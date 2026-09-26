@@ -43,9 +43,11 @@ export class Cassa {
   chiave(t) { return 'op:' + this.conto(t) }
 
   /* ── i prezzi ──
-     costruire sale con le torri già in piedi, potenziare col livello */
-  costoNuova(quante) { return costoNuovaTorre(quante) }
-  costoSalita(torre) { return costoSalita(torre.lv) }
+     costruire sale con le torri già in piedi, potenziare col livello, e
+     tutti e due col listino della torre (`CARATTERE` in data/castello.js):
+     una bomba costa più di un arciere già alla prima pietra */
+  costoNuova(quante, tipo) { return costoNuovaTorre(quante, tipo) }
+  costoSalita(torre) { return costoSalita(torre.lv, torre.tipo) }
 
   potenziabile(torre) { return torre.lv < this.tetto }
 

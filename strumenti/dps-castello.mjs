@@ -28,21 +28,30 @@
                dentro c'è tutto — la gittata, il gruppo che si sfoltisce,
                il colpo grosso sprecato su chi era già quasi morto
 
-   Il ghiaccio non fa danno: il suo valore è **la vita in più che ferma
-   un arciere dello stesso livello** messo sulla piazzola accanto,
-   perché i nemici gelati gli restano a tiro più a lungo (e la brina li
-   rende fragili). Lo si legge nella stessa unità degli altri.
+   Il ghiaccio non fa danno: il suo valore è **la vita in più che
+   fermano due arcieri dello stesso livello** con lui in mezzo, rispetto
+   ai due arcieri da soli — perché i nemici gelati restano a tiro più a
+   lungo (e la brina li rende fragili). Due e non uno: in campo il gelo
+   lavora per chi gli sta intorno, e con un vicino solo si misurerebbe
+   metà del suo mestiere. Lo si legge nella stessa unità degli altri.
 
-   Accanto c'è la stima del modello, e il rapporto fra le due: sopra 1
-   il modello sottovaluta la torre, sotto la sopravvaluta. E c'è il
-   prezzo, per il conto che conta davvero — quanto rende un ⚡ speso.
+   Accanto c'è la stima del modello (`dpsDi`, in arcieri di livello 1),
+   e il rapporto fra valore misurato e stima: sopra 1 il modello
+   sottovaluta la torre, sotto la sopravvaluta. E c'è la
+   regola del listino (vedi `CARATTERE` in `data/castello.js`): quanto
+   **dovrebbe** valere quella torre a quel livello, visto quello che
+   costa — l'arciere misurato, per il rapporto dei prezzi, per la resa.
+   `val/att` è il numero che conta: vicino a 1 la torre vale il suo
+   prezzo, sopra è un affare, sotto è una fregatura.
 
-     npm run dps                         # tutto
+     npm run dps                         # tutto (un minuto)
      npm run dps -- --livelli 1,5,10     # solo quei livelli
      npm run dps -- --onde 3,9           # su quelle ondate
+     npm run dps -- --rapido             # un banco solo: per tarare a mano
+     npm run dps -- --torri add,div      # solo quelle torri
    ═══════════════════════════════════════════════════════════════════ */
 import { TAPPE, MONDO, nemiciDiOnda, intervalloDiOnda, velocitaNemico, dpsDi,
-         costoNuovaTorre, costoSalita, RAMI_DA } from '../src/data/castello.js'
+         costoNuovaTorre, costoSalita, RAMI_DA, resaDi } from '../src/data/castello.js'
 import { TORRI, ramiDi } from '../src/data/ops.js'
 import { Battaglia } from '../src/motore/castello/battaglia.js'
 import { Torre } from '../src/motore/castello/torre.js'
@@ -54,21 +63,27 @@ const opzione = (nome, difetto) => {
   const i = argv.indexOf(nome)
   return i >= 0 ? argv[i + 1].split(',').map(Number) : difetto
 }
+const RAPIDO = argv.includes('--rapido')
 const LIVELLI = opzione('--livelli', [1, RAMI_DA, 7, 10])
-const ONDE = opzione('--onde', [3, 8, 13])
+const ONDE = opzione('--onde', RAPIDO ? [8] : [3, 8, 13])
+const iT = argv.indexOf('--torri')
+const SOLO = iT >= 0 ? argv[iT + 1].split(',') : null
 
 /* ── i banchi di prova ──
    Tre tappe a una strada sola, una per terreno di scuola, e le prime
    sei piazzole di ciascuna — quelle che si occupano per prime, dove si
    combatte davvero. Una strada sola perché con due bocche metà ondata
    passa dall'altra parte, e si misurerebbe la mappa invece della torre. */
-const BANCHI = ['La radice', 'La cripta', 'Il corridoio']
+const BANCHI = (RAPIDO ? ['La cripta'] : ['La radice', 'La cripta', 'Il corridoio'])
   .map(nome => TAPPE.find(t => t.nome === nome && !(t.forme && t.forme.length > 1)))
   .filter(Boolean)
-  /* piazzole in abbondanza: servono le prime sei, più quella accanto
-     per il ghiaccio, e una tappa corta ne dichiara meno */
-  .map(t => ({ ...t, posti: 12 }))
-const PIAZZOLE = 6
+  /* piazzole in abbondanza: servono le prime sei, più quelle accanto
+     per il ghiaccio, e una tappa corta ne dichiara meno. E la durezza
+     ferma a 1: muove la velocità dei nemici, e la calcola il modello —
+     che è proprio quello che qui si sta mettendo alla prova; se la
+     lasciassi a lui, ritoccare una torre cambierebbe il banco */
+  .map(t => ({ ...t, posti: 12, durezza: 1 }))
+const PIAZZOLE = RAPIDO ? 3 : 6
 const PASSO = 1 / 30
 const IMMORTALE = 1e9
 
@@ -91,7 +106,7 @@ function passaggio(tappa, torri, onda, quanti = nemiciDiOnda(onda), vita = IMMOR
   const stato = { cuori: 99, onda: 0, uccisi: 0, torri: 0, energia: 0 }
   const b = new Battaglia({ tappa, misure: MONDO, stato, caso: () => 0.5 })
   b.inizia()
-  b.torri = torri.map(t => {
+  b.torri = torri.filter(t => t.tipo).map(t => {
     const p = b.postazioni[t.posto]
     return new Torre({ x: p.x, y: p.y, tipo: t.tipo, lv: t.lv, ramo: t.ramo || null })
   })
@@ -134,7 +149,7 @@ function passaggio(tappa, torri, onda, quanti = nemiciDiOnda(onda), vita = IMMOR
    cui l'ondata viene fermata quasi tutta (ne passa al più uno su dieci),
    per bisezione, moltiplicata per quanti sono. È la «vita fermata a
    ondata», nella stessa unità in cui la taratura misura le tappe. */
-const TENUTA = { onda: 8, posti: [0, 2, 4], giri: 12, passano: 0.1 }
+const TENUTA = { onda: 8, posti: RAPIDO ? [0, 2] : [0, 2, 4], giri: 12, passano: 0.1 }
 function tenuta(torri) {
   let somma = 0, n = 0
   const quanti = nemiciDiOnda(TENUTA.onda)
@@ -166,6 +181,10 @@ function misura(torri, { quanti = null } = {}) {
            bersagli: colpi ? bersagli / colpi : 0 }
 }
 
+/* `{ tipo: null }` in una lista di torri è una piazzola lasciata vuota:
+   serve al ghiaccio, che si misura in mezzo a due arcieri */
+const VUOTA = { tipo: null }
+
 /* quanto costa arrivare a quel livello, se fosse la prima torre in campo */
 function prezzoDi(k, lv) {
   let e = costoNuovaTorre(0, k)
@@ -182,10 +201,15 @@ console.log(`banchi: ${BANCHI.map(t => t.nome).join(', ')} · ${PIAZZOLE} piazzo
 console.log(`unità del valore: l'arciere di livello 1, che ferma ${f(tenutaBase, 0)} di vita ` +
             `all'ondata ${TENUTA.onda}\n`)
 console.log('torre         ramo       lv | singolo efficace bersagli | modello  mis/mod |' +
-            ' valore  prezzo  valore per 100⚡')
+            ' valore atteso val/att | prezzo')
+
+/* l'arciere di ogni livello, misurato una volta: è il metro della regola */
+const arciereA = {}
+for (const lv of LIVELLI) arciereA[lv] = tenuta([{ tipo: 'add', lv }]) / tenutaBase
 
 const righe = []
 for (const [k, T] of Object.entries(TORRI)) {
+  if (SOLO && !SOLO.includes(k)) continue
   const rami = [null, ...ramiDi(k).map(r => r.id)]
   for (const ramo of rami) {
     for (const lv of LIVELLI) {
@@ -197,23 +221,26 @@ for (const [k, T] of Object.entries(TORRI)) {
         singolo = solo.dps; efficace = onda.dps; bersagli = onda.bersagli
         valore = tenuta([{ tipo: k, lv, ramo }]) / tenutaBase
       } else {
-        /* il ghiaccio: la vita in più che ferma un arciere pari livello
-           con lui accanto, rispetto all'arciere da solo — e la si legge
-           anche come danno al secondo, in proporzione a quello
-           dell'arciere */
-        const arciere = tenuta([{ tipo: 'add', lv }])
-        const insieme = tenuta([{ tipo: 'add', lv }, { tipo: k, lv, ramo }])
-        valore = (insieme - arciere) / tenutaBase
-        efficace = misura([{ tipo: 'add', lv }]).dps * (insieme - arciere) / arciere
+        /* il ghiaccio: la vita in più che fermano due arcieri pari
+           livello con lui in mezzo, rispetto ai due arcieri da soli — e
+           la si legge anche come danno al secondo, in proporzione a
+           quello di un arciere */
+        const coppia = tenuta([{ tipo: 'add', lv }, VUOTA, { tipo: 'add', lv }])
+        const insieme = tenuta([{ tipo: 'add', lv }, { tipo: k, lv, ramo }, { tipo: 'add', lv }])
+        valore = (insieme - coppia) / tenutaBase
+        efficace = misura([{ tipo: 'add', lv }]).dps * valore / arciereA[lv]
       }
-      const modello = dpsDi(k, lv, ramo)
+      const modello = dpsDi(k, lv, ramo) / dpsDi('add', 1)
       const prezzo = prezzoDi(k, lv)
-      righe.push({ k, ramo, lv, singolo, efficace, bersagli, modello, valore, prezzo })
+      /* la regola: l'arciere di quel livello, per quanto costa di più o
+         di meno, per la resa che il listino promette */
+      const atteso = arciereA[lv] * (prezzo / prezzoDi('add', lv)) * resaDi(k)
+      righe.push({ k, ramo, lv, singolo, efficace, bersagli, modello, valore, atteso, prezzo })
       console.log(`${(T.emoji + ' ' + T.nome).padEnd(13)} ${(ramo || '—').padEnd(9)} ${String(lv).padStart(3)} |` +
                   ` ${f(singolo).padStart(7)} ${f(efficace).padStart(8)} ${f(bersagli, 2).padStart(8)} |` +
-                  ` ${f(modello).padStart(7)} ${modello ? f(efficace / modello, 2).padStart(8) : '       —'} |` +
-                  ` ${f(valore, 2).padStart(6)} ${String(Math.round(prezzo)).padStart(7)}` +
-                  ` ${f(valore / prezzo * 100, 2).padStart(9)}`)
+                  ` ${f(modello, 2).padStart(7)} ${modello ? f(valore / modello, 2).padStart(8) : '       —'} |` +
+                  ` ${f(valore, 2).padStart(6)} ${f(atteso, 2).padStart(6)} ${f(valore / atteso, 2).padStart(7)} |` +
+                  ` ${String(Math.round(prezzo)).padStart(6)}`)
     }
   }
   console.log()
@@ -224,8 +251,7 @@ for (const [k, T] of Object.entries(TORRI)) {
    rispetto a quanto costa. */
 for (const lv of LIVELLI) {
   const tronchi = righe.filter(r => r.lv === lv && !r.ramo)
-  const arc = tronchi.find(r => r.k === 'add')
-  console.log(`livello ${lv}: ` + tronchi.map(r =>
-    `${TORRI[r.k].emoji} vale ${f(r.valore / arc.valore, 2)}× l'arciere` +
-    ` (per ⚡ ${f((r.valore / r.prezzo) / (arc.valore / arc.prezzo), 2)}×)`).join(' · '))
+  console.log(`livello ${String(lv).padStart(2)}: ` + tronchi.map(r =>
+    `${TORRI[r.k].emoji} vale ${f(r.valore / arciereA[lv], 2)}× l'arciere` +
+    ` (per ⚡ ${f((r.valore / r.prezzo) / (arciereA[lv] / prezzoDi('add', lv)), 2)}×)`).join(' · '))
 }

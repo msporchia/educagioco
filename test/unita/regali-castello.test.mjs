@@ -32,7 +32,7 @@
 
    `node test/esegui.mjs regali --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
-import { REGALI, OGNI_REGALO, QUANTE_CARTE, LIBERA, LIBERE, TAPPE, MONDO, CFG,
+import { REGALI, OGNI_REGALO, QUANTE_CARTE, LIBERA, LIBERE, TAPPE, MONDO, CFG, sequenzaTorri,
          doniZero, doniDi, regaloDi, quantiRegali, regaliOfferti,
          tiroConDoni, geloConDoni, tiroDi, geloDi } from '../../src/data/castello.js'
 import { creaBattaglia } from '../../src/motore/battaglia.js'
@@ -164,9 +164,12 @@ function partita(tappa, regali, { ondate = 8, s = 7 } = {}) {
   b.inizia()
   /* due torri e via: il resto lo fa il tempo. Non si compra niente, così
      la partita è la stessa in tutte le prove e l'unica differenza sono i
-     regali. */
-  b.costruisci('add', { prezzo: 0 })
-  b.costruisci(tappa.torri[1] || 'add', { prezzo: 0 })
+     regali. Le due torri sono quelle con cui apre il giocatore modello
+     (`sequenzaTorri`): con le immunità, due torri a caso possono non
+     toccare metà delle ondate, e un regalo sul danno non si vedrebbe */
+  const [prima, seconda] = sequenzaTorri(tappa, 2)
+  b.costruisci(prima || 'add', { prezzo: 0 })
+  b.costruisci(seconda || prima || 'add', { prezzo: 0 })
   let t = 0, regalati = 0
   while (t < 60 * ondate && !b.finito) {
     if (b.regaliDaScegliere > 0) { b.prendiRegalo('frecce'); regalati++ }
@@ -196,8 +199,12 @@ for (const l of LIBERE) {
   const senza = partita(l, null), zero = partita(l, {})
   stessaLista(`${l.nome}: zero regali gioca come nessun regalo`,
               [senza.uccisi, senza.cuori], [zero.uccisi, zero.cuori])
-  const con = partita(l, { frecce: 10 })
-  controlla(`${l.nome}: e con dieci gradi di frecce si ferma più gente`,
+  /* dieci gradi su tutti e tre i danni, e non solo sulle frecce: con le
+     immunità metà delle ondate l'arciere non le tocca, e un regalo
+     sulle frecce da solo, in otto ondate con due torri, può non
+     cambiare di un nemico chi cade */
+  const con = partita(l, { frecce: 10, incanto: 10, polvere: 10 })
+  controlla(`${l.nome}: e con dieci gradi sui danni si ferma più gente`,
             con.uccisi > senza.uccisi, `${senza.uccisi} → ${con.uccisi} nemici fermati`)
 }
 
@@ -289,17 +296,21 @@ for (const [i, p] of scala.entries()) {
   controlla(`con ${p.k} regali si perde comunque`, p.persa,
             `con ${p.k} regali la partita non finisce più: la libera diventa una schermata fissa`)
 }
-controlla('i regali si sentono: dieci portano più lontano di zero',
-          scala[1].onda > scala[0].onda,
-          `zero → o${scala[0].onda.toFixed(1)}, dieci → o${scala[1].onda.toFixed(1)}`)
+/* Trentacinque e non dieci: con le immunità la prima ondata oltre la
+   tabella è quella di un mostro che metà delle torri non tocca (nella
+   radura grande è lo slime, che per giunta si divide), e dieci gradi
+   spalmati su sette voci non bastano a passarla — trentacinque sì. */
+controlla('i regali si sentono: trentacinque portano più lontano di zero',
+          scala[2].onda > scala[0].onda,
+          `zero → o${scala[0].onda.toFixed(1)}, trentacinque → o${scala[2].onda.toFixed(1)}`)
 /* il rendimento cala: i primi dieci regali comprano ondate, gli ultimi
    cento molte meno per regalo. È la condizione perché accumularli per
    sempre non porti in cielo — la vita dei nemici cresce a moltiplicare,
    i regali a sommare, e il moltiplicare vince sempre. */
 const perRegalo = (a, b) => (scala[b].onda - scala[a].onda) / (scala[b].k - scala[a].k)
 controlla('e cento non rendono immortali: il rendimento cala',
-          perRegalo(2, 3) < perRegalo(0, 1) / 2,
-          `${perRegalo(0, 1).toFixed(2)} ondate per regalo all'inizio, ` +
+          perRegalo(2, 3) < perRegalo(0, 2),
+          `${perRegalo(0, 2).toFixed(2)} ondate per regalo all'inizio, ` +
           `${perRegalo(2, 3).toFixed(2)} in fondo`)
 nota('fin dove arriva il metro: ' + scala.map(p => `${p.k} regali → o${p.onda.toFixed(1)}`).join(' · '))
 /* e quaranta tutti sulla stessa voce: è previsto (si può riprendere lo

@@ -10,18 +10,26 @@
 
    Cambia la forma del danno, non la quantità. Non è gusto: `pianoDi`,
    `difesaCon`, `durezzaDi` e la tabella delle vite in
-   `taratura-castello.js` sono costruiti su `dpsDi(tipo, livello)`, che
-   il ramo non lo guarda nemmeno. Se un ramo fosse più forte, chi
-   sceglie bene troverebbe le tappe facili e chi sceglie male
+   `taratura-castello.js` sono costruiti sulle torri senza ramo — il
+   giocatore modello i rami non li sceglie. Se un ramo fosse più forte,
+   chi sceglie bene troverebbe le tappe facili e chi sceglie male
    impossibili, e il taratore non saprebbe più quale delle due partite
-   sta misurando.
+   sta misurando. Adesso che le **torri** non valgono più lo stesso (il
+   listino, `CARATTERE`) i rami sì: la torre si sceglie guardando il
+   prezzo, il ramo si prende allo stesso prezzo di un gradino qualunque.
+
+   Si conta con la stima del modello, `dpsDi(tipo, livello, ramo)`, che
+   è la stessa per le torri e per i rami — e che `npm run dps` mette a
+   confronto col motore vero. Prima questo test aveva una formula sua,
+   e diceva «pari» mentre il motore misurava il napalm al triplo del
+   mortaio: il veleno era scritto al secondo e contato in tutto.
 
    Questo test è l'unico posto dove quella promessa viene contata. Senza,
    basta ritoccare un moltiplicatore in `RAMI` per rompere in silenzio la
    taratura di quindici tappe.
    ═══════════════════════════════════════════════════════════════════ */
 import { TORRI, ramiDi } from '../../src/data/ops.js'
-import { RAMI, RAMI_DA, tiroDi, geloDi, dpsDi } from '../../src/data/castello.js'
+import { RAMI, RAMI_DA, tiroDi, geloDi, dpsDi, raggioDi } from '../../src/data/castello.js'
 import { Nemico } from '../../src/motore/castello/nemico.js'
 import { Colpo } from '../../src/motore/castello/colpo.js'
 import { Torre } from '../../src/motore/castello/torre.js'
@@ -29,35 +37,31 @@ import { Cassa } from '../../src/views/castello/cassa.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 1. i due rami valgono lo stesso ══════════
-   Il danno al secondo del ramo, veleno compreso: quello che il modello
-   crede di avere in campo deve essere quello che c'è davvero. */
-const dpsRamo = (k, lv, ramo) => {
-  const t = tiroDi(k, lv, ramo)
-  /* La catena si misura **con un rimbalzo solo**, e non è generosità:
-     sul bersaglio singolo perde apposta, e quello che le manca lo
-     ritrova su chi sta vicino. Un'ondata è una fila di mostri, quindi
-     un rimbalzo va a segno quasi sempre; il secondo no, e infatti non
-     si conta. È il modo in cui questo ramo resta pari agli altri senza
-     essere pari in ogni singola situazione — che è tutto il punto di
-     avere due rami. */
-  const conRimbalzo = t.rimbalzi ? 1.5 : 1
-  const colpo = t.danno * t.salve * conRimbalzo / t.ricarica * (1 + (t.area || 0) / 90)
-  // il veleno arriva dopo, ma arriva: conta per intero, spalmato sulla ricarica
-  const male = t.veleno ? t.veleno * t.salve * Math.min(t.durata, t.ricarica * 4) /
-                          Math.max(t.ricarica, t.durata) : 0
-  return colpo + male
-}
-
+   Il danno al secondo del ramo, veleno e rimbalzi compresi: quello che
+   il modello crede di avere in campo deve essere quello che c'è
+   davvero. La catena sul bersaglio singolo perde apposta, e quello che
+   le manca lo ritrova su chi sta vicino: la stima conta i rimbalzi
+   (`BERSAGLI.rimbalzo`), e un'ondata è una fila di mostri. */
 for (const [k, T] of Object.entries(TORRI)) {
   if (!T.danno) continue                       // il ghiaccio si misura altrove
   for (const lv of [RAMI_DA, 7, 10]) {
     const base = dpsDi(k, lv)
     for (const r of ramiDi(k)) {
-      const suo = dpsRamo(k, lv, r.id)
+      const suo = dpsDi(k, lv, r.id)
       dentro(`${T.nome} liv.${lv} · ${r.nome} vale quanto il tronco`,
              suo / base, 0.82, 1.22)
     }
   }
+}
+/* il veleno si scrive **in tutto**: quanto fa il male che continua, in
+   multipli del colpo, spalmato sulla durata. Al secondo, com'era prima,
+   il napalm lo moltiplicava per quattro secondi e per tutti quelli
+   presi nello scoppio */
+{
+  const t = tiroDi('sub', 5, 'veleno'), liscio = tiroDi('sub', 5)
+  const colpoPieno = liscio.danno
+  dentro('il veleno fa in tutto quello che dice il ramo, non di più',
+         t.veleno * t.durata / colpoPieno, RAMI.veleno.veleno * 0.99, RAMI.veleno.veleno * 1.01)
 }
 
 /* la catena è l'unica che perde sul bersaglio singolo, e deve: quello
@@ -65,9 +69,15 @@ for (const [k, T] of Object.entries(TORRI)) {
 controlla('la catena da sola fa meno del tronco',
           tiroDi('sub', 5, 'catena').danno < tiroDi('sub', 5).danno)
 
-/* ══════════ 2. il gelo: largo o cattivo, mai tutti e due ══════════ */
+/* ══════════ 2. il gelo: largo o cattivo, mai tutti e due ══════════
+   La bufera arriva più lontano e gela più a lungo, ma non frena di più;
+   la brina frena di più e rende fragili, ma arriva meno lontano. Prima
+   la bufera frenava anche meno del ghiaccio semplice, e misurata col
+   motore valeva meno di lui: un ramo che toglie è un tranello. */
 const bufera = geloDi(6, 'bufera'), brina = geloDi(6, 'brina'), liscio = geloDi(6)
-controlla('la bufera frena meno del ghiaccio semplice', bufera.freno < liscio.freno)
+controlla('la bufera non frena più del ghiaccio semplice', bufera.freno <= liscio.freno)
+controlla('ma gela più a lungo', bufera.durata > liscio.durata)
+controlla('e arriva più lontano', raggioDi('bufera') > 1 && raggioDi('brina') < raggioDi('bufera'))
 controlla('la brina frena più del ghiaccio semplice', brina.freno > liscio.freno)
 uguale('e solo la brina rende fragili', bufera.fragile, 1)
 controlla('la brina sì', brina.fragile > 1)

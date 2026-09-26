@@ -27,15 +27,14 @@ import { TAPPE, LIBERE, LIBERA, CFG, difesaCon, difesaLarga, energiaAll, nemiciD
          costoNuovaTorre, costoSalita, forzaDi, partenzaDi, resaTipi, dpsDi,
          tiroDi, operazioniDi, premioTappa, geloDi, vitaNemico, costoDifesaPiena,
          energiaMassima, potenzaDi, pianoDi, ondateDi, postiDi, entrataOnda, frontiDi,
-         ingressiDi, firmaEquilibrio, firmaTaratura }
+         ingressiDi, firmaEquilibrio, firmaTaratura, sequenzaTorri, resaPerEnergia, resaDi,
+         listinoDi }
   from '../../src/data/castello.js'
 import { CAMPAGNE, LIBERE_RACCONTO } from '../../src/data/campagne-castello.js'
-import { torreResistente } from '../../src/data/mostri.js'
+import { firmaImmunita, immuniDi } from '../../src/data/mostri.js'
 import { migraCastello, TD_VERSIONE } from '../../src/store/profile.js'
 import { TORRI } from '../../src/data/ops.js'
-import { RESISTENZA } from '../../src/data/mostri.js'
 import { Ondate } from '../../src/motore/castello/ondate.js'
-import { Nemico } from '../../src/motore/castello/nemico.js'
 import { gioca, PROFILI } from '../../strumenti/simula-castello.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -50,10 +49,25 @@ for (const [i, t] of TAPPE.entries())
   controlla(`${i + 1}. ${t.nome}: ogni ondata ha la sua vita`,
             Array.isArray(t.vite) && t.vite.length === t.ondate && t.vite.every(v => v > 0),
             `${t.vite ? t.vite.length : 0} vite per ${t.ondate} ondate`)
+/* ── lo stesso mostro, più avanti, non torna mai più molle ──
+   Mostro per mostro, e non ondata per ondata: da quando c'è l'immunità
+   il golem che solo le bombe aprono e il pipistrello che le bombe non
+   toccano non stanno sulla stessa scala, e la taratura li spiana
+   ognuno per conto suo (vedi `spiana` in `strumenti/tara-castello.mjs`).
+   Il capo fa gruppo a sé. */
+const chiDi = (t, o) => { const b = new Ondate(t).bestiaDi(o); return b.capo ? 'capo' : b.id }
+function ammorbiditi(t) {
+  const v = t.vite || [], male = []
+  for (let k = 0; k < v.length; k++) {
+    const chi = chiDi(t, k + 1)
+    for (let j = k + 1; j < v.length; j++)
+      if (chiDi(t, j + 1) === chi) { if (v[j] < v[k]) male.push(`${chi} o${k + 1}→o${j + 1}`); break }
+  }
+  return male
+}
 for (const [i, t] of TAPPE.entries())
-  controlla(`${i + 1}. ${t.nome}: i nemici non si ammorbidiscono mai andando avanti`,
-            (t.vite || []).every((v, k) => k === 0 || v >= t.vite[k - 1]),
-            (t.vite || []).join(' → '))
+  controlla(`${i + 1}. ${t.nome}: lo stesso mostro non si ammorbidisce mai andando avanti`,
+            !ammorbiditi(t).length, ammorbiditi(t).join(' · ') + ' · ' + (t.vite || []).join(' → '))
 
 /* ── 1. la promessa nuova: una tappa costa i calcoli che promette ──
 
@@ -86,8 +100,11 @@ nota('calcoli promessi: ' + TAPPE.map(t => t.calcoli).join(' · ') +
    non bastasse a portare almeno una torre al suo `cap`, l'operazione più
    difficile che quella tappa racconta non si vedrebbe mai */
 for (const [i, t] of TAPPE.entries()) {
-  let solaInCima = costoNuovaTorre(0) + costoNuovaTorre(1)
-  for (let lv = 1; lv < t.cap; lv++) solaInCima += costoSalita(lv)
+  /* le prime due della fila del giocatore modello, e la prima portata
+     in cima: i prezzi sono quelli delle torri che si comprano davvero */
+  const [a, b] = sequenzaTorri(t, 2)
+  let solaInCima = costoNuovaTorre(0, a) + costoNuovaTorre(1, b)
+  for (let lv = 1; lv < t.cap; lv++) solaInCima += costoSalita(lv, a)
   const tutta = energiaAll(t.ondate + 1, t.partenza)
   controlla(`${i + 1}. ${t.nome}: si arriva in cima alla scaletta (livello ${t.cap})`,
             solaInCima <= tutta && t.posti >= 2,
@@ -112,8 +129,12 @@ for (const [i, t] of TAPPE.entries()) {
    Sistemarlo davvero vuol dire insegnare al taratore a misurare anche
    *dove* muoiono i nemici e non solo fin dove arrivano. Fino ad allora
    una tappa su venti che perdona sta scritta qui col suo nome: un test
-   che dice la verità vale più di un test verde. */
-const PERDONANO = new Set(['Il canneto'])
+   che dice la verità vale più di un test verde.
+   Con le immunità il Canneto non perdona più — il troll che solo le
+   bombe aprono tiene alta la tensione anche lì — e l'elenco è vuoto;
+   resta perché la prossima tappa che perdona si scriva qui, e non si
+   tolga il controllo. */
+const PERDONANO = new Set([])
 for (const [i, t] of TAPPE.entries()) {
   const tutto = gioca(t, PROFILI.misura)
   controlla(`${i + 1}. ${t.nome}: chi spende tutta l'energia la finisce`,
@@ -170,64 +191,39 @@ for (const [i, t] of TAPPE.entries()) {
   controlla(`${i + 1}. ${t.nome}: c'è più da comprare di quanto si possa spendere`,
             costoDifesaPiena(t) > tutta,
             `comprare tutto costa ${costoDifesaPiena(t)}⚡, la tappa ne dà ${tutta}⚡`)
+  /* con i prezzi diversi «meno di un gradino» non è più un numero solo:
+     quello che resta non basta per la prossima cosa che comprerebbe */
+  const finale = difesaCon(tutta, t)
   controlla(`${i + 1}. ${t.nome}: chi gioca bene finisce a tasche vuote`,
-            difesaCon(tutta, t).resta < costoSalita(1),
-            `gli restano ${difesaCon(tutta, t).resta}⚡, cioè un gradino non comprato`)
+            finale.resta < finale.prossima && finale.resta < costoNuovaTorre(0),
+            `gli restano ${finale.resta}⚡, e la prossima mossa ne costa ${finale.prossima}`)
 }
-/* e chi corre non deve trovarsi con un'altra tappa in mano: il bonus
-   della fretta è un premio, non una seconda economia */
+/* e chi corre non deve trovarsi con un'altra tappa in mano: il premio
+   della fretta è un premio, non una seconda economia. Da quando si può
+   chiamare anche a ondata in corso il premio è più grosso — rende il
+   tempo risparmiato — e il tetto è di **due** acquisti in tutta la
+   tappa: il modello non lo conta (vedi `CFG.fretta`) */
 for (const [i, t] of TAPPE.entries()) {
   const conFretta = difesaCon(energiaMassima(t), t)
   const acquisti = conFretta.torri.length + conFretta.torri.reduce((s, lv) => s + lv - 1, 0)
-  controlla(`${i + 1}. ${t.nome}: il bonus della fretta vale al massimo un acquisto`,
-            acquisti - t.calcoli <= 1,
-            `chi si prende sempre il bonus arriva a ${acquisti} acquisti invece di ${t.calcoli}`)
+  controlla(`${i + 1}. ${t.nome}: la fretta vale al massimo due acquisti`,
+            acquisti - t.calcoli <= 2,
+            `chi si prende sempre il premio più grosso arriva a ${acquisti} acquisti invece di ${t.calcoli}`)
 }
 
-/* ── 5b. le resistenze: quando parlano, e quanto pesano ──
-
-   Un mostro dichiara a che cosa **resiste** — la torre che gli fa un
-   terzo del danno — e la tappa lo annuncia tre ondate prima. Ma non in
-   tutte le ondate, e le due eccezioni non sono gusto: senza, la
-   taratura si sfascia in modi già misurati e scritti in
-   `motore/castello/ondate.js`.
-
-     · **all'inizio no**, per tante ondate quante sono le bocche: finché
-       in campo c'è una torre per strada, spegnerne una lascia quella
-       strada scoperta e non c'è nessun'altra mossa da fare;
-     · **all'ultima no**: la taratura non lascia mai un'ondata più dura
-       di quella dopo, quindi l'ultima fissa il tetto di tutta la tappa
-       — e il tetto deve misurare la tappa, non quale bestia sia
-       capitata in fondo alla fila.
-
-   Fra le due, la resistenza c'è sempre: se un'ondata di mezzo non la
-   portasse, il preavviso direbbe una cosa e il campo un'altra. */
-const bocche = t => (t.forme?.length || 1)
+/* ── 5b. le immunità: ci sono sempre, e il preavviso dice il vero ──
+   Un mostro è immune alle torri che non lo toccano, e non si accende né
+   si spegne: è com'è fatto. Quello che il preavviso annuncia per ogni
+   ondata deve essere esattamente quello che il mostro è — se no il
+   nastro direbbe una cosa e il campo un'altra. Le regole delle file
+   (chi si può ferire, nessuna torre che vince da sola, la prima ondata
+   all'arciere) e i conti dell'immunità sul nemico stanno in
+   `unita/immunita-castello`. */
 for (const [i, t] of TAPPE.entries()) {
   const onde = Array.from({ length: t.ondate }, (_, k) => new Ondate(t).bestiaDi(k + 1))
-  const mute = onde.map((b, k) => (b.resiste ? null : k + 1)).filter(Boolean)
-  const attese = [...Array.from({ length: bocche(t) }, (_, k) => k + 1), t.ondate]
-  controlla(`${i + 1}. ${t.nome}: parlano di resistenza tutte le ondate tranne l'apertura e l'ultima`,
-            t.resistenze ? mute.join() === [...new Set(attese)].join() : mute.length === t.ondate,
-            t.resistenze ? `mute: ${mute.join(' ')} · attese: ${[...new Set(attese)].join(' ')}`
-                         : 'la tappa non ha resistenze ma qualche ondata ne dichiara una')
-  if (!t.resistenze) continue
-  controlla(`${i + 1}. ${t.nome}: nessuna ondata chiude una torre che la tappa non dà`,
-            onde.every(b => !b.resiste || t.torri.includes(b.resiste)),
-            onde.filter(b => b.resiste && !t.torri.includes(b.resiste))
-                .map(b => `${b.nome}→${b.resiste}`).join(' '))
-}
-/* e quanto pesa: un terzo, contato sul nemico e non sulla tabella */
-{
-  const colpo = (resiste, tipo) => {
-    const n = new Nemico({ vita: 300, vel: 0, bestia: 'slime', resiste })
-    n.ferisci(90, tipo)
-    return 300 - n.vita
-  }
-  uguale('la torre a cui si resiste fa un terzo del danno', Math.round(colpo('sub', 'sub')), 30)
-  uguale('tutte le altre lo fanno intero', colpo('sub', 'add'), 90)
-  controlla('e non esiste una torre che ne faccia di più: il premio non c\'è più',
-            RESISTENZA < 1 && colpo(null, 'sub') === 90)
+  controlla(`${i + 1}. ${t.nome}: ogni ondata dice a cosa è immune, e dice il vero`,
+            onde.every(b => b.immune.join() === immuniDi(b.id).join()),
+            onde.map(b => `${b.nome}:${b.immune.join('+')}`).join(' '))
 }
 
 /* ── 6. potenziare deve rendere più che allargarsi ──
@@ -237,8 +233,11 @@ for (const [i, t] of TAPPE.entries()) {
   for (const o of [1, Math.ceil(t.ondate / 2), t.ondate]) {
     const e = energiaAll(o, t.partenza)
     const alta = difesaCon(e, t), larga = difesaLarga(e, t)
+    /* alla prima ondata con meno di dieci per cento di scarto: con i
+       prezzi diversi chi si allarga compra tre arcieri dove l'altro ne
+       sale uno, e con così poca energia la differenza è rumore */
     controlla(`${i + 1}. ${t.nome} · ondata ${o}: le torri alte battono le tante torri basse`,
-              alta.potenza >= larga.potenza,
+              alta.potenza >= larga.potenza * (o === 1 ? 0.9 : 1),
               `[${alta.torri}] fa ${alta.potenza.toFixed(0)}, [${larga.torri}] fa ${larga.potenza.toFixed(0)}`)
   }
 }
@@ -289,9 +288,18 @@ for (const [k, arco] of perCampagna.entries()) {
               calcoli.join(' → ') + ` · fatica ${fatiche.map(f => f.toFixed(0)).join(' → ')}`)
     continue
   }
-  controlla(`${CAMPAGNE[k].nome}: la fatica non cala dentro la campagna`,
-            fatiche.every((f, i) => i === 0 || f >= fatiche[i - 1] * 0.95),
+  /* Con le immunità la vita di un'ondata dipende da **quante torri la
+     possono ferire**: un golem che solo le bombe aprono ha meno vita di
+     un pipistrello che arcieri e magia prendono tutti e due, e quale
+     mostro una tappa mette in fila sposta la fatica di un quarto in su
+     o in giù. Quindi dentro la campagna si controlla che non crolli —
+     tre quarti della tappa prima, non di meno — e che finisca più in
+     alto di dove comincia. */
+  controlla(`${CAMPAGNE[k].nome}: la fatica non crolla dentro la campagna`,
+            fatiche.every((f, i) => i === 0 || f >= fatiche[i - 1] * 0.75),
             fatiche.map(f => f.toFixed(0)).join(' → '))
+  controlla(`${CAMPAGNE[k].nome}: e finisce più in alto di dove comincia`,
+            fatiche.at(-1) > fatiche[0], fatiche.map(f => f.toFixed(0)).join(' → '))
   /* Nessuna tappa può essere un muro: la taratura la tiene comunque fra
      il 60 e l'85% del suo limite, quindi il salto grosso non è mai una
      difficoltà in più — è una difesa migliore. Il salto più grande di
@@ -363,39 +371,73 @@ for (const [i, t] of TAPPE.entries()) {
 }
 
 /* ── 9. i prezzi sono quelli che il gioco racconta ── */
-uguale('la prima torre costa il prezzo base', costoNuovaTorre(0), CFG.costruzione)
+uguale('il prezzo base di una torre è quello scritto', costoNuovaTorre(0), CFG.costruzione)
 controlla('costruire rincara con le torri già in campo',
           costoNuovaTorre(3) > costoNuovaTorre(0))
-controlla('salire di un gradino costa meno che costruire',
-          costoSalita(1) < costoNuovaTorre(0),
-          `${costoSalita(1)}⚡ contro ${costoNuovaTorre(0)}⚡`)
 controlla('salire costa di più mano a mano che si sale', costoSalita(5) > costoSalita(1))
-/* I due listini restano vicini apposta: un acquisto è un calcolo, e se un
-   gradino in cima costasse il triplo di uno in fondo il bersaglio dei
-   `calcoli` non si potrebbe più centrare. La convenienza di potenziare
-   sta nella resa, non nel prezzo. */
-controlla('un acquisto costa più o meno sempre lo stesso',
-          costoSalita(10) <= costoNuovaTorre(0) * 2,
-          `il gradino più caro costa ${costoSalita(10)}⚡, la prima torre ${costoNuovaTorre(0)}⚡`)
+/* ── il carattere: le torri avanzate sono più care già alla prima pietra ──
+   Il listino segue la scuola: l'arciere (addizione) costa poco, le bombe
+   (divisione) più di tutte. Il ghiaccio, che non ferisce, costa meno di
+   tutte — vale per quanto fa rendere gli altri. */
+const PER_ASPETTO = a => Object.keys(TORRI).find(k => TORRI[k].aspetto === a)
+const [ARC, MAG, GHI, BOM] = ['arciere', 'magica', 'ghiaccio', 'bombe'].map(PER_ASPETTO)
+controlla('l\'arciere costa meno della magica, e la magica meno delle bombe',
+          costoNuovaTorre(0, ARC) < costoNuovaTorre(0, MAG) &&
+          costoNuovaTorre(0, MAG) < costoNuovaTorre(0, BOM),
+          ['arciere', 'magica', 'bombe'].map(a => `${a} ${costoNuovaTorre(0, PER_ASPETTO(a))}⚡`).join(' · '))
+controlla('il ghiaccio costa meno di tutte', Object.keys(TORRI).every(k => k === GHI ||
+          costoNuovaTorre(0, GHI) < costoNuovaTorre(0, k)))
+/* con quello che costa una bomba si fanno due arcieri, o uno portato al
+   livello tre: tre scelte che si pesano (l'esempio è dell'utente) */
+dentro('una bomba costa quanto due arcieri, più o meno',
+       costoNuovaTorre(0, BOM) / (costoNuovaTorre(0, ARC) + costoNuovaTorre(1, ARC)), 0.75, 1.25)
+dentro('o quanto un arciere portato al livello tre',
+       costoNuovaTorre(0, BOM) / (costoNuovaTorre(0, ARC) + costoSalita(1, ARC) + costoSalita(2, ARC)),
+       0.65, 1.25)
+/* ── la regola: un ⚡ rende lo stesso, a meno del premio della scuola ──
+   Il numero di `npm run dps` misurato col motore, qui preso dalla stima
+   del modello (`dpsDi`), che è quella con cui il modello tara le tappe.
+   Non deve essere esatto — la stima non vede l'ondata che si sfoltisce —
+   ma non può stare lontano: il difetto di prima era un per otto. */
+for (const k of Object.keys(TORRI))
+  for (const lv of [1, 4, 7, 10])
+    dentro(`${TORRI[k].nome} liv.${lv}: un ⚡ rende quanto dice il listino`,
+           resaPerEnergia(k, lv) / resaDi(k), 0.72, 1.3)
+nota('resa per ⚡ (arciere = 1): ' + Object.keys(TORRI).map(k =>
+  `${TORRI[k].emoji} ${[1, 4, 7, 10].map(lv => resaPerEnergia(k, lv).toFixed(2)).join('/')}`).join(' · '))
+/* Il listino si applica a tutto quello che una torre costa, costruirla e
+   farla salire: la scala resta quasi piatta dentro ogni torre, perché
+   un acquisto è un calcolo e un gradino in cima non può costare il
+   triplo di uno in fondo. La convenienza di potenziare sta nella resa. */
+for (const k of Object.keys(TORRI)) {
+  controlla(`${TORRI[k].nome}: salire di un gradino costa meno che costruirla`,
+            costoSalita(1, k) < costoNuovaTorre(0, k), `${costoSalita(1, k)}⚡ contro ${costoNuovaTorre(0, k)}⚡`)
+  controlla(`${TORRI[k].nome}: un acquisto costa più o meno sempre lo stesso`,
+            costoSalita(10, k) <= costoNuovaTorre(0, k) * 2)
+}
 /* Ogni torre cresce a modo suo, ma la convenienza deve valere per tutte:
    salire di un gradino costa meno di una torre nuova e deve rendere quasi
-   quanto raddoppiare la difesa. Il ghiaccio è fuori da questo conto — non
-   fa danno, cresce nel gelo — e ha il suo controllo più sotto. */
+   quanto raddoppiare la difesa. */
 const SPARANO = Object.keys(TORRI).filter(k => TORRI[k].danno)
 for (const k of SPARANO)
   controlla(`${TORRI[k].nome}: il secondo livello è più conveniente della seconda torre`,
-            costoSalita(1) < costoNuovaTorre(1) && forzaDi(k, 2) - 1 >= 0.4,
-            `${costoSalita(1)}⚡ per +${((forzaDi(k, 2) - 1) * 100).toFixed(0)}% di potenza, ` +
-            `contro ${costoNuovaTorre(1)}⚡ per +100%`)
+            costoSalita(1, k) < costoNuovaTorre(1, k) && forzaDi(k, 2) - 1 >= 0.4,
+            `${costoSalita(1, k)}⚡ per +${((forzaDi(k, 2) - 1) * 100).toFixed(0)}% di potenza, ` +
+            `contro ${costoNuovaTorre(1, k)}⚡ per +100%`)
 nota('potenza al livello 10: ' + SPARANO.map(k =>
   `${TORRI[k].nome} ×${forzaDi(k, 10).toFixed(1)}`).join(' · '))
 
 /* ── 10. i conti di contorno ── */
 dentro('i nemici della prima ondata sono pochi', nemiciDiOnda(1), 4, 10)
 controlla('le ondate successive portano più nemici', nemiciDiOnda(5) > nemiciDiOnda(1))
-controlla('i nemici delle ondate avanti sono più robusti',
-          TAPPE.every(t => vitaNemico(t, t.ondate) > vitaNemico(t, 1)),
-          TAPPE.map(t => `${vitaNemico(t, 1)}→${vitaNemico(t, t.ondate)}`).join(' · '))
+/* non ondata per ondata: l'ultima può essere il capo (la sua vita è
+   scritta in nemici normali, e contro uno solo l'area non conta) o un
+   mostro che una torre sola ferisce, e ha meno vita per quello. Quello
+   che deve valere è che la tappa **salga**: l'ondata più robusta non è
+   mai la prima */
+controlla('l\'ondata più robusta della tappa non è la prima',
+          TAPPE.every(t => Math.max(...t.vite.slice(1)) > t.vite[0]),
+          TAPPE.map(t => `${t.vite[0]}→${Math.max(...t.vite.slice(1))}`).join(' · '))
 controlla('le partite libere partono con la stessa generosità di una tappa di mezzo',
           LIBERE.every(l => l.partenza >= partenzaDi({ cap: 3 })), LIBERE.map(l => `${l.partenza}⚡`).join(' '))
 controlla('un errore costa energia ma non è una condanna',
@@ -404,10 +446,11 @@ controlla('un errore costa energia ma non è una condanna',
 controlla('fermare i nemici paga più che aspettare',
           nemiciDiOnda(1) * CFG.perNemico > CFG.fineOnda + CFG.ondataPulita)
 
-/* ── 11. le torri non si equivalgono ──
-   Il ghiaccio non fa danno: una tappa che lo mette in mano ha una difesa più
-   debole a parità di torri, e il modello deve saperlo. Prima non lo sapeva e
-   prometteva una potenza che sul campo non c'era.
+/* ── 11. le torri non si equivalgono, e costano di conseguenza ──
+   La resa di una tappa è per ⚡ speso, con l'arciere di livello 1 come
+   unità: prima era per torre, e diceva che il ghiaccio abbassava la
+   tappa — con i prezzi uguali era vero. Adesso il ghiaccio costa la metà
+   di una magica e rende per quello che costa.
 
    Quale operazione compri quale torre può cambiare (ed è già cambiato una
    volta): qui non si scrivono chiavi a mano, si chiede a `TORRI` chi è
@@ -416,11 +459,10 @@ const GELO = Object.keys(TORRI).find(k => TORRI[k].gela)
 const ZONA = Object.keys(TORRI).filter(k => TORRI[k].area > 0)
 controlla('una tappa di soli arcieri rende quanto l\'unità di misura',
           Math.abs(resaTipi(['add']) - 1) < 0.001, resaTipi(['add']).toFixed(2))
-controlla('il ghiaccio abbassa la resa della tappa',
-          resaTipi(['add', GELO]) < resaTipi(['add']),
-          `${resaTipi(['add', GELO]).toFixed(2)} contro ${resaTipi(['add']).toFixed(2)}`)
-controlla('i colpi a zona valgono più dell\'arciere',
-          ZONA.every(k => dpsDi(k) > dpsDi('add')),
+dentro('il ghiaccio rende per quello che costa, come l\'arciere',
+       resaTipi([GELO]), 0.9, 1.1)
+controlla('le torri a zona fanno più dell\'arciere, e costano di più',
+          ZONA.every(k => dpsDi(k) > dpsDi('add') && listinoDi(k) > listinoDi('add')),
           ZONA.map(k => `${TORRI[k].emoji} ${dpsDi(k).toFixed(0)}`).join(' · ') +
           ` · 🏹 ${dpsDi('add').toFixed(0)}`)
 nota('resa per tappa: ' + TAPPE.map(t => resaTipi(t.torri).toFixed(2)).join(' → '))
@@ -476,9 +518,9 @@ for (const l of LIBERE) {
   controlla(`${l.nome}: tutti i mostri della campagna, ognuno una volta`,
             l.mostri.length === tutti.size && l.mostri.every(m => tutti.has(m)),
             `${l.mostri.join(' ')} contro ${[...tutti].join(' ')}`)
-  controlla(`${l.nome}: due ondate di fila non chiudono la stessa torre`,
-            l.mostri.every((m, i) => torreResistente(m) !== torreResistente(l.mostri[(i + 1) % l.mostri.length])),
-            l.mostri.map(m => torreResistente(m)).join(' '))
+  controlla(`${l.nome}: due ondate di fila non hanno le stesse immunità`,
+            l.mostri.every((m, i) => firmaImmunita(m) !== firmaImmunita(l.mostri[(i + 1) % l.mostri.length])),
+            l.mostri.map(m => firmaImmunita(m)).join(' '))
   /* due bocche, o una strada che si attraversa da sé: il bastione è
      l'anello vero, e la sua difesa si divide nel tempo (vedi
      `unita/ingressi-castello`) */
@@ -487,8 +529,8 @@ for (const l of LIBERE) {
   controlla(`${l.nome}: ogni ondata tarata ha la sua vita`,
             Array.isArray(l.vite) && l.vite.length === 20 && l.vite.every(v => v > 0),
             `${l.vite ? l.vite.length : 0} vite`)
-  controlla(`${l.nome}: i nemici non si ammorbidiscono mai andando avanti`,
-            (l.vite || []).every((v, k) => k === 0 || v >= l.vite[k - 1]), (l.vite || []).join(' → '))
+  controlla(`${l.nome}: lo stesso mostro non si ammorbidisce mai andando avanti`,
+            !ammorbiditi({ ...l, ondate: 20 }).length, ammorbiditi({ ...l, ondate: 20 }).join(' · '))
   controlla(`${l.nome}: la vita continua a salire oltre la tabella`, l.oltre > 1, `×${l.oltre}`)
   /* si gioca **com'è in gioco** — `ondate: Infinity`, così le bocche
      insieme arrivano da dove le mette `ONDATE_TARATE` — e ci si ferma

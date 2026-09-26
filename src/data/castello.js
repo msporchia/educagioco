@@ -45,19 +45,60 @@
    trova `npm run tara` giocando ogni tappa migliaia di volte con il
    motore vero, e finisce in `taratura-castello.js`.
 
-   ── una nota sui prezzi ──
+   ── il carattere delle torri, e i prezzi ──
 
-   Costruire e potenziare costano quasi uguale, e le due scale salgono
-   piano. Non è pigrizia: se un gradino in cima costasse il triplo di
-   uno in fondo, «energia totale ÷ costo medio di un acquisto» cambierebbe
-   da tappa a tappa e il bersaglio non si potrebbe più centrare. La
-   convenienza di potenziare non sta nel prezzo — sta in quello che
-   rende: una torre alta vale quanto tre torri basse e occupa un posto
-   solo. È lì che la matematica difficile diventa la scelta furba
-   invece della tassa.
+   Le quattro torri **non valgono lo stesso e non costano lo stesso**.
+   Prima costavano uguale, e misurate col motore vero
+   (`npm run dps`) le bombe di livello alto valevano otto arcieri e il
+   napalm tredici: la regola del gioco era «costruisci bombe», e chi
+   giocava lo aveva capito prima di chi l'aveva scritto.
+
+   Adesso ogni torre ha un **listino** (`CARATTERE.prezzo`): tutto
+   quello che la riguarda — costruirla e farla salire — costa il prezzo
+   base per quel numero. Le torri più avanti nella scuola (la magica
+   con la sottrazione, le bombe con la divisione) sono **più forti e più
+   care già alla prima pietra**; l'arciere è quello debole che costa
+   poco. Un arciere costa 24, una bomba 56: con quello che costa una
+   bomba si fanno due arcieri, o un arciere portato al livello tre — e
+   sono tre scelte che si pesano, non una giusta e due sbagliate.
+
+   ── la regola ──
+   **Quanto rende un ⚡ speso** — la vita che la torre ferma diviso quello
+   che è costata — è lo stesso per tutte, a parità di livello, a meno di
+   un premio per chi arriva dopo nella scuola (`CARATTERE.resa`):
+
+     🏹 arciere    listino 0,6   resa 1      la torre di partenza
+     ❄️ ghiaccio   listino 0,5   resa 1      non ferisce: aiuta chi ferisce
+     🔮 magica     listino 1     resa 1,1    a zona, e la magia
+     💣 bombe      listino 1,4   resa 1,2    la più cara e la più forte
+
+   Il premio c'è perché le torri avanzate arrivano dopo — nella scuola e
+   nella partita — e costano di più: se rendessero esattamente come
+   l'arciere, con meno torri in campo sarebbero solo più scomode. Ma è
+   un dieci-venti per cento e non un per otto: con le immunità (vedi
+   `data/mostri.js`) nessuna torre, da sola, vince una tappa.
+
+   **Quanto rende** lo stima `dpsDi`, e lo **misura** `npm run dps` col
+   motore vero: il danno al secondo di una torre ad area conta tutti
+   quelli che prende — in genere due o tre per colpo, e `BERSAGLI` dice
+   quanti, misurato — quindi il suo colpo singolo è più debole di quello
+   dell'arciere a parità di prezzo, ed è giusto: lo stesso danno spalmato
+   su un gruppo. Il cecchino fa pochi colpi forti e la raffica tanti
+   deboli, ma il danno al secondo è lo stesso.
+
+   ── e la promessa dei calcoli ──
+   Un acquisto resta un calcolo, qualunque cosa compri. Con prezzi
+   diversi, «energia totale ÷ costo medio di un acquisto» dipende da
+   **cosa** si compra, quindi il modello non usa più un prezzo medio: il
+   piano (`pianoDi`) sa **che torre** costruisce il giocatore modello a
+   ogni passo (`sequenzaTorri`) e quanto costa, e le ondate si contano
+   su quello. Chi compra solo bombe fa meno calcoli e più difficili
+   (sono divisioni); chi compra solo arcieri ne fa di più e più facili.
+   È una scelta anche questa, e sta dentro la stessa tappa.
    ═══════════════════════════════════════════════════════════════════ */
 import { TORRI } from './ops.js'
-import { torreResistente } from './mostri.js'
+import { MOSTRI, ABILITA, CAPO, feritoDa, firmaImmunita, guastiDelleImmunita, mostroDiOnda }
+  from './mostri.js'
 import { RACCONTO, LIBERE_RACCONTO } from './campagne-castello.js'
 import { VITE, FIRMA, OLTRE } from './taratura-castello.js'
 
@@ -69,28 +110,38 @@ export const CFG = {
   respiro: 1,
 
   /* ── l'economia ──
-     La scala dei potenziamenti è quasi piatta apposta: un acquisto è un
-     calcolo, e un calcolo deve costare più o meno sempre lo stesso, o
-     «energia totale ÷ costo medio» cambierebbe da tappa a tappa e il
-     bersaglio dei `calcoli` non si potrebbe centrare.
+     Questi sono i prezzi **base**: ogni torre li moltiplica per il suo
+     listino (`CARATTERE`), quindi un arciere nuovo costa 24 e una bomba
+     56. La scala dei potenziamenti è quasi piatta: salire costa più o
+     meno quanto costruire la stessa torre.
 
      A rincarare è invece **allargarsi**: la prima torre 40, la seconda
-     60, la terza 80. È lì che sta la lezione del gioco. Salire di un
-     gradino rende il 60% in più di potenza; se costruire costasse poco
-     più che potenziare, riempire il campo di torri di livello 1 sarebbe
-     la mossa migliore — l'abbiamo misurato, e lo era — e la matematica
-     difficile diventerebbe una tassa invece che la scelta furba. */
+     60, la terza 80 (per il listino). È lì che sta la lezione del gioco.
+     Salire di un gradino rende il 60% in più di potenza; se costruire
+     costasse poco più che potenziare, riempire il campo di torri di
+     livello 1 sarebbe la mossa migliore — l'abbiamo misurato, e lo era —
+     e la matematica difficile diventerebbe una tassa invece che la
+     scelta furba. */
   costruzione: 40, costruzionePiu: 20,
   potenziamento: 36, potenziamentoPiu: 2,
   perNemico: 2,                    // energia per ogni nemico fermato
   fineOnda: 4, ondataPulita: 6,    // premio di fine ondata, doppio se non passa nessuno
-  /* Chi chiama l'ondata subito è pagato per la fretta. Il premio è
-     piccolo di proposito: in tutta la tappa più lunga vale **un
-     acquisto in più**, cioè un calcolo regalato a chi non se la prende
-     comoda. Se valesse di più diventerebbe un obbligo, e il modello
-     delle tappe — tarato su chi si prende il suo tempo — non
-     racconterebbe più la partita di nessuno. */
-  bonusPronti: 4, entroSecondi: 8,
+  /* ── la fretta ──
+     La prossima ondata si può chiamare prima del tempo — anche con la
+     precedente ancora in campo, come in Kingdom Rush — e chi lo fa è
+     pagato per **il tempo che risparmia**: `perSecondo` ⚡ per ogni
+     secondo in meno di attesa e di cammino dei mostri che sono ancora
+     in giro, fino a `tetto` (`premioDellaFretta`).
+
+     Il premio è piccolo di proposito, e **il modello non lo conta**:
+     le ondate e l'energia di partenza sono tarate su chi si prende il
+     suo tempo, e la fretta è un cuscinetto in più per chi rischia —
+     due ondate in campo insieme sono più dure di una alla volta. In
+     tutta la tappa più lunga, chi chiama sempre al primo istante si
+     porta a casa al più **due acquisti** in più: `unita/castello` lo
+     conta. Se valesse di più diventerebbe un obbligo, e il modello
+     delle tappe non racconterebbe più la partita di nessuno. */
+  fretta: { perSecondo: 0.12, tetto: 6 },
   /* Dopo tanto starsene fermi l'ondata parte da sola — il conto scorre solo a
      mani ferme, mai mentre si calcola. All'inizio la corda è lunga: chi sta
      imparando dove si tocca merita di guardarsi intorno. Si accorcia tappa
@@ -188,31 +239,50 @@ export const GEOMETRIA = {
    unità, e una torre ne presidia ancora due raggi scarsi. */
 export const MONDO = { W: 420, H: 760, S: 1.3 }
 
+/* ═══════════ il carattere di ogni torre ═══════════
+
+   `prezzo` è il listino: moltiplica tutto quello che quella torre costa,
+   costruirla e farla salire. `resa` è quanto rende un ⚡ speso lì,
+   rispetto all'arciere, a parità di livello: la regola è in testa al
+   file. Si legge per aspetto, come le immunità — l'operazione che compra
+   una torre può cambiare, il suo mestiere no. */
+export const CARATTERE = {
+  arciere:  { prezzo: 0.6, resa: 1.0 },
+  ghiaccio: { prezzo: 0.5, resa: 1.0 },
+  magica:   { prezzo: 1.0, resa: 1.1 },
+  bombe:    { prezzo: 1.4, resa: 1.2 },
+}
+const carattereDi = k => CARATTERE[TORRI[k]?.aspetto] || { prezzo: 1, resa: 1 }
+/* il listino di una torre; senza torre, il prezzo base */
+export const listinoDi = k => (k ? carattereDi(k).prezzo : 1)
+export const resaDi = k => carattereDi(k).resa
+
 /* ── come cresce una torre quando sale di livello ──
 
-   Non tutte allo stesso modo, ed è il punto. Prima ogni torre
-   moltiplicava il suo danno con la stessa identica formula: potenziare
-   l'arciere e potenziare le bombe si sentivano uguali, e la scelta di
-   quale far salire era solo una questione di prezzo.
-
-   Adesso ognuna cresce nel suo mestiere:
+   Non tutte allo stesso modo, ed è il punto. Ognuna cresce nel suo
+   mestiere:
 
      arciere   spara sempre più spesso — a fine scaletta tira una freccia
                ogni 0,3 secondi invece che ogni 0,62: è una raffica
      magica    allarga l'onda: colpisce gruppi sempre più grossi
-     bombe     il colpo singolo enorme, e dal settimo livello ne lancia
-               due per volta
+     bombe     il colpo più forte, e dal settimo livello ne lancia due per
+               volta — ma **due più piccole** (`perSalva`): prima la salva
+               doppia raddoppiava il danno da un gradino all'altro, ed era
+               metà del motivo per cui le bombe valevano otto arcieri
      ghiaccio  non fa danno: cresce nel gelo, vedi `geloDi`
 
-   Chi cresce nella cadenza fa meno danno per colpo, se no diventerebbe
-   la torre e basta. I numeri qui sotto li usa sia il gioco sia il
-   modello che tara le tappe: non esiste un secondo posto dove sono
-   scritti, quindi non possono divergere. */
+   Quanto crescono non è più a occhio: tutte e tre le torri che feriscono
+   devono salire **con la stessa pendenza** — un livello 7 vale rispetto
+   al suo livello 1 quanto vale l'arciere — se no il listino direbbe una
+   cosa al primo gradino e un'altra al decimo. Lo controlla
+   `unita/rami-castello` con la stima, e `npm run dps` col motore.
+   I numeri qui sotto li usa sia il gioco sia il modello che tara le
+   tappe: non esiste un secondo posto dove sono scritti. */
 export const CRESCITA = {
   arciere:  { danno: 0.45, cadenza: 0.12,  area: 0 },
-  magica:   { danno: 0.9,  cadenza: 0,     area: 0.095 },
+  magica:   { danno: 0.62, cadenza: 0,     area: 0.08 },
   ghiaccio: { danno: 0,    cadenza: 0,     area: 0 },
-  bombe:    { danno: 0.9,  cadenza: 0,     area: 0.045, salveDa: 7, salve: 2 },
+  bombe:    { danno: 0.62, cadenza: 0,     area: 0.04, salveDa: 7, salve: 2, perSalva: 0.55 },
 }
 const crescitaDi = k => CRESCITA[TORRI[k].aspetto] || CRESCITA.arciere
 
@@ -222,41 +292,44 @@ const crescitaDi = k => CRESCITA[TORRI[k].aspetto] || CRESCITA.arciere
    costa un calcolo in più: è quello che il calcolo del gradino compra.
 
    ── la regola che tiene in piedi tutto ──
-   **I due rami valgono lo stesso.** Cambia la forma del danno — tutto
-   in un colpo o spalmato, su uno o su molti, subito o nel tempo — non
-   la quantità. Il perché non è estetico: `pianoDi`, `difesaCon`,
-   `durezzaDi` e la tabella delle vite in `taratura-castello.js` sono
-   tutti costruiti su `dpsDi(tipo, livello)`. Se un ramo fosse più
-   forte, il bambino che sceglie bene troverebbe le tappe facili e
-   quello che sceglie male impossibili, e il taratore non saprebbe più
-   quale delle due partite sta misurando. Con i rami a pari valore il
-   modello può continuare a **ignorarli**, ed è quello che fa.
+   **I due rami valgono lo stesso, e quanto il tronco.** Cambia la forma
+   del danno — tutto in un colpo o spalmato, su uno o su molti, subito o
+   nel tempo — non la quantità. Adesso che le torri non si equivalgono
+   più fra loro verrebbe da chiedersi se anche i rami possano smettere di
+   equivalersi, e la risposta è no, per una ragione che con le torri non
+   vale: **la torre si sceglie guardando il listino, il ramo no**. Il ramo
+   si prende a metà scaletta, allo stesso prezzo di un gradino qualunque,
+   e se uno dei due valesse di più sarebbe un tranello — chi sceglie bene
+   troverebbe le tappe facili e chi sceglie male impossibili, e il
+   taratore (che i rami non li sceglie) non saprebbe quale delle due
+   partite sta misurando. Con i rami a pari valore il modello può
+   continuare a **ignorarli**, ed è quello che fa.
 
-   I numeri qui sotto vanno letti come moltiplicatori del caso base, e
-   il conto da far tornare è quello di `dpsDi`: danno × salve ÷
-   ricarica. Il veleno conta come danno, solo che arriva dopo.
+   Pari valore **misurato**, e non sulla carta: `npm run dps` gioca ogni
+   ramo davanti a un'ondata vera. Prima il veleno era scritto «al
+   secondo» e contato «in tutto», e il napalm — che lo spalma su un'area
+   — valeva il triplo del mortaio.
 
-     cecchino   1,7 ÷ 1,7 = 1     e vede il 30% più lontano
-     raffica    0,55 × 2 ÷ 1,1 = 1  su due bersagli diversi
-     veleno     0,4 subito + 0,6 nel tempo = 1
-     catena     0,7 sul primo, metà sul rimbalzo: perde sul solo,
-                guadagna sul gruppo
-     mortaio    1,5 ÷ 1,5 = 1     e arriva molto più lontano
-     napalm     0,45 + 0,55 che brucia = 1, su un'area più larga
+     cecchino   pochi colpi forti: 1,7 ÷ 1,7, e vede il 30% più lontano
+     raffica    due frecce su due nemici: 0,55 × 2 ÷ 1,1
+     veleno     un colpo più debole, e il male che continua: `veleno` è
+                quanto fa **in tutto**, spalmato su `durata` secondi
+     catena     meno sul primo, e rimbalza sui vicini (metà, poi un quarto)
+     mortaio    arriva molto più lontano, e quando arriva pesa
+     napalm     scoppia più largo e lascia tutti a bruciare
 
-   Il ghiaccio è fuori dal conto perché non fa danno: i suoi due rami si
-   dividono fra largo-e-gentile e stretto-e-cattivo, e la brina in più
-   rende fragile chi ha gelato — l'unico modo in cui una torre che non
-   ferisce può far male. */
+   Il ghiaccio non fa danno: i suoi due rami si dividono fra
+   largo-e-gentile e stretto-e-cattivo, e la brina rende fragile chi ha
+   gelato — l'unico modo in cui una torre che non ferisce può far male. */
 export const RAMI = {
-  cecchino: { danno: 1.7,  ricarica: 1.7, raggio: 1.3 },
+  cecchino: { danno: 1.8,  ricarica: 1.7, raggio: 1.3 },
   raffica:  { danno: 0.55, ricarica: 1.1, salve: 2 },
-  veleno:   { danno: 0.4,  veleno: 0.6,   durata: 3 },
-  catena:   { danno: 0.7,  rimbalzi: 2 },
-  bufera:   { area: 1.55,  freno: 0.78,   raggio: 1.15 },
-  brina:    { area: 0.85,  freno: 1.18,   fragile: 1.25 },
-  mortaio:  { danno: 1.5,  ricarica: 1.5, raggio: 1.35, area: 0.85 },
-  napalm:   { danno: 0.45, veleno: 0.55,  durata: 4, area: 1.25 },
+  veleno:   { danno: 0.5,  veleno: 0.75,  durata: 3 },
+  catena:   { danno: 0.95, rimbalzi: 2 },
+  bufera:   { freno: 1.0,  raggio: 1.5,   durata: 1.4 },
+  brina:    { freno: 1.1,  fragile: 1.08, raggio: 0.9 },
+  mortaio:  { danno: 1.6,  ricarica: 1.5, raggio: 1.3, area: 0.85 },
+  napalm:   { danno: 0.55, veleno: 0.55,  durata: 3, area: 1.1 },
 }
 
 /* Da che gradino si sceglie. Quarto: prima ci sono tre salite per
@@ -266,19 +339,25 @@ export const RAMI_DA = 4
 
 /* Come tira la torre `k` al livello `lv`, per il ramo che ha preso: è
    l'unica funzione che il gioco interroga quando spara, e la stessa che
-   il modello usa per i conti — che infatti la chiama senza ramo. */
+   il modello usa per i conti. */
 export function tiroDi(k, lv, ramo = null) {
   const c = crescitaDi(k), n = Math.max(0, lv - 1), T = TORRI[k]
   const r = RAMI[ramo] || {}
-  const danno = T.danno * (1 + n * c.danno)
+  const salve = r.salve || (c.salveDa && lv >= c.salveDa ? c.salve : 1)
+  /* chi lancia due colpi per crescita li fa più piccoli: la salva intera
+     vale poco più di un colpo solo, e il gradino non raddoppia */
+  const perColpo = salve > 1 && !r.salve ? (c.perSalva || 1) : 1
+  const danno = T.danno * (1 + n * c.danno) * perColpo
+  const durata = r.durata || 0
   return {
     danno: danno * (r.danno ?? 1),
     ricarica: T.ricarica / (1 + n * c.cadenza) * (r.ricarica ?? 1),
     area: T.area * (1 + n * c.area) * (r.area ?? 1),
-    salve: r.salve || (c.salveDa && lv >= c.salveDa ? c.salve : 1),
-    /* quanto male continua a fare dopo il colpo, e per quanto */
-    veleno: r.veleno ? danno * r.veleno : 0,
-    durata: r.durata || 0,
+    salve,
+    /* quanto male continua a fare dopo il colpo, **al secondo**, e per
+       quanto: in tutto fa `veleno` volte il colpo, spalmato sulla durata */
+    veleno: r.veleno && durata ? danno * r.veleno / durata : 0,
+    durata,
     rimbalzi: r.rimbalzi || 0,
   }
 }
@@ -292,15 +371,15 @@ export const raggioDi = ramo => (RAMI[ramo] || {}).raggio || 1
 export const forzaDi = (k, lv) => dpsDi(k, lv) / dpsDi(k, 1)
 
 /* Il gelo, che è il modo in cui il ghiaccio «fa danno» pur non facendone:
-   salendo di livello frena di più *e* dura di più. Prima saliva solo la
-   durata, e potenziare il ghiaccio era l'unico potenziamento che non si
-   vedeva. Il freno si ferma al 70%: un nemico bloccato del tutto non è
-   più un nemico, è un bersaglio fermo, e la partita si spegne. */
+   salendo di livello frena di più *e* dura di più. Il freno si ferma al
+   75%: un nemico bloccato del tutto non è più un nemico, è un bersaglio
+   fermo, e la partita si spegne. La bufera gela più largo e più a
+   lungo ma frena meno; la brina frena di più e rende fragile. */
 export const geloDi = (lv, ramo = null) => {
   const r = RAMI[ramo] || {}
   return {
-    freno: Math.min(0.75, (0.45 + (lv - 1) * 0.028) * (r.freno ?? 1)),
-    durata: 1.2 + (lv - 1) * 0.15,
+    freno: Math.min(0.75, (0.56 + (lv - 1) * 0.02) * (r.freno ?? 1)),
+    durata: (1.6 + (lv - 1) * 0.18) * (r.durata ?? 1),
     /* la brina non ferisce: rende fragile. Chi è gelato da lei prende
        più danno da tutti gli altri, ed è il modo in cui una torre che
        non fa male diventa la più importante del campo. */
@@ -308,69 +387,77 @@ export const geloDi = (lv, ramo = null) => {
   }
 }
 
-/* Quanto vale una torre, in danni al secondo, al livello che ha. Il colpo a
-   zona conta di più di quello che dice il danno secco, perché prende più di
-   un nemico per volta: il raggio d'esplosione lo si paga in questa
-   maggiorazione. */
-export function dpsDi(k, lv = 1) {
-  const t = tiroDi(k, lv)
-  return t.danno * t.salve / t.ricarica * (1 + (t.area || 0) / 90)
+/* ═══════════ quanto vale una torre ═══════════
+
+   Il danno al secondo **efficace**: contando tutti quelli che prende.
+   Prima era «danno × salve ÷ ricarica, e un po' in più per chi ha
+   un'area» — `(1 + area/90)` — e sottostimava le torri ad area della
+   metà. Adesso l'area vale **un bersaglio in più ogni `BERSAGLI.area`
+   unità di raggio**, e il numero non è scelto: è quello che fa dire
+   alla stima quello che `npm run dps` misura come **vita fermata** su
+   un'ondata vera. Viene **circa due bersagli** per la magica e le bombe
+   di livello 1 — la stima che si faceva a occhio, e che adesso è una
+   misura. Su nemici che non muoiono mai l'area ne prende tre o quattro
+   (lo dice la colonna `bersagli` dello strumento), ma i nemici veri
+   muoiono: il gruppo si sfoltisce, e il secondo colpo trova meno gente
+   del primo.
+
+   Il veleno conta per quello che fa davvero: un nemico avvelenato di
+   nuovo prima che il male finisca non ne prende due dosi (vale la più
+   forte), quindi chi colpisce più spesso della durata avvelena di
+   continuo e basta. I rimbalzi della catena contano metà del colpo per
+   il primo e un quarto per il secondo, quando trovano un vicino — in
+   un'ondata quasi sempre.
+
+   Il ghiaccio non fa danno, e la stima non finge di saperlo misurare: il
+   suo valore è **quello che la regola gli assegna** — quanto costa, per
+   quanto deve rendere — e a controllare che il gelo lo valga davvero è
+   `npm run dps`, che lo mette accanto a un arciere e misura la vita in
+   più che ferma. */
+export const BERSAGLI = { area: 45, rimbalzo: 0.5 }
+const bersagliDi = area => 1 + (area || 0) / BERSAGLI.area
+
+export function dpsDi(k, lv = 1, ramo = null) {
+  if (!TORRI[k].danno) {
+    return resaDi(k) * listinoDi(k) / listinoDi('add') * dpsDi('add', lv)
+  }
+  const t = tiroDi(k, lv, ramo)
+  const colpo = t.danno * t.salve / t.ricarica
+  const male = t.veleno * t.salve * Math.min(t.durata, t.ricarica) / t.ricarica
+  /* i rimbalzi saltano da un nemico solo a un altro solo: stanno fuori
+     dall'area, che moltiplica il colpo e il veleno */
+  const rimbalzi = t.rimbalzi ? t.danno * BERSAGLI.rimbalzo / t.ricarica : 0
+  return (colpo + male) * bersagliDi(t.area) + rimbalzi
 }
 
 /* l'arciere di livello 1: l'unità di misura di tutto */
 const DPS = dpsDi('add', 1)
 
-/* Le tappe non danno tutte le stesse torri, e le torri non si equivalgono: il
-   ghiaccio non fa un danno che sia uno — tiene fermi i nemici, e vale come
-   tempo in più per sparare — mentre magica e bombe rendono più dell'arciere.
-   Chi gioca le alterna, quindi la potenza vera di una tappa è quella media,
-   corretta per il gelo. Senza questo conto il modello prometteva una difesa
-   che nelle ultime tappe non c'era.
+/* ── quanto rende un ⚡ speso in una torre, rispetto all'arciere ──
+   È il numero che la regola in testa al file fissa, e che i test
+   contano: a parità di livello deve stare vicino a `resa`. */
+export const resaPerEnergia = (k, lv = 1) =>
+  (dpsDi(k, lv) / listinoDi(k)) / (dpsDi('add', lv) / listinoDi('add'))
 
-   ── quanto vale il gelo, e perché questo numero è approssimativo ──
-
-   Valeva 0,45, ed era tarato su un campo che non esiste più. Quando le
-   piazzole si occupavano dal castello, gelare un nemico gli toglieva gli
-   ultimi metri, cioè niente: il tempo era già finito. Adesso le torri
-   stanno in testa al percorso e gelare un nemico appena entrato gli
-   allunga **tutta** la strada che ha davanti.
-
-   Misurato con il simulatore — si cerca per bisezione il moltiplicatore di
-   vita che il giocatore modello regge ancora, con e senza il ghiaccio fra
-   i tipi disponibili — il coefficiente che servirebbe va da 1,3 a 5,0.
-   Non è una costante, e non fingiamo che lo sia: quello che decide non è
-   quante torri ci sono ma **da che ondata il ghiaccio è in campo**. Dove
-   arriva terzo su tre e tardi (La gola, Il camminamento) non sposta
-   niente; dove arriva in tempo (Il corridoio, Il torrione) vale dal 30 al
-   40% di vita nemica in più sopportata; nella partita libera, dove si
-   comprano quattro torri e il gelo c'è quasi da subito, vale il 70%.
-
-   1,5 è il numero onesto: è quello che fa dire al modello «il ghiaccio
-   vale grosso modo quanto una torre che spara», ed è quello che undici
-   misure su quattordici confermano. Le tre tappe dove il ghiaccio vale di
-   più restano sottostimate, e va bene così — sbagliare per difetto qui
-   vuol dire credere la difesa più debole di com'è, che è il verso giusto
-   in cui sbagliare.
-
-   Il limite vero non è il numero, è la formula: `quotaGelo` conta i tipi
-   che la tappa **offre**, non le torri che il bambino **costruisce**. In
-   nove tappe su dodici il metro ne compra due e il ghiaccio non lo mette
-   mai in campo, eppure il modello gliene sconta un quarto. Per aggiustarlo
-   davvero servirebbe che `resaTipi` sapesse la difesa, e non la sa. */
-export const VALE_IL_GELO = 1.5
+/* La resa media delle torri che una tappa mette a disposizione, per ⚡
+   speso, con l'arciere di livello 1 come unità. Prima era la resa **per
+   torre**, e diceva che il ghiaccio abbassava la tappa: con i prezzi
+   uguali era vero, adesso il ghiaccio costa la metà di una magica e la
+   domanda giusta è quanto rende quello che si spende. Resta la misura
+   con cui `faticaDi` confronta tappe che danno torri diverse. */
 export function resaTipi(tipi, lv = 1) {
-  const medio = tipi.reduce((s, k) => s + dpsDi(k, lv), 0) / tipi.length
-  const quotaGelo = tipi.filter(k => !TORRI[k].danno).length / tipi.length
-  return (medio / DPS) * (1 + quotaGelo * VALE_IL_GELO)
+  const lista = tipi && tipi.length ? tipi : ['add']
+  return lista.reduce((s, k) => s + dpsDi(k, lv) / listinoDi(k), 0) / lista.length /
+         (DPS / listinoDi('add'))
 }
 
-/* La potenza di una difesa: ogni torre in campo vale la media di quelle
-   che la tappa mette a disposizione, al livello che ha. Da quando ogni
-   torre cresce a modo suo il livello non si può più mettere fuori dalla
-   media — un arciere di livello 10 e una bombarda di livello 10 non
-   valgono più la stessa cosa. */
-export const potenzaDi = (tipi, livelli) =>
-  livelli.reduce((s, lv) => s + DPS * resaTipi(tipi && tipi.length ? tipi : ['add'], lv), 0)
+/* La potenza di una difesa: la somma di quello che vale ogni torre in
+   campo, per il suo tipo e il suo livello. `torri` è una lista di
+   `{ tipo, lv }`. Da quando le torri costano diverso non si può più
+   dire «ogni torre vale la media delle quattro»: il giocatore modello
+   ne costruisce una fila precisa (`sequenzaTorri`), e la potenza è
+   quella di *quella* fila. */
+export const potenzaDi = torri => torri.reduce((s, t) => s + dpsDi(t.tipo, t.lv), 0)
 
 export const nemiciDiOnda = o => CFG.nemiciBase + o * CFG.nemiciPiu
 export const vitaDiOnda = (o, durezza) => CFG.vitaBase * durezza * (1 + o * CFG.vitaPiu)
@@ -399,14 +486,53 @@ export function vitaNemico(tappa, onda) {
   /* oltre la tabella c'è solo la partita libera, che non finisce mai e
      quindi non si può tabellare: si continua con la stessa progressione
      con cui saliva, e prima o poi vince lei — è il punto di quella
-     modalità */
-  return Math.round(v[v.length - 1] * Math.pow(tappa.oltre || 1.2, onda - v.length))
+     modalità.
+     Si riparte **dallo stesso mostro**: da quando la taratura spiana
+     mostro per mostro la tabella non sale più in fila — un golem che
+     solo le bombe aprono ha meno vita di un pipistrello — e ripartire
+     dall'ultima ondata (o dalla più alta) faceva un gradino a caso
+     proprio sulla ventunesima. Il mostro si porta fino in fondo alla
+     tabella al passo con cui ci sale **tutta la tabella** — il rapporto
+     fra l'ultimo giro di mostri e quello prima, in media geometrica, e
+     mai più svelto di `oltre` — e da lì sale di `oltre` a ondata come
+     tutti. Col passo del mostro da solo non andava: un orco che la
+     tabella aveva visto a 16 e poi a 290 si portava dietro quel salto,
+     e alla ventitreesima era un muro. */
+  const passo = tappa.oltre || 1.2
+  const n = v.length
+  const chi = o => (tappa.capi && o % tappa.capi === 0 ? 'capo'
+                                                        : mostroDiOnda(tappa.mostri || [], o))
+  let ultima = 0
+  for (let j = 1; j <= n; j++) if (chi(j) === chi(onda)) ultima = j
+  if (!ultima) return Math.round(Math.max(...v) * Math.pow(passo, onda - n))
+  const giro = Math.max(1, (tappa.mostri || []).length)
+  const livello = (da, a) => {
+    const xs = []
+    for (let j = Math.max(1, da); j <= a; j++) if (chi(j) !== 'capo') xs.push(Math.log(v[j - 1]))
+    return xs.length ? Math.exp(xs.reduce((s, x) => s + x, 0) / xs.length) : null
+  }
+  const fine = livello(n - giro + 1, n), prima = livello(n - 2 * giro + 1, n - giro)
+  const ritmo = fine && prima ? Math.min(passo, Math.max(1, Math.pow(fine / prima, 1 / giro))) : passo
+  return Math.round(v[ultima - 1] * Math.pow(ritmo, n - ultima) * Math.pow(passo, onda - n))
 }
 export const velocitaNemico = (tappa, onda) =>
   (CFG.velBase + onda * CFG.velPiu) * (0.85 + 0.15 * tappa.durezza)
 
-export const costoNuovaTorre = quante => CFG.costruzione + CFG.costruzionePiu * quante
-export const costoSalita = lv => CFG.potenziamento + CFG.potenziamentoPiu * (lv - 1)
+/* ── i prezzi ──
+   Il prezzo base per il listino della torre: `quante` sono le torri già
+   in campo (allargarsi rincara), `lv` il livello da cui si sale. Senza
+   torre, il prezzo base — è quello che le frasi dei test e dei documenti
+   chiamano «una torre». Arrotondati, perché a schermo si leggono. */
+export const costoNuovaTorre = (quante, k = null) =>
+  Math.round(listinoDi(k) * (CFG.costruzione + CFG.costruzionePiu * quante))
+export const costoSalita = (lv, k = null) =>
+  Math.round(listinoDi(k) * (CFG.potenziamento + CFG.potenziamentoPiu * (lv - 1)))
+
+/* ── il premio della fretta ──
+   I secondi risparmiati chiamando l'ondata prima del tempo, in ⚡: vedi
+   `CFG.fretta`. Intero, perché a schermo si legge sul tasto. */
+export const premioDellaFretta = secondi =>
+  Math.max(0, Math.min(CFG.fretta.tetto, Math.floor(secondi * CFG.fretta.perSecondo)))
 
 /* ═══════════ dal bersaglio alla tappa ═══════════
 
@@ -418,10 +544,10 @@ export const costoSalita = lv => CFG.potenziamento + CFG.potenziamentoPiu * (lv 
    prima una torre per ingresso, poi sempre il gradino più
    conveniente fra salire la torre più bassa e costruirne una nuova. È
    la stessa strategia di `difesaCon` e del giocatore finto del
-   simulatore — deve essere la stessa, o il bersaglio si centrerebbe su
-   un bambino che non esiste. Qui le postazioni non fanno da tetto: il
-   piano dice di quante c'è bisogno, e `postiDi` gliene dà almeno
-   tante. */
+   simulatore — **è la stessa funzione** (`prossimoAcquisto`), o il
+   bersaglio si centrerebbe su un bambino che non esiste. Qui le
+   postazioni non fanno da tetto: il piano dice di quante c'è bisogno, e
+   `postiDi` gliene dà almeno tante. */
 /* Quante torri si comprano prima di cominciare a salire: **due, o una
    per ingresso se gli ingressi sono di più**. Due è la regola di sempre
    — con una torre sola la prima ondata è una lotteria — e una per
@@ -431,19 +557,209 @@ export const costoSalita = lv => CFG.potenziamento + CFG.potenziamentoPiu * (lv 
    regalare cuori. */
 export const primeQuante = tappa => Math.max(2, ingressiDi(tappa))
 
-export function pianoDi(tappa) {
-  const { calcoli, cap } = tappa
-  const prime = primeQuante(tappa)
-  const torri = [], passi = []
-  for (let k = 0; k < calcoli; k++) {
-    const nuova = costoNuovaTorre(torri.length)
-    const piuBassa = torri.length ? Math.min(...torri) : null
-    const salita = piuBassa != null && piuBassa < cap ? costoSalita(piuBassa) : Infinity
-    if (torri.length < prime) { passi.push(nuova); torri.push(1); continue }
-    if (salita <= nuova) { passi.push(salita); torri[torri.indexOf(piuBassa)]++ }
-    else { passi.push(nuova); torri.push(1) }
+/* ── che torre costruisce il giocatore modello ──
+   Una fila di tipi, la stessa per il piano, per la difesa di
+   `difesaCon` e per il simulatore. Due regole, in quest'ordine:
+
+     1. **le prime torri coprono le prime ondate.** Sono una per
+        ingresso, e devono sparare — il ghiaccio su una strada dove non
+        spara nessuno non ferma niente. Fra le coppie (o le terne) di
+        torri che sparano si prende quella che ferisce **più ondate di
+        fila dall'inizio**, poi quella che ferisce più mostri della fila,
+        e a pari merito quella che costa meno; in testa va quella che
+        ferisce la prima ondata. L'ordine conta: con due torri in campo
+        e i soldi per una terza ancora lontani, un golem alla seconda
+        ondata che nessuna delle due apre è un'ondata intera che passa.
+        Il preavviso lo dice prima, e chi vede arrivare un golem non
+        apre con due arcieri;
+     2. **poi si copre il resto, strada per strada.** Si scorrono le
+        ondate in ordine, e per ognuna si guarda la strada da cui
+        scende: se lì nessuna torre ferisce quel mostro, si aggiunge la
+        prima torre della tappa che lo ferisce, **su quella strada**. È
+        una torre **urgente** (`urgenti`): si compra prima di salire di
+        livello, perché senza di lei un'ondata passa intera. Il
+        preavviso le dice tre ondate prima, e chi lo legge fa lo stesso;
+     3. **poi a giro**, la torre che ce n'è di meno, così il campo
+        finisce per avere un po' di tutto — ghiaccio compreso.
+
+   Non è il giocatore migliore possibile, ed è apposta: è un bambino
+   diligente che legge chi arriva, non uno che ottimizza. La tappa è
+   tarata su di lui. */
+/* ── da che bocca arriva l'ondata `o` ──
+   Con una strada sola non c'è niente da decidere. Con due, si
+   alternano: la prima da una parte, la seconda dall'altra, e ogni terza
+   **da tutte e due insieme** (`-1`, che il campo legge come «alternali
+   uno per uno») — ma non prima di `daQuandoInsieme`. Sta qui e non nel
+   motore perché la deve sapere anche il giocatore modello, per scegliere
+   le torri da mettere davanti a ogni bocca; il motore la chiede a lui
+   (`Ondate.viaDi`). */
+export function boccaDellOnda(o, vie, daQuandoInsieme = Infinity) {
+  if (vie < 2) return 0
+  if (o % 3 === 0 && o >= daQuandoInsieme) return -1
+  return Math.floor((o - 1 - Math.floor((o - 1) / 3)) % vie)
+}
+
+/* tutte le file di `n` torri prese da `lista` (anche ripetute) */
+function file(lista, n) {
+  if (n <= 0) return [[]]
+  return lista.flatMap(x => file(lista, n - 1).map(resto => [x, ...resto]))
+}
+
+/* ── l'apertura ──
+   Le prime torri vanno una per bocca: la piazzola numero `j` sta sulla
+   strada `j % bocche`, perché le piazzole si occupano a giro fra le
+   strade (`Percorso.piazzole`). Quindi non basta che la coppia ferisca
+   chi arriva: deve ferirlo **la torre che sta dalla sua parte**. Nel
+   Canneto il rovo della seconda ondata scende dall'altra bocca, e se da
+   quella parte c'è la bomba che lui ignora passa intero.
+   Si guardano le prime cinque ondate — prima della quinta non arrivano
+   mai da tutte le bocche insieme — e si prende la fila di torri che ne
+   copre di più **dall'inizio**, poi quella che ferisce più mostri della
+   fila, poi quella che costa meno. */
+function apertura(tappa, sparano, fila) {
+  const quante = primeQuante(tappa)
+  const vie = ingressiDi(tappa)
+  const tocca = (tipi, m) => tipi.some(k => feritoDa(m, k))
+  const copre = tipi => {
+    let n = 0
+    for (let o = 1; o <= Math.min(5, fila.length * 2); o++) {
+      const m = fila[(o - 1) % fila.length]
+      const via = boccaDellOnda(o, vie)
+      if (!tocca(tipi.filter((_, j) => vie < 2 || j % vie === via), m)) break
+      n++
+    }
+    return n
   }
-  return { torri, passi, costo: passi.reduce((s, x) => s + x, 0) }
+  const ferisce = tipi => fila.filter(m => tocca(tipi, m)).length
+  const diverse = tipi => new Set(tipi).size
+  const costo = tipi => tipi.reduce((s, k, i) => s + costoNuovaTorre(i, k), 0)
+  /* e la prima torre deve ferire la prima ondata da sola: chi sbaglia un
+     conto sulla prima torre (una penale, e la seconda non ci sta più
+     nei soldi di partenza) deve avere comunque in campo qualcosa che
+     tocca chi arriva */
+  const primaTocca = tipi => (fila.length && feritoDa(fila[0], tipi[0]) ? 1 : 0)
+  return file(sparano, quante)
+    .sort((a, b) => copre(b) - copre(a) || primaTocca(b) - primaTocca(a) ||
+                    ferisce(b) - ferisce(a) || diverse(b) - diverse(a) ||
+                    costo(a) - costo(b))[0] || []
+}
+
+/* Torna la fila dei tipi; accanto, `strade` (su che strada va ogni
+   torre: il simulatore la posa lì) e `urgenti` (quali si comprano prima
+   di salire). Il piano i posti non li guarda — conta i prezzi — ma il
+   simulatore sì, ed è per questo che la strada sta nella fila. */
+export function sequenzaTorri(tappa, quante = 32) {
+  const tipi = tappa.torri && tappa.torri.length ? tappa.torri : ['add']
+  const sparano = tipi.filter(k => TORRI[k].danno)
+  const fila = tappa.mostri || []
+  const vie = ingressiDi(tappa)
+  const scelte = [], strade = []
+  const urgenti = new Set()
+  if (sparano.length) {
+    apertura(tappa, sparano, fila).forEach((k, j) => {
+      scelte.push(k); strade.push(vie < 2 ? 0 : j % vie); urgenti.add(j)
+    })
+  }
+  /* le ondate in fila, due giri della fila dei mostri: tanto basta perché
+     ogni mostro sia sceso da ogni strada almeno una volta */
+  if (sparano.length)
+    for (let o = 1; o <= fila.length * vie * 2 && scelte.length < quante; o++) {
+      const m = fila[(o - 1) % fila.length]
+      const bocca = boccaDellOnda(o, vie, 5)
+      for (let v = 0; v < vie; v++) {
+        if (bocca >= 0 && v !== bocca) continue
+        if (scelte.some((k, j) => strade[j] === v && feritoDa(m, k))) continue
+        const k = sparano.find(x => feritoDa(m, x))
+        if (!k || scelte.length >= quante) continue
+        urgenti.add(scelte.length); scelte.push(k); strade.push(v)
+      }
+    }
+  const quanteDi = k => scelte.filter(x => x === k).length
+  while (scelte.length < quante) {
+    const k = [...tipi].sort((a, b) => quanteDi(a) - quanteDi(b) ||
+                                       tipi.indexOf(a) - tipi.indexOf(b))[0]
+    /* sulla strada che ne ha di meno */
+    const perStrada = v => strade.filter(x => x === v).length
+    const v = Array.from({ length: vie }, (_, i) => i).sort((a, b) => perStrada(a) - perStrada(b))[0]
+    scelte.push(k); strade.push(v)
+  }
+  scelte.strade = strade
+  scelte.urgenti = urgenti
+  return scelte
+}
+
+/* ── quante ondate copre l'apertura ──
+   Le prime ondate di fila che le torri di apertura del giocatore
+   modello feriscono, ognuna dalla sua strada. Il validatore e
+   `unita/castello` pretendono che siano almeno `APERTURA_COPRE`: la
+   terza torre costa tanto (allargarsi rincara, e le torri che
+   servono ai corazzati sono le più care) e prima della quarta ondata
+   non ci sono i soldi per comprarla — un mostro che le prime due non
+   toccano, lì, è un'ondata intera che passa, e la taratura non può
+   farci niente: nessuna vita è abbastanza bassa per chi non si può
+   ferire. */
+export const APERTURA_COPRE = 4
+export function coperturaApertura(tappa) {
+  const fila = tappa.mostri || []
+  if (!fila.length) return 0
+  const vie = ingressiDi(tappa)
+  const prime = sequenzaTorri(tappa, primeQuante(tappa))
+  let n = 0
+  for (let o = 1; o <= fila.length * 2; o++) {
+    const m = fila[(o - 1) % fila.length]
+    const via = boccaDellOnda(o, vie)
+    if (!prime.some((k, j) => (vie < 2 || j % vie === via) && feritoDa(m, k))) break
+    n++
+  }
+  return n
+}
+
+/* ── la mossa dopo ──
+   `torri` è quello che c'è in campo, `[{ tipo, lv }]`. Torna la mossa
+   che il giocatore modello farebbe adesso — `{ che: 'nuova', tipo,
+   costo }` o `{ che: 'salita', indice, costo }` — o `null` se non c'è
+   più niente da comprare.
+
+   Prima le torri di apertura e quelle che coprono un mostro scoperto;
+   poi il più conveniente fra salire la torre più bassa e costruire la
+   prossima della fila. `largo` è chi non potenzia mai (il termine di
+   paragone di `difesaLarga` e del profilo `largo` del simulatore). */
+export function prossimoAcquisto(torri, tappa, { posti = Infinity, largo = false,
+                                                  sequenza = null } = {}) {
+  const fila = sequenza || sequenzaTorri(tappa)
+  const tipo = fila[Math.min(torri.length, fila.length - 1)]
+  const strada = fila.strade ? fila.strade[Math.min(torri.length, fila.length - 1)] : 0
+  const nuova = torri.length < posti
+    ? { che: 'nuova', tipo, strada, costo: costoNuovaTorre(torri.length, tipo) } : null
+  let indice = -1
+  for (let i = 0; i < torri.length; i++)
+    if (torri[i].lv < tappa.cap && (indice < 0 || torri[i].lv < torri[indice].lv)) indice = i
+  const salita = indice >= 0
+    ? { che: 'salita', indice, costo: costoSalita(torri[indice].lv, torri[indice].tipo) } : null
+  if (nuova && (torri.length < primeQuante(tappa) || fila.urgenti?.has(torri.length))) return nuova
+  if (largo) return nuova
+  if (!salita || !nuova) return salita || nuova
+  return salita.costo <= nuova.costo ? salita : nuova
+}
+
+/* comprare davvero: la stessa mossa applicata a una lista di torri */
+function compra(torri, m) {
+  if (m.che === 'nuova') torri.push({ tipo: m.tipo, lv: 1 })
+  else torri[m.indice] = { ...torri[m.indice], lv: torri[m.indice].lv + 1 }
+}
+
+export function pianoDi(tappa) {
+  const sequenza = sequenzaTorri(tappa)
+  const torri = [], passi = []
+  for (let k = 0; k < tappa.calcoli; k++) {
+    const m = prossimoAcquisto(torri, tappa, { sequenza })
+    if (!m) break
+    passi.push(m.costo); compra(torri, m)
+  }
+  /* `torri` resta la lista dei livelli, come l'ha sempre letta chi la
+     usa; i tipi stanno accanto */
+  return { torri: torri.map(t => t.lv), tipi: torri.map(t => t.tipo), passi,
+           costo: passi.reduce((s, x) => s + x, 0) }
 }
 
 /* quanto lascia in mano un'ondata a chi la chiude senza far passare
@@ -457,9 +773,8 @@ export const entrataOnda = o => nemiciDiOnda(o) * CFG.perNemico + CFG.fineOnda +
    a `partenzaDi` e la sola parte del piano che le ondate non possono
    pagare, perché viene prima della prima */
 const primeTorri = tappa => {
-  let costo = 0
-  for (let i = 0; i < primeQuante(tappa); i++) costo += costoNuovaTorre(i)
-  return costo
+  const fila = sequenzaTorri(tappa, primeQuante(tappa))
+  return fila.reduce((s, k, i) => s + costoNuovaTorre(i, k), 0)
 }
 
 /* ── quante ondate ──
@@ -483,10 +798,12 @@ export function ondateDi(tappa) {
    Quello che le ondate non arrivano a pagare, e mai meno di due torri:
    perdere la prima ondata è l'unico modo di perdere che non dipende da
    come si gioca. Chi non ha un bersaglio di calcoli — la partita
-   libera — riceve due torri e mezza scaletta, come si è sempre fatto. */
+   libera — riceve due torri e mezza scaletta **a prezzo base**, come si
+   è sempre fatto: la generosità di partenza non deve dipendere da quale
+   torre costa quanto. */
 export function partenzaDi(tappa) {
   if (!tappa.calcoli) {
-    let e = primeTorri(tappa)
+    let e = costoNuovaTorre(0) + costoNuovaTorre(1)
     for (let lv = 1; lv < Math.max(2, Math.ceil(tappa.cap / 2)); lv++) e += costoSalita(lv)
     return Math.round(e)
   }
@@ -500,9 +817,9 @@ export function partenzaDi(tappa) {
 
    Il minimo è quello che serve: le piazzole che il piano occupa più una
    di respiro, e mai meno delle torri che la tappa mette a disposizione.
-   La seconda condizione non è estetica — quasi ogni ondata arriva con una
-   resistenza dichiarata in anticipo, e poter tenere in campo una torre
-   che quell'ondata non chiude è la scelta che il gioco chiede. Se le
+   La seconda condizione non è estetica — ogni mostro è immune a qualcosa,
+   e il preavviso lo dice prima: poter tenere in campo una torre che
+   quell'ondata non ignora è la scelta che il gioco chiede. Se le
    piazzole fossero meno dei tipi, quella scelta sarebbe finta.
 
    Sopra al minimo c'è una **quota per campagna**, e cresce: quattro nel
@@ -559,11 +876,13 @@ export function postiDi(tappa) {
 /* comprare tutto: occupare ogni posto e portare ogni torre in cima. Serve
    a controllare che la tappa abbia sempre più da vendere di quanto il
    bambino possa comprare. */
-export function costoDifesaPiena({ posti, cap }) {
+export function costoDifesaPiena(tappa) {
+  const { posti, cap } = tappa
+  const fila = sequenzaTorri(tappa, posti)
   let costo = 0
   for (let i = 0; i < posti; i++) {
-    costo += costoNuovaTorre(i)
-    for (let lv = 1; lv < cap; lv++) costo += costoSalita(lv)
+    costo += costoNuovaTorre(i, fila[i])
+    for (let lv = 1; lv < cap; lv++) costo += costoSalita(lv, fila[i])
   }
   return costo
 }
@@ -577,37 +896,30 @@ export function energiaAll(o, partenza) {
   return e
 }
 
-/* il tetto: quella di chi gioca bene *e* corre, prendendosi anche il
-   bonus della fretta a ogni chiamata. Non è la misura su cui si tara —
-   è il margine che resta a chi gioca meglio del modello. */
+/* il tetto: quella di chi gioca bene *e* corre, prendendosi il premio
+   più grosso della fretta a ogni chiamata. Non è la misura su cui si
+   tara — è il margine che resta a chi gioca meglio del modello. */
 export function energiaMassima({ ondate, partenza }) {
-  return energiaAll(ondate + 1, partenza) + CFG.bonusPronti * ondate
+  return energiaAll(ondate + 1, partenza) + CFG.fretta.tetto * ondate
 }
 
 /* ── cosa ci si compra con l'energia che si ha in mano ──
-   È il giocatore modello: prima una torre per ingresso — due dove la
-   strada è una sola, tre dove sono tre — per non restare scoperto, poi
-   sempre il gradino più conveniente fra salire la torre più bassa e
-   costruirne una nuova. È la stessa strategia che il test gioca davvero,
-   ed è il piano di `pianoDi` con un tetto di postazioni e un portafoglio. */
-export function difesaCon(energia, tappa) {
-  const { cap, posti, torri: tipi } = tappa
-  const prime = primeQuante(tappa)
+   È il giocatore modello: la mossa di `prossimoAcquisto`, una dopo
+   l'altra, finché ce n'è per pagarla. Quando la prossima costa più di
+   quello che resta si ferma — come il giocatore del simulatore, che
+   aspetta di avere i soldi invece di ripiegare su un'altra cosa. È il
+   piano di `pianoDi` con un tetto di postazioni e un portafoglio. */
+export function difesaCon(energia, tappa, { largo = false } = {}) {
+  const sequenza = sequenzaTorri(tappa, Math.max(32, tappa.posti || 0))
   const torri = []
-  let resta = energia
-  for (let giro = 0; giro < 200; giro++) {
-    const nuova = costoNuovaTorre(torri.length)
-    const piuBassa = torri.length ? Math.min(...torri) : null
-    const salita = piuBassa != null && piuBassa < cap ? costoSalita(piuBassa) : Infinity
-    const possoNuova = torri.length < posti && resta >= nuova
-    if (torri.length < prime && possoNuova) { resta -= nuova; torri.push(1); continue }
-    if (salita <= resta && (salita <= nuova || !possoNuova)) {
-      resta -= salita; torri[torri.indexOf(piuBassa)]++; continue
-    }
-    if (possoNuova) { resta -= nuova; torri.push(1); continue }
-    break
+  let resta = energia, prossima = null
+  for (let giro = 0; giro < 400; giro++) {
+    const m = prossimoAcquisto(torri, tappa, { posti: tappa.posti, largo, sequenza })
+    if (!m || m.costo > resta) { prossima = m; break }
+    resta -= m.costo; compra(torri, m)
   }
-  return { torri, potenza: potenzaDi(tipi, torri), resta }
+  return { torri: torri.map(t => t.lv), tipi: torri.map(t => t.tipo),
+           potenza: potenzaDi(torri), resta, prossima: prossima ? prossima.costo : Infinity }
 }
 
 /* ═══════════ la vecchia curva, e a cosa serve ancora ═══════════
@@ -692,14 +1004,7 @@ export const premioTappa = i => Math.max(1, Math.round(operazioniDi(TAPPE[i]) / 
 /* La difesa di chi non potenzia mai: solo torri di livello 1, finché ci
    stanno e finché l'energia regge. È il termine di paragone — se questa
    rende quanto l'altra, la matematica difficile non serve a niente. */
-export function difesaLarga(energia, { posti, torri: tipi }) {
-  const torri = []
-  let resta = energia
-  while (torri.length < posti && resta >= costoNuovaTorre(torri.length)) {
-    resta -= costoNuovaTorre(torri.length); torri.push(1)
-  }
-  return { torri, potenza: potenzaDi(tipi, torri), resta }
-}
+export const difesaLarga = (energia, tappa) => difesaCon(energia, tappa, { largo: true })
 
 /* i secondi di calma prima che l'ondata parta da sola: tanti nella prima
    tappa, sempre meno via via che il gioco chiede di stare sul pezzo */
@@ -730,8 +1035,13 @@ export const TAPPE = RACCONTO.map((t, i) => {
    taratura invece di andare avanti con numeri di ieri. */
 export function firmaEquilibrio() {
   const roba = JSON.stringify([
-    CFG, CRESCITA, GEOMETRIA, MONDO, VALE_IL_GELO, RAMI, RAMI_DA, PIAZZOLE_PER_INGRESSO,
+    CFG, CRESCITA, GEOMETRIA, MONDO, CARATTERE, RAMI, RAMI_DA, PIAZZOLE_PER_INGRESSO,
     Object.entries(TORRI).map(([k, T]) => [k, T.danno, T.ricarica, T.area, T.raggio, !!T.gela]),
+    // chi arriva e cosa fa: le immunità decidono quale torre lavora, le
+    // abilità quanta vita porta davvero un'ondata, il capo come ne
+    // finisce una
+    Object.entries(MOSTRI).map(([id, m]) => [id, m.immune, m.abilita || null, !!m.vola]),
+    ABILITA, CAPO,
     // Il tracciato entra per intero, che la tappa dichiari `forma` o
     // `forme`: le spezzate decidono quanta strada ogni torre tiene sotto
     // tiro, e con `t.forma` da solo le sette tappe a più bocche
@@ -739,14 +1049,14 @@ export function firmaEquilibrio() {
     // palude senza che la taratura risultasse stantia. `fronti` sta qui
     // esplicito e non solo di rimbalzo via `durezza`.
     RACCONTO.map(t => [chiaveTappa(t), t.calcoli, t.cap, t.torri, t.mostri,
-                       !!t.resistenze, !!t.rami, t.forme || [t.forma], t.fronti ?? null]),
+                       !!t.abilita, !!t.capo, !!t.rami, t.forme || [t.forma], t.fronti ?? null]),
     // `durezza` c'è dentro perché muove la **velocità** dei nemici: una
     // tappa tarata su mostri più lenti non è la stessa tappa
     TAPPE.map(t => [t.ondate, t.posti, t.partenza, t.attesa, t.durezza]),
     // e le quattro libere, ognuna col suo tracciato: sono tarate come le
     // tappe, e ridisegnarne una senza ritarare sarebbe lo stesso buco
     LIBERE.map(l => [l.chiave, l.campagna, l.cap, l.posti, l.torri, l.mostri, l.rami,
-                     l.forme, l.fronti ?? null, l.partenza, l.attesa]),
+                     l.forme, l.fronti ?? null, l.partenza, l.attesa, l.capi, !!l.abilita]),
   ])
   let h = 5381
   for (let i = 0; i < roba.length; i++) h = ((h * 33) ^ roba.charCodeAt(i)) >>> 0
@@ -837,10 +1147,9 @@ export const doniZero = () => ({
    li applica. I gradi si sommano senza tetto — riprendere lo stesso
    regalo venti volte è previsto, e misurato. */
 export const REGALI = [
-  /* L'arciere è l'unico che colpisce un nemico solo, e nelle ondate
-     alte della partita libera è **quasi sempre lui quello a cui si
-     resiste** (Goblin, Pipistrello, Ragno, Orco: guarda
-     `data/mostri.js`). Perciò il suo gradino è il più grosso del
+  /* L'arciere è l'unico che colpisce un nemico solo, ed è la torre a
+     cui sono immuni più mostri (goblin, ragno, orco, golem, lupo…:
+     guarda `data/mostri.js`). Perciò il suo gradino è il più grosso del
      catalogo, e non è generosità: misurato al muro, +10% di arciere
      vale un settimo di +10% di bombe. */
   { id: 'frecce', emoji: '🏹', nome: 'Frecce affilate', torre: 'add',
@@ -869,11 +1178,9 @@ export const REGALI = [
     dai: (d, g) => { d.raggio += 0.09 * g } },
   /* Vale solo per chi ha scelto il ramo che avvelena o che brucia, e va
      detto sulla carta: un regalo che non fa niente è peggio di un
-     regalo che non c'è. Il veleno però è l'unico danno che **passa
-     attraverso le resistenze** (`Nemico.avvelena` non le guarda: il
-     male è già dentro), quindi per chi ha quel ramo è il regalo più
-     forte del catalogo — e sta bene così, perché è la ricompensa di
-     una scelta fatta col campo davanti. */
+     regalo che non c'è. Chi è immune alla torre è immune anche al suo
+     veleno (`Nemico.avvelena`): il male arriva col colpo, e un colpo
+     che rimbalza non lascia niente dentro. */
   { id: 'veleno', emoji: '☠️', nome: 'Veleno tenace', ramo: true,
     che: 'veleno e fuoco fanno più male — solo le torri che ce l\'hanno',
     per: '+30% di veleno',
@@ -982,18 +1289,20 @@ export function geloConDoni(lv, ramo, doni) {
    Sono **tutti quelli della campagna**, in fila come `mostroDiOnda` li
    pesca. Non `mostroLibero`, che pescava dal bestiario intero — un
    lupo di palude nel bosco di notte è un'altra storia. La fila si
-   dispone **a giro di resistenza**, come fanno a mano le tappe: due
-   ondate di fila non devono chiudere la stessa torre, se no chi ha
+   dispone **a giro di immunità**, come fanno a mano le tappe: due
+   ondate di fila non devono lasciar fuori le stesse torri, se no chi ha
    costruito bene per questa non deve pensare per la prossima. Si
-   pesca ogni volta dal mucchio più grosso fra quelli che non chiudono
-   la torre di prima, e il validatore (`strumenti/valida-percorsi.mjs`)
-   ricontrolla la fila che ne esce. */
+   pesca ogni volta dal mucchio più grosso fra quelli con un'immunità
+   diversa da quello di prima, e il validatore
+   (`strumenti/valida-percorsi.mjs`) ricontrolla la fila che ne esce.
+   E la fila comincia da uno che l'arciere ferisce: è la torre che si
+   compra per prima, e la prima ondata non deve essere un muro. */
 const ultimaDi = campagna => RACCONTO.filter(t => t.campagna === campagna).at(-1)
 function mostriDi(campagna) {
   const tutti = [...new Set(RACCONTO.filter(t => t.campagna === campagna).flatMap(t => t.mostri))]
   const mucchi = new Map()
   for (const m of tutti) {
-    const k = torreResistente(m) || '?'
+    const k = firmaImmunita(m)
     if (!mucchi.has(k)) mucchi.set(k, [])
     mucchi.get(k).push(m)
   }
@@ -1006,16 +1315,19 @@ function mostriDi(campagna) {
     fila.push(v.shift())
     prima = k
   }
-  /* la fila gira in tondo: se l'ultimo chiude la stessa torre del
-     primo, lo si infila dove sta bene — fra due che non la chiudono */
-  const res = m => torreResistente(m) || '?'
+  /* la fila gira in tondo: se l'ultimo ha le stesse immunità del primo,
+     lo si infila dove sta bene — fra due che non le hanno */
+  const res = firmaImmunita
   const ultimo = fila[fila.length - 1]
   if (fila.length > 2 && res(ultimo) === res(fila[0])) {
     const dove = fila.findIndex((m, i) => i > 0 && i < fila.length - 1 &&
                                           res(fila[i - 1]) !== res(ultimo) && res(m) !== res(ultimo))
     if (dove > 0) { fila.pop(); fila.splice(dove, 0, ultimo) }
   }
-  return fila
+  /* e si fa girare finché in testa non c'è uno che l'arciere ferisce:
+     girarla non tocca chi sta accanto a chi, quindi il giro resta buono */
+  const primo = fila.findIndex(m => feritoDa(m, 'add'))
+  return primo > 0 ? [...fila.slice(primo), ...fila.slice(0, primo)] : fila
 }
 
 /* Quante ondate di una libera sono tarate: le prime venti, come una
@@ -1027,12 +1339,45 @@ function mostriDi(campagna) {
    sesta e cedeva lì (misurato: persa all'ondata 6 senza un regalo). */
 export const ONDATE_TARATE = 20
 
+/* ── una fila che regga l'apertura ──
+   Il giro delle immunità lo fa `mostriDi`, ma con due bocche non basta:
+   le prime quattro ondate le devono ferire le due torri di apertura,
+   ognuna dalla sua parte (`coperturaApertura`). Si prova a far girare la
+   fila, e se non basta a scambiare la terza e la quarta con una più
+   avanti, finché le regole di `guastiDelleImmunita` e la copertura
+   tornano tutte e due. Se niente torna si tiene la fila com'era, e il
+   validatore lo dice col nome. */
+function filaCheRegge(tappa) {
+  const va = fila => {
+    const t = { ...tappa, mostri: fila }
+    return !guastiDelleImmunita(t).length && coperturaApertura(t) >= APERTURA_COPRE
+  }
+  const base = tappa.mostri
+  const n = base.length
+  for (let r = 0; r < n; r++) {
+    const giro = [...base.slice(r), ...base.slice(0, r)]
+    if (va(giro)) return giro
+    for (const i of [2, 3, 1])
+      for (let j = i + 1; j < n; j++) {
+        const f = giro.slice();
+        [f[i], f[j]] = [f[j], f[i]]
+        if (va(f)) return f
+      }
+  }
+  return base
+}
+
 export const LIBERE = LIBERE_RACCONTO.map(r => {
   const ultima = ultimaDi(r.campagna)
-  return {
+  const libera = {
     ...r, ondate: Infinity, posti: 14, cap: 10,
     torri: ultima.torri, ambiente: ultima.ambiente,
-    resistenze: true, rami: !!ultima.rami,
+    rami: !!ultima.rami,
+    /* le abilità ci sono sempre, anche nel Bosco: la partita infinita è
+       il posto dove il gioco vive di varietà, e chi ci arriva ha finito
+       la campagna. E il capo, ogni `CAPO.ogni` ondate, a ritmo fisso:
+       il preavviso lo annuncia come tutto il resto */
+    abilita: true, capi: CAPO.ogni,
     /* e i regali: solo qui. Nelle tappe della campagna il campo non
        esiste, quindi il motore non li applica mai — vedi il blocco dei
        regali qui sopra */
@@ -1043,6 +1388,7 @@ export const LIBERE = LIBERE_RACCONTO.map(r => {
        continua a salire di questo passo e prima o poi vince lei */
     vite: VITE[r.chiave], oltre: (OLTRE && OLTRE[r.chiave]) || 1.2,
   }
+  return { ...libera, mostri: filaCheRegge(libera) }
 })
 
 export const liberaDi = chiave => LIBERE.find(l => l.chiave === chiave) || null
