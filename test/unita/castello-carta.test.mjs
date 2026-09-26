@@ -17,7 +17,7 @@
    (`node strumenti/sprite/carte-castello.mjs`). */
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { TAPPE, LIBERE } from '../../src/data/castello.js'
-import { cartaDi, percorsoDi, DA_RIDISEGNARE, COLONNE, RIGHE } from '../../src/giochi/castello/motore/carta.js'
+import { cartaDi, percorsoDi, DA_RIDISEGNARE, A_MANO, COLONNE, RIGHE } from '../../src/giochi/castello/motore/carta.js'
 import { Percorso } from '../../src/motore/castello/percorso.js'
 import { MONDO } from '../../src/data/castello.js'
 
@@ -76,5 +76,22 @@ for (const t of tutte) {
   else
     uguale(`${dove}: rispetta la scacchiera`, c.guasti.length, 0, c.guasti.join(' · '))
 }
+
+/* le carte scritte a mano: nessuna tappa resta da ridisegnare, e quelle
+   a mano sono davvero la loro tappa — la radura grande è una bocca sola
+   che si sdoppia in due bracci e si richiude nello stesso tronco */
+nota('le carte a mano')
+uguale('nessuna tappa resta da ridisegnare', DA_RIDISEGNARE.join(', '), '')
+for (const chiave of Object.keys(A_MANO))
+  controlla(`${chiave}: è una tappa vera`, tutte.some(t => chiaveDi(t) === chiave))
+const radura = cartaDi(tutte.find(t => chiaveDi(t) === 'libera-bosco'))
+uguale('la radura: due vie', radura.vie.length, 2)
+uguale('la radura: una bocca sola', new Set(radura.vie.map(v => v[0].join())).size, 1)
+controlla('la radura: i bracci si separano subito e si richiudono prima della porta', (() => {
+  const [a, b] = radura.vie
+  const comuni = a.filter(c => b.some(d => d[0] === c[0] && d[1] === c[1]))
+  return a[3].join() !== b[3].join() && comuni.length >= 6 &&
+    a.slice(-6).every(c => comuni.includes(c))
+})())
 
 riassunto('le carte del castello a scacchiera')

@@ -34,11 +34,60 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 /* Le tappe che la conversione automatica non sa mettere sulla
-   scacchiera, per chiave o per nome: vanno ridisegnate a mano, a celle,
-   quando il gioco si rifà. `unita/castello-carta` pretende che tutte le
-   altre passino, e che queste servano ancora — una che si aggiusta da
-   sé deve uscire dall'elenco. */
-export const DA_RIDISEGNARE = ['libera-bosco']
+   scacchiera, per chiave o per nome, e che non hanno ancora la loro
+   carta a mano (`A_MANO`, qui sotto). `unita/castello-carta` pretende
+   che tutte le altre passino, e che queste servano ancora — una che si
+   aggiusta da sé deve uscire dall'elenco. Oggi è vuoto: l'ultima, la
+   radura grande, adesso è scritta a mano. */
+export const DA_RIDISEGNARE = []
+
+/* ── le carte scritte a mano ──
+   Dove la conversione sbaglia, la strada e le piazzole si scrivono cella
+   per cella: `+` strada, `o` piazzola, il resto non conta (bocca,
+   castello, fitto, acqua e decori li mette `cartaDi` come per le altre,
+   col seme della tappa). Le vie non si scrivono: sono **tutti i
+   cammini** dalla cella sotto la bocca a quella sopra il castello
+   (`camminiDi`), da sinistra a destra, e le piazzole si occupano
+   partendo dall'ingresso, a giro fra le vie, come nel motore.
+
+   La radura grande (`LIBERA_BOSCO` in `data/campagne-castello.js`): una
+   bocca sola, la strada che si sdoppia subito e scende in due bracci a
+   zig-zag lungo i fianchi — fuori verso il bosco, dentro verso la
+   radura, due volte — e i due bracci si richiudono in mezzo in un tronco
+   che si ripiega a sinistra prima della porta. La radura è la clessidra
+   fra i due bracci: stretta dove i bracci rientrano (colonne 5 e 6),
+   larga otto celle dove escono. Le piazzole stanno nelle anse, dove una
+   torre vede due tratti della stessa strada, e tre dentro la radura: di
+   lì si tira ai due bracci — è il regalo di questo terreno, com'era
+   nelle forme. I bracci sono lo specchio l'uno dell'altro attorno al
+   mezzo del campo (5,5), non attorno alla bocca (6): è quello che lascia
+   a tutti e due una colonna di bosco fra la strada e il bordo. */
+export const A_MANO = {
+  'libera-bosco': [
+    '............',
+    '............',
+    '......+.....',
+    '......+.....',
+    '..++++++++..',
+    '..+o.o..o+..',
+    '..+++..+++..',
+    '...o+o.+o...',
+    '.++++..++++.',
+    '.+........+.',
+    '.+o......o+.',
+    '.++++..++++.',
+    '...o+.o+o...',
+    '....++++....',
+    '.....o+.....',
+    '...++++o....',
+    '...+o.......',
+    '...++++.....',
+    '......+.....',
+    '............',
+    '............',
+    '............',
+  ],
+}
 
 export const COLONNE = 12
 export const RIGHE = 22
@@ -145,6 +194,17 @@ function stradeDi(forme) {
   let meglio = null
   for (const modo of MODI) {
     const vie = forme.map(f => filaDi(f, modo))
+    const { versi, guasti } = controllaVie(vie)
+    if (!meglio || guasti.length < meglio.guasti.length) meglio = { vie, versi, guasti, modo }
+    if (!guasti.length) break
+  }
+  return meglio
+}
+
+/* I versi di ogni cella di strada, e cosa non rispetta la scacchiera:
+   vale per le vie convertite e per quelle scritte a mano */
+function controllaVie(vie) {
+  {
     const versi = new Map()
     const dai = (c, v) => {
       if (!versi.has(k(...c))) versi.set(k(...c), new Set())
@@ -182,16 +242,74 @@ function stradeDi(forme) {
         gia.add(k(...c))
       }
     }
-    if (!meglio || guasti.length < meglio.guasti.length) meglio = { vie, versi, guasti, modo }
-    if (!guasti.length) break
+    return { versi, guasti }
   }
-  return meglio
+}
+
+/* ── le vie di una carta scritta a mano ──
+   Tutti i cammini semplici da una cella di strada della prima riga (sotto
+   la bocca) a una dell'ultima (sopra il castello), passando solo per la
+   strada. Con una biforcazione che si richiude sono due, ed è quello che
+   la radura vuole; se fossero più di quattro la strada avrebbe un anello
+   che nessuna tappa chiede, e si dice. Da sinistra a destra: al primo
+   passo in cui due vie si separano, prima quella che va più a sinistra. */
+function camminiDi(disegno) {
+  const e = (x, y) => (disegno[y] || '')[x] === '+'
+  const fuori = []
+  const giro = (via, visti) => {
+    if (fuori.length > 8) return
+    const [x, y] = via[via.length - 1]
+    if (y === ULTIMA) { fuori.push(via.slice()); return }
+    for (const [dx, dy] of Object.values(PASSI)) {
+      const q = [x + dx, y + dy]
+      if (!e(...q) || visti.has(k(...q)) || q[1] < PRIMA) continue
+      visti.add(k(...q)); via.push(q)
+      giro(via, visti)
+      via.pop(); visti.delete(k(...q))
+    }
+  }
+  for (let x = 0; x < COLONNE; x++) if (e(x, PRIMA)) giro([[x, PRIMA]], new Set([k(x, PRIMA)]))
+  const prima = (p, q) => {
+    for (let i = 0; i < Math.min(p.length, q.length); i++)
+      if (p[i][0] !== q[i][0] || p[i][1] !== q[i][1]) return p[i][0] - q[i][0]
+    return p.length - q.length
+  }
+  return fuori.sort(prima)
+}
+
+function stradeAMano(disegno) {
+  const vie = camminiDi(disegno)
+  const { versi, guasti } = controllaVie(vie)
+  if (vie.length > 4) guasti.push(`${vie.length} cammini dalla bocca al castello: la strada ha un anello`)
+  disegno.forEach((r, y) => [...r].forEach((c, x) => {
+    if (c === '+' && !versi.has(k(x, y))) guasti.push(`(${x},${y}) strada che non porta al castello`)
+  }))
+  return { vie, versi, guasti, modo: 'a mano' }
+}
+
+/* le piazzole di una carta a mano: le `o` del disegno, ognuna della via
+   che le passa accanto più vicino all'ingresso, e occupate in
+   quell'ordine — la prima dove i mostri arrivano per primi, e a pari
+   distanza a giro fra le vie, come fa il motore */
+function piazzoleAMano(disegno, vie) {
+  const fuori = []
+  disegno.forEach((r, y) => [...r].forEach((c, x) => {
+    if (c !== 'o') return
+    let meglio = null
+    vie.forEach((via, iv) => via.forEach(([vx, vy], d) => {
+      if (Math.abs(vx - x) + Math.abs(vy - y) === 1 && (!meglio || d < meglio.d)) meglio = { d, iv }
+    }))
+    fuori.push({ x, y, d: meglio ? meglio.d : Infinity, via: meglio ? meglio.iv : 0 })
+  }))
+  fuori.sort((p, q) => p.d - q.d || p.via - q.via || p.y - q.y || p.x - q.x)
+  return fuori.map(({ x, y, via }) => [x, y, via])
 }
 
 export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}) {
   const caso = sorte(seme)
   const forme = tappa.forme || [tappa.forma]
-  const { vie, versi, guasti: guastiStrada, modo } = stradeDi(forme)
+  const disegno = A_MANO[tappa.chiave] || A_MANO[tappa.nome]
+  const { vie, versi, guasti: guastiStrada, modo } = disegno ? stradeAMano(disegno) : stradeDi(forme)
   const griglia = Array.from({ length: RIGHE }, () => Array(COLONNE).fill('.'))
   const dentro = (x, y) => x >= 0 && x < COLONNE && y >= 0 && y < RIGHE
   const a = (x, y) => (dentro(x, y) ? griglia[y][x] : null)
@@ -239,7 +357,14 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
   /* le piazzole nell'ordine in cui si sono messe, che è quello in cui
      il motore le occupa: [x, y, quale via] */
   const piazzole = []
-  for (const { via, d, lato } of fila) {
+  /* scritte a mano: si mettono dove dice il disegno, con le regole di
+     sempre — libere, e non attaccate a un'altra */
+  if (disegno)
+    for (const [x, y, via] of piazzoleAMano(disegno, vie)) {
+      if (!libera(x, y) || vicinaAPiazzola(x, y)) guasti.push(`(${x},${y}) piazzola non libera o attaccata a un'altra`)
+      metti(x, y, 'o'); piazzole.push([x, y, via]); messe++
+    }
+  for (const { via, d, lato } of disegno ? [] : fila) {
     if (messe >= quante) break
     /* dalla cella a quel punto della strada, poi via via più lontano
        lungo la strada, finché un lato non è libero */
@@ -261,7 +386,7 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
       }
     }
   }
-  if (messe < quante) guasti.push(`piazzole: ${messe} invece di ${quante}`)
+  if (messe !== quante) guasti.push(`piazzole: ${messe} invece di ${quante}`)
 
   /* ── le distrazioni ──
      Vicino = a una cella (anche di sbieco) dalla strada, da una
