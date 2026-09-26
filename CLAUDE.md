@@ -613,9 +613,19 @@ committate: non è ricostruibile da git.
   scatola dice **a che giro è** («3/5»), che resta scritto dove sbatte. Lì
   la soluzione **si scrive** nel livello (`soluzioni`, e le `fragili` che
   non devono prendere la carota): il risolutore trova la strada più corta,
-  non il programma più corto, e il 💡 parte da quella scritta. Il sentiero
-  senza fine si apre alla fine delle tappe dei piccoli (`TAPPE_PICCOLE`),
-  non della campagna: è il loro.
+  non il programma più corto, e il 💡 parte da quella scritta.
+  **Il sentiero senza fine sta in fondo e mescola tutto quello che si è
+  finito**: a ogni posto il caso sceglie la famiglia (il coniglio sul
+  prato, il cane, lo zaino col ripeti, col fino a o col se) e dentro le
+  regole (buche sì o no, ghiaccio sì o no), fra i gradini finiti
+  (`INGREDIENTI` in `motore/generatore.js`); il livello, che sale coi
+  sentieri della seduta, decide quanto è grande e quanto è lunga la
+  strada. I posti del prato e del cane si fanno a caso e li esamina il
+  risolutore; **quelli con lo zaino vanno al contrario** — prima il
+  programma, poi il posto scavato attorno alla sua strada
+  (`motore/sagome.js`, una sagoma per forma di posto) — e il motore
+  pretende che la scatola serva, che le mosse ingenue perdano e, col
+  «fino a», che nessun numero faccia le veci del colore.
   **Le condizioni guardano per terra**: le lastre colorate (`r u g`, con
   la forma oltre al colore). La testa di una scatola 🔁 può essere un
   numero, un colore — «fino al rosso»: un giro, e alla fine di ogni giro
@@ -650,9 +660,10 @@ committate: non è ricostruibile da git.
   quindi l'arrivo in mezzo alla fila ha il suo travaso (`FILE`/`riordina`
   in `dati/campagna.js`), che al contrario del costruttore **lascia la
   tappa raggiunta dov'era**: a chi era già allo zaino le pecore si aprono
-  alle spalle, e niente si richiude. Il sentiero senza fine e i traguardi
-  di prima restano legati alle buche (`TAPPE_PRIME`), non alla fine dei
-  piccoli.
+  alle spalle, e niente si richiude. Il sentiero senza fine (che **si
+  apre** lì, anche se sulla mappa sta in fondo: a sei anni lo zaino è
+  chiuso e il sentiero no) e i traguardi di prima restano legati alle
+  buche (`TAPPE_PRIME`), non alla fine dei piccoli.
 - **`src/giochi/costruttore/`** — un robot costruisce, visto di lato,
   quello che il bambino programma: **progetti** (funzioni) con le loro
   **misure** (parametri), **lavagnette** (variabili), ripeti, se, ripeti

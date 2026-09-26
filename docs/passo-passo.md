@@ -282,7 +282,8 @@ dall'altra parte di un buco, al di là della buca giusta.
 Una tappa paga le sue monete **una volta sola**, alla prima vittoria (🪙4
 nei primi passi, 🪙12 alle buche, da 🪙14 a 🪙20 con lo zaino): il livello
 è fisso, e rigiocarlo è ricordarlo, non esercitarsi. Il sentiero senza
-fine paga 🪙3 per sentiero, perché lì ogni sentiero è nuovo.
+fine paga 🪙3 per sentiero (🪙6 con lo zaino), perché lì ogni sentiero è
+nuovo.
 
 Il 💡 è **una scala**, e ogni tocco scende di un gradino
 (`motore/aiuti.js`). I primi due sono **gratis** e non danno la risposta: il
@@ -393,22 +394,55 @@ un'altra cosa.
 
 ## Il sentiero senza fine
 
-Finite le buche si apre il **sentiero senza fine** (sulla mappa sta
-subito dopo di loro, e non in fondo: è dei piccoli, e chi non ha ancora
-l'età dello zaino gioca lì): livelli fatti al
-momento, a caso, e tenuti solo se il risolutore dice che si vincono, che la
-strada è lunga quanto il gradino chiede, che la carota vuole una deviazione
-e che la regola nuova serve davvero. Ogni due sentieri se ne aggiunge una,
-nello stesso ordine della campagna, poi si mescola. Chi ha portato il
-gregge nel recinto (l'ultima tappa del cane) trova anche **le pecore**: un
-sentiero sì e uno no è un pascolo, con una scala sua — una pecora, poi il
-ghiaccio, poi due, e in cima tre pecore sparse da riunire — fatto e
-controllato allo stesso modo, e con le pecore
-mai incastrate in partenza. Quello che si
-migliora è **quanti sentieri di fila si fanno senza comprare aiuti**:
+In fondo alla mappa c'è il **sentiero senza fine**: posti fatti al
+momento, uno dopo l'altro, che mescolano **tutto quello che il bambino ha
+già finito** nella campagna. A ogni posto il caso sceglie di che specie
+è — il coniglio sul prato, il cane con le pecore, o un posto con lo
+zaino (il ripeti, il fino a, il se) — e dentro, quali regole: le buche
+sì o no, il ghiaccio sì o no, il fiume da saltare, i massi. Solo fra
+quelle dei gradini finiti: chi ha sei anni e lo zaino chiuso trova prati
+e pascoli, chi ha finito tutto trova anche le scatole. Il posto appena
+giocato pesa meno, così due di fila della stessa specie sono rari.
+
+Si apre **alla fine delle buche**, non della campagna, anche se sta in
+fondo: a sei anni lo zaino resta chiuso per età, e il sentiero è il posto
+dove giocare intanto. Il caso è pesato perché il posto non esca né banale
+né fuori portata: il **livello** sale ogni due sentieri della seduta (e
+parte più in alto per chi ha finito più gradini), e decide quanto è
+grande il posto, quanto è lunga la strada, quante regole insieme — una ai
+primi livelli, fino a tre più su — quante pecore, e quali forme dello
+zaino.
+
+**Ogni posto ha una soluzione, sempre.** Ce ne sono due specie:
+
+- **il prato e il pascolo** si fanno a caso e si tengono solo se il
+  risolutore dice che si vincono con la carota (l'osso), che la strada è
+  lunga quanto il livello chiede, che la carota vuole una deviazione e
+  che la regola principale serve davvero — e con due regole insieme,
+  anche la seconda. Le pecore non partono mai incastrate;
+- **i posti con lo zaino** vanno al contrario: prima si sceglie il
+  programma, poi si scava il posto attorno alla strada che fa. Ci sono
+  tredici forme, le stesse della campagna — la scala dove l'ordine delle
+  frecce conta, lo stagno con una scatola per lato, le terrazze, il campo
+  arato, i sassi nel fiume, il lago a gradini, le pozze coi massi, la
+  galleria sotto la siepe, le stalle del cane; col fino a i gradini storti
+  e il campo storto; col se le colline e il sentiero dei segni — ognuna
+  con le sue misure tirate a caso, e poi girata e specchiata. Il motore
+  rigioca tutto e butta il posto se la scatola non serve (la strada
+  scritta freccia per freccia ci starebbe nello zaino), se una mossa
+  ingenua vince (le frecce nell'ordine sbagliato, i colori scambiati, un
+  se dimenticato), o se col fino a **un numero qualunque** al posto del
+  colore vince lo stesso: si provano tutti.
+
+Il fuori, attorno alla strada, è fatto di macchie — un boschetto, uno
+stagno, una siepe — e mai di prato: un pezzo d'erba che dalla strada non
+si raggiunge sembra una strada.
+
+Un sentiero vinto vale 🪙3, e 🪙6 se aveva lo zaino: lì si sta di più. Quello
+che si migliora è **quanti sentieri di fila si fanno senza comprare aiuti**:
 sbagliare non chiude la serie, e nemmeno i due gradini gratis del 💡;
-comprarne uno sì. Il record sta sul tasto della mappa e
-nella tabella dei primati.
+comprarne uno sì. Il record sta sul tasto della mappa e nella tabella dei
+primati.
 
 ## Cosa allena
 
