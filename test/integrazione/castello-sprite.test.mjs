@@ -15,15 +15,21 @@
      · una torre si costruisce, l'ondata parte e i mostri camminano;
      · il campo si vede, e non è il ripiego a tinta unita: la scena
        vestita ha colori che il ripiego non ha;
+     · il nastro e la scheda dicono il nome della **figura** che si vede
+       (`scena/bestiario.js`): nel bosco lo slime è la «Melma»;
+     · la radura grande, l'unica carta scritta a mano, si gioca: il
+       motore ha le sue piazzole, e i mostri scendono per tutti e due i
+       bracci;
      · nessun errore in console, in tre vestiti diversi.
 
-   Con `--scatti` lascia una foto per vestito (`castello-sprite-*`).
+   Con `--scatti` lascia una foto per vestito (`castello-sprite-*`) e
+   una della radura (`castello-sprite-radura`).
    `node test/esegui.mjs castello-sprite`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
-import { TAPPE, MONDO } from '../../src/data/castello.js'
+import { TAPPE, LIBERE, MONDO } from '../../src/data/castello.js'
 import { cartaDi, percorsoDi } from '../../src/giochi/castello/motore/carta.js'
 
 const browser = await apriBrowser()
@@ -119,6 +125,9 @@ const cammino = await page.evaluate(async () => {
 controlla('l\'ondata parte', cammino.onda >= 1, JSON.stringify(cammino))
 controlla('e i mostri camminano', cammino.prima != null &&
           (cammino.dopo > cammino.prima || cammino.uccisi > 0), JSON.stringify(cammino))
+/* il nome sulla scheda del mostro in campo è quello della figura */
+const nome = await page.locator('.scheda .dati b').first().textContent().catch(() => '')
+uguale('la scheda dice il nome della figura, non quello del gioco', nome, 'Melma')
 const nelBosco = await colori()
 controlla('il campo è vestito, non una tinta sola', nelBosco > 60, `${nelBosco} colori`)
 await togliCartelli()
@@ -148,6 +157,38 @@ for (const [i, nome] of [[TAPPE.findIndex(t => t.campagna === 'sotterraneo'), 'l
   await attendi(page, 600)
   await scatto(page, `castello-sprite-${nome}`)
 }
+
+/* ---------- 4. la radura grande, scritta a mano ---------- */
+nota('la radura grande')
+const radura = LIBERE.find(l => l.chiave === 'libera-bosco')
+await page.evaluate(() => window.__td.iniziaLibera('libera-bosco'))
+await attendi(page, 900)
+const attesaRadura = percorsoDi(cartaDi(radura)).percorso.posti
+  .map(([fx, fy]) => [Math.round(fx * MONDO.W), Math.round(fy * MONDO.H)])
+const inRadura = (await page.evaluate(() => window.__td.postazioni().map(p => [p.x, p.y])))
+  .map(([x, y]) => [Math.round(x), Math.round(y)])
+uguale('la radura: il motore ha le piazzole della carta a mano', JSON.stringify(inRadura), JSON.stringify(attesaRadura))
+await costruisci('add')
+await costruisci('sub')
+const bracci = await page.evaluate(async () => {
+  const attesa = ms => new Promise(r => setTimeout(r, ms))
+  const T = window.__td
+  const vie = new Set()
+  T.velocita.value = 3
+  /* la terza ondata arriva da tutte e due le parti: se ne chiamano
+     tre, e si guarda da quali bracci è passato qualcuno */
+  for (let o = 0; o < 3; o++) {
+    const fine = Date.now() + 8000
+    while (!T.inAttesa.value && Date.now() < fine) await attesa(100)
+    T.chiamaOnda()
+    for (let i = 0; i < 25; i++) { T.nemici().forEach(n => vie.add(n.via)); await attesa(100) }
+  }
+  return [...vie].sort()
+})
+uguale('la radura: i mostri scendono per tutti e due i bracci', JSON.stringify(bracci), '[0,1]')
+await togliCartelli()
+await attendi(page, 400)
+await scatto(page, 'castello-sprite-radura')
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))
 await browser.close()
