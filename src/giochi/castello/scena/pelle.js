@@ -16,6 +16,10 @@
      fondale(t, poi)  la funzione che dipinge il fondale di quella tappa.
                   Se la scena non è ancora decodificata dipinge il suo
                   colore e chiama `poi` quando è pronta, e il campo ridipinge.
+     nome(t, id)  come si chiama il mostro `id` in quella tappa: il nome
+                  della figura che si vede (`bestiario.js`), per il nastro
+                  di chi arriva e la scheda del mostro in campo. La chiave
+                  resta quella del gioco.
 
    Il verso delle dipendenze è voluto: il gioco nuovo sa del vecchio, il
    vecchio non sa niente del nuovo. `torri` non si porta dietro una riga
@@ -28,7 +32,8 @@
    il gioco si rifà sulle carte, `npm run tara` va rifatto su di loro.
    ═══════════════════════════════════════════════════════════════════ */
 import { cartaDi, percorsoDi } from '../motore/carta.js'
-import { PITTORI_SPRITE, caricaFigure } from './pittori.js'
+import { PITTORI_SPRITE, caricaFigure, usaVestito } from './pittori.js'
+import { figuraDi, NOMI } from './bestiario.js'
 import { componi, carica, vestitoDi, TINTA_DI } from './vestito.js'
 
 /* la carta di una tappa si calcola una volta: la chiedono sia il motore
@@ -46,7 +51,14 @@ export const PELLE = {
      nasce: alla prima torre è già pronto */
   prepara() { caricaFigure().catch(() => {}) },
 
-  tappa(t) { return { ...t, ...percorsoDi(cartaPer(t)) } },
+  /* apparecchiare una tappa è anche vestirla: da qui in poi i mostri
+     sono le creature del suo vestito, in campo e nei ritratti */
+  tappa(t) {
+    usaVestito(vestitoDi(t))
+    return { ...t, ...percorsoDi(cartaPer(t)) }
+  },
+
+  nome(t, id) { return NOMI[figuraDi(vestitoDi(t), id)] },
 
   fondale(t, poi) {
     const nome = vestitoDi(t)

@@ -25,6 +25,10 @@ const props = defineProps({
   bestia: { type: Object, required: true },   // { id, nome, vola, resiste }
   vita: { type: Number, default: 0 },         // quanta ne ha uno solo
   quanti: { type: Number, default: 0 },       // quanti ne restano in campo
+  /* i pittori di una pelle (il castello a sprite): lì il ritratto è la
+     figura del campo, fatta stare nel riquadro dal suo pittore
+     `ritratto`, invece del mostro a poligoni */
+  pittori: { type: Object, default: null },
 })
 
 const ritratto = ref(null)
@@ -32,15 +36,16 @@ let tela = null, raf = 0
 
 function gira(ts) {
   // il ritratto respira come sul campo: fermo sembrava un francobollo
-  tela?.disegna([{ che: 'mostro', x: 17, y: 23, bestia: props.bestia.id,
-                   vola: false, vita: 1, gelo: 0 }], ts / 1000)
+  tela?.disegna([props.pittori
+    ? { che: 'ritratto', x: 17, y: 17, bestia: props.bestia.id }
+    : { che: 'mostro', x: 17, y: 23, bestia: props.bestia.id, vola: false, vita: 1, gelo: 0 }], ts / 1000)
   raf = requestAnimationFrame(gira)
 }
 
 onMounted(() => {
   // unità piccola: il mostro deve riempire il riquadro, non stare al suo
   // posto in una scena
-  tela = creaTela(ritratto.value, PITTORI, { unita: 46, massimo: 3 })
+  tela = creaTela(ritratto.value, props.pittori || PITTORI, { unita: 46, massimo: 3 })
   tela.ridimensiona()
   raf = requestAnimationFrame(gira)
 })

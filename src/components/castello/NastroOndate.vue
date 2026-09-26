@@ -44,6 +44,9 @@ const FRECCE = { sinistra: '↙', destra: '↘', ambo: '↙↘' }
 defineProps({
   /* [{ onda, fra, id, nome, quanti, vola, resiste }] — le dà il motore */
   prossime: { type: Array, default: () => [] },
+  /* i pittori della pelle, se il campo ne ha una: il ritratto è la figura
+     che poi scende in campo */
+  pittori: { type: Object, default: null },
 })
 </script>
 
@@ -52,7 +55,7 @@ defineProps({
     <span class="titolo">In arrivo</span>
     <div v-for="p in prossime" :key="p.onda" class="avviso" :class="{ subito: p.fra === 1 }">
       <span class="faccia">
-        <RitrattoMostro :bestia="p.id" />
+        <RitrattoMostro :bestia="p.id" :pittori="pittori" />
         <!-- la resistenza sta *addosso* al mostro, non di fianco: è quella
              che si deve leggere insieme alla faccia, non dopo -->
         <span v-if="p.resiste" class="punto"

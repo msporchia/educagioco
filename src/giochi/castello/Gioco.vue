@@ -12,13 +12,19 @@
    La pelle sta in `scena/pelle.js` e dice cosa cambia; il resto — il
    motore, il foglio dei conti, la mappa delle tappe — non sa che esiste.
 
-   Cosa manca, e dove sta scritto:
-     · undici mostri su diciotto fanno le veci di un altro
-       (`FIGURA_DI` in `scena/pittori.js`);
+   Ogni vestito ha il suo bestiario (`scena/bestiario.js`): la stessa
+   ondata di slime è una melma verde nel bosco e un sasso di magma nella
+   lava, e il nastro dice il nome di quello che si vede.
+
+   Cosa manca, e dove sta scritto (il piano delle immagini è
+   `strumenti/sprite/DA-GENERARE.md`):
      · tre scene per quattro campagne: le grotte, le mura e la palude
        prendono in prestito un vestito (`VESTITO_DI` in `scena/vestito.js`);
-     · la radura grande non sta ancora sulla scacchiera
-       (`DA_RIDISEGNARE` in `motore/carta.js`), e si gioca coi suoi guasti;
+     · i vestiti sono ritagliati dalle scene, non dal foglio dei pezzi:
+       quando il foglio arriva basta metterlo in cartella
+       (`vesti.py`, «il foglio del terreno»);
+     · i mostri respirano sul posto e scivolano: i passi di lato e di
+       fronte arrivano coi fogli del cammino, e i pittori li usano da sé;
      · le torri vengono da un foglio di provenienza non documentata
        (`dati/figure.js`): va rifatto prima di pubblicare altrove;
      · le tappe sono tarate sulla strada smussata, e quella a squadra è

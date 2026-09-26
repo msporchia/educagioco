@@ -20,7 +20,8 @@
    ── la pelle ──
    Chi passa `pelle` cambia come il campo si vede e dove passa la
    strada, e nient'altro: i pittori, la tappa come la legge il motore
-   (strada e piazzole), e il fondale. È il castello a celle
+   (strada e piazzole), il fondale, e il nome dei mostri — quello della
+   figura che si vede, se la pelle ne dà uno. È il castello a celle
    (`giochi/castello/scena/pelle.js`, il contratto è lì); senza, il campo
    è quello di sempre, e questo file non importa niente di quel gioco.
    ═══════════════════════════════════════════════════════════════════ */
@@ -130,12 +131,20 @@ function ridimensiona() {
    solo quando cambia davvero: un array nuovo sessanta volte al secondo
    farebbe ridisegnare mezzo schermo per niente. */
 let firmaOnda = -1
+/* Il nome di un mostro, se la pelle ne dà uno: quello della figura che
+   si vede (il grifone del castello a sprite, non l'«arpia»). La chiave
+   resta quella del motore. `bestia` cambia solo a ogni ondata, e la
+   copia col nome si rifà solo allora: un oggetto nuovo a ogni
+   fotogramma farebbe ridisegnare la scheda sessanta volte al secondo. */
+const conNome = b => (b && props.pelle?.nome ? { ...b, nome: props.pelle.nome(tappa, b.id) || b.nome } : b)
+let bestiaDa = null, bestiaVista = null
 function aggiornaVista(forza = false) {
   const v = props.vista
   v.inAttesa = motore.inAttesa()
   v.pronti = motore.pronti()
   v.restaAttesa = motore.restaAttesa()
-  v.bestia = motore.bestia
+  if (motore.bestia !== bestiaDa) { bestiaDa = motore.bestia; bestiaVista = conNome(bestiaDa) }
+  v.bestia = bestiaVista
   v.inCampo = motore.nemici.length
   v.vitaOnda = Math.round(motore.ondate.vitaDi(Math.max(1, props.hud.onda)))
   /* il regalo in sospeso: la schermata ne fa un velo, e finché c'è il
@@ -144,7 +153,7 @@ function aggiornaVista(forza = false) {
   v.regaliPresi = motore.regaliPresi
   if (forza || props.hud.onda !== firmaOnda) {
     firmaOnda = props.hud.onda
-    v.prossime = motore.prossime()
+    v.prossime = motore.prossime().map(conNome)
   }
 }
 
@@ -273,7 +282,8 @@ defineExpose({ apparecchia, avvia, ridimensiona, motore: () => motore,
     <!-- durante la battaglia: chi si ha davanti. Fra un'ondata e
          l'altra lascia il posto al preavviso di chi arriverà -->
     <SchedaMostro v-if="attivo && vista.bestia && !vista.inAttesa" :bestia="vista.bestia"
-                  :vita="vista.vitaOnda" :quanti="vista.inCampo" />
+                  :vita="vista.vitaOnda" :quanti="vista.inCampo"
+                  :pittori="pelle ? pelle.pittori : null" />
     <div v-if="messaggio.testo" :key="messaggio.n" class="annuncio">{{ messaggio.testo }}</div>
   </div>
 </template>

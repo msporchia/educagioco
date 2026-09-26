@@ -617,7 +617,8 @@ onMounted(() => {
               @click="sposto = null">Tocca dove spostarla · annulla</button>
 
       <template v-else-if="fase === 'gioco' && vista.inAttesa">
-        <div class="preavviso-alto"><NastroOndate :prossime="vista.prossime" /></div>
+        <div class="preavviso-alto"><NastroOndate :prossime="vista.prossime"
+                                                   :pittori="pelle ? pelle.pittori : null" /></div>
         <button class="bottone stretto onda" :class="{ svelto: vista.pronti }"
                 @click="chiamaOnda">
           {{ hud.onda ? 'Manda l\'ondata' : 'Comincia la battaglia' }} ▶<template

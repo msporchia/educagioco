@@ -9,9 +9,13 @@
                appoggiata sulla piazzola, col gettone del livello e il ＋
                di sempre (`targhe`, lo stesso disegno del castello a
                poligoni: la figura cambia, quello che dice no)
-     mostro    la creatura del sotterraneo che fa le sue veci, coi
-               quattro fotogrammi del respiro, girata verso dove va, con
-               la barra della vita, il gelo e la resistenza di sempre
+     mostro    la creatura che fa le sue veci in questo vestito
+               (`bestiario.js`): coi passi di lato o di fronte se il suo
+               foglio del cammino c'è, se no coi fotogrammi del respiro,
+               girata verso dove va, con la barra della vita, il gelo e
+               la resistenza di sempre
+     ritratto  la stessa creatura ferma, grande quanto il riquadro: per
+               il nastro di chi arriva e per la scheda del mostro in campo
      castello  niente: è già nel fondale (`vestito.js`)
      piazzola, raggio, colpo, schizzo, ingresso   quelli di sempre. La
                freccia dell'ingresso resta anche se la bocca è dipinta:
@@ -37,44 +41,41 @@ import { MONDO } from '../../../data/castello.js'
 import { COLONNE } from '../motore/carta.js'
 import { CELLA } from '../dati/vestiti.js'
 import { IMMAGINE, PEZZI, CREATURE } from '../dati/figure.js'
+import { figuraDi } from './bestiario.js'
 
 /* quante unità del mondo vale un pixel del foglio */
 export const UNITA = MONDO.W / COLONNE / CELLA
 
 /* ── chi fa le veci di chi ──
-   I mostri del castello sono diciotto, le creature ritagliate sette. Un
-   mostro vale l'altro (parole dell'utente), quindi quelli senza la loro
-   figura ne prendono una che le somiglia almeno nel modo di muoversi —
-   chi vola prende chi vola, perché l'ombra staccata da terra lo dice
-   comunque.
-   TODO: quando le altre undici creature sono ritagliate dai fogli del
-   sotterraneo (la tabella è in `strumenti/sprite/DA-GENERARE.md`),
-   ognuno la sua — e le righe col commento se ne vanno. */
-export const FIGURA_DI = {
-  slime: 'melma',
-  pipistrello: 'pipistrello',
-  fantasma: 'fantasma',
-  golem: 'golem',
-  lupo: 'lupo',
-  verme: 'serpente',
-  troll: 'troll',
-  goblin: 'troll',          // lo scheletro con spada e scudo
-  ragno: 'lupo',            // il ragno nero
-  orco: 'troll',            // lo zombie verde
-  scheletro: 'golem',       // lo scheletro
-  arpia: 'fantasma',        // il grifone
-  drago: 'pipistrello',     // il drago rosso
-  corvo: 'pipistrello',     // il pipistrello con l'occhio
-  rovo: 'serpente',         // la pianta carnivora
-  blatta: 'melma',          // lo scorpione
-  corazziere: 'golem',      // la tartaruga corazzata
-  balestriere: 'troll',     // il diavoletto
+   Lo dice il bestiario, vestito per vestito. Il vestito è quello della
+   tappa che il campo sta giocando: lo scrive la pelle quando apparecchia
+   (`usaVestito`), e da lì lo leggono il campo, il nastro e la scheda —
+   di campi ce n'è uno alla volta. */
+let vestito = 'bosco'
+export function usaVestito(nome) { vestito = nome }
+export const creaturaDi = bestia => {
+  const chi = figuraDi(vestito, bestia)
+  return CREATURE.includes(chi) ? chi : CREATURE[0]
 }
-const creaturaDi = bestia => (CREATURE.includes(FIGURA_DI[bestia]) ? FIGURA_DI[bestia] : CREATURE[0])
-const fotogrammi = {}
+
+/* le pose di ogni creatura, dai nomi dei pezzi: `mostro:<chi>:<n>` è il
+   respiro, `mostro:<chi>:lato:<n>` e `…:fronte:<n>` i passi */
+const pose = {}
 for (const nome of Object.keys(PEZZI)) {
-  const [fam, chi] = nome.split(':')
-  if (fam === 'mostro') (fotogrammi[chi] ||= []).push(nome)
+  const [fam, chi, verso, n] = nome.split(':')
+  if (fam !== 'mostro') continue
+  const p = (pose[chi] ||= { respiro: [], lato: [], fronte: [] })
+  p[n === undefined ? 'respiro' : verso].push(nome)
+}
+
+/* quale fila di pose per chi cammina in quel verso: di lato se va a
+   destra o a sinistra, di fronte se scende (o sale: di spalle non c'è),
+   e il respiro dove i passi non ci sono */
+function serieDi(chi, verso) {
+  const p = pose[chi]
+  const passi = verso ? p.lato : p.fronte
+  if (passi.length) return { serie: passi, passi: true }
+  return { serie: p.respiro.length ? p.respiro : p.fronte.length ? p.fronte : p.lato, passi: false }
 }
 
 /* il nome della figura di una torre: il ramo conta dallo stadio di mezzo
@@ -135,15 +136,15 @@ function mostro(p, cosa) {
   if (!img) return PITTORI.mostro(p, cosa)
   const { x, y, bestia, vita = 1, gelo = 0, vola = false, resiste = null, verso = 0 } = cosa
   const S = p.S
-  const chi = creaturaDi(bestia)
-  const pose = fotogrammi[chi]
-  /* il respiro: cinque fotogrammi al secondo, sfasati per posto così una
-     fila di melme non respira all'unisono */
-  const n = pose[Math.floor(p.tempo * 5 + x * 0.07 + y * 0.05) % pose.length]
+  const { serie, passi } = serieDi(creaturaDi(bestia), verso)
+  /* il respiro a cinque fotogrammi al secondo, i passi a otto; sfasati
+     per posto, così una fila di melme non respira all'unisono */
+  const n = serie[Math.floor(p.tempo * (passi ? 8 : 5) + x * 0.07 + y * 0.05) % serie.length]
   const piede = y + PIEDE_MOSTRO
   const alto = vola ? -9 * S + Math.sin(p.tempo * 2.6 + x * 0.05) * 2.2 * S : 0
   p.velo(vola ? 0.5 : 1, () => p.ellisse(x, piede - 1 * S, 9 * S, 3 * S, '#00000033'))
-  /* le figure del foglio guardano a destra: chi va a sinistra si specchia */
+  /* le figure del foglio guardano a destra (o chi guarda, quelle di
+     fronte): chi va a sinistra si specchia */
   const { lh } = figura(p.ctx, n, x, piede + alto, { specchia: verso < 0 })
   const cima = piede + alto - lh
   if (gelo > 0) {
@@ -172,4 +173,23 @@ function mostro(p, cosa) {
   }
 }
 
-export const PITTORI_SPRITE = { ...PITTORI, torre, mostro, castello: () => {} }
+/* ── il ritratto ──
+   Ferma o quasi: di fronte se c'è, se no il respiro, grande quanto il
+   riquadro permette e centrata. La misura la dà il fotogramma più grande
+   della serie, così respirando non cambia taglia. */
+function ritratto(p, cosa) {
+  if (!img) return PITTORI.ritratto ? PITTORI.ritratto(p, cosa) : null
+  const chi = creaturaDi(cosa.bestia)
+  const pp = pose[chi]
+  const serie = pp.fronte.length ? pp.fronte : pp.respiro.length ? pp.respiro : pp.lato
+  const W = Math.max(...serie.map(k => PEZZI[k][2])), H = Math.max(...serie.map(k => PEZZI[k][3]))
+  const s = Math.min(p.W, p.H) * 0.94 / Math.max(W, H)
+  const [sx, sy, w, h] = PEZZI[serie[Math.floor((p.tempo || 0) * 5) % serie.length]]
+  p.ctx.imageSmoothingQuality = 'high'
+  p.ctx.drawImage(img, sx, sy, w, h, p.W / 2 - w * s / 2, p.H / 2 + H * s / 2 - h * s, w * s, h * s)
+}
+
+/* `pronte` non è un pittore: è la promessa che chi dipinge una volta
+   sola (il ritratto del nastro) aspetta per ridipingersi a foglio pronto */
+export const PITTORI_SPRITE = { ...PITTORI, torre, mostro, ritratto, castello: () => {},
+                                pronte: () => caricaFigure() }

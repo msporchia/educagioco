@@ -18,6 +18,9 @@ import { PITTORI } from '../../grafica/castello.js'
 const props = defineProps({
   bestia: { type: String, required: true },
   unita: { type: Number, default: 30 },     // più piccola, più grosso il mostro
+  /* chi lo dipinge: quelli di sempre, o quelli di una pelle (il castello
+     a sprite), che il mostro lo mostrano con la figura del campo */
+  pittori: { type: Object, default: null },
 })
 
 const tela = ref(null)
@@ -30,8 +33,10 @@ function dipingi() {
 }
 
 onMounted(() => {
-  campo = creaTela(tela.value, PITTORI, { unita: props.unita, massimo: 3 })
+  campo = creaTela(tela.value, props.pittori || PITTORI, { unita: props.unita, massimo: 3 })
   dipingi()
+  // un foglio di figure ancora da decodificare: si ridipinge quando c'è
+  props.pittori?.pronte?.().then(dipingi, () => {})
 })
 watch(() => props.bestia, dipingi)
 </script>
