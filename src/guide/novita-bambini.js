@@ -75,6 +75,8 @@ export const NOVITA = [
     testo: '🏗️ Nuovo gioco: Il costruttore, programma un robot che costruisce' },
   { id: 11, quando: '2026-09-25', gioco: 'sotterraneo',
     testo: '🕯️ Il sotterraneo ha muri nuovi, torce accese e una fontana vera' },
+  { id: 12, quando: '2026-09-26', gioco: 'passo',
+    testo: '♾️ Il sentiero senza fine ora ha anche le scatole e le pecore' },
 ]
 
 /* quante righe per gioco, al massimo: è il tetto di chi torna dopo
