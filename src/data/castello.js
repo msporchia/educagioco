@@ -1257,6 +1257,72 @@ export function geloConDoni(lv, ramo, doni) {
   return { ...g, durata: g.durata + doni.gelo, fragile: g.fragile + doni.fragile }
 }
 
+/* ═══════════════ IL BLOCCHETTO DEI POTENZIAMENTI ═══════════════
+
+   «Ho preso otto potenziamenti, e adesso i miei arcieri fanno +80%»:
+   è la frase che un bambino vuole potersi dire guardando il campo, e
+   finora doveva ricostruirsela contando i gettoni dei livelli torre per
+   torre. Qui la si compone, per il foglio che la schermata apre durante
+   la partita (`components/castello/Potenziamenti.vue`).
+
+   Due specie di potenziamenti, e si sommano:
+
+     · i **gradini** saliti dalle torri in campo — uno per ogni conto
+       fatto per potenziarle, quindi è anche il numero di operazioni che
+       le ha rese così;
+     · i **regali** della partita libera, che restano per sempre.
+
+   Per ogni tipo di torre in campo si dice quante sono, quanti gradini
+   hanno salito in tutto, che mestiere hanno scelto, e **quanto fanno in
+   più di una torre appena costruita** — la media delle loro, contando
+   il livello, il ramo e i regali che toccano quella torre. Il numero è
+   quello del modello (`dpsDi`): lo stesso che decide i prezzi, quindi
+   non può dire una cosa mentre il listino ne dice un'altra.
+
+   Puro, e provato in `unita/blocchetto-castello`. `torri` sono
+   `[{ tipo, lv, ramo }]`, `regali` i gradi presi `{ id: quanti }` (vuoto
+   nella campagna, dove i regali non valgono). */
+export function blocchettoDi(torri = [], regali = null) {
+  const doni = doniDi(regali)
+  const perTipo = []
+  for (const k of Object.keys(TORRI)) {
+    const sue = torri.filter(t => t.tipo === k)
+    if (!sue.length) continue
+    const aspetto = TORRI[k].aspetto
+    const regalo = TORRI[k].danno ? (doni.danno[aspetto] ?? 1) * (1 + doni.cadenza) : 1
+    const forza = sue.reduce((s, t) => s + dpsDi(k, t.lv, t.ramo) * regalo / dpsDi(k, 1), 0) / sue.length
+    const rami = {}
+    for (const t of sue) if (t.ramo) rami[t.ramo] = (rami[t.ramo] || 0) + 1
+    perTipo.push({
+      tipo: k, quante: sue.length,
+      gradini: sue.reduce((s, t) => s + t.lv - 1, 0),
+      piu: Math.round((forza - 1) * 100),
+      livelloMassimo: Math.max(...sue.map(t => t.lv)),
+      rami: Object.entries(rami).map(([ramo, quante]) => ({ ramo, quante })),
+    })
+  }
+  const doniPresi = REGALI
+    .map(r => ({ r, g: Math.max(0, Math.floor((regali || {})[r.id] || 0)) }))
+    .filter(({ g }) => g > 0)
+    .map(({ r, g }) => ({ id: r.id, emoji: r.emoji, nome: r.nome, gradi: g,
+                          che: r.che, quanto: moltiplicaPer(r.per, g) }))
+  const gradini = perTipo.reduce((s, t) => s + t.gradini, 0)
+  const regaliPresi = doniPresi.reduce((s, d) => s + d.gradi, 0)
+  return { torri: perTipo, regali: doniPresi, gradini, regaliPresi,
+           totale: gradini + regaliPresi }
+}
+
+/* «+30% di danno» preso tre volte è «+90% di danno»: ogni numero della
+   frase moltiplicato per i gradi, con la virgola all'italiana. La frase
+   di un regalo è scritta per un grado solo (`per` nel catalogo), e il
+   foglio dice quanto fanno tutti insieme. */
+function moltiplicaPer(frase, gradi) {
+  return frase.replace(/\d+(?:,\d+)?/g, n => {
+    const v = Number(n.replace(',', '.')) * gradi
+    return String(Math.round(v * 10) / 10).replace('.', ',')
+  })
+}
+
 /* ═══════════════ LE PARTITE LIBERE ═══════════════
 
    Una partita libera non finisce: le ondate continuano, i nemici

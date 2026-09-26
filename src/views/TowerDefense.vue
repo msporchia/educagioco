@@ -51,7 +51,7 @@ import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { GIOCHI } from '../data/giochi.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
 import { TORRI } from '../data/ops.js'
-import { CFG, TAPPE, LIBERE, liberaDi, premioTappa, quantiRegali,
+import { CFG, TAPPE, LIBERE, liberaDi, premioTappa, quantiRegali, blocchettoDi,
          prossimoAcquisto, sequenzaTorri } from '../data/castello.js'
 import ColumnOp from '../components/ColumnOp.vue'
 import Barra from '../components/Barra.vue'
@@ -65,7 +65,7 @@ import RitrattoTorre from '../components/castello/RitrattoTorre.vue'
 import MappaTappe from '../components/castello/MappaTappe.vue'
 import FineTappa from '../components/castello/FineTappa.vue'
 import Regalo from '../components/castello/Regalo.vue'
-
+import Potenziamenti from '../components/castello/Potenziamenti.vue'
 import { Cassa } from './castello/cassa.js'
 import { suono } from '../audio.js'
 
@@ -284,16 +284,31 @@ const mira = computed(() => {
    momento in cui si sceglie che cosa costruire */
 const immune = computed(() => (vista.prossime[0] && vista.prossime[0].immune) || [])
 
+/* ── il blocchetto dei potenziamenti ──
+   Si apre dal gettone ⬆️ sul campo. È una fotografia presa quando lo si
+   apre — le torri del motore non sono reattive, e un foglio che si
+   riscrive da solo mentre lo si legge non si legge — e si rifà a ogni
+   apertura. */
+const blocchetto = ref(null)
+function apriBlocchetto() {
+  const m = motore()
+  if (!m || fase.value !== 'gioco') return
+  chiudi()
+  blocchetto.value = blocchettoDi(m.torri.map(t => ({ tipo: t.tipo, lv: t.lv, ramo: t.ramo })),
+                                  m.regali)
+}
 
 /* ── aprire e chiudere ── */
 function apriPiazzola(i) {
   if (fase.value !== 'gioco' || op.value) return
+  blocchetto.value = null
   if (sposto.value) return posala(i)
   foglio.value = { che: 'costruisci', piazzola: i }
 }
 
 function apriTorre(torre) {
   if (fase.value !== 'gioco' || op.value || !torre) return
+  blocchetto.value = null
   sposto.value = null                 // toccare una torre annulla lo spostamento
   foglio.value = { che: 'torre', torre }
 }
@@ -323,6 +338,7 @@ const posti = () => (motore() ? motore().liberi().length : 0)
 function chiudi() {
   foglio.value = null
   sposto.value = null
+  blocchetto.value = null
   annulla()
 }
 
@@ -561,7 +577,8 @@ onMounted(() => {
   /* il gancio dei test: da fuori si gioca una partita senza toccare lo
      schermo. Non lo usa nessuna parte del gioco. */
   window.__td = { hud, fase, scelta, op, inizia, scegliTorre, operazioneFinita,
-                  vista,
+                  // il blocchetto dei potenziamenti: aprirlo da fuori è come toccare ⬆️
+                  blocchetto, apriBlocchetto, vista,
                   /* la mossa che farebbe il giocatore modello, con la stessa
                      funzione del simulatore (`prossimoAcquisto`): la prova
                      nel browser deve giocare come la taratura, non come un
@@ -635,6 +652,14 @@ onMounted(() => {
            fare adesso. Non blocca niente e se ne va da sé (`dritta`). -->
       <div v-if="dritta" class="primi-passi">{{ dritta }}</div>
 
+      <!-- il gettone dei potenziamenti: quanti se ne sono presi, e
+           toccandolo il blocchetto che dice cosa hanno fatto. Sta sul
+           campo, in basso a sinistra, e non nella barra: lassù i gettoni
+           sono già al limite, e un quinto spingeva fuori l'energia -->
+      <button v-if="fase === 'gioco' && !foglio && !blocchetto" class="tondo su-potenziamenti"
+              data-azione="potenziamenti" aria-label="potenziamenti" @click="apriBlocchetto">
+        ⬆️<b>{{ vista.potenziamenti }}</b>
+      </button>
 
       <button v-if="fase === 'gioco' && sposto" class="bottone chiaro stretto onda"
               @click="sposto = null">Tocca dove spostarla · annulla</button>
@@ -652,7 +677,7 @@ onMounted(() => {
 
       <!-- a battaglia in corso, appena l'ondata è uscita tutta: la
            prossima si può mandare subito, e il premio dice quanto rende -->
-      <button v-else-if="fase === 'gioco' && vista.puoiChiamare && !foglio"
+      <button v-else-if="fase === 'gioco' && vista.puoiChiamare && !foglio && !blocchetto"
               class="bottone stretto onda svelto" data-azione="chiama-prossima" @click="chiamaOnda">
         Manda la prossima ▶<template v-if="vista.premio"> · +{{ vista.premio }} ⚡</template>
       </button>
@@ -702,6 +727,13 @@ onMounted(() => {
         </template>
       </Foglio>
 
+      <!-- ════════ IL BLOCCHETTO ════════
+           I potenziamenti presi e cosa hanno fatto. Un foglio come gli
+           altri, con la ✕ in alto a destra; il campo non si ferma. -->
+      <Foglio v-if="fase === 'gioco'" :aperto="!!blocchetto" titolo="I tuoi potenziamenti"
+              @chiudi="blocchetto = null">
+        <Potenziamenti v-if="blocchetto" :blocchetto="blocchetto" />
+      </Foglio>
 
       <!-- ════════ IL REGALO ════════
            Ogni cinque ondate della partita libera. Sta sopra il foglio e

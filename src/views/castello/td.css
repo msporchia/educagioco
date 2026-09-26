@@ -56,6 +56,14 @@
                animation:passi-su .3s ease-out }
 @keyframes passi-su { from { opacity:0; transform:translateY(8px) } }
 
+/* il gettone dei potenziamenti: in basso a sinistra, lontano dal tasto
+   dell'ondata che sta in mezzo */
+.su-potenziamenti { position:absolute; left:10px; z-index:3;
+                    bottom:calc(16px + env(safe-area-inset-bottom));
+                    display:flex; align-items:center; gap:2px; font-size:15px;
+                    box-shadow:0 2px 8px #2a214033 }
+.su-potenziamenti b { font-size:14px; color:var(--viola-scuro) }
+
 .banco { flex:1; min-height:0; width:100%; display:flex; flex-direction:column;
          align-items:center; justify-content:safe center; gap:8px;
          padding:10px 12px calc(12px + env(safe-area-inset-bottom)); overflow-y:auto }

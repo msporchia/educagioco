@@ -20,10 +20,15 @@
      · la radura grande, l'unica carta scritta a mano, si gioca: il
        motore ha le sue piazzole, e i mostri scendono per tutti e due i
        bracci;
+     · le cose nuove si vedono anche con questa pelle: il preavviso
+       dice le immunità, il colpo che rimbalza su un immune lascia il
+       segno, la prossima ondata si chiama a battaglia in corso, e il
+       blocchetto dei potenziamenti si apre e si chiude con la ✕;
      · nessun errore in console, in tre vestiti diversi.
 
-   Con `--scatti` lascia una foto per vestito (`castello-sprite-*`) e
-   una della radura (`castello-sprite-radura`).
+   Con `--scatti` lascia una foto per vestito (`castello-sprite-*`),
+   una della radura (`castello-sprite-radura`) e una del blocchetto
+   (`castello-sprite-blocchetto`).
    `node test/esegui.mjs castello-sprite`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
@@ -189,6 +194,58 @@ uguale('la radura: i mostri scendono per tutti e due i bracci', JSON.stringify(b
 await togliCartelli()
 await attendi(page, 400)
 await scatto(page, 'castello-sprite-radura')
+
+/* ---------- 5. immunità, fretta e blocchetto ----------
+   La grotta apre coi pipistrelli, che le bombe non toccano: una bomba
+   sola in campo, e il colpo deve rimbalzare lasciando il segno. Poi la
+   prossima ondata si chiama con questa ancora in campo, e il gettone ⬆️
+   apre il blocchetto. */
+{
+  const i = TAPPE.findIndex(t => t.nome === 'La grotta')
+  nota(`${TAPPE[i].nome}: immunità, fretta e blocchetto`)
+  await page.evaluate(i => window.__td.inizia(i), i)
+  await attendi(page, 900)
+  /* il preavviso c'è fra un'ondata e l'altra con almeno una torre in
+     campo: prima si costruisce la bomba */
+  await costruisci('div')
+  await attendi(page, 300)
+  const preavviso = await page.evaluate(() =>
+    [...document.querySelectorAll('[data-onda-preavviso]')].map(e => e.dataset.immune))
+  uguale('il preavviso dice a cosa è immune la prima ondata (bombe e ghiaccio)',
+         (preavviso[0] || '').split(',').sort().join(','), 'div,mul')
+  await costruisci('add')
+  const partita = await page.evaluate(async () => {
+    const attesa = ms => new Promise(r => setTimeout(r, ms))
+    const T = window.__td
+    T.chiamaOnda()
+    T.velocita.value = 2
+    let respinto = false, chiama = false
+    const fine = Date.now() + 9000
+    while (Date.now() < fine && !(respinto && chiama)) {
+      respinto ||= T.nemici().some(n => n.respinto > 0)
+      chiama ||= !!document.querySelector('[data-azione="chiama-prossima"]')
+      await attesa(60)
+    }
+    const prima = T.hud.onda
+    document.querySelector('[data-azione="chiama-prossima"]')?.click()
+    await attesa(200)
+    return { respinto, chiama, prima, dopo: T.hud.onda }
+  })
+  controlla('la bomba rimbalza sul pipistrello, e si vede', partita.respinto, JSON.stringify(partita))
+  controlla('a ondata uscita tutta c\'è il tasto per chiamare la prossima', partita.chiama)
+  uguale('e toccarlo la manda subito', partita.dopo, partita.prima + 1)
+  await togliCartelli()
+  await page.locator('[data-azione="potenziamenti"]').click()
+  await attendi(page, 400)
+  controlla('il gettone ⬆️ apre il blocchetto', await page.locator('[data-blocchetto]').isVisible())
+  controlla('con una riga per le bombe e una per gli arcieri',
+            await page.locator('[data-blocchetto-torre="div"]').count() === 1 &&
+            await page.locator('[data-blocchetto-torre="add"]').count() === 1)
+  await scatto(page, 'castello-sprite-blocchetto')
+  await page.locator('.foglio:not(.via) button[aria-label="chiudi"]').click()
+  await attendi(page, 400)
+  uguale('e la ✕ lo chiude', await page.evaluate(() => window.__td.blocchetto.value), null)
+}
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))
 await browser.close()
