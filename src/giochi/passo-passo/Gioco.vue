@@ -45,7 +45,7 @@ import { mettiCarta, mettiScatola, togliPrima, scegliTesta } from './motore/fila
 import { suggerisci, minimoDi, carteUsate } from './motore/risolutore.js'
 import { scalaDi, pensieroDi, dove, pezzoDiStrada } from './motore/aiuti.js'
 import { mancano, chiedeConferma, SVELA } from '../aiuti.js'
-import { generaSentiero, caso } from './motore/generatore.js'
+import { generaSentiero, caso, premioDi, INGREDIENTI } from './motore/generatore.js'
 import { Proiezione } from './scena/proiezione.js'
 import { Regia } from './scena/regia.js'
 
@@ -62,9 +62,6 @@ const CHIAVE = 'passo'
    non si lascia toccare subito, perché il dito che ha appena premuto si
    lascia dietro un tocco */
 const CIECA = 320
-/* quanto vale un sentiero senza fine vinto: un sentiero nuovo è
-   esercizio vero (vedi `CALIBRAZIONE.md`), e ne chiede mezzo minuto */
-const PREMIO_SENTIERO = 3
 
 /* ═══════════ dove siamo ═══════════ */
 const vista = ref('mappa')          // mappa | campo
@@ -119,6 +116,7 @@ let ultimoGiro = null               // { passi: [{ i, mossa }], riusciti }
 const sentieri = ref(0)             // quanti in questa seduta
 const serie = ref(0)                // di fila, senza aiuti
 let semeSeduta = 1
+let famigliaPrima = null            // di che specie era il sentiero di prima
 let chiusaDallAiuto = null          // la frase di quando l'aiuto ha chiuso la serie
 
 const avanza = progresso(CHIAVE)
@@ -144,12 +142,23 @@ const colori = computed(() => {
     .map(ch => (LEGENDA[ch] || {}).lastra).filter(Boolean))
   return COLORI.filter(c => qui.has(c))
 })
-/* Il sentiero senza fine si apre alla fine delle buche, e senza
-   guardare l'età: è dei piccoli, e le tappe dello zaino che vengono dopo
-   sono chiuse fino agli otto anni. Legarlo alla campagna intera, come
-   quando la campagna finiva alle buche, o alla fine delle pecore arrivate
-   dopo, l'avrebbe chiuso proprio a chi l'aveva già aperto. */
+/* Il sentiero senza fine sta in fondo alla mappa, perché mescola tutto
+   quello che viene prima, ma **si apre** alla fine delle buche, e senza
+   guardare l'età: chi ha sei anni e le tappe dello zaino chiuse ci gioca
+   coi posti del prato e del cane, e legarlo alla campagna intera
+   l'avrebbe chiuso proprio a chi l'aveva già aperto. Cosa ci trova lo
+   dicono i gradini finiti (`sbloccati`). */
 const sentieroAperto = () => tappaAperta(TAPPE_PRIME, avanza.tappa)
+/* le cose che il sentiero può mescolare: ogni gradino finito ne porta
+   una (`INGREDIENTI` in `motore/generatore.js`). Finito vuol dire vinto
+   l'ultimo posto, o aperto quello dopo — che per chi ha nove anni e i
+   gradini dei piccoli passati per età vuol dire saputo. Non basta la
+   seconda: a sei anni, finito il cane, il posto dopo è dello zaino e
+   resta chiuso per età, e il cane nel sentiero ci deve essere lo stesso */
+const sbloccati = () => SCALINI.filter(s => INGREDIENTI[s.chiave]).filter(s => {
+  const u = CAMPAGNA.map(t => t.scalino).lastIndexOf(s.chiave)
+  return stelleDi(CHIAVE, u) > 0 || (u + 1 < QUANTE_TAPPE && aperta(CHIAVE, u + 1))
+}).map(s => INGREDIENTI[s.chiave])
 
 /* ═══════════ la mappa ═══════════ */
 const scalini = computed(() => SCALINI.map(s => ({
@@ -167,8 +176,8 @@ const statoSentiero = computed(() => ({
   record: primatoInParole(primatoDi(CHIAVE), SENZA_FINE.misura),
   quante: TAPPE_PRIME,
   fatte: Math.min(avanza.tappa, TAPPE_PRIME),
-  /* sulla mappa sta dopo le buche */
-  dopo: CAMPAGNA[TAPPE_PRIME - 1].scalino,
+  /* sulla mappa sta in fondo, dopo l'ultimo gradino */
+  dopo: SCALINI.at(-1).chiave,
 }))
 
 /* ── la manina della prima volta ──
@@ -707,10 +716,10 @@ function vittoria(esito) {
     carota: esito.carota, cane: !!(liv && liv.cane), svelato: svelato.value, monete,
     ...strada, zaino: !!liv.zaino,
     racconto: CAMPAGNA[i].racconto,
-    /* dopo l'ultima tappa dei piccoli ▶ porta sul sentiero senza fine,
-       che si è appena aperto, a chi non ha ancora l'età dello zaino:
-       finire non è una porta chiusa */
-    prossima: aperta(CHIAVE, i + 1) || (i + 1 === TAPPE_PICCOLE && sentieroAperto()),
+    /* dopo l'ultima tappa dei piccoli ▶ porta sul sentiero senza fine
+       a chi non ha ancora l'età dello zaino, e dopo l'ultima di tutte a
+       chiunque: finire non è una porta chiusa */
+    prossima: aperta(CHIAVE, i + 1) || ((i + 1 === TAPPE_PICCOLE || i + 1 === QUANTE_TAPPE) && sentieroAperto()),
   }
 }
 
@@ -719,15 +728,16 @@ function avviaSentiero() {
   sentieri.value = 0
   serie.value = 0
   semeSeduta = (Date.now() % 100000) + 1
+  famigliaPrima = null
   prossimoSentiero()
 }
 
-/* chi ha portato il gregge nel recinto (l'ultima tappa del cane) trova
-   le pecore anche nel sentiero, un sentiero sì e uno no */
-const GREGGE = CAMPAGNA.findIndex(t => t.chiave === 'gregge')
+/* il prossimo posto: fra le cose che sa, e di una specie diversa da
+   quello di prima, se il caso lo concede */
 function prossimoSentiero() {
-  const cane = stelleDi(CHIAVE, GREGGE) > 0
-  const t = generaSentiero(sentieri.value, caso(semeSeduta * 1009 + sentieri.value), { cane })
+  const t = generaSentiero(sentieri.value, caso(semeSeduta * 1009 + sentieri.value),
+                           { sbloccati: sbloccati(), prima: famigliaPrima })
+  famigliaPrima = t.famiglia
   entra({ ...t, chiave: `sentiero-${sentieri.value}` }, -1)
 }
 
@@ -743,8 +753,9 @@ function chiudiLaSerie() {
 }
 
 function vittoriaSentiero(esito, strada) {
+  const monete = premioDi(tappa.value)
   sentieri.value++
-  addCoins(PREMIO_SENTIERO)
+  addCoins(monete)
   contaLaVittoria(esito)
   let frase = chiusaDallAiuto || ''
   let record = false
@@ -759,8 +770,8 @@ function vittoriaSentiero(esito, strada) {
   }
   /* nel sentiero non ci sono stelle, ma la strada lunga si dice lo
      stesso: è lì che si vedevano le file da quaranta frecce */
-  return { che: 'sentiero', titolo: tappa.value.nome, frase, record, monete: PREMIO_SENTIERO,
-           ...strada }
+  return { che: 'sentiero', titolo: tappa.value.nome, frase, record, monete,
+           ...strada, zaino: !!liv.zaino }
 }
 
 /* ═══════════ dopo il cartello ═══════════ */
@@ -768,7 +779,7 @@ function avanti() {
   if (sentiero.value) return prossimoSentiero()
   const i = tappaIdx.value + 1
   if (i < QUANTE_TAPPE && aperta(CHIAVE, i)) avviaTappa(i)
-  else if (i === TAPPE_PICCOLE && sentieroAperto()) avviaSentiero()
+  else if ((i === TAPPE_PICCOLE || i === QUANTE_TAPPE) && sentieroAperto()) avviaSentiero()
   else allaMappa()
 }
 

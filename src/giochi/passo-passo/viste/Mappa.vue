@@ -11,10 +11,10 @@
    Il racconto di ogni posto (cosa si scopre lì) sta nell'`aria-label`:
    è per il grande che legge, e sul cartello di fine tappa si vede.
 
-   Dopo le buche, il sentiero senza fine: si apre alla fine delle tappe
-   dei piccoli, e sul tasto c'è il record — è quello che fa venire voglia
-   di entrarci. Sta lì in mezzo e non in fondo perché è dei piccoli: i
-   gradini dello zaino, che vengono dopo, si aprono solo agli otto anni.
+   In fondo, il sentiero senza fine: mescola quello che viene prima, e
+   sul tasto c'è il record — è quello che fa venire voglia di entrarci.
+   Si apre alla fine delle buche, non della campagna: chi ha sei anni e
+   lo zaino ancora chiuso ci gioca coi posti che sa.
    ═══════════════════════════════════════════════════════════════════ */
 defineProps({
   scalini: { type: Array, required: true },       // [{ chiave, nome, icona, dritta, tappe: [] }]
@@ -58,7 +58,7 @@ defineEmits(['gioca', 'senza-fine'])
         </span>
         <span v-else>
           <b>Il sentiero senza fine</b>
-          <i>si apre alla fine delle {{ senzaFine.quante }} tappe ({{ senzaFine.fatte }} fatte)</i>
+          <i>si apre alla fine delle prime {{ senzaFine.quante }} tappe ({{ senzaFine.fatte }} fatte)</i>
         </span>
       </button>
     </template>

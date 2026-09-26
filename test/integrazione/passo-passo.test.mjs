@@ -339,7 +339,10 @@ await scatto(page, 'passo-sentiero')
 /* Il sentiero è fatto a caso: la soluzione il test non la sa. La sa il
    💡 — e scendere solo lui deve bastare ad arrivare a casa: si tocca il
    💡, si tocca quello che brilla (e un gradino caro si conferma col
-   secondo tocco), finché non brilla ▶. È la scala intera, pagata. */
+   secondo tocco), finché non brilla ▶. È la scala intera, pagata. Nei
+   posti con lo zaino quello che brilla può essere la testa di una
+   scatola: toccata, apre la scelta, e lì brilla il numero (o il colore)
+   da toccare — come farebbe un bambino. */
 {
   let giri = 0
   for (; giri < 40; giri++) {
@@ -350,6 +353,8 @@ await scatto(page, 'passo-sentiero')
     if (await page.locator('.pp-brilla').count()) {
       await page.locator('.pp-brilla').first().click()
       await attendi(page, 60)
+      const scelta = page.locator('[data-scelta-volte] .pp-brilla')
+      if (await scelta.count()) { await scelta.first().click(); await attendi(page, 60) }
     }
   }
   controlla('scendendo il 💡 la fila si compone', giri < 40, `${giri} giri`)
