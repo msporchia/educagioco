@@ -2,6 +2,16 @@
 """Vestire le carte del castello con una scena generata — il provvisorio.
 
     python3 strumenti/sprite/vesti.py --provino td_1.png uscita.png
+    python3 strumenti/sprite/vesti.py --atlante
+
+Il secondo scrive i due moduli **generati** che il gioco `castello`
+compone nel browser (`src/giochi/castello/dati/vestiti.js`, i pezzi
+delle tre scene, e `figure.js`, torri e mostri): vedi `atlante()` in
+fondo. Il campo non si porta dietro ventiquattro mappe già vestite —
+peserebbero dieci volte tanto — ma i pezzi, e la composizione la rifà
+`src/giochi/castello/scena/vestito.js` con la stessa logica di `vesti()`
+qui sotto. **Chi cambia `vesti()` cambia anche quello**, se no la
+battaglia finta e il gioco si vestono in due modi.
 
 Le carte (`src/giochi/castello/motore/carta.js`) sono scritte a
 caratteri; qui ogni carattere diventa un pezzo **preso dalla scena**
@@ -31,6 +41,10 @@ Tre cose imparate col primo giro, che incollava ritagli quadrati:
 
 Chi lo usa per disegnare le carte è `scacchiera.py --carte … --vesti`.
 """
+import base64
+import importlib.util
+import io
+import json
 import sys
 from functools import lru_cache
 from pathlib import Path
@@ -452,8 +466,213 @@ def provino(scena, uscita):
     foglio.save(uscita)
 
 
+# ── l'atlante per il gioco ───────────────────────────────────────────
+#
+# Due moduli, e tutti e due si scrivono da qui:
+#
+#   vestiti.js  i pezzi delle tre scene. **Le misure sono le stesse**
+#               nelle tre (la geometria è una, rivestita), quindi la
+#               tabella dei rettangoli è una sola e le immagini tre.
+#               Le toppe, lo stagno e la bocca hanno già l'alfa sfumato
+#               dentro: nel browser una maschera sfumata costerebbe un
+#               canvas a parte per ogni toppa posata.
+#   figure.js   le torri (dal foglio di agosto, `prova-battaglia.py`) e
+#               i mostri coi quattro fotogrammi del respiro (dai fogli
+#               del sotterraneo). Alla misura del foglio: una cella da
+#               64 px è 16 pixel del disegno anche lì.
+#
+# WebP con l'alfa e non PNG: sono pezzi di scene dipinte, non pixel art
+# a blocchi, e il PNG li pagava tre volte tanto. Quanto pesano lo scrive
+# il modulo in testa, e lo stampa il comando.
+
+REPO = Path(__file__).resolve().parents[2]
+DATI = REPO / 'src' / 'giochi' / 'castello' / 'dati'
+SCENE = {'bosco': 'td_1.png', 'neve': 'td_2.png', 'lava': 'td_3.png'}
+QUALITA = 85
+
+
+def prova_battaglia():
+    """`prova-battaglia.py` col trattino non si importa per nome: le
+    tabelle delle torri e dei mostri stanno lì, e restano lì."""
+    spec = importlib.util.spec_from_file_location('prova_battaglia', Path(__file__).parent / 'prova-battaglia.py')
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def impacchetta(misure, largo=1024, spazio=2):
+    """Scaffali: i pezzi dal più alto al più basso, in file da sinistra a
+    destra. Non è il più stretto possibile, ma è stabile — stessi pezzi,
+    stesso atlante — ed è quello che serve a un file generato che finisce
+    nei diff."""
+    ordine = sorted(misure, key=lambda k: (-misure[k][1], -misure[k][0], k))
+    posti, x, y, riga = {}, 0, 0, 0
+    for k in ordine:
+        w, h = misure[k]
+        if x + w > largo:
+            x, y, riga = 0, y + riga + spazio, 0
+        posti[k] = (x, y, w, h)
+        x += w + spazio
+        riga = max(riga, h)
+    return posti, y + riga
+
+
+def webp(im):
+    buf = io.BytesIO()
+    im.save(buf, 'WEBP', quality=QUALITA, method=6)
+    return buf.getvalue()
+
+
+def pezzi_da_atlante(scena):
+    """I pezzi di `pezzi()` come li vuole il gioco: con un nome ciascuno,
+    e l'alfa già dentro."""
+    p = pezzi(scena)
+    fuori = {}
+    for vv, varianti in p['strada'].items():
+        for g, im in enumerate(varianti):
+            fuori[f'strada:{vv}:{g}'] = im
+    for fam in ('prato', 'fitto'):
+        for i, im in enumerate(p[fam]):
+            t = im.convert('RGBA')
+            t.putalpha(sfumatura(TOPPA, TOPPA))
+            fuori[f'{fam}:{i}'] = t
+    for fam in ('piazzola', 'albero', 'decoro'):
+        for i, im in enumerate(p[fam]):
+            fuori[f'{fam}:{i}'] = im
+    fuori['bocca'] = p['bocca']
+    fuori['castello'] = p['castello']
+    st = p['stagno'].convert('RGBA')
+    st.putalpha(sfumatura(*st.size, 12))
+    fuori['stagno'] = st
+    # il primo strato, sotto tutte le toppe: una toppa senza sfumatura,
+    # tirata su tutto il campo
+    fuori['fondo'] = p['prato'][0].convert('RGBA')
+    quanti = {fam: len(p[fam]) for fam in ('prato', 'fitto', 'piazzola', 'albero', 'decoro')}
+    return fuori, quanti
+
+
+def figure_da_atlante():
+    pb = prova_battaglia()
+    foglio = Image.open(pb.FOGLIO_TORRI).convert('RGBA')
+    fuori = {}
+    for (tipo, stadio, ramo), (col, riga) in pb.FIGURE.items():
+        fuori[f'torre:{tipo}:{stadio}:{ramo or ""}'] = pb.torre(foglio, col, riga)
+    # la torre salita senza aver preso un ramo (le tappe senza rami): la
+    # sua colonna, allo stadio che ha
+    for tipo, col in (('arciere', 'Archer'), ('magica', 'Magic'), ('ghiaccio', 'Frost'), ('bombe', 'Bomb')):
+        for stadio in (1, 2):
+            fuori[f'torre:{tipo}:{stadio}:'] = pb.torre(foglio, col, stadio)
+    creature = []
+    for nome in ('mostri-1', 'mostri-2'):
+        f = json.loads((pb.MOSTRI_SOT / f'{nome}.json').read_text())
+        sc = f['scala']
+        im = Image.open(pb.MOSTRI_SOT / f'{nome}.png').convert('RGBA')
+        for loro in sorted(set(pb.MOSTRI.values()) | {'serpente'}):
+            for i in range(8):
+                d = f['sprite'].get(f'{loro}-fermo-{i}')
+                if not d:
+                    break
+                (x, y), (w, h) = d['da'], d['cella']
+                fuori[f'mostro:{loro}:{i}'] = im.crop((x * sc, y * sc, (x + w) * sc, (y + h) * sc))
+                if loro not in creature:
+                    creature.append(loro)
+    return fuori, creature
+
+
+def js_tabella(posti):
+    righe = [f"  '{k}': [{x}, {y}, {w}, {h}]," for k, (x, y, w, h) in sorted(posti.items())]
+    return '{\n' + '\n'.join(righe) + '\n}'
+
+
+def atlante():
+    DATI.mkdir(parents=True, exist_ok=True)
+    # ── i vestiti ──
+    immagini, pesi, posti, quanti = {}, {}, None, None
+    for nome, file in SCENE.items():
+        scena = Image.open(Path(RIFERIMENTO).parent / file).convert('RGB')
+        pz, q = pezzi_da_atlante(scena)
+        if posti is None:
+            posti, alto = impacchetta({k: im.size for k, im in pz.items()})
+            quanti = q
+        foglio = Image.new('RGBA', (1024, alto), (0, 0, 0, 0))
+        for k, im in pz.items():
+            assert im.size == posti[k][2:], f'{nome}: {k} misura {im.size}, la tabella {posti[k][2:]}'
+            foglio.paste(im, posti[k][:2])
+        dati = webp(foglio)
+        immagini[nome] = base64.b64encode(dati).decode()
+        pesi[nome] = round(len(dati) / 1024)
+    tot = sum(pesi.values())
+    testa = f"""/* GENERATO da strumenti/sprite/vesti.py --atlante — non si scrive a mano.
+
+   I pezzi con cui `scena/vestito.js` compone il campo del castello a
+   celle, presi dalle tre scene generate
+   (`strumenti/sprite/sorgenti/castello/generati/td_1.png`, `td_2`,
+   `td_3`) con i ritagli di `vesti.py`. È **il provvisorio**: quando c'è
+   il foglio dei pezzi (`strumenti/sprite/DA-GENERARE.md`) questo file si
+   rifà da quello.
+
+   PEZZI    nome → [x, y, largo, alto], **uguale per le tre scene**: la
+            geometria è una sola, rivestita tre volte.
+              strada:<versi>:<variante>   una cella da {C} px, coi lati da
+                                          cui la strada prosegue (N E S O)
+              prato:<n> fitto:<n>         toppe da {TOPPA} px, già sfumate
+              piazzola:<n> albero:<n> decoro:<n>   figure scontornate
+              bocca castello stagno fondo
+   QUANTI   quante varianti ha ogni famiglia
+   SCENE    vestito → immagine WebP in base64. Pesano {' · '.join(f'{k} {v} KB' for k, v in pesi.items())},
+            {tot} KB in tutto (in base64 un terzo di più).
+*/
+"""
+    corpo = (testa +
+             f'export const CELLA = {C}\n'
+             f'export const TOPPA = {TOPPA}\n'
+             f'export const VERSI = {json.dumps(list(VERSI))}\n'
+             f'export const QUANTI = {json.dumps(quanti)}\n'
+             f'export const PEZZI = {js_tabella(posti)}\n'
+             'export const SCENE = {\n' +
+             ''.join(f"  {k}: 'data:image/webp;base64,{v}',\n" for k, v in immagini.items()) +
+             '}\n')
+    (DATI / 'vestiti.js').write_text(corpo)
+    print(f'vestiti.js: {" · ".join(f"{k} {v} KB" for k, v in pesi.items())} di WebP')
+
+    # ── le figure ──
+    pz, creature = figure_da_atlante()
+    posti, alto = impacchetta({k: im.size for k, im in pz.items()}, largo=1024)
+    foglio = Image.new('RGBA', (1024, alto), (0, 0, 0, 0))
+    for k, im in pz.items():
+        foglio.paste(im, posti[k][:2])
+    dati = webp(foglio)
+    kb = round(len(dati) / 1024)
+    testa = f"""/* GENERATO da strumenti/sprite/vesti.py --atlante — non si scrive a mano.
+
+   Le torri e i mostri del castello a celle, alla misura dei loro fogli
+   (una cella da {C} px è 16 pixel del disegno anche qui).
+
+     torre:<aspetto>:<stadio>:<ramo>   dal foglio di agosto
+                  `strumenti/sprite/sorgenti/castello/non-usati/PVX1O.png`,
+                  con la tabella `FIGURE` di `prova-battaglia.py`. Il ramo
+                  vuoto è la torre salita senza averne preso uno.
+                  ⚠ Quel foglio ha la provenienza non documentata: va
+                  rifatto col generatore prima di pubblicare il gioco.
+     mostro:<creatura>:<fotogramma>   i quattro fotogrammi del respiro,
+                  dai fogli del sotterraneo (`mostri-1.png`, `mostri-2.png`).
+                  Quale creatura per quale mostro lo dice `scena/figure.js`.
+
+   Il WebP pesa {kb} KB.
+*/
+"""
+    corpo = (testa +
+             f'export const CREATURE = {json.dumps(creature)}\n'
+             f'export const PEZZI = {js_tabella(posti)}\n'
+             f"export const IMMAGINE = 'data:image/webp;base64,{base64.b64encode(dati).decode()}'\n")
+    (DATI / 'figure.js').write_text(corpo)
+    print(f'figure.js: {len(pz)} figure, {kb} KB di WebP')
+
+
 if __name__ == '__main__':
     if len(sys.argv) == 4 and sys.argv[1] == '--provino':
         provino(Image.open(sys.argv[2]).convert('RGB'), sys.argv[3])
+    elif len(sys.argv) == 2 and sys.argv[1] == '--atlante':
+        atlante()
     else:
         sys.exit(__doc__)
