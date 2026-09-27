@@ -395,44 +395,57 @@ un'altra cosa.
 ## Il sentiero senza fine
 
 In fondo alla mappa c'è il **sentiero senza fine**: posti fatti al
-momento, uno dopo l'altro, che mescolano **tutto quello che il bambino ha
-già finito** nella campagna. A ogni posto il caso sceglie di che specie
-è — il coniglio sul prato, il cane con le pecore, o un posto con lo
-zaino (il ripeti, il fino a, il se) — e dentro, quali regole: le buche
-sì o no, il ghiaccio sì o no, il fiume da saltare, i massi. Solo fra
-quelle dei gradini finiti: chi ha sei anni e lo zaino chiuso trova prati
-e pascoli, chi ha finito tutto trova anche le scatole. Il posto appena
-giocato pesa meno, così due di fila della stessa specie sono rari.
+momento, uno dopo l'altro. È **il finale**: chi ci gioca ha già
+dimostrato di sapersela cavare, quindi la difficoltà sta **sempre in
+cima**, dal primo sentiero all'ultimo, e mescola **tutto quello che il
+bambino ha già finito** nella campagna.
+
+A ogni posto il caso sceglie di che specie è — il coniglio sul prato, il
+cane con le pecore, o un posto con lo zaino (il ripeti, il fino a, il se)
+— e il posto nasce con tutto quello che quella specie sa mettere in
+scena, **meno una o due cose**. È così che il sentiero cambia da un posto
+all'altro senza mai farsi facile:
+
+- **un prato** ha le quattro regole meno una o due — due o tre insieme,
+  il fosso da saltare, il masso da spingere nella pozza, una macchia di
+  ghiaccio, la galleria delle buche — dentro un **labirinto di siepi con
+  qualche slargo**, la tana lontana dalla partenza e la carota in un
+  vicolo. Un prato aperto tirato a caso ha quasi sempre la strada dritta,
+  e al finale non serve;
+- **un pascolo** ha tre pecore sparse e il ghiaccio, meno uno dei due;
+- **un posto con lo zaino** è una delle forme della fine della campagna,
+  con due idee insieme: due scale una dopo l'altra, le terrazze, il campo
+  arato, i sassi nel fiume, la spirale di ghiaccio, le pozze coi massi;
+  col fino a i gradini storti, il campo storto (a piedi o di sasso in
+  sasso) e le scale coi pianerottoli, a due colori; col se le colline e
+  il sentiero dei segni, sul prato o sul ghiaccio.
+
+Solo fra quello che si è finito: chi ha sei anni e lo zaino chiuso trova
+prati e pascoli, chi ha finito tutto trova anche le scatole. La specie
+appena giocata pesa meno, così due di fila uguali sono rari.
 
 Si apre **alla fine delle buche**, non della campagna, anche se sta in
 fondo: a sei anni lo zaino resta chiuso per età, e il sentiero è il posto
-dove giocare intanto. Il caso è pesato perché il posto non esca né banale
-né fuori portata: il **livello** sale ogni due sentieri della seduta (e
-parte più in alto per chi ha finito più gradini), e decide quanto è
-grande il posto, quanto è lunga la strada, quante regole insieme — una ai
-primi livelli, fino a tre più su — quante pecore, e quali forme dello
-zaino.
+dove giocare intanto.
 
-**Ogni posto ha una soluzione, sempre.** Ce ne sono due specie:
+**Ogni posto ha una soluzione, sempre, e un pavimento sotto cui non
+scende.** La strada più corta, anche lasciando perdere la carota, è di
+almeno dieci frecce in un prato, dodici in un pascolo, dodici mosse con
+lo zaino (otto o dieci dove una mossa è una scivolata o un salto), e lo
+zaino tiene almeno cinque carte. Poi:
 
-- **il prato e il pascolo** si fanno a caso e si tengono solo se il
-  risolutore dice che si vincono con la carota (l'osso), che la strada è
-  lunga quanto il livello chiede, che la carota vuole una deviazione e
-  che la regola principale serve davvero — e con due regole insieme,
-  anche la seconda. Le pecore non partono mai incastrate;
+- **il prato e il pascolo** si tengono solo se il risolutore dice che si
+  vincono con la carota (l'osso), che la carota vuole una deviazione e
+  che **tutte** le regole del posto servono davvero. Le pecore non
+  partono mai incastrate;
 - **i posti con lo zaino** vanno al contrario: prima si sceglie il
-  programma, poi si scava il posto attorno alla strada che fa. Ci sono
-  tredici forme, le stesse della campagna — la scala dove l'ordine delle
-  frecce conta, lo stagno con una scatola per lato, le terrazze, il campo
-  arato, i sassi nel fiume, il lago a gradini, le pozze coi massi, la
-  galleria sotto la siepe, le stalle del cane; col fino a i gradini storti
-  e il campo storto; col se le colline e il sentiero dei segni — ognuna
-  con le sue misure tirate a caso, e poi girata e specchiata. Il motore
-  rigioca tutto e butta il posto se la scatola non serve (la strada
-  scritta freccia per freccia ci starebbe nello zaino), se una mossa
-  ingenua vince (le frecce nell'ordine sbagliato, i colori scambiati, un
-  se dimenticato), o se col fino a **un numero qualunque** al posto del
-  colore vince lo stesso: si provano tutti.
+  programma, poi si scava il posto attorno alla strada che fa, lo si gira
+  e lo si specchia a caso. Il motore rigioca tutto e butta il posto se la
+  scatola non serve (la strada scritta freccia per freccia ci starebbe
+  nello zaino), se una mossa ingenua vince (le frecce nell'ordine
+  sbagliato, i colori scambiati, un se dimenticato), o se col fino a **un
+  numero qualunque** al posto del colore vince lo stesso: si provano
+  tutti.
 
 Il fuori, attorno alla strada, è fatto di macchie — un boschetto, uno
 stagno, una siepe — e mai di prato: un pezzo d'erba che dalla strada non

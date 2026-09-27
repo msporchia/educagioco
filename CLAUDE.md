@@ -615,18 +615,21 @@ committate: non è ricostruibile da git.
   la soluzione **si scrive** nel livello (`soluzioni`, e le `fragili` che
   non devono prendere la carota): il risolutore trova la strada più corta,
   non il programma più corto, e il 💡 parte da quella scritta.
-  **Il sentiero senza fine sta in fondo e mescola tutto quello che si è
-  finito**: a ogni posto il caso sceglie la famiglia (il coniglio sul
-  prato, il cane, lo zaino col ripeti, col fino a o col se) e dentro le
-  regole (buche sì o no, ghiaccio sì o no), fra i gradini finiti
-  (`INGREDIENTI` in `motore/generatore.js`); il livello, che sale coi
-  sentieri della seduta, decide quanto è grande e quanto è lunga la
-  strada. I posti del prato e del cane si fanno a caso e li esamina il
-  risolutore; **quelli con lo zaino vanno al contrario** — prima il
+  **Il sentiero senza fine è il finale**: sta in fondo, mescola tutto
+  quello che si è finito (`INGREDIENTI` in `motore/generatore.js`) e la
+  difficoltà è **sempre in cima** — niente scala che sale con le
+  partite, era il difetto della prima versione. La varietà la fa il caso
+  **togliendo**: a ogni posto si tira la famiglia (il coniglio sul prato,
+  il cane, lo zaino col ripeti, col fino a o col se) e il posto nasce con
+  tutto quello che la famiglia sa fare, meno una o due cose. Sotto c'è un
+  pavimento (`PAVIMENTO`, `STRADA_MIN`, `ZAINO_MIN`) misurato **senza**
+  carota. Il prato è un labirinto di siepi con le regole sulla strada
+  (`bozzaLabirinto`): un prato aperto tirato a caso non arrivava mai a
+  dieci frecce. **I posti con lo zaino vanno al contrario** — prima il
   programma, poi il posto scavato attorno alla sua strada
-  (`motore/sagome.js`, una sagoma per forma di posto) — e il motore
-  pretende che la scatola serva, che le mosse ingenue perdano e, col
-  «fino a», che nessun numero faccia le veci del colore.
+  (`motore/sagome.js`, solo forme a due idee) — e il motore pretende che
+  la scatola serva, che le mosse ingenue perdano e, col «fino a», che
+  nessun numero faccia le veci del colore.
   **Le condizioni guardano per terra**: le lastre colorate (`r u g`, con
   la forma oltre al colore). La testa di una scatola 🔁 può essere un
   numero, un colore — «fino al rosso»: un giro, e alla fine di ogni giro
