@@ -1103,17 +1103,18 @@ export const firmaTaratura = () => FIRMA
 
    La partita libera cede **sempre alla stessa ondata**, e non è
    un'impressione: oltre la ventesima la tabella delle vite finisce e
-   la vita continua a salire di `OLTRE` (1,45) per ondata, cioè +45% a
+   la vita continua a salire di `OLTRE` (1,3) per ondata, cioè +30% a
    giro. Una difesa che è già al massimo della scaletta — quattro torri
    di livello 10 — non ha più niente da comprare, quindi la ventunesima
    ondata non si può vincere giocando meglio: si può solo non giocarla.
    Un record che non si muove è un record che non si guarda più.
 
    Il regalo è quello che manca: **qualcosa che cambia fra una partita e
-   l'altra**. Tre o quattro gradi valgono grosso modo un'ondata in più —
-   è misurato, vedi `docs/castello.md` — quindi chi arriva alla venti
-   oggi arriva alla ventuno domani, e la fila dei record torna a
-   salire.
+   l'altra**. Non un'ondata a regalo — la scala è a gradoni, e il
+   record si sposta di colpo quando i gradi bastano a passare il mostro
+   del muro — ma una fila di record che sale a ogni manciata di
+   partite: misurato, vedi `docs/castello.md` e
+   `strumenti/regali-castello.mjs`.
 
    ── e perché **non** stanno nella campagna ──
 
@@ -1142,13 +1143,26 @@ export const firmaTaratura = () => FIRMA
 
    ── come sono dimensionati ──
 
-   Un grado vale grosso modo il 10% di una delle quattro torri, cioè un
-   3% della difesa in campo. Serve perché la curva lo pretende: sopra la
-   ventesima ondata guadagnare un'ondata vuol dire reggere il 45% di
-   vita in più, e i cinque cuori la ammorbidiscono solo un po'. Gradini
-   più grossi comprerebbero tre ondate alla prima partita; più piccoli
-   non si sentirebbero mai. `docs/castello.md` porta la tabella
-   misurata. */
+   **Piccoli: +5% a quello che toccano**, perché non si perdono mai. Se
+   ne prendono quattro a partita (uno ogni cinque ondate, e il muro sta
+   dopo la ventesima), quindi cento gradi sono venticinque partite, e
+   chi gioca spesso ne ha centinaia. Un gradino che sulla carta sembra
+   enorme (+30%, com'era all'inizio) dopo un mese è una difesa che non
+   cede più, e un bambino lo legge come «+30%? tantissimo» anche quando
+   al muro non sposta niente. Col passo piccolo, **dentro lo stesso
+   regalo i gradi si sommano** (+5%, +10%, +15%…: il ventesimo grado
+   raddoppia quello che tocca) e regali diversi si moltiplicano fra
+   loro, perché toccano cose diverse (il danno, la cadenza, il raggio).
+
+   Il prezzo è che il record si muove più tardi: sopra la ventesima
+   ondata guadagnare un'ondata vuol dire reggere il 30% di vita in più,
+   e dieci gradi non bastano quasi mai. Misurato sulle quattro libere
+   (`strumenti/regali-castello.mjs`, e il banco in
+   `unita/regali-castello`): venti gradi spostano il record di un'ondata
+   (cinque nel delta), cinquanta di tre-nove, cento di sette-nove, e il
+   rendimento cala da sé — la vita cresce a moltiplicare, i gradi a
+   sommare. Un tetto per regalo non serve: il tetto lo mette già la
+   curva. `docs/castello.md` porta la tabella. */
 export const OGNI_REGALO = 5
 
 /* Quante carte si offrono fra cui scegliere: tre, perché su uno schermo
@@ -1176,17 +1190,19 @@ export const REGALI = [
   /* L'arciere è l'unico che colpisce un nemico solo, ed è la torre a
      cui sono immuni più mostri (goblin, ragno, orco, golem, lupo…:
      guarda `data/mostri.js`). Perciò il suo gradino è il più grosso del
-     catalogo, e non è generosità: misurato al muro, +10% di arciere
-     vale un settimo di +10% di bombe. */
+     catalogo (+8% invece di +5%), e non è generosità: misurato al muro,
+     +10% di arciere vale un settimo di +10% di bombe. Non di più,
+     però: sulla carta si deve leggere come un passo, non come un
+     tesoro. */
   { id: 'frecce', emoji: '🏹', nome: 'Frecce affilate', torre: 'add',
-    che: 'gli arcieri fanno molto più male', per: '+30% di danno',
-    dai: (d, g) => { d.danno.arciere += 0.30 * g } },
+    che: 'gli arcieri fanno più male', per: '+8% di danno',
+    dai: (d, g) => { d.danno.arciere += 0.08 * g } },
   { id: 'incanto', emoji: '🔮', nome: 'Incanto più forte', torre: 'sub',
-    che: "l'onda magica fa più male", per: '+12% di danno',
-    dai: (d, g) => { d.danno.magica += 0.12 * g } },
+    che: "l'onda magica fa più male", per: '+5% di danno',
+    dai: (d, g) => { d.danno.magica += 0.05 * g } },
   { id: 'polvere', emoji: '💣', nome: 'Polvere da sparo', torre: 'div',
-    che: 'le bombe fanno più male', per: '+8% di danno',
-    dai: (d, g) => { d.danno.bombe += 0.08 * g } },
+    che: 'le bombe fanno più male', per: '+5% di danno',
+    dai: (d, g) => { d.danno.bombe += 0.05 * g } },
   /* Il ghiaccio non fa danno, quindi il suo regalo non può essere «più
      danno» — e **non può essere solo più gelo**: il freno è già al
      tetto e allungare la durata oltre la strada non aggiunge niente
@@ -1197,11 +1213,11 @@ export const REGALI = [
      e vale tanto quanto le altre perché passa dal danno degli altri. */
   { id: 'gelo', emoji: '❄️', nome: 'Gelo che morde', torre: 'mul',
     che: 'il gelo dura di più, e chi è gelato prende più male da tutti',
-    per: '+0,4 s di gelo e +4% di danno su chi è gelato',
-    dai: (d, g) => { d.gelo += 0.4 * g; d.fragile += 0.04 * g } },
+    per: '+0,2 s di gelo e +3% di danno su chi è gelato',
+    dai: (d, g) => { d.gelo += 0.2 * g; d.fragile += 0.03 * g } },
   { id: 'vista', emoji: '🦅', nome: 'Vista lunga',
-    che: 'tutte le torri arrivano più lontano', per: '+9% di raggio',
-    dai: (d, g) => { d.raggio += 0.09 * g } },
+    che: 'tutte le torri arrivano più lontano', per: '+5% di raggio',
+    dai: (d, g) => { d.raggio += 0.05 * g } },
   /* Vale solo per chi ha scelto il ramo che avvelena o che brucia, e va
      detto sulla carta: un regalo che non fa niente è peggio di un
      regalo che non c'è. Chi è immune alla torre è immune anche al suo
@@ -1209,13 +1225,15 @@ export const REGALI = [
      che rimbalza non lascia niente dentro. */
   { id: 'veleno', emoji: '☠️', nome: 'Veleno tenace', ramo: true,
     che: 'veleno e fuoco fanno più male — solo le torri che ce l\'hanno',
-    per: '+30% di veleno',
-    dai: (d, g) => { d.veleno += 0.30 * g } },
+    per: '+8% di veleno',
+    dai: (d, g) => { d.veleno += 0.08 * g } },
   /* ── il settimo tocca tutti, e passa dal tempo ──
      Ricaricare più in fretta è danno in più senza dirlo, e vale per
      tutte e quattro le torri — ghiaccio compreso, che così rinfresca il
      gelo più spesso. È il regalo di chi in campo ha un po' di tutto e
-     non vuole scegliere.
+     non vuole scegliere, e per questo il suo grado è il più piccolo
+     (+3%): anche così, quaranta gradi tutti qui sono la voce che porta
+     più lontano (`node strumenti/regali-castello.mjs --soli 40`).
 
      ── i due che sono stati provati e non ci sono ──
      **«+1 cuore»** non vale niente: l'ondata che ferma la partita non
@@ -1231,8 +1249,8 @@ export const REGALI = [
      prende. Quello che non sposta niente e quello che sposta tutto
      costano la stessa scelta, e nessuno dei due si tiene. */
   { id: 'cadenza', emoji: '💨', nome: 'Mani veloci',
-    che: 'tutte le torri ricaricano più in fretta', per: '+4% di cadenza',
-    dai: (d, g) => { d.cadenza += 0.04 * g } },
+    che: 'tutte le torri ricaricano più in fretta', per: '+3% di cadenza',
+    dai: (d, g) => { d.cadenza += 0.03 * g } },
 ]
 
 export const regaloDi = id => REGALI.find(r => r.id === id) || null
@@ -1338,7 +1356,7 @@ export function blocchettoDi(torri = [], regali = null) {
            totale: gradini + regaliPresi }
 }
 
-/* «+30% di danno» preso tre volte è «+90% di danno»: ogni numero della
+/* «+5% di danno» preso tre volte è «+15% di danno»: ogni numero della
    frase moltiplicato per i gradi, con la virgola all'italiana. La frase
    di un regalo è scritta per un grado solo (`per` nel catalogo), e il
    foglio dice quanto fanno tutti insieme. */

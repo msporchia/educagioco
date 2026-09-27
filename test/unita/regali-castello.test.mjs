@@ -5,7 +5,7 @@
    La partita libera cedeva **sempre alla stessa ondata** — la ventesima,
    con i cinque cuori intatti fino a lì — e non per come si giocava: a
    quel punto la difesa è già in cima alla scaletta e la vita dei nemici
-   continua a salire del 45% a ondata. Un record che non si muove non è
+   continua a salire del 30% a ondata. Un record che non si muove non è
    un record. Da qui i regali: ogni cinque ondate un potenziamento da
    scegliere, che **resta anche domani**.
 
@@ -26,9 +26,10 @@
      4. **la cadenza**: uno ogni cinque ondate, l'ondata non parte finché
         non è scelto (così un regalo rimandato non si perde) e non se ne
         accumulano due.
-     5. **i regali si sentono, e non rendono immortali**: con k regali si
-        arriva più lontano che con zero, e con quaranta sulla stessa voce
-        si muore comunque.
+     5. **i regali si sentono, e non rendono immortali**: con cinquanta
+        gradi (una dozzina di partite) ogni libera arriva più lontano che
+        con zero, con quattrocento si muore comunque, e con quaranta
+        sulla stessa voce pure.
 
    `node test/esegui.mjs regali --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
@@ -37,7 +38,7 @@ import { REGALI, OGNI_REGALO, QUANTE_CARTE, LIBERA, LIBERE, TAPPE, MONDO, CFG, s
          tiroConDoni, geloConDoni, tiroDi, geloDi } from '../../src/data/castello.js'
 import { creaBattaglia } from '../../src/motore/battaglia.js'
 import { Nemico } from '../../src/motore/castello/nemico.js'
-import { gioca, PROFILI } from '../../strumenti/simula-castello.mjs'
+import { finoDove } from '../../strumenti/regali-castello.mjs'
 import { regaliDi, regaloPreso } from '../../src/giochi/campagne.js'
 import { state, init, creaGiocatore } from '../../src/store/profile.js'
 import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -113,9 +114,11 @@ uguale('un profilo senza regali ne ha zero', quantiRegali(undefined), 0)
          JSON.stringify(tiroConDoni('add', 5, null, null)), JSON.stringify(tiroDi('add', 5)))
   uguale('e con i doni a riposo pure',
          JSON.stringify(tiroConDoni('add', 5, null, doniZero())), JSON.stringify(tiroDi('add', 5)))
+  /* un grado è piccolo apposta (+8% all'arciere, +5% agli altri): qui
+     si prova che si somma, due gradi di frecce sono +16% */
   const d = doniDi({ frecce: 2 })
   controlla('due gradi di frecce alzano il danno dell\'arciere',
-            tiroConDoni('add', 5, null, d).danno > tiroDi('add', 5).danno * 1.3,
+            Math.abs(tiroConDoni('add', 5, null, d).danno - tiroDi('add', 5).danno * 1.16) < 1e-9,
             `${tiroDi('add', 5).danno.toFixed(1)} → ${tiroConDoni('add', 5, null, d).danno.toFixed(1)}`)
   uguale('e non toccano la magica',
          tiroConDoni('sub', 5, null, d).danno, tiroDi('sub', 5).danno)
@@ -128,7 +131,7 @@ uguale('un profilo senza regali ne ha zero', quantiRegali(undefined), 0)
   const v = doniDi({ veleno: 4 })
   uguale('il veleno non tocca chi non avvelena', tiroConDoni('sub', 5, null, v).veleno, 0)
   controlla('e fa più male a chi ce l\'ha',
-            tiroConDoni('sub', 5, 'veleno', v).veleno > tiroDi('sub', 5, 'veleno').veleno * 2,
+            tiroConDoni('sub', 5, 'veleno', v).veleno > tiroDi('sub', 5, 'veleno').veleno * 1.3,
             `${tiroDi('sub', 5, 'veleno').veleno.toFixed(1)} → ` +
             `${tiroConDoni('sub', 5, 'veleno', v).veleno.toFixed(1)}`)
   /* il gelo: dura di più **e** rende più fragile. La seconda metà è
@@ -136,7 +139,7 @@ uguale('un profilo senza regali ne ha zero', quantiRegali(undefined), 0)
      è «più gelo» e basta. */
   const g = doniDi({ gelo: 5 })
   const prima = geloDi(6), dopo = geloConDoni(6, null, g)
-  controlla('il gelo regalato dura di più', dopo.durata > prima.durata + 1,
+  controlla('il gelo regalato dura di più', dopo.durata > prima.durata + 0.9,
             `${prima.durata.toFixed(1)}s → ${dopo.durata.toFixed(1)}s`)
   controlla('e chi è gelato diventa più fragile', dopo.fragile > prima.fragile,
             `×${prima.fragile.toFixed(2)} → ×${dopo.fragile.toFixed(2)}`)
@@ -268,69 +271,64 @@ for (const l of LIBERE) {
 }
 
 /* ══════════ 4. quanto valgono, misurato giocando ══════════
-   La scala è a gradoni — oltre la ventesima la vita sale del 45% a
-   ondata, e passare un muro fa arrivare di colpo tre ondate più in là —
-   quindi qui non si controlla «un regalo, un'ondata»: si controlla che
-   la curva **salga** e che non finisca mai in cielo.
+   Un grado è piccolo apposta — +5% a quello che tocca, +8% all'arciere,
+   +3% a quello che tocca tutte le torri — perché i gradi **restano per
+   sempre** e si riprendono senza tetto: a quattro per partita, cento
+   gradi sono venticinque partite, e un gradino da +30% dopo cento
+   partite avrebbe fatto la difesa immortale. Il prezzo del gradino
+   piccolo è che il record si muove più tardi, e questa sezione dice
+   **quanto più tardi**, giocando.
+
+   Le partite le gioca `strumenti/regali-castello.mjs` (che stampa anche
+   la tabella intera): il giocatore modello fino alla sconfitta, con N
+   gradi presi **come li prende un bambino** — dal giro delle tre carte,
+   non spalmati in ordine di catalogo — e i regali della partita dallo
+   stesso punto del giro. Una partita costa un decimo di secondo, quindi
+   si misurano tutte e quattro le libere: il muro di ognuna è un mostro
+   diverso, e un regalo che sfonda nel delta può non spostare niente nel
+   bosco. La scala è a gradoni — un muro passato fa arrivare di colpo tre
+   ondate più in là — quindi non si controlla «un regalo, un'ondata»: si
+   controlla che la curva **salga**, da dove, e che non finisca in cielo.
 
    `tempo: 60` in testa al file: sono partite vere giocate fino alla
-   sconfitta, e costano secondi. La scala si misura **sulla prima
-   libera** (il bosco, che è anche quella che eredita il record di
-   ieri): le altre tre hanno la loro tabella e il loro muro, e che
-   ognuna regga e ceda lo controlla `unita/castello`. Misurarla quattro
-   volte costerebbe quattro volte tanto per dire la stessa cosa — i
-   regali sono gli stessi, e la curva sale a moltiplicare dappertutto. */
-/* si gioca com'è in gioco (`ondate: Infinity`), non come una campagna
-   da novanta: cambierebbe da quando le ondate arrivano da tutte e due
-   le bocche. `attesa: 1` toglie solo il tempo morto: il metro non
-   chiama mai l'ondata, e trenta secondi per trentasette ondate sono
-   mezz'ora dell'ora che il simulatore concede a una partita — con
-   cento regali si arrivava allo stallo per orologio, non per difesa */
-const LUNGA = { ...LIBERA, attesa: 1 }
-const SEMI = [7, 29]
-const spalma = k => {
-  const o = {}
-  for (let i = 0; i < k; i++) { const id = IDS[i % IDS.length]; o[id] = (o[id] || 0) + 1 }
-  return o
+   sconfitta. */
+const GRADI = [0, 20, 50, 100, 400]
+const scale = LIBERE.map(l => ({ l, scala: GRADI.map(k => ({ k, ...finoDove(l, k) })) }))
+for (const { l, scala } of scale) {
+  for (const [i, p] of scala.entries()) {
+    if (i) controlla(`${l.nome}: ${p.k} gradi non portano meno lontano di ${scala[i - 1].k}`,
+                     p.onda >= scala[i - 1].onda,
+                     `o${scala[i - 1].onda} → o${p.onda}`)
+    controlla(`${l.nome}: con ${p.k} gradi si perde comunque`, p.esito === 'persa',
+              `con ${p.k} gradi la partita non finisce più (${p.esito} all'ondata ${p.onda})`)
+  }
+  /* Cinquanta e non dieci. Dieci gradi sono un +8% qui e un +5% là, e
+     oltre la ventesima la vita sale del 30% a ondata (`OLTRE`): nel
+     bosco e nel sotterraneo dieci gradi non spostano il record di
+     un'ondata, e venti lo spostano di una. Cinquanta sono una dozzina
+     di partite, ed è da lì che la promessa regge su tutti e quattro i
+     terreni. */
+  const [zero, , cinquanta] = scala
+  controlla(`${l.nome}: i regali si sentono — cinquanta gradi portano più lontano di zero`,
+            cinquanta.onda > zero.onda, `zero → o${zero.onda}, cinquanta → o${cinquanta.onda}`)
+  /* il rendimento cala: i primi cento gradi comprano ondate, i trecento
+     dopo molte meno per grado. È la condizione perché accumularli per
+     sempre non porti in cielo — la vita cresce a moltiplicare, i gradi
+     dello stesso regalo a sommare, e il moltiplicare vince sempre. */
+  const perGrado = (a, b) => (scala[b].onda - scala[a].onda) / (scala[b].k - scala[a].k)
+  controlla(`${l.nome}: e quattrocento non rendono immortali — il rendimento cala`,
+            perGrado(3, 4) < perGrado(0, 3),
+            `${perGrado(0, 3).toFixed(3)} ondate per grado fino a cento, ` +
+            `${perGrado(3, 4).toFixed(3)} da cento a quattrocento`)
+  nota(`${l.nome}: ` + scala.map(p => `${p.k} gradi → o${p.onda}`).join(' · '))
 }
-const finoDove = regali => {
-  const r = SEMI.map(s => gioca(LUNGA, { ...PROFILI.misura, s, regali }))
-  return { onda: r.reduce((n, x) => n + x.onda, 0) / r.length,
-           persa: r.every(x => x.esito === 'persa') }
-}
-
-const scala = [0, 10, 35, 140].map(k => ({ k, ...finoDove(spalma(k)) }))
-for (const [i, p] of scala.entries()) {
-  if (i) controlla(`${p.k} regali non portano meno lontano di ${scala[i - 1].k}`,
-                   p.onda >= scala[i - 1].onda,
-                   `o${scala[i - 1].onda.toFixed(1)} → o${p.onda.toFixed(1)}`)
-  controlla(`con ${p.k} regali si perde comunque`, p.persa,
-            `con ${p.k} regali la partita non finisce più: la libera diventa una schermata fissa`)
-}
-/* Trentacinque e non dieci: con le immunità la prima ondata oltre la
-   tabella è quella di un mostro che metà delle torri non tocca (nella
-   radura grande è lo slime, che per giunta si divide), e dieci gradi
-   spalmati su sette voci non bastano a passarla — trentacinque sì. */
-controlla('i regali si sentono: trentacinque portano più lontano di zero',
-          scala[2].onda > scala[0].onda,
-          `zero → o${scala[0].onda.toFixed(1)}, trentacinque → o${scala[2].onda.toFixed(1)}`)
-/* il rendimento cala: i primi dieci regali comprano ondate, gli ultimi
-   cento molte meno per regalo. È la condizione perché accumularli per
-   sempre non porti in cielo — la vita dei nemici cresce a moltiplicare,
-   i regali a sommare, e il moltiplicare vince sempre. */
-const perRegalo = (a, b) => (scala[b].onda - scala[a].onda) / (scala[b].k - scala[a].k)
-controlla('e cento non rendono immortali: il rendimento cala',
-          perRegalo(2, 3) < perRegalo(0, 2),
-          `${perRegalo(0, 2).toFixed(2)} ondate per regalo all'inizio, ` +
-          `${perRegalo(2, 3).toFixed(2)} in fondo`)
-nota('fin dove arriva il metro: ' + scala.map(p => `${p.k} regali → o${p.onda.toFixed(1)}`).join(' · '))
 /* e quaranta tutti sulla stessa voce: è previsto (si può riprendere lo
    stesso regalo quante volte si vuole) e non deve sfondare il gioco */
-const soli = REGALI.map(r => ({ r, ...finoDove({ [r.id]: 40 }) }))
-for (const { r, persa, onda } of soli)
-  controlla(`quaranta ${r.id}: si muore comunque`, persa, `o${onda}`)
-nota('quaranta gradi su una voce sola: ' +
-     soli.map(({ r, onda }) => `${r.emoji} o${onda.toFixed(0)}`).join(' · '))
+const soli = REGALI.map(r => ({ r, ...finoDove(LIBERA, 40, { soli: r.id }) }))
+for (const { r, esito, onda } of soli)
+  controlla(`quaranta ${r.id}: si muore comunque`, esito === 'persa', `${esito} a o${onda}`)
+nota('quaranta gradi su una voce sola, nel bosco: ' +
+     soli.map(({ r, onda }) => `${r.emoji} o${onda}`).join(' · '))
 
 /* ══════════ 5. il posto nel profilo ══════════
    Fuori dal browser l'archivio degrada in memoria da sé, quindi il giro

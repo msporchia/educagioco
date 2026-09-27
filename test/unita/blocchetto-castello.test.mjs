@@ -38,12 +38,12 @@ uguale('due regali sulle frecce e uno sulla vista fanno tre', r.regaliPresi, 3)
 uguale('e il totale li conta', r.totale, 10)
 const frecce = r.regali.find(x => x.id === 'frecce')
 uguale('la frase di un regalo preso due volte è moltiplicata', frecce.quanto,
-       REGALI.find(x => x.id === 'frecce').per.replace('30', '60'))
+       REGALI.find(x => x.id === 'frecce').per.replace('8', '16'))
 controlla('e gli arcieri con le frecce affilate fanno di più',
           r.torri.find(t => t.tipo === 'add').piu > arcieri.piu,
           `${arcieri.piu}% → ${r.torri.find(t => t.tipo === 'add').piu}%`)
 uguale('i numeri con la virgola restano all\'italiana',
-       blocchettoDi([], { gelo: 3 }).regali[0].quanto, '+1,2 s di gelo e +12% di danno su chi è gelato')
+       blocchettoDi([], { gelo: 3 }).regali[0].quanto, '+0,6 s di gelo e +9% di danno su chi è gelato')
 nota(`esempio: ${r.totale} potenziamenti · ` +
      r.torri.map(t => `${t.tipo} ×${t.quante} +${t.piu}%`).join(' · '))
 

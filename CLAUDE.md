@@ -1229,8 +1229,20 @@ committate: non è ricostruibile da git.
   potenziamento fra tre carte e **resta per sempre**, riprendibile
   quante volte si vuole: senza, quella modalità cedeva sempre
   all'ondata venti — la difesa è già in cima alla scaletta e la vita
-  sale del 45% a ondata — e un record che non si muove nessuno lo
-  guarda. **Nella campagna non si applicano**: la tappa deve
+  sale del 30% a ondata — e un record che non si muove nessuno lo
+  guarda. **Un grado è piccolo: +5% a quello che tocca** (+8%
+  all'arciere, che per punto rende meno; +3% alla cadenza, che tocca
+  tutte le torri), perché i gradi non si perdono mai e a quattro per
+  partita chi gioca spesso ne ha centinaia: un +30% sulla carta,
+  com'era all'inizio, dopo un mese è una difesa che non cede più. Dentro
+  lo stesso regalo i gradi si **sommano** (il ventesimo raddoppia),
+  regali diversi si moltiplicano perché toccano cose diverse. Il prezzo
+  è che il record si muove tardi — dieci gradi quasi mai, cinquanta
+  (una dozzina di partite) sì su tutti e quattro i terreni, ed è quello
+  che il banco pretende — e un tetto per regalo non serve, perché la
+  vita cresce a moltiplicare e i gradi a sommare: la tabella la stampa
+  `node strumenti/regali-castello.mjs`, che prende i gradi dal giro
+  delle carte come un bambino. **Nella campagna non si applicano**: la tappa deve
   dichiararli (`regali: true`, ce l'hanno solo le quattro `LIBERE`) e
   il motore ignora quelli che gli arrivano per una tappa che non li
   prevede,

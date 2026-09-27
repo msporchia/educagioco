@@ -215,7 +215,7 @@ Una partita libera non finisce mai, ma **finiva sempre allo stesso punto**:
 l'ondata venti, con tutti e cinque i cuori ancora pieni fino a lì. Non per
 come si giocava — a quel punto la difesa è già in cima alla scaletta e non
 c'è più niente da comprare, mentre la vita dei nemici continua a salire del
-45% a ondata. Un record che non si muove smette di essere un record.
+30% a ondata. Un record che non si muove smette di essere un record.
 
 Adesso **ogni cinque ondate arriva un regalo**: tre carte, se ne sceglie una,
 e quello che si prende **resta per sempre** — vale anche nelle partite di
@@ -224,9 +224,15 @@ voci in catalogo: frecce più affilate, incanto più forte, polvere da sparo,
 gelo che morde, vista lunga, veleno tenace, mani veloci.
 
 Così la partita libera diventa quello che deve essere: **una fila di record
-che sale**. Le prime partite si ferma alla venti; con una decina di regali in
-tasca passa il muro e arriva alla ventiquattresima; poi si va avanti a
-guadagnare ondate sempre più lentamente.
+che sale**, a ogni manciata di partite e non a ogni partita.
+
+**Un regalo è un passo piccolo: +5%** a quello che tocca (+8% alle frecce,
+perché l'arciere per punto rende meno; +3% alla cadenza, che tocca tutte le
+torri). È piccolo perché non si perde mai: se ne prendono quattro a partita,
+e chi gioca spesso ne ha centinaia. Lo stesso regalo preso più volte si
+**somma** (+5%, +10%, +15%… e al ventesimo la torre fa il doppio), regali
+diversi si moltiplicano fra loro. All'inizio erano +30%, e dopo un mese
+sarebbero diventati una difesa che non cede più.
 
 **Solo nelle partite libere.** Le venti tappe della campagna sono tarate
 ondata per ondata da un simulatore, e un bonus che cresce col giocare
@@ -235,22 +241,26 @@ dipende da quante partite libere si sono fatte prima. Il motore i regali li
 applica soltanto dove la tappa li dichiara, e a dichiararli sono solo le
 quattro libere.
 
-**Quanto vale un regalo**, misurato facendo giocare il simulatore sulla
-libera del bosco (`node test/esegui.mjs regali`, che rifà queste misure a
-ogni giro):
+**Quanto vale un regalo**, misurato facendo giocare il simulatore su tutte e
+quattro le libere, con i gradi presi come li prende un bambino dal giro delle
+carte (`node strumenti/regali-castello.mjs`; il banco è
+`node test/esegui.mjs regali`):
 
-| regali in tasca | fin dove arriva |
-|---|---|
-| 0 | ondata 20 |
-| 10 | ondata 25 |
-| 35 | ondata 31 |
-| 140 | ondata 39 |
+| gradi in tasca | 0 | 10 | 20 | 35 | 50 | 100 | 200 | 400 |
+|---|---|---|---|---|---|---|---|---|
+| la radura grande | 21 | 21 | 22 | 22 | 28 | 28 | 31 | 31 |
+| il bivio | 24 | 24 | 25 | 25 | 27 | 32 | 32 | 38 |
+| il bastione | 21 | 22 | 22 | 24 | 24 | 29 | 29 | 34 |
+| il delta | 22 | 27 | 27 | 27 | 31 | 31 | 34 | 38 |
 
-I salti sono a gradoni e non uno per volta, e il rendimento cala: oltre la
-ventesima la vita cresce a moltiplicare (×1,3 a ondata, su ogni terreno), i
-regali a sommare, e il moltiplicare vince sempre — quaranta gradi tutti sulla
-stessa voce portano dalla 20 alla 25-28, non oltre. Immortali non si
-diventa, ed è la condizione perché la modalità resti un gioco.
+I salti sono a gradoni e non uno per volta: il record si sposta di colpo
+quando i gradi bastano a passare il mostro del muro, e poi resta fermo fino
+al muro dopo. Dieci gradi quasi non si sentono, cinquanta (una dozzina di
+partite) spostano il record su tutti e quattro i terreni. E il rendimento
+cala da sé: oltre la ventesima la vita cresce a moltiplicare (×1,3 a ondata,
+su ogni terreno), i gradi a sommare, e il moltiplicare vince sempre — per
+questo non serve un tetto. Immortali non si diventa, ed è la condizione
+perché la modalità resti un gioco.
 
 **Una scelta fatta a occhi aperti**: un regalo non si paga con un esercizio,
 e in questo progetto tutto quello che si riceve si paga in esercizio
