@@ -132,9 +132,21 @@ function torre(p, cosa) {
 
 /* ── il mostro ──
    Il piede sulla strada, un filo sotto la sua mezzeria (10 px del
-   foglio, come nella battaglia finta): la strada è larga e un mostro
+   foglio a misura piena, 8 da quando i mostri stanno a metà: la
+   strada è larga e un mostro
    che ci cammina esattamente in mezzo sembra appeso. */
-const PIEDE_MOSTRO = 10 * UNITA
+const PIEDE_MOSTRO = 8 * UNITA
+/* ── quanto grandi in campo ──
+   I fogli delle creature sono dipinti alla grana delle scene, ma alla
+   misura di un mostro del sotterraneo, dove una creatura è grande quanto
+   l'eroe e riempie la sua cella. Qui la cella è di una torre: alla misura
+   del foglio uno scorpione occupava tre volte la strada ed era grande
+   quanto la torre che gli spara, e a vederlo non tornava. A metà si
+   legge ancora bene, e la strada torna a essere una strada con dei
+   mostri sopra. Vale per tutti: le proporzioni fra loro restano quelle
+   del foglio (il golem più grosso della melma), e il capo è grande
+   `taglia` volte questo. */
+const MISURA_MOSTRI = 0.5
 function mostro(p, cosa) {
   if (!img) return PITTORI.mostro(p, cosa)
   const { x, y, bestia, vita = 1, gelo = 0, vola = false, verso = 0,
@@ -146,22 +158,25 @@ function mostro(p, cosa) {
   const n = serie[Math.floor(p.tempo * (passi ? 8 : 5) + x * 0.07 + y * 0.05) % serie.length]
   const piede = y + PIEDE_MOSTRO
   const alto = vola && !aTerra ? -9 * S + Math.sin(p.tempo * 2.6 + x * 0.05) * 2.2 * S : 0
-  p.velo(vola ? 0.5 : 1, () => p.ellisse(x, piede - 1 * S, 9 * S * taglia, 3 * S * taglia, '#00000033'))
+  p.velo(vola ? 0.5 : 1, () => p.ellisse(x, piede - 1 * S, 6 * S * taglia, 2 * S * taglia, '#00000033'))
+  const scala = taglia * MISURA_MOSTRI
   if (aTerra) {
     /* a terra: stesa di fianco, sbiadita, e tre stelline che girano
-       sopra — non è finita, fra un attimo si rialza */
+       sopra — non è finita, fra un attimo si rialza. Stesa, la figura è
+       alta quanto era larga: le stelline girano appena sopra quella
+       misura, non a un'altezza fissa che a metà taglia le staccava */
     p.velo(0.55, () => p.in(x, piede - 4 * S, () =>
-      figura(p.ctx, n, 0, 0, { scala: taglia }), Math.PI / 2))
+      figura(p.ctx, n, 0, 0, { scala }), Math.PI / 2))
+    const sopra = piede - 4 * S - PEZZI[n][2] * UNITA * scala / 2 - 3 * S
     for (let i = 0; i < 3; i++) {
       const a = p.tempo * 4 + i * 2.09
-      p.cerchio(x + Math.cos(a) * 8 * S, piede - 14 * S + Math.sin(a) * 2.5 * S, 1.6 * S, '#ffe27a')
+      p.cerchio(x + Math.cos(a) * 8 * S, sopra + Math.sin(a) * 2.5 * S, 1.6 * S, '#ffe27a')
     }
     return
   }
   /* le figure del foglio guardano a destra (o chi guarda, quelle di
      fronte): chi va a sinistra si specchia */
-  const { lh } = figura(p.ctx, n, x, piede + alto, { specchia: verso < 0, scala: taglia })
-  const cima = piede + alto - lh
+  const { lh } = figura(p.ctx, n, x, piede + alto, { specchia: verso < 0, scala })
   if (gelo > 0) {
     // il gelo: un velo azzurro sul corpo e tre schegge, come nel castello a poligoni
     const cy = piede + alto - lh * 0.45, r = Math.max(9 * S, lh * 0.45)
@@ -173,8 +188,14 @@ function mostro(p, cosa) {
                 [x + Math.cos(a - 0.3) * r, cy + Math.sin(a - 0.3) * r]], '#e8f7ff')
     }
   }
-  // la barra della vita sopra la testa, ferma anche se il mostro vola
-  const sopra = Math.min(cima, piede - 16 * S) - 4 * S
+  /* la barra della vita sopra la testa, ferma anche se il mostro vola:
+     si misura dalla testa senza l'ondeggio, e chi vola la tiene un filo
+     più su perché ondeggiando non ci sbatta contro. Prima c'era un
+     pavimento a sedici punti sopra il piede, che alla misura del foglio
+     non scattava mai e a metà misura scattava sempre: la barra restava
+     a mezz'aria sopra una melma alta la metà */
+  const testa = piede + (vola ? -9 * S : 0) - lh
+  const sopra = testa - (vola ? 4 : 2.5) * S
   const w = 15 * S * Math.min(taglia, 1.6), q = Math.max(0, Math.min(1, vita))
   p.rett(x - w / 2 - 0.7 * S, sopra - 0.7 * S, w + 1.4 * S, 2.6 * S + 1.4 * S, '#00000055')
   p.rett(x - w / 2, sopra, w * q, 2.6 * S, q > 0.5 ? '#38c172' : q > 0.25 ? '#ffc93c' : '#ff5c7a')
