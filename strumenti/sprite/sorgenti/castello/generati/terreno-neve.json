@@ -1,0 +1,12 @@
+{
+ "__": "La neve: lo stesso foglio del bosco rifatto pezzo per pezzo (prompt 2 della neve, voce 4 di DA-GENERARE.md), quindi le coordinate e le misure sono quelle di terreno-bosco.json ('come'): qui c'e' solo quello che cambia. Il fondo e' un magenta pieno e non la scacchiera, perche' sulla neve la scacchiera dipinta non si toglierebbe: gli orli dei pezzi sono bianchi come lei. Il magenta del generatore e' rumoroso — (247,4,250), (250,2,251), (246,10,245) — e lascia un filo viola sugli orli: lo toglie vesti.py (senza_fondo).",
+ "come": "terreno-bosco.json",
+ "fondo": [255, 0, 255],
+ "prompt": {
+  "scheda": "PROMPT-scenario.md",
+  "prompt": "2 della neve (voce 4 di DA-GENERARE.md)",
+  "allegati": ["td_2.png"],
+  "generatore": "settembre 2026, nella chat del foglio del bosco",
+  "testo": "Rifai lo stesso foglio, pezzo per pezzo, ogni pezzo nella stessa posizione e della stessa misura, vestito come la scena allegata: la neve. Il prato diventa neve, il bosco fitto e gli alberi diventano abeti innevati, i laghetti e il lago diventano ghiaccio con la riva innevata, il sentiero è terra battuta grigia, le piattaforme sono assi coperte di neve, la tana è una grotta nella roccia innevata. Il castello resta lo stesso. Il fondo dietro i pezzi è un magenta pieno e uniforme (#FF00FF), senza scacchiera, senza sfumature e senza ombre. Non spostare niente: cambia solo il vestito."
+ }
+}

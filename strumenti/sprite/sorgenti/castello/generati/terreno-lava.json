@@ -1,0 +1,16 @@
+{
+ "__": "La lava: lo stesso foglio del bosco rifatto pezzo per pezzo (prompt 2 della lava, voce 4 di DA-GENERARE.md), quindi coordinate e misure sono quelle di terreno-bosco.json ('come'). Fondo magenta pieno come la neve. Due cose sue: il fondo e il fondo 'qua e la'' hanno dei cristalli arancioni sparsi — erano vietati dal prompt, e su un fondo ripetuto sembrano gemme — quindi le toppe si prendono dove ce ne sono meno ('evita': 'acceso', vedi quiete in vesti.py); e il castello e' stato rivestito di pietra nera con le crepe di lava invece di restare quello del bosco. Va bene cosi', e si usa.",
+ "come": "terreno-bosco.json",
+ "fondo": [255, 0, 255],
+ "prompt": {
+  "scheda": "PROMPT-scenario.md",
+  "prompt": "2 della lava (voce 4 di DA-GENERARE.md)",
+  "allegati": ["td_3.png"],
+  "generatore": "settembre 2026, nella chat del foglio del bosco",
+  "testo": "Rifai lo stesso foglio, pezzo per pezzo, ogni pezzo nella stessa posizione e della stessa misura, vestito come la scena allegata ma più calmo: il fondo è roccia scura uniforme con poche crepe, senza fiammelle sparse e senza cristalli. I laghetti e il lago sono lava con la riva di roccia, il bosco fitto sono rupi scure, gli alberi sono alberi secchi, il sentiero è terra bruciata chiara, le piattaforme sono lastre di pietra scura, la tana è una grotta nella roccia vulcanica. Il castello resta lo stesso. Il fondo dietro i pezzi è un magenta pieno e uniforme (#FF00FF), senza scacchiera, senza sfumature e senza ombre. Non spostare niente: cambia solo il vestito."
+ },
+ "sprite": {
+  "fondo": {"evita": "acceso"},
+  "fondo-qua": {"evita": "acceso"}
+ }
+}
