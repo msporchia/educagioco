@@ -61,19 +61,26 @@ function cercaIn(elenco, id, genitore = null, ramo = null) {
    **Una riga nuova non sceglie al posto del bambino.** La prima versione
    nasceva già eseguibile — `vai a destra 1`, `ripeti 2 volte` — e un
    valore di comodo si leggeva come l'unico possibile: «vai a destra»
-   diceva che si va solo a destra. Adesso le scelte vere arrivano dalla
-   cassetta (il verso, il posto del mattone: un tasto ciascuno) e i
-   numeri nascono **N**, da scegliere: la vista apre la scelta appena la
-   riga c'è, e il robot si rifiuta di partire con una N dentro.
+   diceva che si va solo a destra. La seconda metteva la scelta nella
+   cassetta, un tasto per verso, e sbagliava in un altro modo: la riga
+   nasceva con la freccia già scritta e il colore già messo, e nessuno
+   dei due bambini che l'hanno provata ha capito che toccandoli si
+   cambiavano. Adesso **verso, posto e colore nascono vuoti** (`null`) e
+   si scelgono **sulla riga**: la vista apre la scelta attaccata alla
+   casella, e la prima volta la si tocca proprio dove poi la si ritocca.
+   Chi chiama passa un valore solo quando non c'è niente da scegliere —
+   un colore solo nel livello, un posto solo per il mattone.
 
-   Il colore è l'eccezione, ed è voluta: con un colore solo nel livello
-   non c'è niente da scegliere, e con più colori si propone quello usato
-   per ultimo (`colore`), che è una scelta del bambino e non nostra. */
-export function rigaNuova(tipo, { colore = null, verso = null, dove = 'sotto', lato = null, lavagnette = [], progetto = null } = {}) {
+   **I passi di «vai» nascono 1**, e sono l'unico numero che nasce
+   scritto: un passo è l'unità, e chiederlo a ogni riga era una domanda
+   con la risposta ovvia. La casella resta una casella, col suo ▾. Gli
+   altri numeri — le volte di un ripeti, le misure di una chiamata, il
+   valore di una lavagnetta — nascono **N**, perché lì non c'è un numero
+   ovvio: la N è la lezione. */
+export function rigaNuova(tipo, { colore = null, verso = null, dove = null, lato = null, lavagnette = [], progetto = null } = {}) {
   switch (tipo) {
-    case 'vai': return fai.vai(verso, N())
+    case 'vai': return fai.vai(verso, 1)
     case 'metti': return fai.metti(colore, dove)
-    /* nel porto il lato lo sceglie la cassetta, un tasto per freccia */
     case 'prendi': return fai.prendi(lato)
     case 'posa': return fai.posa(lato)
     case 'ripeti': return fai.ripeti(N(), [])
@@ -98,7 +105,9 @@ export function primaDaScegliere(riga, prog = null) {
   if (!riga) return null
   if (riga.tipo === 'vai') return !riga.verso ? { campo: 'verso', tipo: 'verso' }
     : vuoto(riga.quanto) ? { campo: 'quanto', tipo: 'numero' } : null
-  if (riga.tipo === 'metti') return !riga.colore || riga.colore.vuoto ? { campo: 'colore', tipo: 'colore' } : null
+  /* `dove` vuoto è solo `null`: una riga di prima senza il campo è «sotto» */
+  if (riga.tipo === 'metti') return riga.dove === null ? { campo: 'dove', tipo: 'posto' }
+    : !riga.colore || riga.colore.vuoto ? { campo: 'colore', tipo: 'colore' } : null
   if (riga.tipo === 'prendi' || riga.tipo === 'posa') return !riga.lato ? { campo: 'lato', tipo: 'lato' } : null
   if (riga.tipo === 'ripeti') return vuoto(riga.volte) ? { campo: 'volte', tipo: 'numero' } : null
   if (riga.tipo === 'finche' || riga.tipo === 'se' || riga.tipo === 'aspetta')
@@ -370,7 +379,8 @@ export function problemi(prog, lavagnetteOrdine = {}) {
       const scelta = primaDaScegliere(i, prog)
       if (scelta) trovati.push({ id: i.id, motivo: {
         numero: 'n-da-scegliere', valore: 'n-da-scegliere', colore: 'colore-da-scegliere', cond: 'condizione-da-scegliere',
-        verso: 'verso-da-scegliere', lato: 'verso-da-scegliere', lavagnetta: 'lavagnetta-mancante' }[scelta.tipo], ...scelta })
+        verso: 'verso-da-scegliere', lato: 'verso-da-scegliere', posto: 'posto-da-scegliere',
+        lavagnetta: 'lavagnetta-mancante' }[scelta.tipo], ...scelta })
     }
   }
   return trovati

@@ -293,8 +293,18 @@ for (const l of LIVELLI) {
   const nuovo = mod.rigaNuova('ripeti')
   controlla('un ripeti nuovo nasce con la N, non con un numero di comodo', nuovo.volte.vuoto === true)
   uguale('e la prima cosa da scegliere è quella', mod.primaDaScegliere(nuovo).campo, 'volte')
-  const vai = mod.rigaNuova('vai', { verso: 'sinistra' })
-  controlla('un vai nuovo ha il verso scelto dalla cassetta, e la N da scegliere', vai.verso === 'sinistra' && vai.quanto.vuoto)
+  const vai = mod.rigaNuova('vai')
+  controlla('un vai nuovo nasce senza verso, e con un passo', vai.verso === null && vai.quanto.n === 1)
+  uguale('e la cosa da scegliere è il verso, sulla riga', mod.primaDaScegliere(vai).campo, 'verso')
+  controlla('scelto il verso non resta niente: il passo non si chiede', mod.primaDaScegliere({ ...vai, verso: 'destra' }) === null)
+  const mattone = mod.rigaNuova('metti')
+  controlla('un mattone nuovo nasce senza posto e senza colore', mattone.dove === null && mattone.colore === null)
+  uguale('prima si sceglie il posto', mod.primaDaScegliere(mattone).tipo, 'posto')
+  uguale('poi il colore', mod.primaDaScegliere({ ...mattone, dove: 'sotto' }).tipo, 'colore')
+  controlla('una riga di prima senza il campo del posto è «sotto», non da scegliere',
+            mod.primaDaScegliere({ tipo: 'metti', colore: 'rosso' }) === null)
+  controlla('il posto vuoto è un problema prima di partire, con la sua frase',
+            mod.problemi(programma({ principale: [{ ...mattone, colore: 'rosso' }] })).some(g => g.motivo === 'posto-da-scegliere'))
   uguale('una domanda nuova non è scelta', mod.rigaNuova('se').cond, null)
   const r = mod.inserisci(p, { dopo: primo }, nuovo)
   uguale('una riga inserita dopo un\'altra', p.principale[1].id, r)
@@ -354,9 +364,8 @@ for (const l of LIVELLI) {
   presa.principale.pop()
   controlla('la copia di un programma non tocca il dato del livello', originale.principale.length === 7)
 
-  /* il porto: il lato lo sceglie la cassetta, e la domanda nasce vuota */
-  const prendi = mod.rigaNuova('prendi', { lato: 'su' })
-  uguale('un «prendi» nasce col lato scelto dalla cassetta', prendi.lato, 'su')
+  /* il porto: il lato si sceglie sulla riga, e la domanda nasce vuota */
+  uguale('un «prendi» nasce senza lato', mod.rigaNuova('prendi').lato, null)
   uguale('senza lato, la prima cosa da scegliere è quella', mod.primaDaScegliere(mod.rigaNuova('posa')).tipo, 'lato')
   uguale('un «aspetta che» nasce senza domanda', mod.primaDaScegliere(mod.rigaNuova('aspetta')).campo, 'cond')
   controlla('un «ripeti per sempre» non ha niente da scegliere', mod.primaDaScegliere(mod.rigaNuova('sempre')) === null)

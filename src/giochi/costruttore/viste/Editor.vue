@@ -68,6 +68,7 @@ provide('editore', {
     const porto = props.livello.mondo === 'porto'
     return {
       colori: props.livello.colori,
+      posti: props.livello.posti || ['sotto'],
       nomi,
       confronta: nomi.misure.length + nomi.lavagnette.length + nomi.ordine.length > 0,
       ...(porto ? { porto: true, versi: LATI, dove: DOVE_PORTO, cose: props.livello.cose || [],

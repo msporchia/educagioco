@@ -75,6 +75,7 @@ export const PERCHE = {
   'colore-da-scegliere': () => 'Di che colore? Tocca il punto di domanda e scegli.',
   'condizione-da-scegliere': () => 'Manca la domanda: tocca i puntini e scegli cosa deve guardare il robot.',
   'verso-da-scegliere': () => 'Da che parte? Scegli la freccia.',
+  'posto-da-scegliere': () => 'Dove va il mattone? Tocca il punto di domanda e scegli.',
   negativo: d => `«${d.quanto}» passi? Il robot conta solo in avanti: il numero è sotto zero.`,
   'ripeti-negativo': d => `Ripetere ${d.quanto} volte non si può: il numero è sotto zero.`,
   'lavagnetta-sconosciuta': d => `Il robot non trova la lavagnetta «${d.nome}».`,

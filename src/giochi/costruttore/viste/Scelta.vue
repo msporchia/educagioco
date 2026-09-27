@@ -24,6 +24,10 @@
 
    Le lavagnette dell'ordine hanno il lucchetto: si leggono e basta. Le
    misure del progetto sono tratteggiate: esistono solo dentro di lui.
+
+   Chiudersi si dice in due modi: la ✕ (`chiudi`) chiude e basta, una
+   scelta fatta o «fatto» (`avanti`) chiudono e aprono la casella dopo
+   che resta da scegliere — il posto del mattone, poi il suo colore.
    ═══════════ */
 import { ref, computed, watch } from 'vue'
 import { colore } from '../dati/colori.js'
@@ -40,7 +44,7 @@ const props = defineProps({
        e per il porto: porto, versi, dove, cose, leggere } */
   contesto: { type: Object, required: true },
 })
-const emit = defineEmits(['scegli', 'chiudi', 'nuova-lavagnetta'])
+const emit = defineEmits(['scegli', 'chiudi', 'avanti', 'nuova-lavagnetta'])
 
 const valoreDi = () => {
   const [testa, coda] = props.campo.split('.')
@@ -96,6 +100,10 @@ const nomi = computed(() => ({ misure: [], lavagnette: [], ordine: [], misureCol
    quattro frecce, la mano, e le cose che il livello offre */
 const versi = computed(() => props.contesto.versi || ['destra', 'sinistra'])
 const doveLista = computed(() => props.contesto.dove || DOVE)
+/* i posti del mattone che il livello offre (e quello già scritto, se è
+   arrivato da un altro cantiere) */
+const postiLista = computed(() => Object.keys(POSTI_IN_PAROLE)
+  .filter(v => (props.contesto.posti || Object.keys(POSTI_IN_PAROLE)).includes(v) || v === props.riga.dove))
 const coseLista = computed(() => props.contesto.cose || COSE)
 const latiParole = computed(() => (props.riga.tipo === 'posa' ? LATI_POSA : LATI_PRENDI))
 /* dove si può leggere: le quattro frecce e la mano */
@@ -135,7 +143,7 @@ function genere(t) {
 }
 const tuttiNomi = computed(() => [...nomi.value.misure, ...nomi.value.lavagnette, ...nomi.value.ordine])
 
-const scegli = v => { emit('scegli', v); emit('chiudi') }
+const scegli = v => { emit('scegli', v); emit('avanti') }
 </script>
 
 <template>
@@ -156,8 +164,8 @@ const scegli = v => { emit('scegli', v); emit('chiudi') }
 
     <!-- dove va il mattone -->
     <div v-else-if="tipo === 'posto'" class="cst-fila">
-      <button v-for="(p, v) in POSTI_IN_PAROLE" :key="v" type="button" class="cst-chip cst-grosso"
-              :class="{ 'cst-su': (riga.dove || 'sotto') === v }" :data-posto="v" @click="scegli(v)">{{ p }}</button>
+      <button v-for="v in postiLista" :key="v" type="button" class="cst-chip cst-grosso"
+              :class="{ 'cst-su': riga.dove === v }" :data-posto="v" @click="scegli(v)">{{ POSTI_IN_PAROLE[v] }}</button>
     </div>
 
     <!-- i colori: quelli del livello, e i nomi che portano un colore -->
@@ -235,7 +243,7 @@ const scegli = v => { emit('scegli', v); emit('chiudi') }
                 :class="{ 'cst-su': expr.op === op }" @click="conto(op)">{{ op === '-' ? '−' : op }}</button>
         <button v-if="expr.op" type="button" class="cst-chip" data-operazione="niente" @click="senzaConto">niente conto</button>
       </div>
-      <button type="button" class="cst-scelta-fatto" data-azione="fatto" @click="emit('chiudi')">fatto</button>
+      <button type="button" class="cst-scelta-fatto" data-azione="fatto" @click="emit('avanti')">fatto</button>
     </template>
 
     <!-- una condizione -->
@@ -288,7 +296,7 @@ const scegli = v => { emit('scegli', v); emit('chiudi') }
                   :class="{ 'cst-su': cond.b && cond.b.v === n }" @click="cambiaCond('b', { v: n })">{{ n }}</button>
         </div>
       </template>
-      <button type="button" class="cst-scelta-fatto" data-azione="fatto" @click="emit('chiudi')">fatto</button>
+      <button type="button" class="cst-scelta-fatto" data-azione="fatto" @click="emit('avanti')">fatto</button>
     </template>
 
     <!-- quale lavagnetta scrivere -->

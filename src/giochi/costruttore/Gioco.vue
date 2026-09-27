@@ -149,9 +149,8 @@ const attesaLavagnetta = ref(null)     // { riga } o { inserisci: dove }
 /* quanti gradini della scala degli aiuti sono stati scesi in questo
    livello: si pagano, e quello che si è pagato resta (`aiutiPresi`) */
 const aiutiVisti = ref(0)
-/* il colore di partenza di un mattone nuovo: con un colore solo nel
-   livello è quello, con più colori è l'ultimo scelto dal bambino */
-const ultimoColore = ref(null)
+/* la riga presa con ✂ o ⧉, finché non la si posa: `{ id, copia }` */
+const mano = ref(null)
 const ricominciaArmato = ref(false)
 let ricominciaTimer = 0
 
@@ -265,8 +264,16 @@ const fraseZainoPieno = () => `Qui il programma sta in ${zaino.value} righe, e s
 function seleziona(id) { sel.value = id; aperta_.value = null }
 function apri(a) { aperta_.value = a; ultimaCasella = null; if (a) sel.value = null }
 function imposta({ id, campo, valore }) {
-  if (campo === 'colore') ultimoColore.value = valore
   modifica(p => mod.imposta(p, id, campo, valore), `${id}:${campo}`)
+}
+/* una scelta fatta: se nella riga resta un'altra casella da scegliere
+   (il colore dopo il posto, la seconda misura) si apre quella */
+function sceltaFatta(id) {
+  const t = prog.value && mod.trova(prog.value, id)
+  const s = t && mod.primaDaScegliere(t.nodo, prog.value)
+  const ora = aperta_.value
+  if (s && !(ora && ora.id === id && ora.campo === s.campo)) apri({ id, campo: s.campo, tipo: s.tipo })
+  else aperta_.value = null
 }
 
 function aggiungi(posto) {
@@ -276,7 +283,10 @@ function aggiungi(posto) {
   foglio.value = 'cassetta'
 }
 
-function sceltoBlocco({ blocco, progetto, verso, dove: posto, lato }) {
+/* Le scelte di una riga nuova si fanno sulla riga (`rigaNuova`): qui
+   si scrive solo quello che non è una scelta — il colore quando il
+   livello ne ha uno solo, il posto del mattone quando ce n'è uno solo. */
+function sceltoBlocco({ blocco, progetto }) {
   const p = prog.value
   if (blocco === 'assegna' && !(p.lavagnette || []).length) {
     attesaLavagnetta.value = { inserisci: dove.value }
@@ -285,8 +295,10 @@ function sceltoBlocco({ blocco, progetto, verso, dove: posto, lato }) {
   }
   const pr = progetto ? (p.progetti || []).find(q => q.id === progetto) : null
   const colori = liv.value.colori
-  const colore = colori.length === 1 ? colori[0] : (ultimoColore.value || colori[0])
-  const riga = mod.rigaNuova(blocco, { colore, verso, dove: posto, lato, lavagnette: p.lavagnette, progetto: pr })
+  const posti = liv.value.posti || ['sotto']
+  const riga = mod.rigaNuova(blocco, { colore: colori.length === 1 ? colori[0] : null,
+                                      dove: posti.length === 1 ? posti[0] : null,
+                                      lavagnette: p.lavagnette, progetto: pr })
   const id = modifica(q => mod.inserisci(q, dove.value, riga))
   foglio.value = null
   apriLaPrimaScelta(id, riga)
@@ -301,14 +313,9 @@ function apriLaPrimaScelta(id, riga) {
 }
 
 function azione({ tipo, id }) {
-  if (tipo === 'duplica') {
-    const t = prog.value && mod.trova(prog.value, id)
-    if (t && troppoPerLoZaino(righe.value + righeDi([t.nodo]))) return
-  }
   modifica(p => {
     if (tipo === 'su') mod.sposta(p, id, -1)
     else if (tipo === 'giu') mod.sposta(p, id, +1)
-    else if (tipo === 'duplica') sel.value = mod.duplica(p, id)
     else if (tipo === 'togli') { mod.togli(p, id); sel.value = null }
     else if (tipo === 'altrimenti') {
       const t = mod.trova(p, id)

@@ -163,6 +163,7 @@ export class Mondo {
       case 'metti': {
         const colore = es.valutaColore(i.colore, i.id)
         const r = this.robot
+        if (i.dove === null) throw new Inciampo('posto-da-scegliere', i.id)
         const dove = i.dove || 'sotto'
         if (dove === 'sotto') {
           /* il mattone va dove il robot ha i piedi, e il robot ci sale

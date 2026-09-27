@@ -109,7 +109,9 @@ export function pezzi(i, programma) {
        rosso») su un telefono andava a capo a metà */
     case 'metti': return [
       { testo: 'metti' },
-      { campo: 'dove', tipo: 'posto', mostra: POSTI_IN_PAROLE[i.dove || 'sotto'] },
+      i.dove === null
+        ? { campo: 'dove', tipo: 'posto', mostra: '?', manca: true, etichetta: 'dove va il mattone' }
+        : { campo: 'dove', tipo: 'posto', mostra: POSTI_IN_PAROLE[i.dove || 'sotto'] },
       casellaColore('colore', i.colore),
     ]
     case 'prendi': return [
@@ -184,20 +186,21 @@ export const iconaDi = (i, programma) => {
    `rigaNuova` in `motore/modifica.js`; i progetti si aggiungono da chi
    monta, perché sono del bambino e non del livello.
 
-   **Una scelta che conta non ha un valore di comodo.** «Vai» sono due
-   tasti, uno per verso, e «metti» tre, uno per posto: con un tasto solo
-   e «a destra» già scritto dentro, sembrava che a destra fosse l'unico
-   posto dove andare — l'ha visto il papà al primo giro. I numeri invece
-   nascono **N**, da scegliere, e la scelta si apre da sola. */
+   **Un tasto per blocco, e le scelte si fanno sulla riga.** «Vai» a
+   destra con un tasto solo sembrava l'unico verso possibile; poi sono
+   stati due tasti, uno per verso, e la riga nasceva con la freccia già
+   scritta — e a chi l'ha provata non veniva in mente che la freccia si
+   potesse cambiare. Adesso la cassetta dice *quante* strade ci sono
+   («← o →») e la riga nasce col punto di domanda, la scelta aperta
+   sulla casella. «Metti» con un posto solo nel livello non chiede
+   niente (`unPosto`); con tre li mostra e li fa scegliere (`piuPosti`). */
 export const GRUPPI = [
   { nome: 'Camminare', blocchi: [
-    { blocco: 'vai', verso: 'destra', esempio: 'vai → a destra N passi' },
-    { blocco: 'vai', verso: 'sinistra', esempio: 'vai ← a sinistra N passi' },
+    { blocco: 'vai', esempio: 'vai ← o → , 1 passo', nota: 'la freccia la scegli tu, e anche i passi' },
   ] },
   { nome: 'Costruire', blocchi: [
-    { blocco: 'metti', dove: 'sotto', esempio: 'metti un mattone ↓ sotto i piedi', nota: 'e ci sale sopra' },
-    { blocco: 'metti', dove: 'giu-destra', esempio: 'metti un mattone ↘ in basso a destra', nota: 'dove andrà il piede' },
-    { blocco: 'metti', dove: 'giu-sinistra', esempio: 'metti un mattone ↙ in basso a sinistra', nota: 'dove andrà il piede' },
+    { blocco: 'metti', unPosto: true, esempio: 'metti un mattone ↓ sotto i piedi', nota: 'e ci sale sopra' },
+    { blocco: 'metti', piuPosti: true, esempio: 'metti un mattone ↓ ↘ ↙', nota: 'sotto i piedi, o dove andrà il piede' },
   ] },
   { nome: 'Ripetere', blocchi: [
     { blocco: 'ripeti', esempio: 'ripeti N volte' },
@@ -207,18 +210,16 @@ export const GRUPPI = [
   { nome: 'Lavagnette', blocchi: [{ blocco: 'assegna', esempio: '[ ] diventa N' }] },
 ]
 
-/* La cassetta del porto. Le frecce sono quattro per tre gesti — dodici
-   tasti — e in fila come i blocchi del cantiere sarebbero un elenco da
-   scorrere: stanno su una riga per gesto (`fila`), ognuno con la sua
-   freccia. Un tasto per freccia resta la regola: la scelta si fa qui,
-   e la riga nasce già con il suo verso, senza un verso di comodo. */
-const quattro = (blocco, parole) => ['su', 'giu', 'sinistra', 'destra'].map(l => ({
-  blocco, [blocco === 'vai' ? 'verso' : 'lato']: l, freccia: FRECCE[l], esempio: `${blocco} ${parole[l]}`,
-}))
+/* La cassetta del porto: la stessa regola, con quattro frecce. Erano
+   dodici tasti, una fila di frecce per gesto, e la riga nasceva col
+   verso già scritto; adesso un tasto per gesto, e la freccia si sceglie
+   sulla riga. */
 export const GRUPPI_PORTO = [
-  { nome: 'Camminare', fila: true, blocchi: quattro('vai', { su: '↑ su N passi', giu: '↓ giù N passi', sinistra: '← a sinistra N passi', destra: '→ a destra N passi' }) },
-  { nome: 'Prendere di fianco', fila: true, blocchi: quattro('prendi', LATI_PRENDI) },
-  { nome: 'Posare di fianco', fila: true, blocchi: quattro('posa', LATI_POSA) },
+  { nome: 'Camminare', blocchi: [{ blocco: 'vai', esempio: 'vai ↑ ↓ ← → , 1 passo', nota: 'la freccia la scegli tu, e anche i passi' }] },
+  { nome: 'Prendere e posare di fianco', blocchi: [
+    { blocco: 'prendi', esempio: 'prendi da ↑ ↓ ← →' },
+    { blocco: 'posa', esempio: 'posa verso ↑ ↓ ← →' },
+  ] },
   { nome: 'Ripetere', blocchi: [
     { blocco: 'ripeti', esempio: 'ripeti N volte' },
     { blocco: 'finche', esempio: 'ripeti · smetti quando …' },

@@ -76,15 +76,23 @@ await page.waitForSelector('[data-editor]', { timeout: 5000 })
 const canvas = await page.locator('.cst-campo canvas').boundingBox()
 controlla('il cantiere si vede', canvas && canvas.width > 200 && canvas.height > 80, JSON.stringify(canvas))
 for (let k = 0; k < 4; k++) {
-  await aggiungi('principale', 'metti:sotto')
+  await aggiungi('principale', 'metti')
   if (k < 3) {
-    await aggiungi('principale', 'vai:destra')
-    /* la N del passo: la scelta si è aperta da sola */
-    await page.waitForSelector('[data-scelta="numero"]', { timeout: 3000 })
-    await tocca('[data-scelta="numero"] [data-cifra="1"]')
+    await aggiungi('principale', 'vai')
+    /* la freccia: la scelta si è aperta da sola, sulla riga */
+    await page.waitForSelector('[data-scelta="verso"]', { timeout: 3000 })
+    if (!k) controlla('un «vai» nuovo nasce col punto di domanda sulla freccia',
+                      (await page.locator('[data-editor] .cst-riga').last().locator('[data-casella="verso"]').innerText()).startsWith('?'))
+    await tocca('[data-scelta="verso"] [data-verso="destra"]')
+    if (!k) {
+      uguale('scelta la freccia, i passi non si chiedono', await page.locator('[data-scelta]').count(), 0)
+      uguale('e sono uno', (await page.locator('[data-editor] .cst-riga').last().locator('[data-casella="quanto"]').innerText()).trim().replace('▾', ''), '1')
+    }
   }
 }
 uguale('sette righe scritte', await page.locator('[data-editor] .cst-riga').count(), 7)
+uguale('con un colore solo e un posto solo il mattone non ha scelte: le sue caselle sono ferme',
+       await page.locator('[data-editor] [data-casella="colore"].cst-fissa, [data-editor] [data-casella="dove"].cst-fissa').count(), 8)
 await scatto(page, 'costruttore-programma')
 await tocca('[data-velocita="veloce"]')
 await tocca('[data-azione="via"]')
@@ -110,21 +118,25 @@ await tocca('[data-livello="0"]')
 await page.waitForSelector('[data-editor]', { timeout: 5000 })
 uguale('dopo una ricarica il programma c\'è ancora', await page.locator('[data-editor] .cst-riga').count(), 7)
 
-/* ---------- 4. una N lasciata vuota: ▶ non parte ---------- */
-await aggiungi('principale', 'vai:destra')
-await page.waitForSelector('[data-scelta="numero"]', { timeout: 3000 })
-await tocca('[data-scelta="numero"] [data-chiudi]')
-controlla('la N non scelta si vede', await page.locator('.cst-casella.cst-manca').count() === 1)
+/* ---------- 4. una freccia lasciata vuota: ▶ non parte ---------- */
+await aggiungi('principale', 'vai')
+await page.waitForSelector('[data-scelta="verso"]', { timeout: 3000 })
+await tocca('[data-scelta="verso"] [data-chiudi]')
+controlla('la freccia non scelta si vede', await page.locator('.cst-casella.cst-manca').count() === 1)
 await tocca('[data-azione="via"]')
 await page.waitForSelector('[data-messaggio]', { timeout: 3000 })
 {
   const msg = await page.locator('[data-messaggio]').innerText()
-  controlla('▶ con una N vuota dice cosa manca', /Al posto di N/.test(msg), msg)
-  uguale('e apre la scelta del numero', await page.locator('[data-scelta="numero"]').count(), 1)
+  controlla('▶ con una freccia vuota dice cosa manca', /Da che parte/.test(msg), msg)
+  uguale('e apre la scelta della freccia', await page.locator('[data-scelta="verso"]').count(), 1)
 }
 
 /* ---------- 5. un errore apposta: la riga si accende ---------- */
-/* nove passi a destra dopo l'ultimo mattone: si esce dal cantiere */
+/* nove passi a destra dopo l'ultimo mattone: si esce dal cantiere. Il
+   passo è nato 1, e si cambia toccandolo */
+await tocca('[data-scelta="verso"] [data-verso="destra"]')
+await tocca('[data-editor] .cst-riga >> nth=-1 >> [data-casella="quanto"]')
+await page.waitForSelector('[data-scelta="numero"]', { timeout: 3000 })
 await tocca('[data-scelta="numero"] [data-cifra="9"]')
 await tocca('[data-azione="via"]')
 await page.waitForSelector('[data-guasto]', { timeout: 10000 })
@@ -134,7 +146,29 @@ await page.waitForSelector('[data-guasto]', { timeout: 10000 })
 }
 await scatto(page, 'costruttore-errore')
 
-/* ---------- 6. tre ordini, una lavagnetta ---------- */
+/* ---------- 5-bis. due colori: il mattone nasce senza ---------- */
+await semina(page, { settings: { eta: 10 },
+                     campagne: { costruttore: { tappa: 1, libera: false, stelle: { 0: 2 }, cfg: { velocita: 'veloce', fila: FILA_ATTUALE } } } })
+await page.locator('.carta.gioco[data-gioco="costruttore"]').click()
+await page.waitForSelector('.cst-mappa', { timeout: 5000 })
+await tocca('[data-livello="1"]')
+await page.waitForSelector('[data-editor]', { timeout: 5000 })
+{
+  const prima = await page.locator('[data-editor] .cst-riga').count()
+  await aggiungi('principale', 'metti')
+  await page.waitForSelector('[data-scelta="colore"]', { timeout: 3000 })
+  uguale('con due colori il mattone nasce col punto di domanda, e la scelta aperta',
+         await page.locator('[data-editor] .cst-riga').last().locator('[data-casella="colore"].cst-manca').count(), 1)
+  await tocca('[data-scelta="colore"] [data-colore]')
+  uguale('scelto il colore la scelta si chiude', await page.locator('[data-scelta]').count(), 0)
+  /* due passi indietro: il colore, e la riga */
+  await tocca('[data-azione="annulla"]')
+  uguale('«annulla» toglie prima il colore', await page.locator('[data-editor] [data-casella="colore"].cst-manca').count(), 1)
+  await tocca('[data-azione="annulla"]')
+  uguale('e poi la riga', await page.locator('[data-editor] .cst-riga').count(), prima)
+}
+
+/* ---------- 6. tre ordini, una lavagnetta, e la mano ---------- */
 await semina(page, { settings: { eta: 10 },
                      campagne: { costruttore: { tappa: 3, libera: false, stelle: { 0: 2, 1: 2, 2: 2 }, cfg: { velocita: 'veloce', fila: FILA_ATTUALE } } } })
 await page.locator('.carta.gioco[data-gioco="costruttore"]').click()
@@ -197,11 +231,14 @@ await tocca('[data-scheda="principale"]')
   await tocca('[data-scelta="numero"] [data-cifra="2"]')
   await tocca('[data-scelta="numero"] [data-azione="fatto"]')
   const rip = await page.locator('[data-editor] .cst-riga').first().getAttribute('data-riga')
-  for (const [blocco, valore] of [['chiama:torre', '[data-nome="torri"]'], ['vai:destra', '[data-cifra="1"]'], ['chiama:muro', '[data-nome="muro"]']]) {
-    await aggiungi(`${rip}:corpo`, blocco)
-    await tocca(`[data-scelta="numero"] ${valore}`)
-    await tocca('[data-scelta="numero"] [data-azione="fatto"]')
-  }
+  await aggiungi(`${rip}:corpo`, 'chiama:torre')
+  await tocca('[data-scelta="numero"] [data-nome="torri"]')
+  await tocca('[data-scelta="numero"] [data-azione="fatto"]')
+  await aggiungi(`${rip}:corpo`, 'vai')
+  await tocca('[data-scelta="verso"] [data-verso="destra"]')
+  await aggiungi(`${rip}:corpo`, 'chiama:muro')
+  await tocca('[data-scelta="numero"] [data-nome="muro"]')
+  await tocca('[data-scelta="numero"] [data-azione="fatto"]')
   await aggiungi('principale', 'chiama:torre')
   await tocca('[data-scelta="numero"] [data-nome="torri"]')
   await tocca('[data-scelta="numero"] [data-azione="fatto"]')
@@ -260,9 +297,12 @@ await tocca('[data-scheda="principale"]')
   await tocca('[data-aggiungi="principale"]')
   await page.waitForSelector('[data-cassetta]', { timeout: 3000 })
   await attendi(page, 350)
-  uguale('la cassetta del porto ha una riga di quattro frecce per prendere',
-         await page.locator('[data-cassetta] [data-blocco^="prendi:"]').count(), 4)
-  await tocca('[data-cassetta] [data-chiudi]')
+  uguale('la cassetta del porto ha un «prendi» solo',
+         await page.locator('[data-cassetta] [data-blocco^="prendi"]').count(), 1)
+  await tocca('[data-cassetta] [data-blocco="prendi"]')
+  await page.waitForSelector('[data-scelta="lato"]', { timeout: 3000 })
+  uguale('e le quattro frecce si scelgono sulla riga', await page.locator('[data-scelta="lato"] [data-lato]').count(), 4)
+  await tocca('[data-azione="annulla"]')
   await tocca('[data-azione="via"]')
   await page.waitForSelector('[data-fine="livello"]', { timeout: 40000 })
   uguale('la gru: tutte e due le navi scaricate', await page.locator('[data-gettone].cst-vinto').count(), 2)
