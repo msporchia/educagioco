@@ -4,8 +4,9 @@
 
    La carta di una tappa (`motore/carta.js`) dice cosa c'è in ogni cella:
    prato, fitto, acqua, strada, piazzola, bocca, castello. Qui ogni cella
-   diventa un pezzo preso dalle scene generate (`dati/vestiti.js`, che
-   scrive `strumenti/sprite/vesti.py --atlante`), e ne esce un'immagine
+   diventa un pezzo preso dal foglio del terreno di quel vestito
+   (`dati/vestiti.js`, che scrive `strumenti/sprite/vesti.py --atlante`;
+   senza foglio, dai ritagli della scena), e ne esce un'immagine
    sola grande quanto la carta — 12×22 celle da 64 px — che il campo
    usa come fondale.
 
@@ -26,7 +27,7 @@
    scelta dichiarata dell'utente («per il livello senza lo scenario
    giusto per ora puoi riutilizzarne un altro mettendo un todo»).
    ═══════════════════════════════════════════════════════════════════ */
-import { SCENE, PEZZI as TUTTI, CELLA as C, TOPPA, QUANTI as QUANTE } from '../dati/vestiti.js'
+import { SCENE, PEZZI as TUTTI, CELLA as C, TOPPA, QUANTI as QUANTE, DAL_FOGLIO } from '../dati/vestiti.js'
 
 export const VESTITO_DI = {
   bosco: 'bosco',
@@ -74,6 +75,45 @@ function versi(a, x, y) {
     if (c === '+' || (v === 'N' && c === 'A') || (v === 'S' && c === 'C')) fuori += v
   }
   return fuori
+}
+
+/* ── i decori grandi e le cose per terra ──
+   Due distrazioni che ha solo il foglio del terreno, e che la carta non
+   scrive: le deduce il vestito dai `d` e dal fondo, con `caso` come tutto
+   il resto. È `grandi_e_terra()` di vesti.py, regola per regola:
+     · un decoro grande prende il posto di un `d` (uno su due) che ha
+       libero il quadrato di 2×2 in giù a destra — fondo, non fitto né
+       acqua — e lontano una cella da strada, piazzole, bocca e castello:
+       le distrazioni non toccano il gioco (`motore/carta.js`);
+     · una cosa per terra sta su una cella di fondo su cinque, **dentro la
+       sua cella**: niente sborda sulla strada o su una piazzola.
+   Torna { grandi: Map('x,y' → quale), terra: [[x, y, quale, dx, dy]] }. */
+export function grandiETerra(a, w, h, nGrandi, misureTerra) {
+  const grandi = new Map(), prese = new Set()
+  const fondo = c => c === '.' || c === ','
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      if (!nGrandi || a(x, y) !== 'd' || caso(x, y, 2, 12)) continue
+      const blocco = [[x, y], [x + 1, y], [x, y + 1], [x + 1, y + 1]]
+      if (!blocco.slice(1).every(([i, j]) => fondo(a(i, j)))) continue
+      let vicino = false
+      for (const [i, j] of blocco)
+        for (let dy = -1; dy <= 1; dy++)
+          for (let dx = -1; dx <= 1; dx++) if ('+oAC'.includes(a(i + dx, j + dy) || '.')) vicino = true
+      if (vicino) continue
+      grandi.set(`${x},${y}`, caso(x, y, nGrandi, 3))
+      for (const [i, j] of blocco) prese.add(`${i},${j}`)
+    }
+  const terra = []
+  const nTerra = misureTerra.length
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      if (!nTerra || !fondo(a(x, y)) || prese.has(`${x},${y}`) || caso(x, y, 5, 13)) continue
+      const k = caso(x, y, nTerra, 14)
+      const [tw, th] = misureTerra[k]
+      terra.push([x, y, k, caso(x, y, C - tw + 1, 15), caso(x, y, C - th + 1, 16)])
+    }
+  return { grandi, terra }
 }
 
 /* ── comporre ──
@@ -162,24 +202,46 @@ export function componi(righe, nome) {
       }
     }
 
-  /* 4 — la strada e le piazzole */
+  /* 4 — la strada e le piazzole (nel mezzo della cella: quelle del
+     foglio sono più strette di una cella) */
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const c = a(x, y)
       if (c === '+') {
         const vv = versi(a, x, y)
         if (PEZZI[`strada:${vv}:0`]) posa(`strada:${vv}:${caso(x, y, 3, 1)}`, x * C, y * C)
-      } else if (c === 'o') posa(`piazzola:${caso(x, y, QUANTI.piazzola, 2)}`, x * C, y * C)
+      } else if (c === 'o') {
+        const pz = `piazzola:${caso(x, y, QUANTI.piazzola, 2)}`
+        const [, , pw, ph] = PEZZI[pz]
+        posa(pz, x * C + Math.floor((C - pw) / 2), y * C + Math.floor((C - ph) / 2))
+      }
     }
+
+  /* 4b — le cose per terra: piatte, sotto a tutte le figure */
+  const misureTerra = []
+  for (let i = 0; i < (QUANTI.terra || 0); i++) misureTerra.push(PEZZI[`terra:${i}`].slice(2))
+  const { grandi, terra } = grandiETerra(a, w, h, QUANTI.grande || 0, misureTerra)
+  for (const [x, y, k, dx, dy] of terra) posa(`terra:${k}`, x * C + dx, y * C + dy)
 
   /* 5 — le figure, dall'alto in basso: chi sta più giù copre chi sta su.
      Il fitto è fatto di alberi interi, tre per cella, e lungo il bordo
      si spostano verso il prato e ci sbordano, come fa un bosco vero */
+  /* [chiave d'ordine, pezzo, x, y] */
   const figure = []
+  const centrata = (pz, x, y, sx, sy) => {
+    const [, , pw, ph] = PEZZI[pz]
+    return [pz, x * C + Math.floor((C - pw) / 2) + sx, y * C + Math.floor((C - ph) / 2) + sy - 8]
+  }
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const c = a(x, y)
-      if (c === 'd') figure.push([y * C, `decoro:${caso(x, y, QUANTI.decoro, 3)}`, x, y, 0, 0])
+      if (grandi.has(`${x},${y}`)) {
+        /* un decoro grande: in mezzo alle sue due colonne, coi piedi in
+           fondo alla seconda riga */
+        const pz = `grande:${grandi.get(`${x},${y}`)}`
+        const [, , pw, ph] = PEZZI[pz]
+        figure.push([(y + 1) * C, pz, x * C + C - Math.floor(pw / 2), (y + 2) * C - 6 - ph])
+      } else if (c === 'd') figure.push([y * C, ...centrata(`decoro:${caso(x, y, QUANTI.decoro, 3)}`, x, y, 0, 0)])
       else if (c === '^') {
         let vx = 0, vy = 0
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
@@ -189,26 +251,32 @@ export function componi(righe, nome) {
         ;[[-14, -18], [16, -4], [-4, 14]].forEach(([ox, oy], k) => {
           const sx = vx + ox + caso(x, y, 11, 7 + k) - 5
           const sy = vy + oy + caso(x, y, 11, 9 + k) - 5
-          figure.push([y * C + sy, `albero:${caso(x, y, QUANTI.albero, 6 + k)}`, x, y, sx, sy])
+          figure.push([y * C + sy, ...centrata(`albero:${caso(x, y, QUANTI.albero, 6 + k)}`, x, y, sx, sy)])
         })
       }
     }
+  /* stabile: a chiave pari resta l'ordine in cui sono entrate, come il
+     `sorted` di Python */
   figure.sort((p, q) => p[0] - q[0])
-  for (const [, nome, x, y, sx, sy] of figure) {
-    const [, , pw, ph] = PEZZI[nome]
-    posa(nome, x * C + Math.floor((C - pw) / 2) + sx, y * C + Math.floor((C - ph) / 2) + sy - 8)
-  }
+  for (const [, pz, x, y] of figure) posa(pz, x, y)
 
-  /* 6 — la bocca e il castello. Sotto l'arco della bocca l'ultimo terzo
-     è la strada nostra, non il moncone della scena; sotto le mura la
-     strada prosegue, e il castello ci si posa sopra */
+  /* 6 — la bocca e il castello. La tana del foglio è una figura intera
+     col suo sentiero in fondo: nel mezzo delle tre colonne, coi piedi un
+     quarto di cella dentro la prima riga di strada. Quella della scena è
+     un ritaglio di tre celle, e sotto l'arco l'ultimo terzo è la strada
+     nostra, non il moncone della scena. Sotto le mura la strada prosegue,
+     e il castello ci si posa sopra */
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       if (a(x, y) === 'A' && a(x - 1, y) !== 'A' && a(x, y - 1) !== 'A') {
-        posa('bocca', x * C, y * C)
-        const [sx, sy] = PEZZI['strada:NS:0']
-        const terzo = Math.floor(C / 3)
-        ctx.drawImage(img, sx, sy, C, terzo, (x + 1) * C, (y + 2) * C - terzo, C, terzo)
+        const [, , bw, bh] = PEZZI.bocca
+        if (DAL_FOGLIO[nome]) posa('bocca', x * C + Math.floor((3 * C - bw) / 2), (y + 2) * C + C / 4 - bh)
+        else {
+          posa('bocca', x * C, y * C)
+          const [sx, sy] = PEZZI['strada:NS:0']
+          const terzo = Math.floor(C / 3)
+          ctx.drawImage(img, sx, sy, C, terzo, (x + 1) * C, (y + 2) * C - terzo, C, terzo)
+        }
       }
       if (a(x, y) === 'C' && a(x - 1, y) !== 'C' && a(x, y - 1) !== 'C') {
         for (let i = x; i < x + 5; i++) if (a(i, y - 1) === '+') posa('strada:NS:0', i * C, y * C)
