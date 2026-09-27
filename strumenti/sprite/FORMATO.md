@@ -42,6 +42,20 @@ basta: l'attrezzo non cambia.
   colore esplicito `[255, 255, 255]`. Dichiararlo evita il caso peggiore:
   un cane bianco a cui si aprono buchi nella schiena perché il bianco della
   carta e il bianco del cane sono lo stesso colore.
+
+  `"scacchiera"` è la **trasparenza dipinta**: la scacchiera grigia che
+  certi generatori disegnano coi pixel veri invece di lasciare l'alfa
+  (il foglio del terreno del bosco: niente alfa, e i due grigi
+  (254,254,254)/(229,229,229) più i loro vicini di un'unità). Si toglie
+  allagando dai bordi quello che è grigio (canali entro 12) e chiaro
+  (sopra 200), e poi la frangia grigia che resta attorno ai contorni: i
+  fiori bianchi e le pietre chiuse dentro un contorno non si toccano.
+  Oggi la legge solo `vesti.py` (`senza_fondo`). Per un fondo a colore
+  pieno, lì, il colore **non compare in nessun pezzo** — è il motivo per
+  cui si chiede magenta — e quindi si toglie anche dove l'allagamento non
+  arriva (fra i tronchi, fra le traverse), più la frangia che il
+  generatore ci mescola sugli orli, misurata sulla tinta: per il magenta,
+  quanto rosso e blu superano il verde.
 - **`alone`** — una soglia d'alfa, per esempio `128`, per i fogli **già
   trasparenti** che il generatore consegna con un bagliore attorno a
   ogni figura (alfa 1–50, di solito rossastro) e il corpo appena sotto
@@ -394,6 +408,35 @@ sotto finché una cartella più interna non ne dichiara un altro.
   "tessera": 16,
 }
 ```
+
+### I fogli del terreno del castello (`"attrezzo": "vesti"`)
+
+I foglietti `terreno-<vestito>.json` li legge `vesti.py`, e hanno quattro
+cose in più:
+
+- **`come`** — `"come": "terreno-bosco.json"`: il foglietto prende da
+  quello tutto quello che non dice lui, e i pezzi **uno per uno** (una
+  chiave scritta sotto `"sprite": {"fondo": {…}}` si aggiunge a quelle
+  del fondo del bosco, non le sostituisce). È per un foglio rifatto
+  pezzo per pezzo su un altro — la neve e la lava sul bosco — che ha le
+  stesse coordinate e un altro fondo.
+- **il ritaglio si stringe sull'alfa** dopo la `misura`: il rettangolo
+  si scrive qualche pixel più largo del disegno, così regge un
+  rivestimento che si è spostato, e il margine non arriva al gioco.
+- per pezzo, **`tasche`** (solo col fondo `"scacchiera"`: la scacchiera
+  chiusa dentro quel pezzo si toglie per colore, cosa che sul foglio
+  intero non si può), **`evita`** (`"acceso"`: dall'interno di un fondo si
+  prendono le toppe con meno cristalli arancioni) e, sulla `strada`,
+  **`striscia`** `[a, b]` — dove sta la strada in una cella da 64, orlo
+  compreso — e **`sfuma`**, quanti pixel dell'orlo sfumano nel prato.
+- `fondo`, `fondo-qua` e `fitto` sono **l'interno** del loro quadrato: i
+  fondi generati hanno un orlo e non si ripetono come piastrelle, e se ne
+  ritagliano toppe.
+
+Il foglio delle torri (`torri-1.json`) è un'altra forma ancora: una
+griglia regolare (`griglia`), quale figura è quale torre (`figure`,
+riga e colonna), una `scala` per stadio, e le due correzioni `erba` e
+`pieno` (dette nel suo `__`).
 
 Una cartella può anche dichiarare `"attrezzo": "terreni"`: vuol dire che
 quei fogli li ritaglia un altro script (`strumenti/sprite/terreni.py`,
