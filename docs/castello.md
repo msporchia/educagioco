@@ -78,11 +78,22 @@ parità di prezzo.
 Al posto della vecchia resistenza — un terzo del danno, che su una torre
 otto volte più forte era ancora tanto — ogni mostro dichiara le torri che
 **non lo toccano affatto**: zero danno, niente veleno, niente gelo. Chi vola
-passa sopra le bombe e il gelo, chi è corazzato si fa rimbalzare addosso
-frecce e magia, il fantasma lo prende solo la magia, il drago solo le
-frecce. Il nastro in cima lo dice tre ondate prima con le torri sbarrate, la
-carta di una torre che l'ondata ignora dice «non lo tocca», e in campo il
-colpo che rimbalza lascia la scritta «immune».
+passa sopra le bombe (e pipistrelli, arpia e corvo anche sopra il gelo), chi
+è corazzato si fa rimbalzare addosso frecce e magia, le frecce passano
+attraverso il fantasma e la magia non scalfisce il drago. Il nastro in cima
+lo dice tre ondate prima con le torri sbarrate, la carta di una torre che
+l'ondata ignora dice «non lo tocca», e in campo il colpo che rimbalza lascia
+la scritta «immune».
+
+**Al massimo due immunità per mostro** *(27 settembre)*. Il fantasma e il
+drago ne avevano tre — bombe, gelo e una delle due torri che feriscono — e
+un mostro che una torre sola può ferire e nessuna può frenare non è una
+scelta, è un indovinello con una soluzione. Adesso il gelo li prende tutti e
+due. Ha voluto dire rifare tre cose: la fila del Camminamento (il fantasma
+dietro l'arpia), i capi delle partite libere (almeno due torri li devono
+ferire: nel Delta il drago era finito capo della decima ondata, e con le
+frecce ancora basse passava con qualunque vita) e il bestiario, dove ogni
+figura adesso dice a cosa è immune il suo mostro.
 
 Le file delle tappe sono fatte perché nessuna torre, da sola, le vinca, e
 perché la prima ondata la ferisca l'arciere e le prime quattro le torri con

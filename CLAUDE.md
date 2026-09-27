@@ -1157,17 +1157,33 @@ committate: non è ricostruibile da git.
 - **Nel castello un mostro è immune, non resistente.** Ogni mostro
   dichiara in `data/mostri.js` le torri che **non lo toccano affatto**
   (`immune`: zero danno, niente veleno, niente gelo): chi vola ignora
-  bombe e ghiaccio, chi è corazzato frecce e magia, e ognuno ha il suo
-  profilo. Non si accende e non si spegne per tappa: è com'è fatto il
+  le bombe (pipistrello, arpia e corvo anche il gelo, il fantasma le
+  frecce, il drago la magia), chi è corazzato frecce e magia, e ognuno
+  ha il suo profilo — **al massimo due** (`IMMUNITA_MAX`): con tre il
+  fantasma e il drago avevano una torre sola che li feriva e non si
+  potevano nemmeno frenare, cioè un indovinello e non una scelta. Non
+  si accende e non si spegne per tappa: è com'è fatto il
   mostro, quindi a decidere è **la fila** della tappa, e le sue regole
   stanno in `guastiDelleImmunita` (ogni mostro si può ferire con le
   torri della tappa, ogni torre che ferisce ha un mostro immune, la
   prima ondata la ferisce l'arciere) e in `coperturaApertura` (le prime
   quattro ondate le feriscono le torri di apertura, ognuna dalla sua
-  strada). Le controllano il validatore e `unita/immunita-castello`. Il
-  colpo che rimbalza si vede (`respinto`, la pastiglia «immune»), e la
-  taratura spiana la vita **mostro per mostro**: un golem che solo le
-  bombe aprono ha meno vita di un pipistrello, e non è un errore.
+  strada). Le controllano il validatore e `unita/immunita-castello`.
+  Nelle libere la fila la dispone `filaCheRegge`, che pretende anche
+  che **i capi li feriscano almeno due torri** (`capiAperti`): alla
+  decima ondata la difesa è giovane, e un capo che tocca una torre sola
+  passava con qualunque vita. Il giocatore modello sa da quale ondata
+  le bocche scendono insieme (`insiemeDa`, la stessa del motore): lo
+  contava sempre dalla quinta, e nelle libere comprava torri per la
+  strada sbagliata. Il colpo che rimbalza si vede (`respinto`, la
+  pastiglia «immune»), e la taratura spiana la vita **mostro per
+  mostro**: un golem che solo le bombe aprono ha meno vita di un
+  pipistrello, e non è un errore. **La figura dice l'immunità**
+  (`giochi/castello/scena/bestiario.js`): al bambino serve capire che
+  torre mettergli davanti, non chi è — carapace e setole reggono le
+  frecce, melme e ossa la magia, i draghi bombe e magia — e una figura
+  che fa due mostri li fa con le stesse immunità
+  (`unita/castello-bestiario`).
 - **Abilità, capo e fretta sono del motore, e la taratura le conta da
   sé.** Dal Sotterraneo in poi (e sempre nelle libere) slime e verme si
   dividono quando cadono e scheletro e troll si rialzano una volta

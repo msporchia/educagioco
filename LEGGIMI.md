@@ -764,9 +764,13 @@ difesa, non la fa crollare. Il ghiaccio, che si compra con la moltiplicazione,
 pesca il moltiplicatore fra le tabelline che gli asteroidi hanno trovato deboli.
 
 **Ogni mostro è immune a qualcosa** (`data/mostri.js`): le torri che non lo
-toccano affatto — né danno, né veleno, né gelo. Chi vola passa sopra le bombe
-e il gelo, chi è corazzato si fa rimbalzare addosso frecce e magia, il
-fantasma lo prende solo la magia, il drago solo le frecce. Il nastro in cima
+toccano affatto — né danno, né veleno, né gelo — e sono **al massimo due**.
+Chi vola passa sopra le bombe (pipistrelli, arpia e corvo anche sopra il gelo),
+chi è corazzato si fa rimbalzare addosso frecce e magia, le frecce passano
+attraverso il fantasma e la magia non scalfisce il drago — che però il gelo lo
+sentono tutti e due: con tre immunità avevano una torre sola e nessun modo di
+frenarli. La figura che li disegna dice a cosa sono immuni: carapace e setole
+reggono le frecce, melme e ossa la magia, i draghi bombe e magia. Il nastro in cima
 lo dice tre ondate prima con le torri sbarrate, la carta della torre sbagliata
 dice «non lo tocca», e in campo il colpo che rimbalza lascia la scritta
 «immune» sopra la testa. Prima c'era la resistenza — un terzo del danno — ma

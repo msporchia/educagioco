@@ -505,7 +505,7 @@ export const AIUTI = {
         'Per costruire e potenziare servono soldi, e i soldi si prendono **facendo i conti**.',
       ] },
       { titolo: 'Le cose che si capiscono tardi', righe: [
-        'Certi mostri sono **immuni** a certe torri: chi vola se ne infischia delle bombe e del ghiaccio, chi ha la corazza delle frecce e della magia. Il nastro in cima lo dice prima che arrivino, con le torri sbarrate: una torre sola non basta mai.',
+        'Certi mostri sono **immuni** a certe torri: chi vola se ne infischia delle bombe (e quasi sempre anche del ghiaccio), chi ha la corazza delle frecce e della magia, e il mostro stesso te lo fa capire: una melma non sente la magia, uno scorpione non sente le frecce. Il nastro in cima lo dice prima che arrivino, con le torri sbarrate: una torre sola non basta mai.',
         'Le torri **non costano uguale**: l\'arciere costa poco, le bombe tanto — ma fanno anche di più. Con una bomba si fanno due arcieri.',
         'Le torri sparano solo a chi passa **vicino a loro**: metterle tutte insieme all\'inizio lascia scoperto il resto.',
         'Una torre potenziata vale più di due torri deboli. Il tasto ⬆️ sul campo dice quanti potenziamenti hai preso, e quanto fanno.',
