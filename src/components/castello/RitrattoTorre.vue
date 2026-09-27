@@ -20,6 +20,10 @@ const props = defineProps({
   lv: { type: Number, default: 1 },
   ramo: { type: String, default: null },
   unita: { type: Number, default: 74 },     // più piccola, più grossa la torre
+  /* chi la dipinge: quelli di sempre, o quelli di una pelle (il castello
+     a sprite), che la torre la mostrano con la figura del campo — come
+     fa già il ritratto dei mostri */
+  pittori: { type: Object, default: null },
 })
 
 const tela = ref(null)
@@ -28,14 +32,17 @@ let campo = null
 function dipingi() {
   if (!campo) return
   const { W, H } = campo.ridimensiona()
-  campo.disegna([{ che: 'torre', x: W / 2, y: H * 0.82,
+  const che = props.pittori && props.pittori.ritrattoTorre ? 'ritrattoTorre' : 'torre'
+  campo.disegna([{ che, x: W / 2, y: H * 0.82,
                    tipo: props.tipo, lv: props.lv, ramo: props.ramo,
                    potenziabile: false, posso: false }], 0)
 }
 
 onMounted(() => {
-  campo = creaTela(tela.value, PITTORI, { unita: props.unita, massimo: 3 })
+  campo = creaTela(tela.value, props.pittori || PITTORI, { unita: props.unita, massimo: 3 })
   dipingi()
+  // un foglio di figure ancora da decodificare: si ridipinge quando c'è
+  props.pittori?.pronte?.().then(dipingi, () => {})
 })
 watch(() => [props.tipo, props.lv, props.ramo], dipingi)
 </script>

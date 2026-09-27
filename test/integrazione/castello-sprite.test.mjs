@@ -110,6 +110,11 @@ await page.mouse.click(dove.x, dove.y)
 await attendi(page, 300)
 uguale('toccata la piazzola, il foglio chiede che torre',
        await page.evaluate(() => window.__td.foglio.value && window.__td.foglio.value.che), 'costruisci')
+/* le carte del foglio mostrano la figura del campo, non la torre a
+   poligoni: si vede solo a occhio, quindi uno scatto (il foglio di
+   figure si carica da sé, e i ritratti si ridipingono quando c'è) */
+await attendi(page, 500)
+await scatto(page, 'castello-sprite-scelta')
 
 uguale('la torre si costruisce', await costruisci('add'), 1)
 controlla('ed è nata sulla piazzola toccata', await page.evaluate(() => {

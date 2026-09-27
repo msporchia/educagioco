@@ -707,10 +707,12 @@ onMounted(() => {
               @chiudi="chiudi" @indietro="indietro">
         <SceltaTorre v-if="foglio && foglio.che === 'costruisci'"
                      :tappa="tappa" :energia="hud.energia" :costi="costi"
-                     :divisioni="divisioni" :immune="immune" @scegli="scegliTorre" />
+                     :divisioni="divisioni" :immune="immune" @scegli="scegliTorre"
+                     :pittori="pelle ? pelle.pittori : null" />
 
         <SchedaTorre v-else-if="foglio && foglio.che === 'torre'"
                      :torre="foglio.torre" :cap="massimo" :costo="costoSalita(foglio.torre)"
+                     :pittori="pelle ? pelle.pittori : null"
                      :energia="hud.energia" :divisioni="divisioni" :rami="rami"
                      :costo-sposta="CFG.spostamento" :puoi-spostare="posti() > 0"
                      @potenzia="salgo" @sposta="chiediSposta" />
@@ -719,6 +721,7 @@ onMounted(() => {
           <div class="intestazione">
             <span class="ritratto">
               <RitrattoTorre :tipo="scelta" :lv="bersaglio ? bersaglio.lv + 1 : 1"
+                             :pittori="pelle ? pelle.pittori : null"
                              :ramo="strada || (bersaglio && bersaglio.ramo)" :unita="52" />
             </span>
             <b>{{ TORRI[scelta].nome }}</b>
@@ -735,7 +738,8 @@ onMounted(() => {
            altri, con la ✕ in alto a destra; il campo non si ferma. -->
       <Foglio v-if="fase === 'gioco'" :aperto="!!blocchetto" titolo="I tuoi potenziamenti"
               @chiudi="blocchetto = null">
-        <Potenziamenti v-if="blocchetto" :blocchetto="blocchetto" />
+        <Potenziamenti v-if="blocchetto" :blocchetto="blocchetto"
+                       :pittori="pelle ? pelle.pittori : null" />
       </Foglio>
 
       <!-- ════════ IL REGALO ════════

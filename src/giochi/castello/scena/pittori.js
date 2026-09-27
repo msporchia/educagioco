@@ -201,7 +201,28 @@ function ritratto(p, cosa) {
   p.ctx.drawImage(img, sx, sy, w, h, p.W / 2 - w * s / 2, p.H / 2 + H * s / 2 - h * s, w * s, h * s)
 }
 
+/* ── il ritratto di una torre ──
+   Nelle carte del foglio (cosa costruire, la scheda, il potenziamento, il
+   riepilogo) la torre è la stessa figura del campo, grande quanto il
+   riquadro lascia. La scala è **una per tutte le torri** — quella che fa
+   stare nel riquadro la figura più grande del foglio — e non una per
+   figura: fatte stare tutte a misura piena, la torre appena costruita e
+   quella al massimo sembrerebbero grandi uguali, e crescere non si
+   vedrebbe più. */
+let piuGrande = null
+function ritrattoTorre(p, cosa) {
+  if (!img) return PITTORI.torre(p, { ...cosa, x: p.W / 2, y: p.H * 0.82 })
+  if (!piuGrande) {
+    const torri = Object.keys(PEZZI).filter(k => k.startsWith('torre:')).map(k => PEZZI[k])
+    piuGrande = [Math.max(...torri.map(t => t[2])), Math.max(...torri.map(t => t[3]))]
+  }
+  const [sx, sy, w, h] = PEZZI[figuraTorre(cosa.tipo, cosa.lv, cosa.ramo)]
+  const s = Math.min(p.W * 0.94 / piuGrande[0], p.H * 0.94 / piuGrande[1])
+  p.ctx.imageSmoothingQuality = 'high'
+  p.ctx.drawImage(img, sx, sy, w, h, p.W / 2 - w * s / 2, p.H * 0.97 - h * s, w * s, h * s)
+}
+
 /* `pronte` non è un pittore: è la promessa che chi dipinge una volta
    sola (il ritratto del nastro) aspetta per ridipingersi a foglio pronto */
-export const PITTORI_SPRITE = { ...PITTORI, torre, mostro, ritratto, castello: () => {},
+export const PITTORI_SPRITE = { ...PITTORI, torre, mostro, ritratto, ritrattoTorre, castello: () => {},
                                 pronte: () => caricaFigure() }

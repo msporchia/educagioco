@@ -27,6 +27,9 @@ import { TORRI, segnoDi } from '../../data/ops.js'
 import RitrattoTorre from './RitrattoTorre.vue'
 
 const props = defineProps({
+  /* i pittori della pelle, se il campo ne ha una: il ritratto della
+     torre è allora la figura del campo */
+  pittori: { type: Object, default: null },
   torre: { type: Object, required: true },       // { tipo, lv, ramo }
   cap: { type: Number, default: 10 },
   costo: { type: Number, default: 0 },
@@ -50,7 +53,7 @@ const gradini = computed(() => Array.from({ length: props.cap }, (_, i) => i + 1
 <template>
   <div class="chi">
     <span class="figura">
-      <RitrattoTorre :tipo="torre.tipo" :lv="torre.lv" :ramo="torre.ramo" :unita="62" />
+      <RitrattoTorre :pittori="pittori" :tipo="torre.tipo" :lv="torre.lv" :ramo="torre.ramo" :unita="62" />
     </span>
     <span class="dati">
       <b :style="{ color: modello.colore }">{{ modello.nome }}</b>
@@ -69,7 +72,7 @@ const gradini = computed(() => Array.from({ length: props.cap }, (_, i) => i + 1
       <button v-for="r in rami" :key="r.id" class="ramo" :style="{ '--c': modello.colore }"
               :class="{ cara: !posso }" :data-ramo="r.id" @click="$emit('potenzia', r.id)">
         <span class="figura">
-          <RitrattoTorre :tipo="torre.tipo" :lv="torre.lv + 1" :ramo="r.id" :unita="66" />
+          <RitrattoTorre :pittori="pittori" :tipo="torre.tipo" :lv="torre.lv + 1" :ramo="r.id" :unita="66" />
         </span>
         <b>{{ r.nome }}</b>
         <span class="descr">{{ r.descr }}</span>

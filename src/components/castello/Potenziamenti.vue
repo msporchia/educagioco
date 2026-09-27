@@ -22,6 +22,9 @@ import { TORRI } from '../../data/ops.js'
 import RitrattoTorre from './RitrattoTorre.vue'
 
 const props = defineProps({
+  /* i pittori della pelle, se il campo ne ha una: il ritratto della
+     torre è allora la figura del campo */
+  pittori: { type: Object, default: null },
   /* quello che compone `blocchettoDi`: { torri, regali, gradini, regaliPresi, totale } */
   blocchetto: { type: Object, required: true },
 })
@@ -49,7 +52,7 @@ const vuoto = computed(() => !props.blocchetto.torri.length && !props.blocchetto
 
     <div v-for="t in blocchetto.torri" :key="t.tipo" class="riga" :style="{ '--c': TORRI[t.tipo].colore }"
          :data-blocchetto-torre="t.tipo" :data-piu="t.piu">
-      <span class="figura"><RitrattoTorre :tipo="t.tipo" :lv="t.livelloMassimo" :unita="40" /></span>
+      <span class="figura"><RitrattoTorre :pittori="pittori" :tipo="t.tipo" :lv="t.livelloMassimo" :unita="40" /></span>
       <span class="dati">
         <b>{{ nomeDi(t.tipo) }} ×{{ t.quante }}</b>
         <span>{{ t.gradini }} {{ t.gradini === 1 ? 'potenziamento' : 'potenziamenti' }} ·
