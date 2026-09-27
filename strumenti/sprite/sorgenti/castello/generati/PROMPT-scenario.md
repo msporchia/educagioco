@@ -152,6 +152,30 @@ il fitto sui bordi e intorno al castello.
 
 ## Prompt 2 — il foglio
 
+**Quello da usare è questo**, allegati la scena (`td_1.png`) e lo schema
+(`PROMPT-scenario-foglio.png`): è quello che ha fatto `terreno-bosco.png`,
+il 27 settembre 2026. È più corto del primo, dice «nello stile di» invece
+di «esattamente», non ha il blocco dello scenario in coda (l'atmosfera
+sta nell'ultimo paragrafo) e non nomina i mostri. Il primo, più sotto, **è
+stato rifiutato dal filtro dei contenuti**, e resta scritto perché le
+regole che dice sono le stesse.
+
+```text
+Crea un foglio di pezzi (sprite sheet) in pixel art, nello stile della prima immagine allegata: stessa tavolozza, stessa luce da in alto a sinistra, stesso contorno scuro, stessi pixel grandi (ogni pixel del disegno è un quadrato di 4×4 px). La seconda immagine è uno schema a colori piatti: indica dove va ogni pezzo e quanto è grande; i suoi colori non vanno copiati.
+
+Formato orizzontale 1536×1024 px, fondo trasparente, griglia invisibile di celle da 64×64 px. Ogni pezzo parte dall'angolo di una cella ed è separato dagli altri da mezza cella di trasparente. Niente ombre sotto i pezzi, niente cornici, niente testo e niente numeri.
+
+Dall'alto in basso:
+1. Tre quadrati di 4×4 celle che si ripetono senza cuciture (il bordo destro continua nel sinistro, quello di sotto in quello di sopra), senza bordi né linee di griglia: il prato, il prato con qualche fiore, il bosco fitto visto dall'alto. A destra: due piattaforme di legno da una cella ciascuna e due laghetti interi con la loro riva, uno di 2×2 e uno di 3×3 celle.
+2. Un pezzo di sentiero di 5×5 celle: il sentiero fa il giro del quadrato e una croce lo divide in quattro, così ci sono le quattro curve, gli incroci a T, l'incrocio e i tratti dritti. Il sentiero è largo mezza cella e corre nel mezzo delle celle, con il prato ai lati, all'esterno e nei quattro spazi interni. Accanto: l'ingresso di una tana fra grandi radici (3×2 celle); il castello visto di fronte, col portone verso chi guarda (5×4 celle); un lago che entra dal bordo destro (3×5 celle, riva frastagliata a sinistra, lato destro tagliato dritto); tre elementi grandi 2×2 celle: un gruppo di alberi, un masso col muschio, e uno a scelta.
+3. Sei alberi del bosco, larghi una cella e alti due, e sei elementi piccoli da una cella: un albero isolato, un cespuglio, un masso, un gruppo di sassi, un ceppo, un pezzo di staccionata.
+4. Dodici piccole cose da mettere sul prato, una per cella, senza nessun quadrato di prato sotto: foglie, fiori, trifogli, sassolini, ciuffi d'erba, rametti.
+
+Atmosfera: un bosco luminoso di fine estate, allegro. Prato verde medio, spento e uniforme; sentiero di terra ocra con un bordo di ciuffi d'erba e sassi tondi; acqua verde-azzurra con la riva di sabbia e canne; piattaforme di assi di legno chiaro bordate di pietre; castello di pietra chiara coi tetti conici blu, le bandiere rosse e il portone di legno.
+```
+
+Il primo, rifiutato:
+
 ```text
 Disegna il foglio dei pezzi (uno sprite sheet) con cui si costruisce ESATTAMENTE la scena allegata: stesso scenario, stessa tavolozza, stessa strada, stesso fondo, stessa luce piatta, stessa misura. La seconda immagine allegata è lo SCHEMA del foglio: dice dove va ogni pezzo e quanto è grande, e i suoi colori piatti non vanno copiati.
 
@@ -293,19 +317,17 @@ Quattro controlli, in quest'ordine — e nessuno dei quattro è «è bello»:
 
 ## Come si monta nel gioco
 
-**Montato il 26 settembre 2026, in attesa del foglio.** Il gioco
+**Montato il 26 settembre 2026, coi fogli veri dal 27.** Il gioco
 sperimentale `castello` è il tower defense vero con un'altra pelle
 (`src/giochi/castello/scena/pelle.js`): le carte a scacchiera le fa
 `motore/carta.js`, e il vestito lo compone `scena/vestito.js` coi pezzi
-che scrive `strumenti/sprite/vesti.py --atlante`. Oggi i pezzi sono
-ritagliati dalle scene; **quando il foglio del prompt 2 arriva si salva
-come `terreno-bosco.png` qui accanto**, il foglietto modello
-`terreno-bosco.json` (scritto sulle coordinate dello schema) si ritocca
-guardando `vesti.py --provino-foglio bosco provino.png`, e
-`vesti.py --atlante` prende il foglio al posto della scena. Neve e lava
-fanno lo stesso con `terreno-neve.png` e `terreno-lava.png`, e senza un
-foglietto loro usano quello del bosco. Il piano intero, coi comandi, è
-in [`../../../DA-GENERARE.md`](../../../DA-GENERARE.md).
+che scrive `strumenti/sprite/vesti.py --atlante`. I pezzi vengono dai
+tre fogli del terreno qui accanto (`terreno-bosco.png`, `-neve`,
+`-lava`), ognuno col suo foglietto: quello del bosco è misurato pezzo per
+pezzo, gli altri due dicono `"come": "terreno-bosco.json"` e il loro
+fondo. Le scene (`td_1.png`…) restano il ripiego di un vestito senza
+foglio. Il piano intero, coi comandi, è in
+[`../../../DA-GENERARE.md`](../../../DA-GENERARE.md).
 
 Quello che segue è com'era stato pensato, e com'è andata:
 
@@ -457,3 +479,77 @@ riga**. 1024×1536, RGB.
 - **Nella lava ci sono cristalli rossi**, a mucchi, sparsi sul campo: in
   un gioco sembrano gemme da raccogliere. Nel foglio della lava vanno
   chiesti senza, o scartati al ritaglio.
+
+### `terreno-bosco.png` — il foglio del bosco ✅, fuori griglia
+
+27 settembre 2026, nella chat di `td_1.png`, allegati `td_1.png` e lo
+schema. **Il primo prompt 2 è stato rifiutato dal filtro dei
+contenuti**; è passato il secondo, più corto, che dice «nello stile di»
+invece di «esattamente» e non nomina i mostri (è quello scritto adesso
+in cima al prompt 2, e intero nel foglietto). 1536×1024, RGB. Tutti i
+pezzi chiesti ci sono, nell'ordine chiesto, e la mano è quella della
+scena.
+
+- **La trasparenza è dipinta**: niente alfa, la scacchiera grigia della
+  «trasparenza» disegnata coi pixel veri, (254,254,254)/(253,253,253) e
+  (229,229,229)/(228,228,228). Si toglie allagando dai bordi i grigi
+  chiari (`"fondo": "scacchiera"`, `senza_fondo` in `vesti.py`), più un
+  giro sulla frangia grigia attorno agli alberi; restano i fiori bianchi
+  dentro i cespugli e le pietre del castello, che sono chiusi dal
+  contorno. Fra le traverse della staccionata la scacchiera resta chiusa
+  in una tasca, e lì si toglie per colore (`"tasche": true` su quel
+  pezzo solo).
+- **Non sta sulla griglia**: la finestra della strada è ~281 px per
+  cinque celle (~56 px a cella), e alberi e decori sono più grandi del
+  chiesto (gli alberi del fitto ~100×155 invece di 64×128). Quindi il
+  foglietto non è quello scritto sullo schema: ogni pezzo ha il suo
+  rettangolo misurato, e una `misura` in pixel di gioco con una scala
+  per famiglia, che tiene le proporzioni del disegno.
+- **I tre fondi hanno un orlo** d'erba, e non si ripetono come
+  piastrelle: si prende l'interno del quadrato e se ne ritagliano toppe
+  sfumate, come si faceva con la scena.
+- **La finestra della strada non ha le celle al loro posto**: il giro
+  corre sull'orlo del quadrato e i quattro prati di dentro sono più
+  larghi della strada. Non importa: la strada si ricompone da un tratto
+  dritto solo (quello verticale della croce), e l'orlo è **un filo
+  d'erba** e non una riga scura, quindi sfuma nel prato per tre pixel.
+- **Quindici cose per terra** invece di dodici, e tutte buone: si usano
+  tutte.
+- Vengono bene: la tana fra le radici, il castello, gli stagni con le
+  ninfee e il lago che entra dal bordo, i decori grandi.
+
+### `terreno-neve.png` e `terreno-lava.png` ✅ — rivestiti, sul magenta
+
+27 settembre 2026, nella chat del foglio del bosco, allegando `td_2.png`
+e `td_3.png`, coi due prompt della voce 4 di `DA-GENERARE.md`: «rifai lo
+stesso foglio, pezzo per pezzo…» e **il fondo magenta pieno**, perché
+sulla neve la scacchiera non si toglierebbe (gli orli dei pezzi sono
+bianchi come lei). 1536×1024, RGB.
+
+- **La geometria è quella del bosco**: stesse quattro bande, stessi
+  pezzi (7 · 7 · 12 · 15), bordi entro 5 px. I foglietti dicono solo
+  `"come": "terreno-bosco.json"` e il fondo, e i rettangoli del bosco
+  hanno 6 px di margine apposta.
+- **Il magenta è rumoroso** — (247,4,250), (250,2,251), (246,10,245) — e
+  lascia un filo viola di mezzo sugli orli, più qualche tasca chiusa fra
+  i tronchi: `senza_fondo` toglie il magenta anche dove l'allagamento non
+  arriva, e la frangia per tinta (rosso e blu sopra il verde di più di
+  55). La roccia della lava è viola-grigia, ma dentro i pezzi non passa
+  mai 50.
+- **La neve è uscita pulita al primo colpo.**
+- **La lava ha i cristalli** arancioni sparsi sul fondo e sul fondo «qua
+  e là», chiesti via e arrivati lo stesso: le toppe si prendono dove ce
+  ne sono meno (`"evita": "acceso"`), ma il fondo resta fitto di sassi e
+  crepe, il più affollato dei tre. **E il castello è di pietra nera** con
+  le crepe di lava invece di restare quello del bosco: va bene così, e si
+  usa.
+
+### `torri-1.png` — le torri ✅, fuori ordine
+
+27 settembre 2026, ritoccato a mano dall'utente la stessa mattina.
+1248×832 con l'alfa vero, cinque per quattro su una griglia regolare, ma
+**non nell'ordine chiesto** e con le figure **tutte grandi uguali**, un
+disco d'erba sotto ognuna. I gettoni erano finiti e si usa questo: la
+mappa delle figure, la crescita (la scala per stadio) e le due correzioni
+stanno nel foglietto `torri-1.json`, e la voce 2 di `DA-GENERARE.md` dice
+perché. Il veleno ha una figura sola.

@@ -90,8 +90,9 @@ di 4×4 px».
 
 - **I colpi, le barre della vita, il raggio delle torri**: li disegna il
   gioco, com'era deciso ad agosto.
-- **Il castello e la bocca**: si prendono dalla scena (o dal foglio del
-  terreno), e sono identici nei tre vestiti.
+- **Il castello e la bocca**: si prendono dal foglio del terreno di ogni
+  vestito. Il castello doveva restare identico nei tre, e la lava l'ha
+  rivestito di pietra nera con le crepe di lava: va bene così.
 
 ## Il lavoro senza gettoni
 
@@ -111,59 +112,81 @@ nome col quale salvare** e **il comando da lanciare dopo**. Il prompt
 mandato si conserva nel foglietto (dove c'è) o si incolla nella voce qui,
 **nel momento in cui si salva il PNG**.
 
-### 1 — Il foglio del terreno del bosco · 1 immagine
+### 1 — Il foglio del terreno del bosco · 1 immagine · ✅ 27 settembre 2026
 
 **Sblocca** le carte vere: finisce il provvisorio (`vesti.py`, che
 ritaglia dalla scena), arrivano i due stagni veri e il lago che entra
-dal bordo, il fondo «con qualcosa in più», i pezzi alti del fitto.
+dal bordo, il fondo «con qualcosa in più», gli alberi interi del fitto, i
+decori grandi e le cose per terra.
 
-**Prompt**: il prompt 2 della scheda del castello
-([`sorgenti/castello/generati/PROMPT-scenario.md`](sorgenti/castello/generati/PROMPT-scenario.md)),
-con in coda il blocco del bosco. **Allegati**: `td_1.png` e
-`PROMPT-scenario-foglio.png`. Nella stessa chat di `td_1`, se c'è
-ancora.
+**Com'è andata**: il primo prompt 2 della scheda è stato **rifiutato dal
+filtro dei contenuti**; è passato il secondo, più corto, che dice «nello
+stile di» invece di «esattamente» e non nomina i mostri. **Il prompt 2 da
+usare è quello**, ed è conservato intero nel foglietto
+(`terreno-bosco.json`, `prompt.testo`) e nella scheda. Il foglio è tornato
+col fondo a **scacchiera dipinta** (`"fondo": "scacchiera"`), fuori dalla
+griglia chiesta (la finestra della strada a ~56 px per cella) e coi fondi
+**orlati**: il foglietto è stato rimisurato pezzo per pezzo, e i dettagli
+stanno nella scheda, in «Com'è andata».
 
-**Si salva come** `strumenti/sprite/sorgenti/castello/generati/terreno-bosco.png`.
-Il foglietto c'è già, **scritto sullo schema** (`terreno-bosco.json`):
-si guarda dove sono venuti i pezzi e si ritoccano `da` e `cella` di
-quelli spostati — `misura` no, è la misura che il gioco si aspetta.
+**Allegati**: `td_1.png` e `PROMPT-scenario-foglio.png`, nella chat di `td_1`.
+
+**Sta in** `strumenti/sprite/sorgenti/castello/generati/terreno-bosco.png`.
 
 ```bash
-python3 strumenti/sprite/vesti.py --provino-foglio bosco /tmp/foglio.png   # i rettangoli sopra il foglio
+python3 strumenti/sprite/vesti.py --provino-foglio bosco /tmp/foglio.png   # i rettangoli sopra il foglio scontornato
+python3 strumenti/sprite/vesti.py --provino bosco /tmp/pezzi.png           # i pezzi che ne escono
 python3 strumenti/sprite/vesti.py --atlante                                # e il gioco usa il foglio
 node strumenti/sprite/carte-castello.mjs                                   # le carte vestite, da guardare
 ```
 
-Se torna verticale si riscrivono le coordinate del foglietto, i nomi
-restano. Se l'alone c'è, `"alone": 128` è già nel foglietto.
+### 2 — Le torri, nella mano delle scene · 1 immagine · ✅ 27 settembre 2026
 
-### 2 — Le torri, nella mano delle scene · 1 immagine
-
-**Perché**: le torri della prova vengono da
+**Perché**: le torri della prova venivano da
 `sorgenti/castello/non-usati/PVX1O.png`, che ha la **provenienza non
-documentata** — va rifatto prima di pubblicare, come `terreni.png`. E
-già che si rifà: gli stadi iniziali sono sproporzionati (il ghiaccio
-appena costruito è un disco piatto, le bombe un cannoncino minuscolo
-accanto a torri di due celle), la brina non ha una figura sua (nella
-prova prende i cristalli viola di «Arcane») e gli stadi alti sbordano
-sulla strada.
+documentata**. Adesso vengono da `torri-1.png`; `PVX1O.png` resta in
+`non-usati/` (lo legge ancora `prova-battaglia.py` come ripiego, se il
+foglio nuovo mancasse) ma non entra più nell'atlante.
 
-**Allegati**: `td_1.png` (la mano) e `PVX1O.png` (cosa è ogni torre).
-Chat nuova.
+**Com'è andata**: il foglio è tornato 1248×832 con l'alfa vero e una
+griglia regolare di cinque per quattro, ma **non nell'ordine chiesto** e
+con le figure **tutte grandi uguali**, un disco d'erba sotto ognuna. I
+gettoni erano finiti, quindi si è tenuto questo, e l'utente l'ha ritoccato
+a mano (brina e napalm con l'alone). Tre cose le dice il suo foglietto,
+`torri-1.json`, invece di ritoccare il PNG:
 
-**Si salva come** `strumenti/sprite/sorgenti/castello/generati/torri-1.png`.
-Non ha foglietto: lo legge `righe.py` da sé, quattro righe da cinque
-figure, e se i conti non tornano si ferma e lo dice.
+- **quale figura è quale torre** (`figure`, riga e colonna da 0), letto col
+  foglio davanti — e le otto torri salite **senza ramo**: l'arciere la
+  torretta con la tettoia (r0c1, l'unica che nessun ramo usa) e poi la
+  balestra; la magica la catena; il ghiaccio le punte e poi i cristalli;
+  le bombe i due mortai;
+- **via il disco d'erba** (`erba`): il verde che si raggiunge dal
+  trasparente passando per il verde, nel quarto basso della figura; e
+  `pieno`, perché lo scontorno del disco aveva fatto mezzo trasparente il
+  verde delle divise dei soldati (sul campo ci si vedeva il prato
+  attraverso);
+- **la crescita la dà la scala** (`scala`: 0,60 · 0,68 · 0,76 per stadio):
+  sul foglio le figure sono tutte ~125×185, e senza la torre appena
+  costruita sarebbe grande quanto quella al massimo.
+
+Una figura si prende **per macchie d'alfa, non per cella**: la fiamma del
+cannone di r3c4 sale dentro la cella di sopra, e ritagliando le celle la
+brina si ritrovava in fondo un pezzo di fuoco (`figure_della_griglia` in
+`vesti.py`).
+
+**TODO**: il veleno ha una figura sola (r1c2): lo stadio 2 è lo stesso
+dell'1. E la brina e il napalm al massimo, con l'alone e la fiamma, sono
+più larghi di una cella e mezza: coprono un pezzo di strada.
+
+**Sta in** `strumenti/sprite/sorgenti/castello/generati/torri-1.png`.
 
 ```bash
-python3 strumenti/sprite/righe.py strumenti/sprite/sorgenti/castello/generati/torri-1.png /tmp/torri.png
-# deve dire «4 righe: 5 · 5 · 5 · 5 figure»; il provino mostra i riquadri
 python3 strumenti/sprite/vesti.py --atlante
-node strumenti/sprite/carte-castello.mjs
+node strumenti/sprite/carte-castello.mjs      # castello-battaglia-figure.png: le venti torri in fila
 ```
 
-La torre salita senza aver preso un ramo (le tappe senza rami) prende
-la figura del primo ramo.
+Il prompt che era stato scritto per questa voce, qui sotto, non è quello
+che ha prodotto il foglio (non è stato conservato):
 
 ```text
 Disegna il foglio delle torri (uno sprite sheet) di questo gioco di difesa della torre, nella mano ESATTA della scena allegata: stesso contorno scuro, stessa luce da in alto a sinistra, stessa tavolozza, stessa grana — ogni pixel del disegno è un quadrato pieno di 4×4 px. La seconda immagine allegata è il VECCHIO foglio delle torri: dice cosa è ogni torre e come cresce, ma la mano da seguire è quella della scena, non quella.
@@ -180,48 +203,41 @@ Quattro righe, una per torre, e in ogni riga cinque figure da sinistra a destra:
 Ogni torre si riconosce da lontano anche piccola, con una sagoma e un colore suoi — l'arciere legno e verde, la magica pietra e viola, il ghiaccio azzurro e bianco, le bombe ferro e arancio — e crescendo si capisce che è la stessa torre diventata più forte.
 ```
 
-**Come si guarda**: le cinque di una riga sono la stessa torre; le
-cinque appena costruite hanno la stessa stazza; niente è più largo di
-una cella e mezza; niente scritte; `righe.py` conta 4 × 5.
+### 3 — La lava più calma · non serve più
 
-### 3 — La lava più calma · 1 immagine, una riga
+Era la scena della lava rifatta con la roccia calma, per ritagliarci i
+pezzi. Col foglio della lava (voce 4) i pezzi non si ritagliano più dalla
+scena, e la calma l'ha chiesta direttamente il suo prompt. Il foglio è
+uscito comunque coi cristalli, e le toppe di fondo li scansano
+(`"evita": "acceso"` in `terreno-lava.json`).
 
-**Perché**: nella prova la lava è l'unico vestito dove le figure non si
-staccano — crepe e fiammelle dappertutto, e il fitto è un incendio. Il
-prompt 1 lo vietava («il terreno è il fondo: colori più spenti») e
-`td_3.png` non l'ha seguito. In più ha dei cristalli rossi sparsi che
-sembrano gemme da raccogliere.
+### 4 — I fogli del terreno della neve e della lava · 2 immagini · ✅ 27 settembre 2026
 
-Nella chat dove è uscita `td_3.png`:
+**Sblocca** gli altri due vestiti col foglio vero. Nella chat dove è
+uscito il foglio del bosco, allegando la scena di quel vestito
+(`td_2.png` per la neve, `td_3.png` per la lava). **Il fondo si chiede
+magenta pieno**, non trasparente: sulla neve la scacchiera dipinta non si
+toglierebbe, perché gli orli dei pezzi sono bianchi come lei.
 
-```text
-Rifai la stessa scena con la lava, ma il terreno è il fondo: roccia scura, calma e uniforme, con poche crepe e nessuna fiammella sparsa; la lava resta solo nei laghi e ai bordi del campo, e il bosco dei bordi sono rupi scure, non fiamme. Niente cristalli. Non cambiare nient'altro: strada, piazzole, bocche e castello restano identici, nello stesso posto.
-```
-
-**Si salva come** `strumenti/sprite/sorgenti/castello/generati/td_4.png`
-(`td_3.png` resta: una sorgente non si butta), e in `vesti.py` la riga
-`SCENE` dice `'lava': 'td_4.png'`. Poi `python3 strumenti/sprite/vesti.py
---atlante` e `node strumenti/sprite/carte-castello.mjs`. Prima di tenerla
-si controlla che la geometria sia rimasta quella (i bordi della strada
-sulla riga 200 a ±2 pixel del disegno da `td_1`, com'è scritto nella
-scheda): i ritagli si misurano tutti su `td_1`.
-
-### 4 — I fogli del terreno della neve e della lava · 2 immagini, una riga l'una
-
-**Sblocca** gli altri due vestiti col foglio vero. Si fanno dopo l'1 e
-il 3, nella chat dove è uscito il foglio del bosco, allegando la scena
-di quel vestito (`td_2.png` per la neve, `td_4.png` per la lava):
+Neve:
 
 ```text
-Rifai lo stesso foglio, pezzo per pezzo e ogni pezzo nella stessa posizione e della stessa misura, vestito come la scena allegata. Non spostare niente: cambia solo il vestito.
+Rifai lo stesso foglio, pezzo per pezzo, ogni pezzo nella stessa posizione e della stessa misura, vestito come la scena allegata: la neve. Il prato diventa neve, il bosco fitto e gli alberi diventano abeti innevati, i laghetti e il lago diventano ghiaccio con la riva innevata, il sentiero è terra battuta grigia, le piattaforme sono assi coperte di neve, la tana è una grotta nella roccia innevata. Il castello resta lo stesso. Il fondo dietro i pezzi è un magenta pieno e uniforme (#FF00FF), senza scacchiera, senza sfumature e senza ombre. Non spostare niente: cambia solo il vestito.
 ```
 
-**Si salvano come** `terreno-neve.png` e `terreno-lava.png`, accanto a
-`terreno-bosco.png`. Se il foglio resta fermo com'è successo alle scene
-(entro due pixel del disegno) non serve altro: **un vestito senza il
-suo foglietto usa quello del bosco**. Se si è mosso, si copia
-`terreno-bosco.json` in `terreno-neve.json` e si ritocca. Poi, per tutti
-e due:
+Lava:
+
+```text
+Rifai lo stesso foglio, pezzo per pezzo, ogni pezzo nella stessa posizione e della stessa misura, vestito come la scena allegata ma più calmo: il fondo è roccia scura uniforme con poche crepe, senza fiammelle sparse e senza cristalli. I laghetti e il lago sono lava con la riva di roccia, il bosco fitto sono rupi scure, gli alberi sono alberi secchi, il sentiero è terra bruciata chiara, le piattaforme sono lastre di pietra scura, la tana è una grotta nella roccia vulcanica. Il castello resta lo stesso. Il fondo dietro i pezzi è un magenta pieno e uniforme (#FF00FF), senza scacchiera, senza sfumature e senza ombre. Non spostare niente: cambia solo il vestito.
+```
+
+**Stanno in** `terreno-neve.png` e `terreno-lava.png`, accanto a
+`terreno-bosco.png`. Sono rimasti fermi (entro 5 px dal bosco), quindi i
+loro foglietti dicono solo `"come": "terreno-bosco.json"` e il fondo
+`[255, 0, 255]`: coordinate e misure le ereditano. Il magenta del
+generatore è rumoroso e lascia un filo viola sugli orli: lo toglie
+`senza_fondo` in `vesti.py` (vedi `FORMATO.md`, `fondo`). Com'è andata
+sta nella scheda.
 
 ```bash
 python3 strumenti/sprite/vesti.py --provino-foglio neve /tmp/neve.png
@@ -304,10 +320,10 @@ memoria sugli scenari del sotterraneo).
 
 | # | cosa | immagini | allegati | si salva come | sblocca |
 |---|---|---|---|---|---|
-| 1 | foglio del terreno, bosco | 1 | `td_1`, schema del foglio | `castello/generati/terreno-bosco.png` | le carte vere |
-| 2 | le torri | 1 | `td_1`, `PVX1O` | `castello/generati/torri-1.png` | le torri pubblicabili |
-| 3 | la lava più calma | 1 | (chat di `td_3`) | `castello/generati/td_4.png` | un vestito che si legge |
-| 4 | fogli del terreno, neve e lava | 2 | la scena del vestito | `terreno-neve.png`, `terreno-lava.png` | gli altri due vestiti |
+| 1 ✅ | foglio del terreno, bosco | 1 | `td_1`, schema del foglio | `castello/generati/terreno-bosco.png` | le carte vere |
+| 2 ✅ | le torri | 1 | `td_1`, `PVX1O` | `castello/generati/torri-1.png` | le torri pubblicabili |
+| 3 — | la lava più calma (non serve più) | 1 | (chat di `td_3`) | `castello/generati/td_4.png` | un vestito che si legge |
+| 4 ✅ | fogli del terreno, neve e lava | 2 | la scena del vestito | `terreno-neve.png`, `terreno-lava.png` | gli altri due vestiti |
 | 5 | i mostri che camminano | 3 + 4 | `mostri-1`, `mostri-2` | `sotterraneo/generati/mostri-cammino-A.png`… | mostri di fronte, e il sotterraneo tutto in una mano |
 | 6 | gli eroi | 1 | `mostri-1`, una scena | — | l'addio a 0x72 |
 
