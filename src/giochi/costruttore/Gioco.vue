@@ -131,6 +131,7 @@ async function apriLivello(i) {
   tab.value = null
   sel.value = null
   aperta_.value = null
+  mano.value = null
   foglio.value = null
   finale.value = null
   aiutiVisti.value = aiutiPresi(CHIAVE, l.chiave)
@@ -239,6 +240,7 @@ function annulla() {
   archivio.programmi[liv.value.chiave] = conAttrezzi(prima, liv.value)
   sel.value = null
   aperta_.value = null
+  mano.value = null
   if (tab.value && !(prima.progetti || []).some(p => p.id === tab.value)) tab.value = null
   resetRisultato()
   salvaPresto()
@@ -324,6 +326,28 @@ function azione({ tipo, id }) {
   })
 }
 
+/* ═══════════ la mano ═══════════
+   ✂ prende una riga per spostarla, ⧉ per copiarla; poi si tocca un
+   «📥 qui» — anche in un'altra scheda — e la riga è lì, selezionata,
+   così si vede dov'è andata. Una copia conta per lo zaino. */
+const manoViva = computed(() => (mano.value && prog.value && mod.trova(prog.value, mano.value.id) ? mano.value : null))
+function prendiInMano(m) {
+  mano.value = m
+  sel.value = null
+  aperta_.value = null
+}
+function posa(posto) {
+  const m = manoViva.value
+  if (!m) return
+  if (m.copia && troppoPerLoZaino(righe.value + righeDi([mod.trova(prog.value, m.id).nodo]))) return
+  let id = null
+  modifica(p => { id = m.copia ? mod.incollaCopia(p, m.id, posto) : (mod.trasloca(p, m.id, posto) ? m.id : null) })
+  mano.value = null
+  if (!id) return
+  sel.value = id
+  nextTick(() => document.querySelector(`[data-riga="${id}"]`)?.scrollIntoView({ block: 'nearest' }))
+}
+
 function nuovaLavagnetta(idRiga = null) {
   attesaLavagnetta.value = idRiga ? { riga: idRiga } : null
   foglio.value = 'lavagnetta'
@@ -380,6 +404,7 @@ function ricomincia() {
   archivio.programmi[liv.value.chiave] = inizio(liv.value)
   tab.value = null
   sel.value = null
+  mano.value = null
   resetRisultato()
   salvaPresto()
 }
@@ -487,6 +512,7 @@ function via() {
   if (!prog.value || stato.inCorso) return
   aperta_.value = null
   sel.value = null
+  mano.value = null
   foglio.value = null
   if (zaino.value && righe.value > zaino.value) {
     messaggio.value = { tipo: 'errore', testo: `Il programma ha ${righe.value} righe, e qui ne stanno ${zaino.value}. ` +
@@ -647,9 +673,9 @@ const progettoAperto = computed(() =>
         <Editor :programma="prog" :livello="liv" :tab="tabMostrato" :sel="sel" :aperta="aperta_"
                 :accesa="stato.inCorso ? stato.riga : null" :guasto="stato.guasto" :problemi="problemi"
                 :giro="stato.inCorso ? stato.giro : null" :sola="stato.inCorso" :pila="stato.pila"
-                :indietro="passiIndietro" :zaino="zaino" :scritte="righe" :livelli="LIVELLI"
+                :indietro="passiIndietro" :zaino="zaino" :scritte="righe" :livelli="LIVELLI" :mano="manoViva"
                 @tab="t => { tab = t; sel = null; aperta_ = null }" @seleziona="seleziona" @apri="apri"
-                @imposta="imposta" @aggiungi="aggiungi" @azione="azione" @annulla="annulla"
+                @imposta="imposta" @avanti="sceltaFatta" @mano="prendiInMano" @posa="posa" @aggiungi="aggiungi" @azione="azione" @annulla="annulla"
                 @nuova-lavagnetta="nuovaLavagnetta" @progetto="apriProgetto" @ricomincia="ricomincia" />
         <p v-if="ricominciaArmato" class="cst-messaggio cst-errore cst-fisso">Tocca ancora «ricomincia» per cancellare tutto il programma di questo livello.</p>
       </div>

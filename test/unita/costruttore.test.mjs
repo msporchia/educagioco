@@ -329,6 +329,28 @@ for (const l of LIVELLI) {
   mod.togli(p, dup)
   uguale('togliere porta via la riga coi suoi figli', [...istruzioni(p)].length, 3)
 
+  /* la mano: dentro e fuori da un ripeti, anche in un progetto */
+  {
+    const q = programma({ principale: [fai.vai('destra', 1), fai.metti('rosso'), fai.ripeti(3, [fai.vai('destra', 2)])] })
+    const [a, b, rip] = q.principale.map(i => i.id)
+    const dentroRip = q.principale[2].corpo[0].id
+    controlla('una riga entra in fondo a un ripeti', mod.trasloca(q, b, { dentro: rip, ramo: 'corpo', inFondo: true }))
+    uguale('e ci sta, con lo stesso id', q.principale[1].corpo.map(i => i.id).join(), `${dentroRip},${b}`)
+    controlla('un\'altra entra in cima', mod.trasloca(q, a, { prima: dentroRip }))
+    uguale('prima di quella che c\'era', q.principale[0].corpo.map(i => i.id).join(), `${a},${dentroRip},${b}`)
+    controlla('e una esce, sopra il ripeti', mod.trasloca(q, b, { prima: rip }))
+    uguale('fuori dal ripeti', q.principale.map(i => i.id).join(), `${b},${rip}`)
+    controlla('un blocco non va dentro sé stesso', !mod.trasloca(q, rip, { dentro: rip }) && !mod.trasloca(q, rip, { prima: dentroRip }))
+    uguale('e resta dov\'era, intero', `${q.principale.length} ${q.principale[1].corpo.length}`, '2 2')
+    controlla('un posto che non c\'è lascia la riga dov\'era', !mod.trasloca(q, b, { prima: 'n999' }) && q.principale[0].id === b)
+    const pr = mod.nuovoProgetto(q, { nome: 'passo' })
+    controlla('una riga va anche in un progetto', mod.trasloca(q, b, { progetto: pr }) && q.progetti[0].corpo[0].id === b)
+    const c = mod.incollaCopia(q, rip, { progetto: null })
+    const tutti = [...istruzioni(q)].map(i => i.id)
+    controlla('la copia di un blocco ha id nuovi, figli compresi', c !== rip && new Set(tutti).size === tutti.length)
+    uguale('e va dove dice la mano, con quello che ha dentro', q.principale.at(-1).corpo.length, 2)
+  }
+
   mod.imposta(p, primo, 'verso', 'su')
   uguale('cambiare una casella', p.principale[0].verso, 'su')
 

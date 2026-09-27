@@ -223,10 +223,23 @@
 
 .cst-tasti-riga { display: flex; gap: 6px; flex-wrap: wrap; padding: 6px 2px 2px }
 .cst-tasti-riga button {
-  min-width: 40px; min-height: 36px; border-radius: 10px; border: 1.5px solid var(--cst-bordo); background: var(--cst-fondo); font-size: 15px;
+  min-width: 40px; padding: 0 8px; min-height: 36px; border-radius: 10px; border: 1.5px solid var(--cst-bordo); background: var(--cst-fondo); font-size: 15px;
 }
 .cst-tasti-riga .cst-agg { background: var(--cst-giallo-chiaro); border-color: var(--cst-giallo); font-weight: 600 }
 .cst-tasti-riga .cst-via { flex: 0 0 auto; min-height: 36px; font-size: 15px; background: var(--cst-rosso-chiaro); box-shadow: none; color: var(--cst-rosso) }
+
+/* ── la mano: una riga presa, e i posti dove posarla ── */
+.cst-riga.cst-in-mano { border-style: dashed; border-color: #5b8def; background: #eef3fe; opacity: .75 }
+.cst-mano {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0 2px; padding: 6px 8px;
+  border-radius: 10px; background: #eef3fe; border: 1.5px solid #5b8def; font-size: 14px;
+}
+.cst-mano b { font-weight: 600 }
+.cst-mano button { margin-left: auto; min-height: 34px; padding: 2px 12px; border-radius: 10px; border: 1.5px solid var(--cst-bordo); background: #fff; font-size: 14px }
+.cst-posa {
+  align-self: stretch; min-height: 30px; padding: 2px 10px; border-radius: 8px; text-align: left;
+  border: 1.5px dashed #5b8def; background: #f4f7fe; color: #2f5bb7; font-size: 13px; font-weight: 600;
+}
 
 .cst-altrimenti { margin: 4px 0 0 18px; font-size: 13px; font-weight: 600; color: #6b4fb0 }
 .cst-piu {

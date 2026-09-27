@@ -11,9 +11,12 @@
    ritrovarsi dopo una ricarica, e una riga tolta per sbaglio tornare
    con «annulla».
 
-   E le scelte non si fanno da sole: una riga nuova nasce con la N, la
-   scelta del numero si apre da sola, e ▶ con una N vuota non parte ma
-   apre la scelta che manca.
+   E le scelte non si fanno da sole: un «vai» nasce col punto di
+   domanda sulla freccia e la scelta aperta sulla riga (i passi nascono
+   1, e non si chiedono), un mattone in un livello con due colori nasce
+   senza colore, un ripeti con la N; ▶ con qualcosa da scegliere non
+   parte ma apre la scelta che manca. E la mano: due righe scritte fuori
+   da un ripeti ci entrano con ✂, e il programma vince.
 
    Poi il porto, la seconda parte: la cassetta con le frecce, e la gru
    giocata con la sua soluzione su tutte e due le giornate — la tela
@@ -183,10 +186,34 @@ const ripeti = await page.locator('[data-editor] .cst-riga').first().getAttribut
 await page.waitForSelector('[data-scelta="numero"]', { timeout: 3000 })
 await tocca('[data-scelta="numero"] [data-nome="lungo"]')
 await tocca('[data-scelta="numero"] [data-azione="fatto"]')
-await aggiungi(`${ripeti}:corpo`, 'metti:sotto')
-await aggiungi(`${ripeti}:corpo`, 'vai:destra')
-await page.waitForSelector('[data-scelta="numero"]', { timeout: 3000 })
-await tocca('[data-scelta="numero"] [data-cifra="1"]')
+/* si costruisce a pezzi: le due righe scritte fuori, e poi portate dentro */
+await aggiungi('principale', 'metti')
+await aggiungi('principale', 'vai')
+await tocca('[data-scelta="verso"] [data-verso="destra"]')
+{
+  const ids = await page.locator('[data-editor] .cst-riga').evaluateAll(r => r.map(x => x.dataset.riga))
+  const [, mattone, passo] = ids
+  for (const id of [mattone, passo]) {
+    await tocca(`[data-riga="${id}"] .cst-ico`)     // l'icona: al centro della riga c'è una casella
+    await tocca('[data-azione="sposta"]')
+    if (id === mattone) {
+      controlla('con la riga in mano la testa dice cosa si sposta', /Sposti/.test(await page.locator('[data-mano]').innerText()))
+      uguale('e non offre il posto dov\'è già, né quello subito sotto',
+             await page.locator(`[data-posa="prima:${mattone}"], [data-posa="prima:${passo}"]`).count(), 0)
+      await scatto(page, 'costruttore-mano')
+    }
+    await tocca(`[data-posa="fondo:${ripeti}:corpo"]`)
+  }
+  uguale('le due righe sono dentro il ripeti, in ordine',
+         await page.locator('.cst-righe.cst-dentro .cst-riga').evaluateAll(r => r.map(x => x.dataset.riga).join()), `${mattone},${passo}`)
+  uguale('e la mano è vuota', await page.locator('[data-mano]').count(), 0)
+  uguale('la riga posata resta selezionata: si vede dov\'è andata', await page.locator(`[data-riga="${passo}"].cst-sel`).count(), 1)
+  /* ⧉ e poi «lascia»: niente cambia */
+  await tocca('[data-azione="copia"]')
+  controlla('con una copia in mano ci sono i posti dove posarla', await page.locator('[data-posa]').count() > 0)
+  await tocca('[data-azione="lascia"]')
+  uguale('«lascia» non copia niente', await page.locator('[data-editor] .cst-riga').count(), 3)
+}
 await scatto(page, 'costruttore-ripeti')
 await tocca('[data-azione="via"]')
 await page.waitForSelector('[data-fine="livello"]', { timeout: 20000 })

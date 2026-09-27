@@ -14,10 +14,17 @@
    righe, attraverso `Righe.vue`, lo chiedono all'editore che questo
    componente mette a disposizione (provide/inject), così una riga
    dentro tre blocchi non deve rimandare gli eventi su per tre livelli.
+
+   Quello che si ha **in mano** (✂ sposta, ⧉ copia) si dice in cima, nella
+   testa che resta ferma mentre si scorre: il posto dove posarlo può
+   stare due schermate più giù, o in un'altra scheda — si cambia scheda
+   con la riga in mano, ed è così che una riga entra in un progetto.
    ═══════════════════════════════════════════════════════════════════ */
 import { computed, provide, ref, watch, nextTick } from 'vue'
-import { nomiLeggibili } from '../motore/modifica.js'
-import { DOVE_PORTO, LATI } from '../dati/scrivi.js'
+import { nomiLeggibili, trova } from '../motore/modifica.js'
+import { pezzi, iconaDi } from './frasi.js'
+import { colore } from '../dati/colori.js'
+import { DOVE_PORTO, LATI, dentro as sottoRighe } from '../dati/scrivi.js'
 import Righe from './Righe.vue'
 
 const props = defineProps({
@@ -36,9 +43,10 @@ const props = defineProps({
   zaino: { type: Number, default: null },        // quante righe tiene il programma, se il livello lo dice
   scritte: { type: Number, default: 0 },         // quante ne ha scritte il bambino (gli attrezzi no)
   livelli: { type: Array, default: () => [] },   // per dire da quale livello viene un attrezzo
+  mano: { type: Object, default: null },         // { id, copia }: la riga presa per spostarla o copiarla
 })
-const emit = defineEmits(['tab', 'seleziona', 'apri', 'imposta', 'aggiungi', 'azione', 'annulla',
-                          'nuova-lavagnetta', 'progetto', 'ricomincia'])
+const emit = defineEmits(['tab', 'seleziona', 'apri', 'imposta', 'avanti', 'aggiungi', 'azione', 'annulla',
+                          'nuova-lavagnetta', 'progetto', 'ricomincia', 'mano', 'posa'])
 
 const progetti = computed(() => props.programma.progetti || [])
 /* cambiando scheda si riparte dalla cima: la testa di un progetto (e la
@@ -61,6 +69,7 @@ provide('editore', {
   problemi: computed(() => props.problemi),
   giro: computed(() => props.giro),
   sola: computed(() => props.sola),
+  mano: computed(() => props.mano),
   contesto: computed(() => {
     const nomi = nomiLeggibili(props.programma, props.tab, lavagnetteOrdine.value)
     /* il porto: quattro frecce, la mano, le cose del livello, e la lettura
@@ -78,9 +87,21 @@ provide('editore', {
   seleziona: id => emit('seleziona', id),
   apri: (id, campo, tipo) => emit('apri', id ? { id, campo, tipo } : null),
   imposta: (id, campo, valore) => emit('imposta', { id, campo, valore }),
+  avanti: id => emit('avanti', id),
+  prendi: (id, copia) => emit('mano', id ? { id, copia } : null),
+  posa: posto => emit('posa', { progetto: props.tab, ...posto }),
   aggiungi: posto => emit('aggiungi', posto),
   azione: (tipo, id) => emit('azione', { tipo, id }),
   nuovaLavagnetta: id => emit('nuova-lavagnetta', id),
+})
+
+/* la riga in mano, detta come si legge nell'editor */
+const inMano = computed(() => {
+  const t = props.mano && trova(props.programma, props.mano.id)
+  if (!t) return null
+  const n = t.nodo
+  const frase = pezzi(n, props.programma).map(p => p.testo ?? (p.colore && !p.mostra ? (colore(p.colore) || {}).nome : p.mostra)).join(' ')
+  return { icona: iconaDi(n, props.programma), frase, dentro: [...sottoRighe([n])].length - 1 }
 })
 
 const misureDi = p => (p.misure || []).length ? `(${p.misure.join(', ')})` : ''
@@ -137,6 +158,12 @@ const valoriDi = p => (inCima.value && inCima.value.progetto === p.id ? inCima.v
           data-zaino :data-righe="scritte" :aria-label="`${scritte} righe su ${zaino}`">📝 {{ scritte }}/{{ zaino }}</span>
     <button v-if="!sola" type="button" class="cst-annulla" data-azione="annulla" aria-label="annulla" title="annulla"
             :disabled="!indietro" @click="emit('annulla')">↶</button>
+    </div>
+    <div v-if="inMano && !sola" class="cst-mano" data-mano :data-copia="mano.copia ? '' : null">
+      <span>{{ mano.copia ? '⧉ Copi' : '✂ Sposti' }} <b>{{ inMano.icona }} {{ inMano.frase }}</b>
+        <template v-if="inMano.dentro"> con {{ inMano.dentro === 1 ? 'la riga' : `le ${inMano.dentro} righe` }} che ha dentro</template>:
+        tocca 📥 dove va.</span>
+      <button type="button" data-azione="lascia" @click="emit('mano', null)">lascia</button>
     </div>
     </div>
 

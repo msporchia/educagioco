@@ -8,9 +8,16 @@
    entra in un blocco senza trascinare niente.
 
    Toccare una riga la seleziona, e sotto compaiono i suoi tasti (su,
-   giù, doppia, via, e «＋ sotto»); toccare una casella apre la scelta
-   **attaccata alla riga**, non in fondo allo schermo — la domanda deve
-   stare accanto al tasto che l'ha chiamata, se no l'occhio la perde.
+   giù, sposta, copia, via, e «＋ sotto»); toccare una casella apre la
+   scelta **attaccata alla riga**, non in fondo allo schermo — la domanda
+   deve stare accanto al tasto che l'ha chiamata, se no l'occhio la perde.
+
+   **La mano.** ✂ e ⧉ prendono la riga (col blocco e quello che ha
+   dentro), e finché la si tiene ogni elenco mostra i posti dove
+   posarla: uno sopra ogni riga e uno in fondo, al posto del «＋». È il
+   taglia-e-incolla, e serve a costruire a pezzi: due righe scritte, poi
+   ci si accorge che vanno dentro un ripeti. Spostando, i posti che la
+   lascerebbero dov'è non si mostrano, e nemmeno quelli dentro di lei.
 
    Non tocca il programma: chiama l'editore che le passa `Editor.vue`
    (provide/inject), e l'editore lo dice a chi coordina.
@@ -27,6 +34,8 @@ const props = defineProps({
   profondita: { type: Number, default: 0 },
   /* le righe di un attrezzo: si leggono e basta */
   bloccata: { type: Boolean, default: false },
+  /* dentro la riga che si sta spostando: qui non si posa */
+  senzaPosti: { type: Boolean, default: false },
 })
 
 const ed = inject('editore')
@@ -34,23 +43,56 @@ const conCorpo = i => ['ripeti', 'finche', 'sempre', 'se'].includes(i.tipo)
 /* ferme mentre il programma gira, e sempre in un attrezzo */
 const ferma = () => ed.sola.value || props.bloccata
 
+const mano = () => ed.mano.value
 function tocca(i) {
   if (ferma()) return
+  /* con una riga in mano si tocca solo dove posarla; toccare lei la lascia */
+  if (mano()) { if (mano().id === i.id) ed.prendi(null); return }
   ed.seleziona(ed.sel.value === i.id ? null : i.id)
 }
+/* una casella che ha una scelta sola non si apre, e non ha il ▾: il ▾
+   promette una scelta, e il colore di un livello con un colore solo non
+   lo è. Solo se quello che c'è scritto è proprio quell'unica scelta. */
+function unaSola(i, p) {
+  const c = ed.contesto.value
+  if (p.tipo === 'posto') return c.posti.length < 2 && c.posti.includes(i.dove || 'sotto')
+  if (p.tipo === 'colore' && !c.porto) return c.colori.length < 2 && p.colore === c.colori[0] &&
+    !c.nomi.misureColore.length && !c.nomi.ordineColore.length
+  return false
+}
 function casella(i, p) {
-  if (ferma() || !p.campo) return
+  if (ferma() || mano() || !p.campo || unaSola(i, p)) return
   ed.apri(i.id, p.campo, p.tipo)
 }
+/* i posti dove posare quello che si ha in mano */
+const conPosti = () => !!mano() && !ferma() && !props.senzaPosti
+const spostando = () => mano() && !mano().copia
+/* spostando, sopra di lei e subito sotto è lo stesso posto dov'è già */
+function postoSopra(k) {
+  if (!conPosti()) return false
+  if (!spostando()) return true
+  const id = mano().id
+  return props.righe[k].id !== id && !(k > 0 && props.righe[k - 1].id === id)
+}
+const postoInFondo = () => conPosti() &&
+  !(spostando() && props.righe.length && props.righe[props.righe.length - 1].id === mano().id)
+const inFondo = () => (props.dove.dentro ? { dentro: props.dove.dentro, ramo: props.dove.ramo, inFondo: true }
+  : { progetto: props.dove.progetto })
+const nomeInFondo = () => (props.dove.dentro ? `${props.dove.dentro}:${props.dove.ramo}` : (props.dove.progetto || 'principale'))
 const aperta = (i, p) => ed.aperta.value && ed.aperta.value.id === i.id && ed.aperta.value.campo === p.campo
 const apertaQui = i => ed.aperta.value && ed.aperta.value.id === i.id
 </script>
 
 <template>
   <ol class="cst-righe" :class="{ 'cst-dentro': profondita > 0 }">
-    <li v-for="i in props.righe" :key="i.id" class="cst-riga-posto">
+    <template v-for="(i, k) in props.righe" :key="i.id">
+    <li v-if="postoSopra(k)" class="cst-riga-posto">
+      <button type="button" class="cst-posa" :data-posa="'prima:' + i.id" @click="ed.posa({ prima: i.id })">📥 qui</button>
+    </li>
+    <li class="cst-riga-posto">
       <div class="cst-riga" :data-riga="i.id"
            :class="{ 'cst-sel': ed.sel.value === i.id, 'cst-accesa': ed.accesa.value === i.id,
+                     'cst-in-mano': mano() && mano().id === i.id,
                      'cst-guasta': ed.guasto.value === i.id, 'cst-problema': ed.problemi.value.has(i.id),
                      'cst-blocco': conCorpo(i) }"
            :data-guasto="ed.guasto.value === i.id ? '' : null"
@@ -58,7 +100,7 @@ const apertaQui = i => ed.aperta.value && ed.aperta.value.id === i.id
         <span class="cst-ico">{{ iconaDi(i, ed.programma.value) }}</span>
         <template v-for="(p, k) in pezzi(i, ed.programma.value)" :key="k">
           <button v-if="p.campo" type="button" class="cst-casella"
-                  :class="{ 'cst-aperta': aperta(i, p), 'cst-lav': p.lavagnetta, 'cst-manca': p.manca }"
+                  :class="{ 'cst-aperta': aperta(i, p), 'cst-lav': p.lavagnetta, 'cst-manca': p.manca, 'cst-fissa': ferma() || unaSola(i, p) }"
                   :style="p.colore ? { '--cst-tinta': (colore(p.colore) || {}).tinta } : null"
                   :aria-label="p.etichetta || null"
                   :data-casella="p.campo" @click.stop="casella(i, p)">
@@ -75,13 +117,14 @@ const apertaQui = i => ed.aperta.value && ed.aperta.value.id === i.id
       <Scelta v-if="apertaQui(i)" :tipo="ed.aperta.value.tipo" :riga="i" :campo="ed.aperta.value.campo"
               :contesto="ed.contesto.value"
               @scegli="v => ed.imposta(i.id, ed.aperta.value.campo, v)"
-              @chiudi="ed.apri(null)" @nuova-lavagnetta="ed.nuovaLavagnetta(i.id)" />
+              @chiudi="ed.apri(null)" @avanti="ed.avanti(i.id)" @nuova-lavagnetta="ed.nuovaLavagnetta(i.id)" />
 
       <!-- i tasti della riga selezionata -->
-      <div v-if="ed.sel.value === i.id && !ferma()" class="cst-tasti-riga">
+      <div v-if="ed.sel.value === i.id && !ferma() && !mano()" class="cst-tasti-riga">
         <button type="button" data-azione="sopra" aria-label="sposta su" @click="ed.azione('su', i.id)">↑</button>
         <button type="button" data-azione="sotto" aria-label="sposta giù" @click="ed.azione('giu', i.id)">↓</button>
-        <button type="button" data-azione="doppia" aria-label="duplica" @click="ed.azione('duplica', i.id)">⧉</button>
+        <button type="button" data-azione="sposta" aria-label="prendi e sposta" @click="ed.prendi(i.id, false)">✂ sposta</button>
+        <button type="button" data-azione="copia" aria-label="copia" @click="ed.prendi(i.id, true)">⧉ copia</button>
         <button v-if="i.tipo === 'se'" type="button" data-azione="altrimenti" @click="ed.azione('altrimenti', i.id)">
           {{ i.altrimenti ? '− altrimenti' : '＋ altrimenti' }}</button>
         <button type="button" class="cst-agg" data-azione="aggiungi-dopo" @click="ed.aggiungi({ dopo: i.id })">＋ sotto</button>
@@ -91,17 +134,23 @@ const apertaQui = i => ed.aperta.value && ed.aperta.value.id === i.id
       <!-- i corpi dei blocchi -->
       <template v-if="conCorpo(i)">
         <Righe :righe="i.corpo || i.allora || []" :profondita="profondita + 1" :bloccata="bloccata"
+               :senza-posti="senzaPosti || !!(spostando() && mano().id === i.id)"
                :dove="{ progetto: dove.progetto, dentro: i.id, ramo: i.tipo === 'se' ? 'allora' : 'corpo' }" />
         <template v-if="i.tipo === 'se' && i.altrimenti">
           <div class="cst-altrimenti">altrimenti</div>
           <Righe :righe="i.altrimenti" :profondita="profondita + 1" :bloccata="bloccata"
+                 :senza-posti="senzaPosti || !!(spostando() && mano().id === i.id)"
                  :dove="{ progetto: dove.progetto, dentro: i.id, ramo: 'altrimenti' }" />
         </template>
       </template>
     </li>
-    <li v-if="!ferma()" class="cst-riga-posto">
-      <button type="button" class="cst-piu" :data-aggiungi="dove.dentro ? `${dove.dentro}:${dove.ramo}` : (dove.progetto || 'principale')"
-              @click="ed.aggiungi(dove.dentro ? { dentro: dove.dentro, ramo: dove.ramo, inFondo: true } : { progetto: dove.progetto })">
+    </template>
+    <li v-if="postoInFondo()" class="cst-riga-posto">
+      <button type="button" class="cst-posa" :data-posa="'fondo:' + nomeInFondo()" @click="ed.posa(inFondo())">
+        📥 {{ profondita > 0 ? 'qui dentro' : 'qui' }}{{ righe.length ? ', in fondo' : '' }}</button>
+    </li>
+    <li v-if="!ferma() && !mano()" class="cst-riga-posto">
+      <button type="button" class="cst-piu" :data-aggiungi="nomeInFondo()" @click="ed.aggiungi(inFondo())">
         ＋ <span>{{ profondita > 0 ? 'qui dentro' : 'aggiungi' }}</span>
       </button>
     </li>

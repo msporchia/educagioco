@@ -11,6 +11,8 @@
 
      progetto   null = la principale, se no l'id del progetto
      dopo       l'id della riga dopo cui inserire (stesso elenco)
+     prima      l'id della riga prima di cui inserire: è il «📥 qui» che
+                la mano mette sopra ogni riga
      dentro     l'id di un blocco (ripeti, se, …) in cima al cui corpo
                 inserire; `ramo` dice quale corpo: corpo|allora|altrimenti,
                 e `inFondo` lo mette in fondo invece che in cima (è il «＋
@@ -132,7 +134,18 @@ export function primaDaScegliere(riga, prog = null) {
    deve accendersi insieme all'originale. */
 export function inserisci(prog, posto, riga) {
   rinumera(prog, riga)
-  const { progetto = null, dopo = null, dentro = null, ramo = 'corpo', inFondo = false } = posto || {}
+  return metti(prog, posto, riga)
+}
+
+/* la riga va al suo posto così com'è, id compresi */
+function metti(prog, posto, riga) {
+  const { progetto = null, prima = null, dopo = null, dentro = null, ramo = 'corpo', inFondo = false } = posto || {}
+  if (prima) {
+    const t = trova(prog, prima)
+    if (!t) return null
+    t.elenco.splice(t.indice, 0, riga)
+    return riga.id
+  }
   if (dentro) {
     const t = trova(prog, dentro)
     if (!t) return null
@@ -166,9 +179,9 @@ export function togli(prog, id) {
   return true
 }
 
-/* su e giù dentro lo stesso elenco: chi vuole portare una riga dentro
-   un blocco la toglie e la rimette — spostare attraverso i livelli con
-   un dito, su un telefono, è il trascinamento che qui non esiste */
+/* su e giù dentro lo stesso elenco; per entrare in un blocco o uscirne
+   c'è `trasloca`, che è la mano: trascinare attraverso i livelli con un
+   dito, su un telefono, è il gesto che qui non esiste */
 export function sposta(prog, id, verso) {
   const t = trova(prog, id)
   if (!t) return false
@@ -177,6 +190,32 @@ export function sposta(prog, id, verso) {
   const [r] = t.elenco.splice(t.indice, 1)
   t.elenco.splice(j, 0, r)
   return true
+}
+
+/* ── la mano ──
+   Prendere una riga e posarla altrove: dentro un ripeti, fuori da un se,
+   in un progetto. Si costruisce a pezzi — due righe scritte, poi ci si
+   accorge che vanno ripetute — e senza questo l'unica strada era
+   cancellarle e riscriverle dentro il blocco. La riga si porta dietro
+   tutto quello che ha dentro, e **tiene i suoi id**: è la stessa riga,
+   non una copia. Un blocco non si posa dentro sé stesso. */
+export function trasloca(prog, id, posto) {
+  const t = trova(prog, id)
+  if (!t || !posto) return false
+  const dentroDiLei = new Set(sottoRighe([t.nodo]).map(i => i.id))
+  if ([posto.prima, posto.dopo, posto.dentro].some(x => x && dentroDiLei.has(x))) return false
+  if (posto.prima === id || posto.dopo === id) return false
+  t.elenco.splice(t.indice, 1)
+  if (metti(prog, posto, t.nodo)) return true
+  t.elenco.splice(t.indice, 0, t.nodo)       // il posto non c'era: torna dov'era
+  return false
+}
+
+/* la copia va dove dice la mano, con gli id nuovi */
+export function incollaCopia(prog, id, posto) {
+  const t = trova(prog, id)
+  if (!t) return null
+  return inserisci(prog, posto, JSON.parse(JSON.stringify(t.nodo)))
 }
 
 export function duplica(prog, id) {
