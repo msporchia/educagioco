@@ -21,8 +21,8 @@
        motore ha le sue piazzole, e i mostri scendono per tutti e due i
        bracci;
      · le cose nuove si vedono anche con questa pelle: il preavviso
-       dice le immunità, il colpo che rimbalza su un immune lascia il
-       segno, la prossima ondata si chiama a battaglia in corso, e il
+       dice le immunità, la torre non spreca colpi su chi le è immune,
+       la prossima ondata si chiama a battaglia in corso, e il
        blocchetto dei potenziamenti si apre e si chiude con la ✕;
      · il capo è la figura del bestiario di quel vestito, gigante: la
        scheda lo chiama col nome della figura e «gigante»;
@@ -203,8 +203,9 @@ await attendi(page, 400)
 await scatto(page, 'castello-sprite-radura')
 
 /* ---------- 5. immunità, fretta e blocchetto ----------
-   La grotta apre coi pipistrelli, che le bombe non toccano: una bomba
-   sola in campo, e il colpo deve rimbalzare lasciando il segno. Poi la
+   La grotta apre coi pipistrelli, che le bombe non toccano: la bomba
+   non deve sparargli nemmeno un colpo — ci pensa l'arciere — e il
+   segno «immune» non deve comparire, perché nessuno ha tirato a vuoto. Poi la
    prossima ondata si chiama con questa ancora in campo, e il gettone ⬆️
    apre il blocchetto. */
 {
@@ -226,19 +227,28 @@ await scatto(page, 'castello-sprite-radura')
     const T = window.__td
     T.chiamaOnda()
     T.velocita.value = 2
-    let respinto = false, chiama = false
+    /* chi ha sparato si vede dalla ricarica: una torre che non ha mai
+       tirato la tiene sotto zero (è pronta), una che ha tirato la
+       rimette in positivo. I colpi volano troppo in fretta per
+       contarli guardando ogni tanto */
+    const sparato = tipo => T.torri().some(t => t.tipo === tipo && t.ricarica > 0)
+    let respinto = false, chiama = false, bombe = false, frecce = false
     const fine = Date.now() + 9000
-    while (Date.now() < fine && !(respinto && chiama)) {
+    while (Date.now() < fine && !(chiama && frecce)) {
       respinto ||= T.nemici().some(n => n.respinto > 0)
+      bombe ||= sparato('div')
+      frecce ||= sparato('add')
       chiama ||= !!document.querySelector('[data-azione="chiama-prossima"]')
       await attesa(60)
     }
     const prima = T.hud.onda
     document.querySelector('[data-azione="chiama-prossima"]')?.click()
     await attesa(200)
-    return { respinto, chiama, prima, dopo: T.hud.onda }
+    return { respinto, chiama, bombe, frecce, prima, dopo: T.hud.onda }
   })
-  controlla('la bomba rimbalza sul pipistrello, e si vede', partita.respinto, JSON.stringify(partita))
+  uguale('la bomba non spara ai pipistrelli, che le sono immuni', partita.bombe, false)
+  controlla('l\'arciere sì', partita.frecce, JSON.stringify(partita))
+  controlla('e nessuno ha il segno «immune»: nessun colpo è andato a vuoto', !partita.respinto)
   controlla('a ondata uscita tutta c\'è il tasto per chiamare la prossima', partita.chiama)
   uguale('e toccarlo la manda subito', partita.dopo, partita.prima + 1)
   await togliCartelli()

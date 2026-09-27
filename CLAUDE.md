@@ -1191,8 +1191,12 @@ committate: non è ricostruibile da git.
   passava con qualunque vita. Il giocatore modello sa da quale ondata
   le bocche scendono insieme (`insiemeDa`, la stessa del motore): lo
   contava sempre dalla quinta, e nelle libere comprava torri per la
-  strada sbagliata. Il colpo che rimbalza si vede (`respinto`, la
-  pastiglia «immune»), e la taratura spiana la vita **mostro per
+  strada sbagliata. **Una torre non spara a chi le è immune**
+  (`agisci` in `motore/castello/torre.js`): con solo immuni a tiro
+  resta ferma e non consuma la ricarica, e il ghiaccio soffia solo se
+  c'è qualcuno da gelare; la pastiglia «immune» (`respinto`) la lascia
+  chi viene preso dentro da un colpo ad area tirato a un altro. E la
+  taratura spiana la vita **mostro per
   mostro**: un golem che solo le bombe aprono ha meno vita di un
   pipistrello, e non è un errore. **La figura dice l'immunità**
   (`giochi/castello/scena/bestiario.js`): al bambino serve capire che

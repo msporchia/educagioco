@@ -4,8 +4,10 @@
    Quattro cose arrivate insieme, e ognuna ha una promessa da tenere:
 
      1. **l'immunità è zero**: la torre a cui un mostro è immune non gli
-        fa niente — né danno, né veleno, né gelo — e il colpo che
-        rimbalza si vede (il segno «immune» sopra la testa);
+        fa niente — né danno, né veleno, né gelo — e **non gli spara
+        nemmeno**: con solo immuni a tiro resta ferma e pronta. Il segno
+        «immune» sopra la testa lo lascia chi viene preso dentro da un
+        colpo ad area tirato a un altro;
      2. **le abilità non cambiano l'energia**: chi si divide lascia dei
         pezzi che si spartiscono quello che lui avrebbe pagato, chi si
         rialza paga una volta sola, e le ondate con le abilità arrivano
@@ -28,6 +30,7 @@ import { TORRI } from '../../src/data/ops.js'
 import { creaBattaglia } from '../../src/motore/battaglia.js'
 import { Nemico } from '../../src/motore/castello/nemico.js'
 import { Colpo } from '../../src/motore/castello/colpo.js'
+import { Torre } from '../../src/motore/castello/torre.js'
 import { Ondate } from '../../src/motore/castello/ondate.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -59,6 +62,28 @@ const BOMBE = Object.keys(TORRI).find(k => TORRI[k].aspetto === 'bombe')
   const scoppio = new Colpo({ x: 0, y: 0, tx: 5, ty: 0, t: 1, tipo: BOMBE, danno: 20, area: 40 })
   scoppio.impatto(sotto, via)
   controlla('la bomba ferisce il goblin e non l\'arpia', sotto[0].vita === 30 && sotto[1].vita === 50)
+  controlla('e l\'arpia, presa dentro, ha il segno «immune»', sotto[1].respinto > 0)
+
+  /* la torre non spreca colpi: con solo immuni a tiro non spara, e la
+     ricarica non la consuma — resta pronta per il primo che può ferire */
+  const campo = { via, S: 1 }
+  const bomba = new Torre({ x: 0, y: 0, tipo: BOMBE })
+  const pipi = new Nemico({ d: 10, vita: 50, vel: 0, bestia: 'pipistrello', immune: immuniDi('pipistrello') })
+  uguale('con solo un pipistrello a tiro la bomba non spara', bomba.agisci(0.1, { ...campo, nemici: [pipi] }), null)
+  controlla('e resta pronta', bomba.ricarica <= 0, `ricarica ${bomba.ricarica}`)
+  controlla('e il pipistrello non ha nessun segno addosso', !(pipi.respinto > 0))
+  const gob = new Nemico({ d: 5, vita: 50, vel: 0, bestia: 'goblin', immune: immuniDi('goblin') })
+  const spari = bomba.agisci(0.01, { ...campo, nemici: [pipi, gob] })
+  controlla('arriva un goblin: la bomba spara subito, e a lui',
+            !!spari?.colpi?.length && spari.colpi.every(c => c.preso === gob),
+            JSON.stringify(spari?.colpi?.map(c => c.preso?.bestia)))
+  controlla('anche se il pipistrello è più avanti', pipi.d > gob.d)
+  /* il ghiaccio: la folata parte solo se c'è qualcuno da gelare */
+  const ghiaccio = new Torre({ x: 0, y: 0, tipo: GELO })
+  uguale('con solo chi vola a tiro il ghiaccio non soffia',
+         ghiaccio.agisci(0.1, { ...campo, nemici: [pipi] }), null)
+  controlla('e resta pronto anche lui', ghiaccio.ricarica <= 0)
+  controlla('con un goblin sì', !!ghiaccio.agisci(0.01, { ...campo, nemici: [pipi, gob] }) && gob.gelo > 0)
 }
 
 /* ══════════ 2. le file delle tappe rispettano le regole ══════════ */

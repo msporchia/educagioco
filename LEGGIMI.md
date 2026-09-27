@@ -772,8 +772,10 @@ sentono tutti e due: con tre immunità avevano una torre sola e nessun modo di
 frenarli. La figura che li disegna dice a cosa sono immuni: carapace e setole
 reggono le frecce, melme e ossa la magia, i draghi bombe e magia. Il nastro in cima
 lo dice tre ondate prima con le torri sbarrate, la carta della torre sbagliata
-dice «non lo tocca», e in campo il colpo che rimbalza lascia la scritta
-«immune» sopra la testa. Prima c'era la resistenza — un terzo del danno — ma
+dice «non lo tocca», e in campo la torre **non gli spara nemmeno**: con
+solo immuni a tiro resta ferma e carica, pronta per il primo che può ferire.
+La scritta «immune» sopra la testa compare quando un colpo ad area, tirato a
+un altro, prende dentro anche lui. Prima c'era la resistenza — un terzo del danno — ma
 un terzo di tanto è ancora tanto: la regola del gioco era «costruisci bombe».
 Le file delle tappe sono fatte perché nessuna torre, da sola, le vinca.
 

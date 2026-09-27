@@ -82,8 +82,10 @@ passa sopra le bombe (e pipistrelli, arpia e corvo anche sopra il gelo), chi
 è corazzato si fa rimbalzare addosso frecce e magia, le frecce passano
 attraverso il fantasma e la magia non scalfisce il drago. Il nastro in cima
 lo dice tre ondate prima con le torri sbarrate, la carta di una torre che
-l'ondata ignora dice «non lo tocca», e in campo il colpo che rimbalza lascia
-la scritta «immune».
+l'ondata ignora dice «non lo tocca», e in campo una torre non spreca colpi su
+chi le è immune: se a tiro ha solo quelli resta ferma e carica, pronta per il
+primo che può ferire. La scritta «immune» compare quando un colpo ad area,
+tirato a un altro, prende dentro anche lui.
 
 **Al massimo due immunità per mostro** *(27 settembre)*. Il fantasma e il
 drago ne avevano tre — bombe, gelo e una delle due torri che feriscono — e

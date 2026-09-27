@@ -70,19 +70,27 @@ export class Torre {
      alte ne lanciano due, e se il secondo bersaglio non c'è ripiegano
      sul primo — due colpi sulla stessa testa, non un colpo sprecato.
 
-     ── e chi è immune va in fondo alla fila ──
-     Se a tiro c'è qualcuno che questa torre può ferire, spara a lui.
-     Se ci sono solo immuni spara lo stesso, e il colpo rimbalza: una
-     torre ferma sembrerebbe rotta, una che spara e non fa niente dice
-     esattamente quello che succede. Chi è a terra per rialzarsi non si
-     guarda proprio. */
+     ── e chi è immune non si guarda nemmeno ──
+     La torre prende di mira **solo chi può ferire**. Se a tiro ci sono
+     solo immuni non spara, e non consuma la ricarica: resta pronta, e
+     il primo che può ferire lo prende subito, invece di arrivargli
+     addosso mentre lei ricarica un colpo buttato. Sparava lo stesso,
+     col colpo che rimbalzava: l'idea era che una torre ferma sembrasse
+     rotta, ma un colpo sprecato su chi non si può toccare è proprio
+     quello che un bambino non farebbe mai — e a guardarlo sembrava la
+     torre a sbagliare, non il mostro a essere immune. Il ghiaccio fa
+     lo stesso: la folata parte solo se dentro c'è qualcuno da gelare.
+     Il segno «immune» sopra la testa resta, e adesso dice una cosa
+     sola: un colpo ad area o un rimbalzo della catena, tirato a chi si
+     poteva ferire, ha preso dentro anche un immune (`respingi` in
+     `nemico.js`). Chi è a terra per rialzarsi non si guarda proprio. */
   agisci(dt, { nemici, via, viaDi, S }) {
     this.ricarica -= dt
     if (this.ricarica > 0) return null
     const raggio = this.raggio(S)
     const dove = n => (viaDi ? viaDi(n) : via).puntoA(n.d)
     const dentro = nemici.filter(n => n.bersaglio && dist(dove(n), this) <= raggio)
-    if (!dentro.length) return null
+    if (!dentro.some(n => !n.immuneA(this.tipo))) return null
 
     // la cadenza è quella del livello e del ramo: l'arciere alto spara
     // una raffica, il cecchino un colpo solo ogni tanto
@@ -100,8 +108,7 @@ export class Torre {
                                        gelo: true, cresce: 1.1, spegne: 0.8 })] }
     }
 
-    const inFila = [...dentro].sort((a, b) =>
-      (a.immuneA(this.tipo) - b.immuneA(this.tipo)) || (b.d - a.d))
+    const inFila = dentro.filter(n => !n.immuneA(this.tipo)).sort((a, b) => b.d - a.d)
     const colpi = []
     for (let k = 0; k < tiro.salve; k++) {
       const preso = inFila[Math.min(k, inFila.length - 1)]
