@@ -96,9 +96,24 @@ const vicinanzaDi = (o, ondate, a = A) => DA + (a - DA) * ((o - 1) / Math.max(1,
    Quindi si tara al massimo della tensione, si prova con il
    `pasticcione` — tre partite, tre serie di errori diverse — e se non
    ce la fa si allarga di cinque punti e si ricomincia. Il numero che
-   esce non è quello che volevo: è il più teso che regge. */
+   esce non è quello che volevo: è il più teso che regge.
+
+   ── e si allarga dove cede, non dappertutto ──
+   Prima l'allargamento abbassava tutta la rampa insieme. Nella Grotta
+   non bastava a niente: il pasticcione e `pigro` — quello che tiene in
+   tasca un quarto dell'energia, e che la tappa **non** deve finire —
+   cadevano tutti e due all'ondata 5, contro gli stessi golem, con le
+   stesse due bombe in campo. Abbassando tutto passavano insieme, e la
+   tappa che il pasticcione finiva la finiva anche chi non spendeva:
+   con una rampa sola non c'era nessun punto che li separasse.
+   Li separa l'ultima ondata, dove chi ha speso tutto ha una torre in
+   più. Allora si abbassano **solo le ondate dove il pasticcione perde
+   cuori**, cinque punti per volta, e le altre restano tese: chi cade
+   per aver sbagliato i conti trova l'ondata che l'ha fermato più
+   morbida, chi cade per non aver speso trova il muro in fondo. Mai più
+   di `GIU_MAX` sotto la rampa, e al massimo `GIRI_ANELLO` giri. */
 const SEMI = [7, 13, 29]
-const SCALINI = [0, 0.05, 0.1, 0.15, 0.2, 0.3]
+const GIU_MAX = 0.3, GIRI_ANELLO = 16
 
 /* Il limite: la vita più bassa che fa entrare almeno un nemico. Sopra
    di lei si perde, sotto si tiene — quindi si trova per bisezione. */
@@ -116,8 +131,8 @@ function limiteDi(tappa, onda, istantanea, opzioni) {
 
 /* la vita di un'ondata: una frazione del suo limite, e la misura di
    quanto si è avvicinato il più avanti di loro */
-function vitaDiTaratura(tappa, onda, istantanea, opzioni, a) {
-  const vicinanza = vicinanzaDi(onda, tappa.ondate, a)
+function vitaDiTaratura(tappa, onda, istantanea, opzioni, giù) {
+  const vicinanza = vicinanzaDi(onda, tappa.ondate) - giù
   const limite = limiteDi(tappa, onda, istantanea, opzioni)
   const vita = Math.max(5, Math.round(limite * vicinanza))
   tappa.vite[onda - 1] = vita
@@ -132,7 +147,7 @@ function vitaDiTaratura(tappa, onda, istantanea, opzioni, a) {
    precedente: le torri che ha in campo chi spende tutto, e l'energia
    che gli è rimasta. Tarare l'ondata 7 senza aver prima fissato le
    sei di prima vorrebbe dire tararla su una difesa immaginaria. */
-function taraTappa(tappa, a) {
+function taraTappa(tappa, giù) {
   const t = { ...tappa, vite: [] }
   const righe = []
   for (let o = 1; o <= tappa.ondate; o++) {
@@ -149,7 +164,7 @@ function taraTappa(tappa, a) {
       righe.push({ onda: o, vita: t.vite[o - 1], cieca: true })
       continue
     }
-    const r = vitaDiTaratura(t, o, foto, PROFILI.misura, a)
+    const r = vitaDiTaratura(t, o, foto, PROFILI.misura, giù[o - 1] || 0)
     t.vite[o - 1] = r.vita
     righe.push({ onda: o, ...r, torri: foto.torri.map(x => x.lv).join(''),
                  energia: Math.round(foto.stato.energia), chi: chiDi(tappa, o) })
@@ -200,13 +215,25 @@ function spiana(vite, tappa) {
 
 /* la tappa più tesa che il bambino vero riesce ancora a finire */
 function taraFinchePassa(tappa) {
+  const giù = new Array(tappa.ondate).fill(0)
   let ultimo = null
-  for (const giù of SCALINI) {
-    const a = A - giù
-    const { vite, righe } = taraTappa(tappa, a)
+  for (let giro = 0; giro < GIRI_ANELLO; giro++) {
+    const { vite, righe } = taraTappa(tappa, giù)
     const prove = SEMI.map(s => gioca({ ...tappa, vite }, { ...PROFILI.pasticcione, s }))
-    ultimo = { vite, righe, a, prove }
+    ultimo = { vite, righe, giù: giù.slice(), prove }
     if (prove.every(r => r.esito === 'vinta')) return ultimo
+    /* le ondate dove ha perso cuori, in una qualunque delle tre partite;
+       se non ne ha persi e non ha vinto lo stesso, quella dove si è fermato */
+    const dove = new Set()
+    for (const r of prove) {
+      for (const s of r.storia) if (s.persi) dove.add(s.onda)
+      if (r.esito !== 'vinta' && !r.storia.some(s => s.persi)) dove.add(Math.max(1, Math.min(r.onda, tappa.ondate)))
+    }
+    let mosso = false
+    for (const o of dove) if (giù[o - 1] < GIU_MAX - 1e-9) {
+      giù[o - 1] = Math.round((giù[o - 1] + 0.05) * 100) / 100; mosso = true
+    }
+    if (!mosso) break
   }
   return ultimo          // non ce l'ha fatta nemmeno larghissima: lo dirà il collaudo
 }
@@ -291,12 +318,13 @@ console.log(`si gioca dal ${(DA * 100).toFixed(0)}% del limite nella prima ondat
             `al ${(A * 100).toFixed(0)}% nell'ultima\n`)
 for (const [i, tappa] of [...TAPPE.entries(), ...libere.map((l, k) => [TAPPE.length + k, l])]) {
   const via = Date.now()
-  const { vite, righe, a, prove } = taraFinchePassa(tappa)
+  const { vite, righe, giù, prove } = taraFinchePassa(tappa)
   fatte[chiaveDi(tappa)] = vite
   const reggono = prove.filter(r => r.esito === 'vinta').length
   console.log(`${i + 1}. ${tappa.nome} — ${tappa.ondate} ondate · ${tappa.posti} posti · ` +
-              `cap ${tappa.cap} · fino al ${(a * 100).toFixed(0)}% del limite` +
-              `${a < A ? ` (allargata da ${(A * 100).toFixed(0)}%: il pasticcione non passava)` : ''}` +
+              `cap ${tappa.cap} · fino al ${(A * 100).toFixed(0)}% del limite` +
+              `${giù.some(g => g > 0) ? ` (allargata in ${giù.map((g, k) => g > 0 ? `o${k + 1} −${Math.round(g * 100)}` : '')
+                .filter(Boolean).join(', ')}: il pasticcione ci perdeva cuori)` : ''}` +
               ` · ${((Date.now() - via) / 1000).toFixed(1)}s`)
   if (reggono < SEMI.length)
     console.log(`   ⚠ il pasticcione la finisce solo ${reggono} volte su ${SEMI.length}`)

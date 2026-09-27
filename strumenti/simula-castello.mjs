@@ -157,7 +157,7 @@ export function gioca(tappa, opzioni = {}) {
      applica solo la tappa che li prevede, quindi per la campagna questa
      riga non esiste. Serve a misurare quanto vale un regalo — che è
      l'unico modo di dimensionarli, vedi `docs/castello.md`. */
-  const motore = creaBattaglia({ tappa, misure, stato, caso, regali })
+  const motore = creaBattaglia({ tappa, misure, stato, regali })
   motore.inizia()
 
   let speso = 0                 // quanto ha messo in torri, penali comprese

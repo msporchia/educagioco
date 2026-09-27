@@ -37,7 +37,7 @@ import { REGALI, OGNI_REGALO, QUANTE_CARTE, LIBERA, LIBERE, TAPPE, MONDO, CFG, s
          tiroConDoni, geloConDoni, tiroDi, geloDi } from '../../src/data/castello.js'
 import { creaBattaglia } from '../../src/motore/battaglia.js'
 import { Nemico } from '../../src/motore/castello/nemico.js'
-import { gioca, PROFILI, seme } from '../../strumenti/simula-castello.mjs'
+import { gioca, PROFILI } from '../../strumenti/simula-castello.mjs'
 import { regaliDi, regaloPreso } from '../../src/giochi/campagne.js'
 import { state, init, creaGiocatore } from '../../src/store/profile.js'
 import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -158,9 +158,9 @@ uguale('un profilo senza regali ne ha zero', quantiRegali(undefined), 0)
    Il banco: una partita giocata col motore vero, senza schermo. */
 const TUTTI = (quanti = 3) => Object.fromEntries(REGALI.map(r => [r.id, quanti]))
 
-function partita(tappa, regali, { ondate = 8, s = 7 } = {}) {
+function partita(tappa, regali, { ondate = 8 } = {}) {
   const stato = { cuori: 0, onda: 0, uccisi: 0, torri: 0, energia: 0 }
-  const b = creaBattaglia({ tappa, misure: { ...MONDO }, stato, caso: seme(s), regali })
+  const b = creaBattaglia({ tappa, misure: { ...MONDO }, stato, regali })
   b.inizia()
   /* le torri e via: il resto lo fa il tempo. Non si compra niente, così
      la partita è la stessa in tutte le prove e l'unica differenza sono i
@@ -224,7 +224,7 @@ for (const l of LIBERE) {
    parte; prenderlo lo consuma; e due non se ne accumulano. */
 {
   const stato = { cuori: 0, onda: 0, uccisi: 0, torri: 0, energia: 0 }
-  const b = creaBattaglia({ tappa: LIBERA, misure: { ...MONDO }, stato, caso: seme(7) })
+  const b = creaBattaglia({ tappa: LIBERA, misure: { ...MONDO }, stato })
   b.inizia()
   /* una difesa regalata e alta: qui si misura il ritmo dei regali, non
      se la partita si regge, e una torre di livello 1 alla quinta ondata

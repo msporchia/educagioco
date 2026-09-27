@@ -22,6 +22,18 @@ import { nemiciDiOnda, intervalloDiOnda, vitaNemico, velocitaNemico, insiemeDa,
          boccaDellOnda } from '../../data/castello.js'
 import { MOSTRI, CAPO, ABILITA, mostroDiOnda, mostroLibero, immuniDi } from '../../data/mostri.js'
 
+/* il passo stretto dentro un gruppetto, di quanto si muove la fila,
+   quante ondate su tre escono a gruppetti, e di quanto (in unità del
+   mondo) un mostro può uscire indietro rispetto al suo posto */
+const RITMO = { stretto: 0.5, mosso: 0.25, gruppo: [2, 3], da: 3, quota: 1 / 3, sfalso: 30 }
+/* un numero fra 0 e 1 che dipende solo da `a` e `b`: il dado del ritmo
+   e dello sfalso, che tira sempre lo stesso numero per la stessa ondata */
+function caso(a, b = 0) {
+  let h = Math.imul(a + 1, 2654435761) ^ Math.imul(b + 7, 40503)
+  h = Math.imul(h ^ (h >>> 15), 2246822519)
+  return ((h ^ (h >>> 13)) >>> 0) / 4294967296
+}
+
 export class Ondate {
   constructor(tappa) { this.tappa = tappa }
 
@@ -90,6 +102,48 @@ export class Ondate {
     return Math.max(1, Math.round(nemiciDiOnda(o) * this.follaDi(o)))
   }
   intervalloDi(o) { return intervalloDiOnda(o) / this.follaDi(o) }
+  /* ── il ritmo dentro l'ondata ──
+     Il passo fra un mostro e il dopo, in multipli di `intervalloDi`. Col
+     passo fisso uscivano in fila come soldatini, e la fila si legge una
+     volta e poi non chiede più niente. Adesso ogni ondata ha un ritmo:
+     dalla terza in poi una su tre esce **a gruppetti** — due o tre vicini, poi una
+     pausa lunga — e le altre in fila, ma con passi che cambiano di un
+     quarto in più o in meno. I gruppetti sono dove le torri ad area
+     rendono, e dove quelle su un bersaglio solo fanno fatica.
+
+     Due cose tengono ferma la taratura. Il ritmo lo decide **il numero
+     dell'ondata**, non il caso: la stessa ondata esce sempre uguale, e il
+     banco che la rigioca misura la stessa cosa. E **in media il passo
+     resta 1**: un gruppetto di `g` fa `g − 1` passi corti e uno lungo che
+     li ripaga, la fila mossa va da 0,75 a 1,25 — l'ondata dura quanto
+     prima, e l'energia che porta arriva negli stessi tempi. */
+  ritmoDi(o, k) {
+    /* le prime due ondate escono regolari: arrivano addosso all'unica
+       torre che il bambino ha appena costruito, e lì due mostri vicini
+       sono un cuore perso prima di aver capito il gioco */
+    if (o < RITMO.da) return 1
+    if (caso(o) < RITMO.quota) {
+      const [da, a] = RITMO.gruppo
+      const g = da + Math.floor(caso(o, 99) * (a - da + 1))
+      return k % g < g - 1 ? RITMO.stretto : g - RITMO.stretto * (g - 1)
+    }
+    return 1 - RITMO.mosso + 2 * RITMO.mosso * caso(o, k + 1)
+  }
+  /* ── lo sfalso di chi esce ──
+     Di quanto il `k`-esimo mostro dell'ondata `o` esce indietro rispetto
+     alla bocca, fra zero e `RITMO.sfalso` unità del mondo: così
+     una fila non è una fila di gemelli. Era l'unico numero tirato davvero
+     a caso della battaglia, e **si vedeva nei conti**: dove una torre
+     sola apre il mostro dell'ondata — i golem, che feriscono solo le
+     bombe — quel soffio decide chi finisce sotto la stessa bomba e chi
+     ci scappa, e la stessa ondata con le stesse torri e la stessa vita
+     una volta si fermava a metà strada e una volta entrava. Il taratore
+     misurava il limite con un'uscita, il metro giocava la tappa con
+     un'altra, e perdeva un cuore su un'ondata tarata al 65%. Adesso lo
+     decide il numero dell'ondata, come il ritmo: la stessa ondata esce
+     sempre uguale, e quella che il banco ha misurato è quella che si
+     gioca. */
+  sfalsoDi(o, k) { return caso(o, k + 1000) * RITMO.sfalso }
   vitaDi(o) {
     const v = vitaNemico(this.tappa, o)
     return this.eCapo(o) ? v * nemiciDiOnda(o) * CAPO.vita : v

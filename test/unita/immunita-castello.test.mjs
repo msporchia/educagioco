@@ -101,7 +101,7 @@ nota('immunità: ' + Object.entries(MOSTRI).map(([id, m]) =>
 const tappaDi = nome => TAPPE.find(t => t.nome === nome)
 function campo(tappa) {
   const stato = { cuori: 0, onda: 0, uccisi: 0, torri: 0, energia: 0 }
-  const b = creaBattaglia({ tappa, misure: MONDO, stato, caso: () => 0.5 })
+  const b = creaBattaglia({ tappa, misure: MONDO, stato })
   b.inizia()
   return { b, stato }
 }

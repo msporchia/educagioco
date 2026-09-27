@@ -21,9 +21,6 @@
      `stato`    l'oggetto dove tenere il conto (vedi `Tabellone`)
      `eventi`   cosa fare quando succede qualcosa: avvisi, suoni,
                 contatori del profilo. Il simulatore non ne passa nessuno
-     `caso`     da dove escono i numeri a caso. Il gioco usa Math.random,
-                il simulatore un seme, così una partita si può rigiocare
-                identica
      `regali`   i potenziamenti definitivi della partita libera,
                 `{ id: quanti }` (vedi `REGALI` in `data/castello.js`).
                 Li applica **solo** se la tappa li prevede
@@ -53,9 +50,8 @@ const zitto = () => {}
 export const PREAVVISO = 3
 
 export class Battaglia {
-  constructor({ tappa, misure, stato, eventi = {}, caso = Math.random, regali = null }) {
+  constructor({ tappa, misure, stato, eventi = {}, regali = null }) {
     this.tappa = tappa
-    this.caso = caso
     this.misure = misure
 
     /* i regali, e i doni che ne escono. La tappa che non li prevede non
@@ -211,7 +207,8 @@ export class Battaglia {
   }
 
   /* i nemici escono dall'ingresso sfalsati di poco, così un'ondata non
-     è una fila di gemelli: è l'unico punto in cui serve il caso */
+     è una fila di gemelli. Lo sfalso lo decide l'ondata (`sfalsoDi`),
+     non il caso: vedi lì perché */
   generaNemico() {
     const o = this.tabellone.onda
     /* da che ingresso entra: lo decide l'ondata, e quando l'ondata
@@ -223,7 +220,7 @@ export class Battaglia {
     this.usciti++
     const b = this.bestia
     this.nemici.push(new Nemico({
-      d: -this.caso() * 30,
+      d: -this.ondate.sfalsoDi(o, this.ondate.quantiDi(o) - this.daGenerare),
       via, onda: o,
       vita: this.ondate.vitaDi(o),
       vel: this.ondate.velocitaDi(o) * this.misure.S,
@@ -365,7 +362,10 @@ export class Battaglia {
       this.prossimo -= dt
       if (this.prossimo <= 0) {
         this.generaNemico(); this.daGenerare--
-        this.prossimo = this.ondate.intervalloDi(this.tabellone.onda)
+        // il passo fino al prossimo segue il ritmo dell'ondata (`ritmoDi`)
+        const o = this.tabellone.onda
+        this.prossimo = this.ondate.intervalloDi(o) *
+          this.ondate.ritmoDi(o, this.ondate.quantiDi(o) - this.daGenerare - 1)
       }
     }
     this.chiudiLeOndate()

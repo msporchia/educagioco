@@ -104,7 +104,7 @@ Colpo.prototype.impatto = function (...a) {
    prima torre aveva qualcuno a tiro, e quanti colpi e bersagli. */
 function passaggio(tappa, torri, onda, quanti = nemiciDiOnda(onda), vita = IMMORTALE) {
   const stato = { cuori: 99, onda: 0, uccisi: 0, torri: 0, energia: 0 }
-  const b = new Battaglia({ tappa, misure: MONDO, stato, caso: () => 0.5 })
+  const b = new Battaglia({ tappa, misure: MONDO, stato })
   b.inizia()
   b.torri = torri.filter(t => t.tipo).map(t => {
     const p = b.postazioni[t.posto]
