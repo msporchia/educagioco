@@ -25,8 +25,13 @@ In basso il programma, a righe che si leggono come frasi:
 
 Non si scrive niente a tastiera: si tocca «＋», si sceglie un blocco dalla
 cassetta, e si riempiono le caselle toccandole. **Una scelta non nasce mai
-fatta**: «vai» sono due tasti, uno per verso, e i numeri nascono **N**, da
-scegliere — un valore di comodo si leggeva come l'unico possibile.
+fatta**: un «vai» nuovo ha il punto di domanda sulla freccia e la scelta
+aperta lì, sulla riga — la prima volta la si tocca proprio dove poi la si
+cambia — e lo stesso il colore del mattone, quando i colori sono più d'uno.
+I numeri nascono **N**, da scegliere; solo i passi di «vai» nascono 1, che è
+l'unità, e il ▾ accanto dice che si possono cambiare. Una riga già scritta
+si **sposta** (✂) o si **copia** (⧉) dove si vuole, dentro un ripeti o
+fuori, anche in un progetto: si costruisce a pezzi.
 
 ## Il mondo, e le sue regole
 

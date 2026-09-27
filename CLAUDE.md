@@ -677,11 +677,17 @@ committate: non è ricostruibile da git.
   regge tutte — è l'idea delle scene del Generale, ed è quella che rende
   necessari i parametri; ogni livello porta le sue `fragili` (il numero del
   primo ordine scritto a mano, la colonna a righe) e `unita/costruttore`
-  pretende che ognuna perda almeno un ordine. **Una scelta non nasce fatta**:
-  i numeri di una riga nuova sono `{ vuoto: true }`, scritti **N**, la scelta
-  si apre da sola e ▶ non parte con una N dentro — «vai a destra 1» di
-  partenza si leggeva come l'unico verso possibile (è la prima cosa vista
-  giocandolo). **Il robot cammina e cade** (`motore/esecutore.js`, `passo`,
+  pretende che ognuna perda almeno un ordine. **Una scelta non nasce fatta, e
+  si fa sulla riga**: la cassetta ha un tasto per blocco, e la riga nasce col
+  `?` sul verso, sul posto del mattone e sul colore (`null`), con la scelta
+  già aperta attaccata alla casella — «vai a destra 1» di partenza si leggeva
+  come l'unico verso possibile, e con un tasto per verso nella cassetta la
+  freccia nasceva scritta e nessun bambino capiva che toccandola si
+  cambiava. I numeri nascono **N** e ▶ non parte con una N dentro, **tranne
+  i passi di «vai», che nascono 1** (un passo è l'unità: chiederlo era una
+  domanda con la risposta ovvia). Ogni casella che si cambia ha il suo ▾, e
+  quella che ha una scelta sola (un colore solo nel livello) sta ferma e
+  senza. **Il robot cammina e cade** (`motore/esecutore.js`, `passo`,
   `cadi`): sale mettendosi un mattone sotto i piedi e posa anche in basso a
   destra/sinistra, dove andrà il piede; era un drone che volava, e un robot
   per aria non dava nessun ordine alle cose. **I programmi stanno fuori dal
@@ -711,7 +717,14 @@ committate: non è ricostruibile da git.
   Passo passo ha già. Il banco pretende che in un livello dei progetti la
   soluzione **srotolata** non ci stia, e che ogni mossa ingenua perda un
   ordine o non ci stia. **L'editor ha dieci passi di «annulla»**, in memoria
-  per livello: un 🗑 su un blocco porta via tutto quello che ha dentro.
+  per livello: un 🗑 su un blocco porta via tutto quello che ha dentro. **E
+  ha la mano** (`trasloca`/`incollaCopia` in `motore/modifica.js`): ✂ sposta
+  e ⧉ copia prendono una riga col suo blocco, e ogni elenco mostra i
+  «📥 qui» dove posarla — dentro e fuori dai ripeti, e in un'altra scheda,
+  cioè dentro un progetto. Si costruisce a pezzi, e senza, due righe da
+  mettere dentro un ripeti andavano cancellate e riscritte. Nei test:
+  `[data-azione="sposta"|"copia"|"lascia"]`, `[data-mano]`,
+  `[data-posa="prima:<id>"|"fondo:<elenco>"]`.
   **La seconda parte è il porto** (`motore/porto/`, `dati/porto/`,
   `scena/porto.js`): un mondo **visto dall'alto che lavora da solo** — la
   gru cala, il nastro porta verso il mare, i clienti chiedono al bancone —
