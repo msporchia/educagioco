@@ -2,41 +2,39 @@
    IL SENTIERO SENZA FINE — livelli fatti al momento
 
    Dopo la campagna i posti scritti a mano finiscono; il sentiero no. Qui
-   un livello si **fa al momento e poi si fa esaminare dal motore**: si
-   tiene solo se si vince, se la strada è lunga quanto il livello
-   chiede, se la carota vuole una deviazione e se le regole che mette in
-   scena servono davvero. Un livello che si vince andando dritti non è
-   un sentiero, è un corridoio.
+   un posto si **fa al momento e poi si fa esaminare dal motore**: si
+   tiene solo se si vince, se la strada è lunga almeno quanto il
+   pavimento, se la carota vuole una deviazione e se le regole che mette
+   in scena servono tutte davvero. Un posto che si vince andando dritti
+   non è un sentiero, è un corridoio.
 
-   ── COSA C'È DENTRO ───────────────────────────────────────────────
-   Il sentiero sta in fondo alla campagna, e mescola quello che il
-   bambino ha già imparato: a ogni posto si tira a caso **la famiglia**
-   — il coniglio sul prato, il cane con le pecore, un posto con lo zaino
-   col ripeti, col fino a o col se — e dentro la famiglia **le regole**
-   (le buche sì o no, il ghiaccio sì o no). Solo fra le cose sbloccate:
-   i gradini della campagna finiti (`INGREDIENTI`). Il caso è pesato
-   perché il posto non esca né banale né fuori portata: quanto è grande,
-   quanto è lunga la strada, quante regole insieme lo dice il livello
-   (`livelloDi`), che sale coi sentieri fatti nella seduta. Il caso si
-   passa da fuori (`rnd`): lo stesso seme fa lo stesso sentiero, e i
-   test raccontano sempre la stessa storia.
+   ── IL FINALE ─────────────────────────────────────────────────────
+   Il sentiero sta in fondo alla campagna ed è il finale: chi ci gioca
+   ha già dimostrato di sapersela cavare da solo. Quindi la difficoltà
+   è **sempre in cima**, dal primo sentiero all'ultimo, e la varietà la
+   fa il caso **togliendo**: a ogni posto si tira la famiglia — il
+   coniglio sul prato, il cane con le pecore, un posto con lo zaino col
+   ripeti, col fino a o col se — e il posto nasce con tutto quello che
+   quella famiglia sa mettere in scena, meno una o due cose (le buche
+   no, il ghiaccio sì…). Solo fra le cose sbloccate: i gradini della
+   campagna finiti (`INGREDIENTI`). Il caso si passa da fuori (`rnd`):
+   lo stesso seme fa lo stesso sentiero, e i test raccontano sempre la
+   stessa storia.
 
    ── DUE MODI DI FARE UN POSTO ─────────────────────────────────────
    Il prato e il cane si costruiscono a caso e si tengono solo se il
-   risolutore dice che si vincono, lunghi quanto il livello chiede, con
-   la carota (l'osso) che vuole una deviazione, e con la regola
-   principale che serve davvero — e con due regole insieme anche la
-   seconda, finché il caso lo concede. Con più pecore i posti costano di
+   risolutore dice che si vincono con la carota (l'osso), con la strada
+   più corta — anche senza carota — sopra il pavimento (`PAVIMENTO`), e
+   con tutte le regole che servono. Con più pecore i posti costano di
    più da risolvere, quindi lì il risolutore ha un tetto (`LIMITE_CANE`).
    I posti con lo zaino vanno al contrario: prima il programma, poi il
    posto scavato attorno alla sua strada (`motore/sagome.js`), perché il
    programma più corto coi cicli il risolutore non lo sa trovare.
 
    ── SE IL CASO NON AIUTA ──────────────────────────────────────────
-   Si prova un certo numero di volte, poi si allarga la richiesta (una
-   strada un po' più corta, una deviazione più piccola) e si riprova. In
-   fondo c'è sempre un livello di riserva che si vince: un bambino che
-   aspetta un sentiero che non arriva è un gioco rotto.
+   Si prova un certo numero di volte, poi si abbassa di poco il pavimento
+   e si riprova. In fondo c'è sempre un posto di riserva che si vince: un
+   bambino che aspetta un sentiero che non arriva è un gioco rotto.
    ═══════════════════════════════════════════════════════════════════ */
 import { Livello, celleIncastro } from './livello.js'
 import { misura, serveLaRegola } from './risolutore.js'
@@ -78,34 +76,20 @@ const REGOLE = { salto: 'salto', ghiaccio: 'ghiaccio', massi: 'spinta', buche: '
    e quattro le regole del prato */
 export const DI_BASE = ['salto', 'ghiaccio', 'massi', 'buche']
 
-/* ═══════════ il livello ═══════════
-   Da 0 a 9: sale di uno ogni due sentieri della seduta, e parte più in
-   alto per chi ha finito più gradini — chi ha finito la campagna non
-   deve rifarsi i prati da quattro frecce prima di trovare un posto che
-   lo impegni. Il livello non sceglie **cosa** c'è nel posto (lo sceglie
-   il caso, fra le cose sbloccate): sceglie quanto è lunga la strada,
-   quanto è grande il posto, quante regole insieme, quante pecore, e
-   quali sagome dello zaino si possono tirare. */
-export const LIVELLO_MAX = 9
-export const livelloDi = (fatti, sbloccati = DI_BASE) =>
-  Math.min(LIVELLO_MAX, Math.max(0, Math.floor((sbloccati.length - 4) / 2)) + Math.floor(fatti / 2))
-
 /* ═══════════ la famiglia ═══════════
    Di che specie è il prossimo posto: il coniglio sul prato, il cane
-   con le pecore, o un posto con lo zaino (ripeti, fino a, se). Il caso
-   è pesato: ognuna delle cose sbloccate può uscire, e quella appena
-   giocata pesa meno — tre posti di fila dello stesso tipo sono il modo
-   in cui un sentiero senza fine diventa noioso. Lo zaino pesa un po' di
-   più col livello: è il posto dove si pensa di più. */
+   con le pecore, o un posto con lo zaino (ripeti, fino a, se). Ognuna
+   delle cose sbloccate può uscire, e quella appena giocata pesa meno:
+   tre posti di fila dello stesso tipo sono il modo in cui un sentiero
+   senza fine diventa noioso. */
 export const FAMIGLIE = ['prato', 'cane', 'ripeti', 'fino', 'se']
-export function famigliaDi(rnd, sbloccati, lv = 0, prima = null) {
-  const zaino = 0.8 + lv * 0.06
+export function famigliaDi(rnd, sbloccati, prima = null) {
   const pesi = {
     prato: 1,
     cane: sbloccati.includes('cane') ? 0.8 : 0,
-    ripeti: sbloccati.includes('ripeti') ? zaino : 0,
-    fino: sbloccati.includes('fino') ? zaino : 0,
-    se: sbloccati.includes('se') ? zaino : 0,
+    ripeti: sbloccati.includes('ripeti') ? 1 : 0,
+    fino: sbloccati.includes('fino') ? 1 : 0,
+    se: sbloccati.includes('se') ? 1 : 0,
   }
   if (prima && pesi[prima]) pesi[prima] *= 0.3
   let t = rnd() * FAMIGLIE.reduce((n, f) => n + pesi[f], 0)
@@ -113,51 +97,59 @@ export function famigliaDi(rnd, sbloccati, lv = 0, prima = null) {
   return 'prato'
 }
 
-/* ═══════════ la ricetta del prato ═══════════
-   Quante regole del mondo insieme (una ai primi livelli, due o tre più
-   su), quali (a caso fra quelle sbloccate), e le misure che il posto
-   deve avere per essere tenuto. La prima regola tirata è quella
-   principale: deve servire sempre. */
-export function ricettaDelPrato(sbloccati, lv, rnd) {
+/* ═══════════ la ricetta: tutto, meno una o due cose ═══════════
+   Il sentiero è il finale: chi ci arriva ha già dimostrato di sapersela
+   cavare, e la difficoltà sta **sempre in cima**, dal primo sentiero
+   all'ultimo — niente scala che sale con le partite. Quello che cambia
+   da un posto all'altro lo fa il caso **togliendo**: il posto nasce con
+   tutto quello che la sua famiglia sa mettere in scena, e se ne tolgono
+   una o due cose. Un prato ha le quattro regole meno una o due (quindi
+   due o tre insieme, e tutte devono servire); un pascolo ha tre pecore
+   e il ghiaccio, meno uno dei due; lo zaino sceglie fra le sagome a due
+   idee (`motore/sagome.js`). Sotto c'è un pavimento, la strada più
+   corta **senza** carota: chi lascia perdere la carota non deve trovare
+   un posto da tre frecce. */
+export const PAVIMENTO = { prato: 10, cane: 12 }
+
+export function ricettaDelPrato(sbloccati, rnd) {
   const poss = Object.keys(REGOLE).filter(r => sbloccati.includes(r))
-  const quante = Math.min(poss.length, lv < 3 ? 1 : lv < 6 ? 1 + (rnd() < 0.5 ? 1 : 0) : 2 + (rnd() < 0.3 ? 1 : 0))
-  const regole = []
-  while (regole.length < quante) {
-    const r = poss[Math.floor(rnd() * poss.length)]
-    if (!regole.includes(r)) regole.push(r)
-  }
+  const togli = poss.length >= 4 ? 1 + (rnd() < 0.5 ? 1 : 0) : poss.length === 3 ? 1 : 0
+  const regole = poss.map(r => [rnd(), r]).sort((p, q) => p[0] - q[0]).map(p => p[1]).slice(togli)
   const ha = r => regole.includes(r)
-  const k = regole.length
   return {
     regole,
-    lato: [Math.min(8, 5 + Math.floor(lv / 3) + (k > 1 ? 1 : 0)), Math.min(8, 4 + Math.floor((lv + 1) / 2))],
-    lunga: [Math.min(10, 3 + Math.floor(lv / 2) + k), Math.min(18, 6 + lv + 2 * k)],
-    dev: lv === 0 ? 0 : lv < 4 ? 1 : 2,
-    ostacoli: ha('ghiaccio') ? 0.08 : 0.11,
-    pozze: ha('salto') ? 0.5 : 1,
-    ghiaccio: ha('ghiaccio') ? 1 : 0,
-    fiume: ha('salto') ? 1 : 0,
+    /* il labirinto, in celle: cinque per cinque fa una mappa da nove,
+       e ogni tanto una fila in più in altezza */
+    celle: [5, rnd() < 0.4 ? 6 : 5],
+    varchi: 0.12,
+    slarghi: 0.25,
+    corta: PAVIMENTO.prato,
+    lunga: 30,
+    dev: 2,
     salti: ha('salto'),
-    massi: ha('massi') ? 1 : 0,
-    buche: ha('buche') ? 1 : 0,
   }
 }
 
 /* ── la ricetta del cane ──
-   Una pecora, poi due, poi tre sparse da riunire; il ghiaccio se lo si
-   conosce, una volta su due. Il recinto sta sul bordo, con la siepe ai
-   lati: il cancello guarda dentro al prato */
-export function ricettaDelCane(sbloccati, lv, rnd) {
-  const pecore = 1 + (lv >= 3 ? 1 : 0) + (lv >= 6 ? 1 : 0)
+   Tre pecore sparse da riunire e il ghiaccio, meno una delle due cose:
+   o due pecore sul ghiaccio, o tre sul prato, e ogni tanto tutte e due.
+   Il recinto sta sul bordo, con la siepe ai lati: il cancello guarda
+   dentro al prato */
+export function ricettaDelCane(sbloccati, rnd) {
+  const ghiaccio = sbloccati.includes('ghiaccio')
+  const via = !ghiaccio ? 'ghiaccio' : scegli3(rnd, ['pecora', 'ghiaccio', 'niente'])
+  const pecore = via === 'pecora' ? 2 : 3
   return {
     pecore,
-    lato: pecore >= 3 ? [6, 6] : [6 + (lv >= 4 ? 1 : 0), 5 + (lv >= 2 ? 1 : 0)],
-    lunga: [Math.min(12, 4 + lv), Math.min(22, 9 + 2 * lv)],
-    dev: lv < 2 ? 1 : 2,
-    ostacoli: pecore >= 3 ? 0.05 : 0.07,
-    ghiaccio: sbloccati.includes('ghiaccio') && pecore < 3 && rnd() < 0.5 ? 0.7 : 0,
+    lato: [7, 6],
+    corta: PAVIMENTO.cane,
+    lunga: 26,
+    dev: 1,
+    ostacoli: 0.05,
+    ghiaccio: via !== 'ghiaccio' ? 0.9 : 0,
   }
 }
+const scegli3 = (rnd, l) => l[Math.floor(rnd() * l.length)]
 
 /* quanti stati guarda il risolutore su un posto del cane, prima di
    lasciarlo stare: un bambino non se ne accorge, un telefono sì */
@@ -173,85 +165,152 @@ export const premioDi = t => (t && t.zaino ? 6 : 3)
 const NOMI = ['Il sentiero', 'La radura', 'Il guado', 'Il campo', 'La collina', 'Il boschetto',
               'La palude', 'Il lago', 'La siepe', 'Il vallone', 'La conca', 'Il pianoro']
 
-/* ── una mappa a caso ── */
-function bozza(g, rnd) {
-  const [W, H] = g.lato
-  const m = Array.from({ length: H }, () => Array(W).fill('.'))
-  const tira = p => rnd() < p
-  const dentro = (x, y) => x >= 0 && y >= 0 && x < W && y < H
+/* ── un prato del finale: il labirinto di siepi ──
+   Un prato aperto tirato a caso ha quasi sempre la strada dritta: su
+   quattrocento, nemmeno uno arrivava a dieci frecce. Il finale vuole
+   struttura, quindi il prato è **un labirinto di siepi con qualche
+   slargo** (un labirinto a caso, con dei varchi in più perché ci siano
+   delle scelte, e qualche pilastro tolto), la tana lontana dalla
+   partenza, e le regole messe **dove la strada passa**:
+     · il salto: un fosso (o un tronco) di traverso a un corridoio;
+     · i massi: un masso nel corridoio con la pozza dietro — spinto, fa
+       il ponte;
+     · il ghiaccio: una macchia che copre un pezzo di labirinto, e sul
+       ghiaccio si scivola oltre gli incroci;
+     · le buche: la strada si chiude a metà, e dall'altra parte si passa
+       solo per la galleria.
+   La carota sta in un vicolo. Se tutto questo regge lo dice il
+   risolutore, dopo: qui si costruisce e basta. Le siepi sono alte (un
+   salto non le scavalca); l'acqua di contorno solo dove non si salta. */
+export function bozzaLabirinto(g, rnd) {
+  const [CW, CH] = g.celle
+  const W = 2 * CW - 1, H = 2 * CH - 1
   const a = n => Math.floor(rnd() * n)
-
-  /* il fuori: qualche cella del bordo è bosco o acqua, così il posto ha
-     una forma e non è un rettangolo pieno */
-  const fuori = tira(0.5) ? 'A' : '~'
+  const aperta = Array.from({ length: H }, () => Array(W).fill(false))
+  const i = (x, y) => y * W + x
+  /* il labirinto: si scava da una cella a caso, un passo alla volta */
+  const vista = new Set()
+  const pila = [[2 * a(CW), 2 * a(CH)]]
+  aperta[pila[0][1]][pila[0][0]] = true
+  vista.add(i(...pila[0]))
+  const VERSI = [[2, 0], [-2, 0], [0, 2], [0, -2]]
+  while (pila.length) {
+    const [x, y] = pila.at(-1)
+    const vicini = VERSI.map(([dx, dy]) => [x + dx, y + dy, dx, dy])
+      .filter(([nx, ny]) => nx >= 0 && ny >= 0 && nx < W && ny < H && !vista.has(i(nx, ny)))
+    if (!vicini.length) { pila.pop(); continue }
+    const [nx, ny, dx, dy] = vicini[a(vicini.length)]
+    aperta[y + dy / 2][x + dx / 2] = true
+    aperta[ny][nx] = true
+    vista.add(i(nx, ny))
+    pila.push([nx, ny])
+  }
+  /* i varchi in più, e i pilastri tolti: gli slarghi */
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    const bordo = x === 0 || y === 0 || x === W - 1 || y === H - 1
-    if (bordo && tira(0.22)) m[y][x] = fuori
+    if (aperta[y][x]) continue
+    const varco = (x % 2) !== (y % 2)
+    if (varco && rnd() < g.varchi) aperta[y][x] = true
+    if (!varco && x % 2 && y % 2 && rnd() < g.slarghi) aperta[y][x] = true
   }
+  const m = aperta.map(r => r.map(o => (o ? '.' : null)))
+  const dentro = (x, y) => x >= 0 && y >= 0 && x < W && y < H
+  const libero = (x, y) => dentro(x, y) && m[y][x] !== null
 
-  /* il ghiaccio: un lago, con qualche sasso piantato dentro */
-  if (g.ghiaccio && tira(g.ghiaccio)) {
-    const w = 3 + a(Math.max(1, W - 3)), h = 3 + a(Math.max(1, H - 3))
-    const x0 = a(W - w + 1), y0 = a(H - h + 1)
-    for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++)
-      m[y][x] = tira(0.14) ? 'O' : '*'
-  }
-  /* un fiume: una riga o una colonna d'acqua, qualche volta col guado */
-  if (g.fiume && tira(g.fiume)) {
-    if (tira(0.5)) {
-      const x = 1 + a(W - 2)
-      for (let y = 0; y < H; y++) m[y][x] = '~'
-      if (tira(0.3)) m[a(H)][x] = 't'
-    } else {
-      const y = 1 + a(H - 2)
-      for (let x = 0; x < W; x++) m[y][x] = '~'
-      if (tira(0.3)) m[y][a(W)] = 't'
+  /* la strada più lunga che si trova: la partenza e la tana più lontane */
+  const distanze = (sx, sy) => {
+    const d = new Map([[i(sx, sy), 0]])
+    const fila = [[sx, sy]]
+    const su = new Map()
+    while (fila.length) {
+      const [x, y] = fila.shift()
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx, ny = y + dy
+        if (!libero(nx, ny) || d.has(i(nx, ny))) continue
+        d.set(i(nx, ny), d.get(i(x, y)) + 1)
+        su.set(i(nx, ny), [x, y])
+        fila.push([nx, ny])
+      }
     }
+    return { d, su }
   }
-  /* una pozza */
-  if (g.pozze && tira(g.pozze)) {
-    const w = 1 + a(2), h = 1 + a(2)
-    const x0 = a(W - w + 1), y0 = a(H - h + 1)
-    for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++)
-      if (m[y][x] === '.') m[y][x] = '~'
-  }
-  /* gli ostacoli sparsi */
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++)
-    if (m[y][x] === '.' && tira(g.ostacoli)) m[y][x] = ['A', 'B', 'S'][a(3)]
-
-  const libere = pred => {
+  const celle = []
+  for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) celle.push([x, y])
+  const [px, py] = celle[a(celle.length)]
+  const { d: dp, su: suP } = distanze(px, py)
+  const lontane = celle.filter(([x, y]) => dp.has(i(x, y))).sort((p, q) => dp.get(i(...q)) - dp.get(i(...p)))
+  const [tx, ty] = lontane[a(Math.min(3, lontane.length))]
+  if (dp.get(i(tx, ty)) < 12) return null
+  const strada = [[tx, ty]]
+  while (strada[0][0] !== px || strada[0][1] !== py) strada.unshift(suP.get(i(...strada[0])))
+  const sulla = new Set(strada.map(([x, y]) => i(x, y)))
+  /* un pezzo di strada dritto: tre celle in fila, lontano dai due capi */
+  const dritti = () => {
     const l = []
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (pred(m[y][x], x, y)) l.push([x, y])
+    for (let k = 2; k < strada.length - 3; k++) {
+      const [p, q, r] = [strada[k - 1], strada[k], strada[k + 1]]
+      if (q[0] - p[0] === r[0] - q[0] && q[1] - p[1] === r[1] - q[1]) l.push(k)
+    }
     return l
   }
-  const metti = (ch, pred) => {
-    const l = libere(pred)
-    if (!l.length) return null
-    const [x, y] = l[a(l.length)]
-    m[y][x] = ch
-    return [x, y]
-  }
+  const usate = new Set()
+  const prendi = (k, ch) => { const [x, y] = strada[k]; m[y][x] = ch; usate.add(k) }
 
-  /* il masso: su un prato, con un po' di posto intorno per spingerlo */
-  if (g.massi && tira(g.massi)) {
-    metti('m', (c, x, y) => c === '.' && [[1, 0], [-1, 0], [0, 1], [0, -1]]
-      .filter(([dx, dy]) => dentro(x + dx, y + dy) && '.*~'.includes(m[y + dy][x + dx])).length >= 3)
+  if (g.regole.includes('buche')) {
+    const n = strada.length
+    const k1 = Math.floor(n * (0.25 + rnd() * 0.15)), k2 = Math.floor(n * (0.6 + rnd() * 0.2))
+    /* il taglio: un varco a metà strada fra le due buche diventa siepe */
+    let taglio = -1
+    for (let k = Math.floor((k1 + k2) / 2); k < k2 - 1; k++)
+      if ((strada[k][0] % 2) !== (strada[k][1] % 2)) { taglio = k; break }
+    if (taglio < 0 || k2 - k1 < 5) return null
+    const [cx, cy] = strada[taglio]
+    m[cy][cx] = null
+    prendi(k1, '1'); prendi(k2, '1')
+    for (let k = k1 + 1; k < k2; k++) usate.add(k)
   }
-  /* le buche: lontane almeno tre passi, se no la galleria porta nella
-     cella accanto e non insegna niente */
-  if (g.buche) {
-    const b = metti('1', c => c === '.')
-    if (!b) return null
-    if (!metti('1', (c, x, y) => c === '.' && Math.abs(x - b[0]) + Math.abs(y - b[1]) >= 3)) return null
+  if (g.regole.includes('salto')) {
+    const l = dritti().filter(k => !usate.has(k) && !usate.has(k - 1) && !usate.has(k + 1) &&
+      (strada[k][0] % 2) !== (strada[k][1] % 2))
+    if (!l.length) return null
+    prendi(l[a(l.length)], rnd() < 0.35 ? 't' : '~')
   }
-  if (!metti('P', c => c === '.')) return null
-  if (!metti('@', c => c === '.')) return null
-  /* la carota può stare anche sul ghiaccio — è lì che si prende
-     scivolando — e prende la lettera del terreno che ha sotto */
-  const posti = libere(c => c === '.' || c === '*')
-  if (!posti.length) return null
-  const [cx, cy] = posti[a(posti.length)]
-  m[cy][cx] = m[cy][cx] === '*' ? 'C' : 'c'
+  if (g.regole.includes('massi')) {
+    const l = dritti().filter(k => !usate.has(k - 1) && !usate.has(k) && !usate.has(k + 1) && !usate.has(k + 2))
+    if (!l.length) return null
+    const k = l[a(l.length)]
+    prendi(k, 'm')
+    prendi(k + 1, '~')
+    usate.add(k - 1)
+  }
+  if (g.regole.includes('ghiaccio')) {
+    /* una macchia larga tre o quattro, attorno a un pezzo di strada */
+    const libere = strada.map((c, k) => k).filter(k => k > 1 && k < strada.length - 2 && !usate.has(k))
+    if (!libere.length) return null
+    const [cx, cy] = strada[libere[a(libere.length)]]
+    const lw = 3 + a(2), lh = 3 + a(2)
+    const x0 = Math.max(0, cx - a(lw)), y0 = Math.max(0, cy - a(lh))
+    for (let y = y0; y < Math.min(H, y0 + lh); y++) for (let x = x0; x < Math.min(W, x0 + lw); x++)
+      if (m[y][x] === '.') m[y][x] = '*'
+  }
+  m[py][px] = 'P'
+  m[ty][tx] = '@'
+  /* la carota: in un vicolo, cioè una cella fuori strada da cui si torna */
+  const vicoli = []
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++)
+    if ((m[y][x] === '.' || m[y][x] === '*') && !sulla.has(i(x, y))) vicoli.push([x, y])
+  if (!vicoli.length) return null
+  const [ox, oy] = vicoli[a(vicoli.length)]
+  m[oy][ox] = m[oy][ox] === '*' ? 'C' : 'c'
+  /* le siepi: a macchie di alberi e cespugli, e un po' d'acqua dove non
+     si salta (l'acqua si scavalca, e aprirebbe scorciatoie) */
+  const muri = g.salti ? 'AAB' : 'AAB~'
+  const semi = Array.from({ length: 4 }, () => [rnd() * W, rnd() * H, muri[a(muri.length)]])
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (m[y][x] !== null) continue
+    let meglio = semi[0], dd = Infinity
+    for (const s of semi) { const q = (s[0] - x) ** 2 + (s[1] - y) ** 2; if (q < dd) { dd = q; meglio = s } }
+    m[y][x] = meglio[2] === 'A' && rnd() < 0.12 ? 'B' : meglio[2]
+  }
   return m.map(r => r.join(''))
 }
 
@@ -328,59 +387,46 @@ function bozzaCane(g, rnd) {
 }
 
 /* ── un sentiero ──
-   `fatti` è quanti ne ha già fatti in questa seduta; `rnd` il caso;
-   `sbloccati` gli ingredienti che conosce (`INGREDIENTI`); `prima` la
-   famiglia del sentiero di prima, che così pesa meno. */
-export function generaSentiero(fatti, rnd, { sbloccati = DI_BASE, prima = null, prove = 260 } = {}) {
-  const lv = livelloDi(fatti, sbloccati)
-  const famiglia = famigliaDi(rnd, sbloccati, lv, prima)
+   `fatti` è quanti ne ha già fatti in questa seduta (sceglie la stagione,
+   non la difficoltà); `rnd` il caso; `sbloccati` gli ingredienti che
+   conosce (`INGREDIENTI`); `prima` la famiglia del sentiero di prima,
+   che così pesa meno. */
+export function generaSentiero(fatti, rnd, { sbloccati = DI_BASE, prima = null, prove = 120 } = {}) {
+  const famiglia = famigliaDi(rnd, sbloccati, prima)
   const tema = TEMI[fatti % TEMI.length]
-  const base = { famiglia, livello: lv }
   if (famiglia === 'ripeti' || famiglia === 'fino' || famiglia === 'se') {
-    const t = generaZaino(famiglia, sbloccati, lv, rnd)
-    if (t) return { ...t, ...base, tema: t.tema || tema, cane: !!Livello.da(t).cane, misure: { carte: t.zaino } }
-    return { ...RISERVA_ZAINO, carte: carteInMano(sbloccati), ...base, tema, nome: 'Il viale lungo', misure: null }
+    const t = generaZaino(famiglia, sbloccati, rnd)
+    if (t) return { ...t, famiglia, tema: t.tema || tema, cane: !!Livello.da(t).cane, misure: { carte: t.zaino } }
+    return { ...RISERVA_ZAINO, carte: carteInMano(sbloccati), famiglia, tema, nome: 'Il campo arato', misure: null }
   }
-  if (famiglia === 'cane') return generaPascolo(rnd, ricettaDelCane(sbloccati, lv, rnd), { ...base, tema })
-  const g = ricettaDelPrato(sbloccati, lv, rnd)
+  if (famiglia === 'cane') return generaPascolo(rnd, ricettaDelCane(sbloccati, rnd), { famiglia, tema })
+  const g = ricettaDelPrato(sbloccati, rnd)
   const nome = NOMI[Math.floor(rnd() * NOMI.length)]
-  const principale = g.regole[0] ? REGOLE[g.regole[0]] : null
-  const altre = g.regole.slice(1).map(r => REGOLE[r])
-  /* tre giri, sempre più di manica larga: prima tutte le regole (fino a
-     due) che servono, poi solo la principale, poi basta che si vinca */
-  const giri = [
-    { lunga: g.lunga, dev: g.dev, altre: Math.min(1, altre.length), principale },
-    { lunga: [Math.max(2, g.lunga[0] - 1), g.lunga[1] + 1], dev: Math.max(0, g.dev - 1), altre: 0, principale },
-    { lunga: [2, g.lunga[1] + 2], dev: 0, altre: 0, principale: null },
-  ]
-  for (const richiesta of giri) {
+  const regole = g.regole.map(r => REGOLE[r])
+  /* due giri: prima col pavimento pieno, poi un poco più basso. Le regole
+     devono servire tutte in tutti e due: un posto «dei massi» che si
+     vince girando attorno al masso non ha i massi, ha un sasso in più */
+  for (const corta of [g.corta, g.corta - 2]) {
     for (let i = 0; i < prove; i++) {
-      const b = bozza(g, rnd)
+      const b = bozzaLabirinto(g, rnd)
       if (!b) continue
       const tappa = { mappa: b, salti: !!g.salti }
       const liv = Livello.da(tappa)
       const mis = misura(liv)
-      if (!mis.lunga) continue
-      if (mis.lunga < richiesta.lunga[0] || mis.lunga > richiesta.lunga[1]) continue
-      if (mis.deviazione < richiesta.dev) continue
-      if (richiesta.principale && !serveLaRegola(liv, richiesta.principale)) continue
-      if (richiesta.altre && altre.filter(r => serveLaRegola(liv, r)).length < richiesta.altre) continue
-      return { ...tappa, ...base, tema, nome, regole: g.regole, cane: false,
-               misure: { lunga: mis.lunga, deviazione: mis.deviazione } }
+      if (!mis.lunga || mis.corta < corta || mis.lunga > g.lunga || mis.deviazione < g.dev) continue
+      if (!regole.every(r => serveLaRegola(liv, r))) continue
+      return { ...tappa, famiglia, tema, nome, regole: g.regole, cane: false,
+               misure: { lunga: mis.lunga, corta: mis.corta, deviazione: mis.deviazione } }
     }
   }
-  return { ...RISERVA, ...base, tema, nome, regole: [], cane: false, misure: null }
+  return { ...RISERVA, famiglia, tema, nome, regole: [], cane: false, misure: null }
 }
 
 /* un sentiero del cane: stessa strada del coniglio, meno prove (un
    posto con le pecore costa di più) e il risolutore col tetto */
-function generaPascolo(rnd, g, base, { prove = 90 } = {}) {
+function generaPascolo(rnd, g, base, { prove = 160 } = {}) {
   const nome = NOMI_CANE[Math.floor(rnd() * NOMI_CANE.length)]
-  const giri = [
-    { lunga: g.lunga, dev: g.dev },
-    { lunga: [Math.max(3, g.lunga[0] - 2), g.lunga[1] + 2], dev: 0 },
-  ]
-  for (const richiesta of giri) {
+  for (const corta of [g.corta, g.corta - 3]) {
     for (let i = 0; i < prove; i++) {
       const b = bozzaCane(g, rnd)
       if (!b) continue
@@ -388,24 +434,27 @@ function generaPascolo(rnd, g, base, { prove = 90 } = {}) {
       const liv = Livello.da(tappa)
       const mis = misura(liv, { limite: LIMITE_CANE })
       if (!mis.lunga || !mis.corta) continue
-      if (mis.lunga < richiesta.lunga[0] || mis.lunga > richiesta.lunga[1]) continue
-      if (mis.deviazione < richiesta.dev) continue
-      return { ...tappa, ...base, nome, cane: true, misure: { lunga: mis.lunga, deviazione: mis.deviazione } }
+      if (mis.corta < corta || mis.lunga > g.lunga || mis.deviazione < g.dev) continue
+      return { ...tappa, ...base, nome, cane: true,
+               misure: { lunga: mis.lunga, corta: mis.corta, deviazione: mis.deviazione } }
     }
   }
   return { ...RISERVA_CANE, ...base, nome, cane: true, misure: null }
 }
 
-/* il posto di riserva con lo zaino: un viale, una scatola */
+/* il posto di riserva con lo zaino: un campo arato, che sta sopra il
+   pavimento anche lui */
 export const RISERVA_ZAINO = {
   mappa: [
-    'AAAAAAAA',
-    'P..c...A',
-    'AAAAAA@A',
+    'P.....A',
+    'BBBBB.A',
+    '..c...A',
+    '.BBBBBA',
+    '.....@A',
   ],
   salti: false,
-  zaino: 3,
-  soluzioni: [programma(ripeti(6, 'destra'), 'giu')],
+  zaino: 9,
+  soluzioni: [programma(ripeti(2, ripeti(5, 'destra'), ripeti(2, 'giu'), ripeti(5, 'sinistra'), ripeti(2, 'giu')))],
 }
 
 /* il posto di riserva del cane: una pecora, il recinto davanti */

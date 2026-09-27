@@ -29,9 +29,9 @@ import { risolvi, suggerisci, serveLaRegola, serveLaCarta, misura, mosseDi, mini
   from '../../src/giochi/passo-passo/motore/risolutore.js'
 import { mettiCarta, mettiCiclo, mettiScatola, togliPrima, scegliVolte, scegliTesta, seguiConsiglio }
   from '../../src/giochi/passo-passo/motore/fila.js'
-import { generaSentiero, caso, livelloDi, famigliaDi, premioDi, INGREDIENTI, DI_BASE, LIVELLO_MAX,
+import { generaSentiero, caso, famigliaDi, premioDi, INGREDIENTI, DI_BASE, PAVIMENTO,
          RISERVA, RISERVA_CANE, RISERVA_ZAINO } from '../../src/giochi/passo-passo/motore/generatore.js'
-import { SAGOME, generaZaino, provaLoZaino } from '../../src/giochi/passo-passo/motore/sagome.js'
+import { SAGOME, generaZaino, provaLoZaino, ZAINO_MIN, STRADA_MIN } from '../../src/giochi/passo-passo/motore/sagome.js'
 import { Proiezione, fotogrammaIniziale } from '../../src/giochi/passo-passo/scena/proiezione.js'
 import manifesto, { CHIAVE, SENZA_FINE } from '../../src/giochi/passo-passo/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
@@ -774,16 +774,12 @@ for (const [i, t] of CAMPAGNA.entries()) {
   const PICCOLI = [...DI_BASE, 'cane']
   controlla('ogni gradino dopo i primi passi porta un ingrediente, tranne l\'ultimo',
             SCALINI.slice(1, -1).every(s => INGREDIENTI[s.chiave]) && !INGREDIENTI[SCALINI.at(-1).chiave])
-  controlla('il livello sale coi sentieri fatti, e si ferma in cima',
-            livelloDi(0) === 0 && livelloDi(2) === 1 && livelloDi(99) === LIVELLO_MAX)
-  controlla('chi ha finito la campagna parte più in alto di chi ha finito le buche',
-            livelloDi(0, TUTTI) > livelloDi(0, DI_BASE))
   controlla('lo zaino paga più di un prato', premioDi({ zaino: 3 }) > premioDi({ mappa: [] }))
 
   /* la famiglia esce solo fra le cose sbloccate, e quella di prima pesa meno */
   const famiglie = (sbl, n = 400, prima = null) => {
     const r = caso(11), c = {}
-    for (let i = 0; i < n; i++) { const f = famigliaDi(r, sbl, 3, prima); c[f] = (c[f] || 0) + 1 }
+    for (let i = 0; i < n; i++) { const f = famigliaDi(r, sbl, prima); c[f] = (c[f] || 0) + 1 }
     return c
   }
   uguale('finite le buche, solo prati', Object.keys(famiglie(DI_BASE)).join(), 'prato')
@@ -794,7 +790,7 @@ for (const [i, t] of CAMPAGNA.entries()) {
 
   /* un giro lungo, con tutto sbloccato: ogni posto si vince, e nel
      modo che la sua famiglia dice */
-  let tutti = 0, buoni = 0, riserve = 0, regole = 0, servono = 0, stesse = 0
+  let tutti = 0, buoni = 0, riserve = 0, regole = 0, servono = 0, stesse = 0, bassi = 0
   const viste = new Set(), sagomeViste = new Set()
   for (let seme = 1; seme <= 4; seme++) {
     let prima = null
@@ -822,8 +818,13 @@ for (const [i, t] of CAMPAGNA.entries()) {
       else nota('un sentiero storto', `${t.famiglia} ${t.sagoma || ''} ${g.join(' ')} ${t.mappa.join('/')}`)
       if (t.famiglia === 'prato' && t.regole.length) {
         regole++
-        if (serveLaRegola(liv, { salto: 'salto', ghiaccio: 'ghiaccio', massi: 'spinta', buche: 'buche' }[t.regole[0]])) servono++
+        if (t.regole.every(r => serveLaRegola(liv, { salto: 'salto', ghiaccio: 'ghiaccio', massi: 'spinta', buche: 'buche' }[r]))) servono++
       }
+      /* il pavimento: dal primo sentiero, la strada più corta — anche
+         lasciando perdere la carota — non è mai corta */
+      const corta = risolvi(liv, { carota: false, limite: 40000 })
+      const pavimento = t.zaino ? 8 : PAVIMENTO[t.famiglia] - 3
+      if (!corta || corta.length < pavimento) { bassi++; nota('un sentiero basso', `${t.famiglia} ${t.sagoma || ''} ${corta && corta.length}`) }
     }
   }
   uguale('ogni sentiero è una mappa scritta bene e si vince con la carota', buoni, tutti)
@@ -831,7 +832,8 @@ for (const [i, t] of CAMPAGNA.entries()) {
   controlla('e molte sagome diverse dello zaino', sagomeViste.size >= 8, [...sagomeViste].join(' '))
   controlla('quasi mai il posto di riserva', riserve <= tutti * 0.05, `${riserve} su ${tutti}`)
   controlla('quasi mai due posti di fila della stessa famiglia', stesse <= tutti * 0.2, `${stesse} su ${tutti}`)
-  controlla('quasi sempre la regola principale del prato serve davvero', servono >= regole * 0.9, `${servono} su ${regole}`)
+  uguale('nei prati le regole servono tutte', servono, regole)
+  uguale('nessun sentiero sotto il pavimento, dal primo all\'ultimo', bassi, 0)
 
   const a = generaSentiero(5, caso(42), { sbloccati: TUTTI }), b = generaSentiero(5, caso(42), { sbloccati: TUTTI })
   uguale('lo stesso seme fa lo stesso sentiero', a.mappa.join('/'), b.mappa.join('/'))
@@ -839,21 +841,23 @@ for (const [i, t] of CAMPAGNA.entries()) {
             Array.from({ length: 12 }, (_, f) => Livello.da(generaSentiero(f, caso(f + 1))).cane).every(c => !c))
   controlla('senza le carte, niente zaino nel sentiero',
             Array.from({ length: 12 }, (_, f) => generaSentiero(f, caso(f + 3), { sbloccati: PICCOLI })).every(t => !t.zaino))
-  controlla('col cane, in cima, il gregge da riunire: tre pecore', (() => {
+  controlla('i pascoli hanno due o tre pecore, dal primo sentiero', (() => {
+    const n = []
     for (let s = 1; s < 40; s++) {
-      const t = generaSentiero(30, caso(s), { sbloccati: PICCOLI })
-      if (t.famiglia === 'cane') return Livello.da(t).pecore.length === 3
+      const t = generaSentiero(0, caso(s), { sbloccati: PICCOLI })
+      if (t.famiglia === 'cane') n.push(Livello.da(t).pecore.length)
     }
-    return false
+    return n.length > 5 && n.every(k => k >= 2) && n.includes(3)
   })())
-  controlla('a livello alto il prato mette insieme più regole',
-            Array.from({ length: 10 }, (_, f) => generaSentiero(30, caso(f + 5))).some(t => t.regole && t.regole.length >= 2))
+  controlla('con le quattro regole, un prato ne mette insieme due o tre, dal primo sentiero',
+            Array.from({ length: 10 }, (_, f) => generaSentiero(0, caso(f + 5)))
+              .every(t => t.regole.length >= 2 && t.regole.length <= 3))
   controlla('i salti compaiono solo dove c\'è il fiume da saltare',
             Array.from({ length: 16 }, (_, f) => generaSentiero(f, caso(f + 9)))
               .every(t => !!t.salti === (t.regole || []).includes('salto')))
   controlla('il posto di riserva del prato si vince', !!misura(Livello.da(RISERVA)).conCarota)
   controlla('il posto di riserva del cane si vince anche lui', !!misura(Livello.da(RISERVA_CANE)).conCarota)
-  controlla('e quello dello zaino vince, e vuole la scatola',
+  controlla('e quello dello zaino vince, vuole la scatola e sta sopra il pavimento',
             provaLoZaino({ ...RISERVA_ZAINO, carte: ['ripeti'] }))
 
   /* ── le sagome, una per una ──
@@ -864,14 +868,14 @@ for (const [i, t] of CAMPAGNA.entries()) {
   for (const g of SAGOME) {
     let fatte = 0, prove = 0, sane = 0, aiutate = 0, piste = 0, pisteBuone = 0
     const forme = new Set()
-    for (let lv = g.da; lv <= LIVELLO_MAX; lv += 2) for (let seme = 1; seme <= 4; seme++) {
+    for (let seme = 1; seme <= 16; seme++) {
       prove++
-      const t = generaZaino(g.carta, TUTTI, lv, caso(1000 * lv + seme * 7), { sagoma: g.chiave })
+      const t = generaZaino(g.carta, TUTTI, caso(1000 + seme * 7), { sagoma: g.chiave })
       if (!t) continue
       fatte++
       forme.add(t.mappa.join('/'))
       const liv = Livello.da(t)
-      if (provaLoZaino(t) && !guastiDellaFila(t.soluzioni[0]).length &&
+      if (provaLoZaino(t, { strada: g.strada || STRADA_MIN }) && t.zaino >= ZAINO_MIN && !guastiDellaFila(t.soluzioni[0]).length &&
           t.fragili.every(f => { const r = esegui(liv, f); return !(r.esito === TANA && r.carota) })) sane++
       if (g.carta !== 'ripeti') for (const f of t.fragili) {
         piste++
@@ -896,7 +900,7 @@ for (const [i, t] of CAMPAGNA.entries()) {
   /* col «fino a» contare non basta: la stessa sagoma, coi numeri al
      posto del colore, non vince mai */
   {
-    const t = generaZaino('fino', TUTTI, 4, caso(5), { sagoma: 'gradini' })
+    const t = generaZaino('fino', TUTTI, caso(5), { sagoma: 'gradini' })
     const liv = Livello.da(t)
     const contando = VOLTE_PROVA.every(n => {
       const f = t.soluzioni[0].map(x => (/^ripeti-(rosso|blu|giallo)$/.test(x) ? `ripeti-${n}` : x))
