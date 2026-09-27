@@ -7,6 +7,10 @@
        diventa una tappa di melme;
      · chi vola nel gioco vola anche nel disegno: una bestia a quattro
        zampe sospesa sopra la strada;
+     · a figura uguale, immunità uguali: la figura è quello che il
+       bambino guarda per scegliere la torre, e se lo scorpione nel bosco
+       volesse dire «niente frecce» e nella neve «niente bombe» avrebbe
+       imparato una cosa falsa;
      · le figure che il bestiario nomina sono **esattamente** quelle che
        l'atlante porta (`dati/figure.js`, `vesti.py --atlante`): una in
        meno è un buco, una in più è peso che nessuno disegna;
@@ -15,7 +19,7 @@
        ogni mostro. */
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { readFileSync } from 'node:fs'
-import { MOSTRI } from '../../src/data/mostri.js'
+import { MOSTRI, firmaImmunita } from '../../src/data/mostri.js'
 import { BESTIARIO, NOMI, VOLANO, FIGURE_NOMINATE, figuraDi } from '../../src/giochi/castello/scena/bestiario.js'
 import { VESTITO_DI } from '../../src/giochi/castello/scena/vestito.js'
 import { CREATURE, PEZZI } from '../../src/giochi/castello/dati/figure.js'
@@ -30,6 +34,14 @@ for (const v of vestiti)
     controlla(`${v} · ${id}: ha una figura`, !!f)
     if (m.vola) controlla(`${v} · ${id}: vola, e la sua figura vola`, VOLANO.includes(f), f)
   }
+
+/* chi fa chi, figura per figura: tutti i mostri che una figura fa, in
+   qualunque vestito, hanno le stesse immunità */
+const profili = {}
+for (const v of vestiti)
+  for (const id of Object.keys(MOSTRI)) (profili[BESTIARIO[v][id]] ||= new Set()).add(firmaImmunita(id))
+for (const [f, p] of Object.entries(profili))
+  controlla(`${f}: fa sempre mostri con le stesse immunità`, p.size === 1, [...p].join(' · '))
 
 stessaLista("l'atlante porta tutte e sole le figure nominate", [...CREATURE].sort(), FIGURE_NOMINATE)
 for (const f of FIGURE_NOMINATE) {

@@ -782,11 +782,11 @@ CREATURE_CASTELLO = Path(__file__).parent / 'creature-castello.json'
 CAMMINO = {
     'A': ['melma', 'scheletro-scudo', 'pipistrello', 'fantasma', 'ragno', 'lupo'],
     'B': ['golem', 'troll', 'scheletro', 'drago', 'grifone', 'pianta'],
-    'C': ['serpente', 'scorpione', 'tartaruga', 'diavoletto', 'zombie', 'pipistrello-occhio'],
+    'C': ['serpente', 'scorpione', 'ombra', 'draghetto', 'zombie', 'pipistrello-occhio'],
     'D': ['golem-magma', 'occhio', 'spirito-fuoco', 'granchio', 'bestia-cornuta', 'negromante'],
-    'E': ['golem-lava', 'draghetto', 'drago-lava', 'ombra', 'melma-viola', 'mostro-viola'],
+    'E': ['golem-lava', 'diavoletto', 'melma-viola', 'mostro-viola'],
     'F': ['melma-rosa', 'mummia', 'fantasma-azzurro', 'cinghiale', 'golem-pietra', 'teschio-azzurro'],
-    'G': ['golem-ghiaccio', 'tornado', 'ent', 'spirito-elettrico'],
+    'G': ['golem-ghiaccio', 'tornado', 'ent', 'spirito-elettrico', 'drago-lava', 'tartaruga'],
 }
 
 

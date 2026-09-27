@@ -46,24 +46,24 @@ di 4×4 px».
 
 | castello | immune a | bosco | lava | neve |
 |---|---|---|---|---|
-| slime | magica · ✂️ | la melma verde | il sasso di magma con le corna di fuoco | la melma rosa |
-| goblin | arciere | lo scheletro con spada e scudo | il diavoletto rosso | la mummia |
+| slime | magica · ✂️ | la melma verde | la melma viola | la melma rosa |
+| goblin | arciere | lo scorpione viola | il diavoletto rosso | la mummia |
 | pipistrello | bombe, ghiaccio · vola | il pipistrello viola | l'occhio volante rosso | il pipistrello con un occhio solo |
-| fantasma | bombe, ghiaccio, arciere · vola | il fantasma verde acqua | lo spirito di fuoco | il fantasma azzurro |
-| ragno | arciere | il ragno nero | il granchio rosso | il cinghiale |
-| orco | arciere | lo zombie verde | la bestia cornuta | il golem di pietra col muschio |
+| fantasma | bombe, arciere · vola | il fantasma verde acqua | il fantasma verde acqua | il fantasma azzurro |
+| ragno | arciere | il ragno nero | il granchio rosso | lo scorpione viola |
+| orco | arciere | lo zombie verde | la bestia cornuta | il cinghiale |
 | scheletro | magica, ghiaccio · 💫 | lo scheletro | il negromante col cappuccio viola | il teschio con la fiamma azzurra |
 | golem | arciere, magica | il golem di pietra bruna | il golem di lava | il golem di ghiaccio |
-| arpia | bombe, ghiaccio · vola | il grifone | il draghetto rosa con le ali | il tornado azzurro |
-| drago | bombe, ghiaccio, magica · vola | il drago rosso con le ali | il drago rosso con le ali | il drago rosso con le ali |
-| lupo | arciere, ghiaccio | il lupo grigio | il drago di lava senza ali | il lupo grigio |
+| arpia | bombe, ghiaccio · vola | il grifone | il pipistrello con un occhio solo | il tornado azzurro |
+| drago | bombe, magica · vola | il drago rosso con le ali | il drago rosso con le ali | il drago rosso con le ali |
+| lupo | arciere, ghiaccio | il lupo grigio | il lupo grigio | lo spirito del fulmine giallo |
 | corvo | bombe, ghiaccio · vola | il pipistrello con un occhio solo | il pipistrello viola | il pipistrello viola |
-| rovo | arciere, bombe | la pianta carnivora | l'ombra viola con gli occhi gialli | l'uomo albero |
-| verme | bombe · ✂️ | il serpente verde | la melma viola | il serpente verde |
-| blatta | bombe, magica | lo scorpione viola | lo scorpione viola | lo spirito del fulmine giallo |
-| troll | arciere, magica · 💫 | l'omone grigio con la clava | il mostro viola con la bocca grande | l'omone grigio con la clava |
-| corazziere | arciere, magica | la tartaruga corazzata | la tartaruga corazzata | la tartaruga corazzata |
-| balestriere | bombe | il diavoletto rosso | lo scheletro | lo scheletro con spada e scudo |
+| rovo | arciere, bombe | la pianta carnivora | la pianta carnivora | l'uomo albero |
+| verme | bombe · ✂️ | l'ombra viola con gli occhi gialli | l'ombra viola con gli occhi gialli | l'ombra viola con gli occhi gialli |
+| blatta | bombe, magica | il draghetto rosa con le ali | il draghetto rosa con le ali | il drago di lava senza ali |
+| troll | arciere, magica · 💫 | l'omone grigio con la clava | il sasso di magma con le corna di fuoco | il golem di pietra col muschio |
+| corazziere | arciere, magica | lo scheletro con spada e scudo | lo spirito di fuoco | la tartaruga corazzata |
+| balestriere | bombe | il serpente verde | il mostro viola con la bocca grande | il serpente verde |
 
   Il nome che il castello dà al mostro resta quello del gioco (è la
   chiave delle sue immunità, `data/mostri.js`; ✂️ si divide, 💫 si
@@ -71,13 +71,17 @@ di 4×4 px».
   nastro e sulla scheda è quello della figura («Grifone», «Golem di
   magma»: `NOMI` nel bestiario). Chi vola nel
   gioco prende una figura che vola, e `unita/castello-bestiario` lo
-  pretende. Il bestiario è stato scelto quando i mostri avevano una
-  resistenza sola, e dove si poteva si leggeva a occhio (il granchio col
-  carapace regge le frecce, il tornado le bombe); con le immunità
-  qualche figura dice il contrario del suo mostro — lo spirito di fuoco
-  «a cui la magia passa attraverso» fa il fantasma, che solo la magia
-  tocca; lo scheletro con lo scudo fa il balestriere della neve, che le
-  frecce le prende. Si sistema quando si ritocca il bestiario.
+  pretende. **La figura dice a quale torre è immune** — è quello che
+  serve al bambino per scegliere la torre, non chi è il mostro: il
+  carapace e le setole reggono le frecce, pietra e guscio anche la
+  magia, le melme e le ossa reggono la magia, i draghi le bombe e la
+  magia, l'ombra e i grovigli le bombe. Il vocabolario intero sta in
+  testa al bestiario, e una figura che fa due mostri in due vestiti li
+  fa con le stesse immunità (lo scorpione è il goblin del bosco e il
+  ragno della neve: niente frecce tutti e due). Rifatto il 27 settembre
+  coi profili a due immunità al massimo: prima lo spirito di fuoco
+  faceva il fantasma, lo scheletro con lo scudo il goblin e il
+  balestriere, e il verme che si divide era un serpente.
 
   **Il peso**: le quaranta creature col respiro sono 626 KB di WebP in
   `dati/figure.js` (864 KB col base64, 605 KB più di prima). È il
@@ -261,13 +265,15 @@ la creatura nel foglio allegato** (il generatore la deve trovare):
 |---|---|
 | A | la melma verde · lo scheletro con spada e scudo · il pipistrello viola · il fantasma verde acqua del secondo foglio · il ragno nero · il lupo grigio |
 | B | il golem di pietra bruna · l'omone grigio con la clava · lo scheletro senza armi · il drago rosso con le ali · il grifone · la pianta carnivora verde del primo foglio |
-| C | il serpente verde · lo scorpione viola · la tartaruga corazzata con le spine · il diavoletto rosso · lo zombie verde del primo foglio · il pipistrello viola con un occhio solo |
+| C | il serpente verde · lo scorpione viola · l'ombra viola con gli occhi gialli · il draghetto rosa con le ali · lo zombie verde del primo foglio · il pipistrello viola con un occhio solo |
 | D | il sasso di magma con le corna di fuoco · l'occhio volante rosso del primo foglio · lo spirito di fuoco · il granchio rosso · la bestia cornuta viola e arancio · il negromante col cappuccio viola |
-| E | il golem di lava rosso · il draghetto rosa con le ali · il drago di lava senza ali · l'ombra viola con gli occhi gialli · la melma viola · il mostro viola con la bocca grande |
+| E | il golem di lava rosso · il diavoletto rosso · la melma viola · il mostro viola con la bocca grande |
 | F | la melma rosa · la mummia · il fantasma azzurro del primo foglio · il cinghiale · il golem di pietra col muschio del secondo foglio · il teschio con la fiamma azzurra |
-| G | il golem di ghiaccio del primo foglio · il tornado azzurro · l'uomo albero · lo spirito del fulmine giallo |
+| G | il golem di ghiaccio del primo foglio · il tornado azzurro · l'uomo albero · lo spirito del fulmine giallo · il drago di lava senza ali · la tartaruga corazzata con le spine |
 
-A, B, C sono il bosco; D ed E la lava; F e G la neve. L'ordine delle
+A, B, C sono il bosco; D ed E la lava; F e G la neve — una creatura
+che sta in più vestiti è nel foglio del primo, prima il bosco e poi la
+lava, così coi soli A, B e C il bosco cammina tutto. L'ordine delle
 righe è quello di `CAMMINO` in `vesti.py`: **se il generatore ne
 scambia due, si scambiano lì**, non si rifà il foglio.
 
@@ -277,7 +283,7 @@ scambia due, si scambiano lì**, non si rifà il foglio.
 
 ```bash
 python3 strumenti/sprite/righe.py strumenti/sprite/sorgenti/sotterraneo/generati/mostri-cammino-A.png /tmp/a.png
-# deve dire «6 righe: 8 · 8 · 8 · 8 · 8 · 8 figure» (G: 4 righe)
+# deve dire «6 righe: 8 · 8 · 8 · 8 · 8 · 8 figure» (E: 4 righe)
 python3 strumenti/sprite/vesti.py --atlante
 python3 strumenti/sprite/vesti.py --creature /tmp/creature.png            # tutte, coi passi
 ```
