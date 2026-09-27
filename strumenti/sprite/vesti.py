@@ -984,15 +984,73 @@ def senza_erba(im):
     coda = [(x, y) for y in range(da, h) for x in range(w)
             if not px[x, y][3] and any(0 <= x + dx < w and da <= y + dy < h and erba(px[x + dx, y + dy])
                                        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))]
-    via = 0
+    tolti = {}
     while coda:
         x, y = coda.pop()
         for p, q in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
             if 0 <= p < w and da <= q < h and erba(px[p, q]):
+                tolti[(p, q)] = px[p, q]
                 px[p, q] = (0, 0, 0, 0)
-                via += 1
                 coda.append((p, q))
-    return via
+    # ── la porta del veleno ──
+    # Il portoncino verde del calderone tocca il disco senza un contorno
+    # scuro in mezzo, e il riempimento ci entrava: la torre restava con la
+    # porta bucata, e da lì si vedeva il prato. Il colore non basta a
+    # separarli (i verdi scuri sono gli stessi), la forma sì: un verde tolto
+    # che ha la pietra della torre a sinistra E a destra sulla stessa riga
+    # sta dentro la torre, e torna. Il disco sta fuori dai suoi fianchi.
+    pietra = lambda c: c[3] and not erba(c)
+    for y in range(da, h):
+        riga = [x for x in range(w) if pietra(px[x, y])]
+        if not riga:
+            continue
+        sx, dx = min(riga), max(riga)
+        for x in range(sx + 1, dx):
+            if (x, y) in tolti:
+                px[x, y] = tolti.pop((x, y))
+    return len(tolti)
+
+
+def chiudi_i_buchi(im, soglia=128):
+    """Rende pieno quello che dal bordo del ritaglio non si raggiunge
+    passando per il trasparente: i buchi **dentro** la figura. Il veleno del
+    foglio delle torri ha il liquido del calderone e il portoncino verdi
+    mezzo trasparenti (alfa da 0 a 224), e sul campo ci si vedeva il prato
+    attraverso. Si dichiara cella per cella (`chiudi` nel foglietto), perché
+    gli aloni morbidi della brina e del napalm devono restare morbidi."""
+    px = im.load()
+    w, h = im.size
+    fuori = set()
+    coda = [(x, y) for x in range(w) for y in (0, h - 1)] + [(x, y) for y in range(h) for x in (0, w - 1)]
+    coda = [q for q in coda if px[q][3] < soglia]
+    fuori.update(coda)
+    while coda:
+        x, y = coda.pop()
+        for q in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            if 0 <= q[0] < w and 0 <= q[1] < h and q not in fuori and px[q][3] < soglia:
+                fuori.add(q)
+                coda.append(q)
+    # dove il foglio era trasparente il colore sotto è quasi nero: il buco
+    # si riempie col colore dei vicini pieni, un giro dopo l'altro dall'orlo
+    # verso dentro, come una macchia d'acqua che si allarga
+    buco = {(x, y) for y in range(h) for x in range(w) if (x, y) not in fuori and px[x, y][3] < soglia}
+    for y in range(h):
+        for x in range(w):
+            if (x, y) not in fuori and (x, y) not in buco and px[x, y][3] < 255:
+                r, g, b, _ = px[x, y]
+                px[x, y] = (r, g, b, 255)
+    while buco:
+        giro = {}
+        for x, y in buco:
+            vicini = [px[q] for q in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1))
+                      if 0 <= q[0] < w and 0 <= q[1] < h and q not in buco and px[q][3] == 255]
+            if vicini:
+                giro[(x, y)] = tuple(sum(c[i] for c in vicini) // len(vicini) for i in range(3)) + (255,)
+        if not giro:
+            break
+        for q, c in giro.items():
+            px[q] = c
+            buco.discard(q)
 
 
 def figure_della_griglia(im, col, rig, soglia=24):
@@ -1053,6 +1111,8 @@ def torri_dal_foglio(png=TORRI_NUOVE):
             pz.putalpha(pz.getchannel('A').point(lambda v, s=fg['pieno']: 255 if v >= s else v))
         if fg.get('erba'):
             senza_erba(pz)
+        if [r, c] in fg.get('chiudi', []):
+            chiudi_i_buchi(pz)
         tieni = pz.getchannel('A').point(lambda v: 255 if v >= 24 else 0).getbbox()
         tagli[(r, c)] = pz.crop(tieni)
     fuori = {}
