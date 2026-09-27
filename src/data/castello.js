@@ -585,6 +585,16 @@ export const primeQuante = tappa => Math.max(2, ingressiDi(tappa))
    Non è il giocatore migliore possibile, ed è apposta: è un bambino
    diligente che legge chi arriva, non uno che ottimizza. La tappa è
    tarata su di lui. */
+/* Quante ondate di una libera sono tarate: le prime venti, come una
+   tappa. Lo legge `insiemeDa`, e da lì il motore e il giocatore
+   modello: la regola «da quando le ondate arrivano da tutte le bocche»
+   dipende da quante ondate ha la tappa, e una libera ne ha infinite —
+   la taratura la gioca a venti, e il gioco deve giocarla come la
+   taratura, se no il sotterraneo tarato con le bocche insieme dalla
+   nona le trovava dalla sesta e cedeva lì (misurato: persa all'ondata 6
+   senza un regalo). */
+export const ONDATE_TARATE = 20
+
 /* ── da che bocca arriva l'ondata `o` ──
    Con una strada sola non c'è niente da decidere. Con due, si
    alternano: la prima da una parte, la seconda dall'altra, e ogni terza
@@ -597,6 +607,22 @@ export function boccaDellOnda(o, vie, daQuandoInsieme = Infinity) {
   if (vie < 2) return 0
   if (o % 3 === 0 && o >= daQuandoInsieme) return -1
   return Math.floor((o - 1 - Math.floor((o - 1) / 3)) % vie)
+}
+
+/* ── da quale ondata arrivano da tutte le bocche insieme ──
+   Non dalla terza: si comincia a un terzo della tappa, e mai prima
+   della quinta ondata (il perché sta in `Ondate.daQuandoInsieme`, che
+   chiede questo numero qui). Una partita libera non ha un numero di
+   ondate e si conta come se ne avesse `ONDATE_TARATE`, così il gioco e
+   la taratura giocano la stessa partita. Sta qui perché lo deve sapere
+   anche il giocatore modello: la fila delle torri lo contava sempre
+   dalla quinta, e nelle libere — che mettono insieme le bocche dalla
+   nona — comprava per la sesta una torre sulla strada sbagliata. Una
+   tappa che non sa ancora quante ondate ha (mentre `ondateDi` la sta
+   contando) resta alla quinta: le tappe sono tutte sotto le quindici. */
+export function insiemeDa(ondate) {
+  if (!ondate) return 5
+  return Math.max(5, Math.ceil(Math.min(ondate, ONDATE_TARATE) / 3))
 }
 
 /* tutte le file di `n` torri prese da `lista` (anche ripetute) */
@@ -665,7 +691,7 @@ export function sequenzaTorri(tappa, quante = 32) {
   if (sparano.length)
     for (let o = 1; o <= fila.length * vie * 2 && scelte.length < quante; o++) {
       const m = fila[(o - 1) % fila.length]
-      const bocca = boccaDellOnda(o, vie, 5)
+      const bocca = boccaDellOnda(o, vie, insiemeDa(tappa.ondate))
       for (let v = 0; v < vie; v++) {
         if (bocca >= 0 && v !== bocca) continue
         if (scelte.some((k, j) => strade[j] === v && feritoDa(m, k))) continue
@@ -1396,27 +1422,42 @@ function mostriDi(campagna) {
   return primo > 0 ? [...fila.slice(primo), ...fila.slice(0, primo)] : fila
 }
 
-/* Quante ondate di una libera sono tarate: le prime venti, come una
-   tappa. Lo legge anche il motore (`Ondate.daQuandoInsieme`): la regola
-   «da quando le ondate arrivano da tutte le bocche» dipende da quante
-   ondate ha la tappa, e una libera ne ha infinite — la taratura la
-   gioca a venti, e il gioco deve giocarla come la taratura, se no il
-   sotterraneo tarato con le bocche insieme dalla nona le trovava dalla
-   sesta e cedeva lì (misurato: persa all'ondata 6 senza un regalo). */
-export const ONDATE_TARATE = 20
-
 /* ── una fila che regga l'apertura ──
    Il giro delle immunità lo fa `mostriDi`, ma con due bocche non basta:
    le prime quattro ondate le devono ferire le due torri di apertura,
    ognuna dalla sua parte (`coperturaApertura`). Si prova a far girare la
    fila, e se non basta a scambiare la terza e la quarta con una più
-   avanti, finché le regole di `guastiDelleImmunita` e la copertura
-   tornano tutte e due. Se niente torna si tiene la fila com'era, e il
-   validatore lo dice col nome. */
+   avanti, finché le regole di `guastiDelleImmunita`, la copertura e i
+   capi (qui sotto) tornano tutte e tre. Se niente torna si tiene la
+   fila com'era, e il validatore lo dice col nome.
+
+   ── i capi ──
+   Nella libera il capo arriva ogni `CAPO.ogni` ondate, ed è il mostro
+   che la fila mette in quel punto: un'ondata intera in un corpo solo.
+   Se lo ferisce **una torre sola**, tutta l'ondata dipende da quella
+   torre, al livello che ha a quel punto e dalla parte dove sta — e alla
+   decima ondata la difesa è ancora giovane. È successo nel Delta
+   quando il drago ha perso l'immunità al gelo: la sua firma è diventata
+   quella della blatta, la fila si è ridisposta e il drago è finito in
+   terza posizione, cioè capo della decima ondata. Solo le frecce lo
+   toccano, e l'arciere dalla sua parte era ancora al primo gradino:
+   passava con qualunque vita, la taratura toccava il pavimento e la
+   libera cedeva lì. Quindi i capi delle ondate tarate devono poterli
+   ferire almeno due torri: è una regola delle libere, perché nella
+   campagna il capo chiude la tappa, quando la difesa è finita. */
+export function capiAperti(tappa) {
+  const sparano = tappa.torri.filter(k => TORRI[k].danno)
+  for (let o = CAPO.ogni; o <= ONDATE_TARATE; o += CAPO.ogni) {
+    const m = mostroDiOnda(tappa.mostri, o)
+    if (sparano.filter(k => feritoDa(m, k)).length < 2) return false
+  }
+  return true
+}
 function filaCheRegge(tappa) {
   const va = fila => {
     const t = { ...tappa, mostri: fila }
-    return !guastiDelleImmunita(t).length && coperturaApertura(t) >= APERTURA_COPRE
+    return !guastiDelleImmunita(t).length && coperturaApertura(t) >= APERTURA_COPRE &&
+           capiAperti(t)
   }
   const base = tappa.mostri
   const n = base.length

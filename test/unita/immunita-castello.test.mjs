@@ -21,9 +21,9 @@
    il validatore le dice, qui si contano.
    ═══════════════════════════════════════════════════════════════════ */
 import { TAPPE, LIBERE, CFG, MONDO, premioDellaFretta, coperturaApertura, APERTURA_COPRE,
-         nemiciDiOnda } from '../../src/data/castello.js'
-import { MOSTRI, ABILITA, CAPO, immuniDi, feritoDa, guastiDelleImmunita, vitaEffettiva }
-  from '../../src/data/mostri.js'
+         nemiciDiOnda, capiAperti } from '../../src/data/castello.js'
+import { MOSTRI, ABILITA, CAPO, IMMUNITA_MAX, immuniDi, feritoDa, gelabile, guastiDelleImmunita,
+         vitaEffettiva } from '../../src/data/mostri.js'
 import { TORRI } from '../../src/data/ops.js'
 import { creaBattaglia } from '../../src/motore/battaglia.js'
 import { Nemico } from '../../src/motore/castello/nemico.js'
@@ -69,10 +69,31 @@ for (const t of [...TAPPE, ...LIBERE]) {
             coperturaApertura(t) >= Math.min(APERTURA_COPRE, t.mostri.length * 2),
             `ne copre ${coperturaApertura(t)}`)
 }
-/* e il profilo di ogni mostro: almeno una torre che ferisce lo tocca */
-for (const [id, m] of Object.entries(MOSTRI))
+/* nelle libere il capo arriva ogni dieci ondate, ed è chi la fila mette
+   lì: almeno due torri lo devono ferire (vedi `capiAperti`) */
+for (const l of LIBERE)
+  controlla(`${l.nome}: i capi delle ondate tarate li feriscono almeno due torri`, capiAperti(l),
+            l.mostri.join(' '))
+/* e il profilo di ogni mostro: almeno una torre che ferisce lo tocca, e
+   al massimo due che non lo toccano — con tre, fra le quattro torri una
+   è il ghiaccio, e il mostro aveva una risposta sola e non si frenava */
+for (const [id, m] of Object.entries(MOSTRI)) {
   controlla(`${m.nome}: c'è almeno una torre che lo ferisce`,
             Object.keys(TORRI).some(k => feritoDa(id, k)), immuniDi(id).join())
+  controlla(`${m.nome}: è immune al massimo a ${IMMUNITA_MAX} torri`,
+            m.immune.length <= IMMUNITA_MAX && immuniDi(id).length <= IMMUNITA_MAX, m.immune.join())
+  if (m.vola) controlla(`${m.nome}: vola, quindi le bombe non lo toccano`, m.immune.includes('bombe'))
+}
+/* i volanti non sono tutti uguali: la seconda immunità cambia con la
+   bestia. Il fantasma e il drago, che ne avevano tre, adesso gelano */
+{
+  const volanti = Object.entries(MOSTRI).filter(([, m]) => m.vola)
+  controlla('i volanti non hanno tutti le stesse immunità',
+            new Set(volanti.map(([, m]) => [...m.immune].sort().join())).size > 1)
+  uguale('il fantasma: niente bombe, niente frecce', immuniDi('fantasma').sort().join(), [ARCIERE, BOMBE].sort().join())
+  uguale('il drago: niente bombe, niente magia', immuniDi('drago').sort().join(), [MAGICA, BOMBE].sort().join())
+  controlla('e tutti e due il gelo lo sentono', gelabile('fantasma') && gelabile('drago'))
+}
 nota('immunità: ' + Object.entries(MOSTRI).map(([id, m]) =>
   `${m.nome} ${immuniDi(id).map(k => TORRI[k].emoji).join('')}`).join(' · '))
 

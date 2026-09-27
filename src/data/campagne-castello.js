@@ -461,13 +461,14 @@ export const CAMPAGNE = [
         mostri: ['pipistrello', 'ragno', 'slime', 'goblin'], forma: BOSCO_RADURA },
       { nome: 'Il folto', emoji: '🌳', ambiente: 'bosco-fitto', calcoli: 10, cap: 6,
         torri: ['add', 'sub', 'mul'],
-        /* 💣❄️ · 🔮 · 🏹 · 🏹💣❄️ — entra il ghiaccio, e i due che volano
-           gli passano sopra: è la prima cosa che si impara di lui */
+        /* 💣❄️ · 🔮 · 🏹 · 🏹💣 — entra il ghiaccio, e il pipistrello gli
+           passa sopra mentre il fantasma no: è la prima cosa che si
+           impara di lui, che il gelo non lo dice il volo ma la bestia */
         mostri: ['pipistrello', 'slime', 'goblin', 'fantasma'], forma: BOSCO_FOLTO },
       { nome: 'La radice', emoji: '🪵', ambiente: 'bosco-notte', calcoli: 12, cap: 7,
         // niente rami: il bosco insegna a salire, non ancora a scegliere
         torri: ['add', 'sub', 'mul', 'div'], capo: true,
-        /* 💣❄️ · 🏹 · 🔮❄️ · 🏹💣❄️ · 🏹🔮 · 🏹 — arrivano le bombe, e con
+        /* 💣❄️ · 🏹 · 🔮❄️ · 🏹💣 · 🏹🔮 · 🏹 — arrivano le bombe, e con
            loro il golem, che senza di loro non si apre. E in fondo il
            primo capo. */
         mostri: ['arpia', 'ragno', 'scheletro', 'fantasma', 'golem', 'orco'],
@@ -498,12 +499,12 @@ export const CAMPAGNE = [
         mostri: ['blatta', 'ragno', 'slime', 'verme'], forme: SOTTO_FOGNE },
       { nome: 'La cripta', emoji: '⚰️', ambiente: 'cripta', calcoli: 16, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
-        // 💣❄️ · 🏹💣❄️ · 🔮❄️ · 🏹🔮 · 💣❄️ · 🏹
+        // 💣❄️ · 🏹💣 · 🔮❄️ · 🏹🔮 · 💣❄️ · 🏹
         mostri: ['pipistrello', 'fantasma', 'scheletro', 'golem', 'arpia', 'orco'],
         forma: SOTTO_CRIPTA },
       { nome: 'La gola', emoji: '⛰️', ambiente: 'gola', calcoli: 19, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, capo: true,
-        // 🔮❄️ · 🏹🔮 · 🏹 · 💣❄️ · 🏹💣❄️ · 🏹
+        // 🔮❄️ · 🏹🔮 · 🏹 · 💣❄️ · 🏹💣 · 🏹
         mostri: ['scheletro', 'golem', 'orco', 'arpia', 'fantasma', 'ragno'],
         forma: SOTTO_GOLA },
     ],
@@ -521,23 +522,28 @@ export const CAMPAGNE = [
         mostri: ['arpia', 'golem', 'orco'], forma: MURA_CORTILE },
       { nome: 'Il camminamento', emoji: '🧱', ambiente: 'camminamento', calcoli: 18, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
-        /* 💣❄️ · 🏹🔮 · 💣❄️ · 🏹💣❄️ — sopra le mura volano, e le bombe
-           e il gelo non li toccano; ma di ronda passa il corazziere, che
-           senza bombe non si apre */
-        mostri: ['arpia', 'corazziere', 'pipistrello', 'fantasma'], forma: MURA_CAMMINAMENTO },
+        /* 💣❄️ · 🏹💣 · 💣❄️ · 🏹🔮 — sopra le mura volano, e le bombe
+           non li toccano; ma di ronda passa il corazziere, che senza
+           bombe non si apre. Il fantasma sta dietro l'arpia e non dietro
+           il pipistrello: da quando il gelo lo prende, in quarta e in
+           ottava ondata la sua sorte dipendeva da un soffio — da come
+           uscivano dalla bocca — e la taratura non ci trovava un limite
+           che reggesse (rigiocata da capo cedeva a metà della vita che
+           aveva misurato) */
+        mostri: ['arpia', 'fantasma', 'pipistrello', 'corazziere'], forma: MURA_CAMMINAMENTO },
       { nome: 'Il corridoio', emoji: '🗝️', ambiente: 'corridoio', calcoli: 22, cap: 9,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
-        // 💣❄️ · 🔮 · 🔮❄️ · 💣❄️ · 🏹 · 🏹💣❄️
+        // 💣❄️ · 🔮 · 🔮❄️ · 💣❄️ · 🏹 · 🏹💣
         mostri: ['pipistrello', 'slime', 'scheletro', 'arpia', 'orco', 'fantasma'],
         forma: MURA_CORRIDOIO },
       { nome: 'La sala del trono', emoji: '👑', ambiente: 'trono', calcoli: 26, cap: 10,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
-        // 💣❄️ · 🏹🔮 · 🏹 · 🏹💣❄️ · 💣❄️ · 🔮💣❄️ — il drago chiude ogni giro
+        // 💣❄️ · 🏹🔮 · 🏹 · 🏹💣 · 💣❄️ · 🔮💣 — il drago chiude ogni giro
         mostri: ['arpia', 'golem', 'orco', 'fantasma', 'pipistrello', 'drago'],
         forma: MURA_TRONO },
       { nome: 'Il torrione', emoji: '🏰', ambiente: 'bastione', calcoli: 30, cap: 10,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, capo: true,
-        // 💣❄️ · 🏹🔮 · 🏹 · 🏹💣❄️ · 🏹 · 🔮💣❄️ — sei bestie sul tracciato più corto
+        // 💣❄️ · 🏹🔮 · 🏹 · 🏹💣 · 🏹 · 🔮💣 — sei bestie sul tracciato più corto
         mostri: ['arpia', 'golem', 'ragno', 'fantasma', 'orco', 'drago'],
         forme: MURA_TORRIONE },
     ],
@@ -568,7 +574,7 @@ export const CAMPAGNE = [
         mostri: ['blatta', 'troll', 'verme', 'corvo', 'rovo', 'lupo'], forme: PALUDE_PANTANO },
       { nome: 'La foce', emoji: '🌊', ambiente: 'palude-torce', calcoli: 24, cap: 10,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, capo: true,
-        // 🔮💣❄️ · 🏹🔮 · 🔮💣 · 💣 · 🏹❄️ · 💣❄️ — il drago apre, e il capo chiude
+        // 🔮💣 · 🏹🔮 · 🔮💣 · 💣 · 🏹❄️ · 💣❄️ — il drago apre, e il capo chiude
         mostri: ['drago', 'troll', 'blatta', 'verme', 'lupo', 'corvo'], fronti: 1.6, forme: PALUDE_FOCE },
     ],
   },

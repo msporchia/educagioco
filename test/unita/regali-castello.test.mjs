@@ -162,14 +162,22 @@ function partita(tappa, regali, { ondate = 8, s = 7 } = {}) {
   const stato = { cuori: 0, onda: 0, uccisi: 0, torri: 0, energia: 0 }
   const b = creaBattaglia({ tappa, misure: { ...MONDO }, stato, caso: seme(s), regali })
   b.inizia()
-  /* due torri e via: il resto lo fa il tempo. Non si compra niente, così
+  /* le torri e via: il resto lo fa il tempo. Non si compra niente, così
      la partita è la stessa in tutte le prove e l'unica differenza sono i
-     regali. Le due torri sono quelle con cui apre il giocatore modello
-     (`sequenzaTorri`): con le immunità, due torri a caso possono non
-     toccare metà delle ondate, e un regalo sul danno non si vedrebbe */
-  const [prima, seconda] = sequenzaTorri(tappa, 2)
-  b.costruisci(prima || 'add', { prezzo: 0 })
-  b.costruisci(seconda || prima || 'add', { prezzo: 0 })
+     regali. Le torri sono quelle che il giocatore modello compra per
+     prime (`sequenzaTorri`, le `urgenti`), ognuna sulla sua strada: con
+     le immunità, due torri a caso possono non toccare metà delle ondate,
+     e un regalo sul danno non si vedrebbe. Erano le due dell'apertura,
+     e bastavano finché nel Delta la sesta ondata non è diventata un
+     troll che scende dalla parte dove le due non lo toccano: passava
+     intero, la partita finiva lì con o senza regali, e il conto dei
+     fermati era lo stesso. `ondate` è quanto dura, in minuti */
+  const fila = sequenzaTorri(tappa)
+  const quante = Math.max(2, fila.urgenti ? fila.urgenti.size : 0)
+  for (let j = 0; j < quante; j++) {
+    const posto = b.liberi().find(i => (b.postazioni[i].via || 0) === (fila.strade?.[j] || 0))
+    b.costruisci(fila[j] || 'add', { prezzo: 0, posto: posto ?? null })
+  }
   let t = 0, regalati = 0
   while (t < 60 * ondate && !b.finito) {
     if (b.regaliDaScegliere > 0) { b.prendiRegalo('frecce'); regalati++ }
@@ -196,14 +204,17 @@ controlla('e le quattro partite libere li prevedono tutte',
 
 /* ── 3b. in ogni libera, zero regali è il gioco di ieri ── */
 for (const l of LIBERE) {
-  const senza = partita(l, null), zero = partita(l, {})
+  /* sedici minuti e non otto: con le torri che coprono tutta la fila,
+     nei primi otto nel Delta e nel Bivio cadono tutti comunque, con o
+     senza regali, e il conto dei fermati non si muove */
+  const lunga = { ondate: 16 }
+  const senza = partita(l, null, lunga), zero = partita(l, {}, lunga)
   stessaLista(`${l.nome}: zero regali gioca come nessun regalo`,
               [senza.uccisi, senza.cuori], [zero.uccisi, zero.cuori])
   /* dieci gradi su tutti e tre i danni, e non solo sulle frecce: con le
      immunità metà delle ondate l'arciere non le tocca, e un regalo
-     sulle frecce da solo, in otto ondate con due torri, può non
-     cambiare di un nemico chi cade */
-  const con = partita(l, { frecce: 10, incanto: 10, polvere: 10 })
+     sulle frecce da solo può non cambiare di un nemico chi cade */
+  const con = partita(l, { frecce: 10, incanto: 10, polvere: 10 }, lunga)
   controlla(`${l.nome}: e con dieci gradi sui danni si ferma più gente`,
             con.uccisi > senza.uccisi, `${senza.uccisi} → ${con.uccisi} nemici fermati`)
 }

@@ -16,7 +16,7 @@
    il preavviso era una cosa da leggere per curiosità.
 
    Adesso un mostro dichiara le torri che **non lo toccano affatto**
-   (`immune`): zero danno, e per il ghiaccio niente gelo. Una o più, e
+   (`immune`): zero danno, e per il ghiaccio niente gelo. Una o due, e
    ognuno ha il suo profilo. È una regola che cambia la mossa: un'ondata
    di volanti passa sopra le bombe come se non ci fossero, un'ondata di
    corazzati si fa grattare dalle frecce e basta — e nessuna torre, da
@@ -27,8 +27,14 @@
    regole, e un bambino che le ha capite indovina l'immunità di un
    mostro che non ha mai visto.
 
-     🪽 **chi vola** passa sopra le bombe — scoppiano per terra — e sopra
-        il gelo, che si posa sul sentiero. Tutti e cinque.
+     🪽 **chi vola** passa sopra le bombe — scoppiano per terra. Tutti e
+        cinque, ed è la regola che non cambia. La seconda immunità la
+        dice la bestia: chi ha le ali (pipistrello, arpia, corvo) passa
+        sopra anche il gelo, che si posa sul sentiero; il fantasma il
+        gelo lo sente — è nebbia, e la nebbia col freddo si fa brina —
+        ma le frecce gli passano attraverso; il drago vola basso, col
+        suo peso, e il gelo gli arriva alle ali, ma la magia dei draghi
+        è più vecchia di quella delle torri.
      🛡 **chi è corazzato** (pietra, piastre, pelle di sasso) si fa
         rimbalzare addosso le frecce e la magia: lo apre solo lo
         scoppio, e il gelo lo frena come frena tutti.
@@ -36,6 +42,15 @@
         scudo) e la manca chi è troppo svelto o non ha un corpo;
      🔮 **la magia** cerca una mente su cui fare presa: non la trova in
         una gelatina, in una blatta, in una testa vuota.
+
+   ── al massimo due ──
+   Nessun mostro è immune a più di due torri (`IMMUNITA_MAX`, e lo conta
+   `unita/immunita-castello`). Il fantasma e il drago ne avevano tre, e
+   tre su quattro — con una delle quattro, il ghiaccio, che il danno non
+   lo fa comunque — voleva dire un mostro che aveva **una risposta
+   sola** e in più non si poteva nemmeno frenare: non una scelta, un
+   indovinello con una soluzione. Con due il gelo torna a prenderli, e
+   la torre che manca si compensa tenendoli più a lungo sotto le altre.
 
    Il vincolo che rende giusta la cosa lo controllano
    `strumenti/valida-percorsi.mjs` e `unita/castello`: in ogni tappa
@@ -71,9 +86,10 @@ export const MOSTRI = {
   goblin:     { nome: 'Goblin',     immune: ['arciere'] },
   // 🪽 vola: sopra le bombe e sopra il gelo
   pipistrello:{ nome: 'Pipistrello', vola: true, immune: ['bombe', 'ghiaccio'] },
-  /* 🪽 vola, e le frecce lo attraversano come lui attraversa i muri: lo
-     prende solo la magia, che è la stessa roba di cui è fatto */
-  fantasma:   { nome: 'Fantasma',   vola: true, immune: ['bombe', 'ghiaccio', 'arciere'] },
+  /* 🪽 vola, e le frecce lo attraversano come lui attraversa i muri: dei
+     colpi lo prende solo la magia, che è la stessa roba di cui è fatto.
+     Il gelo sì — è nebbia, e col freddo si fa brina */
+  fantasma:   { nome: 'Fantasma',   vola: true, immune: ['bombe', 'arciere'] },
   // 🏹 carapace e otto zampe: la freccia rimbalza o ci passa in mezzo
   ragno:      { nome: 'Ragno',      immune: ['arciere'] },
   // 🏹 cuoio e grasso: la freccia si pianta e lui nemmeno se ne accorge
@@ -86,8 +102,9 @@ export const MOSTRI = {
   // 🪽 vola alta e vira
   arpia:      { nome: 'Arpia',      vola: true, immune: ['bombe', 'ghiaccio'] },
   /* 🪽 due ali e mezza tonnellata, e la magia dei draghi è più vecchia di
-     quella delle torri: lo abbattono solo le frecce */
-  drago:      { nome: 'Drago',      vola: true, immune: ['bombe', 'ghiaccio', 'magica'] },
+     quella delle torri: lo abbattono solo le frecce. Ma vola basso, col
+     suo peso, e il gelo gli arriva alle ali */
+  drago:      { nome: 'Drago',      vola: true, immune: ['bombe', 'magica'] },
 
   /* le otto bestie nuove, disegnate in `grafica/mostri/` */
   // 🏹❄️ corre a zig-zag, e con quella pelliccia il freddo non lo ferma
@@ -112,6 +129,10 @@ export const MOSTRI = {
 }
 
 export const ELENCO = Object.keys(MOSTRI)
+
+/* quante torri, al massimo, possono non toccare un mostro (vedi «al
+   massimo due» in testa) */
+export const IMMUNITA_MAX = 2
 
 /* ── dall'aspetto alla torre ──
    L'unico punto in cui i due mondi si toccano: «bombe» diventa la

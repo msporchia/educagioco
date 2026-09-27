@@ -18,7 +18,7 @@
    `prossime()` è quello che l'interfaccia mette in un nastro, ed è il
    solo motivo per cui il motore espone il futuro invece del presente.
    ═══════════════════════════════════════════════════════════════════ */
-import { nemiciDiOnda, intervalloDiOnda, vitaNemico, velocitaNemico, ONDATE_TARATE,
+import { nemiciDiOnda, intervalloDiOnda, vitaNemico, velocitaNemico, insiemeDa,
          boccaDellOnda } from '../../data/castello.js'
 import { MOSTRI, CAPO, ABILITA, mostroDiOnda, mostroLibero, immuniDi } from '../../data/mostri.js'
 
@@ -124,9 +124,7 @@ export class Ondate {
      scritto a mano, e la taratura — che gioca la libera a venti ondate
      — le metteva insieme dalla nona: il bivio tarato così cedeva in
      gioco alla sesta. */
-  get daQuandoInsieme() {
-    return Math.max(5, Math.ceil(Math.min(this.quante, ONDATE_TARATE) / 3))
-  }
+  get daQuandoInsieme() { return insiemeDa(this.quante) }
 
   /* ── il preavviso ──
      Le ondate che arrivano dopo la `dopo`-esima, al massimo `quante`.
