@@ -1,17 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   ARCHIVIO A TRE LIVELLI — non lancia mai eccezioni.
-
-   1. IndexedDB   → capiente, asincrono, sopravvive alla pulizia "cookie"
-                    su molti browser. È l'archivio buono.
-   2. localStorage→ ripiego se IndexedDB manca o è bloccato.
-   3. memoria     → ultimo ripiego. Dentro un'anteprima in iframe sandbox
-                    il solo TOCCARE localStorage solleva SecurityError: con
-                    l'accesso diretto l'eccezione interrompeva il caricamento
-                    del profilo e il gioco partiva senza dati.
-
-   Ogni scrittura è ritardata di qualche centinaio di ms e accorpata, così
-   rispondere a una domanda non costa un accesso al disco.
-   ═══════════════════════════════════════════════════════════════════ */
+// Archivio a tre livelli (IndexedDB -> localStorage -> memoria), non lancia
+// mai eccezioni: vedi docs/core/archivio.md.
 
 const DB_NAME = 'giochi-bambini', STORE = 'kv', VERSION = 1;
 const mem = new Map();
@@ -109,17 +97,9 @@ export async function remove(key) {
   try { localStorage.removeItem(key) } catch (e) { /* ignora */ }
 }
 
-/* Quali chiavi ci sono, fra tutte quelle che cominciano per `prefisso`.
-   Serve a ricostruire l'elenco dei giocatori da `profilo:*` invece di
-   cercare un nome scritto nel codice — che è la ragione per cui questo
-   repo può diventare pubblico senza portarsi dietro i nomi dei bambini.
-
-   Guarda tutti e tre i livelli e li unisce, perché non è detto che
-   raccontino la stessa storia: se IndexedDB è stato lento all'avvio si
-   è scritto su localStorage, e un profilo che sta solo lì è comunque un
-   profilo che esiste. Meglio un giocatore di troppo nell'elenco che uno
-   in meno: quello di troppo si vede e si cancella, quello mancante
-   sembra sparito. */
+// unisce tutti e tre i livelli: possono non raccontare la stessa storia
+// (IndexedDB lento all'avvio -> scritto su localStorage), e un giocatore
+// di troppo si cancella, uno mancante sembra sparito
 export async function chiavi(prefisso = '') {
   const viste = new Set();
   const daIdb = await idbRun('readonly', s => s.getAllKeys());
