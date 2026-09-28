@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    L'ELENCO DELLE CLASSI, ORDINATE PER LIVELLO
 
-       npm run quiz:livelli          riscrive docs/livelli-delle-domande.md
+       npm run quiz:livelli          riscrive docs/apprendimento/livelli-delle-domande.md
 
    Una classe è una terna **modulo · grado · tipologia**: è l'unità con
    cui `nucleo/classi.js` pesca, e quindi l'unica cosa che decide se una
@@ -23,7 +23,7 @@ import { anniDelLivello } from '../../src/quiz/nucleo/classi.js'
 
 const QUI = dirname(fileURLToPath(import.meta.url))
 const CARTELLA = resolve(QUI, '../../src/quiz/moduli')
-const FUORI = resolve(QUI, '../../docs/livelli-delle-domande.md')
+const FUORI = resolve(QUI, '../../docs/apprendimento/livelli-delle-domande.md')
 
 /* I moduli si leggono dalla cartella, non dal registro: `registro.js`
    li raccoglie con `import.meta.glob`, che è di Vite e in Node puro
@@ -96,4 +96,4 @@ righe.push('', '---', '',
   `Totale: ${classi.length} classi su ${MODULI.length} moduli.`, '')
 
 writeFileSync(FUORI, righe.join('\n'))
-console.log(`${classi.length} classi da ${MODULI.length} moduli → docs/livelli-delle-domande.md`)
+console.log(`${classi.length} classi da ${MODULI.length} moduli → docs/apprendimento/livelli-delle-domande.md`)
