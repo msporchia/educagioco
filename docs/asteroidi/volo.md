@@ -30,6 +30,14 @@ cose (`difficolta`, `ritmo`):
   livello non deve diventarne il muro. Nel volo l'unica cosa è durare.
 - **Il sasso giusto è in scena entro tre secondi** (`rispostaEntro`) e,
   anche al pavimento, resta da toccare per almeno due.
+- **Il cronometro della risposta parte quando il sasso giusto è tutto
+  dentro lo schermo** (`prontaIl` in `src/views/MathGame.vue`), non
+  quando compare la domanda o nasce il sasso: contando da prima, l'attesa
+  della caduta finirebbe nell'SRS come esitazione sul calcolo. Per questo
+  il sasso giusto (mai quello sbagliato) nasce sfalsato in modo da essere
+  tutto in scena entro `rispostaEntro`; quando nemmeno partire attaccato
+  al bordo basta (boss grosso, schermo piccolo, ultima vita) nasce già
+  affacciato invece che accelerare.
 - Il peso del calcolo, il boss (`bossLento` 1,45), la domanda difficile
   (`difficileLento` 1,25) e l'ultima vita (`EMERGENZA`: ×1,25, cioè un
   quarto più lenti) allungano moltiplicando sopra.

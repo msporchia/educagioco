@@ -1,53 +1,15 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL CALCOLO A MENTE — il catalogo dei concetti.
-
-   Le tabelline sono 55 fatti: si contano, si imparano, finiscono. Il
-   calcolo a mente no — 27+38 e 68+75 non sono due cose da mandare a
-   memoria, sono la stessa strategia («arrivo prima alla decina») su due
-   numeri diversi. Per questo qui l'elemento che il motore segue non è
-   sempre il calcolo: sono DUE cose, tenute separate apposta.
-
-     · i FATTI, dove i casi sono pochi e vanno saputi a memoria come le
-       tabelline: somme e sottrazioni entro il venti, gli amici del dieci,
-       i doppi. Chiave per fatto — `calc:8+5`, `calc:13-7`.
-     · i CONCETTI, dove i casi sono infiniti: la chiave è la strategia
-       — `calc:somma-riporto` — e ogni domanda è un'istanza generata al
-       momento. La forza dice quanto è consolidata la strategia, non
-       quante volte è uscito quel numero.
-
-   Si distinguono dalla chiave e basta: dopo `calc:` un fatto comincia
-   con una cifra, un concetto con una lettera. Così il motore, l'albo e i
-   traguardi continuano a vedere una materia sola senza saperne niente.
-
-   TRE ASSI DI DIFFICOLTÀ invece di uno. Le scalette del castello
-   (`data/ops.js`) sono dieci gradini fissi: qui la difficoltà si muove
-   su quale concetto è aperto (i prerequisiti), quanto è consolidato (la
-   forza), e quanto sono grandi i numeri dentro lo stesso concetto (la
-   TAGLIA, 0..1, che il gestore ricava dalla forza). Un concetto non ha
-   un ultimo esercizio: `somma-riporto` a taglia 0 propone 27+38, a
-   taglia 1 propone 68+75.
-
-   LA DRITTA è la strategia detta a parole, come il trucco dei pianeti in
-   `data/tabelline.js`. È la ragione per cui questo è un gioco che
-   insegna e non un quiz: «arriva prima alla decina» vale più di cento
-   ripetizioni di 8+5.
-
-   I DISTRATTORI NON SONO RUMORE. Si risponde toccando un asteroide, e se
-   i numeri sbagliati fossero presi a caso attorno al risultato basterebbe
-   escludere invece di calcolare. Qui i falsi sono gli ERRORI TIPICI di
-   quel concetto — il riporto dimenticato, le colonne sottratte in valore
-   assoluto, lo zero in meno — quindi somigliano al risultato quanto basta
-   perché l'unico modo di distinguerli sia farlo, il conto.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il calcolo a mente: il catalogo dei concetti. FATTI (pochi casi, chiave
+// per fatto, es. `calc:8+5`) e CONCETTI (casi infiniti, chiave-strategia,
+// es. `calc:somma-riporto`) si distinguono dalla chiave: dopo `calc:` una
+// cifra è un fatto, una lettera un concetto. Dettagli: docs/asteroidi/scaletta.md.
 
 const casuale = (min, max) => min + Math.floor(Math.random() * (max - min + 1))
 const scegli = a => a[Math.floor(Math.random() * a.length)]
 
-/* la taglia (0..1) muove un parametro fra il suo minimo e il suo massimo */
+// la taglia (0..1) muove un parametro fra il suo minimo e il suo massimo
 const fra = (t, min, max) => Math.round(min + (max - min) * Math.max(0, Math.min(1, t)))
 
-/* prova finché il vincolo non è soddisfatto: i vincoli qui sotto capitano
-   spesso, e dopo N tentativi si tiene quel che c'è (stessa scelta di ops.js) */
+// dopo N tentativi si tiene quel che c'è (stessa scelta di ops.js)
 function finoA(prova, vale, tentativi = 300) {
   let ultimo = prova()
   for (let i = 0; i < tentativi && !vale(ultimo); i++) ultimo = prova()
@@ -57,14 +19,12 @@ function finoA(prova, vale, tentativi = 300) {
 const unita = n => n % 10
 const decine = n => Math.floor(n / 10) % 10
 
-/* ═══════════ le chiavi ═══════════ */
 export const PREFISSO = 'calc:'
 export const chiaveConcetto = id => PREFISSO + id
 export const eFatto = k => /^calc:\d/.test(k)
 export const idDaChiave = k => k.slice(PREFISSO.length)
 
-/* I tre modi di scrivere un fatto. La somma ha chiave ordinata — 5+7 e
-   7+5 sono lo stesso fatto, come 6×8 e 8×6 — la sottrazione no. */
+// la somma ha chiave ordinata (5+7 e 7+5 sono lo stesso fatto); la sottrazione no
 const somma = (a, b) => ({
   chiave: PREFISSO + Math.min(a, b) + '+' + Math.max(a, b),
   testo: `${a} + ${b} = ?`, ris: a + b, a, b, segno: '+' })
@@ -77,8 +37,8 @@ const amico = (a, tot) => ({
   chiave: PREFISSO + a + '+?' + tot,
   testo: `${a} + ? = ${tot}`, ris: tot - a, a, b: tot, segno: '+', complemento: true })
 
-/* Da una chiave di fatto si risale sempre all'esercizio: il picker sceglie
-   una chiave, il gioco deve poterla mostrare senza tenersi niente da parte. */
+// da una chiave si risale sempre all'esercizio: il gioco lo mostra senza
+// tenersi niente da parte
 export function fattoDaChiave(k) {
   const s = idDaChiave(k)
   let m
@@ -88,13 +48,9 @@ export function fattoDaChiave(k) {
   return null
 }
 
-/* ═══════════ quanto costa un fatto ═══════════
-   Decide l'ordine con cui i fatti entrano in lavorazione, e senza di lei
-   entrano nell'ordine in cui sono scritti: 1+1, 1+2, 1+3… cioè un'intera
-   partita a sommare uno. La fatica di una somma è dove ti porta, con due
-   sconti veri: aggiungere 1 è contare, non ricordare, e i doppi si
-   imparano prima di tutto il resto perché servono a tutto il resto.
-   Torna un numero fra 0 e 1: è un pari-merito, non l'ordine principale. */
+// Decide l'ordine con cui i fatti entrano in lavorazione (senza, uscirebbe
+// 1+1, 1+2, 1+3…): sconti per i +1 (contare, non ricordare) e per i doppi.
+// Torna 0..1, un pari-merito e non l'ordine principale.
 export function faticaFatto(k) {
   const e = fattoDaChiave(k)
   if (!e) return 0
@@ -105,12 +61,9 @@ export function faticaFatto(k) {
   return Math.max(0, Math.min(20, costo)) / 21
 }
 
-/* ═══════════ le famiglie di un fatto ═══════════
-   L'insieme in lavorazione gira a turno fra le famiglie, come fa con le
-   tabelline (vedi `activeSet` in store/srs.js). Senza, una partita esce
-   tutta «1+2, 1+3, 1+4…»: sono davvero i fatti più facili, e proprio per
-   questo l'ordine da solo non basta — di serate a sommare uno ne bastano
-   zero. La famiglia è il numero attorno a cui gira il fatto. */
+// L'insieme in lavorazione gira a turno fra le famiglie (vedi `activeSet`
+// in store/srs.js), se no una partita esce tutta «1+2, 1+3, 1+4…».
+// La famiglia è il numero attorno a cui gira il fatto.
 export function famigliaFatto(k) {
   const e = fattoDaChiave(k)
   if (!e) return k
@@ -119,8 +72,7 @@ export function famigliaFatto(k) {
   return 's' + Math.min(e.a, e.b)
 }
 
-/* esercizi senza chiave propria: la chiave gliela mette `esercizioDi()`,
-   ed è quella del concetto */
+// esercizi senza chiave propria: la chiave gliela mette `esercizioDi()`
 const conto = (a, segno, b, ris, testo) => ({ a, b, segno, ris, testo })
 const piu = (a, b) => conto(a, '+', b, a + b, `${a} + ${b} = ?`)
 const tolgo = (a, b) => conto(a, '−', b, a - b, `${a} − ${b} = ?`)
@@ -129,17 +81,14 @@ const diviso = (a, b) => conto(a, ':', b, a / b, `${a} : ${b} = ?`)
 const mancante = (a, tot) => ({ a, b: tot, segno: '+', ris: tot - a,
                                 testo: `${a} + ? = ${tot}`, complemento: true })
 
-/* ═══════════ gli errori tipici ═══════════
-   Ogni famiglia sbaglia a modo suo, e il modo è sempre lo stesso: chi
-   somma dimentica il riporto, chi sottrae fa le colonne in valore
-   assoluto («52−27: 5−2 fa 3, 7−2 fa 5, quindi 35»), chi moltiplica per
-   una decina perde uno zero. Sono questi i numeri da mettere in cielo. */
+// gli errori tipici di ogni famiglia (docs/asteroidi/scaletta.md): riporto
+// dimenticato, colonne sottratte in valore assoluto, zero perso in una decina
 const scambiaCifre = n => {
   const s = String(n)
   return s.length === 2 ? +(s[1] + s[0]) : n
 }
 
-/* la sottrazione fatta colonna per colonna senza mai chiedere in prestito */
+// la sottrazione fatta colonna per colonna senza mai chiedere in prestito
 function senzaPrestito(a, b) {
   let out = 0, peso = 1
   while (a > 0 || b > 0) {
@@ -161,16 +110,14 @@ function erroriTipici(e) {
   return [r + 1, r - 1, r + e.b, r - e.b, r * e.b, r + 10, r - 10]
 }
 
-/* Quanti bersagli sbagliati servono, presi in ordine di plausibilità e
-   scartando quelli che si riconoscerebbero a occhio: negativi, con un
-   numero di cifre diverso dal risultato (dove si può), doppioni. */
+// bersagli sbagliati in ordine di plausibilità, scartando quelli che si
+// riconoscerebbero a occhio (negativi, cifre diverse dal risultato, doppioni)
 export function distrattoriDi(e, n) {
   const c = CONCETTI_PER_ID[e.id]
   const cifre = String(e.ris).length
   const visti = new Set([e.ris])
   const buoni = [], ripiego = []
-  /* un falso deve restare nel mondo del risultato: 1010 accanto a 110 lo
-     scarta anche chi non sa contare, e quel bersaglio è spazio sprecato */
+  // un falso deve restare nel mondo del risultato, o è spazio sprecato
   const credibile = v => v >= e.ris / 2 - 12 && v <= e.ris * 2 + 12
   const prova = v => {
     if (!Number.isInteger(v) || v < 0 || visti.has(v) || !credibile(v)) return
@@ -178,10 +125,8 @@ export function distrattoriDi(e, n) {
     // a parità di plausibilità viene prima chi ha la stessa lunghezza
     ;(String(v).length === cifre ? buoni : ripiego).push(v)
   }
-  /* Ogni tanto i falsi stanno tutti da una parte. Senza questo il risultato
-     giusto non è MAI il più grande né il più piccolo dei bersagli, e
-     scartare i due estremi diventa una scorciatoia che funziona sempre:
-     sei asteroidi che ne valgono quattro. */
+  // ogni tanto i falsi stanno tutti da una parte, se no scartare i due
+  // estremi sarebbe sempre una scorciatoia (docs/asteroidi/scaletta.md)
   const lato = Math.random()
   const passo = lato < 0.2 ? -1 : lato > 0.8 ? 1 : 0
 
@@ -209,22 +154,15 @@ export function distrattoriDi(e, n) {
   return out
 }
 
-/* ═══════════ I CONCETTI ═══════════
-   `peso` (1..3) è quanto il calcolo costa in testa: da lì il gioco ricava
-   quanti asteroidi mandare giù e quanto lentamente farli cadere. Un 3+4
-   può arrivare fra sei bersagli, un 497+298 ne vuole tre e il doppio del
-   tempo, altrimenti la scelta multipla diventa una lotteria.
+// `peso` (1..3) è quanto il calcolo costa in testa (asteroidi e caduta,
+// docs/asteroidi/scaletta.md); `tabelline` è quante devono reggere perché
+// il concetto si apra — i concetti moltiplicativi pescano il fattore fra quelle.
 
-   `tabelline` è quante tabelline devono reggere perché il concetto si
-   apra, e i concetti moltiplicativi pescano il fattore proprio fra quelle:
-   così le due campagne degli asteroidi si tengono per mano invece di
-   stare una accanto all'altra. */
-
-/* le tabelline su cui appoggiarsi quando ancora non ne regge nessuna:
-   sono le tre che si sanno per regola e non per memoria */
+// le tre tabelline che si sanno per regola e non per memoria, da usare
+// quando ancora non ne regge nessuna
 const REGOLE = [2, 5, 10]
 const tab = ctx => (ctx && ctx.tabelline && ctx.tabelline.length ? ctx.tabelline : REGOLE)
-/* per moltiplicare a mente serve un fattore vero, non 1 o 10 */
+// per moltiplicare a mente serve un fattore vero, non 1 o 10
 const tabVera = ctx => {
   const buone = tab(ctx).filter(n => n >= 2 && n <= 9)
   return buone.length ? scegli(buone) : scegli([2, 3, 4, 5])
@@ -277,12 +215,9 @@ export const CONCETTI = [
       return out
     } },
 
-  /* ───────── 3. il buco da riempire, e le decine tonde ─────────
-     Il `?` in mezzo al conto non è una somma scritta in un altro modo: è
-     un'altra domanda — «quanto manca» invece di «quanto fa» — e chiede di
-     girare l'operazione. Per questo non sta più il primo giorno accanto a
-     3+4: arriva quando somme e sottrazioni entro il venti stanno in piedi,
-     insieme all'altro complemento, quello del cento. */
+  // ───────── 3. il buco da riempire, e le decine tonde ─────────
+  // il `?` è un'altra domanda («quanto manca», non «quanto fa»): arriva solo
+  // quando somme/sottrazioni entro il venti reggono già (docs/asteroidi/scaletta.md)
   { id: 'amici-10', nome: 'Gli amici del dieci', segno: '+', peso: 1,
     prereq: ['somma-10', 'meno-10'],
     dritta: 'Sono le coppie che fanno dieci: 1 e 9, 2 e 8, 3 e 7, 4 e 6, 5 e 5.',
@@ -360,13 +295,9 @@ export const CONCETTI = [
       },
       e => unita(e.a) >= unita(e.b) && e.ris >= 10 && e.b >= 10) },
 
-  /* ───────── 5. due cifre, col cambio ─────────
-     Qui c'era il gradino più alto di tutta la campagna: si passava da 34+5
-     e 23+45 — dove le colonne non si parlano — direttamente a 27+38, che
-     è la stessa cosa più il riporto più due cifre da tenere a mente. In
-     mezzo manca un solo passo, ed è quello che si fa a scuola: **una cifra
-     sola che scavalca la decina**. 26+7 è 8+5 con davanti una decina che
-     non si muove; imparato quello, 27+38 è farlo due volte. */
+  // ───────── 5. due cifre, col cambio ─────────
+  // unita-riporto/unita-prestito sono il gradino fra "due cifre senza cambio"
+  // e il riporto: scavalcare una decina sola (26+7) prima di farlo due volte
   { id: 'unita-riporto', nome: 'Passa la decina', segno: '+', peso: 2,
     prereq: ['unita-in-piu', 'somma-20'],
     dritta: 'Arriva prima alla decina tonda: 26+7 → 26+4 fa 30, restano 3, quindi 33.',
@@ -505,11 +436,8 @@ export const CONCETTI = [
   { id: 'quante-volte', nome: 'Quante volte ci sta', segno: ':', peso: 2,
     prereq: ['divide-tabellina'],
     dritta: 'In 29 il 4 ci sta 7 volte (28) e avanza 1: si cerca il più vicino senza superare.',
-    /* in cima alla taglia il divisore ha due cifre — «in 87 quante volte
-       c'è 12?» → 7, col resto 3 — che è la tabellina grande del volo
-       (`GRANDI` in data/tabelline.js) letta al contrario e con l'avanzo.
-       Il quoziente resta dentro la tabellina: fino a 12 per l'11 e il
-       12, fino a 5 per il 13-14-15, come le caselle grandi che esistono */
+    // in cima alla taglia il divisore è una tabellina GRANDI del volo (data/tabelline.js)
+    // letta al contrario, col resto; il quoziente resta dentro la tabellina
     genera: t => {
       const grande = t >= 0.75 && Math.random() < 0.5
       const m = grande ? casuale(11, 15) : casuale(3, 9)
@@ -564,39 +492,32 @@ export const CONCETTI = [
 export const CONCETTI_PER_ID = Object.fromEntries(CONCETTI.map(c => [c.id, c]))
 export const eConcettoDiFatti = c => typeof c.chiavi === 'function'
 
-/* tutte le chiavi dei fatti, calcolate una volta: servono al pool, al
-   conteggio della materia e alla tavola dei progressi */
+// tutte le chiavi dei fatti, una volta: servono al pool, al conteggio della
+// materia e alla tavola dei progressi
 const FATTI_DI = new Map(CONCETTI.filter(eConcettoDiFatti).map(c => [c.id, c.chiavi()]))
 export const chiaviDi = id => FATTI_DI.get(id) || [chiaveConcetto(id)]
 export const TUTTI_I_FATTI = [...new Set([...FATTI_DI.values()].flat())]
 
-/* Quale concetto «possiede» un fatto. Un fatto può stare in più concetti
-   — 6+6 è un doppio ed è anche una somma fino a 10 — e allora vale il
-   primo del catalogo, che è il più elementare: la dritta da dare a chi
-   sbaglia 3+3 è quella delle somme piccole, non quella dei doppi. */
+// il concetto che «possiede» un fatto (6+6 è un doppio ed è anche una somma
+// fino a 10): vale il primo del catalogo, il più elementare — la dritta di
+// chi sbaglia 3+3 è quella delle somme piccole, non quella dei doppi
 const PADRONE = new Map()
 for (const c of CONCETTI.filter(eConcettoDiFatti))
   for (const k of chiaviDi(c.id)) if (!PADRONE.has(k)) PADRONE.set(k, c.id)
 export const concettoDiChiave = k => (eFatto(k) ? PADRONE.get(k) : idDaChiave(k))
 
-/* Il padrone è uno, ma l'APPARTENENZA è di tutti: 1+2 è una somma fino a
-   dieci ed è anche un quasi doppio, e per la stazione dei quasi doppi
-   quella risposta conta. Col padrone soltanto, i concetti trasversali —
-   doppi, quasi doppi — non avrebbero mai una domanda loro e il bersaglio
-   della tappa sarebbe irraggiungibile. */
+// il padrone è uno, ma l'appartenenza è di tutti: senza, i concetti
+// trasversali (doppi, quasi doppi) non avrebbero mai una domanda loro
 const SETDI = new Map([...FATTI_DI].map(([id, ks]) => [id, new Set(ks)]))
 export const appartiene = (id, k) =>
   (SETDI.has(id) ? SETDI.get(id).has(k) : idDaChiave(k) === id)
 
-/* quanti elementi esistono in tutto: i fatti uno per uno, i concetti a
-   istanze infinite uno ciascuno. È il denominatore della padronanza. */
+// denominatore della padronanza: i fatti uno per uno, i concetti a
+// istanze infinite uno ciascuno
 export const TOTALE_ELEMENTI =
   TUTTI_I_FATTI.length + CONCETTI.filter(c => !eConcettoDiFatti(c)).length
 
-/* ═══════════ da una chiave all'esercizio da mostrare ═══════════
-   Il picker sceglie una chiave e basta: qui diventa una domanda vera.
-   Un fatto si rilegge dalla chiave, un concetto genera un'istanza nuova
-   alla taglia che il gestore ha deciso. */
+// il picker sceglie una chiave, qui diventa una domanda vera
 export function esercizioDi(chiave, ctx = {}) {
   const id = concettoDiChiave(chiave)
   const c = CONCETTI_PER_ID[id]
@@ -609,29 +530,9 @@ export function esercizioDi(chiave, ctx = {}) {
   return { ...e, chiave, id, peso: c.peso }
 }
 
-/* ═══════════ LE STAZIONI ═══════════
-   La campagna, con la stessa forma dei pianeti: una fila, una tappa per
-   volta, un bersaglio di partita. I concetti nuovi sono il cuore della
-   tappa, i precedenti restano dentro come ripasso — una strategia che non
-   si rivede si dimentica come una tabellina.
-
-   L'ultima stazione non porta niente di nuovo: è l'esame, come il ☀️
-   delle tabelline. Dopo c'è il volo a mente, che non finisce.
-
-   UNA COSA NUOVA PER TAPPA, e la cosa nuova è sempre *un pezzo in più da
-   tenere a mente*. Le tappe di mezzo erano tre — «Due cifre», «Riporti e
-   prestiti» — e ognuna ne portava quattro o sei insieme: chi le apriva si
-   trovava addosso 12+6 e 52−27 nella stessa partita. Adesso la salita è
-   scritta nella fila, un gradino per volta:
-
-     12+6   la decina sta ferma, si toccano le unità
-     26+7   le unità scavalcano, la decina si muove di uno
-     23+45  due cifre contro due cifre, ma le colonne non si parlano
-     27+38  due cifre e le colonne si parlano: il riporto
-     47+29  quasi tondo: si arrotonda e si aggiusta
-
-   Le fasi della luna 🌑🌒🌓🌗 sono lì apposta, per far vedere che è una
-   salita sola e non cinque cose diverse. */
+// Le stazioni: una fila di tappe come i pianeti, un concetto nuovo alla
+// volta (un pezzo in più da tenere a mente). L'ultima non porta niente di
+// nuovo: è l'esame. Dettagli e la tabella delle tappe: docs/asteroidi/scaletta.md.
 const TAPPE = [
   { emoji: '🚀', nome: 'Fino al dieci', esempio: '3+4 · 6+6 · 9−4',
     portata: 25, scuola: 'numeri',
@@ -648,13 +549,8 @@ const TAPPE = [
   { emoji: '🌓', nome: 'Passa la decina', esempio: '26+7 · 43−7',
     portata: 45, scuola: 'decine',
     nuovi: ['unita-riporto', 'unita-prestito'] },
-  /* Queste due stavano a 48 e 53, cioè in seconda: è dove si fanno
-     **sulla carta**, in colonna. A mente, col sasso che cade, sono roba di
-     terza — e la fila degli asteroidi le mette dopo il pianeta del 7 e
-     dopo quello del 9. Con i numeri di prima si sarebbero dichiarate più
-     facili delle tabelline che le precedono, e il cancello per età avrebbe
-     chiuso la fila su un pianeta con dietro una stazione aperta. Il perché
-     dell'ordine sta in `data/asteroidi.js`. */
+  // portata alzata da 48/53 (in colonna sono di seconda, a mente di terza) —
+  // vedi "La fila e l'età" in docs/asteroidi/scaletta.md
   { emoji: '🌗', nome: 'Due cifre', esempio: '23+45 · 68−25',
     portata: 55, scuola: 'decine',
     nuovi: ['due-somma', 'due-meno'] },
@@ -680,27 +576,17 @@ const TAPPE = [
 
 export const STAZIONI = TAPPE.map((t, i) => ({
   i, emoji: t.emoji, nome: t.nome, nuovi: t.nuovi, esempio: t.esempio,
-  /* dove sta sulla scala 0-100 di `data/portata.js` e quale pezzo di
-     scuola dà per scontato: insieme dicono a chi questa tappa va
-     offerta e a chi invece è roba già passata */
+  // portata e scuola: a chi va offerta questa tappa, a chi è già passata
   portata: t.portata, scuola: t.scuola,
-  /* tutto quello che si è visto fin qui: il pool di una stazione è i suoi
-     concetti più il ripasso di quelli di prima */
+  // il pool di una stazione: i suoi concetti più il ripasso di quelli prima
   concetti: TAPPE.slice(0, i + 1).flatMap(x => x.nuovi),
   dritta: t.nuovi.length
     ? CONCETTI_PER_ID[t.nuovi[0]].dritta
     : 'Tutto quello che sai fare a mente, mescolato. Niente di nuovo, nessuno sconto.',
-  /* Sale piano: le tappe adesso sono dodici invece di nove, e con il vecchio
-     `14 + i*2` l'ultima ne avrebbe chieste trentasei — una partita intera
-     senza sbagliare. Poche cose per tappa vogliono un bersaglio corto. */
   bersaglio: Math.round(13 + i * 1.2),
-  /* poco più della metà: la tappa chiede i suoi concetti otto volte su
-     dieci (`QUOTA_TAPPA` in `store/calcolo.js`), il resto sono errori e
-     ripasso. Chiedere quanto la quota promette, e non di più, è quello che
-     tiene la tappa una serata invece che un'attesa */
+  // otto su dieci sono i concetti della tappa (QUOTA_TAPPA in store/calcolo.js)
   mirate: t.nuovi.length ? Math.round(Math.round(13 + i * 1.2) * 0.55) : 0,
 }))
 
-/* Il volo infinito — tutti i concetti, senza bersaglio — non sta qui:
-   è uno per stazioni e pianeti insieme, e sta in `data/asteroidi.js`
-   (`VOLO`), che è il file della fila. */
+// il volo infinito (tutti i concetti, senza bersaglio) sta in
+// data/asteroidi.js (VOLO), il file della fila unica

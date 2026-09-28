@@ -7,6 +7,6 @@ Tabelline e calcolo a mente in una fila sola (`src/views/MathGame.vue`).
 - [volo.md](volo.md) — il livello e quanto corre il cielo, il volo infinito oltre il catalogo, l'astronave e i gettoni
 - [da-fare.md](da-fare.md) — le voci aperte
 
-Vedi anche: il perché di ogni giunzione della fila in testa a
-`src/data/asteroidi.js`; [../apprendimento/srs.md](../apprendimento/srs.md)
+Vedi anche: il perché di ogni giunzione della fila in
+[scaletta.md](scaletta.md); [../apprendimento/srs.md](../apprendimento/srs.md)
 (il motore e la marea); [../core/primati.md](../core/primati.md) (i record).

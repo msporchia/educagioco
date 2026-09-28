@@ -50,6 +50,36 @@ La fila, oggi (22 voci):
 | 🌓 | Passa la decina | 🌌 | Fino a mille |
 | 🟡 | pianeta del 6 | ⭐ | La prova |
 
+## Le giunzioni, voce per voce
+
+- **«Fino al dieci» e «Oltre la decina» prima di ogni tabellina**: sono il
+  pavimento di tutto il resto, e il pianeta del 2 sono i doppi — senza
+  7+7 non c'è modo di sapere che 2×7 fa 14.
+- **Il pianeta del 10 prima di «Amici e decine»**: 30+40 è la regola dello
+  zero applicata alla somma, e si impara prima con la tabellina del 10
+  già in mano.
+- **«Due cifre e una» (12+6, 34+20) prima del pianeta del 3**: chiede solo
+  decine tonde, niente di moltiplicativo — il gradino additivo più basso
+  rimasto.
+- **Il pianeta del 3 chiude il quartetto 2-10-5-3**: con queste quattro
+  salde si arriva alla soglia che `spezza-prodotto` e `divide-tabellina`
+  dichiarano (`tabelline: 4`), e da lì il grafo non sbarra più — decide
+  il peso.
+- **Il pianeta del 4 prima di «Passa la decina»**: il 4 è il 2 raddoppiato
+  (roba saputa), e da «Passa la decina» in poi le stazioni pesano due —
+  così le tabelline restano un passo avanti dal primo momento in cui conta.
+- **«Passa la decina» prima di «Due cifre», col 6 e il 7 in mezzo**:
+  l'ordine fra le due stazioni è quello scelto dentro le stazioni stesse;
+  il 6 è il 3 raddoppiato, il 7 porta solo tre caselle nuove.
+- **L'8 e il 9 prima di «Riporti e prestiti»**: il riporto è il gradino
+  additivo più alto (due colonne che si parlano), e arriva con tutte le
+  tabelline in mano per non aprire un secondo fronte di memoria.
+- **«I quasi tondi» subito dopo il riporto**: è una scorciatoia (si
+  arrotonda e si aggiusta) che ha senso solo dopo aver fatto il conto alla
+  maniera lunga.
+- **«Fino a mille» in fondo, con la prova**: 497+298 è solo il riporto con
+  una cifra in più, e la prova non porta niente di nuovo.
+
 ## Un contatore, un segno
 
 - **Il contatore è uno** (`mate.fila`): quante voci della scaletta sono
@@ -95,16 +125,32 @@ La fila, oggi (22 voci):
   **La quota ha memoria** (`creaMiscela`, `FINESTRA` 5): mai più di una
   domanda fuori tappa ogni cinque, quindi mai due di fila; il boss conta
   come fuori tappa. La stessa domanda non esce mai due volte di seguito.
-- **Il boss** (ogni otto domande) arriva dalla tappa dopo: è un assaggio.
-  Dove una tappa dopo non c'è (il Sole, il volo, il pianeta prima del
-  Sole) `chiaveDelBoss` ripiega sulla casella più tosta di casa, e quella
-  **si segna sul motore** — è roba già insegnata.
+- **Il boss** (ogni otto domande) arriva dalla tappa dopo: è un assaggio,
+  e per questo non si segna sul motore (né giusto né sbagliato: misurare
+  roba non ancora insegnata non direbbe niente di vero). Dove una tappa
+  dopo non c'è (il Sole, il volo, il pianeta prima del Sole) `chiaveDelBoss`
+  ripiega sulla casella più tosta di casa, e quella **si segna sul
+  motore** — è roba già insegnata. Il ripiego prima pescava quella col
+  peso più alto, ed è uscito un boss che chiedeva 1×1: il peso premia chi
+  non si è mai visto, e le caselle mai viste sono proprio quelle che
+  nessuna tappa chiede.
 - L'insieme in lavorazione **gira a turno fra le tabelline in gioco**, e
   `×1` e `×10` stanno in fondo alla scala di difficoltà: sono regole, non
   fatti da mandare a memoria.
 - La ⭐ di una tabellina (nei conti in cima, non nella fila) vuol dire
   **tutte e dieci le caselle imparate** secondo la forza *efficace*: una
   tabellina lasciata lì per un mese la perde.
+- **La difficoltà di un calcolo si stima in due strati** (`stima`,
+  `store/tabelline.js`): prima quanti dei due fattori vanno saputi a
+  memoria (1 e 10 sono regole, 2/3/5 si contano a mente, il resto va
+  saputo — le grandi oltre il 10 costano un po' di più perché si
+  spezzano: 12×7 è 70+14); poi, appena c'è materiale (otto incontri), il
+  tempo medio di risposta *di quel bambino* prende il posto della stima.
+- **Il cuore di una tappa non può restare in due.** `activeSet` dà solo
+  quello che non è ancora imparato: una tabellina facile (il 10) si
+  impara in mezza partita, e senza ripescare le caselle già imparate
+  quando il cuore si assottiglia (`CUORE`, 6) la tappa finiva a ripetere
+  la stessa domanda o a cedere tutta la partita al ripasso.
 
 ## Le stazioni del calcolo a mente
 
