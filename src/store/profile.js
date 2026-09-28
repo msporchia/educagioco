@@ -1,10 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════
-   PROFILO CONDIVISO
-   Un solo profilo per bambino, alimentato da tutti i giochi: monete,
-   progressi delle campagne e stato di apprendimento di ogni elemento.
-   Le chiavi degli elementi sono con prefisso (`math:` / `en:`) così un
-   motore solo serve materie diverse senza confonderle.
-   ═══════════════════════════════════════════════════════════════════ */
+// Profilo condiviso: monete, campagne, apprendimento. Vedi docs/core/archivio.md.
 import { reactive, computed } from 'vue'
 import { load, save, flush, remove, detectBackend, backend, chiavi } from './storage.js'
 import { scordaSessioni } from './sessioni.js'
@@ -25,24 +19,8 @@ import { riscuotiTraguardi, segnaGiorno, serieViva, livelloTotale,
          tabellineIntereDi, allineaMate, allineaInglese,
          allineaSpagnolo } from './progressi.js'
 
-/* ── CHI GIOCA ──
-   Prima qui c'era un elenco fisso di nomi scritto nel codice. Adesso è un
-   dato come gli altri: sta nella chiave `giocatori`, i genitori lo
-   cambiano, e nel repo non compare il nome di nessun bambino.
-
-   Un giocatore è `{ id, nome }`, e i due campi servono a cose diverse:
-   l'**id** è la chiave del salvataggio (`profilo:<id>`) e non cambia mai
-   più una volta creato; il **nome** è l'etichetta che si legge a schermo
-   e si può correggere quando si scrive male. Tenerli separati è ciò che
-   rende la rinomina gratuita: si tocca un'etichetta, non si sposta un
-   byte di progressi.
-
-   Per i profili che esistono già l'id *è* il nome con cui erano stati
-   salvati, e la loro chiave resta dov'è: l'aggiornamento non copia e non
-   cancella niente, e una build vecchia ripubblicata per sbaglio ritrova
-   tutto al suo posto. Per chi nasce da oggi l'id è opaco (`g1`, `g2`):
-   il nome resta solo dentro il valore, e cambiarlo non lascia in giro
-   una chiave che se lo porta dietro. */
+// Un giocatore è { id, nome }: l'id è la chiave del salvataggio e non
+// cambia mai, il nome è solo l'etichetta (vedi docs/core/archivio.md).
 const KEY_ROSTER = 'giocatori'
 const KEY = id => 'profilo:' + id
 const PREFISSO = 'profilo:'
@@ -51,55 +29,11 @@ const blank = () => ({
   v: 7,
   coins: 0,
   items: {},                       // 'math:7x8' | 'en:butterfly' -> stato
-  /* Qui c'era la cameretta: `owned` e `layout` (gli oggetti sulle
-     mensole), `pets` e `casa` (gli animali adottati e chi stava sul
-     tappeto), `dispensa` (la roba da mangiare), `accessori` e `serie`
-     (le capsule). È stata tolta insieme ai suoi salvataggi, e un profilo
-     che se li porta ancora dietro li perde al primo caricamento: il
-     perché, e quel poco che se ne tiene, sta in `sgomberaLaCameretta`,
-     qui sotto. */
-  /* `sa` sono i macrogruppi di scuola che i genitori hanno SPENTO
-     (`data/saperi.js`): una voce a `false` per ognuno. Chi a scuola non
-     ha ancora fatto le misure non deve vedersi chiedere quanti
-     centilitri sono due litri — non è una domanda difficile, è una
-     domanda muta: si può solo indovinare. Chi lo legge sono i moduli di
-     quiz (`quiz/scelta.js`, che degrada al grado più facile invece di
-     sparire) e il castello per le divisioni. Elenco di eccezioni come
-     `giochi`: un sapere nuovo nasce acceso per tutti, salvo i pochi che
-     il catalogo dichiara `difetto: false` — quelli nascono spenti e la
-     voce salvata è il `true` di chi li ha accesi.
-     `divisioni: true/false` è la forma vecchia dello stesso flag, prima
-     che i macrogruppi esistessero: si legge ancora in `selectPlayer`
-     per non riaccendere le divisioni a chi le aveva spente. */
-  /* `giochi` sono le carte spente in home: una voce a `false` per ogni
-     gioco che i genitori hanno tolto di mezzo. È un elenco di eccezioni e
-     non di permessi apposta — un gioco nuovo nasce acceso anche per chi
-     ha il profilo di ieri, senza migrazioni. */
-  /* `tuttoAperto` toglie i lucchetti alle campagne: tutte le tappe di
-     tutti i giochi giocabili subito, senza superare quelle prima. Chi lo
-     legge è `tappaAperta()`, qui sotto, e i giochi passano da lì: la
-     regola sta in un posto solo perché quando stava in cinque il flag si
-     è scollato senza che nessuno se ne accorgesse. */
-  /* C'era anche `varianti`, per spegnere un MODO di giocare dentro un
-     gioco: aveva un inquilino solo (il calcolo a mente negli asteroidi)
-     ed è andato via con lui — il perché sta accanto a `guidaGiaVista`,
-     qui sotto. Un salvataggio di ieri può ancora portarselo dietro, e
-     non dà fastidio a nessuno: non lo legge più niente. */
+  // `sa`: macrogruppi di scuola spenti (docs/apprendimento/saperi.md).
+  // `giochi`: carte spente in home, eccezioni (docs/genitori/interruttori.md).
+  // `tuttoAperto`: lucchetti delle campagne tolti, vedi `tappaAperta()` sotto.
   settings: { tables: [2, 3, 4, 5], sound: true, music: true,
               giochi: {}, sa: {}, tuttoAperto: false },
-  /* contatori che salgono e non scendono mai: sono la memoria di quanto
-     si è giocato, e i traguardi si misurano quasi tutti qui sopra */
-  /* i contatori dello spagnolo hanno un nome loro (`es`, `verbiEs`,
-     `frasiEs`): sommarli a quelli inglesi vorrebbe dire non sapere più
-     in quale lingua si è giocato */
-  /* `misure` sono gli ingredienti dosati giusti, `incasso` sta in centesimi
-     come tutto il resto della bancarella */
-  /* del generale si contano quattro cose: i livelli portati a casa, le
-     stelle raccolte, gli ordini firmati in tutto e i livelli chiusi
-     **da soli** — senza farsi svelare niente e senza lasciare nessuno
-     sul campo. `avanzati` è quello che dice se si sta davvero
-     imparando: un livello vinto con un ordine di alto livello (un
-     ciclo, una condizione, un evento) e non con la fila di passi. */
   totals: { math: 0, mente: 0, en: 0, verbi: 0, frasi: 0, es: 0, verbiEs: 0, frasiEs: 0, td: 0,
             partiteMath: 0, torri: 0, perfette: 0, ondate: 0,
             misure: 0, pozioni: 0, pozioniPerfette: 0,
@@ -107,43 +41,16 @@ const blank = () => ({
             missioni: 0, stelle: 0, ordini: 0, daSolo: 0, avanzati: 0,
             monete: 0 },
   best: { math: 0, serieMath: 0, onda: 0, serieGiorni: 0, pozioni: 0, clienti: 0 },
-  /* Il castello: quante tappe sono state superate (indice della prossima) e
-     se la partita libera è sbloccata. `v` dice su quale campagna quel numero
-     è stato scritto — le tappe sono passate da sei a quindici, e senza il
-     numero di versione un salvataggio di ieri direbbe «due» intendendo una
-     cosa diversa da quello che intende oggi. Vedi `migraCastello`. */
-  td: { tappa: 0, libera: false, v: 2 },
-  /* Gli asteroidi hanno UNA fila e un contatore solo, `mate.fila`:
-     quante voci della scaletta di `data/asteroidi.js` sono superate.
-     `mate.tappa` e `calc.tappa` restano come specchio per chi parla di
-     una campagna sola, e li scrive `sincronizzaAsteroidi`. */
-  mate: { tappa: 0, fila: 0, libera: false },
-  calc: { tappa: 0, libera: false },// lo specchio delle stazioni a mente
+  td: { tappa: 0, libera: false, v: 2 },   // `v`: vedi `migraCastello`
+  mate: { tappa: 0, fila: 0, libera: false },   // fila unica, vedi `sincronizzaAsteroidi`
+  calc: { tappa: 0, libera: false },// specchio delle stazioni a mente
   eng: { tappa: 0, libera: false }, // e per la campagna di English
   esp: { tappa: 0, libera: false }, // e per quella di Spagnolo
-  /* La bancarella: stessa forma, più il numero di versione — le giornate
-     sono passate da sei a sedici e un «4» scritto ieri non parla dello
-     stesso posto di un «4» scritto oggi. Vedi `migraMercato`. */
-  mercato: { tappa: 0, libera: false, v: 2 },
-  /* Il generale ha la stessa forma delle altre campagne — `tappa` è quanti
-     livelli sono stati superati — più due cose sue, tenute per livello e
-     non in totale: `ordini` è il RECORD (il minor numero di ordini con cui
-     quel livello è stato chiuso) e `stelle` quante stelle vale adesso, una
-     o due. Stanno per livello perché rigiocarne uno già fatto non deve
-     gonfiare il totale: le stelle sono la somma dei propri primati, non
-     delle partite. **La chiave è l'`id` del livello** (`v: 2`), non la sua
-     posizione nella fila: vedi `migraGenerale`. `aiuti` è quanti gradini
-     della scala degli aiuti sono stati scesi in ogni livello: si pagano
-     in monete, e un gradino pagato resta di chi l'ha comprato
-     (`giochi/aiuti.js`). */
+  mercato: { tappa: 0, libera: false, v: 2 },   // `v`: vedi `migraMercato`
+  // `ordini`/`stelle`/`aiuti` per livello (chiave = id, non posizione): vedi `migraGenerale`
   gen: { tappa: 0, libera: false, ordini: {}, stelle: {}, aiuti: {}, v: 2 },
-  /* I GIOCHI NUOVI (`src/giochi/`) stanno tutti qui, con una forma sola:
-     'codice' -> { tappa, libera, stelle:{}, cfg:{} }. Sopra si vede il
-     contrario — otto campi che dicono la stessa cosa in otto modi — ed è
-     il motivo per cui questo esiste: un gioco nuovo non deve più
-     aggiungere un campo al profilo né una migrazione. Chi lo muove è
-     `src/giochi/campagne.js`, e sa crearsi la voce che non c'è: un
-     profilo salvato ieri gioca a un gioco di oggi senza migrazioni. */
+  // i giochi di src/giochi/ stanno tutti qui: 'codice' -> { tappa, libera, stelle:{}, cfg:{} }
+  // (vedi src/giochi/campagne.js: un gioco nuovo non aggiunge un campo al profilo)
   campagne: {},
   giorni: { ultimo: '', serie: 0, record: 0, totali: 0 },   // i giorni di fila
   badge: {},                        // id traguardo -> { g: grado preso, t: quando }
@@ -161,31 +68,15 @@ export const state = reactive({
   festa: [],                // traguardi appena presi, in attesa di essere mostrati
 })
 
-/* Accendere e spegnere il suono passa di qui e non da `audio.js`, perché
-   è una preferenza del profilo e va salvata: `suono.muta()` da solo
-   cambiava il ref e basta. */
+// Passa da qui e non da audio.js: è una preferenza del profilo, va salvata.
 export function accendiSuono(si) {
   suonoAcceso.value = !!si
   state.profile.settings.sound = !!si
   persist()
 }
 
-/* ── con che personaggio si vede in mappa ──
-   È un attributo del bambino, come il nome — non di un gioco: i giochi
-   nuovi non toccano il profilo (vedi `src/giochi/campagne.js`), ma qui non
-   sta nascendo un campo per la fattoria, sta nascendo un campo per il
-   bambino che la fattoria (e domani chiunque altro disegni un personaggio
-   in mappa) si limita a leggere. `PERSONE` — chi si può scegliere, contro
-   le bestie che camminano per conto loro — viene dall'atlante degli
-   sprite, generato da `strumenti/sprite/atlante.py` dal `tipo` dichiarato
-   in ogni foglietto sorgente (`strumenti/sprite/FORMATO.md`).
-
-   Il valore di partenza non sta in `blank()`: si calcola qui, alla
-   lettura, come fa già `progresso()` in `campagne.js` — un profilo
-   salvato ieri non ha bisogno di una migrazione per giocare oggi. Stessa
-   idea per chi punta a un personaggio che l'atlante non ha più (un
-   aggiornamento che ne toglie uno, o un salvataggio importato da un'altra
-   casa): si ricade sul primo disponibile invece di piantare il gioco. */
+// Personaggio in mappa: attributo del bambino, non di un gioco. Il valore di
+// partenza si calcola qui e non in `blank()` (vedi docs/core/archivio.md).
 export function aspettoDi() {
   const p = state.profile
   if (typeof p.aspetto !== 'string' || !PERSONE.includes(p.aspetto)) p.aspetto = PERSONE[0]
@@ -198,19 +89,15 @@ export function scegliAspetto(nome) {
   return true
 }
 
-/* ---------- il roster ----------
-   Una voce vale se ha un id: il nome può essere vuoto (un profilo
-   ricostruito da una chiave rovinata) e si rimedia con l'id, ma senza id
-   non si sa nemmeno quale salvataggio caricare. */
+// Una voce vale se ha un id: senza non si sa quale salvataggio caricare.
 function normalizzaVoce(v) {
   if (typeof v === 'string') return { id: v, nome: v }        // forma vecchia, mai pubblicata
   if (!v || typeof v !== 'object' || !v.id) return null
   return { id: String(v.id), nome: String(v.nome ?? v.id) }
 }
 
-/* Ricostruisce l'elenco senza cercare nessun nome: quello che c'è è
-   quello che sta nell'archivio. Ordine alfabetico per id, che per i due
-   profili di casa dà lo stesso ordine di prima. */
+// Ricostruisce il roster enumerando le chiavi `profilo:*` in archivio,
+// per il primo avvio dopo l'aggiornamento che ha introdotto il roster.
 async function rosterDalleChiavi() {
   const ks = await chiavi(PREFISSO)
   return ks.map(k => k.slice(PREFISSO.length)).filter(Boolean).map(id => ({ id, nome: id }))
@@ -222,9 +109,6 @@ async function caricaRoster() {
     const buone = salvato.map(normalizzaVoce).filter(Boolean)
     if (buone.length) return buone
   }
-  /* Nessun roster: o è il primo avvio dopo l'aggiornamento — e allora i
-     profili ci sono e vanno raccolti — oppure è un'installazione nuova,
-     e allora non c'è niente da raccogliere e l'app chiede un nome. */
   return rosterDalleChiavi()
 }
 
@@ -236,50 +120,22 @@ export const giocatore = id => state.giocatori.find(g => g.id === id) || null
 export const nomeDi = id => (giocatore(id) || {}).nome || ''
 export const nomeCorrente = () => nomeDi(state.player)
 
-/* Un id che non è mai stato usato. Opaco apposta: `g3` non dice a
-   nessuno chi è, e rinominare non lascia dietro una chiave col nome
-   sbagliato. Guarda anche l'archivio, non solo il roster, perché un
-   profilo eliminato può aver lasciato la sua chiave. */
+// Un id opaco mai usato: guarda anche l'archivio, non solo il roster,
+// perché un profilo eliminato può aver lasciato la sua chiave.
 async function idLibero() {
   const presi = new Set(state.giocatori.map(g => g.id))
   for (const k of await chiavi(PREFISSO)) presi.add(k.slice(PREFISSO.length))
   for (let i = 1; ; i++) if (!presi.has('g' + i)) return 'g' + i
 }
 
-/* Crea un giocatore. Il nome si ripulisce ma non si controlla che sia
-   unico: due fratelli possono chiamarsi uguale sullo schermo, gli id
-   restano diversi ed è quello che conta.
-
-   `entra` dice se metterlo subito al posto di chi sta giocando. Al primo
-   avvio sì — è l'unico che c'è, e la domanda «come ti chiami?» finisce
-   con lui che gioca. Dalla schermata dei genitori no: aggiungere un
-   fratellino non vuol dire buttare fuori chi ha in mano il telefono, e
-   cambiare giocatore lì ricarica la schermata e richiede il codice.
-
-   `aspetto`, se c'è, è il personaggio scelto in fase di creazione — non
-   obbligatorio: chi non lo passa si ritrova comunque `aspettoDi()` a
-   posto al primo bisogno, col primo di `PERSONE`. Va applicato al
-   profilo VUOTO come `partenza`, per lo stesso motivo: quando `entra` è
-   falso il profilo non passa mai da `state.profile`, quindi
-   `scegliAspetto()` (che scrive lì) non lo raggiungerebbe.
-
-   `partenza` è **un numero di anni** da quando la manopola ha preso il
-   posto delle quattro carte: la fascia si ricava da lì
-   (`partenzaPerEta`) e l'età resta quella fine — 7 anni sta nella
-   fascia dei 6,5 e deve restare 7. La chiave di una fascia si accetta
-   ancora perché è quello che si scrive in un test quando l'età precisa
-   non interessa. */
+// `entra`: sì al primo avvio, no dalla schermata dei genitori (un fratellino
+// non caccia chi gioca). `partenza`: un'età in anni, applicata una sola volta.
 export async function creaGiocatore(nome, entra = true, partenza = null, aspetto = null) {
   const pulito = String(nome || '').trim().slice(0, 20)
   if (!pulito) throw new Error('Serve un nome')
   const id = await idLibero()
   state.giocatori.push({ id, nome: pulito })
   salvaRoster()
-  /* La partenza è un pugno di eccezioni scritte una volta sola: da qui
-     in poi il profilo è come tutti gli altri e si tocca a mano. Si
-     applica al profilo VUOTO, prima che esista sul serio, così non
-     esiste un istante in cui un bambino di quattro anni ha in home le
-     divisioni in colonna. */
   const fresco = blank()
   if (partenza != null && partenza !== '') {
     const { giochi, sa, eta } = typeof partenza === 'number'
@@ -391,18 +247,9 @@ function segnala(n) {
   if (n) state.regalo = { n, k: state.regalo.k + 1 }
 }
 
-/* ---------- il cheat delle monete ----------
-   `giochi.html#monete=500` regala 500 monete al giocatore in corso, e
-   `#monete=-100` le toglie. Serve ai grandi per provare i negozi senza
-   rifarsi mille tabelline, e si scrive dove si scrivono gli indirizzi.
-
-   Sta nel frammento (#) e non nella query (?) per un motivo pratico: il
-   frammento si può cancellare da dentro la pagina anche aprendo il file
-   con doppio click, la query no. Così il regalo si riscuote una volta
-   sola e un aggiornamento della pagina non lo raddoppia.
-
-   Un secondo giocatore scelto dopo non lo riceve: le monete vanno a chi
-   stava giocando quando si è aperto l'indirizzo. */
+// `#monete=500` (o negativo): vedi docs/core/comandi.md. Sta nel frammento
+// e non nella query perché si può cancellare anche da un file aperto a
+// doppio click, così il regalo si riscuote una volta sola.
 export function riscuotiCheat() {
   if (typeof location === 'undefined') return 0
   // il numero deve finire lì: senza il controllo in coda `#monete=1e9`
@@ -410,10 +257,7 @@ export function riscuotiCheat() {
   const m = /(?:^#?|&)monete=(-?\d{1,7})(?=&|$)/i.exec(location.hash || '')
   if (!m) return 0
   const n = parseInt(m[1], 10)
-  /* Si toglie **solo il suo pezzo**: il resto del frammento può essere
-     un altro cheat che aspetta la sua schermata — `#fattoria-tipo=30&
-     monete=2000` — e buttarlo via qui voleva dire perderlo prima che la
-     fattoria lo leggesse. Da solo, il frammento resta vuoto come prima. */
+  // toglie solo il suo pezzo: il resto può essere un altro cheat in attesa
   const resto = (location.hash || '').replace(/^#/, '').split('&')
     .filter(p => !/^monete=/i.test(p)).join('&')
   try { location.hash = resto } catch (e) { /* pazienza: al massimo si ripete */ }
@@ -425,81 +269,21 @@ export function riscuotiCheat() {
   return n
 }
 
-/* ── il posto delle migrazioni una-tantum ──
-   `da` è la versione da cui viene il profilo (0 = non esisteva). Qui
-   dentro si mette quello che si può fare **una volta sola**, perché al
-   prossimo avvio `da` sarà già la versione di adesso e nessuno saprà più
-   da dove veniva.
-
-   Il numero è già letto e messo in mano a chi serve, perché il momento
-   per agganciarsi è questo — quando la prossima build tocca i telefoni,
-   l'informazione non c'è più. Chi aggiunge un caso qui scriva anche il
-   suo test in `test/unita/profilo.test.mjs`. */
+// Il posto delle migrazioni una-tantum: `da` è la versione di provenienza
+// (0 = non esisteva). Un caso nuovo qui vuole il suo test in
+// test/unita/profilo.test.mjs, perché alla prossima build `da` è già oggi.
 export function migraProfilo(p, da) {
   if (da === 0) return p        // profilo nuovo: non c'è niente da cui migrare
   if (da < 7) saperiArrivatiTardi(p.settings)
   return p
 }
 
-/* ── QUELLO CHE UNA FASCIA HA IMPARATO A SPEGNERE DOPO ──
-   Le partenze scrivono le eccezioni **una volta sola**, dentro
-   `creaGiocatore`: un bambino creato ieri non riceve niente di quello
-   che l'elenco impara oggi. Finché si trattava di aggiungere un gioco
-   andava bene — acceso è l'assenza, e un gioco nuovo nasce acceso per
-   tutti — ma un pezzo di scuola che si scopre di dover spegnere è il
-   caso opposto: chi ha già il profilo continua a ricevere le domande
-   mute, e il difetto è arrivato in mano a un genitore giocando, non da
-   qui.
-
-   Qui sotto c'è **la fotografia** di cosa è stato aggiunto ai difetti
-   di ogni fascia in questo giro. Non è un elenco da tenere allineato a
-   `data/partenze.js`: è storia congelata, e il giro prossimo alzerà `v`
-   e scriverà la sua accanto. Leggere gli elenchi di oggi non
-   servirebbe — direbbero cosa una fascia spegne *adesso*, non cosa ha
-   appena imparato a spegnere.
-
-   ── E QUELLO CHE UN GRANDE HA MESSO A MANO NON SI TOCCA ──
-   È la sola cosa che rende questa migrazione lecita, e regge per
-   costruzione: si scrive una chiave **solo per la fascia in cui è
-   nuova**, e solo se il profilo non dice già niente di suo su quella
-   chiave. Il paragone non è mai con un profilo vuoto — le partenze
-   *scrivono* delle eccezioni, e confrontare col vuoto farebbe
-   risultare «messa a mano» ogni riga che nessuno ha toccato.
-
-   I casi, uno per uno:
-
-     · **c'è già scritto qualcosa** (`false`, o `true` per i pochi che
-       nascono spenti) — è la voce di un grande, e non si tocca.
-     · **non c'è scritto niente e la chiave è nuova per la sua fascia**
-       — ieri il difetto non la nominava, quindi l'assenza non può
-       voler dire «un grande l'ha riaccesa»: la riaccensione di un
-       sapere al suo difetto non lascia traccia (`accendiSapere`
-       cancella la voce), ed è esattamente il motivo per cui si guarda
-       **la fascia** e non lo stato di oggi. Si scrive.
-     · **non c'è scritto niente e la chiave non è nuova per la sua
-       fascia** — lì l'assenza è la traccia di un grande che l'ha
-       riaccesa, e infatti non si scrive niente.
-     · **profilo senza età** — `settings.eta` manca ai profili nati
-       prima che la domanda esistesse, e valgono `ETA_DIFETTO` (nove
-       anni), cioè la fascia «quarta o quinta», che non spegne niente:
-       la migrazione non li tocca, ed è la risposta giusta anche senza
-       saperne l'età. Nessuna riga scritta a indovinare.
-
-   ── E IL CESTINO ──
-   Una copia messa da parte **prima** dell'aggiornamento porta con sé
-   il suo `v` vecchio, quindi rimetterla la fa passare di qui e viene
-   migrata; una fatta dopo ha già `v` nuovo e non si tocca due volte.
-   Non c'è niente da fare: `ripristinaCestinato` scrive il profilo e
-   chiama `selectPlayer`, che è la strada da cui si arriva qui. */
+// Fotografia congelata (non un elenco da allineare a data/partenze.js): tocca
+// una chiave solo nella fascia in cui il difetto è nuovo, e solo se il
+// profilo non dice già niente. Vedi docs/apprendimento/saperi-per-fascia.md.
 const SAPERI_ARRIVATI = {
-  /* «Com'è fatto un animale»: il corpo che dice il posto è un
-     obiettivo di fine terza, e a cinque e a sei anni e mezzo mancano
-     due anni buoni. */
   piccoli: ['adattamento'],
   prima: ['adattamento'],
-  /* Le sottovoci di quinta dentro due gruppi che restano accesi:
-     ruotare a mente, i cubetti nascosti, lo sviluppo del cubo e le
-     viste dall'alto. Vedi il commento della fascia in `partenze.js`. */
   terza: ['geo:rotazione', 'geo:cubetti', 'geo:sviluppo', 'geo:viste'],
   quarta: [],
 }
@@ -508,46 +292,18 @@ function saperiArrivatiTardi(s) {
   if (!s || typeof s !== 'object') return
   if (!s.sa || typeof s.sa !== 'object') s.sa = {}
   const anni = Number(s.eta)
-  /* la stessa lettura di `etaDelBambino`, che non si può chiamare da
-     qui: `state.profile` è ancora quello di prima */
+  // non si può chiamare `etaDelBambino()`: `state.profile` è ancora quello di prima
   const fascia = partenzaPerEta(
     Number.isFinite(anni) && anni >= 3 && anni <= 14 ? anni : ETA_DIFETTO)
   for (const k of (fascia && SAPERI_ARRIVATI[fascia.chiave]) || [])
     if (s.sa[k] === undefined) s.sa[k] = false
 }
 
-/* ── LA CAMERETTA SE NE VA, E SI PORTA VIA I SUOI SALVATAGGI ──
-   Tolta il 23 settembre 2026: i bambini non la aprivano più, e la
-   fattoria fa lo stesso mestiere — il posto dove si spendono le monete
-   — e lo fa meglio. Sui salvataggi la scelta è stata fatta apposta, non
-   per omissione: **si cancellano**. Gli animali coi loro nomi, gli
-   oggetti delle mensole, la dispensa, le capsule. Nessun rimborso e
-   nessun travaso in fattoria.
-
-   Quello che non si cancella è **il livello**, ed è l'unica ragione per
-   contare prima di buttare. Il livello è la somma dell'esperienza di
-   tutti i giochi (`store/progressi.js`) ed è il moltiplicatore delle
-   monete: la cameretta ne dava per ogni animale adottato e per ogni
-   oggetto comprato, e leggerli da collezioni che non ci sono più lo
-   farebbe scendere sotto gli occhi del bambino. Quindi le due
-   collezioni diventano due numeri in `totals` — quanti animali, quanti
-   oggetti — e `XP_AREA.cameretta` li legge da lì con la formula di
-   prima. I pasti stavano già in un contatore e restano dove sono: li
-   legge anche «Tuttofare», che fra i giochi provati conta chi ha dato da
-   mangiare a un animale.
-
-   Gli altri tre contatori e le medaglie delle due famiglie tolte
-   dall'albo non li legge più nessuno, e se ne vanno con le collezioni.
-   «Salvadanaio» (`room-monete`) resta: conta le monete guadagnate in
-   tutti i giochi, e sta fra i traguardi trasversali con lo stesso id.
-
-   Gira **a ogni caricamento**, e non una volta sola dietro `v`: su un
-   profilo già sgomberato non trova niente da fare, e i conti sono un
-   `Math.max`, quindi ripassarci non raddoppia niente. È la stessa idea
-   del travaso `nelPar` → `daSolo` qui sotto, e serve alle copie che
-   arrivano da prima — il cestino, un salvataggio importato, e una build
-   vecchia rimasta aperta su un telefono, che riscriverebbe `pets` vuoto
-   sopra un profilo già contato. */
+// La cameretta è stata tolta coi suoi salvataggi (si cancellano, nessun
+// travaso): quello che resta è il livello, contato in `totals` prima di
+// buttare le collezioni. Gira a ogni caricamento (non solo dietro `v`, per
+// le copie che arrivano da prima: cestino, import, build vecchia su un
+// telefono) ed è idempotente (`Math.max`). Vedi docs/core/progressi.md.
 const CAMPI_DELLA_CAMERETTA = ['owned', 'layout', 'pets', 'casa', 'dispensa', 'accessori', 'serie']
 const CONTATORI_DELLA_CAMERETTA = ['preferiti', 'cure', 'capsule']
 const MEDAGLIE_DELLA_CAMERETTA = [
@@ -575,28 +331,14 @@ export async function selectPlayer(id) {
   const raw = await load(KEY(id))
   const vuoto = blank()
   const p = { ...vuoto, ...(raw && typeof raw === 'object' ? raw : {}) }
-  /* ── da quale versione viene questo profilo ──
-     Va letto QUI, prima della riga sotto che lo timbra: `p.v = vuoto.v`
-     riscrive il numero a ogni avvio senza averlo mai guardato, quindi
-     appena un telefono apre una build nuova l'informazione è persa per
-     sempre. Era vero anche prima — semplicemente non se ne era accorto
-     nessuno, perché nessuna migrazione l'aveva mai chiesta.
-     0 vuol dire «profilo che non esisteva», ed è giusto così: un profilo
-     nuovo non ha niente da migrare. */
+  // va letto PRIMA di `p.v = vuoto.v` sotto, che lo timbra: dopo, l'informazione è persa
   const daVersione = Number.isFinite(raw && raw.v) ? raw.v : 0
   p.v = vuoto.v
   migraProfilo(p, daVersione)
   p.settings = { ...vuoto.settings, ...(p.settings || {}) }
   migraSaperi(p.settings)
   p.totals = { ...vuoto.totals, ...(p.totals || {}) }
-  /* ── `nelPar` È DIVENTATO `daSolo` ──
-     Il par non esiste più, e la seconda stella adesso la dà l'esserci
-     arrivati da soli. Il travaso è ESATTO e non generoso: `dentroPar`
-     ha sempre voluto dire «nel par **e** senza aiuti pagati **e** senza
-     compagni caduti», cioè conteneva già tutto quello che oggi si
-     chiede — chi lo aveva meritato lo merita anche adesso. Senza questa
-     riga il traguardo tornerebbe indietro sotto gli occhi di chi lo
-     aveva già preso. */
+  // `nelPar` -> `daSolo`: travaso esatto, non generoso (`dentroPar` implicava già `daSolo`)
   if (p.totals.nelPar) {
     p.totals.daSolo = Math.max(p.totals.daSolo || 0, p.totals.nelPar)
     delete p.totals.nelPar
@@ -608,17 +350,11 @@ export async function selectPlayer(id) {
   p.eng = { ...vuoto.eng, ...(p.eng || {}) }
   p.esp = { ...vuoto.esp, ...(p.esp || {}) }
   p.mercato = migraMercato(vuoto.mercato, raw && raw.mercato)
-  /* il laboratorio delle pozioni è rifatto da zero e vive in
-     `campagne.pozioni` come gli altri giochi nuovi: il campo `lab` e il
-     residuo degli aiuti di prima non dicono più niente a nessuno */
-  delete p.lab
+  delete p.lab   // pozioni rifatta, vive in campagne.pozioni; nessuno legge più `lab`
   if (p.settings) delete p.settings.misureNuove
   p.gen = migraGenerale(vuoto.gen, raw && raw.gen)
   p.giorni = { ...vuoto.giorni, ...(p.giorni || {}) }
-  /* le avventure a capitoli del Generale non ci sono più (non si sono mai
-     aperte), e con loro il posto dove tenevano i progressi: nessuno lo
-     scriveva, perché nessuno ci poteva giocare */
-  delete p.storie
+  delete p.storie   // le avventure a capitoli del Generale non si sono mai aperte
   if (!p.items || typeof p.items !== 'object') p.items = {}
   if (!p.badge || typeof p.badge !== 'object') p.badge = {}
   sgomberaLaCameretta(p)
@@ -644,9 +380,6 @@ export async function selectPlayer(id) {
   persist()
 }
 
-/* ---------- la giornata ----------
-   Un giorno di fila si conta appena si sceglie il giocatore: entrare è
-   già il gesto che conta, non serve indovinare qualcosa per meritarlo. */
 function apriGiornata(now = Date.now()) {
   const p = state.profile
   segnaGiorno(p, now)
@@ -655,18 +388,8 @@ function apriGiornata(now = Date.now()) {
   controllaTraguardi(now)
 }
 
-/* ── cosa sa il bambino ──
-   I macrogruppi di scuola (`data/saperi.js`): accesi salvo che i
-   genitori li spengano, per bambino come tutto il resto di `settings`.
-   Spegnere non toglie un gioco e non tocca nessun progresso: toglie le
-   domande che senza quel pezzo di scuola non si possono ragionare. */
-/* Il difetto lo dichiara il catalogo (`difetto: false` in
-   `data/saperi.js`), non questo file: quasi tutti i saperi nascono
-   accesi, i pezzi che a scuola si fanno dopo — congiuntivo,
-   condizionale, passato remoto — nascono spenti. Quello che si salva
-   nel profilo resta **solo l'eccezione**, come per i giochi in home:
-   cambia da cosa. Le tipologie dei moduli (`orto:apostrofo`) non stanno
-   nel catalogo e non hanno difetto: sono accese, come sempre. */
+// I saperi (docs/apprendimento/saperi.md): il difetto lo dichiara il
+// catalogo (`difetto: false`), il profilo salva solo l'eccezione.
 const SPENTI_DI_PARTENZA = new Set(SAPERI.filter(s => s.difetto === false).map(s => s.chiave))
 const difettoDi = chiave => !SPENTI_DI_PARTENZA.has(chiave)
 
@@ -681,41 +404,15 @@ export function accendiSapere(chiave, si) {
   else s.sa[chiave] = si
   persist()
 }
-/* quelli spenti, che è la forma in cui li vuole chi fa le domande:
-   `quiz/scelta.js` non chiede «è acceso questo?», chiede «cosa devo
-   evitare» e degrada da sé.
-
-   Si leggono le eccezioni salvate invece di filtrare il catalogo,
-   perché qui dentro finiscono due specie di chiavi: i gruppi di
-   `data/saperi.js` («accenti») e le singole tipologie dichiarate dai
-   moduli di quiz («orto:apostrofo»). Le seconde il profilo non le
-   conosce e non deve conoscerle — sarebbe l'elenco di tutti i moduli
-   dentro lo store — e per chi fa le domande sono comunque la stessa
-   cosa: una chiave da evitare. Una chiave rimasta nel salvataggio di
-   una tipologia che non esiste più non fa danno: non la chiede
-   nessuno.
-
-   Ai nomi salvati si aggiungono quelli che nascono spenti: nel profilo
-   non c'è scritto niente proprio perché sono al loro difetto, e chi fa
-   le domande deve saperli evitare lo stesso. */
+// Quelli spenti, nella forma che vuole chi fa le domande («cosa evitare»):
+// eccezioni salvate + quelli spenti di partenza, mai il catalogo filtrato.
 export const saperiSpenti = () =>
   [...new Set([...Object.keys(state.profile.settings.sa || {}), ...SPENTI_DI_PARTENZA])]
     .filter(c => !sapereAcceso(c))
 
-/* ── LE TRE POSIZIONI DI UN PEZZO DI SCUOLA ──
-   Il gemello di `fissaGioco`, e per lo stesso motivo. `accendiSapere`
-   risponde a «acceso o spento?», che è la domanda giusta quando a
-   chiedere è chi fa le domande; la tacca della schermata dei grandi ne
-   fa un'altra — **chi decide**, l'età o il grande — e le posizioni sono
-   tre, non due.
-
-   «Come dice l'età» non vuol dire «nessuna eccezione»: vuol dire quella
-   che la partenza di quest'età scriverebbe adesso, che per le divisioni
-   a otto anni è `false`. È la stessa cosa che scrive `rimettiAiDifetti`,
-   e le due strade devono portare allo stesso posto — se qui si
-   cancellasse e basta, «rimetti questa riga» e «rimetti tutto»
-   lascerebbero due profili diversi, e la riga resterebbe ambra dopo
-   aver rimesso tutto. */
+// Gemello di `fissaGioco`: tre posizioni, non due (docs/genitori/ritocchi.md).
+// «Come dice l'età» scrive l'eccezione attesa e non cancella, così
+// `rimettiAiDifetti` e questa funzione portano allo stesso profilo.
 export function fissaSapere(chiave, come) {
   const s = state.profile.settings
   if (!s.sa) s.sa = {}
@@ -726,34 +423,18 @@ export function fissaSapere(chiave, come) {
   persist()
 }
 
-/* Le divisioni sono un sapere come gli altri; questi due nomi restano
-   perché il castello li chiama così da sempre e dire `sapereAcceso
-   ('divisioni')` dentro la cassa non lo renderebbe più chiaro. */
+// Nomi storici del castello, invariati per non offuscarli dentro la cassa
 export const divisioniAccese = () => sapereAcceso('divisioni')
 export const accendiDivisioni = si => accendiSapere('divisioni', si)
 
-/* Quello che il castello sa fare, nella forma che `data/ops.js` si
-   aspetta. Sta qui e non nella cassa perché lo chiedono in tre — la
-   cassa, il banco e il cartello di fine tappa — e tre copie della stessa
-   coppia di chiamate erano tre posti dove dimenticarne una. */
+// Una volta sola (cassa, banco, cartello di fine tappa), non tre copie
 export const contiPermessi = () => ({
   div: sapereAcceso('divisioni'),
   mul: sapereAcceso('moltiplicazioni'),
 })
 
-/* Il flag di ieri diventa il sapere di oggi. Prima le divisioni erano
-   `settings.divisioni`, un booleano tutto loro; chi le aveva spente non
-   se le deve ritrovare accese al primo avvio dopo l'aggiornamento —
-   sarebbe il caso peggiore, perché il gioco tornerebbe a chiedere
-   proprio quello che il bambino non sa fare. Si legge una volta e poi
-   il vecchio flag sparisce dal profilo. */
-/* Le tipologie della coniugazione si chiamavano `verbo:futuro`, che è
-   il prefisso dei verbi inglesi in `items`: dal giorno che il ripasso
-   dei quiz scrive lì dentro sarebbero due materie nello stesso
-   cassetto, e si chiamano `coniug:` (vedi `quiz/moduli/coniugazione.js`).
-   Chi aveva spento una di quelle voci se la deve ritrovare spenta:
-   perdere un'eccezione qui vuol dire ricominciare a chiedere proprio
-   quello che il genitore aveva tolto. */
+// migrazione: `settings.divisioni` -> `sa.divisioni`; `verbo:*` -> `coniug:*`
+// (coniugazione: `verbo:` era già il prefisso dei verbi inglesi in `items`)
 const CONIUGAZIONE_VECCHIE = new Set([
   'presente-regolare', 'presente-isc', 'presente-irregolare', 'ausiliare',
   'participio', 'participio-irregolare', 'imperfetto', 'futuro',
@@ -773,33 +454,17 @@ function migraSaperi(s) {
   }
 }
 
-/* ── i giochi in prova ──
-   Un gioco `sperimentale` sta dietro un cancello: finché questo flag è
-   spento non esiste per chi gioca — non è in home, non è fra le carte
-   da accendere, e non conta nel «non hai nessun gioco acceso». È uno
-   solo per tutti i giochi in prova, ed è **per bambino** come tutto il
-   resto di `settings`: si può dare il gioco a metà al più grande e non
-   alla piccola. Resta raggiungibile dall'indirizzo (`#generale`), che è
-   la strada dei grandi e dei test. */
 export const sperimentaliAccesi = () => state.profile.settings.sperimentali === true
 export function accendiSperimentali(si) {
   state.profile.settings.sperimentali = !!si
   persist()
 }
 
-/* i giochi in home: accesi salvo che i genitori li spengano, ed è per
-   bambino — uno può avere il castello e l'altro no. Quelli in prova
-   passano prima dal cancello qui sopra. */
 export const giocoAcceso = chiave =>
   (!eSperimentale(chiave) || sperimentaliAccesi()) &&
   giocoGiocabile(chiave) &&
   (state.profile.settings.giochi || {})[chiave] !== false
 
-/* Un gioco fatto tutto della stessa classe di domande — il laboratorio
-   delle pozioni, che è conversioni e basta — non si può giocare se quel
-   macrogruppo è spento: non sarebbe difficile, sarebbe da indovinare.
-   Non è l'interruttore dei genitori messo giù, è la carta che non si
-   accende, e la schermata dei genitori scrive perché. */
 export const giocoGiocabile = chiave => serveA(chiave).every(sapereAcceso)
 export const saperiCheMancano = chiave => serveA(chiave).filter(c => !sapereAcceso(c))
 export function accendiGioco(chiave, si) {
@@ -829,42 +494,15 @@ export function fissaGioco(chiave, come) {
   const s = state.profile.settings
   if (!s.giochi) s.giochi = {}
   if (come !== 'difetto') { s.giochi[chiave] = come === 'si'; persist(); return }
-  /* «Come dice l'età» non vuol dire «nessuna eccezione»: vuol dire
-     **quella che la partenza di quest'età scriverebbe adesso**, che per
-     un gioco da piccoli a nove anni è `false`. È la stessa cosa che
-     scrive `rimettiAiDifetti`, e le due strade devono portare allo
-     stesso posto: se qui si cancellasse e basta, «rimetti tutto» e
-     «rimetti questa riga» lascerebbero due profili diversi. */
+  // scrive l'eccezione attesa (non cancella), come `fissaSapere`: vedi docs/genitori/ritocchi.md
   const atteso = eccezioniPerEta(etaDelBambino()).giochi || {}
   if (atteso[chiave] === false) s.giochi[chiave] = false
   else delete s.giochi[chiave]
   persist()
 }
-/* quanti ne restano accesi: se sono zero la home lo dice invece di
-   mostrare una pagina vuota */
 export const quantiGiochiAccesi = () => CHIAVI_GIOCHI.filter(giocoAcceso).length
 
-/* ── SPOSTARE L'ETÀ, CHE ADESSO È L'UNICA MANOPOLA ──
-   Qui c'era `applicaPartenza`: si sceglieva una delle quattro fasce e
-   si riscrivevano giochi, saperi ed età in blocco. Serviva a chi era
-   nato prima che la domanda esistesse, ma era **la seconda manopola**
-   della stessa carta — dieci pixel sotto un `− 7,5 anni +` che
-   spostava solo l'età — e le due non si distinguevano guardandole,
-   mentre una delle due cancellava senza dirlo.
-
-   Adesso ce n'è una sola, in anni, e la fascia è una conseguenza. Cosa
-   succede spostandola lo decide `spostandoLEta` in `data/partenze.js`,
-   che è dato puro e si prova senza schermo; qui si scrive e basta. I
-   tre casi stanno lì, ma il patto vale la pena ripeterlo perché è
-   quello che rende la manopola usabile: **dentro la stessa fascia non
-   si tocca niente**. Da 8 a 8,5 si muove la mira delle domande, e tutto
-   quello che il grande aveva sistemato a mano resta dov'era.
-
-   Quello che questa funzione non tocca è tutto il resto: monete,
-   animali, campagne, traguardi, la memoria di cosa il bambino sa — e
-   nemmeno gli altri settaggi (il suono, i giochi in prova). L'età decide
-   cosa si vede e cosa si chiede, non cancella niente di quello che è
-   stato guadagnato. */
+// L'unica manopola dell'età: vedi docs/genitori/manopola.md e spostandoLEta in data/partenze.js
 export function spostaLEta (anni) {
   const s = state.profile.settings
   const mossa = spostandoLEta({ da: etaDelBambino(), a: anni,
@@ -875,25 +513,14 @@ export function spostaLEta (anni) {
   if (mossa.riscrive) {
     s.giochi = mossa.giochi
     s.sa = mossa.sa
-    /* i ritocchi se ne vanno col resto: sono correzioni sopra l'età, e
-       ripartire dai difetti vuol dire ripartire da quella. Che
-       spariscano non è mai una sorpresa — entrano nel conto di
-       `suMisura`, quindi la schermata l'ha già fatto confermare. */
-    delete s.ritocchi
+    delete s.ritocchi   // correzioni sopra l'età: la schermata l'ha già fatto confermare
   }
   persist()
   return mossa
 }
 
-/* ── E IL TASTO CHE RIMETTE TUTTO ──
-   Il compagno di `spostaLEta`, per il caso in cui l'età è giusta e a
-   essere sbagliato è quello che ci è stato messo sopra. Non tocca
-   l'età: butta le eccezioni e riparte dai difetti della sua fascia,
-   ritocchi compresi — sono correzioni sopra l'età, e rimetterla come
-   nuova vuol dire togliere anche quelle.
-
-   `null` quando non c'era niente da rimettere: chi lo chiama può dirlo
-   invece di far finta di aver fatto qualcosa. */
+// Compagno di `spostaLEta`: non tocca l'età, riparte dai difetti della sua
+// fascia. `null` quando non c'era niente da rimettere.
 export function rimettiAiDifetti () {
   const s = state.profile.settings
   const mossa = rimettendoLEta({ eta: etaDelBambino(), giochi: s.giochi || {},
@@ -933,28 +560,9 @@ export const etaDelBambino = () => {
    guarda; una scorciatoia che scrive solo il numero è la stessa
    seconda manopola di prima, spostata in un altro file. */
 
-/* ── il ritocco: «per lui questo è facile» ──
-   L'interruttore dei saperi era un sì/no, e il no è una risposta
-   grossa: «i problemi scritti no» tiene fuori anche quelli da una riga
-   che il bambino saprebbe fare. Ma non bastano nemmeno tre blocchi da
-   scegliere: quello che un grande vuole dire quasi sempre è **una tacca
-   più su o una più giù** rispetto a come l'abbiamo tarata noi.
-
-   Un gradino è mezzo anno di scuola (`PASSO` in `quiz/nucleo/modulo.js`)
-   e se ne fanno al massimo tre per parte: oltre un anno e mezzo non si
-   sta più ritoccando una taratura, si sta dicendo un'altra cosa — e
-   quell'altra cosa è spegnere il gruppo, che ha il suo tasto.
-
-   La chiave è un gruppo di `data/saperi.js` o una singola tipologia di
-   quiz: per chi fa le domande sono la stessa cosa. Chi non ritocca
-   niente non ha nessuna voce nel profilo, che è il caso normale. */
+// Il ritocco: una tacca di mezzo anno sopra o sotto la taratura, al massimo
+// tre per parte (docs/genitori/ritocchi.md). Chi non ritocca non ha voce.
 export const ritoccoSapere = chiave => (state.profile.settings.ritocchi || {})[chiave] || 0
-/* quanti ne sono stati fatti, e come si torna indietro tutti insieme.
-   Serve perché i ritocchi sono tanti piccoli gesti e nessuno si ricorda
-   quali ha fatto: senza un modo di rimetterli a posto, la prima volta
-   che uno smanetta si ritrova una taratura sua che non sa più
-   ricostruire. L'età no: quella si vede scritta in cima e si sposta
-   col dito, quindi non c'è niente da ricordare. */
 export const quantiRitocchi = () => Object.keys(state.profile.settings.ritocchi || {}).length
 export function azzeraRitocchi() {
   const quanti = quantiRitocchi()
@@ -972,20 +580,8 @@ export function ritocca(chiave, gradini) {
   return n
 }
 
-/* ── RICOMINCIARE A CONTARE UNA RIGA ──────────────────────────────
-   «Come va» mostra il conto delle risposte di ogni tipologia, e quel
-   conto è **appiccicoso**: dopo aver reso una cosa più facile, il vecchio
-   «ne ha sbagliate 7 su 10» resta lì per settimane e continua a dire una
-   cosa che non è più vera — perché le dieci risposte vecchie le ha date
-   sulle domande di prima. Chi ritocca deve poter dire «adesso ricomincia
-   a contare», o l'unica alternativa è aspettare che le nuove risposte
-   diluiscano le vecchie.
-
-   Si butta **il conto**, non l'elemento: `s` (la forza del ripasso) e
-   `last` restano, perché quelli non parlano di quanto era tarata bene
-   una domanda ma di quando va ripassata — e un ripasso azzerato
-   rifarebbe uscire domani una cosa saputa ieri. Anche il tempo se ne va
-   con le risposte: è la loro media. */
+// Butta il conto (non l'elemento): `s` e `last` restano, un ripasso
+// azzerato rifarebbe uscire domani una cosa saputa ieri.
 export function azzeraConto(chiave) {
   const it = state.profile.items?.[chiave]
   if (!it) return false
@@ -994,44 +590,15 @@ export function azzeraConto(chiave) {
   return true
 }
 
-/* Tutto quello che dipende dal bambino e non dal modulo, nella forma in
-   cui lo vuole `quiz/nucleo/classi.js`. Un oggetto solo perché è una
-   cosa sola: «chi sta giocando». */
 export const regoleDomande = () => ({
   eta: etaDelBambino(),
   finestra: finestraDi(etaDelBambino()),
   ritocchi: { ...(state.profile.settings.ritocchi || {}) },
 })
 
-/* ── NON C'È UN QUARTO INTERRUTTORE, e non si rifà ──
-   C'era: `settings.varianti`, «un MODO di giocare dentro un gioco», con
-   dentro una voce sola — `asteroidi:mente`, che toglieva il calcolo a
-   mente dagli asteroidi. Se n'è andato col suo unico inquilino, e il
-   motivo è scritto in `data/asteroidi.js`: spegnere metà di un gioco
-   vuol dire tenerne due, con due file, due numerazioni e due strade in
-   ogni schermata che lo nomina. Le tre forme che restano (un gioco, un
-   pezzo di scuola, i giochi in prova) dicono tutte una cosa che vale in
-   casa o a scuola; questa diceva soltanto «di questo gioco preferisco
-   metà», che è la domanda che le file uniche esistono per non fare.
-
-   Se un giorno servisse davvero togliere un modo di giocare, la strada
-   è l'età e i pezzi di scuola spenti — che tolgono delle domande e non
-   spaccano un gioco in due.
-
-/* ── QUELLO CHE UN BAMBINO HA GIÀ VISTO UNA VOLTA ──
-   Serve alle spiegazioni che compaiono **dentro la partita** e devono
-   comparire una volta sola: oggi la riga dei primi passi del tower
-   defense (`views/TowerDefense.vue`), che sta in fondo al campo finché
-   la prima torre non è in piedi.
-
-   Non serve più ad aprire da solo il foglio del `?`: quello è stato
-   provato e tolto — un velo all'apertura i bambini lo chiudono per
-   riflesso, e insegna a chiudere i veli.
-
-   Sta nelle impostazioni del bambino e non nell'archivio di casa: un
-   fratello che apre il gioco per la prima volta deve rivederla anche se
-   l'altro l'ha già superata. Come i giochi spenti, si scrive solo quello
-   che è successo — chi non ha una voce non l'ha mai vista. */
+// Non c'è un quarto interruttore per metà di un gioco: vedi
+// docs/genitori/interruttori.md. `guidaGiaVista`/`segnaGuidaVista`: le
+// spiegazioni dentro la partita che compaiono una volta sola, per bambino.
 export const guidaGiaVista = chiave =>
   (state.profile.settings.guideViste || {})[chiave] === true
 export function segnaGuidaVista(chiave) {
@@ -1042,13 +609,8 @@ export function segnaGuidaVista(chiave) {
   persist()
 }
 
-/* ── LE NOVITÀ, LETTE FIN QUI ──
-   Il segno della pagina delle novità (`guide/novita-bambini.js`): l'id
-   più alto che c'era quando si è premuto «Letto». Per bambino, come le
-   guide viste — due fratelli non se le leggono a vicenda — e chi non
-   l'ha mai scritto parte da zero, cioè le vede tutte, col tetto della
-   pagina. `flush()` subito, come per il nastro «installalo»: chi preme
-   «Letto» e chiude l'app un attimo dopo se le ritroverebbe davanti. */
+// Vedi docs/genitori/novita-bambini.md. `flush()` subito: chi preme «Letto»
+// e chiude l'app un attimo dopo non deve ritrovarsele davanti.
 export const novitaLette = () => {
   const n = state.profile.settings.novitaLette
   return typeof n === 'number' ? n : 0
@@ -1059,31 +621,16 @@ export function segnaNovitaLette() {
   return flush()
 }
 
-/* i lucchetti delle campagne: spento vuol dire «una tappa per volta»,
-   che è il comportamento di sempre. Acceso, tutte le tappe di tutti i
-   giochi si aprono subito. */
 export const tuttoAperto = () => state.profile.settings.tuttoAperto === true
 export function accendiTuttoAperto(si) {
   state.profile.settings.tuttoAperto = !!si
   persist()
 }
 
-/* ── una tappa è aperta? ──
-   La domanda che ogni campagna si faceva per conto suo, con la stessa
-   riga copiata in cinque giochi: `i <= progresso.tappa`. Adesso è qui,
-   una volta sola, perché il lucchetto dei genitori la deve poter
-   scavalcare tutta insieme — e perché una regola scritta in cinque
-   posti prima o poi diverge in cinque modi.
-
-   `fatto` è quante tappe sono state superate (`progresso.tappa`): la
-   prossima è sempre aperta, quelle dopo no. È una funzione pura tranne
-   che per il flag, quindi la si può provare senza browser. */
+// Una regola sola invece che copiata in cinque giochi; pura tranne il flag.
 export const tappaAperta = (i, fatto) => tuttoAperto() || i <= fatto
 
-/* Senza giocatore non si scrive: durante l'onboarding il profilo in
-   memoria è un `blank()` che non è di nessuno, e salvarlo creerebbe una
-   chiave `profilo:` senza id — che poi il roster ricostruito dalle
-   chiavi si ritroverebbe fra i piedi come un giocatore senza nome. */
+// Senza giocatore non si scrive: in onboarding salverebbe una chiave senza id
 export function persist() {
   if (!state.player) return
   save(KEY(state.player), JSON.parse(JSON.stringify(state.profile)))
@@ -1091,35 +638,23 @@ export function persist() {
 export const flushNow = flush
 
 export async function resetPlayer() {
-  /* La copia prima del rogo: vedi `store/cestino.js`. Si prende
-     `state.profile` e non quello su disco perché `persist()` scrive con
-     un ritardo, e quello che il grande sta cancellando è ciò che ha
-     davanti adesso. */
+  // copia prima del rogo (store/cestino.js): `state.profile`, non il disco,
+  // perché `persist()` scrive con un ritardo
   await cestina(state.player, nomeCorrente(), state.profile, 'cancellati')
   state.profile = blank()
-  /* è lo stesso bambino, e i giochi li ha già visti: le novità di prima
-     non tornano solo perché si ricomincia dalla prima tappa */
-  state.profile.settings.novitaLette = ULTIMA_NOVITA
+  state.profile.settings.novitaLette = ULTIMA_NOVITA   // le ha già viste, non è un bambino nuovo
   state.festa = []
   await remove(KEY(state.player))
   apriGiornata()
   persist()
 }
 
-/* Mettere da parte una copia senza cancellare niente: la chiama chi sta
-   per azzerare **una parte** dei progressi (una campagna sola) invece di
-   tutto, e quindi non passa da `resetPlayer`. */
+// Per chi azzera una parte sola dei progressi, non passa da `resetPlayer`
 export async function cestinaOra(motivo = '') {
   await cestina(state.player, nomeCorrente(), state.profile, motivo)
 }
 
-/* Rimettere una copia dal cestino. Ricostruisce anche il roster: la voce
-   può essere di un bambino eliminato, che nell'elenco non c'è più — e un
-   profilo senza nessuno che lo nomini sarebbe un salvataggio orfano, cioè
-   invisibile. Ritorna il nome, così la schermata può dire chi è tornato.
-
-   Non consuma la voce (vedi `store/cestino.js`): un ripristino sbagliato
-   dev'essere annullabile ripristinando quello giusto. */
+// Ricostruisce anche il roster: la voce può essere di un bambino eliminato
 export async function ripristinaCestinato(quando) {
   const voce = await voceCestinata(quando)
   if (!voce) throw new Error('Questa copia non c\'è più')
@@ -1133,49 +668,29 @@ export async function ripristinaCestinato(quando) {
   return voce.nome
 }
 
-/* ---------- salvataggio da portare via ----------
-   I progressi vivono solo dentro il browser del telefono: se si rompe, o
-   se un giorno cambia l'indirizzo da cui si aprono i giochi, spariscono.
-   Queste due funzioni sono la rete di sicurezza, e stanno dietro il PIN
-   della schermata dei genitori. */
-
-/* La firma serve a non farsi dare un JSON qualsiasi. Un salvataggio
-   scaricato prima di questa versione ne ha una diversa, e va importato
-   lo stesso: per questo il controllo qui sotto non guarda che il nome
-   combaci, ma che il file **abbia la forma** di un salvataggio. Inseguire
-   l'elenco delle firme vecchie sarebbe stato peggio del male — e una di
-   quelle era un pezzo di storia di casa che in un repo pubblico non ha
-   motivo di stare. */
+// Esportare/importare tutto: la rete di sicurezza dietro il PIN dei genitori.
+// La firma non si confronta col nome: il controllo guarda solo la forma,
+// così un file esportato da una versione vecchia si importa lo stesso.
 const FIRMA = 'giochi-bambini'
 
 export async function esportaTutto() {
   // il profilo aperto può essere più fresco di quello già scritto su disco
   persist()
   await flush()
-  /* Si esporta quello che c'è nell'archivio, non quello che c'è nel
-     roster: se un profilo è rimasto orfano — roster perso, voce
-     cancellata per sbaglio — questo è l'ultimo momento in cui qualcuno
-     se ne può accorgere, e buttarlo qui vorrebbe dire buttarlo davvero. */
+  // esporta dall'archivio, non dal roster: recupera anche un profilo orfano
   const profili = {}
   for (const k of await chiavi(PREFISSO)) {
     const p = await load(k)
     if (p) profili[k.slice(PREFISSO.length)] = p
   }
-  /* I nomi viaggiano col file: senza, un profilo con id opaco tornerebbe
-     indietro chiamandosi `g2`. */
   const giocatori = state.giocatori.map(g => ({ id: g.id, nome: g.nome }))
   return { tipo: FIRMA, v: 2, esportato: new Date().toISOString(), giocatori, profili }
 }
 
-/* Ritorna i nomi ripristinati, così la schermata può dire cosa è successo
-   invece di un generico "fatto". */
 export async function importaTutto(dati) {
   if (!dati || !dati.profili || typeof dati.profili !== 'object' || Array.isArray(dati.profili))
     throw new Error('Questo non è un salvataggio dei giochi')
 
-  /* Il roster si ricostruisce da quello che c'è nel file, non da un
-     elenco scritto qui: un salvataggio può arrivare da un'altra casa,
-     con altri bambini e altri id, e deve entrare comunque. */
   const ripristinati = []
   for (const [id, p] of Object.entries(dati.profili)) {
     if (!id || !p || typeof p !== 'object') continue
@@ -1184,8 +699,6 @@ export async function importaTutto(dati) {
   }
   if (!ripristinati.length) throw new Error('Nel file non c\'è nessun profilo da ripristinare')
 
-  /* I nomi, se il file li porta; altrimenti l'id fa anche da nome, come
-     per i profili di prima che il roster esistesse. */
   const nomi = new Map()
   if (Array.isArray(dati.giocatori))
     for (const v of dati.giocatori.map(normalizzaVoce)) if (v) nomi.set(v.id, v.nome)
@@ -1201,7 +714,6 @@ export async function importaTutto(dati) {
   return ripristinati.map(id => nomi.get(id) || id)
 }
 
-/* ---------- elementi ---------- */
 export function item(id) {
   const it = state.profile.items[id]
   if (it) return it
@@ -1224,12 +736,7 @@ export function countMastered(prefix, now = Date.now()) {
     .filter(([k, v]) => k.startsWith(prefix) && isMastered(v, now)).length
 }
 
-/* ---------- monete e livelli ----------
-   Il livello è uno solo per tutto il profilo ed è la somma dell'esperienza
-   di ogni gioco (vedi store/progressi.js): è anche il moltiplicatore delle
-   monete, così giocare a inglese fa guadagnare di più anche alle torri.
-   I livelli per singolo gioco esistono, ma stanno nella pagina Albo e non
-   toccano l'economia: un salvadanaio solo, un livello solo. */
+// Livello unico e moltiplicatore delle monete: vedi docs/core/progressi.md
 export const level = computed(() => livelloTotale(state.profile).n)
 
 export function addCoins(n) {
@@ -1242,13 +749,8 @@ export function addCoins(n) {
   return state.profile.coins
 }
 
-/* ── spendere, se ci sono ──
-   `addCoins(-n)` si ferma a zero, e per la fattoria va bene: lì il prezzo
-   si guarda prima di mostrare il tasto. Chi vende una cosa sola e subito
-   — un gradino degli aiuti — ha bisogno della domanda e della spesa in
-   un colpo: **o paga tutto, o non paga niente**, e dice quale delle due.
-   Una spesa si scrive subito su disco, come una tappa vinta: un aiuto
-   pagato e perso chiudendo l'app sarebbe un furto. */
+// O paga tutto o non paga niente (utile a chi vende domanda+spesa in un
+// colpo, come un gradino degli aiuti); scrive subito su disco.
 export function spendi(n) {
   if (!(n > 0)) return true
   if ((state.profile.coins || 0) < n) return false
@@ -1257,10 +759,8 @@ export function spendi(n) {
   return true
 }
 
-/* ═══════════ contatori e traguardi ═══════════
-   I giochi non toccano `totals` e `best` a mano: chiamano queste due, che
-   sanno anche far scattare i traguardi. Un contatore che nessuno guarda
-   non serve a niente, uno guardato dal posto sbagliato si dimentica. */
+// I giochi non toccano `totals`/`best` a mano: `segna`/`segnaBest` fanno
+// scattare anche i traguardi.
 export function segna(chiave, n = 1) {
   const t = state.profile.totals
   t[chiave] = (t[chiave] || 0) + n
@@ -1269,8 +769,8 @@ export function segna(chiave, n = 1) {
   return t[chiave]
 }
 
-/* Registra un primato. Torna true se è un record nuovo, così il gioco può
-   festeggiare senza doversi ricordare il valore di prima. */
+// Torna true se è un record nuovo, così il gioco può festeggiare senza
+// doversi ricordare il valore di prima.
 export function segnaBest(chiave, valore) {
   const b = state.profile.best
   if (!(valore > (b[chiave] || 0))) return false
@@ -1280,14 +780,8 @@ export function segnaBest(chiave, valore) {
   return true
 }
 
-/* Guarda se qualche traguardo è stato raggiunto adesso.
-   È rientrante — il premio in monete richiama addCoins, che richiama
-   persist — quindi si protegge da sola.
-
-   La PRIMA volta (profilo che esisteva prima dei traguardi, o appena
-   azzerato) i traguardi già meritati vengono registrati in silenzio:
-   niente monete e niente festa. Regalare duemila monete e venti popup
-   per cose fatte il mese scorso non è un premio, è rumore. */
+// Rientrante (il premio in monete richiama persist), si protegge da sola.
+// Prima volta: registra in silenzio i traguardi già meritati (vedi docs/core/progressi.md).
 let dentro = false
 export function controllaTraguardi(now = Date.now()) {
   if (dentro) return []
@@ -1305,49 +799,21 @@ export function controllaTraguardi(now = Date.now()) {
   } finally { dentro = false }
 }
 
-/* la vista che mostra la festa la toglie di mezzo appena l'ha mostrata */
 export function festaVista() { state.festa = [] }
 
-/* ---------- la fotografia dei progressi, per la pagina Albo ---------- */
 export const traguardi = (now = Date.now()) => statoTraguardi(state.profile, now)
 export const livelloOra = (now = Date.now()) => livelloTotale(state.profile, now)
 export const areaOra = (area, now = Date.now()) => progressoArea(state.profile, area, now)
 export const serieGiorni = (now = Date.now()) => serieViva(state.profile, now)
 
-/* ---------- "a che punto sei" in una materia ----------
-   `abilitaOra('mate')` dice quanto si sa adesso, `difficoltaOra('mate')`
-   traduce lo stesso numero in un livello 1..5 da dare a un generatore di
-   domande. È il gancio con cui i giochi smettono di ripartire da zero. */
+// difficoltaOra traduce abilitaOra in un livello 1..5 per un generatore di domande
 export const abilitaOra = (materia, now = Date.now()) => abilita(state.profile, materia, now)
 export const difficoltaOra = (materia, now = Date.now()) => difficolta(state.profile, materia, now)
 
-/* ---------- campagna del tower defense ----------
-   `tappa` è quante tappe sono state superate: è anche l'indice della prossima
-   da giocare. Vinta l'ultima si apre la partita libera, senza fine. */
 export const tdProgresso = () => state.profile.td
 
-/* ---------- il salvataggio di chi giocava alle sei tappe ----------
-
-   Il castello aveva sei tappe; adesso ne ha quindici, tre campagne da
-   cinque. `td.tappa` è un indice su quella fila, quindi un «4» scritto
-   ieri e un «4» scritto oggi non parlano dello stesso posto: senza
-   rimappare, chi era arrivato in fondo si ritroverebbe a metà del bosco.
-
-   La regola è che **nessuno torna indietro**. Le sei tappe di ieri
-   coprivano, per scaletta e difficoltà, quello che oggi sono le prime
-   due campagne: chi le aveva finite tutte trova aperto tutto il bosco e
-   tutto il sotterraneo — e le mura, che sono nuove, restano da
-   conquistare. La partita libera, se era sbloccata, resta sbloccata: era
-   un premio già preso, e i premi non si tolgono.
-
-   La tabella è scritta a mano e non è una proporzione: dieci diviso sei
-   darebbe numeri che non cadono su un confine di campagna, e la prima
-   cosa che un bambino guarda è dove si ferma la fila delle bandierine.
-
-   `v` è il segno che la migrazione è già stata fatta. Va letto **prima**
-   di fondere il salvataggio con il profilo vuoto: se si fondesse per
-   primo, il `v` del vuoto coprirebbe l'assenza nel salvataggio e la
-   rimappatura non partirebbe mai. */
+// Rimappa le sei tappe di ieri sulle quindici di oggi, senza far tornare
+// indietro nessuno: vedi docs/castello/campagne.md ("I salvataggi").
 export const TD_VERSIONE = 2
 const TD_DA_SEI = [0, 2, 3, 5, 7, 8, 10]
 
@@ -1374,39 +840,14 @@ export function tdCompleta(indice, quanteTappe) {
   return td
 }
 
-/* ---------- gli asteroidi: UN contatore su UNA fila ----------
-   `mate.fila` è quante voci della scaletta sono state superate, ed è
-   l'indice della prossima. Non c'è più un contatore per i pianeti e uno
-   per le stazioni: la fila è una, e l'ordine — col perché di ogni
-   giunzione — sta in `data/asteroidi.js`.
-
-   `mate.tappa` e `calc.tappa` restano scritti, ma **come specchio**: si
-   ricavano dalla fila (`campagneDaFila`) e li legge solo chi parla di
-   una campagna sola — i traguardi che contano le tabelline, la mappa dei
-   concetti, i due voli infiniti. Nessuno di loro decide più cosa è
-   aperto, e infatti non li scrive più nessun gioco.
-
-   Le stelle invece non si segnano da nessuna parte: si ricalcolano dal
-   motore ogni volta che si guarda, perché una tabellina che non si
-   ripassa smette di essere sicura e la stella deve poter tornare
-   indietro. */
+// mate.fila è il contatore unico; mate.tappa/calc.tappa restano solo come
+// specchio. Vedi docs/asteroidi/scaletta.md ("Un contatore, un segno").
 export const mateProgresso = () => state.profile.mate
 export const calcProgresso = () => state.profile.calc
 export const tabellineIntere = (now = Date.now()) => tabellineIntereDi(state.profile, now)
 
-/* L'UNICO POSTO CHE SCRIVE I DUE SPECCHI, e anche la migrazione.
-
-   Un profilo che non ha `fila` viene da prima della fila unica: i suoi
-   due contatori si travasano in uno solo, prendendo la posizione più
-   avanzata compatibile — chi aveva superato una tappa non se la ritrova
-   chiusa. Il perché della scelta generosa sta in testa a
-   `data/asteroidi.js`.
-
-   Poi c'è il secondo mestiere, che vale a ogni avvio: `allineaMate` e
-   `allineaCalcolo` aprono le tappe che il bambino **sa già** e lo dicono
-   scrivendo i due indici di campagna. Quello che aprono va portato
-   dentro il contatore unico, se no la fila resterebbe indietro rispetto
-   a due numeri che nessuno guarda più. */
+// L'unico posto che scrive i due specchi e fa la migrazione dai due vecchi
+// contatori (posizione più avanzata compatibile, mai in giù).
 export function sincronizzaAsteroidi(p) {
   const mate = p.mate || (p.mate = { tappa: 0, fila: 0, libera: false })
   const calc = p.calc || (p.calc = { tappa: 0, libera: false })
@@ -1416,14 +857,7 @@ export function sincronizzaAsteroidi(p) {
   const specchio = campagneDaFila(mate.fila)
   mate.tappa = specchio.pianeta
   calc.tappa = specchio.mente
-  /* IL VOLO INFINITO SI APRE QUANDO LA FILA È FINITA, ed è uno —
-     tabelline e calcolo a mente insieme (`data/asteroidi.js`). Erano
-     due, uno per campagna, e siccome i pianeti finiscono prima delle
-     stazioni (il Sole apre il capitolo del moltiplicare, la prova chiude
-     la fila) c'erano delle sere in cui la mappa ne offriva uno solo: una
-     metà del gioco che finiva prima dell'altra, dentro una fila che è
-     una. `calc.libera` resta scritto per chi lo legge ancora. `libera`
-     non torna mai indietro: un volo aperto resta aperto. */
+  // il volo infinito è uno solo (docs/asteroidi/volo.md); `libera` non torna mai indietro
   if (mate.fila >= SCALETTA.length) { mate.libera = true; calc.libera = true }
   return mate
 }
@@ -1462,40 +896,8 @@ export function linguaCompleta(campo, indice, quanteTappe) {
    libera, che non chiude mai. */
 export const mercatoProgresso = () => state.profile.mercato
 
-/* ---------- il salvataggio di chi giocava alle sei giornate ----------
-
-   La bancarella aveva sei giornate; adesso ne ha sedici, perché fra le
-   prime e la cassa rotta è entrata la scala che mancava (vedi la tabella
-   in testa a `data/bancarella.js`). `mercato.tappa` è un indice su quella
-   fila, quindi un «4» scritto ieri e un «4» scritto oggi non parlano dello
-   stesso posto: senza rimappare, chi aveva finito il mercato coperto si
-   ritroverebbe a metà delle giornate del totale.
-
-   La regola è quella di sempre, la stessa di `migraCastello`: **nessuno
-   torna indietro**. Le sei giornate di ieri sono tutte ancora qui, con lo
-   stesso id, e si sono solo spostate lungo la fila:
-
-     banchetto 0→0 · paese 1→1 · grande 2→5 · fiera 4→10 · coperto 3→13 ·
-     mente 5→15
-
-   `tappa` è **quante ne sono state finite**, cioè l'indice della prossima.
-   Chi ne aveva finite k aveva superato le vecchie 0..k-1, e quindi tutto
-   quello che sta prima della più avanzata fra quelle: da cui la tabella,
-   che non è una proporzione ma il conto vero, giornata per giornata.
-   Nota il 4 e il 5 che finiscono nello stesso posto: ieri il mercato
-   coperto veniva prima della fiera, oggi viene dopo, e chi si era fermato
-   in mezzo trova aperte tutte e due — mai una in meno.
-
-   Chi le aveva finite tutte (k = 6) trova aperto tutto, e la giornata
-   libera se l'era già sbloccata resta sbloccata: era un premio già preso.
-   Le dieci giornate nuove gli risultano fatte, ed è la scelta meno
-   peggio — l'alternativa era richiudergli la cassa rotta che aveva già
-   battuto.
-
-   `v` è il segno che la migrazione è già stata fatta, e va letto **prima**
-   di fondere il salvataggio con il profilo vuoto: se si fondesse per
-   primo, il `v` del vuoto coprirebbe l'assenza nel salvataggio e la
-   rimappatura non partirebbe mai. */
+// Rimappa le sei giornate di ieri sulle sedici di oggi, nessuno torna
+// indietro: vedi docs/bancarella/regole.md ("Il salvataggio segue la fila").
 export const MERCATO_VERSIONE = 2
 const MERCATO_DA_SEI = [0, 1, 2, 6, 14, 14, 16]
 
@@ -1521,27 +923,14 @@ export function mercatoCompleta(indice, quanteGiornate) {
   return m
 }
 
-/* ═══════════ il generale: dai vecchi indici agli id ═══════════
-   Fino al settembre 2026 le stelle e i record del Generale stavano sotto
-   la POSIZIONE del livello nella fila (`gen.stelle[6]`), e c'era un
-   avviso scritto in testa alla fila: riordinarla sposta i voti. È
-   arrivato il giorno: la fila è passata da ventisei livelli ai sei
-   pubblicati, e «Due strade» sarebbe scivolata dal settimo posto al
-   quarto portandosi via il voto di un livello che non c'è più.
-   Adesso la chiave è l'`id`, e questa è la tabella per tradurre: dove
-   stavano i sei che restano, nella fila di allora. Gli altri venti sono
-   stati tolti, e i loro voti se ne vanno con loro — li vedeva solo chi
-   aveva acceso i giochi in prova. I contatori (`totals`) non si toccano:
-   salgono e non scendono mai, e raccontano quanto si è giocato, non
-   cosa c'è adesso in elenco. */
+// Il Generale: le stelle stavano sotto la POSIZIONE del livello nella fila
+// (26 -> 6 livelli); adesso la chiave è l'`id`, e questa tabella traduce le
+// vecchie posizioni. I livelli tolti perdono il voto; `totals` non si tocca.
 const GEN_DA_POSIZIONE = { 0: 'primo', 1: 'chiave', 2: 'parole-due-chiavi',
                            6: 'due-strade', 14: 'attesa', 19: 'richiamo' }
 export function migraGenerale(vuoto, salvato) {
   const dati = salvato && typeof salvato === 'object' ? salvato : {}
   const dizionario = x => (x && typeof x === 'object' && !Array.isArray(x) ? { ...x } : {})
-  /* i due dizionari: un profilo salvato prima che il gioco esistesse non
-     ce li ha, e uno rovinato a mano potrebbe averli di un altro tipo. In
-     tutti e due i casi si riparte da vuoto, non da rotto. */
   const g = { ...vuoto, ...dati, ordini: dizionario(dati.ordini), stelle: dizionario(dati.stelle),
               aiuti: dizionario(dati.aiuti) }
   // il `v` che conta è quello del salvataggio: fondendo per primo il
@@ -1595,29 +984,11 @@ export function migraGenerale(vuoto, salvato) {
    (`views/generale/fila.js`), e passa la risposta già fatta. */
 export const genProgresso = () => state.profile.gen
 
-/* ── COSA VALE LA SECONDA STELLA ──
-   Una regola sola per le prove e per i capitoli, scritta qui perché è
-   una regola di progressione e non di partita.
-   Prima era **il par**: chiudere con pochi ordini. Il gioco però non
-   chiede di risolvere in poche mosse, chiede di risolvere — e quel
-   numero diceva al bambino che il piano che funziona, il suo, non era
-   quello giusto. Adesso la seconda stella dice una cosa che il gioco
-   intende davvero: **ci sei arrivato da solo**. La perde chi lascia
-   qualcuno sul campo, perché se no mandare avanti un compagno a morire
-   sarebbe gratis, e chi ha fatto girare **la soluzione intera** scritta
-   dal gioco (`svelato`).
-
-   Gli altri gradini degli aiuti non la toccano più: costavano la stella,
-   e una stella è un prezzo che un bambino non sente — adesso si pagano
-   in monete (`giochi/aiuti.js`), e pagarli due volte sarebbe una
-   punizione. La soluzione intera è un'altra cosa: non è un prezzo, è un
-   fatto — quel piano non l'hai pensato tu. */
+// Seconda stella: ci sei arrivato da solo (nessuno caduto, nessuna
+// soluzione intera svelata). Non è più «il par» (pochi ordini).
 export const daSolo = ({ svelato = false, caduti = 0 } = {}) => !svelato && !caduti
 
-/* ── i gradini degli aiuti scesi, livello per livello ──
-   Si tengono perché si pagano: chi esce e rientra ritrova le frasi che
-   ha comprato, e un pezzo di piano pagato si rimette gratis. Si tiene il
-   massimo, come le stelle: una scala non si risale. */
+// Si tengono perché si pagano: un gradino pagato si rimette gratis. Massimo, non risalita.
 export const genAiutiPresi = id => ((state.profile.gen || {}).aiuti || {})[id] || 0
 export function genSegnaAiuti(id, n) {
   const g = state.profile.gen
@@ -1647,8 +1018,7 @@ export function genCompleta(id, conto = {}) {
   const stelle = solo ? 2 : 1
   const prima = g.stelle[id] || 0
   if (stelle > prima) g.stelle[id] = stelle
-  /* quanti livelli sono stati superati: non apre i lucchetti — quelli si
-     leggono dalle stelle — ma è quello che guardano i contatori */
+  // quanti livelli superati: non apre i lucchetti (quelli guardano le stelle), ma i contatori sì
   g.tappa = Math.max(g.tappa || 0, Object.keys(g.stelle).length)
 
   if (primaVolta) segna('missioni')
