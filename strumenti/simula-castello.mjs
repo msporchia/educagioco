@@ -1,59 +1,27 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL CASTELLO GIOCATO A MENTE
-
-   Fa girare `motore/battaglia.js` — le regole vere, quelle che girano
-   sul telefono — con un giocatore finto al posto del bambino, e senza
-   niente da disegnare. Una tappa intera costa qualche decimo di
-   secondo: si possono provare mille partite nel tempo in cui il browser
-   ne gioca una.
-
-   Serve a rispondere alla sola domanda che conta per l'equilibrio:
-
-     quanta della sua energia deve spendere, uno che gioca, per
-     arrivare in fondo?
-
-   Se la risposta è «la metà», la tappa è una passeggiata, e non importa
-   quanto sia bello il modello che l'ha generata. Il giocatore finto ha
-   un tetto di spesa apposta: `quota: 0.75` vuol dire che di tutta
-   l'energia che la tappa gli mette in mano ne spende tre quarti e il
-   resto se lo tiene. Facendo scendere quel tetto finché non perde si
-   misura, in un numero, quanto la tappa è larga di manica.
-
-   Da quando una tappa promette i suoi `calcoli`, questo strumento
-   risponde anche a una seconda domanda: **quanti acquisti fa davvero**
-   chi la gioca bene. Un acquisto è un'operazione in colonna, e il
-   numero che esce dalla partita simulata deve essere quello scritto in
-   `data/campagne-castello.js` — se non lo è, il modello di
-   `data/castello.js` è sbagliato, non il dato.
-
-   Uso:
-     node strumenti/simula-castello.mjs                  # tutte e venti
-     node strumenti/simula-castello.mjs 6                # solo la sesta
-     node strumenti/simula-castello.mjs libera-mura      # una partita libera
-     node strumenti/simula-castello.mjs --quote 1,.9,.8  # con che tetti
-   ═══════════════════════════════════════════════════════════════════ */
+// Il castello giocato a mente: fa girare `motore/battaglia.js` (le regole
+// vere) con un giocatore finto, senza disegnare — una tappa costa qualche
+// decimo di secondo. Risponde a due domande: quanta energia serve per
+// arrivare in fondo (`quota`) e quanti acquisti fa davvero chi gioca bene
+// (deve tornare uguale a `calcoli`). Vedi docs/castello/taratura.md.
+//   node strumenti/simula-castello.mjs                  # tutte e venti
+//   node strumenti/simula-castello.mjs 6                # solo la sesta
+//   node strumenti/simula-castello.mjs libera-mura      # una partita libera
+//   node strumenti/simula-castello.mjs --quote 1,.9,.8  # con che tetti
 import { TAPPE, LIBERE, liberaDi, CFG, MONDO, costoNuovaTorre,
          sequenzaTorri, prossimoAcquisto } from '../src/data/castello.js'
 import { creaBattaglia } from '../src/motore/battaglia.js'
 import { TORRI } from '../src/data/ops.js'
 import { immuniDellOnda } from '../src/data/mostri.js'
 
-/* ── il campo su cui si tara ──
-   Le misure contano davvero: un campo più largo è una strada più lunga,
-   quindi più secondi sotto tiro. Adesso però ce n'è **una sola**, ed è
-   dichiarata: `MONDO` in `data/castello.js`. Prima si tarava sul
-   telefono in verticale sperando che sul computer non cambiasse troppo;
-   oggi non c'è niente da sperare, perché il mondo è lo stesso ovunque e
-   quello che cambia da uno schermo all'altro è solo l'inquadratura.
-   La formula della scala è quella di `grafica/tela.js`: se cambia lì,
-   cambia qui. */
+// Il campo su cui si tara è uno solo (`MONDO`): la formula della scala è
+// quella di `grafica/tela.js`, se cambia lì cambia qui.
 export const TELEFONO = { ...MONDO }
 export function misureDi(W, H, unita = 420) {
   return { W, H, S: Math.max(0.62, Math.min(1.5, Math.min(W, H) / unita)) }
 }
 
-/* Numeri a caso ma sempre gli stessi: una partita simulata si deve poter
-   rigiocare identica, o un bilanciamento non è una misura ma un aneddoto. */
+// Numeri a caso ma sempre gli stessi: una partita simulata si deve poter
+// rigiocare identica.
 export function seme(n) {
   let s = n >>> 0
   return () => {
@@ -67,82 +35,29 @@ export function seme(n) {
 const PASSO = 1 / 60          // lo stesso passo di un telefono che va liscio
 const LIMITE = 3600           // un'ora di gioco simulato: oltre, è uno stallo
 
-/* i regali che il finto giocatore prende, a giro: le quattro voci che
-   toccano una torre. `veleno` resta fuori perché vale solo per chi ha
-   scelto il ramo che avvelena, e lui i rami non li sceglie; `vista` e
-   `mura` si misurano a parte, chiedendoli con `sceglie`. */
+// I regali che il finto giocatore prende, a giro (veleno resta fuori:
+// vale solo per chi sceglie il ramo che avvelena, e lui non sceglie rami).
 const GIRO_REGALI = ['frecce', 'incanto', 'polvere', 'gelo']
 
-/* ── il giocatore finto ──
-
-   Non è un'intelligenza artificiale: è un bambino diligente. Costruisce
-   due torri per non restare scoperto — una per ingresso, dove gli
-   ingressi sono di più — e quelle che servono perché nessun mostro
-   della tappa gli passi sopra immune, poi sceglie il gradino più
-   conveniente — che è quasi sempre potenziare, ed è il punto di tutto
-   il gioco. Che torre costruisce e quando lo decide `prossimoAcquisto`
-   in `data/castello.js`, **la stessa funzione** del piano che conta i
-   calcoli: se il simulatore giocasse in un altro modo, il bersaglio si
-   centrerebbe su un bambino che non esiste. Ogni acquisto gli costa il
-   tempo di un'operazione in colonna, durante il quale il campo va
-   avanti senza di lui.
-
-   I parametri sono quelli che distinguono un bambino dall'altro:
-
-     quota     quanta parte dell'energia ricevuta si lascia spendere
-     strategia 'potenzia' | 'costruisci' — torri alte o torri tante
-     tOp       secondi per fare un'operazione in colonna
-     sbaglia   con che probabilità sbaglia (ogni errore è una penale)
-     svelto    se chiama l'ondata appena il campo è pulito, e si prende
-               il premio della fretta
-     impaziente se la chiama appena **si può**, anche con l'ondata di
-               prima ancora in campo: il premio più grosso, e due
-               ondate addosso insieme
-     traOndate se compra soltanto a campo pulito, prima di chiamare
-               l'ondata, invece che anche mentre i mostri camminano
-     immunita  se legge il preavviso ed **evita** di costruire una torre
-               a cui l'ondata in arrivo è immune
-*/
+// Il giocatore finto: un bambino diligente, non un ottimizzatore. Compra
+// con `prossimoAcquisto` (la stessa funzione del piano dei calcoli), e ogni
+// acquisto gli costa il tempo di un'operazione in colonna. I parametri
+// distinguono un bambino dall'altro: vedi docs/castello/taratura.md.
 export const PROFILI = {
-  /* Il metro su cui si tarano le tappe: spende tutto, non sbaglia un
-     conto — e **non corre**. Il bonus della fretta non entra nel conto
-     apposta: chi si prende il tempo di calcolare bene non deve trovarsi
-     in debito per questo, e i cinque punti a ondata di chi è svelto
-     restano quello che devono essere, un cuscinetto in più. */
+  // il metro su cui si tarano le tappe: spende tutto, non sbaglia, non corre
   misura:      { quota: 1.00, strategia: 'potenzia', tOp: 10, sbaglia: 0, svelto: false,
                  traOndate: true },
-  /* chi ne tiene da parte un decimo: deve passare, ma sentirlo. Uguale
-     al metro in tutto il resto — se no «spendere il 90%» non vuol dire
-     niente: prendersi il bonus della fretta ne vale già il sette. */
   parco:       { quota: 0.90, strategia: 'potenzia', tOp: 10, sbaglia: 0, svelto: false,
                  traOndate: true },
-  /* chi ne tiene da parte un quarto: non deve passare */
   pigro:       { quota: 0.75, strategia: 'potenzia', tOp: 10, sbaglia: 0, svelto: false,
                  traOndate: true },
-  /* il tetto di quello che si può avere: spende tutto, corre, e compra
-     anche mentre i mostri camminano */
   pieno:       { quota: 1.00, strategia: 'potenzia', tOp: 10, sbaglia: 0, svelto: true },
-  /* il bambino vero: spende tutto ma sbaglia un conto su quattro, ci
-     mette il suo tempo e la fretta non se la prende. Deve passare lo
-     stesso, se no la tappa è tarata per un adulto */
+  // il bambino vero: sbaglia un conto su quattro, ci mette il suo tempo, deve passare lo stesso
   pasticcione: { quota: 1.00, strategia: 'potenzia', tOp: 22, sbaglia: 0.25, svelto: false },
-  /* chi non ha capito che potenziare conviene: riempie il campo di
-     torri di livello 1. Deve arrivare meno lontano dell'altro */
+  // solo torri di livello 1: deve arrivare meno lontano degli altri
   largo:       { quota: 1.00, strategia: 'costruisci', tOp: 10, sbaglia: 0,  svelto: true },
-  /* Chi legge il preavviso fino in fondo: uguale al metro in tutto, ma
-     quando costruisce **scarta** la torre a cui l'ondata in arrivo è
-     immune, e ne prende una che la ferisce.
-     Il metro il preavviso lo legge già a metà — costruisce prima le
-     torri che coprono la fila dei mostri, perché con le immunità non
-     leggerlo del tutto vuol dire regalare ondate intere — ma poi va a
-     giro. Questo profilo serve a **misurare quanto vale** leggere anche
-     il resto, non a fissarlo. */
   previdente:  { quota: 1.00, strategia: 'potenzia', tOp: 10, sbaglia: 0, svelto: false,
                  traOndate: true, immunita: true },
-  /* Chi manda l'ondata dopo appena può, con quella di prima ancora in
-     campo: si prende il premio più grosso della fretta, e si prende
-     anche due ondate addosso. Serve a misurare se chiamare in anticipo
-     è una scelta che si paga — deve esserlo, se no diventa un obbligo */
   impaziente:  { quota: 1.00, strategia: 'potenzia', tOp: 10, sbaglia: 0, svelto: true,
                  impaziente: true },
 }
@@ -154,10 +69,6 @@ export function gioca(tappa, opzioni = {}) {
           da = null, istantanee = null, regali = null, sceglie = null } = opzioni
   const caso = seme(s)
   const stato = { cuori: 0, onda: 0, uccisi: 0, torri: 0, energia: 0 }
-  /* i regali della partita libera (`REGALI` in `data/castello.js`): li
-     applica solo la tappa che li prevede, quindi per la campagna questa
-     riga non esiste. Serve a misurare quanto vale un regalo — che è
-     l'unico modo di dimensionarli, vedi `docs/castello/libere.md`. */
   const motore = creaBattaglia({ tappa, misure, stato, regali })
   motore.inizia()
 
@@ -168,50 +79,34 @@ export function gioca(tappa, opzioni = {}) {
   let t = 0
   const storia = []
   let cuoriPrima = stato.cuori
-  /* Si può ripartire da un'ondata di mezzo invece che dall'inizio: al
-     taratore serve riprovare la stessa ondata cento volte con nemici
-     diversi, e rigiocarsi ogni volta tutta la tappa da capo costerebbe
-     cento volte tanto. L'istantanea porta con sé anche quanto è stato
-     speso fin lì, altrimenti il tetto di spesa ripartirebbe da zero. */
+  // si può ripartire da un'ondata di mezzo (per il taratore, che riprova la
+  // stessa ondata cento volte): l'istantanea porta con sé anche lo speso
   if (da) { motore.riprendi(da); speso = da.speso || 0 }
   let ondaVista = stato.onda     // per accorgersi che ne è partita una nuova
   let foto = null                // com'era il campo prima che partisse
 
-  /* quanto può ancora spendere: dell'energia che la tappa gli ha dato in
-     tutto, la sua quota — il resto se lo tiene in tasca */
   const disponibile = () => (stato.energia + speso) * quota - speso
 
-  /* la fila delle torri che costruisce: è quella del piano */
   const sequenza = sequenzaTorri(tappa, Math.max(32, tappa.posti || 0))
 
-  /* a quali torri è immune l'ondata **in arrivo** — non quella in
-     corso: si compra a campo pulito, fra un'ondata e l'altra, e la
-     torre da non comprare è quella per chi deve ancora arrivare. È
-     l'informazione che il nastro del preavviso mette sotto gli occhi
-     del bambino. */
+  // a quali torri è immune l'ondata in arrivo (non quella in corso: si
+  // compra a campo pulito, fra un'ondata e l'altra)
   function immuniInArrivo() {
     if (!immunita) return []
     const inArrivo = motore.prossime(1)[0]
     return immuniDellOnda(inArrivo)
   }
 
-  /* cosa comprerebbe adesso, se potesse. Si sale sempre la torre più
-     bassa, anche chi legge il preavviso: inseguire l'ondata col
-     potenziamento è stato misurato ed è una mossa peggiore — un gradino
-     alto costa di più, e a fine tappa ci si ritrova con meno livelli in
-     tutto di chi ha tenuto le torri pari. Il preavviso paga su *cosa
-     costruire*, non su cosa alzare. */
+  // Cosa comprerebbe adesso: si sale sempre la torre più bassa (inseguire
+  // l'ondata col potenziamento è una mossa peggiore, misurato).
   function mossa() {
-    /* con la strada di ognuna: i bisogni delle ondate miste la guardano */
     const torri = motore.torri.map(x => ({ tipo: x.tipo, lv: x.lv,
       via: motore.postazioni.find(p => p.x === x.x && p.y === x.y)?.via }))
     const m = prossimoAcquisto(torri, tappa, { posti: tappa.posti, sequenza, onda: stato.onda,
                                               largo: strategia === 'costruisci' })
     if (!m) return null
     if (m.che === 'salita') return { ...m, torre: motore.torri[m.indice] }
-    /* chi legge tutto il preavviso: se la torre della fila è una di
-       quelle che l'ondata in arrivo ignora, ne prende un'altra — la
-       prima della tappa che la ferisce, se c'è */
+    // chi legge tutto il preavviso scarta la torre a cui l'ondata è immune
     const immuni = immuniInArrivo()
     if (immuni.includes(m.tipo)) {
       const altra = tappa.torri.find(k => TORRI[k].danno && !immuni.includes(k))
@@ -283,16 +178,12 @@ export function gioca(tappa, opzioni = {}) {
                     livelli: f.torri.map(x => x.lv), speso: Math.round(f.speso), avanzata: 0 })
       cuoriPrima = stato.cuori
     }
-    /* Quanto vicino al castello è arrivato il più avanti di loro. È la
-       misura su cui si tarano le ondate: dice «di poco» o «di tanto»
-       dove i cuori dicono soltanto sì o no, e serve un numero che
-       cambi poco alla volta per poterci cercare sopra. */
+    // quanto vicino al castello è arrivato il più avanti di loro: la misura
+    // su cui si tarano le ondate (i cuori dicono solo sì o no)
     if (storia.length) {
       const corsa = storia[storia.length - 1]
-      /* sulla **sua** strada, non sulla prima: con due bocche le strade
-         hanno lunghezze diverse, e un nemico misurato sulla strada
-         sbagliata risultava al 110% del cammino — o al 70% quando era
-         già alla porta */
+      // sulla sua strada, non sulla prima: con due bocche le strade hanno
+      // lunghezze diverse
       for (const n of motore.nemici)
         corsa.avanzata = Math.max(corsa.avanzata, n.d / motore.viaDi(n).lunghezza)
       if (stato.cuori < cuoriPrima) {
@@ -311,18 +202,14 @@ export function gioca(tappa, opzioni = {}) {
       esito, onda: stato.onda, cuori: stato.cuori, uccisi: stato.uccisi, regali: presi,
       livelli: motore.torri.map(x => x.lv), speso: Math.round(speso),
       guadagnato: Math.round(guadagnato), avanzo: Math.round(stato.energia),
-      /* il numero che riassume tutto: quanta dell'energia ricevuta è
-         rimasta in tasca a fine partita */
       inTasca: guadagnato ? stato.energia / guadagnato : 0,
       secondi: Math.round(t), storia,
     }
   }
 }
 
-/* ── quanto poco basta spendere ──
-   Abbassa il tetto di spesa finché la tappa non si perde più. Il numero
-   che esce è la larghezza di manica della tappa: 1 vuol dire che serve
-   tutto, 0.6 che ne bastano sei decimi e il resto è decorazione. */
+// Abbassa il tetto di spesa finché la tappa non si perde più: la larghezza
+// di manica (1 = serve tutto, 0.6 = ne bastano sei decimi).
 export function quotaMinima(tappa, opzioni = {}, passo = 0.05) {
   for (let q = 0.4; q <= 1.001; q += passo) {
     const r = gioca(tappa, { ...opzioni, quota: Math.round(q * 100) / 100 })
@@ -331,14 +218,12 @@ export function quotaMinima(tappa, opzioni = {}, passo = 0.05) {
   return { quota: null, esito: gioca(tappa, { ...opzioni, quota: 1 }) }
 }
 
-/* ── quando è chiamato a mano ── */
 if (import.meta.url === `file://${process.argv[1]}`) {
   const argv = process.argv.slice(2)
   const quali = argv.filter(a => /^\d+$/.test(a)).map(Number)
   const iQuote = argv.indexOf('--quote')
   const quote = iQuote >= 0 ? argv[iQuote + 1].split(',').map(Number) : null
-  /* una partita libera si chiede per chiave (`libera-mura`) e si gioca
-     come la tara: venti ondate, senza regali — è il pavimento */
+  // una libera si chiede per chiave, e si gioca come la tara: 20 ondate senza regali
   const libere = argv.filter(a => liberaDi(a)).map(a => {
     const l = liberaDi(a)
     return [TAPPE.length + LIBERE.indexOf(l), { ...l, ondate: 20, regali: false }]

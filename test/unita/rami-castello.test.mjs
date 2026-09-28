@@ -1,33 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I DUE RAMI DI UNA TORRE — e la regola che li tiene onesti.
-
-   A metà scaletta una torre sceglie un mestiere: cecchino o raffica,
-   veleno o catena, bufera o brina, mortaio o napalm. La scelta non
-   costa un calcolo in più — è quello che il calcolo del gradino compra
-   — e proprio per questo deve valere una regola sola:
-
-     **i due rami valgono lo stesso.**
-
-   Cambia la forma del danno, non la quantità. Non è gusto: `pianoDi`,
-   `difesaCon`, `durezzaDi` e la tabella delle vite in
-   `taratura-castello.js` sono costruiti sulle torri senza ramo — il
-   giocatore modello i rami non li sceglie. Se un ramo fosse più forte,
-   chi sceglie bene troverebbe le tappe facili e chi sceglie male
-   impossibili, e il taratore non saprebbe più quale delle due partite
-   sta misurando. Adesso che le **torri** non valgono più lo stesso (il
-   listino, `CARATTERE`) i rami sì: la torre si sceglie guardando il
-   prezzo, il ramo si prende allo stesso prezzo di un gradino qualunque.
-
-   Si conta con la stima del modello, `dpsDi(tipo, livello, ramo)`, che
-   è la stessa per le torri e per i rami — e che `npm run dps` mette a
-   confronto col motore vero. Prima questo test aveva una formula sua,
-   e diceva «pari» mentre il motore misurava il napalm al triplo del
-   mortaio: il veleno era scritto al secondo e contato in tutto.
-
-   Questo test è l'unico posto dove quella promessa viene contata. Senza,
-   basta ritoccare un moltiplicatore in `RAMI` per rompere in silenzio la
-   taratura di quindici tappe.
-   ═══════════════════════════════════════════════════════════════════ */
+// I due rami valgono lo stesso (cambia la forma del danno, non la
+// quantità): vedi docs/castello/torri.md. Questo test è l'unico posto dove
+// quella promessa viene contata, con la stima del modello (`dpsDi`) contro
+// cui `npm run dps` confronta il motore vero.
 import { TORRI, ramiDi } from '../../src/data/ops.js'
 import { RAMI, RAMI_DA, tiroDi, geloDi, dpsDi, raggioDi } from '../../src/data/castello.js'
 import { Nemico } from '../../src/motore/castello/nemico.js'

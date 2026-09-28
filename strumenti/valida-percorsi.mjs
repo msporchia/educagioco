@@ -1,223 +1,59 @@
 #!/usr/bin/env node
-/* ═══════════════════════════════════════════════════════════════════
-   LE QUINDICI TAPPE DEL CASTELLO, PASSATE AI RAGGI X
-
-       node strumenti/valida-percorsi.mjs
-
-   Una `forma` in `data/campagne-castello.js` è una spezzata di sei
-   numeri per riga: si legge bene e non dice niente. Questo strumento
-   la fa diventare quello che diventa in gioco — la smussa con lo
-   stesso Chaikin del motore, ci dispone le postazioni con la stessa
-   formula di `motore/battaglia.js` — e poi controlla le cose che a
-   occhio non si vedono. Una volta sola, sulle misure del mondo
-   (`MONDO` in `data/castello.js`): prima erano due, telefono e
-   computer, perché il campo si stirava dentro il riquadro che
-   trovava; adesso il mondo è dichiarato e a piegarsi è lo schermo.
-
-   Le distanze sono in **unità di disegno** (`S`), la stessa misura in
-   cui sono scritti i raggi delle torri e le piazzole: in pixel non
-   vorrebbero dire niente, perché il campo cambia taglia.
-
-   ── che cosa guarda ──
-
-     margini      il tracciato sta dentro il riquadro giocabile, entra
-                  dal bordo di sopra ed esce in fondo;
-
-     gomito       quanto si avvicinano due parti del tracciato che
-                  distano fino a 200 unità **di cammino**: è una curva
-                  che torna su sé stessa, e va bene che si avvicini —
-                  nell'incavo di un gomito la torre ci sta apposta. Il
-                  minimo serve solo a escludere i tornanti a spillo;
-
-     corridoio    la stessa cosa fra parti che distano più di 200
-                  unità di cammino: lì sono due corsie diverse, e
-                  devono starsi larghe. Il conto del minimo: 34
-                  (quanto sta fuori una postazione) + 15 (la sua
-                  piazzola) + 17 (mezza strada) = 66, tenuto a 62;
-
-     piazzole     la distanza fra le due postazioni più vicine, da tre
-                  fino a **quante ne avrà davvero questa tappa** —
-                  glielo si chiede a `data/castello.js` — più due di
-                  margine per il giorno in cui l'economia ne aprisse
-                  qualcuna in più;
-
-     presidio     quanta strada tiene sotto tiro una postazione,
-                  misurata in raggi d'arciere. Su un tracciato diritto
-                  una torre ne batte due, uno per lato: presidio ~1,9.
-                  Su un tracciato ripiegato la stessa torre ne batte
-                  quattro, e la tappa perdona. È la difficoltà che sta
-                  nella mappa invece che nei numeri, ed è per questo
-                  che deve **scendere** dal bosco alle mura;
-
-     scoperto     la stessa cosa guardata con **le postazioni che la
-                  tappa ha davvero**, che da quando i calcoli sono
-                  scesi sono tre o quattro, non otto. È un controllo
-                  diverso dal presidio e serve a un'altra paura: il
-                  presidio è una media, e una media alta si può fare
-                  anche con due torri appiccicate e mezzo tracciato
-                  senza nessuno. Quindi qui si guarda il **buco**: il
-                  tratto continuo più lungo che nessuna torre vede.
-                  Si contano solo i buchi **interni**, fra la prima e
-                  l'ultima postazione: quelli in testa e in coda non
-                  dipendono dal disegno ma dalla formula che dispone
-                  le piazzole a `lunghezza/(n+1)`, che lascia sempre
-                  un quarto di strada libero all'ingresso e uno
-                  all'uscita, su qualunque mappa;
-
-     immunità     ogni mostro si deve poter ferire con una torre che la
-                  tappa mette a disposizione, e dove le torri che
-                  feriscono sono più d'una **ognuna deve avere un mostro
-                  immune** — se no quella torre, da sola, vince la
-                  tappa. La prima ondata la ferisce l'arciere, e due
-                  ondate di fila non hanno le stesse immunità. Le regole
-                  sono scritte una volta sola, in `guastiDelleImmunita`
-                  (`data/mostri.js`), e le conta anche `unita/castello`.
-                  Le ondate miste mescolano due tipi che nessuna torre
-                  ferisce tutti e due, e che almeno due torri toccano
-                  (`guastiDelleMiste`).
-                  E le prime otto ondate le devono ferire le torri
-                  con cui il giocatore modello apre, ognuna dalla sua
-                  strada (`coperturaApertura` in `data/castello.js`),
-                  tranne dove `APERTURA_CORTA` dice perché non si può.
-   ═══════════════════════════════════════════════════════════════════ */
+// Le tappe del castello, passate ai raggi X: node strumenti/valida-percorsi.mjs
+// Rifà la geometria di una `forma` (smussa, dispone le postazioni) e
+// controlla quello che a occhio non si vede — margini, distanze minime,
+// presidio, buchi, immunità. Le distanze sono in unità di disegno (`S`), non
+// in pixel. Vedi docs/castello/campagne.md e mostri.md.
 import { Percorso } from '../src/motore/castello/percorso.js'
 import { CAMPAGNE, RACCONTO, LIBERE_RACCONTO } from '../src/data/campagne-castello.js'
 import { guastiDelleImmunita, guastiDelleMiste } from '../src/data/mostri.js'
-/* Quante piazzole avrà davvero la tappa lo decide l'economia, che sta
-   in un altro file e in un altro cantiere. La si legge — non la si
-   scrive — perché senza quel numero questo strumento controllerebbe
-   una mappa che non esiste: gli stessi tracciati con otto torri e con
-   tre non sono la stessa difesa. */
+// Quante piazzole avrà davvero la tappa lo decide l'economia (si legge, non
+// si scrive): senza, questo strumento controllerebbe una mappa che non esiste.
 import { postiDi, MONDO, LIBERE, TAPPE, coperturaApertura, APERTURA_COPRE, APERTURA_CORTA,
          ONDATE_TARATE, chiaveTappa }
   from '../src/data/castello.js'
 
-/* ── i margini del campo ──
-   Il campo è verticale: i mostri entrano dal bordo **alto** e scendono
-   fino al castello, che sta in basso. Prima entravano da sinistra e
-   uscivano a destra, perché il riquadro era quasi quadrato e schiacciato
-   fra la barra e il banco dei bottoni; il banco non c'è più, il campo si
-   prende lo schermo, e lo schermo di un telefono è alto. */
 const X0 = 0.05, X1 = 0.95, Y0 = 0.04, Y1 = 0.95
 const INGRESSO = 0.05           // il primo punto sta sul bordo di sopra
 const USCITA = 0.90             // l'ultimo arriva davvero in fondo
 
-/* ── le distanze minime, in unità di disegno ── */
-const GOMITO = 52               // dentro una curva che rientra
-const CORRIDOIO = 62            // fra due corsie diverse
-const PIAZZOLE = 40             // fra due postazioni, da 3 a 8
-const PIAZZOLE_FITTE = 22       // fra due postazioni, nei due di margine
-const VICINO = 80               // sotto questo cammino due punti sono lo stesso tratto
-const LONTANO = 200             // oltre questo cammino sono due corsie
-const RAGGIO = 92               // il raggio dell'arciere di livello 1
-/* Quanta parte finale di una strada è «confluenza»: lì due ingressi si
-   avvicinano per forza, perché la porta del castello è una sola, e
-   pretendere che stiano larghi vorrebbe dire pretendere due castelli.
-   Un quinto è quanto basta a farle arrivare insieme senza che diventino
-   una corsia sola per mezza mappa — che è il modo noto di rendere finta
-   una mappa a due ingressi: se si uniscono presto, si difende solo il
-   tratto comune e i due ingressi non li guarda più nessuno. */
+// Le distanze minime, in unità di disegno; il perché di ognuna è in
+// docs/castello/campagne.md ("Le distanze minime" e "Le tappe a più bocche").
+const GOMITO = 52
+const CORRIDOIO = 62
+const PIAZZOLE = 40
+const PIAZZOLE_FITTE = 22
+const VICINO = 80
+const LONTANO = 200
+const RAGGIO = 92                // il raggio dell'arciere di livello 1
 const CONFLUENZA = 0.2
-/* Sotto questa distanza due strade **sono la stessa strada**: è una Y
-   che si chiude, un anello che si richiude, un canale che si immette.
-   È il caso che prima non esisteva — c'erano solo strade separate — e
-   che rendeva tutte le mappe a più ingressi due canali paralleli. */
 const FUSE = 9
-/* e quanto può durare il tratto in cui sono fuse: oltre la metà, una
-   mappa a due bocche si difende tutta dopo l'incrocio, e i due ingressi
-   diventano un disegno senza conseguenze */
 const COMUNE = 0.5
-/* ── la via di mezzo ──
-   Due strade che si separano passano per forza da venti, trenta,
-   quaranta unità: è la forcella, e dura un attimo. Quello che non deve
-   esistere è un **tratto lungo** in cui stanno a quella distanza — a
-   schermo si legge come una strada sola sbavata, e in gioco sono due
-   che nessuna torre riesce a coprire insieme. Quindi non si guarda la
-   distanza minima: si guarda per quanta strada si sta in mezzo.
-
-   Diciotto per cento perché una forcella costa il suo, e una mappa può
-   averne due: la clessidra della Foce si fonde a metà campo e si
-   riapre subito dopo, e ogni passaggio si porta dietro il suo tratto di
-   avvicinamento. Sopra questa quota non è più una forcella — è un
-   corridoio doppio. */
 const IN_MEZZO = 0.18
 
-/* ── le fasce per campagna: lunghezza in unità, presidio in raggi ──
-   Non c'è più un «vale per il telefono»: il mondo è uno solo, e queste
-   fasce valgono lì. **Sono le stesse di prima del campo verticale**, e
-   non è una svista: il mondo nuovo ha la stessa area in unità di quello
-   vecchio (vedi `MONDO` in `data/castello.js`), solo girata. Una strada
-   misura ancora fra i 400 e i 1000 unità e una torre ne presidia ancora
-   due raggi scarsi — quello che è cambiato è la forma, non la quantità
-   di gioco. */
+// Le fasce per campagna (lunghezza in unità, presidio in raggi): la Palude
+// è fuori scala perché la sua difficoltà sta nei fronti, non nel presidio.
 const FASCE = {
   bosco:       { lung: [780, 1000], presidio: [2.15, 2.70] },
   sotterraneo: { lung: [520, 950],  presidio: [1.95, 2.40] },
   mura:        { lung: [420, 800],  presidio: [1.80, 2.20] },
-  /* La Palude è fuori dalla scala del presidio, e non per svista: le
-     sue strade sono corte perché sono due o tre, e la difficoltà non
-     sta più in quanto una torre presidia ma in **quanti fronti** ci
-     sono. Chiederle di scendere ancora sotto le Mura vorrebbe dire
-     rettifili nudi su tre ingressi, cioè una tappa impossibile per una
-     ragione che non si vede. */
   palude:      { lung: [420, 720],  presidio: [1.80, 2.15] },
 }
-const PRESIDIO_MINIMO = 1.85    // il pavimento, ovunque: sotto è un tiro al bersaglio
+const PRESIDIO_MINIMO = 1.85    // il pavimento, ovunque
 
-/* ── le postazioni che ci sono davvero ──
-   `postiDi()` ne dà **tre o quattro** per tappa: sono scese da
-   otto-dieci quando il numero di calcoli è sceso, e i percorsi qui
-   dentro erano stati disegnati prima. Con tre torri al posto di otto
-   un tracciato può lasciare scoperti tratti che con otto non si
-   vedevano, e la fascia di presidio non se ne accorge — è una media, e
-   le medie non hanno buchi.
-   Si guarda il numero vero della tappa, non un numero di comodo: a tre
-   e a quattro le piazzole non stanno negli stessi posti, e una mappa
-   che regge a quattro può avere un buco a tre. Se un giorno l'economia
-   cambia quel numero, questo controllo se ne accorge da solo. */
-/* le partite libere non hanno un piano da cui derivarle: le dichiarano */
+// Le postazioni che una tappa avrà davvero (l'economia le decide, si legge
+// da `postiDi`, non si scrive un numero di comodo).
 const postiVeri = t => t.posti ?? postiDi(t)
-/* In più si prova sempre il caso più magro — **tre** postazioni, il
-   minimo che `postiDi` possa dare — anche se oggi nessuna tappa ci
-   arriva. Non fa fallire niente: è un avvertimento, perché quanto
-   spendere e quante piazzole aprire è una manopola che si gira spesso,
-   e se domani una tappa scende a tre è meglio saperlo prima che dopo. */
-const MAGRO = 3
-/* Il pavimento del presidio si abbassa quando le postazioni sono
-   poche: con tre torri su un rettifilo delle mura non si può chiedere
-   la densità che ne fanno sei. Quello che non si sconta è il buco. */
+const MAGRO = 3                 // il minimo che postiDi possa dare: si avvisa, non si fallisce
 const PRESIDIO_POCHI = 1.78
-/* Quanto può essere lungo un tratto interno che nessuna torre vede.
-   Sessanta unità sono due terzi scarsi di un raggio d'arciere: il
-   nemico ci passa senza prendere niente, ma non fa in tempo a
-   riprendere fiato. Oggi la peggiore delle quindici sta a 42. */
-const BUCO_INTERNO = 60
-/* e l'ordine fra le campagne, che è il punto di tutto: il bosco
-   perdona più del sotterraneo, che perdona più delle mura */
-const SCALINO = 0.12
+const BUCO_INTERNO = 60          // tratto interno più lungo che nessuna torre vede
+const SCALINO = 0.12             // quanto deve scendere il presidio da una campagna alla prossima
 
-/* La misura del campo, e adesso è **una sola**: il mondo è dichiarato
-   in `data/castello.js` e non si piega più allo schermo — è la
-   telecamera a incorniciarlo. Prima qui ce n'erano due, telefono e
-   computer, e metà dei controlli esisteva per dire quanto peggiorava
-   la seconda. */
 const MISURE = [{ nome: 'campo', W: MONDO.W, H: MONDO.H }]
-/* la scala non si calcola più: la dichiara il mondo */
 const scalaDi = () => MONDO.S
 
-/* ── il campo, chiesto al motore ──
-   Prima queste nove righe erano una copia fedele della geometria di
-   `motore/battaglia.js`, tenuta uguale a mano. Non lo sono più: da
-   quando le piazzole stanno in una classe esportata (`Percorso`) si
-   importa quella, e la copia — che nel frattempo era **divergita**,
-   perché occupava ancora le postazioni partendo dal castello mentre il
-   gioco le occupa dall'ingresso — non c'è più. Questo strumento
-   controlla il campo su cui si gioca davvero, e non c'è più niente da
-   tenere allineato.
-
-   `forme` può essere una spezzata sola o un elenco: le tappe a due
-   ingressi hanno due strade, e il `Percorso` le spartisce le piazzole
-   da sé. */
+// Il campo, chiesto al motore vero (`Percorso`): non è più una copia a mano
+// della geometria di `motore/battaglia.js`, che divergeva.
 function campoDi(forme, W, H, S, quante) {
   const p = new Percorso(forme, quante, { W, H, S })
   return { via: p.via, vie: p.vie, postazioni: p.postazioni }
@@ -226,20 +62,10 @@ function campoDi(forme, W, H, S, quante) {
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
 const dove = (p, M) => p ? `(${(p.x / M.W).toFixed(2)}, ${(p.y / M.H).toFixed(2)})` : '—'
 
-/* ── una strada che si attraversa da sé ──
-   Un anello vero — la strada scende, fa un cappio e ripassa sopra sé
-   stessa — è due tratti della **stessa** via che si tagliano. Il motore
-   non ha bisogno di saperlo (un nemico ha un `d` scalare, e passa due
-   volte dallo stesso punto senza che nessuno glielo dica), il fondale
-   nemmeno (la cella dell'incrocio chiede la tessera a croce), ma il
-   validatore sì: senza, un cappio sarebbe indistinguibile da due
-   corsie che si sfiorano. Quindi la tappa lo **dichiara** (`incroci`),
-   e qui si contano quelli che ci sono davvero: due segmenti della
-   spezzata smussata che si tagliano, con abbastanza cammino in mezzo
-   da non essere lo stesso gomito. Torna il punto e l'angolo, perché un
-   incrocio va bene solo se è netto — sotto `INCROCIO_NETTO` gradi due
-   tratti non si attraversano, si sfiorano per un pezzo, ed è proprio
-   quello che le corsie non devono fare. */
+// Un anello vero (la strada si attraversa da sé) è due tratti della stessa
+// via che si tagliano: la tappa lo dichiara (`incroci`), qui si contano
+// quelli veri. Un incrocio va bene solo se è netto (sotto INCROCIO_NETTO
+// gradi è una sbavata, non un incrocio).
 const INCROCIO_NETTO = 60       // gradi: sotto, non è un incrocio ma una sbavata
 const ATTORNO_ALL_INCROCIO = 80 // unità: fin dove il ravvicinamento è l'incrocio stesso
 function incrociDi(vie, S) {
@@ -269,11 +95,9 @@ function incrociDi(vie, S) {
 const vicinoAUnIncrocio = (p, incroci, S) =>
   incroci.some(c => dist(p, c.punto) / S < ATTORNO_ALL_INCROCIO)
 
-/* quanto si sfiorano due parti del tracciato, distinguendo il gomito
-   (poco cammino in mezzo) dalla corsia parallela (molto cammino).
-   `sfiorano` è la corsia parallela **della stessa strada** che sta
-   sotto `CORRIDOIO` senza essere un incrocio dichiarato: è il guasto
-   che un cappio deve poter evitare senza che si smetta di cercarlo. */
+// Quanto si sfiorano due parti del tracciato: il gomito (poco cammino in
+// mezzo) dalla corsia parallela (molto cammino). `sfiorano` è la corsia
+// parallela della stessa strada sotto CORRIDOIO senza essere un incrocio.
 function ravvicinamenti(vie, S, incroci = []) {
   const passo = 4 * S
   let gomito = Infinity, corridoio = Infinity, dg = null, dc = null
@@ -295,12 +119,8 @@ function ravvicinamenti(vie, S, incroci = []) {
         }
       }
   }
-  /* ── e fra due strade diverse ──
-     Due ingressi vogliono dire due corsie che vivono in parallelo, e
-     valgono le stesse distanze di due corsie della stessa strada. Con
-     una differenza: **in fondo si toccano per forza**, perché la porta
-     del castello è una sola. L'ultimo pezzo di ciascuna è quindi fuori
-     dal conto — lì convergere è il disegno, non un difetto. */
+  // fra due strade diverse: in fondo si toccano per forza (la porta è una
+  // sola), quindi l'ultimo pezzo di ciascuna è fuori dal conto
   for (let a = 0; a < vie.length; a++)
     for (let b = a + 1; b < vie.length; b++) {
       const ca = vie[a].campiona(passo), cb = vie[b].campiona(passo)
@@ -319,16 +139,9 @@ function ravvicinamenti(vie, S, incroci = []) {
   return { gomito, corridoio, dg, dc, sfiorano, ds, ds2, comune, inMezzo }
 }
 
-/* Le due postazioni più vicine, dalle tre di magra fino a quante ne
-   avrà davvero questa tappa (`fino`), più due di margine per il giorno
-   in cui l'economia ne chiedesse qualcuna in più.
-
-   Prima si provava sempre fino a dodici, ed era una domanda senza
-   risposta: una mappa del bosco con dodici piazzole non esiste — ne ha
-   quattro — e pretendere che le regga tutte vuol dire raddrizzare le
-   anse che sono il motivo per cui quel bosco perdona. Si controlla
-   quello che il gioco fa, non quello che potrebbe fare in un mondo
-   parallelo. */
+// Le due postazioni più vicine, da tre fino a quante ne avrà davvero questa
+// tappa (`fino`): si controlla quello che il gioco fa, non un numero fisso
+// che nessuna mappa raggiunge.
 function piazzoleStrette(forme, W, H, S, fino = 8) {
   let larga = Infinity, fitta = Infinity, quante = 0
   for (let q = 3; q <= fino + 2; q++) {
@@ -343,16 +156,10 @@ function piazzoleStrette(forme, W, H, S, fino = 8) {
   return { larga, fitta, quante }
 }
 
-/* Il presidio. Si misura con sei postazioni — il numero di mezzo fra
-   quelli che una tappa può avere — così le quindici mappe si
-   confrontano fra loro con lo stesso metro. */
+// Il presidio: sei postazioni (il numero di mezzo), così tutte le mappe si
+// confrontano con lo stesso metro. Con due ingressi si misura strada per
+// strada, o il numero verrebbe fuori più alto solo perché le strade sono corte.
 function presidioDi(forme, W, H, S, quante = 6) {
-  /* Con due ingressi si misura **strada per strada**, come se ognuna
-     fosse una tappa a sé: sei postazioni sulla sua, e quanto ne
-     presidiano. Se no il numero verrebbe fuori più alto solo perché le
-     strade sono corte — e il presidio non è «quanto è comoda la mappa»,
-     è «quanta strada tiene una torre», che deve restare confrontabile
-     fra una tappa a un ingresso e una a due. */
   const strade = Array.isArray(forme[0][0]) ? forme : [forme]
   const presidi = strade.map(f => {
     const { via, postazioni } = campoDi(f, W, H, S, quante)
@@ -367,17 +174,12 @@ function presidioDi(forme, W, H, S, quante = 6) {
   return presidi.reduce((s, p) => s + p, 0) / presidi.length
 }
 
-/* La tappa vista con le postazioni che ha davvero. Torna il presidio e
-   il buco interno più lungo — il tratto continuo che nessuna delle
-   `quante` torri raggiunge, contato solo fra la prima e l'ultima
-   piazzola. Il raggio è quello dell'arciere: è la torre che si compra
-   per prima e quella con cui si copre, non il ghiaccio a 86 né le
-   bombe a 132. */
+// La tappa vista con le postazioni che ha davvero: presidio e buco interno
+// più lungo (il raggio è quello dell'arciere, la torre che si compra per prima).
 function conPochePostazioni(forme, W, H, S, quante) {
   const { vie, postazioni } = campoDi(forme, W, H, S, quante)
   const passo = 3 * S
-  /* con due strade il buco si cerca su tutte e due, ma una per volta:
-     la fine di una e l'inizio dell'altra non sono un tratto continuo */
+  // con due strade il buco si cerca su tutte e due, ma una per volta
   const camp = vie.flatMap(v => v.campiona(passo))
   const confini = []
   let acc = 0
@@ -397,14 +199,10 @@ function conPochePostazioni(forme, W, H, S, quante) {
   return { presidio: totale / postazioni.length / R, buco: peggiore / S, punto }
 }
 
-/* ═══════════ la geometria di una tappa ═══════════ */
 function esaminaForma(t) {
   const guasti = [], avvisi = []
-  /* una strada o due: una tappa a due ingressi dichiara `forme`, e da
-     qui in giù cambia solo il plurale */
+  // una strada o due (`forme`); una spezzata nuda va letta lo stesso
   const dichiarate = t.forme || [t.forma]
-  /* una libera a una bocca dichiara `forme: [una]`, e chi scrivesse la
-     spezzata nuda va letto lo stesso */
   const forme = Array.isArray(dichiarate[0][0]) ? dichiarate : [dichiarate]
   const f = forme[0]
 
@@ -436,31 +234,17 @@ function esaminaForma(t) {
     const r = ravvicinamenti(vie, S, incroci)
     const p = piazzoleStrette(forme, M.W, M.H, S, postiVeri(t))
     const presidio = presidioDi(forme, M.W, M.H, S)
-    /* la lunghezza si guarda **strada per strada**, non sommata: un
-       mostro ne percorre una sola, ed è su quella che si misura quanto
-       tempo la difesa ha per fermarlo. Due ingressi non fanno una tappa
-       lunga il doppio — fanno due tappe corte da difendere insieme, che
-       è un'altra cosa e si paga in piazzole (vedi `postiDi`). */
+    // la lunghezza si guarda strada per strada, non sommata: un mostro ne
+    // percorre una sola
     const lunghe = vie.map(v => v.lunghezza / S)
     const lung = Math.max(...lunghe)
-    /* Le partite libere stanno **fuori dalla fascia** della loro
-       campagna, ed è il loro mestiere: sono i tracciati più intricati
-       di ogni mondo, con due bocche che si fondono, quindi più lunghi e
-       più presidiati di qualunque tappa. Tutto il resto — tornanti,
-       corsie, piazzole, buchi, il pavimento del presidio — vale uguale:
-       una strada che si sbava resta una strada che si sbava. */
+    // le libere stanno fuori dalla fascia della loro campagna: sono i
+    // tracciati più intricati di ogni mondo
     const fascia = t.libera ? null : FASCE[t.campagna]
 
     if (r.gomito < GOMITO)
       guasti.push(`${M.nome}: tornante a spillo, ${r.gomito.toFixed(0)}u ` +
                   `(minimo ${GOMITO}) attorno a ${dove(r.dg, M)}`)
-    /* ── gli incroci: tanti quanti dichiarati, e netti ──
-       Un cappio che ripassa sopra sé stesso è voluto e va detto
-       (`incroci: 1`); uno che non è dichiarato è quasi sempre una
-       spezzata sbagliata. E fuori dall'incrocio la stessa strada non
-       si sfiora: due tratti a meno di `CORRIDOIO` senza tagliarsi sono
-       due corsie che nessuna torre copre insieme e che a schermo sono
-       una strada sbavata. */
     const attesi = t.incroci || 0
     if (incroci.length !== attesi)
       guasti.push(`${M.nome}: la strada si attraversa ${incroci.length} volte ` +
@@ -500,7 +284,7 @@ function esaminaForma(t) {
       guasti.push(`${M.nome}: presidio ${presidio.toFixed(2)}, sotto il pavimento ` +
                   `di ${PRESIDIO_MINIMO}: non c'è tempo di tirare`)
 
-    /* e la stessa mappa con le postazioni che avrà davvero */
+    // e la stessa mappa con le postazioni che avrà davvero
     const q = postiVeri(t)
     const poche = conPochePostazioni(forme, M.W, M.H, S, q)
     if (poche.presidio < PRESIDIO_POCHI)
@@ -511,7 +295,7 @@ function esaminaForma(t) {
                   `di strada che nessuna torre vede (massimo ${BUCO_INTERNO}) ` +
                   `attorno a ${dove(poche.punto, M)}`)
 
-    /* e il caso più magro, che non fa fallire ma si dice */
+    // e il caso più magro, che non fa fallire ma si dice
     if (q > MAGRO) {
       const v = conPochePostazioni(forme, M.W, M.H, S, MAGRO)
       if (v.buco > BUCO_INTERNO)
@@ -528,16 +312,12 @@ function esaminaForma(t) {
   return { guasti, avvisi, misure }
 }
 
-/* ═══════════ chi arriva, e a che cosa è immune ═══════════ */
+// Chi arriva, e a che cosa è immune (vedi docs/castello/mostri.md).
 function esaminaMostri(t) {
   if (!t.mostri || !t.mostri.length) return ['nessun mostro']
   const guasti = guastiDelleImmunita(t)
-  /* la copertura dell'apertura guarda le torri che il giocatore modello
-     compra per prime, quindi vuole la tappa coi suoi numeri (le libere
-     li hanno già; le tappe si prendono da `TAPPE`) */
+  // la copertura dell'apertura vuole la tappa coi suoi numeri veri
   const vera = t.libera ? t : TAPPE.find(x => x.campagna === t.campagna && x.nome === t.nome) || t
-  /* le ondate miste: due tipi che nessuna torre ferisce tutti e due, e
-     almeno due torri che feriscono qualcuno (`guastiDelleMiste`) */
   guasti.push(...guastiDelleMiste(vera, Number.isFinite(vera.ondate) ? vera.ondate : ONDATE_TARATE))
   const copre = coperturaApertura(vera)
   const serve = Math.min(APERTURA_COPRE, Number.isFinite(vera.ondate) ? vera.ondate : APERTURA_COPRE)
@@ -583,12 +363,6 @@ for (const c of CAMPAGNE) {
   medie[c.id] = presidi.reduce((s, v) => s + v, 0) / presidi.length
 }
 
-/* ── e le quattro partite libere ──
-   Una per terreno, il tracciato più intricato del suo mondo: fuori dalla
-   fascia della campagna (vedi `esaminaForma`), dentro tutto il resto.
-   Mostri e torri arrivano dalla campagna (`LIBERE` in `data/castello.js`),
-   quindi il controllo delle immunità qui guarda quello che il gioco
-   mette davvero in campo. */
 console.log('\n      ♾️ LE PARTITE LIBERE')
 for (const l of LIBERE) {
   const t = { ...l, libera: true }
@@ -617,13 +391,8 @@ console.log(`      minimi: gomito ${GOMITO}u · corsie ${CORRIDOIO}u · ` +
 console.log(`      con le postazioni vere della tappa: presidio almeno ${PRESIDIO_POCHI} · ` +
             `buco interno al massimo ${BUCO_INTERNO}u`)
 
-/* l'ordine fra le campagne: il presidio medio deve scendere, e di un
-   passo che si senta */
-/* Il presidio deve scendere lungo i **primi tre** archi: è la lezione
-   che raccontano — sentieri che si ripiegano e perdonano, poi cunicoli,
-   poi rettifili. La Palude non ci entra: lì a crescere sono gli
-   ingressi, e il presidio delle sue strade è un numero che parla
-   d'altro. */
+// Il presidio deve scendere lungo i primi tre archi (la Palude non c'entra:
+// lì a crescere sono gli ingressi).
 const ordine = ['bosco', 'sotterraneo', 'mura']
 console.log('\n      presidio medio: ' +
   ordine.map(k => `${k} ${medie[k].toFixed(2)}`).join('  >  '))
