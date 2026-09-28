@@ -1,94 +1,12 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE GUIDE — DATO PURO
-
-   Due registri, perché sono due pubblici diversi.
-
-   `GUIDE` sono per i grandi, e stanno nella schermata «Come funziona»
-   (`src/guide/Guide.vue`), **fuori dal codice di casa**: un genitore che
-   riceve il link per la prima volta deve poter leggere come si installa
-   senza sapere che il codice di partenza è 0000.
-
-   `AIUTI` sono uno per gioco, e li apre il `?` della barra
-   (`components/Barra.vue`). Li legge chi ha il gioco già aperto — spesso
-   un bambino — quindi frasi corte, niente strategia in venti righe, e
-   soprattutto **le cose che dallo schermo non si vedono**: che il dito va
-   tenuto premuto, che la cifra si scrive una alla volta. Come si tocca un
-   tasto lo scopre da sé; che esista il tocco lungo, no.
-
-   ── PERCHÉ NON STANNO NEI MANIFESTI ──
-   Sarebbe stato il posto naturale per i giochi nuovi (`gioco.js`), ma
-   metà dei giochi non ce l'ha un manifesto: quelli in `src/views/` sono
-   più vecchi della convenzione. Con l'aiuto nel manifesto ci sarebbero
-   due posti dove cercarlo, e il tower defense — che è quello che ne ha
-   più bisogno di tutti — sarebbe finito in quello sbagliato.
-
-   ── LE PRIME DUE RISPONDONO A «COS'È QUESTA ROBA» ──
-   L'elenco cominciava da «come si installa», e prometteva più di quello
-   che manteneva: erano otto guide che spiegavano **le manopole** a chi
-   non sapeva ancora cosa fosse l'applicazione sotto. Chi riceve il link
-   da un'altra famiglia si trova davanti un gioco senza nome, senza
-   nessuno dietro, e la prima schermata che vede gli chiede di scrivere
-   il nome di suo figlio: le domande che si fa in quel momento sono
-   *cos'è*, *chi me l'ha dato*, *cosa ci guadagna*, *dove finisce quello
-   che scrivo* — e nessuna delle otto rispondeva. Le manopole vengono
-   dopo, e restano tutte dov'erano.
-
-   ── LA FORMA DI UN BLOCCO ──
-   Una stringa è un paragrafo. Un oggetto può avere:
-     titolo   un'intestazione sopra il blocco
-     testo    uno o più paragrafi dentro il blocco (stringa o elenco)
-     righe    un elenco puntato
-     passi    un elenco numerato (le istruzioni da seguire in ordine)
-     collegamenti  [{ url, testo, sotto }] — porta fuori dall'app, e si
-              vede che porta fuori. Solo `http(s)`.
-     chiuso   il blocco nasce ripiegato: si vede il titolo, si apre
-              toccandolo (vedi sotto)
-     dove     'android' | 'ios' | 'computer' — il blocco c'è sempre, ma
-              sta aperto solo su quella piattaforma e ripiegato sulle
-              altre; i blocchi `dove` si riordinano da sé, il proprio
-              davanti
-     se       'android' | 'ios' | 'computer' | 'installata' | 'da-installare'
-              — il blocco compare **solo** lì e altrove non esiste (vedi
-              `guide/aiuto.js`). Da usare quando altrove sarebbe una
-              frase falsa, non solo inutile: per «i passi di un altro
-              telefono» c'è `dove`
-   Niente HTML: quello che si può scrivere è quello che c'è qui sopra, e
-   una chiave sconosciuta non viene disegnata.
-
-   ── DUE LIVELLI, E IL SECONDO STA CHIUSO ──
-   `chiuso: true` è quello che tiene corte le risposte. Di roba scritta
-   ce n'era parecchia — nel README, in `docs/`, nei documenti dei
-   singoli giochi — e nessuna stava qui dentro, per un motivo giusto:
-   messa in fila avrebbe seppellito la risposta di tre righe che serve a
-   quasi tutti. Chiusa in una fisarmonica invece convive: sopra la
-   risposta corta, sotto una freccia che dice che c'è dell'altro e non
-   costa niente a chi tira dritto. La regola per decidere dove va un
-   paragrafo è **se serve a fare qualcosa sta fuori, se spiega perché è
-   fatto così sta dentro**.
-
-   ── `subito` ──
-   Le guide marcate così le legge chi non ha ancora un profilo: sono
-   quelle che il velo del primo avvio (`guide/VeloGuide.vue`) offre
-   prima che il gioco esista. Le altre parlano di manopole che stanno
-   dentro le impostazioni, e le impostazioni di un bambino che non c'è
-   ancora non si aprono.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// Le guide, dato puro: GUIDE per i grandi («Come funziona»), AIUTI uno per
+// gioco (il `?` della barra). Forma di un blocco, `chiuso`, `dove`/`se`,
+// `subito`: vedi docs/genitori/guide.md.
 import { GIOCHI } from '../data/giochi.js'
 import { AREE, MODI } from '../data/aree.js'
 import { CHI, CODICE, AUTORE, SEGNALA } from './aiuto.js'
 
-/* ── L'ELENCO DEI GIOCHI NON SI SCRIVE A MANO ──
-   Sarebbe stata la cosa più naturale: quindici righe di testo. Ma un
-   elenco scritto a mano è un elenco che il giorno dopo dice il falso —
-   si aggiunge un gioco e nessuno torna qui — e per di più direbbe cose
-   diverse da quelle che il bambino ha sotto gli occhi in home, che i
-   nomi e le descrizioni li prende dallo stesso registro. Qui si
-   raggruppa e si impagina, punto: `data/giochi.js` resta l'unico posto
-   dove un gioco si descrive.
-
-   Gli sperimentali restano fuori: di partenza non esistono per nessuno,
-   e prometterli in una guida vorrebbe dire farli cercare a vuoto. */
+// composto da data/giochi.js, non scritto a mano: un elenco a mano direbbe
+// il falso il giorno che si aggiunge un gioco. Gli sperimentali restano fuori.
 const perArea = () => AREE.map(a => ({
   titolo: a.emoji + ' ' + a.nome,
   righe: GIOCHI.filter(g => g.area === a.chiave && !g.sperimentale)
@@ -489,11 +407,8 @@ export const GUIDE = [
   },
 ]
 
-/* ═══════════ UNO PER GIOCO, dietro il `?` della barra ═══════════
-   La chiave è quella della schermata (`App.vue` / `giochi/schermate.js`),
-   così chi monta la barra scrive `guida="torri"` e non deve inventarsi
-   un altro nome. Manca un gioco? Il `?` non compare: chi non ha niente
-   da spiegare non deve avere un tasto che apre una schermata vuota. */
+// uno per gioco: la chiave è quella della schermata (guida="torri"); un
+// gioco senza voce qui non mostra il `?`
 export const AIUTI = {
   torri: {
     emoji: '🏹', titolo: 'La difesa del castello',
