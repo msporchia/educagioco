@@ -1,51 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   MOTORE DI APPRENDIMENTO — condiviso da tutti i giochi.
-
-   Un "elemento" è indifferentemente una tabellina (`math:7x8`) o un
-   vocabolo (`en:butterfly`): il motore non sa di cosa si tratta.
-
-   Stato per elemento:
-     s     forza 0..6      quanto è consolidato
-     ok    risposte giuste totali
-     err   errori totali
-     last  quando è stato incontrato l'ultima volta (ms epoch)
-     t     media mobile del tempo di risposta (usata solo dove la
-           velocità conta davvero, cioè le tabelline)
-
-   Due idee portanti:
-
-   1. DECADIMENTO NEL TEMPO. L'intervallo di ripasso raddoppia a ogni
-      livello di forza. Superata la scadenza la forza *efficace* cala da
-      sola: una parola imparata dieci giorni fa non vale quanto una
-      imparata ieri, e torna a farsi vedere senza che nessuno la segni
-      come sbagliata. È la curva dell'oblio.
-
-   2. DISTANZA MINIMA. Dentro la sessione nessun elemento può ricomparire
-      prima di `minGap` altri elementi. Prima le ripetizioni arrivavano a
-      raffica: la coda richiamava una parola dopo 3 turni e il campione
-      pesato poteva ripescarla subito dopo.
-
-   3. RIPOSO DENTRO LA SESSIONE. Chi risponde giusto `pausaDopo` volte di
-      fila (tre, negli asteroidi) su uno stesso elemento ha dimostrato di
-      saperlo *adesso*: continuare a
-      riproporlo nella stessa partita è tempo tolto a quello che non sa.
-      L'elemento va a riposo fino a fine sessione e ne entra un altro.
-      Il consolidamento vero resta affidato ai ripassi dei giorni dopo.
-
-   E una cosa che il motore NON decide: la LENTEZZA. La curva dell'oblio
-   è uguale per tutti gli elementi, e per una materia a scala — le
-   tabelline, il calcolo a mente — è cieca a un fatto che un maestro
-   vede subito: chi sa 7×8 non ha dimenticato 2×3, anche se non lo vede
-   da dieci giorni. Chi chiama può passare un fattore di lentezza per
-   elemento (`lentezza`, ≥ 1: quante volte più lungo è il suo
-   intervallo), e chi lo calcola è `store/marea.js`. Qui si sa solo che
-   l'intervallo si allunga; senza il fattore tutto resta com'era, ed è
-   così che lo usano le lingue e i quiz.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// Motore di apprendimento condiviso da tutti i giochi: vedi docs/apprendimento/srs.md.
 const DAY = 86400000;
 
-/* intervalli di ripasso in giorni, uno per livello di forza */
 export const IVL = [0.007, 0.03, 0.3, 1, 3, 8, 21];   // ~10 min → 3 settimane
 export const MAX_S = IVL.length - 1;
 
@@ -61,22 +16,18 @@ export const SRS = {
 
 export const newItem = () => ({ s: 0, ok: 0, err: 0, last: 0, seen: 0, t: 0 });
 
-/* l'intervallo di ripasso di questo elemento, allungato della sua
-   lentezza (1 = la curva di sempre) */
 const intervallo = (it, lentezza = 1) => IVL[Math.min(it.s, MAX_S)] * DAY * lentezza;
 
-/* quando l'elemento andrebbe ripassato */
 export const dueAt = (it, lentezza = 1) => (it.last || 0) + intervallo(it, lentezza);
 
-/* quanto è in ritardo, in multipli del proprio intervallo.
-   0 = appena scaduto, 1 = scaduto da un intervallo intero, ... */
+// in multipli del proprio intervallo: 0 = appena scaduto, 1 = scaduto da un intervallo intero
 export function overdue(it, now, lentezza = 1) {
   if (!it.last) return 1;                       // mai visto: da fare
   const span = intervallo(it, lentezza);
   return (now - dueAt(it, lentezza)) / span;
 }
 
-/* forza EFFICACE: quella nominale meno il decadimento accumulato */
+// forza EFFICACE: quella nominale meno il decadimento accumulato
 export function strength(it, now, lentezza = 1) {
   if (!it.last) return 0;
   const late = Math.max(0, overdue(it, now, lentezza));
@@ -86,8 +37,7 @@ export function strength(it, now, lentezza = 1) {
 export const isMastered = (it, now, lentezza = 1) =>
   strength(it, now, lentezza) >= SRS.masterS;
 
-/* Peso di estrazione. Alto = esce spesso.
-   Cala con la forza efficace e cresce con il ritardo accumulato. */
+// peso di estrazione: alto = esce spesso; cala con la forza, cresce col ritardo
 export function weight(it, now, opts = {}) {
   const lentezza = opts.lentezza || 1;
   const s = strength(it, now, lentezza);
@@ -100,7 +50,6 @@ export function weight(it, now, opts = {}) {
   return w;
 }
 
-/* Registra una risposta e aggiorna la forza. */
 export function record(it, { correct, ms = 0, now = Date.now() }) {
   it.seen++;
   it.last = now;
@@ -110,18 +59,13 @@ export function record(it, { correct, ms = 0, now = Date.now() }) {
   } else {
     it.err++;
     it.s = Math.max(0, strength(it, now) - SRS.lossErr);
-    // quando è stato sbagliato l'ultima volta: la marea (`store/marea.js`)
-    // non tocca quello che è stato sbagliato di recente, e senza questa
-    // data non avrebbe modo di saperlo — `err` conta, non dice quando
-    it.errAt = now;
+    it.errAt = now;   // store/marea.js non tocca lo sbagliato di recente: gli serve la data, non solo `err`
   }
   if (ms > 0) it.t = it.t ? it.t * 0.55 + ms * 0.45 : ms;
   return it;
 }
 
-/* ═══════════ SELEZIONE ═══════════
-   Tiene la memoria corta della sessione (ultimi elementi visti) e una
-   coda di ripasso per quelli sbagliati. */
+// La selezione: memoria corta della sessione più una coda di ripasso
 export function createPicker({ getItem, useTime = false, pausaDopo = 0,
                                lentezza = () => 1 } = {}) {
   let recent = [];       // ultimi id mostrati, per la distanza minima
@@ -176,10 +120,7 @@ export function createPicker({ getItem, useTime = false, pausaDopo = 0,
 
   function reset() { recent = []; queue = []; round = 0; serie.clear(); riposo.clear() }
 
-  /* Una domanda scelta FUORI dal picker — il boss degli asteroidi, che
-     viene dalla tappa dopo — deve comunque entrare nella memoria corta.
-     Senza, il picker non sa che è appena passata e la domanda successiva
-     può essere la stessa, due volte di fila. */
+  // una domanda scelta FUORI dal picker (il boss degli asteroidi) entra comunque in memoria corta
   function annota(id) {
     recent.push(id)
     if (recent.length > SRS.minGap) recent.shift()
@@ -187,28 +128,13 @@ export function createPicker({ getItem, useTime = false, pausaDopo = 0,
 
   return { pick, afterAnswer, reset, annota,
            get round() { return round },
-           // quanti elementi sono usciti di scena: chi chiama il picker può
-           // allargare di altrettanto l'insieme attivo e far entrare cose nuove
            get riposati() { return riposo.size },
            aRiposo: id => riposo.has(id) };
 }
 
-/* ═══════════ INSIEME ATTIVO ═══════════
-   Non si allenano 190 elementi insieme: metà non uscirebbe mai in una
-   sessione da 40 domande. Se ne tengono ~10 in lavorazione, e quando uno
-   è imparato esce e ne entra uno nuovo. Gli elementi scaduti da ripassare
-   rientrano comunque, anche se già "imparati".
-
-   `gruppi` serve quando l'insieme deve *rappresentare* qualcosa che il
-   bambino ha scelto — le tabelline, per esempio. Prendendo solo i più
-   facili in assoluto si finiva a proporre per intere partite la tabellina
-   dell'1 e quella del 10, che sono le più facili di tutte: chi ha spuntato
-   tutte le tabelline non vedeva mai il 7. Con `gruppi(id) -> [chiavi]` la
-   scelta gira a turno fra i gruppi, così ogni tabellina spuntata porta il
-   suo elemento più facile prima che una qualsiasi porti il secondo.
-
-   `lentezza(id)` è il fattore della marea, per elemento: chi non lo
-   passa ha la curva di sempre. */
+// L'insieme attivo: ~10 elementi in lavorazione (non tutti, altrimenti metà
+// non uscirebbe mai). `gruppi(id)` fa girare la scelta a turno fra i gruppi
+// scelti dal bambino, se no i più facili in assoluto monopolizzano tutto.
 export function activeSet(allIds, getItem, order, now = Date.now(),
                           size = SRS.setSize, gruppi = null, lentezza = () => 1) {
   const learning = allIds.filter(id => !isMastered(getItem(id), now, lentezza(id)));
