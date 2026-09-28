@@ -1,25 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL FONDO DEL CASSETTO — colore e forme, per tutti
-
-   Le due dozzine di righe che stavano in cima a `generale.js` e in cima
-   a `ambienti.js`, scritte due volte. Non è un modulo «di utilità»: è
-   il posto dove sta l'unica cosa che chi disegna gli omini e chi
-   disegna i muri devono avere in comune, cioè **come si mescola un
-   colore** e **come si traccia una capsula**.
-
-   Due livelli, apposta:
-     · `capsula`, `poligono`, `tondo` prendono il **pennello** di
-       `tela.js` (usano `q.ctx`): li usa chi disegna in scena;
-     · `rett`, `ell`, `velo`, `poly` prendono il **contesto 2D nudo**:
-       li usa chi dipinge il fondale, che lavora su una tela di scorta
-       che il motore non conosce.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il fondo del cassetto: colore e forme, per tutti. Vedi docs/core/grafica.md.
 import { trama } from './materia.js'
-
-/* ─────────── colore ───────────
-   Due sole funzioni, e servono a non scrivere a mano trenta tinte:
-   l'ombra di un colore è quel colore più scuro, e un personaggio che
-   lampeggia è la sua tavolozza spostata verso il rosso. */
 
 const canale = (c, i) => parseInt(c.slice(i, i + 2), 16)
 
@@ -31,9 +11,6 @@ export function mescola(a, b, q) {
 
 export const buio = (c, q = 0.34) => mescola(c, '#1a1226', q)
 
-/* la tavolozza intera spostata verso una tinta: è così che un
-   personaggio diventa rosso di errore o bianco di botta senza che
-   ogni singola figura debba saperlo */
 export function tinge(pal, col, q) {
   if (q <= 0) return pal
   const out = {}
@@ -45,47 +22,12 @@ export function tinge(pal, col, q) {
   return out
 }
 
-/* ─────────── il volume ───────────
-   La ragione per cui trent'anni di cerchi in più non miglioravano il
-   disegno: `fillStyle` prendeva sempre **una tinta sola**, e una tinta
-   sola è una campitura, non un corpo. Aggiungere forme dentro una
-   campitura non le dà volume — la riempie di righe.
-
-   Il rimedio non è disegnare di più: è che la stessa forma, riempita
-   con un gradiente invece che con una tinta, smette di essere un
-   ritaglio di carta. `fillStyle` accetta già un `CanvasGradient`, e i
-   pittori continuano a passare la loro stringa: la traduzione avviene
-   qui sotto, una volta, per tutti.
-
-   **La luce viene dall'alto**, sempre, in tutto il gioco. Non è una
-   semplificazione da poco prezzo: la scena è vista di tre quarti
-   dall'alto, e una direzione sola dichiarata una volta è ciò che fa
-   sembrare le figure illuminate dalla stessa lampada invece che
-   ognuna dalla sua. */
-
+// il volume: fillStyle prende sempre un gradiente, mai una tinta piatta. Vedi docs/core/grafica.md.
 const CHIARO = '#ffffff', SCURO = '#0a0616'
 
 const tinta = c => typeof c === 'string' && c.length === 7 && c[0] === '#'
 
-/* Dall'alto schiarito al basso incupito, lungo l'altezza della forma.
-
-   ── la curva non è diritta, ed è tutta la differenza ──
-   Un gradiente lineare da chiaro a scuro fa una cosa sola: sbiadisce.
-   Il primo tentativo era esattamente quello — 26% di bianco in cima,
-   24% di nero in fondo, in mezzo il colore — e il risultato restava
-   *piatto*, perché una superficie che cambia tono in modo uniforme è
-   quello che l'occhio legge come **carta stampata male**, non come
-   una cosa tonda.
-
-   Quello che dice «tondo» è dove la luce **smette**: un colmo chiaro
-   stretto in alto, un tuffo rapido verso il tono pieno, e poi il
-   fondo che si scurisce piano. Tre fermate ravvicinate in cima e una
-   lontana in fondo — cioè una curva con un ginocchio, non una
-   diagonale. È la stessa ragione per cui `luce.js` alle pozze delle
-   torce dà cinque fermate e non due.
-
-   E in fondo il colore non va nel nero ma nel blu della notte: il
-   nero spegne e basta, un'ombra colorata resta materia. */
+// curva con un "ginocchio" (non lineare): un gradiente diritto sbiadisce invece di sembrare tondo
 function volume(c, col, alto, basso) {
   if (!tinta(col)) return col
   const g = c.createLinearGradient(0, alto, 0, basso)
@@ -96,17 +38,7 @@ function volume(c, col, alto, basso) {
   return g
 }
 
-/* ─────────── posare la materia ───────────
-   Va chiamata **con il tracciato della forma ancora in mano**: si
-   ritaglia su quello e si riempie. Il motivo vive nelle coordinate
-   del contesto di adesso — che chi disegna un personaggio ha già
-   traslato sulla figura — e quindi **viaggia con lei**. È tutta qui la
-   differenza fra una materia e una filigrana: nessuno calcola dove
-   sta la trama, ci pensa la stessa matrice che sposta il disegno.
-
-   Il riquadro da riempire si prende largo: costa un `fillRect` di
-   qualche decina di pixel, e sbagliarlo stretto lascerebbe un angolo
-   della forma senza trama. */
+// va chiamata col tracciato della forma ancora in mano: la trama viaggia con la figura (le sue coordinate)
 function posaMateria(c, materia, x, y, w, h) {
   if (!materia) return
   const t = trama(c, materia)
@@ -118,11 +50,7 @@ function posaMateria(c, materia, x, y, w, h) {
   c.restore()
 }
 
-/* ─────────── le forme che ricorrono ───────────
-   Un gioco di omini è fatto quasi tutto di capsule e di poligoni con
-   il contorno scuro. Il contorno non è un vezzo: a 36 px è l'unica
-   cosa che tiene staccato un personaggio dal pavimento. */
-
+// il contorno scuro non è un vezzo: a 36px è l'unica cosa che tiene staccato un personaggio dal pavimento
 export function capsula(q, x, y, w, h, r, col, bordo, sp, materia) {
   const c = q.ctx
   r = Math.min(r, w, h)
@@ -164,8 +92,6 @@ export function tondo(q, x, y, rx, ry, col, bordo, sp, materia) {
 }
 
 
-/* ─────────── le stesse cose sul contesto nudo ─────────── */
-
 export const rett = (c, x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h) }
 
 export const ell = (c, x, y, rx, ry, col) => {
@@ -181,11 +107,7 @@ export function poly(c, punti, col, bordo, sp) {
   if (bordo) { c.strokeStyle = bordo; c.lineWidth = sp; c.lineJoin = 'round'; c.stroke() }
 }
 
-/* ─────────── il caso che non cambia mai ───────────
-   `dado(a, b, c)` è un numero fra 0 e 1 che dipende solo dai tre
-   interi che gli dai. Nessuno stato, nessun ordine di chiamata: la
-   stessa stanza esce identica anche se domani la si dipingesse a
-   riquadri, al contrario, o due volte. */
+// numero deterministico 0..1 dai tre interi: nessuno stato, nessun ordine di chiamata
 export function dado(a, b = 0, c = 0) {
   let t = (Math.imul(a | 0, 73856093) ^ Math.imul(b | 0, 19349663) ^ Math.imul(c | 0, 83492791)) >>> 0
   t = Math.imul(t ^ t >>> 15, 0x85ebca6b)

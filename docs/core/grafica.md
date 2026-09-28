@@ -121,6 +121,33 @@ meno da dipingere.
   celle, il costo scende di un terzo. Nessuna muratura è obbligata a
   usarlo.
 
+## Il tessuto (`grafica/tessuto.js`) e i pittori comuni (`grafica/comune.js`)
+
+- **Un ambiente dichiara due liste**, `mura` e `suolo`: la prima voce è il
+  fondo, le altre si prendono una fetta di superficie dove dice il loro
+  `campo` (chiazze di rumore correlato, `dove:` fa cadere due voci negli
+  stessi posti). La fetta è un **quantile** dei valori veri e non una
+  soglia fissa, se no la media di due rumori la superava una cella su
+  cento e la stanza tornava a tinta unita senza dirlo. Il confine si
+  decide **per blocco**, non per cella (passa dai giunti), e un cantonale
+  (spigolo con vuoto su due lati non opposti) non si sfalda mai. Un suolo
+  o un muro dichiarato nella mappa (`suoli.lastre` in legenda) vince per
+  dichiarazione, non per rumore, e vale solo sulla sua cella. Due
+  tentativi scartati: materiali mescolati a chiazze con tinte scelte a
+  mano (famiglie cromatiche che non si conoscono) e un'anomalia sola
+  cablata nel motore (per averne due bisognava riaprire il file).
+- **`comune.js`** tiene ciò che chi disegna gli omini e chi disegna i muri
+  devono avere in comune: colore (`mescola`, `tinge` — la tavolozza intera
+  spostata verso una tinta, per il lampeggio di danno) e volume
+  (`capsula`/`poligono`/`tondo` sul pennello di `tela.js`, `rett`/`ell`/
+  `poly` sul contesto nudo). **`fillStyle` prende sempre un gradiente**,
+  mai una tinta piatta: un colmo chiaro stretto in cima, un ginocchio, poi
+  il fondo che si scurisce nel blu di notte (mai nel nero, che spegne)
+  invece di sbiadire uniformemente — è quello che fa sembrare una forma
+  tonda invece che carta stampata male. **`dado(a,b,c)`** è il caso
+  deterministico di tutto il gioco: stessa stanza, stesso disegno, comunque
+  e quante volte la si ridipinga.
+
 ## Le misure
 
 - **La scala sta nella trasformazione del contesto** (`dpr × scala`, una
