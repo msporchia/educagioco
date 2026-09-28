@@ -1,25 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE STRANEZZE — le stanze dove non si risponde, si decide
-
-   Un dungeon fatto solo di domande è un compito con le spade. Ogni
-   tanto ci vuole una stanza in cui non c'è niente da sapere: c'è solo
-   da scegliere, e nessuna delle due scelte è quella «giusta». Una è
-   prudente e dà poco, l'altra è un azzardo — e il bambino impara che
-   azzardare qualche volta va bene e qualche volta no. È la stessa
-   scommessa dello scrigno, senza la domanda.
-
-   Qui dentro non c'è codice: un esito **dichiara** cosa dà, e il motore
-   lo applica. Le parole che il motore capisce sono cinque:
-
-     gemme: 8       otto gemme in tasca
-     cuore: 1       un cuore recuperato (mai oltre il massimo)
-     cuoriMax: 1    un cuore in più per sempre, già pieno
-     danno: 1       un cuore perso
-     tesoro: true   un tesoro a caso fra quelli che mancano
-
-   `peso` dice quanto spesso capita un esito fra quelli della stessa
-   scelta. Una scelta con un esito solo capita sempre.
-   ═══════════════════════════════════════════════════════════════════ */
+// Le stranezze: stanze dove non si risponde, si decide — una scelta prudente
+// e una d'azzardo, nessuna "giusta". Un esito dichiara cosa dà (gemme, cuore,
+// cuoriMax, danno, tesoro) e il motore lo applica; `peso` è la frequenza
+// relativa fra gli esiti della stessa scelta.
 
 export const EVENTI = [
   {
@@ -130,8 +112,6 @@ export const CHIAVI_EVENTI = EVENTI.map(e => e.chiave)
 
 export const evento = chiave => EVENTI.find(e => e.chiave === chiave) || EVENTI[0]
 
-/* le parole che il motore sa applicare: fuori da questo elenco un
-   esito è un regalo che non arriva mai */
 export const DONI_EVENTO = ['gemme', 'cuore', 'cuoriMax', 'danno', 'tesoro']
 
 export function guastiDegliEventi(eventi = EVENTI) {
@@ -158,13 +138,9 @@ export function guastiDegliEventi(eventi = EVENTI) {
         if (es.da?.danno) rischiose++
       }
     }
-    /* le due scelte non possono essere tutte e due un azzardo né tutte
-       e due un regalo: una stranezza in cui non c'è niente da decidere
-       è una schermata con un tasto «avanti» travestita */
     const conCosto = (e.scelte || []).filter(s => s.costo).length
     if (!rischiose && !conCosto) guasti.push(`${dove}: nessuna delle due scelte rischia niente`)
   }
-  /* un solo evento vuol dire vederlo tre volte per discesa */
   if (eventi.length < 6) guasti.push(`${eventi.length} stranezze sono poche: si ripetono nella stessa discesa`)
   return guasti
 }
