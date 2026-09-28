@@ -85,7 +85,9 @@ lì a crescere è la difficoltà tattica (le bocche).
   è cambiato.
 - **Il mondo è uno** (`MONDO`: 420×760, verticale, uguale su ogni schermo):
   cambia solo quanto lo si vede grande. La telecamera sta in
-  [`../core/grafica.md`](../core/grafica.md).
+  [`../core/grafica.md`](../core/grafica.md). La scala `S` (1,3) non è a
+  occhio: tiene la stessa area del vecchio campo (390×420 a S=0,93), solo
+  in una forma più stretta e più alta.
 
 ## Il giocatore modello
 
@@ -149,6 +151,15 @@ npm run tara -- --da 0.6 --bersaglio 0.85
   tappa intera.
 - **La promessa:** chi spende tutto finisce la tappa; chi tiene in tasca un
   quarto no (perde quattordici volte su quindici); il pasticcione ce la fa.
+
+## La vecchia curva, e a cosa serve ancora
+
+`durezzaDi` (con `RESA` 0,55 e `MARGINE` 1,35) è il modello che *prima*
+decideva quanto fossero duri i nemici: potenza in campo contro vita in
+arrivo. Non tara più niente — quel mestiere è passato a `npm run tara`, che
+gioca invece di stimare — ma non è codice morto: la `durezza` che ne esce
+muove ancora la **velocità** dei nemici (`velocitaNemico`) e la vita di chi
+la tabella non ce l'ha, cioè le partite libere oltre l'ultima ondata tarata.
 
 ## Il file generato e la firma
 

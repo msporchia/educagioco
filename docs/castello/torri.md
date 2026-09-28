@@ -92,9 +92,13 @@ vedersi, non restare un numeretto in un angolo.
 
 - **Il veleno si scrive in tutto, non al secondo** (`veleno` è il totale
   spalmato su `durata`). Scritto al secondo e contato in tutto, il napalm
-  valeva il triplo del mortaio.
+  valeva il triplo del mortaio. Un nemico avvelenato di nuovo prima che il
+  male finisca non prende due dosi (vale la più forte): chi colpisce più
+  spesso della durata avvelena di continuo e basta.
 - **La brina è l'unico modo in cui una torre che non ferisce fa male**
   (`fragile`).
+- **I rimbalzi della catena contano metà del colpo, poi un quarto** (`BERSAGLI.rimbalzo`),
+  e stanno fuori dall'area (che moltiplica colpo e veleno).
 - `unita/rami-castello` conta la parità ramo per ramo con la stessa stima
   delle torri; `npm run dps` la misura col motore.
 
