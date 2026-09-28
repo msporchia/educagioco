@@ -1,30 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   A COSA SERVE UNA ROBA DEL GRANAIO — TUTTE LE USCITE, IN UN POSTO
-
-   `serveA` di `dati/bisogni.js` elenca le tre uscite che stanno in
-   quel file: le ricette che la prendono, la ciotola, le coccole. Da
-   quando esiste l'albero a più fasi ce n'è una quarta, e sta in una
-   tabella che `bisogni.js` **non può importare**: un **ordine** del
-   mercato (`vuole` in `dati/mercato.js`) — e `mercato.js` importa
-   `livelli.js`, che importa `animali.js`, che importa `bisogni.js`:
-   un anello.
-
-   Quindi il conto intero sta qui, un gradino sopra tutte, e chi vuole
-   sapere *tutto* quello che si può fare con una merce chiede a questo
-   file. Non è solo ordine: la stoffa non si mangia e non si mette
-   addosso — la vuole la sarta — e senza gli ordini risultava «non
-   serve a niente», cioè roba che riempie uno scomparto per sempre. Un
-   ordine consuma la merce quanto una ciotola.
-
-   C'era una quinta uscita, **un addobbo pagato col granaio** (il
-   maglione della sartoria, `da:` in `dati/addobbi.js`): è andata via
-   con gli addobbi sulla schiena — un'emoji di maglione non sta su una
-   bestia — e il maglione è una merce e basta, che vuole la sarta. Il
-   giorno che tornerà come sprite, l'uscita si riaggiunge qui.
-
-   Torna righe di dato e **non frasi**, come `serveA`: la frase la
-   compone chi mostra (`viste/Granaio.vue`).
-   ═══════════════════════════════════════════════════════════════════ */
+/* A cosa serve una roba del granaio, tutte le uscite: bisogni.js ne vede tre e non può importare
+   la quarta (gli ordini) senza chiudere un anello — vedi docs/fattoria/catena.md. */
 import { PRODOTTI } from './coltivazioni.js'
 import { serveA as ciotolaEMacchine } from './bisogni.js'
 import { CLIENTI } from './mercato.js'
@@ -32,15 +7,11 @@ import { CATALOGO } from './catalogo.js'
 
 export function serveA(prodotto) {
   const usi = ciotolaEMacchine(prodotto)
-  /* Un mestiere per riga, e solo chi la chiede **per mestiere**: la
-     nonna e il bottegaio prendono tutto, e «serve alla nonna» detto di
-     ogni merce non direbbe niente di questa. */
+  // Solo chi la chiede per mestiere: la nonna e il bottegaio prendono tutto, e non contano qui.
   for (const c of CLIENTI)
     if ((c.vuole || []).includes(prodotto))
       usi.push({ che: 'ordine', emoji: c.emoji, nome: c.nome })
-  /* E le botteghe del paese, che chiedono per elenco chiuso: «la
-     vuole la pasticceria» dice dove portarla, che il mestiere del
-     cliente da solo non dice. */
+  // Le botteghe del paese: elenco chiuso, dice dove portarla.
   for (const v of CATALOGO)
     if (v.posto && v.posto.chiede.includes(prodotto))
       usi.push({ che: 'bottega', emoji: '🏪', nome: v.nome, la: !!v.la })
@@ -49,10 +20,7 @@ export function serveA(prodotto) {
 
 export function guastiDegliUsi() {
   const g = []
-  /* Una roba che non serve a niente si accumula in uno scomparto che
-     ha otto posti: dopo un po' è pieno di roba inutile e non entra più
-     niente, e non c'è niente a schermo che lo dica. Stava in
-     `guastiDeiBisogni`, e lì vedeva solo tre uscite su quattro. */
+  // Una roba che non serve a niente riempie uno scomparto (8 posti) per sempre.
   for (const id of Object.keys(PRODOTTI))
     if (!serveA(id).length) g.push(`${id}: non serve a niente, e occuperebbe un posto per sempre`)
   for (const id of Object.keys(PRODOTTI))
