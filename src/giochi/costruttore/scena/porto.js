@@ -509,8 +509,7 @@ export class TelaPorto {
     }
     ctx.stroke()
     ctx.lineCap = 'butt'
-    /* il cordolo, dentro la casella di strada, verso quello che strada
-       non è; verso il bordo della mappa no, perché di là continua */
+    // il cordolo va verso quello che strada non è, mai verso il bordo della mappa (di là continua)
     const b = c * 0.12
     const fuori = (x, y) => p.dentro(x, y) && !strada(x, y)
     ctx.fillStyle = STRADA.cordolo
@@ -532,7 +531,6 @@ export class TelaPorto {
       if (fuori(x + 1, y)) { ctx.moveTo(px + c - b, py); ctx.lineTo(px + c - b, py + c) }
     }
     ctx.stroke()
-    /* le strisce del parcheggio */
     ctx.strokeStyle = STRADA.riga
     ctx.lineWidth = Math.max(1.5, c * 0.055)
     ctx.setLineDash([c * 0.13, c * 0.08])
@@ -550,14 +548,8 @@ export class TelaPorto {
     return p.dentro(x, y) && m.piazzole.has(y * p.w + x)
   }
 
-  /* Da che parte una casella di strada esce dalla mappa, se esce. Sta sul
-     bordo non basta: una strada che corre lungo il bordo non esce di
-     lato. Esce se la strada arriva dritta contro il bordo (ha una strada
-     dalla parte opposta), o se è una casella sola. Le piazzole non contano
-     come strada qui: una piazzola sopra la strada del bordo non la fa
-     uscire di sotto. E una piazzola non è mai un'uscita, se ha una strada
-     vicino: in fondo a una strada, contro il bordo, è un parcheggio, e i
-     camion ci arrivano dalla strada — non dal niente oltre il bordo. */
+  // sta sul bordo non basta: esce solo se arriva dritta contro il bordo (o è una casella sola);
+  // una piazzola con una strada vicino non è mai un'uscita, è un parcheggio in fondo alla strada
   uscita(p, x, y) {
     const m = this.memo(p)
     if (!m.uscite) m.uscite = new Map()
@@ -577,14 +569,8 @@ export class TelaPorto {
     return esce
   }
 
-  /* ── la strada di un camion ──
-     Dalla piazzola al bordo più vicino, lungo la strada (una ricerca in
-     ampiezza sulle caselle di strada), e poi fuori dalla mappa quanto
-     basta a sparire. Se la strada non esce da nessuna parte il camion
-     arriva dal basso, dritto. È la stessa strada all'andata e al
-     ritorno: il camion ha sempre la cabina verso l'uscita — entra in
-     retromarcia, come ai moli di carico, ed esce col muso avanti — così
-     non deve mai girarsi su se stesso in una casella sola. */
+  // dalla piazzola al bordo più vicino, la stessa strada all'andata e al ritorno: il camion entra
+  // in retromarcia (come ai moli di carico) ed esce col muso avanti, senza mai girarsi su di sé
   percorso(p, x, y) {
     const m = this.memo(p)
     if (!m.percorsi) m.percorsi = new Map()
@@ -631,9 +617,7 @@ export class TelaPorto {
     return r
   }
 
-  /* dove sta, e da che parte guarda la cabina, un camion a `s` celle
-     dalla piazzola lungo la sua strada; nelle curve la cabina gira un po'
-     prima e un po' dopo l'angolo, invece che di scatto */
+  // posizione e verso della cabina a `s` celle dalla piazzola; nelle curve gira un po' prima e dopo
   lungoLaStrada(r, s) {
     s = fra(s, 0, r.lung)
     let i = r.tratti.findIndex(t => s <= t.da + t.l)
@@ -648,10 +632,7 @@ export class TelaPorto {
     return { x: t.ax + (t.bx - t.ax) * f, y: t.ay + (t.by - t.ay) * f, angolo }
   }
 
-  /* ── il mare ──
-     Onde lente e fisse al loro posto: si muovono avanti e indietro di
-     poco, con periodi di secondi. Un'acqua che tremola a sessanta
-     fotogrammi si guarda al posto del robot. */
+  // onde lente e fisse al loro posto: un'acqua che tremola a 60fps si guarda al posto del robot
   mare(p, vis, t) {
     const { ctx, cella: c } = this
     const acqua = []
@@ -662,7 +643,6 @@ export class TelaPorto {
     ctx.beginPath()
     for (const [, , px, py] of acqua) ctx.rect(px, py, c, c)
     ctx.fill()
-    /* l'ombra della banchina sull'acqua: il sole viene dall'alto a sinistra */
     ctx.fillStyle = MARE.ombra
     ctx.beginPath()
     for (const [x, y, px, py] of acqua) {
@@ -684,7 +664,6 @@ export class TelaPorto {
       }
     }
     ctx.stroke()
-    /* la schiuma contro la banchina respira piano, tutta insieme */
     ctx.strokeStyle = `rgba(255,255,255,${0.42 + 0.16 * Math.sin(t / 1300)})`
     ctx.lineWidth = Math.max(1, c * 0.06)
     ctx.beginPath()
@@ -699,8 +678,7 @@ export class TelaPorto {
     ctx.lineCap = 'butt'
   }
 
-  /* ── i muri: blocchi di pietra sfalsati, con la faccia davanti più
-     scura dove finiscono, e l'ombra sul pavimento a destra e sotto ── */
+  // blocchi di pietra sfalsati, con la faccia davanti più scura dove finiscono
   muri(p, vis) {
     const { ctx, cella: c } = this
     const mezza = c / 2
@@ -740,8 +718,7 @@ export class TelaPorto {
       }
     })
     ctx.stroke()
-    /* la faccia davanti, dove il muro finisce verso il basso: è quello che
-       lo fa stare in piedi invece che dipinto per terra */
+    // la faccia davanti è quello che fa stare il muro in piedi invece che dipinto per terra
     ctx.fillStyle = MURO.faccia
     ctx.beginPath()
     this.celle(p, vis, 'muro', (x, y, px, py) => {
@@ -770,8 +747,7 @@ export class TelaPorto {
     ctx.fill()
   }
 
-  /* la griglia si vede appena, e solo dove si cammina: serve a contare i
-     passi, non a decorare (sul mare farebbe una piscina) */
+  // si vede appena, e solo dove si cammina: serve a contare i passi, non a decorare
   griglia(p, vis, tema) {
     const { ctx, cella: c } = this
     const pav = (x, y) => this.suoloDi(p, x, y) === 'pavimento'
@@ -785,9 +761,7 @@ export class TelaPorto {
     ctx.stroke()
   }
 
-  /* ── gli schizzi: una cassa finita in mare lascia gli anelli sull'acqua.
-     Si ricordano qui e non nel quadro, così durano il loro tempo anche se
-     la regia toglie il volo appena atterrato ── */
+  // si ricordano qui e non nel quadro: durano il loro tempo anche se il volo è già tolto
   acqua(t) {
     const { ctx, cella: c } = this
     for (const [chiave, s] of this.schizzi) {
@@ -804,7 +778,6 @@ export class TelaPorto {
         ctx.ellipse(s.x, s.y, c * (0.12 + g * 0.5), c * (0.08 + g * 0.3), 0, 0, Math.PI * 2)
         ctx.stroke()
       }
-      /* e le gocce, nei primi istanti */
       if (e < 450) {
         const g = e / 450
         ctx.fillStyle = `rgba(225,242,255,${1 - g})`
@@ -819,12 +792,10 @@ export class TelaPorto {
     }
   }
 
-  /* ── i segni per terra: dove cala la gru, e dove si mettono i clienti ── */
   segniPerTerra(p) {
     const { ctx, cella: c } = this
     if (p.puntoGru) {
-      /* quattro squadrette gialle e nere, quelle dei piazzali: dicono
-         «qui scende qualcosa» senza sembrare una cassa da mettere */
+      // squadrette come nei piazzali: «qui scende qualcosa», non una cassa da mettere
       const px = p.puntoGru.x * c, py = p.puntoGru.y * c
       const m = c * 0.08, l = c * 0.26, s = c * 0.08
       ctx.fillStyle = '#f2b632'
@@ -864,7 +835,6 @@ export class TelaPorto {
     }
   }
 
-  /* ═══════════ gli arredi ═══════════ */
   arredi(p, q, t, vis, inVolo, inArrivo) {
     for (let y = vis.y0; y <= vis.y1; y++) for (let x = vis.x0; x <= vis.x1; x++) {
       const a = p.arredo[y * p.w + x]
@@ -876,8 +846,6 @@ export class TelaPorto {
     }
   }
 
-  /* lo scaffale: un telaio scuro con tre listelli, i quattro montanti agli
-     angoli; fra un listello e l'altro si vede il buio di sotto */
   scaffale(x, y) {
     const { ctx, cella: c } = this
     const m = c * 0.07, l = c - 2 * m, X = x * c + m, Y = y * c + m
@@ -900,9 +868,7 @@ export class TelaPorto {
     for (const [ax, ay] of [[X, Y], [X + l - s, Y], [X, Y + l - s], [X + l - s, Y + l - s]]) ctx.fillRect(ax, ay, s, s)
   }
 
-  /* il bancone: legno lucido. Più celle di bancone in fila fanno un
-     bancone solo — gli spigoli si arrotondano solo dove finisce, e la
-     faccia davanti (più scura) solo dove sotto non continua */
+  // più celle in fila fanno un bancone solo: spigoli arrotondati solo dove finisce
   bancone(p, x, y) {
     const { ctx, cella: c } = this
     const px = x * c, py = y * c
@@ -925,7 +891,6 @@ export class TelaPorto {
     ctx.fillStyle = '#b8793f'
     rett(ctx, x0, y0, x1 - x0, y1 - y0 - fronte, [raggi[0], raggi[1], giu ? 0 : r * 0.5, giu ? 0 : r * 0.5])
     ctx.fill()
-    /* le venature, e la luce sul piano: è quello che lo fa «lucido» */
     ctx.strokeStyle = 'rgba(110,62,25,.35)'
     ctx.lineWidth = 1
     ctx.beginPath()
@@ -947,18 +912,13 @@ export class TelaPorto {
     ctx.fill()
   }
 
-  /* ── il nastro ──
-     Si disegna «in avanti verso destra» e si gira. I listelli e le frecce
-     scorrono di una cella a ogni scatto (`nastroDal`), e il disegno si
-     ripete ogni mezza cella: finito lo scatto è identico a prima, quindi
-     non serve sapere quanti scatti ci sono stati. Il nastro sta fermo fra
-     uno scatto e l'altro, come la cassa che ci sta sopra. */
+  // si disegna «in avanti verso destra» e si gira; il motivo si ripete ogni mezza cella
+  // (finito lo scatto è identico a prima, non serve sapere quanti ce ne sono stati)
   nastro(p, x, y, a, q, t) {
     const { ctx, cella: c } = this
     const [dx, dy] = DIREZIONI[a.verso] || DIREZIONI.destra
     const eNastro = (nx, ny) => p.dentro(nx, ny) && !!p.arredo[ny * p.w + nx] && p.arredo[ny * p.w + nx].tipo === 'nastro'
-    /* davanti c'è un altro nastro, o un cassone in cui scaricare: in tutti
-       e due i casi il nastro non finisce nel vuoto, e il rullo non c'è */
+    // davanti un altro nastro o un cassone: il nastro non finisce nel vuoto, il rullo non c'è
     const avanti = eNastro(x + dx, y + dy) || this.scaricaIn(p, x, y, a)
     let dietro = false
     for (const d of Object.keys(DIREZIONI)) {
@@ -975,7 +935,6 @@ export class TelaPorto {
     ctx.save()
     ctx.translate((x + 0.5) * c, (y + 0.5) * c)
     ctx.rotate(DA_DESTRA[a.verso] || 0)
-    /* il telaio, con le sponde */
     ctx.fillStyle = 'rgba(30,30,35,.25)'
     ctx.fillRect(-h + c * 0.04, -h + c * 0.08, c, c - c * 0.06)
     ctx.fillStyle = '#8a9199'
@@ -985,7 +944,6 @@ export class TelaPorto {
     ctx.fillRect(-h, larga, c, c * 0.03)
     ctx.fillStyle = '#b3b9c0'
     ctx.fillRect(-h, -h + c * 0.05, c, Math.max(1, c * 0.035))
-    /* il tappeto, con listelli e frecce che scorrono */
     ctx.save()
     ctx.beginPath()
     ctx.rect(-h, -larga, c, 2 * larga)
@@ -1009,7 +967,6 @@ export class TelaPorto {
     }
     ctx.stroke()
     ctx.restore()
-    /* i rulli: in fondo dove il nastro finisce, in testa dove comincia */
     const rullo = rx => {
       ctx.fillStyle = '#5c636b'
       ctx.fillRect(rx, -h + c * 0.05, c * 0.11, c - c * 0.1)
@@ -1030,12 +987,7 @@ export class TelaPorto {
     return b && b.tipo === 'cassone' ? b : null
   }
 
-  /* ── gli scivoli ──
-     Dove un nastro scarica in un cassone, la fine del nastro diventa uno
-     scivolo che entra oltre il bordo del cassone: si vede che le casse
-     finiscono lì dentro. Si disegnano dopo tutti gli arredi, perché il
-     cassone può venire prima o dopo il nastro nel giro delle caselle, e
-     lo scivolo deve stargli sopra in tutti e due i casi. */
+  // si disegnano dopo tutti gli arredi: il cassone può venire prima o dopo il nastro nel giro delle celle
   scivoli(p, vis) {
     const { ctx, cella: c } = this
     const h = c / 2, larga = c * 0.34
@@ -1064,26 +1016,20 @@ export class TelaPorto {
       ctx.lineTo(h - c * 0.02, larga)
       ctx.closePath()
       ctx.fill()
-      /* il labbro dello scivolo, lucido */
       ctx.fillStyle = '#c9ced4'
       ctx.fillRect(fondo - c * 0.04, -larga * 0.82, c * 0.04, larga * 1.64)
       ctx.restore()
     }
   }
 
-  /* ── i cassoni ──
-     Quattro figure per la stessa cosa: un posto che tiene tante casse.
-     Se accetta un colore solo, quel colore lo porta addosso in grande — il
-     bordo del cassone, le sponde del camion, la mastra della stiva, la
-     fascia sulla porta — e di nuovo nell'etichetta con il conto. */
+  // quattro figure per la stessa cosa: se accetta un colore solo lo porta addosso in grande
   cassone(p, x, y, a, inVolo) {
     const pila = p.pile[y * p.w + x]
     let cima = null
     for (let i = pila.length - 1; i >= 0; i--) if (!inVolo.has(pila[i].id)) { cima = pila[i]; break }
     const col = a.colore ? colore(a.colore) : null
     const figura = a.figura || 'cassone'
-    /* nella buca le lettere non si vedono: sono dentro. Si vede solo che
-       ce n'è qualcuna, da un foglio che spunta dalla fessura */
+    // nella buca le lettere non si vedono: si vede solo che ce n'è qualcuna, da un foglio nella fessura
     if (figura === 'buca') return this.buca(x, y, !!cima)
     if (figura === 'pila') return this.pila(x, y, a, pila.filter(q => !inVolo.has(q.id)))
     if (figura === 'camion') this.camion(p, x, y, col)
@@ -1094,7 +1040,7 @@ export class TelaPorto {
       const d = this.contenuto(p, x, y)
       this.cosa(d.x, d.y, d.s, cima, false)
       if (figura === 'stiva') {
-        /* giù nella stiva è buio: la cassa si intravede, non si vede */
+        // giù nella stiva è buio: la cassa si intravede, non si vede
         this.ctx.fillStyle = 'rgba(8,12,18,.3)'
         this.ctx.fillRect(x * this.cella + this.cella * 0.2, y * this.cella + this.cella * 0.2, this.cella * 0.6, this.cella * 0.6)
       }
@@ -1102,8 +1048,7 @@ export class TelaPorto {
     }
   }
 
-  /* dove sta, e quanto è grande, la cassa in cima a un cassone: serve al
-     cassone per disegnarla e ai voli per farla atterrare lì */
+  // dove sta e quanto è grande la cassa in cima a un cassone (serve al cassone e ai voli)
   contenuto(p, x, y) {
     const c = this.cella
     const a = p.arredo[y * p.w + x]
@@ -1126,16 +1071,13 @@ export class TelaPorto {
     return { x: cx, y: cy + (figura === 'cassone' ? c * 0.01 : 0), s: figura === 'stiva' ? 0.7 : 0.8 }
   }
 
-  /* da che parte guarda la cabina di un camion: sulla piazzola verso
-     l'uscita della sua strada, altrove verso il muro o il bordo */
+  // sulla piazzola verso l'uscita della sua strada, altrove verso il muro o il bordo
   angoloCabina(p, x, y) {
     if (this.suoloDi(p, x, y) === 'strada') return this.percorso(p, x, y).tratti[0].angolo
     return DA_SU[this.latoEsterno(p, x, y)]
   }
 
-  /* il lato «di fuori» di una cella: dove c'è un muro, il mare o il bordo.
-     Lì va la cabina del camion e la porta del magazzino, così il cassone
-     si apre verso il pavimento dove lavora il robot */
+  // dove c'è un muro, il mare o il bordo: lì va la cabina del camion e la porta del magazzino
   latoEsterno(p, x, y) {
     const m = this.memo(p)
     const chiave = y * p.w + x
@@ -1170,7 +1112,6 @@ export class TelaPorto {
     ctx.lineWidth = Math.max(1, c * 0.04)
     ctx.stroke()
     const b = c * 0.13
-    /* le assi del bordo */
     ctx.strokeStyle = 'rgba(70,42,18,.5)'
     ctx.lineWidth = 1
     ctx.beginPath()
@@ -1210,7 +1151,7 @@ export class TelaPorto {
      lo stesso fermo sulla piazzola e in viaggio sulla strada */
   figuraCamion(cx, cy, angolo, col) {
     const { ctx, cella: c } = this
-    /* l'ombra cade sempre in basso a destra, anche quando il camion gira */
+    // l'ombra cade sempre in basso a destra, anche quando il camion gira
     ctx.save()
     ctx.translate(cx + c * 0.05, cy + c * 0.07)
     ctx.rotate(angolo)
@@ -1221,10 +1162,8 @@ export class TelaPorto {
     ctx.save()
     ctx.translate(cx, cy)
     ctx.rotate(angolo)
-    /* le ruote sporgono appena dai fianchi */
     ctx.fillStyle = '#22262c'
     for (const wy of [-0.33, 0.3]) for (const wx of [-0.47, 0.39]) ctx.fillRect(wx * c, wy * c - c * 0.09, c * 0.08, c * 0.18)
-    /* il pianale, di legno, con le sponde */
     ctx.fillStyle = '#a07549'
     ctx.fillRect(-c * 0.4, -c * 0.16, c * 0.8, c * 0.63)
     ctx.strokeStyle = 'rgba(80,50,22,.45)'
@@ -1240,8 +1179,7 @@ export class TelaPorto {
       ctx.strokeStyle = col.ombra
       ctx.strokeRect(-c * 0.4 + 0.5, -c * 0.16 + 0.5, c * 0.8 - 1, c * 0.63 - 1)
     }
-    /* la cabina: tetto chiaro, parabrezza scuro davanti, e gli specchietti
-       che sporgono — sono loro che dicono «camion» visto da sopra */
+    // gli specchietti che sporgono sono quelli che dicono «camion» visto da sopra
     ctx.fillStyle = '#2b3036'
     ctx.fillRect(-c * 0.47, -c * 0.44, c * 0.1, c * 0.05)
     ctx.fillRect(c * 0.37, -c * 0.44, c * 0.1, c * 0.05)
@@ -1259,8 +1197,6 @@ export class TelaPorto {
     ctx.restore()
   }
 
-  /* la stiva: un pezzo di ponte d'acciaio, la mastra intorno al boccaporto
-     e il buio della nave sotto */
   stiva(x, y, col) {
     const { ctx, cella: c } = this
     const px = x * c, py = y * c
@@ -1285,16 +1221,14 @@ export class TelaPorto {
     ctx.fillRect(px + c * 0.2, py + c * 0.2, c * 0.6, c * 0.6)
   }
 
-  /* la porta del magazzino: la saracinesca dalla parte del muro, e davanti
-     il bancale dove si posano le casse */
+  // la saracinesca dalla parte del muro, e davanti il bancale dove si posano le casse
   portaMagazzino(p, x, y, col) {
     const { ctx, cella: c } = this
     const lato = this.latoEsterno(p, x, y)
     ctx.save()
     ctx.translate((x + 0.5) * c, (y + 0.5) * c)
     ctx.rotate(DA_SU[lato])
-    /* la piazzola dipinta per terra: bianca, o del colore che accetta — è
-       la parte che si vede sempre, anche sotto l'etichetta */
+    // bianca, o del colore che accetta: si vede sempre, anche sotto l'etichetta
     ctx.fillStyle = 'rgba(40,30,20,.12)'
     ctx.fillRect(-c * 0.47, -c * 0.47, c * 0.94, c * 0.94)
     if (col) {
@@ -1324,7 +1258,6 @@ export class TelaPorto {
       ctx.lineWidth = Math.max(1, c * 0.03)
       ctx.strokeRect(-c * 0.43, -c * 0.42, c * 0.86, c * 0.11)
     }
-    /* il bancale: tre assi con le fessure */
     ctx.fillStyle = '#6f5334'
     ctx.fillRect(-c * 0.36, -c * 0.17, c * 0.72, c * 0.6)
     ctx.fillStyle = '#caa26c'
@@ -1332,12 +1265,7 @@ export class TelaPorto {
     ctx.restore()
   }
 
-  /* La buca delle lettere, in piedi e un po' di sbieco come il robot:
-     vista proprio da sopra sarebbe una scatola qualunque, ed è il davanti
-     — la fessura, il numero — che la fa buca. Sopra il coperchio con la
-     fessura e la sua linguetta d'ottone, davanti il posto per il numero:
-     quello, che è l'indirizzo e va letto prima di tutto il resto, lo
-     mette `etichette`, grande. */
+  // vista da sopra sarebbe una scatola qualunque: è il davanti (fessura, numero) che la fa buca
   buca(x, y, piena) {
     const { ctx, cella: c } = this
     const px = x * c, py = y * c
@@ -1346,14 +1274,12 @@ export class TelaPorto {
     ctx.fillStyle = 'rgba(30,25,20,.25)'
     rett(ctx, X + c * 0.06, cima + c * 0.1, W, fondo - cima, c * 0.12)
     ctx.fill()
-    /* il davanti, più scuro */
     ctx.fillStyle = BUCA.corpo
     rett(ctx, X, cima, W, fondo - cima, c * 0.12)
     ctx.fill()
     ctx.strokeStyle = BUCA.bordo
     ctx.lineWidth = Math.max(1, c * 0.04)
     ctx.stroke()
-    /* il coperchio, tondo davanti, con la luce sopra */
     ctx.fillStyle = BUCA.coperchio
     ctx.beginPath()
     ctx.moveTo(X, spigolo)
@@ -1373,7 +1299,6 @@ export class TelaPorto {
     ctx.fillStyle = BUCA.ottone
     ctx.fillRect(fx + c * 0.02, fy + fh + c * 0.015, fw - c * 0.04, Math.max(1, c * 0.03))
     if (piena) {
-      /* una lettera che spunta dalla fessura: dentro c'è posta */
       ctx.save()
       ctx.translate(px + c * 0.5, fy + fh / 2)
       ctx.rotate(-0.1)
@@ -1386,8 +1311,7 @@ export class TelaPorto {
     }
   }
 
-  /* il numero di un cassone che prende solo lettere: la targhetta bianca
-     col numero grosso, come il civico di una casa */
+  // targhetta bianca col numero grosso, come il civico di una casa
   targa(cx, cy, numero, lato) {
     const { ctx } = this
     ctx.fillStyle = CARTA
@@ -1403,7 +1327,6 @@ export class TelaPorto {
     ctx.fillText(String(numero), cx, cy + lato * 0.05)
   }
 
-  /* ═══════════ le cose ═══════════ */
   cose(p, vis, inVolo) {
     const c = this.cella
     for (let y = vis.y0; y <= vis.y1; y++) for (let x = vis.x0; x <= vis.x1; x++) {
@@ -1425,10 +1348,7 @@ export class TelaPorto {
     else this.cassa(x, y, LATO_CASSA * this.cella * scala, cosa.colore, ombra)
   }
 
-  /* La forma di formaggio vista dall'alto: un tondo con la crosta, la
-     pasta e la luce. La grandezza è il suo numero, ed è la regola della
-     pila: una più grande sopra una più piccola la schiaccia — quindi si
-     deve vedere a colpo d'occhio quale è più grande, anche in mano. */
+  // la grandezza è il numero: una più grande sopra una più piccola la schiaccia, e va vista a colpo d'occhio
   forma(cx, cy, scala, numero, ombra = true) {
     const { ctx, cella: c } = this
     const r = raggioForma(numero, this.formeMax || numero) * c * scala
@@ -1458,11 +1378,7 @@ export class TelaPorto {
     ctx.stroke()
   }
 
-  /* L'asse della torre: un tagliere tondo col bordo del suo colore — il
-     colore è il nome dell'asse («l'asse rossa»), quello che il programma
-     passa a «sposta» — e sopra le forme, dalla più grande in giù. Ogni
-     forma ha la sua ombra sulla forma di sotto: è quella che fa vedere
-     la pila come una pila e non come un bersaglio dipinto. */
+  // il colore del tagliere è il nome dell'asse («l'asse rossa»), quello che «sposta» riceve
   pila(x, y, a, forme) {
     const { ctx, cella: c } = this
     const cx = (x + 0.5) * c, cy = (y + 0.5) * c
@@ -1494,10 +1410,7 @@ export class TelaPorto {
     forme.forEach((f, i) => this.forma(cx, cy - c * ALZO_FORMA * i, 1, f.numero, i === 0))
   }
 
-  /* La cassa vista dall'alto: il telaio del colore, la luce sugli spigoli
-     in alto a sinistra, il pannello incassato e le due assi incrociate.
-     Il bordo scuro (`ombra`) la stacca da qualunque pavimento, anche la
-     cassa bianca sulla graniglia della bottega. */
+  // il bordo scuro la stacca da qualunque pavimento, anche una cassa bianca su un pavimento chiaro
   cassa(cx, cy, l, chiave, ombra = true) {
     const { ctx } = this
     const col = colore(chiave) || colore('grigio')
@@ -1589,8 +1502,7 @@ export class TelaPorto {
     ctx.restore()
   }
 
-  /* il disegno in trasparenza: la cassa che ci deve finire, tratteggiata.
-     Quelle che mancano a sera lampeggiano, come nel cantiere */
+  // la cassa che ci deve finire, tratteggiata; quelle che mancano a sera lampeggiano
   fantasmi(p, q, t, vis, inVolo) {
     const { ctx, cella: c } = this
     for (const [k, chiave] of p.bersaglio) {
@@ -1634,14 +1546,8 @@ export class TelaPorto {
     ctx.lineCap = 'butt'
   }
 
-  /* ═══════════ i camion per strada ═══════════
-     Un mezzo è un camion che arriva o che riparte, lungo la sua strada
-     (`percorso`): arrivando frena in fondo, ripartendo prende la rincorsa.
-     Chi riparte si porta il carico, e se riparte mezzo vuoto se ne va
-     sotto la nuvola scura del cliente arrabbiato. Dietro lascia due
-     sbuffi di fumo, che dicono da che parte sta andando. Mentre riparte,
-     il suo pianale si ricorda in `inPartenza`: l'ultima cassa, se è
-     ancora in volo, ci atterra sopra invece che sulla piazzola vuota. */
+  // arrivando frena in fondo, ripartendo prende la rincorsa; il pianale in partenza si ricorda
+  // in `inPartenza`, così una cassa ancora in volo atterra lì e non sulla piazzola vuota
   mezzi(p, q, t, inVolo) {
     const { ctx, cella: c } = this
     for (const m of q.mezzi || []) {
@@ -1669,8 +1575,7 @@ export class TelaPorto {
     }
   }
 
-  /* gli sbuffi dietro al camion, presi lungo la sua strada: dove è appena
-     passato, non dove punta la marmitta — è la scia che dice il verso */
+  // dove il camion è appena passato, non dove punta la marmitta: è la scia che dice il verso
   fumo(r, s, verso, t) {
     const { ctx, cella: c } = this
     for (let i = 0; i < 3; i++) {
@@ -1685,15 +1590,8 @@ export class TelaPorto {
     }
   }
 
-  /* ═══════════ la gru ═══════════
-     Il braccio arriva da fuori, dal lato dove passa sopra meno cose che
-     contano (il pavimento, gli arredi: il mare e i muri no); fra quelli,
-     preferisce passare sopra il mare, dove si vede per intero ed è il
-     posto delle gru vere, e a pari merito arriva dall'alto dello schermo.
-     Sta in alto (`ALTEZZA_GRU`): si disegna spostato verso la cima dello
-     schermo, e per terra ne resta l'ombra. Per questo dal basso arriva
-     solo se proprio non c'è altro: spostato in su, un braccio che viene
-     da sotto passa sopra la sua stessa cella, e copre la cassa calata. */
+  // il braccio arriva dal lato dove copre meno pavimento/arredi, preferendo il mare o l'alto:
+  // da sotto solo se non c'è altro, perché spostato in su coprirebbe la cassa appena calata
   latoGru(p) {
     const m = this.memo(p)
     if (m.gru) return m.gru
@@ -1741,8 +1639,7 @@ export class TelaPorto {
     const lontano = (Math.max(p.w, p.h) + 3) * c
     const F = { x: T.x + ux * lontano, y: T.y + uy * lontano }
     const P = { x: T.x - ux * c * 0.4, y: T.y - uy * c * 0.4 }
-    /* il traliccio: due correnti e la zeta fra loro, ancorata alla punta
-       così resta ferma anche quando la telecamera scorre */
+    // ancorato alla punta, così resta fermo anche quando la telecamera scorre
     const dx = P.x - F.x, dy = P.y - F.y, L = Math.hypot(dx, dy)
     const ax = dx / L, ay = dy / L, nx = -ay, ny = ax, w = c * 0.17
     const punto = (d, s) => [F.x + ax * d + nx * w * s, F.y + ay * d + ny * w * s]
@@ -1768,14 +1665,12 @@ export class TelaPorto {
     ctx.lineWidth = Math.max(1, c * 0.055)
     ctx.stroke()
     ctx.lineCap = 'butt'
-    /* il carrello */
     ctx.fillStyle = '#3a3f47'
     rett(ctx, T.x - c * 0.2, T.y - c * 0.15, c * 0.4, c * 0.3, c * 0.06)
     ctx.fill()
     ctx.fillStyle = '#6b727c'
     ctx.fillRect(T.x - c * 0.12, T.y - c * 0.05, c * 0.24, c * 0.1)
-    /* il gancio, quando non sta calando niente: a riposo sotto il
-       carrello, tirato su quando le casse sono finite */
+    // il gancio: a riposo sotto il carrello, tirato su quando le casse sono finite
     const cala = (q.voli || []).some(v => v && v.da === 'gru' && t < v.dal + (v.durata || 0))
     if (cala) return
     const finita = !!p.gru && !p.gru.casse.length
@@ -1802,10 +1697,8 @@ export class TelaPorto {
     ctx.lineCap = 'butt'
   }
 
-  /* ═══════════ i clienti ═══════════
-     Guardano il bancone, la fila si mette dietro (dalla parte opposta, o
-     di fianco se dietro finisce la mappa) e la nuvoletta va dall'unica
-     parte che resta libera: né sul bancone, né sulla fila. */
+  // la fila si mette dietro al bancone (o di fianco se dietro finisce la mappa),
+  // la nuvoletta va dall'unica parte libera: né sul bancone né sulla fila
   disposizione(p) {
     const m = this.memo(p)
     if (m.clienti) return m.clienti
@@ -1822,11 +1715,9 @@ export class TelaPorto {
     const fila = [OPPOSTO[verso], ...DI_FIANCO[verso]].find(dentro) || OPPOSTO[verso]
     const altri = ['su', 'destra', 'sinistra', 'giu'].filter(d => d !== verso && d !== fila)
     const nuvola = altri.find(dentro) || altri[0]
-    /* il «+3» di chi aspetta sta di fianco alla fila, dalla parte opposta
-       alla nuvoletta */
+    // il «+3» di chi aspetta sta di fianco alla fila, dalla parte opposta alla nuvoletta
     const lato = DI_FIANCO[fila].find(d => d !== nuvola) || DI_FIANCO[fila][0]
-    /* quanto posto c'è dietro, fino al bordo: la fila si stringe invece di
-       uscire dalla mappa, se no il «+3» finirebbe fuori dal canvas */
+    // la fila si stringe invece di uscire dalla mappa, se no il «+3» finirebbe fuori dal canvas
     const [fx, fy] = DIREZIONI[fila]
     let spazio = 0.5
     for (let x = pc.x + fx, y = pc.y + fy; p.dentro(x, y); x += fx, y += fy) spazio++
@@ -1862,8 +1753,7 @@ export class TelaPorto {
     const pc = p.puntoClienti
     const bx = (pc.x + 0.5) * c, by = (pc.y + 0.5) * c
     const persone = []
-    /* chi aspetta: gli stessi che conta `porto.inFila()`, presi per nome
-       così ognuno ha la sua maglia */
+    // gli stessi che conta porto.inFila(), presi per nome così ognuno ha la sua maglia
     const attesa = p.clienti.fila.filter(f => f.arriva <= p.t)
     const f = this.fila(d, attesa.length)
     attesa.slice(0, f.quanti).forEach((chi, i) => {
@@ -1934,12 +1824,6 @@ export class TelaPorto {
     }
   }
 
-  /* ═══════════ il robot ═══════════
-     Lo stesso muratore di latta del cantiere, un po' di sbieco: la testa
-     con lo schermo e l'occhio sopra il corpo giallo, le gambe sotto.
-     L'occhio guarda verso `verso`; di spalle (in su) si vede la griglia
-     sul retro della testa. Quello che tiene in mano sta davanti a lui,
-     dalla parte dove guarda — sopra la testa se guarda in su. */
   posRobot(q, p, t) {
     const c = this.cella
     const r = q.robot || p.robot || { x: 0, y: 0 }
@@ -1979,8 +1863,6 @@ export class TelaPorto {
     ctx.beginPath()
     ctx.ellipse(R.x, R.y + c * 0.35, c * 0.27, c * 0.09, 0, 0, Math.PI * 2)
     ctx.fill()
-    /* le gambe: di fianco vanno avanti e indietro, di fronte e di spalle
-       si alzano a turno */
     ctx.fillStyle = '#3d4450'
     const lg = c * 0.1
     if (orizz) {
@@ -1992,7 +1874,6 @@ export class TelaPorto {
     }
     /* guardando in su la cosa sta dietro la testa: si disegna prima */
     if (mano && verso === 'su') this.cosa(M.x, M.y, IN_MANO, mano, false)
-    /* il corpo */
     ctx.fillStyle = GIALLO
     ctx.strokeStyle = GIALLO_BORDO
     ctx.lineWidth = lw
@@ -2001,8 +1882,6 @@ export class TelaPorto {
     ctx.stroke()
     ctx.fillStyle = 'rgba(138,97,18,.35)'
     ctx.fillRect(cx - c * 0.12, cy + c * 0.03, c * 0.24, Math.max(1, c * 0.04))
-    /* le braccia, quando sono vuote: di fianco una sola, verso dove
-       guarda; di fronte e di spalle tutte e due, che dondolano */
     ctx.fillStyle = GIALLO_BORDO
     if (!mano) {
       if (orizz) ctx.fillRect(v > 0 ? cx + c * 0.22 : cx - c * 0.36, cy - c * 0.01 + fase * c * 0.02, c * 0.14, c * 0.07)
@@ -2010,7 +1889,6 @@ export class TelaPorto {
     } else if (verso === 'su') {
       for (const s of [-1, 1]) ctx.fillRect(cx + s * c * 0.27 - c * 0.035, cy - c * 0.34, c * 0.07, c * 0.28)
     }
-    /* la testa, con lo schermo */
     ctx.fillStyle = '#e9edf2'
     ctx.strokeStyle = '#4a5260'
     rett(ctx, cx - c * 0.22, cy - c * 0.39, c * 0.44, c * 0.31, c * 0.08)
@@ -2030,20 +1908,16 @@ export class TelaPorto {
       ctx.arc(cx + c * 0.025, cy - c * 0.235, c * 0.022, 0, Math.PI * 2)
       ctx.fill()
     } else {
-      /* di spalle: la griglia sul retro della testa */
       ctx.fillStyle = '#9aa3ae'
       for (let i = 0; i < 3; i++) ctx.fillRect(cx - c * 0.1, cy - c * 0.3 + i * c * 0.06, c * 0.2, Math.max(1, c * 0.03))
     }
-    /* l'antenna, con la lucina: rossa quando si è fermato */
     ctx.fillStyle = '#4a5260'
     ctx.fillRect(cx - c * 0.015, cy - c * 0.49, c * 0.03, c * 0.1)
     ctx.fillStyle = q.fermo ? ROSSO : '#ff8a3d'
     ctx.beginPath()
     ctx.arc(cx, cy - c * 0.49, c * 0.05, 0, Math.PI * 2)
     ctx.fill()
-    /* la cosa in mano, davanti, e le mani che la stringono ai lati: il
-       braccio sotto la cosa, la mano sopra il bordo — sul numero di un
-       biglietto non ci va niente */
+    // sul numero di un biglietto non ci va niente sopra
     if (mano && verso !== 'su') {
       ctx.fillStyle = GIALLO_BORDO
       if (orizz) ctx.fillRect(v > 0 ? cx + c * 0.2 : cx - c * 0.34, cy - c * 0.01, c * 0.14, c * 0.07)
@@ -2069,17 +1943,11 @@ export class TelaPorto {
     }
   }
 
-  /* ═══════════ le cose in viaggio ═══════════
-     Ogni capo di un volo è una cella o uno dei quattro posti con un nome;
-     il modo di viaggiare dipende da dove parte e dove arriva: dalla gru
-     scende lungo il cavo, verso il mare cade e sparisce, al cliente va in
-     mano e sparisce, fra due celle scorre dritta, fra una cella e le mani
-     fa un saltello. */
+  // ogni capo di un volo è una cella o uno dei quattro posti con nome (mano, gru, cliente, mare)
   capo(capo, p, q, t, volo) {
     const c = this.cella
     if (capo === 'mano') { const M = this.manoDi(q, p, t); return { ...M, s: IN_MANO } }
     if (capo === 'gru' && p.puntoGru) {
-      /* appesa sotto il carrello, e più grande perché è più in alto */
       const T = this.carrello(p)
       return { x: T.x, y: T.y + c * 0.1 + this.mezzaAltezza(volo && volo.cosa, IN_ALTO), s: IN_ALTO }
     }
@@ -2088,14 +1956,12 @@ export class TelaPorto {
       return { x: P.x, y: P.y - c * 0.05, s: 0.55 }
     }
     if (capo === 'mare') {
-      /* oltre il bordo della mappa per il motore è mare anche lui: lo
-         schizzo si tira dentro quanto basta perché se ne vedano gli anelli */
+      // oltre il bordo la cosa è mare anche per il motore: lo schizzo si tira dentro quanto basta per vederne gli anelli
       const m = this.puntoMare(p, q, volo)
       return { x: fra((m.x + 0.5) * c, c * 0.2, (p.w - 0.2) * c), y: fra((m.y + 0.5) * c, c * 0.2, (p.h - 0.2) * c), s: 0.5 }
     }
     if (capo && typeof capo === 'object') {
-      /* l'ultima cassa di un camion che si riempie: il camion riparte
-         mentre lei è ancora in volo, e lei ci atterra sopra lo stesso */
+      // il camion può ripartire mentre la sua ultima cassa è ancora in volo: atterra sopra lo stesso
       const via = p.dentro(capo.x, capo.y) && this.inPartenza.get(capo.y * p.w + capo.x)
       return via || this.contenuto(p, capo.x, capo.y)
     }
@@ -2103,8 +1969,7 @@ export class TelaPorto {
     return { x: R.x, y: R.y, s: 1 }
   }
 
-  /* dove finisce in acqua una cosa: in fondo al nastro da cui cade, se no
-     nel mare accanto, se no davanti al robot */
+  // in fondo al nastro da cui cade, se no nel mare accanto, se no davanti al robot
   puntoMare(p, q, volo) {
     const da = volo && volo.da
     if (da && typeof da === 'object') {
@@ -2129,17 +1994,15 @@ export class TelaPorto {
     for (const v of q.voli || []) {
       if (!v || !v.cosa) continue
       const fine = v.dal + (v.durata || 0)
-      /* lo schizzo si segna appena si vede il volo, con l'ora in cui la
-         cassa toccherà l'acqua: la regia può togliere il volo appena
-         finito, e un telefono lento può non avere un fotogramma lì in mezzo */
+      // segnato appena si vede il volo: la regia toglie il volo appena finito e un telefono lento
+      // potrebbe non avere un fotogramma proprio lì
       if (v.a === 'mare') this.schizzo(v, p, q, t, fine)
       if (t >= fine) continue
       const f = fra((t - v.dal) / Math.max(1, v.durata || 1), 0, 1)
       const A = this.capo(v.da, p, q, t, v), B = this.capo(v.a, p, q, t, v)
       let e = morbido(f), arco = 0, alfa = 1
       if (v.da === 'gru') {
-        /* scende piano e frena in fondo, come si posa un carico; l'ombra
-           per terra si stringe e si scurisce mentre la cosa si avvicina */
+        // frena in fondo come si posa un carico; l'ombra si stringe e scurisce avvicinandosi
         e = frena(f)
         alfa = f < 0.12 ? f / 0.12 : 1
         const g = 1.25 - 0.25 * e
@@ -2192,12 +2055,7 @@ export class TelaPorto {
     this.schizzi.set(chiave, { x: B.x, y: B.y, dal: fine })
   }
 
-  /* ═══════════ quello che il robot guarda, e legge ═══════════ */
-
-  /* dove disegnare il riquadro di una cella; una cella fuori dalla mappa
-     («a destra c'è il bordo?», un passo oltre il bordo) si tira dentro
-     finché ne resta una striscia sul bordo: se no il riquadro starebbe
-     fuori dal canvas, e l'occhiata non si vedrebbe */
+  // una cella fuori dalla mappa si tira dentro finché ne resta una striscia sul bordo
   cellaVisibile(p, x, y) {
     const c = this.cella, dentro = c * 0.24
     return {
@@ -2235,8 +2093,6 @@ export class TelaPorto {
     ctx.globalAlpha = 1
   }
 
-  /* ── i guai: la cella dove il robot si è fermato, e l'anello rosso dove
-     il mondo ha fatto perdere la giornata ── */
   segnali(p, q, t) {
     const { ctx, cella: c } = this
     const f = q.fermo
@@ -2256,8 +2112,7 @@ export class TelaPorto {
     }
     const g = q.guaio
     if (g && Number.isFinite(g.x) && Number.isFinite(g.y)) {
-      /* una cassa caduta oltre il bordo ha il guaio fuori dalla mappa: si
-         tira dentro, come lo schizzo */
+      // fuori dalla mappa si tira dentro, come lo schizzo
       const cx = fra((g.x + 0.5) * c, c * 0.2, (p.w - 0.2) * c), cy = fra((g.y + 0.5) * c, c * 0.2, (p.h - 0.2) * c)
       const e = Math.max(0, t - (g.dal || 0))
       ctx.strokeStyle = ROSSO
@@ -2284,8 +2139,7 @@ export class TelaPorto {
     const f = (t - u.dal) / 900
     if (f < 0 || f > 1) return
     const { ctx, cella: c } = this
-    /* sale di fianco alla testa: né sopra il bancone né sulla nuvoletta,
-       perché il cliente dopo può essere già arrivato con la sua richiesta */
+    // di fianco alla testa: né sopra il bancone né sulla nuvoletta, che può già avere una richiesta
     const d = this.disposizione(p)
     const verso = d.verso === 'destra' || d.verso === 'sinistra' ? -DIREZIONI[d.verso][0] : d.nuvola === 'sinistra' ? 1 : -1
     const x = (p.puntoClienti.x + 0.5) * c + verso * c * 0.72
@@ -2336,31 +2190,23 @@ export class TelaPorto {
     ctx.fill()
   }
 
-  /* ── la nuvoletta del cliente ──
-     È l'informazione più importante dello schermo: la cassa che vuole,
-     grande, e sotto quanta pazienza gli resta. Quando la barretta diventa
-     rossa lampeggia piano: la fretta si vede senza bisogno del suono. */
+  // l'informazione più importante dello schermo: la cassa che vuole e quanta pazienza resta
   richiesta(p, t) {
     const cl = p.clienti && p.clienti.alBancone
     if (!cl || !p.puntoClienti) return
     const { ctx, cella: c } = this
     const d = this.disposizione(p)
     const P = this.postoCliente(p, t)
-    /* quando il cliente parla a parole («la più grande», «di meno!») la
-       nuvoletta si allarga un poco: una cassa ci stava, una frase no */
+    // a parole («la più grande», «di meno!») la nuvoletta si allarga: una cassa ci stava, una frase no
     const aParole = p.clienti.indovina || !!QUALITA_IN_NUVOLA[cl.chiede]
     const bw = c * (aParole ? 1.26 : 1.04), bh = c * 1.16
     let bx = P.x, by = P.y - c * 1.3
     if (d.nuvola === 'giu') by = P.y + c * 1.05
     else if (d.nuvola === 'destra' || d.nuvola === 'sinistra') {
-      /* di fianco, ma lontano dal bancone: se il bancone è sopra la
-         nuvoletta si abbassa all'altezza del cliente */
       bx = P.x + DIREZIONI[d.nuvola][0] * c * 1.08
       by = P.y + (d.verso === 'su' ? c * 0.02 : -c * 0.55)
     }
-    /* la nuvoletta resta dentro il porto: un cliente in fondo a sinistra
-       la tirerebbe fuori dallo schermo a metà, e «di meno!» diventerebbe
-       «li meno!». La coda continua a indicare chi parla */
+    // resta dentro il porto: fuori schermo «di meno!» diventerebbe «li meno!»; la coda indica sempre chi parla
     bx = fra(bx, bw / 2 + c * 0.06, p.w * c - bw / 2 - c * 0.06)
     const e = this.cliente && this.cliente.id === cl.id ? fra((t - this.cliente.dal) / 300, 0, 1) : 1
     const s = e < 1 ? tuffo(e) : 1
@@ -2389,10 +2235,7 @@ export class TelaPorto {
     ctx.restore()
   }
 
-  /* Chi fa indovinare: finché non ha visto una lettera, un biglietto col
-     punto di domanda; dopo, la sua risposta, grande — è l'unica cosa che
-     il programma può sapere. Sotto, un pallino per ogni lettera che
-     guarderà ancora: quando finiscono se ne va. */
+  // un punto di domanda finché non risponde; sotto un pallino per ogni tentativo rimasto
   indovinello(p, cl, bx, cy, bw, bh) {
     const { ctx, cella: c } = this
     if (cl.risposta) this.scritta(bx, cy - c * 0.04, cl.risposta === 'di-piu' ? ['di più!', '▲'] : ['di meno!', '▼'], c * 0.2)
@@ -2417,9 +2260,7 @@ export class TelaPorto {
     righe.forEach((r, i) => ctx.fillText(r, cx, cy + (i - (righe.length - 1) / 2) * corpo * 1.1))
   }
 
-  /* una nuvoletta con la coda verso chi parla: prima la coda, poi il
-     corpo sopra, e poi di nuovo il pieno della coda sopra il bordo del
-     corpo, così le due forme sembrano una */
+  // la coda si disegna prima, poi il corpo sopra, poi di nuovo la coda: le due forme sembrano una
   nuvoletta(bx, by, w, h, tx, ty) {
     const { ctx, cella: c } = this
     const x = bx - w / 2, y = by - h / 2, r = Math.min(w, h) * 0.22
@@ -2447,8 +2288,7 @@ export class TelaPorto {
     ctx.moveTo(...b1); ctx.lineTo(...punta); ctx.lineTo(...b2); ctx.closePath()
     ctx.fill()
     ctx.stroke()
-    /* l'ombra del canvas non segue la trasformazione: va moltiplicata a
-       mano per il `devicePixelRatio`, se no sul telefono sparisce */
+    // l'ombra non segue la trasformazione: va moltiplicata a mano per il devicePixelRatio
     ctx.shadowColor = 'rgba(0,0,0,.18)'
     ctx.shadowBlur = c * 0.12 * this.dpr
     ctx.shadowOffsetY = c * 0.04 * this.dpr
@@ -2477,7 +2317,6 @@ export class TelaPorto {
     const e = t - l.dal
     if (e < 0 || e > 900) return
     const { ctx, cella: c } = this
-    /* quello che ha letto: una cella di fianco, o la cosa che tiene in mano */
     let tx, ty
     if (l.mano) {
       const M = this.manoDi(q, p, t)
@@ -2509,10 +2348,7 @@ export class TelaPorto {
     ctx.restore()
   }
 
-  /* Dove va la nuvoletta di quello che il robot ha letto: sopra, se c'è
-     posto e se non copre il robot. Il robot legge di fianco a sé, quindi
-     quando legge in giù la cella di sopra è proprio la sua: lì la
-     nuvoletta va di sbieco, poi di fianco, e per ultima sotto. */
+  // sopra se c'è posto e non copre il robot; leggendo in giù la cella sopra è la sua, quindi va di sbieco
   postoNuvoletta(p, q, t, tx, ty, w, h) {
     const c = this.cella
     const R = this.posRobot(q, p, t)
@@ -2529,11 +2365,7 @@ export class TelaPorto {
     return ripiego || { x: fra(tx, x0 + w / 2, x1 - w / 2), y: fra(ty - c, y0 + h / 2, y1 - h / 2) }
   }
 
-  /* ── le etichette dei cassoni: quante casse ci sono (e quante ne
-     entrano, se non sono infinite), col colore che accetta davanti.
-     Stanno sul bordo in alto del cassone e sopra tutto il resto: è un
-     numero che il programma legge, e il bambino deve poterlo leggere
-     con lui ── */
+  // quante casse ci sono (e quante ne entrano): è un numero che il programma legge
   etichette(p, vis, inVolo, inArrivo, t) {
     const c = this.cella
     for (let y = vis.y0; y <= vis.y1; y++) for (let x = vis.x0; x <= vis.x1; x++) {
@@ -2543,9 +2375,7 @@ export class TelaPorto {
       /* si contano quelle arrivate: una cassa ancora in volo non c'è ancora */
       const n = p.pile[k].filter(q => !inVolo.has(q.id)).length
       const testo = a.capienza < 99 ? `${n}/${a.capienza}` : String(n)
-      /* un cassone con un numero è un indirizzo: il numero va grande,
-         da leggere a colpo d'occhio («la buca del 5»), e il conto delle
-         lettere passa piccolo in un angolo */
+      // un indirizzo: il numero va grande («la buca del 5»), il conto delle lettere piccolo in un angolo
       if (a.numero != null || a.figura === 'buca') {
         const buca = a.figura === 'buca'
         if (a.numero != null) {
@@ -2556,9 +2386,7 @@ export class TelaPorto {
                        Math.max(9, Math.round(c * 0.25)), { largo: p.w * c })
         continue
       }
-      /* sopra il cassone; un camion invece l'etichetta la porta sulla
-         cabina, dalla parte della strada, così il pianale col carico resta
-         scoperto */
+      // un camion porta l'etichetta sulla cabina, lato strada: il pianale col carico resta scoperto
       let ex = (x + 0.5) * c, ey = y > 0 ? y * c + c * 0.02 : (y + 1) * c - c * 0.02
       if (a.figura === 'camion') {
         const angolo = this.angoloCabina(p, x, y)
@@ -2576,10 +2404,7 @@ export class TelaPorto {
     }
   }
 
-  /* Una pastiglia bianca con un testo corto (e un quadretto di colore);
-     se sporgerebbe dalla mappa si sposta dentro. Con `pazienza` (da 0 a 1)
-     sotto il testo c'è la barretta, la stessa dei clienti: dal verde al
-     rosso, e sotto un quarto lampeggia. */
+  // testo corto ed eventuale quadretto di colore; con `pazienza` la barretta verde-rosso dei clienti
   pastiglia(cx, cy, testo, corpo, { col = null, largo = Infinity, alto = Infinity, pazienza = null, t = 0 } = {}) {
     const { ctx } = this
     ctx.font = `800 ${Math.round(corpo)}px system-ui, sans-serif`
@@ -2625,9 +2450,7 @@ export class TelaPorto {
     ctx.fillText(testo, tx, cy + corpo * 0.04)
   }
 
-  /* ── i bordi della vista: dove la mappa continua, un'ombra leggera e
-     una freccetta. Senza, una mappa più grande dello schermo sembra
-     finire dove finisce il canvas ── */
+  // senza, una mappa più grande dello schermo sembra finire dove finisce il canvas
   bordi(p) {
     const { ctx, cella: c } = this
     const W = this.vistaW, H = this.vistaH, L = 14
