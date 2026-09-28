@@ -1,23 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA CASSETTA — i blocchi che il livello mette a disposizione
-
-   Si apre dal «＋» e mostra solo i blocchi del livello: al primo livello
-   sono due, all'ultimo sette. Un blocco che non serve ancora non si
-   offre — un tasto che il livello non sa usare è una domanda che il
-   bambino si fa senza nessuno a cui farla.
-
-   I progetti sono del bambino: compaiono qui uno per uno, e chiamarli è
-   metterli nel programma come un blocco qualunque. Gli **attrezzi**
-   (`dati/attrezzi.js`) stanno in un gruppo loro, anche nei livelli dove
-   un progetto non si può ancora scrivere: si chiamano e basta, e sotto
-   il nome dicono dove lasciano il robot — la riga dopo comincia da lì.
-
-   Un tasto per blocco, e **nessuna scelta si fa qui**: il verso, il
-   posto del mattone e il colore si scelgono sulla riga appena nata
-   (`viste/frasi.js`, `GRUPPI`). Il porto ha una cassetta sua
-   (`GRUPPI_PORTO`), con la stessa regola.
-   ═══════════════════════════════════════════════════════════════════ */
+// La cassetta: i blocchi che il livello mette a disposizione (vedi
+// docs/costruttore/linguaggio.md), più attrezzi e progetti del bambino.
+// Un tasto per blocco: nessuna scelta si fa qui, si sceglie sulla riga.
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { GRUPPI, GRUPPI_PORTO, ICONE } from './frasi.js'
 
@@ -42,9 +26,7 @@ const gruppi = computed(() => (props.porto ? GRUPPI_PORTO : GRUPPI)
                                                     !(b.piuPosti && props.posti.length < 2)) }))
   .filter(g => g.blocchi.length))
 
-/* la finestra cieca di sempre: la cassetta nasce sotto il dito che ha
-   appena premuto «＋», e un secondo tocco di troppo sceglierebbe un
-   blocco che nessuno ha chiesto */
+// la finestra cieca (vedi docs/core/interfaccia.md)
 const cieco = ref(true)
 let timer = 0
 onMounted(() => { timer = setTimeout(() => { cieco.value = false }, 320) })

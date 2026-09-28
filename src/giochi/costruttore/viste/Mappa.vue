@@ -1,12 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA MAPPA DEI CANTIERI
-
-   Un capitolo per concetto, e sotto i suoi livelli: ognuno dice accanto
-   al nome **cosa si impara** («ripeti», «un progetto con una misura»),
-   come le prove del Generale. Riceve tutto già deciso — cosa è aperto
-   e cosa è chiuso per età, quante stelle — e sceglie dove andare.
-   ═══════════════════════════════════════════════════════════════════ */
+// La mappa dei cantieri: un capitolo per concetto, i suoi livelli sotto.
+// Riceve tutto già deciso (aperto/chiuso, stelle) e sceglie dove andare.
 defineProps({
   capitoli: { type: Array, required: true },   // [{ chiave, nome, icona, dice, livelli: [] }]
   libero: { type: Object, default: null },      // il cantiere libero, con `aperto`

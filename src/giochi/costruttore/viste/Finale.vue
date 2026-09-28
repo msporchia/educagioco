@@ -1,12 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL CARTELLO DI FINE LIVELLO
-
-   Dice le stelle, le monete (solo la prima volta: un livello rifatto
-   si ricorda, non si risolve) e **su quanti ordini ha retto** il
-   programma, uno per uno — è la cosa vera del gioco. Se il livello ne
-   aveva uno solo non lo dice: sarebbe una frase senza notizia.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il cartello di fine livello: stelle, monete e su quanti ordini ha
+// retto il programma (vedi docs/costruttore/campagna.md).
 import { ref, onMounted, onUnmounted } from 'vue'
 import Festa from '../../Festa.vue'
 
@@ -20,8 +14,7 @@ defineProps({
 })
 const emit = defineEmits(['avanti', 'mappa', 'resta'])
 
-/* la finestra cieca di sempre: il cartello compare sotto il dito che ha
-   appena premuto ▶, e quel dito si lascia dietro un tocco */
+// la finestra cieca (vedi docs/core/interfaccia.md)
 const cieco = ref(true)
 let timer = 0
 onMounted(() => { timer = setTimeout(() => { cieco.value = false }, 320) })

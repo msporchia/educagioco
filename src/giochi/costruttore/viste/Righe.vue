@@ -1,27 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   UN ELENCO DI RIGHE — e dentro i blocchi, un altro elenco uguale
-
-   Si chiama da sé: un «ripeti» ha dentro delle righe, che possono
-   avere dentro un «se», che ha dentro delle righe. Ogni elenco finisce
-   con un «＋» che aggiunge in fondo a **quell'**elenco: è così che si
-   entra in un blocco senza trascinare niente.
-
-   Toccare una riga la seleziona, e sotto compaiono i suoi tasti (su,
-   giù, sposta, copia, via, e «＋ sotto»); toccare una casella apre la
-   scelta **attaccata alla riga**, non in fondo allo schermo — la domanda
-   deve stare accanto al tasto che l'ha chiamata, se no l'occhio la perde.
-
-   **La mano.** ✂ e ⧉ prendono la riga (col blocco e quello che ha
-   dentro), e finché la si tiene ogni elenco mostra i posti dove
-   posarla: uno sopra ogni riga e uno in fondo, al posto del «＋». È il
-   taglia-e-incolla, e serve a costruire a pezzi: due righe scritte, poi
-   ci si accorge che vanno dentro un ripeti. Spostando, i posti che la
-   lascerebbero dov'è non si mostrano, e nemmeno quelli dentro di lei.
-
-   Non tocca il programma: chiama l'editore che le passa `Editor.vue`
-   (provide/inject), e l'editore lo dice a chi coordina.
-   ═══════════════════════════════════════════════════════════════════ */
+// Un elenco di righe, che si chiama da sé (un blocco ha dentro un altro
+// elenco). Non tocca il programma: chiama l'editore iniettato da
+// Editor.vue. Vedi docs/costruttore/progetti.md (la mano, ✂/⧉).
 import { inject } from 'vue'
 import { pezzi, iconaDi } from './frasi.js'
 import { colore } from '../dati/colori.js'

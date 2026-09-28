@@ -1,37 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA REGIA — il programma che gira, a una velocità che si guarda
-
-   Sta fra il motore e lo schermo. Tira fuori dall'esecutore un fatto
-   per volta (`motore/esecutore.js`), aspetta quanto serve perché si
-   veda, e intanto aggiorna due cose:
-
-     · `quadro`, l'oggetto che la tela disegna a ogni fotogramma: si
-       muta sul posto, niente reattività — la tela lo rilegge da sola;
-     · `stato`, reattivo, per quello che sta nel DOM: la riga accesa, la
-       pila delle carte aperte, i valori delle lavagnette, gli esiti.
-
-   ── DUE MONDI, UNA REGIA ────────────────────────────────────────────
-   Il cantiere di lato e il porto dall'alto hanno quadri diversi (li
-   disegnano due tele, `scena/tela.js` e `scena/porto.js`) e qualche
-   fatto diverso: nel porto il robot prende e posa, e il mondo fa i suoi
-   turni — la gru cala, il nastro scorre, un cliente arriva. Tutto il
-   resto — la riga che si accende, i giri, le carte dei progetti, le
-   lavagnette, l'ordine delle prove — è lo stesso, e sta scritto una
-   volta sola.
-
-   Nel porto le cose che si muovono diventano **voli** nel quadro (una
-   cassa dalla casella alle mani, dalla gru al molo, dal nastro al mare):
-   il motore le ha già spostate, la tela le fa viaggiare.
-
-   ── L'ORDINE DELLE PROVE ───────────────────────────────────────────
-   Si parte dal primo ordine, alla velocità scelta. Se regge, gli altri
-   si giocano **a schermo, accelerati** — la stessa scelta fatta per il
-   Generale: vedere che il programma tiene anche con cinque gradini è la
-   soddisfazione, e dirlo a parole la ruberebbe. Al primo ordine che
-   cade ci si ferma lì, su quell'ordine, col guasto a vista.
-
-   Non sa niente di monete e di profilo: a cose fatte chiama `su.fine`.
-   ═══════════════════════════════════════════════════════════════════ */
+// La regia: sta fra il motore e lo schermo. Tira fuori dall'esecutore un
+// fatto per volta e aggiorna `quadro` (mutato sul posto, per la tela) e
+// `stato` (reattivo, per il DOM). Il cantiere e il porto condividono la
+// stessa regia (nel porto le cose in movimento diventano `voli`). Vedi
+// docs/costruttore/linguaggio.md e porto.md. Non sa niente di monete e
+// profilo: a cose fatte chiama `su.fine`.
 import { markRaw } from 'vue'
 import { Esecuzione } from './motore/esecutore.js'
 import { mondoDellOrdine, verdetto, nelPorto } from './motore/prova.js'

@@ -1,13 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   UNA LAVAGNETTA NUOVA
-
-   Una lavagnetta è un numero con un nome: si scrive, si cancella, si
-   riscrive. «Lavagnetta» e non «scatola» apposta: una scatola fa
-   pensare a tante cose dentro, una lavagnetta tiene un numero solo —
-   quello di adesso — ed è esattamente quello che fa una variabile.
-   Nasce a 0.
-   ═══════════════════════════════════════════════════════════════════ */
+// Una lavagnetta nuova: tiene un numero solo (nasce a 0), come una
+// variabile. Vedi docs/costruttore/linguaggio.md.
 import { ref, computed } from 'vue'
 import { NOMI_LAVAGNETTE } from './frasi.js'
 

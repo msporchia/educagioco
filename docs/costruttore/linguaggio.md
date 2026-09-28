@@ -23,6 +23,10 @@ livello una sfida. Codice in `src/giochi/costruttore/`: l'esecutore è
   diversi e finiscono sul bordo del cantiere, quindi un numero contato a mano
   regge un ordine solo, e uno alto «per stare sicuri» fa dire al robot che non
   può uscire.
+- **Come si vince un ordine lo dichiara il livello** (`prova` in
+  `motore/prova.js`): `disegno` (i mattoni combaciano col disegno),
+  `passaggio` (l'omino arriva alla bandiera), `libero` (niente da vincere:
+  il cantiere libero) o `giornata` (il porto, a sera — vedi [porto.md](porto.md)).
 
 ## Il robot cammina e cade
 

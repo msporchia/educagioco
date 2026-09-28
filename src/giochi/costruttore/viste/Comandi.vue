@@ -1,16 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   I COMANDI — via, stop, la velocità, l'aiuto, e le lavagnette
-
-   Un tasto solo che dice sempre cosa succede se lo premi: **▶ Via**
-   quando è fermo, **■ Stop** mentre gira — ed è la stessa regola del
-   Generale. Accanto la velocità, a tre tacche: piano per capire, veloce
-   per vedere il castello venir su.
-
-   Sotto, le **lavagnette**: quelle dell'ordine col lucchetto, quelle del
-   bambino col loro valore che cambia mentre il robot lavora. Sono il
-   pezzo che rende una variabile una cosa che si vede.
-   ═══════════════════════════════════════════════════════════════════ */
+// I comandi: ▶ Via / ■ Stop, la velocità, l'aiuto, e le lavagnette
+// (dell'ordine, col lucchetto, e quelle del bambino). Vedi
+// docs/costruttore/linguaggio.md e porto.md (il turno).
 defineProps({
   inCorso: { type: Boolean, default: false },
   velocita: { type: String, default: 'normale' },
@@ -19,9 +10,7 @@ defineProps({
   valori: { type: Object, default: () => ({}) },        // i loro valori, se sta girando
   conLavagnette: { type: Boolean, default: false },     // si possono creare
   aiuti: { type: Number, default: 0 },                  // quanti aiuti ha già visto
-  /* nel porto il mondo ha un orologio: mentre gira si vede il turno che
-     passa, ed è metà della lezione — aspettare costa tempo, pensare no */
-  turno: { type: Number, default: null },
+  turno: { type: Number, default: null },               // nel porto: il turno che passa
 })
 import { colore } from '../dati/colori.js'
 const emit = defineEmits(['via', 'stop', 'velocita', 'aiuto', 'nuova-lavagnetta'])

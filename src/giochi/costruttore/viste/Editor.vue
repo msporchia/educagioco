@@ -1,25 +1,8 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   L'EDITOR — il programma, a schede
-
-   Una scheda per la fila principale e una per ogni progetto: un
-   progetto è un pezzo di programma con un nome e le sue misure, e si
-   scrive nella sua scheda come la principale. Mentre il programma gira
-   la scheda segue il robot: quando entra in «colonna» si apre la carta
-   di colonna, con le misure di **quella** chiamata scritte sopra
-   («alta 3») — è la pila delle chiamate, fatta vedere invece che
-   spiegata.
-
-   Tutto quello che succede qui si dice a chi coordina (`emit`): le
-   righe, attraverso `Righe.vue`, lo chiedono all'editore che questo
-   componente mette a disposizione (provide/inject), così una riga
-   dentro tre blocchi non deve rimandare gli eventi su per tre livelli.
-
-   Quello che si ha **in mano** (✂ sposta, ⧉ copia) si dice in cima, nella
-   testa che resta ferma mentre si scorre: il posto dove posarlo può
-   stare due schermate più giù, o in un'altra scheda — si cambia scheda
-   con la riga in mano, ed è così che una riga entra in un progetto.
-   ═══════════════════════════════════════════════════════════════════ */
+// L'editor: una scheda per la fila principale e una per ogni progetto.
+// Mette a disposizione l'«editore» (provide/inject) che Righe.vue usa,
+// così una riga dentro tre blocchi non rimanda gli eventi su tre livelli.
+// Vedi docs/costruttore/progetti.md e linguaggio.md (l'esecutore e la regia).
 import { computed, provide, ref, watch, nextTick } from 'vue'
 import { nomiLeggibili, trova } from '../motore/modifica.js'
 import { pezzi, iconaDi } from './frasi.js'
