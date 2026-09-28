@@ -1,12 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL GIOCO LIBERO — le due manopole
-
-   Finita la campagna, la difficoltà torna in mano al bambino: quanto
-   duro (compreso lo scaglione «esperto», che nelle tappe non compare
-   mai) e con quali disegni. Le due scelte si ricordano fra una sera e
-   l'altra — chi ha trovato il suo posto non deve rimetterlo ogni volta.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il gioco libero: finita la campagna, difficoltà e tema tornano in mano
+// al bambino (compreso lo scaglione «esperto», assente nelle tappe). Le
+// due scelte si ricordano da una sera all'altra.
 defineProps({
   scaglioni: { type: Array, required: true },
   temi: { type: Array, required: true },        // [{ chiave, nome, icona, accento }]

@@ -1,28 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA SPIEGAZIONE SENZA PAROLE
+// La spiegazione senza parole: un codice coperto che si scopre, un
+// tentativo sotto, e i tre casi mostrati uno alla volta (pieno: le due
+// caselle si accendono e vola un pallino verde; vuoto: la casella salta
+// fino alla sua e torna; niente: trema e si spegne). Questa classe non
+// calcola niente — i passi glieli passa `motore/indizi.js` — così non può
+// mai raccontare una regola diversa da quella che il gioco applica.
 
-   Un bambino di sei anni non legge un regolamento, e «pallino verde =
-   giusto al posto giusto» è una frase che va capita due volte prima di
-   servire a qualcosa. Quello che vede invece è: un codice coperto che si
-   scopre, un tentativo sotto, e poi — uno alla volta — i tre casi.
-
-     pieno    il disegno combacia in colonna: le due caselle si accendono
-              e un pallino verde vola nel riquadro
-     vuoto    il disegno c'è ma sta altrove: SALTA fino alla sua casella
-              e torna, e il pallino che vola è vuoto
-     niente   il disegno non c'è: trema una volta e si spegne
-
-   È il pezzo che lega la causa all'effetto senza dirlo a parole, ed è il
-   motivo per cui questo gioco non ha una schermata di istruzioni.
-
-   Questa classe **non calcola niente**: i tre casi glieli passa chi la
-   costruisce, già decisi da `motore/indizi.js`. Se un giorno cambiassero
-   le regole, la spiegazione cambierebbe da sola — e non potrebbe
-   raccontare una regola che il gioco non applica.
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* I tempi, in millesimi. Stanno qui in cima perché sono la cosa che si
-   ritocca guardando un bambino guardare. */
+// I tempi, in millesimi: si ritoccano guardando un bambino guardare.
 const T = {
   scopri: 400,      // quando il lucchetto si apre
   perCasella: 120,  // ritardo fra una casella scoperta e la dopo
@@ -42,9 +25,8 @@ const nodo = (tag, classe, testo) => {
 }
 
 export class Dimostrazione {
-  /* `radice` è l'elemento in cui costruirsi; `passi` sono i tre casi già
-     decisi; `suona` è una funzione facoltativa che riceve 'pieno' |
-     'vuoto' | 'niente' — chi la passa decide se e cosa far sentire. */
+  // `radice` è l'elemento in cui costruirsi; `passi` sono i tre casi già
+  // decisi; `suona` riceve 'pieno' | 'vuoto' | 'niente'.
   constructor(radice, { codice, tentativo, passi, suona = null } = {}) {
     this.radice = radice
     this.codice = codice
@@ -55,7 +37,6 @@ export class Dimostrazione {
     this.costruita = false
   }
 
-  /* ---------- il telaio, costruito una volta sola ---------- */
   costruisci() {
     const r = this.radice
     r.innerHTML = ''
@@ -94,11 +75,10 @@ export class Dimostrazione {
     this.radice?.querySelectorAll('.cs-dvolante').forEach(v => v.remove())
   }
 
-  /* ---------- un giro intero, poi da capo ---------- */
   giro() {
     this.daCapo()
 
-    /* si sbircia il codice: qui è scoperto perché è solo un esempio */
+    // si sbircia il codice: qui è scoperto perché è solo un esempio
     this.fra(T.scopri, () => {
       this.lucchetto.textContent = '👁️'
       this.celleSeg.forEach((c, i) => this.fra(i * T.perCasella, () => {
@@ -146,9 +126,7 @@ export class Dimostrazione {
     }
 
     if (passo.tipo === 'vuoto') {
-      /* il salto: la casella va fino a dove il disegno sta davvero e
-         torna. La distanza si misura sul posto — le due righe hanno lo
-         stesso passo, ma non si dà per scontato. */
+      // il salto: la casella va fino a dove il disegno sta davvero e torna
       this.fra(quando, () => {
         const da = prova.getBoundingClientRect(), a = seg.getBoundingClientRect()
         prova.style.setProperty('--dx', (a.left - da.left) + 'px')
@@ -164,7 +142,6 @@ export class Dimostrazione {
       return
     }
 
-    /* niente: trema e si spegne, e nel riquadro non arriva nulla */
     this.fra(quando, () => { prova.classList.add('cs-no'); this.suona?.('niente') })
     this.fra(quando + 500, () => {
       prova.classList.remove('cs-no')
@@ -172,9 +149,9 @@ export class Dimostrazione {
     })
   }
 
-  /* Un pallino che parte dalla casella e atterra nel riquadro degli
-     indizi. Vola un sosia in posizione assoluta; quello vero sta già al
-     suo posto, invisibile, così l'arrivo è esattamente dove sarà. */
+  // Un pallino che parte dalla casella e atterra nel riquadro degli
+  // indizi. Vola un sosia in posizione assoluta; quello vero sta già al
+  // suo posto, invisibile, così l'arrivo è esattamente dove sarà.
   vola(daCella, tipo) {
     const cornice = this.radice.getBoundingClientRect()
     const a = daCella.getBoundingClientRect()

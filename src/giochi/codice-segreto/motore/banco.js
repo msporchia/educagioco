@@ -1,35 +1,14 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL BANCO DI PROVA — un giocatore finto
-
-   Non serve al gioco: serve a chi lo prova. Il gioco non lo importa, e
-   nel file unico non ci finisce (il build lo scarta: nessuno lo chiama).
-
-   Il finto giocatore sceglie sempre un codice ancora **compatibile** con
-   tutte le risposte avute: se un codice non spiegherebbe i pallini già
-   visti, non lo prova. È il ragionamento che il gioco vorrebbe insegnare
-   — «il 🐶 qui non può starci, l'ho già escluso» — ridotto all'osso, e
-   se con questo le prove concesse non bastano vuol dire che quella tappa
-   chiede fortuna, non testa.
-
-   Sotto c'è anche un giocatore **distratto**, che quel ragionamento lo
-   fa solo ogni tanto: è il bambino vero, ed è quello che dice se la
-   tappa è giocabile davvero e non solo in teoria.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il banco di prova: un giocatore finto che sceglie sempre un codice
+// ancora compatibile con le risposte avute, e uno «distratto» che ci
+// riesce solo ogni tanto (`attenzione`). Non lo importa il gioco, non
+// finisce nel file unico.
 import { Partita } from './partita.js'
 import { confronta } from './indizi.js'
 
-/* Tutti i codici possibili con queste regole. Cresce come una potenza: lo
-   chiama solo il banco, e solo sugli scaglioni della campagna (al più
-   16.807 con «esperto», che una macchina se li mangia).
-
-   **La lista si tiene da parte, per regole.** Non è una micro-ottimizzazione
-   gratuita: `gioca` la rifaceva a ogni partita, e un test che gioca
-   seicento partite di «esperto» costruiva seicento volte le stesse 16.807
-   liste da cinque — il conto vero (scegliere e filtrare) sparisce dentro
-   quello. Si può condividere perché nessuno la tocca: `gioca` legge i
-   codici e `compatibili` filtra, e nessuno dei due scrive dentro.
-   La chiave è l'oggetto `regole`, quindi una regola buttata via se la
-   porta dietro. */
+// Tutti i codici possibili, tenuti da parte per `regole`: `gioca` li legge
+// e `compatibili` li filtra senza scriverci dentro, così un banco che
+// gioca centinaia di partite sullo stesso scaglione non li ricostruisce
+// ogni volta.
 const listino = new WeakMap()
 
 export function tuttiICodici(regole) {
@@ -59,9 +38,8 @@ export const compatibili = (candidati, prova) => candidati.filter(c => {
   return r.pieni === prova.pieni && r.vuoti === prova.vuoti
 })
 
-/* `attenzione` è quanto spesso il giocatore ragiona davvero: 1 = sempre
-   (il ragionatore perfetto), 0.6 = ogni tanto tira a caso fra tutti i
-   codici, come fa un bambino stanco. */
+// `attenzione` è quanto spesso il giocatore ragiona davvero: 1 = sempre,
+// 0.6 = ogni tanto tira a caso fra tutti i codici, come un bambino stanco.
 export function gioca(regole, { codice = null, rnd = Math.random, attenzione = 1 } = {}) {
   const partita = new Partita(regole, { rnd, codice })
   const tutti = tuttiICodici(regole)
@@ -75,9 +53,8 @@ export function gioca(regole, { codice = null, rnd = Math.random, attenzione = 1
   return partita
 }
 
-/* Quante volte su cento questo giocatore porta a casa un codice, e in
-   quante prove di media quando ce la fa. È il numero che dice se una
-   tappa è tarata: sotto una certa soglia non è difficile, è ingiusta. */
+// Quante volte su cento questo giocatore vince, e in quante prove medie:
+// il numero con cui si dice se una tappa è tarata o solo ingiusta.
 export function misura(regole, { volte = 200, attenzione = 1, rnd = Math.random } = {}) {
   let vinte = 0, prove = 0
   for (let i = 0; i < volte; i++) {
@@ -87,8 +64,7 @@ export function misura(regole, { volte = 200, attenzione = 1, rnd = Math.random 
   return { volte, vinte, quota: vinte / volte, proveMedie: vinte ? prove / vinte : 0 }
 }
 
-/* Il caso ripetibile: due prove uguali devono raccontare la stessa
-   storia, o un test rosso non si sa se è un guasto o sfortuna. */
+// Il caso ripetibile, per test che devono raccontare sempre la stessa storia.
 export function caso(seme = 1) {
   let s = seme >>> 0 || 1
   return () => {
