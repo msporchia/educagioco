@@ -1,50 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL MERCATO — QUALCUNO CHE CHIEDE
-
-   ── IL PROBLEMA ───────────────────────────────────────────────────
-   Quello che la fattoria produce lo mangiavano **solo il cane e il
-   gatto**, e una ciotola non è un consumo: si riempie in un gesto e la
-   pancia risale da sola. Da lì il silo si tappava di grano e la
-   domanda «e adesso cosa ci faccio» non aveva risposta — la catena
-   arrivava in fondo e finiva contro un muro.
-
-   Adesso al banco arrivano degli ordini: **«il fornaio vuole 3 grano e
-   2 uova»**. Un obiettivo che si legge in due secondi e che dice da
-   solo cosa seminare, che è la cosa che nessun magazzino sa dire.
-
-   ── COSA STA QUI E COSA STA DI LÀ ─────────────────────────────────
-   Qui le **regole**: cosa si può chiedere, quando arriva un ordine
-   nuovo, cosa succede consegnando. In `dati/mercato.js` i **numeri** —
-   quanto rende un ordine e perché non paga monete, che è la decisione
-   grossa. Lo stato (i tre posti al banco, l'esperienza guadagnata) sta
-   nella `Fattoria`, che è quello che finisce nel profilo.
-
-   Stessa forma di `motore/vicino.js`: funzioni pure che ricevono la
-   fattoria e rispondono. Nessun Vue, nessun DOM, gira in Node — e
-   infatti si prova senza browser (`test/unita/mercato`).
-
-   ── NON SI CHIEDE QUELLO CHE NON SI PUÒ FARE ──────────────────────
-   Un ordine pesca solo fra le merci **ottenibili adesso**: quelle che
-   il livello ha aperto (`merciDelLivello`) e che questa fattoria sa
-   davvero produrre (`Fattoria.ottenibile` — la stessa domanda con cui
-   il silo decide quali scomparti mostrare). È la stessa promessa che
-   il carretto del vicino non fa: offrire zucche a chi le vedrà fra
-   ventimila monete è un tasto che non si può premere, cioè un tasto
-   rotto.
-
-   ── RIFIUTARE COSTA ATTESA, CONSEGNARE NO ─────────────────────────
-   Un posto **consegnato** si riempie subito: la roba l'hai portata, il
-   posto è tuo. Un posto **rifiutato** resta vuoto per `RIPOSO_MIN`
-   minuti veri. Senza quell'attesa il gesto giusto sarebbe premere ✕
-   finché non esce l'ordine più facile — cioè un mercato che si gioca
-   col pollice invece che coi campi. Cinque minuti sono un campo di
-   grano: chi rifiuta torna a coltivare, non aspetta guardando.
-
-   ── E IL CASO SI PASSA DA FUORI ───────────────────────────────────
-   `rnd` arriva da chi chiama (`Math.random` in gioco), perché una
-   partita si deve poter rifare identica: senza, un test racconta ogni
-   volta una storia diversa.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Il mercato: le regole (cosa si può chiedere, quando arriva un ordine, cosa succede consegnando).
+   I numeri stanno in dati/mercato.js — vedi docs/fattoria/chi-chiede.md e regole.md. rnd arriva da
+   fuori (una partita si deve poter rifare identica). */
 import { PRODOTTI } from '../dati/coltivazioni.js'
 import { eMercato } from '../dati/catalogo.js'
 import {
@@ -54,26 +10,16 @@ import {
 
 const MINUTO = 60000
 
-/* C'è una bancarella in mappa? In magazzino non conta: una cosa
-   comprata e non ancora posata non fa niente, come un silo nel baule
-   non contiene niente. Stessa regola del carretto del vicino. */
+// C'è una bancarella in mappa? In magazzino non conta, come per il carretto del vicino.
 export const mercatoIn = f => f.cose.find(eMercato) || null
 
-/* Le merci che un ordine può chiedere a questa fattoria, in ordine di
-   tabella. Due filtri e non uno: il **livello** (che è dato, e vale
-   per tutti) e quello che **questa** fattoria sa fare (che dipende dai
-   premi presi). Il secondo è sempre più stretto del primo, e tenerli
-   tutti e due scritti serve a poterlo provare per ogni livello senza
-   costruire sessantacinque fattorie. */
+// Le merci che un ordine può chiedere: livello (dato) e ottenibile (dipende dai premi presi).
 export const merciOrdinabili = f =>
   merciDelLivello(f.livello).filter(p => f.ottenibile(p))
 
 const pesca = (rnd, quante) => Math.min(quante - 1, Math.floor(rnd() * quante))
 
-/* Come `pesca`, ma una merce pesa quanto dice `pesoDellaMerce`: la
-   torta esce più spesso del grano, e quello che è appena arrivato più
-   spesso di tutti. Un'estrazione sola di `rnd`, come prima, così una
-   partita seminata si rifà identica. */
+// Come pesca, ma una merce pesa quanto dice pesoDellaMerce (un'estrazione sola, così si rifà identica).
 function pescaPesata(rnd, merci, livello) {
   const pesi = merci.map(p => pesoDellaMerce(p, livello))
   let x = rnd() * pesi.reduce((s, w) => s + w, 0)
@@ -81,10 +27,7 @@ function pescaPesata(rnd, merci, livello) {
   return merci.length - 1
 }
 
-/* Un ordine nuovo. Quante merci diverse: quasi sempre una o due — tre
-   solo ogni tanto, e mai più di quante se ne possano produrre. «Tre
-   grano» è un ordine che un bambino di sei anni legge tutto; «due
-   grano, un uovo, tre carote e una lana» è un compito. */
+// Un ordine nuovo: quasi sempre una o due merci diverse, mai più di quante se ne possano produrre.
 export function componiOrdine(f, rnd = Math.random, id = 1) {
   const merci = merciOrdinabili(f)
   if (!merci.length) return null
@@ -99,25 +42,13 @@ export function componiOrdine(f, rnd = Math.random, id = 1) {
     const [p] = resta.splice(pescaPesata(rnd, resta, f.livello), 1)
     chiede[p] = 1 + Math.floor(rnd() * PEZZI_MAX)
   }
-  /* **Prima la roba, poi chi la vuole.** Il cliente era pescato fra
-     tutti, e con sette merci non si notava; con ventidue sì — il
-     pizzaiolo che chiede la lana fa sembrare il banco una lotteria.
-     Chi può venire lo dice il dato (`clientiPer` in `dati/mercato.js`,
-     dove `vuole` restringe e la sua assenza vuol dire «prende di
-     tutto»): qui resta un'estrazione sola, come prima, così una
-     partita seminata si rifà identica. */
+  // Prima la roba, poi chi la vuole (clientiPer): pescare il cliente fra tutti faceva sembrare il banco una lotteria.
   const possibili = clientiPer(chiede)
   const chi = possibili[pesca(rnd, possibili.length)]
   return { id, chi: chi.id, chiede, xp: premioPer(chiede), minuti: minutiPer(chiede) }
 }
 
-/* I tre posti del banco, rimessi a posto: quelli vuoti si riempiono,
-   quelli in riposo aspettano il loro minuto. Si chiama aprendo il
-   mercato e dopo ogni gesto — non c'è nessun orologio da tenere in
-   vita, come per i campi che crescono leggendo l'ora vera.
-
-   Torna `true` se qualcosa è cambiato, così chi chiama sa se c'è da
-   salvare. */
+// I tre posti rimessi a posto: i vuoti si riempiono, quelli in riposo aspettano il loro minuto.
 export function aggiornaIlMercato(f, ora = Date.now(), rnd = Math.random) {
   if (!Array.isArray(f.ordini)) f.ordini = []
   let mosso = false
@@ -137,18 +68,12 @@ export function aggiornaIlMercato(f, ora = Date.now(), rnd = Math.random) {
   return mosso
 }
 
-/* Gli ordini veri, senza i posti vuoti: è quello che la schermata
-   mostra. I posti in riposo escono a parte (`riposi`), perché «fra
-   quanto ne arriva un altro» è una cosa da dire e non da nascondere. */
+// Gli ordini veri, senza i posti vuoti; i posti in riposo escono a parte (riposi).
 export const ordiniDi = f => (f.ordini || []).filter(o => o && o.chiede)
 export const riposiDi = f => (f.ordini || []).filter(o => o && !o.chiede && o.dal)
 export const ordineDi = (f, id) => ordiniDi(f).find(o => o.id === id) || null
 
-/* Quello che manca per consegnare: `[{ prodotto, serve, hai }]`, vuoto
-   se si può consegnare. Non è un sì/no perché un «non si può» non
-   compare mai da solo in questo gioco — porta con sé cosa manca, e
-   possibilmente il tasto per andarlo a prendere
-   (`motore/consiglio.js`). */
+// Quello che manca per consegnare: mai un sì/no da solo, porta sempre cosa manca.
 export function cheMancaPer(f, ordine) {
   if (!ordine) return []
   return Object.entries(ordine.chiede)
@@ -158,13 +83,7 @@ export function cheMancaPer(f, ordine) {
 
 export const puoiConsegnare = (f, ordine) => !!ordine && !cheMancaPer(f, ordine).length
 
-/* Consegnare: esce la merce, entra l'esperienza, e al posto liberato
-   arriva subito un ordine nuovo.
-
-   Il controllo viene **prima** di toccare qualunque cosa, come in
-   `nutri` e in `coccola`: chi non ha abbastanza roba non perde niente,
-   perde solo il gesto. Un ordine consegnato a metà sarebbe l'unico
-   modo, in tutta la fattoria, di far sparire il lavoro di un bambino. */
+// Consegnare: il controllo viene prima di toccare qualunque cosa, come in nutri e coccola.
 export function consegna(f, id, ora = Date.now(), rnd = Math.random) {
   if (!mercatoIn(f)) return { ok: false, motivo: 'niente-mercato' }
   const o = ordineDi(f, id)
@@ -179,9 +98,7 @@ export function consegna(f, id, ora = Date.now(), rnd = Math.random) {
   return { ok: true, xp: o.xp, ordine: o, livello: f.livello, salito }
 }
 
-/* Rifiutare: il posto resta vuoto per `RIPOSO_MIN` minuti. Non si
-   perde niente e non si paga niente — quello che si paga è **il
-   tempo**, che è l'unica moneta che qui non si può fare in fretta. */
+// Rifiutare: non si perde niente, si paga solo tempo.
 export function rifiuta(f, id, ora = Date.now()) {
   const o = ordineDi(f, id)
   if (!o) return { ok: false, motivo: 'non-esiste' }
@@ -191,20 +108,14 @@ export function rifiuta(f, id, ora = Date.now()) {
   return { ok: true, minuti: RIPOSO_MIN }
 }
 
-/* Fra quanti minuti torna un posto rifiutato: serve alla schermata, che
-   dice «ne arriva un altro fra 4 min» invece di lasciare un buco. */
+// Fra quanti minuti torna un posto rifiutato.
 export const mancaAlProssimo = (riposo, ora = Date.now()) =>
   Math.max(0, Math.ceil(((riposo && riposo.dal ? riposo.dal : ora) - ora) / MINUTO))
 
-/* C'è qualcosa da consegnare adesso? È il fumetto che galleggia sopra
-   la bancarella, la stessa domanda del 🧺 sopra un campo pronto: si
-   vede da lontano e non chiede di aprire niente. */
+// C'è qualcosa da consegnare adesso? È il fumetto sopra la bancarella.
 export const qualcosaDaConsegnare = f => ordiniDi(f).some(o => puoiConsegnare(f, o))
 
-/* Quello che la schermata deve sapere, in un colpo: gli ordini con
-   dentro già contato cosa manca, e i posti in attesa. Chi disegna non
-   rifà nessun conto — riceve fatti già decisi, come il resto del
-   gioco. */
+// Quello che la schermata deve sapere, già contato.
 export function bancoDi(f, ora = Date.now()) {
   return {
     ordini: ordiniDi(f).map(o => ({
