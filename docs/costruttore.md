@@ -33,6 +33,14 @@ l'unità, e il ▾ accanto dice che si possono cambiare. Una riga già scritta
 si **sposta** (✂) o si **copia** (⧉) dove si vuole, dentro un ripeti o
 fuori, anche in un progetto: si costruisce a pezzi.
 
+**Una domanda è una frase a caselle** — «[↓ sotto i piedi] [c'è] [un
+mattone] [🌈 di qualunque colore]» — e toccandone un pezzo si apre solo la
+sua scelta. Il posto si tocca su un quadretto attorno al robot invece di
+leggerne sei nomi; il colore nasce *qualunque* e si stringe dopo, fra i
+colori che ci sono nelle mappe (non solo quelli che il robot mette: nei nidi
+si mette il giallo e si guarda il rosso). Era un modulo con quattro file di
+tasti tutte aperte insieme.
+
 ## Il mondo, e le sue regole
 
 Poche, e valgono in tutti i livelli:
@@ -104,6 +112,10 @@ per sbaglio, col blocco e tutto quello che aveva dentro, torna com'era.
 Il «se» arriva subito dopo il cantiere, prima delle funzioni: una decisione
 è più semplice di un progetto, e coi colori ha qualcosa da decidere fin da
 subito — il robot non guarda solo *se* c'è un mattone, ma di che colore è.
+Quanto camminare lo dice «lungo», la lavagnetta dell'ordine: i pavimenti e i
+muri di un livello sono lunghi diversi e finiscono sul bordo del cantiere,
+quindi un numero contato a mano regge un ordine solo, e uno alto «per stare
+sicuri» fa dire al robot che non può uscire.
 I colori poi diventano anche dei **valori**: una misura di un progetto può
 essere un colore, e nelle bandiere i colori li porta l'ordine («sinistra»,
 «centro», «destra»), come «lungo» porta un numero.

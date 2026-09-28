@@ -362,40 +362,45 @@ const DEL_CANTIERE = [
     chiave: 'sui-rossi', nome: 'Sui mattoni rossi', icona: '🐦', capitolo: 'guardare',
     impara: 'se c\'è…', portata: 63, premio: 12,
     chi: { emoji: '🐦', nome: 'Il passerotto' },
-    racconto: 'Sul pavimento ci sono mattoni rossi e blu. Sopra ogni mattone rosso voglio un mattone giallo, per farci il nido. Sopra i blu, niente.',
+    racconto: 'Sul pavimento, lungo «lungo», ci sono mattoni rossi e blu. Sopra ogni mattone rosso voglio un mattone giallo, per farci il nido. Sopra i blu, niente.',
     prova: 'disegno',
+    /* i pavimenti finiscono sul bordo del cantiere: un passo di troppo e
+       il robot lo dice («non può uscire»), invece di un numero alto a
+       caso che vince lo stesso — quanti passi lo dice «lungo» */
     ordini: [
-      { nome: 'il primo pavimento', mappa: [
-        '..........',
-        '..........',
-        '.g.gg..g..',
-        '@RBRRBBRB.',
-        '##########',
+      { nome: 'lungo 8', lavagnette: { lungo: 8 }, mappa: [
+        '.........',
+        '.........',
+        '.g.gg..g.',
+        '@RBRRBBRB',
+        '#########',
       ] },
-      { nome: 'il secondo pavimento', mappa: [
-        '..........',
-        '..........',
-        '..g..gg.g.',
-        '@BRBBRRBR.',
-        '##########',
+      { nome: 'lungo 6', lavagnette: { lungo: 6 }, mappa: [
+        '.........',
+        '.........',
+        '....g.gg.',
+        '..@BRBRRB',
+        '#########',
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'se'], colori: ['giallo'],
     ragiona: [
-      'Nei due pavimenti i rossi stanno in posti diversi: un programma che si ricorda dov\'erano nel primo sbaglia il secondo. Il robot deve capirlo da solo, mattone per mattone.',
+      'Nei due pavimenti i rossi stanno in posti diversi, e uno è più corto: un programma che si ricorda dov\'erano nel primo sbaglia il secondo. Il robot deve capirlo da solo, mattone per mattone.',
       'Fai finta di essere il robot, un mattone alla volta: cosa ti serve sapere, in ogni posto, per decidere se mettere il giallo? E il robot, da dove lo può sapere?',
     ],
     indizi: [
       'Il robot cammina sul pavimento: dopo ogni passo può guardare cosa ha sotto i piedi.',
       '«Se» fa quello che ha dentro solo quando la domanda è vera: «se sotto i piedi c\'è un mattone rosso».',
-      'Ripeti 8 volte: un passo a destra, e se sotto i piedi c\'è un mattone rosso, metti un mattone giallo.',
+      'Ripeti «lungo» volte: un passo a destra, e se sotto i piedi c\'è un mattone rosso, metti un mattone giallo.',
     ],
     soluzione: programma({ principale: [
-      fai.ripeti(8, [fai.vai('destra', 1), fai.se(guarda('sotto', 'mattone', true, 'rosso'), [fai.metti('giallo')])]),
+      fai.ripeti('lungo', [fai.vai('destra', 1), fai.se(guarda('sotto', 'mattone', true, 'rosso'), [fai.metti('giallo')])]),
     ] }),
     fragili: [
       { nome: 'un mattone giallo dappertutto', programma: programma({ principale: [
-        fai.ripeti(8, [fai.vai('destra', 1), fai.metti('giallo')])] }) },
+        fai.ripeti('lungo', [fai.vai('destra', 1), fai.metti('giallo')])] }) },
+      { nome: 'il numero del primo pavimento', programma: programma({ principale: [
+        fai.ripeti(8, [fai.vai('destra', 1), fai.se(guarda('sotto', 'mattone', true, 'rosso'), [fai.metti('giallo')])])] }) },
       { nome: 'i rossi del primo pavimento, a mano', programma: programma({ principale: [
         fai.vai('destra', 1), fai.metti('giallo'), fai.vai('destra', 2), fai.metti('giallo'),
         fai.vai('destra', 1), fai.metti('giallo'), fai.vai('destra', 3), fai.metti('giallo')] }) },
@@ -405,22 +410,22 @@ const DEL_CANTIERE = [
     chiave: 'rosso-su-rosso', nome: 'Rosso sopra rosso', icona: '🎨', capitolo: 'guardare',
     impara: 'se… altrimenti', portata: 64, premio: 12,
     chi: { emoji: '🧑‍🎨', nome: 'La mosaicista' },
-    racconto: 'Ricopiami il pavimento, un piano più su: sopra ogni rosso un rosso, sopra ogni blu un blu. E ogni stanza ha il suo pavimento.',
+    racconto: 'Ricopiami il pavimento, un piano più su: sopra ogni rosso un rosso, sopra ogni blu un blu. E ogni stanza ha il suo pavimento, lungo «lungo».',
     prova: 'disegno',
     ordini: [
-      { nome: 'la stanza grande', mappa: [
-        '..........',
-        '..........',
-        '.rrbrbbrr.',
-        '@RRBRBBRR.',
-        '##########',
+      { nome: 'la stanza grande', lavagnette: { lungo: 8 }, mappa: [
+        '.........',
+        '.........',
+        '.rrbrbbrr',
+        '@RRBRBBRR',
+        '#########',
       ] },
-      { nome: 'la stanza piccola', mappa: [
-        '..........',
-        '..........',
-        '.brbrrbbr.',
-        '@BRBRRBBR.',
-        '##########',
+      { nome: 'la stanza piccola', lavagnette: { lungo: 6 }, mappa: [
+        '.........',
+        '.........',
+        '...brrbbr',
+        '..@BRRBBR',
+        '#########',
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'se'], colori: ['rosso', 'blu'],
@@ -430,39 +435,42 @@ const DEL_CANTIERE = [
     ],
     indizi: [
       'Tocca la riga del «se» e premi «＋ altrimenti»: è la strada per quando la risposta è no.',
-      '«Se sotto i piedi c\'è un mattone rosso: metti rosso — altrimenti: metti blu». Tutto dentro un «ripeti 8 volte», dopo un passo a destra.',
+      '«Se sotto i piedi c\'è un mattone rosso: metti rosso — altrimenti: metti blu». Tutto dentro un «ripeti «lungo» volte», dopo un passo a destra.',
     ],
     soluzione: programma({ principale: [
-      fai.ripeti(8, [fai.vai('destra', 1),
+      fai.ripeti('lungo', [fai.vai('destra', 1),
         fai.se(guarda('sotto', 'mattone', true, 'rosso'), [fai.metti('rosso')], [fai.metti('blu')])]),
     ] }),
     fragili: [
       { nome: 'sempre rosso', programma: programma({ principale: [
-        fai.ripeti(8, [fai.vai('destra', 1), fai.metti('rosso')])] }) },
+        fai.ripeti('lungo', [fai.vai('destra', 1), fai.metti('rosso')])] }) },
       { nome: 'solo il se, senza altrimenti', programma: programma({ principale: [
-        fai.ripeti(8, [fai.vai('destra', 1), fai.se(guarda('sotto', 'mattone', true, 'rosso'), [fai.metti('rosso')])])] }) },
+        fai.ripeti('lungo', [fai.vai('destra', 1), fai.se(guarda('sotto', 'mattone', true, 'rosso'), [fai.metti('rosso')])])] }) },
+      { nome: 'il numero della stanza grande', programma: programma({ principale: [
+        fai.ripeti(8, [fai.vai('destra', 1),
+          fai.se(guarda('sotto', 'mattone', true, 'rosso'), [fai.metti('rosso')], [fai.metti('blu')])])] }) },
     ],
   },
   {
     chiave: 'buchi', nome: 'I buchi nel muro', icona: '🕳️', capitolo: 'guardare',
     impara: 'se c\'è…', portata: 65, premio: 12,
     chi: CAPOMASTRO,
-    racconto: 'Il muro vecchio ha dei buchi, e ogni muro li ha in posti diversi. Il robot ci cammina sopra: dove c\'è un buco ci cade dentro, e lì ci va un mattone.',
+    racconto: 'Il muro vecchio è lungo «lungo» e ha dei buchi, e ogni muro li ha in posti diversi. Il robot ci cammina sopra: dove c\'è un buco ci cade dentro, e lì ci va un mattone.',
     prova: 'disegno',
     ordini: [
-      { nome: 'il muro della piazza', mappa: [
-        '.............',
-        '.............',
-        '.............',
-        '@RRrRRrrRRR..',
-        '#############',
+      { nome: 'il muro della piazza', lavagnette: { lungo: 10 }, mappa: [
+        '...........',
+        '...........',
+        '...........',
+        '@RRrRRrrRRr',
+        '###########',
       ] },
-      { nome: 'il muro del pozzo', mappa: [
-        '.............',
-        '.............',
-        '.............',
-        '@RrRrRRRRrr..',
-        '#############',
+      { nome: 'il muro del pozzo', lavagnette: { lungo: 7 }, mappa: [
+        '...........',
+        '...........',
+        '...........',
+        '...@RrRrRRr',
+        '###########',
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'se'], colori: ['rosso'],
@@ -473,17 +481,19 @@ const DEL_CANTIERE = [
     indizi: [
       'Sul muro il robot ha sotto i piedi un mattone; caduto in un buco, sotto i piedi ha il terreno.',
       '«Se sotto i piedi c\'è il terreno»: è lì che manca un mattone, e lì lo metti.',
-      'Ripeti 10 volte: un passo a destra, e se sotto i piedi c\'è il terreno metti un mattone.',
+      'Ripeti «lungo» volte: un passo a destra, e se sotto i piedi c\'è il terreno metti un mattone.',
     ],
     soluzione: programma({ principale: [
-      fai.ripeti(10, [fai.vai('destra', 1), fai.se(guarda('sotto', 'terreno'), [fai.metti('rosso')])]),
+      fai.ripeti('lungo', [fai.vai('destra', 1), fai.se(guarda('sotto', 'terreno'), [fai.metti('rosso')])]),
     ] }),
     fragili: [
       { nome: 'un mattone dappertutto', programma: programma({ principale: [
-        fai.ripeti(10, [fai.vai('destra', 1), fai.metti('rosso')])] }) },
+        fai.ripeti('lungo', [fai.vai('destra', 1), fai.metti('rosso')])] }) },
+      { nome: 'il numero del primo muro', programma: programma({ principale: [
+        fai.ripeti(10, [fai.vai('destra', 1), fai.se(guarda('sotto', 'terreno'), [fai.metti('rosso')])])] }) },
       { nome: 'i buchi del primo muro, a mano', programma: programma({ principale: [
         fai.vai('destra', 3), fai.metti('rosso'), fai.vai('destra', 3), fai.metti('rosso'),
-        fai.vai('destra', 1), fai.metti('rosso')] }) },
+        fai.vai('destra', 1), fai.metti('rosso'), fai.vai('destra', 3), fai.metti('rosso')] }) },
     ],
   },
   {
