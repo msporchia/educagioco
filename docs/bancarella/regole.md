@@ -45,6 +45,9 @@ La spina dorsale del gioco (`CONTI`, `chiedeIlTotale`, `chiedeIlResto`):
 | `resto` | lo somma la cassa | `? ? ?` | conta il resto, posa le monete, ✓ |
 | `tutto` | `? ? ?` | `? ? ?` | tutti e due (la cassa rotta) |
 
+- **La tastiera della cassa scrive come sta scritto sul cartellino**:
+  `4` o `4,30`, non i centesimi. Una tastiera in centesimi avrebbe
+  insegnato a scrivere 430 per dire quattro euro e trenta.
 - **La cassa non dice mai la cifra giusta.** Un totale sbagliato dice «È
   troppo!»/«È poco…», un resto sbagliato «Sono troppi!»/«Sono pochi…»:
   costa tre secondi di pazienza e si riprova. Se la svelasse, il conto dopo
@@ -82,7 +85,11 @@ prima.
   volte la stessa cosa. Resta come promessa dove il cliente sceglie come
   pagare.
 - **La difficoltà è un numero ricavato, non scelto** (`fatica`: pesa le
-  sei leve con `PESO_CONTO`, `PESO_PASSO`, `PESO_PAGA`). Due giornate
+  sei leve con `PESO_CONTO`, `PESO_PASSO`, `PESO_PAGA`). I pesi non sono
+  opinioni: il conto è la voce più cara (una sottrazione a mente vale più
+  di due centesimi in più sul cartellino), i centesimi costano poco alla
+  volta e tanto in fondo, la banconota grossa sposta il resto di un
+  ordine di grandezza. Due giornate
   vicine non distano più di `SALTO` (6). La `portata` esce riscalando il
   **massimo raggiunto** della fatica fra `PORTATA_DA` 32 (sei anni e mezzo)
   e `PORTATA_A` 72 (nove anni e tre quarti): la fatica scende quando entra

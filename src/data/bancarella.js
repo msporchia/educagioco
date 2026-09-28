@@ -1,68 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA BANCARELLA — il mercato, i banchi, i clienti, il resto.
+/* LA BANCARELLA — il mercato, i banchi, i clienti, il resto.
+   Vedi docs/bancarella/presentazione.md e regole.md.
 
-   Il mercato si gira **a tappe**: una tappa è un banco solo — il
-   fruttivendolo, il forno, il frigo — con la sua merce tutta in vista
-   nelle ceste. Niente reparti da aprire: davanti hai sei o otto ceste
-   e basta, quindi il tempo lo passi a contare i soldi e non a cercare
-   dove sta il pane.
-
-   Le giornate di mercato sono una campagna: ognuna ha il suo giro di
-   banchi, le sue monete nel cassetto e il suo tempo.
-
-   ── IL DIFETTO CHE HA RIFATTO LA SCALETTA ────────────────────────
-   «Passa da super semplice a super complessa nell'ultimo livello.» È
-   il verdetto di un genitore, ed era esatto: per cinque giornate la
-   cassa faceva **tutti e due i conti** — sommava la spesa e calcolava
-   il resto — e al bambino restava un mestiere solo, comporre con le
-   monete una cifra che gli veniva detta. Poi, all'ultima giornata, la
-   cassa si rompeva e gli arrivavano in faccia **due conti nuovi
-   insieme**: la somma e la sottrazione. Non era una salita, era un
-   gradino: cinque sere di allenamento a una cosa, e la sesta a
-   un'altra.
-
-   La cura non è ammorbidire l'ultima giornata — quella è il traguardo
-   giusto — è **mettere la scala che mancava**. Adesso i conti entrano
-   uno per volta e da numeri che si fanno a mente:
-
-     · **solo il totale** — la cassa dice ancora il resto, ma la somma
-       della spesa la batti tu sulla tastiera. Somme entro il 10 in
-       euro tondi, poi tre addendi, poi entro il 20.
-     · **solo il resto** — il totale torna scritto sullo scontrino (è
-       la cassa a farlo) e a te resta la sottrazione: la roba fa 8 €,
-       il cliente paga con 10 €. Poi 20 €, poi 50 €, e solo dopo i
-       prezzi cominciano a farsi fini.
-     · **tutti e due** — la cassa rotta di sempre, che adesso arriva in
-       cima a una scala invece che da un salto.
-
-   ── LA REGOLA DELLA SCALETTA: UNA COSA NUOVA PER GIORNATA ────────
-   Ogni giornata cambia **una leva sola** rispetto a quella prima, e
-   sempre in salita. Le leve sono sei:
-
-     conto     cosa deve calcolare il bambino: niente · totale · resto · tutto
-     banchi    quante tappe ha la giornata (tre o quattro)
-     articoli  quante cose diverse chiede un cliente
-     copie     «due angurie»: quante unità in più dello stesso prodotto
-     passo     quanto sono fini i prezzi: 1 € · 50c · 10c · 5c · 1c
-     paga      la banconota più grossa che il cliente tira fuori
-
-   Quando entra una leva pesante — un conto nuovo — le altre **tornano
-   indietro**: è la stessa scelta che la cassa rotta faceva già da sola
-   («il tempo torna largo e il resto torna corto»), ed è il motivo per
-   cui la fatica non fa mai due salti insieme. Alleggerire è gratis,
-   appesantire costa una giornata.
-
-   `pezzi` — quante monete deve chiedere il resto — **non è fra le
-   leve**, ed è deliberato: è la conseguenza di quanto è fine il passo
-   e di quanto è grossa la banconota, e contarla a parte vorrebbe dire
-   contare due volte la stessa cosa. Resta come *promessa* dove il
-   cliente può scegliere con cosa pagare (le prime giornate); dove la
-   banconota è fissa — «paga con 20 €» — la promessa non si può fare, e
-   infatti non c'è.
-
-   ── LA TABELLA DELLA PROGRESSIONE ────────────────────────────────
-   Sedici giornate, quindici passaggi, una leva per passaggio.
-   `test/unita/bancarella` la ricontrolla a ogni giro: se qualcuno
+   La tabella della progressione: sedici giornate, quindici passaggi, una
+   leva sola per passaggio (`conto`, `banchi`, `articoli`, `copie`, `passo`,
+   `paga`). `test/unita/bancarella` la ricontrolla a ogni giro: se qualcuno
    aggiunge due cose insieme, diventa rossa.
 
     #  giornata              conto  banchi art copie passo  paga   LA COSA NUOVA
@@ -81,12 +22,7 @@
    13  I cinque centesimi    resto    4     3    0    5c    20 €   i cinque centesimi
    14  Il mercato coperto    resto    4     3    0    1c    20 €   i centesimi: 0,89 €, 1,39 €
    15  Due cose uguali       resto    4     3    1    1c    20 €   «due angurie, per favore»
-   16  La cassa rotta        tutto    4     3    1    5c    20 €   TUTTI E DUE I CONTI INSIEME
-
-   Le sei giornate di ieri sono tutte ancora qui, con lo stesso id — si
-   sono solo spostate lungo la fila, e `migraMercato` in
-   `store/profile.js` porta ogni salvataggio dove gli tocca.
-   ═══════════════════════════════════════════════════════════════════ */
+   16  La cassa rotta        tutto    4     3    1    5c    20 €   TUTTI E DUE I CONTI INSIEME */
 
 export const TAGLI = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]  // centesimi
 export const euro = c => (c / 100).toFixed(2).replace('.', ',') + ' €'
@@ -103,16 +39,8 @@ const mescola = a => {
   return m
 }
 
-/* ═══════════ IL LISTINO ═══════════
-   Prezzi FISSI, sempre gli stessi: è un listino da mercato, non un generatore
-   di numeri a caso. Così il bambino impara a memoria che il pane costa 1,50 e
-   il cartellino sulla cesta diventa qualcosa da leggere davvero.
-   [emoji, nome, prezzo in centesimi, banco]
-
-   Ogni banco tiene **almeno sei cose in euro tondi**, e non è un vezzo: le
-   prime giornate chiedono di sommare a mente, e «2 € + 3 €» è il posto da
-   cui si parte. Senza quella riserva il banco a passo 1 € restava con tre
-   ceste in croce, o la prima somma cominciava da 0,89 + 1,39. */
+/* Il listino: prezzi fissi, vedi docs/bancarella/regole.md.
+   [emoji, nome, prezzo in centesimi, banco] */
 export const LISTINO = [
   // ---- il fruttivendolo ----
   ['🍎', 'mele', 50, 'frutta'],       ['🍌', 'banane', 100, 'frutta'],
@@ -154,11 +82,7 @@ export const LISTINO = [
   ['🧋', 'frullato', 300, 'dolci'],
 ]
 
-/* ═══════════ I BANCHI ═══════════
-   Cinque banchi piccoli invece di quattro reparti grandi: a un banco ci
-   stanno otto o nove prodotti, e otto ceste ci stanno tutte sullo schermo.
-   Le categorie devono essere ovvie — il gelato sta al frigo perché è lì che
-   un bambino lo cerca, non fra i dolci confezionati. */
+/* I banchi: vedi docs/bancarella/regole.md. */
 export const BANCHI = {
   frutta:  { nome: 'Il fruttivendolo', icona: '🍎', colore: '#c8442f', tenda: '#e8705c',
              legno: '#b5714a' },
@@ -176,64 +100,26 @@ export const MAX_CESTE = 8          // quante ceste stanno su un banco
 export const CLIENTI_PER_TAPPA = 3  // quanti clienti fa la fila a ogni banco
 
 export const FACCE = ['🧑', '👩', '👴', '👵', '🧒', '👨', '🧔', '👦', '👧', '🧓', '👱', '🙋']
-/* il colore del vestito: la fila si legge da lontano solo se le persone sono
-   persone e non tre emoji piccole in fila */
+/* il colore del vestito: si legge da lontano solo se sono persone e non
+   emoji piccole in fila */
 export const VESTITI = ['#e2725b', '#5b8ee2', '#67a95a', '#d9a441', '#9a6fbf',
                         '#4fa8a0', '#d96fa0', '#7a8ba0']
 
-/* ═══════════ CHI FA IL CONTO ═══════════
-   Una giornata dichiara `conto`, e sono quattro parole in fila di fatica.
-   Non è un interruttore per gioco: è **la scala** su cui è costruita la
-   campagna, e non torna mai indietro.
-
-     niente   la cassa somma e sottrae; al bambino resta comporre il resto
-              con le monete del cassetto — il gesto di base
-     totale   la riga TOTALE dello scontrino dice `? ? ?`: la somma la
-              batte lui sulla tastiera della cassa. Il resto lo dice ancora
-              il display
-     resto    il totale torna scritto, il display dice `? ? ?`: la
-              sottrazione la fa lui, posa le monete e preme ✓
-     tutto    la cassa rotta: `? ? ?` tutte e due le volte
-
-   Il patto è che **la cassa non dice mai la cifra giusta**: sbagliare
-   costa tempo e si riprova, come quando si sbaglia a dare il resto per
-   davvero. Se la svelasse, il conto dopo non lo farebbe più nessuno. */
+/* `conto`: niente · totale · resto · tutto, la scala su cui è costruita la
+   campagna (non torna mai indietro). Vedi docs/bancarella/regole.md. */
 export const CONTI = ['niente', 'totale', 'resto', 'tutto']
 export const chiedeIlTotale = c => c === 'totale' || c === 'tutto'
 export const chiedeIlResto = c => c === 'resto' || c === 'tutto'
 
-/* ═══════════ QUANTO RENDE UN CLIENTE ═══════════
-   `docs/apprendimento/calibrazione.md`: 🪙1 sono dieci secondi di esercizio, e una domanda
-   vera ne vale tre. Un cliente non è una domanda — è un pezzo di lavoro
-   che si può misurare — e quanto lavoro sia dipende da quello che la
-   giornata gli fa fare:
-
-     niente   leggere la lista, prendere due o tre cose dalle ceste,
-              comporre con le monete un resto già scritto        ~20 s  🪙2
-     totale   + una somma di due o tre prezzi                    ~30 s  🪙3
-     resto    + una sottrazione                                  ~30 s  🪙3
-     tutto    + tutte e due                                      ~40 s  🪙4
-
-   Una giornata da quattro banchi sono dodici clienti: 🪙24 la più facile,
-   🪙48 la più tosta — quattro e otto minuti di esercizio, che è quello
-   che ci si mette davvero. Prima il premio era `level`, cioè il livello
-   del bambino: la stessa giornata pagava il doppio a chi giocava da più
-   tempo, e una giornata facile quanto una tosta.
-
-   Un cliente che se ne va non paga niente: quello che non si è fatto non
-   si paga (`docs/apprendimento/calibrazione.md`, «una risposta sbagliata non paga niente»). */
+/* Quanto rende un cliente, secondo `conto`: vedi docs/bancarella/regole.md
+   e docs/apprendimento/calibrazione.md. Un cliente che se ne va non paga
+   niente. */
 export const MONETE_CLIENTE = { niente: 2, totale: 3, resto: 3, tutto: 4 }
 export const premioCliente = camp => MONETE_CLIENTE[(camp && camp.conto) || 'niente']
 
-/* ═══════════ QUANTO È DIFFICILE UNA GIORNATA ═══════════
-   Un numero solo, che pesa le sei leve. Non serve a giocare: serve a
-   **ordinare la fila** e a ricavarne la `portata`, e serve al test, che
-   controlla che due giornate vicine non siano lontane più di `SALTO`.
-
-   I pesi non sono opinioni: il conto è la cosa più cara (una sottrazione
-   a mente vale più di due centesimi in più sul cartellino), i centesimi
-   costano poco alla volta e tanto in fondo, la banconota grossa sposta il
-   resto di un ordine di grandezza. */
+/* Un numero solo che pesa le sei leve: serve a ordinare la fila e a
+   ricavarne la `portata` (vedi docs/bancarella/regole.md). I pesi non sono
+   opinioni: non alzare PESO_CONTO senza restare la voce più cara. */
 const PESO_CONTO = { niente: 0, totale: 6, resto: 10, tutto: 16 }
 const PESO_PASSO = { 100: 0, 50: 2, 10: 4, 5: 5, 1: 7 }
 const PESO_PAGA = { 500: 0, 1000: 2, 2000: 4, 5000: 7 }
@@ -259,40 +145,11 @@ export const leve = g => ({
   paga: pagaMassima(g),
 })
 
-/* ═══════════ LE GIORNATE DI MERCATO ═══════════
-   Una campagna è una giornata: un giro di banchi, tre clienti per banco.
-
-   `tempo` sono i secondi di pazienza per una spesa da tre pezzi: il primo
-   numero è quello della prima tappa, il secondo quello dell'ultima. Dentro
-   la giornata si stringe piano. Da una giornata all'altra si stringe
-   finché non entra un conto nuovo: lì **torna largo**, perché la fatica si
-   è spostata sulla testa e non sulle dita.
-   Chi compra di più aspetta di più: +8 secondi per ogni pezzo oltre i tre.
-
-   `pezzi` è quante monete deve chiedere il resto: dove c'è, il cliente
-   sceglie con che cosa pagare apposta perché venga così.
-
-   `tetto` è quanto può costare al massimo la spesa: è la leva che tiene le
-   somme «entro il 10» e «entro il 20», e serve anche a garantire che la
-   banconota dichiarata basti sempre a pagare.
-
-   `paga` è con che cosa paga il cliente — l'elenco vero delle banconote che
-   può tirare fuori. Dove ce n'è una sola («paga con 20 €») è quella e
-   basta, ed è così che la sottrazione parte da un numero conosciuto.
-
-   `copie` è quante unità in più può volere dello stesso prodotto.
-
-   `portata` è dove sta la giornata sulla scala 0-100 di `data/portata.js`,
-   e **non si scrive a mano**: esce da `fatica` (vedi `conPortata` più
-   sotto). Sta sulla GIORNATA e non sul singolo banco perché è la giornata
-   a dire quanto è difficile; il banco cambia solo la merce.
-
-   `scuola: 'numeri'` — comporre un resto è aritmetica che la scuola dà,
-   quindi a chi l'ha già passata le prime giornate non si offrono più.
-
-   `nuovo` è la cosa che questa giornata aggiunge, in parole: si legge
-   sulla carta della giornata, e il test la pretende su tutte tranne la
-   prima — una giornata che non aggiunge niente non ha motivo di esistere. */
+/* Una campagna è una giornata: un giro di banchi, tre clienti per banco.
+   Vedi docs/bancarella/regole.md per tempo, pezzi, paga, portata e scuola.
+   `tetto` è quanto può costare al massimo la spesa (le somme «entro il 10»
+   e «entro il 20»), e garantisce anche che la banconota dichiarata basti.
+   `portata` non si scrive a mano: esce da `fatica`, vedi `conPortata`. */
 const SCALETTA = [
   /* ── fase 1: la cassa fa tutto, si impara il gesto ── */
   { id: 'banchetto', nome: 'Il banchetto', emoji: '🧺', conto: 'niente',
@@ -431,17 +288,9 @@ const SCALETTA = [
     monete: [5, 10, 20, 50, 100, 200, 500, 1000] },
 ]
 
-/* ── la portata, ricavata e non scelta ──
-   Il numero 0-100 di `data/portata.js` (0 = quattro anni, 12,5 punti per
-   anno) esce dalla `fatica` della giornata, riscalata sull'arco che il
-   gioco dichiara: dai sei anni e mezzo ai dieci scarsi.
-
-   Quello che si riscala è il **massimo raggiunto** e non la fatica di
-   quella giornata sola, e il motivo è la regola di sopra: quando entra un
-   conto nuovo le altre leve tornano indietro, quindi la fatica scende
-   anche se la scaletta sta salendo. Una campagna invece non torna mai
-   indietro — `filaConPortata` è un cancello, e un cancello che si riapre
-   rimetterebbe in fila roba già passata. */
+/* La portata, ricavata e non scelta: vedi docs/bancarella/regole.md. Si
+   riscala sul **massimo raggiunto** di `fatica` e non sulla giornata sola,
+   perché la fatica scende quando entra un conto nuovo. */
 export const PORTATA_DA = 32        // sei anni e mezzo: sotto, il gioco non si offre
 export const PORTATA_A = 72         // nove anni e tre quarti
 
@@ -458,11 +307,7 @@ function conPortata (scaletta) {
 
 export const CAMPAGNE = conPortata(SCALETTA)
 
-/* La giornata libera: si apre a campagna finita, non finisce mai e il giro
-   dei banchi ricomincia da capo. Il tempo scende di due secondi a tappa e
-   poi si ferma: deve restare una sfida, non una condanna. La cassa resta
-   rotta — dopo sedici giornate tornare a farsi dire il resto sarebbe un
-   passo indietro — e qui il cliente paga con quello che gli pare. */
+/* La giornata libera: vedi docs/bancarella/regole.md. */
 export const LIBERA = {
   id: 'libera', nome: 'Giornata libera', emoji: '♾️', conto: 'tutto',
   dritta: 'Il mercato non chiude: si va avanti finché reggi.',
@@ -514,16 +359,8 @@ export function esposizione(t) {
   return mescola(merceDi(t.passo, t.banco)).slice(0, MAX_CESTE)
 }
 
-/* ═══════════ che cosa si sta imparando ═══════════
-   Il motore di apprendimento vuole una chiave per elemento, e nel resto
-   l'elemento non è la cifra — 2,40 € oggi e 2,40 € domani non sono due
-   cose diverse da sapere. Quello che cambia la fatica è il pezzo più
-   piccolo che serve per comporlo: dare 2,00 € è un conto da euro tondi,
-   dare 2,37 € vuol dire scendere fino ai centesimi.
-
-   Cinque fasce, una per gradino della scala dei tagli, e si scoprono da
-   sole andando avanti: nelle prime giornate i prezzi sono in euro tondi e
-   i centesimi non compaiono proprio. */
+/* Che cosa si sta imparando: vedi docs/bancarella/regole.md. L'elemento non
+   è la cifra ma il pezzo più piccolo che serve per comporla. */
 export const FASCE = [
   { id: 'euro',      passo: 100, nome: 'euro tondi' },
   { id: 'mezzi',     passo: 50,  nome: 'mezzi euro' },
@@ -534,23 +371,8 @@ export const FASCE = [
 export const fasciaDi = cent => FASCE.find(f => cent % f.passo === 0) || FASCE[FASCE.length - 1]
 export const chiaveResto = cent => 'bancarella:' + fasciaDi(cent).id
 
-/* ═══════════ con cosa paga il cliente ═══════════
-   Non è un dettaglio: **è la difficoltà del gioco**. Il resto di 4,90 € da
-   comporre con cinque monete e quello di 0,40 € da comporre con due sono lo
-   stesso conto per il computer e due mestieri diversi per un bambino di otto
-   anni.
-
-   Due modi, e la giornata sceglie quale:
-
-     · `paga` con una voce sola — il cliente ha **quella** banconota e
-       basta («paga con 20 €»). Serve alle giornate del resto, dove il
-       punto è che la sottrazione parta da un numero conosciuto; il
-       `tetto` della giornata garantisce che basti sempre.
-     · `paga` con più voci — fra i modi in cui potrebbe pagare sceglie
-       quello che lascia un resto **da tante monete quante ne vuole la
-       giornata** (`pezzi`), e se `pezzi` non c'è tira a sorte.
-
-   Se per qualche motivo nessuna delle banconote dichiarate bastasse, si
+/* Con cosa paga il cliente: è metà della difficoltà del gioco, vedi
+   docs/bancarella/regole.md. Se nessuna banconota dichiarata bastasse, si
    ripiega sui modi veri: la banconota che ha in tasca, oppure una cifra
    tonda un po' più alta della spesa — 3,00 €, 2,50 € — che si compone con
    tre pezzi al massimo. Un cliente senza soldi bloccherebbe la fila. */
@@ -573,11 +395,9 @@ function comePuoPagare(totale, ammessi) {
   return [...out].filter(p => scomponi(p, TAGLI).length <= 3).sort((a, b) => a - b)
 }
 
-/* La spesa: quante cose, quali, e le copie — il tutto sotto il `tetto`
-   della giornata, che è quello che tiene «le somme entro il dieci».
-   Si tira a sorte e si riprova invece di scegliere i prodotti uno per uno
-   guardando quanto resta: quella strada darebbe sempre le stesse spese
-   povere, perché finirebbe per prendere sempre i più economici. */
+/* La spesa, sotto il `tetto` della giornata: si tira a sorte e si riprova
+   invece di scegliere i prodotti uno per uno guardando quanto resta, che
+   finirebbe per prendere sempre i più economici. */
 function spesaDi(t, esposti) {
   const quanti = Math.min(caso(t.articoli[0], t.articoli[1]), esposti.length)
   const tetto = t.tetto || Infinity
@@ -602,8 +422,7 @@ function spesaDi(t, esposti) {
   return presi
 }
 
-/* Un cliente della tappa: prende solo roba che è sul banco davanti, perché
-   quella è tutta la merce che esiste in questo momento. */
+/* Un cliente della tappa: prende solo roba esposta sul banco. */
 export function generaCliente(t, esposti = esposizione(t)) {
   const presi = spesaDi(t, esposti)
   const pezzi = presi.reduce((s, a) => s + a.quanti, 0)
@@ -634,9 +453,8 @@ export function generaCliente(t, esposti = esposizione(t)) {
            minimo: scomponi(resto, t.monete).length }
 }
 
-/* La cifra composta col minor numero di pezzi possibile: serve per il bonus
-   "pagato giusto" e ai test. Con i tagli dell'euro prendere sempre il più
-   grande possibile dà davvero il minimo. */
+/* Il minimo di pezzi per comporre una cifra: coi tagli dell'euro il più
+   grande possibile a ogni passo dà davvero il minimo. */
 export function scomponi(cent, disponibili = TAGLI) {
   const out = []
   let r = cent
@@ -644,15 +462,9 @@ export function scomponi(cent, disponibili = TAGLI) {
   return out
 }
 
-/* ═══════════ la tastiera della cassa ═══════════
-   Nelle giornate del totale il bambino batte la cifra come si batte su un
-   registratore vero: le cifre, la virgola, e la cassa la legge. Si scrive
-   `4` o `4,30` — cioè **come sta scritto sul cartellino**, che è il punto:
-   una tastiera in centesimi avrebbe insegnato a scrivere 430 per dire
-   quattro euro e trenta.
-
-   Vivono qui e non nella schermata perché sono regole e non disegno:
-   `test/unita/bancarella` le prova senza aprire niente. */
+/* La tastiera della cassa: si scrive `4` o `4,30`, come sta scritto sul
+   cartellino (vedi docs/bancarella/regole.md). Regole e non disegno: vivono
+   qui e non nella schermata, `test/unita/bancarella` le prova da sole. */
 export function centesimiScritti(testo) {
   const s = String(testo == null ? '' : testo).trim()
   if (!s || s === ',') return null
