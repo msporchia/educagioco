@@ -1,19 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA SORTE — il caso ripetibile, con le scorciatoie che servono a chi
-   scrive un generatore di domande.
-
-   Perché non `Math.random()`: una domanda generata a caso non si può
-   provare. Con un seme, invece, «la domanda 47 del grado 3 di
-   ortografia» è sempre la stessa cosa — e il banco di prova
-   (`strumenti/quiz/banco.mjs`) può girare mille domande per modulo e
-   dire *quale* è venuta storta, non solo che qualcosa non torna.
-
-   Un generatore riceve una sorte e non chiama mai `Math.random()`:
-   è l'unica regola di questo file.
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* Il rumore ripetibile (lo stesso di `grafica/tela.js`): stesso seme,
-   stessa sequenza, su qualunque macchina. */
+/* Il caso ripetibile: mai Math.random(), un generatore riceve sempre una
+   sorte. Con un seme «la domanda 47 del grado 3» è sempre la stessa,
+   e il banco di prova può dire quale è venuta storta. */
 function seminato(seme) {
   let s = seme | 0
   return () => {
@@ -53,10 +40,7 @@ export class Sorte {
   /* `n` elementi diversi fra loro */
   alcuni(lista, n) { return this.mescola(lista).slice(0, n) }
 
-  /* `n` elementi diversi presi da `lista`, saltando quelli che a `scarta`
-     non vanno bene. È il gesto più frequente di tutti — i distrattori
-     sono sempre «altri che non siano la risposta giusta» — e scritto a
-     mano ogni volta è dove nascono i doppioni. */
+  // il gesto più frequente: i distrattori sono sempre «altri che non siano la giusta»
   distrattori(lista, n, scarta = () => false) {
     const buoni = lista.filter(x => !scarta(x))
     return this.mescola(buoni).slice(0, n)
