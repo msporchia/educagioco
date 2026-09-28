@@ -1,23 +1,8 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL LABORATORIO DELLE POZIONI — IL COORDINATORE
-
-   La ricetta chiede «1,5 kg di polvere di luna»; sullo scaffale ci
-   sono tre ingredienti e sul banco una bilancia che conta in grammi.
-   Si prende l'ingrediente giusto, lo si trascina sulla bilancia, si
-   mettono i pesi finché il numero fa 1500 g, e via nel calderone.
-
-   Il gioco vecchio chiedeva di convertire dalla prima ricetta con
-   cinque bilance davanti. Questo è rifatto da zero attorno alla
-   scaletta scritta in `dati/campagna.js`: prima il gesto, poi una
-   cosa nuova per volta, spiegata finché serve.
-
-   Questo file mette insieme i pezzi ed **è l'unico che sa che esistono
-   le monete**: le regole stanno in `motore/`, le tappe in `dati/`, le
-   schermate in `viste/`. Non c'è pausa perché non c'è un orologio: il
-   tempo non è un avversario, e un ⏸ dove non scorre niente è un tasto
-   che non fa niente.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il coordinatore: l'unico file che sa che esistono le monete. Le
+// regole stanno in `motore/`, le tappe in `dati/`, le schermate in
+// `viste/`. Niente pausa: non c'è un orologio, il tempo non è un
+// avversario. Vedi docs/pozioni/regole.md.
 import { ref, computed, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
@@ -41,7 +26,7 @@ const CIECO = 320           // una schermata appena comparsa non si tocca subito
 const TUFFO = 900           // quanto si guarda l'ingrediente andare nel calderone
 const REPLICA = 3           // rifare una tappa già fatta paga un terzo
 
-/* ═══════════ dove siamo ═══════════ */
+// dove siamo
 const vista = ref('mappa')          // mappa | banco
 const tappaIdx = ref(0)
 const partita = ref(null)
@@ -54,7 +39,7 @@ const avanza = progresso(CHIAVE)
 const tappa = computed(() => CAMPAGNA[tappaIdx.value])
 const titolo = computed(() => (vista.value === 'banco' ? tappa.value.nome : 'Le pozioni'))
 
-/* ═══════════ la mappa ═══════════ */
+// la mappa
 const blocchi = computed(() => BLOCCHI.map(b => ({
   ...b,
   tappe: b.tappe.map(t => ({
@@ -72,7 +57,7 @@ const calderone = computed(() => ({
 }))
 const strumentiTutti = computed(() => (partita.value ? partita.value.tappa.strumenti.map(k => STRUMENTO[k]) : []))
 
-/* ═══════════ giocare ═══════════ */
+// giocare
 let timer = 0, barra = 0, apertaIl = 0
 onUnmounted(() => { clearTimeout(timer); cancelAnimationFrame(barra) })
 

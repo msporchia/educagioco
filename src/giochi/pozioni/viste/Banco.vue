@@ -1,27 +1,10 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL BANCO — la ricetta, gli attrezzi, lo scaffale
-
-   Dall'alto in basso: la pergamena con la ricetta e il calderone, il
-   cartello con l'aiuto (quando c'è), gli attrezzi in mezzo, lo
-   scaffale degli ingredienti in fondo — vicino al pollice, perché è
-   da lì che si prende.
-
-   **Si trascina.** Un ingrediente si prende dallo scaffale e si porta
-   sull'attrezzo; se il dito si stacca senza essersi mosso, è un tocco:
-   l'ingrediente resta «in mano» e si posa toccando l'attrezzo. Tutte e
-   due le strade portano agli stessi due eventi, `prendi` e `posa`, e
-   chi sta sopra non sa quale delle due è stata usata.
-
-   Il dito si lascia dietro un click, e va ingoiato: dopo un
-   trascinamento col dito arriva un `click` sul punto in cui si è
-   mollato — cioè sull'attrezzo, che si «toccherebbe» da solo. Col
-   mouse non succede. Vedi `zittisciIlFantasma`, lo stesso rimedio della
-   fattoria.
-
-   Questa vista non decide niente: riceve la partita e dice cosa il
-   bambino ha fatto.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il banco: pergamena e calderone, il cartello con l'aiuto, gli
+// attrezzi, lo scaffale in fondo (vicino al pollice). Si trascina, o si
+// tocca (l'ingrediente resta «in mano» e si posa toccando l'attrezzo):
+// tutte e due le strade portano agli stessi eventi, `prendi` e `posa`.
+// Questa vista non decide niente: riceve la partita e dice cosa il
+// bambino ha fatto.
 import { ref, computed } from 'vue'
 import { FAMIGLIA, scrivi, QUANTO_E } from '../dati/misure.js'
 import Strumento from './Strumento.vue'
@@ -48,8 +31,8 @@ const finoA = s => scrivi(s.limite, FAMIGLIA[s.famiglia].unita.G)
 const livello = computed(() => (strumento.value ? Math.min(1, p.value.messo / strumento.value.limite) : 0))
 const lettura = computed(() => (strumento.value ? scrivi(p.value.messo, strumento.value.unita) : ''))
 
-/* ── il suggerimento di come si gioca, per la prima tappa ──
-   Cambia con la fase: dice la prossima cosa da fare e basta. */
+// il suggerimento di come si gioca, per la prima tappa: cambia con la
+// fase, dice la prossima cosa da fare e basta
 const comeSiGioca = computed(() => {
   if (!aiuto.value || aiuto.value.livello !== 'gioco') return ''
   const f = ing.value ? famigliaDi(ing.value.famiglia) : null
@@ -61,7 +44,6 @@ const comeSiGioca = computed(() => {
   return `Metti i ${f.pezzo === 'peso' ? 'pesi' : f.pezzo === 'pezzo' ? 'pezzi' : 'misurini'} finché il numero fa ${ing.value.dose.testo}, poi «nel calderone»`
 })
 
-/* ═══════════ il trascinamento ═══════════ */
 const SOGLIA = 16              // sotto, un dito è ancora fermo (non 4 px come un mouse)
 const FANTASMA_MS = 120, FANTASMA_PX = 32
 const presa = ref(null)        // { nome, emoji, x, y, x0, y0, mosso, sopra }
@@ -121,7 +103,6 @@ const quantoE = u => QUANTO_E[u] || ''
 
 <template>
   <div class="pz-banco" :class="{ 'pz-bloccato': bloccato }" :data-fase="partita.fase">
-    <!-- ═════ LA PERGAMENA E IL CALDERONE ═════ -->
     <div class="pz-alto">
       <div class="pz-pergamena" data-pergamena>
         <b><span class="em">{{ ricetta.emoji }}</span> {{ ricetta.nome }}</b>
@@ -142,9 +123,7 @@ const quantoE = u => QUANTO_E[u] || ''
       </div>
     </div>
 
-    <!-- ═════ IL CARTELLO ═════
-         L'aiuto della tappa, o quello che un esito ha da dire. Sta
-         sopra il banco, dove l'occhio sta già guardando la dose. -->
+    <!-- il cartello: l'aiuto della tappa, o quello che un esito ha da dire -->
     <div v-if="esito" class="pz-cartello" :class="'pz-' + esito.tipo" data-esito
          :data-codice="esito.codice || 'giusto'">
       <template v-if="esito.tipo === 'giusto'">
@@ -198,9 +177,7 @@ const quantoE = u => QUANTO_E[u] || ''
       </template>
     </div>
 
-    <!-- ═════ GLI ATTREZZI ═════
-         Tutti in fila finché non se ne sceglie uno; poi resta quello,
-         con i suoi pezzi sotto. -->
+    <!-- gli attrezzi: tutti in fila finché non se ne sceglie uno -->
     <div class="pz-attrezzi" :class="{ 'pz-uno': !!strumento, 'pz-tanti': strumentiTutti.length > 3 }">
       <template v-if="!strumento">
         <button v-for="s in strumentiTutti" :key="s.chiave" class="pz-attrezzo"
@@ -249,7 +226,6 @@ const quantoE = u => QUANTO_E[u] || ''
       </div>
     </div>
 
-    <!-- ═════ LO SCAFFALE ═════ -->
     <div class="pz-scaffale" data-scaffale>
       <button v-for="s in ricetta.scaffale" :key="s.nome" class="pz-ingrediente"
               :class="{ 'pz-fatto': ricetta.ingredienti.some(i => i.nome === s.nome && i.fatto),

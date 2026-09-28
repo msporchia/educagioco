@@ -1,11 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL CARTELLO DI FINE TAPPA
-
-   La tappa si finisce sempre: qui si dice com'è andata — stelle,
-   monete, quante pozioni senza uno sbaglio — e si va avanti. Quando è
-   l'ultima, e la prima volta, il cartello è quello del maestro.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il cartello di fine tappa: la tappa si finisce sempre, qui si dice
+// com'è andata. Quando è l'ultima, e la prima volta, è quello del maestro.
 defineProps({
   titolo: { type: String, required: true },
   stelle: { type: Number, default: 0 },

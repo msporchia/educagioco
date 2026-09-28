@@ -1,17 +1,11 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   UN ATTREZZO, DISEGNATO
-
-   Non un'emoji: una bilancia disegnata si riconosce come bilancia, si
-   fa più grande per la taglia più grande e si riempie di quello che ci
-   si mette sopra. Riceve fatti già decisi — il gesto, la taglia, quanto
-   è pieno — e non sa niente di dosi e di unità.
-
-     gesto    pesa | versa | taglia
-     taglia   P | M | G — la P è piccola e la G è grossa, a occhio
-     livello  0..1, quanto è pieno rispetto al limite
-     pezzi    quanti pezzi ci sono sopra (i pesi sul piatto)
-   ═══════════════════════════════════════════════════════════════════ */
+// Un attrezzo disegnato: si riempie di quello che ci si mette sopra.
+// Riceve fatti già decisi (gesto, taglia, quanto è pieno) e non sa
+// niente di dosi e unità.
+//   gesto    pesa | versa | taglia
+//   taglia   P | M | G — la P è piccola e la G è grossa, a occhio
+//   livello  0..1, quanto è pieno rispetto al limite
+//   pezzi    quanti pezzi ci sono sopra (i pesi sul piatto)
 const props = defineProps({
   gesto: { type: String, required: true },
   taglia: { type: String, default: 'P' },
