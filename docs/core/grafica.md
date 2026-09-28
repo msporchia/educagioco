@@ -148,6 +148,25 @@ meno da dipingere.
   deterministico di tutto il gioco: stessa stanza, stesso disegno, comunque
   e quante volte la si ridipinga.
 
+## Il buio e le pozze di luce (`grafica/luce.js`)
+
+Una pozza di luce non si aggiunge al buio: **glielo toglie**. Il velo del
+buio si dipinge a parte su una tela di scorta, si buca con
+`destination-out` dove una torcia è vicina, e solo dopo si posa sulla
+stanza — dentro al buco si vede il pavimento vero, fuori la stessa stanza
+al buio: una cosa sola illuminata a tratti, non due tinte piatte. Sopra,
+`soft-light` con la tinta della fiamma satura il pavimento sotto la
+torcia (non lo copre), e `screen` accende il cuore della pozza. Il buio è
+sempre un velo piatto, mai una vignettatura (che seguirebbe la mappa
+invece dello schermo). La luce del bosco (`chiazzeDiLuce`) usa `lighter`
+(si somma) e non `soft-light`, perché sul verde una luce calda in
+soft-light sposta la tinta verso l'oliva.
+
+**`creaLuce`** risponde «che luce arriva qui» per i personaggi, con la
+stessa curva (`caduta`) con cui le pozze dipinte sul fondale smettono,
+così un personaggio si accende esattamente dove il pavimento è già dorato
+e non prima.
+
 ## Le misure
 
 - **La scala sta nella trasformazione del contesto** (`dpr × scala`, una
