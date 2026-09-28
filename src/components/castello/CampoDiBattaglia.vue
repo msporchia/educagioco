@@ -1,35 +1,11 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL CAMPO DI BATTAGLIA
-
-   Il pezzo di schermo dove si combatte, e il posto dove i due mestieri
-   si toccano senza mescolarsi:
-
-     il motore (`motore/castello/`) fa passare il tempo e non sa che
-     esiste uno schermo;
-     la tela (`grafica/tela.js`) dipinge e non sa che esistono energia,
-     ondate e prezzi;
-     questo componente fa il travaso — una lista di cose in scena
-     (`views/castello/scena.js`) — e raccoglie il dito.
-
-   Non c'è una sola regola di gioco qui dentro. Quello che esce di qui
-   sono tre cose: `vista`, che è quello che il banco deve poter leggere
-   (chi arriva, cosa si può potenziare, se l'ondata può partire);
-   l'esito, quando la partita si chiude; e il tocco su una torre.
-
-   ── la pelle ──
-   Chi passa `pelle` cambia come il campo si vede e dove passa la
-   strada, e nient'altro: i pittori, la tappa come la legge il motore
-   (strada e piazzole), il fondale, e il nome dei mostri — quello della
-   figura che si vede, se la pelle ne dà uno. È il castello a celle
-   (`giochi/castello/scena/pelle.js`, il contratto è lì); senza, il campo
-   è quello di sempre, e questo file non importa niente di quel gioco.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il campo di battaglia: il motore (regole, non pixel) e la tela (pixel,
+// non regole) si toccano solo qui, che fa il travaso in una lista di cose
+// in scena e raccoglie il dito. `pelle` cambia solo come il campo si vede e
+// dove passa la strada (il contratto è in giochi/castello/scena/pelle.js).
 import { ref, onMounted, onUnmounted } from 'vue'
 import { creaTela } from '../../grafica/tela.js'
 import { PITTORI } from '../../grafica/castello.js'
-/* il fondale lo dipinge il terreno della tappa, non un prato solo: le
-   quindici tavolozze stanno in `grafica/terreni/` */
 import { campo as disegnaCampo } from '../../grafica/terreni/indice.js'
 import { creaBattaglia } from '../../motore/battaglia.js'
 import { scenaDi } from '../../views/castello/scena.js'
@@ -45,11 +21,9 @@ const props = defineProps({
   calcolando: { type: Boolean, default: false },
   velocita: { type: Number, default: 1 },
   messaggio: { type: Object, default: () => ({ testo: '', n: 0 }) },
-  /* quello che il foglio aperto sta guardando: una piazzola, una torre,
-     e il raggio da mostrare. Entra da fuori perché è la schermata a
-     saperlo, non il campo. */
+  // cosa sta guardando il foglio aperto (piazzola/torre/raggio): lo sa la
+  // schermata, non il campo
   mira: { type: Object, default: null },
-  /* chi si veste in un altro modo: vedi «la pelle» qui in cima */
   pelle: { type: Object, default: null },
 })
 const emit = defineEmits(['esito', 'potenzia', 'piazzola'])
@@ -58,10 +32,7 @@ const tela = ref(null)
 let campo = null           // la tela: sa di pixel, non di regole
 let motore = null          // il motore: sa di regole, non di pixel
 let tappa = null, seme = 1
-/* i regali della partita libera, come li ha in tasca questo bambino:
-   arrivano da fuori (`giochi/campagne.js` li legge dal profilo) e il
-   campo li passa al motore, che è l'unico a sapere cosa farne */
-let regali = null
+let regali = null          // i regali in tasca: arrivano da fuori, il campo li passa al motore
 let raf = 0, ultimo = 0, chiuso = false
 
 const dito = new Trascino({
@@ -72,16 +43,11 @@ const dito = new Trascino({
   suona: che => props.eventi.suona?.(che),
 })
 
-/* ── apparecchiare ──
-   Un motore nuovo per la tappa che si sta guardando: costruisce il suo
-   percorso e le sue piazzole, e da lì esce anche lo sfondo — dipinto una
-   volta sola e poi solo ricopiato. */
 function apparecchia(quale = tappa, s = seme, doni = regali) {
   if (!campo || !quale) return null
   tappa = quale; seme = s; regali = doni
-  /* il motore vede la tappa come la vuole la pelle; tutto il resto qui
-     (il tetto della scaletta, il terreno del fondale) resta quello della
-     tappa vera */
+  // il motore vede la tappa come la vuole la pelle; il resto (tetto,
+  // terreno) resta quello della tappa vera
   motore = creaBattaglia({ tappa: props.pelle ? props.pelle.tappa(tappa) : tappa,
                            misure: campo.misure, stato: props.hud,
                            eventi: props.eventi, regali })
@@ -101,9 +67,8 @@ function avvia(quale, s, doni = null) {
 
 function dipingiFondale() {
   if (props.pelle) {
-    /* la pelle può non essere pronta (un'immagine da decodificare): dà
-       un fondale di ripiego e richiama quando lo è — se nel frattempo
-       non si è cambiata tappa */
+    // la pelle può non essere pronta: dà un fondale di ripiego e richiama
+    // quando lo è (se non si è cambiata tappa nel frattempo)
     const quella = tappa
     return campo.dipingiFondale(props.pelle.fondale(tappa, () => {
       if (campo && tappa === quella) dipingiFondale()
@@ -114,9 +79,6 @@ function dipingiFondale() {
                    ambiente: tappa && tappa.ambiente, seme }))
 }
 
-/* Della misura dello schermo il gioco tiene solo quello che gli serve
-   per giocare — quanto è largo il campo e quanto vale un'unità, che è
-   la scala di raggi e velocità. Pixel e risoluzione se li vede la tela. */
 function ridimensiona() {
   if (!campo) return
   const misure = campo.ridimensiona()
@@ -126,18 +88,13 @@ function ridimensiona() {
   dipingiFondale()
 }
 
-/* ── quello che la schermata legge ──
-   Si riscrive a ogni fotogramma, ma la lista che costa — il preavviso —
-   solo quando cambia davvero: un array nuovo sessanta volte al secondo
-   farebbe ridisegnare mezzo schermo per niente. */
+// La lista che costa (il preavviso) si riscrive solo quando cambia davvero:
+// un array nuovo 60 volte al secondo farebbe ridisegnare mezzo schermo per niente.
 let firmaOnda = -1
-/* Il nome di un mostro, se la pelle ne dà uno: quello della figura che
-   si vede (il grifone del castello a sprite, non l'«arpia»). La chiave
-   resta quella del motore. `bestia` cambia solo a ogni ondata, e la
-   copia col nome si rifà solo allora: un oggetto nuovo a ogni
-   fotogramma farebbe ridisegnare la scheda sessanta volte al secondo. */
+// Il nome di un mostro, se la pelle ne dà uno (la chiave resta quella del
+// motore); `bestia` cambia solo a ogni ondata, e la copia col nome si rifà
+// solo allora.
 const nomeDi = x => ({ ...x, nome: props.pelle.nome(tappa, x.id) || x.nome })
-/* e in un'ondata mista anche il secondo, che sta in `con` */
 const conNome = b => (b && props.pelle?.nome
   ? { ...nomeDi(b), ...(b.con ? { con: nomeDi(b.con) } : {}) } : b)
 let bestiaDa = null, bestiaVista = null
@@ -146,13 +103,8 @@ function aggiornaVista(forza = false) {
   v.inAttesa = motore.inAttesa()
   v.pronti = motore.pronti()
   v.restaAttesa = motore.restaAttesa()
-  /* la prossima si può chiamare anche con questa in campo, e il tasto
-     dice quanto rende farlo adesso */
   v.puoiChiamare = motore.puoiChiamare()
   v.premio = motore.premioFretta()
-  /* quanti potenziamenti in tutto — gradini saliti e regali — per il
-     gettone ⬆️ sul campo: il blocchetto che si apre toccandolo li conta
-     per bene (`blocchettoDi`) */
   let gradini = 0
   for (const t of motore.torri) gradini += t.lv - 1
   v.potenziamenti = gradini + motore.regaliPresi
@@ -160,8 +112,6 @@ function aggiornaVista(forza = false) {
   v.bestia = bestiaVista
   v.inCampo = motore.nemici.length
   v.vitaOnda = Math.round(motore.ondate.vitaDi(Math.max(1, props.hud.onda)))
-  /* il regalo in sospeso: la schermata ne fa un velo, e finché c'è il
-     campo sta fermo — il motore da parte sua non manda l'ondata */
   v.regalo = motore.regaliDaScegliere
   v.regaliPresi = motore.regaliPresi
   if (forza || props.hud.onda !== firmaOnda) {
@@ -170,13 +120,9 @@ function aggiornaVista(forza = false) {
   }
 }
 
-/* Un fotogramma: il motore fa passare il tempo, la tela lo mostra. Qui
-   dentro non c'è nessuna regola — solo il travaso.
-
-   Chi ha già capito non deve stare a guardare: la velocità moltiplica il
-   tempo del campo — non quello delle operazioni, che restano a misura di
-   bambino — ripetendo il passo invece di allungarlo, così nessun
-   proiettile scavalca il bersaglio. */
+// Un fotogramma: la velocità moltiplica il tempo del campo (non quello
+// delle operazioni) ripetendo il passo invece di allungarlo, così nessun
+// proiettile scavalca il bersaglio.
 function ciclo(ts) {
   const dt = Math.min(0.05, (ts - ultimo) / 1000 || 0); ultimo = ts
   if (motore && props.attivo && !chiuso) {
@@ -189,8 +135,7 @@ function ciclo(ts) {
   campo?.disegna(scenaDi(motore, {
     S: campo.misure.S, trascino: dito, tetto: tappa ? tappa.cap : 10,
     energia: props.hud.energia, occupato: props.calcolando,
-    /* le piazzole si accendono se ci si può comprare almeno la torre
-       che costa meno, fra quelle che la tappa dà */
+    // le piazzole si accendono se si può comprare almeno la torre più economica
     costoNuova: Math.min(...(tappa?.torri || ['add'])
       .map(k => costoNuovaTorre(motore ? motore.torri.length : 0, k))),
     mira: props.mira,
@@ -198,23 +143,14 @@ function ciclo(ts) {
   raf = requestAnimationFrame(ciclo)
 }
 
-/* ── il dito ──
-   Qui resta solo il DOM: dove ha toccato, chi si tiene il puntatore, e
-   la telecamera da rovesciare — perché il dito cade sui pixel dello
-   schermo e il gioco vive nelle unità del campo. La regola del gesto
-   sta in `views/castello/trascino.js`.
-
-   ── una dita, due dita ──
-   Un dito è del gioco: prende torri, le sposta, apre le piazzole. Due
-   dita sono di chi guarda: spostano l'inquadratura e la ingrandiscono.
-   Devono restare separate — un pan a un dito ruberebbe il gesto con cui
-   si trascina una torre, che è quello che serve più spesso. */
+// Il dito: un dito è del gioco (prende torri, apre piazzole), due dita sono
+// di chi guarda (spostano e ingrandiscono l'inquadratura). Devono restare
+// separate, o un pan a un dito ruberebbe il trascinamento di una torre.
 const puntoDi = ev => {
   const r = tela.value.getBoundingClientRect()
   return campo.versoIlMondo(ev.clientX - r.left, ev.clientY - r.top)
 }
-/* i puntatori appoggiati adesso, in pixel di schermo: servono al pinch */
-const dita = new Map()
+const dita = new Map() // i puntatori appoggiati adesso, in pixel di schermo: servono al pinch
 let pizzico = null                 // { distanza, cx, cy } fra le due dita
 
 const schermoDi = ev => {
@@ -263,15 +199,9 @@ function suIlDito(ev) {
   if (dito.attivo) dito.su()
 }
 
-/* doppio tocco: la mappa torna tutta in quadro. È la via d'uscita da
-   uno zoom in cui ci si è persi, e su un telefono è l'unica che un
-   bambino prova per istinto. */
-function rimetti() { campo?.rimetti() }
+function rimetti() { campo?.rimetti() } // doppio tocco: la mappa torna tutta in quadro
 
 onMounted(() => {
-  /* il mondo non lo decide lo schermo: è dichiarato, ed è lo stesso per
-     tutti (`data/castello.js`). Quello che cambia da un telefono a un
-     computer è solo quanto lo si vede grande. */
   campo = creaTela(tela.value, props.pelle ? props.pelle.pittori : PITTORI, { mondo: MONDO })
   props.pelle?.prepara?.()
   ridimensiona()
@@ -286,8 +216,6 @@ onUnmounted(() => {
 
 defineExpose({ apparecchia, avvia, ridimensiona, motore: () => motore,
                misure: () => campo?.misure,
-               /* dal mondo ai pixel: serve a chi deve posare un dito dove
-                  sta una cosa, e le prove automatiche sono le prime */
                versoLoSchermo: (x, y) => campo?.versoLoSchermo(x, y) })
 </script>
 
@@ -295,8 +223,6 @@ defineExpose({ apparecchia, avvia, ridimensiona, motore: () => motore,
   <div class="campo">
     <canvas ref="tela" @pointerdown="giuIlDito" @pointermove="muoviIlDito"
             @pointerup="suIlDito" @pointercancel="suIlDito" @dblclick="rimetti"></canvas>
-    <!-- durante la battaglia: chi si ha davanti. Fra un'ondata e
-         l'altra lascia il posto al preavviso di chi arriverà -->
     <SchedaMostro v-if="attivo && vista.bestia && !vista.inAttesa" :bestia="vista.bestia"
                   :vita="vista.vitaOnda" :quanti="vista.inCampo"
                   :pittori="pelle ? pelle.pittori : null" />
