@@ -1,37 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA BATTAGLIA — l'orchestratore.
-
-   Qui non c'è nessuna regola di dettaglio: le regole stanno nelle cose
-   che scendono in campo — `Nemico` cammina, `Torre` spara, `Colpo`
-   ferisce, `Schizzo` sbiadisce, `Percorso` sa dove passa la strada,
-   `Ondate` sa chi arriva, `Tabellone` tiene i numeri. Questa classe fa
-   l'unica cosa che nessuno di loro può fare da solo: **decidere
-   l'ordine in cui succedono le cose**, e dire quando la partita è
-   finita.
-
-   Non c'è un contesto 2D, non c'è Vue, non c'è il DOM: gira uguale
-   dentro il gioco e dentro Node — ed è la ragione per cui esiste.
-   `strumenti/simula-castello.mjs` fa girare *questo stesso codice*
-   mille volte al secondo, e il bilanciamento non è più un'opinione: è
-   una misura.
-
-   Chi la crea le passa:
-     `tappa`    la tappa da giocare (`data/castello.js`)
-     `misure`   quanto è largo il campo e quanto vale un'unità: { W, H, S }
-     `stato`    l'oggetto dove tenere il conto (vedi `Tabellone`)
-     `eventi`   cosa fare quando succede qualcosa: avvisi, suoni,
-                contatori del profilo. Il simulatore non ne passa nessuno
-     `regali`   i potenziamenti definitivi della partita libera,
-                `{ id: quanti }` (vedi `REGALI` in `data/castello.js`).
-                Li applica **solo** se la tappa li prevede
-                (`tappa.regali`): la campagna è tarata, e un bonus che
-                cresce fra una partita e l'altra la farebbe scivolare
-                senza dirlo a nessuno. Senza regali la partita è quella
-                di sempre, numero per numero
-
-   Quello che la battaglia NON fa: non sa cosa sia un'operazione in
-   colonna (chi compra dice quanto paga), non disegna, non salva niente.
-   ═══════════════════════════════════════════════════════════════════ */
+// La battaglia: l'orchestratore. Le regole di dettaglio stanno nelle cose
+// che scendono in campo (Nemico, Torre, Colpo, Percorso, Ondate,
+// Tabellone); questa classe decide solo l'ordine in cui succedono e quando
+// la partita finisce. Gira uguale nel gioco e in Node (vedi
+// strumenti/simula-castello.mjs): non sa cosa sia un'operazione in colonna,
+// non disegna, non salva niente.
 import { CFG, doniDi, regaloDi, quantiRegali, OGNI_REGALO, premioDellaFretta }
   from '../../data/castello.js'
 import { ABILITA, CAPO } from '../../data/mostri.js'
@@ -42,11 +14,8 @@ import { Nemico } from './nemico.js'
 import { Torre } from './torre.js'
 import { Schizzo } from './schizzo.js'
 
-/* niente da fare, ma senza far crollare chi chiama */
-const zitto = () => {}
+const zitto = () => {} // niente da fare, ma senza far crollare chi chiama
 
-/* quante ondate in anticipo si annunciano: tre è quanto basta per
-   decidere cosa costruire senza diventare una tabella da studiare */
 export const PREAVVISO = 3
 
 export class Battaglia {
@@ -54,15 +23,14 @@ export class Battaglia {
     this.tappa = tappa
     this.misure = misure
 
-    /* i regali, e i doni che ne escono. La tappa che non li prevede non
-       ne riceve nemmeno uno: è la riga che tiene la campagna tarata. */
+    // la tappa che non prevede regali non ne riceve nemmeno uno: è la riga
+    // che tiene la campagna tarata
     this.regali = tappa.regali ? { ...(regali || {}) } : {}
     this.doni = doniDi(this.regali)
     this.daScegliere = 0
 
-    /* `tappa.percorso` c'è solo nel campo a celle (`giochi/castello/`):
-       strada a squadra e piazzole già messe. Le tappe vere non ce
-       l'hanno, e il percorso è quello di sempre. */
+    // `tappa.percorso` c'è solo nel campo a celle (giochi/castello/): le
+    // tappe vere non ce l'hanno, e il percorso è quello di sempre
     this.percorso = new Percorso(tappa.forme || tappa.forma, tappa.posti, misure, tappa.percorso)
     this.ondate = new Ondate(tappa)
     this.tabellone = new Tabellone(stato)
@@ -76,22 +44,18 @@ export class Battaglia {
     this.nati = []                     // i pezzi di chi si è diviso, in campo al prossimo passo
     this.daGenerare = 0; this.prossimo = 0; this.pausa = 0; this.tempo = 0
     this.usciti = 0                    // quanti sono entrati: serve ad alternare gli ingressi
-    /* le ondate ancora aperte, `{ onda: pulita }`: da quando la prossima
-       si può chiamare mentre questa è ancora in campo, «l'ondata è
-       finita» non vuol più dire «il campo è pulito» — un'ondata finisce
-       quando se n'è andato l'ultimo dei suoi */
+    // le ondate ancora aperte, { onda: pulita }: un'ondata finisce quando se
+    // n'è andato l'ultimo dei suoi, non quando il campo è pulito
     this.aperte = new Map()
     this.finito = null                 // 'vinta' | 'persa' quando la partita è chiusa
     this.bestia = this.ondate.bestiaDi(1)
   }
 
-  /* ── le misure dello schermo ── */
   ridimensiona(nuove) {
     this.misure = nuove
     this.percorso.ridimensiona(nuove)
   }
 
-  /* ── una partita da capo ── */
   inizia() {
     this.tabellone.azzera(this.tappa.partenza)
     this.nemici = []; this.torri = []; this.colpi = []; this.schizzi = []; this.nati = []
@@ -103,32 +67,22 @@ export class Battaglia {
     this.bestia = this.ondate.bestiaDi(1)
   }
 
-  /* ═══════════ i regali ═══════════
-     Uno ogni `OGNI_REGALO` ondate, e solo dove la tappa li prevede. Il
-     conto di quanti ce ne sono da scegliere sta qui e non nella
-     schermata per due motivi: perché **l'ondata non parte** finché ce
-     n'è uno in sospeso (così un regalo rimandato non si perde), e
-     perché un regalo non scelto non deve poter diventare due. */
+  // Uno ogni OGNI_REGALO ondate: l'ondata non parte finché ce n'è uno in
+  // sospeso, così un regalo rimandato non si perde e non ne diventa due.
   prendiRegalo(id) {
     if (!this.tappa.regali || !regaloDi(id)) return null
     this.regali[id] = (this.regali[id] || 0) + 1
     this.doni = doniDi(this.regali)
-    /* le torri già in piedi ci guadagnano subito: un regalo che valesse
-       solo per quelle costruite dopo sarebbe un regalo da leggere */
+    // le torri già in piedi ci guadagnano subito
     for (const t of this.torri) t.doni = this.doni
     if (this.daScegliere > 0) this.daScegliere--
     this.suona('livello')
     return this.regali
   }
 
-  /* quanti regali aspettano di essere scelti (0 o 1, di fatto: finché
-     c'è un regalo in sospeso l'ondata dopo non parte) */
   get regaliDaScegliere() { return this.daScegliere }
-  /* quanti ne sono stati presi in tutto: è il numero del giro delle
-     carte, e quello che la mappa mostra sul tasto */
   get regaliPresi() { return quantiRegali(this.regali) }
 
-  /* ═══════════ le ondate ═══════════ */
   nuovaOnda(extra = '') {
     const o = this.tabellone.ondaNuova()
     this.bestia = this.ondate.bestiaDi(o)
@@ -143,29 +97,19 @@ export class Battaglia {
     this.suona('livello')
   }
 
-  /* il campo è pulito e c'è qualcosa che difende: l'ondata può partire */
+  // il campo è pulito e c'è qualcosa che difende: l'ondata può partire
   inAttesa() {
     return !!this.torri.length && !this.nemici.length && this.daGenerare === 0 &&
            !this.finito && this.tabellone.onda < this.tappa.ondate
   }
 
-  /* ── chiamare la prossima prima del tempo ──
-     Come in Kingdom Rush: finita di entrare l'ondata di adesso, la
-     prossima si può far partire subito — anche con i mostri ancora in
-     campo. Non mentre l'ondata sta ancora uscendo dalla bocca: le due
-     file si mescolerebbero all'ingresso, e il motore genera un'ondata
-     per volta. E mai con un regalo da scegliere, che ferma le ondate.
-
-     Il premio è **il tempo risparmiato**: quanto ci avrebbero messo i
-     mostri in campo ad arrivare in fondo, più l'attesa che non si fa
-     (`premioDellaFretta` in `data/castello.js`, dove stanno i numeri e
-     come li conta il modello). Chiamarla appena si può rende di più,
-     chiamarla a campo pulito dopo aver aspettato un po' rende meno. */
+  // Chiamare la prossima prima del tempo (come in Kingdom Rush): non mentre
+  // l'ondata sta ancora uscendo dalla bocca, e mai con un regalo da
+  // scegliere. Il premio è il tempo risparmiato (`premioDellaFretta`).
   puoiChiamare() {
     return !!this.torri.length && this.daGenerare === 0 && this.daScegliere === 0 &&
            !this.finito && this.tabellone.onda < this.tappa.ondate
   }
-  /* i secondi che si risparmiano chiamandola adesso */
   risparmiati() {
     const attesa = Math.max(0, this.tappa.attesa - (this.nemici.length ? 0 : this.pausa))
     let camminare = 0
@@ -176,9 +120,7 @@ export class Battaglia {
     return attesa + camminare
   }
   premioFretta() { return this.puoiChiamare() ? premioDellaFretta(this.risparmiati()) : 0 }
-  /* il premio è ancora lì: il tasto lo dice */
   pronti() { return this.premioFretta() > 0 }
-  /* i secondi prima che l'ondata parta da sola */
   restaAttesa() { return Math.max(0, Math.ceil(this.tappa.attesa - this.pausa)) }
 
   chiamaOnda() {
@@ -189,38 +131,29 @@ export class Battaglia {
     return true
   }
 
-  /* ── il preavviso ──
-     Chi arriva dopo quella in corso (o dopo l'ultima finita, se il
-     campo è pulito). È deterministico, quindi si può dire in anticipo:
-     è l'informazione che rende la scelta della torre una decisione. */
+  // Il preavviso: chi arriva dopo quella in corso. È deterministico, quindi
+  // si può dire in anticipo.
   prossime(quante = PREAVVISO) {
     const vie = this.percorso.quanteVie
     const attese = this.ondate.prossime(this.tabellone.onda, quante, vie)
     if (vie < 2) return attese
-    /* da che parte entrano, detto in parole che si guardano: la strada
-       non ha un nome, ma ha un ingresso, e quell'ingresso sta a destra
-       o a sinistra dell'altro. È l'informazione che rende il trascinare
-       una torre una mossa invece che una carezza. */
+    // da che parte entrano, detto in parole (la strada non ha un nome, ma
+    // un ingresso a destra o a sinistra dell'altro)
     const inizi = this.percorso.vie.map(v => v.inizio.x)
     const piuAsinistra = Math.min(...inizi)
     const lato = k => (inizi[k] <= piuAsinistra ? 'sinistra' : 'destra')
     return attese.map(p => ({ ...p, lato: p.via < 0 ? 'ambo' : lato(p.via) }))
   }
 
-  /* i nemici escono dall'ingresso sfalsati di poco, così un'ondata non
-     è una fila di gemelli. Lo sfalso lo decide l'ondata (`sfalsoDi`),
-     non il caso: vedi lì perché */
   generaNemico() {
     const o = this.tabellone.onda
-    /* da che ingresso entra: lo decide l'ondata, e quando l'ondata
-       arriva da tutte e due le parti i mostri si alternano uno per uno
-       — così le due file partono insieme invece che una dopo l'altra */
+    // da che ingresso entra (lo decide l'ondata): con le due bocche insieme
+    // si alternano uno per uno, così le due file partono insieme
     const vie = this.percorso.quanteVie
     const scelta = this.ondate.viaDi(o, vie)
     const via = scelta < 0 ? this.usciti % vie : scelta
     this.usciti++
-    /* in un'ondata mista i due tipi escono alternati: chi sia il
-       `k`-esimo lo dice l'ondata (`chiEsce`), non il caso */
+    // in un'ondata mista i due tipi escono alternati (`chiEsce`)
     const k = this.ondate.quantiDi(o) - this.daGenerare
     const b = this.ondate.chiEsce(o, k, this.bestia)
     this.nemici.push(new Nemico({
@@ -233,12 +166,8 @@ export class Battaglia {
     }))
   }
 
-  /* ── chi cade ──
-     Paga quanto vale — un mostro uno, un capo l'ondata intera, un pezzo
-     la sua parte — e se si divide lascia in campo i suoi pezzi. I pezzi
-     non pagano di più del mostro intero: si spartiscono quello che lui
-     avrebbe pagato, così un'ondata di slime lascia l'energia di
-     qualunque altra ondata, e il conto dei `calcoli` non se ne accorge. */
+  // Chi cade paga quanto vale; se si divide i pezzi si spartiscono la sua
+  // paga, così un'ondata di slime non lascia più energia di un'altra.
   caduto(n) {
     const div = ABILITA.dividi
     if (n.abilita === 'dividi' && !n.pezzo) {
@@ -261,16 +190,9 @@ export class Battaglia {
     this.tabellone.perNemico(this.doni.perNemico, n.paga)
   }
 
-  /* ═══════════ l'economia ═══════════
-     Il prezzo lo decide chi compra (nel gioco è l'operazione in colonna
-     appena finita, con la penale degli errori): qui si paga e si mette
-     in campo. Tenere il conto in un posto solo è ciò che permette al
-     simulatore di spendere come spende un bambino. */
-  /* Dove nasce una torre: dove l'ha messa il dito, se il dito l'ha
-     detto. Chi non lo dice — il simulatore, il taratore, i test —
-     prende l'ordine di sempre, dall'ingresso verso il castello: è la
-     partita su cui ogni tappa è tarata, e deve restare quella anche
-     adesso che a schermo si può scegliere. */
+  // Dove nasce una torre: dove l'ha messa il dito, se l'ha detto. Chi non
+  // lo dice (simulatore, taratore, test) prende l'ordine di sempre,
+  // dall'ingresso verso il castello: è la partita su cui la tappa è tarata.
   costruisci(tipo, { prezzo = 0, penale = 0, posto = null } = {}) {
     this.tabellone.paga(prezzo + penale)
     this.pausa = 0                     // ha appena fatto qualcosa: l'attesa riparte
@@ -286,9 +208,6 @@ export class Battaglia {
     return torre
   }
 
-  /* Salire di un gradino, e — se è il gradino del bivio — prendere anche
-     una strada. Il ramo arriva da fuori perché è una scelta di chi
-     gioca, non una regola del campo. */
   potenzia(torre, { prezzo = 0, penale = 0, ramo = null } = {}) {
     this.tabellone.paga(prezzo + penale)
     this.pausa = 0
@@ -296,17 +215,11 @@ export class Battaglia {
     return torre
   }
 
-  /* ── spostare una torre ──
-     Si paga in energia come tutto il resto, e si paga **qui**: che sia
-     arrivata da un trascinamento o da un tocco sulla piazzola, la
-     regola è una sola e sta nel motore. Torna `false` se non si può —
-     energia che non basta, piazzola occupata — e allora chi ha in mano
-     la torre la rimette dov'era. */
+  // Spostare una torre si paga qui, qualunque sia il gesto che l'ha
+  // causato. `false` se non si può (energia, piazzola occupata).
   sposta(torre, posto) {
     if (!torre || !this.libera(posto, torre)) return false
-    /* rimetterla dov'è già non è uno spostamento: capita a chi solleva
-       una torre e la riappoggia, e farglielo pagare sarebbe una multa
-       per aver cambiato idea */
+    // rimetterla dov'è già non è uno spostamento: non si paga per aver cambiato idea
     if (this.postoDi(torre) === posto) return true
     if (this.tabellone.energia < CFG.spostamento) return false
     const p = this.percorso.postazioni[posto]
@@ -318,12 +231,9 @@ export class Battaglia {
     return true
   }
 
-  /* ── chi occupa cosa ──
-     Una piazzola è presa se ci sta sopra una torre. Il confronto è sulla
-     posizione e non su un indice perché le torri si spostano col dito, e
-     l'unica verità su dove stanno è dove stanno. `salvo` serve a chi si è
-     già preso una torre in mano: la piazzola da cui l'ha sollevata è
-     libera, se no non potrebbe rimettercela. */
+  // Una piazzola è presa se ci sta sopra una torre (sulla posizione, non su
+  // un indice: le torri si spostano col dito). `salvo` è la torre che si ha
+  // già in mano: la piazzola da cui l'ha sollevata resta libera.
   libera(i, salvo = null) {
     const p = this.percorso.postazioni[i]
     if (!p) return false
@@ -332,16 +242,12 @@ export class Battaglia {
   liberi(salvo = null) {
     return this.percorso.postazioni.map((_, i) => i).filter(i => this.libera(i, salvo))
   }
-  /* la piazzola su cui sta questa torre, se ci sta */
   postoDi(torre) {
     return this.percorso.postazioni.findIndex(p => Math.hypot(torre.x - p.x, torre.y - p.y) < 2)
   }
 
-  /* ═══════════ un passo di gioco ═══════════
-     `calcolando` dice che in questo momento c'è un'operazione aperta: il
-     campo va avanti lo stesso — i nemici non aspettano — ma il conto
-     dell'attesa no. Chi sta calcolando non viene mai messo sotto
-     pressione; chi guarda il campo senza fare niente sì. */
+  // `calcolando`: il campo va avanti lo stesso, ma il conto dell'attesa no
+  // (chi sta calcolando non viene mai messo sotto pressione).
   avanza(dt, calcolando = false) {
     if (this.finito) return this.finito
     this.tempo += dt
@@ -359,8 +265,6 @@ export class Battaglia {
     return null
   }
 
-  /* la generazione dei nemici, la chiusura delle ondate e la pausa fra
-     un'ondata e l'altra */
   scorriIlTempo(dt, calcolando) {
     if (this.daGenerare > 0) {
       this.prossimo -= dt
@@ -375,26 +279,18 @@ export class Battaglia {
     this.chiudiLeOndate()
     if (this.daGenerare > 0 || this.nemici.length || this.nati.length || !this.torri.length) return null
 
-    /* campo pulito: il gioco NON manda l'ondata da solo. Aspetta che sia
-       il bambino a chiamarla, così i calcoli si fanno con tutto il tempo
-       che servono; l'unica fretta è quella che sceglie lui, ed è pagata. */
+    // campo pulito: il gioco non manda l'ondata da solo, aspetta il bambino
     if (!calcolando) this.pausa += dt
     if (this.tabellone.onda >= this.tappa.ondate && this.pausa > CFG.respiro) return this.chiudi('vinta')
-    /* col regalo da scegliere l'ondata non parte, nemmeno da sola: chi
-       lo rimanda per guardarsi il campo se lo ritrova prima della
-       prossima, e chi posa il telefono non trova un'ondata in faccia */
+    // col regalo da scegliere l'ondata non parte, nemmeno da sola
     if (this.daScegliere > 0) return null
     // stare fermi non è una strategia: passato il tempo, i nemici arrivano lo stesso
     if (this.pausa >= this.tappa.attesa) this.nuovaOnda()
     return null
   }
 
-  /* ── quando un'ondata è finita ──
-     Quando se n'è andato l'ultimo dei suoi — fermato o arrivato — e non
-     ne devono più uscire. Di solito coincide col campo pulito; con la
-     prossima chiamata in anticipo no, e il premio di fine ondata, la
-     moneta della libera e il regalo arrivano lo stesso, al momento
-     giusto. */
+  // Un'ondata è finita quando se n'è andato l'ultimo dei suoi: di solito
+  // coincide col campo pulito, ma con la chiamata in anticipo no.
   chiudiLeOndate() {
     for (const [o, pulita] of this.aperte) {
       if (o === this.tabellone.onda && this.daGenerare > 0) continue
@@ -418,14 +314,11 @@ export class Battaglia {
       if (!n.arrivato) continue
       if (this.aperte.has(n.onda)) this.aperte.set(n.onda, false)
       this.suona('no')
-      /* il capo se ne porta via di più: vedi `CAPO` */
       for (let k = 0; k < (n.capo ? CAPO.cuori : 1); k++)
         if (this.tabellone.cuoreVia()) return this.chiudi('persa')
     }
-    /* chi è caduto camminando è caduto di veleno — o di fuoco, che è lo
-       stesso male con un altro nome. Vale come un'uccisione: se no il
-       ramo del veleno regalerebbe morti che non pagano energia, e
-       sceglierlo sarebbe una punizione. */
+    // chi è caduto camminando è caduto di veleno (o fuoco): vale come
+    // un'uccisione, o il ramo del veleno regalerebbe morti senza energia
     for (const n of this.nemici)
       if (!n.vivo && !n.arrivato) this.caduto(n)
     this.nemici = this.nemici.filter(n => n.vivo)
@@ -467,10 +360,8 @@ export class Battaglia {
     return esito
   }
 
-  /* ── una fotografia della partita fra un'ondata e l'altra ──
-     Serve al taratore, che deve poter riprovare la stessa ondata con
-     vite diverse ripartendo dalle stesse condizioni. Si scatta a campo
-     pulito, quindi non c'è niente in volo da salvare. */
+  // Una fotografia della partita fra un'ondata e l'altra, per il taratore
+  // (che riprova la stessa ondata con vite diverse dalle stesse condizioni).
   istantanea() {
     return { stato: this.tabellone.foto(), torri: this.torri.map(t => t.dati()),
              pausa: this.pausa, tempo: this.tempo, aperte: [...this.aperte] }
@@ -487,13 +378,8 @@ export class Battaglia {
     this.bestia = this.ondate.bestiaDi(Math.max(1, this.tabellone.onda))
   }
 
-  /* ── quello che si legge da fuori ── */
-  /* Da che bocca sta scendendo la roba: quella dell'ondata in corso se
-     ce n'è una, se no quella che arriverà. `-1` vuol dire tutte e due.
-     Serve al campo per accendere la freccia giusta — e la differenza
-     conta: mentre i mostri scendono da sinistra, indicare la bocca
-     della prossima ondata sarebbe una bugia con le migliori
-     intenzioni. */
+  // Da che bocca sta scendendo la roba: quella in corso, o quella che
+  // arriverà. -1 vuol dire tutte e due (accende la freccia giusta sul campo).
   get bocca() {
     const vie = this.percorso.quanteVie
     if (vie < 2) return 0
@@ -501,16 +387,9 @@ export class Battaglia {
     return this.ondate.viaDi(this.tabellone.onda + (inCorso ? 0 : 1), vie)
   }
   get via() { return this.percorso }
-  /* la strada su cui cammina *questo* nemico. Con una strada sola è
-     sempre quella, e chi disegna o chi spara non deve accorgersi di
-     quando le strade sono due. */
   viaDi(nemico) { return this.percorso.viaN(nemico ? nemico.via : 0) }
   get postazioni() { return this.percorso.postazioni }
-  /* quanti ne devono ancora uscire dall'ingresso: con questo e i nemici
-     in campo si sa se il campo è pulito anche prima della prima torre */
   get inArrivo() { return this.daGenerare }
-  /* nessuna ondata aperta: vuol dire anche che premi e regali di quella
-     di prima sono già stati dati */
   get ondaChiusa() { return this.aperte.size === 0 }
   get esito() { return this.finito }
 }
