@@ -1,45 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   GLI OGGETTI A TERRA — le cose che si trovano in giro
-
-   Questo gioco era «sto fermo e guardo»: le gemme camminavano da sole
-   verso l'eroe, i mostri arrivavano comodi da tutti i lati, e l'arco
-   tirava da solo. Il dito serviva a scansare, e neanche sempre. Adesso
-   **le cose si trovano in giro**: una gemma resta dov'è caduta, e ogni
-   tanto sul campo compare un oggetto che sta lì per qualche secondo e
-   poi svanisce — chi lo vuole ci va.
-
-   Tre oggetti, e ognuno dà una cosa sola:
-
-     cuore     ti torna un cuore, subito (il tetto non cambia)
-     calamita  per qualche secondo tutte le gemme in campo volano da te
-     cassa     si apre un'offerta di carte, **pagata con la domanda come
-               sempre**: una risposta sbagliata non paga, e niente si
-               regala senza esercizio (vedi `docs/apprendimento/calibrazione.md`). La
-               cassa non è un potenziamento gratis, è un'occasione in
-               più di guadagnarselo
-
-   `peso` è quanto spesso esce fra i tre. Il cuore ha un peso suo solo
-   quando manca un cuore: a cuori pieni non uscirebbe per niente, e un
-   oggetto che non fa niente è una corsa a vuoto. La cassa ha un tetto
-   suo, ed è un conto e non un peso (`CFG.oggetti.cassa` in
-   `taratura.js`): mai nei primi secondi, mai due in campo, e non più
-   di una ogni tre quarti di minuto — chi pesca lo dice con `cassa:
-   false`, e allora escono solo gli altri due.
-
-   Da quando le gemme si prendono a contatto (la calamita di base non
-   c'è più: solo la carta), la calamita trovata a terra vale di più di
-   prima — senza la carta è l'unico risucchio che esiste.
-
-   Da dove arrivano: **a tempo** (`CFG.oggetti.ogni`, in `taratura.js`) e
-   **dai mostri grossi** — cinghiale, roccia e colosso ne lasciano uno
-   con una certa probabilità (`daiGrossi`). A tempo perché le prime tappe
-   non hanno bestie grosse e senza questa riga il prato verde non avrebbe
-   niente da raggiungere; dai grossi perché ammazzare un colosso deve
-   valere qualcosa di più della sua gemma.
-
-   Le forme le disegna `scena/campo.js`; il motore legge solo `peso`
-   e `secondi`.
-   ═══════════════════════════════════════════════════════════════════ */
+// Gli oggetti a terra: una gemma resta dov'è caduta, e ogni tanto sul
+// campo compare un oggetto che sta lì per qualche secondo e poi
+// svanisce. Tre oggetti: cuore (ridà una vita), calamita (tira le gemme
+// per qualche secondo), cassa (apre un'offerta di carte, pagata con la
+// domanda come sempre). Il perché e i numeri: docs/survivors/regole.md
+// e docs/survivors/taratura.md. Le forme le disegna scena/campo.js; il
+// motore legge solo `peso` e `secondi`.
 
 export const OGGETTI = {
   cuore:    { nome: 'cuore',    peso: 2,   colore: '#ff5470' },
@@ -49,10 +14,8 @@ export const OGGETTI = {
 
 export const CHIAVI_OGGETTI = Object.keys(OGGETTI)
 
-/* Quale oggetto esce, dato il caso, se manca un cuore e se una cassa è
-   ammessa: il cuore non si offre a chi li ha tutti, o si corre per
-   niente; la cassa non si offre oltre il suo tetto (lo tiene il motore,
-   `cassaAmmessa`). */
+// il cuore non si offre a chi li ha tutti (si correrebbe per niente); la
+// cassa non si offre oltre il suo tetto (lo tiene il motore, `cassaAmmessa`)
 export function pescaOggetto(rnd, { feribile = true, cassa = true } = {}) {
   const buoni = CHIAVI_OGGETTI.filter(k => (feribile || k !== 'cuore') && (cassa || k !== 'cassa'))
   let totale = 0
@@ -74,18 +37,14 @@ export function guastiDegliOggetti(tabella = OGGETTI) {
   }
   for (const k of ['cuore', 'calamita', 'cassa'])
     if (!tabella[k]) guasti.push(`manca l'oggetto "${k}", che il motore conosce per nome`)
-  /* la calamita deve durare abbastanza da vedersi, e non tanto da
-     diventare un'aspirapolvere permanente */
   const c = tabella.calamita
   if (c && !(c.secondi >= 2 && c.secondi <= 8))
     guasti.push(`la calamita dura ${c?.secondi} secondi: o non si vede o è un muro`)
-  /* a cuori pieni il cuore non deve uscire: una corsa per niente */
   const senza = new Set()
   let s = 0.01
   for (let i = 0; i < 40; i++) { senza.add(pescaOggetto(() => s, { feribile: false })); s = (s + 0.0249) % 1 }
   if (senza.has('cuore')) guasti.push('a cuori pieni esce lo stesso un cuore')
   if (senza.size < 2) guasti.push('a cuori pieni resta un oggetto solo da trovare')
-  /* e oltre il tetto delle casse non ne esce nessuna, ma esce qualcosa */
   const tetto = new Set()
   s = 0.01
   for (let i = 0; i < 40; i++) { tetto.add(pescaOggetto(() => s, { cassa: false })); s = (s + 0.0249) % 1 }

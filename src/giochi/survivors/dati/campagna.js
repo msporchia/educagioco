@@ -1,40 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA CAMPAGNA — nove tappe in tre scalini
-
-   L'ingresso non è una schermata con «scegli la difficoltà»: è un
-   percorso. Una tappa è **lo stesso motore con altri numeri e un altro
-   vestito** — non c'è nessun codice che sappia distinguere la prima
-   dall'ultima.
-
-   Cosa si vince: **restare vivi fino allo scadere**. `durata` è tutto
-   quello che serve sapere per capire quanto dura una partita, e cresce
-   piano — tre quarti di minuto la prima volta, tre minuti e mezzo
-   l'ultima. Una tappa che non finisce non si può nemmeno vincere, ed è
-   per questo che il traguardo c'è: ma chi ci arriva può **restare in
-   campo** (vedi `Partita.continua`), e allora la marea sale finché non lo
-   prende. La campagna insegna, il tempo dopo il traguardo è il gioco.
-
-   Le tre leve della difficoltà moltiplicano le curve di `taratura.js`:
-
-     ritmo    quanti mostri nascono al secondo
-     vigore   quanta vita hanno
-     fretta   quanto corrono
-
-   Attenzione a come si leggono: le curve corrono sul **tempo vero**
-   (`Regole.marea`), quindi una tappa lunga è già più dura di una corta a
-   parità di leve — ed è per questo che i moltiplicatori delle ultime
-   tappe sono più *bassi* di quelli delle prime. Chi li ritocca non guarda
-   il numero ma la piena al traguardo, che il validatore qui sotto
-   pretende crescente, e poi rilancia `unita/survivors`.
-
-   `squadra` è chi può comparire (ognuno entra alla sua quota di tappa,
-   vedi `mostri.js`), `rincaro` è quanto si alza il prezzo delle domande
-   andando avanti, `premio` sono le monete per stella.
-
-   Finite le nove tappe si apre il **gioco libero**: comincia con tutto in
-   campo e non finisce, e il punteggio è quanto si è resistito.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// Nove tappe in tre scalini: una tappa è lo stesso motore con altri
+// numeri e un altro vestito. Le tre leve (ritmo, vigore, fretta)
+// moltiplicano le curve di taratura.js e corrono sul tempo vero
+// (Regole.marea): una tappa lunga è già più dura di una corta a parità
+// di leve, quindi le leve delle ultime tappe sono più basse di quelle
+// delle prime — chi le ritocca guarda la piena al traguardo (il
+// validatore qui sotto), non il numero. Vedi docs/survivors/regole.md.
 import { CFG } from './taratura.js'
 
 export const SCALINI = [
@@ -49,14 +19,9 @@ export const SCALINI = [
 const TUTTI = ['melma', 'pipistrello', 'moscerino', 'fungo', 'ragno',
                'spettro', 'cinghiale', 'roccia', 'colosso']
 
-/* `portata` è dove sta la tappa sulla scala 0-100 di `data/portata.js`,
-   e dice a chi va offerta. Qui NON c'è `scuola`, ed è una dichiarazione,
-   non una dimenticanza: quello che questa campagna insegna non lo dà
-   nessuna scuola, quindi la sua testa non si taglia mai per età — le
-   prime tappe restano a disposizione anche di chi arriva grande, che
-   altrimenti non imparerebbe mai come si gioca. Si taglia solo in alto. */
+// `portata` (0-100, docs/apprendimento/eta-e-portata.md): niente
+// `scuola` qui, si taglia solo in alto.
 export const CAMPAGNA = [
-  /* ── scalino 1: si impara a muoversi ── */
   { chiave: 'prato', nome: 'Il prato verde', scenario: 'prato', scalino: 'prati',
     portata: 12,
     durata: 45, ritmo: 1.44, vigore: 1.15, fretta: 1.20, rincaro: 0,
@@ -73,7 +38,6 @@ export const CAMPAGNA = [
     squadra: ['melma', 'pipistrello', 'moscerino'], premio: 4,
     racconto: 'Al buio arrivano gli sciami. Non stare fermo.' },
 
-  /* ── scalino 2: il bosco chiede qualcosa ── */
   { chiave: 'pantano', nome: 'Il pantano', scenario: 'palude', scalino: 'fitto',
     portata: 30,
     durata: 90, ritmo: 1.24, vigore: 1.43, fretta: 0.99, rincaro: 0.05,
@@ -81,10 +45,8 @@ export const CAMPAGNA = [
     racconto: 'I funghi hanno la pelle dura: serve qualcosa che picchi.' },
   { chiave: 'grotta', nome: 'La grotta', scenario: 'grotta', scalino: 'fitto',
     portata: 35,
-    /* il vigore era 1.70, come le dune: da quando si va in giro per le
-       gemme e si scansano i muri, i ragni che arrivano a 37 secondi
-       facevano della grotta un avvallamento (63% al banco, contro l'80%
-       delle due tappe dopo). Misurato, non stimato */
+    // il vigore era 1.70 (come le dune): coi ragni a 37s la grotta era un
+    // avvallamento misurato al banco (63% contro l'80% delle due tappe dopo)
     durata: 105, ritmo: 1.14, vigore: 1.58, fretta: 1.00, rincaro: 0.05,
     squadra: ['melma', 'pipistrello', 'moscerino', 'fungo', 'ragno', 'spettro'], premio: 6,
     racconto: 'I ragni ti raggiungono: scappare dritto non basta più.' },
@@ -95,7 +57,6 @@ export const CAMPAGNA = [
     premio: 6,
     racconto: 'Due minuti e mezzo sotto il sole, e arrivano i cinghiali.' },
 
-  /* ── scalino 3: tutti insieme ── */
   { chiave: 'ghiacciaio', nome: 'Il ghiacciaio', scenario: 'neve', scalino: 'lontano',
     portata: 55,
     durata: 145, ritmo: 0.97, vigore: 1.82, fretta: 1.02, rincaro: 0.10,
@@ -118,15 +79,9 @@ export const QUANTE_TAPPE = CAMPAGNA.length
 export const tappa = indice =>
   CAMPAGNA[Math.max(0, Math.min(indice, CAMPAGNA.length - 1))]
 
-/* Il gioco libero: non finisce, e ha tutto dentro dal primo minuto. Non è
-   una tappa e non sta nella campagna — è quello che resta dopo.
-
-   `durata: Infinity` non è solo «non c'è traguardo»: è la riga che il
-   motore legge (`Regole.infinita`) per sapere che qui **il mazzo delle
-   carte non ha tetto** — le copie oltre l'ultimo livello rendono ogni
-   volta meno, e il perché sta in `mazzo.js` sotto `resa`. Dentro le nove
-   tappe quella strada non si apre nemmeno: sono tarate sui tetti veri e
-   girano identiche al bit. */
+// Il gioco libero: non finisce, e ha tutto dentro dal primo minuto.
+// `durata: Infinity` è la riga che il motore legge (Regole.infinita) per
+// sapere che qui il mazzo delle carte non ha tetto (vedi mazzo.js, `resa`).
 export const LIBERO = {
   chiave: 'libero', nome: 'Sopravvivenza', scenario: 'notte', scalino: null,
   durata: Infinity, ritmo: 1.20, vigore: 1.90, fretta: 1.05, rincaro: 0.08,
@@ -147,9 +102,6 @@ export function guastiDellaCampagna(campagna = CAMPAGNA, scenari, mostri) {
     if (!t.nome || !t.racconto) guasti.push(`${dove}: senza nome o senza racconto`)
     if (scenari && !scenari[t.scenario]) guasti.push(`${dove}: lo scenario "${t.scenario}" non esiste`)
     if (!SCALINI.some(s => s.chiave === t.scalino)) guasti.push(`${dove}: scalino "${t.scalino}" sconosciuto`)
-    /* il tetto è quello che un bambino regge senza posare il telefono: da
-       lì in poi la partita non si allunga più — si resta in campo dopo il
-       traguardo, che è una scelta sua e finisce quando vuole lui */
     if (!(t.durata >= 20 && t.durata <= 240))
       guasti.push(`${dove}: ${t.durata} secondi non sono una partita per un bambino`)
     for (const k of ['ritmo', 'vigore', 'fretta'])
@@ -160,16 +112,11 @@ export function guastiDellaCampagna(campagna = CAMPAGNA, scenari, mostri) {
     if (!(t.squadra?.length)) guasti.push(`${dove}: nessun mostro in squadra`)
     if (mostri) for (const k of t.squadra || [])
       if (!mostri[k]) guasti.push(`${dove}: il mostro "${k}" non esiste`)
-    /* qualcuno deve esserci dal primo istante, o la tappa comincia vuota */
     if (mostri && !(t.squadra || []).some(k => mostri[k]?.da === 0))
       guasti.push(`${dove}: nessun mostro comincia insieme alla tappa`)
   }
-  /* ── la campagna deve salire ──
-     Non si guardano più i moltiplicatori uno per uno: da quando la marea
-     corre sul tempo vero (`Regole.marea`), una tappa più lunga è più dura
-     **a parità di leve**, e infatti le leve delle ultime tappe sono più
-     basse di quelle delle prime. Quello che deve crescere è la piena che
-     si trova addosso al traguardo: quanti nascono e quanto sono duri. */
+  // quello che deve crescere è la piena al traguardo (quanti nascono e
+  // quanto sono duri), non i moltiplicatori uno per uno
   const marea = t => t.durata / CFG.tappaTipo
   const piena = t => CFG.natePerSecondo(marea(t)) * t.ritmo
   const durezza = t => CFG.vitaNemico(marea(t)) * t.vigore
@@ -186,7 +133,6 @@ export function guastiDellaCampagna(campagna = CAMPAGNA, scenari, mostri) {
     if ((campagna[i].squadra || []).length < (campagna[i - 1].squadra || []).length)
       guasti.push(`tappa ${i + 1}: la squadra dei mostri si è ristretta`)
   }
-  /* gli scalini arrivano in fila e nessuno resta vuoto */
   const ordine = SCALINI.map(s => s.chiave)
   const fila = campagna.map(t => ordine.indexOf(t.scalino))
   if (fila.some((n, i) => i > 0 && n < fila[i - 1]))
@@ -194,7 +140,6 @@ export function guastiDellaCampagna(campagna = CAMPAGNA, scenari, mostri) {
   for (const s of SCALINI)
     if (!campagna.some(t => t.scalino === s.chiave))
       guasti.push(`lo scalino "${s.chiave}" non ha nemmeno una tappa`)
-  /* la prima tappa deve essere davvero la prima: una sola bestia, lenta */
   if (campagna[0].squadra.length > 1)
     guasti.push('la prima tappa comincia già con due mostri diversi')
   return guasti

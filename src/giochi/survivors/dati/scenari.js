@@ -1,22 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   GLI SCENARI — il vestito di una tappa
-
-   Il gioco non cambia mai: cambia il posto dove si gioca. Nove tappe
-   sullo stesso prato verde sono la stessa schermata nove volte, e a metà
-   non ci si torna più; nove posti diversi sono un viaggio.
-
-   Qui c'è **solo il colore**: chi disegna (`scena/campo.js`) sa fare un
-   terreno, dei ciuffi e dei puntini, e prende da qui di che tinta. Non
-   c'è nessuna regola di gioco in questo file — la palude non rallenta e
-   la notte non acceca: sono vestiti, non trappole. Un bambino che perde
-   perché il fondo è scuro non impara niente.
-
-     terra    il fondo pieno
-     chiazza  le macchie appena diverse che danno il senso del movimento
-     ciuffo   i due colori dei ciuffi
-     puntini  i tre colori dei fiorellini (o dei sassi, o delle stelle)
-     buio     true se il fondo è scuro: il cruscotto si schiarisce
-   ═══════════════════════════════════════════════════════════════════ */
+// Gli scenari: il vestito di una tappa, solo il colore. Nessuna regola
+// di gioco qui — la palude non rallenta e la notte non acceca, sono
+// vestiti e non trappole.
+//   terra    il fondo pieno
+//   chiazza  le macchie appena diverse che danno il senso del movimento
+//   ciuffo   i due colori dei ciuffi
+//   puntini  i tre colori dei fiorellini (o dei sassi, o delle stelle)
+//   buio     true se il fondo è scuro: il cruscotto si schiarisce
 
 export const SCENARI = {
   prato:   { nome: 'il prato',    icona: '🌿', accento: '#3fa34d', buio: false,

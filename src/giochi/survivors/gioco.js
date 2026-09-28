@@ -1,44 +1,17 @@
-/* ═══════════════════════════════════════════════════════════════════
-   SURVIVORS — IL MANIFESTO
-
-   La carta d'identità del gioco: chi è, come si chiama, dove è arrivato
-   chi ci gioca. È **dato puro** — non importa Vue, non importa il
-   profilo, non importa nemmeno il proprio `Gioco.vue` — perché la home e
-   la schermata dei genitori hanno bisogno di sapere che questo gioco
-   esiste, e passano dallo store: se il manifesto si tirasse dietro lo
-   store si chiuderebbe un anello di `import` che si rompe un lunedì
-   mattina senza motivo.
-
-   La schermata sta a parte, in `src/giochi/schermate.js`.
-
-   Struttura della cartella (vedi `docs/core/convenzione-giochi.md`):
-
-     dati/    tabelle: tappe, mazzo delle carte, mostri, scenari, taratura
-     motore/  le regole, a classi, senza schermo — girano anche in Node
-     scena/   il canvas e il battito, che di regole non sanno niente
-     viste/   un componente per schermata
-     Gioco.vue  il coordinatore, l'unico che sa di monete e domande
-   ═══════════════════════════════════════════════════════════════════ */
+// Il manifesto: dato puro. Struttura della cartella e convenzione dei
+// giochi nuovi in docs/core/convenzione-giochi.md.
 import { CAMPAGNA, QUANTE_TAPPE } from './dati/campagna.js'
 import { apriQuaderno, primatoInParole } from '../primati.js'
 
 export const CHIAVE = 'survivors'
 
-/* ── LA SFIDA SENZA FINE ──
-   Finite le tappe si apre la Sopravvivenza, che **non si vince**: si
-   resiste finché si resiste. Un gioco che non finisce non ha una stella
-   da dare, e l'unica cosa che può dire è «sei migliorato» — ma per
-   dirla serve sapere cosa si misura e come si scrive. `misura: 'tempo'`
-   è una chiave di `MISURE` (`giochi/primati.js`) e non un'unità scritta
-   a mano: è lì che 125 diventa «2:05» invece di «125s», che a un
-   bambino che ha resistito due minuti dice molto meno. */
+// La Sopravvivenza: non si vince, si resiste finché si resiste. Vedi
+// docs/core/primati.md.
 export const SENZA_FINE = {
   nome: 'La Sopravvivenza',
   icona: '♾️',
   misura: 'tempo',
   che: 'quanto resisti',
-  /* com'era la partita del record, accanto al tempo: i mostri e il
-     livello dell'eroe sono le due cose che un bambino racconta */
   dettagli: d => [`${d.uccisi} mostri`, `livello ${d.livello}`],
 }
 
@@ -49,31 +22,17 @@ export default {
   che: 'schivare i mostri e scegliere i potenziamenti',
   area: 'avventure',
   come: 'riflessi',
-  /* ── LE DOMANDE QUI SONO QUELLE DEI MODULI DI QUIZ ──
-     Non «questo gioco fa domande» — le fa anche Conta gli animali, ma
-     sono sue — bensì **il pedaggio passa da `src/quiz/`**, cioè dal
-     mazzo che l'età del bambino taglia. Lo chiede il quadro di un'età
-     (`data/quadro.js`): se in casa non c'è nessun gioco che dichiara
-     questa riga, i quattro blocchi delle domande descrivono un mazzo
-     che nessuno pescherà, e vanno detti per quello che sono. */
+  // il pedaggio passa da src/quiz/ (il mazzo che l'età del bambino taglia),
+  // non domande sue come Conta gli animali
   quiz: true,
   tappe: QUANTE_TAPPE,
-  /* il colore della carta in home: se lo porta il gioco, così aggiungerne
-     uno non vuol dire aggiungere una riga al foglio di stile della home */
   tinta: '#dff0d8',
   senzaFine: SENZA_FINE,
 
-  /* La riga che la home mostra sotto il nome. La scrive il gioco perché è
-     il gioco a sapere cosa vuol dire il suo avanzamento. Riceve il record
-     (`src/giochi/campagne.js`) e non se lo va a prendere: così resta una
-     funzione e si può provare. */
   riassunto(av = { tappa: 0, libera: false, stelle: {}, cfg: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
     const coda = stelle ? ` · ⭐ ${stelle}` : ''
     if (av.libera) {
-      /* il record lo legge `primati.js`, che sa anche dov'era prima
-         (`cfg.primato`): chi aveva resistito un minuto e mezzo se lo
-         ritrova scritto in home senza nessuna migrazione */
       const primato = primatoInParole(apriQuaderno(av), SENZA_FINE.misura)
       return primato ? `sopravvivenza · primato ${primato}${coda}`
                      : `sopravvivenza ♾️${coda}`
@@ -82,29 +41,13 @@ export default {
     return `tappa ${i + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[i].nome}${coda}`
   },
 
-  /* ═══════════ quello che il gioco porta all'albo ═══════════
-     Un gioco si presenta da solo: la sua famiglia di traguardi, quanto
-     vale in esperienza, e come si capisce che è stato provato. Chi
-     raccoglie è `src/giochi/albo.js`, e né `data/traguardi.js` né
-     `store/progressi.js` sanno che questo gioco esiste.
-
-     Le misure sono quelle di tutti (`m.tot`, `m.best`) più le tre che
-     ogni campagna ha per forza — `m.tappeDi`, `m.stelleDi`, `m.finita`.
-
-     I contatori li muove `Gioco.vue` con `segna()`/`segnaBest()`:
-       survivorsPartite   partite finite, vinte o no
-       survivorsTappe     tappe portate a casa
-       survivorsMostri    mostri abbattuti in tutto
-       survivorsCarte     carte prese (una per salita di livello)
-       survivorsToste     carte forti prese **rispondendo giusto**
-       survivorsLivello   (primato) il livello più alto in una partita
-       survivorsTempo     (primato) secondi resistiti nel gioco libero   */
+  // I contatori (segna()/segnaBest() in Gioco.vue): survivorsPartite,
+  // survivorsTappe, survivorsMostri, survivorsCarte, survivorsToste
+  // (carte forti prese rispondendo giusto), survivorsLivello (primato),
+  // survivorsTempo (primato).
   albo: {
     area: { nome: 'Survivors', emoji: '🏹' },
 
-    /* L'unità di lavoro qui è la domanda pagata per una carta: una
-       partita ne vale cinque o sei. Le carte toste valgono il doppio,
-       perché il punto del gioco è che qualcuno le scelga. */
     xp: m => m.tot('survivorsCarte') * 2 + m.tot('survivorsToste') * 2 +
              m.stelleDi(CHIAVE) * 5 + m.tappeDi(CHIAVE) * 40,
     provato: m => m.tot('survivorsPartite') > 0,
@@ -117,16 +60,12 @@ export default {
         come: n => n === 1 ? 'Supera la prima tappa di Survivors'
                            : `Supera ${n} tappe di Survivors`,
         soglie: [1, 5, QUANTE_TAPPE], valore: m => m.tappeDi(CHIAVE) },
-      /* le stelle sono la somma dei primati per tappa: rigiocarne una già
-         fatta non ne aggiunge, e tre stelle vogliono dire zero ferite */
       { id: 'sur-stelle', emoji: '⭐', nome: 'Senza un graffio',
         come: n => `Raccogli ${n} stelle a Survivors`,
         soglie: [6, 15, QUANTE_TAPPE * 3], valore: m => m.stelleDi(CHIAVE) },
       { id: 'sur-livello', emoji: '📈', nome: 'Cresciuto bene',
         come: n => `Arriva al livello ${n} in una partita sola`,
         soglie: [6, 9, 12], valore: m => m.best('survivorsLivello') },
-      /* quello che premia chi osa: la carta forte costa la domanda tosta,
-         e questo conta solo quelle prese rispondendo giusto */
       { id: 'sur-toste', emoji: '🧠', nome: 'Chi non risica',
         come: n => `Prendi ${n} carte forti rispondendo giusto`,
         soglie: [5, 30, 120], valore: m => m.tot('survivorsToste') },
