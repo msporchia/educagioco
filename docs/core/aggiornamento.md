@@ -21,7 +21,11 @@ Come una versione nuova arriva su un telefono: il service worker
 - **L'installazione chiede la pagina `no-cache`**, una volta sola e
   obbligatoria: GitHub Pages fa tenere la pagina dieci minuti, e senza il
   service worker nuovo si metteva in casa la pagina vecchia che il browser
-  si teneva da parte.
+  si teneva da parte. Si scarica una volta sola, come `./` (chi chiede
+  `index.html` riceve comunque `./`): scaricarla anche come `./index.html`
+  raddoppiava i megabyte senza motivo. Se non arriva, l'installazione
+  fallisce e resta il service worker di prima con la sua copia intera —
+  un'icona mancante non blocca l'installazione, la pagina sì.
 
 ## Il nastro
 
