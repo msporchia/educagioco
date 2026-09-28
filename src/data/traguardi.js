@@ -1,59 +1,20 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I TRAGUARDI — l'elenco, non il motore.
-
-   Ogni traguardo si misura su una sola grandezza che cresce e non torna
-   mai indietro (risposte giuste, tappe superate, clienti serviti...), e ha
-   fino a tre soglie: 🥉 🥈 🥇. Il valore si legge dal profilo tramite
-   l'oggetto `m` delle misure (vedi store/progressi.js): qui dentro non
-   c'è logica, così aggiungere un traguardo è aggiungere una riga.
-
-   Conseguenza importante: i traguardi sono RETROATTIVI. Chi ha già
-   servito 60 clienti prima che questa pagina esistesse si trova il badge
-   sbloccato al primo avvio, perché il valore si ricalcola dal profilo e
-   non viene contato a partire da oggi.
-
-   `come(n)` è la frase che legge il bambino, con dentro la soglia del
-   grado a cui sta puntando: "Servi 60 clienti" e non "Servi tanti clienti".
-
-   Qui sotto ci sono **i giochi vecchi**, uno per uno. I giochi nuovi
-   (`src/giochi/`) portano i propri traguardi nel loro manifesto e si
-   accodano da soli in fondo al file: aggiungerne uno non si fa più qui.
-   ═══════════════════════════════════════════════════════════════════ */
+/* L'elenco dei traguardi, non il motore: ognuno una grandezza che cresce e
+   basta, fino a tre soglie 🥉🥈🥇, letta dal profilo tramite l'oggetto `m`
+   (store/progressi.js) — sono RETROATTIVI, vedi docs/core/progressi.md.
+   I giochi vecchi sono qui uno per uno; i nuovi (src/giochi/) si accodano
+   da soli dal loro manifesto. */
 import { AREE_GIOCHI, TRAGUARDI_GIOCHI } from '../giochi/albo.js'
 
-/* ═══════════ l'interruttore del generale ═══════════
-   TOGLIERE QUANDO IL GIOCO ENTRA IN HOME — è l'unica riga da cambiare.
-
-   Finché è `false`, il generale non esiste per l'albo: né la sua area di
-   traguardi, né i suoi cinque traguardi, né la materia degli ordini
-   (`difficoltaOra('ordini')` risponde 1, e va bene: il gioco non si può
-   ancora aprire). Serve perché i traguardi sono retroattivi e la
-   schermata è raggiungibile solo dall'indirizzo: un bambino che apre
-   l'albo e trova una sezione a 0/5 di un gioco che non può giocare vede
-   un buco, non una promessa.
-
-   Non è solo estetica: i traguardi qui sotto entrano in `quantiTotali`,
-   e cinque traguardi impossibili farebbero segnare 42/47 a chi ha preso
-   tutto. Tenerli fuori tiene onesti i conti. */
+// toglierla quando il generale entra in home: finché è false l'area e i suoi traguardi non esistono per l'albo
 export const GENERALE_ATTIVO = true
 
-/* le famiglie in cui la pagina raggruppa i traguardi */
 const AREE_TUTTE = [
   { id: 'mate',     nome: 'Tabelline Asteroidi', emoji: '☄️', classe: 'mate' },
-  /* parole, verbi e frasi sono un gioco solo: una famiglia sola di
-     traguardi. Gli id dei vecchi traguardi dei verbi restano quelli,
-     altrimenti i badge già presi sparirebbero dal profilo. */
   { id: 'inglese',  nome: 'English',             emoji: '🌐', classe: 'eng' },
   { id: 'spagnolo', nome: 'Español',             emoji: '🇪🇸', classe: 'esp' },
   { id: 'torri',    nome: 'Difendi il Castello', emoji: '🏰', classe: 'td' },
   { id: 'bancarella', nome: 'La bancarella',       emoji: '🛒', classe: 'banco' },
   { id: 'generale', nome: 'Il generale',           emoji: '🎖️', classe: 'gen' },
-  /* Qui c'erano due famiglie, «Watson, Sherlock & Irene» e «Cameretta &
-     Negozio»: sono andate via con la cameretta, dodici traguardi in
-     tutto. Le medaglie prese le ha cancellate `sgomberaLaCameretta`
-     (store/profile.js), e l'esperienza che la cameretta aveva dato resta
-     nel livello. Il dodicesimo, «Salvadanaio», non parlava della
-     cameretta e sta coi trasversali, in fondo. */
   { id: 'tutti',    nome: 'Tutti i giochi',      emoji: '🌈', classe: 'tutti' },
 ]
 
@@ -62,9 +23,8 @@ export const MEDAGLIE = ['🥉', '🥈', '🥇']
 export const PREMI = [15, 40, 100]
 
 const TRAGUARDI_TUTTI = [
-  /* ---------- Tabelline Asteroidi ---------- */
-  /* «partiteMath» conta le partite di tutti e due i cieli — pianeti e
-     stazioni — quindi la frase non nomina le tabelline */
+  // ---------- Tabelline Asteroidi ----------
+  // «partiteMath» conta le partite di tutti e due i cieli, quindi la frase non nomina le tabelline
   { id: 'mate-prima', area: 'mate', emoji: '🚀', nome: 'Primo volo',
     come: () => 'Gioca una partita agli Asteroidi',
     soglie: [1], valore: m => m.tot('partiteMath') },
@@ -77,10 +37,7 @@ const TRAGUARDI_TUTTI = [
   { id: 'mate-sicure', area: 'mate', emoji: '✖️', nome: 'Tabelline sicure',
     come: n => `Impara ${n} calcoli sul serio`,
     soglie: [10, 30, 55], valore: m => m.imparati('math:') },
-  /* Il traguardo che il bambino racconta a parole: "so la tabellina del
-     7". Vale tutta la tabellina, non un calcolo per volta, e la misura
-     guarda la forza di adesso: una tabellina lasciata lì per un mese
-     smette di contare finché non si ripassa. */
+  // vale tutta la tabellina, non un calcolo per volta; scende se non si ripassa (guarda la forza di adesso)
   { id: 'mate-tabelline', area: 'mate', emoji: '⭐', nome: 'Tabelline a memoria',
     come: n => n === 1 ? 'Impara una tabellina intera, tutte e dieci le caselle'
                        : `Impara ${n} tabelline intere`,
@@ -92,7 +49,7 @@ const TRAGUARDI_TUTTI = [
     come: n => `Arriva a ${n} punti in una partita`,
     soglie: [200, 600, 1500], valore: m => m.best('math') },
 
-  /* ---------- il calcolo a mente, che sta negli stessi asteroidi ---------- */
+  // ---------- il calcolo a mente, che sta negli stessi asteroidi ----------
   { id: 'mente-stazioni', area: 'mate', emoji: '🛰️', nome: 'Stazioni orbitali',
     come: n => n === 1 ? 'Supera la prima stazione del calcolo a mente'
                        : `Supera ${n} stazioni del calcolo a mente`,
@@ -100,14 +57,12 @@ const TRAGUARDI_TUTTI = [
   { id: 'mente-giuste', area: 'mate', emoji: '🧠', nome: 'Conti a mente',
     come: n => `Fai ${n} calcoli a mente giusti`,
     soglie: [50, 250, 1000], valore: m => m.tot('mente') },
-  /* Non i calcoli ma le STRATEGIE che reggono adesso: «so arrivare alla
-     decina» vale più di cento somme azzeccate per caso. Come le tabelline
-     intere, scende se non si ripassa. */
+  // le strategie che reggono adesso, non i calcoli: come le tabelline intere, scende se non si ripassa
   { id: 'mente-concetti', area: 'mate', emoji: '💡', nome: 'Trucchi in tasca',
     come: n => `Tieni in mano ${n} trucchi di calcolo`,
     soglie: [5, 15, 30], valore: m => m.concettiSaldi() },
 
-  /* ---------- English ---------- */
+  // ---------- English ----------
   { id: 'en-parole', area: 'inglese', emoji: '🔤', nome: 'Vocabolario',
     come: n => `Impara ${n} parole inglesi`,
     soglie: [10, 50, 150], valore: m => m.imparati('en:') },
@@ -133,9 +88,7 @@ const TRAGUARDI_TUTTI = [
     come: n => `Rispondi giusto ${n} volte sulle frasi`,
     soglie: [20, 100, 400], valore: m => m.tot('frasi') },
 
-  /* ---------- Español ----------
-     Gli stessi traguardi dell'inglese, con gli id loro: due lingue non
-     si sommano, e chi impara «perro» non ha imparato «dog». */
+  // ---------- Español ---------- gli stessi traguardi dell'inglese, con id propri: due lingue non si sommano
   { id: 'es-parole', area: 'spagnolo', emoji: '🔤', nome: 'Vocabulario',
     come: n => `Impara ${n} parole spagnole`,
     soglie: [10, 50, 150], valore: m => m.imparati('es:') },
@@ -157,19 +110,12 @@ const TRAGUARDI_TUTTI = [
   { id: 'es-frasi-giuste', area: 'spagnolo', emoji: '🔁', nome: 'Botta e risposta',
     come: n => `Rispondi giusto ${n} volte sulle frasi spagnole`,
     soglie: [20, 100, 400], valore: m => m.tot('frasiEs') },
-  /* Quello che questo gioco è venuto a fare: parlare con la mamma. Si
-     prende quando si sanno le frasi di tutti i giorni, non le parole
-     sciolte, ed è l'unico traguardo con un grado solo. */
+  // l'unico traguardo con un grado solo: quello che il gioco è venuto a fare, parlare con la mamma
   { id: 'es-mamma', area: 'spagnolo', emoji: '💛', nome: 'Ahora hablo con mamá',
     come: () => 'Impara 20 frasi spagnole e supera sei tappe',
     soglie: [1], valore: m => (m.imparati('frase-es:') >= 20 && m.tappeEs() >= 6 ? 1 : 0) },
 
-  /* ---------- Difendi il Castello ---------- */
-  /* le soglie sono i confini delle tre campagne — la prima tappa, il
-     Bosco intero, tutte e quindici — e non tre numeri qualsiasi: erano
-     `[1, 3, 6]` da quando le tappe erano sei in tutto, e l'oro si
-     sarebbe preso a un terzo del viaggio. Chi l'oro ce l'ha già lo
-     tiene: un grado registrato non si toglie mai (`riscuotiTraguardi`). */
+  // ---------- Difendi il Castello ---------- le soglie sono i confini delle tre campagne, non tre numeri qualsiasi
   { id: 'td-tappe', area: 'torri', emoji: '🗺️', nome: 'La campagna',
     come: n => n === 1 ? 'Supera la prima tappa'
                        : n === 15 ? 'Finisci tutte e quindici le tappe'
@@ -189,7 +135,7 @@ const TRAGUARDI_TUTTI = [
                        : `Diventa sicuro in ${n} operazioni`,
     soglie: [2, 4], valore: m => m.imparati('op:') },
 
-  /* ---------- La bancarella ---------- */
+  // ---------- La bancarella ----------
   { id: 'banco-clienti', area: 'bancarella', emoji: '🧾', nome: 'Bottegaio',
     come: n => `Servi ${n} clienti`,
     soglie: [10, 60, 250], valore: m => m.tot('clienti') },
@@ -211,28 +157,17 @@ const TRAGUARDI_TUTTI = [
     come: n => `Incassa ${Math.round(n / 100)} € in tutto`,
     soglie: [10000, 50000, 200000], valore: m => m.tot('incasso') },
 
-  /* ---------- Il generale ----------
-     Qui non si conta quante volte si è indovinato: si conta quante volte
-     ci si è arrivati da soli. Per un pezzo il metro è stato il par — «ce
-     l'ho fatta con quattro ordini» — ed era il metro sbagliato: il gioco
-     non chiede di risolvere in poche mosse, chiede di risolvere. Adesso
-     quello che vale è aver chiuso senza farsi svelare né la struttura né
-     la soluzione, e senza lasciare nessuno sul campo. */
+  // ---------- Il generale ---------- non quante volte si è indovinato, quante volte ci si è arrivati da soli
   { id: 'gen-livelli', area: 'generale', emoji: '🎖️', nome: 'Sul campo',
     come: n => n === 1 ? 'Supera il primo livello del generale'
                        : `Supera ${n} livelli del generale`,
     soglie: [1, 5, 12], valore: m => m.tot('missioni') },
-  /* l'`id` resta `gen-par` anche se il par non c'è più: è la chiave con
-     cui la medaglia è già salvata nei profili (`p.badge[id]`), e
-     cambiarla farebbe ripartire da zero chi l'aveva presa — che è
-     esattamente quello che il travaso `nelPar` → `daSolo` in
-     `store/profile.js` serve a evitare. Gli id sono chiavi, non nomi. */
+  // id resta gen-par anche se il par non c'è più: è la chiave del badge salvato nei profili, cambiarla lo azzererebbe
   { id: 'gen-par', area: 'generale', emoji: '🎯', nome: 'Ci sono arrivato da solo',
     come: n => n === 1 ? 'Vinci un livello senza farti svelare niente'
                        : `Vinci ${n} livelli senza farti svelare niente`,
     soglie: [1, 6, 20], valore: m => m.tot('daSolo') },
-  /* La riga che il gioco è venuto a insegnare: dire una volta sola una
-     cosa che va fatta cento volte. */
+  // la riga che il gioco è venuto a insegnare: dire una volta sola una cosa che va fatta cento volte
   { id: 'gen-avanzati', area: 'generale', emoji: '🔁', nome: 'Non lo ripeto due volte',
     come: n => n === 1 ? 'Vinci un livello con un ordine che si ripete o che aspetta'
                        : `Vinci ${n} livelli con un ordine di alto livello`,
@@ -244,41 +179,25 @@ const TRAGUARDI_TUTTI = [
     come: () => 'Finisci tutti i livelli della campagna',
     soglie: [1], valore: m => m.campagnaGen() },
 
-  /* ---------- trasversali ---------- */
+  // ---------- trasversali ----------
   { id: 'all-serie', area: 'tutti', emoji: '🔥', nome: 'Ogni giorno',
     come: n => `Gioca ${n} giorni di fila`,
     soglie: [3, 7, 30], valore: m => m.best('serieGiorni') },
-  /* i giochi sono sette: la terza soglia è arrivata con il laboratorio e la
-     bancarella, e chi aveva già l'argento adesso ha un oro da prendere.
-     Col generale i giochi diventano otto, ma le soglie NON si toccano:
-     alzare l'oro a 8 farebbe retrocedere a 🥈 chi l'oro ce l'ha già —
-     il badge resta scritto nel profilo, ma la medaglia mostrata si
-     ricalcola ogni volta, e tornerebbe indietro sotto gli occhi. */
+  // le soglie non seguono il numero di giochi: alzarle farebbe retrocedere chi l'oro ce l'ha già (si ricalcola ogni volta)
   { id: 'all-tuttofare', area: 'tutti', emoji: '🌈', nome: 'Tuttofare',
     come: n => `Prova ${n} giochi diversi`,
     soglie: [3, 5, 7], valore: m => m.giochiProvati() },
   { id: 'all-livello', area: 'tutti', emoji: '🎓', nome: 'Si sale',
     come: n => `Arriva al livello ${n}`,
     soglie: [3, 6, 12], valore: m => m.livello() },
-  /* Stava fra i traguardi della cameretta perché era lì che le monete si
-     spendevano, ma conta quelle **guadagnate**, in tutti i giochi: è
-     rimasto quando la cameretta se n'è andata. L'id è quello di allora:
-     è la chiave della medaglia nei profili, e con un id nuovo chi l'ha
-     già presa se la vedrebbe consegnare una seconda volta, festa e
-     monete comprese. */
+  // id di quando stava fra i traguardi della cameretta: cambiarlo consegnerebbe la medaglia una seconda volta
   { id: 'room-monete', area: 'tutti', emoji: '🪙', nome: 'Salvadanaio',
     come: n => `Guadagna ${n} monete in tutto`,
     soglie: [100, 500, 2000], valore: m => m.tot('monete') },
 ]
 
-/* Quello che il resto del programma vede: se il generale è spento, la
-   sua area e i suoi traguardi non ci sono proprio, e ogni conto — badge
-   presi, totali, percentuali — resta quello dei giochi veri. */
 const acceso = a => a !== 'generale' || GENERALE_ATTIVO
-/* I giochi nuovi (`src/giochi/`) non hanno una riga qui: si presentano da
-   soli col blocco `albo` del loro manifesto, e `giochi/albo.js` li mette
-   in fila. Vanno in fondo, prima dei trasversali, che restano l'ultima
-   famiglia perché parlano di tutti i giochi insieme. */
+// i giochi nuovi vanno in fondo, prima dei trasversali (che parlano di tutti i giochi insieme)
 const trasversale = a => a.id === 'tutti'
 export const AREE = [
   ...AREE_TUTTE.filter(a => acceso(a.id) && !trasversale(a)),
