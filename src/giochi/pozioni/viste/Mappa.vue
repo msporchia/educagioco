@@ -1,10 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA MAPPA — un blocco per famiglia, e il calderone in fondo
-
-   Riceve tutto già deciso: cosa è aperto, quante stelle, dov'è il
-   bambino. Qui si sceglie dove andare e basta.
-   ═══════════════════════════════════════════════════════════════════ */
+// La mappa: un blocco per famiglia, e il calderone in fondo. Riceve
+// tutto già deciso; qui si sceglie dove andare e basta.
 defineProps({
   blocchi: { type: Array, required: true },   // [{ chiave, nome, emoji, dritta, tappe: [] }]
 })

@@ -1,10 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL LABORATORIO DELLE POZIONI — L'ASPETTO
-
-   Un file solo, ogni classe comincia per `pz-`. Il fondo è quello
-   notturno del laboratorio di sempre; le carte chiare sono la
-   pergamena e gli attrezzi, cioè le cose che si toccano.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Ogni classe comincia per `pz-`. Fondo notturno, carte chiare per la
+   pergamena e gli attrezzi (le cose che si toccano). */
 .pz {
   --pz-fondo: #1e1533;
   --pz-carta: #fff9ee;
@@ -21,7 +16,7 @@
 .pz .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
                        "Twemoji Mozilla", sans-serif; line-height: 1 }
 
-/* ═══════════ la mappa ═══════════ */
+/* la mappa */
 .pz-mappa { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column;
             gap: 14px; width: 100%; max-width: 520px; margin: 0 auto;
             padding: 8px 12px calc(16px + env(safe-area-inset-bottom)) }
@@ -48,7 +43,7 @@
 .pz-tappa.pz-adesso { box-shadow: 0 3px 0 var(--pz-viola), inset 0 0 0 2px var(--pz-viola) }
 .pz-tappa.pz-fatta .pz-numero { background: var(--pz-verde) }
 
-/* ═══════════ il banco ═══════════ */
+/* il banco */
 .pz-banco { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px;
             width: 100%; max-width: 520px; margin: 0 auto; padding: 6px 10px;
             padding-bottom: calc(8px + env(safe-area-inset-bottom)); position: relative }
@@ -190,7 +185,7 @@
 .pz-fantasma { position: fixed; z-index: 50; pointer-events: none; font-size: 40px;
                transform: translate(-50%, -60%); filter: drop-shadow(0 4px 4px #0006) }
 
-/* ═══════════ il cartello di fine ═══════════ */
+/* il cartello di fine */
 .pz-velo { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center;
            justify-content: center; padding: 20px; background: #1e153399 }
 .pz-cartello-fine { width: 100%; max-width: 360px; background: var(--pz-carta); color: var(--pz-inchiostro);
