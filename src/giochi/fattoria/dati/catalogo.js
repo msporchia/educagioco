@@ -1,147 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   QUELLO CHE SI PUÒ METTERE NELLA FATTORIA
-
-   Dato puro. Ogni voce dice **cosa si vede** (`pezzo`, un nome
-   dell'atlante), **quanto occupa per terra** (`piede`, in celle) e
-   **quanto costa**. Nient'altro: come si disegna lo sa `scena/`, se si
-   può posare lì lo sa `motore/`.
-
-   ── IL PIEDE NON È LA FIGURA ──────────────────────────────────────
-   Una casa occupa 4×2 celle per terra ma è alta cinque tessere: il
-   tetto sta **sopra** il suo piede, non dentro. Tenere separate le due
-   cose è quello che permette a un personaggio di passare dietro il
-   tetto e davanti al muro. Senza la distinzione i tetti coprono la roba
-   che sta dietro, e la scena si appiattisce.
-
-   ── E QUASI SEMPRE SI RICAVA ──────────────────────────────────────
-   Il piede si scriveva a mano, voce per voce, e finché le voci erano
-   trenta andava bene. Adesso sono dieci volte tante — l'atlante è
-   cresciuto di tre fogli — e trecento numeri copiati a mano sono
-   trecento occasioni di scriverne uno storto, che a schermo si presenta
-   come un albero che si può attraversare o un lampione che occupa mezzo
-   prato. Quindi il ripiego lo **misura il disegno** (`piedeDalDisegno`),
-   e si scrive solo quando la misura non basta:
-
-     · **largo** = quanto è largo lo sprite, arrotondato in celle. Non
-       c'è niente da decidere: quello che si vede è quello che occupa.
-     · **profondo** = 1, tranne per le cose larghe **e** alte, che sono
-       gli edifici: quelli hanno un fianco, e un fianco è profondo.
-
-   Sulle trentadue voci scritte a mano di prima la regola ne ricava
-   trenta identiche. Le due che sbaglia sono l'orto e la radura, che
-   sono **terreno** e non oggetti — il loro piede è quanta terra
-   occupano, non quanto disegno c'è — e infatti sono le due che il piede
-   se lo dichiarano.
-
-   ── GIRARE E ROVESCIARE: TRE COSE, NON UNA ────────────────────────
-   «Perché non posso girare questa casa di novanta gradi?» ha tre
-   risposte diverse a seconda di com'è disegnato il pezzo, e finché non
-   stanno scritte si riscoprono ogni volta.
-
-     · **`vedute`** — il set ha *davvero* il pezzo nell'altro verso, e
-       girare vuol dire cambiare disegno. La staccionata sdraiata e il
-       palo in piedi sono due tessere; la casa vista davanti e la casa
-       vista di dietro sono due tessere. Quindi la staccionata è **una
-       voce sola che si gira**, non due voci diverse — e il pezzo che si
-       mette al posto dell'altro porta con sé il proprio piede, perché
-       [2,1] sdraiato diventa [1,2] in piedi.
-
-     · **il quarto di giro** — `ctx.rotate` a schermo, e non costa
-       niente: la pixel art regge i novanta gradi esatti senza
-       sfrangiarsi (non regge i quarantacinque). Vale per quello che è
-       disegnato **a piombo dall'alto** — un'aiuola, una pozza, un
-       sasso, una siepe — dove ogni quarto di giro dà un pezzo
-       altrettanto vero. Non vale per quello che ha una **faccia**: una
-       casa girata di novanta gradi non gira, cade, e la sua ombra punta
-       in su mentre quella di tutto il resto punta in giù.
-
-     · **lo specchio** — `ctx.scale(-1, 1)`, e non tocca né il sopra né
-       la direzione della luce finché la luce viene dall'alto. Lo regge
-       quasi tutto, ed è quello che risolve il fastidio vero: la porta
-       del fienile dal lato sbagliato, la carriola che punta di là,
-       due casette identiche affiancate che si vede che sono la stessa.
-
-   ── E NON SI DECIDONO QUI ─────────────────────────────────────────
-   Le ultime due **non si scrivono in questa tabella**: le sa il foglio
-   da cui il pezzo è stato ritagliato, e chi il foglio l'ha guardato è
-   chi ha scritto il suo foglietto `.json`
-   (`strumenti/sprite/FORMATO.md`, campo `trasforma`). Da lì
-   `atlante.py` le porta dentro `VOCI` del modulo generato — `giri` (1,
-   2 o 4) e `specchia` — e qui si leggono, pezzo per pezzo. Duecento
-   righe di catalogo che ridicono a mano quello che sta già nel
-   foglietto sono duecento righe da tenere d'accordo per sempre, e la
-   prima che scivola dà un pezzo rovesciato che nessun controllo trova.
-
-   Una riga può comunque scrivere `quarti` o `specchio` e vincere lei:
-   è il ripiego che sbaglia, non la legge — stesso patto di `piede`.
-
-   ── IL MEZZO GIRO, E PERCHÉ QUASI MAI ─────────────────────────────
-   Girare non è un numero solo, sono **due domande indipendenti**, e
-   l'atlante le dichiara separate perché una sola non basta a dirle:
-   *si corica?* (`giri`) e *il sopra può diventare il sotto?*
-   (`ribalta`). La siepe è il pezzo che ha costretto a separarle: per il
-   ritto è ancora una siepe — ed è l'unico modo di chiudere un cortile
-   con un foglio che la disegna solo sdraiata — ma **a gambe per aria
-   no**, perché ha un filo d'ombra sotto e a mezzo giro ce l'ha in cima.
-   Con un numero solo si doveva scegliere fra perdere il verso utile e
-   regalare quello capovolto, e a schermo si vedeva la seconda.
-
-   Su questi fogli il mezzo giro è quasi sempre sbagliato, e non per
-   caso: **niente qui è disegnato dallo zenit vero**. Un sasso ha l'erba
-   ai piedi, un cespuglio l'ombra sotto, il laghetto il bordo di pietra
-   col riflesso in cima. Il quarto di giro sposta quell'ombra di lato e
-   l'occhio lo accetta; il mezzo la porta sopra, e non c'è verso di
-   guardarlo. Restano ribaltabili le pochissime cose che non poggiano su
-   niente — una ninfea, una coccinella, una pozza d'acqua.
-
-   `giri: 2` («l'asse sì, la faccia no»: una staccionata, un tronco
-   steso) è mezzo giro **e basta**, e nella fattoria non si offre per un
-   motivo diverso ancora: su un pezzo simmetrico non si distingue dallo
-   specchio, che c'è già ed è più giusto. Sarebbe un ↻ che si preme e
-   non cambia niente, cioè un tasto rotto — peggio di un tasto che non
-   c'è. Quindi qui il ↻ o cambia disegno (`vedute`) o corica, e per
-   tutto il resto non compare.
-
-   ── `sotto` — CHI STA PER TERRA ───────────────────────────────────
-   Un orto, un'aiuola, dei fiori sono *terreno*, non oggetti: vanno
-   disegnati sotto tutto il resto, se no un fiore alto tre pixel finisce
-   davanti a una casa perché è più in basso nello schermo.
-
-   ── `campo`, `macchina`, `silo` — CHI LAVORA ──────────────────────
-   Tre voci su quattro sono arredamento; queste no, si toccano e **fanno
-   qualcosa**. Il campo si semina, la macchina trasforma, il silo allarga
-   il granaio. Qui si dichiara solo *che* lo fanno; cosa ci cresce e
-   quanto ci vuole sta in `dati/coltivazioni.js`, e le regole nel motore.
-   Tenerli separati è la ragione per cui aggiungere una coltura è una
-   riga di tabella e non un giro dentro al catalogo.
-
-   ── `stati` — UNA MACCHINA CHE SI LEGGE DA LONTANO ────────────────
-   Un recinto è una macchina come il mulino (stessi verbi: avvia,
-   aspetta, ritira) con una cosa in più: **si vede in che stato è senza
-   aprirlo**. Il foglio degli animali disegna ogni specie sei volte, e
-   `stati` dice quale pezzo va con quale momento —
-
-     calmo   com'è quando non lo si sta guardando: è il ritratto della
-             voce, quello che si vede nel baule
-     fame    ferma, e vuole da mangiare (il fumetto è disegnato dentro
-             lo sprite, quindi non ce ne vuole un altro sopra)
-     mangia  ha appena cominciato
-     felice  a metà
-     dorme   quasi fatta
-     pronto  c'è da raccogliere
-
-   Chi sceglie fra questi è il motore (`aspettoDellaCosa`), che è
-   l'unico che sa che ora è. Qui c'è solo l'elenco dei nomi — e il
-   motivo per cui l'elenco sta nel catalogo è che i pezzi che esistono
-   davvero li sa il catalogo, non il motore.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Dato puro: cosa si vede (pezzo), quanto occupa (piede), quanto costa. Come si disegna sta in scena/,
+   se si può posare sta in motore/. piede si ricava dal disegno (piedeDalDisegno); girare/rovesciare
+   e stati dei recinti — vedi docs/fattoria/come-si-tocca.md e macchine.md. */
 import { PEZZI, TESSERA, VOCI } from './atlante.js'
 import { ricetteDi, SILI } from './coltivazioni.js'
 import { FINESTRE } from './stagioni.js'
 
-/* Il piede che si ricava dal disegno, e il ragionamento sta in testa al
-   file. Chi non ci si ritrova scrive `piede` nella sua riga e vince lui:
-   questo è un ripiego buono, non una legge. */
+// Il piede ricavato dal disegno; chi non ci si ritrova scrive piede nella sua riga e vince lui.
 export function piedeDalDisegno(pezzo) {
   const p = PEZZI[pezzo]
   if (!p) return [1, 1]
@@ -149,140 +13,25 @@ export function piedeDalDisegno(pezzo) {
   return [largo, largo >= 3 && p[3] / TESSERA >= 2.5 ? 2 : 1]
 }
 
-/* ── `la` E `plurale` — IL GENERE DEL NOME, DICHIARATO ────────────
-   I consigli parlano di queste voci per nome e ci mettono davanti un
-   articolo: «nel mulino», «il fienile ha qualcosa da ritirare», «i
-   tuoi mulini stanno lavorando». Tutto il resto — l'apostrofo davanti
-   a una vocale (nell'ovile), lo `lo` davanti alla esse impura (nello
-   stagno), il plurale del nome (fienile → fienili) — si ricava dal
-   nome; **il genere no**, e non c'è regola che lo indovini senza
-   sbagliare.
-
-   Era rimasto scritto che i consigli sapevano «nel» e «nell'» e non
-   «nella», e che perciò un nome femminile non si poteva usare: tant'è
-   che il pentolone si chiama così e non «Cucina del cortile». Ma
-   *Conigliera* e *Stalla* c'erano già, e dicevano «nel conigliera»
-   da sempre — e le *Arnie*, che sono anche plurali, dicevano «nel
-   arnie». Nessuno se n'era accorto perché non è un errore, è una
-   frase storta: non la trova nessun test, la trova un genitore che
-   legge ad alta voce a un bambino che sta imparando a leggere.
-
-   Quindi si dichiara: `la: true` per il femminile, `plurale: true`
-   per il nome che è già plurale. Chi non dice niente è maschile
-   singolare, che è la maggioranza. Le funzioni stanno in
-   `motore/consiglio.js`, una volta sola per le quattro frasi che le
-   scrivono. */
+// la/plurale: il genere del nome, dichiarato — non si ricava ("nel conigliera", "nel arnie" erano
+// frasi storte che nessun test trova). Usati da motore/consiglio.js.
 const V = (id, pezzo, nome, prezzo, extra) =>
   ({ id, pezzo, nome, prezzo, piede: piedeDalDisegno(pezzo), ...extra })
 
-/* ── `zona` E `apri` — DOVE STA E QUANDO ARRIVA ───────────────────
-   Ogni linguetta dice due cose in più di sé.
+// zona: 'lavoro' o 'bello' (le due metà del baule); liv vince su tutto, solo per chi lavora.
+// cresce: rincara a ogni copia (lineare, mai esponenziale); unico: un silo in più non conterrebbe di più.
 
-   **`zona`** è la metà del baule in cui vive: `lavoro` (i campi, le
-   macchine, i silos, i recinti degli animali — le cose che *fanno*
-   qualcosa) o `bello` (tutto il resto: alberi, fiori, panchine, case).
-   Sono duecento voci, e senza questa divisione la carriola sta in mezzo
-   al pollaio: chi cerca il mulino deve passare in rassegna il vivaio.
-
-   Quando arriva una decorazione **non si dichiara**: tutte quelle
-   della zona `bello` stanno in una fila sola, ordinata per prezzo, e ne
-   escono due o tre per livello (`dati/livelli.js`). Sono quasi
-   duecento, ed è la ricchezza che rende lungo il gioco — a secchiate
-   diventano una lista, a gocce sono la ragione per cui si torna.
-
-   **`liv`** sulla singola riga vince su tutto, e ce l'hanno solo le
-   poche che *lavorano*: mulino, silos, i cinque recinti. Lì il momento
-   in cui arrivano è una decisione di gioco, non un conto sui prezzi.
-
-   ── `cresce` E `unico` — LE COPIE ─────────────────────────────────
-   Quello che **produce** rincara a ogni copia (`cresce`), perché due
-   conigliere fanno il doppio della lana e il campo numero cinque vale
-   quanto il primo: a prezzo fisso l'unica strategia sarebbe riempire il
-   prato di recinti uguali. Il conto sta in `prezzoDellaVoce`, ed è
-   lineare — mai esponenziale (`docs/apprendimento/calibrazione.md`).
-
-   I silos invece sono **`unico`**: due silos dello stesso tipo non
-   contengono niente di più (la capienza è del *tipo*, e si compra
-   ingrandendo), quindi il secondo non si vende affatto. Un oggetto che
-   si può comprare due volte e la seconda non fa niente è peggio di uno
-   che non si può comprare.
-
-── `cresce` — QUELLO CHE RINCARA A OGNI COPIA ───────────────────
-   Un pezzo di terra rincara già (`prezzoPiazzola` in `dati/mondo.js`),
-   e per lo stesso motivo deve rincarare **il campo**: è la cosa che
-   moltiplica tutto il resto — più campi vuol dire più raccolto per
-   volta — e a prezzo fisso il decimo campo costa come il primo mentre
-   vale molto di più. Senza rincaro l'unica strategia è comprare campi
-   finché c'è terra, e il gioco finisce lì.
-
-   Il rincaro è più dolce di quello della terra (1,38 lì contro 1,45
-   qui, ma la terra parte da 45 e il campo da 22): i primi due o tre
-   restano una spesa da pomeriggio, il sesto è una decisione. Chi non
-   dichiara `cresce` costa sempre uguale — una panchina è una panchina,
-   e ce ne stanno dieci senza che nessuna valga meno. */
+// Il campo rincara come un pezzo di terra: senza, l'unica strategia sarebbe riempire il prato di campi.
 export const RINCARO = 0.6
 
-/* Quanto costa la prossima copia di una cosa, avendone già `quante`.
-   Vale sia per quelle in mappa sia per quelle nel baule: sono la stessa
-   cosa comprata, e uno che mette via i campi per ricomprarli a prezzo
-   di listino avrebbe trovato il modo di non pagare il rincaro.
-
-   Il rincaro è **lineare** (`base · (1 + n · cresce)`), non geometrico:
-   22, 35, 48, 61, 74… La prima versione moltiplicava per 1,45 a ogni
-   copia, ed era la stessa curva esponenziale bocciata sugli
-   ingrandimenti del silo — il decimo campo sarebbe costato 🪙770, due
-   ore di esercizi, mentre vale quanto il primo. Il metro sta in
-   `docs/apprendimento/calibrazione.md`: le monete si guadagnano sempre allo stesso ritmo,
-   quindi lo sforzo per una copia in più deve crescere piano. */
+// Rincaro lineare (base·(1+n·cresce)), non geometrico — vedi docs/fattoria/campi-e-silos.md.
 export function prezzoDellaVoce(v, quante = 0) {
   if (!v) return 0
   if (!v.cresce || !(quante > 0)) return v.prezzo
   return Math.round(v.prezzo * (1 + quante * v.cresce))
 }
 
-/* I ritratti di un recinto, dal nome della specie. Si scrive così e non
-   sei volte a mano per lo stesso motivo per cui gli stadi di una
-   coltura si scrivono con una funzione: sei nomi ricopiati cinque volte
-   sono trenta occasioni di sbagliarne uno, e uno sbagliato è un recinto
-   che sparisce in un certo momento della giornata e in nessun altro.
-
-   ── E «FAME» È DI NUOVO IL RITRATTO CALMO ─────────────────────────
-   *Ribalta la scelta di prima*, che era un disegno apposta: lo stesso
-   recinto **col fumetto dipinto dentro**, uno per specie. Aveva tre
-   difetti, e il primo li spiega tutti — **quel fumetto non può dire il
-   vero**. Cosa mangia un recinto sta nelle ricette, e le ricette
-   cambiano: il giorno che le mucche e le pecore hanno cominciato a
-   volere tutte e due il foraggio, il foglio continuava a mostrare un
-   mucchietto arancione all'una e un ciuffo verde all'altre. Poi era
-   **minuscolo**: a schermo un recinto è largo settanta pixel, quindi
-   dentro il fumetto ce ne stanno dieci per dieci, che non bastano a
-   distinguere una carota da una zucca. E infine i cinque disegni si
-   portavano dietro un rimasuglio del generatore — una macchia colorata
-   appesa alla staccionata — che non era niente.
-
-   Adesso il fumetto lo disegna la scena, grande quanto serve, e ci
-   mette **la merce che quel recinto sta aspettando davvero**
-   (`Fattoria.cosaVuole`). Il ritratto di chi ha fame torna a essere
-   quello calmo: la faccia dell'animale in quei cinque disegni era la
-   stessa.
-
-   ── E CHI IL RITRATTO NON CE L'HA MOSTRA QUELLO CALMO ─────────────
-   I sei stati sono **sei domande al foglio, non sei disegni
-   obbligatori**: il pezzo che l'atlante non ha si sostituisce col
-   `calmo`, ed è quello che già succedeva al `fame`. Le cinque specie
-   dell'orto (anatre, capre, api, alpaca, asini) hanno tre ritratti —
-   calmo, mangia, dorme — e le altre tre posizioni cadono lì:
-
-     · **felice** dura un terzo del lavoro e sta in mezzo fra «mangia»
-       e «dorme»: a schermo è un battito d'occhi, e un disegno in più
-       per specie costava più foglio di quanto rendesse.
-     · **pronto** non ha bisogno di una faccia perché ce l'ha già il
-       🧺 che la scena gli mette in testa (`aspettoDellaCosa`), che è
-       la cosa che si vede da lontano e che dice di andare lì.
-
-   La regola sta qui e non in un elenco di eccezioni per specie: chi
-   domani disegnerà i sei ritratti delle anatre non deve toccare
-   nessuna riga, gli basta generare il foglio. */
+// I ritratti di un recinto: chi non ce l'ha mostra il calmo — vedi docs/fattoria/macchine.md.
 const RECINTO = specie => Object.fromEntries(
   ['calmo', 'fame', 'mangia', 'felice', 'dorme', 'pronto'].map(q => {
     const suo = `recinto_${specie}_${q}`
@@ -357,180 +106,46 @@ export const CATEGORIE = [
     V('fiore_appeso',  'ciondolo_fiore',    'Fiore appeso',       7),
   ] },
 
-  /* ── IL LAVORO: TUTTO QUELLO CHE PRODUCE, IN UNA LINGUETTA SOLA ──
-     *Ribalta la divisione di prima*, che erano due — «Campi» (campo,
-     mulino, silos, carretto) e «Cortile» (fienile e i cinque recinti).
-     Erano due linguette da quattro e da sei voci, dentro una metà del
-     baule che ne aveva solo quelle: cioè **due tasti per scegliere fra
-     dieci cose**, quando dieci cose ci stanno tutte in uno scaffale.
-     E il confine fra le due era una distinzione da adulti — la terra da
-     una parte, gli animali dall'altra — mentre per chi gioca sono la
-     stessa cosa: le unità che *fanno* qualcosa, tutte in fila nella
-     catena. Adesso la linguetta è una e non si mostra nemmeno: una sola
-     non è una scelta (`viste/Roba.vue`).
-
-     L'orto era in mezzo ai fiori ed era **solo un disegno**: due celle
-     di terra mossa che non facevano niente. È lo stesso id e lo stesso
-     prezzo — chi ne aveva già uno se lo ritrova coltivabile, senza
-     migrazioni — ma adesso si semina, e da quando c'è il foglio dei
-     campi il disegno è l'aiuola vera invece di una tessera di terra.
-
-     Il mulino costa più di trenta pappe comprate, e questo è voluto: la
-     catena deve **dare un motivo per spendere**, non essere il modo di
-     smettere di spendere. Si ripaga solo a chi coltiva per giorni.
-
-     Le aiuole nude e i cartelli non coltivano niente: sono arredo che
-     viene dallo stesso foglio, e servono a far sembrare un orto anche
-     il pezzo di terra che non è un campo — e stanno di là, fra le
-     decorazioni. */
+  // Il lavoro: campi, macchine, silos e recinti in una linguetta sola — vedi docs/fattoria/macchine.md.
   { chiave: 'campi', zona: 'lavoro', nome: 'Il lavoro', icona: '🌾', voci: [
     V('orto',          'campo_vuoto',       'Campo',             22,
       { sotto: true, campo: true, piede: [2, 2], cresce: RINCARO }),
     V('mulino',        'mulino_vento',      'Mulino',           150, { macchina: 'mulino', liv: 4, cresce: RINCARO }),
     V('silo',          'silo_rosso',        'Silo del raccolto', 120, { silo: 'terra', unico: true }),
-    /* ── IL CARRETTO DEL VICINO ──────────────────────────────────
-       Era una decorazione fra le case, e adesso lavora: **è lo stesso
-       id e lo stesso prezzo**, come fu per l'orto qui sopra, quindi chi
-       se l'era comprato per bellezza se lo ritrova utile e non c'è
-       niente da migrare.
-
-       Costa poco e arriva presto apposta. Non è una macchina che fa
-       guadagnare: è la **valvola** di chi ha il silo tappato di una
-       cosa sola, e una valvola che si può permettere solo chi sta bene
-       non serve a niente. Cosa fa e perché perde sta in
-       `motore/vicino.js`.
-
-       Il disegno è cambiato — `carretto` di `edifici_3.png` al posto
-       del `carretto_mercato` rosa di `edifici.png` — e nel foglietto
-       porta un `misura` che lo riporta ai 41 px di prima. Non è
-       vezzo: **il piede si ricava dal disegno**, e un carretto che
-       cresce di una cella si ritroverebbe addosso il vicino in una
-       fattoria già salvata. Vale uguale per il mercato qui sotto. */
+    // Il carretto del vicino: era una decorazione — vedi docs/fattoria/chi-chiede.md.
     V('carretto_mercato', 'carretto',       'Carretto del vicino', 32,
       { vicino: true, liv: 8, unico: true }),
-    /* ── LA BANCARELLA DEL MERCATO ───────────────────────────────
-       **Era una decorazione, adesso lavora**: stesso id, stesso pezzo,
-       stesso prezzo — la quarta volta che succede qui dentro, dopo
-       l'orto, il carretto del vicino e il fienile, e sempre per la
-       stessa ragione. Chi se l'era comprata per bellezza se la ritrova
-       utile, e non c'è niente da migrare in nessun salvataggio.
-
-       Cosa fa sta in `motore/mercato.js`: al banco arrivano tre ordini
-       («il fornaio vuole 3 grano e 2 uova») e consegnarli fa salire il
-       livello. È la cosa che mancava alla fine della catena — quello
-       che si produce lo mangiavano solo il cane e il gatto.
-
-       **Al 2, prima ancora del mulino.** Stava al 4, perché un mercato
-       che chiede solo grano sembrava un mercato finto; ma è il banco a
-       far sì che una coltura arrivata prima della sua bocca non sia
-       roba ferma nel silo, e da quando le cose arrivano una per livello
-       (`dati/livelli.js`) quelle colture sono parecchie. E consegnare fa
-       salire: è bene che si impari presto. Col mulino al 4 le merci
-       diventano due, con le carote al 5 tre. `unico` come i silos — tre posti al banco
-       sono tre, e una seconda bancarella non ne aggiungerebbe nessuno:
-       un oggetto che si compra due volte e la seconda non fa niente è
-       peggio di uno che non si può comprare. */
+    // La bancarella del mercato: era una decorazione — vedi docs/fattoria/chi-chiede.md.
     V('mercato',       'bancarella',        'Mercato',            40,
       { mercato: true, liv: 2, unico: true }),
-    /* ── LA MONGOLFIERA ──────────────────────────────────────────
-       La nave di Hay Day (`docs/fattoria/chi-chiede.md`): tre file di
-       casse che si riempiono un po' alla volta, e cosa fa sta in
-       `motore/mongolfiera.js`. Qui c'è **la piazzola dove atterra**, ed
-       è `unica` come la bancarella — una seconda non farebbe scendere
-       un secondo pallone.
-
-       Ha **due facce** (`edifici_4.png`): il pallone a terra, e la
-       piazzola vuota quando è partito — in `partita`, che sceglie
-       `aspettoDellaCosa` e che `guastiDelCatalogo` guarda come la
-       prima. Il piede si scrive a mano, [3, 2], ed è **il cesto**: il
-       pallone sopra è largo quattro celle e alto otto, e sborda in su
-       come il mais maturo, ma quello che tocca terra è il cesto — e la
-       piazzola, rimessa alla sua larghezza nel foglietto, prende lo
-       stesso posto quando il pallone se ne va. */
+    // La mongolfiera: due facce (a terra / partita) — vedi docs/fattoria/chi-chiede.md.
     V('mongolfiera',   'mongolfiera',       'Mongolfiera',       250,
       { mongolfiera: true, liv: 26, unico: true, la: true, piede: [3, 2],
         partita: { pezzo: 'mongolfiera_partita' } }),
-    /* **Insieme al mulino**, e non dopo: da quando il mangime è
-       roba da animali finisce qui dentro, e un mulino che macina un
-       livello prima che esista il posto dove mettere quello che fa
-       sarebbe un tasto che non si può premere. */
+    // Insieme al mulino, non dopo: il mangime deve avere subito dove finire.
     V('silo_bianco',   'silo_bianco',       'Silo della stalla', 120, { silo: 'stalla', liv: 4, unico: true }),
 
-    /* ── LE BOTTEGHE, E IL TERZO SILO ────────────────────────────
-       L'albero a più fasi (`docs/fattoria/catena.md`): macchine che
-       prendono quello che esce da un'altra macchina e lo portano un
-       gradino più su. Un edificio è **un mestiere che si riconosce a
-       colpo d'occhio**, mai più di quattro ricette.
-
-       Sono nate **prima del loro disegno**, ed era deliberato: prima
-       si decide l'albero, poi si generano gli sprite giusti. Per un
-       giro il `pezzo` è stato un ripiego preso dal foglio delle case
-       — una tettoia per il telaio, una casa lunga per la dispensa — e
-       `aspetta` diceva quale pezzo il foglio avrebbe portato, con
-       `guastiDelCatalogo` a diventare rosso il giorno che il pezzo
-       c'era e la riga non l'aveva ancora preso. Il foglio è arrivato
-       (`generati/edifici_2.png`) e adesso ognuna ha la sua faccia: il
-       telaio col filo teso, il forno acceso col fumo, le tinozze
-       viola. Il piede non si scrive lo stesso — lo ricava
-       `piedeDalDisegno`, e viene [4, 2] per tutte come diceva il
-       progetto, [3, 2] per la dispensa.
-
-       Prezzi nella fascia «una struttura» (🪙150–360, `docs/apprendimento/calibrazione.md`),
-       tutti con `cresce: RINCARO` come il mulino; la dispensa costa
-       quanto gli altri due silos ed è `unico` come loro. */
+    // Le botteghe e il terzo silo: l'albero a più fasi — vedi docs/fattoria/catena.md e sprite.md.
     V('dispensa',      'dispensa',          'Dispensa',         120,
       { silo: 'bottega', liv: 16, unico: true, la: true }),
     V('telaio',        'telaio',            'Telaio',           170,
       { macchina: 'telaio', liv: 16, cresce: RINCARO }),
-    /* `panificio` e non `forno`: `forno` è già la decorazione «Forno a
-       legna», e la regola delle arnie contro l'apiario vale anche qui —
-       quando si ha un disegno apposta si fa una voce nuova. E ce l'ha:
-       lo sbuffo di fumo sopra il camino sta **dentro il rettangolo del
-       ritaglio**, perché è il pezzo che dice che il forno è acceso. */
+    // panificio e non forno: forno è già la decorazione "Forno a legna".
     V('panificio',     'panificio',         'Panificio',        180,
       { macchina: 'panificio', liv: 17, cresce: RINCARO }),
-    /* Il pentolone prende dal fienile le quattro cose che si scaldano
-       (`dati/coltivazioni.js`, «il fienile fa il secco»): arriva al 23
-       col beverone. «Pentolone» e non «Cucina del cortile» era una
-       scelta fatta **per aggirare una funzione**: i consigli lo
-       nominano con `dentroA`, che sapeva «nel» e «nell'» e non
-       «nella». Poi è arrivata la cucina, e con lei sartoria, tintoria
-       e dispensa — quattro nomi femminili — e la stalla e la
-       conigliera dicevano «nel stalla» **da sempre**, senza che
-       nessuno se ne fosse accorto. Adesso il genere si dichiara
-       (`la: true`, vedi `motore/consiglio.js`) e il nome si sceglie
-       per come suona, non per come si declina. */
+    // pentolone: il genere si dichiara (la: true) — vedi la nota su la/plurale in testa al file.
     V('pentolone',     'pentolone',         'Pentolone',        150,
       { macchina: 'pentolone', liv: 23, cresce: RINCARO }),
-    /* Il caseificio al 20, due livelli dopo le mucche: tetto verde,
-       le forme di formaggio sulla mensola davanti, il bidone del latte
-       accanto alla porta. */
     V('caseificio',    'caseificio',        'Caseificio',       200,
       { macchina: 'caseificio', liv: 20, cresce: RINCARO }),
     V('sartoria',      'sartoria',          'Sartoria',         250,
       { macchina: 'sartoria', liv: 42, cresce: RINCARO, la: true }),
-    /* La sartoria al 42: la vetrina col manichino e l'insegna delle
-       forbici. La tintoria al 55, dopo la lavanda: le due tinozze
-       davanti e le stoffe stese ad asciugare. */
     V('tintoria',      'tintoria',          'Tintoria',         300,
       { macchina: 'tintoria', liv: 55, cresce: RINCARO, la: true }),
-    /* La cucina al 25, fra le anatre e i maiali: è la macchina dove le
-       colture si incontrano (`dati/coltivazioni.js`, le confluenze) e
-       l'unica che prende roba di tre catene diverse per volta. Una
-       tettoia coi fornelli accesi, le pentole appese alla trave e le
-       verdure tagliate sul ceppo. */
     V('cucina',        'cucina',            'Cucina',           210,
       { macchina: 'cucina', liv: 25, cresce: RINCARO, la: true }),
 
-    /* ── L'ALBERO NUOVO: CINQUE BOTTEGHE IN PIÙ ──────────────────
-       `docs/fattoria/macchine.md`. Tre hanno già la loro facciata,
-       disegnata in anticipo nello stesso foglio delle due bancarelle
-       (`edifici_3.png`, campo `__`): lo zuccherificio, il pastificio,
-       il sushi bar. La gelateria è arrivata dopo, con la mongolfiera
-       (`edifici_4.png`), e la friggitoria per ultima, con la fiera
-       (`edifici_5.png`): fino ad allora prendeva in prestito il gazebo
-       della cena, come facevano tutte le botteghe di sopra prima che
-       arrivasse il loro foglio (§6). */
+    // L'albero nuovo: cinque botteghe in più — vedi docs/fattoria/macchine.md.
     V('zuccherificio', 'zuccherificio',     'Zuccherificio',    230,
       { macchina: 'zuccherificio', liv: 31, cresce: RINCARO }),
     V('gelateria',     'gelateria',         'Gelateria',        240,
@@ -542,25 +157,7 @@ export const CATEGORIE = [
     V('sushi_bar',     'sushi_bar',         'Sushi bar',        340,
       { macchina: 'sushi_bar', liv: 62, cresce: RINCARO }),
 
-    /* ── LE BOTTEGHE DEL PAESE ───────────────────────────────────
-       Non trasformano e non contengono: **chiedono**, come la
-       bancarella, ma ognuna il suo elenco chiuso e coi suoi clienti
-       (`docs/fattoria/chi-chiede.md`, le regole in
-       `motore/botteghe.js`, i numeri in `dati/botteghe.js`). L'elenco
-       sta qui, sulla voce, perché è la cosa che si compra: chi
-       aggiunge una merce all'osteria la aggiunge dove l'osteria si
-       vede.
-
-       `unico` come la bancarella: la fama e i banconi sono della
-       bottega, e una seconda pasticceria non ne aggiungerebbe nessuno.
-       Ognuna arriva con almeno tre merci già consegnabili, e lo
-       pretende `guastiDegliSblocchi` — una bottega che il giorno in cui
-       compare non ha niente da chiedere è un posto vuoto comprato.
-
-       Tre hanno la facciata dal foglio delle bancarelle
-       (`edifici_3.png`); l'osteria usa la `rosticceria`, che è lo
-       stesso mestiere. La mensa — la scuola, il posto dei bambini —
-       ha la sua scuoletta col campanile in `edifici_4.png`. */
+    // Le botteghe del paese: chiedono da un elenco chiuso — vedi docs/fattoria/chi-chiede.md.
     V('pasticceria',   'pasticceria',       'Pasticceria',      180,
       { liv: 21, unico: true, la: true, posto: {
         chiede: ['torta', 'burro', 'uova', 'latte', 'merenda', 'crostata',
@@ -583,42 +180,9 @@ export const CATEGORIE = [
                  'berretto', 'sacchetto', 'sapone'],
         clienti: ['sarta', 'lavandaia'] } }),
 
-    /* ── IL CORTILE: DOVE FINISCE LA CATENA ──────────────────────
-       Il fienile e cinque recinti, e non sono arredo: sono macchine
-       (`stati` in testa al file, le ricette in `dati/coltivazioni.js`).
-       Costano molto più di tutto il resto perché sono la fine della
-       catena — prima il campo, poi il mangime, poi la stalla — e perché
-       quello che rendono non si compra da nessuna parte.
+    // Il cortile: fienile e cinque recinti, in fila dopo i campi — vedi docs/fattoria/macchine.md.
 
-       Stanno **in fila dopo i campi e non in una linguetta a parte**:
-       sono i passi successivi della stessa catena, e messi in due
-       scaffali diversi quella fila non si vede.
-
-       Il piede dei recinti è scritto e non ricavato: sono larghi quattro
-       celle e ne occupano **tre** di profondità, non due. È l'unico
-       posto della fattoria dove si cammina *dentro* qualcosa, e due
-       celle lascerebbero l'ultima fila di staccionata calpestabile. */
-
-    /* ── IL FIENILE ──────────────────────────────────────────────
-       **Era una decorazione, adesso lavora**: stesso id, stesso pezzo,
-       stesso prezzo — la terza volta che succede qui dentro, dopo
-       l'orto e il carretto del vicino, e per la stessa ragione. Chi se
-       l'era comprato per bellezza se lo ritrova utile, e non c'è
-       niente da migrare in nessun salvataggio.
-
-       Il mulino fa la ciotola di casa, il fienile fa il mangime del
-       recinto: due macchine e due mestieri, e per questo non sono una
-       sola con sette tasti.
-
-       Arriva **al 6, un livello dopo le carote e uno prima della
-       conigliera**: una cosa per livello (`dati/livelli.js`). Era stata
-       al 4 — «prima la mangiatoia, poi chi mangia», che come racconto è
-       giusto — e per un livello intero era una macchina che si comprava
-       e **non sapeva fare niente**: la sua prima ricetta vuole le
-       carote, che arrivavano dopo. Aprendola c'era
-       la frase «metti dentro quello che hai raccolto» e sotto il
-       vuoto. Una macchina senza ricette è un tasto rotto che costa 150
-       monete, e adesso lo dice `guastiDegliSblocchi`. */
+    // Il fienile: era una decorazione — vedi docs/fattoria/catena.md.
     V('fienile',       'fienile0',          'Fienile',         150,
       { macchina: 'fienile', liv: 6, cresce: RINCARO }),
     V('conigliera',    'recinto_conigli_calmo', 'Conigliera',    95,
@@ -634,30 +198,12 @@ export const CATEGORIE = [
     V('porcile',       'recinto_maiali_calmo',  'Porcile',      260,
       { macchina: 'porcile', stati: RECINTO('maiali'), piede: [4, 3], liv: 28, cresce: RINCARO }),
 
-    /* ── LE CINQUE BOCCHE DELL'ORTO ──────────────────────────────
-       Stessa forma dei cinque di sopra — macchine con dei ritratti,
-       piede 4×3, rincaro lineare — e la ragione per cui esistono non
-       è «altri cinque animali»: fra il porcile (26) e la fine del
-       catalogo (64) non arrivava **più niente che lavorasse**, cioè
-       trentotto livelli in cui chi aveva imparato la catena non
-       aveva più niente da imparare. Cosa mangiano e cosa danno sta in
-       `dati/coltivazioni.js`, con la tabella delle coppie.
-
-       I prezzi salgono col livello e restano tutti nella fascia
-       «struttura» di `docs/apprendimento/calibrazione.md` (🪙150–360, mezz'ora-un'ora di
-       esercizi): l'ultimo è a 🪙355 e non oltre, perché sopra le due
-       ore non ci va niente e una bestia non è un ingrandimento del
-       silo. */
+    // Le cinque bocche dell'orto — vedi docs/fattoria/macchine.md e coltivazioni.js.
     V('stagno_anatre', 'recinto_anatre_calmo',  'Stagno delle anatre', 240,
       { macchina: 'anatre', stati: RECINTO('anatre'), piede: [4, 3], liv: 24, cresce: RINCARO }),
     V('recinto_capre', 'recinto_capre_calmo',   'Recinto delle capre', 280,
       { macchina: 'capre', stati: RECINTO('capre'), piede: [4, 3], liv: 40, cresce: RINCARO }),
-    /* «Arnie» e non «apiario»: l'apiario è la decorazione da 🪙30 che
-       sta fra le case da sempre, e questa è la macchina. Sono due
-       cose diverse con due prezzi diversi, come il fienile che lavora
-       e il fienile rosso che sta lì — quando si ha un disegno apposta
-       non si riusa una decorazione, si riusa **quando il disegno è lo
-       stesso** (l'orto, il carretto, il fienile, il mercato). */
+    // Arnie e non apiario: l'apiario è già la decorazione qui sotto.
     V('arnie',         'recinto_api_calmo',     'Arnie',               300,
       { macchina: 'arnie', stati: RECINTO('api'), piede: [4, 3], liv: 45, cresce: RINCARO,
         la: true, plurale: true }),
@@ -666,37 +212,14 @@ export const CATEGORIE = [
     V('recinto_asini', 'recinto_asini_calmo',   'Recinto degli asini', 355,
       { macchina: 'asini', stati: RECINTO('asini'), piede: [4, 3], liv: 52, cresce: RINCARO }),
 
-    /* ── LA PESCHIERA: IL SETTIMO RECINTO, TARDI E DA SOLO ────────
-       **Non si chiama «laghetto»**, che è già la decorazione da 🪙26
-       qui sopra fra le siepi (`sotto: true`, un pezzo di terreno):
-       stessa regola delle arnie contro l'apiario — quando si ha un
-       disegno apposta non si riusa una decorazione, si riusa solo
-       quando il disegno è lo stesso.
-
-       Niente foglio ancora (`docs/fattoria/da-fare.md` vuole «i
-       suoi ritratti da recinto: calmo, mangia, pronto…»), e un ripiego
-       fatto di tessere di terreno prese a caso ('laghetto0'…) non
-       supererebbe il controllo che vuole un vero `recinto_<specie>_…`
-       dietro ogni ritratto (`unita/fattoria`, «i ritratti di un
-       recinto»). Il ripiego che regge — e che assomiglia davvero, non
-       solo di nome — è **lo stagno delle anatre**: un recinto d'acqua
-       è un recinto d'acqua, e finché il pesce non ha la sua faccia
-       prende in prestito quella intera, sei stati compresi. `aspetta`
-       dice il nome vero, e il foglio si chiede accanto ai recinti
-       (`animali_3.png`, `generati/PROMPT-secondo-albero.md` §6). */
+    // La peschiera: il settimo recinto, senza foglio ancora (aspetta) — vedi docs/fattoria/da-fare.md.
     V('peschiera',      'recinto_anatre_calmo', 'Peschiera',      360,
       { macchina: 'pesci', stati: RECINTO('anatre'),
         piede: [4, 3], liv: 57, cresce: RINCARO, la: true, aspetta: 'recinto_pesci_calmo' }),
   ] },
 
 
-  /* ── LE BESTIOLINE ────────────────────────────────────────────────
-     Quello che sta *attorno* agli animali e non lavora: la cuccia, i
-     nidi, la ciotola, e i due conigli di ceramica che non mangiano
-     niente. Stanno qui e non nel cortile perché il cortile è la fine
-     della catena e dev'essere leggibile in un colpo — cinque recinti,
-     tutti che fanno qualcosa. Un gattino di ceramica in mezzo a cinque
-     macchine è la cosa che fa toccare quello sbagliato. */
+  // Le bestioline: attorno agli animali, non nel cortile (che dev'essere leggibile in un colpo).
   { chiave: 'bestiole', zona: 'bello', nome: 'Bestioline', icona: '🐰', voci: [
     V('cuccia',        'cuccia0',           'Cuccia',            20),
     V('cuccia_grande', 'cuccia_grande',     'Cuccia grande',     28),
@@ -717,12 +240,7 @@ export const CATEGORIE = [
     V('coccinella',    'coccinella0',       'Coccinella',         3),
   ] },
 
-  /* Lo stagno e le ninfee erano qui, sono stati tolti — **si vendeva un
-     disegno, non uno specchio d'acqua** — e adesso tornano, ma come
-     quello che sono: una pozza disegnata, non l'acqua vera. L'acqua vera
-     si dipinge (`dipingi` nel motore, `dati/terreni.js`) e si raccorda
-     da sé; questi sono laghetti da giardino, larghi due celle, che a
-     nessuno viene in mente di accostare. */
+  // Laghetti da giardino: non è l'acqua vera, che si dipinge (motore/fattoria.js, dati/terreni.js).
   { chiave: 'acqua', zona: 'bello', nome: 'Acqua', icona: '💧', voci: [
     /* la fontana è animata: i fotogrammi girano da soli */
     V('fontana',       'fontana0',          'Fontana',           60,
@@ -748,11 +266,7 @@ export const CATEGORIE = [
       { pezzo: 'palo',        piede: [1, 2] },     // in piedi
     ] }),
     V('recinto',       'recinto',           'Recinto',            8),
-    /* Il cancello da solo non voleva dire niente e non si vendeva: è un
-       pezzo di raccordo, e il pittore che sa comporre una staccionata
-       non c'è ancora. Torna in vendita perché con `recinto` accanto un
-       cancello **si compone col dito**, che è il modo in cui questo
-       gioco fa tutto il resto. */
+    // Il cancello si compone col dito insieme al recinto.
     V('cancello',      'cancello',          'Cancello',          12),
     V('ringhiera',     'ringhiera',         'Ringhiera',          9),
     V('colonna',       'colonna',           'Colonna',           11),
@@ -762,20 +276,13 @@ export const CATEGORIE = [
     V('gazebo_cena',   'gazebo_cena',       'Gazebo con tavolo', 95),
     V('cartello',      'cartello',          'Cartello',          10),
     V('insegna',       'insegna',           'Insegna',           14),
-    /* I cinque cartelli del foglio dei campi. Stanno con le insegne e
-       non coi campi: sono legno piantato per terra, non terra lavorata —
-       e nella linguetta dei campi facevano numero fra quattro cose che
-       lavorano davvero. */
+    // I cinque cartelli del foglio dei campi: legno piantato per terra, non terra lavorata.
     V('cartello_grano', 'cartello_grano',   'Cartello grano',     6),
     V('cartello_mais', 'cartello_mais',     'Cartello mais',      6),
     V('cartello_carote', 'cartello_carote', 'Cartello carote',    6),
     V('cartello_zucche', 'cartello_zucche', 'Cartello zucche',    6),
     V('cartello_erba', 'cartello_erba',     'Cartello erba',      6),
-    /* E gli otto dell'orto. Stesso prezzo dei cinque di sopra perché
-       sono la stessa cosa — una tavoletta piantata per terra — e
-       quindi arrivano dove li manda il prezzo, in mezzo agli altri
-       cartelli e non al livello della loro coltura. Un cartello non è
-       il permesso di seminare: è legno. */
+    // E gli otto dell'orto: un cartello non è il permesso di seminare, è legno.
     V('cartello_pomodori', 'cartello_pomodori', 'Cartello pomodori', 6),
     V('cartello_patate', 'cartello_patate',   'Cartello patate',    6),
     V('cartello_fragole', 'cartello_fragole', 'Cartello fragole',   6),
@@ -784,33 +291,14 @@ export const CATEGORIE = [
     V('cartello_cavolfiori', 'cartello_cavolfiori', 'Cartello cavoli', 6),
     V('cartello_cipolle', 'cartello_cipolle', 'Cartello cipolle',   6),
     V('cartello_aglio', 'cartello_aglio',     'Cartello aglio',     6),
-    /* Una bandiera sola, e non due. I quattro pezzi sono i **quattro
-       fotogrammi della stessa bandiera che sventola**. Il terzo si
-       chiamava `bandiera_asta`, e quel nome è precisamente quello che
-       aveva fatto finire in negozio la stessa cosa due volte a due
-       prezzi diversi: adesso si chiama `bandiera2`, che è quello che è.
-
-       È animata, e non lo era: i quattro ritagli erano larghi 34, 32, 36
-       e uno mancava del tutto, e siccome chi disegna centra lo sprite
-       sul piede (`posa` in `scena/tela.js`) farli girare avrebbe mosso
-       **il palo** invece del drappo. Adesso sono tutti 32×32 col palo
-       nelle stesse colonne, misurato sul passo vero del foglio, e il
-       palo sta fermo. L'ordine è quello in cui stanno sul foglio, ed è
-       un'onda che scorre lungo il drappo.
-
-       ⚠ Questo elenco e il campo `anima` del foglietto dicono la stessa
-       cosa in due posti: `scena/tela.js` legge **questo**, il banco degli
-       sprite legge quello. Vanno tenuti d'accordo a mano — non si
-       leggono a vicenda, e uno solo dei due acceso non dà nessun errore:
-       la bandiera resta ferma in gioco, o si muove solo nel banco. */
+    // Bandiera animata: quattro fotogrammi con lo stesso palo fermo (misurati sul foglio).
     V('bandiera',      'bandiera0',         'Bandiera',          10, {
       anima: ['bandiera0', 'bandiera1', 'bandiera2', 'bandiera_tesa'] }),
     V('stendardo',     'bandiera_stemma',   'Stendardo',         10),
   ] },
 
   { chiave: 'case', zona: 'bello', nome: 'Case', icona: '🏚️', voci: [
-    /* una voce sola che si gira: davanti c'è la porta, dietro il muro
-       cieco. Erano due voci di catalogo, ed era la stessa casa. */
+    // una voce sola che si gira: davanti la porta, dietro il muro cieco
     V('casa',          'casa',              'Casa',             120, { vedute: [
       { pezzo: 'casa',       piede: [5, 2] },     // il davanti, con la porta
       { pezzo: 'casa_retro', piede: [5, 2] },     // il dietro
@@ -826,10 +314,7 @@ export const CATEGORIE = [
     V('forno_pizza',   'forno_pizza',       'Forno a cupola',    85),
     V('chiosco_rosa',  'dehors_rosa',       'Chiosco rosa',      80),
     V('chiosco_azzurro', 'dehors_azzurro',  'Chiosco azzurro',   80),
-    /* Il mercato era qui, fra le case, e adesso lavora: sta con la
-       catena, qualche riga più su. Stesso id, stesso pezzo, stesso
-       prezzo — la quarta volta che succede, dopo l'orto, il carretto
-       del vicino e il fienile. */
+    // Il mercato era qui: sta con la catena, qualche riga più su.
     V('casotta',       'pollaio',           'Casotta',           60),
     V('serra',         'serra',             'Serra',             90),
     V('tettoia_fieno', 'tettoia_fieno',     'Tettoia',           45),
@@ -875,22 +360,7 @@ export const CATEGORIE = [
       anima: ['calderone0', 'calderone1'] }),
   ] },
 
-  /* ── LE FESTE: SI COMPRANO SOLO NELLA LORO FINESTRA ───────────────
-     `stagione:` è una chiave di `FINESTRE` (`dati/stagioni.js`), e vuol
-     dire tre cose insieme: la voce sta nel baule **solo in quei
-     giorni**, non è un premio di nessun livello (non entra nella fila
-     dei due-tre per livello di `dati/livelli.js`, se no una zucca
-     comprabile due settimane l'anno occuperebbe un posto che si vede
-     tutto l'anno), e non chiede di essere reclamata — `sbloccata()`
-     la dà per aperta. Quello che si è comprato **resta**: posato tutto
-     l'anno, o nel baule finché lo si rimette giù. La linguetta è
-     `stagionale`, così la pagina dei livelli non la annuncia come uno
-     scaffale nuovo.
-
-     Niente sprite nuovi, ed è deliberato: le zucche sono la zucca
-     matura dell'orto, l'albero è l'albero grande — con le lucine e la
-     stella addosso, che le disegna la scena (`luci: true`). Prezzi
-     nella fascia «una cosetta» di `docs/apprendimento/calibrazione.md`. */
+  // Le feste: stagione: è una chiave di FINESTRE — vedi docs/fattoria/stagioni.md.
   { chiave: 'feste', zona: 'bello', nome: 'Feste', icona: '🎉', stagionale: true, voci: [
     V('zucche_halloween', 'campo_zucche6',  'Zucche di Halloween', 9,
       { sotto: true, piede: [2, 2], stagione: 'halloween' }),
@@ -899,25 +369,7 @@ export const CATEGORIE = [
       { stagione: 'natale', luci: true }),
   ] },
 
-  /* ── LA FIERA: NON SI COMPRA, SI VINCE ────────────────────────────
-     Le otto sorprese della mongolfiera (`motore/mongolfiera.js`): una
-     arriva **nel baule**, come una cosa comprata, ogni volta che le
-     casse si riempiono tutte. `fiera: true` vuol dire tre cose insieme,
-     come `stagione:` qui sopra: la voce **non si vende** (il baule la
-     mostra solo a chi ne ha una in mano da posare, e `compra` la
-     rifiuta), non è un premio di nessun livello (fuori dalla fila di
-     `dati/livelli.js`, e fuori dalla pagina dei livelli) e non chiede
-     di essere reclamata — la apre averla (`Fattoria.sbloccata`).
-
-     È il premio che non sono monete e che si colleziona: una
-     decorazione che si compra con le monete non direbbe niente di
-     come la si è avuta. Il `prezzo` non si paga mai; c'è perché ogni
-     voce ne ha uno (`guastiDelCatalogo`) e dice quanto vale, per chi
-     un giorno stimasse lo speso da quello che si ha.
-
-     Sono nate prima del loro foglio, con un ripiego dal giardino che
-     somigliava e il nome vero in `aspetta`; il foglio è arrivato con la
-     friggitoria (`edifici_5.png`). */
+  // La fiera: non si compra, si vince (fiera: true) — vedi docs/fattoria/chi-chiede.md.
   { chiave: 'fiera', zona: 'bello', nome: 'La fiera', icona: '🎪', fiera: true, voci: [
     V('fiera_bandierine', 'fiera_bandierine', 'Bandierine della fiera', 30,
       { fiera: true }),
@@ -937,9 +389,7 @@ export const CATEGORIE = [
       { fiera: true }),
   ] },
 
-  /* Si chiamava «Banco», che diceva dov'era finita la roba e non cos'è.
-     Qui sta quello che **viene dai campi** e si mette in giro: cassette,
-     ceste, balle di fieno, e lo spaventapasseri che le guarda. */
+  // Quello che viene dai campi e si mette in giro.
   { chiave: 'raccolto', zona: 'bello', nome: 'Raccolto', icona: '🥕', voci: [
     V('spaventapasseri', 'spaventapasseri', 'Spaventapasseri',   24),
     V('balla_tonda',   'balla_fieno_tonda', 'Balla di fieno',     7),
@@ -955,11 +405,7 @@ export const CATEGORIE = [
     V('raccolto_carote', 'raccolto_carote', 'Cassa di carote',    9),
     V('raccolto_zucche', 'raccolto_zucche', 'Cassa di zucche',    9),
     V('raccolto_erba', 'raccolto_erba',     'Cassa di erba',      9),
-    /* Le otto casse dell'orto: la stessa figura che il silo mostra
-       sullo scaffale (`PRODOTTI` in `dati/coltivazioni.js`), qui
-       comprabile per lasciarla in giro. Vale la pena dirlo perché è
-       il motivo per cui costano 9 come le altre cinque e non di più:
-       chi la posa non compra un raccolto, compra una cassa. */
+    // Le otto casse dell'orto: costano 9 come le altre, perché si compra la cassa e non il raccolto.
     V('raccolto_patate', 'raccolto_patate', 'Cassa di patate',    9),
     V('raccolto_cavolfiori', 'raccolto_cavolfiori', 'Cassa di cavoli', 9),
     V('raccolto_pomodori', 'raccolto_pomodori', 'Cassa di pomodori', 9),
@@ -988,28 +434,7 @@ export const CATEGORIE = [
   ] },
 ]
 
-/* ── LE TRE METÀ DEL BAULE ────────────────────────────────────────
-   Duecento voci in undici linguette, e la carriola fiorita in mezzo al
-   pollaio: chi cerca il mulino passava in rassegna il vivaio. Le
-   linguette si raggruppano in tre metà, che sono tre modi diversi di
-   spendere:
-
-     🌾 **La fattoria** — quello che *fa* qualcosa: campi, macchine,
-        silos, i recinti.
-     🌸 **Decorazioni** — quello che sta lì e basta: alberi, fiori,
-        panchine, laghetti, case.
-     🐕 **Animali** — le bestie di casa, che si comprano e chiedono un
-        nome. Non hanno linguette e non stanno in `CATEGORIE`: è
-        l'unica delle tre che non si ricava da qui sotto.
-
-   Stanno **in questo file e non nel baule** perché non sono più solo
-   una fila di tasti dentro un foglio: sono anche i tre tondi in alto a
-   destra, che aprono il baule già dalla parte giusta
-   (`Gioco.vue`). Due elenchi scritti a mano in due posti sarebbero due
-   elenchi che si scostano.
-
-   Si chiamava «Il bello», che è vero ma non è una parola che un bambino
-   userebbe cercando una panchina. «Decorazioni» sì. */
+// Le tre metà del baule (lavoro/decorazioni/animali): vive qui perché sono anche i tre tondi in alto.
 export const ANIMALI_ZONA = 'animali'
 export const ZONE = [
   { chiave: 'lavoro', nome: 'La fattoria', icona: '🌾' },
@@ -1020,42 +445,18 @@ export const ZONE = [
 export const CATALOGO = CATEGORIE.flatMap(c => c.voci)
 export const PER_ID = Object.fromEntries(CATALOGO.map(v => [v.id, v]))
 
-/* ── QUELLO CHE IL FOGLIO SA DI OGNI PEZZO ────────────────────────
-   `VOCI` elenca le *cose* dell'atlante, ognuna coi suoi fotogrammi;
-   qui serve la strada opposta — da un nome di pezzo alla voce che lo
-   contiene — perché il catalogo cita i pezzi (`'casa_retro'`,
-   `'recinto_maiali_fame'`) e non i loro gruppi. Si costruisce una
-   volta all'import: sono cinquecento nomi, e rifare la ricerca a ogni
-   fotogramma sarebbe una scansione lineare dentro il giro di disegno. */
+// Da un nome di pezzo alla voce che lo contiene (il catalogo cita i pezzi, non i gruppi).
 const VOCE_DEL_PEZZO = {}
 for (const v of VOCI)
   for (const fotogrammi of Object.values(v.pose || {}))
     for (const nome of fotogrammi) VOCE_DEL_PEZZO[nome] = v
 
-/* Un pezzo che l'atlante non conosce non gira e non si specchia: è il
-   verso giusto in cui sbagliare, perché una cosa girata per sbaglio si
-   vede e una che si poteva girare e non si è girata non fa danni. */
+// Un pezzo che l'atlante non conosce non gira e non si specchia.
 const quartiDelPezzo = nome => (VOCE_DEL_PEZZO[nome] || {}).giri || 1
 const specchioDelPezzo = nome => (VOCE_DEL_PEZZO[nome] || {}).specchia !== false
 const ribaltaDelPezzo = nome => (VOCE_DEL_PEZZO[nome] || {}).ribalta !== false
 
-/* ── I GIRI CHE UNA COSA REGGE, IN ORDINE ─────────────────────────
-   Non un numero: **la lista dei quarti leciti**, perché quelli leciti
-   non sono sempre i primi N. Due domande indipendenti, e l'atlante le
-   dichiara separate perché una sola non basta a dirle:
-
-     · `giri`     — si corica? 4 = sì (è disegnato a piombo), 1 = no
-     · `ribalta`  — il sopra può diventare il sotto?
-
-   La siepe è il pezzo che ha costretto a separarle: `giri: 4` perché
-   per il ritto è ancora una siepe, `ribalta: false` perché ha un filo
-   d'ombra sotto e a mezzo giro ce l'ha in cima. Con un numero solo si
-   doveva scegliere fra perdere il verso utile e regalare quello a
-   gambe per aria, e a schermo si vedeva la seconda.
-
-   Il mezzo giro **da solo** (`giri: 2`, la staccionata, il tronco
-   steso) resta fuori per l'altro motivo, quello scritto in testa al
-   file: su un pezzo simmetrico non si distingue dallo specchio. */
+// giri e ribalta sono due domande indipendenti — vedi docs/fattoria/come-si-tocca.md.
 function giriPossibili(v) {
   const q = v.quarti != null ? v.quarti : quartiDelPezzo(v.pezzo)
   if (q !== 4) return [0]
@@ -1063,11 +464,7 @@ function giriPossibili(v) {
   return ribalta ? [0, 1, 2, 3] : [0, 1]
 }
 
-/* Quanti versi ha una cosa, cioè quante volte il ↻ cambia qualcosa
-   prima di tornare al punto di partenza. Una voce con `vedute` vale
-   quante ne ha (girarla vuol dire cambiare disegno, e il quarto di
-   giro non si somma: darebbe due pose quasi identiche fra cui
-   scegliere); tutte le altre valgono quanti giri regge il disegno. */
+// vedute vale quante ne ha (girare cambia disegno); altrimenti quanti giri regge il disegno.
 export function quantiVersi(v) {
   if (!v) return 1
   return v.vedute ? v.vedute.length : giriPossibili(v).length
@@ -1077,27 +474,10 @@ export const puoGirare = v => quantiVersi(v) > 1
 export const puoSpecchiare = v =>
   !!v && (v.specchio != null ? v.specchio : specchioDelPezzo(v.pezzo))
 
-/* Le funzioni che reggono una voce sconosciuta senza esplodere. Un
-   salvataggio di ieri può contenere un id che oggi non c'è più — è già
-   successo, con il `palo` diventato una staccionata girata — e il gioco
-   deve continuare a disegnare tutto il resto. */
+// Regge un id sconosciuto (un salvataggio di ieri) senza esplodere.
 export const versoDi = cosa => (cosa && cosa.g) || 0
 
-/* ── COM'È MESSA UNA COSA, TUTTO INSIEME ──────────────────────────
-   Quattro fatti che vanno sempre insieme e che nessuno deve ricavare
-   due volte: che pezzo mostrare, quanta terra occupa **da girata**, di
-   quanti quarti va ruotato il disegno e se va rovesciato. Chi disegna
-   li vuole tutti e quattro; chi calcola una collisione vuole solo il
-   piede; chi cerca cosa c'è sotto il dito vuole piede e giro. Averli
-   da una funzione sola è quello che tiene d'accordo per sempre il
-   posto dove una cosa *si vede* e il posto dove *sta*.
-
-   Nota la cosa che non è ovvia: **lo specchio non cambia l'ingombro**
-   — stessi pixel, stesso rettangolo, solo rovesciati — mentre il
-   quarto di giro dispari scambia larghezza e profondità. È il motivo
-   per cui il verso vive in `cosa.g` e lo specchio in `cosa.m`, invece
-   che tutti e due dentro un numero solo: sono due fatti di natura
-   diversa, e uno dei due il motore lo deve controllare. */
+// Piede, giro e specchio insieme: lo specchio non cambia l'ingombro, il giro dispari sì.
 export function assettoDi(cosa, v = PER_ID[cosa && cosa.id]) {
   if (!v) return { pezzo: null, piede: [1, 1], giro: 0, specchio: false }
   const specchio = puoSpecchiare(v) && !!(cosa && cosa.m)
@@ -1105,10 +485,7 @@ export function assettoDi(cosa, v = PER_ID[cosa && cosa.id]) {
     const q = v.vedute[versoDi(cosa) % v.vedute.length]
     return { pezzo: q.pezzo, piede: q.piede, giro: 0, specchio }
   }
-  /* `g` è **quale verso**, non di quanti quarti: i quarti leciti
-     possono essere [0, 1] e non [0, 1, 2, 3], e passare il verso per
-     un modulo darebbe la siepe a gambe per aria appena il bambino
-     preme ↻ due volte. */
+  // g è quale verso, non quanti quarti: un modulo sbagliato metterebbe la siepe a gambe per aria.
   const possibili = giriPossibili(v)
   const giro = possibili[versoDi(cosa) % possibili.length]
   const [largo, profondo] = v.piede
@@ -1123,51 +500,28 @@ export function assettoDi(cosa, v = PER_ID[cosa && cosa.id]) {
 export const piedeDi = (cosa, v = PER_ID[cosa && cosa.id]) => assettoDi(cosa, v).piede
 export const pezzoDi = (cosa, v = PER_ID[cosa && cosa.id]) => assettoDi(cosa, v).pezzo
 
-/* La voce che *è* quella macchina («mulino», «pollaio»): serve a chi
-   deve nominarla — «3 🌾 nel mulino» — partendo da una ricetta, che la
-   macchina la conosce per mestiere e non per id. Oggi i due coincidono,
-   ma coincidono per caso, e chi un giorno vendesse due mulini diversi
-   scoprirebbe la differenza da un nome sbagliato in un foglio. */
+// La voce che è quella macchina, per nominarla ("nel mulino") partendo da una ricetta.
 export const laMacchina = quale => CATALOGO.find(v => v.macchina === quale) || null
 
-/* Le quattro domande che si fanno a una cosa in mappa per sapere se,
-   oltre a stare lì, **lavora**. Si chiedono all'id perché chi le chiede
-   ha in mano una `cosa` del salvataggio, non una voce di catalogo. */
+// Le quattro domande che dicono se una cosa in mappa lavora.
 export const eCampo = cosa => !!(cosa && (PER_ID[cosa.id] || {}).campo)
 export const macchinaDi = cosa => (PER_ID[cosa && cosa.id] || {}).macchina || null
-/* Il silo dice **quale** dei due è (`'terra'`, `'stalla'`): è la
-   stessa parola che i prodotti si scrivono addosso in
-   `dati/coltivazioni.js`, ed è tutto il legame che c'è fra una cosa in
-   mappa e la roba che ci sta dentro. */
+// Il silo dice quale dei due è: la stessa parola che i prodotti si scrivono addosso.
 export const siloDi = cosa => (PER_ID[cosa && cosa.id] || {}).silo || null
 export const eSilo = cosa => !!siloDi(cosa)
 
-/* Il carretto del vicino: non è una macchina (non trasforma e non ha un
-   orologio) e non è un silo (non contiene niente). È la terza cosa che
-   si tocca e apre un foglio, e si riconosce come le altre due. */
+// Il carretto: non è una macchina né un silo, la terza cosa che apre un foglio.
 export const eVicino = cosa => !!(PER_ID[cosa && cosa.id] || {}).vicino
 
-/* La bancarella del mercato: come il carretto, non è una macchina e non
-   è un silo — si tocca e apre il foglio degli ordini
-   (`motore/mercato.js`). La differenza fra i due sta in cosa fanno: il
-   carretto **prende** quello che avanza, il mercato **chiede** quello
-   che serve. */
+// La bancarella: come il carretto, ma chiede invece di prendere.
 export const eMercato = cosa => !!(PER_ID[cosa && cosa.id] || {}).mercato
-/* La piazzola della mongolfiera: la terza cosa che **chiede**, dopo il
-   banco e le botteghe (`motore/mongolfiera.js`). */
+// La mongolfiera: la terza cosa che chiede.
 export const eMongolfiera = cosa => !!(PER_ID[cosa && cosa.id] || {}).mongolfiera
-/* Una bottega del paese: chiede come il mercato, ma dal suo elenco
-   (`motore/botteghe.js`). Torna il `posto` della voce e non un sì/no,
-   perché chi la tocca vuole sapere cosa chiede. */
+// Una bottega del paese: torna il posto (non un sì/no), perché chi tocca vuole sapere cosa chiede.
 export const postoDi = cosa => (PER_ID[cosa && cosa.id] || {}).posto || null
 export const statiDi = cosa => (PER_ID[cosa && cosa.id] || {}).stati || null
 
-/* ── SI PARTE DA ZERO ─────────────────────────────────────────────
-   Niente. Nemmeno una panchina. C'era una fattoria di partenza già
-   arredata, e sembrava una buona idea — «aprire su un prato vuoto non
-   dice niente» — ma regalava tredici oggetti che nessuno aveva
-   comprato, in un gioco che è tutto lì: guadagnare fuori e spendere
-   qui. La prima panchina messa giù vale perché è costata. */
+// Si parte da zero: una fattoria arredata regalava cose mai comprate, in un gioco che è spendere.
 export const PARTENZA = []
 
 export function guastiDelCatalogo() {
@@ -1177,14 +531,10 @@ export function guastiDelCatalogo() {
     if (visti.has(v.id)) g.push(`id doppio nel catalogo: ${v.id}`)
     visti.add(v.id)
     if (!PEZZI[v.pezzo]) g.push(`${v.id}: la tessera «${v.pezzo}» non è nell'atlante`)
-    /* Una voce nata prima del suo disegno dice cosa aspetta: il giorno
-       che quel pezzo c'è, va preso — se no la bottega resta una tettoia
-       col disegno vero a due righe di distanza. */
+    // Una voce che aspetta il suo disegno va aggiornata il giorno che il pezzo c'è.
     if (v.aspetta && PEZZI[v.aspetta])
       g.push(`${v.id}: aspetta «${v.aspetta}», che nell'atlante c'è già — scrivilo come pezzo`)
-    /* La seconda faccia della mongolfiera (partita) vale come la prima:
-       un ripiego che c'è, e un `aspetta` che diventa rosso il giorno
-       che il foglio porta il pezzo vero. */
+    // La seconda faccia della mongolfiera (partita) vale come la prima.
     if (v.partita) {
       if (!PEZZI[v.partita.pezzo])
         g.push(`${v.id}: la faccia «partita» (${v.partita.pezzo}) non è nell'atlante`)
@@ -1203,43 +553,26 @@ export function guastiDelCatalogo() {
     }
     if (v.vedute && v.vedute.length < 2)
       g.push(`${v.id}: una veduta sola non è un giro — meglio niente tasto`)
-    /* Il campo che questa tabella non deve avere. `giri` era il nome
-       di `vedute` fino a ieri, e nell'atlante generato vuol dire
-       un'altra cosa (quanti quarti di giro regge il disegno): una voce
-       che se lo riscrive addosso non lancia niente, semplicemente
-       smette di girare — o gira dove non deve. */
+    // giri era il nome di vedute: nell'atlante generato vuol dire altro (quanti quarti regge).
     if (v.giri != null)
       g.push(`${v.id}: «giri» adesso si chiama «vedute» (e nell'atlante vuol dire altro)`)
-    /* Girare una cosa larga e sottile le scambia il piede, e se il
-       piede è dichiarato a mano si può dichiarare una profondità che
-       non esiste. Un quarto di giro con un piede storto mette una
-       staccionata dentro una casa senza che nessuno se ne accorga. */
+    // Un piede dichiarato a mano può sbagliare la profondità dopo lo scambio del giro.
     if (puoGirare(v) && !v.vedute && (v.piede[0] < 1 || v.piede[1] < 1))
       g.push(`${v.id}: gira, e il suo piede non regge lo scambio`)
-    /* Un campo si calpesta: è terra lavorata, non un mobile. Senza
-       `sotto` una bestia non potrebbe attraversarlo e il bambino
-       vedrebbe il cane girargli attorno senza capire perché. */
+    // Un campo va sotto, se no non ci si cammina sopra.
     if (v.campo && !v.sotto)
       g.push(`${v.id}: un campo va sotto, se no non ci si cammina sopra`)
-    /* Una macchina senza ricette è un oggetto che si tocca e non fa
-       niente: a schermo è un tasto rotto, ed è il tipo di guasto che
-       nessuno segnala perché sembra una cosa da comprare più tardi. */
+    // Una macchina senza ricette è un tasto rotto.
     if (v.macchina && !ricetteDi(v.macchina).length)
       g.push(`${v.id}: la macchina «${v.macchina}» non ha nessuna ricetta`)
-    /* Uno stato che l'atlante non ha è **muto**: `drawImage` con un
-       argomento non finito torna senza disegnare e senza lanciare,
-       quindi il recinto sparisce in un certo momento della giornata e in
-       nessun altro, e in console non c'è niente. */
+    // Uno stato che l'atlante non ha è muto: il recinto sparisce in certi momenti senza errore.
     for (const [quale, nome] of Object.entries(v.stati || {}))
       if (!PEZZI[nome]) g.push(`${v.id}: lo stato «${quale}» non è nell'atlante`)
     if (v.stati && !v.macchina)
       g.push(`${v.id}: ha degli stati e non è una macchina — non li vedrebbe nessuno`)
-    /* Un ritratto che non è uno degli stati vuol dire che nel baule si
-       compra una cosa e in mappa ne compare un'altra. */
+    // Un ritratto che non è fra gli stati: in baule si compra una cosa, in mappa ne compare un'altra.
     if (v.stati && !Object.values(v.stati).includes(v.pezzo))
       g.push(`${v.id}: il ritratto «${v.pezzo}» non è fra i suoi stati`)
-    /* Una stagione che non esiste è una voce che non compare mai: il
-       baule la mostra solo quando `stagioneDi()` risponde quel nome. */
     if (v.stagione && !FINESTRE[v.stagione])
       g.push(`${v.id}: la stagione «${v.stagione}» non è in FINESTRE`)
   }
@@ -1248,36 +581,22 @@ export function guastiDelCatalogo() {
     if (cat.has(c.chiave)) g.push(`categoria doppia: ${c.chiave}`)
     cat.add(c.chiave)
     if (!c.voci.length) g.push(`categoria vuota: ${c.chiave}`)
-    /* Una linguetta stagionale tiene solo voci stagionali e viceversa:
-       una voce di sempre in mezzo alle feste non si aprirebbe mai (la
-       linguetta non è un premio), e una stagionale fra le panchine
-       farebbe comparire e sparire la linguetta con lei. */
+    // Una linguetta stagionale tiene solo voci stagionali e viceversa.
     for (const v of c.voci)
       if (!!v.stagione !== !!c.stagionale)
         g.push(`${v.id}: ${v.stagione ? 'è stagionale' : 'non è stagionale'} e sta in «${c.chiave}»`)
-    /* Stessa regola per la fiera: una sorpresa fra le panchine
-       diventerebbe un premio di livello, e una panchina fra le
-       sorprese non si comprerebbe mai. */
+    // Stessa regola per la fiera.
     for (const v of c.voci)
       if (!!v.fiera !== !!c.fiera)
         g.push(`${v.id}: ${v.fiera ? 'è della fiera' : 'non è della fiera'} e sta in «${c.chiave}»`)
     if (c.fiera && c.stagionale) g.push(`${c.chiave}: fiera e stagionale insieme`)
   }
-  /* `animali` è una linguetta che `viste/Roba.vue` aggiunge da sé — le
-     bestie di casa — e una categoria di catalogo che si chiamasse così la
-     coprirebbe: si aprirebbe il baule e al posto dei cani ci sarebbero
-     delle panchine. (`granaio` era la seconda, e non lo è più: il
-     raccolto si guarda toccando un silo; e `animali` da linguetta è
-     diventata **una delle tre metà** in cima, ma la collisione è la
-     stessa.) */
+  // 'animali' è una linguetta che viste/Roba.vue aggiunge da sé: una categoria omonima la coprirebbe.
   if (cat.has('animali'))
     g.push('la categoria «animali» è già una metà del baule')
   for (const p of PARTENZA)
     if (!PER_ID[p.id]) g.push(`la fattoria di partenza cita «${p.id}», che non è in catalogo`)
-  /* I due silos si citano a vicenda — la voce dice in che famiglia è, e
-     la famiglia dice qual è la sua voce — e un legame storto vorrebbe
-     dire roba che non entra in nessun silo, o un silo che si costruisce
-     e non serve a niente. Nessuno dei due si vede provando a occhio. */
+  // I due silos si citano a vicenda: un legame storto lascerebbe roba senza silo, o un silo inutile.
   for (const [fam, si] of Object.entries(SILI)) {
     const v = PER_ID[si.cosa]
     if (!v) g.push(`il silo «${fam}» cita «${si.cosa}», che non è in catalogo`)
