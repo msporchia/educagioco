@@ -45,7 +45,15 @@ emoji hanno solo su una testa gialla staccata dal corpo.
   (bimba, bimbo, grande per `corpo.js`), `scena/luoghi.js`, `scena/cose.js`,
   `scena/tela.js` (il disegno e la telecamera), e `viste/Passo.vue`,
   **l'unico posto che sa che esistono due specie di vignetta**.
+- **Una scheda è `{ luogo, cose: [{ che, x, y, … }] }`**: `luogo` riempie
+  il riquadro, `cose` è la fila di quello che ci va sopra **nell'ordine
+  in cui si disegna** (chi viene dopo copre chi viene prima) — niente
+  ordinamento per profondità, a questa taglia le figure sono due o tre e
+  un elenco a mano è più corto da leggere di qualunque regola.
 - **Una storia disegnata porta `disegnata: true`** (`dati/storie.js`).
+- **Le didascalie sono indicizzate sul passo, non sulla storia**
+  (`dati/didascalie.js`): la stessa regola per cui la stessa emoji vuol
+  dire la stessa cosa dappertutto — un passo, una parola, ovunque capiti.
 
 ## Le regole che disegnare ha insegnato
 
@@ -79,6 +87,19 @@ emoji hanno solo su una testa gialla staccata dal corpo.
 - **La finestra di «Manca» è contigua** (`motore/quesito.js`): il primo
   passo, l'ultimo e il buco in mezzo facevano vedere, in una storia da
   quattro, una fila 1-2-4 che nella storia non esiste.
+
+## Combinazioni scartate
+
+Alcune coppie sembrano un prima/dopo e non lo sono, ed è la stessa
+trappola vista da lati diversi: **passi paralleli** (ingredienti o
+vestiti che si possono scambiare — il pomodoro e il formaggio, i
+pantaloni e la maglietta), **cicli biologici che un bambino non legge
+come tali** (l'uovo di gallina davanti a un bruco), e **oggetti che sono
+solo una tappa verso un altro oggetto e non uno stadio della storia** (la
+bottiglia non è uno stadio dell'uva, il burro non è una tappa del
+formaggio, l'ancora non è il «prima» della nave). Chi aggiunge una storia
+controlla per prima cosa se la sua coppia di passi è di uno di questi
+tipi.
 
 ## Scrivere una storia
 

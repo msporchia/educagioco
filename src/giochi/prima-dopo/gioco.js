@@ -1,19 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   PRIMA E DOPO — IL MANIFESTO
-
-   La carta d'identità del gioco, dato puro come `codice-segreto/gioco.js`
-   spiega. Struttura della cartella, il calco è sempre quello:
-
-     dati/    tabelle e basta: le storie, i verbi, le tappe
-     motore/  le regole, a classi, senza schermo — girano anche in Node
-     viste/   un componente per schermata
-     Gioco.vue  il coordinatore, l'unico che sa che esistono le monete
-
-   Questo gioco insegna la sequenzialità temporale e il rapporto causa-
-   effetto: rimettere in fila il seme, il germoglio, il fiore. È lo
-   stesso ragionamento che «Il Generale» chiede cinque anni più tardi
-   con gli ordini in fila — qui arriva prima, senza leggere una riga.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il manifesto: dato puro. Struttura della cartella e convenzione dei
+// giochi nuovi in docs/core/convenzione-giochi.md.
 import { CAMPAGNA, QUANTE_TAPPE } from './dati/campagna.js'
 
 export const CHIAVE = 'prima'
@@ -27,14 +13,8 @@ export default {
   come: 'pensare',
   tappe: QUANTE_TAPPE,
   tinta: '#e7f5e0',
-
-  /* Per la home dei piccoli: un gioco che si dichiara pensato per i
-     quattro-sei anni, niente testo da leggere per giocarlo. La home dei
-     piccoli non esiste ancora — questo campo è solo la dichiarazione. */
   piccoli: true,
 
-  /* La riga sotto il nome, in home. Riceve il record dell'avanzamento
-     (`src/giochi/campagne.js`) e non se lo va a prendere da solo. */
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
     const coda = stelle ? ` · ⭐ ${stelle}` : ''
@@ -43,11 +23,6 @@ export default {
     return `tappa ${i + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[i].nome}${coda}`
   },
 
-  /* ═══════════ quello che il gioco porta all'albo ═══════════
-     I contatori li muove `Gioco.vue` con `segna()`/`segnaBest()`:
-       storie        storie rimesse in fila, giuste alla fine
-       storieTappe   tappe portate a casa
-       serieStorie   (primato) storie filate senza un errore, di fila */
   albo: {
     area: { nome: 'Prima e dopo', emoji: '⏭️' },
 
@@ -65,8 +40,6 @@ export default {
       { id: 'pd-stelle', emoji: '⭐', nome: 'Tutto al suo posto',
         come: n => `Raccogli ${n} stelle`,
         soglie: [6, 15, QUANTE_TAPPE * 3], valore: m => m.stelleDi(CHIAVE) },
-      /* la storia si riprova sempre finché non viene giusta: questo
-         traguardo dice quando comincia a venire giusta la prima volta */
       { id: 'pd-serie', emoji: '🔥', nome: "Una dopo l'altra",
         come: n => `Rimetti in fila ${n} storie di seguito senza sbagliare`,
         soglie: [5, 10, 20], valore: m => m.best('serieStorie') },

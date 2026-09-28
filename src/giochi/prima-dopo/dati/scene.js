@@ -1,57 +1,15 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE SCENE DISEGNATE — il prototipo che sostituisce le emoji
-
-   ── PERCHÉ ESISTE QUESTO FILE ──
-   Una storia fatta di emoji non si sceglie: si cerca. Si guarda cosa il
-   set mette a disposizione e ci si sforza di incastrarci un prima e un
-   dopo, e quando l'incastro non torna si accetta un passo che «più o
-   meno» va bene — 🧴 per lo shampoo, 🏰 per il castello di sabbia. Il
-   criterio diventa quali emoji stanno insieme senza stonare, che è un
-   criterio di inventario e non di didattica. Il costo grosso però non
-   sono i passi zoppi: è tutto quello che con le emoji **non si può
-   raccontare**. Un bambino che cade e si sbuccia il ginocchio. Uno che
-   rompe qualcosa e lo dice. Uno che viene consolato. Sono le storie che
-   a quattro anni servono di più — causa ed effetto sulle *persone* — e
-   non ce n'era nemmeno una.
-
-   Qui una scena è una **scheda**: dove siamo, chi c'è, che faccia fa,
-   cosa tiene in mano. Il disegno lo fa `scena/`, con lo stesso pittore
-   di tutto il resto del progetto.
-
-   ── COM'È FATTA UNA SCHEDA ──
-     luogo   una voce di `scena/cose.js` → LUOGHI (prato, cortile,
-             salotto, bagno): due o tre fasce di colore, niente di più
-     cose    la fila di quello che ci va sopra, **nell'ordine in cui si
-             disegna**: chi viene dopo copre chi viene prima. Non c'è
-             nessun ordinamento per profondità, ed è voluto — a questa
-             taglia le figure sono due o tre, e un elenco ordinato a
-             mano è più corto da leggere di qualunque regola.
-
-   Una persona è una cosa come le altre (`che: 'bimba'`), e porta
-   `faccia`, `dir`, `passo`, `inclina`, `ginocchio`.
-
-   ── IL CONFINE CHE VALE LA PENA TENERE ──
-   Questo file è **dato puro**: gira in Node, nessun canvas, e i test lo
-   leggono senza aprire un browser. È lo stesso patto di `dati/storie.js`
-   — e il motivo per cui `motore/` non si accorge nemmeno che una storia
-   è disegnata invece che scritta a emoji.
-
-   ── PROTOTIPO ──
-   Tre storie, undici scene. Servono a decidere se il cassetto disegnato
-   vale il suo prezzo prima di pagarlo per tutte e quarantatré le storie.
-   Se la risposta è sì, il passo dopo non è disegnare di più qui: è
-   spostare `scena/persone.js` in `grafica/personaggi/`, perché le stesse
-   figure servono alle icone del lessico (vedi `docs/prima-dopo/da-fare.md`, «il cassetto
-   dei concetti disegnati»).
-   ═══════════════════════════════════════════════════════════════════ */
+// Le scene disegnate: perché esistono, invece delle emoji, e come è
+// fatta una scheda — docs/prima-dopo/disegni.md. Una scena è dato puro
+// (gira in Node, nessun canvas): { luogo, cose: [{ che, x, y, … }] }.
+// Il disegno lo fa `scena/`, con lo stesso pittore di tutto il progetto.
+//
+// Prototipo: tre storie, undici scene. Il passo dopo, se vale il prezzo,
+// non è disegnarne altre qui: è spostare `scena/persone.js` in
+// `grafica/personaggi/` (docs/prima-dopo/da-fare.md).
 
 export const SCENE = {
 
-  /* ══ LA CORSA E IL GINOCCHIO SBUCCIATO ══
-     Quattro passi con un verso che non si discute, e nessuno dei quattro
-     è dicibile a emoji: 🏃 è «corre» senza dire chi, e la faccia — che è
-     tutta l'informazione della seconda e della terza vignetta — le emoji
-     ce l'hanno solo su una testa gialla staccata dal corpo. */
+  /* ── LA CORSA E IL GINOCCHIO SBUCCIATO ── */
 
   'corre-nel-prato': {
     luogo: 'prato',
@@ -64,9 +22,8 @@ export const SCENE = {
     ],
   },
 
-  /* l'inciampo: inclinata in avanti e con le braccia buttate avanti
-     (`stato: 'lancia'` è la posa che le alza, e qui vuol dire «si sta
-     parando»). Il sasso è piccolo apposta — la cosa da guardare è lei */
+  // inclinata in avanti con le braccia buttate avanti (stato «lancia» è
+  // la posa che le alza, qui vuol dire «si sta parando»)
   'inciampa': {
     luogo: 'prato',
     inquadra: { zoom: 1.7, x: 48, y: 58 },
@@ -77,8 +34,6 @@ export const SCENE = {
     ],
   },
 
-  /* ferma, in piedi, che piange: il ginocchio rosso si vede perché è
-     l'unica macchia calda in mezzo al verde */
   'ginocchio-sbucciato': {
     luogo: 'prato',
     inquadra: { zoom: 1.9, x: 50, y: 59 },
@@ -88,9 +43,8 @@ export const SCENE = {
     ],
   },
 
-  /* il grande si china e mette il cerotto. La bimba è ancora seria — non
-     contenta: il sollievo è la vignetta, il sorriso sarebbe già la fine
-     di un'altra storia */
+  // la bimba resta seria, non contenta: il sollievo è la vignetta, il
+  // sorriso sarebbe già la fine di un'altra storia
   'il-cerotto': {
     luogo: 'prato',
     inquadra: { zoom: 1.15, x: 50, y: 54 },
@@ -102,10 +56,7 @@ export const SCENE = {
     ],
   },
 
-  /* ══ IL VASO ROTTO, E DETTO ══
-     La storia che nessuna fila di emoji sa raccontare: non perché manchi
-     il vaso (🏺 c'è), ma perché il terzo passo — dirlo — non è una cosa,
-     è una faccia davanti a un'altra faccia. */
+  /* ── IL VASO ROTTO, E DETTO ── */
 
   'palla-in-casa': {
     luogo: 'salotto',
@@ -129,10 +80,8 @@ export const SCENE = {
     ],
   },
 
-  /* lo dice. La nuvoletta contiene i cocci che si sono appena visti
-     grandi: è il modo di dire «sta raccontando quella cosa lì» senza una
-     parola scritta — e senza parole ci si tiene, perché a quattro anni
-     non si legge */
+  // la nuvoletta contiene i cocci appena visti grandi: «sta raccontando
+  // quella cosa lì» senza una parola scritta
   'lo-dice': {
     luogo: 'salotto',
     inquadra: { zoom: 1.15, x: 50, y: 52 },
@@ -155,13 +104,8 @@ export const SCENE = {
     ],
   },
 
-  /* ══ DAL FANGO ALLA DOCCIA ══
-     È la storia che oggi si chiama «doccia» e fa 🚿 🧴 👕 — dove il
-     sapone non viene *dopo* la doccia ma dentro, e la maglietta è una
-     convenzione: chi risponde bene non ha ragionato, si è ricordato come
-     si fa a casa sua. Disegnata smette di essere un'abitudine e diventa
-     una causa: **è sporco**, per questo si lava, e infatti dopo è
-     pulito. Lo sporco addosso è l'informazione che l'emoji non ha. */
+  /* ── DAL FANGO ALLA DOCCIA — disegnata smette di essere un'abitudine e
+     diventa una causa: è sporco, per questo si lava ── */
 
   'gioca-nel-fango': {
     luogo: 'cortile',
@@ -170,9 +114,8 @@ export const SCENE = {
       { che: 'pozzanghera', x: 66, y: 82, w: 20 },
       { che: 'bimbo', x: 44, dir: 'giu', passo: 1, faccia: 'contenta' },
       { che: 'schizzi', x: 44, y: 80 },
-      /* la pozzanghera torna anche **davanti** ai piedi: senza, il
-         primo passo e il terzo erano lo stesso bambino in piedi, e a
-         settanta pixel si distinguevano solo dal colore del fondo */
+      // la pozzanghera torna anche davanti ai piedi: senza, il primo
+      // passo e il terzo erano lo stesso bambino in piedi
       { che: 'pozzanghera', x: 44, y: 84, w: 17, davanti: true },
     ],
   },
@@ -196,11 +139,7 @@ export const SCENE = {
     ],
   },
 
-  /* ══ LA MATTINA ══
-     Una routine, sì — ma disegnata smette di essere una fila di oggetti
-     che stanno insieme (⏰ 🥣 🎒 🏫, dove chi indovina si è ricordato la
-     propria casa) e diventa una giornata che qualcuno attraversa: c'è
-     sempre lo stesso bambino, e quello che cambia è dove si trova. */
+  /* ── LA MATTINA ── */
 
   'si-sveglia': {
     luogo: 'cameretta',
@@ -239,10 +178,8 @@ export const SCENE = {
     ],
   },
 
-  /* ══ LA SERA ══
-     Il verso lo dà il sonno, non l'abitudine: si sbadiglia *prima* di
-     andare a letto, e la favola sta in mezzo perché è l'unica cosa che
-     succede fra le due. */
+  /* ── LA SERA — il verso lo dà il sonno: si sbadiglia prima di andare a
+     letto, la favola sta in mezzo ── */
 
   'la-cena': {
     luogo: 'cucina',
@@ -281,12 +218,8 @@ export const SCENE = {
     ],
   },
 
-  /* ══ SI PIANTA IL SEME ══
-     La crescita che c'era (🌰 🌱 🌳) è vera e non è forzata, ma non ha
-     nessuno dentro: succede da sola. Con una bambina che semina, annaffia
-     e aspetta, la stessa lezione acquista un *perché* — e il terzo passo
-     smette di essere «poi diventa grande» e diventa «poi è cresciuto
-     perché l'ha annaffiato». */
+  /* ── SI PIANTA IL SEME — una bambina che semina e annaffia, il terzo
+     passo diventa «è cresciuto perché l'ha annaffiato» ── */
 
   'si-semina': {
     luogo: 'orto',
@@ -326,11 +259,8 @@ export const SCENE = {
     ],
   },
 
-  /* ══ IL GATTINO CRESCE ══
-     La ciotola resta della stessa taglia in tutte e tre: senza un metro
-     fermo accanto, tre gatti più grandi uno dell'altro sono tre gatti
-     disegnati a caso. È la stessa ragione per cui nelle vignette con due
-     persone la statura racconta chi è il bambino. */
+  /* ── IL GATTINO CRESCE — la ciotola resta della stessa taglia in tutte
+     e tre, il metro fermo che fa leggere la crescita del gatto ── */
 
   'il-gattino': {
     luogo: 'salotto',
@@ -362,7 +292,7 @@ export const SCENE = {
     ],
   },
 
-  /* ══ LA TORTA ══ */
+  /* ── LA TORTA ── */
 
   'si-impasta': {
     luogo: 'cucina',
@@ -393,7 +323,7 @@ export const SCENE = {
     ],
   },
 
-  /* ══ LA SPREMUTA ══ */
+  /* ── LA SPREMUTA ── */
 
   'le-arance': {
     luogo: 'cucina',
@@ -426,10 +356,8 @@ export const SCENE = {
     ],
   },
 
-  /* ══ IL GELATO CADUTO ══
-     Tre passi, e il terzo è quello che conta: non «arriva un gelato
-     nuovo» — che sarebbe una storia sul gelato — ma **qualcuno che
-     divide il suo**, che è una storia sui bambini. */
+  /* ── IL GELATO CADUTO — il terzo passo non è «arriva un gelato nuovo»
+     ma qualcuno che divide il suo ── */
 
   'col-gelato': {
     luogo: 'cortile',
@@ -462,12 +390,8 @@ export const SCENE = {
     ],
   },
 
-  /* ══ IL LITIGIO CHE FINISCE BENE ══
-     La storia che nel quaderno era in cima alla lista delle cose che con
-     le emoji non si raccontano. Il primo e l'ultimo passo hanno in scena
-     le stesse tre cose — due bambini e un orsetto — e a distinguerli sono
-     **solo le facce**: è la prova migliore che questo cassetto serva a
-     qualcosa. */
+  /* ── IL LITIGIO CHE FINISCE BENE — primo e ultimo passo hanno le stesse
+     tre cose in scena, a distinguerli sono solo le facce ── */
 
   'si-litiga': {
     luogo: 'cameretta',
@@ -510,11 +434,7 @@ export const SCENE = {
     ],
   },
 
-  /* ══ SENZA GIACCA ══
-     Il freddo non si disegna: si disegna **chi ha freddo**. La tinta
-     azzurra addosso è la stessa leva con cui il castello distingue due
-     squadre della stessa guardia (`tinta` in `corpo.js`), usata qui per
-     dire una cosa che nessun oggetto in scena saprebbe dire. */
+  /* ── SENZA GIACCA — il freddo si disegna disegnando chi ha freddo ── */
 
   'esce-senza-giacca': {
     luogo: 'cortile',
@@ -548,15 +468,10 @@ export const SCENE = {
 
 export const CHIAVI_SCENE = Object.keys(SCENE)
 
-/* Un passo è disegnato se è il nome di una scena; se non lo è, è
-   un'emoji. Non c'è un prefisso e non serve: nessuna emoji si scrive
-   come `ginocchio-sbucciato`. */
+// Un passo è disegnato se è il nome di una scena; se non lo è, è
+// un'emoji — nessuna emoji si scrive come `ginocchio-sbucciato`.
 export const èScena = passo => Object.prototype.hasOwnProperty.call(SCENE, passo)
 
-/* I controlli che si possono fare senza aprire un canvas. Quello che una
-   scena disegnata *sembra* non lo dice nessun test — lo dice
-   `strumenti/banco/storie.html`, che le mette tutte in fila per un occhio
-   umano. Qui si controlla solo che non manchi niente. */
 export function guastiDelleScene(scene = SCENE, luoghi = null, pittori = null) {
   const guasti = []
   for (const [chiave, s] of Object.entries(scene)) {
