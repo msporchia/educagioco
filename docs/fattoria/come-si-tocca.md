@@ -32,6 +32,47 @@ Le regole del dito che valgono per tutti i giochi stanno in
   (`zittisciIlFantasma` in `Gioco.vue`). La prova è un tocco vero via CDP
   (`integrazione/fattoria`).
 
+## Il bersaglio, l'aggancio, e i numeri che li tarano
+
+- **Il bersaglio si decide alla pressione, non al rilascio**: fra i due
+  momenti le bestie camminano, e chiedendo di nuovo al rilascio si
+  toccherebbe quello che è rimasto sotto il dito, o niente. `bersaglio()`
+  cerca in due giri: prima i bersagli esatti (la bestia dov'è disegnata,
+  la cosa sulla cella dove appoggia), poi allargati — una cosa anche dove
+  si *vede* (`riquadroPosa`, perché un silo alto quasi quattro celle si
+  vedeva grande e si toccava solo nella striscia in basso) e una bestia
+  con qualche pixel di margine (`GRAZIA = 6`). La grazia non ruba mai un
+  bersaglio esatto: il primo giro vince sempre sul secondo.
+- **Un bersaglio col foglio non scende mai sotto `MINIMO_TOCCO` (44 px)**:
+  la misura che Android e iOS chiedono da anni per un tasto, perché alla
+  scala più stretta un campo misura 32 px, meno di un polpastrello.
+- **Tenere premuto aggancia** (420 ms, `ATTESA`): la cosa non si solleva
+  subito, resta dov'è finché il dito non si muove (`SCARTO_DITO`,
+  [`../core/il-dito.md`](../core/il-dito.md)) — a quel punto comincia il
+  trascinamento. Un tocco che si stacca senza essersi mai mosso è un
+  tocco, per quanto a lungo sia rimasto giù: apre le opzioni, non trascina
+  niente. L'anello che segna l'attesa aspetta 180 ms prima di comparire
+  (`RITARDO_ANELLO`), così un tocco normale — un centinaio di
+  millisecondi — non lo fa mai vedere.
+- **Il click fantasma si ingoia in due modi**: `preventDefault()` sul
+  `touchend` nato sul campo toglie il click alla radice
+  ([`../core/il-dito.md`](../core/il-dito.md)); dove non si può
+  (`cancelable` falso) resta una rete stretta, `zittisciIlFantasma` —
+  ingoia solo un click arrivato entro 100 ms e 32 px da dove il dito si è
+  alzato (`FANTASMA_MS`, `FANTASMA_PX`), perché un ascolto largo si
+  mangiava anche il primo click vero premuto in fretta dopo un
+  trascinamento.
+- **Il pannello confronta l'identità con `toRaw`**: è un `ref`, quindi
+  quello che ci mettiamo dentro esce avvolto nel proxy di Vue, mai uguale
+  per identità alla cosa vera in `mondo.cose`. Senza `toRaw`, «c'è
+  ancora?» rispondeva sempre di no e il foglio di una macchina si
+  richiudeva da solo cinque secondi dopo averlo aperto.
+- **Lo scorrimento al bordo non ha un `requestAnimationFrame` suo**: usa
+  il fotogramma che il gioco fa girare comunque per le bestie, perché un
+  secondo orologio è uno in più da ricordarsi di spegnere. La frazione di
+  pixel che avanza (meno di uno a fotogramma, a spinta docile) si tiene
+  da parte invece di buttarla, se no metà della fascia non muove niente.
+
 ## Girare e rovesciare
 
 Tenendo premuto una cosa posata escono **↻ giralo**, **⇄ rovescialo** e
