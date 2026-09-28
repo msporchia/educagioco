@@ -1,22 +1,9 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA MAPPA DELLA CAMPAGNA
-
-   Tre scalini, nove tappe. Riceve tutto già deciso — cosa è aperto,
-   quante stelle, di che colore, quanto dura — e non sa niente di
-   profili, monete e motore: qui dentro si sceglie dove andare e basta.
-
-   Su ogni tappa c'è scritto **quanto dura**: è la prima cosa che un
-   bambino vuole sapere prima di dire di sì, e «40 secondi» è una
-   promessa che si può mantenere.
-
-   ── LA PARTITA LASCIATA A METÀ STA IN CIMA ────────────────────────
-   È la prima cosa che si vede, e dice a che punto era: quanto manca,
-   che livello, quanti cuori restano. Sotto ci sono le tappe di sempre,
-   e toccarne una **avverte** invece di buttare via la partita in
-   silenzio — perché il dito di un bambino sulla mappa ci finisce
-   comunque, e quello che si perde sono le carte già pagate rispondendo.
-   ═══════════════════════════════════════════════════════════════════ */
+// La mappa della campagna: tre scalini, nove tappe, riceve tutto già
+// deciso. Su ogni tappa c'è scritto quanto dura. La partita lasciata a
+// metà sta in cima (a che punto era): toccare un'altra tappa avverte
+// invece di buttarla via in silenzio, perché il dito di un bambino
+// sulla mappa ci finisce comunque.
 import { ref } from 'vue'
 
 const props = defineProps({
@@ -28,9 +15,7 @@ const emit = defineEmits(['gioca', 'libero', 'riprendi', 'scorda'])
 
 const durata = s => s < 60 ? `${s}s` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
-/* Quale partita si sta per cominciare avendone una in sospeso: la tappa
-   (con nome e indice) o la Sopravvivenza. */
-const chiede = ref(null)
+const chiede = ref(null)   // quale partita si sta per cominciare avendone una in sospeso
 
 function tocca(quale) {
   if (!props.ripresa) return vai(quale)
@@ -46,7 +31,6 @@ function vai(quale) {
 
 <template>
   <div class="sv-mappa">
-    <!-- ═══ dove eri rimasto ═══ -->
     <div v-if="ripresa" class="sv-ripresa" data-ripresa="1">
       <p class="sv-dove">
         <span class="sv-faccia em">{{ ripresa.icona }}</span>
@@ -107,8 +91,7 @@ function vai(quale) {
       <span v-else>finisci le {{ libero.quante }} tappe ({{ libero.fatte }} fatte)</span>
     </button>
 
-    <!-- ═══ «ne cominci un'altra?» ═══
-         Detto prima, mai dopo: quello che si perde non torna. -->
+    <!-- «ne cominci un'altra?»: detto prima, mai dopo -->
     <div v-if="chiede" class="sv-velo" @click.self="chiede = null">
       <div class="sv-modale">
         <h2><span class="em">⚠️</span> Hai una partita a metà</h2>

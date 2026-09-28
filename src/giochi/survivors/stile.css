@@ -1,18 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   SURVIVORS — L'ASPETTO
-
-   Un file solo, e ogni classe comincia per `sv-`. Non è pignoleria: lo
-   stile globale dell'applicazione ha già `.riga`, `.carta`, `.tondo`, e
-   due fogli che si contendono lo stesso nome si rompono a distanza di
-   mesi, quando nessuno si ricorda più perché.
-
-   Il colore dello scenario arriva da `--sv-accento`, che il gioco scrive
-   sul contenitore: la tappa della neve è azzurra e quella del deserto è
-   ambra senza che qui ci sia scritto da nessuna parte cosa sia la neve.
-
-   Il campo di battaglia **non scorre e non si stringe**: prende tutto
-   quello che resta sotto la barra, e il canvas dentro ci sta esatto.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Ogni classe comincia per `sv-` (evita scontri con `.riga`, `.carta`,
+   `.tondo` dello stile globale). Il colore dello scenario arriva da
+   `--sv-accento`, scritto dal gioco. Il campo di battaglia non scorre e
+   non si stringe: prende tutto lo spazio sotto la barra. */
 
 .sv {
   --sv-accento: #3fa34d;
@@ -36,7 +25,7 @@
 .sv .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji",
                       "Segoe UI Emoji", "Twemoji Mozilla", sans-serif; line-height: 1 }
 
-/* ═══════════ la mappa della campagna ═══════════ */
+/* la mappa della campagna */
 .sv-mappa { flex: 1; min-height: 0; overflow-y: auto; display: flex;
             flex-direction: column; gap: 14px; padding: 8px 10px 20px }
 .sv-scalino > h3 { display: flex; align-items: center; gap: 7px;
@@ -63,9 +52,7 @@
 .sv-tappa.sv-chiusa { opacity: .5; border-left-color: #c8cfc0; box-shadow: none }
 .sv-tappa.sv-adesso { box-shadow: 0 3px 0 var(--sv-accento) }
 
-/* ═══════════ la partita lasciata a metà ═══════════
-   In cima alla mappa, e si vede che è un'altra cosa dalle tappe: quelle
-   sono posti dove andare, questa è una cosa già cominciata. */
+/* la partita lasciata a metà, in cima alla mappa */
 .sv-ripresa { background: linear-gradient(180deg, #fff8e2, var(--sv-carta));
               border: 2px solid #ffd257; border-radius: 16px; padding: 12px;
               display: flex; flex-direction: column; gap: 8px }
@@ -88,7 +75,7 @@
 .sv-libero.sv-chiusa { background: #e2e7dd; color: var(--sv-tenue) }
 .sv-libero b { color: #ffd257 }
 
-/* ═══════════ il campo di battaglia ═══════════ */
+/* il campo di battaglia */
 .sv-campo { flex: 1; min-height: 0; position: relative; overflow: hidden;
             touch-action: none; background: #6dbd5c; border-radius: 0 }
 .sv-tela { display: block; width: 100%; height: 100%; }
@@ -113,10 +100,6 @@
              color: #fff; font-size: 16px; font-weight: 800; text-shadow: 0 2px 6px #000b;
              pointer-events: none; animation: sv-respira 1.8s infinite }
 @keyframes sv-respira { 0%, 100% { opacity: .95 } 50% { opacity: .45 } }
-/* qui c'era `.sv-attesa`, il «tocca per ripartire» di una partita
-   ripresa: adesso quel cartello è il velo della pausa, che è di casa
-   (`giochi/VeloPausa.vue`) e porta il suo stile con sé */
-
 .sv-presi { position: absolute; left: 8px; right: 8px; bottom: 6px; text-align: center;
             font-size: 17px; pointer-events: none; line-height: 1.4;
             text-shadow: 0 2px 4px #000a; color: #fff }
@@ -127,7 +110,7 @@
                border-radius: 16px; padding: 9px 12px; color: #fff; font-size: 14px;
                font-weight: 700; text-align: center; animation: sv-entra .25s }
 
-/* ═══════════ i veli: carte e cartello di fine ═══════════ */
+/* i veli: carte e cartello di fine */
 .sv-velo { position: absolute; inset: 0; z-index: 8; padding: 16px 14px;
            background: rgba(9, 14, 32, .88); backdrop-filter: blur(2px);
            display: flex; flex-direction: column; align-items: center;
@@ -148,10 +131,7 @@
             text-align: left; transition: transform .1s, box-shadow .1s }
 .sv-carta:active { transform: translateY(4px);
                    box-shadow: 0 2px 0 #00000055, inset 0 0 0 4px #ffffff80 }
-/* Il colore della carta è quello del suo **prezzo**, non del suo posto
-   nella fila: una carta debole già cresciuta costa come una media e
-   dev'essere gialla, o il colore — che è la prima cosa che si guarda —
-   racconterebbe il contrario dei pallini. */
+/* il colore della carta è quello del suo prezzo, non del suo posto nella fila */
 .sv-carta.sv-tdebole { background: linear-gradient(160deg, #e6ffe8, #b7ecbd) }
 .sv-carta.sv-tmedia  { background: linear-gradient(160deg, #fff3c4, #ffd66b) }
 .sv-carta.sv-tforte  { background: linear-gradient(160deg, #ffe0d8, #ffb1a0) }
@@ -161,23 +141,14 @@
                         color: #17204a; line-height: 1.15 }
 .sv-carta .sv-testi i { font-style: normal; font-size: 12px; font-weight: 900;
                         letter-spacing: .5px }
-/* cosa dà la carta, in una riga: qui non si corre, e scegliere fra tre
-   nomi soli vorrebbe dire tirare a indovinare */
 .sv-carta .sv-chiaro { display: block; font-size: 12.5px; line-height: 1.2;
                        color: #3a4468; margin: 2px 0 3px }
 .sv-carta .sv-nuova { color: #d1481f }
 .sv-carta .sv-salita { color: #2b6cb0 }
-/* «ancora un po' di più»: una carta ripresa oltre il suo ultimo livello,
-   che capita solo nella Sopravvivenza. Grigia e non blu, perché non è una
-   salita — è quello che resta quando la scaletta è finita. Il nome non è
-   `sv-oltre`: quello è già l'orologio del tempo **oltre il traguardo**,
-   che è un'altra cosa che si chiamerebbe uguale */
+/* grigia e non blu: non è una salita, è quello che resta quando la scaletta è finita */
 .sv-carta .sv-ancora { color: #6b7280 }
-/* il prezzo: i pallini e una parola. Un bambino che non legge ancora
-   bene conta i pallini, e sono la stessa cosa. Sono cinque e non tre
-   perché adesso il prezzo non è quello della fascia ma quello della
-   carta a quel livello, e fra «media nuova» e «media all'ultimo
-   livello» ci deve stare qualcosa in mezzo che si veda. */
+/* cinque pallini e non tre: il prezzo non è quello della fascia ma
+   quello della carta a quel livello, serve spazio in mezzo */
 .sv-prezzo { flex: none; display: flex; flex-direction: column; align-items: center;
              gap: 4px; color: var(--sv-prezzo, #444) }
 .sv-pallini { display: flex; gap: 3px }
@@ -208,8 +179,7 @@
 .sv-grosso:active { transform: translateY(4px); box-shadow: none }
 .sv-grosso.sv-chiaro { background: #fff; color: var(--sv-inchiostro);
                        box-shadow: 0 4px 0 var(--sv-bordo) }
-/* «resto in campo»: rosso come una cosa che si sceglie apposta, non come
-   il tasto che si preme per inerzia */
+/* «resto in campo»: rosso, una cosa che si sceglie apposta */
 .sv-grosso.sv-resta { background: linear-gradient(180deg, #ff7a45, #d1481f);
                       box-shadow: 0 4px 0 #8f3013 }
 .sv-extra { color: #d1481f !important; font-weight: 800 }
