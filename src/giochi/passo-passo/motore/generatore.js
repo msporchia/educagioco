@@ -1,41 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL SENTIERO SENZA FINE — livelli fatti al momento
-
-   Dopo la campagna i posti scritti a mano finiscono; il sentiero no. Qui
-   un posto si **fa al momento e poi si fa esaminare dal motore**: si
-   tiene solo se si vince, se la strada è lunga almeno quanto il
-   pavimento, se la carota vuole una deviazione e se le regole che mette
-   in scena servono tutte davvero. Un posto che si vince andando dritti
-   non è un sentiero, è un corridoio.
-
-   ── IL FINALE ─────────────────────────────────────────────────────
-   Il sentiero sta in fondo alla campagna ed è il finale: chi ci gioca
-   ha già dimostrato di sapersela cavare da solo. Quindi la difficoltà
-   è **sempre in cima**, dal primo sentiero all'ultimo, e la varietà la
-   fa il caso **togliendo**: a ogni posto si tira la famiglia — il
-   coniglio sul prato, il cane con le pecore, un posto con lo zaino col
-   ripeti, col fino a o col se — e il posto nasce con tutto quello che
-   quella famiglia sa mettere in scena, meno una o due cose (le buche
-   no, il ghiaccio sì…). Solo fra le cose sbloccate: i gradini della
-   campagna finiti (`INGREDIENTI`). Il caso si passa da fuori (`rnd`):
-   lo stesso seme fa lo stesso sentiero, e i test raccontano sempre la
-   stessa storia.
-
-   ── DUE MODI DI FARE UN POSTO ─────────────────────────────────────
-   Il prato e il cane si costruiscono a caso e si tengono solo se il
-   risolutore dice che si vincono con la carota (l'osso), con la strada
-   più corta — anche senza carota — sopra il pavimento (`PAVIMENTO`), e
-   con tutte le regole che servono. Con più pecore i posti costano di
-   più da risolvere, quindi lì il risolutore ha un tetto (`LIMITE_CANE`).
-   I posti con lo zaino vanno al contrario: prima il programma, poi il
-   posto scavato attorno alla sua strada (`motore/sagome.js`), perché il
-   programma più corto coi cicli il risolutore non lo sa trovare.
-
-   ── SE IL CASO NON AIUTA ──────────────────────────────────────────
-   Si prova un certo numero di volte, poi si abbassa di poco il pavimento
-   e si riprova. In fondo c'è sempre un posto di riserva che si vince: un
-   bambino che aspetta un sentiero che non arriva è un gioco rotto.
-   ═══════════════════════════════════════════════════════════════════ */
+/* IL SENTIERO SENZA FINE — livelli fatti al momento, esaminati dal
+   motore: si tengono solo se si vincono, sopra il pavimento, con la
+   carota che chiede una deviazione e con tutte le regole che servono.
+   Vedi docs/passo-passo/sentiero.md per le regole, la ricetta e i
+   controlli. */
 import { Livello, celleIncastro } from './livello.js'
 import { misura, serveLaRegola } from './risolutore.js'
 import { generaZaino, carteInMano } from './sagome.js'
@@ -58,13 +25,8 @@ export function caso(seme = 1) {
   }
 }
 
-/* ═══════════ gli ingredienti ═══════════
-   Ogni gradino finito della campagna mette nel sentiero una cosa: una
-   regola del mondo, il cane, una carta. Si conta **finito** e non
-   visto: al primo livello del ghiaccio il ghiaccio si sta imparando, e
-   il sentiero è il posto dove si usa quello che si sa. Il gradino
-   «tutto il mondo» non porta niente di nuovo: le sagome mescolano già
-   le regole con le scatole. */
+/* ogni gradino finito (non solo visto) della campagna mette nel
+   sentiero una cosa: una regola del mondo, il cane, una carta */
 export const INGREDIENTI = {
   salto: 'salto', ghiaccio: 'ghiaccio', massi: 'massi', buche: 'buche',
   pecore: 'cane', ripeti: 'ripeti', fino: 'fino', se: 'se',
@@ -76,12 +38,7 @@ const REGOLE = { salto: 'salto', ghiaccio: 'ghiaccio', massi: 'spinta', buche: '
    e quattro le regole del prato */
 export const DI_BASE = ['salto', 'ghiaccio', 'massi', 'buche']
 
-/* ═══════════ la famiglia ═══════════
-   Di che specie è il prossimo posto: il coniglio sul prato, il cane
-   con le pecore, o un posto con lo zaino (ripeti, fino a, se). Ognuna
-   delle cose sbloccate può uscire, e quella appena giocata pesa meno:
-   tre posti di fila dello stesso tipo sono il modo in cui un sentiero
-   senza fine diventa noioso. */
+/* di che specie è il prossimo posto; quella appena giocata pesa meno */
 export const FAMIGLIE = ['prato', 'cane', 'ripeti', 'fino', 'se']
 export function famigliaDi(rnd, sbloccati, prima = null) {
   const pesi = {
@@ -97,18 +54,7 @@ export function famigliaDi(rnd, sbloccati, prima = null) {
   return 'prato'
 }
 
-/* ═══════════ la ricetta: tutto, meno una o due cose ═══════════
-   Il sentiero è il finale: chi ci arriva ha già dimostrato di sapersela
-   cavare, e la difficoltà sta **sempre in cima**, dal primo sentiero
-   all'ultimo — niente scala che sale con le partite. Quello che cambia
-   da un posto all'altro lo fa il caso **togliendo**: il posto nasce con
-   tutto quello che la sua famiglia sa mettere in scena, e se ne tolgono
-   una o due cose. Un prato ha le quattro regole meno una o due (quindi
-   due o tre insieme, e tutte devono servire); un pascolo ha tre pecore
-   e il ghiaccio, meno uno dei due; lo zaino sceglie fra le sagome a due
-   idee (`motore/sagome.js`). Sotto c'è un pavimento, la strada più
-   corta **senza** carota: chi lascia perdere la carota non deve trovare
-   un posto da tre frecce. */
+/* il pavimento è la strada più corta senza carota (vedi docs/passo-passo/sentiero.md) */
 export const PAVIMENTO = { prato: 10, cane: 12 }
 
 export function ricettaDelPrato(sbloccati, rnd) {
@@ -130,11 +76,7 @@ export function ricettaDelPrato(sbloccati, rnd) {
   }
 }
 
-/* ── la ricetta del cane ──
-   Tre pecore sparse da riunire e il ghiaccio, meno una delle due cose:
-   o due pecore sul ghiaccio, o tre sul prato, e ogni tanto tutte e due.
-   Il recinto sta sul bordo, con la siepe ai lati: il cancello guarda
-   dentro al prato */
+/* tre pecore sparse e il ghiaccio, meno una delle due cose */
 export function ricettaDelCane(sbloccati, rnd) {
   const ghiaccio = sbloccati.includes('ghiaccio')
   const via = !ghiaccio ? 'ghiaccio' : scegli3(rnd, ['pecora', 'ghiaccio', 'niente'])
@@ -157,31 +99,16 @@ export const LIMITE_CANE = 20000
 const NOMI_CANE = ['Il pascolo', 'Il trifoglio', 'L\'ovile', 'Il prato alto', 'La radura',
                    'Il campo di papaveri', 'La collinetta', 'Il pascolo lungo']
 
-/* quanto vale un sentiero vinto: mezzo minuto un posto del prato o del
-   cane, un minuto uno con lo zaino, che chiede di trovare lo schema
-   prima di scriverlo (una moneta, dieci secondi: `docs/apprendimento/calibrazione.md`) */
+/* quanto vale un sentiero vinto (vedi docs/passo-passo/stelle-e-aiuti.md) */
 export const premioDi = t => (t && t.zaino ? 6 : 3)
 
 const NOMI = ['Il sentiero', 'La radura', 'Il guado', 'Il campo', 'La collina', 'Il boschetto',
               'La palude', 'Il lago', 'La siepe', 'Il vallone', 'La conca', 'Il pianoro']
 
-/* ── un prato del finale: il labirinto di siepi ──
-   Un prato aperto tirato a caso ha quasi sempre la strada dritta: su
-   quattrocento, nemmeno uno arrivava a dieci frecce. Il finale vuole
-   struttura, quindi il prato è **un labirinto di siepi con qualche
-   slargo** (un labirinto a caso, con dei varchi in più perché ci siano
-   delle scelte, e qualche pilastro tolto), la tana lontana dalla
-   partenza, e le regole messe **dove la strada passa**:
-     · il salto: un fosso (o un tronco) di traverso a un corridoio;
-     · i massi: un masso nel corridoio con la pozza dietro — spinto, fa
-       il ponte;
-     · il ghiaccio: una macchia che copre un pezzo di labirinto, e sul
-       ghiaccio si scivola oltre gli incroci;
-     · le buche: la strada si chiude a metà, e dall'altra parte si passa
-       solo per la galleria.
-   La carota sta in un vicolo. Se tutto questo regge lo dice il
-   risolutore, dopo: qui si costruisce e basta. Le siepi sono alte (un
-   salto non le scavalca); l'acqua di contorno solo dove non si salta. */
+/* un labirinto di siepi con qualche slargo, le regole messe dove la
+   strada passa e la carota in un vicolo; se regge lo dice il risolutore
+   dopo, qui si costruisce e basta (un prato aperto tirato a caso non
+   arrivava quasi mai a dieci frecce) */
 export function bozzaLabirinto(g, rnd) {
   const [CW, CH] = g.celle
   const W = 2 * CW - 1, H = 2 * CH - 1
@@ -314,11 +241,8 @@ export function bozzaLabirinto(g, rnd) {
   return m.map(r => r.join(''))
 }
 
-/* ── un posto del cane, a caso ──
-   Il recinto è una tacca nel bordo: una o due celle, con la siepe ai
-   due lati lungo il bordo, così si entra solo dal prato. Le pecore
-   stanno dove si possono ancora recuperare (mai su una cella di
-   incastro: partirebbe già persa) e non accanto al cane. */
+/* il recinto è una tacca nel bordo, con la siepe ai due lati; le pecore
+   non stanno mai su una cella d'incastro (partirebbe già persa) */
 function bozzaCane(g, rnd) {
   const [W, H] = g.lato
   const m = Array.from({ length: H }, () => Array(W).fill('.'))
@@ -403,9 +327,8 @@ export function generaSentiero(fatti, rnd, { sbloccati = DI_BASE, prima = null, 
   const g = ricettaDelPrato(sbloccati, rnd)
   const nome = NOMI[Math.floor(rnd() * NOMI.length)]
   const regole = g.regole.map(r => REGOLE[r])
-  /* due giri: prima col pavimento pieno, poi un poco più basso. Le regole
-     devono servire tutte in tutti e due: un posto «dei massi» che si
-     vince girando attorno al masso non ha i massi, ha un sasso in più */
+  /* due giri: prima col pavimento pieno, poi un poco più basso; le
+     regole devono servire in tutti e due */
   for (const corta of [g.corta, g.corta - 2]) {
     for (let i = 0; i < prove; i++) {
       const b = bozzaLabirinto(g, rnd)

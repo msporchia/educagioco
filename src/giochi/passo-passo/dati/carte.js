@@ -1,55 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE CARTE — il vocabolario del programma, dal gradino del ripeti in là
-
-   Fino alle buche il programma è una fila di frecce, e basta. Poi
-   arrivano le carte che **ne contengono altre**: 🔁 ripeti N volte, con
-   dentro le frecce da ripetere. La fila però resta una fila — un elenco
-   piatto di stringhe, com'era — e un ciclo ci sta dentro come una
-   coppia di segni, l'apertura col suo numero e la chiusura:
-
-     ['destra', 'ripeti-4', 'destra', 'giu', 'fine', 'destra']
-         →       🔁 4 (        →       ↓     )        →
-
-   Piatta perché è così che si scrive col dito: il cursore è un numero
-   fra una carta e l'altra, e mettere o togliere una carta è uno
-   `splice`, dentro o fuori da un ciclo che sia. L'albero serve a chi
-   esegue e a chi disegna la scatola, e si ricava da qui (`albero`).
-   Un livello di prima che non ha cicli ha una fila che è esattamente
-   quella di sempre: niente cambia per i primi ventiquattro.
-
-   ── LO ZAINO ──────────────────────────────────────────────────────
-   Un livello dei gradini nuovi dichiara quante carte tiene la fila
-   (`zaino`), e la strada, scritta freccia per freccia, non ci sta: il
-   ciclo non è una comodità, è l'unico modo di farcela stare. È la regola
-   che l'ha fatto nascere, detta da chi l'ha chiesta: «senza i cicli non
-   riescono fisicamente a starci le freccine». Lo zaino è un tetto per
-   arrivare, non la quarta stella: quella è la strada più corta
-   (`minimoDi` in `motore/risolutore.js`), e oggi ogni zaino è largo
-   quanto la sua soluzione.
-
-   Si contano le carte che si toccano — una freccia, un salto, un 🔁 — e
-   la chiusura no: è il bordo della scatola, non una carta.
-
-   ── LE TESTE DELLE SCATOLE ────────────────────────────────────────
-   Le scatole sono due, e la loro testa dice tutto:
-     ripeti-5        🔁 5 volte
-     ripeti-rosso    🔁 fino al rosso: si fa un giro, e alla fine di
-                     ogni giro il coniglio guarda cosa ha sotto i piedi —
-                     «vai su fino alla cella rossa». Almeno un giro sempre:
-                     in un angolo ci sei già sopra, e «fino al rosso» vuol
-                     dire il prossimo
-     ripeti-casa     🔁 fino a casa: finché non si arriva alla tana (che
-                     vince, come sempre, dovunque si arrivi)
-     se-rosso        ❓ se sei sul rosso: quello che ha dentro si fa una
-                     volta, o non si fa
-   Il colore è quello di una lastra (`LASTRE` in `dati/mondo.js`).
-
-   ── NIENTE VALORI DI COMODO ───────────────────────────────────────
-   Una scatola nuova nasce con la N (`ripeti-N`, `se-N`): il valore è da
-   scegliere, e ▶ non parte finché ne resta una (vedi il costruttore,
-   dove la regola è nata). Un numero già scritto si legge come l'unico
-   possibile.
-   ═══════════════════════════════════════════════════════════════════ */
+/* LE CARTE — il vocabolario del programma, dal gradino del ripeti in là.
+   Vedi docs/passo-passo/zaino.md per lo zaino e le teste delle scatole. */
 import { LASTRE } from './mondo.js'
 
 export const APRI = 'ripeti-'
@@ -62,8 +12,7 @@ export const CASA = 'casa'
 export const VOLTE = [2, 3, 4, 5, 6, 7, 8, 9]
 export const COLORI = Object.keys(LASTRE)
 
-/* le carte che un livello può mettere in mano oltre alle frecce. Le
-   prime tre sono tre teste della stessa scatola: un livello le accende
+/* le prime tre sono teste della stessa scatola: un livello le accende
    una per una, e la scelta della testa offre solo quelle accese */
 export const CARTE = {
   ripeti: { icona: '🔁', nome: 'ripeti tante volte' },
@@ -110,24 +59,16 @@ export function valoreBuono(t, v) {
   return VOLTE.includes(v) || COLORI.includes(v) || v === CASA
 }
 
-/* ── scrivere un programma nei dati ──
-   Le soluzioni dei livelli si scrivono così, e si leggono:
-     programma('destra', ripeti(4, 'destra', 'giu'), 'destra')
-     programma(ripeti('casa', se('rosso', 'giu'), se('blu', 'destra'))) */
+/* le soluzioni dei livelli si scrivono così:
+   programma('destra', ripeti(4, 'destra', 'giu'), 'destra') */
 export const ripeti = (v, ...corpo) => [apri(v), ...corpo.flat(Infinity), FINE]
 export const se = (colore, ...corpo) => [apriSe(colore), ...corpo.flat(Infinity), FINE]
 export const programma = (...pezzi) => pezzi.flat(Infinity)
 
-/* ── l'albero ──
-   Ogni nodo sa dove sta nella fila piatta (`i`), così chi disegna e chi
-   esegue possono dire «questa carta» con lo stesso numero:
-     { che: 'mossa', i, m }
-     { che: 'ripeti', i, fine, volte, fino, corpo: [nodi] }
-                         `volte` un numero, o `fino` un colore o `casa`
-     { che: 'se', i, fine, colore, corpo: [nodi] }
-   Una fila scritta male non fa esplodere niente: una chiusura senza
-   apertura si salta, un'apertura senza chiusura si chiude in fondo (lo
-   dice `guastiDellaFila`, ma chi gioca non deve accorgersene). */
+/* la fila piatta come nodi ({ che: 'mossa'|'ripeti'|'se', i, ... corpo }),
+   ognuno con l'indice `i` nella fila di partenza. Una fila scritta male
+   non esplode: una chiusura senza apertura si salta, un'apertura senza
+   chiusura si chiude in fondo. */
 export function albero(fila = []) {
   const radice = []
   const pila = [{ corpo: radice }]
@@ -169,10 +110,8 @@ export function aperturaDi(fila, j) {
   return -1
 }
 
-/* ── una fila scritta bene ──
-   Aperture e chiusure appaiate, numeri che esistono, e le mosse dette
-   da chi le conosce (`mosse`: l'elenco di chi le sa, qui non si importa
-   il mondo). Serve ai test e alle soluzioni scritte nei livelli. */
+/* aperture e chiusure appaiate, valori che esistono, mosse note a chi
+   le riceve (`mosse`, se dato) */
 export function guastiDellaFila(fila, { mosse = null, dove = 'fila' } = {}) {
   const guasti = []
   let d = 0

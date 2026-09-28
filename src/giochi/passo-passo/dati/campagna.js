@@ -1,86 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA CAMPAGNA — i posti dei piccoli, e poi lo zaino
-
-   Ogni gradino porta **una regola nuova**, e da lì in poi quella regola
-   c'è sempre: il mondo non cambia da un livello all'altro, si allarga.
-   Prima si cammina e basta, poi si salta, poi si scivola, poi si spinge,
-   poi si cade nelle buche — e l'ultimo livello le mette tutte insieme.
-
-   Dopo le buche arriva il **cane pastore**: l'ultima regola del mondo,
-   e l'unica in cui chi corre non va da nessuna parte — porta le pecore
-   nel recinto, e le pecore si spostano solo scappando da lui. È ancora
-   un gradino dei piccoli (niente carte, niente zaino), ma è quello dove
-   si pensa di più: una pecora spinta nel posto sbagliato si incastra, e
-   la strada si scrive pensando a dove andrà a finire lei, non a dove va
-   il cane.
-
-   Dopo il cane il mondo smette di crescere e cresce **la lingua**: i
-   gradini dei grandi portano una carta nuova invece che una regola del
-   mondo — 🔁 ripeti, per cominciare (`dati/carte.js`) — e con la carta
-   lo **zaino**, quante carte tiene la fila. La strada scritta freccia
-   per freccia nello zaino non ci sta: il ciclo è l'unico modo di farla
-   stare, e il test lo pretende (`serveLaCarta`). Il mondo resta quello
-   di prima, con tutte le sue regole: un ciclo di salti, un ciclo sul
-   ghiaccio.
-
-   ── UN LIVELLO È UN POSTO, NON UNA STANZA ─────────────────────────
-   La mappa è scritta a mano, una lettera per cella (la legenda sta in
-   `dati/mondo.js`), e ognuna ha la sua forma: un prato con due
-   cespugli, un bosco con un bivio, un fiume con i sassi, un lago
-   ghiacciato con un buco. Il fuori non è sempre un rettangolo pieno — è
-   l'acqua, il bosco, la siepe — e ogni posto ha un piccolo «aha»,
-   scritto nel `racconto`: è la cosa che il livello esiste per far
-   scoprire.
-
-   ── LA CAROTA ─────────────────────────────────────────────────────
-   Ogni livello ne ha una, e prenderla vale una stella. Nei primi sta
-   sulla strada; poi chiede una deviazione; poi una deviazione pensata —
-   sul ghiaccio, dietro a un buco, dall'altra parte della buca. Non è
-   mai obbligatoria: senza, la tana vale lo stesso.
-
-   ── I NUMERI ──────────────────────────────────────────────────────
-   `portata` è la scala di tutto il repo (0 = quattro anni, 12,5 punti
-   per anno, vedi `data/portata.js`): dal prato a quattro anni al tutto
-   insieme a sette e mezzo. L'ultima sta a 44 e non a 45 apposta: la mira
-   di un bambino di sei anni arriva a 44, e un punto in più chiudeva col
-   lucchetto l'ultima tappa (e il sentiero senza fine dietro) proprio a
-   chi ha l'età giusta per giocarla. Le pecore stanno a 44 anche loro,
-   per la stessa ragione: sono il gradino dopo di chi ha sei anni e ha
-   finito le buche, e lo zaino a quell'età resta chiuso. Nessuna tappa dichiara `scuola`: dietro non
-   c'è un pezzo di programma scolastico, e la testa della fila non si
-   taglia mai.
-
-   `premio` sono le monete **della prima vittoria**, una volta sola: il
-   livello è fisso, e rigiocarlo è ricordarlo, non esercitarsi (vedi
-   `docs/apprendimento/calibrazione.md`). Sale col gradino perché col gradino sale il tempo
-   che un livello chiede: un minuto il prato, cinque il labirinto di
-   ghiaccio.
-
-   `trappole`, nei livelli del cane, sono le mosse ingenue di quel posto
-   — passare sotto la pecora per prendere l'osso, spingerla troppo in
-   là — e il test pretende che non vincano e che prima di fermarsi
-   facciano un pezzo di strada: è lì che si vede dove si è sbagliato.
-
-   `salti: true` accende la seconda fila di frecce. Solo dove il livello
-   le usa: una fila di tasti che non servono a niente è una fila di
-   tasti da provare a caso.
-
-   ── I LIVELLI CON LO ZAINO ────────────────────────────────────────
-   Dichiarano tre cose in più: `carte` (quali tasti oltre alle frecce:
-   `['ripeti']`), `zaino` (quante carte tiene la fila) e `soluzioni`,
-   scritte con `programma()` e `ripeti()`. Qui la soluzione si scrive,
-   non si misura: il risolutore trova la strada più corta, non il
-   programma più corto, e gli aiuti partono da quella scritta
-   (`suggerisciNelloZaino`). Le `fragili` sono le mosse ingenue — la
-   scatola con le frecce nell'ordine sbagliato, la scalinata presa dal
-   lato comodo — e il test pretende che nessuna vinca con la carota: se
-   una vincesse, la carota non chiederebbe di pensare.
-
-   Quanto è lunga la strada più corta e se la regola del gradino serve
-   davvero **non si scrive qui**: lo misura il risolutore, e il test
-   (`test/unita/passo-passo`) lo pretende. Le misure di oggi, per chi
-   deve scrivere un livello nuovo, stanno in `docs/passo-passo/livelli.md`.
-   ═══════════════════════════════════════════════════════════════════ */
+/* LA CAMPAGNA — i posti dei piccoli, e poi lo zaino.
+   Vedi docs/passo-passo/regole.md (regole del mondo, cane pastore),
+   docs/passo-passo/zaino.md (carte, zaino) e docs/passo-passo/livelli.md
+   (i campi di una tappa, le misure di oggi). */
 import { guastiDellaMappa, MOSSE } from './mondo.js'
 import { CARTE, carteDi, guastiDellaFila, programma, ripeti, se } from './carte.js'
 
@@ -104,14 +25,11 @@ export const SCALINI = [
     dritta: 'Una scatola che non conta: ripete finché il coniglio non arriva sulla lastra del colore giusto.' },
   { chiave: 'se', nome: 'Il se', icona: '❓', carta: 'se',
     dritta: 'Il coniglio guarda cosa ha sotto i piedi, e decide: la scatola ❓ si fa solo sul colore giusto.' },
-  /* e l'ultimo rimette insieme tutto: il ghiaccio, i massi, i salti, le
-     lastre, con le scatole in mano */
   { chiave: 'mondo', nome: 'Tutto il mondo', icona: '🌍', carta: 'ripeti',
     dritta: 'Il ghiaccio, i massi, i salti e i segnali, con tutte le scatole in mano.' },
 ]
 
-/* I temi sono solo vestito: cambiano l'erba, le foglie per terra, la
-   neve sugli alberi. Le regole restano le stesse in ogni stagione. */
+/* i temi sono solo vestito: le regole restano le stesse in ogni stagione */
 export const TEMI = ['primavera', 'estate', 'inverno', 'autunno']
 
 export const CAMPAGNA = [
@@ -365,30 +283,7 @@ export const CAMPAGNA = [
       '1..t..@',
     ] },
 
-  /* ── gradino 6: il cane pastore ──
-     Il bobtail al posto del coniglio, le pecore al posto della tana. Le
-     pecore vedono il cane a due caselle, e si scansano prima che arrivi:
-     nei primi posti il cane parte a tre caselle dalla pecora, così dalla
-     prima freccia la spinge da lontano e non le va mai addosso. Un
-     gradino di regola del mondo come gli altri cinque, ma è quello dove
-     la strada si pensa di più: il cane non va da nessuna parte, è la
-     pecora che deve arrivare. Da una pecora a tre; la carota è un osso,
-     e prenderlo chiede un giro che non spaventi nessuno — chi ci passa
-     accanto male incastra la pecora, e la fila si ferma lì.
-
-     Le pecore non sono sassi: una che scappa spinge quella che ha
-     davanti, e si muovono a pezzetti di gregge — «Una spinge l'altra» lo
-     insegna, e da lì i posti sono prati con le pecore **sparse**, da
-     riunire prima di portarle dentro, non file già pronte.
-
-     Dopo i primi quattro, il cane rifà le regole che il bambino ha già:
-     il ghiaccio (due volte), la buca che sbuca alle spalle della pecora,
-     il fiume che il cane salta e la pecora no, il masso che fa il ponte
-     per lei. Un posto del cane che non usa niente di quello che c'era
-     prima è un posto staccato dal gioco, e il cane poi **torna** in ogni
-     gradino dello zaino, con la carta di quel gradino. Monete fra le
-     buche e lo zaino (12–14), portata 44: è il gradino dopo per chi ha
-     sei anni e ha finito le buche. */
+  /* ── gradino 6: il cane pastore (vedi docs/passo-passo/regole.md) ── */
   { chiave: 'primo-gregge', nome: 'Il primo gregge', icona: '🐕', scalino: 'pecore',
     portata: 44, premio: 12, tema: 'primavera',
     racconto: 'Il cane non tocca mai le pecore: gli basta fermarsi a due passi, e loro si scansano dall\'altra parte. Dietro alla pecora, verso il recinto, e lei ci entra da sola. L\'osso chiede un giro: chi ci arriva passandole sotto la manda contro il bosco, e lì si incastra.',
@@ -512,10 +407,7 @@ export const CAMPAGNA = [
     ],
     trappole: [['giu', 'sinistra', 'sinistra', 'sinistra', 'sinistra']] },
 
-  /* ── gradino 7: il ripeti ──
-     Le monete salgono a 14 e poi a 16: un livello con lo zaino chiede
-     di trovare lo schema prima di scriverlo, e ci si sta più di un
-     minuto. La portata va dai 7 anni e mezzo agli 8 e mezzo. */
+  /* ── gradino 7: il ripeti ── */
   { chiave: 'viale', nome: 'Il viale', icona: '🌳', scalino: 'ripeti',
     portata: 46, premio: 14, tema: 'autunno', carte: ['ripeti'], zaino: 3,
     racconto: 'Il viale è lungo cinque passi e nello zaino ci stanno tre carte: la scatola 🔁 ripete la freccia che ha dentro, tante volte quante dice il suo numero.',
@@ -526,8 +418,6 @@ export const CAMPAGNA = [
     ],
     soluzioni: [programma(ripeti(5, 'destra'), 'giu')],
     fragili: [programma(ripeti(6, 'destra'), 'giu'), programma(ripeti(4, 'destra'), 'giu')] },
-  /* il cane torna: la stessa scatola, e ogni pecora che il cane passa
-     scende nella sua stalla */
   { chiave: 'stalle', nome: 'Le stalle', icona: '🛖', scalino: 'ripeti',
     portata: 46, premio: 14, tema: 'primavera', carte: ['ripeti'], zaino: 2,
     racconto: 'Il cane passa lungo il corridoio, e ogni pecora che gli sta accanto, sopra o sotto, scende nella sua stalla. Nello zaino ci stanno due carte: una scatola, e la freccia da ripetere.',
@@ -630,21 +520,7 @@ export const CAMPAGNA = [
     soluzioni: [programma(ripeti(3, ripeti(6, 'destra'), ripeti(2, 'giu'),
                                     ripeti(6, 'sinistra'), ripeti(2, 'giu')))] },
 
-  /* ── gradino 7: fino a ──
-     La scatola che non conta. Serve dove la stessa scatola deve fare
-     strade lunghe diverse — i gradini storti, le file del campo, i lati
-     della spirale — perché lì un numero va bene una volta sola: è la
-     scatola dentro la scatola a renderla necessaria, e lo zaino la
-     pretende. Le lastre rosse dicono dove girare.
-
-     ── LE FALSE PISTE ──
-     Chi sbaglia non deve sbattere al primo passo contro un albero: deve
-     proseguire su una strada che sembrava buona, e finire in un fosso, in
-     uno stagno o fermo in un angolo. È lì che si capisce *quale* scatola
-     era sbagliata — e il test lo pretende dalle `fragili`: almeno due
-     passi prima di fermarsi. Per questo i gradini e i solchi continuano
-     oltre la lastra rossa, e sotto ci sono i fossi: chi conta invece di
-     guardare va avanti e ci cade. */
+  /* ── gradino 7: fino a (vedi «Le false piste» in docs/passo-passo/zaino.md) ── */
   { chiave: 'gradini-storti', nome: 'I gradini storti', icona: '🪜', scalino: 'fino',
     portata: 60, premio: 16, tema: 'autunno', carte: ['ripeti', 'fino'], zaino: 5,
     racconto: 'Tre gradini sopra i fossi, ognuno lungo diverso: contarli non serve, il coniglio va avanti finché non arriva sulla lastra rossa, e scende sul sasso. Chi scende prima, o dopo, finisce nel fosso.',
@@ -661,8 +537,6 @@ export const CAMPAGNA = [
     fragili: [programma(ripeti(3, ripeti(2, 'destra'), 'giu', 'giu')),
               programma(ripeti(3, ripeti(4, 'destra'), 'giu', 'giu')),
               programma(ripeti(3, ripeti('rosso', 'destra'), 'giu'))] },
-  /* il cane torna: due corridoi di stalle lunghi diversi, e nessun
-     numero va bene per tutti e due */
   { chiave: 'stalle-gradini', nome: 'Le stalle a gradini', icona: '🪜', scalino: 'fino',
     portata: 61, premio: 16, tema: 'estate', carte: ['ripeti', 'fino'], zaino: 5,
     racconto: 'Due corridoi di stalle, uno più lungo dell\'altro: il cane va avanti finché non arriva sulla lastra rossa, e scende al corridoio dopo. Con un numero, uno dei due corridoi va storto: nel primo si sbatte, nel secondo si scende troppo presto.',
@@ -727,11 +601,7 @@ export const CAMPAGNA = [
     fragili: [programma(ripeti(2, ripeti(6, 'destra'), ripeti(6, 'giu'),
                                   ripeti(6, 'sinistra'), ripeti(4, 'su')))] },
 
-  /* ── gradino 8: il se ──
-     Il coniglio decide guardando per terra. Serve dove la strada gira in
-     tre versi: «fino a» sa dire quando smettere, non da che parte andare
-     dopo. Il «fino a casa» c'è da qui: con il se, si ripete finché non si
-     è arrivati. */
+  /* ── gradino 8: il se ── */
   { chiave: 'colline', nome: 'Le colline', icona: '⛰️', scalino: 'se',
     portata: 67, premio: 18, tema: 'estate', carte: ['ripeti', 'fino', 'casa', 'se'], zaino: 6,
     racconto: 'Avanti sempre: se il prato diventa rosso si scende, se diventa giallo si sale. Una scatola sola, e le colline sono tutte diverse. Chi sbaglia verso trova una stradina che sembra buona, e porta allo stagno.',
@@ -765,8 +635,6 @@ export const CAMPAGNA = [
               programma('destra', 'destra', ripeti('casa', se('rosso', 'giu'), se('blu', 'giu'), se('giallo', 'su'))),
               programma('destra', 'destra', ripeti('casa', se('rosso', 'giu'), se('blu', 'destra'))),
               programma('destra', 'destra', ripeti('casa', ripeti('rosso', 'destra'), ripeti('blu', 'giu')))] },
-  /* il cane torna: le lastre dicono dove c'è una pecora da spingere in
-     fondo alla sua nicchia */
   { chiave: 'nicchie', nome: 'Le nicchie', icona: '🧱', scalino: 'se',
     portata: 68, premio: 18, tema: 'autunno', carte: ['ripeti', 'fino', 'casa', 'se'], zaino: 8,
     racconto: 'Nel corridoio le lastre dicono dove c\'è una pecora da spingere in fondo alla sua nicchia: il rosso sotto, il blu sopra. Passandole davanti lei fa un passo, ma la stalla è più in fondo: il cane ci entra, e torna. Un programma solo per tutto il corridoio; chi scambia i colori infila il muso nella siepe.',
@@ -783,12 +651,7 @@ export const CAMPAGNA = [
     fragili: [programma(ripeti('casa', 'destra', se('rosso', 'su', 'giu'), se('blu', 'giu', 'su'))),
               programma(ripeti('casa', 'destra', se('rosso', 'giu', 'su')))] },
 
-  /* ── gradino 9: tutto il mondo ──
-     Le regole del mondo e le scatole insieme: sul ghiaccio sono i sassi a
-     fermare una scatola che gira, nell'acqua sono i massi a fare il
-     ponte a ogni giro, nel fiume si ripete un salto finché non si arriva
-     al sasso rosso, e nel bosco ghiacciato si scivola da un segnale
-     all'altro leggendoli. */
+  /* ── gradino 9: tutto il mondo ── */
   { chiave: 'spirale-ghiaccio', nome: 'La spirale di ghiaccio', icona: '🌀', scalino: 'mondo',
     portata: 70, premio: 20, tema: 'inverno', carte: ['ripeti', 'fino'], zaino: 5,
     racconto: 'Sul ghiaccio non servono le lastre: a fermare il coniglio negli angoli ci pensano i sassi. Quattro frecce, e a ogni giro il cerchio si stringe.',
@@ -838,8 +701,6 @@ export const CAMPAGNA = [
                                     ripeti('rosso', 'salto-sinistra'), 'salto-giu'))],
     fragili: [programma(ripeti(2, ripeti(3, 'salto-destra'), 'salto-giu',
                                   ripeti(2, 'salto-sinistra'), 'salto-giu'))] },
-  /* il cane torna: tre lastre di ghiaccio, e a ogni giro due spinte —
-     la seconda gliela dà il cane scivolandole dietro */
   { chiave: 'lago-stalle', nome: 'Il lago delle stalle', icona: '🧊', scalino: 'mondo',
     portata: 73, premio: 20, tema: 'inverno', carte: ['ripeti', 'fino'], zaino: 7,
     racconto: 'Tre pecore, tre strisce di ghiaccio con un\'isola d\'erba in mezzo. La prima spinta la manda sull\'isola; la seconda gliela dà il cane scivolandole dietro, e lei arriva nella stalla. Poi il cane torna indietro e scende: tre volte la stessa cosa.',
@@ -881,28 +742,13 @@ export const QUANTE_TAPPE = CAMPAGNA.length
 /* le tappe dei piccoli: tutte quelle senza zaino, che vengono per prime */
 export const TAPPE_PICCOLE = CAMPAGNA.findIndex(t => t.zaino)
 export const TAPPE_ZAINO = QUANTE_TAPPE - TAPPE_PICCOLE
-/* le tappe dei primi cinque gradini, fino alle buche. Il sentiero senza
-   fine si apre alla fine di queste — non dopo le pecore, e non a campagna
-   finita: è il sentiero dei piccoli, e chiuderlo dietro a un gradino
-   nuovo vorrebbe dire toglierlo a chi l'aveva già. Per lo stesso motivo
-   ci si fermano i traguardi di prima: una soglia che si allunga con la
-   campagna fa tornare d'argento l'oro di chi le aveva finite tutte */
+/* la fine delle buche: qui si apre il sentiero senza fine e qui si
+   fermano i traguardi di prima (vedi docs/passo-passo/sentiero.md) */
 export const TAPPE_PRIME = CAMPAGNA.findIndex(t => t.scalino === 'pecore')
 
-/* ═══════════ quando la fila cambia ═══════════
-   Le stelle stanno sotto **l'indice** della tappa (è la forma di tutte
-   le campagne, `giochi/campagne.js`), e il 25 settembre 2026 fra le buche
-   e lo zaino sono arrivate le pecore: senza travaso le stelle del viale
-   sarebbero finite sul primo gregge. Ogni fila che è stata giocata resta
-   scritta qui, e il profilo dice quale conosce (`cfg.fila`).
-
-   Il travaso rimette le stelle al loro livello per chiave, e la tappa
-   raggiunta **resta la stessa tappa**: chi era allo zaino resta allo
-   zaino, e le pecore gli si aprono alle spalle, da giocare quando vuole.
-   È il contrario del costruttore, dove un livello nuovo in mezzo si fa
-   prima di andare avanti: lì un bambino che stava giocando il viale se
-   lo ritroverebbe chiuso dietro a sei livelli nuovi, e un livello che
-   ieri c'era e oggi no è la cosa che non deve succedere. */
+/* le stelle stanno sotto l'indice della tappa: inserire una tappa in
+   mezzo senza travaso le sposta sul livello sbagliato. Vedi «Quando la
+   fila cambia» in docs/passo-passo/livelli.md. */
 export const FILE = {
   1: ['prato', 'cespuglio', 'stagno', 'bosco', 'orto',
       'ruscello', 'tronco', 'fosso', 'recinto', 'fiume',
@@ -914,22 +760,14 @@ export const FILE = {
       'colline', 'segni',
       'spirale-ghiaccio', 'pozze', 'fiume-sassi', 'bosco-ghiacciato'],
 }
-/* la fila delle prime prove del cane (25 settembre 2026, due build mai
-   pubblicate): sei tappe del cane dopo le buche, e lo zaino com'era */
 FILE[2] = [...FILE[1].slice(0, 24),
   'primo-gregge', 'altra-parte', 'curva', 'pecora-ghiaccio', 'due-in-fila', 'gregge',
   ...FILE[1].slice(24)]
-/* lo stesso giorno il cane si è intrecciato col resto: il ghiaccio, la
-   buca, il fiume e il masso nel suo gradino, e una tappa sua in ogni
-   gradino dello zaino */
 FILE[3] = [...FILE[1].slice(0, 24),
   'primo-gregge', 'altra-parte', 'curva', 'due-in-fila', 'pecora-ghiaccio', 'galleria', 'guado',
   'lago-gelato', 'ponte-pecore', 'gregge',
   'viale', 'stalle', ...FILE[1].slice(25, 33), 'stalle-gradini', ...FILE[1].slice(33, 38),
   'nicchie', ...FILE[1].slice(38, 41), 'lago-stalle', FILE[1][41]]
-/* e ancora lo stesso giorno le pecore hanno smesso di essere sassi: una
-   spinge l'altra, «Due in fila» se n'è andata, e i prati hanno le pecore
-   sparse da riunire */
 FILE[4] = CAMPAGNA.map(t => t.chiave)
 export const FILA_ATTUALE = 4
 
@@ -939,7 +777,7 @@ export function riordina(av, vecchia, nuova = CAMPAGNA.map(t => t.chiave)) {
     const j = nuova.indexOf(vecchia[Number(i)])
     if (j >= 0 && s > 0) stelle[j] = s
   }
-  /* la prossima da giocare era questa: resta lei. Finita la fila vecchia,
+  /* la prossima da giocare resta la stessa tappa; finita la fila vecchia,
      si è arrivati dopo il suo ultimo livello */
   const fatte = Math.max(0, Math.min((av && av.tappa) || 0, vecchia.length))
   const qui = fatte < vecchia.length ? nuova.indexOf(vecchia[fatte])
@@ -951,15 +789,8 @@ export function riordina(av, vecchia, nuova = CAMPAGNA.map(t => t.chiave)) {
 export const tappeDelloScalino = chiave =>
   CAMPAGNA.map((t, i) => ({ ...t, indice: i })).filter(t => t.scalino === chiave)
 
-/* ── LA CAMPAGNA SCRITTA BENE ──
-   Solo quello che si vede senza giocare: le chiavi, i campi, le mappe
-   leggibili, gli scalini in fila, i premi e la portata che salgono. Se
-   un livello **si vince**, e se ha bisogno della sua regola, lo dice il
-   risolutore nel test — il dato non sa niente del motore. */
-/* Lo zaino e le carte di un livello, senza giocarlo: le carte esistono,
-   lo zaino è un numero sensato, e ogni soluzione scritta è una fila ben
-   fatta, con le mosse che il livello mette in mano, e ci sta. Se una
-   soluzione **vince**, e se il ciclo **serve**, lo dice il test. */
+/* lo zaino, le carte e le soluzioni scritte, senza giocarle: se una
+   soluzione vince e se il ciclo serve lo dice il test, non questa funzione */
 function guastiDelloZaino(t, dove) {
   const guasti = []
   if (!t.zaino && !t.carte && !t.soluzioni) return guasti
@@ -978,6 +809,8 @@ function guastiDelloZaino(t, dove) {
   return guasti
 }
 
+/* solo quello che si vede senza giocare: se un livello si vince, e se ha
+   bisogno della sua regola, lo dice il risolutore nel test */
 export function guastiDellaCampagna(campagna = CAMPAGNA) {
   const guasti = []
   const viste = new Set()
@@ -993,9 +826,7 @@ export function guastiDellaCampagna(campagna = CAMPAGNA) {
     if (t.scuola) guasti.push(`${dove}: dichiara un pezzo di scuola, e dietro questo gioco non ce n'è`)
     if (!(t.premio >= 1 && t.premio <= 20)) guasti.push(`${dove}: premio ${t.premio} fuori misura`)
     guasti.push(...guastiDellaMappa(t.mappa, dove))
-    /* i salti dichiarati da chi ha una staccionata o un tronco da
-       scavalcare: senza la seconda fila di frecce quel livello non si
-       gioca, e il risolutore lo direbbe solo come «non si vince» */
+    /* senza salti dichiarati un ostacolo basso non si supera mai */
     if (!t.salti && t.mappa.some(r => /[t-]/.test(r)))
       guasti.push(`${dove}: ha ostacoli bassi ma non accende i salti`)
     guasti.push(...guastiDelloZaino(t, dove))
@@ -1009,9 +840,7 @@ export function guastiDellaCampagna(campagna = CAMPAGNA) {
     guasti.push('gli scalini non sono in fila: una tappa di un gradino viene dopo una del gradino dopo')
   for (const s of SCALINI)
     if (!campagna.some(t => t.scalino === s.chiave)) guasti.push(`lo scalino «${s.chiave}» non ha nemmeno una tappa`)
-  /* lo zaino arriva una volta e resta: dopo il primo livello che ce
-     l'ha, ce l'hanno tutti, e gli scalini delle carte vengono dopo
-     quelli delle regole */
+  /* lo zaino arriva una volta e resta: dopo il primo livello che ce l'ha, ce l'hanno tutti */
   const primo = campagna.findIndex(t => t.zaino)
   if (primo >= 0 && campagna.slice(primo).some(t => !t.zaino))
     guasti.push('dopo il primo livello con lo zaino, un livello senza')

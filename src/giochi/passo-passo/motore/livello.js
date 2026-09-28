@@ -1,30 +1,14 @@
-/* ═══════════════════════════════════════════════════════════════════
-   UN LIVELLO LETTO — la mappa ASCII diventata celle
-
-   La mappa sta nel dato come righe di lettere (`dati/campagna.js`, la
-   legenda in `dati/mondo.js`); qui si legge **una volta** e si tiene in
-   tabelle piatte, una voce per cella, indicizzate `y · colonne + x`.
-   Piatte perché il risolutore ci passa sopra decine di migliaia di volte
-   per livello, e un indice intero costa niente.
-
-   Quello che sta qui non cambia mai durante una partita: il terreno, gli
-   ostacoli, le coppie di buche, dove si parte, dov'è la tana, dove stava
-   la carota e dove stavano i massi e le pecore **all'inizio**. Quello
-   che cambia — il coniglio (o il cane), la carota presa, i massi
-   spinti, i ponti, le pecore che scappano — sta nel mondo
-   (`motore/mondo.js`), che parte da qui e non lo tocca.
-
-   Un livello con le pecore è **del cane**: `cane` lo dice a chi disegna
-   e a chi consiglia, e la meta non è la tana ma il recinto.
-   ═══════════════════════════════════════════════════════════════════ */
+/* UN LIVELLO LETTO — la mappa ASCII diventata celle, in tabelle piatte
+   (indicizzate `y · colonne + x`, perché il risolutore ci passa sopra
+   decine di migliaia di volte per livello). Quello che sta qui non
+   cambia mai durante una partita: quello che cambia (la posizione, i
+   massi spinti, le pecore) sta nel mondo (`motore/mondo.js`), che parte
+   da qui e non lo tocca. */
 import { LEGENDA, OSTACOLI, VISTA } from '../dati/mondo.js'
 
 export class Livello {
   /* `tappa` è una voce della campagna (o un livello generato): basta
-     che abbia `mappa` e, se il livello usa i salti, `salti: true`. Dal
-     gradino del ripeti anche lo `zaino` (quante carte tiene la fila),
-     le `carte` che mette in mano oltre alle frecce, e le `soluzioni`
-     scritte, da cui partono gli aiuti (`motore/risolutore.js`) */
+     `mappa`, più `salti`/`zaino`/`carte`/`soluzioni` se il livello li usa */
   static da(tappa) {
     return new Livello(tappa.mappa, { salti: !!tappa.salti, zaino: tappa.zaino || null,
                                       carte: tappa.carte || [], soluzioni: tappa.soluzioni || [] })
@@ -99,21 +83,10 @@ export class Livello {
   }
 }
 
-/* ── LE CELLE DOVE UNA PECORA SI INCASTRA ──
-   Una pecora si sposta solo scappando, cioè col cane dalla parte
-   opposta: una pecora in un angolo non ha più un «dietro» dove il cane
-   possa mettersi, e non si recupera più. Qui si trovano **una volta
-   per livello** tutte le celle da cui una pecora, anche col cane libero
-   di andare dove vuole e senza nessun'altra pecora in giro, non arriva
-   più al recinto: le altre celle si ricavano all'indietro dal recinto,
-   e quello che resta è incastro.
-
-   È il conto più largo possibile — nessun'altra pecora in mezzo, e se
-   il livello ha dei massi l'acqua conta come un ponte possibile — quindi
-   dice «incastrata» solo quando è vero in ogni caso. Il motore lo usa
-   per fermare la fila nel momento in cui succede (`motore/mondo.js`):
-   senza, il bambino aggiungerebbe frecce a una partita già persa, e
-   nessuna freccia gli direbbe perché. */
+/* le celle da cui una pecora non torna più al recinto (vedi
+   docs/passo-passo/regole.md): il conto più largo possibile — nessun'altra
+   pecora in mezzo, l'acqua conta come ponte se ci sono massi — così dice
+   «incastrata» solo quando è vero in ogni caso. */
 export function celleIncastro(liv) {
   const n = liv.n
   const ponti = liv.massi.length > 0

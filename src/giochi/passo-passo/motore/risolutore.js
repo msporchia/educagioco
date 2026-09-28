@@ -1,28 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL RISOLUTORE — la strada più corta, cercata in ampiezza
-
-   Lo stato di una partita è piccolo: dove sta il coniglio, se ha preso
-   la carota, dove stanno i massi, quali pozze sono diventate ponti. Su
-   una mappa da sette per nove sono al più qualche migliaio di stati, e
-   una ricerca in ampiezza li guarda tutti in un lampo. È **esatta**: la
-   prima strada che trova è la più corta che esista, non una buona.
-
-   Serve a tre cose, e nessuna delle tre è giocare al posto del bambino:
-
-     1. **i test** — ogni tappa della campagna si vince, con la carota e
-        senza, e la strada trovata giocata dal motore vince davvero;
-     2. **gli aiuti** — il 💡 non dice la soluzione: trova il pezzo più
-        lungo della fila del bambino da cui si può ancora arrivare, e
-        da lì la prossima freccia giusta (`suggerisci`);
-     3. **il controllo sulle regole** — un livello del ghiaccio che si
-        vince anche col ghiaccio trattato da prato non insegna il
-        ghiaccio (`serveLaRegola`). È il difetto dei livelli che passano
-        tutti i controlli e non valgono niente.
-
-   Le strade si contano in frecce, non in celle: una scivolata lunga sei
-   celle è una freccia sola, ed è esattamente quello che il ghiaccio ha
-   di bello.
-   ═══════════════════════════════════════════════════════════════════ */
+/* IL RISOLUTORE — la strada più corta, cercata in ampiezza (esatta: la
+   prima strada che trova è la più corta che esista). Serve ai test, agli
+   aiuti (`suggerisci`) e al controllo che una regola serva davvero
+   (`serveLaRegola`) — mai a giocare al posto del bambino. Le strade si
+   contano in frecce, non in celle: una scivolata lunga sei celle è una
+   freccia sola. */
 import { PASSI, SALTI } from '../dati/mondo.js'
 import { carteDi, daScegliere, eApri, eFine, eSe, valoreDi } from '../dati/carte.js'
 import { Mondo, esegui, TANA, eErrore } from './mondo.js'
@@ -36,13 +17,9 @@ const LIMITE = 400000
 export const mosseDi = (liv, senza = null) =>
   liv.salti && senza !== 'salto' ? [...PASSI, ...SALTI] : PASSI
 
-/* La strada più corta fino alla tana — con la carota, se `carota`.
-   `da` è un mondo già avviato (il punto a cui è arrivata la fila del
-   bambino): senza, si parte dalla partenza. Torna l'elenco delle mosse,
-   o `null` se da lì non si arriva. */
-/* `limite` è quanti stati guardare prima di arrendersi: il generatore
-   lo abbassa, perché un posto con due pecore che chiede centomila stati
-   per essere risolto è un posto che non gli serve */
+/* la strada più corta fino alla tana, con la carota se `carota`; `da`
+   è un mondo già avviato, senza si parte dalla partenza. Torna l'elenco
+   delle mosse, o `null` se da lì non si arriva. */
 export function risolvi(liv, { carota = true, senza = null, da = null, limite = LIMITE } = {}) {
   const inizio = da ? da.clona() : new Mondo(liv, { senza, eventi: false })
   if (da) inizio.senza = senza ?? da.senza
@@ -80,23 +57,9 @@ function strada(nodo) {
   return fuori.reverse()
 }
 
-/* ── LA STRADA PIÙ CORTA, IN CARTE ──
-   La quarta stella: arrivare con la carota usando meno carte possibile.
-   Le carte si contano fino a quella che ha portato a casa — quelle
-   rimaste in coda non sono mai partite, e chi segue il 💡 da una fila
-   lunga se le troverebbe dietro senza colpa.
-
-   Senza zaino il minimo si **misura**: la fila è fatta solo di frecce, e
-   la strada più corta del risolutore (in frecce, non in celle) è il
-   programma più corto che esista. Con lo zaino no: il programma più
-   corto coi cicli non lo trova una ricerca in ampiezza, quindi il
-   minimo è la più corta delle `soluzioni` scritte — e un bambino che
-   fa meglio la stella la prende lo stesso, perché si chiede «al più».
-   Oggi ogni zaino è largo quanto la sua soluzione: lì la stella la dà
-   la carota, e lo zaino è già il par.
-
-   Torna `{ carte, carota }` (`carota` è falso solo se la carota non si
-   può prendere), o `null` se il livello non si vince. */
+/* la quarta stella (vedi docs/passo-passo/stelle-e-aiuti.md): torna
+   `{ carte, carota }` (`carota` falso solo se non si può prendere), o
+   `null` se il livello non si vince. */
 export function minimoDi(liv) {
   if (liv.zaino) {
     const buone = liv.soluzioni.filter(s => {
@@ -115,25 +78,14 @@ export function minimoDi(liv) {
    giro è finito (`esito.dove`) */
 export const carteUsate = (fila, esito) => carteDi(fila.slice(0, esito.dove + 1))
 
-/* ── L'AIUTO ──
-   Il pezzo più lungo della fila del bambino che sta ancora **su una
-   strada più corta**, e da lì la prima mossa di quella strada. Punta
-   alla tana **con la carota** se si può prendere; se no, alla tana e
-   basta. Non «da cui si arriva ancora», come era prima della quarta
-   stella: chi seguiva il 💡 da una fila lunga arrivava a casa per la
-   strada lunga, e poi il cartello gli diceva che si poteva fare con
-   meno — il gioco che ti aiuta e poi ti rimprovera. Adesso seguire il
-   💡 porta sempre alla strada più corta; se la fila arriva già ma è
-   lunga, la mossa porta `accorcia` e il 🔎 lo dice.
-
-   Torna una di tre cose:
+/* il pezzo più lungo della fila del bambino che sta ancora su una
+   strada più corta, e da lì la prima mossa di quella strada (vedi
+   docs/passo-passo/stelle-e-aiuti.md). Torna una di tre cose:
      { che: 'mossa', cursore, mossa }  metti il cursore lì, e la freccia
-                                       giusta è questa (la tocca il bambino)
+                                       giusta è questa
      { che: 'via' }                    la fila vince già: manca solo ▶
-     null                              non c'è niente da dire (non capita
-                                       in un livello che si vince)
-   Con lo zaino l'aiuto è un altro, e sta più sotto
-   (`suggerisciNelloZaino`). */
+     null                              non c'è niente da dire
+   Con lo zaino l'aiuto è un altro (`suggerisciNelloZaino`). */
 export function suggerisci(liv, fila = []) {
   if (liv.zaino) return suggerisciNelloZaino(liv, fila)
   const intera = esegui(liv, fila, { eventi: false })
@@ -158,32 +110,12 @@ export function suggerisci(liv, fila = []) {
   return null
 }
 
-/* ── L'AIUTO, CON LO ZAINO ──
-   Qui la strada più corta non basta: scritta freccia per freccia nello
-   zaino non ci sta, ed è proprio il punto del livello. Quindi l'aiuto
-   guarda due cose, in quest'ordine:
-
-     1. **quello che manca ci sta ancora sciolto?** Se la fila del bambino
-        non sbaglia e la strada da dove arriva fino a casa (con la carota)
-        entra nei posti rimasti, si consiglia la prossima freccia in fondo.
-        È il bambino quasi arrivato, col suo programma che non somiglia a
-        nessuna soluzione scritta: non lo si rimanda indietro;
-     2. **la soluzione scritta più simile**: quella che ha in comune col
-        bambino il pezzo di testa più lungo, e da lì la prima differenza.
-        Una differenza può essere di quattro specie, e ognuna dice al
-        bambino una cosa diversa:
-          { che: 'mossa', cursore, mossa }    qui ci va questa freccia
-          { che: 'scatola', cursore, testa }  qui ci va una scatola, con
-                                              questa testa (`ripeti-5`,
-                                              `ripeti-rosso`, `se-blu`…)
-          { che: 'testa', apri, valore }      questa scatola vuole un altro
-                                              valore in testa
-          { che: 'togli', cursore }           la carta prima del cursore è
-                                              di troppo (⌫)
-
-   Una fila che vince già con la carota dice solo ▶ (`{ che: 'via' }`).
-   Un livello senza soluzioni scritte (non ce n'è, oggi) si accontenta
-   della tana. */
+/* con lo zaino l'aiuto parte dalla soluzione scritta più simile (vedi
+   docs/passo-passo/zaino.md) e torna una di:
+     { che: 'mossa', cursore, mossa }    qui ci va questa freccia
+     { che: 'scatola', cursore, testa }  qui ci va una scatola con questa testa
+     { che: 'testa', apri, valore }      questa scatola vuole un altro valore
+     { che: 'togli', cursore }           la carta prima del cursore è di troppo */
 function suggerisciNelloZaino(liv, fila) {
   const r = esegui(liv, fila, { eventi: false })
   if (r.esito === TANA && r.carota) return { che: 'via' }

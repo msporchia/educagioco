@@ -27,6 +27,11 @@ legenda delle celle sta in `dati/mondo.js`, le regole in `motore/mondo.js`.
   aggiungono. ■ ferma tutto e rimette il mondo com'era.
 - **Niente tempo, niente vite, niente suoni che puniscono** (lo sbaglio è un
   tonfo morbido), e nessuna informazione sta solo nel suono.
+- **La manina della prima volta** (`Gioco.vue`): chi apre il primo livello
+  non sa leggere e non sa cosa fare, quindi una manina indica la freccia e
+  poi ▶ — non blocca niente, non si chiude, e sparisce al primo ▶ per non
+  tornare più. La stessa manina indica 🔁 la prima volta che si arriva allo
+  zaino, finché nella fila non c'è una scatola.
 
 ## Le regole del mondo
 
@@ -50,14 +55,21 @@ Arrivano una per gradino, e da lì restano.
 La **tana** vince subito, in qualunque modo ci si arrivi: le frecce dopo non
 contano. Per il cane vale lo stesso con l'ultima pecora nel recinto.
 
-Tre casi decisi apposta:
+Casi decisi apposta:
 
 - saltando non si prende la carota **in mezzo** e non si entra nella tana in
   mezzo: si prende quello su cui si mette la zampa, e vederci passare sopra
   dice che il salto è lungo due;
 - non si atterra su un masso: lo si spinge solo camminando;
 - un masso non si spinge sulla tana, sulla carota o su una buca, che
-  sparirebbero sotto un sasso.
+  sparirebbero sotto un sasso;
+- il salto scavalca anche una buca (come l'acqua) e il recinto (è terra), ma
+  non una pecora: è alta come un sasso, e contro si sbatte;
+- le pecore scappano tutte insieme, ognuna dalla sua parte, in un ordine
+  fisso (su, giù, sinistra, destra) che conta solo quando una scivola dove
+  un'altra voleva andare;
+- la pecora passa sopra la carota (l'osso, per il cane) senza prenderla: il
+  cane la prende quando la pecora se n'è andata.
 
 ## Il cane pastore
 

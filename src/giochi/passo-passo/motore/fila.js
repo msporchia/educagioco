@@ -1,23 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE MODIFICHE ALLA FILA — quello che fa un tocco
-
-   La fila è un elenco piatto (`dati/carte.js`): un ciclo ci sta dentro
-   come un'apertura e una chiusura, e il cursore è un numero fra una
-   carta e l'altra. Queste funzioni dicono cosa diventano la fila e il
-   cursore dopo un tocco; sono pure, così si provano in Node e la vista
-   non ha niente di suo da sbagliare. Tornano sempre `{ fila, cursore }`
-   nuovi, e non toccano quelli che ricevono.
-
-   ── ⌫ TOGLIE LA COSA PRIMA DEL CURSORE ────────────────────────────
-   Qualunque cosa sia, e intera:
-     · una freccia: la freccia;
-     · la fine di una scatola (il cursore sta subito dopo un ciclo): la
-       scatola con dentro tutto. Vista da fuori una scatola è una cosa
-       sola, e così la conta anche lo zaino;
-     · l'inizio di una scatola (il cursore sta in cima al suo corpo): il
-       🔁 e basta. Le frecce che aveva dentro restano dove sono, fuori:
-       si è tolta la carta del ripeti, non le altre.
-   ═══════════════════════════════════════════════════════════════════ */
+/* LE MODIFICHE ALLA FILA — quello che fa un tocco (⌫, vedi
+   docs/passo-passo/zaino.md). Funzioni pure che tornano sempre
+   `{ fila, cursore }` nuovi, senza toccare quelli che ricevono. */
 import { apri, conValore, eApri, eFine, FINE, chiusuraDi, aperturaDi } from '../dati/carte.js'
 
 const dentro = (fila, c) => Math.max(0, Math.min(fila.length, c))
@@ -71,11 +54,9 @@ export function scegliTesta(fila, i, valore) {
 }
 export const scegliVolte = scegliTesta
 
-/* ── seguire un aiuto ──
-   Quello che fa un bambino che tocca proprio la cosa che l'aiuto ha
-   acceso. Il gioco non lo chiama mai — l'aiuto indica, la carta la mette
-   il bambino — ma i test sì: chi segue soltanto gli aiuti deve arrivare
-   a casa (`motore/risolutore.js`, `suggerisci`). */
+/* quello che fa un bambino che tocca proprio la cosa che l'aiuto ha
+   acceso. Il gioco non lo chiama mai: solo i test, per pretendere che
+   chi segue soltanto gli aiuti arrivi a casa. */
 export function seguiConsiglio(fila, cursore, s) {
   if (!s) return { fila, cursore }
   switch (s.che) {
