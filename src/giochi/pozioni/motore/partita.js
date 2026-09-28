@@ -218,7 +218,7 @@ export class Partita {
     return this.sbagli <= Math.ceil(dosiDellaTappa(this.tappa) / 4) ? 2 : 1
   }
   /* le monete: una dose azzeccata al primo colpo è una domanda vera
-     (`CALIBRAZIONE.md`), e una sbagliata non paga */
+     (`docs/apprendimento/calibrazione.md`), e una sbagliata non paga */
   get monete() { return this.dosiGiuste * MONETE_A_DOSE }
 }
 

@@ -145,7 +145,7 @@ export const PRODOTTI = {
      in tintoria, e da lì esce il colore. Sta nel silo del raccolto
      perché esce da un campo — il criterio è quello, non cosa se ne fa. */
   lavanda:    { nome: 'Lavanda',    emoji: '💐', silo: 'terra', pezzo: 'raccolto_lavanda' },
-  /* Le due colture dell'albero nuovo (§8 di docs/fattoria-albero.md),
+  /* Le due colture dell'albero nuovo (`docs/fattoria/macchine.md`),
      nello stesso foglio della lavanda: `campi_3.png`. */
   barbabietola: { nome: 'Barbabietola', emoji: '🍠', silo: 'terra', pezzo: 'raccolto_barbabietola' },
   riso:         { nome: 'Riso',         emoji: '🍚', silo: 'terra', pezzo: 'raccolto_riso' },
@@ -206,7 +206,7 @@ export const PRODOTTI = {
 
      ── `aspetta` — LA FACCIA CHE NON C'È ANCORA ────────────────────
      Prima si decide l'albero, poi si generano gli sprite: l'inverso di
-     com'era andata finora (`docs/fattoria-albero.md`). Una merce nuova
+     com'era andata finora (`docs/fattoria/sprite.md`). Una merce nuova
      nasce quindi **prima del suo disegno**, con l'emoji come ripiego
      dichiarato — che è esattamente il caso per cui `Merce.vue` tiene il
      ripiego — e scrive in `aspetta` il nome del pezzo che il foglio le
@@ -264,7 +264,7 @@ export const PRODOTTI = {
   sacchetto: { nome: 'Sacchetto profumato', emoji: '👝', silo: 'bottega', pezzo: 'merce_sacchetto' },
 
   /* ── L'ALBERO NUOVO: LO ZUCCHERIFICIO, LA GELATERIA, IL PASTIFICIO,
-       LA FRIGGITORIA, IL SUSHI BAR (§8 di docs/fattoria-albero.md) ────
+       LA FRIGGITORIA, IL SUSHI BAR (`docs/fattoria/macchine.md`) ────
      Diciassette merci nuove, nate prima del loro foglio con `aspetta`
      (vedi sopra): le facce sono arrivate tutte insieme, con quelle
      della tintoria e della cucina, in `merci_4.png`. */
@@ -393,7 +393,7 @@ export const COLTURE = [
      distingue non è la lentezza, è **con cosa vanno in coppia**.
 
      Il prezzo di raccolta resta 1 o 2 monete — un gesto è un gesto
-     (`CALIBRAZIONE.md`) — e quello che costa davvero è avere due campi
+     (`docs/apprendimento/calibrazione.md`) — e quello che costa davvero è avere due campi
      liberi nello stesso momento invece di uno. */
   {
     id: 'patate', liv: 22, nome: 'Patate', emoji: '🥔',
@@ -786,7 +786,7 @@ export const RICETTE = [
      del filo è erba → foraggio → lana → stoffa → maglione, cinque fasi
      — e quello che ne esce finisce nella dispensa, il terzo silo.
      Il progetto intero, con le catene che arrivano dopo, sta in
-     `docs/fattoria-albero.md`. */
+     `docs/fattoria/catena.md`. */
 
   /* ── il telaio: la stoffa ──
      Arriva al 16, due livelli dopo l'ovile: due lane fanno una stoffa,
@@ -813,7 +813,7 @@ export const RICETTE = [
 
   /* ── la sartoria: il maglione ──
      Due stoffe fanno un maglione, al 42: vale 🪙16 e un'ora e cinquanta
-     di fattoria con un campo solo (`docs/fattoria-albero.md`, §3), e
+     di fattoria con un campo solo (`docs/fattoria/catena.md`), e
      non si mangia — lo vuole la sarta — quindi non entra nel conto
      delle pappe: il suo freno è il tempo. */
   {
@@ -930,8 +930,8 @@ export const RICETTE = [
   },
 
   /* ═══════════ L'ALBERO NUOVO: PIÙ VICINO A HAY DAY ═══════════
-     Due colture, un recinto, cinque botteghe (`docs/fattoria-albero.md`
-     §8.1). Ogni riga arriva **con la bocca che la mangia**, come tutto
+     Due colture, un recinto, cinque botteghe (`docs/fattoria/
+     macchine.md`). Ogni riga arriva **con la bocca che la mangia**, come tutto
      il resto del file, e ogni bottega sta sotto le quattro ricette. Una
      ricetta senza `liv` prende quello della sua macchina — è il
      ripiego di `ricetteDi` — e si scrive `liv` solo quando la tabella
@@ -1149,7 +1149,7 @@ export const merciDi = famiglia =>
   Object.keys(PRODOTTI).filter(k => PRODOTTI[k].silo === famiglia)
 
 /* Quanto costa il prossimo ingrandimento: 40, 130, 185, 220, 250, 275…
-   — che in tempo di gioco (vedi `CALIBRAZIONE.md`: una moneta sono dieci
+   — che in tempo di gioco (vedi `docs/apprendimento/calibrazione.md`: una moneta sono dieci
    secondi di esercizi) vuol dire 7 minuti il primo, poi mezz'ora, poi
    sempre intorno all'ora.
 

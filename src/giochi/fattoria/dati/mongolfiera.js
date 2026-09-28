@@ -4,7 +4,7 @@
    Dato puro, come `dati/mercato.js` di cui è la sorella: i numeri
    stanno qui, le regole — cosa si chiede, cosa succede consegnando,
    quando riparte — in `motore/mongolfiera.js`. Il progetto è in
-   `docs/fattoria-albero.md` §8.3, «La mongolfiera».
+   `docs/fattoria/chi-chiede.md`, «La mongolfiera».
 
    ── PERCHÉ È DIVERSA DAL BANCO ────────────────────────────────────
    Il banco è il camion di Hay Day: ordini piccoli, sempre, che si

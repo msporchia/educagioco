@@ -352,7 +352,7 @@ function consegna() {
   suono.moneta()
   /* il premio lo dice la giornata, non il livello di chi gioca: una
      giornata facile rende meno di una tosta, e il conto sta in
-     `MONETE_CLIENTE` (`data/bancarella.js`, che cita `CALIBRAZIONE.md`).
+     `MONETE_CLIENTE` (`data/bancarella.js`, che cita `docs/apprendimento/calibrazione.md`).
      Prima era `level`, cioè la stessa giornata pagava il doppio a chi
      giocava da più tempo. */
   if (hud.serviti % PER_MONETA === 0) {

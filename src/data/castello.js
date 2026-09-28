@@ -1249,7 +1249,7 @@ export const firmaTaratura = () => FIRMA
    l'altra**. Non un'ondata a regalo — la scala è a gradoni, e il
    record si sposta di colpo quando i gradi bastano a passare il mostro
    del muro — ma una fila di record che sale a ogni manciata di
-   partite: misurato, vedi `docs/castello.md` e
+   partite: misurato, vedi `docs/castello/libere.md` e
    `strumenti/regali-castello.mjs`.
 
    ── e perché **non** stanno nella campagna ──
@@ -1270,7 +1270,7 @@ export const firmaTaratura = () => FIRMA
 
    Un regalo **non passa da un esercizio**: si prende per essere
    arrivati fin lì, non per aver fatto un conto in più. Va contro la
-   regola generale del progetto (vedi `CALIBRAZIONE.md`: quello che si
+   regola generale del progetto (vedi `docs/apprendimento/calibrazione.md`: quello che si
    riceve si paga in esercizio) e la riga per cui è accettabile è
    questa: le ondate che l'hanno fatto arrivare erano **tutte pagate in
    operazioni in colonna**, e il regalo non si spende — non compra
@@ -1300,7 +1300,7 @@ export const firmaTaratura = () => FIRMA
    toccano), cento di due-dieci su tutti e quattro, e il rendimento
    cala da sé — la vita cresce a moltiplicare, i gradi a
    sommare. Un tetto per regalo non serve: il tetto lo mette già la
-   curva. `docs/castello.md` porta la tabella. */
+   curva. `docs/castello/libere.md` porta la tabella. */
 export const OGNI_REGALO = 5
 
 /* Quante carte si offrono fra cui scegliere: tre, perché su uno schermo

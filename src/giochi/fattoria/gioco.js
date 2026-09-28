@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA FATTORIA — IL MANIFESTO
 
-   Dato puro, come vuole `src/giochi/CONVENZIONE.md`: non importa Vue, non
+   Dato puro, come vuole `docs/core/convenzione-giochi.md`: non importa Vue, non
    importa il profilo. Il calco è sempre `codice-segreto/`, con la stessa
    struttura di cartella (`dati/`, `motore/`, `scena/`, `viste/`,
    `Gioco.vue`). Le regole vere stanno in `motore/fattoria.js`: qui c'è

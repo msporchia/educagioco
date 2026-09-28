@@ -13,7 +13,7 @@
    Si conta con `requestAnimationFrame`, e il passo più lungo che si
    concede è cinque centesimi: a schermo spento il browser non consegna
    fotogrammi, e il coniglio si ferma dov'è invece di ritrovarsi in
-   fondo alla fila al ritorno. È l'orologio che CLAUDE.md chiede di
+   fondo alla fila al ritorno. È l'orologio che `docs/core/interfaccia.md` chiede di
    fermare a mano quando non è fatto di fotogrammi — qui lo è, e si
    ferma da sé.
 

@@ -7,7 +7,7 @@
    posto solo che le chiede ha un difetto che si vede giocando — la
    torta e il biscotto escono ogni tanto, in mezzo a tutto il resto, e
    niente dice **per chi** si fanno. Le botteghe sono i visitatori di
-   Hay Day (`docs/fattoria-albero.md` §8.3): la pasticcera vuole tre
+   Hay Day (`docs/fattoria/chi-chiede.md`): la pasticcera vuole tre
    biscotti, e sulla pasticceria c'è scritto chi è.
 
    ── COSA STA QUI E COSA STA DI LÀ ─────────────────────────────────

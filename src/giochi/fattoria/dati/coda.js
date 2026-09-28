@@ -5,7 +5,7 @@
    fila ne tiene altri che aspettano**, così si caricano tre pasti prima
    di andare a dormire. Vale per tutte, recinti compresi — sono
    macchine, e dar da mangiare tre volte alle galline prima di uscire è
-   esattamente il gesto che si vuole (`docs/fattoria-albero.md` §8.4).
+   esattamente il gesto che si vuole (`docs/fattoria/macchine.md`, «La fila»).
 
    ── I POSTI ───────────────────────────────────────────────────────
    **Uno di partenza**: quello che lavora, e nessuno che aspetta. Gli
@@ -27,7 +27,7 @@
    ── I PREZZI RADDOPPIANO ──────────────────────────────────────────
    🪙20 · 40 · 80 · 160 · 320: ogni posto costa il doppio di quello
    prima. È l'unica curva esponenziale della fattoria, e
-   `CALIBRAZIONE.md` le vieta per una ragione che qui non vale: senza un
+   `docs/apprendimento/calibrazione.md` le vieta per una ragione che qui non vale: senza un
    tetto, una curva che raddoppia chiede alla decima volta un prezzo da
    settimane, mentre le monete arrivano sempre allo stesso ritmo. Questa
    si ferma al quinto posto comprato, e il quinto costa meno di un'ora di
@@ -63,7 +63,7 @@ export const PREZZI_DELLA_FILA = Array.from(
   { length: POSTI_MASSIMI - POSTI_DI_PARTENZA },
   (_, i) => PRIMO_POSTO * RINCARO_DELLA_FILA ** i)
 
-/* Sopra le due ore di esercizi non ci va niente (`CALIBRAZIONE.md`, la
+/* Sopra le due ore di esercizi non ci va niente (`docs/apprendimento/calibrazione.md`, la
    scala delle spese): 🪙720, a dieci secondi la moneta. */
 const DUE_ORE = 720
 

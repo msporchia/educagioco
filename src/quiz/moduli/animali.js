@@ -6,7 +6,7 @@
    un gioco, e la differenza sta tutta in come si fa la domanda.
 
    IL PERICOLO, DETTO SUBITO. «Dove vive il koala?» è il tipo di domanda
-   che `LEGGIMI.md` mette in guardia: la risposta non si ricava da
+   che `docs/apprendimento/quiz-moduli.md` mette in guardia: la risposta non si ricava da
    niente, chi sbaglia non ha ragionato storto — non se lo ricordava. Il
    banco la trova ineccepibile (forma giusta, falsi distinti, varietà
    alta) e non insegna niente.

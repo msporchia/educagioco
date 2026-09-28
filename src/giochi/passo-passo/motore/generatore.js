@@ -159,7 +159,7 @@ const NOMI_CANE = ['Il pascolo', 'Il trifoglio', 'L\'ovile', 'Il prato alto', 'L
 
 /* quanto vale un sentiero vinto: mezzo minuto un posto del prato o del
    cane, un minuto uno con lo zaino, che chiede di trovare lo schema
-   prima di scriverlo (una moneta, dieci secondi: `CALIBRAZIONE.md`) */
+   prima di scriverlo (una moneta, dieci secondi: `docs/apprendimento/calibrazione.md`) */
 export const premioDi = t => (t && t.zaino ? 6 : 3)
 
 const NOMI = ['Il sentiero', 'La radura', 'Il guado', 'Il campo', 'La collina', 'Il boschetto',

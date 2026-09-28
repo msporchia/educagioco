@@ -77,7 +77,7 @@ const TEMPO = Number(argomenti.find(a => a.startsWith('--tempo='))?.slice(8)) ||
    altro worktree, un altro giro di test — e a otto la CPU resta libera
    per due terzi; a dodici si guadagnano venti secondi, ma la si occupa
    quasi tutta e i Chrome si prendono cinque giga
-   (`docs/tempi-dei-test.md`). Sotto i sedici processori le corsie sono
+   (`docs/core/tempi-dei-test.md`). Sotto i sedici processori le corsie sono
    la metà di quelli che ci sono. `--alla-volta=1` è il lanciatore di
    prima, riga per riga: serve quando un test si comporta male solo in
    compagnia, per sapere se è lui o la folla.

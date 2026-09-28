@@ -11,7 +11,7 @@
 
    La schermata sta a parte, in `src/giochi/schermate.js`.
 
-   Struttura della cartella (vedi `src/giochi/CONVENZIONE.md`):
+   Struttura della cartella (vedi `docs/core/convenzione-giochi.md`):
 
      dati/    tabelle: tappe, mazzo delle carte, mostri, scenari, taratura
      motore/  le regole, a classi, senza schermo — girano anche in Node

@@ -8,7 +8,7 @@
    Una tappa non si perde: se una risposta è sbagliata si conta insieme
    e si riprova la stessa domanda, finché non riesce.
 
-   Dato puro, come vuole `src/giochi/CONVENZIONE.md`: non importa Vue, non
+   Dato puro, come vuole `docs/core/convenzione-giochi.md`: non importa Vue, non
    importa il profilo. La schermata sta a parte, in
    `src/giochi/schermate.js`.
 

@@ -38,7 +38,7 @@ const emit = defineEmits(['vai'])
 
 const CHIAVE = 'prima'
 const RESPIRO = 550        // quanto resta a schermo il segno di giusto
-/* La finestra cieca di sempre (vedi CLAUDE.md): una domanda appena
+/* La finestra cieca di sempre (vedi `docs/core/interfaccia.md`): una domanda appena
    comparsa non si lascia toccare subito. Qui serve due volte — dopo la
    spunta di una storia giusta e dopo il «ho capito» della spiegazione —
    perché la domanda dopo nasce esattamente sotto il dito che ha appena

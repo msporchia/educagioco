@@ -236,7 +236,7 @@ controlla('sotto i sei anni la bancarella non si offre', portate[0] >= 32,
 nota('portata: ' + portate.join(' → '))
 
 /* ── i premi: una giornata facile rende meno di una tosta ──
-   `CALIBRAZIONE.md`: 🪙1 sono dieci secondi di esercizio. */
+   `docs/apprendimento/calibrazione.md`: 🪙1 sono dieci secondi di esercizio. */
 const premi = CAMPAGNE.map(premioCliente)
 controlla('il premio per cliente non scende mai',
           premi.every((p, i) => i === 0 || p >= premi[i - 1]), premi.join(' → '))

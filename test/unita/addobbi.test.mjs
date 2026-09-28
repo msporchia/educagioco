@@ -296,7 +296,7 @@ function conLaBestia(chi, borsa = borsaInfinita()) {
 }
 
 /* ══════════ 6. i prezzi stanno nella loro fascia ══════════
-   `CALIBRAZIONE.md`: un addobbo è **una cosetta**, da uno a cinque
+   `docs/apprendimento/calibrazione.md`: un addobbo è **una cosetta**, da uno a cinque
    minuti di esercizi. Fuori da lì non è caro o economico, è nella scala
    sbagliata — e un cappello che costa quanto un pollaio mette una
    decorazione in concorrenza con la catena. */

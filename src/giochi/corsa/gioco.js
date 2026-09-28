@@ -18,7 +18,7 @@
    il gioco è finito si toglie questa riga, e da quel momento è un gioco
    come gli altri.
 
-   Struttura della cartella (vedi `src/giochi/CONVENZIONE.md`):
+   Struttura della cartella (vedi `docs/core/convenzione-giochi.md`):
 
      dati/    tabelle: gradi della truppa, vestiti, tappe
      motore/  le regole, senza schermo — girano anche in Node

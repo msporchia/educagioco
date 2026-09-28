@@ -41,7 +41,7 @@
    vale il suo prezzo prima di pagarlo per tutte e quarantatré le storie.
    Se la risposta è sì, il passo dopo non è disegnare di più qui: è
    spostare `scena/persone.js` in `grafica/personaggi/`, perché le stesse
-   figure servono alle icone del lessico (vedi `todo.md`, «il cassetto
+   figure servono alle icone del lessico (vedi `docs/prima-dopo/da-fare.md`, «il cassetto
    dei concetti disegnati»).
    ═══════════════════════════════════════════════════════════════════ */
 

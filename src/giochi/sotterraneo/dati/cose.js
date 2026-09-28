@@ -385,7 +385,7 @@ export const COSE = {
      mette appena sotto la boccetta (sei gemme, sei punti di vita), che
      è il paragone giusto — un piano di luce è una comodità, non la
      sopravvivenza — e sopra il gesto, perché una torcia non è un
-     gesto. La scala di `CALIBRAZIONE.md` qui non decide: quella è in
+     gesto. La scala di `docs/apprendimento/calibrazione.md` qui non decide: quella è in
      **monete**, e le gemme non escono dalla discesa. */
   torcia: { em: '🔦', nome: 'Torcia', sprite: 'torcia', usa: 'luce',
             stanze: STANZE_TORCIA, prezzo: 5,

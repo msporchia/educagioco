@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL LABORATORIO DELLE POZIONI — IL MANIFESTO
 
-   Dato puro, come vuole `src/giochi/CONVENZIONE.md`: non importa Vue,
+   Dato puro, come vuole `docs/core/convenzione-giochi.md`: non importa Vue,
    non importa il profilo. La schermata sta in `src/giochi/schermate.js`.
 
    La chiave resta `pozioni`, la stessa del gioco vecchio: è quella con

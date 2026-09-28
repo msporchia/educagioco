@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL CASTELLO A SPRITE — IL MANIFESTO
 
-   Dato puro, come vuole `src/giochi/CONVENZIONE.md`: non importa Vue,
+   Dato puro, come vuole `docs/core/convenzione-giochi.md`: non importa Vue,
    non importa il profilo. La schermata sta in `src/giochi/schermate.js`.
 
    ⚠ DUE CASTELLI, PER ORA. Il tower defense che si gioca oggi ha chiave

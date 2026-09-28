@@ -1194,7 +1194,7 @@ function tappaSuperata() {
      rincaro si conta sull'indice DENTRO la sua campagna (`v.i`) e non
      sulla posizione in fila: la fila è lunga il doppio, e contarla lì
      raddoppierebbe i premi senza che nessuno l'abbia deciso (vedi
-     `CALIBRAZIONE.md`). */
+     `docs/apprendimento/calibrazione.md`). */
   premio.value = giaFatto ? 1 : level.value * (1 + Math.floor((v ? v.i : 0) / 4))
   addCoins(premio.value)
   riassunto()

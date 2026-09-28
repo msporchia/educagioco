@@ -17,7 +17,7 @@
    «ho capito» e si controlla la cosa che nessun test di unità vede: che
    il gioco **vada avanti**, cioè che la domanda dopo si lasci toccare.
    È il guasto del `v-if` che non si spegne mai, quello che in cinque
-   schermate incatenate era vivo in quattro (vedi CLAUDE.md).
+   schermate incatenate era vivo in quattro (vedi `docs/core/interfaccia.md`).
    `node test/esegui.mjs prima-dopo`
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, scatto, semina, attendi }

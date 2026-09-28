@@ -21,7 +21,7 @@
      · Non si può fare in fretta. Le monete arrivano solo dagli
        esercizi, quindi il livello è **tempo di studio**, riletto: al
        livello 10 ci si arriva con 🪙3000 spesi, cioè otto ore
-       (`CALIBRAZIONE.md`).
+       (`docs/apprendimento/calibrazione.md`).
      · Non si perde e non si punisce. Spendere è sempre un passo
        avanti, anche quando si compra un cespuglio storto: niente di
        quello che si fa qui può far scendere il livello.
@@ -80,7 +80,7 @@ import { ANIMALI } from './animali.js'
    tempo di capire come gira**, che è la cosa che il primo livello deve
    comprare.
 
-   In tempo di esercizi (🪙6 al minuto, `CALIBRAZIONE.md`), contando
+   In tempo di esercizi (🪙6 al minuto, `docs/apprendimento/calibrazione.md`), contando
    solo la spesa: il livello 2 sono 45 minuti, il 10 undici ore, il 30
    cinquantasei, l'ultimo del catalogo duecento. Le consegne ne fanno
    una parte, quindi il tempo vero è meno — spalmato su mesi, che è la
@@ -323,7 +323,7 @@ export const NOMI = {
   recinto_alpaca: 'Gli alpaca',
   lasagne: 'Le lasagne',
   /* La sciarpa di lana, anticipata rispetto al berretto
-     (`docs/fattoria-albero.md` §8.1). */
+     (`docs/fattoria/livelli.md`). */
   sciarpa_lana: 'La sciarpa',
   fragole: 'Le fragole',
   marmellata: 'La marmellata',
@@ -412,7 +412,7 @@ export const vuoto = r => !r.schede.length && !r.cose.length &&
    **Reclamare non regala niente**, e va detto perché la parola promette
    più di quello che dà: apre la voce nel baule, dove si compra con le
    monete come sempre. La fattoria è il posto dove si spende quello che
-   si è guadagnato altrove (`CALIBRAZIONE.md`), e un livello che
+   si è guadagnato altrove (`docs/apprendimento/calibrazione.md`), e un livello che
    regalasse la roba toglierebbe di mezzo proprio il gesto che tiene in
    piedi tutto il resto.
 

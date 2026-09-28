@@ -52,7 +52,7 @@
 
    `premio` sono le monete **della prima vittoria**, una volta sola: il
    livello è fisso, e rigiocarlo è ricordarlo, non esercitarsi (vedi
-   `CALIBRAZIONE.md`). Sale col gradino perché col gradino sale il tempo
+   `docs/apprendimento/calibrazione.md`). Sale col gradino perché col gradino sale il tempo
    che un livello chiede: un minuto il prato, cinque il labirinto di
    ghiaccio.
 
@@ -79,7 +79,7 @@
    Quanto è lunga la strada più corta e se la regola del gradino serve
    davvero **non si scrive qui**: lo misura il risolutore, e il test
    (`test/unita/passo-passo`) lo pretende. Le misure di oggi, per chi
-   deve scrivere un livello nuovo, stanno in `docs/passo-passo.md`.
+   deve scrivere un livello nuovo, stanno in `docs/passo-passo/livelli.md`.
    ═══════════════════════════════════════════════════════════════════ */
 import { guastiDellaMappa, MOSSE } from './mondo.js'
 import { CARTE, carteDi, guastiDellaFila, programma, ripeti, se } from './carte.js'

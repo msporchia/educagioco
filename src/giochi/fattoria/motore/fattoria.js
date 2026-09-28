@@ -73,7 +73,7 @@
 
    Il conto resta di una moneta per gesto: togliere 1, rimettere giù dal
    baule 0 — in tutto 1, come spostare. Il perché del prezzo (una moneta
-   = dieci secondi di esercizio) sta in `CALIBRAZIONE.md`, e il perché di
+   = dieci secondi di esercizio) sta in `docs/apprendimento/calibrazione.md`, e il perché di
    una monetina proprio qui in `dati/mondo.js`.
 
    Paga **solo il gesto del bambino**: nessun altro metodo di questo file

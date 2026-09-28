@@ -57,7 +57,7 @@
 
    ── DUE LIVELLI, E IL SECONDO STA CHIUSO ──
    `chiuso: true` è quello che tiene corte le risposte. Di roba scritta
-   ce n'era parecchia — nel README, in `LEGGIMI.md`, nei documenti dei
+   ce n'era parecchia — nel README, in `docs/`, nei documenti dei
    singoli giochi — e nessuna stava qui dentro, per un motivo giusto:
    messa in fila avrebbe seppellito la risposta di tre righe che serve a
    quasi tutti. Chiusa in una fisarmonica invece convive: sopra la

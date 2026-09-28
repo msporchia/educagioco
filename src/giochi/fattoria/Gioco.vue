@@ -1113,7 +1113,7 @@ function prendi(voce, da, p, opz = {}) {
   if (!dove || !muoviSuCella(dove.x, dove.y) || !preso.ok) return
 
   /* ── E QUI IL DITO SI LASCIA DIETRO UN CLICK ──────────────────────
-     Il guasto è quello scritto in CLAUDE.md, preso in pieno: posare
+     Il guasto è quello scritto in `docs/core/il-dito.md`, preso in pieno: posare
      subito può **far comparire un foglio esattamente sotto il dito** —
      una bestia comprata chiede il nome — e un attimo dopo arriva il
      click fantasma di quello stesso tocco. Va a finire sul velo appena

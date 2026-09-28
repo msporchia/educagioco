@@ -5,7 +5,7 @@
    stessa cosa — due occhi tondi, arrabbiati se serve — ma questo
    cantiere non importa `grafica/castello.js`: tre altri agenti ci
    stanno lavorando in parallelo proprio adesso (vedi
-   `docs/castello-riassetto.md`) e quel file potrebbe cambiare forma
+   il vecchio `docs/castello-riassetto.md`) e quel file potrebbe cambiare forma
    sotto i piedi. Questa è quindi un'implementazione indipendente
    dello stesso disegno, scritta con `p.cerchio` e `p.linea` invece
    che con `ctx` nudo. Quando le due famiglie di mostri si

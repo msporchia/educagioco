@@ -1,5 +1,5 @@
 /* ═════ IL TOPO ═════
-   Anche questo nasce da un difetto scritto in `todo.md`: «Cric il topo
+   Anche questo nasce da un difetto scritto nel vecchio `todo.md`: «Cric il topo
    oggi esce come un mostriciattolo» — nei dati non ha ancora un
    pittore suo, e quello che gli si avvicina di più è un goblin o uno
    scheletro piccolo. Cric non apre porte, passa sotto: nella storia

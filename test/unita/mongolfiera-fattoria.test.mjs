@@ -1,6 +1,6 @@
 /* LA MONGOLFIERA DELLA FATTORIA, SENZA BROWSER
 
-   Le cose che questo file difende (`docs/fattoria-albero.md` §8.3):
+   Le cose che questo file difende (`docs/fattoria/chi-chiede.md`):
      1. **si chiede solo roba lavorata e ottenibile adesso** — due fasi
         o più, una merce diversa per fila, controllato a ogni livello
         da quando la mongolfiera arriva;

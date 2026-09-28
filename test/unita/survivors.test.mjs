@@ -1,5 +1,5 @@
 /* Verifica di Survivors, senza browser. Le tre cose che la convenzione
-   chiede (`src/giochi/CONVENZIONE.md`): i dati stanno in piedi, il
+   chiede (`docs/core/convenzione-giochi.md`): i dati stanno in piedi, il
    calcolo è giusto dove è facile sbagliarsi, e **le nove tappe si vincono
    giocandole davvero** — con un finto giocatore che schiva, non a occhio.
 

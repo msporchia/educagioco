@@ -65,7 +65,7 @@ const DA_SU = { su: 0, destra: Math.PI / 2, giu: Math.PI, sinistra: -Math.PI / 2
    cella sta a 30, che è il meno che un dito tocca senza sbagliare. */
 const CELLA_MIN = 26, CELLA_MAX = 48, CELLA_TELECAMERA = 30
 /* un tocco diventa un trascinamento solo oltre la misura del dito: sotto,
-   Android e iOS considerano il dito ancora fermo (vedi CLAUDE.md) */
+   Android e iOS considerano il dito ancora fermo (vedi `docs/core/il-dito.md`) */
 const SOGLIA_DITO = 16
 /* una cassa è un po' più piccola della cella, così fra due vicine si vede
    il pavimento; in mano è più piccola ancora, e resta dentro la sagoma */

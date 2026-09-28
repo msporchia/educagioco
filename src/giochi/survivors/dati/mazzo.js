@@ -13,7 +13,7 @@
    si potenziava lo stesso — la domanda diventava un pedaggio che si
    pagava comunque, e chi rispondeva bene non ci guadagnava abbastanza.
    Poi c'è stata una monetina di consolazione, ed era peggio (vedi
-   `CALIBRAZIONE.md`: un tasto premuto a caso non è esercizio). Adesso
+   `docs/apprendimento/calibrazione.md`: un tasto premuto a caso non è esercizio). Adesso
    il potenziamento **si vince rispondendo**, e chi sbaglia perde il
    giro, non la partita: il giro dopo arriva presto perché le gemme
    continuano a cadere.

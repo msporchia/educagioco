@@ -7,7 +7,7 @@
    **esiste un pittore per ogni cosa che i dati possono nominare, e lo
    sa disegnare in ogni stato?**
 
-   Non è un test — CLAUDE.md è esplicito sul perché: nessuna prova del
+   Non è un test — `docs/core/test.md` è esplicito sul perché: nessuna prova del
    Generale guarda i pixel, quindi una porta che si apre e resta
    dipinta chiusa non fa scattare niente di rosso. Questa pagina non
    controlla, **mostra**: mette in fila ogni figura, in ogni stato, con

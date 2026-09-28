@@ -199,7 +199,7 @@ const V = (id, pezzo, nome, prezzo, extra) =>
    conigliere fanno il doppio della lana e il campo numero cinque vale
    quanto il primo: a prezzo fisso l'unica strategia sarebbe riempire il
    prato di recinti uguali. Il conto sta in `prezzoDellaVoce`, ed è
-   lineare — mai esponenziale (`CALIBRAZIONE.md`).
+   lineare — mai esponenziale (`docs/apprendimento/calibrazione.md`).
 
    I silos invece sono **`unico`**: due silos dello stesso tipo non
    contengono niente di più (la capienza è del *tipo*, e si compra
@@ -232,7 +232,7 @@ export const RINCARO = 0.6
    copia, ed era la stessa curva esponenziale bocciata sugli
    ingrandimenti del silo — il decimo campo sarebbe costato 🪙770, due
    ore di esercizi, mentre vale quanto il primo. Il metro sta in
-   `CALIBRAZIONE.md`: le monete si guadagnano sempre allo stesso ritmo,
+   `docs/apprendimento/calibrazione.md`: le monete si guadagnano sempre allo stesso ritmo,
    quindi lo sforzo per una copia in più deve crescere piano. */
 export function prezzoDellaVoce(v, quante = 0) {
   if (!v) return 0
@@ -433,7 +433,7 @@ export const CATEGORIE = [
     V('mercato',       'bancarella',        'Mercato',            40,
       { mercato: true, liv: 2, unico: true }),
     /* ── LA MONGOLFIERA ──────────────────────────────────────────
-       La nave di Hay Day (`docs/fattoria-albero.md` §8.3): tre file di
+       La nave di Hay Day (`docs/fattoria/chi-chiede.md`): tre file di
        casse che si riempiono un po' alla volta, e cosa fa sta in
        `motore/mongolfiera.js`. Qui c'è **la piazzola dove atterra**, ed
        è `unica` come la bancarella — una seconda non farebbe scendere
@@ -457,7 +457,7 @@ export const CATEGORIE = [
     V('silo_bianco',   'silo_bianco',       'Silo della stalla', 120, { silo: 'stalla', liv: 4, unico: true }),
 
     /* ── LE BOTTEGHE, E IL TERZO SILO ────────────────────────────
-       L'albero a più fasi (`docs/fattoria-albero.md`): macchine che
+       L'albero a più fasi (`docs/fattoria/catena.md`): macchine che
        prendono quello che esce da un'altra macchina e lo portano un
        gradino più su. Un edificio è **un mestiere che si riconosce a
        colpo d'occhio**, mai più di quattro ricette.
@@ -475,7 +475,7 @@ export const CATEGORIE = [
        `piedeDalDisegno`, e viene [4, 2] per tutte come diceva il
        progetto, [3, 2] per la dispensa.
 
-       Prezzi nella fascia «una struttura» (🪙150–360, `CALIBRAZIONE.md`),
+       Prezzi nella fascia «una struttura» (🪙150–360, `docs/apprendimento/calibrazione.md`),
        tutti con `cresce: RINCARO` come il mulino; la dispensa costa
        quanto gli altri due silos ed è `unico` come loro. */
     V('dispensa',      'dispensa',          'Dispensa',         120,
@@ -523,7 +523,7 @@ export const CATEGORIE = [
       { macchina: 'cucina', liv: 25, cresce: RINCARO, la: true }),
 
     /* ── L'ALBERO NUOVO: CINQUE BOTTEGHE IN PIÙ ──────────────────
-       `docs/fattoria-albero.md` §8. Tre hanno già la loro facciata,
+       `docs/fattoria/macchine.md`. Tre hanno già la loro facciata,
        disegnata in anticipo nello stesso foglio delle due bancarelle
        (`edifici_3.png`, campo `__`): lo zuccherificio, il pastificio,
        il sushi bar. La gelateria è arrivata dopo, con la mongolfiera
@@ -545,7 +545,7 @@ export const CATEGORIE = [
     /* ── LE BOTTEGHE DEL PAESE ───────────────────────────────────
        Non trasformano e non contengono: **chiedono**, come la
        bancarella, ma ognuna il suo elenco chiuso e coi suoi clienti
-       (`docs/fattoria-albero.md` §8.3, le regole in
+       (`docs/fattoria/chi-chiede.md`, le regole in
        `motore/botteghe.js`, i numeri in `dati/botteghe.js`). L'elenco
        sta qui, sulla voce, perché è la cosa che si compra: chi
        aggiunge una merce all'osteria la aggiunge dove l'osteria si
@@ -644,7 +644,7 @@ export const CATEGORIE = [
        `dati/coltivazioni.js`, con la tabella delle coppie.
 
        I prezzi salgono col livello e restano tutti nella fascia
-       «struttura» di `CALIBRAZIONE.md` (🪙150–360, mezz'ora-un'ora di
+       «struttura» di `docs/apprendimento/calibrazione.md` (🪙150–360, mezz'ora-un'ora di
        esercizi): l'ultimo è a 🪙355 e non oltre, perché sopra le due
        ore non ci va niente e una bestia non è un ingrandimento del
        silo. */
@@ -673,7 +673,7 @@ export const CATEGORIE = [
        disegno apposta non si riusa una decorazione, si riusa solo
        quando il disegno è lo stesso.
 
-       Niente foglio ancora (`docs/fattoria-albero.md` §8.7 vuole «i
+       Niente foglio ancora (`docs/fattoria/da-fare.md` vuole «i
        suoi ritratti da recinto: calmo, mangia, pronto…»), e un ripiego
        fatto di tessere di terreno prese a caso ('laghetto0'…) non
        supererebbe il controllo che vuole un vero `recinto_<specie>_…`
@@ -890,7 +890,7 @@ export const CATEGORIE = [
      Niente sprite nuovi, ed è deliberato: le zucche sono la zucca
      matura dell'orto, l'albero è l'albero grande — con le lucine e la
      stella addosso, che le disegna la scena (`luci: true`). Prezzi
-     nella fascia «una cosetta» di `CALIBRAZIONE.md`. */
+     nella fascia «una cosetta» di `docs/apprendimento/calibrazione.md`. */
   { chiave: 'feste', zona: 'bello', nome: 'Feste', icona: '🎉', stagionale: true, voci: [
     V('zucche_halloween', 'campo_zucche6',  'Zucche di Halloween', 9,
       { sotto: true, piede: [2, 2], stagione: 'halloween' }),

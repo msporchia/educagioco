@@ -11,8 +11,8 @@
 
    ── PERCHÉ UNA FORMA DIVERSA DAL BANCO ────────────────────────────
    Il banco è il camion di Hay Day: tanti ordini piccoli, di tutto, e
-   sempre pieno. Le botteghe sono **i visitatori** (`docs/fattoria-
-   albero.md` §8.3): qualcuno che vuole *una* cosa sua. Perciò la
+   sempre pieno. Le botteghe sono **i visitatori** (`docs/fattoria/
+   chi-chiede.md`): qualcuno che vuole *una* cosa sua. Perciò la
    forma è stretta apposta —
 
      · **un cliente per bancone, una merce sola, 2–4 pezzi.** «La

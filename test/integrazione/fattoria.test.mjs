@@ -381,7 +381,7 @@ await chiudi()
 
   /* ── E UNA BESTIA POSATA COSÌ CHIEDE IL NOME, E RESTA LÌ A CHIEDERLO ──
      Il caso che si è rotto per primo, ed è la trappola scritta in
-     CLAUDE.md: posare subito fa comparire un foglio **sotto il dito** —
+     `docs/core/il-dito.md`: posare subito fa comparire un foglio **sotto il dito** —
      una bestia comprata chiede come si chiama — e il click fantasma di
      quello stesso tocco cade sul velo appena nato, che si chiude da sé.
      Da fuori: «tocco l'animale, mi si chiude la schermata e non riesco a
@@ -935,7 +935,7 @@ await chiudi()
     /* ── LA RIGA CHE CONTA: IL MERCATO NON PAGA MONETE ──────────────
        Le monete si guadagnano facendo esercizi negli altri giochi, e un
        banco che comprasse il grano chiuderebbe l'anello
-       (`CALIBRAZIONE.md`). Si guarda però **la seconda** consegna e non
+       (`docs/apprendimento/calibrazione.md`). Si guarda però **la seconda** consegna e non
        la prima: la prima porta con sé la medaglia di bronzo del
        traguardo «Servizio a domicilio», e una medaglia paga monete in
        tutti i giochi — è l'economia delle medaglie, non il mercato che

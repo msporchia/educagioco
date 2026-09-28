@@ -54,7 +54,7 @@
 
    ── I PREZZI ──────────────────────────────────────────────────────
    Sono tutti nella fascia **«una cosetta»** di
-   [`CALIBRAZIONE.md`](../../../../CALIBRAZIONE.md): da 🪙6 a 🪙24,
+   [`docs/apprendimento/calibrazione.md`](../../../../docs/apprendimento/calibrazione.md): da 🪙6 a 🪙24,
    cioè da uno a quattro minuti di esercizi. Non è una spesa che si
    pesa — è quello che si compra col resto delle monete, dopo il campo
    e prima del prossimo recinto — e va tenuta lì: un cappello che
@@ -175,7 +175,7 @@ export function guastiDegliAddobbi() {
     if (!AGGANCI_TUTTI.includes(a.dove))
       g.push(`${a.id}: l'aggancio «${a.dove}» non esiste`)
     if (!(a.misura > 0)) g.push(`${a.id}: misura impossibile`)
-    /* La fascia «una cosetta» di `CALIBRAZIONE.md`: da un minuto a
+    /* La fascia «una cosetta» di `docs/apprendimento/calibrazione.md`: da un minuto a
        cinque di esercizi. Un cappello fuori da lì non è caro o
        economico, è **nella scala sbagliata** — e allora o non lo compra
        nessuno o si smette di costruire la catena per comprarne uno.

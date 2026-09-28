@@ -379,7 +379,7 @@ function scegliCarta(chiave) {
    cadere. Il «ci hai provato» resta — è giusto che ci sia — ma non ha
    un prezzo. Le monete di questo gioco si prendono in un modo solo:
    arrivare in fondo a una tappa (`p.monete`, che è il premio delle
-   stelle). Vedi anche `CALIBRAZIONE.md`: una moneta vale dieci secondi
+   stelle). Vedi anche `docs/apprendimento/calibrazione.md`: una moneta vale dieci secondi
    di esercizio, e un tasto premuto a caso non è esercizio. */
 function risposto({ giusto }) {
   const p = partita.value

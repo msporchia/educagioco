@@ -19,7 +19,7 @@ node test/esegui.mjs --alla-volta=1 uno alla volta, come una volta (vedi sotto)
 niente browser, niente build, un risultato prima di aver tolto le dita
 dalla tastiera. `test/integrazione/` non ci entra mai — apre Chrome, e in
 fila vale più del novanta per cento dell'intera suite (misurato in
-[`docs/tempi-dei-test.md`](../docs/tempi-dei-test.md)) — quindi si chiede
+[`docs/core/tempi-dei-test.md`](../docs/core/tempi-dei-test.md)) — quindi si chiede
 solo per «estrema necessità»: si è appena toccata *quella* schermata e si
 vuole esserne sicuri prima di committare. In quel caso il modo giusto non
 è `npm run test:browser` (tutti insieme, un minuto e mezzo anche otto

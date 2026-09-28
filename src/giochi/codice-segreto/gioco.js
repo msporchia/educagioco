@@ -13,7 +13,7 @@
    posto che tira dentro il `.vue`.
 
    Struttura della cartella (il calco per i giochi che verranno, vedi
-   `src/giochi/CONVENZIONE.md`):
+   `docs/core/convenzione-giochi.md`):
 
      dati/    tabelle e basta: temi, difficoltà, tappe
      motore/  le regole, a classi, senza schermo — girano anche in Node

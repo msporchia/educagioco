@@ -6,7 +6,7 @@
         controlla per **ogni** livello, dal primo all'ultimo;
      2. **il mercato non paga monete** — mai, in nessun caso: le monete
         entrano solo dagli esercizi degli altri giochi, e un banco che
-        comprasse il grano chiuderebbe l'anello (`CALIBRAZIONE.md`);
+        comprasse il grano chiuderebbe l'anello (`docs/apprendimento/calibrazione.md`);
      3. **un ordine non rende più del tempo che costa produrlo**;
      4. **rifiutare costa attesa** — se no si scorre finché esce quello
         facile, e il mercato diventa una slot machine;
@@ -110,7 +110,7 @@ uguale('i posti al banco sono tre', POSTI, 3)
 }
 
 /* I due conti che risalgono la catena rifanno **esatti** i numeri della
-   tabella in `docs/fattoria.md`: è il modo di sapere che non se li sono
+   tabella in `docs/fattoria/catena.md`: è il modo di sapere che non se li sono
    inventati, e diventa rosso il giorno che qualcuno ritocca una ricetta
    senza aggiornare la documentazione. */
 {

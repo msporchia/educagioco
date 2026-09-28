@@ -25,7 +25,7 @@
    il primo giorno è l'unico che conta — e che un gesto gratis in mezzo
    a gesti che costano non si legge come un regalo: si legge come quello
    che si preme sempre, e gli altri due diventano decorazione. Una
-   monetina è dieci secondi di esercizio (`CALIBRAZIONE.md`): è il
+   monetina è dieci secondi di esercizio (`docs/apprendimento/calibrazione.md`): è il
    prezzo più piccolo che esista qui dentro, non una tassa.
 
    ── OGNI BESTIA HA I SUOI CIBI ────────────────────────────────────
@@ -54,7 +54,7 @@
    Quando, dopo un gesto, **tutti e tre** i bisogni stanno nella fascia
    alta — la stessa soglia di «sta benissimo» in `comeSta`, non una
    nuova — la bestia paga esperienza, come fa il mercato consegnando:
-   mai monete (`CALIBRAZIONE.md`). Quanto, lo dice il suo prezzo
+   mai monete (`docs/apprendimento/calibrazione.md`). Quanto, lo dice il suo prezzo
    (`premioBenessere` in `dati/animali.js`); *se*, lo decide
    `premiaSeStaBene` qui sotto, ed è **una volta per ciclo**: il
    premio non torna finché almeno un bisogno non è risceso sotto la

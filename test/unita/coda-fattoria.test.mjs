@@ -2,7 +2,7 @@
    LA FILA NELLE MACCHINE, SENZA BROWSER
 
    Una macchina lavora un pezzo alla volta e ne tiene altri in fila
-   (`dati/coda.js`, `docs/fattoria-albero.md` §8.4). Qui si gioca la fila
+   (`dati/coda.js`, `docs/fattoria/macchine.md`). Qui si gioca la fila
    per davvero, con l'orologio in mano: si carica, si chiude il gioco e
    si riapre più tardi, si toglie un pezzo, si ritira a silo pieno, si
    rilegge un salvataggio di prima che la fila esistesse.

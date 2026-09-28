@@ -21,7 +21,7 @@
    dimenticanza.
 
    La regola che tiene in piedi tutta l'applicazione sta in
-   `dati/coltivazioni.js` e in [`CALIBRAZIONE.md`](../../../../CALIBRAZIONE.md):
+   `dati/coltivazioni.js` e in [`docs/apprendimento/calibrazione.md`](../../../../docs/apprendimento/calibrazione.md):
    **niente si vende, il verso è sempre monete → cose.** Le monete si
    guadagnano facendo esercizi negli altri giochi e si bruciano qui. Un
    mercato che pagasse il grano chiuderebbe l'anello — semina gratis,
@@ -56,7 +56,7 @@
    mossa giusta era rifiutare la torta e aspettare il grano: il
    contrario di un gioco di fattoria, dove la catena lunga è quella che
    vale. Adesso, a parità di gesti, la catena lunga rende un po' di più
-   — da ⭐2 a ⭐4 per gesto (`docs/fattoria-albero.md` §8.2).
+   — da ⭐2 a ⭐4 per gesto (`docs/fattoria/chi-chiede.md`).
 
    **E in media non rende di più di prima**, ed è voluto. Il primo giro
    aveva `PER_GESTO = 3`, e un raccolto portato al banco rendeva il
@@ -206,7 +206,7 @@ export const PREMIO_BASE = 6
 export const PER_GESTO = 2
 export const BONUS_FASE = 0.2
 
-/* 🪙6 = un minuto di esercizio (`CALIBRAZIONE.md`): è il cambio con cui
+/* 🪙6 = un minuto di esercizio (`docs/apprendimento/calibrazione.md`): è il cambio con cui
    si controlla che un ordine non renda più del tempo che chiede. */
 export const MONETE_AL_MINUTO = 6
 
@@ -221,7 +221,7 @@ export const MONETE_AL_MINUTO = 6
    se no chi ha aspettato viene pagato di più per la stessa roba.
 
    I due conti rifanno esatti i numeri della tabella in
-   [`docs/fattoria.md`](../../../../docs/fattoria.md) — mangime 🪙3 e
+   [`docs/fattoria/catena.md`](../../../../docs/fattoria/catena.md) — mangime 🪙3 e
    ~14 min, uovo 🪙5 e ~36, pastone 🪙7 e ~30, tartufo 🪙9 e ~72 — che è
    il modo di sapere che non si sono inventati. */
 const menoDi = (a, b) => (a < b ? a : b)

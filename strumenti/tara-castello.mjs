@@ -305,7 +305,7 @@ const libere = LIBERE.map(l => ({ ...l, ondate: ONDATE_LIBERE, regali: false }))
    alla 33ª, a ×1,10 non si muore entro un'ora di gioco. A ×1,3 senza
    regali si cede fra la 20ª e la 22ª e con trentacinque fra la 27ª e
    la 31ª, che è la scala su cui i regali sono dimensionati
-   (`docs/castello.md`). Sopra 1,3 si tiene quello che il tracciato
+   (`docs/castello/libere.md`). Sopra 1,3 si tiene quello che il tracciato
    dice, se dice di più. */
 const OLTRE_MINIMO = 1.3
 function passoOltre(righe) {

@@ -1,6 +1,6 @@
 /* LE BOTTEGHE DEL PAESE, SENZA BROWSER
 
-   Le cose che questo file difende (`docs/fattoria-albero.md` §8.3):
+   Le cose che questo file difende (`docs/fattoria/chi-chiede.md`):
      1. **una bottega chiede solo dal suo elenco, e solo l'ottenibile** —
         controllato al livello in cui arriva e in cima alla scaletta;
      2. **un cliente, una merce, 2–4 pezzi**, e il premio è quello del

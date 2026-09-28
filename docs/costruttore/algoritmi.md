@@ -80,3 +80,7 @@ I guardrail, senza i quali la ricorsione era rimandata:
 - **Un livello la cui soluzione chiama sé stessa dichiara `ricorsione: true`**,
   e il banco non la srotola per misurare lo zaino (`chiamaSeStesso` in
   `motore/zaino.js`): srotolarla non finirebbe mai.
+- **Le mosse ingenue sono false piste**: vincono il giorno più semplice e
+  cedono solo quando la giornata smette di essere un caso particolare. Chi
+  sbaglia prosegue su una strada plausibile e finisce in trappola, invece
+  di sbattere al primo passo (la stessa regola di `../passo-passo/zaino.md`).

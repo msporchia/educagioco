@@ -157,7 +157,7 @@ export function gioca(tappa, opzioni = {}) {
   /* i regali della partita libera (`REGALI` in `data/castello.js`): li
      applica solo la tappa che li prevede, quindi per la campagna questa
      riga non esiste. Serve a misurare quanto vale un regalo — che è
-     l'unico modo di dimensionarli, vedi `docs/castello.md`. */
+     l'unico modo di dimensionarli, vedi `docs/castello/libere.md`. */
   const motore = creaBattaglia({ tappa, misure, stato, regali })
   motore.inizia()
 

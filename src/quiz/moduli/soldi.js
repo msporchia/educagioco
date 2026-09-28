@@ -820,7 +820,7 @@ class Soldi extends Modulo {
          Il conto tondo delle monete è di seconda-terza (38-44), il
          resto e i confronti di terza-quarta (50-57), i numeri con la
          virgola senza euro di quarta-quinta (57-72) — la stessa
-         scaletta di cui parla `CLAUDE.md` per questo modulo. La spesa
+         scaletta di cui parla `docs/apprendimento/quiz-livelli.md` per questo modulo. La spesa
          furba (76-94) viene dopo: non è più complicato dividere o
          moltiplicare, è capire QUALE conto fare, e quello arriva più
          tardi dei conti stessi. */

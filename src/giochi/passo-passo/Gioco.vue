@@ -58,7 +58,7 @@ defineOptions({ name: 'PassoPasso' })
 const emit = defineEmits(['vai'])
 
 const CHIAVE = 'passo'
-/* la finestra cieca di sempre (CLAUDE.md): una schermata appena comparsa
+/* la finestra cieca di sempre (`docs/core/interfaccia.md`): una schermata appena comparsa
    non si lascia toccare subito, perché il dito che ha appena premuto si
    lascia dietro un tocco */
 const CIECA = 320

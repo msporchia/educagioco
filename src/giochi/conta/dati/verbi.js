@@ -3,7 +3,7 @@
 
    Un verbo è un modo di chiedere «quanti?». Non genera niente da solo
    (quello è `motore/scena.js`, che ha bisogno del mondo e del caso): qui
-   c'è solo la sua carta d'identità, dato puro come vuole `CONVENZIONE.md`.
+   c'è solo la sua carta d'identità, dato puro come vuole `docs/core/convenzione-giochi.md`.
 
      modo       come si risponde — decide quale riga di bottoni mostra
                 la vista, non il verbo:

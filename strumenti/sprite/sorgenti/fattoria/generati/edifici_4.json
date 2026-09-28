@@ -1,5 +1,5 @@
 {
-  "__": "La mongolfiera (a terra e partita), la gelateria e la mensa della scuola: il secondo albero della fattoria, §8 di docs/fattoria-albero.md.\n\nÈ il primo foglio consegnato **con un alone**: attorno a ogni figura un bagliore rossastro ad alfa 1–50, e il corpo ad alfa 252–253 invece che pieno. `\"alone\": 128` lo toglie sul foglio grande, prima della riduzione (FORMATO.md).\n\nLa piazzola è rimessa con `misura` alla larghezza del cesto (52 px e non 68): le due facce si danno il cambio sullo stesso piede, e un pallone che parte non deve lasciare dietro una cosa più larga di lui.",
+  "__": "La mongolfiera (a terra e partita), la gelateria e la mensa della scuola: il secondo albero della fattoria, docs/fattoria/sprite.md.\n\nÈ il primo foglio consegnato **con un alone**: attorno a ogni figura un bagliore rossastro ad alfa 1–50, e il corpo ad alfa 252–253 invece che pieno. `\"alone\": 128` lo toglie sul foglio grande, prima della riduzione (FORMATO.md).\n\nLa piazzola è rimessa con `misura` alla larghezza del cesto (52 px e non 68): le due facce si danno il cambio sullo stesso piede, e un pallone che parte non deve lasciare dietro una cosa più larga di lui.",
   "prompt": {
     "scheda": "PROMPT-secondo-albero.md",
     "base": "edifici_3.png",

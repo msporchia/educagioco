@@ -230,8 +230,7 @@ e capsule spariscono dal profilo, senza rimborso e senza travaso in
 fattoria. Il livello dei bambini non scende — prima di cancellare le
 collezioni se ne contano gli elementi (`sgomberaLaCameretta` in
 `src/store/profile.js`) — e le sue medaglie sono uscite dall'albo. Il
-racconto intero sta in `LEGGIMI.md`, alla voce «La cameretta, che non c'è
-più».
+perché sta in `docs/core/progressi.md`.
 
 ### 3. Le cose piccole viste negli scatti
 - Un oggetto piazzato sul bordo si **sovrappone alla staccionata** invece di

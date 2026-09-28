@@ -60,7 +60,7 @@ export const ANIMALI = {
 }
 
 /* ── QUANTO PAGA UNA BESTIA RIMESSA A POSTO ───────────────────────
-   Esperienza, mai monete (`dati/bisogni.js`, `CALIBRAZIONE.md`), e
+   Esperienza, mai monete (`dati/bisogni.js`, `docs/apprendimento/calibrazione.md`), e
    **un quindicesimo del suo prezzo**: 🪙90 → ⭐6 per un cane, ⭐5 per
    un gatto, ⭐8 per il pappagallo. Tre ragioni per questo numero.
 

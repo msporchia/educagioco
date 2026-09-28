@@ -203,7 +203,7 @@ export const chiedeIlTotale = c => c === 'totale' || c === 'tutto'
 export const chiedeIlResto = c => c === 'resto' || c === 'tutto'
 
 /* ═══════════ QUANTO RENDE UN CLIENTE ═══════════
-   `CALIBRAZIONE.md`: 🪙1 sono dieci secondi di esercizio, e una domanda
+   `docs/apprendimento/calibrazione.md`: 🪙1 sono dieci secondi di esercizio, e una domanda
    vera ne vale tre. Un cliente non è una domanda — è un pezzo di lavoro
    che si può misurare — e quanto lavoro sia dipende da quello che la
    giornata gli fa fare:
@@ -221,7 +221,7 @@ export const chiedeIlResto = c => c === 'resto' || c === 'tutto'
    tempo, e una giornata facile quanto una tosta.
 
    Un cliente che se ne va non paga niente: quello che non si è fatto non
-   si paga (`CALIBRAZIONE.md`, «una risposta sbagliata non paga niente»). */
+   si paga (`docs/apprendimento/calibrazione.md`, «una risposta sbagliata non paga niente»). */
 export const MONETE_CLIENTE = { niente: 2, totale: 3, resto: 3, tutto: 4 }
 export const premioCliente = camp => MONETE_CLIENTE[(camp && camp.conto) || 'niente']
 

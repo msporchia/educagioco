@@ -14,7 +14,7 @@
      calamita  per qualche secondo tutte le gemme in campo volano da te
      cassa     si apre un'offerta di carte, **pagata con la domanda come
                sempre**: una risposta sbagliata non paga, e niente si
-               regala senza esercizio (vedi `CALIBRAZIONE.md`). La
+               regala senza esercizio (vedi `docs/apprendimento/calibrazione.md`). La
                cassa non è un potenziamento gratis, è un'occasione in
                più di guadagnarselo
 

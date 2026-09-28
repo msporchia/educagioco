@@ -43,7 +43,7 @@
        fusione, il cuore del merge sort.
 
    Le mosse ingenue di questi quattro livelli sono spesso **false piste**
-   (vedi `CLAUDE.md`): vincono il giorno più semplice e cedono solo
+   (vedi `docs/costruttore/algoritmi.md`): vincono il giorno più semplice e cedono solo
    quando la giornata smette di essere un caso particolare — le due
    bande già in ordine fra loro nel tricolore, le lettere arrivate già
    crescenti in «Fare posto», le due file perfettamente intrecciate nella

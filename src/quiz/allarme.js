@@ -3,7 +3,7 @@
 
    `consiglio.js` sa già dire quando una tipologia è un muro — otto
    risposte almeno, meno di metà giuste — e sapeva dirlo a nessuno: la
-   schermata che lo mostrava è sospesa (vedi «Come va» in CLAUDE.md), e
+   schermata che lo mostrava è sospesa (vedi `docs/genitori/come-va.md`), e
    il conto restava scritto nel profilo senza che lo leggesse nessuno.
 
    Qui c'è il pezzo che mancava: **il momento in cui si dice**. Non una

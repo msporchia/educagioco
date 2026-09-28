@@ -1,5 +1,5 @@
 {
-  "__": "Il forno, lo zucchero e la gelateria: pane, torta, zucchero, succo, gelato, pasta (§8 di docs/fattoria-albero.md).\n\nCome edifici_4 è tornato con un alone rossastro attorno a ogni figura, anche se il prompt lo vietava: lo toglie `\"alone\": 128`. Le misure hanno un divisore solo per tutto il foglio, 16 — le figure sono venute più grandi di quelle di merci_2, e con 16 stanno fra 15 e 30 px come le altre.",
+  "__": "Il forno, lo zucchero e la gelateria: pane, torta, zucchero, succo, gelato, pasta (docs/fattoria/sprite.md).\n\nCome edifici_4 è tornato con un alone rossastro attorno a ogni figura, anche se il prompt lo vietava: lo toglie `\"alone\": 128`. Le misure hanno un divisore solo per tutto il foglio, 16 — le figure sono venute più grandi di quelle di merci_2, e con 16 stanno fra 15 e 30 px come le altre.",
   "prompt": {
     "scheda": "PROMPT-merce.md",
     "base": "merci_2.png",

@@ -18,7 +18,7 @@
    ── LE MONETE ───────────────────────────────────────────────────────
    Un livello paga **la prima volta** che si vince (`premio` in
    `dati/livelli.js`). Rifarlo è ricordarsi il programma, non scriverlo:
-   non è esercizio, e non vale niente (vedi `CALIBRAZIONE.md`). Le
+   non è esercizio, e non vale niente (vedi `docs/apprendimento/calibrazione.md`). Le
    stelle sono due: vinto, e vinto senza farsi scrivere la soluzione
    intera. E gli aiuti si pagano in monete: i primi due gradini, che
    fanno ragionare, sono gratis; poi gli indizi a 🪙10, e i gradini che

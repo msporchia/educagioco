@@ -10,7 +10,7 @@
 
    ── PERCHÉ SI PAGA, E IN MONETE ─────────────────────────────────────
    Gli aiuti costavano una stella, quella «da solo», e non funzionava:
-   quello che un bambino insegue sono le monete (`CALIBRAZIONE.md`), e
+   quello che un bambino insegue sono le monete (`docs/apprendimento/calibrazione.md`), e
    una stella in meno è un prezzo che non si sente. Il 💡 diventava così
    il modo di finire un livello senza pensarci — si preme, si segue, si
    vince — e il livello era bruciato, perché una soluzione vista è quasi

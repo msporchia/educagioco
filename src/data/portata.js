@@ -96,7 +96,7 @@ export { livelloDegliAnni, anniDelLivello, LIVELLO_MIN, LIVELLO_MAX }
    perché conta le tappe una per una.
 
    Un anno indietro e un anno e mezzo avanti sono i numeri che qui
-   valgono, e il perché sta in `CALIBRAZIONE.md`: una campagna è una
+   valgono, e il perché sta in `docs/apprendimento/calibrazione.md`: una campagna è una
    fila che si macina tutta, non una campana da cui si pesca ogni tanto,
    quindi la finestra deve essere quella stretta. Se un giorno la mira
    delle domande si muove ancora, questi restano fermi finché non è

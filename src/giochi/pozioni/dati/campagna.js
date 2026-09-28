@@ -195,7 +195,7 @@ export const BLOCCHI = [
 ]
 
 /* quante dosi chiede una tappa a chi la finisce: è il lavoro vero, e
-   da lì escono le monete (`CALIBRAZIONE.md`: una dose è una domanda
+   da lì escono le monete (`docs/apprendimento/calibrazione.md`: una dose è una domanda
    vera, letta e ragionata, e vale tre monete) */
 export const dosiDellaTappa = t => t.clienti * t.ingredienti
 export const MONETE_A_DOSE = 3

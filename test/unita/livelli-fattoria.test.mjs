@@ -202,7 +202,7 @@ for (let l = 1; l <= ULTIMO; l++)
   const due = prezzoDellaVoce(PER_ID.conigliera, 1)
   controlla('la seconda conigliera costa di più', due > uno, `${uno} → ${due}`)
   /* Lineare, non esponenziale: la decima copia non deve costare due ore
-     di esercizi (`CALIBRAZIONE.md`). */
+     di esercizi (`docs/apprendimento/calibrazione.md`). */
   const dieci = prezzoDellaVoce(PER_ID.orto, 9)
   controlla(`il decimo campo resta abbordabile (🪙${dieci})`, dieci < 6 * 60 * 2)
 

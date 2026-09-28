@@ -4,7 +4,7 @@ Il metodo: si allega **un'immagine di base già fatta bene** e si dice
 «nello stesso stile di questa». La scheda dice tutto quello che il
 generatore altrimenti inventa: misura, vista, fondo, ombra, tavolozza,
 appoggio, griglia. Il perché sta in
-[`docs/fattoria-albero.md`](../../../../../docs/fattoria-albero.md), §6.
+[`docs/fattoria/sprite.md`](../../../../../docs/fattoria/sprite.md).
 
 Il prompt usato **si conserva nel foglietto** del foglio che ne esce
 (campo `prompt`, vedi `FORMATO.md`): copiarlo e cambiare la riga

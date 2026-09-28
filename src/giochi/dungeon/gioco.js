@@ -19,7 +19,7 @@
    che cresce mano a mano che si scende.
 
    Struttura della cartella (il calco è `codice-segreto/`, vedi
-   `src/giochi/CONVENZIONE.md`):
+   `docs/core/convenzione-giochi.md`):
 
      dati/    tabelle: campagna, stanze, mostri, tesori, stranezze, taratura
      motore/  le regole, a classi, senza schermo — girano anche in Node

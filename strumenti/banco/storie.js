@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL BANCO DELLE STORIE DISEGNATE — «prima e dopo», in fila
 
-   Nessun test guarda i pixel (CLAUDE.md è esplicito sul perché), e per
+   Nessun test guarda i pixel (`docs/core/test.md` è esplicito sul perché), e per
    un gioco il cui contenuto *è* il disegno quel silenzio pesa: una
    faccia triste che viene uguale a una serena non fa scattare niente di
    rosso, e la storia diventa muta senza che nessuno se ne accorga.

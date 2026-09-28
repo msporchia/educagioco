@@ -13,7 +13,7 @@
    distrattori, o le opzioni cambiassero forma, il conto non
    tornerebbe più e la clip lo direbbe restando ferma su una domanda.
 
-   La tappa 0 è scelta apposta: è quella di cui CLAUDE.md dice che
+   La tappa 0 è scelta apposta: è quella di cui si dice che
    «mette in campo fino a cinque cose e sceglie la specie da sé» — un
    solo gruppo, mai un intruso, mai un'attesa (`piuUno`/`stessi` hanno un
    tempo morto voluto che qui non serve) — e le sue quattro `partite`

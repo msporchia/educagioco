@@ -1,5 +1,5 @@
 /* Verifica della Corsa dei numeri, senza browser. Le quattro cose che la
-   convenzione chiede (`src/giochi/CONVENZIONE.md`): i dati stanno in
+   convenzione chiede (`docs/core/convenzione-giochi.md`): i dati stanno in
    piedi, il calcolo è giusto dove è facile sbagliarsi, **le nove tappe
    si vincono giocandole davvero** con un finto giocatore che legge i
    cancelli, e i traguardi scattano.

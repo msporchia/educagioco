@@ -749,7 +749,7 @@
    ed è il riquadro del consiglio sotto una ricetta (`Passo.vue`), con
    bordo e sfondo suoi. Riusato qui si portava dietro il riquadro e
    spezzava la riga in due — è il caso di `.avviso` scritto in
-   CLAUDE.md, capitato di nuovo: una classe che sembra giusta ce l'ha
+   `docs/core/il-dito.md`, capitato di nuovo: una classe che sembra giusta ce l'ha
    già qualcun altro. */
 .fa-ramo-testo small { font-size: 11.5px; line-height: 1.3; white-space: normal;
   margin-top: 2px }

@@ -24,7 +24,7 @@
    parte e basta, perché non c'è niente da perdere.
 
    La conferma è uno stato del componente, e un componente che resta
-   montato fra un pallone e l'altro se la porterebbe dietro (CLAUDE.md,
+   montato fra un pallone e l'altro se la porterebbe dietro (`docs/core/interfaccia.md`,
    «Un `v-if` che non si spegne mai non rimonta niente»): si rimette a
    zero quando cambia il pallone.
 

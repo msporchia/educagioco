@@ -26,13 +26,13 @@ ogni gioco si può spegnere. Il nome porta alla pagina del gioco.
 
 <table>
 <tr>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-asteroidi.webp" width="220"><br><b><a href="docs/asteroidi.md">☄️ Asteroidi</a></b><br>Tabelline e calcolo a mente: si spara al risultato giusto.</td>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-castello.webp" width="220"><br><b><a href="docs/castello.md">🏰 Difendi il Castello</a></b><br>Tower defense: ogni torre si paga con un'operazione in colonna.</td>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-inglese.webp" width="220"><br><b><a href="docs/lingue.md">🌐 English e 🇪🇸 Spagnolo</a></b><br>Parole, verbi e frasi, e ogni parola si sente pronunciata, anche offline.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-asteroidi.webp" width="220"><br><b><a href="docs/asteroidi/presentazione.md">☄️ Asteroidi</a></b><br>Tabelline e calcolo a mente: si spara al risultato giusto.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-castello.webp" width="220"><br><b><a href="docs/castello/presentazione.md">🏰 Difendi il Castello</a></b><br>Tower defense: ogni torre si paga con un'operazione in colonna.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-inglese.webp" width="220"><br><b><a href="docs/lingue/presentazione.md">🌐 English e 🇪🇸 Spagnolo</a></b><br>Parole, verbi e frasi, e ogni parola si sente pronunciata, anche offline.</td>
 </tr>
 <tr>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-bancarella.webp" width="220"><br><b><a href="docs/bancarella.md">🛒 La bancarella</a></b><br>Si vende, si incassa e si dà il resto.</td>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-pozioni.webp" width="220"><br><b><a href="docs/pozioni.md">⚗️ Le pozioni</a></b><br>Litri, chili e metri: si dosa con gli attrezzi che si hanno.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-bancarella.webp" width="220"><br><b><a href="docs/bancarella/presentazione.md">🛒 La bancarella</a></b><br>Si vende, si incassa e si dà il resto.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-pozioni.webp" width="220"><br><b><a href="docs/pozioni/presentazione.md">⚗️ Le pozioni</a></b><br>Litri, chili e metri: si dosa con gli attrezzi che si hanno.</td>
 <td width="33%"></td>
 </tr>
 </table>
@@ -43,16 +43,16 @@ Tre gradini della stessa scala, e nessuno fa scrivere codice: si comincia con le
 
 <table>
 <tr>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-passo.webp" width="220"><br><b><a href="docs/passo-passo.md">🐇 Passo passo</a></b><br>Una fila di frecce riporta il coniglio alla tana. Poi il cane pastore, poi i cicli.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-passo.webp" width="220"><br><b><a href="docs/passo-passo/presentazione.md">🐇 Passo passo</a></b><br>Una fila di frecce riporta il coniglio alla tana. Poi il cane pastore, poi i cicli.</td>
 <td align="center" width="33%" valign="top"><img src="docs/img/clip-generale.webp" width="220"><br><b><a href="docs/generale.md">🎖️ Il Generale</a></b><br>Ordini a una squadretta: sequenze, condizioni, cicli e segnali.</td>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-costruttore.webp" width="220"><br><b><a href="docs/costruttore.md">🏗️ Il costruttore</a></b><br>Un robot costruisce quello che programmi: funzioni, parametri, variabili.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-costruttore.webp" width="220"><br><b><a href="docs/costruttore/presentazione.md">🏗️ Il costruttore</a></b><br>Un robot costruisce quello che programmi: funzioni, parametri, variabili.</td>
 </tr>
 </table>
 
 ### Avventure fatte di domande
 
 Pescano da un magazzino comune di italiano, matematica, spazio, tempo e
-logica, tarato sull'età: [cosa c'è dentro](docs/domande.md). Dopo uno
+logica, tarato sull'età: [cosa c'è dentro](docs/apprendimento/presentazione.md). Dopo uno
 sbaglio si legge il perché, e come si fa.
 
 <table>
@@ -65,9 +65,9 @@ sbaglio si legge il perché, e come si fa.
 
 <table>
 <tr>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-sotterraneo.webp" width="220"><br><b><a href="docs/sotterraneo.md">🗺️ Il sotterraneo</a></b><br>Porte, forzieri e mostri al buio: ogni cosa che vale costa una risposta.</td>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-dungeon.webp" width="220"><br><b><a href="docs/dungeon.md">⚔️ Il Dungeon</a></b><br>Di stanza in stanza, e ogni risposta giusta porta bottino.</td>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-survivors.webp" width="220"><br><b><a href="docs/survivors.md">🏹 Survivors</a></b><br>Sopravvivenza a ondate: la carta più forte costa la domanda più tosta.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-sotterraneo.webp" width="220"><br><b><a href="docs/sotterraneo/presentazione.md">🗺️ Il sotterraneo</a></b><br>Porte, forzieri e mostri al buio: ogni cosa che vale costa una risposta.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-dungeon.webp" width="220"><br><b><a href="docs/dungeon/presentazione.md">⚔️ Il Dungeon</a></b><br>Di stanza in stanza, e ogni risposta giusta porta bottino.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-survivors.webp" width="220"><br><b><a href="docs/survivors/presentazione.md">🏹 Survivors</a></b><br>Sopravvivenza a ondate: la carta più forte costa la domanda più tosta.</td>
 </tr>
 </table>
 
@@ -75,8 +75,8 @@ sbaglio si legge il perché, e come si fa.
 
 <table>
 <tr>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-codice.webp" width="220"><br><b><a href="docs/codice-segreto.md">🔐 Codice Segreto</a></b><br>Deduzione pura: si indovina la combinazione leggendo i pallini.</td>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-fattoria.webp" width="220"><br><b><a href="docs/fattoria.md">🚜 La fattoria</a></b><br>Dove si spendono le monete: campi, mulini e animali, col tempo vero.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-codice.webp" width="220"><br><b><a href="docs/codice-segreto/presentazione.md">🔐 Codice Segreto</a></b><br>Deduzione pura: si indovina la combinazione leggendo i pallini.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-fattoria.webp" width="220"><br><b><a href="docs/fattoria/presentazione.md">🚜 La fattoria</a></b><br>Dove si spendono le monete: campi, mulini e animali, col tempo vero.</td>
 <td width="33%"></td>
 </tr>
 </table>
@@ -85,8 +85,8 @@ sbaglio si legge il perché, e come si fa.
 
 <table>
 <tr>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-conta.webp" width="220"><br><b><a href="docs/conta.md">🐑 Conta gli animali</a></b><br>Si conta quello che si vede, in fila, sparpagliato, in mezzo agli intrusi.</td>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-prima.webp" width="220"><br><b><a href="docs/prima-dopo.md">⏭️ Prima e dopo</a></b><br>Il seme, il germoglio, l'albero: si rimette in fila una storia.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-conta.webp" width="220"><br><b><a href="docs/conta/presentazione.md">🐑 Conta gli animali</a></b><br>Si conta quello che si vede, in fila, sparpagliato, in mezzo agli intrusi.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-prima.webp" width="220"><br><b><a href="docs/prima-dopo/presentazione.md">⏭️ Prima e dopo</a></b><br>Il seme, il germoglio, l'albero: si rimette in fila una storia.</td>
 <td width="33%"></td>
 </tr>
 </table>
@@ -140,8 +140,9 @@ npm test            # le prove senza browser, pochi secondi
 npm run scatti      # rifà le immagini e le clip di questa pagina
 ```
 
-Tutti i comandi e cosa riscrivono stanno in [`ADMIN.md`](ADMIN.md), le
-regole del motore di apprendimento in [`LEGGIMI.md`](LEGGIMI.md).
+Tutti i comandi e cosa riscrivono stanno in [`docs/core/comandi.md`](docs/core/comandi.md),
+le regole del motore di apprendimento in [`docs/apprendimento/`](docs/apprendimento/README.md),
+e ogni argomento ha la sua cartella in [`docs/`](docs/README.md).
 
 </details>
 

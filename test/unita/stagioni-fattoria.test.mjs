@@ -88,7 +88,7 @@ controlla('il seme del giorno cambia a mezzanotte e non prima',
   controlla(`in catalogo ci sono voci stagionali (${stagionali.length})`, stagionali.length >= 3)
   controlla('e ce n\'è per ogni stagione',
             Object.keys(FINESTRE).every(s => stagionali.some(v => v.stagione === s)))
-  controlla('costano come una cosetta (🪙6–30, CALIBRAZIONE.md)',
+  controlla('costano come una cosetta (🪙6–30, docs/apprendimento/calibrazione.md)',
             stagionali.every(v => v.prezzo >= 6 && v.prezzo <= 30))
   /* non entrano nella fila dei due-tre per livello: nessun livello le
      porta come premio */

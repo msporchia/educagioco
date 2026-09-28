@@ -8,7 +8,7 @@
    e quando qualcosa va storto si guarda *quale* ordine era sbagliato —
    detto a un bambino di cinque anni che non sa leggere.
 
-   Dato puro, come vuole `src/giochi/CONVENZIONE.md`. La cartella:
+   Dato puro, come vuole `docs/core/convenzione-giochi.md`. La cartella:
 
      dati/     il vocabolario del mondo (le lettere delle mappe, le
                mosse) e la campagna, ventiquattro posti scritti a mano

@@ -2,7 +2,7 @@
 
 Il metodo è quello di `PROMPT-edificio.md`: un'immagine di base allegata,
 «nello stesso stile di questa», e la scheda che dice il resto. Il perché
-sta in [`docs/fattoria-albero.md`](../../../../../docs/fattoria-albero.md),
+sta in [`docs/fattoria/sprite.md`](../../../../../docs/fattoria/sprite.md),
 §6.
 
 Una merce si vede **solo dentro un riquadro** — il fumetto sopra un
@@ -93,7 +93,7 @@ minestrone, polenta), ne restano **dieci**, cioè due fogli. L'ordine non
 è casuale: ogni foglio tiene insieme le cose di una catena, così le
 proporzioni fra loro restano giuste. La lista intera, coi ripieghi che
 usano intanto, sta in
-[`docs/fattoria-albero.md`](../../../../../docs/fattoria-albero.md), §6.
+[`docs/fattoria/sprite.md`](../../../../../docs/fattoria/sprite.md), §6.
 
 **`merci_3.png` — il filo e il colore** (6 oggetti):
 

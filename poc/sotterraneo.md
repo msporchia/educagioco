@@ -2,8 +2,8 @@
 
 > **Il gioco esiste.** Da agosto 2026 sta in `src/giochi/sotterraneo/`,
 > dietro «i giochi in prova», con le domande vere dei moduli di quiz e sei
-> discese — la pagina è [`docs/sotterraneo.md`](../docs/sotterraneo.md), e
-> quello che manca ancora sta in [`todo.md`](../todo.md). Questi due
+> discese — la pagina è [`docs/sotterraneo/`](../docs/sotterraneo/README.md), e
+> quello che manca ancora sta in [`docs/sotterraneo/da-fare.md`](../docs/sotterraneo/da-fare.md). Questi due
 > prototipi **restano**: sono il posto dove provare un'idea prima di
 > metterla nel gioco, e l'atlante ce lo tiene allineato `atlante.py`, che
 > scrive lo stesso PNG qui dentro e nel modulo del gioco. Le decisioni qui
