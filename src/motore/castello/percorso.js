@@ -1,55 +1,17 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL PERCORSO — le strade e le loro piazzole.
-
-   La tappa scrive le sue forme in coordinate 0–1, che non sanno niente
-   di schermi. Qui diventano strade vere, smussate, e ai loro lati
-   nascono le postazioni dove si può costruire.
-
-   È l'unico posto del motore che tocca la geometria: chi cammina
-   (`Nemico`) chiede solo «dove sono dopo tot metri **sulla mia
-   strada**», chi spara (`Torre`) chiede solo «quanto è lontano quel
-   nemico».
-
-   ── una strada o più d'una ──
-   Quasi tutte le tappe ne hanno una. Alcune — le ultime, e la partita
-   libera — ne hanno due: due ingressi diversi, due file di mostri, un
-   castello solo. Le strade **non si fondono mai**: si avvicinano verso
-   il fondo e arrivano alla stessa porta da parti diverse. Fonderle
-   avrebbe voluto dire piazzole disegnate due volte sullo stesso tratto,
-   e soprattutto una partita che si vince mettendo tutto dopo il punto
-   in cui si uniscono — cioè una mappa a due ingressi che si gioca come
-   se ne avesse uno.
-
-   Le postazioni si spartiscono fra le strade in proporzione a quanto
-   sono lunghe, e si occupano **a giro**: prima la più vicina
-   all'ingresso della strada A, poi quella della strada B, poi la
-   seconda di A… Se si riempisse una strada per volta, la prima torre
-   difenderebbe metà campo e l'altra metà passerebbe senza vedere
-   nessuno.
-
-   Vive anche a schermo cambiato: `ridimensiona` rifà strade e piazzole
-   con le misure nuove, e il resto del motore non se ne accorge.
-
-   ── una strada a squadra, e le piazzole già decise ──
-   Il quarto argomento serve al campo disegnato a celle (il gioco
-   `castello`, `src/giochi/castello/`): lì la strada è una fila di celle
-   di una scacchiera, e le piazzole sono celle anche loro, messe dalla
-   carta. `spigoli: true` lascia la forma com'è, senza smussarla —
-   una strada a squadra smussata taglierebbe gli angoli e i mostri
-   camminerebbero sul prato — e `posti: [[fx, fy, via], …]` dice le
-   piazzole in coordinate 0–1, nell'ordine in cui si occupano, al posto
-   di quelle calcolate. Chi non lo passa ha il percorso di sempre: la
-   taratura e la sua firma non lo vedono.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il percorso: le strade (dalle forme 0-1 della tappa, smussate) e ai loro
+// lati le piazzole. Le strade non si fondono mai (vedi campagne.md); le
+// postazioni si spartiscono in proporzione alla lunghezza e si occupano a
+// giro fra le strade, partendo dall'ingresso.
 import { smussa, tracciato } from '../../grafica/geometria.js'
 import { GEOMETRIA } from '../../data/castello.js'
 
-/* quanto devono starsi larghe due piazzole, in unità: è la stessa
-   distanza che `strumenti/valida-percorsi.mjs` pretende, e serve solo
-   dove due strade si avvicinano — su una strada sola non capita mai */
+// Distanza minima fra due piazzole (la stessa di valida-percorsi.mjs):
+// serve solo dove due strade si avvicinano.
 const MINIMA_FRA_PIAZZOLE = 42
 
 export class Percorso {
+  // `spigoli`/`posti` servono al campo a celle (giochi/castello/): strada
+  // già a squadra (non smussare) e piazzole già decise dalla carta.
   constructor(forme, quante, misure, { spigoli = false, posti = null } = {}) {
     // una forma sola o un elenco di forme: si accettano tutte e due
     this.forme = Array.isArray(forme[0][0]) ? forme : [forme]
@@ -59,29 +21,23 @@ export class Percorso {
     this.ridimensiona(misure)
   }
 
-  /* I tracciati sono quelli della tappa, smussati: restano spezzate —
-     quindi camminarci sopra e misurarle costa quanto prima — ma curvano
-     come strade vere. */
   ridimensiona({ W, H, S }) {
     this.W = W; this.H = H; this.S = S
     const liscia = this.spigoli ? punti => punti : smussa
     this.vie = this.forme.map(f => tracciato(liscia(f.map(([x, y]) => ({ x: x * W, y: y * H })))))
-    /* le piazzole dichiarate si scalano e basta: le ha già messe chi ha
-       disegnato il campo, e sbrogliarle le sposterebbe fuori dalla loro
-       cella */
+    // le piazzole dichiarate si scalano e basta: sbrogliarle le sposterebbe
+    // fuori dalla loro cella
     this.postazioni = this.posti
       ? this.posti.map(([x, y, via = 0]) => ({ x: x * W, y: y * H, via }))
       : this.piazzole()
     return this
   }
 
-  /* la strada numero `k`, e quella di chi non ne ha una: la prima */
   viaN(k = 0) { return this.vie[Math.min(k || 0, this.vie.length - 1)] }
   get quanteVie() { return this.vie.length }
 
-  /* ── quante piazzole per strada ──
-     In proporzione alla lunghezza, almeno una ciascuna, e la somma deve
-     tornare esattamente a quelle che la tappa ha promesso. */
+  // Quante piazzole per strada, in proporzione alla lunghezza: la somma
+  // deve tornare esattamente a quelle promesse dalla tappa.
   quote() {
     const lung = this.vie.map(v => v.lunghezza)
     const totale = lung.reduce((s, l) => s + l, 0)
@@ -97,46 +53,20 @@ export class Percorso {
     return quote
   }
 
-  /* Le postazioni stanno ai lati della strada, alternate, e si occupano
-     **partendo da dove entrano i mostri**.
-
-     Prima si partiva dal castello, e con le tappe lunghe di ieri —
-     dieci, quindici torri comprate — la differenza non si vedeva:
-     la strada si riempiva tutta comunque. Da quando una tappa si
-     vince con due o tre torri, quella scelta è diventata il difetto
-     più grosso del gioco: le torri si ammassavano davanti alla porta
-     e il mostro faceva l'ottantacinque per cento della strada senza
-     che nessuno gli sparasse. Un tower defense in cui si combatte
-     solo sullo zerbino.
-
-     Partendo dall'ingresso il combattimento si vede dove deve
-     vedersi, e soprattutto **il ghiaccio ritrova il suo mestiere**:
-     gelare un nemico appena entrato gli allunga tutta la strada che
-     ha davanti, gelarlo davanti al castello non gli toglie niente,
-     perché il tempo è già finito. Restano ammassate, e va bene:
-     concentrare il fuoco è una difesa, spalmarlo su una strada
-     lunga con tre torri non lo è.
-
-     ⚠ I numeri non stanno qui: stanno in `GEOMETRIA`, dentro
-     `data/castello.js`, perché **cambiano l'equilibrio** e devono
-     entrare nella firma che dice quando la taratura è stantia. Questa
-     stessa funzione è già stata cambiata una volta senza che il test se
-     ne accorgesse, e per un giorno il gioco ha girato su vite tarate
-     per un campo che non esisteva più. Chi tocca il *codice* qui sotto
-     — il passo, il lato alternato, il rientro dai bordi — deve
-     incrementare `GEOMETRIA.v`: i dati non sanno descriverlo da soli. */
+  // Le postazioni stanno ai lati della strada, alternate, e si occupano
+  // partendo da dove entrano i mostri (non dal castello): vedi
+  // docs/castello/taratura.md. Chi tocca il codice qui sotto (il passo, il
+  // lato alternato, il rientro dai bordi) deve incrementare `GEOMETRIA.v`,
+  // o la taratura resta fatta per un campo che non esiste più.
   piazzole() {
     const { W, H, S } = this
     const quote = this.quote()
-    /* prima si dispongono strada per strada, poi si mescolano a giro:
-       la fila che ne esce è l'ordine in cui verranno occupate */
+    // prima si dispongono strada per strada, poi si mescolano a giro
     const perVia = this.vie.map((via, k) => {
       const posti = []
       const passo = via.lunghezza / (quote[k] + 1)
-      /* le strade dispongono le loro a passi sfalsati a due a due: dove
-         si fondono — una Y, un anello che si richiude — le piazzole
-         cadrebbero esattamente una sull'altra e ne resterebbe metà.
-         metà. */
+      // sfalsate a due a due: dove le strade si fondono (una Y, un anello)
+      // le piazzole cadrebbero esattamente una sull'altra
       const sfalso = this.vie.length > 1 ? (k / this.vie.length) * 0.34 : 0
       for (let i = 1; i <= quote[k]; i++) {
         const d = passo * (i + sfalso)
@@ -156,22 +86,10 @@ export class Percorso {
     return this.sbroglia(fila)
   }
 
-  /* ── due strade, una piazzola sola ──
-     Dove le strade convergono le loro piazzole finiscono l'una addosso
-     all'altra: ognuna è disposta sulla sua strada senza sapere niente
-     dell'altra. Qui si guardano tutte insieme e chi è troppo vicina a
-     una già messa si scosta di lato, dalla parte opposta alla strada.
-     Se non basta, si toglie: meglio una piazzola in meno che due
-     sovrapposte, che a schermo sono una e a dito sono un terno al
-     lotto.
-
-     Vale anche con **una strada sola**: una strada che si attraversa
-     da sé (il bastione) mette all'incrocio due piazzole una sull'altra
-     esattamente come due strade che si fondono. Prima qui c'era un
-     `return` per la strada singola, ed era innocuo solo finché nessuna
-     strada si incrociava: sulle venti tappe a una via non sposta
-     niente, perché le loro piazzole stanno già più larghe della
-     minima (lo controlla `strumenti/valida-percorsi.mjs`). */
+  // Dove le strade convergono (o una strada si attraversa da sé, il
+  // bastione) le piazzole finiscono l'una addosso all'altra: qui si
+  // scostano, e se non basta si tolgono (meglio una in meno che due
+  // sovrapposte, a dito un terno al lotto).
   sbroglia(fila) {
     const minima = MINIMA_FRA_PIAZZOLE * this.S
     const tenute = []
@@ -192,9 +110,8 @@ export class Percorso {
     return tenute
   }
 
-  /* da qui in giù è il tracciato principale che risponde: chi ha in mano
-     un `Percorso` e non sa niente di strade multiple continua a vedere
-     quella che ha sempre visto */
+  // da qui in giù è il tracciato principale: chi non sa di strade multiple
+  // continua a vedere quella che ha sempre visto
   get via() { return this.vie[0] }
   get lunghezza() { return this.via.lunghezza }
   get punti() { return this.via.punti }
