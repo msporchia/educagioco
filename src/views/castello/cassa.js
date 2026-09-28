@@ -1,25 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA CASSA — dove si paga, e con cosa.
-
-   Il motore non sa cosa sia un'operazione in colonna: chi compra dice
-   quanto paga, e basta. Questa classe è il posto dove le due cose si
-   incontrano — quanto costa una torre, quale conto la compra, a che
-   gradino della scaletta.
-
-   Le tre regole che tiene:
-
-   · **la difficoltà non la decide il gioco, la decide il livello della
-     torre**. Si costruisce al livello 1 — l'operazione senza riporti — e
-     si sale un gradino per volta, ogni volta con un calcolo più
-     difficile. Il tetto è quello della tappa (`cap`).
-   · **che conto chiede una torre**: il suo, salvo che i genitori abbiano
-     spento le divisioni — allora le bombe chiedono moltiplicazioni più
-     difficili (`contoDi` in data/ops.js). Il resto del gioco non se ne
-     accorge: cambia il conto, non la torre.
-   · **per la torre magica il moltiplicatore esce dalle tabelline
-     deboli**: la torre che si compra con una moltiplicazione è anche il
-     modo per far ripassare quello che sta scivolando via.
-   ═══════════════════════════════════════════════════════════════════ */
+// La cassa: dove si paga e con cosa. Il motore non sa cosa sia
+// un'operazione in colonna; questa classe fa da ponte fra il prezzo di una
+// torre, il conto che la compra e il gradino della scaletta. Vedi
+// docs/castello/operazioni.md.
 import { GENERATORI, contoDi, gradoDi, segnoDi, ramiDi } from '../../data/ops.js'
 import { costoNuovaTorre, costoSalita, RAMI_DA } from '../../data/castello.js'
 import { item, divisioniAccese, contiPermessi } from '../../store/profile.js'
@@ -28,13 +10,11 @@ import { weight } from '../../store/srs.js'
 export class Cassa {
   constructor(tappa = null) { this.tappa = tappa }
 
-  /* la tappa cambia il tetto della scaletta e nient'altro */
   perTappa(tappa) { this.tappa = tappa; return this }
 
   get divisioni() { return divisioniAccese() }
-  /* cosa si può chiedere: le divisioni e le moltiplicazioni insieme,
-     perché il ripiego è una scala e non due interruttori indipendenti —
-     spente tutte e due, le Bombe scendono di due scalini e non di uno */
+  // il ripiego è una scala, non due interruttori indipendenti: vedi
+  // docs/castello/operazioni.md
   get sa() { return contiPermessi() }
   get tetto() { return this.tappa ? this.tappa.cap : 1 }
 
@@ -42,30 +22,20 @@ export class Cassa {
   segno(t) { return segnoDi(t, this.sa) }
   chiave(t) { return 'op:' + this.conto(t) }
 
-  /* ── i prezzi ──
-     costruire sale con le torri già in piedi, potenziare col livello, e
-     tutti e due col listino della torre (`CARATTERE` in data/castello.js):
-     una bomba costa più di un arciere già alla prima pietra */
   costoNuova(quante, tipo) { return costoNuovaTorre(quante, tipo) }
   costoSalita(torre) { return costoSalita(torre.lv, torre.tipo) }
 
   potenziabile(torre) { return torre.lv < this.tetto }
 
-  /* ── il bivio ──
-     I due mestieri fra cui scegliere, e solo nel momento giusto: la
-     tappa deve offrirli, la torre deve stare per arrivare al gradino
-     del bivio, e non deve averne già preso uno. Fuori da lì l'elenco è
-     vuoto e la scheda mostra il solito tasto — che è come dire che il
-     bivio non esiste, senza doverlo scrivere due volte. */
+  // I due mestieri fra cui scegliere, solo al gradino giusto e se non ne ha
+  // già preso uno: fuori da lì l'elenco è vuoto (il bivio non esiste).
   rami(torre) {
     if (!torre || torre.ramo || !this.tappa || !this.tappa.rami) return []
     if (!this.potenziabile(torre)) return []
     return this.gradino(torre) === RAMI_DA ? ramiDi(torre.tipo) : []
   }
-  /* che gradino chiede: una torre nuova il primo, una già in campo il suo più uno */
   gradino(torre) { return torre ? Math.min(this.tetto, torre.lv + 1) : 1 }
 
-  /* l'operazione che compra questa torre a questo gradino */
   operazione(tipo, torre = null) { return this.operazioneA(tipo, this.gradino(torre)) }
 
   operazioneA(tipo, gradino) {
@@ -74,9 +44,8 @@ export class Cassa {
     return k === 'mul' ? GENERATORI.mul(lv, this.moltiplicatoreDebole()) : GENERATORI[k](lv)
   }
 
-  /* fra le otto tabelline, quella che sta scivolando via di più: si
-     pesca a caso ma con il peso del ripasso, così non esce sempre la
-     stessa e non esce mai una che è già solida */
+  // Il ghiaccio si compra con moltiplicazioni: il moltiplicatore esce dalla
+  // tabellina che sta scivolando via di più (pesata col ripasso).
   moltiplicatoreDebole() {
     const ora = Date.now()
     const cand = []
