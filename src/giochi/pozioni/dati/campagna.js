@@ -1,60 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA CAMPAGNA — una scaletta sola, ripetuta per tre famiglie
-
-   Il gioco vecchio chiedeva di convertire dalla prima ricetta e
-   metteva davanti cinque bilance che contavano tutte in grammi. La
-   scaletta nuova viene da chi l'ha guardata giocare: **prima si
-   impara il gesto, poi una cosa nuova per volta, e ogni cosa nuova si
-   spiega finché serve e poi si toglie.**
-
-   I nove gradini, per una famiglia (qui i pesi, ma per le lunghezze e
-   i liquidi sono gli stessi con altri nomi):
-
-     1  banco     «500 g»: scegli l'ingrediente, mettilo sulla
-                  bilancia, componi la dose. Nessuna conversione: qui
-                  si impara come funziona il gioco.
-     2  grande    «1 kg», e la bilancia conta in grammi. Il conto è
-                  scritto sopra il banco, col risultato: 1 kg = 1000 g.
-     3  grandi    chili interi (2 kg, 5 kg), senza più il risultato: la
-                  regola resta scritta, il numero lo trovi tu.
-     4  virgola   0,5 kg · 1,5 kg: la virgola si sposta. È quella che
-                  fa diventare matti, quindi il conto torna svolto.
-     5  virgole   le stesse virgole, e niente più aiuti.
-     6  media     arriva la bilancia degli etti. La ricetta chiede 8 kg
-                  e sulla bilancia dei grammi non ci stanno: si capisce
-                  da soli che quando i chili sono tanti si sale.
-     7  miste     chili, etti e grammi: la ricetta parla in tre unità e
-                  bisogna leggere bene prima di scegliere dove pesare.
-     8  inversa   «6000 g», e la bilancia dei grammi non ci arriva: si
-                  sale agli etti. È la conversione al contrario, e
-                  torna il conto svolto.
-     9  inverse   su e giù per la scala, senza cartello.
-
-   Le lunghezze rifanno la scaletta con metri, decimetri e centimetri;
-   i liquidi con litri, decilitri e millilitri. Poi due tappe in cui
-   arriva di tutto — e solo nell'ultima ci sono **tre attrezzi per
-   famiglia**, perché tre bilance per tipo vanno bene quando si è
-   esperti, non prima.
-
-   ── GLI AIUTI ──
-     gioco    come si gioca: trascina l'ingrediente, componi la dose
-     svolto   il conto per intero, col risultato
-     regola   l'uguaglianza («1 kg = 1000 g») e basta
-     ''       niente — e uno sbaglio riporta comunque il conto svolto
-              su quella dose, che è la regola di tutti i giochi di casa
-
-   ── I NUMERI ──
-   Le dosi sono scritte in multipli dell'unità grande (0,5 = mezzo
-   chilo, mezzo metro, mezzo litro) e in che unità **la ricetta le
-   scrive** (`in`): così la stessa riga vale per le tre famiglie. Il
-   dato finito porta ogni dose già in unità base con il suo testo, e
-   `guastiDellaCampagna` controlla che ognuna si possa comporre con gli
-   attrezzi della tappa — e, dove l'attrezzo è uno solo, con quello.
-   ═══════════════════════════════════════════════════════════════════ */
+// Una scaletta sola, ripetuta per tre famiglie: nove gradini che
+// insegnano una cosa nuova per volta. Il perché dei gradini e degli
+// aiuti è in docs/pozioni/regole.md.
 import { FAMIGLIE, VALE, scrivi } from './misure.js'
 
-/* le dosi, per gradino: `in` è dove la ricetta le scrive, i numeri
-   sono multipli della grande */
+// le dosi, per gradino: `in` è dove la ricetta le scrive, i numeri sono
+// multipli della grande
 const GRADINI = [
   { id: 'banco', aiuto: 'gioco', strumenti: ['P'], scelta: 2, clienti: 4, ingredienti: 1,
     scuola: 'misure',
@@ -107,10 +57,8 @@ const GRADINI = [
            { in: 'G', valori: [0.5, 3, 12] }] },
 ]
 
-/* ── le due tappe finali ──
-   Qui una tappa pesca da tutte e tre le famiglie: le dosi sono quelle
-   dei gradini senza aiuti, più — nell'ultima — quelle da magazzino, che
-   ci stanno solo sull'attrezzo grande. */
+// le due tappe finali: pescano da tutte e tre le famiglie, con le dosi
+// dei gradini senza aiuti più (nell'ultima) quelle da magazzino
 const FINALI = [
   { id: 'calderone', nome: 'Il grande calderone', emoji: '🔮',
     dritta: 'Pesi, lunghezze e liquidi nella stessa pozione: ogni ingrediente vuole il suo attrezzo.',
@@ -125,13 +73,9 @@ const FINALI = [
            { in: 'P', valori: [3, 4.5, 25] }] },
 ]
 
-/* dove comincia ogni famiglia sulla scala 0–100 di `data/portata.js`
-   (12,5 punti per anno, 0 = quattro anni): i pesi a sette anni e
-   mezzo, che è quando le misure entrano a scuola, e da lì un punto e
-   mezzo a gradino, una famiglia dopo l'altra fino agli undici anni
-   del calderone. La fila sale sempre: un bambino di dieci anni trova
-   già passati i primi gradini dei pesi, non quelli dei liquidi, che
-   arrivano dopo e deve ancora vedere. */
+// dove comincia ogni famiglia sulla scala 0-100 (docs/apprendimento/eta-e-portata.md):
+// i pesi a sette anni e mezzo (quando le misure entrano a scuola), poi un
+// punto e mezzo a gradino
 const PORTATA_DA = { massa: 44, lunghezza: 56, capacita: 68 }
 const PASSO_PORTATA = 1.5
 
@@ -182,7 +126,7 @@ export const ID_GRADINI = GRADINI.map(g => g.id)
 
 export const tappa = i => CAMPAGNA[Math.max(0, Math.min(i, CAMPAGNA.length - 1))]
 
-/* per la mappa: un blocco per famiglia, più il calderone in fondo */
+// per la mappa: un blocco per famiglia, più il calderone in fondo
 export const BLOCCHI = [
   ...FAMIGLIE.map(f => ({
     chiave: f.chiave, nome: f.nome, emoji: f.emoji,
@@ -194,16 +138,13 @@ export const BLOCCHI = [
     tappe: CAMPAGNA.map((t, i) => ({ ...t, indice: i })).filter(t => t.famiglie.length > 1) },
 ]
 
-/* quante dosi chiede una tappa a chi la finisce: è il lavoro vero, e
-   da lì escono le monete (`docs/apprendimento/calibrazione.md`: una dose è una domanda
-   vera, letta e ragionata, e vale tre monete) */
+// quante dosi chiede una tappa a chi la finisce: è il lavoro vero, da lì
+// escono le monete (docs/apprendimento/calibrazione.md)
 export const dosiDellaTappa = t => t.clienti * t.ingredienti
 export const MONETE_A_DOSE = 3
 
-/* ═══════════ il controllo di forma ═══════════
-   Riceve da fuori chi sa dire se una dose si compone (`componibile`,
-   che sta nel motore): il dato non importa il motore, ma il test li
-   mette insieme. */
+// Riceve da fuori chi sa dire se una dose si compone (`componibile`, nel
+// motore): il dato non importa il motore, ma il test li mette insieme.
 export function guastiDellaCampagna(componibile, campagna = CAMPAGNA, strumenti = {}) {
   const g = []
   const viste = new Set()
@@ -226,8 +167,6 @@ export function guastiDellaCampagna(componibile, campagna = CAMPAGNA, strumenti 
       if (!suoi.some(a => componibile(d.base, a)))
         g.push(`${dove}: la dose ${d.testo} non si compone con nessun attrezzo`)
     }
-    /* ogni famiglia in scena deve avere ingredienti da chiedere e
-       almeno una dose */
     for (const f of t.famiglie)
       if (!t.dosi.some(d => d.famiglia === f)) g.push(`${dove}: la famiglia ${f} è in scena senza dosi`)
   }
