@@ -83,6 +83,37 @@ Per disegnare con fogli di figure invece che coi poligoni:
   non è il bordo di una zona, è una cella intera che si vede da una parte
   sola (la regola sta in [`../sotterraneo/`](../sotterraneo/README.md)).
 
+## I muri (`grafica/muri.js`)
+
+Il pezzo di fondale più lungo, condiviso da tutti gli ambienti a stanze:
+**il bordo è disegnato, la massa no**. Una cella di muro circondata da altri
+muri non è una parete che qualcuno guarda, è la roccia dietro: disegnarci
+sopra i conci riempie mezza mappa di tessuto che non dice niente. Solo le
+celle che toccano il pavimento (`bordo`) portano conci, giunti, spessore,
+ombra e muschio; le sepolte (`massa`) restano piatte e quasi nere — il
+salto netto fra le due fa leggere la forma della stanza, e costa molto
+meno da dipingere.
+
+- **La muratura è continua su tutta la mappa**, poi ritagliata sulla
+  sagoma dei muri: se le pietre si generassero cella per cella, ogni cella
+  avrebbe i suoi giunti e si vedrebbe la griglia.
+- **Il fuori (le celle piene per il motore ma non muratura) è nero e
+  basta**: niente conci, niente spessore. Toglie la cornice di mattoni
+  intorno a tutta la mappa, che altrimenti sembrava un edificio solo.
+- **Il paramento può mancare** (`sotto: { muro: 'roccia' }`): il bordo si
+  dipinge due volte, prima il nucleo poi il rivestimento che salta i
+  blocchi caduti — il confine passa lungo i giunti, non fra due materiali
+  incollati.
+- **Sei passate**: ombra portata sul pavimento, la sagoma/massa, la
+  muratura vera (una passata per voce di `mura`, ciascuna disegna solo
+  dove tocca a lei — il confine corre sui giunti), il fianco in ombra,
+  l'ombra del muro per terra (`multiply`, perché la luce viene sempre
+  dall'alto), il filo di luce in cima, muschio e ragnatele negli angoli.
+- **Il ritaglio per risparmio** (`soloSu`) salta la costruzione del
+  tracciato quando non serve: su una mappa dove i muri sono un terzo delle
+  celle, il costo scende di un terzo. Nessuna muratura è obbligata a
+  usarlo.
+
 ## Le misure
 
 - **La scala sta nella trasformazione del contesto** (`dpr × scala`, una
