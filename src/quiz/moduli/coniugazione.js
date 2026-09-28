@@ -1,92 +1,20 @@
-/* ═══════════════════════════════════════════════════════════════════
-   CONIUGAZIONE — coniugare i verbi italiani, dal presente ai tempi
-   che si sbagliano davvero.
-
-   La scaletta segue quello che un bambino incontra a scuola: prima il
-   presente regolare (tre famiglie, -are -ere -ire), poi gli irregolari
-   di ogni giorno (essere, avere, andare…), poi il passato prossimo —
-   che sono DUE errori diversi, l'ausiliare sbagliato («ho andato») e
-   il participio sbagliato («aprito») — poi imperfetto e futuro, e in
-   cima i participi più duri insieme alle frasi intere, dove i due
-   errori del passato prossimo si vedono insieme.
-
-   I FALSI SONO ERRORI VERI, non lettere a caso, e per lo più si
-   COSTRUISCONO invece di scriverli tutti a mano:
-     · la «regolarizzazione» — un bambino che applica la regola giusta
-       al verbo sbagliato («io ando» invece di «vado») — si calcola dal
-       verbo stesso (`regolarizza`), e si scarta da sola quando
-       coincide col vero (capita spesso: «noi andiamo» è regolare
-       anche per davvero);
-     · lo scambio -isc-/niente («capo» invece di «capisco») si toglie
-       dalla desinenza vera;
-     · lo scambio -evo/-ivo all'imperfetto («facivo» invece di
-       «facevo») si calcola con un `replace`;
-     · il futuro che tiene la vocale dell'infinito («parlarò» invece
-       di «parlerò») si calcola dalla radice.
-   Il passato prossimo (`PARTICIPI`) resta scritto a mano, parola per
-   parola: lì non c'è una regola da applicare male, c'è solo la forma
-   vera da sapere o non sapere, come le parole di `ortografia.js`.
-
-   TRE FORMATI, alternati con `sorte.forse()`: la frase col buco
-   («Marta ___ (fare) i compiti»), la domanda diretta («qual è la
-   forma di «mangiare» con «tu»?» / «qual è il passato di…?») e la
-   frase intera da riconoscere fra tre versioni — quest'ultima è dove
-   ausiliare e participio sbagliano insieme, come li sbaglia un
-   bambino per davvero.
-
-   I TEMPI SI OPPONGONO, NON SOLO LE PERSONE. Per un pezzo ogni
-   domanda pescava i falsi dalle *altre persone dello stesso tempo*:
-   «Una volta noi ___ (parlare)» usciva con parlavamo / parlavo /
-   parlavate, e il bambino sceglieva la persona senza mai dover
-   decidere il tempo — l'avverbio davanti era decorativo, perché
-   nessuna delle tre opzioni era al presente o al futuro. Ci si
-   coniugava benissimo senza avere in testa la differenza fra
-   «parliamo», «parlavamo» e «parleremo», che è la cosa che questi
-   tempi servono a insegnare. Da qui due tipologie che vivono in cima
-   alla scaletta, dove il concetto costa:
-     · `coniug:tempo-giusto` — verbo e persona restano fermi, cambia
-       solo il tempo, e a sceglierlo è il *quando* della frase
-       («Adesso», «Una volta», «Domani»). Gli avverbi devono
-       selezionare un tempo solo: «Ogni giorno noi parliamo» è vero
-       tanto quanto «ogni giorno noi parlavamo», e una domanda con
-       due risposte difendibili passa qualunque controllo di forma;
-     · `coniug:riconosci-tempo` — la strada inversa, la forma già
-       coniugata e il nome del tempo da dire.
-
-   IL PASSATO REMOTO sta all'ultimo grado insieme ai participi duri,
-   perché è il posto dove l'italiano chiede di sapere a memoria e
-   basta: «cuocere» fa «io cossi» ma «noi cocemmo», e chi applica la
-   regola scrive «cuocei». Le persone irregolari sono la prima, la
-   terza e la sesta — le altre tre restano regolari, e distinguere le
-   une dalle altre È l'esercizio. I falsi sono i due errori veri: la
-   regolarizzazione e l'imperfetto al posto suo («cocevamo» per
-   «cocemmo»). Al remoto NON si usa la frase col buco: «Molti anni fa
-   noi ___» accetta onestamente anche l'imperfetto, quindi si chiede
-   sempre in forma diretta.
-
-   IN CIMA CI SONO ANCHE I MODI E I TEMPI CHE ARRIVANO DOPO —
-   condizionale (presente e passato), congiuntivo (presente e
-   imperfetto), imperativo, e i composti fatti con l'ausiliare a un
-   tempo diverso: trapassato prossimo, futuro anteriore, trapassato
-   remoto. Ognuno ha il suo interruttore in `data/saperi.js`, e tutti
-   **nascono spenti**: un bambino che il congiuntivo non l'ha mai
-   sentito nominare non deve incontrarlo perché noi l'abbiamo scritto.
-   I quattro composti sono una domanda sola scritta una volta
-   (`composto`), perché sono davvero la stessa cosa quattro volte: il
-   participio non si muove e il tempo lo dà l'ausiliare — ed è per
-   questo che i loro falsi cambiano SOLO l'ausiliare, mettendo in fila
-   «avevo mangiato», «avrò mangiato» e «ho mangiato».
-   ═══════════════════════════════════════════════════════════════════ */
+/* Coniugare i verbi italiani, dal presente ai tempi che si sbagliano davvero.
+   I falsi sono errori veri e per lo più si costruiscono da regole (vedi
+   `regolarizza`, gli scambi -isc-/-evo-ivo/vocale del futuro) invece di
+   scrivere ogni domanda a mano; il passato prossimo (PARTICIPI) resta
+   scritto a mano perché lì non c'è una regola da applicare male. Tre
+   formati alternati con `sorte.forse()`: frase col buco, domanda diretta,
+   frase intera da riconoscere. I tempi (non solo le persone) si oppongono
+   in `tempo-giusto`/`riconosci-tempo`, in cima alla scaletta. I tempi che
+   arrivano dopo (condizionale, congiuntivo, imperativo, i composti)
+   nascono spenti in data/saperi.js. */
 
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo } from '../nucleo/domanda.js'
 
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1)
 
-/* ── il presente regolare ──
-   Le desinenze delle quattro famiglie (la quarta è la stessa dei verbi
-   in -ire che mettono -isc- in mezzo: capire, non dormire). Servono
-   anche a «regolarizzare» un verbo irregolare — vedi più sotto. */
+// le desinenze delle quattro famiglie (la quarta è -ire con -isc-: capire, non dormire); servono anche a regolarizza()
 const DESINENZE = {
   are: ['o', 'i', 'a', 'iamo', 'ate', 'ano'],
   ere: ['o', 'i', 'e', 'iamo', 'ete', 'ono'],
@@ -124,9 +52,6 @@ const REGOLARI = {
   },
 }
 
-/* ── il presente irregolare ──
-   Solo le forme vere: la «dritta» e l'errore-per-regolarizzazione si
-   calcolano da qui, non si scrivono a mano (`regolarizza`, sotto). */
 const IRREGOLARI = [
   { infinito: 'essere', forme: ['sono', 'sei', 'è', 'siamo', 'siete', 'sono'] },
   { infinito: 'avere', forme: ['ho', 'hai', 'ha', 'abbiamo', 'avete', 'hanno'] },
@@ -142,23 +67,14 @@ const IRREGOLARI = [
   { infinito: 'sapere', forme: ['so', 'sai', 'sa', 'sappiamo', 'sapete', 'sanno'] },
 ]
 
-/* l'errore di un bambino che tratta un irregolare come se fosse
-   regolare: «andare» → «io ando», non «vado». Capita che coincida col
-   vero (dare → noi «diamo» è regolare per davvero): chi chiama questa
-   funzione controlla sempre che il risultato sia diverso dal vero. */
+// un irregolare trattato come regolare («io ando», non «vado»): può coincidere col vero, chi chiama controlla sempre
 const regolarizza = (infinito, idx) => {
   const tipo = infinito.slice(-3)
   const radice = infinito.slice(0, infinito.length - 3)
   return radice + DESINENZE[tipo][idx]
 }
 
-/* ── il passato prossimo: ausiliare e participio ──
-   Ogni voce: l'infinito, il participio vero, l'ausiliare, due errori
-   che un bambino scrive davvero, un'emoji se aiuta a capire di cosa si
-   parla, e — solo per i verbi che si prestano a una frase intera — un
-   `compl` per costruirla («Luca ___ (andare) al parco»).
-   `irregolare: true` sono i participi che non seguono -ato/-uto/-ito:
-   sono quelli della tappa più dura. */
+// compl (solo dove si presta a una frase intera) costruisce «Luca ___ (andare) al parco»; irregolare = tappa più dura
 const PARTICIPI = [
   { infinito: 'andare', participio: 'andato', ausiliare: 'essere', errori: ['anduto', 'andito'], compl: 'al parco', emoji: '🚶', irregolare: false },
   { infinito: 'venire', participio: 'venuto', ausiliare: 'essere', errori: ['venito', 'veniuto'], compl: 'a casa nostra', emoji: '🏠', irregolare: false },
@@ -266,23 +182,12 @@ const CON_COMPLEMENTO = PARTICIPI.filter(v => v.compl)
 const femminile = p => p.slice(0, -1) + 'a'
 const SOGGETTI = [{ nome: 'Luca', genere: 'm' }, { nome: 'Marta', genere: 'f' }]
 
-/* ── l'accordo col soggetto ──
-   Col passato prossimo di ESSERE tutto quello che segue si accorda:
-   il participio («Marta è andata»), il participio SBAGLIATO dei falsi
-   («è anduta», che se restasse maschile si scarterebbe a occhio senza
-   sapere niente) e il complemento quando è un aggettivo — `agg: true`,
-   cioè «famoso», «zitto», «contento». Con avere non si accorda niente
-   («Marta ha mangiato la pizza»), ed è proprio la differenza che
-   questo grado insegna. Prima si accordava solo il participio, e usciva
-   «Ieri Marta è diventata famoso». */
+// con essere si accorda tutto quello che segue (participio, falso compreso, e il complemento se è un aggettivo)
 const accorda = (parola, v, sog) =>
   v.ausiliare === 'essere' && sog.genere === 'f' ? femminile(parola) : parola
 const complementoDi = (v, sog) => (v.agg ? accorda(v.compl, v, sog) : v.compl)
 
-/* ── imperfetto e futuro: gli irregolari veri ──
-   Andare, stare e i verbi in -are in generale sono regolari a questi
-   due tempi (andavo, andrò con la sola radice che cambia): gli
-   irregolari da imparare a memoria sono questi. */
+// gli irregolari veri a imperfetto e futuro (andare/-are in genere sono regolari qui, solo la radice cambia)
 const IMPERFETTO_IRR = [
   { infinito: 'essere', forme: ['ero', 'eri', 'era', 'eravamo', 'eravate', 'erano'] },
   { infinito: 'fare', forme: ['facevo', 'facevi', 'faceva', 'facevamo', 'facevate', 'facevano'] },
@@ -313,26 +218,14 @@ const futuroStem = (infinito, tipo) => {
   return tipo === 'ire' ? radice + 'ir' : radice + 'er'
 }
 
-/* ── il passato remoto ──
-   Manca la riga `ere`, e non per dimenticanza: al passato remoto i
-   verbi regolari in -ere hanno DUE forme buone («temei» e «temetti»,
-   «credé» e «credette»), quindi qualunque falso si scelga rischia di
-   essere una risposta onesta. I -ere entrano solo dalla tabella degli
-   irregolari, dove la forma vera è una sola. */
+// manca la riga `ere`: i regolari in -ere hanno due forme buone al remoto, ogni falso rischierebbe di essere onesto
 const REMOTO_END = {
   are: ['ai', 'asti', 'ò', 'ammo', 'aste', 'arono'],
   ire: ['ii', 'isti', 'ì', 'immo', 'iste', 'irono'],
 }
-/* le desinenze regolari in -ere servono lo stesso, ma solo a
-   COSTRUIRE L'ERRORE: «cuocei» al posto di «cossi» è quello che scrive
-   chi la regola la sa e il verbo no. */
-const REMOTO_ERE_FINTE = ['ei', 'esti', 'é', 'emmo', 'este', 'erono']
+const REMOTO_ERE_FINTE = ['ei', 'esti', 'é', 'emmo', 'este', 'erono'] // solo per costruire l'errore («cuocei»)
 
-/* Le persone 1ª, 3ª e 6ª del singolare-plurale sono quelle che
-   cambiano tema («cossi, cosse, cossero»); la 2ª, la 4ª e la 5ª
-   restano regolari sul tema debole («cocesti, cocemmo, coceste»). È
-   tutta lì la difficoltà del passato remoto, e per questo si chiedono
-   anche quelle: distinguere le une dalle altre È l'esercizio. */
+// 1ª, 3ª, 6ª cambiano tema (cossi/cosse/cossero), le altre restano regolari (cocesti): distinguerle È l'esercizio
 const REMOTO_FORTI = [0, 2, 5]
 const REMOTO_IRR = [
   { infinito: 'essere', forme: ['fui', 'fosti', 'fu', 'fummo', 'foste', 'furono'] },
@@ -367,24 +260,11 @@ const REMOTO_IRR = [
   { infinito: 'rimanere', forme: ['rimasi', 'rimanesti', 'rimase', 'rimanemmo', 'rimaneste', 'rimasero'] },
 ]
 
-/* ── condizionale e congiuntivo ──
-   Il condizionale presente sta sullo stesso tema del futuro (parlerò →
-   parlerei), e questa è la ragione per cui l'errore giusto da mettergli
-   accanto è proprio il futuro: chi non li distingue scrive «domani
-   mangerei». Gli irregolari sono gli stessi del futuro, desinenze a
-   parte, quindi la tabella non si riscrive: si riusa `FUTURO_IRR`
-   togliendo la coda. */
+// il condizionale sta sullo stesso tema del futuro (parlerò → parlerei): riusa FUTURO_IRR, non si riscrive la tabella
 const CONDIZIONALE_END = ['ei', 'esti', 'ebbe', 'emmo', 'este', 'ebbero']
-/* dal futuro al suo tema, che è lo stesso: «sarò» → «sar-». La prima
-   persona del futuro finisce sempre in una vocale sola, quindi il tema
-   è tutto quello che le sta davanti. */
-const temaDalFuturo = forme => forme[0].slice(0, -1)
+const temaDalFuturo = forme => forme[0].slice(0, -1) // «sarò» → «sar-»: la 1ª persona finisce in una vocale sola
 
-/* Il congiuntivo presente ha una faccia sola per io/tu/lui («che io
-   mangi, che tu mangi, che lui mangi»), ed è la cosa che lo rende
-   difficile da chiedere: tre persone su sei danno la stessa risposta.
-   Perciò le domande sul congiuntivo presente si fanno solo su noi/voi/
-   loro, dove la forma è unica — le altre tre si vedono nell'aiuto. */
+// il congiuntivo presente ha una faccia sola per io/tu/lui: si chiede solo su noi/voi/loro, dove la forma è unica
 const CONG_PRES_END = {
   are: ['i', 'i', 'i', 'iamo', 'iate', 'ino'],
   ere: ['a', 'a', 'a', 'iamo', 'iate', 'ano'],
@@ -419,19 +299,8 @@ const CONG_IMPF_IRR = [
   { infinito: 'stare', forme: ['stessi', 'stessi', 'stesse', 'stessimo', 'steste', 'stessero'] },
 ]
 
-/* ── l'imperativo ──
-   Tre persone e non sei: un ordine si dà a te (parla!), a noi
-   (parliamo!) o a voi (parlate!), e le forme di cortesia («parli
-   pure») sono congiuntivo travestito — roba da grandi, fuori di qui.
-
-   La difficoltà vera è UNA e sta tutta nella seconda persona dei verbi
-   in -are, dove imperativo e indicativo si scambiano la vocale:
-   «parla!» comanda, «parli» racconta. Negli altri due gruppi le due
-   forme coincidono («prendi» vale per tutte e due), e allora la
-   domanda si sposta sulla persona giusta dell'ordine.
-
-   E poi c'è il negativo, che è la regola che sorprende: alla seconda
-   persona vuole l'infinito. «Non correre!», mai «non corri!». */
+// tre persone (tu/noi/voi), non sei: le forme di cortesia sono congiuntivo travestito, fuori di qui.
+// il negativo alla 2ª persona vuole l'infinito: «Non correre!», mai «non corri!»
 const IMPERATIVO_END = {
   are: ['a', 'iamo', 'ate'],
   ere: ['i', 'iamo', 'ete'],
@@ -451,17 +320,11 @@ const IMPERATIVO_IRR = [
   { infinito: 'stare', forme: ["sta'", 'stiamo', 'state'] },
   { infinito: 'dire', forme: ["di'", 'diciamo', 'dite'] },
 ]
-/* Questi cinque la seconda persona ce l'hanno buona in due modi —
-   «va'» e «vai», «fa'» e «fai» — e una domanda a scelta multipla con
-   due risposte giuste non è una domanda: a loro si chiedono solo il
-   noi e il voi. Nemmeno il negativo, che alla seconda persona
-   passerebbe di lì. */
+// questi cinque hanno la 2ª persona buona in due modi («va'»/«vai»): a loro si chiede solo noi/voi, mai il negativo
 const IMPERATIVO_DUE_FORME = ['andare', 'fare', 'dare', 'stare', 'dire']
 const PRONOMI_IMP = ['tu', 'noi', 'voi']
-/* dov'è la stessa persona nella tabella dei sei */
-const POSTO_IMP = [1, 3, 4]
-/* chi si sta comandando, che è quello che fissa la persona: senza,
-   «___ (parlare) piano!» si risponde giusto in tre modi */
+const POSTO_IMP = [1, 3, 4] // dov'è la stessa persona nella tabella dei sei
+// chi si comanda fissa la persona: senza, «___ (parlare) piano!» si risponde giusto in tre modi
 const VOCATIVO = {
   tu: ['Marta', 'Luca', 'Nina', 'Bruno'],
   noi: ['Dai', 'Su', 'Forza'],
@@ -475,34 +338,15 @@ function imperativoDi(infinito) {
   return IMPERATIVO_END[ISC.has(infinito) ? 'ireIsc' : fin].map(f => radiceDi(infinito) + f)
 }
 
-/* ── i tempi composti ──
-   Due parole, e il tempo lo dà la prima: «ho mangiato» è passato
-   prossimo, «avevo mangiato» trapassato, «avrò mangiato» futuro
-   anteriore, «ebbi mangiato» trapassato remoto, «avrei mangiato»
-   condizionale passato. Il participio non si muove mai.
-
-   Per questo i falsi si costruiscono cambiando SOLO l'ausiliare: chi
-   sbaglia un tempo composto sbaglia lì, e un falso che tocca il
-   participio starebbe chiedendo un'altra cosa. Ha anche il pregio di
-   non passare mai dalla regola: «avere» è coniugato a mano in ognuno
-   dei suoi tempi, e non c'è nessun «berò» in agguato.
-
-   Solo verbi con «avere»: quelli con «essere» porterebbero dentro
-   l'accordo del participio («eravamo andati»), che è un'altra lezione
-   e ce l'ha già `ausiliareFrase`.
-
-   La tabella di «avere» tempo per tempo sta più sotto (`AUSILIARE`),
-   dove ci sono già le forme da cui la si ricava. */
-/* com'è messo l'ausiliare, detto a un bambino */
+// tempi composti: due parole, il tempo lo dà la prima (ho/avevo/avrò/ebbi/avrei mangiato); il participio non si muove.
+// i falsi cambiano SOLO l'ausiliare; solo verbi con «avere» (con «essere» porterebbero l'accordo, altra lezione)
 const COME_AUSILIARE = {
   trapassato: "all'imperfetto",
   'futuro-anteriore': 'al futuro',
   'trapassato-remoto': 'al passato remoto',
   'condizionale-passato': 'al condizionale',
 }
-/* gli altri due composti che gli si confondono, in ordine: il primo è
-   quello che si sbaglia davvero */
-const COMPOSTO_FALSI = {
+const COMPOSTO_FALSI = { // gli altri due composti che confondono, in ordine: il primo è quello che si sbaglia davvero
   trapassato: ['prossimo', 'futuro-anteriore'],
   'futuro-anteriore': ['prossimo', 'trapassato'],
   'trapassato-remoto': ['trapassato', 'prossimo'],
@@ -510,10 +354,7 @@ const COMPOSTO_FALSI = {
 }
 const VERBI_COMPOSTI = PARTICIPI.filter(p => p.ausiliare === 'avere')
 
-/* verbi «sicuri» per la coniugazione regolare a imperfetto e futuro:
-   niente -ciare/-giare/-care/-gare, che al futuro cambiano ortografia
-   (mangerò, non mangerò... anzi «giocherò» con la h) — una cosa in
-   più da spiegare che non è la coniugazione. */
+// «sicuri» a imperfetto/futuro: niente -ciare/-giare/-care/-gare, che al futuro cambiano ortografia (giocherò con la h)
 const ARE_SICURI = ['parlare', 'cantare', 'saltare', 'guardare', 'ascoltare', 'lavare', 'portare',
   'aiutare', 'chiamare', 'comprare', 'lavorare', 'nuotare', 'suonare', 'guidare', 'cucinare',
   'disegnare', 'aspettare']
@@ -523,17 +364,7 @@ const IRE_SICURI = ['dormire', 'partire', 'sentire', 'seguire', 'servire', 'copr
   'capire', 'finire', 'preferire', 'pulire', 'spedire', 'unire', 'colpire', 'guarire', 'punire',
   'gestire']
 
-/* ── un verbo, un tempo, sei forme ──
-   L'unico posto che sa dire come si coniuga qualcosa: prima guarda se
-   quel verbo ha una tabella sua a quel tempo, se no applica la regola.
-   Serve alle domande che oppongono i TEMPI fra loro, dove lo stesso
-   verbo va coniugato in tre modi diversi nella stessa domanda —
-   `imperfetto()` e `futuro()` continuano invece a fare da sé, perché
-   hanno bisogno di sapere se la forma è uscita dalla regola o dalla
-   tabella per scrivere l'aiuto giusto.
-   Torna `null` quando quel verbo a quel tempo non lo sappiamo fare in
-   modo sicuro: chi chiama filtra, invece di rischiare una forma
-   inventata. */
+// un verbo, un tempo, sei forme: tabella se c'è, regola se no. Torna null se non è sicuro: chi chiama filtra
 const ISC = new Set(REGOLARI.ireIsc.verbi)
 const tabellaDi = (lista, infinito) => (lista.find(v => v.infinito === infinito) || {}).forme || null
 const radiceDi = infinito => infinito.slice(0, infinito.length - 3)
@@ -566,19 +397,12 @@ function formeDi(infinito, tempo) {
   }
 }
 
-/* i verbi di cui sappiamo dire presente, imperfetto e futuro senza
-   sbagliare: le tre liste «sicure» più gli irregolari che hanno una
-   tabella per ogni tempo che serve. «dovere» resta fuori di proposito —
-   il futuro ce l'ha in tabella, ma il presente («devo») no, e la regola
-   direbbe «dovo». */
+// «dovere» resta fuori di proposito: il futuro ce l'ha in tabella ma il presente («devo») no, la regola direbbe «dovo»
 const IRR_COMPLETI = ['essere', 'avere', 'andare', 'fare', 'dire', 'venire', 'stare',
   'potere', 'volere', 'sapere', 'vedere', 'uscire']
 const VERBI_TEMPI = [...ARE_SICURI, ...ERE_SICURI, ...IRE_SICURI, ...IRR_COMPLETI]
 
-/* «avere» coniugato in ognuno dei suoi tempi: è la prima parola di
-   tutti i tempi composti, e quindi quella che dice di che tempo si
-   tratta. Scritta qui una volta e presa dalle tabelle vere, mai dalla
-   regola — «avere» è irregolare quasi dappertutto. */
+// «avere» in ognuno dei suoi tempi (la prima parola di ogni composto), sempre dalle tabelle vere: è irregolare quasi ovunque
 const AVERE_PRESENTE = formeDi('avere', 'presente')
 const AVERE_IMPERFETTO = formeDi('avere', 'imperfetto')
 const AUSILIARE = {
@@ -589,17 +413,11 @@ const AUSILIARE = {
   'condizionale-passato': formeDi('avere', 'condizionale'),
 }
 
-/* «potere» e «volere» un imperativo non ce l'hanno affatto */
-const VERBI_IMPERATIVO = VERBI_TEMPI.filter(v => v !== 'potere' && v !== 'volere')
-
-/* al passato remoto i regolari sono -are e -ire: i -ere hanno due
-   forme buone e stanno solo nella tabella degli irregolari */
+const VERBI_IMPERATIVO = VERBI_TEMPI.filter(v => v !== 'potere' && v !== 'volere') // un imperativo non ce l'hanno
+// al passato remoto i regolari sono -are e -ire: i -ere hanno due forme buone e stanno solo negli irregolari
 const REMOTO_REGOLARI = [...REGOLARI.are.verbi, ...REGOLARI.ire.verbi, ...REGOLARI.ireIsc.verbi]
 
-/* il passato remoto come lo scriverebbe chi applica la regola a un
-   verbo che non la segue: «cuocei» per «cossi». Torna `null` per i
-   verbi dalla radice troppo corta («bere» → «b-»), dove l'errore
-   costruito non somiglia a niente che un bambino scriverebbe. */
+// il remoto come lo scriverebbe chi applica la regola a un verbo che non la segue; null se la radice è troppo corta
 function remotoRegolarizzato(infinito, idx) {
   const fin = infinito.slice(-3)
   const radice = radiceDi(infinito)
@@ -608,13 +426,7 @@ function remotoRegolarizzato(infinito, idx) {
   return fine ? radice + fine : null
 }
 
-/* ── i falsi, in ordine di preferenza ──
-   Un candidato è `[forma, perché]`: entra il primo che vale, si smette
-   a due. Si scarta da sé quello nullo, quello uguale alla risposta
-   giusta e quello già preso — e non è un caso di scuola: questi errori
-   si *costruiscono*, e un errore costruito ogni tanto è la forma vera
-   («noi cocemmo» è regolare per davvero). Chi scriveva questi controlli
-   a mano, domanda per domanda, prima o poi ne dimenticava uno. */
+// i falsi in ordine di preferenza: [forma, perché], si scarta da sé il nullo, l'uguale alla giusta, il già preso
 function raccogli(formaGiusta, candidati) {
   const presi = []
   for (const c of candidati) {
@@ -626,9 +438,7 @@ function raccogli(formaGiusta, candidati) {
   return presi.map(([forma, perche]) => testo(forma, perche))
 }
 
-/* Come si chiama un tempo quando lo si nomina in una consegna, e come
-   si chiama quando è una risposta da toccare (lì l'articolo davanti
-   sarebbe rumore). */
+// come si chiama un tempo in una consegna, contro l'etichetta come risposta (senza articolo)
 const NOME_TEMPO = {
   presente: 'il presente',
   imperfetto: "l'imperfetto",
@@ -652,9 +462,7 @@ const ETICHETTA = {
   trapassato: 'trapassato prossimo',
   remoto: 'passato remoto',
 }
-/* a cosa serve quel tempo, detto a un bambino: è l'aiuto che compare
-   quando sbaglia, e deve dire *perché* era quello e non un altro */
-const SPIEGA = {
+const SPIEGA = { // a cosa serve quel tempo, detto a un bambino: l'aiuto quando sbaglia, dice perché era quello
   presente: 'quello che si fa adesso',
   imperfetto: 'quello che si faceva una volta, e durava',
   futuro: 'quello che si farà',
@@ -666,13 +474,7 @@ const SPIEGA = {
   'condizionale-passato': 'quello che si sarebbe fatto e non si è fatto',
 }
 
-/* ── il *quando* della frase, che è quello che sceglie il tempo ──
-   Un avverbio qui dentro deve lasciare in piedi UN tempo solo. «Ieri» e
-   «Ogni giorno» sono fuori per questo: «ogni giorno noi parliamo» è
-   vero quanto «ogni giorno noi parlavamo», e una domanda con due
-   risposte difendibili passa qualunque controllo di forma senza che
-   nessuno se ne accorga. Sono invariabili anche al soggetto — niente
-   «da piccolo/a/i», che vorrebbe l'accordo. */
+// il *quando* deve lasciare in piedi UN tempo solo: «Ieri»/«Ogni giorno» sono fuori (valgono per due tempi)
 const QUANDO = {
   presente: ['Adesso', 'In questo momento', 'Proprio ora'],
   imperfetto: ['Una volta', 'In quegli anni', 'Tanti anni fa', "Quell'estate"],
@@ -688,20 +490,7 @@ const SCALETTA = [
   'i participi duri, il passato remoto e i modi che si fanno dopo',
 ]
 
-/* Le tipologie. Il presente è un gruppo suo: si coniuga parlando, e un
-   bambino che dice «noi andiamo» lo sa fare prima di sapere che si
-   chiama presente indicativo. Dal passato prossimo in poi sono i tempi
-   che si *studiano*, e chi non li ha ancora visti resta al presente
-   invece di restare fuori.
-
-   IL PREFISSO È `coniug:` E NON `verbo:`, che sarebbe il nome ovvio.
-   `verbo:` è già preso: sono i verbi inglesi in `store/srs.js`
-   (`progressi.js`, materia «Verbi inglesi», e il conto che si legge in
-   home). Finché queste chiavi restavano fra le domande non faceva
-   danno; da quando il ripasso le scrive nel profilo (`quiz/memoria.js`)
-   la coniugazione italiana andrebbe a gonfiare la padronanza
-   d'inglese — e i traguardi con lei. Un prefisso è uno spazio di nomi
-   condiviso da tutto il repo: si sceglie guardando gli altri. */
+// prefisso coniug: e non verbo:, già preso dai verbi inglesi in store/progressi.js (gonfierebbe la loro padronanza)
 const TIPI = [
   { chiave: 'coniug:presente-regolare', nome: 'Il presente dei verbi regolari', sa: 'presente', gradi: { 1: 0.75 } },
   { chiave: 'coniug:presente-isc', livello: 56, nome: 'I verbi in -isc (finire, capire)', sa: 'presente', gradi: { 1: 0.25 } },
@@ -711,33 +500,21 @@ const TIPI = [
   { chiave: 'coniug:participio-irregolare', nome: 'I participi irregolari (preso, scritto)', sa: 'tempi-verbali', gradi: { 3: 0.25, 6: 0.25 } },
   { chiave: 'coniug:imperfetto', nome: "L'imperfetto", sa: 'tempi-verbali', gradi: { 4: 0.5 } },
   { chiave: 'coniug:futuro', nome: 'Il futuro', sa: 'tempi-verbali', gradi: { 4: 0.5 } },
-  /* le due che oppongono i tempi invece delle persone: stanno in alto
-     perché scegliere fra «parliamo», «parlavamo» e «parleremo» è un
-     gradino sopra lo scegliere fra «parlavamo» e «parlavate» — che
-     resta dov'era, ai gradi 1-4, e resta importante */
+  // le due che oppongono i tempi (non le persone) stanno in alto: un gradino sopra scegliere fra le persone
   { chiave: 'coniug:tempo-giusto', nome: 'Scegliere il tempo che la frase chiede', sa: 'tempi-verbali', gradi: { 5: 0.5, 6: 0.1 } },
   { chiave: 'coniug:riconosci-tempo', nome: 'Riconoscere il tempo di un verbo', sa: 'tempi-verbali', gradi: { 5: 0.3, 6: 0.05 } },
-  /* i tempi che a scuola arrivano dopo: ognuno col suo interruttore,
-     e tutti e quattro spenti finché un genitore non dice di sì
-     (`difetto: false` in `data/saperi.js`) */
+  // i tempi che a scuola arrivano dopo: spenti finché un genitore non dice sì (difetto: false in data/saperi.js)
   { chiave: 'coniug:passato-remoto', nome: 'Il passato remoto (andò, cossi, mangiammo)', sa: 'passato-remoto', gradi: { 6: 0.2 } },
   { chiave: 'coniug:composti', nome: 'Trapassato prossimo e futuro anteriore (avevo/avrò mangiato)', sa: 'tempi-composti', gradi: { 6: 0.12 } },
-  /* il trapassato remoto è l'unico tipo che ne chiede DUE, di saperi:
-     è un tempo composto, ma la prima parola è al passato remoto («ebbi
-     mangiato»), e chiederlo a chi il passato remoto non l'ha fatto
-     sarebbe muto lo stesso. Un tipo si spegne se gli manca uno
-     qualsiasi dei suoi (`Modulo.tipoSpento`). */
+  // l'unico tipo che chiede due saperi: è un composto ma la prima parola è al passato remoto («ebbi mangiato»)
   { chiave: 'coniug:trapassato-remoto', nome: 'Il trapassato remoto (ebbi mangiato)', sa: ['tempi-composti', 'passato-remoto'], gradi: { 6: 0.06 } },
   { chiave: 'coniug:condizionale', nome: 'Il condizionale (vorrei, avrei voluto)', sa: 'condizionale', gradi: { 6: 0.12 } },
   { chiave: 'coniug:congiuntivo', nome: 'Il congiuntivo (che io sia, se io fossi)', sa: 'congiuntivo', gradi: { 6: 0.12 } },
-  /* l'imperativo si sente parlare molto prima di sapere come si
-     chiama, e non ha bisogno di nessun altro tempo per stare in piedi:
-     è l'unico dei tardivi che si affaccia anche al grado 5 */
+  // l'unico dei tardivi che si affaccia già al grado 5: non ha bisogno di nessun altro tempo per stare in piedi
   { chiave: 'coniug:imperativo', nome: "L'imperativo (parla!, andiamo!, non correre!)", sa: 'imperativo', gradi: { 5: 0.15, 6: 0.1 } },
 ]
 
-/* due forme diverse da quella giusta, prese da `lista` (le altre
-   persone della stessa tabella): il gesto più comune di questo file. */
+// due forme diverse dalla giusta, prese da `lista` (le altre persone della stessa tabella)
 function altreDue(lista, giusta, sorte, scarta) {
   const buone = lista.filter(f => f !== giusta && f !== scarta)
   const scelte = sorte.alcuni(buone, 2)
@@ -745,15 +522,7 @@ function altreDue(lista, giusta, sorte, scarta) {
   return scelte
 }
 
-/* la domanda su una persona coniugata: buco o forma diretta, a
-   seconda della sorte — le due domande allenano la stessa cosa ma non
-   si somigliano.
-
-   `avverbio` e `nomeTempo` fissano il TEMPO nella consegna: senza,
-   «lui ___ (vendere)» si risponde giusto anche al presente («vende»)
-   e il bambino sceglie fra i falsi guardando solo che forma hanno,
-   non sapendo il verbo. Al presente (gradi 1-2) non servono: è il
-   tempo che si dà per scontato quando non si dice altro. */
+// avverbio/nomeTempo fissano il TEMPO nella consegna: senza, «lui ___ (vendere)» si risponde giusto anche al presente
 function domandaPersona({ sorte, pronome, infinito, formaGiusta, falsi, chiave, aiuto,
   avverbio, nomeTempo, soloDiretta }) {
   const buco = !soloDiretta && sorte.forse(0.55)
@@ -762,27 +531,13 @@ function domandaPersona({ sorte, pronome, infinito, formaGiusta, falsi, chiave, 
       ? (avverbio ? `${cap(avverbio)} ${pronome} ___ (${infinito}).` : `${cap(pronome)} ___ (${infinito}).`)
       : (nomeTempo ? `Qual è ${nomeTempo} di «${infinito}» con «${pronome}»?` : `Qual è la forma di «${infinito}» con «${pronome}»?`),
     buona: testo(formaGiusta),
-    /* un falso può arrivare già confezionato (`testo(forma, perché)`)
-       quando ha una spiegazione sua: alle domande che oppongono i tempi
-       serve dire *che tempo era* quello sbagliato, non ripetere l'aiuto
-       generale */
+    // un falso può arrivare già confezionato (testo(forma, perché)) quando serve dire che tempo era, non l'aiuto generale
     falsi: falsi.map(f => (typeof f === 'string' ? testo(f, aiuto) : f)),
     chiave,
     aiuto,
     sorte,
   })
 }
-
-/* avverbi che fissano imperfetto e futuro nelle frasi col buco —
-   invarianti col soggetto (niente «da piccolo/a/i» che vorrebbe
-   l'accordo). */
-/* gli avverbi stanno in `QUANDO`, uno solo per tutte le domande che ne
-   hanno bisogno: erano due elenchi, e in quello dell'imperfetto
-   c'erano «Ieri», «Ogni giorno» e «Tutti i giorni» — che l'imperfetto
-   lo *permettono* ma non lo *impongono* («ogni giorno noi parliamo» è
-   una frase giusta). Finché i falsi erano altre persone dello stesso
-   tempo nessuno se ne accorgeva; adesso che si oppongono i tempi
-   sarebbero domande con due risposte buone. */
 
 class Coniugazione extends Modulo {
   constructor() {
@@ -793,24 +548,12 @@ class Coniugazione extends Modulo {
       materia: 'italiano',
       chiaro: 'coniugare i verbi italiani: presente, passato, imperfetto e futuro',
       scaletta: SCALETTA,
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [38, 44, 56, 63, 75, 95],
-      /* il presente lo usa chi parla; passato prossimo, imperfetto e
-         futuro sono i tempi che si studiano, e chi non li ha ancora
-         visti resta al presente invece di restare fuori */
+      livelli: [38, 44, 56, 63, 75, 95], // scala 0-100 comune a tutte le materie, vedi docs/apprendimento/quiz-livelli.md
       tipi: TIPI,
     })
   }
 
-  /* L'ausiliare si chiede in due modi: al grado 3 con la frase col buco,
-     al grado 5 con la frase intera da giudicare. È la stessa cosa da
-     sapere e quindi la stessa chiave — cambia quanto costa vederlo, che
-     è esattamente cosa vuol dire «grado». */
+  // l'ausiliare si chiede in due modi (grado 3 col buco, grado 5 la frase intera): stessa chiave, cambia il costo
   genera(grado, sorte, tipo) {
     switch (tipo) {
       case 'coniug:presente-isc': return this.presenteRegolare(sorte, true)
@@ -833,7 +576,6 @@ class Coniugazione extends Modulo {
     }
   }
 
-  /* ── grado 1: presente regolare ── */
   presenteRegolare(sorte, soloIsc) {
     const tipo = soloIsc ? 'ireIsc' : sorte.uno(['are', 'ere', 'ire'])
     const dati = REGOLARI[tipo]
@@ -844,7 +586,7 @@ class Coniugazione extends Modulo {
 
     let falsi
     if (tipo === 'ireIsc' && [0, 1, 2, 5].includes(idx) && sorte.forse(0.5)) {
-      /* l'errore che si sente di più: dimenticare -isc- */
+      // l'errore che si sente di più: dimenticare -isc-
       const radice = infinito.slice(0, infinito.length - 3)
       const senzaIsc = radice + DESINENZE.ire[idx]
       falsi = [senzaIsc, ...altreDue(forme, formaGiusta, sorte, senzaIsc)].slice(0, 2)
@@ -859,7 +601,6 @@ class Coniugazione extends Modulo {
     })
   }
 
-  /* ── grado 2: presente irregolare ── */
   presenteIrregolare(sorte) {
     const v = sorte.uno(IRREGOLARI)
     const idx = sorte.fra(0, 5)
@@ -873,7 +614,7 @@ class Coniugazione extends Modulo {
     }
     let falsi = candidati.slice(0, 2)
 
-    /* il tocco in più: l'errore che si sente per davvero su «venire» */
+    // l'errore che si sente per davvero su «venire»
     if (v.infinito === 'venire' && idx === 1 && sorte.forse(0.5) && !falsi.includes('venghi')) {
       falsi = ['venghi', falsi[0]]
     }
@@ -886,10 +627,7 @@ class Coniugazione extends Modulo {
     })
   }
 
-  /* ── il participio da solo: «qual è il passato di…?» ──
-     regolari e irregolari sono due tipologie diverse e il pool si
-     divide di conseguenza: «mangiato» si ricava dalla regola, «preso»
-     si sa o non si sa. */
+  // regolari e irregolari sono due tipologie diverse: «mangiato» si ricava dalla regola, «preso» si sa o non si sa
   participioDiretto(sorte, irregolari) {
     const pool = PARTICIPI.filter(v => !!v.irregolare === !!irregolari)
     const v = sorte.uno(pool)
@@ -905,7 +643,6 @@ class Coniugazione extends Modulo {
     })
   }
 
-  /* ── grado 3: la frase col buco, ausiliare + participio insieme ── */
   ausiliareFrase(sorte) {
     const v = sorte.uno(CON_COMPLEMENTO)
     const sog = sorte.uno(SOGGETTI)
@@ -929,7 +666,6 @@ class Coniugazione extends Modulo {
     })
   }
 
-  /* ── grado 5: la frase intera, dove i due errori si vedono insieme ── */
   fraseIntera(sorte) {
     const v = sorte.uno(CON_COMPLEMENTO)
     const sog = sorte.uno(SOGGETTI)
@@ -956,7 +692,6 @@ class Coniugazione extends Modulo {
     })
   }
 
-  /* ── grado 4: imperfetto ── */
   imperfetto(sorte) {
     let infinito, forme, aiuto
     if (sorte.forse(0.35)) {
@@ -988,7 +723,6 @@ class Coniugazione extends Modulo {
     })
   }
 
-  /* ── grado 4: futuro ── */
   futuro(sorte) {
     let infinito, forme, aiuto
     if (sorte.forse(0.35)) {
@@ -1009,8 +743,7 @@ class Coniugazione extends Modulo {
 
     let falsi = null
     if (infinito.endsWith('are')) {
-      /* l'errore più sentito: tenere la vocale dell'infinito
-         («parlarò» invece di «parlerò») */
+      // l'errore più sentito: tenere la vocale dell'infinito («parlarò» invece di «parlerò»)
       const radice = infinito.slice(0, infinito.length - 3)
       const erroreVocale = radice + 'ar' + FUTURO_END[idx]
       if (erroreVocale !== formaGiusta) falsi = [erroreVocale, ...altreDue(forme, formaGiusta, sorte, erroreVocale)].slice(0, 2)
@@ -1023,11 +756,7 @@ class Coniugazione extends Modulo {
     })
   }
 
-  /* ── grado 5: il tempo che la frase chiede ──
-     Verbo e persona restano fermi, cambia solo il tempo: è la domanda
-     che i gradi 1-4 non fanno mai, perché lì i falsi sono le altre
-     persone. A deciderlo è il *quando* davanti («Adesso», «Una volta»,
-     «Domani»), o il nome del tempo se esce la forma diretta. */
+  // verbo e persona restano fermi, cambia solo il tempo: i gradi 1-4 non lo fanno mai (lì i falsi sono le persone)
   tempoGiusto(sorte) {
     const TERNA = ['presente', 'imperfetto', 'futuro']
     const infinito = sorte.uno(VERBI_TEMPI)
@@ -1043,9 +772,7 @@ class Coniugazione extends Modulo {
     const falsi = raccogli(formaGiusta, [
       ...TERNA.filter(t => t !== quale)
         .map(t => [forma[t], `«${forma[t]}» è ${NOME_TEMPO[t]}: ${SPIEGA[t]}`]),
-      /* tappo: due tempi diversi non danno mai la stessa forma sulla
-         stessa persona, ma se succedesse resterebbe una domanda con due
-         risposte sole */
+      // tappo: se due tempi dessero mai la stessa forma, resterebbe una domanda con due risposte sole
       ...altreDue(formeDi(infinito, quale), formaGiusta, sorte).map(f => [f, aiuto]),
     ])
 
@@ -1056,13 +783,7 @@ class Coniugazione extends Modulo {
     })
   }
 
-  /* ── grado 5: e come si chiama, questo tempo? ──
-     La strada inversa: la forma è già coniugata, il nome è la risposta.
-     Sono due domande diverse per lo stesso concetto — si può saper
-     coniugare senza saper nominare, e viceversa — e la seconda è quella
-     che serve quando a scuola la maestra dice «mettilo all'imperfetto».
-     Il passato prossimo entra solo con l'ausiliare «avere», così non si
-     porta dietro l'accordo del participio, che è un'altra lezione. */
+  // la strada inversa: forma già coniugata, il nome è la risposta; il prossimo entra solo con «avere» (niente accordo)
   riconosciTempo(sorte) {
     const scelte = ['presente', 'imperfetto', 'futuro', 'prossimo']
     const quale = sorte.uno(scelte)
@@ -1087,20 +808,12 @@ class Coniugazione extends Modulo {
     })
   }
 
-  /* ── grado 6: il passato remoto ──
-     Sempre in forma diretta: «Molti anni fa noi ___ (cuocere)» accetta
-     onestamente anche l'imperfetto, e una domanda con due risposte
-     buone non si vede da nessun controllo. I due falsi sono i due
-     errori veri — la regola applicata a un verbo che non la segue
-     («cuocei») e l'imperfetto al posto suo («cocevamo») — più le altre
-     persone quando quelli non si possono costruire. */
+  // sempre in forma diretta: «Molti anni fa noi ___» accetterebbe onestamente anche l'imperfetto
   passatoRemoto(sorte) {
     const irregolare = sorte.forse(0.7)
     const infinito = irregolare ? sorte.uno(REMOTO_IRR).infinito : sorte.uno(REMOTO_REGOLARI)
     const forme = formeDi(infinito, 'remoto')
-    /* le persone forti sono quelle che insegnano qualcosa, ma le altre
-       si chiedono lo stesso: sapere che «noi cocemmo» resta regolare è
-       metà dell'esercizio */
+    // le persone forti insegnano qualcosa, ma le altre si chiedono lo stesso: «noi cocemmo» resta regolare
     const idx = irregolare && sorte.forse(0.6) ? sorte.uno(REMOTO_FORTI) : sorte.fra(0, 5)
     const formaGiusta = forme[idx]
 
@@ -1122,18 +835,7 @@ class Coniugazione extends Modulo {
     })
   }
 
-  /* ── grado 6: i tempi composti ──
-     Trapassato prossimo, futuro anteriore, trapassato remoto e
-     condizionale passato sono la stessa domanda quattro volte: il
-     participio sta fermo e a cambiare è solo l'ausiliare, che è
-     esattamente la cosa da imparare. Perciò un metodo solo, e il tempo
-     arriva da fuori.
-
-     I due falsi sono gli altri composti che gli si confondono, più la
-     persona sbagliata: tre forme che differiscono per la prima parola
-     e basta, così l'occhio è costretto a guardare proprio lì. In forma
-     diretta, perché una frase che regge il trapassato regge quasi
-     sempre anche il passato prossimo. */
+  // quattro composti, stessa domanda: il participio sta fermo, cambia solo l'ausiliare (un metodo solo, tempo da fuori)
   composto(sorte, quale, chiave) {
     const v = sorte.uno(VERBI_COMPOSTI)
     const idx = sorte.fra(0, 5)
@@ -1154,20 +856,12 @@ class Coniugazione extends Modulo {
     })
   }
 
-  /* ── grado 5-6: l'imperativo ──
-     L'unico che non si chiede né col buco neutro né in forma diretta,
-     ma con un ordine vero e qualcuno a cui darlo: «Marta, ___
-     (parlare) più piano!». Il vocativo non è colore — è quello che
-     fissa la persona, e senza la stessa frase avrebbe tre risposte
-     buone. */
+  // un ordine vero e un vocativo (non è colore: fissa la persona, senza la frase avrebbe tre risposte buone)
   imperativo(sorte) {
     const infinito = sorte.uno(VERBI_IMPERATIVO)
     const forme = imperativoDi(infinito)
     const dueForme = IMPERATIVO_DUE_FORME.includes(infinito)
-    /* il negativo vive solo alla seconda persona, che è l'unica dove
-       cambia forma: «non correre!» invece di «non corri!». Con noi e
-       voi si direbbe «non corriamo», e non ci sarebbe niente da
-       imparare. */
+    // il negativo vive solo alla 2ª persona, l'unica dove cambia forma: «non correre!», non «non corri!»
     const negativo = !dueForme && sorte.forse(0.3)
     const i = negativo ? 0 : (dueForme ? sorte.uno([1, 2]) : sorte.fra(0, 2))
     const chi = PRONOMI_IMP[i]
@@ -1181,17 +875,11 @@ class Coniugazione extends Modulo {
       ? [
         [forme[0], `«${forme[0]}!» è l'ordine senza «non»: con «non» ci vuole «${infinito}»`],
         [indicativo, `«${indicativo}» racconta quello che fa, non comanda`],
-        /* per i verbi in -ere e -ire i due qui sopra sono la stessa
-           parola («metti» comanda e racconta), e senza un terzo la
-           domanda resterebbe con due risposte in tutto */
+        // per -ere/-ire i due sopra sono la stessa parola: senza un terzo resterebbero due risposte in tutto
         [formeDi(infinito, 'presente')[2], 'questo racconta quello che fa qualcun altro'],
       ]
       : [
-        /* per i verbi in -are questo è IL falso: «parli» è quello che
-           il bambino scrive, ed è la forma dell'indicativo. Negli altri
-           due gruppi coincide con la risposta giusta e si scarta da sé,
-           che è il modo giusto di dire «lì non c'è niente da
-           sbagliare». */
+        // per -are questo è IL falso («parli»); negli altri due gruppi coincide con la giusta e si scarta da sé
         [indicativo, `«${indicativo}» racconta quello che fa; per comandare ci vuole «${formaGiusta}»`],
         ...PRONOMI_IMP.map((p, n) => [forme[n], `«${forme[n]}!» è l'ordine per «${p}»`]),
       ])
@@ -1208,16 +896,7 @@ class Coniugazione extends Modulo {
     })
   }
 
-  /* ── grado 6: il condizionale ──
-     Sta sullo stesso tema del futuro (parlerò → parlerei), ed è per
-     questo che il falso giusto da mettergli accanto è proprio il
-     futuro: chi non li distingue scrive «domani mangerei». In forma
-     diretta, perché ogni inciso che regge il condizionale («con più
-     tempo…») regge onestamente anche il futuro.
-
-     Ogni tanto esce il passato («avrei mangiato»), che è un composto
-     come gli altri e passa di là: stessa chiave, perché per un
-     genitore che accende «il condizionale» sono la stessa cosa. */
+  // stesso tema del futuro (parlerò → parlerei): il falso giusto è il futuro. Il passato passa dai composti, stessa chiave
   condizionale(sorte) {
     if (sorte.forse(0.35)) return this.composto(sorte, 'condizionale-passato', 'coniug:condizionale')
     const infinito = sorte.uno(VERBI_TEMPI)
@@ -1240,19 +919,7 @@ class Coniugazione extends Modulo {
     })
   }
 
-  /* ── grado 6: il congiuntivo ──
-     Qui la frase col buco torna, ed è l'unico modo onesto di chiederlo:
-     «Penso che» e «Vorrei che» reggono il congiuntivo e nient'altro,
-     mentre il nome del modo da solo non dice a un bambino quando
-     serve. Il falso è l'errore che fanno anche i grandi — l'indicativo
-     al suo posto, «penso che voi siete».
-
-     Le persone si scelgono, e non per varietà. Al presente io/tu/lui
-     danno tutte e tre la stessa forma («che io mangi, che tu mangi») e
-     con «noi» il congiuntivo è identico all'indicativo («mangiamo»):
-     restano voi e loro, le uniche due dove la risposta è una sola e
-     l'errore vero — l'indicativo — è distinguibile. All'imperfetto si
-     sovrappongono solo io e tu («fossi»), e le altre quattro valgono. */
+  // «Penso che»/«Vorrei che» reggono solo il congiuntivo; le persone si scelgono dove la forma non si sovrappone
   congiuntivo(sorte) {
     const passato = sorte.forse(0.45)
     const tempo = passato ? 'congiuntivo-imperfetto' : 'congiuntivo'
