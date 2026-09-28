@@ -1,29 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I LIVELLI DEL PORTO — la seconda metà del costruttore
-
-   Stessa forma dei livelli del cantiere (`dati/livelli.js`, con tutti i
-   campi spiegati lì), più quello che serve a un mondo visto dall'alto
-   che lavora da solo:
-
-     mondo       'porto': sceglie il mondo (`motore/porto/mondo.js`)
-     tema        il pavimento da disegnare: molo | magazzino | bottega
-     prova       'giornata': si vince se a sera gli obiettivi tornano
-     ordini      ognuno è **una giornata**: la mappa a coppie di
-                 caratteri (`dati/porto/legenda.js`), i `cassoni`, la
-                 `gru`, il `nastro`, i `clienti`, l'`obiettivo`
-                 (`motore/porto/esito.js`) e le lavagnette dell'ordine
-     cose        le cose che le domande del livello offrono
-                 («↑ sopra c'è [una cassa]»): solo quelle che servono
-     leggere     se le caselle dei valori offrono 📖, la lettura
-
-   ── LE REGOLE PER SCRIVERNE UNO ───────────────────────────────────
-   Quelle del cantiere valgono tutte (una cosa nuova per livello, la
-   fatica a mano prima, gli ordini sono la sfida), e ne aggiungo una:
-   **una giornata diversa deve cambiare il lavoro, non solo i numeri**.
-   Un'altra nave con più casse, i cesti messi in un altro ordine, clienti
-   che chiedono altro: il programma che ha ricordato la prima giornata
-   invece di guardarla la perde, e la mossa ingenua lo dimostra.
-   ═══════════════════════════════════════════════════════════════════ */
+// I livelli del porto: stessa forma dei livelli del cantiere, più i
+// campi del mondo dall'alto (vedi docs/costruttore/livelli.md, «Il porto
+// aggiunge»).
 import { fai, guarda, leggi, tinta, progetto, programma } from '../scrivi.js'
 
 const CAPITANA = { emoji: '⚓', nome: 'La capitana del porto' }
@@ -38,7 +15,7 @@ const cerca = () => progetto('cerca', { nome: 'cerca', icona: '🔎', misure: ['
 ])
 
 export const LIVELLI_PORTO = [
-  /* ═══════════ prendere e posare ═══════════ */
+  // prendere e posare
   {
     chiave: 'primo-carico', nome: 'Il primo carico', icona: '📦', capitolo: 'porto',
     impara: 'prendere e posare', portata: 82, premio: 15,
@@ -115,7 +92,7 @@ export const LIVELLI_PORTO = [
     ],
   },
 
-  /* ═══════════ guardare cosa si ha in mano ═══════════ */
+  // guardare cosa si ha in mano
   {
     chiave: 'rosse-e-blu', nome: 'Rosse e blu', icona: '🍅', capitolo: 'porto',
     impara: 'se in mano c\'è…', portata: 83, premio: 20,
@@ -167,7 +144,7 @@ export const LIVELLI_PORTO = [
     ],
   },
 
-  /* ═══════════ leggere ═══════════ */
+  // leggere
   {
     chiave: 'bolla', nome: 'La bolla', icona: '📋', capitolo: 'porto',
     impara: 'leggere un numero', portata: 83, premio: 20,
@@ -215,7 +192,7 @@ export const LIVELLI_PORTO = [
     ],
   },
 
-  /* ═══════════ il mondo che si muove ═══════════ */
+  // il mondo che si muove
   {
     chiave: 'gru', nome: 'La gru', icona: '🏗️', capitolo: 'porto',
     impara: 'aspetta che…, per sempre', portata: 84, premio: 20,
@@ -303,7 +280,7 @@ export const LIVELLI_PORTO = [
     ],
   },
 
-  /* ═══════════ cercare ═══════════ */
+  // cercare
   {
     chiave: 'smistamento', nome: 'Lo smistamento', icona: '🧺', capitolo: 'porto',
     impara: 'un colore letto, da cercare', portata: 84, premio: 25,
@@ -372,7 +349,7 @@ export const LIVELLI_PORTO = [
     ],
   },
 
-  /* ═══════════ i clienti ═══════════ */
+  // i clienti
   {
     chiave: 'bottega', nome: 'La bottega dei colori', icona: '🛍️', capitolo: 'porto',
     impara: 'un progetto che cerca', portata: 84, premio: 25,
