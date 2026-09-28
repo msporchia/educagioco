@@ -1,45 +1,18 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I PITTORI DELLA GEOMETRIA
+/* Cinque scene di geometria, tutte nel quadrato 100×100 del riquadro:
+   figura, griglia, angolo, solido, costruzione. Il pittore non decide
+   niente (non ruota né specchia da sé: celle/punti arrivano già pronti
+   dal modulo, o due risposte con JSON diverso potrebbero apparire
+   identiche). Il colore è un nome («verde»), mai un codice: dentro una
+   domanda tutte le figure hanno lo stesso colore, se no si sceglie il
+   colore e non la forma. */
 
-   Cinque scene, tutte dentro il quadrato 100×100 del riquadro:
-
-     { che: 'figura',  forma: 'esagono', ruota: .12, colore: 'verde',
-                       asse: null | 'v' | 'o' | 'd1' | 'd2' }
-     { che: 'griglia', celle: [[0,0],[1,0]], colonne: 4, righe: 4,
-                       colore: 'viola', asse: null|'sinistra'|'destra'|'centro' }
-     { che: 'angolo',  gradi: 90, ruota: 1.2, colore: 'giallo' }
-     { che: 'solido',  tipo: 'cubo', colore: 'azzurro' }
-     { che: 'costruzione', cubi: [[0,0,0],[1,0,0],[0,0,1]], colore: 'viola',
-                       scatola: 0 | 2 | 3 }
-
-   QUI NON SI DECIDE NIENTE. Il pittore non sa quale sia la risposta
-   giusta, non sa che grado di difficoltà sta servendo e non ruota né
-   specchia niente per conto suo: `celle` sono già le celle che si
-   devono vedere. È una scelta voluta — nel modulo una figura girata di
-   un quarto e la stessa specchiata devono essere due liste di celle
-   diverse, altrimenti due risposte con un JSON diverso potrebbero
-   apparire identiche al bambino, che è il guasto peggiore di tutti
-   perché nessun controllo automatico lo prende.
-
-   IL COLORE È UN NOME, non un codice: la scena dice `colore: 'verde'`
-   e le tre gradazioni che servono a far sembrare un cubo un cubo
-   stanno qui. Dentro una stessa domanda tutte le figure hanno lo
-   stesso colore, se no il bambino sceglie il colore e non la forma.
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* la tavolozza sta in `tinte.js`: la dividono con i pittori delle
-   sequenze, dove il colore non è decorazione ma la regola stessa —
-   e allora due rossi diversi sarebbero un guasto. `COLORI` si
-   ri-esporta perché i moduli lo importano da qui da sempre. */
 import { COLORI, tinta, inchiostroAsse } from './tinte.js'
 export { COLORI }
 
 const GIRO = Math.PI * 2
 
 
-/* ── attrezzi ── */
-
-/* poligono regolare centrato in (0,0), primo vertice in alto */
+// poligono regolare centrato in (0,0), primo vertice in alto
 function regolare(n, r, fase = 0) {
   const v = []
   for (let i = 0; i < n; i++) {
@@ -49,8 +22,7 @@ function regolare(n, r, fase = 0) {
   return v
 }
 
-/* un quarto di giro in senso orario, `q` volte (le coordinate hanno la
-   y in giù, quindi (x,y) → (−y,x) gira come le lancette) */
+// un quarto di giro orario, `q` volte (y in giù, quindi (x,y) → (−y,x) gira come le lancette)
 const ruotaPunti = (v, q) => {
   let r = v
   for (let i = 0; i < ((q % 4) + 4) % 4; i++) r = r.map(([x, y]) => [-y, x])
@@ -59,9 +31,7 @@ const ruotaPunti = (v, q) => {
 
 const chiudi = v => [...v, v[0]].map(([x, y]) => ({ x, y }))
 
-/* il contorno si chiude tornando sul primo punto, e i capi tondi
-   servono a non lasciare la tacchetta che si vede dove il tratto
-   finisce sopra sé stesso */
+// i capi tondi evitano la tacchetta dove il tratto si chiude sopra sé stesso
 function faccia(p, punti, riempimento, orlo, spessore = 1.6) {
   p.figura(punti, riempimento)
   if (!orlo) return
@@ -79,10 +49,7 @@ function tratteggio(p, [ax, ay], [bx, by], col) {
   }
 }
 
-/* ── le figure piane ──
-   Le varianti girate si ricavano da quelle dritte: così «la casa col
-   tetto a destra» non è una seconda lista di punti da tenere allineata
-   a mano, ed è garantito che sia proprio la stessa figura. */
+// le varianti girate si ricavano da quelle dritte: garantito che «casa col tetto a destra» sia la stessa figura
 const DRITTE = {
   triangolo: regolare(3, 46),
   quadrato: [[-32, -32], [32, -32], [32, 32], [-32, 32]],
@@ -105,7 +72,7 @@ for (const f of ['isoscele', 'casa', 'freccia', 'trapezio']) {
   FORME[f + '-giu'] = ruotaPunti(DRITTE[f], 2)
   FORME[f + '-sinistra'] = ruotaPunti(DRITTE[f], 3)
 }
-/* i quattro triangoli rettangoli, chiamati come sta l'angolo retto */
+// i quattro triangoli rettangoli, chiamati come sta l'angolo retto
 FORME['retto-tl'] = DRITTE.retto
 FORME['retto-tr'] = ruotaPunti(DRITTE.retto, 1)
 FORME['retto-br'] = ruotaPunti(DRITTE.retto, 2)
@@ -137,10 +104,7 @@ export function figura(p, { forma = 'quadrato', ruota = 0, colore = 'azzurro', a
   if (asse && ASSI[asse]) tratteggio(p, ASSI[asse][0], ASSI[asse][1], inchiostroAsse(colore))
 }
 
-/* ── la griglia ──
-   Il quaderno a quadretti: un pannello chiaro, i quadretti segnati e le
-   celle accese sopra. L'asse è la piega, e si disegna sul bordo dove il
-   modulo dice che sta lo specchio. */
+// il quaderno a quadretti: pannello chiaro, quadretti segnati, celle accese sopra; l'asse è la piega dello specchio
 export function griglia(p, { celle = [], colonne = 4, righe = 4, colore = 'azzurro', asse = null }) {
   const t = tinta(colore)
   const lato = Math.min(84 / colonne, 84 / righe)
@@ -166,21 +130,12 @@ export function griglia(p, { celle = [], colonne = 4, righe = 4, colore = 'azzur
   }
 }
 
-/* ── l'angolo ──
-   Due raggi e il ventaglio che sta in mezzo: senza il ventaglio colorato
-   un bambino guarda i raggi invece dell'apertura. Niente quadratino
-   dell'angolo retto: sarebbe la risposta scritta sopra la domanda. */
+// senza il ventaglio colorato un bambino guarda i raggi invece dell'apertura; niente quadratino dell'angolo retto
 export function angolo(p, { gradi = 90, ruota = 0, colore = 'azzurro' }) {
   const t = tinta(colore)
   const a0 = ruota, a1 = ruota + gradi * Math.PI / 180
 
-  /* Si centra l'angolo, non il suo vertice: i due raggi partono da un
-     punto solo e vanno tutti e due dalla stessa parte, quindi col
-     vertice in mezzo al riquadro il disegno finisce sempre in un
-     angolo. Si misura l'ingombro a raggio unitario, si allunga fino a
-     riempire il quadrato e si sposta il vertice di conseguenza — così
-     un angolo stretto e uno largo occupano lo stesso spazio e la
-     grandezza del disegno non suggerisce la risposta. */
+  // si centra l'angolo, non il vertice: così uno stretto e uno largo occupano lo stesso spazio (la grandezza non suggerisce)
   const ingombro = [[0, 0], [Math.cos(a0), Math.sin(a0)], [Math.cos(a1), Math.sin(a1)]]
   for (let i = 0; i <= 16; i++) {
     const a = a0 + (a1 - a0) * (i / 16)
@@ -207,9 +162,7 @@ export function angolo(p, { gradi = 90, ruota = 0, colore = 'azzurro' }) {
   p.ctx.lineCap = 'butt'
 }
 
-/* ── i solidi ──
-   Tre gradazioni della stessa tinta e gli spigoli chiari: è il minimo
-   per far vedere che una cosa ha un davanti, un sopra e un fianco. */
+// tre gradazioni della stessa tinta e spigoli chiari: il minimo per un davanti, un sopra, un fianco
 function scatola(p, t, w, h, prof) {
   const d = prof
   const fx = -(w + d) / 2, fy = (d - h) / 2
@@ -274,30 +227,14 @@ export function solido(p, { tipo = 'cubo', colore = 'azzurro' }) {
   p.in(50, 50, q => (SOLIDI[tipo] || SOLIDI.cubo)(q, t))
 }
 
-/* ── i cubetti impilati ──
-     { che: 'costruzione', cubi: [[x, y, z], …], colore: 'viola',
-       scatola: 0 }
-
-   x va in basso a destra, y in basso a sinistra, z in su: è
-   l'assonometria dei mattoncini, quella in cui un cubetto si vede con
-   tre facce e la pila si legge a colpo d'occhio.
-
-   DUE COSE, E NESSUNA È UN VEZZO. I cubi si disegnano dal più lontano
-   al più vicino (`x+y+z` crescente): è l'unico ordine in cui quello
-   davanti copre quello dietro invece di essere coperto. E la scala si
-   ricava dall'ingombro vero della costruzione, non da un numero fisso:
-   una torre di quattro e un tappeto di nove devono riempire lo stesso
-   riquadro, se no la grandezza del disegno racconta la risposta prima
-   che il bambino conti — e quando c'è la scatola l'ingombro è LEI, se
-   no due costruzioni nella stessa scatola verrebbero grandi diverse. */
+// x in basso a destra, y in basso a sinistra, z in su: l'assonometria dei mattoncini, tre facce per cubetto
+// disegnati dal più lontano al più vicino (x+y+z crescente); la scala viene dall'ingombro vero, mai un numero fisso
 export function costruzione(p, { cubi = [], colore = 'azzurro', scatola = 0 }) {
   if (!cubi.length && !scatola) return
   const t = tinta(colore)
   const px = (x, y, z) => [(x - y) * 1, (x + y) * 0.54 - z * 1.16]
 
-  /* l'ingombro: gli otto vertici di ogni cubetto, in unità — o quelli
-     della scatola, se c'è: dentro una scatola l'ingombro è la scatola,
-     e la costruzione ci sta dentro per costruzione */
+  // l'ingombro: gli otto vertici di ogni cubetto, o della scatola se c'è (dentro una scatola l'ingombro è lei)
   const punti = scatola
     ? [0, scatola].flatMap(x => [0, scatola].flatMap(y => [0, scatola].map(z => px(x, y, z))))
     : cubi.flatMap(([x, y, z]) =>
@@ -313,23 +250,10 @@ export function costruzione(p, { cubi = [], colore = 'azzurro', scatola = 0 }) {
   p.ctx.lineJoin = 'round'
   let davanti = null            // i tre spigoli della scatola che stanno davanti a tutto
 
-  /* ── la scatola, quando c'è ──
-     `scatola: 2` vuol dire «una scatola 2×2×2, e i cubetti stanno lì
-     dentro». Si disegna perché una scatola che sta solo nel testo non
-     si può contare: quello che MANCA è fatto di posti vuoti, e un
-     posto vuoto o si vede o non c'è. Le tre facce di fondo — il
-     pavimento e le due pareti dietro — sono a caselle, così i posti
-     liberi si contano guardando invece che immaginando. I tre spigoli
-     davanti si disegnano due volte — pieni qui sotto, e smorzati dopo
-     i cubetti (`davanti`) — perché stanno davvero davanti a tutto: se
-     restassero solo qui, una costruzione che arriva al bordo li
-     coprirebbe, e la scatola sparirebbe proprio quando è quasi piena. */
+  // la scatola: i posti vuoti si contano guardando (facce a caselle); gli spigoli davanti si ridisegnano smorzati sopra i cubetti
   if (scatola) {
     const L = scatola
-    /* il vetro è azzurrino e mai bianco: l'orlo dei cubetti è quasi
-       bianco (`tinte.js`), e due bianchi vicini si leggono come la
-       stessa cosa — lo spigolo della scatola diventerebbe il lato di
-       un cubetto che non c'è */
+    // il vetro è azzurrino e mai bianco: due bianchi vicini si leggerebbero come la stessa cosa
     const filo = 'rgba(188, 205, 242, .38)'
     const orlo = 'rgba(188, 205, 242, .78)'
     const tratto = (a, q, col = filo, sp = 1) => p.linea([{ x: a[0], y: a[1] }, { x: q[0], y: q[1] }], col, sp)
@@ -344,8 +268,7 @@ export function costruzione(p, { cubi = [], colore = 'azzurro', scatola = 0 }) {
       tratto(su(i, 0, 0), su(i, 0, L))    // la parete di destra, in su
       tratto(su(0, 0, i), su(L, 0, i))    // e di traverso
     }
-    /* il bordo della scatola: è quello che la fa leggere come una
-       scatola invece che come un reticolo */
+    // il bordo della scatola: la fa leggere come scatola invece che come reticolo
     tratto(su(0, 0, L), su(L, 0, L), orlo, 1.6)
     tratto(su(0, 0, L), su(0, L, L), orlo, 1.6)
     tratto(su(0, L, 0), su(0, L, L), orlo, 1.6)
@@ -365,11 +288,7 @@ export function costruzione(p, { cubi = [], colore = 'azzurro', scatola = 0 }) {
     faccia(p, [v(0, 0, 1), v(1, 0, 1), v(1, 1, 1), v(0, 1, 1)], t.luce, t.orlo, 1.2)   // il coperchio
   }
 
-  /* gli spigoli davanti si ripassano SOPRA i cubetti, smorzati: un
-     cubetto che arriva al bordo frontale cancellava la scatola proprio
-     quando è quasi piena — cioè quando la domanda è più difficile.
-     Smorzati e non pieni perché è vetro: se tagliassero i cubetti con
-     lo stesso tratto del bordo sembrerebbero un cubetto in più. */
+  // smorzati e non pieni perché è vetro: col tratto del bordo sembrerebbero un cubetto in più
   if (davanti) p.velo(0.42, davanti)
 }
 
