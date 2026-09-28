@@ -1,26 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA CAMPAGNA DELLE TABELLINE — dieci pianeti, uno per tabellina.
-
-   Prima il gioco chiedeva al bambino "quali tabelline vuoi allenare?".
-   È una domanda a cui non sa rispondere: chi non conosce il 7 non sceglie
-   il 7, e chi spunta tutto vede ogni tabellina un decimo delle volte.
-   Qui la strada è già tracciata, come nella campagna del castello: una
-   tappa porta una tabellina nuova, le precedenti restano dentro come
-   ripasso, e il bersaglio dice quando la tappa è superata.
-
-   L'ordine non è 1, 2, 3...: è l'ordine con cui le tabelline si imparano
-   davvero. Prima quelle che hanno una regola visibile (2, 10, 5), poi le
-   piccole, infine 6, 7, 8, 9 — che sono poche caselle ma sono quelle che
-   costano. La tabellina dell'1 entra insieme al 2: è una regola, non
-   dieci fatti da mandare a memoria, e da sola non merita una tappa.
-
-   Due traguardi diversi, e non vanno confusi:
-     · SUPERARE la tappa  → il bersaglio di una partita, si fa stasera
-     · la STELLA ⭐        → tutti e dieci i calcoli della tabellina sono
-                             imparati secondo il motore, e restano tali
-                             anche fra una settimana. Quella è la frase
-                             "ho imparato la tabellina del 2".
-   ═══════════════════════════════════════════════════════════════════ */
+// La campagna delle tabelline: dieci pianeti in fila, uno per tabellina.
+// Vedi docs/asteroidi/scaletta.md (l'ordine, il bersaglio, la stella ⭐).
 
 /* 6×8 e 8×6 sono lo stesso fatto: una chiave sola, sempre ordinata */
 export const chiaveCalcolo = (a, b) => 'math:' + Math.min(a, b) + 'x' + Math.max(a, b)
@@ -30,21 +9,9 @@ export const fattoriDi = k => k.slice(5).split('x').map(Number)
 export const calcoliTabellina = n =>
   Array.from({ length: 10 }, (_, i) => chiaveCalcolo(n, i + 1))
 
-/* ═══════════ LE TABELLINE GRANDI ═══════════
-   Il catalogo finisce a 9×9, e a scuola pure: le 55 caselle sono la
-   scaletta, la mappa, le stelle, la marea. Ma chi nel volo infinito è
-   arrivato a livello nove le sa tutte, e continuare a chiedergliele è
-   logoramento, non esercizio. Queste sono lo STRATO OLTRE del volo
-   (`store/volo.js`): l'11 e il 12 per intero, e le prime caselle del
-   13, 14 e 15 — quelle che si fanno a mente spezzando (13×4 = 40+12).
-
-   Hanno la stessa forma di chiave delle altre (`math:8x11`): sono fatti
-   della stessa specie e il motore li segue allo stesso modo. Ma NON
-   SONO CASELLE: non contano fra le 55, non entrano in nessuna tappa,
-   non hanno una riga nella mappa né un pezzo di stella. Chi conta le
-   caselle passa da `eCasella`, e `unita/asteroidi` lo controlla su ogni
-   consumatore. ×1 e ×10 delle grandi non ci sono: 11×10 è una regola,
-   non un fatto. */
+// Le tabelline grandi (11..15), lo strato oltre il catalogo del volo
+// infinito: vedi docs/asteroidi/volo.md. Non sono caselle (`eCasella`
+// le esclude): chi le conta passa sempre di lì.
 const FATTORI_GRANDI = [
   ...Array.from({ length: 8 }, (_, i) => [i + 2, 11]),   // 2×11 … 9×11
   ...Array.from({ length: 8 }, (_, i) => [i + 2, 12]),   // 2×12 … 9×12
@@ -57,9 +24,8 @@ export const eGrande = k => fattoriDi(k)[1] > 10
    premia guarda queste e non le grandi */
 export const eCasella = k => !eGrande(k)
 
-/* I pianeti, in ordine di introduzione. `dritta` è il trucco che si dice
-   al bambino prima di partire: sono le regole vere che gli insegnanti
-   danno a voce, e scritte una volta valgono più di cento ripetizioni. */
+// I pianeti, in ordine di introduzione; `dritta` è il trucco detto al
+// bambino prima di partire.
 const PIANETI = [
   { n: 2, liv: 40,  emoji: '🌍', nome: 'Il pianeta del 2',
     dritta: 'Due alla volta: sono tutti i numeri pari. È il numero raddoppiato.' },
@@ -81,37 +47,21 @@ const PIANETI = [
     dritta: 'Una decina meno il numero: 9 × 6 è 60 − 6 = 54. E le cifre sommate fanno sempre 9.' },
 ]
 
-/* Le tappe. `tabelle` è cumulativa — la tappa del 5 gioca anche 1, 2 e 10 —
-   perché una tabellina imparata e mai più rivista si dimentica: il ripasso
-   deve stare dentro la tappa nuova, non in un menu a parte.
-
-   `bersaglio` sono le risposte giuste che servono per superarla, `mirate`
-   quante di quelle devono essere sulla tabellina nuova. La seconda è poco
-   più della metà della prima: la tappa chiede la sua tabellina otto volte
-   su dieci (`QUOTA_TAPPA` in `store/calcolo.js`), meno la domanda del
-   boss che arriva dalla tappa dopo, e il resto sono errori e ripasso.
-   Chiedere quanto la quota promette, e non di più, è quello che tiene la
-   tappa una serata invece che un'attesa. */
+// Le tappe: `tabelle` è cumulativa (ripasso), `bersaglio`/`mirate` sono
+// il traguardo di partita — vedi docs/asteroidi/scaletta.md (`QUOTA_TAPPA`).
 export const CAMPAGNA = PIANETI.map((p, i) => ({
   i,
   nome: p.nome,
   emoji: p.emoji,
   dritta: p.dritta,
   nuova: p.n,
-  /* dove sta questa tappa sulla scala 0-100 di `data/portata.js`, e
-     quale pezzo di scuola dà per scontato: insieme dicono a chi va
-     offerta. Le tabelline si fanno in seconda e si finiscono in terza —
-     è il motivo per cui a nove anni il pianeta del 2 non si offre più. */
-  portata: p.liv,
+  portata: p.liv, // scala 0-100 di `data/portata.js`: vedi docs/apprendimento/eta-e-portata.md
   scuola: 'moltiplicazioni',
   tabelle: [1, ...PIANETI.slice(0, i + 1).map(x => x.n)].sort((a, b) => a - b),
   bersaglio: 15 + i * 2,
   mirate: Math.round((15 + i * 2) * 0.6),
 }))
 
-/* L'ultima tappa non porta niente di nuovo: mescola tutto quello che c'è
-   stato prima. È l'esame, ed è l'unica in cui ogni domanda può venire da
-   qualsiasi tabellina. */
 CAMPAGNA.push({
   i: CAMPAGNA.length,
   nome: 'Il sole',
@@ -125,6 +75,4 @@ CAMPAGNA.push({
   mirate: 0,
 })
 
-/* Il volo infinito — quello che resta a campagna finita — non sta qui:
-   è uno per pianeti e stazioni insieme, e sta in `data/asteroidi.js`
-   (`VOLO`), che è il file della fila. */
+// Il volo infinito (a campagna finita) non sta qui: è in `data/asteroidi.js` (`VOLO`).
