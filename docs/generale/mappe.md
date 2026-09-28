@@ -1,25 +1,15 @@
-[← torna al README](../README.md) · [il gioco](generale.md) · [come si insegna](generale-didattica.md) · [dove siamo](generale_improvements.md)
+# Le mappe del Generale
 
-# Le mappe — dalla forma compressa alla stanza
+Come una mappa scritta in un livello (griglia di token + legenda) diventa la
+stanza a schermo: i token di serie, la legenda, la decompressione in mappa
+piena e l'arredamento automatico. Come si disegna un livello intero sta in
+`src/data/livelli/GUIDA.md`.
 
-Quello che un livello scrive è **una forma compressa**: una griglia di
-token e una legenda. Quello che si vede a schermo è un reticolo pieno,
-con il terreno risolto cella per cella, i bordi raccordati, l'arredo al
-suo posto. Fra le due cose ci va un passo, e questo file dice qual è.
+## I tre token di serie
 
-Prima quel passo **non esisteva**: si andava dai token al disegno, e
-ogni pezzo che avesse bisogno di sapere qualcosa sulla forma della
-stanza se lo ricavava da sé. È il motivo per cui, scrivendo un livello
-in una sera, è finita una botte disegnata sopra un muro — non perché la
-regola fosse sbagliata, ma perché non c'era nessuno che sapesse cos'è
-un muro. Adesso c'è: `motore/generale/stanze.js`.
-
----
-
-## 0. Tre token che non chiedono legenda
-
-Ogni mappa è fatta di tre cose prima di tutto il resto, e si scrivono
-senza dichiararle:
+Si scrivono senza dichiararli, e stanno in un posto solo: `DI_SERIE` in
+`src/data/livelli/livello.js`, letto dal controllo dei refusi e da chi
+trasforma la mappa in campo (`src/motore/generale/campo.js`).
 
 | token | cos'è | per il gioco | per chi dipinge |
 |---|---|---|---|
@@ -27,24 +17,14 @@ senza dichiararle:
 | `##` | muro | non ci si passa, la vista si ferma | conci, spessore, ombra, torce |
 | due spazi | **il fuori** | come il muro | nero, fino al filo del pavimento |
 
-Il fuori è arrivato per ultimo (settembre 2026), ed è quello che cambia
-di più come si legge una mappa. Prima tutto quello che non era
-pavimento era muro, e una cella di muro che tocca un pavimento si
-dipinge a conci: ogni mappa finiva chiusa in una **cornice di
-mattoni**, sembrava un edificio solo, e il nero che compariva dove i
-muri erano spessi si leggeva come un buco. Adesso la regola è: **il
-muro vero solo dove serve** — fra due stanze, attorno a una porta, dove
-qualcosa ci sta appeso — e il resto è fuori. La forma del posto la dà
-il nero: una cucina con la sua nicchia, un corridoio che gira.
+- **Il muro vero solo dove serve**: fra due stanze, attorno a una porta, dove
+  qualcosa ci sta appeso. Il resto è fuori, e **la forma del posto la dà il
+  nero** (una cucina con la sua nicchia, un corridoio che gira).
+- Provato tutto-muro: una cella di muro accanto al pavimento si dipinge a
+  conci, quindi ogni mappa finiva in una **cornice di mattoni**, sembrava un
+  edificio solo, e il nero dove i muri erano spessi si leggeva come un buco.
 
-I tre token stanno in un posto solo, `DI_SERIE` in
-`data/livelli/livello.js`: li legge il controllo dei refusi e li legge
-chi trasforma la mappa in campo (`motore/generale/campo.js`).
-
-## 1. Tre famiglie in legenda, e sono già due
-
-La legenda dichiara già chi cammina (`chi.*`) e cosa c'è (`cose.*`). Da
-oggi dichiara anche **di che è fatto il posto**:
+## La legenda: chi, cosa, e di che è fatto il posto
 
 ```js
 scena: campo([
@@ -55,151 +35,84 @@ scena: campo([
      BT: arredo.botte() }),
 ```
 
-- **`suoli.*`** — di che è fatto il pavimento lì. La cella resta
-  pavimento a tutti gli effetti: il motore non sa nemmeno che sia
-  diverso, cambia solo chi la dipinge. *(fatto)*
-- **`muri.*`** — di che è fatta la muratura. La cella resta muro: non ci
-  si passa, la vista si ferma. *(fatto)*
-- **`arredo.*`** — un mobile: **occupa la cella**. Non è scenografia
-  dipinta, è un ostacolo vero, e per questo si dichiara qui e non in
-  `scenografia`. *(fatto)*
-- **`arredo.niente()`** — «qui non ci va niente», nemmeno
-  all'arredatore automatico. *(fatto)*
+- `chi.*` chi cammina, `cose.*` cosa c'è (le fabbriche di
+  `src/data/livelli/scrivi.js`).
+- **`suoli.*`** — di che è fatto il pavimento. La cella resta pavimento: il
+  motore non lo sa, cambia solo chi dipinge.
+- **`muri.*`** — di che è fatta la muratura. La cella resta muro.
+- **`arredo.*`** — un mobile che **occupa la cella**: un ostacolo vero, per
+  questo sta in legenda e non in `scenografia`.
+- **`arredo.niente()`** — «qui non ci va niente», nemmeno l'arredatore
+  automatico. È la valvola per la cella che deve restare libera (una
+  piazzola, il punto dove qualcuno si ferma): il livello ha l'ultima parola.
 
-La regola che ne discende: **quello che si vede ingombrare, ingombra**.
-Non esiste più il caso «disegnato solido, calpestabile».
+**Quello che si vede ingombrare, ingombra.** Non esiste «disegnato solido,
+calpestabile». Vale per l'arredo dichiarato; quello che nasce da sé sta
+sulla faccia dei muri che ci sono già (sotto).
 
-Vale per l'arredo **dichiarato**, che sta dentro una stanza e ne
-occupa una casella. Quello che nasce da sé è un'altra cosa e sta
-altrove: sulla faccia dei muri che ci sono già (§3).
+## La decompressione: `src/motore/generale/stanze.js`
 
----
+`mappaPiena`: funzione pura, griglia compressa → mappa piena. Per ogni cella
+dice cos'è (muro, pavimento, fuori, arredo, con che materiale) e cosa **sa
+di essere** rispetto alla stanza:
 
-## 2. La decompressione *(fatta: `motore/generale/stanze.js`)*
+- `stanza` — in che stanza sta (le stanze si separano ai varchi; un
+  corridoio largo uno è una soglia lunga, non una stanza);
+- `soglia` — un passaggio, una strozzatura fra due aperti;
+- `bordo`, `angolo` — pavimento con uno o due muri accanto;
+- `obbligata` — toglierla spezzerebbe il pavimento in due;
+- `facce` — un muro che dà su un pavimento, e da che parte.
 
-Una funzione pura: griglia compressa → **mappa piena**. Restituisce, per
-ogni cella, quello che è (muro/pavimento/arredo, con che materiale) e
-quello che **sa di essere** rispetto alla forma della stanza:
+Il perché: senza questo passo ogni pezzo si ricavava da sé la forma della
+stanza, e una botte è finita disegnata sopra un muro perché nessuno sapeva
+cos'è un muro. Qui dentro sta anche **il riempimento dei buchi**: la cella
+che ospita una chiave non può dichiarare anche il pavimento, e prende il
+terreno dei vicini (se no: una macchia d'erba sotto ogni oggetto in mezzo
+al lastricato). Essendo pura, **si prova** (`test/unita/stanze.test.mjs`)
+invece di fidarsi di quello che esce dipinto.
 
-- in che **stanza** sta (le stanze si separano ai varchi);
-- se è una **soglia** — il passaggio fra due stanze;
-- se è un **bordo**, un **angolo**, un **fondo cieco**;
-- cosa ha **adiacente** (questo muro dà sul prato, questo sul lastricato);
-- se è un **passo obbligato**: toglierla spezzerebbe la stanza in due.
+## L'arredamento automatico: `src/motore/generale/arreda.js`
 
-Qui dentro migrano due cose che oggi sono scritte a mano in due file
-diversi:
+Sopra la mappa piena e separato, così si prova da solo e si spegne. Il
+catalogo (chi nasce in che ambiente, e quanto) è dato:
+`src/data/arredamento.js`.
 
-- **il riempimento dei buchi.** Un token dice una cosa sola: la cella
-  che ospita una chiave non può dichiarare anche il pavimento, e restava
-  con quello dell'ambiente — una macchia d'erba sotto ogni oggetto in
-  mezzo al lastricato. Si guarda intorno e si prende il terreno dei
-  vicini (oggi: `motore/generale/campo.js`);
-- **i dettagli che non devono cadere sul lastricato** (oggi: dentro
-  `libera()` in `grafica/mappa.js`).
-
-E qui nasce la cosa che vale di più: **è una funzione pura, quindi si
-prova**. Il banco può guardarci dentro invece di fidarsi di quello che
-esce dipinto.
-
----
-
-## 3. L'arredamento automatico *(fatto: `motore/generale/arreda.js`)*
-
-Sopra la mappa piena, e **separato**, così si prova da solo e si può
-spegnere. Il catalogo — chi può nascere in che ambiente, e quanto — è
-dato: `data/arredamento.js`.
-
-### Il seme serve alle imperfezioni, non alle scelte
-
-Una macchia d'usura può nascere da un rumore: sbagliarla non vuol dire
-niente. Una torcia o una botte no — seminate a caso si ripetono a caso.
-Qui la conoscenza c'è davvero (questo è un angolo, questa è una soglia,
-questo muro dà sul prato), quindi le scelte sono **informate**.
-
-### Dove sa stare una cosa
-
-È una proprietà dell'oggetto, non di chi arreda:
+- **Il seme serve alle imperfezioni, non alle scelte.** Una macchia d'usura
+  può nascere dal rumore; una torcia o una botte seminate a caso si
+  ripetono a caso. Qui le scelte sono informate (angolo, soglia, muro che
+  dà sul prato).
+- **Dove sa stare una cosa è una proprietà dell'oggetto**:
 
 | regola | vuol dire | esempi |
 |---|---|---|
-| `sulMuro` | sulla faccia del muro, non sul pavimento | torcia, ragnatela, bandiera |
+| `sulMuro` | sulla faccia del muro | torcia, ragnatela, bandiera |
 | `alMuro` | appoggiata alla parete: sulla casella di muro, col pavimento davanti | botte, cassa, sacco, stalagmite |
-| `ovunque` | sul pavimento, e allora è roba che si calpesta | pozzanghere, ossa, funghi |
+| `ovunque` | sul pavimento, quindi roba che si calpesta | pozzanghere, ossa, funghi |
 
-E in più **su che terreno**: i fiori sul prato sì, sul lastricato no; le
-ragnatele in una cripta sì, in un cortile no. Ogni ambiente dichiara
-cosa può nascere da lui.
+- **E su che terreno**: fiori sul prato sì, sul lastricato no; ragnatele in
+  cripta sì, in cortile no. Ogni ambiente dichiara cosa può nascere da lui.
+- **Quanto**: un fattore di riempimento per l'area della stanza
+  (`riempimento`, di base 0,06): una stanzetta da sei caselle prende una
+  cosa, un salone sei.
+- **La presenza è la dichiarazione.** Una torcia messa a mano serve alla
+  storia: fa luce, e il motore non ne aggiunge in quella stanza. Senza,
+  ne mette di scenografiche, che non cambiano la vista di nessuno. Nessun
+  flag: la differenza è chi ce l'ha messa.
+- Niente sopra una cosa in gioco, né dove il livello ha chiesto una casella
+  libera.
 
-### Quanto
+**La mappa non si tocca.** L'arredatore non mura mai una casella: disegna
+sulla faccia dei muri che ci sono già, il cui ingombro è vero senza che
+nessuno lo dichiari. Provato il contrario (murare una casella di pavimento
+contro una parete, con divieti su soglie e passi obbligati): una botte che
+non chiude niente allungava di un passo una strada misurata a cammino e un
+livello giocato a vista smetteva di vincersi; e nella grotta comparivano
+rettangoli di pavimento chiaro attorno alle stalagmiti. Quello che sta sul
+pavimento è roba che si calpesta; un mobile che occupa lo scrive il livello
+con `arredo.*`, e il banco lo gioca.
 
-Un **fattore di riempimento** moltiplicato per l'area della stanza: una
-stanzetta da sei caselle prende una cosa, un salone ne prende sei. Le
-stanze la decompressione le ha già separate.
+Nei test: `test/unita/stanze.test.mjs`; il banco dei livelli controlla che
+la scenografia non sieda su niente in gioco e che gli ingombranti stiano
+sui muri (`INGOMBRANTI` in `src/grafica/oggetti/indice.js`).
 
-### La presenza è la dichiarazione
-
-Se una torcia l'hai messa **a mano**, serve alla storia: **fa luce**, e
-il motore non ne aggiunge altre in quella stanza. Se non ne hai messe,
-può metterne di **scenografiche**: si vedono e non cambiano la vista di
-nessuno. Non serve nessun flag — la differenza è chi ce l'ha messa.
-
-### La regola: la mappa non si tocca
-
-La prima versione dell'arredatore faceva il contrario. Sceglieva una
-casella di pavimento contro una parete e la **murava** — una botte
-ingombra, e la mappa non deve mentire — con tre divieti a fare da rete:
-mai su una soglia, mai su un passo obbligato, mai dove il livello ha
-chiesto una casella libera.
-
-Non bastavano, e l'hanno detto in due. Il banco: `azioni/1-la-ronda-che-decide`
-smetteva di vincersi, perché quel livello si gioca **a vista** e una
-botte che non chiude niente allunga lo stesso di un passo la strada fra
-il punto di guardia e l'angolo — e la vista si misura a cammino. E
-l'occhio: nella grotta comparivano rettangoli di pavimento chiaro in
-mezzo alla roccia, come se qualcuno avesse aperto un buco per metterci
-dentro una stalagmite.
-
-Il verso giusto era l'altro. **Il muro c'è già**: il suo ingombro è
-vero senza che nessuno lo dichiari, e la faccia che dà sul pavimento è
-esattamente dove una cosa appoggiata alla parete si vedrebbe. Ci si
-mette il disegno sopra e non si tocca niente — la mappa resta quella
-che il livello ha scritto, cella per cella, e non c'è nessuna distanza
-da ricontrollare perché non si è spostato un sasso.
-
-Quello che sta sul pavimento è allora, per forza, roba che si calpesta:
-una pozzanghera, un mucchio d'ossa, un fungo. E un mobile che **occupa**
-lo scrive il livello in legenda con `arredo.*`: è una decisione, si vede
-nella mappa, e il banco la gioca.
-
-### La cella che deve restare libera
-
-Quando serve uno spazio vuoto per forza — una piazzola, il punto dove
-qualcuno si ferma — il livello lo dice, e nessuno ci mette niente. È la
-valvola di sfogo: se le regole strutturali non bastano, il livello ha
-sempre l'ultima parola.
-
----
-
-## 4. In che ordine si fa
-
-1. ~~**`arredo.*` in legenda**~~ — fatto.
-2. ~~**La mappa piena**~~ — fatto: `motore/generale/stanze.js`. Ci è
-   migrato dentro il riempimento dei buchi.
-3. ~~**L'arredamento automatico**~~ — fatto: `motore/generale/arreda.js`,
-   catalogo in `data/arredamento.js`, provato in
-   `test/unita/stanze.test.mjs`.
-
-### Cosa resta
-
-- **I dettagli sul lastricato.** L'esclusione vive ancora dentro
-  `libera()` in `grafica/mappa.js` e legge i suoli invece dei fatti
-  della mappa piena: funziona, ma è la seconda copia di una domanda a
-  cui adesso sa rispondere qualcun altro.
-- **Il raccordo fra due murature diverse.** Dove la pietra del castello
-  incontra il legno del fienile oggi c'è uno stacco netto.
-- **I livelli vecchi in legenda.** Trenta livelli mettono i mobili in
-  `scenografia`, su caselle di muro: si vedono giusti e ingombrano
-  davvero, ma è una convenzione che va tenuta a mente invece di essere
-  scritta. Riscriverli con `arredo.*` si fa un livello alla volta,
-  quando lo si apre per altro.
+Quello che resta da fare sulle mappe è in [da-fare.md](da-fare.md).
