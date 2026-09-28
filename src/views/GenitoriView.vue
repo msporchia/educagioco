@@ -1,15 +1,5 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   SCHERMATA DEI GENITORI
-   Le cose che un bambino non deve poter fare per sbaglio: portarsi via i
-   progressi, rimetterli, cancellarli. Prima stavano sulla home, e
-   "azzera i dati" a portata di dito era solo questione di tempo.
-
-   Il PIN non è sicurezza: è un gradino contro il tocco distratto. Chi
-   vuole entrare davvero apre gli strumenti del browser. Si cambia da qui
-   dentro — quando i bambini imparano a leggerlo da sopra la spalla — e
-   vive in `store/pin.js`, fuori dai profili.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Schermata dei genitori, dietro il PIN (vedi docs/genitori/). */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
          rinominaGiocatore, eliminaGiocatore, cestinaOra, ripristinaCestinato,
@@ -44,13 +34,9 @@ import TempoDiGioco from '../components/TempoDiGioco.vue'
 
 const emit = defineEmits(['vai'])
 
-/* Il nome di chi sta giocando. Da quando esiste il roster `state.player`
-   è un id e non un nome: scritto a schermo direbbe «Impostazioni di g2»
-   a chi si è appena iscritto. Il nome sta nel roster, e si chiede lì. */
+/* state.player è un id, non un nome: il nome si legge dal roster. */
 const chi = computed(() => nomeCorrente() || 'questo giocatore')
 
-/* chi finisce dentro il salvataggio: si legge dal roster, così la carta
-   dice la verità anche dopo che i genitori hanno aggiunto qualcuno */
 const chiGioca = computed(() => {
   const nomi = state.giocatori.map(g => g.nome).filter(Boolean)
   if (nomi.length <= 1) return nomi[0] || 'tutti i progressi'
@@ -65,8 +51,6 @@ const esito = ref(null)          // { ok: bool, testo: string }
 const confermaAzzera = ref(false)
 const confermaFattoria = ref(false)
 
-/* Ricomincia la fattoria e basta. Passa da `campagne.js` come tutti i
-   giochi nuovi: qui non si sa nemmeno com'è fatta dentro. */
 async function azzeraFattoria() {
   await cestinaOra('fattoria')
   azzeraCampagna('fattoria')
@@ -75,20 +59,11 @@ async function azzeraFattoria() {
   cestino.value = await leggiCestino()
 }
 
-/* ── il cestino ──
-   Quello che si è cancellato di recente, e il tasto per rimetterlo. La
-   sezione esiste solo se c'è qualcosa dentro: una riga «il cestino è
-   vuoto» è una riga da leggere ogni volta per non sapere niente, come
-   quella dei guasti. Perché ci sia un cestino, vedi
-   `store/cestino.js`. */
+// il cestino: vedi docs/genitori/cestino-e-posta.md
 const cestino = ref([])
 const rimettendo = ref(null)     // la voce in attesa di conferma
 
-/* ── la posta ──
-   Le note che un grande deve leggere (`guide/novita.js`) e gli avvisi
-   che il gioco si è scritto da solo. Stanno in cima a questa schermata e
-   non in una scheda a parte: chi entra per un altro motivo le trova
-   sulla strada, chi entra apposta non deve cercarle. */
+// la posta: vedi docs/genitori/cestino-e-posta.md
 const posta = ref({ note: [], avvisi: [] })
 const cePosta = computed(() => posta.value.note.length + posta.value.avvisi.length > 0)
 
@@ -97,33 +72,18 @@ async function hoLetto() {
   posta.value = await laPosta()
 }
 const file = ref(null)
-/* il cambio del codice: 'nuovo' mentre lo si sceglie, 'ripeti' mentre lo
-   si conferma. Chiedere due volte non è una formalità — un codice
-   sbagliato di un dito chiude fuori i grandi e basta. */
+// 'nuovo' mentre si sceglie il codice, 'ripeti' mentre lo si conferma
 const modo = ref('')
 const nuovo = ref('')
-/* il codice dimenticato: la domanda al posto delle quattro cifre, stesso
-   tastierino e stessa attesa (`store/pin.js`) */
-const recupero = ref(false)
+const recupero = ref(false)   // il codice dimenticato: vedi docs/genitori/codice.md
 
-/* le due schede: quello che si vede ('giochi') e quello che si sa
-   ('sa'). Erano una colonna sola e i macrogruppi l'avrebbero fatta
-   lunga il doppio, con due cose diverse mescolate: quali giochi
-   compaiono, e quali domande hanno senso per questo bambino. */
 const scheda = ref('bambini')
 
-/* i guasti registrati da `incidenti.js`: si leggono una volta all'entrata
-   e non si stanno a guardare in diretta — chi apre questa pagina lo fa
-   dopo, per capire cos'è successo prima */
-const incidenti = ref([])
-
-/* i giudizi sulle domande, dallo stesso posto e per lo stesso motivo:
-   si sono accumulati mentre si giocava, e si guardano dopo */
-const giudizi = ref([])
+const incidenti = ref([])   // letti una volta all'entrata, da src/incidenti.js
+const giudizi = ref([])     // vedi docs/genitori/come-va.md
 
 onMounted(async () => {
-  /* uscire e rientrare non azzera l'attesa: se ne era rimasta, si
-     riprende da dove stava invece di ricominciare dal tastierino vivo */
+  // uscire e rientrare non azzera l'attesa dopo uno sbaglio: riprende da dove stava
   guardaLOrologio()
   if (conto.value.resta) {
     haSbagliato.value = true
@@ -136,8 +96,6 @@ onMounted(async () => {
   posta.value = await laPosta()
 })
 
-/* l'ora e basta se è di oggi, altrimenti anche il giorno: «alle 17:42»
-   è quello che un genitore confronta col «si è rotto prima di cena» */
 function quando (iso) {
   const d = new Date(iso)
   if (isNaN(d)) return '?'
@@ -146,8 +104,6 @@ function quando (iso) {
   return oggi ? ore : d.toLocaleDateString('it', { day: 'numeric', month: 'short' }) + ' ' + ore
 }
 
-/* copiare serve a mandarlo a chi ci mette le mani: negli appunti finisce
-   tutto quello che c'è, pila compresa, che a schermo sarebbe illeggibile */
 async function copiaGuasti () {
   const testo = incidenti.value.map(g =>
     `${g.quando} · ${g.dove} · ${g.versione}\n${g.testo}\n${g.pila || ''}`).join('\n\n')
@@ -165,31 +121,11 @@ async function scordaGuasti () {
   esito.value = { ok: true, testo: 'Cancellati.' }
 }
 
-/* la riparazione ricarica la pagina da sé: non c'è niente da dire dopo */
 const riparaApp = () => ripara()
 
-/* ── segnalare ──
-   Un modulo fuori dal gioco, e non un indirizzo di posta: su un telefono
-   senza client configurato un `mailto:` è l'ennesimo tasto che non fa
-   niente, ed è precisamente il guasto che questa pagina esiste per non
-   avere. Ci va dentro quello che chi scrive non saprebbe dire — la
-   versione, e l'ultimo inciampo se ce n'è uno — così che una segnalazione
-   utile costi una frase invece di una traduzione.
-
-   La pila non entra nell'indirizzo: sarebbe lunga il triplo del limite
-   che i browser reggono in fila. Per quella c'è «Copia» qui sopra.
-
-   ── COME ARRIVANO DALL'ALTRA PARTE ──
-   In Tally i parametri dell'indirizzo riempiono **solo i campi
-   nascosti**, che nell'editor si aggiungono scrivendo `/hidden`, e sono
-   **sensibili alle maiuscole**: il nome del campo dev'essere identico
-   al parametro, lettera per lettera. Un campo normale — una casella di
-   testo, un indirizzo di posta — dall'indirizzo non si tocca affatto.
-   Quindi un parametro che nel form non ha il suo campo nascosto non dà
-   nessun errore: il modulo si apre come sempre e il dato sparisce.
-
-   Questo qui vuole `versione` e `guasto`. */
-
+// modulo Tally con `versione` e `guasto` precompilati; la pila non ci sta
+// (limite di lunghezza dell'indirizzo), per quella c'è «Copia». Trappole
+// di Tally coi parametri nell'indirizzo: docs/genitori/come-va.md
 const linkSegnala = computed(() => {
   const q = new URLSearchParams({ versione: __VERSIONE__.id })
   const ultimo = incidenti.value[incidenti.value.length - 1]
@@ -197,11 +133,7 @@ const linkSegnala = computed(() => {
   return `${SEGNALA}?${q}`
 })
 
-/* ── i giudizi sulle domande ──
-   L'interruttore mette tre tastini sopra ogni domanda dei quiz. Sta qui
-   dentro e non in `settings` perché è del telefono e non di un bambino:
-   chi giudica è il grande seduto di fianco, e cambiando giocatore non
-   deve riaccenderlo. */
+// giudiziAccesi è del telefono e non di settings: cambiando bambino non si spegne
 function cambiaGiudizi() {
   accendiGiudizi(!giudiziAccesi.value)
   esito.value = { ok: true, testo: giudiziAccesi.value
@@ -209,28 +141,13 @@ function cambiaGiudizi() {
     : 'Spento: le domande tornano come prima.' }
 }
 
-/* la riga da leggere a schermo: la stessa che partirebbe nel modulo,
-   che è il punto — quello che si manda si vede prima */
 const righeGiudizi = computed(() =>
   giudizi.value.slice().reverse().map(g => ({
     ico: verdettoDi(g.verdetto)?.ico || '·',
     testo: rigaGiudizio(g),
   })))
 
-/* ── dove vanno ──
-   Non c'è un server a cui mandarli e non ci sarà: un modulo è l'unico
-   canale che da un telefono senza posta configurata non chiede niente a
-   nessuno.
-
-   Ma è un modulo **suo**, non quello dei guasti, e i due non vanno
-   mescolati: il primo lo compila chiunque inciampi nel gioco e chiede
-   di raccontare cosa è successo, questo lo apre chi ha in mano il
-   telefono di casa e non ha niente da scrivere — si apre e si tocca
-   invia. Un campo obbligatorio, qui, sarebbe un pedaggio su un gesto
-   che deve costare un tocco.
-
-   Vuole un campo nascosto `giudizi` e uno `versione` (vedi sopra come
-   si aggiungono). */
+// modulo Tally separato da quello dei guasti: campi nascosti `giudizi` e `versione`
 const SEGNALA_GIUDIZI = 'https://tally.so/r/lb28zp'
 
 const paccoDaMandare = computed(() => paccoGiudizi(giudizi.value))
@@ -251,10 +168,7 @@ async function copiaGiudizi() {
   }
 }
 
-/* Cancellare è a mano, e apposta: il modulo si apre in un'altra scheda
-   e da qui non si sa se è stato davvero inviato. Svuotare da soli dopo
-   aver aperto il link vorrebbe dire buttare via i giudizi di chi ci ha
-   ripensato a metà. */
+// cancellare è a mano: da qui non si sa se il modulo è stato davvero inviato
 async function scordaGiudizi () {
   await svuotaGiudizi()
   giudizi.value = []
@@ -276,12 +190,7 @@ function premi(n) {
   else { cifre.value = ''; fermati() }
 }
 
-/* ── l'attesa dopo un codice sbagliato ──
-   Quanto dura lo decide `store/pin.js`, che tiene il conto degli sbagli
-   anche se si esce e si rientra; qui si tiene solo il battito che fa
-   scendere il numero e riempire la barretta. Senza barretta sarebbero
-   trenta secondi di tastierino che non fa niente, cioè esattamente il
-   guasto che si sta cercando di non avere. */
+// la durata la tiene store/pin.js; qui solo il battito che riempie la barretta
 const conto = ref({ resta: 0, quanto: 0 })
 const haSbagliato = ref(false)
 let battito = null
@@ -307,12 +216,7 @@ onUnmounted(() => clearInterval(battito))
 
 function cancella() { cifre.value = cifre.value.slice(0, -1); sbagliato.value = false }
 
-/* ---------- il codice dimenticato ----------
-   Perché sia una domanda di cultura generale e non qualcosa di più
-   serio sta scritto in `store/pin.js`. Qui conta solo che sbagliare
-   costi *la stessa attesa* di un codice sbagliato: la risposta è un
-   anno, cioè poche centinaia di possibilità, e senza il freno di
-   `segnaSbaglio` si tirerebbero tutte in un pomeriggio. */
+// il codice dimenticato: vedi docs/genitori/codice.md
 function apriRecupero() { recupero.value = true; cifre.value = ''; sbagliato.value = false }
 function lasciaIlRecupero() { recupero.value = false; cifre.value = ''; sbagliato.value = false }
 
@@ -322,21 +226,12 @@ async function quattroDelRecupero() {
   recupero.value = false
   pin.value = await azzeraPin()
   azzeraSbagli()
-  /* Lo scrive nella posta: se a rispondere non è stato il grande di
-     casa, questo è l'unico modo che ha di scoprirlo — e la risposta a
-     una domanda di cultura generale è alla portata di chiunque la
-     cerchi (`store/pin.js`). Senza traccia scritta, un codice tornato a
-     0000 sembra una stranezza dell'applicazione. */
+  // traccia in posta: è l'unico modo di sapere che è stato aperto senza il codice
   await avvisa('Il codice era stato dimenticato ed è stato rimesso a ' + PIN_INIZIALE
     + '. Se non sei stato tu, l\'ha fatto qualcuno che ha risposto alla domanda.')
-  /* e si rilegge la posta: questa schermata la carica al montaggio, e
-     qui dentro il montaggio è già passato — senza, l'avviso appena
-     scritto si vedrebbe solo alla visita dopo, che è quanto dire mai */
+  // si rilegge: il montaggio (che ricarica la posta) è già passato
   posta.value = await laPosta()
   dentro.value = true
-  /* si entra e si sceglie subito quello nuovo: una casa lasciata a 0000
-     è una casa senza codice, e chi è appena rientrato non ci ripensa da
-     solo domani */
   cambiaCodice()
   esito.value = { ok: true,
     testo: 'Il codice è tornato a ' + PIN_INIZIALE + '. Scegline uno nuovo adesso.' }
@@ -401,14 +296,7 @@ async function importa(ev) {
   ev.target.value = ''   // stesso file due volte di fila deve poter funzionare
 }
 
-/* ── PASSARE IL GIOCO A UN'ALTRA FAMIGLIA ──
-   Si condivide **l'indirizzo secco**, senza messaggio addosso: chi lo
-   manda scrive di suo quello che ha da dire, e un testo preconfezionato
-   in fondo a una chat suona come una catena di sant'Antonio.
-
-   L'indirizzo lo scrive il build e non lo si legge da `location`: qui in
-   casa il gioco arriva dal server di casa, e quell'indirizzo per un'altra
-   famiglia non esiste. Vedi `guide/aiuto.js`. */
+// si condivide l'indirizzo secco, senza messaggio: vedi docs/genitori/guide.md
 async function passaIlGioco () {
   esito.value = null
   const r = await condividi({ url: INDIRIZZO, titolo: 'Educagioco' })
@@ -416,11 +304,7 @@ async function passaIlGioco () {
   else if (r.come === 'niente') esito.value = { ok: false, testo: INDIRIZZO }
 }
 
-/* Il salvataggio mandato dal foglio del telefono invece che scaricato.
-   Su un telefono «scarica» finisce in una cartella che poi va ritrovata;
-   di qui va dove serve — a se stessi in chat, nel cloud, sull'altro
-   telefono — che è l'unico motivo per cui uno esporta i progressi.
-   La carta compare solo dove la condivisione di file c'è davvero. */
+// la carta compare solo dove la condivisione di file esiste davvero
 const puoMandareFile = (() => {
   try { return !!navigator.canShare?.({ files: [new File(['{}'], 'p.json', { type: 'application/json' })] }) }
   catch { return false }
@@ -442,29 +326,14 @@ async function mandaSalvataggio () {
   }
 }
 
-/* Serve solo a decidere se vale la pena dire «installalo»: chi ci gioca
-   già dall'icona non ha bisogno di sentirselo ripetere. */
 const daInstallare = !installata() && piattaforma() !== 'computer'
 
-/* ── chi gioca ──
-   Aggiungere, rinominare, eliminare. Sta dietro il PIN e non in home
-   perché sono i tre gesti che possono far sparire mesi di partite col
-   dito sbagliato — eliminare cancella davvero, e non c'è un cestino.
-
-   L'unica porta che non passa di qui è la prima: a roster vuoto il nome
-   si chiede subito, senza codice (`components/Benvenuto.vue`). Un'app
-   appena installata che chiede un PIN che nessuno ha ancora scelto non
-   si apre più.
-
-   Una schermata sola con tre stati, come il resto di questo file:
-   `rinominando` tiene l'id di chi si sta ribattezzando, `eliminando`
-   quello di chi sta per sparire, `aggiungendo` dice che si sta scrivendo
-   un nome nuovo. Mai due aperti insieme. */
+// aggiungere, rinominare, eliminare: dietro il PIN. Eliminare passa dal
+// cestino (store/cestino.js), quindi non è mai davvero senza ritorno.
+// `rinominando`/`eliminando`/`aggiungendo` sono mai due aperti insieme.
 const rinominando = ref('')
 const eliminando = ref('')
-/* Il modulo del bambino nuovo non sta più qui: è la stessa schermata
-   del primo avvio (`components/Benvenuto.vue`), aperta a tutto schermo.
-   Qui resta solo l'interruttore che la apre. */
+// il modulo del bambino nuovo è components/Benvenuto.vue, a tutto schermo
 const aggiungendo = ref(false)
 const nomeInCorso = ref('')
 
@@ -472,36 +341,12 @@ function chiudiTutto() {
   rinominando.value = ''; eliminando.value = ''; nomeInCorso.value = ''
 }
 
-/* ── QUANTI ANNI HA, CHE È L'UNICA MANOPOLA ──
-   Qui c'erano due manopole per la stessa cosa: un `− 7,5 anni +` che
-   spostava solo l'età, e dieci pixel più sotto un «Rimetti giochi e
-   domande» che apriva le quattro fasce e riscriveva **tutto** — giochi,
-   saperi, ritocchi — senza che niente, a guardarle, dicesse quale
-   fosse quale.
-
-   Adesso ce n'è una (`components/ManopolaEta.vue`) e dice cosa fa
-   mentre la si muove. Il conto dei tre casi sta in `data/partenze.js`
-   e non qui, perché è **lo stesso** che poi scrive: se la schermata se
-   lo rifacesse per conto suo, il riassunto direbbe una cosa e il
-   salvataggio ne farebbe un'altra.
-
-     · dentro la stessa fascia — si sposta l'età e basta, muta
-     · fascia diversa, ma nessuna scelta fatta a mano — si va dritti
-     · fascia diversa, e c'era roba sistemata a mano — si chiede
-
-   Il terzo caso è il motivo per cui il tasto «Rimetti» non serve più:
-   quello che faceva succede qui, ma solo quando c'è davvero qualcosa
-   da riscrivere, e detto prima invece che dopo. */
+// la manopola dell'età: vedi docs/genitori/manopola.md
 const giroEta = ref(0)
 const anniOra = computed(() => (giroEta.value, etaDelBambino()))
 const settaggi = computed(() => (giroEta.value, state.profile.settings || {}))
 
-/* Qui non si decide più niente: la manopola muove la sua bozza, mostra
-   il quadro di quell'età e chiede conferma da sé, con il cartello
-   appiccicato in fondo — `scegli` arriva una volta sola, quando il
-   grande ha premuto «Applica». Prima si scriveva a ogni tacca e la
-   conferma compariva in fondo alla colonna, dove non la vedeva
-   nessuno: si vedeva solo una freccia che smetteva di rispondere. */
+// `scegli` arriva una sola volta, quando si preme «Applica» nel cartello
 function applicaAnni(anni) {
   const mossa = spostaLEta(anni)
   giroEta.value++
@@ -514,66 +359,31 @@ function applicaAnni(anni) {
 
 const inLettere = anniInLettere
 
-/* ── LA CORREZIONE PICCOLA, DAL QUADRO ──
-   L'età è la manopola grossa e sta sopra; questa è la riga per volta:
-   *le stagioni le davamo per sapute, e a scuola sono indietro di mezzo
-   anno*. La tacca (`components/eta/Taratura.vue`) non scrive niente e
-   manda su cosa ha deciso — come fa già quella dell'età — e qui si
-   sceglie fra le due scritture, che sono due affermazioni diverse:
-
-     · **spostare** è un ritocco (`settings.ritocchi`), mezzo anno per
-       scatto e non più di tre: la domanda resta, cambia solo dove cade;
-     · **togliere** è un'altra cosa (`settings.sa`): il pezzo di scuola
-       si spegne e le domande che lo danno per scontato spariscono da
-       tutti i giochi, castello compreso.
-
-   Riaccendere si fa solo se era spento davvero: `accendiSapere` accetta
-   qualunque chiave, e passarle una tipologia di quiz scriverebbe una
-   voce che non spegne niente e che nessuno andrebbe più a togliere. */
+// la ✎ del quadro: vedi docs/genitori/ritocchi.md
 function ritoccaDalQuadro({ chiave, ritocco = 0, spenta = false }) {
   if (!chiave) return
   if (spenta) accendiSapere(chiave, false)
   else if (saperiSpenti().includes(chiave)) accendiSapere(chiave, true)
-  /* Il ritocco si scrive in tutti e due i casi. Spegnendo con «Toglila»
-     arriva quello di prima, e riscriverlo non cambia niente; ma
-     «rimettila com'era», su un pezzo che l'età spegne, arriva con lo
-     zero **insieme** allo spegnimento — e senza questa riga il ritocco
-     vecchio resterebbe lì a tenerla ambra. */
+  // il ritocco si scrive in tutti e due i casi: senza, «rimettila com'era»
+  // su un pezzo che l'età ha spento lascerebbe il vecchio ritocco ad ambrarla
   ritocca(chiave, ritocco)
   giroEta.value++
 }
 
-/* ── e la ✎ di un gioco ──
-   Non sposta niente di mezzo anno: dice **chi decide** se sta in casa.
-   `'difetto'` toglie l'eccezione e lascia decidere all'età, che è il
-   ripristino di una riga sola — quello di tutte insieme è il tasto in
-   fondo al quadro. */
+// la ✎ di un gioco: sceglie chi decide se sta in casa, non sposta l'età
 function fissaDalQuadro({ chiave, come }) {
   if (!chiave) return
   fissaGioco(chiave, come)
   giroEta.value++
 }
 
-/* ── e la ✎ di un pezzo di scuola che vive dentro un gioco ──
-   Le divisioni del castello non hanno domande nel mazzo, quindi non
-   hanno una difficoltà da spostare di mezzo anno: quello che si sceglie
-   è la stessa cosa dei giochi — chi decide, l'età o il grande — e si
-   scrive con la stessa funzione di `fissaGioco`, dall'altra parte
-   (`settings.sa`). Passa da qui e non da `ritoccaDalQuadro` perché
-   quello parla di ritocchi, e un ritocco su una chiave senza domande
-   sarebbe una voce nel salvataggio che non sposta niente. */
+// la ✎ di un pezzo di scuola appeso a un gioco (es. le divisioni del castello)
 function fissaSapereDalQuadro({ chiave, come }) {
   if (!chiave) return
   fissaSapere(chiave, come)
   giroEta.value++
 }
 
-/* ── rimettere tutto com'è di partenza ──
-   Non tocca l'età e non tocca i progressi: butta le eccezioni — giochi
-   messi a mano, pezzi di scuola tolti, domande spostate — e riparte dai
-   valori della sua fascia. Il conto di cosa se ne va l'ha già mostrato
-   il quadro prima di chiedere conferma, e viene dalla stessa funzione
-   che qui scrive. */
 function rimettiTutto() {
   const mossa = rimettiAiDifetti()
   giroEta.value++
@@ -585,23 +395,12 @@ function rimettiTutto() {
 function apriRinomina(g) { chiudiTutto(); rinominando.value = g.id; nomeInCorso.value = g.nome }
 function apriElimina(g) { chiudiTutto(); eliminando.value = g.id }
 
-/* ── il bambino nuovo: la stessa schermata del primo avvio ──
-   Qui c'era un modulo suo — nome, faccia, quattro carte — che era la
-   copia peggiore di `components/Benvenuto.vue`: stessa domanda, altro
-   disegno, e un tasto «Aggiungi» che si comportava diversamente. Il
-   bambino nuovo nasceva e restava fermo; per farlo giocare bisognava
-   uscire, tornare in home e sceglierlo, mentre lui guardava.
-
-   Adesso si apre il wizard vero, a tutto schermo, e finisce **entrando
-   in partita con lui**: è il motivo per cui si sta aggiungendo un
-   bambino. Il codice dei genitori è già stato chiesto per arrivare fin
-   qui, quindi non si chiede una seconda volta. */
+// il bambino nuovo apre il wizard del primo avvio e finisce entrando in
+// partita con lui; il codice non si richiede due volte
 function apriAggiungi() { chiudiTutto(); aggiungendo.value = true }
 function fattoIlBambino() {
   aggiungendo.value = false
-  /* `state.player` è cambiato, quindi `App.vue` rimonta questa
-     schermata da capo e il codice torna a essere chiesto: si va in home
-     invece di lasciare un tastierino davanti a chi ha appena finito. */
+  // state.player è cambiato: App.vue rimonterebbe con un tastierino davanti
   emit('vai', 'home')
 }
 
@@ -618,12 +417,8 @@ async function salvaNome() {
   }
 }
 
-/* Da qui si elimina solo chi sta giocando adesso — è l'unico che ha una
-   carta — quindi `eliminaGiocatore` sposta sempre `state.player` su
-   qualcun altro (o su nessuno, se era l'ultimo). Restare fermi vorrebbe
-   dire una schermata rimontata col tastierino davanti: si va in home,
-   che è dove si sceglie chi gioca ed è la cosa da fare subito dopo. Ci
-   pensa il `watch` di `App.vue`, che vale per ogni cambio di bambino. */
+// eliminaGiocatore sposta state.player su un altro (o su nessuno): il
+// watch di App.vue porta in home da solo, per ogni cambio di bambino
 async function eliminaOra(g) {
   try {
     await eliminaGiocatore(g.id)
@@ -633,32 +428,11 @@ async function eliminaOra(g) {
   chiudiTutto()
 }
 
-/* ── provare una domanda prima di decidere ──
-   La scheda «Le domande» dice cosa esiste e a chi arriva; questo lo fa
-   vedere. La domanda che si apre è quella vera, generata dallo stesso
-   modulo che la darebbe al bambino: nessuno la scrive a mano e quindi
-   nessuno se la dimentica aggiornata (`quiz/nucleo/esempi.js`).
-
-   Provare non cambia niente: si guarda, si chiude, e la taratura è
-   ancora dove stava.
-
-   ── DUE SCHEDE DIVENTATE UNA ──
-   Qui c'era anche «Cosa sa»: una carta per macrogruppo di scuola, con
-   l'interruttore e le sottovoci. Mostrava **le stesse cose** della
-   scheda delle domande dette in un altro modo — gli stessi gruppi, le
-   stesse tipologie, gli stessi ritocchi — e due elenchi della stessa
-   cosa sono due posti dove guardare e uno dove sbagliarsi. È rimasta
-   quella per difficoltà, dove ogni riga porta con sé il ✕ che spegne
-   il suo gruppo: spegnere un pezzo di scuola si fa da lì, e vale come
-   prima anche per i giochi che leggono i saperi (il castello e le
-   divisioni, il laboratorio e le conversioni). */
+// la domanda vera generata dal modulo che la darebbe al bambino; provare
+// non cambia niente (vedi docs/genitori/quadro.md)
 const prova = ref(null)          // { chiave, nome, eta } | { sorgente|giro|eta, nome } | null
 
 
-/* Tutte le tappe aperte da subito. L'interruttore c'è e la scelta si
-   salva nel profilo; i giochi però non lo leggono ancora, quindi per ora
-   non cambia niente — ed è scritto sulla carta, perché un interruttore
-   che sembra fare qualcosa e non la fa è peggio che non averlo. */
 const aperto = computed(() => tuttoAperto())
 function cambiaAperto() {
   accendiTuttoAperto(!aperto.value)
@@ -667,24 +441,13 @@ function cambiaAperto() {
     : 'Tornato al normale: le tappe si aprono una per volta.' }
 }
 
-/* ── con che faccia si vede in mappa ──
-   Si può cambiare solo per chi sta giocando adesso: il profilo degli
-   altri fratelli non è caricato in memoria, e caricarlo solo per
-   guardare un aspetto sarebbe un giro lungo per una carta che oggi non
-   lo mostra. Sta nella carta di «Chi gioca» che ha la spunta 🎮, non
-   quassù fra gli interruttori: è un attributo del bambino, come il nome,
-   non una preferenza su cosa si vede in home. */
+// solo per chi gioca adesso: il profilo degli altri non è in memoria
 const aspettoAttuale = computed(() => aspettoDi())
 function cambiaAspetto(nome) {
   if (nome === aspettoAttuale.value) return
   scegliAspetto(nome)
 }
 
-/* ── i giochi in prova ──
-   Il cancello è uno per tutti. Chiuso, i giochi che ci stanno dietro non
-   si elencano nemmeno: accendere il singolo non avrebbe nessun effetto,
-   e un interruttore che non fa niente è peggio di un interruttore che
-   non c'è. */
 const inProva = computed(() => sperimentaliAccesi())
 const sperimentali = computed(() =>
   inProva.value ? GIOCHI.filter(g => g.sperimentale) : [])
@@ -717,40 +480,15 @@ async function rimetti(v) {
 </script>
 
 <template>
-  <!-- ── il bambino nuovo prende tutto lo schermo ──
-       È la stessa schermata del primo avvio, e prende tutto lo schermo
-       per lo stesso motivo per cui lo prende lì: chi la sta compilando
-       sta rispondendo a tre domande di fila su un bambino che ancora
-       non c'è, e avere dietro l'elenco delle impostazioni di un altro
-       bambino è solo rumore. Non serve la barra: la via d'uscita ce
-       l'ha dentro. -->
+  <!-- il bambino nuovo: la stessa schermata del primo avvio, a tutto schermo -->
   <Benvenuto v-if="aggiungendo" :primo="false"
              @fatto="fattoIlBambino" @lasciaStare="aggiungendo = false" />
 
   <div v-else class="schermo">
     <Barra titolo="Impostazioni" :audio="false" @indietro="$emit('vai','home')" />
 
-    <!-- ── il gradino ──
-         Il titolo era «Solo per i grandi» e il codice sbagliato si
-         annunciava in rosso: messe insieme, le due cose facevano di
-         questa schermata un minigioco — c'è un segreto, e provare a
-         indovinarlo dà una reazione a ogni tiro. Adesso dice cosa c'è
-         dentro con la voce di un modulo da compilare, e sbagliare non
-         risponde: aspetta (`store/pin.js`).
-
-         Restava però una schermata che, a un bambino capitato qui, non
-         diceva né di chi è né dove si torna: solo un tastierino e una
-         freccia in cima. Adesso lo dice prima di tutto — «le cambia un
-         grande», detto come si dice a chi ha girato la maniglia
-         sbagliata, non come un divieto, che è pubblicità — e sotto il
-         tastierino c'è la via d'uscita, larga uguale. -->
-    <!-- ── il codice dimenticato ──
-         Stesso tastierino, stessi quattro pallini, stessa attesa dopo uno
-         sbaglio: al posto del codice si risponde a una domanda che si
-         impara dopo le elementari. Non è una barriera — la risposta sta
-         su internet — è la sola strada che un grande poco pratico
-         percorre da solo, dal telefono, dentro l'app installata. Il
-         ragionamento intero sta in `store/pin.js`. -->
+    <!-- il codice dimenticato: stesso tastierino, stessa attesa dopo uno
+         sbaglio; vedi docs/genitori/codice.md -->
     <div v-if="!dentro && recupero" class="centro">
       <h2>Il codice dimenticato</h2>
       <p class="testo">Rispondi e il codice torna a <b>{{ PIN_INIZIALE }}</b>, così puoi
@@ -783,12 +521,8 @@ async function rimetti(v) {
       <div class="pallini">
         <span v-for="(pieno, i) in pallini" :key="i" :class="{ pieno }"></span>
       </div>
-      <!-- Dopo il primo sbaglio questo blocco non se ne va più: a
-           tempo scaduto la barretta e il conto restano al loro posto,
-           spenti. Sparendo si porterebbero dietro ottanta pixel, il
-           tastierino salterebbe in su nell'istante esatto in cui torna
-           a rispondere, e chi aveva il dito pronto premerebbe un altro
-           numero. -->
+      <!-- resta anche a tempo scaduto, spento: sparendo il tastierino
+           salterebbe proprio quando torna a rispondere -->
       <div v-if="haSbagliato" class="fermo">
         <span class="barretta" :class="{ muta: !fermo }"><i :style="{ width: riempita + '%' }"></i></span>
         <small :class="{ muta: !fermo }">fra {{ mancano }} second{{ mancano === 1 ? 'o' : 'i' }} si riprova</small>
@@ -802,21 +536,14 @@ async function rimetti(v) {
         <button class="tasto canc" :disabled="fermo" @click="cancella">⌫</button>
       </div>
 
-      <!-- La via d'uscita, larga come il tastierino e sotto di esso: chi
-           è arrivato qui senza il codice deve avere davanti una cosa da
-           fare che non sia provare i numeri. La freccia della barra non
-           basta — è piccola, sta in cima e vale per ogni schermata,
-           quindi non dice «hai sbagliato porta, torna a giocare». -->
       <button class="bottone chiaro esci" data-azione="torna-ai-giochi"
               @click="$emit('vai','home')">← Torna ai giochi</button>
 
-      <!-- Piccolo e ultimo, sotto la via d'uscita: chi il codice ce l'ha
-           non deve nemmeno vederlo, e chi l'ha perso lo cerca. -->
       <button class="link" data-azione="codice-dimenticato" @click="apriRecupero">
         Non ricordi il codice?</button>
     </div>
 
-    <!-- ── il codice nuovo: stesso tastierino, due giri ── -->
+    <!-- il codice nuovo: stesso tastierino, due giri -->
     <div v-else-if="modo" class="centro">
       <h2>{{ titoloCambio }}</h2>
       <p class="testo">Quattro cifre. Te lo chiedo due volte, così un dito
@@ -840,13 +567,7 @@ async function rimetti(v) {
     <div v-else class="centro">
       <h2>Impostazioni di {{ chi }}</h2>
 
-      <!-- ══ LA POSTA ══
-           Quello che un grande deve sapere e che non ha nessun modo di
-           venire a sapere: non c'è un server, non c'è un indirizzo di
-           posta, e la famiglia che ha ricevuto il gioco da un'altra
-           famiglia non la conosce nessuno. Sta in cima e non in una
-           scheda sua: chi è entrato per un altro motivo la trova sulla
-           strada. Perché una nota si scriva, vedi `guide/novita.js`. -->
+      <!-- la posta dei grandi: vedi docs/genitori/cestino-e-posta.md -->
       <div v-if="cePosta" class="posta" data-posta>
         <h2>C'è una cosa da dirti</h2>
 
@@ -854,8 +575,6 @@ async function rimetti(v) {
           <b>Su questo telefono</b>
           <p>{{ a.testo }}</p>
           <small>{{ quando(a.quando) }}</small>
-          <!-- un avviso che dice «guarda questa cosa» e non ci porta è
-               metà avviso: la scheda si apre da qui, come per le note -->
           <button v-if="a.azione" class="bottone chiaro" data-azione="posta-vai"
                   @click="scheda = a.azione.scheda">{{ a.azione.testo }}</button>
         </div>
@@ -868,46 +587,16 @@ async function rimetti(v) {
                   @click="scheda = n.azione.scheda">{{ n.azione.testo }}</button>
         </div>
 
-        <!-- L'unica uscita, e per questo non c'è nessuna ✕ in giro: il
-             nastro in home che manda qui non si può chiudere, così un
-             bambino non può consumare l'ack per riflesso. Chi preme
-             questo ha il codice, quindi è un grande. -->
+        <!-- niente ✕: solo «Ho letto», che vuole il codice -->
         <button class="bottone" data-azione="ho-letto" @click="hoLetto">Ho letto</button>
       </div>
 
-      <!-- ── TRE SCHEDE, E UNA SOLA TARA ──
-           *Chi gioca su questo telefono*, *come sta andando*, *cosa gli
-           arriva*. Erano tre anche prima ma dicevano un'altra cosa:
-           «Domande» era l'elenco delle classi con quattro tondi per
-           riga, «Giochi» una fila di interruttori, e tutte e due
-           tornavano a dire quello che il quadro dell'età diceva già —
-           con l'aggravante di una **seconda tacca dell'età**, che è
-           esattamente il difetto (due manopole per la stessa cosa) che
-           la manopola era nata per togliere.
-
-           Adesso si tara in un posto solo, ed è il quadro: l'età in
-           cima e la ✎ su ogni riga. La prima scheda non lo ospita più —
-           ci si arrivava scorrendo due schermate di elenchi per
-           cambiare il nome a un bambino — e tiene solo la riga che dice
-           quanti anni ha, col rimando.
-
-           L'ordine è quello in cui si legge: **chi è**, **cosa gli
-           diamo**, **come sta andando**. «Come va» in fondo e non in
-           mezzo perché è l'unica che non si tocca: si guarda, e semmai
-           rimanda alla seconda col tasto già pronto. -->
+      <!-- tre schede, e si tara in una sola: vedi docs/genitori/come-va.md -->
       <div class="schede">
         <button :class="{ ora: scheda === 'bambini' }" data-scheda="bambini"
                 @click="scheda = 'bambini'">Bambini</button>
         <button :class="{ ora: scheda === 'giochi' }" data-scheda="giochi"
                 @click="scheda = 'giochi'">Giochi e domande</button>
-        <!-- ══ E LA TERZA: COM'È ANDATA ══
-             Le tre schede rispondono a tre domande diverse, ed è il
-             motivo per cui sono tre e non una: *chi gioca*, *cosa gli
-             arriva*, *come sta andando*. Questa era stata sospesa
-             perché mostrava **solo i segnali** — tre righe sopra
-             soglia, senza il resto — e tre righe senza il resto non
-             dicono se sono tre su dieci o tre su centoventi. Adesso ci
-             sono tutte, in ordine di come vanno. -->
         <button :class="{ ora: scheda === 'comeva' }" data-scheda="comeva"
                 @click="scheda = 'comeva'">Come va</button>
       </div>
@@ -915,19 +604,7 @@ async function rimetti(v) {
       <!-- ══════════ scheda: i bambini ══════════ -->
       <template v-if="scheda === 'bambini'">
       <h2>Chi gioca</h2>
-      <!-- ── UNA CARTA SOLA, E UN ELENCO ──
-           Qui c'era il roster intero: tre bambini, ognuno con «Cambia
-           nome» ed «Elimina» addosso, e sotto quello che stava giocando
-           anche l'età, la faccia e un tasto che riscriveva tutto. Sei
-           bottoni per tre righe, in una schermata dove tutto il resto
-           parla di un bambino solo — e per giunta metà di quei comandi
-           funzionava solo per uno dei tre, perché il profilo degli altri
-           in memoria non c'è.
-
-           Adesso è come il resto della schermata: **parla di chi sta
-           giocando adesso**. Gli altri sono una riga di nomi, e si
-           passa a loro da dove si è sempre fatto, cioè la home — che è
-           anche l'unico posto dove un bambino può farlo da sé. -->
+      <!-- parla solo di chi sta giocando adesso; gli altri sono nomi, e si passa da lì dalla home -->
       <p class="mini">Queste impostazioni sono di <b>{{ chi }}</b>, che sta giocando adesso.
         Ogni bambino ha le sue e i suoi progressi.</p>
 
@@ -961,14 +638,7 @@ async function rimetti(v) {
             <i>sta giocando adesso</i>
 
             <div class="aspetto-sezione">
-              <!-- ── l'età, qui, è solo una riga ──
-                   La manopola col quadro sotto è alta due schermate, e
-                   stava in mezzo alla carta di chi gioca: per cambiare
-                   il nome a un bambino bisognava scorrere tutto
-                   l'elenco delle domande. Qui resta la sola cosa che
-                   serve leggere — quanti anni ha, che è la taratura e
-                   non un'anagrafe — e il rimando alla scheda dove si
-                   cambia. -->
+              <!-- qui l'età è solo una riga col rimando: la manopola sta nell'altra scheda -->
               <button class="riga-eta" data-azione="vai-alla-tara"
                       @click="scheda = 'giochi'">
                 <span><b>{{ chi }} ha {{ inLettere(anniOra) }}</b>
@@ -990,12 +660,6 @@ async function rimetti(v) {
           </div>
         </template>
 
-        <!-- ── gli altri ──
-             Nomi e basta: cambiarne uno vuol dire prima passare a lui,
-             e si passa dalla home. Sono due tocchi in più su un gesto
-             che si fa una volta l'anno, e in cambio nessuno modifica
-             per sbaglio il bambino sbagliato — che è il guasto che
-             questa riga di nomi rende impossibile. -->
         <div v-if="state.giocatori.length > 1" class="carta altri" data-altri-giocatori>
           <span class="ico">🙂</span>
           <b>Giocano anche {{ state.giocatori.filter(g => g.id !== state.player)
@@ -1055,12 +719,7 @@ async function rimetti(v) {
           </div>
         </div>
 
-        <!-- Ricominciare UN gioco solo, che non è la stessa cosa di
-             cancellare tutto. Sta in un blocco a sé e non dentro la catena
-             qui sopra: infilata lì in mezzo spezzava il `v-else` del
-             cancella-tutto, che smetteva di comparire — e il tasto rosso
-             sembrava non fare niente. Compare solo se quel bambino la
-             fattoria l'ha davvero aperta. -->
+        <!-- ricomincia solo la fattoria, non tutto: compare solo se l'ha aperta -->
         <template v-if="haGiocato('fattoria')">
           <button v-if="!confermaFattoria" class="carta pericolo"
                   data-azione="azzera-fattoria" @click="confermaFattoria = true">
@@ -1082,11 +741,7 @@ async function rimetti(v) {
         </template>
       </div>
 
-      <!-- ══ il cestino ══
-           «Non si torna indietro» sulla carta rossa qui sopra non è più
-           vero, ed è deliberato: chi cancella per sbaglio i progressi di
-           un bambino è quasi sempre un grande stanco, non un bambino
-           entrato di nascosto. Compare solo se c'è qualcosa dentro. -->
+      <!-- il cestino: vedi docs/genitori/cestino-e-posta.md -->
       <template v-if="cestino.length">
         <h2>Cancellati di recente</h2>
         <p class="mini">Le ultime copie messe da parte prima di cancellare. Rimetterne una
@@ -1113,11 +768,6 @@ async function rimetti(v) {
         </div>
       </template>
 
-      <!-- ══ passarlo ad altri ══
-           Sta qui dentro perché è roba da grandi, ma la stessa cosa c'è
-           anche in «Come funziona», che è fuori dal codice: chi riceve il
-           gioco da un'altra famiglia non ha motivo di conoscere il PIN, e
-           il primo bisogno di un genitore nuovo è installarlo. -->
       <h2>Passa il gioco</h2>
       <p class="mini">Non c'è un negozio da cui scaricarlo: si passa l'indirizzo, e chi lo
         riceve se lo aggiunge alla schermata del telefono. È gratis e non chiede niente
@@ -1152,14 +802,7 @@ async function rimetti(v) {
         </button>
       </div>
 
-      <!-- ── SE QUALCOSA SI ROMPE ──
-           Un guasto su un telefono che non è il tuo è, di solito, il
-           racconto di un bambino: «si è piantato». Qui c'è scritto cosa
-           è successo davvero, con l'ora e la versione, e sotto il tasto
-           che rimette a posto la copia dell'app senza toccare i
-           progressi. La sezione compare solo quando c'è qualcosa da
-           dire: una riga «nessun guasto» sarebbe una riga in più da
-           leggere ogni volta per non sapere niente. -->
+      <!-- solo se c'è qualcosa da dire: vedi docs/core/guasti.md -->
       <template v-if="incidenti.length">
         <h2>Se qualcosa si è rotto</h2>
         <p class="mini">Gli errori che il gioco si è annotato da solo, con l'ora e la
@@ -1196,14 +839,7 @@ async function rimetti(v) {
         </div>
       </template>
 
-      <!-- ── DIRMELO ──
-           Questa sta fuori dal `v-if` di sopra, e il motivo è tutto qui:
-           i guasti che il gioco si annota sono quelli che lanciano un
-           errore, e la metà delle cose che non vanno non ne lancia
-           nessuno — un livello troppo difficile, una parola sbagliata,
-           un tasto che risponde ma fa la cosa storta. Se il modo di
-           dirmelo comparisse solo quando c'è già un errore in archivio,
-           mancherebbe esattamente quando serve di più. -->
+      <!-- fuori dal v-if di sopra: metà delle cose che non vanno non lancia un errore -->
       <h2>Dirmi che qualcosa non va</h2>
       <p class="mini">Un livello impossibile, una parola sbagliata, un tasto che risponde e
         fa la cosa storta: le cose che nessun errore in archivio racconta.</p>
@@ -1220,33 +856,14 @@ async function rimetti(v) {
       </div>
       </template>
 
-      <!-- ══════════ scheda: giochi e domande ══════════
-           `v-else-if` e non `v-else`: finché le schede erano due, «non
-           bambini» voleva dire «giochi», e la terza scheda si è portata
-           dietro il quadro dell'età sopra il suo contenuto — «Come va»
-           apriva la manopola, e il suo grafico stava due schermate più
-           giù dove non lo vedeva nessuno. Un `v-else` è una condizione
-           che dice «tutto il resto», ed è giusta solo finché il resto è
-           uno. -->
+      <!-- ══════════ scheda: giochi e domande ══════════ -->
       <template v-else-if="scheda === 'giochi'">
-      <!-- ── L'UNICO POSTO DOVE SI TARA ──
-           L'età in cima e, sotto, il quadro di quell'età: i giochi in
-           casa e le domande divise per come cadono rispetto a lui, ogni
-           riga con la sua ✎. Qui c'erano due elenchi di interruttori —
-           uno per gioco e uno per classe di domande — che dicevano le
-           stesse cose in un modo che non si poteva confrontare con
-           niente: la carta «Difendi il Castello» spenta non diceva che a
-           quell'età sarebbe comparsa comunque, e la riga di una domanda
-           non diceva a chi arrivava. -->
+      <!-- l'unico posto dove si tara: vedi docs/genitori/manopola.md, docs/genitori/quadro.md -->
       <h2>Quanti anni ha</h2>
       <p class="mini">È la taratura, non un'anagrafe: decide quali giochi trova in home
         e quanto sono difficili le domande. Sotto c'è il quadro di quell'età — e ogni
         riga si può correggere con la ✎, se per {{ chi }} non è così.</p>
 
-      <!-- `risposte` è com'è andata finora, tipologia per tipologia: le
-           righe che vanno male portano il loro numero accanto al nome.
-           È lo stesso conto dell'avviso che arriva in posta, quindi chi
-           entra da lì ritrova qui la riga di cui parlava. -->
       <ManopolaEta :anni="anniOra" :giochi="settaggi.giochi || {}"
                    :sa="settaggi.sa || {}" :ritocchi="settaggi.ritocchi || {}"
                    :risposte="state.profile?.items || {}"
@@ -1275,24 +892,14 @@ async function rimetti(v) {
                 data-flag="tuttoAperto" @click="cambiaAperto">
           <span class="ico">🔓</span>
           <b>Sblocca tutti i livelli</b>
-          <!-- diceva «nessun gioco lo legge ancora», ed era vecchio: lo
-               leggono il Generale, il castello, le lingue, la bancarella
-               e gli asteroidi (`tappaAperta`/`tuttoAperto` in profile.js) -->
+          <!-- lo leggono il Generale, il castello, le lingue, la bancarella e gli asteroidi -->
           <i>{{ aperto ? 'Segnato: nei giochi a tappe si apre tutto, anche quello che non ha ancora fatto'
                        : 'Le tappe si aprono una per volta, come adesso' }}</i>
           <span class="leva"><span class="pallina"></span></span>
         </button>
       </div>
 
-      <!-- ── GIUDICARE LE DOMANDE ──
-           L'altra metà di quello che non va, e quella che nessun errore
-           segnala: una domanda giusta ma fuori misura. Il difetto non lo
-           vede il gioco — per lui la domanda è ineccepibile — lo vede
-           solo chi sta seduto di fianco mentre il bambino ci sbatte, e
-           finora finiva su un foglietto. Acceso l'interruttore, tre
-           tastini sopra ogni domanda: il verdetto lo dà il grande, tutto
-           il resto (modulo, grado, tipologia, tempo, esito) se lo
-           annota il gioco da solo. -->
+      <!-- il quaderno dei giudizi: vedi docs/genitori/come-va.md -->
       <h2>Le domande dei quiz</h2>
       <p class="mini">Acceso, sopra ogni domanda compaiono tre tastini per dire com'era:
         😴 troppo facile, 😰 troppo difficile, 🐛 storta. Serve a correggere le tarature
@@ -1336,21 +943,8 @@ async function rimetti(v) {
 
       </template>
 
-      <!-- ══════════ scheda: come va ══════════
-           Tutte le domande che esistono, ordinate da quella che gli va
-           peggio a quella che gli va meglio, col punteggio che è anche
-           il tasto: si preme, si aprono i numeri, si decide. Il ▶ passa
-           di qui e arriva allo stesso pannello di prova delle altre
-           schede — la messa in scena di una domanda dev'essere la
-           stessa da qualunque parte si arrivi. -->
+      <!-- ══════════ scheda: come va ══════════ vedi docs/genitori/come-va.md -->
       <template v-if="scheda === 'comeva'">
-        <!-- ── prima quanto, poi come ──
-             Sono due domande diverse e la prima viene prima: «quanto ci
-             sta davanti» è quella che un genitore si fa da solo, senza
-             che nessuno gliela suggerisca, e trovarla in cima è il
-             motivo per cui poi scorre anche il resto. Nessun giudizio
-             su quanto sia tanto: dipende dal giorno e dalla famiglia,
-             e chi legge ha in mano il contesto che il gioco non ha. -->
         <h2>Quanto ha giocato</h2>
         <TempoDiGioco />
 
@@ -1360,41 +954,11 @@ async function rimetti(v) {
 
       <p v-if="esito" :class="esito.ok ? 'mini' : 'avviso'">{{ esito.testo }}</p>
 
-      <!-- ══ DA CHI ARRIVA QUESTO GIOCO ══
-           Non c'era da nessuna parte, ed era la domanda che un grande si
-           fa per prima quando riceve un link da un'altra famiglia: chi me
-           l'ha dato, e cosa ci guadagna. La risposta lunga sta nelle
-           guide («Chi l'ha fatto»), che si leggono senza codice; qui sta
-           la riga corta, in fondo alle impostazioni, dove finisce chi ha
-           già deciso di fidarsi abbastanza da entrare.
-
-           In fondo e non in cima apposta: chi apre le impostazioni ci
-           entra per spegnere un gioco o salvare i progressi, non per
-           sapere di me. Una firma in cima sarebbe una firma in mezzo ai
-           piedi.
-
-           ── E UN LINK SOLO ──
-           C'era anche il LinkedIn dell'autore, accanto al codice. Da
-           qui è sbagliato: questa è la schermata di un genitore che sta
-           tarando le domande di suo figlio, e un profilo professionale
-           in fondo trasforma un regalo in un biglietto da visita. Chi
-           vuole sapere chi c'è dietro ha **«Come funziona» → «Chi l'ha
-           fatto»**, che è una pagina che si apre apposta: lì il link
-           c'è, e lì è una risposta invece che un'insegna.
-
-           Sparita anche la riga sulla licenza MIT: era la terza volta
-           che la stessa cosa veniva detta nella stessa applicazione (la
-           guida ha un capitolo suo, il README pure), e in fondo a una
-           schermata di impostazioni non serve a nessuno. -->
+      <!-- la firma: riga corta in fondo, non in cima; il resto sta in "Chi l'ha fatto" -->
       <footer class="firma" data-firma>
         <p>Educagioco è di <b>{{ CHI }}</b>, che l'ha scritto per i suoi due figli.
           Gratis, senza pubblicità e senza account: <b>niente esce da questo
           telefono</b>.</p>
-        <!-- Il modulo per segnalare non si ripete qui: sta in una carta
-             dieci centimetri più su, e da lì parte con la versione e
-             l'ultimo guasto già dentro. Due strade per la stessa cosa, e
-             una peggiore dell'altra, è come si fa scegliere quella
-             sbagliata. -->
         <div class="fuori">
           <a :href="CODICE" target="_blank" rel="noopener" data-fuori="codice">
             Il codice, aperto ↗</a>
@@ -1402,9 +966,7 @@ async function rimetti(v) {
       </footer>
     </div>
 
-    <!-- il pannello di prova copre tutto: si è entrati per guardare una
-         cosa sola. Sta fuori dalle schede perché non è di nessuna delle
-         tre: è un modo di leggere una voce, non un'impostazione. -->
+    <!-- fuori dalle schede: non è un'impostazione, è un modo di leggere una voce -->
     <Prova v-if="prova" :chiave="prova.chiave || ''" :nome="prova.nome"
            :sorgente="prova.sorgente || null" :giro="prova.giro || null"
            :eta="prova.eta ?? null" @chiudi="prova = null" />
@@ -1412,11 +974,7 @@ async function rimetti(v) {
 </template>
 
 <style scoped>
-/* ── la riga che rimanda alla taratura ──
-   Non è un interruttore e non è una carta: è una frase con un rimando,
-   e si legge come tale. Quello che c'era prima al suo posto — la
-   manopola col quadro sotto — era alto due schermate in mezzo alla
-   carta di chi gioca. */
+/* non è un interruttore né una carta: è una frase col rimando */
 .riga-eta { display:flex; align-items:center; gap:10px; width:100%; text-align:left;
             background:#f5f2ff; border:none; border-radius:14px; padding:10px 12px;
             cursor:pointer; font-family:inherit }
@@ -1432,10 +990,7 @@ async function rimetti(v) {
                 box-shadow:inset 0 0 0 2px #d4dce6; transition:.12s }
 .pallini span.pieno { background:var(--viola); box-shadow:none; transform:scale(1.1) }
 
-/* ── la posta ──
-   Un blocco, non una carta: si legge, non si tocca. Il colore è quello
-   dei nastri di casa e non un rosso d'allarme — non è mai urgente, e
-   una cosa che grida ogni volta smette di essere letta. */
+/* un blocco che si legge, non una carta; il colore è quello dei nastri di casa, mai rosso d'allarme */
 .posta { width:100%; max-width:400px; margin:0 0 16px; text-align:left }
 .posta h2 { margin:0 0 8px }
 .nota { background:#eef4ff; border:2px solid #cfe0f8; border-radius:14px;
@@ -1446,8 +1001,7 @@ async function rimetti(v) {
 .nota small { display:block; margin-top:6px; font-size:11px; opacity:.6 }
 .nota .bottone { margin-top:9px }
 
-/* la domanda del codice dimenticato: più grande del testo intorno perché
-   è la cosa a cui si sta rispondendo, e non un'istruzione */
+/* più grande del testo intorno: è la cosa a cui si sta rispondendo */
 .domanda { font-size:16px; font-weight:700; margin:2px 0 12px; text-align:center; max-width:300px }
 
 .tastierino { display:grid; grid-template-columns:repeat(3,1fr); gap:11px; width:100%; max-width:260px }
@@ -1455,15 +1009,12 @@ async function rimetti(v) {
          font-size:23px; font-weight:800; box-shadow:0 4px 0 #d4dce6 }
 .tasto:active { transform:translateY(2px); box-shadow:0 2px 0 #d4dce6 }
 .tasto.canc { font-size:19px; color:var(--tenue) }
-/* durante l'attesa il tastierino resta dov'è, spento: toglierlo di
-   mezzo farebbe pensare a una schermata rotta, e chi guarda deve
-   vedere che i tasti ci sono e che adesso non rispondono */
+/* resta dov'è, spento: toglierlo farebbe pensare a una schermata rotta */
 .tastierino.spento { opacity:.45 }
 .tastierino.spento .tasto { box-shadow:0 4px 0 #d4dce6 }
 
-/* niente rosso e niente punto esclamativo: è una porta chiusa, non un
-   errore. La barretta è l'unica cosa che si muove — due secondi muti
-   sono indistinguibili da un tasto rotto. */
+/* niente rosso: è una porta chiusa, non un errore. La barretta si muove
+   perché due secondi muti sono indistinguibili da un tasto rotto */
 .fermo { display:flex; flex-direction:column; align-items:center; gap:7px;
          width:100%; max-width:260px; margin:2px 0 }
 .fermo small { font-size:12px; color:var(--tenue); opacity:.8 }
@@ -1474,14 +1025,10 @@ async function rimetti(v) {
 /* a tempo scaduto restano lì, invisibili: tengono il posto e basta */
 .fermo .muta { visibility:hidden }
 
-/* larga quanto il tastierino e subito sotto: è il tasto più grande della
-   schermata, così la cosa ovvia da fare qui è andarsene */
+/* il tasto più grande della schermata: la cosa ovvia da fare qui è andarsene */
 .esci { width:100%; max-width:260px; margin-top:4px; font-size:16px; padding:13px 18px }
 
-/* le due linguette: quella aperta è piena, l'altra è solo scritta —
-   non c'è modo di sbagliarsi su dove si è */
-/* tre schede stanno larghe uguali su un telefono da 390: il testo
-   scende di un punto, il resto non cambia */
+/* tre schede larghe uguali su un telefono da 390 */
 .schede { display:flex; gap:6px; width:100%; max-width:400px; margin:-4px 0 2px }
 .schede button { flex:1; padding:11px 6px; border-radius:14px; font-size:14px; font-weight:800;
                  color:var(--tenue); background:#ffffff88 }
@@ -1510,22 +1057,13 @@ h3.materia { margin:10px 0 -2px; font-size:13px; font-weight:900; letter-spacing
                                box-shadow:0 1px 3px #00000033 }
 .carta.interruttore.spento .leva { background:#c9c2d6 }
 .carta.interruttore.spento .pallina { left:3px }
-/* la carta di un sapere ha una riga in più: l'esempio di una domanda
-   che sparisce, che è quello che fa capire cosa si sta spegnendo */
+/* una riga in più: l'esempio della domanda che sparisce spegnendola */
 .carta.sapere { grid-template-rows:auto auto auto; padding:12px 16px }
 .carta.sapere .ico, .carta.sapere .leva { grid-row:1/4 }
 .carta.sapere small { font-size:11.5px; color:var(--tenue); opacity:.85 }
 .carta.sapere.spento { opacity:.62 }
 
-/* ── il dettaglio di un gruppo ──
-   Sta sotto la sua carta e non è una carta a sua volta: deve leggersi
-   come «dentro questo», non come «un'altra cosa allo stesso livello».
-   Da qui il rientro, lo sfondo più tenue e la leva più piccola. */
-/* Erano due scrittine da 12px senza sfondo, e una scrittina non si legge
-   come un tasto: la si scavalca, e l'elenco delle domande di un gruppo
-   restava una cosa che nessuno apriva. Adesso sono tasti veri — alti
-   quanto un dito, con il loro fondo — e dicono **quante** domande ci
-   sono dentro, che è la ragione per aprirli. */
+/* sta sotto la sua carta, non a fianco: si legge come "dentro questo" */
 .dettaglio-tasto { align-self:flex-start; margin:-6px 0 0 14px; padding:8px 14px;
                    min-height:40px; border-radius:999px;
                    font-size:13px; font-weight:750; color:var(--viola-scuro);
@@ -1542,15 +1080,7 @@ h3.materia { margin:10px 0 -2px; font-size:13px; font-weight:900; letter-spacing
 .dettaglio .voce-chi b { display:block; font-size:13.5px; font-weight:750 }
 .dettaglio .voce-chi i { display:block; font-style:normal; font-size:11px; color:var(--tenue);
                          font-weight:600 }
-/* ── la difficoltà di una voce ──
-   Un numero e un pallino, sulla riga di sotto insieme al modulo. La
-   prima versione era una barretta a segmento in fondo alla riga, e due
-   cose non tornavano: rubava al nome la metà della larghezza (su un
-   telefono i nomi lunghi andavano a capo tre volte), e a difficoltà 100
-   il segmento partiva dal bordo destro e spariva sotto l'`overflow`.
-   Il pallino colorato dice la stessa cosa in dodici pixel, e il numero
-   dice il resto — un intervallo dove la tipologia esce a più gradi,
-   perché una media non corrisponde a nessuna domanda vera. */
+/* un intervallo, non una media: la tipologia esce a più gradi di difficoltà */
 .dettaglio .voce-chi i .pallino { display:inline-block; width:8px; height:8px;
                                   border-radius:50%; margin-right:2px; vertical-align:-1px }
 .dettaglio .voce.spento .voce-chi i .pallino { opacity:.45 }
@@ -1565,45 +1095,30 @@ h3.materia { margin:10px 0 -2px; font-size:13px; font-weight:900; letter-spacing
 .dettaglio .voce.spento .pallina { left:3px }
 .carta.sapere.spento i { color:#b23a5a }
 
-/* ── i due tasti che non spengono niente ──
-   Sotto la carta, in fila e in piccolo: chi è venuto a spegnere tocca
-   la carta e non li legge nemmeno, chi non sa cosa sta spegnendo li
-   trova lì. Il rientro è lo stesso del dettaglio, così si vede che
-   parlano della carta di sopra. */
+/* i due tasti che non spengono niente: stesso rientro del dettaglio, sotto la sua carta */
 .azioni-sapere { display:flex; align-items:center; gap:4px; flex-wrap:wrap;
                  margin:-6px 0 0 14px }
-/* dentro la riga il rientro ce l'ha già il contenitore */
 .azioni-sapere .dettaglio-tasto { margin:0 }
 .prova-tasto { padding:8px 14px; min-height:40px; font-size:13px; font-weight:750;
                color:var(--viola); background:#7c5cff1f; border-radius:999px }
 .prova-tasto:active { transform:translateY(1px) }
-/* nel dettaglio la riga è stretta: resta il solo triangolino, e il
-   nome della voce lo dice l'`aria-label` a chi legge con le orecchie.
-   Colorato come il tasto grande, però: grigio si leggeva come «apri
-   questa riga», e invece è la stessa cosa di sopra. */
+/* qui resta solo il triangolino: il nome lo dice l'aria-label */
 .dettaglio .voce-riga { display:flex; align-items:center; gap:2px; background:var(--carta) }
 .dettaglio .voce-riga .voce { flex:1; min-width:0 }
 .prova-tasto.solo-segno { flex:none; padding:10px 14px; font-size:12px; border-radius:0;
                           background:none; color:var(--viola) }
 
-/* sette carte di fila: più basse, e quelle spente si vedono da lontano */
 .carta.gioco { padding:11px 16px }
 .carta.gioco .ico { font-size:25px }
 .carta.gioco.spento { opacity:.62 }
-/* spento da un macrogruppo, non dai genitori: la leva è ferma e il
-   motivo sta scritto sulla carta */
+/* spento da un macrogruppo, non dai genitori: la leva resta ferma */
 .carta.gioco.bloccato i { color:#b23a5a }
 .carta.gioco.bloccato .leva { background:#e3dce8 }
-/* un gioco in prova lo dice sulla carta: chi lo accende deve sapere che
-   quello che troverà è a metà */
 .carta.gioco.prova b small { margin-left:6px; font-size:10px; font-weight:900; letter-spacing:.4px;
                              text-transform:uppercase; color:#8a6a1f; background:#fff2cf;
                              border-radius:7px; padding:2px 6px; vertical-align:middle }
 
-/* ── il libretto dei guasti ──
-   Una carta che si legge, non che si preme: il testo dell'errore va a
-   capo quanto serve e resta in monospazio, perché è roba da girare a chi
-   ci mette le mani, non da capire a colpo d'occhio. */
+/* si legge, non si preme: il monospazio è per chi ci mette le mani, non a colpo d'occhio */
 .carta.guasti { grid-template-rows:auto auto auto auto }
 .carta.guasti .ico { grid-row:1/3 }
 .lista-guasti { grid-column:1/3; margin:8px 0 0; padding:0; list-style:none;
@@ -1617,21 +1132,13 @@ h3.materia { margin:10px 0 -2px; font-size:13px; font-weight:900; letter-spacing
 .carta.guasti .riga { grid-column:1/3; justify-content:flex-start; margin-top:9px }
 .carta.guasti .bottone { font-size:14px; padding:9px 15px; box-shadow:0 4px 0 #d4dce6 }
 
-/* l'unica carta che è un link e non un tasto: da sola prenderebbe il blu
-   e la sottolineatura del browser, e in mezzo alle altre si leggerebbe
-   come una cosa d'altro tipo */
+/* l'unica carta che è un link: senza queste regole prenderebbe blu e sottolineatura */
 .carta.segnala { text-decoration:none; color:inherit }
-/* e l'unico bottone che è un link, per lo stesso motivo: «Manda» apre il
-   modulo fuori dal gioco, ma in fila con «Copia» e «Cancella» deve
-   sembrare uno dei tre */
+/* «Manda» è un link ma deve sembrare un bottone come «Copia» e «Cancella» */
 a.bottone { text-decoration:none; display:inline-flex; align-items:center;
             justify-content:center }
 
-/* ── da dove parte un bambino ──
-   Tre righe da leggere e non tre pastiglie da premere: la differenza fra
-   «terza» e «quarta» sta tutta nella riga sotto, e chi sceglie senza
-   leggerla sceglie a caso. Per questo la scritta piccola c'è sempre,
-   anche sulla scelta non selezionata. */
+/* tre righe da leggere, non pastiglie: la scritta piccola c'è sempre, anche non selezionata */
 .carta.sapere.quanto { display:flex; flex-direction:column; gap:5px; align-items:flex-start;
                        text-align:left; cursor:default }
 .carta.sapere.quanto.spento { opacity:.62 }
@@ -1644,16 +1151,14 @@ a.bottone { text-decoration:none; display:inline-flex; align-items:center;
 .livello.freccia { background:#eef2ff; color:var(--viola) }
 .livello:disabled { opacity:.4 }
 .livello.spegni.on { background:linear-gradient(180deg,#b23a5a,#8d2a45) }
-/* il consiglio si vede che è un'altra cosa dal resto della carta: non
-   è una descrizione, è un fatto misurato più un tasto */
+/* il consiglio è un fatto misurato, non una descrizione: si vede che è un'altra cosa */
 .carta.sapere.quanto > em.consiglio { color:var(--viola-scuro); font-weight:650 }
 .fai { border:none; background:none; font-family:inherit; font-size:11px; font-weight:800;
        color:var(--viola); text-decoration:underline; padding:2px 0; cursor:pointer }
 .livello:active { transform:translateY(1px) }
 
 
-/* Cancellare non deve somigliare alle altre due: si vede da lontano che è
-   quella che fa danni. */
+/* si vede da lontano che è quella che fa danni */
 .carta.pericolo b { color:#b23a5a }
 .carta.pericolo.aperta { display:flex; flex-direction:column; gap:9px; align-items:center;
                          text-align:center; background:#fff0f3 }
@@ -1663,24 +1168,17 @@ a.bottone { text-decoration:none; display:inline-flex; align-items:center;
 .bottone.rosso:active { box-shadow:0 3px 0 #a82a46 }
 .bottone.chiaro { font-size:16px; padding:13px 22px }
 
-/* ── chi gioca ──
-   La carta di un giocatore ha una riga in più delle altre: sotto il nome
-   ci stanno i suoi tre gesti. I bottoni vanno a capo da soli, perché
-   «Passa a Federica» più altri due su un telefono stretto non ci stanno
-   in fila — ed è lo stesso motivo per cui la fila in home ora va a capo. */
+/* una riga in più delle altre carte: sotto il nome i suoi tre gesti, a capo se serve */
 .carta.chi-gioca { grid-template-rows:auto auto auto }
 .carta.chi-gioca .ico { grid-row:1/4 }
 .carta.chi-gioca .riga { grid-column:2; justify-content:flex-start; margin-top:7px }
 .carta.chi-gioca .bottone { font-size:14px; padding:9px 15px; box-shadow:0 4px 0 #d4dce6 }
 .carta.chi-gioca .bottone:active { transform:translateY(2px); box-shadow:0 2px 0 #d4dce6 }
-/* l'aspetto è un quarto rigo che solo chi sta giocando adesso ha: le
-   altre carte restano a tre righe, quindi occupa colonna intera invece
-   di lasciare l'icona a mezz'aria sotto di sé */
+/* colonna intera: le altre carte restano a tre righe */
 .carta.chi-gioca .aspetto-sezione { grid-column:1/3; margin-top:9px;
   padding-top:9px; border-top:1px solid #8593a822 }
 .carta.chi-gioca .aspetto-sezione .mini { text-align:left; margin:0 0 7px }
-/* la carta aperta a scrivere un nome: stessa forma di quella che chiede
-   conferma prima di cancellare, senza il rosso */
+/* stessa forma della conferma prima di cancellare, senza il rosso */
 .carta.aperta { display:flex; flex-direction:column; gap:9px; align-items:center; text-align:center }
 .carta.aperta i { max-width:34ch }
 .campo { width:100% }
@@ -1692,11 +1190,7 @@ a.bottone { text-decoration:none; display:inline-flex; align-items:center;
 .campo .nome:focus { outline:3px solid var(--viola); outline-offset:1px }
 .campo .bottone { font-size:15px; padding:11px 17px }
 
-/* ── la firma ──
-   Sbiadita e senza carta sotto: è l'ultima cosa della colonna e non
-   deve competere con un'impostazione. Il rimando dice che porta fuori
-   (↗): un link che apre il browser dentro un'app installata è un
-   salto, e va annunciato. */
+/* sbiadita: l'ultima cosa della colonna, non deve competere con un'impostazione */
 .firma { width:100%; max-width:400px; margin:26px 0 6px; padding-top:14px;
          border-top:1px solid #8593a826; text-align:center }
 .firma p { font-size:12.5px; line-height:1.5; color:var(--tenue); margin:0 }
