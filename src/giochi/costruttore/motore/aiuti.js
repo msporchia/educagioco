@@ -1,74 +1,12 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA SCALA DEGLI AIUTI DEL COSTRUTTORE — cosa dice, e cosa scrive
-
-   La scala è quella di tutti i giochi che si sbloccano pensando
-   (`giochi/aiuti.js`, dove stanno i prezzi). Qui si compone per un
-   livello del costruttore:
-
-     ragiona   gratis   `liv.ragiona`: cosa chiede il livello, e la
-                        domanda giusta da farsi
-     indizio   🪙10     `liv.indizi`: dal più largo al più stretto
-     pezzo  ┐
-     forma  ├ 🪙50 · 100 · 200   scrivono nel programma, e li ricava da sé
-     svela  ┘           dalla `soluzione` del livello
-
-   ── PERCHÉ I GRADINI CHE SCRIVONO NON LI SCRIVE CHI FA IL LIVELLO ──
-   Escono dalla soluzione, cioè dal programma che il banco gioca a ogni
-   giro (`unita/costruttore`): se il pezzo o la forma fossero scritti a
-   mano, il giorno che la soluzione cambia direbbero un'altra cosa, e
-   nessuno se ne accorgerebbe fino a quando un bambino non li paga.
-
-   ── IL PEZZO ────────────────────────────────────────────────────────
-   Metà del lavoro, e mai il nodo. Tre casi, nell'ordine:
-     · il livello ha **progetti suoi** (non gli attrezzi): il
-       pezzo sono i progetti, interi. Il programma principale che li usa
-       resta del bambino — ed è lì che stanno le misure dell'ordine.
-       Tranne quando un progetto **chiama sé stesso** (la torre del
-       casaro): lì il nodo è proprio la chiamata, e il pezzo è il
-       progetto senza — le misure, il fermo, quello che fa lui — mentre
-       le chiamate a sé stesso, e cosa passargli, restano da scrivere;
-     · il programma principale ha **più righe in cima**: la prima metà
-       (per difetto), intera;
-     · il programma è **un blocco solo** (un «ripeti», un «ripeti
-       finché», un «ripeti per sempre»): il pezzo è quello che il blocco
-       ha dentro, scritto fuori dal blocco, **con le domande da
-       scegliere**. È il lavoro di un giro; quante volte, fino a quando e
-       cosa guardare resta da decidere — che è quasi sempre la lezione
-       («ripeti **lungo** volte», «smetti quando c'è il terreno», «aspetta
-       che ci sia una cassa»). Con le domande scritte, nel porto il
-       pezzo era la soluzione senza la parola «sempre».
-   Il pezzo dei progetti si aggiunge al programma del bambino (un
-   progetto con lo stesso nome si sostituisce); gli altri due prendono
-   il posto del programma principale, e i progetti restano.
-
-   ── LA FORMA ────────────────────────────────────────────────────────
-   Tutto il programma, coi valori da scegliere: **N** al posto dei
-   numeri, la domanda da scegliere nei «se» e nei «ripeti finché», e i
-   colori da scegliere se il livello ne ha più d'uno (con un colore solo
-   non c'è niente da scegliere, ed è la stessa regola della cassetta).
-   Il verso di un passo e il posto di un mattone restano: si scelgono
-   dalla cassetta, sono la forma. Quello che il pezzo aveva già dato —
-   comprato, cinquanta monete — resta intero, e anche i progetti che il
-   livello dà già fatti (gli attrezzi): un gradino più caro non dà meno
-   di quello prima.
-
-   ── LA SOLUZIONE ────────────────────────────────────────────────────
-   Tutta, al posto del programma. È l'unico gradino che segna il
-   programma come `svelato`, e l'unico che costa la seconda stella: non
-   come prezzo — il prezzo sono le monete — ma perché quel programma non
-   l'ha scritto il bambino.
-   ═══════════════════════════════════════════════════════════════════ */
+// La scala degli aiuti del costruttore, composta per livello.
+// Prezzi e regole comuni: docs/core/aiuti.md. Cosa dà ogni gradino: docs/costruttore/campagna.md.
 import { conIPrezzi, RAGIONA, INDIZIO, PEZZO, FORMA, SVELA } from '../../aiuti.js'
 import { copia, numera } from '../dati/scrivi.js'
 import { chiamaSeStesso } from './zaino.js'
 
-/* due istruzioni sono la stessa se sono uguali a parte gli id, che il
-   programma assegna da sé */
 const senzaId = x => JSON.stringify(x, (k, v) => (k === 'id' ? undefined : v))
 const RAMI = ['corpo', 'allora', 'altrimenti']
-/* un programma con le righe senza id, che `numera` rifarà nuovi. Solo le
-   RIGHE: l'id di un progetto è il suo nome, ed è quello con cui lo
-   chiamano le righe che lo usano — toglierlo lo scollerebbe da tutte */
+// Solo le RIGHE perdono l'id: quello di un progetto è il suo nome, e lo scollerebbe dalle chiamate che lo usano.
 const riga = i => {
   const q = { ...i }
   delete q.id
@@ -102,10 +40,7 @@ export function scalaDi(liv) {
   return conIPrezzi(passi)
 }
 
-/* ═══════════ il pezzo ═══════════
-   Torna `{ sostituisce, programma, dati, testo }`, o `null` se il
-   programma è troppo piccolo per averne una metà. `dati` sono le
-   istruzioni già date, che la forma terrà intere. */
+// Torna { sostituisce, programma, dati, testo }, o null se il programma è troppo piccolo per averne una metà.
 export function pezzoDi(liv) {
   const sol = liv.soluzione
   const attrezzi = new Set((liv.attrezzi || []).map(p => p.id))
@@ -146,7 +81,6 @@ export function pezzoDi(liv) {
   return null
 }
 
-/* una copia con le domande da scegliere, a ogni profondità */
 function senzaDomande(i) {
   const q = copia(i)
   if ('cond' in q) q.cond = null
@@ -154,8 +88,7 @@ function senzaDomande(i) {
   return q
 }
 
-/* tutte le istruzioni di una fila, a ogni profondità: quelle date da un
-   pezzo si riconoscono anche dentro un blocco */
+// A ogni profondità: quelle date da un pezzo si riconoscono anche dentro un blocco.
 function tutte(fila) {
   const out = []
   const giro = l => (l || []).forEach(i => { out.push(i); for (const r of RAMI) if (Array.isArray(i[r])) giro(i[r]) })
@@ -163,24 +96,13 @@ function tutte(fila) {
   return out
 }
 
-/* ═══════════ la forma ═══════════ */
 export function formaDi(liv, dati = []) {
   const sol = liv.soluzione
   const conColori = (liv.colori || []).length > 1
   const attrezzi = new Set((liv.attrezzi || []).map(p => p.id))
-  /* `dati` tiene due specie: i segni dei progetti dati interi
-     (`{ progetto }`, senza `tipo`) e le righe date — che a loro volta
-     possono essere chiamate, e avere un `progetto` anche loro */
   const eSegno = d => !!d.progetto && !d.tipo
   const interi = new Set([...attrezzi, ...dati.filter(eSegno).map(d => d.progetto)])
-  /* Si confronta **riga per riga**: la testa di un'istruzione (quello
-     che ha di suo, senza i rami) già data resta intera, e i rami si
-     guardano uno per uno. Confrontando i blocchi interi, un «ripeti 8»
-     dato col suo «se» da scegliere dentro non combaciava con quello
-     della soluzione, e la forma gli rimetteva la N: un gradino più caro
-     che toglie quello che uno più economico aveva dato.
-     Una testa data ne tiene intera una sola della soluzione, la prima
-     uguale non ancora presa. */
+  // Confronto per testa (senza rami), non a blocchi interi: se no un ramo già scelto viene rimesso a N.
   const date = tutte(dati.filter(d => !eSegno(d))).map(testa)
   const svuota = i => {
     const k = date.indexOf(testa(i))
@@ -198,7 +120,6 @@ export function formaDi(liv, dati = []) {
   }
 }
 
-/* un'istruzione coi valori da scegliere, e i suoi rami passati a `dentro` */
 function vuota(i, conColori, dentro) {
   const N = () => ({ vuoto: true })
   const q = { ...i }
@@ -212,12 +133,7 @@ function vuota(i, conColori, dentro) {
   return q
 }
 
-/* ═══════════ scrivere un gradino nel programma ═══════════
-   Torna il programma nuovo, e non tocca quello che riceve. Gli id di
-   quello che entra si rifanno (`numera`): due righe con lo stesso id si
-   accenderebbero insieme. Le lavagnette della soluzione si aggiungono a
-   quelle del bambino — un pezzo che usa «h» senza «h» si fermerebbe
-   alla prima riga. */
+// Torna il programma nuovo senza toccare quello vecchio; gli id di quello che entra si rifanno con numera().
 export function applica(prog, passo) {
   const vecchio = prog || { principale: [], progetti: [], lavagnette: [] }
   const entra = sfila(passo.programma)

@@ -1,26 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL COSTRUTTORE — IL MANIFESTO
-
-   Un robot costruisce, visto di lato, quello che il bambino programma.
-   Il bambino scrive **progetti** (le funzioni) con delle **misure** (i
-   parametri) e usa delle **lavagnette** (le variabili); qualcuno ordina
-   una cosa — una scala, un ponte, un castello — e le misure dell'ordine
-   cambiano: lo stesso programma deve reggere su tre gradini e su
-   cinque. È il gioco che il Generale aveva lasciato a un domani: quello
-   «dove si scrive di più e si tocca di meno», e dove le variabili le
-   crea il bambino.
-
-   Dato puro, come tutti i manifesti (vedi `codice-segreto/gioco.js`).
-   La struttura della cartella è quella di sempre:
-
-     dati/    colori, legenda delle mappe, i livelli, la campagna, e
-              `scrivi.js` — come si scrive un programma dentro un dato
-     motore/  il mondo, l'esecutore a passi, la prova sugli ordini, le
-              modifiche al programma: tutto senza schermo, gira in Node
-     scena/   il cantiere disegnato: mattoni, robot, omino
-     viste/   la mappa, l'editor e le sue caselle, i cartelli
-     Gioco.vue  il coordinatore: l'unico che sa di monete e profilo
-   ═══════════════════════════════════════════════════════════════════ */
+// Il manifesto del costruttore. Vedi docs/costruttore/presentazione.md.
 import { CAMPAGNA, QUANTE_TAPPE } from './dati/campagna.js'
 
 export const CHIAVE = 'costruttore'
@@ -34,14 +12,8 @@ export default {
   come: 'pensare',
   tappe: QUANTE_TAPPE,
   tinta: '#f3e3d3',
-  /* si legge: le righe del programma sono frasi, e le lavagnette hanno
-     un nome. Sotto la terza elementare non si comincia da qui */
   grandi: true,
-  /* la fila si apre per merito: chi ha vinto un livello apre il
-     successivo anche oltre la mira dell'età (`data/portata-giochi.js`).
-     Ogni livello è il passo dopo di quello prima, e averlo vinto è la
-     prova che il bambino ci arriva */
-  perMerito: true,
+  perMerito: true, // vedi docs/costruttore/campagna.md
 
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
@@ -51,10 +23,7 @@ export default {
     return `livello ${i + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[i].nome}${coda}`
   },
 
-  /* ═══════════ quello che il gioco porta all'albo ═══════════
-     Un contatore solo, mosso da `Gioco.vue` con `segna()`:
-       coMattoni   i mattoni che il robot ha posato, in qualunque prova
-     Il resto lo sanno già le campagne (tappe, stelle, finita). */
+  // coMattoni: mattoni posati in qualunque prova, sommato da Gioco.vue con segna()
   albo: {
     area: { nome: 'Il costruttore', emoji: '🏗️' },
 

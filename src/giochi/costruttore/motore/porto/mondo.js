@@ -1,106 +1,27 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL PORTO — un mondo visto dall'alto, che lavora anche da solo
-
-   È la seconda metà del costruttore. Il cantiere di lato era fatto di
-   materia: mattoni e forme. Il porto è fatto di **lavoro che arriva**:
-   la gru cala una cassa, il nastro la porta verso il mare, un cliente
-   al bancone chiede un colore. Il bambino programma un robot solo, e il
-   programma non sa cosa arriverà né quando: deve guardare, aspettare e
-   decidere. Là gli ordini cambiavano fra una prova e l'altra, qui
-   arrivano mentre il programma gira.
-
-   Le coordinate sono quelle dello schermo, viste dall'alto: `x` verso
-   destra, `y` verso il basso. «Su» è la cima dello schermo.
-
-   ── LE REGOLE DEL MONDO, CHE VALGONO SEMPRE ────────────────────────
-     · **l'orologio.** Il mondo va a turni. Ogni gesto del robot — un
-       passo, prendere, posare, un turno d'attesa — costa un turno, e a
-       ogni turno tutti gli attori fanno la loro mossa. Pensare è
-       gratis: guardare, leggere, decidere, fare i conti non fanno
-       passare il tempo. Se no un programma giusto ma pieno di «se»
-       sarebbe lento senza che nessuno capisca perché;
-     · il robot va ↑ ↓ ← → un passo alla volta. Non entra nel mare, non
-       passa i muri, non sale sugli scaffali, sul bancone, sui cassoni e
-       sui nastri, e **non passa sopra le cose**: una cassa per terra è
-       un ingombro, si prende o si gira intorno;
-     · ha due mani e **porta una cosa alla volta**. Prende e posa **di
-       fianco a sé**, verso una delle quattro frecce — come nel cantiere
-       il mattone andava sotto i piedi o dove sarebbe andato il piede;
-     · per terra, su uno scaffale, sul bancone e su un nastro ci sta
-       **una cosa sola**; un cassone ne tiene tante, fino alla sua
-       capienza, e se ha un colore prende solo casse di quel colore;
-     · **legge** quello che c'è di fianco: il colore di una cassa, il
-       numero di un biglietto, quello che chiede il cliente al bancone,
-       quante casse ci sono in un cassone;
-     · il nastro sposta di una casella quello che ci sta sopra, ogni
-       `passoNastro` turni; in fondo al molo la cosa cade in mare, e la
-       giornata è persa;
-     · la gru cala una cassa ogni tot turni nel suo punto, **se è
-       libero**: se no aspetta;
-     · i clienti si mettono in fila e vengono al bancone uno per volta;
-       chiedono una cassa di un colore e aspettano finché hanno
-       pazienza. Chi riceve quello che voleva se ne va contento; chi
-       riceve un'altra cosa, o aspetta troppo, fa perdere la giornata;
-     · un nastro che finisce contro un cassone ci scarica dentro, finché
-       c'è posto: è così che il porto lavora anche da solo, e la gru
-       riempie il magazzino senza che nessuno la aiuti;
-     · i camion arrivano alla loro ora sulla piazzola, vogliono un certo
-       numero di casse (a volte di un colore) e **ripartono appena sono
-       pieni**; un camion che aspetta troppo riparte mezzo vuoto, e la
-       giornata è persa. Sulla strada il robot non ci va;
-     · un cassone con un `numero` è una buca delle lettere: prende solo
-       i biglietti con quel numero;
-     · una **pila** (`figura: 'pila'`) tiene le forme di formaggio una
-       sull'altra, e una forma grande sopra una più piccola la schiaccia:
-       ci si posa solo una forma più piccola di quella in cima. È la torre
-       di Hanoi, e la regola è tutta qui;
-     · un cliente può chiedere **una qualità** invece di una cosa
-       (`massimo`, `minimo`: «la lettera più grande che c'è»): allora non
-       si legge cosa vuole, lo si capisce guardando le lettere;
-     · e un cliente che **fa indovinare** (`clienti.indovina`) non dice
-       quale lettera vuole: a ogni lettera sbagliata la rimette sul
-       bancone e dice solo «di più!» o «di meno!», e dopo `tentativi`
-       lettere sbagliate se ne va arrabbiato.
-
-   ── LA GIORNATA ──────────────────────────────────────────────────
-   Finisce quando l'orologio arriva a `durata`, oppure quando il robot
-   aspetta e **non può più succedere niente** (la gru è vuota, sui nastri
-   non si muove niente, nessun cliente in arrivo). Un programma che
-   finisce prima non ferma il mondo: la gru cala lo stesso e i clienti
-   arrivano lo stesso (`finoASera`), ed è così che si vede che il lavoro
-   non è finito.
-
-   Qui non c'è niente di disegnato e niente di Vue: gira in Node, e i
-   test giocano giornate intere.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il porto: un mondo visto dall'alto, a turni, che lavora anche da solo. Regole: docs/costruttore/porto.md.
+// Gira in Node, senza disegno: i test giocano giornate intere.
 import { Inciampo, Sera } from '../inciampo.js'
 import { leggiCasella, cosaDaLettera } from '../../dati/porto/legenda.js'
 import { colore as coloreDi } from '../../dati/colori.js'
 
 export const LATI = { su: [0, -1], giu: [0, 1], destra: [1, 0], sinistra: [-1, 0] }
 export const DURATA = 300
-/* una giornata lunga esegue tante righe: il tetto dei passi del cantiere
-   (cinquemila) fermerebbe un programma giusto a metà pomeriggio */
-export const TETTO_PASSI_PORTO = 60000
+export const TETTO_PASSI_PORTO = 60000 // una giornata lunga esegue tante righe: il tetto del cantiere (5000) fermerebbe un programma giusto
 
 const NOMI_ARREDI = { scaffale: 'lo scaffale', bancone: 'il bancone', cassone: 'il cassone', nastro: 'il nastro' }
 
-/* un cassone prende questa cosa? il colore di una cassa, il numero di
-   una lettera: quello che dice di prendere, e basta */
 const accetta = (a, cosa) =>
   (!a.colore || (cosa.tipo === 'cassa' && cosa.colore === a.colore)) &&
   (a.numero == null || (cosa.tipo === 'biglietto' && cosa.numero === a.numero))
 
-/* «una cassa rossa»: i colori stanno scritti al maschile (il rosso), la
-   cassa è femmina; e «prende solo casse rosse», al plurale */
+// I colori stanno scritti al maschile (il rosso), la cassa è femmina («una cassa rossa»), «rosse» al plurale.
 const AL_FEMMINILE = { rosso: 'rossa', giallo: 'gialla', bianco: 'bianca', grigio: 'grigia', nero: 'nera' }
 const AL_PLURALE = { rosso: 'rosse', giallo: 'gialle', verde: 'verdi', bianco: 'bianche', grigio: 'grigie',
                      nero: 'nere', marrone: 'marroni' }
 export const coloreAlFemminile = c => AL_FEMMINILE[c] || (coloreDi(c) || {}).nome || c
 export const coloreAlPlurale = c => AL_PLURALE[c] || (coloreDi(c) || {}).nome || c
 
-/* i nomi dei cassoni hanno l'articolo («il camion», «la stiva»): le
-   frasi ci costruiscono sopra, e «in il camion» non si dice */
+// I nomi dei cassoni hanno l'articolo («il camion», «la stiva»): «in il camion» non si dice.
 export const eFemminile = nome => /^(la|una) /.test(nome || '')
 export function nel(nome) {
   const m = /^(il|lo|la) (.*)$/.exec(nome || '')
@@ -109,7 +30,6 @@ export function nel(nome) {
   return `in ${nome}`
 }
 
-/* le qualità che un cliente può chiedere al posto di una cosa */
 export const QUALITA = {
   massimo: 'la lettera più grande che c\'è',
   minimo: 'la lettera più piccola che c\'è',
@@ -127,16 +47,12 @@ export function cosaInParole(x) {
   return 'qualcosa'
 }
 
-/* quello che si legge su una cosa: il colore di una cassa, il numero di
-   un biglietto */
 export const valoreDi = cosa => (cosa.tipo === 'cassa' ? cosa.colore : cosa.numero)
 
-/* le forme di una pila, dal basso: la più grande sotto, fino alla 1 */
+// Dal basso: la più grande sotto, fino alla 1.
 const formeDa = n => Array.from({ length: n }, (_, i) => ({ tipo: 'forma', numero: n - i }))
 
 export class Porto {
-  /* Un ordine (una giornata) diventa un porto: la mappa a coppie di
-     caratteri (`dati/porto/legenda.js`), i cassoni, e gli attori. */
   static daOrdine(ordine, livello = {}) {
     const righe = ordine.mappa
     const h = righe.length
@@ -163,9 +79,7 @@ export class Porto {
             a.colore = spec.colore || null
             a.figura = spec.figura || 'cassone'
             a.numero = spec.numero ?? null
-            /* la pila delle forme: il suo colore è il nome del posto
-               («la pila rossa»), non un colore che filtra quello che
-               prende — per questo sta in `tinta` e non in `colore` */
+            // Il colore di una pila è il nome del posto («la pila rossa»), non un filtro: sta in `tinta` e non in `colore`.
             if (a.figura === 'pila') {
               a.tinta = spec.tinta || null
               for (const f of formeDa(spec.forme || 0)) p.pile[k].push(p.nuovaCosa(f))
@@ -205,12 +119,10 @@ export class Porto {
       const fila = (ordine.clienti.fila || []).map(([arriva, chiede], n) => ({ id: n + 1, arriva, chiede }))
       p.clienti = { fila, alBancone: null, pazienza: ordine.clienti.pazienza || 120,
                     serviti: 0, arrabbiati: 0, totale: fila.length,
-                    /* chi fa indovinare, e quante lettere sbagliate sopporta */
                     indovina: !!ordine.clienti.indovina, tentativi: ordine.clienti.tentativi || 4 }
       if (p.clienti.indovina && fila.some(f => typeof f.chiede !== 'number'))
         throw new Error('porto: chi fa indovinare pensa a una lettera, cioè a un numero')
     }
-    /* i camion: `fila` è [[arriva, vuole, colore?], …] */
     if (ordine.camion) {
       if (!p.piazzole.length) throw new Error('porto: ci sono i camion ma nella mappa manca la piazzola (&)')
       const fila = (ordine.camion.fila || []).map(([arriva, vuole, colore = null], n) => ({ id: n + 1, arriva, vuole, colore }))
@@ -224,9 +136,7 @@ export class Porto {
     this.h = h
     this.suolo = new Array(w * h).fill('pavimento')
     this.arredo = new Array(w * h).fill(null)
-    /* le cose di ogni casella, dal basso in alto: una sola quasi
-       dappertutto, tante in un cassone (si prende quella in cima) */
-    this.pile = Array.from({ length: w * h }, () => [])
+    this.pile = Array.from({ length: w * h }, () => [])  // dal basso in alto; si prende quella in cima
     this.bersaglio = new Map()       // casella → colore della cassa che ci deve finire
     this.celleNastro = []
     this.robot = null
@@ -244,7 +154,6 @@ export class Porto {
     this.passoNastro = 2
     this.obiettivo = {}
     this.ultimaCosa = 0
-    /* per l'esecutore: il porto ha un orologio, e le giornate sono lunghe */
     this.orologio = true
     this.tettoPassi = TETTO_PASSI_PORTO
   }
@@ -258,8 +167,7 @@ export class Porto {
   nuovaCosa(spec) { return { id: ++this.ultimaCosa, ...spec } }
   eClienti(x, y) { return !!this.puntoClienti && this.puntoClienti.x === x && this.puntoClienti.y === y }
 
-  /* Perché il robot non può mettere piede in una casella: `null` se può.
-     Il motivo è una chiave di `PERCHE`, e i dettagli servono alla frase. */
+  // Perché il robot non può mettere piede in una casella: null se può, o un motivo di PERCHE con i dettagli per la frase.
   ostacolo(x, y) {
     if (!this.dentro(x, y)) return { motivo: 'porto-fuori' }
     const k = this.k(x, y)
@@ -273,14 +181,12 @@ export class Porto {
     return null
   }
 
-  /* la casella di fianco al robot, verso una freccia */
   diFianco(lato, id) {
     if (!LATI[lato]) throw new Inciampo('verso-da-scegliere', id)
     const [dx, dy] = LATI[lato]
     return { x: this.robot.x + dx, y: this.robot.y + dy }
   }
 
-  /* ═══════════ quello che il robot fa ═══════════ */
   *fai(i, es) {
     switch (i.tipo) {
       case 'vai': {
@@ -328,8 +234,7 @@ export class Porto {
         const cosa = this.mano
         let servito = null, risposta = null
         if (a && a.tipo === 'bancone') {
-          /* sul bancone ci sta una cosa sola: la lettera che il cliente
-             ha rimesso lì va ripresa, prima di dargliene un'altra */
+          // Una lettera rimessa lì da "indovina" va ripresa prima di darne un'altra.
           if (this.pile[k].length) throw new Inciampo('posto-occupato', i.id, { x, y })
           servito = this.servi(cosa, i.id)
           if (servito && servito.torna) {
@@ -366,15 +271,10 @@ export class Porto {
     }
   }
 
-  /* il cliente al bancone riceve una cosa: se è quella che voleva se ne
-     va contento, se no la giornata è persa — sbagliare un cliente non è
-     un dettaglio da scoprire a sera */
   servi(cosa, id) {
     const c = this.clienti && this.clienti.alBancone
     if (!c) throw new Inciampo('nessun-cliente', id)
-    /* chi fa indovinare: una lettera sbagliata non è un guaio, è una
-       domanda — la rimette sul bancone e risponde «di più» o «di meno».
-       Il guaio è finire i tentativi */
+    // Chi fa indovinare: una lettera sbagliata non è un guaio, è una domanda — il guaio è finire i tentativi.
     if (this.clienti.indovina && cosa.tipo === 'biglietto' && cosa.numero !== c.chiede) {
       c.sbagliate = (c.sbagliate || 0) + 1
       if (c.sbagliate >= this.clienti.tentativi)
@@ -389,10 +289,7 @@ export class Porto {
     return { ...c }
   }
 
-  /* quello che il cliente voleva è quello che ha ricevuto? Una qualità
-     («la più grande») si controlla contro tutte le lettere che ci sono
-     ancora nel porto, dovunque stiano: sugli scaffali, per terra, nei
-     cassoni. Quella consegnata è già fuori, in mano al robot. */
+  // Una qualità («la più grande») si controlla contro tutte le lettere ancora nel porto: quella consegnata è già in mano.
   combacia(cosa, chiede) {
     if (eQualita(chiede)) {
       if (cosa.tipo !== 'biglietto') return false
@@ -403,7 +300,6 @@ export class Porto {
       : cosa.tipo === 'biglietto' && cosa.numero === chiede
   }
 
-  /* ═══════════ quello che il robot guarda, e legge ═══════════ */
   guarda(c, es, id) {
     if (c.dove === 'mano') {
       const trovato = this.eCosa(this.mano, c, es, id)
@@ -416,7 +312,6 @@ export class Porto {
     return { esito: c.c === false ? !trovato : trovato, x, y, cosa: this.cosaC(x, y) }
   }
 
-  /* la cosa in mano, o in cima a una casella, è quella della domanda? */
   eCosa(cosa, c, es, id) {
     if (c.cosa === 'niente') return !cosa
     if (!cosa) return false
