@@ -1,35 +1,14 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE COSE — quello che sta in scena insieme alle persone
-
-   Il patto è quello dei quiz (`quiz/grafica/riquadro.js`): si dipinge
-   sempre dentro un quadrato di 100×100, con l'origine in alto a
-   sinistra, e nessuno qui dentro sa quanto sarà grande davvero. Il
-   pavimento sta a `SUOLO` (`scena/luoghi.js`), ed è l'unica misura che
-   luoghi, cose e persone devono avere in comune: chi appoggia qualcosa
-   per terra la mette lì.
-
-   Ogni cosa è una funzione `(p, c)` dove `c` porta almeno `x` e `y`, e
-   disegna con quelle come punto d'appoggio — che per quasi tutte è il
-   punto dove tocca terra. Chi ha bisogno di variare porta i suoi campi
-   (`s`, `w`, `r`, `vola`, `davanti`), e chi non li scrive vede quello
-   che vedeva prima.
-
-   ── LA REGOLA CHE VALE PIÙ DI TUTTE ──
-   Una cosa che a settanta pixel non si riconosce **non va aggiunta**:
-   va cambiata la storia. È la stessa trappola delle emoji vista dall'altra
-   parte — lì si accettava il disegno sbagliato perché era l'unico
-   disponibile, qui si accetterebbe il disegno illeggibile perché è
-   quello che serviva.
-   ═══════════════════════════════════════════════════════════════════ */
+// Quello che sta in scena insieme alle persone: si dipinge in un
+// quadrato di 100×100 (il patto dei quiz, quiz/grafica/riquadro.js), col
+// pavimento a SUOLO (scena/luoghi.js). Ogni cosa è una funzione (p, c)
+// con almeno c.x/c.y come punto d'appoggio (di solito dove tocca terra);
+// chi ha bisogno di variare porta i suoi campi (s, w, r, vola, davanti).
+// Regola sopra le altre: una cosa che a settanta pixel non si riconosce
+// non va aggiunta, va cambiata la storia.
 import { capsula, poligono, tondo, mescola } from '../../../grafica/comune.js'
 import { LATO, SUOLO, LUOGHI } from './luoghi.js'
 
 const BORDO = '#2a2036'
-
-/* ═══════════ LE COSE ═══════════
-   Ognuna è una funzione `(p, c)` dove `c` porta almeno `x` e `y`, e
-   disegna con quelle come punto d'appoggio — che per quasi tutte è il
-   punto dove toccano terra. */
 
 const cose = {
   sole(p, c) {

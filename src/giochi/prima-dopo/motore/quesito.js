@@ -1,25 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL QUESITO — una storia diventa una domanda
-
-   Sei modi diversi di chiedere «cosa viene prima, cosa viene dopo» a
-   partire dagli stessi due ingredienti: una storia (`dati/storie.js`)
-   e un verbo (`dati/verbi.js`). Qui non c'è DOM, non c'è Vue — solo lo
-   stato di una domanda, con `tocca()` che la fa avanzare, esattamente
-   come `motore/partita.js` del Codice Segreto fa con `posa()`.
-
-   Tre forme, tre classi:
-     QuesitoOrdina    le vignette sparse, da posare buca per buca
-     QuesitoScelta    manca / dopo / prima: si sceglie fra tre
-     QuesitoIntruso   quattro vignette in fila, una non c'entra
-
-   Tutte e tre parlano la stessa lingua verso fuori — `tipo`, `verbo`,
-   `storia`, `finita`, `esito`, `tocca(id)` — così `viste/Storia.vue` e
-   il banco di prova possono trattarle quasi allo stesso modo, e solo il
-   disegno cambia da un tipo all'altro.
-
-   Il caso si passa da fuori (`rnd`), o il banco di prova non potrebbe
-   rifare la stessa domanda due volte per misurarla.
-   ═══════════════════════════════════════════════════════════════════ */
+// Una storia diventa una domanda: sei modi diversi di chiedere «cosa
+// viene prima, cosa viene dopo» a partire da una storia e un verbo.
+// Nessun DOM, nessun Vue — solo lo stato di una domanda, con `tocca()`
+// che la fa avanzare, come `motore/partita.js` del Codice Segreto con
+// `posa()`. Tre forme, tre classi (QuesitoOrdina, QuesitoScelta,
+// QuesitoIntruso), tutte con la stessa lingua verso fuori: `tipo`,
+// `verbo`, `storia`, `finita`, `esito`, `tocca(id)`.
 
 function mescola(lista, rnd) {
   const a = lista.slice()
@@ -30,9 +15,8 @@ function mescola(lista, rnd) {
   return a
 }
 
-/* Le vignette sparse non devono mai arrivare già in ordine: sarebbe un
-   regalo, e un bambino che le tocca nell'ordine in cui le vede
-   vincerebbe senza aver ragionato. */
+// Le vignette sparse non devono mai arrivare già in ordine: sarebbe un
+// regalo, si vincerebbe senza aver ragionato.
 function mescolaSenzaOrdine(lista, rnd) {
   if (lista.length < 2) return lista.slice()
   let a = mescola(lista, rnd)
@@ -41,24 +25,16 @@ function mescolaSenzaOrdine(lista, rnd) {
   return a
 }
 
-/* I distrattori vengono da altre storie idonee alla stessa tappa (di
-   solito la stessa categoria, o poche categorie vicine): un passo preso
-   da un mondo lontanissimo si riconosce troppo facilmente, uno preso
-   dalla storia giusta sarebbe anche lui giusto. Si esclude perciò ogni
-   emoji che compare nella storia in corso, ovunque essa stia. */
+// I distrattori vengono da altre storie idonee alla stessa tappa,
+// escludendo ogni emoji che compare già nella storia in corso.
 function distrattori(storia, pool, quanti, rnd) {
   const evita = new Set(storia.passi)
   const prendi = liste => [...new Set(liste.flatMap(s => s.passi).filter(e => !evita.has(e)))]
 
-  /* ── E DELLA STESSA FAMIGLIA ──
-     Da quando esistono le storie disegnate (`disegnata: true`) un
-     distrattore va cercato prima fra le storie fatte come quella in
-     corso. Non è un vezzo estetico: in una fila di tre vignette
-     disegnate, un'emoji si riconosce **per come è fatta** invece che
-     per quello che racconta, e la domanda smette di essere «cosa viene
-     dopo» per diventare «quale non è un disegno». Se non ce ne sono
-     abbastanza si completa con quello che c'è — una domanda un po'
-     meno pulita è meglio di una domanda che non si può fare. */
+  // prima della stessa famiglia (disegnata o a emoji): in una fila di
+  // vignette disegnate un'emoji si riconoscerebbe per come è fatta
+  // invece che per quello che racconta. Se non bastano si completa col
+  // resto — una domanda meno pulita è meglio di una che non si può fare.
   const stessaFamiglia = pool.filter(s => !!s.disegnata === !!storia.disegnata)
   const scelti = mescola(prendi(stessaFamiglia), rnd).slice(0, quanti)
   if (scelti.length >= quanti) return scelti
@@ -81,15 +57,10 @@ export class QuesitoOrdina {
 
   get piena() { return this.posate.every(x => x !== null) }
   get finita() { return this.esito !== null }
-
-  /* Le vignette non ancora nella striscia, nell'ordine sparso in cui
-     sono nate: è quello che la scena mostra nella zona di pesca. */
   get vignetteLibere() { return this.sparse.filter(v => !this.posate.includes(v.id)) }
 
-  /* Si tocca una vignetta: se è già in una buca torna su, altrimenti va
-     nella prima buca libera. Niente trascinamento — è tutto il gesto
-     che un bambino di quattro anni deve imparare. Quando la striscia si
-     riempie la consegna è automatica: non c'è un tasto in più da capire. */
+  // Niente trascinamento: si tocca e va nella prima buca libera, o torna
+  // su se era già posata. Piena la striscia, la consegna è automatica.
   tocca(id) {
     if (this.finita) return false
     const dove = this.posate.indexOf(id)
@@ -109,19 +80,11 @@ export class QuesitoScelta {
     this.storia = storia
     const passi = storia.passi
 
-    /* cosa si vede: sempre tre posizioni, una delle quali è un buco.
-       Le storie più lunghe non mostrano tutti i loro passi: bastano tre
-       tappe per chiedere «cosa viene dopo/prima/nel mezzo».
-
-       La finestra dei tre è **contigua**, sempre: prima si mostrava il
-       primo passo, l'ultimo, e in mezzo il buco di un passo qualunque —
-       che in una storia da quattro vuol dire una fila che nella storia
-       non esiste (il primo, il secondo, il quarto). Il bambino non
-       poteva accorgersene, perché il terzo non glielo faceva vedere
-       nessuno; ma la spiegazione dopo un errore sì, e una spiegazione
-       che mostra una fila inventata insegna la cosa sbagliata. */
+    // sempre tre posizioni contigue, una delle quali è il buco: una
+    // finestra non contigua (primo, ultimo, un passo qualunque in mezzo)
+    // farebbe vedere, nella spiegazione, una fila che nella storia non esiste
     if (this.verbo === 'manca') {
-      const da = Math.floor(rnd() * (passi.length - 2))         // la finestra [da, da+2]
+      const da = Math.floor(rnd() * (passi.length - 2))
       this.corretta = passi[da + 1]
       this.mostrati = [passi[da], null, passi[da + 2]]
     } else if (this.verbo === 'dopo') {
@@ -177,27 +140,16 @@ export class QuesitoIntruso {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   LA SPIEGAZIONE — cosa far vedere quando si è sbagliato
-
-   Sta qui e non nella vista perché è una **regola**, non un disegno:
-   qual è la fila vera, dove stava la domanda, cosa ha risposto il
-   bambino. Nella vista ci finiva in una `computed` che sapeva i nomi
-   dei tre tipi di quesito — cioè la stessa cosa scritta nel posto dove
-   non si può provare senza aprire un browser.
-
-   Quello che torna è sempre **una fila vera e contigua della storia**,
-   mai una fila di comodo: è l'unica cosa che il bambino ha davanti nel
-   momento in cui sta imparando, e se lì gli si fa vedere una sequenza
-   che nella storia non esiste, tanto valeva non spiegare niente.
-
-     titolo    il nome della storia, per chi legge ad alta voce
-     passi     la fila giusta, in ordine
-     esatti    per «ordina»: quali posizioni erano al posto giusto
-     buco      per «manca/dopo/prima»: l'indice di quello che si chiedeva
-     scelta    il passo sbagliato che è stato toccato, se ce n'è uno
-     intruso   per «intruso»: la vignetta che non c'entrava
-   ═══════════════════════════════════════════════════════════════════ */
+// La spiegazione: cosa far vedere quando si è sbagliato. Sta qui e non
+// nella vista perché è una regola (qual è la fila vera, dove stava la
+// domanda, cosa ha risposto il bambino), non un disegno. Torna sempre
+// una fila vera e contigua della storia, mai una fila di comodo.
+//   titolo    il nome della storia, per chi legge ad alta voce
+//   passi     la fila giusta, in ordine
+//   esatti    per «ordina»: quali posizioni erano al posto giusto
+//   buco      per «manca/dopo/prima»: l'indice di quello che si chiedeva
+//   scelta    il passo sbagliato che è stato toccato, se ce n'è uno
+//   intruso   per «intruso»: la vignetta che non c'entrava
 export function spiegazione(q) {
   const base = { titolo: q.storia.nome, passi: [], esatti: null, buco: null,
                  scelta: null, intruso: null }
@@ -211,8 +163,6 @@ export function spiegazione(q) {
     return { ...base,
       passi: q.storia.passi.slice(0, q.vignette.length),
       intruso: q.vignette.find(v => v.intruso)?.emoji ?? null,
-      /* quello che ha toccato è un passo vero della storia: si segna
-         nella fila, invece di rimostrarlo a parte */
       scelta: sbagliata && !sbagliata.intruso ? sbagliata.emoji : null }
   }
 
@@ -222,9 +172,8 @@ export function spiegazione(q) {
     scelta: q.scelta && q.scelta !== q.corretta ? q.scelta : null }
 }
 
-/* La sola porta d'ingresso: chi chiama non deve sapere quale delle tre
-   classi sta ricevendo, solo che verboDef.tipo lo decide. `pool` sono
-   le altre storie idonee alla stessa tappa — la fonte dei distrattori. */
+// La sola porta d'ingresso: `pool` sono le altre storie idonee alla
+// stessa tappa, la fonte dei distrattori.
 export function generaQuesito(verboDef, storia, pool, rnd = Math.random) {
   if (verboDef.tipo === 'ordina') return new QuesitoOrdina(storia, verboDef, rnd)
   if (verboDef.tipo === 'scegli') return new QuesitoScelta(storia, verboDef, pool, rnd)
