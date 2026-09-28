@@ -1,21 +1,8 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL CARTELLO DI FINE
-
-   Un cartello solo per i due modi in cui una partita finisce, perché è
-   lo stesso gesto: «è finita, ecco com'è andata, si riparte da qui».
-
-   Perdere non toglie niente e non fa arretrare: si riprova la stessa
-   tappa quando si vuole. A sei anni la punizione non insegna, insegna il
-   giro dopo — e questo cartello lo deve dire, se no il bambino crede di
-   aver perso qualcosa.
-
-   Nella Sopravvivenza la riga che conta è **il primato**: lì non si
-   vince niente, quindi l'unica cosa che il gioco ha da dare è dire di
-   quanto si è migliorato. Arriva già scritta (`giochi/primati.js`) e
-   con i coriandoli quando è un record: questo file non conta e non
-   confronta niente.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il cartello di fine: un cartello solo per i due modi in cui una
+// partita finisce. Perdere non toglie niente e non fa arretrare. Nella
+// Sopravvivenza conta il primato, che arriva già scritto
+// (giochi/primati.js): questo file non conta e non confronta niente.
 import Festa from '../../Festa.vue'
 
 defineProps({
@@ -26,8 +13,7 @@ defineProps({
   tempo: { type: Number, default: 0 },
   uccisi: { type: Number, default: 0 },
   livello: { type: Number, default: 1 },
-  /* `{ record, primo, frase, … }` nella Sopravvivenza, niente nelle
-     tappe: un primato non c'entra dove c'è un traguardo da tagliare */
+  // { record, primo, frase, … } nella Sopravvivenza, niente nelle tappe
   primato: { type: Object, default: null },
   libera: { type: Boolean, default: false },
   ultima: { type: Boolean, default: false },   // la campagna è finita qui
@@ -58,10 +44,6 @@ const minuti = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart
         <div class="sv-dato"><b>{{ livello }}</b><span>livello</span></div>
       </div>
 
-      <!-- il record, e di quanto: «🥇 Nuovo record! 2:05 (32s meglio di
-           prima)». Quando non è un record si dice lo stesso quanto è
-           mancato — è la riga che fa venire voglia di rigiocare, e non
-           è un rimprovero: quel record è suo. -->
       <p v-if="primato && primato.record" class="sv-primato em" data-primato="nuovo">
         🥇 {{ primato.frase }}
       </p>
@@ -70,9 +52,7 @@ const minuti = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart
       <p v-if="monete">+{{ monete }} 🪙</p>
       <p v-else-if="!vinta">non hai perso niente: la tappa ti aspetta</p>
 
-      <!-- Al traguardo si può restare in campo. Da lì non si vince più
-           niente — la stella è già presa — e prima o poi ti prendono: è
-           quello il senso, e il tasto lo dice invece di prometterlo. -->
+      <!-- al traguardo si può restare: da lì non si vince più niente, prima o poi ti prendono -->
       <button v-if="puoiRestare" class="sv-grosso sv-resta" @click="$emit('resta')">
         <span class="em">⏱️</span> resto in campo
       </button>

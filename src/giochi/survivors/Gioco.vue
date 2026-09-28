@@ -1,22 +1,9 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   SURVIVORS — IL COORDINATORE
-
-   L'eroe spara da solo al mostro più vicino, e col dito si va in giro:
-   a prendere le gemme e gli oggetti rimasti a terra, a scansare le
-   file di mostri che attraversano lo schermo, a puntare le armi che
-   colpiscono dove si corre. Le gemme fanno salire di livello, e **a
-   ogni livello il gioco si ferma e propone tre carte che si pagano con
-   una domanda** — facile, media o tosta a seconda di quanto è forte la
-   carta. Chi sbaglia non prende niente: il giro dopo arriva presto.
-
-   Questo file mette insieme i pezzi ed è **l'unico che sa che esistono
-   le monete e l'avanzamento**: le regole stanno in `motore/`, i numeri
-   in `dati/`, il disegno in `scena/`, le schermate in `viste/`. E non sa
-   che materie esistano: chiede una domanda con una difficoltà da 0 a 1 e
-   la mostra. Se qualcosa qui dentro comincia a somigliare a una regola di
-   gioco, vuol dire che è nel file sbagliato.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il coordinatore: l'unico file che sa che esistono le monete e
+// l'avanzamento. Le regole stanno in `motore/`, i numeri in `dati/`, il
+// disegno in `scena/`, le schermate in `viste/`. Non sa che materie
+// esistano: chiede una domanda con una difficoltà da 0 a 1 e la
+// mostra. Vedi docs/survivors/regole.md.
 import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
@@ -49,7 +36,7 @@ const emit = defineEmits(['vai'])
 const CHIAVE = 'survivors'
 const RESPIRO = 500          // quanto si guarda il campo prima del cartello
 
-/* ═══════════ dove siamo ═══════════ */
+// dove siamo
 const vista = ref('mappa')            // mappa | campo
 const tappaIdx = ref(-1)              // -1 = gioco libero
 const partita = shallowRef(null)      // il motore: NON reattivo dentro
@@ -68,28 +55,12 @@ let attesa = 0
 let orologioBrindisi = 0
 const giostra = new Giostra(passo)
 
-/* ═══════════ la pausa ═══════════
-   Tutta in `giochi/pausa.js`: il ⏸ della barra, il telefono posato, il
-   foglio del `?`, il cartello di un traguardo. Qui si aggiunge la sola
-   condizione di casa che sia reattiva — col cartello finale davanti non
-   si combatte — mentre quello che vive nel motore (`p.finita`,
-   `p.inPausa`, cioè la sosta delle carte) si guarda dentro il battito:
-   uno `shallowRef` non avvisa nessuno quando cambia un campo dentro.
-
-   ── `inAttesa` non c'è più, ed è una fusione voluta ────────────────
-   Questo gioco aveva già il suo «tocca per ripartire»: una partita
-   ripresa dalla mappa nasceva ferma, con una riga in mezzo al campo, e
-   ripartiva al primo dito. È **la stessa idea** del velo comune, scritta
-   a mano prima che il pezzo comune esistesse — e tenerle tutte e due
-   voleva dire due riprese diverse per lo stesso gesto: chi riprendeva
-   una partita e poi si metteva il telefono in tasca tornava a trovarsi
-   due cartelli da togliere, in due punti dello schermo, con due frasi
-   diverse. Adesso riprendere una partita lasciata a metà **mette in
-   pausa** (`metti({ auto: true })`, come il telefono posato: non l'ha
-   chiesto nessuno, è successo), e quello che si vede è il velo di
-   sempre, con sotto la riga che dice a che punto era. Una ripresa sola,
-   un velo solo, e il campo che sta fermo finché non lo si tocca — che
-   era la ragione per cui `inAttesa` era nato. */
+// La pausa (giochi/pausa.js): qui si aggiunge la sola condizione che sia
+// reattiva (col cartello finale davanti non si combatte). `inAttesa` è
+// sparito: il "tocca per ripartire" scritto a mano per una partita
+// ripresa era la stessa idea del velo comune, e tenerli tutti e due
+// dava due riprese diverse per lo stesso gesto — adesso riprendere
+// mette in pausa (metti({ auto: true })), come il telefono posato.
 const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale.value })
 
 const avanza = progresso(CHIAVE)
@@ -97,17 +68,11 @@ const libera = computed(() => tappaIdx.value < 0)
 const regoleOra = computed(() => libera.value ? LIBERO : CAMPAGNA[tappaIdx.value] || CAMPAGNA[0])
 const veste = computed(() => scenario(regoleOra.value.scenario))
 
-/* Dove il gioco **scorre davvero**, ed è l'unico posto in cui il ⏸ e il
-   velo hanno senso: sul campo, senza nessun altro velo davanti. Le tre
-   carte, la domanda che le paga e il cartello finale sono già veli sopra
-   una partita ferma, e un secondo velo sopra di loro è un gioco rotto. */
+// dove il gioco scorre davvero: le tre carte, la domanda e il cartello
+// finale sono già veli sopra una partita ferma
 const siGioca = computed(() => vista.value === 'campo'
   && !offerta.value && !domanda.value && !finale.value)
 
-/* Cosa si stava facendo, sul velo della pausa. Chi riapre il telefono
-   dopo mezz'ora non sta guardando il gioco: sta guardando il telefono
-   che si accende, e una riga che dice a che punto era la partita è
-   quello che gli fa tornare in mente cosa sta per riprendere. */
 const dovEravamo = computed(() => {
   const c = cruscotto.value
   const s = Math.max(0, Math.ceil(c.oltre ? c.extra : c.infinita ? c.tempo : c.restano))
@@ -122,17 +87,11 @@ function vuoto() {
            restano: 0, infinita: false, uccisi: 0, presi: [], cassa: false }
 }
 
-/* ═══════════ LA PARTITA LASCIATA A METÀ ═══════════
-   Uscire non butta più via niente: si scrive dove si era
-   (`motore/sosta.js`) e la mappa la offre in cima. Il ref serve solo a
-   farla comparire e sparire: la verità sta in archivio. */
+// la partita lasciata a metà: uscire non butta più via niente, si
+// scrive dove si era (motore/sosta.js) e la mappa la offre in cima
 const ripresa = ref(laRipresa())
 let daSalvare = 0
 
-/* La carta della mappa vuole anche la faccia dello scenario, che `dice`
-   non conosce: di là si sa che una tappa ha uno scenario, non che la
-   notte sia 🌙. Nella Sopravvivenza la faccia è la sua, ♾️, perché non
-   c'è nessuna tappa da riconoscere. */
 function laRipresa() {
   const d = dice(sosta(CHIAVE), CAMPAGNA, LIBERO)
   return d && { ...d, icona: d.libera ? '♾️' : scenario(d.scenario).icona }
@@ -143,9 +102,7 @@ function salva({ subito = false } = {}) {
   if (!p) return
   daSalvare = 0
   const dato = scrivi(p, tappaIdx.value)
-  /* `scrivi` torna `null` a partita finita o già vinta, e allora la
-     sosta va **tolta**: se no una tappa portata a casa resterebbe in
-     cima alla mappa come se fosse ancora a metà. */
+  // `scrivi` torna null a partita finita o già vinta: la sosta va tolta
   salvaSosta(CHIAVE, dato, { subito })
 }
 
@@ -154,9 +111,7 @@ function scorda() {
   ripresa.value = null
 }
 
-/* Riprendere non è ricominciare. Se il salvataggio non si legge più —
-   una versione vecchia, un dato storto — si comincia la tappa da capo
-   invece di lasciare un tasto che non fa niente. */
+// se il salvataggio non si legge più si comincia la tappa da capo
 function riprendiPartita() {
   const dato = sosta(CHIAVE)
   const t = dato ? (dato.tappa < 0 ? LIBERO : CAMPAGNA[dato.tappa]) : null
@@ -170,15 +125,8 @@ function riprendiPartita() {
   domanda.value = null
   finale.value = null
   brindisi.value = ''
-  /* la dritta «tieni premuto e trascina» è per chi comincia: chi
-     riprende ha già giocato, e al suo posto c'è il velo della pausa */
-  toccato.value = true
-  /* ── il campo ripreso nasce fermo ──
-     `auto` perché non l'ha chiesto nessuno: è successo, come col
-     telefono posato. Riaprire una partita e ritrovarsi in mezzo alla
-     marea mentre si sta ancora capendo dove si era rimasti costa il
-     primo cuore, e questo gioco non è a turni come il Dungeon. */
-  metti({ auto: true })
+  toccato.value = true   // la dritta è per chi comincia, non per chi riprende
+  metti({ auto: true })  // il campo ripreso nasce fermo: non l'ha chiesto nessuno
   vista.value = 'campo'
   pagata = false
   contata = false
@@ -187,9 +135,7 @@ function riprendiPartita() {
   if (pittore) prendiTela(pittore.tela)
 }
 
-/* ═══════════ la mappa ═══════════
-   Le tappe arrivano alla vista già decise: cosa è aperto, quante stelle,
-   di che colore. La schermata non deve chiedere niente a nessuno. */
+// la mappa: le tappe arrivano già decise
 const scalini = computed(() => SCALINI.map(s => ({
   ...s,
   tappe: tappeDelloScalino(s.chiave).map(t => ({
@@ -203,24 +149,17 @@ const scalini = computed(() => SCALINI.map(s => ({
   })),
 })))
 
-/* Il tasto della Sopravvivenza porta con sé il record già scritto in
-   parole («2:05»): la mappa non sa in che unità si misuri questo gioco,
-   e non deve impararlo — lo dice il manifesto una volta sola. */
 const statoLibero = computed(() => ({
   aperto: aperta(CHIAVE, QUANTE_TAPPE),
   quante: QUANTE_TAPPE,
   fatte: Math.min(avanza.tappa, QUANTE_TAPPE),
-  // col racconto della partita del record: «2:05 · 580 mostri · livello 6»
   primato: recordInParole(primatoDi(CHIAVE), SENZA_FINE),
 }))
 
 const titolo = computed(() =>
   vista.value === 'campo' ? regoleOra.value.nome : 'Survivors')
 
-/* ═══════════ i suoni ═══════════
-   Il motore non suona: dice cosa è successo e qui si decide come. Sono
-   sintetizzati come in tutti gli altri giochi — un file audio in più nel
-   build unico peserebbe più di tutto il gioco messo insieme. */
+// i suoni: il motore non suona, dice cosa è successo
 let ultimoTiro = 0
 const VERSI = {
   tiro: () => {
@@ -232,20 +171,14 @@ const VERSI = {
   morto: () => suono.nota(220, 90, 0.09, 'square', 0.05),
   gemma: () => suono.nota(1180, 1760, 0.05, 'sine', 0.05),
   ahia: () => suono.nota(300, 70, 0.22, 'sawtooth', 0.12),
-  /* gli oggetti a terra: un «ding» quando ne compare uno, così si alza
-     lo sguardo, e un verso suo per ognuno quando lo si prende */
   oggetto: () => suono.nota(1400, 1900, 0.09, 'sine', 0.05),
   cuore: () => suono.vita(),
   calamita: () => suono.nota(380, 1500, 0.35, 'sine', 0.07),
   cassa: () => suono.compra(),
-  /* il muro: un brontolio basso, per alzare lo sguardo — è l'unico
-     avviso che c'è, e non dice da che parte: quello lo si vede */
-  muro: () => suono.rumore(0.5, 0.09, 500, 120),
+  muro: () => suono.rumore(0.5, 0.09, 500, 120),   // un brontolio, senza dire da che parte
   livello: () => suono.livello(),
   fuoco: () => suono.rumore(0.22, 0.06, 900, 200),
   tuono: () => suono.rumore(0.18, 0.07, 2400, 120),
-  /* le armi che guardano dove corri: un sibilo per la lancia, un
-     colpo secco per il fendente */
   lancia: () => suono.nota(700, 180, 0.14, 'sawtooth', 0.06),
   fendente: () => suono.rumore(0.12, 0.09, 2000, 400),
   fine: () => suono.fine(),
@@ -260,30 +193,18 @@ function suona(eventi) {
   }
 }
 
-/* ═══════════ il battito ═══════════
-   Il campo si ferma anche quando c'è **il cartello di un traguardo**
-   davanti (`state.festa`, che `App.vue` mostra a schermo intero per tre
-   secondi buoni). Prima no, e voleva dire perdere cuori per aver preso un
-   premio: il velo copre il campo, il bambino non vede più i mostri, e
-   quando torna a vederlo ne ha tre addosso. Un traguardo che si paga con
-   una vita è un traguardo che il bambino impara a temere. Il tempo qui è
-   fermo davvero — `avanza` è l'unico posto dove passa — quindi si
-   ricomincia esattamente dalla scena che si era lasciata.
-
-   L'elenco non sta più qui: è `fermo`, che arriva da `giochi/pausa.js` e
-   vale uguale in tutti i giochi. Quello che resta scritto è **roba del
-   motore** (`p.finita`, `p.inPausa`, che è la sosta delle carte), che
-   non è reattiva e va riguardata a ogni fotogramma. */
+// il battito: il campo si ferma anche davanti al cartello di un
+// traguardo (state.festa) — un traguardo che si paga con una vita è un
+// traguardo che si impara a temere. `fermo` (giochi/pausa.js) tiene
+// l'elenco di cosa blocca; qui resta solo roba del motore, non reattiva.
 function passo(dt) {
   const p = partita.value
   if (!p) return
   const bloccato = fermo.value || p.finita || p.inPausa
   if (!bloccato) {
     p.avanza(dt)
-    /* ogni tanto, e non a ogni fotogramma: una partita salvata è meno di
-       un chilobyte, ma scriverla sessanta volte al secondo su un
-       telefono si sente. Cinque secondi è quello che al massimo si
-       riperde, e cinque secondi non sono niente. */
+    // ogni tanto, non a ogni fotogramma: scrivere sessanta volte al
+    // secondo su un telefono si sente, cinque secondi persi non sono niente
     daSalvare += dt
     if (daSalvare > 5) salva()
   }
@@ -302,16 +223,11 @@ function passo(dt) {
   pittore?.disegna(p.scena())
 }
 
-/* ═══════════ giocare ═══════════ */
+// giocare
 function avvia(indice) {
   clearTimeout(attesa); attesa = 0
-  /* una partita che comincia non comincia in pausa: il telefono posato
-     sulla mappa lascia acceso il freno, e senza questa riga la partita
-     nuova nascerebbe dietro un velo che nessuno ha chiesto */
-  togli()
-  /* una partita nuova butta quella lasciata a metà: la mappa lo ha già
-     chiesto (`Mappa.vue`), qui non si chiede una seconda volta */
-  scorda()
+  togli()   // una partita che comincia non comincia in pausa
+  scorda()  // una partita nuova butta quella lasciata a metà (già chiesto dalla mappa)
   tappaIdx.value = indice
   const t = indice < 0 ? LIBERO : CAMPAGNA[indice]
   partita.value = new Partita(new Regole(t))
@@ -325,13 +241,9 @@ function avvia(indice) {
   pagata = false
   contata = false
   mostriSegnati = 0
-  /* il pittore arriva quando la schermata monta e consegna il canvas */
   if (pittore) prendiTela(pittore.tela)
 }
 
-/* Il canvas: la vista lo consegna appena esiste. Da qui in poi il motore
-   sa quanto è grande il campo — che è l'unica cosa di schermo che gli
-   serve, per far entrare i mostri appena oltre il bordo. */
 function prendiTela(tela) {
   if (!tela) return
   pittore = new Campo(tela)
@@ -350,10 +262,8 @@ function muovi(dx, dy) {
   partita.value?.muovi(dx, dy)
 }
 
-/* ═══════════ la carta si paga ═══════════
-   Il gioco chiede una domanda **della difficoltà che costa la carta** e
-   non sa di che materia sia: `evita` serve solo a non farne due di fila
-   dello stesso modulo. */
+// la carta si paga: una domanda della difficoltà che costa la carta,
+// senza sapere di che materia sia
 function scegliCarta(chiave) {
   const p = partita.value
   voluta = p.offerta.find(c => c.chiave === chiave) || p.offerta[0]
@@ -362,52 +272,29 @@ function scegliCarta(chiave) {
   suono.ok()
 }
 
-/* ── IL POTENZIAMENTO SI VINCE RISPONDENDO, E SBAGLIARE NON PAGA ──
-   Qui c'era una monetina di consolazione: «niente carta, ma ci hai
-   provato». Sembrava innocua — vale in fattoria, non in campo, non
-   falsa la partita — ed era il buco più grosso di tutto il gioco, per
-   una ragione che il codice non poteva sapere: **quello che un bambino
-   vuole sono le monete**. Non la carta, non la tappa: le monete, perché
-   quelle si spendono. E allora una moneta per ogni risposta sbagliata
-   non è un premio di consolazione, è **il modo più veloce di farne**:
-   si chiede una carta, si preme un tasto a caso, si incassa, si
-   ricomincia. Nella partita libera, dove non si vince niente, era
-   perfino l'unica fonte.
-
-   Adesso sbagliare non dà niente e lo dice: si è provato, non si è
-   preso, il giro dopo arriva presto perché le gemme continuano a
-   cadere. Il «ci hai provato» resta — è giusto che ci sia — ma non ha
-   un prezzo. Le monete di questo gioco si prendono in un modo solo:
-   arrivare in fondo a una tappa (`p.monete`, che è il premio delle
-   stelle). Vedi anche `docs/apprendimento/calibrazione.md`: una moneta vale dieci secondi
-   di esercizio, e un tasto premuto a caso non è esercizio. */
+// il potenziamento si vince rispondendo: sbagliare non dà niente (niente
+// monetina di consolazione — sarebbe il modo più veloce di farne, vedi
+// docs/apprendimento/calibrazione.md). Le monete si prendono solo
+// arrivando in fondo a una tappa.
 function risposto({ giusto }) {
   const p = partita.value
   ultimoModulo = domanda.value?.modulo || null
   domanda.value = null
-  /* ── rispondere È il tocco che riprende ──
-     Mentre la domanda è a schermo il velo della pausa non si mostra (una
-     domanda è già un velo, e due uno sull'altro sono un gioco rotto) e il
-     ⏸ sparisce dalla barra. Ma il freno può essersi acceso lo stesso — il
-     telefono posato *durante* la domanda — e senza questa riga il campo
-     si ritroverebbe fermo dietro un velo comparso dal niente, subito dopo
-     aver risposto. */
+  // rispondere è il tocco che riprende: il freno può essersi acceso
+  // durante la domanda, senza questa riga il campo resterebbe fermo
+  // dietro un velo comparso dal niente
   togli()
   if (giusto) {
     const presa = p.prendi(voluta.chiave)
     brinda(`${presa.icona} ${presa.nome} — ${presa.chiaro}`, true)
     segna('survivorsCarte')
-    /* la carta forte l'ha pagata la domanda tosta: è la cosa che questo
-       gioco vuole premiare, e ha un traguardo suo */
     if (voluta.fascia === 'forte') segna('survivorsToste')
   } else {
     p.rinuncia()
     brinda('niente carta — ci riprovi alla prossima', false)
   }
   cruscotto.value = p.cruscotto
-  /* una carta è il momento in cui si perde di più: qualche secondo di
-     campo si rigioca, una domanda a cui si è già risposto no */
-  salva()
+  salva()   // una carta è il momento in cui si perde di più se non si salva
 }
 
 function brinda(testo, giusto) {
@@ -418,12 +305,9 @@ function brinda(testo, giusto) {
   orologioBrindisi = setTimeout(() => { brindisi.value = '' }, 2600)
 }
 
-/* ═══════════ finire ═══════════
-   Una partita si chiude fino a due volte: la prima al traguardo — la
-   tappa è vinta, le stelle sono contate — e la seconda quando ti prendono,
-   se hai scelto di restare in campo. I premi si pagano una volta sola
-   (`pagata`), e i mostri si contano a delta, o chi resta li conterebbe
-   due volte. */
+// finire: una partita si chiude fino a due volte (al traguardo, e
+// quando ti prendono se hai scelto di restare); i premi si pagano una
+// volta sola, i mostri si contano a delta
 let pagata = false
 let contata = false
 let mostriSegnati = 0
@@ -440,12 +324,6 @@ function chiudiPartita() {
   let monete = 0
 
   if (libera.value) {
-    /* Nel gioco libero non si vince: si resiste, e le monete sono il
-       tempo. Quello che la partita ha da dare è il confronto con sé
-       stessi: il conto e la frase stanno in `giochi/primati.js`, il
-       record in `campagne[survivors]`, e al cartello arriva anche di
-       quanto si è migliorato — che è la sola cosa che un «🥇 nuovo
-       primato!» non diceva. */
     monete = Math.min(20, Math.floor(secondi / 15))
     const esito = segnaPrimato(CHIAVE, secondi, Date.now(),
                                { uccisi: p.uccisi, livello: p.livello })
@@ -456,9 +334,7 @@ function chiudiPartita() {
     segna('survivorsTappe')
     pagata = true
   }
-  /* chi è rimasto in campo dopo aver vinto si porta a casa anche il tempo
-     regalato: poco, ma abbastanza perché restare non sia gratis */
-  if (extra) monete += Math.min(12, Math.floor(extra / 20))
+  if (extra) monete += Math.min(12, Math.floor(extra / 20))   // il tempo regalato non è gratis
 
   if (monete) addCoins(monete)
   if (!contata) { segna('survivorsPartite'); contata = true }
@@ -473,28 +349,20 @@ function chiudiPartita() {
     vinta: p.vinta, titolo: regoleOra.value.nome, stelle: p.stelle,
     monete, tempo: p.tempo, uccisi: p.uccisi, livello: p.livello,
     primato, libera: libera.value, extra,
-    /* al traguardo si può restare: da lì in poi la marea sale e basta,
-       e quello che si è vinto è già vinto */
     puoiRestare: p.alTraguardo,
     ultima: p.vinta && !libera.value && tappaIdx.value === QUANTE_TAPPE - 1,
   }
 }
 
-/* «resta in campo»: la partita riparte dove si era fermata, senza più un
-   traguardo davanti. Non si può più vincere niente — si può solo durare. */
 function resta() {
   const p = partita.value
   if (!p?.continua()) return
-  /* stessa ragione di `risposto`: il cartello finale è un velo suo, e
-     sotto di lui il freno può essersi acceso senza che si vedesse */
   togli()
   finale.value = null
   cruscotto.value = p.cruscotto
   giostra.avvia()
 }
 
-/* «avanti» dopo una vinta porta alla tappa dopo: tornare ogni volta alla
-   mappa per ripartire è un giro in più che nessun bambino chiede. */
 function ancora() {
   const f = finale.value
   if (!f) return
@@ -516,12 +384,8 @@ function allaMappa() {
   vista.value = 'mappa'
 }
 
-/* ── tornare alla mappa ──
-   Uscire a metà **non chiude più la partita**: si scrive dove si era e
-   la mappa la offre in cima. Si salva sempre, anche dopo dieci secondi:
-   quello che si perde non sono i mostri uccisi, sono **le carte già
-   pagate con una domanda**, e quelle si riprendono solo rispondendo di
-   nuovo. */
+// uscire a metà non chiude più la partita: si scrive dove si era e la
+// mappa la offre in cima; si salva sempre, anche dopo pochi secondi
 function indietro() {
   if (vista.value === 'mappa') return emit('vai', 'home')
   const p = partita.value
@@ -532,27 +396,16 @@ function indietro() {
   allaMappa()
 }
 
-/* ── il telefono che si mette in tasca ──
-   Su un telefono l'app non si chiude: sparisce. `visibilitychange` è
-   l'ultimo momento in cui si può ancora scrivere, e il `subito` serve
-   perché il salvataggio pigro potrebbe non scattare mai. Che il campo si
-   fermi lo fa `giochi/pausa.js`, che ascolta lo stesso evento per conto
-   suo: qui resta solo la scrittura. */
+// il telefono che si mette in tasca: visibilitychange è l'ultimo
+// momento in cui si può ancora scrivere. giochi/pausa.js ferma il
+// campo per conto suo sullo stesso evento; qui resta solo la scrittura.
 function seSparisce(e) {
   if (e?.type === 'pagehide' || document.visibilityState === 'hidden')
     salva({ subito: true })
 }
 
-/* ═══════════ il gancio per guardarsi ═══════════
-   La schermata delle carte arriva dopo qualche minuto di partita, e chi
-   scrive il gioco non può guardarla solo giocando: `salta()` fa salire
-   di livello subito, e i potenziamenti passati fanno finta che la
-   partita sia già avanti — è così che si scattano le carte mature senza
-   giocare mezz'ora (lo faceva anche il prototipo da cui viene il gioco,
-   e ce lo siamo portati dietro).
-
-   Per chi gioca **non esiste**: `import.meta.env.DEV` è falso quando si
-   costruisce il file unico e tutto questo blocco sparisce dal build. */
+// il gancio per guardarsi: fa salire di livello subito, per scattare le
+// carte mature senza giocare mezz'ora. Sparisce dal build (import.meta.env.DEV).
 function gancioDiProva() {
   if (!import.meta.env.DEV) return
   window.__survivors = {
@@ -568,9 +421,6 @@ function gancioDiProva() {
 
 onMounted(() => {
   addEventListener('resize', ridimensiona)
-  /* `visibilitychange` si ascolta sul `document`, che è dove viene
-     lanciato: alla finestra ci arriva solo perché risale. Il `pagehide`
-     invece è della finestra e basta. */
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
   gancioDiProva()
@@ -589,9 +439,7 @@ onUnmounted(() => {
 
 <template>
   <div class="schermo">
-    <!-- il ⏸ c'è solo dove scorre qualcosa: sulla mappa non c'è niente
-         da fermare, e dietro le tre carte, la domanda o il cartello
-         finale il gioco è già fermo -->
+    <!-- il ⏸ c'è solo dove scorre qualcosa -->
     <Barra :titolo="titolo" guida="survivors" @aiuto="aiuto" monete
            :pausa="siGioca" @pausa="metti()"
            :scura="vista === 'campo' && veste.buio" @indietro="indietro" />
@@ -618,9 +466,8 @@ onUnmounted(() => {
       <Finale v-if="finale" v-bind="finale"
               @ancora="ancora" @esci="allaMappa" @resta="resta" />
 
-      <!-- il velo copre tutto lo schermo, quindi sta in fondo e fuori da
-           qualunque cosa: le carte, la domanda e il cartello finale hanno
-           già la loro pausa, e sopra di loro non ci va -->
+      <!-- il velo copre tutto lo schermo: le carte, la domanda e il
+           cartello finale hanno già la loro pausa -->
       <VeloPausa v-if="inPausa && siGioca" :dove="dovEravamo" @riprendi="togli" />
     </div>
   </div>
