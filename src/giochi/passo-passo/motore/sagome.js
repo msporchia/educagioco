@@ -1,52 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE SAGOME — i posti con lo zaino, fatti al momento
-
-   Un posto del prato si genera a caso e si fa esaminare dal risolutore
-   (`motore/generatore.js`): la strada più corta la trova lui, esatta.
-   Con lo zaino non basta — il programma più corto coi cicli non lo trova
-   una ricerca in ampiezza — quindi qui si va **al contrario**: prima si
-   sceglie il programma, poi si scava il posto attorno alla strada che
-   fa. La soluzione esiste per costruzione, e lo zaino è largo quanto lei.
-
-   Una sagoma è una **forma di posto**, ognuna col suo «aha», quelle
-   della fine della campagna, con due idee insieme: le due scale dove
-   l'ordine conta, le terrazze (una scatola dentro l'altra), il campo
-   arato, i sassi nel fiume, la spirale di ghiaccio, le pozze coi massi;
-   col «fino a» i gradini storti, il campo storto (a piedi o a salti) e
-   le scale coi pianerottoli, a due colori; col «se» le colline e il
-   sentiero dei segni (sul prato o sul ghiaccio). Ogni sagoma tira a caso
-   le sue misure — quante volte, quanto lunghi i gradini, dove la carota,
-   che colore — e il posto finito si gira e si specchia a caso: la stessa
-   scala scende a destra, sale a sinistra, va in giù.
-
-   ── COSA SI PRETENDE, PRIMA DI TENERLO ────────────────────────────
-   Il sentiero è il finale, quindi c'è un pavimento: uno zaino di almeno
-   cinque carte e una strada, freccia per freccia, di almeno dodici
-   mosse (`provaLoZaino`). Poi il motore vero rigioca tutto, e il posto
-   si butta se:
-     · la mappa non è scritta bene (una tana, una carota, le misure);
-     · la soluzione non arriva a casa con la carota;
-     · la strada, scritta freccia per freccia, ci sta nello zaino — il
-       ciclo non servirebbe;
-     · una delle mosse ingenue obbligatorie vince con la carota: la
-       scatola con le frecce nell'ordine sbagliato, i colori scambiati,
-       un «se» dimenticato;
-     · col «fino a», **un numero qualunque** al posto di ogni colore vince
-       lo stesso: si provano tutti, testa per testa. Se ne basta uno, il
-       «fino a» è una comodità e non la carta del posto.
-   Le altre mosse ingenue (un giro in più o in meno) si tengono solo se
-   perdono: servono al 💡, non alla prova.
-
-   ── IL FUORI ──────────────────────────────────────────────────────
-   Quello che la sagoma non scava lo riempie `componi`, e solo con cose
-   che non si attraversano — alberi, cespugli, sassi, acqua — così la
-   strada del risolutore resta quella scavata: una scorciatoia nel bosco
-   farebbe stare la strada nello zaino. Niente prato di contorno: un
-   pezzo d'erba che dalla strada non si raggiunge sembra una strada, e
-   un bambino ci prova. Il fuori è **a macchie** (un boschetto, uno
-   stagno, una siepe), non sparso cella per cella: sparso sembra rumore,
-   e il posto non ha una forma.
-   ═══════════════════════════════════════════════════════════════════ */
+// Le sagome: i posti con lo zaino del sentiero senza fine, fatti al
+// momento andando **al contrario** — prima si sceglie il programma, poi
+// si scava il posto attorno alla strada che fa, e lo zaino è largo
+// quanto lei (un risolutore non trova il programma più corto coi cicli).
+// Ogni sagoma tira a caso le sue misure e il posto finito si gira e si
+// specchia a caso. Vedi docs/passo-passo/sentiero.md (le sagome, il
+// pavimento, i controlli).
 import { Livello } from './livello.js'
 import { esegui, TANA } from './mondo.js'
 import { risolvi } from './risolutore.js'
@@ -61,11 +19,10 @@ const storto = () => { throw STORTO }
 const DIR = { destra: [1, 0], sinistra: [-1, 0], giu: [0, 1], su: [0, -1] }
 const LETTERA = { rosso: 'r', blu: 'u', giallo: 'g' }
 
-/* ═══════════ lo scavo ═══════════
-   Un foglio senza bordi: le coordinate possono andare sotto zero, e la
-   cornice si decide alla fine (`componi`). `metti` rifiuta di scrivere
-   una cosa diversa sopra una già scritta: è così che due pezzi di strada
-   che si pestano i piedi si scoprono subito. */
+// Lo scavo: un foglio senza bordi (coordinate anche sotto zero, la
+// cornice si decide in `componi`). `metti` rifiuta di sovrascrivere una
+// cella già scritta con un carattere diverso, così due pezzi di strada
+// che si pestano i piedi si scoprono subito.
 class Scavo {
   constructor() { this.celle = new Map() }
   get(x, y) { return this.celle.get(`${x},${y}`) }
@@ -86,10 +43,7 @@ const passo = ([x, y], m) => {
 }
 const chiave = ([x, y]) => `${x},${y}`
 
-/* ═══════════ il fuori ═══════════
-   Quattro vestiti, ognuno con le sue macchie e quanto pesano: il bosco,
-   la siepe (cespugli e sassi), lo stagno, e il fiume dei sassi che è
-   tutto acqua. */
+// il fuori: quattro vestiti, ognuno con le sue macchie e quanto pesano
 const FUORI = {
   bosco:  [['A', 6], ['B', 2], ['~', 1]],
   prato:  [['B', 4], ['A', 3], ['~', 2]],
@@ -156,9 +110,8 @@ export function componi(scavo, rnd, fondo) {
   return righe
 }
 
-/* ═══════════ girare e specchiare ═══════════
-   Una sagoma si scrive in un verso solo (di solito verso destra e in
-   giù), e il posto finito si gira: la mappa e le frecce insieme. */
+// girare e specchiare: una sagoma si scrive in un verso solo (destra e
+// in giù), e il posto finito si gira, mappa e frecce insieme
 const GIRI = {
   tr: { destra: 'giu', giu: 'destra', sinistra: 'su', su: 'sinistra' },
   fx: { destra: 'sinistra', sinistra: 'destra' },
@@ -186,11 +139,8 @@ export function gira(t, rnd) {
   return { ...t, mappa, soluzione, fragili }
 }
 
-/* ═══════════ i numeri al posto dei colori ═══════════
-   Ogni testa «fino a un colore» diventa un numero, e si provano tutte le
-   combinazioni: se una vince con la carota, il posto si fa anche
-   contando, e il «fino a» non serve. Le teste sono al più quattro, e le
-   prove al più quattromila corse corte. */
+// ogni testa «fino a un colore» diventa un numero, e si provano tutte le
+// combinazioni: se una vince, il «fino a» non serve (vedi provaLoZaino)
 function contandoSiVince(liv, fila) {
   const teste = fila.map((t, i) => (eRipeti(t) && COLORI.includes(valoreDi(t)) ? i : -1)).filter(i => i >= 0)
   if (!teste.length) return false
@@ -209,13 +159,7 @@ function contandoSiVince(liv, fila) {
   return giro(0)
 }
 
-/* ═══════════ la prova ═══════════
-   Il pavimento prima di tutto: il sentiero è il finale, e un posto con
-   lo zaino ci sta solo se è almeno come quelli in fondo alla campagna —
-   uno zaino di almeno `ZAINO_MIN` carte (due idee in un programma non
-   stanno in quattro) e una strada, scritta freccia per freccia, di
-   almeno `strada` mosse (dodici di serie; meno dove una mossa è una
-   scivolata o un salto, che vale più celle). */
+// la prova: il pavimento di un posto col zaino (vedi docs/passo-passo/sentiero.md)
 export const ZAINO_MIN = 5
 export const STRADA_MIN = 12
 export function provaLoZaino(t, { strada = STRADA_MIN, zaino = ZAINO_MIN } = {}) {
@@ -235,23 +179,16 @@ export function provaLoZaino(t, { strada = STRADA_MIN, zaino = ZAINO_MIN } = {})
   return true
 }
 
-/* ═══════════ le sagome ═══════════
-   Ognuna: la carta del suo gradino, le regole del mondo che le servono
-   (`serve`), qualche nome, il pavimento della strada se non è quello di
-   serie, e `fai(rnd)` che torna lo scavo, la soluzione e le mosse
-   ingenue (`{ fila, obbligatoria }`). Sono **le forme della fine della
-   campagna**, con due idee insieme: due scale una dopo l'altra, la
-   scatola dentro la scatola, il ghiaccio o il salto dentro un ciclo, due
-   colori, tre versi. Le forme dei primi livelli del ripeti — il viale,
-   lo stagno, la scala sola — qui non ci sono: si sanno già. */
+// le sagome: ognuna ha la carta del suo gradino, le regole del mondo che
+// le servono (`serve`), qualche nome, e `fai(rnd)` che torna lo scavo, la
+// soluzione e le mosse ingenue (`{ fila, obbligatoria }`)
 const a = (rnd, n) => Math.floor(rnd() * n)
 const tra = (rnd, da, fino) => da + a(rnd, fino - da + 1)
 const scegli = (rnd, l) => l[a(rnd, l.length)]
 const ruota = (l, k) => [...l.slice(k), ...l.slice(0, k)]
 const mescola = (rnd, l) => l.map(x => [rnd(), x]).sort((p, q) => p[0] - q[0]).map(p => p[1])
 
-/* segue una fila di frecce sul prato, scavando dove passa: torna le
-   celle dove ha messo piede, e si rifiuta di ripassare dove è già stata */
+// segue una fila di frecce scavando dove passa; con `visti` si rifiuta di ripassare
 function segui(s, da, mosse, { visti = null } = {}) {
   let p = da
   const celle = []
@@ -266,12 +203,8 @@ function segui(s, da, mosse, { visti = null } = {}) {
 const ripetute = (n, motivo) => Array.from({ length: n }, () => motivo).flat()
 const uguali = (p, q) => p[0] === q[0] && p[1] === q[1]
 
-/* ── il cammino che non si tocca ──
-   Un cammino a caso, con dei versi permessi e dei pezzi lunghi quanto
-   dice `lungo()`, che non passa mai accanto a sé stesso (se no la strada
-   del risolutore taglierebbe): serve ai segni, sul prato e sul ghiaccio.
-   Torna i pezzi `{ verso, celle }`, la prima cella di ognuno è quella
-   dopo la partenza del pezzo. */
+// un cammino a caso che non passa mai accanto a sé stesso (se no il
+// risolutore taglierebbe la strada): serve al sentiero dei segni
 function cammino(rnd, versi, pezzi, lungo, largo = 8, alto = 10) {
   const occupate = new Set(['0,0'])
   let [x0, x1, y0, y1] = [0, 0, 0, 0]
@@ -314,11 +247,8 @@ function cammino(rnd, versi, pezzi, lungo, largo = 8, alto = 10) {
 const OPPOSTO = { destra: 'sinistra', sinistra: 'destra', su: 'giu', giu: 'su' }
 
 export const SAGOME = [
-  /* ── la collina: due scale, una dopo l'altra ──
-     Ogni scala è un motivo di due o tre frecce, ripetuto, e scavata larga
-     due: accanto alla strada giusta c'è quella del motivo girato (→↓
-     invece di ↓→), che arriva a casa lo stesso — ma la carota sta su un
-     gradino solo. Due scatole diverse, e l'ordine conta in tutte e due. */
+  // la collina: due scale in fila; la carota sta solo sul gradino vero,
+  // non su quello del motivo girato (che arriva a casa lo stesso)
   { chiave: 'scala', carta: 'ripeti', serve: [],
     nomi: ['La collina', 'Su e giù per il bosco', 'I gradini di pietra', 'La scalinata doppia'],
     fai(rnd) {
@@ -361,9 +291,8 @@ export const SAGOME = [
       }
     } },
 
-  /* ── le terrazze: una scatola dentro l'altra ──
-     Un gradino grande è fatto di passi piccoli, e si scende per due
-     strade: giù e poi avanti, o avanti e poi giù. La carota su una sola. */
+  // le terrazze: due strade equivalenti (giù poi avanti, o avanti poi
+  // giù), la carota sta solo su una
   { chiave: 'terrazze', carta: 'ripeti', serve: [],
     nomi: ['Le terrazze', 'La vigna', 'I campi a gradini'],
     fai(rnd) {
@@ -387,9 +316,8 @@ export const SAGOME = [
       }
     } },
 
-  /* ── il campo arato: avanti e indietro fra le siepi ──
-     Quattro scatole dentro una. La siepe ha il varco in fondo alla fila:
-     chi conta un passo di meno ci sbatte il muso. */
+  // il campo arato: il varco della siepe è in fondo alla fila, chi conta
+  // un passo di meno ci sbatte il muso
   { chiave: 'solchi', carta: 'ripeti', serve: [],
     nomi: ['Il campo arato', 'L\'orto', 'I filari'],
     fai(rnd) {
@@ -417,10 +345,7 @@ export const SAGOME = [
       }
     } },
 
-  /* ── di sasso in sasso: due file di sassi, due scatole ──
-     Tutto acqua, e i sassi dove si atterra: prima si scende, poi si sale
-     (o si scende ancora), e ogni fila ha il suo passo. Chi cammina invece
-     di saltare fa splash. */
+  // di sasso in sasso: tutto acqua, chi cammina invece di saltare fa splash
   { chiave: 'sassi', carta: 'ripeti', serve: ['salto'], strada: 10,
     nomi: ['Di sasso in sasso', 'Il guado', 'Il ruscello dei sassi'],
     fai(rnd) {
@@ -457,12 +382,8 @@ export const SAGOME = [
       }
     } },
 
-  /* ── la spirale di ghiaccio: quattro frecce, e le scivolate cambiano ──
-     Tutto ghiaccio, e a fermare il coniglio negli angoli ci pensano i
-     sassi. La stessa scatola gira quattro volte il lago, e ogni scivolata
-     è lunga diversa: si capisce solo guardando dove sono i sassi. */
-  /* una giostra così regge una volta su cento (un sasso cade sempre sul
-     lato di prima): costa poco, e le prove sono di più */
+  // la spirale di ghiaccio: la stessa scatola gira quattro volte il lago
+  // con scivolate lunghe diverse; regge circa una prova su cento, da qui `prove: 600`
   { chiave: 'spirale', carta: 'ripeti', serve: ['ghiaccio'], strada: 8, tema: 'inverno', prove: 600,
     nomi: ['La spirale di ghiaccio', 'Il lago che gira', 'La pista gelata'],
     fai(rnd) {
@@ -497,9 +418,8 @@ export const SAGOME = [
       }
     } },
 
-  /* ── le pozze: a ogni gradino un masso fa il ponte ──
-     La stessa scatola spinge, attraversa e va avanti. Chi va avanti prima
-     di spingere trova un prato che finisce nell'acqua. */
+  // le pozze: chi va avanti prima di spingere il masso trova un prato
+  // che finisce in acqua
   { chiave: 'pozze', carta: 'ripeti', serve: ['massi'],
     nomi: ['Le pozze', 'I ponti di sasso', 'Il fosso dei massi'],
     fai(rnd) {
@@ -529,11 +449,8 @@ export const SAGOME = [
       }
     } },
 
-  /* ── i gradini storti: fino al colore ──
-     Ogni gradino è lungo diverso: contare non serve, si va avanti finché
-     non si arriva sulla lastra, e si scende dal varco. Oltre la lastra il
-     gradino continua, e sotto ci sono i fossi: chi conta invece di
-     guardare ci cade. */
+  // i gradini storti: oltre la lastra il gradino continua sul fosso, chi
+  // conta invece di guardare ci cade
   { chiave: 'gradini', carta: 'fino', serve: [],
     nomi: ['I gradini storti', 'La scala dei fossi', 'Le balze'],
     fai(rnd) {
@@ -567,12 +484,8 @@ export const SAGOME = [
       }
     } },
 
-  /* ── il campo storto: fino al colore, avanti e indietro ──
-     Le file del campo sono tutte intere, e il passaggio fra un fosso e
-     l'altro è ogni volta in un posto diverso: la lastra lo dice. L'ultima
-     fila porta a casa, e lì non c'è lastra: la scatola si ferma alla tana.
-     Col salto è il fiume dei sassi: le file sono sassi un sì e uno no, e
-     fra una fila e l'altra c'è la siepe, con l'acqua solo sotto la lastra. */
+  // il campo storto: il passaggio fra un fosso e l'altro è ogni volta in
+  // un posto diverso, lo dice la lastra (col salto: il fiume dei sassi)
   { chiave: 'campo', carta: 'fino', serve: [],
     nomi: ['Il campo storto', 'I fossi', 'Il campo di grano'],
     fai(rnd) { return campoStorto(rnd, false) } },
@@ -580,10 +493,7 @@ export const SAGOME = [
     nomi: ['Il fiume dei sassi', 'Il guado lungo', 'Le pietre del torrente'],
     fai(rnd) { return campoStorto(rnd, true) } },
 
-  /* ── scale e pianerottoli: due colori ──
-     La scala scende fino a un colore, il pianerottolo va avanti fino
-     all'altro, e ogni volta sono lunghi diversi. Oltre la lastra la scala
-     finisce nel fosso, e il pianerottolo nello stagno. */
+  // scale e pianerottoli: due colori, lunghi diversi ogni volta
   { chiave: 'pianerottoli', carta: 'fino', serve: [],
     nomi: ['Scale e pianerottoli', 'Il palazzo', 'Le cascate'],
     fai(rnd) {
@@ -621,10 +531,8 @@ export const SAGOME = [
       }
     } },
 
-  /* ── le colline: sempre avanti, e il colore dice su o giù ──
-     Una scatola sola, e le colline tutte diverse. Chi legge un colore al
-     contrario trova un pezzo di prato che sembra buono, e dietro l'acqua;
-     chi si dimentica un «se» va dritto nello stagno. */
+  // le colline: sempre avanti, il colore dice su o giù; chi legge un
+  // colore al contrario trova un prato che sembra buono, e dietro l'acqua
   { chiave: 'colline', carta: 'se', serve: [],
     nomi: ['Le colline', 'Su e giù', 'I dossi'],
     fai(rnd) {
@@ -675,12 +583,8 @@ export const SAGOME = [
       }
     } },
 
-  /* ── il sentiero dei segni: ogni lastra dice dove andare ──
-     Tre versi, un colore per verso, e un programma solo che li legge
-     tutti. Il sentiero non tocca mai sé stesso, così la strada è quella e
-     basta; tutt'intorno lo stagno, e chi scambia due colori ci finisce.
-     Sul ghiaccio è il bosco ghiacciato: fra un segno e l'altro si scivola,
-     ed è la lastra a fermare. */
+  // il sentiero dei segni: tre versi, un colore per verso; chi scambia
+  // due colori finisce nello stagno (sul ghiaccio: si scivola fra un segno e l'altro)
   { chiave: 'segni', carta: 'se', serve: [],
     nomi: ['Il sentiero dei segni', 'I cartelli', 'La strada dipinta'],
     fai(rnd) { return segni(rnd, false) } },
@@ -788,9 +692,7 @@ function segni(rnd, ghiaccio) {
   }
 }
 
-/* le carte che si danno in mano, dal gradino che ce le ha messe in poi:
-   chi ha imparato il «se» lo trova anche in un posto del ripeti, come
-   nella campagna */
+// le carte in mano dal gradino che le ha messe in poi (come nella campagna)
 export function carteInMano(sbloccati) {
   const carte = ['ripeti']
   if (sbloccati.includes('fino')) carte.push('fino')
@@ -798,12 +700,8 @@ export function carteInMano(sbloccati) {
   return carte
 }
 
-/* ═══════════ un posto con lo zaino ═══════════
-   Si sceglie una sagoma della carta chiesta fra quelle che il bambino può
-   giocare (le regole del mondo che conosce), si
-   prova qualche volta, e se proprio non esce niente si passa a un'altra.
-   Torna `null` solo se nessuna sagoma della carta regge: chi chiama ha la
-   sua riserva. `sagoma` ne chiede una sola (per i test e per il banco). */
+// un posto con lo zaino: prova una sagoma della carta chiesta, e se
+// nessuna regge torna `null` (chi chiama ha la sua riserva)
 export function generaZaino(carta, sbloccati, rnd, { prove = 60, sagoma = null } = {}) {
   const puo = SAGOME.filter(g => (sagoma ? g.chiave === sagoma
     : g.carta === carta && g.serve.every(r => sbloccati.includes(r))))
