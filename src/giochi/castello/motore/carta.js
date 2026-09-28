@@ -1,67 +1,20 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA CARTA DI UNA TAPPA — il campo sulla scacchiera, e tutto il resto
-   intorno
+// La carta di una tappa (dato puro, gira in Node): da una tappa del tower
+// defense (le `forme`, curve 0-1) a una carta di 12x22 celle, con gli
+// stessi caratteri della pianta della scheda di prompt
+// (strumenti/sprite/sorgenti/castello/generati/PROMPT-scenario.md):
+//   .  fondo          ,  fondo con qualcosa in più     ^  il fitto
+//   ~  acqua          d  decoro sparso                 +  strada
+//   o  piazzola       A  bocca (3x2, in cima)           C  castello (5x3, in fondo)
+// Le distrazioni (laghi, fitto, decori) le sceglie un generatore col seme
+// della tappa e non toccano mai il gioco (strada, piazzole, bocca, castello).
 
-   Dato puro, gira in Node: da una tappa del tower defense (le sue
-   `forme`, curve in coordinate 0–1) a una **carta** di 12×22 celle,
-   scritta con gli stessi caratteri della pianta della scheda di prompt
-   (`strumenti/sprite/sorgenti/castello/generati/PROMPT-scenario.md`):
-
-     .  fondo          ,  fondo con qualcosa in più     ^  il fitto
-     ~  acqua          d  decoro sparso                 +  strada
-     o  piazzola       A  bocca (3×2, in cima)          C  castello (5×3, in fondo)
-
-   Così la stessa carta si disegna con lo schema (`scacchiera.py
-   --carte`) oggi, e con i pezzi del foglio domani.
-
-   ── la strada: a squadra, una per cella ──
-   Le forme delle tappe sono spezzate oblique, smussate dal motore. Qui
-   ogni vertice cade nella sua cella e fra due vertici si mette **un
-   gomito**: prima di traverso e poi lungo, dove il tratto è più lungo
-   che alto (le corsie del bosco), e al contrario dove è più alto che
-   lungo. È il modo in cui una serpentina diventa una serpentina a
-   squadra invece di una scala di gradini da una cella.
-
-   ── il resto lo mette il caso, ma un caso con un seme ──
-   Il fitto sui bordi, i laghetti, i decori e le chiazze di fondo li
-   sceglie un generatore col seme della tappa: la stessa tappa esce
-   sempre uguale, e due tappe diverse non si somigliano. Sono le
-   «distrazioni» che rendono vivo il campo — in `td_1.png` sono metà
-   della bellezza — e hanno una regola sola: **non toccano il gioco**.
-   Mai sulla strada o su una piazzola, mai acqua o fitto a ridosso di
-   dove si gioca, e mai un decoro attaccato a una piazzola, che
-   sembrerebbe parte di lei.
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* Le tappe che la conversione automatica non sa mettere sulla
-   scacchiera, per chiave o per nome, e che non hanno ancora la loro
-   carta a mano (`A_MANO`, qui sotto). `unita/castello-carta` pretende
-   che tutte le altre passino, e che queste servano ancora — una che si
-   aggiusta da sé deve uscire dall'elenco. Oggi è vuoto: l'ultima, la
-   radura grande, adesso è scritta a mano. */
+// Tappe che la conversione automatica non sa mettere sulla scacchiera e non
+// hanno ancora una carta a mano: oggi vuoto (unita/castello-carta lo pretende).
 export const DA_RIDISEGNARE = []
 
-/* ── le carte scritte a mano ──
-   Dove la conversione sbaglia, la strada e le piazzole si scrivono cella
-   per cella: `+` strada, `o` piazzola, il resto non conta (bocca,
-   castello, fitto, acqua e decori li mette `cartaDi` come per le altre,
-   col seme della tappa). Le vie non si scrivono: sono **tutti i
-   cammini** dalla cella sotto la bocca a quella sopra il castello
-   (`camminiDi`), da sinistra a destra, e le piazzole si occupano
-   partendo dall'ingresso, a giro fra le vie, come nel motore.
-
-   La radura grande (`LIBERA_BOSCO` in `data/campagne-castello.js`): una
-   bocca sola, la strada che si sdoppia subito e scende in due bracci a
-   zig-zag lungo i fianchi — fuori verso il bosco, dentro verso la
-   radura, due volte — e i due bracci si richiudono in mezzo in un tronco
-   che si ripiega a sinistra prima della porta. La radura è la clessidra
-   fra i due bracci: stretta dove i bracci rientrano (colonne 5 e 6),
-   larga otto celle dove escono. Le piazzole stanno nelle anse, dove una
-   torre vede due tratti della stessa strada, e tre dentro la radura: di
-   lì si tira ai due bracci — è il regalo di questo terreno, com'era
-   nelle forme. I bracci sono lo specchio l'uno dell'altro attorno al
-   mezzo del campo (5,5), non attorno alla bocca (6): è quello che lascia
-   a tutti e due una colonna di bosco fra la strada e il bordo. */
+// Le carte scritte a mano: strada e piazzole cella per cella (`+`/`o`), il
+// resto lo mette `cartaDi` come per le altre. Le vie non si scrivono: sono
+// tutti i cammini dalla bocca al castello (`camminiDi`).
 export const A_MANO = {
   'libera-bosco': [
     '............',
@@ -93,8 +46,7 @@ export const COLONNE = 12
 export const RIGHE = 22
 const BOCCA = { w: 3, h: 2 }
 const CASTELLO = { w: 5, h: 3 }
-/* la prima riga di strada, sotto la bocca, e l'ultima, sopra il castello */
-const PRIMA = BOCCA.h
+const PRIMA = BOCCA.h            // la prima riga di strada, sotto la bocca
 const ULTIMA = RIGHE - CASTELLO.h - 1
 
 const PASSI = { N: [0, -1], S: [0, 1], O: [-1, 0], E: [1, 0] }
@@ -102,7 +54,7 @@ const CONTRO = { N: 'S', S: 'N', O: 'E', E: 'O' }
 const k = (x, y) => `${x},${y}`
 const stringe = (v, a, b) => Math.max(a, Math.min(b, v))
 
-/* un generatore piccolo e col seme: `mulberry32`, e il seme viene dal nome */
+// un generatore piccolo e col seme (mulberry32), dal nome della tappa
 function sorte(nome) {
   let h = 2166136261
   for (const c of String(nome)) h = Math.imul(h ^ c.charCodeAt(0), 16777619)
@@ -115,22 +67,9 @@ function sorte(nome) {
   }
 }
 
-/* ── da una forma a una fila di celle ──
-   Le forme stanno fra y = 0,04 (sotto il bordo di sopra) e 0,95 (il
-   piede del castello). Come portarle sulle righe e sulle colonne non ha
-   una risposta sola: con dodici colonne le corsie stanno strette, e un
-   arrotondamento che separa bene le anse del sentiero schiaccia quelle
-   del delta. Quindi i modi sono pochi, scritti qui in ordine, e si
-   tiene **il primo che rispetta la scacchiera** (`MODI`, e il giro in
-   `stradeDi`). Sempre nello stesso ordine: la stessa tappa esce sempre
-   uguale.
-
-     stende   il tratto 0,04–0,95 si allarga su tutte le righe fra la
-              bocca e il castello
-     taglia   la riga è quella di y, e quello che cade sotto la bocca o
-              dentro il castello si spinge fuori
-   e per ciascuno le colonne arrotondate per difetto o al più vicino, e
-   il gomito col tratto corto per primo o per secondo. */
+// Da una forma a una fila di celle: si provano pochi `MODI` in ordine e si
+// tiene il primo che rispetta la scacchiera (`stradeDi`), sempre nello
+// stesso ordine perché la stessa tappa esca sempre uguale.
 const Y0 = 0.04, Y1 = 0.95
 const RIGA = {
   stende: y => PRIMA + Math.round((y - Y0) / (Y1 - Y0) * (ULTIMA - PRIMA)),
@@ -146,14 +85,12 @@ for (const riga of Object.keys(RIGA))
     for (const cortoPrima of [true, false]) MODI.push({ riga, colonna, cortoPrima })
 
 export function filaDi(forma, { riga = 'stende', colonna = 'difetto', cortoPrima = true } = {}) {
-  /* le colonne restano fra la seconda e la penultima: una strada sul
-     bordo non ha dove mettere una piazzola, e la bocca sopra di lei non
-     starebbe nel mezzo */
+  // le colonne restano fra la seconda e la penultima: sul bordo non c'è
+  // dove mettere una piazzola
   const vertici = forma.map(([x, y]) => [stringe(COLONNA[colonna](x), 1, COLONNE - 2),
                                          stringe(RIGA[riga](y), PRIMA + 1, ULTIMA - 1)])
-  /* la strada esce dalla bocca **dritta** per una cella, ed entra dritta
-     nel castello: un gomito subito sotto il varco farebbe strada anche
-     la cella accanto, cioè una bocca da cui la strada esce di lato */
+  // la strada esce dalla bocca dritta per una cella, ed entra dritta nel
+  // castello
   const [x0] = vertici[0]
   const [xe] = vertici[vertici.length - 1]
   vertici.splice(0, 1, [x0, PRIMA], [x0, PRIMA + 1])
@@ -186,10 +123,8 @@ export function filaDi(forma, { riga = 'stende', colonna = 'difetto', cortoPrima
 const versoFra = ([ax, ay], [bx, by]) =>
   (by < ay ? 'N' : by > ay ? 'S' : bx < ax ? 'O' : 'E')
 
-/* ── la carta ── */
-/* La strada di una tappa: le vie, i versi di ogni cella, e cosa non va.
-   Si provano i `MODI` in ordine e si tiene il primo senza guasti; se
-   nessuno ci riesce, quello che ne ha di meno — e i guasti si dicono. */
+// Si provano i MODI in ordine e si tiene il primo senza guasti; se nessuno
+// ci riesce, quello che ne ha di meno.
 function stradeDi(forme) {
   let meglio = null
   for (const modo of MODI) {
@@ -201,8 +136,8 @@ function stradeDi(forme) {
   return meglio
 }
 
-/* I versi di ogni cella di strada, e cosa non rispetta la scacchiera:
-   vale per le vie convertite e per quelle scritte a mano */
+// I versi di ogni cella di strada, e cosa non rispetta la scacchiera (vale
+// per le vie convertite e per quelle scritte a mano).
 function controllaVie(vie) {
   {
     const versi = new Map()
@@ -235,8 +170,8 @@ function controllaVie(vie) {
     for (const via of vie) {
       const gia = new Set()
       for (const c of via) {
-        /* una via che ripassa da una cella la deve attraversare dritta:
-           è l'incrocio del bastione, non un nodo */
+        // una via che ripassa da una cella la deve attraversare dritta:
+        // è l'incrocio del bastione, non un nodo
         if (gia.has(k(...c)) && versi.get(k(...c)).size !== 4)
           guasti.push(`(${c}) la strada ripassa da una cella senza attraversarla`)
         gia.add(k(...c))
@@ -246,13 +181,9 @@ function controllaVie(vie) {
   }
 }
 
-/* ── le vie di una carta scritta a mano ──
-   Tutti i cammini semplici da una cella di strada della prima riga (sotto
-   la bocca) a una dell'ultima (sopra il castello), passando solo per la
-   strada. Con una biforcazione che si richiude sono due, ed è quello che
-   la radura vuole; se fossero più di quattro la strada avrebbe un anello
-   che nessuna tappa chiede, e si dice. Da sinistra a destra: al primo
-   passo in cui due vie si separano, prima quella che va più a sinistra. */
+// Tutti i cammini semplici dalla prima riga (sotto la bocca) all'ultima
+// (sopra il castello), da sinistra a destra: più di quattro vuol dire un
+// anello che nessuna tappa chiede.
 function camminiDi(disegno) {
   const e = (x, y) => (disegno[y] || '')[x] === '+'
   const fuori = []
@@ -287,10 +218,8 @@ function stradeAMano(disegno) {
   return { vie, versi, guasti, modo: 'a mano' }
 }
 
-/* le piazzole di una carta a mano: le `o` del disegno, ognuna della via
-   che le passa accanto più vicino all'ingresso, e occupate in
-   quell'ordine — la prima dove i mostri arrivano per primi, e a pari
-   distanza a giro fra le vie, come fa il motore */
+// Le piazzole di una carta a mano: le `o` del disegno, occupate nell'ordine
+// della via più vicina all'ingresso (come fa il motore).
 function piazzoleAMano(disegno, vie) {
   const fuori = []
   disegno.forEach((r, y) => [...r].forEach((c, x) => {
@@ -317,7 +246,7 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
   const guasti = [...guastiStrada]
   for (const kk of versi.keys()) metti(...kk.split(',').map(Number), '+')
 
-  /* le bocche e il castello */
+  // le bocche e il castello
   for (const x of new Set(vie.map(v => v[0][0]))) {
     const x0 = stringe(x - 1, 0, COLONNE - BOCCA.w)
     for (let dy = 0; dy < BOCCA.h; dy++)
@@ -330,11 +259,8 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
   for (let dy = 0; dy < CASTELLO.h; dy++)
     for (let dx = 0; dx < CASTELLO.w; dx++) metti(xc + dx, ULTIMA + 1 + dy, 'C')
 
-  /* ── le piazzole ──
-     Come nel motore (`Percorso.piazzole`): in proporzione alla lunghezza
-     di ogni strada, a passi regolari **partendo dall'ingresso**, ai lati
-     alterni, e occupate a giro fra le strade. Una piazzola è una cella
-     libera accanto alla strada, e due piazzole non si toccano. */
+  // le piazzole: come nel motore (Percorso.piazzole), in proporzione alla
+  // lunghezza di ogni strada, partendo dall'ingresso, lati alterni
   const quante = posti ?? tappa.posti ?? 6
   const lung = vie.map(v => v.length)
   const tot = lung.reduce((s, l) => s + l, 0)
@@ -354,11 +280,7 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
   const fila = []
   for (let i = 0; i < Math.max(...quote); i++) for (const p of perVia) if (p[i]) fila.push(p[i])
   let messe = 0
-  /* le piazzole nell'ordine in cui si sono messe, che è quello in cui
-     il motore le occupa: [x, y, quale via] */
-  const piazzole = []
-  /* scritte a mano: si mettono dove dice il disegno, con le regole di
-     sempre — libere, e non attaccate a un'altra */
+  const piazzole = []          // nell'ordine in cui il motore le occupa: [x, y, via]
   if (disegno)
     for (const [x, y, via] of piazzoleAMano(disegno, vie)) {
       if (!libera(x, y) || vicinaAPiazzola(x, y)) guasti.push(`(${x},${y}) piazzola non libera o attaccata a un'altra`)
@@ -366,8 +288,6 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
     }
   for (const { via, d, lato } of disegno ? [] : fila) {
     if (messe >= quante) break
-    /* dalla cella a quel punto della strada, poi via via più lontano
-       lungo la strada, finché un lato non è libero */
     let fatto = false
     for (let s = 0; s < via.length && !fatto; s++) {
       for (const j of [d + s, d - s]) {
@@ -388,10 +308,7 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
   }
   if (messe !== quante) guasti.push(`piazzole: ${messe} invece di ${quante}`)
 
-  /* ── le distrazioni ──
-     Vicino = a una cella (anche di sbieco) dalla strada, da una
-     piazzola, dalla bocca o dal castello: lì resta il fondo, al massimo
-     un decoro. */
+  // le distrazioni: vicino = a una cella dalla strada/piazzola/bocca/castello
   const vicino = (x, y) => {
     for (let dy = -1; dy <= 1; dy++)
       for (let dx = -1; dx <= 1; dx++) if ('+oAC'.includes(a(x + dx, y + dy) || '.')) return true
@@ -404,9 +321,8 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
     return true
   }
 
-  /* i laghetti: da zero a due, prima quelli che entrano dal bordo, e
-     con la riva frastagliata — un rettangolo pieno sembrerebbe una
-     piscina */
+  // i laghetti: da zero a due, con la riva frastagliata (un rettangolo
+  // pieno sembrerebbe una piscina)
   const laghi = Math.floor(caso() * 3)
   for (let n = 0, tentativi = 0; n < laghi && tentativi < 200; tentativi++) {
     const w = 2 + Math.floor(caso() * 2), h = 2 + Math.floor(caso() * 3)
@@ -422,9 +338,8 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
     n++
   }
 
-  /* il fitto: la cornice che chiude il campo — i bordi di lato, gli
-     angoli in fondo accanto al castello, la riga in cima fra le bocche —
-     e poi cresce un po' verso dentro, a macchie */
+  // il fitto: la cornice che chiude il campo, poi cresce un po' verso
+  // dentro, a macchie
   for (let y = 0; y < RIGHE; y++)
     for (let x = 0; x < COLONNE; x++) {
       const cornice = x === 0 || x === COLONNE - 1 || y === 0 || y >= ULTIMA + 1
@@ -441,9 +356,8 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
     for (const [x, y] of nuovi) metti(x, y, '^')
   }
 
-  /* le chiazze di fondo diverso, a coppie, e i decori sparsi: un decoro
-     anche accanto alla strada (ci stanno, nella scena), ma mai accanto a
-     una piazzola né a un altro decoro */
+  // le chiazze di fondo, a coppie, e i decori sparsi: mai accanto a una
+  // piazzola né a un altro decoro
   for (let n = 0; n < 4; n++) {
     const x = Math.floor(caso() * (COLONNE - 1)), y = PRIMA + Math.floor(caso() * (ULTIMA - PRIMA))
     for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) if (libera(x + dx, y + dy)) metti(x + dx, y + dy, ',')
@@ -463,18 +377,10 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
   }
 }
 
-/* ── dalla carta al motore ──
-   Il motore (`motore/castello/percorso.js`) ragiona in coordinate 0–1 e
-   non sa niente di celle: qui le vie diventano spezzate che passano **per
-   il centro delle celle**, e le piazzole il centro della loro. La strada
-   comincia dentro la bocca e finisce dentro il castello, non sul loro
-   ciglio: un mostro che compare sul bordo della bocca sembra spuntare
-   dal prato. Dei vertici si tengono solo gli spigoli — una fila di
-   diciassette punti in riga è un segmento solo.
-
-   Torna i due pezzi di tappa che cambiano: `forme` e `percorso` (che il
-   motore passa a `Percorso` così com'è: strada senza smussare, piazzole
-   già messe). */
+// Dalla carta al motore: il motore ragiona in coordinate 0-1, qui le vie
+// diventano spezzate per il centro delle celle (solo gli spigoli restano).
+// La strada comincia dentro la bocca e finisce dentro il castello, non sul
+// ciglio, o un mostro sembra spuntare dal prato.
 export const DENTRO_LA_BOCCA = 0.3          // in celle, dal bordo di sopra
 export const DENTRO_IL_CASTELLO = ULTIMA + 1.4
 
