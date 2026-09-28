@@ -1,56 +1,13 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA DOMANDA — il componente che i giochi mettono in scena.
-
-   Riceve una domanda già fatta (`src/quiz/scelta.js` la produce) e la
-   mostra: consegna, la cosa da guardare se c'è, i tasti delle risposte.
-   Poi dice com'è andata e si toglie di mezzo.
-
-     <Domanda :domanda="d.domanda" :pittori="d.pittori"
-              :titolo="`${d.icona} ${d.nome}`" @risposto="incassa" />
-
-   Segue la convenzione dei giochi nuovi: **non chiama nessun motore e
-   non sa cosa sia una moneta**. Riceve quello che deve mostrare ed
-   emette quello che è successo — `{ giusto, chiave, tempo, indice }` —
-   e chi l'ha chiamato decide se quello vale una carta di
-   potenziamento, una porta che si apre o niente.
-
-   L'UNICA COSA CHE SCRIVE è il ripasso: la chiave del concetto e com'è
-   andata, in `quiz/memoria.js`. Sta qui e non nei giochi perché i
-   giochi la chiave non la guardano nemmeno — prendono `{ giusto }` e
-   basta — e perché quattro giochi che si ricordano di annotare sono
-   quattro posti dove dimenticarsene: infatti il `:key` della domanda
-   se l'erano ricordato in uno su cinque. Non è il profilo che si tocca
-   a mano (contatori, monete, livelli): è la stessa risposta che il
-   componente ha appena visto, scritta dove serve a farla tornare.
-   Chi non ha `origine` non annota — è una domanda mostrata fuori dal
-   giro normale — e la palestra dei genitori (`gioco: 'prova'`) non
-   annota mai: lì si guardano le domande, non si esercita nessuno.
-
-   È il gemello Vue di `grafica/scheda.js`, che fa la stessa cosa in DOM
-   puro per le palestre dei prototipi: là non c'è Vue e non ci deve
-   essere, qui invece un overlay imperativo dentro un gioco reattivo
-   sarebbe un corpo estraneo.
-
-   UNA COSA SOLA DA SAPERE: il velo è `position: absolute`, così copre il
-   riquadro del gioco e non tutto il telefono (la barra in cima resta
-   dov'è). Chi lo mette in scena deve avere `position: relative` addosso,
-   o la domanda esce dal posto sbagliato.
-
-   LA SCHEDA SI ADATTA ALLO SCHERMO, non ha una taglia sola. I disegni
-   (l'orologio, la figura da specchiare, i quadretti) erano fissi a 148 e
-   118 pixel: su un telefono vecchio da 320×480 una domanda di geometria
-   veniva alta 760 pixel e le ultime due risposte restavano fuori, senza
-   nemmeno il modo di arrivarci. Adesso ogni misura è un `clamp()` legato
-   a `--qz-h`, l'unità di altezza utile, e il velo scorre lo stesso —
-   perché un carattere grosso di sistema o una consegna lunga possono
-   sempre sforare, e allora si scrolla invece di perdere un pezzo.
-
-   `--qz-h` vale `1vh`, cioè «ho tutto lo schermo». Un gioco che apre la
-   domanda in un pannello più corto la stringe da fuori — il dungeon, che
-   la tiene in fondo su tre quarti d'altezza, dichiara `--qz-h: .72vh` —
-   e i disegni rimpiccioliscono di conseguenza.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Mette in scena una domanda già fatta (`quiz/scelta.js`) ed emette
+   `{ giusto, chiave, tempo, indice }`: non chiama motori e non sa cosa
+   sia una moneta. Annota anche il ripasso (`quiz/memoria.js`) — l'unico
+   posto che lo fa, per non doverselo ricordare in ogni gioco. Gemello
+   imperativo per chi non ha Vue: `grafica/scheda.js`. Vedi
+   docs/apprendimento/quiz-moduli.md e la-domanda.md; `--qz-h` (1vh di
+   default) è l'altezza che il gioco concede alla scheda, e ogni misura
+   vi è legata con `clamp()` così un pannello più corto la rimpicciolisce
+   tutta invece di tagliarla. */
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { dipingi } from './grafica/riquadro.js'
 import Giudizio from '../components/Giudizio.vue'
@@ -66,184 +23,44 @@ const props = defineProps({
   domanda: { type: Object, required: true },
   pittori: { type: Object, default: () => ({}) },
   titolo: { type: String, default: '' },
-  /* quanto resta a vedere l'esito prima di sparire */
-  respiro: { type: Number, default: 1500 },
-  /* Da dove viene la domanda: il pacchetto che `scelta.js` ha
-     consegnato (`{ modulo, grado, materia, … }`) e il nome del gioco
-     che l'ha chiesta. Non servono a mostrarla — la domanda si mette in
-     scena benissimo senza — ma a chi la giudica troppo facile o troppo
-     difficile: sono le due cose che rendono un giudizio azionabile
-     invece che un «una domanda era difficile». Facoltativi: un gioco
-     che non li passa mostra la domanda come sempre. */
+  respiro: { type: Number, default: 1500 }, // quanto resta a vedere l'esito prima di sparire
+  // per i giudizi (troppo facile/difficile) e il ripasso, non per mostrare la domanda: facoltativi
   origine: { type: Object, default: null },
   gioco: { type: String, default: '' },
-  /* ── l'attesa si può accorciare toccandola ──
-     L'attesa dopo una risposta resta **quella del gioco**, barra
-     compresa: si vede l'esito, si vede quanto manca, e quando la barra
-     è piena si prosegue da soli. Cambiarla nel pannello vorrebbe dire
-     guardare una messa in scena diversa da quella che riceve il
-     bambino, che è esattamente quello che il pannello esiste per
-     evitare.
-
-     Questo aggiunge una cosa sola: chi guarda venti domande di fila può
-     **toccare la barra** per andare avanti subito, invece di aspettare
-     ogni volta. Nei giochi no, e non è una dimenticanza: lì il tocco
-     che arriverebbe subito dopo una risposta è quasi sempre il fantasma
-     di quello che ha appena risposto, e salterebbe l'esito da solo. */
-  saltabile: { type: Boolean, default: false },
+  saltabile: { type: Boolean, default: false }, // vedi docs/apprendimento/la-domanda.md
 })
 const emit = defineEmits(['risposto'])
 let cieca = 0
 
 const scelto = ref(-1)
-/* ══════════ GLI OROLOGI SI FERMANO COL TELEFONO ══════════
-   Un gioco che gira su `requestAnimationFrame` si congela da sé quando
-   la pagina sparisce. Questa scheda no: è fatta di `setTimeout` e di
-   `performance.now()`, e quelli non si accorgono di niente. Due guasti,
-   tutti e due invisibili da dentro.
-
-   **Il tempo di parete.** `partenza` era un istante, e il tempo della
-   risposta la differenza da adesso: il telefono posato per quaranta
-   minuti con la domanda a schermo annotava quaranta minuti in
-   `store/srs.js`, che di quel numero tiene una media pesata al 45% —
-   un campione solo, e la tipologia risulta «ci mette venti minuti» per
-   sempre. Adesso si conta **solo il tempo in cui la domanda era
-   davanti agli occhi**: `visto` accumula, `partenza` vale 0 mentre la
-   pagina è nascosta, e il tetto (`tempoDaAnnotare`) copre quel che
-   resta.
-
-   **L'attesa dell'esito.** `avanti` scattava lo stesso a schermo
-   spento, quindi la domanda dopo arrivava mentre il telefono era in
-   tasca: si tornava e si trovava una schermata nuova al posto della
-   spiegazione che non si era ancora letta. Quell'attesa **esiste per
-   essere letta**, quindi si congela quello che resta e riparte da lì —
-   barra compresa, che senza riparte da capo o resta piena. */
+// il tempo si ferma a schermo nascosto (setTimeout/performance.now non se ne accorgono da sé):
+// vedi docs/core/interfaccia.md#i-tempi e docs/apprendimento/la-domanda.md
 let partenza = 0        // quando è ricominciato il conto (0 = fermo)
 let visto = 0           // quanto è già stata guardata, in ms
-/* ── la finestra cieca ──
-   Una domanda appena comparsa **non si lascia toccare** per un pelo di
-   tempo. Non è pignoleria: i giochi che incatenano domande — il
-   sotterraneo, il Dungeon, la Corsa, Survivors — la fanno comparire
-   *nello stesso punto dello schermo* dove c'era quella di prima, e un
-   tocco partito un attimo prima (o il click che il dito si lascia
-   dietro, che arriva dopo il `touchend`) atterra sulla risposta nuova e
-   la dà a caso. Da fuori si legge «ha premuto anche quella sotto, e me
-   l'ha data sbagliata», ed è successo davvero.
-   Trecento millisecondi: meno di quanto ci mette chiunque a leggere una
-   domanda nuova, più di quanto ci mette un fantasma ad arrivare. */
-const CIECA = 320
+const CIECA = 320       // finestra cieca al montaggio: vedi docs/core/interfaccia.md
 const pronta = ref(false)
-/* Quanto manca alla prossima, per non lasciare l'attesa muta (vedi
-   `scegli`): 0 = non si sta aspettando niente. */
-const attesa = ref(0)
-/* ── la risposta arrivata prima della lettura ──
-   `nucleo/domanda.js` dice quanto tempo ci vuole a leggere *questa*
-   domanda; sotto quel tempo, e sbagliando, si resta fermi più a lungo e
-   la riga sotto lo dice. Non toglie niente di quello che il bambino ha:
-   la penalità è il tempo, e il motivo per cui è il tempo sta scritto là.
-
-   **Quanto in più lo decide la raffica** (`quiz/fretta.js`): un secondo
-   e mezzo la prima volta, tre la seconda di fila, quattro e mezzo dalla
-   terza. Una penalità fissa non funzionava — col pavimento dei quattro
-   secondi sotto, un secondo e mezzo sopra si perde: 4,0 contro 5,5 non
-   si distingue, e infatti non si distingueva. Il comportamento da
-   spegnere non è il tocco affrettato, che capita a chiunque abbia il
-   dito già in aria: è la fila di tocchi con cui si fa passare una
-   domanda senza guardarla. */
-const diFretta = ref(false)
-/* Quanto si sta fermi dopo aver risposto lo decide `nucleo/domanda.js`
-   (`attesaDellEsito`): un pavimento di quattro secondi dopo uno
-   sbaglio, che cresce con le parole da leggere e non supera mai i
-   dieci contando la fretta. Il conto sta là e non qui perché è una
-   taratura, e una taratura chiusa dentro un `.vue` non la prova
-   nessuno. Qui resta la metà che riguarda lo schermo: la barra si
-   riempie per tutto il tempo, così l'attesa si vede passare invece di
-   sembrare un gioco impuntato. */
-/* il timer della prossima domanda e il modo di anticiparlo: non sono
-   `ref` perché non si disegnano, e un `ref` che nessuno guarda è solo
-   una cosa in più che può restare indietro */
+const attesa = ref(0)   // quanto manca alla prossima (0 = non si aspetta niente)
+const diFretta = ref(false) // vedi docs/apprendimento/la-domanda.md#troppo-di-fretta-il-tempo-non-la-roba
+// il timer della prossima domanda: non è un `ref` perché non si disegna
 let avanti = null        // il timer
 let vaiAvanti = null     // cosa fa quando scatta
 let scade = 0            // a che istante scatterebbe
-/* la barra dell'attesa si rifà da capo quando l'attesa riparte dopo un
-   telefono posato: un'animazione CSS già avviata non cambia durata, e
-   senza questa chiave la riga resterebbe piena mentre si aspetta */
-const giro = ref(0)
+const giro = ref(0)       // rifà la barra da capo quando l'attesa riparte (l'animazione CSS non cambia durata da sola)
 const tele = ref([])          // i canvas delle risposte disegnate
 const teloSoggetto = ref(null)
-/* ── LA LENTE ──
-   Il disegno del soggetto sta in un riquadro largo al massimo 148 px:
-   basta per un orologio, non per una griglia 6×6 con dentro le
-   lettere, i numeri e un'emoji per casella — lì una cella è venti
-   pixel, e «qual è la casella del cane» diventa una domanda sulla
-   vista invece che sulle coordinate. Toccando il disegno si apre
-   grande quanto lo schermo, e si chiude toccando ovunque.
-   Solo il soggetto: sui tasti delle risposte il tocco È la risposta, e
-   un tastino per ingrandire dentro un tasto che risponde è il modo di
-   far dare una risposta a caso a chi voleva solo guardare meglio. */
-const ingrandito = ref(false)
+const ingrandito = ref(false) // la lente: solo il soggetto si ingrandisce, vedi quiz-moduli.md
 const teloZoom = ref(null)
 
 const risposte = computed(() => props.domanda.risposte || [])
-/* ── la frase col rilievo ──
-   Un soggetto scritto può essere una frase con dentro la parola di cui
-   si parla — «che parte del discorso è "lo" in questa frase?» — e la
-   parola si ritaglia qui. Il taglio sta in `nucleo/domanda.js` perché
-   la stessa frase la deve ritagliare uguale anche la scheda in DOM
-   puro, e perché una regola dentro un `.vue` non si prova senza un
-   browser. Nel dato non c'è nessun HTML: c'è la parola, e il grassetto
-   lo mette la messa in scena. */
+// la frase col rilievo: il ritaglio sta in nucleo/domanda.js (lo condivide grafica/scheda.js)
 const frase = computed(() =>
   evidenziando(props.domanda.soggetto?.testo, props.domanda.soggetto?.evidenzia))
-/* UN TESTO DA LEGGERE NON È UNA PAROLA DA GUARDARE. Il corpo grosso e
-   centrato del soggetto è tarato su «gomma» o su «□ + 7 = 15»; un
-   raccontino di trenta parole, messo così, esce su otto righe in
-   grassetto e non si legge — si scorre. Oltre qualche parola vera (le
-   cifre e i segni non contano: un'uguaglianza resta grossa) il soggetto
-   diventa un paragrafo, allineato a sinistra e col peso del testo. */
+// oltre 6 parole vere il soggetto diventa un paragrafo a sinistra invece di un titolo centrato
 const PAROLE_DA_PARAGRAFO = 6
 const daLeggere = computed(() =>
   (props.domanda.soggetto?.testo || '').split(/\s+/)
     .filter(w => /\p{L}/u.test(w)).length >= PAROLE_DA_PARAGRAFO)
-/* ═════ QUANTI TASTI IN RIGA, E PERCHÉ NON SI CONTANO I CARATTERI ═════
-   Le risposte stanno affiancate finché ci stanno, e quando non ci stanno
-   scendono una sotto l'altra. Prima la decisione era **una soglia a
-   caratteri** — «se una risposta supera i 13, una colonna sola» — ed era
-   cieca due volte.
-
-   Cieca sul tasto: 13 caratteri in **tre** colonne su un telefono da 360
-   px sono tre tasti da 90, e «insegniante» non ci sta in nessuno dei
-   tre. Cieca sul verso: la griglia era `1fr 1fr 1fr`, ma un `1fr` non
-   scende sotto il **min-content** della sua cella, e il min-content di
-   un tasto con dentro una parola che non si spezza È quella parola.
-   Quindi la colonna non si stringeva: si allargava la griglia, e i tasti
-   uscivano di lato dalla carta. Misurato: tre volte «insegniante» in una
-   carta larga 308 px fanno una griglia da 309 dentro un posto da 282, e
-   il terzo tasto finisce oltre il bordo — cioè fuori dallo schermo di un
-   telefono un filo più stretto, o con un carattere di sistema un filo
-   più grosso.
-
-   Adesso non c'è nessuna soglia. La fila sa **quanto largo deve poter
-   essere un tasto** e ne mette in riga quanti ne stanno, fino a un tetto
-   che è quello di sempre: due risposte affiancate, tre in fila, quattro
-   a due a due. Quando non ce ne stanno, vanno a capo — e chi resta solo
-   sull'ultima riga si prende tutta la larghezza invece di restare un
-   mezzo tasto spaiato. La misura si dichiara in `ch`, che è l'unità
-   giusta perché quello che deve starci dentro è testo:
-
-     · la **parola più lunga** — quella non si spezza mai, e se non ci
-       sta è lei a sfondare;
-     · **metà della risposta più lunga** — cioè: una risposta si può
-       leggere su due righe, non su cinque.
-
-   Il resto lo fa `min-width: 0` più `overflow-wrap` sul tasto: da lì in
-   poi un tasto può stringersi quanto vuole e il testo va a capo invece
-   di uscire. Le due cose insieme sono la garanzia — la fila sceglie
-   quanti tasti stanno bene in riga, e il tasto non può comunque
-   sfondare quello che gli tocca.
-
-   I disegni e le emoji non entrano nel conto: hanno una `max-width`
-   loro, e il nome sotto la figura è una didascalia che va a capo da sé. */
+// il layout delle risposte (colonne, larghezza minima): vedi docs/apprendimento/la-domanda.md
 const colonne = computed(() => (risposte.value.length === 3 ? 3 : 2))
 const minTasto = computed(() => {
   const testi = risposte.value
@@ -252,35 +69,14 @@ const minTasto = computed(() => {
   if (!testi.length) return '0px'
   const parola = Math.max(...testi.flatMap(t => t.split(/\s+/).map(p => p.length)))
   const intera = Math.max(...testi.map(t => t.length))
-  /* i 18 px sono il tasto intorno al testo — 8 di imbottitura per lato
-     più il bordo — e ci vanno perché la misura è una `flex-basis`, che
-     con `box-sizing: border-box` comprende anche quelli: senza, si
-     direbbe quanto è larga la parola e non quanto è largo il tasto che
-     la deve contenere */
+  // +18px: l'imbottitura e il bordo del tasto, che con border-box contano nella flex-basis
   return `calc(${Math.max(parola, Math.ceil(intera / 2))}ch + 18px)`
 })
 
-/* ── LA SPIEGAZIONE È DOPPIA, E LE DUE METÀ RESTANO SEPARATE ──
-   `perche` corregge la scelta appena fatta, `comeSiFa` insegna il
-   metodo: vedi `nucleo/domanda.js`, che è dove sta la regola. Erano un
-   `||` — il primo dei due che ci fosse — e siccome i moduli scritti
-   bene hanno tutti e due, l'insegnamento non è mai arrivato a nessuno.
-   A schermo vanno su due righe diverse apposta: un bambino deve vedere
-   che una dice «ecco perché no» e l'altra «ecco come si fa». */
+// perche + comeSiFa, mai un `||`: vedi docs/apprendimento/la-domanda.md
 const spiegazione = computed(() => spiegazioneDi(props.domanda, scelto.value))
 
-/* ── LA SCORCIATOIA, E QUANDO VA DETTA ──
-   Una domanda che si può risolvere con una formula porta una `dritta`
-   — «6 × 6 = 36: in un quadrato l'area è lato per lato» — e la dritta
-   serve a **chi ha risposto giusto contando a dito**: quello lì la
-   domanda l'ha saputa, ma per la strada lunga, e nessuno glielo dirà
-   mai perché il gioco gli ha detto «Giusto!» ed è andato avanti.
-   Quindi: si legge se si è sbagliato, e si legge dopo una risposta
-   giusta **solo se è arrivata tardi**. Chi risponde in cinque secondi
-   la strada corta ce l'ha già, e fermarlo per spiegargliela sarebbe
-   una punizione per aver saputo.
-   La soglia e la regola stanno in `nucleo/domanda.js`, pure: qui
-   dentro non si potrebbero provare senza un browser. */
+// la dritta: solo a chi sbaglia o a chi indovina tardi, vedi la-domanda.md
 const quantoCiHaMesso = ref(0)
 const dritta = computed(() => {
   if (scelto.value < 0) return ''
@@ -399,10 +195,7 @@ function saltaAttesa() {
   if (props.saltabile) salta()
 }
 
-/* La lente si apre solo a domanda pronta: nei primi millisecondi il
-   tocco che arriva è il fantasma di quello di prima (vedi `CIECA`), e
-   una lente che si spalanca da sola nasconde la domanda appena
-   comparsa. */
+// solo a domanda pronta: nei primi millisecondi il tocco è il fantasma di quello di prima (vedi CIECA)
 async function ingrandisci() {
   if (!pronta.value || !props.domanda.soggetto?.scena) return
   ingrandito.value = true
@@ -410,9 +203,7 @@ async function ingrandisci() {
   if (teloZoom.value) dipingi(teloZoom.value, props.pittori, props.domanda.soggetto.scena)
 }
 
-/* Quello che si sa di questa domanda **adesso**: il tempo scorre e
-   l'esito arriva dopo, quindi non è un oggetto ma una funzione, che i
-   tre tasti chiamano nel momento in cui li tocchi. */
+// una funzione e non un oggetto: il tempo scorre e l'esito arriva dopo, i tre tasti la chiamano al tocco
 const daGiudicare = () => ({
   gioco: props.gioco,
   modulo: props.origine?.modulo || '',
@@ -425,30 +216,7 @@ const daGiudicare = () => ({
   tempo: guardata(),
 })
 
-/* ══════════ UNA DOMANDA NUOVA AZZERA TUTTO ══════════
-   Questa è la riga che teneva bloccati i giochi, ed è il motivo per cui
-   il difetto sembrava un problema di tocchi.
-
-   Chi incatena domande — il sotterraneo, il Dungeon, la Corsa,
-   Survivors — passa dalla domanda A alla B **senza mai spegnere il
-   `v-if` in mezzo**: succede tutto dentro lo stesso giro di
-   aggiornamento, quindi Vue non vede nessun momento in cui la domanda
-   non c'è, non smonta niente e **riusa questa stessa istanza**. Con lei
-   restano `scelto`, l'esito e i disegni di prima. Da fuori si vede
-   esattamente quello che è stato riferito: la domanda nuova compare con
-   un tasto **già colorato** — quello nello stesso posto di quello
-   premuto un attimo prima, e di solito è «sbagliata» — e poi non va più
-   avanti, perché `scegli()` trova una scelta già fatta ed esce senza
-   dire niente. Il gioco è fermo per sempre, e senza nessun errore.
-
-   Si azzera qui dentro e non con un `:key` in chi lo monta: la `key` va
-   ricordata in ogni gioco, e il quinto gioco che nascerà se la
-   dimenticherà come se l'erano dimenticata in quattro su cinque. Il
-   contratto sta nel componente.
-
-   I disegni si rifanno per lo stesso motivo, e dopo il layout: prima il
-   canvas non sa quanto è largo, e un riquadro dipinto a misura
-   sbagliata resta sgranato. */
+// azzera tutto a ogni domanda nuova: vedi docs/core/interfaccia.md#un-v-if-che-non-si-spegne-mai-non-rimonta-niente
 async function inizia() {
   clearTimeout(cieca)
   scelto.value = -1
@@ -472,18 +240,7 @@ async function inizia() {
   })
 }
 
-/* ── il telefono che si posa, e che torna ──
-   Tre orologi da fermare, e uno solo va rimesso in moto. Il conto del
-   tempo riparte (era fermo, non perso) e l'attesa dell'esito riparte
-   **da quello che restava**: si torna e si ha ancora il tempo di
-   leggere la spiegazione. La finestra cieca invece no — quei 320 ms
-   sono passati da un pezzo, e chi torna non ha nessun fantasma del dito
-   da schivare.
-
-   Nessuno riprende «da solo» niente di più di così: qui non c'è nessuna
-   partita che riparte in corsa (quella è `giochi/pausa.js`, e infatti
-   aspetta un tocco). Qui c'è una schermata ferma che resta ferma per il
-   tempo che le mancava. */
+// il telefono si posa e torna: il tempo riparte, l'attesa dell'esito riparte da quello che restava
 function schermo(e) {
   if (e?.type === 'pagehide' || document.visibilityState === 'hidden') {
     if (partenza) { visto += performance.now() - partenza; partenza = 0 }
@@ -495,8 +252,7 @@ function schermo(e) {
     return
   }
   if (!partenza) partenza = performance.now()
-  /* c'era un'attesa in corso: riparte da dov'era, e la barra con lei */
-  if (!avanti && vaiAvanti) {
+  if (!avanti && vaiAvanti) { // c'era un'attesa in corso: riparte da dov'era, barra compresa
     giro.value++
     programma(attesa.value)
   }
@@ -504,20 +260,11 @@ function schermo(e) {
 
 onMounted(() => {
   inizia()
-  /* sul `document`, che è dove `visibilitychange` viene lanciato: alla
-     finestra ci arriva solo perché risale */
-  document.addEventListener('visibilitychange', schermo)
+  document.addEventListener('visibilitychange', schermo) // sul document: alla finestra arriva solo perché risale
   addEventListener('pagehide', schermo)
 })
-/* Sull'oggetto, non sulla chiave: due domande di fila possono avere la
-   stessa `chiave` (la stessa tabellina chiesta due volte) e restare due
-   domande diverse a cui si deve poter rispondere due volte. */
-watch(() => props.domanda, inizia)
+watch(() => props.domanda, inizia) // sull'oggetto, non sulla chiave: due domande di fila possono avere la stessa chiave
 
-/* `avanti` va spento come `cieca`: un gioco che chiude la domanda
-   appena arriva l'evento smonta questo componente col timer ancora
-   armato, e quello scatta lo stesso — emettendo `risposto` su un
-   componente che non c'è più. */
 onUnmounted(() => {
   clearTimeout(cieca)
   clearTimeout(avanti)
@@ -529,10 +276,7 @@ onUnmounted(() => {
 <template>
   <div class="qz-velo">
     <div class="qz-carta">
-      <!-- la riga in cima porta due cose che non c'entrano fra loro: di
-           che materia è la domanda, e i tre tasti per giudicarla. I
-           secondi ci sono solo se un grande li ha accesi, e allora la
-           riga compare anche senza titolo. -->
+      <!-- titolo e giudizio: il secondo solo se un grande l'ha acceso, e allora la riga compare anche senza titolo -->
       <div v-if="titolo || giudiziAccesi" class="qz-testa">
         <span>{{ titolo }}</span>
         <Giudizio :voce="daGiudicare" />
@@ -540,18 +284,14 @@ onUnmounted(() => {
       <div class="qz-consegna">{{ domanda.testo }}</div>
 
       <div v-if="domanda.soggetto" class="qz-soggetto" :class="{ nominato: domanda.soggetto.nome }">
-        <!-- il disegno si tocca e si guarda grande: la lente in un
-             angolo è lì per dire che si può, perché un canvas non
-             sembra un tasto -->
+        <!-- la lente in un angolo dice che il disegno si può ingrandire, perché un canvas non sembra un tasto -->
         <button v-if="domanda.soggetto.scena" type="button" class="qz-guarda"
                 aria-label="ingrandisci il disegno" @click="ingrandisci">
           <canvas ref="teloSoggetto" class="qz-telo-grande" />
           <span class="qz-lente" aria-hidden="true">🔍</span>
         </button>
         <span v-else-if="domanda.soggetto.emoji" class="qz-emoji">{{ domanda.soggetto.emoji }}</span>
-        <!-- una frase con la parola in rilievo: i tre pezzi stanno
-             attaccati apposta, uno spazio in più qui dentro si vedrebbe
-             in mezzo alla frase -->
+        <!-- i tre pezzi attaccati apposta: uno spazio in più qui si vedrebbe in mezzo alla frase -->
         <span v-else-if="frase.parola" class="qz-frase"
         >{{ frase.prima }}<b class="qz-spicca">{{ frase.parola }}</b>{{ frase.dopo }}</span>
         <span v-else :class="{ 'qz-testo': daLeggere }">{{ domanda.soggetto.testo }}</span>
@@ -560,10 +300,7 @@ onUnmounted(() => {
 
       <div class="qz-risposte"
            :style="{ '--qz-colonne': colonne, '--qz-min': minTasto }">
-        <!-- `data-giusta` è per chi gioca da script — le prove e le clip
-             del README, che devono poter rispondere giusto al primo
-             tocco invece di tirare a indovinare. A schermo non si vede,
-             come i ganci `window.__…` degli altri giochi. -->
+        <!-- data-giusta è per chi gioca da script (prove e clip del README): non si vede a schermo -->
         <button v-for="(r, i) in risposte" :key="i" type="button"
                 class="qz-tasto" :data-giusta="i === domanda.giusta ? '' : null"
                 :class="[classe(i), { emoji: r.emoji !== undefined, nominata: r.nome !== undefined }]"
@@ -575,9 +312,7 @@ onUnmounted(() => {
         </button>
       </div>
 
-      <!-- l'attesa che si vede: comincia quando si è risposto e finisce
-           quando arriva la prossima. Senza, quei due secondi sono un
-           gioco fermo. -->
+      <!-- l'attesa che si vede, senza la quale sembra un gioco fermo -->
       <div v-if="attesa" class="qz-avanti" :class="{ saltabile }"
            @click="saltaAttesa">
         <i :key="giro" :style="{ animationDuration: attesa + 'ms' }"></i>
@@ -586,67 +321,21 @@ onUnmounted(() => {
       <div class="qz-esito">
         <template v-if="scelto >= 0">
           <span v-if="scelto === domanda.giusta" class="bene">Giusto!</span>
-          <!-- ── tre righe, tre mestieri ──
-               «Era questa» più il perché correggono **questa scelta**;
-               «Si fa così» insegna il metodo, ed è l'unica delle tre
-               che serve anche la volta dopo; la dritta dice che c'era
-               una strada più corta. Messe in un paragrafo unico si
-               leggono come una scusa lunga, e il metodo — che è la sola
-               parte che vale qualcosa domani — finisce in coda. -->
+          <!-- tre righe, tre mestieri: la correzione, il metodo (comeSiFa, l'unico utile anche domani), la dritta -->
           <template v-else><span class="male">Era questa.</span> {{ spiegazione.perche }}</template>
           <div v-if="spiegazione.comeSiFa" class="qz-come">
             <b>Si fa così:</b> {{ spiegazione.comeSiFa }}
           </div>
           <div v-if="dritta" class="qz-dritta">💡 {{ dritta }}</div>
-          <!-- l'attesa più lunga non resta muta, o è un gioco che si è
-               impuntato: si dice cos'è successo e cosa si vuole -->
-          <!-- ── una riga, e non le regole del meccanismo ──
-               Che l'attesa cresca insistendo, e che per uscirne servano
-               quattro risposte giuste, sono cose che non si spiegano: si
-               sentono. Quello che va detto è la cosa che il bambino può
-               fare adesso — leggere la domanda — e quella sta tutta qui.
-               La versione con «ancora 2 risposte giuste e non si aspetta
-               più» diceva il vero e chiedeva di studiarsi un
-               regolamento, nel momento in cui c'era già una spiegazione
-               da leggere sopra. -->
+          <!-- una riga sola: il meccanismo (cresce con l'insistenza, quattro giuste per uscirne) non si spiega -->
           <div v-if="diFretta" class="qz-fretta">🐢 Troppo di fretta: leggi bene la domanda.</div>
         </template>
       </div>
     </div>
 
-    <!-- ══════════ IL DISEGNO GRANDE, E PERCHÉ ESCE DA QUI ══════════
-         Si chiude con un tocco qualunque — sul disegno, sulla consegna,
-         sul nero intorno. Chiudere sul `click` e non sul `pointerup`
-         non è un dettaglio: col secondo il dito si lascia dietro un
-         click che atterrerebbe sul tasto rimasto sotto, e la risposta
-         partirebbe da sola.
-
-         Il `Teleport` invece è il rimedio a un guasto riferito da chi
-         ci giocava: nel sotterraneo la lente **si apriva a metà
-         schermo**, con la caverna che restava a vista sopra. Stava
-         dentro il velo della domanda, cioè in fondo al pannello del
-         gioco, e da lì un `position: fixed` non vuol dire affatto
-         «tutto il telefono»: lo dice l'antenato più vicino che si sia
-         dichiarato riferimento. I fogli del sotterraneo entrano in
-         scena con una `transform` (`sot-sale`, `sot-cresce`), e una
-         `transform` su un antenato **è** quella dichiarazione: la
-         lente smetteva di essere lo schermo e diventava il pannello,
-         ritagliata dentro il foglio in basso.
-
-         E anche senza nessuna `transform` c'era la seconda metà: lo
-         `z-index: 50` si spendeva **dentro** la pila del pannello che
-         ospita la domanda (`.sot-foglio` è 10, `.sot-velo` 12), quindi
-         qualunque cosa l'applicazione metta più in alto — la barra in
-         cima, che è 20 — passava sopra la lente. Misurato: al centro
-         della striscia in cima, sotto il dito c'era la barra.
-
-         Appesa al `body` non c'è più niente in mezzo: nessun antenato
-         da cui farsi ritagliare, nessuna pila in cui restare
-         intrappolata. Il rimedio sta qui e non nei cinque giochi
-         perché il difetto non è di un gioco: chi monta una domanda non
-         deve sapere che esiste una lente, e finché lo doveva sapere
-         bastava una riga di aspetto scritta in un `.css` di gioco per
-         spostarla senza che se ne accorgesse nessuno. -->
+    <!-- Teleport al body: appesa al pannello di un gioco, un `position: fixed` si ritaglia sul primo
+         antenato con una transform (i fogli del sotterraneo ne hanno una) e può finire sotto la barra.
+         Si chiude sul click, non sul pointerup, o il dito si lascia dietro un click che risponde da solo. -->
     <Teleport to="body">
       <div v-if="ingrandito" class="qz-zoom" @click="ingrandito = false">
         <canvas ref="teloZoom" class="qz-telo-zoom" />
@@ -717,25 +406,12 @@ onUnmounted(() => {
   border: 1px solid rgba(255, 255, 255, .08);
   font-size: clamp(22px, 6vw, 30px); font-weight: 750; text-align: center;
 }
-/* Il soggetto è **la cosa da guardare**, e per i mazzi dove la figura È
-   la domanda — «con che lettera comincia 🐝» — quaranta pixel sono
-   pochi: a sei anni si guarda l'immagine, non la si sbircia. Grande
-   quanto il riquadro concede, che è la stessa regola del disegno. */
-.qz-emoji { font-size: clamp(38px, 11vw, 56px); }
-/* ── LA FRASE DA LEGGERE ──
-   Il corpo del soggetto è tarato su un'emoji o su una parola sola: sei
-   parole a trenta pixel diventano tre righe, e una frase su tre righe
-   non si legge, si scorre. Quindi più piccola e meno grassa della
-   parola in rilievo, che invece resta grossa — è quella su cui si
-   risponde, e deve saltare all'occhio senza doverla cercare.
-   Il colore non basta da solo (c'è chi non lo distingue, e ci sono i
-   telefoni al sole): sotto la parola c'è anche una riga. */
+.qz-emoji { font-size: clamp(38px, 11vw, 56px); } /* la figura È la domanda: grande quanto concede il riquadro */
+/* più piccola e meno grassa della parola in rilievo, che deve saltare all'occhio; il colore non basta da solo */
 .qz-frase {
   font-size: clamp(16px, 4.6vw, 22px); font-weight: 600; line-height: 1.4;
 }
-/* il raccontino da capire: si legge riga per riga, quindi a sinistra,
-   col peso del testo e con l'interlinea larga */
-.qz-testo {
+.qz-testo { /* il raccontino da capire: a sinistra, riga per riga */
   font-size: clamp(15px, 4.3vw, 19px); font-weight: 500; line-height: 1.5;
   text-align: left;
 }
@@ -760,27 +436,11 @@ onUnmounted(() => {
   width: clamp(76px, calc(17 * var(--qz-h)), 148px);
   height: auto; aspect-ratio: 1;
 }
-/* ── I TASTI IN RIGA SI CONTANO DA SÉ ──
-   Una fila che va a capo, non una griglia a colonne fisse, ed è per una
-   ragione sola: **chi resta solo sull'ultima riga si prende tutta la
-   larghezza**. Con la griglia le tre risposte dell'ortografia venivano
-   due sopra e una sotto larga la metà, spaiata, sotto due tasti uguali;
-   qui la terza è un tasto intero e la fila si legge come una scaletta.
-
-   Il conto delle due variabili sta nello script, col perché per esteso:
-   `--qz-colonne` è il **tetto** (due, o tre quando le risposte sono
-   tre) e `--qz-min` la larghezza sotto la quale un tasto non si
-   stringe. La `flex-basis` prende la più grande delle due — la fetta
-   che toccherebbe a uno di `--qz-colonne`, oppure la misura del testo
-   se è più larga — e da lì in poi decide il ritorno a capo. Il pixel in
-   meno serve solo a un arrotondamento: senza, capita di mandare a capo
-   l'ultimo tasto proprio quando ci starebbero tutti. */
+/* la fila va a capo da sé (vedi docs/apprendimento/la-domanda.md): --qz-colonne è il tetto,
+   --qz-min la larghezza sotto cui un tasto non si stringe (calcolate nello script) */
 .qz-risposte {
   --qz-gap: clamp(6px, calc(1.1 * var(--qz-h)), 10px);
-  /* il corpo del carattere sta anche qui, e non solo sul tasto: `ch` si
-     misura dove la variabile si usa, e con 16 px qui e 19 sul tasto la
-     misura sarebbe corta di un quinto proprio sugli schermi larghi */
-  font-size: clamp(16px, 4.4vw, 19px);
+  font-size: clamp(16px, 4.4vw, 19px); /* si misura anche qui: `ch` dipende da dove si usa */
   display: flex; flex-wrap: wrap; gap: var(--qz-gap);
 }
 .qz-tasto {
@@ -788,17 +448,9 @@ onUnmounted(() => {
                 (100% - (var(--qz-colonne, 2) - 1) * var(--qz-gap))
                   / var(--qz-colonne, 2) - 1px);
   display: flex; align-items: center; justify-content: center;
-  /* ── il tasto non sfonda mai il posto che gli tocca ──
-     Un elemento flessibile non scende sotto il proprio min-content, e
-     il min-content di un tasto è la parola più lunga che ci sta
-     dentro: senza queste due righe una risposta come «insegniante»
-     allarga il tasto invece di andare a capo, e la fila esce dalla
-     carta. `anywhere` e non `break-word` apposta — solo il primo
-     abbassa anche il min-content, cioè dice alla fila che quella
-     parola, all'occorrenza, si può spezzare. */
+  /* `anywhere` e non `break-word`: solo il primo abbassa il min-content, o una parola lunga sfonda il tasto */
   min-width: 0; overflow-wrap: anywhere;
-  /* 42px è il dito, non l'estetica: sotto non si scende mai */
-  min-height: clamp(42px, calc(7 * var(--qz-h)), 62px);
+  min-height: clamp(42px, calc(7 * var(--qz-h)), 62px); /* 42px è il dito, non l'estetica */
   padding: clamp(6px, calc(1.1 * var(--qz-h)), 12px) 8px; cursor: pointer;
   border-radius: 16px; border: 1px solid rgba(255, 255, 255, .14);
   background: rgba(255, 255, 255, .075); color: inherit;
@@ -811,15 +463,7 @@ onUnmounted(() => {
   width: 100%; max-width: clamp(52px, calc(13.5 * var(--qz-h)), 118px);
   aspect-ratio: 1; height: auto;
 }
-/* LA PAROLA SOTTO LA FIGURA. Un disegno di savana si riconosce molto
-   prima di saperlo chiamare, e il nome è lì per la seconda metà: il
-   tasto diventa una colonna, figura sopra e parola sotto.
-
-   Il corpo del carattere si dichiara qui e non si eredita, apposta: un
-   tasto a emoji ne porta addosso quaranta pixel, e il nome uscirebbe
-   grande quanto l'icona — cioè sembrerebbe la risposta invece della
-   sua didascalia. */
-.qz-tasto.nominata { flex-direction: column; gap: clamp(2px, calc(.6 * var(--qz-h)), 5px); }
+.qz-tasto.nominata { flex-direction: column; gap: clamp(2px, calc(.6 * var(--qz-h)), 5px); } /* figura sopra, nome sotto */
 .qz-soggetto.nominato { flex-direction: column; gap: clamp(3px, calc(.8 * var(--qz-h)), 7px); }
 .qz-nome {
   font-size: clamp(11px, 3.2vw, 14px); font-weight: 650; line-height: 1.2;
@@ -836,23 +480,8 @@ onUnmounted(() => {
   line-height: 1.4; color: #b9c6e6;
 }
 .qz-zoom {
-  /* `fixed` e non `absolute`: il velo scorre quando la carta è più alta
-     dello schermo, e un absolute scorrerebbe con lui — la lente si
-     aprirebbe sopra la testa di chi ha scrollato in fondo. Fissa resta
-     dov'è, e **appesa al `body`** (il `Teleport` nel template) è fissa
-     rispetto allo schermo e non rispetto al pannello di un gioco: il
-     perché per esteso sta lì.
-
-     Lo `z-index` è alto apposta, e la scala è quella
-     dell'applicazione: i veli dei giochi stanno fra 5 e 40, quelli di
-     casa (le sorprese, il banco di prova, un traguardo) fra 60 e 80.
-     Sopra tutti perché la lente è l'ultima cosa chiesta e nessuna di
-     quelle deve tagliarla; sotto il 200 del cartello «gira il
-     telefono», che vince sempre su tutto.
-
-     `--qz-h` non si eredita più da chi ha aperto la domanda, e va
-     bene così: un gioco dichiara quanto schermo ha concesso **alla
-     carta**, mentre la lente lo schermo ce l'ha tutto. */
+  /* fixed, appesa al body col Teleport: il velo scorre quando la carta è più alta dello schermo,
+     e un absolute scorrerebbe con lui. z-index scala dell'app: vedi docs/core/z-index-dal-codice.md */
   --qz-h: 1vh;
   position: fixed; inset: 0; z-index: 100; cursor: zoom-out;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -860,15 +489,9 @@ onUnmounted(() => {
   padding: clamp(8px, calc(2 * var(--qz-h)), 18px);
   background: rgba(6, 9, 18, .96);
   animation: qz-entra .14s ease;
-  /* così `cqh` qui sotto misura QUESTO riquadro e non la finestra */
-  container-type: size;
+  container-type: size; /* così `cqh` qui sotto misura questo riquadro e non la finestra */
 }
-/* Quadrato, e grande quanto il lato corto concede. Due righe e non una:
-   la prima misura l'altezza con `--qz-h`, che è quanto il gioco dichiara
-   di aver concesso alla domanda; la seconda misura il riquadro vero
-   (`cqh`) e vince dove il browser la capisce. Serve tutte e due perché
-   `--qz-h` è una dichiarazione e può non combaciare: un disegno più alto
-   del riquadro esce sotto, e quello che si perde è metà griglia. */
+/* due misure perché --qz-h è una dichiarazione che può non combaciare col riquadro vero (cqh) */
 .qz-telo-zoom {
   width: min(100%, calc(78 * var(--qz-h)));
   width: min(100%, 78cqh);
@@ -886,29 +509,17 @@ onUnmounted(() => {
   font: inherit; font-size: 18px; line-height: 1;
 }
 .qz-esito .bene { color: #7ee6a4; font-weight: 700; }
-/* la scorciatoia sta su una riga sua, più chiara del perché: è un
-   consiglio, non una correzione, e chi ha risposto giusto non deve
-   leggerla come un rimprovero */
-.qz-dritta {
+.qz-dritta { /* ambra: è un consiglio, non una correzione */
   margin-top: 4px; color: #ffd79a;
   font-size: clamp(12px, 3.5vw, 14px); line-height: 1.35;
 }
 .qz-esito .male { color: #ffb0b0; font-weight: 700; }
-/* ── COME SI FA ──
-   Sta in un riquadro suo, con un filo di colore a sinistra, e le altre
-   due righe no: è l'unica che parla del **prossimo** tentativo invece
-   che di quello appena andato storto, e a occhio deve staccarsi dal
-   rosso della correzione qui sopra e dall'ambra del consiglio qui
-   sotto. Azzurro perché i due colori caldi sono già presi, e perché
-   qui non c'è niente da rimproverare: si sta spiegando. */
-.qz-come {
+.qz-come { /* azzurro: parla del prossimo tentativo, non c'è niente da rimproverare */
   margin-top: 6px; padding: 5px 10px 6px;
   border-left: 3px solid #6fc4ff; border-radius: 0 8px 8px 0;
   background: rgba(111, 196, 255, .1); color: #dbeaff;
   font-size: clamp(12.5px, 3.6vw, 14.5px); line-height: 1.4;
 }
 .qz-come b { color: #8fd0ff; font-weight: 750; }
-/* la riga della fretta: dello stesso genere della dritta — un consiglio,
-   non un rimprovero — e per questo non è rossa */
-.qz-fretta { margin-top: 4px; font-size: 12.5px; color: #ffd9a0; }
+.qz-fretta { margin-top: 4px; font-size: 12.5px; color: #ffd9a0; } /* un consiglio come la dritta, non rossa */
 </style>

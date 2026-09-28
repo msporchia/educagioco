@@ -39,6 +39,11 @@ spiegazione, e quando si avvisa un grande. Le regole pure stanno in
   leggere.
 - **L'attesa si vede**: una barra si riempie per tutto il tempo, se no
   quattro secondi muti sembrano un tasto rotto.
+- **`saltabile` (solo `Prova.vue`, la palestra dei grandi)**: si tocca la
+  barra per abbreviare l'attesa invece di aspettarla — utile a chi guarda
+  venti domande di fila. Nei giochi non c'è: il tocco che arriva subito
+  dopo una risposta è quasi sempre il fantasma di quello appena dato, e
+  salterebbe l'esito da solo.
 
 ## Troppo di fretta: il tempo, non la roba
 
@@ -94,3 +99,17 @@ far risultare «ci mette venti minuti» per sempre.
 
 Nei test: `unita/consiglio`. Dove porta l'avviso — la schermata «Come va» e
 il rosso nel quadro — sta in [../genitori/come-va.md](../genitori/come-va.md).
+
+## Il layout delle risposte
+
+Le risposte di `Domanda.vue` vanno a capo da sole invece di stare su una
+griglia a colonne fisse: chi resta solo sull'ultima riga prende tutta la
+larghezza, invece di restare un mezzo tasto spaiato. Provata e scartata una
+soglia a caratteri («oltre 13, una colonna sola»): era cieca sul tasto (tre
+colonne strette non bastano comunque) e sul verso (una griglia `1fr` non
+scende sotto il min-content di un tasto, cioè la parola più lunga che non si
+spezza — la griglia si allargava e i tasti uscivano dalla carta). Adesso la
+fila dichiara quanto largo *deve poter essere* un tasto (`--qz-min`, in `ch`:
+la parola più lunga, o metà della risposta più lunga se più grande) e un
+tetto di colonne (`--qz-colonne`), e va a capo da sé; `min-width: 0` +
+`overflow-wrap: anywhere` sul tasto garantiscono che non sfondi comunque.

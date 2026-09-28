@@ -22,6 +22,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [primati.md](primati.md) — i giochi senza fine e i record
 - [aiuti.md](aiuti.md) — la scala del 💡 a monete
 - [da-fare.md](da-fare.md) — le voci aperte che non sono di un gioco solo
+- [z-index-dal-codice.md](z-index-dal-codice.md) — la scala degli z-index dei veli
 
 Vedi anche: [`../apprendimento/`](../apprendimento/README.md) (motore di ripasso,
 quiz, calibrazione), [`../genitori/`](../genitori/README.md) (la schermata dei
