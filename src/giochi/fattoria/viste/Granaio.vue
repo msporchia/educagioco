@@ -1,51 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   DENTRO UN SILO: GLI SCOMPARTI, E COME FARLI PIÙ GRANDI
-
-   Si apre toccando un silo — come si tocca un campo per vedere cosa ci
-   cresce e un recinto per vedere se ha fame. È lo stesso gesto di tutto
-   il resto, «tocca una cosa tua e vedi cosa ci si può fare», e ha una
-   conseguenza voluta: **senza silo non c'è niente da guardare**, perché
-   senza silo non c'è nemmeno dove mettere la roba.
-
-   ── UNO SCOMPARTO PER MERCE ───────────────────────────────────────
-   *Ribalta la scelta di prima*, che era un tetto solo condiviso da
-   tutto il silo. Era la risposta giusta a un difetto diverso — un tetto
-   per prodotto così alto da non mordere mai — e ha prodotto il suo:
-   dodici posti in comune fra sette merci sono due a testa, e un
-   bambino che semina sempre la stessa cosa riempiva il silo con quella
-   e non poteva più raccogliere niente. Trentadue di mais e quattro di
-   carote, e il gioco fermo.
-
-   Adesso ogni merce ha **la sua barretta**, tutte della stessa misura,
-   e ingrandire il silo le allarga tutte insieme. Il mais non può più
-   mangiarsi il posto delle carote. E la domanda per cui si apre un
-   magazzino — *quanto ci sta ancora* — smette di essere un conto e
-   diventa una riga da guardare.
-
-   Le barrette **vuote si vedono lo stesso**, ed è metà del mestiere di
-   questa schermata: uno scomparto a zero non è un buco, è il posto
-   dove potrebbe andare qualcosa. È il modo di far scoprire che si può
-   coltivare altro senza dirlo con una frase.
-
-   Ma vale **solo per quello che è già aperto**. Prima c'erano tutte le
-   merci del silo, e al primo raccolto di grano si leggevano già latte,
-   uova, lana e tartufi: il magazzino raccontava tutta la scaletta del
-   gioco in anticipo. Quello che deve ancora arrivare si guarda dov'è un
-   premio — la pagina dei livelli — e non dove sarebbe una riga vuota in
-   un elenco. Il filtro sta nel motore (`Fattoria.merciAperte`): una
-   schermata che sceglie cosa mostrare è una comodità, la regola sta
-   dove sta il resto delle regole.
-
-   ── PREMERE UNA ROBA DICE CHI LA USA ──────────────────────────────
-   Dal silo non esce niente con le dita: non si posa e non si vende. Ma
-   «🌾 Grano: 3 nel mulino fanno 2 🥣» è la sola cosa utile che una riga
-   di magazzino possa dire, ed è il modo in cui la catena si scopre da
-   dentro invece che per tentativi.
-
-   Non sa niente del profilo: riceve gli scomparti già contati e quanto
-   costa ingrandirli.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Dentro un silo: uno scomparto per merce, vuoti compresi (solo quelli aperti). Premere una roba
+   dice chi la usa — vedi docs/fattoria/campi-e-silos.md. Non sa niente del profilo. */
 import { computed, ref, watch } from 'vue'
 import { PRODOTTI, SILI, SCOMPARTO_PIU } from '../dati/coltivazioni.js'
 import { serveA } from '../dati/usi.js'
@@ -55,18 +10,13 @@ import Merce from './Merce.vue'
 import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
-  /* 'terra' o 'stalla': il perché di due silos sta in `coltivazioni.js` */
+  // 'terra' o 'stalla': il perché di due silos sta in coltivazioni.js
   famiglia: { type: String, default: 'terra' },
-  /* `[{ prodotto, posti, quanti, pieno }]`, uno per merce, già contati
-     dal motore (`Fattoria.scomparti`) — anche quelli vuoti, ma **solo
-     quelli aperti**: vedi qui sotto */
+  // [{prodotto, posti, quanti, pieno}], già contati dal motore (Fattoria.scomparti), solo gli aperti
   scomparti: { type: Array, default: () => [] },
-  /* Quanto ci sta in uno scomparto. Arriva a parte e non si legge dal
-     primo della lista, perché la lista può essere vuota: un silo
-     comprato prima di avere qualcosa da metterci dentro esiste, e
-     direbbe «0 di ogni cosa» — cioè che è rotto. */
+  // Quanto ci sta in uno scomparto: a parte, perché la lista può essere vuota (un silo appena costruito).
   posti: { type: Number, default: 0 },
-  /* quante volte è già stato ingrandito, e quanto costa la prossima */
+  // quante volte è già stato ingrandito, e quanto costa la prossima
   livello: { type: Number, default: 0 },
   costo: { type: Number, default: 0 },
   monete: { type: Number, default: 0 },
@@ -77,41 +27,26 @@ const silo = computed(() => SILI[props.famiglia] || SILI.terra)
 const roba = id => PRODOTTI[id] || { nome: id, emoji: '📦' }
 const manca = computed(() => Math.max(0, props.costo - props.monete))
 
-/* Quanti scomparti sono colmi: è l'unica cosa che va detta in cima,
-   perché è l'unica che chiede di fare qualcosa. Se non ce n'è nessuno
-   non si dice niente — un cartello tranquillizzante ripetuto ogni volta
-   smette di essere letto, e quando arriva quello vero non si distingue. */
+// Quanti scomparti sono colmi: si dice solo se ce n'è, se no un cartello ripetuto smette di essere letto.
 const pieni = computed(() => props.scomparti.filter(s => s.pieno))
 
-/* ── chi usa questa roba ──────────────────────────────────────────
-   Si preme una riga e sotto compare a cosa serve. Una sola per volta, e
-   ripremendola si chiude: due riquadri aperti insieme farebbero saltare
-   in su tutto il resto del foglio, e chi legge perderebbe il posto.
-
-   Chi ha davvero gli usi lo sa `dati/bisogni.js`; qui si compone la
-   frase, perché il nome della macchina lo sa il catalogo. */
+// Chi usa questa roba: una riga alla volta (ripremendo si chiude).
 const aperto = ref(null)
 const tocca = id => { aperto.value = aperto.value === id ? null : id }
-/* Cambiando silo si chiude quello che era aperto: il pannello si rifà
-   dopo un ingrandimento, e un riquadro rimasto aperto su un prodotto
-   dell'altro silo sarebbe roba che non c'entra. */
+// Cambiando silo si chiude quello che era aperto (roba dell'altro silo non c'entra).
 watch(() => props.famiglia, () => { aperto.value = null })
 
 const usiDi = computed(() => aperto.value ? serveA(aperto.value) : [])
 const dice = u => {
   if (u.che === 'ricetta') {
     const dove = laMacchina(u.dove)
-    /* Il **nome** e non l'emoji: la riga sopra mostra la figura vera
-       della merce, e un'emoji che non le somiglia (🥬 per una balla di
-       fieno) fa sembrare due cose diverse quello che è una cosa sola. */
+    // Il nome e non l'emoji: la riga sopra mostra già la figura vera.
     return `${u.quanti} ${dentroA(dove)}` +
            ` ${u.minuti > 0 ? `(${u.minuti} min)` : ''} → ${u.resa} ${u.nome.toLowerCase()}`
   }
   if (u.che === 'cibo')
     return `nella ciotola: riempie ${Math.round(u.quanto * 100)}% di pancia`
-  /* L'uscita che non passa dalla ciotola: un mestiere che la chiede al
-     mercato. (C'era anche «si mette addosso a una bestia», il maglione:
-     torna il giorno che gli addobbi della schiena sono sprite.) */
+  // L'uscita che non passa dalla ciotola: un mestiere che la chiede al mercato.
   if (u.che === 'ordine') return `${u.emoji} ${u.nome.toLowerCase()} la chiede al mercato`
   if (u.che === 'bottega') return `${u.emoji} la vuole ${u.la ? 'la' : 'il'} ${u.nome.toLowerCase()}`
   return `${u.nome.toLowerCase()}, per il ${u.bisogno.toLowerCase()}`
@@ -123,9 +58,7 @@ const dice = u => {
     <Chiudi @chiudi="$emit('chiudi')" />
     <h2>{{ silo.nome }}</h2>
 
-    <!-- Cosa ci sta, detto una volta e in numero: «8 di ogni cosa» è la
-         regola intera, e sta in cima perché è quello che si viene a
-         sapere. -->
+    <!-- Cosa ci sta, in numero: "8 di ogni cosa" è la regola intera. -->
     <p class="fa-posti">
       <b>{{ posti }}</b> di ogni cosa
       <span v-if="pieni.length">· {{ pieni.length === 1
@@ -133,15 +66,11 @@ const dice = u => {
         : `${pieni.length} scomparti sono al completo` }}</span>
     </p>
 
-    <!-- Un silo comprato prima di avere di che riempirlo: capita col
-         silo della stalla, che si può costruire prima delle bestie. Si
-         dice cosa manca, invece di mostrare un riquadro vuoto. -->
+    <!-- Un silo comprato prima di avere di che riempirlo (la stalla, prima delle bestie). -->
     <p v-if="!scomparti.length" class="fa-piccolo">Qui dentro non c'è
        ancora niente da mettere: ci arriverà {{ silo.vuoto }}.</p>
 
-    <!-- ── gli scomparti ──
-         Uno per riga, barretta e numeri: è la risposta alla domanda per
-         cui si apre un magazzino, e si legge senza contare niente. -->
+    <!-- Uno per riga, barretta e numeri: si legge senza contare niente. -->
 
     <div class="fa-scomparti">
       <button v-for="s in scomparti" :key="s.prodotto" type="button"
@@ -157,17 +86,12 @@ const dice = u => {
       </button>
     </div>
 
-    <!-- A cosa serve quello che si è appena premuto. Su uno scomparto
-         colmo la stessa riga cambia mestiere: non dice più «a cosa
-         serve» ma **come si svuota**, che è la cosa che si sta
-         cercando. -->
+    <!-- Su uno scomparto colmo la stessa riga dice come si svuota. -->
     <div v-if="aperto" class="fa-usi">
       <b><Merce :merce="aperto" :lato="26" /> {{ roba(aperto).nome }}</b>
       <p v-for="(u, i) in usiDi" :key="i">{{ dice(u) }}</p>
       <p v-if="!usiDi.length">Per adesso non serve a niente.</p>
-      <!-- Da qui si vede la strada intera: il silo è il posto dove la
-           catena «si scopre da dentro», e questo è il tasto che la
-           mostra tutta (`viste/Albero.vue`). -->
+      <!-- Da qui si vede la strada intera (viste/Albero.vue). -->
       <button type="button" class="fa-bot piccolo" data-azione="albero"
               @click="$emit('albero', aperto)">🌳 Come si fa</button>
     </div>
@@ -182,8 +106,7 @@ const dice = u => {
       <button class="fa-bot forte" :disabled="manca > 0" @click="$emit('ingrandisci')">
         Ingrandisci 🪙{{ costo }}</button>
     </div>
-    <!-- Il tasto spento dice **di quanto** manca, come in tutto il resto
-         del gioco: è il numero che rimanda a fare esercizi. -->
+    <!-- Il tasto spento dice di quanto manca, come in tutto il resto del gioco. -->
     <p class="fa-piccolo">
       <template v-if="manca">Ti {{ manca === 1 ? 'manca' : 'mancano' }}
         🪙{{ manca }}: </template>
