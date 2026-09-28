@@ -1,215 +1,133 @@
 # Calibrazione: quanto vale una moneta
 
-Questo file risponde a **una domanda sola**: quanto deve costare una cosa, e
-quanto deve rendere un gioco. Prima non c'era una risposta, e si vede — gli
-stessi asteroidi pagano una moneta ad asteroide mentre una tappa del
-sotterraneo ne paga trentaquattro, e nella fattoria un ingrandimento del silo
-è arrivato a chiedere quarantamila monete, cioè centoundici ore di esercizi.
-Nessuno di quei numeri era sbagliato *da solo*: erano sbagliati fra loro,
-perché ognuno era stato scelto guardando il proprio gioco.
+Quanto deve costare una cosa e quanto deve rendere un gioco. Si legge prima
+di scrivere un prezzo, un premio di tappa o un potenziamento che rincara: i
+numeri sbagliati sono quasi sempre giusti *da soli* e sbagliati fra loro,
+perché scelti guardando il proprio gioco.
 
-## L'unità: una moneta sono dieci secondi
+## L'unità: 🪙1 = 10 secondi di esercizio
 
-> **🪙1 = 10 secondi di esercizio.**
-
-Da lì viene tutto il resto:
-
-| quanto | in monete | perché |
+| quanto | monete | perché |
 |---|---|---|
-| un asteroide abbattuto | 🪙1 | una tabellina è un colpo d'occhio: dieci secondi |
-| una domanda vera (dungeon, corsa, sotterraneo, survivors, castello) | 🪙3 | si legge una consegna, si sceglie fra quattro: mezzo minuto |
+| un asteroide abbattuto | 🪙1 | una tabellina è un colpo d'occhio |
+| una domanda vera (dungeon, corsa, sotterraneo, survivors, castello) | 🪙3 | leggere una consegna e scegliere fra quattro: mezzo minuto |
 | un minuto di esercizi | 🪙6 | |
-| **un'ora di esercizi** | **🪙360** | il numero da tenere in testa quando si scrive un prezzo |
+| **un'ora di esercizi** | **🪙360** | il numero da tenere in testa scrivendo un prezzo |
 
-Un gioco non paga «per partita»: paga **per il tempo di esercizio che ha
-davvero chiesto**. Una tappa che fa otto domande vale 🪙24, che ci si metta
-tre minuti o dieci — il resto del tempo è il gioco, ed è il premio, non il
-lavoro.
+Un gioco paga **per il tempo di esercizio che ha davvero chiesto**, non per
+partita: una tappa da otto domande vale 🪙24, che duri tre minuti o dieci. Il
+resto del tempo è il gioco, ed è il premio.
 
-### E una risposta sbagliata non paga niente
+## Nessun gioco paga una risposta sbagliata
 
-Corollario, e non è una crudeltà: **un tasto premuto a caso non è
-esercizio**, quindi non vale dieci secondi e non vale una moneta. Survivors
-dava una monetina a chi sbagliava la domanda del potenziamento — un «ci hai
-provato» che valeva in fattoria e non in campo — e sembrava innocua finché
-non si guarda cosa un bambino sta davvero cercando: **le monete**, perché
-quelle si spendono. Con quella regola il modo più veloce di farne era
-chiedere una carta e premere a caso; nella partita libera, dove non si vince
-niente, era l'unica fonte.
+Un tasto premuto a caso non è esercizio, quindi non vale una moneta. Quello
+che un bambino cerca sono **le monete**: un premio di consolazione diventa il
+modo più veloce di farne, a costo zero, e mette fuori scala tutto il resto.
+Provato: Survivors dava una monetina a chi sbagliava la domanda del
+potenziamento, e nella partita libera era l'unica fonte. Le monete si
+prendono arrivando in fondo a una tappa.
 
-Un premio di consolazione è una moneta stampata senza il lavoro dietro, e
-mette fuori scala tutto quello che viene dopo: se ne può fare quante se ne
-vuole, a costo zero.
+## Il cambio: spendere costa il doppio di studiare
 
-## Il cambio: giocare costa il doppio di studiare
-
-La fattoria — tutto quello che si compra con le monete — è **il posto dove
-si spende**. Il rapporto scelto è:
-
-> **cinque minuti passati a spendere costano dieci minuti di esercizi.**
-
-Un gesto in un gioco di spesa (seminare, raccogliere, far partire una
-macchina, dare da mangiare) dura circa **dieci secondi**, quindi ne costa
-venti di esercizio:
-
-> **un gesto = 🪙2.**
-
-È il motivo per cui seminare costa 1–4 monete e non 20: un gesto è un gesto.
-Quello che costa tanto sono le **strutture**, che si comprano una volta e
-poi lavorano per sempre.
+La fattoria è il posto dove si spende. **Cinque minuti a spendere costano
+dieci minuti di esercizi**; un gesto (seminare, raccogliere, avviare una
+macchina) dura ~10 s, quindi **un gesto = 🪙2**. Costano tanto le
+**strutture**, che si comprano una volta e lavorano per sempre.
 
 ## La scala delle spese
 
-Tradotta in tempo di esercizi, una spesa deve cadere in una di queste fasce.
-Se una spesa nuova non ci sta dentro, è quella spesa a essere sbagliata — non
-la scala.
-
-| fascia | tempo | cos'è | esempi di oggi |
+| fascia | tempo | monete | esempi |
 |---|---|---|---|
-| un gesto | 10–40 s | 🪙1–4 | seminare, raccogliere, avviare il mulino, una crocchetta |
-| una cosetta | 1–5 min | 🪙6–30 | un cespuglio, una panchina, un cibo buono |
-| una cosa vera | 5–25 min | 🪙30–150 | un campo (22), un pezzo di terra (45), un silo o la dispensa (120) |
-| una struttura | 25–60 min | 🪙150–360 | il mulino, il fienile e il pentolone (150), le botteghe (telaio 170, panificio 180, caseificio 200, cucina 210, sartoria 250, tintoria 300), i recinti (95–260), un animale (75–120) |
-| una spesa lunga | 1–2 ore | 🪙360–720 | gli ingrandimenti alti, la terra dopo il decimo pezzo |
+| un gesto | 10–40 s | 1–4 | seminare, raccogliere, una crocchetta |
+| una cosetta | 1–5 min | 6–30 | un cespuglio, una panchina, un cibo buono |
+| una cosa vera | 5–25 min | 30–150 | un campo (22), un pezzo di terra (45), silo o dispensa (120) |
+| una struttura | 25–60 min | 150–360 | mulino, fienile, pentolone (150), botteghe (170–300), recinti (95–260), un animale (75–120) |
+| una spesa lunga | 1–2 ore | 360–720 | gli ingrandimenti alti, la terra dopo il decimo pezzo |
 
-Sopra le due ore non ci va **niente**. Un bambino gioca venti o trenta minuti
-al giorno: due ore sono già una settimana, e una settimana per una cosa sola
-è il punto in cui si smette di provarci.
+**Sopra le due ore non ci va niente**: un bambino gioca venti-trenta minuti
+al giorno, e una settimana per una cosa sola è dove si smette di provarci.
+Una spesa che non sta nella scala è sbagliata lei, non la scala.
 
 ## Gli aiuti che si comprano
 
-Il 💡 del Generale, di Passo passo e del costruttore vende gradini
-(`src/giochi/aiuti.js`). I primi due sono **gratis** — fanno ragionare, e
-non dicono la risposta — e gli altri si pagano:
+Il 💡 del Generale, di Passo passo e del costruttore (`src/giochi/aiuti.js`):
+i primi due gradini sono **gratis** (fanno ragionare), poi
 
-| gradino | prezzo | in esercizio | cos'è |
-|---|---|---|---|
-| un indizio | 🪙10 | 1 min 40 s | una frase concreta, o la carta giusta in un posto |
-| il primo gradino che scrive | 🪙50 | 8 min | un pezzo di programma, o di strada |
-| il penultimo | 🪙100 | 17 min | la forma coi valori da scegliere, o metà strada |
-| la soluzione intera | 🪙200 | 33 min | tutto il programma |
+| gradino | prezzo | in esercizio |
+|---|---|---|
+| un indizio | 🪙10 | 1 min 40 s |
+| il primo che scrive | 🪙50 | 8 min |
+| il penultimo | 🪙100 | 17 min |
+| la soluzione intera | 🪙200 | 33 min |
 
-Questi prezzi **non sono un mercato**: sono un freno. Un livello di quei
-giochi rende 🪙4–30 la prima volta, e scendere tutta la scala costa
-🪙350–390 — dieci livelli. È voluto, e la domanda da farsi non è «quanto
-vale una soluzione» ma «cosa succede se un bambino preme il 💡 finché il
-livello non si risolve da solo»: con la stella come prezzo succedeva ogni
-volta, perché una stella in meno non si sente, e il livello era bruciato.
-Chi invece è bloccato davvero ha due gradini gratis che lo fanno ragionare,
-e un indizio costa meno di una tappa di qualunque gioco.
-
-Due conseguenze da non perdere. Nessun aiuto rende monete — il premio del
-livello si paga lo stesso alla prima vittoria, ma è sempre molto meno di
-quello che la scala è costata, quindi comprarsi la strada non è mai un
-modo di guadagnare. E un gradino pagato **resta** (nel Generale e nel
-costruttore): pagarlo due volte per un tocco di troppo su ← sarebbe una
-moneta tolta senza niente in cambio, cioè il contrario del premio di
-consolazione, e sbagliato per la stessa ragione.
+- **Non è un mercato, è un freno.** Un livello rende 🪙4–30 la prima volta,
+  la scala intera costa 🪙350–390 (dieci livelli). La domanda da farsi è
+  «cosa succede se preme il 💡 finché il livello non si risolve da solo».
+  Provato: la stella come prezzo. Non funziona: una stella in meno non si
+  sente, e il livello era bruciato.
+- **Nessun aiuto rende monete**: il premio alla prima vittoria è sempre
+  molto meno della scala.
+- **Un gradino pagato resta** (Generale, costruttore): pagarlo due volte
+  per un tocco di troppo sarebbe una moneta tolta senza niente in cambio.
 
 ## Le curve: mai esponenziali
 
-Una cosa che si compra più volte deve rincarare — se no la strategia è
-comprarne dieci e il gioco finisce lì — ma **il rincaro non è mai
-esponenziale**, e il motivo è che le monete si guadagnano sempre allo stesso
-ritmo. Una curva esponenziale presume che chi paga diventi più ricco a ogni
-passo; qui non succede, quindi **lo sforzo riparte da zero ogni volta** e il
-prezzo va scritto in *ore di esercizio*, non in percentuali.
+Una cosa che si compra più volte deve rincarare, ma **mai in modo
+esponenziale**: le monete si guadagnano sempre allo stesso ritmo, quindi lo
+sforzo riparte da zero ogni volta e il prezzo va scritto in ore.
 
-Le due forme buone:
-
-- **lineare** (`base · (1 + n·k)`), quando ogni copia vale quanto la prima:
-  i campi e i recinti della fattoria (`cresce` nel catalogo, k = 0,6 → 🪙22,
-  35, 48, 62…). Il pezzo di terra usa ancora un 1,38 geometrico: è l'ultimo
-  rimasto, e va guardato la prossima volta che si tocca l'economia — il
-  decimo pezzo costa già 🪙800, più di due ore;
-- **logaritmica** (`base + passo · ln(1+n)`), quando la cosa migliora sempre
-  la stessa cosa: gli ingrandimenti del silo — 🪙40, 130, 185, 220, 250… cioè
-  7 minuti il primo, mezz'ora il secondo, poi sempre intorno all'ora, e mai
-  di più.
-
-Il controllo da fare a mente su ogni curva nuova: **quanto costa la decima
-volta, in ore?** Se la risposta è «più di due», la curva è sbagliata.
-
-**L'eccezione è una curva col tetto vicino.** La fila delle macchine della
-fattoria raddoppia — 🪙20 · 40 · 80 · 160 · 320, un posto alla volta sopra
-l'unico di partenza (`giochi/fattoria/dati/coda.js`) — e va bene perché si
-ferma al quinto: la decima volta non esiste, e l'ultima costa meno di
-un'ora. Lì il raddoppio è la forma giusta e non un incidente: il primo
-posto è quasi regalato, gli ultimi sono un lusso che si sceglie, e chi
-vuole andare più svelto trova più conveniente una seconda macchina.
-Deciso da lui il 24 settembre 2026. Il tetto delle due ore lo controlla
-`guastiDellaFila`, così chi un giorno allungasse la fila lo scopre da un
-test e non da un bambino.
+- **Lineare** (`base · (1 + n·k)`) quando ogni copia vale la prima: campi e
+  recinti della fattoria (`cresce` nel catalogo, k = 0,6 → 🪙22, 35, 48, 62…).
+- **Logaritmica** (`base + passo · ln(1+n)`) quando migliora sempre la
+  stessa cosa: gli ingrandimenti del silo (🪙40, 130, 185, 220, 250…: mai più
+  di un'ora).
+- **Il controllo a mente**: quanto costa la decima volta, in ore? Più di
+  due → la curva è sbagliata.
+- **L'eccezione è una curva col tetto vicino**: la fila delle macchine della
+  fattoria raddoppia (🪙20 · 40 · 80 · 160 · 320, `giochi/fattoria/dati/coda.js`)
+  e si ferma al quinto posto; l'ultimo costa meno di un'ora. Il tetto delle
+  due ore lo controlla `guastiDellaFila`.
 
 ## Dentro una partita: l'energia del castello
 
-Il castello ha una valuta sua, l'energia ⚡, che non esce mai dalla partita e
-non si cambia in monete: le monete di una tappa sono **i calcoli che la tappa
-promette** (una ogni dieci, per il livello), e restano quelle qualunque cosa
-costi una torre. Quando le torri hanno smesso di costare uguale — l'arciere
-24 ⚡, le bombe 56 — la domanda da farsi era proprio questa, e la risposta è che
-la promessa regge perché il piano dei calcoli conta i prezzi delle torri che il
-giocatore modello compra davvero (`sequenzaTorri`, `pianoDi`): chi compra solo
-bombe fa meno conti e più difficili, chi compra solo arcieri ne fa di più e più
-facili, e la tappa resta la stessa.
+L'energia ⚡ non esce dalla partita e non si cambia in monete: le monete di
+una tappa sono **i calcoli che la tappa promette** (una ogni dieci, per il
+livello), qualunque cosa costi una torre. La promessa regge perché il piano
+dei calcoli conta i prezzi delle torri che il giocatore modello compra
+davvero (`sequenzaTorri`, `pianoDi`). Due regole gemelle di quelle qui sopra:
 
-Dentro la partita valgono due regole che somigliano a quelle di qui:
-
-- **un ⚡ rende lo stesso ovunque lo si spenda** (a meno di un premio per le
-  torri avanzate), come una moneta vale dieci secondi dappertutto — e lo misura
-  uno strumento (`npm run dps`), non l'occhio;
-- **la fretta si paga poco**: chiamare l'ondata prima del tempo rende al più
-  sei ⚡, cioè in tutta una tappa due acquisti in più. Un premio che valesse di
-  più diventerebbe un obbligo, esattamente come una moneta per un errore
-  diventa il modo più veloce di farne.
+- **un ⚡ rende lo stesso ovunque** (a meno di un premio per le torri
+  avanzate), e lo misura `npm run dps`, non l'occhio;
+- **la fretta si paga poco**: chiamare l'ondata prima rende al più sei ⚡,
+  due acquisti in più per tappa. Di più diventerebbe un obbligo.
 
 ## Il livello di un gioco che si spende
 
-La fattoria ha un livello che sale **con le monete spese lì dentro**
-(`giochi/fattoria/dati/livelli.js`), e la forma è riusabile: soglia
-`A·(n-1)² + B·(n-1)`, tanti livelli che danno poco, e quello che non è ancora
-arrivato mostrato in una pagina dei livelli invece che spento dentro il
-negozio — e mai un livello che non porta niente.
+La fattoria sale di livello **con le monete spese lì dentro**
+(`giochi/fattoria/dati/livelli.js`), forma riusabile: soglia
+`A·(n-1)² + B·(n-1)`, tanti livelli che danno poco, quello che arriva
+mostrato in una pagina dei livelli e non spento nel negozio, mai un livello
+che non porta niente.
 
-**La roba di un livello non deve pagare il livello dopo.** Se il livello
-sale spendendo, quello che un livello apre è anche la spesa più ovvia da
-fare subito, e se costa quanto il salto successivo il livello si paga da
-sé: si compra, si sale, arriva altro da comprare. Nella fattoria succedeva
-al 3, al 5, al 20, al 22 e al 26. Perciò ogni salto è **il passo della
-formula più il costo di quello che il livello apre** (`costoDelLivello`):
-comprare tutto paga la sua parte, il passo si fa giocando. Il controllo da
-fare a mente su un gioco nuovo che si livella spendendo: *comprato tutto
-quello che è appena arrivato, quanto manca al prossimo?* Se la risposta è
-«quasi niente», il livello non misura più il gioco, misura il listino.
-
-Le altre due sorgenti del livello pagano **esperienza e mai monete**, e
-stanno sulla stessa scala delle monete perché si sommano a quelle spese:
+- **La roba di un livello non paga il livello dopo**: ogni salto è il passo
+  della formula più il costo di quello che il livello apre
+  (`costoDelLivello`). Se no si compra, si sale, arriva altro: il livello
+  misura il listino. Il controllo: comprato tutto quello appena arrivato,
+  quanto manca al prossimo? «Quasi niente» è sbagliato.
+- **Le altre sorgenti pagano esperienza, mai monete**, sulla stessa scala:
 
 | cosa | rende | il freno |
 |---|---|---|
-| un ordine del mercato | ⭐ 6 + 2·(i gesti che ci sono voluti), con +20% per ogni fase oltre la prima — da 8 (un grano) a 110 (una lasagna); in bottega +25%, nella mongolfiera i bonus di fila e di pallone | mai più del tempo di campo che chiede (`guastiDelMercato`) |
-| una bestia di casa rimessa a posto (pancia, pelo e gioco tutti nella fascia «sta benissimo») | ⭐ un quindicesimo del suo prezzo: 6 il cane, 5 il gatto, 8 il pappagallo | **una volta per ciclo** — non torna finché un bisogno non è risceso sotto «sta bene», cioè non prima di tre ore |
+| un ordine del mercato | ⭐ 6 + 2·gesti, +20% per fase oltre la prima (8 un grano, 110 una lasagna); +25% in bottega, i bonus della mongolfiera | mai più del tempo di campo che chiede (`guastiDelMercato`) |
+| una bestia di casa rimessa a posto (tre bisogni a «sta benissimo») | ⭐ un quindicesimo del prezzo: 6 cane, 5 gatto, 8 pappagallo | una volta per ciclo: non prima che un bisogno riscenda sotto «sta bene» (≥ tre ore) |
 
-Il numero della bestia sta sotto l'ordine più piccolo del mercato apposta:
-tre gesti da 🪙1–14 e le ore che ci mette la pancia a scendere non sono un
-quarto d'ora di campo. Senza il ciclo, tre coccole da una monetina sarebbero
-una zecca — non di monete, di livelli.
+Senza il ciclo, tre coccole da una monetina sarebbero una zecca di livelli.
 
 ## Dove stanno i numeri
 
-- `src/giochi/fattoria/dati/coltivazioni.js` — prezzi dei gesti, capienza e
-  ingrandimenti dei silos (`costoIngrandimento`)
-- `src/giochi/fattoria/dati/catalogo.js` — prezzi delle cose, e `cresce` per
-  quelle che rincarano
+- `src/giochi/fattoria/dati/coltivazioni.js` — gesti, silos, `costoIngrandimento`
+- `src/giochi/fattoria/dati/catalogo.js` — prezzi, e `cresce` per chi rincara
 - `src/giochi/fattoria/dati/mondo.js` — il pezzo di terra e il suo rincaro
 - `src/giochi/*/dati/campagna.js` — i premi delle tappe, gioco per gioco
 
-## Quello che ancora non torna
-
-Il riequilibrio dei **premi dei giochi** non è stato fatto: oggi una tappa
-rende `premio × stelle` con premi scelti gioco per gioco (dungeon 3→10,
-sotterraneo 10→34, conta 1→4), senza nessun rapporto con quante domande
-contiene davvero. La strada è dichiarare in ogni campagna **quante domande
-chiede una tappa** e pagarle a 🪙3, poi un test che confronta il dichiarato
-con quello che il motore chiede davvero — come già fa `npm run tara` per il
-castello.
+Quello che ancora non torna è in [da-fare.md](da-fare.md).
