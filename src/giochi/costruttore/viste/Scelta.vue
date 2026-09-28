@@ -12,7 +12,8 @@
      numero       un numero, o una lavagnetta, o un conto con una sola
                   operazione («h + 1»): le cifre da 0 a 10 e un ± per
                   andare oltre, i nomi da toccare, e i quattro segni
-     cond         «[sotto] c'è [il vuoto]», oppure «[h] è minore di [5]»
+     cond         «[sotto] c'è [il vuoto]», oppure «[h] è minore di [5]»:
+                  una frase a caselle, e sotto le scelte di una sola
      lavagnetta   quale lavagnetta scrivere (o una nuova)
      lato         nel porto: da che parte prendere o posare, le quattro frecce
      valore       il valore di una lavagnetta: come un numero, e nel porto
@@ -41,6 +42,7 @@ const props = defineProps({
   riga: { type: Object, required: true },
   campo: { type: String, required: true },
   /* { colori, nomi: { misure, lavagnette, ordine }, confronta,
+       nel cantiere: coloriDomanda, cose (quello che c'è nelle mappe),
        e per il porto: porto, versi, dove, cose, leggere } */
   contesto: { type: Object, required: true },
 })
@@ -61,6 +63,7 @@ watch(() => [props.riga.id, props.campo], () => {
   expr.value = copia(valoreDi()) || { vuoto: true }
   lato.value = expr.value && expr.value.op ? 'b' : 'a'
   cond.value = copia(valoreDi()) || condVuota()
+  pezzoCond.value = daScegliereCond(cond.value)
 })
 
 const pezzoAttivo = computed(() => (expr.value.op ? expr.value[lato.value] : expr.value))
@@ -115,32 +118,70 @@ const nomiColore = computed(() => [...nomi.value.misureColore, ...nomi.value.ord
 const colorato = c => ['mattone', 'cassa', 'cassone', 'camion'].includes(c)
 
 /* ── le condizioni ──
+   **Una frase a caselle, e sotto le scelte di una casella sola.** Erano
+   quattro file di tasti tutte aperte insieme — sei posti, c'è/non c'è,
+   sei cose, i colori — e una domanda si leggeva come un modulo da
+   riempire. Adesso sopra c'è la frase («[↓ sotto i piedi] [c'è] [un
+   mattone] [🌈 di qualunque colore]»), e toccando un pezzo si apre solo
+   la sua scelta: il posto è **un quadretto attorno al robot**, dove si
+   tocca la cella da guardare invece di leggere sei nomi.
+
    Una domanda nuova non ha un posto né una cosa già scelti: si scrive
    nella riga solo quando il bambino li ha scelti tutti e due, se no
    «sotto i piedi c'è il vuoto» sarebbe di nuovo un valore di comodo che
-   sembra l'unico possibile. */
+   sembra l'unico possibile. Il colore invece nasce **qualunque**: è la
+   domanda più larga, e stringerla è una scelta. */
 const condVuota = () => ({ tipo: 'guarda', dove: null, cosa: null, c: true })
 const cond = ref(copia(valoreDi()) || condVuota())
 const completa = c => (c.tipo === 'confronta' ? !!(c.a && c.cmp && c.b) : !!(c.dove && c.cosa))
+/* la prima casella che manca: è quella che si apre */
+const daScegliereCond = c => (c.tipo === 'confronta'
+  ? ['a', 'cmp', 'b'].find(k => !c[k]) || null
+  : (!c.dove ? 'dove' : !c.cosa ? 'cosa' : null))
+const pezzoCond = ref(daScegliereCond(cond.value))
+const apriPezzo = k => { pezzoCond.value = pezzoCond.value === k ? null : k }
+
+/* i colori di una domanda: quelli che ci sono nelle mappe, non solo quelli
+   che il robot mette (`quelloCheSiGuarda`) */
+const coloriDomanda = computed(() => props.contesto.coloriDomanda || props.contesto.colori || [])
+const conColore = computed(() => colorato(cond.value.cosa) && coloriDomanda.value.length + nomiColore.value.length > 0)
+
 function cambiaCond(campo, v) {
   cond.value = { ...cond.value, [campo]: v }
   if (!cond.value.colore) delete cond.value.colore
   if (completa(cond.value)) emit('scegli', copia(cond.value))
+  /* avanti fino alla prima che manca; scelta la cosa, il suo colore */
+  pezzoCond.value = daScegliereCond(cond.value) ||
+    (campo === 'cosa' && conColore.value ? 'colore' : null)
 }
 /* cambiando la cosa, il colore resta solo se è ancora una cosa colorata */
 function cambiaCosa(c) {
   const nuova = { ...cond.value, cosa: c }
   if (!colorato(c)) delete nuova.colore
   cond.value = nuova
-  if (completa(cond.value)) emit('scegli', copia(cond.value))
+  cambiaCond('cosa', c)
 }
 function genere(t) {
   if (cond.value.tipo === t) return
   /* un confronto nuovo non ha niente di scelto: «h è minore di 1» già
      scritto sarebbe il valore di comodo che sembra l'unico possibile */
   cond.value = t === 'guarda' ? condVuota() : { tipo: 'confronta', a: null, cmp: null, b: null }
+  pezzoCond.value = daScegliereCond(cond.value)
   if (completa(cond.value)) emit('scegli', copia(cond.value))
 }
+
+/* Il quadretto attorno al robot: dove guarda, messo dove sta. Di lato
+   il robot vede sopra la testa, ai due lati, sotto i piedi e in basso
+   davanti e dietro; nel porto, visto dall'alto, le quattro frecce — e la
+   mano, che non è un posto e sta a parte. */
+const INTORNO = [[null, 'sopra', null], ['sinistra', 'robot', 'destra'], ['giu-sinistra', 'sotto', 'giu-destra']]
+const INTORNO_PORTO = [[null, 'su', null], ['sinistra', 'robot', 'destra'], [null, 'giu', null]]
+const FRECCE_DOVE = { sopra: '↑', sinistra: '←', destra: '→', 'giu-sinistra': '↙', sotto: '↓', 'giu-destra': '↘',
+                      su: '↑', giu: '↓' }
+const intorno = computed(() => (props.contesto.porto ? INTORNO_PORTO : INTORNO)
+  .flat().map(d => (d === 'robot' || doveLista.value.includes(d) ? d : null)))
+
+const nomeColoreDomanda = c => (typeof c === 'string' ? (colore(c) || {}).nome : numeroInParole(c))
 const tuttiNomi = computed(() => [...nomi.value.misure, ...nomi.value.lavagnette, ...nomi.value.ordine])
 
 const scegli = v => { emit('scegli', v); emit('avanti') }
@@ -246,31 +287,63 @@ const scegli = v => { emit('scegli', v); emit('avanti') }
       <button type="button" class="cst-scelta-fatto" data-azione="fatto" @click="emit('avanti')">fatto</button>
     </template>
 
-    <!-- una condizione -->
+    <!-- una condizione: la frase a caselle, e le scelte della casella aperta -->
     <template v-else-if="tipo === 'cond'">
-      <div v-if="contesto.confronta" class="cst-fila">
-        <button type="button" class="cst-chip" :class="{ 'cst-su': cond.tipo !== 'confronta' }" @click="genere('guarda')">👀 il robot guarda</button>
-        <button type="button" class="cst-chip" :class="{ 'cst-su': cond.tipo === 'confronta' }" data-genere="confronta" @click="genere('confronta')">⚖️ confronta due numeri</button>
+      <div v-if="contesto.confronta" class="cst-fila cst-fila-genere">
+        <button type="button" class="cst-chip cst-grosso" :class="{ 'cst-su': cond.tipo !== 'confronta' }" data-genere="guarda" @click="genere('guarda')">👀 guarda</button>
+        <button type="button" class="cst-chip cst-grosso" :class="{ 'cst-su': cond.tipo === 'confronta' }" data-genere="confronta" @click="genere('confronta')">⚖️ confronta</button>
       </div>
+
       <template v-if="cond.tipo !== 'confronta'">
-        <div class="cst-fila">
-          <button v-for="d in doveLista" :key="d" type="button" class="cst-chip" :class="{ 'cst-su': cond.dove === d }"
-                  :data-dove="d" @click="cambiaCond('dove', d)">{{ DOVE_IN_PAROLE[d] }}</button>
+        <div class="cst-frase-domanda">
+          <button type="button" class="cst-pezzo cst-pezzo-domanda" data-pezzo-domanda="dove"
+                  :class="{ 'cst-su': pezzoCond === 'dove', 'cst-vuoto': !cond.dove }"
+                  @click="apriPezzo('dove')">{{ cond.dove ? DOVE_IN_PAROLE[cond.dove] : 'dove?' }}</button>
+          <button type="button" class="cst-pezzo cst-pezzo-domanda" data-pezzo-domanda="ce"
+                  :class="{ 'cst-su': pezzoCond === 'ce' }"
+                  @click="apriPezzo('ce')">{{ cond.c === false ? 'non c\'è' : 'c\'è' }}</button>
+          <button type="button" class="cst-pezzo cst-pezzo-domanda" data-pezzo-domanda="cosa"
+                  :class="{ 'cst-su': pezzoCond === 'cosa', 'cst-vuoto': !cond.cosa }"
+                  @click="apriPezzo('cosa')">{{ cond.cosa ? COSE_IN_PAROLE[cond.cosa] : 'cosa?' }}</button>
+          <button v-if="conColore" type="button" class="cst-pezzo cst-pezzo-domanda" data-pezzo-domanda="colore"
+                  :class="{ 'cst-su': pezzoCond === 'colore' }"
+                  :style="typeof cond.colore === 'string' ? { '--cst-tinta': colore(cond.colore).tinta } : null"
+                  @click="apriPezzo('colore')">
+            <i class="cst-quadretto" :class="{ 'cst-arcobaleno': !cond.colore }" v-if="!cond.colore || typeof cond.colore === 'string'"></i>
+            {{ cond.colore ? nomeColoreDomanda(cond.colore) : 'di qualunque colore' }}
+          </button>
         </div>
-        <div class="cst-fila">
-          <button type="button" class="cst-chip" :class="{ 'cst-su': cond.c !== false }" data-ce="si" @click="cambiaCond('c', true)">c'è</button>
-          <button type="button" class="cst-chip" :class="{ 'cst-su': cond.c === false }" data-ce="no" @click="cambiaCond('c', false)">non c'è</button>
+
+        <!-- dove: il quadretto attorno al robot -->
+        <div v-if="pezzoCond === 'dove'" class="cst-fila cst-fila-intorno">
+          <div class="cst-intorno" data-intorno>
+            <template v-for="(d, k) in intorno" :key="k">
+              <span v-if="d === 'robot'" class="cst-intorno-robot" aria-hidden="true">🤖</span>
+              <button v-else-if="d" type="button" class="cst-intorno-cella" :class="{ 'cst-su': cond.dove === d }"
+                      :data-dove="d" :aria-label="DOVE_IN_PAROLE[d]" @click="cambiaCond('dove', d)">{{ FRECCE_DOVE[d] }}</button>
+              <span v-else></span>
+            </template>
+          </div>
+          <button v-if="doveLista.includes('mano')" type="button" class="cst-chip" :class="{ 'cst-su': cond.dove === 'mano' }"
+                  data-dove="mano" @click="cambiaCond('dove', 'mano')">{{ DOVE_IN_PAROLE.mano }}</button>
         </div>
-        <div class="cst-fila">
+
+        <div v-else-if="pezzoCond === 'ce'" class="cst-fila">
+          <button type="button" class="cst-chip cst-grosso" :class="{ 'cst-su': cond.c !== false }" data-ce="si" @click="cambiaCond('c', true)">c'è</button>
+          <button type="button" class="cst-chip cst-grosso" :class="{ 'cst-su': cond.c === false }" data-ce="no" @click="cambiaCond('c', false)">non c'è</button>
+        </div>
+
+        <div v-else-if="pezzoCond === 'cosa'" class="cst-fila">
           <button v-for="c in coseLista" :key="c" type="button" class="cst-chip" :class="{ 'cst-su': cond.cosa === c }"
                   :data-cosa="c" @click="cambiaCosa(c)">{{ COSE_IN_PAROLE[c] }}</button>
         </div>
-        <!-- un mattone, una cassa, un cassone possono essere di un colore
-             preciso: scritto, o il nome di chi lo porta («tinta») -->
-        <div v-if="colorato(cond.cosa) && contesto.colori.length > 0" class="cst-fila" data-colori-domanda>
-          <button type="button" class="cst-chip" :class="{ 'cst-su': !cond.colore }" data-colore-domanda="qualunque"
-                  @click="cambiaCond('colore', null)">di qualunque colore</button>
-          <button v-for="c in contesto.colori" :key="c" type="button" class="cst-chip cst-colore"
+
+        <!-- un mattone, una cassa, un cassone: di qualunque colore, o di
+             uno preciso — scritto, o il nome di chi lo porta («tinta») -->
+        <div v-else-if="pezzoCond === 'colore' && conColore" class="cst-fila" data-colori-domanda>
+          <button type="button" class="cst-chip cst-colore" :class="{ 'cst-su': !cond.colore }" data-colore-domanda="qualunque"
+                  @click="cambiaCond('colore', null)"><i class="cst-quadretto cst-arcobaleno"></i>qualunque</button>
+          <button v-for="c in coloriDomanda" :key="c" type="button" class="cst-chip cst-colore"
                   :class="{ 'cst-su': cond.colore === c }" :data-colore-domanda="c"
                   :style="{ '--cst-tinta': colore(c).tinta }" @click="cambiaCond('colore', c)">
             <i class="cst-quadretto"></i>{{ colore(c).nome }}
@@ -280,21 +353,48 @@ const scegli = v => { emit('scegli', v); emit('avanti') }
                   @click="cambiaCond('colore', { v: n })">{{ n }}</button>
         </div>
       </template>
+
       <template v-else>
-        <div class="cst-fila">
-          <button v-for="n in tuttiNomi" :key="'a' + n" type="button" class="cst-chip cst-nome"
-                  :class="{ 'cst-su': cond.a && cond.a.v === n }" @click="cambiaCond('a', { v: n })">{{ n }}</button>
+        <div class="cst-frase-domanda">
+          <button type="button" class="cst-pezzo" data-pezzo-domanda="a"
+                  :class="{ 'cst-su': pezzoCond === 'a', 'cst-vuoto': !cond.a }"
+                  @click="apriPezzo('a')">{{ cond.a ? numeroInParole(cond.a) : '?' }}</button>
+          <button type="button" class="cst-pezzo cst-pezzo-domanda" data-pezzo-domanda="cmp"
+                  :class="{ 'cst-su': pezzoCond === 'cmp', 'cst-vuoto': !cond.cmp }"
+                  @click="apriPezzo('cmp')">{{ cond.cmp ? CONFRONTI_IN_PAROLE[cond.cmp] : 'come?' }}</button>
+          <button type="button" class="cst-pezzo" data-pezzo-domanda="b"
+                  :class="{ 'cst-su': pezzoCond === 'b', 'cst-vuoto': !cond.b }"
+                  @click="apriPezzo('b')">{{ cond.b ? numeroInParole(cond.b) : '?' }}</button>
         </div>
-        <div class="cst-fila">
+        <div v-if="pezzoCond === 'cmp'" class="cst-fila">
           <button v-for="c in CONFRONTI" :key="c" type="button" class="cst-chip" :class="{ 'cst-su': cond.cmp === c }"
                   :data-confronto="c" @click="cambiaCond('cmp', c)">{{ CONFRONTI_IN_PAROLE[c] }}</button>
         </div>
-        <div class="cst-fila cst-cifre">
-          <button v-for="n in 11" :key="'b' + n" type="button" class="cst-chip"
-                  :class="{ 'cst-su': cond.b && cond.b.n === n - 1 }" @click="cambiaCond('b', { n: n - 1 })">{{ n - 1 }}</button>
-          <button v-for="n in tuttiNomi" :key="'bn' + n" type="button" class="cst-chip cst-nome"
-                  :class="{ 'cst-su': cond.b && cond.b.v === n }" @click="cambiaCond('b', { v: n })">{{ n }}</button>
-        </div>
+        <!-- i due lati: un nome, quello che il robot legge (📖), e nel porto
+             un colore («prima è uguale a rosso»); le cifre solo a destra,
+             perché «5 è minore di h» si legge al contrario -->
+        <template v-else-if="pezzoCond === 'a' || pezzoCond === 'b'">
+          <div class="cst-fila" :class="{ 'cst-cifre': pezzoCond === 'b' }">
+            <template v-if="pezzoCond === 'b'">
+              <button v-for="n in 11" :key="'n' + n" type="button" class="cst-chip" :data-cifra="n - 1"
+                      :class="{ 'cst-su': cond.b && cond.b.n === n - 1 }" @click="cambiaCond('b', { n: n - 1 })">{{ n - 1 }}</button>
+            </template>
+            <button v-for="n in tuttiNomi" :key="'v' + n" type="button" class="cst-chip cst-nome" :data-nome="n"
+                    :class="{ 'cst-su': (cond[pezzoCond] || {}).v === n }" @click="cambiaCond(pezzoCond, { v: n })">{{ n }}</button>
+          </div>
+          <div v-if="contesto.leggere" class="cst-fila" data-leggi>
+            <span class="cst-piccolo">📖 leggi:</span>
+            <button v-for="l in letture" :key="'r' + l" type="button" class="cst-chip" :data-leggi="l"
+                    :class="{ 'cst-su': (cond[pezzoCond] || {}).leggi === l }"
+                    @click="cambiaCond(pezzoCond, { leggi: l })">{{ FRECCE[l] }}</button>
+          </div>
+          <div v-if="contesto.porto && contesto.colori.length" class="cst-fila">
+            <button v-for="c in contesto.colori" :key="'c' + c" type="button" class="cst-chip cst-colore" :data-colore="c"
+                    :class="{ 'cst-su': cond[pezzoCond] === c }"
+                    :style="{ '--cst-tinta': colore(c).tinta, '--cst-ombra': colore(c).ombra }"
+                    @click="cambiaCond(pezzoCond, c)"><i class="cst-quadretto"></i>{{ colore(c).nome }}</button>
+          </div>
+        </template>
       </template>
       <button type="button" class="cst-scelta-fatto" data-azione="fatto" @click="emit('avanti')">fatto</button>
     </template>

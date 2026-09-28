@@ -26,6 +26,7 @@ import { Esecuzione, TETTO_PILA, fraseDi, PERCHE } from '../../src/giochi/costru
 import { provaLivello } from '../../src/giochi/costruttore/motore/prova.js'
 import * as mod from '../../src/giochi/costruttore/motore/modifica.js'
 import { conAttrezzi } from '../../src/giochi/costruttore/motore/attrezzi.js'
+import { quelloCheSiGuarda, siConfronta } from '../../src/giochi/costruttore/dati/legenda.js'
 import { righeDi, righeScritte, srotola, ciSta, chiamaSeStesso } from '../../src/giochi/costruttore/motore/zaino.js'
 import { torre } from '../../src/giochi/costruttore/dati/attrezzi.js'
 import manifesto from '../../src/giochi/costruttore/gioco.js'
@@ -258,6 +259,30 @@ for (const l of LIVELLI) {
      misura) si controllano dove arrivano, cioè negli ordini */
   const colori = new Set([...istruzioni(l.soluzione)].filter(i => i.tipo === 'metti' && typeof i.colore === 'string').map(i => i.colore))
   controlla(`«${l.nome}»: e solo i suoi colori`, [...colori].every(c => l.colori.includes(c)), [...colori].join(','))
+  /* e le domande chiedono solo quello che la scelta offre: i colori delle
+     mappe e le cose del livello. «Sui mattoni rossi» chiedeva del rosso con
+     una pulsantiera solo gialla, e a schermo il rosso non c'era da scegliere */
+  if (l.mondo !== 'porto') {
+    const vede = quelloCheSiGuarda(l)
+    const domande = [...istruzioni(l.soluzione)].map(i => i.cond).filter(c => c && c.tipo === 'guarda')
+    const fuoriScelta = domande.filter(c => !vede.cose.includes(c.cosa) ||
+      (typeof c.colore === 'string' && !vede.colori.includes(c.colore)))
+    controlla(`«${l.nome}»: le domande della soluzione si possono scegliere`, fuoriScelta.length === 0,
+              fuoriScelta.map(c => `${c.cosa} ${c.colore || ''}`).join(', '))
+  }
+  /* e i due lati di un confronto sono cose che la scelta offre: un nome,
+     una cifra a destra, quello che si legge dove il livello legge, un
+     colore nel porto. «Cercare» confrontava il 📖 e il tricolore un colore,
+     e la scelta dava solo nomi e cifre */
+  {
+    const confronti = [...istruzioni(l.soluzione)].map(i => i.cond).filter(c => c && c.tipo === 'confronta')
+    if (confronti.length) controlla(`«${l.nome}»: confronta due numeri, e la scelta il ⚖️ lo offre`, siConfronta(l))
+    const offerto = (x, lato) => (x && typeof x.v === 'string') || (lato === 'b' && x && typeof x.n === 'number') ||
+      (x && x.leggi && !!l.leggere) || (typeof x === 'string' && l.mondo === 'porto' && l.colori.includes(x))
+    const storti = confronti.filter(c => !offerto(c.a, 'a') || !offerto(c.b, 'b'))
+    controlla(`«${l.nome}»: e i lati dei suoi confronti si possono scegliere`, storti.length === 0,
+              storti.map(c => JSON.stringify([c.a, c.b])).join(' '))
+  }
   const posti = new Set([...istruzioni(l.soluzione)].filter(i => i.tipo === 'metti').map(i => i.dove || 'sotto'))
   controlla(`«${l.nome}»: e solo i posti dei mattoni che offre`,
             [...posti].every(q => (l.posti || ['sotto']).includes(q)), [...posti].join(','))

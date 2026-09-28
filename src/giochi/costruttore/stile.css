@@ -275,6 +275,19 @@
 .cst-conto { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 20px }
 .cst-pezzo { min-width: 48px; min-height: 40px; padding: 2px 12px; border-radius: 10px; border: 1.5px solid #b9c8ec; background: #fff; text-align: center; font-weight: 700; font-family: ui-monospace, Menlo, monospace }
 .cst-pezzo.cst-su { border-color: #5b8def; box-shadow: 0 0 0 2px #dbe6fd }
+/* la domanda: una frase a caselle, e sotto la scelta di una sola */
+.cst-frase-domanda { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px }
+.cst-pezzo-domanda { font-family: inherit; font-size: 15px; display: inline-flex; align-items: center; gap: 6px }
+.cst-pezzo.cst-vuoto { border-style: dashed; border-color: #e08a00; background: #fff4dc; color: #8a4b00 }
+.cst-quadretto.cst-arcobaleno { background: conic-gradient(#d9482b, #f2c230, #4caf50, #3a7bd5, #8e5cc2, #d9482b) }
+.cst-fila-intorno { justify-content: center; gap: 12px }
+/* la prima fila corre sotto la ✕: le lascia il suo posto */
+.cst-fila-genere { margin-right: 42px }
+.cst-intorno { display: grid; grid-template-columns: repeat(3, 52px); grid-auto-rows: 46px; gap: 5px }
+.cst-intorno-cella { border-radius: 10px; border: 1.5px solid var(--cst-bordo); background: #fff; font-size: 22px; line-height: 1 }
+.cst-intorno-cella.cst-su { background: #5b8def; border-color: #5b8def; color: #fff }
+.cst-intorno-robot { display: flex; align-items: center; justify-content: center; font-size: 26px;
+                     border-radius: 10px; background: #e3e9f7 }
 .cst-segni .cst-piccolo { margin: 0 }
 /* «cst-scelta-fatto» e non «cst-fatto»: quel nome era anche la classe dei
    livelli vinti nella mappa e del messaggio del cantiere libero, e li
