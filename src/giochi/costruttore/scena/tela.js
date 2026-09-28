@@ -1,28 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL CANTIERE DISEGNATO
-
-   Riceve un **quadro** già deciso e lo disegna, sessanta volte al
-   secondo finché serve. Non sa cosa sia un livello, un ordine o un
-   programma: sa che c'è una griglia con del terreno, dei mattoni, un
-   disegno in trasparenza, un robot che va da una cella a un'altra, un
-   omino e una bandiera.
-
-     quadro = {
-       w, h, suolo: [...], mattoni: Map(k → colore), bersaglio: Map,
-       robot: { x, y }, robotDa: { x, y } | null, dal: ms,   // il passo in corso
-       durata: ms, come: 'passo'|'sale'|'cade', verso: ±1,     // quanto dura, e com'è
-       omino: { x, y, come } | null, ominoDa, bandiera: { x, y } | null,
-       posa: { x, y, dal } | null,        // il mattone appena messo: fa «pop»
-       guarda: { x, y, esito, dal } | null,  // l'occhio del robot su una cella
-       fermo: { x, y } | null,            // dove il robot si è fermato per un errore
-       confronto: { mancano, troppi, sbagliati } | null,
-       esito: 'splash'|'muro'|'caduta'|… | null,  // come è finita la prova dell'omino
-     }
-
-   Il robot è disegnato e non preso da un foglio: è un muratore di
-   latta, geometrico per natura, e i poligoni qui non sono un ripiego —
-   sono lo stile giusto (vedi la memoria sul tetto della resa grafica).
-   ═══════════════════════════════════════════════════════════════════ */
+// il cantiere disegnato: riceve un quadro già deciso (docs/costruttore/linguaggio.md)
 import { colore } from '../dati/colori.js'
 
 const CIELO = '#d9eefb'
@@ -48,8 +24,7 @@ export class Tela {
     cancelAnimationFrame(this.raf)
   }
 
-  /* La misura della cella la decide chi monta la tela (sa quanto posto
-     c'è); qui si prepara il canvas per il `devicePixelRatio`. */
+  // prepara il canvas per il devicePixelRatio
   misura(larghezza, altezzaMassima, w, h) {
     const cella = Math.max(10, Math.floor(Math.min(larghezza / w, altezzaMassima / h)))
     this.cella = cella
@@ -74,7 +49,6 @@ export class Tela {
     const { ctx, cella: c } = this
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
     const W = q.w * c, H = q.h * c
-    /* il cielo: due fasce, più chiaro in basso verso l'orizzonte */
     ctx.fillStyle = CIELO
     ctx.fillRect(0, 0, W, H)
     ctx.fillStyle = CIELO_BASSO
@@ -88,7 +62,6 @@ export class Tela {
     }
     this.griglia(q)
 
-    /* il disegno in trasparenza, sotto i mattoni veri */
     for (const [k, col] of q.bersaglio) {
       if (q.mattoni.has(k)) continue
       this.fantasma(k % q.w, Math.floor(k / q.w), col, q, t)
@@ -101,7 +74,6 @@ export class Tela {
     this.robot(q, t)
   }
 
-  /* ── il fondo ── */
   nuvole(q, t) {
     const { ctx, cella: c } = this
     ctx.fillStyle = 'rgba(255,255,255,.75)'
@@ -123,8 +95,7 @@ export class Tela {
     const sopra = y > 0 ? q.suolo[(y - 1) * q.w + x] : 'aria'
     ctx.fillStyle = TERRA
     ctx.fillRect(px, py, c, c)
-    /* due sassolini fissi per cella: la terra non è una tinta unita, ma
-       non deve nemmeno tremolare — la posizione viene dalla cella */
+    // due sassolini fissi per cella, dalla posizione (niente tremolio)
     ctx.fillStyle = (x + y) % 2 ? SASSO : TERRA_SCURA
     const a = ((x * 7 + y * 13) % 5) / 5, b = ((x * 11 + y * 3) % 7) / 7
     ctx.fillRect(px + c * (0.15 + a * 0.6), py + c * (0.35 + b * 0.4), c * 0.12, c * 0.1)
@@ -163,7 +134,6 @@ export class Tela {
     ctx.stroke()
   }
 
-  /* ── i mattoni ── */
   mattone(x, y, chiave, q, t) {
     const { ctx, cella: c } = this
     const col = colore(chiave) || colore('rosso')
@@ -181,7 +151,6 @@ export class Tela {
     ctx.fillStyle = col.luce
     ctx.fillRect(px, py, l - m, m)
     ctx.fillRect(px, py, m, l - m)
-    /* la malta: una riga orizzontale e due mezzi giunti sfalsati */
     ctx.fillStyle = col.ombra
     ctx.fillRect(px + m, py + l * 0.5 - m / 2, l - 2 * m, Math.max(1, m * 0.7))
     ctx.fillRect(px + l * 0.5, py + m, Math.max(1, m * 0.7), l * 0.5 - m)
@@ -193,8 +162,7 @@ export class Tela {
     const { ctx, cella: c } = this
     const col = colore(chiave) || colore('rosso')
     const px = x * c, py = y * c
-    /* quelli che mancano a fine prova lampeggiano: il disegno che chiede
-       ancora un mattone si vede senza doverlo leggere */
+    // quelli che mancano a fine prova lampeggiano
     const manca = q.confronto && q.confronto.mancano.some(p => p.x === x && p.y === y)
     const a = manca ? 0.3 + 0.3 * (0.5 + 0.5 * Math.sin(t / 150)) : 0.22
     ctx.globalAlpha = a
@@ -227,7 +195,6 @@ export class Tela {
     ctx.globalAlpha = 1
   }
 
-  /* ── la bandiera, l'omino ── */
   bandiera(x, y, t) {
     const { ctx, cella: c } = this
     const px = x * c, py = y * c
@@ -257,11 +224,9 @@ export class Tela {
     const giu = q.esito === 'caduta'
     ctx.save()
     if (giu) { ctx.translate(px + c / 2, py + c * 0.8); ctx.rotate(Math.PI / 2); ctx.translate(-(px + c / 2), -(py + c * 0.8)) }
-    /* le gambe */
     ctx.fillStyle = '#3b4a6b'
     ctx.fillRect(px + c * 0.36, py + c * 0.66, c * 0.1, c * (passo ? 0.3 : 0.26))
     ctx.fillRect(px + c * 0.54, py + c * 0.66, c * 0.1, c * (passo ? 0.26 : 0.3))
-    /* il corpo e la testa */
     ctx.fillStyle = '#e8743b'
     ctx.fillRect(px + c * 0.32, py + c * 0.38, c * 0.36, c * 0.32)
     ctx.fillStyle = '#f5c9a0'
@@ -284,8 +249,7 @@ export class Tela {
     }
   }
 
-  /* l'occhio del robot su una cella: il riquadro verde se la risposta è
-     sì, grigio se è no — la condizione si vede, non solo il suo esito */
+  // l'occhio del robot su una cella: verde se sì, grigio se no
   occhiata(q, t) {
     const { ctx, cella: c } = this
     const g = q.guarda
@@ -296,17 +260,12 @@ export class Tela {
     ctx.strokeRect(px + 1.5, py + 1.5, c - 3, c - 3)
   }
 
-  /* ── il robot ──
-     Un muratore a due gambe, non un drone: cammina, sale un gradino,
-     cade. L'occhio guarda da che parte sta andando (`verso`), le gambe
-     si alternano mentre cammina e si stringono mentre cade. */
   robot(q, t) {
     const { ctx, cella: c } = this
     let { x, y } = q.robot
     let f = 1
     if (q.robotDa && q.durata) {
       f = Math.min(1, (t - q.dal) / q.durata)
-      /* la caduta accelera, il passo è morbido */
       const e = q.come === 'cade' ? f * f : f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2
       x = q.robotDa.x + (x - q.robotDa.x) * e
       y = q.robotDa.y + (y - q.robotDa.y) * e
@@ -314,13 +273,11 @@ export class Tela {
     const inMoto = q.robotDa && f < 1
     const cade = inMoto && q.come === 'cade'
     const cammina = inMoto && !cade
-    /* un saltello a metà passo, e quando sale sul gradino */
     const salto = cammina ? Math.sin(f * Math.PI) * c * (q.come === 'sale' ? 0.12 : 0.06) : 0
     const px = x * c, py = y * c - salto
     const cx = px + c / 2
     const v = q.verso || 1
 
-    /* le gambe */
     ctx.fillStyle = '#3d4450'
     const fase = cammina ? Math.sin(f * Math.PI * 2) : 0
     const lg = c * 0.1, alt = c * 0.2
@@ -331,22 +288,18 @@ export class Tela {
       ctx.fillRect(cx - c * 0.16 + fase * c * 0.05, py + c * 0.78, lg, alt)
       ctx.fillRect(cx + c * 0.06 - fase * c * 0.05, py + c * 0.78, lg, alt)
     }
-    /* il corpo: giallo cantiere */
     ctx.fillStyle = '#f5b82e'
     ctx.strokeStyle = '#8a6112'
     ctx.lineWidth = Math.max(1, c * 0.05)
     ctx.beginPath()
-    /* `roundRect` manca sui Safari prima del 16: lì il robot è squadrato,
-       ma c'è */
+    // roundRect manca su Safari <16: lì il robot è squadrato, ma c'è
     if (ctx.roundRect) ctx.roundRect(cx - c * 0.26, py + c * 0.42, c * 0.52, c * 0.38, c * 0.08)
     else ctx.rect(cx - c * 0.26, py + c * 0.42, c * 0.52, c * 0.38)
     ctx.fill()
     ctx.stroke()
-    /* il braccio, verso dove guarda; alzato mentre cade */
     ctx.fillStyle = '#8a6112'
     if (cade) ctx.fillRect(cx + v * c * 0.24, py + c * 0.28, c * 0.07, c * 0.2)
     else ctx.fillRect(cx + v * c * 0.24, py + c * 0.52, c * 0.14, c * 0.07)
-    /* la testa, con lo schermo e l'occhio */
     ctx.fillStyle = '#e9edf2'
     ctx.strokeStyle = '#4a5260'
     ctx.beginPath()
@@ -358,7 +311,6 @@ export class Tela {
     ctx.beginPath()
     ctx.arc(cx + v * c * 0.07, py + c * 0.26, c * 0.07, 0, Math.PI * 2)
     ctx.fill()
-    /* l'antenna, con la lucina */
     ctx.fillStyle = '#4a5260'
     ctx.fillRect(cx - c * 0.015, py + c * 0.01, c * 0.03, c * 0.1)
     ctx.fillStyle = q.fermo ? '#c0262d' : '#ff8a3d'

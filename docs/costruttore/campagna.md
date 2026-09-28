@@ -59,3 +59,9 @@ funziona in generale: [../apprendimento/eta-e-portata.md](../apprendimento/eta-e
   cosa. Un test pretende che la soluzione svelata vinca davvero.
 - **Quello che si è pagato resta** (`campagne.costruttore.aiuti`, via
   `segnaAiutiPresi`), e un pezzo di programma si rimette gratis.
+- **Il primo gradino gratis si scende da sé** aprendo il foglio: chi tocca la
+  lampadina vuole già una mano, e fargli toccare un secondo tasto per una
+  frase che non costa niente è una schermata in più.
+- **Chi compra è `scendi` in `Gioco.vue`, non il foglio**: senza monete la
+  spesa si rifiuta comunque, anche premendo un tasto che avrebbe dovuto
+  essere spento.

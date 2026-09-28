@@ -1,83 +1,23 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL PORTO DISEGNATO — dall'alto, e con una telecamera
-
-   Il fratello di `tela.js`, con la stessa forma e lo stesso patto:
-   riceve un **quadro** già deciso e lo disegna sessanta volte al
-   secondo. Non sa cosa sia un programma, un livello o una moneta, e non
-   sa nemmeno *perché* una cassa stia volando: sa da dove parte, dove
-   arriva e a che ora.
-
-     quadro = {
-       mondo: 'porto', porto,               // il Porto: si legge, non si tocca mai
-       tema: 'molo'|'magazzino'|'bottega',  // la tavolozza del pavimento
-       robot, robotDa, dal, durata, verso,  // il passo in corso, come nel cantiere
-       voli: [{ cosa, da, a, dal, durata }],  // le cose in viaggio
-       mezzi: [{ come: 'arriva'|'parte', x, y, dal, durata,
-                 colore, capienza, carico, contento }],  // i camion sulla strada
-       guarda, legge, fermo, guaio,         // l'occhio, la nuvoletta, i guai
-       mancano, sbagliati, umore,           // la sera, e il cliente appena andato
-       nastroDal, passo, seguiRobot,
-     }
-
-   Il porto arriva qui già alla fine del turno: la cassa presa è già in
-   mano, quella calata è già per terra. Il disegno deve raccontare **come
-   ci è arrivato**, e per questo il quadro porta gli orari: finché un
-   volo è in corso la cosa si disegna in viaggio e non al suo posto, e
-   quando atterra il porto la ritrova da solo dove il motore l'aveva già
-   messa. Così qui non c'è niente da tenere in pari con il motore. I
-   camion sono la stessa cosa in grande: mentre arriva, il camion è già
-   un arredo sulla piazzola, ma si disegna sulla strada; quando riparte
-   l'arredo non c'è più, e il camion se ne va col carico che il mezzo
-   si porta dietro.
-
-   ── DRITTO E DI SBIECO ───────────────────────────────────────────────
-   Pavimento, arredi e casse si vedono dritti dall'alto: sono loro che si
-   contano. Il robot, i clienti e la gru invece sono un po' di sbieco, con
-   la testa più su dei piedi: visto proprio da sopra il robot sarebbe una
-   testa grigia e basta, e il giallo del muratore di latta — che è come lo
-   si riconosce dal cantiere — sparirebbe. L'altezza si disegna spostando
-   verso la cima dello schermo: è così che la cassa della gru *scende*
-   lungo il cavo, invece di ingrandirsi sul posto.
-
-   ── LA TELECAMERA ────────────────────────────────────────────────────
-   Se la mappa sta nello spazio con celle di almeno 26 px, non c'è: il
-   canvas è grande quanto la mappa. Se no la cella resta a 30 px — più
-   piccola a dito non si conta — e il canvas diventa una finestra sulla
-   mappa: mentre il programma gira segue il robot, da fermi si trascina.
-
-   Quello che questa tela ricorda da un fotogramma all'altro è solo roba
-   da occhi: dov'è la telecamera, il dito che trascina, gli schizzi
-   d'acqua ancora aperti, da quando è arrivato il cliente al bancone.
-   ═══════════════════════════════════════════════════════════════════ */
+// il porto disegnato, dall'alto e con una telecamera (docs/costruttore/porto.md)
 import { colore } from '../dati/colori.js'
 
 /* le quattro frecce, come nel motore: `y` cresce verso il basso */
 const DIREZIONI = { su: [0, -1], giu: [0, 1], destra: [1, 0], sinistra: [-1, 0] }
 const OPPOSTO = { su: 'giu', giu: 'su', destra: 'sinistra', sinistra: 'destra' }
 const DI_FIANCO = { su: ['destra', 'sinistra'], giu: ['destra', 'sinistra'], destra: ['giu', 'su'], sinistra: ['giu', 'su'] }
-/* per girare un disegno fatto «in avanti verso destra» (il nastro) o
-   «con la testa in su» (il camion, la porta del magazzino) */
+// per girare un disegno fatto «in avanti verso destra» o «con la testa in su»
 const DA_DESTRA = { destra: 0, giu: Math.PI / 2, sinistra: Math.PI, su: -Math.PI / 2 }
 const DA_SU = { su: 0, destra: Math.PI / 2, giu: Math.PI, sinistra: -Math.PI / 2 }
 
-/* Le misure. Sotto i 26 px una cella non si conta più a colpo d'occhio,
-   sopra i 48 una mappa piccola diventa un poster; con la telecamera la
-   cella sta a 30, che è il meno che un dito tocca senza sbagliare. */
+// sotto i 26px una cella non si conta più a colpo d'occhio, sopra i 48 diventa un poster
 const CELLA_MIN = 26, CELLA_MAX = 48, CELLA_TELECAMERA = 30
-/* un tocco diventa un trascinamento solo oltre la misura del dito: sotto,
-   Android e iOS considerano il dito ancora fermo (vedi `docs/core/il-dito.md`) */
+// oltre questa misura un tocco diventa un trascinamento (docs/core/il-dito.md)
 const SOGLIA_DITO = 16
-/* una cassa è un po' più piccola della cella, così fra due vicine si vede
-   il pavimento; in mano è più piccola ancora, e resta dentro la sagoma */
 const LATO_CASSA = 0.74, IN_MANO = 0.7
-/* il braccio della gru sta in alto: di quanto, in celle di schermo. Poco
-   meno di una cella: il carrello cade sul bordo della cella di sopra, e
-   non si confonde con la riga dopo */
+// poco meno di una cella, così il carrello non si confonde con la riga sopra
 const ALTEZZA_GRU = 0.9
-/* appesa al gancio, lassù, una cassa è più vicina all'occhio: più grande */
 const IN_ALTO = 1.3
-/* dove tiene le cose il robot, rispetto al centro della sua cella: in
-   avanti verso la freccia, e sopra la testa quando guarda in su */
+// dove tiene le cose il robot, rispetto al centro della sua cella
 const MANO = { destra: [0.44, 0.04], sinistra: [-0.44, 0.04], giu: [0, 0.19], su: [0, -0.5] }
 
 const INCHIOSTRO = '#2d2a26', CARTA = '#fffdf9'
@@ -86,35 +26,23 @@ const GIALLO = '#f5b82e', GIALLO_BORDO = '#8a6112'
 const MARE = { fondo: '#3f8ecf', onda: 'rgba(190,228,250,.6)', ombra: 'rgba(12,40,80,.3)' }
 const MURO = { fondo: '#8d8880', chiaro: '#a9a39a', scuro: '#7f7a72', giunto: '#615c55', faccia: '#6b665f', bordo: '#4f4b45' }
 const STRADA = { asfalto: '#4f5358', chiaro: '#5d6167', scuro: '#44484d', riga: 'rgba(242,240,230,.92)', cordolo: '#cfc9bd', cordoloScuro: '#8f897e' }
-/* la buca delle lettere è verde scuro: il rosso delle buche vere qui
-   vorrebbe dire «prende solo casse rosse», e il numero sopra è già
-   tutto quello che serve sapere */
+// verde scuro: il rosso vorrebbe dire «prende solo casse rosse»
 const BUCA = { corpo: '#2f6d67', coperchio: '#428d85', bordo: '#1b4440', fessura: '#0e1d1b', ottone: '#caa24b' }
-/* le forme di formaggio della torre del casaro: la crosta, la pasta, e
-   la luce sul piatto di sopra. Viste dall'alto una pila è una serie di
-   anelli uno dentro l'altro — la più piccola in cima, al centro — e ogni
-   forma sta un filo più in alto di quella sotto */
+// viste dall'alto, una pila di formaggi è anelli concentrici, il più piccolo in cima
 const FORMAGGIO = { crosta: '#c98a1b', scura: '#9a6512', pasta: '#f3c95a', luce: '#fbe39a', ombra: 'rgba(60,35,5,.28)' }
 const ALZO_FORMA = 0.02
-/* il raggio di una forma, in celle, rispetto alla più grande della
-   giornata: la 1 si vede ancora bene, la più grande riempie la sua asse.
-   Con tre forme o con sette la torre occupa lo stesso posto, e la
-   differenza fra una forma e la vicina si vede sempre */
+// il raggio è relativo alla forma più grande: con 3 o 7 forme la torre occupa lo stesso posto
 const raggioForma = (numero, massima) => 0.13 + (0.29 * (Math.max(1, numero) - 1)) / Math.max(1, massima - 1)
-/* quello che dice un cliente che chiede una qualità, in due righe */
 const QUALITA_IN_NUVOLA = { massimo: ['la più', 'grande'], minimo: ['la più', 'piccola'] }
 
-/* I tre pavimenti. Stanno tutti sul chiaro e sul caldo: sopra ci devono
-   leggersi dieci colori di casse, e un pavimento saturo se ne mangerebbe
-   qualcuno (il cotto si mangia l'arancio, il blu il blu). */
+// chiari e caldi: sopra devono leggersi dieci colori di casse, un pavimento saturo se ne mangia qualcuno
 const PAVIMENTI = {
   molo:      { fondo: '#d6b588', chiaro: '#e0c298', scuro: '#c9a777', giunto: 'rgba(255,244,222,.45)', chiodo: '#8a6843', bordo: '#7d5a37', griglia: 'rgba(92,58,22,.3)' },
   magazzino: { fondo: '#bcb3a6', chiaro: '#c6beb2', scuro: '#b0a699', giunto: 'rgba(88,78,66,.32)', chiodo: '#9d9487', bordo: '#7b7266', griglia: 'rgba(60,50,40,.16)' },
   bottega:   { fondo: '#eee2c8', chiaro: '#f4ead5', scuro: '#e5d5b5', giunto: 'rgba(150,118,78,.38)', chiodo: '#c27b59', bordo: '#a58d6b', griglia: 'rgba(120,90,55,.1)' },
 }
 
-/* i clienti: tre tavolozze che girano con l'id, così lo stesso cliente
-   resta lo stesso dalla fila al bancone */
+// tre tavolozze che girano con l'id: lo stesso cliente resta lo stesso dalla fila al bancone
 const MAGLIE = ['#e8743b', '#4f86c6', '#6aa84f', '#c2185b', '#7e57c2', '#26a69a', '#f4a825', '#5d6d7e']
 const PELLI = ['#f5c9a0', '#e3b088', '#c68b5e', '#8d5a3b', '#f1d3b3']
 const CAPELLI = ['#3a2a1e', '#6b4226', '#d9a441', '#1f1f1f', '#a0522d', '#9a9a9a']
@@ -123,31 +51,27 @@ const fra = (v, a, b) => Math.max(a, Math.min(b, v))
 const morbido = f => (f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2)
 const frena = f => 1 - Math.pow(1 - f, 3)
 const tuffo = f => 1 + 2.2 * Math.pow(f - 1, 3) + 1.2 * Math.pow(f - 1, 2)
-/* a metà strada fra due angoli, per la via più corta: una curva a destra
-   non deve diventare tre quarti di giro a sinistra */
+// a metà fra due angoli per la via più corta (mai un giro lungo per una curva breve)
 const mescola = (a, b, k) => {
   let d = b - a
   while (d > Math.PI) d -= Math.PI * 2
   while (d < -Math.PI) d += Math.PI * 2
   return a + d * k
 }
-/* un numero fisso fra 0 e 1 per ogni cella: i sassolini, le venature e
-   le onde stanno sempre allo stesso posto — niente tremola */
+// un numero fisso fra 0 e 1 per cella: niente tremola fra un fotogramma e l'altro
 const caso = (a, b, n = 0) => {
   const s = Math.sin(a * 127.1 + b * 311.7 + n * 74.7) * 43758.5453
   return s - Math.floor(s)
 }
 
-/* `roundRect` manca sui Safari prima del 16: lì gli spigoli sono vivi, ma
-   il disegno c'è */
+// roundRect manca su Safari <16: lì gli spigoli sono vivi, ma il disegno c'è
 function rett(ctx, x, y, w, h, r = 0) {
   ctx.beginPath()
   if (ctx.roundRect) ctx.roundRect(x, y, w, h, r)
   else ctx.rect(x, y, w, h)
 }
 
-/* quello che dipende solo dalla mappa (da che parte arriva la gru, dove
-   si mette la fila): si calcola una volta per porto */
+// quello che dipende solo dalla mappa si calcola una volta per porto
 const MEMO = new WeakMap()
 
 export class TelaPorto {
@@ -197,10 +121,7 @@ export class TelaPorto {
     this.ascolti = []
   }
 
-  /* Quanto è grande la cella, e quanto il canvas. La regola sta in testa
-     al file; qui conta che si possa richiamare a ogni ridimensionamento:
-     il canvas si tocca solo se cambia (riassegnare `width` lo svuota), e
-     la telecamera resta sullo stesso punto della mappa. */
+  // il canvas si tocca solo se cambia: riassegnare `width` lo svuota
   misura(larghezza, altezzaMassima, w, h) {
     const p = this.quadro && this.quadro.porto
     w = w || (p && p.w) || 1
@@ -228,9 +149,7 @@ export class TelaPorto {
     if (this.canvas.height !== ph) this.canvas.height = ph
     this.canvas.style.width = `${this.vistaW}px`
     this.canvas.style.height = `${this.vistaH}px`
-    /* il dito che trascina non deve far scorrere la pagina; senza
-       telecamera invece il canvas torna una parte della pagina come le
-       altre, e ci si scorre sopra */
+    // col dito che trascina non deve scorrere la pagina; senza telecamera sì
     this.canvas.style.touchAction = this.telecamera ? 'none' : ''
     if (prima !== this.cella) {
       this.cam.x *= this.cella / prima
@@ -246,8 +165,7 @@ export class TelaPorto {
     this.quadro = quadro
   }
 
-  /* un quadro nuovo è un altro ordine, o un'altra giornata: la telecamera
-     torna sul robot e gli effetti di prima si chiudono */
+  // un quadro nuovo è un altro ordine: la telecamera torna sul robot
   daCapo() {
     this.daCentrare = true
     this.schizzi.clear()
@@ -272,19 +190,13 @@ export class TelaPorto {
     this.raf = requestAnimationFrame(this.giro)
   }
 
-  /* ═══════════ la telecamera ═══════════ */
   tieniDentro() {
     const c = this.cella
     this.cam.x = fra(this.cam.x, 0, Math.max(0, this.w * c - this.vistaW))
     this.cam.y = fra(this.cam.y, 0, Math.max(0, this.h * c - this.vistaH))
   }
 
-  /* Mentre il programma gira la telecamera va dietro al robot, ma non
-     gli sta incollata: si muove solo quando lui esce dal riquadro in
-     mezzo. Un mondo che scorre a ogni passo sotto i piedi del robot non
-     si riesce più a contare, ed è contando le celle che si scrive il
-     programma. Quando `seguiRobot` si riaccende — si è trascinato per
-     guardare altrove, e si preme ▶ — prima si torna col robot al centro. */
+  // la telecamera non sta incollata al robot: si muove solo quando esce dal riquadro in mezzo
   inquadra(q, t, dt) {
     if (!this.telecamera) {
       this.cam.x = this.cam.y = 0
@@ -329,17 +241,11 @@ export class TelaPorto {
     }
   }
 
-  /* ── il dito ──
-     Si trascina solo da fermi e solo con la telecamera. Un tocco breve non
-     muove niente: sotto la soglia il dito è ancora un tocco, e il click
-     che lascia arriva a chi sta sotto come sempre. Dopo un trascinamento
-     invece quel click si ingoia: il dito che si alza non è una scelta. */
+  // il dito si trascina solo da fermi e solo con la telecamera; sotto la soglia resta un tocco
   premuto(e) {
     if (!this.telecamera || (this.quadro && this.quadro.seguiRobot)) return
     if (e.pointerType === 'mouse' && e.button !== 0) return
-    /* un secondo dito non ruba il trascinamento al primo; un dito nuovo
-       invece sì, anche se del vecchio non è mai arrivato il `pointerup` —
-       col mouse succede lasciando il tasto fuori dal canvas */
+    // un secondo dito non ruba il trascinamento al primo; uno nuovo sì
     if (this.dito && !e.isPrimary) return
     this.dito = { id: e.pointerId, x0: e.clientX, y0: e.clientY, cx: this.cam.x, cy: this.cam.y, via: false }
   }
@@ -349,7 +255,6 @@ export class TelaPorto {
     if (!d || e.pointerId !== d.id) return
     if (!d.via) {
       if (Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < SOGLIA_DITO) return
-      /* si riparte da qui, se no la mappa salterebbe di sedici pixel */
       d.via = true
       d.x0 = e.clientX
       d.y0 = e.clientY
@@ -370,8 +275,7 @@ export class TelaPorto {
     this.dito = null
   }
 
-  /* in cattura sul canvas stesso: così arriva prima di un `@click` messo
-     sullo stesso elemento, e lo ferma insieme a quelli dei genitori */
+  // in cattura sul canvas: arriva prima di un @click sullo stesso elemento e lo ferma
   cliccato(e) {
     if (performance.now() - this.trascinatoAlle < 400) {
       e.stopImmediatePropagation()
@@ -379,37 +283,30 @@ export class TelaPorto {
     }
   }
 
-  /* ═══════════ il fotogramma ═══════════ */
   disegna(q, t) {
     const { ctx, dpr, cella: c } = this
     const p = q.porto
-    /* le forme della torre sono 1, 2, … n: la più grande è quante sono */
+    // le forme della torre sono 1, 2, … n: la più grande è quante sono
     this.formeMax = p.pile.reduce((n, pila) => n + pila.filter(x => x.tipo === 'forma').length, 0) +
       (p.mano && p.mano.tipo === 'forma' ? 1 : 0)
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    /* ogni fotogramma parte dallo stesso stato: un tratteggio o una
-       trasparenza dimenticati da un pittore non passano al successivo */
+    // ogni fotogramma riparte dallo stesso stato: niente resta da un pittore al successivo
     ctx.globalAlpha = 1
     ctx.setLineDash([])
     ctx.lineCap = 'butt'
     ctx.lineJoin = 'miter'
     ctx.fillStyle = MARE.fondo
     ctx.fillRect(0, 0, this.vistaW, this.vistaH)
-    /* la telecamera si ferma sui pixel interi: una griglia spostata di
-       mezzo pixel diventa sfocata, e mentre scorre sfarfalla */
+    // sui pixel interi: spostata di mezzo pixel la griglia sfoca e sfarfalla scorrendo
     const ox = Math.round(this.cam.x), oy = Math.round(this.cam.y)
     ctx.translate(-ox, -oy)
-    /* si disegna solo quello che si vede, più una cella di margine per chi
-       sporge (la testa del robot, il camion, le etichette) */
+    // solo quello che si vede, più una cella di margine per chi sporge
     const vis = {
       x0: Math.max(0, Math.floor(ox / c) - 1), x1: Math.min(p.w - 1, Math.ceil((ox + this.vistaW) / c)),
       y0: Math.max(0, Math.floor(oy / c) - 1), y1: Math.min(p.h - 1, Math.ceil((oy + this.vistaH) / c) + 1),
     }
-    /* le cose in viaggio: finché volano non stanno al loro posto */
     const inVolo = new Set()
     for (const v of q.voli || []) if (v && v.cosa && t < v.dal + (v.durata || 0)) inVolo.add(v.cosa.id)
-    /* e i camion che stanno arrivando: sono già sulla piazzola per il
-       motore, ma sullo schermo sono ancora per strada */
     const inArrivo = new Set()
     for (const m of q.mezzi || [])
       if (m && m.come === 'arriva' && t < m.dal + (m.durata || 0) && p.dentro(m.x, m.y)) inArrivo.add(m.y * p.w + m.x)
@@ -431,8 +328,7 @@ export class TelaPorto {
     this.fantasmi(p, q, t, vis, inVolo)
     this.cose(p, vis, inVolo)
     this.mezzi(p, q, t, inVolo)
-    /* gli schizzi dopo gli arredi: una cassa caduta oltre il bordo della
-       mappa fa gli anelli sul bordo, che può essere la fine di un nastro */
+    // dopo gli arredi: una cassa caduta oltre il bordo fa gli anelli lì (fine di un nastro)
     this.acqua(t)
     if (q.sbagliati && q.sbagliati.length) this.croci(q.sbagliati, t)
     this.ombraGru(p)
@@ -450,20 +346,16 @@ export class TelaPorto {
     if (this.telecamera) this.bordi(p)
   }
 
-  /* ═══════════ il pavimento ═══════════ */
   pavimento(p, tema, vis) {
     const { ctx, cella: c } = this
-    /* una mano di fondo su tutto quello che si vede, e poi i dettagli
-       sopra: due rettangoli vicini lasciano una riga chiara fra loro
-       quando il bordo cade a metà di un pixel del telefono */
+    // una mano di fondo continua, poi i dettagli: due rettangoli vicini lascerebbero una riga chiara
     ctx.fillStyle = tema.fondo
     ctx.fillRect(vis.x0 * c, vis.y0 * c, (vis.x1 - vis.x0 + 1) * c, (vis.y1 - vis.y0 + 1) * c)
     if (tema === PAVIMENTI.magazzino) this.cemento(p, tema, vis)
     else if (tema === PAVIMENTI.bottega) this.mattonelle(p, tema, vis)
     else this.assi(p, tema, vis)
 
-    /* dove il pavimento finisce nel mare c'è la trave del bordo: si vede
-       dove non si può andare prima di doverlo leggere */
+    // la trave del bordo: si vede dove non si può andare prima di doverlo leggere
     ctx.fillStyle = tema.bordo
     ctx.beginPath()
     const b = c * 0.08
@@ -484,11 +376,7 @@ export class TelaPorto {
 
   suoloDi(p, x, y) { return p.dentro(x, y) ? p.suolo[y * p.w + x] : null }
 
-  /* il molo: assi di legno, due per cella, lunghe due celle e sfalsate
-     come si inchiodano davvero. Fra le due assi di una cella c'è solo un
-     filo di luce, mai una riga scura: la riga scura è la griglia, ed è
-     quella che si conta — con due righe uguali per cella le file
-     sembrerebbero il doppio */
+  // due assi per cella, sfalsate come si inchiodano davvero; la riga scura è solo la griglia
   assi(p, tema, vis) {
     const { ctx, cella: c } = this
     const mezza = c / 2
@@ -510,7 +398,6 @@ export class TelaPorto {
       ctx.lineTo(px + c, py + mezza + 0.5)
     })
     ctx.stroke()
-    /* i chiodi, ai due capi di ogni asse */
     ctx.fillStyle = tema.chiodo
     ctx.beginPath()
     const n = Math.max(1, c * 0.05)
@@ -525,8 +412,7 @@ export class TelaPorto {
     ctx.fill()
   }
 
-  /* il magazzino: lastre di cemento di due celle per due, con i
-     sassolini e qualche macchia d'olio */
+  // lastre di cemento 2x2, coi sassolini e qualche macchia d'olio
   cemento(p, tema, vis) {
     const { ctx, cella: c } = this
     this.celle(p, vis, 'pavimento', (x, y, px, py) => {
@@ -560,8 +446,7 @@ export class TelaPorto {
     ctx.stroke()
   }
 
-  /* la bottega: mattonelle di graniglia, una per cella, col rombo di cotto
-     negli incroci — la griglia qui c'è già, ed è la fuga */
+  // mattonelle di graniglia, una per cella, col rombo di cotto negli incroci
   mattonelle(p, tema, vis) {
     const { ctx, cella: c } = this
     ctx.fillStyle = tema.scuro
@@ -586,12 +471,8 @@ export class TelaPorto {
     ctx.fill()
   }
 
-  /* ── la strada dei camion ──
-     Asfalto, la riga tratteggiata dove la strada va — la si ricava dalle
-     caselle-strada vicine, quindi viene da sé dritta, in curva o a
-     incrocio — e il cordolo chiaro verso tutto quello che strada non è:
-     è il confine che il robot non passa. La piazzola ha le strisce del
-     parcheggio, e si vede anche vuota: lì si ferma qualcuno. */
+  // la riga tratteggiata viene dalle celle-strada vicine (dritta, in curva o a incrocio);
+  // il cordolo è il confine che il robot non passa
   strade(p, vis) {
     const { ctx, cella: c } = this
     const asfalto = []
@@ -602,7 +483,6 @@ export class TelaPorto {
     ctx.beginPath()
     for (const [, , px, py] of asfalto) ctx.rect(px, py, c, c)
     ctx.fill()
-    /* la grana, fissa come i sassolini del cemento */
     const g = Math.max(1, c * 0.045)
     for (const [tono, da] of [[STRADA.chiaro, 60], [STRADA.scuro, 70]]) {
       ctx.fillStyle = tono
@@ -611,9 +491,7 @@ export class TelaPorto {
         for (let i = 0; i < 4; i++) ctx.rect(px + c * (0.08 + 0.84 * caso(x, y, da + i)), py + c * (0.08 + 0.84 * caso(x, y, da + 5 + i)), g, g)
       ctx.fill()
     }
-    /* la riga di mezzo: da ogni casella un braccio verso ogni strada
-       vicina (e verso fuori, dove la strada esce dalla mappa); due bracci
-       in fila fanno un trattino, due ad angolo una curva */
+    // un braccio verso ogni strada vicina (e verso l'uscita): in fila un trattino, ad angolo una curva
     ctx.strokeStyle = STRADA.riga
     ctx.lineWidth = Math.max(1.5, c * 0.065)
     ctx.lineCap = 'square'

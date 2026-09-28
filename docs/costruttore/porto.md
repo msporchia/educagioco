@@ -36,7 +36,26 @@ che non sa cosa arriverà né quando. Codice in `motore/porto/`, `dati/porto/`,
   ne va arrabbiato;
 - **la giornata finisce da sola** quando non può più succedere niente, ed è
   così che un «per sempre» si ferma (è la `Sera` di `motore/inciampo.js`, non
-  un errore). A sera `motore/porto/esito.js` dice cosa manca, coi numeri.
+  un errore). A sera `motore/porto/esito.js` dice cosa manca, coi numeri, non
+  «riprova»: quello che va storto **durante** la giornata (una cassa in mare,
+  un cliente arrabbiato) ferma la giornata subito, con un `Inciampo` — l'esito
+  guarda solo com'è finita.
+
+## L'obiettivo di una giornata
+
+Il livello (o l'ordine) lo dichiara in `obiettivo`, invece di scriverlo in
+codice; ognuno vale da sé se il pezzo di mondo che riguarda c'è (si
+disattiva con `false`):
+
+| chiave | cosa guarda |
+|---|---|
+| `bersagli` | le casse disegnate in trasparenza sono al loro posto, del colore giusto |
+| `cassoni` | `{ <nome>: { quante } }`, o `{ vuoto: true }` per dire che deve restare vuoto |
+| `serviti` | tutti i clienti se ne sono andati contenti |
+| `gru` | la gru ha calato tutte le sue casse, e sotto di lei non ne è rimasta nessuna |
+| `camion` | tutti i camion della giornata sono ripartiti pieni |
+| `mani` | a sera il robot non ha niente in mano (vale sempre) |
+| `inOrdine` | `{ y, da, a }` (una riga dello scaffale) o `{ cassone }` (dal fondo alla cima), con `colori` per guardare casse invece di lettere — vedi [algoritmi.md](algoritmi.md) |
 
 Il linguaggio è quello del cantiere più **prendi** e **posa** (una freccia
 ciascuno), **aspetta che …**, **ripeti per sempre**, e il valore **📖 leggi**
@@ -57,6 +76,22 @@ guardarla perde la seconda.
   scena di prova sembrava un esercizio, non un porto.
 - Il decoro non deve sembrare una cosa da spostare (niente casse o lettere di
   decoro).
+
+Il primo carattere è **il posto**, il secondo **la cosa**:
+
+| posto | | cosa | |
+|---|---|---|---|
+| `.` pavimento | `#` muro | `.` niente | `@` il robot (solo su pavimento) |
+| `~` mare | `=` scaffale | `R` una cassa (maiuscola del colore) | `r` qui, alla fine, una cassa (disegno) |
+| `B` bancone dei clienti | `>` `<` `^` `v` nastro (verso) | `1`…`9` un biglietto con quel numero | `*` qui cala la gru |
+| `_` la strada dei camion (il robot non ci va) | `C` + nome: un cassone | `%` qui si mettono i clienti | `&` la piazzola del camion |
+
+Le lettere dei colori sono quelle di `dati/colori.js`. Un carattere ripetuto
+(`##`, `~~`, `==`, `>>`) vuol dire «e basta», come nelle mappe del Generale —
+non per le lettere, dove `BB` è il bancone con sopra una cassa blu. La
+piazzola del camion (`&`) resta strada anche quando il camion non c'è. Una
+coppia che la legenda non riconosce è un guasto, non un pavimento vuoto: deve
+arrossare un test. Un ordine può aggiungere coppie sue (`legenda: {'BX': {...}}`).
 
 ## I capitoli del porto
 
@@ -96,5 +131,31 @@ tutti insieme.
 | 🦐 Pesce fresco | difficile | cercare il frigo giusto, e tornare prima che la cassa dopo cada in mare |
 | 🔀 Due lavori | difficile | camion e clienti dallo stesso posto: chi c'è si serve, se no si aspetta un turno |
 | ⚓ La giornata del porto | oltre lo schermo | tutto insieme, e la telecamera segue il robot |
+
+## La tela del porto (`scena/porto.js`)
+
+Il fratello di `scena/tela.js`: riceve un `quadro` già deciso e lo disegna,
+senza sapere perché una cassa vola. Il porto arriva già alla fine del
+turno (la cassa presa è già in mano), e il quadro porta gli orari di ogni
+volo e mezzo: finché un volo è in corso la cosa si disegna in viaggio, e
+quando atterra la tela la ritrova da sola dov'è — niente da tenere in pari
+col motore.
+
+- **Dritto e di sbieco**: pavimento, arredi e casse si vedono dritti
+  dall'alto (sono loro che si contano); il robot, i clienti e la gru sono
+  un po' di sbieco, con la testa più su dei piedi — visto da sopra il
+  robot sarebbe solo una testa grigia, e il giallo del muratore di latta
+  sparirebbe. L'altezza si disegna spostando verso la cima dello schermo:
+  è così che la cassa della gru *scende* lungo il cavo invece di
+  ingrandirsi sul posto.
+- **La telecamera**: se la mappa sta nello schermo con celle di almeno
+  26px, non c'è — il canvas è grande quanto la mappa. Se no la cella resta
+  a 30px (più piccola a dito non si conta) e il canvas diventa una
+  finestra che segue il robot mentre il programma gira, e si trascina col
+  dito da fermi.
+- **Quello che la tela ricorda fra un fotogramma e l'altro è solo roba da
+  occhi**: dov'è la telecamera, il dito che trascina, gli schizzi d'acqua
+  ancora aperti, da quando è arrivato il cliente al bancone — mai stato di
+  gioco.
 
 Dopo le giornate vengono gli algoritmi: [algoritmi.md](algoritmi.md).

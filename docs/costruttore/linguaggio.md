@@ -56,7 +56,10 @@ per aria non dava nessun ordine alle cose.
   «vai», che nascono **1**: un passo è l'unità, chiederlo era una domanda con
   la risposta ovvia.
 - **Ogni casella che si cambia ha il suo ▾**; quella che ha una scelta sola
-  (un colore solo nel livello) sta ferma e senza.
+  (un colore solo nel livello) sta ferma e senza. Provato senza: un
+  quadratino colorato da solo, o un «1» già scritto, si leggevano come
+  parte della frase, e nessuno dei due bambini che l'hanno provato li
+  toccava.
 - **Una domanda è una frase a caselle** — «[↓ sotto i piedi] [c'è] [un
   mattone] [🌈 di qualunque colore]» — e toccandone un pezzo si apre solo la
   sua scelta. Il posto si tocca su un quadretto attorno al robot; il colore
@@ -65,22 +68,88 @@ per aria non dava nessun ordine alle cose.
   robot non mette (nei nidi si mette il giallo e si guarda il rosso). Capire
   quale domanda ha senso fa parte della sfida.
 
+## La scelta di una casella (`viste/Scelta.vue`)
+
+- **Un numero può essere un conto con una sola operazione** («h + 1»): dalla
+  N si parte scegliendo il primo pezzo, da un numero già scritto il secondo;
+  «per» e «diviso» partono da 2 (il doppio, la metà), «più» e «meno» da 1.
+- **Una domanda (`cond`) nasce senza posto né cosa scelti**: si scrive nella
+  riga solo quando sono scelti tutti e due i pezzi, se no «sotto i piedi
+  c'è il vuoto» sarebbe di nuovo un valore di comodo. Il colore invece nasce
+  **qualunque**: è la domanda più larga, e stringerla è una scelta.
+- **Il posto si tocca su un quadretto attorno al robot** (di lato: sopra, ai
+  due lati, sotto e in basso davanti/dietro; nel porto le quattro frecce),
+  non leggendo un elenco di nomi.
+- **Le lavagnette dell'ordine (🔒) si leggono e basta**; le misure del
+  progetto sono tratteggiate perché esistono solo dentro di lui.
+- **Chiudersi si dice in due modi**: la ✕ chiude e basta, una scelta fatta
+  (o «fatto») chiude e apre la casella dopo che resta da scegliere — il
+  posto del mattone, poi il suo colore.
+
 ## Numeri e colori, due specie di valori
 
 - **Una misura può essere un colore** (`tipi: { tinta: 'colore' }`), **un
   ordine può portare colori** (`{ sinistra: 'verde' }`, come «lungo» porta un
   numero), e **una casella offre solo la specie giusta**.
 - Nel porto c'è un valore in più, **📖 leggi** (vedi [porto.md](porto.md)).
+- **Una stringa che è il nome di un colore resta un colore, ogni altra
+  stringa è una lavagnetta** (`valoreScritto` in `dati/scrivi.js`): la stessa
+  regola per `confronta`, `assegna` e gli argomenti di `chiama`.
+
+## Le mappe e i colori
+
+- **Una mappa è ASCII, un carattere per cella** (`dati/legenda.js`): `.`
+  aria, `#` terreno solido, `~` acqua (non regge, ma un mattone la
+  riempie), `@` il robot, `P` l'omino di prova, `F` la bandiera d'arrivo.
+  Una lettera che la legenda non riconosce è un guasto, non un'aria: deve
+  arrossare un test, non sparire in silenzio sul telefono.
+- **Un mattone si scrive con la lettera del suo colore** (`dati/colori.js`):
+  **minuscola** = «qui ci va», il disegno in trasparenza da costruire;
+  **maiuscola** = «qui c'è già», la torre o il muro da cui si parte.
+- **Dieci colori al massimo**, e un livello offre solo quelli che gli
+  servono: una pulsantiera con tutti e dieci non si sceglie, si scorre.
+- **`tinta`/`luce`/`ombra` stanno nel colore e non nel pittore**: un
+  mattone rosso deve restare lo stesso rosso nella pulsantiera, nella riga
+  del programma e sul campo.
+
+## La tela del cantiere (`scena/tela.js`)
+
+Riceve un `quadro` già deciso (griglia, mattoni, mattoni-fantasma cioè il
+disegno in trasparenza, robot, omino di prova, bandiera) e lo disegna
+sessanta volte al secondo: non sa cos'è un livello, un ordine o un
+programma. **Il robot è disegnato a poligoni e non preso da un foglio
+sprite**: è un muratore di latta, geometrico per natura — qui i poligoni
+non sono un ripiego, sono lo stile giusto (il tetto della resa grafica,
+vedi [../core/grafica.md](../core/grafica.md)).
 
 ## L'esecutore e la regia
 
 - **L'esecutore è un generatore** che srotola il programma **un fatto per
-  volta** (`riga`, `muovi`, `metti`, `entra`…), e `src/giochi/costruttore/regia.js`
-  li anima.
+  volta** — un `yield` per chiamata di `prossimo()` — e `regia.js` li anima.
 - È così che mentre gira la riga che lavora si accende, le lavagnette
   cambiano sotto gli occhi, un ripeti dice a che giro è, e **la scheda di un
   progetto si apre con le misure di quella chiamata** («rettangolo · largo 2
   · alto 5»): la pila delle chiamate fatta vedere.
+- **Un generatore e non una pila propria**, perché la ricorsione del
+  bambino dev'essere una ricorsione vera di JavaScript (`yield*` dentro
+  `yield*`); l'esecutore tiene comunque una sua pila «da mostrare»
+  (`this.pila`), quella che la vista disegna.
+- **I fatti**: `riga`, `giro`, `guarda`, `legge`, `assegna`, `entra`,
+  `esce`, più quelli del mondo (`muovi`/`metti` nel cantiere, anche
+  `prendi`/`posa`/`turno` nel porto); chiude con `fine` o `errore`, e dopo
+  li ripete per sempre.
+- **Tre reti fermano un programma che non finisce mai** (`motore/esecutore.js`):
+  `TETTO_PASSI` (5000 passi), `TETTO_PILA` (40, vedi [algoritmi.md](algoritmi.md))
+  e, dove c'è un orologio, `TETTO_PENSIERI` (300 righe di fila senza che
+  passi un turno — un giro del porto ne fa una ventina fra un gesto e
+  l'altro). Senza, il telefono di un bambino si pianterebbe su un «ripeti»
+  sbagliato.
+- **Le misure di una chiamata si calcolano prima di aprire la carta**, con
+  le lavagnette di chi chiama: `colonna(h)` vuol dire «il valore di h
+  adesso», non «la h del progetto».
+- **Cercare una lavagnetta guarda prima la carta aperta, poi il bambino,
+  poi l'ordine**: dentro `colonna`, «alta» è la misura di *questa*
+  colonna, non un'altra cosa con lo stesso nome.
 
 ## L'ordine dei capitoli
 

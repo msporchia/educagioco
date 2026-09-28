@@ -1,30 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL COSTRUTTORE — IL COORDINATORE
-
-   L'unico file del gioco che sa che esistono le monete, il profilo e
-   l'archivio. Tiene il programma del livello aperto, applica le
-   modifiche che l'editor chiede (`motore/modifica.js`), fa partire la
-   regia e decide cosa dire quando si ferma.
-
-   ── DOVE STANNO I PROGRAMMI ────────────────────────────────────────
-   Il programma di ogni livello si tiene: chi esce a metà e torna domani
-   ritrova quello che aveva scritto, progetti compresi. Sta **fuori dal
-   profilo**, in archivio sotto `costruttore:<id del giocatore>`: il
-   profilo si riscrive intero a ogni `persist()`, e tredici programmi
-   dentro ogni scrittura sarebbero peso per sempre (la stessa scelta di
-   `store/sessioni.js`). Si salva poco dopo ogni modifica e all'uscita.
-
-   ── LE MONETE ───────────────────────────────────────────────────────
-   Un livello paga **la prima volta** che si vince (`premio` in
-   `dati/livelli.js`). Rifarlo è ricordarsi il programma, non scriverlo:
-   non è esercizio, e non vale niente (vedi `docs/apprendimento/calibrazione.md`). Le
-   stelle sono due: vinto, e vinto senza farsi scrivere la soluzione
-   intera. E gli aiuti si pagano in monete: i primi due gradini, che
-   fanno ragionare, sono gratis; poi gli indizi a 🪙10, e i gradini che
-   scrivono nel programma a 🪙50 · 100 · 200 (`motore/aiuti.js`,
-   `giochi/aiuti.js`).
-   ═══════════════════════════════════════════════════════════════════ */
+/* Il coordinatore: l'unico file che sa di monete, profilo e archivio.
+   Vedi docs/costruttore/campagna.md. */
 import { ref, reactive, computed, shallowRef, watch, nextTick, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
@@ -69,8 +45,7 @@ const idx = ref(-1)
 const LIBERO_IDX = -2
 const liv = computed(() => (idx.value === LIBERO_IDX ? LIBERO : idx.value >= 0 ? LIVELLI[idx.value] : null))
 const avanza = progresso(CHIAVE)
-/* chi ha giocato con una fila di livelli di prima ritrova le stelle sui
-   livelli giusti (`riordina` in `dati/campagna.js`) */
+// vedi docs/costruttore/campagna.md — riordinare la fila
 if (avanza.cfg.fila !== FILA_ATTUALE) {
   const vecchia = FILE[avanza.cfg.fila || 1]
   if (vecchia && ((avanza.tappa || 0) > 0 || Object.keys(avanza.stelle || {}).length))
@@ -83,9 +58,7 @@ const archivio = reactive({ programmi: {} })
 const VERSIONE = 2
 const chiaveArchivio = () => `costruttore:${state.player || 'nessuno'}`
 const pronto = load(chiaveArchivio()).then(d => {
-  /* la versione 1 aveva il robot che volava e «vai su»: quei programmi
-     parlano un'altra lingua, e si ricomincia da capo (l'avanzamento sta
-     nel profilo e resta) */
+  // versione diversa: lingua incompatibile, si ricomincia (docs/costruttore/campagna.md)
   if (d && d.v === VERSIONE && d.programmi && typeof d.programmi === 'object') archivio.programmi = d.programmi
 }).catch(() => {})
 let salvaTimer = 0
@@ -96,9 +69,7 @@ function salvaOra() {
 }
 const salvaPresto = () => { clearTimeout(salvaTimer); salvaTimer = setTimeout(salvaOra, 500) }
 
-/* un programma nuovo è vuoto, con dentro gli attrezzi del livello: li
-   rimette `conAttrezzi` ogni volta che il livello si apre, così un
-   programma salvato ieri ha gli attrezzi di oggi */
+// gli attrezzi non si salvano: li rimette conAttrezzi ad ogni apertura (docs/costruttore/progetti.md)
 const inizio = l => ({ ...conAttrezzi(scriviProgramma({ principale: [], progetti: [], lavagnette: [] }), l), svelato: false })
 const prog = computed(() => (liv.value ? archivio.programmi[liv.value.chiave] : null))
 const lavagnetteOrdine = computed(() => (liv.value ? liv.value.ordini[0].lavagnette || {} : {}))
@@ -147,24 +118,17 @@ const foglio = ref(null)               // cassetta | progetto | lavagnetta | aiu
 const dove = ref(null)                 // dove andrà la riga scelta in cassetta
 const progettoInModifica = ref(null)
 const attesaLavagnetta = ref(null)     // { riga } o { inserisci: dove }
-/* quanti gradini della scala degli aiuti sono stati scesi in questo
-   livello: si pagano, e quello che si è pagato resta (`aiutiPresi`) */
-const aiutiVisti = ref(0)
+const aiutiVisti = ref(0)              // gradini scesi in questo livello (docs/costruttore/campagna.md)
 /* la riga presa con ✂ o ⧉, finché non la si posa: `{ id, copia }` */
 const mano = ref(null)
 const ricominciaArmato = ref(false)
 let ricominciaTimer = 0
 
-/* I progetti scritti negli altri cantieri, da riprendere: uno per
-   nome (se lo stesso nome sta in più livelli vince quello del livello
-   più avanti, che di solito è il più rifinito), e non quelli che questo
-   programma ha già. */
+// i progetti degli altri livelli da riprendere (docs/costruttore/progetti.md)
 const altriProgetti = computed(() => {
   if (!liv.value || !prog.value) return []
   const qui = new Set((prog.value.progetti || []).map(p => p.nome))
   const visti = new Map()
-  /* solo dallo stesso mondo: una colonna di mattoni nel porto non
-     saprebbe cosa fare, e prendere una cassa nel cantiere nemmeno */
   const mondo = liv.value.mondo || 'cantiere'
   const fonti = [...LIVELLI.filter(l => (l.mondo || 'cantiere') === mondo).map(l => [l.chiave, l.nome, LIVELLI.indexOf(l)]),
                  ...(mondo === 'cantiere' ? [[LIBERO.chiave, LIBERO.nome, 999]] : [])]
@@ -193,11 +157,7 @@ function importa({ chiave, progetto }) {
 
 const problemi = computed(() => new Set(prog.value ? mod.problemi(prog.value, lavagnetteOrdine.value).map(p => p.id) : []))
 
-/* Ogni modifica passa da qui, e qui si ricorda com'era prima: è quello
-   che «annulla» rimette. `casella` è la casella che si sta cambiando:
-   i tocchi di fila sulla stessa casella — le cifre di un numero, i
-   pezzi di una domanda — sono un passo solo, se no per tornare indietro
-   di un numero ci vorrebbero tre «annulla». */
+// ogni modifica passa da qui, per ricordare com'era prima (docs/costruttore/progetti.md)
 function modifica(fn, casella = null) {
   if (stato.inCorso || !prog.value) return null
   const prima = JSON.stringify(prog.value)
@@ -208,12 +168,7 @@ function modifica(fn, casella = null) {
   return r
 }
 
-/* ═══════════ annulla ═══════════
-   Dieci passi indietro, per livello: una riga tolta per sbaglio (col
-   blocco e tutto quello che aveva dentro), un «ricomincia» di troppo, un
-   pezzo di programma comprato al posto del proprio. I passi stanno in
-   memoria e non nell'archivio: sono di questa partita, e un programma è
-   un oggetto piccolo — dieci copie non pesano niente. */
+// annulla: dieci passi in memoria, per livello (docs/costruttore/progetti.md)
 const PASSI_INDIETRO = 10
 const storie = new Map()
 const storia = chiave => { if (!storie.has(chiave)) storie.set(chiave, []); return storie.get(chiave) }
@@ -246,11 +201,7 @@ function annulla() {
   salvaPresto()
 }
 
-/* ═══════════ lo zaino ═══════════
-   Un livello può dire quante righe tiene il programma (`zaino`): gli
-   attrezzi non si contano. Pieno, il «＋» non apre la cassetta ma dice
-   cosa fare — è lì che il bambino scopre che un progetto scritto una
-   volta si chiama tante. */
+// lo zaino: quante righe tiene il programma, attrezzi esclusi (docs/costruttore/progetti.md)
 const zaino = computed(() => (liv.value && liv.value.zaino) || null)
 const righe = computed(() => (prog.value ? righeScritte(prog.value) : 0))
 function troppoPerLoZaino(quante) {
@@ -268,8 +219,7 @@ function apri(a) { aperta_.value = a; ultimaCasella = null; if (a) sel.value = n
 function imposta({ id, campo, valore }) {
   modifica(p => mod.imposta(p, id, campo, valore), `${id}:${campo}`)
 }
-/* una scelta fatta: se nella riga resta un'altra casella da scegliere
-   (il colore dopo il posto, la seconda misura) si apre quella */
+// se nella riga resta un'altra casella da scegliere, si apre quella
 function sceltaFatta(id) {
   const t = prog.value && mod.trova(prog.value, id)
   const s = t && mod.primaDaScegliere(t.nodo, prog.value)
@@ -285,9 +235,7 @@ function aggiungi(posto) {
   foglio.value = 'cassetta'
 }
 
-/* Le scelte di una riga nuova si fanno sulla riga (`rigaNuova`): qui
-   si scrive solo quello che non è una scelta — il colore quando il
-   livello ne ha uno solo, il posto del mattone quando ce n'è uno solo. */
+// le scelte si fanno sulla riga (docs/costruttore/linguaggio.md); qui solo quello che non è una scelta
 function sceltoBlocco({ blocco, progetto }) {
   const p = prog.value
   if (blocco === 'assegna' && !(p.lavagnette || []).length) {
@@ -306,8 +254,7 @@ function sceltoBlocco({ blocco, progetto }) {
   apriLaPrimaScelta(id, riga)
 }
 
-/* una riga appena nata con qualcosa da scegliere (la N, la domanda)
-   apre subito quella scelta: è la cosa che il bambino deve fare dopo */
+// una riga nata con qualcosa da scegliere apre subito quella scelta
 function apriLaPrimaScelta(id, riga) {
   const s = mod.primaDaScegliere(riga, prog.value)
   if (s) { aperta_.value = { id, campo: s.campo, tipo: s.tipo }; sel.value = null }
@@ -326,10 +273,7 @@ function azione({ tipo, id }) {
   })
 }
 
-/* ═══════════ la mano ═══════════
-   ✂ prende una riga per spostarla, ⧉ per copiarla; poi si tocca un
-   «📥 qui» — anche in un'altra scheda — e la riga è lì, selezionata,
-   così si vede dov'è andata. Una copia conta per lo zaino. */
+// la mano: ✂/⧉ e poi un «📥 qui» (docs/costruttore/progetti.md)
 const manoViva = computed(() => (mano.value && prog.value && mod.trova(prog.value, mano.value.id) ? mano.value : null))
 function prendiInMano(m) {
   mano.value = m
@@ -409,21 +353,12 @@ function ricomincia() {
   salvaPresto()
 }
 
-/* ═══════════ gli aiuti ═══════════
-   Una scala sola e un tasto solo: prima i gradini che fanno ragionare
-   (gratis), poi gli indizi (🪙10), poi quelli che scrivono nel programma
-   — il pezzo, la forma coi valori da scegliere, la soluzione — a 🪙50 ·
-   100 · 200. La compone `motore/aiuti.js` dal livello; qui si compra, e
-   si scrive. Chi compra è `scendi`, non il foglio: senza monete la
-   spesa si rifiuta anche se un tasto spento venisse premuto lo stesso. */
+// gli aiuti: la scala e i prezzi in docs/costruttore/campagna.md
 const scala = computed(() => (liv.value ? scalaDi(liv.value) : []))
 const aiutiFatti = computed(() => scala.value.slice(0, aiutiVisti.value))
 const prossimoAiuto = computed(() => scala.value[aiutiVisti.value] || null)
 const monete = computed(() => state.profile.coins || 0)
 
-/* il 💡: il primo gradino, gratis, si scende da sé — chi tocca la
-   lampadina vuole una mano, e fargli toccare un altro tasto per leggere
-   una frase che non costa niente è una schermata in più */
 function apriAiuti() {
   if (!aiutiVisti.value && prossimoAiuto.value && !prossimoAiuto.value.prezzo) scendi()
   foglio.value = 'aiuto'
@@ -435,15 +370,12 @@ function scendi() {
   segnaAiutiPresi(CHIAVE, liv.value.chiave, aiutiVisti.value)
   if (scriveNelProgramma(p)) scriviAiuto(p)
 }
-/* un gradino che scrive, già pagato, si rimette gratis */
+// un gradino già pagato si rimette gratis
 function rimetti(k) {
   const p = scala.value[k]
   if (k < aiutiVisti.value && scriveNelProgramma(p)) scriviAiuto(p)
 }
-/* Il programma nuovo lo fa `applica`: il pezzo dei progetti si aggiunge
-   a quello del bambino, gli altri prendono il posto del programma
-   principale o di tutto. `svelato` lo accende solo la soluzione intera,
-   ed è quello che tiene spenta la seconda stella. */
+// svelato lo accende solo la soluzione intera (spegne la seconda stella)
 function scriviAiuto(p) {
   if (stato.inCorso) stop()
   const prima = prog.value
