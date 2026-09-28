@@ -1,17 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   L'ALBO — la pagina che risponde a "a che punto sono?".
-
-   Quattro fasce, in quest'ordine, perché è l'ordine delle domande che
-   si fa un bambino quando riapre il gioco:
-     1. chi sono adesso   → livello, monete, giorni di fila
-     2. i miei record     → i giochi senza fine, e se sto migliorando
-     3. cosa so fare      → una barra per materia, con il grado
-     4. cosa ho vinto     → i traguardi, presi e da prendere
-   Non c'è niente di calcolato qui dentro: tutto viene da
-   store/progressi.js e da `giochi/campagne.js`, così la pagina resta
-   una vetrina.
-   ═══════════════════════════════════════════════════════════════════ */
+// L'albo: chi sono adesso, i miei record, cosa so fare, cosa ho vinto.
+// Vedi docs/core/progressi.md e docs/core/primati.md. Vetrina pura: niente
+// calcolato qui, tutto da store/progressi.js e giochi/campagne.js.
 import { ref, computed } from 'vue'
 import { state, traguardi, livelloOra, areaOra, serieGiorni, abilitaOra,
          tabellineIntere, nomeCorrente } from '../store/profile.js'
@@ -29,13 +19,11 @@ const serie = computed(() => serieGiorni())
 const elenco = computed(() => traguardi())
 const presi = computed(() => elenco.value.filter(t => t.preso))
 const abilita = computed(() => MATERIE.map(m => abilitaOra(m.id)))
-/* le tabelline sapute per intero: la riga di stelle sotto la barra delle
-   tabelline è la risposta alla domanda che il bambino fa davvero — non
-   "quanti calcoli so" ma "quali tabelline so" */
+// le tabelline sapute per intero, sotto la barra delle tabelline
 const intere = computed(() => new Set(tabellineIntere()))
 
-/* le aree in cui c'è davvero qualcosa da vedere restano tutte: anche una
-   sezione vuota è informazione ("qui non ho ancora fatto niente") */
+// solo le aree che hanno almeno un traguardo dichiarato: una fascia
+// senza niente preso resta visibile lo stesso ("qui non ho fatto niente")
 const aree = computed(() => AREE.map(a => {
   const suoi = elenco.value.filter(t => t.area === a.id)
   return { ...a, suoi, presi: suoi.filter(t => t.preso).length,
@@ -46,9 +34,7 @@ const visibili = a => filtro.value === 'presi' ? a.suoi.filter(t => t.preso)
                     : filtro.value === 'manca' ? a.suoi.filter(t => !t.finito)
                     : a.suoi
 
-/* i giochi che non finiscono, con il loro record. Vuoto finché non se
-   n'è giocato nessuno: una tabella di record a zero non è un invito, è
-   un elenco di cose che non hai fatto */
+// i giochi senza fine, coi record: vuoto finché non se n'è giocato nessuno
 const primati = computed(() => tabellaDeiPrimati())
 
 const ultimi = computed(() =>
@@ -93,11 +79,7 @@ const pct = q => Math.round(q * 100) + '%'
         </span>
       </div>
 
-      <!-- ══════ i miei record ══════
-           I giochi senza fine non danno stelle e non danno tappe: danno
-           un numero che cresce, e questo è il posto dove si vedono
-           insieme. Se non se n'è ancora giocato nessuno la fascia non
-           c'è: un blocco vuoto non si mostra. -->
+      <!-- i miei record: vedi docs/core/primati.md -->
       <template v-if="primati.length">
         <h2 class="sezione">I miei record</h2>
         <p class="testo">Questi giochi non finiscono: si va avanti finché si resiste.
@@ -134,9 +116,7 @@ const pct = q => Math.round(q * 100) + '%'
         <button :class="{ on: filtro === 'manca' }" @click="filtro = 'manca'">Da prendere</button>
       </div>
 
-      <!-- l'id nell'attributo: le famiglie arrivano anche dai manifesti dei
-           giochi nuovi, e un test deve poter dire «quella del Codice
-           Segreto c'è» senza cercare il nome scritto a schermo -->
+      <!-- data-area: un test cerca l'id, non il nome scritto a schermo -->
       <div v-for="a in aree" :key="a.id" class="area" :data-area="a.id">
         <div class="capo area-capo">
           <span class="ico">{{ a.emoji }}</span>
