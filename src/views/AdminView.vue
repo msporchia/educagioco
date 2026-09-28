@@ -1,29 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA PAGINA DEI TRUCCHI — `#admin`
-
-   I cheat di casa stanno nell'indirizzo, ognuno letto dal posto che lo
-   riguarda (`#monete=500` dal profilo, `#fattoria-tipo=30` dalla
-   fattoria, `#sotterraneo=roba` dal sotterraneo…), ed erano diventati
-   abbastanza da non ricordarseli: si andavano a cercare nel codice.
-   Qui ci sono tutti, uno per tasto, più quello che serve a usarli bene
-   — un bambino di prova su cui provarli.
-
-   ── NIENTE CODICE, E NIENTE PORTA IN HOME ─────────────────────────
-   Non chiede il codice dei grandi e non ha una carta da nessuna parte:
-   ci si arriva solo scrivendo `#admin` nell'indirizzo, che dall'app
-   installata non si può fare. È la stessa porta dei cheat che elenca
-   — un bambino che la trova si è guadagnato il diritto di usarla — e
-   un codice in più sarebbe una cosa in più da ricordare, cioè proprio
-   quello che questa pagina toglie.
-
-   ── I TASTI NON FANNO: SCRIVONO L'INDIRIZZO ───────────────────────
-   Quasi ogni tasto scrive il cheat che esiste già e porta dove quel
-   cheat si legge. Non si rifà niente qui: se un cheat cambia, questa
-   pagina lo segue senza saperlo. Fanno da sé solo le cose che un cheat
-   non ha — il bambino di prova, i due interruttori che stanno dietro il
-   codice dei grandi, il codice rimesso a `0000`.
-   ═══════════════════════════════════════════════════════════════════ */
+// La pagina dei trucchi (`#admin`, niente codice né carta in home): vedi
+// docs/core/comandi.md. Quasi ogni tasto scrive il cheat che esiste già e
+// porta dove si legge; un cheat nuovo si aggiunge qui in A_MANO.
 import { computed, ref } from 'vue'
 import Barra from '../components/Barra.vue'
 import { state, selectPlayer, creaGiocatore, nomeCorrente, etaDelBambino,
@@ -43,18 +21,12 @@ const prova = computed(() => sperimentaliAccesi())
 const aperto = computed(() => tuttoAperto())
 const esito = ref('')
 
-/* Un cheat dell'indirizzo, e la schermata dove si legge. Scriverlo
-   basta per le monete (le riscuote il profilo a qualunque ora); gli
-   altri si leggono **entrando** nel loro gioco, e ci si porta lì. */
+// scrive il cheat nell'indirizzo, e porta al gioco che lo legge
 function trucco(frammento, dove = null) {
   location.hash = frammento
   if (dove) emit('vai', dove)
 }
 
-/* ── il bambino di prova ──
-   La fattoria di prova butta quella del bambino attivo: sul server di
-   casa è quella vera. Un tasto solo lo crea la prima volta e ci torna
-   le altre; si toglie dalle impostazioni dei grandi come ogni bambino. */
 const PROVA = 'Prova'
 async function bambinoDiProva() {
   const c = state.giocatori.find(g => g.nome === PROVA)
