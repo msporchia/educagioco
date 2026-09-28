@@ -1,51 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL PRIMO AVVIO — E, DA ADESSO, OGNI VOLTA CHE SI AGGIUNGE UN BAMBINO
-
-   Quando nell'archivio non c'è nessun giocatore, questa è la prima cosa
-   che si vede. Prima non poteva succedere: i giocatori erano scritti nel
-   codice, quindi ce n'erano sempre due anche su un telefono appena
-   installato. Adesso l'elenco è vuoto finché qualcuno non ci mette il
-   suo nome.
-
-   Non chiede il PIN apposta. Il PIN protegge le cose dei genitori, ma
-   qui non c'è ancora niente da proteggere: chiederlo vorrebbe dire che
-   un'app appena installata non si apre senza sapere un codice che
-   nessuno ha ancora scelto. Aggiungere un fratello, invece, ci si
-   arriva **da dentro le impostazioni**, che il codice l'hanno già
-   chiesto: la schermata è la stessa, il gradino sta prima.
-
-   ── UN MODULO SOLO, E NON DUE ────────────────────────────────────
-   Qui e nella schermata dei grandi c'erano due moduli diversi che
-   facevano la stessa cosa — nome, faccia, da dove parte — disegnati in
-   due modi, con due tasti «Aggiungi» che si comportavano diversamente
-   (di là il bambino nuovo non entrava nemmeno in partita). Adesso è
-   questo, e basta: `primo` dice solo se c'è già qualcuno che gioca,
-   e cambia due parole e la via d'uscita.
-
-   ── DUE PASSI, E IL SECONDO NON È PER IL BAMBINO ──────────────────
-   Il nome e la faccia sono la sua domanda; **quanti anni ha** è la
-   domanda del grande che gli sta installando il gioco, e le due cose
-   non stanno bene sullo stesso schermo — una colonna con dentro il
-   nome, sei facce e una manopola con il suo riassunto non è più «tre
-   tocchi», è un modulo.
-
-   Perché chiederlo qui e non lasciarlo alla schermata dei genitori:
-   perché di lì passa chi aggiunge il *secondo* bambino, e il primo —
-   cioè chiunque installi l'app — non ci passava mai. Nasceva con tutto
-   acceso: quindici carte in home, con dentro le divisioni in colonna,
-   anche a un bambino di cinque anni. Regalando il gioco si è visto due
-   volte di fila, e le due volte era una sorella più piccola.
-
-   ── L'ETÀ NON SI PRESELEZIONA ────────────────────────────────────
-   La manopola nasce **senza un valore**, e il tasto resta spento finché
-   non si muove. È la stessa cautela che avevano le quattro carte, e per
-   lo stesso motivo: una risposta già data si preme senza leggerla, con
-   l'effetto che un bambino di quattro anni si ritroverebbe la home di
-   un quinta elementare perché nessuno ha guardato. Solo che adesso, a
-   guardarla, la manopola dice cosa fa — quali giochi entrano in casa e
-   come si spostano le domande — invece di dire a chi è rivolta.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il primo avvio e ogni bambino aggiunto: un modulo solo (`primo` cambia
+// due parole e la via d'uscita). Vedi docs/genitori/manopola.md.
 import { ref, computed } from 'vue'
 import { creaGiocatore } from '../store/profile.js'
 import { eccezioniPerEta } from '../data/partenze.js'
@@ -56,45 +11,15 @@ import Prova from '../quiz/Prova.vue'
 import VeloGuide from '../guide/VeloGuide.vue'
 
 const props = defineProps({
-  /* `false` quando si arriva qui dalle impostazioni per aggiungere un
-     fratello: cambia le parole e accende la via d'uscita */
-  primo: { type: Boolean, default: true },
+  primo: { type: Boolean, default: true },   // false = si aggiunge un fratello dalle impostazioni
 })
 const emit = defineEmits(['fatto', 'lasciaStare'])
 
 const nome = ref('')
 const occupato = ref(false)
-/* Preselezionato, non chiesto vuoto come l'età: qui non cambia cosa il
-   bambino vede o sa, solo con che faccia si vede in mappa — un tasto
-   spento finché non si sceglie sarebbe attrito su una schermata che
-   vuole restare corta. */
-const aspetto = ref(PERSONE[0])
-/* ── SI PARTE DA QUATTRO ANNI ──
-   Non da un valore in mezzo e non da vuoto. Chi apre questa schermata
-   sta aggiungendo un bambino, e un bambino che si aggiunge è quasi
-   sempre il più piccolo di casa: da lì si sale finché l'elenco di
-   quello che il gioco dà per scontato non comincia a dire cose che non
-   sa, e ci si ferma.
-
-   La cautela che c'era prima — nessun valore, e il tasto spento finché
-   non si muove — serviva a impedire che si premesse senza leggere. Con
-   quattro anni non serve più, perché **premere senza leggere adesso
-   sbaglia dalla parte giusta**: si consegna la casa più piccola e la
-   taratura più prudente, e chi ne aveva bisogno se ne accorge subito e
-   torna a spostarla. Con un valore in mezzo no: un bambino di quattro
-   anni si sarebbe trovato la home di un terza elementare. */
-const anni = ref(4)
+const aspetto = ref(PERSONE[0])   // preselezionato: non cambia cosa vede/sa, solo la faccia in mappa
+const anni = ref(4)   // si parte da quattro, non da vuoto: premere senza leggere sbaglia dalla parte giusta
 const passo = ref(1)
-/* ── «COS'È QUESTO GIOCO?» ──
-   Chi apre il link ricevuto da un'altra famiglia si trova qui, e questa
-   schermata gli chiede il nome di suo figlio senza aver detto una parola
-   su cosa sia, chi l'abbia scritto e dove vada a finire quello che
-   scrive. Le risposte c'erano — nelle guide — ma dietro la home, cioè
-   dopo aver creato il profilo: si leggevano a decisione presa.
-
-   È un velo e non un'altra schermata perché qui non si può navigare da
-   nessuna parte (`App.vue` monta il benvenuto al posto di tutto), e
-   perché il nome mezzo scritto deve restare dov'è. */
 const spiegami = ref(false)
 const prova = ref(null)   // { sorgente|chiave, nome } | null
 
@@ -110,11 +35,7 @@ function avanti() {
 async function entra() {
   if (!pulito.value || anni.value == null || occupato.value) return
   occupato.value = true
-  /* `entra: true` anche quando si aggiunge un fratello, ed è cambiato
-     apposta: prima il bambino nuovo nasceva e restava fermo: si tornava
-     alle impostazioni di chi stava giocando prima, e chi l'aveva appena
-     creato doveva uscire, tornare in home e sceglierlo. Si aggiunge un
-     bambino perché vuole giocare adesso. */
+  // entra: true anche aggiungendo un fratello: si aggiunge un bambino perché vuole giocare adesso
   try {
     await creaGiocatore(pulito.value, true, anni.value, aspetto.value)
     emit('fatto')
@@ -140,11 +61,6 @@ async function entra() {
 
       <p v-if="primo" class="mini">Lo possono cambiare mamma e papà quando vogliono.</p>
 
-      <!-- ── la porta delle spiegazioni ──
-           Sotto il tasto e non sopra: chi ha già in mano il link da
-           un'altra famiglia e sa cos'è deve poter scrivere il nome e
-           andare. Ma si legge — non è una scritta piccola in fondo — e
-           dice cosa apre invece di dire «informazioni». -->
       <button v-if="primo" class="che-roba" type="button"
               data-azione="cos-e" @click="spiegami = true">
         ❓ Cos'è questo gioco? Chi l'ha fatto? ›</button>
@@ -153,7 +69,6 @@ async function entra() {
               data-azione="lascia-stare" @click="emit('lasciaStare')">← lascia stare</button>
     </div>
 
-    <!-- ── il passo dei grandi ── -->
     <div v-else class="centro fasce">
       <span class="em">🎒</span>
       <h1>{{ pulito }}<br><span>quanti anni ha?</span></h1>
@@ -161,43 +76,20 @@ async function entra() {
         mettergli in casa e quanto difficili sono le domande. Si sposta quando si vuole,
         dalle impostazioni.</p>
 
-      <!-- Le impostazioni da mostrare le calcola qui il padre, perché
-           qui il bambino non esiste ancora: non ha né giochi spenti né
-           saperi tolti, e quello che il riassunto deve far vedere è
-           **cosa gli daremmo** a quell'età. Sono le stesse che
-           `creaGiocatore` scriverà nel profilo, dalla stessa funzione:
-           se le due divergessero il wizard prometterebbe una casa e ne
-           consegnerebbe un'altra. -->
+      <!-- daQuellEta usa la stessa funzione che scriverà creaGiocatore: se
+           divergessero, il wizard prometterebbe una casa e ne consegnerebbe un'altra -->
       <div class="manopola-posto">
         <ManopolaEta :anni="anni" :giochi="daQuellEta.giochi" :sa="daQuellEta.sa"
                      @scegli="anni = $event" @prova="prova = $event" />
       </div>
 
-      <!-- Il tasto sta appiccicato in fondo, come l'«Applica» della
-           schermata dei grandi: il quadro cresce quanto ha da dire, e
-           su un telefono corto un tasto in coda a una colonna che
-           scorre non lo vede chi sta ancora leggendo. -->
       <button class="via in-fondo" type="button" :disabled="occupato"
               data-azione="si-gioca" @click="entra">Si gioca!</button>
       <button class="indietro" type="button" @click="passo = 1">← cambia il nome</button>
     </div>
 
-    <!-- ── provare una domanda mentre si decide ──
-         Lo stesso pannello della schermata dei grandi, e per lo stesso
-         motivo: il nome di una classe di domande non dice che aspetto
-         abbia. Qui serve anche di più che di là, perché chi è al primo
-         avvio non ha ancora visto **nessuna** domanda del gioco, e sta
-         decidendo su un elenco di titoli. Provare non scrive niente. -->
-    <!-- l'età va passata anche qui: un gruppo di sapere è largo, e senza
-         il ▶ su «i numeri e le quantità» pescherebbe fra tutte le sue
-         domande — a quattro anni si finiva su una dichiarata otto e
-         mezzo (`quiz/nucleo/esempi.js`) -->
-    <!-- `giro` va inoltrato come gli altri tre, e la sua assenza non
-         dava nessun errore: il ▶ di un pezzo di scuola manda la lista
-         delle sue domande, qui andava persa, e `Prova` ripiegava sul
-         modo «pesca come in partita» — si partiva da «i numeri e le
-         quantità» e la domanda dopo era di logica. Un ripiego che
-         funziona è il modo più caro di rompersi. -->
+    <!-- provare una domanda mentre si decide: eta e giro vanno passati a
+         Prova, senza un gruppo largo pescherebbe fra tutte le sue domande -->
     <VeloGuide v-if="spiegami" @chiudi="spiegami = false" />
 
     <Prova v-if="prova" :chiave="prova.chiave || ''" :nome="prova.nome"
@@ -209,10 +101,7 @@ async function entra() {
 
 <style scoped>
 .benvenuto .centro { display:flex; flex-direction:column; align-items:center; gap:18px; padding:24px }
-/* Il passo dell'età è **una colonna che scorre**, non una schermata
-   centrata: il riassunto della manopola cresce quanto ha da dire, e
-   centrarlo verticalmente gli farebbe sbattere il tasto «Si gioca!»
-   fuori dallo schermo su un telefono corto. */
+/* una colonna che scorre, non centrata: il riassunto della manopola cresce quanto ha da dire */
 .benvenuto .centro.fasce { gap:12px; padding:18px 14px 28px; justify-content:flex-start;
                            min-height:100%; overflow-y:auto }
 .em { font-size:64px; line-height:1 }
@@ -235,16 +124,9 @@ form { display:flex; flex-direction:column; align-items:center; gap:14px; width:
 .via.in-fondo { position:sticky; bottom:6px; z-index:5 }
 .mini { opacity:.75; font-size:14px; text-align:center; margin:0 }
 .mini.alto { max-width:36ch; font-size:12.5px; margin:-4px 0 0 }
-/* Era bianco, e lo sfondo di questa schermata è chiaro: «← cambia il
-   nome» e «← lascia stare» si leggevano solo sapendo che c'erano. */
 .indietro { background:none; border:none; font-family:inherit; font-size:14px;
             color:var(--tenue); opacity:.9; padding:4px 10px; cursor:pointer }
 
-/* Un tasto vero e non un rimando in punta di piedi: la domanda che si
-   fa chi è arrivato qui senza sapere niente è esattamente questa, e
-   scritta piccola in fondo allo schermo non la leggerebbe. Resta però
-   scavato invece che pieno — quello pieno è «Avanti», e la cosa da
-   fare qui è cominciare. */
 .che-roba { background:#ffffffcc; border:2px solid #d9d0f5; border-radius:999px;
             font-family:inherit; font-size:14px; font-weight:800;
             color:var(--viola-scuro); padding:11px 19px; cursor:pointer;
