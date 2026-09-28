@@ -1,24 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   PRIMA E DOPO — L'ASPETTO
-
-   Un file solo, ogni classe comincia per `pd-` (vedi il perché in
-   `codice-segreto/stile.css`: due fogli che si contendono lo stesso
-   nome si rompono a distanza di mesi).
-
-   Il colore arriva da `--pd-accento`, che il gioco scrive sul
-   contenitore: qui non è il vestito di uno scaglione di difficoltà, è
-   la tinta di ogni singola tappa — dichiarata in `dati/campagna.js`.
-
-   Le vignette sono bersagli grossi apposta, ben distanziati, perché a
-   quattro anni un dito è largo e la mira corta — ma soprattutto perché
-   dentro non c'è più un'emoji, c'è un disegno con delle facce, e una
-   faccia in un riquadro da 76 px è quattro pixel. Quindi non c'è più
-   una misura fissa: **la vignetta è grande quanto lo schermo permette**,
-   e a deciderlo è quante ne stanno in fila (`--pd-riga`, che la vista
-   scrive guardando il quesito). Tre in fila su un telefono fanno 115 px
-   invece di 78; quattro non possono fare di più di 84, ed è aritmetica,
-   non una scelta.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Ogni classe comincia per `pd-` (due fogli con lo stesso nome si
+   rompono a distanza di mesi). Il colore arriva da `--pd-accento`,
+   scritto dal gioco: la tinta di ogni tappa (`dati/campagna.js`), non un
+   vestito di scaglione. Le vignette non hanno una misura fissa: sono
+   grandi quanto lo schermo permette, decisa da quante ne stanno in fila
+   (`--pd-riga`, scritta dalla vista) — perché dentro c'è un disegno con
+   delle facce, e una faccia in un riquadro da 76px è quattro pixel. */
 
 .pd {
   --pd-accento: #2f9e44;
@@ -28,16 +14,11 @@
   --pd-bordo: #dbe8cf;
   --pd-buca: #eef4e6;
   --pd-raggio: 18px;
-  /* quanto è largo il tavolo per davvero: la stessa formula del blocco
-     qui sotto (larghezza dello schermo, tappata a 480, meno i due
-     margini). Serve **come lunghezza vera** e non come percentuale,
-     perché `--pd-vignetta` finisce anche in un `font-size`, e lì un
-     `100%` vorrebbe dire tutt'altro. */
+  /* lunghezza vera e non percentuale: --pd-vignetta finisce anche in un
+     font-size, dove il 100% vorrebbe dire tutt'altro */
   --pd-largo: calc(min(100vw, 480px) - 24px);
   --pd-passo: 10px;          /* lo spazio fra una vignetta e l'altra */
-  /* la vignetta della spiegazione, che sta in colonna e quindi non
-     divide la larghezza con nessuno: è la più grande del gioco */
-  --pd-spiega: clamp(84px, 28vw, 128px);
+  --pd-spiega: clamp(84px, 28vw, 128px);  /* la vignetta della spiegazione, la più grande */
 
   flex: 1; min-height: 0;
   display: flex; flex-direction: column; gap: 10px;
@@ -49,25 +30,13 @@
 .pd .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
                        "Twemoji Mozilla", sans-serif; line-height: 1 }
 
-/* ═══════════ la scena di gioco ═══════════ */
-/* Tre blocchi e basta — consegna, striscia del tempo, vignette da pescare —
-   in uno schermo alto: distribuiti invece che accatastati in cima,
-   altrimenti la metà bassa del telefono resta bianca.
-
-   ── LA MISURA DI UNA VIGNETTA STA QUI E NON SU `.pd` ──
-   `--pd-riga` (quante ne stanno in fila) la scrive la vista su questo
-   elemento, e `--pd-vignetta` la legge: le due dichiarazioni devono
-   stare **sullo stesso elemento**, perché un `var()` dentro una
-   proprietà personalizzata si risolve dove la proprietà è dichiarata,
-   non dove viene usata. Dichiarata su `.pd`, `--pd-vignetta` avrebbe
-   letto per sempre il 3 di partenza — e infatti l'ha fatto: le quattro
-   vignette dell'intruso venivano larghe come tre e andavano a capo.
-   Buche e vignette sono la stessa misura per forza: una vignetta che
-   non riempie la sua buca si legge come «non ci sta». I tre limiti sono
-   la larghezza (quante ne stanno su una riga), l'altezza (`--pd-file`:
-   quante righe ci sono in tutto — due di solito, quattro quando anche
-   la striscia si mette in quadrato) e un tetto di 176 px per gli
-   schermi larghi. Comanda il più stretto dei tre. */
+/* la misura di una vignetta sta qui e non su `.pd`: `--pd-riga` (scritta
+   dalla vista) e `--pd-vignetta` devono stare sullo stesso elemento,
+   perché un `var()` dentro una proprietà personalizzata si risolve dove
+   la proprietà è dichiarata — su `.pd` avrebbe letto per sempre il 3 di
+   partenza (è già successo: le quattro vignette dell'intruso venivano
+   larghe come tre). Comanda il più stretto fra larghezza, altezza
+   (`--pd-file`) e un tetto di 176px per gli schermi larghi. */
 .pd-storia { --pd-riga: 3; --pd-file: 2;
              --pd-vignetta: min(
                  calc((var(--pd-largo) - (var(--pd-riga) - 1) * var(--pd-passo) - 2px)
@@ -77,7 +46,7 @@
              flex: 1; min-height: 0; display: flex; flex-direction: column;
              gap: 14px }
 
-/* ═══════════ la mappa della campagna ═══════════ */
+/* la mappa della campagna */
 .pd-mappa { flex: 1; min-height: 0; overflow-y: auto; display: flex;
             flex-direction: column; gap: 16px; padding: 2px 2px 20px }
 .pd-scalino > h3 { display: flex; align-items: center; gap: 7px;
@@ -103,25 +72,17 @@
 .pd-tappa.pd-chiusa { opacity: .5; border-left-color: #cfd8c3; box-shadow: none }
 .pd-tappa.pd-adesso { box-shadow: 0 3px 0 var(--pd-accento) }
 
-/* ═══════════ la consegna, senza parole ═══════════ */
+/* la consegna, senza parole */
 .pd-consegna { flex: 0 0 auto; display: flex; align-items: center; gap: 10px;
                background: var(--pd-carta); border-radius: 14px; padding: 10px 14px;
                box-shadow: 0 2px 0 var(--pd-bordo) }
 .pd-consegna > .em { font-size: 30px; flex: none }
 .pd-consegna p { font-size: 12.5px; color: var(--pd-tenue); margin: 0 }
 
-/* ═══════════ la striscia del tempo ═══════════ */
-/* striscia e pesca si spartiscono in parti uguali lo spazio sotto la
-   consegna — così su uno schermo alto non si accatasta tutto in cima e
-   su uno basso non esce niente fuori — ma la striscia sta **in fondo**
-   al suo mezzo invece che in mezzo: su un telefono in piedi avanzano
-   trecento pixel, e con la striscia in alto e la pesca in basso una
-   vignetta pescata sembrava volare dall'altra parte dello schermo. */
+/* la striscia sta in fondo al suo mezzo (non in mezzo): con la pesca in
+   basso una vignetta pescata sembrava volare dall'altra parte dello schermo */
 .pd-striscia { flex: 1 1 0; display: flex; justify-content: center;
                align-items: flex-end; gap: var(--pd-passo); padding: 4px 0 }
-/* la striscia in quadrato: due e due. Nell'intruso si centra da sé
-   perché sotto non c'è nient'altro; in un «ordina» a quattro resta in
-   basso, attaccata alla pesca. */
 .pd-striscia-intrusa, .pd-striscia-quadrata { flex-wrap: wrap }
 .pd-striscia-intrusa { align-items: center; align-content: center }
 .pd-striscia-quadrata { align-content: flex-end }
@@ -135,10 +96,8 @@
 @keyframes pd-tonfo { 0% { transform: scale(.55) } 60% { transform: scale(1.12) }
                       100% { transform: none } }
 
-/* ═══════════ la zona di pesca: le vignette da toccare ═══════════ */
-/* e la pesca sta in cima al suo, per lo stesso motivo: le due file si
-   ritrovano una sotto l'altra in mezzo allo schermo, che è dove si
-   guardano insieme */
+/* la pesca sta in cima al suo mezzo: le due file si ritrovano una sotto
+   l'altra in mezzo allo schermo, dove si guardano insieme */
 .pd-pesca { flex: 1 1 0; min-height: 0; overflow-y: auto;
             display: flex; flex-wrap: wrap; justify-content: center;
             align-content: flex-start; gap: var(--pd-passo); padding: 8px 0 20px }
@@ -148,12 +107,8 @@
                transition: transform .1s, box-shadow .1s }
 .pd-vignetta:active { transform: translateY(3px); box-shadow: inset 0 0 0 2px var(--pd-bordo) }
 
-/* ═══════════ le vignette disegnate ═══════════ */
-/* Una scena disegnata riempie tutta la sua buca invece di starci in
-   mezzo come un carattere: il disegno *è* la vignetta, e un margine
-   intorno lo farebbe leggere come una figurina appoggiata lì. Gli
-   angoli li eredita da chi la contiene, che è l'unico posto dove il
-   raggio è deciso. */
+/* una scena disegnata riempie tutta la sua buca (il disegno *è* la
+   vignetta, non un carattere in mezzo); gli angoli li eredita da chi la contiene */
 .pd-vignetta-tela { display: block; width: 100%; height: 100%; border-radius: inherit }
 
 /* la striscia congelata: mentre c'è la spunta di una storia giusta, o
@@ -161,12 +116,9 @@
    ma si vede lo stesso */
 .pd-congelata .pd-buca, .pd-congelata .pd-vignetta { pointer-events: none }
 
-/* ═══════════ la spiegazione dell'errore ═══════════ */
-/* La storia vera, un passo per riga. In colonna e non in fila per una
-   ragione sola: in fila un disegno è largo un terzo di schermo meno i
-   margini, in colonna è largo quanto si vuole e gli resta accanto il
-   posto per dire cos'è. È l'unico momento del gioco in cui i disegni si
-   guardano invece di sceglierli. */
+/* la spiegazione: la storia vera, un passo per riga, in colonna (largo
+   quanto si vuole, con accanto il posto per dire cos'è) invece che in
+   fila (un terzo di schermo meno i margini) */
 .pd-spiega { max-height: 100%; overflow-y: auto; gap: 8px;
              padding: 18px 16px 16px }
 .pd-spiega h2 { font-size: 20px }
@@ -198,14 +150,9 @@
             text-align: left }
 .pd-frase b { color: var(--pd-accento) }
 
-/* la riga che si chiedeva, e i posti finiti nell'ordine sbagliato. Il
-   posto si tinge nel **numero** e non nel disegno: in un «ordina»
-   rovesciato sono sbagliate tutte le righe, e quattro cornici rosse su
-   quattro disegni giusti dicono «hai sbagliato tutto» invece di «erano
-   in quest'ordine». Per la stessa ragione la vignetta che si era
-   toccata per sbaglio non si segna affatto: nell'intruso è un passo
-   **vero** della storia, e bordarla di rosso direbbe il contrario di
-   quello che si sta spiegando. */
+/* si tinge il numero, non il disegno: in un «ordina» rovesciato sono
+   sbagliate tutte le righe, e quattro cornici rosse su disegni giusti
+   direbbero «hai sbagliato tutto» invece di «erano in quest'ordine» */
 .pd-passi li.pd-chiave { background: var(--pd-buca) }
 .pd-passi li.pd-chiave .pd-riquadro { border-color: var(--pd-accento) }
 .pd-passi li.pd-storto .pd-num { color: #e03131 }
@@ -226,12 +173,12 @@
                transform-origin: left; animation: pd-scorre linear forwards }
 @keyframes pd-scorre { from { transform: scaleX(1) } to { transform: scaleX(0) } }
 
-/* ═══════════ il segno di giusto ═══════════ */
+/* il segno di giusto */
 .pd-spunta { position: absolute; inset: 0; display: grid; place-items: center;
              font-size: 96px; pointer-events: none; animation: pd-pop .4s backwards }
 @keyframes pd-pop { 0% { transform: scale(0) } 65% { transform: scale(1.25) } 100% { transform: none } }
 
-/* ═══════════ il velo: il cartello di fine tappa ═══════════ */
+/* il velo: il cartello di fine tappa */
 .pd-velo { position: absolute; inset: 0; z-index: 5; padding: 18px;
            background: rgba(35,45,25,.72);
            display: flex; flex-direction: column; align-items: center;

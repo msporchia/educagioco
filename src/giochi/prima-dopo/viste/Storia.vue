@@ -1,28 +1,10 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA SCENA — dove si gioca
-
-   Tre disegni diversi per tre forme di quesito (`quesito.tipo`): la
-   striscia da riempire, la fila col buco e le tre opzioni, le quattro
-   vignette fra cui c'è l'intrusa.
-
-   Cosa succede quando si sbaglia **non è più affare di questo file**.
-   C'era prima un lampo — la fila giusta al posto della striscia, il
-   tempo di un'occhiata — e prima ancora un replay da quattro secondi;
-   adesso c'è un foglio a parte (`Spiegazione.vue`) che dice anche
-   perché, e questo file torna a fare una cosa sola: far vedere la
-   domanda e dire cosa è stato toccato. Quando la fase non è `gioca` si
-   congela e basta.
-
-   Non tocca il motore: tocca una vignetta ed emette `tocca`, e chi
-   coordina (`Gioco.vue`) decide cosa vuol dire. Non sa nemmeno cosa sia
-   una moneta.
-
-   NOTA PER DOMANI: quando arriverà la voce italiana, è qui — nella
-   consegna in alto e nella frase piccola — che andrà agganciata: oggi
-   non c'è niente da leggere ad alta voce, perché
-   `strumenti/incidi-voci.mjs` parla ancora solo inglese e spagnolo.
-   ═══════════════════════════════════════════════════════════════════ */
+// La scena di gioco: tre disegni diversi per tre forme di quesito (la
+// striscia da riempire, la fila col buco e tre opzioni, le quattro
+// vignette con l'intrusa). Non tocca il motore: emette `tocca` e chi
+// coordina (Gioco.vue) decide cosa vuol dire. Cosa succede quando si
+// sbaglia è affare di Spiegazione.vue, non di questo file: qui, quando
+// la fase non è `gioca`, si congela e basta.
 import { computed } from 'vue'
 import Passo from './Passo.vue'
 
@@ -35,34 +17,21 @@ defineEmits(['tocca'])
 
 const NUMERI = ['1️⃣', '2️⃣', '3️⃣', '4️⃣']
 
-/* ═══════ QUANTO SI PUÒ FARE GRANDE UN DISEGNO ═══════
-   Due numeri, e il foglio di stile ci ricava la misura: `--pd-riga`
-   quante vignette stanno **su una riga** (comanda la larghezza) e
-   `--pd-file` quante righe ci sono **in tutto sullo schermo** (comanda
-   l'altezza). Striscia e pesca hanno per forza la stessa misura — una
-   vignetta che non riempie la sua buca si legge come «non ci sta» —
-   quindi vale il caso peggiore delle due.
-
-   Tre in riga su un telefono fanno 115 px, quattro ne fanno 84: e 84
-   px, per un disegno con dentro una faccia, è di nuovo il francobollo
-   da cui si è scappati smettendo con le emoji. Perciò quando le
-   vignette sono quattro **non si mettono in fila, si mettono in
-   quadrato**: due e due, 158 px l'una, quasi quattro volte l'area. Il
-   verso del tempo non si perde, perché nella striscia le buche sono
-   numerate (1️⃣ 2️⃣ 3️⃣ 4️⃣) e due-e-due si legge come una pagina di
-   fumetto — che è appunto l'ordine giusto. */
+// `--pd-riga` (vignette per riga) e `--pd-file` (righe in tutto) sono le
+// due misure che il foglio di stile usa per dimensionare una vignetta:
+// striscia e pesca condividono la stessa misura, quindi vale il caso
+// peggiore delle due. A quattro vignette si passa da una fila (84px,
+// di nuovo il francobollo delle emoji) a un quadrato due-e-due (158px),
+// leggibile come una pagina di fumetto perché le buche sono numerate.
 const inRiga = computed(() => {
   const q = props.quesito
-  /* per «ordina» si contano le buche, non le vignette ancora da pescare:
-     quelle calano man mano che si posano, e una misura che le seguisse
-     farebbe crescere i disegni mentre si gioca */
+  // per «ordina» si contano le buche, non le vignette ancora da pescare:
+  // quelle calano man mano che si posano
   if (q.tipo === 'ordina') return q.sequenza.length > 3 ? 2 : q.sequenza.length
   if (q.tipo === 'intruso') return 2
   return Math.max(q.mostrati.length, q.opzioni.length)
 })
 
-/* quante righe di vignette ci sono in tutto: la striscia (una, o due se
-   è in quadrato) più la pesca, che non c'è nell'intruso */
 const inColonna = computed(() => {
   const q = props.quesito
   if (q.tipo === 'intruso') return 2

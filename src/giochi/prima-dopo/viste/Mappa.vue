@@ -1,15 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA MAPPA DELLA CAMPAGNA
-
-   Calcata su `codice-segreto/viste/Mappa.vue`, ma con le carte più
-   grandi: qui legge un bambino di quattro anni, e l'unica cosa che deve
-   riconoscere da sola è «questa è aperta, questa no».
-
-   Riceve tutto già deciso — cosa è aperto e cosa è chiuso per età,
-   quante stelle, il colore della tappa — e non sa niente di profili o
-   motore: qui dentro si sceglie dove andare e basta.
-   ═══════════════════════════════════════════════════════════════════ */
+// La mappa della campagna, calcata su codice-segreto/viste/Mappa.vue con
+// le carte più grandi: qui legge un bambino di quattro anni. Riceve
+// tutto già deciso (aperto, chiuso per età, stelle, colore).
 defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
 })
@@ -33,8 +25,7 @@ defineEmits(['gioca'])
           <span class="pd-faccia em">{{ t.aperta ? t.icona : '🔒' }}</span>
           <span class="pd-testo">
             <b>{{ t.nome }}</b>
-            <!-- chiusa per età non si scrive niente: andando avanti non si
-                 apre, e per questo bambino il gioco finisce lì -->
+            <!-- chiusa per età non si scrive niente: per questo bambino il gioco finisce lì -->
             <i v-if="t.aperta">{{ t.racconto }}</i>
             <i v-else-if="!t.perEta">continua per aprirla</i>
           </span>

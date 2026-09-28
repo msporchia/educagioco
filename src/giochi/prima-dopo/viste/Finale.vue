@@ -1,13 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL CARTELLO DI FINE TAPPA
-
-   Qui non esiste un cartello di partita persa: una storia sbagliata si
-   riprova e basta, non chiude niente. L'unico cartello è quello buono,
-   a tappa portata a casa — come in `codice-segreto/viste/Finale.vue`
-   ma senza il gemello per la partita, perché qui una partita non ha un
-   finale suo: lo ha solo la tappa.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il cartello di fine tappa: qui non esiste un cartello di partita
+// persa, una storia sbagliata si riprova e basta. L'unico cartello è
+// quello buono, a tappa portata a casa.
 defineProps({
   titolo: { type: String, required: true },
   stelle: { type: Number, default: 1 },
