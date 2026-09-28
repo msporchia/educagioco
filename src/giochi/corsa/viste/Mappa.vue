@@ -1,15 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA MAPPA DELLA CAMPAGNA
-
-   Tre scalini, nove tappe. Riceve tutto già deciso — cosa è aperto,
-   quante stelle, di che colore, quanto dura — e non sa niente di
-   profili, monete e motore: qui dentro si sceglie dove andare e basta.
-
-   Su ogni tappa c'è scritto **quanto dura**: è la prima cosa che un
-   bambino vuole sapere prima di dire di sì, e «50 secondi» è una
-   promessa che si può mantenere.
-   ═══════════════════════════════════════════════════════════════════ */
+// La mappa della campagna: tre scalini, nove tappe. Riceve tutto già
+// deciso; su ogni tappa c'è scritto quanto dura, la prima cosa che un
+// bambino vuole sapere prima di dire di sì.
 defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe }]
   libera: { type: Object, required: true },   // { aperta, quante, fatte, primato }

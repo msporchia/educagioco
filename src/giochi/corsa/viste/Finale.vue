@@ -1,25 +1,10 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL CARTELLO DI FINE
-
-   Un cartello solo per i due modi in cui una corsa finisce, perché è lo
-   stesso gesto: «è finita, ecco com'è andata, si riparte da qui».
-
-   Perdere non toglie niente e non fa arretrare: si riprova la stessa
-   tappa quando si vuole. A sei anni la punizione non insegna, insegna il
-   giro dopo — e questo cartello lo deve dire, se no il bambino crede di
-   aver perso qualcosa.
-
-   La riga che conta di più è **la mira**: quanti dei cancelli erano il
-   migliore. È l'unica cosa qui dentro che parli di matematica invece che
-   di fortuna, ed è quella che vale la terza stella.
-
-   Nella corsa infinita la riga che conta è un'altra, ed è **il
-   primato**: lì non si vince niente, quindi l'unica cosa che il gioco
-   ha da dare è dire di quanto si è migliorato. Arriva già scritta
-   (`giochi/primati.js`) e con i coriandoli quando è un record: questo
-   file non conta e non confronta niente.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il cartello di fine: un cartello solo per i due modi in cui una
+// corsa finisce. Perdere non toglie niente e non fa arretrare. La riga
+// che conta di più è la mira (quanti cancelli erano il migliore): è
+// l'unica che parli di matematica invece che di fortuna, ed è quella
+// della terza stella. Nella corsa infinita conta il primato, che arriva
+// già scritto (giochi/primati.js): questo file non conta e non confronta niente.
 import Festa from '../../Festa.vue'
 
 defineProps({
@@ -34,8 +19,7 @@ defineProps({
   meglio: { type: Number, default: 0 },
   libri: { type: Number, default: 0 },        // esercizi indovinati
   causa: { type: String, default: '' },
-  /* `{ record, primo, frase, … }` nella corsa infinita, niente nelle
-     tappe: un primato non c'entra dove c'è un traguardo da tagliare */
+  // { record, primo, frase, … } nella corsa infinita, niente nelle tappe
   primato: { type: Object, default: null },
   libera: { type: Boolean, default: false },
   ultima: { type: Boolean, default: false },  // la campagna è finita qui
@@ -67,10 +51,6 @@ defineEmits(['ancora', 'esci'])
         🎯 il cancello migliore <b>{{ meglio }}</b> volte su {{ cancelli }}
       </p>
       <p v-if="libri" class="co-libri em">📚 {{ libri }} esercizi indovinati</p>
-      <!-- il record, e di quanto: «🥇 Nuovo record! 312 m (32 m meglio
-           di prima)». Quando non è un record si dice lo stesso quanto è
-           mancato — è la riga che fa venire voglia di rigiocare, e non
-           è un rimprovero: quel record è suo. -->
       <p v-if="primato && primato.record" class="co-primato em" data-primato="nuovo">
         🥇 {{ primato.frase }}
       </p>
