@@ -51,6 +51,9 @@ src/giochi/<nome-gioco>/
   mano**: si usano `segna()` e `segnaBest()` di `src/store/profile.js`.
   Se il gioco ha un orologio, la pausa non si scrive in casa: vedi
   [interfaccia.md](interfaccia.md#la-pausa-una-sola).
+- **`stile.css`** — ogni classe sotto un prefisso suo: due fogli che si
+  contendono lo stesso nome si rompono a distanza di mesi, quando uno dei
+  due cambia e l'altro no.
 
 ## Il manifesto, `gioco.js`
 

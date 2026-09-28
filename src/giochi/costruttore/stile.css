@@ -1,18 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL COSTRUTTORE — L'ASPETTO
-
-   Un file solo, ogni classe comincia per `cst-` (il perché sta in
-   `codice-segreto/stile.css`: due fogli che si contendono lo stesso
-   nome si rompono a distanza di mesi).
-
-   Lo schermo è diviso in due: **sopra** l'ordine, il cantiere e i
-   comandi, fermi; **sotto** il programma, che scorre da solo. Un
-   programma lungo non deve portarsi via il cantiere: è guardando il
-   robot mentre si legge la riga accesa che si capisce cosa fa.
-
-   Il giallo è quello dei cantieri: il robot, la riga che gira, il tasto
-   ▶. Il rosso è solo per quello che non va.
-   ═══════════════════════════════════════════════════════════════════ */
+/* il costruttore: ogni classe sotto `cst-` (docs/core/convenzione-giochi.md).
+   Sopra fermo (ordine, cantiere, comandi), sotto scorre il programma. */
 
 .cst {
   --cst-fondo: #f7f1e8;
@@ -39,7 +26,7 @@
 .cst-piccolo { font-size: 13px; color: var(--cst-tenue); margin: 2px 0 8px }
 .cst-ico { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; line-height: 1 }
 
-/* ═══════════ la mappa ═══════════ */
+/* la mappa */
 .cst-mappa { flex: 1; min-height: 0; overflow: auto; padding: 10px 12px 24px }
 .cst-capitolo { margin-bottom: 18px }
 .cst-capitolo h3 { margin: 6px 0 0; font-size: 18px; display: flex; align-items: center; gap: 8px }
@@ -60,7 +47,6 @@
 .cst-testo-livello i { font-style: normal; font-size: 13px; color: var(--cst-tenue) }
 .cst-stelline { font-size: 14px; white-space: nowrap }
 
-/* ═══════════ il cantiere: sopra fermo, sotto scorre ═══════════ */
 .cst-cantiere { flex: 1; min-height: 0; display: flex; flex-direction: column }
 .cst-sopra { flex: 0 0 auto; padding: 6px 10px 4px; display: flex; flex-direction: column; gap: 6px }
 
@@ -107,8 +93,7 @@
   background: var(--cst-carta); font-size: 20px; position: relative;
 }
 .cst-lampadina small { position: absolute; right: 4px; bottom: 2px; font-size: 10px; color: var(--cst-tenue) }
-/* il turno del porto: un numero che corre, largo fisso perché non faccia
-   ballare i tasti accanto */
+/* il turno del porto: largo fisso, perché non faccia ballare i tasti accanto */
 .cst-turno {
   min-width: 58px; min-height: 42px; display: inline-flex; align-items: center; justify-content: center;
   border-radius: 12px; background: var(--cst-carta); border: 1.5px solid var(--cst-bordo);
@@ -133,7 +118,7 @@
 .cst-messaggio.cst-fatto { background: #e5f5e8; color: #1f5f2c }
 .cst-messaggio.cst-fisso { margin: 0 10px 8px }
 
-/* ═══════════ l'editor ═══════════ */
+/* l'editor */
 .cst-editor {
   flex: 1 1 auto; min-height: 0; overflow: auto;
   padding: 6px 10px 90px; border-top: 1.5px solid var(--cst-bordo); background: var(--cst-carta);
@@ -154,9 +139,7 @@
 .cst-scheda small { color: var(--cst-tenue) }
 .cst-scheda.cst-su { background: var(--cst-giallo-chiaro); border-color: var(--cst-giallo); font-weight: 600 }
 .cst-scheda.cst-nuovo { border-style: dashed; color: var(--cst-tenue) }
-/* gli attrezzi: già scritti, chiusi. Il lucchetto è piccolo e sta
-   davanti: si chiamano come gli altri progetti, cambia solo che non si
-   toccano */
+/* attrezzi: si chiamano come i progetti, non si toccano (docs/costruttore/progetti.md) */
 .cst-scheda.cst-attrezzo { background: #eef3ee; border-color: #c7d9c7 }
 .cst-scheda.cst-attrezzo.cst-su { background: #dff0df; border-color: #6aa86a }
 .cst-lucchetto { font-size: 11px; margin-right: 3px; vertical-align: 1px }
@@ -164,8 +147,7 @@
 .cst-nota-attrezzo { margin: 0 4px 8px; padding: 7px 10px; border-radius: 10px; background: #eef6ee;
                      color: #2f4a2f; font-size: 13px; line-height: 1.4 }
 
-/* in fondo alla riga delle schede: lo zaino e «annulla», fermi mentre le
-   schede scorrono */
+/* zaino e «annulla» restano fermi mentre le schede scorrono */
 .cst-barra-schede { display: flex; align-items: center; gap: 6px }
 .cst-barra-schede .cst-schede { flex: 1 1 auto; min-width: 0 }
 .cst-zaino { flex: none; font-size: 13px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap;
@@ -206,15 +188,11 @@
   display: inline-flex; align-items: center; gap: 5px;
 }
 .cst-casella.cst-aperta { background: #dbe6fd; border-color: #5b8def }
-/* il ▾ dice «questo si cambia»: un quadratino colorato da solo, o un
-   «1» già scritto, si leggevano come parte della frase — nessuno dei
-   due bambini che l'hanno provato li toccava. Dove non si cambia (un
-   attrezzo, il programma che gira) il ▾ non c'è. */
+/* il ▾ dice «questo si cambia» (docs/costruttore/linguaggio.md); dove non si cambia non c'è */
 .cst-casella::after { content: '▾'; font-size: 11px; line-height: 1; margin-left: -1px; opacity: .55 }
 .cst-casella.cst-fissa::after { content: none }
 .cst-casella.cst-aperta::after { content: '▴' }
-/* quello che resta da scegliere: la N, il ?, i puntini — si vede senza
-   leggerlo, e pulsa piano finché non è scelto */
+/* quello che resta da scegliere pulsa piano finché non è scelto */
 .cst-casella.cst-manca { border-style: dashed; border-color: #e08a00; background: #fff4dc; color: #8a4b00;
                          animation: cst-manca 1.6s ease-in-out infinite }
 @keyframes cst-manca { 50% { box-shadow: 0 0 0 3px #ffe2a8 } }
@@ -228,7 +206,7 @@
 .cst-tasti-riga .cst-agg { background: var(--cst-giallo-chiaro); border-color: var(--cst-giallo); font-weight: 600 }
 .cst-tasti-riga .cst-via { flex: 0 0 auto; min-height: 36px; font-size: 15px; background: var(--cst-rosso-chiaro); box-shadow: none; color: var(--cst-rosso) }
 
-/* ── la mano: una riga presa, e i posti dove posarla ── */
+/* la mano */
 .cst-riga.cst-in-mano { border-style: dashed; border-color: #5b8def; background: #eef3fe; opacity: .75 }
 .cst-mano {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0 2px; padding: 6px 8px;
@@ -250,7 +228,7 @@
 .cst-piede-editor { margin-top: 18px; display: flex; justify-content: flex-end }
 .cst-ricomincia { border: none; background: none; color: var(--cst-tenue); font-size: 13px; text-decoration: underline }
 
-/* ── la scelta di una casella, attaccata alla riga ── */
+/* la scelta di una casella */
 .cst-scelta {
   position: relative; margin: 4px 0 6px; padding: 10px 10px 8px; border-radius: 12px;
   background: #f4f7fe; border: 1.5px solid #b9c8ec; display: flex; flex-direction: column; gap: 8px;
@@ -275,7 +253,6 @@
 .cst-conto { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 20px }
 .cst-pezzo { min-width: 48px; min-height: 40px; padding: 2px 12px; border-radius: 10px; border: 1.5px solid #b9c8ec; background: #fff; text-align: center; font-weight: 700; font-family: ui-monospace, Menlo, monospace }
 .cst-pezzo.cst-su { border-color: #5b8def; box-shadow: 0 0 0 2px #dbe6fd }
-/* la domanda: una frase a caselle, e sotto la scelta di una sola */
 .cst-frase-domanda { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px }
 .cst-pezzo-domanda { font-family: inherit; font-size: 15px; display: inline-flex; align-items: center; gap: 6px }
 .cst-pezzo.cst-vuoto { border-style: dashed; border-color: #e08a00; background: #fff4dc; color: #8a4b00 }
@@ -289,12 +266,10 @@
 .cst-intorno-robot { display: flex; align-items: center; justify-content: center; font-size: 26px;
                      border-radius: 10px; background: #e3e9f7 }
 .cst-segni .cst-piccolo { margin: 0 }
-/* «cst-scelta-fatto» e non «cst-fatto»: quel nome era anche la classe dei
-   livelli vinti nella mappa e del messaggio del cantiere libero, e li
-   vestiva da tasto blu spinto a destra */
+/* «cst-scelta-fatto»: «cst-fatto» era già la classe dei livelli vinti e del cantiere libero */
 .cst-scelta-fatto { align-self: flex-end; min-height: 38px; padding: 4px 18px; border-radius: 10px; border: none; background: #5b8def; color: #fff; font-weight: 700 }
 
-/* ═══════════ i fogli ═══════════ */
+/* i fogli */
 .cst-velo {
   position: fixed; inset: 0; z-index: 30; background: rgba(40, 30, 20, .45);
   display: flex; align-items: flex-end; justify-content: center;
@@ -347,7 +322,7 @@
 .cst-piede-editor { gap: 14px }
 .cst-aiuti { padding-left: 20px; margin: 6px 0; display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.4 }
 
-/* ── il cartello di fine ── */
+/* il cartello di fine */
 .cst-velo-fine { align-items: center; padding: 16px }
 .cst-cartello {
   position: relative; width: 100%; max-width: 380px; text-align: center;

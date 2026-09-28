@@ -1,48 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   COM'È ANDATA LA GIORNATA — il verdetto del porto
-
-   Nel cantiere il verdetto era uno: il disegno è venuto? Nel porto una
-   giornata può chiedere più cose, e il livello le **dichiara** invece di
-   scriverle in codice (`obiettivo`, nel livello o nell'ordine):
-
-     bersagli    le casse disegnate in trasparenza (la lettera minuscola
-                 nella mappa) sono al loro posto, del colore giusto. Vale
-                 da sé se la mappa ne ha
-     cassoni     { <nome>: { quante: 5 } } — quante casse ci devono
-                 essere alla fine in quel cassone; `vuoto: true` per dire
-                 che deve restare vuoto
-     serviti     tutti i clienti se ne sono andati contenti. Vale da sé
-                 se nella giornata ci sono clienti
-     gru         la gru ha calato tutte le sue casse, e sotto di lei non
-                 ne è rimasta nessuna. Vale da sé se c'è la gru
-     camion      tutti i camion della giornata sono ripartiti pieni. Vale
-                 da sé se ci sono i camion
-     mani        a sera il robot non ha niente in mano: una cassa in
-                 mano non è consegnata. Vale sempre
-     inOrdine    { y, da, a } — sulla riga `y`, dalla casella `da` alla
-                 `a`, una lettera per casella e i numeri che non scendono
-                 mai: le lettere del postino messe in fila. Non dice come
-                 ci si arriva, e un altro modo di ordinarle vince lo stesso.
-                 Con `colori: ['verde', 'bianco', 'rosso']` guarda casse
-                 invece di lettere, e l'ordine è quello dell'elenco (il
-                 tricolore). Con `cassone: 'p'` invece della riga guarda
-                 dentro un cassone, dal fondo alla cima: il sacco del
-                 postino riempito in ordine
-
-   Quello che va storto **durante** la giornata — una cassa in mare, un
-   cliente arrabbiato, una cassa del colore sbagliato — non arriva fin
-   qui: ferma la giornata nel momento in cui succede (`Inciampo`), perché
-   è lì che si vede. Qui si guarda solo com'è finita.
-
-   Le frasi dicono cosa manca con i numeri, non «riprova»: «nel camion ci
-   sono 3 casse, e ne volevano 5» è una cosa su cui si può ragionare.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il verdetto del porto: cosa dichiara `obiettivo` è in docs/costruttore/porto.md.
 import { coloreAlFemminile, eFemminile, nel } from './mondo.js'
 
 const maiuscola = s => (s ? s[0].toUpperCase() + s.slice(1) : s)
 const casse = n => (n === 1 ? '1 cassa' : `${n} casse`)
-/* quello che c'è in un cassone, contato: nel sacco della posta sono
-   lettere, e «3 casse» sarebbe falso */
+// Nel sacco della posta sono lettere, e «3 casse» sarebbe falso.
 const cose = pila => (pila.length && pila.every(c => c.tipo === 'biglietto')
   ? (pila.length === 1 ? '1 lettera' : `${pila.length} lettere`) : casse(pila.length))
 
@@ -51,7 +12,6 @@ export function esitoDelPorto(porto) {
   const mancano = [], sbagliati = []
   const obiettivo = porto.obiettivo || {}
 
-  /* le casse disegnate in trasparenza */
   if (obiettivo.bersagli !== false) {
     for (const [k, colore] of porto.bersaglio) {
       const cima = porto.cimaDi(k)
@@ -64,7 +24,6 @@ export function esitoDelPorto(porto) {
       frasi.push(`Dove ci voleva una cassa ${coloreAlFemminile(s.atteso)} ce n'è una ${coloreAlFemminile(s.trovato)}.`)
   }
 
-  /* quante casse ci sono nei cassoni */
   for (const [id, voglio] of Object.entries(obiettivo.cassoni || {})) {
     const k = porto.cassone(id)
     if (k < 0) { frasi.push(`Il cassone «${id}» non c'è.`); continue }
@@ -79,14 +38,12 @@ export function esitoDelPorto(porto) {
           : `${maiuscola(nel(a.nome))} ${ci} ${casse(n)}: ne volevano solo ${voglio.quante}.`)
   }
 
-  /* i clienti */
   const c = porto.clienti
   if (c && obiettivo.serviti !== false && c.serviti < c.totale)
     frasi.push(c.serviti === 0
       ? `Nessun cliente è stato servito: ne sono venuti ${c.totale}.`
       : `Hai servito ${c.serviti} clienti su ${c.totale}.`)
 
-  /* la gru: ha calato tutto, e tutto è stato portato via */
   const g = porto.gru
   if (g && obiettivo.gru !== false) {
     if (g.casse.length)
@@ -95,27 +52,21 @@ export function esitoDelPorto(porto) {
       frasi.push('Sotto la gru è rimasta una cassa: nessuno l\'ha portata via.')
   }
 
-  /* i camion: tutti partiti pieni */
   const cm = porto.camion
   if (cm && obiettivo.camion !== false && cm.partiti < cm.totale)
     frasi.push(cm.partiti === 0
       ? `Nessun camion è ripartito pieno: ne sono arrivati ${cm.totale}.`
       : `Sono ripartiti pieni ${cm.partiti} camion su ${cm.totale}.`)
 
-  /* le lettere in fila, dalla più piccola alla più grande (o le casse,
-     nell'ordine dei loro colori) */
   if (obiettivo.inOrdine) frasi.push(...inOrdine(porto, obiettivo.inOrdine))
 
-  /* a sera le mani sono vuote: una cassa in mano non è consegnata */
   if (porto.mano && obiettivo.mani !== false)
     frasi.push(`Il robot ha ancora in mano ${porto.mano.tipo === 'cassa' ? 'una cassa' : 'un biglietto'}: non è arrivata da nessuna parte.`)
 
   return { vinto: frasi.length === 0, frasi, mancano, sbagliati }
 }
 
-/* In ordine: una riga dello scaffale, o la pila di un cassone dal fondo
-   alla cima. Con `colori` le cose sono casse, e il loro posto in fila è
-   quello del colore nell'elenco; senza, sono lettere col loro numero. */
+// Con `colori` le cose sono casse, e il loro posto in fila è quello del colore nell'elenco; senza, lettere col loro numero.
 function inOrdine(porto, { y, da, a, cassone = null, colori = null }) {
   const frasi = []
   const cose = []

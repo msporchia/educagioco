@@ -20,10 +20,24 @@ corto. Due pezzi lo tengono fermo: gli attrezzi e lo zaino.
   robot (`finisce`: «in cima alla torre»), perché la riga dopo comincia da lì.
   Si impara a usare una funzione prima di scriverla: il capitolo dei
   progetti comincia così (la cinta).
+- **Sono fabbriche e non oggetti fissi** perché lo stesso attrezzo cambia
+  colore da un livello all'altro (la colonna gialla della scala, quella
+  bianca del tempio).
+- **Un attrezzo non si porta dietro una lavagnetta**: se deve tornare a un
+  punto noto lo fa guardando il mondo (`guarda`/`finche`), non contando i
+  passi — l'imbuca del postino torna al sacco così.
 - **Li rimette nel programma `motore/attrezzi.js`** (`conAttrezzi`) a ogni
   apertura, e non si salvano come roba del bambino.
 - **Le strade di una mappa del porto sono attrezzi di quella mappa**, non
   del catalogo (vedi [porto.md](porto.md)).
+
+## Importare un progetto da un altro livello
+
+La cassetta offre anche i progetti scritti nei livelli già giocati
+(`altriProgetti` in `Gioco.vue`): uno per nome, e se lo stesso nome è stato
+scritto in più livelli vince quello del livello più avanti — di solito il
+più rifinito. Solo dallo stesso mondo: una colonna di mattoni nel porto non
+saprebbe cosa fare, e prendere una cassa nel cantiere nemmeno.
 
 ## Lo zaino di righe 📝
 
@@ -40,8 +54,17 @@ corto. Due pezzi lo tengono fermo: gli attrezzi e lo zaino.
 
 ## L'editor
 
+- **Un posto nel programma** (`motore/modifica.js`) si dice con `{ progetto,
+  dopo, dentro, ramo }`: `progetto` è `null` per la principale o l'id di un
+  progetto, `dopo`/`prima` l'id della riga accanto a cui inserire, `dentro`
+  l'id di un blocco (con `ramo`: corpo|allora|altrimenti, e `inFondo` per
+  metterla in fondo al corpo invece che in cima), e senza niente di tutto
+  questo va in fondo al corpo del progetto (o della principale).
 - **↶ annulla, dieci passi**, in memoria per livello: un 🗑 su un blocco porta
   via tutto quello che ha dentro, e annulla lo rimette.
+- **I tocchi di fila sulla stessa casella sono un passo solo** (le cifre di
+  un numero, i pezzi di una domanda): se no tornare indietro di un numero
+  scritto a mano costerebbe tre «annulla».
 - **La mano** (`trasloca`/`incollaCopia` in `motore/modifica.js`): ✂ sposta e
   ⧉ copia prendono una riga col suo blocco, e ogni elenco mostra i «📥 qui»
   dove posarla — dentro e fuori dai ripeti, e in un'altra scheda, cioè dentro

@@ -1,64 +1,12 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE PILE — si prende solo quella in cima
-
-   In fondo alla fila. Una pila tiene le cose una sull'altra, e si
-   prende sempre quella in cima: il cassone del porto lo era da sempre,
-   e nessun livello lo faceva lavorare.
-
-     · il carico al contrario: le casse del nastro della nave vanno sul
-       nastro del camion rovesciate, e il robot non ha nessun posto dove
-       appoggiarle tranne il cassone. Il cassone la capovolge da solo —
-       dentro in un verso, fuori nell'altro — e il programma non ha niente
-       che capovolga;
-     · la torre del casaro (Hanoi): le forme di formaggio stanno in pila
-       sulle tre assi, e una grande sopra una più piccola la schiaccia
-       (`figura: 'pila'` in `motore/porto/mondo.js`). Due forme a mano;
-       tre con la «torre di due» già fatta; quattro scrivendo la «torre
-       di tre» con quella di due; e poi quante se ne vuole — col
-       progetto che chiama sé stesso.
-
-   ── PERCHÉ LA TORRE È UNA SCALA DI QUATTRO LIVELLI ────────────────
-   La ricorsione non si spiega: si arriva a vederla. Ogni gradino dà già
-   fatto quello che il bambino ha scritto in quello prima (gli attrezzi),
-   e il gradino dopo è lo stesso disegno una volta più in alto: tre
-   forme sono «la torre di due, la grande, la torre di due»; quattro
-   sono «la torre di tre, la grande, la torre di tre» — e la torre di
-   tre la scrive lui, con la torre di due dentro. Al quarto gradino le
-   torri sono alte tre, quattro, cinque e sei, e nessuna torre già
-   fatta basta: resta solo il progetto che, per spostare una torre alta
-   N, sposta due torri alte N − 1. Quello che rende la ricorsione
-   **necessaria** è lo zaino: la catena di torri di tre, quattro,
-   cinque, sei scritte una per una non ci sta.
-
-   Il robot sta fermo fra le tre assi — la rossa a sinistra, la verde
-   sopra, la blu a destra — e l'attrezzo «sposta» porta una forma da
-   un'asse all'altra: la lezione è la torre, non la strada. Le assi si
-   chiamano col loro colore, ed è così che un ordine dice «partenza»,
-   «arrivo» e «appoggio»: tre colori, che cambiano da un giorno
-   all'altro, e un programma scritto coi colori di lunedì perde martedì.
-   ═══════════════════════════════════════════════════════════════════ */
+// Le pile: si prende sempre quella in cima. Vedi docs/costruttore/algoritmi.md.
 import { fai, guarda, confronta, meno, progetto, programma } from '../scrivi.js'
 import { sposta, torreDiDue } from '../attrezzi.js'
 
-/* ═══════════ il carico al contrario ═══════════ */
-
 const CAPITANO = { emoji: '👩‍✈️', nome: 'La capitana' }
 
-/* Il robot sta fermo in un buco nel muro, e intorno ha solo tre cose: a
-   destra il nastro della nave, che porta le casse verso di lui e se le
-   tiene in fila (finisce contro il robot, quindi è una coda); sopra il
-   cassone; sotto il nastro del camion, che le porta a sinistra e le mette
-   in fila da solo contro il muro, nell'ordine in cui le posi — col disegno
-   della fila rovesciata in trasparenza.
-
-   Nessun posto per terra dove appoggiarne una, ed è la regola del
-   livello. La prima versione aveva sotto uno scaffale libero, e con dei
-   posti liberi la pila non serve: si porta ogni cassa dritta al suo posto
-   (l'ha detto l'utente guardandola). Qui l'unico modo di rovesciare la
-   fila è quello della pila: dentro tutte, poi fuori tutte. */
 function banchina(casse) {
   const n = casse.length
-  const rx = n + 1                       /* la colonna del robot: a sinistra c'è posto per la fila d'arrivo */
+  const rx = n + 1  // la colonna del robot: a sinistra c'è posto per la fila d'arrivo
   const w = rx + n + 2
   const riga = f => Array.from({ length: w }, (_, x) => f(x)).join('')
   const rovescia = [...casse].reverse()
@@ -102,8 +50,7 @@ const AL_CONTRARIO = {
     fai.finche(guarda('su', 'niente'), [fai.prendi('su'), fai.posa('giu')]),
   ] }),
   fragili: [
-    /* la falsa pista: lunedì la fila è rosso-verde-rosso, e rovesciarla
-       o no è lo stesso */
+    // falsa pista: lunedì la fila è rosso-verde-rosso, e rovesciarla o no è lo stesso
     { nome: 'dritte sul camion, senza cassone', programma: programma({ principale: [
       fai.finche(guarda('destra', 'niente'), [fai.prendi('destra'), fai.posa('giu')]),
     ] }) },
@@ -117,14 +64,11 @@ const AL_CONTRARIO = {
   ],
 }
 
-/* ═══════════ la torre del casaro ═══════════ */
-
 const CASARO = { emoji: '🧑‍🍳', nome: 'Il casaro' }
 const COLORI_ASSI = ['rosso', 'verde', 'blu']
 const ASSE = { rosso: 'R', verde: 'V', blu: 'B' }
 const NOME_ASSE = { rosso: 'l\'asse rossa', verde: 'l\'asse verde', blu: 'l\'asse blu' }
 
-/* il magazzino: le tre assi attorno al robot, e i muri intorno */
 const MAGAZZINO = [
   '##########',
   '####CV####',
@@ -132,10 +76,7 @@ const MAGAZZINO = [
   '##########',
 ]
 
-/* un giorno del casaro: la torre di `forme` forme sull'asse `da`, che
-   va portata sull'asse `a`. L'asse libera (`via`) la dice l'ordine: è
-   quella che resta. `conForme` mette anche l'altezza fra le lavagnette,
-   dove i giorni non sono tutti alti uguali. */
+// conForme mette anche l'altezza fra le lavagnette (i giorni non sono tutti alti uguale)
 function giorno(nome, forme, partenza, arrivo, { conForme = false } = {}) {
   const appoggio = COLORI_ASSI.find(c => c !== partenza && c !== arrivo)
   const cassoni = {}
@@ -156,11 +97,6 @@ const TORRE = {
   cose: ['forma', 'niente'], leggere: false,
 }
 
-/* le tre assi di una torre, per il ruolo che hanno: da dove parte, dove
-   arriva, e quella libera dove si appoggia intanto. Sono nomi e non
-   preposizioni perché dentro la torre il progetto passa a sé stesso le
-   sue misure: con «da», «a» e «via» la riga si leggeva «torre da da a via
-   via a», e non si capiva niente */
 const ruoli = ['partenza', 'arrivo', 'appoggio']
 const tipiRuoli = { partenza: 'colore', arrivo: 'colore', appoggio: 'colore' }
 
@@ -231,8 +167,6 @@ const TRE_FORME = {
   ],
 }
 
-/* la torre di tre del bambino: è la soluzione di «Tre forme» diventata
-   un progetto, con le sue tre misure */
 const torreDiTre = () => progetto('torre3', { nome: 'torre di tre', icona: '🗼', misure: ruoli, tipi: tipiRuoli }, [
   fai.chiama('torre2', 'partenza', 'appoggio', 'arrivo'), fai.chiama('sposta', 'partenza', 'arrivo'), fai.chiama('torre2', 'appoggio', 'arrivo', 'partenza'),
 ])
@@ -276,9 +210,8 @@ const QUATTRO_FORME = {
   ],
 }
 
-/* la torre del bambino, alta quanto si vuole: per spostarne una alta
-   «alta», se ne spostano due alte «alta − 1». Una torre alta zero non
-   si sposta: è il fermo, senza il quale non finirebbe mai */
+// fermo=false toglie il caso base (la mossa ingenua non finisce mai);
+// dritta=true manda la prima sotto-torre dritta all'arrivo invece che sull'appoggio
 const torre = ({ fermo = true, dritta = false } = {}) => {
   const giu = meno('alta', 1)
   const corpo = [

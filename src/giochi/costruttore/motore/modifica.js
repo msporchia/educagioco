@@ -1,27 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE MODIFICHE AL PROGRAMMA — quello che fa un tocco nell'editor
-
-   La vista non tocca il programma: dice cosa vuole fare («metti un
-   ripeti dopo la riga n4», «cambia il verso di n7 in su») e chi coordina
-   chiama una di queste funzioni. Sono pure e lavorano sul posto, così si
-   provano in Node e la vista non ha niente di suo da sbagliare.
-
-   ── DOVE SI INSERISCE ─────────────────────────────────────────────
-   Un posto nel programma si dice con `{ progetto, dopo, dentro, ramo }`:
-
-     progetto   null = la principale, se no l'id del progetto
-     dopo       l'id della riga dopo cui inserire (stesso elenco)
-     prima      l'id della riga prima di cui inserire: è il «📥 qui» che
-                la mano mette sopra ogni riga
-     dentro     l'id di un blocco (ripeti, se, …) in cima al cui corpo
-                inserire; `ramo` dice quale corpo: corpo|allora|altrimenti,
-                e `inFondo` lo mette in fondo invece che in cima (è il «＋
-                qui dentro» che chiude ogni corpo)
-     niente     in fondo al corpo del progetto (o della principale)
-   ═══════════════════════════════════════════════════════════════════ */
+// Le modifiche al programma: funzioni pure, la vista non tocca mai il programma direttamente.
+// La forma di un "posto" (progetto/dopo/prima/dentro/ramo): docs/costruttore/progetti.md.
 import { fai, N, istruzioni, dentro as sottoRighe } from '../dati/scrivi.js'
 
-/* un id mai usato in questo programma */
 export function nuovoId(prog) {
   const n = Math.max(prog.prossimo || 1, 1)
   prog.prossimo = n + 1
@@ -34,8 +14,7 @@ export const corpoDi = (prog, progetto) => {
   return p ? p.corpo : null
 }
 
-/* Dove sta una riga: l'elenco che la contiene e la posizione. Si cerca
-   dappertutto, principale e progetti, dentro i blocchi compresi. */
+// Dove sta una riga: l'elenco che la contiene e la posizione (cerca in principale, progetti e blocchi).
 export function trova(prog, id) {
   const corpi = [{ progetto: null, corpo: prog.principale }, ...(prog.progetti || []).map(p => ({ progetto: p.id, corpo: p.corpo }))]
   for (const { progetto, corpo } of corpi) {
@@ -59,26 +38,8 @@ function cercaIn(elenco, id, genitore = null, ramo = null) {
   return null
 }
 
-/* ── le righe nuove ──
-   **Una riga nuova non sceglie al posto del bambino.** La prima versione
-   nasceva già eseguibile — `vai a destra 1`, `ripeti 2 volte` — e un
-   valore di comodo si leggeva come l'unico possibile: «vai a destra»
-   diceva che si va solo a destra. La seconda metteva la scelta nella
-   cassetta, un tasto per verso, e sbagliava in un altro modo: la riga
-   nasceva con la freccia già scritta e il colore già messo, e nessuno
-   dei due bambini che l'hanno provata ha capito che toccandoli si
-   cambiavano. Adesso **verso, posto e colore nascono vuoti** (`null`) e
-   si scelgono **sulla riga**: la vista apre la scelta attaccata alla
-   casella, e la prima volta la si tocca proprio dove poi la si ritocca.
-   Chi chiama passa un valore solo quando non c'è niente da scegliere —
-   un colore solo nel livello, un posto solo per il mattone.
-
-   **I passi di «vai» nascono 1**, e sono l'unico numero che nasce
-   scritto: un passo è l'unità, e chiederlo a ogni riga era una domanda
-   con la risposta ovvia. La casella resta una casella, col suo ▾. Gli
-   altri numeri — le volte di un ripeti, le misure di una chiamata, il
-   valore di una lavagnetta — nascono **N**, perché lì non c'è un numero
-   ovvio: la N è la lezione. */
+// Una riga nasce senza scegliere al posto del bambino: verso/posto/colore nascono vuoti, i numeri N (i passi di
+// «vai» nascono 1, l'unica eccezione). Vedi docs/costruttore/linguaggio.md.
 export function rigaNuova(tipo, { colore = null, verso = null, dove = null, lato = null, lavagnette = [], progetto = null } = {}) {
   switch (tipo) {
     case 'vai': return fai.vai(verso, 1)
@@ -100,28 +61,24 @@ export function rigaNuova(tipo, { colore = null, verso = null, dove = null, lato
   }
 }
 
-/* La prima casella da scegliere di una riga appena nata: è quella che la
-   vista apre da sola. `null` se non c'è niente da scegliere. */
+// La prima casella da scegliere di una riga appena nata, o null se non c'è niente da scegliere.
 export function primaDaScegliere(riga, prog = null) {
   const vuoto = e => !e || !!e.vuoto || (!!e.op && (vuoto(e.a) || vuoto(e.b)))
   if (!riga) return null
   if (riga.tipo === 'vai') return !riga.verso ? { campo: 'verso', tipo: 'verso' }
     : vuoto(riga.quanto) ? { campo: 'quanto', tipo: 'numero' } : null
-  /* `dove` vuoto è solo `null`: una riga di prima senza il campo è «sotto» */
+  // `dove` vuoto è solo `null`: una riga di prima senza il campo è «sotto».
   if (riga.tipo === 'metti') return riga.dove === null ? { campo: 'dove', tipo: 'posto' }
     : !riga.colore || riga.colore.vuoto ? { campo: 'colore', tipo: 'colore' } : null
   if (riga.tipo === 'prendi' || riga.tipo === 'posa') return !riga.lato ? { campo: 'lato', tipo: 'lato' } : null
   if (riga.tipo === 'ripeti') return vuoto(riga.volte) ? { campo: 'volte', tipo: 'numero' } : null
   if (riga.tipo === 'finche' || riga.tipo === 'se' || riga.tipo === 'aspetta')
     return !riga.cond ? { campo: 'cond', tipo: 'cond' } : null
-  /* il valore di una lavagnetta è di qualunque specie: nel porto ci va
-     anche un colore, o quello che il robot legge */
   if (riga.tipo === 'assegna') return !riga.nome ? { campo: 'nome', tipo: 'lavagnetta' }
     : vuoto(riga.valore) ? { campo: 'valore', tipo: 'valore' } : null
   if (riga.tipo === 'chiama') {
     const k = (riga.argomenti || []).findIndex(a => typeof a !== 'string' && vuoto(a))
     if (k < 0) return null
-    /* la casella di una misura che è un colore apre la scelta dei colori */
     const p = prog && (prog.progetti || []).find(q => q.id === riga.progetto)
     const m = p && (p.misure || [])[k]
     return { campo: `argomenti.${k}`, tipo: p && (p.tipi || {})[m] === 'colore' ? 'colore' : 'numero' }
@@ -129,15 +86,12 @@ export function primaDaScegliere(riga, prog = null) {
   return null
 }
 
-/* Inserisce una riga (con i suoi figli, se ne ha) e torna il suo id.
-   Gli id di tutto quello che entra sono nuovi: una riga duplicata non
-   deve accendersi insieme all'originale. */
+// Inserisce una riga (con i suoi figli) e torna il suo id; gli id di quello che entra sono sempre nuovi.
 export function inserisci(prog, posto, riga) {
   rinumera(prog, riga)
   return metti(prog, posto, riga)
 }
 
-/* la riga va al suo posto così com'è, id compresi */
 function metti(prog, posto, riga) {
   const { progetto = null, prima = null, dopo = null, dentro = null, ramo = 'corpo', inFondo = false } = posto || {}
   if (prima) {
@@ -179,9 +133,7 @@ export function togli(prog, id) {
   return true
 }
 
-/* su e giù dentro lo stesso elenco; per entrare in un blocco o uscirne
-   c'è `trasloca`, che è la mano: trascinare attraverso i livelli con un
-   dito, su un telefono, è il gesto che qui non esiste */
+// Su e giù dentro lo stesso elenco; per entrare in un blocco o uscirne c'è `trasloca`.
 export function sposta(prog, id, verso) {
   const t = trova(prog, id)
   if (!t) return false
@@ -192,13 +144,7 @@ export function sposta(prog, id, verso) {
   return true
 }
 
-/* ── la mano ──
-   Prendere una riga e posarla altrove: dentro un ripeti, fuori da un se,
-   in un progetto. Si costruisce a pezzi — due righe scritte, poi ci si
-   accorge che vanno ripetute — e senza questo l'unica strada era
-   cancellarle e riscriverle dentro il blocco. La riga si porta dietro
-   tutto quello che ha dentro, e **tiene i suoi id**: è la stessa riga,
-   non una copia. Un blocco non si posa dentro sé stesso. */
+// La mano: sposta una riga (con tutto quello che ha dentro) tenendo i suoi id, senza posarla dentro sé stessa.
 export function trasloca(prog, id, posto) {
   const t = trova(prog, id)
   if (!t || !posto) return false
@@ -211,7 +157,6 @@ export function trasloca(prog, id, posto) {
   return false
 }
 
-/* la copia va dove dice la mano, con gli id nuovi */
 export function incollaCopia(prog, id, posto) {
   const t = trova(prog, id)
   if (!t) return null
@@ -227,9 +172,7 @@ export function duplica(prog, id) {
   return copia.id
 }
 
-/* Cambia un campo di una riga: `verso`, `colore`, `quanto`, `volte`,
-   `cond`, `nome`, `valore`, `argomenti.0`… Il valore arriva già nella
-   forma giusta (un numero è `{n}` / `{v}` / `{op,a,b}`). */
+// Cambia un campo di una riga; il valore arriva già nella forma giusta (un numero è {n} / {v} / {op,a,b}).
 export function imposta(prog, id, campo, valore) {
   const t = trova(prog, id)
   if (!t) return false
@@ -238,18 +181,15 @@ export function imposta(prog, id, campo, valore) {
     if (!Array.isArray(t.nodo[testa])) t.nodo[testa] = []
     t.nodo[testa][Number(coda)] = valore
   } else t.nodo[testa] = valore
-  /* un «se» a cui si toglie l'altrimenti lo perde, e uno a cui lo si
-     chiede ne riceve uno vuoto */
   if (t.nodo.tipo === 'se' && campo === 'altrimenti' && valore === true) t.nodo.altrimenti = []
   return true
 }
 
-/* ═══════════ i progetti ═══════════ */
 export function nuovoProgetto(prog, { nome, icona = '🧱', misure = [] }) {
   if (!Array.isArray(prog.progetti)) prog.progetti = []
   let id = 'p-' + (nome || 'progetto').toLowerCase().replace(/[^a-zà-ù0-9]+/g, '-').replace(/^-|-$/g, '') || 'p'
   while (prog.progetti.some(p => p.id === id)) id += '-bis'
-  /* le misure arrivano come nomi o come { nome, tipo } */
+  // Le misure arrivano come nomi o come { nome, tipo }.
   const voci = misure.map(m => (typeof m === 'string' ? { nome: m } : m))
   const nuovo = { id, nome: nome || 'progetto', icona, misure: voci.map(m => m.nome), corpo: [] }
   const colori = voci.filter(m => m.tipo === 'colore').map(m => m.nome)
@@ -258,10 +198,7 @@ export function nuovoProgetto(prog, { nome, icona = '🧱', misure = [] }) {
   return id
 }
 
-/* Rinominare le misure si porta dietro le righe che le usano, dentro il
-   progetto; aggiungerne o toglierne una sistema anche **tutte le
-   chiamate**, così una chiamata non resta mai con il numero sbagliato
-   di caselle — che sarebbe un errore del gioco, non del bambino. */
+// Rinominare una misura si porta dietro le righe che la usano; aggiungerne o toglierne una sistema tutte le chiamate.
 export function aggiornaProgetto(prog, id, { nome, icona, misure }) {
   const p = (prog.progetti || []).find(q => q.id === id)
   if (!p) return false
@@ -269,13 +206,12 @@ export function aggiornaProgetto(prog, id, { nome, icona, misure }) {
   if (icona) p.icona = icona
   if (Array.isArray(misure)) {
     const vecchie = p.misure || []
-    /* una misura rinominata tiene il suo posto: `misure` arriva come
-       [{ nome, da }] dove `da` è il nome di prima (o null se è nuova) */
+    // `misure` arriva come [{ nome, da }], dove `da` è il nome di prima (o null se è nuova).
     const nuove = misure.map(m => (typeof m === 'string' ? { nome: m, da: m } : m))
     for (const m of nuove)
       if (m.da && m.da !== m.nome) rinominaNumero(p.corpo, m.da, m.nome)
     p.misure = nuove.map(m => m.nome)
-    /* una misura è un numero, se non si dice altro; un colore lo dice `tipi` */
+    // Una misura è un numero se non si dice altro; un colore lo dice `tipi`.
     const colori = nuove.filter(m => (m.tipo || (m.da && (p.tipi || {})[m.da])) === 'colore').map(m => m.nome)
     if (colori.length) p.tipi = Object.fromEntries(colori.map(n => [n, 'colore']))
     else delete p.tipi
@@ -295,7 +231,7 @@ export function togliProgetto(prog, id) {
   const k = (prog.progetti || []).findIndex(p => p.id === id)
   if (k < 0) return false
   prog.progetti.splice(k, 1)
-  /* le chiamate a un progetto che non c'è più se ne vanno con lui */
+  // Le chiamate a un progetto che non c'è più se ne vanno con lui.
   const via = elenco => {
     for (let j = elenco.length - 1; j >= 0; j--) {
       const i = elenco[j]
@@ -308,7 +244,6 @@ export function togliProgetto(prog, id) {
   return true
 }
 
-/* ═══════════ le lavagnette ═══════════ */
 export function nuovaLavagnetta(prog, nome) {
   if (!Array.isArray(prog.lavagnette)) prog.lavagnette = []
   const pulito = String(nome || '').trim().toLowerCase().replace(/\s+/g, '-').slice(0, 12)
@@ -324,7 +259,6 @@ export function togliLavagnetta(prog, nome) {
   return true
 }
 
-/* ═══════════ chi usa cosa ═══════════ */
 function rinominaNumero(corpo, da, a) {
   const cambia = e => {
     if (!e || typeof e !== 'object') return e
@@ -342,16 +276,8 @@ function rinominaNumero(corpo, da, a) {
   }
 }
 
-/* I nomi che si possono leggere in un punto del programma: dentro un
-   progetto le sue misure, dappertutto le lavagnette del bambino e i
-   numeri dell'ordine. È l'elenco che la casella di un numero offre.
-   Le lavagnette del bambino non hanno una specie fissa: nel cantiere ci
-   finiscono solo numeri, nel porto anche i colori letti su una cassa, e
-   quali caselle le offrono lo decide la vista. */
-/* `lavagnetteOrdine` sono i numeri (o i colori) di un ordine, come li
-   dichiara il livello: `{ lungo: 7 }`, `{ sinistra: 'verde' }`. Qui se ne
-   guarda la specie, perché una casella di numeri offre solo numeri e una
-   di colori solo colori. */
+// I nomi leggibili in un punto del programma (misure del progetto, lavagnette, numeri dell'ordine), divisi per specie
+// (una casella di numeri offre solo numeri, una di colori solo colori): è l'elenco che offre la casella di un valore.
 export function nomiLeggibili(prog, progetto, lavagnetteOrdine = {}) {
   const p = progetto ? (prog.progetti || []).find(q => q.id === progetto) : null
   const tipi = (p && p.tipi) || {}
@@ -367,22 +293,17 @@ export function nomiLeggibili(prog, progetto, lavagnetteOrdine = {}) {
   }
 }
 
-/* ═══════════ i controlli prima di partire ═══════════
-   Quello che si sa già prima di premere ▶: una riga che nomina una
-   lavagnetta che non esiste, una chiamata a un progetto tolto, una
-   misura usata fuori dal suo progetto. La vista li segna in rosso; il
-   robot, se si parte lo stesso, si fermerebbe lì. */
+// Quello che si sa già prima di premere ▶ (lavagnetta inesistente, progetto tolto, misura fuori posto): la vista
+// li segna in rosso, prima che il robot ci si fermi davvero.
 export function problemi(prog, lavagnetteOrdine = {}) {
   const trovati = []
   const corpi = [{ progetto: null, corpo: prog.principale }, ...(prog.progetti || []).map(p => ({ progetto: p.id, corpo: p.corpo }))]
   for (const { progetto, corpo } of corpi) {
     const noti = nomiLeggibili(prog, progetto, lavagnetteOrdine)
     const numeri = new Set([...noti.misure, ...noti.lavagnette, ...noti.ordine])
-    /* una lavagnetta del bambino può portare un colore (nel porto lo
-       legge su una cassa): di lei si sa la specie solo mentre gira */
+    // Una lavagnetta del bambino può portare un colore: di lei si sa la specie solo mentre gira.
     const colori = new Set([...noti.misureColore, ...noti.ordineColore, ...noti.lavagnette])
     const nomi = e => !e || typeof e !== 'object' ? [] : e.v ? [e.v] : e.op ? [...nomi(e.a), ...nomi(e.b)] : []
-    /* un nome dove ci va un numero deve essere un numero, e viceversa */
     const controlla = (lista, giusti, altri, sbaglio, id) => {
       for (const n of lista) {
         if (giusti.has(n)) continue
@@ -398,8 +319,7 @@ export function problemi(prog, lavagnetteOrdine = {}) {
       const argColori = (i.argomenti || []).filter((_, k) => tipiChiamato[misureChiamato[k]] === 'colore')
       const letti = [...nomi(i.quanto), ...nomi(i.volte), ...nomi(i.valore), ...argNumeri.flatMap(nomi)]
       controlla(letti, numeri, colori, 'non-un-numero', i.id)
-      /* in un confronto «è uguale a» ci stanno anche due colori («da è
-         uguale a rosso», dentro «sposta»); minore e maggiore vogliono numeri */
+      // «è uguale a» ammette anche due colori; minore e maggiore vogliono numeri.
       if (i.cond && i.cond.tipo === 'confronta') {
         const confrontati = [...nomi(i.cond.a), ...nomi(i.cond.b)]
         controlla(confrontati, i.cond.cmp === '=' ? new Set([...numeri, ...colori]) : numeri, colori, 'non-un-numero', i.id)
@@ -414,7 +334,6 @@ export function problemi(prog, lavagnetteOrdine = {}) {
         const p = (prog.progetti || []).find(q => q.id === i.progetto)
         if (!p) trovati.push({ id: i.id, motivo: 'progetto-sconosciuto' })
       }
-      /* quello che resta da scegliere: la N, il colore, la domanda */
       const scelta = primaDaScegliere(i, prog)
       if (scelta) trovati.push({ id: i.id, motivo: {
         numero: 'n-da-scegliere', valore: 'n-da-scegliere', colore: 'colore-da-scegliere', cond: 'condizione-da-scegliere',
@@ -425,13 +344,8 @@ export function problemi(prog, lavagnetteOrdine = {}) {
   return trovati
 }
 
-/* ═══════════ i progetti degli altri cantieri ═══════════
-   Un progetto scritto in un livello resta del bambino: da un altro
-   livello lo si riprende, e arriva **con i progetti che chiama** — una
-   casa che usa «muro» senza «muro» sarebbe una casa che si ferma alla
-   prima riga. Quelli che il programma ha già (per nome) non si
-   raddoppiano: si usa quello che c'è. Gli id delle righe sono nuovi,
-   perché nel programma d'arrivo devono essere unici. */
+// Importa un progetto da un altro livello con quelli che chiama (vedi docs/costruttore/progetti.md);
+// quelli già presenti per nome non si raddoppiano.
 export function importaProgetto(prog, sorgente, idProgetto) {
   const tutti = sorgente.progetti || []
   const serve = []
@@ -444,7 +358,7 @@ export function importaProgetto(prog, sorgente, idProgetto) {
   guarda(idProgetto)
   if (!serve.length) return null
   if (!Array.isArray(prog.progetti)) prog.progetti = []
-  /* id di là → id di qua, per rifare le chiamate */
+  // id di là → id di qua, per rifare le chiamate.
   const mappa = {}
   for (const p of serve) {
     const gia = prog.progetti.find(q => q.nome === p.nome)

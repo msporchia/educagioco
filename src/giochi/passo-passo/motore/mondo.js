@@ -1,94 +1,13 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE REGOLE DEL MONDO — cosa succede a ogni freccia
+/* LE REGOLE DEL MONDO — cosa succede a ogni freccia. Valgono sempre,
+   uguali in ogni livello: un livello non ne cambia nessuna, ne mette in
+   scena qualcuna. Vedi docs/passo-passo/regole.md per le otto regole e
+   i casi decisi apposta (il salto, i massi, le pecore).
 
-   Otto regole, e **valgono sempre, uguali in ogni livello**: un mondo
-   che in un posto fa una cosa e in un altro un'altra non si può
-   programmare, si può solo indovinare. Un livello non ne cambia
-   nessuna: ne mette in scena qualcuna.
-
-     1. il prato si cammina;
-     2. contro un ostacolo o contro il bordo della mappa si sbatte, e la
-        fila si ferma lì;
-     3. nell'acqua si fa splash, e la fila si ferma lì;
-     4. il salto porta due celle più in là scavalcando quella in mezzo,
-        se in mezzo c'è acqua, prato, ghiaccio o un ostacolo **basso**.
-        Contro uno alto (o un masso) si sbatte. Dove si atterra valgono
-        le regole di sempre;
-     5. sul ghiaccio si continua nella stessa direzione finché la cella
-        dopo non si può entrare (ostacolo, bordo, masso: ci si ferma sul
-        ghiaccio, e **non è un errore**), finché il ghiaccio finisce (ci
-        si ferma sulla prima cella che non è ghiaccio) o finché si cade
-        in acqua (splash). Scivolando si prende la carota e si entra
-        nella tana;
-     6. camminando contro un masso lo si spinge di una cella, se oltre
-        c'è posto. Oltre c'è ghiaccio: il masso scivola finché non si
-        ferma. Oltre c'è acqua: il masso affonda e diventa un sasso
-        piatto su cui si cammina — un ponte. Il masso non va su un
-        ostacolo, su un altro masso, sulla tana, sulla carota o su una
-        buca: lì non si muove, e il coniglio sbatte. Spinto il masso, il
-        coniglio entra nella cella che ha lasciato;
-     7. entrando in una buca si esce dalla sua gemella (stesso anello),
-        e il movimento finisce lì, anche scivolando. Ripassarci sopra
-        rifà il viaggio;
-     8. **le pecore scappano dal cane.** Quando il cane si ferma sulla
-        riga o sulla colonna di una pecora, a una o due caselle da lei
-        (`VISTA`) e senza niente di alto in mezzo — dopo un passo, una
-        scivolata, un salto o una buca — lei fa un passo dalla parte
-        opposta: si scansa prima che il cane le arrivi addosso. E se
-        davanti ha un'altra pecora la spinge, e quella si sposta con lei:
-        le pecore non sono sassi, si muovono a pezzetti di gregge. Se in
-        fondo alla fila c'è un ostacolo, l'acqua, un masso, la tana o una
-        buca, o se lì finisce la mappa, non si muove nessuna (e la prima
-        fa «bee»). Sul ghiaccio scivola, come un masso,
-        e si ferma sull'ultima cella prima di quello che la fermerebbe:
-        nell'acqua non ci va. Una pecora che entra nel recinto ci resta,
-        e non occupa più il posto. Il cane contro una pecora sbatte, e
-        nel recinto non entra: sbatte anche lì. E una pecora che finisce
-        dove non si recupera più — in un angolo, contro un muro lungo
-        che non ha un «dietro» (`celleIncastro` in `motore/livello.js`)
-        — **si incastra**, e la fila si ferma lì come contro un albero:
-        la partita è già persa, e la freccia che l'ha persa lampeggia.
-
-   E la meta. Il coniglio arriva alla tana: arrivarci, in qualunque modo
-   e in qualunque momento, **vince subito** — le frecce dopo non
-   contano. Il cane non ha una tana: vince quando l'ultima pecora entra
-   nel recinto, allo stesso modo, subito.
-
-   ── TRE SCELTE CHE LE REGOLE NON DICEVANO ─────────────────────────
-   Le ha dovute prendere il motore, e stanno scritte qui perché sono
-   regole anche loro:
-     · saltando **non** si prende la carota che sta in mezzo, e non si
-       entra nella tana che sta in mezzo: si prende quello che c'è dove
-       si mette la zampa. Saltare oltre la tana è il modo più chiaro di
-       vedere che il salto è lungo due;
-     · non si atterra su un masso: lo si spinge solo camminando. Un masso
-       spinto dall'alto era un caso che nessun bambino si aspetta;
-     · una buca in mezzo a un salto si scavalca, come l'acqua;
-     · una pecora no: è alta come un sasso, e contro si sbatte. Il
-       recinto in mezzo a un salto invece si scavalca, è terra;
-     · le pecore scappano **una volta per freccia**, quando il cane si
-       è fermato: una scivolata lunga sei celle accanto a un gregge le
-       spaventa solo dove finisce. Vedono sopra l'acqua e le cose basse,
-       non attraverso un albero, un masso o un'altra pecora: quella
-       dietro a una pecora il cane non lo vede. E scappano tutte insieme, ognuna
-       dalla sua parte, in un ordine fisso (su, giù, sinistra, destra)
-       che conta solo quando una scivola dove un'altra voleva andare;
-     · la pecora passa sopra la carota (l'osso, per il cane) e la
-       lascia lì: il cane la prende quando la pecora se n'è andata.
-
-   ── IL MOTORE NON SA DI ESSERE GUARDATO ───────────────────────────
-   Ogni mossa lascia una **traccia**: una fila di fatti già decisi —
-   «passo da qui a lì», «il masso scivola fin là», «splash qui» — che la
-   scena (`scena/proiezione.js`) mette in movimento. Il motore non sa
-   quanto dura un passo né com'è fatto uno splash; la scena non sa
-   perché il coniglio si è fermato. Il risolutore la traccia la spegne
-   (`eventi: false`) e va dieci volte più svelto.
-
-   `senza` spegne una regola, e serve a una domanda sola: **questo
-   livello ha bisogno della sua regola?** Un livello del ghiaccio che si
-   vince anche col ghiaccio trattato da prato non insegna il ghiaccio
-   (`motore/risolutore.js`, `serveLaRegola`). Nel gioco non si usa mai.
-   ═══════════════════════════════════════════════════════════════════ */
+   Ogni mossa lascia una **traccia** di fatti già decisi che la scena
+   mette in movimento; il risolutore la spegne (`eventi: false`) e va
+   dieci volte più svelto. `senza` spegne una regola per chiedersi se un
+   livello ne ha davvero bisogno (`serveLaRegola`); nel gioco non si usa
+   mai. */
 import { MOSSE, VERSI, CHIAVI_VERSI, VISTA } from '../dati/mondo.js'
 import { albero, conCicli, eFine, CASA } from '../dati/carte.js'
 
@@ -101,14 +20,8 @@ export const FINITA = 'finita'
 /* un errore ferma la fila; la tana (o il recinto pieno) la chiude vincendo */
 export const eErrore = esito => esito === SBATTE || esito === SPLASH || esito === STANCO || esito === PERSA
 
-/* ── QUANTI PASSI PRIMA DI STANCARSI ──
-   Coi cicli un programma corto può fare un sacco di strada, e anche
-   girare a vuoto: `🔁9 (🔁9 (→ ←))` sono centosessantadue passi avanti e
-   indietro, un minuto e mezzo di coniglio che fa la spola senza sbattere
-   mai. Oltre questo numero gli gira la testa, e la fila si ferma lì
-   come contro un sasso. Nessuna strada vera ci arriva vicino: una mappa
-   da sette per nove ha sessantatré celle, e un livello che ne chiede
-   più di cinquanta è un livello da rifare. */
+/* oltre questi passi al coniglio gira la testa, come contro un sasso
+   (vedi docs/passo-passo/zaino.md) */
 export const PASSI_MAX = 90
 
 /* le regole che si possono spegnere col `senza` di `Mondo` (e le
@@ -310,12 +223,9 @@ export class Mondo {
     }
   }
 
-  /* ── le pecore ──
-     Il cane si è fermato: chi lo vede — sulla sua riga o sulla sua
-     colonna, fin dove arriva la vista — scappa dalla parte opposta. Ogni pecora lascia **un fatto solo**, con tutta la strada
-     che ha fatto (il passo, la scivolata, il recinto) o con `ferma` se
-     non ha potuto muoversi: la scena le fa scappare tutte insieme, e il
-     «bee» di quella ferma dice al bambino che ci ha provato. */
+  /* il cane si è fermato: chi lo vede scappa dalla parte opposta. Ogni
+     pecora lascia un fatto solo (la strada fatta, o `ferma`), così la
+     scena le fa scappare tutte insieme. */
   spaventa() {
     if (this.senza === 'pecore') return null
     const cane = this.p
@@ -342,16 +252,9 @@ export class Mondo {
     return PERSA
   }
 
-  /* ── la fuga, e il gregge ──
-     Le pecore non sono sassi: una che scappa spinge quella che ha
-     davanti, e quella la sua — si muove tutta la fila, un passo, come un
-     pezzetto di gregge. Se in fondo alla fila c'è qualcosa che non la
-     lascia passare (l'acqua, un albero, il bordo) non si muove nessuna,
-     e la prima fa «bee». Poi ognuna fa quello che fa il terreno dove è
-     finita: sul ghiaccio scivola, nel recinto entra. Si parte dalla
-     testa della fila, così chi scivola dietro si ferma contro chi è
-     davanti, e i fatti escono nello stesso ordine: la scena le muove
-     tutte insieme. */
+  /* si parte dalla testa della fila (la pecora che scappa per prima),
+     così chi scivola dietro si ferma contro chi è davanti e i fatti
+     escono nello stesso ordine in cui la scena deve muoverli */
   fuggi(k, dx, dy) {
     const fila = [this.pecore[k]]
     let r = this.liv.vicino(fila[0], dx, dy)
@@ -396,22 +299,12 @@ export class Mondo {
   }
 }
 
-/* ═══════════ una fila intera ═══════════
-   Si gioca la fila del bambino dall'inizio, sempre: è un programma, non
-   un telecomando. Torna com'è finita e, per ogni passo, i fatti che ha
-   prodotto.
-
-     esito   TANA · SBATTE · SPLASH · STANCO · FINITA (le frecce sono
-             finite prima della tana: non è un errore, è un programma
-             non finito)
-     dove    l'indice, nella fila, della carta su cui è finita
-     carota  se l'ha presa
-     passi   [{ i, mossa, eventi, giri }] — uno per freccia eseguita.
-             Senza cicli sono le carte della fila una per una; con i
-             cicli la stessa carta torna a ogni giro, e `giri` dice a
-             che giro è ogni ciclo aperto, dal più esterno:
-             [[indice dell'apertura, giro, di quanti]]
-     mondo   com'è rimasto il mondo alla fine */
+/* gioca la fila dall'inizio e torna { esito, dove, carota, passi, mondo }:
+   `esito` è TANA·SBATTE·SPLASH·STANCO·FINITA (fila finita prima della
+   tana, non un errore), `dove` l'indice della carta su cui è finita,
+   `passi` un { i, mossa, eventi, giri } per freccia eseguita (coi cicli
+   la stessa carta torna a ogni giro, e `giri` dice a che giro è ogni
+   ciclo aperto). */
 const NESSUN_GIRO = Object.freeze([])
 
 export function esegui(liv, fila, { senza = null, eventi = true } = {}) {
@@ -434,16 +327,8 @@ export function esegui(liv, fila, { senza = null, eventi = true } = {}) {
     return esce(FINITA, fila.length - 1)
   }
 
-  /* coi cicli: si cammina l'albero, e una carta dentro un ciclo si
-     esegue tante volte quanti sono i giri. Una N non scelta vale zero
-     giri — ▶ non parte, ma gli aiuti una fila così la possono leggere.
-
-     Il «fino a» fa un giro e poi guarda sotto i piedi, e smette se è sul
-     colore giusto: almeno un giro sempre. «Fino a casa» non smette mai
-     da sé — ci pensa la tana. Un giro che non ha mosso il coniglio non
-     cambierà mai quello che ha sotto i piedi: la fila si ferma lì come
-     quando gira la testa, invece di aspettare per sempre. Il «se» guarda
-     una volta, e fa quello che ha dentro o lo salta. */
+  /* coi cicli si cammina l'albero (vedi docs/passo-passo/zaino.md per
+     «fino a» e «se»); una N non scelta vale zero giri */
   const giri = []
   let fine = null
   const corri = nodi => {
@@ -484,22 +369,11 @@ export function esegui(liv, fila, { senza = null, eventi = true } = {}) {
   return esce(FINITA, passi.length ? passi.at(-1).i : -1)
 }
 
-/* Le stelle di una tappa vinta: arrivato, con la carota, e la strada
-   trovata da te. La terza la toglieva qualunque 💡, ed era il prezzo
-   dell'aiuto; adesso gli aiuti si pagano in monete (`motore/aiuti.js`),
-   e la stella se ne va solo se la strada te l'ha scritta tutta il gioco
-   (`svelato`): non è un prezzo, è un fatto.
-
-   La quarta è la strada più corta (`corta`, vedi `eCorta`): era stata
-   tenuta fuori apposta — «arrivarci è arrivarci» — e c'è tornata perché
-   senza nessun incentivo si vedevano file da quaranta frecce su posti
-   che se ne chiedono dodici. */
+/* le quattro stelle di una tappa vinta (vedi docs/passo-passo/stelle-e-aiuti.md) */
 export const stelleDellaVittoria = ({ carota = false, svelato = false, corta = false } = {}) =>
   1 + (carota ? 1 : 0) + (svelato ? 0 : 1) + (corta ? 1 : 0)
 
-/* La quarta stella: la carota presa (se si può prendere) e non più carte
-   del minimo (`minimoDi` in `motore/risolutore.js`). Si chiede «al più»:
-   chi trova una strada più corta di quella che il gioco conosce non
-   perde niente. */
+/* la quarta stella, chiesta «al più»: chi trova una strada più corta di
+   quella che il gioco conosce non perde niente */
 export const eCorta = ({ usate, carota, minimo }) =>
   !!minimo && (carota || !minimo.carota) && usate <= minimo.carte

@@ -17,6 +17,9 @@ Un elenco di righe, un carattere per cella (legenda in `dati/mondo.js`):
     r u g  le lastre (rossa, blu, gialla)
     p  una pecora   #  il recinto   (un livello con le pecore non ha la tana)
 
+- **La carota e il masso hanno due lettere, un albero una sola**: sotto
+  la carota o il masso il terreno conta per le regole (si scivola o no),
+  sotto un albero no — un albero non lo attraversa nessuno.
 - **Un livello è un posto, non una stanza.** Ognuno ha la sua forma (un
   prato, un bivio nel bosco, un fiume con le isole, un lago ghiacciato col
   buco), il fuori non è sempre un rettangolo pieno, e il `racconto` dice il

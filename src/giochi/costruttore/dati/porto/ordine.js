@@ -1,64 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   METTERE IN ORDINE — le lettere del postino, dalla più piccola alla più grande
-
-   Il primo algoritmo vero del gioco. Sullo scaffale dell'ufficio postale
-   ci sono le lettere, ognuna col numero della sua casa, e prima di
-   partire il postino le vuole in fila: il numero più piccolo a sinistra.
-   Il robot le legge (📖), le confronta (⚖️ «prima è maggiore di dopo»,
-   il confronto che il linguaggio aveva e che nessun livello usava) e le
-   scambia passando dal banco di sotto, perché in mano ne tiene una sola.
-
-     · due lettere: confrontare due numeri e, solo se serve, scambiarle —
-       lo scambio lo scrive il bambino, e diventa un attrezzo;
-     · la passata: una passata lungo tutto lo scaffale porta la lettera
-       più grande in fondo, come una bolla che sale. Negli ordini di questo
-       livello una passata basta;
-     · in ordine: con una passata sola non basta più, e si ripete la
-       passata — tornando ogni volta all'inizio. È il bubble sort, scritto
-       da un bambino.
-
-   Si vince se a sera le lettere sullo scaffale sono in ordine
-   (`inOrdine`, in `motore/porto/esito.js`): il banco non guarda come ci
-   si è arrivati, e un programma che le ordina in un altro modo vince lo
-   stesso.
-
-   Dopo «In ordine» lo stesso algoritmo si guarda da quattro punti
-   diversi — cosa vuol dire «fuori posto», cosa costa confrontare,
-   quanto lavoro rifare quando basta poco, come unire invece di
-   ordinare da capo:
-
-     · il tricolore: la stessa passata di «In ordine», ma il fuori posto
-       lo dice il colore delle casse (la bandiera) e non il numero — la
-       bandiera olandese di Dijkstra, alla romana;
-     · il casellario: le lettere del postino si ripetono, e ognuna sa già
-       dov'è la sua casa. Imbucarle tutte e rileggere le buche in fila le
-       rimette in ordine senza confrontare mai un numero con un altro —
-       il contrario di «In ordine», apposta;
-     · fare posto: lo scaffale parte già ordinato, e una lettera nuova
-       (sempre più grande della sentinella «1» in testa) va infilata al
-       suo posto senza rifare tutta la fila — l'inserimento, come si
-       ordinano le carte tenute in mano;
-     · la cerniera: due file già ordinate, su due nastri, si uniscono in
-       una sola prendendo sempre la più piccola delle due teste — la
-       fusione, il cuore del merge sort.
-
-   Le mosse ingenue di questi quattro livelli sono spesso **false piste**
-   (vedi `docs/costruttore/algoritmi.md`): vincono il giorno più semplice e cedono solo
-   quando la giornata smette di essere un caso particolare — le due
-   bande già in ordine fra loro nel tricolore, le lettere arrivate già
-   crescenti in «Fare posto», le due file perfettamente intrecciate nella
-   «cerniera».
-   ═══════════════════════════════════════════════════════════════════ */
+// Mettere in ordine, poi lo stesso algoritmo letto da quattro punti di
+// vista diversi (tricolore, casellario, fare posto, cerniera).
+// Vedi docs/costruttore/algoritmi.md.
 import { fai, guarda, confronta, leggi, meno, piu, programma } from '../scrivi.js'
 import { scambia, imbuca } from '../attrezzi.js'
 
 const POSTINO = { emoji: '📮', nome: 'Il postino' }
 
-/* L'ufficio postale: in alto lo scaffale con le lettere da mettere in
-   ordine, sotto il corridoio del robot, più giù i banchi dove appoggiare
-   una lettera mentre si scambia. E nient'altro: c'erano anche gli scaffali
-   dei pacchi, a destra dietro un muro, e a chi l'ha provato «fanno solo
-   confusione» — casse che non c'entrano sembrano cose da spostare. */
 export function ufficio(numeri, robot = 1) {
   const n = numeri.length
   const corridoio = Array.from({ length: n }, (_, i) => (i + 1 === robot ? '.@' : '..')).join('')
@@ -75,34 +22,22 @@ const giorno = (nome, numeri, robot = 1) => ({
   nome, mappa: ufficio(numeri, robot), lavagnette: { lettere: numeri.length }, obiettivo: inOrdine(numeri.length),
 })
 
-/* il confronto di due vicine: prima quella sotto cui sta il robot, poi
-   quella a destra */
 const confrontaEScambia = (scambio) => [
   fai.assegna('prima', leggi('su')), fai.vai('destra', 1), fai.assegna('dopo', leggi('su')),
   fai.se(confronta('prima', '>', 'dopo'), scambio),
 ]
 const passata = () => fai.ripeti(meno('lettere', 1), confrontaEScambia([fai.chiama('scambia')]))
 
-/* lo scambio scritto a mano: la lettera sopra il robot va sul banco, quella
-   a sinistra prende il suo posto, e quella del banco va a sinistra */
 const SCAMBIO = [
   fai.prendi('su'), fai.posa('giu'), fai.vai('sinistra', 1), fai.prendi('su'),
   fai.vai('destra', 1), fai.posa('su'), fai.prendi('giu'), fai.vai('sinistra', 1), fai.posa('su'),
 ]
 
-/* ── il tricolore: la stessa passata, letta sui colori ──
-   La bandiera olandese di Dijkstra, alla romana: tre bande invece di
-   due. L'algoritmo di «In ordine» non cambia una riga — confronta due
-   vicine, scambiale se sono al contrario, ripeti finché la fila è
-   ferma — cambia solo cosa vuol dire «al contrario»: non più un numero
-   più grande di un altro, ma un colore che viene dopo nella bandiera. */
 const inOrdineTricolore = n => ({ inOrdine: { y: 1, da: 1, a: n, colori: ['verde', 'bianco', 'rosso'] } })
 const giornoTricolore = (nome, casse, robot = 1) => ({
   nome, mappa: ufficio(casse, robot), lavagnette: { casse: casse.length }, obiettivo: inOrdineTricolore(casse.length),
 })
-/* le tre coppie fuori posto: rosso prima di bianco, rosso prima di
-   verde, bianco prima di verde — lette con `confronta('prima','=',…)`,
-   che tiene un nome di colore per quello che è */
+// le tre coppie fuori posto, una alla volta: non c'è un «più grande» fra colori
 const confrontaEScambiaTricolore = () => [
   fai.assegna('prima', leggi('su')), fai.vai('destra', 1), fai.assegna('dopo', leggi('su')),
   fai.se(confronta('prima', '=', 'rosso'), [
@@ -114,8 +49,7 @@ const confrontaEScambiaTricolore = () => [
   ]),
 ]
 const passataTricolore = () => fai.ripeti(meno('casse', 1), confrontaEScambiaTricolore())
-/* la mossa ingenua: solo le due regole del rosso, come se la bandiera
-   avesse due bande e non tre */
+// mossa ingenua: solo le regole del rosso, come se la bandiera avesse due bande e non tre
 const confrontaEScambiaSoloRosso = () => [
   fai.assegna('prima', leggi('su')), fai.vai('destra', 1), fai.assegna('dopo', leggi('su')),
   fai.se(confronta('prima', '=', 'rosso'), [
@@ -123,7 +57,7 @@ const confrontaEScambiaSoloRosso = () => [
     fai.se(confronta('dopo', '=', 'verde'), [fai.chiama('scambia')]),
   ]),
 ]
-/* l'altra mossa ingenua: la bandiera scritta al contrario, rosso davanti */
+// mossa ingenua: la bandiera scritta al contrario, rosso davanti
 const confrontaEScambiaInversa = () => [
   fai.assegna('prima', leggi('su')), fai.vai('destra', 1), fai.assegna('dopo', leggi('su')),
   fai.se(confronta('prima', '=', 'verde'), [
@@ -136,13 +70,6 @@ const confrontaEScambiaInversa = () => [
 ]
 const passateDi = corpo => [fai.ripeti(meno('casse', 1), [fai.ripeti(meno('casse', 1), corpo()), fai.vai('sinistra', meno('casse', 1))])]
 
-/* ── il casellario: smistare senza confrontare ──
-   Le stesse otto buche del postino (`dati/porto/giornate.js`), ma le
-   lettere del sacco si ripetono: ognuna sa già dov'è la sua casa, senza
-   bisogno di guardare le altre. Imbucate tutte, si rileggono le buche in
-   fila dalla prima: il sacco torna pieno da solo, in ordine, e nessun
-   numero è mai stato confrontato con un altro — è il contrario di «In
-   ordine», apposta. */
 function bucheDelCasellario(lettere) {
   const c = { p: { nome: 'il sacco della posta', dentro: lettere } }
   for (let n = 1; n <= 8; n++) c[n] = { nome: `la buca del ${n}`, figura: 'buca', numero: n, capienza: 9 }
@@ -159,17 +86,10 @@ const giornoCasellario = (nome, lettere) => ({
   obiettivo: { cassoni: { p: { quante: lettere.length } }, inOrdine: { cassone: 'p' } },
 })
 
-/* ── fare posto: infilare al suo posto ──
-   Lo scaffale è già in ordine; la gru cala altre lettere, una alla
-   volta — sempre da due in su — e ognuna va infilata dove sta, senza
-   rifare tutto lo scaffale: l'inserimento, come si mettono in ordine le
-   carte tenute in mano. La «1» in testa allo scaffale non si sposta
-   mai: è il fermo che ferma il confronto prima che il robot esca dallo
-   scaffale, e funziona solo perché ogni lettera nuova è almeno un due. */
 function giornoFarePosto(nome, iniziali, nuove) {
   const k = iniziali.length, m = nuove.length
-  const w = k + m + 4                    /* muro, «1», le iniziali, le vuote, il punto della gru, muro */
-  const gx = 2 + k + m                   /* colonna del punto della gru, e partenza del robot */
+  const w = k + m + 4  // muro, «1», le iniziali, le vuote, il punto della gru, muro
+  const gx = 2 + k + m  // colonna del punto della gru, e partenza del robot
   const riga = f => Array.from({ length: w }, (_, x) => f(x)).join('')
   const mappa = [
     riga(() => '##'),
@@ -190,17 +110,9 @@ function giornoFarePosto(nome, iniziali, nuove) {
   }
 }
 
-/* ── la cerniera: unire due file già in ordine ──
-   Due postini hanno già ordinato il loro sacco, in fila su due nastri
-   che portano verso il robot; il furgone li vuole in una fila sola.
-   Niente si riordina: delle due teste si prende sempre la più piccola —
-   la fusione, il cuore del merge sort. Il nastro d'arrivo (riga 3) è
-   tenuto largo quanto tutte le lettere del giorno, perché quello che vi
-   si posa non torna più indietro: si accoda da sé contro il muro a
-   sinistra (`destinoSulNastro` in `motore/porto/mondo.js`). */
 function giornoCerniera(nome, sinistra, destra) {
   const nS = sinistra.length, nD = destra.length
-  const rx = nS + nD + 2                 /* la colonna del robot: posto per tutte le lettere del giorno, alla riga 3 */
+  const rx = nS + nD + 2  // la colonna del robot: posto per tutte le lettere del giorno, alla riga 3
   const w = rx + nD + 2
   const riga = f => Array.from({ length: w }, (_, x) => f(x)).join('')
   const mappa = [
@@ -308,8 +220,7 @@ export const IN_ORDINE = [
     ] }),
     fragili: [
       { nome: 'una passata sola', programma: programma({ lavagnette: ['prima', 'dopo'], principale: [passata()] }) },
-      /* la falsa pista: la seconda passata comincia in fondo, e il primo
-         passo va contro il muro */
+      // falsa pista: la seconda passata comincia in fondo, contro il muro
       { nome: 'senza tornare all\'inizio', programma: programma({ lavagnette: ['prima', 'dopo'], principale: [
         fai.ripeti(meno('lettere', 1), [passata()])] }) },
       { nome: 'le passate di lunedì', programma: programma({ lavagnette: ['prima', 'dopo'], principale: [
@@ -343,8 +254,7 @@ export const IN_ORDINE = [
       fai.ripeti(meno('casse', 1), [passataTricolore(), fai.vai('sinistra', meno('casse', 1))]),
     ] }),
     fragili: [
-      /* la falsa pista: coi verdi e i bianchi già in ordine fra loro,
-         lunedì basta spingere le rosse in fondo; dagli altri giorni no */
+      // falsa pista: lunedì i verdi e i bianchi sono già in ordine fra loro, bastano le rosse
       { nome: 'solo le rosse in fondo', programma: programma({ lavagnette: ['prima', 'dopo'],
         principale: passateDi(confrontaEScambiaSoloRosso) }) },
       { nome: 'una passata sola', programma: programma({ lavagnette: ['prima', 'dopo'], principale: [passataTricolore()] }) },
@@ -444,9 +354,7 @@ export const IN_ORDINE = [
       fai.ripeti('nuove', [
         fai.aspetta(guarda('su', 'biglietto')),
         fai.prendi('su'), fai.assegna('nuova', leggi('mano')),
-        /* un passo garantito fuori dal punto della gru: appena il robot
-           lo lascia libero, la gru può calarci sopra la prossima lettera
-           nello stesso istante — e la ricerca non deve mai leggerla lì */
+        // un passo fuori dal punto della gru: appena libero può calarci la prossima lettera
         fai.vai('sinistra', 1),
         fai.finche(guarda('su', 'biglietto'), [fai.vai('sinistra', 1)]),
         fai.vai('destra', 1), fai.posa('su'),
@@ -529,15 +437,12 @@ export const IN_ORDINE = [
       fai.finche(guarda('destra', 'niente'), [fai.prendi('destra'), fai.posa('giu')]),
     ] }),
     fragili: [
-      /* la falsa pista: lunedì le due file non si incrociano mai (tutta
-         la sinistra è più piccola di tutta la destra), quindi vince */
+      // falsa pista: lunedì tutta la sinistra è già più piccola di tutta la destra
       { nome: 'prima tutte quelle di sinistra', programma: programma({ principale: [
         fai.finche(guarda('sinistra', 'niente'), [fai.prendi('sinistra'), fai.posa('giu')]),
         fai.finche(guarda('destra', 'niente'), [fai.prendi('destra'), fai.posa('giu')]),
       ] }) },
-      /* l'altra falsa pista: martedì le due file sono perfettamente
-         intrecciate (dispari a sinistra, pari a destra), quindi
-         alternare senza confrontare basta lo stesso */
+      // falsa pista: martedì le due file sono perfettamente intrecciate (dispari/pari)
       { nome: 'una e una', programma: programma({ principale: [
         fai.ripeti(8, [
           fai.se(guarda('sinistra', 'biglietto'), [fai.prendi('sinistra'), fai.posa('giu')]),

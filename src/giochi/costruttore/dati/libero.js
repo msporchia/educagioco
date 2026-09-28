@@ -1,19 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL CANTIERE LIBERO — dove non ordina nessuno
-
-   Un cantiere grande e vuoto, con tutti i blocchi e tutti i colori, e i
-   progetti dei livelli da riprendere dalla cassetta. Non si vince e non
-   paga: è il posto dove un progetto scritto per il re diventa il
-   castello che si voleva fare, ed è il motivo per tornare quando i
-   livelli sono finiti — collezionare quello che si è scritto e usarlo.
-
-   Non è una tappa: non sta in `LIVELLI`, non conta nelle stelle e non
-   sposta la campagna. Si apre finito il primo capitolo, quando i blocchi
-   per costruire qualcosa di grande ci sono già tutti.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il cantiere libero: non è una tappa, non sta in `LIVELLI` e non conta
+// nelle stelle. Vedi docs/costruttore/linguaggio.md.
 import { CHIAVI_COLORI } from './colori.js'
 
-export const APRE_DOPO = 6      // quante tappe servono: il capitolo del cantiere
+export const APRE_DOPO = 6
 
 export const LIBERO = {
   chiave: 'libero', nome: 'Il cantiere libero', icona: '🏗️', libero: true,

@@ -1,24 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I PEZZI DISEGNATI A MANO — quello che l'atlante non ha
-
-   L'atlante della fattoria ha il coniglio, i sassi, i cespugli, il
-   tronco: quello che si può, si prende da lì (`scena/tela.js`). Non ha
-   un albero grande una cella, una carota che si legga a sedici pixel,
-   una tana, una buca: quelli stanno qui, **scritti come dato** — una
-   riga di lettere per riga di pixel, e una tavolozza che dice cosa vuol
-   dire ogni lettera. Si disegnano una volta sola in un canvas a parte e
-   da lì in poi sono uno sprite come gli altri.
-
-   Perché così e non con dei `fillRect` sparsi: un disegno scritto in
-   lettere si guarda e si corregge a occhio, e ha la stessa grana dei
-   pezzi dell'atlante (un pixel è un pixel, niente curve lisce). Un
-   cerchio disegnato col canvas accanto a un cespuglio in pixel art si
-   vede subito che viene da un altro mondo.
-
-   La tavolozza è quella dell'Overworld dell'atlante, dove si poteva:
-   l'erba `#35a541`, l'acqua `#1e7cb8`, la schiuma bianca. Chi cambia un
-   colore qui lo cambia in tutti i livelli.
-   ═══════════════════════════════════════════════════════════════════ */
+/* I pezzi disegnati a mano — quello che l'atlante della fattoria non ha
+   (albero, carota, tana, buca…): vedi docs/core/sprite-a-mano-dal-codice.md. */
 
 export const COLORI = {
   erba: ['#3aa844', '#349e3f'],           // i due verdi della scacchiera
@@ -256,14 +237,9 @@ export const LASTRE_DISEGNI = {
   ], { o: '#5a4208', L: '#fff0a0', F: '#f4c430', D: '#b8860e', S: '#6a4a06' }),
 }
 
-/* ── le pecore ──
-   Non le ha l'atlante da sole: le ha dentro il recinto della fattoria
-   (`recinto_pecore_calmo` e `recinto_pecore_mangia`, dal foglio degli
-   animali generati), sull'erba. Sono state staccate dall'erba una volta,
-   ridotte a ventidue colori e scritte qui come gli altri disegni: così
-   hanno la stessa mano del bobtail che le rincorre, e non una seconda.
-   La prima guarda a destra (a sinistra si specchia), la seconda bruca a
-   testa bassa: è quella che sta nel recinto, tranquilla. */
+/* le pecore: staccate dall'erba del foglio della fattoria e scritte qui come
+   dato, per avere la stessa mano del bobtail. La prima guarda a destra (a
+   sinistra si specchia), la seconda bruca a testa bassa, nel recinto. */
 export const PECORA = { tavolozza: { a: '#f9f2e6', b: '#f8ecdd', c: '#f6e7d6', d: '#f4e3d0', e: '#f2decc', f: '#f0d9c6', g: '#ecd4c0', h: '#e8ceb6', i: '#e4c7af', j: '#dcbba0', k: '#d0ad92', l: '#e4a683', m: '#cd9d81', n: '#ba917b', o: '#cd8c6c', p: '#a8816d', q: '#b57157', r: '#936c58', s: '#7c5643', t: '#5d432a', u: '#3c2d19' }, righe: [
   '...........u..........',
   '.......u.usppgpst.....',

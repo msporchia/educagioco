@@ -1,28 +1,10 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   UN ELENCO DI CARTE — e dentro una scatola, un altro elenco uguale
-
-   Si chiama da sé: la fila è un elenco di carte, e un 🔁 è una scatola
-   con dentro un altro elenco (`albero` di `dati/carte.js`). Fra una
-   carta e l'altra c'è un posto dove può stare il cursore, e in fondo a
-   ogni elenco un altro: il posto in fondo a una scatola è **dentro** la
-   scatola, quello subito dopo è fuori. Sono due tocchi diversi — l'ultima
-   carta dentro, o il bordo della scatola — ed è così che si entra e si
-   esce da un ciclo senza trascinare niente.
-
-   La scatola ha una testa e un bordo. La testa dice quante volte — o
-   fino a che colore, o fino a casa; o, in una scatola ❓, su che colore
-   farlo — e N se è ancora da scegliere; toccarla riapre la scelta.
-   Mentre il coniglio corre dice **a che giro è** — «3/5», o «3» in un
-   «fino a», che il totale non lo sa — ed è il pezzo che fa vedere un
-   ciclo girare. Se la fila si ferma male dentro un ciclo il giro resta
-   scritto, arancione: «sbatte al terzo giro» si legge senza leggere. Il
-   bordo, in fondo, mette il cursore subito fuori.
-
-   Non tocca niente: legge quello che `Fila.vue` le mette a disposizione
-   (provide/inject: una carta dentro tre scatole non deve rimandare i
-   tocchi su per tre livelli) e dice dove si è toccato.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Un elenco di carte — e dentro una scatola, un altro elenco uguale: si
+   chiama da sé (vedi docs/passo-passo/zaino.md per il posto dentro/fuori
+   una scatola e il giro visualizzato sulla testa). Non tocca niente: legge
+   quello che `Fila.vue` le mette a disposizione con provide/inject — una
+   carta dentro tre scatole non deve rimandare i tocchi su per tre livelli
+   — e dice dove si è toccato. */
 import { computed, inject } from 'vue'
 import Icona from './Icona.vue'
 import Lastra from './Lastra.vue'

@@ -1,21 +1,8 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA MAPPA DELLA CAMPAGNA — i gradini dei piccoli, e quelli dello zaino
-
-   Una griglia e non un elenco: sono tante tappe, e una colonna di
-   trenta carte si scorre per mezzo minuto prima di arrivare dove si
-   era. Ogni carta dice tre cose che si vedono senza leggere: il
-   disegno del posto, le stelle prese, il lucchetto. Il nome sta sotto,
-   piccolo, per chi legge.
-
-   Il racconto di ogni posto (cosa si scopre lì) sta nell'`aria-label`:
-   è per il grande che legge, e sul cartello di fine tappa si vede.
-
-   In fondo, il sentiero senza fine: mescola quello che viene prima, e
-   sul tasto c'è il record — è quello che fa venire voglia di entrarci.
-   Si apre alla fine delle buche, non della campagna: chi ha sei anni e
-   lo zaino ancora chiuso ci gioca coi posti che sa.
-   ═══════════════════════════════════════════════════════════════════ */
+/* La mappa della campagna: una griglia e non un elenco, perché una colonna
+   di trenta carte si scorre per mezzo minuto prima di arrivare dove si
+   era. Il racconto di ogni posto sta nell'`aria-label`, per il grande che
+   legge. Il sentiero senza fine: docs/passo-passo/sentiero.md. */
 defineProps({
   scalini: { type: Array, required: true },       // [{ chiave, nome, icona, dritta, tappe: [] }]
   senzaFine: { type: Object, required: true },    // { aperto, record, quante, fatte, dopo }

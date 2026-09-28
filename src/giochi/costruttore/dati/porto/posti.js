@@ -1,33 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I POSTI DEL PORTO — ogni cassa ha il suo posto, e una strada per arrivarci
-
-   Il capitolo dei progetti del cantiere ha insegnato a scrivere un pezzo
-   una volta e a chiamarlo tante; qui lo stesso si fa con le **strade**. Il
-   porto è grande, i posti sono lontani, e ogni cassa ha il suo — la verde
-   al cassone, la rossa sulla nave, la blu in bottega: un lavoro diverso
-   per ogni colore, e il programma principale diventa una fila di
-   decisioni che chiamano chi sa la strada.
-
-     · le strade del porto: la strada del magazzino la sa già il robot
-       (due attrezzi, `esci` e `rientra`), e il bambino scrive le
-       decisioni — di che colore è la cassa, e dove va;
-     · il porto grande: una mappa più larga dello schermo, quattro colori
-       e due posti, e le strade le scrive il bambino. Due colori vanno
-       nello stesso posto, quindi la stessa strada serve due volte: lo
-       zaino non tiene quattro strade scritte a mano due volte ciascuna.
-
-   Le strade di un porto valgono solo su quella mappa: gli attrezzi del
-   primo livello si scrivono qui (`attrezzo` di `dati/attrezzi.js`), non
-   nel catalogo. E lungo le strade non ci sono scaffali di casse per
-   bellezza: una cassa che non c'entra, dello stesso colore di quelle da
-   portare, sembra una cosa da portare.
-   ═══════════════════════════════════════════════════════════════════ */
+// I posti del porto: un lavoro diverso per ogni colore, e una strada per
+// arrivarci scritta una volta e chiamata più volte. Vedi docs/costruttore/porto.md.
 import { fai, guarda, progetto, programma } from '../scrivi.js'
 import { attrezzo } from '../attrezzi.js'
 
 const CAPITANA = { emoji: '⚓', nome: 'La capitana del porto' }
 
-/* ── le strade del porto: il magazzino in basso, il piazzale in mezzo ── */
 const esci = () => attrezzo(progetto('esci', { nome: 'esci', icona: '🚪' }, [
   fai.vai('destra', 2), fai.vai('su', 2), fai.vai('destra', 3), fai.vai('su', 2),
 ]), { finisce: 'fuori dalla porta del magazzino, in mezzo al piazzale' })
@@ -52,13 +29,10 @@ const posti = dentro => ({
   b: { nome: 'la bottega', figura: 'magazzino', colore: 'blu', capienza: 20 },
 })
 
-/* il lavoro di ogni colore, dal piazzale e ritorno */
 const alCassone = [fai.vai('sinistra', 6), fai.posa('sinistra'), fai.vai('destra', 6)]
 const allaNave = [fai.vai('su', 1), fai.posa('su'), fai.vai('giu', 1)]
 const allaBottega = [fai.vai('destra', 5), fai.posa('destra'), fai.vai('sinistra', 5)]
 
-/* ── il porto grande: il deposito in basso, il molo a sinistra, il
-   mercato a destra, e le strade che girano intorno ai magazzini ── */
 const GRANDE = [
   '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',
   '~~~~~~~~~~~~####################################',
@@ -120,8 +94,7 @@ export const LIVELLI_POSTI = [
     fragili: [
       { nome: 'tutte sulla nave', programma: programma({ principale: [fai.finche(guarda('sinistra', 'niente'), [
         fai.prendi('sinistra'), fai.chiama('esci'), ...allaNave, fai.chiama('rientra')])] }) },
-      /* la falsa pista: il primo giro va bene, poi il robot resta nel
-         piazzale e il deposito gli sembra vuoto */
+      // falsa pista: il primo giro va bene, poi il robot resta nel piazzale
       { nome: 'senza rientrare', programma: programma({ principale: [fai.finche(guarda('sinistra', 'niente'), [
         fai.prendi('sinistra'), fai.chiama('esci'),
         fai.se(guarda('mano', 'cassa', true, 'verde'), alCassone, [
@@ -175,8 +148,7 @@ export const LIVELLI_POSTI = [
               fai.se(guarda('mano', 'cassa', true, 'verde'), [fai.chiama('al-molo'), fai.posa('su'), fai.chiama('dal-molo')],
                 [fai.chiama('al-molo'), fai.posa('sinistra'), fai.chiama('dal-molo')])])]),
         ])] }) },
-      /* la strada del mercato con un passo in meno: all'ultima svolta il
-         robot ha il muro davanti, e lo dice — le strade si contano */
+      // strada del mercato con un passo in meno: all'ultima svolta il robot trova il muro
       { nome: 'una strada col passo in meno', programma: programma({
         progetti: [
           progetto('al-mercato', { nome: 'al mercato', icona: '🍎' }, [

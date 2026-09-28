@@ -1,44 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA TELA — il livello, disegnato
-
-   Riceve un fotogramma già deciso (`scena/proiezione.js`: dove sta il
-   coniglio, che faccia ha, dove sono i massi, cosa sta succedendo) e lo
-   dipinge. Non sa niente di regole: non sa perché il coniglio si ferma,
-   né quanto vale una carota.
-
-   ── LA SCALA STA NELLA TRASFORMAZIONE ─────────────────────────────
-   Come nel sotterraneo: il contesto si scala una volta per fotogramma,
-   e da lì in poi tutto è in **pixel dello sprite** — una cella è 16, il
-   coniglio è alto quello che è alto. Lo zoom è intero **in pixel del
-   dispositivo** (`k`): il canvas è grande esattamente `mondo × k`, e il
-   CSS lo rimpicciolisce di `devicePixelRatio`, così un pixel dello
-   sprite è sempre un quadrato di `k` pixel veri e niente si sfrangia.
-   Con `k` in pixel veri e non in pixel CSS ci sono più misure fra cui
-   scegliere: a densità 2, una cella può essere 40 px CSS invece di
-   dover saltare da 32 a 48.
-
-   ── LA PLANCIA ────────────────────────────────────────────────────
-   Il livello è un pezzo di mondo posato sullo schermo, con il suo
-   spessore di terra sotto: si vede dove finisce, ed è lì che il
-   coniglio sbatte. Sopra la prima riga c'è un po' d'aria (`TESTA`),
-   perché le orecchie e i salti ci passano.
-
-   ── IL CANE E LE PECORE ───────────────────────────────────────────
-   In un livello con le pecore chi corre è il bobtail, dallo stesso
-   atlante e con gli stessi fotogrammi del coniglio (tre versi, fermo e
-   tre passi): cambia solo il nome del pezzo e quanta aria ha sotto i
-   piedi. Le pecore sono un disegno a lettere (`scena/pixel.js`), e nel
-   recinto brucano. La staccionata del recinto non è una cella: sta sui
-   **lati** delle celle del recinto che non danno su un posto dove si
-   cammina — quello che si vede chiuso è chiuso, e da dove si vede
-   aperto le pecore entrano.
-
-   ── DAVANTI E DIETRO ──────────────────────────────────────────────
-   Tutto quello che sta in piedi — alberi, sassi, massi, la tana, la
-   carota, il coniglio — si disegna in ordine di **dove tocca terra**:
-   chi sta più in basso sullo schermo sta davanti. Il terreno, le buche
-   e i ponti stanno per terra e si disegnano prima.
-   ═══════════════════════════════════════════════════════════════════ */
+/* La tela — il livello disegnato: riceve un fotogramma già deciso
+   (`scena/proiezione.js`) e lo dipinge, senza sapere niente di regole.
+   La scala sta nella trasformazione del contesto, una cella è 16 pixel
+   sprite: vedi docs/core/grafica.md. La staccionata del recinto sta sui
+   **lati** delle celle che non danno su un posto dove si cammina, non
+   sulle celle stesse. Le figure in piedi si disegnano in ordine di dove
+   toccano terra (più in basso sullo schermo = più davanti). */
 import { ATLANTE, PEZZI, TESSERA } from '../../fattoria/dati/atlante.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
 import { pezzo, COLORI, STAGIONI, CAROTA, ALBERO, ALBERO_NEVE, ALBERO_AUTUNNO, TANA, MASSO,
@@ -56,11 +22,7 @@ export const ZOCCOLO = 5              // lo spessore di terra sotto l'ultima
 export const LATO = 1                 // un filo ai lati, per l'ombra della plancia
 const CELLA_MAX = 90                  // px CSS: oltre, un livello piccolo diventa un poster
 
-/* chi corre: il pezzo dell'atlante, quante righe vuote ha sotto i
-   piedi, e di quanto va spostato di lato perché stia in mezzo alla cella.
-   Il bobtail è ritagliato stretto e centrato sulla figura (il foglio
-   rifatto a settembre 2026): niente aria sotto e niente spostamento —
-   quello di prima ne voleva cinque e -2. */
+// chi corre: il pezzo dell'atlante, quante righe vuote ha sotto i piedi, e lo spostamento laterale in cella
 const CORRIDORI = {
   coniglio: { nome: 'coniglio', vuote: 3, lato: 0 },
   cane: { nome: 'cane-bobtail', vuote: 0, lato: 0 },
@@ -368,11 +330,7 @@ export class Tela {
     }
   }
 
-  /* ── il recinto ──
-     La staccionata sta sui lati chiusi delle celle del recinto: quello
-     in alto sta dietro a tutto quello che c'è nella cella, quelli di lato
-     e in basso davanti alle pecore che ci brucano dentro. Chiuso vuol
-     dire che di là non si cammina (un ostacolo, l'acqua, il bordo). */
+  // il lato in alto della staccionata sta dietro a tutto, quelli di lato e in basso davanti alle pecore
   figureDelRecinto(figure, f, t) {
     const liv = this.liv
     const aperto = (x, y) => {

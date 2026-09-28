@@ -15,6 +15,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [pubblicare.md](pubblicare.md) — GitHub Pages, il server di casa, il numero di versione
 - [grafica.md](grafica.md) — `src/grafica/`: tela, telecamera, pittori, scheletri, sprite e tessere
 - [sprite.md](sprite.md) — gli strumenti degli sprite e il banco `npm run mondo`
+- [sprite-a-mano-dal-codice.md](sprite-a-mano-dal-codice.md) — disegnare uno sprite come dato nel codice, quando l'atlante non ce l'ha
 - [strumenti.md](strumenti.md) — voci, scatti e clip, icone, la guardia dei commenti
 - [convenzione-giochi.md](convenzione-giochi.md) — come è fatto un gioco nuovo in `src/giochi/`
 - [interfaccia.md](interfaccia.md) — barra, fogli con la ✕, pausa, schermate verticali, `v-if`, orologi

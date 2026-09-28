@@ -1,28 +1,13 @@
-/* ═══════════════════════════════════════════════════════════════════
-   CERCARE — trovare senza guardare tutto due volte
-
-   Dopo «Mettere in ordine»: l'ufficio postale, e tre modi di trovare.
-
-     · il campione: la lettera più grande, con una lavagnetta che cambia
-       solo quando arriva un record. Il cliente chiede una qualità
-       («la più grande che c'è», `massimo`), non un numero da leggere;
-     · la lettera che manca: dall'1 a «case» ce n'è una per casa, e una
-       non c'è. Si trova con un conto, senza cercarla;
-     · indovina la lettera: il cliente non dice quale vuole, dice solo
-       «di più!» o «di meno!», e guarda al massimo quattro lettere. Le
-       lettere sono in ordine — è a questo che serviva metterle — e si
-       cerca dimezzando (la ricerca binaria, con il ÷).
-   ═══════════════════════════════════════════════════════════════════ */
+// Cercare, dopo «Mettere in ordine»: il campione, la lettera che manca,
+// indovina la lettera (ricerca binaria). Vedi docs/costruttore/algoritmi.md.
 import { fai, guarda, confronta, leggi, piu, meno, diviso, programma } from '../scrivi.js'
 
 const POSTINO = { emoji: '📮', nome: 'Il postino' }
 const CLIENTE_ESIGENTE = { emoji: '🧐', nome: 'Un cliente esigente' }
 const CLIENTE_BIRICHINO = { emoji: '😏', nome: 'Un cliente birichino' }
 
-/* la mappa del campione e di indovina: i clienti e il bancone a sinistra
-   del robot, lo scaffale delle lettere sopra il corridoio — la lettera
-   della casella j sta «j passi a destra» del robot, com'è nella
-   soluzione di tutti e due i livelli */
+// la lettera della casella j sta «j passi a destra» del robot: la soluzione
+// di campione e indovina si appoggia a questa distanza fissa
 function mappaConClienti(numeri) {
   const n = numeri.length
   const largo = n + 4
@@ -34,10 +19,8 @@ function mappaConClienti(numeri) {
   ]
 }
 
-/* la bacheca del postino: sopra le caselle delle case (vuote, o con la
-   cassa rossa in trasparenza sulla casa che manca), sotto lo scaffale
-   con le lettere mescolate — una in meno delle case, perché quella che
-   manca non c'è: non è un buco da vedere, è un conto da fare */
+// la casa che manca non ha un buco visibile sullo scaffale: si trova con un
+// conto, non guardando
 function mappaBacheca(caseTotali, manca, lettere) {
   const largo = caseTotali + 3
   const case_ = Array.from({ length: caseTotali }, (_, i) => (i + 1 === manca ? '=r' : '=='))
@@ -63,12 +46,9 @@ const giornoIndovina = (nome, segreto) => ({
   clienti: { indovina: true, tentativi: 4, pazienza: 400, fila: [[1, segreto]] },
 })
 
-/* il ritorno al bancone, dopo aver preso una lettera dallo scaffale: lo
-   stesso «ripeti finché» già visto ne «La bottega dei colori» */
 const tornaAlBancone = () => fai.finche(guarda('sinistra', 'bancone'), [fai.vai('sinistra', 1)])
 
 export const CERCARE = [
-  /* ═══════════ 1. IL CAMPIONE ═══════════ */
   {
     chiave: 'campione', nome: 'Il campione', icona: '🏆', capitolo: 'cercare',
     impara: 'ricordarsi il più grande', portata: 98, premio: 35,
@@ -107,8 +87,7 @@ export const CERCARE = [
       ],
     }),
     fragili: [
-      /* vince lunedì: lì la più grande è proprio l'ultima dello
-         scaffale, e senza il «se» «record» diventa lei per caso */
+      // vince lunedì: l'ultima letta è già la più grande
       { nome: 'l\'ultima letta', programma: programma({
         lavagnette: ['record', 'letto'],
         principale: [
@@ -118,7 +97,7 @@ export const CERCARE = [
           fai.prendi('su'), tornaAlBancone(), fai.aspetta(guarda('sinistra', 'cliente')), fai.posa('sinistra'),
         ],
       }) },
-      /* vince martedì: lì la più grande è proprio la prima */
+      // vince martedì: la più grande è proprio la prima
       { nome: 'la prima', programma: programma({
         principale: [
           fai.vai('destra', 1), fai.prendi('su'),
@@ -139,7 +118,6 @@ export const CERCARE = [
       }) },
     ],
   },
-  /* ═══════════ 2. LA LETTERA CHE MANCA ═══════════ */
   {
     chiave: 'lettera-che-manca', nome: 'La lettera che manca', icona: '🕳️', capitolo: 'cercare',
     impara: 'un conto che trova', portata: 98, premio: 40,
@@ -175,8 +153,7 @@ export const CERCARE = [
       ],
     }),
     fragili: [
-      /* vince lunedì: lì la più grande letta è la 4, e la casa dopo è
-         proprio la 5 che manca. Basta mescolarle perché non regga più */
+      // vince lunedì: la casa dopo la più grande letta (4) è proprio la 5 che manca
       { nome: 'sempre la casa dopo l\'ultima', programma: programma({
         lavagnette: ['massimo', 'letto', 'manca'],
         principale: [
@@ -190,8 +167,7 @@ export const CERCARE = [
           fai.prendi('sinistra'), fai.vai('destra', 'manca'), fai.posa('su'),
         ],
       }) },
-      /* vince lunedì perché lì le lettere sono in ordine: il primo posto
-         dove il numero letto non è quello atteso è la casa che manca */
+      // vince lunedì: lì le lettere sono in ordine, e il primo numero fuori posto è la mancante
       { nome: 'la prima che salta, in fila', programma: programma({
         lavagnette: ['trovato', 'atteso', 'manca', 'letto'],
         principale: [
@@ -212,7 +188,6 @@ export const CERCARE = [
       }) },
     ],
   },
-  /* ═══════════ 3. INDOVINA LA LETTERA ═══════════ */
   {
     chiave: 'indovina', nome: 'Indovina la lettera', icona: '🎯', capitolo: 'cercare',
     impara: 'cercare dimezzando', portata: 99, premio: 45,
@@ -253,8 +228,7 @@ export const CERCARE = [
       ],
     }),
     fragili: [
-      /* vince lunedì: la segreta (3) è vicina all'inizio, e ci si arriva
-         in tempo prima dei quattro tentativi. Martedì e mercoledì no */
+      // vince lunedì: la segreta (3) è vicina all'inizio, in tempo entro i quattro tentativi
       { nome: 'dall\'1 in su', programma: programma({
         lavagnette: ['tentativo'],
         principale: [
@@ -270,8 +244,7 @@ export const CERCARE = [
           ]),
         ],
       }) },
-      /* perde con l'1 o il 9: da 5 a un estremo sono quattro passetti, e
-         il quarto sbagliato è già il cliente che se ne va arrabbiato */
+      // perde con l'1 o il 9: da 5 a un estremo sono già quattro passetti
       { nome: 'dal mezzo a passetti', programma: programma({
         lavagnette: ['tentativo'],
         principale: [

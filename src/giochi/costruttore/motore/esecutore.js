@@ -1,69 +1,13 @@
-/* ═══════════════════════════════════════════════════════════════════
-   L'ESECUTORE — il programma del bambino, un passo alla volta
-
-   Non esegue il programma d'un fiato: lo **srotola** in una fila di
-   fatti, uno per chiamata di `prossimo()`, e chi lo guida decide quanto
-   aspettare fra un fatto e l'altro. È tutto quello che serve per far
-   *vedere la macchina che lavora*, che nel costruttore è metà della
-   lezione:
-
-     { tipo: 'riga',    id, progetto, profondita }   sta per eseguire questa riga
-     { tipo: 'giro',    id, n, di }                  il giro n (da 1) di un ripeti
-     { tipo: 'guarda',  id, esito, x?, y?, cosa? }   la risposta a una condizione
-     { tipo: 'legge',   id, x, y, valore }           il robot ha letto qualcosa
-     { tipo: 'assegna', id, nome, valore }
-     { tipo: 'entra',   id, progetto, misure }       si apre la carta di un progetto
-     { tipo: 'esce',    progetto }
-     { tipo: 'fine', sera? }                         il programma (o la giornata) è finito
-     { tipo: 'errore',  motivo, id, ... }            il robot si è fermato, e perché
-
-   più i fatti **del mondo**, che li decide lui: nel cantiere di lato
-   `muovi` e `metti`, nel porto anche `prendi`, `posa` e `turno` (quello
-   che il mondo ha fatto da sé mentre il robot lavorava).
-
-   Gli ultimi due della lista chiudono: dopo, `prossimo()` li ripete per
-   sempre.
-
-   ── IL MONDO E L'ESECUTORE ──────────────────────────────────────────
-   Qui c'è quello che vale in tutti i mondi: ripetere, decidere, i
-   progetti e le loro misure, le lavagnette, i conti. **Camminare,
-   mettere, prendere e guardare li sa il mondo** (`mondo.fai`,
-   `mondo.guarda`, `mondo.leggi`): il cantiere di lato con la sua
-   gravità, il porto dall'alto col suo orologio. Un mondo con un
-   orologio ha anche `attendi` (un turno che passa senza fare niente) e
-   `finoASera` (quello che succede dopo che il programma è finito: i
-   clienti arrivano lo stesso).
-
-   ── PERCHÉ UN GENERATORE ──────────────────────────────────────────
-   La pila delle chiamate è quella di JavaScript (`yield*` dentro
-   `yield*`), e la ricorsione del bambino è una ricorsione vera. La pila
-   *da mostrare* invece la tiene l'esecutore (`this.pila`), perché è
-   quella che la vista disegna: «principale › colonna (alta 3)».
-
-   ── LE RETI ────────────────────────────────────────────────────────
-   Un `ripeti` che non finisce mai e un progetto che chiama sé stesso
-   senza fermarsi sono errori normali, non guasti del gioco: si contano
-   i passi (`TETTO_PASSI`) e la profondità (`TETTO_PILA`), e al tetto il
-   robot si ferma dicendolo. Senza, il telefono di un bambino si
-   pianterebbe al primo `ripeti · smetti quando` sbagliato. Dove c'è un
-   orologio c'è una terza rete: tante righe di fila **senza che passi
-   un turno** vogliono dire un giro che pensa a vuoto (`TETTO_PENSIERI`).
-   ═══════════════════════════════════════════════════════════════════ */
+// L'esecutore: il programma del bambino srotolato un fatto alla volta. Vedi docs/costruttore/linguaggio.md.
 import { Inciampo, Sera } from './inciampo.js'
 
 export { Inciampo }
 
 export const TETTO_PASSI = 5000
 export const TETTO_PILA = 40
-/* righe di fila senza che il mondo faccia un turno: un giro del porto
-   ne esegue una ventina fra un gesto e l'altro, trecento è un giro vuoto */
-export const TETTO_PENSIERI = 300
+export const TETTO_PENSIERI = 300 // un giro del porto ne fa una ventina fra un gesto e l'altro
 
-/* Le frasi con cui il robot dice perché si è fermato. Stanno qui e non
-   nella vista perché i test le controllano: un errore senza una frase è
-   un robot che si ferma muto, e un bambino di nove anni non ha nessun
-   altro posto dove leggerlo. Ci sono anche quelle del porto: sono poche,
-   e un posto solo si controlla meglio di due. */
+// Le frasi con cui il robot dice perché si è fermato (anche quelle del porto). Stanno qui perché i test le controllano.
 export const PERCHE = {
   fuori: () => 'Il robot non può uscire dal cantiere.',
   muro: () => 'Davanti c\'è un muro troppo alto: il robot sale un gradino alla volta.',
@@ -132,8 +76,7 @@ export const fraseDi = errore =>
   (PERCHE[errore.motivo] || (() => 'Il robot si è fermato.'))(errore)
 
 export class Esecuzione {
-  /* `lavagnette` sono i numeri dell'ordine (`{ gradini: 5 }`): si
-     leggono come le altre, ma non si scrivono. */
+  // `lavagnette` sono i numeri dell'ordine: si leggono come le altre, ma non si scrivono.
   constructor(programma, mondo, { lavagnette = {}, tettoPassi = null } = {}) {
     this.programma = programma
     this.mondo = mondo
@@ -145,7 +88,6 @@ export class Esecuzione {
     this.tettoPassi = tettoPassi || mondo.tettoPassi || TETTO_PASSI
     this.pensieri = 0
     this.tVisto = null
-    /* le letture fatte mentre si calcola un valore: si raccontano dopo */
     this.letture = []
     this.fine = null
     this.giro = this.tutto()
@@ -166,8 +108,7 @@ export class Esecuzione {
     return e
   }
 
-  /* quello che la vista mostra accanto al programma: la pila delle carte
-     aperte, con le misure di ognuna, e le lavagnette del bambino */
+  // Quello che la vista mostra accanto al programma: la pila delle carte aperte e le lavagnette del bambino.
   fotografia() {
     return {
       pila: this.pila.slice(1).map(c => ({ progetto: c.progetto, misure: { ...c.misure } })),
@@ -179,8 +120,7 @@ export class Esecuzione {
   *tutto() {
     try {
       yield* this.corpo(this.programma.principale || [])
-      /* il programma è finito, la giornata forse no: dove c'è un
-         orologio, il mondo va avanti da solo fino a sera */
+      // Il programma è finito, la giornata forse no: dove c'è un orologio il mondo va avanti da solo fino a sera.
       if (this.mondo.finoASera) yield* this.mondo.finoASera(this)
       this.fine = { tipo: 'fine' }
     } catch (e) {
@@ -206,7 +146,6 @@ export class Esecuzione {
     for (const i of elenco || []) yield* this.istruzione(i)
   }
 
-  /* le letture fatte calcolando un valore, raccontate una per una */
   *letto(id) {
     const tutte = this.letture.splice(0)
     for (const l of tutte) yield { tipo: 'legge', id, ...l }
@@ -241,9 +180,7 @@ export class Esecuzione {
         }
         break
       }
-      /* «ripeti per sempre»: finisce quando il mondo dice che è sera, o
-         quando il robot si ferma. Senza orologio sarebbe il «ripeti» che
-         non finisce mai, e la rete dei passi lo ferma lo stesso. */
+      // Finisce quando il mondo dice che è sera; senza orologio è la rete dei passi a fermarlo.
       case 'sempre': {
         for (let k = 0; ; k++) {
           if (k > 0) this.conta(i.id)
@@ -253,9 +190,7 @@ export class Esecuzione {
         // eslint-disable-next-line no-unreachable
         break
       }
-      /* «aspetta che [domanda]»: si guarda, e se la risposta è no passa
-         un turno. Ogni turno d'attesa è un turno del mondo: la gru cala,
-         il nastro scorre, i clienti arrivano. */
+      // Ogni turno d'attesa è un turno del mondo: la gru cala, il nastro scorre, i clienti arrivano.
       case 'aspetta': {
         if (!this.mondo.attendi) throw new Inciampo('niente-tempo', i.id)
         for (let k = 0; ; k++) {
@@ -268,9 +203,6 @@ export class Esecuzione {
         }
         break
       }
-      /* «aspetta un turno»: il robot sta fermo, il mondo va avanti. Serve
-         a chi ha due lavori e in quel momento non ce n'è nessuno: un
-         «ripeti per sempre» che guarda e basta girerebbe a vuoto */
       case 'pausa': {
         if (!this.mondo.attendi) throw new Inciampo('niente-tempo', i.id)
         yield* this.mondo.attendi(this, i.id)
@@ -299,9 +231,6 @@ export class Esecuzione {
           throw new Inciampo('misure-sbagliate', i.id,
                              { nome: p.nome, vuole: (p.misure || []).length, date: argomenti.length })
         if (this.pila.length > TETTO_PILA) throw new Inciampo('pila', i.id)
-        /* le misure si calcolano **prima** di aprire la carta, con le
-           lavagnette di chi chiama: `colonna(h)` vuol dire «il valore di
-           h adesso», non «la h del progetto» */
         const misure = {}
         const tipi = p.tipi || {}
         ;(p.misure || []).forEach((m, k) => {
@@ -315,19 +244,14 @@ export class Esecuzione {
         yield { tipo: 'esce', progetto: p.id }
         break
       }
-      /* il resto lo sa il mondo: camminare, mettere, prendere, posare */
+      // Il resto lo sa il mondo: camminare, mettere, prendere, posare.
       default:
         if (this.mondo.fai) yield* this.mondo.fai(i, this)
         break
     }
   }
 
-  /* ── i valori ──
-     Tre specie girano nel programma: i numeri, i colori (una misura di
-     tipo colore, una lavagnetta dell'ordine delle bandiere, quello che il
-     robot legge su una cassa) e — per chi li legge — quello che dice il
-     mondo. Una al posto dell'altra ferma il robot, e la frase dice quale
-     ci voleva. */
+  // Un numero: letterale, lavagnetta, letto dal mondo, o un conto. Una specie sbagliata ferma il robot.
   valuta(e, id) {
     if (!e) throw new Inciampo('numero-mancante', id)
     if (e.vuoto) throw new Inciampo('n-da-scegliere', id)
@@ -349,7 +273,6 @@ export class Esecuzione {
       if (e.op === '+') return a + b
       if (e.op === '-') return a - b
       if (e.op === '×') return a * b
-      /* il diviso della scuola: senza virgola, e il resto si lascia */
       if (e.op === '÷') {
         if (b === 0) throw new Inciampo('diviso-zero', id)
         return Math.trunc(a / b)
@@ -358,7 +281,7 @@ export class Esecuzione {
     throw new Inciampo('numero-mancante', id)
   }
 
-  /* un colore: scritto per esteso, il nome di chi lo porta, o letto */
+  // Un colore: scritto per esteso, il nome di chi lo porta, o letto.
   valutaColore(e, id) {
     if (!e || (typeof e === 'object' && e.vuoto)) throw new Inciampo('colore-da-scegliere', id)
     if (typeof e === 'string') return e
@@ -375,9 +298,7 @@ export class Esecuzione {
     throw new Inciampo('colore-da-scegliere', id)
   }
 
-  /* un valore di qualunque specie: è quello che scrive una lavagnetta.
-     «voglio diventa [quello che chiede il cliente]» ci mette un colore,
-     «h diventa [h + 1]» un numero. I conti si fanno solo coi numeri. */
+  // Un valore di qualunque specie, quello che scrive una lavagnetta: i conti restano solo per i numeri.
   valore(e, id) {
     if (!e) throw new Inciampo('numero-mancante', id)
     if (typeof e === 'string') return e
@@ -387,8 +308,7 @@ export class Esecuzione {
     return this.valuta(e, id)
   }
 
-  /* quello che il robot legge nel mondo: la chiede al mondo, e la
-     ricorda per raccontarla (l'occhio sulla cella che ha letto) */
+  // La chiede al mondo, e ricorda la lettura per raccontarla (l'occhio sulla cella letta).
   dalMondo(lato, id) {
     if (!this.mondo.leggi) throw new Inciampo('niente-da-leggere', id)
     const l = this.mondo.leggi(lato, this, id)
@@ -396,10 +316,7 @@ export class Esecuzione {
     return l.valore
   }
 
-  /* Chi cerca una lavagnetta la cerca prima fra le misure della carta
-     aperta, poi fra quelle del bambino, poi fra i numeri dell'ordine. È
-     l'ordine di un linguaggio vero, e serve: dentro `colonna`, «alta» è
-     la misura di questa colonna e non un'altra cosa con lo stesso nome. */
+  // Cerca prima fra le misure della carta aperta, poi il bambino, poi l'ordine: vedi docs/costruttore/linguaggio.md.
   leggi(nome, id) {
     const cornice = this.pila[this.pila.length - 1]
     if (Object.prototype.hasOwnProperty.call(cornice.misure, nome)) return cornice.misure[nome]
@@ -415,9 +332,7 @@ export class Esecuzione {
     this.valori[nome] = v
   }
 
-  /* ── le condizioni ──
-     Il confronto è dell'esecutore (due valori, un segno); guardare è
-     del mondo, che sa cosa c'è da vedere. */
+  // Il confronto è dell'esecutore; guardare è del mondo, che sa cosa c'è da vedere.
   prova(c, id) {
     if (!c) throw new Inciampo('condizione-da-scegliere', id)
     if (c.tipo === 'confronta') {

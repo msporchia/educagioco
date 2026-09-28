@@ -1,79 +1,19 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL VOCABOLARIO DEL MONDO — cosa può stare in una cella, e le mosse
+/* IL VOCABOLARIO DEL MONDO — cosa può stare in una cella, e le mosse.
+   Dato puro: le lettere con cui si scrive una mappa (legenda sotto),
+   gli ostacoli, le otto mosse. Le regole di cosa succede entrandoci
+   stanno in `motore/mondo.js`; qui si dice solo **cosa esiste**. Vedi
+   docs/passo-passo/regole.md per le regole del mondo, del cane e delle
+   lastre. */
 
-   Dato puro: le lettere con cui si scrive una mappa, gli ostacoli (alti
-   e bassi), le otto mosse. Le regole che dicono cosa succede entrandoci
-   stanno in `motore/mondo.js`; qui si dice solo **cosa esiste**.
-
-   ── UNA LETTERA PER CELLA ─────────────────────────────────────────
-   Una mappa è un elenco di righe tutte lunghe uguali, e ogni carattere
-   è una cella. La legenda è questa e non ce n'è un'altra: una lettera
-   che qui non c'è è un guasto (`guastiDellaMappa`), non una cella vuota.
-
-     .  prato                    ~  acqua              *  ghiaccio
-     @  la tana (l'arrivo)       P  la partenza, su un prato
-     c  la carota, su un prato   C  la carota, sul ghiaccio
-     m  un masso, su un prato    M  un masso, sul ghiaccio
-     A  albero      B  cespuglio      S  sasso        (alti)
-     O  sasso piantato nel ghiaccio                   (alto)
-     t  tronco      -  staccionata                    (bassi)
-     1 2 3  le buche collegate: la stessa cifra, la stessa coppia
-     r u g  le lastre colorate: rossa, blu (u, perché B è il
-            cespuglio), gialla
-     p  una pecora, su un prato   #  il recinto (dove vanno le pecore)
-
-   Perché la carota e il masso hanno due lettere e l'albero una sola:
-   sotto la carota e sotto il masso il terreno **conta per le regole**
-   (chi ci passa sopra scivola o no), sotto un albero no — un albero non
-   lo attraversa nessuno. Il sasso nel ghiaccio ha la sua lettera solo
-   per come si disegna: un sasso su un'isola d'erba in mezzo al lago
-   ghiacciato si leggeva come un posto dove fermarsi.
-
-   ── ALTI E BASSI ─────────────────────────────────────────────────
-   Tutti gli ostacoli fermano chi ci cammina contro. La differenza è il
-   salto: uno basso (il tronco, la staccionata) si scavalca, uno alto no.
-   Sono disegni diversi apposta — il bambino deve poterlo dire guardando,
-   senza provarlo — e la differenza sta in questa tabella e basta.
-
-   ── LE PECORE E IL RECINTO ────────────────────────────────────────
-   Dove ci sono le pecore non c'è la tana: il livello è del **cane**,
-   e si vince quando le pecore sono tutte nel recinto. Il recinto è un
-   pezzo di terra (`#`), largo quanto si vuole: le pecore ci entrano da
-   qualunque lato che dia su un posto dove si cammina, e il cane non ci
-   entra mai. Quali lati sono chiusi lo dice la mappa, con gli ostacoli
-   attorno — e il disegno mette la staccionata proprio lì, così quello
-   che si vede e quello che vale sono la stessa cosa. La carota, in un
-   livello del cane, si disegna come un osso: per il motore è la stessa
-   cosa da prendere. Quanto lontano vede una pecora lo dice `VISTA`, qui
-   sotto.
-
-   ── LE LASTRE ─────────────────────────────────────────────────────
-   Una lastra colorata per terra non fa niente: si cammina come il prato
-   (e come il prato ferma chi scivola). Serve a **guardarla**: dal
-   gradino del «fino a» il coniglio può ripetere finché non ci arriva
-   sopra, e dal «se» può decidere cosa fare a seconda del colore che ha
-   sotto i piedi (`dati/carte.js`). Ogni colore ha anche la sua forma —
-   il rosso un cerchio, il blu un quadrato, il giallo un triangolo — perché
-   un bambino su dodici i colori non li distingue tutti, e la carta deve
-   potersi leggere lo stesso.
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* quanto è grande una mappa, al massimo: su un telefono da 390 px la
-   mappa deve stare intera in larghezza e in circa metà dell'altezza, a
-   ingrandimento intero (vedi `scena/tela.js`). Sette per nove bastava ai
-   piccoli; i gradini dei grandi mescolano più regole e vogliono più
-   posto, e a nove per undici una cella resta sui trenta pixel */
+/* quanto è grande una mappa, al massimo (vedi docs/passo-passo/zaino.md) */
 export const COLONNE_MAX = 9
 export const RIGHE_MAX = 11
 /* e al minimo: sotto le tre celle per lato non c'è un posto, c'è un
    corridoio */
 export const LATO_MIN = 3
 
-/* quanto lontano una pecora vede il cane: sulla sua riga o sulla sua
-   colonna, fino a `VISTA` caselle, se in mezzo non c'è niente di alto
-   (un albero, un cespuglio, un sasso, un masso, un'altra pecora — sopra
-   l'acqua e le cose basse si vede). A due il cane non le va mai addosso:
-   le fa spostare da lontano, come un cane da pastore vero */
+/* quanto lontano una pecora vede il cane, sulla sua riga o colonna
+   (vedi docs/passo-passo/regole.md) */
 export const VISTA = 2
 
 /* quante frecce può tenere la fila: non è un tetto di gioco (qui non
@@ -125,23 +65,16 @@ export const LEGENDA = {
   '#': { terreno: 'recinto' },
 }
 
-/* i colori degli anelli delle buche, uno per coppia: stanno qui e non
-   nel disegno perché «la coppia 2 è viola» è un fatto del mondo che
-   anche la pagina di aiuto e i test possono voler dire */
+/* «la coppia 2 è viola» è un fatto del mondo, non solo del disegno:
+   anche la pagina di aiuto e i test lo vogliono dire */
 export const COPPIE = {
   1: { colore: '#ff5fa2', nome: 'rosa' },
   2: { colore: '#8d6bff', nome: 'viola' },
   3: { colore: '#ffb31a', nome: 'arancio' },
 }
 
-/* ── LE MOSSE ──
-   Le frecce sono **assolute**: su è verso la cima dello schermo, sempre,
-   comunque sia girato il coniglio. «Gira a destra» chiederebbe di
-   ruotare la figura a mente, e a cinque anni quella capacità non c'è
-   ancora: si sbaglierebbe per la ragione sbagliata.
-
-   `salto-…` sposta di due celle scavalcando quella in mezzo. La fila del
-   bambino è un elenco di queste chiavi, e basta. */
+/* le frecce sono assolute (vedi docs/passo-passo/regole.md); `salto-…`
+   sposta di due celle scavalcando quella in mezzo */
 export const VERSI = {
   su:       { dx: 0,  dy: -1, nome: 'su' },
   giu:      { dx: 0,  dy: 1,  nome: 'giù' },
@@ -164,11 +97,8 @@ export const nomeDellaMossa = m => {
   return (d.salto ? 'salto ' : 'passo ') + d.nome
 }
 
-/* ── UNA MAPPA SCRITTA BENE ──
-   Il controllo che una mappa si può leggere, senza giocarla: la forma,
-   le lettere, e le cose che devono esserci una volta sola. Se una mappa
-   si **vince** lo dice il risolutore (`motore/risolutore.js`), che qui
-   non si importa — il dato non sa niente del motore. */
+/* se una mappa si può leggere: la forma, le lettere, le cose che devono
+   esserci una volta sola. Se si vince lo dice il risolutore, non qui. */
 export function guastiDellaMappa(mappa, dove = 'mappa') {
   const guasti = []
   if (!Array.isArray(mappa) || !mappa.length) return [`${dove}: nessuna riga`]
@@ -188,9 +118,8 @@ export function guastiDellaMappa(mappa, dove = 'mappa') {
   const quante = pred => Object.entries(conta)
     .filter(([ch]) => LEGENDA[ch] && pred(LEGENDA[ch])).reduce((n, [, k]) => n + k, 0)
   if (quante(d => d.partenza) !== 1) guasti.push(`${dove}: la partenza deve esserci una volta sola`)
-  /* un livello del coniglio ha la sua tana e niente recinto; uno del
-     cane ha le pecore, il recinto, e nessuna tana: si vince quando sono
-     tutte dentro, e una tana lì sarebbe una seconda meta */
+  /* un livello del cane ha le pecore e il recinto, e nessuna tana:
+     sarebbe una seconda meta */
   if (quante(d => d.pecora)) {
     if (quante(d => d.terreno === 'tana')) guasti.push(`${dove}: con le pecore non c'è la tana, c'è il recinto`)
     if (!quante(d => d.terreno === 'recinto')) guasti.push(`${dove}: ci sono le pecore e non c'è il recinto`)

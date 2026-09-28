@@ -19,6 +19,29 @@ diventa il posto per i primi algoritmi: `dati/porto/ordine.js`,
   colori (`colori: ['verde', 'bianco', 'rosso']`) e quello dentro un sacco
   (`cassone`).
 
+## Le false piste di «mettere in ordine»
+
+Dopo «In ordine» lo stesso algoritmo si guarda da quattro punti diversi: il
+tricolore (fuori posto = colore, non numero), il casellario (smistare senza
+confrontare, il contrario apposta), fare posto (inserimento senza rifare
+tutto) e la cerniera (fondere due file già ordinate). Le mosse ingenue di
+questi livelli vincono sul giorno più semplice e cedono solo quando smette
+di essere un caso particolare: le due bande già in ordine fra loro nel
+tricolore, le lettere arrivate già crescenti in «Fare posto», le due file
+perfettamente intrecciate nella cerniera.
+
+- **In «Fare posto» la sentinella «1» in testa allo scaffale non si sposta
+  mai**: ferma il confronto prima che il robot esca dallo scaffale, e regge
+  solo perché ogni lettera nuova è almeno un due (`dati/porto/ordine.js`).
+- **In «La cerniera» il nastro d'arrivo è largo quanto tutte le lettere del
+  giorno**: quello che vi si posa non torna più indietro, si accoda da sé.
+
+## Le pile
+
+- **Un cassone è una pila**: si prende sempre quella in cima. «Il carico al
+  contrario» non ha un posto libero per terra apposta — con un posto libero
+  si porta ogni cassa dritta al suo posto e la pila non serve più.
+
 ## Tre pezzi di mondo, nessuna meccanica su misura
 
 - **Il cliente che chiede una qualità** (`massimo`/`minimo`: «la lettera più
@@ -54,7 +77,9 @@ Tre assi (rossa, verde, blu), la torre va dalla «partenza» all'«arrivo»,
 quella libera è l'«appoggio». Le assi si chiamano col loro colore, quindi un
 programma scritto coi colori di lunedì perde martedì. Il robot sta fermo e
 «sposta» porta una forma da un'asse all'altra: la lezione è la torre, non la
-strada.
+strada. Le misure di «torre di due/tre» sono nomi di ruolo (partenza, arrivo,
+appoggio), quelle di «sposta» preposizioni (da, a): così una chiamata si legge
+come una frase, «sposta da [partenza] a [appoggio]».
 
 **La ricorsione non si spiega, si arriva a vederla**: ogni gradino dà già
 fatto quello che il bambino ha scritto nel gradino prima.

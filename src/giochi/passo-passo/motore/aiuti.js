@@ -1,38 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA SCALA DEL 💡 — da ragionare a farsi scrivere la strada
-
-   È la scala di tutti i giochi che si sbloccano pensando
-   (`giochi/aiuti.js`, dove stanno i prezzi), detta al coniglio:
-
-     🧠 pensa      gratis   cosa chiede questo posto e qual è la domanda
-                            giusta — ricavato da quello che c'è sulla
-                            mappa (ghiaccio, massi, buche, lo zaino…)
-     🔎 dove       gratis   dove la fila comincia a sbagliare: il cursore
-                            va lì e quello che segue si spegne. Il posto,
-                            non la carta
-     💡 carta ×3   🪙10     la carta giusta in quel posto: il 💡 di prima
-     🧩 un terzo   🪙50     un pezzo di strada scritto nella fila: un terzo
-     🧩 metà       🪙100    di quello che manca, poi la metà, poi tutto —
-     ✅ tutto      🪙200    sempre a partire da dove la fila va bene
-
-   ── PERCHÉ LA SCALA RIPARTE A OGNI INGRESSO ─────────────────────────
-   Nel Generale e nel costruttore i gradini comprati restano, perché
-   sono frasi e programmi sempre uguali. Qui no: ogni gradino guarda la
-   fila di adesso, e la fila riparte vuota a ogni ingresso. Quello che si
-   è pagato sta nella fila, e la fila si vince col ▶ che viene subito
-   dopo. Rientrando si ricomincia dai gradini gratis.
-
-   ── I PEZZI SONO QUELLO CHE FAREBBE CHI SEGUE IL 💡 ──
-   Un pezzo di strada non è scritto da nessuna parte: è la fila che
-   verrebbe fuori seguendo il consiglio del risolutore (`suggerisci`) un
-   certo numero di volte — una carta, una scatola, una testa da
-   scegliere, una carta da togliere — con le stesse mosse che fa il
-   bambino (`seguiConsiglio`). Così le carte che il gioco imparerà
-   domani ci entrano da sole, e un pezzo non può portare in un vicolo
-   cieco: il test lo pretende dal 💡 da sempre.
-
-   Puro: gira in Node e si prova in `unita/aiuti`.
-   ═══════════════════════════════════════════════════════════════════ */
+/* LA SCALA DEL 💡 — da ragionare a farsi scrivere la strada.
+   Vedi docs/passo-passo/stelle-e-aiuti.md per i gradini e i prezzi
+   (comuni a più giochi in docs/core/aiuti.md). Puro: gira in Node e si
+   prova in `unita/aiuti`. */
 import { conIPrezzi, RAGIONA, INDIZIO, PEZZO, SVELA } from '../../aiuti.js'
 import { suggerisci, risolvi } from './risolutore.js'
 import { seguiConsiglio } from './fila.js'
@@ -42,9 +11,8 @@ export const CARTE_GIUSTE = 3
 /* un tetto di sicurezza: nessuna strada vuole tanti consigli */
 const TETTO = 80
 
-/* ═══════════ la scala ═══════════
-   Sempre la stessa forma: i gradini che scrivono non hanno un
-   contenuto fisso — si calcolano dalla fila quando si comprano. */
+/* i gradini che scrivono non hanno un contenuto fisso: si calcolano
+   dalla fila quando si comprano */
 export function scalaDi() {
   return conIPrezzi([
     { che: RAGIONA, cosa: 'pensa' },
@@ -56,14 +24,10 @@ export function scalaDi() {
   ])
 }
 
-/* ═══════════ 🧠 pensa ═══════════
-   Due frasi: cosa chiede il posto (e il nodo), e la domanda da farsi.
-   Si ricavano da quello che c'è sulla mappa e non da un testo scritto
-   livello per livello: valgono per la campagna, per il sentiero senza
-   fine e per i posti che verranno. Si guarda la cosa più nuova — lo
-   zaino, poi le pecore, le buche, i massi, il ghiaccio, i salti — perché è quella
-   che il posto è venuto a insegnare. Le legge un grande a chi non sa
-   ancora leggere: il pezzo che si vede è il gradino dopo. */
+/* due frasi (cosa chiede il posto, e la domanda da farsi), ricavate da
+   quello che c'è sulla mappa e non da un testo scritto livello per
+   livello: si guarda la cosa più nuova (lo zaino, poi le pecore, le
+   buche, i massi, il ghiaccio, i salti). */
 export function pensieroDi(liv) {
   const carota = liv.carota >= 0 ? ' E la carota 🥕: prima prendila, poi vai a casa.' : ''
   const carte = liv.carte || []
@@ -101,8 +65,7 @@ export function pensieroDi(liv) {
           'Conta le caselle col dito: quante a destra, quante in su o in giù, prima di girare?' + carota]
 }
 
-/* ═══════════ 🔎 dove ═══════════
-   Il posto, e non la carta. Torna cosa accendere e la frase da dire:
+/* cosa accendere e la frase da dire:
      { che: 'via' }                    la fila va già bene: ▶
      { che: 'qui', cursore, sospette } il cursore va lì; `sospette` se
                                        dopo ci sono carte da cambiare
@@ -126,12 +89,9 @@ export function dove(liv, fila) {
                : 'Comincia dalla prima carta: da che parte deve andare il coniglio?' }
 }
 
-/* ═══════════ i pezzi di strada ═══════════
-   Quello che farebbe chi segue il 💡 fino a casa, a partire da questa
-   fila. Senza zaino si riparte dal pezzo che va bene — le carte
-   sbagliate dopo si buttano, se no chi segue i consigli se le
-   trascinerebbe dietro per sempre; con lo zaino no, perché lì il
-   consiglio sa anche dire «questa è di troppo». */
+/* quello che farebbe chi segue il 💡 fino a casa. Senza zaino le carte
+   sbagliate dopo il pezzo buono si buttano; con lo zaino no, perché lì
+   il consiglio sa già dire «questa è di troppo». */
 export function strada(liv, fila) {
   let f = fila.slice()
   let c = f.length
