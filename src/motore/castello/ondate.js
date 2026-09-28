@@ -1,34 +1,14 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE ONDATE — chi arriva, quanti sono, e quando.
-
-   Il ciclo della tappa in una classe sola: data un'ondata, dice chi la
-   compone, quanti nemici sono, ogni quanto escono dall'ingresso. Non
-   tiene tempo e non fa camminare nessuno: è una **tabella calcolata**,
-   e per questo si può guardare anche in avanti.
-
-   ── il preavviso ──
-   Ed è tutto il punto. Chi arriva è deterministico — `mostroDiOnda`
-   dipende solo dal numero dell'ondata — quindi «fra tre ondate arriva
-   il Golem, e la magia non lo tocca» si può dire *adesso*, mentre il
-   campo è pulito e si stanno facendo i conti per comprare. Prima quello
-   che un mostro reggeva si scopriva quando l'ondata era già partita,
-   cioè quando non serviva più a niente: era un dettaglio, non una
-   decisione.
-
-   `prossime()` è quello che l'interfaccia mette in un nastro, ed è il
-   solo motivo per cui il motore espone il futuro invece del presente.
-   ═══════════════════════════════════════════════════════════════════ */
+// Le ondate: chi arriva, quanti sono, quando escono. Una tabella calcolata
+// (niente tempo, nessuno cammina), deterministica per ondata: è quello che
+// rende possibile il preavviso, mostrato prima che l'ondata parta.
 import { nemiciDiOnda, intervalloDiOnda, vitaNemico, velocitaNemico, insiemeDa,
          boccaDellOnda } from '../../data/castello.js'
 import { MOSTRI, CAPO, ABILITA, mostroDiOnda, mostroLibero, immuniDi, coppiaDellOnda }
   from '../../data/mostri.js'
 
-/* il passo stretto dentro un gruppetto, di quanto si muove la fila,
-   quante ondate su tre escono a gruppetti, e di quanto (in unità del
-   mondo) un mostro può uscire indietro rispetto al suo posto */
 const RITMO = { stretto: 0.5, mosso: 0.25, gruppo: [2, 3], da: 3, quota: 1 / 3, sfalso: 30 }
-/* un numero fra 0 e 1 che dipende solo da `a` e `b`: il dado del ritmo
-   e dello sfalso, che tira sempre lo stesso numero per la stessa ondata */
+// un numero fra 0 e 1 che dipende solo da `a` e `b`: tira sempre lo stesso
+// per la stessa ondata (il ritmo e lo sfalso devono essere ripetibili)
 function caso(a, b = 0) {
   let h = Math.imul(a + 1, 2654435761) ^ Math.imul(b + 7, 40503)
   h = Math.imul(h ^ (h >>> 15), 2246822519)
@@ -36,48 +16,17 @@ function caso(a, b = 0) {
 }
 
 export class Ondate {
-  /* chi arriva in un'ondata non cambia mai: si calcola una volta per
-     ondata (`bestiaDi`), perché le coppie delle miste si cercano fra
-     tutti i mostri della tappa e il motore lo chiede a ogni mostro che
-     esce */
+  // chi arriva non cambia mai: si calcola una volta per ondata (`bestiaDi`)
   constructor(tappa) { this.tappa = tappa; this.bestie = new Map() }
 
-  /* la partita libera non ha un numero di ondate: non finisce */
   get campagna() { return Number.isFinite(this.tappa.ondate) }
   get quante() { return this.tappa.ondate }
   ultima(o) { return this.campagna && o >= this.quante }
 
-  /* Chi arriva in questa ondata: di solito un tipo solo, così la scheda
-     in alto a destra parla di lui e scegliere la torre è una domanda con
-     una risposta.
-
-     ── e ogni tanto due ──
-     L'ondata mista (`coppiaDellOnda` in `data/mostri.js`) porta il
-     secondo tipo in `con`, con la stessa forma del primo: chi la mostra
-     (il preavviso, la scheda) disegna due ritratti e due immunità, chi
-     la genera li alterna nella fila (`chiEsce`). Il primo è quello che
-     la fila avrebbe mandato comunque, e resta dov'era: `id`, `immune`
-     e il resto parlano di lui, così chi non sa delle miste legge
-     un'ondata vera, solo non intera.
-
-     ── le immunità ci sono sempre ──
-     Prima una tappa accendeva le *resistenze* solo da una certa ondata in
-     poi e mai nell'ultima, perché un terzo del danno tolto alla torre
-     sbagliata faceva saltare la taratura in modi misurati. L'immunità è
-     un'altra cosa: è **com'è fatto il mostro**, e un pipistrello che
-     alla seconda ondata si prende le bombe e alla terza no sarebbe una
-     bugia. Quello che una tappa decide adesso è **chi manda e in che
-     ordine**: la prima ondata la ferisce sempre l'arciere, che è la
-     torre che si compra per prima (lo controlla il validatore), e il
-     giocatore modello costruisce prima le torri che servono a coprire la
-     fila (`sequenzaTorri` in `data/castello.js`).
-
-     ── le abilità sì, le accende la tappa ──
-     Dividersi e rialzarsi arrivano dal Sotterraneo in poi (`abilita`):
-     nel Bosco si impara che cosa tocca chi, e un mostro che fa anche
-     un'altra cosa è una seconda lezione nella stessa tappa. Il mostro è
-     lo stesso; nel Bosco quella cosa non la fa, e il preavviso non la
-     dice. */
+  // Chi arriva: di solito un tipo solo. Nelle miste il secondo tipo sta in
+  // `con` (vedi docs/castello/mostri.md); il primo resta quello che la fila
+  // avrebbe mandato comunque. Le immunità sono sempre accese (com'è fatto
+  // il mostro); le abilità solo se la tappa le accende (`abilita`).
   bestiaDi(o) {
     if (!this.bestie.has(o)) this.bestie.set(o, this.componi(o))
     return this.bestie.get(o)
@@ -97,20 +46,15 @@ export class Ondate {
              abilita: this.tappa.abilita ? m.abilita || null : null }
   }
 
-  /* ── quanti per tipo, in una mista ──
-     Metà e metà di un'ondata normale, e ognuno con la sua `folla`: chi
-     si divide arriva in meno anche mescolato. `[primo, secondo]`. */
+  // Quanti per tipo, in una mista: metà e metà, ognuno con la sua `folla`.
   perTipoDi(o) {
     const b = this.bestiaDi(o)
     const n = nemiciDiOnda(o)
     const folla = x => (x.abilita ? ABILITA[x.abilita].folla : 1)
     return [Math.max(1, Math.round(n / 2 * folla(b))), Math.max(1, Math.round(n / 2 * folla(b.con)))]
   }
-  /* Chi esce per `k`-esimo (da zero) nell'ondata `o`: la scheda del
-     primo o del secondo tipo. Alternati, e quando uno dei due è di meno
-     (chi si divide) i suoi si spargono lungo la fila invece di finire
-     tutti in fondo: il `k`-esimo è del secondo quando la sua quota,
-     contata fin lì, fa un passo. Deterministico come tutto il resto. */
+  // Chi esce per k-esimo: alternati, spargendo lungo la fila chi è di meno
+  // invece di finire tutti in fondo.
   chiEsce(o, k, b = this.bestiaDi(o)) {
     if (!b.con) return b
     const [na, nb] = this.perTipoDi(o)
@@ -118,26 +62,15 @@ export class Ondate {
     return Math.floor((k + 1) * nb / tot) > Math.floor(k * nb / tot) ? b.con : b
   }
 
-  /* ── il capo ──
-     Nella partita infinita ogni `capi` ondate; nella campagna solo come
-     ultima ondata di una tappa che lo dichiara (`capo: true`). I numeri
-     del capo stanno in `CAPO` (`data/mostri.js`). */
   eCapo(o) {
     const t = this.tappa
     return !!((t.capi && o > 0 && o % t.capi === 0) ||
               (t.capo && this.campagna && o === this.quante))
   }
 
-  /* Il capo è uno solo, con la vita di tutta l'ondata che sostituisce
-     (e un decimo in più), e cammina alla metà.
-     E chi ha un'abilità arriva in meno (`folla` in `ABILITA`): chi si
-     divide fa tre bersagli di uno, chi si rialza due, e un'ondata
-     intera di quelli non la ferma la vita — la ferma quante frecce si
-     tirano al secondo. Misurato: un'ondata piena di vermi passava anche
-     con cinque punti di vita a testa, perché ogni verme chiedeva tre
-     frecce e ne arrivava uno ogni secondo e un quarto. In meno, più
-     distanziati — l'ondata dura quanto le altre — e ognuno vale di più
-     (`pagaDi`): l'energia dell'ondata non cambia. */
+  // Chi ha un'abilità arriva in meno (`folla`): un'ondata intera di chi si
+  // divide non la ferma la vita, la ferma quante frecce al secondo si
+  // tirano (misurato coi vermi). L'energia dell'ondata non cambia (`pagaDi`).
   follaDi(o) {
     if (this.eCapo(o)) return 1
     const b = this.bestiaDi(o)
@@ -150,25 +83,13 @@ export class Ondate {
     return Math.max(1, Math.round(nemiciDiOnda(o) * this.follaDi(o)))
   }
   intervalloDi(o) { return intervalloDiOnda(o) / this.follaDi(o) }
-  /* ── il ritmo dentro l'ondata ──
-     Il passo fra un mostro e il dopo, in multipli di `intervalloDi`. Col
-     passo fisso uscivano in fila come soldatini, e la fila si legge una
-     volta e poi non chiede più niente. Adesso ogni ondata ha un ritmo:
-     dalla terza in poi una su tre esce **a gruppetti** — due o tre vicini, poi una
-     pausa lunga — e le altre in fila, ma con passi che cambiano di un
-     quarto in più o in meno. I gruppetti sono dove le torri ad area
-     rendono, e dove quelle su un bersaglio solo fanno fatica.
-
-     Due cose tengono ferma la taratura. Il ritmo lo decide **il numero
-     dell'ondata**, non il caso: la stessa ondata esce sempre uguale, e il
-     banco che la rigioca misura la stessa cosa. E **in media il passo
-     resta 1**: un gruppetto di `g` fa `g − 1` passi corti e uno lungo che
-     li ripaga, la fila mossa va da 0,75 a 1,25 — l'ondata dura quanto
-     prima, e l'energia che porta arriva negli stessi tempi. */
+  // Il passo fra un mostro e il dopo: dalla terza ondata, una su tre esce a
+  // gruppetti (dove le torri ad area rendono), le altre con un ritmo mosso.
+  // Deterministico (il numero dell'ondata, non il caso) e in media 1 (la
+  // durata e l'energia dell'ondata non cambiano).
   ritmoDi(o, k) {
-    /* le prime due ondate escono regolari: arrivano addosso all'unica
-       torre che il bambino ha appena costruito, e lì due mostri vicini
-       sono un cuore perso prima di aver capito il gioco */
+    // le prime due ondate escono regolari: due mostri vicini sull'unica
+    // torre appena costruita sarebbero un cuore perso senza aver capito niente
     if (o < RITMO.da) return 1
     if (caso(o) < RITMO.quota) {
       const [da, a] = RITMO.gruppo
@@ -177,63 +98,25 @@ export class Ondate {
     }
     return 1 - RITMO.mosso + 2 * RITMO.mosso * caso(o, k + 1)
   }
-  /* ── lo sfalso di chi esce ──
-     Di quanto il `k`-esimo mostro dell'ondata `o` esce indietro rispetto
-     alla bocca, fra zero e `RITMO.sfalso` unità del mondo: così
-     una fila non è una fila di gemelli. Era l'unico numero tirato davvero
-     a caso della battaglia, e **si vedeva nei conti**: dove una torre
-     sola apre il mostro dell'ondata — i golem, che feriscono solo le
-     bombe — quel soffio decide chi finisce sotto la stessa bomba e chi
-     ci scappa, e la stessa ondata con le stesse torri e la stessa vita
-     una volta si fermava a metà strada e una volta entrava. Il taratore
-     misurava il limite con un'uscita, il metro giocava la tappa con
-     un'altra, e perdeva un cuore su un'ondata tarata al 65%. Adesso lo
-     decide il numero dell'ondata, come il ritmo: la stessa ondata esce
-     sempre uguale, e quella che il banco ha misurato è quella che si
-     gioca. */
+  // Di quanto il k-esimo mostro esce indietro rispetto alla bocca (fra zero
+  // e RITMO.sfalso): deterministico, perché altrimenti la stessa ondata
+  // usciva diversa fra taratura e partita vera, e un soffio decideva chi
+  // finiva sotto la stessa bomba.
   sfalsoDi(o, k) { return caso(o, k + 1000) * RITMO.sfalso }
   vitaDi(o) {
     const v = vitaNemico(this.tappa, o)
     return this.eCapo(o) ? v * nemiciDiOnda(o) * CAPO.vita : v
   }
   velocitaDi(o) { return velocitaNemico(this.tappa, o) * (this.eCapo(o) ? CAPO.passo : 1) }
-  /* quanti nemici vale quando cade: il capo vale l'ondata intera, così
-     l'energia che l'ondata lascia è la stessa che si sia capo o no — ed
-     è quella che il modello dei `calcoli` conta */
+  // il capo vale l'ondata intera: l'energia lasciata non cambia se è capo o no
   pagaDi(o) { return nemiciDiOnda(o) / this.quantiDi(o) }
 
-  /* ── da che ingresso arriva l'ondata `o` ──
-     Con una strada sola non c'è niente da decidere. Con due, si
-     alternano: la prima da una parte, la seconda dall'altra, e ogni
-     terza **da tutte e due insieme** (`-1`, che il campo legge come
-     «alternali uno per uno»).
-
-     Deterministico, come tutto il resto delle ondate, perché deve poter
-     essere annunciato tre ondate prima: sapere che fra due giri arrivano
-     da sotto è quello che rende il trascinare una torre una mossa invece
-     che una carezza. */
+  // Da che ingresso arriva l'ondata: con due si alternano, ogni terza da
+  // tutte e due insieme (-1). Deterministico, per il preavviso.
   viaDi(o, quante = 1) { return boccaDellOnda(o, quante, this.daQuandoInsieme) }
 
-  /* ── da quando arrivano da tutte le bocche insieme ──
-     Non dalla terza ondata: con tre strade quello vuol dire dividere in
-     tre una difesa che ha ancora tre torri di livello uno, e la tappa
-     si perde per una ragione che nessuno può vedere. Si comincia a un
-     terzo della tappa — mai prima della quinta ondata — quando le torri
-     sono cresciute abbastanza da reggere un fronte per parte. */
-  /* Una partita libera non ha un numero di ondate: si conta come se ne
-     avesse tante quante ne tara `npm run tara` (`ONDATE_TARATE`), così
-     il gioco e la taratura giocano la stessa partita. Prima era «6»
-     scritto a mano, e la taratura — che gioca la libera a venti ondate
-     — le metteva insieme dalla nona: il bivio tarato così cedeva in
-     gioco alla sesta. */
   get daQuandoInsieme() { return insiemeDa(this.quante) }
 
-  /* ── il preavviso ──
-     Le ondate che arrivano dopo la `dopo`-esima, al massimo `quante`.
-     Ognuna sa fra quanto arriva, chi la compone, quanti sono, quanta
-     vita ha ciascuno, a quali torri è immune, se fa qualcosa quando
-     cade e se è un capo: tutto quello che serve per decidere cosa
-     costruire *prima* che serva. */
   prossime(dopo, quante = 3, vie = 1) {
     const out = []
     for (let i = 1; i <= quante; i++) {
