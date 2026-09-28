@@ -6,6 +6,11 @@ tessere.
 
 ## La regola di fondo
 
+**Il tetto della resa grafica.** Dove un personaggio è disegnato a poligoni
+e non a sprite (il robot del costruttore, per esempio), è una scelta di
+stile e non un ripiego: altri giochi (il castello, il bestiario del
+dungeon) sono passati agli sprite quando la scena lo chiedeva.
+
 **Chi gioca non disegna.** Una view passa a `tela.disegna()` la lista delle
 cose in scena (`{ che: 'torre', x, y, tipo, lv }`); una figura nuova è una
 riga in `PITTORI`, mai un `ctx.arc` dentro il gioco. E in `grafica/` non
