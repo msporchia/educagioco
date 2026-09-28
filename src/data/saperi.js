@@ -1,88 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   COSA SA IL BAMBINO — i macrogruppi che i genitori accendono e spengono.
-
-   Nasce da un fatto banale e scomodo: a scuola certe cose un bambino non
-   le ha ancora fatte. Non sa quanto è un litro, non sa che un chilo è
-   mille grammi — e un gioco che gliele chiede non è «difficile», è muto: non
-   c'è niente da ragionare, si tira a indovinare. Le divisioni del
-   castello avevano già il loro interruttore per la stessa ragione;
-   questo file generalizza quel gesto invece di ripeterlo undici volte.
-
-   L'IDEA È UNA SOLA: un sapere è **un pezzo di scuola**, non un gioco e
-   non un modulo. Spegnerlo toglie le domande che senza quel pezzo non
-   si possono ragionare — e basta. Tutto il resto resta identico: gli
-   stessi giochi, le stesse tappe, gli stessi progressi. Il gioco degrada
-   invece di sbarrare, esattamente come il castello che senza divisioni
-   chiede moltiplicazioni più difficili.
-
-   DOVE STA LA MAPPA. Non qui: qui c'è solo l'elenco dei pezzi di
-   scuola, con le parole per dirlo a un genitore. **Chi dichiara di aver
-   bisogno di un sapere è chi fa le domande** — un modulo di quiz lo
-   dichiara tipologia per tipologia (`sa:` dentro `tipi`), un gioco che
-   le domande se le fa in casa lo dichiara nel suo manifesto (`chiede:`
-   in `data/giochi.js`, che è la strada del castello per le divisioni e
-   le moltiplicazioni). Così la domanda e il suo requisito
-   cambiano insieme, e non esiste un elenco da tenere allineato a mano.
-   `test/unita/saperi.test.mjs` controlla che le due parti si parlino:
-   una chiave citata da un modulo e non elencata qui è un guasto, e un
-   sapere che non lo cita nessuno è un interruttore che esiste e non si
-   raggiunge — peggio che non averlo, perché nessuno ha modo di
-   accorgersene. La dichiarazione è anche quello che dà al pezzo di
-   scuola **una riga** nel quadro dell'età: senza, si spegne e non si
-   riaccende.
-
-   DUE LIVELLI. Un gruppo è grosso — «accenti e apostrofi» — e le
-   tipologie che ci stanno dentro sono tre: l'accento, l'apostrofo, la
-   lettera h. Il genitore che spegne il gruppo le toglie tutte; quello
-   che apre il dettaglio ne toglie una sola. Le sottovoci NON stanno in questo file — sono le
-   `tipi` dei moduli, e chi le raccoglie per la schermata dei genitori è
-   `src/quiz/saperi.js`. Il motivo è sempre quello: chi fa la domanda
-   dichiara, il catalogo dà solo i nomi grossi. Se le sottovoci stessero
-   qui, aggiungere una tipologia vorrebbe dire ricordarsi di venire a
-   scriverla anche in questo file — e prima o poi non lo si fa.
-
-   DUE RAGIONI PER SPEGNERE, e la seconda è arrivata dopo. La prima è
-   quella di sempre: **il bambino quella cosa non l'ha fatta**, e la
-   domanda gli arriva muta. La seconda è **isolare**: i gruppi di
-   ragionamento (le deduzioni, le analogie, le sequenze) non sono pezzi
-   di scuola e nessuno li spegne per una lacuna — si spengono per
-   vedere un tipo di domanda da solo, o per toglierne uno che a questo
-   bambino adesso non serve. Vale anche dentro i gruppi che una lacuna
-   ce l'hanno: l'orologio si sa leggere o no, ma il dettaglio permette
-   lo stesso di lasciare i quarti e togliere i minuti spicci. Il
-   meccanismo è uno solo, le ragioni per usarlo sono due.
-
-   ACCESO È L'ASSENZA. Nel profilo si salvano solo le eccezioni
-   (`settings.sa = { misure: false }`), come per i giochi in home: un
-   sapere nuovo nasce acceso anche per chi ha il profilo di ieri, e non
-   serve nessuna migrazione.
-
-   TRANNE QUELLI CHE NASCONO SPENTI (`difetto: false`). La regola di
-   sopra vale finché un sapere è roba che a scuola si fa presto e per
-   tutti: chi non l'ha fatto lo spegne, e nel frattempo qualche domanda
-   muta è il prezzo. Non vale per i pezzi che si fanno **dopo** — il
-   congiuntivo, il condizionale, il passato remoto — dove i bambini che
-   non li hanno mai visti sono la maggioranza e quelli che li hanno
-   visti l'eccezione. Lì l'assenza va letta al contrario, se no
-   aggiungere il congiuntivo vuol dire mandarlo d'ufficio a tutti quelli
-   che hanno il profilo di ieri, e un genitore che non apre mai questa
-   schermata non ha modo di saperlo.
-
-   È l'unico posto dove il difetto si dichiara: `store/profile.js` lo
-   legge da qui, e chi accende o spegne continua a salvare **solo quello
-   che si scosta dal difetto** — la voce nel profilo resta l'eccezione,
-   cambia solo da cosa. `spegne` è comunque scritto dal lato dello
-   spegnere, anche per questi: è cosa si perde, e vale uguale che sia il
-   punto di partenza o una scelta.
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* `che` è cosa vuol dire saperlo, `esempio` è una domanda vera che
-   sparisce, `spegne` è cosa cambia nel gioco. Sono tre righe e non una
-   perché il genitore che spegne deve poter prevedere l'effetto: senza
-   l'esempio si spegne a naso, e a naso si spegne troppo.
-
-   `difetto: false` è la quarta riga, e ce l'hanno in pochi: nasce
-   spento, e resta spento finché un genitore non dice di sì. */
+/* I macrogruppi di sapere che i genitori accendono e spengono: un pezzo di
+   scuola, non un gioco o un modulo. Chi fa le domande dichiara il bisogno
+   (`sa:` nei moduli, `chiede:` nel manifesto di un gioco); questo file
+   dà solo i nomi grossi e le parole per un genitore (`che`, `esempio`,
+   `spegne`). Acceso è l'assenza, tranne `difetto: false` (nasce spento:
+   il congiuntivo, il passato remoto…). Vedi
+   docs/apprendimento/saperi.md — leggerlo prima di aggiungere una riga. */
 export const SAPERI = [
   /* ── matematica ── */
   {
@@ -127,67 +49,35 @@ export const SAPERI = [
     esempio: '«84 : 4»',
     spegne: 'le divisioni in colonna del castello — la torre Bombe chiede moltiplicazioni più difficili',
   },
-  /* Le frazioni sono un pezzo di scuola con una data precisa — arrivano
-     in terza — ed è la cosa che un genitore sa dire senza esitare: «le
-     frazioni non le ha ancora fatte». Il gioco però le spiega nella
-     carta (sotto quanti pezzi, sopra quanti colorati), quindi da terza
-     in su restano accese anche a chi a scuola è indietro: vedi
-     `data/partenze.js`. */
+  // il gioco le spiega nella carta (sotto i pezzi, sopra i colorati): da terza in su restano accese anche a chi è indietro
   {
     chiave: 'frazioni', nome: 'Le frazioni', ico: '🍕', materia: 'matematica',
     che: 'dividere una cosa in pezzi uguali e dire quanti se ne prendono: 3/4 di torta, 1/3 di 12',
     esempio: '«che parte della torta è colorata?»',
     spegne: 'tutte le domande sulle frazioni, disegnate e col conto',
   },
-  /* I grafici sono il quarto pezzo della matematica di scuola —
-     «relazioni, dati e previsioni» nelle Indicazioni — e un gruppo a
-     sé perché non sta dentro nessuno degli altri: un bambino che conta
-     benissimo può non aver mai visto una scala che va di due in due.
-     Nasce acceso ovunque tranne che nella fascia dei piccoli: leggere
-     un grafico si spiega in una riga («segui la cima fino ai numeri»),
-     e la riga c'è. */
+  // gruppo a sé: un bambino che conta benissimo può non aver mai visto una scala che va di due in due
   {
     chiave: 'dati', nome: 'Grafici e tabelle', ico: '📈', materia: 'matematica',
     che: 'leggere un pittogramma, un grafico a barre e una tabella: quanti sono, chi ne ha di più, quanti in tutto, e in quinta moda e media',
     esempio: '«nel grafico, quanti gelati ha venduto il gelataio giovedì?»',
     spegne: 'le domande su pittogrammi, grafici a barre e tabelle, con la moda e la media',
   },
-  /* I problemi non sono un'operazione in più: sono il passo prima, e si
-     spengono da soli perché sono l'unica domanda di matematica che
-     bisogna saper LEGGERE. A un bambino che ancora decifra le parole
-     una storia con dentro un conto non è difficile — è muta, e quello
-     che si misura non è più la matematica. */
+  // l'unica domanda di matematica che bisogna saper leggere: a chi ancora decifra le parole non è difficile, è muta
   {
     chiave: 'problemi', nome: 'I problemi scritti', ico: '📝', materia: 'matematica',
     che: 'leggere una storia con dei numeri dentro e capire da solo che conto chiede',
     esempio: '«Nina ha 4 mele e poi ne raccoglie ancora 3: quante mele ha adesso?»',
     spegne: 'tutti i problemi a parole; i conti restano, chiesti come conti',
   },
-  /* L'algebra prima dell'algebra: il numero nascosto (□ + 7 = 15) e le
-     bilance in pari. Il nascosto nei più e nei meno è di seconda e
-     terza, le bilance vere sono di quarta e quinta, e le due incognite
-     il programma della primaria non le chiede affatto. Si insegnano in
-     una carta — «togli la stessa cosa da tutte e due le parti» — e per
-     questo restano accese; il gruppo c'è perché un grande che le vede
-     arrivare prima del tempo le possa togliere tutte insieme, senza
-     portarsi via le divisioni che ci stanno dentro. */
+  // l'algebra prima dell'algebra: si insegna in carta («togli la stessa cosa da tutte e due le parti»), resta accesa
   {
     chiave: 'bilance', nome: 'Le bilance e il numero nascosto', ico: '⚖️', materia: 'matematica',
     che: 'trovare il numero che manca in un conto, e quanto pesa una cosa guardando una bilancia in pari',
     esempio: '«tre 🍎 pesano come un peso da 12: quanto pesa una 🍎?»',
     spegne: 'le domande col numero nascosto e con le bilance; i conti restano, chiesti come conti',
   },
-  /* DUE GRUPPI, NON UNO, e la ragione è che un bambino può avere l'uno
-     senza l'altro. `denaro` è riconoscere le monete e maneggiarle —
-     contare, dare il resto, capire quanto costano più cose — e a
-     scuola comincia con l'euro, seconda-terza. `decimali` è il numero
-     con la virgola preso come numero e non come prezzo: il valore
-     delle cifre dopo la virgola, il confronto (3,45 non è più di 3,5),
-     l'ordine, l'arrotondamento — roba di quarta-quinta. Un bambino di
-     terza sa già dare il resto ma non ha ancora sentito parlare di
-     decimi e centesimi; tenerli insieme spegnerebbe il resto per chi
-     ancora non li conosce, o li accenderebbe insieme a chi sa contare
-     le monete ma leggerebbe «3,45» come due numeri attaccati. */
+  // due gruppi non uno: un bambino di terza sa già dare il resto (denaro) ma non ha ancora visto decimi e centesimi
   {
     chiave: 'denaro', nome: 'Le monete e gli euro', ico: '💰', materia: 'matematica',
     che: 'riconoscere monete e banconote, contare quanto fanno insieme, dare il resto',
@@ -260,26 +150,14 @@ export const SAPERI = [
   },
 
   /* ── italiano ── */
-  /* Il primo pezzo di scuola in assoluto, e l'unico che si spegne
-     guardando in basso invece che in alto: non «non l'ha ancora
-     fatto», ma «l'ha già fatto, e chiedergli con che lettera comincia
-     una mela lo prenderebbe in giro». A tenerlo fuori dalla strada dei
-     grandi basta di norma la fascia delle domande (`data/partenze.js`),
-     che a chi è in terza non fa nemmeno vedere quel pezzo di scala:
-     questo interruttore serve al caso opposto, il bambino che a sei
-     anni legge già bene. */
+  // l'unico che si spegne guardando in basso: non «non l'ha ancora fatto» ma «l'ha già fatto» (il bambino che legge presto)
   {
     chiave: 'lettura', nome: 'Leggere le parole', ico: '🔤', materia: 'italiano',
     che: 'riconoscere le lettere e leggere una parola corta fino in fondo, invece di indovinarla dalla prima',
     esempio: '«con che lettera comincia 🐝?»',
     spegne: 'le domande sulle lettere e sulle parole da leggere, quelle di chi comincia adesso',
   },
-  /* Il gradino sopra «Leggere le parole», e si spegne dall'altra parte:
-     quello si toglie a chi legge già bene, questo a chi legge ancora a
-     fatica — per lui un testo di tre frasi non è difficile, è muto. È
-     un gruppo a sé e non una tipologia di un altro perché è l'unico
-     che un grande ha motivo di spegnere da solo, lasciando accesa tutta
-     la grammatica: il bambino che scrive giusto e legge lento. */
+  // il gradino sopra «lettura», si spegne dall'altra parte: chi legge ancora a fatica, non chi legge bene
   {
     chiave: 'comprensione', nome: 'Capire quello che si legge', ico: '📚', materia: 'italiano',
     che: 'leggere due o tre frasi e ritrovarci chi, dove, prima e dopo, perché — e quello che si capisce senza che sia scritto',
@@ -370,12 +248,7 @@ export const SAPERI = [
     spegne: 'le domande su accenti, apostrofi e la lettera h',
   },
 
-  /* ── ragionamento ──
-     Questi non sono pezzi di scuola: non c'è una lezione da aver fatto,
-     e nessuno di questi interruttori serve a nascondere una lacuna.
-     Sono qui per l'altra ragione — poter isolare un tipo di
-     ragionamento e vederlo da solo, che è utile a chi prova il gioco
-     tanto quanto a chi lo gioca. Nascono accesi come tutto il resto. */
+  // ── ragionamento ── non pezzi di scuola: servono a isolare un tipo di ragionamento, non a coprire una lacuna
   {
     chiave: 'deduzione', nome: 'Dedurre da una regola', ico: '🧠', materia: 'ragionamento',
     che: 'tirare la conclusione da una regola: se vale per tutti, vale anche per lui',
@@ -413,14 +286,7 @@ export const SAPERI = [
     spegne: 'le sequenze da continuare e le figure intruse',
   },
 
-  /* ── scienze ──
-     I due pezzi si spengono per ragioni diverse, ed è il motivo per cui
-     sono due. Gli ambienti del mondo sono roba di seconda e terza: chi
-     non li ha fatti non sa cosa sia una savana, e la domanda gli arriva
-     muta. L'adattamento invece è il gradino sopra — non *dove* vive un
-     animale ma *come si capisce* guardandolo — e si può togliere
-     lasciando le domande sui posti, che è quello che serve a un bambino
-     che gli ambienti li sta imparando adesso. */
+  // ── scienze ── due pezzi per due ragioni: ambienti (dove vive) è di seconda-terza, adattamento (come si capisce) è il gradino sopra
   {
     chiave: 'ambienti', nome: 'Gli ambienti del mondo', ico: '🌍', materia: 'scienze',
     che: 'savana, deserto, giungla, ghiacci: che posti sono e quali animali ci vivono',
@@ -439,8 +305,6 @@ export const CHIAVI_SAPERI = SAPERI.map(s => s.chiave)
 export const sapereDi = chiave => SAPERI.find(s => s.chiave === chiave)
 export const esisteSapere = chiave => CHIAVI_SAPERI.includes(chiave)
 
-/* le materie nell'ordine in cui si presentano ai genitori, ricavate
-   dall'elenco: aggiungere un sapere di una materia nuova non vuol dire
-   toccare anche questa riga */
+// ricavate dall'elenco: un sapere di una materia nuova non tocca questa riga
 export const MATERIE_SAPERI = [...new Set(SAPERI.map(s => s.materia))]
 export const saperiDiMateria = materia => SAPERI.filter(s => s.materia === materia)
