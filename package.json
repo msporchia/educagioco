@@ -19,6 +19,7 @@
     "test:browser": "node test/esegui.mjs integrazione",
     "test:svelto": "node test/esegui.mjs --svelti --niente-build",
     "test:tutto": "node test/esegui.mjs",
+    "test:commenti": "node strumenti/solo-commenti.mjs",
     "quiz:banco": "node strumenti/quiz/banco.mjs",
     "quiz:livelli": "node strumenti/quiz/livelli.mjs",
     "quiz:eta": "node strumenti/quiz/eta.mjs",
