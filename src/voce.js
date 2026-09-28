@@ -1,25 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA VOCE — pronuncia incisa, non sintesi del dispositivo.
-
-   Perché non `speechSynthesis`: dà una voce diversa su ogni apparecchio.
-   Su Android di solito buona, su Linux esce espeak — incomprensibile. A
-   un bambino che sta imparando una pronuncia sbagliata fa più danno del
-   silenzio.
-
-   Le lingue sono due e hanno due incisioni diverse: l'inglese con una
-   voce britannica, lo spagnolo con una boliviana, che è quella di casa.
-   Ogni lingua ha i suoi sprite e il suo indice, e non si mescolano: la
-   stessa parola può esistere in tutte e due (`no`, `piano`) e va detta
-   con la bocca giusta.
-
-   Le parole non sono un file ciascuna ma concatenate in pochi SPRITE
-   (vedi `incidi-voci.mjs` per il perché). Qui dentro succede questo:
-   si prende [sprite, inizio, durata] dall'indice, si decodifica lo
-   sprite UNA volta e lo si tiene da parte, poi si suona la fettina che
-   serve. Decodificare costa memoria — un minuto di audio sono diversi
-   megabyte — quindi se ne tengono al massimo tre: quelli usati di
-   recente restano, il più vecchio esce.
-   ═══════════════════════════════════════════════════════════════════ */
+// La voce: pronuncia incisa, non sintesi del dispositivo. Vedi docs/lingue/voce.md.
 import { SPRITE as SPRITE_EN, INDICE as INDICE_EN } from './data/voci.js'
 import { SPRITE as SPRITE_ES, INDICE as INDICE_ES } from './data/voci-es.js'
 import { acceso, contesto } from './audio.js'
@@ -36,9 +15,7 @@ let ultima = null                   // la sorgente che sta suonando
 
 const vocabolario = lingua => VOCI[lingua] || VOCI.en
 
-/** C'è la pronuncia di questa parola? Una parola aggiunta ai dati senza
-    rilanciare `npm run voci` non ce l'ha, e il gioco si limita a non
-    proporre le domande in ascolto. */
+/** C'è la pronuncia di questa parola? */
 export const haVoce = (parola, lingua = 'en') => !!vocabolario(lingua).indice[parola]
 
 function daBase64(dato) {
@@ -51,8 +28,8 @@ function daBase64(dato) {
 async function prendiSprite(lingua, nome) {
   const id = lingua + ':' + nome
   if (decodificati.has(id)) {
-    const buf = decodificati.get(id)              // rinfresca l'ordine d'uso
-    decodificati.delete(id); decodificati.set(id, buf)
+    const buf = decodificati.get(id)
+    decodificati.delete(id); decodificati.set(id, buf)   // rinfresca l'ordine d'uso
     return buf
   }
   if (inCorso.has(id)) return inCorso.get(id)
@@ -71,8 +48,7 @@ async function prendiSprite(lingua, nome) {
   return lavoro
 }
 
-/** Scalda lo sprite di una parola senza suonarlo: si chiama quando si
-    entra in una tappa, così la prima pronuncia non fa aspettare. */
+/** Scalda lo sprite di una parola senza suonarlo, così la prima pronuncia non fa aspettare. */
 export function prepara(parole, lingua = 'en') {
   const indice = vocabolario(lingua).indice
   const visti = new Set()
@@ -98,8 +74,7 @@ export async function pronuncia(parola, lingua = 'en') {
   const g = ac.createGain()
   g.gain.value = 1
   src.connect(g); g.connect(ac.destination)
-  // un pelo di margine in coda: il taglio secco mangia la fine della parola
-  src.start(0, inizio, durata + 0.06)
+  src.start(0, inizio, durata + 0.06)   // margine in coda: il taglio secco mangia la fine della parola
   ultima = src
   src.onended = () => { if (ultima === src) ultima = null }
 }
