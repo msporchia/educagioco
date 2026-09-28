@@ -1,26 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA FATTORIA — IL MANIFESTO
-
-   Dato puro, come vuole `docs/core/convenzione-giochi.md`: non importa Vue, non
-   importa il profilo. Il calco è sempre `codice-segreto/`, con la stessa
-   struttura di cartella (`dati/`, `motore/`, `scena/`, `viste/`,
-   `Gioco.vue`). Le regole vere stanno in `motore/fattoria.js`: qui c'è
-   solo la carta d'identità e quello che il gioco porta all'albo.
-
-   ── PERCHÉ NIENTE TAPPE ───────────────────────────────────────────
-   Ogni altro gioco nuovo è una campagna: una fila di partite via via più
-   toste, e `tappe` dice quante. La fattoria non lo è — è deciso così
-   (vedi la nota di progetto del 15 agosto 2026): è il posto dove si
-   *spende* quello che si guadagna esercitandosi negli altri giochi, un
-   prato libero che cresce comprando terra e si riempie decorando. Non
-   c'è una partita da vincere né un ordine in cui va fatto, quindi
-   `tappe: 0` è onesto — dire «tappe: 1» solo per avere un numero
-   diverso da zero sarebbe inventare una campagna che non esiste.
-   Restano comunque `libera`/`cfg` di `src/giochi/campagne.js`: è
-   l'unico posto sanzionato dove il profilo può tenere lo stato della
-   fattoria (piazzole, cose, bosco, magazzino — quello che torna da
-   `Fattoria.serializza()`), e ci sta sotto `cfg.stato`.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Il manifesto della fattoria (dato puro, calco codice-segreto/). tappe: 0 è onesto: non è una
+   campagna, è il prato dove si spende — vedi docs/fattoria/presentazione.md. Lo stato vive in
+   src/giochi/campagne.js sotto cfg.stato (quello che torna da Fattoria.serializza()). */
 import { PIAZZOLE_INIZIALI } from './dati/mondo.js'
 
 export const CHIAVE = 'fattoria'
@@ -29,50 +9,19 @@ export default {
   chiave: CHIAVE,
   nome: 'La fattoria',
   icona: '🚜',
-  /* invita, non spiega: niente qui dentro dice «compra piazzole,
-     sgombra il bosco» — quello lo scopre chi apre il gioco */
+  // invita, non spiega: niente qui dice "compra piazzole, sgombra il bosco"
   che: 'terra da comprare e una casa da arredare',
   area: 'avventure',
   come: 'fare',
   tappe: 0,
 
-  /* ── NON È PIÙ IN PROVA, ED È UNA DECISIONE DI PRODOTTO ──
-     Stava dietro «i giochi in prova» perché incompleta. È uscita allo
-     scoperto non perché fosse finita, ma perché **prendeva il posto
-     della cameretta**: il money pit dev'essere uno solo — un bambino che
-     può spendere le monete in due posti non sceglie, si dimentica
-     dell'altro — e fra i due questo era quello che si poteva far
-     crescere. La cameretta è passata prima dall'altra parte del
-     cancello, e un mese dopo, quando i bambini avevano smesso di
-     aprirla, è stata tolta del tutto, salvataggi compresi
-     (`sgomberaLaCameretta` in `store/profile.js`): adesso le monete si
-     spendono solo qui.
-     Quello che manca — gli animali da accudire, i prezzi che nessun
-     bambino ha ancora provato — resta da fare con la carta accesa, che è
-     l'unico modo per cui qualcuno se ne accorga. */
+  // Ha preso il posto della cameretta (tolta, salvataggi compresi): il money pit dev'essere uno solo.
   tinta: '#f4ecc8',
 
-  /* ── UN POSTO NON SI NASCONDE MAI ──
-     `piccoli` e `grandi` sono le due estremità di una scala, e la
-     fattoria non sta su nessuna delle due: non è difficile né facile,
-     è il prato dove si spende. Dichiararla `piccoli` sarebbe la
-     scorciatoia sbagliata — quel flag la farebbe comparire ai bambini
-     di quattro anni e **sparire a quelli di nove**, perché le partenze
-     dalla terza in su spengono proprio i giochi per i piccolissimi.
-
-     Quindi non è un'estremità: è un `posto`, e un posto non si giudica
-     per età. È la stessa cosa che `data/portata.js` dice già dei
-     giochi senza campagna — «sono posti, non scalette, e l'assenza
-     vuol dire *non si giudica*, non *si nasconde*» — detta dove serve
-     anche alle partenze. Un grande può sempre spegnerla a mano come
-     tutte le altre carte: quello che questo evita è che gliela
-     spegniamo noi. */
+  // Un posto, non un'estremità: piccoli la farebbe sparire ai bambini di nove anni (le partenze la spengono).
   posto: true,
 
-  /* La riga sotto il nome, in home. `av` è il record di
-     `src/giochi/campagne.js` — qui senza `tappa`/`stelle`, che per un
-     gioco senza tappe non vogliono dire niente: quello che conta è
-     `cfg.stato`, il salvataggio della fattoria stessa. */
+  // La riga sotto il nome, in home: senza tappa/stelle, che per un gioco senza tappe non contano.
   riassunto(av = { tappa: 0, libera: false, stelle: {}, cfg: {} }) {
     const stato = (av.cfg || {}).stato
     if (!stato) return 'un pezzo di terra tutto da riempire'
@@ -83,49 +32,17 @@ export default {
     return `${terra} · ${cose} cose sistemate`
   },
 
-  /* ═══════════ quello che il gioco porta all'albo ═══════════
-     I contatori li muove `Gioco.vue` con `segna()`/`segnaBest()`:
-       fattoriaTerre     piazzole comprate, in tutto
-       fattoriaSgomberi  pezzi di bosco sgomberati, in tutto
-       fattoriaPosati    cose messe giù per la prima volta — non conta
-                         chi si sposta, quello è già suo
-       fattoriaVarieta   (primato) quanti tipi diversi si sono posseduti
-                         insieme, fra mappa e magazzino — `tipiPosseduti`
-       fattoriaRaccolti  campi raccolti, in tutto. Non si conta la
-                         semina: chi semina raccoglie, e sarebbe lo
-                         stesso numero contato due volte
-       fattoriaRitiri    volte che si è ritirato qualcosa dal mulino
-       fattoriaOrdini    ordini consegnati al mercato — il gesto che
-                         chiude la catena, e l'unico che porta via roba
-                         dal silo senza darla a una bestia
-       fattoriaVestiti   (primato) quanti addobbi hanno addosso le
-                         bestie, tutte insieme e adesso. È un primato e
-                         non un contatore per la stessa ragione della
-                         varietà: mettere e togliere lo stesso
-                         cappellino venti volte non vale venti volte
-
-     Non c'è un contatore per gli animali: nel catalogo di oggi
-     (`dati/catalogo.js`) non ce ne sono — solo terreno, recinti, case e
-     arredo. Se arriveranno, un contatore dedicato si aggiunge allora. */
+  // I contatori li muove Gioco.vue con segna()/segnaBest(): fattoriaVarieta e fattoriaVestiti sono
+  // primati (mettere e togliere lo stesso non vale doppio), fattoriaOrdini è il gesto che chiude la catena.
   albo: {
     area: { nome: 'La fattoria', emoji: '🚜' },
 
-    /* Modesto apposta: la fattoria spende le monete guadagnate altrove,
-       non deve diventare la scorciatoia per salire di livello. Niente
-       bonus grosso da campagna finita — qui non ce n'è una — quindi
-       un'azione vale un punto, non trenta. */
+    // Modesto apposta: non deve diventare la scorciatoia per salire di livello senza fare un esercizio.
     xp: m => m.tot('fattoriaTerre') + m.tot('fattoriaSgomberi')
              + Math.floor(m.tot('fattoriaPosati') / 2) + m.best('fattoriaVarieta')
-             /* un raccolto vale mezzo punto: è il gesto che si ripete più
-                di tutti, e a punto pieno la fattoria diventerebbe il modo
-                più svelto di salire di livello senza fare un esercizio */
+             // un raccolto vale mezzo punto: è il gesto più ripetuto
              + Math.floor(m.tot('fattoriaRaccolti') / 2) + m.tot('fattoriaRitiri')
-             /* Un ordine vale due punti e non uno: dietro ce n'è una
-                catena intera — semina, attesa vera, ricetta — mentre un
-                ritiro è un tocco. Resta comunque modesto, perché
-                l'esperienza vera che un ordine dà è **il livello della
-                fattoria**, che è un'altra scala e sta in
-                `dati/livelli.js`. */
+             // Un ordine vale due punti: dietro c'è una catena intera, ma l'esperienza vera sta nel livello della fattoria.
              + 2 * m.tot('fattoriaOrdini') + m.best('fattoriaVestiti'),
     provato: m => m.tot('fattoriaTerre') + m.tot('fattoriaSgomberi')
                   + m.tot('fattoriaPosati') + m.tot('fattoriaRaccolti') > 0,
@@ -140,29 +57,19 @@ export default {
       { id: 'fattoria-posati', emoji: '🧺', nome: 'Casa dolce casa',
         come: n => `Sistema ${n} cose nella fattoria`,
         soglie: [10, 40, 120], valore: m => m.tot('fattoriaPosati') },
-      /* la varietà del catalogo (34 voci oggi) tiene basse le soglie
-         alte: prenderle tutte non deve chiedere di comprare due case */
+      // la varietà del catalogo (34 voci oggi) tiene basse le soglie alte
       { id: 'fattoria-varieta', emoji: '🎨', nome: 'Un po\' di tutto',
         come: n => `Colleziona ${n} cose diverse`,
         soglie: [8, 20, 32], valore: m => m.best('fattoriaVarieta') },
-      /* Le soglie sono basse perché un raccolto costa **tempo vero**: il
-         grano ci mette dieci minuti, e chiederne cento vorrebbe dire
-         chiedere sedici ore di attesa, cioè un traguardo che si prende
-         per anzianità e non per aver giocato. */
+      // Soglie basse: un raccolto costa tempo vero (dieci minuti), non un tocco.
       { id: 'fattoria-raccolti', emoji: '🌾', nome: 'Buon raccolto',
         come: n => `Raccogli ${n} campi`,
         soglie: [3, 12, 40], valore: m => m.tot('fattoriaRaccolti') },
-      /* Le soglie sono basse per lo stesso motivo dei raccolti — un
-         ordine costa tempo vero, non tocchi — e la prima è **uno**: il
-         primo ordine consegnato è il momento in cui si scopre che la
-         catena ha una fine, e va segnato lì. */
+      // Stesso motivo dei raccolti; la prima soglia è uno, il momento in cui si scopre che la catena ha una fine.
       { id: 'fattoria-ordini', emoji: '🧺', nome: 'Servizio a domicilio',
         come: n => `Consegna ${n} ordini al mercato`,
         soglie: [1, 10, 35], valore: m => m.tot('fattoriaOrdini') },
-      /* Le soglie contano gli addobbi **addosso insieme**, non i
-         cappelli comprati: l'ultima chiede di vestire più di una
-         bestia, che è il modo di far scoprire che il guardaroba si
-         sposta da una all'altra. */
+      // Contano gli addobbi addosso insieme, non i cappelli comprati: l'ultima chiede di vestirne più di una.
       { id: 'fattoria-vestiti', emoji: '🎩', nome: 'Che eleganza',
         come: n => `Metti ${n} addobbi alle tue bestie`,
         soglie: [1, 4, 8], valore: m => m.best('fattoriaVestiti') },
