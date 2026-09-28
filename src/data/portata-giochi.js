@@ -1,28 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   QUALE GIOCO HA ANCORA QUALCOSA DA DARE A QUESTO BAMBINO
-
-   Il ponte fra le campagne (che adesso dicono dove sta ogni tappa, in
-   `portata`) e chi deve decidere se una carta va messa in home.
-   `data/portata.js` fa il conto e non sa cosa sia un profilo; qui si
-   mettono insieme le due cose, e si va a prendere l'età dove sta.
-
-   ── PERCHÉ UN FILE E NON UNA RIGA IN `giochiAcceso` ──────────────
-   Perché le campagne stanno in quattordici file diversi e importarle
-   tutte da `store/profile.js` vorrebbe dire tirarsi dentro mezza
-   applicazione da un modulo che oggi è quasi solo stato — e un anello di
-   import è un guasto che si presenta mesi dopo, senza un motivo
-   visibile. Qui invece l'unica cosa che si importa dallo store sono due
-   letture (`etaDelBambino`, `saperiSpenti`), e la catena resta a senso
-   unico.
-
-   ── COSA NON FA ──────────────────────────────────────────────────
-   Non spegne niente e non tocca `settings`. Un gioco che qui risulta
-   fuori portata **non è spento**: l'interruttore dei genitori resta
-   l'ultima parola, e questo è solo il conto che decide se la carta si
-   offre da sola a chi non l'ha mai aperta. La differenza è quella di
-   sempre — «acceso è l'assenza» — e qui si aggiunge una domanda, non un
-   secondo interruttore.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Il ponte fra le campagne (data/portata.js, che non sa cosa sia un
+   profilo) e chi decide se una carta va in home. Un file a sé e non una
+   riga in profile.js perché importare qui quattordici campagne invece che
+   là evita un anello di import a senso unico. Non spegne niente: un
+   gioco fuori portata non è spento, è solo il conto che decide se la
+   carta si offre da sola. Vedi docs/apprendimento/eta-e-portata.md. */
 import { giocoDaOffrire, filaConPortata, primaDaGiocare, arcoDelGioco,
          statoDellaTappa, PASSATA, AVANTI } from './portata.js'
 import { state, etaDelBambino, saperiSpenti, tappaAperta, tuttoAperto,
@@ -48,16 +29,8 @@ import { CAMPAGNA as SOTTERRANEO } from '../giochi/sotterraneo/dati/campagna.js'
 import { CAMPAGNA as PASSO_PASSO } from '../giochi/passo-passo/dati/campagna.js'
 import { CAMPAGNA as COSTRUTTORE } from '../giochi/costruttore/dati/campagna.js'
 
-/* La fila di tappe di ogni gioco, per la chiave con cui la home lo
-   conosce. Chi non è qui dentro non ha una campagna — la fattoria è un
-   posto, non una scaletta — e resta sempre alla portata di tutti:
-   l'assenza vuol dire «non si giudica», non «si nasconde». */
+// chi non è qui dentro non ha una campagna (la fattoria è un posto): l'assenza vuol dire «non si giudica», non «si nasconde»
 export const TAPPE_DEL_GIOCO = {
-  /* Gli asteroidi sono una fila sola, e adesso lo sono anche sotto: un
-     contatore unico su questa scaletta qui (`mate.fila`). Le due file
-     separate non servono più a nessuno — il lucchetto lavora sulla
-     posizione in fila, e il gioco chiama `apertaQui` con la tappa in
-     mano invece che con la chiave di una campagna. */
   mate: SCALETTA.map(v => v.T),
   inglese: INGLESE,
   spagnolo: SPAGNOLO,
@@ -77,17 +50,9 @@ export const TAPPE_DEL_GIOCO = {
   costruttore: COSTRUTTORE,
 }
 
-/* le regole che dipendono da questo bambino, lette una volta sola */
 const regole = () => ({ eta: etaDelBambino(), spenti: saperiSpenti() })
 
-/* ── l'ha già aperto? ──
-   La domanda che salva tutto il resto: **un gioco cominciato non
-   sparisce mai.** I giochi nuovi lo sanno dire da soli — ogni manifesto
-   dichiara `albo.provato`, che è lì da prima e per un altro motivo (il
-   traguardo «Tuttofare») — e i sette vecchi si riconoscono dal loro
-   contatore, come già fa `store/progressi.js`. Nessun campo nuovo nel
-   profilo: la domanda si sapeva già rispondere, non la si era mai fatta
-   qui. */
+// un gioco cominciato non sparisce mai: i vecchi si riconoscono dal loro contatore, i nuovi da albo.provato
 const CONTATORE_VECCHIO = {
   mate: 'math', inglese: 'en', spagnolo: 'es', torri: 'torri',
   bancarella: 'clienti', generale: 'missioni',
@@ -103,36 +68,14 @@ export function giaProvato (chiave) {
   try { return !!g.albo.provato(misure(state.profile)) } catch { return false }
 }
 
-/* ── QUELLO CHE IL PROFILO NON DICE, LO DICE L'ETÀ ──
-   `settings.giochi` è un elenco di eccezioni, e la partenza ne scrive
-   una per ogni gioco che quell'età non deve vedere — ma solo per i
-   giochi che esistono il giorno in cui il bambino nasce. Un gioco
-   arrivato dopo, nel suo profilo, non c'è, e fin qui «non c'è» voleva
-   dire acceso: a un bambino di cinque anni nato prima di un gioco per i
-   grandi coi primi livelli facili la carta compariva, e a uno aggiunto
-   il giorno dopo no. Stessa età, due home diverse — e nel quadro dei
-   grandi una riga che diceva «c'è» con la tacca su «come dice l'età:
-   arriva più avanti».
-
-   Adesso un gioco che il profilo non nomina vale **quello che la
-   partenza di quest'età scriverebbe oggi**. Non si scrive niente: si
-   legge, così un gioco nuovo arriva a tutti come dice l'età, e il
-   quadro fa la stessa lettura (`giochiDiUnEta` in `data/quadro.js`).
-   Chi vuole il contrario lo dice per esteso — «ce l'ha» è `true`, e
-   `giocoForzato` vince come sempre. */
+// un gioco che il profilo non nomina vale quello che la partenza di oggi scriverebbe: si legge, non si scrive (vedi eta-e-portata.md)
 const spentoDallEta = chiave => {
   const scelto = ((state.profile && state.profile.settings.giochi) || {})[chiave]
   return typeof scelto !== 'boolean' &&
     eccezioniPerEta(etaDelBambino()).giochi[chiave] === false
 }
 
-/* ── la domanda che fa la home ──
-   Un gioco senza campagna (la fattoria) non si giudica: è un posto,
-   non una scaletta, e resta a disposizione di tutti.
-
-   E quello che l'età spegne da sola segue la regola della portata:
-   **un gioco cominciato non sparisce mai**. Il bambino nato prima che
-   l'ha già aperto se lo tiene, come se lo tiene chi l'ha superato. */
+// un gioco senza campagna (la fattoria) non si giudica; un gioco cominciato non sparisce mai
 export function giocoDaVedere (chiave, { provato = null, fatte = 0 } = {}) {
   const tappe = TAPPE_DEL_GIOCO[chiave]
   const dallEta = spentoDallEta(chiave)
@@ -142,21 +85,10 @@ export function giocoDaVedere (chiave, { provato = null, fatte = 0 } = {}) {
   return giocoDaOffrire(tappe, { ...regole(), provato: gia, fatte })
 }
 
-/* ── e la domanda intera: questo gioco, ce l'ha in home? ──
-   Acceso da un grande (e giocabile coi saperi che ci sono), e poi o
-   tenuto in casa a mano contro l'età, o dentro la portata. La fanno in
-   due — le carte della home e le novità dei bambini
-   (`guide/novita-bambini.js`) — e sta qui perché due copie della stessa
-   domanda prima o poi rispondono due cose diverse: una riga sul
-   castello a chi in home il castello non ce l'ha. Il perché dei pezzi
-   sta accanto alle carte, in `views/HomeView.vue`. */
+// la fanno in due (le carte della home e le novità dei bambini): sta qui perché due copie divergerebbero
 export const inCasa = chiave =>
   giocoAcceso(chiave) && (giocoForzato(chiave) || giocoDaVedere(chiave))
 
-/* ── e le due che serviranno alle mappe ──
-   Da dove comincia chi apre adesso, e come sta messa la fila. Non le usa
-   ancora nessuno: stanno qui perché il conto è lo stesso e sparpagliarlo
-   sarebbe il modo di farlo divergere. */
 export const filaDelGioco = chiave =>
   filaConPortata(TAPPE_DEL_GIOCO[chiave] || [], regole())
 
@@ -167,27 +99,7 @@ export const daDoveComincia = chiave =>
 export const arcoDi = chiave => arcoDelGioco(TAPPE_DEL_GIOCO[chiave] || [])
 
 
-/* ── il lucchetto, con dentro l'età ──
-   `store/profile.js` ha la regola unica di quando una tappa è aperta
-   (`tappaAperta`: la prossima sì, quelle dopo no). Qui si aggiungono le
-   due cose che la portata sa e quella non può sapere — sta in questo
-   file e non là perché `profile.js` non deve importarsi quattordici
-   campagne per rispondere a una domanda sul lucchetto.
-
-     · quello che il bambino ha già passato **nasce aperto**: a nove
-       anni non si comincia da «2×2» per arrivare al 7. Non è un regalo,
-       è il contrario — è roba che sa già fare, e obbligarlo a rifarla
-       era il difetto di partenza.
-     · quello che gli sta ancora davanti resta **chiuso comunque**,
-       anche se il progresso ci sarebbe arrivato: a sei anni «7×8» non
-       si apre.
-
-   La seconda metà è quella che va guardata due volte, perché toglie
-   qualcosa: chi ha già superato quelle tappe le rivede chiuse. Ma
-   `tuttoAperto()` (il lucchetto dei grandi) passa davanti a tutto e
-   resta la scappatoia, ed è la stessa che c'era prima. */
-/* sopra la mira, coi lucchetti dei grandi al loro posto: l'unico caso in
-   cui una tappa resta chiusa per quanto si vada avanti */
+// il lucchetto: passato nasce aperto, oltre la mira resta chiuso comunque (tuttoAperto() dei grandi passa davanti a tutto)
 const oltreLEta = stato => stato === AVANTI && !tuttoAperto()
 
 export function apertaQui (tappa, i, fatte) {
@@ -197,31 +109,13 @@ export function apertaQui (tappa, i, fatte) {
   return tappaAperta(i, fatte)
 }
 
-/* ── o per merito ──
-   Un gioco può dire nel manifesto che la sua fila si apre **per
-   merito** (`perMerito: true`): chi ha vinto la tappa prima va avanti
-   anche oltre la mira dell'età. Lì una tappa non è un pezzo di scuola
-   che il bambino non ha ancora fatto, è il passo dopo di una scala che
-   ha salito da solo — e avere vinto quella di prima è la prova che ci
-   arriva. L'età resta quello che decide se la carta si offre in home
-   (`giocoDaVedere`) e cosa nasce già aperto in testa; non ferma chi sta
-   salendo. Il costruttore è il primo a dirlo: a nove anni si fermava
-   alla piramide, con le candeline chiuse davanti a un bambino che aveva
-   appena fatto la scala e la piramide. */
+// perMerito: chi ha vinto la tappa prima va avanti oltre la mira (l'età resta ciò che decide se la carta si offre)
 const perMerito = chiave => !!(GIOCHI_NUOVI.find(g => g.chiave === chiave) || {}).perMerito
 
-/* la stessa cosa per chi ha in mano la chiave del gioco invece della
-   tappa: le campagne dei giochi nuovi passano tutte da `giochi/campagne.js` */
 export const tappaApertaQui = (chiave, i, fatte) =>
   (perMerito(chiave) && tappaAperta(i, fatte)) || apertaQui((TAPPE_DEL_GIOCO[chiave] || [])[i], i, fatte)
 
-/* ── e se è chiusa, perché ──
-   Due lucchetti che a schermo si somigliano e non dicono la stessa cosa:
-   quello di sempre si apre andando avanti, questo no — a quattro anni
-   «Tutto mescolato» resta chiusa per quanto si giochi. Serve a
-   chi scrive qualcosa sotto una tappa chiusa: «continua per aprirla» è
-   vero per il primo e falso per il secondo. Il predicato è lo stesso del
-   lucchetto, così le due risposte non possono scollarsi. */
+// due lucchetti diversi: quello di sempre si apre andando avanti, questo no («continua per aprirla» sarebbe falso)
 export const tappaChiusaPerEtaQui = (chiave, i) => {
   const tappa = (TAPPE_DEL_GIOCO[chiave] || [])[i]
   return !!tappa && !perMerito(chiave) && oltreLEta(statoDellaTappa(tappa, regole()))
