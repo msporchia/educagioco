@@ -1,38 +1,13 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL PROGRAMMA PIÙ CORTO — cercato davvero, nei livelli con lo zaino
+/* Cerca davvero il programma più corto (in carte) nei livelli con lo
+   zaino, per controllare che le `soluzioni` scritte a mano siano già le
+   più corte (vedi docs/passo-passo/stelle-e-aiuti.md). Cerca per stati
+   del mondo, coi pezzi in cima (una freccia o una scatola intera) fino a
+   `--scatola` carte; quello che trova si rigioca col motore vero.
 
      node strumenti/passo-passo/minimi.mjs              tutti i livelli con lo zaino
      node strumenti/passo-passo/minimi.mjs lago stalle  solo quelli col nome che contiene…
      node strumenti/passo-passo/minimi.mjs --scatola=7  scatole fino a sette carte, testa compresa (di serie 6)
-     node strumenti/passo-passo/minimi.mjs --secondi=60 quanto provarci per livello (di serie 30)
-
-   La quarta stella di Passo passo è la strada più corta **in carte**,
-   con la carota. Senza zaino la trova il risolutore, esatta: la fila è
-   fatta solo di frecce. Con lo zaino no — i cicli non si trovano con
-   una ricerca in ampiezza sulle mosse — e il minimo è la più corta
-   delle `soluzioni` scritte a mano (`minimoDi` in `motore/risolutore.js`).
-   Una soluzione scritta a mano può non essere la più corta: questo
-   strumento la mette alla prova.
-
-   ── COME CERCA ────────────────────────────────────────────────────
-   Un programma è una fila di **pezzi in cima**: una freccia, o una
-   scatola intera con dentro quello che ha. Ogni pezzo fa la sua cosa a
-   partire da come ha trovato il mondo, e non sa niente di quelli prima:
-   quindi si cerca per stati del mondo, come il risolutore, ma ogni
-   passo costa le carte del pezzo — una freccia 1, una scatola 1 più il
-   suo corpo. Uno stato già raggiunto con meno carte non si riguarda.
-
-   Il limite onesto è la grandezza delle scatole: i corpi possibili
-   crescono in fretta (più di centomila scatole da sei carte, con dieci
-   teste), quindi si guardano le scatole fino a `--scatola` carte, testa
-   compresa.
-   Quello che trova è **sempre vero** (lo rigioca col motore vero, e lo
-   stampa); quello che non trova vuol dire «non con scatole così».
-
-   L'esecuzione dei pezzi qui è una copia snella di `esegui`
-   (`motore/mondo.js`), per andare veloce: per questo ogni programma
-   trovato si rigioca col motore vero prima di dirlo.
-   ═══════════════════════════════════════════════════════════════════ */
+     node strumenti/passo-passo/minimi.mjs --secondi=60 quanto provarci per livello (di serie 30) */
 import { CAMPAGNA } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
 import { Mondo, esegui, TANA, PASSI_MAX } from '../../src/giochi/passo-passo/motore/mondo.js'
@@ -53,9 +28,8 @@ const FRECCE = { su: '↑', giu: '↓', sinistra: '←', destra: '→',
                  'salto-su': '⇑', 'salto-giu': '⇓', 'salto-sinistra': '⇐', 'salto-destra': '⇒' }
 const SEGNO = { rosso: '🔴', blu: '🔵', giallo: '🟡', casa: '🏠' }
 
-/* ── un pezzo, eseguito a partire da un mondo ──
-   torna `null` se il pezzo finisce e la fila può andare avanti, se no
-   com'è finita (la tana, uno sbaglio, stanco) */
+// un pezzo eseguito da un mondo: `null` se finisce e si va avanti, se no
+// com'è finita (tana, sbaglio, stanco)
 function corri(nodi, w, conto) {
   for (const nodo of nodi) {
     if (nodo.che === 'ripeti') {
@@ -90,11 +64,9 @@ function corri(nodi, w, conto) {
   return null
 }
 
-/* ── i pezzi possibili, per grandezza ──
-   `file(s)`: tutte le file di carte lunghe s (in carte: le chiusure
-   non contano); `pezzi(s)`: i pezzi in cima lunghi s — una freccia se
-   s = 1, se no una testa col suo corpo lungo s − 1. Si generano man
-   mano e non si tengono: sono milioni, e in memoria non ci stanno. */
+// i pezzi possibili per grandezza: `file(s)` tutte le file lunghe s
+// carte, `pezzi(s)` i pezzi in cima lunghi s. Generati man mano, mai
+// tenuti tutti insieme (sono milioni).
 function catalogo(liv) {
   const frecce = liv.salti ? [...PASSI, ...SALTI] : PASSI.slice()
   const colori = [...new Set(liv.lastra.filter(Boolean))]
@@ -121,10 +93,8 @@ function catalogo(liv) {
   return pezzi
 }
 
-/* ── la ricerca ──
-   in ampiezza per carte spese: una coda per costo, e per ogni stato il
-   costo più basso con cui ci si è arrivati. Il primo arrivo a casa con
-   la carota è il programma più corto (con scatole così) */
+// la ricerca in ampiezza per carte spese: il primo arrivo a casa con la
+// carota è il programma più corto (con scatole fino a `SCATOLA` carte)
 function cerca(liv, tetto, scadenza) {
   const pezzi = catalogo(liv)
   const inizio = new Mondo(liv, { eventi: false })
