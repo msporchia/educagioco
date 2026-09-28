@@ -1,144 +1,16 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I GIOCHI CHE SI POSSONO SPEGNERE
-   Una carta della home per riga, con la stessa chiave che usa `App.vue`
-   per scegliere la schermata. Serve ai genitori: un bambino che non ha
-   ancora visto le divisioni, o che davanti a nove carte non ne apre
-   nessuna, deve poter trovare in home solo quello che gli serve adesso.
-
-   Fuori dall'elenco resta di proposito l'albo dei progressi. Ci stava
-   anche la cameretta, finché è esistita: era il posto delle monete e
-   degli animali, non una materia — un posto come la fattoria, che però
-   la sua carta ce l'ha e si spegne come le altre.
-
-   ── I GIOCHI IN PROVA ────────────────────────────────────────────
-   `sperimentale: true` non è un interruttore in più: è un **cancello**.
-   Finché un gioco porta quel segno **non si vede**, e non c'è niente da
-   spegnere perché non c'è niente da accendere — a meno che nei
-   settaggi non sia acceso il flag «giochi in prova»
-   (`settings.sperimentali`).
-
-   Il flag è **uno solo**, non uno per gioco: dice «fammi vedere anche
-   le cose non finite», e vale per tutti quelli in prova insieme. È
-   spento di partenza, così un gioco a metà non arriva ai bambini prima
-   che un grande abbia deciso che è pronto.
-
-   Il giorno che un gioco è finito si toglie una riga qui, e da quel
-   momento è un gioco come gli altri: acceso per tutti, spegnibile uno
-   per uno come tutti.
-
-   ── LE DUE ESTREMITÀ: `piccoli` E `grandi` ───────────────────────
-   Due dichiarazioni, e nessuna delle due è un interruttore: servono
-   alle partenze (`data/partenze.js`) per accendere il set giusto a un
-   bambino appena arrivato, senza che nessuno debba tenere a mano
-   l'elenco di cosa va bene a che età.
-
-   `piccoli: true` è la fascia dei quattro-sei anni: consegna iconica,
-   niente da leggere, non si può perdere. `grandi: true` è l'altra
-   punta — **dà per scontato che il bambino legga da solo, o la
-   matematica delle classi alte**: le tabelline, le operazioni in
-   colonna, l'euro e il resto, una lingua straniera scritta, le domande
-   di quiz che oggi partono dalla terza.
-
-   Chi non dichiara né l'uno né l'altro sta in mezzo, ed è la
-   maggioranza silenziosa che nessuna partenza spegne tranne quella dei
-   piccolissimi.
-
-   `cresce: true` sta accanto a `piccoli` e dice che il gioco comincia
-   da lì ma non finisce lì: Passo passo è per chi non legge fino alle
-   buche, e poi arrivano i cicli, che sono da otto anni. Le partenze dei
-   grandi non lo spengono come spengono i giochi dei piccoli — a
-   decidere fin dove arriva è la portata delle sue tappe, come per tutti.
-
-   ── E POI C'È `posto`, CHE NON STA SULLA SCALA ───────────────────
-   La fattoria non è né facile né difficile: è il prato dove si spende
-   quello che si guadagna altrove. Non ha una campagna, non si vince,
-   non si perde — e `data/portata.js` lo dice già per conto suo, che i
-   giochi senza scaletta «sono posti, non scalette», quindi non li
-   giudica. `posto: true` dice la stessa cosa **alle partenze**, che
-   invece ragionano per bandierine: senza, il prato sparirebbe a un
-   bambino di quattro anni per il solo fatto di non essersi dichiarato
-   `piccoli` — e dichiararsi `piccoli` lo farebbe sparire a quello di
-   nove. Un grande può sempre spegnerlo a mano: qui si evita solo che
-   lo spegniamo noi.
-
-   È già successo una volta, ed è il modo giusto di usarla: il Dungeon,
-   Survivors e il sotterraneo hanno portato `grandi` finché le domande
-   che aprono le porte partivano tutte dalla terza. Non era il gioco a
-   essere troppo grande — schivare un mostro e scegliere una strada si
-   sa fare a sei anni — era il pedaggio. Quando il mazzo dei piccoli è
-   arrivato (`quiz/moduli/lettere.js`, e la fascia in
-   `store/profile.js`) quelle tre righe sono sparite, e i tre giochi
-   sono ricomparsi in home a chi entra in prima **senza toccare una
-   riga dei giochi**.
-
-   ── E `quiz`, CHE DICE DA DOVE VIENE IL PEDAGGIO ─────────────────
-   `quiz: true` vuol dire che le domande di questo gioco escono dai
-   moduli di `src/quiz/`, cioè dal mazzo che l'età taglia. Non è «fa
-   domande»: Conta gli animali ne fa, ma sono sue e vivono dentro il
-   gioco. Serve al quadro di un'età (`data/quadro.js`) per non elencare
-   a un genitore quattro blocchi di domande quando in casa non c'è
-   nessun gioco che le peschi — che è quello che succedeva da quattro a
-   cinque anni e mezzo, dove i giochi accesi sono tre e nessuno passa
-   di lì.
-
-   ── QUELLO CHE UN GIOCO DÀ PER SCONTATO ──────────────────────────
-   `serve: ['conversioni']` sono i macrogruppi di `data/saperi.js`
-   senza i quali quel gioco non è difficile: è impossibile. Il
-   laboratorio delle pozioni è **tutto** conversioni — mezzo litro in
-   millilitri, due etti in grammi — e a chi non le ha mai viste non
-   resta niente da ragionare. Gli altri giochi non dichiarano niente
-   perché degradano da soli: il castello senza divisioni chiede
-   moltiplicazioni, i quiz scendono di grado.
-
-   Non è l'interruttore dei genitori messo giù: è la stessa carta che
-   non si può accendere finché quel sapere è spento, e la schermata dei
-   genitori lo scrive invece di far sparire una carta senza motivo.
-
-   ── E `chiede`, CHE È L'AFFERMAZIONE PIÙ DEBOLE ──────────────────
-   `chiede: ['moltiplicazioni', 'divisioni']` vuol dire **questo gioco
-   fa domande che danno per scontato quel pezzo di scuola**, e senza
-   degrada invece di sparire: il castello con le divisioni spente chiede
-   moltiplicazioni più difficili, e resta il castello. È la stessa
-   dichiarazione che un modulo di quiz fa nei suoi `tipi` (`sa:`), detta
-   da un gioco che le domande se le fa in casa.
-
-   Serve perché senza di lei quelle due voci erano **impostazioni
-   irraggiungibili**: da quando la schermata dei genitori compone il
-   quadro dell'età dai pezzi di scuola che le domande citano, un sapere
-   che vive solo dentro un gioco non aveva più nessuna riga da cui
-   essere toccato — e un genitore non aveva nemmeno modo di accorgersi
-   che a suo figlio le divisioni erano spente. La regola, adesso, è che
-   **chi guarda un sapere lo dichiara**: un modulo di quiz o un gioco,
-   e `test/unita/saperi.test.mjs` diventa rosso se qualcuno resta senza
-   nessuno che lo citi.
-
-   Non si confonde con `serve`: quella dice «senza, questa carta non si
-   può nemmeno accendere», questa dice «senza, questo gioco chiede
-   qualcos'altro». Un gioco può dichiarare tutte e due, e sono due righe
-   diverse nella schermata dei grandi.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Una carta della home per riga, con la stessa chiave di App.vue. I flag del
+   manifesto (piccoli/grandi/posto/cresce, serve/chiede, sperimentale, quiz)
+   sono spiegati in docs/apprendimento/eta-e-portata.md e saperi.md; i giochi
+   in prova in docs/genitori/interruttori.md; senzaFine in
+   docs/core/primati.md. L'albo dei progressi resta fuori di proposito. */
 import { GIOCHI_NUOVI } from '../giochi/indice.js'
-/* le quattro partite libere del castello: dato puro, come questo file */
-import { LIBERE_RACCONTO } from './campagne-castello.js'
+import { LIBERE_RACCONTO } from './campagne-castello.js' // le quattro partite libere del castello
 
 export const GIOCHI = [
-  /* Senza `grandi`, ed è la stessa correzione già fatta per il Dungeon e
-     per Survivors: il flag lo teneva spento fino a otto anni, mentre la
-     sua prima tappa è tarata su **sei** (`arcoDelGioco` sulle tappe di
-     `data/portata-giochi.js` dà 6,0–10,2). Non è il gioco a essere da
-     grandi — schivare un sasso rispondendo «3 + 2» si sa fare in prima,
-     con le dita — erano le tabelline in cima alla campagna, e a quelle
-     ci pensa la portata, che non offre una tappa fuori mira. Con due
-     dichiarazioni che dicono cose diverse vinceva la più grossolana. */
+  // senza `grandi`: la prima tappa è tarata su 6 anni (arcoDelGioco), la portata già non offre una tappa fuori mira
   { chiave: 'mate',       ico: '☄️', nome: 'Asteroidi',
     che: 'tabelline e calcolo a mente', area: 'numeri', come: 'domande',
-    /* Il volo infinito non finisce: quello che si porta a casa sono i
-       punti, e com'era fatta quella partita. Una sfida sola — il volo è
-       uno, tabelline e calcolo a mente insieme (`data/asteroidi.js`).
-       Il record di prima stava in `best.math`, fuori dalla campagna, e
-       `vecchio` lo fa leggere finché un quaderno non c'è: chi aveva
-       fatto 1240 punti ieri se li ritrova. `best.math` resta, e si
-       scrive ancora, perché i traguardi lo guardano. */
+    // sfida sola; best.math resta fuori dalla campagna finché un quaderno non c'è (vedi docs/core/primati.md)
     senzaFine: {
       nome: 'Volo infinito', icona: '♾️', misura: 'punti', che: 'quanti punti fai',
       dettagli: d => [`livello ${d.livello}`, `${d.centri} centri`, `serie ${d.serie}`],
@@ -148,26 +20,11 @@ export const GIOCHI = [
     che: 'parole, verbi e frasi in inglese', area: 'parole', come: 'domande', grandi: true },
   { chiave: 'spagnolo',   ico: '🇪🇸', nome: 'Spagnolo',
     che: 'parole, verbi e frasi in spagnolo', area: 'parole', come: 'domande', grandi: true },
-  /* Le due operazioni del castello sono l'esempio per cui `chiede`
-     esiste: la cassa le guarda da sempre (`contiPermessi()` in
-     `store/profile.js`) e nessun altro le nominava, quindi le loro righe
-     nella schermata dei grandi dipendevano dal fatto che un problema a
-     parole le citasse di sfuggita. Detto qui, il legame è quello vero —
-     ed è il castello a portarsele dietro anche alle età in cui quel
-     problema non arriva. */
+  // l'esempio per cui `chiede` esiste: la cassa guarda moltiplicazioni/divisioni da sempre (vedi docs/apprendimento/saperi.md)
   { chiave: 'torri',      ico: '🏰', nome: 'Difendi il Castello',
     che: 'operazioni in colonna, torri e nemici', area: 'numeri', come: 'strategia',
     grandi: true, chiede: ['moltiplicazioni', 'divisioni'],
-    /* Le partite libere non finiscono: quello che si porta a casa è
-       quante ondate si sono rette, e com'era fatta quella partita. La
-       forma è quella di `giochi/primati.js`; i giochi nuovi la
-       dichiarano nel manifesto, questo la dichiara qui perché un
-       manifesto non ce l'ha. Sono **quattro sfide**, una per terreno,
-       con un record ciascuna: misura e racconto sono gli stessi per
-       tutte e stanno scritti una volta. La prima — il bosco — eredita
-       il record di quando la libera era una sola: chi aveva retto
-       ventun ondate ieri se le ritrova lì, che era il bosco anche
-       allora. */
+    // quattro sfide, una per terreno; la prima (il bosco) eredita il record di quando la libera era una sola
     senzaFine: {
       misura: 'ondate', che: 'quante ondate reggi',
       dettagli: d => [`${d.uccisi} nemici fermati`, `${d.torri} torri`],
@@ -175,45 +32,23 @@ export const GIOCHI = [
         chiave: l.chiave, nome: l.nome, icona: l.emoji, eredita: i === 0,
       })),
     } },
-  /* Senza `grandi`, ed è stato un errore di taratura: la sua prima
-     giornata è tarata sui sei anni e mezzo (`portata: 32`, ricavata in
-     `data/bancarella.js`), cioè prima elementare — e contare le monete e
-     dare il resto non chiede di saper leggere niente. Il flag la spegneva
-     a tutta la partenza «prima o seconda», compresi gli anni a cui il
-     gioco dice di rivolgersi. */
+  // senza `grandi`: la prima giornata è tarata sui 6,5 anni (portata: 32), contare monete non chiede di saper leggere
   { chiave: 'bancarella', ico: '🛒', nome: 'La bancarella',
     che: 'euro, centesimi e resto', area: 'numeri', come: 'fare' },
   { chiave: 'generale',   ico: '🎖️', nome: 'Il generale',
     che: 'sequenze, cicli ed eventi', area: 'logica', come: 'strategia', grandi: true },
-  /* I giochi scritti con la convenzione nuova (`src/giochi/`) si
-     aggiungono da soli: il loro manifesto dice già chiave, nome e icona,
-     e ripeterli qui vorrebbe dire tenerli allineati a mano. Il registro è
-     dato puro apposta — importarlo qui non tira dentro né Vue né lo
-     store, e non si chiude nessun anello di import. */
+  // i giochi di src/giochi/ si aggiungono da soli dal loro manifesto: ripeterli qui sarebbe tenerli allineati a mano
   ...GIOCHI_NUOVI.map(g => ({ chiave: g.chiave, ico: g.icona, nome: g.nome, che: g.che,
                               area: g.area, come: g.come, piccoli: !!g.piccoli,
                               cresce: !!g.cresce, grandi: !!g.grandi, posto: !!g.posto, quiz: !!g.quiz,
                               tinta: g.tinta,
                               sperimentale: !!g.sperimentale, serve: g.serve || [],
                               chiede: g.chiede || [],
-                              /* la sfida senza fine, se il gioco ne ha una: è
-                                 così che la tabella dei record vede vecchi e
-                                 nuovi in un elenco solo */
                               senzaFine: g.senzaFine || null })),
 ]
 
 export const CHIAVI_GIOCHI = GIOCHI.map(g => g.chiave)
-/* chi sta dietro al cancello, per chiave: lo chiede `store/profile.js`
-   per decidere se un gioco si vede, e lo chiede la schermata dei
-   genitori per metterli in un gruppo a parte */
 export const eSperimentale = chiave => GIOCHI.some(g => g.chiave === chiave && g.sperimentale)
 export const CHIAVI_SPERIMENTALI = GIOCHI.filter(g => g.sperimentale).map(g => g.chiave)
-/* cosa dà per scontato un gioco: lo chiede `store/profile.js` per non
-   mettere in home un gioco che il bambino non può giocare */
 export const serveA = chiave => GIOCHI.find(g => g.chiave === chiave)?.serve || []
-/* e cosa **chiede** senza esigerlo. Il quadro dell'età scorre l'elenco
-   e se lo legge da sé (`data/quadro.js`); questo serve a chi ha in mano
-   una chiave sola, ed è il gemello di `serveA` perché le due domande si
-   somigliano abbastanza da volerle vedere una accanto all'altra:
-   nessuno decide con questa se una carta si accende. */
-export const chiedeA = chiave => GIOCHI.find(g => g.chiave === chiave)?.chiede || []
+export const chiedeA = chiave => GIOCHI.find(g => g.chiave === chiave)?.chiede || [] // il gemello più debole di serveA
