@@ -1,54 +1,24 @@
-/* ═══════════════════════════════════════════════════════════════════
-   QUANTO SPOSTANO I REGALI, DAVVERO
-
-   I regali della partita libera (`REGALI` in `data/castello.js`)
-   restano per sempre e si riprendono senza tetto: un bambino che gioca
-   spesso ne accumula decine. Dimensionarli a occhio vuol dire
-   sbagliarli nei due versi — gradini che sulla carta sembrano enormi
-   (+30%) e al muro non spostano un'ondata, o gradini piccoli che dopo
-   cento partite fanno la difesa immortale. Qui lo si misura: il
-   giocatore modello (`PROFILI.misura` di `simula-castello.mjs`) gioca
-   ogni libera fino alla sconfitta con N gradi già in tasca, e si legge
-   a che ondata cede.
-
-   ── come li prende un bambino ──
-   Non spalmati in ordine di catalogo: **dal giro delle carte**. Il
-   regalo numero `k` si sceglie fra le tre di `regaliOfferti(k)`, e il
-   bambino finto prende a turno la prima, la seconda, la terza
-   (`sceltaDelBambino`). È il modo più vicino al vero senza inventarsi
-   dei gusti: ogni voce passa, nessuna domina, e anche il veleno — che
-   al giocatore modello non serve, perché i rami non li sceglie — ogni
-   tanto viene preso, come lo prenderebbe chi non ha letto la carta.
-   Durante la partita continua dallo stesso punto del giro: con N gradi
-   in tasca, il primo regalo della partita è il numero N.
-
-   Il giocatore modello non sbaglia conti, quindi il seme non cambia
-   niente: una partita per libera e per N basta.
-
-   Uso:
-     node strumenti/regali-castello.mjs                  # 0 10 20 35 50 100
-     node strumenti/regali-castello.mjs 0,50,200,400     # altri gradi
-     node strumenti/regali-castello.mjs --soli 40        # 40 gradi su una voce sola
-   ═══════════════════════════════════════════════════════════════════ */
+// Quanto spostano i regali, davvero: il giocatore modello gioca ogni libera
+// fino alla sconfitta con N gradi già in tasca (presi dal giro delle carte,
+// non spalmati per catalogo) e si legge a che ondata cede. Vedi
+// docs/castello/libere.md.
+//   node strumenti/regali-castello.mjs                  # 0 10 20 35 50 100
+//   node strumenti/regali-castello.mjs 0,50,200,400     # altri gradi
+//   node strumenti/regali-castello.mjs --soli 40        # 40 gradi su una voce sola
 import { LIBERE, REGALI, QUANTE_CARTE, regaliOfferti } from '../src/data/castello.js'
 import { gioca, PROFILI } from './simula-castello.mjs'
 
-/* il regalo numero `k` (da zero) che sceglierebbe il bambino */
 export const sceltaDelBambino = k => regaliOfferti(k)[k % QUANTE_CARTE].id
 
-/* i primi `n` regali presi a quel modo, come `{ id: quanti }` */
 export function presiDaBambino(n) {
   const o = {}
   for (let k = 0; k < n; k++) { const id = sceltaDelBambino(k); o[id] = (o[id] || 0) + 1 }
   return o
 }
 
-/* Fin dove arriva la libera con quei regali in tasca. `attesa: 1` toglie
-   solo il tempo morto fra un'ondata e l'altra (il metro non la chiama
-   mai): con cento regali, trenta secondi per quaranta ondate si
-   mangiavano l'ora che il simulatore concede, e la partita finiva per
-   orologio invece che per difesa. `soli` mette tutti i gradi, e quelli
-   presi in partita, su una voce sola. */
+// `attesa: 1` toglie solo il tempo morto fra un'ondata e l'altra (con cento
+// regali, l'ora concessa al simulatore si mangiava per orologio, non per
+// difesa). `soli` mette tutti i gradi su una voce sola.
 export function finoDove(libera, n, { soli = null } = {}) {
   const regali = soli ? { [soli]: n } : presiDaBambino(n)
   const sceglie = soli ? () => soli : i => sceltaDelBambino(n + i)
@@ -56,10 +26,8 @@ export function finoDove(libera, n, { soli = null } = {}) {
   return { onda: r.onda, esito: r.esito, presi: r.regali }
 }
 
-/* quanti gradi di una voce servono a raddoppiare quello che tocca: i
-   gradi dello stesso regalo si **sommano** (+5%, +10%, +15%…), quindi
-   è 1 ÷ il passo di un grado. Il passo lo si legge dal catalogo
-   facendogli applicare un grado, non lo si ricopia. */
+// Quanti gradi servono a raddoppiare quello che tocca (1 ÷ il passo di un
+// grado, letto facendo applicare un grado al catalogo, non ricopiato).
 export function raddoppiaIn(r) {
   const d = { danno: { arciere: 1, magica: 1, bombe: 1, ghiaccio: 1 },
               raggio: 1, cadenza: 0, gelo: 0, fragile: 0, veleno: 1 }
