@@ -1,28 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE GIORNATE DEL PORTO — il porto che lavora tutto insieme
-
-   Il capitolo del porto insegna un pezzo per volta, in scene piccole. Qui
-   i pezzi lavorano insieme: la gru riempie il magazzino da sola, i camion
-   arrivano e ripartono, le lettere vanno alle loro buche, i clienti
-   entrano in bottega. Ogni sfida ha **una cosa nuova** — il camion che
-   riparte pieno, un numero letto che diventa dei passi, aspettare dentro
-   un ripeti, due lavori da un posto solo — ma intorno c'è un porto vero,
-   e il resto lavora da sé.
-
-   Le sfide vanno dalla piccola (il primo camion) alla grande (la
-   giornata del porto, più larga dello schermo), e la regola per scriverle
-   è quella di sempre: **una giornata diversa cambia il lavoro**. I campi
-   sono quelli di `dati/porto/livelli.js`, più gli attori nuovi:
-
-     camion   { pazienza, fila: [[arriva, vuole, colore?], …] }: arrivano
-              sulla piazzola (`&`), ripartono appena pieni
-     cassoni  anche `numero` (una buca delle lettere) e cifre in
-              `dentro` (le lettere)
-
-   Tutto quello che gira intorno non deve poter far perdere la giornata a
-   chi non l'ha ancora imparato: la gru scarica su un nastro che finisce
-   nel magazzino, e il magazzino è abbastanza grande.
-   ═══════════════════════════════════════════════════════════════════ */
+// Le giornate del porto: i pezzi visti nel capitolo del porto lavorano
+// tutti insieme, e ogni sfida aggiunge una cosa nuova. Vedi
+// docs/costruttore/porto.md (le giornate, camion e cassoni).
 import { fai, guarda, leggi, tinta, progetto, programma } from '../scrivi.js'
 import { cerca as attrezzoCerca } from '../attrezzi.js'
 
@@ -41,16 +19,13 @@ const servi = () => [
 
 const GRU_DI_SFONDO = { casse: 'GRB', ogni: 8, primo: 2 }
 
-/* I consigli del 💡: `ragiona`, due frasi gratis (il nodo del livello, e
-   la domanda giusta da farsi), e `indizi`, da uno a tre a 10 monete, dal
-   più largo al più stretto. I gradini che scrivono nel programma li
-   ricava il gioco dalla `soluzione` (`motore/aiuti.js`). */
+// `ragiona`/`indizi` per la scala del 💡, vedi docs/costruttore/livelli.md
 const consigli = (ragiona, indizi) => ({ ragiona, indizi })
 /* a sera il sacco è vuoto: una lettera rimasta dentro non è consegnata */
 const SACCO_VUOTO = { cassoni: { p: { vuoto: true } } }
 
 export const GIORNATE = [
-  /* ═══════════ piccola: il camion ═══════════ */
+  // piccola: il camion
   {
     chiave: 'primo-camion', nome: 'Il primo camion', icona: '🚚', capitolo: 'giornate',
     impara: 'il camion riparte quando è pieno', portata: 90, premio: 25,
@@ -102,7 +77,7 @@ export const GIORNATE = [
     ],
   },
 
-  /* ═══════════ media: un numero letto che diventa dei passi ═══════════ */
+  // media: un numero letto che diventa dei passi
   {
     chiave: 'postino', nome: 'Il postino', icona: '✉️', capitolo: 'giornate',
     impara: 'un numero letto, fatto passi', portata: 90, premio: 25,
@@ -153,7 +128,7 @@ export const GIORNATE = [
     ],
   },
 
-  /* ═══════════ media: aspettare dentro un ripeti ═══════════ */
+  // media: aspettare dentro un ripeti
   {
     chiave: 'frigo', nome: 'Il frigo', icona: '🧊', capitolo: 'giornate',
     impara: 'aspettare dentro un ripeti', portata: 91, premio: 30,
@@ -195,7 +170,7 @@ export const GIORNATE = [
     ],
   },
 
-  /* ═══════════ difficile: cercare in fretta ═══════════ */
+  // difficile: cercare in fretta
   {
     chiave: 'pesce-fresco', nome: 'Pesce fresco', icona: '🦐', capitolo: 'giornate',
     impara: 'cercare, e tornare in tempo', portata: 92, premio: 30,
@@ -253,7 +228,7 @@ export const GIORNATE = [
     ],
   },
 
-  /* ═══════════ difficile: due lavori da un posto solo ═══════════ */
+  // difficile: due lavori da un posto solo
   {
     chiave: 'due-lavori', nome: 'Due lavori', icona: '🔀', capitolo: 'giornate',
     impara: 'decidere cosa fare prima', portata: 93, premio: 35,
@@ -313,7 +288,7 @@ export const GIORNATE = [
     ],
   },
 
-  /* ═══════════ grande: tutto il porto ═══════════ */
+  // grande: tutto il porto
   {
     chiave: 'giornata-porto', nome: 'La giornata del porto', icona: '⚓', capitolo: 'giornate',
     impara: 'tutto insieme, più largo dello schermo', portata: 94, premio: 40,

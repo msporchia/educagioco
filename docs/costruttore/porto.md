@@ -120,8 +120,10 @@ tutti insieme.
 - **Quello che lavora intorno non deve poter far perdere** chi non l'ha
   ancora imparato: la gru scarica su un nastro che finisce in un cassone e lo
   riempie da sola.
-- **I camion** (`camion`, sulla piazzola `&`) arrivano alla loro ora e
-  **ripartono appena pieni**: sono l'attore che il livello mette apposta.
+- **I camion** (`camion: { pazienza, fila: [[arriva, vuole, colore?], …] }`,
+  sulla piazzola `&`) arrivano alla loro ora e **ripartono appena pieni**:
+  sono l'attore che il livello mette apposta. Un cassone può avere
+  `numero` (una buca delle lettere) e le sue lettere in `dentro`.
 
 | giornata | grandezza | cosa si impara |
 |---|---|---|

@@ -1,75 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I LIVELLI DEL COSTRUTTORE
-
-   Un livello è **un ordine da evadere**: qualcuno chiede una cosa (il
-   capomastro, il re, la principessa) e il bambino scrive il programma
-   con cui il robot la costruisce. Le mappe sono ASCII (legenda in
-   `dati/legenda.js`), i programmi si scrivono con `dati/scrivi.js`.
-
-   ── I CAMPI ───────────────────────────────────────────────────────
-     chiave, nome, icona   chi è (la chiave non si rinomina: è il posto
-                           dove si salvano le stelle e il programma)
-     capitolo              in quale capitolo sta (`CAPITOLI`)
-     impara                la cosa nuova, in tre parole: la dice la mappa
-     portata               quanto è difficile, sulla scala 0–100 del repo
-     premio                le monete della **prima** vittoria
-     chi, racconto         chi ordina e cosa dice — l'unica consegna
-     prova                 disegno | passaggio (vedi `motore/prova.js`)
-     ordini                [{ nome, lavagnette, mappa, robot? }]: le
-                           situazioni su cui il programma deve reggere
-     cassetta              i blocchi che il livello offre
-     colori                i colori della pulsantiera (il primo è il
-                           colore di partenza di «metti»)
-     posti                 dove si può posare un mattone: di solito solo
-                           ↓ sotto i piedi; i lati (↘ ↙) nei livelli che
-                           li chiedono — il bosco, il ponte
-     misure                se i progetti possono avere misure
-     attrezzi              progetti già scritti e chiusi, quasi sempre
-                           cose che il bambino ha costruito in un livello
-                           prima (`dati/attrezzi.js`): si chiamano, si
-                           leggono, non si cambiano, e lo zaino non li conta
-     zaino                 quante righe può scrivere il bambino (vedi
-                           `motore/zaino.js`): dove c'è, il lavoro scritto
-                           riga per riga non ci sta, e il banco lo pretende
-     ragiona               due frasi gratis, che fanno pensare invece di
-                           suggerire: la prima dice cosa chiede il
-                           livello e cosa lo rende difficile, la seconda
-                           la domanda giusta da farsi (o come provarci).
-                           Non nominano il blocco che risolve e non
-                           contengono la soluzione, nemmeno a metà
-     indizi                da una a tre frasi concrete, 🪙10 l'una, dalla
-                           più larga alla più stretta; l'ultima può
-                           nominare blocchi, lavagnette e misure. Dopo
-                           gli indizi il gioco aggiunge da sé i gradini
-                           che scrivono nel programma, ricavati dalla
-                           `soluzione` (🪙50 · 100 · 200): non si
-                           scrivono qui
-     soluzione             un programma che vince tutti gli ordini: lo
-                           gioca il banco a ogni giro, e da lui escono i
-                           gradini degli aiuti che scrivono nel programma
-     fragili               le mosse ingenue e plausibili, ognuna con il
-                           suo nome: il banco pretende che **ognuna perda
-                           almeno un ordine**. Se una vince, il livello
-                           non insegna quello che dichiara — il difetto è
-                           un ordine che manca, non un punteggio.
-
-   ── LE REGOLE PER SCRIVERNE UNO ───────────────────────────────────
-   1. **Un livello muove una cosa sola.** Il ripeti, poi il ripeti con
-      la misura dell'ordine, poi il ripeti dentro il ripeti. Due cose
-      nuove insieme vogliono dire due livelli.
-   2. **La fatica a mano prima.** Un blocco arriva quando farne a meno
-      stanca: il muro da dieci mattoni scritto a mano è venti righe.
-   3. **Gli ordini sono la sfida.** Un livello con un ordine solo si
-      vince a mano; con due, chi ha scritto il numero dell'ordine al
-      posto della lavagnetta perde il secondo — e lo vede.
-   4. **Un posto diverso ogni volta**: altri colori, altra forma, un
-      altro che ordina. È quello che fa di ventidue livelli ventidue
-      posti e non la stessa schermata ventidue volte.
-   5. **I colori lavorano.** Un livello a un colore solo va bene per
-      imparare un blocco; poi il colore diventa la ragione di una
-      decisione (sopra i rossi, le strisce, la scacchiera) o una misura
-      (le bandiere).
-   ═══════════════════════════════════════════════════════════════════ */
+// I livelli del costruttore: un ordine da evadere. Il significato dei
+// campi, le cinque regole per scriverne uno e l'ordine dei capitoli
+// sono in docs/costruttore/livelli.md.
 import { fai, guarda, piu, meno, tinta, progetto, programma, POSTI } from './scrivi.js'
 import { CHIAVI_COLORI } from './colori.js'
 import { torre, muro, albero, colonna, riga, guastiDegliAttrezzi } from './attrezzi.js'
@@ -80,10 +11,6 @@ import { IN_ORDINE } from './porto/ordine.js'
 import { CERCARE } from './porto/cercare.js'
 import { PILE } from './porto/pile.js'
 
-/* L'ordine dei capitoli: il «se» viene subito dopo il cantiere. Stava in
-   fondo, dopo progetti e lavagnette, e a metà gioco il papà ha notato che
-   «ancora non abbiamo introdotto gli if»: una decisione è più semplice di
-   una funzione, e coi colori ha qualcosa da decidere fin da subito. */
 export const CAPITOLI = [
   { chiave: 'cantiere', nome: 'Il cantiere', icona: '🧱',
     dice: 'Mattoni, passi, colori, e il blocco che ripete.' },
@@ -118,7 +45,7 @@ const CAPOMASTRO = { emoji: '👷', nome: 'Il capomastro' }
    distrarrebbe da lei. */
 
 const DEL_CANTIERE = [
-  /* ═══════════ 1. IL CANTIERE ═══════════ */
+  // 1. Il cantiere
   {
     chiave: 'primo-muretto', nome: 'Il primo muretto', icona: '🧱', capitolo: 'cantiere',
     impara: 'mettere e camminare', portata: 54, premio: 6,
@@ -357,7 +284,7 @@ const DEL_CANTIERE = [
         fai.ripeti(4, [fai.metti('marrone'), fai.metti('bianco'), fai.metti('rosso'), fai.vai('destra', 1)])] }) },
     ],
   },
-  /* ═══════════ 2. GUARDARE E DECIDERE ═══════════ */
+  // 2. Guardare e decidere
   {
     chiave: 'sui-rossi', nome: 'Sui mattoni rossi', icona: '🐦', capitolo: 'guardare',
     impara: 'se c\'è…', portata: 63, premio: 12,
@@ -599,16 +526,7 @@ const DEL_CANTIERE = [
         fai.ripeti(6, [fai.metti('marrone', 'giu-destra'), fai.vai('destra', 1)])] }) },
     ],
   },
-  /* ═══════════ 3. I PROGETTI ═══════════
-     Prima si usano, poi si scrivono. Il capitolo comincia con gli
-     attrezzi del capomastro — la torre della torretta, il muro del muro
-     lungo, già scritti — e il bambino impara a chiamarli con le misure
-     dell'ordine e a sapere dove lasciano il robot. Poi il suo primo
-     progetto, dove lo zaino lo rende necessario: tre alberi scritti a
-     mano non ci stanno. Poi le misure, e infine una casa fatta di pezzi
-     che si ripetono. Ogni livello ha il suo `zaino`, e il banco pretende
-     che la soluzione srotolata — le chiamate sostituite dal corpo del
-     progetto — non ci stia: se ci sta, il progetto era un di più. */
+  // 3. I progetti: prima si usano (gli attrezzi), poi si scrivono
   {
     chiave: 'cinta', nome: 'La cinta', icona: '🏯', capitolo: 'progetti',
     impara: 'chiamare un attrezzo', portata: 69, premio: 12,
@@ -996,7 +914,7 @@ const DEL_CANTIERE = [
         principale: [fai.chiama('casa'), fai.vai('destra', 2), fai.chiama('albero'), fai.vai('destra', 3), fai.chiama('casa')] }) },
     ],
   },
-  /* ═══════════ 4. LE LAVAGNETTE ═══════════ */
+  // 4. Le lavagnette
   {
     chiave: 'scala', nome: 'La scala', icona: '🪜', capitolo: 'lavagnette',
     impara: 'una lavagnetta che cresce', portata: 78, premio: 20,
@@ -1179,7 +1097,7 @@ const DEL_CANTIERE = [
           fai.ripeti('alta', [fai.chiama('candela', 'h'), fai.vai('destra', 2)])] }) },
     ],
   },
-  /* ═══════════ 5. LE SFIDE ═══════════ */
+  // 5. Le sfide
   {
     chiave: 'muro-gemello', nome: 'Il muro gemello', icona: '🪞', capitolo: 'sfide',
     impara: 'contare', portata: 84, premio: 25,
@@ -1347,13 +1265,8 @@ const DEL_CANTIERE = [
   },
 ]
 
-/* ═══════════ la fila ═══════════
-   Il porto viene dopo le lavagnette — leggere un biglietto vuol dire
-   scriverlo in una lavagnetta — e le sfide del cantiere dopo il porto.
-   Chi aveva giocato con la fila di prima ritrova le stelle al loro posto
-   (`FILE` in `dati/campagna.js`). Le giornate del porto, dove i pezzi
-   lavorano tutti insieme, chiudono: stanno in fondo anche per non
-   spostare le stelle di nessuno. */
+// la fila: vedi `FILE` in dati/campagna.js per come si riordina senza
+// spostare le stelle di nessuno
 export const LIVELLI = [
   ...DEL_CANTIERE.filter(l => l.capitolo !== 'sfide'),
   ...LIVELLI_PORTO,
@@ -1365,7 +1278,6 @@ export const LIVELLI = [
   ...PILE,
 ]
 
-/* ═══════════ i controlli sul dato ═══════════ */
 const BLOCCHI = ['vai', 'metti', 'prendi', 'posa', 'ripeti', 'finche', 'se', 'aspetta', 'pausa', 'sempre', 'assegna', 'progetti']
 
 export function guastiDeiLivelli(livelli = LIVELLI) {
