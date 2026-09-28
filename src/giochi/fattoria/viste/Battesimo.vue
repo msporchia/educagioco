@@ -1,16 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   COME LO CHIAMI?
-
-   Si tocca un nome, e basta. La casella per scriverlo c'è, ma sotto:
-   questo gioco lo apre anche un bambino di quattro anni, e una casella
-   di testo vuota per chi non sa scrivere non è una scelta — è un muro.
-   Chi ci arriva chiama il cane «aaa», o chiama la mamma.
-
-   Il nome non è obbligatorio: si può prendere l'animale così com'è e
-   battezzarlo dopo, toccandolo nel prato. Un bambino che non ha ancora
-   deciso non deve restare bloccato davanti a una domanda.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Come lo chiami: si tocca un nome (la casella per scriverlo c'è, ma sotto) — vedi
+   docs/fattoria/animali.md. Il nome non è obbligatorio: si può battezzare dopo, nel prato. */
 import { ref } from 'vue'
 import { nomiPer } from '../dati/animali.js'
 import Provino from './Provino.vue'
