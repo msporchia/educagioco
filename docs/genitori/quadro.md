@@ -63,6 +63,20 @@ In fondo a ogni blocco delle domande, «▶ pescane una come farebbe un gioco»
 pesca con la stessa campana e gli stessi saperi spenti di una partita:
 l'elenco dice cosa esiste, non quanto spesso esce.
 
+## Quello che dà per scontato che sappia (`sa`)
+
+`saperiDiUnEta` elenca i pezzi di scuola dati per scontato, **i più recenti
+per primi**: un elenco che comincia da «i numeri e le quantità» direbbe la
+stessa cosa a quattro anni e a undici, uno che comincia da «le divisioni»
+dice a che punto siamo. Un gruppo compare solo se ha almeno una domanda
+**dentro la finestra**: uno con zero domande sotto il tetto dell'età non dà
+per scontato niente, si sta solo tenendo acceso un interruttore che non
+tocca nulla. **Si taglia solo il tetto, mai il fondo**: sotto la finestra un
+sapere è dato per scontato più che mai, è sopra che non lo è ancora. Un
+gruppo che vive solo dentro un gioco (le divisioni del castello) resta
+comunque, anche senza domande proprie: è l'unica riga che spiega perché quel
+gioco chiede quello che chiede.
+
 ## Se nessun gioco le chiede, niente elenco
 
 Se in casa non c'è nessun gioco che passi da `src/quiz/`, i blocchi delle
