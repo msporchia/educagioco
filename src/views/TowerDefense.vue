@@ -1,51 +1,16 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   TOWER DEFENSE — il guscio.
-
-   Il campo si prende lo schermo. Non c'è più un banco di bottoni sotto:
-   si compra **toccando il campo**, che è il posto dove si sta già
-   guardando. Una piazzola vuota chiede che torre costruirci, una torre
-   già in piedi apre la sua scheda — e in tutti e due i casi il conto da
-   fare sale dal basso, dentro lo stesso foglio.
-
-   Il campo non si ferma mentre si calcola: un minimo di fretta ci va. Il
-   foglio però si appoggia sopra e basta, senza rimpicciolire niente —
-   un'inquadratura che entra e esce a ogni tocco stanca l'occhio e il
-   telefono, e per guardare la battaglia c'è già il gesto giusto:
-   chiudere il foglio.
-
-   L'energia ⚡ la lasciano i nemici fermati, e serve sia a costruire sia
-   a potenziare — ma potenziare costa molto meno e rende molto di più,
-   così il calcolo difficile è la strada conveniente invece che una
-   tassa. Gli errori si pagano in energia, mai in vite: sbagliare
-   rallenta la difesa, non la fa crollare. E l'ondata parte quando la
-   chiama il bambino: il tempo per i conti è tutto suo, la fretta è
-   facoltativa e viene pagata a parte.
-
-   ── cosa è rimasto qui dentro ──
-   Poco, e apposta. Questo file tiene **la fase** (mappa, gioco, fine) e
-   **cosa sta guardando il dito**, e fa da centralino fra i pezzi:
-
-     motore/castello/          le regole, che girano anche senza schermo
-     grafica/castello/         i pittori
-     components/castello/      campo, foglio, scelta, scheda, mappa, fine
-     views/castello/cassa.js   che operazione compra una torre
-     views/castello/scena.js   dal motore alla lista di cose in scena
-     views/castello/trascino.js la regola del dito sul campo
-
-   Le tre cose che il motore non sa fare — mostrare, far toccare, e
-   chiedere un'operazione in colonna prima di pagare — sono l'unica
-   ragione per cui questo file esiste.
-   ═══════════════════════════════════════════════════════════════════ */
+// Tower Defense: il guscio. Si compra toccando il campo (vedi
+// docs/castello/torri.md), il conto sale dal basso nello stesso foglio, e il
+// campo non si ferma mentre si calcola. Questo file tiene solo la fase
+// (mappa, gioco, fine) e cosa sta guardando il dito, e fa da centralino fra
+// motore/castello/ (regole), grafica/castello/ (pittori), components/castello/
+// (campo, foglio, mappa) e views/castello/ (cassa, scena, trascino).
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { state, answer, level, addCoins, tdProgresso, tdCompleta,
          segna, segnaBest, divisioniAccese, tuttoAperto,
          guidaGiaVista, segnaGuidaVista } from '../store/profile.js'
 import { saltaLeSpiegazioni } from '../guide/aiuto.js'
 import { usaPausa } from '../giochi/pausa.js'
-/* il record della partita libera: il conto e le frasi stanno in
-   `giochi/primati.js`, il posto nel profilo in `giochi/campagne.js` —
-   gli stessi della corsa infinita e della Sopravvivenza */
 import { primatoDi, segnaPrimato, regaliDi, regaloPreso } from '../giochi/campagne.js'
 import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { GIOCHI } from '../data/giochi.js'
@@ -71,10 +36,8 @@ import { Cassa } from './castello/cassa.js'
 import { suono } from '../audio.js'
 
 defineEmits(['vai'])
-/* Il castello a celle (`giochi/castello/`) è questa stessa schermata con
-   un'altra pelle: la passa al campo, e si prende il suo titolo e il suo
-   `?`. Senza, è `torri` com'è sempre stato. Le tappe, i conti e il
-   salvataggio sono gli stessi: `castello` gioca la campagna di `torri`. */
+// Il castello a celle (giochi/castello/) è questa stessa schermata con
+// un'altra pelle (`pelle`): tappe, conti e salvataggio restano quelli di `torri`.
 defineProps({
   pelle: { type: Object, default: null },
   titolo: { type: String, default: 'Castello' },
@@ -83,74 +46,39 @@ defineProps({
 
 const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine
 
-/* ═══════════ la pausa ═══════════
-   Le condizioni che fermano il campo se le scriveva questo file — il
-   foglio del `?`, il cartello di un traguardo — e adesso sono quelle di
-   tutti (`giochi/pausa.js`). Quello che ci si guadagna sono le due che
-   mancavano: il ⏸, e **il telefono posato**. Il secondo qui costava
-   caro: il castello è l'unico gioco dove si può restare fermi a fare
-   una divisione in colonna, e chi metteva giù il telefono a metà conto
-   lo ritrovava con l'ondata passata e i cuori in meno.
-
-   `anche` dice la sola condizione di casa che sia reattiva — fuori
-   dalla partita non c'è niente da far camminare — così `fermo` vuol
-   dire esattamente «il campo non avanza», che è tutto quello che il
-   campo deve sapere.
-
-   **Quello che NON entra qui è `calcolando`.** Il campo non si ferma
-   mentre si fanno i conti, ed è una regola dichiarata: un minimo di
-   fretta ci va, e per guardare la battaglia c'è già il gesto giusto,
-   che è chiudere il foglio. La pausa è un'altra cosa — è il bambino che
-   chiede di fermarsi, non il gioco che aspetta. */
-/* `anche` porta anche il regalo: il velo delle tre carte tiene fermo il
-   campo come il cartello di un traguardo — non è una pausa chiesta dal
-   bambino, quindi non mostra il velo della pausa, ma il campo non deve
-   camminare mentre si legge cosa fanno. */
+// La pausa (`giochi/pausa.js`) ferma il campo anche col telefono posato:
+// serve perché il castello è l'unico gioco dove si resta fermi a fare un
+// conto. `calcolando` non ci entra apposta: il campo non si ferma mentre si
+// calcola. `anche` porta anche il regalo, che tiene fermo il campo come un
+// traguardo senza mostrare il velo della pausa.
 const { inPausa, fermo, metti, togli, aiuto } = usaPausa({
   anche: () => fase.value !== 'gioco' || regaloAperto.value,
 })
 
-/* il tabellone: il motore ci scrive dentro e lo schermo si aggiorna da sé */
 const hud = reactive({ cuori: CFG.cuori, onda: 0, uccisi: 0, torri: 0, energia: 0 })
-/* quello che il campo fa sapere alla schermata: si riempie a ogni fotogramma */
 const vista = reactive({ inAttesa: false, pronti: false, restaAttesa: 0, bestia: null,
                          inCampo: 0, vitaOnda: 0, prossime: [],
                          regalo: 0, regaliPresi: 0,
                          puoiChiamare: false, premio: 0, potenziamenti: 0 })
 const messaggio = reactive({ testo: '', n: 0 })
 
-/* ── il regalo ──
-   Ogni cinque ondate la partita libera ne mette uno da scegliere, e il
-   motore lo tiene in sospeso (`vista.regalo`): finché c'è, l'ondata
-   dopo non parte. `rimandato` è il «guardo prima il campo» — il velo si
-   toglie, il regalo resta lì, e torna appena si prova a chiamare
-   l'ondata. I gradi presi stanno nel profilo
-   (`campagne.torri.regali`), e questo `ref` è la copia che il velo
-   mostra.
-   `regaloAperto` lo legge anche `fermo` qui sopra: è un computed, quindi
-   si valuta quando serve e non quando è scritto. */
+// Il regalo: finché ce n'è uno in sospeso (`vista.regalo`) l'ondata dopo non
+// parte. `rimandato` è il «guardo prima il campo»: il velo si toglie, il
+// regalo resta lì e torna al prossimo tentativo di chiamare l'ondata.
 const regali = ref({})
 const rimandato = ref(false)
 const regaloAperto = computed(() => fase.value === 'gioco' && vista.regalo > 0 &&
                                     !rimandato.value && !state.festa.length)
 
 const premio = ref(0)
-/* la partita libera appena finita, rispetto al record: { record, frase } */
-const primato = ref(null)
-/* le quattro sfide del castello, una per partita libera: `sfidaDi` dà
-   quella con la chiave della libera, con misura e racconto ereditati
-   da quello scritto in cima al manifesto */
+const primato = ref(null)          // la partita libera appena finita, rispetto al record
 const SENZA_FINE = GIOCHI.find(g => g.chiave === 'torri').senzaFine
-/* le quattro libere per la mappa, ognuna col suo record già in parole
-   («12 ondate · 580 nemici fermati · 9 torri»). Si rilegge a ogni
-   partita finita (`primato` cambia), non a ogni fotogramma. */
+// le quattro libere per la mappa, col record già in parole; si rilegge a
+// ogni partita finita (`primato` cambia), non a ogni fotogramma
 const libere = computed(() => (primato.value, LIBERE.map(l => ({
   chiave: l.chiave, nome: l.nome, emoji: l.emoji,
   primato: recordInParole(primatoDi('torri', l.chiave), sfidaDi(SENZA_FINE, l.chiave)),
 }))))
-/* quanti potenziamenti definitivi ha in tasca: sta sulla mappa sopra i
-   quattro tasti, perché è l'altra cosa che uno si porta dietro da una
-   partita libera all'altra — e vale su tutti i terreni */
 const doteLibera = computed(() => quantiRegali(regali.value))
 
 const campo = ref(null)            // il componente del campo, non la tela
@@ -163,54 +91,28 @@ const tappa = computed(() => (tappaIdx.value < 0 ? liberaDi(liberaScelta.value) 
                                                   : TAPPE[tappaIdx.value]))
 const campagna = computed(() => tappaIdx.value >= 0)
 const divisioni = computed(() => divisioniAccese())
-/* la partita libera si apre vincendo l'ultima tappa — o subito, se i
-   genitori hanno acceso «tutto aperto» */
 const libera = computed(() => progresso.value.libera || tuttoAperto())
 
-/* Cosa si stava facendo, sul velo della pausa. A che ondata si era è la
-   sola cosa che serve a riconoscere la partita che ci si ritrova in
-   mano mezz'ora dopo: i cuori e l'energia sono già scritti nella barra
-   che sta sopra. */
+// Cosa si stava facendo, sul velo della pausa: a che ondata si era (i cuori
+// e l'energia sono già nella barra sopra).
 const dovEravamo = computed(() => {
   if (!hud.onda) return '⚔️ la battaglia non è ancora cominciata'
   return campagna.value ? `⚔️ ondata ${hud.onda} di ${tappa.value.ondate}`
                         : `⚔️ ondata ${hud.onda}`
 })
 
-/* ── il foglio ──
-   Una cosa sola alla volta, e sa sempre *di che cosa* si sta parlando:
-
-     { che: 'costruisci', piazzola }   una piazzola vuota, che torre?
-     { che: 'torre', torre }           una torre in campo, e che ci faccio
-     { che: 'conto', … }               il calcolo che paga la decisione
-
-   Il terzo non nasce mai da solo: ci si arriva dal primo o dal secondo,
-   e si porta dietro dove va a finire la torre. */
+// Il foglio: una cosa sola alla volta — { che: 'costruisci', piazzola } |
+// { che: 'torre', torre } | { che: 'conto', … } (nasce sempre dai primi due).
 const foglio = ref(null)
-/* la torre che sta cercando un posto nuovo: il foglio si toglie di
-   mezzo e il campo aspetta che gli si dica dove. È un modo e non una
-   schermata — si annulla toccando qualunque altra cosa. */
+// la torre che sta cercando un posto nuovo: un modo, non una schermata — si
+// annulla toccando qualunque altra cosa
 const sposto = ref(null)
 
-/* ── l'acquisto ──
-   Il prezzo lo si paga in energia, ma prima si paga in calcolo: la
-   `Cassa` dice quale operazione, il motore mette in campo. */
 const scelta = ref(null)           // tipo di torre in costruzione
 
-/* ── I PRIMI PASSI ──
-   Il foglio «come si gioca» si apre da solo al primo ingresso e dice le
-   regole, ma le regole lette prima di aver visto il campo si dimenticano
-   in tre secondi. Quello che manca è la riga che sta lì **mentre** si
-   guarda il campo e dice la sola cosa da fare adesso.
-
-   Non è un tutorial che prende per mano: non blocca niente, non ferma il
-   campo, non impedisce nessun tocco. È una riga in fondo — dove sta già
-   «Tocca dove spostarla» — che dura finché la prima torre non è in
-   piedi, e poi se ne va per sempre.
-
-   La memoria sta nel profilo del bambino (`guideViste`), quindi un
-   fratello che apre il gioco per la prima volta la rivede, e chi ha già
-   giocato non se la ritrova mai più. */
+// La riga dei primi passi: non un tutorial che blocca, solo una riga in
+// fondo che dura finché la prima torre non è in piedi (memoria in
+// `guideViste`, per bambino).
 const PRIMI_PASSI = 'torri:primi-passi'
 const primiPassi = ref(false)
 const passoFatto = ref(false)
@@ -221,14 +123,10 @@ function accendiPrimiPassi () {
   passoFatto.value = false
 }
 
-/* La riga cambia una volta sola: prima dice cosa toccare, poi — messa su
-   la prima torre — dice la cosa che dal campo non si vede, cioè che i
-   soldi per la seconda escono dai conti. Poi sparisce da sé. */
+// La riga cambia una volta sola: prima dice cosa toccare, poi (prima torre
+// in piedi) che i soldi per la prossima escono dai conti.
 const dritta = computed(() => {
   if (!primiPassi.value || fase.value !== 'gioco') return ''
-  /* il campo ha già il suo annuncio «tocca una piazzola», che però dura
-     un secondo e mezzo: questa riga non lo ripete, dice il pezzo che da
-     sola una piazzola non spiega — che la torre si paga con un conto */
   if (hud.torri === 0) return 'Tocca una piazzola: il conto che esce paga la torre'
   return 'Le torri sparano da sole · i soldi per la prossima escono dai conti'
 })
@@ -237,8 +135,6 @@ watch(() => hud.torri, n => {
   if (!primiPassi.value || !n || passoFatto.value) return
   passoFatto.value = true
   segnaGuidaVista(PRIMI_PASSI)
-  /* la seconda riga resta il tempo di leggerla, e non un secondo di più:
-     da lì in avanti il campo parla da sé */
   setTimeout(() => { primiPassi.value = false }, 6000)
 })
 
@@ -249,7 +145,6 @@ const dove = ref(null)             // su che piazzola nascerà
 const strada = ref(null)           // e che ramo prenderà, se è il gradino del bivio
 
 const massimo = computed(() => tappa.value.cap)
-/* ogni torre ha il suo listino: quanto costa costruire quella lì, adesso */
 const costoNuova = tipo => cassa.costoNuova(hud.torri, tipo)
 const costi = computed(() => Object.fromEntries(tappa.value.torri.map(k => [k, costoNuova(k)])))
 const costoSalita = torre => cassa.costoSalita(torre)
@@ -258,16 +153,11 @@ const livelloOp = (t, torre) => cassa.gradino(torre)
 const motore = () => campo.value?.motore()
 const S = () => campo.value?.misure()?.S || 1
 
-/* ── cosa sta guardando il dito ──
-   La passa al campo, che la traduce in un alone e in un cerchio di
-   raggio d'azione. È l'unica cosa che la schermata dice al campo su
-   cosa disegnare, e resta un dato: nessuno qui tocca un pixel. */
+// Cosa sta guardando il dito: la passa al campo (un dato, nessun pixel qui).
 const mira = computed(() => {
   if (fase.value !== 'gioco') return null
   const m = motore()
   if (!m) return null
-  /* mentre si cerca dove posarla, il campo mostra lei e tutte le
-     piazzole libere: è l'unica domanda aperta */
   const t = sposto.value
   if (t) return { torre: t, x: t.x, y: t.y, tipo: t.tipo,
                   raggio: t.raggio(S()), muovendo: true }
@@ -281,16 +171,11 @@ const mira = computed(() => {
            raggio: f.tipo ? TORRI[f.tipo].raggio * S() : 0 }
 })
 
-/* le torri a cui chi sta per arrivare è immune: il preavviso, letto nel
-   momento in cui si sceglie che cosa costruire. In un'ondata mista sono
-   quelle che non toccano nessuno dei due (`immuniDellOnda`) */
+// le torri a cui chi sta per arrivare è immune, letto dal preavviso
 const immune = computed(() => immuniDellOnda(vista.prossime[0]))
 
-/* ── il blocchetto dei potenziamenti ──
-   Si apre dal gettone ⬆️ sul campo. È una fotografia presa quando lo si
-   apre — le torri del motore non sono reattive, e un foglio che si
-   riscrive da solo mentre lo si legge non si legge — e si rifà a ogni
-   apertura. */
+// Il blocchetto: una fotografia presa quando si apre (le torri del motore
+// non sono reattive), rifatta a ogni apertura.
 const blocchetto = ref(null)
 function apriBlocchetto() {
   const m = motore()
@@ -315,10 +200,8 @@ function apriTorre(torre) {
   foglio.value = { che: 'torre', torre }
 }
 
-/* ── spostare ──
-   Il tasto nella scheda apre il modo; il tocco su una piazzola lo
-   chiude. Chi paga e chi decide se si può è il motore: qui si dice solo
-   com'è andata. */
+// Il tasto nella scheda apre il modo, il tocco su una piazzola lo chiude
+// (il motore decide se si può e paga; qui si dice solo com'è andata).
 function chiediSposta() {
   const t = foglio.value && foglio.value.torre
   if (!t) return
@@ -352,10 +235,8 @@ function apriOperazione(t, torre, costo) {
   foglio.value = { che: 'conto', torre, piazzola: dove.value, tipo: t }
 }
 
-/* ── costruire ──
-   La piazzola è quella che si è toccata; chi arriva da fuori senza
-   averne toccata una (i test, e chi gioca di fretta) prende la prima
-   libera, che è l'ordine di sempre. */
+// La piazzola è quella toccata; chi non ne ha toccata una (i test) prende
+// la prima libera.
 function scegliTorre(t) {
   if (fase.value !== 'gioco' || scelta.value) return
   if (!tappa.value.torri.includes(t)) return
@@ -367,10 +248,8 @@ function scegliTorre(t) {
   apriOperazione(t, null, costo)
 }
 
-/* toccare una torre già in campo apre il calcolo che la fa salire di
-   livello — e se è il gradino del bivio, `ramo` dice anche che cosa
-   diventerà. La scelta non costa un calcolo in più: è quello che il
-   calcolo compra. */
+// Toccare una torre apre il calcolo che la fa salire; `ramo`, al bivio,
+// dice anche cosa diventerà.
 function potenzia(torre, ramo = null) {
   if (fase.value !== 'gioco' || scelta.value || !torre) return
   if (!cassa.potenziabile(torre)) { avvisa('Già al massimo'); return }
@@ -381,9 +260,7 @@ function potenzia(torre, ramo = null) {
   apriOperazione(torre.tipo, torre, costo)
 }
 const potenziaIndice = i => potenzia(motore().torri[i])
-/* dalla scheda: la torre di cui si sta guardando la scheda */
 const salgo = ramo => potenzia(foglio.value && foglio.value.torre, ramo)
-/* i due mestieri, quando è il momento di sceglierli */
 const rami = computed(() => {
   const f = foglio.value
   return f && f.che === 'torre' ? cassa.rami(f.torre) : []
@@ -506,10 +383,8 @@ function inizia(i = tappaIdx.value, quale = null) {
   tappaIdx.value = i
   cassa.perTappa(tappa.value)
   chiudi()
-  /* i regali si rileggono dal profilo a ogni partita: è lì che vivono,
-     e una partita nuova deve partire con quello che si è preso nella
-     precedente. Nella campagna il motore li ignora da sé (la tappa non
-     li prevede), quindi qui non c'è nessun `if` da ricordarsi. */
+  // i regali si rileggono dal profilo: nella campagna il motore li ignora
+  // da sé (la tappa non li prevede)
   regali.value = regaliDi('torri')
   rimandato.value = false
   campo.value.avvia(tappa.value, i + 1, regali.value)
@@ -539,23 +414,15 @@ function tappaSuperata() {
 
 const prossimaTappa = () => inizia(Math.min(TAPPE.length - 1, tappaIdx.value + 1))
 const prossima = computed(() => (campagna.value ? TAPPE[tappaIdx.value + 1] || null : null))
-/* la partita libera del terreno su cui si è appena giocato: è quella
-   che il cartello del trionfo offre — si è finito nella palude, e la
-   palude senza fine è la porta accanto */
+// la partita libera del terreno appena giocato: quella offerta dal trionfo
 const liberaDiQui = () => (LIBERE.find(l => l.campagna === tappa.value.campagna) || LIBERE[0]).chiave
 
 function finePartita() {
   fase.value = 'fine'
   chiudi()
   suono.fine()
-  /* Nella partita libera non si vince: si regge. Quello che resta è
-     quante ondate, e com'era fatta quella partita — è la stessa cosa che
-     la corsa infinita fa coi metri. Le ondate *superate* sono quella in
-     corso meno una, come le conta il cartello. */
   primato.value = null
   if (!campagna.value) {
-    /* il record è **di questa libera**: la chiave della sfida è quella
-       del terreno, e il quaderno di ogni terreno è suo */
     const sfida = sfidaDi(SENZA_FINE, tappa.value.chiave)
     const esito = segnaPrimato('torri', Math.max(0, hud.onda - 1), Date.now(),
                                { uccisi: hud.uccisi, torri: hud.torri }, tappa.value.chiave)
@@ -576,15 +443,12 @@ onMounted(() => {
   cassa.perTappa(tappa.value)
   regali.value = regaliDi('torri')
   campo.value.apparecchia(tappa.value, tappaIdx.value + 1)
-  /* il gancio dei test: da fuori si gioca una partita senza toccare lo
-     schermo. Non lo usa nessuna parte del gioco. */
+  // il gancio dei test: gioca una partita senza toccare lo schermo (non lo
+  // usa nessuna parte del gioco)
   window.__td = { hud, fase, scelta, op, inizia, scegliTorre, operazioneFinita,
-                  // il blocchetto dei potenziamenti: aprirlo da fuori è come toccare ⬆️
                   blocchetto, apriBlocchetto, vista,
-                  /* la mossa che farebbe il giocatore modello, con la stessa
-                     funzione del simulatore (`prossimoAcquisto`): la prova
-                     nel browser deve giocare come la taratura, non come un
-                     giocatore inventato dentro il test */
+                  // la mossa del giocatore modello, con la stessa funzione
+                  // del simulatore (`prossimoAcquisto`)
                   mossaModello: (largo = false) => {
                     const m = motore(), t = tappa.value
                     if (!m) return null
@@ -621,11 +485,7 @@ onMounted(() => {
 
 <template>
   <div class="schermo td">
-    <!-- la barra è quella di tutte le schermate: si torna indietro sempre
-         allo stesso modo, e il gioco ci appende i suoi indicatori -->
-    <!-- il ⏸ c'è solo dove il campo cammina: sulla mappa non c'è niente
-         da fermare, e davanti al cartello di fine tappa (o a quello di un
-         traguardo) il gioco è già fermo dietro un velo suo -->
+    <!-- il ⏸ c'è solo dove il campo cammina -->
     <Barra :titolo="titolo" :guida="guida" @aiuto="aiuto"
            :pausa="fase === 'gioco' && !state.festa.length" @pausa="metti()"
            :monete="fase !== 'gioco'" @indietro="$emit('vai','home')">
@@ -633,13 +493,7 @@ onMounted(() => {
                     :ondate="campagna ? tappa.ondate : ''" @velocita="cambiaVelocita" />
     </Barra>
 
-    <!-- ════════ L'ARENA ════════
-         Il campo, quello che gli sta intorno, e il foglio che ci sale
-         sopra. Quando il campo cammina lo dice `fermo`, che è l'elenco
-         comune (`giochi/pausa.js`): la pausa chiesta col ⏸, il telefono
-         posato, il foglio del `?`, e il cartello di un traguardo — quel
-         velo copre tutto per tre secondi, e un premio non deve costare
-         un cuore a chi non vede più i mostri. -->
+    <!-- L'arena: il campo cammina quando non è `fermo` (giochi/pausa.js) -->
     <div class="arena" :class="{ gioca: fase === 'gioco' }">
       <CampoDiBattaglia ref="campo" :hud="hud" :vista="vista" :eventi="eventi"
                         :attivo="!fermo" :calcolando="!!scelta"
@@ -647,21 +501,9 @@ onMounted(() => {
                         :mira="mira" :pelle="pelle"
                         @esito="finita" @potenzia="apriTorre" @piazzola="apriPiazzola" />
 
-      <!-- Sopra il campo, e solo fra un'ondata e l'altra: chi sta
-           arrivando, e il tasto che lo fa arrivare. Durante la
-           battaglia lasciano il posto alla scheda del mostro che è in
-           campo — le due cose non servono mai insieme, e su un telefono
-           lo spazio in alto è uno solo. -->
-      <!-- mentre si cerca dove posare una torre, il fondo dice cosa sta
-           succedendo e come tirarsene fuori -->
-      <!-- la prima partita in assoluto: una riga che dice la sola cosa da
-           fare adesso. Non blocca niente e se ne va da sé (`dritta`). -->
+      <!-- la prima partita in assoluto: non blocca niente, se ne va da sé -->
       <div v-if="dritta" class="primi-passi">{{ dritta }}</div>
 
-      <!-- il gettone dei potenziamenti: quanti se ne sono presi, e
-           toccandolo il blocchetto che dice cosa hanno fatto. Sta sul
-           campo, in basso a sinistra, e non nella barra: lassù i gettoni
-           sono già al limite, e un quinto spingeva fuori l'energia -->
       <button v-if="fase === 'gioco' && !foglio && !blocchetto" class="tondo su-potenziamenti"
               data-azione="potenziamenti" aria-label="potenziamenti" @click="apriBlocchetto">
         ⬆️<b>{{ vista.potenziamenti }}</b>
@@ -681,14 +523,11 @@ onMounted(() => {
         </button>
       </template>
 
-      <!-- a battaglia in corso, appena l'ondata è uscita tutta: la
-           prossima si può mandare subito, e il premio dice quanto rende -->
       <button v-else-if="fase === 'gioco' && vista.puoiChiamare && !foglio && !blocchetto"
               class="bottone stretto onda svelto" data-azione="chiama-prossima" @click="chiamaOnda">
         Manda la prossima ▶<template v-if="vista.premio"> · +{{ vista.premio }} ⚡</template>
       </button>
 
-      <!-- mappa della campagna · vinta · trionfo · sconfitta -->
       <div v-else class="banco">
         <MappaTappe v-if="fase === 'mappa'" :tappe="TAPPE" :fatte="progresso.tappa"
                     :libera="libera" :libere="libere" :regali="doteLibera"
@@ -736,26 +575,16 @@ onMounted(() => {
         </template>
       </Foglio>
 
-      <!-- ════════ IL BLOCCHETTO ════════
-           I potenziamenti presi e cosa hanno fatto. Un foglio come gli
-           altri, con la ✕ in alto a destra; il campo non si ferma. -->
       <Foglio v-if="fase === 'gioco'" :aperto="!!blocchetto" titolo="I tuoi potenziamenti"
               @chiudi="blocchetto = null">
         <Potenziamenti v-if="blocchetto" :blocchetto="blocchetto"
                        :pittori="pelle ? pelle.pittori : null" />
       </Foglio>
 
-      <!-- ════════ IL REGALO ════════
-           Ogni cinque ondate della partita libera. Sta sopra il foglio e
-           sotto la pausa: chi posa il telefono davanti alle tre carte
-           trova la pausa, e dietro le carte che aspettano. -->
+      <!-- il regalo sta sopra il foglio e sotto la pausa -->
       <Regalo v-if="regaloAperto && !inPausa" :presi="vista.regaliPresi" :gradi="regali"
               @scegli="prendiRegalo" @piu-tardi="rimandato = true" />
 
-      <!-- il velo copre tutto, foglio compreso: in pausa non c'è niente
-           da fare se non ripartire. Le condizioni sono le stesse del ⏸ —
-           dove il gioco sta già dietro un altro velo non se ne mette un
-           secondo sopra. -->
       <VeloPausa v-if="inPausa && fase === 'gioco' && !state.festa.length"
                  :dove="dovEravamo" @riprendi="togli" />
     </div>
