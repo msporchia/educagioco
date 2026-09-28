@@ -1,18 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I VESTITI DELLA PISTA
-
-   Una tappa non è un livello nuovo del motore: è **lo stesso motore con
-   altri numeri e un altro vestito**. Qui ci sono solo i vestiti — cielo,
-   prato, strada, alberi — e nient'altro: chi disegna riceve i colori e
-   non sa che esistano le tappe, chi gioca non sa che esistano i colori.
-
-   Le tinte non sono decorazione. Nove tappe con lo stesso sfondo sono la
-   stessa schermata nove volte, e un bambino che rigioca la quarta deve
-   riconoscerla in mezzo secondo — dal colore, non leggendo il titolo.
-
-   `bordo` è quello che sfila a lato della strada: è la cosa che *si vede*
-   passare, e senza qualcosa che passa vicino la velocità non si sente.
-   ═══════════════════════════════════════════════════════════════════ */
+// I vestiti della pista: una tappa è lo stesso motore con altri numeri
+// e un altro vestito. Le tinte non sono decorazione — un bambino che
+// rigioca la quarta tappa deve riconoscerla dal colore, non dal titolo.
+// `bordo` è quello che sfila a lato della strada: senza qualcosa che
+// passa vicino, la velocità non si sente.
 
 export const VESTI = {
   prato: {

@@ -1,24 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA TRUPPA È UN NUMERO SCRITTO IN TERRA
-
-   Cinque verdi valgono un rosso, cinque rossi un blu, cinque blu un
-   giallo — e ognuno spara quanto vale. Non è una trovata grafica per non
-   disegnare duecento figure: è il **raggruppamento** messo in terra. 87
-   non è un mucchio, sono tre blu, due rossi e due verdi, e si contano
-   con gli occhi.
-
-   Si cambia **ogni cinque**, non ogni dieci. Con dieci il branco arriva a
-   quattromila e i cancelli devono offrire «+6000» per contare qualcosa:
-   numeri che nessuno somma a mente e che in terra non si vedono più. Con
-   cinque il massimo è 624 — quattro gradi, al massimo quattro figure per
-   grado, sedici soldati in scena — e ogni bonus torna un numero umano.
-
-   Qui dentro non c'è niente che giochi: c'è la tabella dei gradi e il
-   modo di scrivere un numero con quei gradi. Chi disegna legge i colori
-   da qui, chi calcola legge i valori: sono la stessa tabella, ed è
-   l'unico motivo per cui il numero scritto e quello che corre in terra
-   non possono raccontare due storie diverse.
-   ═══════════════════════════════════════════════════════════════════ */
+// La truppa è un numero scritto in terra: cinque verdi valgono un
+// rosso, cinque rossi un blu, cinque blu un giallo, e ognuno spara
+// quanto vale — è il raggruppamento, non una trovata per non disegnare
+// duecento figure. Il perché del cambio ogni cinque (non dieci) è in
+// docs/corsa/regole.md.
 
 export const CAMBIO = 5
 
@@ -29,14 +13,13 @@ export const ORDINI = [
   { v: CAMBIO ** 3, colore: '#ffcf3a', ombra: '#b98c00', nome: 'gialli' },
 ]
 
-/* Il massimo che i quattro gradi sanno rappresentare: quattro gialli,
-   quattro blu, quattro rossi, quattro verdi. Oltre non si va — chi
-   guadagna di più lo incassa in stelle (vedi `motore/corsa.js`), perché
-   un branco da diecimila non è un numero: è una scritta. */
+// Il massimo che i quattro gradi sanno rappresentare (quattro gialli,
+// quattro blu, quattro rossi, quattro verdi): oltre non si va, chi
+// guadagna di più lo incassa in stelle.
 export const TETTO = CAMBIO ** 4 - 1
 
-/* Da un numero ai suoi gruppi, dal grado più alto al più basso.
-   `[{ grado, quanti }]`, e i gradi vuoti non compaiono. */
+// Da un numero ai suoi gruppi, dal grado più alto al più basso.
+// [{ grado, quanti }], e i gradi vuoti non compaiono.
 export function scomponi(n) {
   const fuori = []
   let resto = Math.max(0, Math.floor(n))
@@ -48,16 +31,13 @@ export function scomponi(n) {
   return fuori
 }
 
-/* La stessa cosa detta a parole — «3 blu · 2 rossi · 2 verdi» — che è
-   quello che compare accanto alla truppa mentre corre. Scritto e
-   disegnato devono dire la stessa cosa, o il raggruppamento non si
-   impara: si subisce. */
+// «3 blu · 2 rossi · 2 verdi»: quello che compare accanto alla truppa
+// mentre corre, e deve dire la stessa cosa del disegno in terra.
 export const aParole = n =>
   scomponi(n).map(({ grado, quanti }) => `${quanti} ${ORDINI[grado].nome}`).join(' · ')
 
-/* La fila di soldati da mettere in scena, uno per figura, dal più forte
-   al più debole. Chi disegna riceve **i gradi già decisi** e pensa solo a
-   dove metterli: qui non si sa niente di schieramenti e di pixel. */
+// La fila di soldati da mettere in scena, uno per figura, dal più forte
+// al più debole. Chi disegna riceve i gradi già decisi.
 export function figure(n) {
   const fila = []
   for (const { grado, quanti } of scomponi(n))
@@ -78,8 +58,8 @@ export function guastiDegliOrdini() {
     guasti.push('due gradi hanno lo stesso colore: in terra sarebbero indistinguibili')
   if (TETTO !== CAMBIO ** ORDINI.length - 1)
     guasti.push(`il tetto (${TETTO}) non è quello che i ${ORDINI.length} gradi sanno scrivere`)
-  /* la prova che conta: qualunque numero fino al tetto si scrive, e
-     rileggendo i gruppi si ritrova identico */
+  // la prova che conta: qualunque numero fino al tetto si scrive, e
+  // rileggendo i gruppi si ritrova identico
   for (const n of [0, 1, 4, 5, 24, 25, 87, 124, 125, 243, 500, TETTO]) {
     const somma = scomponi(n).reduce((t, { grado, quanti }) => t + quanti * ORDINI[grado].v, 0)
     if (somma !== n) guasti.push(`${n} scomposto e risommato fa ${somma}`)
