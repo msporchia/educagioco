@@ -1,85 +1,75 @@
-# 🚜 La fattoria — cosa manca al secondo albero
+# La fattoria — da fare
 
-Il progetto è [`fattoria-albero.md`](fattoria-albero.md) §8. Questa è
-**la lista da spuntare**: quello che il secondo albero non ha ancora, e
-quello che è stato deciso di *non* fare, con il perché. Si aggiorna
-quando una riga si chiude, e una riga chiusa si cancella: la storia sta
-in git e nel progetto.
+Solo voci aperte. Una voce chiusa si cancella: la regola che ne resta va
+nel file del suo argomento.
 
-Aggiornata il 24 settembre 2026.
+## Sprite che mancano
 
-## Prima di pubblicare
+Il gioco è intero anche senza: chi aspetta usa un ripiego e lo dichiara in
+`aspetta` (vedi [sprite.md](sprite.md)). I prompt sono già scritti in
+`strumenti/sprite/sorgenti/fattoria/generati/PROMPT-secondo-albero.md`.
 
-- [ ] **La suite intera nel browser** — `npm run test:tutto` — prima del
-      push. Finora sono girati i test della fattoria e dell'albero.
-- [ ] **La prova col dito su un telefono vero** delle tre schermate
-      nuove: la fila di una macchina, una bottega, la mongolfiera.
-      In Chrome si aprono coi tocchi simulati; col dito vero non le ha
-      ancora provate nessuno.
-- [ ] **Un salvataggio vero**: aprire la build con una **copia** del
-      profilo di casa. I test dicono che una macchina che lavorava
-      diventa una fila da uno e che botteghe e mongolfiera nascono vuote;
-      un profilo vero dice il resto.
-
-## Sprite
-
-Finché manca il suo disegno, una voce ne usa uno preso in prestito e
-dichiara in `aspetta` quello vero: il gioco è intero anche senza, e
-`guastiDelCatalogo` / `guastiDelleColture` diventano rossi il giorno
-che il pezzo arriva e la riga non l'ha preso. I prompt stanno in
-[`PROMPT-secondo-albero.md`](../strumenti/sprite/sorgenti/fattoria/generati/PROMPT-secondo-albero.md).
-
-- [ ] **`animali_3.png`** — i tre ritratti della peschiera. Stava in
-      `edifici_5`, ed è uscita: è un recinto, e si chiede accanto ai
-      recinti, col prato che hanno tutti.
-- [ ] **`addobbi.png`** — fuori dall'albero: fiocco, sciarpa,
-      campanella, mantellina e zainetto, sospesi finché non sono
-      sprite, in tre viste ciascuno. È l'unico foglio che vuole anche
-      del codice: `addosso()` in `scena/tela.js` oggi sa scrivere solo
-      un'emoji.
-
-Fatti: `edifici_4` (mongolfiera, piazzola, gelateria, mensa), `merci_3`
-(pane, torta, zucchero, succo, gelato, pasta), `campi_3` (barbabietola,
-lavanda, riso), `merci_4` (le ventidue merci che mancavano, più il
-pastone e il miele: adesso nessuna merce usa un ripiego) ed
-`edifici_5` (la friggitoria e le otto decorazioni della fiera).
+- [ ] **`animali_3.png` — i ritratti della peschiera** (calmo, mangia,
+      pronto…). È un recinto, e si chiede accanto ai recinti, col prato che
+      hanno tutti. Arrivato il foglio, `peschiera` in `dati/catalogo.js`
+      smette di `aspetta: 'recinto_pesci_calmo'` e prende i suoi `stati`.
+- [ ] **`addobbi.png` — fiocco, sciarpa, campanella, mantellina,
+      zainetto**, in tre viste ciascuno. È l'unico foglio che vuole anche
+      codice: `addosso()` in `scena/tela.js` sa posare solo un'emoji, e va
+      insegnato a posare un `pezzo`. Poi le righe in `dati/addobbi.js`
+      passano da `emoji` a `pezzo` e perdono `sospeso`; `unita/addobbi`
+      pretende un punto per ogni aggancio. Con gli sprite può tornare anche
+      il maglione come addobbo pagato col granaio, e con lui la quinta
+      uscita di `dati/usi.js`.
 
 ## Da provare giocando
 
-- [ ] **Il ritmo dei livelli.** Il premio paga i gesti e non le monete,
-      con `PER_GESTO = 2`: al banco un raccolto rende in media ⭐6 contro
-      i 7 di prima, e botteghe e mongolfiera riportano la media a quella
-      di prima (§8.2). È un conto sulle tabelle — `unita/mercato` tiene
-      fermo il tetto a ⭐6,8 — non una partita: la fila nelle macchine
-      fa produrre di più a chi gioca, e quanto non l'ha misurato
-      nessuno. Se la roba nuova arriva troppo in fretta, la leva è
-      `PER_GESTO`.
-- [ ] **La fila da un posto.** Deciso il 24 settembre 2026: di base
-      un posto, e gli altri a prezzi che raddoppiano. I numeri —
-      🪙20 · 40 · 80 · 160 · 320 — sono una proposta sulla sua
-      richiesta di un rincaro esponenziale: da guardare se il secondo
-      posto lo comprano tutti subito (allora 🪙20 è una formalità) e se
-      oltre il terzo ci arriva qualcuno. Le leve sono `PRIMO_POSTO` e
-      `RINCARO_DELLA_FILA` in `dati/coda.js`.
+- [ ] **Il ritmo dei livelli.** Il premio a gesti (`PER_GESTO = 2`) è un
+      conto sulle tabelle: al banco un raccolto rende ⭐6 contro 7, e
+      botteghe e mongolfiera dovrebbero riportare la media a quella di
+      prima ([chi-chiede.md](chi-chiede.md)). La fila fa produrre di più a
+      chi gioca, e quanto non l'ha misurato nessuno. Se la roba nuova
+      arriva troppo in fretta, la leva è `PER_GESTO`.
+- [ ] **La fila da un posto.** 🪙20 · 40 · 80 · 160 · 320 sono una proposta
+      sul rincaro che raddoppia: guardare se il secondo posto lo comprano
+      tutti subito (allora 🪙20 è una formalità) e se oltre il terzo ci
+      arriva qualcuno. Le leve sono `PRIMO_POSTO` e `RINCARO_DELLA_FILA`
+      in `dati/coda.js`.
 
-## Deciso di non fare
+## Da guardare col dito, su un telefono vero
 
-- **Nessun tappo sui livelli** («per salire devi aver provato le ricette
-  nuove»). Un bambino che accumula monete e le spende tutte insieme
-  salta avanti di parecchi livelli: è una scelta sua, e da lì si
-  arrangia. Ci si aspetta che usi quello che ha; un vincolo in più è una
-  complicazione che non vale.
+Fatte e provate dai test, mai giocate col dito: in Chrome girano coi tocchi
+simulati.
 
-- **Il `?` della fattoria non spiega botteghe, fila e mongolfiera.** Il
-  gioco le dà un po' per volta, e il `?` spiega le prime mosse e i primi
-  concetti: il resto si scopre toccando. (Gli è stata aggiunta una
-  riga sola: il mercato, che arriva al 4.)
-- **Il consiglio non sa niente di botteghe e mongolfiera**, per lo
-  stesso motivo: insegna la catena, non tutti i posti dove portarla.
-- **Nessuna nota nella posta dei grandi** per il secondo albero: una
-  nota obbliga un grande a leggerla, e il posto giusto è il changelog
-  dei bambini (`guide/novita-bambini.js`), dove ha le sue due righe —
-  la fila delle macchine, e botteghe e mongolfiera salendo di livello.
-- **La mongolfiera non chiede mangime** (`mangime: true` in
-  `dati/coltivazioni.js`): solo prodotti finiti, come la nave di Hay
-  Day. Il banco sì, perché lì li vuole la veterinaria.
+- [ ] **La fila di una macchina, una bottega, la mongolfiera.**
+- [ ] **La camminata**: il cane che aggira la casa invece di attraversarla,
+      e chi si accosta quando sulla meta non si può stare
+      (`motore/camminata.js`).
+
+## Da migliorare
+
+- [ ] **Dire *cosa* serve, non solo che serve.** Il 💭 sopra cani e gatti è
+      generico: un'icona per bisogno (🍖 la pancia, 🎾 il gioco, 🪮 il pelo —
+      sono già le `icona` di `BISOGNI` in `dati/bisogni.js`) si legge da
+      lontano senza aprire la scheda. Lo stesso per il 🧺 dei campi, che
+      potrebbe dire cosa è pronto. I recinti l'hanno già risolto col fumetto
+      della merce: il disegno c'è (`chiede` di `Tela` in `scena/tela.js`),
+      manca chi gli passi la faccia giusta.
+- [ ] **Gli animali dei recinti non camminano.** Un recinto è un disegno che
+      cambia stato; per farli girare servirebbe un attore a quattro
+      direzioni per specie, cioè un foglio ciascuno. Va bene così, ma è la
+      cosa che un bambino chiederà.
+- [ ] **L'acqua si vende come disegno, non come acqua.** Laghetto e stagno
+      sono pezzi da giardino di due-tre celle. L'acqua vera si dipinge
+      (`dipingi`/`spiana` nel motore, `dati/terreni.js`,
+      `scena/bordi.js`), e il pennello resta spento in `Gioco.vue` finché il
+      pittore non sa raccordare due materie diverse.
+- [ ] **Altri modi di spendere monete grosse**: un campo che matura più in
+      fretta, un annaffiatoio. Il money pit vive sull'attrezzatura (silos e
+      fila ci sono già; gli addobbi sono la spesa piccola).
+- [ ] **Raccogliere i campi uno per uno** oggi è la stessa scheda dei cani,
+      e va bene; con molti campi diventerà noioso prima che comodo.
+- [ ] **Il bosco è salvato cella per cella** (`ostacoli` nel salvataggio,
+      ~400 voci dopo sei acquisti di terra). Regge; se un giorno si
+      comprano decine di piazzole conviene generarlo al volo dalle
+      coordinate e salvare solo gli sgomberi.

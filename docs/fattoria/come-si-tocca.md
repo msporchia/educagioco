@@ -1,0 +1,122 @@
+# Come si tocca la fattoria
+
+I gesti sul prato, il baule, girare e rovesciare, e le regole dei fogli.
+Le regole del dito che valgono per tutti i giochi stanno in
+[`../core/il-dito.md`](../core/il-dito.md), quelle dei fogli in
+[`../core/interfaccia.md`](../core/interfaccia.md).
+
+## Sul prato
+
+- **Un gesto solo per tutto: si tocca una cosa propria e si vede cosa ci
+  si può fare.** Toccare un cane apre la sua scheda, toccare un campo la
+  sua. Tenere premuto e trascinare sposta; tenere premuto sul prato apre
+  il baule lì.
+- **Trascinando contro il bordo il mondo scorre da solo**: il dito fermo
+  in una fascia lungo un bordo fa scorrere verso quel lato, piano se la si
+  sfiora e svelto se ci si appoggia, e la cosa resta sotto il dito. Si
+  ferma dove il mondo finisce. Lo schermo di un telefono tiene meno di
+  metà fattoria, e prima per portare una panchina di là bisognava posarla,
+  spostare la vista e riprenderla. Il conto è puro, in `scena/spinta.js`
+  (`unita/spinta-fattoria`).
+- **Il baule tenuto premuto si ricorda dove**: il posto è già scelto, e
+  la panchina si posa lì. Se lì non ci sta resta appesa al dito, che è il
+  modo di dire «scegline un altro» senza un cartello. Aperto dal tasto in
+  alto il baule non ha un posto da ricordare: si posa col tocco dopo.
+- **Inviti, non rimproveri**: un 🧺 sopra un campo pronto e una macchina
+  che ha finito, un 💭 sopra una bestia che ha bisogno, un 📋 sopra la
+  bancarella con un ordine consegnabile; un recinto cambia faccia da sé.
+  Si vedono da lontano senza aprire niente, e non succede niente se si
+  ignorano.
+- **Il click fantasma va ingoiato**: chi apre un pannello dal `pointerup`
+  della tela riceve subito dopo un `click` sul velo appena comparso
+  (`zittisciIlFantasma` in `Gioco.vue`). La prova è un tocco vero via CDP
+  (`integrazione/fattoria`).
+
+## Girare e rovesciare
+
+Tenendo premuto una cosa posata escono **↻ giralo**, **⇄ rovescialo** e
+**📦 mettilo via**. I primi due compaiono solo se quel pezzo li regge:
+meglio niente che un tasto che fa una cosa storta.
+
+- **Certe cose il foglio le disegna in due versi** (la staccionata
+  sdraiata e il palo in piedi, la casa davanti e di dietro): ↻ cambia
+  disegno, e il pezzo si porta dietro il suo ingombro ([2,1] → [1,2]).
+- **Certe cose si coricano**: ↻ le ruota davvero con un `ctx.rotate` (la
+  pixel art regge i novanta gradi esatti), senza copie nell'atlante. Quasi
+  tutte hanno **due versi e non quattro**: niente è disegnato dallo zenit,
+  e il quarto di giro sposta l'ombra di lato (l'occhio lo accetta), il
+  mezzo giro la porta sopra (a gambe per aria). I quattro versi pieni sono
+  solo per quello che non poggia su niente: pozza, ninfea, coccinella.
+- **Quasi tutto si rovescia**: la porta del fienile dal lato sbagliato, due
+  casette identiche affiancate. Lo specchio non tocca l'ingombro, quindi ⇄
+  non dice mai di no per mancanza di posto.
+- **Quello che no**: una casa girata cade (facciata di lato, ombra in su);
+  i campi e i cartelli (vedi [campi-e-silos.md](campi-e-silos.md)).
+- **Lo decide il foglietto, non il gioco**: il campo `trasforma` in
+  `strumenti/sprite/FORMATO.md`, che `atlante.py` porta nel modulo
+  generato. Chi ha guardato il disegno è chi scrive quel file; duecento
+  righe di catalogo che lo ridicono sarebbero da tenere d'accordo per
+  sempre.
+
+## Quello che si guarda prima di scegliere
+
+**Davanti a una scelta, quello che serve per farla dev'essere a schermo.**
+
+- **Le ricette sono caselle, non formule**: una casella per pezzo, accesa
+  se ce l'hai, tratteggiata con la figura in ombra se manca («questo ti
+  manca», non «non si può»). Provato «3 → 2»: una formula si legge, e
+  leggere qui non si dà per scontato. Il foglio delle ricette è largo 400
+  px: a 360 la freccia andava a capo nel mezzo.
+- **«Ne hai N» ovunque si sceglie**, sotto ogni coltura e ogni ricetta:
+  risponde a *mi serve?*. Uno scomparto colmo lo dice **prima** di
+  seminare, in oro.
+- **Il nome, dove c'è un disegno accanto**: nelle schede, nel silo e nei
+  consigli si scrive «foraggio» e non 🥬, perché l'emoji è un ripiego e a
+  volte non somiglia alla figura. L'emoji resta dove niente la
+  contraddice.
+- **L'oro vuol dire pieno** (silo, carretto), mai il rosso di un rifiuto.
+
+## Il baule
+
+- **Tre metà, scelte prima di entrare**: 🌾 *La fattoria* (quello che fa
+  qualcosa), 🌸 *Decorazioni* (quello che sta lì), 🐕 *Animali*. Sono tre
+  tasti tondi fuori dal baule, accanto al gettone del livello, che lo
+  aprono già dalla parte giusta; dentro restano come linguette. Compaiono
+  solo le metà che hanno qualcosa: al primo livello c'è solo 🌾. Provato
+  un 📦 solo con la scelta dentro: due gesti, e un pacco chiuso non fa
+  venire in mente né una panchina né un cane.
+- **Sotto «la fattoria» la linguetta è una sola, e non si mostra**: campo,
+  mulino, silos, macchine e recinti sono i passi della stessa catena, e
+  divisi in «Campi» e «Cortile» la fila non si vedeva. Provati anche nove
+  finti campi da arredo: si posavano e non facevano niente, e sono stati
+  tolti.
+- **Griglia a colonne uguali**, figure grandi **in scala fra loro** su un
+  ripiano: una casa si vede che è una casa. Quello che non ti puoi
+  permettere dice **di quanto** («manca 🪙12»), che è il numero che rimanda
+  a fare esercizi. Le cose che lavorano hanno un filo d'oro attorno.
+- **Lo scaffale si scorre col dito**: toccare una carta la prende (e resta
+  appesa al dito), strisciare in su o in giù scorre e non prende niente,
+  strisciare di lato la tira fuori e la posa dove il dito si alza. Col
+  mouse si scorre con la rotella. Su e giù è del browser (`touch-action:
+  pan-y`), e un `pointercancel` vuol dire «non è successo niente».
+  Provato «si prende al primo contatto» (`pointerdown`):
+  una strisciata si portava via la carta, e la *comprava*. Soglie in
+  `scena/dito.js`, vista `viste/Roba.vue` e `viste/Provino.vue`; lo vede
+  solo un test che scorre col dito (`integrazione/campi`).
+
+## I fogli
+
+- **Ogni foglio ha la stessa ✕ in alto a destra**, appiccicata
+  (`viste/Chiudi.vue`). I tasti in fondo restano **solo dove sono una
+  scelta** («Lascia stare / Compra», «Chiudi / Ritira», «🎩 Vestilo / Va
+  bene»); dove l'unica cosa da fare era chiudere (baule, livelli, mercato,
+  albero) lo fa la ✕.
+- **Ogni foglio è una colonna**: titolo e tasti fermi, l'elenco in mezzo
+  si stringe e scorre (`flex: 0 1 auto; min-height: 0`), e nessuno dichiara
+  un'altezza in `vh` — misura presa a occhio su un telefono solo, che su
+  uno schermo basso faceva uscire il foglio dal velo con i tasti
+  irraggiungibili.
+- `unita/fattoria` legge i `.vue` e pretende la ✕ da ogni vista che
+  dichiara `'chiudi'` fra i suoi `emits`.
+
+Nei test: `[data-chiudi]` o `aria-label="chiudi"`, non il carattere.
