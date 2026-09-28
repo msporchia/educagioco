@@ -1,29 +1,10 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   «CERCA AGGIORNAMENTI» — IL FOGLIO
-
-   Si apre dal fondo della home («↻ cerca aggiornamenti», accanto alla
-   versione) e dal nastro «c'è una versione nuova»: tutti e due chiamano
-   `aggiornaOra()` in `aggiornamento.js`, e questo foglio fa vedere a che
-   punto è. Qui dentro non si decide niente.
-
-   Il foglio esiste per una cosa sola: **che l'attesa si veda.** Sette
-   megabyte e mezzo su una rete lenta sono minuti, e un aggiornamento
-   muto è indistinguibile da uno che non arriverà mai — che era proprio
-   il difetto da togliere. Quindi i megabyte si contano, e quando va
-   storto si dice **cosa** è andato storto e che il gioco è rimasto
-   com'era: «non ha funzionato» e basta non dice se si può giocare.
-
-   Si chiude solo con la ✕. Non toccando fuori: a scaricamento in corso
-   chiudere vuol dire fermarlo, e un tocco di passaggio sul velo non
-   deve buttare via tre megabyte già arrivati.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il foglio di «cerca aggiornamenti»: non decide niente, mostra a che punto
+// è aggiornaOra() (docs/core/aggiornamento.md). Si chiude solo con la ✕
+// (non toccando fuori): a scaricamento in corso chiuderebbe e fermerebbe.
 import { computed } from 'vue'
 import { aggiornando, aggiornaOra, lasciaStare, inMega } from '../aggiornamento.js'
 
-/* la versione a schermo: «hai già l'ultima» dice questa, non quella del
-   sito — se il sito ne avesse una più vecchia, sarebbe la risposta
-   sbagliata alla domanda giusta */
 const questa = __VERSIONE__
 
 const a = computed(() => aggiornando.value || {})
@@ -35,7 +16,6 @@ const guasto = computed(() => ['muto', 'interrotto', 'vecchia'].includes(a.value
 <template>
   <div class="ag-velo" data-aggiorna :data-fase="a.fase">
     <div class="ag-foglio" role="dialog" aria-modal="true" aria-labelledby="ag-titolo">
-      <!-- la ✕ non c'è solo a «riparto»: lì la pagina se ne va da sé -->
       <button v-if="a.fase !== 'pronta'" type="button" class="ag-chiudi" aria-label="chiudi"
               data-chiudi @click="lasciaStare()">✕</button>
 

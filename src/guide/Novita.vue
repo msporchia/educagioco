@@ -1,16 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LE NOVITÀ — la pagina che le legge a un bambino
-
-   Ci si arriva dal nastro in home (`guide/Nastri.vue`), che c'è solo
-   quando c'è qualcosa di nuovo per **questo** bambino. Il contenuto e
-   le regole stanno in `guide/novita-bambini.js`; qui c'è solo il modo di
-   mostrarle: un riquadro per gioco, al massimo `PER_GIOCO` righe
-   ciascuno, e in fondo «Letto», che mette il segno e riporta ai giochi.
-
-   L'elenco si fotografa all'apertura e non si ricalcola: premendo
-   «Letto» la pagina non deve svuotarsi sotto il dito prima di andarsene.
-   ═══════════════════════════════════════════════════════════════════ */
+// La pagina delle novità per un bambino: vedi docs/genitori/novita-bambini.md.
+// L'elenco si fotografa all'apertura e non si ricalcola: «Letto» non deve svuotarla sotto il dito.
 import Barra from '../components/Barra.vue'
 import { daLeggere } from './novita-bambini.js'
 import { novitaLette, segnaNovitaLette } from '../store/profile.js'
@@ -21,18 +11,13 @@ const emit = defineEmits(['vai'])
 
 const gruppi = daLeggere(novitaLette(), inCasa)
 
-/* il titolo del riquadro: il gioco com'è scritto sulla sua carta in
-   home, così il bambino lo riconosce; senza gioco, è di tutti */
 function testata (chiave) {
   if (!chiave) return { ico: '✨', nome: 'In tutti i giochi' }
   const g = GIOCHI.find(x => x.chiave === chiave)
   return g ? { ico: g.ico, nome: g.nome } : { ico: '✨', nome: chiave }
 }
 
-/* «24 agosto», e l'anno solo se non è quello di adesso: a chi torna
-   dopo tanto tempo dice da quando c'è, agli altri non ruba spazio.
-   Si spezza la stringa invece di passare da `Date`, che la leggerebbe
-   in UTC e la sera tardi sbaglierebbe il giorno. */
+// si spezza la stringa invece di passare da Date, che leggerebbe in UTC e sbaglierebbe il giorno
 const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio',
               'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre']
 function giorno (quando) {
@@ -65,9 +50,6 @@ async function letto () {
           </ul>
         </section>
 
-        <!-- in fondo e appiccicato, perché a chi torna dopo tanto la
-             pagina può essere lunga: la via d'uscita non deve stare due
-             schermate più giù -->
         <div class="piede">
           <button class="bottone" data-azione="novita-letto" @click="letto">👍 Letto!</button>
         </div>
