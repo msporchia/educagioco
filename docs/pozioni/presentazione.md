@@ -1,4 +1,4 @@
-[← torna al README](../README.md)
+[← torna al README](../../README.md)
 
 # ⚗️ Il laboratorio delle pozioni
 
@@ -7,7 +7,7 @@ dose, sullo scaffale ci sono gli ingredienti, sul banco gli attrezzi: si
 prende quello che serve, lo si trascina sull'attrezzo che ci arriva, e si
 compone la dose coi pezzi.
 
-<img src="img/pozioni-gioco.png" width="230"> <img src="img/pozioni-mappa.png" width="230">
+<img src="../img/pozioni-gioco.png" width="230"> <img src="../img/pozioni-mappa.png" width="230">
 
 ## Come è fatto
 
@@ -24,21 +24,19 @@ gioco: la ricetta parla come le pare — «1,5 kg», «35 hg», «6000 g» — e
 bisogna leggere l'unità, scegliere un attrezzo su cui la dose ci sta, e
 tradurre nell'unità in cui quell'attrezzo conta. Otto chili sulla bilancia
 dei grammi non ci stanno: si sale a quella degli etti, e 8 kg diventano
-80 hg. Qualunque attrezzo su cui la dose si compone va bene — un chilo sono
-mille grammi sulla bilancia da cucina e dieci etti su quella del mercato —
-e scegliere è **una scelta vera**.
+80 hg. Un chilo sono mille grammi sulla bilancia da cucina e dieci etti su
+quella del mercato: vanno bene tutte e due, e scegliere è **una scelta
+vera**.
 
 Sull'attrezzo si posano i **pezzi**: i pesi sul piatto, i misurini nella
 caraffa, i pezzi di nastro. Il numero sale, e quando fa la dose si manda
-tutto nel calderone.
+tutto nel calderone, che cambia colore a ogni ingrediente.
 
 ## La scaletta: una cosa nuova per volta
 
-Il gioco vecchio chiedeva di convertire dalla prima ricetta e metteva davanti
-cinque bilance che contavano tutte in grammi. La fila nuova viene da chi l'ha
-guardato giocare: **prima si impara il gesto, poi una cosa nuova per volta,
-e ogni cosa nuova si spiega finché serve e poi si toglie.** Nove gradini, e
-sono gli stessi per le tre famiglie:
+**Prima si impara il gesto, poi una cosa nuova per volta, e ogni cosa
+nuova si spiega finché serve e poi si toglie.** Nove gradini, gli stessi
+per le tre famiglie:
 
 | | gradino | cosa chiede | aiuto |
 |---|---|---|---|
@@ -58,61 +56,30 @@ tutto — pesi, lunghezze e liquidi nella stessa pozione — e solo nell'ultima
 ci sono **tre attrezzi per famiglia**: nove sul banco, che vanno bene a chi
 è esperto e non prima. Ventinove tappe in tutto.
 
-La scaletta è **dato puro** (`src/giochi/pozioni/dati/campagna.js`): i
-nove gradini sono scritti una volta, in multipli dell'unità grande, e si
-ripetono per le tre famiglie con gli altri nomi. Il test controlla che
-ogni dose di ogni tappa si componga con gli attrezzi di quella tappa, che
-al sesto gradino l'attrezzo piccolo non ci arrivi davvero, e che ogni
-«senza aiuti» venga dopo il suo «svolto».
-
 ## Il conto svolto
 
 Il cartello sopra il banco dice l'uguaglianza, gli scalini fra le due unità
-e il gesto: *1 kg = 1000 g · kg ×10 hg ×10 dag ×10 g · da kg a g sono 3
-scalini in giù · aggiungi 3 zeri · 1 → 10 → 100 → 1000 g*. Con la virgola
-dice «la virgola va a destra di 3 posti», perché a chi legge «2 kg» la
-virgola non si vede, e dirgli di spostarla è dirgli di cercare una cosa che
-non c'è. Al contrario — dai grammi agli etti — si sale, e gli zeri si
-tolgono: *6000 → 600 → 60 hg*.
+e il gesto: *1 kg = 1000 g · da kg a g sono 3 scalini in giù · aggiungi 3
+zeri · 1 → 10 → 100 → 1000 g*. Con la virgola dice «la virgola va a destra
+di 3 posti»; a chi legge «2 kg» la virgola non si vede, e dirgli di
+spostarla è dirgli di cercare una cosa che non c'è. Al contrario — dai
+grammi agli etti — si sale, e gli zeri si tolgono: *6000 → 600 → 60 hg*.
 
-Quando la tappa dice che la bilancia dei grammi non ci arriva, il cartello
-lo dice prima ancora di posare: «20 kg sulla bilancia dei grammi non ci
-stanno: usa la bilancia del mercato, che conta in hg».
-
-**Uno sbaglio lo riporta per intero**, anche nelle tappe senza aiuti. È la
-regola di tutti i giochi di casa — dopo uno sbaglio si dice il perché *e*
-come si fa — e su una conversione sbagliata quello che manca è proprio il
-metodo. Ogni sbaglio ha le sue parole: l'ingrediente che non è nella
-ricetta, la polvere messa nella caraffa («la polvere si pesa, non si versa:
-serve una bilancia»), l'attrezzo troppo piccolo («arriva fino a 5 kg»), la
-dose troppa o poca. Poi si sta fermi qualche secondo a leggere, con la
-barra che dice quanto manca, e si riprova.
+**Uno sbaglio lo riporta per intero**, anche nelle tappe senza aiuti:
+dopo uno sbaglio si dice il perché *e* come si fa. Ogni sbaglio ha le sue
+parole — l'ingrediente che non è nella ricetta, la polvere messa nella
+caraffa («la polvere si pesa, non si versa: serve una bilancia»),
+l'attrezzo troppo piccolo («arriva fino a 5 kg»), la dose troppa o poca.
+Poi si sta fermi qualche secondo a leggere, con la barra che dice quanto
+manca, e si riprova.
 
 ## Senza fretta e senza cuori
 
-Il tempo non è un avversario. Il gioco vecchio aveva la pazienza del
-cliente che scendeva e i cuori che finivano, e il risultato era un cartello
-da leggere con una barra che calava sopra: si imparava a non leggere. Qui
-**la tappa si finisce sempre**, e a cambiare sono le stelle — tre senza
-sbagli, due con pochi, una comunque. Le monete sono tre per ogni dose
-azzeccata al primo colpo (`CALIBRAZIONE.md`: una dose è una domanda vera,
-letta e ragionata), e una dose sbagliata non paga.
-
-Al motore di apprendimento va **il primo tentativo** di ogni dose che
-chiede una conversione, sotto la chiave della coppia di unità nel verso in
-cui la si è fatta (`pozioni:kg-g`, `pozioni:g-hg`). Le dosi col conto
-svolto non si segnano: il risultato era scritto, quindi nessuno l'ha
-chiesto.
-
-## Il dito
-
-L'ingrediente si trascina dallo scaffale all'attrezzo; se il dito si stacca
-senza essersi mosso è un tocco, l'ingrediente resta «in mano» e si posa
-toccando l'attrezzo. Le due strade arrivano agli stessi due gesti, e il
-click fantasma che il dito si lascia dietro dopo un trascinamento viene
-ingoiato, come nella fattoria. Il test nel browser fa un trascinamento vero
-(`touchStart` · `touchMove` · `touchEnd`) e controlla che l'attrezzo non si
-tocchi da solo una seconda volta.
+Il tempo non è un avversario: una barra che scende sopra un cartello da
+leggere insegna a non leggere. **La tappa si finisce sempre**, e a
+cambiare sono le stelle — tre senza sbagli, due con pochi, una comunque.
+Le monete sono tre per ogni dose azzeccata al primo colpo, e una dose
+sbagliata non paga.
 
 ## Cosa allena
 
@@ -128,3 +95,5 @@ conversioni in *Impostazioni → Giochi e domande*: qui le misure non sono un
 tipo di domanda fra tanti, sono tutto il gioco. Compare in home dai sette
 anni e mezzo; a un bambino più grande le prime tappe dei pesi nascono già
 aperte, e può cominciare da dove gli serve.
+
+Per chi ci lavora: [le regole](regole.md).

@@ -1,4 +1,4 @@
-[← torna al README](../README.md)
+[← torna al README](../../README.md)
 
 # 🐑 Conta gli animali
 
@@ -6,7 +6,7 @@
 quattro anni apre da solo.* Si conta quello che si vede, si tocca quello che
 si conta. Non c'è una riga da leggere per giocarlo, e non si può perdere.
 
-<img src="img/conta-gioco.png" width="230"> <img src="img/conta-mappa.png" width="230">
+<img src="../img/conta-gioco.png" width="230"> <img src="../img/conta-mappa.png" width="230">
 
 ## Come è fatto
 
@@ -45,17 +45,15 @@ cosa che con il primo non c'entra quasi niente.
 | **Uno in più, uno in meno** | ne arriva una, una scappa: quante sono adesso? |
 | **Quanti in tutto?** | due gruppi separati messi insieme — l'addizione, senza il segno |
 
-Due meritano una riga in più.
-
 **«Sono sempre gli stessi?»** è il concetto più importante del gioco: la
-quantità non cambia se cambia la disposizione. È una cosa che a quattro anni
-non è per niente ovvia — cinque pecore sparpagliate *sembrano* più di cinque
-pecore in fila — e non si insegna a parole, si insegna facendole spostare
-sotto gli occhi.
+quantità non cambia se cambia la disposizione. A quattro anni non è per
+niente ovvio — cinque pecore sparpagliate *sembrano* più di cinque pecore
+in fila — e non si insegna a parole, si insegna facendole spostare sotto
+gli occhi.
 
-**«Più volpi o più animali?»** è l'inclusione di classe, ed è la domanda che
-un bambino piccolo sbaglia quasi sempre la prima volta: confronta le volpi
-con gli *altri* animali invece che con tutti quanti. Ha sempre la stessa
+**«Più volpi o più animali?»** è l'inclusione di classe, la domanda che un
+bambino piccolo sbaglia quasi sempre la prima volta: confronta le volpi con
+gli *altri* animali invece che con tutti quanti. Ha sempre la stessa
 risposta, per costruzione — perciò nella sua tappa si alterna con «dove ce
 n'è di più», se no la si impara come si impara la posizione di un tasto.
 
@@ -89,12 +87,12 @@ simboli, e che qui non ne usa nemmeno uno.
 
 - **Nessuna domanda scritta**: si può giocare senza saper leggere. È il
   motivo per cui esiste.
-- **Non si perde.** Non c'è modo di finire una partita male: la tappa si
-  chiude quando è chiusa. Le stelle dicono quanto è filata liscia — tre
-  senza nemmeno un errore, due fino a due, una comunque.
+- **Non si perde.** La tappa si chiude quando è chiusa. Le stelle dicono
+  quanto è filata liscia — tre senza nemmeno un errore, due fino a due, una
+  comunque.
 - **Si spegne con «I numeri e le quantità»** e, per lo scalino del bosco,
   «Tutti e nessuno»: sono i due pezzi di scuola che dichiara.
 - **Sparisce da sé quando serve.** La sua campagna sta fra i quattro e i sei
   anni e mezzo scarsi: a un bambino di otto anni la carta non viene proprio
   offerta, a meno che non l'abbia già cominciata — vedi
-  [come l'età decide cosa si vede](genitori.md#quanti-anni-ha).
+  [come l'età decide cosa si vede](../genitori/presentazione.md#quanti-anni-ha).

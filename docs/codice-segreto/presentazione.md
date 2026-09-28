@@ -1,4 +1,4 @@
-[← torna al README](../README.md)
+[← torna al README](../../README.md)
 
 # 🔐 Codice Segreto
 
@@ -9,7 +9,7 @@ nascosta leggendo gli indizi di quelle già provate.
 > risolvono a occhio, poi non più. Provatelo prima di darlo per «troppo
 > facile» — e se un adulto ci mette qualche tentativo, è normale.
 
-<img src="img/codice-gioco.png" width="230"> <img src="img/codice-mappa.png" width="230">
+<img src="../img/codice-gioco.png" width="230"> <img src="../img/codice-mappa.png" width="230">
 
 ## Come è fatto
 
@@ -39,24 +39,16 @@ combinazione.
 
 Le ripetizioni sono lo scalino vero: finché ogni figura compare al massimo
 una volta il ragionamento è lineare, quando possono ripetersi il conteggio
-dei pallini diventa molto meno intuitivo. (È anche il punto in cui questo
-tipo di gioco viene implementato sbagliato più spesso — qui c'è una prova
-automatica dedicata solo a quello.)
+dei pallini diventa molto meno intuitivo. È anche il punto in cui questo
+tipo di gioco viene implementato sbagliato più spesso, e qui c'è una prova
+automatica dedicata solo a quello.
 
-**E cresce anche il numero di tentativi concessi**: nove righe sulle prime
-tappe, dieci, undici e dodici man mano che le combinazioni possibili passano
-da 24 a più di sedicimila. All'inizio non era così — erano sei per quasi
-tutti — e il risultato era che le ultime tappe si perdevano una volta su
-quattro pur ragionando: non più difficili, solo più corte del necessario.
-
-Quel numero è stato alzato due volte, e la seconda dopo aver **guardato
-giocare dei bambini veri**: il modello con cui era stato tarato (un
-giocatore che ragiona poco più di una volta su due) era ottimistico, e a
-sei o sette righe si perdeva abbastanza spesso da vivere la partita come
-una questione di fortuna — che è esattamente quello che questo gioco non
-deve essere. Rimisurato su un giocatore che ragiona due volte su cinque, le
-partite perse passano dal 13-19% al 2-5%, e le stelle non si sono mosse:
-le righe in più non regalano un voto migliore, allungano solo quanto si può
+**Cresce anche il numero di tentativi concessi**: nove righe sulle prime
+tappe, poi dieci, undici e dodici man mano che le combinazioni possibili
+passano da 24 a più di sedicimila. Il numero è tarato su un giocatore che
+ragiona due volte su cinque, come un bambino vero: così le partite perse
+restano fra il 2 e il 5%, e perdere non diventa mai una questione di
+fortuna. Le righe in più non regalano stelle: allungano solo quanto si può
 sbagliare prima di perdere.
 
 ## Cosa allena
@@ -71,15 +63,11 @@ voglia di smettere.
 ## Note per i genitori
 
 - Non ci sono domande da spegnere: non c'è nessun prerequisito scolastico.
-- Le prove automatiche di questo gioco **giocano davvero le nove tappe** con
-  un finto giocatore che ragiona, e verificano due cose: chi ragiona bene
-  vince quasi sempre, e chi ragiona a sprazzi — un bambino vero, che a metà
+- Le prove automatiche **giocano davvero le nove tappe** con un finto
+  giocatore che ragiona, e verificano due cose: chi ragiona bene vince
+  quasi sempre, e chi ragiona a sprazzi — un bambino vero, che a metà
   partita si distrae — perde al massimo una volta su venti. Se non fosse
-  così sarebbe un gioco di fortuna travestito da gioco di logica. Le
-  distrazioni provate sono due, e quella che decide è la più distratta:
-  tarare sul bambino ideale è il modo di scoprire dal vivo che il tabellone
-  era corto.
-- Le **stelle** di fine partita non sono più «hai usato meno di metà
-  tabellone» ma una soglia di tentativi scritta per ogni difficoltà. Prima
-  erano legate al tetto, e sulle tappe toste le tre stelle chiedevano di
-  chiudere in tre tentativi: praticamente mai.
+  così sarebbe un gioco di fortuna travestito da gioco di logica.
+- Le **stelle** di fine partita dipendono da una soglia di tentativi scritta
+  per ogni difficoltà, non dalla lunghezza del tabellone: sulle tappe toste
+  tre stelle sono difficili ma possibili.
