@@ -1,33 +1,12 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL BANCO DI PROVA — un giocatore finto che sceglie il cancello
-
-   Non serve al gioco: serve a chi lo prova. Il gioco non lo importa e nel
-   file unico non ci finisce (nessuno lo chiama, il build lo scarta).
-
-   In questa corsa il bambino fa **una cosa sola**: guarda tre numeri e
-   decide in quale corsia mettersi. Quindi il giocatore finto fa quella —
-   calcola cosa gli farebbero i tre cancelli e va dal migliore — e le
-   manopole che contano sono due:
-
-     `bravura`  quanto spesso il conto gli viene giusto. A 1 prende
-                sempre il migliore; a 0.5 metà delle volte sceglie a
-                caso, che è il bambino vero. È questo numero che dice se
-                una tappa è giocabile davvero e non solo in teoria.
-     `sapienza` quanto spesso risponde giusto all'esercizio del cancello
-                d'oro. Sbagliare non toglie niente — resta com'è — e
-                anche questo va misurato: **una tappa che si vince solo
-                rispondendo bene sarebbe una tappa che si perde a
-                scuola**, e non è questo il patto.
-
-   `gusto` è se il cancello d'oro lo prende o tira dritto: `studioso` lo
-   sceglie quando conviene, `svelto` non lo guarda mai. Serve a provare
-   che si finisce la campagna **anche senza fare un solo esercizio** — se
-   no non è un'offerta, è un pedaggio con un altro nome.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il banco di prova: un giocatore finto che guarda tre numeri e sceglie
+// la corsia. `bravura` è quanto spesso il conto gli viene giusto (a 1
+// prende sempre il migliore, a 0.5 metà delle volte sceglie a caso);
+// `sapienza` quanto spesso risponde giusto al cancello d'oro; `gusto`
+// se lo prende (`studioso`) o tira dritto (`svelto`), per provare che la
+// campagna si finisce anche senza fare un esercizio.
 import { Partita } from './corsa.js'
 
-/* Da quanto lontano decide. Un bambino guarda il cancello quando è
-   leggibile, non appena spunta all'orizzonte. */
+// da quanto lontano decide: un bambino guarda il cancello quando è leggibile
 const SGUARDO = 26
 
 export class Pilota {
@@ -37,21 +16,16 @@ export class Pilota {
     this.bravura = bravura
     this.sapienza = sapienza
     this.gusto = gusto
-    /* `fretta` è il bambino che martella lo schermo per non aspettare.
-       Serve a provare la cosa che la spinta non deve mai fare: rubare il
-       tempo di leggere i cancelli. */
-    this.fretta = fretta
+    this.fretta = fretta   // il bambino che martella lo schermo per non aspettare
     this.domande = 0
     this.giuste = 0
   }
 
-  /* Quanto vale un cancello per lui, adesso. Il cancello d'oro vale
-     quanto pensa di saperne: chi non risponde mai lo conta come niente e
-     tira dritto. */
+  // quanto vale un cancello per lui, adesso: il cancello d'oro vale
+  // quanto pensa di saperne
   valore(op, truppa, tetto) {
-    /* si guarda dove si arriva **dopo il tetto**: sopra il tetto due
-       cancelli diversissimi sono la stessa cosa, e un pilota che non lo
-       sapesse racconterebbe una precisione che non c'è */
+    // si guarda dove si arriva dopo il tetto, o un pilota "esatto" oltre
+    // il tetto racconterebbe una precisione che non c'è
     if (!op.libro) return Math.min(tetto, op.f(truppa))
     if (this.gusto !== 'studioso') return -1
     return Math.min(tetto, truppa * (1 + 4 * this.sapienza))
@@ -64,8 +38,6 @@ export class Pilota {
       .sort((a, b) => a.z - b.z)[0]
 
     if (cancello && cancello.z - partita.dist < SGUARDO) {
-      /* il conto gli viene, oppure no: sotto la bravura sceglie a caso,
-         che è quello che fa un bambino che non ha fatto in tempo */
       if (this.rnd() > this.bravura) return partita.punta(Math.floor(this.rnd() * 3) - 1)
       let miglioreI = 0, migliore = -Infinity
       for (const [i, op] of cancello.ops.entries()) {
@@ -75,7 +47,7 @@ export class Pilota {
       return partita.punta(miglioreI - 1)
     }
 
-    /* fra un cancello e l'altro: prendi le casse, scansa i coni */
+    // fra un cancello e l'altro: prendi le casse, scansa i coni
     const vicine = cose.filter(c => (c.tipo === 'cassa' || c.tipo === 'cono') &&
                                     c.z - partita.dist < 12)
     const cassa = vicine.find(c => c.tipo === 'cassa')
@@ -85,7 +57,6 @@ export class Pilota {
     return false
   }
 
-  /* L'esercizio del cancello d'oro. Sbagliare costa il giro e nient'altro. */
   rispondi(partita) {
     if (!partita.inPausa) return null
     this.domande++
@@ -95,8 +66,8 @@ export class Pilota {
   }
 }
 
-/* Una partita giocata dal finto giocatore. `dt` fisso: il tempo di questo
-   gioco non è quello dell'orologio, è quello che gli si dà. */
+// `dt` fisso: il tempo di questo gioco non è quello dell'orologio, è
+// quello che gli si dà.
 export function gioca(regole, {
   rnd = Math.random, dt = 1 / 30, bravura = 1, sapienza = 0.8, gusto = 'studioso',
   fermo = false, fino = 240, fretta = false,
@@ -116,10 +87,9 @@ export function gioca(regole, {
   return { partita, pilota }
 }
 
-/* Quante volte su cento questo giocatore porta a casa la tappa, con
-   quante stelle, e quanto grossa gli arriva la truppa. È il numero che
-   dice se una tappa è tarata: sotto una certa soglia non è difficile, è
-   ingiusta — e sopra un'altra non è una tappa, è una passeggiata. */
+// Quante volte su cento questo giocatore porta a casa la tappa, con
+// quante stelle, e quanto grossa gli arriva la truppa: il numero che
+// dice se una tappa è tarata.
 export function misura(regole, { volte = 20, rnd = Math.random, ...resto } = {}) {
   let vinte = 0, stelle = 0, truppa = 0, persi = 0, metri = 0, domande = 0, tre = 0
   for (let i = 0; i < volte; i++) {
@@ -142,8 +112,6 @@ export function misura(regole, { volte = 20, rnd = Math.random, ...resto } = {})
   }
 }
 
-/* Il caso ripetibile: due prove uguali devono raccontare la stessa
-   storia, o un test rosso non si sa se è un guasto o sfortuna. */
 export function caso(seme = 1) {
   let s = seme >>> 0 || 1
   return () => {

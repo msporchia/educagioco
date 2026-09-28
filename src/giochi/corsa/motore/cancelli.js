@@ -1,68 +1,35 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I CANCELLI — le tre scelte, e perché non sono finte
-
-   Un cancello è un operatore: `×3`, `+50`, `−20`, `÷5 +80`. Passarci
-   dentro fa quello che c'è scritto alla truppa. Non c'è nessuna domanda
-   da leggere di corsa: **il conto è la mossa**, e sbagliarlo non è un
-   voto brutto — è arrivare al mostro con meno soldati.
-
-   Tre regole, e sono tutto quello che rende la scelta una scelta:
-
-   1. **Niente due cancelli che portano allo stesso numero.** `×2` e `+50`
-      con cinquanta soldati sono la stessa cosa detta in due modi: chi
-      sceglie non sceglie niente.
-   2. **Il migliore non è sempre lo stesso simbolo.** Il moltiplicatore
-      convive con un'addizione grossa: con 4 soldati conviene `+18`, con
-      12 conviene `×3`, e capirlo *è* il gioco. Se vincesse sempre `×`
-      basterebbe cercare la crocetta.
-   3. **Le addizioni si tarano su quanti ce ne sono già.** Con 7 soldati
-      `+30` è un regalo assurdo, con 700 è polvere. E restano numeri
-      tondi, perché un `+237` mentre si corre non lo somma nessuno.
-
-   Il caso arriva da fuori (`rnd`): due partite con lo stesso seme devono
-   raccontare la stessa storia, o un test rosso non si sa se è un guasto
-   o sfortuna.
-   ═══════════════════════════════════════════════════════════════════ */
+// I cancelli: un operatore (×3, +50, −20, ÷5 +80) per corsia. Tre regole
+// tengono la scelta una scelta vera (niente due cancelli allo stesso
+// numero, il migliore non è sempre lo stesso simbolo, le addizioni si
+// tarano su quanti soldati ci sono già): docs/corsa/regole.md. Il caso
+// arriva da fuori (`rnd`) per i test.
 import { CAMBIO } from '../dati/ordini.js'
 
 const mescola = (a, rnd) =>
   a.map(v => [rnd(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1])
 
-/* Un numero tondo dell'ordine di grandezza giusto. Il passo cresce col
-   numero apposta: sotto la decina si conta a uno a uno, sopra il
-   centinaio si conta a cento. */
+// un numero tondo dell'ordine di grandezza giusto: il passo cresce col
+// numero, sotto la decina si conta a uno a uno, sopra il centinaio a cento
 export function tondo(base, frazione) {
   const grezzo = Math.max(2, base * frazione)
   const passo = grezzo < 10 ? 1 : grezzo < 60 ? 5 : grezzo < 300 ? 25 : 100
   return Math.max(passo, Math.round(grezzo / passo) * passo)
 }
 
-/* ── il cancello col libro ──
-   Il premio più forte del gioco (`×5`), ma bisogna fermarsi e fare un
-   esercizio. È **un'offerta, non un pedaggio**, e le tre condizioni che
-   fanno la differenza sono tutte e tre qui:
-
-     · si vede prima — è d'oro e ha il libro, da quaranta metri
-     · non è mai obbligatorio — le altre due corsie sono cancelli veri
-     · sbagliare non toglie niente — si è perso solo il tempo di provarci
-
-   Toglierne una qualunque lo trasforma in una tassa, e una tassa la si
-   paga svogliati. */
+// il cancello col libro: ×5, ma bisogna fermarsi e fare un esercizio —
+// un'offerta e non un pedaggio, vedi docs/corsa/regole.md
 const LIBRO = () => ({ seg: '×' + CAMBIO, libro: true, f: v => v * CAMBIO })
 
-/* Quanto vale un cancello quando bisogna **prevedere il futuro** (il
-   mostro va dimensionato su dove sarà la truppa, non su dov'è adesso). Il
-   libro si conta come un `×2`, non come un `×5`: tarare i nemici sul caso
-   perfetto vuol dire mandare un esercito contro chi ha sbagliato il
-   conto, cioè proprio contro chi aveva più bisogno di cavarsela. */
+// quanto vale un cancello quando bisogna prevedere il futuro (il mostro
+// va dimensionato su dove sarà la truppa): il libro conta come un ×2,
+// non un ×5, o tarare i nemici sul caso perfetto punirebbe chi ha
+// sbagliato il conto
 export const resaPrevista = o => (o.libro ? v => v * 2 : o.f)
 
 export function generaCancelli(n, { rnd = Math.random, libri = 0.34, tetto = Infinity } = {}) {
-  /* Le scelte composte: «÷5 +80» contro «×2 −40». Servono a togliere la
-     scorciatoia — finché i cancelli sono `+50` e `×2` basta guardare
-     quale numero è più grosso, e non si sta calcolando niente. Arrivano
-     quando la truppa è abbastanza numerosa da rendere una divisione
-     sensata: dividere sette soldati non insegna niente e fa male. */
+  // le scelte composte («÷5 +80» contro «×2 −40») tolgono la scorciatoia
+  // di guardare solo il numero più grosso; arrivano quando la truppa è
+  // abbastanza numerosa da rendere sensata una divisione
   const composti = n < 40 ? [] : [
     { seg: `÷${CAMBIO} +${tondo(n, 0.55)}`, doppio: true },
     { seg: `×2 −${tondo(n, 0.5)}`, doppio: true },
@@ -76,25 +43,19 @@ export function generaCancelli(n, { rnd = Math.random, libri = 0.34, tetto = Inf
     ...(n <= 120 ? [{ seg: '×3', f: v => v * 3 }] : []),
     { seg: '+' + tondo(n, 0.35) },
     { seg: '+' + tondo(n, 0.7) },
-    /* Con tre soldati in croce niente cancelli che tolgono: chi è finito
-       in fondo deve poter risalire scegliendo, se no resta a uno per
-       sempre e il gioco diventa una corsa senza scelte. */
+    // con tre soldati in croce niente cancelli che tolgono: chi è finito
+    // in fondo deve poter risalire scegliendo
     ...(n > 4 ? [{ seg: '−' + tondo(n, 0.35) },
                  { seg: '÷2', f: v => Math.max(1, Math.floor(v / 2)) }] : []),
   ].map(costruisci)
 
-  /* Il cancello col libro, quando esce, ha la precedenza sugli altri: è
-     l'offerta che questo gioco esiste per fare. */
+  // il cancello col libro, quando esce, ha la precedenza sugli altri
   const ordine = [...candidati.filter(c => c.libro),
                   ...mescola(candidati.filter(c => !c.libro), rnd)]
 
-  /* ── niente scelte finte, e si guarda **dove si arriva davvero** ──
-     Il confronto va fatto sul risultato già tagliato dal tetto: con la
-     truppa a 620 su 624, `×2` e `+400` sono numeri diversi sulla carta e
-     la stessa identica cosa in terra. Prima si confrontavano i numeri
-     grezzi, e vicino al tetto uscivano terne con tre corsie che facevano
-     tutte lo stesso — cioè nessuna scelta, proprio nel momento in cui il
-     bambino aveva giocato meglio. */
+  // niente scelte finte: il confronto va fatto sul risultato già
+  // tagliato dal tetto, o vicino al tetto uscirebbero terne che
+  // arrivano tutte allo stesso numero
   const dove = c => Math.min(tetto, Math.max(0, c.f(n)))
   const scelti = []
   for (const c of ordine) {
@@ -102,23 +63,18 @@ export function generaCancelli(n, { rnd = Math.random, libri = 0.34, tetto = Inf
     if (scelti.some(s => dove(s) === dove(c))) continue
     scelti.push(c)
   }
-  /* Con la truppa a uno o due i cancelli possibili sono pochissimi e
-     alcuni cadono per l'assurdo (`−2` su una truppa di uno) o per il
-     doppione: si riempie con addizioni piccole finché la terna è piena.
-     Una corsia vuota non esiste — quella corsia si può comunque
-     attraversare. */
+  // con la truppa a uno o due i cancelli possibili sono pochissimi: si
+  // riempie con addizioni piccole finché la terna è piena
   for (let k = 1; scelti.length < 3 && k < 40; k++) {
     const c = costruisci({ seg: '+' + k })
     if (!scelti.some(s => dove(s) === dove(c))) scelti.push(c)
   }
-  /* la corsia buona non è sempre la stessa: se no si impara la posizione
-     invece del conto, e il gioco diventa un riflesso */
   return mescola(scelti, rnd)
 }
 
-/* Da quello che c'è scritto a quello che succede. L'ordine è **quello in
-   cui è scritto** — prima chi moltiplica o divide, poi chi aggiunge o
-   toglie — perché è l'unico che un bambino può dedurre guardandolo. */
+// dal segno a quello che succede: l'ordine è quello in cui è scritto
+// (prima chi moltiplica o divide, poi chi aggiunge o toglie), l'unico
+// che un bambino può dedurre guardandolo
 function costruisci(c) {
   if (c.f) return c
   if (c.doppio) {
@@ -132,24 +88,8 @@ function costruisci(c) {
   return { ...c, f: c.seg[0] === '+' ? v => v + k : v => Math.max(1, v - k) }
 }
 
-/* ── PERCHÉ UN CANCELLO NON HA UN COLORE ──
-   C'è stato, per un giro: verde chi moltiplicava o aggiungeva, rosso chi
-   toglieva o divideva. Era comodo da lontano ed era **il difetto più
-   grave che questo gioco potesse avere**: con due corsie rosse su tre non
-   resta niente da calcolare, si va sull'unica verde. E con due verdi si
-   guarda quale numero è più grosso, che è ancora leggere, non contare.
-
-   Il colore rispondeva alla domanda al posto del bambino. Adesso i tre
-   cancelli sono identici e c'è scritto solo il conto: `÷2`, `+9`, `×2`,
-   e quale conviene dipende da quanti soldati hai *adesso*.
-
-   L'unico che resta diverso è quello col libro, ed è diverso per il
-   motivo opposto: non dice quanto vale, dice che **si paga fermandosi**.
-   Un'offerta che si scopre solo dopo averla presa è una trappola. */
-
-/* Il guasto che nessun occhio trova: una terna che non è una scelta.
-   Girata su mille truppe diverse, dice se i cancelli restano tre cose
-   distinte anche ai numeri che nessuno prova a mano. */
+// Il guasto che nessun occhio trova: una terna che non è una scelta,
+// girata su mille truppe diverse.
 export function guastiDeiCancelli({ rnd = Math.random, volte = 400, tetti = [24, 124, 624] } = {}) {
   const guasti = []
   const truppe = [1, 2, 3, 4, 5, 9, 10, 24, 25, 40, 87, 120, 200, 400, 624]
@@ -164,8 +104,6 @@ export function guastiDeiCancelli({ rnd = Math.random, volte = 400, tetti = [24,
       if (esiti.some(v => v < 1 || !Number.isFinite(v))) {
         guasti.push(`con ${n} soldati un cancello porta a ${esiti.join(', ')}`); break
       }
-      /* almeno un cancello deve migliorare la situazione: tre cancelli
-         che tolgono sono una punizione, non una scelta */
       if (n <= 4 && !esiti.some(v => v > n)) {
         guasti.push(`con ${n} soldati nessun cancello fa risalire: da lì non si esce più`); break
       }
@@ -174,7 +112,6 @@ export function guastiDeiCancelli({ rnd = Math.random, volte = 400, tetti = [24,
       }
     }
   }
-  /* i numeri tondi restano tondi, o il bonus non lo somma nessuno */
   for (const n of truppe)
     for (const q of [0.35, 0.55, 0.7]) {
       const t = tondo(n, q)

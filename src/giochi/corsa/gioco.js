@@ -1,45 +1,13 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA CORSA DEI NUMERI — IL MANIFESTO
-
-   La carta d'identità del gioco: chi è, come si chiama, dove è arrivato
-   chi ci gioca. È **dato puro** — non importa Vue, non importa il
-   profilo, non importa nemmeno il proprio `Gioco.vue` — perché la home e
-   la schermata dei genitori hanno bisogno di sapere che questo gioco
-   esiste e passano dallo store: se il manifesto si tirasse dietro lo
-   store si chiuderebbe un anello di `import` che si rompe un lunedì
-   mattina senza motivo.
-
-   La schermata sta a parte, in `src/giochi/schermate.js`.
-
-   ── IN PROVA ─────────────────────────────────────────────────────
-   `sperimentale: true` non è un interruttore in più, è un **cancello**:
-   finché c'è, la carta non compare in home per nessuno, a meno che nella
-   schermata dei genitori non sia acceso «giochi in prova». Il giorno che
-   il gioco è finito si toglie questa riga, e da quel momento è un gioco
-   come gli altri.
-
-   Struttura della cartella (vedi `docs/core/convenzione-giochi.md`):
-
-     dati/    tabelle: gradi della truppa, vestiti, tappe
-     motore/  le regole, senza schermo — girano anche in Node
-     scena/   il canvas e il battito, che di regole non sanno niente
-     viste/   un componente per schermata
-     Gioco.vue  il coordinatore, l'unico che sa di monete e domande
-   ═══════════════════════════════════════════════════════════════════ */
+// Il manifesto: dato puro. Struttura della cartella e convenzione dei
+// giochi nuovi in docs/core/convenzione-giochi.md. `sperimentale: true`
+// è un cancello: la carta non compare in home finché non si toglie
+// questa riga (vedi «giochi in prova» nella schermata dei genitori).
 import { CAMPAGNA, QUANTE_TAPPE } from './dati/campagna.js'
 import { apriQuaderno, primatoInParole } from '../primati.js'
 
 export const CHIAVE = 'corsa'
 
-/* ── LA SFIDA SENZA FINE ──
-   Finite le nove tappe si apre la corsa infinita, che **non si vince**:
-   si dura. Un gioco che non finisce non ha una stella da dare, e
-   l'unica cosa che può dire è «sei migliorato» — ma per dirla serve
-   sapere cosa si misura e come si scrive. Lo dichiara qui, e da questa
-   riga vivono il record (`giochi/primati.js`), il cartello di fine e la
-   tabella dei record nell'albo. `misura: 'metri'` non è un'unità
-   scritta a mano: è una chiave di `MISURE`, così due giochi non
-   scrivono la stessa cosa in due modi. */
+// La corsa infinita: non si vince, si dura. Vedi docs/core/primati.md.
 export const SENZA_FINE = {
   nome: 'La corsa infinita',
   icona: '♾️',
@@ -54,33 +22,19 @@ export default {
   che: 'far crescere la truppa scegliendo il cancello giusto',
   area: 'numeri',
   come: 'riflessi',
-  /* ── LE DOMANDE QUI SONO QUELLE DEI MODULI DI QUIZ ──
-     Non «questo gioco fa domande» — le fa anche Conta gli animali, ma
-     sono sue — bensì **il pedaggio passa da `src/quiz/`**, cioè dal
-     mazzo che l'età del bambino taglia. Lo chiede il quadro di un'età
-     (`data/quadro.js`): se in casa non c'è nessun gioco che dichiara
-     questa riga, i quattro blocchi delle domande descrivono un mazzo
-     che nessuno pescherà, e vanno detti per quello che sono. */
+  // il pedaggio passa da src/quiz/ (il mazzo che l'età del bambino taglia),
+  // non domande sue come Conta gli animali
   quiz: true,
   tappe: QUANTE_TAPPE,
   sperimentale: true,
-  /* per la scala di `data/giochi.js`: i cancelli sono conti a mente, e
-     a un ritmo che a sei anni non si tiene */
-  grandi: true,
+  grandi: true,   // i cancelli sono conti a mente, a un ritmo che a sei anni non si tiene
   tinta: '#ffe8cf',
   senzaFine: SENZA_FINE,
 
-  /* La riga che la home mostra sotto il nome. La scrive il gioco perché è
-     il gioco a sapere cosa vuol dire il suo avanzamento. Riceve il record
-     (`src/giochi/campagne.js`) e non se lo va a prendere: così resta una
-     funzione e si può provare. */
   riassunto(av = { tappa: 0, libera: false, stelle: {}, cfg: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
     const coda = stelle ? ` · ⭐ ${stelle}` : ''
     if (av.libera) {
-      /* il record lo legge `primati.js`, che sa anche dov'era prima
-         (`cfg.primato`): chi ha corso novecento metri il mese scorso se
-         li ritrova scritti in home senza nessuna migrazione */
       const primato = primatoInParole(apriQuaderno(av), SENZA_FINE.misura)
       return primato ? `corsa infinita · primato ${primato}${coda}`
                      : `corsa infinita ♾️${coda}`
@@ -89,26 +43,15 @@ export default {
     return `tappa ${i + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[i].nome}${coda}`
   },
 
-  /* ═══════════ quello che il gioco porta all'albo ═══════════
-     Un gioco si presenta da solo: la sua famiglia di traguardi, quanto
-     vale in esperienza, e come si capisce che è stato provato. Chi
-     raccoglie è `src/giochi/albo.js`, e né `data/traguardi.js` né
-     `store/progressi.js` sanno che questo gioco esiste.
-
-     I contatori li muove `Gioco.vue` con `segna()`/`segnaBest()`:
-       corsaPartite    corse finite, vinte o no
-       corsaTappe      tappe portate a casa
-       corsaMostri     mostri abbattuti prima dell'impatto
-       corsaCancelli   cancelli attraversati in tutto
-       corsaLibri      esercizi del cancello d'oro indovinati
-       corsaTruppa     (primato) la truppa più grossa in una corsa
-       corsaMetri      (primato) i metri più lontani in una corsa      */
+  // I contatori (segna()/segnaBest() in Gioco.vue): corsaPartite,
+  // corsaTappe, corsaMostri, corsaCancelli, corsaLibri, corsaTruppa
+  // (primato), corsaMetri (primato).
   albo: {
     area: { nome: 'La corsa', emoji: '🏃' },
 
-    /* L'unità di lavoro qui è **il cancello letto**: un conto a mente per
-       ognuno, e una corsa ne porta una decina. L'esercizio del cancello
-       d'oro vale di più perché è quello che nessuno è obbligato a fare. */
+    // l'unità di lavoro è il cancello letto: un conto a mente, una corsa
+    // ne porta una decina; l'esercizio del cancello d'oro vale di più
+    // perché nessuno è obbligato a farlo
     xp: m => m.tot('corsaCancelli') + m.tot('corsaLibri') * 4 +
              m.stelleDi(CHIAVE) * 5 + m.tappeDi(CHIAVE) * 40,
     provato: m => m.tot('corsaPartite') > 0,
@@ -121,9 +64,6 @@ export default {
         come: n => n === 1 ? 'Supera la prima tappa della corsa'
                            : `Supera ${n} tappe della corsa`,
         soglie: [1, 5, QUANTE_TAPPE], valore: m => m.tappeDi(CHIAVE) },
-      /* le stelle sono la somma dei primati per tappa: rigiocarne una già
-         fatta non ne aggiunge, e la terza si prende solo leggendo i
-         cancelli invece di indovinarli */
       { id: 'cor-stelle', emoji: '⭐', nome: 'Occhio ai numeri',
         come: n => `Raccogli ${n} stelle alla corsa`,
         soglie: [6, 15, QUANTE_TAPPE * 3], valore: m => m.stelleDi(CHIAVE) },
@@ -133,9 +73,6 @@ export default {
       { id: 'cor-mostri', emoji: '👾', nome: 'Abbattuti in volata',
         come: n => `Abbatti ${n} mostri prima che ti arrivino addosso`,
         soglie: [10, 60, 250], valore: m => m.tot('corsaMostri') },
-      /* quello che premia chi si ferma a studiare pur non dovendo: il
-         cancello d'oro non è mai obbligatorio, e questo conta solo gli
-         esercizi indovinati */
       { id: 'cor-libri', emoji: '📚', nome: 'Chi si ferma a pensare',
         come: n => `Indovina ${n} esercizi del cancello d'oro`,
         soglie: [5, 30, 120], valore: m => m.tot('corsaLibri') },
