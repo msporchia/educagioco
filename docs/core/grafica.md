@@ -46,9 +46,16 @@ visiva non compaiono mai nella stessa domanda.
 
 Per disegnare con fogli di figure invece che coi poligoni:
 
-- **`atlante.js`** — un foglio di figure e come si posano: il piede, lo
-  specchio, la scala intera. Gli atlanti li genera
-  `strumenti/sprite/atlante.py` (vedi [sprite.md](sprite.md)).
+- **`atlante.js`** — un foglio di figure e come si posano: il piede (`posa`,
+  che appoggia la figura sul punto di contatto e non sull'angolo — figure
+  di altezze diverse crescerebbero nel terreno), lo specchio, la scala
+  intera. Gli atlanti li genera `strumenti/sprite/atlante.py` (vedi
+  [sprite.md](sprite.md)). **`alone`** dice «questo si tocca» senza
+  scriverlo: posa la sagoma tinta dello sprite otto volte attorno al
+  posto dove andrà la figura, e ne resta visibile un bordo di un pixel —
+  va chiamato prima della figura vera, o le mangia i bordi. È l'unica
+  cosa che si tiene in cache (un `source-in` su un canvas a parte è caro,
+  ma i pezzi che si illuminano sono poche decine, non l'atlante intero).
 - **`tessere.js`** — *quale* tessera va in una cella, ricavata dai vicini
   (strade, pozze, recinti). Niente canvas: gira in Node e si prova in
   `unita/tessere`.
