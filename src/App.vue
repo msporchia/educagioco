@@ -21,114 +21,50 @@ import { SCHERMATE } from './giochi/schermate.js'
 
 const vista = ref('home')
 const pronto = ref(false)
-/* `verbi` esiste ancora e porta a English: i verbi sono una tappa della
-   campagna, ma un vecchio rimando alla schermata separata non deve
-   finire su una pagina bianca. */
-/* La cameretta non c'è più, e con lei `#cameretta` e `#animali`: un
-   frammento che non è una schermata viene ignorato (`dallIndirizzo`,
-   qui sotto), e un vecchio rimando resta in home invece di finire su
-   una pagina bianca. */
+// verbi -> LinguaGame: la cameretta non c'è più (#cameretta, #animali restano ignorati sotto)
 const viste = { home: HomeView,
                 inglese: LinguaGame, verbi: LinguaGame, spagnolo: LinguaGame,
                 mate: MathGame, torri: TowerDefense,
                 bancarella: BancarellaGame,
                 generale: GeneraleGame,
                 albo: AlboView, genitori: GenitoriView,
-                /* «Come funziona»: sta fuori dal codice dei genitori
-                   apposta — la prima guida è come si installa, e la
-                   legge chi ha appena ricevuto il link (`guide/Guide.vue`) */
                 guide: Guide,
-                /* le novità per i bambini: ci porta il nastro in home, e
-                   si legge soltanto (`guide/novita-bambini.js`) */
                 novita: Novita,
-                /* i trucchi di casa, tutti insieme (`#admin`): nessuna
-                   carta ci porta, ci si arriva solo dall'indirizzo */
-                admin: AdminView,
-                /* i giochi scritti con la convenzione nuova (`src/giochi/`)
-                   si registrano da soli: una riga in `schermate.js` e sono
-                   raggiungibili da qui e dall'indirizzo, senza toccare
-                   questo elenco ogni volta */
+                admin: AdminView,   // #admin: nessuna carta ci porta
                 ...SCHERMATE }
 
-/* English e Spagnolo sono lo stesso componente con dentro due lingue: il
-   `key` le tiene separate, altrimenti passando dall'una all'altra Vue
-   riuserebbe la schermata di prima con i dati nuovi a metà. */
+// stesso componente con due lingue: il key le tiene separate, se no Vue riuserebbe la schermata di prima
 const lingue = { inglese: 'en', verbi: 'en', spagnolo: 'es' }
 
-/* ---------- entrare da un indirizzo ----------
-   `giochi.html#generale` si apre già dentro quella schermata. Non è un
-   router: la navigazione resta quella dei tasti e l'indirizzo non viene
-   mai riscritto da qui. Serve a due cose vere — i test entrano in una
-   schermata senza doverci arrivare a colpi di dito, e un gioco che non
-   ha ancora la sua carta in home si può comunque provare.
-
-   Un frammento che non è il nome di una schermata viene ignorato: il
-   cheat delle monete (`#monete=500`) passa di qui e non sposta niente.
-   Il controllo è `hasOwnProperty` e non `viste[k]` perché `#toString`
-   sarebbe altrimenti una schermata valida, e non lo è. */
+// giochi.html#generale apre già quella schermata: non è un router, l'indirizzo
+// non viene mai riscritto da qui. hasOwnProperty e non viste[k]: #toString altrimenti sarebbe valida
 function dallIndirizzo() {
   if (typeof location === 'undefined') return
   const chiave = (location.hash || '').replace(/^#/, '')
   if (Object.prototype.hasOwnProperty.call(viste, chiave)) vista.value = chiave
-  /* Il cheat della fattoria di prova si legge **entrando** nella
-     fattoria (`giochi/fattoria/Gioco.vue`), quindi l'indirizzo ci porta
-     anche: `#fattoria-tipo=30` da solo lascerebbe in home, con la
-     fattoria da aprire a mano e il frammento lì ad aspettarla. */
+  // il cheat della fattoria si legge ENTRANDO nella fattoria, quindi ci porta anche l'indirizzo
   else if (/(?:^|&)fattoria-tipo=\d/i.test(chiave)) vista.value = 'fattoria'
 }
 
 onMounted(async () => {
   await init()
-  /* dopo `init()` e non prima: la prima volta la posta decide guardando
-     se in casa c'è già un profilo, e deve guardare l'archivio vero
-     (`store/posta.js`) */
-  await initPosta()
+  await initPosta()   // dopo init(): la prima volta decide guardando se in casa c'è già un profilo
   dallIndirizzo()
   if (typeof window !== 'undefined') window.addEventListener('hashchange', dallIndirizzo)
   pronto.value = true
 
-  /* ── cambiare bambino riporta in home ──
-     `state.player` cambia in tre modi: la fila dei nomi in home (che è
-     già in home), un bambino appena aggiunto dalle impostazioni, e un
-     profilo eliminato. Negli ultimi due si resterebbe fermi dov'eravamo
-     — cioè nelle impostazioni — che però `:key` rimonta da capo:
-     davanti c'è di nuovo il tastierino del codice, subito dopo aver
-     risposto a tre domande. E in generale una schermata aperta su un
-     bambino non vale per il bambino dopo: i progressi che mostra sono
-     di un altro.
-
-     **Si accende qui e non in cima al file**, e la differenza non è di
-     stile: `init()` sceglie il primo giocatore, quindi un `watch`
-     dichiarato fuori scatterebbe anche a quella prima scelta — dopo
-     `dallIndirizzo()`, perché i job si smaltiscono a fine microtask — e
-     rimanderebbe in home chiunque sia entrato da `#sotterraneo`. Vale
-     per i test che aprono una schermata dall'indirizzo e per il cheat
-     che apre un gioco senza carta in home. */
+  // il watch si accende QUI e non in cima al file: init() sceglie il primo
+  // giocatore, e dichiarato fuori scatterebbe anche a quella scelta,
+  // rimandando in home chi è entrato da #sotterraneo
   watch(() => state.player, () => {
-    /* la sessione è di **chi** stava giocando: si chiude prima di
-       cambiare, se no i minuti finirebbero addosso al bambino dopo */
-    esciDalGioco()
-    /* tranne la pagina dei trucchi: cambiare bambino è una delle cose
-       che ci si viene a fare (il bambino di prova), e quello che mostra
-       lo rilegge dal bambino nuovo — la `:key` la rimonta */
-    if (vista.value !== 'admin') vista.value = 'home'
+    esciDalGioco()   // la sessione è di chi stava giocando: si chiude prima di cambiare
+    if (vista.value !== 'admin') vista.value = 'home'   // admin: cambiare bambino è previsto lì
   })
   guardaLoSchermo()
 })
 function vai(v) { vista.value = v }
 
-/* ═══════════ quanto ha giocato, e a cosa ═══════════
-   `store/sessioni.js` tiene il registro; qui si dice soltanto **quando
-   comincia e quando finisce** una sessione, perché questo è l'unico
-   posto che sa quale schermata è aperta. Un gioco non se ne occupa: se
-   dovesse ricordarsene lui, il quinto gioco che nasce se ne
-   dimenticherebbe — come si erano dimenticati il `:key` della domanda
-   in quattro su cinque.
-
-   Contano solo i **giochi**: home, impostazioni, albo, guide e novità
-   non sono tempo passato a giocare, e metterle nel conto direbbe a un
-   genitore che suo figlio ha passato dieci minuti sul gioco quando li
-   ha passati a scegliere. */
+// solo i giochi contano il tempo: home, impostazioni, albo, guide e novità non sono tempo di gioco
 const NON_GIOCHI = ['home', 'albo', 'genitori', 'guide', 'novita', 'admin']
 const gioca = v => !!viste[v] && !NON_GIOCHI.includes(v)
 
@@ -138,13 +74,7 @@ function apriSessione(v) {
 }
 watch(vista, apriSessione)
 
-/* ── il telefono posato col gioco aperto ──
-   Senza questo, un bambino che lascia il sotterraneo aperto e va a
-   cena figura come tre ore di sotterraneo. Si chiude la sessione
-   quando la pagina sparisce e se ne apre una nuova quando torna: le
-   pause non si contano, e quello che resta nel registro sono partite
-   vere. `pagehide` copre il caso in cui la scheda venga chiusa e basta,
-   dove `visibilitychange` su iOS non arriva sempre. */
+// pagehide copre il caso in cui la scheda venga chiusa e basta: su iOS visibilitychange non arriva sempre
 function guardaLoSchermo() {
   if (typeof document === 'undefined') return
   document.addEventListener('visibilitychange', () => {
@@ -154,24 +84,13 @@ function guardaLoSchermo() {
   window.addEventListener('pagehide', () => esciDalGioco())
 }
 
-/* ── tornare in home va a vedere se c'è una versione nuova ──
-   Il controllo automatico dorme quando l'app è in secondo piano
-   (`src/aggiornamento.js`), e su un telefono l'app è in secondo piano
-   quasi sempre. Uscire da un gioco è il momento buono: la partita è
-   finita, il nastro può comparire senza far perdere niente a nessuno, e
-   la richiesta è di due kilobyte con un freno da cinque minuti. */
-watch(vista, v => { if (v === 'home') controlla() })
-
-
+watch(vista, v => { if (v === 'home') controlla() })   // uscire da un gioco è un buon momento per controllare
 </script>
 
 <template>
   <div v-if="!pronto" class="schermo">
     <div class="centro"><h1>Un attimo…</h1></div>
   </div>
-  <!-- nessun giocatore nell'archivio: si comincia dal nome. Prima di
-       qualunque schermata, perché senza un profilo non c'è niente da
-       mostrare e niente su cui salvare -->
   <Benvenuto v-else-if="!state.player" />
   <template v-else>
     <component :is="viste[vista]" :lingua="lingue[vista]" @vai="vai"
@@ -179,11 +98,7 @@ watch(vista, v => { if (v === 'home') controlla() })
     <!-- i giochi sono pensati in verticale: girato, il campo diventa una fessura -->
     <div class="gira"><span class="em">📱</span><b>Gira il telefono</b>
       <span class="mini">i giochi si vedono in verticale</span></div>
-    <!-- fuori dalla vista: un traguardo può scattare in qualsiasi gioco.
-         La chiave è la stessa della schermata perché il cartello di un
-         traguardo appena preso deve sparire quando si cambia bambino:
-         `selectPlayer` svuota `state.festa`, ma il cartello già a schermo
-         se ne stava lì a fare i complimenti al bambino sbagliato. -->
+    <!-- key = state.player: il cartello di un traguardo non deve sopravvivere al cambio di bambino -->
     <Traguardo :key="state.player" />
   </template>
 </template>
