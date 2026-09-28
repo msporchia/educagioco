@@ -1,35 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL LESSICO SPAGNOLO — ogni voce è [spagnolo, italiano, emoji,
-   categoria, famiglia?] — quinto campo facoltativo, vedi `words.js`.
-
-   Stessa forma di `words.js` e stesse categorie: le emoji (e le
-   famiglie) sono quelle dell'inglese, voce per voce, perché sono già
-   state scelte una volta senza doppioni e cambiarle vorrebbe solo dire
-   rifare quel lavoro. Valgono le tre regole di là:
-
-   1. NESSUNA EMOJI RIPETUTA e nessuna parola ripetuta. I distrattori
-      figurati escono dalla stessa categoria: due voci con la stessa
-      emoji darebbero una domanda con due risposte giuste.
-   2. L'EMOJI È FACOLTATIVA (`''`): resta vuota quando non esiste
-      un'icona che sia davvero la cosa — non solo quella che le
-      assomiglia di più — e va benissimo per i concetti astratti, gli
-      aggettivi, le preposizioni e le parole di servizio.
-   3. DUE EMOJI CONFONDIBILI NON ESCONO MAI NELLA STESSA DOMANDA: chi le
-      confonde dichiara la stessa famiglia dell'inglese nel quinto campo.
-
-   ── Quale spagnolo ──
-   Quello che si parla in casa: dove il boliviano e lo spagnolo di Spagna
-   non vanno d'accordo si è scelto il primo — `papa` e non `patata`,
-   `palta` e non `aguacate`, `auto`, `celular`, `computadora`, `jugo`,
-   `lentes`, `durazno`, `frutilla`. Sono parole capite in tutta l'America
-   latina, ed è la lingua che i bambini sentiranno dalla mamma.
-
-   ── Le parole che si somigliano ──
-   Alcune coppie in spagnolo si distinguono per poco: `tarde` (tardi) e
-   `la tarde` (il pomeriggio), `mañana` (domani) e `la mañana` (la
-   mattina). Si tengono con l'articolo, che è come si dicono davvero: due
-   voci uguali sarebbero due risposte giuste nella stessa domanda.
-   ═══════════════════════════════════════════════════════════════════ */
+// Voce: [spagnolo, italiano, emoji, categoria, famiglia?], stessa forma
+// e stesse categorie/famiglie di `words.js` (vedi docs/lingue/vocaboli.md).
+// `tarde`/`la tarde`, `mañana`/`la mañana` si tengono con l'articolo:
+// è come si dicono davvero, e senza sarebbero due voci uguali.
 export const PAROLE_ES = [
   // ---- animali ----
   ['perro','cane','🐶','a'],['gato','gatto','🐱','a'],['ratón','topo','🐭','a'],

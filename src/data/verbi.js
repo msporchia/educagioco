@@ -1,14 +1,5 @@
-/* Verbi inglesi con il loro significato italiano.
-   A differenza di `words.js`, qui la risposta NON è un'emoji ma la parola
-   italiana scritta: così entrano anche azioni e concetti che nessuna singola
-   emoji saprebbe illustrare.
-
-   Ogni voce è [inglese, italiano, emoji]. L'emoji può essere '' (vuota) e al
-   momento il gioco NON la mostra: accanto alla parola inglese svelerebbe la
-   risposta che stiamo chiedendo. Resta nei dati per usi futuri (ripasso,
-   schede, premi).
-   I distrattori (le risposte sbagliate) sono altri verbi italiani di questa
-   stessa lista, quindi bastano una dozzina di voci perché il gioco funzioni. */
+// Voce: [inglese, italiano, emoji]. L'emoji resta nei dati per usi
+// futuri: il gioco non la mostra ancora (svelerebbe la risposta).
 export const VERBI = [
   // ---- movimento e corpo ----
   ['run', 'correre', '🏃'], ['walk', 'camminare', '🚶'], ['jump', 'saltare', '🤸'],

@@ -1,57 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE FRASI SPAGNOLE — dove il vocabolario diventa lingua.
-
-   Stessa meccanica di sempre: un bersaglio, alcune risposte, si tocca
-   quella giusta. Il motore di apprendimento non sa che sono frasi: le
-   chiavi sono `frase-es:<id>`.
-
-   ── Perché qui il punto di domanda C'È ──
-   In inglese le frasi del gioco sono scritte senza `?`, perché lì la
-   domanda si riconosce dal verbo girato e col punto interrogativo
-   sarebbe bastato guardare l'ultimo carattere. In spagnolo è il
-   contrario: la domanda si SCRIVE, e si scrive con due segni, `¿` in
-   apertura e `?` in chiusura. Toglierli vorrebbe dire insegnare a
-   scrivere male. Quindi ci sono — e siccome ci sono, i falsi di una
-   domanda sono anch'essi domande: se l'unica frase con `¿` fosse quella
-   giusta, la risposta si vedrebbe da lontano senza capire niente.
-
-   ── Dove sta la difficoltà, in spagnolo ──
-   Non nell'ordine delle parole, che assomiglia all'italiano, ma in
-   quattro cose che un italiano sbaglia per anni:
-
-     SER o ESTAR   due verbi per un solo «essere». `es mi hermana` (chi
-                   è) contro `está en casa` (dove sta, come sta adesso).
-     IL GENERE     l'articolo e l'aggettivo seguono il nome: `la casa
-                   blanca`, `el gato negro`. E parecchi nomi cambiano
-                   genere rispetto all'italiano — `la leche`, `el agua`.
-     TENER         fame, sete, freddo, anni: in spagnolo si HANNO, non
-                   si è. `tengo hambre`, mai «soy hambre».
-     GUSTAR        funziona al rovescio: `me gusta el chocolate` vuol
-                   dire alla lettera «mi piace il cioccolato», e il
-                   soggetto è il cioccolato.
-
-   I falsi sono errori veri, quelli che si fanno davvero, e mai frasi
-   che in America latina suonerebbero giuste: se una cosa si dice in
-   Bolivia, qui non è un errore.
-
-   ── I campi ──
-     it, es    le due frasi. Le affermative senza punto finale, le
-               domande con `¿…?`.
-     tema      per pescare distrattori affini (le lettere di parole-es.js)
-     liv       1 facile · 2 media · 3 tosta — decide in che tappa entra
-     falsi     traduzioni spagnole sbagliate, per le domande IT → ES
-     falsiIt   traduzioni italiane sbagliate, per le domande ES → IT.
-               Facoltativo: se manca, i distrattori escono dalle altre
-               frasi dello stesso tema.
-     buco      facoltativo: la stessa frase con un vuoto da riempire.
-               È il posto della grammatica pura (ser/estar, el/la,
-               tener, concordanza).
-   ═══════════════════════════════════════════════════════════════════ */
+// Le frasi spagnole: `¿…?` sulle domande, anche nei `falsi` (vedi
+// docs/lingue/vocaboli.md). Campi in
+// docs/lingue/vocaboli.md#formato-dei-dati: it/es, tema, liv, falsi,
+// falsiIt?, buco?.
 export const FRASI_ES = [
-  /* ─────────── livello 1: questo è, il gatto è nero, dov'è ───────────
-     Qui si impara la cosa più semplice e più utile: dare un nome alle
-     cose e dire come sono. E si comincia subito a sentire il genere,
-     perché in spagnolo non si può dire una frase senza sceglierlo. */
+  /* ─────────── livello 1: questo è, il gatto è nero, dov'è ─────────── */
   { id: 'e-gato-1', tema: 'a', liv: 1, it: 'questo è un gatto', es: 'este es un gato',
     falsi: ['esta es un gato', 'este es un gata'], falsiIt: ['questo è un gatto?', 'questo gatto'],
     buco: { testo: 'este ___ un gato', giusta: 'es', falsi: ['son', 'soy', 'eres'] } },
@@ -183,10 +135,7 @@ export const FRASI_ES = [
   { id: 'e-bici-nueva', tema: 't', liv: 1, it: 'la mia bicicletta è nuova', es: 'mi bicicleta es nueva',
     falsi: ['mi bicicleta es nuevo', 'mi bicicleta está nueva'] },
 
-  /* ─────────── livello 2: ho fame, mi piace, andiamo ───────────
-     Le frasi che servono per chiedere e raccontare. Qui entrano le due
-     cose che dall'italiano non si indovinano: `tener` per fame, sete,
-     freddo e anni, e `gustar` che gira la frase al contrario. */
+  /* ─────────── livello 2: ho fame, mi piace, andiamo ─────────── */
   { id: 'e-tengo-hambre', tema: 'f', liv: 2, it: 'ho fame', es: 'tengo hambre',
     falsi: ['soy hambre', 'estoy hambre'], falsiIt: ['ho sete', 'sono affamato?'],
     buco: { testo: '___ hambre', giusta: 'tengo', falsi: ['soy', 'estoy', 'hay'] } },
@@ -349,11 +298,7 @@ export const FRASI_ES = [
     falsi: ['¿cómo se dices en español?', '¿cómo es dice en español?'],
     falsiIt: ['che cosa vuol dire in spagnolo?', 'come si scrive in spagnolo?'] },
 
-  /* ─────────── livello 3: ser contro estar, e tutto insieme ───────────
-     Le frasi che mettono una accanto all'altra le due cose che in
-     italiano sono la stessa: chi sei e come stai adesso. Più i
-     riflessivi, il futuro con `voy a` e la doppia negazione, che in
-     spagnolo è la forma giusta e non un errore. */
+  /* ─────────── livello 3: ser contro estar, e tutto insieme ─────────── */
   { id: 'e-ser-estar-1', tema: 'k', liv: 3, it: 'mio fratello è simpatico, ma oggi è arrabbiato',
     es: 'mi hermano es simpático, pero hoy está enojado',
     falsi: ['mi hermano está simpático, pero hoy es enojado',

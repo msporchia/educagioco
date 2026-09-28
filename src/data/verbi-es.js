@@ -1,14 +1,6 @@
-/* Verbi spagnoli con il loro significato italiano, all'infinito come si
-   trovano sul vocabolario.
-
-   Stessa forma di `verbi.js`: ogni voce è [spagnolo, italiano, emoji], e
-   l'emoji può essere '' — il gioco al momento non la mostra, perché
-   accanto alla parola spagnola svelerebbe la risposta che sta chiedendo.
-   I distrattori sono altri verbi italiani di questa stessa lista.
-
-   Due coppie da non scambiare, e sono quelle che gli italiani sbagliano
-   per prime: `llevar` è portare con sé, `ponerse` è mettersi addosso;
-   `saber` è sapere una cosa, non conoscere una persona. */
+// Voce: [spagnolo, italiano, emoji], stessa forma di `verbi.js`.
+// Non scambiare: `llevar` è portare con sé, `ponerse` mettersi addosso;
+// `saber` è sapere una cosa, non conoscere una persona.
 export const VERBI_ES = [
   // ---- movimento e corpo ----
   ['correr', 'correre', '🏃'], ['caminar', 'camminare', '🚶'], ['saltar', 'saltare', '🤸'],

@@ -1,28 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL LESSICO UNIFICATO — parole, verbi e frasi di ogni lingua visti
-   tutti allo stesso modo, così il gioco ne maneggia uno solo.
-
-   Le chiavi inglesi restano quelle di sempre (`en:dog`, `verbo:run`,
-   `frase:e-cat-1`) perché sono già nel profilo dei bambini: cambiarle
-   vorrebbe dire buttare via mesi di ripassi. Lo spagnolo, che è
-   arrivato dopo, ha le sue (`es:perro`, `verbo-es:correr`,
-   `frase-es:e-gato-1`): due lingue non si mescolano mai nel motore di
-   apprendimento, sapere «gatto» in inglese non vuol dire saperlo in
-   spagnolo.
-
-   Ogni voce ha sempre gli stessi campi, qualunque cosa sia:
-     chiave   quella del motore di apprendimento
-     lingua   'en' | 'es' — decide fra quali compagne pescare i falsi
-     genere   'parola' | 'verbo' | 'frase'
-     str      la parola nella lingua straniera
-     it       l'italiano
-     emoji    '' se non ce l'ha
-     cat      categoria, per pescare distrattori affini
-     famiglia '' di norma: la dichiara solo chi rischia di essere confusa
-              a colpo d'occhio con un'altra emoji (vedi `words.js`).
-              `domande.js` non ne pesca due della stessa in una domanda.
-     frase    solo per le frasi: la voce intera del file delle frasi
-   ═══════════════════════════════════════════════════════════════════ */
+// Il lessico unificato: parole, verbi e frasi di ogni lingua con gli
+// stessi campi (chiave, lingua, genere, str, it, emoji, cat, famiglia,
+// frase?) — vedi docs/lingue/vocaboli.md. Le chiavi non si rinominano:
+// sono già nei profili dei bambini.
 import { WORDS } from './words.js'
 import { VERBI } from './verbi.js'
 import { FRASI } from './frasi.js'
@@ -30,9 +9,8 @@ import { PAROLE_ES } from './parole-es.js'
 import { VERBI_ES } from './verbi-es.js'
 import { FRASI_ES } from './frasi-es.js'
 
-/* I prefissi delle chiavi, uno solo posto dove sono scritti. Quelli
-   inglesi non hanno la lingua dentro per ragioni storiche: c'era una
-   lingua sola, e i profili salvati la chiamano così. */
+// i prefissi inglesi non hanno la lingua dentro per ragioni storiche:
+// c'era una lingua sola, e i profili salvati la chiamano già così
 export const PREFISSI = {
   en: { parola: 'en:',    verbo: 'verbo:',    frase: 'frase:' },
   es: { parola: 'es:',    verbo: 'verbo-es:', frase: 'frase-es:' },
@@ -55,8 +33,8 @@ function aggiungi(v) {
   perCat.get(k).push(v)
 }
 
-/* Registra una lingua intera. I verbi hanno una categoria loro: un
-   verbo va confuso con un altro verbo, non con un animale. */
+// i verbi hanno una categoria loro: un verbo va confuso con un altro
+// verbo, non con un animale
 function registra(lingua, { parole, verbi, frasi }) {
   const pre = PREFISSI[lingua]
   for (const [str, it, emoji, cat, famiglia] of parole)
@@ -78,16 +56,9 @@ export const voceDi = k => voci.get(k) || null
 export const TUTTE = [...voci.values()]
 export const tutteDi = lingua => perLingua.get(lingua) || []
 
-/* Le compagne di una voce: quelle della stessa lingua, della stessa
-   categoria e dello stesso genere, che sono i distrattori buoni — un
-   animale si confonde con un animale, non con un giorno della
-   settimana, e mai con una parola di un'altra lingua.
-
-   Se la categoria è piccola si allarga a tutto il genere. Il margine è
-   il doppio di quante ne servono, non il minimo indispensabile: con
-   l'osso del collo uscirebbero sempre gli stessi tre distrattori, e un
-   bambino impara in fretta a rispondere per esclusione invece che per
-   averlo capito. */
+// I distrattori buoni: stessa lingua, categoria e genere; se la
+// categoria è piccola si allarga a tutto il genere. Il margine è il
+// doppio del minimo, se no uscirebbero sempre gli stessi tre distrattori.
 export function compagne(v, quante) {
   const stesse = perCat.get(v.lingua + ':' + v.genere + ':' + v.cat) || []
   if (stesse.length >= quante * 2 + 1) return stesse
