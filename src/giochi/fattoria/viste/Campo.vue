@@ -1,27 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL CAMPO: COSA CI SEMINO, E QUANDO È PRONTO
-
-   Si tocca un campo e si apre questo, esattamente come toccando un cane
-   si apre `Bestia.vue`: è **lo stesso gesto per la stessa cosa** — «mi
-   avvicino a qualcosa di mio e vedo cosa posso farci» — e averne uno solo
-   è il motivo per cui non c'è niente di nuovo da imparare.
-
-   Tre stati e non uno di più: vuoto (cosa ci semino), sta crescendo
-   (quanto manca), pronto (raccogli). Il prezzo si vede **prima** di
-   premere, come sulla ciotola e come sui cartelli del bosco: scegliere
-   fra il grano da 10 minuti e il mais da 18 è una scelta solo se i due
-   numeri sono a schermo.
-
-   ── QUELLO CHE QUI NON SI DICE MAI ────────────────────────────────
-   Che si può perdere qualcosa. Un campo pronto resta pronto per sempre
-   (`dati/coltivazioni.js`), quindi non c'è nessun conto alla rovescia
-   dopo la maturazione, nessun «sbrigati», nessun rosso. Chi è a zero
-   monete legge quanto gli serve e torna dopo, e il grano è ancora lì.
-
-   Non sa niente del profilo né delle monete vere: riceve `stato` e
-   `monete`, manda fuori `semina` e `raccogli`. Chi paga è `Gioco.vue`.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Il campo: tre stati (vuoto, cresce, pronto), il prezzo si vede prima di premere, niente si perde
+   mai — vedi docs/fattoria/campi-e-silos.md. Non sa niente del profilo: riceve stato/monete. */
 import { computed } from 'vue'
 import { PRODOTTI } from '../dati/coltivazioni.js'
 import Merce from './Merce.vue'
@@ -29,26 +8,17 @@ import Passo from './Passo.vue'
 import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
-  /* quello che torna da `Fattoria.statoCampo()` */
+  // quello che torna da Fattoria.statoCampo()
   stato: { type: Object, required: true },
   monete: { type: Number, default: 0 },
-  /* quanto ci sta ancora nel silo del raccolto: zero vuol dire che
-     raccogliere non si può, e il pannello lo dice invece di mostrare un
-     tasto spento senza perché */
+  // quanto ci sta ancora nel silo del raccolto: zero vuol dire che raccogliere non si può
   ciSta: { type: Number, default: 99 },
-  /* il silo del raccolto non è ancora stato costruito. Si dice **prima
-     di seminare**, non a raccolto pronto: scoprire che non c'è dove
-     metterlo dopo aver aspettato dieci minuti veri è la cosa che fa
-     smettere di seminare. */
+  // il silo del raccolto non è ancora costruito: si dice prima di seminare, non a raccolto pronto
   senzaSilo: { type: Boolean, default: false },
   prezzoSilo: { type: Number, default: 0 },
-  /* Quelle che il livello della fattoria ha già aperto
-     (`dati/livelli.js`): al primo campo sono due, e crescono con la
-     fattoria. Le porta chi apre il foglio — qui non si decide niente. */
+  // Quelle che il livello ha già aperto; le porta chi apre il foglio.
   colture: { type: Array, default: () => [] },
-  /* Il prossimo passo quando il raccolto non ha dove andare
-     (`motore/consiglio.js`): o si usa quello che c'è, o si allarga il
-     silo. Arriva già deciso — qui non si sceglie, si mostra. */
+  // Il prossimo passo quando il raccolto non ha dove andare (motore/consiglio.js).
   passo: { type: Object, default: null },
 })
 const emit = defineEmits(['semina', 'raccogli', 'chiudi', 'passo'])
@@ -68,17 +38,8 @@ const prodotto = k => PRODOTTI[k] || { nome: k, emoji: '📦' }
     <template v-if="stato.vuoto">
       <p>Scegli cosa seminare. Ci vuole del tempo vero: puoi chiudere il
          gioco e tornare quando è cresciuto.</p>
-      <!-- **Quanto ne hai già**, sotto ogni coltura. È l'informazione
-           che trasforma cinque bottoni in una scelta: senza, si semina
-           sempre la stessa cosa e si scopre il silo tappato dieci
-           minuti dopo, davanti a un raccolto che non entra. Uno
-           scomparto colmo lo dice qui, **prima** di seminare. -->
-      <!-- `fa-semi` scorre: erano cinque semi e ci stavano tutti nel
-           foglio, da quando c'è l'orto sono tredici — cinque file di
-           bottoni, cioè un foglio più alto dello schermo di un
-           telefono, e quello che restava fuori era **tagliato** (il
-           velo centra e `.fa` nasconde quello che sborda), non
-           raggiungibile scorrendo. -->
+      <!-- Quanto ne hai già, sotto ogni coltura: trasforma i bottoni in una scelta. -->
+      <!-- fa-semi scorre: con l'orto sono tredici semi, più di quanti ne stiano in uno schermo. -->
       <div class="fa-nomi fa-semi">
         <button v-for="k in colture" :key="k.id"
                 :class="['fa-cibo', 'grande', k.ciSta < k.resa ? 'colma' : 'suo']"
@@ -122,10 +83,7 @@ const prodotto = k => PRODOTTI[k] || { nome: k, emoji: '📦' }
          <b>È pronto!</b> Ne
          {{ c.resa === 1 ? 'viene' : 'vengono' }} {{ c.resa }}
          {{ prodotto(c.da).nome.toLowerCase() }}.</p>
-      <!-- Non ci sta: il perché lo dice il consiglio, e porta il tasto.
-           Prima qui c'era «usa qualcosa, o toccalo e ingrandiscilo»,
-           che sono due compiti da fare da un'altra parte detti a un
-           bambino che sta guardando un campo maturo. -->
+      <!-- Non ci sta: il perché lo dice il consiglio, e porta il tasto. -->
       <template v-if="pieno">
         <p class="fa-piccolo">Il campo ti aspetta: non si perde niente.</p>
         <Passo :passo="passo" @fai="a => emit('passo', a)" />

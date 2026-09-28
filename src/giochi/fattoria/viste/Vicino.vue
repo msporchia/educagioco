@@ -1,29 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL CARRETTO DEL VICINO — LA SCHERMATA
-
-   Due passi e non uno di più: **cosa gli dai**, e **cosa ti dà**. In
-   mezzo non c'è nessuna conferma, perché non si spende niente e non si
-   perde niente che non fosse già in eccesso.
-
-   ── LA RIGA CHE CAMBIA TUTTO È LA PRIMA ───────────────────────────
-   Chi apre questo foglio ci arriva in due stati diversi, e la schermata
-   deve accorgersene: chi ha uno scomparto colmo è **venuto a
-   sbloccarsi** e va portato lì in una mossa; chi non ne ha nessuno è
-   passato per curiosità, e va spiegato cos'è questo posto. La stessa
-   frase per tutti e due sarebbe muta per il primo e incomprensibile per
-   il secondo.
-
-   ── QUELLO CHE NON SI DICE MAI ────────────────────────────────────
-   «Butta». Il vicino **prende**, e se non ha niente da darti in cambio
-   ringrazia. La differenza fra le due parole è tutta la differenza fra
-   sprecare il proprio lavoro e regalarlo, e in una fattoria dove niente
-   marcisce è l'unico posto in cui la roba può uscire dalle mani di un
-   bambino: quindi deve uscirne bene.
-
-   Non sa niente del profilo: riceve cosa si può dare e cosa si può
-   ricevere, già decisi da `motore/vicino.js`.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Il carretto: due passi (cosa gli dai, cosa ti dà), niente conferma in mezzo. Prende e mai butta
+   — vedi docs/fattoria/chi-chiede.md. Riceve tutto già deciso da motore/vicino.js. */
 import { computed } from 'vue'
 import { PRODOTTI } from '../dati/coltivazioni.js'
 import { DAI, RICEVI } from '../motore/vicino.js'
@@ -31,25 +8,20 @@ import Merce from './Merce.vue'
 import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
-  /* `[{ prodotto, quanti, colmo }]` — quello di cui hai almeno cinque */
+  // [{prodotto, quanti, colmo}] — quello di cui hai almeno cinque
   puoiDare: { type: Array, default: () => [] },
-  /* `[{ prodotto, quanti }]` per la merce scelta: quello che ci sta
-     ancora ed è già stato sbloccato. Vuoto vuol dire che resta solo il
-     regalo, ed è uno stato normale, non un errore. */
+  // [{prodotto, quanti}] per la merce scelta; vuoto vuol dire che resta solo il regalo
   offerte: { type: Array, default: () => [] },
-  /* quante merci hanno lo scomparto colmo: decide di cosa parla la
-     prima riga */
+  // quante merci hanno lo scomparto colmo: decide di cosa parla la prima riga
   colmi: { type: Number, default: 0 },
-  /* la merce scelta al primo passo, tenuta da chi apre il foglio
-     perché è lui a dover ricalcolare le offerte */
+  // la merce scelta al primo passo, tenuta da chi apre il foglio
   scelto: { type: String, default: '' },
 })
 const emit = defineEmits(['scegli', 'scambia', 'regala', 'chiudi'])
 
 const roba = k => PRODOTTI[k] || { nome: k, emoji: '📦' }
 const dato = computed(() => props.scelto ? roba(props.scelto) : null)
-/* Quello che si sta per dare, se c'è: serve a scrivere «5 🌽» invece di
-   «cinque cose», che a sei anni è un'altra frase. */
+// Quello che si sta per dare, se c'è.
 const troppo = computed(() => props.puoiDare.filter(r => r.colmo))
 </script>
 
@@ -67,13 +39,7 @@ const troppo = computed(() => props.puoiDare.filter(r => r.colmo))
          sola: gliene dai <b>{{ DAI }}</b> e te ne dà <b>{{ RICEVI }}</b>
          di un'altra. Conviene solo quando non sai più dove metterla.</p>
 
-      <!-- **Nessuna di queste è spenta**, e non deve sembrarlo: sono
-           tutte cose che il vicino prende. Erano segnate `altrui` —
-           la classe del cibo che una bestia rifiuta, scritta in rosso —
-           e quel rosso qui diceva una bugia: si leggeva «non hai i
-           requisiti» su un tasto che funziona benissimo. Quello colmo
-           si segna in **oro**, che è la tinta con cui il silo segna uno
-           scomparto pieno e vuol dire «guarda qui». -->
+      <!-- Nessuna di queste è spenta: sono tutte cose che il vicino prende. Il colmo si segna in oro, come il silo. -->
       <div v-if="puoiDare.length" class="fa-nomi">
         <button v-for="r in puoiDare" :key="r.prodotto"
                 :class="['fa-cibo', 'grande', r.colmo ? 'colma' : '']"
@@ -102,8 +68,7 @@ const troppo = computed(() => props.puoiDare.filter(r => r.colmo))
           <u>{{ r.quanti ? 'ne hai ' + r.quanti : 'non ne hai' }}</u>
         </button>
       </div>
-      <!-- Nessuna offerta: non è un errore ed è importante che non lo
-           sembri. Il vicino la prende lo stesso, e ringrazia. -->
+      <!-- Nessuna offerta non è un errore: il vicino la prende lo stesso, e ringrazia. -->
       <p v-else class="fa-piccolo">Adesso non ha niente da darti in cambio:
          hai già tutto, o quello che potrebbe darti non ci starebbe. Se
          vuoi se lo prende lo stesso — ti ringrazia, e tu hai il posto
