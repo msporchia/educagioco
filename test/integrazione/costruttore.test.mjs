@@ -383,9 +383,9 @@ await tocca('[data-scheda="principale"]')
 
 /* ---------- 8-quater. la domanda: una frase a caselle ----------
    Si apre solo la scelta di una casella per volta, il posto si tocca sul
-   quadretto attorno al robot, e il colore della domanda viene dalle mappe:
-   «Sui mattoni rossi» mette solo il giallo e chiede del rosso — con la
-   pulsantiera il rosso non c'era da scegliere. */
+   quadretto attorno al robot, e si offre tutto — anche quello che nel
+   livello non serve: «Sui mattoni rossi» mette solo il giallo e chiede del
+   rosso, e con la pulsantiera il rosso non c'era da scegliere. */
 {
   const nidi = LIVELLI.findIndex(l => l.chiave === 'sui-rossi')
   await scriviArchivio(page, { v: 2, programmi: {} })
@@ -403,7 +403,7 @@ await tocca('[data-scheda="principale"]')
   await scatto(page, 'costruttore-domanda-posto')
   await tocca('[data-scelta="cond"] [data-dove="sotto"]')
   uguale('scelto il posto si apre la cosa', await page.locator('[data-scelta="cond"] [data-cosa]').count() > 0, true)
-  uguale('l\'acqua non si offre dove non c\'è', await page.locator('[data-scelta="cond"] [data-cosa="acqua"]').count(), 0)
+  uguale('si offrono tutte le cose, anche l\'acqua che qui non c\'è', await page.locator('[data-scelta="cond"] [data-cosa="acqua"]').count(), 1)
   await tocca('[data-scelta="cond"] [data-cosa="mattone"]')
   uguale('un mattone nasce di qualunque colore, e si apre il colore',
          await page.locator('[data-scelta="cond"] [data-colore-domanda="qualunque"].cst-su').count(), 1)

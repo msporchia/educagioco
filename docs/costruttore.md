@@ -36,9 +36,10 @@ fuori, anche in un progetto: si costruisce a pezzi.
 **Una domanda è una frase a caselle** — «[↓ sotto i piedi] [c'è] [un
 mattone] [🌈 di qualunque colore]» — e toccandone un pezzo si apre solo la
 sua scelta. Il posto si tocca su un quadretto attorno al robot invece di
-leggerne sei nomi; il colore nasce *qualunque* e si stringe dopo, fra i
-colori che ci sono nelle mappe (non solo quelli che il robot mette: nei nidi
-si mette il giallo e si guarda il rosso). Era un modulo con quattro file di
+leggerne sei nomi; il colore nasce *qualunque* e si stringe dopo. Si offre
+tutto — tutte le cose, tutti i colori, anche quelli che il robot non mette
+(nei nidi si mette il giallo e si guarda il rosso) — perché capire quale
+domanda ha senso fa parte della sfida. Era un modulo con quattro file di
 tasti tutte aperte insieme.
 
 ## Il mondo, e le sue regole

@@ -23,9 +23,8 @@
 import { computed, provide, ref, watch, nextTick } from 'vue'
 import { nomiLeggibili, trova } from '../motore/modifica.js'
 import { pezzi, iconaDi } from './frasi.js'
-import { colore } from '../dati/colori.js'
+import { colore, CHIAVI_COLORI } from '../dati/colori.js'
 import { DOVE_PORTO, LATI, dentro as sottoRighe } from '../dati/scrivi.js'
-import { quelloCheSiGuarda, siConfronta } from '../dati/legenda.js'
 import Righe from './Righe.vue'
 
 const props = defineProps({
@@ -60,7 +59,6 @@ const conProgetti = computed(() => (props.livello.cassetta || []).includes('prog
 /* le lavagnette dell'ordine, coi loro valori: dalla specie (numero o
    colore) si sa in quali caselle offrirle */
 const lavagnetteOrdine = computed(() => props.livello.ordini[0].lavagnette || {})
-const guardabile = computed(() => quelloCheSiGuarda(props.livello))
 
 provide('editore', {
   programma: computed(() => props.programma),
@@ -79,12 +77,15 @@ provide('editore', {
     const porto = props.livello.mondo === 'porto'
     return {
       colori: props.livello.colori,
-      /* le domande guardano tutto quello che c'è nelle mappe, non solo i
-         colori che si mettono (`dati/legenda.js`) */
-      ...(porto ? {} : { coloriDomanda: guardabile.value.colori, cose: guardabile.value.cose }),
+      /* una domanda offre **tutti** i colori, non solo quelli che si
+         mettono: in «Sui mattoni rossi» si mette il giallo e si guarda il
+         rosso. E non solo quelli che servono: capire quale domanda ha
+         senso è metà della sfida, e una scelta ridotta all'osso la
+         suggerirebbe */
+      coloriDomanda: CHIAVI_COLORI,
       posti: props.livello.posti || ['sotto'],
       nomi,
-      confronta: siConfronta(props.livello) && nomi.misure.length + nomi.lavagnette.length + nomi.ordine.length > 0,
+      confronta: nomi.misure.length + nomi.lavagnette.length + nomi.ordine.length > 0,
       ...(porto ? { porto: true, versi: LATI, dove: DOVE_PORTO, cose: props.livello.cose || [],
                     leggere: !!props.livello.leggere } : {}),
     }

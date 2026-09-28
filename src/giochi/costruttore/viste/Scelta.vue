@@ -42,7 +42,7 @@ const props = defineProps({
   riga: { type: Object, required: true },
   campo: { type: String, required: true },
   /* { colori, nomi: { misure, lavagnette, ordine }, confronta,
-       nel cantiere: coloriDomanda, cose (quello che c'è nelle mappe),
+       coloriDomanda (tutti: vedi `Editor.vue`),
        e per il porto: porto, versi, dove, cose, leggere } */
   contesto: { type: Object, required: true },
 })
@@ -141,8 +141,8 @@ const daScegliereCond = c => (c.tipo === 'confronta'
 const pezzoCond = ref(daScegliereCond(cond.value))
 const apriPezzo = k => { pezzoCond.value = pezzoCond.value === k ? null : k }
 
-/* i colori di una domanda: quelli che ci sono nelle mappe, non solo quelli
-   che il robot mette (`quelloCheSiGuarda`) */
+/* i colori di una domanda sono tutti, non quelli della pulsantiera: il
+   robot guarda anche quello che non sa mettere */
 const coloriDomanda = computed(() => props.contesto.coloriDomanda || props.contesto.colori || [])
 const conColore = computed(() => colorato(cond.value.cosa) && coloriDomanda.value.length + nomiColore.value.length > 0)
 
@@ -388,8 +388,8 @@ const scegli = v => { emit('scegli', v); emit('avanti') }
                     :class="{ 'cst-su': (cond[pezzoCond] || {}).leggi === l }"
                     @click="cambiaCond(pezzoCond, { leggi: l })">{{ FRECCE[l] }}</button>
           </div>
-          <div v-if="contesto.porto && contesto.colori.length" class="cst-fila">
-            <button v-for="c in contesto.colori" :key="'c' + c" type="button" class="cst-chip cst-colore" :data-colore="c"
+          <div v-if="contesto.porto" class="cst-fila">
+            <button v-for="c in coloriDomanda" :key="'c' + c" type="button" class="cst-chip cst-colore" :data-colore="c"
                     :class="{ 'cst-su': cond[pezzoCond] === c }"
                     :style="{ '--cst-tinta': colore(c).tinta, '--cst-ombra': colore(c).ombra }"
                     @click="cambiaCond(pezzoCond, c)"><i class="cst-quadretto"></i>{{ colore(c).nome }}</button>
