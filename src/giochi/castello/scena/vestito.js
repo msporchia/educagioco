@@ -22,10 +22,12 @@
    `drawImage`, una volta per tappa.
 
    ── quale vestito per quale campagna ──
-   Le scene sono tre — il bosco, la neve, la lava — e le campagne quattro.
-   Quelle senza la loro scena ne prendono in prestito un'altra: è una
-   scelta dichiarata dell'utente («per il livello senza lo scenario
-   giusto per ora puoi riutilizzarne un altro mettendo un todo»).
+   I vestiti sono quattro — il bosco, la neve, la lava, la palude — e le
+   campagne quattro, ma non si corrispondono una per una: il bosco e la
+   palude hanno il loro, le grotte e le mura ne prendono in prestito un
+   altro. È una scelta dichiarata dell'utente («per il livello senza lo
+   scenario giusto per ora puoi riutilizzarne un altro mettendo un
+   todo»).
    ═══════════════════════════════════════════════════════════════════ */
 import { SCENE, PEZZI as TUTTI, CELLA as C, TOPPA, QUANTI as QUANTE, DAL_FOGLIO } from '../dati/vestiti.js'
 
@@ -33,7 +35,7 @@ export const VESTITO_DI = {
   bosco: 'bosco',
   sotterraneo: 'lava',   // TODO: la scena delle grotte, quando c'è
   mura: 'neve',          // TODO: la scena delle mura, quando c'è
-  palude: 'bosco',       // TODO: la scena della palude, quando c'è
+  palude: 'palude',
 }
 
 /* le partite libere hanno la loro `campagna` come le tappe: seguono quella */
@@ -42,7 +44,7 @@ export const vestitoDi = tappa => VESTITO_DI[tappa && tappa.campagna] || 'bosco'
 /* il colore che si vede mentre l'immagine si decodifica: il fondo di
    ogni scena, all'incirca, perché un lampo nero a ogni tappa sembra un
    guasto */
-export const TINTA_DI = { bosco: '#5f9a3c', neve: '#dfe9f0', lava: '#4a3a4c' }
+export const TINTA_DI = { bosco: '#5f9a3c', neve: '#dfe9f0', lava: '#4a3a4c', palude: '#71732a' }
 
 /* ── caricare ──
    Un'immagine per scena, decodificata una volta sola e tenuta. */

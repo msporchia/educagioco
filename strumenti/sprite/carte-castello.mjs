@@ -9,8 +9,9 @@
    `poc/scatti/castello-carte.png`, e in console quali carte non
    rispettano la scacchiera e perché.
 
-   Poi le rifà vestite con ognuna delle tre scene generate
-   (`castello-carte-bosco.png`, `-neve`, `-lava`): vedi `vesti.py`.
+   Poi le rifà vestite con ognuno dei quattro vestiti
+   (`castello-carte-bosco.png`, `-neve`, `-lava`, `-palude`): vedi
+   `vesti.py`.
 
    E una battaglia finta (`castello-battaglia.png`, più il catalogo
    delle figure in `castello-battaglia-figure.png`): vedi
@@ -32,7 +33,7 @@ import { BESTIARIO } from '../../src/giochi/castello/scena/bestiario.js'
 const QUI = dirname(fileURLToPath(import.meta.url))
 const RADICE = join(QUI, '..', '..')
 const USCITA = join(RADICE, 'poc', 'scatti', 'castello-carte.png')
-const VESTITI = ['bosco', 'neve', 'lava']
+const VESTITI = ['bosco', 'neve', 'lava', 'palude']
 
 const carte = [...TAPPE, ...LIBERE].map(t => {
   const c = cartaDi(t)
@@ -52,7 +53,7 @@ for (const nome of VESTITI) {
                            '--vesti', nome], { stdio: 'inherit' })
 }
 
-/* e una battaglia finta sulle fogne, nei tre vestiti: le torri sulle
+/* e una battaglia finta sulle fogne, in ogni vestito: le torri sulle
    piazzole e sulla strada i mostri del bestiario di quel vestito — per
    vedere l'effetto finale (`prova-battaglia.py`) */
 const bestiario = join(dirname(file), 'bestiario.json')

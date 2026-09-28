@@ -18,10 +18,10 @@
 
    Cosa manca, e dove sta scritto (il piano delle immagini è
    `strumenti/sprite/DA-GENERARE.md`):
-     · tre scene per quattro campagne: le grotte, le mura e la palude
-       prendono in prestito un vestito (`VESTITO_DI` in `scena/vestito.js`);
-     · i vestiti sono ritagliati dalle scene, non dal foglio dei pezzi:
-       quando il foglio arriva basta metterlo in cartella
+     · quattro vestiti per quattro campagne, ma non uno per una: le
+       grotte e le mura prendono in prestito la lava e la neve
+       (`VESTITO_DI` in `scena/vestito.js`), il bosco e la palude hanno
+       il loro. Un vestito nuovo è un foglio del terreno in cartella
        (`vesti.py`, «il foglio del terreno»);
      · i mostri respirano sul posto e scivolano: i passi di lato e di
        fronte arrivano coi fogli del cammino, e i pittori li usano da sé;

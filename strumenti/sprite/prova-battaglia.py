@@ -156,10 +156,11 @@ def main():
         if k.startswith('mostro:'):
             pose.setdefault(k.split(':')[1], []).append(v)
     quale = next(c for c in carte if c['nome'] == 'Le fogne')
-    vestiti = ('bosco', 'neve', 'lava')
+    # un vestito per tavola, tutti quelli che il bestiario conosce
+    vestiti = tuple(bestiario)
     tavole = [in_posa(quale, v, torri, [pose[c][0] for c in bestiario[v].values()]) for v in vestiti]
     w, h = tavole[0].size
-    tutte = Image.new('RGB', (w * 3 + 32, h), (20, 20, 20))
+    tutte = Image.new('RGB', (w * len(tavole) + 16 * (len(tavole) - 1), h), (20, 20, 20))
     for i, im in enumerate(tavole):
         tutte.paste(im, (i * (w + 16), 0))
     tutte.save(uscita)

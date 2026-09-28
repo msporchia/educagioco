@@ -29,7 +29,7 @@
      · l'ondata mista (in fondo a una tappa delle Mura): il preavviso la
        annuncia con due facce e due immunità, in campo scendono i due
        tipi mescolati, e la scheda li chiama coi nomi delle figure;
-     · nessun errore in console, in tre vestiti diversi.
+     · nessun errore in console, in quattro vestiti diversi.
 
    Con `--scatti` lascia una foto per vestito (`castello-sprite-*`),
    una della radura (`castello-sprite-radura`), una del blocchetto
@@ -150,10 +150,14 @@ await togliCartelli()
 await scatto(page, 'castello-sprite-bosco')
 
 /* ---------- 3. gli altri vestiti ----------
-   Il sotterraneo si veste di lava e le mura di neve (`VESTITO_DI`): due
-   immagini diverse da decodificare, e due carte diverse da comporre. */
+   Il sotterraneo si veste di lava, le mura di neve e la palude del suo
+   (`VESTITO_DI`): tre immagini diverse da decodificare, e tre carte
+   diverse da comporre. La palude ha un foglio suo, con più decori grandi
+   e meno alberi del bosco: `QUANTI` li conta, e il campo non ne
+   presuppone un numero. */
 for (const [i, nome] of [[TAPPE.findIndex(t => t.campagna === 'sotterraneo'), 'lava'],
-                         [TAPPE.findIndex(t => t.campagna === 'mura'), 'neve']]) {
+                         [TAPPE.findIndex(t => t.campagna === 'mura'), 'neve'],
+                         [TAPPE.findIndex(t => t.campagna === 'palude'), 'palude']]) {
   nota(`${TAPPE[i].nome}, vestito di ${nome}`)
   await page.evaluate(i => window.__td.inizia(i), i)
   await attendi(page, 900)
@@ -220,6 +224,11 @@ await scatto(page, 'castello-sprite-radura')
   /* il preavviso c'è fra un'ondata e l'altra con almeno una torre in
      campo: prima si costruisce la bomba */
   await costruisci('div')
+  /* un traguardo (le torri costruite in tutto, i conti senza errori) può
+     scattare proprio qui — dipende da quante tappe si sono giocate prima,
+     e con la palude sono una di più — e il suo cartello ferma il campo:
+     niente attesa, niente preavviso */
+  await togliCartelli()
   await attendi(page, 300)
   const preavviso = await page.evaluate(() =>
     [...document.querySelectorAll('[data-onda-preavviso]')].map(e => e.dataset.immune))

@@ -18,7 +18,7 @@
      · **la figura dice a quale torre è immune**, ed è la cosa che conta:
        al bambino non serve sapere chi è il mostro, serve capire che
        torre mettergli davanti. Il vocabolario è corto, e vale in tutti
-       e tre i vestiti:
+       e quattro i vestiti:
          🪽 ali o volo            → niente bombe, tutti; e chi ha le ali
                                     di un animale (pipistrelli, grifone,
                                     tornado, l'occhio) passa sopra anche
@@ -135,6 +135,29 @@ export const BESTIARIO = {
     verme: 'ombra',
     blatta: 'drago-lava',        // un drago, senza ali
     troll: 'golem-pietra',       // pietra
+    corazziere: 'tartaruga',
+    balestriere: 'serpente',
+  },
+  /* l'acqua ferma: quasi il bosco — melme, serpenti, la pianta
+     carnivora, il troll sotto il ponte — e quattro cose da palude: il
+     granchio, il fuoco fatuo, il golem col muschio e la tartaruga */
+  palude: {
+    slime: 'melma',
+    goblin: 'granchio',          // un comune, dal fango
+    pipistrello: 'pipistrello',
+    fantasma: 'fantasma-azzurro', // il fuoco fatuo
+    ragno: 'ragno',
+    orco: 'zombie',
+    scheletro: 'scheletro',
+    golem: 'golem-pietra',       // pietra col muschio
+    arpia: 'grifone',
+    drago: 'drago',
+    lupo: 'lupo',
+    corvo: 'pipistrello-occhio',
+    rovo: 'pianta',
+    verme: 'ombra',
+    blatta: 'draghetto',
+    troll: 'troll',
     corazziere: 'tartaruga',
     balestriere: 'serpente',
   },
