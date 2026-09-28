@@ -1,26 +1,9 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   L'ELENCO DELLE GUIDE — una forma sola, due posti
-
-   Le stesse voci si mostrano in due cornici diverse: la schermata «Come
-   funziona» (`Guide.vue`) e il foglio che si apre al primo avvio
-   (`VeloGuide.vue`), dove una schermata non si può aprire perché senza
-   un profilo il benvenuto è montato al posto di tutto.
-
-   **Le guide restano un registro solo** (`contenuti.js`): qui non c'è
-   nessun testo, arriva tutto da fuori. Quello che stava per diventare
-   due erano l'impaginazione e il CSS della riga, copiati nei due
-   componenti — e due copie della stessa riga sono due righe che un
-   giorno si guardano diverse senza che nessuno l'abbia deciso.
-
-   Chi mostra un sottoinsieme lo sceglie prima di passarlo: il velo dà
-   le `subito`, la schermata le dà tutte.
-   ═══════════════════════════════════════════════════════════════════ */
+// L'elenco delle guide, una forma sola per Guide.vue e VeloGuide.vue: vedi
+// docs/genitori/guide.md. Chi mostra un sottoinsieme lo sceglie prima di passarlo.
 defineProps({
   guide: { type: Array, default: () => [] },
-  /* il velo e la schermata marcano le voci con due attributi diversi:
-     due test devono poter dire quale dei due stanno guardando */
-  marca: { type: String, default: 'guida' },
+  marca: { type: String, default: 'guida' },   // il velo e la schermata marcano le voci diversamente
 })
 defineEmits(['apri'])
 </script>

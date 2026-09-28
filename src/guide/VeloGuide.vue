@@ -1,28 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   «COS'È QUESTO GIOCO?» — LE GUIDE PRIMA CHE IL GIOCO ESISTA
-
-   Un foglio che sale dal basso sopra la schermata del primo avvio.
-   Serve a rispondere alle domande che si fa chi ha appena aperto il
-   link ricevuto da un'altra famiglia, e che fino a ieri non trovavano
-   risposta da nessuna parte: la prima cosa che vedeva era **«Ciao!
-   Come ti chiami?»**, cioè un'applicazione senza nome che chiede il
-   nome di suo figlio.
-
-   ── PERCHÉ UN VELO E NON LA SCHERMATA DELLE GUIDE ──
-   Perché lì non ci si può andare: senza nemmeno un profilo in archivio
-   `App.vue` monta il benvenuto **al posto di tutto il resto**, e non
-   c'è nessuna navigazione da cui passare. E anche potendo: chi ha già
-   scritto mezzo nome non deve ritrovarsi la casella vuota per aver
-   letto due righe. Un foglio si chiude e sotto c'è tutto com'era.
-
-   ── NON LE MOSTRA TUTTE ──
-   Solo quelle marcate `subito` (`guide/contenuti.js`). Le altre
-   spiegano manopole che stanno dentro le impostazioni di un bambino, e
-   qui il bambino non c'è ancora: sarebbero istruzioni per una porta che
-   non esiste. Il resto si legge dopo, da «? Come funziona» in fondo
-   alla home — e il foglio lo dice, invece di lasciarlo scoprire.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il velo «cos'è questo gioco?» prima che il profilo esista (App.vue monta il
+// benvenuto al posto di tutto): solo le guide `subito`. Vedi docs/genitori/guide.md.
 import { ref, computed } from 'vue'
 import Blocchi from './Blocchi.vue'
 import Elenco from './Elenco.vue'
@@ -38,7 +16,6 @@ const aperta = ref(null)
   <!-- @click.self: si chiude toccando fuori dal foglio, non dentro -->
   <div class="aiuto-velo" data-velo="guide" @click.self="$emit('chiudi')">
     <div class="foglio">
-      <!-- ── l'elenco ── -->
       <template v-if="!aperta">
         <h2>Cos'è questo gioco?</h2>
         <div class="scorre">
@@ -51,7 +28,6 @@ const aperta = ref(null)
           Ho capito</button>
       </template>
 
-      <!-- ── una guida aperta ── -->
       <template v-else>
         <h2><span class="em">{{ aperta.emoji }}</span> {{ aperta.titolo }}</h2>
         <div class="scorre"><Blocchi :blocchi="aperta.blocchi" /></div>
@@ -63,8 +39,7 @@ const aperta = ref(null)
 </template>
 
 <style scoped>
-/* stessa forma del velo del `?` dentro un gioco: chi ne ha visto uno
-   sa già come si chiude l'altro */
+/* stessa forma del velo del `?` dentro un gioco */
 .aiuto-velo { position:fixed; inset:0; z-index:120; display:flex; align-items:flex-end;
               justify-content:center; background:#1b2436aa; backdrop-filter:blur(2px) }
 .foglio { width:min(560px,100%); max-height:88vh; display:flex; flex-direction:column;
