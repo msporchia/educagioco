@@ -60,9 +60,29 @@ Per disegnare con fogli di figure invece che coi poligoni:
 - **Una strada vuole etichette, non un sì/no per lato.** La seconda metà di
   `tessere.js` tratta il bordo come un'etichetta — *dove* passa, non *se*
   passa (`·`, `c`, `sx`, `dx`): sono le *Wang tiles*. `componiPercorso`
-  sceglie le tessere come si risolve un sudoku. Gli attacchi non si
-  dichiarano: li **misura** dal foglio `strumenti/sprite/terreni.py`, che
-  misura anche la griglia dall'alfa a ogni giro.
+  sceglie le tessere come si risolve un sudoku (backtracking: sempre la
+  casella con meno scelte possibili, così un ramo sbagliato fallisce
+  presto). Il caso è deterministico sulla posizione (`caso(x,y)`), mai su
+  un contatore: una strada che si ridisegna diversa a ogni giro si legge
+  come un guasto anche quando è bella. Gli attacchi non si dichiarano: li
+  **misura** dal foglio `strumenti/sprite/terreni.py`, che misura anche la
+  griglia dall'alfa a ogni giro.
+- **Le chiavi a quattro vicini sono lettere N/S/O/E**, sempre in
+  quell'ordine (rende le chiavi confrontabili). Un pezzo mancante si
+  cerca allo specchio (`riflessa`, che scambia O/E) prima di tornare
+  `null` — un foglio quasi mai disegna tutti e quattro gli angoli.
+- **`bordoOtto` guarda anche le diagonali**, dove `fettaDi` si ferma ai
+  quattro vicini in croce: serve al dungeon, per l'angolo concavo dove
+  due corridoi si saldano da dentro. Non tutte le 256 combinazioni di
+  otto vicini contano — una diagonale cambia la forma solo se i due lati
+  che la affiancano sono entrambi dentro (`angoliInterni`) — ed è la
+  stessa riduzione dietro le 47 forme canoniche dell'autotiling "blob".
+  Un set senza pezzi diagonali non resta scoperto: `fettaEquivalente`
+  ripiega sulla forma a quattro vicini che `fettaDi` avrebbe scelto.
+- **Le pose di una tessera sono al più otto** (4 giri × specchio):
+  `giraSocket` fa un quarto di giro (i giri sono quattro perché la pixel
+  art regge i 90°, non i 45°), pose identiche su ogni lato (un incrocio
+  girato) restano una sola.
 - **Il calco da guardare** è `giochi/sotterraneo/scena/tela.js`. La forma
   dei muri però viene da `scena/muri.js`: a tre quarti la faccia di un muro
   non è il bordo di una zona, è una cella intera che si vede da una parte
