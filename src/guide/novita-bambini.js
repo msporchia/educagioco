@@ -79,6 +79,8 @@ export const NOVITA = [
     testo: '♾️ Il sentiero senza fine ora ha anche le scatole e le pecore' },
   { id: 13, quando: '2026-09-27', gioco: 'costruttore',
     testo: '✂️ Nel costruttore ora sposti e copi le righe, anche dentro un ripeti' },
+  { id: 14, quando: '2026-09-28', gioco: 'torri',
+    testo: '🏰 Nel castello arrivano ondate miste: due mostri insieme' },
 ]
 
 /* quante righe per gioco, al massimo: è il tetto di chi torna dopo
