@@ -1,156 +1,132 @@
 # Come è fatto un gioco
 
-Questa cartella è la casa dei giochi scritti con la convenzione nuova. Il
-primo è `codice-segreto/`: **è il calco**, e chi ne aggiunge uno copia quella
-struttura invece di inventarne un'altra.
+La convenzione di `src/giochi/`: le cartelle di un gioco, il manifesto,
+dove sta l'avanzamento, i traguardi e i test che un gioco nuovo porta.
 
-I giochi vecchi stanno ancora in `src/views/` e sono fatti in altri quattro
-modi diversi: un file solo da duemila righe, i dati sparsi in `src/data/`, un
-campo dedicato nel profilo per ognuno. Non è un modello da seguire — è il
-motivo per cui questa convenzione esiste.
+- **`src/giochi/` è la casa dei giochi nuovi.** Il calco è
+  `src/giochi/codice-segreto/`: chi aggiunge un gioco copia quella
+  struttura invece di inventarne un'altra.
+- **`src/views/` non è un modello.** I giochi vecchi sono fatti in quattro
+  modi diversi (un file da duemila righe, dati sparsi in `src/data/`, un
+  campo nel profilo per ognuno): sono il motivo per cui la convenzione
+  esiste.
 
 ## La regola sola
 
-**Ogni pezzo sa una cosa e non sa le altre.** Se un file ha bisogno di sapere
-insieme che 🐶 vale un pallino verde *e* che quel pallino è un `<div>` di
-diciannove pixel *e* che vincere dà tre monete, quel file è tre file.
-
-## La struttura
+**Ogni pezzo sa una cosa e non sa le altre.** Un file che deve sapere
+insieme che 🐶 vale un pallino verde, che il pallino è un `<div>` di
+diciannove pixel e che vincere dà tre monete sono tre file.
 
 ```
 src/giochi/<nome-gioco>/
-  gioco.js          il manifesto: l'UNICA porta verso il resto dell'app
-  dati/             dato puro: tabelle, nessuna funzione che gioca
-  motore/           il calcolo: classi pure, girano in Node, zero DOM e zero Vue
-  scena/            il disegno imperativo: canvas e animazioni, zero regole
-  viste/            i componenti Vue di una schermata sola
-  Gioco.vue         il coordinatore: mette insieme i pezzi e parla col profilo
-  stile.css         l'aspetto, tutto sotto un prefisso suo
+  gioco.js     il manifesto: l'UNICA porta verso il resto dell'app
+  dati/        dato puro: tabelle, nessuna funzione che gioca
+  motore/      il calcolo: classi pure, girano in Node, zero DOM e zero Vue
+  scena/       il disegno imperativo: canvas e animazioni, zero regole
+  viste/       i componenti Vue di una schermata sola
+  Gioco.vue    il coordinatore: mette insieme i pezzi e parla col profilo
+  stile.css    l'aspetto, tutto sotto un prefisso suo
 ```
 
-### `gioco.js` — il manifesto
+- **`dati/`** — tabelle e basta (temi, scaglioni, tappe), nessun `import`
+  di motore, scena o Vue. **La difficoltà si dichiara qui**: un livello
+  nuovo è una riga. Ogni file esporta una `guasti…()` che si controlla da
+  sola (chiavi doppie, riferimenti inesistenti, numeri impossibili), e il
+  test la fa girare: un dato sbagliato è rosso in un secondo, non una
+  schermata bianca su un telefono.
+- **`motore/`** — le regole, a classi, **senza schermo**: niente DOM,
+  niente Vue, non sa cos'è una moneta. Gira uguale in Node, ed è l'unico
+  motivo per cui la difficoltà si **misura** invece di provarla a occhio
+  (`motore/banco.js`, il giocatore finto). Il caso si passa da fuori
+  (`rnd = Math.random`): una partita si deve poter rifare identica.
+- **`scena/`** — quello che il template non sa dire: canvas, coreografie a
+  tempo. Classi con `avvia()` e `ferma()` che ricevono l'elemento e **non
+  conoscono le regole**: ricevono fatti già decisi (`tipo: 'pieno'`).
+- **`viste/`** — una schermata per file, `props` dentro ed `emit` fuori.
+  Non toccano il profilo, non chiamano il motore.
+- **`Gioco.vue`** — l'unico file del gioco che sa di monete, contatori e
+  salvataggi. Tiene lo stato reattivo, sceglie la schermata e salva
+  passando da `src/giochi/campagne.js`: se il profilo cambia forma, si
+  cambia lì e nessun gioco se ne accorge. **I contatori non si toccano a
+  mano**: si usano `segna()` e `segnaBest()` di `src/store/profile.js`.
+  Se il gioco ha un orologio, la pausa non si scrive in casa: vedi
+  [interfaccia.md](interfaccia.md#la-pausa-una-sola).
 
-Chiave, nome, icona, componente, quante tappe. È l'unico file che `App.vue`,
-la home e la schermata dei genitori importano: aggiungere un gioco non deve
-voler dire mettere le mani in cinque file dell'applicazione.
+## Il manifesto, `gioco.js`
 
-**Come si presenta in home**, e sono tre campi che vanno insieme:
+Chiave, nome, icona, componente, quante tappe. È l'unico file che
+`App.vue`, la home e la schermata dei grandi importano.
 
-- `che` — *cosa insegna*, in una riga breve (`'euro, centesimi e resto'`).
-  Sta sulla carta sotto il nome, quindi invita e non spiega: se serve una
-  subordinata è troppo lungo, e il posto di quella spiegazione sono i
-  traguardi. Non ci va il nome del gruppo — il gruppo sta scritto sopra la
-  carta, e ripeterlo (`'logica: dedurre…'`) ruba mezza riga.
-- `area` — *di cosa parla*, e decide **in quale gruppo compare la carta**:
-  una delle chiavi di `src/data/aree.js`. Senza, il gioco non finisce in
-  nessun gruppo e **sparisce dalla home** senza dare errore.
+**Un gioco nuovo si registra in due file**: `src/giochi/indice.js`
+(manifesti puri, l'ordine è quello delle carte in home) e
+`src/giochi/schermate.js` (i `.vue`, letto solo da `App.vue`). Sono due
+catene di import diverse: `data/giochi.js` ha bisogno dei nomi, e
+importando i `.vue` si tirerebbe dietro mezza applicazione — un anello
+di import è un guasto che si presenta mesi dopo.
+
+**Come si presenta in home**, tre campi che vanno insieme:
+
+- `che` — *cosa insegna*, una riga breve (`'euro, centesimi e resto'`).
+  Invita, non spiega: se serve una subordinata è troppo lungo (la
+  spiegazione va nei traguardi). Non ripete il gruppo, che è già scritto
+  sopra la carta.
+- `area` — *di cosa parla*: una chiave di `src/data/aree.js`, e decide in
+  quale gruppo compare la carta. **Senza, il gioco sparisce dalla home**
+  senza dare errore.
 - `come` — *che tipo di gioco è* (`domande`, `pensare`, `riflessi`,
-  `strategia`, `fare`): una delle chiavi di `MODI`, sempre in `aree.js`.
+  `strategia`, `fare`): una chiave di `MODI` in `aree.js`.
 
-`test/unita/aree.test.mjs` diventa rosso se uno dei due manca o cita una
-chiave che non esiste. Facoltativi: `tinta` (lo sfondo della carta, che i
-giochi nuovi portano con sé perché non hanno una riga di CSS dedicata) e
-le **due estremità della scala**, `piccoli: true` e `grandi: true`.
+`test/unita/aree.test.mjs` è rosso se `area` o `come` mancano o citano una
+chiave che non esiste.
 
-`piccoli` mette l'etichetta per la fascia dei quattro-sei anni: consegna
-iconica, niente da leggere, non si può perdere. `grandi` dice il
-contrario — questo gioco dà per scontato che il bambino legga da solo, o
-la matematica delle classi alte. Chi non dichiara né l'uno né l'altro sta
-in mezzo, ed è il caso normale. `cresce: true`, accanto a `piccoli`, è
-per chi comincia da lì e non finisce lì (Passo passo): le partenze dei
-grandi non lo spengono, e fin dove arriva lo dice la portata delle sue
-tappe.
+Facoltativi: `tinta` (lo sfondo della carta: i giochi nuovi non hanno una
+riga di CSS dedicata) e le bandierine della scala d'età, che non sono
+interruttori ma le legge `src/data/partenze.js` quando si aggiunge un
+bambino:
 
-Non sono interruttori: le legge `src/data/partenze.js`, che al momento in
-cui un bambino si aggiunge accende il set giusto senza che nessuno debba
-tenere a mano un elenco di cosa va bene a che età. Sbagliarle non dà
-errore da nessuna parte — si vede solo il giorno che un bambino di sei
-anni si trova in home un gioco che non sa aprire, o non trova quello che
-saprebbe giocare.
+- `piccoli: true` — fascia quattro-sei anni: consegna iconica, niente da
+  leggere, non si può perdere.
+- `grandi: true` — dà per scontato che il bambino legga da solo, o la
+  matematica delle classi alte. Né l'uno né l'altro è il caso normale.
+- `cresce: true`, accanto a `piccoli` — comincia dai piccoli e non finisce
+  lì (Passo passo): le partenze dei grandi non lo spengono, e fin dove
+  arriva lo dice la portata delle tappe.
 
-### `dati/` — il dato
-
-Tabelle e basta: temi, scaglioni di difficoltà, tappe. Nessun `import` di
-motore, scena o Vue. **La difficoltà si dichiara qui**, non si sparge nel
-codice: chi vuole un livello nuovo aggiunge una riga.
-
-Ogni file di dati esporta anche una funzione `guasti…()` che si controlla da
-sola — chiavi doppie, riferimenti a roba che non esiste, numeri impossibili —
-e il test unitario la fa girare. Un dato sbagliato deve diventare rosso in un
-secondo, non una schermata bianca sul telefono di un bambino.
-
-### `motore/` — il calcolo
-
-Le regole del gioco, a classi, **senza schermo**: non tocca un elemento del
-DOM, non importa Vue, non sa cosa sia una moneta. Gira uguale nel browser e in
-Node, e questo è l'unico motivo per cui la difficoltà si può *misurare*
-invece di provarla a occhio (vedi `motore/banco.js`, il giocatore finto).
-
-Il caso si passa da fuori (`rnd = Math.random`): una partita si deve poter
-rifare identica, o il test racconta ogni volta una storia diversa.
-
-### `scena/` — il disegno
-
-Quello che il template non sa esprimere: un canvas, una coreografia a tempo,
-un pezzo che vola da un punto a un altro. Classi con `avvia()` e `ferma()`,
-che ricevono l'elemento su cui lavorare e **non conoscono le regole**: chi
-disegna riceve fatti già decisi (`tipo: 'pieno'`), non li calcola.
-
-### `viste/` — i componenti
-
-Una schermata per file, `props` in ingresso ed `emit` in uscita. Non toccano
-il profilo, non chiamano il motore: ricevono quello che devono mostrare.
-
-### `Gioco.vue` — il coordinatore
-
-L'unico file del gioco che sa che esistono le monete, i contatori e
-l'avanzamento salvato. Tiene lo stato reattivo, decide quale schermata è in
-scena, e passa da `src/giochi/campagne.js` per salvare. Se domani il profilo
-cambia forma, si cambia lì e nessun gioco se ne accorge.
-
-### La pausa, se il gioco ha un orologio
-
-Non si scrive in casa: `usaPausa()` di `pausa.js` e `VeloPausa.vue` sono
-tre righe nel coordinatore, e il contratto sta in testa a `pausa.js`.
-
-```js
-const { inPausa, fermo, metti, togli, aiuto } = usaPausa()
-```
-```html
-<Barra … pausa @pausa="metti()" @aiuto="aiuto" />
-<VeloPausa v-if="inPausa" @riprendi="togli" />
-```
-
-Nel battito, `if (!fermo.value) p.avanza(dt)`. `fermo` somma la pausa, il
-telefono posato, il foglio del `?` e il cartello di un traguardo: erano
-quattro copie scritte a mano, e divergevano. Chi non ha un orologio — un
-posto, non una scaletta — non mette niente.
+Sbagliarle non dà errore: si vede solo il giorno che un bambino di sei
+anni trova in home un gioco che non sa aprire. Gli altri campi letti
+dall'età e dai saperi (`posto`, `quiz`, `chiede`, `serve`, `perMerito`,
+`sperimentale`) sono spiegati in [`../genitori/`](../genitori/); il blocco
+`senzaFine` in [primati.md](primati.md).
 
 ## L'avanzamento
 
-Un gioco **non aggiunge un campo suo al profilo**. I giochi vecchi l'hanno
-fatto — `td`, `mate`, `calc`, `eng`, `esp`, `mercato`, `lab`, `gen`: otto
-campi che dicono la stessa cosa in otto posti — e ogni gioco nuovo era una
-migrazione in più. Qui si passa da `src/giochi/campagne.js`, che tiene tutto
-sotto `profile.campagne[<chiave>]` con una forma sola:
+**Un gioco non aggiunge un campo suo al profilo.** I giochi vecchi l'hanno
+fatto (`td`, `mate`, `calc`, `eng`, `esp`, `mercato`, `lab`, `gen`), e ogni
+gioco era una migrazione in più. Qui tutto sta in
+`profile.campagne[<chiave>]`, scritto solo da `src/giochi/campagne.js`:
 
 ```js
 { tappa: 0, libera: false, stelle: {}, cfg: {} }
 ```
 
-`tappa` è quante tappe sono state superate (l'indice della prossima),
-`stelle` è il primato per tappa, `cfg` è quello che il bambino ha scelto e
-va ricordato (la difficoltà del gioco libero, per dire).
+- `tappa` — quante tappe superate (l'indice della prossima);
+- `libera` — la campagna è finita, il gioco libero è aperto;
+- `stelle` — il **primato** per tappa, non la somma: rigiocare non gonfia,
+  e una partita storta non toglie una stella già presa;
+- `cfg` — quello che il bambino ha scelto e va ricordato;
+- `aiuti`, `primato`, `primati` — solo in chi ha una scala del 💡
+  ([aiuti.md](aiuti.md)) o una sfida senza fine ([primati.md](primati.md)).
+
+La forma la mette a posto chi legge (`progresso(chiave)`): un profilo di
+ieri non ha bisogno di migrazioni per un gioco che ieri non c'era.
 
 ## I traguardi e l'esperienza
 
-Un gioco **non scrive i propri traguardi in `data/traguardi.js`** e non aggiunge
-la propria riga a `XP_AREA` in `store/progressi.js`. Nei giochi vecchi quelle
-tre cose stanno in tre posti lontani fra loro, e sbagliarne una dà un'area a
-0/5 nell'albo o un traguardo che nessuno può prendere — senza che niente
-diventi rosso.
-
-Qui è **il gioco a presentarsi**, con un blocco `albo` nel manifesto:
+Un gioco **non scrive i suoi traguardi in `data/traguardi.js`** e non
+aggiunge la sua riga a `XP_AREA` in `store/progressi.js`: tre posti
+lontani, e sbagliarne uno dà un'area a 0/5 nell'albo o un traguardo
+impossibile senza che niente diventi rosso. Si presenta il gioco, col
+blocco `albo` del manifesto:
 
 ```js
 albo: {
@@ -162,41 +138,34 @@ albo: {
 }
 ```
 
-Li raccoglie `src/giochi/albo.js`, e `data/traguardi.js` e `store/progressi.js`
-li accodano ai propri senza sapere che gioco sia. L'`id` dell'area è la chiave
-del gioco e non si dichiara: così non può essere diversa da quella con cui il
-gioco si registra altrove.
+Li raccoglie `src/giochi/albo.js`, e `data/traguardi.js` e
+`store/progressi.js` li accodano senza sapere che gioco sia. L'`id`
+dell'area è la chiave del gioco e non si dichiara, così non può divergere.
 
-Le misure che i `valore:` leggono sono quelle di tutti (`m.tot`, `m.best`) più
-le tre che ogni campagna ha per forza — `m.tappeDi(chiave)`,
-`m.stelleDi(chiave)`, `m.finita(chiave)` — che leggono `profile.campagne` e
-valgono uguali per qualunque gioco nuovo. Nessun gioco aggiunge una misura sua.
+I `valore:` leggono le misure di tutti (`m.tot`, `m.best`) più le tre di
+ogni campagna — `m.tappeDi(chiave)`, `m.stelleDi(chiave)`,
+`m.finita(chiave)`. **Nessun gioco aggiunge una misura sua.**
 
 **Le soglie di «Tuttofare» non si alzano** quando arriva un gioco nuovo: la
-medaglia mostrata si ricalcola ogni volta, e chi ha l'oro se lo vedrebbe
-tornare indietro sotto gli occhi.
+medaglia si ricalcola, e chi ha l'oro se lo vedrebbe tornare indietro.
 
 ## La campagna
 
-L'ingresso di un gioco è una campagna a tappe, come il castello: si comincia
-da una fila di partite facili, poi normali, poi toste. Una tappa non è un
-livello nuovo del motore — è **lo stesso motore con altri numeri e un altro
-vestito**. Cambiare il vestito a ogni tappa (altri disegni, altro colore) non
-è decorazione: è quello che fa sembrare un percorso una fila di posti diversi
-invece della stessa schermata nove volte.
+L'ingresso di un gioco è una campagna a tappe: facili, poi normali, poi
+toste. Una tappa è **lo stesso motore con altri numeri e un altro
+vestito**, e cambiare il vestito (disegni, colore) non è decorazione: fa
+sembrare il percorso una fila di posti diversi e non la stessa schermata
+nove volte.
 
 ## I test
 
-Un gioco nuovo porta un test di unità che gira senza browser
-(`test/unita/<nome>.test.mjs`) e prova tre cose:
+Un gioco nuovo porta `test/unita/<nome>.test.mjs`, senza browser, che
+prova:
 
-1. **i dati stanno in piedi** — le funzioni `guasti…()` non trovano niente,
-   `guastiDellAlbo()` compreso
-2. **il calcolo è giusto** — soprattutto i casi in cui è facile sbagliarsi
-3. **le tappe si vincono** — giocate davvero dal giocatore finto, non a occhio
-4. **i traguardi scattano** — a profilo finito si prendono tutti, a profilo
-   vuoto nessuno. Un traguardo che nessuno può prendere non si vede da
-   nessuna parte, e senza questo controllo non se ne accorge nessuno
-
-Se una tappa la vince solo la fortuna, si vede qui e non dal muso lungo di un
-bambino.
+1. **i dati stanno in piedi** — le `guasti…()` non trovano niente,
+   `guastiDellAlbo()` e (se c'è `senzaFine`) `guastiDelleSfide()` compresi;
+2. **il calcolo è giusto** — soprattutto dove è facile sbagliarsi;
+3. **le tappe si vincono** — giocate dal giocatore finto, non a occhio: se
+   una tappa la vince solo la fortuna si vede qui;
+4. **i traguardi scattano** — a profilo finito si prendono tutti, a
+   profilo vuoto nessuno: un traguardo impossibile non si vede altrove.
