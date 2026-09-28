@@ -52,6 +52,16 @@ esce solo dal modulo di segnalazione precompilato. Serve perché una domanda
 fuori misura è formalmente ineccepibile: nessun controllo automatico la
 trova.
 
+- **Il testo viaggia dentro l'indirizzo** del modulo Tally: ogni carattere
+  strano ne costa fino a tre, quindi `riga()` è compatta, senza accenti né
+  simboli, col verdetto per primo perché è quello che si scorre.
+- **Sopra `TETTO_INVIO` (30) si mandano gli ultimi**, dicendo in testa
+  quanti sono rimasti a casa: farsi troncare in silenzio da un limite del
+  browser sarebbe peggio di un pacco corto ma completo.
+- **Una voce nuova con lo stesso `id` sostituisce, non si accoda**: quell'id
+  è una domanda comparsa una volta, e chi cambia idea sul verdetto non ne
+  ha giudicate due.
+
 Nei test: `[data-scheda="bambini"|"giochi"|"comeva"]` per le schede;
 `[data-come-va]`, `[data-sommario]`, `[data-riga="<tipo>"]`,
 `[data-voto="<tipo>"]`, `[data-altre]`; nella scheda di una domanda
