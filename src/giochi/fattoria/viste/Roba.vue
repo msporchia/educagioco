@@ -1,56 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL BAULE — L'ELENCO DI TUTTO, NON DI QUELLO CHE POSSIEDI
-
-   Un posto solo dove si guarda «cosa c'è da avere e a che punto sono»,
-   invece di un negozio da una parte e una cassapanca dall'altra: sono la
-   stessa domanda fatta due volte. Ogni oggetto c'è sempre, e sopra c'è
-   scritto o il prezzo o quanti ne hai.
-
-   **Toccare è già mettere giù.** Un gesto solo: si tocca una cosa e la
-   posa comincia — il foglio si toglie di mezzo e l'anteprima è già
-   agganciata alla griglia, col suo ingombro vero. Se la cosa è già tua
-   esce dal baule, se non lo è la si compra posandola: comprare e
-   piazzare erano due gesti diversi, e il primo lasciava il bambino con
-   una panchina invisibile in un magazzino che non aveva mai visto.
-   Toccare e non premere: lo scaffale deve poter scorrere sotto il dito
-   (vedi `premi`, più giù).
-
-   Si chiamava «la roba», ed era il nome sbagliato per due motivi: non
-   dice niente a un bambino, e detto ad alta voce suona male. «Il baule»
-   invece si capisce a quattro anni — è la cassa dove stanno le tue cose,
-   e da cui ne escono di nuove.
-
-   ── PERCHÉ È DIVENTATO UNO SCAFFALE ───────────────────────────────
-   Perché il catalogo è passato da trenta voci a duecento, e quello che
-   reggeva trenta figurine non regge duecento. Tre cose sono cambiate, e
-   tutte e tre per lo stesso motivo — **quello che si compra si sceglie
-   guardando, non leggendo**:
-
-     · **la figura è grande** e sta su un ripiano, non su un rettangolo
-       vuoto. Le cose poggiano tutte sulla stessa riga e sono in scala
-       fra loro (`Provino.vue`), quindi in uno scaffale si vede subito
-       che una casa è una casa e un fiorellino è un fiorellino. Prima
-       ogni pezzo era ingrandito per conto suo e le proporzioni erano a
-       caso — quando non sbordava proprio dalla carta.
-     · **quello che non ti puoi permettere dice di quanto** («manca
-       🪙12») invece di essere solo pallido. È la regola dei tasti spenti
-       di tutto il resto del gioco: uno spento senza il perché è uno
-       rotto. E quel numero è la cosa che rimanda a fare esercizi, che è
-       poi il senso di tutto il posto.
-     · **una riga dice cosa c'è in questa linguetta.** Undici linguette
-       sono troppe da imparare a memoria, e «Cortile» da solo non dice
-       che lì dentro le cose si toccano e fanno qualcosa.
-
-   Quello che invece **non** ci sta è un gettone delle monete: c'era, ed
-   era il numero della barra in cima ripetuto trenta pixel più sotto. La
-   barra non se ne va quando si apre il baule — il velo copre il gioco,
-   non lei — quindi quel gettone costava una riga di scaffale per dire
-   una cosa che era già a schermo.
-
-   Non sa niente del profilo né delle monete vere: riceve `monete` e
-   `magazzino` e manda fuori `tira`. Chi paga è `Gioco.vue`.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Il baule: l'elenco di tutto, non solo quello che possiedi. Toccare è già posare (compra e piazza
+   insieme) — vedi docs/fattoria/come-si-tocca.md. Non sa niente del profilo: riceve monete/magazzino,
+   manda tira. */
 import { computed, onMounted, ref } from 'vue'
 import { CATEGORIE, ZONE, ANIMALI_ZONA } from '../dati/catalogo.js'
 import { chiaveDi } from '../dati/livelli.js'
@@ -63,70 +14,31 @@ const props = defineProps({
   monete: { type: Number, default: 0 },
   magazzino: { type: Object, default: () => ({}) },
   bestie: { type: Array, default: () => [] },     // quelle già comprate
-  /* `id → quanto costa adesso`, per le poche cose che rincarano a ogni
-     copia: il campo. Chi non c'è dentro costa il prezzo di catalogo. Il
-     conto è del motore (`quantoCosta`), qui si mostra e non si decide —
-     la stessa divisione della ciotola e dei cartelli del bosco. */
+  // id → quanto costa adesso, per quello che rincara a ogni copia (il campo); il conto è del motore.
   prezzi: { type: Object, default: () => ({}) },
-  /* L'id della voce su cui aprirsi, se il baule è stato aperto da un
-     consiglio («ti serve un campo»). Vuoto vuol dire: apriti dove ti
-     apri sempre. */
+  // L'id della voce su cui aprirsi, se il baule è stato aperto da un consiglio.
   punta: { type: String, default: '' },
-  /* Le chiavi dei premi **presi** (`cosa:orto`, `bestia:cane-bobtail`):
-     quello che non è ancora arrivato — o è arrivato e nessuno è andato
-     a prenderlo — **non sta qui**. Una voce spenta dentro un negozio è
-     un tasto rotto — chi la vede prova a premerla e non succede niente
-     — mentre la stessa voce dentro la pagina dei livelli, con scritto
-     «al livello 4», è una cosa da desiderare. Il perché per esteso sta
-     in `dati/livelli.js`.
-
-     Era il numero del livello, e filtrava da sé; adesso il conto lo fa
-     il motore, che è l'unico a sapere cosa è stato preso. */
+  // Le chiavi dei premi presi: quello non ancora preso non sta qui, anche se il livello l'ha aperto.
   presi: { type: Array, default: () => [] },
-  /* Da che metà aprirsi: la sceglie chi ha premuto il tondo in alto.
-     Vuoto vuol dire «decidi tu», ed è quello che serve quando ad aprire
-     è stato un consiglio, che sa la voce e non la metà. */
+  // Da che metà aprirsi; vuoto vuol dire "decidi tu".
   zonaIniziale: { type: String, default: '' },
-  /* Gli id delle cose **uniche già in mappa** — i due silos. Un secondo
-     silo dello stesso tipo non si può posare (il motore risponde
-     «ne-hai-gia»), e una voce che non si può prendere è un tasto rotto:
-     sparisce dallo scaffale, come sparisce quello che il livello non ha
-     ancora aperto. Il conto lo fa il motore, che è l'unico a sapere
-     cosa c'è in mappa; qui si mostra e non si decide. */
+  // Gli id delle cose uniche già in mappa (i due silos): una seconda non si può posare.
   posati: { type: Array, default: () => [] },
-  /* Che periodo dell'anno è (`stagioneDi` in `dati/stagioni.js`), o
-     vuoto. Le voci con `stagione:` stanno sullo scaffale **solo** in
-     quei giorni — e, fuori, solo se ce n'è già una nel baule: una cosa
-     comprata non sparisce mai, nemmeno da qui. Chi sa che giorno è è
-     `Gioco.vue`; questo foglio riceve il nome e basta. */
+  // La stagione (dati/stagioni.js): le voci stagione: stanno sullo scaffale solo in quei giorni.
   stagione: { type: String, default: '' },
 })
 const emit = defineEmits(['tira', 'tiraBestia', 'chiudi'])
 
-/* Gli animali si prendono come le altre cose — anche una bestia si posa
-   dove vuoi tu, ed è così che finisce dentro un recinto — ma passano da
-   un'uscita loro: prima di comparire chiedono un nome. */
+// Gli animali passano da un'uscita loro: prima di comparire chiedono un nome.
 const ANIMALI = ANIMALI_ZONA
 
-/* Quello che è stato preso, in un insieme: `vociDi` gira duecento voci
-   a ogni cambio di linguetta, e cercarle una per una dentro un array
-   sarebbe un conto quadratico per niente. */
+// Un Set: cercare in un array duecento volte a ogni cambio di linguetta sarebbe un conto quadratico.
 const presi = computed(() => new Set(props.presi))
 const preso = (tipo, id) => presi.value.has(chiaveDi(tipo, id))
 
-/* Le tre metà stanno in `dati/catalogo.js` (`ZONE`): le usa anche
-   `Gioco.vue`, per i tre tondi in alto che aprono il baule già dalla
-   parte giusta. */
-/* Il granaio **non è più una linguetta**, ed era: stava qui perché
-   «cosa ho» è una domanda sola e il baule è il posto dove si va a farla.
-   Sbagliato per due motivi. Finiva in mezzo alle cose da **comprare**,
-   ed era l'unica che si guardava e basta; e faceva sembrare le scorte
-   una schermata del gioco invece del contenuto di una cosa costruita.
-   Adesso si tocca un silo — vedi `viste/Granaio.vue`. */
+// Il granaio non è più una linguetta: si tocca un silo (viste/Granaio.vue) invece di guardarlo qui.
 
-/* Una riga sotto il titolo per ogni linguetta. Non è decorazione: dice
-   *cosa ci si fa* con la roba che c'è lì sotto, che è la sola cosa che
-   una griglia di figurine non riesce a dire da sola. */
+// Una riga sotto il titolo per ogni linguetta: dice cosa ci si fa, che una griglia di figurine non dice da sola.
 const DICE = {
   verde: 'Alberi, cespugli e sassi, ma dove vuoi tu.',
   fiori: 'Vasi e fioriere. I fiori piccoli si posano anche sull\'erba.',
@@ -141,24 +53,11 @@ const DICE = {
   fiera: 'Le sorprese della mongolfiera: non si comprano, si vincono riempiendo le casse.',
 }
 
-/* ── APERTO SU UNA COSA PRECISA ───────────────────────────────────
-   `punta` è l'id di una voce, e arriva da chi ha appena detto «ti serve
-   un campo»: il baule si apre **dove quella cosa è**, metà giusta e
-   linguetta giusta, con la voce accesa. Senza, il consiglio finiva in un
-   baule di duecento cose aperto sulla prima linguetta, e trovare il
-   campo restava un compito — che è esattamente quello che il consiglio
-   doveva togliere di mezzo. */
+// punta è l'id di una voce (da un consiglio): il baule si apre dove quella cosa è, metà e linguetta giuste.
 const laCategoriaDi = id => (CATEGORIE.find(c => c.voci.some(v => v.id === id)) || null)
 const suPunta = CATEGORIE.length ? laCategoriaDi(props.punta) : null
 
-/* E aperto lì, **la voce si deve vedere**. Metà e linguetta giuste non
-   bastano più: col secondo albero «la fattoria» ha trentasei voci, e la
-   voce accesa poteva stare sotto lo schermo — a livello 40 l'ovile che
-   serve alla lana ne mostrava quindici pixel, a 60 il recinto degli
-   alpaca niente del tutto. Un consiglio che apre il baule su una cosa
-   che non si vede è un baule aperto a caso. Si scorre **lo scaffale e
-   basta**, non con `scrollIntoView`, che si porterebbe dietro anche il
-   foglio e il gioco sotto: la voce va a metà, dove l'occhio la trova. */
+// E la voce deve vedersi: si scorre lo scaffale (non scrollIntoView, che trascinerebbe anche il foglio).
 const scaffale = ref(null)
 onMounted(() => {
   const s = scaffale.value
@@ -171,37 +70,24 @@ onMounted(() => {
 
 const zona = ref(suPunta ? (suPunta.zona || 'bello') : (props.zonaIniziale || 'lavoro'))
 const categoria = ref(suPunta ? suPunta.chiave : CATEGORIE[0].chiave)
-/* La linguetta aperta dev'essere una di quelle che ci sono **in questa
-   metà**: cambiando metà, o al primo livello dove ce n'è una sola, una
-   `ref` che punta altrove mostrerebbe uno scaffale vuoto. */
+// La linguetta aperta dev'essere una di quelle di questa metà, se no punterebbe a uno scaffale vuoto.
 const scheda = computed(() =>
   schede.value.some(s => s.chiave === categoria.value)
     ? categoria.value : (schede.value[0] || {}).chiave)
-/* Le bestie arrivate. Quelle che non lo sono non stanno qui per lo
-   stesso motivo delle cose: si guardano nella pagina dei livelli. Sta
-   **sopra** a chi la legge: `zone` la usa, e una `computed` dichiarata
-   dopo quella che la chiama è una zona morta che aspetta il giorno in
-   cui qualcuno legge `zone` durante il setup. */
+// Le bestie arrivate; sta sopra zone perché la usa (una computed dopo chi la chiama è una zona morta).
 const inVendita = computed(() => IN_VENDITA.filter(a => preso('bestia', a.chi)))
 
-/* Una metà senza niente dentro non si mostra: al primo livello le
-   decorazioni non ci sono ancora e gli animali nemmeno, e un tasto che
-   si apre su niente è un tasto rotto. Gli animali non hanno linguette,
-   quindi si guarda direttamente se ce n'è uno in vendita. */
+// Una metà senza niente dentro non si mostra: un tasto che apre su niente è un tasto rotto.
 const zone = computed(() => ZONE.filter(z => z.chiave === ANIMALI
   ? inVendita.value.length : schedeDi(z.chiave).length))
 const quantiNe = id => props.magazzino[id] || 0
 const eMia = chi => props.bestie.some(b => (b.chi || b) === chi)
 
-/* Quello che il livello ha già aperto e che si può ancora prendere.
-   Una cosa unica già posata esce di scena; se invece è **nel baule** —
-   comprata e non ancora messa giù — resta, o non ci sarebbe più modo di
-   tirarla fuori. */
+// Quello che il livello ha aperto e si può ancora prendere; se è nel baule resta anche da unico.
 const vociDi = chiave => {
   const c = CATEGORIE.find(c => c.chiave === chiave)
   if (!c) return []
-  /* La fiera non si vende: sullo scaffale c'è solo quello che la
-     mongolfiera ha lasciato nel baule, da posare. */
+  // La fiera non si vende: solo quello che la mongolfiera ha lasciato nel baule.
   return c.voci.filter(v => (v.fiera ? quantiNe(v.id)
       : v.stagione
       ? v.stagione === props.stagione || quantiNe(v.id)
@@ -214,47 +100,17 @@ const schedeDi = quale => quale === ANIMALI ? []
 const schede = computed(() => schedeDi(zona.value))
 
 const costa = v => props.prezzi[v.id] ?? v.prezzo
-/* Quanto manca per potersela permettere: zero vuol dire che si può. È
-   il numero che sta al posto del tasto spento senza perché. */
+// Quanto manca per potersela permettere: zero vuol dire che si può.
 const manca = v => Math.max(0, costa(v) - props.monete)
 
-/* Toccare **è** cominciare a posare: non si aspetta che il dito si
-   sposti, perché quell'attesa era un gesto da imparare e nessuno l'ha
-   imparato da solo. Chi si è appoggiato per sbaglio non ha comprato
-   niente: la cosa resta appesa al dito e si posa dove la si vuole (o non
-   si posa affatto, se la si lascia dove non ci sta).
-
-   ── TOCCARE PRENDE, STRISCIARE SCORRE ─────────────────────────────
-   Era «premere»: la cosa si prendeva al primo contatto, e lo scaffale
-   col dito **non si scorreva più**. Il dito che partiva da una carta se
-   la portava via — e una strisciata la comprava, perché si posava dove
-   il dito si alzava. Restavano gli spazi fra le carte, otto pixel, e
-   nemmeno quelli: il telefono sposta il tocco sulla carta più vicina.
-   Finché uno scaffale stava in uno schermo non se n'è accorto nessuno;
-   col secondo albero «la fattoria» ha trentasei voci, e la conigliera
-   era finita alla settima riga, dove nessun dito arrivava.
-
-   Adesso decide il movimento, come sul prato (`Gioco.vue`):
-     · il dito che si stacca **fermo** ha toccato: la cosa si prende, e
-       resta appesa al dito come prima;
-     · il dito che va **in su o in giù** sta scorrendo: lo scorrimento
-       lo fa il browser (`touch-action: pan-y` sulla carta) e qui non si
-       prende niente;
-     · il dito che va **di lato** la tira fuori e la posa dove si alza:
-       il trascinamento di prima, nel solo verso che non è uno
-       scorrimento.
-   Il mouse non scorre trascinando — ha la rotella — e trascinare in
-   qualunque verso tira fuori. Le soglie sono quelle del prato
-   (`scena/dito.js`), per la stessa ragione: un dito non sta fermo come
-   un mouse. */
+// Tocca prende, striscia scorre (in su/giù è del browser, di lato tira fuori e posa) — vedi
+// docs/fattoria/come-si-tocca.md e docs/core/il-dito.md.
 let dito = null
 
 function premi(e, prendi) {
   dito = { id: e.pointerId, x: e.clientX, y: e.clientY, prendi,
            scarto: e.pointerType === 'mouse' ? SCARTO_MOUSE : SCARTO_DITO }
-  /* Quello che fa questo puntatore arriva alla carta anche fuori da
-     lei: un mouse che si stacca sopra lo spazio fra due carte non deve
-     lasciarne una «premuta» per il prossimo passaggio. */
+  // Il puntatore resta legato alla carta anche fuori da lei (setPointerCapture).
   try { e.currentTarget.setPointerCapture(e.pointerId) } catch (_) { /* niente */ }
 }
 
@@ -275,7 +131,7 @@ function lascia(e) {
   prendi(e, false)
 }
 
-/* Il browser si è preso il dito per scorrere: non è successo niente. */
+// Il browser si è preso il dito per scorrere: non è successo niente.
 function annulla() { dito = null }
 
 function giu(e, v) {
@@ -293,9 +149,7 @@ function giuBestia(e, a) {
 
 <template>
   <div class="fa-baule" @pointermove="muovi" @pointerup="lascia" @pointercancel="annulla">
-    <!-- Il resto del gesto di una carta — muoversi, staccarsi, lasciarlo
-         al browser — sale fin qui: la carta si tiene il puntatore
-         (`premi`), e da un posto solo si sente per tutte e due le metà. -->
+    <!-- Il resto del gesto sale fin qui: la carta si tiene il puntatore (premi). -->
     <Chiudi @chiudi="$emit('chiudi')" />
     <h2>Il baule</h2>
 
@@ -306,10 +160,7 @@ function giuBestia(e, a) {
         <b>{{ z.icona }}</b> {{ z.nome }}</button>
     </nav>
 
-    <!-- Le linguette compaiono **solo se sono più di una**: sotto «la
-         fattoria» ce n'è una sola, e un tasto che non ha alternative
-         non è una scelta — è una riga di schermo che dice il nome di
-         quello che si sta già guardando. -->
+    <!-- Le linguette compaiono solo se sono più di una. -->
     <nav v-if="schede.length > 1" class="fa-schede">
       <button v-for="c in schede" :key="c.chiave"
               :class="['fa-scheda', { viva: c.chiave === scheda }]"
@@ -322,19 +173,13 @@ function giuBestia(e, a) {
        recinto ci resta.</p>
     <p v-else class="fa-dice">{{ DICE[scheda] || 'Premi una cosa e scegli dove metterla.' }}</p>
 
-    <!-- `bestie` sono i record salvati (`{ chi, nome, … }`), non i nomi
-         degli sprite: cercarci dentro una stringa non trovava mai
-         niente, e un cane già comprato restava in vendita col suo
-         prezzo. -->
+    <!-- bestie sono i record salvati, non i nomi degli sprite. -->
     <div v-if="zona === 'animali'" class="fa-scaffale">
       <div v-for="a in inVendita" :key="a.chi"
            :class="['fa-voce', { presa: eMia(a.chi),
                                  cara: !eMia(a.chi) && a.prezzo > monete }]"
            @pointerdown="giuBestia($event, a)">
-        <!-- il ripiano delle bestie è più alto degli altri: un cane è
-             uno sprite 16×32, e in un riquadro da 54 l'ingrandimento
-             intero che ci sta è ×1 — cioè la metà del posto sprecata.
-             A 68 ci sta il ×2, e mezzo pixel di pixel art non esiste. -->
+        <!-- il ripiano delle bestie è più alto: un cane è uno sprite 16×32. -->
         <span class="fa-ripiano alto"><Provino :pezzo="a.chi + '_giu0'" :lato="68" /></span>
         <span class="fa-nome">{{ a.nome }}</span>
         <span v-if="eMia(a.chi)" class="fa-prezzo tuo">è tua</span>
