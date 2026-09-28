@@ -329,7 +329,6 @@ export class Porto {
       case 'cassa': case 'biglietto': case 'forma': case 'niente': return this.eCosa(this.cimaDi(k), c, es, id)
       case 'libero': return !this.ostacolo(x, y)
       case 'cliente': return !!(this.arredo[k] && this.arredo[k].tipo === 'bancone' && this.clienti && this.clienti.alBancone)
-      /* la risposta di chi fa indovinare, all'ultima lettera che ha avuto */
       case 'di-piu': case 'di-meno': {
         const cl = this.arredo[k] && this.arredo[k].tipo === 'bancone' && this.clienti && this.clienti.alBancone
         return !!cl && cl.risposta === c.cosa
@@ -337,12 +336,10 @@ export class Porto {
       case 'muro': return this.suolo[k] === 'muro'
       case 'mare': return this.suolo[k] === 'mare'
       case 'strada': return this.suolo[k] === 'strada'
-      /* «↓ c'è un camion»: un cassone che viaggia, fermo sulla piazzola */
       case 'camion': {
         const a = this.arredo[k]
         return !!(a && a.tipo === 'cassone' && a.figura === 'camion') && (!c.colore || a.colore === es.valutaColore(c.colore, id))
       }
-      /* «un cassone rosso»: quello che prende solo casse rosse */
       case 'cassone': {
         const a = this.arredo[k]
         return !!(a && a.tipo === 'cassone') && (!c.colore || a.colore === es.valutaColore(c.colore, id))
@@ -351,7 +348,7 @@ export class Porto {
     }
   }
 
-  /* quello che c'è in una casella, in una parola: la regia lo mostra */
+  // Quello che c'è in una casella, in una parola: la regia lo mostra.
   cosaC(x, y) {
     if (!this.dentro(x, y)) return 'bordo'
     const k = this.k(x, y)
@@ -361,10 +358,7 @@ export class Porto {
     return this.suolo[k]
   }
 
-  /* Leggere: torna `{ x, y, valore }` (o `{ mano: true, valore }`). Un
-     cassone si legge come **quante** casse tiene: è una quantità, non
-     una cassa sola. Un bancone vuoto con un cliente davanti si legge
-     come quello che il cliente chiede. */
+  // Un cassone si legge come quante casse tiene (una quantità, non una cassa sola); il bancone come quello che il cliente chiede.
   leggi(lato, es, id) {
     if (lato === 'mano') {
       if (!this.mano) throw new Inciampo('niente-da-leggere', id)
@@ -386,13 +380,7 @@ export class Porto {
     throw new Inciampo('niente-da-leggere', id, { x, y })
   }
 
-  /* ═══════════ l'orologio ═══════════
-     Un turno: prima i nastri, poi la gru (così una cassa calata sul
-     nastro non scorre nello stesso turno), poi i clienti. Il fatto
-     `turno` racconta alla regia cosa è successo; un guaio (una cassa in
-     mare, un cliente arrabbiato) ferma la giornata. `come` dice alla
-     regia che turno era: un gesto del robot, un'attesa, o il mondo che
-     va avanti da solo a programma finito. */
+  // Prima i nastri, poi la gru (così una cassa calata non scorre nello stesso turno), poi i clienti e i camion.
   *turno(come = 'gesto') {
     this.t++
     const eventi = []
@@ -406,20 +394,16 @@ export class Porto {
     if (this.t >= this.durata) throw new Sera('orologio')
   }
 
-  /* un turno d'attesa: se non può più succedere niente, aspettare non
-     serve — è sera */
   *attendi() {
     if (this.quieto()) throw new Sera('quiete')
     yield* this.turno('attesa')
   }
 
-  /* il programma è finito, il porto no */
   *finoASera() {
     while (!this.quieto()) yield* this.turno('da-solo')
   }
 
-  /* niente può più cambiare da solo: la gru è vuota, sui nastri non si
-     muove niente, nessun cliente al bancone o in arrivo */
+  // Niente può più cambiare da solo: la gru è vuota, sui nastri non si muove niente, nessun cliente al bancone o in arrivo.
   quieto() {
     if (this.gru && this.gru.casse.length) return false
     if (this.clienti && (this.clienti.alBancone || this.clienti.fila.length)) return false
@@ -427,7 +411,7 @@ export class Porto {
     return !this.celleNastro.some(k => this.pile[k].length && this.puoScorrere(k))
   }
 
-  /* dove andrebbe la cosa sul nastro `k`, e se ci può andare */
+  // Dove andrebbe la cosa sul nastro `k`, e se ci può andare.
   destinoSulNastro(k) {
     const { x, y } = this.xy(k)
     const [dx, dy] = LATI[this.arredo[k].verso]
@@ -436,23 +420,16 @@ export class Porto {
     const nk = this.k(nx, ny)
     const na = this.arredo[nk]
     if (na && na.tipo === 'nastro' && !this.pile[nk].length) return { x: nx, y: ny, k: nk }
-    /* in fondo al nastro un cassone: ci scarica dentro, se c'è posto e
-       se la cosa è di quelle che prende */
     if (na && na.tipo === 'cassone' && this.pile[nk].length < na.capienza && accetta(na, this.cimaDi(k)))
       return { x: nx, y: ny, k: nk, dentro: true }
     return null
   }
   puoScorrere(k) { return !!this.destinoSulNastro(k) }
 
-  /* i nastri: ogni `passoNastro` turni ogni cosa va avanti di una
-     casella, se davanti c'è posto; in fondo al molo cade in mare. Si
-     rifà il giro finché qualcosa si muove, perché una cassa si sposta
-     solo se quella davanti si è già spostata — e mai due volte */
+  // Rifà il giro finché qualcosa si muove: una cassa si sposta solo se quella davanti si è già spostata, e mai due volte.
   nastri(eventi) {
     if (!this.celleNastro.length || this.t % this.passoNastro !== 0) return
-    /* lo scatto si racconta anche a nastro vuoto: la macchina gira, e chi
-       disegna fa scorrere i listelli */
-    eventi.push({ che: 'nastri' })
+    eventi.push({ che: 'nastri' }) // anche a nastro vuoto, così chi disegna fa scorrere i listelli
     const mosse = new Set()
     let cambiato = true
     while (cambiato) {
@@ -476,7 +453,6 @@ export class Porto {
     }
   }
 
-  /* la gru: una cassa ogni `ogni` turni, nel suo punto, se è libero */
   lavoroDellaGru(eventi) {
     const g = this.gru
     if (!g || !g.casse.length || this.t < g.prossimo) return
@@ -490,7 +466,6 @@ export class Porto {
     eventi.push({ che: 'cala', id: cosa.id, x: g.x, y: g.y, cosa: { ...cosa } })
   }
 
-  /* i clienti: uno alla volta al bancone; la pazienza cala solo lì */
   lavoroDeiClienti(eventi) {
     const c = this.clienti
     if (!c) return
@@ -511,12 +486,7 @@ export class Porto {
     }
   }
 
-  /* I camion: arrivano alla loro ora sulla prima piazzola libera,
-     vogliono `vuole` casse (di un colore, se lo dicono) e ripartono
-     appena sono pieni. Si guarda prima chi arriva e poi chi parte: un
-     camion appena arrivato è vuoto, e una piazzola lasciata libera in
-     questo turno si riempie al prossimo — due camion nello stesso
-     istante nella stessa casella non si vedrebbero. */
+  // Prima chi parte, poi chi arriva: una piazzola appena liberata si riempie al turno prossimo, non nello stesso.
   lavoroDeiCamion(eventi) {
     const c = this.camion
     if (!c) return
@@ -551,8 +521,7 @@ export class Porto {
     }
   }
 
-  /* quanti clienti sono già arrivati e aspettano in fila, dietro a chi
-     sta al bancone: li disegna la scena */
+  // Quanti clienti sono già arrivati e aspettano in fila, dietro a chi sta al bancone: li disegna la scena.
   inFila() {
     return this.clienti ? this.clienti.fila.filter(f => f.arriva <= this.t).length : 0
   }
