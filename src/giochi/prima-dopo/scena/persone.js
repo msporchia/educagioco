@@ -1,49 +1,17 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE PERSONE DI QUESTO GIOCO — un bambino, una bambina, un grande
-
-   Sono tre schede per `grafica/corpo.js`, esattamente come il cavaliere
-   e la principessa: `persona()` mette gambe, braccia, ombra e stati, e
-   qui c'è solo quello che li distingue. Non stanno in
-   `grafica/personaggi/` perché quel cassetto è il mondo del Generale e
-   del castello — spade, elmi, corone — e questo è il mondo di casa. Il
-   giorno che serviranno a due giochi si spostano di lì, con un import in
-   più e nient'altro (vedi la nota del prototipo in `dati/scene.js`).
-
-   ── LA FACCIA È IL MOTIVO PER CUI ESISTE QUESTO FILE ──
-   Un'emoji ha una faccia sola. Qui la faccia è un dato che chi mette in
-   scena sceglie — `{ che: 'bimba', faccia: 'piange' }` — e `persona()`
-   passa `cosa` alla testa senza sapere cosa ci sia dentro. È tutta la
-   differenza fra «una bambina» e «una bambina che si è fatta male»:
-
-     serena     la faccia di chi sta facendo una cosa qualsiasi
-     contenta   l'arco della bocca in su, gli occhi stretti
-     triste     la bocca in giù e le sopracciglia che cadono all'infuori
-     piange     gli occhi chiusi ad arco, due lacrime, la bocca aperta
-     spavento   occhi grandi, sopracciglia alte, la bocca a o
-     assonnata  gli occhi chiusi dritti e la bocca dello sbadiglio
-     arrabbiata le sopracciglia che scendono verso il naso, la bocca dura
-
-   `arrabbiata` e `triste` sono l'una il rovescio dell'altra e si
-   disegnano con lo stesso tratto girato: le sopracciglia cadono
-   all'infuori in una e all'indentro nell'altra. È il segno più
-   affidabile che si abbia — a settanta pixel la bocca si perde, le
-   sopracciglia no.
-
-   Le sopracciglia contano quanto la bocca: senza, «triste» e «serena»
-   si distinguono solo da un arco di due pixel, e a vignetta piccola
-   quell'arco non si legge.
-
-   ── LE TAGLIE DICONO CHI È CHI ──
-   `taglia` 0.78 i bambini, 1.06 il grande: in una vignetta dove ci sono
-   tutti e due, chi è il bambino si capisce dalla statura prima che dai
-   vestiti. È la stessa leva che nel castello distingue il goblin dal
-   capitano.
-   ═══════════════════════════════════════════════════════════════════ */
+// Tre schede per grafica/corpo.js (bimba, bimbo, grande): come il
+// cavaliere e la principessa, ma per il mondo di casa e non quello del
+// Generale/castello — vedi docs/prima-dopo/da-fare.md sul cassetto.
+// La faccia è un dato che chi mette in scena sceglie
+// ({ che: 'bimba', faccia: 'piange' }), non un'emoji fissa:
+//   serena · contenta · triste · piange · spavento · assonnata ·
+//   arrabbiata (il rovescio di triste: sopracciglia all'indentro)
+// Le sopracciglia contano quanto la bocca: a vignetta piccola sono il
+// segno più affidabile, la bocca si perde prima.
+// `taglia` 0.78 i bambini, 1.06 il grande: in scena la statura dice chi
+// è il bambino prima dei vestiti.
 import { capsula, poligono, tondo, mescola } from '../../../grafica/comune.js'
 import { occhi } from '../../../grafica/segni.js'
 
-/* ─────────── la bocca ───────────
-   Un tratto solo, ma è il tratto che porta l'informazione. */
 function bocca(q, s, faccia) {
   const c = q.ctx
   if (faccia === 'piange') {
@@ -77,10 +45,8 @@ function bocca(q, s, faccia) {
   c.stroke()
 }
 
-/* ─────────── le sopracciglia ───────────
-   Non ci sono quando la faccia è serena: due trattini sopra gli occhi
-   di chi non sta provando niente fanno *sembrare* che stia provando
-   qualcosa. */
+// non ci sono quando la faccia è serena: due trattini sopra occhi normali
+// farebbero *sembrare* che stia provando qualcosa
 function sopracciglia(q, s, faccia) {
   const usa = ['triste', 'piange', 'spavento', 'arrabbiata']
   if (!usa.includes(faccia)) return
@@ -105,10 +71,7 @@ function sopracciglia(q, s, faccia) {
   }
 }
 
-/* ─────────── gli occhi ───────────
-   Da fermo sono quelli di `segni.js`, che li hanno tutti. Cambiano solo
-   quando la faccia lo chiede: chiusi ad arco per chi piange, spalancati
-   per chi si spaventa. */
+// da fermo sono quelli di segni.js; cambiano solo quando la faccia lo chiede
 function sguardo(q, s, faccia, stato, pupilla) {
   if (faccia === 'piange') {
     const c = q.ctx
@@ -154,9 +117,7 @@ function sguardo(q, s, faccia, stato, pupilla) {
   occhi(q, s, 1.5, 0.5, faccia === 'spavento' ? 0.95 : 0.72, stato, pupilla)
 }
 
-/* ─────────── la testa ───────────
-   Una sola per tutti e tre: cambia il ciuffo, non il cranio. `chioma`
-   la sceglie la scheda ('corti', 'code', 'raccolti'). */
+// una sola testa per tutti e tre: cambia il ciuffo (`chioma`), non il cranio
 function testaDiCasa(q, s, C, dir, stato, cosa, chioma, raggio = 4.3) {
   const b = C.bordo, sp = 0.7 * s, R = raggio * s
   const faccia = (cosa && cosa.faccia) || 'serena'
@@ -224,10 +185,7 @@ function testaDiCasa(q, s, C, dir, stato, cosa, chioma, raggio = 4.3) {
     tondo(q, v * 2.6 * F, 1.9 * F, 0.7 * F, 0.5 * F, '#f0a0a0aa')
 }
 
-/* ─────────── il busto ───────────
-   Una maglietta: il collo, il corpo, e una banda più scura in fondo che
-   la stacca dai pantaloni. Vale per tutti e tre — quello che cambia è
-   il colore, che è quanto basta a riconoscersi. */
+// la maglietta è uguale per tutti e tre: cambia solo il colore
 function maglietta(q, s, C, dir, sw, cfg) {
   const b = C.bordo, sp = 0.7 * s
   const w = (cfg.spalle + 1.1) * s
@@ -300,10 +258,7 @@ export function ginocchio(q, s, come) {
     tondo(q, -2.5 * s, -2.6 * s, 1.35 * s, 1.1 * s, '#e03131', BORDO, 0.4 * s)
     tondo(q, -2.5 * s, -2.85 * s, 0.55 * s, 0.42 * s, '#ff8f8f')
   } else if (come === 'cerotto') {
-    /* grande abbastanza da vedersi. Il primo giro lo faceva largo tre
-       unità su cento: in mano c'era il disegno giusto e a schermo non
-       c'era niente, che è il modo più facile di credere che una scena
-       funzioni quando non funziona */
+    // grande abbastanza da vedersi: a tre unità su cento era invisibile a schermo
     q.in(-2.5 * s, -2.6 * s, r => {
       capsula(r, 0, 0, 2.5 * s, 1.05 * s, 0.7 * s, '#fff0cc', BORDO, 0.5 * s)
       r.rett(-0.8 * s, -0.9 * s, 1.6 * s, 1.8 * s, mescola('#fff0cc', '#8c6a3d', 0.35))

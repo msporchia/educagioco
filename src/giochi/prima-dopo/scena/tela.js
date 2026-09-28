@@ -1,52 +1,24 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA TELA DI UNA VIGNETTA — un quadrato, una scheda, un disegno
-
-   Riceve una **scheda** (`dati/scene.js`) e la dipinge. Di regole non sa
-   niente: non sa cos'è una storia, non sa che quella vignetta è la
-   risposta giusta, non sa nemmeno che esista una domanda.
-
-   Il patto con chi disegna è quello dei quiz
-   (`quiz/grafica/riquadro.js`, che fa la stessa cosa per le loro
-   risposte disegnate): si lavora sempre in un quadrato di 100×100 e
-   nessun pittore legge `canvas.width`. Le due copie sono volutamente
-   separate finché questo è un prototipo — il giorno che il cassetto
-   disegnato diventa di due giochi, è quella la funzione che resta e
-   questa sparisce.
-
-   ── LA SCALA STA IN UN POSTO SOLO ──
-   `ctx.setTransform(dpr…)` una volta, poi `ctx.scale(lato/100)` una
-   volta, e da lì in poi tutto è in unità del mondo. Chi moltiplica per
-   la scala riga per riga prima o poi la moltiplica due volte, ed è
-   invisibile a figura piccola (è il difetto che il bestiario ha già
-   pagato una volta).
-
-   ── PERCHÉ NON C'È NESSUNA ANIMAZIONE ──
-   Una vignetta è ferma, come il ritratto di un mostro nel nastro del
-   castello. `p.tempo` resta a zero, e gli stati che pulsano (l'errore
-   rosso, il lampo bianco) qui non si usano: quello che deve dire una
-   vignetta lo dice la posa.
-   ═══════════════════════════════════════════════════════════════════ */
+// La tela di una vignetta: riceve una scheda (dati/scene.js) e la
+// dipinge, senza sapere niente di regole (storia, risposta, domanda). Il
+// patto con chi disegna è quello dei quiz (quiz/grafica/riquadro.js):
+// quadrato di 100×100, nessun pittore legge canvas.width — le due copie
+// restano separate finché questo è un prototipo. La scala sta in un
+// posto solo (dpr poi lato/100): chi la moltiplica riga per riga la
+// moltiplica due volte, invisibile a figura piccola. Una vignetta è
+// ferma (p.tempo resta a zero): quello che deve dire lo dice la posa.
 import { pennello } from '../../../grafica/tela.js'
 import { persona } from '../../../grafica/corpo.js'
 import { PERSONE, ginocchio } from './persone.js'
 import { COSE } from './cose.js'
 import { LUOGHI, LATO, SUOLO } from './luoghi.js'
-/* il gatto non è di questo gioco: è quello del Generale e del dungeon,
-   chiamato con una taglia diversa. È il primo pezzo del cassetto vecchio
-   che serve qui dentro, e mostra da che parte va la strada — le figure
-   si condividono, le *schede* di scena no. */
+// il gatto è preso in prestito dal cassetto del Generale/dungeon: le
+// figure si condividono, le schede di scena no
 import { PITTORI_PERSONE } from '../../../grafica/personaggi/indice.js'
 
-/* Quanto è grande una persona in una vignetta: un bambino viene alto
-   circa 44 unità su 100, cioè poco meno di metà riquadro. Più grande
-   sbatteva contro il bordo di sopra nelle scene con due figure, più
-   piccolo perdeva la faccia — che è tutto il motivo per cui si disegna. */
+// un bambino viene alto circa 44 unità su 100: più grande sbatteva contro
+// il bordo nelle scene con due figure, più piccolo perdeva la faccia
 const SCALA_PERSONA = 2.55
 
-/* ─────────── una persona in scena ───────────
-   Traduce la voce della scheda in quello che `corpo.js` si aspetta, e
-   niente di più: `dir`, `passo`, `stato` sono i suoi, `faccia` la legge
-   solo la testa di `persone.js`, e il ginocchio si posa dopo, addosso. */
 function mettiPersona(p, c, cfg) {
   const s = SCALA_PERSONA * (cfg.taglia || 1) * (c.taglia || 1)
   const y = c.y === undefined ? SUOLO : c.y
@@ -105,17 +77,11 @@ export function scena(p, scheda) {
     }
   }
 
-  /* ── LA TELECAMERA ──
-     Il primo giro disegnava la figura intera in mezzo al paesaggio, e a
-     settanta pixel di vignetta il risultato era una macchia colorata con
-     sopra una faccia di quattro pixel — cioè esattamente l'informazione
-     per cui si è smesso di usare le emoji, buttata via nell'inquadratura.
-     Una vignetta è un fumetto, non una fotografia: si sta addosso.
-
-     Chi scrive una scheda continua a ragionare in coordinate normali
-     (i piedi a `SUOLO`, il riquadro da 0 a 100) e poi dichiara **da
-     dove si guarda**: `inquadra: { zoom, x, y }`. Senza, si vede tutto
-     il riquadro come prima. */
+  // la telecamera: una vignetta è un fumetto e non una fotografia, si
+  // sta addosso — la figura intera in mezzo al paesaggio a settanta
+  // pixel perdeva la faccia. Chi scrive una scheda ragiona in coordinate
+  // normali (piedi a SUOLO) e dichiara da dove si guarda con `inquadra:
+  // { zoom, x, y }`; senza, si vede tutto il riquadro.
   const inq = scheda.inquadra
   if (!inq) return dipingi(p)
   const z = inq.zoom || 1

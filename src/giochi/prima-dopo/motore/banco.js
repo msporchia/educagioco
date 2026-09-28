@@ -1,18 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL BANCO DI PROVA — un giocatore finto
-
-   Non serve al gioco: serve a chi lo prova. Gioca una tappa intera
-   toccando le vignette come farebbe un bambino, usando quello che il
-   quesito sa già di sé — non serve dedurre niente, la risposta giusta
-   è scritta nei dati del quesito, esattamente come la vedrebbe un
-   bambino che ha capito la storia.
-
-   `probErrore` è quanto spesso il finto giocatore sbaglia la prima
-   risposta di una storia: un bambino vero, non un ragionatore perfetto.
-   Non sbaglia mai la seconda — ha appena visto la fila giusta
-   accendersi davanti agli occhi, ed è proprio quello che il lampo deve
-   ottenere.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il banco di prova: un giocatore finto gioca una tappa intera toccando
+// le vignette, usando quello che il quesito già sa (la risposta giusta è
+// nei suoi dati). `probErrore` è quanto spesso sbaglia la prima risposta
+// di una storia; non sbaglia mai la seconda, perché ha appena visto la
+// fila giusta accendersi davanti agli occhi.
 import { Corsa } from './corsa.js'
 
 function rispondiGiusto(q) {
@@ -21,9 +11,8 @@ function rispondiGiusto(q) {
   q.tocca(q.corretta)   // manca | dopo | prima
 }
 
-/* Sbaglia di proposito: in "ordina" scambia le prime due vignette
-   toccate (garantito diverso dall'ordine giusto quando ce ne sono
-   almeno due), negli altri tipi sceglie la prima opzione non giusta. */
+// In "ordina" scambia le prime due vignette toccate, negli altri tipi
+// sceglie la prima opzione non giusta.
 function rispondiSbagliato(q) {
   if (q.tipo === 'ordina') {
     const ordine = q.sequenza.map((_, id) => id)
@@ -55,8 +44,7 @@ export function gioca(tappa, { rnd = Math.random, probErrore = 0, storie } = {})
       corsa.registraSuccesso()
       if (!corsa.finita) corsa.avanti()
     } else {
-      /* capiterebbe solo per un guasto del generatore: la risposta
-         "giusta" del banco deve sempre essere giusta */
+      // capiterebbe solo per un guasto del generatore
       corsa.registraErrore()
       corsa.riprova()
     }
@@ -64,9 +52,8 @@ export function gioca(tappa, { rnd = Math.random, probErrore = 0, storie } = {})
   return corsa
 }
 
-/* Le chiavi delle storie proposte in una corsa intera, nell'ordine in
-   cui sono capitate: serve a controllare la varietà da fuori, senza
-   rigiocare la tappa un'altra volta. */
+// Le chiavi delle storie proposte in una corsa intera, nell'ordine in
+// cui sono capitate: serve a controllare la varietà senza rigiocare.
 export function storieProposte(tappa, opzioni = {}) {
   const chiavi = []
   const corsaOriginale = Corsa.perTappa(tappa, opzioni)
@@ -80,9 +67,7 @@ export function storieProposte(tappa, opzioni = {}) {
   return chiavi
 }
 
-/* Il caso ripetibile, lo stesso di `codice-segreto/motore/banco.js`: due
-   prove uguali devono raccontare la stessa storia, o un test rosso non
-   si sa se è un guasto o sfortuna. */
+// Il caso ripetibile, lo stesso di codice-segreto/motore/banco.js.
 export function caso(seme = 1) {
   let s = seme >>> 0 || 1
   return () => {

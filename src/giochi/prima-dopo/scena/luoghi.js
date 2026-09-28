@@ -1,39 +1,18 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I LUOGHI — dove capita una storia
-
-   Stavano in `cose.js` finché erano quattro. Adesso sono otto e hanno un
-   file loro, perché sono un mestiere diverso da quello di una cosa: un
-   luogo **riempie il riquadro** e non ha un punto d'appoggio, una cosa
-   sta in un punto e non sa cosa ha intorno.
-
-   ── PERCHÉ UN LUOGO È TRE FASCE E NON UNA STANZA ──
-   Una vignetta in una striscia da quattro, su un telefono, è larga
-   settanta pixel. A quella taglia i dettagli non si vedono e la
-   leggibilità viene tutta dal contrasto fra le grandi masse: il chiaro
-   sopra, lo scuro sotto, la figura in mezzo. Quindi i fondali sono
-   deliberatamente poveri — due o tre fasce di colore e **un solo
-   accento riconoscibile** (la finestra, la lavagna, i solchi
-   dell'orto) — e tutto il disegno vero sta nella persona.
-
-   Il corollario che conta per chi ne aggiunge uno: due luoghi devono
-   distinguersi **dal colore prima che dall'arredo**. In una striscia si
-   guarda per mezzo secondo, e la prima cosa che dice «adesso siamo
-   altrove» è che il fondo ha cambiato tinta.
-   ═══════════════════════════════════════════════════════════════════ */
+// Dove capita una storia: un luogo riempie il riquadro (una cosa sta in
+// un punto e non sa cosa ha intorno). A settanta pixel i dettagli non si
+// vedono, quindi i fondali sono due o tre fasce di colore con un solo
+// accento riconoscibile (la finestra, la lavagna, i solchi dell'orto), e
+// due luoghi si distinguono dal colore prima che dall'arredo.
 import { poligono, tondo } from '../../../grafica/comune.js'
 
 export const LATO = 100
 export const SUOLO = 80
 
-/* Quanto i fondali debordano dal riquadro. La telecamera di
-   `scena/tela.js` può stringere su un punto e guardare **oltre** il
-   bordo del mondo: una fascia di colore che finisse esatta a 0 e a 100
-   lascerebbe una striscia trasparente sul bordo della vignetta, che è il
-   genere di difetto che si vede solo su una taglia sola. */
+// quanto i fondali debordano dal riquadro: la telecamera di scena/tela.js
+// può stringere oltre il bordo del mondo, e senza margine si vedrebbe una
+// striscia trasparente
 const FUORI = 60
 
-/* le due righe che ogni luogo scrive uguali: il cielo (o la parete) e il
-   pavimento (o la terra) */
 function fasce(p, alto, basso, quota = SUOLO) {
   p.rett(-FUORI, -FUORI, LATO + FUORI * 2, quota + FUORI, alto)
   p.rett(-FUORI, quota, LATO + FUORI * 2, LATO - quota + FUORI, basso)
