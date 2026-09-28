@@ -1,77 +1,21 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA CAMPAGNA — nove discese, in tre scalini
-
-   L'ingresso al gioco non è «scegli la difficoltà»: è una scala che
-   scende. Prima tre cantine corte per imparare la strada, poi le
-   gallerie, poi il fondo — e la difficoltà non la sceglie il bambino,
-   gliela porta il viaggio.
-
-   Una tappa è **lo stesso dungeon con altri numeri e un altro
-   vestito**: tre manopole e un ambiente di `mostri.js`.
-
-     file      quante file ha la discesa, cioè quanto è lunga. Si
-               dividono in tre piani (vedi `stanze.js`)
-     dif       LA MANOPOLA DELLA PROFONDITÀ: da quanto sono difficili le
-               domande della **prima fila** a quanto lo sono quelle
-               davanti al guardiano (0..1, come vuole `quiz/scelta.js`).
-               Fra i due estremi si sale in linea retta fila per fila —
-               il conto è `difficoltaDi()`, qui sotto, ed è l'unico che
-               c'è. Scendere si deve sentire: `RAMPA_MINIMA` dice di
-               quanto la seconda deve staccare la prima.
-     premio    le monete vere di fine tappa, moltiplicate per le stelle
-
-   Non c'è più nessun `cuori`: la vita è dell'eroe, non della tappa, e
-   cresce con le tappe portate a casa (`dati/eroe.js`).
-
-   ── PERCHÉ SONO LUNGHE COSÌ ──
-   Erano da sei a quattordici file. Adesso sono il triplo, e non è una
-   manopola girata a caso: **è la condizione perché il bottino esista**.
-   Una discesa in cui la spada trovata combattendo si usa per due
-   stanze non ha un bottino, ha una notifica; il divertimento sta nel
-   vedere l'eroe diventare forte e poi *giocarci*, e per giocarci serve
-   strada davanti. Tre piani sono la lunghezza minima perché una cosa
-   trovata in fondo al primo si porti in giro per due.
-
-   Questo manda all'aria il conto delle domande per tappa ereditato dal
-   castello (là una tappa dichiara quanti esercizi costa, e trenta è il
-   tetto oltre il quale è un compito). Qui il numero di domande **non è
-   più l'input**: è quello che risulta da come combatti e da come ti
-   equipaggi, e chi si potenzia bene ne fa meno. Il ragionamento per
-   esteso, con quello che si perde a fare così, sta in `taratura.js`
-   sotto `DOMANDE` e in `COMBATTIMENTO.md`.
-
-   Le domande diventano più difficili in due modi insieme, e questo è il
-   punto: **scendendo** (la profondità alza `dif`) e **scegliendo**
-   (una stanza ricca rincara). Un bambino che gioca prudente vede
-   sempre domande un po' più facili di uno che va a caccia di scrigni,
-   e le vede tutte e due nella stessa tappa.
-
-   Finite le nove, si apre la **discesa senza fondo**: è l'unico posto
-   dove la profondità si sceglie a mano, perché è quella che uno si va a
-   prendere, non quella che gli capita.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// Nove discese in tre scalini: la difficoltà (0..1, `quiz/scelta.js`) sale in
+// linea retta da `dif[0]` (prima fila) a `dif[1]` (davanti al guardiano),
+// vedi `difficoltaDi()`. Perché le discese sono lunghe (tre piani) e il
+// numero di domande non è l'input: docs/dungeon/regole.md, COMBATTIMENTO.md.
 import { QUANTI_PIANI } from './stanze.js'
 
 export const SCALINI = [
-  /* la dritta sta su una riga sola accanto al nome: se è lunga, sul
-     telefono viene tagliata e non dice più niente */
+  // la dritta sta su una riga sola: sul telefono viene tagliata se è lunga
   { chiave: 'cantine', nome: 'Le cantine', icona: '🕯️', dritta: 'corte: si impara la strada' },
   { chiave: 'gallerie', nome: 'Le gallerie', icona: '🪨', dritta: 'più lunghe, e si picchia sul serio' },
   { chiave: 'fondo', nome: 'Il fondo', icona: '🐉', dritta: 'spedizioni: si scende e non si torna su' },
 ]
 
-/* Di quanto le domande del fondo devono staccare quelle dell'ingresso.
-   Sotto questa soglia la discesa è lunga uguale ma piatta, e scendere
-   non si sente: il controllo dei dati la fa rispettare a tutte. */
+// sotto questa soglia scendere non si sente (discesa lunga ma piatta)
 export const RAMPA_MINIMA = 0.2
 
-/* `portata` è dove sta la tappa sulla scala 0-100 di `data/portata.js`,
-   e dice a chi va offerta. Qui NON c'è `scuola`, ed è una dichiarazione,
-   non una dimenticanza: quello che questa campagna insegna non lo dà
-   nessuna scuola, quindi la sua testa non si taglia mai per età — le
-   prime tappe restano a disposizione anche di chi arriva grande, che
-   altrimenti non imparerebbe mai come si gioca. Si taglia solo in alto. */
+// portata: scala 0-100 di data/portata.js. Niente `scuola` qui: quello che
+// insegna questa campagna non lo dà nessuna scuola, si taglia solo in alto.
 export const CAMPAGNA = [
   /* ── scalino 1: le cantine ── */
   { chiave: 'cantina', nome: 'La cantina', ambiente: 'cantina', scalino: 'cantine',
@@ -101,9 +45,7 @@ export const CAMPAGNA = [
     file: 33, dif: [0.3, 0.7], premio: 6,
     racconto: 'Fa caldo. Qualcuno, laggiù, batte il martello.' },
 
-  /* ── scalino 3: il fondo ──
-     Qui una discesa non si fa più in una manciata di stanze: sono
-     spedizioni, e l'equipaggiamento trovato per strada serve tutto. */
+  // ── scalino 3: il fondo — spedizioni, non più una manciata di stanze
   { chiave: 'ghiacciaia', nome: 'La ghiacciaia', ambiente: 'ghiacciaia', scalino: 'fondo',
     portata: 58,
     file: 36, dif: [0.35, 0.8], premio: 7,
@@ -128,10 +70,7 @@ export const scalino = chiave => SCALINI.find(s => s.chiave === chiave) || SCALI
 export const tappeDelloScalino = chiave =>
   CAMPAGNA.map((t, i) => ({ ...t, indice: i })).filter(t => t.scalino === chiave)
 
-/* ── la discesa senza fondo ──
-   Tre profondità, e la difficoltà non è un numero da 0 a 1 sullo
-   schermo: è «quanto scendi». Vive solo qui, fuori dalla campagna,
-   perché è quella che ci si va a prendere. */
+// la discesa senza fondo: qui la profondità si sceglie a mano, non capita
 export const LIBERE = [
   { chiave: 'corta', nome: 'una corsa', icona: '🕯️', file: 21, dif: [0.1, 0.5], premio: 2 },
   { chiave: 'lunga', nome: 'una discesa', icona: '🪨', file: 33, dif: [0.3, 0.75], premio: 3 },
@@ -140,9 +79,7 @@ export const LIBERE = [
 
 export const PREDEFINITA = 'lunga'
 
-/* Una tappa del gioco libero: la profondità scelta più un ambiente
-   scelto. Ha la stessa forma di una tappa della campagna, così il
-   motore non sa nemmeno di stare giocando fuori dalla campagna. */
+// stessa forma di una tappa della campagna: il motore non sa che è libera
 export function tappaLibera(chiaveProfondita, chiaveAmbiente) {
   const p = LIBERE.find(l => l.chiave === chiaveProfondita) ||
             LIBERE.find(l => l.chiave === PREDEFINITA)
@@ -173,15 +110,11 @@ export function guastiDellaCampagna(campagna = CAMPAGNA, ambienti, libere = LIBE
     if (!campagna.some(t => t.scalino === s.chiave))
       guasti.push(`lo scalino "${s.chiave}" non ha nemmeno una tappa`)
 
-  /* due tappe di fila con lo stesso vestito non sono due posti diversi */
   for (let i = 1; i < campagna.length; i++)
     if (campagna[i].ambiente === campagna[i - 1].ambiente)
       guasti.push(`tappa ${i + 1}: stesso ambiente della precedente`)
 
-  /* LA CAMPAGNA È UNA SALITA. Non basta che ogni tappa stia in piedi:
-     devono diventare più dure, o sono nove volte la stessa. Il metro è
-     grezzo apposta — quante file per quanto sono difficili le domande —
-     e non deve mai scendere. */
+  // la campagna è una salita: ogni tappa deve pesare (file × difficoltà) più della precedente
   const peso = t => t.file * (t.dif[0] + t.dif[1])
   for (let i = 1; i < campagna.length; i++)
     if (peso(campagna[i]) <= peso(campagna[i - 1]))
@@ -195,14 +128,8 @@ export function guastiDellaCampagna(campagna = CAMPAGNA, ambienti, libere = LIBE
 
 function guastiDiUnaDiscesa(t, dove) {
   const guasti = []
-  /* Il minimo sono tre piani da quattro file: sotto, un piano è
-     ingresso-riposo-capo e non resta niente da scegliere, cioè i piani
-     diventano una scritta. Il massimo tiene conto di come si gioca
-     davvero: quarantacinque file sono già una serata, e una discesa
-     che non si finisce in una seduta non la finisce nessuno. */
+  // minimo 3 piani da 4 file (sotto, un piano è ingresso-riposo-capo e basta); max 45 (una serata)
   if (!(t.file >= QUANTI_PIANI * 4 && t.file <= 45)) guasti.push(`${dove}: ${t.file} file`)
-  /* le file si devono dividere in piani interi, o l'ultimo piano nasce
-     lungo la metà degli altri e il terzo atto non è un terzo atto */
   if (t.file % QUANTI_PIANI) guasti.push(`${dove}: ${t.file} file non si dividono in ${QUANTI_PIANI} piani`)
   if (t.cuori !== undefined)
     guasti.push(`${dove}: dichiara "cuori", ma la vita adesso è dell'eroe (dati/eroe.js)`)
@@ -211,18 +138,13 @@ function guastiDiUnaDiscesa(t, dove) {
     const [a, b] = t.dif
     if (!(a >= 0 && b <= 1)) guasti.push(`${dove}: difficoltà ${a}..${b} fuori da 0..1`)
     if (!(b > a)) guasti.push(`${dove}: la difficoltà non cresce scendendo (${a}..${b})`)
-    /* una discesa lunga con la stessa domanda dall'inizio alla fine è
-       lunga e basta: scendere si deve sentire */
     else if (b - a < RAMPA_MINIMA)
       guasti.push(`${dove}: scendere non si sente (${a}..${b}, ne serve ${RAMPA_MINIMA})`)
   }
   return guasti
 }
 
-/* La difficoltà della domanda in una stanza: quanto si è scesi, più il
-   rincaro di quella stanza. È **l'unico posto** in cui si decide quanto
-   è tosta una domanda, e sta nei dati apposta: chi vuole un dungeon più
-   gentile cambia due numeri e non apre il motore. */
+// unico posto che decide quanto è tosta una domanda: quanto si è scesi + il rincaro della stanza
 export function difficoltaDi(t, riga, rincaro = 0) {
   const [a, b] = t.dif
   const profondita = t.file > 1 ? Math.min(1, Math.max(0, riga / (t.file - 1))) : 1
