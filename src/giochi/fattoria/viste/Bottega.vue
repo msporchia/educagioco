@@ -1,33 +1,13 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   UNA BOTTEGA DEL PAESE — CHI È VENUTO, E COSA VUOLE
-
-   La sorella di `viste/Mercato.vue`, e si legge allo stesso modo: per
-   ogni bancone chi c'è, cosa vuole, le **caselle** (una per pezzo,
-   accesa se ce l'hai) e il tasto. La differenza è che qui ogni cliente
-   vuole **una cosa sola** — «la pasticcera vuole 3 biscotti» — e che
-   un bancone vuoto non è un buco: dice fra quanto arriva qualcuno,
-   perché è il motivo per tornare.
-
-   ── I CUORI ───────────────────────────────────────────────────────
-   In cima, sotto il nome, la fama della bottega: cinque cuori, uno per
-   consegna, e a cinque la bottega **cresce di un bancone**. Stanno in
-   cima e non in fondo perché sono la cosa che cambia da una visita
-   all'altra, e dicono da soli perché conviene tornare qui invece che
-   al banco.
-
-   Non sa niente del profilo né del granaio: riceve la bottega già
-   contata da `motore/botteghe.js` (`bottegaDi`) e manda fuori
-   `consegna` e `rifiuta` col numero del cliente.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Una bottega del paese, sorella di viste/Mercato.vue: un cliente vuole una cosa sola, i cuori
+   della fama, un bancone vuoto dice fra quanto torna — vedi docs/fattoria/chi-chiede.md. */
 import { computed } from 'vue'
 import { ATTESA_MIN, ATTESA_MAX, BANCONI_MAX } from '../dati/botteghe.js'
 import Merce from './Merce.vue'
 import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
-  /* `{ id, nome, fama: { banconi, cuori, di, piena }, banconi: [...] }`
-     — vedi `bottegaDi` */
+  // {id, nome, fama:{banconi,cuori,di,piena}, banconi:[...]} — vedi bottegaDi
   bottega: { type: Object, required: true },
 })
 const emit = defineEmits(['consegna', 'rifiuta', 'chiudi', 'albero'])
@@ -45,9 +25,7 @@ const caselle = riga => Array.from({ length: riga.serve },
     <Chiudi @chiudi="$emit('chiudi')" />
     <h2>{{ bottega.nome }}</h2>
 
-    <!-- La fama: cinque cuori, e cosa succede quando sono pieni. A tre
-         banconi la bottega è cresciuta del tutto, e la riga lo dice
-         invece di promettere un bancone che non arriverà. -->
+    <!-- La fama: cinque cuori; a tre banconi la riga dice che è cresciuta del tutto. -->
     <div class="fa-fama" data-fama :data-cuori="bottega.fama.cuori">
       <span class="fa-cuori">
         <span v-for="i in bottega.fama.di" :key="i"
@@ -90,10 +68,7 @@ const caselle = riga => Array.from({ length: riga.serve },
         </div>
 
         <div class="fa-fila">
-          <!-- «Non mi va» costa quanto consegnare: il cliente dopo arriva
-               fra dieci e venti minuti in tutti e due i casi. Sta
-               scritto sul tasto, perché una cosa che si scopre dopo
-               averla premuta è una trappola. -->
+          <!-- "Non mi va" costa quanto consegnare: stesso tempo d'attesa. -->
           <button class="fa-bot piano piccolo" data-azione="rifiuta"
                   :title="`il prossimo arriva fra ${ATTESA_MIN}–${ATTESA_MAX} minuti`"
                   @click="emit('rifiuta', b.cliente.id)">✕ non mi va</button>
@@ -101,8 +76,7 @@ const caselle = riga => Array.from({ length: riga.serve },
                   :disabled="!b.cliente.pronto" @click="emit('consegna', b.cliente.id)">
             Consegna</button>
         </div>
-        <!-- Quello che manca **si preme**: apre l'albero di quella
-             merce, come al mercato (`viste/Albero.vue`). -->
+        <!-- Quello che manca si preme: apre l'albero di quella merce. -->
         <p v-if="!b.cliente.pronto" class="fa-piccolo fa-manca">
           <span>Ti serve ancora</span>
           <button v-for="r in b.cliente.righe.filter(r => !r.pieno)" :key="r.prodotto"
@@ -115,9 +89,7 @@ const caselle = riga => Array.from({ length: riga.serve },
       </div>
     </div>
 
-    <!-- Un bancone vuoto dice fra quanto arriva qualcuno: è il motivo
-         per tornare, e senza la bottega sembrerebbe più piccola di
-         com'è. -->
+    <!-- Un bancone vuoto dice fra quanto arriva qualcuno: è il motivo per tornare. -->
     <p v-for="b in attese" :key="'a' + b.i" class="fa-piccolo" data-attesa>
       <template v-if="b.minuti > 0">Al bancone arriva qualcuno fra
         <b>{{ b.minuti }}</b> {{ b.minuti === 1 ? 'minuto' : 'minuti' }}.</template>
