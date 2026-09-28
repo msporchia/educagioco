@@ -1,16 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   PASSO PASSO — L'ASPETTO
-
-   Un file solo, e **ogni classe comincia per `pp-`**, la radice
-   compresa: il CSS di tutti i giochi finisce in un file unico, e due
-   giochi che si contendono lo stesso nome si rompono a vicenda a mesi
-   di distanza.
-
-   I tasti sono grossi apposta: a cinque anni il dito è largo e la mira
-   corta. Due colori e basta per le frecce — blu il passo, arancio il
-   salto — e la tessera nella fila ha il colore del tasto che l'ha
-   messa: si vede a colpo d'occhio dove sono i salti.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Passo passo — l'aspetto. Prefisso `pp-`: vedi docs/core/convenzione-giochi.md.
+   I tasti sono grossi apposta: a cinque anni il dito è largo e la mira corta. */
 
 .pp {
   --pp-carta: #fffdf7;
@@ -162,17 +151,10 @@
             border: 2px dashed #c7d6b8; background: none; padding: 0 }
 
 /* ═══════════ lo zaino e le scatole ═══════════
-   Una scatola è una **cornice**: il bordo del suo colore racchiude la
-   testa e le carte che ha dentro, e dentro non c'è nessun fondo — si
-   vede la fila, come fuori. Le carte dentro sono un poco più piccole di
-   quelle fuori, così la cornice le abbraccia con un filo d'aria invece di
-   stringerle. Il bordo in fondo si tocca per uscire. Una scatola dentro
-   un'altra ha il bordo più chiaro, e le due si distinguono senza contare
-   le parentesi.
-
-   Era una fila dentro la fila, col fondo viola chiaro e una barra piena
-   in fondo: un rettangolo chiaro dentro un altro, e nessuno dei due
-   racchiudeva davvero niente. */
+   Una scatola è una **cornice**: il bordo del suo colore racchiude la testa
+   e le carte che ha dentro, senza nessun fondo — si vede la fila, come
+   fuori. Una scatola dentro un'altra ha il bordo più chiaro, e le due si
+   distinguono senza contare le parentesi. */
 .pp-scatola { --pp-piccola: calc(var(--pp-tessera) - 6px);
               display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px;
               max-width: 100%; padding: 3px 3px 3px 3px; border-radius: 12px;
@@ -209,11 +191,8 @@
 .pp-scatola.pp-se > .pp-testa.pp-gira { box-shadow: 0 0 0 3px var(--pp-luce), 0 3px 8px rgba(0,0,0,.25) }
 .pp-testa .pp-lastra { width: 14px; height: 14px; margin-top: 1px }
 
-/* ── una lastra in piccolo: la forma del suo colore, e basta — il
-   cerchio rosso, il quadrato blu, il triangolo giallo. La forma c'è per
-   chi i colori non li distingue; l'alone bianco la stacca dal viola
-   della testa e dei tasti. Stava dentro un quadratino chiaro, che in una
-   testa grande quanto una tessera era un rettangolo dentro l'altro ── */
+/* una lastra in piccolo (vedi docs/passo-passo/regole.md): l'alone bianco
+   la stacca dal viola della testa e dei tasti */
 .pp-lastra { display: inline-grid; place-items: center; width: 20px; height: 20px; flex: none;
              filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff) }
 .pp-lastra i { display: block; width: 76%; height: 76% }

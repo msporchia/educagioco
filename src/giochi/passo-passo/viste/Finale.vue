@@ -1,32 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL CARTELLO DI FINE — il coniglio è a casa
-
-   Qui non c'è un cartello di partita persa: una fila sbagliata si
-   riprova e basta. Questo compare solo quando il coniglio è nella tana.
-
-   Le quattro stelle si guadagnano per quattro cose diverse, e sotto ognuna c'è
-   il disegno di **cosa** l'ha data: la tana, la carota, 🧠 — la strada
-   l'hai trovata tu. Una stella spenta con sotto la carota dice da sola
-   cosa manca, e che rigiocando la si può prendere — senza una riga da
-   leggere. La terza era «senza 💡», e la toglieva qualunque aiuto: gli
-   aiuti adesso si pagano in monete, e la terza se ne va solo se la
-   strada intera l'ha scritta il gioco.
-
-   La quarta è la strada più corta, con la carota: sotto c'è 🎯 e
-   quante frecce bastano, e se la fila era più lunga una riga lo dice
-   coi due numeri — «si può fare con 7 frecce: tu ne hai usate 12».
-   Senza la carota la riga non c'è: la stella della carota spenta dice
-   già cosa manca, e due cose da rifare insieme sono troppe. Nel
-   sentiero le stelle non ci sono, ma la riga sì.
-
-   Il racconto del posto sta in fondo, piccolo: è per il grande che
-   guarda da sopra la spalla, e dice cosa si è appena imparato.
-
-   I tasti restano spenti per un attimo quando il cartello compare: il
-   dito che ha appena premuto ▶ si lascia dietro un tocco, e quel tocco
-   non deve premere «avanti» da solo.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Il cartello di fine — il coniglio è a casa. Niente cartello di partita
+   persa: una fila sbagliata si riprova e basta, questo compare solo in
+   tana. Le quattro stelle: vedi docs/passo-passo/stelle-e-aiuti.md. */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import Festa from '../../Festa.vue'
 

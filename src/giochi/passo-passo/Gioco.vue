@@ -1,32 +1,8 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   PASSO PASSO — IL COORDINATORE
-
-   Il bambino compone una fila di frecce, preme ▶, e il coniglio la
-   esegue **dall'inizio**, sempre: è un programma, non un telecomando.
-   Mentre corre, la tessera che sta girando si accende. Se sbatte o fa
-   splash, la tessera colpevole lampeggia, il coniglio fa la sua
-   scenetta e torna alla partenza; al giro dopo la parte già vista e già
-   riuscita scorre tre volte più veloce. Se la fila finisce prima della
-   tana il coniglio si ferma e si chiede «e adesso?»: non è un errore, è
-   un programma non finito.
-
-   Dal gradino del ripeti la fila ha le **scatole** dei cicli e lo
-   **zaino**: le modifiche col dito passano da `motore/fila.js` (pure:
-   una scatola si toglie intera, la N nasce da scegliere), e mentre il
-   coniglio corre la testa di ogni scatola dice a che giro è (`giri`).
-
-   Questo file decide **quando** succedono le cose e cosa valgono: è
-   l'unico che sa che esistono le monete, le stelle salvate e i
-   contatori dell'albo. Le regole stanno in `motore/`, il disegno e i
-   tempi in `scena/`, le schermate in `viste/`.
-
-   ── NIENTE PUNIZIONI ──────────────────────────────────────────────
-   Niente tempo, niente vite, niente partita persa. Sbagliare fa
-   riprovare, e il suono dello sbaglio è un tonfo morbido, mai
-   `suono.no()`: quello che insegna è guardare quale tessera lampeggia,
-   e quella si vede anche a volume spento.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Passo passo — il coordinatore: quando succedono le cose e cosa valgono
+   (monete, stelle, contatori dell'albo). Regole in `motore/`, disegno e
+   tempi in `scena/`, schermate in `viste/`. Vedi docs/passo-passo/regole.md
+   e docs/passo-passo/stelle-e-aiuti.md. */
 import { ref, shallowRef, computed, nextTick, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
@@ -72,11 +48,7 @@ const cursore = ref(0)
 const corrente = ref(-1)            // la tessera che sta girando
 const guasto = ref(null)            // dove la fila si è fermata male
 const inCorsa = ref(false)
-/* la scala del 💡 (`motore/aiuti.js`): a che gradino si è, se in questo
-   ingresso si è pagato qualcosa (la serie del sentiero e «Ci penso io»
-   contano chi non ha comprato niente), e se la strada intera l'ha scritta
-   il gioco (la terza stella) */
-const presi = ref(0)
+const presi = ref(0)                // il gradino della scala del 💡 (docs/passo-passo/stelle-e-aiuti.md)
 const pagato = ref(false)
 const svelato = ref(false)
 const pensiero = ref(null)          // la frase del gradino, sopra la mappa
@@ -102,12 +74,8 @@ let sbarra = 0
 let esitoInCorsa = null
 let partitoAlle = 0
 let passoCorrente = -1              // il passo che sta girando (coi cicli non è la carta)
-/* il coniglio sta entrando nella tana: la partita è vinta anche se la
-   festa non è finita. Un ■ in quel secondo non risponde, e un ← scrive
-   la vittoria prima di uscire — una tana che il bambino ha appena visto
-   raggiungere non si butta via. Non la si scrive subito, però: scrivere
-   vuol dire anche guardare i traguardi, e il cartello di un traguardo a
-   metà festa coprirebbe il coniglio che entra in casa. */
+/* la partita è già vinta prima che finisca la festa, ma si scrive solo a
+   festa finita: un traguardo a metà festa coprirebbe il coniglio */
 let inTana = false
 /* il giro di prima: serve a far correre veloce la parte già vista */
 let ultimoGiro = null               // { passi: [{ i, mossa }], riusciti }
@@ -120,9 +88,7 @@ let famigliaPrima = null            // di che specie era il sentiero di prima
 let chiusaDallAiuto = null          // la frase di quando l'aiuto ha chiuso la serie
 
 const avanza = progresso(CHIAVE)
-/* chi ha giocato con la fila di prima (senza le pecore) ritrova le
-   stelle sui livelli giusti, e resta alla tappa dov'era: le pecore gli si
-   aprono alle spalle (`riordina` in `dati/campagna.js`) */
+// riordino della fila di livelli: vedi docs/passo-passo/livelli.md
 if (avanza.cfg.fila !== FILA_ATTUALE) {
   const vecchia = FILE[avanza.cfg.fila || 1]
   if (vecchia && ((avanza.tappa || 0) > 0 || Object.keys(avanza.stelle || {}).length))
@@ -142,19 +108,9 @@ const colori = computed(() => {
     .map(ch => (LEGENDA[ch] || {}).lastra).filter(Boolean))
   return COLORI.filter(c => qui.has(c))
 })
-/* Il sentiero senza fine sta in fondo alla mappa, perché mescola tutto
-   quello che viene prima, ma **si apre** alla fine delle buche, e senza
-   guardare l'età: chi ha sei anni e le tappe dello zaino chiuse ci gioca
-   coi posti del prato e del cane, e legarlo alla campagna intera
-   l'avrebbe chiuso proprio a chi l'aveva già aperto. Cosa ci trova lo
-   dicono i gradini finiti (`sbloccati`). */
+// si apre alla fine delle buche, non della campagna: vedi docs/passo-passo/sentiero.md
 const sentieroAperto = () => tappaAperta(TAPPE_PRIME, avanza.tappa)
-/* le cose che il sentiero può mescolare: ogni gradino finito ne porta
-   una (`INGREDIENTI` in `motore/generatore.js`). Finito vuol dire vinto
-   l'ultimo posto, o aperto quello dopo — che per chi ha nove anni e i
-   gradini dei piccoli passati per età vuol dire saputo. Non basta la
-   seconda: a sei anni, finito il cane, il posto dopo è dello zaino e
-   resta chiuso per età, e il cane nel sentiero ci deve essere lo stesso */
+// ingredienti sbloccati: vedi docs/passo-passo/sentiero.md
 const sbloccati = () => SCALINI.filter(s => INGREDIENTI[s.chiave]).filter(s => {
   const u = CAMPAGNA.map(t => t.scalino).lastIndexOf(s.chiave)
   return stelleDi(CHIAVE, u) > 0 || (u + 1 < QUANTE_TAPPE && aperta(CHIAVE, u + 1))
@@ -180,17 +136,9 @@ const statoSentiero = computed(() => ({
   dopo: SCALINI.at(-1).chiave,
 }))
 
-/* ── la manina della prima volta ──
-   Chi apre il primo livello per la prima volta non sa leggere e non sa
-   cosa fare: una manina indica la freccia, poi ▶. Non blocca niente, non
-   si chiude, non dice niente — e sparisce al primo ▶, per non tornare
-   più: da lì in poi si impara giocando. È la riga dei primi passi del
-   castello, detta a chi non legge. */
+// la manina della prima volta: vedi docs/passo-passo/regole.md
 const manina = computed(() => {
   if (inCorsa.value || finale.value) return null
-  /* e la prima scatola: chi arriva allo zaino non sa che il 🔁 esiste,
-     e lo scopre con lo zaino pieno. La manina lo indica finché nella
-     fila non c'è una scatola */
   if (tappaIdx.value === TAPPE_PICCOLE && stelleDi(CHIAVE, TAPPE_PICCOLE) === 0)
     return conCicli(fila.value) || scelta.value != null ? null : 'ripeti'
   if (tappaIdx.value !== 0 || avanza.tappa > 0 || partito.value) return null
@@ -203,11 +151,8 @@ const titolo = computed(() => {
   return `${tappaIdx.value + 1}. ${tappa.value.nome}`
 })
 
-/* ═══════════ i suoni ═══════════
-   Sintetizzati, morbidi, e **nessuno dice niente che non si veda già**:
-   il salto si vede saltare, lo splash si vede spruzzare. Col volume a
-   zero il gioco è intero. Nella parte che scorre veloce i passi non
-   suonano: tre volte al secondo sarebbero una mitragliatrice. */
+/* ═══════════ i suoni ═══════════ */
+// nella parte veloce i passi non suonano: tre al secondo sarebbero una mitragliatrice
 let ultimoSuono = ''
 const SUONI = {
   passo: () => suono.nota(392, 392, 0.05, 'triangle', 0.035),
@@ -310,13 +255,9 @@ function entra(t, indice) {
 const avviaTappa = i => entra(CAMPAGNA[i], i)
 
 /* ═══════════ comporre la fila ═══════════
-   Ogni tocco passa da `motore/fila.js`, che dice com'è la fila dopo: è
-   lì che sta scritto cosa toglie ⌫ quando prima del cursore c'è una
-   scatola (tutta) o la sua testa (il 🔁 e basta). */
+   Ogni tocco passa da `motore/fila.js`, che dice com'è la fila dopo. */
 const metti = r => { fila.value = r.fila; cursore.value = r.cursore }
 
-/* una freccia, un salto — o, dal consiglio del 💡, una scatola già con
-   la sua testa */
 function freccia(t) {
   if (inCorsa.value || cieco || finale.value || piena.value) return
   if (eApri(t)) return scatola(eSe(t) ? 'se' : 'ripeti', t)
@@ -326,10 +267,7 @@ function freccia(t) {
   suono.nota(t.startsWith('salto-') ? 587 : 523, t.startsWith('salto-') ? 587 : 523, 0.06, 'triangle', 0.05)
 }
 
-/* 🔁 o ❓: una scatola dove sta il cursore, col cursore dentro. La testa
-   nasce da scegliere e la scelta si apre da sola; se il 💡 aveva acceso
-   quel tasto, nella scelta resta acceso il suo valore. Dal consiglio
-   nella fila la scatola arriva già con la sua testa (`gia`) */
+// dal consiglio del 💡 la scatola arriva già con la sua testa (`gia`)
 function scatola(tipo, gia = null) {
   if (inCorsa.value || cieco || finale.value || piena.value) return
   const suggerito = brilla.value === tipo ? consiglioValore.value : null
@@ -430,9 +368,7 @@ function via() {
   segna('ppProve')
 }
 
-/* quanti passi dall'inizio sono uguali al giro di prima, e allora erano
-   andati bene: quelli scorrono veloci. Passi e non carte: coi cicli la
-   stessa carta si esegue a ogni giro */
+// passi e non carte: coi cicli la stessa carta si esegue a ogni giro
 const passiDi = esito => esito.passi.map(p => ({ i: p.i, mossa: p.mossa }))
 function giaVisti(esito) {
   if (!ultimoGiro) return 0
@@ -443,13 +379,9 @@ function giaVisti(esito) {
   return n
 }
 
-/* ■: si ferma tutto e si torna com'era prima del ▶. Quello che era già
-   girato bene resta «già visto» per il giro dopo.
-
-   ■ sta dove stava ▶: un doppio tocco su ▶ fermerebbe la corsa appena
-   partita, e da fuori sembrerebbe un ▶ che non fa niente. Per mezzo
-   secondo ■ non risponde — e non risponde più nemmeno quando il coniglio
-   è già entrato nella tana: quella partita è vinta. */
+/* ■ sta dove stava ▶: senza un ritardo, un doppio tocco su ▶ fermerebbe
+   subito la corsa appena partita. Non risponde più una volta in tana: quella
+   partita è già vinta. */
 const FERMA_DOPO = 500
 function ferma() {
   if (!inCorsa.value || performance.now() - partitoAlle < FERMA_DOPO || inTana) return
@@ -469,9 +401,7 @@ function fineGiro() {
   inCorsa.value = false
   if (!esito) return aiutoPrenotato()
   const errore = eErrore(esito.esito)
-  /* riusciti: tutti i passi tranne quello che ha sbattuto o fatto
-     splash. Quando gira la testa (troppi passi) nessun passo è andato
-     male: è la fila a non finire mai */
+  // riusciti: tutti i passi tranne quello che ha sbattuto o fatto splash
   const cattivo = esito.esito === SBATTE || esito.esito === SPLASH || esito.esito === PERSA ? 1 : 0
   ultimoGiro = { passi: passiDi(esito), riusciti: esito.passi.length - cattivo }
   corrente.value = -1
@@ -500,38 +430,7 @@ function fineGiro() {
   aiutoPrenotato()
 }
 
-/* ═══════════ 💡 ═══════════
-   Una scala, e ogni tocco scende di un gradino (`motore/aiuti.js`, i
-   prezzi in `giochi/aiuti.js`):
-
-     🧠  gratis   cosa chiede questo posto, e la domanda giusta
-     🔎  gratis   dove la fila comincia a sbagliare: il posto, non la carta
-     💡  🪙10 ×3  la carta giusta in quel posto — in trasparenza **dentro
-                  la fila**, dove andrà, e sul suo tasto, che brilla. La
-                  mette il bambino, toccando l'una o l'altro
-     🧩  🪙50     un pezzo di strada scritto nella fila: un terzo di quello
-     🧩  🪙100    che manca, poi la metà
-     ✅  🪙200    tutta la strada — e la terza stella resta spenta
-
-   Costava la stella «senza aiuti», e una stella è un prezzo che un
-   bambino non sente: il 💡 diventava il modo di finire un livello
-   seguendo la lampadina. Il prezzo sta sul tasto **prima** di toccarlo;
-   senza monete il prezzo sobbalza e non succede niente; dai cinquanta in
-   su ci vuole un secondo tocco. La scala riparte a ogni ingresso: ogni
-   gradino guarda la fila di adesso, e la fila riparte vuota.
-
-   Due cose che il 💡 fa gratis a qualunque gradino: dire ▶ se la fila
-   vince già, e riaccendere la carta di prima se la fila è rimasta
-   com'era — pagare due volte la stessa carta perché non la si è ancora
-   toccata sarebbe un furto.
-
-   ── IL 💡 RISPONDE SEMPRE ─────────────────────────────────────────
-   Era spento mentre il coniglio correva, cioè anche nei due secondi
-   della scenetta dopo uno sbaglio: il momento esatto in cui lo si
-   cerca. Adesso durante la corsa si prenota — si accende, e il gradino
-   arriva quando il coniglio si ferma (se è un gradino caro, arriva
-   armato: il secondo tocco resta del bambino) — e ogni tocco fa
-   sobbalzare la lampadina (`colpo`). */
+/* ═══════════ 💡 ═══════════ vedi docs/passo-passo/stelle-e-aiuti.md */
 const SCALA = scalaDi()
 const prossimo = computed(() => SCALA[presi.value] || null)
 const monete = computed(() => state.profile.coins || 0)
@@ -558,10 +457,7 @@ function aiuto() {
   /* la fila vince già: lo si dice, e non costa niente */
   if (s.che === 'via') { spegniConsigli(); brilla.value = 'via'; disarma(); suona(); return }
   const p = prossimo.value
-  /* la carta di prima, con la fila com'era: si riaccende gratis — ma
-     solo se quello che si comprerebbe è un'altra carta, che sarebbe la
-     stessa. Se dopo viene un pezzo di strada si va avanti: il pezzo
-     parte da dove la fila va bene, e quella carta ce la mette lui */
+  // la carta di prima si riaccende gratis, solo se si comprerebbe di nuovo lei
   if (ultimaCarta && ultimaCarta === firma() && p && p.cosa === 'carta') { mostraCarta(s); suona(); return }
   /* la scala è finita: quello che si è pagato si rimette */
   if (!p) { scriviPezzo(SCALA[SCALA.length - 1]); return }
@@ -578,8 +474,6 @@ function aiuto() {
   presi.value++
   if (p.prezzo && !pagato.value) {
     pagato.value = true
-    /* la serie del sentiero conta i sentieri fatti senza comprare aiuti:
-       si chiude al primo gradino pagato, non a quelli che fanno pensare */
     if (sentiero.value) {
       const esito = chiudiLaSerie()
       chiusaDallAiuto = esito ? fraseDiFine(esito, SENZA_FINE.misura) : null
@@ -618,12 +512,7 @@ function mostraDove() {
 function mostraCarta(s) {
   spegniConsigli()
   pensiero.value = null
-  switch (s.che) {
-    /* con lo zaino un aiuto può dire anche altre tre cose: qui ci va una
-       scatola (il suo tasto brilla, e la scatola sta in trasparenza nella
-       fila, con la sua testa), questa scatola vuole un'altra testa (brilla
-       la testa, e nella scelta il valore giusto), e questa carta è di
-       troppo (brilla ⌫, e lei lampeggia) */
+  switch (s.che) {  // le quattro cose che l'aiuto può dire: docs/passo-passo/zaino.md
     case 'scatola':
       cursore.value = s.cursore
       brilla.value = eSe(s.testa) ? 'se' : 'ripeti'
@@ -670,11 +559,8 @@ function aiutoPrenotato() {
 }
 
 /* ═══════════ a casa ═══════════ */
-/* I contatori si muovono **dopo** aver salvato la tappa: `segna()` è
-   anche il momento in cui si guardano i traguardi, e un traguardo sulle
-   tappe guardato prima di `completa()` scatterebbe al ▶ dopo, in mezzo a
-   un'altra corsa. Le monete invece vanno **prima**, così il salvataggio
-   subito di `completa()` le porta con sé. */
+/* i contatori si muovono dopo `completa()`, non prima: `segna()` guarda anche
+   i traguardi, e uno sulle tappe scatterebbe al ▶ dopo se guardato troppo presto */
 function contaLaVittoria(esito) {
   segna('ppTane')
   if (esito.carota) segna('ppCarote')
@@ -682,10 +568,7 @@ function contaLaVittoria(esito) {
   if (!pagato.value) segna('ppDaSolo')
 }
 
-/* La quarta stella, e cosa dire a chi non l'ha presa: quante carte ha
-   usato e quante ne bastavano. Il minimo si chiede adesso e non
-   all'ingresso: costa una ricerca (qualche centesimo di secondo nei
-   prati del cane), e chi esce senza vincere non l'avrebbe mai letto. */
+// il minimo si chiede a vittoria avvenuta, non all'ingresso: costa una ricerca
 function misuraLaStrada(esito) {
   const minimo = minimoDi(liv)
   const usate = carteUsate(fila.value, esito)
@@ -704,9 +587,7 @@ function vittoria(esito) {
   if (sentiero.value) return vittoriaSentiero(esito, strada)
 
   const i = tappaIdx.value
-  /* il premio si paga una volta sola, alla prima vittoria: il livello è
-     fisso, e rigiocarlo è ricordarlo, non esercitarsi */
-  const primaVolta = stelleDi(CHIAVE, i) === 0
+  const primaVolta = stelleDi(CHIAVE, i) === 0  // il premio si paga una volta sola: docs/passo-passo/stelle-e-aiuti.md
   const monete = primaVolta ? CAMPAGNA[i].premio : 0
   if (monete) addCoins(monete)
   completa(CHIAVE, i, QUANTE_TAPPE, { stelle })
@@ -716,9 +597,7 @@ function vittoria(esito) {
     carota: esito.carota, cane: !!(liv && liv.cane), svelato: svelato.value, monete,
     ...strada, zaino: !!liv.zaino,
     racconto: CAMPAGNA[i].racconto,
-    /* dopo l'ultima tappa dei piccoli ▶ porta sul sentiero senza fine
-       a chi non ha ancora l'età dello zaino, e dopo l'ultima di tutte a
-       chiunque: finire non è una porta chiusa */
+    // dopo l'ultima tappa (dei piccoli, o di tutte) ▶ può portare al sentiero senza fine
     prossima: aperta(CHIAVE, i + 1) || ((i + 1 === TAPPE_PICCOLE || i + 1 === QUANTE_TAPPE) && sentieroAperto()),
   }
 }
@@ -741,10 +620,7 @@ function prossimoSentiero() {
   entra({ ...t, chiave: `sentiero-${sentieri.value}` }, -1)
 }
 
-/* La serie è un risultato quando si chiude — all'aiuto chiesto, o
-   quando si torna alla mappa — non a ogni sentiero: se si scrivesse a
-   ogni vittoria le «ultime partite» del quaderno sarebbero 1, 2, 3 della
-   stessa serie. */
+// la serie è un risultato solo quando si chiude, non a ogni sentiero vinto
 function chiudiLaSerie() {
   if (!serie.value) return null
   const esito = segnaPrimato(CHIAVE, serie.value)
@@ -768,8 +644,6 @@ function vittoriaSentiero(esito, strada) {
           : record ? `${serie.value} di fila · il tuo primo record`
           : `${serie.value} di fila · il record è ${prima}`
   }
-  /* nel sentiero non ci sono stelle, ma la strada lunga si dice lo
-     stesso: è lì che si vedevano le file da quaranta frecce */
   return { che: 'sentiero', titolo: tappa.value.nome, frase, record, monete,
            ...strada, zaino: !!liv.zaino }
 }

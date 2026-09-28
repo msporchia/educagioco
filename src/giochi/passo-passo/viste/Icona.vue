@@ -1,17 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   UNA FRECCIA — la stessa sul tasto e nella fila
-
-   Disegnata e non scritta: le frecce emoji (⬅️ ⬆️) ogni telefono le fa a
-   modo suo, e qui la freccia è tutta la consegna.
-
-   Il passo è una freccia piena. Il salto è **una punta doppia** — due
-   celle in quella direzione — sul tasto arancione. La prima prova era un
-   arco che scavalca un quadratino, che raccontava meglio il salto ma
-   girato in su o in giù diventava la freccia tonda del «ricarica» o
-   dell'«annulla»: a sei anni una freccia che non dice da che parte va
-   non è una freccia. La punta doppia si legge uguale nei quattro versi.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Una freccia disegnata, non un'emoji (che ogni telefono fa a modo suo). Il
+   salto è una punta doppia e non un arco: un arco girato in su o in giù si
+   legge come «ricarica»/«annulla», non come una direzione. */
 import { computed } from 'vue'
 
 const props = defineProps({

@@ -1,46 +1,13 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA PROIEZIONE — i fatti del motore messi in movimento
+/* La proiezione — i fatti del motore (`motore/mondo.js`) messi in
+   movimento nel tempo: ogni fatto diventa una **battuta** con inizio e
+   fine, e `fotogramma(t)` dice dove sta ogni cosa al tempo `t`. Non sa
+   niente di regole, non tocca il canvas: gira anche in Node.
 
-   Il motore (`motore/mondo.js`) dice cosa è successo: «passo da qui a
-   lì», «il masso scivola fin là», «splash». Non dice quanto dura niente.
-   Qui ogni fatto diventa una **battuta** con un inizio e una fine, e
-   `fotogramma(t)` risponde a una domanda sola: al tempo `t`, dove sta
-   ogni cosa e che faccia ha? La tela (`scena/tela.js`) disegna la
-   risposta e basta.
-
-   Non sa niente di regole — non sa perché il coniglio si ferma, sa che
-   si ferma — e non tocca il canvas: gira anche in Node, e i test la
-   possono interrogare.
-
-   ── IL TEMPO È RIFATTO DA CAPO A OGNI FOTOGRAMMA ─────────────────
-   Il fotogramma si ricostruisce ripercorrendo le battute dall'inizio
-   fino a `t`: sono al più un paio di centinaia, e rifarle costa meno di
-   un milionesimo di secondo. In cambio non c'è nessuno stato da tenere
-   allineato — tornare indietro, saltare avanti, ripartire, è la stessa
-   funzione chiamata con un altro numero.
-
-   ── LA PARTE GIÀ VISTA VA VELOCE ─────────────────────────────────
-   `veloci` è quanti passi, dall'inizio, sono identici al giro di prima
-   e allora erano andati bene: quelli scorrono a tre volte la velocità.
-   Senza, chi aggiunge una freccia in fondo a una fila di dieci si
-   riguarda dieci passi già visti per vedere l'undicesimo — e a sei
-   anni, dopo la terza volta, smette di guardare. Si contano i passi e
-   non le carte perché coi cicli non sono la stessa cosa: portare un
-   🔁 da 5 a 6 fa correre veloci i primi cinque giri, e lento il sesto.
-
-   ── LE PECORE SCAPPANO TUTTE INSIEME ─────────────────────────────
-   Le battute di solito vengono una dopo l'altra. Quelle delle pecore
-   no: quando il cane si ferma accanto a due pecore, scappano insieme,
-   ognuna dalla sua parte. Una battuta `fugge` che segue un'altra
-   `fugge` della stessa freccia comincia quando comincia lei, e il
-   fotogramma le applica tutte e due finché la più lunga non finisce.
-
-   ── A CHE GIRO SIAMO ─────────────────────────────────────────────
-   Ogni battuta si porta dietro il suo passo (`n`) e i giri dei cicli
-   aperti (`giri`, da `esegui`): il fotogramma li ripete, e la regia li
-   passa a chi disegna la fila, che li scrive sulla testa di ogni
-   scatola. È la cosa che fa capire un ciclo guardandolo girare.
-   ═══════════════════════════════════════════════════════════════════ */
+   Il fotogramma si ricostruisce da capo ripercorrendo le battute ogni
+   volta (costa meno di un microsecondo): niente stato da tenere
+   allineato, tornare indietro è la stessa funzione con un altro numero.
+   `veloci` (parte già vista, tre volte più svelta) conta i passi e non
+   le carte: coi cicli non sono la stessa cosa. */
 
 /* quanto dura ogni battuta, in secondi, a velocità normale */
 export const DURATE = {

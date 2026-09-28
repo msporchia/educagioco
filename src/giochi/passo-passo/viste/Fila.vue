@@ -1,38 +1,11 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA FILA — il programma del bambino, una tessera per carta
-
-   Una striscia che va a capo. Il cursore è una sbarra che lampeggia fra
-   due tessere: una carta nuova entra lì. Toccare una tessera mette il
-   cursore subito dopo di lei, e toccarla di nuovo subito prima: è così
-   che si arriva anche all'inizio della fila. Niente trascinamento — si
-   tocca e basta.
-
-   In testa c'era un coniglio da toccare per andare all'inizio: sembrava
-   un tasto che non faceva niente, e rubava il posto a una tessera. Il
-   secondo tocco fa la stessa cosa senza aggiungere niente da capire.
-
-   Mentre il coniglio corre la tessera che sta girando si accende: è la
-   cosa più importante che questo gioco insegna, sapere **a che punto
-   del programma sei**. Quelle già fatte si spengono un poco. Dove
-   qualcosa è andato storto la tessera lampeggia (`data-guasto`) e resta
-   segnata finché la fila non cambia.
-
-   Dal gradino del ripeti la fila ha le **scatole** dei cicli (le disegna
-   `Carte.vue`, che si chiama da sé) e lo **zaino**: dopo l'ultima carta,
-   tanti posti tratteggiati quante carte ci stanno ancora. Toccarne uno
-   mette il cursore in fondo.
-
-   Il 💡 lascia qui il suo consiglio: accanto al cursore compare la
-   carta giusta **in trasparenza**, tratteggiata e che pulsa — il posto
-   vuoto dove andrà, con dentro quello che ci va. Non è ancora nella
-   fila (▶ non la esegue): toccandola ci entra, come toccando il suo
-   tasto che brilla. Sta qui perché è qui che si guarda: l'anello attorno
-   al tasto, da solo, non lo vedeva nessuno.
-
-   Riceve tutto già deciso e non tocca niente: dice solo dove si è
-   toccato.
-   ═══════════════════════════════════════════════════════════════════ */
+/* La fila — il programma del bambino, una tessera per carta (vedi
+   docs/passo-passo/regole.md). Le scatole le disegna `Carte.vue`, che si
+   chiama da sé; con lo zaino, dopo l'ultima carta ci sono tanti posti
+   tratteggiati quante carte ci stanno ancora. Il consiglio del 💡 compare
+   qui, accanto al cursore, e non solo sul suo tasto: l'anello attorno al
+   tasto da solo non lo vedeva nessuno. Riceve tutto già deciso e non tocca
+   niente: dice solo dove si è toccato. */
 import { ref, computed, watch, nextTick, provide } from 'vue'
 import Carte from './Carte.vue'
 import { albero, carteDi, conCicli } from '../dati/carte.js'

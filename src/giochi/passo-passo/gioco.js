@@ -1,37 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   PASSO PASSO — IL MANIFESTO
-
-   Un coniglio deve tornare nella sua tana. Il bambino non lo guida col
-   dito: gli scrive una **fila di frecce**, preme ▶, e il coniglio la
-   esegue dall'inizio alla fine. È il primo gradino della
-   programmazione — un programma è una fila di ordini, si esegue da capo,
-   e quando qualcosa va storto si guarda *quale* ordine era sbagliato —
-   detto a un bambino di cinque anni che non sa leggere.
-
-   Dato puro, come vuole `docs/core/convenzione-giochi.md`. La cartella:
-
-     dati/     il vocabolario del mondo (le lettere delle mappe, le
-               mosse) e la campagna, ventiquattro posti scritti a mano
-     motore/   le regole del mondo, il risolutore (la strada più corta,
-               gli aiuti, il controllo che un livello insegni la sua
-               regola) e il generatore del sentiero senza fine — tutto
-               senza schermo, gira in Node
-     scena/    la proiezione (i fatti del motore messi in movimento), la
-               tela (il disegno) e la regia (l'orologio)
-     viste/    la mappa, il campo, la fila, il cartello di fine
-     Gioco.vue il coordinatore, l'unico che sa che esistono le monete
-   ═══════════════════════════════════════════════════════════════════ */
+/* Passo passo — il manifesto. Dato puro, struttura di
+   `docs/core/convenzione-giochi.md`: vedi `docs/passo-passo/README.md`. */
 import { CAMPAGNA, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_ZAINO, TAPPE_PRIME } from './dati/campagna.js'
 import { apriQuaderno, primatoInParole } from '../primati.js'
 
 export const CHIAVE = 'passo'
 
-/* Il sentiero senza fine: livelli fatti al momento e controllati dal
-   risolutore, che si apre a campagna finita. Quello che si migliora lì
-   è **quanti sentieri di fila si fanno da soli** — la serie si chiude
-   quando si compra un aiuto (o quando si torna alla mappa). I due
-   gradini gratis del 💡, che fanno pensare, non la chiudono; sbagliare
-   una fila nemmeno: qui sbagliare è riprovare, non perdere. */
+/* vedi docs/passo-passo/sentiero.md */
 export const SENZA_FINE = {
   nome: 'Il sentiero senza fine',
   icona: '♾️',
@@ -50,14 +24,8 @@ export default {
   tinta: '#e6f4d7',
   senzaFine: SENZA_FINE,
 
-  /* per i quattro-sei anni: niente da leggere, e non si perde mai */
   piccoli: true,
-  /* …ma non finisce lì: dopo le buche vengono i gradini dello zaino,
-     coi cicli, che sono da otto anni. Senza questa riga le partenze dei
-     grandi (`data/partenze.js`) lo spegnerebbero a nove anni come si
-     spengono i giochi dei piccoli, e a chi ha l'età dei cicli il gioco
-     dei cicli non arriverebbe mai */
-  cresce: true,
+  cresce: true,  // vedi docs/core/convenzione-giochi.md
 
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
@@ -65,32 +33,17 @@ export default {
     const record = primatoInParole(apriQuaderno(av), SENZA_FINE.misura)
     if ((av.tappa || 0) >= QUANTE_TAPPE)
       return record ? `sentiero senza fine · record ${record}${coda}` : `tutte le tane${coda}`
-    const i = Math.min(av.tappa || 0, QUANTE_TAPPE - 1)
-    /* il sentiero si apre a metà campagna, alla fine delle buche: chi
-       ci è arrivato ma non ha l'età dello zaino gioca lì */
+    const i = Math.min(av.tappa || 0, QUANTE_TAPPE - 1)  // sentiero: vedi docs/passo-passo/sentiero.md
     const sentiero = i >= TAPPE_PRIME && record ? ` · sentiero ${record}` : ''
     return `tappa ${i + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[i].nome}${sentiero}${coda}`
   },
 
-  /* ═══════════ quello che il gioco porta all'albo ═══════════
-     I traguardi di prima contano le tappe dei **primi cinque gradini**
-     (fino alle buche), e non la campagna intera: quando sono arrivati lo
-     zaino e poi il cane la campagna si è allungata, e una soglia legata
-     alla sua lunghezza avrebbe fatto tornare d'argento l'oro di chi le
-     aveva finite tutte (il grado a schermo si ricalcola dai numeri, non si
-     legge dal salvataggio). Lo zaino ha il suo traguardo, e il cane
-     pastore il suo.
-
-     I contatori li muove `Gioco.vue` con `segna()`/`segnaBest()`:
-       ppProve    le file fatte partire col ▶
-       ppTane     le volte che il coniglio è arrivato a casa
-       ppCarote   le volte che ci è arrivato con la carota
-       ppDaSolo   le volte che ci è arrivato senza comprare aiuti
-       ppFila     (primato) i sentieri senza fine di fila, senza comprare aiuti
-       ppPecore   le pecore portate nel recinto (tutte quelle di una tappa
-                  vinta, anche rigiocandola: come le carote)
-     Nessun contatore nuovo per lo zaino: le sue tappe si contano da
-     `tappeDi`, che sono in fila dopo quelle dei piccoli. */
+  /* i traguardi «di prima» contano solo i primi cinque gradini (fino alle
+     buche): vedi TAPPE_PRIME in docs/passo-passo/livelli.md. I contatori
+     li muove Gioco.vue con segna()/segnaBest():
+       ppProve le file col ▶, ppTane le tane, ppCarote con la carota,
+       ppDaSolo senza aiuti, ppFila (primato) i sentieri di fila,
+       ppPecore le pecore nel recinto */
   albo: {
     area: { nome: 'Passo passo', emoji: '🐇' },
 

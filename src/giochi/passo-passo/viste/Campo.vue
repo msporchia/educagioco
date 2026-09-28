@@ -1,35 +1,8 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL CAMPO — la schermata della partita
-
-   Dall'alto in basso: la mappa, la fila, le frecce, e in fondo ⌫ ▶ 💡.
-   È l'ordine in cui si pensa: guardo dove devo andare, guardo cosa ho
-   scritto, aggiungo una freccia, provo.
-
-   Le frecce sono **assolute**: ↑ vuol dire verso la cima dello schermo,
-   sempre, comunque sia girato il coniglio. La seconda fila, quella dei
-   salti, c'è solo nei livelli che la usano. La terza, quella delle
-   carte, dal gradino del ripeti: 🔁 (e dal gradino del se, ❓) mette una
-   scatola dove sta il cursore, col cursore dentro, e sopra le frecce
-   compare la scelta della testa — i numeri da due a nove, i colori
-   delle lastre che ci sono nella mappa, la casa: solo quello che il
-   livello accende, e niente già scelto. La N resta N finché non la tocca
-   il bambino (è la regola del costruttore: un valore di comodo si legge
-   come l'unico possibile). La scelta copre le frecce e non le sposta: se
-   la pulsantiera cambiasse altezza, la mappa sopra ballerebbe.
-
-   Il 💡 dice **prima** di essere toccato cosa costa il prossimo
-   gradino della sua scala (`motore/aiuti.js`): niente sui due gradini
-   gratis, un bollino con la moneta sugli altri — 🪙10, 50, 100, 200.
-   Senza monete il bollino si spegne e sobbalza al tocco; da cinquanta
-   in su il primo tocco lo arma (il bollino chiede «?») e paga il
-   secondo. La frase di un gradino compare **sopra la mappa**, in cima,
-   e non sposta niente: una striscia in mezzo farebbe ballare la tela.
-   Si chiude toccandola.
-
-   Il canvas sta qui dentro ma lo dipinge `scena/tela.js`, che lo riceve
-   da `Gioco.vue` (`defineExpose`): questa vista non sa disegnare.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Il campo — la schermata della partita: mappa, fila, frecce, e in fondo
+   ⌫ ▶ 💡 (vedi docs/passo-passo/regole.md e stelle-e-aiuti.md). Il canvas
+   sta qui ma lo dipinge `scena/tela.js`, ricevuto da `Gioco.vue`
+   (`defineExpose`): questa vista non sa disegnare. */
 import { ref } from 'vue'
 import Fila from './Fila.vue'
 import { computed } from 'vue'

@@ -1,27 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA REGIA — l'orologio della scena
-
-   Tiene il giro dei fotogrammi e fa scorrere il tempo di una proiezione
-   (`scena/proiezione.js`): a ogni fotogramma chiede alla proiezione dove
-   sta ogni cosa, lo passa alla tela, e avvisa chi guida il gioco di tre
-   cose — una battuta è cominciata (per i suoni), il passo che gira è
-   cambiato (per la striscia: quale carta, e a che giro sono i cicli), la
-   proiezione è finita (per le regole). Non sa cosa voglia dire nessuna
-   delle tre.
-
-   ── IL TEMPO È QUELLO DEI FOTOGRAMMI ──────────────────────────────
-   Si conta con `requestAnimationFrame`, e il passo più lungo che si
-   concede è cinque centesimi: a schermo spento il browser non consegna
-   fotogrammi, e il coniglio si ferma dov'è invece di ritrovarsi in
-   fondo alla fila al ritorno. È l'orologio che `docs/core/interfaccia.md` chiede di
-   fermare a mano quando non è fatto di fotogrammi — qui lo è, e si
-   ferma da sé.
-
-   Quando non c'è niente da proiettare il giro continua lo stesso:
-   l'acqua scorre, la carota respira, il fumetto del «e adesso?» dondola.
-   Un livello fermo che si muove un po' è un posto; uno immobile è una
-   figura.
-   ═══════════════════════════════════════════════════════════════════ */
+/* La regia — l'orologio della scena: tiene il giro dei fotogrammi, fa
+   scorrere il tempo di una proiezione (`scena/proiezione.js`) e avvisa chi
+   guida il gioco (battuta, cambio di passo, fine), senza sapere cosa
+   significhino. Il passo massimo di `requestAnimationFrame` è tappato a
+   cinque centesimi: a schermo spento il browser salta fotogrammi, e senza
+   il tappo il coniglio si ritroverebbe in fondo alla fila al ritorno
+   invece che fermo dov'era — l'orologio a fotogrammi si ferma da sé, come
+   vuole `docs/core/interfaccia.md`. */
 import { Tela } from './tela.js'
 import { fotogrammaIniziale } from './proiezione.js'
 
@@ -124,6 +108,7 @@ export class Regia {
         }
       }
     } else if (this.liv) {
+      // senza niente da proiettare il mondo si muove lo stesso (acqua, carota, fumetto)
       f = fotogrammaIniziale(this.liv)
       f.t = this.orologio
     }
