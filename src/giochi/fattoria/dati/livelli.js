@@ -1,155 +1,26 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL LIVELLO DELLA FATTORIA — QUELLO CHE SI APRE SPENDENDO
-
-   ── IL PROBLEMA CHE RISOLVE ───────────────────────────────────────
-   Il baule vendeva duecento cose dal primo minuto, in undici linguette.
-   Per un bambino che apre la fattoria la prima volta non è ricchezza:
-   è **una lista da cui non si sa cosa scegliere**, dove il campo che
-   fa partire tutta la catena sta in mezzo a novanta cespugli. E la
-   catena — campo, mulino, recinto — non si legge da nessuna parte:
-   c'è, ma bisogna indovinarla.
-
-   ── L'ESPERIENZA SONO LE MONETE SPESE QUI, E GLI ORDINI ───────────
-   Le sorgenti sono **due**, e la prima è di gran lunga la più grossa.
-
-   La prima sono **le monete spese in fattoria**. Non i raccolti, non i
-   minuti, non le partite. È la misura giusta per tre motivi.
-
-     · È già la cosa che il gioco vuole. La fattoria è il money pit —
-       si guadagna negli altri giochi e si brucia qui — quindi il
-       livello premia esattamente il gesto che tiene in piedi tutto.
-     · Non si può fare in fretta. Le monete arrivano solo dagli
-       esercizi, quindi il livello è **tempo di studio**, riletto: al
-       livello 10 ci si arriva con 🪙3000 spesi, cioè otto ore
-       (`docs/apprendimento/calibrazione.md`).
-     · Non si perde e non si punisce. Spendere è sempre un passo
-       avanti, anche quando si compra un cespuglio storto: niente di
-       quello che si fa qui può far scendere il livello.
-
-   La seconda sono **gli ordini consegnati al mercato**
-   (`dati/mercato.js`), e *questa riga ribalta quella di prima*, che
-   diceva «spendere è l'unica esperienza». Il motivo del cambio è che
-   la catena non aveva una fine: quello che la fattoria produce lo
-   mangiavano solo il cane e il gatto, e chi coltivava per un'ora si
-   ritrovava il silo colmo e nessuna ragione per svuotarlo. Il mercato
-   è quella ragione, e un mercato che non paga niente non è un mercato.
-
-   Paga **esperienza e mai monete**, ed è la riga da non rompere: le
-   monete entrano solo dagli esercizi fatti negli altri giochi, e un
-   banco che comprasse il grano chiuderebbe l'anello (semina gratis,
-   raccogli per 🪙1, vendi per 🪙5) rendendo inutile tutto il resto
-   dell'applicazione. Il ragionamento per esteso, e i numeri, stanno in
-   `dati/mercato.js`.
-
-   Le due sorgenti si sommano e nient'altro cambia: il livello resta
-   **tempo**, che sia tempo di studio o tempo passato a far girare la
-   catena, e continua a non scendere mai.
-
-   ── SI SBLOCCA, NON SI NASCONDE ───────────────────────────────────
-   Quello che non è ancora arrivato **non sta nel baule**, e il posto
-   dove si vede è **la pagina dei livelli**: lì c'è cosa hai adesso e
-   soprattutto cosa arriva al prossimo. La differenza conta — una voce
-   spenta dentro il negozio è un tasto rotto, la stessa voce dentro una
-   pagina che dice «al livello 4» è una cosa da desiderare.
-
-   ── DOVE STANNO I NUMERI ──────────────────────────────────────────
-   Qui stanno **solo le soglie**. Cosa arriva a ogni livello lo dicono
-   le cose stesse (`liv` sulla voce di catalogo, sulla coltura,
-   sull'animale, e sulla linguetta del baule): un elenco scritto due
-   volte è un elenco che si scosta, e l'anteprima direbbe cose false.
-   `roba(liv)` le raccoglie girando le tabelle vere.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Il livello della fattoria: solo le soglie. Cosa arriva a ogni livello lo dicono le cose stesse
+   (liv sulla voce, roba(liv) le raccoglie) — vedi docs/fattoria/livelli.md. */
 import { CATEGORIE, CATALOGO } from './catalogo.js'
 import { COLTURE, RICETTE, PROFONDITA } from './coltivazioni.js'
 import { ANIMALI } from './animali.js'
 
-/* ── LE SOGLIE ────────────────────────────────────────────────────
-   Quanta esperienza serve **in tutto** — spesa più consegne — per
-   arrivare a un livello. Una formula e non una tabella, così i livelli
-   non finiscono mai: chi ha giocato per mesi deve avere ancora un
-   gradino davanti, se no la ragione di spendere sparisce proprio a chi
-   ne ha spese di più.
-
-   ── IL PRIMO LIVELLO DURA QUANTO SERVE A IMPARARE ─────────────────
-   Il passo minimo (`SOGLIA_B`) è **più alto di tutta l'attrezzatura di
-   partenza**, e non è un caso: campo e silo insieme costano 🪙142, e con
-   un passo piccolo bastavano loro a far scattare tre livelli di fila —
-   si comprava il silo e si sbloccava mezzo baule senza aver ancora
-   raccolto niente. Adesso per il livello 2 servono ⭐260: l'attrezzatura,
-   un secondo campo e qualche giro di semina e raccolto. Cioè **il
-   tempo di capire come gira**, che è la cosa che il primo livello deve
-   comprare.
-
-   In tempo di esercizi (🪙6 al minuto, `docs/apprendimento/calibrazione.md`), contando
-   solo la spesa: il livello 2 sono 45 minuti, il 10 undici ore, il 30
-   cinquantasei, l'ultimo del catalogo duecento. Le consegne ne fanno
-   una parte, quindi il tempo vero è meno — spalmato su mesi, che è la
-   scala giusta per un posto che si guarda cinque minuti al giorno.
-
-   *Ribalta due volte la scelta di prima.* Erano dieci livelli con le
-   soglie scritte a mano, e ogni livello apriva **una linguetta intera**
-   del baule: al primo minuto c'erano trentanove piante fra melo,
-   topiaria e due tipi di siepe, e dopo tre acquisti si era già al terzo
-   livello senza aver fatto niente. Adesso i livelli sono tanti e
-   ognuno dà poco.
-
-   ── LA ROBA DI UN LIVELLO NON PAGA IL LIVELLO DOPO ────────────────
-   La regola del primo livello valeva **per tutti**, e scritta solo per
-   il primo non lo diceva nessuno. Il livello 3 apre il mulino e il silo
-   della stalla (🪙270) e il salto al 4 ne chiedeva 240: si costruiva
-   quello che era appena arrivato e si era già al livello dopo, che
-   apriva altro da costruire, che portava al livello dopo ancora. Un
-   bersaglio che si sposta mentre lo si insegue — i bambini finivano
-   con la schermata piena di cose appena comprate e mai usate. Al 5,
-   al 20, al 22 e al 26 la stessa cosa: quello che il livello apre
-   costava fra il 76% e il 116% del salto. Misurato con un giocatore
-   finto sul motore vero, fra i sette e i quattordici giorni di gioco
-   erano bruciati così.
-
-   Adesso **il salto è il passo di sempre più quello che costa la roba
-   che il livello apre** (`costoDelLivello`): comprarla tutta paga
-   esattamente la sua parte, e il resto del salto si fa giocando — i
-   raccolti, le consegne al banco, alle botteghe e alla mongolfiera,
-   una decorazione in più. Spendere continua a far salire (senza, i
-   primi livelli, che arrivano prima del mercato, non si aprirebbero
-   mai); quello che non succede più è salire **solo** spendendo in
-   quello che il livello ha appena dato.
-
-   Il passo di sempre è anche **un quarto più lungo** (`ALLUNGA`): era
-   tarato quando le consegne non esistevano, e da quando ci sono il
-   banco, le botteghe e la mongolfiera l'esperienza arriva da due parti.
-   Col giocatore finto che viene tre volte al giorno con 🪙150 di
-   esercizi, il 10 arriva al giorno 22 invece che al 15; chi gioca il
-   doppio ci arriva all'11 invece che al 7.
-
-   Il primo livello non aggiunge il suo costo: campo e silo sono già
-   dentro `SOGLIA_B`, scelta apposta sopra i loro 🪙142. */
+// Quanta esperienza serve in tutto (spesa + consegne) per un livello: una formula, non una tabella,
+// così non finiscono mai. Il passo minimo sta sopra tutta l'attrezzatura di partenza (SOGLIA_B),
+// e ogni salto aggiunge il costo di quello che il livello apre (costoDelLivello) — vedi livelli.md.
 export const SOGLIA_A = 8, SOGLIA_B = 200
 export const ALLUNGA = 1.25
 
-/* Il passo di sempre, da solo: la forma di prima, allungata. */
+// Il passo di sempre, da solo.
 const passiFinoA = livello =>
   ALLUNGA * (SOGLIA_A * (livello - 1) ** 2 + SOGLIA_B * (livello - 1))
 
-/* Quanto costa comprare **una volta** quello che il livello apre di
-   produttivo: le cose che lavorano e le bestie di casa, al prezzo di
-   listino (le colture non costano). È la parte del salto che si paga
-   comprando. Dal secondo livello in su: vedi in testa, sul primo.
-
-   **Le decorazioni non contano.** Sono due o tre per livello e costano
-   poche monete: non sono loro il bersaglio che si sposta, e contarle
-   farebbe dipendere le soglie da quale vaso finisce in quale livello.
-   Le bestie sì, anche se non producono: costano quanto un recinto
-   piccolo e si comprano appena arrivano, cioè nel giro contano come
-   una struttura. */
+// Quanto costa comprare una volta quello che il livello apre di produttivo; le decorazioni non contano.
 export const costoDelLivello = livello =>
   livello < 2 ? 0 : premiDi(livello)
     .filter(p => p.tipo === 'bestia' || p.zona === 'lavoro')
     .reduce((n, p) => n + (p.prezzo || 0), 0)
 
-/* La somma dei costi fino a un livello, tenuta da parte: si chiede a
-   ogni ridisegno del gettone, e i premi non cambiano mai durante una
-   partita. Oltre l'ultimo livello che porta qualcosa non cresce più. */
+// Tenuta da parte: i premi non cambiano mai durante una partita.
 let costi = null
 function costiFinoA(livello) {
   if (!costi) {
@@ -166,9 +37,7 @@ export function sogliaDi(livello) {
 
 export function livelloPer(speso = 0) {
   const s = Math.max(0, speso || 0)
-  /* La soglia non ha più un'inversa scritta: si cerca. Il tetto è il
-     livello che si avrebbe col passo da solo, che è sempre più in là
-     di quello vero perché i costi aggiungono e non tolgono. */
+  // Non c'è più un'inversa scritta: si cerca a raddoppio e poi a bisezione.
   let giu = 1, su = 2
   while (sogliaDi(su) <= s) su *= 2
   while (su - giu > 1) {
@@ -179,11 +48,7 @@ export function livelloPer(speso = 0) {
   return giu
 }
 
-/* ── LE SOGLIE DI PRIMA ───────────────────────────────────────────
-   Servono a una cosa sola: sapere a che livello era una fattoria
-   salvata prima che le soglie cambiassero, per non farla scendere
-   (`Fattoria.deserializza`). Il livello non torna mai indietro, nemmeno
-   il giorno in cui cambia la regola. */
+// Servono solo a non far scendere una fattoria salvata prima che le soglie cambiassero.
 export const SOGLIE_ORA = 2
 const sogliaVecchia = l => Math.round((8 * (l - 1) ** 2 + 200 * (l - 1)) / 10) * 10
 export function livelloVecchioPer(esperienza = 0) {
@@ -192,24 +57,9 @@ export function livelloVecchioPer(esperienza = 0) {
   return l
 }
 
-/* ── COSA ARRIVA, E QUANDO ────────────────────────────────────────
-   **Due o tre decorazioni per livello, mai di più.** Il catalogo ne ha
-   quasi duecento, ed è la ricchezza che rende lungo il gioco: date a
-   secchiate diventano una lista da cui non si sa cosa scegliere, date a
-   gocce sono la ragione per cui si torna. Ordinate per prezzo, quindi
-   il vaso da quattro monete arriva subito e la casa sull'albero dopo
-   mesi — e le linguette del baule si aprono da sole via via che arriva
-   la loro prima voce.
-
-   Quello che **lavora** non segue questa fila: campo e silo del
-   raccolto stanno al livello 1 (senza, la catena non comincia), e
-   mulino, silo della stalla e i cinque recinti dichiarano il loro `liv`
-   nel catalogo, perché lì il momento in cui arrivano è una decisione di
-   gioco e non un conto sui prezzi. Stessa cosa per le colture e per le
-   bestie. */
+// Due o tre decorazioni per livello (mai di più), ordinate per prezzo; quello che lavora dichiara liv a mano.
 export const DECORI_PER_LIVELLO = 3
-/* Il livello 1 è **solo la fattoria**: un campo, il silo, due semi.
-   Niente da abbellire finché non c'è niente da guardare. */
+// Il livello 1 è solo la fattoria: niente da abbellire finché non c'è niente da guardare.
 export const PRIMO_DECORO = 2
 
 const DOVE = Object.fromEntries(
@@ -219,9 +69,7 @@ export const categoriaDi = id => DOVE[id] || null
 const PER_CHIAVE = Object.fromEntries(CATEGORIE.map(c => [c.chiave, c]))
 export const zonaDi = id => (PER_CHIAVE[categoriaDi(id)] || {}).zona || 'bello'
 
-/* La fila delle decorazioni: dalla più economica alla più cara. L'id
-   spareggia, se no due voci allo stesso prezzo cambierebbero posto fra
-   una build e l'altra — e una cosa comprata ieri sparirebbe. */
+// Dalla più economica alla più cara; l'id spareggia, se no l'ordine cambierebbe fra una build e l'altra.
 const FILA = CATALOGO
   /* Le voci stagionali non stanno in fila: si comprano solo nella
      loro finestra (`dati/stagioni.js`) e non sono un premio di nessun
@@ -245,36 +93,17 @@ export function livelloDellaVoce(v) {
   return i === undefined ? 1 : PRIMO_DECORO + Math.floor(i / DECORI_PER_LIVELLO)
 }
 
-/* A che livello si vede comparire una linguetta: quando arriva la sua
-   prima voce. Si ricava, non si dichiara — una linguetta che compare
-   vuota è uno scaffale con dentro niente. */
+// A che livello si vede comparire una linguetta: quando arriva la sua prima voce.
 export const livelloDellaScheda = c =>
   Math.min(...c.voci.map(livelloDellaVoce))
 
-/* Fin dove arriva la roba dichiarata. Oltre si continua a salire — la
-   formula non finisce — ma non c'è più niente di nuovo da aprire, e la
-   pagina lo dice invece di promettere. */
+// Fin dove arriva la roba dichiarata; oltre si continua a salire ma senza niente di nuovo da aprire.
 export const ULTIMO = Math.max(
   ...CATALOGO.map(livelloDellaVoce),
   ...COLTURE.map(c => c.liv || 1),
   ...Object.values(ANIMALI).map(a => a.liv || 1))
 
-/* ── I NOMI ───────────────────────────────────────────────────────
-   Sessanta nomi scritti a mano sarebbero sessanta occasioni di scrivere
-   una parola vuota. Quelli che contano si dichiarano — le cose che
-   cambiano il gioco quando arrivano — e tutti gli altri livelli
-   prendono **il nome della cosa più bella che portano**, che è vera per
-   definizione e non va tenuta allineata a niente.
-
-   **Il nome sta sulla cosa, non sul numero del livello.** Erano scritti
-   per livello (`4: 'Il mercato'`), e il giorno che il calendario si è
-   sparso — una cosa per livello invece di tre ogni tanto — ognuno di
-   quei numeri sarebbe diventato una bugia: «Il fienile e i conigli» su
-   un livello che porta solo il fienile. Adesso il nome va dove va la
-   cosa. L'ordine qui sotto è anche la precedenza: se due cose con un
-   nome arrivano insieme, vince la prima (il campo prima del silo). Le
-   ricette contano anche loro: un livello che porta solo la pizza si
-   chiama «La pizza», non come il vaso di fiori che arriva con lei. */
+// I nomi: solo per le cose che cambiano il gioco; gli altri livelli prendono il nome della cosa più bella.
 export const NOMI = {
   orto: 'Il primo campo',
   mercato: 'Il mercato',
@@ -291,9 +120,7 @@ export const NOMI = {
   telaio: 'Il telaio',
   panificio: 'Il panificio',
   stalla: 'Le mucche',
-  /* Il caseificio arriva due livelli dopo le mucche, e non insieme: il
-     latte deve prima essere una cosa che si ha, se no si comprerebbe
-     una macchina per una roba mai vista. */
+  // Il caseificio arriva due livelli dopo le mucche: il latte dev'essere prima una cosa che si ha.
   caseificio: 'Il caseificio',
   pasticceria: 'La pasticceria',
   patate: 'Le patate e i cavolfiori',
@@ -317,13 +144,11 @@ export const NOMI = {
   merceria: 'La merceria',
   cipolle: 'Le cipolle e l\'aglio',
   arnie: 'Le api',
-  /* La pizza vuole la salsa della cucina: è il primo livello in cui
-     tutti e tre gli ingredienti ci sono già. */
+  // La pizza vuole la salsa della cucina: primo livello in cui ci sono tutti e tre gli ingredienti.
   pizza: 'La pizza',
   recinto_alpaca: 'Gli alpaca',
   lasagne: 'Le lasagne',
-  /* La sciarpa di lana, anticipata rispetto al berretto
-     (`docs/fattoria/livelli.md`). */
+  // La sciarpa di lana, anticipata rispetto al berretto.
   sciarpa_lana: 'La sciarpa',
   fragole: 'Le fragole',
   marmellata: 'La marmellata',
@@ -332,8 +157,7 @@ export const NOMI = {
   lavanda: 'La lavanda',
   tintoria: 'La tintoria',
   berretto: 'Il berretto',
-  /* La peschiera e la friggitoria arrivano una dopo l'altra: il pesce
-     che l'una pesca è il primo ingrediente nuovo dell'altra. */
+  // La peschiera e la friggitoria una dopo l'altra: il pesce dell'una è il primo ingrediente dell'altra.
   peschiera: 'La peschiera',
   friggitoria: 'La friggitoria',
   riso: 'Il riso',
@@ -342,7 +166,7 @@ export const NOMI = {
   maki: 'I maki',
 }
 
-/* Le ricette che arrivano a un livello: servono solo al nome. */
+// Le ricette che arrivano a un livello: servono solo al nome.
 const ricetteAl = l => RICETTE.filter(r => livelloDellaRicetta(r) === l).map(r => r.id)
 
 export function nomeDi(livello) {
@@ -352,13 +176,12 @@ export function nomeDi(livello) {
   const r = roba(l)
   if (r.animali.length) return r.animali[0].nome
   if (r.colture.length) return r.colture[0].nome
-  /* la più cara: è quella che si guarda per prima aprendo lo scaffale */
+  // la più cara: è quella che si guarda per prima aprendo lo scaffale
   const cara = r.cose.slice().sort((a, b) => b.prezzo - a.prezzo)[0]
   return cara ? cara.nome : `Livello ${l}`
 }
 
-/* A che punto si è verso il prossimo, per la barra: quanto manca in
-   monete e quanto è fatto in centesimi. */
+// A che punto si è verso il prossimo livello: quanto manca e quanto è fatto.
 export function avanzamento(speso = 0) {
   const liv = livelloPer(speso)
   const da = sogliaDi(liv), a = sogliaDi(liv + 1)
@@ -369,19 +192,13 @@ export function avanzamento(speso = 0) {
   }
 }
 
-/* Cosa arriva **esattamente** a questo livello: è quello che la pagina
-   mostra come anteprima del prossimo, e non è scritto da nessuna parte
-   se non nelle tabelle vere. */
+// Cosa arriva esattamente a questo livello: l'anteprima del prossimo.
 export function roba(livello) {
   const l = Math.max(1, livello | 0)
   return {
-    /* Una linguetta che si apre per la prima volta è una notizia («si
-       apre uno scaffale nuovo»), e le sue voci di quel livello si
-       elencano lo stesso: adesso sono due o tre, non novanta. */
+    // Una linguetta che si apre la prima volta è una notizia: le sue voci di quel livello si elencano lo stesso.
     schede: CATEGORIE.filter(c => !c.stagionale && !c.fiera && livelloDellaScheda(c) === l),
-    /* le stagionali non arrivano con un livello: compaiono con la
-       loro finestra, e non sono un premio da reclamare. La fiera
-       neppure: arriva col pallone, non col livello */
+    // le stagionali e la fiera non arrivano con un livello: compaiono con la finestra o col pallone
     cose: CATALOGO.filter(v => !v.stagione && !v.fiera && livelloDellaVoce(v) === l),
     colture: COLTURE.filter(c => (c.liv || 1) === l),
     animali: Object.entries(ANIMALI).filter(([, a]) => (a.liv || 1) === l)
@@ -392,45 +209,10 @@ export function roba(livello) {
 export const vuoto = r => !r.schede.length && !r.cose.length &&
   !r.colture.length && !r.animali.length
 
-/* ═══════════ I PREMI, E IL FATTO CHE SI RECLAMANO ═══════════
-   Quello che arriva a un livello non arriva più **da solo**. Prima sì:
-   si comprava una panchina, la spesa faceva scattare il livello, e in
-   mezzo al gesto di comprare si apriva un foglio di festa che diceva
-   cos'era arrivato. Due difetti, e il secondo è il vero.
-
-   Il primo è che **spezzava l'acquisto**: il dito era in viaggio fra il
-   baule e il prato, e trovava un velo. Il secondo è che quello che
-   arrivava non lo prendeva nessuno — compariva. Un premio che compare è
-   una riga di elenco; un premio che si preme è una cosa che ci si va a
-   prendere, e la differenza è tutta lì.
-
-   Adesso il livello **apre** i premi, e ognuno si prende premendolo
-   nella pagina dei livelli (`viste/Livelli.vue`). Finché non è preso non
-   sta nel baule: è la stessa regola di prima — quello che non è ancora
-   arrivato non si mostra dentro un negozio — con un gesto in mezzo.
-
-   **Reclamare non regala niente**, e va detto perché la parola promette
-   più di quello che dà: apre la voce nel baule, dove si compra con le
-   monete come sempre. La fattoria è il posto dove si spende quello che
-   si è guadagnato altrove (`docs/apprendimento/calibrazione.md`), e un livello che
-   regalasse la roba toglierebbe di mezzo proprio il gesto che tiene in
-   piedi tutto il resto.
-
-   La chiave è **il tipo più l'id**, e non l'id da solo: una coltura e
-   una voce di catalogo possono chiamarsi uguale, e due premi con la
-   stessa chiave sarebbero uno solo preso due volte. */
+// I premi si prendono premendoli (non arrivano più da soli): vedi docs/fattoria/livelli.md.
 export const chiaveDi = (tipo, id) => `${tipo}:${id}`
 
-/* I premi di un livello, già pronti da mostrare: la figura vera del
-   pezzo (non un'emoji: il perché sta in `viste/Livelli.vue`), il nome, e
-   *che cosa* è — «raccolto» e «carote» da soli sono due parole che
-   sembrano la stessa cosa, mentre «uno scaffale nuovo» e «da seminare»
-   si distinguono da lontano.
-
-   Le linguette del baule **non sono premi**: si aprono da sé quando
-   arriva la loro prima voce (`livelloDellaScheda`), e un quadratino da
-   premere che apre uno scaffale vuoto non è un premio, è un passaggio
-   in più. */
+// I premi di un livello, pronti da mostrare: figura vera (non un'emoji), nome, e che cosa è.
 function componi(livello) {
   const l = Math.max(1, livello | 0)
   const r = roba(l)
@@ -452,25 +234,20 @@ function componi(livello) {
   ]
 }
 
-/* Si compone una volta sola: la pagina dei livelli li chiede a ogni
-   ridisegno, e girare tutto il catalogo per ogni livello a ogni
-   fotogramma è lavoro buttato. */
+// Si compone una volta sola: girare tutto il catalogo a ogni fotogramma sarebbe lavoro buttato.
 const PER_LIVELLO = Array.from({ length: ULTIMO + 1 }, (_, l) => l ? componi(l) : [])
 export const premiDi = livello => PER_LIVELLO[Math.max(1, livello | 0)] || []
 
 const PREMI = PER_LIVELLO.flat()
 const PREMIO_PER_CHIAVE = Object.fromEntries(PREMI.map(p => [p.chiave, p]))
-/* Una chiave che nessun premio dichiara **non esiste**: è così che un
-   salvataggio che nomina una cosa tolta dal catalogo non si porta
-   dietro un premio fantasma per sempre. */
+// Una chiave che nessun premio dichiara non esiste: un id tolto dal catalogo non lascia un premio fantasma.
 export const premioDi = chiave => PREMIO_PER_CHIAVE[chiave] || null
 
 export function guastiDeiLivelli() {
   const g = []
   for (let l = 2; l <= ULTIMO + 2; l++)
     if (!(sogliaDi(l) > sogliaDi(l - 1))) g.push(`la soglia del livello ${l} non sale`)
-  /* Un nome dichiarato per una cosa che non arriva mai è un nome che
-     nessuno vede: di solito una cosa rinominata o tolta. */
+  // Un nome dichiarato per una cosa che non arriva mai è un nome che nessuno vede.
   {
     const arrivano = new Set()
     for (let l = 1; l <= ULTIMO; l++) {
@@ -480,20 +257,13 @@ export function guastiDeiLivelli() {
     for (const id of Object.keys(NOMI))
       if (!arrivano.has(id)) g.push(`c'è un nome per «${id}», che non arriva a nessun livello`)
   }
-  /* Il livello si ricava dalla spesa risolvendo la formula: se
-     l'inversa e la diretta si scostano, uno spende e non sale — o sale
-     senza spendere, che è peggio. */
+  // Se l'inversa e la diretta si scostano, uno spende e non sale — o sale senza spendere.
   for (let l = 1; l <= ULTIMO + 2; l++) {
     if (livelloPer(sogliaDi(l)) !== l) g.push(`chi ha speso la soglia del ${l} non è al ${l}`)
     if (l > 1 && livelloPer(sogliaDi(l) - 1) !== l - 1)
       g.push(`una moneta prima della soglia del ${l} si è già al ${l}`)
   }
-  /* ── LA ROBA DI UN LIVELLO NON PAGA IL LIVELLO DOPO ──────────────
-     Il difetto per cui le soglie hanno la forma che hanno (vedi
-     `costoDelLivello`): comprare tutto quello che un livello apre deve
-     lasciare da fare almeno il passo di sempre. Oggi è vero per
-     costruzione; diventa rosso il giorno che qualcuno torna a una
-     formula sola. */
+  // La roba di un livello non paga il livello dopo: comprarla tutta deve lasciare almeno il passo di sempre.
   for (let l = 2; l <= ULTIMO; l++) {
     const salto = sogliaDi(l + 1) - sogliaDi(l)
     const resta = salto - costoDelLivello(l)
@@ -501,39 +271,30 @@ export function guastiDeiLivelli() {
       g.push(`al livello ${l} comprare quello che arriva (🪙${costoDelLivello(l)}) ` +
              `lascia solo ${resta} del salto di ${salto}: il livello si paga da sé`)
   }
-  /* Un livello che non porta niente è un livello che a schermo si
-     presenta come «hai fatto qualcosa, ecco: niente». */
+  // Un livello che non porta niente si presenta come "hai fatto qualcosa, ecco: niente".
   for (let l = 1; l <= ULTIMO; l++)
     if (vuoto(roba(l))) g.push(`al livello ${l} non arriva niente`)
-  /* E tutto quello che esiste deve arrivare **entro** l'ultimo: una
-     voce dichiarata al livello 30 non la vedrebbe nessuno. */
+  // Tutto quello che esiste deve arrivare entro l'ultimo livello.
   for (const v of CATALOGO)
     if (livelloDellaVoce(v) > ULTIMO) g.push(`${v.id}: arriva al livello ${livelloDellaVoce(v)}, che non esiste`)
-  /* **Due o tre per livello, mai di più**: è la regola che rende lungo
-     il gioco, e si rompe da sola il giorno che una linguetta nuova
-     dichiara un `liv` a mano per venti voci insieme. */
+  // Due o tre per livello, mai di più: si rompe da sola se una linguetta nuova dichiara liv per venti voci.
   for (let l = PRIMO_DECORO; l <= ULTIMO; l++) {
     const quante = roba(l).cose.filter(v => zonaDi(v.id) === 'bello').length
     if (quante > DECORI_PER_LIVELLO)
       g.push(`al livello ${l} arrivano ${quante} decorazioni: sono troppe`)
   }
-  /* Ogni linguetta deve aprirsi prima o poi, e con qualcosa dentro. */
+  // Ogni linguetta deve aprirsi prima o poi, e con qualcosa dentro.
   for (const c of CATEGORIE)
     if (!c.stagionale && !(livelloDellaScheda(c) <= ULTIMO))
       g.push(`la linguetta «${c.chiave}» non si apre mai`)
   for (const c of COLTURE)
     if ((c.liv || 1) > ULTIMO) g.push(`la coltura ${c.id} arriva a un livello che non esiste`)
-  /* Al primo livello ci dev'essere di che cominciare la catena: un
-     campo, un posto dove metterci il raccolto, e qualcosa da seminare. */
+  // Al primo livello ci dev'essere di che cominciare la catena.
   const primo = CATALOGO.filter(v => livelloDellaVoce(v) === 1)
   if (!primo.some(v => v.campo)) g.push('al livello 1 non c\'è nessun campo: la catena non comincia')
   if (!primo.some(v => v.silo === 'terra')) g.push('al livello 1 non c\'è il silo del raccolto')
   if (!COLTURE.some(c => (c.liv || 1) === 1)) g.push('al livello 1 non c\'è niente da seminare')
-  /* ── E OGNI PREMIO DEVE POTERSI MOSTRARE ────────────────────────
-     Un quadratino si preme guardando la figura, non leggendo il nome:
-     un premio senza pezzo sarebbe un riquadro vuoto da premere. E due
-     premi con la stessa chiave sarebbero **un premio solo**, preso due
-     volte: quello che si prende è la chiave, non la riga. */
+  // Ogni premio deve potersi mostrare: una figura, un nome, e una chiave unica.
   {
     const viste = new Set()
     for (let l = 1; l <= ULTIMO; l++)
@@ -548,19 +309,7 @@ export function guastiDeiLivelli() {
   return g
 }
 
-/* ── QUANDO SI PUÒ AVERE UNA ROBA ─────────────────────────────────
-   Il primo livello in cui un prodotto è **ottenibile davvero**: la
-   prima coltura che lo fa, o la prima ricetta — contando che una
-   ricetta vuole la sua macchina *e* i suoi ingredienti, e quindi arriva
-   quando arriva l'ultimo dei tre.
-
-   Serve a due cose diverse. A chi consiglia, per dire «arriva al
-   livello 10» invece di mandare a comprare qualcosa che non c'è. E al
-   controllo qui sotto, che è nato da un difetto vero.
-
-   `giri` è `PROFONDITA`, scritta una volta in `dati/coltivazioni.js`:
-   qui era 4, e già la stoffa — quattro passaggi dopo l'erba — non
-   risultava mai ottenibile, quindi mai al mercato e mai nel silo. */
+// Il primo livello in cui un prodotto è ottenibile davvero (coltura o ricetta, macchina e ingredienti inclusi).
 export function livelloDelProdotto(prodotto, giri = PROFONDITA) {
   if (giri <= 0) return Infinity
   let min = Infinity
@@ -569,9 +318,7 @@ export function livelloDelProdotto(prodotto, giri = PROFONDITA) {
   return min
 }
 
-/* Quando una ricetta si può fare per davvero: il più tardo fra il suo
-   `liv`, il livello della macchina che la ospita, e quello di ogni
-   ingrediente. */
+// Quando una ricetta si può fare per davvero: il più tardo fra il suo liv, la macchina e gli ingredienti.
 export function livelloDellaRicetta(r, giri = PROFONDITA) {
   const macchina = CATALOGO.find(v => v.macchina === r.dove)
   const ing = Object.keys(r.prende || {}).map(k => livelloDelProdotto(k, giri - 1))
@@ -579,29 +326,10 @@ export function livelloDellaRicetta(r, giri = PROFONDITA) {
                   ...(ing.length ? ing : [1]))
 }
 
-/* ── UNA RICETTA NON COMPARE PRIMA DEI SUOI INGREDIENTI ───────────
-   Il difetto che questo controllo esiste per non far tornare: il
-   pastone si vedeva nel mulino dal livello 3, e il mais arrivava al 10.
-   Sette livelli — 🪙2000 di esercizi, più di cinque ore — con un tasto
-   spento in mezzo alle ricette vere, senza che niente dicesse che
-   bisognava aspettare metà del gioco.
-
-   Non è una regola di bellezza. Una ricetta impossibile è indistinguibile
-   da una rotta, e chi la preme e non ottiene niente smette di fidarsi
-   anche di quelle che funzionano. */
+// Una ricetta non compare prima dei suoi ingredienti: un tasto spento è indistinguibile da uno rotto.
 export function guastiDegliSblocchi() {
   const g = []
-  /* ── E UNA MACCHINA NON ARRIVA PRIMA DEL SUO PRIMO LAVORO ────────
-     Il difetto gemello, e trovato allo stesso modo — giocando. Il
-     fienile si comprava al livello 4 e la sua prima ricetta arrivava al
-     5: per un livello intero era una macchina da 150 monete che, aperta,
-     diceva «metti dentro quello che hai raccolto» e sotto non aveva
-     niente. Il controllo qui sopra non lo vedeva, perché guarda le
-     ricette una per una e quella ricetta era in regola: è **la
-     macchina** a essere in anticipo.
-
-     La domanda giusta è quindi la simmetrica: esiste almeno una ricetta
-     che si possa fare il giorno stesso in cui la macchina compare? */
+  // E una macchina non arriva prima del suo primo lavoro: esiste una ricetta il giorno stesso in cui compare?
   for (const v of CATALOGO) {
     if (!v.macchina) continue
     const sue = RICETTE.filter(r => r.dove === v.macchina)
@@ -613,15 +341,7 @@ export function guastiDegliSblocchi() {
              `arriva al ${prima} — sarebbe una macchina vuota per ` +
              `${prima - quando} livell${prima - quando === 1 ? 'o' : 'i'}`)
   }
-  /* ── E UNA BOTTEGA NON ARRIVA PRIMA DI AVERE DA CHIEDERE ─────────
-     La stessa domanda della macchina, girata sulle botteghe del paese
-     (`posto:` nel catalogo): il giorno in cui compare devono esserci
-     già **tre** merci del suo elenco che si possono consegnare. Una
-     sola vorrebbe dire lo stesso cliente con la stessa roba per dieci
-     livelli; nessuna, un bancone vuoto comprato.
-
-     E ogni merce dell'elenco deve esistere: una che non c'è non dà
-     nessun errore, fa solo sì che quella bottega non la chieda mai. */
+  // E una bottega non arriva prima di avere almeno tre merci del suo elenco consegnabili.
   for (const v of CATALOGO) {
     if (!v.posto) continue
     const quando = livelloDellaVoce(v)
