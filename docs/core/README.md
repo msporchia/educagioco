@@ -14,6 +14,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [comandi.md](comandi.md) — tutti i comandi, cosa riscrivono, i banchi di prova, la roba generata, i cheat
 - [pubblicare.md](pubblicare.md) — GitHub Pages, il server di casa, il numero di versione
 - [grafica.md](grafica.md) — `src/grafica/`: tela, telecamera, pittori, scheletri, sprite e tessere
+- [passi.md](passi.md) — `src/motore/passi.js`: celle raggiungibili, percorso, la cella da cui toccare una cosa
 - [sprite.md](sprite.md) — gli strumenti degli sprite e il banco `npm run mondo`
 - [sprite-a-mano-dal-codice.md](sprite-a-mano-dal-codice.md) — disegnare uno sprite come dato nel codice, quando l'atlante non ce l'ha
 - [strumenti.md](strumenti.md) — voci, scatti e clip, icone, la guardia dei commenti
