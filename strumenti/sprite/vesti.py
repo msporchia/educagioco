@@ -9,7 +9,7 @@ provvisorio) o col foglio del terreno, quando c'è.
 
 `--atlante` scrive i due moduli **generati** che il gioco `castello`
 compone nel browser (`src/giochi/castello/dati/vestiti.js`, i pezzi dei
-tre vestiti, e `figure.js`, torri e mostri): vedi `atlante()` in fondo.
+vestiti, e `figure.js`, torri e mostri): vedi `atlante()` in fondo.
 Si rilancia ogni volta che arriva un'immagine: il foglio del terreno di
 un vestito (`terreno-bosco.png`…), il foglio delle torri (`torri-1.png`),
 un foglio di mostri che camminano (`mostri-cammino-A.png`…) — dove
@@ -18,9 +18,9 @@ Gli altri tre sono provini da guardare: i pezzi di un vestito (o di una
 scena), il foglio del terreno scontornato coi rettangoli del suo
 foglietto sopra, tutte le creature.
 
-**Dal 27 settembre 2026 i tre vestiti hanno il loro foglio del terreno**
-(`terreno-bosco.png`, `-neve`, `-lava`: vedi «il foglio del terreno» più
-sotto), e quello che segue sulle scene resta come ripiego e per il
+**Dal 27 settembre 2026 i vestiti hanno il loro foglio del terreno**
+(`terreno-bosco.png`, `-neve`, `-lava`, e dal 28 `-palude`: vedi «il
+foglio del terreno» più sotto), e quello che segue sulle scene resta come ripiego e per il
 provino di una scena qualsiasi. Il campo non si porta dietro ventiquattro mappe già vestite —
 peserebbero dieci volte tanto — ma i pezzi, e la composizione la rifà
 `src/giochi/castello/scena/vestito.js` con la stessa logica di `vesti()`
@@ -432,7 +432,7 @@ def allaga_dai_bordi(px, largo, alto, e_fondo):
 
 
 @lru_cache(maxsize=None)
-def senza_fondo(png, fondo, tolleranza=60, frangia=55):
+def senza_fondo(png, fondo, tolleranza=60, frangia=55, smacchia=False):
     """Il foglio in RGBA, col fondo tolto come dice il foglietto.
 
     `"trasparente"` — c'è già. `"scacchiera"` — la trasparenza dipinta,
@@ -454,7 +454,17 @@ def senza_fondo(png, fondo, tolleranza=60, frangia=55):
          la roccia della lava è viola-grigia, e dentro i pezzi non passa
          mai 50 — ma resta una soglia sulla tinta, non sul colore: è quello
          che distingue la frangia di un contorno scuro da quella di un
-         cristallo arancione."""
+         cristallo arancione.
+
+    Con `smacchia` (il foglietto lo dichiara: `"smacchia": true`) c'è un
+    quarto passo, per il fondo mescolato al **contorno scuro**: un
+    contorno quasi nero sopra il magenta viene (50, 0, 50), che dalla
+    frangia non esce — rosso e blu superano il verde di 50, non di 55 — e
+    che ridotto tinge di viola l'orlo del pezzo e gli spazi fra i fili
+    d'erba. È fondo per una parte e contorno per il resto, quindi non si
+    butta: **si toglie la parte di fondo** (`smacchia_il_contorno`). Non
+    vale per tutti i fogli perché non sempre un pixel così è del fondo:
+    la lava ha il cremisi, che ha il verde a zero anche lui."""
     im = Image.open(png).convert('RGBA')
     if fondo == 'trasparente':
         return im
@@ -477,7 +487,40 @@ def senza_fondo(png, fondo, tolleranza=60, frangia=55):
     bassi = [i for i in range(3) if f[i] <= 127]
     sfrangia(px, largo, alto,
              lambda c: min(c[i] for i in alti) - max((c[i] for i in bassi), default=0) > frangia)
+    if smacchia:
+        smacchia_il_contorno(px, largo, alto, f, alti, bassi)
     return im
+
+
+def smacchia_il_contorno(px, largo, alto, f, alti, bassi, soglia=25, quota=0.35):
+    """Toglie il fondo dai pixel che ne hanno preso la tinta: quelli dove i
+    canali alti del fondo superano i bassi di più di `soglia`, e i bassi
+    stanno sotto `quota` degli alti — per il magenta, il verde quasi a
+    zero. Un pixel così è `t` di fondo e il resto un colore che, sul
+    contorno, è un grigio scuro: `t` si legge dallo scarto fra i canali
+    (quello che un grigio non ha), e il colore si ricava togliendo il
+    fondo in quella proporzione. (50, 0, 50) torna nero, (80, 20, 70) un
+    bruno scuro; un fiore lilla (190, 140, 230) ha il verde alto e non si
+    tocca."""
+    for y in range(alto):
+        for x in range(largo):
+            c = px[x, y]
+            if not c[3]:
+                continue
+            hi = min(c[i] for i in alti)
+            lo = max((c[i] for i in bassi), default=0)
+            if hi - lo <= soglia or lo > quota * hi:
+                continue
+            t = min(0.9, (hi - lo) / 255)
+            px[x, y] = tuple(max(0, min(255, round((c[i] - t * f[i]) / (1 - t)))) for i in range(3)) + (c[3],)
+    # e sull'orlo, il fondo mescolato a un colore **chiaro** — il muschio,
+    # la corteccia: (244, 124, 214), (255, 98, 219), puntini rosa attorno
+    # alle radici del ceppo. Lì non si sa di che colore fosse il pixel, e
+    # siccome è orlo si toglie. Vale per il magenta: sotto c'è sempre roba
+    # calda (verde, bruno), che ha il rosso almeno quanto il blu, mentre i
+    # fiori lilla hanno il blu sopra il rosso di quaranta e restano
+    if tuple(f) == (255, 0, 255):
+        sfrangia(px, largo, alto, lambda c: min(c[0], c[2]) - c[1] > soglia and c[0] >= c[2] - 15)
 
 
 def tasche(px, largo, alto, e_tasca, minima=12):
@@ -610,7 +653,7 @@ def pezzi_dal_foglio(vestito):
         return None
     png, fg = trovato
     fondo = fg.get('fondo', 'trasparente')
-    im = senza_fondo(png, tuple(fondo) if isinstance(fondo, list) else fondo)
+    im = senza_fondo(png, tuple(fondo) if isinstance(fondo, list) else fondo, smacchia=fg.get('smacchia', False))
     pz = lambda nome: ritaglia(im, fg, nome)
     famiglia = lambda pref: [pz(k) for k in sorted(fg['sprite'], key=lambda s: (len(s), s))
                              if k.startswith(pref + '-') and k[len(pref) + 1:].isdigit()]
@@ -872,9 +915,9 @@ def provino(p, uscita):
 #
 # Due moduli, e tutti e due si scrivono da qui:
 #
-#   vestiti.js  i pezzi delle tre scene. **Le misure sono le stesse**
-#               nelle tre (la geometria è una, rivestita), quindi la
-#               tabella dei rettangoli è una sola e le immagini tre.
+#   vestiti.js  i pezzi dei vestiti, una tabella di rettangoli e
+#               un'immagine per vestito: dal foglio del terreno ognuno
+#               ha misure sue, e la palude anche quanti pezzi.
 #               Le toppe, lo stagno e la bocca hanno già l'alfa sfumato
 #               dentro: nel browser una maschera sfumata costerebbe un
 #               canvas a parte per ogni toppa posata.
@@ -889,7 +932,11 @@ def provino(p, uscita):
 
 REPO = Path(__file__).resolve().parents[2]
 DATI = REPO / 'src' / 'giochi' / 'castello' / 'dati'
-SCENE = {'bosco': 'td_1.png', 'neve': 'td_2.png', 'lava': 'td_3.png'}
+# `td_4.png`, la palude, NON è `td_1` rivestita — un'altra pianta, una
+# bocca sola — quindi i ritagli della scena, misurati su `td_1`, lì non
+# valgono: la palude si veste solo dal suo foglio, e la scena resta per
+# lo stile e per il provino.
+SCENE = {'bosco': 'td_1.png', 'neve': 'td_2.png', 'lava': 'td_3.png', 'palude': 'td_4.png'}
 QUALITA = 85
 # Le figure si pagano di più: quaranta creature da quattro fotogrammi
 # sono quasi tutto il peso del castello. A 80 non si distingue da 85 alla
@@ -1280,7 +1327,7 @@ def provino_foglio(vestito, uscita):
     f = fg.get('fondo', 'trasparente')
     # sul foglio già scontornato: è così che si vede se il fondo se n'è
     # andato tutto, e se si è portato via un pezzo di qualcos'altro
-    im = senza_fondo(png, tuple(f) if isinstance(f, list) else f)
+    im = senza_fondo(png, tuple(f) if isinstance(f, list) else f, smacchia=fg.get('smacchia', False))
     fondo = Image.new('RGBA', im.size, (70, 74, 80, 255))
     fondo.alpha_composite(im)
     d = ImageDraw.Draw(fondo)

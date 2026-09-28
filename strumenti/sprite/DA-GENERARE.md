@@ -37,33 +37,33 @@ di 4×4 px».
   irrilevante»), e i due fogli del sotterraneo hanno 54 creature. Per il
   gioco un mostro è solo resistenza, volo e nome, quindi **la figura
   cambia da vestito a vestito** senza toccare l'equilibrio: quaranta
-  creature per i tre vestiti, tutte ritagliate ✅ (il 26 settembre; le
+  creature per i quattro vestiti, tutte ritagliate ✅ (il 26 settembre; le
   coordinate delle nuove stanno in `creature-castello.json`, quelle che
   il sotterraneo aveva già nei suoi foglietti). Chi fa chi lo dice
   `src/giochi/castello/scena/bestiario.js`, e questa tabella è la sua
   copia da leggere — com'è descritta la creatura nel foglio, perché è
   così che la cercano i prompt del cammino:
 
-| castello | immune a | bosco | lava | neve |
-|---|---|---|---|---|
-| slime | — · ✂️ | la melma verde | la melma viola | la melma rosa |
-| goblin | — | lo scorpione viola | il diavoletto rosso | la mummia |
-| pipistrello | bombe, ghiaccio · vola | il pipistrello viola | l'occhio volante rosso | il pipistrello con un occhio solo |
-| fantasma | bombe, arciere · vola | il fantasma verde acqua | il fantasma verde acqua | il fantasma azzurro |
-| ragno | — | il ragno nero | il granchio rosso | lo scorpione viola |
-| orco | — | lo zombie verde | la bestia cornuta | il cinghiale |
-| scheletro | magica, ghiaccio · 💫 | lo scheletro | il negromante col cappuccio viola | il teschio con la fiamma azzurra |
-| golem | arciere, magica | il golem di pietra bruna | il golem di lava | il golem di ghiaccio |
-| arpia | bombe, ghiaccio · vola | il grifone | il pipistrello con un occhio solo | il tornado azzurro |
-| drago | bombe, magica · vola | il drago rosso con le ali | il drago rosso con le ali | il drago rosso con le ali |
-| lupo | — | il lupo grigio | il lupo grigio | lo spirito del fulmine giallo |
-| corvo | bombe, ghiaccio · vola | il pipistrello con un occhio solo | il pipistrello viola | il pipistrello viola |
-| rovo | arciere, bombe | la pianta carnivora | la pianta carnivora | l'uomo albero |
-| verme | — · ✂️ | l'ombra viola con gli occhi gialli | l'ombra viola con gli occhi gialli | l'ombra viola con gli occhi gialli |
-| blatta | bombe, magica | il draghetto rosa con le ali | il draghetto rosa con le ali | il drago di lava senza ali |
-| troll | arciere, magica · 💫 | l'omone grigio con la clava | il sasso di magma con le corna di fuoco | il golem di pietra col muschio |
-| corazziere | arciere, magica | lo scheletro con spada e scudo | lo spirito di fuoco | la tartaruga corazzata |
-| balestriere | — | il serpente verde | il mostro viola con la bocca grande | il serpente verde |
+| castello | immune a | bosco | lava | neve | palude |
+|---|---|---|---|---|---|
+| slime | — · ✂️ | la melma verde | la melma viola | la melma rosa | la melma verde |
+| goblin | — | lo scorpione viola | il diavoletto rosso | la mummia | il granchio rosso |
+| pipistrello | bombe, ghiaccio · vola | il pipistrello viola | l'occhio volante rosso | il pipistrello con un occhio solo | il pipistrello viola |
+| fantasma | bombe, arciere · vola | il fantasma verde acqua | il fantasma verde acqua | il fantasma azzurro | il fantasma azzurro |
+| ragno | — | il ragno nero | il granchio rosso | lo scorpione viola | il ragno nero |
+| orco | — | lo zombie verde | la bestia cornuta | il cinghiale | lo zombie verde |
+| scheletro | magica, ghiaccio · 💫 | lo scheletro | il negromante col cappuccio viola | il teschio con la fiamma azzurra | lo scheletro |
+| golem | arciere, magica | il golem di pietra bruna | il golem di lava | il golem di ghiaccio | il golem di pietra col muschio |
+| arpia | bombe, ghiaccio · vola | il grifone | il pipistrello con un occhio solo | il tornado azzurro | il grifone |
+| drago | bombe, magica · vola | il drago rosso con le ali | il drago rosso con le ali | il drago rosso con le ali | il drago rosso con le ali |
+| lupo | — | il lupo grigio | il lupo grigio | lo spirito del fulmine giallo | il lupo grigio |
+| corvo | bombe, ghiaccio · vola | il pipistrello con un occhio solo | il pipistrello viola | il pipistrello viola | il pipistrello con un occhio solo |
+| rovo | arciere, bombe | la pianta carnivora | la pianta carnivora | l'uomo albero | la pianta carnivora |
+| verme | — · ✂️ | l'ombra viola con gli occhi gialli | l'ombra viola con gli occhi gialli | l'ombra viola con gli occhi gialli | l'ombra viola con gli occhi gialli |
+| blatta | bombe, magica | il draghetto rosa con le ali | il draghetto rosa con le ali | il drago di lava senza ali | il draghetto rosa con le ali |
+| troll | arciere, magica · 💫 | l'omone grigio con la clava | il sasso di magma con le corna di fuoco | il golem di pietra col muschio | l'omone grigio con la clava |
+| corazziere | arciere, magica | lo scheletro con spada e scudo | lo spirito di fuoco | la tartaruga corazzata | la tartaruga corazzata |
+| balestriere | — | il serpente verde | il mostro viola con la bocca grande | il serpente verde | il serpente verde |
 
   Il nome che il castello dà al mostro resta quello del gioco (è la
   chiave delle sue immunità, `data/mostri.js`; ✂️ si divide, 💫 si
@@ -248,6 +248,24 @@ python3 strumenti/sprite/vesti.py --atlante
 node strumenti/sprite/carte-castello.mjs
 ```
 
+### 4b — Il foglio del terreno della palude · 1 immagine · ✅ 28 settembre 2026
+
+**Sblocca** la campagna della Palude col suo vestito (prima si vestiva
+di bosco). Prima la scena, `td_4.png`, poi il foglio, `terreno-palude.png`,
+in una **chat nuova**: allegato per primo `terreno-neve.png` (il foglio
+da rifare) e per seconda `td_4.png` (solo lo stile). Il testo mandato, e
+la trappola del primo tentativo — nella chat del bosco ha rifatto la
+scena coi bordi magenta — stanno nel foglietto `terreno-palude.json` e
+nella scheda. Il foglio **non** ha la disposizione del bosco: il suo
+foglietto ha le sue coordinate, e `"smacchia": true` per il magenta
+rimasto nei contorni.
+
+```bash
+python3 strumenti/sprite/vesti.py --provino-foglio palude /tmp/palude.png
+python3 strumenti/sprite/vesti.py --atlante
+node strumenti/sprite/carte-castello.mjs
+```
+
 ### 5 — I mostri che camminano · 3 immagini per il bosco, 4 per lava e neve
 
 **Arricchisce tutti e due**: oggi le creature generate hanno una posa
@@ -325,8 +343,9 @@ memoria sugli scenari del sotterraneo).
 |---|---|---|---|---|---|
 | 1 ✅ | foglio del terreno, bosco | 1 | `td_1`, schema del foglio | `castello/generati/terreno-bosco.png` | le carte vere |
 | 2 ✅ | le torri | 1 | `td_1`, `PVX1O` | `castello/generati/torri-1.png` | le torri pubblicabili |
-| 3 — | la lava più calma (non serve più) | 1 | (chat di `td_3`) | `castello/generati/td_4.png` | un vestito che si legge |
+| 3 — | la lava più calma (non serve più) | 1 | (chat di `td_3`) | — (il nome `td_4.png` è andato alla palude) | un vestito che si legge |
 | 4 ✅ | fogli del terreno, neve e lava | 2 | la scena del vestito | `terreno-neve.png`, `terreno-lava.png` | gli altri due vestiti |
+| 4b ✅ | la scena e il foglio del terreno della palude | 2 | `terreno-neve`, `td_4`, chat nuova | `td_4.png`, `terreno-palude.png` | la palude col suo vestito |
 | 5 | i mostri che camminano | 3 + 4 | `mostri-1`, `mostri-2` | `sotterraneo/generati/mostri-cammino-A.png`… | mostri di fronte, e il sotterraneo tutto in una mano |
 | 6 | gli eroi | 1 | `mostri-1`, una scena | — | l'addio a 0x72 |
 
@@ -353,6 +372,11 @@ castello, riassunte:
   conti non tornano: per questo i prompt 2 e 5 chiedono mezza cella di
   vuoto fra una figura e l'altra, e le fiamme attaccate a chi le fa;
 - le **scritte**: vietate in maiuscolo in tutti i prompt;
+- **una scena allegata tira verso la scena**: nella chat dove sono
+  uscite le scene, «rifai lo stesso foglio» con la scena allegata ha
+  ridisegnato la scena coi bordi magenta (la palude, voce 4b). Il foglio
+  da rifare si allega **per primo**, la scena per seconda e dichiarata
+  «solo stile», in una chat nuova;
 - il **prompt si conserva nel foglietto** del foglio che ne esce, così
   come è stato mandato; torri e cammino un foglietto non ce l'hanno, e
   il prompt resta in questa pagina, nella voce, con la data.

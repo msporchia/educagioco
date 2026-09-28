@@ -322,11 +322,12 @@ sperimentale `castello` è il tower defense vero con un'altra pelle
 (`src/giochi/castello/scena/pelle.js`): le carte a scacchiera le fa
 `motore/carta.js`, e il vestito lo compone `scena/vestito.js` coi pezzi
 che scrive `strumenti/sprite/vesti.py --atlante`. I pezzi vengono dai
-tre fogli del terreno qui accanto (`terreno-bosco.png`, `-neve`,
-`-lava`), ognuno col suo foglietto: quello del bosco è misurato pezzo per
-pezzo, gli altri due dicono `"come": "terreno-bosco.json"` e il loro
-fondo. Le scene (`td_1.png`…) restano il ripiego di un vestito senza
-foglio. Il piano intero, coi comandi, è in
+quattro fogli del terreno qui accanto (`terreno-bosco.png`, `-neve`,
+`-lava`, `-palude`), ognuno col suo foglietto: quelli del bosco e della
+palude sono misurati pezzo per pezzo, gli altri due dicono `"come":
+"terreno-bosco.json"` e il loro fondo. Le scene (`td_1.png`…) restano il
+ripiego di un vestito senza foglio — non per la palude, la cui scena ha
+un'altra pianta. Il piano intero, coi comandi, è in
 [`../../../DA-GENERARE.md`](../../../DA-GENERARE.md).
 
 Quello che segue è com'era stato pensato, e com'è andata:
@@ -543,6 +544,59 @@ bianchi come lei). 1536×1024, RGB.
   crepe, il più affollato dei tre. **E il castello è di pietra nera** con
   le crepe di lava invece di restare quello del bosco: va bene così, e si
   usa.
+
+### `td_4.png` — la scena della palude ✅ come stile
+
+28 settembre 2026. 1024×1536, RGB. **Non è `td_1` rivestita**: un'altra
+pianta, con una bocca sola (una tana col teschio e le torce) e le
+strade che si intrecciano in mezzo a pozze e canneti, più scura e più
+verde-azzurra di quello che il foglio poi ha dato. Come pianta non
+serve — i ritagli di `vesti.py` misurati su `td_1` lì cadrebbero a
+caso, quindi la palude si veste solo dal suo foglio — ma è quella da
+allegare come esempio di stile.
+
+### `terreno-palude.png` — il foglio della palude ✅, con un'altra disposizione
+
+28 settembre 2026, **in una chat nuova**, allegando prima
+`terreno-neve.png` e poi `td_4.png`, col prompt che comincia «La PRIMA
+immagine allegata è un foglio di pezzi separati (uno sprite sheet) su
+fondo magenta. La SECONDA è una scena: serve SOLO come esempio di stile
+e di colori. NON disegnare una mappa e NON rifare la scena. Rifai il
+PRIMO foglio, pezzo per pezzo…», con il dettaglio riga per riga, e
+finisce «Cambia solo il vestito: da neve a palude…» (quello che se n'è
+conservato sta nel foglietto). 1536×1024, RGB, fondo magenta.
+
+- ⚠ **Il primo tentativo è fallito**: «rifai lo stesso foglio» nella chat
+  del foglio del bosco, con `td_4.png` allegata, ha ridisegnato **la
+  scena** coi bordi magenta invece del foglio dei pezzi. Una scena
+  allegata in una chat che ha già fatto scene tira verso la scena: il
+  foglio da rifare va allegato **per primo**, e la scena va dichiarata
+  «solo stile», in una chat nuova.
+- **Non ha la disposizione del bosco**, quindi il foglietto non dice
+  `"come"` ma ha le sue coordinate, misurate sulle macchie non magenta.
+  Le righe 1 e 4 hanno gli stessi pezzi (7 e 15); la riga 2 ha la croce
+  del sentiero **senza il giro** intorno, la tana, il castello, il lago
+  e **quattro** decori grandi (due salici, un sasso col muschio, un
+  cespuglio coi fiori viola); la riga 3 **cinque** alberi (salici e
+  alberi secchi) e sei decori piccoli, con un tronco caduto al posto
+  della staccionata. I conti non si toccano: quanti pezzi ha una
+  famiglia lo dice `QUANTI`, che `vesti.py` ricava dal foglietto.
+- **La strada è più larga** (35 px di terra contro 26) e ha un orlo
+  scuro sottile: `striscia` [9, 55].
+- **Il tronco caduto è disegnato largo** (142 px): alla scala dei decori
+  piccoli sarebbe venuto largo 88, e sborda sulla strada accanto. Ha una
+  `misura` sua, 0,45.
+- **Il magenta si mescola ai contorni scuri**: canne, sassi, ceppo e
+  tronco hanno contorni sottili, e il magenta ci resta dentro come
+  (50, 0, 50), che la frangia non prende. Ridotti, tingevano di viola
+  l'orlo e gli spazi fra i fili d'erba. Il foglietto dice `"smacchia":
+  true` (`FORMATO.md`): da quei pixel si toglie la parte di fondo. Resta
+  qualche puntino rosa dentro le radici del ceppo, a una misura che sul
+  campo non si vede.
+- **È più chiaro e più «bosco» della scena**: l'erba è oliva e non
+  verde-azzurra, il fitto sono salici e non il canneto che il blocco
+  dello scenario chiedeva, e la strada è terra e non la passerella di
+  assi. Si legge bene sulle carte, e si usa così.
 
 ### `torri-1.png` — le torri ✅, fuori ordine
 

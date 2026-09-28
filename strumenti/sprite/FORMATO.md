@@ -429,6 +429,15 @@ cose in più:
   prendono le toppe con meno cristalli arancioni) e, sulla `strada`,
   **`striscia`** `[a, b]` — dove sta la strada in una cella da 64, orlo
   compreso — e **`sfuma`**, quanti pixel dell'orlo sfumano nel prato.
+- **`smacchia`** (`true`, solo col fondo magenta): il contorno scuro che
+  il generatore ha mescolato al magenta viene (50, 0, 50), non esce dalla
+  frangia e, ridotto, tinge di viola l'orlo dei pezzi e gli spazi fra i
+  fili d'erba. Da quei pixel si toglie la parte di fondo (non si
+  buttano: sono contorno), e sull'orlo se ne vanno anche i puntini rosa
+  del magenta mescolato a un colore chiaro. Si dichiara per foglio
+  perché non tutti i pixel così sono fondo: la lava ha il cremisi, col
+  verde a zero anche lui. Il primo foglio che lo dice è la palude, che
+  ha canne e sassi pieni di contorni sottili.
 - `fondo`, `fondo-qua` e `fitto` sono **l'interno** del loro quadrato: i
   fondi generati hanno un orlo e non si ripetono come piastrelle, e se ne
   ritagliano toppe.
