@@ -16,13 +16,21 @@
    il preavviso era una cosa da leggere per curiosità.
 
    Adesso un mostro dichiara le torri che **non lo toccano affatto**
-   (`immune`): zero danno, e per il ghiaccio niente gelo. Una o due, e
-   ognuno ha il suo profilo. È una regola che cambia la mossa: un'ondata
-   di volanti passa sopra le bombe come se non ci fossero, un'ondata di
-   corazzati si fa grattare dalle frecce e basta — e nessuna torre, da
-   sola, vince una tappa.
+   (`immune`): zero danno, e per il ghiaccio niente gelo. È una regola
+   che cambia la mossa: un'ondata di volanti passa sopra le bombe come
+   se non ci fossero, un'ondata di corazzati si fa grattare dalle
+   frecce e basta — e nessuna torre, da sola, vince una tappa.
 
-   ── quattro famiglie, e si indovinano ──
+   ── ma solo alcuni: di base tutte le torri fanno effetto ──
+   Goblin, orco, ragno, lupo, balestriere, slime e verme sono **comuni**:
+   li ferisce tutto (`comune`). Per un po' erano immuni anche loro, a
+   una torre ciascuno, e il difetto era doppio: non c'era più niente di
+   normale da cui distinguere l'eccezione, e ogni tappa chiedeva la
+   torre giusta fin dalla prima ondata, quando le risorse non bastano
+   per essere variegati. Adesso le tappe si aprono coi comuni
+   (`APERTURA_COPRE` in `data/castello.js`) e gli immuni arrivano dopo.
+
+   ── quattro famiglie di immuni, e si indovinano ──
    Come prima, le ragioni non sono diciotto ragioni diverse: sono poche
    regole, e un bambino che le ha capite indovina l'immunità di un
    mostro che non ha mai visto.
@@ -38,10 +46,11 @@
      🛡 **chi è corazzato** (pietra, piastre, pelle di sasso) si fa
         rimbalzare addosso le frecce e la magia: lo apre solo lo
         scoppio, e il gelo lo frena come frena tutti.
-     🏹 **la freccia** la ferma chi è coperto (cuoio, carapace, uno
-        scudo) e la manca chi è troppo svelto o non ha un corpo;
-     🔮 **la magia** cerca una mente su cui fare presa: non la trova in
-        una gelatina, in una blatta, in una testa vuota.
+     💀 **chi è fatto d'ossa** (lo scheletro): nella testa vuota la
+        magia non trova niente, e non c'è sangue da gelare;
+     🌿 **il rovo e la blatta**: nel groviglio di spine la freccia si
+        perde e lo scoppio sfoltisce e basta; la blatta sopravvive a
+        tutto, anche a una bomba, e non ha una mente per la magia.
 
    ── al massimo due ──
    Nessun mostro è immune a più di due torri (`IMMUNITA_MAX`, e lo conta
@@ -55,8 +64,10 @@
    Il vincolo che rende giusta la cosa lo controllano
    `strumenti/valida-percorsi.mjs` e `unita/castello`: in ogni tappa
    ogni mostro si può ferire con almeno una delle torri che la tappa
-   dà, e ogni torre che fa danno ha almeno un mostro immune — così
-   nessuna torre vince la tappa da sola.
+   dà, e dal Sotterraneo in poi (e in tutte le libere) ogni torre che fa
+   danno ha almeno un mostro immune — così nessuna torre vince la tappa
+   da sola. Il Bosco no: lì si impara cosa fa una torre
+   (`IMPARA_LE_TORRI`).
 
    ── le abilità ──
    Oltre all'immunità, quattro mostri **fanno una cosa** (`abilita`):
@@ -79,21 +90,33 @@
 import { TORRI } from './ops.js'
 
 export const MOSTRI = {
-  /* 🔮 gelatina senza mente e senza forma: l'incantesimo non trova su
-     cosa fare presa. E una gelatina tagliata fa due gelatine. */
-  slime:      { nome: 'Slime',      immune: ['magica'], abilita: 'dividi' },
-  // 🏹 lo scudo di legno rattoppato è tutto quello che ha, e per le frecce basta
-  goblin:     { nome: 'Goblin',     immune: ['arciere'] },
+  /* ── i comuni, e gli speciali ──
+     **Di base tutte le torri fanno effetto** (l'ha detto l'utente, ed è
+     la regola da cui si parte): goblin, orco, ragno, lupo, balestriere,
+     slime e verme non sono immuni a niente. Sono i mostri con cui si
+     apre ogni tappa (`APERTURA_COPRE` in `data/castello.js`): all'inizio
+     le risorse non bastano per essere variegati, e con due torri in
+     campo tutto quello che arriva si deve poter fermare. Slime e verme
+     restano speciali per l'abilità, non per l'immunità.
+     Le immunità ce l'hanno **solo alcuni**, e sono quelli che si
+     riconoscono a colpo d'occhio: chi vola, chi è di pietra o di
+     piastre, chi è fatto d'ossa, il groviglio del rovo e la blatta.
+     Prima ce l'avevano tutti, e un'ondata di goblin chiedeva una torre
+     precisa quanto un'ondata di golem: la regola c'era, ma non c'era
+     più niente di normale da cui distinguerla. */
+  /* ✂️ una gelatina: nessuna immunità, e tagliata fa due gelatine. È
+     speciale per quello che fa quando cade, non per quello che regge */
+  slime:      { nome: 'Slime',      immune: [], abilita: 'dividi' },
+  // un goblin: lo ferisce tutto
+  goblin:     { nome: 'Goblin',     immune: [] },
   // 🪽 vola: sopra le bombe e sopra il gelo
   pipistrello:{ nome: 'Pipistrello', vola: true, immune: ['bombe', 'ghiaccio'] },
   /* 🪽 vola, e le frecce lo attraversano come lui attraversa i muri: dei
      colpi lo prende solo la magia, che è la stessa roba di cui è fatto.
      Il gelo sì — è nebbia, e col freddo si fa brina */
   fantasma:   { nome: 'Fantasma',   vola: true, immune: ['bombe', 'arciere'] },
-  // 🏹 carapace e otto zampe: la freccia rimbalza o ci passa in mezzo
-  ragno:      { nome: 'Ragno',      immune: ['arciere'] },
-  // 🏹 cuoio e grasso: la freccia si pianta e lui nemmeno se ne accorge
-  orco:       { nome: 'Orco',       immune: ['arciere'] },
+  ragno:      { nome: 'Ragno',      immune: [] },
+  orco:       { nome: 'Orco',       immune: [] },
   /* 🔮❄️ ossa e basta: nella testa vuota l'incantesimo non trova niente,
      e non c'è sangue da gelare. E le ossa si rimettono insieme. */
   scheletro:  { nome: 'Scheletro',  immune: ['magica', 'ghiaccio'], abilita: 'risorge' },
@@ -107,16 +130,14 @@ export const MOSTRI = {
   drago:      { nome: 'Drago',      vola: true, immune: ['bombe', 'magica'] },
 
   /* le otto bestie nuove, disegnate in `grafica/mostri/` */
-  // 🏹❄️ corre a zig-zag, e con quella pelliccia il freddo non lo ferma
-  lupo:        { nome: 'Lupo',        immune: ['arciere', 'ghiaccio'] },
+  lupo:        { nome: 'Lupo',        immune: [] },
   // 🪽 vola stretto fra i canneti
   corvo:       { nome: 'Corvo',       vola: true, immune: ['bombe', 'ghiaccio'] },
   /* 🏹💣 un groviglio di spine: la freccia ci si perde dentro, e lo
      scoppio lo sfoltisce e basta. Lo prende la magia. */
   rovo:        { nome: 'Rovo',        immune: ['arciere', 'bombe'] },
-  /* 💣 tutto molle, senza un osso: l'urto se lo mangia. E tagliato in
-     due fa due vermi. */
-  verme:       { nome: 'Verme',       immune: ['bombe'], abilita: 'dividi' },
+  // ✂️ come lo slime: nessuna immunità, e tagliato in due fa due vermi
+  verme:       { nome: 'Verme',       immune: [], abilita: 'dividi' },
   // 💣🔮 sopravvive a tutto — anche a una bomba — e non ha una mente: solo le frecce
   blatta:      { nome: 'Blatta',      immune: ['bombe', 'magica'] },
   /* 🛡 pelle di sasso, come il golem. E un troll ferito si rialza: è la
@@ -124,8 +145,7 @@ export const MOSTRI = {
   troll:       { nome: 'Troll',       immune: ['arciere', 'magica'], abilita: 'risorge' },
   // 🛡 armatura di piastre: le frecce le sente come sassolini, la magia le scivola addosso
   corazziere:  { nome: 'Corazziere',  immune: ['arciere', 'magica'] },
-  // 💣 l'unico che sa cos'è un'artiglieria: al fischio si butta dietro il pavese
-  balestriere: { nome: 'Balestriere', immune: ['bombe'] },
+  balestriere: { nome: 'Balestriere', immune: [] },
 }
 
 export const ELENCO = Object.keys(MOSTRI)
@@ -149,6 +169,8 @@ export const gelabile = id => !(MOSTRI[id]?.immune || []).includes('ghiaccio')
    firma chiudono le stesse torri, e due ondate di fila con la stessa
    firma sono una ripetizione */
 export const firmaImmunita = id => [...(MOSTRI[id]?.immune || [])].sort().join('+') || '—'
+/* un mostro che tutte le torri toccano (vedi «i comuni» in testa a MOSTRI) */
+export const comune = id => !(MOSTRI[id]?.immune || []).length
 
 /* ── le regole di una fila di mostri ──
    Quello che una tappa (o una partita libera) deve rispettare perché le
@@ -163,8 +185,20 @@ export const firmaImmunita = id => [...(MOSTRI[id]?.immune || [])].sort().join('
      · la **prima ondata** la ferisce l'arciere, se la tappa lo dà —
        è la torre che si compra per prima;
      · due ondate di fila non hanno **le stesse immunità** (la fila
-       gira in tondo, quindi anche l'ultima con la prima). */
-export function guastiDelleImmunita({ mostri = [], torri = [] }) {
+       gira in tondo, quindi anche l'ultima con la prima) — tranne due
+       comuni, che non ne hanno nessuna.
+   La seconda non vale nel Bosco (`IMPARA_LE_TORRI`). */
+/* ── il Bosco è dove si imparano le torri ──
+   Nelle sue tappe la regola «ogni torre ha un mostro immune» non vale:
+   lì si impara cosa fa una torre, e una tappa di goblin e slime che
+   tutte le torri feriscono è quello che serve. Dal Sotterraneo in poi —
+   e nelle quattro partite libere, anche quella del bosco — la regola
+   torna. Una libera si riconosce dai capi a ritmo fisso (`capi`). */
+export const IMPARA_LE_TORRI = ['bosco']
+const esente = t => IMPARA_LE_TORRI.includes(t.campagna) && !t.capi
+
+export function guastiDelleImmunita(tappa) {
+  const { mostri = [], torri = [] } = tappa
   const g = []
   for (const m of mostri) if (!MOSTRI[m]) g.push(`mostro sconosciuto: ${m}`)
   if (g.length) return g
@@ -172,7 +206,7 @@ export function guastiDelleImmunita({ mostri = [], torri = [] }) {
   for (const m of mostri)
     if (!feriscono.some(k => feritoDa(m, k)))
       g.push(`${m} è immune a tutte le torri che la tappa dà (${torri.join(' ')}): quell'ondata non si ferma`)
-  if (feriscono.length > 1)
+  if (feriscono.length > 1 && !esente(tappa))
     for (const k of feriscono)
       if (mostri.every(m => feritoDa(m, k)))
         g.push(`nessun mostro è immune a «${TORRI[k].nome}»: da sola vince la tappa`)
@@ -181,6 +215,8 @@ export function guastiDelleImmunita({ mostri = [], torri = [] }) {
   if (mostri.length > 1)
     for (let i = 0; i < mostri.length; i++) {
       const a = mostri[i], b = mostri[(i + 1) % mostri.length]
+      /* due comuni di fila vanno bene: non c'è niente da ripensare */
+      if (comune(a) && comune(b)) continue
       if (firmaImmunita(a) === firmaImmunita(b))
         g.push(`${a} e ${b} arrivano di fila con le stesse immunità (${firmaImmunita(a)})`)
     }

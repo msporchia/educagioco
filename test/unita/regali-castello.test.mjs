@@ -305,10 +305,11 @@ for (const { l, scala } of scale) {
   /* Cento e non dieci, e nemmeno cinquanta. Dieci gradi sono un +8% qui
      e un +5% là, e oltre la ventesima la vita sale del 30% a ondata
      (`OLTRE`): dieci gradi il record lo spostano di un'ondata al più,
-     venti di due, cinquanta di quattro-cinque nel bosco e sulle mura e
-     di niente nel delta, dove il muro della ventunesima è un troll che
-     solo le bombe aprono. Cento sono venticinque partite, ed è da lì
-     che la promessa regge su tutti e quattro i terreni. */
+     venti di tre al più e sul bastione di niente, cinquanta di due-cinque
+     ma sul bastione ancora di niente (il muro della ventunesima è uno
+     scheletro, che magia e gelo non toccano). Cento sono venticinque
+     partite, ed è da lì che la promessa regge su tutti e quattro i
+     terreni. */
   const [zero, , , cento] = scala
   controlla(`${l.nome}: i regali si sentono — cento gradi portano più lontano di zero`,
             cento.onda > zero.onda, `zero → o${zero.onda}, cento → o${cento.onda}`)

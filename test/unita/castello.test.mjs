@@ -31,7 +31,7 @@ import { TAPPE, LIBERE, LIBERA, CFG, difesaCon, difesaLarga, energiaAll, nemiciD
          listinoDi }
   from '../../src/data/castello.js'
 import { CAMPAGNE, LIBERE_RACCONTO } from '../../src/data/campagne-castello.js'
-import { firmaImmunita, immuniDi } from '../../src/data/mostri.js'
+import { firmaImmunita, immuniDi, comune } from '../../src/data/mostri.js'
 import { migraCastello, TD_VERSIONE } from '../../src/store/profile.js'
 import { TORRI } from '../../src/data/ops.js'
 import { Ondate } from '../../src/motore/castello/ondate.js'
@@ -292,11 +292,19 @@ for (const [k, arco] of perCampagna.entries()) {
      possono ferire**: un golem che solo le bombe aprono ha meno vita di
      un pipistrello che arcieri e magia prendono tutti e due, e quale
      mostro una tappa mette in fila sposta la fatica di un quarto in su
-     o in giù. Quindi dentro la campagna si controlla che non crolli —
-     tre quarti della tappa prima, non di meno — e che finisca più in
-     alto di dove comincia. */
+     o in giù. Quindi dentro la campagna si controlla che non crolli e
+     che finisca più in alto di dove comincia.
+     Da quando i comuni non sono immuni a niente lo scarto si è
+     allargato, e il «non crolla» è sceso da tre quarti a tre quinti:
+     una tappa di goblin e slime, che tutte le torri feriscono, ha le
+     vite più alte del Bosco, e la radice — dove arrivano golem, arpia e
+     scheletro — ne ha due terzi pur essendo più difficile (misurato:
+     22 → 29 → 33 → 22 nel Bosco, e la cripta del Sotterraneo a 26
+     dopo il 42 delle fogne). Quello che la fatica misura è la vita, e
+     la vita di un immune vale di più: la difficoltà vera la tiene la
+     taratura, fra il 60 e l'85% del limite di ogni ondata. */
   controlla(`${CAMPAGNE[k].nome}: la fatica non crolla dentro la campagna`,
-            fatiche.every((f, i) => i === 0 || f >= fatiche[i - 1] * 0.75),
+            fatiche.every((f, i) => i === 0 || f >= fatiche[i - 1] * 0.6),
             fatiche.map(f => f.toFixed(0)).join(' → '))
   controlla(`${CAMPAGNE[k].nome}: e finisce più in alto di dove comincia`,
             fatiche.at(-1) > fatiche[0], fatiche.map(f => f.toFixed(0)).join(' → '))
@@ -515,11 +523,18 @@ for (const l of LIBERE) {
          l.torri.join(), ultima.torri.join())
   uguale(`${l.nome}: i rami come nella sua campagna`, l.rami, !!ultima.rami)
   uguale(`${l.nome}: il terreno dell'ultima tappa`, l.ambiente, ultima.ambiente)
-  controlla(`${l.nome}: tutti i mostri della campagna, ognuno una volta`,
-            l.mostri.length === tutti.size && l.mostri.every(m => tutti.has(m)),
+  /* tutti quelli della campagna, e più d'una volta solo un comune: la
+     fila si allunga coi comuni quando le prime otto ondate lo chiedono
+     (`filaCheRegge`) */
+  controlla(`${l.nome}: tutti i mostri della campagna, e ripetuti solo i comuni`,
+            [...tutti].every(m => l.mostri.includes(m)) && l.mostri.every(m => tutti.has(m)) &&
+            l.mostri.every((m, i) => comune(m) || l.mostri.indexOf(m) === i),
             `${l.mostri.join(' ')} contro ${[...tutti].join(' ')}`)
-  controlla(`${l.nome}: due ondate di fila non hanno le stesse immunità`,
-            l.mostri.every((m, i) => firmaImmunita(m) !== firmaImmunita(l.mostri[(i + 1) % l.mostri.length])),
+  controlla(`${l.nome}: due ondate di fila non hanno le stesse immunità (due comuni sì)`,
+            l.mostri.every((m, i) => {
+              const dopo = l.mostri[(i + 1) % l.mostri.length]
+              return (comune(m) && comune(dopo)) || firmaImmunita(m) !== firmaImmunita(dopo)
+            }),
             l.mostri.map(m => firmaImmunita(m)).join(' '))
   /* due bocche, o una strada che si attraversa da sé: il bastione è
      l'anello vero, e la sua difesa si divide nel tempo (vedi

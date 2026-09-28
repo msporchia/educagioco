@@ -1177,23 +1177,44 @@ committate: non è ricostruibile da git.
   frecce, il drago la magia), chi è corazzato frecce e magia, e ognuno
   ha il suo profilo — **al massimo due** (`IMMUNITA_MAX`): con tre il
   fantasma e il drago avevano una torre sola che li feriva e non si
-  potevano nemmeno frenare, cioè un indovinello e non una scelta. Non
-  si accende e non si spegne per tappa: è com'è fatto il
+  potevano nemmeno frenare, cioè un indovinello e non una scelta.
+  **Ma solo alcuni: di base tutte le torri fanno effetto.** Goblin,
+  orco, ragno, lupo, balestriere, slime e verme sono **comuni**
+  (`immune: []`, `comune`), e li ferisce tutto — slime e verme restano
+  speciali per l'abilità. Immuni sono i volanti (pipistrello, arpia,
+  corvo 💣❄️; fantasma 💣🏹; drago 💣🔮), i corazzati (golem, troll,
+  corazziere 🏹🔮), le ossa (scheletro 🔮❄️), il rovo (🏹💣) e la
+  blatta (💣🔮). Quando ce l'avevano tutti non c'era più niente di
+  normale da cui distinguere l'eccezione, e ogni tappa chiedeva la
+  torre giusta dalla prima ondata. Non si accende e non si spegne per
+  tappa: è com'è fatto il
   mostro, quindi a decidere è **la fila** della tappa, e le sue regole
   stanno in `guastiDelleImmunita` (ogni mostro si può ferire con le
   torri della tappa, ogni torre che ferisce ha un mostro immune, la
-  prima ondata la ferisce l'arciere) e in `coperturaApertura`: **le
+  prima ondata la ferisce l'arciere, due di fila mai con le stesse
+  immunità — due comuni sì). **Il Bosco è esente** dalla seconda
+  (`IMPARA_LE_TORRI`): è la campagna dove si impara cosa fa una torre,
+  e una tappa di goblin e slime che tutte feriscono è quello che serve.
+  Dal Sotterraneo in poi e nelle quattro libere (anche quella del
+  bosco) la regola torna, e dove i comuni l'avrebbero rotta la fila ha
+  preso un immune in più, dopo l'apertura (la miniera il pipistrello,
+  le fogne il fantasma, il guado della Palude il rovo). E in
+  `coperturaApertura`: **le
   prime otto ondate** (`APERTURA_COPRE`, o tutte se la tappa è più
   corta) le feriscono le torri di apertura, ognuna dalla sua strada,
   con le bocche insieme quando scendono insieme. Erano quattro, con la
   ragione dei soldi per la terza torre; il conto vero è che **all'inizio
   le risorse non bastano per essere variegati** — dalla quinta ondata
   arrivava un mostro che le prime due non toccano, e il bambino doveva
-  allargarsi proprio quando serviva salire. Dove la fila non ci arriva
-  in nessun ordine lo dice `APERTURA_CORTA`, tappa per tappa e col
-  perché (tre mostri che vogliono tre torri diverse in una fila più
-  corta di otto; o due bocche, con la sesta ondata da tutte e due), e
-  `unita/immunita-castello` pretende che dica il vero nei due versi.
+  allargarsi proprio quando serviva salire. Le prime otto ondate le
+  fanno i comuni, o mostri che le torri di apertura feriscono; dove una
+  tappa ha tre specialisti che vogliono tre torri diverse la fila si
+  **allunga coi comuni** finché l'ultimo arriva nono (la sala del
+  trono, il torrione, il pantano; nelle libere lo fa `filaCheRegge`,
+  e un comune è l'unico mostro che può stare due volte nella stessa
+  fila). `APERTURA_CORTA` è il registro delle tappe che non ci
+  arrivano, col perché, ed è **vuoto**: `unita/immunita-castello`
+  pretende che dica il vero nei due versi.
   Le controllano il validatore e `unita/immunita-castello`.
   Nelle libere la fila la dispone `filaCheRegge` (e se girare e
   scambiare non basta la costruisce posto per posto, `filaCostruita`),
@@ -1212,8 +1233,9 @@ committate: non è ricostruibile da git.
   mostro**: un golem che solo le bombe aprono ha meno vita di un
   pipistrello, e non è un errore. **La figura dice l'immunità**
   (`giochi/castello/scena/bestiario.js`): al bambino serve capire che
-  torre mettergli davanti, non chi è — carapace e setole reggono le
-  frecce, melme e ossa la magia, i draghi bombe e magia — e una figura
+  torre mettergli davanti, non chi è — pietra e piastre reggono
+  frecce e magia, le ossa la magia, i draghi bombe e magia, e le figure
+  dei comuni non sembrano né corazzate né alate — e una figura
   che fa due mostri li fa con le stesse immunità
   (`unita/castello-bestiario`).
 - **Ogni tanto un'ondata è mista** (`MISTA`, `coppiaDellOnda` in
@@ -1227,7 +1249,8 @@ committate: non è ricostruibile da git.
   strada** (`mistaDelPiano` in `data/castello.js`): se chiedesse una
   torre in più proprio in fondo, la tappa farebbe meno conti di quelli
   che promette (il torrione ne faceva 23 invece di 30). Per questo è
-  l'ultima ondata o quella prima, e il canneto non ce l'ha. Metà e metà con
+  l'ultima ondata o quella prima, e il canneto e le isole non ce l'hanno
+  (il guado della Palude nemmeno: ha otto ondate). Metà e metà con
   la `folla` di ciascuno, energia e numero come un'ondata normale.
   L'ondata porta il secondo tipo in `con` (`bestiaDi`), e il preavviso
   e la scheda disegnano due ritratti con **due righe di immunità**: fuse

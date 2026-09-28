@@ -81,7 +81,12 @@ const perdi = (daOnda = 0) => page.evaluate(async daOnda => {
   }
   return { fase: T.fase.value, onda: T.hud.onda, cuori: T.hud.cuori, torri: T.hud.torri }
 }, daOnda)
-const caduta = await perdi()
+/* il contatore si spinge a tre: da quando le libere si aprono coi
+   comuni, la prima ondata del bastione è un orco che le due torri di
+   apertura feriscono tutte e due, e la taratura gli dà la vita che
+   reggono due torri — un arciere solo cade alla prima, il record è
+   zero, e un record zero il tasto non lo scrive */
+const caduta = await perdi(3)
 uguale('con un arciere solo il castello cade', caduta.fase, 'fine', JSON.stringify(caduta))
 const cartello = await page.locator('[data-primato]').textContent()
 controlla('e il cartello dice del primo risultato su questo terreno',

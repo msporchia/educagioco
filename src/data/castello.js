@@ -98,7 +98,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { TORRI } from './ops.js'
 import { MOSTRI, ABILITA, CAPO, MISTA, feritoDa, firmaImmunita, guastiDelleImmunita, mostroDiOnda,
-         coppiaDellOnda, coppieDi } from './mostri.js'
+         coppiaDellOnda, coppieDi, comune } from './mostri.js'
 import { RACCONTO, LIBERE_RACCONTO } from './campagne-castello.js'
 import { VITE, FIRMA, OLTRE } from './taratura-castello.js'
 
@@ -507,7 +507,6 @@ export function vitaNemico(tappa, onda) {
                     : mostroDiOnda(tappa.mostri || [], o))
   let ultima = 0
   for (let j = 1; j <= n; j++) if (chi(j) === chi(onda)) ultima = j
-  if (!ultima) return Math.round(Math.max(...v) * Math.pow(passo, onda - n))
   const giro = Math.max(1, (tappa.mostri || []).length)
   const livello = (da, a) => {
     const xs = []
@@ -516,6 +515,14 @@ export function vitaNemico(tappa, onda) {
     return xs.length ? Math.exp(xs.reduce((s, x) => s + x, 0) / xs.length) : null
   }
   const fine = livello(n - giro + 1, n), prima = livello(n - 2 * giro + 1, n - giro)
+  /* un mostro che nella tabella non è mai arrivato da solo — nelle
+     libere succede a chi la fila mette sul posto del capo: la decima e
+     la ventesima sono sue, ma da capo — riparte dal livello dell'ultimo
+     giro, non dalla vita più alta della tabella. Prendeva il massimo, e
+     da quando ci sono i comuni il massimo è un ragno che tutte le torri
+     feriscono: sul bastione lo scheletro della ventunesima nasceva con
+     la vita di quel ragno, e nessun regalo lo passava */
+  if (!ultima) return Math.round((fine || Math.max(...v)) * Math.pow(passo, onda - n))
   const ritmo = fine && prima ? Math.min(passo, Math.max(1, Math.pow(fine / prima, 1 / giro))) : passo
   return Math.round(v[ultima - 1] * Math.pow(ritmo, n - ultima) * Math.pow(passo, onda - n))
 }
@@ -799,31 +806,18 @@ export function coperturaApertura(tappa) {
    Il registro di quello che la regola non ottiene, tappa per tappa, con
    il motivo. Non è una deroga comoda: `unita/immunita-castello` pretende
    che ogni tappa **fuori** da qui copra le sue otto ondate, e che ogni
-   tappa **qui dentro** non ci arrivi davvero — il giorno che una ci
-   arriva, la riga va tolta. Due motivi, e nessuno dei due si risolve
-   riordinando la fila:
+   tappa **qui dentro** non ci arrivi davvero.
 
-     · **tre torri per tre mostri**: la fila gira in meno di otto ondate,
-       quindi nelle prime otto ci sono tutti i suoi mostri, e tre di loro
-       vogliono tre torri diverse — con due torri di apertura, in
-       qualunque ordine, uno resta scoperto;
-     · **le due bocche**: una coppia che ferisce tutta la fila c'è, ma
-       ogni torre sta sulla sua strada e ferisce solo chi scende di lì,
-       e dalla sesta ondata una su tre scende da tutte e due le bocche
-       (`insiemeDa`): quella la devono ferire tutte e due le torri, e
-       nessun mostro della fila lo è da entrambe.
-
-   Il numero è quante ondate copre oggi. */
-export const APERTURA_CORTA = {
-  'sotterraneo/Le fogne': { copre: 4, perche: 'due bocche: la coppia arciere+magia ferisce tutti, ma non ognuno dalla sua strada' },
-  'mura/La sala del trono': { copre: 5, perche: 'tre torri per tre mostri: golem solo bombe, drago solo frecce, fantasma solo magia' },
-  'mura/Il torrione': { copre: 5, perche: 'tre torri per tre mostri: golem solo bombe, drago solo frecce, fantasma solo magia' },
-  'palude/Il canneto': { copre: 5, perche: 'due bocche: magia+bombe ferisce tutti, ma la sesta scende da tutte e due e nessuno lo feriscono entrambe' },
-  'palude/Le isole': { copre: 4, perche: 'due bocche: frecce+bombe ferisce tutti, ma non ognuno dalla sua strada' },
-  'palude/Il pantano': { copre: 4, perche: 'tre torri per tre mostri: blatta solo frecce, troll solo bombe, rovo solo magia' },
-  'palude/La foce': { copre: 5, perche: 'due bocche: frecce+bombe ferisce tutti, ma la sesta scende da tutte e due e nessuno lo feriscono entrambe' },
-  'libera-palude': { copre: 6, perche: 'tre torri per tre mostri: blatta solo frecce, troll solo bombe, rovo solo magia, e sette mostri in otto ondate' },
-}
+   **È vuoto, ed è il punto.** Quando tutti i mostri avevano
+   un'immunità ci stavano otto tappe, per due motivi che nessun ordine
+   della fila risolveva: tre specialisti che vogliono tre torri diverse
+   in una fila più corta di otto, o due bocche con la sesta ondata da
+   tutte e due. Da quando i comuni non sono immuni a niente le prime
+   otto ondate le fanno loro, e dove gli specialisti erano troppi la
+   fila si è allungata di qualche comune (la sala del trono, il
+   torrione, il pantano). Una tappa nuova che non ci arriva si scrive
+   qui, `{ copre, perche }`, e non si forza. */
+export const APERTURA_CORTA = {}
 
 /* ── la mossa dopo ──
    `torri` è quello che c'è in campo, `[{ tipo, lv }]`. Torna la mossa
@@ -1175,8 +1169,9 @@ export const TAPPE = RACCONTO.map((t, i) => {
    nel canneto la decima scende da una bocca dove ci sono due magie, e
    due magie non fanno due risposte. Se nessuna delle due va bene la
    tappa la mista non la fa: chiederebbe una torre che il piano non ha,
-   cioè dei conti in meno di quelli promessi (è il canneto, che in tutto
-   il piano ha tre torri e due sono magie). Nelle libere non c'è una
+   cioè dei conti in meno di quelli promessi (oggi il canneto e le
+   isole: il loro piano ha tre o quattro torri, e dalla strada della
+   mista nessuna coppia le trova tutte e due). Nelle libere non c'è una
    promessa di calcoli: le coppie restano tutte, e il giocatore modello
    la mista la vede arrivare (i bisogni `miste` di `sequenzaTorri`). */
 function mistaDelPiano(tappa) {
@@ -1299,10 +1294,11 @@ export const firmaTaratura = () => FIRMA
    ondata guadagnare un'ondata vuol dire reggere il 30% di vita in più,
    e dieci gradi non bastano quasi mai. Misurato sulle quattro libere
    (`strumenti/regali-castello.mjs`, e il banco in
-   `unita/regali-castello`): venti gradi spostano il record di una o
-   due ondate, cinquanta di due-cinque (nel delta di niente: il muro
-   della ventunesima è un troll che solo le bombe aprono), cento di
-   due-dieci su tutti e quattro, e il rendimento cala da sé — la vita cresce a moltiplicare, i gradi a
+   `unita/regali-castello`): venti gradi spostano il record di tre
+   ondate al più, cinquanta di due-cinque (sul bastione di niente: il
+   muro della ventunesima è uno scheletro, che magia e gelo non
+   toccano), cento di due-dieci su tutti e quattro, e il rendimento
+   cala da sé — la vita cresce a moltiplicare, i gradi a
    sommare. Un tetto per regalo non serve: il tetto lo mette già la
    curva. `docs/castello.md` porta la tabella. */
 export const OGNI_REGALO = 5
@@ -1613,16 +1609,33 @@ export function capiAperti(tappa) {
   }
   return true
 }
-/* Se nessuna fila arriva a `APERTURA_COPRE`, si abbassa la pretesa
-   un'ondata per volta fino alle quattro di prima, e si tiene la fila
-   migliore: il delta ha sette mostri e tre di loro vogliono tre torri
-   diverse (la blatta solo frecce, il troll solo bombe, il rovo solo
-   magia), quindi con due torri di apertura le prime otto ondate non si
-   coprono in nessun ordine. Quello che manca lo dice `APERTURA_CORTA`. */
+/* Se nessuna fila arriva a `APERTURA_COPRE`, prima si allunga coi
+   comuni (qui sotto), e solo dopo si abbassa la pretesa un'ondata per
+   volta fino alle quattro di una volta, tenendo la fila migliore: una
+   libera che finisse lì va scritta in `APERTURA_CORTA`. Oggi nessuna ci
+   finisce — il delta, che ha tre specialisti per tre torri diverse (la
+   blatta solo frecce, il troll solo bombe, il rovo solo magia), ci
+   arriva con due comuni in più. */
 function filaCheRegge(tappa) {
   for (let copre = APERTURA_COPRE; copre >= 4; copre--) {
     const f = filaCheCopre(tappa, copre)
     if (f) return f
+    /* ── e se non basta, ci si mettono più comuni ──
+       Quando la campagna ha tre specialisti che vogliono tre torri
+       diverse e i mostri sono meno di nove, le prime otto ondate li
+       vedono tutti per forza: nessun ordine le fa fermare a due torri.
+       Come nelle tappe della sala del trono e del pantano, la fila si
+       allunga coi comuni della campagna — un verme o un lupo in più —
+       finché lo specialista che manca arriva nono. Si prova solo al
+       tetto pieno: abbassare la pretesa viene dopo */
+    if (copre === APERTURA_COPRE) {
+      const comuni = tappa.mostri.filter(comune)
+      for (let extra = 1; extra <= 3 && comuni.length; extra++) {
+        const lunga = [...tappa.mostri, ...Array.from({ length: extra }, (_, k) => comuni[k % comuni.length])]
+        const f = filaCheCopre({ ...tappa, mostri: lunga }, copre)
+        if (f) return f
+      }
+    }
   }
   return tappa.mostri
 }
@@ -1679,20 +1692,25 @@ function filaCostruita(tappa, va, copre) {
       for (let o = i + 1; o <= copre; o += n) if (!ferito(m, o)) return false
       return true
     }
-    const fila = [], usati = new Set()
+    /* per posto nella fila e non per nome: un comune può starci due volte */
+    const fila = [], usati = base.map(() => false)
     let passi = 0
     const prova = i => {
       if (++passi > 5000) return false
       if (i === n) return va(fila)
-      for (const m of base) {
-        if (usati.has(m)) continue
+      const provati = new Set()
+      for (let q = 0; q < n; q++) {
+        const m = base[q]
+        if (usati[q] || provati.has(m)) continue
+        provati.add(m)
         if (i === 0 && !feritoDa(m, 'add')) continue
-        if (i > 0 && firmaImmunita(m) === firmaImmunita(fila[i - 1])) continue
+        if (i > 0 && !(comune(m) && comune(fila[i - 1])) &&
+            firmaImmunita(m) === firmaImmunita(fila[i - 1])) continue
         if (!puo(m, i)) continue
         if (capo.has(i) && sparano.filter(k => feritoDa(m, k)).length < 2) continue
-        fila.push(m); usati.add(m)
+        fila.push(m); usati[q] = true
         if (prova(i + 1)) return true
-        fila.pop(); usati.delete(m)
+        fila.pop(); usati[q] = false
       }
       return false
     }

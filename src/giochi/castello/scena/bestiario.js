@@ -34,22 +34,21 @@
                                     sasso, lo spirito di fuoco è una
                                     fiamma che la freccia attraversa. Lo
                                     apre lo scoppio, che lo spegne
-         🦂 carapace, setole,     → niente frecce: scorpione, granchio,
-            bende, cuoio            ragno, cinghiale, mummia, zombie,
-                                    bestia cornuta; e il diavoletto, che
-                                    è troppo piccolo e svelto
-         🫧 gelatina              → niente magia: le melme, che non hanno
-                                    una mente su cui fare presa
          💀 ossa                  → niente magia e niente gelo: testa
                                     vuota e niente sangue (scheletro,
                                     negromante, teschio)
-         🌑 molle, senza forma    → niente bombe: l'ombra e il mostro
-                                    viola, dove lo scoppio affonda; il
-                                    serpente, che sta rasoterra
          🌿 un groviglio          → niente bombe e niente frecce: la
                                     pianta carnivora, l'uomo albero
-         🐺 pelliccia, e svelto   → niente gelo e niente frecce: il lupo,
-                                    e lo spirito del fulmine
+         🐾 tutti gli altri       → **nessuna immunità**: sono i comuni
+                                    (`comune` in `data/mostri.js`), e
+                                    li ferisce tutto — scorpione,
+                                    granchio, ragno, cinghiale, mummia,
+                                    zombie, bestia cornuta, diavoletto,
+                                    le melme, l'ombra, il mostro viola,
+                                    il serpente, il lupo e lo spirito
+                                    del fulmine. Non devono sembrare
+                                    corazzati né volare: il bambino li
+                                    riconosce come quelli normali
        Chi si divide è una cosa molle che si può tagliare — la melma,
        l'ombra — e non un serpente;
      · **a figura uguale, immunità uguali**: una figura che fa due mostri
@@ -87,24 +86,24 @@ export const VOLANO = ['pipistrello', 'pipistrello-occhio', 'occhio', 'fantasma'
 export const BESTIARIO = {
   bosco: {
     slime: 'melma',
-    goblin: 'scorpione',         // il carapace: la freccia rimbalza
+    goblin: 'scorpione',         // un comune: nessuna immunità
     pipistrello: 'pipistrello', fantasma: 'fantasma', ragno: 'ragno', orco: 'zombie',
     scheletro: 'scheletro', golem: 'golem', arpia: 'grifone', drago: 'drago', lupo: 'lupo',
     corvo: 'pipistrello-occhio', rovo: 'pianta',
-    verme: 'ombra',              // molle, lo scoppio ci affonda; e tagliata fa due ombre
+    verme: 'ombra',              // molle, e tagliata fa due ombre
     blatta: 'draghetto',         // un drago: niente bombe, niente magia, come il drago
     troll: 'troll',
     corazziere: 'scheletro-scudo', // lo scudo per le frecce, la testa vuota per la magia
-    balestriere: 'serpente',     // rasoterra: lo scoppio gli passa sopra
+    balestriere: 'serpente',     // un comune
   },
   /* il fuoco: magma, lava, corna, fiamme */
   lava: {
     slime: 'melma-viola',        // una melma, come nel bosco
-    goblin: 'diavoletto',        // piccolo e svelto: la freccia lo manca
+    goblin: 'diavoletto',        // un comune
     pipistrello: 'occhio',       // l'occhio volante, rosso come il posto
     fantasma: 'fantasma',        // trasparente: le frecce gli passano attraverso
-    ragno: 'granchio',           // carapace: le frecce rimbalzano
-    orco: 'bestia-cornuta',      // cuoio e corna
+    ragno: 'granchio',           // un comune
+    orco: 'bestia-cornuta',      // un comune
     scheletro: 'negromante',     // ossa sotto la tonaca
     golem: 'golem-lava',
     arpia: 'pipistrello-occhio',
@@ -116,21 +115,21 @@ export const BESTIARIO = {
     blatta: 'draghetto',
     troll: 'golem-magma',        // sasso e fuoco: né frecce né magia
     corazziere: 'spirito-fuoco', // la freccia lo attraversa, la magia no, lo scoppio lo spegne
-    balestriere: 'mostro-viola', // molle e buio, come l'ombra
+    balestriere: 'mostro-viola', // un comune, molle e buio come l'ombra
   },
   /* il freddo: ghiaccio, vento, cose pallide e cose col pelo */
   neve: {
     slime: 'melma-rosa',
-    goblin: 'mummia',            // le bende: la freccia si pianta e basta
+    goblin: 'mummia',            // un comune
     pipistrello: 'pipistrello-occhio',
     fantasma: 'fantasma-azzurro',
-    ragno: 'scorpione',          // carapace, come il ragno
-    orco: 'cinghiale',           // pelliccia e setole: la freccia ci resta piantata
+    ragno: 'scorpione',          // un comune, come il goblin del bosco
+    orco: 'cinghiale',           // un comune
     scheletro: 'teschio-azzurro', // ossa e basta, e il fuoco freddo
     golem: 'golem-ghiaccio',
     arpia: 'tornado',            // vento: la bomba gli scoppia sotto
     drago: 'drago',
-    lupo: 'spirito-elettrico',   // il fulmine: la freccia lo attraversa, il gelo non lo ferma
+    lupo: 'spirito-elettrico',   // un comune, svelto come il lupo
     corvo: 'pipistrello',
     rovo: 'ent',                 // un groviglio di rami che si richiude
     verme: 'ombra',

@@ -46,24 +46,24 @@ di 4×4 px».
 
 | castello | immune a | bosco | lava | neve |
 |---|---|---|---|---|
-| slime | magica · ✂️ | la melma verde | la melma viola | la melma rosa |
-| goblin | arciere | lo scorpione viola | il diavoletto rosso | la mummia |
+| slime | — · ✂️ | la melma verde | la melma viola | la melma rosa |
+| goblin | — | lo scorpione viola | il diavoletto rosso | la mummia |
 | pipistrello | bombe, ghiaccio · vola | il pipistrello viola | l'occhio volante rosso | il pipistrello con un occhio solo |
 | fantasma | bombe, arciere · vola | il fantasma verde acqua | il fantasma verde acqua | il fantasma azzurro |
-| ragno | arciere | il ragno nero | il granchio rosso | lo scorpione viola |
-| orco | arciere | lo zombie verde | la bestia cornuta | il cinghiale |
+| ragno | — | il ragno nero | il granchio rosso | lo scorpione viola |
+| orco | — | lo zombie verde | la bestia cornuta | il cinghiale |
 | scheletro | magica, ghiaccio · 💫 | lo scheletro | il negromante col cappuccio viola | il teschio con la fiamma azzurra |
 | golem | arciere, magica | il golem di pietra bruna | il golem di lava | il golem di ghiaccio |
 | arpia | bombe, ghiaccio · vola | il grifone | il pipistrello con un occhio solo | il tornado azzurro |
 | drago | bombe, magica · vola | il drago rosso con le ali | il drago rosso con le ali | il drago rosso con le ali |
-| lupo | arciere, ghiaccio | il lupo grigio | il lupo grigio | lo spirito del fulmine giallo |
+| lupo | — | il lupo grigio | il lupo grigio | lo spirito del fulmine giallo |
 | corvo | bombe, ghiaccio · vola | il pipistrello con un occhio solo | il pipistrello viola | il pipistrello viola |
 | rovo | arciere, bombe | la pianta carnivora | la pianta carnivora | l'uomo albero |
-| verme | bombe · ✂️ | l'ombra viola con gli occhi gialli | l'ombra viola con gli occhi gialli | l'ombra viola con gli occhi gialli |
+| verme | — · ✂️ | l'ombra viola con gli occhi gialli | l'ombra viola con gli occhi gialli | l'ombra viola con gli occhi gialli |
 | blatta | bombe, magica | il draghetto rosa con le ali | il draghetto rosa con le ali | il drago di lava senza ali |
 | troll | arciere, magica · 💫 | l'omone grigio con la clava | il sasso di magma con le corna di fuoco | il golem di pietra col muschio |
 | corazziere | arciere, magica | lo scheletro con spada e scudo | lo spirito di fuoco | la tartaruga corazzata |
-| balestriere | bombe | il serpente verde | il mostro viola con la bocca grande | il serpente verde |
+| balestriere | — | il serpente verde | il mostro viola con la bocca grande | il serpente verde |
 
   Il nome che il castello dà al mostro resta quello del gioco (è la
   chiave delle sue immunità, `data/mostri.js`; ✂️ si divide, 💫 si
@@ -74,11 +74,14 @@ di 4×4 px».
   pretende. **La figura dice a quale torre è immune** — è quello che
   serve al bambino per scegliere la torre, non chi è il mostro: il
   carapace e le setole reggono le frecce, pietra e guscio anche la
-  magia, le melme e le ossa reggono la magia, i draghi le bombe e la
-  magia, l'ombra e i grovigli le bombe. Il vocabolario intero sta in
-  testa al bestiario, e una figura che fa due mostri in due vestiti li
-  fa con le stesse immunità (lo scorpione è il goblin del bosco e il
-  ragno della neve: niente frecce tutti e due). Rifatto il 27 settembre
+  magia, le ossa reggono la magia, i draghi le bombe e la magia, i
+  grovigli le bombe e le frecce. **Il «—» sono i comuni**: goblin,
+  orco, ragno, lupo, balestriere, slime e verme non sono immuni a
+  niente, e le loro figure (scorpione, zombie, melme, ombra, serpente,
+  lupo…) non devono sembrare corazzate né volare. Il vocabolario intero
+  sta in testa al bestiario, e una figura che fa due mostri in due
+  vestiti li fa con le stesse immunità (lo scorpione è il goblin del
+  bosco e il ragno della neve: comuni tutti e due). Rifatto il 27 settembre
   coi profili a due immunità al massimo: prima lo spirito di fuoco
   faceva il fantasma, lo scheletro con lo scudo il goblin e il
   balestriere, e il verme che si divide era un serpente.

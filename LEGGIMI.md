@@ -763,14 +763,19 @@ stesso, ma il conto sbagliato costa qualche ⚡ in più. Sbagliare rallenta la
 difesa, non la fa crollare. Il ghiaccio, che si compra con la moltiplicazione,
 pesca il moltiplicatore fra le tabelline che gli asteroidi hanno trovato deboli.
 
-**Ogni mostro è immune a qualcosa** (`data/mostri.js`): le torri che non lo
-toccano affatto — né danno, né veleno, né gelo — e sono **al massimo due**.
+**Alcuni mostri sono immuni a qualcosa** (`data/mostri.js`): le torri che non
+li toccano affatto — né danno, né veleno, né gelo — e sono **al massimo due**.
+Gli altri — goblin, orco, ragno, lupo, balestriere, slime e verme — sono
+**comuni**, e li ferisce tutto: di base tutte le torri fanno effetto, e le tappe
+si aprono con loro, perché all'inizio le risorse non bastano per essere
+variegati.
 Chi vola passa sopra le bombe (pipistrelli, arpia e corvo anche sopra il gelo),
 chi è corazzato si fa rimbalzare addosso frecce e magia, le frecce passano
 attraverso il fantasma e la magia non scalfisce il drago — che però il gelo lo
 sentono tutti e due: con tre immunità avevano una torre sola e nessun modo di
-frenarli. La figura che li disegna dice a cosa sono immuni: carapace e setole
-reggono le frecce, melme e ossa la magia, i draghi bombe e magia. Il nastro in cima
+frenarli. La figura che li disegna dice a cosa sono immuni: pietra e piastre
+reggono frecce e magia, le ossa la magia, i draghi bombe e magia, e le figure
+dei comuni non sembrano né corazzate né alate. Il nastro in cima
 lo dice tre ondate prima con le torri sbarrate, la carta della torre sbagliata
 dice «non lo tocca», e in campo la torre **non gli spara nemmeno**: con
 solo immuni a tiro resta ferma e carica, pronta per il primo che può ferire.

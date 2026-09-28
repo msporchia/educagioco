@@ -52,8 +52,9 @@
    *come* vuole salire.
 
    ── le immunità, e perché decidono le file ──
-   Ogni mostro è **immune** a una o più torri (`data/mostri.js`): non gli
-   fanno niente. Non si accende e non si spegne — è com'è fatto il
+   Alcuni mostri sono **immuni** a una o due torri (`data/mostri.js`):
+   non gli fanno niente. Gli altri sono **comuni** — li ferisce tutto,
+   ed è la base: nei commenti delle file sono il «—». Non si accende e non si spegne — è com'è fatto il
    mostro — quindi a decidere è **chi manda una tappa, e in che
    ordine**. Tre regole, e `strumenti/valida-percorsi.mjs` le verifica
    tutte:
@@ -62,21 +63,21 @@
        non si ferma, qualunque cosa si faccia;
      · dove la tappa dà più torri che feriscono, **ognuna ha almeno un
        mostro immune** nella fila: nessuna torre, da sola, vince la
-       tappa — ed è il motivo per cui l'immunità esiste;
+       tappa — ed è il motivo per cui l'immunità esiste. Non nel Bosco,
+       dove si impara cosa fa una torre (`IMPARA_LE_TORRI`);
      · la **prima ondata** la ferisce l'arciere, che è la torre che si
        compra per prima e costa meno: sette mostri che passano sopra
        l'unica torre in campo vorrebbero dire una partita persa prima
        di aver capito cosa succede.
-     · le **prime quattro ondate** le feriscono le torri di apertura del
-       giocatore modello, ognuna dalla sua strada: la terza torre costa
-       tanto, e prima della quarta ondata non ci sono i soldi per
-       comprarla (`coperturaApertura` in `data/castello.js`). Con due
-       bocche vuol dire che la prima, la terza e la quarta ondata — che
-       scendono dalla stessa parte — hanno una torre in comune che le
-       ferisce.
+     · le **prime otto ondate** le feriscono le torri di apertura del
+       giocatore modello, ognuna dalla sua strada (`coperturaApertura`
+       in `data/castello.js`): all'inizio le risorse non bastano per
+       essere variegati. Per questo le file si aprono coi comuni, e
+       dove una tappa ha tre specialisti che vogliono tre torri diverse
+       la fila si allunga con dei comuni finché l'ultimo arriva nono.
    Le file qui sotto fanno di più: due ondate di fila non hanno mai le
-   stesse immunità, così chi ha costruito bene per l'ondata di adesso
-   deve rimettersi a pensare per la prossima. Il commento accanto a
+   stesse immunità (due comuni sì), così chi ha costruito bene per
+   l'ondata di adesso deve rimettersi a pensare per la prossima. Il commento accanto a
    ogni fila dice **chi lascia fuori**: 🏹 arciere, 🔮 magica, 💣 bombe,
    ❄️ ghiaccio.
 
@@ -444,31 +445,31 @@ export const CAMPAGNE = [
     tappe: [
       { nome: 'Il sentiero', emoji: '🌱', ambiente: 'bosco-chiaro', calcoli: 6, cap: 3,
         torri: ['add'],
-        /* 🔮 · 💣❄️ — una torre sola, quindi due mostri che l'arciere
-           ferisce tutti e due: le immunità che hanno riguardano torri
-           che qui ancora non ci sono */
+        /* — · 💣❄️ — una torre sola, quindi due mostri che l'arciere
+           ferisce tutti e due: lo slime è un comune, e l'immunità del
+           pipistrello riguarda torri che qui ancora non ci sono */
         mostri: ['slime', 'pipistrello'], forma: BOSCO_SENTIERO },
       { nome: 'Il guado', emoji: '💧', ambiente: 'bosco-guado', calcoli: 7, cap: 4,
         torri: ['add', 'sub'],
-        /* 🔮 · 🏹 — due mostri, due torri: l'immunità al suo minimo
-           leggibile. Lo slime la magia non la sente, il goblin si para
-           le frecce, quindi ogni ondata lascia aperta esattamente
-           l'altra. */
+        /* — · — due comuni, due torri: qui si impara cosa fa la magia,
+           e tutte e due le torri feriscono tutti. Il Bosco è esente
+           dalla regola «ogni torre ha un mostro immune»
+           (`IMPARA_LE_TORRI` in `data/mostri.js`) */
         mostri: ['slime', 'goblin'], forma: BOSCO_GUADO },
       { nome: 'La radura', emoji: '🍀', ambiente: 'bosco-radura', calcoli: 8, cap: 5,
         torri: ['add', 'sub'],
-        // 💣❄️ · 🏹 · 🔮 · 🏹
+        // 💣❄️ · — · — · —
         mostri: ['pipistrello', 'ragno', 'slime', 'goblin'], forma: BOSCO_RADURA },
       { nome: 'Il folto', emoji: '🌳', ambiente: 'bosco-fitto', calcoli: 10, cap: 6,
         torri: ['add', 'sub', 'mul'],
-        /* 💣❄️ · 🔮 · 🏹 · 🏹💣 — entra il ghiaccio, e il pipistrello gli
+        /* 💣❄️ · — · — · 🏹💣 — entra il ghiaccio, e il pipistrello gli
            passa sopra mentre il fantasma no: è la prima cosa che si
            impara di lui, che il gelo non lo dice il volo ma la bestia */
         mostri: ['pipistrello', 'slime', 'goblin', 'fantasma'], forma: BOSCO_FOLTO },
       { nome: 'La radice', emoji: '🪵', ambiente: 'bosco-notte', calcoli: 12, cap: 7,
         // niente rami: il bosco insegna a salire, non ancora a scegliere
         torri: ['add', 'sub', 'mul', 'div'], capo: true,
-        /* 💣❄️ · 🏹 · 🔮❄️ · 🏹💣 · 🏹🔮 · 🏹 — arrivano le bombe, e con
+        /* 💣❄️ · — · 🔮❄️ · 🏹💣 · 🏹🔮 · — — arrivano le bombe, e con
            loro il golem, che senza di loro non si apre. E in fondo il
            primo capo. */
         mostri: ['arpia', 'ragno', 'scheletro', 'fantasma', 'golem', 'orco'],
@@ -487,24 +488,27 @@ export const CAMPAGNE = [
         mostri: ['pipistrello', 'golem', 'scheletro'], forma: SOTTO_GROTTA },
       { nome: 'La miniera', emoji: '⛏️', ambiente: 'miniera', calcoli: 11, cap: 6,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
-        // 🔮❄️ · 🏹 · 💣 · 🏹🔮 — il verme, che tagliato fa due vermi
-        mostri: ['scheletro', 'goblin', 'verme', 'golem'], forma: SOTTO_MINIERA },
+        /* 🔮❄️ · — · — · 🏹🔮 · 💣❄️ — il verme, che tagliato fa due
+           vermi. Il pipistrello in fondo è quello che le bombe non
+           toccano: da quando goblin e verme sono comuni, senza di lui
+           nessuno le reggeva, e le bombe da sole vincevano la tappa */
+        mostri: ['scheletro', 'goblin', 'verme', 'golem', 'pipistrello'], forma: SOTTO_MINIERA },
       { nome: 'Le fogne', emoji: '🕸️', ambiente: 'fogne', calcoli: 13, cap: 7,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
-        /* 💣🔮 · 🏹 · 🔮 · 💣 — il verme e la blatta ci stanno di casa,
-           e lo slime si divide come il verme. Con due bocche l'ordine
-           conta: la prima, la terza e la quarta ondata scendono dalla
-           stessa parte, e lì una torre sola le deve ferire tutte e tre
-           (vedi `coperturaApertura` in `data/castello.js`) */
-        mostri: ['blatta', 'ragno', 'slime', 'verme'], forme: SOTTO_FOGNE },
+        /* — · — · — · 💣🔮 · 🏹💣 — il verme e la blatta ci stanno di
+           casa, e lo slime si divide come il verme. Aprono i tre comuni,
+           che con due bocche le torri di apertura feriscono da tutte e
+           due le parti; il fantasma in fondo è quello che le frecce non
+           toccano, perché dal Sotterraneo ogni torre ha il suo immune */
+        mostri: ['verme', 'ragno', 'slime', 'blatta', 'fantasma'], forme: SOTTO_FOGNE },
       { nome: 'La cripta', emoji: '⚰️', ambiente: 'cripta', calcoli: 16, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
-        // 💣❄️ · 🏹💣 · 🔮❄️ · 🏹🔮 · 💣❄️ · 🏹
+        // 💣❄️ · 🏹💣 · 🔮❄️ · 🏹🔮 · 💣❄️ · —
         mostri: ['pipistrello', 'fantasma', 'scheletro', 'golem', 'arpia', 'orco'],
         forma: SOTTO_CRIPTA },
       { nome: 'La gola', emoji: '⛰️', ambiente: 'gola', calcoli: 19, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, capo: true,
-        // 🔮❄️ · 🏹🔮 · 🏹 · 💣❄️ · 🏹💣 · 🏹
+        // 🔮❄️ · 🏹🔮 · — · 💣❄️ · 🏹💣 · —
         mostri: ['scheletro', 'golem', 'orco', 'arpia', 'fantasma', 'ragno'],
         forma: SOTTO_GOLA },
     ],
@@ -518,7 +522,7 @@ export const CAMPAGNE = [
     tappe: [
       { nome: 'Il cortile', emoji: '🚪', ambiente: 'cortile', calcoli: 14, cap: 7,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
-        // 💣❄️ · 🏹🔮 · 🏹
+        // 💣❄️ · 🏹🔮 · —
         mostri: ['arpia', 'golem', 'orco'], forma: MURA_CORTILE },
       { nome: 'Il camminamento', emoji: '🧱', ambiente: 'camminamento', calcoli: 18, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
@@ -533,18 +537,28 @@ export const CAMPAGNE = [
         mostri: ['arpia', 'fantasma', 'pipistrello', 'corazziere'], forma: MURA_CAMMINAMENTO },
       { nome: 'Il corridoio', emoji: '🗝️', ambiente: 'corridoio', calcoli: 22, cap: 9,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
-        // 💣❄️ · 🔮 · 🔮❄️ · 💣❄️ · 🏹 · 🏹💣
+        // 💣❄️ · — · 🔮❄️ · 💣❄️ · — · 🏹💣
         mostri: ['pipistrello', 'slime', 'scheletro', 'arpia', 'orco', 'fantasma'],
         forma: MURA_CORRIDOIO },
       { nome: 'La sala del trono', emoji: '👑', ambiente: 'trono', calcoli: 26, cap: 10,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
-        // 💣❄️ · 🏹🔮 · 🏹 · 🏹💣 · 💣❄️ · 🔮💣 — il drago chiude ogni giro
-        mostri: ['arpia', 'golem', 'orco', 'fantasma', 'pipistrello', 'drago'],
+        /* 💣❄️ · — · 🏹💣 · — · 💣❄️ · 🔮💣 · — · — · 🏹🔮 — sei bestie
+           che vogliono tre risposte diverse (il golem solo le bombe, il
+           drago solo le frecce, il fantasma solo la magia): con due torri
+           in campo le prime otto ondate non si fermavano in nessun
+           ordine. Adesso fra loro passano i comuni — il balestriere di
+           ronda, il ragno, lo slime — e il golem arriva nono, quando la
+           terza torre c'è */
+        mostri: ['arpia', 'orco', 'fantasma', 'balestriere', 'pipistrello', 'drago',
+                 'ragno', 'slime', 'golem'],
         forma: MURA_TRONO },
       { nome: 'Il torrione', emoji: '🏰', ambiente: 'bastione', calcoli: 30, cap: 10,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, capo: true,
-        // 💣❄️ · 🏹🔮 · 🏹 · 🏹💣 · 🏹 · 🔮💣 — sei bestie sul tracciato più corto
-        mostri: ['arpia', 'golem', 'ragno', 'fantasma', 'orco', 'drago'],
+        /* 💣❄️ · 🏹🔮 · — · 🏹💣 · — · — · — · — · 🔮💣 — sei bestie sul
+           tracciato più corto, più tre comuni: il drago, che solo le
+           frecce feriscono, arriva nono, come il golem nella sala */
+        mostri: ['arpia', 'golem', 'ragno', 'fantasma', 'orco', 'balestriere', 'slime',
+                 'ragno', 'drago'],
         forme: MURA_TORRIONE },
     ],
   },
@@ -558,24 +572,33 @@ export const CAMPAGNE = [
     tappe: [
       { nome: 'Il guado', emoji: '💧', ambiente: 'palude-alba', calcoli: 12, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
-        // 🔮💣 · 🏹❄️ · 💣
-        mostri: ['blatta', 'lupo', 'verme'], fronti: 1.5, forme: PALUDE_GUADO },
+        /* — · — · — · 🔮💣 · 🏹💣 — aprono il verme e il lupo, che la
+           palude la conoscono; il rovo è quello che le frecce non
+           toccano, e senza di lui l'arciere da solo vinceva la tappa */
+        mostri: ['verme', 'lupo', 'verme', 'blatta', 'rovo'], fronti: 1.5, forme: PALUDE_GUADO },
       { nome: 'Il canneto', emoji: '🌾', ambiente: 'palude-verde', calcoli: 14, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
-        // 💣❄️ · 🏹🔮 · 🏹💣
-        mostri: ['corvo', 'troll', 'rovo'], fronti: 1.9, forme: PALUDE_CANNETO },
+        /* 💣❄️ · 🏹🔮 · 🏹💣 · — · — · — — i tre della palude vogliono tre
+           torri diverse, e la sesta ondata scende da tutte e due le
+           bocche: adesso la fanno i comuni */
+        mostri: ['corvo', 'troll', 'rovo', 'lupo', 'verme', 'lupo'], fronti: 1.9, forme: PALUDE_CANNETO },
       { nome: 'Le isole', emoji: '🏝️', ambiente: 'palude-stagno', calcoli: 18, cap: 9,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
-        // 🔮💣 · 🏹🔮 · 💣 · 💣❄️
-        mostri: ['blatta', 'troll', 'verme', 'corvo'], fronti: 1.5, forme: PALUDE_ISOLE },
+        // 🔮💣 · 🏹🔮 · — · 💣❄️ · — · —
+        mostri: ['blatta', 'troll', 'verme', 'corvo', 'lupo', 'verme'], fronti: 1.5, forme: PALUDE_ISOLE },
       { nome: 'Il pantano', emoji: '🪵', ambiente: 'palude-marcio', calcoli: 21, cap: 10,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
-        // 🔮💣 · 🏹🔮 · 💣 · 💣❄️ · 🏹💣 · 🏹❄️
-        mostri: ['blatta', 'troll', 'verme', 'corvo', 'rovo', 'lupo'], forme: PALUDE_PANTANO },
+        /* — · 🏹🔮 · — · 💣❄️ · — · — · 🏹💣 · — · 🔮💣 — blatta, troll e
+           rovo vogliono tre torri diverse: la blatta, che solo le frecce
+           feriscono, arriva nona */
+        mostri: ['lupo', 'troll', 'verme', 'corvo', 'lupo', 'verme', 'rovo', 'lupo', 'blatta'],
+        forme: PALUDE_PANTANO },
       { nome: 'La foce', emoji: '🌊', ambiente: 'palude-torce', calcoli: 24, cap: 10,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, capo: true,
-        // 🔮💣 · 🏹🔮 · 🔮💣 · 💣 · 🏹❄️ · 💣❄️ — il drago apre, e il capo chiude
-        mostri: ['drago', 'troll', 'blatta', 'verme', 'lupo', 'corvo'], fronti: 1.6, forme: PALUDE_FOCE },
+        /* 🔮💣 · 🏹🔮 · 🔮💣 · 💣❄️ · — · — — il drago apre, e il capo
+           chiude. Il corvo prima dei comuni: la sesta ondata scende da
+           tutte e due le bocche, e la fa un comune */
+        mostri: ['drago', 'troll', 'blatta', 'corvo', 'lupo', 'verme'], fronti: 1.6, forme: PALUDE_FOCE },
     ],
   },
 ]
