@@ -1,21 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   COSA SO A MENTE — l'altra metà di «Cosa so».
-
-   Le tabelline si guardano in una tavola pitagorica: 55 caselle, una per
-   fatto. Il calcolo a mente no, perché dietro «somme col riporto» ci
-   stanno infiniti calcoli e una casella per ciascuno non esiste. Qui la
-   riga è la STRATEGIA — quella che il gioco chiama trucco — e la barra
-   dice quanto regge adesso.
-
-   Tre stati, e servono tutti e tre:
-     · chiuso   → i prerequisiti non ci sono ancora (e si dice quali)
-     · aperto   → ci si sta lavorando, la barra sale
-     · in mano  → regge, ma può tornare indietro se non si ripassa
-
-   È una pagina di progressi come `MappaTabelline`: stessa veste, stessi
-   colori, e si esce dal tasto della barra in cima.
-   ═══════════════════════════════════════════════════════════════════ */
+// Cosa so a mente: una riga per strategia (non per calcolo, che sono
+// infiniti). Vedi docs/asteroidi/scaletta.md.
 import { ref, computed } from 'vue'
 import { state, calcProgresso } from '../store/profile.js'
 import { STAZIONI, CONCETTI_PER_ID } from '../data/calcolo.js'
@@ -33,10 +18,8 @@ const arrivato = computed(() => calcProgresso().tappa)
 
 const righe = computed(() => STAZIONI.filter(s => s.nuovi.length).map(s => ({
   ...s,
-  /* Chiuso vuol dire «il gioco non te l'ha ancora messo davanti», e questo
-     lo dice la STAZIONE. I prerequisiti deboli non chiudono niente: la
-     stazione a cui si è arrivati si gioca comunque, e il gioco ci mette
-     dentro anche il ripasso di quello che manca. */
+  // chiuso = la stazione non è ancora arrivata; i prerequisiti deboli non
+  // chiudono nulla, entrano come ripasso nella stazione già in corso
   chiusa: s.i > arrivato.value,
   concetti: s.nuovi.map(id => {
     const c = CONCETTI_PER_ID[id]

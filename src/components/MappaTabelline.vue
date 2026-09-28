@@ -1,20 +1,5 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   COSA SO — la tabella pitagorica dei propri progressi.
-
-   Una casella per calcolo, colorata con la forza EFFICACE del motore:
-   quella che cala da sola col tempo, non il numero di risposte giuste.
-   Serve a rispondere alla domanda che il punteggio non risponde: non
-   "quanto ho fatto bene stasera" ma "quali calcoli so e quali no".
-
-   La tabella è simmetrica perché 6×8 e 8×6 sono lo stesso fatto e il
-   motore li tiene su una chiave sola: è detto in fondo, perché un
-   bambino che vede due caselle uguali se lo chiede.
-
-   È una pagina di progressi, non un pezzo di partita: veste come
-   l'albo e come la mappa dei pianeti — fondo chiaro, riquadri bianchi,
-   e il tasto per uscire nella barra in cima, non in fondo alla pagina.
-   ═══════════════════════════════════════════════════════════════════ */
+// Cosa so: la tavola pitagorica dei progressi. Vedi docs/asteroidi/scaletta.md.
 import { ref, computed } from 'vue'
 import { state } from '../store/profile.js'
 import { strength } from '../store/srs.js'
