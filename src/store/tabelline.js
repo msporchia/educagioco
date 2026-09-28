@@ -1,29 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL GESTORE DELLE TABELLINE — chi decide QUALE calcolo chiedere.
-
-   Stava dentro `views/MathGame.vue`, in mezzo al canvas e agli
-   asteroidi, e lì non si poteva provare: la scelta delle domande è la
-   cosa che decide se una tappa insegna o fa perdere tempo, ed è anche
-   l'unica parte del gioco che gira benissimo senza schermo. Da qui in
-   avanti sta in un file suo, come `store/calcolo.js` fa per il calcolo
-   a mente, e si gioca una tappa intera in un test di unità.
-
-   Come `store/calcolo.js`, questo file non importa il profilo: riceve
-   `items` e basta. Così gira anche in Node e non crea cicli di import.
-
-   Tre risposte, e sono tutte quelle che il gioco chiede:
-
-     · cosa può uscire in questa tappa?   → `poolTappa`
-     · cosa chiede il boss?               → `chiaveDelBoss`
-
-   (Il volo infinito non sta qui: pesca da tabelline e calcolo a mente
-   insieme, con una mira che sale col livello, e sta in `store/volo.js`.)
-
-   E in tutti e due passa LA MAREA (`store/marea.js`): quello che
-   sta sotto il livello del bambino si dimentica più piano, così chi sa
-   fino all'8 non si vede chiedere 2×3 per il solo passare dei giorni.
-   Il boss no: chiede la casella più tosta fra quelle che non reggono, e
-   una casella arrugginita in fondo alla scala non è mai la più tosta. */
+/* Il gestore delle tabelline: decide QUALE calcolo chiedere in una tappa
+   (`poolTappa`) e cosa chiede il boss (`chiaveDelBoss`). Come
+   `store/calcolo.js`, non importa il profilo (riceve `items`), quindi
+   gira anche in Node. Il volo infinito pesca da qui e da `store/calcolo.js`
+   insieme: vedi `store/volo.js` e docs/asteroidi/scaletta.md. */
 import { strength, overdue, weight, activeSet, isMastered, SRS } from './srs.js'
 import { CAMPAGNA, chiaveCalcolo, fattoriDi, calcoliTabellina } from '../data/tabelline.js'
 import { mareaTabelline } from './marea.js'
@@ -35,28 +14,8 @@ export const leggi = (items, k) => (items && items[k]) || VUOTO
 
 export const TUTTE_LE_TABELLE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-/* ═══════════ QUANTO È DIFFICILE UN CALCOLO ═══════════
-   Decide l'ordine con cui i calcoli entrano nell'insieme in lavorazione:
-   prima i facili, dopo i difficili. Due strati, e il secondo vince.
-
-   1. LA STIMA, che serve solo finché di questo bambino non si sa niente.
-      La fatica non sta nella taglia del prodotto ma in quanti dei due
-      fattori vanno saputi a memoria: 8×2 è facile e 8×7 no, benché 8 ci
-      sia in tutti e due. Per questo 2×9 sta molto prima di 4×7.
-   2. LA MISURA: il tempo medio di risposta di QUESTO bambino. Appena c'è
-      abbastanza materiale prende il posto della stima, perché difficile
-      è quello che risulta difficile a lui, non quello che ci aspettiamo.
-
-   Non c'è nessun bonus per i quadrati né sconti per il 9: 9×9 e 7×8 sono
-   fatti da sapere come gli altri, e se poi uno dei due è facile per il
-   bambino lo dirà il cronometro. */
-
-/* 1 e 10 non sono fatti da imparare: sono regole. 2, 3 e 5 si contano a
-   mente in un attimo. Il resto va saputo, ed è lì che sta la fatica.
-   Sopra il 10 (le grandi, `GRANDI` in `data/tabelline.js`) si spezza —
-   12×7 è 70+14 — e costa un po' più di un fatto da sapere: così la
-   stima le mette in cima e il boss del volo, che pesca la più tosta,
-   le trova prima di 9×9. */
+// quanto è difficile un calcolo, in due strati (la stima poi la misura
+// vera del bambino): vedi docs/asteroidi/scaletta.md
 const durezza = n => (n === 1 || n === 10) ? 0
                    : (n === 2 || n === 3 || n === 5) ? 1
                    : n > 10 ? 2.5 : 2
@@ -72,10 +31,7 @@ export function stima(k) {
   return durezza(lo) + durezza(hi) + (lo * hi) / 200
 }
 
-/* Il tempo medio riportato sulla stessa scala della stima: un secondo
-   vale come il calcolo più facile, quattro come il più difficile.
-   Comprende anche il colpire l'asteroide, ma quel costo è uguale per
-   tutti i calcoli e quindi non sposta l'ordine. */
+// il tempo medio riportato sulla stessa scala della stima (1 = facile, 4 = difficile)
 const daTempo = ms => 1.2 + (ms / 1000) * 0.8
 
 export function ordineDi(items, now = Date.now()) {
@@ -99,12 +55,8 @@ export function ordineDi(items, now = Date.now()) {
 export const chiaviDelle = tabelle => [...new Set(
   tabelle.flatMap(a => Array.from({ length: 10 }, (_, i) => chiaveCalcolo(a, i + 1))))]
 
-/* ═══════════ I FALSI DI UNA TABELLINA ═══════════
-   Gli errori tipici di chi moltiplica: la riga prima o dopo (a×(b±1)),
-   la colonna accanto ((a±1)×b), il prodotto più o meno un fattore, e i
-   soliti ±1 e ±10. Stava dentro `views/MathGame.vue`, e lì non si
-   poteva provare che i falsi di 12×7 restino credibili; il tetto a
-   200 è quello del cielo — 12×12 più un fattore ci sta. */
+// i falsi: la riga o colonna accanto, il prodotto ±un fattore, ±1 e ±10.
+// Il tetto a 200 è quello del cielo (12×12 più un fattore ci sta)
 export function distrattoriTabellina(a, b, n, sorte = Math.random) {
   const c = [a * (b + 1), a * (b - 1), (a + 1) * b, (a - 1) * b, a * b + a, a * b - a,
              a * b + b, a * b - b, a * b + 1, a * b - 1, a * b + 10, a * b - 10]
@@ -141,27 +93,9 @@ export const dellaTabellina = (n, k) => !!n && fattoriDi(k).includes(n)
 export const insiemeDi = tabelle =>
   Math.max(10, Math.min(16, Math.round(tabelle.length * 1.5)))
 
-/* ═══════════ IL POOL DI UNA TAPPA ═══════════
-   Per più di metà la tabellina nuova, il resto ripasso delle precedenti.
-   Senza questa sproporzione la tabellina del pianeta uscirebbe una volta
-   su sei e la tappa diventerebbe un'attesa; con tutto il pool sulla
-   nuova, invece, le vecchie si dimenticherebbero una dopo l'altra.
-
-   IL CUORE DELLA TAPPA NON PUÒ RESTARE IN DUE — ed è qui che stava il
-   guasto. `activeSet` restituisce solo quello che NON è ancora imparato:
-   una tabellina facile come quella del 10 si impara in mezza partita, e
-   man mano che le caselle passano da «in lavorazione» a «imparata» il
-   lato della tappa si assottiglia. Non rientrano nemmeno dal ripasso: un
-   fatto imparato dieci minuti fa non è scaduto, torna fra tre giorni. Si
-   arrivava così a UNA chiave sola — cioè la stessa domanda ripetuta, la
-   stessa domanda due volte di fila — e a zero chiavi appena l'ultima
-   casella cedeva, e a quel punto era il ripasso a prendersi la partita
-   dentro il pianeta che doveva insegnare il 10.
-
-   Qui si ripesca dalla tabellina del pianeta, dalla casella meno salda
-   alla più salda, finché il cuore non è di nuovo largo. Una casella
-   imparata stamattina che ritorna dieci minuti dopo non è tempo perso: è
-   esattamente quello che una tappa dedicata a una tabellina deve fare. */
+// il pool di una tappa: il cuore (`CUORE`) tiene sempre almeno sei
+// caselle della tabellina nuova in lavorazione, ripescando le già
+// imparate quando si assottiglia — vedi docs/asteroidi/scaletta.md
 export const CUORE = 6
 
 export function poolTappa(tappa, items, now = Date.now(), quanti = null) {
@@ -198,11 +132,7 @@ export function poolTappa(tappa, items, now = Date.now(), quanti = null) {
     cuore.push(...tornano.slice(0, CUORE - cuore.length))
   }
 
-  /* IL RIPASSO NON SUPERA MAI IL CUORE. Prima gli scaduti si sommavano
-     alla quota del ripasso invece di starci dentro: il pool veniva su
-     con sei caselle della tabellina nuova e otto di quelle vecchie, cioè
-     l'opposto della ricetta scritta qui sopra. */
-  const spazio = Math.max(2, Math.min(quante - CUORE, cuore.length))
+  const spazio = Math.max(2, Math.min(quante - CUORE, cuore.length))  // il ripasso non supera mai il cuore
   const B = activeSet(altre, dammi, ordine, now, spazio, k => tabellineDi(k, tabelle), marea)
   const vecchi = [...new Set([...B.learning,
                               ...scaduti([...A.due, ...B.due], spazio)])].slice(0, spazio)
@@ -210,22 +140,8 @@ export function poolTappa(tappa, items, now = Date.now(), quanti = null) {
   return [...new Set([...cuore, ...vecchi])]
 }
 
-/* ═══════════ IL BOSS VIENE DAL PIANETA DOPO ═══════════
-   Un boss che chiede una domanda come tutte le altre non è un boss: è una
-   domanda con la musica. Quello che lo rende un avversario è che **arriva
-   da dove non sei ancora stato** — al pianeta del 6 il boss porta un
-   calcolo del 7. Batterlo è un assaggio del futuro, e perderlo non è una
-   sconfitta: è roba che non hai ancora imparato.
-
-   E un boss non chiede mai un CALCOLO-NULLA. Ne era uscito uno che
-   chiedeva 1×1, e il guasto non era la mancanza di una lista nera: era
-   che quando il «dopo» non c'è — l'ultimo pianeta, il Sole, il volo
-   libero — si ripiegava sulla domanda «più in bilico», cioè quella col
-   peso più alto. Ma il peso premia chi non si è MAI visto, e le caselle
-   mai viste sono proprio quelle che nessuna tappa si degna di chiedere:
-   1×1, 1×2, 1×3. Il ripiego pescava con precisione il contrario di
-   quello che serviva. Adesso, quando un «dopo» non c'è, il boss chiede
-   la casella più TOSTA fra quelle che ancora non reggono. */
+// il boss viene dal pianeta dopo (vedi docs/asteroidi/scaletta.md); non
+// chiede mai un calcolo-nulla (×1, o conti che si contano a vista)
 export const eNulla = k => {
   const [lo, hi] = fattoriDi(k)
   return lo === 1 || (lo <= 3 && hi <= 3)     // ×1 e i conti che si contano
