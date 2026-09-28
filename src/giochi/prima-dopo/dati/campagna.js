@@ -1,21 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA CAMPAGNA — dieci tappe in tre scalini
-
-   Come nel Codice Segreto: prima si mette in fila (tre vignette), poi
-   la storia si allunga (quattro vignette, o un buco da riempire), poi
-   si indovina (cosa viene dopo, cosa c'era prima, cosa non c'entra).
-   L'ultima tappa mescola tutti e sei i verbi.
-
-   Una tappa non elenca le storie una per una: dichiara `categorie` (a
-   quali mondi può attingere) e `verbo` (come si chiede), e
-   `motore/corsa.js` pesca da lì a ogni giro — così due partite della
-   stessa tappa non fanno mai vedere la stessa fila di storie, e non
-   c'è bisogno di scrivere venti righe di dati per ogni tappa.
-
-   `quante` è quante storie servono per portarla a casa. Sbagliarne una
-   non toglie niente: la fila giusta si accende un istante e si riprova
-   — qui non si perde mai, si vede solo nelle stelle.
-   ═══════════════════════════════════════════════════════════════════ */
+// Dieci tappe in tre scalini: prima si mette in fila, poi la storia si
+// allunga, poi si indovina. Una tappa dichiara `categorie` e `verbo`,
+// non le storie una per una: `motore/corsa.js` pesca da lì a ogni giro.
+// Vedi docs/prima-dopo/presentazione.md.
 
 export const SCALINI = [
   { chiave: 'facile',  nome: 'Tre figure',      icona: '🖼️',
@@ -27,7 +13,6 @@ export const SCALINI = [
 ]
 
 export const CAMPAGNA = [
-  /* ── scalino 1: tre figure ── */
   { chiave: 'seme',        nome: 'Il seme cresce',    icona: '🌱', accento: '#2f9e44',
     portata: 4, scuola: 'sequenze',
     scalino: 'facile', verbo: 'ordina3', categorie: ['crescita'], quante: 4,
@@ -41,7 +26,6 @@ export const CAMPAGNA = [
     scalino: 'facile', verbo: 'ordina3', categorie: ['trasformazione', 'cucina'], quante: 5,
     racconto: 'Il latte, la mela, le patate: in cosa diventano?' },
 
-  /* ── scalino 2: la storia lunga ── */
   { chiave: 'quattro-passi', nome: 'Quattro passi',    icona: '🚂', accento: '#1971c2',
     portata: 14, scuola: 'sequenze',
     scalino: 'normale', verbo: 'ordina4', categorie: ['routine', 'viaggio'], quante: 4,
@@ -55,7 +39,6 @@ export const CAMPAGNA = [
     scalino: 'normale', verbo: 'ordina4', categorie: ['crescita', 'trasformazione', 'routine', 'causa-effetto', 'costruzione', 'cucina', 'viaggio'], quante: 5,
     racconto: 'Le storie adesso arrivano da ovunque.' },
 
-  /* ── scalino 3: indovina ── */
   { chiave: 'e-poi',    nome: 'E poi?',          icona: '➡️', accento: '#e64980',
     portata: 24, scuola: 'sequenze',
     scalino: 'tosto', verbo: 'dopo', categorie: ['routine', 'viaggio', 'causa-effetto'], quante: 4,
@@ -83,10 +66,10 @@ export const scalino = chiave => SCALINI.find(s => s.chiave === chiave) || SCALI
 export const tappeDelloScalino = chiave =>
   CAMPAGNA.map((t, i) => ({ ...t, indice: i })).filter(t => t.scalino === chiave)
 
-/* `storie` e `verbi` sono facoltativi: senza, si controlla solo la forma
-   della campagna; con, si controlla anche che ogni tappa abbia abbastanza
-   storie idonee a portarla a casa — e che le tappe facili non possano mai
-   pescare una storia ambigua al contrario. */
+// `storie` e `verbi` sono facoltativi: senza, si controlla solo la forma
+// della campagna; con, si controlla anche che ogni tappa abbia abbastanza
+// storie idonee, e che le tappe facili non peschino mai una storia
+// ambigua al contrario.
 export function guastiDellaCampagna(campagna = CAMPAGNA, storie = null, verbi = null) {
   const guasti = []
   const viste = new Set()
@@ -121,7 +104,6 @@ export function guastiDellaCampagna(campagna = CAMPAGNA, storie = null, verbi = 
     }
   }
 
-  /* gli scalini devono arrivare in fila e nessuno può restare vuoto */
   const ordine = SCALINI.map(s => s.chiave)
   const fila = campagna.map(t => ordine.indexOf(t.scalino))
   if (fila.some((n, i) => i > 0 && n < fila[i - 1]))

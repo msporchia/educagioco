@@ -1,36 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE DIDASCALIE — una parola per ogni passo
-
-   Servono a **una cosa sola**: quando una risposta è sbagliata, il
-   gioco non si limita più ad accendere un istante la fila giusta —
-   fa vedere la storia intera, un passo per riga, e sotto ogni disegno
-   ci scrive cos'è. Letta dall'alto in basso quella colonna è una
-   frase: «Prima il seme, poi si annaffia, poi il germoglio, infine il
-   girasole».
-
-   Perciò le didascalie si scrivono come **pezzi di quella frase**, non
-   come titoli: si mettono dopo «prima», «poi», «infine» e devono
-   suonare. Minuscole, senza punto, corte — tre parole sono già tante
-   in un riquadro largo mezzo telefono.
-
-   ── PERCHÉ SONO IN UN FILE A PARTE, E CHIAVE PER CHIAVE ──
-   Un passo è una stringa: o un'emoji o il nome di una scena disegnata
-   (`dati/scene.js`). Le didascalie sono indicizzate **sul passo**, non
-   sulla storia, per la stessa ragione per cui in `dati/storie.js` c'è
-   scritto che la stessa emoji vuol dire la stessa cosa dappertutto: se
-   🔪 fosse «si taglia» in una storia e «il coltello» in un'altra, un
-   bambino imparerebbe due volte la stessa figura. Un passo, una parola,
-   ovunque capiti.
-
-   Il rovescio della medaglia è che la parola deve reggere in tutte le
-   storie dove quel passo compare, e ogni tanto si sceglie la meno
-   sbagliata: 🍽️ è «a tavola» sia quando è il piatto del pranzo sia
-   quando è la fine di «ci si lava le mani».
-
-   Il gioco resta giocabile **senza leggere niente**: qui non si decide
-   nessuna risposta, si spiega soltanto — come `frase` dei verbi, è
-   roba per chi legge ad alta voce e per i genitori.
-   ═══════════════════════════════════════════════════════════════════ */
+// Una parola per ogni passo: quando si sbaglia, la storia si mostra
+// intera con sotto ogni disegno cosa è, e letta dall'alto in basso quella
+// colonna è una frase («Prima il seme, poi si annaffia, infine il
+// girasole»). Le didascalie si scrivono come pezzi di quella frase — dopo
+// «prima/poi/infine» — minuscole, senza punto, corte. Indicizzate sul
+// passo e non sulla storia: vedi docs/prima-dopo/disegni.md.
 
 export const DIDASCALIE = {
 
@@ -147,10 +120,9 @@ export const DIDASCALIE = {
   '🛣️': 'la strada',
   '🏞️': 'il bosco',
 
-  /* ══ le scene disegnate ══
-     Qui il nome della scena dice già quasi tutto, ma non basta
-     ricopiarlo: `lo-dice` è il passo che le emoji non sapevano
-     raccontare, e la didascalia deve dire *cosa* dice. */
+  /* ── le scene disegnate: qui il nome della scena dice già quasi
+     tutto, ma `lo-dice` è il passo che le emoji non sapevano
+     raccontare, e la didascalia deve dire *cosa* dice ── */
 
   /* il ginocchio sbucciato */
   'corre-nel-prato': 'corre nel prato',
@@ -219,11 +191,9 @@ export const DIDASCALIE = {
   'con-la-giacca': 'con la giacca sta bene',
 }
 
-/* Le parole che aprono ogni riga della spiegazione. La penultima e
-   tutte quelle in mezzo sono «poi»: una storia qui è lunga tre o
-   quattro passi, e inventare un ordinale diverso per ognuno («in
-   seguito», «dopo ancora») farebbe una lezione di grammatica dove
-   serve solo la freccia del tempo. */
+// La penultima e tutte quelle in mezzo sono «poi»: una storia qui è lunga
+// tre o quattro passi, e un ordinale diverso per ognuno sarebbe una
+// lezione di grammatica dove serve solo la freccia del tempo.
 export function ordinale(i, quanti) {
   if (i === 0) return 'Prima'
   if (i === quanti - 1) return 'Infine'
@@ -232,9 +202,6 @@ export function ordinale(i, quanti) {
 
 export const didascalia = passo => DIDASCALIE[passo] || ''
 
-/* Un passo senza didascalia non rompe niente — la riga esce muta — ed è
-   proprio per questo che serve un controllo: si nota solo sbagliando
-   quella storia lì, in quel punto lì. */
 export function guastiDelleDidascalie(storie, didascalie = DIDASCALIE) {
   const guasti = []
   const usati = new Set(storie.flatMap(s => s.passi))

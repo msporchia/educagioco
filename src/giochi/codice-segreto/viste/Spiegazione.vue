@@ -1,14 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL VELO DELLA SPIEGAZIONE
-
-   Poco più di una cornice: monta la Dimostrazione sul suo elemento, la
-   avvia, e la ferma appena si chiude — un'animazione lasciata a girare
-   dietro a una schermata chiusa è un telefono che scalda in tasca.
-
-   Cosa far vedere lo decide chi sta sopra (i disegni sono quelli del
-   tema di questa tappa): qui non si calcola niente.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il velo della spiegazione: monta la Dimostrazione sul suo elemento e la
+// ferma appena si chiude — un'animazione lasciata a girare dietro una
+// schermata chiusa è un telefono che scalda in tasca.
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Dimostrazione } from '../scena/dimostrazione.js'
 

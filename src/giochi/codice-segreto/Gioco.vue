@@ -1,23 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   CODICE SEGRETO — IL COORDINATORE
-
-   Il gioco nasconde un codice di disegni. Il bambino prova una
-   combinazione, il gioco risponde con i pallini: verde pieno = disegno
-   giusto al posto giusto, cerchio arancione = disegno giusto ma nel
-   posto sbagliato. Quante righe abbia il tabellone lo dice lo scaglione
-   (`dati/difficolta.js`), che è l'unico posto dove quel numero è scritto.
-
-   Non c'è matematica e non c'è un regolamento da leggere: la prima volta
-   si apre da sola una spiegazione senza parole di pochi secondi, che
-   mostra da dove vengono i due pallini. È la scommessa di questo gioco.
-
-   Questo file mette insieme i pezzi e **è l'unico che sa che esistono le
-   monete**: le regole stanno in `motore/`, i disegni e le tappe in
-   `dati/`, le animazioni in `scena/`, le schermate in `viste/`. Se
-   qualcosa qui dentro comincia a somigliare a una regola di gioco, vuol
-   dire che è nel file sbagliato.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il coordinatore: l'unico file del gioco che sa che esistono le monete.
+// Regole in `motore/`, disegni e tappe in `dati/`, animazioni in `scena/`,
+// schermate in `viste/`.
 import { ref, computed, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
@@ -48,7 +32,6 @@ const emit = defineEmits(['vai'])
 const CHIAVE = 'codice'
 const RESPIRO = 700        // quanto si guarda il tabellone prima del cartello
 
-/* ═══════════ dove siamo ═══════════ */
 const vista = ref('mappa')          // mappa | manopole | tavolo
 const tappaIdx = ref(-1)            // -1 = gioco libero
 const corsa = ref(null)             // la tappa in corso (motore, reso reattivo)
@@ -57,19 +40,14 @@ const spiega = ref(false)
 const posata = ref(-1)              // l'ultima buca riempita: solo per il tonfo
 const rifiuti = ref(0)              // dita finite su una riga già piena
 const serie = ref(0)                // codici indovinati di fila (per l'albo)
-/* La serie del gioco libero, tenuta a parte da `serie`: quella sopra
-   conta anche i codici delle tappe e alimenta un traguardo, questa è il
-   risultato di una sfida senza fine (`giochi/primati.js`) e parte da
-   zero ogni volta che si entra nel libero. */
+// La serie del gioco libero: alimenta il record (`giochi/primati.js`) e
+// riparte da zero ogni volta che si entra nel libero, a differenza di `serie`.
 const fila = ref(0)
 
 const avanza = progresso(CHIAVE)
 const libero = computed(() => tappaIdx.value < 0)
 const partita = computed(() => corsa.value?.partita || null)
 
-/* ═══════════ la mappa ═══════════
-   Le tappe arrivano alla vista già decise: cosa è aperto, quante stelle,
-   di che colore. La schermata non deve chiedere niente a nessuno. */
 const scalini = computed(() => SCALINI.map(s => ({
   ...s,
   tappe: tappeDelloScalino(s.chiave).map(t => ({
@@ -83,24 +61,19 @@ const scalini = computed(() => SCALINI.map(s => ({
   })),
 })))
 
-/* il libero si apre a campagna finita — o subito, se i genitori hanno
-   tolto i lucchetti a tutto: `aperta` sa già anche di quello */
 const statoLibero = computed(() => ({
   aperto: aperta(CHIAVE, QUANTE_TAPPE),
   quante: QUANTE_TAPPE,
   fatte: Math.min(avanza.tappa, QUANTE_TAPPE),
-  // già in parole («8 di fila»): l'unità la sa il manifesto, non la mappa
   primato: primatoInParole(primatoDi(CHIAVE), SENZA_FINE.misura),
 }))
 
-/* ═══════════ le manopole del gioco libero ═══════════ */
 const scDifficolta = ref(scelta(CHIAVE, 'difficolta', PREDEFINITO))
 const scTema = ref(scelta(CHIAVE, 'tema', CHIAVI_TEMI[0]))
 const temiInElenco = CHIAVI_TEMI.map(k => ({ chiave: k, ...TEMI[k] }))
 function scegliDifficolta(k) { scDifficolta.value = ricorda(CHIAVE, 'difficolta', k) }
 function scegliTema(k) { scTema.value = ricorda(CHIAVE, 'tema', k) }
 
-/* ═══════════ il colore di dove siamo ═══════════ */
 const accento = computed(() =>
   partita.value ? partita.value.regole.accento
   : libero.value ? TEMI[scTema.value].accento
@@ -111,9 +84,6 @@ const titolo = computed(() =>
   : vista.value === 'tavolo' ? 'gioco libero'
   : 'Codice Segreto')
 
-/* ═══════════ i suoni ═══════════
-   Sintetizzati come in tutti gli altri giochi: un file audio in più nel
-   build unico peserebbe più di tutto il gioco messo insieme. */
 const suoni = {
   posa: i => suono.nota(520 + i * 90, 520 + i * 90, 0.10, 'triangle', 0.10),
   pieno: () => suono.nota(660, 660, 0.12, 'triangle', 0.11),
@@ -121,7 +91,6 @@ const suoni = {
   niente: () => suono.nota(200, 140, 0.16, 'sawtooth', 0.08),
 }
 
-/* ═══════════ giocare ═══════════ */
 let attesa = 0
 onUnmounted(() => clearTimeout(attesa))
 
@@ -137,19 +106,14 @@ function alTavolo(nuovaCorsa, indice) {
 
 const avviaTappa = i => alTavolo(Corsa.perTappa(CAMPAGNA[i]), i)
 
-/* nel libero non si contano i codici: si gioca finché va. La corsa non
-   finisce mai, e ogni codice è una partita a sé. */
 const avviaLibero = () => {
   fila.value = 0
   alTavolo(new Corsa(Regole.libere(scDifficolta.value, scTema.value), Infinity), -1)
 }
 
-/* ═══════════ il record del gioco libero ═══════════
-   Una serie è un risultato **quando si chiude** — al codice sbagliato, o
-   quando si lascia il tavolo con dei codici in fila — non a ogni codice:
-   se si scrivesse a ogni vittoria, le «ultime partite» del quaderno
-   sarebbero 1, 2, 3, 4 della stessa serie. Finché la serie corre, il
-   cartello confronta con il record di prima, che intanto non si muove. */
+// La serie si chiude (e si scrive) al codice sbagliato o lasciando il
+// tavolo: se si scrivesse a ogni vittoria le «ultime partite» del quaderno
+// sarebbero i gradini di una stessa serie invece di partite diverse.
 function chiudiLaFila() {
   if (!fila.value) return null
   const esito = segnaPrimato(CHIAVE, fila.value)
@@ -157,8 +121,6 @@ function chiudiLaFila() {
   return esito
 }
 
-/* cosa dire sul cartello del libero: chiusa la serie, la frase di tutti i
-   giochi senza fine; in corsa, quanti di fila e se si è già oltre il record */
 function primatoDelLibero(vinta) {
   if (!vinta) {
     const esito = chiudiLaFila()
@@ -196,8 +158,6 @@ function conferma() {
   suono.ok()
   if (!p.finita) return
 
-  /* la corsa tira la riga: una persa non fa arretrare, ma si vede nelle
-     stelle della tappa */
   const tappaFinita = corsa.value.registra()
   if (p.vinta) {
     addCoins(p.monete)
@@ -251,7 +211,6 @@ function indietro() {
   else allaMappa()
 }
 
-/* ═══════════ coriandoli ═══════════ */
 const tela = ref(null)
 let festa = null
 function coriandoli() {
@@ -260,10 +219,6 @@ function coriandoli() {
   festa.lancia()
 }
 
-/* ═══════════ la spiegazione senza parole ═══════════
-   Si apre da sola la prima volta, e poi solo col «?» in barra. I disegni
-   sono quelli della tappa in cui si sta entrando: la spiegazione è un
-   esempio di questo gioco, non di un altro. */
 const esempio = computed(() => {
   const pool = partita.value ? partita.value.regole.pool : TEMI[CAMPAGNA[0].tema].simboli
   const codice = [pool[0], pool[1], pool[2]]

@@ -1,17 +1,8 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL CARTELLO DI FINE
-
-   Due cartelli in uno, perché sono lo stesso gesto: «è finita una cosa,
-   ecco com'è andata, si va avanti da qui».
-
-     che: 'partita'   un codice, trovato o no
-     che: 'tappa'     la tappa portata a casa
-
-   Il codice si mostra **sempre**, anche quando si è perso — anzi:
-   soprattutto. Un codice che resta segreto non insegna niente, e la
-   voglia di rigiocare nasce dal «ah, era lì».
-   ═══════════════════════════════════════════════════════════════════ */
+// Il cartello di fine, in due versioni: `che: 'partita'` (un codice,
+// trovato o no) e `che: 'tappa'` (la tappa portata a casa). Il codice si
+// mostra sempre, anche perdendo: un codice che resta segreto non insegna
+// niente.
 defineProps({
   che: { type: String, required: true },       // 'partita' | 'tappa'
   vinta: { type: Boolean, default: false },
@@ -21,10 +12,7 @@ defineProps({
   rimaste: { type: Number, default: 0 },       // quanti codici mancano alla tappa
   titolo: { type: String, default: '' },
   libero: { type: Boolean, default: false },
-  /* solo nel gioco libero: { record, frase } — la serie di codici in
-     fila e com'è messa rispetto al record (`giochi/primati.js`). I
-     coriandoli qui non si raddoppiano: il tavolo li lancia già a ogni
-     codice trovato, e la festa del record è la riga in evidenza. */
+  // solo nel gioco libero: { record, frase }, vedi docs/core/primati.md
   primato: { type: Object, default: null },
 })
 defineEmits(['avanti', 'esci'])

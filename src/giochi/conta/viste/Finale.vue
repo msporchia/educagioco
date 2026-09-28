@@ -1,12 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL CARTELLO DI FINE TAPPA
-
-   Un solo cartello, perché qui una domanda sbagliata non porta mai a un
-   cartello suo: si conta insieme e si riprova, senza uscire dalla
-   scena. Questo compare solo quando la tappa è fatta — e qui non si
-   perde mai, quindi è sempre una festa.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il cartello di fine tappa: qui non si perde mai, quindi compare solo
+// a tappa fatta ed è sempre una festa — una domanda sbagliata non porta
+// mai a un cartello suo, si conta insieme e si riprova senza uscire.
 defineProps({
   titolo: { type: String, required: true },
   stelle: { type: Number, required: true },

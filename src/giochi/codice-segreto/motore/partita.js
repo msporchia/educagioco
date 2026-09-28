@@ -1,28 +1,17 @@
-/* ═══════════════════════════════════════════════════════════════════
-   UNA PARTITA — un codice da indovinare
-
-   Le regole, a classi e senza schermo. Il caso si passa da fuori
-   (`rnd`) così una partita si può rifare identica: è quello che permette
-   al banco di prova di giocarne diecimila e dire se una tappa è dura o
-   solo fortunata.
-
-     Regole   uno scaglione di difficoltà applicato a un tema
-     Prova    una riga già giocata: i disegni e i due numeri di risposta
-     Partita  il codice nascosto, la riga in composizione, l'esito
-   ═══════════════════════════════════════════════════════════════════ */
+// Le regole di una partita, a classi e senza schermo. Il caso si passa da
+// fuori (`rnd`) così una partita si può rifare identica: è quello che
+// permette al banco di prova di giocarne migliaia.
 import { scaglione, stellePer, quantiCodici } from '../dati/difficolta.js'
 import { tema } from '../dati/temi.js'
 import { confronta } from './indizi.js'
 
 export class Regole {
-  /* Il modo normale di farne una: una tappa della campagna porta con sé
-     sia la difficoltà sia il vestito. */
   static perTappa(t) {
     return new Regole(scaglione(t.difficolta), tema(t.tema))
   }
 
-  /* Il gioco libero, dove le due cose si scelgono a mano. Una chiave che
-     non esiste non è una schermata bianca: si torna al predefinito. */
+  // Il gioco libero, dove difficoltà e tema si scelgono a mano: una chiave
+  // che non esiste torna al predefinito invece di una schermata bianca.
   static libere(chiaveDifficolta, chiaveTema) {
     return new Regole(scaglione(chiaveDifficolta), tema(chiaveTema))
   }
@@ -37,8 +26,8 @@ export class Regole {
     this.prove = prove
     this.ripetizioni = ripetizioni
     this.premio = premio
-    this.perfetto = perfetto      // entro quante prove vale tre stelle
-    this.bene = bene              // …e due
+    this.perfetto = perfetto
+    this.bene = bene
     this.tema = vestito
     this.pool = vestito.simboli.slice(0, simboli)
 
@@ -50,8 +39,6 @@ export class Regole {
 
   get accento() { return this.tema.accento }
 
-  /* Quanti codici diversi esistono con queste regole: il metro con cui si
-     dice che uno scaglione è più duro di un altro davvero. */
   get quantiCodici() {
     return quantiCodici({ simboli: this.pool.length, caselle: this.caselle,
                           ripetizioni: this.ripetizioni })
@@ -61,7 +48,6 @@ export class Regole {
     if (this.ripetizioni)
       return Array.from({ length: this.caselle },
                         () => this.pool[Math.floor(rnd() * this.pool.length)])
-    /* senza doppioni: si pesca dal mazzo e non si rimette dentro */
     const mazzo = this.pool.slice()
     const codice = []
     for (let i = 0; i < this.caselle; i++)
@@ -76,21 +62,19 @@ export class Prova {
     this.pieni = pieni
     this.vuoti = vuoti
   }
-  /* «ho risposto, e la risposta è niente»: il tabellone deve mostrare
-     qualcosa anche qui, o la riga sembra rimasta senza risposta */
   get muta() { return this.pieni === 0 && this.vuoti === 0 }
   get giusta() { return this.pieni === this.simboli.length }
 }
 
 export class Partita {
-  /* `codice` si può imporre da fuori: serve al banco di prova e alla
-     dimostrazione, dove il codice non deve essere una sorpresa. */
+  // `codice` si può imporre da fuori: serve al banco di prova e alla
+  // dimostrazione, dove non deve essere una sorpresa.
   constructor(regole, { rnd = Math.random, codice = null } = {}) {
     this.regole = regole
     this.codice = codice ? codice.slice() : regole.generaCodice(rnd)
-    this.prove = []                                   // [Prova]
-    this.corrente = Array(regole.caselle).fill(null)  // la riga in composizione
-    this.esito = null                                 // null | 'vinta' | 'persa'
+    this.prove = []
+    this.corrente = Array(regole.caselle).fill(null)
+    this.esito = null
   }
 
   get finita() { return this.esito !== null }
@@ -100,9 +84,7 @@ export class Partita {
   get piena() { return !this.corrente.includes(null) }
   get prossima() { return this.corrente.indexOf(null) }
 
-  /* Posa un disegno nella prima buca libera; torna l'indice della buca,
-     o `false` se la riga era già piena — chi coordina lo usa per far
-     tremare il tasto invece di ingoiare il dito senza dire niente. */
+  // Torna l'indice della buca, o `false` se la riga era già piena.
   posa(simbolo) {
     if (this.finita) return false
     const buca = this.corrente.indexOf(null)
@@ -111,7 +93,6 @@ export class Partita {
     return buca
   }
 
-  /* Si toglie e si compatta a sinistra: le buche in mezzo confondono. */
   togli(indice) {
     if (this.finita || this.corrente[indice] == null) return false
     this.corrente.splice(indice, 1)
@@ -125,8 +106,7 @@ export class Partita {
     return true
   }
 
-  /* La riga si consegna. Torna la Prova appena nata (o null se non era
-     completa), e da qui in poi l'esito è deciso. */
+  // Torna la Prova appena nata (o null se la riga non era completa).
   conferma() {
     if (this.finita || !this.piena) return null
     const simboli = this.corrente.slice()
@@ -140,8 +120,6 @@ export class Partita {
     return prova
   }
 
-  /* Quante stelle vale come è finita: la tabella sta in `difficolta.js`,
-     qui c'è solo il conto. Perdere vale zero, e non toglie niente. */
   get stelle() {
     if (!this.vinta) return 0
     return stellePer(this.regole, this.usate)
@@ -149,9 +127,8 @@ export class Partita {
 
   get monete() { return this.vinta ? this.regole.premio * this.stelle : 0 }
 
-  /* Il tabellone come lo vuole chi disegna: sempre `regole.prove` righe,
-     quelle non ancora giocate vuote, una sola attiva. Il conto si fa qui
-     e non dentro un template. */
+  // Sempre `regole.prove` righe: quelle non ancora giocate vuote, una
+  // sola attiva. Il conto si fa qui e non dentro un template.
   get righe() {
     const attiva = this.finita ? -1 : this.prove.length
     return Array.from({ length: this.regole.prove }, (_, r) => {

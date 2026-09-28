@@ -1,22 +1,14 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL PRATO — dove si conta
-
-   Riceve una domanda già decisa dal motore (`motore/scena.js`, tramite
-   `Corsa`) e manda fuori un solo gesto: `rispondi(valore)`. Non decide
-   mai se una risposta è giusta — quello lo sa solo `Corsa`, in
-   `Gioco.vue` — e non genera mai una domanda nuova da sé.
-
-   Il tocca-e-conta è tutto qui dentro, ed è scenografia: accende un
-   numero sopra il gettone toccato, suona una nota che sale. Non manda
-   niente fuori finché non si preme una risposta (o, nel modo «porta»,
-   il tasto ✔) — è un aiuto per il bambino, non un modo di rispondere.
-
-   `erroreSegnale` sale di uno ogni volta che la risposta data è
-   sbagliata: la domanda resta la stessa (arriva identica da fuori), e
-   qui si anima il «si conta insieme» — gli stessi gettoni, accesi in
-   ordine, uno alla volta — prima di lasciare riprovare.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il prato: riceve una domanda già decisa dal motore e manda fuori un
+// solo gesto, `rispondi(valore)`. Non decide mai se una risposta è
+// giusta (lo sa solo `Corsa`, in `Gioco.vue`) e non genera mai una
+// domanda nuova da sé. Il tocca-e-conta (numero sopra il gettone
+// toccato, nota che sale) è scenografia: non manda niente fuori finché
+// non si preme una risposta.
+//
+// `erroreSegnale` sale a ogni risposta sbagliata: la domanda resta la
+// stessa e qui si anima il «si conta insieme» (gli stessi gettoni,
+// accesi in ordine) prima di lasciare riprovare.
 import { ref, reactive, watch, onBeforeUnmount } from 'vue'
 import { suono } from '../../../audio.js'
 
@@ -33,19 +25,15 @@ const contando = ref(false)      // sta girando il «conta insieme»?
 const tocchi = reactive({})      // { [gruppo]: [idGettone in ordine di tocco] }
 let fineConta = null
 
-/* «uno in più»: si vede prima la scena com'era, poi arriva/scappa — e
-   solo allora si può rispondere. «gli stessi»: si vede la fila, poi si
-   sparpaglia. Sono gli unici due verbi con un tempo morto voluto, e i
-   loro timer stanno qui vicino a quello del «conta insieme» perché sono
-   la stessa famiglia di cose: puliscono tutte allo smontaggio. */
+// «uno in più»: si vede prima la scena com'era, poi arriva/scappa, e solo
+// allora si può rispondere. «gli stessi»: si vede la fila, poi si
+// sparpaglia. Gli unici due verbi con un tempo morto voluto.
 const sparpagliato = ref(false)
 const arrivato = ref(false)
 let timerSparpaglio = null, timerArrivo = null
 
 function svuotaTocchi() { for (const k of Object.keys(tocchi)) delete tocchi[k] }
 
-/* domanda nuova (una risposta giusta ne ha fatta arrivare un'altra):
-   si riparte puliti */
 watch(() => props.domanda, d => {
   svuotaTocchi()
   contando.value = false
@@ -58,8 +46,6 @@ watch(() => props.domanda, d => {
   }, 1100)
 }, { immediate: true })
 
-/* stessa domanda, risposta sbagliata: un suono morbido — non il «no»
-   aggressivo del gioco grande — e la cascata che conta al posto suo */
 watch(() => props.erroreSegnale, n => {
   if (n === 0) return
   suono.nota(320, 260, 0.2, 'sine', 0.08)
@@ -75,8 +61,7 @@ function avviaContaInsieme() {
   fineConta = setTimeout(() => { contando.value = false }, totale * PASSO + 700)
 }
 
-/* l'ordine in cui si accendono i numeri: dall'alto, da sinistra — come
-   si leggerebbe la scena ad alta voce */
+// dall'alto, da sinistra — come si leggerebbe la scena ad alta voce
 function ordineLettura(gruppo) {
   return gruppo.gettoni.filter(bersagliato).slice().sort((a, b) => a.y - b.y || a.x - b.x)
 }
@@ -93,18 +78,15 @@ const ritardoNumero = (gruppo, gettone) => {
   return i < 0 ? {} : { animationDelay: (i * PASSO) + 'ms' }
 }
 
-/* toccare un gettone non risponde: conta, e basta. Un gettone già
-   contato si spegne, non si riconta. */
 function tocca(gruppo, gettone) {
   if (contando.value) return
   const lista = tocchi[gruppo.chiave] || (tocchi[gruppo.chiave] = [])
   const i = lista.indexOf(gettone.id)
   if (i >= 0) { lista.splice(i, 1); suono.nota(280, 280, 0.08, 'sine', 0.07) }
-  /* Sempre la stessa nota, non una scala che sale. Quello che il tocco
-     deve insegnare è «uno e uno solo», e quello sta nel ritmo — mentre
-     a che punto sia arrivato il conto lo dice il numero stampato sul
-     gettone. Se salisse, l'informazione starebbe nel suono: chi ha
-     l'audio spento perderebbe metà del gioco. */
+  // sempre la stessa nota, non una scala che sale: quello che il tocco
+  // insegna è «uno e uno solo», e sta nel ritmo — il numero stampato sul
+  // gettone dice a che punto è il conto, così chi ha l'audio spento non
+  // perde nessuna informazione
   else { lista.push(gettone.id); suono.nota(560, 560, 0.1, 'triangle', 0.1) }
 }
 const contato = (gruppo, gettone) => (tocchi[gruppo.chiave] || []).includes(gettone.id)
@@ -125,10 +107,9 @@ function stileGettone(gettone) {
 
 <template>
   <div class="ct-scena">
-    <!-- la consegna: sempre leggibile per icone. Il testo sotto è per
-         chi legge — un genitore, o un bambino più grande — e domani
-         sarà anche la voce incisa: non c'è ancora, l'italiano manca
-         in `src/data/voci.js`. -->
+    <!-- la consegna: sempre leggibile per icone, il testo sotto è per chi
+         legge; la voce incisa non c'è ancora (l'italiano manca in
+         src/data/voci.js) -->
     <div class="ct-consegna">
       <div class="ct-icone em">
         <span v-for="(ic, i) in domanda.consegna.icone" :key="i">{{ ic }}</span>

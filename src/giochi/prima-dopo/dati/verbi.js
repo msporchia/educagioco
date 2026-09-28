@@ -1,28 +1,12 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I VERBI — sei modi di chiedere la stessa cosa
-
-   Tutti partono dagli stessi ingredienti (una storia, una sequenza di
-   emoji) e chiedono di riconoscere il tempo che passa: rimettere in
-   ordine, indovinare il buco, dire cosa viene dopo o prima, trovare
-   quello che non c'entra.
-
-   `tipo` decide come si gioca, e `motore/quesito.js` sceglie la classe
-   da usare guardandolo:
-     'ordina'   si toccano le vignette sparse, una per buca
-     'scegli'   si tocca una delle tre opzioni
-     'intruso'  si tocca la vignetta che non c'entra
-
-   `minPassi` è quanto deve essere lunga una storia per reggere questo
-   verbo: tre passi bastano per mettere in fila o indovinare un buco,
-   ma per «trovare l'intruso» in mezzo a quattro vignette vere ce ne
-   vogliono almeno quattro, o l'intruso sarebbe l'unica vignetta vera
-   rimasta e la domanda si risponderebbe da sola.
-
-   `icona` è la consegna senza parole — la freccia del tempo di cui
-   parla il capitolato — e `frase` è il testo piccolo sotto, per chi
-   legge e per i genitori: il gioco deve restare giocabile ignorandolo
-   del tutto.
-   ═══════════════════════════════════════════════════════════════════ */
+// Sei modi di chiedere la stessa cosa: riconoscere il tempo che passa.
+// `tipo` decide come si gioca e quale classe usa `motore/quesito.js`:
+//   'ordina'   si toccano le vignette sparse, una per buca
+//   'scegli'   si tocca una delle tre opzioni
+//   'intruso'  si tocca la vignetta che non c'entra
+// `minPassi` è quanto deve essere lunga una storia per reggere questo
+// verbo (l'intruso ne vuole almeno quattro, o l'unica vignetta vera
+// rimasta risponderebbe da sola). `icona` è la consegna senza parole,
+// `frase` il testo per chi legge.
 
 export const VERBI = {
   ordina3: { chiave: 'ordina3', tipo: 'ordina', n: 3, minPassi: 3,

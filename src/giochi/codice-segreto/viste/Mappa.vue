@@ -1,11 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA MAPPA DELLA CAMPAGNA
-
-   Tre scalini, nove tappe. Riceve tutto già deciso — cosa è aperto,
-   quante stelle, che colore ha la tappa — e non sa niente di profili,
-   monete e motore: qui dentro si sceglie dove andare e basta.
-   ═══════════════════════════════════════════════════════════════════ */
+// La mappa della campagna: tre scalini, nove tappe. Riceve tutto già
+// deciso (aperto, stelle, colore) e non sa niente di profili o motore.
 defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
   libero: { type: Object, required: true },   // { aperto, quante, fatte, primato }
@@ -30,8 +25,6 @@ defineEmits(['gioca', 'libero'])
           <span class="cs-faccia em">{{ t.aperta ? t.icona : '🔒' }}</span>
           <span class="cs-testo">
             <b>{{ t.nome }}</b>
-            <!-- chiusa, si dice cosa ci sarà: «i disegni del mare» è un
-                 motivo per arrivarci, «prima finisci quella prima» no -->
             <i>{{ t.aperta ? t.racconto : t.temaNome }}</i>
           </span>
           <span class="cs-stelle em">{{ t.stelle ? '⭐'.repeat(t.stelle) : `${t.partite} 🔑` }}</span>
@@ -39,14 +32,11 @@ defineEmits(['gioca', 'libero'])
       </div>
     </section>
 
-    <!-- il gioco libero: si apre quando la campagna è finita, ed è l'unico
-         posto dove la difficoltà si sceglie a mano -->
     <button class="cs-libero" :class="{ 'cs-chiusa': !libero.aperto }"
             data-tappa="libero" :disabled="!libero.aperto" @click="$emit('libero')">
       <span class="em">{{ libero.aperto ? '🎲' : '🔒' }}</span>
       <span v-if="libero.aperto">
         gioco libero
-        <!-- già in parole («8 di fila»): l'unità la sa il manifesto -->
         <b v-if="libero.primato"> · record {{ libero.primato }}</b>
       </span>
       <span v-else>finisci le {{ libero.quante }} tappe ({{ libero.fatte }} fatte)</span>

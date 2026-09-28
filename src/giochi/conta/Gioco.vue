@@ -1,17 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   CONTA GLI ANIMALI — IL COORDINATORE
-
-   Il bambino conta quello che vede e risponde: una cifra, un tocco su N
-   gettoni, o la scelta fra due recinti. Sbagliare non costa niente — si
-   conta insieme e si riprova la stessa domanda — e una tappa non si
-   perde mai: aspetta finché non riesce.
-
-   Questo file è l'unico che sa che esistono le monete e il profilo: le
-   regole stanno in `motore/`, le specie e le tappe in `dati/`, le
-   schermate in `viste/`. Se qualcosa qui dentro comincia a somigliare a
-   una regola di gioco, è nel file sbagliato.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il coordinatore: l'unico file che sa che esistono le monete e il
+// profilo. Regole in `motore/`, specie e tappe in `dati/`, schermate in
+// `viste/`.
 import { ref, computed } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
@@ -32,7 +22,6 @@ const emit = defineEmits(['vai'])
 
 const CHIAVE = 'conta'
 
-/* ═══════════ dove siamo ═══════════ */
 const vista = ref('mappa')          // mappa | gioco
 const tappaIdx = ref(-1)
 const corsa = ref(null)             // la tappa in corso (motore, reso reattivo)
@@ -43,7 +32,6 @@ const serie = ref(0)                // risposte giuste di fila
 
 const tappaCorrente = computed(() => tappaIdx.value >= 0 ? CAMPAGNA[tappaIdx.value] : null)
 
-/* ═══════════ la mappa ═══════════ */
 const scalini = computed(() => SCALINI.map(s => ({
   ...s,
   tappe: tappeDelloScalino(s.chiave).map(t => ({
@@ -60,7 +48,6 @@ const scalini = computed(() => SCALINI.map(s => ({
 const accento = computed(() => tappaCorrente.value ? MONDI[tappaCorrente.value.mondo].accento : '#65a30d')
 const titolo = computed(() => vista.value === 'gioco' ? tappaCorrente.value.nome : 'Conta gli animali')
 
-/* ═══════════ giocare ═══════════ */
 function avviaTappa(i) {
   tappaIdx.value = i
   corsa.value = Corsa.perTappa(CAMPAGNA[i])

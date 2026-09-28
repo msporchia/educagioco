@@ -4,6 +4,7 @@ Deduzione tipo Mastermind (`src/giochi/codice-segreto/`). È il calco dei
 giochi nuovi: chi scrive un gioco parte da qui.
 
 - [presentazione.md](presentazione.md) — il gioco per chi arriva da fuori, le nove tappe, le note per i genitori
+- [regole.md](regole.md) — gli scaglioni di difficoltà, i temi, il conteggio dei pallini
 
 Vedi anche: [../core/convenzione-giochi.md](../core/convenzione-giochi.md)
 (com'è fatto un gioco nuovo, sul modello di questo);

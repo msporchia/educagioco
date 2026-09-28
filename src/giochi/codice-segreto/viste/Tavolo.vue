@@ -1,27 +1,13 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL TAVOLO — dove si gioca
-
-   Il codice coperto in cima, il tabellone in mezzo, i disegni sotto.
-   Non decide niente: riceve la partita e manda fuori i tre gesti che un
-   bambino può fare (posare, togliere, consegnare).
-
-   Le righe le prepara il motore (`partita.righe`): qui non si conta
-   quante prove restano né quale riga è attiva, si disegna e basta.
-
-   L'unica cosa che il tavolo fa di testa sua è **tenere in vista la riga
-   che si sta scrivendo**: il tabellone scorre quando le righe non ci stanno
-   tutte, e una riga attiva finita sotto il bordo è un gioco che sembra non
-   aver reagito al dito.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il tavolo: codice coperto in cima, tabellone in mezzo, disegni sotto.
+// Non decide niente, manda solo i tre gesti (posare, togliere, consegnare);
+// le righe le prepara il motore (`partita.righe`).
 import { ref, watch, nextTick } from 'vue'
 
 const props = defineProps({
   partita: { type: Object, required: true },
-  /* l'ultima buca riempita e un contatore di rifiuti: servono solo alle
-     due animazioni che dicono «preso» e «non ci sta più niente» */
-  posata: { type: Number, default: -1 },
-  rifiuti: { type: Number, default: 0 },
+  posata: { type: Number, default: -1 },   // l'ultima buca riempita
+  rifiuti: { type: Number, default: 0 },   // dita finite su una riga già piena
 })
 defineEmits(['posa', 'togli', 'conferma'])
 
@@ -34,9 +20,8 @@ watch(() => props.rifiuti, () => {
   })
 })
 
-/* Consegnata una riga, quella nuova va portata in vista — `nearest` scorre
-   il minimo indispensabile, così la riga appena giocata resta lì sopra da
-   guardare invece di scappare in cima. */
+// Consegnata una riga, quella nuova va portata in vista: `nearest` scorre
+// il minimo indispensabile, così la riga resta lì sopra invece di scappare.
 const tabellone = ref(null)
 watch(() => props.partita.usate, () => nextTick(() => {
   tabellone.value?.querySelector('.cs-riga.cs-attiva')
@@ -45,7 +30,6 @@ watch(() => props.partita.usate, () => nextTick(() => {
 </script>
 
 <template>
-  <!-- il codice nascosto: sta in cima, coperto, e si scopre alla fine -->
   <div class="cs-segreto">
     <span class="cs-lucchetto em">{{ partita.finita ? '👁️' : '🔒' }}</span>
     <div v-for="(s, i) in partita.codice" :key="i" class="cs-coperta em"
@@ -53,12 +37,8 @@ watch(() => props.partita.usate, () => nextTick(() => {
          :style="{ animationDelay: (i * 80) + 'ms' }">{{ partita.finita ? s : '?' }}</div>
   </div>
 
-  <!-- la regola che cambia tutto: si può ripetere un disegno o no. Sta
-       sotto il codice coperto perché è una domanda che torna a ogni riga
-       («questo l'ho già messo lì: può stare anche qui?»), e una risposta
-       letta una volta sola nel racconto della tappa a metà partita non si
-       ricorda più. Si dice due volte: due caselline uguali col sì o col no
-       per chi non legge, e la frase per chi legge. -->
+  <!-- la regola che cambia tutto (doppioni sì/no) sta sotto il codice: è
+       la domanda che torna a ogni riga, non solo all'inizio -->
   <div class="cs-regola" :class="{ 'cs-nienteDoppioni': !partita.regole.ripetizioni }"
        :aria-label="partita.regole.ripetizioni
                     ? 'lo stesso disegno può tornare più volte'
