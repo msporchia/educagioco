@@ -1,34 +1,12 @@
-/* ═══════════════════════════════════════════════════════════════════
-   OPERAZIONI IN COLONNA
-   Si scrivono SOLO le cifre del risultato, da destra verso sinistra.
-   I riporti si tengono a mente: scriverli sarebbe una stampella e
-   l'obiettivo è che imparino a farne a meno.
-
-   Unica eccezione la moltiplicazione con moltiplicatore a due cifre:
-   lì i prodotti parziali sono passaggi veri del procedimento, non
-   promemoria, quindi si scrivono per intero e poi si sommano.
-
-   Le cifre sono in ordine "little endian": indice 0 = unità.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// Operazioni in colonna: si scrivono solo le cifre del risultato, i riporti
+// si tengono a mente (eccezione: la moltiplicazione a due cifre scrive per
+// intero i prodotti parziali). Le cifre sono in ordine little endian
+// (indice 0 = unità).
 export const cifre = n => String(n).split('').reverse().map(Number)
 
-/* ═══════════ IL RIPORTO, DETTO AD ALTA VOCE ═══════════
-   «Se viene 12 non si scrive 12» è il malinteso che ferma i bambini la
-   prima volta, e da fuori non somiglia a un errore di calcolo: la somma
-   l'hanno fatta giusta, è la *procedura* che non conoscono ancora — e la
-   dritta «il riporto tienilo a mente» la dà per scontata.
-
-   Questa funzione ricostruisce il conto di una colonna, riporto entrante
-   compreso, così `components/ColumnOp.vue` può mostrarlo a chi ha appena
-   sbagliato. Sta qui e non lì dentro perché è aritmetica e basta, e
-   l'aritmetica si prova senza aprire un browser (`unita/ops`).
-
-   Solo l'addizione, ed è un limite voluto: è lì che nasce il malinteso, e
-   sono le uniche colonne ricostruibili con certezza da quello che sta
-   scritto sopra — nella sottrazione i prestiti si leggerebbero al
-   contrario, nella moltiplicazione la colonna non è la somma delle cifre
-   che ha sopra. */
+// Ricostruisce il conto di una colonna di addizione (riporto compreso), per
+// spiegare a chi ha sbagliato: solo l'addizione, perché è l'unica
+// ricostruibile con certezza da quello che sta scritto sopra.
 export function spiegaColonnaAdd (numeri, i) {
   const parti = numeri.map(n => cifre(n)[i] || 0)
   let riporto = 0
@@ -102,17 +80,8 @@ export function colonnaDiv(a, m) {
   return { quoziente: q, resto, passi, colonne: q.length, saltate: inizio }
 }
 
-/* ═══════════ LA SCALETTA: DIECI GRADINI PER OPERAZIONE ═══════════
-   Il livello è quello della torre: si costruisce al gradino 1 e si sale uno
-   per volta, quindi la scaletta va percorsa tutta e in ordine. Ogni gradino
-   cambia UNA cosa sola — prima le cifre, poi il riporto, poi quanti numeri —
-   perché "sai fare 27+15, adesso prova 247+185+96" è un salto, non un passo.
-
-     +   cifre → riporti → tre addendi → quattro
-     −   cifre → prestiti → prestiti doppi → zeri di mezzo
-     ×   cifre → riporti → moltiplicatore a due cifre → numeri grandi
-     :   esatta → con resto → dividendo lungo → zero nel quoziente          */
-
+// La scaletta: dieci gradini per operazione, uno alla volta, ognuno cambia
+// una cosa sola. Vedi docs/castello/operazioni.md.
 export const LIVELLI = 10
 const grado = lv => Math.max(1, Math.min(LIVELLI, Math.round(lv) || 1))
 
@@ -240,9 +209,8 @@ export function generaSub(lv) {
   return { tipo: 'sub', a, b, segno: '−', ...colonnaSub(a, b), risultato: a - b }
 }
 
-/* ---------- moltiplicazione ----------
-   il moltiplicatore arriva da fuori: così la torre magica allena proprio le
-   tabelline che il gioco degli asteroidi ha trovato deboli */
+// Il moltiplicatore arriva da fuori: così il ghiaccio ripassa proprio le
+// tabelline deboli (vedi docs/castello/operazioni.md).
 const RICETTE_MUL = [
   { lung: 2, doppio: false, riporti: false },
   { lung: 2, doppio: false, riporti: true },
@@ -311,38 +279,16 @@ export function generaDiv(lv) {
 
 export const GENERATORI = { add: generaAdd, sub: generaSub, mul: generaMul, div: generaDiv }
 
-/* ── quando un'operazione non si è ancora fatta a scuola ──
-   Un bambino che le divisioni in colonna non le ha ancora viste non deve
-   restare fuori dall'ultima tappa: nelle impostazioni dei genitori si
-   spengono, e la torre Bombe chiede moltiplicazioni al posto loro. Non le
-   stesse della torre magica, però: tre gradini più su, così la torre che
-   costa di più resta quella che chiede di più, e il gioco non diventa più
-   facile — diventa un'altra strada per lo stesso posto.
-
-   Da quando anche le moltiplicazioni si possono spegnere, la stessa
-   regola vale una scala intera: si scende all'operazione più difficile
-   che resta, e ogni scalino sceso costa tre gradini di difficoltà in più.
-   Divisioni spente → moltiplicazioni a +3. Spente pure quelle →
-   sottrazioni a +6. Il patto è sempre quello, e vale la pena scriverlo:
-   **togliere un'operazione non abbassa l'asticella**, sposta soltanto
-   dove il bambino la incontra. Altrimenti spegnere un sapere sarebbe una
-   scorciatoia, e un genitore lo userebbe per far vincere invece che per
-   dire la verità su cosa il figlio ha già fatto.
-
-   Sotto la sottrazione non si scende: addizione e sottrazione sono il
-   pavimento del castello, e un gioco che chiede solo addizioni non è più
-   il castello — a quel punto si spegne il gioco, che è un interruttore
-   che i genitori hanno già. */
+// Togliere un'operazione non abbassa l'asticella, sposta dove la si
+// incontra: divisioni spente → moltiplicazioni a +3 gradini, spente anche
+// quelle → sottrazioni a +6. Sotto la sottrazione non si scende (a quel
+// punto si spegne il gioco). Vedi docs/castello/operazioni.md.
 export const SALTO_SENZA = 3
-/* alias storico: era il nome di quando l'unica spegnibile era la divisione */
-export const SALTO_SENZA_DIVISIONI = SALTO_SENZA
+export const SALTO_SENZA_DIVISIONI = SALTO_SENZA // alias storico
 export const RIPIEGO = { div: 'mul', mul: 'sub' }
 
-/* `sa` dice cosa il bambino può fare. Regge due forme apposta: l'oggetto
-   `{ div, mul }` di adesso, e il booleano di prima — che voleva dire «le
-   divisioni» e basta. Non è pigrizia: `contoDi(t, false)` è scritto nei
-   test e in mezzo castello, e cambiarlo tutto insieme al resto avrebbe
-   mescolato un refuso di conversione con un cambio di regole. */
+// `sa` regge due forme: l'oggetto `{ div, mul }` di adesso, e il booleano
+// di prima (`contoDi(t, false)`, ancora scritto nei test e in mezzo castello).
 const normalizza = sa =>
   (sa === undefined || sa === null) ? {}
   : typeof sa === 'boolean' ? { div: sa }
@@ -362,37 +308,12 @@ export const gradoDi = (tipo, lv, sa) => {
   const { scesi } = ripiega(tipo, normalizza(sa))
   return Math.min(LIVELLI, lv + scesi * SALTO_SENZA)
 }
-/* il segno che il banco mostra sul tasto della torre */
 export const segnoDi = (tipo, sa) => TORRI[contoDi(tipo, sa)].segno
 
-/* Le torri. `stadi` è come cambiano di aspetto salendo la scaletta: una torre
-   che ha superato sei operazioni deve *vedersi* che è un'altra cosa, altrimenti
-   il lavoro fatto resta un numeretto in un angolo.
-
-   ── i due rami ──
-   A metà scaletta ognuna può diventare due cose diverse (`rami`). Qui ci
-   sono i nomi, i colori e le descrizioni; i numeri — quanto danno, ogni
-   quanto, fin dove — stanno in `data/castello.js` insieme a tutto il
-   resto dell'equilibrio, perché la regola che li tiene onesti è una
-   sola: **i due rami valgono lo stesso**. Cambia la forma del danno,
-   non la quantità, e per questo il modello che tara le tappe può
-   continuare a ignorarli.
-
-   La chiave è **l'operazione**, non la torre: `sub` vuol dire «la torre che
-   si compra facendo sottrazioni». Quale torre sia lo dice `aspetto`, e i
-   due non coincidono per un motivo preciso.
-
-   Le operazioni entrano nell'ordine dei libri — + − × : — e la seconda
-   torre che un bambino si guadagna non può essere il ghiaccio, che non fa
-   danno: se la prima cosa che ti compri con un calcolo difficile non
-   ammazza niente, pensi di aver sbagliato tu. Quindi la sottrazione dà la
-   torre magica, che fa danno a zona e si vede lavorare, e il ghiaccio
-   arriva con la moltiplicazione — terzo, quando c'è già una difesa che
-   approfitta dei nemici tenuti fermi.
-
-   L'ordine qui sotto è anche quello dei tasti nel banco, e deve restare
-   quello di sblocco: vedere una torre al secondo posto per tutta la
-   partita in cui non ce l'hai ancora è confuso e pure bugiardo. */
+// Le torri. La chiave è l'operazione (non la torre): `sub` compra la torre
+// il cui `aspetto` è 'magica'. L'ordine (+ − × :) è anche l'ordine di
+// sblocco: il ghiaccio, che non fa danno, non può essere la seconda torre
+// guadagnata (vedi docs/castello/torri.md e operazioni.md).
 export const TORRI = {
   add: { nome: 'Arciere',  aspetto: 'arciere', emoji: '🏹', segno: '+', colore: '#38c172',
          stadi: ['🏹', '🎯', '🦅'],
