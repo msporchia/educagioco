@@ -1,13 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   COME SI LEGGE UNA RIGA
-
-   Ogni istruzione diventa una **frase con delle caselle**: «vai [→ a
-   destra] [3]», «[h] diventa [h + 1]», «ripeti · smetti quando [qui
-   c'è il terreno]». Il bambino non scrive mai codice: tocca le caselle.
-   Le parole stanno qui, una volta sola, perché le leggono tre posti —
-   la riga, la pulsantiera che la propone, e il test che controlla che
-   ogni blocco abbia la sua frase.
-   ═══════════════════════════════════════════════════════════════════ */
+// Come si legge una riga: ogni istruzione diventa una frase con delle
+// caselle. Le parole stanno qui una volta sola, lette da riga,
+// pulsantiera e test. Vedi docs/costruttore/linguaggio.md.
 import { colore } from '../dati/colori.js'
 
 export const ICONE = {
@@ -182,18 +175,9 @@ export const iconaDi = (i, programma) => {
   return ICONE[i.tipo] || '•'
 }
 
-/* I blocchi della pulsantiera, in gruppi. `blocco` è la chiave di
-   `rigaNuova` in `motore/modifica.js`; i progetti si aggiungono da chi
-   monta, perché sono del bambino e non del livello.
-
-   **Un tasto per blocco, e le scelte si fanno sulla riga.** «Vai» a
-   destra con un tasto solo sembrava l'unico verso possibile; poi sono
-   stati due tasti, uno per verso, e la riga nasceva con la freccia già
-   scritta — e a chi l'ha provata non veniva in mente che la freccia si
-   potesse cambiare. Adesso la cassetta dice *quante* strade ci sono
-   («← o →») e la riga nasce col punto di domanda, la scelta aperta
-   sulla casella. «Metti» con un posto solo nel livello non chiede
-   niente (`unPosto`); con tre li mostra e li fa scegliere (`piuPosti`). */
+// I blocchi della pulsantiera, in gruppi. `blocco` è la chiave di
+// `rigaNuova` in `motore/modifica.js`; i progetti si aggiungono da chi
+// monta. Vedi docs/costruttore/linguaggio.md (una scelta non nasce fatta).
 export const GRUPPI = [
   { nome: 'Camminare', blocchi: [
     { blocco: 'vai', esempio: 'vai ← o → , 1 passo', nota: 'la freccia la scegli tu, e anche i passi' },
@@ -210,10 +194,7 @@ export const GRUPPI = [
   { nome: 'Lavagnette', blocchi: [{ blocco: 'assegna', esempio: '[ ] diventa N' }] },
 ]
 
-/* La cassetta del porto: la stessa regola, con quattro frecce. Erano
-   dodici tasti, una fila di frecce per gesto, e la riga nasceva col
-   verso già scritto; adesso un tasto per gesto, e la freccia si sceglie
-   sulla riga. */
+// La cassetta del porto: la stessa regola, con quattro frecce.
 export const GRUPPI_PORTO = [
   { nome: 'Camminare', blocchi: [{ blocco: 'vai', esempio: 'vai ↑ ↓ ← → , 1 passo', nota: 'la freccia la scegli tu, e anche i passi' }] },
   { nome: 'Prendere e posare di fianco', blocchi: [

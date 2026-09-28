@@ -1,18 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL CAMPO — dove sta la tela
-
-   Monta la tela, le dice quanto posto c'è (tutta la larghezza, e al
-   massimo un terzo abbondante dell'altezza: sotto c'è il programma, che
-   è l'altra metà del gioco) e le passa il quadro. Il quadro lo muta la
-   regia sul posto: qui non si guarda cosa c'è dentro.
-
-   Le tele sono due: il cantiere di lato (`scena/tela.js`) e il porto
-   dall'alto (`scena/porto.js`), che ha anche una telecamera quando il
-   porto è più grande dello schermo. Si passa da un livello all'altro
-   senza smontare il campo («avanti» dal cartello della vittoria), quindi
-   quando cambia il mondo si cambia la tela.
-   ═══════════════════════════════════════════════════════════════════ */
+// Monta la tela (il cantiere di lato o il porto dall'alto) e le passa il
+// quadro, che la regia muta sul posto. Si cambia tela senza smontare il
+// campo quando cambia il mondo (`delPorto`).
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { Tela } from '../scena/tela.js'
 import { TelaPorto } from '../scena/porto.js'

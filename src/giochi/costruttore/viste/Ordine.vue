@@ -1,13 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   L'ORDINE — chi chiede, cosa chiede, e su quali misure
-
-   L'unica consegna del livello: un personaggio che dice cosa vuole. Sotto,
-   **gli ordini** in fila come gettoni — «lungo 4 · lungo 7 · lungo 10» —
-   perché il programma deve reggerli tutti, e il bambino lo deve sapere
-   *prima* di scrivere, non scoprirlo dopo. Toccarne uno fa vedere il
-   cantiere di quell'ordine; dopo una prova il gettone dice com'è andata.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il personaggio che chiede, e gli ordini in fila come gettoni. Vedi
+// docs/costruttore/linguaggio.md.
 defineProps({
   livello: { type: Object, required: true },
   visto: { type: Number, default: 0 },

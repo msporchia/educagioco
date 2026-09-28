@@ -1,24 +1,8 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   GLI AIUTI — una scala: prima si ragiona, poi si paga
-
-   I gradini scesi restano scritti, uno sotto l'altro, e sotto c'è un
-   tasto solo per il prossimo, col suo prezzo **prima** di essere
-   premuto (la scala la compone `motore/aiuti.js`, i prezzi stanno in
-   `giochi/aiuti.js`):
-
-     🧠 ragiona   gratis   cosa chiede il livello, la domanda giusta
-     💡 indizio   🪙10     una cosa concreta
-     🧩 pezzo · forma · ✅ soluzione   🪙50 · 100 · 200, e scrivono nel
-                 programma al posto di quello che c'è
-
-   Senza monete il tasto c'è, spento, e dice quanto manca. Dai cinquanta
-   in su chiede un secondo tocco. Un gradino che scrive, una volta
-   pagato, si rimette gratis dalla sua riga.
-
-   Qui non si spende niente: si dice cosa ha toccato il dito, e chi
-   compra è il coordinatore.
-   ═══════════════════════════════════════════════════════════════════ */
+// La scala degli aiuti: i gradini scesi restano scritti, sotto c'è il
+// tasto per il prossimo col suo prezzo. Qui non si spende niente: si
+// dice cosa ha toccato il dito, chi compra è il coordinatore. Vedi
+// docs/costruttore/campagna.md e docs/core/aiuti.md.
 import { ref, watch, onUnmounted } from 'vue'
 import { mancano, chiedeConferma, scrive } from '../../aiuti.js'
 

@@ -1,20 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   UN PROGETTO: COME SI CHIAMA, CHE FACCIA HA, CHE MISURE VUOLE
-
-   Il nome lo sceglie il bambino — dare un nome a un pezzo di programma
-   *è* la lezione dei progetti, e a nove anni una tastiera non è più un
-   muro. Ma si può anche solo toccare: la figurina propone il suo nome
-   («🏛️ → colonna»), e le misure hanno i loro nomi pronti (alta, larga,
-   lunga…).
-
-   Le misure (i parametri) ci sono solo nei livelli che le insegnano, e
-   sono al massimo quattro: la torre del casaro ne vuole tante — quanto è
-   alta, e le tre assi di partenza, arrivo e appoggio.
-   Una misura rinominata porta con sé le righe che la usano, e toglierne
-   una sistema tutte le chiamate: lo fa `aggiornaProgetto`, qui si
-   raccoglie soltanto cosa vuole il bambino.
-   ═══════════════════════════════════════════════════════════════════ */
+// Un progetto nuovo: nome (a scelta o toccando una figurina) e le sue
+// misure, al massimo quattro. Qui si raccoglie solo cosa vuole il
+// bambino: `aggiornaProgetto` sistema poi le righe che le usano.
 import { ref, computed } from 'vue'
 import { ICONE_PROGETTI, NOMI_MISURE, NOMI_MISURE_COLORE } from './frasi.js'
 

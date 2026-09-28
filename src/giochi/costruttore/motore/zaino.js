@@ -1,36 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LO ZAINO — quante righe può scrivere il bambino in un livello
-
-   È la stessa idea di Passo passo (lì sono carte, qui righe): un livello
-   può dire quante righe tiene il programma (`zaino` nel livello), e il
-   lavoro scritto riga per riga non ci sta. Non è un par — le stelle non
-   guardano quante righe si sono usate, e meno righe non vale di più — è
-   il vincolo che rende **necessario** quello che il livello insegna:
-   un progetto scritto una volta e chiamato tre, un ripeti al posto di
-   dieci righe uguali.
-
-   Il perché è una misura, non un'impressione. Prima dello zaino tutti e
-   quattordici i livelli che usano un progetto si vincevano lo stesso
-   srotolando le chiamate, e in undici il programma srotolato era
-   **più corto** — il villaggio, che insegna «progetti fatti di
-   progetti», senza progetti aveva una riga in meno. Il progetto era una
-   cosa che il racconto chiedeva, non una cosa che servisse.
-
-   ── COSA SI CONTA ─────────────────────────────────────────────────
-   Ogni istruzione è una riga, e un blocco conta la sua testa più le
-   righe che ha dentro («ripeti 3 volte» con due righe dentro sono tre
-   righe). Si contano **il principale e i progetti del bambino**; gli
-   attrezzi del capomastro no (`dati/attrezzi.js`): sono già scritti, e
-   usarli invece di riscriverli è proprio quello che lo zaino vuole
-   insegnare.
-
-   ── SROTOLARE ──────────────────────────────────────────────────────
-   `srotola` riscrive un programma senza i progetti del bambino: ogni
-   chiamata diventa il corpo del progetto, con le misure sostituite dagli
-   argomenti. Serve al banco (`unita/costruttore`): in un livello che
-   insegna i progetti la soluzione srotolata **non deve starci** — se ci
-   sta, il livello non insegna quello che dichiara.
-   ═══════════════════════════════════════════════════════════════════ */
+// Lo zaino: quante righe può scrivere il bambino in un livello (`zaino`
+// nel livello); si contano il principale e i progetti del bambino, non
+// gli attrezzi. `srotola` riscrive il programma senza i progetti, per il
+// banco. Vedi docs/costruttore/progetti.md.
 import { copia } from '../dati/scrivi.js'
 
 const RAMI = ['corpo', 'allora', 'altrimenti']

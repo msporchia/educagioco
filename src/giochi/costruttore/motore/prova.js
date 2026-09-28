@@ -1,28 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA PROVA — un programma, tutti gli ordini di un livello
-
-   Il cuore della sfida del costruttore sta qui, ed è un'idea presa dal
-   Generale: **il programma si scrive prima, e deve reggere su ordini che
-   non hai davanti**. Un livello dichiara più ordini — la stessa scala
-   con 3 gradini e con 5, lo stesso fiume largo 3 e largo 6 — e vince
-   solo il programma che li regge tutti. Chi scrive «3» dove l'ordine
-   dice «gradini» vince il primo e perde il secondo, e lo vede: la scala
-   si ferma a metà e l'omino resta sotto.
-
-   Nel porto un ordine è **una giornata**: altri clienti, altri colori,
-   la gru che cala più casse. Il programma non le vede prima, e deve
-   reggerle tutte lo stesso.
-
-   Come si vince un ordine lo dichiara il livello (`prova`):
-     disegno     a programma finito i mattoni sono esattamente il disegno
-     passaggio   a programma finito l'omino arriva alla bandiera
-     libero      niente da vincere: è il cantiere libero
-     giornata    il porto: a sera, gli obiettivi del livello
-                 (`motore/porto/esito.js`)
-
-   Questo file gioca d'un fiato: serve ai test, al banco e alla vista per
-   sapere l'esito prima di animarlo. Chi anima usa `Esecuzione` a passi.
-   ═══════════════════════════════════════════════════════════════════ */
+// La prova: un programma su tutti gli ordini di un livello, giocata
+// d'un fiato (serve ai test e al banco). Vedi docs/costruttore/linguaggio.md
+// (la sfida sono gli ordini, come si vince un ordine). Chi anima usa
+// `Esecuzione` a passi.
 import { Mondo, camminaOmino } from './mondo.js'
 import { Porto } from './porto/mondo.js'
 import { esitoDelPorto } from './porto/esito.js'
