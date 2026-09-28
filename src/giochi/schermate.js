@@ -1,14 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE SCHERMATE DEI GIOCHI NUOVI
-
-   Chiave → componente, nella forma che si aspetta `App.vue`. È l'unico
-   file che importa davvero i `.vue` dei giochi nuovi, e lo legge solo
-   `App.vue`: i manifesti (`indice.js`) restano dato puro e li può
-   leggere chiunque, anche chi sta a monte dello store.
-
-   Un gioco nuovo aggiunge una riga qui e una in `indice.js`. Niente
-   altro dell'applicazione va toccato.
-   ═══════════════════════════════════════════════════════════════════ */
+// Chiave -> componente per App.vue: l'unico file che importa i .vue dei
+// giochi nuovi (indice.js resta dato puro). Un gioco nuovo aggiunge una
+// riga qui e una in indice.js.
 import CodiceSegreto from './codice-segreto/Gioco.vue'
 import Dungeon from './dungeon/Gioco.vue'
 import Survivors from './survivors/Gioco.vue'

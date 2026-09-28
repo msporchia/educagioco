@@ -1,21 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL REGISTRO DEI GIOCHI NUOVI
-
-   Una riga per gioco. Di qui leggono la home (per fare la carta) e la
-   schermata dei genitori (per l'interruttore): con i giochi vecchi
-   aggiungerne uno voleva dire toccare `App.vue`, `HomeView.vue`,
-   `data/giochi.js` e `store/profile.js`, e dimenticarne uno dava un
-   gioco raggiungibile ma invisibile — o il contrario.
-
-   Qui dentro ci sono solo **manifesti puri**: niente `.vue`, niente
-   store. Le schermate stanno in `schermate.js`, che le importa davvero
-   ed è letto solo da `App.vue`. Sono due file perché sono due catene di
-   `import` diverse: `data/giochi.js` ha bisogno dei nomi e finirebbe per
-   tirarsi dietro mezza applicazione — e un anello di import è un guasto
-   che si presenta mesi dopo, senza un motivo visibile.
-
-   L'ordine è quello in cui le carte compaiono in home.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il registro dei giochi nuovi: manifesti puri, niente .vue né store (le
+// schermate stanno in schermate.js). Vedi docs/core/convenzione-giochi.md.
+// L'ordine è quello delle carte in home.
 import codiceSegreto from './codice-segreto/gioco.js'
 import survivors from './survivors/gioco.js'
 import dungeon from './dungeon/gioco.js'
