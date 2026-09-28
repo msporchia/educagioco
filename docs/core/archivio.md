@@ -48,6 +48,12 @@ scaricano da sole su `visibilitychange` e `pagehide`.
   `segnaBest(chiave, valore)`** di `store/profile.js`: scrivono in `totals`
   e fanno scattare da soli traguardi e festa (vedi [progressi.md](progressi.md)).
 
+- **`profile.aspetto`** (il personaggio scelto per la mappa) non nasce in
+  `blank()`: si calcola alla lettura (`aspettoDi()`), ricadendo sul primo
+  `PERSONE` disponibile se manca o se punta a un personaggio che l'atlante
+  non ha più. Così un profilo vecchio, o uno importato da un'altra casa,
+  non ha bisogno di nessuna migrazione.
+
 ## Fuori dai profili
 
 Chiavi di casa, non di un bambino: stanno fuori perché dentro morirebbero
