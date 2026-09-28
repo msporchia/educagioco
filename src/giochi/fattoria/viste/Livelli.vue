@@ -1,50 +1,15 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA PAGINA DEI LIVELLI — I PREMI, E DOVE SI VA A PRENDERLI
-
-   Sta **in alto**, sempre visibile: è il gettone col numero accanto ai
-   tondi del baule, e si preme quando ci si chiede «e adesso?». Dentro
-   ci sono due blocchi soli, e sono due domande:
-
-     1. **cosa è arrivato** — i premi di questo livello, a quadratini.
-        Quelli non ancora presi si premono, ed è tutto il punto di
-        questa schermata;
-     2. **cosa arriva al prossimo** — gli stessi quadratini, spenti, con
-        quanto manca da spendere. È il motivo per cui si torna.
-
-   ── PERCHÉ SI PRENDONO A MANO ─────────────────────────────────────
-   Prima arrivavano da soli: la spesa faceva scattare il livello e
-   questo stesso foglio si apriva **in festa**, nel mezzo dell'acquisto.
-   Due difetti. Spezzava il gesto — il dito era in viaggio dal baule al
-   prato e trovava un velo — e quello che arrivava non lo prendeva
-   nessuno: compariva. Un premio che compare è una riga di elenco; uno
-   che si preme è una cosa che ci si va a prendere.
-
-   Adesso il livello **apre** i premi, il gettone in alto si accende col
-   loro numero, e si vengono a prendere qui quando si vuole. Prenderli
-   non regala niente: apre la voce nel baule, dove si compra con le
-   monete come sempre (`dati/livelli.js`).
-
-   ── SOLO DUE LIVELLI, E NON DODICI ────────────────────────────────
-   C'era sotto la scaletta intera, tredici righe che scorrevano, «per
-   vedere che la strada continua». Non serviva a niente: sono righe di
-   testo con dentro dei nomi di cose che non si sono mai viste, e in
-   mezzo ci finiva anche l'unica riga su cui si poteva fare qualcosa.
-   Quello che continua si vede lo stesso, perché il blocco del prossimo
-   livello c'è sempre — e quanti ne restano lo dice una riga sola.
-
-   Non sa niente del profilo né del motore: riceve l'avanzamento già
-   fatto, i premi e quali sono stati presi.
-   ═══════════════════════════════════════════════════════════════════ */
+/* La pagina dei livelli: cosa è arrivato (a quadratini, si prendono premendo) e cosa arriva al
+   prossimo — vedi docs/fattoria/livelli.md. Riceve l'avanzamento già fatto, non sa niente del profilo. */
 import { computed } from 'vue'
 import { ULTIMO, premiDi } from '../dati/livelli.js'
 import Provino from './Provino.vue'
 import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
-  /* quello che torna da `Fattoria.avanzamento` */
+  // quello che torna da Fattoria.avanzamento
   stato: { type: Object, required: true },
-  /* le chiavi dei premi già presi */
+  // le chiavi dei premi già presi
   presi: { type: Array, default: () => [] },
 })
 defineEmits(['reclama', 'chiudi'])
@@ -53,12 +18,7 @@ const dopo = computed(() => props.stato.livello + 1)
 const presi = computed(() => new Set(props.presi))
 const preso = p => presi.value.has(p.chiave)
 
-/* ── QUELLO CHE È ARRIVATO ────────────────────────────────────────
-   I premi di questo livello, **più gli arretrati**: chi salta due
-   livelli con una spesa sola, o chi non è passato di qui per una
-   settimana, ha roba aperta a un livello più vecchio, e quella non può
-   restare in un blocco che non si mostra più. Prima i da prendere, che
-   sono la ragione per cui questa pagina è aperta. */
+// Quello che è arrivato: i premi di questo livello più gli arretrati (chi ha saltato livelli).
 const adesso = computed(() => {
   const liv = props.stato.livello
   const miei = premiDi(liv)
@@ -69,9 +29,7 @@ const adesso = computed(() => {
 })
 const daPrendere = computed(() => adesso.value.filter(p => !preso(p)))
 const prossimi = computed(() => premiDi(dopo.value))
-/* Quanti gradini restano da qui in fondo al catalogo. Oltre si continua
-   a salire, ma non arriva più niente di nuovo: si dice invece di
-   promettere. */
+// Quanti gradini restano con qualcosa di nuovo; oltre si continua a salire ma non arriva più niente.
 const restano = computed(() => Math.max(0, ULTIMO - props.stato.livello))
 </script>
 
@@ -80,10 +38,7 @@ const restano = computed(() => Math.max(0, ULTIMO - props.stato.livello))
     <Chiudi @chiudi="$emit('chiudi')" />
     <h2>⭐ Livello {{ stato.livello }} · {{ stato.nome }}</h2>
 
-    <!-- ── quello che è arrivato ──
-         Il titolo cambia mestiere: con dei premi da prendere è un
-         invito e dice quanti sono, senza è il riepilogo di cosa ha
-         portato questo livello. -->
+    <!-- Il titolo cambia mestiere: con premi da prendere è un invito, senza è un riepilogo. -->
     <span class="fa-etichetta" :class="{ dono: daPrendere.length }">
       {{ daPrendere.length
          ? (daPrendere.length === 1 ? '🎁 un premio da prendere'
@@ -109,9 +64,7 @@ const restano = computed(() => Math.max(0, ULTIMO - props.stato.livello))
        aprirlo: da quel momento lo trovi nel baule, e lo compri quando
        hai le monete.</p>
 
-    <!-- ── quello che arriva ──
-         Spento e in grigio: non è un negozio, è una vetrina. Il numero
-         che conta è quanto manca da **spendere qui dentro**. -->
+    <!-- Spento e in grigio: non è un negozio, è una vetrina. -->
     <span class="fa-etichetta">al livello {{ dopo }} arriva</span>
     <p class="fa-posti">
       <b>🪙{{ stato.speso }}</b> spesi ·

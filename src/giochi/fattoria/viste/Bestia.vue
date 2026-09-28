@@ -1,41 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   COME STA, E COSA POSSO FARE PER LUI — IN TRE BLOCCHI
-
-   Si tocca l'animale e si vede come sta. Il nome glielo si dà una volta,
-   lo stato si guarda ogni volta: rinominare è rimasto, ma è un tastino
-   in fondo.
-
-   ── TRE BLOCCHI, UNO PER BISOGNO ──────────────────────────────────
-   *Ribalta la forma di prima*, che era: tre barrette in cima, la
-   ciotola in mezzo, una fila di tasti in fondo. Tutto vero e tutto
-   sparso — dalla ciotola alle barrette non c'era nessun filo, e
-   nessuno poteva capire quale tasto muovesse quale barretta.
-
-   Adesso ogni bisogno è **un blocco**: la sua barra, e sotto solo le
-   cose che quel bisogno lo riempiono. La pancia ha la ciotola, il pelo
-   ha la spazzola e la copertina, il gioco ha la pallina. Non c'è niente
-   da collegare a mente: quello che premi sta dentro la barra che si
-   muove.
-
-   ── QUELLO CHE NON HAI DICE COME SI FA ────────────────────────────
-   La ciotola mostrava dieci cibi, sei dei quali spenti perché quella
-   bestia non li mangia. Adesso mostra **solo i suoi**, e un cibo che
-   non hai non è un tasto morto: premendolo si legge come si ottiene —
-   «3 🌾 nel mulino (5 min)» — e **solo lì**, per chi non ha voglia di
-   aspettare, compare l'offerta di comprarne uno a monete. L'ordine
-   conta: prima come te lo fai, poi come lo compri. È la stessa regola
-   di tutto il posto, dove coltivare conviene ma costa tempo vero.
-
-   Non sa niente del profilo: riceve `stato`, `monete` e `granaio`, e
-   manda fuori `nutri` e `coccola`. Chi paga è `Gioco.vue`.
-
-   `stato` è una **fotografia** dei tre bisogni (`foto` in
-   `dati/bisogni.js`), non la bestia viva del motore: il record del
-   motore è sempre lo stesso oggetto, e un foglio le cui prop sono tutte
-   identiche a prima non si ridisegna affatto. Il perché per esteso, e
-   cosa si vedeva a schermo, stanno lì.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Come sta una bestia, a blocchi (uno per bisogno, con solo le cose che lo riempiono) — vedi
+   docs/fattoria/animali.md. stato è una fotografia (foto in dati/bisogni.js), non la bestia viva:
+   il record del motore è sempre lo stesso oggetto e un foglio con prop identiche non si ridisegna. */
 import { computed, ref } from 'vue'
 import { BISOGNI, CHIAVI, comeSta, cibiPer, gestiPer } from '../dati/bisogni.js'
 import { comeSiFa, PRODOTTI } from '../dati/coltivazioni.js'
@@ -56,32 +22,24 @@ const emit = defineEmits(['nutri', 'coccola', 'rinomina', 'vesti', 'chiudi'])
 
 const famiglia = computed(() => famigliaDi(props.chi))
 const pieno = k => (props.stato[k] ?? 0) > 0.93
-/* Nella riga «gli piace…» stanno solo i cibi **suoi da comprare**: il
-   mangime del mulino va bene per tutti, e infilarlo lì allungherebbe la
-   frase senza dire niente su questa bestia. */
+// Solo i cibi suoi da comprare: il mangime del mulino va bene per tutti e non dice niente su questa bestia.
 const suoi = computed(() => cibiPer(famiglia.value).filter(c => !c.da))
 
 const quantiNe = prodotto => props.granaio[prodotto] || 0
-/* Quanto ne hai: la scorta per quello che si produce, le monete per
-   quello che si compra. Sono due cose diverse e si mostrano diverse. */
+// Quanto ne hai: la scorta per quello che si produce, le monete per quello che si compra.
 const ce = g => g.da ? quantiNe(g.da) > 0 : (g.prezzo || 0) <= props.monete
 const puoi = (g, bisogno) => !pieno(bisogno) && ce(g)
 
-/* I gesti di un bisogno, con quelli che hai davanti: chi può fare
-   qualcosa adesso sta dove il dito arriva prima. */
+// I gesti di un bisogno: chi può fare qualcosa adesso sta dove il dito arriva prima.
 const gesti = bisogno => gestiPer(bisogno, bisogno === 'pancia' ? famiglia.value : null)
   .slice()
   .sort((a, b) => (ce(b) ? 1 : 0) - (ce(a) ? 1 : 0))
 
-/* ── quello che non hai: come si fa ──
-   Uno solo aperto per volta, e ripremendo si chiude. Chi si è aperto la
-   spiegazione del mangime e poi preme il pastone vede il pastone: due
-   riquadri insieme farebbero saltare in su tutto il foglio. */
+// Quello che non hai: come si fa. Uno aperto per volta (ripremendo si chiude).
 const spiega = ref(null)
 function premi(g, bisogno) {
   if (puoi(g, bisogno)) { spiega.value = null; emit(g.che === 'cibo' ? 'nutri' : 'coccola', g); return }
-  /* Pieno vuol dire «non adesso», non «non ce l'hai»: non c'è niente da
-     spiegare, e aprire un riquadro direbbe la cosa sbagliata. */
+  // Pieno vuol dire "non adesso", non "non ce l'hai": niente da spiegare.
   if (pieno(bisogno)) return
   spiega.value = spiega.value === g.id ? null : g.id
 }
@@ -92,9 +50,7 @@ const aperto = computed(() => {
     for (const g of gesti(k)) if (g.id === spiega.value) return { ...g, bisogno: k }
   return null
 })
-/* Come si ottiene la roba che manca. Un gesto che si paga in monete non
-   ha niente da spiegare — mancano le monete, e quelle si fanno negli
-   altri giochi — quindi lì il riquadro dice solo quello. */
+// Come si ottiene la roba che manca; un gesto pagato in monete non ha niente da spiegare.
 const modi = computed(() => aperto.value && aperto.value.da ? comeSiFa(aperto.value.da) : [])
 const dice = m => m.che === 'coltura'
   ? `semina ${m.nome.toLowerCase()} in un campo (${m.minuti} min) → ${m.resa} ${m.emoji}`
@@ -104,18 +60,8 @@ const nomeDi = dove => {
   const v = laMacchina(dove)
   return v ? `nel ${v.nome.toLowerCase()}` : ''
 }
-/* «Oppure comprane uno»: il cibo **suo** che si paga a monete e che
-   riempie una fetta di pancia simile. Compare solo dentro il riquadro
-   di uno che non hai, e mai prima: l'ordine è come te lo fai, poi come
-   lo compri. */
-/* **Prima si prende, poi si chiude.** Il tasto faceva
-   `spiega = null; emit('nutri', invece)` in una riga sola del template,
-   e `invece` è un computed che dipende da `spiega`: azzerato il primo,
-   il secondo diventa `null` **prima** che l'emit lo legga, e chi
-   riceveva un cibo nullo cadeva sul suo `.nome`. A schermo: il tasto
-   che non fa niente e la schermata di guasto. Il rimedio è tenere il
-   valore in una costante prima di toccare qualunque stato — vale per
-   ogni handler che scrive e legge la stessa catena reattiva. */
+// "Oppure comprane uno": solo dentro il riquadro di uno che non hai. Prima si legge il cibo in una
+// costante e poi si azzera spiega, se no invece (un computed su spiega) diventa null prima dell'emit.
 function dagliInvece() {
   const cibo = invece.value
   if (!cibo) return
@@ -178,17 +124,12 @@ const invece = computed(() => {
     </section>
 
     <div class="fa-fila">
-      <!-- «Vestilo» sta **fra i tasti in fondo e non fra i blocchi**: i
-           blocchi sono i bisogni, cioè quello che si fa per lui, e un
-           cappellino non riempie nessuna barra. È una cosa che si fa
-           ogni tanto e per piacere, quindi non ruba il posto a quelle
-           che si fanno ogni volta. -->
+      <!-- Vestilo sta fra i tasti in fondo: non riempie nessuna barra. -->
       <button class="fa-bot piano" data-azione="vesti"
               @click="emit('vesti')">🎩 Vestilo</button>
       <button class="fa-bot forte" @click="emit('chiudi')">Va bene</button>
     </div>
-    <!-- il nome si dà una volta e si cambia di rado: sta in fondo, piccolo,
-         dove non ruba il posto a quello che si fa ogni volta -->
+    <!-- il nome si dà una volta e si cambia di rado -->
     <button class="fa-minuto" @click="emit('rinomina')">cambia nome</button>
   </div>
 </template>
