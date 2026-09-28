@@ -1,20 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL BANCO DI PROVA — un giocatore finto che sa convertire
-
-   Gioca una tappa intera come la giocherebbe chi sa cosa fa: legge la
-   ricetta, prende l'ingrediente giusto, lo posa sull'attrezzo che ci
-   arriva, compone la dose coi pezzi più grandi che può e conferma. Se
-   una tappa non si vince così, è la tappa a essere rotta — e lo dice
-   il test, non un bambino.
-
-   `sbadato` sbaglia apposta: prende un distrattore, posa sul primo
-   attrezzo che vede, mette un pezzo di troppo — e serve a provare che
-   ogni sbaglio ha le sue parole e che dopo si va avanti lo stesso.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il banco di prova: un giocatore finto gioca una tappa intera come la
+// giocherebbe chi sa cosa fa. Se una tappa non si vince così, è la tappa
+// a essere rotta, e lo dice il test.
 import { Partita } from './partita.js'
 import { scomponi } from './misura.js'
 
-/* un caso ripetibile: lo stesso seme, la stessa partita */
 export function caso(seme = 1) {
   let s = seme >>> 0 || 1
   return () => {
@@ -23,7 +12,7 @@ export function caso(seme = 1) {
   }
 }
 
-/* una dose fatta bene, dall'inizio alla fine; torna l'esito di `riprendi` */
+// una dose fatta bene, dall'inizio alla fine; torna l'esito di `riprendi`
 export function dosaBene(p) {
   const ing = p.daFare[0]
   if (!ing) return null
@@ -40,7 +29,6 @@ export function dosaBene(p) {
   return p.riprendi()
 }
 
-/* la tappa intera */
 export function gioca(tappa, { seme = 1 } = {}) {
   const p = new Partita(tappa, { rnd: caso(seme) })
   let giri = 0
@@ -49,7 +37,9 @@ export function gioca(tappa, { seme = 1 } = {}) {
   return p
 }
 
-/* un giro sbadato su una dose: torna gli esiti raccolti, poi la fa bene */
+// un giro sbadato su una dose (prende un distrattore, sbaglia
+// l'attrezzo, mette un pezzo di troppo): torna gli esiti raccolti, poi
+// la fa bene
 export function sbadato(p) {
   const esiti = []
   const ing = p.daFare[0]

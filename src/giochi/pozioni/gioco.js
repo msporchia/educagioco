@@ -1,22 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL LABORATORIO DELLE POZIONI — IL MANIFESTO
-
-   Dato puro, come vuole `docs/core/convenzione-giochi.md`: non importa Vue,
-   non importa il profilo. La schermata sta in `src/giochi/schermate.js`.
-
-   La chiave resta `pozioni`, la stessa del gioco vecchio: è quella con
-   cui i genitori l'hanno acceso o spento, e quella dei saperi che il
-   gioco esige. L'avanzamento invece riparte da capo in
-   `profile.campagne.pozioni` — la campagna è un'altra, e un indice
-   scritto sulla fila vecchia non direbbe niente su questa.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il manifesto: dato puro. Le regole del laboratorio in docs/pozioni/regole.md.
 import { CAMPAGNA, QUANTE_TAPPE } from './dati/campagna.js'
 import { FAMIGLIE } from './dati/misure.js'
 
 export const CHIAVE = 'pozioni'
 
-/* le coppie di unità che il gioco può chiedere, nei due versi: sono
-   gli elementi che il motore di apprendimento segue (`pozioni:kg-g`) */
+// Le coppie di unità che il gioco può chiedere, nei due versi: sono
+// quello che segue il motore di apprendimento (`pozioni:kg-g`).
 export const CONVERSIONI = FAMIGLIE.flatMap(f => {
   const u = Object.values(f.unita)
   return u.flatMap(a => u.filter(b => b !== a).map(b => `${a}-${b}`))
@@ -31,11 +20,7 @@ export default {
   come: 'fare',
   tappe: QUANTE_TAPPE,
   tinta: '#e9e0f7',
-  /* dà per scontato che si legga da soli una ricetta e che le misure
-     siano cominciate a scuola */
   grandi: true,
-  /* senza le misure e le conversioni non è difficile: è impossibile.
-     La carta non si accende, e la schermata dei grandi dice perché. */
   serve: ['misure', 'conversioni'],
 
   riassunto(av = { tappa: 0, libera: false, stelle: {} }) {
@@ -46,13 +31,8 @@ export default {
     return `tappa ${i + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[i].nome}${coda}`
   },
 
-  /* I contatori li muove `Gioco.vue`:
-       misure            dosi azzeccate
-       pozioni           pozioni consegnate
-       pozioniPerfette   consegnate senza uno sbaglio
-     Sono gli stessi nomi del gioco vecchio, così quello che un bambino
-     aveva già fatto non torna a zero nell'albo. Gli id dei traguardi
-     che dicono la stessa cosa di prima restano quelli. */
+  // I contatori (misure, pozioni, pozioniPerfette) e gli id dei traguardi
+  // sono quelli del gioco vecchio, così l'albo non torna a zero.
   albo: {
     area: { nome: 'Il laboratorio delle pozioni', emoji: '⚗️' },
     xp: m => m.tot('misure') + m.tot('pozioni') * 3 + m.tot('pozioniPerfette') * 2

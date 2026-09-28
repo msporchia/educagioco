@@ -1,51 +1,18 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE MISURE — tre famiglie, tre unità a testa, tre attrezzi a testa
+// Tre famiglie di misure, tre unità e tre attrezzi a testa: un attrezzo
+// conta in una unità sola e arriva fin lì. Le regole (perché il pezzo
+// più piccolo divide tutti gli altri, perché niente disegnini che
+// accoppiano) sono in docs/pozioni/regole.md.
 
-   Il laboratorio è rifatto da zero attorno a una cosa sola: **un
-   attrezzo conta in una unità, e arriva fin lì**. La bilancia da
-   cucina conta in grammi e arriva a cinque chili; quella del mercato
-   conta in etti e arriva a venti; quella del magazzino conta in chili.
-   La ricetta parla come le pare — «1,5 kg», «35 hg», «6000 g» — e il
-   gioco è tutto lì: leggere l'unità, scegliere l'attrezzo che ci
-   arriva, e tradurre.
-
-   Le tre famiglie hanno **la stessa forma** — una unità grande (G),
-   una di mezzo (M), una piccola (P) — e per questo la scaletta della
-   campagna si scrive una volta sola (`campagna.js`) e si ripete tre
-   volte con altri nomi. Non sono però la stessa scala: fra chilo e
-   grammo ci sono tre scalini, fra metro e centimetro due. È voluto —
-   il centimetro è l'unità che un bambino ha sul righello, il
-   millimetro no — e il motore conta gli scalini invece di darli per
-   scontati.
-
-   Tutto quello che è un numero sta **in unità base** (grammi,
-   millimetri, millilitri) come intero: niente virgole nel motore, la
-   virgola compare solo quando si scrive a schermo.
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* quanto vale ogni unità nella base della sua famiglia */
+// quanto vale ogni unità nella base della sua famiglia
 export const VALE = {
   kg: 1000, hg: 100, dag: 10, g: 1,
   m: 1000, dm: 100, cm: 10, mm: 1,
   l: 1000, dl: 100, cl: 10, ml: 1,
 }
 
-/* ── le taglie degli attrezzi ──
-   Scritte in multipli dell'unità grande, così valgono per tutte e tre
-   le famiglie: il pezzo più piccolo della bilancia da cucina è 0,05 kg
-   = 50 g, quello del metro a nastro è 0,05 m = 5 cm. Il pezzo più
-   piccolo divide tutti gli altri (il test lo controlla): è la
-   condizione perché «prendi sempre il pezzo più grande» componga
-   qualunque dose che ci sta.
-
-     P  conta nella piccola, arriva a 5 grandi
-     M  conta nella media, arriva a 20 grandi
-     G  conta nella grande, arriva a 100 grandi
-
-   I limiti non sono un dettaglio: sono **il motivo di scegliere**. Otto
-   chili sulla bilancia dei grammi non ci stanno, e la tappa in cui
-   arriva la bilancia degli etti esiste perché lì si capisce che quando
-   i chili sono tanti si sale di unità. */
+// Le taglie degli attrezzi, in multipli dell'unità grande (valgono per
+// tutte e tre le famiglie): P conta nella piccola e arriva a 5 grandi, M
+// nella media e arriva a 20, G nella grande e arriva a 100.
 export const TAGLIE = {
   P: { limite: 5,   pezzi: [0.05, 0.1, 0.2, 0.5, 1, 2] },
   M: { limite: 20,  pezzi: [0.1, 0.2, 0.5, 1, 2, 5, 10] },
@@ -53,9 +20,9 @@ export const TAGLIE = {
 }
 export const ORDINE_TAGLIE = ['P', 'M', 'G']
 
-/* Gli attrezzi si chiamano come li chiamerebbe un bambino, e il nome
-   dice già la taglia. Il `pezzo` è come si chiama quello che si posa:
-   un peso sul piatto, un pezzo di nastro, un misurino versato. */
+// Gli attrezzi si chiamano come li chiamerebbe un bambino. `pezzo` è
+// come si chiama quello che si posa (un peso, un pezzo di nastro, un
+// misurino), `tipo` il gesto (la polvere si pesa, il liquido si versa).
 const FAMIGLIE_GREZZE = [
   { chiave: 'massa', nome: 'I pesi', gesto: 'pesa', verbo: 'Pesa', emoji: '⚖️',
     di: 'polvere', tipo: 'polvere',
@@ -89,8 +56,7 @@ const FAMIGLIE_GREZZE = [
     } },
 ]
 
-/* gli attrezzi con i numeri già in unità base: `limite` e `pezzi` sono
-   interi, e `unita` è quella in cui l'attrezzo conta */
+// gli attrezzi con i numeri già in unità base
 function attrezzoCompleto(fam, taglia) {
   const s = fam.strumenti[taglia]
   const G = VALE[fam.unita.G], unita = fam.unita[taglia]
@@ -108,30 +74,22 @@ export const FAMIGLIE = FAMIGLIE_GREZZE.map(f => ({
 
 export const FAMIGLIA = Object.fromEntries(FAMIGLIE.map(f => [f.chiave, f]))
 
-/* tutti gli attrezzi per chiave: `STRUMENTO.mercato` */
 export const STRUMENTO = Object.fromEntries(
   FAMIGLIE.flatMap(f => ORDINE_TAGLIE.map(t => [f.strumenti[t].chiave, f.strumenti[t]])))
 
-/* la famiglia di un'unità: `famigliaDi('hg')` → la massa */
 export const famigliaDi = u => FAMIGLIE.find(f => f.scala.includes(u)) || null
 
-/* ── quanto è grande, detto con una cosa che si ha in mano ──
-   Il pezzo che le tabelle di scuola non danno mai. Parole e non
-   disegnini: qualunque icona somiglierebbe a uno degli attrezzi sullo
-   scaffale, e l'attrezzo si sceglierebbe accoppiando i simboli. */
+// quanto è grande, con una cosa che si ha in mano invece che un'icona
+// (un'icona somiglierebbe a un attrezzo, e l'attrezzo si sceglierebbe
+// accoppiando i simboli)
 export const QUANTO_E = {
   kg: 'un pacco di zucchero', hg: 'un etto di prosciutto', g: 'una graffetta',
   m: 'un passo lungo', dm: 'una spanna di mano', cm: 'la larghezza di un dito',
   l: 'una bottiglia grande', dl: 'un bicchiere', ml: 'una goccia',
 }
 
-/* ---------- la dispensa ----------
-   Nessun ingrediente può essere un recipiente: 🧪 e 🍯 stavano accanto
-   alla dose e somigliavano agli attrezzi sullo scaffale, così l'attrezzo
-   si sceglieva accoppiando le figure. Qui dentro solo bestie, piante e
-   cose del cielo. Il `tipo` dice il gesto: la polvere si pesa, il
-   liquido si versa, la radice si taglia — ed è la prima cosa che il
-   gioco chiede di sapere. */
+// nessun ingrediente è un recipiente (accoppierebbe con gli attrezzi
+// sullo scaffale): solo bestie, piante e cose del cielo
 export const INGREDIENTI = [
   { emoji: '🐉', nome: 'bava di drago',     tipo: 'liquido', colore: '#5ec46a' },
   { emoji: '🐸', nome: 'essenza di rana',   tipo: 'liquido', colore: '#7fd4c1' },
@@ -168,10 +126,7 @@ export const POZIONI = [
 
 export const CLIENTI = ['🧙', '🧝', '🧚', '🧛', '🧜', '🦉', '🐈‍⬛', '🐸', '🦇', '🧌', '👽', '🤖']
 
-/* ═══════════ il colore del calderone ═══════════
-   Media geometrica dei canali: giallo e blu fanno verde, con la media
-   aritmetica farebbero grigio, e un bambino che rovescia il giallo nel
-   blu si aspetta il verde. */
+// media geometrica dei canali: giallo e blu fanno verde, l'aritmetica farebbe grigio
 export function mescola(colori, vuoto = '#4b3f7d') {
   if (!colori || !colori.length) return vuoto
   const canali = colori.map(h => [1, 3, 5].map(i => Math.max(10, parseInt(h.slice(i, i + 2), 16))))
@@ -179,7 +134,6 @@ export function mescola(colori, vuoto = '#4b3f7d') {
   return '#' + [0, 1, 2].map(n => uno(n).toString(16).padStart(2, '0')).join('')
 }
 
-/* ── il controllo di forma ── */
 export function guastiDelleMisure() {
   const g = []
   for (const f of FAMIGLIE) {
@@ -190,9 +144,6 @@ export function guastiDelleMisure() {
       const s = f.strumenti[t]
       const qui = `${dove}, ${s.nome}`
       if (!s.chiave || !s.nome || !s.emoji) g.push(`${qui}: senza chiave, nome o emoji`)
-      /* i pezzi devono essere interi nell'unità in cui l'attrezzo conta:
-         un peso da mezzo etto su una bilancia che conta in etti è un
-         attrezzo che non si legge */
       for (const p of s.pezzi)
         if (p % VALE[u] !== 0) g.push(`${qui}: un pezzo da ${p} non è intero in ${u}`)
       if (s.limite % VALE[u] !== 0) g.push(`${qui}: il limite non è intero in ${u}`)
@@ -202,8 +153,6 @@ export function guastiDelleMisure() {
       if (s.pezzi.some((p, i) => i && p <= s.pezzi[i - 1])) g.push(`${qui}: i pezzi non salgono`)
       if (s.pezzi[s.pezzi.length - 1] > s.limite) g.push(`${qui}: un pezzo è più grande del limite`)
     }
-    /* la scala scende di ×10 a ogni scalino, se no «conta gli scalini» è
-       una bugia */
     for (let i = 1; i < f.scala.length; i++)
       if (VALE[f.scala[i - 1]] !== VALE[f.scala[i]] * 10)
         g.push(`${dove}: fra ${f.scala[i - 1]} e ${f.scala[i]} non c'è un ×10`)
@@ -224,12 +173,9 @@ export function guastiDelleMisure() {
   return g
 }
 
-/* ═══════════ scrivere una misura ═══════════
-   Dalla base all'unità chiesta, e con la virgola italiana. `inUnita`
-   torna un numero (anche con la virgola: 250 g in hg fanno 2,5), e
-   `scrivi` lo mette in parole: «1,5 kg». Stanno qui e non nel motore
-   perché le tappe si scrivono a mano con dei numeri, e il testo della
-   dose deve esistere già nel dato. */
+// Dalla base all'unità chiesta, con la virgola italiana. Stanno qui e
+// non nel motore perché le tappe si scrivono a mano con dei numeri, e il
+// testo della dose deve esistere già nel dato.
 export const inUnita = (base, u) => Math.round(base / VALE[u] * 1e6) / 1e6
 export const numero = v => String(v).replace('.', ',')
 export const scrivi = (base, u) => numero(inUnita(base, u)) + ' ' + u

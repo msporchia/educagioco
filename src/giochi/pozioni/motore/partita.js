@@ -1,29 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA PARTITA — una tappa giocata, cliente dopo cliente
-
-   Nessuno schermo: si riceve una tappa e si risponde ai gesti.
-
-     prendi(nome)        un ingrediente dallo scaffale, in mano
-     posa(strumento)     l'ingrediente in mano va su un attrezzo
-     metti(pezzo)        un peso sul piatto, un misurino, un pezzo
-     togli() / svuota()  si torna indietro
-     riponi()            si cambia attrezzo, senza penale
-     conferma()          «nel calderone»: giusto o sbagliato
-     riprendi()          dopo un esito, si va avanti
-
-   Il tempo non è un avversario: non c'è pazienza che scende, non ci
-   sono cuori. Il gioco vecchio ne aveva, e il risultato era un
-   cartello da leggere con una barra che scendeva sopra. Qui si sbaglia
-   e si rilegge, e quello che si perde sono le stelle della tappa — tre
-   senza sbagli, due con pochi, una comunque. La tappa **si finisce
-   sempre**.
-
-   Ogni sbaglio è detto: cosa non va (`perche`) e come si fa
-   (`spiegazione`, per intero, anche se la tappa non la mostrava più).
-   Ed è **il primo tentativo** su una dose quello che conta per il
-   motore di apprendimento: la conversione la si sa o non la si sa
-   prima di vedersela svolta.
-   ═══════════════════════════════════════════════════════════════════ */
+// Una tappa giocata, cliente dopo cliente: nessuno schermo, si risponde
+// ai gesti (prendi, posa, metti, togli/svuota, riponi, conferma,
+// riprendi). Il tempo non è un avversario: qui si sbaglia e si rilegge,
+// e quello che si perde sono le stelle della tappa — la tappa si finisce
+// sempre. Le regole sono in docs/pozioni/regole.md.
 import { STRUMENTO, FAMIGLIA } from '../dati/misure.js'
 import { generaRicetta } from './ricetta.js'
 import { verdetto, componibile, spiegazione, perche, chiaveDi, scalini } from './misura.js'
@@ -52,15 +31,13 @@ export class Partita {
     this.nuovaRicetta()
   }
 
-  /* ── dove siamo ── */
   get ingrediente() { return this.corrente >= 0 ? this.ricetta.ingredienti[this.corrente] : null }
   get dose() { return this.ingrediente ? this.ingrediente.dose : null }
   get famiglia() { return this.dose ? FAMIGLIA[this.dose.famiglia] : null }
   get messo() { return this.messi.reduce((s, p) => s + p, 0) }
   get occupato() { return !!this.esito || this.finita }
   get daFare() { return this.ricetta ? this.ricetta.ingredienti.filter(i => !i.fatto) : [] }
-  /* la fase, per chi disegna: scaffale → inMano → dosa */
-  get fase() {
+  get fase() {   // per chi disegna: scaffale → inMano → dosa
     if (!this.ingrediente) return 'scaffale'
     return this.strumento ? 'dosa' : 'inMano'
   }
@@ -72,11 +49,10 @@ export class Partita {
     this.sbagliQui = 0; this.sbagliRicetta = 0; this.esito = null
   }
 
-  /* ── l'attrezzo che questa dose vorrebbe ──
-     Quello che conta nella sua unità se ci sta; se no, fra quelli su
-     cui ci sta, il più vicino di scalini. Serve al cartello svolto
-     («usa la bilancia del mercato») e al finto giocatore, non al
-     verdetto: qualunque attrezzo su cui la dose si compone va bene. */
+  // l'attrezzo che questa dose vorrebbe: quello che conta nella sua
+  // unità se ci sta, se no il più vicino di scalini fra quelli su cui ci
+  // sta. Serve al cartello e al finto giocatore, non al verdetto:
+  // qualunque attrezzo su cui la dose si compone va bene.
   consigliato(dose = this.dose) {
     if (!dose) return null
     const suoi = this.strumenti.filter(s => s.famiglia === dose.famiglia && componibile(dose.base, s))
@@ -85,16 +61,10 @@ export class Partita {
       Math.abs(scalini(dose.unita, a.unita)) - Math.abs(scalini(dose.unita, b.unita)))[0]
   }
 
-  /* ── il cartello sopra il banco ──
-     Quanto si dice lo decide la tappa; dopo uno sbaglio su questa
-     dose si dice tutto, qualunque cosa dica la tappa. Prima di posare
-     si parla dell'attrezzo consigliato, dopo di quello scelto. */
+  // il cartello sopra il banco: quanto dire lo decide la tappa, ma dopo
+  // uno sbaglio su questa dose si dice tutto
   get aiuto() {
-    /* «come si gioca» parla anche prima che ci sia una dose in mano:
-       dice cosa prendere dallo scaffale */
     if (this.tappa.aiuto === 'gioco' && !this.sbagliQui) return { livello: 'gioco', gioco: true }
-    /* e il conto pure: prima di prendere si parla della prossima dose
-       della ricetta, così si legge il cartello guardando la pergamena */
     const d = this.dose || (this.daFare[0] ? this.daFare[0].dose : null)
     if (!d) return null
     const livello = this.sbagliQui ? 'svolto' : this.tappa.aiuto
@@ -103,13 +73,10 @@ export class Partita {
     if (!str) return null
     const sp = spiegazione(d, str.unita, livello)
     if (!sp) return null
-    /* la dose viaggia col cartello: prima di prendere non c'è nessun
-       ingrediente in mano, e chi disegna non deve andarsela a cercare */
     return { livello, dose: d, strumento: str,
              consiglia: !this.strumento && this.strumenti.length > 1 && livello === 'svolto', ...sp }
   }
 
-  /* ── i gesti ── */
   prendi(nome) {
     if (this.occupato) return null
     const i = this.ricetta.ingredienti.findIndex(x => x.nome === nome && !x.fatto)
@@ -121,8 +88,7 @@ export class Partita {
         ? `${nome[0].toUpperCase() + nome.slice(1)} è già nel calderone.`
         : `${nome[0].toUpperCase() + nome.slice(1)} non è nella ricetta: leggi cosa chiede.`)
     }
-    /* cambiare ingrediente a metà dosatura si può: si ricomincia da vuoto */
-    if (i !== this.corrente) this.sbagliQui = 0
+    if (i !== this.corrente) this.sbagliQui = 0   // cambiare ingrediente a metà si può, si ricomincia da vuoto
     this.corrente = i; this.inMano = true; this.strumento = null; this.messi = []
     return { ok: true, ingrediente: this.ingrediente }
   }
@@ -158,8 +124,6 @@ export class Partita {
     const d = this.dose, str = this.strumento
     const v = verdetto(d, str, this.messo)
     if (v !== 'giusto') return this.sbaglio(v, perche(d, str, v), str)
-    /* la dose è giusta: al motore di apprendimento si dice la coppia di
-       unità, se c'era da convertire e se il risultato non era scritto */
     const chiave = chiaveDi(d.unita, str.unita)
     const svolto = this.tappa.aiuto === 'svolto'
     this.dosi.push({ chiave, giusta: this.sbagliQui === 0, chiesta: !!chiave && !svolto })
@@ -170,8 +134,7 @@ export class Partita {
     return this.esito
   }
 
-  /* uno sbaglio si annota una volta sola per dose, al primo: quello che
-     viene dopo è già con la spiegazione davanti */
+  // uno sbaglio si annota una volta sola per dose, al primo
   sbaglio(tipo, testo, strumento = null) {
     this.sbagli++; this.sbagliQui++; this.sbagliRicetta++
     const d = this.dose
@@ -186,8 +149,8 @@ export class Partita {
     return this.esito
   }
 
-  /* dopo l'esito: avanti. Da uno sbaglio sull'attrezzo l'ingrediente
-     torna in mano; da una dose sbagliata l'attrezzo resta e si svuota. */
+  // da uno sbaglio sull'attrezzo l'ingrediente torna in mano; da una
+  // dose sbagliata l'attrezzo resta e si svuota
   riprendi() {
     const e = this.esito
     if (!e) return null
@@ -209,19 +172,13 @@ export class Partita {
     return { che: 'nuovoCliente', perfetta }
   }
 
-  /* ── il bilancio ── */
   get dosiGiuste() { return this.dosi.filter(d => d.giusta).length }
-  /* le stelle: tre senza sbagli, due con pochi (uno ogni quattro dosi),
-     una comunque — la tappa non si perde */
   get stelle() {
     if (!this.sbagli) return 3
     return this.sbagli <= Math.ceil(dosiDellaTappa(this.tappa) / 4) ? 2 : 1
   }
-  /* le monete: una dose azzeccata al primo colpo è una domanda vera
-     (`docs/apprendimento/calibrazione.md`), e una sbagliata non paga */
   get monete() { return this.dosiGiuste * MONETE_A_DOSE }
 }
 
-/* le stelle come le calcola la partita, per chi le vuole senza giocare */
 export const stellePer = (sbagli, tappa) =>
   !sbagli ? 3 : sbagli <= Math.ceil(dosiDellaTappa(tappa) / 4) ? 2 : 1
