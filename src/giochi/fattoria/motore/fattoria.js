@@ -1,86 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE REGOLE DELLA FATTORIA, SENZA SCHERMO
-
-   Classe pura: non tocca il DOM, non importa Vue, non sa che esista un
-   profilo. Gira uguale nel browser e in Node, ed è l'unico motivo per
-   cui una fattoria si può *giocare in un test* invece di provarla a
-   occhio — comprare dieci pezzi di terra, sgombrare il bosco, contare
-   le monete e vedere se l'economia sta in piedi.
-
-   ── LE MONETE ENTRANO DA FUORI ────────────────────────────────────
-   La fattoria conosce i **prezzi** (che sono dato) ma non il
-   salvadanaio: riceve una `borsa` con due metodi, `quante()` e
-   `paga(n)`. In gioco è il profilo, nei test è un finto portafoglio da
-   quattro righe. Così le regole economiche stanno tutte qui — e non
-   sparse fra un componente Vue e un pannello — restando provabili.
-
-   ── COSA C'È DENTRO ───────────────────────────────────────────────
-     piazzole   quali pezzi di terra sono tuoi           `"3,4" → 1`
-     limiti     fin dove arriva il mondo    `{ x0, y0, x1, y1 }`
-     cose       quello che hai messo giù     `{ i, id, g, x, y }`
-     ostacoli   quello che il bosco aveva già     `"14,9" → 'albero'`
-     magazzino  quello che hai comprato e non è in mappa   `id → n`
-     granaio    il raccolto: grano, mais, mangime  `prodotto → n`
-     bestie     le tue, coi bisogni e **dove stanno**  `{ chi, nome, x, y, … }`
-
-   ── IL RACCOLTO NON È IL MAGAZZINO ────────────────────────────────
-   Sono due cassetti diversi e restano diversi. Nel `magazzino` stanno le
-   **cose** che hai comprato e messo via — una panchina, un barile — e da
-   lì tornano in mappa identiche. Nel `granaio` sta la **roba** che si
-   consuma: tre grani diventano due mangimi, e il mangime finisce in una
-   ciotola. Metterli insieme vorrebbe dire una panchina con una
-   scadenza e un grano che si può ripiazzare sul prato.
-
-   Il granaio ha un tetto **per merce** (`postiPerMerce`, in
-   `dati/coltivazioni.js`): ogni prodotto ha il suo scomparto, e
-   ingrandire un silo li allarga tutti insieme. Quello che non ci sta
-   **non si raccoglie**: il campo resta pronto, e questo non è un
-   intoppo ma il modo in cui il gioco chiede un silo senza scriverlo.
-
-   ── IL MONDO NON È UNA COSTANTE ───────────────────────────────────
-   Non c'è più un `PIAZZOLE = 7`: `limiti` dice fin dove arriva la
-   mappa e cresce da sé (`allarga()`) per lasciare sempre due piazzole
-   comprabili attorno alla terra posseduta. Le coordinate non si
-   rinumerano mai — verso l'alto e verso sinistra diventano negative —
-   perché il bosco si ricava dalle coordinate, e rinumerare vorrebbe
-   dire spostare gli alberi che il bambino ha già visto.
-
-   Le posizioni sono in **celle**, mai in pixel: lo zoom cambia mentre
-   si gioca, e un mondo misurato in pixel andrebbe riscalato ogni volta.
-
-   ── DOVE SI PUÒ METTERE IL PIEDE ──────────────────────────────────
-   `calpestabile(cx, cy)` è **la sola risposta** alla domanda «qui ci si
-   può stare?», e ci passano tutti: chi cammina (`motore/camminata.js`,
-   che la riceve da fuori e non sa cosa sia una casa), chi fa comparire
-   un animale (`cellaLibera`) e chi posa una cosa (`libera`, che è la
-   stessa domanda con un piede più largo). Erano quattro conti in
-   quattro posti, e quello dentro al disegno ne conosceva solo un
-   quarto: per questo il cane attraversava le case.
-
-   ── PERCHÉ NON SI PERDE MAI NIENTE ────────────────────────────────
-   Non c'è nessun metodo che distrugge. Quello che rimetti via va in
-   magazzino e da lì si ripiazza gratis quante volte vuoi; non ti
-   rimborsa, ma non sparisce. È la regola su cui un bambino conta.
-
-   ── TOGLIERE COSTA QUANTO SPOSTARE ────────────────────────────────
-   `mettiVia` paga `COSTO_SPOSTARE`, esattamente come `posa(…, {sposta})`,
-   e **non è una tassa in più**: è la stessa tassa detta due volte. Finché
-   togliere era gratis, «📦 e poi rimetti giù dal baule» faceva lo stesso
-   lavoro di uno spostamento a costo zero — cioè la monetina dello
-   spostamento non la pagava nessuno che avesse capito il giro, e chi non
-   l'aveva capito pagava. Una regola che punisce solo chi non ha trovato
-   la scorciatoia è peggio di nessuna regola.
-
-   Il conto resta di una moneta per gesto: togliere 1, rimettere giù dal
-   baule 0 — in tutto 1, come spostare. Il perché del prezzo (una moneta
-   = dieci secondi di esercizio) sta in `docs/apprendimento/calibrazione.md`, e il perché di
-   una monetina proprio qui in `dati/mondo.js`.
-
-   Paga **solo il gesto del bambino**: nessun altro metodo di questo file
-   chiama `mettiVia`, e chi ne aggiungesse uno per conto del gioco (una
-   migrazione, un raccolto che si porta via la sua cosa) sappia che così
-   farebbe pagare una cosa che nessuno ha chiesto.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Le regole della fattoria, senza schermo: classe pura, gira uguale in Node e nel browser. Riceve
+   una borsa {quante(),paga(n)} e non conosce il profilo. Vedi docs/fattoria/regole.md e catena.md. */
 import {
   CELLE, PRIMA, ULTIMA, COSTO_SPOSTARE, LIMITI_VECCHI, celleDi, dentroI,
   limitiPer, piazzolaDi, DENSITA_BOSCO, caso, chiave, prezzoPiazzola,
@@ -109,21 +28,15 @@ import { aspettoDellaMongolfiera, leggiLaMongolfiera } from './mongolfiera.js'
 import { postoDi } from '../dati/catalogo.js'
 import { primaLibera } from '../../../motore/passi.js'
 
-/* Quanto è grosso l'ostacolo più grosso del bosco. Serve a trovare chi
-   copre una cella guardando **poche caselle indietro** invece di
-   scorrere tutto il bosco: `calpestabile` lo chiede una volta per
-   cella, e cercare una strada lo chiede qualche migliaio di volte di
-   fila. */
+// Il più grosso ostacolo del bosco: calpestabile guarda poche celle indietro invece di scorrere tutto.
 const PIEDE_MASSIMO = Object.values(OSTACOLI).reduce(
   (m, o) => [Math.max(m[0], o.piede[0]), Math.max(m[1], o.piede[1])], [1, 1])
 
-/* Una borsa che non paga mai: serve a far girare la fattoria in un test
-   che dell'economia non gliene importa niente. */
+// Una borsa che non paga mai: per far girare la fattoria in un test senza economia.
 export const borsaInfinita = () => ({ quante: () => Infinity, paga: () => true })
 
 export class Fattoria {
-  /* `dato` è quello che torna da `serializza()`: un oggetto semplice,
-     buono da mettere in un profilo. Senza, nasce una fattoria nuova. */
+  // dato è quello che torna da serializza(): senza, nasce una fattoria nuova.
   constructor({ borsa = borsaInfinita(), dato = null } = {}) {
     this.borsa = borsa
     if (dato) this.deserializza(dato)
@@ -137,56 +50,23 @@ export class Fattoria {
     this.ostacoli = {}
     this.magazzino = {}
     this.granaio = {}
-    /* Quante volte è stato ingrandito ciascun silo. Tutte le famiglie
-       ci sono da subito, a zero: un serializza/deserializza deve dare
-       la stessa fattoria, e un oggetto che nasce vuoto e si rilegge
-       pieno di zeri non è la stessa fattoria. */
+    // Tutte le famiglie da subito, a zero: serializza/deserializza deve dare la stessa fattoria.
     this.silos = Object.fromEntries(Object.keys(SILI).map(fam => [fam, 0]))
-    /* Quanto si è speso qui dentro, in tutto e da sempre: è
-       l'esperienza della fattoria (`dati/livelli.js`), e non scende
-       mai. Non si azzera nemmeno mettendo via le cose — quello che hai
-       imparato a fare non si disimpara. */
+    // Quanto speso qui dentro, in tutto e da sempre: non scende mai, nemmeno mettendo via le cose.
     this.speso = 0
-    /* L'esperienza guadagnata **consegnando** al mercato
-       (`motore/mercato.js`). È la seconda sorgente del livello, e sta
-       in un campo suo e non dentro `speso`: le due cose si sommano per
-       il livello ma vogliono dire cose diverse — quella è roba
-       comprata, questa è roba portata al banco — e sommarle qui
-       vorrebbe dire non poter più dire quanto vale ciascuna. */
+    // La seconda sorgente del livello (motore/mercato.js): in campo suo, si somma a speso ma è roba diversa.
     this.guadagnato = 0
-    /* Con quali soglie è stato misurato il livello di questa fattoria
-       (`SOGLIE_ORA` in `dati/livelli.js`). Una nata oggi nasce con
-       quelle di oggi, e non c'è niente da rimettere a posto. */
     this.soglie = SOGLIE_ORA
-    /* I tre posti del banco. Vuoti finché non c'è una bancarella:
-       chi non ce l'ha non ha nessun ordine, e il conto degli id serve
-       a non riusare mai lo stesso — un ordine consegnato e uno nuovo
-       con la stessa chiave sarebbero lo stesso ordine consegnato due
-       volte. */
+    // I tre posti del banco, vuoti finché non c'è una bancarella; l'id non si riusa mai.
     this.ordini = []
     this.prossimoOrdine = 1
-    /* Le botteghe del paese, per id: i banconi e la fama
-       (`motore/botteghe.js`). Vuoto finché non se ne posa una. */
     this.botteghe = {}
-    /* Il pallone della mongolfiera (`motore/mongolfiera.js`): `null`
-       finché non ne è mai atterrato uno. */
     this.mongolfiera = null
-    /* Gli addobbi comprati e **non addosso a nessuno**: il guardaroba.
-       È il magazzino delle bestie, ed è la stessa regola — niente si
-       perde mai: toglierlo lo rimette qui, e da qui torna addosso a chi
-       si vuole quante volte si vuole. Quello che una bestia **ha
-       addosso** invece viaggia dentro la bestia (`addobbi`), come la
-       coltura viaggia dentro il campo. */
+    // Addobbi comprati e non addosso: il guardaroba, come il magazzino. Niente si perde mai.
     this.guardaroba = {}
-    /* Le file ingrandite delle macchine **messe via** (`mettiVia`): nel
-       baule una macchina è un numero, e il numero non si ricorda di aver
-       pagato due posti in più. Si tengono qui, per voce, e la prima che
-       torna giù dal baule si riprende la più lunga (`posa`). */
+    // Le file ingrandite delle macchine messe via: il numero da solo non lo ricorderebbe.
     this.fileRiposte = {}
-    /* I premi già presi. Quelli del livello 1 si prendono d'ufficio: la
-       fattoria appena nata deve avere in mano il campo, il silo e un
-       seme, e chiedere di reclamarli prima ancora di aver visto il prato
-       vorrebbe dire aprire il gioco su un baule vuoto. */
+    // I premi del livello 1 si prendono d'ufficio: il baule non deve nascere vuoto.
     this.reclamati = {}
     this.terreno = {}
     this.bestie = []
@@ -206,17 +86,8 @@ export class Fattoria {
     return this
   }
 
-  /* ═══════════ il bosco ═══════════
-     Non si tira a caso: si ricava dalle coordinate, così la stessa
-     fattoria riaperta domani ha gli stessi alberi negli stessi posti —
-     e un test può dire «lì c'è un masso» e restare vero.
-
-     Si semina **solo dove non è già stato seminato** (`gia`, il mondo di
-     prima): un albero sgomberato è un albero che non deve ricrescere, e
-     rigenerare una zona vecchia lo farebbe tornare. Per lo stesso motivo
-     l'ordine di scorrimento resta quello di sempre — cx fuori, cy dentro
-     — perché la regola «niente pezzi grossi a metà» guarda chi è già
-     stato messo giù nella stessa riga. */
+  // Ricavato dalle coordinate, non a caso: la stessa fattoria riaperta ha gli stessi alberi.
+  // Semina solo dove non era già stato seminato, se no un albero sgomberato ricrescerebbe.
   semina(zona, gia = null) {
     const { cx0, cy0, cx1, cy1 } = celleDi(zona)
     for (let cx = cx0; cx < cx1; cx++)
@@ -233,10 +104,7 @@ export class Fattoria {
       }
   }
 
-  /* Il mondo tiene il passo con la terra comprata: due piazzole di
-     margine su ogni lato, sempre. Si chiama dopo ogni acquisto e
-     all'apertura di un salvataggio — è l'unico posto che fa crescere la
-     mappa, e semina il bosco solo sulla striscia appena comparsa. */
+  // Due piazzole di margine su ogni lato; semina il bosco solo sulla striscia appena comparsa.
   allarga() {
     const prima = this.limiti
     const dopo = limitiPer(Object.keys(this.piazzole), prima)
@@ -258,40 +126,19 @@ export class Fattoria {
              limiti: this.limiti, bestie: this.bestie, prossimo: this.prossimo }
   }
 
-  /* Regge un salvataggio di ieri senza pretendere una migrazione: quello
-     che manca si rimette a posto qui, e un id che non è più in catalogo
-     si butta invece di far cadere tutto il disegno. */
+  // Regge un salvataggio di ieri senza migrazione: quello che manca si rimette qui, un id sparito si butta.
   deserializza(d) {
-    /* Gli addobbi che una bestia non può più portare: si raccolgono
-       leggendo le bestie e si rimettono nel guardaroba più sotto, dove
-       il guardaroba esiste già. */
     const persi = []
     this.piazzole = (d && d.piazzole) || {}
-    /* Un tipo di ostacolo che non esiste più si butta **qui**, non lo si
-       lascia arrivare a chi disegna. È già successo due volte: prima col
-       `palo` diventato una staccionata girata, poi con l'albero e la
-       siepe tolti dal bosco perché erano anche in vendita. Un salvataggio
-       di ieri non deve poter far cadere il gioco di oggi, e un `undefined`
-       che arriva fino al disegno diventa una schermata di guasto. */
+    // Un tipo di ostacolo che non esiste più si butta qui, non arriva a chi disegna.
     this.ostacoli = Object.fromEntries(
       Object.entries((d && d.ostacoli) || {}).filter(([, tipo]) => OSTACOLI[tipo]))
     this.magazzino = (d && d.magazzino) || {}
-    /* Le bestie si rileggono **tutte**, anche quelle che oggi non si
-       sanno disegnare: chi non ha lo sprite viene ignorato da chi mette
-       in scena, non buttato via qui. Un travaso a senso unico non deve
-       cancellare niente per strada. */
-    /* Erano nomi di sprite e basta, prima che si potessero battezzare:
-       una stringa diventa una bestia senza nome, e il salvataggio di
-       ieri si rilegge senza chiedere niente a nessuno. */
+    // Le bestie si rileggono tutte, anche senza sprite (chi mette in scena le ignora, non qui).
     this.bestie = ((d && d.bestie) || [])
       .map(b => typeof b === 'string' ? { chi: b, nome: '' } : b)
       .filter(b => b && typeof b.chi === 'string')
-      /* Quello che una bestia ha addosso si rilegge **solo se sta ancora
-         in piedi**: un addobbo tolto dal catalogo, o messo su una bestia
-         a cui oggi non sta più, sparirebbe dal disegno restando nel
-         salvataggio — cioè una cosa comprata che non si vede e non si
-         può togliere. Qui torna nel guardaroba, e da lì si rimette dove
-         si vuole. */
+      // Un addobbo tolto dal catalogo, o che oggi non sta più, torna nel guardaroba invece di sparire.
       .map(b => {
         if (!b.addobbi || typeof b.addobbi !== 'object') return { ...b, addobbi: {} }
         const addobbi = {}
@@ -302,47 +149,25 @@ export class Fattoria {
         }
         return { ...b, addobbi }
       })
-      /* Il ciclo del premio (`dati/bisogni.js`): un salvataggio di ieri
-         non ce l'ha, e si legge come «non ancora premiata». Un sì/no e
-         basta — qualunque altra cosa ci fosse finita si butta. */
       .map(b => ({ ...b, premiato: b.premiato === true }))
-    /* `acqua` era il nome di prima, quando la materia era una sola:
-       un salvataggio di ieri si rilegge senza chiedere una migrazione. */
+    // acqua era il nome di prima, quando la materia era una sola.
     this.terreno = (d && d.terreno) ||
       Object.fromEntries(Object.keys((d && d.acqua) || {}).map(k => [k, 'acqua']))
-    /* Il granaio tiene solo prodotti che esistono ancora, e quantità
-       sane: una coltura tolta dalla tabella non deve lasciare in
-       archivio una voce che nessuno sa più disegnare né spendere. */
     this.granaio = Object.fromEntries(
       Object.entries((d && d.granaio) || {})
         .filter(([k, n]) => PRODOTTI[k] && n > 0)
         .map(([k, n]) => [k, Math.floor(n)]))
-    /* Quello che un campo o una macchina ha per le mani viaggia **dentro
-       la cosa** (`coltura`/`seminato`, `coda`, `fila`), e va rimesso qui: la
-       riga qui sotto ricopia campo per campo, e chi ne aggiunge uno senza
-       nominarlo lo perde a ogni riapertura senza che niente sembri rotto.
-       Una coltura o una ricetta che oggi non c'è più si scorda — il campo
-       torna vuoto invece di restare seminato di niente per sempre. */
+    // Quello che un campo o una macchina ha per le mani viaggia dentro la cosa; una coltura/ricetta sparita si scorda.
     this.cose = ((d && d.cose) || []).filter(c => c && PER_ID[c.id])
       .map(c => {
         const cosa = { i: c.i, id: c.id, g: c.g || 0, x: c.x | 0, y: c.y | 0 }
-        /* Lo specchio si scrive solo quando c'è: un `m: 0` addosso a
-           ogni cosa sono duecento chiavi in più nel salvataggio di ogni
-           bambino per dire «no» duecento volte. */
+        // Lo specchio si scrive solo quando c'è: un m:0 su ogni cosa sarebbero duecento "no" in più.
         if (c.m) cosa.m = 1
         if (c.coltura && PER_COLTURA[c.coltura] && c.seminato > 0) {
           cosa.coltura = c.coltura
           cosa.seminato = c.seminato
         }
-        /* ── LA FILA, E IL `lavoro` DI IERI ─────────────────────────
-           Una macchina lavorava un pezzo alla volta e lo teneva in
-           `lavoro: { ricetta, da }`; adesso ne tiene una fila. Un
-           salvataggio di ieri si rilegge come **una fila di uno**: un
-           mulino che stava macinando continua a macinare, e non c'è
-           nessuna migrazione da scrivere perché `da` voleva già dire
-           «quando è partito». Se ci fossero tutti e due vince la fila,
-           che è il dato di oggi. Un pezzo di una ricetta che non esiste
-           più si scorda, come la coltura sparita qui sopra. */
+        // La fila, e il lavoro di ieri: un salvataggio vecchio si rilegge come una fila di uno.
         const fila = Array.isArray(c.coda) ? c.coda : c.lavoro ? [c.lavoro] : []
         const coda = fila
           .filter(p => p && PER_RICETTA[p.ricetta] && p.da > 0)
@@ -353,42 +178,15 @@ export class Fattoria {
       })
     this.prossimo = Math.max(1, (d && d.prossimo) || 0,
                              ...this.cose.map(c => (c.i || 0) + 1))
-    /* Quanto è stato ingrandito ciascun silo. Va letto **dopo** le
-       cose, perché un salvataggio di ieri non ce l'ha e si ricava da
-       quelle: allora i silos si sommavano, e chi ne aveva messi tre
-       aveva pagato 360 monete per della capienza. Quella spesa non si
-       butta — vale un ingrandimento a testa oltre il primo, che è il
-       silo stesso. Non è la regola di oggi (oggi si paga 20, non 120):
-       è il cambio di una valuta che non esiste più. */
-    /* Una fattoria di ieri non ha `speso` e ha già delle cose in mappa:
-       si stima da quelle, al prezzo di listino. Meglio di zero — chi ha
-       già mezza fattoria non deve ritrovarsi al livello 1 con tutto
-       richiuso — e non è un regalo, perché quelle monete le ha spese
-       davvero. */
+    // Quanto è stato ingrandito ciascun silo, ricavato dopo le cose per i salvataggi che non ce l'hanno.
+    // Una fattoria di ieri non ha speso: si stima da quello che ha in mappa, al prezzo di listino.
     this.speso = Number.isFinite(d && d.speso) && d.speso > 0 ? Math.floor(d.speso)
       : this.stimaLoSpeso()
-    /* ── IL BANCO DEL MERCATO ───────────────────────────────────────
-       Una fattoria salvata prima che il mercato esistesse non ha né
-       ordini né esperienza guadagnata: nasce con zero e con i posti
-       vuoti, che è esattamente lo stato di chi la bancarella non l'ha
-       ancora comprata. Non c'è niente da migrare, e questo è il punto —
-       un salvataggio di ieri si riapre senza chiedere niente a nessuno.
-
-       Un ordine si rilegge solo se sta in piedi: chiede della roba che
-       esiste ancora, in quantità sane. Una merce tolta dalla tabella
-       lascerebbe un ordine impossibile da consegnare per sempre, cioè
-       un posto occupato da un tasto rotto. */
+    // Il banco del mercato: una fattoria di prima del mercato nasce con zero ordini e zero esperienza.
     this.guadagnato = Number.isFinite(d && d.guadagnato) && d.guadagnato > 0
       ? Math.floor(d.guadagnato) : 0
-    /* ── LE SOGLIE SONO CAMBIATE, IL LIVELLO NO ─────────────────────
-       Le soglie si sono allungate (`dati/livelli.js`, «LA ROBA DI UN
-       LIVELLO NON PAGA IL LIVELLO DOPO»), e la stessa esperienza misurata
-       col metro nuovo vale un livello più basso. Chi era al 20 non deve
-       ritrovarsi al 16 con quattro livelli di roba in mappa che non
-       potrebbe più ricomprare: si aggiunge a `speso` quello che manca
-       per restare dov'era. Una volta sola — dopo, la fattoria dice di
-       essere misurata col metro nuovo. Non è un regalo: è il livello
-       che aveva già. */
+    // Le soglie sono cambiate, il livello no: si aggiunge a speso quello che manca per restare
+    // dov'era col metro nuovo (una volta sola: non è un regalo, è il livello che aveva già).
     if (!(d && d.soglie >= SOGLIE_ORA)) {
       const era = livelloVecchioPer(this.speso + this.guadagnato)
       const manca = sogliaDi(era) - (this.speso + this.guadagnato)
@@ -407,15 +205,11 @@ export class Fattoria {
     })
     this.prossimoOrdine = Math.max(1, (d && d.prossimoOrdine) || 0,
                                    ...this.ordini.map(o => ((o && o.id) || 0) + 1))
-    /* Le botteghe: una fattoria di prima non ne ha, e nasce vuota. Le
-       regole di cosa si rilegge stanno accanto a chi le scrive. */
+    // Le botteghe: una fattoria di prima non ne ha, e nasce vuota.
     this.botteghe = leggiLeBotteghe(d && d.botteghe)
-    /* La mongolfiera: una fattoria di prima non ce l'ha, e nasce col
-       cielo libero. */
+    // La mongolfiera: una fattoria di prima non ce l'ha, e nasce col cielo libero.
     this.mongolfiera = leggiLaMongolfiera(d && d.mongolfiera)
-    /* Il guardaroba: solo addobbi che esistono ancora, in quantità sane.
-       Ci rientra anche quello che una bestia non può più portare — vedi
-       sopra: niente si perde mai. */
+    // Il guardaroba: solo addobbi che esistono ancora, più quello che una bestia non porta più.
     this.guardaroba = {}
     for (const [id, n] of Object.entries((d && d.guardaroba) || {}))
       if (ADDOBBI_PER_ID[id] && n > 0) this.guardaroba[id] = Math.floor(n)
@@ -426,22 +220,12 @@ export class Fattoria {
         .map(n => Math.min(PREZZI_DELLA_FILA.length, Math.floor(n) || 0)).filter(n => n > 0)
       if (PER_ID[id] && buone.length) this.fileRiposte[id] = buone
     }
-    /* ── I PREMI PRESI ──────────────────────────────────────────────
-       Una fattoria salvata prima che i premi si reclamassero non ce li
-       ha, e i suoi livelli sono già passati: si considerano **presi
-       tutti**. Senza, chi è al livello venti riaprirebbe il gioco con
-       il baule svuotato e sessanta quadratini da premere — cioè con la
-       sua roba tolta e restituita a rate.
-
-       Una chiave che nessun premio dichiara si butta: un id sparito dal
-       catalogo non deve lasciare in archivio un premio fantasma. */
+    // I premi presi: una fattoria di prima dei premi li considera tutti presi (i suoi livelli sono già passati).
     this.reclamati = {}
     if (d && d.reclamati && typeof d.reclamati === 'object') {
       for (const k of Object.keys(d.reclamati)) if (premioDi(k)) this.reclamati[k] = 1
     } else this.reclamaTutto()
-    /* E quello che è **già in mano** conta come preso comunque, in ogni
-       caso: una panchina in mappa che risultasse non reclamata sarebbe
-       una cosa comprata che, messa via, non si può più tirare fuori. */
+    // Quello già in mano conta come preso comunque: messo via non si potrebbe più tirare fuori.
     for (const c of this.cose) {
       this.reclamati[chiaveDi('cosa', c.id)] = 1
       if (c.coltura) this.reclamati[chiaveDi('coltura', c.coltura)] = 1
@@ -456,11 +240,7 @@ export class Fattoria {
         : Math.max(0, this.cose.filter(c => siloDi(c) === fam).length - 1)
     }
     if (!Object.keys(this.piazzole).length) return this.nuova()
-    /* Una fattoria salvata quando il mondo era 7×7 fisso non ha
-       `limiti`, e il suo bosco arriva fin dove arrivava quel mondo: si
-       riparte da lì e si semina solo la terra nuova. Dare per scontato
-       un mondo più piccolo di quello vero farebbe ricrescere il bosco
-       dove era stato sgomberato. */
+    // Un salvataggio col mondo 7×7 fisso non ha limiti: si riparte da lì, senza far ricrescere il bosco sgomberato.
     const l = d && d.limiti
     this.limiti = l && ['x0', 'y0', 'x1', 'y1'].every(k => Number.isFinite(l[k]))
       ? { x0: l.x0, y0: l.y0, x1: l.x1, y1: l.y1 } : { ...LIMITI_VECCHI }
@@ -468,27 +248,14 @@ export class Fattoria {
     return this
   }
 
-  /* ═══════════ il livello della fattoria ═══════════
-     L'esperienza sono **le monete spese qui dentro** più **gli ordini
-     consegnati al mercato** — il perché delle due sorgenti, e perché la
-     seconda non paga monete, sta in `dati/livelli.js`. Ci passano tutti
-     i pagamenti, ed è il motivo per cui in questo file non si chiama
-     più `this.borsa.paga()` da nessuna parte: uno solo dimenticato
-     sarebbe un livello che cresce piano senza che nessuno capisca
-     perché. */
+  // Le due sorgenti dell'esperienza (spesa + consegne) — vedi docs/fattoria/livelli.md.
   spendi(n) {
-    /* `paga(-n)` incassa (sgombrare il bosco rendeva, in una vecchia
-       versione): un'entrata non è esperienza. */
+    // paga(-n) incassa (un'entrata non è esperienza).
     if (n > 0) this.speso = (this.speso || 0) + n
     return this.borsa.paga(n)
   }
 
-  /* L'altra metà: quello che il mercato regala consegnando, e quello
-     che una bestia regala quando è rimessa a posto (`premiaIlBenessere`).
-     Non tocca la borsa — **né il mercato né le bestie pagano monete,
-     mai** — e non scende, come tutto il resto dell'esperienza. Torna
-     se il livello è salito, che è l'unica cosa che chi consegna deve
-     sapere. */
+  // Mercato e bestie non pagano mai monete, solo esperienza (che non scende).
   guadagna(n) {
     if (!(n > 0)) return false
     const prima = this.livello
@@ -496,27 +263,14 @@ export class Fattoria {
     return this.livello > prima
   }
 
-  /* Le due sorgenti sommate: è questa la misura del livello, e sta in
-     un posto solo perché due conti diversi per lo stesso numero prima o
-     poi si scostano — e allora il gettone in alto direbbe una cosa e il
-     baule ne aprirebbe un'altra. */
   get esperienza() { return (this.speso || 0) + (this.guadagnato || 0) }
 
   get livello() { return livelloPer(this.esperienza) }
 
-  /* Tutto quello che la pagina dei livelli deve sapere, in un colpo:
-     livello, nome, quanto manca al prossimo. */
   get avanzamento() { return avanzamento(this.esperienza) }
 
-  /* Una fattoria salvata prima che i livelli esistessero: quanto avrà
-     speso, guardando quello che ha in mappa e in magazzino.
-
-     E **non meno di quanto serve a tenersi quello che ha già**: chi
-     aveva un pollaio dev'essere almeno al livello del pollaio, se no il
-     giorno dell'aggiornamento se lo ritrova in mappa e non nel baule —
-     cioè una cosa che ha comprato e non può più ricomprare. La somma
-     dei prezzi da sola non basta, perché i prezzi di listino sono più
-     bassi di quello che si è speso davvero (rincari, semine, cibo). */
+  // Una fattoria di prima dei livelli: stima lo speso da quello che ha in mappa, non meno di quanto
+  // serve a tenerselo (i prezzi di listino sono più bassi di quanto si è speso davvero).
   stimaLoSpeso() {
     let n = 0
     for (const c of this.cose) n += (PER_ID[c.id] || {}).prezzo || 0
@@ -529,21 +283,10 @@ export class Fattoria {
     return Math.max(n, sogliaDi(serve))
   }
 
-  /* ═══════════ i premi, e il gesto di prenderli ═══════════
-     Salire di livello **apre** dei premi; averli vuol dire averli
-     presi. Il perché sta in `dati/livelli.js`: un premio che compare da
-     solo è una riga di elenco, uno che si preme è una cosa che ci si va
-     a prendere — e soprattutto non si presenta in mezzo a un acquisto.
-
-     Il livello resta il cancello di prima: si può reclamare solo quello
-     che il livello ha già aperto. Il reclamo è il secondo giro di
-     chiave, non il primo. */
+  // I premi: il livello apre, prenderli è un gesto a parte — vedi docs/fattoria/livelli.md.
   reclamato(chiave) { return !!this.reclamati[chiave] }
 
-  /* Quello che è arrivato e nessuno ha ancora preso. È il numero che il
-     gettone in alto porta addosso, quindi si chiede spesso: si ferma
-     all'ultimo livello che porta roba, se no un cheat al livello 300
-     girerebbe trecento volte a vuoto. */
+  // Si ferma all'ultimo livello che porta roba, se no un cheat al livello 300 girerebbe a vuoto.
   daReclamare() {
     const fuori = []
     const fin = Math.min(this.livello, ULTIMO)
@@ -561,35 +304,22 @@ export class Fattoria {
     return { ok: true, premio: p }
   }
 
-  /* Tutto quello che c'è da prendere, preso. Non è una scorciatoia per
-     chi gioca: la usa la migrazione di un salvataggio di ieri, il cheat
-     dell'indirizzo, e chi scrive un test che dei quadratini non deve
-     sapere niente. */
+  // Non una scorciatoia per chi gioca: la usa la migrazione, il cheat, e chi scrive un test.
   reclamaTutto() {
     for (const p of this.daReclamare()) this.reclamati[p.chiave] = 1
     return this
   }
 
-  /* Se una cosa è già arrivata **ed è stata presa**. Il baule mostra
-     solo questo, ma la regola sta **qui**: una schermata che filtra è
-     una comodità, un motore che accetta tutto è un buco — e questo
-     motore lo usa anche chi scrive un test. */
+  // La regola sta qui e non solo nel baule: la usa anche chi scrive un test.
   sbloccata(id) {
     const v = PER_ID[id]
-    /* Una voce stagionale non è un premio di nessun livello: il
-       cancello è la finestra dell'anno, e lo tiene il baule
-       (`viste/Roba.vue`, con `stagioneDi`). Il motore non sa che
-       giorno è — e non deve: un salvataggio con una zucca posata a
-       ottobre si riapre a marzo senza che niente la rifiuti. */
+    // Una voce stagionale non è premio di nessun livello: il cancello è la finestra dell'anno.
     if (!v) return false
-    /* Una sorpresa della fiera non è un premio e non si vende: la apre
-       **averla nel baule**, dove l'ha messa la mongolfiera. Una già
-       posata si sposta lo stesso — spostare non chiede di sbloccare. */
+    // Una sorpresa della fiera si apre avendola nel baule, non è un premio.
     if (v.fiera) return this.quantiNe(id) > 0
     return !!v.stagione || this.reclamato(chiaveDi('cosa', id))
   }
 
-  /* Le stesse due domande per le altre due specie di premio. */
   colturaAperta(id) { return this.reclamato(chiaveDi('coltura', id)) }
   bestiaAperta(chi) { return this.reclamato(chiaveDi('bestia', chi)) }
 
@@ -600,8 +330,7 @@ export class Fattoria {
     return this.mia(piazzolaDi(cx), piazzolaDi(cy))
   }
 
-  /* Si compra solo quello che tocca casa: la fattoria cresce da sé, non
-     a macchia di leopardo con dei buchi in mezzo. */
+  // Si compra solo quello che tocca casa: la fattoria cresce da sé, non a macchia di leopardo.
   comprabile(px, py) {
     if (!dentroI(this.limiti, px, py) || this.mia(px, py)) return false
     return this.mia(px - 1, py) || this.mia(px + 1, py) ||
@@ -617,26 +346,13 @@ export class Fattoria {
     if (this.borsa.quante() < costo) return { ok: false, motivo: 'poche-monete', costo }
     this.spendi(costo)
     this.piazzole[chiave(px, py)] = 1
-    /* Comprato il bordo, il margine si è assottigliato: il mondo cresce
-       subito, così il pezzo appena preso ha già altra terra intorno da
-       desiderare. */
+    // Il mondo cresce subito: il pezzo appena preso ha già altra terra intorno da desiderare.
     const cresciuto = this.allarga()
     return { ok: true, costo, cresciuto }
   }
 
-  /* ═══════════ l'acqua si dipinge ═══════════
-     Uno stagno non è un oggetto 3×3 che o ci sta o non ci sta: è una
-     **macchia di celle**, della forma che vuoi. Qui si segna solo dove
-     c'è acqua; che aspetto abbia il bordo lo decide chi disegna
-     guardando i vicini (`scena/bordi.js`), e non è una cosa che il
-     motore debba sapere.
-
-     Costa a cella, e si può togliere: scavare una pozza e ripensarci
-     non deve essere una condanna. Come tutto il resto, non rimborsa.
-
-     `terreno` tiene **solo le celle diverse dal prato**: una fattoria
-     tutta d'erba non deve portarsi dietro milleottocento voci che
-     dicono «qui c'è erba». Chi non è scritto è `BASE`. */
+  // L'acqua è una macchia di celle, non un oggetto: il bordo lo decide chi disegna (scena/bordi.js).
+  // terreno tiene solo le celle diverse dal prato: chi non è scritto è BASE.
   materiaDi(cx, cy) { return this.terreno[chiave(cx, cy)] || BASE }
 
   eAcqua(cx, cy) { return this.materiaDi(cx, cy) === 'acqua' }
@@ -664,8 +380,7 @@ export class Fattoria {
     return { ok: true }
   }
 
-  /* Le due vecchie porte, tenute perché ci passa già del codice: sono
-     la stessa cosa con la materia scritta dentro. */
+  // Le due vecchie porte, tenute perché ci passa già del codice.
   dipingiAcqua(cx, cy) { return this.dipingi(cx, cy, 'acqua') }
   togliAcqua(cx, cy) { return this.spiana(cx, cy) }
 
@@ -675,10 +390,7 @@ export class Fattoria {
     return { x: cosa.x, y: cosa.y, w: p[0], h: p[1] }
   }
 
-  /* `salta` è quello che si sta spostando: sé stesso non è un ostacolo
-     per sé stesso, e va saltato **qui** — se lo si riconoscesse dopo,
-     una staccionata girata che copre la cella di un'altra cosa
-     nasconderebbe quell'altra cosa e la lascerebbe sovrapporre. */
+  // salta è quello che si sta spostando: va escluso qui, non dopo, se no si nasconderebbe da sé.
   cosaSotto(cx, cy, salta = null) {
     for (let i = this.cose.length - 1; i >= 0; i--) {
       if (this.cose[i] === salta) continue
@@ -701,17 +413,8 @@ export class Fattoria {
     return null
   }
 
-  /* ═══════════ una cella sola, e le due domande che le si fanno ═══════════
-     «Ci si posa qualcosa?» e «ci si cammina?» sono lo stesso conto —
-     è terra mia, non è acqua, non c'è bosco, non c'è già qualcosa —
-     tranne per un punto solo: quello che il catalogo dichiara `sotto`
-     (un orto, dei fiori, una radura) è **terreno, non oggetto**. Ci si
-     cammina sopra e non ci si posa sopra, ed è la stessa riga che
-     decide l'ordine di disegno.
-
-     L'ingombro di quello che c'è si chiede a `ingombro()`, che passa da
-     `piedeDi()`: una staccionata girata occupa [1,2] e non [2,1], e
-     leggere `v.piede` bloccherebbe le celle sbagliate. */
+  // "Ci si posa?" e "ci si cammina?" sono lo stesso conto, tranne un punto: quello che il catalogo
+  // dichiara sotto (orto, fiori) è terreno, non oggetto — ci si cammina sopra, non ci si posa.
   cellaBuona(cx, cy, { salta = null, camminando = false } = {}) {
     if (!this.cellaMia(cx, cy)) return false
     if (!siPassa(this.materiaDi(cx, cy))) return false      // in acqua non si posa e non si passa
@@ -723,25 +426,16 @@ export class Fattoria {
     return camminando && !!v.sotto
   }
 
-  /* Dove si può mettere il piede. Una domanda sola, e prima erano
-     quattro conti sparsi in quattro posti — di cui uno, quello dentro
-     al disegno, ne conosceva solo il primo: per questo il cane
-     attraversava le case. */
+  // Una domanda sola: prima erano quattro conti sparsi, e il disegno ne conosceva solo uno.
   calpestabile(cx, cy) { return this.cellaBuona(cx, cy, { camminando: true }) }
 
-  /* Una cosa ci sta se il suo piede cade tutto su terra tua, e non
-     inciampa in niente. */
   libera(cx, cy, w, h, salta = null) {
     for (let i = 0; i < w; i++) for (let j = 0; j < h; j++)
       if (!this.cellaBuona(cx + i, cy + j, { salta })) return false
     return true
   }
 
-  /* ═══════════ sgombrare ═══════════
-     Costa e basta: non rende niente. Il perché sta in `dati/ostacoli.js`
-     — un bosco che paga sarebbe una seconda fonte di monete che non
-     passa da nessun esercizio, e la fattoria smetterebbe di essere la
-     ricompensa di qualcosa. */
+  // Costa e basta, non rende: vedi dati/ostacoli.js.
   sgombra(cx, cy) {
     const o = this.ostacoloSotto(cx, cy)
     if (!o) return { ok: false, motivo: 'niente-da-sgombrare' }
@@ -751,32 +445,14 @@ export class Fattoria {
     return { ok: true, costo: o.costo, tipo: o.tipo }
   }
 
-  /* ═══════════ mettere giù ═══════════
-     Un solo metodo per le due cose che sembrano diverse e non lo sono:
-     posare qualcosa di nuovo e spostare qualcosa che c'è già. Cambia
-     solo chi paga cosa. */
   posa(id, cx, cy, { sposta = null, g = null } = {}) {
     const v = PER_ID[id]
     if (!v) return { ok: false, motivo: 'non-esiste' }
-    /* Quello che il livello non ha ancora aperto non si posa — nemmeno
-       se è già in magazzino, che è il caso di chi ha messo via una cosa
-       comprata prima. Spostare invece resta libero: una cosa già in
-       mappa è tua, e il livello non torna mai indietro. */
+    // Non ancora aperto non si posa, nemmeno dal magazzino; spostare resta libero (è già tua).
     if (!sposta && !this.sbloccata(id))
       return { ok: false, motivo: 'non-sbloccato', liv: livelloDellaVoce(v) }
-    /* Di un silo ce n'è **uno solo per tipo**: la capienza è del tipo e
-       si compra ingrandendo, quindi il secondo non conterrebbe niente
-       di più.
-
-       Qui si guarda **la mappa e non il baule**, ed è la differenza con
-       `compra` (che guarda tutti e due, perché comprarne un secondo
-       avendone già uno in mano è la spesa che non ha senso). Contando
-       anche il baule, un silo messo via non si poteva più rimettere
-       giù: `quanteNeHo` tornava 1 — quell'1 era proprio il silo nel
-       baule — e `posa` diceva `ne-hai-gia` a chi in mappa non ne aveva
-       nessuno. Cioè una cosa comprata, messa via una volta, chiusa nel
-       baule per sempre: l'unico modo di perdere davvero qualcosa in un
-       gioco che promette che non si perde niente. */
+    // Un silo per tipo: si guarda la mappa e non il baule (a differenza di compra), se no un silo
+    // messo via non si potrebbe più rimettere giù — l'unico modo di perdere qualcosa per sempre.
     if (!sposta && v.unico && this.quantiInMappa(id) > 0)
       return { ok: false, motivo: 'ne-hai-gia' }
     const finto = { id, g: g === null ? (sposta ? sposta.g : 0) : g }
@@ -784,8 +460,7 @@ export class Fattoria {
     if (!this.libera(cx, cy, w, h, sposta)) return { ok: false, motivo: 'non-ci-sta' }
 
     if (sposta) {
-      /* rimettere una cosa esattamente dov'era è gratis: se no chi
-         cambia idea a metà gesto si ritrova punito per niente */
+      // Rimetterla esattamente dov'era è gratis: cambiare idea a metà gesto non è un errore.
       if (sposta.x === cx && sposta.y === cy) return { ok: true, costo: 0, cosa: sposta }
       if (this.borsa.quante() < COSTO_SPOSTARE)
         return { ok: false, motivo: 'poche-monete', costo: COSTO_SPOSTARE }
@@ -798,9 +473,7 @@ export class Fattoria {
       this.magazzino[id]--
       if (!this.magazzino[id]) delete this.magazzino[id]
       const cosa = { i: this.prossimo++, id, g: finto.g, x: cx, y: cy }
-      /* Una macchina che torna dal baule si riprende la fila più lunga
-         fra quelle messe via con lei: i posti comprati non si perdono
-         per averla spostata passando dal baule. */
+      // Una macchina dal baule riprende la fila più lunga fra quelle messe via con lei.
       const riposte = this.fileRiposte[id]
       if (riposte && riposte.length) {
         riposte.sort((a, b) => b - a)
@@ -819,19 +492,8 @@ export class Fattoria {
     return { ok: true, costo: prezzo, cosa }
   }
 
-  /* ═══════════ girare ═══════════
-     Un verso avanti, e i versi che una cosa ha li conta il catalogo
-     (`quantiVersi`): per la staccionata e la casa sono le vedute che il
-     foglio disegna davvero, per un'aiuola o un sasso sono i quattro
-     quarti di giro, che la pixel art regge esatti e che costano un
-     `ctx.rotate` a chi disegna. Da qui non si vede la differenza, ed è
-     il punto: qui si sa solo che i versi sono N e che passare al
-     prossimo può cambiare l'ingombro.
-
-     Perché **l'ingombro cambia**: un quarto di giro dispari scambia
-     larghezza e profondità, e una staccionata che gira passa da [2,1] a
-     [1,2]. Se girata non ci sta si torna com'era — meglio un rifiuto
-     che una staccionata dentro una casa. */
+  // I versi li conta il catalogo (quantiVersi); un quarto di giro dispari scambia larghezza e
+  // profondità, e se girata non ci sta si torna com'era.
   gira(cosa) {
     const v = PER_ID[cosa.id]
     const versi = quantiVersi(v)
@@ -847,18 +509,8 @@ export class Fattoria {
     return { ok: true, verso: dopo }
   }
 
-  /* ═══════════ rovesciare ═══════════
-     L'altra metà, e non è la stessa cosa girata: lo specchio non tocca
-     l'ingombro — stessi pixel, stesso rettangolo, solo al contrario —
-     quindi **non può mai fallire per posto**, e chi lo chiama non ha
-     niente da spiegare a nessuno. È anche il motivo per cui vive in un
-     campo suo (`cosa.m`) invece che dentro il verso: un numero solo per
-     due fatti di natura diversa avrebbe obbligato il motore a
-     ricontrollare la collisione anche quando non serve.
-
-     Lo reggono quasi tutti i pezzi. I pochi che no l'hanno detto nel
-     loro foglietto — i cartelli dei campi, che hanno una parola scritta
-     sopra e allo specchio non dicono più niente. */
+  // Lo specchio non tocca l'ingombro (stessi pixel, al contrario): non può mai fallire per posto,
+  // per questo vive in un campo suo (cosa.m). I cartelli dei campi non si specchiano (la scritta).
   specchia(cosa) {
     const v = PER_ID[cosa.id]
     if (!puoSpecchiare(v)) return { ok: false, motivo: 'non-si-specchia' }
@@ -867,20 +519,8 @@ export class Fattoria {
     return { ok: true, specchio: !!cosa.m }
   }
 
-  /* ═══════════ le bestie ═══════════
-     Una bestia si prende e si sposta come un oggetto — questa è la
-     scelta nuova, e ribalta quella di prima («una bestia non si posa,
-     non si sposta»). Il perché sta in `dati/animali.js`: siccome non
-     attraversa la staccionata, spostarla **è** il modo di metterla nel
-     recinto, e non serve inventare un recinto che chiude.
-
-     Da lì viene la cosa che si scorda: **dove sta una bestia si salva**
-     (`x`, `y`, in celle). Se rinascesse in mezzo al prato a ogni
-     apertura, quello che la bambina aveva chiuso nel recinto se ne
-     sarebbe uscito da solo durante la notte.
-
-     Una per tipo — due beagle identici sono due disegni uguali, non due
-     cani. */
+  // Una bestia si prende e si sposta come un oggetto: spostarla è il modo di metterla nel recinto.
+  // Dove sta si salva (x,y): senza, il recinto si svuoterebbe da solo a ogni apertura.
   hoLaBestia(chi) { return this.bestie.some(b => b.chi === chi) }
 
   laBestia(chi) { return this.bestie.find(b => b.chi === chi) || null }
@@ -900,11 +540,7 @@ export class Fattoria {
     return { ok: true, costo: prezzo, bestia }
   }
 
-  /* Prenderla e posarla dove si vuole. **Non costa**, e questa è
-     l'eccezione a `COSTO_SPOSTARE`: una panchina resta dove la metti,
-     una bestia dopo un minuto è già da un'altra parte per conto suo —
-     farsi pagare per uno spostamento che l'animale disfa da sé sarebbe
-     una presa in giro. */
+  // Gratis: una bestia dopo un minuto è già altrove per conto suo, farla pagare sarebbe una beffa.
   spostaBestia(chi, cx, cy) {
     const b = this.laBestia(chi)
     if (!b) return { ok: false, motivo: 'non-e-tua' }
@@ -913,9 +549,7 @@ export class Fattoria {
     return { ok: true, costo: 0, bestia: b }
   }
 
-  /* Dove va messa in scena all'apertura: dove l'avevamo lasciata, e se
-     quel posto non c'è più (una casa costruita sopra, l'acqua dipinta)
-     la cella buona più vicina — sparire non è un'opzione. */
+  // Dove l'avevamo lasciata, o la cella buona più vicina se quel posto non c'è più.
   dovEra(chi) {
     const b = this.laBestia(chi)
     const c0 = PRIMA * CELLE
@@ -928,9 +562,7 @@ export class Fattoria {
     return this.cellaLibera(b.x, b.y)
   }
 
-  /* Chi guarda le bestie camminare annota ogni tanto dove sono
-     arrivate: è quello che rende «l'ho chiuso nel recinto» una cosa che
-     resta anche a gioco chiuso. */
+  // Annotato ogni tanto mentre cammina: rende vero "l'ho chiuso nel recinto" anche a gioco chiuso.
   annota(chi, cx, cy) {
     const b = this.laBestia(chi)
     if (!b) return false
@@ -938,10 +570,7 @@ export class Fattoria {
     return true
   }
 
-  /* Come sta, adesso. Il calo si applica **leggendo**: chi guarda fa
-     scendere e riscrive l'orologio, così il conto non dipende da quanto
-     spesso si guarda — che è l'errore classico di questi bisogni. Una
-     bestia salvata prima che esistessero se li trova al volo. */
+  // Il calo si applica leggendo (non un orologio a parte): il conto non dipende da quanto spesso si guarda.
   stato(chi, ora = Date.now()) {
     const b = this.laBestia(chi)
     if (!b) return null
@@ -949,23 +578,13 @@ export class Fattoria {
     return scendi(b, ora)
   }
 
-  /* Dare da mangiare costa, ed è il motivo per cui una bestia è un
-     impegno e non una spesa una volta sola.
-
-     E il cibo dev'essere **il suo**: un pappagallo la bistecca non la
-     tocca. Il rifiuto viene prima del pagamento — chi sbaglia ciotola
-     non perde monete, perde solo il gesto: è una cosa da imparare, non
-     una trappola. */
+  // Il cibo dev'essere il suo (gradisce); il rifiuto viene prima del pagamento: sbagliare costa solo il gesto.
   nutri(chi, cibo) {
     const b = this.stato(chi)
     if (!b) return { ok: false, motivo: 'non-e-tua' }
     if (!gradisce(cibo, famigliaDi(chi))) return { ok: false, motivo: 'non-gli-piace' }
     if (b.pancia > 0.93) return { ok: false, motivo: 'non-ha-fame' }
-    /* Un cibo si paga in monete **o** si scala dal granaio: il mangime
-       del mulino è già stato pagato coltivandolo (vedi `dati/bisogni.js`).
-       Il controllo viene prima di toccare qualunque cosa, come per il
-       cibo sbagliato: chi non ha mangime non perde il gesto e non perde
-       niente. */
+    // Un cibo si paga in monete o si scala dal granaio (già pagato coltivandolo); il controllo viene prima di tutto.
     if (cibo.da) {
       if (!this.quantoHo(cibo.da)) return { ok: false, motivo: 'manca-roba', prodotto: cibo.da }
       this.togli(cibo.da, 1)
@@ -981,32 +600,19 @@ export class Fattoria {
              premio: this.premiaIlBenessere(chi, b, eraAPosto) }
   }
 
-  /* ═══════════ una bestia rimessa a posto ═══════════
-     Dopo un gesto, se **tutti e tre** i bisogni stanno nella fascia
-     alta e prima non ci stavano, la bestia paga esperienza — come il
-     mercato consegnando, e mai monete. Se e quando lo decide
-     `premiaSeStaBene` in `dati/bisogni.js` (una volta per ciclo, il
-     ciclo sta nel record); quanto lo dice il prezzo della bestia
-     (`premioBenessere`). Qui c'è solo il braccio, e torna **cosa
-     dire**: `{ xp, salito }`, o `null` se non c'è niente da dire. */
+  // Se tutti e tre i bisogni sono nella fascia alta e prima non lo erano, paga esperienza — vedi dati/bisogni.js.
   premiaIlBenessere(chi, b, eraAPosto) {
     if (!premiaSeStaBene(b, eraAPosto)) return null
     const xp = premioBenessere(chi)
     return { xp, salito: this.guadagna(xp) }
   }
 
-  /* Spazzolare resta gratis; giocare costa una monetina (il perché, e la
-     conseguenza da tenere d'occhio, stanno in `dati/bisogni.js`). Il
-     prezzo è del gesto, non di questo metodo: qui si legge e basta. */
+  // Spazzolare resta gratis, giocare costa una monetina — il perché sta in dati/bisogni.js.
   coccola(chi, gesto) {
     const b = this.stato(chi)
     if (!b) return { ok: false, motivo: 'non-e-tua' }
     if (b[gesto.bisogno] > 0.93) return { ok: false, motivo: 'non-serve' }
-    /* Una coccola si paga in monete **o** con la roba del granaio, come
-       un cibo (`nutri`): la copertina è di lana, e la lana è già stata
-       pagata tenendo delle pecore. Il controllo viene prima di toccare
-       qualunque cosa, sempre per lo stesso motivo — chi non ce l'ha non
-       perde niente, perde solo il gesto. */
+    // Si paga in monete o roba del granaio (la lana, già pagata tenendo pecore); il rifiuto viene prima.
     if (gesto.da) {
       if (!this.quantoHo(gesto.da)) return { ok: false, motivo: 'manca-roba', prodotto: gesto.da }
       this.togli(gesto.da, 1)
@@ -1022,9 +628,7 @@ export class Fattoria {
              premio: this.premiaIlBenessere(chi, b, eraAPosto) }
   }
 
-  /* Rinominare è gratis e si può fare sempre: un nome scelto a otto anni
-     non deve restare addosso a undici, e far pagare un ripensamento è il
-     modo più rapido di far smettere di sceglierne uno. */
+  // Gratis e sempre: far pagare un ripensamento sul nome è il modo più rapido di non sceglierne uno.
   rinominaBestia(chi, nome) {
     const b = this.laBestia(chi)
     if (!b) return { ok: false, motivo: 'non-e-tua' }
@@ -1032,41 +636,18 @@ export class Fattoria {
     return { ok: true, nome: b.nome }
   }
 
-  /* ═══════════ vestire una bestia ═══════════
-     Un cappellino, un fiocco, una sciarpa: il catalogo sta in
-     `dati/addobbi.js` e **dove si attaccano** nella scheda
-     dell'animale, che è l'unica che sa dov'è la sua testa.
-
-     Due cassetti, come per le cose del prato: quello che si **ha
-     addosso** viaggia dentro la bestia (`b.addobbi`, una mappa
-     `aggancio → id`), quello comprato e non indossato sta nel
-     **guardaroba**. Toglierlo non lo consuma: torna nel guardaroba, e
-     da lì si rimette dove si vuole. Niente si perde mai, come in tutto
-     il resto della fattoria.
-
-     Un aggancio tiene **una cosa sola**: mettere un cilindro a chi ha
-     già un cappellino rimanda il cappellino nel guardaroba invece di
-     dire di no. Un rifiuto lì sarebbe la risposta giusta a una domanda
-     che nessuno ha fatto — chi preme il secondo cappello sta chiedendo
-     di cambiarlo, non di indossarne due. */
+  // Catalogo in dati/addobbi.js, agganci nella scheda dell'animale. Due cassetti come per le cose
+  // del prato (addosso / guardaroba); un aggancio tiene una cosa sola, il secondo sposta il primo.
   quantiAddobbi(id) { return (this.guardaroba || {})[id] || 0 }
 
-  /* Cosa ha addosso, come mappa `aggancio → id`. Sempre un oggetto: una
-     bestia salvata prima che esistessero gli addobbi non ce l'ha. */
   addobbiDi(chi) {
     const b = this.laBestia(chi)
     return (b && b.addobbi) || {}
   }
 
-  /* Quello che chi disegna deve sapere: le figure e le taglie, già
-     scelte. Il nome dell'aggancio esce insieme perché è la chiave con
-     cui si trova il punto, ma la scena non sa cosa voglia dire. */
   comeEVestita(chi) { return addossoA(this.addobbiDi(chi)) }
 
-  /* Il vestiario di una bestia: quello in vendita che le sta, più
-     quello **sospeso** che il bambino ha già — in guardaroba o addosso
-     a lei (`sospeso` in `dati/addobbi.js`). Un fiocco comprato prima
-     della sospensione resta un tasto; uno mai comprato non compare. */
+  // In vendita più il sospeso che il bambino ha già (guardaroba o addosso).
   vestiarioDi(chi) {
     const tieni = Object.keys(this.guardaroba || {}).filter(id => this.quantiAddobbi(id) > 0)
     return addobbiPer(chi, [...tieni, ...Object.values(this.addobbiDi(chi))])
@@ -1075,8 +656,7 @@ export class Fattoria {
   compraAddobbo(id) {
     const a = ADDOBBI_PER_ID[id]
     if (!a) return { ok: false, motivo: 'non-esiste' }
-    /* Un sospeso esiste — si rilegge, si mette, si toglie — ma non si
-       vende: il negozio è `IN_VENDITA`, non il catalogo. */
+    // Un sospeso esiste (si rilegge, si mette, si toglie) ma non si vende.
     if (a.sospeso) return { ok: false, motivo: 'sospeso' }
     if (this.borsa.quante() < a.prezzo)
       return { ok: false, motivo: 'poche-monete', costo: a.prezzo }
@@ -1085,11 +665,7 @@ export class Fattoria {
     return { ok: true, costo: a.prezzo, addobbo: a }
   }
 
-  /* Mettere addosso quello che si ha in guardaroba. I due rifiuti che
-     contano sono diversi e vanno detti diversi: **non ce l'hai** si
-     risolve comprandolo, **non gli sta** no — un pappagallo la
-     mantellina non la porta e non la porterà mai, perché la schiena non
-     è fra i suoi agganci (`porta` in `dati/animali.js`). */
+  // "Non ce l'hai" si risolve comprando, "non gli sta" no (non è fra i suoi agganci, e non lo sarà mai).
   vestiBestia(chi, id) {
     const b = this.laBestia(chi)
     if (!b) return { ok: false, motivo: 'non-e-tua' }
@@ -1097,13 +673,9 @@ export class Fattoria {
     if (!a) return { ok: false, motivo: 'non-esiste' }
     if (!staA(id, chi)) return { ok: false, motivo: 'non-gli-sta', dove: a.dove }
     if (!b.addobbi) b.addobbi = {}
-    /* Quello che c'era su quell'aggancio torna nel guardaroba: si
-       cambia cappello, non se ne perde uno. */
+    // Quello che c'era su quell'aggancio torna nel guardaroba: si cambia, non se ne perde uno.
     const prima = b.addobbi[a.dove]
-    /* «Ce l'ha già addosso» si guarda **prima** di «non ce l'hai»: un
-       addobbo indossato non sta più in guardaroba, quindi ripremerlo
-       risponderebbe «non ce l'hai» di una cosa che si sta guardando in
-       testa alla bestia — e chi legge quel motivo lo compra due volte. */
+    // "Ce l'ha già addosso" si guarda prima di "non ce l'hai", se no ripremerlo lo farebbe ricomprare.
     if (prima === id) return { ok: false, motivo: 'gia-addosso' }
     if (this.quantiAddobbi(id) < 1) return { ok: false, motivo: 'non-ce-lhai', costo: a.prezzo }
     if (prima) this.guardaroba[prima] = this.quantiAddobbi(prima) + 1
@@ -1113,10 +685,7 @@ export class Fattoria {
     return { ok: true, addobbo: a, tolto: prima || null }
   }
 
-  /* Quanti addobbi ci sono addosso alle bestie, **in tutto e adesso**.
-     È un primato e non un contatore, come `tipiPosseduti`: mettere e
-     togliere lo stesso cappello venti volte non deve valere venti
-     volte. Lo legge il traguardo nel manifesto (`gioco.js`). */
+  // Un primato e non un contatore: mettere e togliere lo stesso cappello venti volte non vale venti.
   get addobbiAddosso() {
     return this.bestie.reduce((n, b) => n + Object.keys(b.addobbi || {}).length, 0)
   }
@@ -1130,20 +699,10 @@ export class Fattoria {
     return { ok: true, id }
   }
 
-  /* ═══════════ i due silos ═══════════
-     Il raccolto, che non è il magazzino (il perché sta in testa al
-     file). Sta in **due silos separati** — la terra da una parte, le
-     bestie dall'altra — e ognuno è piccolo, condiviso e si ingrandisce
-     pagando: il ragionamento per esteso sta in `dati/coltivazioni.js`.
-
-     Quello che non ci sta non si raccoglie, e il campo resta pronto ad
-     aspettare. Che è il modo in cui il gioco chiede di ingrandire il
-     silo senza scriverlo da nessuna parte. */
+  // Il raccolto, non il magazzino (vedi in testa al file) — due silos separati, si ingrandiscono pagando.
   quantoHo(prodotto) { return this.granaio[prodotto] || 0 }
 
-  /* Il silo di quella famiglia, se è stato costruito. Costruito vuol
-     dire **in mappa**: uno in magazzino è una cosa comprata e non
-     ancora messa giù, e finché non è giù non contiene niente. */
+  // Costruito vuol dire in mappa: uno in magazzino non contiene ancora niente.
   siloIn(famiglia) { return this.cose.find(c => siloDi(c) === famiglia) || null }
 
   eCostruito(famiglia) { return !!this.siloIn(famiglia) }
@@ -1152,78 +711,37 @@ export class Fattoria {
     return SILI[famiglia] ? Math.max(0, (this.silos || {})[famiglia] | 0) : 0
   }
 
-  /* Quanti pezzi di **una** merce ci stanno in questo silo. Zero se il
-     silo non c'è, e zero è diverso da piccolo: senza silo quella roba
-     non ha proprio dove finire, e chi chiama lo dice con parole diverse
-     (`silo-manca` contro `non-ci-sta`).
-
-     Il tetto è **dello scomparto**, non del silo intero: vedi
-     `dati/coltivazioni.js`, dove sta il perché del cambio. */
+  // Zero è diverso da piccolo: senza silo non c'è dove finire (silo-manca contro non-ci-sta).
   capienzaDi(famiglia) {
     return this.eCostruito(famiglia) ? postiPerMerce(this.livelloDelSilo(famiglia)) : 0
   }
 
-  /* Quanta roba c'è dentro in tutto. Non serve più a decidere se ci
-     sta — quello lo dice lo scomparto — ma a **dirlo**: «11 cose nel
-     silo del raccolto» è la riga che si legge aprendolo. */
   quantoHoNelSilo(famiglia) {
     return Object.entries(this.granaio)
       .reduce((n, [k, q]) => n + (siloDelProdotto(k) === famiglia ? q : 0), 0)
   }
 
-  /* Quanto ancora ci sta di questo prodotto: quello che avanza **nel
-     suo scomparto**. Due cose che uno scomparto pieno non ferma: le
-     altre merci dello stesso silo, e l'altro silo. Il mais colmo non
-     impedisce più di raccogliere le carote, che era il modo in cui il
-     gioco si fermava senza che niente fosse andato storto. */
+  // Uno scomparto pieno non ferma le altre merci né l'altro silo.
   quantoCiSta(prodotto) {
     const fam = siloDelProdotto(prodotto)
     if (!fam) return 0
     return Math.max(0, this.capienzaDi(fam) - this.quantoHo(prodotto))
   }
 
-  /* Perché non ci sta: il silo non c'è, o **quello scomparto** è pieno.
-     Chi mostra i cartelli ha bisogno di saperlo — «costruisci il silo» e
-     «ingrandiscilo» sono due cose da fare diverse, e un cartello che
-     dice quella sbagliata è peggio di nessun cartello. Il motivo si
-     chiama ancora `silo-pieno` perché è quello che chi gioca vede: la
-     parola «scomparto» sta nel testo, non nel codice di chi decide. */
+  // "costruisci il silo" e "ingrandiscilo" sono due cose da fare diverse: il motivo conta.
   perchePieno(prodotto) {
     const fam = siloDelProdotto(prodotto)
     return { famiglia: fam, motivo: this.eCostruito(fam) ? 'silo-pieno' : 'silo-manca' }
   }
 
-  /* Cosa c'è in un silo, scomparto per scomparto: quello che serve a
-     disegnarlo. Ci sono **anche gli scomparti vuoti**, perché uno
-     scomparto vuoto non è un buco, è il posto dove potrebbe andare
-     qualcosa — cioè l'unico modo di far vedere che si può coltivare
-     altro senza dirlo con una frase. */
-  /* ── IL SILO NON RACCONTA IL FUTURO ──────────────────────────────
-     Gli scomparti erano **tutti**, anche quelli di roba che sarebbe
-     arrivata dopo mesi: la barretta vuota doveva dire «qui potrebbe
-     andare qualcosa», e diceva invece tutta la scaletta del gioco in
-     anticipo — al primo silo si leggevano latte, uova e lana insieme al
-     grano. Una sorpresa che si racconta da sé non è più una sorpresa, e
-     un magazzino non è il posto dove si annuncia il futuro: quello è la
-     pagina dei livelli, dove è **un premio** e non una riga di elenco.
-
-     Resta il senso di prima per quello che è **già aperto**: una
-     coltura che si può seminare oggi ha il suo scomparto anche se non
-     l'hai mai raccolta, ed è così che si scopre che si può coltivare
-     altro. E quello di cui si ha ancora della roba resta comunque
-     visibile, se no una merce tolta dal catalogo diventerebbe roba
-     invisibile che occupa posto. */
+  // Il silo non racconta il futuro: mostra solo gli scomparti già aperti (o con roba dentro), mai
+  // quelli di merci che arriveranno fra mesi — quella sorpresa è un premio di livello, non un elenco.
   merciAperte(famiglia) {
     return merciDi(famiglia).filter(
       p => this.quantoHo(p) > 0 || this.ottenibile(p))
   }
 
-  /* Se una merce si può avere **adesso**: la dà una coltura già presa,
-     o una ricetta che si può fare — cioè che è arrivata, la cui
-     macchina è aperta, e i cui ingredienti sono a loro volta
-     ottenibili. `giri` ferma una catena che si mordesse la coda, ed è
-     `PROFONDITA` di `dati/coltivazioni.js` e non un numero scritto qui:
-     era 4, e lo scomparto della stoffa non sarebbe mai comparso. */
+  // Una coltura già aperta, o una ricetta ottenibile a sua volta; giri ferma un anello (PROFONDITA).
   ottenibile(prodotto, giri = PROFONDITA) {
     if (giri <= 0) return false
     for (const c of COLTURE)
@@ -1251,10 +769,7 @@ export class Fattoria {
     return costoIngrandimento(this.livelloDelSilo(famiglia))
   }
 
-  /* Ingrandire: due posti in più, e il prossimo costa di più. Non c'è
-     nessun tetto agli ingrandimenti — a fermare è il prezzo, che
-     raddoppia il passo ogni volta, e un tetto in più sarebbe un secondo
-     no da spiegare. */
+  // Nessun tetto: a fermare è il prezzo, che raddoppia il passo ogni volta.
   ingrandisci(famiglia) {
     if (!SILI[famiglia]) return { ok: false, motivo: 'non-esiste' }
     if (!this.eCostruito(famiglia)) return { ok: false, motivo: 'silo-manca' }
@@ -1266,10 +781,7 @@ export class Fattoria {
              livello: this.silos[famiglia] }
   }
 
-  /* Mette via quello che ci sta e **torna quanto ne è rimasto fuori**.
-     Chi chiama decide cosa dirne: un raccolto che non ci sta non si
-     raccoglie affatto (vedi `raccogli`), perché mezzo campo raccolto è
-     uno stato che non si sa disegnare. */
+  // Chi chiama decide cosa dirne: un raccolto che non ci sta non si raccoglie affatto (vedi raccogli).
   metti(prodotto, n) {
     if (!PRODOTTI[prodotto] || !(n > 0)) return n | 0
     const ci = Math.min(n, this.quantoCiSta(prodotto))
@@ -1284,18 +796,8 @@ export class Fattoria {
     return true
   }
 
-  /* ═══════════ i campi ═══════════
-     Un campo è una `cosa` come le altre, con due campi in più quando è
-     seminato: `coltura` (cos'è) e `seminato` (quando). Il tempo si
-     **legge**, non si aggiorna: `quantoCresciuto` fa il conto dall'ora
-     vera, quindi il gioco chiuso per una notte fa crescere il grano
-     esattamente come restare a guardarlo, e non c'è nessun orologio da
-     tenere in vita.
-
-     **Niente marcisce**: a crescita finita il campo resta pronto per
-     sempre. La spiegazione lunga sta in `dati/coltivazioni.js` — in due
-     parole, questo posto è il premio per gli esercizi fatti altrove, e
-     un raccolto che scade lo trasformerebbe in un dovere. */
+  // coltura/seminato viaggiano sulla cosa; il tempo si legge dall'ora vera, non si aggiorna.
+  // Niente marcisce: a crescita finita il campo resta pronto per sempre — vedi dati/coltivazioni.js.
   statoCampo(cosa, ora = Date.now()) {
     if (!eCampo(cosa)) return null
     const c = PER_COLTURA[cosa.coltura]
@@ -1308,11 +810,7 @@ export class Fattoria {
     }
   }
 
-  /* `seminaCampo` e non `semina`: `semina()` è già il bosco che nasce
-     dalle coordinate, ed è un'altra cosa per un altro scopo. Due metodi
-     con lo stesso nome qui dentro vorrebbero dire che il secondo
-     cancella il primo, e il bosco smetterebbe di nascere senza che
-     nessun test parli di alberi. */
+  // seminaCampo e non semina: semina() è già il bosco che nasce dalle coordinate.
   seminaCampo(cosa, colturaId, ora = Date.now()) {
     const s = this.statoCampo(cosa)
     if (!s) return { ok: false, motivo: 'non-e-un-campo' }
@@ -1329,14 +827,7 @@ export class Fattoria {
     return { ok: true, costo: c.semina, coltura: c }
   }
 
-  /* Raccogliere costa, e chi è a zero monete **non perde niente**: il
-     campo resta pronto e aspetta il primo esercizio fatto. È la stessa
-     idea della spazzola gratis in `dati/bisogni.js` — non si resta mai
-     chiusi fuori da quello che è già proprio.
-
-     Il silo pieno — o non ancora costruito — si comporta allo stesso
-     modo, e per lo stesso motivo: non si raccoglie, non si paga, il
-     grano resta nel campo. */
+  // A zero monete non si perde niente: il campo resta pronto. Il silo pieno si comporta uguale.
   raccogli(cosa, ora = Date.now()) {
     const s = this.statoCampo(cosa, ora)
     if (!s) return { ok: false, motivo: 'non-e-un-campo' }
@@ -1354,35 +845,8 @@ export class Fattoria {
     return { ok: true, costo: c.raccolta, prodotto: c.da, quanto: c.resa }
   }
 
-  /* ═══════════ le macchine ═══════════
-     Stesso orologio dei campi, mestiere diverso: prende roba dal granaio
-     e dopo un po' ne rende un'altra.
-
-     ── UN PEZZO ALLA VOLTA, E GLI ALTRI IN FILA ─────────────────────
-     Come in Hay Day (`dati/coda.js`): la macchina ne lavora uno e ne
-     tiene altri che aspettano, così si caricano tre pasti prima di
-     uscire. La fila sta **dentro la cosa** (`coda: [{ ricetta, da }]`,
-     più `fila`, quante volte è stata ingrandita), così un mulino
-     spostato si porta dietro quello che stava macinando e quello che
-     aspettava.
-
-     `da` è **quando quel pezzo parte**, non quando è stato messo in
-     fila: si decide mettendolo, ed è la fine dell'ultimo che c'era (o
-     adesso, se non c'era niente). Così ogni pezzo sa da sé quando
-     finisce, e il tempo si **legge** dall'ora come per i campi — a
-     telefono spento il secondo parte quando il primo finisce, senza
-     nessun orologio da tenere in vita. E ritirare quello che è pronto
-     non sposta gli altri: nessuno dipende da chi gli stava davanti.
-
-     La roba si prende **al momento di mettere in fila**, non a lavoro
-     finito: se no si potrebbe caricare dieci volte lo stesso grano, e il
-     granaio sarebbe una promessa invece di una scorta. Per lo stesso
-     motivo un pezzo che non è ancora partito si toglie e rende tutto —
-     roba e monete — perché è ancora la scorta di prima, solo spostata.
-
-     Il pronto **aspetta sulla macchina** e occupa il suo posto: niente
-     marcisce, e la fila dietro continua a lavorare. Un silo pieno
-     ferma il ritiro, non la macchina. */
+  // Un pezzo alla volta, gli altri in fila (coda dentro la cosa, dati/coda.js). da è quando quel
+  // pezzo parte (si legge dall'ora, come i campi); la roba si prende mettendo in fila, non a lavoro finito.
   statoMacchina(cosa, ora = Date.now()) {
     const quale = macchinaDi(cosa)
     if (!quale) return null
@@ -1421,9 +885,7 @@ export class Fattoria {
     }
   }
 
-  /* Cosa manca per fare questa ricetta, e quanto. Serve a chi mostra il
-     pannello: un tasto spento senza il perché è un tasto rotto, e il
-     perché qui è sempre un numero («ti serve un grano in più»). */
+  // Un tasto spento senza il perché è un tasto rotto: qui il perché è sempre un numero.
   cheMancaPer(ricettaId) {
     const r = PER_RICETTA[ricettaId]
     if (!r) return null
@@ -1433,8 +895,7 @@ export class Fattoria {
     return { manca, monete: Math.max(0, r.costo - this.borsa.quante()) }
   }
 
-  /* Mettere in fila. Si chiama ancora `avvia` perché a macchina vuota
-     è esattamente quello: il pezzo parte subito. */
+  // Si chiama ancora avvia perché a macchina vuota è esattamente quello.
   avvia(cosa, ricettaId, ora = Date.now()) {
     const s = this.statoMacchina(cosa, ora)
     if (!s) return { ok: false, motivo: 'non-e-una-macchina' }
@@ -1445,38 +906,18 @@ export class Fattoria {
     if (che.manca.length) return { ok: false, motivo: 'manca-roba', manca: che.manca }
     if (this.borsa.quante() < r.costo)
       return { ok: false, motivo: 'poche-monete', costo: r.costo }
-    /* Prima la roba, poi le monete, poi si parte: se una delle due
-       mancasse a metà si resterebbe con il granaio scucito e niente in
-       macchina. I controlli qui sopra lo escludono, e l'ordine è la
-       cintura di sicurezza. */
+    // Prima la roba, poi le monete, poi si parte: i controlli sopra escludono un fallimento a metà.
     for (const [k, n] of Object.entries(r.prende)) this.togli(k, n)
     if (r.costo) this.spendi(r.costo)
-    /* Parte quando finisce **l'ultimo** che c'è, pronto o no: un pezzo
-       pronto e non ritirato ha già finito, quindi non fa aspettare
-       nessuno. */
+    // Parte quando finisce l'ultimo che c'è, pronto o no: un pronto non ritirato non fa aspettare nessuno.
     const da = Math.max(ora, ...s.coda.map(p => p.fine))
     cosa.coda = [...(cosa.coda || []), { ricetta: r.id, da }]
     return { ok: true, costo: r.costo, ricetta: r, da,
              fine: da + r.minuti * MINUTO, subito: da === ora }
   }
 
-  /* Togliere dalla fila un pezzo che non è ancora partito: rende tutto,
-     roba e monete. Quello che lavora no — è già dentro la macina — e
-     quello pronto nemmeno: quello si ritira.
-
-     Chi veniva dopo **si fa avanti** di quanto durava il pezzo tolto: i
-     pezzi in attesa sono uno attaccato all'altro, quindi basta rifare la
-     catena da lì, ognuno che parte alla fine di chi gli sta davanti.
-
-     La roba torna nel silo, e se lì nel frattempo non c'è più posto il
-     pezzo **resta in fila**: rendere a metà, o sopra il tetto dello
-     scomparto, sarebbe perdere qualcosa o regalarlo. Meglio un no che
-     dice perché, e il pezzo che intanto si fa lo stesso.
-
-     Le monete tornano, e con loro **l'esperienza che avevano dato**: se
-     no mettere e togliere lo stesso pezzo sarebbe un modo gratis di
-     salire di livello. Senza però far scendere il livello — quello non
-     torna mai indietro, e un premio già preso non si ridà. */
+  // Un pezzo non ancora partito rende tutto (roba, monete, esperienza) e chi veniva dopo si fa avanti.
+  // Se il silo non ha più posto il pezzo resta in fila: meglio un no che perdere qualcosa.
   togliDallaFila(cosa, indice, ora = Date.now()) {
     const s = this.statoMacchina(cosa, ora)
     if (!s) return { ok: false, motivo: 'non-e-una-macchina' }
@@ -1506,12 +947,7 @@ export class Fattoria {
     return { ok: true, ricetta: r, reso: { ...r.prende }, monete: r.costo }
   }
 
-  /* Ritirare è gratis: si è già pagato mettendo in fila. Si prende
-     **tutto quello che ci sta**, pezzo per pezzo e in ordine: un pezzo
-     che non entra resta sulla macchina e aspetta, e quelli dopo di lui
-     si prendono lo stesso se il loro scomparto ha posto — il mais colmo
-     non deve tenere fermo il mangime. Un pezzo non si spezza: esce
-     intero o resta. */
+  // Gratis (si paga mettendo in fila); prende tutto quello che ci sta, un pezzo non si spezza.
   ritira(cosa, ora = Date.now()) {
     const s = this.statoMacchina(cosa, ora)
     if (!s) return { ok: false, motivo: 'non-e-una-macchina' }
@@ -1534,16 +970,12 @@ export class Fattoria {
     const coda = cosa.coda.filter((_, i) => !via.has(i))
     if (coda.length) cosa.coda = coda
     else delete cosa.coda
-    /* `prodotto` e `quanto` sono il primo preso, per chi scrive una riga
-       sola; `presi` è tutto, e `restano` i pronti rimasti perché non ci
-       stavano. */
+    // prodotto/quanto sono il primo preso (per una riga sola); presi è tutto.
     return { ok: true, costo: 0, prodotto: presi[0].prodotto, quanto: presi[0].quanto,
              presi, restano: s.pronti - via.size,
              ...(fermo ? { fermo: fermo.da, ...this.perchePieno(fermo.da) } : {}) }
   }
 
-  /* Un posto in più nella fila di **questa** macchina. Il tetto e i
-     prezzi stanno in `dati/coda.js`. */
   ingrandisciLaFila(cosa) {
     if (!macchinaDi(cosa)) return { ok: false, motivo: 'non-e-una-macchina' }
     const costo = prezzoDellaFila(cosa.fila)
@@ -1554,48 +986,24 @@ export class Fattoria {
     return { ok: true, costo, posti: postiDellaFila(cosa.fila) }
   }
 
-  /* ═══════════ quello che la scena deve sapere ═══════════
-     Chi disegna non conosce il grano e non deve conoscerlo: chiede
-     **cosa si vede sopra questa cosa, adesso**, e riceve un nome di
-     tessera e un fumetto da mettere in testa quando c'è qualcosa da
-     fare. È la stessa divisione dei prezzi — la tela legge
-     `prezzoDellaProssima` e non sa come si rincara.
-
-     `sopra` si ripete su ogni cella del piede: quattro germogli su un
-     campo 2×2 sono un campo che cresce, uno solo in mezzo è un ciuffo. */
+  // La scena chiede solo "cosa si vede sopra, adesso" (nome tessera + fumetto), mai il grano stesso.
+  // sopra si ripete su ogni cella del piede.
   aspettoDellaCosa(cosa, ora = Date.now()) {
-    /* La bancarella non lavora e non contiene: **aspetta**. Il fumetto
-       compare quando c'è un ordine che si può consegnare adesso, ed è
-       la stessa idea del 🧺 sopra un campo pronto — si vede da lontano
-       e non chiede di aprire niente. Quando non c'è niente da portare
-       resta muta: un invito che c'è sempre non è un invito. */
+    // La bancarella non lavora né contiene: aspetta. Muta quando non c'è niente da portare.
     if (eMercato(cosa))
       return qualcosaDaConsegnare(this) ? { sopra: null, fumetto: '📋' } : null
-    /* Una bottega del paese, lo stesso: il fumetto c'è quando uno dei
-       suoi clienti ha già tutto quello che chiede. */
     if (postoDi(cosa))
       return daConsegnareIn(this, cosa.id) ? { sopra: null, fumetto: '📋' } : null
-    /* La mongolfiera: il fumetto c'è quando una cassa si può riempire,
-       e partita cambia faccia (`motore/mongolfiera.js`). */
     if (eMongolfiera(cosa)) return aspettoDellaMongolfiera(this, cosa, ora)
     const c = this.statoCampo(cosa, ora)
     if (c) {
       if (c.vuoto) return null
-      /* `alto`: uno stadio non è più una tesserina sull'aiuola, è il
-         campo intero, e il mais maturo è due volte più alto del suo
-         piede. Chi disegna deve saperlo, perché una cosa alta va
-         ordinata come un oggetto — chi le passa dietro ci finisce
-         dietro — mentre l'aiuola sotto resta terreno. */
+      // alto: il mais maturo è due volte più alto del suo piede, e va ordinato come un oggetto.
       return { sopra: c.stadio, alto: true, fumetto: c.pronto ? '🧺' : null }
     }
     const m = this.statoMacchina(cosa, ora)
     if (!m) return null
-    /* Una macchina coi ritratti — cioè un recinto — non si mette
-       qualcosa *sopra*: **cambia disegno**. È l'unico modo di far dire a
-       una cosa in che stato è senza aprirla, e quello che si legge da
-       lontano è la faccia dell'animale, non un'icona che gli galleggia
-       in testa. Il fumetto resta solo per il pronto, che è l'unico stato
-       in cui c'è da fare qualcosa. */
+    // Un recinto non mette niente sopra: cambia disegno (la faccia dell'animale).
     const stati = statiDi(cosa)
     if (stati) {
       const posa = this.posaDelRecinto(m)
@@ -1605,39 +1013,15 @@ export class Fattoria {
         /* quanti ce ne sono da ritirare: il 🧺 dice che c'è da fare,
            il numerino quanto — con la fila possono essere tre */
         pronti: m.pronti,
-        /* ── COSA VUOLE, QUANDO HA FAME ─────────────────────────
-           Il fumetto **non è più dipinto dentro lo sprite**, e il
-           motivo è che due bestie che vogliono la stessa cosa la
-           mostravano con due disegni diversi — la mucca e la pecora
-           vogliono tutte e due il foraggio, e nel foglio erano un
-           mucchietto arancione e un ciuffo verde. Dipinto, quel
-           fumetto non può dire il vero: cosa mangia un recinto sta
-           nelle ricette, e le ricette cambiano.
-
-           Adesso lo dice il motore, che è l'unico che legge insieme
-           l'orologio e la tabella, e lo disegna la scena grande
-           quanto serve per vedersi. Qui esce **il nome di un
-           prodotto**, non un disegno: chi disegna sa come si fa una
-           faccia, questo file no. */
+        // Cosa vuole, quando ha fame: non è più dipinto nello sprite (due bestie con la stessa
+        // fame avevano disegni diversi). Esce il nome del prodotto, non un disegno.
         vuole: posa === 'fame' ? this.cosaVuole(cosa) : null,
       }
     }
-    /* ── UNA MACCHINA AL LAVORO DICE **COSA** STA FACENDO ──────────
-       Era una clessidra, uguale per tutte, e andava bene finché le
-       macchine erano una sola con una ricetta sola. Il fienile ne fa
-       quattro e il mulino due: davanti a una clessidra bisogna aprire
-       il foglio per sapere cos'è partito, e aprirlo è esattamente la
-       cosa che il fumetto esiste per evitare.
+    // Una macchina al lavoro dice cosa sta facendo (non più una clessidra uguale per tutte):
+    // il fienile ha quattro ricette, il mulino due.
 
-       Il pronto resta il 🧺: quello non dice cosa c'è dentro, dice
-       **che c'è da fare qualcosa**, ed è l'unico caso in cui serve un
-       gesto. Chi vuole sapere cosa apre.
-
-       Con la fila le due cose possono stare insieme — un pezzo pronto
-       che aspetta e il prossimo che macina — e allora vince **la faccia
-       di quello che sta facendo**, con accanto il numerino dei pronti:
-       il numero dice già che c'è da ritirare, e la faccia dice quello
-       che il 🧺 non saprebbe dire. */
+    // Con la fila vince la faccia di quello che sta facendo, col numerino dei pronti accanto.
     if (m.lavora) {
       const r = m.lavora.ricetta
       const p = PRODOTTI[r.da]
@@ -1649,20 +1033,8 @@ export class Fattoria {
     return null
   }
 
-  /* Quale dei sei ritratti, dato lo stato della macchina. Le soglie
-     stanno qui e non nel catalogo perché sono una lettura
-     dell'orologio, e il catalogo l'orologio non ce l'ha; i nomi degli
-     stati invece stanno là, insieme ai pezzi che esistono davvero.
-
-     Ferma vuol dire **ha fame**, non «è tranquilla»: un recinto che non
-     sta lavorando è un recinto che aspetta da mangiare, ed è esattamente
-     quello che si vuole far vedere. Il `calmo` resta il ritratto del
-     baule, dove non c'è nessuno stato da raccontare.
-
-     Con la fila conta **chi sta lavorando adesso**. Una gallina che ha
-     un uovo pronto e un'altra pappa davanti sta mangiando, non
-     aspettando — il pronto lo dice il fumetto sopra. Ha fame solo il
-     recinto dove non c'è niente né da fare né da ritirare. */
+  // Quale dei sei ritratti: le soglie stanno qui (leggono l'orologio), i nomi nel catalogo.
+  // Ferma vuol dire ha fame, non "è tranquilla"; con la fila conta solo chi sta lavorando adesso.
   posaDelRecinto(m) {
     const l = m.lavora
     if (!l) return m.pronto ? 'pronto' : 'fame'
@@ -1671,15 +1043,8 @@ export class Fattoria {
     return 'dorme'
   }
 
-  /* Cosa gli si deve dare, cioè il primo ingrediente della prima
-     ricetta che quel recinto sa fare a questo livello. È «il primo» e
-     non «tutti» perché il fumetto è una cosa sola sopra la testa, e
-     perché oggi ogni recinto ha una ricetta con un ingrediente solo: il
-     giorno che ne avesse due, il fumetto direbbe il primo e la scheda
-     direbbe tutto — che è il verso giusto, non il contrario.
-
-     Il livello conta: una ricetta che il bambino non ha ancora aperto
-     manderebbe a cercare una roba che non esiste. */
+  // Il primo ingrediente della prima ricetta che il recinto sa fare a questo livello (non tutti:
+  // il fumetto è una cosa sola). Il livello conta: non manda a cercare roba non ancora aperta.
   cosaVuole(cosa) {
     const quale = macchinaDi(cosa)
     if (!quale) return null
@@ -1688,56 +1053,33 @@ export class Fattoria {
     const id = Object.keys(r.prende || {})[0]
     const p = id && PRODOTTI[id]
     if (!p) return null
-    /* Esce **una faccia già decisa**, non il nome di una merce: chi
-       disegna riceve un pezzo dell'atlante e un ripiego da scrivere,
-       come per gli stadi di un campo e per il 🧺 di quello che è pronto.
-       La scena non deve sapere cos'è il foraggio, e infatti non lo sa. */
+    // Esce una faccia già decisa (pezzo+testo), non il nome di una merce: la scena non sa cos'è il foraggio.
     return { prodotto: id, pezzo: p.pezzo || null, testo: p.emoji }
   }
 
   /* ═══════════ il magazzino ═══════════ */
   quantiNe(id) { return this.magazzino[id] || 0 }
 
-  /* Quante ne ho **giù**, cioè in mappa. È la domanda giusta per chi
-     chiede «ce n'è già uno?» di una cosa `unico`: un silo nel baule non
-     contiene niente e non occupa nessun posto — vedi `posa`. */
+  // Quante ne ho giù (in mappa): un silo nel baule non occupa nessun posto.
   quantiInMappa(id) {
     return this.cose.reduce((n, c) => n + (c.id === id ? 1 : 0), 0)
   }
 
-  /* Quante ne ho **in tutto**: in mappa e nel baule. È il numero da cui
-     dipende il prezzo della prossima (`quantoCosta`), e conta tutte e
-     due le parti apposta — se contasse solo la mappa, mettere via un
-     campo e ricomprarlo sarebbe il modo di pagarlo sempre 22. */
+  // In tutto (mappa + baule): conta tutte e due, se no rimettere via e ricomprare pagherebbe sempre il prezzo base.
   quanteNeHo(id) {
     return this.quantiNe(id) + this.quantiInMappa(id)
   }
 
-  /* Quanto costa **adesso** questa cosa. Quasi tutte costano sempre
-     uguale; il campo rincara a ogni copia (`cresce` in
-     `dati/catalogo.js`), come fa il pezzo di terra. Ci passano tutti e
-     due i modi di comprare — posando e dal baule — perché due conti
-     diversi per lo stesso prezzo sono due conti che prima o poi si
-     scostano, e chi guarda il baule vedrebbe un numero e ne pagherebbe
-     un altro. */
+  // Quasi tutte costano sempre uguale; il campo rincara a ogni copia. Ci passano posa e baule, mai due conti diversi.
   quantoCosta(id) {
     return prezzoDellaVoce(PER_ID[id], this.quanteNeHo(id))
   }
 
-  /* Toglierlo dal prato e rimetterlo nel baule. **Costa quanto
-     spostarlo**, e il perché sta in testa al file: gratis, era la
-     scorciatoia che rendeva gratis anche lo spostamento.
-
-     I due no che vengono prima non costano niente, ed è di proposito:
-     chi tocca il 📦 su un campo seminato non ha fatto niente di male e
-     non deve rimetterci una moneta per essersene accorto. */
+  // Costa quanto spostare (il perché in testa al file); i due no che vengono prima sono gratis.
   mettiVia(cosa) {
     const i = this.cose.indexOf(cosa)
     if (i < 0) return { ok: false, motivo: 'non-in-mappa' }
-    /* Un campo seminato e una macchina al lavoro non si mettono via: nel
-       baule non c'è posto per un grano a metà crescita, e metterli via
-       vorrebbe dire buttare quello che si sta aspettando. Niente si
-       perde — nemmeno per distrazione — quindi si dice no e si aspetta. */
+    // Un campo seminato o una macchina al lavoro non si mettono via: nel baule non c'è posto per una cosa a metà.
     if (cosa.coltura) return { ok: false, motivo: 'campo-seminato' }
     if (cosa.coda && cosa.coda.length) return { ok: false, motivo: 'sta-lavorando' }
     if (this.borsa.quante() < COSTO_SPOSTARE)
@@ -1749,10 +1091,7 @@ export class Fattoria {
     return { ok: true, costo: COSTO_SPOSTARE, id: cosa.id }
   }
 
-  /* Comprarne uno senza metterlo giù. Dal baule non ci passa più
-     nessuno — lì toccare è già posare, e si paga posando — ma resta
-     perché comprare e piazzare sono due cose diverse e il magazzino
-     esiste lo stesso: chi mette via una panchina la ritrova qui. */
+  // Dal baule non ci passa più nessuno (si paga posando), ma resta: chi mette via una cosa la ritrova qui.
   compra(id) {
     const v = PER_ID[id]
     if (!v) return { ok: false, motivo: 'non-esiste' }
@@ -1776,15 +1115,8 @@ export class Fattoria {
     return new Set([...this.cose.map(c => c.id), ...Object.keys(this.magazzino)]).size
   }
 
-  /* Una cella dove si può stare, buona per far comparire qualcuno che
-     cammina. Cerca a cerchi dal punto chiesto invece di tirare a caso —
-     un cane che nasce nel bosco è un cane che non si trova più — e la
-     ricerca è quella di tutti (`primaLibera` di `motore/passi.js`):
-     l'unica cosa che cambia da un gioco all'altro è cosa vuol dire
-     «libera», e qui vuol dire calpestabile.
-
-     Se non trova niente torna il punto chiesto: chi ci nasce sopra
-     saprà uscirne camminando, e sparire non è un'opzione. */
+  // Cerca a cerchi dal punto chiesto (primaLibera di motore/passi.js), mai a caso: un cane nato nel
+  // bosco è un cane che non si trova più. Se non trova niente torna il punto chiesto.
   cellaLibera(cx, cy, raggio = 6) {
     return primaLibera((x, y) => this.calpestabile(x, y), { x: cx, y: cy }, raggio)
            || { x: cx, y: cy }
