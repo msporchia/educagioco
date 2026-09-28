@@ -1,51 +1,15 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL LIBRETTO DEGLI INCIDENTI — cosa succede quando il gioco si rompe.
-
-   Fino a ieri un errore dentro un gestore di eventi non si vedeva da
-   nessuna parte: Vue lo scrive in console e la schermata resta com'era.
-   A un grande davanti a un computer basta. A un bambino col telefono in
-   mano vuol dire **un tasto che non fa niente**, e a chi deve capirlo il
-   giorno dopo non resta niente in mano — solo il racconto di una cosa
-   che «si è piantata».
-
-   Qui succedono tre cose, in ordine di importanza:
-
-   1. l'errore si SCRIVE nell'archivio, sotto `incidenti`. Sta fuori dai
-      profili come il codice dei genitori: un guasto è del telefono, non
-      di un bambino, e chi lo legge lo cerca una volta sola.
-   2. si mostra un cartello. In DOM puro e non in Vue, perché quando è
-      Vue quello inciampato un componente Vue non comparirebbe: sarebbe
-      una rete di sicurezza appesa al ramo che si è appena spezzato.
-   3. si offre di RIPARARE: buttare la copia in cache del service worker
-      e la sua registrazione, e ricaricare. Non tocca né IndexedDB né
-      localStorage — **i progressi restano** — ed è la manovra giusta
-      per una copia dell'app arrivata monca, che se no si ripresenta
-      identica ad ogni avvio e non c'è ricarica che la smuova.
-
-   Quello che questo file NON può fare, e va detto: se a rompersi è la
-   copia dell'app, questo codice non gira affatto. Per quel caso la
-   difesa sta nel service worker (`vite.config.js`), che per la pagina
-   prova la rete prima della cache. Qui si raccoglie il resto.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il libretto degli incidenti: vedi docs/core/guasti.md.
 import { load, save, flush } from './store/storage.js'
 
 const CHIAVE = 'incidenti'
-/* quanti se ne tengono in archivio: gli ultimi, perché il primo di
-   stamattina conta meno dell'ultimo di adesso */
-const QUANTI = 8
-/* e quanti se ne registrano per accensione. Un errore dentro il giro di
-   disegno si ripete sessanta volte al secondo: senza questo tetto il
-   libretto degli incidenti diventerebbe lui il guasto. */
-const PER_VOLTA = 3
+const QUANTI = 8       // gli ultimi: il primo di stamattina conta meno dell'ultimo di adesso
+const PER_VOLTA = 3    // un errore nel giro di disegno si ripete 60 volte al secondo
 
 let scritti = 0
 let visti = new Set()
 let versione = ''
 
-/* ── la parte che si può provare senza browser ──
-   La lista è in ordine di racconto (il più vecchio in testa) e non
-   cresce mai oltre il tetto. Uno stesso guasto che si ripete non
-   occupa otto righe: si tiene l'ultima volta e si conta quante. */
+// uno stesso guasto che si ripete non occupa otto righe: si tiene l'ultima volta e si conta quante
 export function aggiungi (lista, voce, quanti = QUANTI) {
   const prima = Array.isArray(lista) ? lista.filter(v => v && typeof v === 'object') : []
   const gemello = prima.findIndex(v => v.testo === voce.testo && v.dove === voce.dove)
@@ -54,9 +18,6 @@ export function aggiungi (lista, voce, quanti = QUANTI) {
   return [...senza, { ...voce, volte: conto }].slice(-quanti)
 }
 
-/* il testo di un errore, che arriva in cinque forme diverse a seconda di
-   chi l'ha lanciato: un Error, una stringa, un rifiuto di promessa con
-   dentro qualunque cosa */
 export function testoDi (e) {
   if (!e) return 'errore senza nome'
   if (typeof e === 'string') return e
@@ -70,11 +31,7 @@ const primeRighe = (pila, quante = 4) =>
 export const leggi = () => load(CHIAVE).then(l => (Array.isArray(l) ? l : []))
 export const dimentica = () => { save(CHIAVE, []); return flush() }
 
-/* ── registrare ──
-   Non aspetta nessuno: chi chiama è un gestore d'errore, e un gestore
-   d'errore che si mette ad attendere l'archivio è un secondo guasto.
-   Il `flush()` invece serve: un salvataggio ritardato di un terzo di
-   secondo, dopo un crash, spesso non arriva mai. */
+// non aspetta nessuno (un gestore d'errore non deve attendere), ma flush() sì: dopo un crash spesso non arriva
 export async function registra (dove, errore, mostra = true) {
   const testo = testoDi(errore)
   const gia = visti.has(dove + testo)
@@ -96,11 +53,7 @@ export async function registra (dove, errore, mostra = true) {
   } catch (x) { /* se non si riesce nemmeno a scrivere il guasto, pazienza */ }
 }
 
-/* ── riscaricare l'applicazione ──
-   Butta la copia dell'app e chi la serviva, e basta. I progressi stanno
-   in IndexedDB e in localStorage, che qui non si toccano: è tutta la
-   differenza fra questo tasto e «cancella i dati del sito», che invece
-   li porta via. */
+// non tocca IndexedDB né localStorage: tutta la differenza con «cancella i dati del sito»
 export async function ripara () {
   try {
     if (typeof caches !== 'undefined') {
@@ -114,15 +67,10 @@ export async function ripara () {
       await Promise.all(reg.map(r => r.unregister()))
     }
   } catch (x) { /* niente service worker: già a posto */ }
-  /* l'indirizzo si pulisce PRIMA di ricaricare: con `#ripara` ancora in
-     coda la pagina riaprirebbe riparando, all'infinito */
-  try { location.hash = '' } catch (x) { /* pazienza */ }
+  try { location.hash = '' } catch (x) { /* pazienza */ }   // prima di ricaricare, se no riparerebbe all'infinito
   location.reload()
 }
 
-/* `#ripara` nell'indirizzo fa la stessa cosa senza toccare niente a
-   schermo: è la strada per un telefono che parte ma si comporta male,
-   quando il cartello non è comparso e i menu del browser sono lontani. */
 export function riparaSeChiesto () {
   if (typeof location === 'undefined') return false
   if (!/(^#?|&)ripara(&|$)/.test(location.hash || '')) return false
@@ -130,12 +78,7 @@ export function riparaSeChiesto () {
   return true
 }
 
-/* ═══════════ il cartello ═══════════
-   Sfondo crema come il resto dell'app, due tasti e una riga di
-   spiegazione. Il messaggio tecnico c'è ma sta in fondo e in piccolo:
-   serve al grande che lo legge dopo, non al bambino che ce l'ha davanti
-   adesso. Ne compare uno solo: il secondo errore aggiorna quello che
-   c'è già, invece di impilarsi. */
+// il cartello: ne compare uno solo, un secondo errore aggiorna quello che c'è già invece di impilarsi
 let appeso = null
 
 export function cartello (testo) {
@@ -173,11 +116,6 @@ export function cartello (testo) {
   riga.append(
     tasto('↻ Riprova', 'linear-gradient(180deg,#ffd166,#f4a261)', '#c9803f', '#5a3200',
           () => location.reload()),
-    /* «Ripara» non diceva cosa fa, e a un bambino «riparare» suona come
-       «aggiusta il mio gioco» — cioè una promessa che questo tasto non
-       mantiene. Quello che fa davvero è **riscaricare l'applicazione**
-       buttando la copia tenuta da parte: i progressi non li tocca (stanno
-       in archivio, non nella cache), e per questo il tasto lo dice. */
     tasto('⤓ Riscarica il gioco', '#ffffffdd', '#d4dce6', '#4b3f72', ripara))
 
   const dettaglio = document.createElement('small')
@@ -198,26 +136,19 @@ export function cartello (testo) {
   appeso = fuori
 }
 
-/* ═══════════ l'aggancio ═══════════
-   Tre strade portano qui: quello che lancia dentro Vue (render, computed,
-   gestori di eventi), quello che lancia fuori, e le promesse rifiutate
-   che nessuno ha raccolto. La versione arriva da fuori perché questo
-   file non deve sapere niente del build. */
+// tre strade: dentro Vue, fuori Vue, promesse rifiutate. La versione arriva
+// da fuori perché questo file non sa niente del build.
 export function installa (app, opzioni = {}) {
   versione = opzioni.versione || ''
   if (app) {
     app.config.errorHandler = (err, chi, info) => {
       registra(info || 'vue', err)
-      /* si scrive anche in console: chi ha il cavo attaccato vuole la
-         pila intera, non le quattro righe che stanno nell'archivio */
-      console.error(err)
+      console.error(err)   // anche in console: chi ha il cavo attaccato vuole la pila intera
     }
   }
   if (typeof window === 'undefined') return
   window.addEventListener('error', e => {
-    /* un'immagine che non carica passa di qui senza `error`: non è un
-       guasto da cartello, è una figura mancante */
-    if (!e.error) return
+    if (!e.error) return   // un'immagine che non carica passa di qui senza `error`
     registra('finestra', e.error)
   })
   window.addEventListener('unhandledrejection', e => registra('promessa', e.reason))
