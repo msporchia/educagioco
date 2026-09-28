@@ -1,16 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA GIOSTRA — il battito del gioco
-
-   Un `requestAnimationFrame` con due accortezze e nient'altro: il passo
-   di tempo in secondi, e il tetto a 50 millisecondi. Il tetto serve
-   davvero — quando un bambino cambia scheda e torna, il browser consegna
-   un salto di trenta secondi tutto insieme, e senza tetto la corsa
-   riparte con mezza tappa già passata sotto i piedi.
-
-   Non sa cosa faccia il passo che le si dà: avanza un motore, dipinge un
-   canvas, tutti e due. Chi la usa la ferma quando la schermata sparisce,
-   o resta a girare a vuoto per sempre.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il battito del gioco: un requestAnimationFrame col passo in secondi e
+// un tetto (50ms di default) — senza, tornando da una scheda cambiata il
+// browser consegna un salto di trenta secondi tutto insieme, e la corsa
+// riparte con mezza tappa già passata sotto i piedi. Non sa cosa faccia
+// il passo che le si dà. Chi la usa la ferma quando la schermata
+// sparisce, o resta a girare a vuoto.
 
 export class Giostra {
   constructor(passo, { tetto = 0.05 } = {}) {

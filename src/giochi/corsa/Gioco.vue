@@ -1,26 +1,9 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA CORSA DEI NUMERI — IL COORDINATORE
-
-   Si corre da soli su tre corsie e si sceglie solo **dove**. Ogni tanto
-   arriva un cancello — `×3`, `+50`, `÷5 +80` — e quello che c'è scritto
-   succede alla truppa, che è un numero scritto in terra: cinque verdi
-   fanno un rosso, cinque rossi un blu. Il conto **è** la mossa di gioco,
-   non un pedaggio: sbagliarlo non è un voto brutto, è arrivare al mostro
-   con meno soldati.
-
-   Uno dei tre cancelli, ogni tanto, è d'oro e ha un libro: vale `×5`, ma
-   bisogna fermarsi e fare un esercizio. Le tre condizioni che ne fanno
-   **un'offerta e non una tassa** sono tutte rispettate qui e nel motore:
-   si vede prima, non è mai obbligatorio, e sbagliare non toglie niente.
-
-   Questo file mette insieme i pezzi ed è **l'unico che sa che esistono
-   le monete e l'avanzamento**: le regole stanno in `motore/`, i numeri
-   in `dati/`, il disegno in `scena/`, le schermate in `viste/`. E non sa
-   che materie esistano: chiede una domanda con una difficoltà da 0 a 1 e
-   la mostra. Se qualcosa qui dentro comincia a somigliare a una regola di
-   gioco, vuol dire che è nel file sbagliato.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il coordinatore: l'unico file che sa che esistono le monete e
+// l'avanzamento. Le regole stanno in `motore/`, i numeri in `dati/`, il
+// disegno in `scena/`, le schermate in `viste/`. Non sa che materie
+// esistano: chiede una domanda con una difficoltà da 0 a 1 e la mostra.
+// Vedi docs/corsa/regole.md.
 import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
@@ -52,7 +35,7 @@ const emit = defineEmits(['vai'])
 const CHIAVE = 'corsa'
 const RESPIRO = 700          // quanto si guarda la pista prima del cartello
 
-/* ═══════════ dove siamo ═══════════ */
+// dove siamo
 const vista = ref('mappa')          // mappa | pista
 const tappaIdx = ref(-1)            // -1 = corsa infinita
 const partita = shallowRef(null)    // il motore: NON reattivo dentro
@@ -69,13 +52,10 @@ let attesa = 0
 let orologioBrindisi = 0
 const giostra = new Giostra(passo)
 
-/* ═══════════ la pausa ═══════════
-   Tutta in `giochi/pausa.js`: il ⏸ della barra, il telefono posato, il
-   foglio del `?`, il cartello di un traguardo. Qui si aggiunge la sola
-   condizione di casa che sia reattiva — col cartello finale davanti non
-   si corre — mentre quello che vive nel motore (`p.finita`,
-   `p.inPausa`) si guarda dentro il battito: uno `shallowRef` non
-   avvisa nessuno quando cambia un campo dentro. */
+// La pausa (giochi/pausa.js): qui si aggiunge la sola condizione di
+// casa che sia reattiva — col cartello finale davanti non si corre —
+// mentre quello che vive nel motore (p.finita, p.inPausa) si guarda
+// dentro il battito: uno shallowRef non avvisa quando cambia un campo dentro.
 const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale.value })
 
 const avanza = progresso(CHIAVE)
@@ -88,9 +68,7 @@ function vuoto() {
            infinita: false, quota: 0, vinti: 0, mostro: null }
 }
 
-/* ═══════════ la mappa ═══════════
-   Le tappe arrivano alla vista già decise: cosa è aperto, quante stelle,
-   di che colore, quanto dura. La schermata non chiede niente a nessuno. */
+// la mappa: le tappe arrivano alla vista già decise
 const scalini = computed(() => SCALINI.map(s => ({
   ...s,
   tappe: tappeDelloScalino(s.chiave).map(t => ({
@@ -105,9 +83,8 @@ const scalini = computed(() => SCALINI.map(s => ({
   })),
 })))
 
-/* Il tasto della corsa infinita porta con sé il record già scritto in
-   parole («312 m»): la mappa non sa in che unità si misuri questo gioco,
-   e non deve impararlo — lo dice il manifesto una volta sola. */
+// il record arriva già scritto in parole («312 m»): la mappa non deve
+// sapere in che unità si misuri questo gioco
 const statoLibera = computed(() => ({
   aperta: aperta(CHIAVE, QUANTE_TAPPE),
   quante: QUANTE_TAPPE,
@@ -118,18 +95,13 @@ const statoLibera = computed(() => ({
 const titolo = computed(() =>
   vista.value === 'pista' ? regoleOra.value.nome : 'La corsa dei numeri')
 
-/* Cosa si stava facendo, sul velo della pausa. Chi riapre il telefono
-   dopo mezz'ora non sta guardando il gioco: sta guardando il telefono
-   che si accende, e una riga che dice a che punto era la gara è quello
-   che gli fa tornare in mente cosa sta per riprendere. */
+// cosa si stava facendo, sul velo della pausa
 const dovEravamo = computed(() => cruscotto.value.infinita
   ? `🏁 ${cruscotto.value.metri} m corsi`
   : `🏁 mancano ${cruscotto.value.restano} m`)
 
-/* ═══════════ i suoni ═══════════
-   Il motore non suona: dice cosa è successo e qui si decide come. E non
-   porta informazione — col suono spento la corsa resta intera, perché
-   tutto quello che conta è già scritto in strada. */
+// i suoni: il motore non suona, dice cosa è successo. Non portano
+// informazione — col suono spento la corsa resta intera, è già scritta in strada.
 let ultimoSparo = 0
 const VERSI = {
   cambio: () => suono.nota(420, 460, 0.05, 'square', 0.05),
@@ -152,11 +124,7 @@ const VERSI = {
 }
 const LAMPI = {
   meglio: ['#8ef0a8', 24], abbattuto: ['#9fd0ff', 40],
-  /* il colpo che stende il mostro **si vede**: da quando i mostri
-     abbattuti spariscono dalla strada invece di restarci a terra, senza
-     questo lampo lo scontro finirebbe con una cosa che smette di
-     esserci */
-  caduto: ['#ffd98a', 30],
+  caduto: ['#ffd98a', 30],   // il colpo si vede: i mostri abbattuti spariscono subito dalla strada
   cassa: ['#ffd98a', 10], peggio: ['#ff9d9d', 10],
 }
 function reagisci(eventi) {
@@ -170,18 +138,10 @@ function reagisci(eventi) {
   }
 }
 
-/* ═══════════ il battito ═══════════
-   La corsa si ferma quando qualcosa le sta davanti, e l'elenco non sta
-   più qui: è `fermo`, che arriva da `giochi/pausa.js` e vale uguale in
-   tutti i giochi — la pausa chiesta col ⏸, il telefono posato, il
-   cartello di un traguardo (`state.festa`, che `App.vue` mostra a
-   schermo intero per tre secondi buoni), il foglio del `?`. Il motivo
-   per cui il cartello conta: il velo copre la pista, e quando il
-   bambino torna a vederla ha un mostro addosso — un traguardo che si
-   paga con la partita è un traguardo che si impara a temere.
-
-   Quello che resta scritto qui è **roba del motore**, che non è
-   reattiva e va riguardata a ogni fotogramma. */
+// il battito: la corsa si ferma quando qualcosa le sta davanti (`fermo`,
+// di giochi/pausa.js — la pausa, il telefono posato, un traguardo, il
+// foglio del `?`). Quello che resta scritto qui è roba del motore, non
+// reattiva, riguardata a ogni fotogramma.
 function passo(dt) {
   const p = partita.value
   if (!p) return
@@ -189,8 +149,8 @@ function passo(dt) {
   if (!bloccato) p.avanza(dt)
   if (p.eventi.length) reagisci(p.svuotaEventi())
 
-  /* il cancello d'oro: la domanda arriva quando il motore si è fermato,
-     e finché è a schermo la corsa non avanza di un istante */
+  // il cancello d'oro: la domanda arriva quando il motore si è fermato,
+  // e finché è a schermo la corsa non avanza
   if (p.inPausa && !domanda.value) {
     domanda.value = domandaPerGioco({
       difficolta: regoleOra.value.studio, evita: ultimoModulo,
@@ -203,13 +163,10 @@ function passo(dt) {
   pittore?.disegna(p.scena(), bloccato ? 0 : dt)
 }
 
-/* ═══════════ giocare ═══════════ */
+// giocare
 function avvia(indice) {
   clearTimeout(attesa); attesa = 0
-  /* una partita che comincia non comincia in pausa: il telefono posato
-     sulla mappa lascia acceso il freno, e senza questa riga la gara
-     nuova nascerebbe dietro un velo che nessuno ha chiesto */
-  togli()
+  togli()   // una partita che comincia non comincia in pausa: il freno resterebbe acceso da prima
   tappaIdx.value = indice
   const t = indice < 0 ? LIBERA : CAMPAGNA[indice]
   partita.value = new Partita(new Regole(t))
@@ -234,44 +191,30 @@ function prendiTela(tela) {
 
 function ridimensiona() { pittore?.misura() }
 
-/* Un tocco fa due cose insieme, e non è un doppio significato: è lo
-   stesso gesto letto per intero. Sposta nella corsia toccata — se ci sei
-   già, non sposta niente — e in ogni caso **spinge**. Serve a saltare i
-   venti metri di strada vuota fra un cancello e l'altro senza stare lì ad
-   aspettare; davanti alla scelta la spinta si spegne da sé, e quel pezzo
-   lì si corre sempre al passo (vedi `motore/corsa.js`). */
+// un tocco sposta nella corsia toccata (o non sposta niente, se ci sei
+// già) e in ogni caso spinge: serve a saltare i venti metri vuoti fra un
+// cancello e l'altro
 function vai(delta) {
   toccato.value = true
   partita.value?.vai(delta)
   partita.value?.spingi()
 }
 
-/* Il dito (o il tasto) tenuto giù: si spinge finché resta giù. Col mouse
-   è **il** gesto — battere il pulsante per andare avanti non lo fa
-   nessuno — e sul telefono il pollice appoggiato è comodo quanto il
-   tocco. Va rilasciato anche quando la schermata sparisce, se no la
-   partita dopo comincia già in corsa. */
+// il dito (o il tasto) tenuto giù: si spinge finché resta giù
 function premi(giu) {
   if (giu) toccato.value = true
   partita.value?.premi(giu)
 }
 
-/* ═══════════ l'esercizio si paga con niente ═══════════
-   Chi indovina moltiplica la truppa; chi sbaglia resta com'era. Non c'è
-   nessuna penale, e non è una gentilezza: è la condizione senza cui
-   l'offerta tornerebbe a essere un pedaggio, cioè la cosa che i bambini
-   pagano svogliati. */
+// l'esercizio si paga con niente: chi indovina moltiplica la truppa,
+// chi sbaglia resta com'era
 function risposto({ giusto }) {
   const p = partita.value
   ultimoModulo = domanda.value?.modulo || null
   domanda.value = null
-  /* ── rispondere È il tocco che riprende ──
-     Mentre la domanda è a schermo il velo della pausa non si mostra
-     (una domanda è già un velo, e due uno sull'altro sono un gioco
-     rotto) e il ⏸ sparisce dalla barra. Ma il freno può essersi acceso
-     lo stesso — il telefono posato *durante* la domanda — e senza
-     questa riga la corsa resterebbe ferma dietro un velo che non c'è:
-     cioè un gioco impuntato senza niente da toccare. */
+  // rispondere è il tocco che riprende: il freno può essersi acceso
+  // durante la domanda (telefono posato), e senza questa riga la corsa
+  // resterebbe ferma dietro un velo che non c'è più
   togli()
   const esito = p?.rispondi(giusto)
   if (!esito) return
@@ -292,7 +235,7 @@ function brinda(testo, bene) {
   orologioBrindisi = setTimeout(() => { brindisi.value = '' }, 2400)
 }
 
-/* ═══════════ finire ═══════════ */
+// finire
 let pagata = false
 let contata = false
 let mostriSegnati = 0
@@ -307,12 +250,8 @@ function chiudiPartita() {
   let monete = p.monete
 
   if (libera.value) {
-    /* Nella corsa infinita non si vince: si dura, e quello che il gioco
-       ha da dare è il confronto con sé stessi. Il conto e la frase
-       stanno in `giochi/primati.js`, il record in `campagne[corsa]`:
-       qui si consegna il numero e si porta al cartello cosa dire —
-       compreso quanti metri si è migliorato, che è la sola cosa che un
-       «🥇 nuovo primato!» non diceva. */
+    // nella corsa infinita non si vince: si dura, e il conto/la frase
+    // stanno in giochi/primati.js
     const esito = segnaPrimato(CHIAVE, p.dist)
     primato = { ...esito, frase: fraseDiFine(esito, SENZA_FINE.misura) }
   } else if (p.vinta && !pagata) {
@@ -342,8 +281,7 @@ function chiudiPartita() {
   }
 }
 
-/* «avanti» dopo una vinta porta alla tappa dopo: tornare ogni volta alla
-   mappa per ripartire è un giro in più che nessun bambino chiede. */
+// «avanti» dopo una vinta porta alla tappa dopo
 function ancora() {
   const f = finale.value
   if (!f) return

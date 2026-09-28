@@ -1,63 +1,16 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA PISTA — il disegno, che di regole non sa niente
-
-   Riceve una scena già decisa (`Partita.scena()`): questo cancello è
-   d'oro, questo mostro è un boss, questi soldati sono di grado 2. Qui
-   dentro non si sa cosa sia un esercizio, quanto valga un moltiplicatore
-   o perché la truppa cresca — si sa solo dove va messo un pixel.
-
-   ═══════════════════════════════════════════════════════════════════
-   PERCHÉ LA STRADA È LARGA COSÌ
-
-   Nel prototipo la strada occupava sì e no il quaranta per cento della
-   vista: il resto era prato e cielo. È esattamente al contrario di dove
-   guarda chi gioca — sul prato non succede niente, e i tre cancelli fra
-   cui bisogna scegliere stavano schiacciati in una fascia stretta in
-   mezzo allo schermo. Su un telefono in mano a un bambino quella fascia
-   è larga quanto due dita.
-
-   Tre leve, e vanno mosse insieme:
-
-     ORIZZONTE   il cielo si prende un settimo dello schermo e basta.
-                 È bello, ma non ci si gioca.
-     LARGHEZZA   la corsia è larga più di un terzo dello schermo, quindi
-                 la strada al piede del giocatore **esce dai bordi**. È
-                 giusto che esca: la banchina non serve a niente, e i
-                 pochi centimetri di prato che restano bastano agli
-                 alberi che sfilano.
-     STRETTA     quanto in fretta le cose rimpiccioliscono. Dimezzata
-                 rispetto al prototipo. Non è solo estetica: una
-                 prospettiva più dolce tiene la strada larga anche
-                 lontano — e i cancelli restano **leggibili da
-                 quaranta metri**, che è tutto il tempo che si ha per
-                 decidere.
-
-   Misurato sull'area davvero dipinta, su un telefono da 390×732: il
-   prototipo arrivava al **44%** della vista, questi numeri la portano al
-   **57%**, e i tre cancelli arrivano larghi un dito ciascuno. Oltre non
-   si va allargando ancora la corsia — a `LARGHEZZA 0.42` i cancelli
-   laterali cominciano a uscire dallo schermo, e una scelta che non si
-   vede tutta non è una scelta.
-   ═══════════════════════════════════════════════════════════════════ */
+// La pista: il disegno, che di regole non sa niente. Riceve una scena
+// già decisa (Partita.scena()) e sa solo dove mettere un pixel. Perché
+// la strada è larga così, e le altre scelte di disegno: docs/corsa/scena.md.
 import { ORDINI } from '../dati/ordini.js'
 import { veste as vestito } from '../dati/vesti.js'
 
 const ORIZZONTE = 0.12      // dove finisce il cielo, in altezze di schermo
 const PIEDI = 0.95          // dove tocca terra quello che ti sta addosso
-/* Larghezza della corsia e larghezza della strada sono **due numeri
-   diversi**, e tenerli separati serve: la strada deve uscire dai bordi
-   dello schermo, ma la corsia di destra non deve arrivarci — se no la
-   truppa schierata ci finisce sopra e l'ultima fila resta tagliata. Il
-   prodotto dei due è quello che decide quanta vista prende l'asfalto. */
+// corsia e strada sono due misure diverse: la strada esce dai bordi, la
+// corsia di destra no (o l'ultima fila della truppa ci finirebbe sopra)
 const LARGHEZZA = 0.335     // quanto è larga una corsia, in larghezze di schermo
 const LARGA_MAX = 215       // ...ma su un tablet non oltre questo
-/* Una prospettiva **dolce**. Non è un gusto: con la stretta del prototipo
-   la strada a venti metri era già un terzo di quella sotto i piedi, e
-   quello che restava ai lati era prato — cioè metà schermo dedicata a
-   qualcosa dove non succede niente. Dimezzata due volte, a venti metri la
-   strada è ancora larga più della metà, i cancelli si leggono da lontano,
-   e il verde si riduce a due cunei che la foschia finisce di cancellare. */
-const STRETTA = 0.034       // quanto in fretta si stringe con la distanza
+const STRETTA = 0.034       // quanto in fretta si stringe con la distanza (dimezzata dal prototipo)
 const BORDO = 1.76          // dove finisce l'asfalto, in corsie
 const BANCHINA = 1.15       // e dove finisce la terra battuta, in bordi
 const FONDO = 900           // fin dove si disegna la strada: oltre è foschia
@@ -87,16 +40,13 @@ export class Pista {
     this.larg = Math.min(this.W * LARGHEZZA, LARGA_MAX)
   }
 
-  /* L'unica funzione che sa dove finisce un punto della pista sullo
-     schermo. Tutto il resto del disegno passa da qui, così la strada e
-     le cose sopra non possono mai andare fuori registro. */
+  // l'unica funzione che sa dove finisce un punto della pista sullo
+  // schermo: tutto il resto passa da qui, così niente va mai fuori registro
   punto(corsia, z) {
     const s = 1 / (1 + Math.max(z, -0.9) * STRETTA)
     return { s, x: this.W / 2 + corsia * this.larg * s, y: this.oriz + (this.piedi - this.oriz) * s }
   }
 
-  /* i coriandoli: li chiede chi coordina quando succede qualcosa, e non
-     sanno perché — sanno solo di che colore sono */
   scoppio(corsia, colore, quanti = 18) {
     const p = this.punto(corsia, 0)
     for (let i = 0; i < quanti; i++)
@@ -109,9 +59,7 @@ export class Pista {
 
   disegna(s, dt = 0) {
     const { ctx } = this
-    /* la scena porta il **nome** del vestito, non le sue tinte: chi gioca
-       non deve conoscere un colore, e qui i colori si vanno a prendere */
-    const v = vestito(s.veste)
+    const v = vestito(s.veste)   // la scena porta il nome del vestito, non le tinte
     const scossa = s.scossa || 0
     ctx.save()
     if (scossa) ctx.translate((Math.random() - 0.5) * scossa * 0.6, (Math.random() - 0.5) * scossa * 0.4)
@@ -135,10 +83,8 @@ export class Pista {
     ctx.restore()
   }
 
-  /* ═══════════ il fondale ═══════════
-     Tre piani a velocità diverse — nuvole lentissime, colline lente,
-     alberi a bordo strada veloci: è la parallasse a dire «stai
-     correndo», più della strada stessa. */
+  // tre piani a velocità diverse: la parallasse dice «stai correndo»
+  // più della strada stessa
   cielo(v, dist) {
     const { ctx, W } = this
     const o = this.oriz
@@ -176,12 +122,8 @@ export class Pista {
     ctx.fill()
   }
 
-  /* ═══════════ la strada ═══════════
-     Si disegna fino a molto lontano (`FONDO`) e non fino a dove arrivano
-     i cancelli: con una prospettiva dolce, fermarla a quaranta metri
-     lascerebbe un moncone largo un dito appeso in mezzo al cielo. Quello
-     che resta lo cancella la foschia, che è anche l'unica cosa che dà
-     profondità a un fondale disegnato con quattro poligoni. */
+  // si disegna fino a molto lontano (FONDO), non fino ai cancelli, o
+  // resterebbe un moncone appeso in mezzo al cielo; la foschia la cancella
   strada(v, dist) {
     const { ctx, W, H } = this
     const o = this.oriz
@@ -203,26 +145,12 @@ export class Pista {
     nastro(BANCHINA, v.banchina)
     nastro(1, v.strada)
 
-    /* ── niente fasce a tutta larghezza ──
-       C'erano, e sfarfallavano. Una campitura che copre l'intera strada
-       ha un bordo lungo quanto la strada è larga, e in prospettiva quel
-       bordo finisce sotto il pixel man mano che si allontana: il browser
-       lo arrotonda a un lato o all'altro un fotogramma sì e uno no, e su
-       una superficie grande quel salto si legge come un lampeggio.
-
-       Sono state tolte e non sostituite. La velocità la dicono già i
-       tratteggi fra le corsie e gli alberi che sfilano a bordo strada, e
-       quelli sono figure **strette**: quando diventano sub-pixel
-       sbiadiscono e basta, invece di far battere le palpebre a tutto lo
-       schermo. */
-
     // le due righe fra le corsie: dicono dove finisce una scelta e dove
-    // comincia l'altra, ed è l'unica cosa che le separa
+    // comincia l'altra
     for (let i = 0; i < 24; i++) {
       const z0 = i * 4 - (dist % 8), z1 = z0 + 2
       if (z1 < -1 || z0 > 70) continue
-      /* i tratteggi lontani si spengono invece di ridursi a un puntino
-         che tremola: sotto una certa scala non dicono più niente */
+      // i tratteggi lontani si spengono invece di ridursi a un puntino che trema
       ctx.fillStyle = v.righe + 'bb'
       ctx.globalAlpha = Math.min(1, Math.max(0, (70 - z0) / 26))
       for (const c of [-0.5, 0.5]) {
@@ -245,13 +173,8 @@ export class Pista {
       ctx.stroke()
     }
 
-    /* ── la foschia, che fa due mestieri ──
-       Nasconde il punto in cui la strada finisce, e **si mangia il prato
-       lontano**. Il secondo è quello che conta: sotto l'orizzonte, dove
-       la strada è ancora stretta, restano due cunei di verde che l'occhio
-       legge come «il gioco è un nastrino in mezzo a un campo». La
-       prospettiva da sola non li può togliere — è geometria, non una
-       scelta — ma sfumati nel colore dell'aria smettono di esistere. */
+    // la foschia mangia il prato lontano: senza, sotto l'orizzonte
+    // restano due cunei di verde che si leggono come "un nastrino in un campo"
     const f = ctx.createLinearGradient(0, o - 2, 0, o + H * 0.17)
     f.addColorStop(0, v.cielo[2]); f.addColorStop(0.45, v.cielo[2] + '90')
     f.addColorStop(1, v.cielo[2] + '00')
@@ -259,17 +182,10 @@ export class Pista {
     ctx.fillRect(-40, o - 2, W + 80, H * 0.18)
   }
 
-  /* Quello che sfila a lato. Non decora: è la cosa che *si vede* passare,
-     e senza qualcosa che passa vicino la velocità non si sente — il
-     fondale lontano si muove troppo poco per dirla. */
+  // quello che sfila a lato: senza qualcosa che passa vicino, la
+  // velocità non si sente. Arriva fino all'orizzonte (non a 150m) o
+  // resta una fascia di prato vuota sopra la fila
   contorno(v, dist) {
-    /* Si arriva **fino all'orizzonte**, non a centocinquanta metri. Con
-       la prospettiva dolce la fila di alberi finiva a mezza altezza e
-       sopra restava una fascia di prato vuota larga tutto lo schermo —
-       quella «montagna» che si vedeva sotto il cielo. Portata fino in
-       fondo, la fila si chiude in una macchia di bosco e il verde piatto
-       sparisce: costa una quarantina di figure, quasi tutte grandi come
-       un'unghia. */
     const PASSO = 7
     const FIN_LA = 300
     const primo = Math.ceil((dist - 1) / PASSO) * PASSO
@@ -347,43 +263,25 @@ export class Pista {
     ctx.globalAlpha = 1
   }
 
-  /* ═══════════ i cancelli ═══════════
-     Solo quello su cui si sta decidendo è leggibile: il successivo si
-     intravede appena. Sei numeri in fila non sono una decisione più
-     ricca, sono confusione. */
+  // solo il cancello attivo è leggibile; si dissolve negli ultimi due
+  // metri, o coprirebbe la truppa proprio quando si vuole guardarla
   cancelli(c) {
     const { ctx, H } = this
-    /* Tre fattori, e il terzo è quello che si scopre solo giocando: un
-       cancello alto un terzo di schermo, nell'istante in cui gli si passa
-       dentro, **copre la truppa** — cioè l'unica cosa che il bambino vuole
-       guardare proprio in quel momento, per vedere quanto è cresciuta. Si
-       dissolve negli ultimi due metri, che è anche quello che fa sembrare
-       di attraversarlo invece di sbatterci contro. */
     const alfa = Math.min(1, Math.max(0, (46 - c.z) / 10))
                  * (c.attivo ? 1 : 0.22)
                  * Math.min(1, Math.max(0, (c.z + 1) / 3))
     for (let i = 0; i < 3; i++) {
       const op = c.ops[i]
       const p = this.punto(i - 1, c.z)
-      /* la scala si ferma: da vicinissimo un «×5» alto mezzo schermo non
-         si legge meglio, copre solo la strada e il cancello dopo */
-      const s = Math.min(p.s, 0.62)
+      const s = Math.min(p.s, 0.62)   // la scala si ferma: da vicinissimo non si legge meglio
       const w = this.larg * 0.86 * s, h = H * 0.2 * s
       ctx.globalAlpha = alfa
-      /* Tre cancelli **uguali**, e un solo colore per tutti: quello che
-         cambia è il numero scritto sopra, che è l'unica cosa da leggere.
-         Il verde e il rosso di prima rispondevano alla domanda da soli —
-         due corsie rosse su tre e non c'era più niente da calcolare.
-         L'oro resta, perché non dice quanto vale: dice che lì ci si
-         ferma. */
       if (op.oro) this.riquadro(p.x, p.y, w, h, '#7a5a12', '#ffd24a')
       else this.riquadro(p.x, p.y, w, h, '#33405e', '#93a8d4')
       ctx.fillStyle = '#ffffff'
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
       const righe = op.testo.split(' ')
       if (righe.length > 1) {
-        // «÷5» sopra e «+80» sotto: su una riga sola diventa una stringa
-        // lunga che il ridimensionamento riduce a niente
         this.dentro(righe[0], p.x, p.y - h * 0.74, w * 0.74, Math.max(8, h * 0.3))
         this.dentro(righe[1], p.x, p.y - h * 0.46, w * 0.74, Math.max(8, h * 0.3))
       } else {
@@ -397,10 +295,6 @@ export class Pista {
     ctx.globalAlpha = 1
   }
 
-  /* Il mostro: una barra della vita che scende mentre gli si spara
-     addosso, e il numero che resta. Fa vedere in un colpo d'occhio la
-     cosa che tiene in piedi tutto il gioco — che la truppa **è** la
-     potenza di fuoco. */
   nemici(c, v) {
     const { ctx } = this
     const p = this.punto(0, c.z)
@@ -408,9 +302,7 @@ export class Pista {
     const largo = this.larg * 2.2 * s
     ctx.globalAlpha = Math.min(1, Math.max(0, (46 - c.z) / 10))
 
-    // tanti mostri quanti ne restano, fino a cinque: di più si
-    // sovrappongono e diventano una macchia senza facce. Il boss è uno
-    // solo e grosso — si vede da lontano che quello è un altro affare.
+    // fino a cinque mostri, di più diventano una macchia; il boss è uno solo e grosso
     const quanti = c.boss ? 1 : Math.max(1, Math.min(5, Math.ceil(c.quota * 5)))
     const d = Math.max(10, (c.boss ? 150 : 78) * s)
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'
@@ -434,21 +326,14 @@ export class Pista {
     ctx.globalAlpha = 1
   }
 
-  /* Il traguardo: una fascia a scacchi larga tutta la strada. Non è
-     decorazione — è l'unica cosa che dice «ci sei quasi», e quando
-     compare all'orizzonte cambia come si sceglie l'ultimo cancello. */
-  /* Il traguardo è **un arco**, non una riga per terra: una fascia a
-     scacchi dipinta sull'asfalto, vista di scorcio, è alta tre pixel e
-     non la vede nessuno. Un arco si legge da settanta metri, e sapere
-     che manca poco cambia come si sceglie l'ultimo cancello — che è
-     tutta la ragione per cui sta lì. */
+  // un arco (pali + striscione), non una fascia a terra: a terra vista
+  // di scorcio sarebbe alta tre pixel e invisibile
   traguardo(c) {
     const { ctx } = this
     const p = this.punto(0, c.z), q = this.punto(0, Math.max(c.z - 2.5, -0.9))
     const larg = this.larg * BORDO
     ctx.globalAlpha = Math.min(1, Math.max(0, (70 - c.z) / 24))
 
-    // la fascia a terra, che dice esattamente dove finisce
     const passi = 12
     for (let i = 0; i < passi; i++) {
       const a = -larg + (2 * larg * i) / passi, b = -larg + (2 * larg * (i + 1)) / passi
@@ -459,7 +344,6 @@ export class Pista {
       ctx.closePath(); ctx.fill()
     }
 
-    // i due pali e lo striscione fra loro
     const alto = this.H * 0.34 * p.s
     const spesso = Math.max(2, this.larg * 0.06 * p.s)
     const sx = this.W / 2 - larg * p.s, dx = this.W / 2 + larg * p.s
@@ -492,9 +376,6 @@ export class Pista {
     ctx.globalAlpha = 1
   }
 
-  /* La cassa dice quanti soldati porta. Un premio che non si sa quanto
-     vale non è un premio: è una sorpresa, e una sorpresa non si può
-     scegliere di andarsela a prendere. */
   cassa(c) {
     const { ctx } = this
     const p = this.punto(c.corsia, c.z)
@@ -513,8 +394,6 @@ export class Pista {
     ctx.globalAlpha = 1
   }
 
-  /* i colpi in volo: sono la ragione per cui si capisce, senza una riga
-     di spiegazione, che più soldati vuol dire più fuoco */
   colpi(elenco) {
     const { ctx } = this
     ctx.globalAlpha = 0.9
@@ -528,24 +407,17 @@ export class Pista {
     ctx.globalAlpha = 1
   }
 
-  /* ═══════════ la truppa ═══════════
-     I più forti **al centro**, come in una formazione vera: il giallo in
-     mezzo e i verdi ai lati. In fila per grado sembrava una coda al
-     supermercato invece di una squadra schierata. Cinque per riga, e il
-     posto si assegna per distanza dal centro dello schieramento. */
+  // i più forti al centro (il giallo in mezzo), come in una formazione
+  // vera: in fila per grado sembrava una coda al supermercato
   truppa(s) {
     const { ctx } = this
     const p = this.punto(s.corsia, 0)
     const d = Math.min(this.W * 0.19, 86)
     const fila = s.soldati
     const righe = Math.max(1, Math.ceil(fila.length / 5))
-    /* Si costruisce la griglia **intera** e poi si prendono le caselle più
-       centrali, invece di riempirla da sinistra: con tre soldati soli, il
-       riempimento in ordine li metteva tutti nella colonna di bordo e la
-       truppa correva mezza fuori dalla corsia. Le caselle si ordinano per
-       distanza dal centro dello schieramento — i gialli in mezzo,
-       circondati, i verdi sui bordi — che è come si guarda una formazione
-       ed è infatti dove l'occhio li cerca. */
+    // si costruisce la griglia intera e si prendono le caselle più
+    // centrali (per distanza dal centro dello schieramento), invece di
+    // riempire da sinistra: con pochi soldati finivano tutti sul bordo
     const mezzo = (righe - 1) / 2
     const distanza = c => Math.abs(c.col - 2) * 1.15 + Math.abs(c.riga - mezzo)
     const griglia = []
@@ -553,19 +425,15 @@ export class Pista {
       for (let col = 0; col < 5; col++) griglia.push({ riga: r, col })
     griglia.sort((a, b) => distanza(a) - distanza(b))
     const caselle = griglia.slice(0, fila.length)
-    /* Ogni riga si centra sulle colonne che ha davvero, non sulla colonna
-       di mezzo della griglia: con quattro soldati la fila occupa le
-       colonne 0..3, e centrandola sulla 2 lo schieramento uscirebbe di
-       sbieco — visibile subito nella corsia di destra, dove l'ultimo
-       soldato finiva mezzo fuori dallo schermo. */
+    // ogni riga si centra sulle colonne che ha davvero, non su quella
+    // centrale della griglia, o lo schieramento uscirebbe di sbieco
     const centro = []
     for (const c of caselle) {
       const r = centro[c.riga] || (centro[c.riga] = { min: c.col, max: c.col })
       r.min = Math.min(r.min, c.col); r.max = Math.max(r.max, c.col)
     }
 
-    // si disegna dal fondo in avanti, o chi sta dietro finisce sopra chi
-    // gli sta davanti e la formazione si sfalda
+    // dal fondo in avanti, o chi sta dietro finisce sopra chi gli sta davanti
     fila
       .map((g, i) => ({ ...caselle[i], g, i }))
       .sort((a, b) => b.riga - a.riga)
@@ -577,7 +445,6 @@ export class Pista {
                      d * 0.62 * q.s / p.s * (1 + g * 0.15), g)
       })
 
-    // la polvere sotto i piedi
     for (let i = 0; i < 2; i++) {
       const t = ((s.dist * 1.6 + i * 0.5) % 1)
       ctx.globalAlpha = (1 - t) * 0.18
@@ -586,9 +453,8 @@ export class Pista {
     }
     ctx.globalAlpha = 1
 
-    /* Il conto di quanti sono, **attaccato a loro**: il numero in cima
-       allo schermo è lontano dall'occhio proprio nell'istante in cui si
-       sceglie il cancello, che è quando serve. */
+    // il conto attaccato ai soldati: il numero in cima allo schermo è
+    // lontano dall'occhio proprio quando si sceglie il cancello
     const t = this.punto(s.corsia, 0.2)
     const testo = String(s.truppa)
     ctx.font = `900 ${Math.max(14, d * 0.34)}px system-ui, sans-serif`
@@ -600,10 +466,7 @@ export class Pista {
     ctx.fillText(testo, t.x, t.y - d * 1.02)
   }
 
-  /* Un soldatino: corpo, testa, elmetto del suo colore e un'arma che
-     cresce col grado. Disegnato e non emoji, perché il colore deve dire
-     quanto vale — ed è l'unica cosa che questo gioco chiede di leggere
-     guardando per terra. */
+  // disegnato e non emoji, perché il colore deve dire quanto vale
   soldato(x, y, h, g) {
     if (h < 2.5) return
     const { ctx } = this
@@ -623,10 +486,8 @@ export class Pista {
     }
   }
 
-  /* Le righe di corsa: dicono che la spinta **sta funzionando adesso**, e
-     spariscono da sole nei metri prima di un cancello — che è esattamente
-     dove il motore la spegne. Senza, il bambino continuerebbe a martellare
-     lo schermo senza capire perché non succede più niente. */
+  // spariscono da sole nei metri prima di un cancello, dove il motore
+  // spegne la spinta: senza, il bambino martellerebbe senza capire perché
   corsa(spinta) {
     if (spinta < 0.1) return
     const { ctx, W, H } = this
@@ -655,10 +516,8 @@ export class Pista {
     ctx.globalAlpha = 1
   }
 
-  /* Una scritta che sta dentro la sua scatola, sempre. Il corpo si
-     sceglieva dall'altezza del riquadro, e «+22» e «×5» sono due e tre
-     caratteri: il primo sbordava di netto. Qui si misura e, se non ci
-     sta, si rimpicciolisce — costa una `measureText` per cancello. */
+  // si misura e, se non ci sta, si rimpicciolisce: "+22" e "×5" sono due
+  // e tre caratteri, il corpo scelto solo sull'altezza sbordava di netto
   dentro(testo, x, y, largoMax, corpo) {
     const { ctx } = this
     ctx.font = `900 ${corpo}px system-ui, sans-serif`
@@ -669,9 +528,7 @@ export class Pista {
 
   riquadro(x, y, w, h, dentro, bordo) {
     const { ctx } = this
-    // l'ombra a terra: senza, un cancello sembra appeso al cielo e non si
-    // capisce in che corsia sia piantato
-    ctx.fillStyle = '#00000026'
+    ctx.fillStyle = '#00000026'   // l'ombra a terra: senza, il cancello sembra appeso al cielo
     ctx.beginPath(); ctx.ellipse(x, y, w * 0.52, h * 0.07, 0, 0, 7); ctx.fill()
     ctx.fillStyle = dentro
     ctx.beginPath(); ctx.roundRect(x - w / 2, y - h, w, h, Math.max(2, h * 0.12)); ctx.fill()
