@@ -1,80 +1,27 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA PARTITA LASCIATA A METÀ
-
-   Stessa promessa del sotterraneo: **uscire non butta via niente**. Qui
-   una tappa dura fra i quarantacinque secondi e i tre minuti, quindi
-   quello che si salva è meno — ma la Sopravvivenza non finisce mai, e
-   lì una partita può durare quanto un pomeriggio. E soprattutto la
-   regola vale la pena tenerla uguale in tutti i giochi: un bambino che
-   ha imparato che nel sotterraneo si può uscire non deve scoprire che
-   qui no.
-
-   ── QUASI TUTTO SI RIFÀ, POCO SI SCRIVE ───────────────────────────
-   Non c'è nessun mondo da rigenerare: lo scenario sta nella tappa e la
-   `Regole` si rifà dall'indice. I numeri dell'eroe (`f`) sono una
-   funzione dei potenziamenti — `ricalcola()` li rimette a posto — e la
-   prossima soglia è una funzione del livello. Resta da scrivere solo
-   quello che è **successo**: dove si era arrivati, cosa si è preso, e
-   chi c'è in campo.
-
-   ── QUELLO CHE DURA MEZZO SECONDO NON SI SALVA ────────────────────
-   Frecce in volo, briciole, palle giranti, saette: in mezzo secondo si
-   rifanno da soli, e salvarli vorrebbe dire scrivere trecento oggetti
-   per riavere una scintilla. Nemici e gemme invece sì: sono quello che
-   c'è addosso e quello che si è guadagnato.
-
-   ── I MOSTRI NON SI CANCELLANO, SI SPINGONO VIA ───────────────────
-   È la scelta che tiene in piedi tutto il resto. Riaprire il gioco a
-   campo pulito sarebbe comodissimo — e diventerebbe **una mossa**:
-   quando sei circondato esci, rientri, e la marea ricomincia da capo
-   mentre l'orologio no. In campagna quei secondi valgono un cuore, cioè
-   una stella (`stellePerFerite`); nella Sopravvivenza valgono il
-   primato. Quindi i nemici si riprendono dov'erano, e solo quelli
-   addosso all'eroe fanno un passo indietro fino a `SPAZIO` — perché
-   riaprire il gioco con la melma già sul naso e mezzo cuore in meno è
-   il modo più rapido di far pentire qualcuno di aver ripreso. È la
-   stessa regola del sotterraneo, dove chi inseguiva si ritrova a casa
-   sua.
-
-   ── DOPO IL TRAGUARDO NON SI SALVA PIÙ ────────────────────────────
-   Al traguardo stelle e monete sono già state contate e messe via
-   (`chiudiPartita` gira prima che il cartello offra «resto in campo»).
-   Chi resta gioca tempo regalato: se lo interrompe perde qualche
-   monetina e nient'altro. Salvare anche quello vorrebbe dire portarsi
-   dietro *che i premi sono già stati pagati* — e un salvataggio che si
-   scorda quella riga paga la tappa due volte.
-
-   ── SE LA FORMA CAMBIA, SI BUTTA ──────────────────────────────────
-   `VERSIONE` sale ogni volta che questo formato cambia, e un
-   salvataggio di ieri non si legge: si ricomincia la tappa. Una partita
-   persa è un dispiacere, una partita ripresa con dei campi che non
-   tornano è un gioco rotto in un modo che nessuno sa spiegare.
-   ═══════════════════════════════════════════════════════════════════ */
+// La partita lasciata a metà: uscire non butta via niente (la stessa
+// promessa del sotterraneo). Quasi tutto si rifà (lo scenario sta nella
+// tappa, i numeri dell'eroe sono una funzione dei potenziamenti); si
+// scrive solo quello che è successo. Il perché di ogni scelta (i
+// mostri si spingono via invece di sparire, dopo il traguardo non si
+// salva più): docs/survivors/regole.md.
 import { Partita, Regole } from './partita.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { OGGETTI } from '../dati/oggetti.js'
 import { soglia } from '../dati/taratura.js'
 
-/* 2: gli oggetti a terra e la cassa che apre un'offerta. Un salvataggio
-   di versione 1 riprendeva senza oggetti e con «livello» scritto sopra
-   le carte di una cassa: si butta. */
+// 2: gli oggetti a terra e la cassa che apre un'offerta. Un salvataggio
+// di versione 1 si butta (riprendeva senza oggetti e con «livello»
+// scritto sopra le carte di una cassa).
 export const VERSIONE = 2
 
-/* Quanto spazio si trova davanti chi riprende. Poco più della metà
-   della gittata dell'arco (275): l'eroe li vede arrivare e comincia a
-   tirare, ma non sono già addosso. */
+// quanto spazio si trova davanti chi riprende: poco più della metà
+// della gittata dell'arco (275), li vede arrivare ma non è già addosso
 export const SPAZIO = 170
 
-/* Tetti, perché un salvataggio è un dato che si scrive su un telefono
-   ogni pochi secondi. In campagna non si arriva mai a tanto; è la
-   Sopravvivenza al decimo minuto che può avere duecento bestie in
-   campo. Si tengono **i più vicini**, che sono quelli che contano: i
-   lontani, riprendendo, sarebbero arrivati comunque. */
+// tetti di salvataggio: si tengono i nemici/gemme/oggetti più vicini
+// (i lontani, riprendendo, sarebbero arrivati comunque)
 export const MAX_NEMICI = 140
 const MAX_GEMME = 120
-/* gli oggetti a terra: il motore ne tiene pochi (`CFG.oggetti.massimo`),
-   e il tetto qui è solo perché un dato scritto sul telefono ha sempre
-   un tetto — anche quando non ci si arriva */
 export const MAX_OGGETTI = 8
 
 const vicini = (roba, eroe, quanti) => roba.length <= quanti ? roba : [...roba]
@@ -84,10 +31,8 @@ const vicini = (roba, eroe, quanti) => roba.length <= quanti ? roba : [...roba]
 
 const arrotonda = n => Math.round(n * 10) / 10
 
-/* ── quello che si scrive ──
-   `tappa` è l'indice nella campagna (−1 è la Sopravvivenza), non la
-   tappa intera: la tabella sta nel codice e cambia con le versioni,
-   l'indice no. */
+// `tappa` è l'indice nella campagna (-1 è la Sopravvivenza), non la
+// tappa intera: la tabella sta nel codice e cambia con le versioni.
 export function scrivi(partita, tappa) {
   const p = partita
   if (!p || p.finita || p.conquistata) return null
@@ -100,43 +45,31 @@ export function scrivi(partita, tappa) {
     xp: p.xp,
     uccisi: p.uccisi,
     ferite: p.ferite,
-    /* il conto delle casse comparse: è il tetto (`cassaAmmessa`), e
-       senza di lui uscire e rientrare lo azzererebbe */
-    casse: p.casse,
+    casse: p.casse,   // il tetto della cassa (cassaAmmessa): senza, uscire e rientrare lo azzererebbe
     eroe: { x: arrotonda(e.x), y: arrotonda(e.y), cuori: e.cuori,
             cuoriMax: e.cuoriMax, guarda: e.guarda, passi: arrotonda(e.passi),
             rotta: Math.round(e.rotta * 100) / 100 },
     potenziamenti: { ...p.potenziamenti },
-    /* Le tre carte in attesa di essere scelte si salvano **per chiave**
-       e si rivestono riprendendo. Rigenerarle sarebbe una riga in meno
-       e un tiro nuovo a ogni uscita: chi non gradisce l'offerta esce e
-       rientra finché non gliene capita una migliore. */
+    // le tre carte in attesa si salvano per chiave e si rivestono
+    // riprendendo: rigenerarle farebbe uscire e rientrare finché non
+    // capita un'offerta migliore
     offerta: p.offerta ? p.offerta.map(c => c.chiave) : null,
-    /* da dove viene l'offerta: riprendendo, sopra le carte di una cassa
-       deve esserci scritto «cassa», non il livello */
     cassa: p.motivoOfferta === 'cassa' || undefined,
     nemici: vicini(p.nemici, e, MAX_NEMICI).map(n => ({
       t: n.tipo, x: arrotonda(n.x), y: arrotonda(n.y),
       vita: arrotonda(n.vita), max: arrotonda(n.vitaMax),
       passo: arrotonda(n.passo), massa: arrotonda(n.massa),
-      /* chi è in fila resta in fila: riprendendo, un muro che diventa
-         una folla che insegue è un altro gioco */
       ...(n.rotta ? { rx: n.rotta.x, ry: n.rotta.y } : {}),
     })),
     gemme: vicini(p.gemme, e, MAX_GEMME)
       .map(g => ({ x: arrotonda(g.x), y: arrotonda(g.y), val: g.val })),
-    /* con quanto gli resta: un oggetto che stava per svanire non deve
-       ritrovarsi nuovo di zecca, o uscire e rientrare lo farebbe durare
-       per sempre */
     oggetti: vicini(p.oggetti, e, MAX_OGGETTI)
       .map(o => ({ t: o.tipo, x: arrotonda(o.x), y: arrotonda(o.y), resta: arrotonda(o.resta) })),
   }
 }
 
-/* ── quello che si rilegge ──
-   Torna una `Partita` pronta a giocare, o `null` se il salvataggio non
-   si può leggere: chi chiama in quel caso comincia una partita nuova, e
-   non deve saperne il perché. */
+// Torna una Partita pronta a giocare, o `null` se il salvataggio non si
+// può leggere: chi chiama in quel caso comincia una partita nuova.
 export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = {}) {
   if (!dato || dato.v !== VERSIONE || !tappa || !dato.eroe) return null
   try {
@@ -144,9 +77,7 @@ export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = 
     if (mazzo) opzioni.mazzo = mazzo
     const p = new Partita(new Regole(tappa), opzioni)
 
-    /* prima i potenziamenti, poi i numeri che ne dipendono: `ricalcola`
-       legge i livelli delle carte, e con lo zaino vuoto darebbe all'eroe
-       la velocità e la gittata di partenza */
+    // prima i potenziamenti, poi i numeri che ne dipendono
     p.potenziamenti = { ...(dato.potenziamenti || {}) }
     p.ricalcola()
 
@@ -169,9 +100,7 @@ export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = 
     })
     p.eroe.cuori = Math.max(1, Math.min(e.cuori || 1, p.eroe.cuoriMax))
 
-    /* un tipo di mostro che non esiste più si butta, invece di
-       portarselo dietro come una bestia senza scheda che nessuno può
-       né disegnare né uccidere */
+    // un tipo di mostro che non esiste più si butta
     p.nemici = (dato.nemici || [])
       .filter(n => n && MOSTRI[n.t])
       .map(n => ({
@@ -189,7 +118,6 @@ export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = 
       x: g.x, y: g.y, vx: 0, vy: 0, val: g.val || 1, fase: rnd() * 6.3,
     }))
 
-    /* un oggetto senza scheda si butta, come un mostro senza scheda */
     p.oggetti = (dato.oggetti || [])
       .filter(o => o && OGGETTI[o.t] && o.resta > 0)
       .map(o => ({ tipo: o.t, x: o.x, y: o.y, resta: o.resta, fase: rnd() * 6.3 }))
@@ -205,15 +133,14 @@ export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = 
     }
     return p
   } catch {
-    /* un salvataggio storto non porta giù il gioco: si ricomincia. È la
-       stessa scelta dell'archivio, che non lancia mai. */
+    // un salvataggio storto non porta giù il gioco: si ricomincia
     return null
   }
 }
 
-/* Chi era addosso all'eroe fa un passo indietro, lungo la direzione da
-   cui stava arrivando: resta suo il vantaggio di essere vicino, ma non
-   quello di essere già arrivato. */
+// chi era addosso all'eroe fa un passo indietro lungo la direzione da
+// cui stava arrivando: resta suo il vantaggio di essere vicino, non
+// quello di essere già arrivato
 function faiSpazio(n, eroe, rnd) {
   let dx = n.x - eroe.x, dy = n.y - eroe.y
   let d = Math.sqrt(dx * dx + dy * dy)
@@ -226,8 +153,8 @@ function faiSpazio(n, eroe, rnd) {
   n.y = eroe.y + dy / d * SPAZIO
 }
 
-/* Due righe per la carta «riprendi»: cosa si sta lasciando in sospeso.
-   Le legge la mappa, che di `Partita` non sa niente. */
+// due righe per la carta «riprendi»: cosa si sta lasciando in sospeso,
+// le legge la mappa senza sapere niente di Partita
 export function dice(dato, campagna, libero) {
   if (!dato || dato.v !== VERSIONE) return null
   const t = dato.tappa < 0 ? libero : campagna[dato.tappa]
@@ -238,8 +165,6 @@ export function dice(dato, campagna, libero) {
     scenario: t.scenario,
     libera: dato.tappa < 0,
     tempo: Math.floor(dato.tempo || 0),
-    /* quanto manca, che è la cosa che si vuole sapere prima di dire di
-       sì: nella Sopravvivenza non manca niente, si va avanti */
     restano: Number.isFinite(t.durata)
       ? Math.max(0, Math.ceil(t.durata - (dato.tempo || 0))) : 0,
     livello: dato.livello || 1,
