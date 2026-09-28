@@ -1,86 +1,21 @@
-/* ═══════════════════════════════════════════════════════════════════
-   CAPIRE UN TESTO — leggere due o tre frasi e ritrovarci dentro le cose.
-
-   È il buco più grosso che c'era nel catalogo: capire quello che si
-   legge è *la* competenza della primaria, quella su cui si reggono
-   tutte le altre, e fino a qui nessuna domanda la chiedeva. Le domande
-   di italiano che c'erano guardano una parola alla volta — come si
-   scrive, che parte del discorso è, com'è il plurale — e un bambino
-   che le sa tutte può ancora leggere «Prima di uscire, Ugo chiude la
-   finestra» e rispondere che Ugo esce per primo.
-
-   IL TESTO SI GENERA, NON SI SCRIVE. Una storia scritta a mano si
-   impara a memoria in tre partite: qui ogni testo è uno stampo con le
-   parti intercambiabili — chi, dove, che cosa, il fatto e il suo
-   motivo — e la domanda si fa sullo stampo, quindi la risposta giusta
-   la sa il generatore e non un elenco. Il soggetto è il testo
-   (`soggetto: { testo }`), la consegna è la domanda.
-
-   CORTO, E NON PER COMODITÀ. Qui la domanda è il pedaggio di una porta
-   in un gioco d'azione, non una verifica di lettura: il testo sta
-   sempre **sotto le trentacinque parole**, e le prime tipologie molto
-   sotto (una dozzina). `unita/capire` lo conta domanda per domanda.
-   Il tempo che `nucleo/domanda.js` concede per leggere conta anche le
-   parole del soggetto (`tempoDiLettura`), quindi chi risponde prima
-   di aver letto il testo lo si vede — il tetto è quattro secondi, e
-   per trenta parole sono già pochi: è una soglia di «non l'ha
-   guardato», non di «non l'ha capito», ed è giusto così.
-
-   LE SEI TIPOLOGIE, dalla più facile:
-
-     capire:trova     chi, dove, che cosa: è scritto. Il falso vero è
-                      un nome o un posto CITATO ma non quello giusto —
-                      chi riceve al posto di chi porta, dove si cerca al
-                      posto di dove si trova.
-     capire:ordine    l'ordine in cui le cose SUCCEDONO contro quello in
-                      cui sono SCRITTE: «prima di», «dopo aver», «ma
-                      prima». Il falso vero è la frase scritta per prima.
-     capire:perche    il motivo scritto con un connettivo. I falsi: una
-                      cosa vera del testo che però non è il motivo, e un
-                      motivo plausibile che il testo non dice.
-     capire:pronome   a chi si riferisce «lei», «lo», «gli». Solo dove
-                      il testo lo rende UNIVOCO (vedi sotto).
-     capire:indizio   quello che non è scritto ma si ricava da un indizio
-                      solo e preciso: come si sente, che tempo fa, dove
-                      si trova. Il falso vero è la risposta plausibile in
-                      generale ma che il testo non sostiene.
-     capire:titolo    il titolo che va bene per TUTTO il testo, contro
-                      quello che ne racconta un pezzo e quello così largo
-                      che andrebbe bene per mille altri.
-
-   DUE RISPOSTE DIFENDIBILI SONO UN GUASTO, e qui è facile farne.
-   Nessun controllo automatico lo vede, quindi le regole sono scritte
-   dentro i dati:
-     · i pronomi sono univoci per GRAMMATICA, non per buon senso. «Anna
-       diede il libro a Marta. Lei lo lesse» non c'è: «lei» può essere
-       tutte e due. C'è invece «lei» quando nel testo c'è una femmina
-       sola, «la» quando c'è una cosa sola femminile e singolare, «gli»
-       quando il soggetto è sottinteso e «gli» non può essere lui;
-     · le inferenze sono scritte una per una, con l'indizio e con i due
-       falsi scelti apposta: uno smentito dall'indizio e uno plausibile
-       ma non sostenuto — mai uno che l'indizio lascerebbe aperto («c'è
-       il sole» non è un falso per il vento: si può avere tutti e due);
-     · nel testo di un pronome non compare nessun altro nome che vada
-       d'accordo con lui, nemmeno un posto: «in fondo al cassetto…
-       Lo mette nello zaino» renderebbe il cassetto un candidato.
-
-   I NOMI SONO INVENTATI E VARI, e nessuno è di un bambino vero. Le
-   persone hanno il genere scritto accanto al nome, perché le frasi
-   concordano («arriva di corsa, tutta sudata») e perché è il genere a
-   rendere univoci i pronomi.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Capire un testo: leggere due o tre frasi e ritrovarci dentro le cose —
+   la competenza mancante nel catalogo (le altre domande di italiano
+   guardano una parola alla volta). Il testo si genera da uno stampo con
+   parti intercambiabili, mai scritto a mano, e sta sempre sotto le 35
+   parole (è un pedaggio, non una verifica di lettura). Sei tipologie,
+   dalla più facile: trova (chi/dove/cosa, scritto), ordine (successione
+   contro scrittura), perche (il motivo con un connettivo), pronome
+   (univoco per grammatica, mai per buon senso), indizio (un solo indizio
+   preciso, scritto a mano voce per voce), titolo (buono per tutto il
+   testo, non troppo largo). Due risposte difendibili sono un guasto che
+   nessun controllo automatico vede: le regole sono nei dati. */
 
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo } from '../nucleo/domanda.js'
 
-/* Il pezzo di scuola di tutte e sei: capire quello che si legge. È un
-   gruppo suo (`data/saperi.js`) e non «Leggere le parole»: quello si
-   spegne guardando in basso — l'ha già fatto — e questo in alto. */
-const SA = 'comprensione'
+const SA = 'comprensione' // gruppo suo, non «leggere le parole»: quello si spegne in basso (l'ha già fatto), questo in alto
 
-/* ── le persone ──
-   Col genere, per le concordanze e per i pronomi. Sedici e sedici:
-   con meno, le stesse coppie tornano troppo presto. */
+// col genere, per concordanze e pronomi; sedici e sedici, con meno le stesse coppie tornano troppo presto
 const PERSONE = [
   ...['Bruno', 'Dario', 'Fabio', 'Lapo', 'Nico', 'Piero', 'Ugo', 'Zeno', 'Ettore',
     'Tommaso', 'Samuele', 'Giacomo', 'Renato', 'Filippo', 'Carlo', 'Mattia']
@@ -90,19 +25,14 @@ const PERSONE = [
     .map(nome => ({ nome, g: 'f' })),
 ]
 
-/* la desinenza che concorda: `fin(p, 'o', 'a')`, «sudat» + o/a */
-const fin = (p, m, f) => (p.g === 'm' ? m : f)
+const fin = (p, m, f) => (p.g === 'm' ? m : f) // la desinenza che concorda: fin(p, 'o', 'a'), «sudat» + o/a
 const maiuscola = s => s[0].toUpperCase() + s.slice(1)
 
-/* `n` persone diverse, con un filtro facoltativo sul genere */
 const persone = (sorte, n, filtro = () => true) => sorte.alcuni(PERSONE.filter(filtro), n)
 
-/* sostituisce {A} col nome e {o} con la desinenza di chi è {A} */
 const vesti = (t, p) => t.replaceAll('{A}', p.nome).replaceAll('{o}', fin(p, 'o', 'a'))
 
-/* «Ada ed Elisa», «porta ad Alice»: la d eufonica davanti alla stessa
-   vocale. I nomi arrivano a caso, quindi non si può scriverla a mano
-   nello stampo — si mette dopo, su tutto quello che si legge. */
+// la d eufonica: i nomi arrivano a caso, quindi non si scrive a mano nello stampo, si applica dopo su tutto il testo
 const eufonia = s => s && s.replace(/(^|\s)e (?=[EeÈ])/g, '$1ed ').replace(/(^|\s)a (?=[Aa])/g, '$1ad ')
 
 function lucida(d) {
@@ -116,20 +46,7 @@ function lucida(d) {
   return d
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   1. TROVA — chi, dove, che cosa. È scritto.
-
-   La difficoltà vera di una domanda così non è trovare la parola: è
-   non prendere la parola SBAGLIATA che sta lì vicino. In «Gaia porta a
-   Nico la palla di Rita» ci sono tre nomi, e ognuno ha un posto suo —
-   chi fa, a chi, di chi — che si legge dalle paroline in mezzo. I falsi
-   sono gli altri nomi della stessa frase, e il `perche` dice il posto
-   di quello scelto.
-
-   Al grado 2 lo stesso stampo si allunga di una frase e di un nome
-   citato che non fa niente: una risposta in più da scartare, e un
-   testo da tenere in mente un po' più lungo.
-   ═══════════════════════════════════════════════════════════════════ */
+// 1. TROVA (chi, dove, che cosa: è scritto). La difficoltà vera è non prendere il nome sbagliato vicino a quello giusto
 
 const PRESTATI = [
   'la palla', 'il libro', 'la sciarpa', 'il cappello', 'la torcia', 'il quaderno',
@@ -167,7 +84,7 @@ function trovaPorta(sorte, lungo) {
   })
 }
 
-/* i posti di casa dove una cosa si perde, e quelli da cui si torna */
+// i posti di casa dove una cosa si perde, e quelli da cui si torna
 const IN_CASA = ['in giardino', 'in cucina', 'in cantina', 'in soffitta', 'sotto il letto',
   'dietro il divano', "nell'armadio", 'sul balcone', 'in garage', 'nella cesta dei giochi',
   'in bagno', 'sotto il tavolo']
@@ -184,10 +101,7 @@ const PERSI = [
   { il: 'la torcia', g: 'f' }, { il: 'il criceto', g: 'm' }, { il: 'la tartaruga', g: 'f' },
 ]
 
-/* Cercare non è trovare: il posto dove si cerca è scritto per primo,
-   ed è quello che prende chi legge in fretta. La domanda non nomina chi
-   ha trovato («Dov'era…?»), perché nella versione lunga a cercare sono
-   in due e «Lo trova» ha il soggetto sottinteso. */
+// cercare non è trovare: il posto dove si cerca è scritto per primo, ed è quello che prende chi legge in fretta
 function trovaCerca(sorte, lungo) {
   const [A, B] = persone(sorte, 2)
   const cosa = sorte.uno(PERSI)
@@ -218,9 +132,7 @@ const SPESA = ['le pere', 'il pane', 'le uova', 'il formaggio', 'le fragole', 'i
 const PARENTI = ['la nonna', 'il nonno', 'la zia', 'lo zio', 'la mamma', 'il papà']
 const MERCATI = ['al mercato', 'al supermercato', 'al mercato del sabato']
 
-/* Chi compra che cosa: ognuno ha la sua spesa, e c'è un grande che va
-   con loro e — nel testo corto — non compra niente. È il «citato ma non
-   agisce» nella forma più pulita. */
+// chi compra che cosa: un grande va con loro e non compra niente, il «citato ma non agisce» nella forma più pulita
 function trovaSpesa(sorte, lungo) {
   const [A, B] = persone(sorte, 2)
   const par = sorte.uno(PARENTI)
@@ -268,9 +180,7 @@ const DA_SOLO = ["va sull'altalena", 'scende dallo scivolo', 'fa le bolle di sap
 const INSIEME = ['gioca a palla', 'fa una gara di corsa', 'gioca a nascondino', 'fa merenda',
   'costruisce una capanna', 'gioca a campana']
 
-/* Chi gioca con chi: in «Marta gioca a palla con Irene» Irene gioca
-   anche lei, ma la domanda «chi gioca con Irene?» ha una risposta sola.
-   Chi sceglie Irene ha preso il nome e non il posto del nome. */
+// chi gioca con chi: chi sceglie il compagno invece di chi fa l'azione ha preso il nome e non il posto del nome
 function trovaGioco(sorte, lungo) {
   const [A, B, C, D] = persone(sorte, 4)
   const solo = sorte.uno(DA_SOLO)
@@ -279,8 +189,7 @@ function trovaGioco(sorte, lungo) {
   if (lungo) righe.push(`Più tardi arriva ${D.nome} con il cane.`)
   const soggetto = { testo: righe.join(' ') }
   const arriva = testo(D.nome, `${D.nome} arriva più tardi, con il cane`)
-  /* «con chi gioca B» ha due risposte sole finché non c'è il quarto
-     nome: la si chiede solo nel testo lungo */
+  // «con chi gioca B» ha due risposte sole finché non c'è il quarto nome: si chiede solo nel testo lungo
   const chiesta = sorte.uno(lungo ? ['solo', 'chi-con', 'con-chi'] : ['solo', 'chi-con'])
   if (chiesta === 'solo') return domanda({
     testo: `Chi ${solo}?`,
@@ -313,26 +222,10 @@ function trovaGioco(sorte, lungo) {
   })
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   2. ORDINE — quello che succede prima, contro quello scritto prima.
+// 2. ORDINE: quello che succede prima, contro quello scritto prima; il mondo non deve suggerirlo (verbi con «avere», mai «essere»)
+// metà degli stampi rimescola e metà no, per non far imparare «prendi sempre quella in fondo»
 
-   Tre cose che fa una persona, in un ordine che il mondo non suggerisce
-   (chiudere la finestra e annaffiare le piante vanno bene in tutti e
-   due i versi): la risposta deve venire dal testo, non da come va di
-   solito una mattina.
-
-   Gli stampi non sono tutti al contrario, ed è voluto: se in ogni
-   testo la cosa scritta per prima succedesse per ultima, la regola che
-   si imparerebbe è «prendi quella in fondo», che è sbagliata quanto
-   «prendi quella in cima». Metà degli stampi rimescola, metà no, e la
-   domanda chiede a volte la prima e a volte l'ultima.
-
-   Solo verbi con l'ausiliare avere: «dopo aver chiuso» non concorda
-   con chi l'ha fatto, «dopo essere uscita» sì — un dettaglio in meno
-   da sbagliare in un testo che si genera.
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* [infinito, presente, participio] */
+// [infinito, presente, participio]
 const AZIONI = [
   ['chiudere la finestra', 'chiude la finestra', 'chiuso la finestra'],
   ['annaffiare le piante', 'annaffia le piante', 'annaffiato le piante'],
@@ -354,30 +247,24 @@ const AZIONI = [
   ['svuotare la lavastoviglie', 'svuota la lavastoviglie', 'svuotato la lavastoviglie'],
 ].map(([inf, pres, pp]) => ({ inf, pres, pp }))
 
-/* Gli stampi. `x`, `y`, `z` sono le tre azioni nell'ordine in cui
-   SUCCEDONO; `nota` dice, per quella scritta fuori posto, quale parola
-   la sposta — è la metà del `perche` che diagnostica. */
+// gli stampi: x/y/z sono le tre azioni nell'ordine in cui succedono; nota dice, per quella fuori posto, quale parola la sposta
 const ORDINI = [
-  /* scritta per prima, succede per ultima */
-  ({ A, x, y, z }) => ({
+  ({ A, x, y, z }) => ({ // scritta per prima, succede per ultima
     testo: `Prima di ${z.inf}, ${A} ${x.pres} e poi ${y.pres}.`,
     nota: { z: `«prima di ${z.inf}» la manda in fondo, anche se è scritta per prima` },
   }),
-  /* la prima in fondo, l'ultima in cima: il rovescio completo */
-  ({ A, x, y, z }) => ({
+  ({ A, x, y, z }) => ({ // la prima in fondo, l'ultima in cima: il rovescio completo
     testo: `${A} ${z.pres} dopo aver ${y.pp}. E prima di ${y.inf}, ${x.pres}.`,
     nota: {
       z: `«dopo aver ${y.pp}» la manda in fondo, anche se è scritta per prima`,
       x: `«prima di ${y.inf}» la porta in testa, anche se è scritta per ultima`,
     },
   }),
-  /* «ma prima» torna indietro di un passo */
-  ({ A, x, y, z }) => ({
+  ({ A, x, y, z }) => ({ // «ma prima» torna indietro di un passo
     testo: `${A} ${y.pres}, ma prima ${x.pres}. Solo alla fine ${z.pres}.`,
     nota: { x: '«ma prima» la porta in testa, anche se è scritta dopo' },
   }),
-  /* questi tre sono nell'ordine giusto: servono a non far imparare che
-     la risposta sta sempre dall'altra parte */
+  // questi tre sono nell'ordine giusto: servono a non far imparare che la risposta sta sempre dall'altra parte
   ({ A, x, y, z }) => ({ testo: `Appena finisce di ${x.inf}, ${A} ${y.pres}. Poi ${z.pres}.`, nota: {} }),
   ({ A, x, y, z }) => ({ testo: `Dopo aver ${x.pp}, ${A} ${y.pres} e poi ${z.pres}.`, nota: {} }),
   ({ A, x, y, z }) => ({
@@ -408,27 +295,8 @@ function ordine(sorte) {
   })
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   3. PERCHÉ — il motivo, scritto con una parola-ponte.
-
-   Ogni fatto ha due o tre motivi possibili, tutti ragionevoli: il testo
-   ne dice uno, e un altro finisce fra i falsi. È il falso più istruttivo
-   del modulo, perché è VERO NEL MONDO — si resta a casa anche quando
-   piove — e sbagliato solo perché il testo non lo dice. L'altro falso è
-   una cosa che il testo dice davvero, ma di qualcun altro: vera e
-   scritta, e non è il motivo.
-
-   Il ponte cambia, e con lui il verso: dopo «perché», «siccome», «dato
-   che» il motivo viene dopo; con «così» e «per questo» viene prima. Chi
-   ha imparato a prendere la frase dopo «perché» qui trova anche quelle
-   dove il motivo sta dall'altra parte.
-
-   `suo: true` vuol dire che il motivo ha per soggetto la stessa persona
-   («ha la febbre»), e allora con «così» la frase comincia dal suo nome;
-   gli altri motivi hanno un soggetto loro («fuori piove forte») e
-   cominciano da lì.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// 3. PERCHÉ: il motivo con una parola-ponte. Un falso è vero nel mondo ma non detto dal testo, l'altro è scritto ma di un altro
+// il ponte cambia il verso (dopo «perché»/«siccome»/«dato che», prima con «così»/«per questo»)
 const MOTIVI = [
   { fa: 'resta a casa', per: [['ha la febbre', 1], ['fuori piove forte', 0], ['aspetta una telefonata importante', 1]] },
   { fa: 'mette il maglione', per: [['ha freddo', 1], ['stasera fa fresco', 0]] },
@@ -448,18 +316,13 @@ const MOTIVI = [
   { fa: 'mette le scarpe da ginnastica', per: [["oggi c'è la gara di corsa", 0], ['va a giocare a basket', 1]] },
 ].map(m => ({ fa: m.fa, per: m.per.map(([t, suo]) => ({ t, suo: !!suo })) }))
 
-/* quello che fa l'altra persona del testo: niente che possa sembrare un
-   motivo di qualcosa — un flauto suonato sarebbe il rumore che fa
-   chiudere la finestra, e allora il falso diventerebbe difendibile */
+// quello che fa l'altra persona: niente che possa sembrare un motivo di qualcosa (renderebbe il falso difendibile)
 const INTANTO = ['fa i compiti', 'apparecchia la tavola', 'annaffia le piante', 'prepara lo zaino',
   'legge il giornale', 'disegna una casa', 'piega le magliette']
 
-/* i ponti: come si scrive la frase, e dove sta il motivo */
 const PONTI = [
   { dove: 'dopo «perché»', scrivi: (A, c, fa) => `${A} ${fa} perché ${c.t}.` },
-  /* con il motivo in testa il nome va dentro il motivo: «Siccome ha la
-     febbre, Nico…» dopo una frase su Bruno fa pensare che la febbre sia
-     di Bruno */
+  // col motivo in testa il nome va dentro il motivo: dopo una frase su Bruno, «Siccome ha la febbre, Nico…» confonderebbe
   { dove: 'dopo «siccome»',
     scrivi: (A, c, fa) => (c.suo ? `Siccome ${A} ${c.t}, ${fa}.` : `Siccome ${c.t}, ${A} ${fa}.`) },
   { dove: 'dopo «dato che»',
@@ -493,26 +356,8 @@ function perche(sorte) {
   })
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   4. PRONOME — di chi parla «lei», «la», «gli».
-
-   Il pronome è in rilievo nel testo (`evidenzia`), perché la domanda è
-   su QUELLA parola lì e non su un'altra uguale. Tre stampi, e ognuno è
-   univoco per una ragione di grammatica diversa:
-
-     · «Lui»/«Lei» soggetto: nel testo c'è una persona sola di quel
-       genere. Il falso vero è il primo nome del testo — chi legge in
-       fretta attacca il pronome a chi ha nominato per primo.
-     · «Lo»/«La»/«Le» complemento: due cose trovate, di genere o numero
-       diversi, e il pronome va d'accordo con una sola. Mai «li»:
-       «li» andrebbe d'accordo anche con tutte e due insieme. E nella
-       prima frase non c'è nessun altro nome — «in fondo al cassetto»
-       farebbe del cassetto un candidato. Il falso vero è la persona:
-       «la» sembra lei, ma lei è chi fa.
-     · «Gli»/«Le» davanti al verbo: vuol dire «a lui», «a lei», e il
-       soggetto sottinteso è quello della frase prima. Chi riceve non
-       può essere chi dà, quindi è univoco anche fra due maschi.
-   ═══════════════════════════════════════════════════════════════════ */
+// 4. PRONOME: di chi parla «lei», «la», «gli» (in rilievo nel testo). Tre stampi, ognuno univoco per una ragione grammaticale
+// diversa: soggetto (un solo genere in scena), complemento oggetto (genere/numero, mai «li»), termine (chi riceve ≠ chi dà)
 
 const ATTESE = ['davanti a scuola', "alla fermata dell'autobus", "all'ingresso del parco",
   'davanti al cinema', 'sotto casa']
@@ -540,8 +385,7 @@ function pronomeSoggetto(sorte) {
   })
 }
 
-/* le cose trovate: `cosa` è il nome senza articolo, e serve solo a non
-   mettere nella stessa frase «una biglia» e «tre biglie» */
+// cosa è il nome senza articolo, serve solo a non mettere nella stessa frase «una biglia» e «tre biglie»
 const TROVATE = [
   ...[['un quaderno', 'il quaderno'], ['un fischietto', 'il fischietto'], ['un pennarello', 'il pennarello'],
     ['un elastico', "l'elastico"], ['un sasso liscio', 'il sasso liscio'], ['un braccialetto', 'il braccialetto'],
@@ -551,7 +395,7 @@ const TROVATE = [
     ['una figurina', 'la figurina']].map(([un, il]) => ({ un, il, g: 'f', n: 's' })),
   ...[['due figurine', 'le figurine'], ['tre biglie', 'le biglie'], ['due mollette', 'le mollette'],
     ['tre conchiglie', 'le conchiglie']].map(([un, il]) => ({ un, il, g: 'f', n: 'p' })),
-  /* questi solo come «l'altra cosa»: «li» non è mai il pronome chiesto */
+  // questi solo come «l'altra cosa»: «li» non è mai il pronome chiesto
   ...[['tre bottoni', 'i bottoni'], ['due dadi', 'i dadi'], ['tre tappi', 'i tappi']]
     .map(([un, il]) => ({ un, il, g: 'm', n: 'p' })),
 ].map(o => ({ ...o, cosa: o.il.replace(/^(il|la|le|i|l')\s?/, '').slice(0, 5) }))
@@ -565,8 +409,7 @@ const DOVE_METTE = ['mette subito nello zaino', 'porta subito alla mamma', 'nasc
 function pronomeOggetto(sorte) {
   const A = sorte.uno(PERSONE)
   const cercata = sorte.uno(TROVATE.filter(o => !(o.g === 'm' && o.n === 'p')))
-  /* l'altra cosa: genere o numero diversi, e se il pronome è «le» deve
-     essere maschile — due femminili insieme farebbero ancora «le» */
+  // l'altra cosa: genere o numero diversi; se il pronome è «le» dev'essere maschile, o due femminili farebbero ancora «le»
   const altra = sorte.uno(TROVATE.filter(o => o.cosa !== cercata.cosa &&
     (o.g !== cercata.g || o.n !== cercata.n) && (cercata.n === 's' || o.g === 'm')))
   const [P, com] = PRONOMI_OGGETTO[cercata.g + cercata.n]
@@ -612,24 +455,8 @@ function pronomeTermine(sorte) {
   })
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   5. INDIZIO — non è scritto, ma si capisce.
-
-   Qui niente si genera a pezzi: ogni voce è scritta a mano, con il suo
-   indizio e i suoi due falsi, perché la regola che la tiene in piedi —
-   UN indizio solo, chiaro, e nessun falso che l'indizio lasci aperto —
-   non si controlla combinando parti. Quello che si combina è chi c'è
-   (trentadue nomi) e, dove serve, la frase d'apertura.
-
-   L'apertura (`apre`) è la trappola: prepara il falso plausibile.
-   «La famiglia va a trovare gli zii» fa pensare alla macchina; il
-   controllore dice treno. Chi risponde con quello che succede di solito
-   invece che con quello che c'è scritto cade lì, ed è esattamente la
-   cosa che la tipologia insegna. L'apertura non contraddice mai
-   l'indizio: mette solo davanti una strada più comoda.
-
-   {A} è il nome, {o} la desinenza di chi è {A}.
-   ═══════════════════════════════════════════════════════════════════ */
+// 5. INDIZIO: non è scritto, ma si capisce. Ogni voce è scritta a mano (un indizio solo, due falsi) perché la regola
+// non si controlla combinando parti; l'apertura (`apre`) è la trappola che prepara il falso plausibile senza contraddire l'indizio
 
 const COME_SI_SENTE = ['Come si sente {A}?', "Com'è {A}, in quel momento?"]
 const CHE_TEMPO = ['Che tempo fa?', 'Che tempo fa fuori?']
@@ -739,8 +566,7 @@ const INDIZI = [
 function indizio(sorte) {
   const A = sorte.uno(PERSONE)
   const v = sorte.uno(INDIZI)
-  /* l'apertura c'è sempre, dove c'è: è la trappola, e i `perche`
-     possono nominarla */
+  // l'apertura, dove c'è: è la trappola, e i perche possono nominarla
   const apre = v.apre ? vesti(sorte.uno(v.apre), A) + ' ' : ''
   return domanda({
     testo: vesti(sorte.uno(v.chiedi), A),
@@ -753,23 +579,8 @@ function indizio(sorte) {
   })
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   6. TITOLO — quello che va bene per tutto il testo.
-
-   Ogni testo ha una frase che dice di cosa parla (`perno`, sempre in
-   testa e sempre presa) e tre o quattro frasi che la raccontano, fra
-   cui se ne prendono due. Ogni frase di contorno porta con sé il suo
-   titolo-pezzetto, cioè il falso più vero che ci sia: è scritto, è nel
-   testo, ma racconta una frase sola.
-
-   L'altro falso è il titolo TROPPO LARGO: «Gli animali del bosco» per un
-   testo sul riccio. Va bene per il testo, ma anche per altri mille, ed
-   è lo sbaglio di chi ha capito l'argomento e non l'idea.
-
-   Le frasi di contorno si reggono da sole — niente «Poi», niente «lo»
-   che rimandi a una frase che potrebbe non esserci — perché si
-   scelgono a due a due: un rimando è permesso solo verso il perno.
-   ═══════════════════════════════════════════════════════════════════ */
+// 6. TITOLO: buono per tutto il testo. Un falso è il titolo-pezzetto (racconta una sola frase), l'altro è troppo largo
+// le frasi di contorno si reggono da sole (niente «poi»/«lo»): si scelgono a due a due, un rimando solo verso il perno
 
 const TESTI = [
   { perno: 'Il riccio passa tutto l\'inverno a dormire.',
@@ -810,7 +621,7 @@ const TESTI = [
       ['Dietro la diga l\'acqua si alza e forma un laghetto.', 'Un laghetto']],
     giusti: ['Il castoro costruttore', 'Le dighe del castoro'],
     largo: ['Gli animali del fiume', 'I fiumi'], perLargo: 'il testo parla solo del castoro e delle sue dighe' },
-  /* i tre che seguono sono storie, e hanno dentro chi le vive */
+  // i tre che seguono sono storie, e hanno dentro chi le vive
   { perno: 'Per il compleanno della nonna, {A} e il papà fanno una torta di mele.',
     frasi: [['Sbucciano le mele e le tagliano a fettine.', 'Le fettine di mela'],
       ['In forno diventa dorata e profuma tutta la casa.', 'Il profumo in casa'],
@@ -834,7 +645,7 @@ const TESTI = [
 function titolo(sorte) {
   const A = sorte.uno(PERSONE)
   const v = sorte.uno(TESTI)
-  /* due frasi di contorno, nell'ordine in cui stanno */
+  // due frasi di contorno, nell'ordine in cui stanno
   const prese = sorte.alcuni(v.frasi.map((f, i) => i), 2).sort((a, b) => a - b).map(i => v.frasi[i])
   const t = [v.perno, ...prese.map(f => f[0])].map(f => vesti(f, A)).join(' ')
   const pezzo = sorte.uno(prese)[1]
@@ -853,7 +664,6 @@ function titolo(sorte) {
   })
 }
 
-/* ── che cosa si chiede a ogni grado ── */
 const SCALETTA = [
   'chi, dove e che cosa, in due frasi',
   'chi, dove e che cosa, in un testo più lungo',
@@ -862,31 +672,7 @@ const SCALETTA = [
   'quello che si capisce senza leggerlo, e il titolo giusto',
 ]
 
-/* ── Le tipologie, e quanto è complicata ognuna ──
-   La scala è quella di tutto il catalogo: 0 = quattro anni, 12,5 punti
-   per anno di scuola, 100 = fine primaria. Il metro è il programma
-   (Indicazioni nazionali 2012 per l'italiano, lettura):
-
-   · TROVA 31 e 40. Due frasi da una dozzina di parole, con l'informazione
-     scritta, si leggono nella seconda metà della prima (6 anni e mezzo);
-     il testo con il nome in più e la frase in più è da inizio seconda.
-     Sotto non si va: sotto c'è chi le lettere le sta ancora imparando,
-     e per lui un testo di due frasi è muto.
-   · ORDINE 50, PERCHÉ 53. «Cogliere le relazioni» fra le informazioni di
-     un testo — il prima e il dopo, la causa — è un obiettivo di fine
-     terza. Il perché sta un poco più su perché i ponti con il motivo
-     scritto PRIMA («così», «per questo») chiedono di rigirare la frase.
-   · INDIZIO 50. Ricavare quello che non è scritto è un obiettivo di fine
-     quinta, ma i nostri indizi sono uno solo e quotidiano (pigiama,
-     denti lavati, la storia prima di dormire: è sera), e a otto anni si
-     leggono — l'aveva messo a 66, e guardando gli esempi il proprietario
-     l'ha riportato qui. Esce già dal grado 3, accanto al prima-e-dopo.
-   · PRONOME 63. Tenere il filo dei riferimenti è un obiettivo di fine
-     quinta, e una delle cose che le prove nazionali chiedono di più: si
-     mette all'inizio della quarta, univoco per grammatica.
-   · TITOLO 72. Scegliere fra il titolo giusto, il pezzetto e quello
-     troppo largo vuol dire distinguere l'argomento dall'idea principale:
-     da fine quarta. */
+// livelli tarati sul programma (Indicazioni 2012, italiano/lettura): vedi docs/apprendimento/quiz-livelli.md
 const TIPI = [
   { chiave: 'capire:trova', nome: 'Chi, dove, che cosa: è scritto nel testo', sa: SA,
     livello: { 1: 31, 2: 40 }, gradi: { 1: 1, 2: 1 } },
@@ -911,9 +697,8 @@ class Capire extends Modulo {
       materia: 'italiano',
       chiaro: 'leggere due o tre frasi e ritrovarci chi, dove, quando, perché — e quello che si capisce senza che sia scritto',
       scaletta: SCALETTA,
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la media delle sue
-         tipologie, scritte una per una qui sopra con il perché */
-      livelli: [31, 40, 51, 57, 63],
+      livelli: [31, 40, 51, 57, 63], // la media delle sue tipologie, tarate una per una qui sopra
+
       tipi: TIPI,
     })
   }
