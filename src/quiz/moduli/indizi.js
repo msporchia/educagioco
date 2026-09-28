@@ -1,53 +1,18 @@
-/* ═══════════════════════════════════════════════════════════════════
-   INDIZI — chi sono, dedotto da quello che è vero e da quello che no.
-
-   Viene da `poc/indovinelli.html`, dove sono due famiglie che sembrano
-   giochi diversi e sono la stessa macchina: date certe informazioni,
-   fra le cose in ballo ne resta esattamente una.
-
-     LE FIGURE     «non è azzurro · è grande · non ce n'è una sola»
-                   → di tutte le figure sul tavolo ne resta una sola
-     L'INDOVINELLO  «sono giallo · cresco sull'albero · la scimmia mi adora»
-                   → la banana
-
-   Le figure riusano gli attributi e il pittore già in casa
-   (`grafica/pittori/figure.js`, condiviso con `sequenze`), quindi
-   costano poco: la parte nuova è tutta nella scelta degli indizi.
-
-   NESSUN INDIZIO INUTILE. Un indizio che si può togliere senza che la
-   risposta torni ambigua è un indizio decorativo, ed è quello che fa
-   perdere fiducia al bambino: se dice «non è azzurro» e bastava già il
-   resto, ha appena imparato che gli indizi si possono ignorare.
-   `gruppiMinimi` prova ogni sottoinsieme di indizi candidati a forza
-   bruta — esattamente come il prototipo — e lo tiene solo se isola una
-   cosa sola *e* se togliendone uno qualunque torna ambiguo. Non è un
-   controllo a posteriori: è così che il gruppo di indizi viene scelto,
-   quindi una domanda con un indizio superfluo non può proprio uscire.
-
-   E una terza, più giù, che è la stessa macchina girata di lato: LA
-   TABELLA, le griglie logiche in piccolo — «Bruno ha il pesce, Anna
-   non ha il cane: che animale ha Carla?» — dove quello che si scarta
-   non sono cose sul tavolo ma sistemazioni, e la fila e le due cose
-   collegate sono la stessa tabella con un altro vestito.
-
-   `costruisciForme`/`costruisciCose`/`costruisciTabella` restano
-   esportate (oltre al modulo di default) apposta: restituiscono il
-   materiale grezzo — le candidate sul tavolo, il bersaglio, gli indizi
-   con la loro `verifica` — prima che diventi una `domanda()`. È quello
-   che il test di unità usa per ricontrollare l'unicità e la minimalità
-   senza fidarsi del modulo (la tabella, lì, si rilegge dal testo).
-   ═══════════════════════════════════════════════════════════════════ */
+/* Indizi: chi sono, dedotto da quello che è vero e da quello che no. Tre
+   famiglie della stessa macchina — le figure sul tavolo, l'indovinello
+   sulle cose del mondo, e la tabella (le griglie logiche: si scarta fra
+   sistemazioni, non fra cose). Nessun indizio è mai superfluo:
+   `gruppiMinimi` costruisce il gruppo a forza bruta e lo scarta se
+   togliendone uno qualunque la risposta resta unica. Le tre `costruisci*`
+   sono esportate anche per i test, che ricontrollano unicità e minimalità
+   senza fidarsi del modulo. */
 
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, scena, emoji, testo } from '../nucleo/domanda.js'
 import { PITTORI_FIGURE, FORME_FIGURE } from '../grafica/pittori/figure.js'
 import { COLORI } from '../grafica/pittori/tinte.js'
 
-/* ═══════════════════════════════════════════════════════════════════
-   LE FIGURE — stesso vocabolario di `sequenze`: forma, colore, quante
-   copie, grande o piccola. Qui non c'è rotazione: non serve, «gira» non
-   è un indizio che un bambino direbbe di sé.
-   ═══════════════════════════════════════════════════════════════════ */
+// stesso vocabolario di sequenze (forma, colore, quante copie, grande/piccola); niente rotazione, non è un indizio naturale
 const FORME = FORME_FIGURE.filter(f => f !== 'freccia')
 const VALORI = {
   colore: COLORI,
@@ -61,9 +26,7 @@ const NOMEFORMA = {
 }
 const NOMEQUANTI = { 2: 'due', 3: 'tre', 4: 'quattro' }
 
-/* un indizio su una figura è vero per il bersaglio per costruzione:
-   `positivo` dice se il valore è proprio quello del bersaglio o se è
-   uno degli altri che il bersaglio NON ha */
+// positivo dice se il valore è quello del bersaglio, o uno degli altri che il bersaglio NON ha
 function soddisfaForma(ind, f) {
   return ind.positivo ? f[ind.asse] === ind.val : f[ind.asse] !== ind.val
 }
@@ -71,23 +34,13 @@ function testoIndizioForma(ind) {
   const neg = ind.positivo ? '' : 'non '
   if (ind.asse === 'colore') return neg + 'è ' + ind.val
   if (ind.asse === 'forma') return neg + 'è ' + NOMEFORMA[ind.val]
-  /* «grande» ha solo due valori: si dice sempre riferendosi a «grande»,
-     mai a «piccola», così non esce mai un doppio-negativo come «non è
-     piccola» — «non è grande» dice la stessa cosa ed è più diretto */
+  // «grande» ha solo due valori: si dice sempre così, mai «piccola», per non avere un doppio-negativo
   if (ind.asse === 'grande') return neg + 'è grande'
   return ind.val === 1 ? neg + "ce n'è una sola" : neg + 'ce ne sono ' + NOMEQUANTI[ind.val]
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   LE COSE DEL MONDO — banana, mucca, sole: ogni cosa porta le sue
-   etichette (`tag`), e un indizio è proprio un'etichetta letta a voce
-   alta in prima persona. Dati puri, portati dal prototipo.
-   `astratto: true` su un'etichetta vuol dire che descrive un
-   comportamento invece di un fatto che si vede (essere lenti, essere
-   grandi): ai gradi bassi si scartano quando restano abbastanza
-   etichette concrete, perché un bambino piccolo le comincia a leggere
-   dalle cose che vede, non da quelle che deduce.
-   ═══════════════════════════════════════════════════════════════════ */
+// ogni cosa porta le sue etichette (tag), e un indizio è un'etichetta letta in prima persona
+// astratto: true (essere lenti/grandi) si scarta ai gradi bassi quando restano abbastanza etichette concrete
 const SEGNI = {
   giallo: { testo: 'sono giallo' }, rosso: { testo: 'sono rosso' },
   verde: { testo: 'sono verde' }, marrone: { testo: 'sono marrone' },
@@ -176,10 +129,7 @@ const COSE = [
 ]
 function passaTag(tag, cosa) { return cosa.tag.includes(tag) }
 
-/* ═══════════════════════════════════════════════════════════════════
-   LA FORZA BRUTA — ogni sottoinsieme di `cand`, di taglia `quanti`, che
-   isola un solo candidato E in cui nessun elemento è superfluo.
-   ═══════════════════════════════════════════════════════════════════ */
+// ogni sottoinsieme di `cand`, di taglia `quanti`, che isola un solo candidato E in cui nessun elemento è superfluo
 function gruppiMinimi(candidati, passa, cand, quanti) {
   const buoni = []
   const prova = sub => {
@@ -202,11 +152,7 @@ function gruppiMinimi(candidati, passa, cand, quanti) {
 const risolvi = (sorte, x) => (Array.isArray(x) ? sorte.fra(x[0], x[1]) : x)
 const prodotto = (assi, usati) => assi.reduce((n, a) => n * usati[a].length, 1)
 
-/* ── indizi:forme — costruisce il tavolo, il bersaglio e il gruppo di
-   indizi minimo. Non restituisce mai `null`: se la forza bruta non
-   trova niente in `tentativi` prove (può succedere con assi e valori
-   sfortunati) c'è `ripiegoForme`, una domanda più semplice ma sempre
-   valida. ── */
+// costruisce il tavolo, il bersaglio e il gruppo minimo; non torna mai null: se la forza bruta fallisce c'è ripiegoForme
 export function costruisciForme(sorte, cfg) {
   for (let tentativo = 0; tentativo < 50; tentativo++) {
     const nCandidati = risolvi(sorte, cfg.nCandidati)
@@ -223,9 +169,7 @@ export function costruisciForme(sorte, cfg) {
     }
     if (prodotto(assi, usati) < nCandidati) continue
 
-    /* gli assi non scelti restano fissi per tutte le figure: un
-       attributo uguale per tutti sul tavolo non può fare da indizio,
-       quindi non c'è modo di costruire per sbaglio una domanda ambigua */
+    // gli assi non scelti restano fissi per tutte le figure: un attributo uguale per tutti non può fare da indizio
     const base = { colore: sorte.uno(VALORI.colore), forma: sorte.uno(VALORI.forma), quante: 1, grande: true }
     let tutte = [base]
     for (const a of assi) {
@@ -266,9 +210,7 @@ export function costruisciForme(sorte, cfg) {
   return ripiegoForme(sorte)
 }
 
-/* la rete di sicurezza: una griglia 2×2 di colore e forma, due indizi
-   positivi, e sono entrambi necessari (uno solo lascerebbe due figure
-   in piedi) — non è la domanda più ricca, ma non fallisce mai */
+// la rete di sicurezza: griglia 2×2, due indizi positivi entrambi necessari, non fallisce mai
 function ripiegoForme(sorte) {
   const colori = sorte.alcuni(VALORI.colore, 2)
   const forme = sorte.alcuni(VALORI.forma, 2)
@@ -283,16 +225,12 @@ function ripiegoForme(sorte) {
   return { candidati, bersaglio, indizi }
 }
 
-/* ── indizi:cose — stessa forza bruta, sugli oggetti del mondo invece
-   che sulle figure ── */
 export function costruisciCose(sorte, cfg) {
   for (let tentativo = 0; tentativo < 60; tentativo++) {
     const nCandidati = risolvi(sorte, cfg.nCandidati)
     const bersaglio = sorte.uno(COSE)
     const condivisi = c => c.tag.filter(t => bersaglio.tag.includes(t)).length
-    /* i distrattori si pescano fra chi condivide POCHE etichette col
-       bersaglio: troppo simile e la domanda diventa ambigua, troppo
-       lontano e basta un indizio a occhio per escluderlo */
+    // i distrattori condividono poche etichette col bersaglio: troppo simile è ambiguo, troppo lontano si esclude a occhio
     const possibili = COSE.filter(c => c !== bersaglio && condivisi(c) >= cfg.vicini[0] && condivisi(c) <= cfg.vicini[1])
     if (possibili.length < nCandidati - 1) continue
     const candidati = sorte.mescola([bersaglio, ...sorte.alcuni(possibili, nCandidati - 1)])
@@ -318,10 +256,7 @@ export function costruisciCose(sorte, cfg) {
   return ripiegoCose(sorte)
 }
 
-/* la rete di sicurezza: si parte da un'etichetta del bersaglio e si
-   cercano due cose che non ce l'hanno — con oltre sessanta voci in
-   `COSE` ce ne sono quasi sempre, e un solo indizio basta ed è
-   necessario per forza (senza, resterebbero tre candidate) */
+// si parte da un'etichetta del bersaglio e si cercano due cose che non ce l'hanno; un solo indizio basta ed è necessario
 function ripiegoCose(sorte) {
   const bersaglio = sorte.uno(COSE)
   for (const tag of sorte.mescola(bersaglio.tag)) {
@@ -332,9 +267,7 @@ function ripiegoCose(sorte) {
     const indizi = [{ tag, testo: SEGNI[tag].testo, verifica: c => c.tag.includes(tag) }]
     return { candidati, bersaglio, indizi }
   }
-  /* non dovrebbe mai servire (il dataset è troppo vario perché un
-     bersaglio non trovi due estranei), ma qui c'è comunque un'uscita
-     che non lancia mai: le prime due cose della lista, distinte */
+  // non dovrebbe mai servire, ma è un'uscita che non lancia mai: le prime due cose della lista, distinte
   const [a, b] = COSE
   const tag = a.tag.find(t => !b.tag.includes(t)) || a.tag[0]
   return {
@@ -344,55 +277,19 @@ function ripiegoCose(sorte) {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   LA TABELLA DEGLI INDIZI — le «griglie logiche» in piccolo.
+/* La tabella degli indizi: le «griglie logiche» in piccolo, la stessa
+   macchina delle figure girata di lato — qui si scarta fra sistemazioni
+   (chi ha cosa), non fra cose sul tavolo. Una domanda nasce così: pesca
+   la soluzione, pesca indizi veri finché resta una sola sistemazione (un
+   risolutore a forza bruta), toglie quelli superflui, sceglie una domanda
+   che li richieda tutti e la cui risposta non sia già scritta in un
+   indizio. I falsi si calcolano (non si scrivono a mano): sono le
+   risposte a cui arriva chi si è fermato a un indizio da un altro, col
+   `perche` che dice quale. Quattro forme, dalla più facile (tabella,
+   esclusione, fila, collegati). costruisciTabella è esportata come le
+   sorelle, per i test. */
 
-   Tre bambini, tre animali, uno a testa. «Bruno ha il pesce. Anna non
-   ha il cane. Che animale ha Carla?» È la stessa macchina delle figure
-   girata di novanta gradi: là si scarta fra le cose sul tavolo, qui si
-   scarta fra le **sistemazioni** — chi ha cosa — e le sistemazioni non
-   si vedono, si scrivono. Il metodo che si insegna è la tabellina: una
-   ✗ per ogni «non», e dove in una riga resta un posto solo è quello.
-
-   COME NASCE UNA DOMANDA, ed è il punto di tutta la sezione:
-
-     1. si pesca la soluzione (una permutazione per ogni cosa in ballo);
-     2. si pescano indizi veri, di forme diverse, finché le sistemazioni
-        possibili non sono **una sola** — lo dice un risolutore a forza
-        bruta, che con tre persone ha sei casi da guardare (trentasei
-        con due cose collegate, ventiquattro in fila per quattro);
-     3. si tolgono gli indizi che non servono: ognuno di quelli rimasti
-        è necessario, come nelle figure;
-     4. si sceglie **la domanda** fra quelle che chiedono tutti gli
-        indizi — togliendone uno qualunque la risposta non è più una
-        sola — e la cui risposta non sta scritta pari pari in un indizio.
-
-   I FALSI SI CALCOLANO. Sono le risposte a cui arriva chi si è fermato a
-   metà: si toglie un indizio, si guarda cosa diventa possibile, e il
-   `perche` dice quale indizio è stato lasciato indietro e cosa, senza
-   di lui, non torna più («con questa risposta Anna avrebbe il cane»).
-   Con tre persone
-   le risposte sono tutte e tre le cose in ballo, quindi i falsi sono
-   tutti gli altri valori: nessuno scelto a caso, nessuno da scartare a
-   occhio.
-
-   Le quattro forme, dalla più facile:
-
-     indizi:tabella     «ha» e «non ha»                       ~8 anni
-     indizi:esclusione  solo «non» e «né… né», nessun sì       ~9 anni
-     indizi:fila        chi sta in testa, subito dopo, vicino  ~10 anni
-     indizi:collegati   due cose a testa, e «chi ha il gatto
-                        ama il blu» che le lega                ~11 anni
-
-   `costruisciTabella` è esportata come le sorelle: il test rilegge il
-   testo scritto per il bambino, rimette in piedi le sistemazioni da
-   solo e ricontrolla unicità, minimalità e falsi senza fidarsi del
-   risolutore di qui.
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* I bambini, col genere perché «Giulia non è la prima» si concorda.
-   Nomi italiani vari, nessuno che sia anche una cosa del gioco (niente
-   Rosa, Viola, Bianca: «Viola ama il viola» è un inciampo gratis). */
+// il genere serve a concordare («Giulia non è la prima»); niente nomi che siano anche una cosa del gioco (Viola, Rosa)
 const PERSONE = [
   ['Anna', 'f'], ['Bruno', 'm'], ['Carla', 'f'], ['Leo', 'm'], ['Mia', 'f'],
   ['Sara', 'f'], ['Tommaso', 'm'], ['Giulia', 'f'], ['Pietro', 'm'], ['Marta', 'f'],
@@ -403,14 +300,7 @@ const PERSONE = [
   ['Michele', 'm'], ['Agnese', 'f'], ['Enrico', 'm'], ['Teresa', 'f'], ['Gabriele', 'm'],
 ].map(([nome, g]) => ({ nome, g }))
 
-/* Le cose da dividersi. Ogni tema sa dire le sue frasi: il verbo al
-   singolare («Anna ha»), al plurale («né Anna né Bruno hanno»), al
-   condizionale per i `perche` («Anna avrebbe il cane»), e come
-   si chiede; `apre` è il verbo della prima riga, se non è lo stesso
-   («hanno un colore preferito», ma «né Anna né Bruno amano il blu»).
-   Le voci con `em` rispondono col disegno; i colori con la
-   parola, perché un pallino rosso è un'emoji chiara ma «rosso» è
-   quello che c'è scritto negli indizi. */
+// ogni tema sa dire le sue frasi (singolare, plurale, condizionale, chiedi); apre è il verbo della prima riga se diverso
 const TEMI = [
   { cosa: 'un animale', diversi: 'tutti diversi', verbo: 'ha', verboPl: 'hanno', cond: 'avrebbe',
     chiedi: 'Che animale ha', nomi: 'gli animali',
@@ -442,7 +332,7 @@ const TEMI = [
       [null, 'il viola'], [null, "l'arancione"]] },
 ].map(t => ({ ...t, voci: t.voci.map(([em, ogg]) => ({ em, ogg, nudo: ogg.replace(/^(il|lo|la|i|gli|le) |^l'/, '') })) }))
 
-/* la fila: i posti si dicono concordati, «Giulia è la prima» */
+// la fila: i posti si dicono concordati, «Giulia è la prima»
 const POSTI = [
   { m: 'il primo', f: 'la prima', r: { m: 'primo', f: 'prima' } },
   { m: 'il secondo', f: 'la seconda', r: { m: 'secondo', f: 'seconda' } },
@@ -452,7 +342,6 @@ const POSTI = [
 const ULTIMO = { m: "l'ultimo", f: "l'ultima" }
 const posto = (i, n, g) => (i === n - 1 ? ULTIMO[g] : POSTI[i][g])
 
-/* ── il risolutore: tutte le sistemazioni, e quelle che reggono ── */
 function permutazioni(n) {
   if (n === 1) return [[0]]
   const out = []
@@ -460,8 +349,7 @@ function permutazioni(n) {
     for (let i = 0; i <= p.length; i++) out.push([...p.slice(0, i), n - 1, ...p.slice(i)])
   return out
 }
-/* una sistemazione è un array con una permutazione per cosa in ballo:
-   `s[a][persona]` è il valore che quella persona ha per la cosa `a` */
+// una sistemazione è un array con una permutazione per cosa in ballo: s[a][persona] è il valore per quella cosa
 function sistemazioni(n, cose) {
   const perm = permutazioni(n)
   let tutte = [[]]
@@ -470,22 +358,16 @@ function sistemazioni(n, cose) {
 }
 const reggono = (tutte, indizi) => tutte.filter(s => indizi.every(i => i.vale(s)))
 
-/* «Anna, Bruno ed Elena»: la d eufonica davanti alla stessa vocale */
+// «Anna, Bruno ed Elena»: la d eufonica davanti alla stessa vocale
 const unisci = nomi => nomi.length === 1 ? nomi[0]
   : nomi.slice(0, -1).join(', ') + (/^[eE]/.test(nomi[nomi.length - 1]) ? ' ed ' : ' e ') + nomi[nomi.length - 1]
 const parole = t => t.trim().split(/\s+/).filter(Boolean).length
 const senzaPunto = t => t.replace(/\.$/, '')
-/* il nodo di un fatto: una persona, o un valore di una cosa. Un indizio
-   positivo dichiara quali coppie di nodi lega (`lega`), ed è così che si
-   riconosce una domanda con la risposta scritta dentro un indizio */
+// il nodo di un fatto: una persona, o un valore di una cosa; `lega` dichiara le coppie legate da un indizio positivo
 const P = p => 'p' + p
 const V = (a, v) => `a${a}v${v}`
 
-/* ── gli indizi, forma per forma ──
-   Ognuno porta: `forma`, `testo`, `vale(s)` (vero in quella
-   sistemazione?), `lega` (le coppie che afferma pari pari) e
-   `smentita(s)`, che dice a parole cosa non torna in una sistemazione
-   dove l'indizio è falso — è il pezzo che finisce nei `perche`. */
+// ogni indizio: forma, testo, vale(s), lega (coppie affermate), smentita(s) (cosa non torna se falso, per i perche)
 function indiziDelleCose(persone, temi, forme) {
   const n = persone.length
   const out = []
@@ -517,7 +399,7 @@ function indiziDelleCose(persone, temi, forme) {
         smentita: s => cond(a, s, s[a][p] === v ? p : q),
       })
   }
-  /* il ponte fra le due cose: «chi ha il gatto ama il blu» */
+  // il ponte fra le due cose: «chi ha il gatto ama il blu»
   if (temi.length === 2) {
     const [T0, T1] = temi
     for (let v = 0; v < n; v++) for (let w = 0; w < n; w++) {
@@ -537,12 +419,7 @@ function indiziDelleCose(persone, temi, forme) {
   return out
 }
 
-/* In fila: la «cosa» è il posto, `s[0][persona]` è quanti ne ha
-   davanti. «Subito dopo» e «subito prima» sono lo stesso indizio detto
-   dai due capi, e si pesca uno dei due modi di dirlo. «Vicini» vuol
-   dire uno attaccato all'altro: non c'è un «prima di» a distanza, che
-   un bambino leggerebbe come «subito prima» — e la domanda avrebbe due
-   risposte difendibili. */
+// in fila la «cosa» è il posto; «subito dopo/prima» sono lo stesso indizio dai due capi; «vicini» solo attaccati, mai a distanza
 function indiziDellaFila(persone, forme, sorte) {
   const n = persone.length
   const out = []
@@ -574,9 +451,7 @@ function indiziDellaFila(persone, forme, sorte) {
   }
   for (let p = 0; p < n; p++) for (let q = 0; q < n; q++) {
     if (p === q) continue
-    /* la smentita si dice con le parole dell'indizio: se era «Lucia
-       è subito prima di Marta», non torna «Lucia subito prima di
-       Marta», non il suo rovescio */
+    // la smentita si dice con le parole dell'indizio, non il suo rovescio
     if (forme.includes('dopo')) {
       const dopo = sorte.forse(0.5)
       out.push({
@@ -599,11 +474,7 @@ function indiziDellaFila(persone, forme, sorte) {
   return out
 }
 
-/* ── le domande possibili ──
-   Ognuna sa da dove parte (`da`, un nodo), cosa chiede (`opzioni`, i
-   nodi fra cui scegliere) e come si legge la risposta in una
-   sistemazione (`chiedi`). Le risposte sono tutte le cose di quel tipo:
-   con tre persone, tutte e tre. */
+// ogni domanda sa da dove parte (da), cosa chiede (opzioni) e come leggere la risposta in una sistemazione (chiedi)
 function domandeDelleCose(persone, temi) {
   const n = persone.length
   const tutti = [...Array(n).keys()]
@@ -656,32 +527,13 @@ function domandeDellaFila(persone) {
   return out
 }
 
-/* la risposta sta scritta pari pari in un indizio? */
+// la risposta sta scritta pari pari in un indizio?
 const scritta = (dom, giusta, indizi) =>
   indizi.some(i => i.lega.some(([x, y]) => (x === dom.da && y === giusta) || (y === dom.da && x === giusta)))
 
-/* ── i falsi, calcolati ──
-   Per ogni risposta sbagliata si cerca l'indizio che l'avrebbe fermata,
-   e il `perche` lo nomina. Tre casi, in quest'ordine:
-
-     · un indizio che la esclude da solo e lo dice pari pari («Leo non
-       prende il cioccolato», «Bruno ha il pesce») → «lo esclude già»:
-       chi l'ha scelta quell'indizio non l'ha letto;
-     · un indizio che, dimenticato, la rende possibile → «hai lasciato
-       indietro»: è chi si è fermato a metà, l'errore vero di questa
-       domanda. Si preferiscono i «non», i legami e i «subito dopo» ai
-       fatti che fanno da àncora («Bruno ha il pesce», «Sara è la
-       prima»), perché quelli sono gli ultimi che si dimenticano — ed è
-       così che nell'esempio dei due colori il falso è di chi non ha
-       collegato il gatto al blu; e se senza
-       di lui la sistemazione è una sola, si dice anche cosa non torna
-       («con questa risposta Anna avrebbe il cane»);
-     · niente di tutto questo (capita di rado: la escludono due indizi
-       insieme) → la frase generica, riempi la tabella.
-
-   Due falsi della stessa domanda citano, se possono, due indizi
-   diversi: «hai lasciato indietro la stessa cosa» detto due volte
-   insegna meno di due errori distinti. */
+// i falsi: un indizio che esclude da solo → «lo esclude già»; uno dimenticato che la rende possibile → «hai lasciato
+// indietro» (preferendo i «non» e i legami alle àncore, gli ultimi che si dimenticano); altrimenti la frase generica.
+// due falsi della stessa domanda citano indizi diversi quando possono
 const DIRETTE = ['ha', 'non', 'ne', 'testa', 'fondo', 'nonTesta', 'nonFondo', 'mezzo']
 const ANCORE = ['ha', 'testa', 'fondo', 'mezzo']
 const ancora = i => ANCORE.includes(i.forma)
@@ -706,8 +558,7 @@ function falsiCalcolati(tutte, indizi, dom, giusta, fila = false) {
       .sort((a, b) => (ancora(a.i) - ancora(b.i)) || (b.chiaro - a.chiaro))
     if (mezzi.length) {
       const { i, resta } = nuovo(mezzi)
-      /* cosa non torna si dice quando è una cosa sola: una
-         sistemazione, o tante che rompono l'indizio allo stesso modo */
+      // cosa non torna si dice quando è una cosa sola: una sistemazione, o tante che rompono l'indizio allo stesso modo
       const come = new Set(resta.map(s => i.smentita(s)))
       return cita(o, i, come.size === 1
         ? `hai lasciato indietro «${senzaPunto(i.testo)}»: con questa risposta ${[...come][0]}`
@@ -724,10 +575,7 @@ function falsiCalcolati(tutte, indizi, dom, giusta, fila = false) {
   })
 }
 
-/* ── la costruzione, una sola per tutte e tre le famiglie ──
-   `cfg` dice quante persone, quante cose (0 = la fila), quali forme di
-   indizio, quanti indizi, e cosa il gruppo finale deve contenere
-   (`vuole`: almeno una forma per ogni elenco). */
+// cfg dice quante persone, quante cose (0 = la fila), quali forme di indizio, quanti indizi, e vuole (almeno una forma per elenco)
 export function costruisciTabella(sorte, cfg) {
   const fila = cfg.cose === 0
   const tutte = sistemazioni(cfg.persone, fila ? 1 : cfg.cose)
@@ -735,9 +583,7 @@ export function costruisciTabella(sorte, cfg) {
     const persone = sorte.alcuni(PERSONE, cfg.persone)
     const temi = []
     if (!fila) for (const t of sorte.alcuni(TEMI, cfg.cose)) {
-      /* due cose che condividono una voce (la banana è un gusto e una
-         merenda) non si mettono insieme: «chi prende la banana porta la
-         banana» non è un indizio, è un inciampo */
+      // due cose che condividono una voce non si mettono insieme: sarebbe un inciampo, non un indizio
       const gia = temi.flatMap(x => x.voci.map(v => v.nudo))
       const libere = t.voci.filter(v => !gia.includes(v.nudo))
       if (libere.length < cfg.persone) break
@@ -745,14 +591,12 @@ export function costruisciTabella(sorte, cfg) {
     }
     if (!fila && temi.length < cfg.cose) continue
     const soluzione = fila ? [sorte.mescola([...Array(cfg.persone).keys()])] : temi.map(() => sorte.mescola([...Array(cfg.persone).keys()]))
-    /* in fila si dice «non in quest'ordine», quindi l'ordine in cui si
-       elencano i nomi non può essere quello vero */
+    // in fila si dice «non in quest'ordine»: l'ordine elencato non può essere quello vero
     if (fila && soluzione[0].every((pos, p) => pos === p)) continue
 
     const vere = sorte.mescola((fila ? indiziDellaFila(persone, cfg.forme, sorte) : indiziDelleCose(persone, temi, cfg.forme))
       .filter(i => i.vale(soluzione)))
-    /* 2. si aggiunge finché la sistemazione non è una sola: un indizio
-       che non toglie niente a quello che c'è già non entra nemmeno */
+    // si aggiunge finché la sistemazione non è una sola: un indizio che non toglie niente non entra
     let scelti = []
     let restano = tutte
     for (const i of vere) {
@@ -761,7 +605,7 @@ export function costruisciTabella(sorte, cfg) {
       if (dopo.length < restano.length) { scelti.push(i); restano = dopo }
     }
     if (restano.length !== 1) continue
-    /* 3. si toglie quello che non serve, in ordine sparso */
+    // si toglie quello che non serve, in ordine sparso
     for (const i of sorte.mescola(scelti)) {
       const senza = scelti.filter(x => x !== i)
       if (reggono(tutte, senza).length === 1) scelti = senza
@@ -769,14 +613,11 @@ export function costruisciTabella(sorte, cfg) {
     if (scelti.length < cfg.indizi[0] || scelti.length > cfg.indizi[1]) continue
     if (!cfg.vuole.every(gruppo => scelti.some(i => gruppo.includes(i.forma)))) continue
     if (cfg.vieta && scelti.some(i => cfg.vieta.includes(i.forma))) continue
-    /* lo stesso «non» detto due volte («Né Michele né Elena hanno il
-       trenino. Elena non ha né i dadi né il trenino.») non è sbagliato,
-       ma si legge come un indizio ripetuto per distrazione */
+    // lo stesso «non» detto due volte non è sbagliato, ma si legge come un indizio ripetuto per distrazione
     const negati = scelti.flatMap(i => i.nega || [])
     if (new Set(negati).size < negati.length) continue
 
-    /* 4. la domanda: tutti gli indizi servono a lei, e la risposta non
-       è scritta in nessuno */
+    // la domanda: tutti gli indizi servono a lei, e la risposta non è scritta in nessuno
     const domande = (fila ? domandeDellaFila(persone) : domandeDelleCose(persone, temi)).filter(d => {
       const giusta = d.chiedi(soluzione)
       if (scritta(d, giusta, scelti)) return false
@@ -806,25 +647,18 @@ export function costruisciTabella(sorte, cfg) {
 }
 const apre = T => T.apre || T.verboPl
 
-/* le cose in ballo, come si leggono nella prima riga: i disegni in fila,
-   le parole con la virgola */
+// le cose in ballo nella prima riga: i disegni in fila, le parole con la virgola
 function elenco(T, accanto = false) {
   if (T.voci[0].em) return T.voci.map(v => v.em).join(' ')
   return accanto ? T.voci.map(v => v.nudo).join(', ') : unisci(T.voci.map(v => v.nudo))
 }
 
-/* La rete di sicurezza, con la forma dell'esempio che fa da metro:
-   tre persone, «B ha y», «A non ha z», e si chiede di C. Tutti e due gli
-   indizi servono (senza il primo ad A resta la scelta fra x e y, senza
-   il secondo a C resta la scelta fra x e z), e la risposta non è
-   scritta da nessuna parte. Per la fila è «B non è il primo», «C è
-   subito dopo A», e si chiede l'ultimo — l'esempio della fila. Non è la
-   domanda più ricca, ma non fallisce mai: il test la forza. */
+// la rete di sicurezza, con la forma dell'esempio (tre persone, due indizi che servono tutti e due): non fallisce mai
 function ripiegoTabella(sorte, cfg) {
   const persone = sorte.alcuni(PERSONE, 3)
   const tutte = sistemazioni(3, 1)
   if (cfg.cose === 0) {
-    /* A, C, B in fila: A primo, C secondo, B ultimo */
+    // A, C, B in fila: A primo, C secondo, B ultimo
     const soluzione = [[0, 2, 1]]
     const vere = indiziDellaFila(persone, ['nonTesta', 'dopo'], sorte)
     const indizi = [vere.find(i => i.forma === 'nonTesta' && i.testo.startsWith(persone[1].nome + ' ')),
@@ -840,7 +674,7 @@ function ripiegoTabella(sorte, cfg) {
   }
   const T = { ...sorte.uno(TEMI.filter(t => t.voci[0].em)) }
   T.voci = sorte.alcuni(T.voci, 3)
-  /* A ha x, B ha y, C ha z */
+  // A ha x, B ha y, C ha z
   const soluzione = [[0, 1, 2]]
   const vere = indiziDelleCose(persone, [T], ['ha', 'non'])
   const indizi = [vere.find(i => i.forma === 'ha' && i.testo === `${persone[1].nome} ${T.verbo} ${T.voci[1].ogg}.`),
@@ -855,11 +689,7 @@ function ripiegoTabella(sorte, cfg) {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   DALLA COSTRUZIONE ALLA DOMANDA — testo per un bambino, scene per il
-   pittore, e il `perche` di ogni risposta sbagliata: sempre il primo
-   indizio che quella candidata non rispetta, mai «sbagliato» e basta.
-   ═══════════════════════════════════════════════════════════════════ */
+// dalla costruzione alla domanda: il perche di ogni falso è sempre il primo indizio che non rispetta, mai «sbagliato» e basta
 const maiuscola = s => s.charAt(0).toUpperCase() + s.slice(1)
 const frasi = (...righe) => righe.join('\n')
 
@@ -894,11 +724,7 @@ function domandaCose({ candidati, bersaglio, indizi }, sorte) {
   })
 }
 
-/* La tabella degli indizi diventa una domanda: le premesse una per
-   riga (come in `logica`: separate si vedono per quello che sono), i
-   falsi già calcolati, e un `aiuto` che dice il metodo con le parole di
-   quella domanda — nomi e animali, i posti della fila, le due tabelline
-   collegate. */
+// le premesse una per riga (come in logica), i falsi già calcolati, l'aiuto col metodo nelle parole di quella domanda
 function domandaTabella(t, cfg, sorte) {
   const falsi = t.falsi.map(({ dimentica, ...r }) => r)   // eslint-disable-line no-unused-vars
   return domanda({
@@ -924,36 +750,14 @@ function aiutoTabella(t, cfg) {
     : `fai la tabellina, nomi e ${cose}: una ✓ per ogni «${T.verbo}», una ✗ per ogni «non»; dove in una riga resta un posto solo, è quello`
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   LA SCALA DEI GRADI — cresce su tre assi: quante figure sul tavolo,
-   quanti indizi, e se un indizio può dire di no. Le due famiglie si
-   alternano come sequenze alterna «cosa viene dopo» e «chi non
-   c'entra»: gradi dispari le figure, pari l'indovinello, sempre più
-   difficili tutti e due. `quantiProva` è la stessa idea del
-   prototipo — quante taglie di gruppo provare, in ordine — e
-   `filtro` sceglie fra i gruppi minimi trovati quelli che vogliono
-   solo indizi che dicono di sì (i gradi facili) o almeno uno che dice
-   di no (l'ultimo grado).
-
-   LA TABELLA NON HA GRADI SUOI, e non è una dimenticanza. Un grado è
-   una classe, e una classe in più a dieci anni — dove il catalogo è
-   magro — si prende da sola un tiro su dieci: messa in gradi propri, la
-   tabella faceva degli indizi quasi un quarto di tutte le domande di un
-   bambino di quell'età (misurato: 23% contro il 6% di prima), e anche
-   un grado solo in più, in cima, lo raddoppiava. Invece entra nei gradi
-   che ci sono, accanto a chi sta alla stessa altezza, e divide lo
-   spazio con loro: «ha e non ha» e «solo non» accanto all'indovinello
-   dell'ottavo anno, la fila e le due cose collegate accanto alle figure
-   col tavolo pieno. Quanto pesano gli indizi a ogni età resta quello
-   di prima; cambia cosa c'è dentro. Ogni tipologia della tabella
-   dichiara il suo `livello`, perché in un grado condiviso non sta per
-   forza all'altezza del vicino.
-
-   La fila sa stare anche in quattro (`persone: 4`, tre o quattro
-   indizi, sotto le 45 parole): non è in nessun grado perché non c'è un
-   posto dove metterla senza aggiungere una classe, e vale la regola di
-   sopra.
-   ═══════════════════════════════════════════════════════════════════ */
+/* La scala dei gradi cresce su tre assi (figure sul tavolo, indizi, se un
+   indizio può dire di no); le due famiglie si alternano come in sequenze.
+   La tabella non ha gradi suoi apposta: un grado in più a dieci anni,
+   dove il catalogo è magro, prendeva da solo un quarto delle domande
+   (misurato: 23% contro il 6%). Entra invece nei gradi che ci sono,
+   accanto a chi sta alla stessa altezza; ogni tipologia dichiara il suo
+   `livello` perché in un grado condiviso non sta per forza alla stessa
+   altezza del vicino. */
 const SCALETTA = [
   'chi sono io: poche figure sul tavolo, indizi che dicono solo di sì',
   'indovinello: cose di ogni giorno, un paio di indizi facili',
@@ -962,8 +766,7 @@ const SCALETTA = [
   'chi sono io: il tavolo pieno, con un indizio in negativo; la fila; due tabelle collegate',
 ]
 
-/* la cfg è esportata perché il test la riusa: è la stessa che gioca il
-   bambino, non una copia scritta a mano che può disallinearsi */
+// esportata perché il test la riusa: è la stessa che gioca il bambino, non una copia che può disallinearsi
 export const CONFIG_GRADI = [
   { famiglia: 'forme', cfg: { nCandidati: [3, 4], poolAssi: ['colore', 'forma'], nAssi: 2, quantiProva: [2, 1], filtro: 'positivi' } },
   { famiglia: 'cose', cfg: { nCandidati: [3, 4], vicini: [1, 2], soloConcreti: true, quantiProva: [2, 1] } },
@@ -972,13 +775,7 @@ export const CONFIG_GRADI = [
   { famiglia: 'forme', cfg: { nCandidati: [5, 6], poolAssi: ['colore', 'forma', 'quante', 'grande'], nAssi: 3, quantiProva: [3, 2], filtro: 'negazione' } },
 ]
 
-/* La tabella, tipologia per tipologia e grado per grado: `persone` e
-   `cose` (0 = la fila), le `forme` di indizio che si possono pescare,
-   quanti `indizi` alla fine, `vuole` (per ogni elenco, almeno un
-   indizio di una di quelle forme: è quello che rende le forme diverse,
-   «ha» *e* «non ha»), `vieta`, e il tetto di `parole` di tutta la
-   domanda — è il pedaggio di una porta in un gioco d'azione, non un
-   compito in classe. Esportata per lo stesso motivo di sopra. */
+// tetto di `parole` per l'intera domanda: è il pedaggio di una porta in un gioco d'azione, non un compito in classe
 export const CONFIG_TABELLA = {
   'indizi:tabella': {
     4: { persone: 3, cose: 1, forme: ['ha', 'non'], indizi: [2, 3], vuole: [['ha'], ['non']], parole: 45 },
@@ -994,19 +791,14 @@ export const CONFIG_TABELLA = {
     5: { persone: 3, cose: 2, forme: ['ha', 'non', 'lega', 'slega'], indizi: [3, 4], vuole: [['lega', 'slega']], parole: 45 },
   },
 }
-/* la cfg di una tabella con la sua chiave dentro, che è quella che la
-   domanda emette; `null` se il tipo non è della tabella */
+// null se il tipo non è della tabella
 export function cfgTabella(tipo, grado) {
   const perGrado = CONFIG_TABELLA[tipo]
   if (!perGrado) return null
   return { chiave: tipo, ...(perGrado[grado] || Object.values(perGrado)[0]) }
 }
 
-/* I livelli della tabella stanno sulla tipologia, perché il grado lo
-   divide con altri: «ha e non ha» a otto anni (50), senza nessun sì a
-   nove (63), la fila a dieci (75), le due cose collegate a undici (88).
-   Le due di undici anni stanno nel grado dei dieci: a nove anni la
-   finestra si ferma a 87,5, e le cose collegate restano fuori da sole. */
+// i livelli stanno sulla tipologia (non sul grado, condiviso con altri): 50/63/75/88, le due di 11 anni nel grado dei 10
 const TIPI = [
   { chiave: 'indizi:forme', nome: 'Chi sono io: le figure', sa: 'deduzione', gradi: { 1: 1, 3: 1, 5: 0.34 } },
   { chiave: 'indizi:cose', nome: 'Indovinello: le cose del mondo', sa: 'deduzione', gradi: { 2: 1, 4: 0.4 } },
@@ -1025,13 +817,7 @@ class Indizi extends Modulo {
       materia: 'logica',
       chiaro: 'restringere il campo con quello che è vero e quello che non lo è, finché non resta una sola risposta',
       scaletta: SCALETTA,
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [12, 25, 38, 56, 75],
+      livelli: [12, 25, 38, 56, 75], // scala 0-100 comune a tutte le materie: vedi docs/apprendimento/quiz-livelli.md
       tipi: TIPI,
       pittori: PITTORI_FIGURE,
     })
