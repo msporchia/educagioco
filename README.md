@@ -1,5 +1,7 @@
 # Educagioco
 
+> **In English.** Educational games for Italian primary-school kids (ages four to ten), written for my own children and played by them every day: more than a dozen games on one spaced-repetition engine, from times tables and column arithmetic to a three-step path into programming. It is a single HTML file that works offline, with no account and no backend. Everything below is in Italian; the clips give the idea, and it is [playable here](https://msporchia.github.io/educagioco/).
+
 ### 🎲 **[Si gioca qui → msporchia.github.io/educagioco](https://msporchia.github.io/educagioco/)**
 
 Giochi educativi per bambini **dai quattro ai dieci anni**: tabelline e
