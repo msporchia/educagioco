@@ -1,0 +1,102 @@
+# Come è disegnato: scenari, muri a tre quarti, sprite
+
+Lo scenario generato da un prompt, la regola del muro alto una cella, i fogli
+degli sprite e come si posano armi e armature. Le regole di disegno comuni a
+tutti i giochi (tela, telecamera, atlante, tessere, scala nel contesto) stanno
+in [../core/grafica.md](../core/grafica.md).
+
+Il sotterraneo è **il calco da guardare** per un mondo a sprite:
+`src/giochi/sotterraneo/scena/tela.js`, che la forma dei muri la prende da
+`scena/muri.js`.
+
+## Lo scenario
+
+- **Il vestito intero di un piano è uno scenario**: pavimenti, tetto, facce,
+  bordi, porte, scala, fontana, mercante e le cose per terra stanno in una
+  voce di `SCENARI` (`dati/tessere.js`), e **tutte le voci hanno le stesse
+  chiavi**: si cambia vestito a una discesa senza toccare la tela. Aggiungere
+  un pezzo è una riga lì, mai un `if` nel disegno. Oggi ce n'è uno, **le
+  cantine** (`sotterraneo_2.png`), e lo indossano tutte le discese.
+- **Uno scenario nasce da un prompt** diviso in due:
+  `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md` ha una
+  **parte fissa** (griglia, regola del muro, luce, divieti) e un **blocco
+  SCENARIO** da cambiare per la cripta, la fornace, la grotta di cristallo.
+  Si chiede prima **la scena** intera, poi **il foglio** dei pezzi allegando
+  la scena buona: un foglio chiesto da solo esce coi pezzi belli uno per uno
+  e che non stanno insieme. Gli schemi da allegare li disegna
+  `python3 strumenti/sprite/scenario.py`, che legge la pianta dalla scheda e
+  ne controlla la regola del muro.
+- **Quello che non c'è nella tavola non si disegna**: `guastiDelleTessere`
+  chiede all'atlante ogni nome di ogni scenario, e un pezzo mancante è rosso
+  nei test invece che un muro invisibile.
+- **La pelle di una porta ripete il segno** che le sta sopra, col disegno.
+
+## Il muro è alto una cella
+
+La regola sta in `scena/muri.js` (niente canvas, niente nomi di sprite: gira
+in Node) e si prova in `unita/muri-sotterraneo`.
+
+- **La roccia si vede da sopra**: è il tetto dei muri, con un bordo di pietra
+  chiara dove confina col calpestabile.
+- **Dove sotto una cella di roccia si cammina, di quella cella si vede la
+  faccia** del muro, alta una cella col suo coronamento (`faccia`, `tetto`,
+  `genere`). I muri di lato e in basso hanno solo il bordo.
+- **A tre quarti la faccia di un muro non è il bordo di una zona**: è una
+  cella intera che si vede da una parte sola. Così anche il muro spesso una
+  cella fra due corridoi ha la sua forma. Provato il set con la parete alta
+  due celle: fra due corridoi il coronamento non stava, si dipingeva di
+  mattoni tutta la roccia e non si capiva dove finisse una parete.
+- **I bordi sono strisce dentro la cella di tetto** (nord se sopra si
+  cammina; ovest ed est se di lato si cammina o c'è una faccia; a sud mai),
+  **gli angoli sono blocchi** decisi per quarto di cella guardando tre vicini
+  — lato orizzontale, verticale, diagonale — come i «quarti» di RPG Maker:
+  quattro casi per quarto invece di quarantasette figure.
+- **I pavimenti sono quadrati di 4×4 celle** da cui ogni cella prende la sua
+  parte, uno per le stanze e uno per i corridoi (è la prima cosa che dice
+  dove si è); sotto la fontana c'è un **medaglione** di mosaico di 3×3. Il
+  tetto ha la trama solo vicino a dove si cammina: ripetuta dappertutto
+  faceva carta da parati.
+
+## I fogli e l'atlante
+
+- **Il sotterraneo è il primo gioco che usa i due motori comuni**:
+  `src/grafica/atlante.js` (posare uno sprite: il piede, lo specchio, i bordi
+  netti) e `src/grafica/tessere.js` (quale pezzo va in una cella).
+
+- **Da dove vengono**: il posto dallo scenario generato; mostri e cose da
+  raccogliere da fogli generati della stessa famiglia (`mostri-1.png`,
+  `mostri-2.png`, `bottino-e-arredo.png`, `scudi.png`,
+  `armature-e-vesti.png`); eroi, forzieri e monete ancora da **0x72, «16×16
+  DungeonTileset II», CC-0**.
+- **L'atlante** lo monta `strumenti/sprite/atlante.py sotterraneo` (formato
+  in `strumenti/sprite/FORMATO.md`): un PNG di circa 150 KB per 232 pezzi,
+  incorporato in base64, così il build resta un file solo. Si ritaglia **solo
+  quello che qualcuno nomina** (di `armature-e-vesti.png` sette figure su
+  centotrentasei), e il foglietto scrive cosa è rimasto nel foglio. Lo stesso
+  modulo lo legge il banco `strumenti/banco/mondo.html` (`npm run mondo`): se
+  i due si scollassero, il banco non direbbe più niente sul gioco.
+- **Il foglio degli oggetti arriva senza alfa e a tripla grandezza**: il fondo
+  nero lo toglie `atlante.py` allagando dai bordi (`"fondo": "auto"`), la
+  scala è dichiarata `3`, misurata per proporzione sulle armi 0x72 (una spada
+  ridotta sta fra 13 e 37 px; 1254 / 3 = 418 esatto). Una scala sbagliata non
+  dà errori: dà un'arma alta il doppio dell'eroe.
+
+## Armi, armature e arredo in scena
+
+- **L'arma si posa accanto al pugno, staccata, e respira col passo**: dodici
+  armi vanno bene per quattro personaggi senza disegnarne quarantotto. Chi ne
+  porta due le porta una per lato; un'arma a due mani sta in mezzo, davanti al
+  corpo.
+- **Le armature vivono solo come icona** — nello zaino, per terra, al banco.
+  0x72 non ha un fotogramma in cui il personaggio indossi o impugni qualcosa,
+  e la figura di ogni classe è fissa: è il patto del set. I sei scudi vengono
+  da `scudi.png`, le vesti da `armature-e-vesti.png`. Un buco così (le
+  armature restate emoji) va guardato *prima* di innamorarsi di un set.
+- **Di emoji in scena restano solo i segni sopra le porte.** La fontana e il
+  mercante vengono dallo scenario, e la fonte bevuta resta al suo posto,
+  asciutta.
+- **L'arredo** (barili, casse, ossa, uno stendardo, un braciere che fa luce)
+  non si tocca, non blocca e non vale niente: serve a far sembrare che qui
+  sotto ci abbia vissuto qualcuno. Un sotterraneo di stanze vuote si legge
+  come un diagramma. È disegnato più spento delle cose toccabili, che hanno un
+  filo di luce dorato.
