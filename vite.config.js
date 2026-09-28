@@ -5,12 +5,8 @@ import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { salvaFoglietto } from './strumenti/banco/salva-foglietto.js'
 
-// Numero di versione: serve a rispondere alla domanda "il telefono ha preso
-// l'aggiornamento?" senza doverlo indovinare.
-//
-// Due forme della stessa cosa. L'etichetta e' quella che si legge sullo
-// schermo e deve bastare un'occhiata per dire "e' quella delle 19:30, non
-// quella delle 17:00"; l'id e' compatto e serve ai confronti automatici.
+// Numero di versione: vedi docs/core/pubblicare.md. L'etichetta si legge a
+// schermo, l'id (compatto) serve ai confronti automatici.
 const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
               'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre']
 
@@ -28,8 +24,7 @@ function versione () {
   } catch { /* fuori da git: basta la data */ }
 
   return {
-    // il "+" segnala un build fatto con modifiche non committate, cioe' non
-    // ricostruibile da git: e' roba di lavoro, non un rilascio
+    // «+»: build con modifiche non committate, non ricostruibile da git
     id: commit ? `${id}-${commit}${sporco ? '+' : ''}` : id,
     etichetta,
     commit: commit ? `${commit}${sporco ? '+' : ''}` : '',
@@ -38,30 +33,17 @@ function versione () {
 
 const VERSIONE = versione()
 
-// L'INDIRIZZO PUBBLICO, e non `location.href`.
-//
-// Serve al tasto «condividi» e all'anteprima del link nelle chat. Va
-// scritto qui perche' non si puo' ricavare da dove gira: in casa il gioco
-// arriva dal server di casa (un nome `.lan` che per un'altra famiglia non
-// esiste) e dal file unico arriva da `file://`. Condividere quello che si
-// ha sotto il naso vuol dire mandare un link che non si apre.
+// L'indirizzo pubblico e non `location.href`: da dove gira non si ricava
+// (server di casa o file://), e condividere quello sotto il naso manderebbe
+// un link che non si apre altrove (vedi docs/genitori/guide.md).
 const INDIRIZZO = process.env.INDIRIZZO || 'https://msporchia.github.io/educagioco/'
 
-// Accanto all'HTML esce anche versione.json: e' il modo di chiedere al NAS
-// cosa sta servendo davvero (`curl <indirizzo>/versione.json`) senza aprire il
-// browser, e lo usa pubblica.sh per confermare che il deploy sia arrivato.
-//
-// Lo legge anche il gioco (`src/aggiornamento.js`): e' da qui che sa se il
-// sito ha una versione piu' nuova di quella a schermo, e `peso` — i byte
-// della pagina — e' quello che gli fa dire «3,1 di 7,6 MB» mentre scarica.
-// Il sito manda la pagina compressa, e la lunghezza che dichiara e' quella
-// compressa: contando i byte veri non si arriverebbe mai in fondo.
+// versione.json: vedi docs/core/aggiornamento.md. `peso` è la lunghezza
+// compressa che il sito dichiara, non i byte veri.
 function scriviVersione () {
   return {
     name: 'scrivi-versione',
-    // dopo `viteSingleFile`, che e' `post` anche lui e sta prima nella fila:
-    // solo a quel punto la pagina ha dentro tutto, e pesa quello che pesa
-    enforce: 'post',
+    enforce: 'post',   // dopo viteSingleFile: solo allora la pagina pesa quello che pesa
     generateBundle (_opzioni, bundle) {
       const sorgente = bundle['index.html']?.source
       const peso = typeof sorgente === 'string' ? Buffer.byteLength(sorgente) : (sorgente?.byteLength || 0)
@@ -74,78 +56,10 @@ function scriviVersione () {
   }
 }
 
-// IL SERVICE WORKER, scritto dal build perché deve sapere la versione.
-//
-// Serve solo quando i giochi arrivano da un sito. Su GitHub Pages non si
-// possono mandare header propri — niente `Cache-Control: no-cache` come
-// faceva nginx sul NAS — quindi la pagina si prende una cache di dieci
-// minuti decisa da altri, e senza un service worker un telefono può
-// restare su una versione vecchia senza che nessuno se ne accorga.
-//
-// La regola è la più semplice che funziona: **la versione sta nel nome
-// della cache**. Un build nuovo ha un nome nuovo, quindi la vecchia non
-// viene riusata per sbaglio; all'attivazione le altre si cancellano
-// tutte. Niente confronti di data, niente file da tenere allineati.
-//
-// In lettura è cache-first, che è ciò che rende l'app giocabile senza
-// rete. **E nella cache non entra niente di quello che passa**: quella
-// di una versione la scrive l'installazione, una volta sola, e dopo
-// soltanto «cerca aggiornamenti», che la pagina la controlla prima di
-// mettercela. Il nuovo arriva con un service worker nuovo — il build
-// cambia sempre `sw.js`, perché dentro c'è la versione — che si fa la
-// sua cache e butta quella di prima.
-//
-// Fino al 23 settembre 2026 ci provava anche il `fetch`: un `put` dopo
-// ogni pagina presa dalla rete, e un rinfresco del resto «per la volta
-// dopo». Il `clone()` girava dentro un `.then`, cioè dopo che
-// `respondWith` si era già preso il corpo, e il `put` falliva in
-// silenzio: riusciva solo dove la risposta non la voleva nessuno — la
-// pagina arrivata oltre la pazienza, manifest e icone. Nessuno se n'è
-// accorto, perché la copia dell'installazione bastava, e si sono tolti
-// invece di ripararli: riparati avrebbero riscritto sette megabyte e
-// mezzo a ogni apertura, fatto una copia per ogni indirizzo con una coda
-// diversa, e messo la pagina presa dalla rete — che nessuno controlla, e
-// per dieci minuti può arrivare dalla cache del browser — sopra quella
-// che il tasto aveva appena controllato.
-//
-// CON UN'ECCEZIONE: LA PAGINA. Per il documento si prova prima la rete,
-// con pochi secondi di pazienza e la cache pronta dietro. Cache-first
-// anche lì vuol dire che una copia arrivata storta — o una versione
-// pubblicata con un guasto — si ripresenta identica ad ogni avvio, e da
-// dentro il telefono non c'è ricarica che la smuova: l'unica strada
-// resta il menu del browser, che è esattamente dove un bambino non
-// arriva. Offline non cambia niente: `fetch` fallisce subito e risponde
-// la cache, come prima.
-//
-// E L'INSTALLAZIONE, CHE È DOVE LA VERSIONE VECCHIA SI NASCONDEVA.
-// Tre difetti, che da fuori sembravano uno solo — «a volte l'aggiornamento
-// non arriva»:
-//
-// 1. la pagina si chiedeva **passando dalla cache del browser**, e GitHub
-//    Pages dice a tutti di tenersela dieci minuti. Chi aveva aperto il
-//    gioco poco prima di una pubblicazione si ritrovava un service worker
-//    nuovo con dentro la pagina vecchia: e siccome il service worker era
-//    nuovo, nessuno diceva più niente. Adesso la si chiede `no-cache`, che
-//    vuol dire «chiedi al sito se è cambiata»: se non lo è costa una
-//    domanda, e la pagina arriva dalla cache del browser senza riscaricarla;
-// 2. si scaricava **due volte**, come `./` e come `./index.html`: quindici
-//    megabyte invece di sette e mezzo, su una rete lenta il doppio del
-//    tempo prima di poter dire «c'è una versione nuova». La seconda non
-//    serviva: a chi apre `index.html` risponde già `./` (vedi sotto);
-// 3. se la pagina non arrivava si installava lo stesso — «un'icona mancante
-//    non è un buon motivo per restare senza offline», ed era vero per le
-//    icone. Per la pagina no: il service worker nuovo all'attivazione butta
-//    la cache vecchia, e al suo posto non aveva niente. Il primo avvio senza
-//    rete dava la pagina d'errore del browser. Adesso senza pagina
-//    l'installazione fallisce, resta quello di prima con la sua copia
-//    intera, e il browser riprova al controllo dopo.
-//
-// E due cose per «cerca aggiornamenti» (`src/aggiornamento.js`), che la
-// pagina nuova la scarica da sé, contando i megabyte: le sue richieste
-// `no-store` vanno dritte al sito, perché a chi chiede così la cache non
-// risponde, e la pagina che mette nella cache della versione nuova, già
-// controllata, qui non si riscarica. Il nome di quella cache lo sa anche
-// lei (`CASSETTO`).
+// Il service worker: scritto dal build perché deve sapere la versione. La
+// versione sta nel nome della cache (niente confronti di data). Cache-first
+// per tutto tranne la pagina (prima la rete, con poca pazienza): vedi
+// docs/core/aggiornamento.md.
 function scriviServiceWorker () {
   return {
     name: 'scrivi-service-worker',
@@ -232,34 +146,25 @@ self.addEventListener('fetch', e => {
   }
 }
 
-// L'icona della scheda finisce dentro la pagina, come tutto il resto: il
-// build è un file solo, e un `href` a un file accanto non troverebbe
-// niente aprendolo con doppio click. La sorgente resta `public/icona.svg`
-// — una copia sola del disegno — e qui si trasforma nel `data:` da
-// incollare. Niente base64: un SVG è testo, e così resta leggibile.
+// L'icona finisce dentro la pagina come tutto il resto (file unico): da
+// public/icona.svg a un data: URI. Niente base64, un SVG è testo e resta leggibile.
 function iconaInline () {
   return {
     name: 'icona-inline',
     transformIndexHtml (html) {
       const svg = readFileSync('public/icona.svg', 'utf8')
-        .replace(/<!--[\s\S]*?-->/g, '')     // i commenti servono a chi legge il file, non alla scheda
+        .replace(/<!--[\s\S]*?-->/g, '')
         .replace(/\s+/g, ' ')
         .trim()
       const dato = 'data:image/svg+xml,' + encodeURIComponent(svg)
-      // %INDIRIZZO% serve ai meta dell'anteprima: WhatsApp e i messaggi
-      // vogliono un URL assoluto per l'immagine — un `data:` non lo
-      // scaricano, e un percorso relativo non sanno da dove prenderlo.
+      // %INDIRIZZO%: un data: URI non lo scaricano i meta dell'anteprima, vogliono un URL assoluto
       return html.replace('%ICONA%', dato).replaceAll('%INDIRIZZO%', INDIRIZZO)
     },
   }
 }
 
-// Build in un unico .html: niente server, niente file accanto.
-// Lo script inline resta un modulo ES, che da file:// viene eseguito
-// regolarmente (a differenza di un modulo caricato da src esterno).
 export default defineConfig({
-  // `salvaFoglietto` è `apply: 'serve'`: sta qui per il banco dei mondi
-  // (`npm run mondo`) e nel build non ci arriva. Vedi il file per i paletti.
+  // salvaFoglietto è `apply: 'serve'`: solo per il banco (npm run mondo), non nel build
   plugins: [vue(), viteSingleFile(), scriviVersione(), iconaInline(), scriviServiceWorker(),
             salvaFoglietto()],
   define: { __VERSIONE__: JSON.stringify(VERSIONE), __INDIRIZZO__: JSON.stringify(INDIRIZZO) },
