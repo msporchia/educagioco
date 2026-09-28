@@ -1,12 +1,8 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA MAPPA DELLA CAMPAGNA
-
-   Calcata su `codice-segreto/viste/Mappa.vue`, con le carte più grandi:
-   qui legge un bambino di quattro anni, cioè spesso non legge affatto —
-   l'icona del mondo e il lucchetto devono bastare da soli a capire dove
-   si può andare. Nessun gioco libero: la campagna è tutto il gioco.
-   ═══════════════════════════════════════════════════════════════════ */
+// La mappa della campagna, calcata su codice-segreto/viste/Mappa.vue con
+// le carte più grandi: qui legge un bambino di quattro anni, cioè spesso
+// non legge affatto — icona e lucchetto devono bastare. Nessun gioco
+// libero: la campagna è tutto il gioco.
 defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
 })

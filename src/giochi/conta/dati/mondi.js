@@ -1,37 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I MONDI — dove si conta
-
-   Un mondo è un vestito: un posto (il prato, il pollaio...) più le
-   creature e le cose che ci si trovano dentro. Il motore non cambia mai:
-   cambia chi conta il bambino. È lo stesso principio dei temi del
-   Codice Segreto — nove vestiti diversi per lo stesso gioco — applicato
-   qui a dodici tappe.
-
-   Una specie è `{ chiave, emoji, uno, tanti, genere, categoria }`:
-
-     chiave      l'id, univoco in tutto il gioco (non solo nel mondo)
-     emoji       il disegno, grande e toccabile
-     uno, tanti  come si legge («una capra», «tre capre») — per la
-                 striscia scritta piccola sotto la consegna iconica
-     genere      'm' | 'f', e serve a scrivere in italiano: senza,
-                 «quante» resta incollato addosso a tutti e viene fuori
-                 «Quante alberi ci sono?». La frase la legge un genitore
-                 ad alta voce, e domani sarà la voce incisa: una
-                 concordanza sbagliata in un gioco che insegna si sente.
-     categoria   'animali' | 'cose'
-
-   La categoria è quello che rende possibili le tappe sugli insiemi
-   (`quantiDi`, `insieme`, `inclusione`): «quanti animali in tutto»
-   ha senso solo se nella scena c'è anche qualcosa che animale non è.
-   Un mondo che deve ospitare quelle tappe vuole **almeno due specie
-   animali e due specie di cose** — lo controlla `guastiDellaCampagna`,
-   che sa quale verbo chiede cosa (vedi `verbi.js`).
-
-   Il mercato non ha nessuna specie animale apposta: è il mondo per le
-   tappe che non parlano di animali (`piuUno`, `unisci`), e tenerlo
-   senza bestie è quello che lo rende un vestito diverso dagli altri
-   invece di un prato con la frutta.
-   ═══════════════════════════════════════════════════════════════════ */
+// Un mondo è un posto più le creature e le cose che ci si trovano: il
+// motore non cambia, cambia chi conta il bambino. Vedi docs/conta/regole.md.
+//
+// Una specie è { chiave, emoji, uno, tanti, genere, categoria }: `genere`
+// serve alla concordanza italiana («quante capre», non «quanti capre»);
+// `categoria` ('animali'|'cose') rende possibili le tappe sugli insiemi.
 
 export const MONDI = {
   prato: {
@@ -62,10 +34,9 @@ export const MONDI = {
       { chiave: 'rana',      emoji: '🐸', uno: 'rana',       tanti: 'rane',        genere: 'f', categoria: 'animali' },
       { chiave: 'pesceStagno', emoji: '🐟', uno: 'pesce',    tanti: 'pesci',       genere: 'm', categoria: 'animali' },
       { chiave: 'tartaruga', emoji: '🐢', uno: 'tartaruga',  tanti: 'tartarughe',  genere: 'f', categoria: 'animali' },
-      /* la quarta bestia dello stagno non è un vezzo: è lì che sta la
-         tappa dell'inclusione, e un mondo con tre sole specie animali
-         lascia al motore una scelta sola quando deve cambiare — vedi
-         `sceltaSpecie` in `motore/scena.js` */
+      // quarta bestia apposta: qui vive la tappa dell'inclusione, e tre
+      // sole specie animali lascerebbero al motore una scelta sola quando
+      // deve cambiare (vedi `sceltaSpecie` in `motore/scena.js`)
       { chiave: 'cigno',     emoji: '🦢', uno: 'cigno',      tanti: 'cigni',       genere: 'm', categoria: 'animali' },
       { chiave: 'foglia',    emoji: '🍃', uno: 'foglia',     tanti: 'foglie',      genere: 'f', categoria: 'cose' },
       { chiave: 'sassoStagno', emoji: '🪨', uno: 'sasso',    tanti: 'sassi',       genere: 'm', categoria: 'cose' },
@@ -94,8 +65,8 @@ export const MONDI = {
       { chiave: 'sassoMare', emoji: '🪨', uno: 'sasso',     tanti: 'sassi',     genere: 'm', categoria: 'cose' },
     ],
   },
-  /* nessuna bestia apposta: è il mondo delle tappe che non parlano di
-     animali, e tenerlo senza ne fa un vestito davvero diverso */
+  // nessuna bestia apposta: è il mondo delle tappe che non parlano di
+  // animali, e tenerlo senza ne fa un vestito davvero diverso
   mercato: {
     chiave: 'mercato', nome: 'il mercato', icona: '🧺', accento: '#dc2626',
     specie: [
@@ -113,19 +84,14 @@ export const CHIAVI_MONDI = Object.keys(MONDI)
 
 export const mondo = chiave => MONDI[chiave] || MONDI[CHIAVI_MONDI[0]]
 
-/* La faccia con cui un mondo si presenta sulla carta della tappa: la sua
-   prima bestia, non il paesaggio. Chi sceglie la tappa non sa leggere, e
-   guarda solo quella: «🌾» sopra «Il primo gregge» gli promette del grano
-   dove invece ci sono pecore. Il mercato, che bestie non ne ha apposta,
-   resta col suo cesto. */
+// La faccia con cui un mondo si presenta sulla carta della tappa: la sua
+// prima bestia, non il paesaggio — chi sceglie la tappa spesso non legge.
 export const facciaDi = chiave => {
   const m = MONDI[chiave]
   if (!m) return '❓'
   return (m.specie.find(s => s.categoria === 'animali') || {}).emoji || m.icona
 }
 
-/* Le specie di una categoria dentro un mondo: quello che il generatore
-   pesca per costruire una scena. */
 export const specieDi = (m, categoria) =>
   m.specie.filter(s => categoria === 'qualunque' || s.categoria === categoria)
 
@@ -148,8 +114,8 @@ export function guastiDeiMondi(mondi = MONDI) {
         guasti.push(`${doveS}: categoria "${s.categoria}" non è "animali" né "cose"`)
       if (visteQui.has(s.chiave)) guasti.push(`${doveS}: chiave ripetuta dentro il mondo`)
       visteQui.add(s.chiave)
-      /* la chiave di una specie è un id del gioco, come `en:dog` in
-         inglese: non è pensata per ripetersi fra un mondo e l'altro */
+      // una chiave di specie è un id del gioco, come `en:dog`: non è
+      // pensata per ripetersi fra un mondo e l'altro
       if (chiaviSpecie.has(s.chiave))
         guasti.push(`${doveS}: già usata in "${chiaviSpecie.get(s.chiave)}"`)
       else chiaviSpecie.set(s.chiave, chiave)

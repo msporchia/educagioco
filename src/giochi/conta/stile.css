@@ -1,22 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   CONTA GLI ANIMALI — L'ASPETTO
-
-   Un file solo, ogni classe comincia per `ct-` (come `.cs-` nel Codice
-   Segreto: due fogli con lo stesso nome si rompono a distanza di mesi).
-
-   La regola che conta più delle altre: **niente sotto i 56px**. È
-   scritta una volta sola, qui (`--ct-gettone`), e ogni bottone che un
-   bambino di quattro anni deve toccare la eredita — un dito è grosso, e
-   un bersaglio piccolo non è "difficile", è ingiocabile.
-
-   Le posizioni dei gettoni arrivano dal motore in percentuale
-   (`gettone.x`, `gettone.y`): qui si leggono e basta, con
-   `transform: translate(-50%,-50%)` a centrarle sul punto invece che
-   sull'angolo. La stessa proprietà `left`/`top` che si anima quando
-   «gli stessi» si sparpagliano è quella che il motore ha già calcolato
-   senza sapere che sarebbe stata animata — non sa nemmeno che esiste
-   un CSS.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Ogni classe comincia per `ct-` (come `.cs-` nel Codice Segreto: due
+   fogli con lo stesso nome si rompono a distanza di mesi). Niente sotto
+   i 56px (`--ct-gettone`): un dito è grosso, un bersaglio piccolo per un
+   bambino di quattro anni non è "difficile", è ingiocabile. */
 
 .ct {
   --ct-accento: #65a30d;
@@ -36,10 +21,6 @@
 .ct .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
                        "Twemoji Mozilla", sans-serif; line-height: 1 }
 
-/* ═══════════ la mappa della campagna ═══════════
-   Carte più grandi di quelle del Codice Segreto apposta: qui legge un
-   bambino di quattro anni, cioè spesso non legge affatto — l'icona e il
-   lucchetto devono bastare da soli. */
 .ct-mappa { flex: 1; min-height: 0; overflow-y: auto; display: flex;
             flex-direction: column; gap: 16px; padding: 2px 2px 20px }
 .ct-scalino > h3 { display: flex; align-items: center; gap: 8px;
@@ -65,12 +46,10 @@
 .ct-tappa.ct-chiusa { opacity: .5; border-left-color: #d7e0c8; box-shadow: none }
 .ct-tappa.ct-adesso { box-shadow: 0 4px 0 var(--ct-accento) }
 
-/* La scena è una colonna alta quanto lo schermo: senza questa riga il
-   `flex: 1` del campo non ha su cosa crescere, e il prato resta un
-   francobollo in cima con mezza pagina bianca sotto. */
+/* senza questa riga il `flex: 1` del campo non ha su cosa crescere, e il
+   prato resta un francobollo in cima con mezza pagina bianca sotto */
 .ct-scena { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px }
 
-/* ═══════════ la consegna: sempre icone, testo piccolo sotto ═══════════ */
 .ct-consegna { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center;
                gap: 4px; padding: 8px 10px; background: var(--ct-carta);
                border-radius: 18px; box-shadow: 0 2px 0 var(--ct-bordo) }
@@ -78,7 +57,7 @@
             font-size: 34px }
 .ct-frase { font-size: 12.5px; color: var(--ct-tenue); text-align: center; margin: 0 }
 
-/* ═══════════ il campo: uno o due recinti ═══════════ */
+/* il campo: uno o due recinti */
 .ct-campo { flex: 1 1 auto; min-height: 230px; position: relative;
             background: linear-gradient(180deg, #f3f9ec, #eaf3e0);
             border-radius: 20px; box-shadow: inset 0 0 0 2px var(--ct-bordo);
@@ -120,7 +99,7 @@
              animation: ct-pop .28s backwards }
 @keyframes ct-pop { 0% { transform: scale(0) } 65% { transform: scale(1.35) } 100% { transform: scale(1) } }
 
-/* ═══════════ le risposte ═══════════ */
+/* le risposte */
 .ct-risposte { flex: 0 0 auto; display: flex; flex-wrap: wrap; justify-content: center;
                gap: 10px; padding: 4px 0 2px }
 
@@ -148,7 +127,7 @@
 
 button:disabled { opacity: .55 }
 
-/* ═══════════ il cartello di fine tappa ═══════════ */
+/* il cartello di fine tappa */
 .ct-velo { position: absolute; inset: 0; z-index: 5; padding: 18px;
            background: rgba(44,51,32,.68);
            display: flex; align-items: center; justify-content: center; animation: ct-entra .25s }
