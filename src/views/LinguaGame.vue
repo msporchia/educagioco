@@ -1,23 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL GIOCO DI LINGUA — uno solo, a campagna, per English e Spagnolo.
-
-   Prima l'inglese era due giochi: le parole con le figure e i verbi in
-   ascolto. Stesso identico meccanismo — un bersaglio, alcune risposte,
-   si tocca quella giusta — con due vestiti diversi e due mucchi di
-   contenuti separati, e nessuno dei due andava da nessuna parte.
-
-   Qui il meccanismo resta uno, e sopra ci girano tutti i TIPI DI DOMANDA
-   di `data/domande.js`: guarda la figura, ascolta, traduci, gira la
-   traduzione, scegli fra due frasi che sembrano uguali. Quale tipo tocca
-   a un elemento lo decide la sua forza nel motore, non la tappa: vedi
-   lassù il perché.
-
-   Delle lingue questo file sa solo quello che gli passa `data/lingue.js`:
-   la campagna, dove segnare i progressi, il nome da scrivere. Inglese e
-   spagnolo sono due strade separate — chiavi diverse, tappe diverse,
-   progressi diversi — che girano sullo stesso gioco.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il gioco di lingua, uno solo a campagna per English e Spagnolo — vedi
+// docs/lingue/README.md e vocaboli.md. Di ogni lingua sa solo quello che
+// gli passa `data/lingue.js`: campagna, dove segnare i progressi, nome.
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { state, item, answer, level, addCoins, mastered, segna,
          linguaProgresso, linguaCompleta, tappaAperta } from '../store/profile.js'
@@ -33,9 +17,7 @@ import Barra from '../components/Barra.vue'
 const props = defineProps({ lingua: { type: String, default: 'en' } })
 const emit = defineEmits(['vai'])
 
-/* Tutto quello che cambia da una lingua all'altra sta qui dentro. Non è
-   reattivo di proposito: la lingua la sceglie chi apre il gioco dalla
-   home e non cambia mentre si gioca — sarebbe un altro gioco. */
+// non reattivo di proposito: la lingua non cambia mentre si gioca
 const L = linguaDi(props.lingua)
 const CAMPAGNA = L.CAMPAGNA
 
@@ -47,14 +29,10 @@ const progresso = computed(() => linguaProgresso(L.campo))
 const tappaIdx = ref(0)            // -1 = gioco libero
 const tappa = computed(() => L.tappaDi(tappaIdx.value))
 const campagna = computed(() => tappaIdx.value >= 0)
-/* Il lucchetto guarda anche l'età: le tappe che questo bambino ha già
-   passato nascono aperte, quelle troppo avanti restano chiuse
-   (`data/portata.js`, il campo `portata` su ogni tappa). */
+// il lucchetto guarda anche l'età (data/portata.js, campo `portata`)
 const sbloccata = i => apertaQui(L.tappaDi(i), i, progresso.value.tappa)
 
-/* le chiavi nuove della tappa, in un Set: serve a ogni risposta per
-   sapere se contava come "mirata", e `includes` su settanta chiavi a
-   ogni turno si sentirebbe */
+// in un Set: `includes` su settanta chiavi a ogni turno si sentirebbe
 const nuoveDiTappa = computed(() => new Set(tappa.value.nuove))
 const vecchieDiTappa = computed(() =>
   tappa.value.chiavi.filter(k => !nuoveDiTappa.value.has(k)))
@@ -63,10 +41,7 @@ const vecchieDiTappa = computed(() =>
    risposta alla domanda "che cosa mi manca qui?" */
 const saputeDi = t => t.nuove.filter(k => mastered(k)).length
 
-/* ---------- ordine di introduzione ----------
-   Prima le parole che somigliano all'italiano: sono regali, e cominciare
-   con un regalo tiene dentro. Le frasi vanno in fondo comunque, perché
-   la loro tappa arriva dopo. */
+// ---------- ordine di introduzione (vedi docs/lingue/vocaboli.md) ----------
 const cacheOrdine = new Map()
 function ordine(k) {
   if (cacheOrdine.has(k)) return cacheOrdine.get(k)
@@ -98,9 +73,8 @@ let occupato = false, timerId = null
 
 const picker = createPicker({ getItem: k => item(k), useTime: false, pausaDopo: 3 })
 
-/* Il pool: per due terzi la roba nuova della tappa, il resto ripasso.
-   È la stessa scelta dei pianeti — se il nuovo uscisse una volta su
-   dieci, la tappa diventerebbe un'attesa invece di una lezione. */
+// il pool: soprattutto roba nuova della tappa, il resto ripasso — se il
+// nuovo uscisse raro, la tappa diventerebbe un'attesa e non una lezione
 function attive(chiavi, quante) {
   if (!chiavi.length) return []
   const now = Date.now()
@@ -120,10 +94,8 @@ function pool() {
   return p.length ? p : tappa.value.chiavi.slice(0, SRS.setSize)
 }
 
-/* Se una chiave non sa produrre una domanda — una voce sparita, o un tipo
-   che non le si applica — si riprova con un'altra invece di restare lì:
-   un turno che non arriva mai è un gioco morto, e da fuori sembrerebbe
-   che il tocco non funzioni. */
+// se una chiave non sa produrre una domanda si riprova con un'altra:
+// un turno che non arriva mai sembrerebbe un tocco che non funziona
 function nuovoTurno() {
   const P = pool()
   for (let tentativi = 0; tentativi < 12; tentativi++) {
@@ -147,9 +119,8 @@ function nuovoTurno() {
   occupato = false                                  // meglio ripetere che bloccarsi
 }
 
-/* Dopo la risposta la parola NON si ripete da sola: il bambino ha appena
-   premuto, sentirsi parlare addosso confonde. Se vuole risentirla, tocca
-   la carta. */
+// dopo la risposta la parola non si ripete da sola: sentirsi parlare
+// addosso appena premuto confonde; per risentirla si tocca la carta
 function rispondi(o) {
   if (occupato || !o || !turno.value) return
   occupato = true
@@ -206,8 +177,7 @@ function inizia(i = tappaIdx.value) {
 function tappaSuperata() {
   clearTimeout(timerId)
   const ultima = tappaIdx.value === CAMPAGNA.length - 1
-  // il premio è della prima volta: rigiocare una tappa già vinta lascia
-  // una moneta di cortesia, non uno stipendio
+  // il premio è della prima volta: rigiocare una tappa già vinta lascia solo una moneta di cortesia
   const giaFatta = progresso.value.tappa > tappaIdx.value
   linguaCompleta(L.campo, tappaIdx.value, CAMPAGNA.length)
   premio.value = giaFatta ? 1 : level.value * (2 + Math.floor(tappaIdx.value / 2))
@@ -225,10 +195,8 @@ function allaMappa() {
   tappaIdx.value = Math.min(CAMPAGNA.length - 1, progresso.value.tappa)
 }
 
-/* ---------- trascinamento: solo quando le risposte sono figure ----------
-   Toccare funziona sempre; trascinare la parola sulla figura è il gesto
-   che al gioco delle parole piaceva, e sulle emoji ha senso perché il
-   bersaglio è grande. Sui bottoni di testo no: sarebbe scomodo. */
+// ---------- trascinamento: solo quando le risposte sono figure ----------
+// toccare funziona sempre; trascinare ha senso solo su bersagli grandi
 const cartaEl = ref(null)
 const grigliaEl = ref(null)
 const trascina = ref(null)
@@ -433,9 +401,7 @@ onUnmounted(() => { clearTimeout(timerId); zittisci() })
 /* ---------- gioco ---------- */
 .bersaglio { text-align:center; color:var(--tenue); font-weight:800; font-size:13px; padding:2px 0;
              display:flex; gap:6px; justify-content:center }
-/* la domanda sta in basso, appoggiata alle risposte: su un telefono
-   tenuto in mano il pollice arriva lì, e occhio e dito non devono fare
-   avanti e indietro per mezzo schermo */
+/* la domanda sta in basso: è dove arriva il pollice, vicino alle risposte */
 .palco { flex:1; min-height:0; display:flex; flex-direction:column; align-items:center;
          justify-content:flex-end; gap:8px; padding:8px 12px 14px }
 .etichetta { font-size:13px; font-weight:800; letter-spacing:1px; text-transform:uppercase;

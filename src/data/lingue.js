@@ -1,18 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE LINGUE — tutto quello che distingue English da Spagnolo, in un
-   posto solo.
-
-   Il gioco è uno: `views/LinguaGame.vue`. Cambiano i contenuti, le
-   chiavi con cui il motore di apprendimento se li ricorda, e il nome
-   scritto sulla carta. Aggiungere una terza lingua domani vuol dire
-   aggiungere i tre file di dati, la campagna e una voce qui — non
-   toccare il gioco.
-
-   `campo` è dove il profilo tiene a che tappa si è arrivati (`eng` per
-   l'inglese, `esp` per lo spagnolo), `contatori` sono i nomi dei
-   totali che salgono a ogni risposta giusta. Sono nomi storici: i
-   profili salvati sui telefoni dei bambini li usano già così.
-   ═══════════════════════════════════════════════════════════════════ */
+// Tutto quello che distingue English da Spagnolo: il gioco è uno solo
+// (views/LinguaGame.vue). Vedi docs/lingue/README.md e vocaboli.md.
+// `contatori` sono nomi storici: i profili salvati li usano già così.
 import { PREFISSI } from './lessico.js'
 import { CAMPAGNA as TAPPE_EN, LIBERO as LIBERO_EN, tappaEn } from './campagna-inglese.js'
 import { CAMPAGNA as TAPPE_ES, LIBERO as LIBERO_ES, tappaEs } from './campagna-spagnolo.js'

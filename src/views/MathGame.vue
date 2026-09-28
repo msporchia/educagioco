@@ -1,31 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   TABELLINE ASTEROIDI — a campagna, come il castello.
-
-   Il menu non chiede più "quali tabelline vuoi allenare?": è una domanda
-   a cui un bambino non sa rispondere, e la risposta sbagliata rovina la
-   partita (spuntando tutto ogni tabellina esce un decimo delle volte).
-   Al suo posto c'è una fila di tappe: chi porta una tabellina nuova
-   (i pianeti), chi un trucco da fare a mente (le stazioni), tutte nella
-   stessa scaletta ordinata per difficoltà vera — l'ordine, e il perché
-   di ogni giunzione, stanno in `data/asteroidi.js`. Ognuna si porta
-   dietro le precedenti come ripasso e si supera con un bersaglio di
-   partita. Nemmeno il volo libero chiede più cosa allenare: lì sceglie
-   il motore, quello che si ricorda meno.
-
-   QUALE calcolo esce non si decide qui dentro: sta in
-   `store/tabelline.js`, che gira anche senza schermo e si prova giocando
-   una tappa intera in un test di unità. Qui restano gli asteroidi.
-
-   NELLA FILA C'È UN SEGNO SOLO: ⭐ = superata. Ce n'erano due — la ✔
-   del bersaglio preso e la ⭐ della tabellina che il motore dà per
-   imparata — e leggere una lista di tappe voleva dire sapere quali due
-   domande diverse stessero rispondendo due simboli vicini. Quello che
-   il motore sa non sparisce: sta in «Cosa so», nei due conti in cima
-   alla mappa, nell'albo e nei traguardi, che sono i posti dove quella
-   domanda è **la** domanda. Nella fila la domanda è un'altra, ed è una
-   sola: dove sono arrivato.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Asteroidi: tabelline e calcolo a mente in un'unica fila di tappe, vedi
+   docs/asteroidi/scaletta.md. Quale calcolo esce lo decide
+   `store/tabelline.js`, non questo file: qui restano gli asteroidi. */
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { state, item, answer, level, addCoins,
          segna, segnaBest, mateProgresso, tabellineIntere,
@@ -65,13 +41,9 @@ const emit = defineEmits(['vai'])
 
 const CFG = {
   vite: 3, viteMax: 5, cadutaSec: 10,
-  // il sasso con la risposta giusta è in scena entro tre secondi: oltre,
-  // il bambino non è lento, sta aspettando (vedi `ondata`)
-  rispostaEntro: 3,
+  rispostaEntro: 3,                // in scena entro 3s (vedi `ondata`): oltre, è attesa non lentezza
   base: 3, maxAsteroidi: 6, ogniLivelli: 2, salitaOgni: 5,
-  // quanto scende il tempo di caduta a ogni livello, e i due pavimenti:
-  // il perché dei numeri sta in `difficolta`
-  ritmoPasso: 0.05, ritmoTappa: 0.7, ritmoVolo: 0.5,
+  ritmoPasso: 0.05, ritmoTappa: 0.7, ritmoVolo: 0.5,   // vedi `difficolta`, e docs/asteroidi/volo.md
   puntiOk: 10, puntiNo: -5, bossOgni: 8, bossLento: 1.45, difficileLento: 1.25,
   msNonRisposto: 9000,             // il sasso è caduto: non è lentezza, è un buco
   bossPunti: 40, serieVita: 10, perMoneta: 10,
@@ -82,117 +54,57 @@ const daChiave = fattoriDi
 
 const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine | tavola
 
-/* ═══════════ la pausa ═══════════
-   Tutta in `giochi/pausa.js`, come nella corsa: il ⏸ della barra, il
-   telefono posato, il foglio del `?`, il cartello di un traguardo. Di
-   suo il volo aggiunge una condizione sola — **fuori dalla partita non
-   scende niente** — ed è quella che copre in un colpo i quattro veli di
-   casa (mappa, tappa superata, trionfo, fine partita) e la tavola di
-   «Cosa so». Sono tutti `fase`, che è un `ref`: la regola di `anche` —
-   solo roba reattiva — è rispettata perché qui lo stato del volo sta
-   tutto in questo file, non in un motore dentro uno `shallowRef`.
-
-   Il `?` c'era da sempre e non fermava niente: gli asteroidi
-   continuavano a scendere mentre si leggeva come si gioca, cioè la
-   spiegazione costava le vite della partita in corso. Adesso la barra
-   lo dice (`@aiuto`) e il cielo aspetta. */
+/* La pausa: vedi docs/core/interfaccia.md. Qui `anche` è una condizione
+   sola — fuori dalla partita (mappa, veli, tavola di «Cosa so») — che
+   copre tutti i veli in un colpo perché sono tutti letti da `fase`. */
 const { inPausa, fermo, metti, togli, aiuto } = usaPausa({
   anche: () => fase.value !== 'gioco',
 })
 
-/* ═══════════ una fila, un contatore, una tappa aperta ═══════════
-   I pianeti chiedono tabelline, le stazioni calcolo a mente: sono due
-   facce della stessa moneta e stanno in una fila sola, ordinata per
-   difficoltà vera. L'ordine — e il perché di ogni giunzione — sta in
-   `data/asteroidi.js`; qui si sa solo che una voce ha un `tipo` (che
-   decide da quale magazzino escono le domande) e un `pos`, il suo posto
-   nella fila. Il resto del gioco — asteroidi, vite, boss, monete — non
-   sa nemmeno quello.
-
-   IL CONTATORE È UNO SOLO (`mate.fila`): una voce è superata se la fila
-   l'ha lasciata dietro, e quella aperta è **una**, la prossima. Prima
-   erano due contatori, uno per mestiere, e la fila era una sola solo a
-   vedersi: in mezzo alla scaletta c'erano due tappe aperte insieme, la 6
-   e la 8 con la 7 chiusa in mezzo. Chi arriva da lì viene migrato in
-   `store/profile.js` (`sincronizzaAsteroidi`), e non perde niente.
-
-   E NON C'È NESSUN «MODO» DA SCEGLIERE. Qui dentro stavano un `modo`
-   scritto da chi lanciava la partita e due porte d'ingresso
-   (`iniziaPianeta`, `iniziaStazione`): il tipo di una tappa è un fatto
-   della fila, e farlo dichiarare a chi tocca voleva dire tenere in
-   piedi la domanda «tabelline o conti a mente?» dentro il codice che
-   serviva a toglierla. */
+/* La fila unica di pianeti e stazioni: vedi docs/asteroidi/scaletta.md.
+   Una voce ha un `tipo` (da quale magazzino escono le domande) e un
+   `pos`; il resto del gioco non sa nemmeno quello. Il contatore è uno
+   solo (`mate.fila`); `mate.tappa`/`calc.tappa` restano nel profilo solo
+   come specchio (`sincronizzaAsteroidi` in `store/profile.js`). */
 const progresso = computed(() => mateProgresso())
 const contatore = computed(() => filaDi(progresso.value))
 const fila = SCALETTA
 const dove = computed(() => posizioneOra(contatore.value))
-/* i capitoli, ognuno con le sue voci: su un telefono ventidue righe di
-   fila sono un muro, tre o quattro per volta sono una lista */
+// i capitoli: su un telefono ventidue righe di fila sono un muro
 const capitoli = computed(() => CAPITOLI
   .map((c, i) => ({ ...c, voci: fila.filter(v => v.cap === i) }))
   .filter(c => c.voci.length))
 
-/* dove si sta giocando: il posto nella fila, oppure -1 per il volo
-   infinito. Nel volo il mestiere non è un fatto della fila — non c'è
-   nessuna voce da cui leggerlo — ed è **della domanda**: tabelline e
-   calcolo a mente si alternano, e `magazzino` dice da dove viene quella
-   in corso (lo sceglie `nuovaDomanda`, con l'alternanza di
-   `store/volo.js`). Prima erano due voli, uno per mestiere, con un
-   `voloMente` scritto da chi premeva il tasto: cioè le due metà che la
-   fila esiste per fondere, rimesse in piedi in fondo alla mappa. */
+// il posto nella fila, o -1 per il volo infinito: lì il mestiere non è
+// un fatto della fila ma della domanda, e lo dice `magazzino` (store/volo.js)
 const posizione = ref(0)
 const magazzino = ref('tabelline')
 const voce = computed(() => (posizione.value >= 0 ? fila[posizione.value] : null))
 const campagna = computed(() => posizione.value >= 0)
-/* quale dei due mestieri si sta giocando. Non è un modo scelto da
-   qualcuno: è il tipo della voce su cui si è, cioè un fatto della fila —
-   e nel volo, il magazzino della domanda in corso. */
+// quale dei due mestieri: il tipo della voce, o nel volo il magazzino
 const mente = computed(() => (voce.value ? voce.value.tipo === 'mente'
                                          : magazzino.value === 'mente'))
 const tappa = computed(() => (voce.value ? voce.value.T : VOLO))
 /* la sfida senza fine del manifesto: misura, racconto e record del volo */
 const SFIDA_VOLO = sfidaDi(GIOCHI.find(g => g.chiave === 'mate').senzaFine)
-/* Cosa si stava facendo, sul velo della pausa. Chi riapre il telefono
-   dopo mezz'ora non sta guardando il gioco: sta guardando il telefono
-   che si accende, e il posto nella fila è quello che gli fa tornare in
-   mente cosa sta per riprendere. */
+// cosa dire sul velo della pausa: il posto nella fila
 const dovEravamo = computed(() => voce.value
   ? `${voce.value.T.emoji} tappa ${voce.value.n} di ${fila.length}`
   : `${VOLO.emoji} ${VOLO.nome}`)
-/* Aperta col lucchetto di sempre — la prossima sì, quelle dopo no — ma
-   letto **sulla fila**, che è una: `v.pos` è il posto della voce,
-   `dove` quante ne ha superate.
-
-   Il lucchetto guarda anche l'età: quello che il bambino ha già passato
-   nasce aperto (a nove anni non si ricomincia dalla tabellina del 2 per
-   arrivare al 7), e quello che gli sta troppo avanti resta chiuso. Il
-   conto sta in `data/portata-giochi.js`, che legge la `portata`
-   dichiarata su ogni tappa in `data/tabelline.js` e `data/calcolo.js`. */
+// il lucchetto legge `dove` (posizione in fila) e l'età (`data/portata-giochi.js`)
 const apertaVoce = v => apertaQui(v.T, v.pos, dove.value)
 const fattaVoce = v => superata(v, contatore.value)
-/* cosa viene dopo NELLA FILA: dopo un pianeta può toccare a una
-   stazione, ed è tutto il senso di averle mescolate */
+// cosa viene dopo nella fila: dopo un pianeta può toccare a una stazione
 const dopo = computed(() => voce.value
   ? dopoDi(voce.value, contatore.value, apertaVoce) : null)
-/* Le stelle non stanno nel profilo: si rileggono dal motore ogni volta,
-   così una tabellina lasciata lì per un mese perde la sua e si rivede.
-   Non sono più un segno nella fila — lì il segno è uno solo, «superata»
-   — ma restano i due conti in cima alla mappa e la sostanza di «Cosa
-   so». `state.profile.items` è reattivo, quindi si aggiornano da sole
-   appena una risposta cambia le carte in tavola. */
+// le stelle si rileggono dal motore ogni volta (vedi docs/asteroidi/scaletta.md)
 const intere = computed(() => new Set(tabellineIntere()))
 const stelleMente = computed(() =>
   STAZIONI.filter(S => stellaStazione(S, state.profile.items)).length)
-/* La tappa dopo DELLO STESSO MESTIERE, che è da dove viene il boss: un
-   assaggio si fa con la roba che quella tappa lì è venuta a insegnare,
-   quindi a un pianeta serve il pianeta dopo e a una stazione la stazione
-   dopo. È contenuto, non fila — e per questo la regola legge `voce.i`,
-   l'indice dentro la campagna di provenienza, e non `pos`.
-   Sta in `data/asteroidi.js` perché è pura e perché era il posto dove
-   sbagliarla non si vedeva: **è `null` anche quando una tappa dopo c'è
-   ma non porta niente di nuovo** (il Sole, «La prova»), e i tre casi in
-   cui non c'è niente da assaggiare stanno scritti là, accanto
-   all'incidente che sono costati. */
+/* la tappa dopo dello STESSO mestiere, da cui viene il boss: è contenuto
+   e non fila, quindi legge `voce.i` (indice nella campagna) e non `pos`.
+   Torna `null` anche quando la tappa dopo c'è ma non insegna niente di
+   nuovo (il Sole, «La prova»): vedi `daAssaggiare` in `data/asteroidi.js`. */
 const prossima = computed(() => daAssaggiare(voce.value))
 
 /* la riga sotto il nome: cosa porta questa tappa */
@@ -205,27 +117,13 @@ const cheChiede = v => (v.tipo === 'mente'
 const tabelle = computed(() =>
   !mente.value && campagna.value ? tappa.value.tabelle : VOLO.tabelle)
 
-/* `serieMax` è il filotto più lungo della partita: `serie` si azzera a
-   ogni sbaglio, e il record del volo vuole sapere com'era fatta la
-   partita, non com'è finita */
-/* `partenza` è il livello da cui la partita comincia: 1 in una tappa, e
-   nel volo qualche gradino sotto il record (`partenzaDalRecord`), così
-   chi ieri è arrivato a 12 non rifà cinque livelli di 2×3. Il livello a
-   schermo parte da lì e sale da lì — non «resta 1 e sposta solo la
-   mira», perché sassi e velocità (`difficolta`) leggono il livello, e
-   la partita di chi riparte da 8 deve essere quella di livello 8 in
-   tutto, non una di livello 1 con le domande di 8. */
+// `serieMax`: il filotto più lungo, per il record del volo
+// `partenza`: il livello di inizio, sotto il record nel volo (vedi docs/asteroidi/volo.md)
 const hud = reactive({ vite: 3, punti: 0, giuste: 0, mirate: 0, sbagliate: 0, livello: 1,
                        partenza: 1, serie: 0, serieMax: 0 })
 const cartello = reactive({ testo: '', colore: '', n: 0 })
-/* `primato` è cosa dire del record del volo (`segnaPrimato`): nullo in
-   una tappa, dove il record non c'è */
 const finale = reactive({ punti: 0, giuste: 0, mirate: 0, livello: 1, record: false, ripasso: [],
-                          primato: null })
-/* il record del volo, letto **prima di entrare**: sul tasto della mappa,
-   col racconto di quella partita («1240 punti · livello 7 · 43 centri»).
-   È un `computed` su un profilo reattivo, quindi si aggiorna da sé a
-   fine partita, quando la mappa torna. */
+                          primato: null })       // `primato`: null in una tappa, il record non c'è
 const recordVolo = computed(() => recordInParole(primatoDi('mate'), SFIDA_VOLO))
 const premio = ref(0)
 
@@ -235,25 +133,16 @@ let asteroidi = [], particelle = [], anelli = [], stelle = [], frammenti = [], r
 let scossa = 0, lampo = 0, pulsa = 0, raf = 0, ultimo = 0
 let fondale = null, fumo = 0
 
-/* ═══════════ L'ASTRONAVE ═══════════
-   È l'unico personaggio del gioco, e fa due mestieri: spara quando si
-   colpisce, e **dice a che punto è la partita senza numeri**. Le vite
-   non stanno più nella fascia in alto: i cuoricini erano nel posto dove
-   nessuno guarda — chi gioca guarda il cielo, e la nave sta appena
-   sotto, dentro lo stesso sguardo. Adesso una vita in meno è un'ala
-   **strappata** — bordo frastagliato, i pezzi che le galleggiano
-   accanto, le scintille e la spia d'allarme che lampeggia — e l'ultima è
-   una nave in fiamme che fuma.
-   Il campo `danno` è tutto quello che il disegno sa dello stato — la
-   traduzione da vite a danno la fa `sincronizzaNave()`, qui sotto, e i
-   tre gradini in cui si legge stanno in `grafica/spazio.js`. */
+/* L'astronave dice a che punto è la partita senza numeri (vedi
+   docs/asteroidi/volo.md). `danno` è tutto quello che il disegno sa
+   dello stato; lo traduce `sincronizzaNave()` qui sotto, i tre gradini
+   stanno in `grafica/spazio.js`. */
 const nave = reactive({
   x: 0, y: 0, r: 34, lv: 1, danno: 0, mira: -Math.PI / 2, spinta: 0,
   gelo: 0, botta: 0, riparata: 0, t: 0,
 })
-/* a una vita sola la nave è un rottame che lampeggia, a tre è nuova:
-   `CFG.vite` è il riferimento, così le vite di scorta guadagnate col
-   filotto si vedono come una nave sana e non come una nave super */
+// `CFG.vite` è il riferimento: le vite di scorta guadagnate col filotto
+// si vedono come una nave sana, non come una nave super
 const stazzaDi = livello => (livello >= 6 ? 3 : livello >= 3 ? 2 : 1)
 function sincronizzaNave() {
   nave.danno = Math.max(0, Math.min(1, 1 - (hud.vite - 1) / Math.max(1, CFG.vite - 1)))
@@ -264,41 +153,25 @@ function sincronizzaNave() {
     suono.compra()
   } else nave.lv = lv
 }
-/* La domanda in corso, una sola per tutte e due le campagne: `testo` è
-   quello che si legge in fondo allo schermo, `chiave` quello che il
-   motore segna, `peso` quanto costa in testa — da lì il gioco decide
-   quanti asteroidi mandare giù e quanto lentamente farli cadere. */
+// la domanda in corso: `peso` è quanto costa in testa, e decide quanti
+// asteroidi mandare giù e quanto lentamente farli cadere
 let domanda = reactive({ a: 7, b: 8, ris: 56, difficile: false, peso: 1,
                          testo: '7 × 8 = ?', chiave: chiaveCalcolo(7, 8) })
 let esercizio = null               // l'istanza del calcolo a mente, per i falsi
 let chieste = 0, apertoIl = 0
-/* QUANDO IL CRONOMETRO PARTE DAVVERO. Non dal momento della domanda: da
-   quando il sasso con la risposta giusta è in scena e si può toccare.
-   Contando dalla domanda, il tempo che il bambino passa ad aspettare che
-   il sasso arrivi finisce nell'SRS come esitazione — e l'SRS di quel
-   numero si serve per decidere cosa è difficile e quando ripassarlo. Si
-   stava programmando il ripasso sulla velocità di caduta dei sassi. */
-let prontaIl = 0
+let prontaIl = 0   // quando il cronometro parte davvero: vedi docs/asteroidi/volo.md
 /* la domanda in corso è un assaggio della tappa che viene dopo: si gioca
    come le altre, ma non si segna sul motore (vedi `chiaveDalDopo`) */
 let anticipo = false
-/* LA MAREA, per il picker. I pool se la calcolano da soli
-   (`store/marea.js`), ma il picker pesa i candidati per conto suo e
-   deve pesarli con la stessa lentezza, se no il pool dice «2×3 non
-   serve» e il picker lo pesca lo stesso perché lo vede arrugginito. La
-   frontiera si legge una volta per domanda, dentro il pool, e il picker
-   la riusa: ricalcolarla a ogni candidato sarebbe una scansione di
-   tutte le caselle per ogni sasso in cielo. */
+// la marea (`store/marea.js`): il picker deve pesare con la stessa
+// lentezza del pool, se no pesca comunque quello che il pool ha scartato
 let marea = () => 1
 /* tre risposte giuste di fila sullo stesso calcolo bastano per oggi: va a
    riposo e al suo posto entra qualcosa che ancora non si sa */
 const picker = createPicker({ getItem: k => item(k), useTime: true, pausaDopo: 3,
                               lentezza: k => marea(k) })
 
-/* ---------- cosa può uscire ----------
-   Il lavoro vero lo fanno `store/tabelline.js` e `store/calcolo.js`: qui
-   si dice solo quanto grande deve essere l'insieme in lavorazione, e chi
-   è andato a riposo lascia il posto libero. */
+// cosa può uscire: la scelta vera è in `store/tabelline.js`/`store/calcolo.js`
 const chiaviPossibili = () => chiaviDelle(tabelle.value)
 
 function poolAttivo() {
@@ -314,11 +187,8 @@ function poolMente() {
   return poolDi(tappa.value, state.profile.items, ora, 12 + picker.riposati)
 }
 
-/* IL VOLO INFINITO: il pool lo dà la mira del livello (`store/volo.js`),
-   dal magazzino scelto per questa domanda, e il picker ci pesca dentro
-   con la marea di quel mestiere — così quello che sta sotto la frontiera
-   del bambino esce di rado anche qui. `riposati` allarga il pool come
-   nelle tappe: chi è andato a riposo lascia il posto libero. */
+// il volo infinito: il pool lo dà la mira del livello (`store/volo.js`),
+// vedi docs/asteroidi/volo.md
 function poolVolo() {
   const ora = Date.now()
   const quanti = 8 + picker.riposati
@@ -330,43 +200,10 @@ function poolVolo() {
   return poolVoloTabelline(hud.livello, quanti)
 }
 
-/* ---------- difficoltà ----------
-   `peso` è quanto costa il calcolo: 3+4 può arrivare fra sei bersagli,
-   497+298 ne vuole tre e il doppio del tempo. Senza questo la scelta
-   multipla su un calcolo lungo diventa una lotteria: il tempo finisce
-   prima che il conto sia fatto.
-
-   SALENDO DI LIVELLO IL CIELO SI INFITTISCE, E ACCELERA FINO A UN
-   PAVIMENTO. Un sasso in più è una risposta sbagliata in più da scartare
-   — cioè esattamente il lavoro che vogliamo far fare — e quello resta
-   il modo principale di salire. La velocità è stata tolta una volta,
-   perché ogni livello tagliava un decimo del tempo di caduta senza
-   fondo: a livello sei la domanda non era più «quanto fa 7×8» ma
-   «quanto sei svelto di mano», e un bambino che il conto lo sa in
-   cinque secondi veniva segnato come uno che non lo sa. Ma senza nessuna
-   accelerazione il livello era solo un numero: chi sa tutto fino
-   all'8 giocava il pianeta del 9 allo stesso ritmo di chi comincia, e
-   il volo libero non finiva mai — e un gioco che non finisce mai non
-   dà niente da battere.
-
-   Il livello si guadagna con le risposte giuste di QUESTA partita (uno
-   ogni cinque, `salitaOgni`): chi è a livello sette ha appena
-   azzeccato trenta calcoli, e sta dimostrando che il ritmo lo regge. Il
-   cielo scende del 5% a livello (`ritmoPasso`: mezzo secondo su dieci),
-   e si ferma a un pavimento che dipende da dove si sta:
-
-     · nelle TAPPE al 70% (`ritmoTappa`), cioè sette secondi, raggiunto a
-       livello sette: una tappa ha un bersaglio e si chiude in una serata,
-       e il livello non deve diventare il muro che la tiene aperta;
-     · nei VOLI INFINITI al 50% (`ritmoVolo`), cinque secondi, a livello
-       undici: lì l'unica cosa che c'è da fare è durare, e un cielo che
-       non accelera mai è una partita che finisce solo per noia.
-
-   Il pavimento è quello che tiene la domanda una domanda di conto: a
-   cinque secondi il sasso giusto è in scena entro tre (`rispostaEntro`,
-   in `ondata`) e resta da toccare per almeno due — sotto, si tornerebbe
-   a misurare la mano. Il peso del calcolo, il boss e l'ultima vita
-   allungano come prima, moltiplicando sopra questo. */
+/* Difficoltà: vedi docs/asteroidi/volo.md ("Il livello, e quanto corre
+   il cielo"). `peso` è quanto costa il calcolo (meno sassi, più tempo);
+   il livello infittisce il cielo e accelera fino a un pavimento diverso
+   in tappa e in volo (`ritmoTappa`/`ritmoVolo`). */
 function ritmo(lv, volo) {
   const pavimento = volo ? CFG.ritmoVolo : CFG.ritmoTappa
   return Math.max(pavimento, 1 - (lv - 1) * CFG.ritmoPasso)
@@ -379,40 +216,13 @@ function difficolta(lv, peso = 1, volo = false) {
            quanti: Math.max(3, quanti - (peso - 1)) }
 }
 
-/* ═══════════ IL BOSS VIENE DAL PIANETA DOPO ═══════════
-   Un boss che chiede una domanda come tutte le altre non è un boss: è una
-   domanda con la musica. Quello che lo rende un avversario è che **arriva
-   da dove non sei ancora stato** — al pianeta del 6 il boss porta un
-   calcolo del 7, nella campagna a mente porta un concetto della stazione
-   che viene dopo. Batterlo è un assaggio del futuro, e perderlo non è una
-   sconfitta: è roba che non hai ancora imparato.
-
-   Per questo l'anticipo NON si segna sul motore, né come giusta né come
-   sbagliata (vedi `colpisci`): misurare qualcosa che non è stato ancora
-   insegnato non dice niente di vero, e un errore lì marchierebbe come
-   «debole» un calcolo mai visto. Le vite e i punti invece contano: il
-   rischio è quello che rende il boss un boss.
-
-   Dove un «dopo» da assaggiare non c'è — il volo libero, l'ultima tappa
-   di un mestiere, e la penultima, che il dopo ce l'ha ma è un esame e
-   non insegna niente di nuovo (i tre casi stanno in `daAssaggiare`) —
-   il boss chiede la casella più tosta fra quelle che ancora non reggono
-   (nel calcolo a mente non serve: là i numeri crescono da soli con la
-   taglia, e il boss è una domanda normale con la musica). Quella non è
-   un anticipo e **si segna** come tutte le altre: di non insegnato lì
-   non c'è più niente.
-   Prima chiedeva la «più in bilico», cioè quella col peso più alto: ed
-   è così che è uscito un boss che chiedeva 1×1, perché il peso premia
-   chi non si è mai visto e le caselle mai viste sono proprio quelle che
-   nessuna tappa si degna di chiedere. Il ripiego pescava con precisione
-   il contrario di quello che serviva.
-
-   Nel calcolo a mente l'assaggio arriva anche se il grafo non ha ancora
-   aperto la stazione seguente, e non è una svista: la taglia di un
-   concetto mai visto è zero, quindi quello che scende è la sua versione
-   più piccola — 8+5, non 27+38 — e una domanda ogni otto, che non si
-   segna e che lascia un gelo, è un'occhiata oltre la porta, non il muro
-   che il grafo esiste per evitare. */
+/* Il boss viene dal pianeta/stazione dopo, ed è un assaggio: vedi
+   docs/asteroidi/scaletta.md. Per questo l'anticipo non si segna sul
+   motore, né giusto né sbagliato (vedi `colpisci`): misurare roba non
+   ancora insegnata non direbbe niente di vero. Nel calcolo a mente
+   arriva anche se il grafo non ha ancora aperto la stazione dopo, perché
+   la taglia di un concetto mai visto è zero e scende nella sua versione
+   più piccola. */
 function chiaveDalDopo() {
   const t = prossima.value
   // `domanda.chiave` è quella appena chiesta: nemmeno il boss la ripete.
@@ -464,11 +274,7 @@ function preparaTabellina(k, davanti = null) {
   domanda.testo = `${a} × ${b} = ?`
   domanda.peso = 1
   domanda.difficile = (Math.min(a, b) >= 6 && Math.max(a, b) >= 6) || a * b >= 48
-  /* LA GRANDE GIRATA: nel volo una grande su tre scende come divisione
-     (96 : 12 = ?), che è la stessa casella letta al contrario — si segna
-     su 8×12, e i falsi sono quelli di una divisione (`distrattoriDi`),
-     non quelli di un prodotto. Il peso è quello di un conto a mente da
-     due: si spezza, non si ricorda. */
+  // la grande girata (96 : 12 = ?): vedi docs/asteroidi/volo.md
   if (!campagna.value && giraLaGrande(k)) {
     domanda.a = a * b; domanda.b = a; domanda.ris = b
     domanda.testo = `${a * b} : ${a} = ?`
@@ -478,10 +284,8 @@ function preparaTabellina(k, davanti = null) {
 }
 
 function preparaMente(k) {
-  /* nel volo la taglia la dice il livello (`tagliaDelVolo`), nelle tappe
-     la forza del concetto: è il terzo strato del volo per il calcolo a
-     mente, che non ha chiavi nuove — a livello 10 «spezza e moltiplica»
-     chiede 7×86, non 4×12 */
+  // nel volo la taglia la dice il livello, nelle tappe la forza del
+  // concetto (vedi docs/asteroidi/volo.md)
   const taglia = campagna.value ? null : tagliaDelVolo(hud.livello)
   const e = esercizioDaChiave(k, state.profile.items, Date.now(), { taglia })
   esercizio = e
@@ -494,21 +298,15 @@ function preparaMente(k) {
   domanda.difficile = e.peso >= 2 || (!eFatto(k) && (taglia ?? 0) >= 0.8)
 }
 
-/* Quale delle due parti del pool parla in questa domanda. Il pool dice
-   cosa c'è, questa dice ogni quanto: senza, il ripasso — che pesa di più
-   perché lo si sa peggio — si prendeva la partita e la tabellina del
-   pianeta usciva quando capitava. La miscela ha memoria, quindi il tetto
-   di domande fuori tappa vale su ogni tratto di partita e non solo «in
-   media». Vedi `store/calcolo.js`. */
+// la miscela: il pool dice cosa c'è, questa ogni quanto (docs/asteroidi/scaletta.md)
 const miscela = creaMiscela()
 function scegli(p) {
   return picker.pick(campagna.value
     ? miscela.parte(p, eDellaTappa, domanda.chiave) : p)
 }
 
-/* nel volo i due magazzini si alternano: a monetina, mai più di tre di
-   fila dello stesso. Il boss non sceglie — chiede dal magazzino
-   dell'ultima domanda, e non si conta nella fila */
+// nel volo i due magazzini si alternano (docs/asteroidi/volo.md); il boss
+// non sceglie, chiede dal magazzino dell'ultima domanda
 const alternanza = creaAlternanza()
 
 function nuovaDomanda(boss) {
@@ -519,14 +317,8 @@ function nuovaDomanda(boss) {
   const p = !campagna.value ? poolVolo() : mente.value ? poolMente() : poolAttivo()
   const dalBoss = boss ? chiaveDalDopo() : null
   const k = dalBoss || scegli(p)
-  /* UNA CHIAVE DEL BOSS NON È SEMPRE UN ASSAGGIO, ed è il guasto che
-     arrivava dai telefoni: dove una tappa da assaggiare non c'è — il
-     Sole, il volo libero, il pianeta prima del Sole — `chiaveDelBoss`
-     ripiega sulla casella più tosta di casa. Quella non ha nessuna
-     tabellina da mettere davanti (`prossima` è `null`, e leggerci dentro
-     era l'incidente) e soprattutto **va segnata sul motore**: è roba già
-     insegnata, e tenerla fuori buttava via una risposta su otto di tutta
-     la tappa del Sole. */
+  // una chiave del boss non è sempre un assaggio: se `chiaveDelBoss` è
+  // ripiegata su una casella già insegnata (`prossima` nullo), va segnata
   anticipo = !!dalBoss && !!prossima.value
   // il boss non passa dal picker: la memoria corta va avvisata a mano, se
   // no la domanda dopo può essere la stessa del boss
@@ -537,10 +329,7 @@ function nuovaDomanda(boss) {
   if (mente.value) preparaMente(k)
   else preparaTabellina(k, anticipo ? prossima.value.nuova : null)
   apertoIl = performance.now()
-  /* IL GHIACCIO SI SCIOGLIE QUI. Una domanda nuova nasce sempre col
-     cielo alla sua velocità: il gelo si compra per la domanda che si ha
-     davanti, e chi non se lo ricorda se lo trova speso — non lo trova
-     regalato per due domande in più. */
+  // il gelo vale solo per la domanda per cui si è comprato (vedi docs/asteroidi/volo.md)
   gelo = false; gelato.value = false; nave.gelo = 0
   return k
 }
@@ -577,28 +366,9 @@ function ondata() {
     const ok = v === domanda.ris
     const base = Math.min(W, H) * 0.095 * (boss ? 1.22 : 1) + (String(v).length - 1) * 6 * S
     const r = Math.max(24, Math.min(base, colonna * 0.46, boss ? 84 : 68))
-    /* LO SFALSAMENTO È PER I SASSI SBAGLIATI. Nascere tutti sulla stessa
-       riga fa una fila di sasso, non una covata: per questo ognuno parte
-       un po' più su. Ma quello con la RISPOSTA GIUSTA non può nascere in
-       fondo alla covata, se no la domanda è già a schermo da cinque
-       secondi mentre l'unica cosa da toccare deve ancora affacciarsi: il
-       bambino sembra lento e sta solo aspettando.
-
-       IL CONTO SI FA SU «È IN SCENA», NON SU «È NATO», ed è la differenza
-       che mancava: un sasso nasce sopra il bordo, tutto fuori, e il tempo
-       che ci mette a scendere finché non lo si vede per intero — due
-       raggi buoni, mezzo secondo — è tempo in cui il bambino aspetta come
-       aspetterebbe con lo sfalsamento. Tagliare il solo sfalsamento
-       lasciava fuori dal conto proprio quel pezzo. Quindi: dalla domanda
-       al momento in cui il sasso giusto è tutto dentro lo schermo passano
-       al massimo `CFG.rispostaEntro` secondi, e da lì parte il cronometro
-       (`prontaIl`), perché prima di allora non c'era niente da fare.
-
-       Quando nemmeno partire attaccati al bordo basta — un boss grosso su
-       uno schermo piccolo, con l'ultima vita che rallenta tutto — il
-       sasso giusto nasce già affacciato invece di accelerare: il ritmo
-       lo decide il livello, col suo pavimento (vedi `difficolta`), e
-       una covata non corre per far tornare i conti a un'altra. */
+    // lo sfalsamento è per i sassi sbagliati (altrimenti nascono in fila);
+    // il sasso giusto è vincolato a essere in scena entro `rispostaEntro`
+    // secondi, e da lì parte il cronometro `prontaIl` (docs/asteroidi/volo.md)
     const inScena = 2 * r                   // da y = -r-off a centro in y = r
     const sfalsa = Math.random() * H * (boss ? 0.18 : 0.30)
     const off = ok ? Math.min(sfalsa, Math.max(-r, vel * CFG.rispostaEntro - inScena))
@@ -680,37 +450,21 @@ function rompi(a, colore) {
   anello(a.x, a.y, colore, a.r * (a.boss ? 7 : 3))
 }
 
-/* ═══════════ I GETTONI ═══════════
-   Si guadagnano col filotto — anche a metà tappa — e restano in tasca
-   finché non li si preme. Il perché stia in tasca invece di accendersi
-   da solo è scritto in testa a `data/potenziamenti.js`: in due parole,
-   perché il momento in cui spenderlo lo sceglie il bambino.
-
-   IL GELO VALE PER LA DOMANDA IN CORSO E BASTA. Non è un conto alla
-   rovescia: si accende premendo e si spegne quando la domanda è
-   finita, comunque sia finita — colpita giusta, colpita sbagliata o
-   caduta. Il perché sta in `data/potenziamenti.js`, ed è anche la
-   ragione per cui `congelata` non serve più: la domanda col ghiaccio è
-   *questa*, quindi il flag è il gelo stesso. */
+// i gettoni: si guadagnano col filotto e restano in tasca finché non si
+// premono; vedi docs/asteroidi/volo.md e `data/potenziamenti.js`
 const tasca = reactive({ gelo: 0, mirino: 0 })
 const gelato = ref(false)
 let gelo = false
 
-/* ---------- i premi del filotto ----------
-   Le soglie stanno in `data/potenziamenti.js`, non qui: sono un dato di
-   equilibrio e vanno lette accanto alla ragione per cui sono quelle. */
+// i premi del filotto: le soglie stanno in `data/potenziamenti.js`
 function premia(serie) {
   const p = premioDaSerie(serie, CFG.serieVita)
   if (p === 'vita') dammiVita('🔥 ' + serie + ' DI FILA!')
   else if (p === 'gettone') prendiGettone(prossimoGettone(), '🔥 ' + serie + ' DI FILA!  ')
 }
 
-/* Quale gettone tocca. L'alternanza sta in `data/potenziamenti.js` e
-   guarda l'ultimo uscito, non la serie: da qualunque parte arrivi il
-   premio — filotto o boss — il prossimo è l'altro. Qui si aggiunge la
-   sola cosa che il dato non può sapere, cioè cosa c'è già in tasca: se
-   di quello che tocca la tasca è piena, tocca all'altro. Un turno non
-   va sprecato per un magazzino pieno. */
+// quale gettone tocca (`data/potenziamenti.js`), scavalcando l'alternanza
+// se la tasca di quello che toccherebbe è piena
 let ultimoGettone = null
 function prossimoGettone() {
   const tocca = gettoneDopo(ultimoGettone)
@@ -718,9 +472,7 @@ function prossimoGettone() {
   return tasca[tocca] < TASCA_MAX ? tocca : altro
 }
 
-/* La tasca è piccola (`TASCA_MAX`) e quando è piena il gettone non si
-   prende: si dice, invece di sparire in silenzio. Un premio che non
-   arriva senza che nessuno lo spieghi è peggio di nessun premio. */
+// tasca piena (`TASCA_MAX`): il gettone non si prende, ma si dice
 function prendiGettone(quale, prefisso = '') {
   const P = POTENZIAMENTI[quale]
   const pieno = tasca[quale] >= TASCA_MAX
@@ -730,9 +482,7 @@ function prendiGettone(quale, prefisso = '') {
   anello(nave.x, nave.y, P.colore, nave.r * 9)
 }
 
-/* ❄️ il gelo: il cielo al rallentatore **finché questa domanda non è
-   finita**. Non si ripreme mentre è acceso: butterebbe via un gettone
-   per niente, e a un bambino sembrerebbe che non abbia funzionato. */
+// ❄️ il gelo: rallenta finché questa domanda non è finita, non si ripreme
 function usaGelo() {
   if (fase.value !== 'gioco' || !tasca.gelo || gelo) return
   tasca.gelo--
@@ -743,11 +493,8 @@ function usaGelo() {
   suono.compra()
 }
 
-/* 🎯 il mirino: se ne va **una risposta sbagliata a caso**, non la più
-   vicina alla giusta e non quella che sta per cadere — sceglierla
-   sarebbe un consiglio, e un consiglio farebbe il conto al posto suo.
-   Il sasso muore e basta: nessun `answer()`, perché nessuno ha risposto
-   niente, e in archivio non deve restare traccia di un'esplosione. */
+// 🎯 il mirino: toglie una risposta sbagliata a caso (mai la più vicina o
+// quella più in basso: sarebbe un consiglio); nessun `answer()`, nessuno ha risposto
 function usaMirino() {
   if (fase.value !== 'gioco' || !tasca.mirino) return
   const vittime = asteroidi.filter(a => !a.morto && !a.ok)
@@ -763,26 +510,15 @@ function usaMirino() {
 
 function colpisci(a) {
   const k = domanda.chiave
-  /* dal momento in cui la risposta era raggiungibile, non da quello in
-     cui è comparsa la domanda. Chi tocca il sasso mentre si affaccia
-     ancora dà un tempo negativo: lì non si sa quanto è stato veloce, si
-     sa solo che è stato velocissimo, e `record` con 0 lascia stare il
-     cronometro invece di scrivere un numero inventato */
-  /* il tetto è la rete di sotto, non il rimedio: quello vero è `prontaIl`
-     che si sposta col cielo fermo (vedi `ciclo`). Il numero è lo stesso
-     dei quiz (`TEMPO_MAX`) perché la media pesata che lo riceve è la
-     stessa, e due tetti diversi per lo stesso conto sono due tarature da
-     tenere allineate a mano. */
+  // il tempo è da `prontaIl` (quando il sasso era raggiungibile), non dalla
+  // domanda; `TEMPO_MAX` è lo stesso tetto dei quiz, stessa media pesata
   const ms = Math.min(TEMPO_MAX, Math.max(0, performance.now() - prontaIl))
   const mirata = eMirata(k)
   // l'assaggio del pianeta dopo non si segna: né la giusta, che sarebbe
   // mezza fortuna su una cosa mai vista, né la sbagliata, che marchierebbe
   // come debole un calcolo che nessuno ha ancora insegnato
   const segnalo = !anticipo
-  /* col gelo acceso il tempo non si segna: il sasso scendeva al
-     rallentatore, e quello che si misurerebbe è la velocità del
-     ghiaccio, non quella della testa */
-  const nota = { correct: a.ok }
+  const nota = { correct: a.ok }   // col gelo acceso il tempo non si segna: misurerebbe il ghiaccio
   if (!gelo) nota.ms = ms
   if (a.ok) {
     if (segnalo) { answer(k, nota); picker.afterAnswer(k, true) }
@@ -820,11 +556,7 @@ function colpisci(a) {
     spara(a, '#ff6b6b')
     esplodi(a.x, a.y, '#ff6b6b', 14); suono.no(); scossa = 10
     hud.punti = Math.max(0, hud.punti + CFG.puntiNo)
-    /* i gettoni in tasca NON si perdono sbagliando. Il cannone doppio sì,
-       e sembrava una bella regola — «qualcosa da difendere» — ma era una
-       seconda punizione sopra a quella che c'è già: hai sbagliato, hai
-       perso una vita, e in più ti si spegne il premio. Un gettone
-       guadagnato resta guadagnato: si perde solo spendendolo. */
+    // i gettoni in tasca non si perdono sbagliando (docs/asteroidi/volo.md)
     if (mente.value) suggerisci(k)
     perdiVita()
   }
@@ -844,11 +576,7 @@ function suggerisci(k) {
   const c = CONCETTI_PER_ID[id]
   if (n !== 2 || !c) return
   dritta.value = c.dritta
-  /* questo `setTimeout` non si ferma in pausa, e va bene così: spegne un
-     cartello e non costa niente a nessuno — al massimo chi riprende dopo
-     dieci minuti non ritrova il suggerimento, che a quel punto era
-     scaduto comunque. Quello che in pausa non deve correre è il
-     cronometro della risposta, e quello sta nel battito (`ciclo`). */
+  // questo `setTimeout` non si ferma in pausa, e va bene così: spegne solo un cartello
   clearTimeout(spegniDritta)
   spegniDritta = setTimeout(() => { dritta.value = '' }, 9000)
 }
@@ -860,11 +588,7 @@ function dammiVita(perche) {
   } else mostraCartello(perche, '#ffd94a')
 }
 
-/* Una vita in meno non si dice con un numero: la nave si sbianca per un
-   attimo, e da lì in poi resta più malconcia di prima — un'ala
-   strappata che fuma e lampeggia, poi le fiamme. È tutto quello che
-   c'è, e basta perché sta dentro lo
-   stesso sguardo con cui si guardano i sassi. */
+// una vita in meno non si dice con un numero: la nave resta più malconcia (docs/asteroidi/volo.md)
 function perdiVita() {
   hud.serie = 0
   nave.botta = 1
@@ -904,10 +628,8 @@ function ridimensiona() {
   S = Math.max(0.6, Math.min(1.6, Math.min(W, H) / 700))
   altezzaDomanda = Math.max(96, H * 0.17)
   suolo = H - altezzaDomanda
-  // le stelle vive: tre strati che scendono a velocità diverse. La
-  // parallasse è l'unica cosa che dà profondità a un cielo nero, e costa
-  // un campo in più. Il grosso del cielo — nebulose e polvere — sta
-  // fermo nel fondale in cache, che si ridipinge solo qui.
+  // le stelle vive: tre strati a velocità diverse (parallasse); il resto
+  // del cielo sta fermo nel fondale in cache, ridipinto solo qui
   stelle = Array.from({ length: 90 }, () => {
     const z = Math.random() < 0.5 ? 0.35 : Math.random() < 0.7 ? 0.7 : 1.2
     return { x: Math.random() * W, y: Math.random() * H, z,
@@ -919,23 +641,8 @@ function ridimensiona() {
   nave.x = W / 2; nave.y = suolo - nave.r * 0.8
 }
 
-/* ---------- dove guarda il cannone ----------
-   Prima seguiva il sasso più basso. Era vivo da vedere e sbagliato: un
-   puntatore agganciato a *un* asteroide tira l'occhio là, e a un bambino
-   quello si legge come un consiglio. Peggio, arriva il momento in cui i
-   sassi sbagliati sono già morti e l'unico vivo è quello giusto: lì il
-   cannone lo indica per davvero.
-
-   Quindi la regola è che **il cannone non sa dove sono gli asteroidi**.
-   Spazza il cielo da una parte all'altra, avanti e indietro, con un moto
-   che dipende solo dal tempo: passando dappertutto non indica niente, e
-   nel frattempo la torretta sembra viva invece che spenta. Punta un
-   bersaglio solo dopo che il dito ha già scelto — vedi `spara()` — e ci
-   resta finché il raggio è in aria.
-
-   L'ampiezza è larga apposta. Un dondolio stretto attorno alla verticale
-   si legge ancora come «guarda in mezzo»: per non dire niente il cannone
-   deve arrivare *sopra ogni colonna*, comprese quelle di bordo. */
+// il cannone non sa dove sono gli asteroidi (spazza a tempo, punta solo
+// dopo che il dito ha scelto): vedi docs/asteroidi/volo.md
 const SPAZZATA = { arco: 0.95, giroSec: 3.4 }   // ±54°, un'andata e ritorno ogni 3,4 s
 
 function miraARiposo(dt) {
@@ -977,14 +684,9 @@ function aggiorna(dt) {
   }
 }
 
-/* Scintille, fumo e raggi vivono di vita loro: si consumano anche
-   quando il gioco è fermo. Se stessero dentro `aggiorna` — che il
-   cartello di un traguardo mette in pausa — un raggio sparato un attimo
-   prima resterebbe appeso in cielo per tutta la durata della festa. */
+// scintille, fumo, raggi e la spazzata vivono qui e non in `aggiorna`:
+// si consumano anche a gioco fermo, se no restano appesi durante una festa
 function effetti(dt) {
-  // la spazzata sta qui e non in `aggiorna` per la stessa ragione: il
-  // cartello di un traguardo ferma il gioco, e una torretta che si
-  // inchioda mentre il resto è in festa sembra la nave che si è spenta
   miraARiposo(dt)
   for (const p of particelle) {
     p.x += p.vx * dt; p.y += p.vy * dt
@@ -1006,16 +708,9 @@ function effetti(dt) {
   if (nave.botta > 0) nave.botta -= dt * 2.2
   if (nave.riparata > 0) nave.riparata -= dt * 1.6
   if (nave.spinta > 0) nave.spinta -= dt * 2.5
-  /* La nave malconcia fuma, e il fumo **esce dallo strappo**, non dal
-     centro: è il pezzo che il disegno non può fare (sono particelle) e
-     insieme il modo di dire dov'è il guasto — un pennacchio che parte
-     dal buco è la freccia che indica il buco.
-
-     La soglia è `statoScafo` e non un numero scritto qui: i gradini
-     stanno in `grafica/spazio.js`, e chiedere «danno > 0.6» voleva dire
-     che al primo gradino la nave non fumava affatto mentre il commento
-     là dentro diceva di sì. Il fumo comincia con lo strappo; le
-     scintille grosse restano dell'ultimo gradino. */
+  // il fumo esce dal punto dello strappo (`puntoRotto`), non dal centro;
+  // la soglia è `statoScafo`, non un numero scritto qui — i gradini
+  // stanno in `grafica/spazio.js` e vanno letti da lì, non duplicati
   const rovina = statoScafo(nave.danno)
   if (rovina >= 1 && (fumo -= dt) <= 0) {
     fumo = rovina >= 2 ? 0.1 : 0.16
@@ -1034,10 +729,8 @@ function effetti(dt) {
   }
 }
 
-/* L'ordine dei piani, che è la sola cosa da non sbagliare qui dentro:
-   il cielo, la nave, **poi** gli asteroidi. La nave sta dietro perché i
-   numeri devono restare leggibili anche quando un sasso le passa
-   davanti — è il momento in cui si ha più fretta di leggerli. */
+// l'ordine dei piani: il cielo, la nave, poi gli asteroidi — i numeri
+// devono restare leggibili anche quando un sasso passa davanti alla nave
 function disegna(dt) {
   ctx.save()
   if (scossa > 0) ctx.translate((Math.random() - 0.5) * scossa, (Math.random() - 0.5) * scossa)
@@ -1078,27 +771,10 @@ function disegna(dt) {
                    ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1 }
 }
 
-/* ═══════════ il battito ═══════════
-   Quello che ferma il cielo non si scrive più qui: è `fermo`, che arriva
-   da `giochi/pausa.js` e vale uguale in tutti i giochi — il ⏸, il
-   telefono posato, il foglio del `?`, il cartello di un traguardo
-   (`state.festa`, che App.vue mostra a schermo intero per tre secondi:
-   un premio non si paga con una vita) e, di suo, tutto quello che non è
-   la partita. Prima erano due delle cinque, scritte a mano.
-
-   **Si ferma `aggiorna`, non `effetti` e `disegna`**: le scintille
-   finiscono di spegnersi e il cielo resta vivo sotto il velo, ma i sassi
-   non scendono di un pixel e nessuno può cadere sulla nave.
-
-   E **il cronometro della risposta sta fermo col cielo** (`prontaIl`):
-   è un istante di parete, e mezz'ora col telefono in tasca finirebbe in
-   `store/srs.js` come mezz'ora passata a pensare a 7×8 — che di quel
-   numero tiene una media pesata, quindi basta un campione per marchiare
-   un calcolo come «ci mette venti minuti» per sempre. È lo stesso
-   guasto che `quiz/Domanda.vue` ha risolto con `visto`: lì la domanda è
-   di `setTimeout`, qui il tempo si conta a fotogrammi, e quando la
-   pagina torna visibile il primo fotogramma porta l'intero buco — che a
-   quel punto è già pausa, perché dalla pausa non si esce mai da soli. */
+/* Il battito: `fermo` (`giochi/pausa.js`, docs/core/interfaccia.md) ferma
+   solo `aggiorna` (il cielo resta vivo sotto il velo). Il cronometro
+   della risposta (`prontaIl`) sta fermo con lui, se no un telefono
+   posato mezz'ora finirebbe nell'SRS come mezz'ora di esitazione. */
 function ciclo(ts) {
   const vero = ultimo ? ts - ultimo : 0     // quanto è passato davvero, buchi compresi
   const dt = Math.min(0.05, vero / 1000); ultimo = ts
@@ -1113,16 +789,13 @@ function ciclo(ts) {
 /* ---------- partite ----------
    `i` è il posto nella fila, oppure -1 per un volo infinito. */
 function inizia(i = posizione.value) {
-  /* una partita che comincia non comincia in pausa: il telefono posato
-     sulla mappa lascia acceso il freno, e senza questa riga la tappa
-     nuova nascerebbe dietro un velo che nessuno ha chiesto */
+  // una partita non comincia in pausa: senza, il freno lasciato acceso
+  // sulla mappa la farebbe nascere dietro un velo che nessuno ha chiesto
   togli()
   posizione.value = i
   hud.vite = CFG.vite; hud.punti = 0; hud.giuste = 0; hud.mirate = 0; hud.sbagliate = 0
-  /* il volo riparte da sotto il record, non da 2×3 (`partenzaDalRecord`):
-     il livello del record sta nei `dettagli` del quaderno. Una tappa
-     parte da 1, sempre. Va letto PRIMA di `ondata()`: il primo pool si
-     costruisce prima della prima risposta, e deve già essere il suo */
+  // il volo riparte da sotto il record (`partenzaDalRecord`, docs/asteroidi/volo.md);
+  // va letto PRIMA di `ondata()`, che costruisce già il primo pool su questo livello
   const record = campagna.value ? null : primatoDi('mate')
   hud.partenza = record && record.dettagli ? partenzaDalRecord(record.dettagli.livello) : 1
   hud.livello = hud.partenza; hud.serie = 0; hud.serieMax = 0
@@ -1146,19 +819,12 @@ function inizia(i = posizione.value) {
   ondata()
 }
 
-/* dalla mappa si tocca una voce e basta: che sia un pianeta o una
-   stazione lo dice il dato, non chi tocca — e non c'è nessun «modo» da
-   scegliere prima, che era la domanda da cui è cominciato tutto */
+// dalla mappa si tocca una voce e basta: pianeta o stazione lo dice il dato
 const iniziaVoce = v => inizia(v.pos)
-/* il volo infinito, che si apre quando la fila è finita: non è una
-   campagna, è il modo di continuare a volare quando non c'è più una fila
-   da macinare — tabelline e calcolo a mente insieme, sempre più tosti */
-const iniziaVolo = () => inizia(-1)
+const iniziaVolo = () => inizia(-1)   // il volo infinito: si apre a fila finita
 
-/* com'è andata: serve sia a chi finisce le vite sia a chi supera il pianeta.
-   Il «da ripassare» dice il calcolo quando è un fatto (7 × 8, 13 − 7) e il
-   nome della strategia quando dietro c'è un concetto: «somme col riporto»
-   è un consiglio, «68+75» sarebbe un numero preso a caso. */
+// il «da ripassare»: il calcolo se è un fatto, il nome della strategia se
+// è un concetto — «68+75» non direbbe niente, «somme col riporto» sì
 function etichettaDi(k) {
   if (!eFatto(k) && k.startsWith('calc:'))
     return (CONCETTI_PER_ID[concettoDiChiave(k)] || {}).nome || k
@@ -1190,11 +856,8 @@ function tappaSuperata() {
   // una moneta di cortesia, non uno stipendio
   const giaFatto = !!v && fattaVoce(v)
   if (v) asteroidiCompleta(v)
-  /* da 1 a 3 per il livello del giocatore, come le tappe del castello. Il
-     rincaro si conta sull'indice DENTRO la sua campagna (`v.i`) e non
-     sulla posizione in fila: la fila è lunga il doppio, e contarla lì
-     raddoppierebbe i premi senza che nessuno l'abbia deciso (vedi
-     `docs/apprendimento/calibrazione.md`). */
+  // il rincaro conta sull'indice DENTRO la campagna (`v.i`), non sulla
+  // posizione in fila (il doppio): vedi docs/apprendimento/calibrazione.md
   premio.value = giaFatto ? 1 : level.value * (1 + Math.floor((v ? v.i : 0) / 4))
   addCoins(premio.value)
   riassunto()
@@ -1215,16 +878,9 @@ function finePartita() {
   fase.value = 'fine'
   asteroidi = []
   suono.fine()
-  /* IL RECORD DEL VOLO. Una tappa finisce con un bersaglio, il volo con
-     i punti: qui si scrive il quaderno (`giochi/primati.js`) e si tiene
-     cosa dire — di quanto sei migliorato, o quanto ti è mancato. Il
-     racconto sono il livello, i centri e la serie più lunga: quello che
-     un bambino cita quando racconta la partita.
-     PRIMA di `riassunto()`, e non è un dettaglio: finché il quaderno
-     non c'è il record di ieri si legge da `best.math`, che `riassunto`
-     riscrive con i punti di adesso — letto dopo, ogni prima partita del
-     volo risultava un pareggio con sé stessa. `best.math` resta scritto,
-     perché i traguardi lo guardano. */
+  // il record del volo: va scritto PRIMA di `riassunto()`, che riscrive
+  // `best.math` — letto dopo, ogni prima partita sarebbe un pareggio con sé
+  // stessa (vedi docs/asteroidi/volo.md e docs/core/primati.md)
   if (!campagna.value)
     finale.primato = segnaPrimato('mate', hud.punti, Date.now(),
                                   { livello: hud.livello, centri: hud.giuste, serie: hud.serieMax })
@@ -1245,15 +901,11 @@ function allaMappa() {
 
 const suFrontiera = () => { posizione.value = Math.min(fila.length - 1, dove.value) }
 
-/* "Cosa so" si apre da due posti — la mappa e la fine partita — e il tasto
-   della barra riporta a quello da cui si è arrivati, non sempre alla mappa:
-   chi la guarda a fine partita vuole tornare al suo "riprova" */
+// "Cosa so" si apre da due posti: il tasto della barra torna a quello da
+// cui si è arrivati (mappa o fine partita), non sempre alla mappa
 const tornaDa = ref('mappa')
-/* la tavola ha due facce — una tavola pitagorica e un elenco di
-   strategie non stanno nella stessa pagina — e si apre su quella del
-   mestiere da cui si arriva: chi ha appena fatto conti a mente vuole
-   vedere i suoi trucchi. Non è una scelta sul gioco, è una scheda di
-   progressi: qui non si sceglie nessuna tappa. */
+// la tavola ha due facce (tabellina/strategie) e si apre su quella del
+// mestiere da cui si arriva
 const tavolaSu = ref('tabelline')
 function apriTavola() {
   tornaDa.value = fase.value
@@ -1300,26 +952,15 @@ onUnmounted(() => {
   <div class="schermo spazio">
     <canvas ref="tela" @pointerdown="tocca"></canvas>
 
-    <!-- ════════ LA FASCIA IN CIMA, CHE ADESSO È UNA SOLA ════════
-         C'erano due cose sovrapposte: la barra dei gettoni e, sotto, una
-         banda con l'avanzamento della tappa. Due strisce che rubavano un
-         quinto del cielo per dire cinque numeri, di cui tre già scritti
-         sulla nave: le vite (lo scafo ammaccato), il livello (lo scafo
-         più grosso) e il filotto. Restano **le due cose che la nave non
-         può dire**: quanto manca alla fine della tappa, e quanto manca
-         sulla tabellina nuova. In campagna il titolo si toglie di mezzo
-         — chi sta giocando sa dov'è — e l'avanzamento prende quel posto. -->
-    <!-- il ⏸ non ha bisogno di una condizione sua: questa barra esiste
-         solo mentre si vola, e fuori di lì non c'è niente da fermare -->
+    <!-- la fascia in cima dice solo le due cose che la nave non può dire
+         (docs/asteroidi/volo.md): quanto manca alla tappa, e sulla nuova -->
     <Barra v-if="fase === 'gioco'" :titolo="campagna ? '' : VOLO.nome"
            guida="mate" scura pausa @pausa="metti()" @aiuto="aiuto" @indietro="allaMappa">
       <div v-if="campagna" class="avanza">
         <i :style="{ width: quota(hud.giuste, tappa.bersaglio) }"></i>
         <span>{{ tappa.emoji }} {{ hud.giuste }}/{{ tappa.bersaglio }}</span>
       </div>
-      <!-- i centri «mirati»: quelli sulla cosa che la tappa è venuta a
-           insegnare. Non è una seconda barra, è un gettone: si guarda
-           una volta ogni tanto, non di continuo -->
+      <!-- i centri «mirati»: sulla cosa che la tappa insegna; un gettone, non una seconda barra -->
       <div v-if="campagna && tappa.mirate" class="gettone mira"
            :class="{ fatto: hud.mirate >= tappa.mirate }">
         {{ mente ? '🧠' : '×' + tappa.nuova }}
@@ -1338,11 +979,7 @@ onUnmounted(() => {
          si è impuntato -->
     <div v-if="fase === 'gioco' && gelato" class="brina"></div>
 
-    <!-- ════════ LA TASCA ════════
-         In basso a destra, sopra la fascia della domanda, dove il pollice
-         arriva senza coprire il cielo. Un gettone compare solo quando ce
-         l'hai: una fila di icone spente sarebbe una promessa che nessuno
-         ha spiegato. -->
+    <!-- la tasca: un gettone compare solo quando ce l'hai -->
     <div v-if="fase === 'gioco' && (tasca.gelo || tasca.mirino)" class="tasca">
       <button v-if="tasca.gelo" class="tocco gelo" :class="{ speso: gelato }"
               :aria-label="'gelo'" @click="usaGelo">
@@ -1369,21 +1006,14 @@ onUnmounted(() => {
     <!-- ════════ la mappa della campagna: qui il gioco parla la lingua degli altri ════════ -->
     <div v-if="fase === 'mappa'" class="schermo campagna">
       <Barra titolo="Asteroidi" guida="mate" monete @indietro="$emit('vai','home')">
-        <!-- i due conti di «Cosa so», non due progressi: quante tabelline
-             e quanti trucchi reggono ADESSO. Scendono se non si ripassa,
-             ed è la cosa che la fila non dice più — nella fila la ⭐
-             vuol dire «superata», e basta. -->
+        <!-- i due conti di «Cosa so»: scendono se non si ripassa, la fila non lo dice più -->
         <div class="gettone">✖️ <b>{{ intere.size }}/10</b></div>
         <div class="gettone">🧠 <b>{{ stelleMente }}/{{ STAZIONI.length }}</b></div>
       </Barra>
       <div class="centro elenco">
         <h1>Asteroidi</h1>
-        <!-- UNA FILA SOLA, ordinata per difficoltà vera: le tabelline e i
-             conti a mente sono la stessa aritmetica e stavano dietro due
-             linguette, cioè dietro la domanda «cosa preferisci?». L'ordine
-             e il perché di ogni giunzione stanno in `data/asteroidi.js`.
-             I capitoli sono lì per il telefono: ventidue righe di fila
-             sono un muro, tre o quattro alla volta sono una lista. -->
+        <!-- una fila sola (docs/asteroidi/scaletta.md); i capitoli sono per
+             il telefono: ventidue righe sono un muro, tre-quattro una lista -->
         <p class="testo">Una tappa per volta: chi porta una tabellina nuova, chi un trucco
           da fare a mente. Superata, la tappa prende la sua ⭐. Quanto ti resta in
           mano lo dice «Cosa so», qui in fondo.</p>
@@ -1400,13 +1030,7 @@ onUnmounted(() => {
               <span class="em">{{ apertaVoce(v) ? v.T.emoji : '🔒' }}</span>
               <b>{{ v.n }}. {{ v.T.nome }}</b>
               <i>{{ cheChiede(v) }} · {{ v.T.bersaglio }} centri</i>
-              <!-- UN SEGNO SOLO: ⭐ = superata. Ce n'erano due — la ✔ del
-                   bersaglio preso e la ⭐ della tabellina che il motore dà
-                   per imparata — cioè due domande diverse a cui rispondeva
-                   la stessa colonna, e chi scorreva la fila doveva sapere
-                   quale delle due stava leggendo. Quello che il motore sa
-                   sta in «Cosa so» e nei due conti in cima, che è dove
-                   quella domanda è la domanda. -->
+              <!-- un segno solo: ⭐ = superata (docs/asteroidi/scaletta.md) -->
               <span class="stato">
                 <em v-if="fattaVoce(v)" title="superata">⭐</em>
               </span>
@@ -1414,12 +1038,7 @@ onUnmounted(() => {
           </div>
         </template>
 
-        <!-- il volo infinito: si apre quando la fila è finita, ed è UNO,
-             perché la fila è una — tabelline e calcolo a mente insieme,
-             sempre più tosti col livello (`store/volo.js`). Erano due,
-             uno per mestiere, cioè le due metà rimesse in piedi in fondo
-             alla mappa. Il record si legge qui, prima di entrare: un
-             tasto senza il numero da battere è un tasto senza motivo. -->
+        <!-- il volo infinito: uno solo (docs/asteroidi/volo.md), record letto prima di entrare -->
         <div class="riga">
           <button v-if="progresso.libera" class="bottone volo" data-volo
                   @click="iniziaVolo()">{{ VOLO.nome }} ♾️
@@ -1460,10 +1079,7 @@ onUnmounted(() => {
         <div class="gettone">⭐ <b>{{ intere.size }}/10</b></div>
       </Barra>
       <div class="centro elenco">
-        <!-- le due facce restano due anche adesso che la mappa è una
-             fila sola: qui non si sceglie una tappa, si guarda cosa si sa
-             — e una tavola pitagorica e un elenco di strategie non stanno
-             nella stessa pagina -->
+        <!-- due facce: qui non si sceglie una tappa, si guarda cosa si sa -->
         <div class="schede">
           <button :class="{ on: tavolaSu === 'tabelline' }"
                   @click="tavolaSu = 'tabelline'">✖️ Tabelline</button>
@@ -1475,23 +1091,14 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- ════════ tappa superata ════════
-         Un cartello solo, uguale per un pianeta e per una stazione: sono
-         la stessa cosa — una tappa della stessa fila con un bersaglio —
-         e due cartelli diversi dicevano che sono due giochi. C'erano
-         anche due paragrafi sulla ⭐ («arriva quando ti resta in mano»),
-         uno per mestiere: se ne sono andati con la ✔, perché adesso la
-         ⭐ della fila vuol dire «superata» e prometterne un'altra qui
-         sarebbe una bugia. Cosa regge davvero lo dice «Cosa so». -->
+    <!-- tappa superata: un cartello solo, uguale per pianeta e stazione -->
     <div v-if="fase === 'vinta'" class="velo">
       <h1 class="chiaro">{{ tappa.emoji }} Tappa<br><span>superata!</span></h1>
       <div class="dato"><b>{{ tappa.nome }}</b></div>
       <div class="dato">{{ voce ? voce.n : 0 }} di {{ fila.length }}</div>
       <div class="dato">Centri: <span>{{ finale.giuste }}</span></div>
       <div class="dato">Premio: <span>+{{ premio }} 🪙</span></div>
-      <!-- «adesso tocca a» segue la FILA e non la campagna: dopo un
-           pianeta può toccare a una stazione, ed è per questo che le due
-           liste sono state fuse -->
+      <!-- «adesso tocca a» segue la fila, non la campagna -->
       <p v-if="dopo" class="dritta">Ora tocca a
         {{ dopo.T.emoji }} {{ dopo.T.nome }}. {{ dopo.T.dritta }}</p>
       <div class="riga">
@@ -1501,10 +1108,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- La fila finita. È una sola, quindi il cartello è uno solo: prima
-         diceva «tutte le stazioni» o «tutti i pianeti» a seconda di come
-         finiva la campagna che si stava giocando, che con una fila
-         mescolata vuol dire dare due nomi diversi allo stesso traguardo. -->
+    <!-- la fila finita: è una sola, quindi il cartello è uno solo -->
     <div v-if="fase === 'trionfo'" class="velo">
       <h1 class="chiaro">🎉 Scaletta<br><span>finita!</span></h1>
       <p class="testo chiaro">Tutte e {{ fila.length }} le tappe sono superate: i
@@ -1527,11 +1131,7 @@ onUnmounted(() => {
         <span>{{ finale.giuste }}/{{ tappa.bersaglio }}</span> centri</div>
       <div class="dato">Punti: <span>{{ finale.punti }}</span></div>
       <div class="dato">Livello: <span>{{ finale.livello }}</span></div>
-      <!-- nel volo il record dice I DUE NUMERI — quello di adesso e di
-           quanto è meglio, o quanto è mancato («🏆 Nuovo record!» da
-           solo era la notizia senza la misura); i coriandoli solo quando
-           è battuto, mai a un pareggio. In una tappa il record dei punti
-           resta quello di sempre, col numero accanto. -->
+      <!-- nel volo il record dice il numero di adesso e la misura (docs/core/primati.md) -->
       <div v-if="finale.primato" class="dato" data-primato>
         {{ finale.primato.record ? '🏆 ' : '' }}{{ fraseDiFine(finale.primato, SFIDA_VOLO.misura) }}</div>
       <div v-else class="dato">{{ finale.record ? '🏆 Nuovo record: ' + finale.punti
@@ -1550,12 +1150,7 @@ onUnmounted(() => {
       <button class="link chiaro" @click="apriTavola">📊 cosa so già</button>
     </div>
 
-    <!-- il velo copre tutto lo schermo, quindi sta in fondo e fuori da
-         qualunque cosa. `fase === 'gioco'` non è ridondante: la pausa può
-         essersi accesa da sé (il telefono posato) mentre a schermo c'era
-         il cartello di una tappa vinta o la tavola di «Cosa so», e lì il
-         gioco è già fermo dietro un velo suo — due veli uno sull'altro
-         sono un gioco rotto. -->
+    <!-- `fase === 'gioco'` non è ridondante: senza, due veli si sovrapporrebbero -->
     <VeloPausa v-if="inPausa && fase === 'gioco'" :dove="dovEravamo" @riprendi="togli" />
   </div>
 </template>
@@ -1651,15 +1246,13 @@ h1.chiaro span { color:#7fe3ff }
 .ripasso .tit { font-size:12px; letter-spacing:2px; text-transform:uppercase; opacity:.6; margin-bottom:4px }
 .ripasso i { font-style:normal; color:#ef5f5f }
 
-/* ════════ la mappa: sta sopra il canvas e parla la lingua del resto del gioco ════════ */
+/* la mappa: sta sopra il canvas e parla la lingua del resto del gioco */
 .campagna { background:linear-gradient(180deg,#fff4e6,#ffe6ef 55%,#e9e4ff); color:var(--testo);
             z-index:5 }
 .campagna .elenco { justify-content:flex-start; gap:12px; padding-bottom:26px }
 .campagna h1 { margin-bottom:2px }
-/* la fila: pianeti e stazioni nello stesso elenco, spezzato in capitoli */
 .scaletta { display:flex; flex-direction:column; gap:9px; width:100%; max-width:400px }
-/* Le stazioni si vestono come i pianeti: sono la stessa cosa — una tappa
-   con un bersaglio — e due grafiche direbbero che sono due giochi. */
+/* le stazioni si vestono come i pianeti: sono la stessa cosa, una tappa con un bersaglio */
 .pianeta, .stazione {
            display:grid; grid-template-columns:auto 1fr auto; grid-template-rows:auto auto;
            gap:1px 13px; align-items:center; text-align:left; padding:12px 15px;
@@ -1676,19 +1269,14 @@ h1.chiaro span { color:#7fe3ff }
 .pianeta .stato em, .stazione .stato em { font-style:normal }
 /* superato: resta acceso ma smette di chiamare */
 .pianeta.fatto, .stazione.fatto { background:linear-gradient(120deg,#e9f7ea,#fffffff0) }
-/* ADESSO TOCCA A QUESTA, e a una sola. Prima l'anello ce l'aveva ogni
-   riga aperta e non ancora fatta: con l'età che apre in anticipo tutto
-   quello che il bambino sa già, mezza scaletta si accendeva insieme e
-   «dove sono arrivato» non si leggeva più. Con un contatore solo la
-   risposta esiste ed è una, quindi l'anello va lì e basta. */
+/* adesso tocca a questa, e a una sola: vedi docs/asteroidi/scaletta.md */
 .pianeta.ora, .stazione.ora { background:linear-gradient(120deg,#e8f0ff,#fffffff0);
                box-shadow:0 4px 0 #c9d8f5, 0 0 0 2px var(--viola) }
 .pianeta.chiuso, .stazione.chiuso { opacity:.5; box-shadow:0 3px 0 #e9ddf5 }
 .pianeta.chiuso b, .pianeta.chiuso i,
 .stazione.chiuso b, .stazione.chiuso i { color:var(--tenue) }
 
-/* l'hangar: non è un negozio — è la spiegazione di cosa può capitare
-   alla nave mentre si gioca, e sta in fondo perché si legge una volta */
+/* l'hangar: non è un negozio, spiega cosa può capitare alla nave */
 .hangar { width:100%; max-width:400px; display:flex; flex-direction:column; gap:7px;
           margin-top:6px }
 .hangar .testo { margin:0; text-align:left }
@@ -1707,17 +1295,13 @@ h1.chiaro span { color:#7fe3ff }
 .schede button.on { background:var(--carta); color:var(--viola-scuro);
                     box-shadow:0 3px 0 #c9d8f5, 0 0 0 2px var(--viola) }
 
-/* il titolino di un capitolo della fila. Sta a sinistra e non al centro
-   perché deve leggersi come l'inizio di un blocco, non come un titolo:
-   quello che segue è la lista, e l'occhio deve scendere. */
+/* il titolino di un capitolo: a sinistra, si legge come inizio di un blocco */
 .capitolo { align-self:flex-start; margin:10px 0 -4px; font-size:13px; font-weight:900;
             letter-spacing:.6px; text-transform:uppercase; color:var(--viola-scuro);
             opacity:.75 }
 .capitolo + .che { align-self:flex-start; max-width:400px; margin:0 0 2px;
                    text-align:left; line-height:1.35 }
 
-/* Una fila di ventidue tappe non entra in uno schermo, e non deve:
-   `.elenco` scorre già, e i capitoli le danno dei punti dove fermarsi.
-   Quello che non cambia è che una stazione e un pianeta si vestono
-   uguale — vedi sopra: due grafiche direbbero che sono due giochi. */
+/* una fila di ventidue tappe non entra in uno schermo: `.elenco` scorre,
+   i capitoli danno dei punti dove fermarsi */
 </style>

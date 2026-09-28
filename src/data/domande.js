@@ -1,56 +1,16 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I TIPI DI DOMANDA — un meccanismo solo, tanti modi di chiedere.
-
-   Il gioco fa sempre la stessa cosa: mostra un bersaglio, mette lì
-   alcune risposte, se ne tocca una. Non cambia mai. Quello che cambia è
-   cosa c'è nel bersaglio e cosa c'è nelle risposte, e da lì viene tutta
-   la progressione: si comincia riconoscendo una figura e si finisce a
-   scegliere fra «il mio fratello è simpatico» e «il mio fratello sta
-   simpatico».
-
-   Vale per ogni lingua: le voci del lessico hanno il campo `str` — la
-   parola straniera, inglese o spagnola che sia — e qui dentro non si sa
-   né serve sapere quale delle due è. L'unica cosa che cambia è il nome
-   da scrivere nell'etichetta, e arriva da fuori.
-
-   Tenerli qui, fuori dalla schermata di gioco, serve a una cosa sola:
-   aggiungere un tipo domani deve essere aggiungere una voce a questa
-   tabella, non mettere le mani nel gioco.
-
-   ── Il livello di un tipo ──
-   0 RICONOSCERE  la parola è lì scritta e la risposta è una figura
-   1 CAPIRE       serve sapere cosa vuol dire — o riconoscerla a orecchio,
-                  che è la stessa domanda senza la stampella del testo
-   2 TIRARE FUORI si parte dall'italiano, o si ha solo la voce: niente
-                  più appigli, o la parola c'è o non c'è
-
-   Quale tocca a una parola non lo decide la tappa ma la FORZA di quella
-   parola nel motore di apprendimento. Una parola incontrata ieri si
-   chiede con la figura; la stessa parola, saputa da un mese, si chiede
-   al contrario. Così la difficoltà segue chi gioca invece di seguire il
-   calendario, e nessuno si trova a tradurre dall'italiano una parola
-   che ha visto una volta sola.
-   ═══════════════════════════════════════════════════════════════════ */
+// I tipi di domanda: un meccanismo solo (bersaglio, risposte, se ne
+// tocca una), tanti modi di chiedere — la tabella degli otto tipi e i
+// tre livelli (riconoscere/capire/tirare fuori) sono in
+// docs/lingue/vocaboli.md. Vale per ogni lingua: qui non si sa mai se
+// `str` è inglese o spagnolo.
 import { compagne, tutteDi } from './lessico.js'
 
 const mescola = a => a.slice().sort(() => Math.random() - 0.5)
 
-/* prende `quante` voci diverse dalla giusta, senza doppioni di ciò che
-   si vedrà scritto: due opzioni identiche sarebbero due risposte giuste.
-
-   `conFamiglia`, quando è vero, tiene anche conto della FAMIGLIA VISIVA
-   (`v.famiglia`, vedi `lessico.js`): due emoji che si confondono a colpo
-   d'occhio (le facce delle emozioni, gli omini dei mestieri) non escono
-   mai insieme nella stessa domanda. Il bersaglio conta come già vista —
-   la sua famiglia è la prima cosa da evitare. Vale solo per i tipi
-   figurati: le opzioni testuali non hanno questo problema.
-
-   Se la famiglia del bersaglio occupa quasi tutta la sua categoria (gli
-   aggettivi delle facce sono dieci undicesimi delle emoji di «com'è
-   fatto») le compagne vicine non bastano più a riempire la domanda: si
-   allarga a tutta la lingua, come fa già `compagne()` per le categorie
-   piccole — qui il motivo non è la categoria piccola, è la famiglia
-   grande, ma il rimedio è lo stesso. */
+// `quante` voci diverse dalla giusta, senza doppioni di ciò che si vedrà
+// scritto. Con `conFamiglia`, due emoji della stessa FAMIGLIA VISIVA
+// (`v.famiglia`) non escono mai insieme; se la famiglia del bersaglio
+// occupa quasi tutta la sua categoria, si allarga a tutta la lingua.
 function distrattori(v, quante, mostra, ammessa = () => true, viste = new Set(), conFamiglia = false) {
   viste.add(mostra(v))
   const famiglie = new Set(conFamiglia && v.famiglia ? [v.famiglia] : [])
@@ -72,13 +32,9 @@ function distrattori(v, quante, mostra, ammessa = () => true, viste = new Set(),
   return out
 }
 
-/* le stesse frasi vengono usate come distrattori l'una dell'altra: sono
-   già scritte a mano nei campi `falsi` e `falsiIt` dei file delle frasi,
-   e quelle sono le migliori perché sbagliano di poco.
-
-   Le viste si tengono da conto: una coppia domanda/affermazione ha come
-   falso proprio la frase gemella, che è anche fra quelle pescabili — e
-   uscirebbe due volte nella stessa domanda. */
+// i `falsi`/`falsiIt` scritti a mano nei file delle frasi sono i
+// distrattori migliori (sbagliano di poco); si scarta la frase gemella
+// se è già fra quelli, per non farla uscire due volte.
 function frasiVicine(v, quante, lato) {
   const viste = new Set([v[lato]])
   const out = []
@@ -109,11 +65,8 @@ export const TIPI = {
     },
   },
 
-  /* Un gradino sopra `figura`, e non alla pari: leggere `dog` è facile
-     anche il primo giorno, riconoscerlo all'orecchio no. Così la parola si
-     impara prima con gli occhi, e quando la si sa le si toglie il testo —
-     che è poi l'unico modo di allenare l'ascolto, la cosa che a scuola
-     manca e che da adulti serve per prima. */
+  // un gradino sopra `figura`: si toglie il testo solo quando la parola
+  // è già nota (vedi docs/lingue/vocaboli.md, "il testo è una stampella")
   ascoltoFigura: {
     livello: 1, quante: 6, figure: true, etichetta: () => 'Ascolta e scegli',
     puoUsare: (v, ha) => v.genere !== 'frase' && !!v.emoji && ha(v.str),
@@ -139,8 +92,7 @@ export const TIPI = {
     },
   },
 
-  /* la più tosta di tutte insieme a `tradStra`: niente testo E niente
-     figura, solo la voce e cinque parole italiane */
+  // la più tosta insieme a `tradStra`: niente testo né figura
   ascoltoIt: {
     livello: 2, quante: 5, etichetta: () => 'Ascolta: che vuol dire?',
     puoUsare: (v, ha) => v.genere !== 'frase' && ha(v.str),
@@ -187,10 +139,8 @@ export const TIPI = {
     },
   },
 
-  /* livello 1 e non 2: riempire il buco sembra la domanda più difficile, ma
-     le quattro parole sono lì da scegliere — è riconoscere una regola, non
-     produrre. A livello 2 sarebbe uscito solo su frasi già consolidate,
-     cioè quasi mai, e la grammatica non si sarebbe vista. */
+  // livello 1 e non 2: le quattro parole sono lì da scegliere, è
+  // riconoscere una regola e non produrre
   buco: {
     livello: 1, quante: 4, etichetta: () => 'Quale parola ci va?',
     puoUsare: v => v.genere === 'frase' && !!v.frase.buco,
@@ -213,10 +163,8 @@ export const NOMI_TIPI = ['figura', 'ascoltoFigura', 'tradIt', 'ascoltoIt', 'tra
    0..1 = appena conosciuta, 4+ = imparata (è la soglia `masterS`). */
 export const livelloDaForza = s => (s <= 1 ? 0 : s <= 3 ? 1 : 2)
 
-/* Sceglie il tipo di domanda per una voce, fra quelli che la tappa ha
-   aperto. Preferisce i più difficili fra quelli consentiti — altrimenti
-   una parola saputa resterebbe per sempre alla figurina — ma senza
-   escludere i facili, perché rivedere l'immagine ogni tanto fa bene. */
+// Sceglie il tipo fra quelli aperti, preferendo i più difficili ammessi
+// dalla forza — senza escludere i facili, che ritornano ogni tanto.
 export function scegliTipo(v, { aperti, forza, haVoce }) {
   const massimo = livelloDaForza(forza)
   const usabili = aperti.filter(t => TIPI[t] && TIPI[t].puoUsare(v, haVoce))
@@ -232,9 +180,8 @@ export function scegliTipo(v, { aperti, forza, haVoce }) {
   return ammessi[ammessi.length - 1]
 }
 
-/* Il turno pronto da mostrare: bersaglio, opzioni, e come vanno disegnate.
-   `nomeLingua` finisce solo nell'etichetta — "Come si dice in spagnolo?" —
-   ed è l'unico punto in cui il gioco sa che lingua sta insegnando. */
+// Il turno pronto da mostrare. `nomeLingua` finisce solo nell'etichetta:
+// l'unico punto in cui il gioco sa che lingua sta insegnando.
 export function componi(v, tipo, nomeLingua = 'inglese') {
   const def = TIPI[tipo]
   const { domanda, opzioni } = def.costruisci(v)

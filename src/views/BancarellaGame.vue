@@ -1,26 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA BANCARELLA — il negoziante sei tu, e il mercato si gira a tappe.
-
-   Una GIORNATA di mercato è una campagna: un giro di banchi, tre
-   clienti per banco. A ogni tappa hai davanti UN banco solo, con la
-   sua merce tutta in vista nelle ceste — niente reparti da aprire,
-   niente da cercare. Ogni cliente è due momenti:
-
-   1. RACCOLTA — chiede la sua roba (la lista sta nel suo fumetto) e
-      tu la prendi dalle ceste del banco.
-   2. CASSA — quando ha tutto ti allunga la banconota. Il banco
-      diventa il registratore, e **quanto calcola la cassa lo dice la
-      giornata** (`conto` in `data/bancarella.js`): può sommare la
-      spesa e dire il resto, può chiedere che il totale lo batta tu
-      sulla tastiera, può tacere il resto, o tutte e due le cose
-      insieme. Quello che non fa mai è dire la cifra giusta a chi
-      sbaglia: dice troppo o troppo poco, e costa tempo.
-
-   La difficoltà cresce di giornata in giornata, ma **una leva per
-   volta**: la tabella sta in testa a `data/bancarella.js`, e un test
-   la ricontrolla.
-   ═══════════════════════════════════════════════════════════════════ */
+/* LA BANCARELLA — il negoziante sei tu, il mercato si gira a tappe.
+   Vedi docs/bancarella/presentazione.md e regole.md. */
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
 import { state, answer, addCoins, segna, segnaBest,
          mercatoProgresso, mercatoCompleta, tappaAperta } from '../store/profile.js'
@@ -72,20 +52,10 @@ const manca = computed(() => (cliente.value ? cliente.value.resto - dato.value :
 const monetine = computed(() => (cliente.value ? cliente.value.monete.filter(v => v < 500) : []))
 const carte = computed(() => (cliente.value ? cliente.value.monete.filter(v => v >= 500) : []))
 
-/* ═══════════ la pausa ═══════════
-   Una pausa di gioco qui c'era già — il cartello del cambio banco, che
-   ferma il tempo mentre si legge dove si è arrivati — ma non c'era
-   niente per il bambino che vuole fermarsi, né per il telefono posato
-   con la fila davanti al banco. E il `?` era un tasto senza effetto:
-   si apriva «come si gioca» e intanto il cliente si spazientiva.
-
-   `anche` dice la sola condizione di casa, ed è reattiva: fuori dalla
-   partita non scorre niente. Il cartello del cambio banco resta fuori
-   di proposito — è un'attesa *dentro* la partita, e il suo orologio
-   sarebbe il primo a rimetterci (vedi sotto).
-
-   I nomi arrivano da fuori perché `metti` e `togli` qui sono già le
-   monete sul piatto della cassa. */
+/* Il cartello del cambio banco resta fuori da `anche` di proposito: è
+   un'attesa dentro la partita, e il suo orologio ne risentirebbe (vedi
+   sotto). Rinominati perché `metti`/`togli` qui sono già le monete sul
+   piatto della cassa. */
 const { inPausa, fermo, aiutoAperto, metti: mettiInPausa, togli: togliLaPausa,
         aiuto: leggeLaGuida } = usaPausa({ anche: () => fase.value !== 'gioco' })
 
@@ -94,16 +64,10 @@ const { inPausa, fermo, aiutoAperto, metti: mettiInPausa, togli: togliLaPausa,
 const dovEravamo = computed(() => (fase.value === 'gioco' && B.value
   ? `${B.value.icona} ${B.value.nome}` : ''))
 
-/* ── l'orologio che non è un fotogramma ──
-   Il `ciclo` si congela da sé a pagina nascosta, un `setTimeout` no: il
-   cartello del cambio banco dura un secondo e mezzo di **tempo di
-   parete**, quindi il telefono posato proprio lì tornava con la fila
-   già al banco e la pazienza che scorreva. Si congela quello che resta
-   e riparte da lì, come fa `quiz/Domanda.vue` con l'attesa dell'esito —
-   quel secondo e mezzo esiste per essere letto.
-
-   L'orologio è uno solo perché i due usi non capitano mai insieme: il
-   cartello del banco, e il cliente servito che lascia il posto. */
+/* `setTimeout`, a differenza del `ciclo` a fotogrammi, non si congela da sé
+   a pagina nascosta: qui si congela quello che resta e riparte da lì. Uno
+   solo perché i due usi — il cartello del banco e il cliente che lascia il
+   posto — non capitano mai insieme. */
 let timer = 0, scadeIl = 0, restaAl = 0, faPoi = null
 
 function programma(fn, ms) {
@@ -117,23 +81,8 @@ function spegniOrologio() {
   clearTimeout(timer); timer = 0; faPoi = null; restaAl = 0
 }
 
-/* Fermarsi e ripartire — ma **non su tutto `fermo`**, e le due
-   esclusioni sono l'una il rovescio dell'altra.
-
-   Il cartello del cambio banco è dentro `fermo` solo in quanto ferma il
-   battito: congelare per causa sua l'orologio che lo sta aspettando
-   vorrebbe dire non farlo scattare mai più.
-
-   Il cartello di un traguardo (`state.festa`) invece passa da sé in tre
-   secondi, e non c'è niente da salvare: la pazienza intanto è già ferma
-   (quella la guarda `fermo`, nel battito), quindi congelare anche
-   l'orologio allungherebbe soltanto la mano di chi guarda — e chi è
-   stato servito resterebbe piantato al banco a ringraziare per tre
-   secondi in più.
-
-   Quello che resta è quello che conta: il velo della pausa (il ⏸, il
-   telefono posato) e il foglio del `?`, cioè i due casi in cui quel
-   secondo e mezzo di cartello se ne andrebbe senza che nessuno lo legga. */
+/* Si congela solo per il velo della pausa e il foglio del `?`, non per
+   tutto `fermo` (vedi docs/bancarella/regole.md, «Fermarsi»). */
 watch(() => inPausa.value || aiutoAperto.value, giu => {
   if (giu) {
     if (!timer) return
@@ -156,12 +105,10 @@ const PERFETTI = ['Preciso! ✨', 'Che bravo!', 'Giusti giusti!']
 const FRETTA   = ['Ho un po\' di fretta…', 'Sbrighiamoci?', 'Uhm…']
 const UFFA     = ['Me ne vado!', 'Troppo lento!', 'Uffa…']
 
-/* ═══════════ la giornata ═══════════ */
+/* la giornata */
 function inizia(i = idx.value) {
   if (i >= 0 && !sbloccata(i)) return
-  /* una giornata che comincia non comincia in pausa: il telefono posato
-     sulla mappa lascia il freno acceso, e il mercato nuovo nascerebbe
-     dietro un velo che nessuno ha chiesto */
+  // il freno della mappa non deve restare acceso sul mercato nuovo
   togliLaPausa()
   spegniOrologio()
   idx.value = i
@@ -257,27 +204,16 @@ function prendi(a) {
 }
 
 /* ---------- fase 2: la cassa ----------
-   Chi fa i conti lo dice la giornata (`conto` in `data/bancarella.js`), e
-   qui diventano due domande separate:
-
-     `chiediTotale`  la riga TOTALE dello scontrino è `? ? ?` e la cifra si
-                     batte sulla tastiera. Finché non è indovinata il
-                     cassetto non si apre nemmeno: dare il resto prima di
-                     sapere quanto costa la spesa non vuol dire niente.
-     `aMente`        il display non dice il resto: le monete si posano
-                     tutte, anche troppe, e la risposta la dai tu col ✓.
-
-   Quando non c'è né l'una né l'altra la cassa fa tutto, e allora una moneta
-   che sfonda la cifra viene rifiutata e appena il piatto torna il cliente è
-   servito — è il gesto di base delle prime due giornate. */
+   `chiediTotale`/`aMente` sono `conto` (vedi data/bancarella.js) scomposto
+   in due domande. Finché il totale non è indovinato il cassetto non si
+   apre nemmeno: dare il resto prima di sapere quanto costa non vuol dire
+   niente. */
 const aMente = computed(() => !!(cliente.value && cliente.value.chiediResto))
 const chiediTotale = computed(() =>
   !!(cliente.value && cliente.value.chiediTotale) && !contoFatto.value)
 
-/* ═══════════ il totale battuto sulla cassa ═══════════
-   La cassa non dice mai la cifra giusta: dice troppo o troppo poco, come
-   fa già col resto. Sbagliare costa tempo e si riprova — se svelasse il
-   numero, il conto dopo non lo farebbe più nessuno. */
+/* Il totale battuto sulla cassa: mai la cifra giusta, solo troppo/poco
+   (vedi docs/bancarella/regole.md). */
 function batti(t) {
   if (occupato || !cliente.value || momento.value !== 'cassa' || !chiediTotale.value) return
   digitato.value = scriviCifra(digitato.value, t)
@@ -308,8 +244,7 @@ function metti(v) {
   const c = cliente.value
   if (occupato || !c || momento.value !== 'cassa' || chiediTotale.value) return
   if (!c.chiediResto && dato.value + v > c.resto) {
-    // non si può sbagliare per eccesso: la moneta viene rifiutata e basta,
-    // costa due secondi di pazienza e non un cuore
+    // non si sbaglia per eccesso: la moneta è rifiutata, costa tempo non un cuore
     rifiuti++
     rifiutata.value = v
     setTimeout(() => { if (rifiutata.value === v) rifiutata.value = 0 }, 420)
@@ -324,9 +259,8 @@ function metti(v) {
 
 const togli = () => { if (!occupato) piatto.value.pop() }
 
-/* «Ecco il resto»: esiste solo quando la cassa è rotta. Se il conto non torna
-   non si perde un cuore e non si scopre la cifra giusta — si perdono tre
-   secondi e si riprova, che è come va quando si sbaglia a dare il resto. */
+/* «Ecco il resto»: solo a cassa rotta. Se non torna si riprova, non si
+   perde un cuore né si scopre la cifra. */
 function proponi() {
   const c = cliente.value
   if (occupato || !c || momento.value !== 'cassa' || chiediTotale.value ||
@@ -350,11 +284,7 @@ function consegna() {
   if (perfetto) { hud.perfetti++; bonus.value = true; segna('restiPerfetti') }
   battuta.value = pick(perfetto ? PERFETTI : GRAZIE)
   suono.moneta()
-  /* il premio lo dice la giornata, non il livello di chi gioca: una
-     giornata facile rende meno di una tosta, e il conto sta in
-     `MONETE_CLIENTE` (`data/bancarella.js`, che cita `docs/apprendimento/calibrazione.md`).
-     Prima era `level`, cioè la stessa giornata pagava il doppio a chi
-     giocava da più tempo. */
+  // il premio lo dice la giornata (MONETE_CLIENTE in data/bancarella.js), non il livello
   if (hud.serviti % PER_MONETA === 0) {
     const preso = PER_MONETA * premioCliente(camp.value)
     addCoins(preso); moneta.value = preso
@@ -364,10 +294,8 @@ function consegna() {
 }
 
 /* ---------- il tempo ----------
-   `fermo` è l'elenco comune (`giochi/pausa.js`) e comprende già «non si
-   sta giocando»; quello che resta scritto qui sono le due attese di
-   casa, che un velo non deve coprire perché non sono una pausa: il
-   cartello del cambio banco e il cliente appena servito. */
+   `!cambio.value && !occupato` sono le due attese di casa: non una pausa,
+   quindi non passano da `fermo`. */
 function ciclo(ts) {
   const dt = Math.min(0.05, (ts - ultimo) / 1000 || 0); ultimo = ts
   if (!fermo.value && !cambio.value && !occupato) {
@@ -407,10 +335,8 @@ const dopo = computed(() => {
   return p < CAMPAGNE.length ? p : (prog.value.libera ? -1 : null)
 })
 
-/* ═══════════ il disegno del banco ═══════════
-   Le ceste non stanno a scacchiera: righe da tre e da due che si alternano,
-   ognuna spostata di un pelo, e ogni cesta storta a modo suo. Un banco vero
-   non è una griglia. */
+/* Il disegno del banco: righe da tre e da due che si alternano, ognuna
+   spostata di un pelo — niente scacchiera. */
 const FILE = { 1: [1], 2: [2], 3: [3], 4: [2, 2], 5: [3, 2], 6: [2, 2, 2],
                7: [3, 2, 2], 8: [3, 2, 3], 9: [3, 3, 3] }
 const righe = computed(() => {
@@ -476,11 +402,8 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
 
 <template>
   <div class="schermo negozio">
-    <!-- in partita le monete se ne vanno dalla barra: qui si maneggiano euro,
-         due salvadanai in cima sarebbero solo confusione, e lo spazio serve
-         ai cuori — vedi la stessa scelta nel laboratorio -->
-    <!-- il ⏸ c'è solo dove la fila si spazientisce: sulla mappa e sul
-         cartello di fine giornata non c'è niente da fermare -->
+    <!-- niente salvadanaio in barra: qui si maneggiano euro, e lo spazio serve ai cuori -->
+    <!-- il ⏸ c'è solo dove la fila si spazientisce -->
     <Barra titolo="Bancarella" guida="bancarella" :monete="fase !== 'gioco'"
            :pausa="fase === 'gioco' && !state.festa.length" @pausa="mettiInPausa()"
            @aiuto="leggeLaGuida" @indietro="$emit('vai','home')">
@@ -491,7 +414,7 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
       </template>
     </Barra>
 
-    <!-- ═════ LE GIORNATE DI MERCATO ═════ -->
+    <!-- le giornate di mercato -->
     <div v-if="fase === 'mappa'" class="centro mappa">
       <h1>Al <span>mercato</span></h1>
       <p class="testo">Una giornata è un giro di banchi, tre clienti per banco:
@@ -506,9 +429,7 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
             <span class="banchini"><i v-for="(b, j) in g.tappe" :key="j">{{ BANCHI[b].icona }}</i></span>
           </span>
           <span class="stato">{{ !sbloccata(i) ? '🔒' : i < prog.tappa ? '✅' : '▶' }}</span>
-          <!-- quello che questa giornata aggiunge: è la scaletta, detta a voce
-               alta. Senza, sedici carte in fila sembrano sedici volte la
-               stessa cosa. -->
+          <!-- la scaletta, detta a voce alta -->
           <span class="mini">{{ g.nuovo ? '＋ ' + g.nuovo
                                         : g.tappe.length + ' banchi · ' + g.tempo[1] + 's a cliente' }}</span>
         </button>
@@ -522,7 +443,6 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
       </div>
     </div>
 
-    <!-- ═════ GIOCO ═════ -->
     <template v-else-if="fase === 'gioco'">
       <!-- il percorso della giornata: dove sei e quanti banchi mancano -->
       <div class="percorso">
@@ -562,7 +482,6 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
                background: barra(cliente) < 30 ? '#ff5c7a' : barra(cliente) < 60 ? '#ffc93c' : '#38c172' }"></i></div>
         </div>
 
-        <!-- la fila: gente vera, non due emoji sbiadite in un angolo -->
         <div class="fila">
           <div v-for="(c, i) in coda.slice(1)" :key="i" class="attesa">
             <div class="persona" :style="{ '--v': c.vestito }">
@@ -575,12 +494,10 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
         </div>
       </div>
 
-      <!-- ═════ IL BANCO ═════ -->
       <div class="banco" :style="{ '--c': B.colore, '--t': B.tenda, '--l': B.legno }">
         <div class="tenda"></div>
         <div class="insegna">{{ B.icona }} {{ B.nome }}</div>
 
-        <!-- la merce, tutta in vista, nelle ceste -->
         <!-- niente `:key` sui due rami: in produzione, con una key esplicita su
              uno solo dei due, il patch del DOM va in confusione al cambio tappa -->
         <div v-if="momento === 'raccolta'" class="ceste" :style="{ '--r': righe.length }">
@@ -602,7 +519,6 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
           </div>
         </div>
 
-        <!-- ═════ LA CASSA ═════ -->
         <div v-else class="cassa">
           <div class="macchina">
             <div class="scontrino">
@@ -612,17 +528,12 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
                   <b>{{ euro(a.prezzo * a.quanti) }}</b>
                 </span>
               </div>
-              <!-- il totale: scritto dalla cassa, oppure `? ? ?` finché non
-                   l'ha battuto lui -->
               <div class="somma" :class="{ daFare: chiediTotale }">
                 <span>TOTALE</span><b>{{ chiediTotale ? '? ? ?' : euro(cliente.totale) }}</b>
               </div>
             </div>
-            <!-- il registratore: quando la cassa è rotta il display non
-                 calcola più, e al posto della cifra c'è un punto interrogativo -->
             <div class="corpo" :class="{ rotta: aMente || chiediTotale }">
-              <!-- il display: mentre batte il totale mostra quello che sta
-                   scrivendo, come su un registratore vero -->
+              <!-- mentre batte il totale mostra quello che sta scrivendo, come su un registratore vero -->
               <div class="display" v-if="chiediTotale">
                 <span>QUANTO FA?</span>
                 <b>{{ digitato ? digitato + ' €' : '_ _ _' }}</b>
@@ -637,12 +548,8 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
             </div>
           </div>
 
-          <!-- LA TASTIERA VERA. Sta qui e non dentro il registratore per una
-               ragione sola: sotto le dita di un bambino dodici tasti larghi
-               due centimetri non ci stanno in 74 pixel. Prende il posto del
-               piatto e del cassetto, che finché il totale non è battuto non
-               servono — dare il resto senza sapere quanto costa la spesa non
-               vuol dire niente. -->
+          <!-- la tastiera vera sta qui e non nel registratore: dodici tasti
+               larghi due centimetri non ci stanno in 74 pixel -->
           <div v-if="chiediTotale" class="tastierone" :class="{ nonTorna: sbagliato === 'conto' }">
             <button v-for="t in TASTI" :key="t" class="tasto" :data-tasto="t"
                     @click="batti(t)">{{ t }}</button>
@@ -704,7 +611,6 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
       <div v-if="volo" class="vola" :key="volo.k">{{ volo.emoji }}</div>
     </template>
 
-    <!-- ═════ FINE ═════ -->
     <div v-else class="centro">
       <h1 style="font-size:30px">{{ esito === 'vinta' ? 'Giornata finita!' : 'Il banco ha chiuso' }}</h1>
       <div class="vetrina">{{ esito === 'vinta' ? '🎉' : hud.serviti >= 5 ? '😊' : '😅' }}</div>
@@ -722,10 +628,8 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
 
     <div v-if="moneta" class="moneta">+{{ moneta }} 🪙</div>
 
-    <!-- il velo copre tutto lo schermo, quindi sta in fondo e fuori da
-         qualunque cosa. Dove il gioco è già fermo dietro un velo suo —
-         il cartello di fine giornata, quello di un traguardo — non se ne
-         mette un secondo sopra. -->
+    <!-- niente velo sopra un altro velo: dove il gioco è già fermo dietro
+         il suo (fine giornata, traguardo) non se ne mette un secondo -->
     <VeloPausa v-if="inPausa && fase === 'gioco' && !state.festa.length"
                :dove="dovEravamo" @riprendi="togliLaPausa" />
   </div>
@@ -800,9 +704,7 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
           background:#ffffffaa; border-radius:8px; padding:2px 6px }
 @keyframes dice { from { transform:scale(.5) translateY(6px); opacity:0 } to { transform:none; opacity:1 } }
 
-/* ═══════════ IL BANCO ═══════════
-   Un banco solo per tappa, con la tenda a righe dal bordo smerlato, l'insegna
-   e il piano di legno. Tutto quello che si vende è lì sopra: niente da aprire. */
+/* il banco: la tenda a righe dal bordo smerlato, l'insegna e il piano di legno */
 .banco { flex:1; min-height:0; display:flex; flex-direction:column; position:relative;
          margin-top:8px; border-radius:18px 18px 0 0; overflow:hidden;
          box-shadow:0 -3px 14px #00000026 }
@@ -873,9 +775,8 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
           color:#fff; background:#e2725b; border-radius:9px; padding:1px 6px;
           box-shadow:0 2px 4px #0004; animation:dice .3s }
 
-/* ═══════════ LA CASSA ═══════════
-   Il registratore è disegnato — scontrino, display verde, tastierina — e sotto
-   c'è il cassetto estratto con gli scomparti. Prima c'era scritto "CASSA". */
+/* la cassa: il registratore disegnato — scontrino, display verde, tastierina —
+   e sotto il cassetto estratto con gli scomparti */
 .cassa { display:flex; flex-direction:column; gap:7px }
 .macchina { flex:none; display:flex; align-items:stretch; gap:8px; padding:0 2px }
 .scontrino { flex:1; min-width:0; background:#fffdf7; border-radius:3px 3px 0 0;
@@ -906,14 +807,11 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
 /* il totale ancora da battere: si vede che è un buco, non una cifra */
 .somma.daFare b { color:#c8442f; letter-spacing:2px }
 
-/* ═══════════ la tastiera vera ═══════════
-   Tre colonne larghe, che è il minimo perché un dito ci prenda dentro senza
-   guardare: le cifre come su un telefono, la virgola dove sta lo zero di un
-   registratore, e il ✓ largo quanto tutta la fila — è l'unico che manda
-   qualcosa, e non deve poter essere confuso con un tasto che scrive. */
-/* Le righe sono dichiarate (`repeat(5,1fr)`) e non lasciate al contenuto: un
-   grid che si misura sui tasti cresce oltre il `flex:1` e la tastiera esce
-   dallo schermo dal basso — cioè proprio il ✓ non si vede più. */
+/* la tastiera vera: tre colonne larghe come su un telefono, il ✓ largo
+   quanto tutta la fila per non confonderlo con un tasto che scrive.
+   Le righe sono dichiarate (`repeat(5,1fr)`) e non lasciate al contenuto:
+   un grid che si misura sui tasti cresce oltre `flex:1` e il ✓ esce dallo
+   schermo. */
 .tastierone { flex:1; min-height:0; display:grid; grid-template-columns:repeat(3,1fr);
               grid-template-rows:repeat(5,1fr); gap:5px; padding:7px; border-radius:12px;
               background:linear-gradient(180deg,#5d4a3a,#7a6350);

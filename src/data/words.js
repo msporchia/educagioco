@@ -1,41 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL LESSICO — ogni voce è [inglese, italiano, emoji, categoria,
-   famiglia?]. La famiglia è un quinto campo facoltativo: chi legge le
-   prime quattro posizioni (e sono in tanti — vedi sotto) non si accorge
-   nemmeno che c'è.
-
-   Tre regole da rispettare quando si aggiunge roba:
-
-   1. NESSUNA EMOJI RIPETUTA e nessuna parola ripetuta. I distrattori
-      figurati escono dalla stessa categoria: due voci con la stessa
-      emoji darebbero una domanda con due risposte giuste.
-
-   2. L'EMOJI È FACOLTATIVA (`''`), e lo resta di default: se non esiste
-      un'icona perfettamente aderente — la cosa, non «quale ci assomiglia
-      di più» — non si mette. Vale per i concetti astratti (tempo, ora,
-      mese, settimana...), per gli stati d'animo dove l'emoji dice
-      un'altra sfumatura, e per gli oggetti che l'emoji semplicemente non
-      è (una teiera non è una tazza, una scala a pioli non sono le
-      scale). Serviva quando l'unico modo di giocare era "parola →
-      figura"; ora che si gioca anche inglese→italiano, italiano→inglese
-      e in ascolto, si possono insegnare parole che nessuna emoji
-      illustra — aggettivi, tempo, preposizioni, parole di servizio. Una
-      voce senza emoji semplicemente non esce nelle domande figurate.
-
-   3. DUE EMOJI CONFONDIBILI NON ESCONO MAI NELLA STESSA DOMANDA. Quando
-      una voce può essere scambiata per un'altra a colpo d'occhio (le
-      facce delle emozioni, le sagome dei mestieri con lo stesso omino
-      🧑) dichiara la sua FAMIGLIA nel quinto campo — una stringa a
-      piacere, tipo 'facce' o 'mestieri' — e chi pesca i distrattori
-      figurati (`domande.js`) non ne prende due della stessa famiglia
-      nella stessa domanda. Si dichiara solo dove serve, non su tutte le
-      voci: `test/unita/lessico-icone.test.mjs` la fa rispettare
-      costruendo davvero le domande.
-
-   Le categorie con almeno sei emoji reggono le domande figurate; quelle
-   senza (aggettivi, grammatica) danno comunque ottimi distrattori
-   testuali, perché sono parole che si somigliano fra loro.
-   ═══════════════════════════════════════════════════════════════════ */
+// Voce: [inglese, italiano, emoji, categoria, famiglia?]. Niente emoji
+// o parola ripetuta nella stessa lingua; regole complete in
+// docs/lingue/vocaboli.md#formato-dei-dati.
 export const WORDS = [
   // ---- animali ----
   ['dog','cane','🐶','a'],['cat','gatto','🐱','a'],['mouse','topo','🐭','a'],

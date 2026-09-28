@@ -1,35 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE FRASI — dove il vocabolario diventa lingua.
-
-   Stessa meccanica di sempre: un bersaglio, alcune risposte, si tocca
-   quella giusta. Cambia solo cosa c'è dentro. Il motore di
-   apprendimento non sa che sono frasi: le chiavi sono `frase:<id>`.
-
-   ── Perché l'inglese non ha il punto di domanda ──
-   «is this a cat» e «this is a cat» si scrivono senza `?`. Se il
-   bersaglio inglese portasse il punto interrogativo, riconoscere la
-   domanda sarebbe questione di guardare l'ultimo carattere, non di
-   aver capito che in inglese la domanda si fa GIRANDO il verbo. Le
-   traduzioni italiane invece il `?` ce l'hanno: è lì che sta la
-   scelta, fra «questo è un gatto» e «questo è un gatto?».
-
-   Per questo molte frasi vanno in COPPIA — l'affermativa e la sua
-   domanda — e ognuna tiene l'altra come distrattore. Sono le domande
-   più istruttive del gioco: le due risposte sembrano identiche.
-
-   ── I campi ──
-     it, en    le due frasi. `en` senza punteggiatura finale.
-     tema      per pescare distrattori affini (le lettere di words.js)
-     liv       1 facile · 2 media · 3 tosta — decide in che tappa entra
-     falsi     traduzioni inglesi sbagliate, per le domande IT → EN.
-               Sono errori veri: preposizione storta, is/are, ordine
-               delle parole. Senza, basterebbe riconoscere una parola.
-     falsiIt   traduzioni italiane sbagliate, per le domande EN → IT.
-               Facoltativo: se manca, i distrattori escono dalle altre
-               frasi dello stesso tema.
-     buco      facoltativo: la stessa frase con un vuoto da riempire.
-               Serve per la grammatica pura (is/are, a/an, have/has).
-   ═══════════════════════════════════════════════════════════════════ */
+// Le frasi inglesi: `en` senza `?` (vedi docs/lingue/vocaboli.md). Campi
+// in docs/lingue/vocaboli.md#formato-dei-dati: it/en, tema, liv, falsi,
+// falsiIt?, buco?.
 export const FRASI = [
   /* ─────────── livello 1: c'è, è, sono ─────────── */
   { id: 'e-cat-1', tema: 'a', liv: 1, it: 'questo è un gatto', en: 'this is a cat',
@@ -403,8 +374,8 @@ export const FRASI = [
     falsi: ['let us go to home', 'we let go home'] },
 ]
 
-/* le frasi di un livello o più bassi: la tappa nuova porta il livello suo
-   e si tiene dietro tutto quello di prima, come i pianeti delle tabelline */
+// le frasi di un livello o più bassi: una tappa nuova si tiene dietro
+// tutto quello di prima, come i pianeti delle tabelline
 export const frasiFinoA = liv => FRASI.filter(f => f.liv <= liv)
 export const fraseDi = id => FRASI.find(f => f.id === id) || null
 export const chiaveFrase = id => 'frase:' + id

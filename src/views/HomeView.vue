@@ -10,10 +10,7 @@ import { SCALETTA, posizioneOra, filaDi } from '../data/asteroidi.js'
 import { CAMPAGNA as TAPPE_EN } from '../data/campagna-inglese.js'
 import { CAMPAGNA as TAPPE_ES } from '../data/campagna-spagnolo.js'
 import { CAMPAGNE as GIORNATE } from '../data/bancarella.js'
-/* la riga del generale conta le prove CHE SI VEDONO, non tutte quelle
-   che ci sono: quelle non ancora approvate stanno dietro il cancello dei
-   giochi in prova, e «livello 4 di 26» a chi ne ha sei in elenco non
-   direbbe niente di vero */
+// conta le prove CHE SI VEDONO, non tutte: le non approvate sono dietro il cancello dei giochi in prova
 import { fatte as proveFatte, quante as proveQuante } from './generale/fila.js'
 import { gioco as giocoNuovo } from '../giochi/indice.js'
 import { progresso as progressoDi, primatoDi } from '../giochi/campagne.js'
@@ -27,51 +24,27 @@ import { aggiornando, aggiornaOra, daUnSito } from '../aggiornamento.js'
 
 defineEmits(['vai'])
 
-/* Scritta in fondo alla home: serve a rispondere a "il telefono ha preso
-   l'aggiornamento?" guardando lo schermo, senza doverlo indovinare.
-   La stringa la mette il build (vite.config.js). */
-const versione = __VERSIONE__
-/* e il tasto che va a prendere quella dopo, dove c'è un sito a cui
-   chiederla: dal file aperto col doppio click non c'è nessuno */
-const siCerca = daUnSito()
+const versione = __VERSIONE__   // la stringa la mette il build (vite.config.js)
+const siCerca = daUnSito()      // il tasto "cerca aggiornamenti": solo se c'è un sito a cui chiedere
 
-/* English è un gioco solo: parole, verbi e frasi stanno nella stessa
-   campagna, quindi il numero da mostrare è quanto se ne sa in tutto. */
 const imparateEn = computed(() =>
   countMastered('en:') + countMastered('verbo:') + countMastered('frase:'))
 const tappaEn = computed(() => engProgresso())
-/* stessa cosa per lo spagnolo, che ha le sue chiavi: quello che si sa in
-   una lingua non conta nell'altra */
 const imparateEs = computed(() =>
   countMastered('es:') + countMastered('verbo-es:') + countMastered('frase-es:'))
 const tappaEs = computed(() => espProgresso())
-/* dalla home si vede dove si è arrivati nella campagna, non un numero
-   astratto: "pianeta 4 di 10" dice al bambino cosa lo aspetta stasera */
 const pianeta = computed(() => mateProgresso())
 const stelleMate = computed(() => tabellineIntere().length)
-/* Negli asteroidi le tabelline e i conti a mente sono una scaletta sola
-   (`data/asteroidi.js`): la carta dice a che punto della fila si è, che
-   è la cosa che il bambino ritrova aprendo il gioco. La fila è una e
-   sempre la stessa — c'era un interruttore che la accorciava ai soli
-   pianeti, e con lui c'era anche una seconda numerazione da tenere in
-   piedi qui dentro.
-   Un contatore solo, quindi un numero solo: «quante ne ha fatte» e «da
-   dove si riprende» sono lo stesso posto. Erano due quando i binari
-   erano due — cinque pianeti e nessuna stazione facevano «cinque fatte»
-   e «si riprende dalla prima» — e dirne uno solo faceva sembrare che i
-   progressi fossero spariti. */
+// tabelline e conti a mente sono una scaletta sola (data/asteroidi.js): un contatore, non due
 const filaMate = SCALETTA
 const doveMate = computed(() => posizioneOra(filaDi(pianeta.value)))
 const fatteMate = doveMate
 
 const clienti = computed(() => state.profile.totals.clienti || 0)
 const restiPerfetti = computed(() => state.profile.totals.restiPerfetti || 0)
-/* la bancarella invece la campagna ce l'ha: le giornate di mercato */
 const mercato = computed(() => mercatoProgresso())
 const QUANTE_GIORNATE = GIORNATE.length
 
-/* il generale: dove si è arrivati e quante stelle si sono raccolte in
-   tutto (una per livello portato a casa, due per chi sta nel par) */
 const generale = computed(() => genProgresso())
 const stelleGen = computed(() =>
   Object.values(generale.value.stelle || {}).reduce((n, s) => n + s, 0))
@@ -80,87 +53,33 @@ const badge = computed(() => traguardi().filter(t => t.preso).length)
 const serie = computed(() => serieGiorni())
 const salita = computed(() => livelloOra())
 
-/* Azzerare i progressi non sta più qui: era un tocco solo, e un tocco solo
-   prima o poi arriva per sbaglio. Ora vive dietro il PIN in GenitoriView,
-   insieme a salvataggio e ripristino. */
+// azzerare i progressi vive dietro il PIN in GenitoriView, non qui
 
-/* Quali carte si vedono lo decidono i genitori, un gioco per volta e per
-   bambino (`settings.giochi`). Un gioco spento sparisce dalla home ma
-   resta raggiungibile dall'indirizzo (`#torri`): il frammento è roba da
-   grandi e da test, non una strada che un bambino trova per caso.
-   L'albo non si spegne: è dove stanno i progressi. */
-/* ── e poi c'è l'età ──
-   Un gioco acceso non è ancora un gioco da mettere in home: se ogni
-   tappa della sua campagna sta fuori dalla portata di questo bambino,
-   quella carta non ha niente da offrirgli — le pecore da contare a dieci
-   anni, le conversioni a sei. Il conto sta in `data/portata-giochi.js` e
-   guarda le tappe vere, non un'etichetta sul manifesto.
-
-   Due cose che questo NON è. **Non è l'interruttore dei genitori messo
-   giù**: `settings.giochi` resta com'era, e riaccendere l'età non è una
-   cosa che si fa da qui. E **non toglie niente a chi ha già cominciato**:
-   un gioco aperto anche una volta sola resta in home per sempre, perché
-   un gioco che c'era e un giorno non c'è più è peggio di un gioco che
-   non serve — i progressi restano, ma il bambino vede solo che è
-   sparito, e non c'è modo di spiegarglielo dentro il gioco.
-
-   Resta raggiungibile dall'indirizzo (`#pozioni`), come tutto quello che
-   la home non mostra: è la strada dei grandi e dei test. */
-/* La portata decide **cosa si offre a chi arriva**, e un grande può
-   dissentire riga per riga dal quadro delle impostazioni: `giocoForzato`
-   è quel dissenso scritto, e vince sull'età. Non vince su
-   `giocoAcceso`, che dentro ha anche i saperi spenti — quella non è
-   una questione di età ma di domande da indovinare. */
-/* la domanda sta in `data/portata-giochi.js` e non qui: la fanno anche
-   le novità dei bambini, e una riga su un gioco che la home non mostra
-   sarebbe una riga su niente */
+// quali carte si vedono: vedi docs/genitori/interruttori.md e docs/apprendimento/eta-e-portata.md
 const acceso = inCasa
 const nessunGioco = computed(() => quantiGiochiAccesi() === 0)
 
-/* ═══════════ le carte, che adesso si costruiscono da sole ═══════════
-   Erano tredici blocchi scritti a mano, ognuno con la sua riga di
-   descrizione — e quella riga diceva già, con parole diverse, quello
-   che `data/giochi.js` dice nel campo `che`. Due posti da tenere
-   d'accordo per la stessa frase, e infatti non lo erano più: il
-   castello in home si presentava «operazioni in colonna · torri e
-   nemici» e nei settaggi dei genitori «operazioni in colonna, torri e
-   nemici». Adesso la frase è una, sta col gioco, e qui si legge.
-
-   Il colore invece resta CSS e non dato, per i sette vecchi: sono
-   sfumature scritte a mano una per una (`.carta.td`, `.carta.poz`) e
-   spostarle in una tabella di stringhe le renderebbe più difficili da
-   ritoccare, non meno. I giochi nuovi portano la loro `tinta` nel
-   manifesto perché nascono senza una riga di CSS dedicata. */
+// le carte si costruiscono da data/giochi.js e data/aree.js, non a mano.
+// il colore resta CSS per i sette giochi vecchi (sotto); i nuovi portano
+// la loro `tinta` nel manifesto
 const CLASSE = {
   mate: 'mate', inglese: 'eng', spagnolo: 'esp', torri: 'td',
   bancarella: 'banco', generale: 'gen',
 }
 
-/* Un gruppo senza nemmeno un gioco acceso non si disegna: i genitori
-   possono spegnere tutte le parole, e «PAROLE» su una fila vuota
-   sarebbe un titolo che promette qualcosa che non c'è. */
+// un gruppo senza nemmeno un gioco acceso non si disegna
 const gruppi = computed(() => AREE
   .map(a => ({ ...a, giochi: GIOCHI.filter(g => g.area === a.chiave && acceso(g.chiave)) }))
   .filter(a => a.giochi.length))
 
-/* A che punto sei, gioco per gioco. I cinque nuovi se lo sanno dire da
-   soli (`riassunto()` nel manifesto); i sette vecchi no, e le loro
-   righe stavano nel template — le stesse identiche espressioni, spostate
-   qui perché il template adesso è un ciclo solo e non ha più un posto
-   dove metterle. Una riga vuota è legittima: vuol dire «non l'hai
-   ancora aperto», e la carta dice comunque cosa insegna. */
-/* Il castello ha quattro partite libere e la riga è una: si racconta
-   **il record fatto più di recente**, non il più alto — quattro terreni
-   non si confrontano fra loro, e quello di ieri sera è quello che il
-   bambino ha in testa (`recordPiuRecente`, e il perché sta lì). */
+// i giochi nuovi sanno dire da soli a che punto sono; per i vecchi il testo è qui sotto
+// il castello: si racconta il record più recente, non il più alto (docs/core/primati.md)
 const recordTorri = computed(() => {
   const r = recordPiuRecente((state.profile.campagne || {}).torri || {},
                              GIOCHI.find(g => g.chiave === 'torri').senzaFine)
   return r ? `${r.sfida.icona} ${r.sfida.nome} · record ${recordInParole(r.quaderno, r.sfida)}` : ''
 })
 
-/* il volo infinito degli asteroidi ha una sfida sola: si legge da
-   `primatoDi`, che non crea niente, e si dice solo se c'è */
 const recordMate = computed(() => {
   const s = sfidaDi(GIOCHI.find(g => g.chiave === 'mate').senzaFine)
   const r = recordInParole(primatoDi('mate'), s)
@@ -180,9 +99,6 @@ const dove = computed(() => {
     spagnolo: tappaEs.value.libera
       ? `gioco libero ♾️ · 🎯 ${imparateEs.value} sicure`
       : `tappa ${q(tappaEs.value.tappa, TAPPE_ES.length)} · 🎯 ${imparateEs.value} sicure`,
-    /* il castello dice qualcosa solo quando c'è un record della partita
-       libera: si legge senza `progressoDi`, che creerebbe la voce a chi
-       non ci ha mai giocato */
     torri: recordTorri.value ? `♾️ ${recordTorri.value}` : '',
     bancarella: mercato.value.libera
       ? `♾️ mercato libero · ✨ ${restiPerfetti.value} resti precisi`
@@ -204,24 +120,13 @@ function aChePunto (chiave) {
 </script>
 
 <template>
-  <!-- dove finiscono i dati non è roba da leggere per un bambino, ma il
-       test di avvio deve poter dire che siamo su IndexedDB e non sulla
-       memoria: sta nell'attributo, non sullo schermo -->
+  <!-- data-archivio: usato dai test di avvio per verificare IndexedDB vs memoria -->
   <div class="schermo" :data-archivio="state.storage">
     <div class="centro">
-      <!-- niente intestazione col nome: chi apre l'app sa già di chi è il
-           telefono, e quella riga rubava il posto ai giochi. Chi sta
-           giocando si legge dalla fila qui sotto quando i giocatori sono
-           più di uno, e nell'albo. -->
-
-      <!-- ══ i due nastri ══
-           «Installalo» e «c'è una versione nuova»: parlano tutti e due al
-           grande e stanno tutti e due **solo qui**, che è l'unico posto
-           dove ricaricare non costa una partita (`guide/Nastri.vue`). -->
+      <!-- i nastri (installazione, versione nuova...) stanno solo qui: vedi docs/genitori/guide.md -->
       <Nastri @vai="v => $emit('vai', v)" />
 
-      <!-- con un giocatore solo non c'è niente da scegliere: la fila
-           sparisce invece di mostrare un bottone sempre premuto -->
+      <!-- con un giocatore solo non c'è niente da scegliere -->
       <div class="giocatori" v-if="state.giocatori.length > 1">
         <button v-for="g in state.giocatori" :key="g.id" class="gioc"
                 :class="{ on: state.player === g.id }"
@@ -242,17 +147,7 @@ function aChePunto (chiave) {
       </button>
 
       <div class="carte">
-        <!-- ═══ un ciclo solo, per tutti e dodici ═══
-             I gruppi vengono da `data/aree.js` e le carte da
-             `data/giochi.js`: qui non c'è più una carta scritta a mano
-             per gioco, e un gioco nuovo compare senza toccare questo
-             file — vale per i cinque della convenzione nuova come per i
-             sette vecchi, che prima stavano scritti uno per uno.
-
-             Tre righe per carta, e sono tre cose diverse: il nome, cosa
-             insegna, e come si gioca più dove sei arrivato. La seconda
-             è quella che mancava, ed è quella che serve a chi la home
-             la guarda per scegliere invece che per riprendere. -->
+        <!-- un ciclo solo: un gioco nuovo compare senza toccare questo file -->
         <template v-for="a in gruppi" :key="a.chiave">
           <h2 class="area">{{ a.emoji }} {{ a.nome }}</h2>
           <button v-for="g in a.giochi" :key="g.chiave"
@@ -260,13 +155,6 @@ function aChePunto (chiave) {
                   :style="g.tinta ? { background: `linear-gradient(120deg,${g.tinta},#fffffff0)` } : null"
                   @click="$emit('vai', g.chiave)">
             <span class="ico">{{ g.ico }}</span>
-            <!-- Qui c'era un'etichetta «piccoli» sulle carte che lo
-                 dichiarano nel manifesto. È sparita perché la leggeva la
-                 persona sbagliata: a cinque anni non si legge, a sette
-                 dice «questo non è per te» — cioè scoraggia proprio chi
-                 la carta ce l'ha davanti. `piccoli` continua a fare il
-                 suo mestiere alla partenza (`data/partenze.js`), che è
-                 dove serve, e non ha nessun motivo di vedersi. -->
             <b>{{ g.nome }}</b>
             <i>{{ g.che }}</i>
             <small class="modo">{{ MODI[g.come].emoji }} {{ MODI[g.come].nome

@@ -1,16 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA CAMPAGNA DI ENGLISH — tredici tappe, una strada sola.
-
-   Prima l'inglese era due giochi separati (parole con le figure, verbi
-   in ascolto) e nessuno dei due andava da nessuna parte: si apriva, si
-   macinava, si chiudeva. Qui vale quello che vale per i pianeti delle
-   tabelline: la strada è già tracciata, ogni tappa porta roba nuova, e
-   quello di prima resta dentro come ripasso.
-
-   La forma delle tappe — cumulativa, con bersaglio e mirate — sta in
-   `campagna-lingua.js`, condivisa con lo spagnolo: qui ci sono solo i
-   contenuti e le dritte da leggere.
-   ═══════════════════════════════════════════════════════════════════ */
+// La campagna di English: tredici tappe, contenuti e dritte. La forma
+// (cumulativa, bersaglio/mirate) sta in campagna-lingua.js. Vedi
+// docs/lingue/vocaboli.md.
 import { WORDS } from './words.js'
 import { VERBI } from './verbi.js'
 import { FRASI } from './frasi.js'
@@ -21,24 +11,12 @@ export const chiaveParola = chiaveParolaDi('en')
 export const chiaveVerbo = chiaveVerboDi('en')
 export const chiaveFrase = chiaveFraseDi('en')
 
-/* i tipi di domanda, dal più facile al più difficile: l'elenco vero sta
-   in `data/domande.js`, qui si ri-esporta perché la campagna è il posto
-   da cui si guarda cosa una tappa apre. */
+// riesportato: la campagna è il posto da cui si guarda cosa apre una tappa
 export const TIPI = NOMI_TIPI
 
-/* `portata` è dove sta la tappa sulla scala 0-100 di `data/portata.js`.
-   Vanno da «tocca la figura giusta», che si fa a cinque anni perché non
-   c'è niente da leggere e il nome arriva a voce, fino alle frasi scritte
-   avanti e indietro, che sono roba di quinta: **è un gioco lungo sei
-   anni**, ed è il motivo per cui non poteva bastargli un intervallo solo
-   dichiarato a occhio sul manifesto.
-
-   Nessuna tappa dichiara `scuola`, ed è la dichiarazione che conta di
-   più qui dentro: `dog` a dieci anni non la sai *per il fatto di avere
-   dieci anni*. Nessuna scuola gliel'ha data e questo gioco è l'unica
-   fonte che ha, quindi la testa non si taglia mai — al contrario di
-   `2×2`, che a nove anni è tempo perso. È esattamente la coppia di casi
-   che ha fatto nascere `data/portata.js`. */
+// `portata`: scala 0-100 di data/portata.js (vedi docs/apprendimento/eta-e-portata.md).
+// Nessuna tappa dichiara `scuola`: questo gioco è l'unica fonte per queste
+// parole, quindi la testa non si taglia mai per età.
 const T = [
   { emoji: '🐶', nome: 'Gli animali', cats: ['a'],
     portata: 12,

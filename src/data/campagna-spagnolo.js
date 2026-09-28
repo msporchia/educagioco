@@ -1,25 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA CAMPAGNA DI SPAGNOLO — tredici tappe, la stessa strada di English.
-
-   La forma è quella di `campagna-lingua.js`: qui ci sono solo i
-   contenuti e le dritte. L'ordine delle categorie è lo stesso
-   dell'inglese — animali, cibo, colori... — perché è un ordine che
-   funziona: si comincia da quello che si può indicare col dito.
-
-   Quello che cambia è COSA si insegna strada facendo, perché lo
-   spagnolo è difficile in punti diversi. L'inglese chiede di sentire
-   la differenza fra parole che si scrivono e si dicono in modi
-   lontanissimi; lo spagnolo, che a un italiano suona quasi familiare,
-   chiede tre cose che l'italiano non fa:
-
-     il GENERE che si porta dietro articolo e aggettivo,
-     SER e ESTAR, due verbi dove noi ne abbiamo uno,
-     TENER per fame, sete, freddo e anni.
-
-   Sono le dritte delle tappe da 6 in poi, ed è dove finiscono le
-   frasi: le prime tappe servono a mettere insieme le parole per
-   poterle dire.
-   ═══════════════════════════════════════════════════════════════════ */
+// La campagna di Spagnolo: stessa forma di English (campagna-lingua.js),
+// stesso ordine di categorie, contenuti e dritte diversi — lo spagnolo è
+// difficile in punti diversi (genere, ser/estar, tener). Vedi
+// docs/lingue/vocaboli.md.
 import { PAROLE_ES } from './parole-es.js'
 import { VERBI_ES } from './verbi-es.js'
 import { FRASI_ES } from './frasi-es.js'
@@ -30,19 +12,9 @@ export const chiaveParolaEs = chiaveParolaDi('es')
 export const chiaveVerboEs = chiaveVerboDi('es')
 export const chiaveFraseEs = chiaveFraseDi('es')
 
-/* `portata` è dove sta la tappa sulla scala 0-100 di `data/portata.js`.
-   Vanno da «tocca la figura giusta», che si fa a cinque anni perché non
-   c'è niente da leggere e il nome arriva a voce, fino alle frasi scritte
-   avanti e indietro, che sono roba di quinta: **è un gioco lungo sei
-   anni**, ed è il motivo per cui non poteva bastargli un intervallo solo
-   dichiarato a occhio sul manifesto.
-
-   Nessuna tappa dichiara `scuola`, ed è la dichiarazione che conta di
-   più qui dentro: `dog` a dieci anni non la sai *per il fatto di avere
-   dieci anni*. Nessuna scuola gliel'ha data e questo gioco è l'unica
-   fonte che ha, quindi la testa non si taglia mai — al contrario di
-   `2×2`, che a nove anni è tempo perso. È esattamente la coppia di casi
-   che ha fatto nascere `data/portata.js`. */
+// `portata`: scala 0-100 di data/portata.js (vedi docs/apprendimento/eta-e-portata.md).
+// Nessuna tappa dichiara `scuola`: questo gioco è l'unica fonte per queste
+// parole, quindi la testa non si taglia mai per età.
 const T = [
   { emoji: '🐶', nome: 'Gli animali', cats: ['a'],
     portata: 12,

@@ -94,3 +94,32 @@ giusta — e la progressione sta in cosa c'è nel bersaglio e nei bottoni
 
 Nei test: `unita/inglese`, `unita/spagnolo`, `integrazione/inglese`,
 `integrazione/spagnolo`.
+
+## Formato dei dati
+
+- **Le parole** (`words.js`, `parole-es.js`): ogni voce è
+  `[straniero, italiano, emoji, categoria, famiglia?]`. Niente emoji o
+  parola ripetuta nella stessa lingua — i distrattori figurati escono
+  dalla stessa categoria, e un doppione sarebbe due risposte giuste.
+  L'emoji resta vuota (`''`) quando non esiste un'icona che sia
+  davvero la cosa, non solo quella che le somiglia di più: quella voce
+  semplicemente non esce nelle domande figurate. Il quinto campo,
+  `famiglia`, si scrive solo dove due emoji si confondono a colpo
+  d'occhio (facce, mestieri): `domande.js` non ne pesca due della
+  stessa famiglia nella stessa domanda (`unita/lessico-icone`). Lo
+  spagnolo riusa le emoji e le famiglie dell'inglese, voce per voce.
+- **I verbi** (`verbi.js`, `verbi-es.js`): `[straniero, italiano,
+  emoji]`. L'emoji è nei dati ma il gioco non la mostra ancora —
+  accanto alla parola straniera svelerebbe la risposta. I distrattori
+  sono altri verbi italiani della stessa lista.
+- **Le frasi** (`frasi.js`, `frasi-es.js`): un oggetto per frase, con
+  `id`, `tema` (per pescare distrattori affini fra le stesse categorie
+  delle parole), `liv` (1 facile · 2 media · 3 tosta, decide in che
+  tappa entra), `it` e `en`/`es`, `falsi` (traduzioni sbagliate per le
+  domande IT → straniero — errori veri, non frasi solo improbabili),
+  `falsiIt` (facoltativo, IT sbagliato per straniero → IT: se manca, i
+  distrattori escono dalle altre frasi dello stesso tema) e `buco`
+  (facoltativo, la stessa frase con un vuoto da riempire, per la
+  grammatica pura). L'inglese scrive `en` senza punto interrogativo
+  (vedi sopra); lo spagnolo scrive `¿…?` anche nei `falsi`, se no la
+  frase giusta si riconoscerebbe dal segno senza capire niente.
