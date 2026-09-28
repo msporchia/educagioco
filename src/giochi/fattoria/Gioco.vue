@@ -1,28 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA FATTORIA — IL COORDINATORE
-
-   L'unico file del gioco che sa che esistono le monete, il profilo e i
-   contatori. Le regole stanno in `motore/fattoria.js` e girano senza
-   schermo; il disegno in `scena/tela.js` e non conosce i prezzi; le
-   tabelle in `dati/`. Se qualcosa qui dentro comincia a somigliare a una
-   regola di gioco o a un `ctx.drawImage`, è nel file sbagliato.
-
-   ── DOVE STA LA FATTORIA ──────────────────────────────────────────
-   Non in un campo nuovo del profilo: sotto
-   `profile.campagne.fattoria.cfg.stato`, che è l'unico posto sanzionato
-   dove un gioco nuovo scrive (vedi `src/giochi/campagne.js`). È quello
-   che torna da `Fattoria.serializza()`.
-
-   Si salva **a ritardo**: trascinando una panchina si muovono venti volte
-   al secondo delle celle, e persistere a ogni fotogramma vorrebbe dire
-   scrivere in archivio venti volte al secondo per niente.
-
-   ── LE MONETE SONO QUELLE VERE ────────────────────────────────────
-   La borsa che il motore riceve è il salvadanaio del profilo. È il punto
-   di tutto il gioco: la fattoria è il posto dove si *spende* quello che
-   si è guadagnato facendo esercizi altrove, non un'altra lezione.
-   ═══════════════════════════════════════════════════════════════════ */
+/* La fattoria — il coordinatore: regole in motore/fattoria.js, disegno in scena/tela.js, tabelle
+   in dati/. Salva in profile.campagne.fattoria.cfg.stato, a ritardo. Vedi docs/fattoria/regole.md. */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, toRaw } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { state, addCoins, segna, segnaBest, aspettoDi, cestinaOra } from '../../store/profile.js'
@@ -80,19 +58,10 @@ defineOptions({ name: 'LaFattoria' })
 const emit = defineEmits(['vai'])
 
 const CHIAVE = 'fattoria'
-/* Quanto si tiene premuto prima che il gesto **si agganci**. Non è il
-   momento in cui la cosa si solleva — quello lo decide il movimento (vedi
-   `aggancio`): è solo il momento in cui il gioco smette di credere che
-   tu voglia toccare e comincia a credere che tu voglia spostare. */
+// Quanto tenere premuto perché il gesto si agganci — vedi docs/fattoria/come-si-tocca.md.
 const ATTESA = 420
 
-/* Quanto l'anello resta invisibile prima di cominciare a riempirsi. Un
-   tocco normale dura un centinaio di millisecondi: senza questo ritardo
-   l'anello partiva **a ogni tocco**, anche su un campo che il tocco
-   secco apre da sé, e insegnava una regola falsa — «qui bisogna tenere
-   premuto». Chi tocca e stacca adesso non lo vede mai; chi indugia lo
-   vede comparire, ed è esattamente a chi sta indugiando che serve
-   sapere che tenendo premuto succede qualcosa. */
+// Ritardo prima che l'anello compaia, per non mostrarlo su un tocco normale — vedi docs/fattoria/come-si-tocca.md.
 const RITARDO_ANELLO = 180
 
 /* ═══════════ lo stato ═══════════ */
@@ -101,38 +70,18 @@ const monete = computed(() => state.profile.coins || 0)
 const avviso = ref('')
 const pannello = ref(null)          // 'roba' | { tipo: 'piazzola'|'ostacolo', … }
 const scelto = shallowRef(null)     // la cosa o l'attore selezionato
-/* Il pennello del terreno **non è a schermo**, e lo si tiene spento di
-   proposito: il motore sa già dipingere (`dipingi`/`spiana`, e la mappa
-   delle materie in `dati/terreni.js`), ma finché il pittore non sa
-   raccordare due materie diverse dare in mano un pennello vuol dire far
-   disegnare pozze coi bordi sbagliati. La strada è pronta, il tasto
-   arriva quando arriva il disegno. */
+// Spento finché il pittore non sa raccordare due materie diverse — vedi docs/fattoria/da-fare.md.
 const pennello = ref(false)
-/* La voce su cui aprire il baule, quando ad aprirlo è stato un
-   consiglio («ti serve un campo»). Si azzera chiudendo, se no il baule
-   aperto a mano il giorno dopo si riaprirebbe ancora lì sopra. */
+// Si azzera chiudendo, se no il baule si riaprirebbe sulla voce vecchia il giorno dopo.
 const punta = ref('')
-/* Quello che il gioco ha già mostrato: serve solo a capire quando il
-   livello **sale**, che è l'unico momento in cui c'è qualcosa da dire.
-   È un `ref` perché lo legge anche il gettone in alto, che deve
-   ridisegnarsi quando il numero cambia. */
+// Serve solo a sapere quando il livello sale; il gettone in alto lo rilegge per ridisegnarsi.
 const livello = ref(1)
 const avanza = ref(null)
-/* I premi arrivati e non ancora presi. Sta qui e non dentro il foglio
-   dei livelli perché **si vede da fuori**: è il pallino sul gettone in
-   alto, cioè l'unica cosa che dice che c'è qualcosa da andare a
-   prendere mentre si sta guardando il prato. */
+// Vive qui (non nel foglio dei livelli) perché è il pallino sul gettone in alto.
 const daPrendere = ref([])
-/* Le chiavi di tutti i premi presi: le leggono il baule (mostra solo
-   quelle) e la pagina dei livelli (segna i quadratini già presi). È un
-   `ref` e non una lettura diretta del motore perché il motore non è
-   reattivo: chi lo cambia lo dice, con `annotaIPremi`. */
+// ref e non lettura diretta: il motore non è reattivo, annotaIPremi lo dice quando cambia.
 const presi = ref([])
 
-/* Le metà del baule che hanno qualcosa dentro, per i tondi in alto.
-   Al primo livello è una sola — non ci sono ancora né decorazioni né
-   bestie — e un tondo che apre uno scaffale vuoto sarebbe un tasto
-   rotto. */
 const zoneDelBaule = computed(() => {
   const p = new Set(presi.value)
   return ZONE.filter(z => z.chiave === ANIMALI_ZONA
@@ -140,9 +89,7 @@ const zoneDelBaule = computed(() => {
     : CATALOGO.some(v => zonaDi(v.id) === z.chiave && p.has(chiaveDi('cosa', v.id))))
 })
 
-/* Quello che è aperto e quello che aspetta, riletti dal motore. Si
-   chiama dopo ogni cosa che li muove: una spesa (che può far salire il
-   livello) e un premio preso. */
+// Si chiama dopo ogni cosa che può cambiarli: una spesa, un premio preso.
 function annotaIPremi() {
   daPrendere.value = mondo.daReclamare()
   presi.value = Object.keys(mondo.reclamati)
@@ -155,28 +102,17 @@ let bambino = null
 let salvaFra = 0, orologio = 0, ultimo = 0, giro = 0, bisogniFra = 0, alberoFra = 0
 let bottegheFra = 0
 
-/* ── LA STAGIONE ──────────────────────────────────────────────────
-   Che periodo dell'anno è lo dice `dati/stagioni.js` guardando la
-   data di oggi; qui si tiene il nome (`''` un giorno qualunque) e la
-   lista di quello che la scena deve posare in più — zucche, stelle
-   sui tetti, alberelli — già decisa cella per cella. La scena riceve
-   il nome e la lista, e non sa che giorno è; la lista si rifà ogni
-   pochi secondi, non a ogni fotogramma: le cose si spostano di rado,
-   e a mezzanotte il seme cambia da sé. `stagioneForzata` è il cheat
-   `#stagione=natale`, per guardarla a settembre. */
+// La stagione la decide dati/stagioni.js; qui solo il nome e le celle da vestire, rifatte ogni
+// pochi secondi (non a ogni fotogramma). stagioneForzata è il cheat #stagione= — vedi docs/fattoria/stagioni.md.
 const stagione = ref('')
 let stagioneForzata = null, stagionali = [], stagioneFra = 0
 
-/* La borsa che il motore usa: il salvadanaio vero. `paga(-n)` incassa —
-   sgombrare il bosco rende, ed è l'unico modo di guadagnare qui dentro. */
+// La borsa che il motore usa: il salvadanaio vero. paga(-n) incassa (si guadagna solo sgomberando).
 const borsa = {
   quante: () => state.profile.coins || 0,
   paga: n => { addCoins(-n); return true },
 }
 
-/* Lo spazio in cui si cammina, come lo chiede `motore/camminata.js`:
-   una funzione che dice se su quella cella ci si può stare. Il conto è
-   tutto nel motore (`Fattoria.calpestabile`) — qui si passa e basta. */
 const dovePasso = (x, y) => mondo.calpestabile(x, y)
 
 function salva() {
@@ -184,21 +120,8 @@ function salva() {
   guardaIlLivello()
 }
 
-/* Il livello sale spendendo, e le spese passano tutte da un `salva()`:
-   guardarlo qui vuol dire non doverselo ricordare in quindici posti.
-
-   ── E QUI NON SI APRE PIÙ NIENTE DA SÉ ────────────────────────────
-   *Ribalta la scelta di prima*, che era «un livello che arriva in
-   silenzio non lo nota nessuno» e quindi apriva il foglio della festa
-   nel momento esatto della salita. Vero il problema, sbagliato il
-   rimedio: il livello sale **spendendo**, cioè sempre in mezzo a un
-   acquisto — il dito era in viaggio dal baule al prato e trovava un
-   velo. Si spezzava proprio il gesto che il gioco vuole.
-
-   Adesso il livello si annuncia in due modi che non fermano niente: la
-   riga d'avviso che passa da sola, e **il pallino sul gettone**, che
-   resta lì finché i premi non sono stati presi. Quello che è arrivato
-   non si mostra più: si va a prenderlo (`viste/Livelli.vue`). */
+// Il livello sale spendendo: si controlla da qui (chiamato da salva()) invece che in quindici
+// posti, e non apre più niente da solo — vedi docs/fattoria/livelli.md.
 function guardaIlLivello() {
   if (!mondo) return
   avanza.value = mondo.avanzamento
@@ -219,10 +142,7 @@ function apriLivelli() {
   pannello.value = { tipo: 'livello' }
 }
 
-/* Prendere un premio: si apre nel baule, non si regala. Il foglio resta
-   aperto — chi ne ha tre da prendere li prende uno dopo l'altro senza
-   che niente si muova sotto le dita — e il quadratino cambia stato al
-   suo posto. */
+// Il foglio resta aperto: chi ne ha tre da prendere li prende uno dopo l'altro.
 function reclama(chiave) {
   if (!mondo) return
   const r = mondo.reclama(chiave)
@@ -237,11 +157,7 @@ function salvaOra() {
   ricorda(CHIAVE, 'stato', mondo.serializza())
 }
 
-/* Dove sono arrivate le bestie mentre giravano per il prato. Si scrive
-   **al momento di salvare**, non a ogni passo: chi cammina si muove
-   venti volte al secondo, e il motore non deve saperlo. Senza questa
-   riga il cane chiuso nel recinto ricomparirebbe fuori alla riapertura,
-   e sembrerebbe colpa del recinto. */
+// Si scrive solo al salvataggio, non a ogni passo: il motore non deve sapere che si cammina 20 volte al secondo.
 function annotaLeBestie() {
   for (const a of attori) {
     if (a === bambino) continue
@@ -250,10 +166,7 @@ function annotaLeBestie() {
   }
 }
 
-/* Un avviso che ne segue un altro entro due secondi e mezzo veniva
-   cancellato dal timer del primo: «Beagle è arrivato!» e subito dopo
-   «sta benissimo, +9» — e il secondo spariva prima di essere letto.
-   Il timer è uno solo, e ogni avviso nuovo lo rimette da capo. */
+// Un solo timer: un avviso nuovo lo rimette da capo, se no il secondo sparirebbe prima di essere letto.
 let avvisoTimer = null
 function avvisa(testo) {
   avviso.value = testo
@@ -261,41 +174,15 @@ function avvisa(testo) {
   avvisoTimer = setTimeout(() => { avviso.value = '' }, 2600)
 }
 
-/* Chiudere un foglio lascia il prato **pulito**: via il foglio e via la
-   selezione. Sono due cose sole ma vanno insieme, perché la selezione
-   non si vede finché il foglio è aperto e chi la lascia lì non se ne
-   accorge — poi il foglio si chiude e ricompaiono degli attrezzi che
-   nessuno ha chiesto. Vale anche per le bestie, che da selezionate
-   **stanno ferme** (vedi il giro di `muovi` sugli attori): una capra
-   che non riparte più dopo che le hai guardato la scheda sembra
-   incantata, e nessuno collega le due cose. */
-/* Chiudere azzera anche **dove** si stava per mettere qualcosa: quella
-   cella vale per il baule che si è appena aperto tenendoci premuto
-   sopra, e non un minuto dopo. Senza questa riga la prima cosa presa
-   dal baule aperto col tasto in alto finirebbe dove si era tenuto
-   premuto la volta prima — un posto che chi gioca non sta nemmeno
-   guardando. */
+// Chiudere azzera anche la selezione (le bestie selezionate stanno ferme, vedi muovi) e dovePosare
+// (la cella del baule tenuto premuto): senza, resterebbero da un gesto precedente.
 function chiudi() {
   pannello.value = null; scelto.value = null; punta.value = ''
   dovePosare = null
   posaLEtichettaInSospeso()
 }
 
-/* Il baule dal tasto in alto: nessuna cella da ricordare, e quella di
-   prima si butta. Il posto lo si sceglie dopo, come si è sempre fatto.
-
-   ── TRE TASTI E NON UNO ───────────────────────────────────────────
-   In alto c'erano un 📦 e basta, e dentro il baule si sceglieva subito
-   fra le sue tre metà: due gesti per dire una cosa sola, e il primo non
-   diceva niente — un pacco chiuso non fa venire in mente né una
-   panchina né un cane. Adesso le tre metà stanno **fuori**, una per
-   tasto (`ZONE` in `dati/catalogo.js`, le stesse che il baule mostra
-   dentro), e chi vuole un albero preme l'albero.
-
-   Si mostrano solo quelle che hanno qualcosa dentro: al primo livello
-   non ci sono né decorazioni né bestie, e un tasto che si apre su uno
-   scaffale vuoto è un tasto rotto — la stessa regola che vale dentro
-   il baule. */
+// Aperto dal tasto in alto: nessuna cella da ricordare — vedi docs/fattoria/come-si-tocca.md.
 function apriIlBaule(zona = 'lavoro') {
   dovePosare = null
   pannello.value = { tipo: 'roba', zona }
@@ -304,34 +191,15 @@ function apriIlBaule(zona = 'lavoro') {
 /* ═══════════ nascere ═══════════ */
 onMounted(() => {
   mondo = new Fattoria({ borsa, dato: scelta(CHIAVE, 'stato', null) })
-  /* ── il cheat del livello ──
-     `#fattoria=7` porta la fattoria a quel livello, come fa `#monete=`
-     con il salvadanaio (`store/profile.js`). Serve a guardare col
-     telefono una cosa che arriva al livello 9 senza spendere davvero
-     tremila monete, e lo usa anche `integrazione/fattoria`. Sta nel
-     frammento e si cancella subito, così una ricarica non lo ripete.
-
-     Alza e basta: **non scende mai**, che è la regola del livello e
-     varrebbe poco se un indirizzo potesse violarla. */
-  /* `#stagione=natale` (o `halloween`) accende una stagione fuori dal
-     suo periodo: è il modo di guardare la neve a settembre, e lo usa
-     `integrazione/fattoria-stagioni`. Vale per questa apertura e non
-     si salva da nessuna parte. */
+  // #fattoria=N porta a quel livello e non scende mai — vedi docs/fattoria/livelli.md.
+  // #stagione=natale|halloween accende una stagione fuori periodo — vedi docs/fattoria/stagioni.md.
   const frammento = location.hash || ''       // letto una volta: il primo cheat lo cancella
   const stagioneCheat = /(?:^#?|&)stagione=(\w+)(?=&|$)/i.exec(frammento)
   if (stagioneCheat && FINESTRE[stagioneCheat[1].toLowerCase()]) {
     stagioneForzata = stagioneCheat[1].toLowerCase()
     try { location.hash = '' } catch (e) { /* pazienza */ }
   }
-  /* `#fattoria-tipo=30` butta la fattoria di adesso e ne mette una **già
-     giocata** di quel livello (`motore/tipo.js`): campi, macchine,
-     recinti e botteghe al loro posto, i silos pieni, i clienti al banco.
-     È per provare col telefono una cosa che arriverebbe dopo settimane
-     di gioco senza passare un'ora a posare campi. **Prima il cestino**:
-     il profilo com'era si rimette dalla schermata dei grandi, come dopo
-     un «cancella i progressi» fatto per sbaglio — perché sul server di
-     casa la fattoria che si butta è quella vera, e va usato con un
-     bambino di prova. Le monete non le tocca: `#fattoria-tipo=30&monete=2000`. */
+  // #fattoria-tipo=N sostituisce la fattoria con una già giocata di quel livello; il profilo va nel cestino — vedi docs/fattoria/livelli.md.
   const tipo = /(?:^#?|&)fattoria-tipo=(\d{1,2})(?=&|$)/i.exec(frammento)
   if (tipo) {
     try { location.hash = '' } catch (e) { /* pazienza */ }
@@ -345,23 +213,13 @@ onMounted(() => {
   if (cheat) {
     try { location.hash = '' } catch (e) { /* pazienza */ }
     const meta = parseInt(cheat[1], 10)
-    /* Si toglie quello che il mercato ha già dato: il cheat porta **a**
-       quel livello, e sommandoci l'esperienza degli ordini ci si
-       ritroverebbe più avanti di quanto si è chiesto. */
+    // Si toglie l'esperienza già data dagli ordini, se no il cheat sommerebbe le due fonti.
     mondo.speso = Math.max(mondo.speso, sogliaDi(meta) - (mondo.guadagnato || 0))
-    /* I premi dei livelli **già passati** si prendono da sé: il cheat
-       serve a guardare col telefono una cosa che arriverebbe dopo mesi,
-       e farsi premere sessanta quadratini prima di vederla non è quello
-       che si sta provando. Quelli del livello a cui si arriva restano
-       da prendere, come per chi ci è arrivato spendendo — se no il
-       cheat non permetterebbe di guardare proprio la cosa per cui
-       questa pagina esiste. */
+    // I premi dei livelli già passati si prendono da sé; quelli del livello raggiunto restano da prendere.
     for (const p of mondo.daReclamare()) if (p.liv < meta) mondo.reclama(p.chiave)
     salvaOra()
   }
-  /* Il livello di adesso si prende **prima** di qualunque spesa: se no
-     la prima cosa comprata sembrerebbe una salita, e il foglio della
-     festa si aprirebbe da solo appena entrati. */
+  // Prima di qualunque spesa, se no il primo acquisto sembrerebbe una salita di livello.
   livello.value = mondo.livello
   avanza.value = mondo.avanzamento
   annotaIPremi()
@@ -370,9 +228,7 @@ onMounted(() => {
   scena.scala = SCALA_INIZIALE
   vaiACasa()
 
-  /* Il personaggio è quello scelto nel profilo: senza, il gioco dovrebbe
-     indovinare se è una bambina o un bambino, e indovinare vuol dire
-     sbagliare per metà dei bambini. */
+  // Il personaggio è quello scelto nel profilo: indovinarlo sbaglierebbe per metà dei bambini.
   const c = centroDelleTerre()
   const casa = mondo.cellaLibera(Math.round(c.x), Math.round(c.y) + 2)
   bambino = new Attore(aspettoDi(), new Camminatore(casa.x, casa.y, { velocita: 3.6 }))
@@ -383,16 +239,8 @@ onMounted(() => {
   scena.avvia()
   giro = requestAnimationFrame(passo)
   addEventListener('resize', vaiACasa)
-  /* ── LA RETE SOTTO LA SPINTA AL BORDO ────────────────────────────
-     Il dito che si alza sul campo passa da `lascia`, e quello annullato
-     da `annulla`. Ma un puntatore può anche finire **fuori di qui** —
-     il mouse trascinato oltre la finestra e mollato là, la app messa in
-     secondo piano col dito ancora giù, il sistema che si prende il
-     tocco per un suo gesto — e in tutti quei casi sul canvas non arriva
-     più niente: la vista continuerebbe a correre da sola, e al ritorno
-     ci si ritroverebbe dall'altra parte della mappa. Questi tre ascolti
-     fermano **solo lo scorrimento** e non toccano il gesto: quello che
-     si aveva in mano resta in mano. */
+  // Un puntatore può finire fuori dal canvas (mouse trascinato oltre la finestra, app in secondo
+  // piano, gesto preso dal sistema): questi tre ascolti fermano solo lo scorrimento.
   addEventListener('pointerup', fermaLaSpinta)
   addEventListener('pointercancel', fermaLaSpinta)
   addEventListener('blur', fermaLaSpinta)
@@ -410,15 +258,11 @@ onBeforeUnmount(() => {
   salvaOra()
 })
 
-/* Le bestie comprate entrano in scena. Quelle che oggi non si sanno
-   disegnare si **saltano in silenzio**: restano nel salvataggio, e
-   torneranno quando il loro sprite arriverà. Un travaso a senso unico
-   non deve perdere niente per strada, ma nemmeno mostrare un buco. */
+// Quelle senza sprite si saltano in silenzio: restano salvate, torneranno con il disegno.
 function metti_in_scena_le_bestie() {
   for (const b of mondo.bestie) {
     if (!siDisegna(b.chi) || attori.some(a => a.nome === b.chi)) continue
-    /* Dove l'avevamo lasciata, non in mezzo al prato: è la metà che
-       manca perché «l'ho messo nel recinto» resti vero domani. */
+    // Dove l'avevamo lasciata, non in mezzo al prato: così "l'ho messo nel recinto" resta vero domani.
     const dove = mondo.dovEra(b.chi)
     attori.push(new Attore(b.chi, new Camminatore(dove.x, dove.y, { velocita: 2.4, vaga: 2.4 }),
       { chi: b.nome || nomeDi(b.chi), bisogni: [], bob: BOB,
@@ -427,15 +271,8 @@ function metti_in_scena_le_bestie() {
   aggiornaIBisogni()
 }
 
-/* ── QUELLO CHE UNA BESTIA HA ADDOSSO, PER CHI DISEGNA ─────────
-   La scena riceve **fatti già decisi** — la figura, la taglia, e dove
-   cade quel punto in ogni verso — e non sa cosa voglia dire «testa» né
-   quanto costi un cappello: è la stessa divisione del fumetto sopra un
-   recinto, che riceve una faccia e non il nome di una merce. Il
-   catalogo sta in `dati/addobbi.js`, i punti nella scheda dell'animale.
-
-   Si rifà **a ogni cambio**, non a ogni fotogramma: un addobbo si mette
-   una volta ogni tanto. */
+// La scena riceve fatti già decisi (figura, punti) e non sa cosa sia un cappello — come il
+// fumetto sopra un recinto. Si rifà a ogni cambio, non a ogni fotogramma.
 function addobbiInScena(chi) {
   return mondo.comeEVestita(chi)
     .map(a => ({ ...a, punti: puntiDi(chi, a.dove) }))
@@ -447,17 +284,7 @@ function rivestiLaBestia(chi) {
   if (a) a.addobbi = addobbiInScena(chi)
 }
 
-/* ── LE BARRETTE SOPRA LA TESTA, CHE C'ERANO E NON SI VEDEVANO ──────
-   `Attore` sa disegnare le barrette dei bisogni e il 💭 di chi ha fame
-   da quando esistono i bisogni (`scena/tela.js`), ma `bisogni` è un
-   campo facoltativo e **nessuno lo riempiva**: il codice c'era, girava,
-   e non mostrava niente. Da fuori è indistinguibile da una cosa mai
-   fatta — un cane che ha fame e non lo dice, e te ne accorgi solo se lo
-   apri.
-
-   Si aggiorna ogni tanto e non a ogni fotogramma: un bisogno cala nel
-   giro delle ore, e rifare il conto sessanta volte al secondo sarebbe
-   sessanta volte lo stesso numero. */
+// Si aggiorna ogni tanto (non a ogni fotogramma): un bisogno cala nel giro delle ore.
 function aggiornaIBisogni() {
   for (const a of attori) {
     if (a === bambino) continue
@@ -467,15 +294,10 @@ function aggiornaIBisogni() {
   }
 }
 
-/* La telecamera segue il mondo che cresce: comprato un pezzo di terra
-   sul bordo, la mappa si allarga, e i limiti di qui devono allargarsi
-   con lei — se no compare del prato nuovo contro un muro invisibile. */
 function inquadraIlMondo() {
   if (scena) scena.mondo = mondo.limiti
 }
 
-/* Il centro della terra posseduta, in celle: non è più il centro del
-   mondo, che adesso cresce da tutte le parti e non vuol dire più niente. */
 function centroDelleTerre() {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
   for (const k of Object.keys(mondo.piazzole)) {
@@ -509,9 +331,7 @@ function passo(ora) {
   if (stagioneFra <= 0) { stagioneFra = 4; aggiornaLaStagione() }
   alberoFra -= dt
   if (alberoFra <= 0) { alberoFra = 5; rinfrescaLAlbero(); rinfrescaLaMacchina(); rinfrescaLaMongolfiera() }
-  /* Le botteghe si rimettono a posto anche a foglio chiuso: il cliente
-     dopo arriva fra dieci e venti minuti, e il fumetto sopra la bottega
-     deve comparire senza che nessuno la apra. */
+  // Le botteghe si rimettono a posto anche a foglio chiuso: il fumetto deve comparire senza che nessuno la apra.
   bottegheFra -= dt
   if (bottegheFra <= 0) {
     bottegheFra = 7
@@ -525,14 +345,7 @@ function passo(ora) {
   })
 }
 
-/* ── COSA POSA LA STAGIONE, E DOVE ─────────────────────────────────
-   La scelta delle celle è di `addobbiStagionali` (puro); qui si
-   prepara solo quello che le serve, letto dal mondo: le celle di
-   prato libere — terra tua, niente cose, niente bosco, e si guarda
-   solo dentro le piazzole possedute, che è dove può esserci del
-   prato tuo — e le cose posate col loro piede e l'altezza del
-   disegno in celle, perché una stella va **sul tetto** e il tetto
-   sta sopra il piede di quanto è alto lo sprite. */
+// La scelta delle celle è di addobbiStagionali (puro); qui solo quello che le serve, letto dal mondo.
 function aggiornaLaStagione() {
   stagione.value = stagioneForzata || stagioneDi(new Date()) || ''
   if (!stagione.value) { stagionali = []; return }
@@ -554,33 +367,14 @@ function aggiornaLaStagione() {
   stagionali = addobbiStagionali(stagione.value, { libere, edifici, seme: semeDelGiorno(new Date()) })
 }
 
-/* ── TRASCINARE OLTRE IL BORDO DELLO SCHERMO ────────────────────────
-   Tenendo una cosa in mano contro il bordo, il mondo scorre da solo
-   verso quel lato finché da quella parte c'è ancora qualcosa da vedere.
-   Quanto e verso dove lo dice `scena/spinta.js`, che è puro e si prova
-   senza browser; qui restano solo le tre righe che lo attaccano al
-   gioco.
-
-   **Non c'è nessun giro nuovo.** Il conto sta dentro `passo`, il
-   fotogramma che questo gioco fa girare comunque per far camminare le
-   bestie: un `requestAnimationFrame` in più sarebbe un secondo orologio
-   da spegnere, e un orologio che qualcuno dimentica acceso su un
-   telefono si paga in batteria. Fuori dal trascinamento questa funzione
-   esce alla prima riga.
-
-   La cosa in mano **resta sotto il dito**: il dito non si è mosso, ma il
-   mondo sì, quindi la cella sotto è un'altra e `muoviPreso` la
-   ricalcola dallo stesso punto di schermo. Senza, la panchina
-   sembrerebbe scappare all'indietro mentre il prato le passa sotto. */
+// vedi docs/fattoria/come-si-tocca.md — la cosa in mano resta sotto il dito: muoviPreso ricalcola la cella.
 function scorriDalBordo(dt) {
   if (!preso || !ultimoTocco || !scena) return
   const s = spintaAlBordo({
     punto: ultimoTocco, L: scena.L, A: scena.A,
     vista: scena.vista, mondo: scena.riquadroMondo, dt,
   })
-  /* La vista è in pixel interi, e una spinta docile vale una frazione
-     di pixel per fotogramma: quello che avanza si tiene da parte
-     invece di buttarlo, se no metà della fascia non muove niente. */
+  // Pixel interi: quello che avanza (una frazione) si tiene da parte, se no metà della fascia non muove niente.
   const avanzo = conIlResto(restoSpinta, s.dx, s.dy)
   restoSpinta = avanzo.resto
   if (!avanzo.dx && !avanzo.dy) return
@@ -590,10 +384,7 @@ function scorriDalBordo(dt) {
   muoviPreso(ultimoTocco)
 }
 
-/* Il dito si è alzato, è uscito dalla finestra, o il tocco è stato
-   annullato: la vista si ferma qui. Il resto si azzera con lui — una
-   frazione di pixel avanzata da un gesto finito non deve saltare fuori
-   all'inizio del prossimo. */
+// Dito alzato, uscito dalla finestra, o tocco annullato: il resto si azzera con la vista.
 function fermaLaSpinta() {
   ultimoTocco = null
   restoSpinta = { x: 0, y: 0 }
@@ -602,48 +393,18 @@ function fermaLaSpinta() {
 /* ═══════════ il dito ═══════════ */
 const dita = new Map()
 let pizzico = null, giu = null, lungo = null, anello = null, preso = null, scorrendo = false
-/* Dove sta il dito che sta trascinando qualcosa, e la frazione di pixel
-   che la spinta al bordo si porta dietro fra un fotogramma e l'altro
-   (vedi `scena/spinta.js`). Fuori dal trascinamento `ultimoTocco` è
-   `null`, ed è quello che tiene ferma la vista: non c'è nessun altro
-   interruttore da ricordare di spegnere. */
+// ultimoTocco è null fuori dal trascinamento, ed è quello che tiene ferma la vista.
 let ultimoTocco = null, restoSpinta = { x: 0, y: 0 }
-/* La cella su cui è stato aperto il baule, se è stato aperto tenendo
-   premuto sul prato. Vive **fuori** dal pannello perché il pannello si
-   chiude nell'istante in cui si preme una voce, e quella cella serve un
-   attimo dopo. Si azzera appena usata: il baule aperto dal tasto in alto
-   non ha nessun posto da ricordare. */
+// La cella su cui è stato aperto il baule tenendo premuto; si azzera appena usata.
 let dovePosare = null
-/* ── L'AGGANCIO: PASSATA L'ATTESA, LA COSA NON È ANCORA IN MANO ────
-   Prima il tempo decideva da solo: scaduti i 420 ms la cosa era presa, e
-   al rilascio si poteva solo posarla — la scheda con «giralo» e «mettila
-   via» non compariva più. Chi teneva premuto un po' troppo si ritrovava
-   in un trascinamento che non aveva chiesto («mi parte secco in drag e
-   non mi dà le altre opzioni»), e il confine fra i due gesti era il
-   tempo: una cosa che non si vede e che un bambino non dosa.
-
-   Adesso l'attesa **aggancia** e basta: la cosa resta dov'è, e a
-   decidere è il movimento, che si vede. Oltre `SCARTO_DITO` comincia il
-   trascinamento; il dito che si stacca senza essersi mai mosso è un
-   tocco — per quanto a lungo sia rimasto giù — e apre le opzioni.
-
-   `{ tipo: 'cosa'|'bestia'|'baule', voce, da, bestia }` */
+// { tipo: 'cosa'|'bestia'|'baule', voce, da, bestia } — vedi docs/fattoria/come-si-tocca.md.
 let aggancio = null
 
-/* Da quanto in là comincia lo scorrimento — cioè quando il tocco smette
-   di essere un tocco: `SCARTO_DITO` e `SCARTO_MOUSE`, in `scena/dito.js`
-   col perché, perché lo stesso metro lo usa lo scaffale del baule. */
-
-/* Quanto si perdona a un dito che ha sbagliato mira, e quanto grande
-   dev'essere come minimo un bersaglio. I 44 px sono la misura che
-   Android e iOS chiedono da anni per un tasto: alla scala più stretta
-   un campo ne misura 32 e un silo 16, cioè meno di un polpastrello. */
+// Quanto si perdona di mira, e il bersaglio minimo (44 px) — vedi docs/fattoria/come-si-tocca.md.
 const GRAZIA = 6
 const MINIMO_TOCCO = 44
 
-/* Le coordinate del dito arrivano in pagina, ma la tela comincia sotto
-   la barra: senza togliere l'origine si tocca una cella e se ne prende
-   un'altra, e l'errore cresce con l'altezza della barra. */
+// La tela comincia sotto la barra: senza togliere l'origine si tocca una cella e se ne prende un'altra.
 const riquadro = () => tela.value.getBoundingClientRect()
 
 function dove(e) {
@@ -669,9 +430,7 @@ function premi(e) {
   if (dita.size === 2) {
     if (lungo) { clearTimeout(lungo); lungo = null }
     giu = null; anello = null; aggancio = null; scorrendo = false
-    /* Due dita sul campo sono un pizzico, non un trascinamento: se una
-       cosa era in mano resta in mano, ma la vista smette di correre —
-       adesso la sta guidando lo zoom. */
+    // Due dita sono un pizzico: la cosa in mano resta in mano, la vista smette di correre da sola.
     fermaLaSpinta()
     pizzico = { d0: centro().d, scala0: scena.scala }
     return
@@ -683,40 +442,22 @@ function premi(e) {
   scorrendo = false
   if (pennello.value) return dipingi(p)
 
-  /* Una cosa già in mano si posa toccando dove deve andare: è il
-     secondo tempo del gesto che parte dal baule, per chi ha toccato e
-     lasciato invece di trascinare. */
+  // Una cosa già in mano si posa toccando dove deve andare (secondo tempo di chi ha toccato e lasciato).
   if (preso) { preso.pronto = true; return muoviPreso(p) }
 
-  /* Chi c'è sotto il dito lo decide `bersaglio()`, una volta sola e con
-     le stesse regole con cui lo deciderà il rilascio: se la pressione
-     aggancia una cosa e il tocco ne aprisse un'altra, il gioco
-     risponderebbe a due domande diverse allo stesso dito.
-
-     Tenerla premuta **aggancia** — un cane si sposta come una panchina,
-     ed è così che si mette in un recinto — ma finché il dito non si
-     muove è ancora un tocco. */
+  // bersaglio() decide una volta sola, con le stesse regole del rilascio — vedi docs/fattoria/come-si-tocca.md.
   const b = giu.mira = bersaglio(p)
   if (b.bestia && mondo.hoLaBestia(b.bestia.nome))
     return arma(p, { tipo: 'bestia', bestia: { chi: b.bestia.nome, attore: b.bestia } })
   if (b.cosa) return arma(p, { tipo: 'cosa', voce: PER_ID[b.cosa.id], da: b.cosa })
 
-  /* Tenere premuto sul prato vuoto apre il baule. È lo stesso gesto con
-     cui si prende una cosa che c'è già — «tieni premuto dove vuoi agire»
-     — e risparmia il viaggio fino al tasto in alto: si tiene premuto
-     **dove** si vuole mettere qualcosa. Il baule si apre **al rilascio**
-     e non allo scadere del tempo: allo scadere del tempo comparirebbe
-     sotto un dito ancora appoggiato, e chi nel frattempo ha deciso di
-     spostare la vista si troverebbe un foglio in faccia. */
+  // Si apre al rilascio, non allo scadere del tempo: altrimenti comparirebbe sotto un dito ancora fermo.
   const c = scena.cellaDa(p.x, p.y)
   if (mondo.cellaMia(c.x, c.y) && !mondo.ostacoloSotto(c.x, c.y))
     return arma(p, { tipo: 'baule', cella: { x: c.x, y: c.y } })
 }
 
-/* L'anello che si riempie sotto il dito, e quello che vuol dire: finché
-   non è pieno non è successo niente; quando è pieno la cosa è
-   **agganciata** — «adesso puoi trascinare» — e resta lì a dirlo finché
-   il dito non si muove o non si stacca. */
+// Pieno vuol dire agganciato ("adesso puoi trascinare"), finché il dito non si muove o non si stacca.
 function arma(p, quale) {
   anello = { x: p.x, y: p.y, q: -1, pronto: false }
   riempiAnello(performance.now())
@@ -727,9 +468,7 @@ function arma(p, quale) {
   }, ATTESA)
 }
 
-/* `q` sotto zero vuol dire «non disegnarlo ancora»: la scena non tocca
-   un anello con la frazione a zero o meno, quindi il ritardo è tutto
-   qui e la tela non deve sapere niente di quanto dura un tocco. */
+// q sotto zero vuol dire "non disegnarlo ancora": il ritardo è tutto qui, la tela non lo sa.
 function riempiAnello(t0) {
   const cresci = () => {
     if (!anello) return
@@ -740,10 +479,7 @@ function riempiAnello(t0) {
   requestAnimationFrame(cresci)
 }
 
-/* Il movimento, che è quello che si vede, apre il trascinamento: da qui
-   in poi si sta spostando qualcosa e non si sta più scegliendo. Sul
-   prato vuoto non c'è niente da prendere, e muoversi vuol dire
-   semplicemente spostare la vista. */
+// Il movimento apre il trascinamento: da qui in poi si sposta qualcosa, non si sceglie più.
 function cominciaATrascinare(quale, p) {
   if (quale.tipo === 'baule') return false
   if (quale.tipo === 'bestia') prendi(null, null, p, { bestia: quale.bestia })
@@ -760,20 +496,12 @@ function muovi(e) {
   }
   const p = dove(e)
   if (preso) {
-    /* Trascinata per davvero: da qui in poi lasciare vuol dire posare.
-       Il confronto è col punto in cui l'ha presa (`x0`, `y0`) e non con
-       l'ultimo `pointerdown`, perché tirandola fuori dal baule il
-       `pointerdown` è avvenuto sul foglio, che nel frattempo è sparito e
-       qui non è mai arrivato. Col dito un `pointermove` c'è solo se il
-       dito è appoggiato; col mouse bisogna chiederlo (`buttons`), se no
-       basterebbe passarci sopra. */
+    // Confronto con x0,y0 (dove l'ha presa) e non l'ultimo pointerdown: tirandola dal baule il
+    // pointerdown è avvenuto sul foglio, già sparito.
     const premuto = e.pointerType !== 'mouse' || e.buttons > 0
     const scarto = e.pointerType === 'mouse' ? SCARTO_MOUSE : SCARTO_DITO
     if (premuto && Math.hypot(p.x - preso.x0, p.y - preso.y0) > scarto) preso.pronto = true
-    /* Da qui in poi la vista può scorrere da sola verso il bordo che il
-       dito sta toccando (`scorriDalBordo`). Il mouse che passa sopra
-       senza premere non trascina niente e non deve muovere niente: è la
-       stessa distinzione che decide `pronto` due righe più su. */
+    // Da qui la vista scorre da sola verso il bordo (scorriDalBordo): il mouse senza premere non trascina niente.
     if (premuto) ultimoTocco = p
     else fermaLaSpinta()
     return muoviPreso(p)
@@ -784,12 +512,9 @@ function muovi(e) {
   if (Math.hypot(p.x - giu.x0, p.y - giu.y0) > scarto) {
     giu.mosso = true
     if (!pennello.value) scorrendo = true
-    /* Mosso prima dell'attesa: non si è agganciato niente, era uno
-       scorrimento fin dall'inizio. */
+    // Mosso prima dell'attesa: non si è agganciato niente, era uno scorrimento fin dall'inizio.
     if (lungo) { clearTimeout(lungo); lungo = null; anello = null }
-    /* Mosso **dopo** l'attesa: la cosa era agganciata, e adesso comincia
-       davvero a spostarsi. Il trascinamento vince sullo scorrimento — si
-       sposta la panchina, non la vista. */
+    // Mosso dopo l'attesa: la cosa era agganciata, il trascinamento vince sullo scorrimento.
     if (aggancio) {
       const quale = aggancio
       aggancio = null; anello = null
@@ -804,51 +529,11 @@ function muovi(e) {
   if (anello) { anello.x = p.x; anello.y = p.y }
 }
 
-/* ── IL FANTASMA DEL TOCCO ──────────────────────────────────────────
-   Alzato il dito, il browser manda **anche** un `click`, e lo manda a
-   chi si trova sotto il dito *in quel momento* — non a chi c'era quando
-   il dito si è appoggiato. Se il tocco ha appena aperto un pannello, il
-   bersaglio è il velo comparso un istante prima, che si chiude da sé
-   (`@click.self`): il pannello lampeggia e sparisce, e il tasto sembra
-   non aver fatto niente.
-
-   Col mouse non succede: lì il bersaglio del click è deciso alla
-   pressione, ed è il canvas. È tutta la differenza fra «sul computer
-   va» e «sul telefono no» — e il «qualche volta sì» era il dito che
-   capitava dove compare il foglio, dove il click finisce sul foglio
-   invece che sul velo e il pannello resta aperto.
-
-   Il rimedio buono è dirlo al browser: `preventDefault()` sul
-   `touchend` che nasce sul campo, e il click non viene proprio
-   generato. Nessun click che nasce da un dito appoggiato sul CAMPO
-   serve a qualcuno — qui si gioca coi puntatori — e i click veri, sui
-   tasti e sui fogli, nascono da un dito appoggiato su quelli e non
-   passano da questo `touchend`.
-
-   ── PERCHÉ NON BASTAVA INGOIARE IL CLICK ──────────────────────────
-   Prima si restava in ascolto di UN click qualunque per 350 ms e lo si
-   buttava. Va bene quando il fantasma arriva davvero: se lo mangia lui
-   e l'ascolto finisce. Ma **il fantasma non arriva sempre** — dopo uno
-   scorrimento, dopo un pizzico, dopo un tocco annullato il browser non
-   manda nessun click — e allora quell'ascolto restava lì aperto e si
-   mangiava il **primo click vero dei 350 ms dopo**: il tasto del baule
-   premuto subito dopo aver trascinato la mappa, il «Compra» toccato in
-   fretta. A schermo è esattamente «ogni tanto non mi fa toccare le
-   cose, sembra un doppio click» — perché il secondo tocco funziona.
-
-   Resta come rete di sicurezza per chi non manda eventi touch (una
-   penna, un browser strano), ma **stretto**: solo un click che arriva
-   subito (100 ms) e proprio lì dove il dito si è alzato (32 px) è un
-   fantasma. Un click più tardi o più in là è di qualcuno che ha
-   premuto davvero, e non si tocca. */
+// Il click fantasma dopo il pointerup: vedi docs/core/il-dito.md e docs/fattoria/come-si-tocca.md.
 const FANTASMA_MS = 100
 const FANTASMA_PX = 32
 
-/* `cancelable` va chiesto: quando il browser ha già cominciato a
-   scorrere per conto suo il `touchend` non si può più annullare, e
-   provarci scrive un errore in console — cioè fa sembrare rotto proprio
-   il pezzo che serve a non farlo sembrare rotto. Nei casi in cui non si
-   può, il click lo prende `zittisciIlFantasma` qui sotto. */
+// cancelable va chiesto: quando il browser scorre già da sé il touchend non si può annullare.
 function nienteClickDalCampo(e) { if (e.cancelable) e.preventDefault() }
 
 function zittisciIlFantasma(x, y) {
@@ -872,95 +557,48 @@ function lascia(e) {
   if (lungo) { clearTimeout(lungo); lungo = null }
   anello = null
   const p = dove(e)
-  /* Presa dal baule con un tocco secco, la cosa resta appesa al dito:
-     si posa al tocco dopo, quando si vede dove va. */
+  // Presa dal baule con un tocco secco: resta appesa al dito, si posa al tocco dopo.
   if (preso && !preso.pronto) { preso.pronto = true; giu = null; return }
   if (preso) { posaPreso(); giu = null; return }
   if (eraPizzico || !giu) { giu = null; return }
-  /* Un tocco fermo è un tocco, quanto lungo sia: il limite di tempo che
-     c'era buttava via le pressioni un po' lente, cioè proprio quelle di
-     chi ha imparato che «si tiene premuto per prendere». */
+  // Un tocco fermo è un tocco, quanto lungo sia: non solo quello rilasciato in fretta.
   const fermo = !giu.mosso
   const agganciato = aggancio
-  /* ── IL BERSAGLIO SI DECIDE QUANDO IL DITO SI APPOGGIA ──────────
-     Non quando si stacca. Sembra la stessa cosa e non lo è: fra i due
-     momenti passa mezzo secondo, e in mezzo mezzo secondo **le bestie
-     camminano**. Chiedendo di nuovo al rilascio, la capra che stavi
-     toccando si era già spostata di due passi e il tocco apriva quello
-     che era rimasto lì sotto — o niente. Più il dito indugia, più è
-     probabile: cioè capita ai bambini e non a chi prova.
-
-     È la stessa regola che il browser applica al click col mouse — il
-     bersaglio è quello della pressione — e che invece col dito non
-     applica: il motivo per cui esiste `zittisciIlFantasma` qui sopra. */
+  // Deciso alla pressione (bersaglio()), non al rilascio — vedi docs/fattoria/come-si-tocca.md.
   const mira = giu.mira || { bestia: null, cosa: null }
   aggancio = null
   giu = null
   if (!fermo || pennello.value) return
 
-  /* Il dito si è staccato senza essersi mai mosso: era un tocco, per
-     quanto a lungo sia rimasto giù. Sul prato vuoto vuol dire il baule —
-     ed è l'unica cosa che il tocco lungo fa e il tocco secco no, perché
-     lì il tocco secco manda il bambino a camminare. Per tutto il resto
-     si prosegue col percorso del tocco normale, qui sotto: una cosa si
-     seleziona e mostra i suoi attrezzi, una bestia apre la sua scheda. */
+  // Fermo, senza mai muoversi: sul prato vuoto apre il baule (l'unica cosa che il tocco secco non fa).
   if (agganciato && agganciato.tipo === 'baule') {
     scelto.value = null
-    /* **Il baule si porta dietro dove l'hai aperto.** Tenere premuto in
-       mezzo al prato vuol dire «voglio metterci qualcosa *qui*», e
-       farselo poi chiedere una seconda volta è chiedere due volte la
-       stessa cosa: si sceglie la panchina e la si posa dov'era il dito.
-       Se lì non ci sta — il pezzo è più largo di quanto c'è libero — si
-       torna al gesto di sempre e resta appesa al dito, che è il modo di
-       dire «scegli tu un altro posto» senza un cartello. */
+    // Se lì non ci sta, resta appesa al dito: è il modo di dire "scegline un altro" senza un cartello.
     dovePosare = agganciato.cella || null
     pannello.value = { tipo: 'roba', zona: 'lavoro' }
     return
   }
 
-  /* ── IL TOCCO LUNGO È LA CASSETTA DEGLI ATTREZZI ──────────────────
-     Fermo, senza trascinare: compaiono «giralo» e «mettilo via». È lo
-     stesso gesto con cui la si sposta, meno il trascinamento — «tieni
-     premuto per sistemare» — e vale per tutto quello che si posa, il
-     campo e il silo compresi.
-
-     Prima ci arrivava il **tocco secco**, e su una cosa che lavora era
-     un guaio: il tocco secco apriva il foglio *e* selezionava, quindi
-     chiudendo il foglio — o seminando, o raccogliendo — gli attrezzi
-     riemergevano da soli sopra la cosa appena lavorata, a proporre di
-     spostarla. Un menù che ricompare da solo dopo che hai finito è un
-     menù che devi chiudere due volte. Adesso i due gesti dicono due
-     cose diverse: **tocca per fare, tieni premuto per sistemare.** */
+  // Tocca per fare, tieni premuto per sistemare (girare, rovesciare, mettere via).
   if (agganciato && agganciato.tipo === 'cosa') { scelto.value = agganciato.da; return }
 
   const c = scena.cellaDa(p.x, p.y)
   const px = piazzolaDi(c.x), py = piazzolaDi(c.y)
 
-  /* Comprare la terra viene PRIMA di tutto. Le bestie non ci vanno mai —
-     restano su quello che è tuo — ma il loro bersaglio è più largo della
-     cella su cui poggiano, e sporgendo sul bosco accanto si mangiava il
-     tocco: alcune piazzole diventavano incomprabili a seconda di dove si
-     era fermato il cane, il che è il tipo di guasto che sembra un caso. */
+  // Prima di tutto: il bersaglio delle bestie è più largo della cella e sporgeva sul bosco accanto.
   if (mondo.comprabile(px, py)) { scelto.value = null; pannello.value = { tipo: 'piazzola', px, py }; return }
 
   const b = mira
   if (b.bestia) {
     scelto.value = b.bestia
     apriBestia(b.bestia.nome)
-    /* Accanto al bambino, non addosso: se lì non si può stare — c'è
-       una panchina, è acqua — ci pensa `vaiA` ad accostarsi il più
-       vicino possibile invece di lasciare la bestia ferma. */
+    // Accanto al bambino, non addosso: vaiA si accosta se lì non si può stare.
     b.bestia.corpo.vaiA(bambino.corpo.cella.x, bambino.corpo.cella.y + 1, dovePasso)
     return
   }
 
   if (b.cosa) {
-    /* Il tocco secco fa **la cosa principale**: un campo si semina, un
-       mulino macina, un silo si guarda dentro — lo stesso gesto con cui
-       si tocca un cane, ed è il motivo per cui non c'è niente di nuovo
-       da imparare. Chi una cosa principale non ce l'ha — una panchina,
-       un albero, una casa — mostra i suoi attrezzi, che lì sono l'unica
-       cosa che ci si può fare. */
+    // Il tocco secco fa la cosa principale (semina, macina, guarda dentro); chi non ce l'ha mostra i suoi attrezzi.
     if (haFoglio(b.cosa)) { scelto.value = null; return apriLavoro(b.cosa) }
     scelto.value = b.cosa
     return
@@ -972,28 +610,7 @@ function lascia(e) {
   if (mondo.cellaMia(c.x, c.y)) bambino.corpo.vaiA(c.x, c.y, dovePasso)
 }
 
-/* ═══════════ CHI C'È SOTTO IL DITO ═══════════
-   Due giri, e una regola sola a tenerli insieme: **la grazia non ruba
-   mai un bersaglio esatto.**
-
-   Il primo giro chiede solo i bersagli esatti — la bestia dov'è
-   disegnata, la cosa sulla cella dove appoggia. Il secondo allarga: una
-   cosa si prende anche dove si *vede*, e una bestia con qualche pixel di
-   margine.
-
-   Il secondo giro serve perché uno sprite si appoggia col fondo sul suo
-   piede e tutto il resto sporge in su: il silo occupa due celle per una
-   ed è alto quasi quattro, quindi si vedeva grande e si toccava solo
-   nella striscia in basso — sopra quella striscia il dito finiva sul
-   prato dietro, e il bambino ci andava a camminare.
-
-   L'ordine è la parte che conta. Messo così, allargare non toglie niente
-   a nessuno: il prato dietro una casa è un bersaglio esatto e si tocca
-   ancora, e la pecora che passa sopra un campo non se lo mangia più —
-   prima lo faceva, perché il suo rettangolo veniva per primo e portava
-   già la sua grazia addosso. È lo stesso guasto che aveva reso certe
-   piazzole incomprabili a seconda di dove si fermava il cane, e lì era
-   stato tappato spostando una riga; qui la regola è scritta una volta. */
+// Due giri, la grazia non ruba mai un bersaglio esatto — vedi docs/fattoria/come-si-tocca.md.
 function bersaglio(p) {
   const c = scena.cellaDa(p.x, p.y)
   const esatta = attoreSotto(p.x, p.y, 0)
@@ -1005,23 +622,14 @@ function bersaglio(p) {
   return { bestia: attoreSotto(p.x, p.y, GRAZIA), cosa: null }
 }
 
-/* Il secondo giro per le cose: il rettangolo **davvero disegnato**, che
-   la tela sa calcolare (`riquadroPosa`) perché è lo stesso conto con cui
-   lo posa. Vince chi ha il fondo più in basso, cioè chi si vede davanti:
-   fra il silo e l'albero che gli spunta dietro, il dito prende il silo.
-
-   Le cose che hanno un foglio — un campo, un silo, una macchina — non
-   scendono mai sotto `MINIMO_TOCCO`: sono quelle che si toccano dieci
-   volte a partita, e alla scala più stretta un campo misurava 32 px. */
+// Il rettangolo davvero disegnato (riquadroPosa); vince chi ha il fondo più in basso.
 function cosaDisegnataSotto(sx, sy) {
   let vinta = null, fondo = -Infinity
   for (const cosa of mondo.cose) {
     if (!mondo.cellaMia(cosa.x, cosa.y)) continue
     const v = PER_ID[cosa.id]
     if (!v) continue
-    /* `aspettoDi` rende pezzo, piede e verso insieme, ed è quello che
-       tiene il bersaglio del dito incollato al disegno anche su una
-       cosa girata: il piede è già scambiato, e il riquadro pure. */
+    // aspettoDi rende pezzo, piede e verso insieme: il piede è già scambiato su una cosa girata.
     const a = assettoDi(cosa, v)
     const piede = a.piede
     const r = scena.riquadroPosa(a.pezzo, cosa.x, cosa.y, piede, a)
@@ -1034,26 +642,17 @@ function cosaDisegnataSotto(sx, sy) {
   return vinta
 }
 
-/* Un rettangolo che non scende sotto una misura, allargato dal centro
-   così resta dov'è. */
 function almeno(r, lato) {
   const w = Math.max(r.w, lato), h = Math.max(r.h, lato)
   return { x: r.x - (w - r.w) / 2, y: r.y - (h - r.h) / 2, w, h }
 }
 
-/* Chi ha una scheda da aprire, e quindi qualcosa da *fare* al tocco: un
-   campo si semina, una macchina trasforma, un silo si guarda dentro. Una
-   panchina no, e infatti al tocco mostra i suoi attrezzi e basta. */
 function haFoglio(cosa) {
   return eCampo(cosa) || !!macchinaDi(cosa) || eSilo(cosa) || eVicino(cosa) ||
          eMercato(cosa) || !!postoDi(cosa) || eMongolfiera(cosa)
 }
 
-/* Le bestie si guardano dal rettangolo davvero disegnato, non dalla
-   cella: è l'unico modo perché toccare un cane grosso funzioni dove il
-   cane si vede, e non solo dove appoggia. `grazia` è quanto si perdona
-   di lato e in basso — zero nel giro esatto, qualche pixel nel secondo.
-   Sopra la testa non si perdona niente: lì c'è già lo sprite. */
+// Dal rettangolo davvero disegnato, non dalla cella: grazia perdona di lato e in basso, mai sopra la testa.
 function attoreSotto(sx, sy, grazia = GRAZIA) {
   for (let i = attori.length - 1; i >= 0; i--) {
     const a = attori[i]
@@ -1074,27 +673,14 @@ function annulla() {
   fermaLaSpinta()
 }
 
-/* col mouse non si pizzica: la rotella fa lo stesso mestiere, ma a passi
-   interi — moltiplicare per 1,18 arrotondato lascerebbe la scala dov'è */
+// Col mouse non si pizzica: la rotella fa lo stesso mestiere, a passi interi.
 function rotella(e) {
   e.preventDefault()
   scena.zoomA(scena.scala + (e.deltaY < 0 ? 1 : -1), e.clientX, e.clientY)
 }
 
-/* ═══════════ prendere e posare ═══════════
-   Un gesto solo per tre cose che sembravano diverse: spostare quello
-   che c'è già, tirare fuori dal baule quello che si ha da parte, e
-   comprare quello che non si ha ancora. In tutti e tre i casi
-   l'anteprima è agganciata alla griglia **con l'ingombro vero** — la
-   casa occupa cinque celle per due, e vederlo prima di lasciare è
-   l'unico modo di scegliere davvero dove va.
-
-   `pronto` è la differenza fra i due modi di finire il gesto:
-   trascinando (`pronto` da subito) si posa alzando il dito; toccando e
-   basta nel baule la cosa **resta appesa** e si posa col tocco dopo,
-   dove la si vuole. Senza, un tocco svelto nel baule comprerebbe e
-   poserebbe sotto al dito, cioè dove il foglio copriva la mappa: una
-   spesa fatta senza aver visto dove finiva. */
+// Un gesto per spostare, tirare dal baule o comprare: l'anteprima è agganciata alla griglia con
+// l'ingombro vero. pronto distingue trascinare (si posa alzando il dito) da toccare (resta appesa).
 function prendi(voce, da, p, opz = {}) {
   const bestia = opz.bestia || null
   if (!voce && !bestia) return
@@ -1106,39 +692,15 @@ function prendi(voce, da, p, opz = {}) {
   scelto.value = bestia ? bestia.attore || null : (da || null)
   pannello.value = null
   if (p) muoviPreso(p)
-  /* Il baule era stato aperto tenendo premuto su una cella: quella
-     scelta è già stata fatta, e si posa lì. Solo se ci sta davvero —
-     `muoviSuCella` lo dice — se no la cosa resta appesa al dito come
-     sempre, e la si mette dove si vuole. */
+  // Il baule era stato aperto tenendo premuto su una cella: si posa lì solo se ci sta davvero.
   if (!dove || !muoviSuCella(dove.x, dove.y) || !preso.ok) return
 
-  /* ── E QUI IL DITO SI LASCIA DIETRO UN CLICK ──────────────────────
-     Il guasto è quello scritto in `docs/core/il-dito.md`, preso in pieno: posare
-     subito può **far comparire un foglio esattamente sotto il dito** —
-     una bestia comprata chiede il nome — e un attimo dopo arriva il
-     click fantasma di quello stesso tocco. Va a finire sul velo appena
-     nato, che si chiude da sé (`@click.self`): il foglio sparisce e
-     l'animale non si compra più. Da fuori è «tocco l'animale, mi si
-     chiude la schermata e non riesco a metterlo».
-
-     Prima non capitava perché premere nel baule non apriva niente:
-     lasciava la cosa appesa al dito, e il fantasma cadeva sul prato
-     dove non fa niente. Col mouse non capita affatto, ed è il motivo
-     per cui questi guasti si vedono solo dal telefono.
-
-     `opz.clic` sono le coordinate **dello schermo** (non della tela):
-     `zittisciIlFantasma` confronta con `clientX/clientY`, e passargli
-     quelle della tela avrebbe ingoiato il click sbagliato — cioè
-     nessuno. */
+  // Posare può aprire un foglio sotto il dito (nome della bestia): va ingoiato il click fantasma — vedi docs/core/il-dito.md.
   if (opz.clic) zittisciIlFantasma(opz.clic.x, opz.clic.y)
   posaPreso()
 }
 
-/* Come `muoviPreso`, ma partendo da una **cella** invece che da un
-   punto sullo schermo: chi ha tenuto premuto sul prato una cella la
-   sapeva già, e ripassare per i pixel vorrebbe dire rifare al contrario
-   il conto che la telecamera ha appena fatto. Torna se il conto si è
-   potuto fare. */
+// Come muoviPreso, ma da una cella invece che da un punto sullo schermo (per chi ha tenuto premuto sul prato).
 function muoviSuCella(cx, cy) {
   if (!preso || !scena) return false
   const centro = scena.puntoDellaCella
@@ -1148,17 +710,12 @@ function muoviSuCella(cx, cy) {
   return true
 }
 
-/* L'ingombro vero e la figura vera di quello che si ha in mano. Una
-   bestia sta in una cella sola e ci va **camminandoci**, quindi la
-   domanda che le si fa è `calpestabile` e non `libera`: una bestia si
-   posa dove potrebbe arrivare da sé, e in acqua o dentro una casa no. */
+// Una bestia sta in una cella e ci arriva camminando: si chiede calpestabile, non libera.
 function muoviPreso(p) {
   if (!preso) return
   const { voce, da, bestia } = preso
   const finto = da || (voce ? { id: voce.id, g: 0 } : null)
-  /* Anche l'anteprima si porta dietro il verso: chi sposta una cosa
-     girata la vede girata dove sta per lasciarla, se no il fantasma
-     dice il posto sbagliato proprio a chi sta decidendo dove metterla. */
+  // Anche l'anteprima porta il verso: una cosa girata si vede girata dove sta per finire.
   const a = bestia ? null : assettoDi(finto, voce)
   const piede = bestia ? [1, 1] : a.piede
   const c = scena.cellaDa(p.x, p.y)
@@ -1172,14 +729,7 @@ function muoviPreso(p) {
     : mondo.libera(preso.cx, preso.cy, piede[0], piede[1], da)
 }
 
-/* Perché non si è potuta posare, **detto per esteso**. Era un `else`
-   solo — «Lì non ci sta.» per tutto quello che non fossero le monete — e
-   `posa` di no ne dice quattro: uno solo dei quattro parla di posto.
-   Quello che si leggeva era un cartello che dice il falso, e il caso in
-   cui mentiva davvero era il silo: messo via e ripreso dal baule,
-   `ne-hai-gia` diventava «lì non ci sta», e chi lo leggeva provava tutte
-   le celle del prato una per una. Un rifiuto che nomina la ragione
-   sbagliata manda a cercare la soluzione dove non c'è. */
+// Il motivo per esteso — vedi docs/fattoria/regole.md ("un rifiuto nomina la ragione vera").
 function perchePosaNo(r) {
   if (r.motivo === 'poche-monete')
     return `Ti servono ${r.costo - monete.value} monete in più.`
@@ -1201,18 +751,12 @@ function posaPreso() {
     return
   }
   if (!p.da) { segna('fattoriaPosati'); segnaBest('fattoriaVarieta', mondo.tipiPosseduti) }
-  /* Posata, e basta. Prima restava selezionata, quindi appena finito di
-     spostare una panchina ci si ritrovava addosso i tastini per
-     spostarla: la risposta alla domanda che si era appena finito di
-     fare. Chi la vuole girare tiene premuto, che è il gesto che ha
-     appena usato. */
+  // Non resta selezionata: chi la sposta non si ritrova i tastini di "spostala" appena finito.
   scelto.value = null
   salva()
 }
 
-/* Una bestia già tua si sposta e basta; una che si sta comprando passa
-   prima dal nome — «prima si sceglie il nome, poi si paga» vale anche
-   adesso che si sceglie pure il posto. */
+// Prima si sceglie il posto, poi il nome, poi si paga: come per una bestia già tua.
 function posaLaBestia(p) {
   const { chi, attore, compra } = p.bestia
   if (!p.ok) { scelto.value = null; return avvisa('Lì non ci può stare.') }
@@ -1223,8 +767,7 @@ function posaLaBestia(p) {
   }
   const r = mondo.spostaBestia(chi, p.cx, p.cy)
   if (!r.ok) return avvisa('Lì non ci può stare.')
-  /* La si posa *ferma*: se restasse la strada di prima, ripartirebbe
-     subito verso dove stava andando e sembrerebbe scappata di mano. */
+  // Si posa ferma: con la strada di prima ripartirebbe subito e sembrerebbe scappata di mano.
   attore.corpo.fermati()
   attore.corpo.x = p.cx + 0.5
   attore.corpo.y = p.cy + 0.5
@@ -1246,34 +789,17 @@ const gestiDiScelto = computed(() => {
   const v = PER_ID[s.id]
   return [
     ...(puoGirare(v) ? [{ chiave: 'gira', icona: '↻', titolo: 'giralo' }] : []),
-    /* ⇄ compare su quasi tutto, perché quasi tutto si può rovesciare, e
-       ↻ su poco, perché girare di novanta gradi ha senso solo per quello
-       che è disegnato a piombo dall'alto. Chi non li regge non li vede:
-       un tasto che si preme e non fa niente è peggio di un tasto che
-       non c'è. */
+    // Chi non regge gira/rovescia non vede il tasto: uno che non fa niente è peggio di nessun tasto.
     ...(puoSpecchiare(v) ? [{ chiave: 'specchia', icona: '⇄', titolo: 'rovescialo' }] : []),
-    /* Il prezzo si vede **prima di premere**, ed è la metà che mancava:
-       da quando mettere via costa quanto spostare (`COSTO_SPOSTARE`),
-       un 📦 muto sarebbe una moneta che sparisce senza che nessuno
-       l'abbia vista chiedere. Girare e rovesciare restano senza numero
-       perché restano gratis: il numero c'è dove c'è da pagare. */
     { chiave: 'via', icona: '📦', titolo: `mettilo via (${COSTO_SPOSTARE} moneta)`,
       prezzo: COSTO_SPOSTARE },
   ]
 })
 
-/* Quanto è larga la barretta degli attrezzi, ricavata invece che
-   cablata. Erano 140 px scritti a mano, giusti finché i tasti sono tre;
-   il primo che ne aggiunge uno se la trova mezza fuori dallo schermo da
-   un lato, e non se ne accorge finché non tocca proprio un oggetto sul
-   bordo. Le misure sono quelle di `.fa-attrezzi` in `stile.css`: tasto
-   44 (il minimo di un polpastrello), 6 di stacco, 5 di margine, 2 di
-   bordo. */
+// Ricavata e non cablata: il primo tasto in più la troverebbe mezza fuori schermo. Misure in .fa-attrezzi (stile.css).
 const larghezzaAttrezzi = quanti => 44 * quanti + 6 * (quanti - 1) + 14
 
-/* Gli attrezzi non stanno mai sotto un foglio aperto. Non è solo che
-   non si vedrebbero: chiudendo il foglio **ricomparirebbero**, ed è così
-   che il menù tornava da solo sopra il campo appena seminato. */
+// Mai sotto un foglio aperto: chiudendolo ricomparirebbero da soli sopra la cosa appena usata.
 const doveAttrezzi = computed(() => {
   const s = scelto.value
   if (!s || !s.id || !scena || preso || pannello.value) return null
@@ -1294,23 +820,16 @@ function attrezzo(chiave) {
     if (!r.ok) avvisa('Girato non ci sta: fagli spazio.')
     else salva()
   }
-  /* Rovesciare non cambia l'ingombro, quindi non può mai mancare il
-     posto e non c'è niente da spiegare a nessuno: si fa e si salva. */
+  // Rovesciare non cambia l'ingombro: non può mai mancare il posto.
   if (chiave === 'specchia' && mondo.specchia(s).ok) salva()
   if (chiave === 'via') {
-    /* Adesso può dire no: un campo seminato e un mulino al lavoro non si
-       mettono via, perché nel baule non c'è posto per un grano a metà
-       crescita. Prima non c'era niente da rifiutare e il valore di
-       ritorno si buttava — ora buttarlo vorrebbe dire un tasto che non fa
-       niente senza spiegare perché. */
+    // Un campo seminato o una macchina al lavoro non si mettono via: nel baule non c'è posto per una cosa a metà.
     const r = mondo.mettiVia(s)
     if (!r.ok) return avvisa(
       r.motivo === 'campo-seminato'
         ? 'Nel campo c\'è qualcosa che sta crescendo: raccoglilo prima.'
       : r.motivo === 'poche-monete'
-        /* Mettere via costa quanto spostare, quindi può mancare la
-           moneta: senza questa riga il tasto non avrebbe fatto niente
-           e non avrebbe detto perché. */
+        // Mettere via costa quanto spostare: senza questa riga il tasto non avrebbe detto perché.
         ? `Mettere via costa 🪙${r.costo}: ti ${r.costo - monete.value === 1 ? 'serve' : 'servono'} ` +
           `🪙${r.costo - monete.value} in più.`
         : `${(PER_ID[s.id] || {}).nome || 'La macchina'} ha della roba in fila: ` +
@@ -1320,43 +839,20 @@ function attrezzo(chiave) {
   }
 }
 
-/* ═══════════ i campi e le macchine ═══════════
-   Il tocco su una cosa che *lavora* apre la sua scheda. Chi non lavora —
-   una panchina, una casa — non apre niente e resta solo selezionato, come
-   ha sempre fatto.
-
-   *C'era una variante* che spegneva la coltivazione dalla pagina dei
-   grandi, e non c'è più: la fattoria **è** la coltivazione, e senza non
-   resterebbe un posto più semplice ma un prato con dei mobili. */
+// Chi non lavora (una panchina, una casa) non apre niente e resta solo selezionato — vedi docs/fattoria/regole.md.
 function apriLavoro(cosa, con = '') {
   if (eCampo(cosa)) return apriCampo(cosa)
   if (macchinaDi(cosa)) return apriMacchina(cosa)
-  /* Il silo non lavora — non trasforma niente — ma **contiene**: è la
-     cosa che tiene il raccolto, e toccarla è il modo di guardarci
-     dentro. Era una linguetta del baule, in mezzo alle cose da
-     comprare; il perché del cambio sta in `viste/Granaio.vue`. */
+  // Il silo non lavora ma contiene: toccarlo è il modo di guardarci dentro.
   if (eSilo(cosa)) return apriGranaio(siloDi(cosa))
-  /* `con` arriva solo da un consiglio, e solo il carretto lo usa: chi
-     ci è mandato perché un certo scomparto è pieno il primo passo
-     l'ha già fatto, e ripeterglielo è il compito che il consiglio
-     doveva togliere. */
+  // con arriva solo da un consiglio: il primo passo l'ha già fatto, non si ripete.
   if (eVicino(cosa)) return apriVicino(con)
-  /* La bancarella: non trasforma e non contiene, **chiede**. È la
-     quarta cosa che si tocca e apre un foglio, e si riconosce come le
-     altre tre. */
   if (eMercato(cosa)) return apriMercato()
-  /* Una bottega del paese: chiede anche lei, ma dal suo elenco. */
   if (postoDi(cosa)) return apriBottega(cosa.id)
-  /* La mongolfiera: le casse da riempire, o il cielo vuoto. */
   if (eMongolfiera(cosa)) return apriMongolfiera()
 }
 
-/* ═══════════ la mongolfiera ═══════════
-   Come il banco: il pallone si rimette a posto **aprendo** (e dal
-   battito della scena, per il fumetto e per quello che atterra mentre
-   si guarda il prato), il caso arriva da qui, e il foglio si
-   ricompone a ogni gesto e resta aperto — chi ha tre casse pronte le
-   carica una dopo l'altra. */
+// Il pallone si rimette a posto aprendo (e dal battito, per il fumetto); il foglio resta aperto fra un gesto e l'altro.
 function apriMongolfiera() {
   if (aggiornaLaMongolfiera(mondo, Date.now(), Math.random)) salva()
   pannello.value = { tipo: 'mongolfiera', nave: naveDi(mondo, Date.now()) }
@@ -1371,8 +867,7 @@ function caricaCassa({ fila, cassa }) {
     ? `🎈 Tutto pieno! ⭐ ${r.xp}, e nel baule c'è una sorpresa: ${(PER_ID[r.sorpresa] || {}).nome || 'un regalo'}.`
     : r.bonusFila ? `📦 Fila piena! ⭐ ${r.xp} di esperienza.`
     : `📦 Caricata! ⭐ ${r.xp} di esperienza.`)
-  /* Una mongolfiera piena conta come un ordine consegnato nell'albo:
-     una cassa sola no, se no un pallone varrebbe nove ordini. */
+  // Una mongolfiera piena conta come un ordine consegnato; una cassa sola no, se no varrebbe nove ordini.
   if (r.tutto) segna('fattoriaOrdini', 1)
   salva()
   apriMongolfiera()
@@ -1386,8 +881,7 @@ function partiMongolfiera() {
   apriMongolfiera()
 }
 
-/* Dal battito: un pallone che atterra mentre si guarda il prato, e il
-   foglio aperto che conta i minuti del cielo vuoto. */
+// Dal battito: un pallone che atterra mentre si guarda il prato.
 function rinfrescaLaMongolfiera() {
   if (aggiornaLaMongolfiera(mondo, Date.now(), Math.random)) salva()
   const p = pannello.value
@@ -1395,11 +889,7 @@ function rinfrescaLaMongolfiera() {
     pannello.value = { tipo: 'mongolfiera', nave: naveDi(mondo, Date.now()) }
 }
 
-/* ═══════════ le botteghe del paese ═══════════
-   Come il mercato: il foglio si ricompone a ogni gesto, e la bottega
-   si rimette a posto aprendola (oltre che dal battito, per il fumetto).
-   Dopo una consegna si resta dentro — se la fama ha appena aperto un
-   bancone, il cliente nuovo è lì. */
+// La bottega si rimette a posto aprendola (oltre che dal battito); si resta dentro dopo una consegna.
 function apriBottega(id) {
   if (aggiornaLaBottega(mondo, id, Date.now(), Math.random)) salva()
   pannello.value = { tipo: 'bottega', bottega: bottegaDi(mondo, id, Date.now()) }
@@ -1430,17 +920,8 @@ function rifiutaAllaBottega(n) {
   apriBottega(id)
 }
 
-/* ═══════════ il mercato ═══════════
-   I tre posti al banco si rimettono a posto **aprendo**, non con un
-   orologio che gira: un ordine rifiutato torna dopo cinque minuti veri,
-   e il conto si fa leggendo l'ora — come per i campi che crescono a
-   gioco chiuso. Il caso arriva da qui (`Math.random`), perché il motore
-   non ne ha uno suo: una partita si deve poter rifare identica.
-
-   Il foglio si ricompone a ogni gesto invece di tenersi in mano quello
-   di prima: cosa si può consegnare dipende da cosa c'è in granaio, e il
-   granaio cambia a ogni consegna — un elenco tenuto da prima
-   proporrebbe un ordine già consegnato. */
+// I tre posti al banco si rimettono a posto aprendo, con l'ora vera; il caso arriva da qui
+// (Math.random) perché il motore non ne ha uno suo — una partita si deve poter rifare identica.
 function apriMercato() {
   if (aggiornaIlMercato(mondo, Date.now(), Math.random)) salva()
   pannello.value = { tipo: 'mercato', ...bancoDi(mondo, Date.now()) }
@@ -1451,13 +932,11 @@ function consegnaOrdine(id) {
   if (!r.ok) return avvisa(r.motivo === 'manca-roba'
     ? 'Ti manca ancora qualcosa: guarda le caselle vuote.'
     : 'Quell\'ordine non c\'è più.')
-  /* Il contatore è del profilo e non della fattoria: i traguardi li
-     legge l'albo (`gioco.js`), che di un salvataggio non sa niente. */
+  // Il contatore è del profilo, non della fattoria: i traguardi non sanno niente di un salvataggio.
   segna('fattoriaOrdini', 1)
   avvisa(`✅ Consegnato! ⭐ ${r.xp} di esperienza.`)
   salva()
-  /* Si resta al banco: chi ne ha due pronti li consegna uno dopo
-     l'altro senza riaprire il foglio. */
+  // Si resta al banco: chi ne ha due pronti li consegna senza riaprire il foglio.
   apriMercato()
 }
 
@@ -1469,11 +948,7 @@ function rifiutaOrdine(id) {
   apriMercato()
 }
 
-/* Il carretto: due passi, e il secondo si ricalcola ogni volta invece di
-   tenerlo da parte. Cosa il vicino può offrire dipende da cosa c'è
-   ancora posto per ricevere, e il posto cambia dopo ogni scambio — un
-   elenco tenuto in mano da prima proporrebbe una merce che nel
-   frattempo è diventata colma, cioè cinque pezzi dati via per niente. */
+// Il secondo passo si ricalcola ogni volta: il posto libero cambia dopo ogni scambio.
 function apriVicino(scelto = '') {
   pannello.value = {
     tipo: 'vicino', scelto,
@@ -1494,34 +969,21 @@ function alVicino(verso) {
     ? `${dato} → ${r.ricevuti} ${PRODOTTI[r.verso].emoji}. Il vicino ringrazia!`
     : `${dato} al vicino. «Grazie!»`)
   salva()
-  /* Si resta sul carretto, al primo passo: chi ne aveva trenta di una
-     cosa ne ha ancora venticinque, e chiudere il foglio vorrebbe dire
-     riaprirlo cinque volte. */
+  // Si resta sul carretto: chi ne aveva trenta di una cosa ne ha ancora venticinque.
   apriVicino('')
 }
 
-/* Si apre **quel** silo, non «il granaio»: sono due magazzini separati
-   con due tetti separati, e toccare il silo bianco per vedere il grano
-   sarebbe la stessa confusione di prima con un'altra faccia. */
+// Si apre quel silo, non "il granaio": sono due magazzini separati.
 function apriGranaio(famiglia) {
   pannello.value = { tipo: 'granaio', famiglia,
                      scomparti: mondo.scomparti(famiglia),
-                     /* la capienza si passa a parte: gli scomparti sono
-                        solo quelli **aperti** (il silo non racconta il
-                        futuro, vedi `Fattoria.merciAperte`), e quando
-                        non ce n'è ancora nessuno il foglio direbbe
-                        «0 di ogni cosa» leggendola dal primo */
+                     // Gli scomparti sono solo quelli aperti (il silo non racconta il futuro).
                      posti: mondo.capienzaDi(famiglia),
                      livello: mondo.livelloDelSilo(famiglia),
                      costo: mondo.costoDellIngrandimento(famiglia) }
 }
 
-/* ═══════════ l'albero di una merce ═══════════
-   Il consiglio srotolato (`dati/albero.js`, `viste/Albero.vue`). Si apre
-   sempre **con una merce già scelta** — dal silo, dal mercato, dalla
-   macchina — e si ricompone a ogni apertura, perché è un conto
-   sull'orologio e sul granaio. Le sue righe eseguono le stesse azioni
-   dei consigli: non c'è niente di nuovo da fare qui. */
+// Il consiglio srotolato: si apre sempre con una merce già scelta e si ricompone a ogni apertura.
 function apriAlbero(prodotto) {
   if (!prodotto) return
   const albero = alberoDi(mondo, prodotto)
@@ -1529,30 +991,15 @@ function apriAlbero(prodotto) {
   pannello.value = { tipo: 'albero', prodotto, albero }
 }
 
-/* ── E SI RIFÀ DA SOLO, FINCHÉ È APERTO ──
-   Un pannello di questa fattoria è **un'istantanea**: si compone
-   all'apertura e resta com'era. Per quasi tutti va bene — un foglio di
-   ricette non ha niente che scorra — ma l'albero è fatto di orologi, e
-   ne mostra fino a cinque insieme: `⏳ pronto fra 4 min` sulla
-   macchina, `🌱 sta crescendo · 3 min` sul campo, e sotto ancora. Un
-   conto alla rovescia che non scende non è un dettaglio: è un numero
-   che dice il falso, e lo dice proprio a chi è lì per sapere quanto
-   manca.
-
-   Si rifà ogni cinque secondi, dal battito della scena, che è dove
-   stanno già i bisogni e la stagione. Non serve più spesso: quello che
-   mostra sono minuti. E non serve un orologio suo — uno `setInterval`
-   qui vorrebbe dire ricordarsi di spegnerlo, e un orologio dimenticato
-   in una pagina di gioco lavora a schermo spento. */
+// L'albero mostra fino a cinque orologi insieme: un conto alla rovescia che non scende mente proprio
+// a chi è lì per sapere quanto manca. Si rifà ogni 5 secondi dal battito della scena, niente setInterval suo.
 function rinfrescaLAlbero() {
   const p = pannello.value
   if (!p || p.tipo !== 'albero') return
   pannello.value = { ...p, albero: alberoDi(mondo, p.prodotto) }
 }
 
-/* Ingrandire è la sola cosa che si fa da dentro un silo, e il foglio si
-   rifà con i numeri nuovi invece di chiudersi: si guarda il posto che
-   si è appena comprato, e chi ne vuole altri due è già lì. */
+// Il foglio si rifà con i numeri nuovi invece di chiudersi: chi ne vuole altri due è già lì.
 function ingrandisci() {
   const { famiglia } = pannello.value
   const r = mondo.ingrandisci(famiglia)
@@ -1564,41 +1011,26 @@ function ingrandisci() {
   salva()
 }
 
-/* ═══════════ IL PROSSIMO PASSO ═══════════
-   Le regole di cosa consigliare stanno nel motore (`motore/consiglio.js`)
-   e girano senza schermo; qui c'è solo il braccio che **esegue** quello
-   che il consiglio ha deciso. Quattro forme e non una di più: se ne
-   servisse una quinta, il posto dove aggiungerla è quel file, non
-   questo.
-
-   Il foglio da cui si è partiti si chiude sempre: il consiglio manda
-   da un'altra parte, e lasciare aperto quello di prima vorrebbe dire
-   due fogli sovrapposti — e un tasto «chiudi» che scopre una schermata
-   che non si stava guardando. */
+// Le regole di cosa consigliare stanno nel motore (motore/consiglio.js); qui solo il braccio che esegue.
+// Il foglio da cui si è partiti si chiude sempre: il consiglio manda altrove.
 function faiIlPasso(azione) {
   if (!azione) return chiudi()
   chiudi()
   if (azione.che === 'apri') {
-    /* Non basta aprirne il foglio: la cosa può stare fuori dallo
-       schermo, e chiudendo il foglio ci si ritroverebbe a guardare il
-       prato sbagliato senza sapere dove si è finiti. */
+    // La cosa può stare fuori schermo: si guarda prima di aprire il foglio.
     guarda(azione.cosa)
     return apriLavoro(azione.cosa, azione.con)
   }
-  /* Arrivata ma non ancora presa: il baule non ce l'ha, il premio sì. */
-  if (azione.che === 'premio') return apriLivelli()
+  if (azione.che === 'premio') return apriLivelli()  // arrivata ma non ancora presa
   if (azione.che === 'compra') {
     punta.value = azione.voce
-    /* la zona la decide `punta`: il baule si apre dov'è quella cosa */
-    pannello.value = { tipo: 'roba', zona: '' }
+    pannello.value = { tipo: 'roba', zona: '' }  // la zona la decide punta
     return
   }
   if (azione.che === 'ingrandisci') return ingrandisciIlSilo(azione.famiglia)
 }
 
-/* La telecamera si sposta su una cosa, se non si vede già: se si vede,
-   fermo. Un salto di mezzo schermo per centrare una cosa che era già
-   davanti agli occhi fa perdere il posto a chi guardava. */
+// Si sposta solo se la cosa non si vede già: un salto per centrare quello che era già davanti fa perdere il posto.
 function guarda(cosa) {
   if (!scena || !cosa) return
   const g = mondo.ingombro(cosa)
@@ -1611,11 +1043,7 @@ function guarda(cosa) {
   scena.limita()
 }
 
-/* Ingrandire un silo **senza passare dal suo foglio**: è il tasto che
-   compare in fondo a un campo pronto che non ha dove scaricare. Chi lo
-   preme sta guardando il campo, non il silo, quindi non si apre il
-   granaio: si paga, si dice cos'è cambiato, e il campo si ritrova
-   raccoglibile. */
+// Compare in fondo a un campo pronto senza dove scaricare: chi lo preme guarda il campo, non il silo.
 function ingrandisciIlSilo(famiglia) {
   const r = mondo.ingrandisci(famiglia)
   if (!r.ok) return avvisa(r.motivo === 'poche-monete'
@@ -1625,15 +1053,7 @@ function ingrandisciIlSilo(famiglia) {
   salva()
 }
 
-/* Quello che il gioco dice quando una roba non ha dove finire. Sono due
-   cose da fare diverse — costruire il silo, o ingrandirlo — e un
-   cartello che dice quella sbagliata è peggio di nessun cartello.
-
-   Da quando ogni merce ha il suo scomparto, il pieno è **di quella
-   merce** e non del silo: dirlo per esteso («lo scomparto del mais è
-   pieno») è la differenza fra un bambino che guarda il silo e non
-   capisce cosa c'è di pieno, e uno che sa che le carote entrano
-   ancora. */
+// Il pieno è di quella merce, non del silo: dirlo per esteso evita di far credere pieno tutto il silo.
 function nonCiSta(r) {
   const si = SILI[r.famiglia] || SILI.terra
   const pr = PRODOTTI[r.prodotto] || { emoji: '📦', nome: 'roba' }
@@ -1644,34 +1064,21 @@ function nonCiSta(r) {
          ' Le altre cose entrano ancora.'
 }
 
-/* Lo stato si rilegge **a ogni apertura** e non si tiene da parte: è un
-   conto sull'orologio vero (`statoCampo`), e uno tenuto in mano da ieri
-   direbbe che manca ancora mezz'ora a un grano già pronto. */
+// Si rilegge a ogni apertura: un conto sull'orologio tenuto da ieri direbbe che manca ancora mezz'ora a un grano pronto.
 function apriCampo(cosa) {
   const stato = mondo.statoCampo(cosa)
   if (!stato) return
   pannello.value = { tipo: 'campo', cosa, stato,
-                     /* solo quelle che il livello ha aperto: due al
-                        primo campo, e due scelte a quattro anni sono
-                        una scelta — cinque sono un elenco */
-                     /* Ognuna con **quanto ne hai già** e quanto ci sta
-                        ancora: seminare è una scelta fra cinque cose, e
-                        senza quel numero si sceglie a memoria — cioè si
-                        semina sempre la stessa e ci si accorge del silo
-                        tappato dieci minuti dopo, a raccolto pronto. */
+                     // Solo quelle che il livello ha aperto: cinque scelte a quattro anni sono un elenco, non una scelta.
+                     // hai e ciSta, per scegliere "mi serve?" invece che a memoria.
                      colture: COLTURE.filter(c => mondo.colturaAperta(c.id))
                        .map(c => ({ ...c, hai: mondo.quantoHo(c.da),
                                     ciSta: mondo.quantoCiSta(c.da) })),
                      ciSta: stato.coltura ? mondo.quantoCiSta(stato.coltura.da) : 99,
-                     /* si dice **prima di seminare** che servirà un posto
-                        dove metterlo: scoprirlo a raccolto pronto vuol
-                        dire aver aspettato dieci minuti per niente */
+                     // Si dice prima di seminare che servirà un posto, non a raccolto pronto.
                      senzaSilo: !mondo.eCostruito('terra'),
                      prezzoSilo: mondo.quantoCosta(SILI.terra.cosa),
-                     /* Il passo si calcola **solo quando serve**: è una
-                        camminata sulla catena, e farla a ogni apertura
-                        di ogni campo sarebbe lavoro buttato nove volte
-                        su dieci. */
+                     // Il passo si calcola solo quando serve: è una camminata sulla catena.
                      passo: stato.coltura && stato.pronto &&
                             mondo.quantoCiSta(stato.coltura.da) < stato.coltura.resa
                        ? comeFarePosto(mondo, stato.coltura.da) : null }
@@ -1683,9 +1090,7 @@ function semina(coltura) {
   if (!r.ok) return avvisa(r.motivo === 'poche-monete'
     ? `Ti ${r.costo - monete.value === 1 ? 'serve' : 'servono'} 🪙${r.costo - monete.value} in più.`
     : 'Qui c\'è già qualcosa.')
-  /* Non si conta la semina: chi semina raccoglie, e due contatori per lo
-     stesso giro darebbero due numeri che dicono la stessa cosa e si
-     scostano solo per i campi ancora in crescita. */
+  // Non si conta la semina, solo il raccolto: due contatori per lo stesso giro direbbero la stessa cosa.
   chiudi()
   avvisa(`${coltura.emoji} Seminato. Torna fra ${coltura.minuti} minuti.`)
   salva()
@@ -1704,13 +1109,7 @@ function raccogli() {
   salva()
 }
 
-/* Quanti posti restano, in coda all'avviso di quando è appena entrata
-   della roba: è il momento in cui la domanda «e adesso quanto ci sta?»
-   viene da sola, ed è l'unico posto in cui la si può leggere senza
-   aprire niente. Una riga in coda e non un cartello suo — un cartello
-   in più a ogni raccolto diventa una cosa da chiudere, non da leggere —
-   e si tace quando il silo è ancora largo, perché un numero che non
-   preoccupa detto ogni volta smette di essere letto. */
+// In coda all'avviso di raccolto: si tace quando il silo è ancora largo, un numero che non preoccupa smette di essere letto.
 function quantoNeResta(r) {
   const fam = (PRODOTTI[r.prodotto] || {}).silo
   const resta = mondo.quantoCiSta(r.prodotto)
@@ -1718,57 +1117,36 @@ function quantoNeResta(r) {
   return resta ? ` Restano ${resta} posti.` : ' Adesso è pieno: toccalo per ingrandirlo.'
 }
 
-/* Le ricette arrivano al pannello **già con quello che manca**: il conto
-   è del motore (`cheMancaPer`), e il foglio lo mostra. Un tasto spento
-   senza il perché è un tasto rotto. */
+// Le ricette arrivano già con quello che manca (cheMancaPer): un tasto spento senza il perché è un tasto rotto.
 function apriMacchina(cosa) {
   const stato = mondo.statoMacchina(cosa)
   if (!stato) return
   const { siRitira, fuori } = quantiSiRitirano(stato)
   pannello.value = {
     tipo: 'macchina', cosa, stato,
-    /* Il nome viene dal catalogo e non dal pannello: le macchine adesso
-       sono sette, e un foglio che dice «Il mulino» sopra un pollaio è la
-       cosa che fa smettere di fidarsi di quello che c'è scritto. */
+    // Dal catalogo e non dal pannello: sette macchine, un nome sbagliato è quello che rompe la fiducia.
     nome: (PER_ID[cosa.id] || {}).nome || 'La macchina',
     bestie: !!statiDi(cosa),
-    /* Solo quelle che il livello ha aperto: il pastone vuole il mais,
-       che arriva sette livelli dopo il mulino, e mostrarlo prima era un
-       tasto spento per cinque ore di esercizi (`dati/coltivazioni.js`). */
+    // Solo quelle che il livello ha aperto (vedi dati/coltivazioni.js).
     ricette: ricetteDi(stato.macchina, mondo.livello).map(ricetta => {
       const m = mondo.cheMancaPer(ricetta.id)
-      /* **Quanto ne hai già**, di quello che entra e di quello che esce.
-         È la domanda che si fa davanti a una macchina con quattro
-         ricette — non «posso?», a cui rispondono già il tasto spento e
-         il numero che manca, ma «mi serve?». Senza, si preme sempre la
-         prima. */
+      // Quanto ne hai già, di quello che entra e di quello che esce: risponde a "mi serve?", non "posso?".
       const hai = { [ricetta.da]: mondo.quantoHo(ricetta.da) }
       for (const k of Object.keys(ricetta.prende)) hai[k] = mondo.quantoHo(k)
-      /* Dove andare a prendere la **prima** cosa che manca. Una sola e
-         non tutte: due consigli affiancati sono due tasti che portano
-         in due posti, e chi legge sceglie di non premere né l'uno né
-         l'altro. Fatta quella, alla riapertura il consiglio è il
-         prossimo — che è il modo in cui una catena si percorre. */
+      // Solo la prima cosa che manca: due consigli affiancati non si premono né l'uno né l'altro.
       const primo = (m.manca || [])[0]
       return { ricetta, ...m, hai,
                passo: primo ? comeAvere(mondo, primo.prodotto) : null }
     }),
     siRitira, nonCiSta: fuori ? fuori.da : '',
-    /* Quale silo tocca a quello che è rimasto fuori, e se c'è: il
-       pollaio riempie quello della stalla, il mulino quello del
-       raccolto, e «metti un silo» senza dire *quale* manderebbe a
-       comprare quello sbagliato — che costa 120 monete. */
+    // Quale silo tocca a quello rimasto fuori: dirlo senza il nome manderebbe a comprare quello sbagliato.
     ...(fuori ? nomeDelSilo(fuori.da) : stato.ricetta ? nomeDelSilo(stato.ricetta.da) : {}),
-    /* E se quello che è pronto non ha dove finire, dove andarlo a
-       mettere: stessa domanda del campo maturo, stessa risposta. */
+    // E se il pronto non ha dove finire, dove andarlo a mettere.
     passo: fuori ? comeFarePosto(mondo, fuori.da) : null,
   }
 }
 
-/* Quanti pezzi pronti entrerebbero adesso, e il primo che resterebbe
-   fuori: lo stesso giro di `ritira` nel motore, fatto sulla carta. Con
-   la fila i pronti possono essere di merci diverse, e il tasto «Ritira»
-   deve sapere se prende qualcosa prima di essere premuto. */
+// Quanti pezzi pronti entrerebbero adesso, e il primo che resterebbe fuori (stesso giro di ritira, sulla carta).
 function quantiSiRitirano(stato) {
   const posto = {}
   let siRitira = 0, fuori = null
@@ -1782,26 +1160,16 @@ function quantiSiRitirano(stato) {
   return { siRitira, fuori }
 }
 
-/* Il foglio della macchina **resta aperto** dopo ogni gesto e si rifà:
-   con la fila il gesto naturale è metterne tre di fila, e un foglio che
-   si chiude a ogni tocco fa riaprire la macchina tre volte. Si rifà
-   anche dal battito della scena, come l'albero: una barra che non
-   avanza e un pezzo che non diventa pronto sono numeri che mentono. */
+// Resta aperto dopo ogni gesto (per metterne tre di fila) e si rifà anche dal battito della scena.
 function rinfrescaLaMacchina() {
   const p = pannello.value
   if (!p || p.tipo !== 'macchina') return
-  /* `toRaw`: il pannello è un `ref`, e quello che ci sta dentro esce
-     avvolto nel proxy di Vue — mai uguale, per identità, alla cosa vera
-     in `mondo.cose`. Senza, il controllo «c'è ancora?» diceva sempre di
-     no, e il foglio di una macchina si chiudeva da solo al primo
-     rinfresco, cinque secondi dopo averlo aperto. */
+  // toRaw: confronta l'identità vera, non il proxy di Vue — vedi docs/fattoria/come-si-tocca.md.
   const cosa = toRaw(p.cosa)
   if (!mondo.cose.includes(cosa)) return chiudi()
   apriMacchina(cosa)
 }
 
-/* Come si chiama il silo di questo prodotto, se è costruito e quanto
-   costa. Serve ai fogli, che di silos non sanno niente. */
 function nomeDelSilo(prodotto) {
   const fam = (PRODOTTI[prodotto] || {}).silo || 'terra'
   return { silo: SILI[fam].nome, senzaSilo: !mondo.eCostruito(fam),
@@ -1816,24 +1184,15 @@ function avvia(ricetta) {
     : r.motivo === 'fila-piena' ? 'La fila è piena: ritira quello che è pronto, o allungala.'
     : 'Non c\'è abbastanza roba.')
   apriMacchina(cosa)
-  /* Diceva «Il mulino è partito» anche sopra un pollaio — la stessa
-     bugia che il pannello aveva già smesso di dire. Il nome della
-     macchina però non si può infilare in questa frase: «la conigliera
-     è partito» è peggio del difetto che ripara, e le sette macchine
-     hanno tre generi fra loro. Quindi si dice **quello che sta
-     arrivando**, che è l'unica cosa che chi ha appena premuto non sa
-     già — la macchina ce l'ha sotto il dito. */
-  /* In fila dietro a un altro, i minuti da dire sono **fino alla fine
-     di questo**, non la sua durata: «fra 4 minuti» detto di un pezzo
-     che parte fra dieci è una promessa che non si mantiene. */
+  // Il nome della macchina non entra nella frase (sette macchine, tre generi): si dice cosa sta arrivando.
+  // In fila dietro a un altro, i minuti sono fino alla fine di questo, non la sua durata.
   const fra = r.subito ? ricetta.minuti : Math.max(1, Math.ceil((r.fine - Date.now()) / MINUTO))
   avvisa(r.subito ? `${ricetta.emoji} ${ricetta.nome} fra ${fra} minuti.`
                   : `${ricetta.emoji} ${ricetta.nome} in fila: pronto fra ${fra} minuti.`)
   salva()
 }
 
-/* Togliere dalla fila un pezzo non ancora partito: torna tutto, roba e
-   monete, e lo si dice — se no la ✕ sembra un cestino. */
+// Torna tutto, roba e monete, e lo si dice: se no la ✕ sembra un cestino.
 function togliDallaFila(indice) {
   const { cosa } = pannello.value
   const r = mondo.togliDallaFila(cosa, indice)
@@ -1863,9 +1222,7 @@ function ritira() {
     ? nonCiSta(r) : `Manca ancora ${r.manca} min.`)
   segna('fattoriaRitiri')
   apriMacchina(cosa)
-  /* Tutto quello che è entrato, merce per merce, e se qualcosa è
-     rimasto sulla macchina lo si dice: «+3 nel silo» con un quarto
-     pezzo ancora lì farebbe credere di averlo perso. */
+  // Tutto quello che è entrato, merce per merce; se qualcosa resta sulla macchina lo si dice.
   const presi = r.presi.map(p => `${PRODOTTI[p.prodotto].emoji} +${p.quanto}`).join(' ')
   avvisa(`${presi} nel silo!` +
          (r.restano ? ` ${r.restano === 1 ? 'Uno resta' : `${r.restano} restano`} qui: non ci ${r.restano === 1 ? 'sta' : 'stanno'}.`
@@ -1879,9 +1236,7 @@ function compraPiazzola() {
   const r = mondo.compraPiazzola(px, py)
   if (!r.ok) return avvisa(`Ti servono ${r.costo - monete.value} monete in più.`)
   segna('fattoriaTerre')
-  /* Il mondo può essere appena cresciuto: la telecamera lo deve sapere
-     **subito**, o il prato nuovo resta dietro un muro invisibile fino
-     al prossimo giro di disegno. */
+  // Il mondo può essere appena cresciuto: la telecamera lo deve sapere subito.
   inquadraIlMondo()
   scena.limita()
   chiudi()
@@ -1897,11 +1252,7 @@ function sgombra() {
   salva()
 }
 
-/* Prima si sceglie il posto, poi il nome, poi si paga. Il nome prima del
-   pagamento è la regola di sempre — un animale battezzato «dopo» resta
-   «il cane» per sempre, perché quel dopo non arriva mai — e il posto è
-   arrivato davanti a tutto da quando anche una bestia si posa: comprarla
-   e trovarsela in mezzo al prato vorrebbe dire spostarla subito. */
+// Prima il posto, poi il nome, poi si paga: un animale battezzato "dopo" resta "il cane" per sempre.
 function prendiUnaBestia({ bestia, x, y, trascina }) {
   pannello.value = null
   if (mondo.hoLaBestia(bestia.chi)) return avvisa(`${bestia.nome} è già tuo.`)
@@ -1911,16 +1262,8 @@ function prendiUnaBestia({ bestia, x, y, trascina }) {
          { bestia: { chi: bestia.chi, compra: bestia }, pronto: !!trascina, clic: { x, y } })
 }
 
-/* Toccare una bestia mostra **come sta**, non chiede il nome: il nome
-   glielo dai una volta, lo stato lo guardi ogni volta.
-
-   `stato` è una **fotografia** dei tre bisogni e non il record del
-   motore, che è sempre lo stesso oggetto: il perché per esteso sta in
-   `dati/bisogni.js` accanto a `foto`, e in due righe è che un foglio
-   le cui prop sono tutte identiche a prima **non si ridisegna**. Dare
-   un gomitolo non muove le monete — si paga in lana — quindi la barra
-   restava ferma, e saltava su alla prima cosa comprata dopo, insieme a
-   quella di quel gesto lì: due barre in su per un tocco solo. */
+// stato è una fotografia dei bisogni, non il record del motore (sempre lo stesso oggetto): un foglio
+// con le stesse prop non si ridisegna, e la barra restava ferma finché non arrivava un altro cambio.
 function apriBestia(chi) {
   const b = mondo.laBestia(chi)
   if (!b) return
@@ -1928,20 +1271,13 @@ function apriBestia(chi) {
                      stato: foto(mondo.stato(chi)) }
 }
 
-/* ═══════════ vestire una bestia ═══════════
-   Il guardaroba è del motore (`vestiBestia`, `guardaroba`); qui c'è
-   solo il braccio, e una cosa in più che il motore non fa apposta:
-   **premere quello che non hai lo compra**. È lo stesso gesto del
-   baule, dove premere è già posare e si paga posando — un tasto che
-   dicesse «prima compralo, poi mettiglielo» sarebbero due gesti per
-   una cosa sola. */
+// Il guardaroba è del motore; qui in più: premere quello che non hai lo compra (come nel baule).
 function apriVestiario(chi) {
   const b = mondo.laBestia(chi)
   if (!b) return
   pannello.value = {
     tipo: 'vestiario', chi, che: nomeDi(chi), nome: b.nome || '',
-    /* In vendita più quello sospeso che ha già: un fiocco comprato
-       prima della sospensione resta un tasto, uno mai comprato no. */
+    // In vendita più quello sospeso che ha già: comprato prima della sospensione resta un tasto.
     addobbi: mondo.vestiarioDi(chi),
     portati: { ...mondo.addobbiDi(chi) },
     guardaroba: { ...mondo.guardaroba },
@@ -1951,18 +1287,14 @@ function apriVestiario(chi) {
 function metti(id) {
   const { chi } = pannello.value
   const a = addobbo(id)
-  /* Ripremere quello che ha **già addosso** non fa niente, e soprattutto
-     non lo ricompra: un addobbo indossato non sta più in guardaroba,
-     quindi senza questa riga il tasto della cosa che si sta guardando
-     in testa alla bestia ne comprerebbe un secondo a ogni tocco. */
+  // Quello che ha già addosso non si ricompra: un addobbo indossato non sta più in guardaroba.
   if (a && mondo.addobbiDi(chi)[a.dove] === id) return
   if (mondo.quantiAddobbi(id) < 1) {
     const c = mondo.compraAddobbo(id)
     if (!c.ok) return avvisa(c.motivo === 'poche-monete'
       ? `Ti ${c.costo - monete.value === 1 ? 'manca' : 'mancano'} 🪙${c.costo - monete.value}: ` +
         'fai un po\' di esercizi negli altri giochi.'
-      /* Un sospeso che non si ha: nel vestiario non compare, quindi
-         qui ci si arriva solo da un tasto vecchio rimasto a schermo. */
+      // Un sospeso che non si ha non compare nel vestiario: qui solo per un tasto vecchio a schermo.
       : c.motivo === 'sospeso'
       ? 'Questo per ora non si vende.'
       : 'Non è andata: riprova.')
@@ -1971,8 +1303,7 @@ function metti(id) {
   if (!r.ok && r.motivo !== 'gia-addosso') return avvisa(r.motivo === 'non-gli-sta'
     ? `${nomeDi(chi)} lì non ci mette niente.` : 'Non è andata: riprova.')
   if (r.ok) avvisa(`${r.addobbo.emoji} ${r.addobbo.nome} addosso!`)
-  /* Un **primato** e non un contatore: mettere e togliere lo stesso
-     cappello venti volte non vale venti volte. */
+  // Un primato, non un contatore: mettere e togliere lo stesso cappello venti volte non vale venti.
   segnaBest('fattoriaVestiti', mondo.addobbiAddosso)
   rivestiLaBestia(chi)
   salva()
@@ -1996,9 +1327,7 @@ function nutri(cibo) {
   if (!r.ok) return avvisa(
     r.motivo === 'non-gli-piace' ? `${nome} non mangia ${cibo.nome.toLowerCase()}.`
     : r.motivo === 'non-ha-fame' ? 'Ha la pancia piena.'
-    /* Il mangime non si compra: manca la roba, non le monete, e dirgli
-       «ti servono 0 monete» sarebbe la risposta giusta alla domanda
-       sbagliata. */
+    // Il mangime non si compra: manca la roba, non le monete.
     : r.motivo === 'manca-roba' ? `Non hai ${cibo.nome.toLowerCase()}: passa dal mulino.`
     : `Ti servono ${r.costo - monete.value} monete in più.`)
   if (r.premio) festeggiaIlBenessere(chi, nome, r.premio)
@@ -2012,32 +1341,20 @@ function coccola(gesto) {
   if (!r.ok) return avvisa(
     r.motivo === 'poche-monete'
       ? `Ti serve ${r.costo} moneta: falla giocare dopo qualche esercizio.`
-    /* La copertina si paga in lana, non in monete: manca la roba, e
-       dirgli «ti servono 0 monete» sarebbe la risposta giusta alla
-       domanda sbagliata. Stessa forma del mangime in `nutri`. */
+      // La copertina si paga in lana, non in monete: manca la roba, non le monete.
     : r.motivo === 'manca-roba' ? 'Non hai lana: tieni delle pecore, o dei conigli.'
     : 'Non ne ha bisogno adesso.')
   if (r.premio) festeggiaIlBenessere(chi, nome, r.premio)
   salva(); apriBestia(chi)
 }
 
-/* ── UNA BESTIA RIMESSA A POSTO ─────────────────────────────────────
-   Il motore ha già deciso e già contato (`premiaIlBenessere`): qui si
-   dice, in due posti. La riga d'avviso in cima, che dice **quanto** e
-   dove va a finire (la ⭐ del gettone, come per un ordine consegnato),
-   e un «+9 ⭐» che sale dalla testa della bestia sul prato — la tela
-   riceve un testo e un punto, e non sa cosa sia l'esperienza. Il punto
-   è la cima dello sprite: il corpo sta ai piedi e la figura è alta due
-   celle. Se poi `salva()` annuncia un livello nuovo, quella riga copre
-   questa, ed è giusto: è la notizia più grossa delle due. */
+// Il motore ha già deciso e già contato: qui si dice, in due posti — l'avviso in cima e un "+9 ⭐"
+// che sale dalla testa della bestia sul prato.
 function festeggiaIlBenessere(chi, nome, premio) {
   const faccia = (animale(chi) || {}).emoji || '🐾'
   avvisa(`${faccia} ${nome} sta benissimo! ⭐ +${premio.xp} di esperienza.`)
   etichettaInSospeso = { chi, testo: `+${premio.xp} ⭐` }
-  /* la scheda della bestia si riapre nello stesso giro, a tutta altezza,
-     e un'etichetta che vive due secondi e mezzo dietro un foglio non la
-     vede nessuno: si posa quando il foglio si chiude (`chiudi()`), o
-     subito se non c'è nessun foglio davanti. */
+  // La scheda si riapre a tutta altezza: l'etichetta si posa quando il foglio chiude, o subito se non c'è.
   nextTick(() => { if (!pannello.value) posaLEtichettaInSospeso() })
 }
 
@@ -2066,42 +1383,21 @@ function battezza(nome) {
   salva()
 }
 
-/* Toccata una cosa nel baule, la posa comincia lì: il foglio si toglie
-   di mezzo e l'anteprima è già agganciata alla griglia. Chi non ce l'ha
-   la compra posandola — un gesto solo, e il prezzo si paga quando si sa
-   già dove va. Le coordinate arrivano in pagina e la tela comincia sotto
-   la barra: senza togliere l'origine l'anteprima nasce spostata. */
-/* I prezzi che il baule deve mostrare **adesso**: quasi tutti sono
-   quelli di catalogo, il campo no — rincara a ogni copia (`cresce` in
-   `dati/catalogo.js`). È una funzione e non un `computed` perché
-   `mondo` è un oggetto normale e non uno stato reattivo: si rilegge a
-   ogni apertura del baule, che è esattamente quando serve. */
+// Toccata una cosa nel baule, la posa comincia lì: il foglio si toglie di mezzo, il prezzo si paga posando.
+// Quasi tutti i prezzi sono di catalogo, il campo no (rincara a ogni copia): si rilegge a ogni apertura.
 function prezziCorrenti() {
   const p = {}
   for (const v of CATALOGO) if (v.cresce) p[v.id] = mondo.quantoCosta(v.id)
   return p
 }
 
-/* Le cose uniche che stanno **già in mappa**: i due silos. Il baule non
-   le mostra più, perché posarne una seconda non si può e un tasto che
-   risponde «ne hai già uno» è un tasto rotto. Si guarda la mappa e non
-   `quanteNeHo`, che conta anche il baule: un silo comprato e non ancora
-   messo giù deve restare prendibile.
-
-   È la stessa domanda che fa `posa` (`quantiInMappa`), e adesso passa
-   proprio da lì. Erano due conti scritti in due posti, e quello del
-   motore contava anche il baule: qui il silo messo via si vedeva, si
-   prendeva, e arrivato sul prato il motore diceva di no. Uno scaffale
-   che offre quello che il motore rifiuta è peggio di uno scaffale che
-   non lo offre. */
+// I due silos, unici: si guarda la mappa (quantiInMappa) e non quanteNeHo, che conta anche il baule —
+// un silo messo via deve restare prendibile.
 function giaPosati() {
   return CATALOGO.filter(v => v.unico && mondo.quantiInMappa(v.id) > 0).map(v => v.id)
 }
 
-/* `trascina` vuol dire che il dito è uscito dalla carta di lato ed è
-   ancora giù: è il trascinamento, e si posa dove si alza (`pronto`).
-   Senza, la carta è stata toccata e il dito è già su: la cosa resta
-   appesa e si posa col tocco dopo. */
+// trascina: il dito è uscito di lato ed è ancora giù (si posa dove si alza); altrimenti resta appesa.
 function tiraVoce({ voce, x, y, trascina }) {
   pannello.value = null
   const r = riquadro()
@@ -2114,20 +1410,14 @@ function tiraVoce({ voce, x, y, trascina }) {
     <Barra titolo="La fattoria" guida="fattoria" monete @indietro="emit('vai', 'home')" />
 
     <div class="fa">
-    <!-- `touchend` esiste solo per **non** far nascere il click fantasma
-         (vedi `zittisciIlFantasma`): il gioco si tocca coi puntatori,
-         qui sotto un click non serve mai a nessuno. -->
+    <!-- touchend esiste solo per non far nascere il click fantasma (zittisciIlFantasma). -->
     <canvas ref="tela" class="fa-tela"
             @pointerdown="premi" @pointermove="muovi" @pointerup="lascia"
             @pointercancel="annulla" @touchend="nienteClickDalCampo"
             @wheel.prevent="rotella"></canvas>
 
     <div class="fa-tasti">
-      <!-- il livello sta in alto e si vede sempre: la domanda «e
-           adesso?» viene guardando il prato, non aprendo un menù. Col
-           pallino addosso dice anche che c'è qualcosa da venire a
-           prendere, ed è l'unico posto in cui lo dice: non si apre più
-           niente da sé (vedi `guardaIlLivello`). -->
+      <!-- Sempre visibile: non si apre più niente da solo (vedi guardaIlLivello). -->
       <button v-if="avanza" class="fa-liv" :class="{ dono: daPrendere.length }"
               data-livelli title="i livelli della fattoria"
               @click="apriLivelli">
@@ -2135,9 +1425,7 @@ function tiraVoce({ voce, x, y, trascina }) {
         <i><u :style="{ width: Math.round(avanza.quanto * 100) + '%' }"></u></i>
         <b v-if="daPrendere.length" class="fa-bollo">{{ daPrendere.length }}</b>
       </button>
-      <!-- Le tre metà del baule, una per tasto: un 📦 chiuso non fa
-           venire in mente né una panchina né un cane. Ci sono solo
-           quelle che hanno qualcosa dentro. -->
+      <!-- Le tre metà del baule, una per tasto: solo quelle con qualcosa dentro. -->
       <button v-for="z in zoneDelBaule" :key="z.chiave" class="fa-tondo"
               :data-baule="z.chiave" :title="z.nome"
               @click="apriIlBaule(z.chiave)">{{ z.icona }}</button>
