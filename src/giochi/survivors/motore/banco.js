@@ -1,76 +1,30 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL BANCO DI PROVA — un giocatore finto che va in giro
-
-   Non serve al gioco: serve a chi lo prova. Il gioco non lo importa, e
-   nel file unico non ci finisce (il build lo scarta: nessuno lo chiama).
-
-   In questo gioco il bambino fa **tre cose col dito**, e il giocatore
-   finto fa quelle:
-
-     schiva    guarda i mostri vicini e va dove fra mezzo secondo c'è
-               più spazio — e sa che chi è in fila (`rotta`) tira
-               dritto invece di inseguirlo, che è quello che si vede
-     raccoglie le gemme restano dove cadono e gli oggetti svaniscono: se
-               non ci va nessuno, non sale di livello nessuno. Le mete
-               tirano un po' la direzione, e quando non c'è nessuno
-               addosso si va dritti alla più vicina
-     mira      le armi direzionali colpiscono dove si sta andando, e un
-               giocatore che le ha si mette a correre verso il grumo di
-               mostri più fitto — non sempre, e non quando è pericoloso
-
-   E c'è la manopola che conta davvero: `bravura`. A 1 riguarda dove
-   andare sessanta volte al secondo e non sbaglia mai; a 0.5 ci ripensa
-   ogni quarto di secondo, tira di sghembo e ogni tanto resta fermo — che
-   è il bambino vero, ed è quello che dice se una tappa è giocabile
-   davvero e non solo in teoria.
-
-   `mira` è quante volte, avendo un'arma che guarda dove si corre e un
-   grumo di mostri a tiro, sceglie di correre da quella parte fra le
-   direzioni **quasi sicure quanto la migliore**. Non è «quante volte
-   mira giusto»: quello lo misura il banco (`quotaMira`, la quota di
-   occasioni in cui la direzione presa stava entro 45° dal grumo) — è
-   quante volte ci prova. La differenza è che provarci quando tutte le
-   direzioni sono pericolose non serve, e il pilota lo sa.
-
-   `raccolta` è quanto gli importa di quello che c'è per terra: a 1 va
-   a prendere gemme e oggetti, a 0 li ignora e schiva e basta — è il
-   bambino che **sta al centro** e raccoglie solo quello che calpesta.
-   Da quando le gemme si prendono a contatto (niente calamita senza la
-   carta), la differenza fra i due è la misura di quanto conta andare
-   in giro, e la scaletta dei livelli è tarata su quella.
-
-   `sapienza` è quanto spesso risponde giusto alla domanda che paga la
-   carta: sbagliare non dà niente, e il giro dopo si riprova. Anche
-   questo va misurato — una tappa che si vince **solo** rispondendo bene
-   sarebbe una tappa che si perde a scuola, non nel gioco.
-
-   Il pilota non bara: legge quello che si vede a schermo — dove sono i
-   mostri, da che parte va una fila, dove stanno gemme e oggetti — e
-   niente che il bambino non veda.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il banco di prova: un giocatore finto che schiva, raccoglie e mira.
+// `bravura` è la manopola che conta: a 1 riguarda dove andare sessanta
+// volte al secondo e non sbaglia mai, a 0.5 ci ripensa ogni quarto di
+// secondo e tira di sghembo (il bambino vero). `mira` è quante volte,
+// avendo un'arma che guarda dove corre e un grumo a tiro, sceglie di
+// correre da quella parte fra le direzioni quasi sicure quanto la
+// migliore. `raccolta` è quanto gli importa di quello che c'è per
+// terra (0 = il bambino che sta al centro e schiva soltanto).
+// `sapienza` è quanto risponde giusto alla domanda che paga una carta.
+// Il pilota non bara: legge solo quello che si vede a schermo.
 import { Partita } from './partita.js'
 
 const SGUARDO = 300          // fin dove il pilota guarda per decidere
 const PORTATA = 420          // fin dove conta una gemma o un oggetto
 const QUANTE = 16            // le direzioni che prova
 const GIUSTA = Math.PI / 4   // entro quanto una direzione «guarda» il grumo
-/* una direzione è abbastanza sicura per mirarci se dopo il passo nessun
-   mostro è a meno di 75 pixel (il pericolo è la somma di 1/d²) */
+// una direzione è abbastanza sicura per mirarci se dopo il passo nessun
+// mostro è a meno di 75 pixel (il pericolo è la somma di 1/d²)
 const PERICOLO_OK = 1 / (75 * 75)
-/* una finta — un'occhiata sola verso il grumo — si fa solo se il più
-   vicino è ancora a più di questi pixel */
-const FINTA_OK = 90
-/* quanto più pericolosa della migliore può essere una direzione perché
-   ci si miri lo stesso: misurato — a 1.8 il pilota che mira moriva il
-   triplo (la grotta da 92% a 25%), a 1.0 non mirava quasi mai (9%) */
+const FINTA_OK = 90          // una finta si fa solo se il più vicino è oltre questi pixel
+// quanto più pericolosa della migliore può essere una direzione perché
+// ci si miri lo stesso: misurato — a 1.8 il pilota che mira moriva il
+// triplo (la grotta da 92% a 25%), a 1.0 non mirava quasi mai (9%)
 const QUASI = 1.15
 
-/* quanto pesa una meta rispetto a un mostro: un oggetto vale tre gemme,
-   perché svanisce e perché una cassa è un'offerta intera */
-const PESO_OGGETTO = 3
-/* quanto è stretto il nocciolo del richiamo: una gemma a più di trenta
-   pixel dal tragitto non si prende, e non deve nemmeno tirare molto */
-const RACCOLTA_KERNEL = 30 * 30
+const PESO_OGGETTO = 3       // un oggetto vale tre gemme: svanisce, e una cassa è un'offerta intera
+const RACCOLTA_KERNEL = 30 * 30   // il nocciolo del richiamo: una gemma a più di 30px dal tragitto non si prende
 
 const scarto = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)))
 
@@ -81,12 +35,9 @@ export class Pilota {
     this.bravura = bravura
     this.sapienza = sapienza
     this.raccolta = raccolta
-    /* Quante ne indovina, sempre, indipendentemente da quanto è cara la
-       carta. Serve a **misurare quanto pesa sbagliare**: con `sapienza` la
-       probabilità dipende dal prezzo, e allora «ne sbaglia il 10%» non si
-       può nemmeno scrivere. Nel gioco vero non esiste: è lo strumento con
-       cui si tara la domanda «quanto si può sbagliare e finirla lo
-       stesso». */
+    // quante ne indovina sempre, a prescindere dal prezzo: misura quanto
+    // pesa sbagliare (con `sapienza` la probabilità dipende dal prezzo,
+    // e "ne sbaglia il 10%" non si potrebbe scrivere). Non esiste nel gioco vero.
     this.esattezza = esattezza
     this.gusto = gusto
     this.mira = mira
@@ -94,52 +45,31 @@ export class Pilota {
     this.ultima = 0            // la direzione di adesso, in radianti
     this.domande = 0
     this.giuste = 0
-    /* quante delle offerte venivano da una cassa trovata a terra e non
-       da un livello: è il numero che tiene la cassa rara (vedi il test) */
-    this.casse = 0
-    /* il conto della mira: le occasioni in cui c'era un'arma che guarda
-       dove si corre e un grumo a tiro, e quante volte la direzione presa
-       stava entro `GIUSTA` dal grumo */
-    this.occasioni = 0
+    this.casse = 0             // offerte venute da una cassa e non da un livello
+    this.occasioni = 0         // il conto della mira: occasioni con un'arma direzionale e un grumo a tiro
     this.mirate = 0
     this.ultimaFinta = null
   }
 
-  /* Ogni quanto ci ripensa: chi è sveglio corregge in continuazione, chi
-     lo è meno tiene la direzione di prima anche quando non va più bene. */
   get riflesso() { return 0.06 + (1 - this.bravura) * 0.45 }
 
-  /* quante volte su cento, avendone l'occasione, ha guardato dalla
-     parte giusta: è il numero che dice se «mirare» sta succedendo */
   get quotaMira() { return this.occasioni ? this.mirate / this.occasioni : 0 }
 
-  /* Scappare dritti non basta: chi fugge in linea retta si trova la folla
-     davanti (i mostri nascono anche dove sta andando) e si lascia
-     indietro le gemme, che adesso restano dove cadono. Quindi il pilota
-     fa quello che fa un giocatore vero: **guarda dove sarà fra mezzo
-     secondo**. Prova sedici direzioni, immagina i mostri che nel
-     frattempo si sono mossi — verso di lui, o dritti se sono in fila —
-     e sceglie il varco più largo, tirato un po' dalle cose da
-     raccogliere. Se ha un'arma che colpisce dove corre, fra le direzioni
-     quasi sicure quanto la migliore prende quella che guarda il grumo.
-
-     È il ragionamento che il gioco chiede, ridotto all'osso, e serve che
-     sia fatto bene: un pilota sciocco direbbe che tutte le tappe sono
-     dure, e non si saprebbe quali lo sono davvero. */
+  // guarda dove sarà fra mezzo secondo (non dove sono adesso i mostri),
+  // sceglie il varco più largo tirato dalle cose da raccogliere, e se ha
+  // un'arma che colpisce dove corre prende — fra le direzioni quasi
+  // sicure — quella che guarda il grumo
   guida(partita, dt) {
     this.pensa -= dt
     if (this.pensa > 0) return
     this.pensa = this.riflesso
 
-    /* chi è distratto ogni tanto non decide proprio: tiene la direzione
-       di prima anche quando non va più bene */
     if (this.rnd() > 0.55 + 0.45 * this.bravura) return
 
     const e = partita.eroe
     const avanti = 0.55                       // di quanto si guarda avanti
     const passo = partita.f.velocita * avanti
 
-    /* i mostri che contano, già spostati di dove saranno */
     const vicini = []
     for (const n of partita.nemici) {
       const dx = n.x - e.x, dy = n.y - e.y
@@ -153,8 +83,6 @@ export class Pilota {
     const mete = this.mete(partita)
 
     if (!vicini.length) {
-      /* nessuno addosso: si va a prendere la cosa più vicina che vale
-         di più, e se non c'è niente si sta fermi */
       const m = this.metaMigliore(mete, e)
       if (!m) { partita.fermati(); return }
       const a = Math.atan2(m.y - e.y, m.x - e.x)
@@ -162,13 +90,9 @@ export class Pilota {
       return
     }
 
-    /* Le direzioni da provare: sedici a ventaglio, più quella **esatta**
-       verso le tre mete migliori. Da quando una gemma si prende a
-       contatto, «più o meno di là» non basta: a ventidue gradi e mezzo
-       di passo si passa a un braccio dalla gemma e non la si prende
-       mai — è quello che il vecchio pilota faceva, e la calamita di
-       base glielo copriva. La direzione esatta si valuta come le altre:
-       se è pericolosa non si prende. */
+    // sedici direzioni a ventaglio più la direzione esatta verso le tre
+    // mete migliori: da quando una gemma si prende a contatto, "più o
+    // meno di là" non basta
     const direzioni = []
     for (let i = 0; i < QUANTE; i++) direzioni.push(i / QUANTE * 6.283)
     for (const m of this.meteMigliori(mete, e, 3)) direzioni.push(Math.atan2(m.y - e.y, m.x - e.x))
@@ -183,11 +107,8 @@ export class Pilota {
         const dx = v.x - px, dy = v.y - py
         pericolo += 1 / Math.max(900, dx * dx + dy * dy)
       }
-      /* le cose da raccogliere: conta quanto il **tragitto** del passo
-         ci passa vicino — non il punto d'arrivo. Una gemma si prende
-         passandoci sopra, e un passo che ci passa sopra e finisce oltre
-         l'ha presa; il nocciolo è stretto (trenta pixel) perché a un
-         braccio di distanza non si prende niente */
+      // conta quanto il tragitto del passo (non il punto d'arrivo) passa
+      // vicino alle mete: una gemma si prende passandoci sopra
       let richiamo = 0
       for (const m of mete) {
         const mx = m.x - e.x, my = m.y - e.y
@@ -195,22 +116,12 @@ export class Pilota {
         const dx = mx - ux * t, dy = my - uy * t
         richiamo += m.peso / (dx * dx + dy * dy + RACCOLTA_KERNEL)
       }
-      /* cambiare idea di colpo costa: chi zigzaga a vuoto non va da
-         nessuna parte, e nemmeno un bambino lo fa */
-      const svolta = scarto(a, this.ultima)
+      const svolta = scarto(a, this.ultima)   // cambiare idea di colpo costa
       prove.push({ a, pericolo, richiamo, svolta, costo: pericolo * (1 + 0.12 * svolta) })
       if (pericolo < minPericolo) minPericolo = pericolo
     }
-    /* ── prima la pelle, poi le gemme ──
-       Si parte dalla direzione meno pericolosa; poi, fra quelle **quasi
-       sicure quanto quella** (lo stesso `QUASI` della mira: con nessuno
-       a meno di 75 pixel dopo il passo sono tutte buone), si prende
-       quella che passa sopra più roba. Era una somma pesata — pericolo
-       meno richiamo — e il richiamo non vinceva mai: fra due direzioni
-       la differenza di pericolo è cento volte quella di richiamo, e a
-       quel punto il pilota andava dove lo portava la paura e le gemme
-       le prendeva solo se ci passava per caso. Con la calamita di base
-       «per caso» bastava; a contatto no. */
+    // prima la pelle, poi le gemme: fra le direzioni quasi sicure quanto
+    // la meno pericolosa, si prende quella che passa sopra più roba
     const sogliaSicura = Math.max(minPericolo * QUASI, PERICOLO_OK)
     let scelta = prove[0]
     for (const p of prove) if (p.costo < scelta.costo) scelta = p
@@ -219,16 +130,10 @@ export class Pilota {
       if (p.richiamo - 1e-5 * p.svolta > scelta.richiamo - 1e-5 * scelta.svolta) scelta = p
     }
 
-    /* ── la mira ──
-       Con un'arma che colpisce dove si corre e un grumo a tiro, fra le
-       direzioni **abbastanza sicure** — quasi quanto la migliore, o con
-       nessuno a meno di `SPAZIO_OK` dopo il passo — si prende quella
-       che guarda il grumo. Non sempre (`mira`), e mai a costo di
-       finirci dentro. Se nessuna direzione sicura guarda il grumo ma
-       nessuno è ancora addosso, si fa **una finta**: un'occhiata sola
-       verso di loro, che punta l'arma, e al battito dopo si torna a
-       scappare. È quello che fa un bambino col fendente in mano: un
-       passo verso i mostri e via. */
+    // la mira: con un'arma direzionale e un grumo a tiro, fra le
+    // direzioni sicure si prende quella che guarda il grumo (non
+    // sempre, mai a costo di finirci dentro); se nessuna guarda il
+    // grumo ma nessuno è ancora addosso, una finta sola
     const grumo = this.grumo(partita)
     if (grumo !== null) {
       this.occasioni++
@@ -244,8 +149,7 @@ export class Pilota {
       }
     }
 
-    /* la mano storta: quanto meno è bravo, tanto più tira di sghembo */
-    const storto = (this.rnd() - 0.5) * (1 - this.bravura) * 2.2
+    const storto = (this.rnd() - 0.5) * (1 - this.bravura) * 2.2   // la mano storta
     const a = scelta.a + storto
     if (grumo !== null && scarto(a, grumo.a) <= GIUSTA) this.mirate++
     else this.ultimaFinta = null
@@ -257,10 +161,6 @@ export class Pilota {
     partita.muovi(Math.cos(a), Math.sin(a))
   }
 
-  /* Le cose da andare a prendere, con quanto valgono: gli oggetti più
-     delle gemme (svaniscono, e una cassa è un'offerta intera), le gemme
-     quanto la loro esperienza. Solo quelle a portata di una schermata:
-     una gemma a tre schermate non la vede nessuno. */
   mete(partita) {
     const e = partita.eroe
     const mete = []
@@ -279,8 +179,6 @@ export class Pilota {
     return this.meteMigliori(mete, e, 1)[0] || null
   }
 
-  /* le `quante` mete che valgono di più per la distanza: vicine e
-     pesanti prima. Quella già sotto i piedi non conta, la prende da sé */
   meteMigliori(mete, e, quante) {
     const pesate = []
     for (const m of mete) {
@@ -292,12 +190,8 @@ export class Pilota {
     return pesate.slice(0, quante).map(x => x.m)
   }
 
-  /* Dove sta il grumo di mostri più fitto a tiro dell'arma che guarda
-     dove si corre: la direzione, fra sedici, con più mostri nel suo
-     spicchio, pesati per vicinanza — e quanto è vicino il più vicino di
-     tutti, che decide se una finta è ancora possibile. `null` se non
-     c'è un'arma così o non c'è nessuno a tiro: allora mirare non vuol
-     dire niente. */
+  // il grumo di mostri più fitto a tiro dell'arma direzionale: `null`
+  // se non c'è un'arma così o nessuno è a tiro
   grumo(partita) {
     const f = partita.f
     if (!(f.lancia > 0 || f.fendente > 0)) return null
@@ -322,10 +216,6 @@ export class Pilota {
     return miglioreA === null ? null : { a: miglioreA, vicino }
   }
 
-  /* La pausa dei potenziamenti: si sceglie una carta e si paga la
-     domanda. Sbagliare costa il giro — niente carta — ed è per questo che
-     `sapienza` è una manopola che sposta davvero l'ago: giocare bene con
-     le tabelline sbagliate deve restare possibile, ma non gratis. */
   rispondi(partita) {
     const offerta = partita.offerta
     if (!offerta?.length) return null
@@ -343,30 +233,24 @@ export class Pilota {
     return offerta[offerta.length - 1]          // la più cara
   }
 
-  /* Quanto spesso ci prende: più cara è la carta, più tosta è la domanda.
-     Se il banco ha fissato l'esattezza, quella vince su tutto. */
   probabilita(prezzo) {
     if (this.esattezza !== null) return this.esattezza
     return Math.max(0.05, Math.min(0.98, this.sapienza - 0.35 * prezzo))
   }
 }
 
-/* Una partita giocata dal finto giocatore. `dt` fisso: il tempo di questo
-   gioco non è quello dell'orologio, è quello che gli si dà. */
 export function gioca(regole, {
   rnd = Math.random, dt = 1 / 30, bravura = 1, sapienza = 0.8, gusto = 'forte',
   esattezza = null, mira = 0.65, raccolta = 1, campo = null, fermo = false,
   fino = 180, oltre = 0, da = null,
 } = {}) {
-  /* `da` è una partita già cominciata — quella che serve a provare che
-     una partita **ripresa** arriva in fondo (`motore/sosta.js`): il
-     pilota la prende in mano dove qualcun altro l'ha lasciata. */
+  // `da` è una partita già cominciata: serve a provare che una partita
+  // ripresa (motore/sosta.js) arriva in fondo
   const partita = da || new Partita(regole, { rnd, campo })
   const pilota = new Pilota({ rnd, bravura, sapienza, gusto, esattezza, mira, raccolta })
   const durata = Number.isFinite(regole.durata) ? regole.durata : fino
-  /* `oltre` sono i secondi che il pilota resta in campo dopo aver vinto:
-     serve a provare che la marea continua a salire e che prima o poi
-     prende anche chi gioca bene */
+  // `oltre` sono i secondi che il pilota resta in campo dopo aver vinto,
+  // per provare che la marea prende anche chi gioca bene
   const finoA = durata + oltre
   const massimo = Math.ceil(finoA / dt) + 200
   let passi = 0
@@ -382,11 +266,6 @@ export function gioca(regole, {
   return { partita, pilota }
 }
 
-/* Quante volte su cento questo giocatore porta a casa la tappa, quanto
-   resiste quando non ce la fa, a che livello arriva, e quante volte ha
-   guardato dalla parte giusta. È il numero che dice se una tappa è
-   tarata: sotto una certa soglia non è difficile, è ingiusta — e sopra
-   un'altra non è una tappa, è un'attesa. */
 export function misura(regole, {
   volte = 20, rnd = Math.random, ...resto
 } = {}) {
@@ -411,17 +290,12 @@ export function misura(regole, {
     ucciseMedie: uccisi / volte,
     feriteMedie: ferite / volte,
     domandeMedie: domande / volte,
-    /* quante di quelle domande le ha aperte una cassa trovata a terra */
     casseMedie: casse / volte,
-    /* la quota di occasioni in cui ha guardato dalla parte giusta, su
-       tutte le partite insieme: `null` se non ne ha mai avuta una */
     quotaMira: occasioni ? mirate / occasioni : null,
     occasioniMedie: occasioni / volte,
   }
 }
 
-/* Il caso ripetibile: due prove uguali devono raccontare la stessa
-   storia, o un test rosso non si sa se è un guasto o sfortuna. */
 export function caso(seme = 1) {
   let s = seme >>> 0 || 1
   return () => {
