@@ -1,69 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   CHI FA LA DOMANDA — il ponte fra un gioco e gli undici moduli.
-
-   Un gioco non nomina mai un modulo. Dice «dammi una domanda tosta di
-   italiano» — o non dice nemmeno quello — e riceve una domanda già
-   pronta da mostrare:
-
-     const d = domandaPerGioco({ difficolta: 0.6 })
-     // { domanda, pittori, modulo, materia, grado }
-
-   Perché non lasciare che il gioco scelga il modulo: perché allora
-   Survivors avrebbe dentro l'elenco delle materie, e aggiungere un
-   modulo vorrebbe dire aprire i giochi. Qui invece un modulo nuovo si
-   presenta da solo — il registro lo raccoglie dalla cartella — e
-   compare in tutti i giochi la sera stessa.
-
-   LA DIFFICOLTÀ È UNA SOLA MANOPOLA, da 0 a 1. I moduli hanno gradi
-   diversi (cinque, sei), e non è affare del gioco saperlo: 0 è il primo
-   grado di qualunque modulo, 1 è l'ultimo. Un gioco che si fa più duro
-   alza quel numero e basta.
-
-   SI PESCA UNA CLASSE DI DOMANDE, NON UN MODULO. È la cosa che qui
-   dentro conta di più, e per un po' è stata sbagliata. Prima si tirava
-   a sorte il modulo (uno su undici) e poi il grado si *calcolava* dalla
-   difficoltà: `round(1 + d × (gradi−1))`. Due conseguenze, tutte e due
-   brutte. La prima: con le tre fasce di Survivors (0.15 · 0.50 · 0.85)
-   il primo e l'ultimo grado di ogni modulo non uscivano mai — l'area,
-   il perimetro e il confronto fra i due stanno in cima alla scaletta
-   della griglia, e per vederli serviva una carta da 0.8. La seconda:
-   una classe di domande valeva quanto il modulo che se la portava
-   dietro, quindi un modulo con sei classi le mostrava una alla volta e
-   un modulo con una classe sola la mostrava sempre.
-
-   Adesso l'unità è la COPPIA (modulo, grado) — una classe di domande —
-   e si pescano tutte insieme con un peso che cala man mano che ci si
-   allontana dalla difficoltà chiesta. Perimetro pesa quanto «i
-   contrari», i gradi in cima si vedono, e la difficoltà resta una
-   manopola: solo che adesso è un centro, non un binario.
-
-   QUELLO CHE IL BAMBINO NON HA MAI FATTO non si chiede. I genitori
-   spengono un gruppo o una singola tipologia (`data/saperi.js`, la
-   seconda scheda della loro schermata) e da lì in poi quelle domande
-   non escono più: dentro un grado si pescano solo le tipologie ancora
-   accese, un grado che le perde tutte sparisce, il modulo degrada a un
-   grado più facile e se non ne ha nessuno esce dal mazzo. È l'unico
-   posto che lo sa — i giochi continuano a chiedere «una domanda» e
-   basta.
-
-   E QUELLO CHE NON HA ANCORA L'ETÀ DI FARE nemmeno. Ogni classe di
-   domande dichiara a che età serve (`nucleo/classi.js`), ogni bambino
-   ha la sua, e le classi fuori portata non entrano nel mazzo: né i muri
-   né le prese in giro. Il genitore può scavalcare tutto gruppo per
-   gruppo — «di questa materia dammene facili» — e allora vince la sua
-   scelta, perché le età che dichiariamo sono un punto di partenza e lui
-   il bambino ce l'ha in casa.
-
-   IL RIPASSO PESA, MA POCO. Ogni domanda porta la chiave del concetto
-   che allena, e da quando le risposte finiscono in `store/srs.js`
-   (`quiz/memoria.js`) la pesca non è più cieca: quello che il bambino
-   sa meno esce una volta e mezzo, quello che sa bene la metà. La banda
-   è stretta apposta e il perché sta in `nucleo/bisogno.js` — qui la
-   domanda è il pedaggio di un gioco d'avventura, non la lezione, e una
-   partita di sola geometria a chi la geometria non la capisce sarebbe
-   una punizione. I giochi non se ne accorgono, che è esattamente il
-   motivo per cui la scelta sta qui e non dentro di loro.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Il ponte fra un gioco e i moduli: un gioco non nomina mai un modulo, dice
+   solo una difficoltà 0..1 e riceve una domanda pronta. Si pesca una
+   classe (coppia modulo+grado), non un modulo — provato il contrario:
+   metteva sempre lo stesso grado in mostra. Saperi spenti ed età tagliano
+   il mazzo, il ripasso pesa poco (banda stretta, nucleo/bisogno.js). Vedi
+   docs/apprendimento/quiz-moduli.md e quiz-livelli.md. */
 
 import { MODULI, perId } from './nucleo/registro.js'
 import { sorteQualunque } from './nucleo/sorte.js'
@@ -71,82 +11,45 @@ import { classiDi, pescaClasse } from './nucleo/classi.js'
 import { ilBisogno } from './memoria.js'
 import { saperiSpenti, regoleDomande } from '../store/profile.js'
 
-/* Le materie, nell'ordine in cui si presentano. Un gioco può restringere
-   il campo (`materie: ['matematica', 'spazio']`), ma non è tenuto a
-   conoscerle: senza filtro entrano tutte. */
+// un gioco può restringere il campo (materie: ['matematica', 'spazio']); senza filtro entrano tutte
 export const MATERIE = ['italiano', 'matematica', 'spazio', 'tempo', 'logica', 'scienze']
 
-/* da 0..1 al grado di *quel* modulo, che può averne cinque o sei.
-   `spenti` sono i saperi che i genitori hanno tolto: se il grado che
-   verrebbe fuori li chiede, si scende al grado buono più vicino invece
-   di consegnare una domanda che il bambino può solo indovinare.
-   È il conto secco, senza banda: serve a chi una classe la vuole
-   decisa (`domandaDa`) e al confronto nei test. */
+// da 0..1 al grado di quel modulo; se il grado chiede saperi spenti si scende al grado buono più vicino
 export function gradoPer(modulo, difficolta = 0, spenti = [], regole = null) {
   const g = Math.max(1, Math.min(modulo.gradi, Math.round(1 + (difficolta || 0) * (modulo.gradi - 1))))
   return (spenti.length || regole) ? (modulo.gradoVicino(g, spenti, regole) ?? g) : g
 }
 
-/* ── le classi di domande fra cui pescare ──
-   Una per coppia (modulo, grado), con il peso che le tocca a quella
-   difficoltà. Il conto sta in `nucleo/classi.js`, che non importa
-   niente e si può quindi provare senza browser: qui si applicano solo
-   i filtri di chi chiede. */
 export function classiAmmesse({ materie, moduli, spenti = [], difficolta = 0,
                                 bisogno = null, regole = null } = {}) {
   const buoni = moduliAmmessi({ materie, moduli, spenti })
   const restano = classiDi(buoni, { spenti, difficolta, bisogno, regole })
-  /* SPENTO TUTTO non si resta senza domande. Finché c'era un modulo che
-     non dichiarava niente — la logica, le sequenze — qualcosa restava
-     sempre e questa riga non serviva; da quando ogni tipologia sta in un
-     gruppo, spegnerli tutti svuota l'elenco, e chi chiama si troverebbe
-     un `null` al posto della classe. Un gioco senza domanda è rotto e
-     una domanda che il bambino non sa fare no: si torna a pescare fra
-     tutte, come già fa `moduliAmmessi` quando resta a mani vuote. */
+  // spento tutto non si resta senza domande: un gioco senza domanda è rotto, una domanda che non sa fare no
   if (restano.length) return restano
-  /* Fuori età non si resta senza domande: si riapre tutto, esattamente
-     come si riaprono i saperi spenti. Un'età scritta storta, o un
-     bambino più piccolo di qualunque domanda che sappiamo fare, è un
-     errore nostro — e il modo giusto di sbagliarlo è una domanda un po'
-     fuori misura, non un gioco che si pianta. */
+  // fuori età nemmeno: si riapre tutto, un'età scritta storta è un errore nostro, non un gioco che si pianta
   const senzaEta = classiDi(buoni, { spenti, difficolta, bisogno })
   return senzaEta.length ? senzaEta : classiDi(buoni, { difficolta, bisogno })
 }
 
-/* i moduli fra cui pescare, dati i filtri di chi chiede */
 export function moduliAmmessi({ materie, moduli, spenti = [] } = {}) {
-  /* Il registro si riempie con `import.meta.glob`, che è di Vite: se
-     questo file finisce in un test che gira in Node, la lista è vuota e
-     senza questa riga si vedrebbe solo un `undefined` più avanti. */
+  // il registro si riempie con import.meta.glob (Vite): in un test Node la lista è vuota
   if (!MODULI.length) throw new Error(
     'nessun modulo di quiz: `src/quiz/scelta.js` gira solo sotto Vite — ' +
     'in Node importa il modulo che ti serve da `src/quiz/moduli/`')
   let buoni = MODULI
   if (moduli?.length) buoni = buoni.filter(m => moduli.includes(m.id))
   if (materie?.length) buoni = buoni.filter(m => materie.includes(m.materia))
-  /* Un modulo che senza quei saperi non ha più un solo grado da
-     chiedere — l'orologio a chi le lancette non le legge — esce dal
-     mazzo: gli altri hanno gradi liberi e degradano invece di sparire.
-     Se restasse vuoto si torna a tutti, perché un gioco senza domande
-     è rotto e un gioco con una domanda difficile no. */
+  // un modulo senza quei saperi non ha più un grado da chiedere ed esce dal mazzo; se resta vuoto si torna a tutti
   const conSaperi = spenti.length ? buoni.filter(m => m.gradiLiberi(spenti).length) : buoni
   if (conSaperi.length) return conSaperi
   return buoni.length ? buoni : MODULI
 }
 
-/* ── la domanda pronta da mostrare ──
-   `evita` è l'id del modulo appena uscito: due domande di fila dello
-   stesso modulo fanno sembrare il gioco un'interrogazione su una materia
-   sola, e con undici moduli non c'è ragione. */
+// evita è l'id del modulo appena uscito: due domande di fila dello stesso modulo sembrano un'interrogazione
 export function domandaPerGioco({
   difficolta = 0, materie, moduli, evita, sorte = sorteQualunque(),
   spenti = saperiSpenti(), bisogno = ilBisogno(), regole = regoleDomande(),
 } = {}) {
-  /* La manopola del gioco è relativa: «facile» vuol dire una cosa a sei
-     anni e un'altra a dieci, e il gioco non sa quanti anni ha chi ha in
-     mano il telefono — né deve saperlo. Qui diventa un'età bersaglio
-     intorno a quella di chi gioca, e le classi che non gli competono non
-     entrano nemmeno nel mazzo. */
   const tutte = classiAmmesse({ materie, moduli, spenti, difficolta, bisogno, regole })
   const senzaLUltimo = evita ? tutte.filter(c => c.modulo.id !== evita) : tutte
   const { modulo, grado } = pescaClasse(sorte, senzaLUltimo.length ? senzaLUltimo : tutte)
@@ -161,21 +64,14 @@ export function domandaPerGioco({
   }
 }
 
-/* Comodità per chi una materia la vuole per forza (il dungeon che mette
-   la stanza di matematica): stessa cosa, con l'id già deciso. */
+// comodità per chi vuole una materia per forza (il dungeon con la stanza di matematica): id già deciso
 export function domandaDa(id, { difficolta = 0, sorte = sorteQualunque(),
                                 spenti = saperiSpenti(), bisogno = ilBisogno(),
                                 regole = regoleDomande() } = {}) {
   const modulo = perId(id)
-  /* anche il modulo chiesto per nome passa dai saperi: se non gli resta
-     nessun grado, meglio la domanda di un altro che una muta */
   if (!modulo || !modulo.gradiLiberi(spenti).length)
     return domandaPerGioco({ difficolta, sorte, spenti, bisogno, regole })
-  /* il modulo è deciso, la classe no: dentro un modulo solo la banda
-     conta ancora di più, se no si vedrebbe sempre lo stesso grado.
-     L'età qui NON taglia: chi chiede un modulo per nome lo vuole, e un
-     modulo tutto fuori portata resterebbe senza una sola classe —
-     meglio il suo grado più vicino che la materia sbagliata. */
+  // l'età qui NON taglia: chi chiede un modulo per nome lo vuole, meglio il suo grado più vicino che la materia sbagliata
   const { grado } = pescaClasse(sorte,
     classiAmmesse({ moduli: [id], spenti, difficolta, bisogno,
                     regole: regole ? { ...regole, eta: null } : null }))
