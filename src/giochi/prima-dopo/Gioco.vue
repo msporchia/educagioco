@@ -1,21 +1,11 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   PRIMA E DOPO — IL COORDINATORE
-
-   Si rimettono in fila le vignette di una storia: il seme, il
-   germoglio, il fiore. Niente trascinamento — si tocca una vignetta e
-   vola nel primo posto libero — e niente da leggere per giocare: la
-   consegna è la freccia del tempo in cima, il testo sotto è per chi
-   legge e per i genitori.
-
-   Una storia sbagliata non punisce e non si liquida in mezzo secondo:
-   si conta l'errore e si apre la spiegazione (`viste/Spiegazione.vue`),
-   che fa vedere la storia intera in grande, un passo per riga, con
-   sotto cos'è — e si va avanti quando lo dice il bambino. Questo file
-   decide solo *quando* aprirla. È anche l'unico file del gioco che sa
-   che esistono le monete: le regole stanno in `motore/`, le storie e i
-   verbi in `dati/`, le schermate in `viste/`.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il coordinatore: si rimettono in fila le vignette di una storia. Una
+// storia sbagliata non punisce e non si liquida in mezzo secondo: si
+// conta l'errore e si apre la spiegazione (viste/Spiegazione.vue), che
+// fa vedere la storia intera e si va avanti quando lo dice il bambino
+// — questo file decide solo *quando* aprirla. È l'unico file del gioco
+// che sa che esistono le monete: le regole stanno in `motore/`, le
+// storie e i verbi in `dati/`, le schermate in `viste/`.
 import { ref, computed, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
@@ -38,14 +28,12 @@ const emit = defineEmits(['vai'])
 
 const CHIAVE = 'prima'
 const RESPIRO = 550        // quanto resta a schermo il segno di giusto
-/* La finestra cieca di sempre (vedi `docs/core/interfaccia.md`): una domanda appena
-   comparsa non si lascia toccare subito. Qui serve due volte — dopo la
-   spunta di una storia giusta e dopo il «ho capito» della spiegazione —
-   perché la domanda dopo nasce esattamente sotto il dito che ha appena
-   premuto, e su un telefono quel dito si lascia dietro un click. */
+// La finestra cieca di sempre (docs/core/interfaccia.md): serve due
+// volte qui — dopo la spunta di una storia giusta e dopo il «ho capito»
+// della spiegazione — perché la domanda dopo nasce sotto il dito che ha
+// appena premuto.
 const CIECA = 320
 
-/* ═══════════ dove siamo ═══════════ */
 const vista = ref('mappa')          // mappa | tavolo
 const tappaIdx = ref(-1)
 const corsa = ref(null)             // la tappa in corso (motore, reso reattivo)
@@ -58,7 +46,6 @@ const serie = ref(0)                // storie filate senza un errore, di fila
 const quesito = computed(() => corsa.value?.quesito || null)
 const verboAttuale = computed(() => quesito.value ? datiVerbo(quesito.value.verbo) : null)
 
-/* ═══════════ la mappa ═══════════ */
 const scalini = computed(() => SCALINI.map(s => ({
   ...s,
   tappe: tappeDelloScalino(s.chiave).map(t => ({
@@ -70,39 +57,22 @@ const scalini = computed(() => SCALINI.map(s => ({
   })),
 })))
 
-/* ═══════════ il colore di dove siamo ═══════════
-   Ogni tappa porta il suo accento (dichiarato in `dati/campagna.js`):
-   qui non c'è un tema da cui ricavarlo, come nel Codice Segreto — la
-   storia stessa è già il vestito. */
+// ogni tappa porta il suo accento (dati/campagna.js): qui non c'è un
+// tema da cui ricavarlo, la storia stessa è già il vestito
 const accento = computed(() => tappaIdx.value >= 0 ? CAMPAGNA[tappaIdx.value].accento : '#2f9e44')
 const titolo = computed(() => tappaIdx.value >= 0 ? CAMPAGNA[tappaIdx.value].nome : 'Prima e dopo')
 
-/* ═══════════ i suoni ═══════════
-   Sintetizzati come in tutti gli altri giochi, e **nessuno di loro dice
-   niente che non si veda già**: il verso del tempo lo dice la freccia in
-   cima e le vignette che si accendono in fila, non l'altezza della nota.
-   Una scala che sale sarebbe informazione affidata all'audio, e l'audio
-   qui si spegne dalla barra — un gioco che col silenzio non si capisce
-   più è un gioco rotto per metà dei bambini.
-   Sono due soltanto: il tonfo di una vignetta che si posa e la nota
-   che scende quando la fila era sbagliata. La spiegazione che segue
-   non suona niente — si guarda e, se c'è un grande, si legge; una nota
-   per vignetta coprirebbe la voce di chi legge, che lì è la cosa più
-   utile che ci sia.
-   NOTA PER DOMANI: quando ci sarà la voce italiana, la consegna letta
-   ad alta voce entra qui, non nella vista — `Storia.vue` riceve solo
-   funzioni già decise. */
+// nessuno dei due suoni dice niente che non si veda già: il verso del
+// tempo lo dice la freccia in cima, non l'altezza della nota
 const suoni = {
   posa: () => suono.nota(520, 520, 0.09, 'triangle', 0.10),
   storto: () => suono.nota(320, 260, 0.2, 'sine', 0.08),
 }
 
-/* ═══════════ giocare ═══════════ */
 let attesa = 0
 let sbarra = 0
 onUnmounted(() => { clearTimeout(attesa); clearTimeout(sbarra) })
 
-/* Una domanda nuova a schermo: per un istante non risponde a niente. */
 function domandaNuova() {
   clearTimeout(sbarra)
   cieco.value = true
@@ -156,15 +126,11 @@ function sbagliata() {
   corsa.value.registraErrore()
   serie.value = 0
   suoni.storto()
-  /* la spiegazione si prepara **adesso**, con il quesito ancora nello
-     stato sbagliato: è da lì che si sa cosa era stato scelto */
+  // si prepara adesso, col quesito ancora nello stato sbagliato: è da lì che si sa cosa era stato scelto
   spiega.value = spiegazione(quesito.value)
   fase.value = 'spiega'
 }
 
-/* «ho capito», o il foglio che si chiude da sé: la stessa storia,
-   riproposta in un'altra forma. Rimetterla identica come la si è appena
-   vista sarebbe copiare, non ripensarci. */
 function fineSpiegazione() {
   corsa.value.riprova()
   spiega.value = null
