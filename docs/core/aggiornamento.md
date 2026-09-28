@@ -30,6 +30,13 @@ può restare aperta per giorni. `aggiornamento.js` sorveglia (all'apertura,
 al ritorno in primo piano, al ritorno in home, ogni mezz'ora) e accende un
 ref.
 
+- **I timer di una pagina in background sono congelati**, su iOS come su
+  Android: una PWA installata sta quasi sempre in background (la si
+  riprende dallo switcher, non la si riapre), quindi il controllo ogni
+  mezz'ora scatta solo per chi gioca da mezz'ora di fila — il momento
+  peggiore per dirgli di ricaricare. Ecco perché contano i tre momenti
+  espliciti (apertura, primo piano, home) e non solo il timer.
+
 - **Lo decide il sito, non il service worker**: `versione.json` (letto
   `no-store`) contro `__VERSIONE__`. Legato all'installazione di un service
   worker sbagliava nei due versi: parlava a chi aveva già la pagina fresca
