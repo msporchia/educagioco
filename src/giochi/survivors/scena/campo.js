@@ -1,18 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL CAMPO — quello che si vede, e nient'altro
-
-   Riceve una scena già decisa (`partita.scena()`) e la dipinge. Qui
-   dentro non c'è una regola: non si sa quanto vale una gemma, quanti
-   cuori restano, cosa costa una carta. Si sa che quel mostro è un fungo
-   e che l'alone di ghiaccio ha raggio 86, e li si disegna.
-
-   Il mondo non ha bordi: l'eroe sta sempre al centro dello schermo ed è
-   il prato a scorrere sotto. Da qui la sola riga di conto che c'è in
-   questo file — `cx, cy`, che porta da mondo a schermo.
-
-   Niente librerie: Pixi o Konva peserebbero da 100 a 450 KB e il build
-   deve restare un HTML unico.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il campo: riceve una scena già decisa (partita.scena()) e la
+// dipinge, senza sapere niente di regole. Il mondo non ha bordi:
+// l'eroe sta sempre al centro dello schermo ed è il prato a scorrere
+// sotto (`cx, cy` porta da mondo a schermo). Niente librerie (Pixi o
+// Konva peserebbero 100-450 KB, il build resta un HTML unico).
 import { MOSTRI } from '../dati/mostri.js'
 import { OGGETTI } from '../dati/oggetti.js'
 import { scenario } from '../dati/scenari.js'
@@ -68,13 +58,8 @@ export class Campo {
     ctx.translate(cx, cy)
 
     if (s.gelo) this.aloneGelo(s.eroe, s.gelo, s.tempo)
-    /* ── si disegna solo quello che sta nello schermo ──
-       Il campo non ha muri: chi non hai ucciso ti segue anche da tre
-       schermate di distanza, e quando la marea è alta sono centinaia di
-       mostri che nessuno sta guardando. Disegnarli costava un mostro
-       intero per ognuno — corpo, ombra, occhi, zampe — per niente. Il
-       filtro sta qui e non nel motore: le regole li muovono tutti lo
-       stesso, cambia solo chi finisce sul vetro. */
+    // si disegna solo quello che sta nello schermo: il filtro sta qui e
+    // non nel motore, le regole muovono tutti i mostri lo stesso
     const dentro = (o, m = 60) => {
       const px = o.x + cx, py = o.y + cy
       return px > -m && px < W + m && py > -m && py < H + m
@@ -91,17 +76,13 @@ export class Campo {
     for (const e of s.effetti) this.effetto(e, H)
 
     ctx.restore()
-    /* di un muro in arrivo non si disegna niente: c'era una fascia
-       rossa sul bordo da cui entrava la fila, ed è stata tolta apposta —
-       la fila si vede arrivare, e capire da che parte scansarsi è il
-       gioco (`nasceMuro` nel motore) */
+    // di un muro in arrivo non si disegna niente apposta: capire da che
+    // parte scansarsi è il gioco (nasceMuro nel motore)
     if (s.dolore) this.dolore(s.dolore)
   }
 
-  /* ═══════════ il fondo ═══════════
-     Erba, chiazze e puntini che scorrono col mondo. I colori arrivano
-     dallo scenario della tappa: la stessa funzione fa il prato, la neve e
-     la grotta senza sapere cosa siano. */
+  // il fondo: erba, chiazze e puntini col colore dello scenario della
+  // tappa (la stessa funzione fa il prato, la neve e la grotta)
   terreno(veste, eroe, cx, cy) {
     const ctx = this.ctx, W = this.larghezza, H = this.altezza
     ctx.fillStyle = veste.terra
@@ -145,7 +126,6 @@ export class Campo {
     ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, 6.29); ctx.fill()
   }
 
-  /* ═══════════ l'alone di ghiaccio ═══════════ */
   aloneGelo(eroe, r, tempo) {
     const ctx = this.ctx
     const g = ctx.createRadialGradient(eroe.x, eroe.y, r * 0.2, eroe.x, eroe.y, r)
@@ -160,7 +140,6 @@ export class Campo {
     }
   }
 
-  /* ═══════════ l'eroe: un bambino arciere ═══════════ */
   eroe(e, tempo) {
     const ctx = this.ctx
     const x = e.x, y = e.y
@@ -226,10 +205,8 @@ export class Campo {
     ctx.globalAlpha = 1
   }
 
-  /* ═══════════ un mostro ═══════════
-     Il corpo è diverso per tipo apposta: un cerchio uguale per tutti li
-     faceva sembrare tutti la stessa palla con gli occhi, e un bambino
-     impara «quello grigio non muore» guardandolo, non leggendolo. */
+  // un mostro: il corpo è diverso per tipo apposta, un cerchio uguale
+  // per tutti li faceva sembrare la stessa palla con gli occhi
   mostro(n, eroe) {
     const ctx = this.ctx
     const m = MOSTRI[n.tipo] || MOSTRI.melma
@@ -371,16 +348,13 @@ export class Campo {
     }
   }
 
-  /* ═══════════ una freccia ═══════════ */
+  // tre frecce che si distinguono a colpo d'occhio: bianca la normale,
+  // dorata quella fortunata, azzurra quella che gela
   freccia(c) {
     const ctx = this.ctx
     if (c.lancia) return this.lancia(c)
     ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.a)
     const L = c.r * 2.6
-    /* tre frecce diverse, e si distinguono a colpo d'occhio: bianca la
-       normale, dorata quella fortunata che fa il doppio, azzurra quella
-       che gela — se non si vedesse, il dardo di ghiaccio sarebbe una
-       carta che il bambino paga senza sapere se sta funzionando */
     const asta = c.gelida ? '#bfefff' : c.oro ? '#ffd257' : '#fff3c4'
     const punta = c.gelida ? '#7fd4ff' : c.oro ? '#ffb703' : '#ffffff'
     ctx.strokeStyle = asta
@@ -397,10 +371,7 @@ export class Campo {
     ctx.restore()
   }
 
-  /* ═══════════ la lancia ═══════════
-     Più lunga e più grossa di una freccia, con l'asta scura e la punta
-     larga: si deve vedere che è un'altra arma, e che va dritta dove si
-     stava correndo. */
+  // più lunga e grossa di una freccia: si deve vedere che è un'altra arma
   lancia(c) {
     const ctx = this.ctx
     ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.a)
@@ -423,20 +394,12 @@ export class Campo {
     ctx.restore()
   }
 
-  /* ═══════════ una cometa in orbita ═══════════
-     Era un'emoji del pallone appiccicata sul campo. Adesso è un sasso
-     infuocato con la coda: la coda è la parte che conta, perché è quella
-     che fa vedere **da che parte gira** — e un bambino che lo vede sa
-     dove mettersi per travolgere quello che lo insegue. */
+  // una cometa: un sasso infuocato con la coda, che fa vedere da che
+  // parte gira (la coda sta dietro, ad `a - 90°`: sottrarre la
+  // metterebbe davanti e la cometa sembrerebbe girare al contrario)
   palla(p) {
     const ctx = this.ctx
     const r = p.r || 15
-    /* La cometa gira con l'angolo che cresce (`orbita` in `partita.js`),
-       quindi va verso `a + 90°` e la coda le sta **dietro**, a
-       `a − 90°`. I pezzi si sommano lungo quella direzione: sottrarli
-       li metterebbe davanti al sasso, e la cometa sembrerebbe girare
-       dalla parte sbagliata — che è l'unica cosa che questo disegno
-       deve dire giusta. */
     const coda = p.a - 1.5708
     ctx.save()
     ctx.globalAlpha = 0.5
@@ -455,7 +418,6 @@ export class Campo {
     ctx.restore()
   }
 
-  /* ═══════════ le cosine che volano via ═══════════ */
   effetto(e, H) {
     const ctx = this.ctx
     if (e.che === 'briciola') {
@@ -492,10 +454,8 @@ export class Campo {
     }
   }
 
-  /* ═══════════ una gemma di esperienza ═══════════
-     Quando la calamita trovata a terra sta tirando, ogni gemma si lascia
-     dietro una scia verso l'eroe: è così che si vede che vola *per quel
-     motivo*, e non per conto suo. */
+  // una gemma: quando la calamita trovata a terra sta tirando, lascia
+  // una scia verso l'eroe (si vede che vola per quel motivo)
   gemma(g, tirata = false, eroe = null) {
     const ctx = this.ctx
     const s = 6 + Math.min(4, g.val) + Math.sin(g.fase) * 0.8
@@ -520,12 +480,8 @@ export class Campo {
     ctx.globalAlpha = 1
   }
 
-  /* ═══════════ un oggetto a terra ═══════════
-     Disegnati a mano e non con le emoji: un'emoji ha lo stile del
-     telefono, non si tinge del prato e non respira. Ognuno ha un alone
-     del suo colore che pulsa, così si vede da lontano che c'è qualcosa
-     da andare a prendere, e negli ultimi due secondi lampeggia: sta per
-     sparire, e chi lo vuole deve muoversi. */
+  // un oggetto a terra: disegnato e non emoji, con un alone che pulsa
+  // (si vede da lontano) e lampeggia negli ultimi due secondi prima di sparire
   oggetto(o, tempo) {
     const ctx = this.ctx
     const scheda = OGGETTI[o.tipo]
