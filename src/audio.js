@@ -4,10 +4,7 @@ import { ref } from 'vue'
 let AC = null
 export const acceso = ref(true)
 
-/* L'unico AudioContext dell'applicazione: lo usano sia gli effetti qui
-   sotto sia le voci incise di `voce.js`. Uno solo perché i browser ne
-   contano pochi per scheda, e perché va risvegliato: sul telefono nasce
-   sospeso finché il dito non tocca qualcosa. */
+// unico per l'app (voce.js lo riusa): i browser ne contano pochi per scheda, e va risvegliato al tocco
 export function contesto() {
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)()
@@ -52,10 +49,7 @@ function rumore(dur, vol, da, a) {
 }
 
 export const suono = {
-  /* `acceso` si legge da qui e si cambia da `store/profile.js`
-     (`accendiSuono`), perché è una preferenza del bambino e va salvata
-     con le sue: qui dentro non si sa nemmeno che esistano i profili. */
-  acceso,
+  acceso,   // si cambia da store/profile.js (accendiSuono): qui non si sa che esistano i profili
   nota, rumore,
   ok:     () => { nota(660, 660, 0.1); nota(990, 990, 0.14, 'triangle', 0.13, 80) },
   no:     () => { nota(300, 120, 0.26, 'sawtooth', 0.12); rumore(0.16, 0.06, 700, 180) },
