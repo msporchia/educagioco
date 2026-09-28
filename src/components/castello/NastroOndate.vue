@@ -33,6 +33,13 @@
    battaglia quel posto è della scheda del mostro che si ha davanti, e
    le due cose non servono mai insieme.
 
+   ── e l'ondata mista ──
+   Due tipi insieme (`con`, vedi `coppiaDellOnda` in `data/mostri.js`):
+   due facce, ognuna con **le sue** immunità addosso, e il riquadro a
+   righe. Le immunità non si fondono in una fila sola, perché quello che
+   c'è da leggere è che non coincidono — nessuna torre li ferisce tutti
+   e due — e fuse direbbero «tutte sbarrate».
+
    Dove gli ingressi sono due, ogni pastiglia dice anche **da che
    parte** arriva quell'ondata. È l'informazione che rende il
    trascinamento di una torre una mossa invece che una carezza: «fra due
@@ -48,7 +55,7 @@ import RitrattoMostro from './RitrattoMostro.vue'
 const FRECCE = { sinistra: '↙', destra: '↘', ambo: '↙↘' }
 
 defineProps({
-  /* [{ onda, fra, id, nome, quanti, vola, immune, abilita, capo }] — le dà il motore */
+  /* [{ onda, fra, id, nome, quanti, vola, immune, abilita, capo, con? }] — le dà il motore */
   prossime: { type: Array, default: () => [] },
   /* i pittori della pelle, se il campo ne ha una: il ritratto è la figura
      che poi scende in campo */
@@ -59,33 +66,42 @@ defineProps({
    piccolo e i segni sono emoji; chi ci tiene il dito sopra (o chi non
    vede) si legge la frase intera */
 function frase(p) {
+  if (p.con) return `${p.nome} e ${p.con.nome} insieme: ` + [p, p.con].map(delTipo).join(' — ')
+  return delTipo(p)
+}
+/* la frase di un tipo solo: in una mista, una per ciascuno */
+function delTipo(p) {
   const parti = [p.capo ? `${p.nome} gigante: il capo` : p.nome]
   if (p.immune && p.immune.length)
     parti.push('immune a ' + p.immune.map(k => TORRI[k].nome.toLowerCase()).join(' e '))
   if (p.abilita) parti.push(ABILITA[p.abilita].che)
   return parti.join(' · ')
 }
+/* le facce del riquadro: una, o due in un'ondata mista */
+const facce = p => (p.con ? [p, p.con] : [p])
 </script>
 
 <template>
   <div v-if="prossime.length" class="preavviso">
     <span class="titolo">In arrivo</span>
     <div v-for="p in prossime" :key="p.onda" class="avviso"
-         :class="{ subito: p.fra === 1, capo: p.capo }" :title="frase(p)"
+         :class="{ subito: p.fra === 1, capo: p.capo, mista: p.con }" :title="frase(p)"
          :data-onda-preavviso="p.onda" :data-immune="(p.immune || []).join(',')"
+         :data-mista="p.con ? p.con.id : null"
+         :data-immune-con="p.con ? p.con.immune.join(',') : null"
          :data-abilita="p.abilita || null" :data-capo="p.capo ? '' : null">
-      <span class="faccia">
-        <RitrattoMostro :bestia="p.id" :pittori="pittori" />
+      <span v-for="f in facce(p)" :key="f.id" class="faccia">
+        <RitrattoMostro :bestia="f.id" :pittori="pittori" />
         <!-- le immunità stanno *addosso* al mostro, non di fianco: sono
              quelle che si devono leggere insieme alla faccia, non dopo -->
-        <span v-if="p.immune && p.immune.length" class="immuni">
-          <span v-for="k in p.immune" :key="k" class="punto">{{ TORRI[k].emoji }}</span>
+        <span v-if="f.immune && f.immune.length" class="immuni">
+          <span v-for="k in f.immune" :key="k" class="punto">{{ TORRI[k].emoji }}</span>
         </span>
-        <span v-if="p.abilita" class="abilita">{{ ABILITA[p.abilita].emoji }}</span>
+        <span v-if="f.abilita" class="abilita">{{ ABILITA[f.abilita].emoji }}</span>
         <span v-if="p.capo" class="corona">👑</span>
       </span>
       <span class="dati">
-        <b>{{ p.capo ? 'Capo!' : p.nome }}</b>
+        <b>{{ p.capo ? 'Capo!' : p.con ? 'Misti!' : p.nome }}</b>
         <i>🌊{{ p.onda }} · ×{{ p.quanti }}<template v-if="p.lato"> ·
           <em :class="p.lato">{{ FRECCE[p.lato] }}</em></template></i>
       </span>

@@ -136,7 +136,10 @@ let firmaOnda = -1
    resta quella del motore. `bestia` cambia solo a ogni ondata, e la
    copia col nome si rifà solo allora: un oggetto nuovo a ogni
    fotogramma farebbe ridisegnare la scheda sessanta volte al secondo. */
-const conNome = b => (b && props.pelle?.nome ? { ...b, nome: props.pelle.nome(tappa, b.id) || b.nome } : b)
+const nomeDi = x => ({ ...x, nome: props.pelle.nome(tappa, x.id) || x.nome })
+/* e in un'ondata mista anche il secondo, che sta in `con` */
+const conNome = b => (b && props.pelle?.nome
+  ? { ...nomeDi(b), ...(b.con ? { con: nomeDi(b.con) } : {}) } : b)
 let bestiaDa = null, bestiaVista = null
 function aggiornaVista(forza = false) {
   const v = props.vista

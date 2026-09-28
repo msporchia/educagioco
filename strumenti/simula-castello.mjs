@@ -36,6 +36,7 @@ import { TAPPE, LIBERE, liberaDi, CFG, MONDO, costoNuovaTorre,
          sequenzaTorri, prossimoAcquisto } from '../src/data/castello.js'
 import { creaBattaglia } from '../src/motore/battaglia.js'
 import { TORRI } from '../src/data/ops.js'
+import { immuniDellOnda } from '../src/data/mostri.js'
 
 /* ── il campo su cui si tara ──
    Le misure contano davvero: un campo più largo è una strada più lunga,
@@ -191,7 +192,7 @@ export function gioca(tappa, opzioni = {}) {
   function immuniInArrivo() {
     if (!immunita) return []
     const inArrivo = motore.prossime(1)[0]
-    return inArrivo ? inArrivo.immune : []
+    return immuniDellOnda(inArrivo)
   }
 
   /* cosa comprerebbe adesso, se potesse. Si sale sempre la torre più
@@ -201,8 +202,10 @@ export function gioca(tappa, opzioni = {}) {
      tutto di chi ha tenuto le torri pari. Il preavviso paga su *cosa
      costruire*, non su cosa alzare. */
   function mossa() {
-    const torri = motore.torri.map(x => ({ tipo: x.tipo, lv: x.lv }))
-    const m = prossimoAcquisto(torri, tappa, { posti: tappa.posti, sequenza,
+    /* con la strada di ognuna: i bisogni delle ondate miste la guardano */
+    const torri = motore.torri.map(x => ({ tipo: x.tipo, lv: x.lv,
+      via: motore.postazioni.find(p => p.x === x.x && p.y === x.y)?.via }))
+    const m = prossimoAcquisto(torri, tappa, { posti: tappa.posti, sequenza, onda: stato.onda,
                                               largo: strategia === 'costruisci' })
     if (!m) return null
     if (m.che === 'salita') return { ...m, torre: motore.torri[m.indice] }

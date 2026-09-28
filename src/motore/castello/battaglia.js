@@ -137,7 +137,8 @@ export class Battaglia {
     this.daGenerare = this.ondate.quantiDi(o)
     this.prossimo = 0; this.pausa = 0
     this.aperte.set(o, true)
-    const chi = this.bestia.capo ? ` · arriva il capo: ${this.bestia.nome} gigante` : ''
+    const chi = this.bestia.capo ? ` · arriva il capo: ${this.bestia.nome} gigante`
+      : this.bestia.con ? ` · ${this.bestia.nome} e ${this.bestia.con.nome} insieme` : ''
     this.avvisa((this.ondate.ultima(o) ? 'Ultima ondata!' : 'Ondata ' + o) + chi + extra)
     this.suona('livello')
   }
@@ -218,9 +219,12 @@ export class Battaglia {
     const scelta = this.ondate.viaDi(o, vie)
     const via = scelta < 0 ? this.usciti % vie : scelta
     this.usciti++
-    const b = this.bestia
+    /* in un'ondata mista i due tipi escono alternati: chi sia il
+       `k`-esimo lo dice l'ondata (`chiEsce`), non il caso */
+    const k = this.ondate.quantiDi(o) - this.daGenerare
+    const b = this.ondate.chiEsce(o, k, this.bestia)
     this.nemici.push(new Nemico({
-      d: -this.ondate.sfalsoDi(o, this.ondate.quantiDi(o) - this.daGenerare),
+      d: -this.ondate.sfalsoDi(o, k),
       via, onda: o,
       vita: this.ondate.vitaDi(o),
       vel: this.ondate.velocitaDi(o) * this.misure.S,

@@ -1182,10 +1182,22 @@ committate: non è ricostruibile da git.
   mostro, quindi a decidere è **la fila** della tappa, e le sue regole
   stanno in `guastiDelleImmunita` (ogni mostro si può ferire con le
   torri della tappa, ogni torre che ferisce ha un mostro immune, la
-  prima ondata la ferisce l'arciere) e in `coperturaApertura` (le prime
-  quattro ondate le feriscono le torri di apertura, ognuna dalla sua
-  strada). Le controllano il validatore e `unita/immunita-castello`.
-  Nelle libere la fila la dispone `filaCheRegge`, che pretende anche
+  prima ondata la ferisce l'arciere) e in `coperturaApertura`: **le
+  prime otto ondate** (`APERTURA_COPRE`, o tutte se la tappa è più
+  corta) le feriscono le torri di apertura, ognuna dalla sua strada,
+  con le bocche insieme quando scendono insieme. Erano quattro, con la
+  ragione dei soldi per la terza torre; il conto vero è che **all'inizio
+  le risorse non bastano per essere variegati** — dalla quinta ondata
+  arrivava un mostro che le prime due non toccano, e il bambino doveva
+  allargarsi proprio quando serviva salire. Dove la fila non ci arriva
+  in nessun ordine lo dice `APERTURA_CORTA`, tappa per tappa e col
+  perché (tre mostri che vogliono tre torri diverse in una fila più
+  corta di otto; o due bocche, con la sesta ondata da tutte e due), e
+  `unita/immunita-castello` pretende che dica il vero nei due versi.
+  Le controllano il validatore e `unita/immunita-castello`.
+  Nelle libere la fila la dispone `filaCheRegge` (e se girare e
+  scambiare non basta la costruisce posto per posto, `filaCostruita`),
+  che pretende anche
   che **i capi li feriscano almeno due torri** (`capiAperti`): alla
   decima ondata la difesa è giovane, e un capo che tocca una torre sola
   passava con qualunque vita. Il giocatore modello sa da quale ondata
@@ -1204,6 +1216,29 @@ committate: non è ricostruibile da git.
   frecce, melme e ossa la magia, i draghi bombe e magia — e una figura
   che fa due mostri li fa con le stesse immunità
   (`unita/castello-bestiario`).
+- **Ogni tanto un'ondata è mista** (`MISTA`, `coppiaDellOnda` in
+  `data/mostri.js`): due tipi mescolati nella stessa fila, che nessuna
+  torre ferisce tutti e due e che almeno due torri toccano — una torre
+  sola non basta. Le coppie si cercano fra i mostri che la tappa manda
+  già (`coppieDi`), mai scritte a mano. Nelle libere una su cinque
+  dalla decima (13ª, 18ª, 23ª…, mai sul capo); nella campagna una sola,
+  in fondo alle tappe di Mura e Palude più lunghe di otto ondate, e
+  **con una coppia che le torri del piano feriscono già dalla sua
+  strada** (`mistaDelPiano` in `data/castello.js`): se chiedesse una
+  torre in più proprio in fondo, la tappa farebbe meno conti di quelli
+  che promette (il torrione ne faceva 23 invece di 30). Per questo è
+  l'ultima ondata o quella prima, e il canneto non ce l'ha. Metà e metà con
+  la `folla` di ciascuno, energia e numero come un'ondata normale.
+  L'ondata porta il secondo tipo in `con` (`bestiaDi`), e il preavviso
+  e la scheda disegnano due ritratti con **due righe di immunità**: fuse
+  direbbero «tutte sbarrate». La taratura le spiana **per ondata**,
+  come il capo (`chiDi` → `'mista'`), e il giocatore modello le conosce
+  come **bisogni** (`miste` di `sequenzaTorri`) che si accendono col
+  preavviso e che `prossimoAcquisto` guarda contro le torri in campo:
+  nella fila no, perché la fila è il piano e il piano è la promessa dei
+  `calcoli`. Nei test i bersagli sono `[data-mista]` e
+  `[data-immune-con]` sul preavviso e `[data-scheda-mista]` sulla
+  scheda.
 - **Abilità, capo e fretta sono del motore, e la taratura le conta da
   sé.** Dal Sotterraneo in poi (e sempre nelle libere) slime e verme si
   dividono quando cadono e scheletro e troll si rialzano una volta
@@ -1242,8 +1277,9 @@ committate: non è ricostruibile da git.
   lo stesso regalo i gradi si **sommano** (il ventesimo raddoppia),
   regali diversi si moltiplicano perché toccano cose diverse. Il prezzo
   è che il record si muove tardi — dieci gradi quasi mai, cinquanta
-  (una dozzina di partite) sì su tutti e quattro i terreni, ed è quello
-  che il banco pretende — e un tetto per regalo non serve, perché la
+  (una dozzina di partite) su tre terreni su quattro, cento
+  (venticinque partite) su tutti, ed è quello che il banco pretende —
+  e un tetto per regalo non serve, perché la
   vita cresce a moltiplicare e i gradi a sommare: la tabella la stampa
   `node strumenti/regali-castello.mjs`, che prende i gradi dal giro
   delle carte come un bambino. **Nella campagna non si applicano**: la tappa deve

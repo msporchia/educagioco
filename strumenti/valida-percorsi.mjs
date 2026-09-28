@@ -72,19 +72,24 @@
                   ondate di fila non hanno le stesse immunità. Le regole
                   sono scritte una volta sola, in `guastiDelleImmunita`
                   (`data/mostri.js`), e le conta anche `unita/castello`.
-                  E le prime quattro ondate le devono ferire le torri
+                  Le ondate miste mescolano due tipi che nessuna torre
+                  ferisce tutti e due, e che almeno due torri toccano
+                  (`guastiDelleMiste`).
+                  E le prime otto ondate le devono ferire le torri
                   con cui il giocatore modello apre, ognuna dalla sua
-                  strada (`coperturaApertura` in `data/castello.js`).
+                  strada (`coperturaApertura` in `data/castello.js`),
+                  tranne dove `APERTURA_CORTA` dice perché non si può.
    ═══════════════════════════════════════════════════════════════════ */
 import { Percorso } from '../src/motore/castello/percorso.js'
 import { CAMPAGNE, RACCONTO, LIBERE_RACCONTO } from '../src/data/campagne-castello.js'
-import { guastiDelleImmunita } from '../src/data/mostri.js'
+import { guastiDelleImmunita, guastiDelleMiste } from '../src/data/mostri.js'
 /* Quante piazzole avrà davvero la tappa lo decide l'economia, che sta
    in un altro file e in un altro cantiere. La si legge — non la si
    scrive — perché senza quel numero questo strumento controllerebbe
    una mappa che non esiste: gli stessi tracciati con otto torri e con
    tre non sono la stessa difesa. */
-import { postiDi, MONDO, LIBERE, TAPPE, coperturaApertura, APERTURA_COPRE }
+import { postiDi, MONDO, LIBERE, TAPPE, coperturaApertura, APERTURA_COPRE, APERTURA_CORTA,
+         ONDATE_TARATE, chiaveTappa }
   from '../src/data/castello.js'
 
 /* ── i margini del campo ──
@@ -531,10 +536,17 @@ function esaminaMostri(t) {
      compra per prime, quindi vuole la tappa coi suoi numeri (le libere
      li hanno già; le tappe si prendono da `TAPPE`) */
   const vera = t.libera ? t : TAPPE.find(x => x.campagna === t.campagna && x.nome === t.nome) || t
+  /* le ondate miste: due tipi che nessuna torre ferisce tutti e due, e
+     almeno due torri che feriscono qualcuno (`guastiDelleMiste`) */
+  guasti.push(...guastiDelleMiste(vera, Number.isFinite(vera.ondate) ? vera.ondate : ONDATE_TARATE))
   const copre = coperturaApertura(vera)
-  if (copre < Math.min(APERTURA_COPRE, t.mostri.length * 2))
+  const serve = Math.min(APERTURA_COPRE, Number.isFinite(vera.ondate) ? vera.ondate : APERTURA_COPRE)
+  const corta = APERTURA_CORTA[vera.chiave || chiaveTappa(vera)]
+  if (copre < serve && !corta)
     guasti.push(`l'apertura ferisce solo le prime ${copre} ondate, dalla loro strada: ` +
-                `ne servono ${APERTURA_COPRE}, perché prima non ci sono i soldi per una terza torre`)
+                `ne servono ${serve}, perché all'inizio le risorse non bastano per essere variegati`)
+  if (corta && copre >= serve)
+    guasti.push(`copre le sue ${serve} ondate: va tolta da APERTURA_CORTA`)
   return guasti
 }
 

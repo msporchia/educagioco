@@ -15,6 +15,11 @@
    Il ritratto non è un'immagine: è lo stesso pittore che disegna i
    mostri sul campo, chiamato su una tela piccola. Un mostro nuovo si
    disegna una volta sola e compare in tutti e due i posti.
+
+   In un'ondata **mista** (`con`, vedi `coppiaDellOnda` in
+   `data/mostri.js`) le facce sono due e le immunità due righe, una per
+   tipo: la cosa da leggere è proprio che non coincidono, quindi non si
+   fondono in una riga sola.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { creaTela } from '../grafica/tela.js'
@@ -23,7 +28,7 @@ import { TORRI } from '../data/ops.js'
 import { ABILITA } from '../data/mostri.js'
 
 const props = defineProps({
-  bestia: { type: Object, required: true },   // { id, nome, vola, immune, abilita, capo }
+  bestia: { type: Object, required: true },   // { id, nome, vola, immune, abilita, capo, con? }
   vita: { type: Number, default: 0 },         // quanta ne ha uno solo
   quanti: { type: Number, default: 0 },       // quanti ne restano in campo
   /* i pittori di una pelle (il castello a sprite): lì il ritratto è la
@@ -32,32 +37,43 @@ const props = defineProps({
   pittori: { type: Object, default: null },
 })
 
-const ritratto = ref(null)
-let tela = null, raf = 0
+const ritratto = ref(null), ritrattoCon = ref(null)
+let tele = [null, null], raf = 0
+
+/* la tela di un riquadro, fatta quando il riquadro c'è: il secondo
+   compare e sparisce con le ondate miste */
+function telaDi(i, canvas) {
+  if (!canvas) { tele[i] = null; return null }
+  if (!tele[i] || tele[i].canvas !== canvas) {
+    // unità piccola: il mostro deve riempire il riquadro, non stare al
+    // suo posto in una scena
+    tele[i] = creaTela(canvas, props.pittori || PITTORI, { unita: 46, massimo: 3 })
+    tele[i].canvas = canvas
+    tele[i].ridimensiona()
+  }
+  return tele[i]
+}
+const figura = id => (props.pittori
+  ? { che: 'ritratto', x: 17, y: 17, bestia: id }
+  : { che: 'mostro', x: 17, y: 23, bestia: id, vola: false, vita: 1, gelo: 0 })
 
 function gira(ts) {
   // il ritratto respira come sul campo: fermo sembrava un francobollo
-  tela?.disegna([props.pittori
-    ? { che: 'ritratto', x: 17, y: 17, bestia: props.bestia.id }
-    : { che: 'mostro', x: 17, y: 23, bestia: props.bestia.id, vola: false, vita: 1, gelo: 0 }], ts / 1000)
+  telaDi(0, ritratto.value)?.disegna([figura(props.bestia.id)], ts / 1000)
+  if (props.bestia.con) telaDi(1, ritrattoCon.value)?.disegna([figura(props.bestia.con.id)], ts / 1000)
   raf = requestAnimationFrame(gira)
 }
 
-onMounted(() => {
-  // unità piccola: il mostro deve riempire il riquadro, non stare al suo
-  // posto in una scena
-  tela = creaTela(ritratto.value, props.pittori || PITTORI, { unita: 46, massimo: 3 })
-  tela.ridimensiona()
-  raf = requestAnimationFrame(gira)
-})
+onMounted(() => { raf = requestAnimationFrame(gira) })
 onUnmounted(() => cancelAnimationFrame(raf))
-watch(() => props.bestia.id, () => tela?.ridimensiona())
+watch(() => [props.bestia.id, props.bestia.con?.id], () => tele.forEach(t => t?.ridimensiona()))
 </script>
 
 <template>
-  <div class="scheda">
+  <div class="scheda" :data-scheda-mista="bestia.con ? '' : null">
     <div class="faccia"><canvas ref="ritratto"></canvas></div>
-    <div class="dati">
+    <div v-if="bestia.con" class="faccia"><canvas ref="ritrattoCon"></canvas></div>
+    <div v-if="!bestia.con" class="dati">
       <b>{{ bestia.capo ? '👑 ' + bestia.nome + ' gigante' : bestia.nome }}</b>
       <i v-if="bestia.vola">vola</i>
       <span class="riga">❤️ {{ vita }} · ×{{ quanti }}</span>
@@ -66,6 +82,16 @@ watch(() => props.bestia.id, () => tela?.ridimensiona())
       </span>
       <span v-if="bestia.abilita" class="fa" data-scheda-abilita>
         {{ ABILITA[bestia.abilita].emoji }} {{ ABILITA[bestia.abilita].nome }}
+      </span>
+    </div>
+    <!-- la mista: una riga per tipo, perché quello che conta è che le
+         due immunità non coincidono -->
+    <div v-else class="dati">
+      <b>{{ bestia.nome }} e {{ bestia.con.nome }}</b>
+      <span class="riga">❤️ {{ vita }} · ×{{ quanti }}</span>
+      <span v-for="x in [bestia, bestia.con]" :key="x.id" class="resiste"
+            data-scheda-immune :data-per="x.id">
+        {{ x.nome }}: {{ x.immune.length ? 'immune a ' + x.immune.map(k => TORRI[k].emoji).join(' ') : 'nessuna immunità' }}{{ x.abilita ? ' · ' + ABILITA[x.abilita].emoji : '' }}
       </span>
     </div>
   </div>
@@ -87,6 +113,10 @@ watch(() => props.bestia.id, () => tela?.ridimensiona())
            background:#eceaf0; border-radius:999px;
            padding:1px 6px; margin-top:2px; white-space:nowrap; overflow:hidden;
            text-overflow:ellipsis }
+/* la mista ha due facce e due righe di immunità: le righe non si
+   devono troncare, perché sono proprio quello che c'è da leggere */
+.scheda[data-scheda-mista] { max-width:66% }
+.scheda[data-scheda-mista] .resiste { white-space:normal }
 /* quello che fa quando cade: non è un divieto, è una cosa da aspettarsi */
 .fa { font-size:9px; font-weight:800; color:var(--viola-scuro); margin-top:1px; white-space:nowrap }
 </style>

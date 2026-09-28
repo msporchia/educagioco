@@ -20,7 +20,8 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { nemiciDiOnda, intervalloDiOnda, vitaNemico, velocitaNemico, insiemeDa,
          boccaDellOnda } from '../../data/castello.js'
-import { MOSTRI, CAPO, ABILITA, mostroDiOnda, mostroLibero, immuniDi } from '../../data/mostri.js'
+import { MOSTRI, CAPO, ABILITA, mostroDiOnda, mostroLibero, immuniDi, coppiaDellOnda }
+  from '../../data/mostri.js'
 
 /* il passo stretto dentro un gruppetto, di quanto si muove la fila,
    quante ondate su tre escono a gruppetti, e di quanto (in unità del
@@ -35,16 +36,29 @@ function caso(a, b = 0) {
 }
 
 export class Ondate {
-  constructor(tappa) { this.tappa = tappa }
+  /* chi arriva in un'ondata non cambia mai: si calcola una volta per
+     ondata (`bestiaDi`), perché le coppie delle miste si cercano fra
+     tutti i mostri della tappa e il motore lo chiede a ogni mostro che
+     esce */
+  constructor(tappa) { this.tappa = tappa; this.bestie = new Map() }
 
   /* la partita libera non ha un numero di ondate: non finisce */
   get campagna() { return Number.isFinite(this.tappa.ondate) }
   get quante() { return this.tappa.ondate }
   ultima(o) { return this.campagna && o >= this.quante }
 
-  /* Chi arriva in questa ondata: un tipo solo, così la scheda in alto a
-     destra parla di lui e scegliere la torre è una domanda con una
-     risposta.
+  /* Chi arriva in questa ondata: di solito un tipo solo, così la scheda
+     in alto a destra parla di lui e scegliere la torre è una domanda con
+     una risposta.
+
+     ── e ogni tanto due ──
+     L'ondata mista (`coppiaDellOnda` in `data/mostri.js`) porta il
+     secondo tipo in `con`, con la stessa forma del primo: chi la mostra
+     (il preavviso, la scheda) disegna due ritratti e due immunità, chi
+     la genera li alterna nella fila (`chiEsce`). Il primo è quello che
+     la fila avrebbe mandato comunque, e resta dov'era: `id`, `immune`
+     e il resto parlano di lui, così chi non sa delle miste legge
+     un'ondata vera, solo non intera.
 
      ── le immunità ci sono sempre ──
      Prima una tappa accendeva le *resistenze* solo da una certa ondata in
@@ -65,11 +79,43 @@ export class Ondate {
      lo stesso; nel Bosco quella cosa non la fa, e il preavviso non la
      dice. */
   bestiaDi(o) {
-    const id = this.tappa.mostri ? mostroDiOnda(this.tappa.mostri, o) : mostroLibero(o)
+    if (!this.bestie.has(o)) this.bestie.set(o, this.componi(o))
+    return this.bestie.get(o)
+  }
+  componi(o) {
+    const capo = this.eCapo(o)
+    const coppia = capo ? null : coppiaDellOnda(this.tappa, o)
+    const id = coppia ? coppia[0]
+      : this.tappa.mostri ? mostroDiOnda(this.tappa.mostri, o) : mostroLibero(o)
+    const b = { ...this.schedaDi(id), capo }
+    if (coppia) b.con = this.schedaDi(coppia[1])
+    return b
+  }
+  schedaDi(id) {
     const m = MOSTRI[id] || {}
     return { id, nome: m.nome, vola: !!m.vola, immune: immuniDi(id),
-             abilita: this.tappa.abilita ? m.abilita || null : null,
-             capo: this.eCapo(o) }
+             abilita: this.tappa.abilita ? m.abilita || null : null }
+  }
+
+  /* ── quanti per tipo, in una mista ──
+     Metà e metà di un'ondata normale, e ognuno con la sua `folla`: chi
+     si divide arriva in meno anche mescolato. `[primo, secondo]`. */
+  perTipoDi(o) {
+    const b = this.bestiaDi(o)
+    const n = nemiciDiOnda(o)
+    const folla = x => (x.abilita ? ABILITA[x.abilita].folla : 1)
+    return [Math.max(1, Math.round(n / 2 * folla(b))), Math.max(1, Math.round(n / 2 * folla(b.con)))]
+  }
+  /* Chi esce per `k`-esimo (da zero) nell'ondata `o`: la scheda del
+     primo o del secondo tipo. Alternati, e quando uno dei due è di meno
+     (chi si divide) i suoi si spargono lungo la fila invece di finire
+     tutti in fondo: il `k`-esimo è del secondo quando la sua quota,
+     contata fin lì, fa un passo. Deterministico come tutto il resto. */
+  chiEsce(o, k, b = this.bestiaDi(o)) {
+    if (!b.con) return b
+    const [na, nb] = this.perTipoDi(o)
+    const tot = na + nb
+    return Math.floor((k + 1) * nb / tot) > Math.floor(k * nb / tot) ? b.con : b
   }
 
   /* ── il capo ──
@@ -95,10 +141,12 @@ export class Ondate {
   follaDi(o) {
     if (this.eCapo(o)) return 1
     const b = this.bestiaDi(o)
+    if (b.con) return this.quantiDi(o) / nemiciDiOnda(o)
     return b.abilita ? ABILITA[b.abilita].folla : 1
   }
   quantiDi(o) {
     if (this.eCapo(o)) return 1
+    if (this.bestiaDi(o).con) { const [na, nb] = this.perTipoDi(o); return na + nb }
     return Math.max(1, Math.round(nemiciDiOnda(o) * this.follaDi(o)))
   }
   intervalloDi(o) { return intervalloDiOnda(o) / this.follaDi(o) }

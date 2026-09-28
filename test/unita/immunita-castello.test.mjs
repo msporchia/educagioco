@@ -15,17 +15,21 @@
      3. **il capo è un'ondata**: uno solo, con la vita di tutta l'ondata
         e un decimo, più lento, e paga come l'ondata intera — se no la
         promessa dei `calcoli` saltava ogni dieci ondate;
-     4. **la fretta paga il tempo risparmiato**, anche a ondata in corso,
+     4. **le ondate miste** mescolano due tipi che nessuna torre ferisce
+        tutti e due, arrivano dove devono (tardi) e valgono come
+        un'ondata normale;
+     5. **la fretta paga il tempo risparmiato**, anche a ondata in corso,
         e non rompe le ondate: il premio di fine ondata, la moneta e il
         regalo arrivano lo stesso a chi chiama prima.
 
    Più le regole delle file (`guastiDelleImmunita`) su tutte le tappe:
    il validatore le dice, qui si contano.
    ═══════════════════════════════════════════════════════════════════ */
-import { TAPPE, LIBERE, CFG, MONDO, premioDellaFretta, coperturaApertura, APERTURA_COPRE,
+import { TAPPE, LIBERE, CFG, MONDO, premioDellaFretta, coperturaApertura, APERTURA_COPRE, APERTURA_CORTA,
+         chiaveTappa,
          nemiciDiOnda, capiAperti } from '../../src/data/castello.js'
-import { MOSTRI, ABILITA, CAPO, IMMUNITA_MAX, immuniDi, feritoDa, gelabile, guastiDelleImmunita,
-         vitaEffettiva } from '../../src/data/mostri.js'
+import { MOSTRI, ABILITA, CAPO, IMMUNITA_MAX, MISTA, immuniDi, feritoDa, gelabile, guastiDelleImmunita,
+         guastiDelleMiste, coppieDi, immuniDellOnda, vitaEffettiva } from '../../src/data/mostri.js'
 import { TORRI } from '../../src/data/ops.js'
 import { creaBattaglia } from '../../src/motore/battaglia.js'
 import { Nemico } from '../../src/motore/castello/nemico.js'
@@ -90,10 +94,31 @@ const BOMBE = Object.keys(TORRI).find(k => TORRI[k].aspetto === 'bombe')
 for (const t of [...TAPPE, ...LIBERE]) {
   const g = guastiDelleImmunita(t)
   controlla(`${t.nome}: la fila dei mostri è giusta con le immunità`, !g.length, g.join(' · '))
-  controlla(`${t.nome}: l'apertura ferisce le prime ${APERTURA_COPRE} ondate`,
-            coperturaApertura(t) >= Math.min(APERTURA_COPRE, t.mostri.length * 2),
-            `ne copre ${coperturaApertura(t)}`)
+  /* le prime otto ondate le feriscono le torri di apertura (o tutte, se
+     la tappa è più corta): all'inizio le risorse non bastano per essere
+     variegati. Dove non si può, lo dice `APERTURA_CORTA`, col perché —
+     e la riga deve dire il vero in tutti e due i versi */
+  const serve = Math.min(APERTURA_COPRE, Number.isFinite(t.ondate) ? t.ondate : APERTURA_COPRE)
+  const copre = coperturaApertura(t), corta = APERTURA_CORTA[t.chiave || chiaveTappa(t)]
+  if (!corta)
+    controlla(`${t.nome}: l'apertura ferisce le prime ${serve} ondate`, copre >= serve, `ne copre ${copre}`)
+  else {
+    controlla(`${t.nome}: è nel registro delle aperture corte, e davvero non arriva a ${serve}`,
+              copre < serve, `ne copre ${copre}: togli la riga da APERTURA_CORTA`)
+    uguale(`${t.nome}: e il registro dice quante ne copre`, corta.copre, copre)
+  }
+  /* niente miste e niente capi dentro l'apertura: una mista vuole due
+     risposte, un capo un'ondata intera in un corpo solo. Il capo della
+     radice è l'eccezione: la tappa ha sette ondate e lui la chiude */
+  const O = new Ondate(t)
+  for (let o = 1; o <= serve; o++) {
+    const b = O.bestiaDi(o)
+    controlla(`${t.nome} · ondata ${o}: dentro l'apertura non è mista`, !b.con)
+    if (b.capo && !(t.capo && o === t.ondate))
+      controlla(`${t.nome} · ondata ${o}: dentro l'apertura non arriva un capo`, false)
+  }
 }
+nota('aperture corte: ' + Object.entries(APERTURA_CORTA).map(([k, v]) => `${k} ${v.copre}/${APERTURA_COPRE}`).join(' · '))
 /* nelle libere il capo arriva ogni dieci ondate, ed è chi la fila mette
    lì: almeno due torri lo devono ferire (vedi `capiAperti`) */
 for (const l of LIBERE)
@@ -206,6 +231,94 @@ nota(`vita vera di chi fa qualcosa: si divide ×${vitaEffettiva('slime').toFixed
   const cuori = stato.cuori
   b.muoviNemici(0.01)
   uguale('arrivato al castello, toglie tre cuori', cuori - stato.cuori, CAPO.cuori)
+}
+
+/* ══════════ 4b. le ondate miste ══════════
+   Due tipi mescolati nella stessa fila, con immunità che si incastrano:
+   una torre sola non basta. Le regole stanno in `data/mostri.js`
+   (`coppiaDellOnda`, `guastiDelleMiste`) e il validatore le ripete. */
+{
+  for (const t of [...TAPPE, ...LIBERE]) {
+    const g = guastiDelleMiste(t, Number.isFinite(t.ondate) ? t.ondate : 30)
+    controlla(`${t.nome}: le ondate miste rispettano la regola della coppia`, !g.length, g.join(' · '))
+  }
+  /* dove arrivano: in campagna solo in fondo alle tappe di Mura e
+     Palude, una per tappa; prima si impara un tipo alla volta */
+  const misteDi = (t, fino) => {
+    const o = new Ondate(t), out = []
+    for (let k = 1; k <= fino; k++) if (o.bestiaDi(k).con) out.push(k)
+    return out
+  }
+  for (const t of TAPPE) {
+    const m = misteDi(t, t.ondate)
+    const ultima = t.capo ? t.ondate - 1 : t.ondate
+    if (t.miste)
+      controlla(`${t.nome}: una mista sola, in fondo (l'ultima${t.capo ? ' prima del capo' : ''}, o quella prima)`,
+                m.length === 1 && m[0] >= ultima - 1 && m[0] <= ultima, m.join())
+    else uguale(`${t.nome}: nessuna mista (${t.campagna}, ${t.ondate} ondate)`, m.length, 0)
+    if (t.miste) controlla(`${t.nome}: solo nelle Mura e nella Palude, e dopo l'apertura`,
+                           MISTA.campagne.includes(t.campagna) && t.mista > APERTURA_COPRE)
+  }
+  /* nella partita infinita: una su cinque dalla decima, mai sul capo */
+  for (const l of LIBERE) {
+    const m = misteDi(l, 40)
+    controlla(`${l.nome}: le miste arrivano dalla decima in poi, una ogni ${MISTA.ogni}`,
+              m.length >= 5 && m[0] >= MISTA.da && m.every((o, i) => !i || o - m[i - 1] === MISTA.ogni),
+              m.join(' '))
+    controlla(`${l.nome}: e mai sull'ondata del capo`, m.every(o => o % CAPO.ogni !== 0))
+    controlla(`${l.nome}: e le coppie cambiano`, new Set(m.map(o => {
+      const b = new Ondate(l).bestiaDi(o); return b.id + b.con.id })).size > 1)
+  }
+  /* un'ondata mista vera: la prima della radura grande */
+  const l = { ...LIBERE[0], vite: Array(20).fill(50) }
+  const ondate = new Ondate(l)
+  const o = misteDi(l, 40)[0]
+  const b = ondate.bestiaDi(o)
+  const sparano = l.torri.filter(k => TORRI[k].danno)
+  controlla(`ondata ${o}: nessuna torre ferisce tutti e due`,
+            sparano.every(k => !(feritoDa(b.id, k) && feritoDa(b.con.id, k))), `${b.id} + ${b.con.id}`)
+  controlla('e almeno due torri feriscono qualcuno',
+            sparano.filter(k => feritoDa(b.id, k) || feritoDa(b.con.id, k)).length >= 2)
+  uguale('le torri che non toccano nessuno dei due non fanno danno',
+         immuniDellOnda(b).filter(k => TORRI[k].danno).length, 0)
+  uguale('l\'energia è quella di un\'ondata normale',
+         Math.round(ondate.quantiDi(o) * ondate.pagaDi(o) * 1000), nemiciDiOnda(o) * 1000)
+  const chi = Array.from({ length: ondate.quantiDi(o) }, (_, k) => ondate.chiEsce(o, k).id)
+  const [na, nb] = ondate.perTipoDi(o)
+  uguale('metà e metà, contando la folla', [chi.filter(x => x === b.id).length, chi.filter(x => x === b.con.id).length].join(), [na, nb].join())
+  controlla('alternati nella fila, non a blocchi', chi.slice(0, 6).join() !== Array(6).fill(chi[0]).join(),
+            chi.slice(0, 8).join(' '))
+  controlla('il preavviso la annuncia coi due mostri',
+            ondate.prossime(o - 2, 3).some(p => p.onda === o && p.con && p.con.id === b.con.id))
+  /* e in campo escono tutti e due, ognuno con le sue immunità */
+  const { b: bat, stato } = campo(l)
+  bat.torri.push({ agisci: () => null })
+  stato.onda = o - 1
+  bat.nuovaOnda()
+  while (bat.daGenerare > 0) { bat.generaNemico(); bat.daGenerare-- }
+  const tipi = new Set(bat.nemici.map(n => n.bestia))
+  uguale('in campo scendono i due tipi', [...tipi].sort().join(), [b.id, b.con.id].sort().join())
+  controlla('ognuno con le sue immunità',
+            bat.nemici.every(n => n.immune.join() === immuniDi(n.bestia).join()))
+  uguale('quanti ne annuncia', bat.nemici.length, ondate.quantiDi(o))
+  /* chi si divide arriva in meno anche mescolato: il corridoio delle mura
+     mescola slime e fantasma */
+  const corr = TAPPE.find(t => t.nome === 'Il corridoio')
+  const oc = new Ondate(corr), bc = oc.bestiaDi(corr.ondate)
+  if (bc.con && (bc.abilita === 'dividi' || bc.con.abilita === 'dividi')) {
+    const [p1, p2] = oc.perTipoDi(corr.ondate)
+    const dividi = bc.abilita === 'dividi' ? p1 : p2, altro = bc.abilita === 'dividi' ? p2 : p1
+    controlla(`${corr.nome}: chi si divide arriva in meno anche mescolato`, dividi < altro, `${p1} + ${p2}`)
+  }
+  nota('tappe delle Mura e della Palude senza mista: ' + TAPPE.filter(t =>
+    MISTA.campagne.includes(t.campagna) && !t.miste).map(t => t.nome).join(', '))
+  nota('le miste: ' + [...TAPPE.filter(t => t.miste), ...LIBERE].map(t => {
+    const O = new Ondate(t)
+    const m = misteDi(t, Number.isFinite(t.ondate) ? t.ondate : 20).map(k => {
+      const x = O.bestiaDi(k); return `o${k} ${x.nome}+${x.con.nome}` })
+    return `${t.nome}: ${m.join(', ')}`
+  }).join(' · '))
+  controlla('ogni libera ha delle coppie fra cui scegliere', LIBERE.every(x => coppieDi(x).length >= 2))
 }
 
 /* ══════════ 5. la fretta ══════════ */

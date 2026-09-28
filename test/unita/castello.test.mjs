@@ -54,8 +54,8 @@ for (const [i, t] of TAPPE.entries())
    il golem che solo le bombe aprono e il pipistrello che le bombe non
    toccano non stanno sulla stessa scala, e la taratura li spiana
    ognuno per conto suo (vedi `spiana` in `strumenti/tara-castello.mjs`).
-   Il capo fa gruppo a sé. */
-const chiDi = (t, o) => { const b = new Ondate(t).bestiaDi(o); return b.capo ? 'capo' : b.id }
+   Il capo fa gruppo a sé, e le ondate miste pure. */
+const chiDi = (t, o) => { const b = new Ondate(t).bestiaDi(o); return b.capo ? 'capo' : b.con ? 'mista' : b.id }
 function ammorbiditi(t) {
   const v = t.vite || [], male = []
   for (let k = 0; k < v.length; k++) {

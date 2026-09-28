@@ -26,8 +26,8 @@
      4. **la cadenza**: uno ogni cinque ondate, l'ondata non parte finché
         non è scelto (così un regalo rimandato non si perde) e non se ne
         accumulano due.
-     5. **i regali si sentono, e non rendono immortali**: con cinquanta
-        gradi (una dozzina di partite) ogni libera arriva più lontano che
+     5. **i regali si sentono, e non rendono immortali**: con cento
+        gradi (venticinque partite) ogni libera arriva più lontano che
         con zero, con quattrocento si muore comunque, e con quaranta
         sulla stessa voce pure.
 
@@ -302,25 +302,33 @@ for (const { l, scala } of scale) {
     controlla(`${l.nome}: con ${p.k} gradi si perde comunque`, p.esito === 'persa',
               `con ${p.k} gradi la partita non finisce più (${p.esito} all'ondata ${p.onda})`)
   }
-  /* Cinquanta e non dieci. Dieci gradi sono un +8% qui e un +5% là, e
-     oltre la ventesima la vita sale del 30% a ondata (`OLTRE`): nel
-     bosco e nel sotterraneo dieci gradi non spostano il record di
-     un'ondata, e venti lo spostano di una. Cinquanta sono una dozzina
-     di partite, ed è da lì che la promessa regge su tutti e quattro i
-     terreni. */
-  const [zero, , cinquanta] = scala
-  controlla(`${l.nome}: i regali si sentono — cinquanta gradi portano più lontano di zero`,
-            cinquanta.onda > zero.onda, `zero → o${zero.onda}, cinquanta → o${cinquanta.onda}`)
-  /* il rendimento cala: i primi cento gradi comprano ondate, i trecento
-     dopo molte meno per grado. È la condizione perché accumularli per
-     sempre non porti in cielo — la vita cresce a moltiplicare, i gradi
-     dello stesso regalo a sommare, e il moltiplicare vince sempre. */
-  const perGrado = (a, b) => (scala[b].onda - scala[a].onda) / (scala[b].k - scala[a].k)
-  controlla(`${l.nome}: e quattrocento non rendono immortali — il rendimento cala`,
-            perGrado(3, 4) < perGrado(0, 3),
-            `${perGrado(0, 3).toFixed(3)} ondate per grado fino a cento, ` +
-            `${perGrado(3, 4).toFixed(3)} da cento a quattrocento`)
+  /* Cento e non dieci, e nemmeno cinquanta. Dieci gradi sono un +8% qui
+     e un +5% là, e oltre la ventesima la vita sale del 30% a ondata
+     (`OLTRE`): dieci gradi il record lo spostano di un'ondata al più,
+     venti di due, cinquanta di quattro-cinque nel bosco e sulle mura e
+     di niente nel delta, dove il muro della ventunesima è un troll che
+     solo le bombe aprono. Cento sono venticinque partite, ed è da lì
+     che la promessa regge su tutti e quattro i terreni. */
+  const [zero, , , cento] = scala
+  controlla(`${l.nome}: i regali si sentono — cento gradi portano più lontano di zero`,
+            cento.onda > zero.onda, `zero → o${zero.onda}, cento → o${cento.onda}`)
   nota(`${l.nome}: ` + scala.map(p => `${p.k} gradi → o${p.onda}`).join(' · '))
+}
+/* il rendimento cala: i primi cento gradi comprano ondate, i trecento
+   dopo molte meno per grado. È la condizione perché accumularli per
+   sempre non porti in cielo — la vita cresce a moltiplicare, i gradi
+   dello stesso regalo a sommare, e il moltiplicare vince sempre. Si
+   conta **sulle quattro libere insieme**: la scala è a gradoni, e su
+   un terreno solo un gradone preso a 101 gradi invece che a 99 basta a
+   capovolgere il conto (il bivio fermo a o27 da cinquanta a cento, e
+   poi a o34 a duecento) */
+{
+  const guadagno = (a, b) => scale.reduce((s, { scala }) => s + scala[b].onda - scala[a].onda, 0) /
+                             (GRADI[b] - GRADI[a])
+  controlla('e quattrocento non rendono immortali — il rendimento cala',
+            guadagno(3, 4) < guadagno(0, 3),
+            `${guadagno(0, 3).toFixed(3)} ondate per grado fino a cento, ` +
+            `${guadagno(3, 4).toFixed(3)} da cento a quattrocento, sulle quattro libere`)
 }
 /* e quaranta tutti sulla stessa voce: è previsto (si può riprendere lo
    stesso regalo quante volte si vuole) e non deve sfondare il gioco */

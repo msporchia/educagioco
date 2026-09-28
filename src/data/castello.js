@@ -97,8 +97,8 @@
    È una scelta anche questa, e sta dentro la stessa tappa.
    ═══════════════════════════════════════════════════════════════════ */
 import { TORRI } from './ops.js'
-import { MOSTRI, ABILITA, CAPO, feritoDa, firmaImmunita, guastiDelleImmunita, mostroDiOnda }
-  from './mostri.js'
+import { MOSTRI, ABILITA, CAPO, MISTA, feritoDa, firmaImmunita, guastiDelleImmunita, mostroDiOnda,
+         coppiaDellOnda, coppieDi } from './mostri.js'
 import { RACCONTO, LIBERE_RACCONTO } from './campagne-castello.js'
 import { VITE, FIRMA, OLTRE } from './taratura-castello.js'
 
@@ -500,15 +500,19 @@ export function vitaNemico(tappa, onda) {
      e alla ventitreesima era un muro. */
   const passo = tappa.oltre || 1.2
   const n = v.length
+  /* chi arriva, con le stesse famiglie della taratura: il capo e le
+     miste fanno gruppo a sé (`chiDi` in `strumenti/tara-castello.mjs`) */
   const chi = o => (tappa.capi && o % tappa.capi === 0 ? 'capo'
-                                                        : mostroDiOnda(tappa.mostri || [], o))
+                    : coppiaDellOnda(tappa, o) ? 'mista'
+                    : mostroDiOnda(tappa.mostri || [], o))
   let ultima = 0
   for (let j = 1; j <= n; j++) if (chi(j) === chi(onda)) ultima = j
   if (!ultima) return Math.round(Math.max(...v) * Math.pow(passo, onda - n))
   const giro = Math.max(1, (tappa.mostri || []).length)
   const livello = (da, a) => {
     const xs = []
-    for (let j = Math.max(1, da); j <= a; j++) if (chi(j) !== 'capo') xs.push(Math.log(v[j - 1]))
+    for (let j = Math.max(1, da); j <= a; j++)
+      if (chi(j) !== 'capo' && chi(j) !== 'mista') xs.push(Math.log(v[j - 1]))
     return xs.length ? Math.exp(xs.reduce((s, x) => s + x, 0) / xs.length) : null
   }
   const fine = livello(n - giro + 1, n), prima = livello(n - 2 * giro + 1, n - giro)
@@ -595,6 +599,10 @@ export const primeQuante = tappa => Math.max(2, ingressiDi(tappa))
    senza un regalo). */
 export const ONDATE_TARATE = 20
 
+/* quante ondate prima il giocatore modello si prepara a una mista: le
+   tre del preavviso, cioè da quando il bambino la vede arrivare */
+export const PREAVVISO_MISTE = 3
+
 /* ── da che bocca arriva l'ondata `o` ──
    Con una strada sola non c'è niente da decidere. Con due, si
    alternano: la prima da una parte, la seconda dall'altra, e ogni terza
@@ -638,24 +646,14 @@ function file(lista, n) {
    chi arriva: deve ferirlo **la torre che sta dalla sua parte**. Nel
    Canneto il rovo della seconda ondata scende dall'altra bocca, e se da
    quella parte c'è la bomba che lui ignora passa intero.
-   Si guardano le prime cinque ondate — prima della quinta non arrivano
-   mai da tutte le bocche insieme — e si prende la fila di torri che ne
-   copre di più **dall'inizio**, poi quella che ferisce più mostri della
-   fila, poi quella che costa meno. */
+   Si guardano le prime `APERTURA_COPRE` ondate, con le bocche che
+   scendono insieme quando scendono insieme, e si prende la fila di
+   torri che ne copre di più **dall'inizio**, poi quella che ferisce più
+   mostri della fila, poi quella che costa meno. */
 function apertura(tappa, sparano, fila) {
   const quante = primeQuante(tappa)
-  const vie = ingressiDi(tappa)
   const tocca = (tipi, m) => tipi.some(k => feritoDa(m, k))
-  const copre = tipi => {
-    let n = 0
-    for (let o = 1; o <= Math.min(5, fila.length * 2); o++) {
-      const m = fila[(o - 1) % fila.length]
-      const via = boccaDellOnda(o, vie)
-      if (!tocca(tipi.filter((_, j) => vie < 2 || j % vie === via), m)) break
-      n++
-    }
-    return n
-  }
+  const copre = tipi => ondateFerite(tappa, tipi, APERTURA_COPRE)
   const ferisce = tipi => fila.filter(m => tocca(tipi, m)).length
   const diverse = tipi => new Set(tipi).size
   const costo = tipi => tipi.reduce((s, k, i) => s + costoNuovaTorre(i, k), 0)
@@ -700,6 +698,36 @@ export function sequenzaTorri(tappa, quante = 32) {
         urgenti.add(scelte.length); scelte.push(k); strade.push(v)
       }
     }
+  /* e le ondate miste (`coppiaDellOnda` in `data/mostri.js`): due mostri
+     che nessuna torre ferisce tutti e due, quindi sulla strada da cui
+     scendono ci vuole una torre per ciascuno. Arrivano tardi — in fondo
+     alle tappe di Mura e Palude, dalla tredicesima nelle libere — e non
+     entrano nella fila: la fila è il piano, e il piano è la promessa dei
+     `calcoli`, contata quando la tappa ancora non sa di avere una mista.
+     Stanno accanto (`miste`), come **bisogni** che si accendono quando
+     il preavviso mostra la mista (`PREAVVISO_MISTE` ondate prima), e
+     `prossimoAcquisto` li guarda contro le torri che ci sono davvero.
+     Da urgenti in fila si compravano alla prima ondata, prima di ogni
+     gradino, per un'ondata che arriva alla fine (misurato: il guado
+     della palude perdeva due terzi della vita); fuori dai bisogni, nella
+     radura grande alla tredicesima mancavano le bombe per il golem, e la
+     mista passava con qualunque vita. Il bambino fa lo stesso: vede la
+     mista arrivare, e costruisce quello che le manca. */
+  const miste = []
+  if (sparano.length) {
+    const fino = Math.min(Number.isFinite(tappa.ondate) ? tappa.ondate : ONDATE_TARATE, ONDATE_TARATE)
+    for (let o = 1; o <= fino; o++) {
+      const coppia = coppiaDellOnda(tappa, o)
+      if (!coppia) continue
+      const bocca = boccaDellOnda(o, vie, insiemeDa(tappa.ondate))
+      for (const m of coppia)
+        for (let v = 0; v < vie; v++) {
+          if (bocca >= 0 && v !== bocca) continue
+          const k = sparano.find(x => feritoDa(m, x))
+          if (k) miste.push({ da: Math.max(1, o - PREAVVISO_MISTE), onda: o, mostro: m, tipo: k, strada: v })
+        }
+    }
+  }
   const quanteDi = k => scelte.filter(x => x === k).length
   while (scelte.length < quante) {
     const k = [...tipi].sort((a, b) => quanteDi(a) - quanteDi(b) ||
@@ -711,33 +739,90 @@ export function sequenzaTorri(tappa, quante = 32) {
   }
   scelte.strade = strade
   scelte.urgenti = urgenti
+  scelte.miste = miste
   return scelte
 }
 
 /* ── quante ondate copre l'apertura ──
    Le prime ondate di fila che le torri di apertura del giocatore
    modello feriscono, ognuna dalla sua strada. Il validatore e
-   `unita/castello` pretendono che siano almeno `APERTURA_COPRE`: la
-   terza torre costa tanto (allargarsi rincara, e le torri che
-   servono ai corazzati sono le più care) e prima della quarta ondata
-   non ci sono i soldi per comprarla — un mostro che le prime due non
-   toccano, lì, è un'ondata intera che passa, e la taratura non può
-   farci niente: nessuna vita è abbastanza bassa per chi non si può
-   ferire. */
-export const APERTURA_COPRE = 4
-export function coperturaApertura(tappa) {
+   `unita/immunita-castello` pretendono che siano almeno
+   `APERTURA_COPRE` — o tutte, nelle tappe più corte.
+
+   ── otto, e non quattro ──
+   Erano quattro, con la ragione dei soldi: la terza torre costa tanto
+   (allargarsi rincara) e prima della quarta ondata non si compra. Ma
+   il conto vero è più lungo: all'inizio le risorse non bastano per
+   essere variegati. Con quattro, dalla quinta ondata arrivava un mostro
+   che le prime due torri non toccano, e il bambino doveva comprarne
+   una terza quando ancora non aveva salito un gradino — cioè spendere
+   in larghezza proprio quando serviva l'altezza. «All'inizio ho poche
+   risorse, non posso già essere variegato» (l'ha detto lui): le prime
+   otto ondate le feriscono le torri con cui si apre, e la varietà la
+   chiede la seconda metà della tappa — e le miste, che non arrivano
+   mai prima della nona.
+
+   Tutto questo vale per l'ondata vera: con le bocche insieme la
+   devono ferire le torri di **tutte e due** le strade, e una mista
+   vuol dire tutti e due i suoi mostri. Una torre per strada: dove la
+   strada è una sola le torri di apertura sono comunque due
+   (`primeQuante`), e basta che una delle due ferisca chi arriva. */
+export const APERTURA_COPRE = 8
+
+/* quante ondate, dall'inizio, le torri `tipi` (la `j`-esima sulla strada
+   `j % bocche`) feriscono tutte — fino a `fino`, o fino in fondo alla
+   tappa */
+function ondateFerite(tappa, tipi, fino = Infinity) {
   const fila = tappa.mostri || []
   if (!fila.length) return 0
   const vie = ingressiDi(tappa)
-  const prime = sequenzaTorri(tappa, primeQuante(tappa))
+  const insieme = insiemeDa(tappa.ondate)
+  const ultima = Math.min(fino, Number.isFinite(tappa.ondate) ? tappa.ondate
+                                 : Math.max(APERTURA_COPRE, fila.length * 2))
   let n = 0
-  for (let o = 1; o <= fila.length * 2; o++) {
-    const m = fila[(o - 1) % fila.length]
-    const via = boccaDellOnda(o, vie)
-    if (!prime.some((k, j) => (vie < 2 || j % vie === via) && feritoDa(m, k))) break
+  for (let o = 1; o <= ultima; o++) {
+    const chi = coppiaDellOnda(tappa, o) || [mostroDiOnda(fila, o)]
+    const via = boccaDellOnda(o, vie, insieme)
+    const strade = vie < 2 ? [0] : via < 0 ? Array.from({ length: vie }, (_, v) => v) : [via]
+    const ferite = chi.every(m => strade.every(v =>
+      tipi.some((k, j) => (vie < 2 || j % vie === v) && feritoDa(m, k))))
+    if (!ferite) break
     n++
   }
   return n
+}
+export function coperturaApertura(tappa) {
+  return ondateFerite(tappa, sequenzaTorri(tappa, primeQuante(tappa)))
+}
+
+/* ── dove le otto ondate non si coprono, e perché ──
+   Il registro di quello che la regola non ottiene, tappa per tappa, con
+   il motivo. Non è una deroga comoda: `unita/immunita-castello` pretende
+   che ogni tappa **fuori** da qui copra le sue otto ondate, e che ogni
+   tappa **qui dentro** non ci arrivi davvero — il giorno che una ci
+   arriva, la riga va tolta. Due motivi, e nessuno dei due si risolve
+   riordinando la fila:
+
+     · **tre torri per tre mostri**: la fila gira in meno di otto ondate,
+       quindi nelle prime otto ci sono tutti i suoi mostri, e tre di loro
+       vogliono tre torri diverse — con due torri di apertura, in
+       qualunque ordine, uno resta scoperto;
+     · **le due bocche**: una coppia che ferisce tutta la fila c'è, ma
+       ogni torre sta sulla sua strada e ferisce solo chi scende di lì,
+       e dalla sesta ondata una su tre scende da tutte e due le bocche
+       (`insiemeDa`): quella la devono ferire tutte e due le torri, e
+       nessun mostro della fila lo è da entrambe.
+
+   Il numero è quante ondate copre oggi. */
+export const APERTURA_CORTA = {
+  'sotterraneo/Le fogne': { copre: 4, perche: 'due bocche: la coppia arciere+magia ferisce tutti, ma non ognuno dalla sua strada' },
+  'mura/La sala del trono': { copre: 5, perche: 'tre torri per tre mostri: golem solo bombe, drago solo frecce, fantasma solo magia' },
+  'mura/Il torrione': { copre: 5, perche: 'tre torri per tre mostri: golem solo bombe, drago solo frecce, fantasma solo magia' },
+  'palude/Il canneto': { copre: 5, perche: 'due bocche: magia+bombe ferisce tutti, ma la sesta scende da tutte e due e nessuno lo feriscono entrambe' },
+  'palude/Le isole': { copre: 4, perche: 'due bocche: frecce+bombe ferisce tutti, ma non ognuno dalla sua strada' },
+  'palude/Il pantano': { copre: 4, perche: 'tre torri per tre mostri: blatta solo frecce, troll solo bombe, rovo solo magia' },
+  'palude/La foce': { copre: 5, perche: 'due bocche: frecce+bombe ferisce tutti, ma la sesta scende da tutte e due e nessuno lo feriscono entrambe' },
+  'libera-palude': { copre: 6, perche: 'tre torri per tre mostri: blatta solo frecce, troll solo bombe, rovo solo magia, e sette mostri in otto ondate' },
 }
 
 /* ── la mossa dopo ──
@@ -749,9 +834,14 @@ export function coperturaApertura(tappa) {
    Prima le torri di apertura e quelle che coprono un mostro scoperto;
    poi il più conveniente fra salire la torre più bassa e costruire la
    prossima della fila. `largo` è chi non potenzia mai (il termine di
-   paragone di `difesaLarga` e del profilo `largo` del simulatore). */
+   paragone di `difesaLarga` e del profilo `largo` del simulatore).
+   `onda` è quante ondate sono già partite: dice quando si accendono i
+   bisogni delle miste (`miste` della fila), che si guardano contro le
+   torri in campo — con la loro strada, `via`, se chi chiede la sa. Chi
+   non la dice — il piano, che non gioca le ondate — non li vede: la
+   promessa dei `calcoli` è quella della tappa senza miste. */
 export function prossimoAcquisto(torri, tappa, { posti = Infinity, largo = false,
-                                                  sequenza = null } = {}) {
+                                                  sequenza = null, onda = 0 } = {}) {
   const fila = sequenza || sequenzaTorri(tappa)
   const tipo = fila[Math.min(torri.length, fila.length - 1)]
   const strada = fila.strade ? fila.strade[Math.min(torri.length, fila.length - 1)] : 0
@@ -763,6 +853,14 @@ export function prossimoAcquisto(torri, tappa, { posti = Infinity, largo = false
   const salita = indice >= 0
     ? { che: 'salita', indice, costo: costoSalita(torri[indice].lv, torri[indice].tipo) } : null
   if (nuova && (torri.length < primeQuante(tappa) || fila.urgenti?.has(torri.length))) return nuova
+  /* la mista in arrivo: se sulla sua strada nessuna torre ferisce uno
+     dei due, si costruisce quella che lo ferisce, lì */
+  const vie = ingressiDi(tappa)
+  const manca = (fila.miste || []).find(b => b.da <= onda && onda < b.onda &&
+    !torri.some(t => (vie < 2 || t.via == null || t.via === b.strada) && feritoDa(b.mostro, t.tipo)))
+  if (manca && torri.length < posti)
+    return { che: 'nuova', tipo: manca.tipo, strada: manca.strada,
+             costo: costoNuovaTorre(torri.length, manca.tipo) }
   if (largo) return nuova
   if (!salita || !nuova) return salita || nuova
   return salita.costo <= nuova.costo ? salita : nuova
@@ -1052,8 +1150,51 @@ export const TAPPE = RACCONTO.map((t, i) => {
   const base = { ...t, ondate, posti, partenza, attesa: attesaDi(i, RACCONTO.length) }
   // `vite` è la taratura trovata sul campo; `durezza` resta la vecchia
   // curva, che serve ancora alla velocità e a chi la taratura non ce l'ha
-  return { ...base, durezza: durezzaDi(base), vite: VITE[chiaveTappa(t)] }
+  const tappa = { ...base, durezza: durezzaDi(base), vite: VITE[chiaveTappa(t)],
+           /* l'ondata mista in fondo alla tappa: solo nelle ultime due
+              campagne (`MISTA` e `ondataMista` in `data/mostri.js`), e
+              mai dentro le prime `APERTURA_COPRE` ondate, che le
+              torri di apertura devono poter fermare da sole */
+           miste: MISTA.campagne.includes(t.campagna) && ondate > APERTURA_COPRE }
+  return tappa.miste ? { ...tappa, ...mistaDelPiano(tappa) } : tappa
 })
+
+/* ── la mista della campagna chiede le torri che il piano ha già ──
+   Nella campagna la mista chiude una tappa che promette i suoi
+   `calcoli`, e il piano che li conta (`pianoDi`) non sa che ci sarà. Se
+   la coppia volesse una torre che sulla strada della mista non c'è, il
+   bambino dovrebbe costruirne una in più proprio in fondo — e una torre
+   nuova costa due o tre gradini: la tappa giocata davvero faceva sette
+   conti in meno di quelli promessi (misurato nel torrione: 23 invece di
+   30). Quindi fra le coppie buone si tengono quelle che **le torri del
+   piano, dalla strada della mista**, feriscono già tutte e due: la
+   mista chiede lo stesso due risposte diverse, e sono due risposte che
+   il campo ha.
+   Dove cade: l'ultima ondata (la penultima, se l'ultima è del capo), o
+   quella prima se dalla strada dell'ultima il piano ha una torre sola —
+   nel canneto la decima scende da una bocca dove ci sono due magie, e
+   due magie non fanno due risposte. Se nessuna delle due va bene la
+   tappa la mista non la fa: chiederebbe una torre che il piano non ha,
+   cioè dei conti in meno di quelli promessi (è il canneto, che in tutto
+   il piano ha tre torri e due sono magie). Nelle libere non c'è una
+   promessa di calcoli: le coppie restano tutte, e il giocatore modello
+   la mista la vede arrivare (i bisogni `miste` di `sequenzaTorri`). */
+function mistaDelPiano(tappa) {
+  const tutte = coppieDi(tappa)
+  const sequenza = sequenzaTorri(tappa)
+  const piano = pianoDi(tappa).tipi.map((k, j) => ({ k, via: sequenza.strade[j] }))
+  const vie = ingressiDi(tappa)
+  const ultima = tappa.capo ? tappa.ondate - 1 : tappa.ondate
+  for (const o of [ultima, ultima - 1]) {
+    if (o <= APERTURA_COPRE) continue
+    const bocca = boccaDellOnda(o, vie, insiemeDa(tappa.ondate))
+    const strade = vie < 2 ? [0] : bocca < 0 ? Array.from({ length: vie }, (_, v) => v) : [bocca]
+    const coperto = m => strade.every(v => piano.some(t => (vie < 2 || t.via === v) && feritoDa(m, t.k)))
+    const buone = tutte.filter(c => c.every(coperto))
+    if (buone.length) return { mista: o, coppie: buone }
+  }
+  return { miste: false }
+}
 
 /* L'impronta dei numeri su cui la taratura è stata fatta. Se cambiano i
    prezzi, le torri o le tappe, questa cambia e non combacia più con
@@ -1067,7 +1208,7 @@ export function firmaEquilibrio() {
     // abilità quanta vita porta davvero un'ondata, il capo come ne
     // finisce una
     Object.entries(MOSTRI).map(([id, m]) => [id, m.immune, m.abilita || null, !!m.vola]),
-    ABILITA, CAPO,
+    ABILITA, CAPO, MISTA,
     // Il tracciato entra per intero, che la tappa dichiari `forma` o
     // `forme`: le spezzate decidono quanta strada ogni torre tiene sotto
     // tiro, e con `t.forma` da solo le sette tappe a più bocche
@@ -1158,9 +1299,10 @@ export const firmaTaratura = () => FIRMA
    ondata guadagnare un'ondata vuol dire reggere il 30% di vita in più,
    e dieci gradi non bastano quasi mai. Misurato sulle quattro libere
    (`strumenti/regali-castello.mjs`, e il banco in
-   `unita/regali-castello`): venti gradi spostano il record di un'ondata
-   (cinque nel delta), cinquanta di tre-nove, cento di sette-nove, e il
-   rendimento cala da sé — la vita cresce a moltiplicare, i gradi a
+   `unita/regali-castello`): venti gradi spostano il record di una o
+   due ondate, cinquanta di due-cinque (nel delta di niente: il muro
+   della ventunesima è un troll che solo le bombe aprono), cento di
+   due-dieci su tutti e quattro, e il rendimento cala da sé — la vita cresce a moltiplicare, i gradi a
    sommare. Un tetto per regalo non serve: il tetto lo mette già la
    curva. `docs/castello.md` porta la tabella. */
 export const OGNI_REGALO = 5
@@ -1471,10 +1613,23 @@ export function capiAperti(tappa) {
   }
   return true
 }
+/* Se nessuna fila arriva a `APERTURA_COPRE`, si abbassa la pretesa
+   un'ondata per volta fino alle quattro di prima, e si tiene la fila
+   migliore: il delta ha sette mostri e tre di loro vogliono tre torri
+   diverse (la blatta solo frecce, il troll solo bombe, il rovo solo
+   magia), quindi con due torri di apertura le prime otto ondate non si
+   coprono in nessun ordine. Quello che manca lo dice `APERTURA_CORTA`. */
 function filaCheRegge(tappa) {
+  for (let copre = APERTURA_COPRE; copre >= 4; copre--) {
+    const f = filaCheCopre(tappa, copre)
+    if (f) return f
+  }
+  return tappa.mostri
+}
+function filaCheCopre(tappa, copre) {
   const va = fila => {
     const t = { ...tappa, mostri: fila }
-    return !guastiDelleImmunita(t).length && coperturaApertura(t) >= APERTURA_COPRE &&
+    return !guastiDelleImmunita(t).length && coperturaApertura(t) >= copre &&
            capiAperti(t)
   }
   const base = tappa.mostri
@@ -1489,7 +1644,61 @@ function filaCheRegge(tappa) {
         if (va(f)) return f
       }
   }
-  return base
+  return filaCostruita(tappa, va, copre)
+}
+
+/* ── se girare e scambiare non basta, la fila si costruisce ──
+   Da quando le torri di apertura devono ferire le prime
+   `APERTURA_COPRE` ondate (otto, e non più quattro), nelle libere con
+   tanti mostri un giro e uno scambio non trovano quasi mai la fila:
+   i primi otto posti devono essere mostri che la coppia di apertura
+   ferisce **dalla loro strada**, e quelli che la coppia non tocca
+   vanno dopo. Qui si costruisce posto per posto, provando le coppie
+   di apertura una alla volta e i mostri nell'ordine del giro delle
+   immunità (così la fila resta il più vicino possibile a quella di
+   `mostriDi`), con le stesse regole: la prima all'arciere, due di fila
+   mai con le stesse immunità, i capi feriti da almeno due torri. La
+   parola finale la dice `va`, cioè le stesse regole di prima. Il
+   numero di passi è limitato: gira quando si carica il modulo. */
+function filaCostruita(tappa, va, copre) {
+  const base = tappa.mostri
+  const n = base.length
+  const sparano = tappa.torri.filter(k => TORRI[k].danno)
+  const vie = ingressiDi(tappa)
+  const insieme = insiemeDa(tappa.ondate)
+  const capo = new Set()
+  for (let o = CAPO.ogni; o <= ONDATE_TARATE; o += CAPO.ogni) capo.add((o - 1) % n)
+  for (const tipi of file(sparano, primeQuante(tappa))) {
+    /* le ondate dell'apertura che cadono sul posto `i`, e chi può starci */
+    const ferito = (m, o) => {
+      const via = boccaDellOnda(o, vie, insieme)
+      const strade = vie < 2 ? [0] : via < 0 ? Array.from({ length: vie }, (_, v) => v) : [via]
+      return strade.every(v => tipi.some((k, j) => (vie < 2 || j % vie === v) && feritoDa(m, k)))
+    }
+    const puo = (m, i) => {
+      for (let o = i + 1; o <= copre; o += n) if (!ferito(m, o)) return false
+      return true
+    }
+    const fila = [], usati = new Set()
+    let passi = 0
+    const prova = i => {
+      if (++passi > 5000) return false
+      if (i === n) return va(fila)
+      for (const m of base) {
+        if (usati.has(m)) continue
+        if (i === 0 && !feritoDa(m, 'add')) continue
+        if (i > 0 && firmaImmunita(m) === firmaImmunita(fila[i - 1])) continue
+        if (!puo(m, i)) continue
+        if (capo.has(i) && sparano.filter(k => feritoDa(m, k)).length < 2) continue
+        fila.push(m); usati.add(m)
+        if (prova(i + 1)) return true
+        fila.pop(); usati.delete(m)
+      }
+      return false
+    }
+    if (prova(0)) return fila.slice()
+  }
+  return null
 }
 
 export const LIBERE = LIBERE_RACCONTO.map(r => {

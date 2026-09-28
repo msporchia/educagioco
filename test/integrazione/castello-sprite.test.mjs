@@ -26,11 +26,15 @@
        blocchetto dei potenziamenti si apre e si chiude con la ✕;
      · il capo è la figura del bestiario di quel vestito, gigante: la
        scheda lo chiama col nome della figura e «gigante»;
+     · l'ondata mista (in fondo a una tappa delle Mura): il preavviso la
+       annuncia con due facce e due immunità, in campo scendono i due
+       tipi mescolati, e la scheda li chiama coi nomi delle figure;
      · nessun errore in console, in tre vestiti diversi.
 
    Con `--scatti` lascia una foto per vestito (`castello-sprite-*`),
    una della radura (`castello-sprite-radura`), una del blocchetto
-   (`castello-sprite-blocchetto`) e una del capo (`castello-sprite-capo`).
+   (`castello-sprite-blocchetto`), una del capo (`castello-sprite-capo`) e
+   una dell'ondata mista (`castello-sprite-mista`).
    `node test/esegui.mjs castello-sprite`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
@@ -302,6 +306,68 @@ await scatto(page, 'castello-sprite-radura')
   await togliCartelli()
   await attendi(page, 300)
   await scatto(page, 'castello-sprite-capo')
+}
+
+/* ---------- 7. l'ondata mista ----------
+   La prima tappa delle Mura chiude con due tipi mescolati (`coppiaDellOnda`
+   in `data/mostri.js`). Come per il capo, il tabellone si porta avanti:
+   prima a due ondate dalla mista, per leggerla nel preavviso, poi alla
+   vigilia, e la si chiama. */
+{
+  const { Ondate } = await import('../../src/motore/castello/ondate.js')
+  const { vestitoDi } = await import('../../src/giochi/castello/scena/vestito.js')
+  const { NOMI, figuraDi } = await import('../../src/giochi/castello/scena/bestiario.js')
+  const i = TAPPE.findIndex(t => t.campagna === 'mura')
+  const t = TAPPE[i], o = t.capo ? t.ondate - 1 : t.ondate
+  const attesa = new Ondate(t).bestiaDi(o)
+  nota(`${t.nome}: l'ondata mista (${attesa.id} e ${attesa.con?.id})`)
+  controlla(`l'ondata ${o} del ${t.nome} è mista`, !!attesa.con)
+  await page.evaluate(i => window.__td.inizia(i), i)
+  await attendi(page, 900)
+  await costruisci('add')
+  await costruisci('div')
+  await togliCartelli()
+  const preavviso = await page.evaluate(async o => {
+    const attesa = ms => new Promise(r => setTimeout(r, ms))
+    const T = window.__td, m = T.motore()
+    m.nemici.length = 0; m.daGenerare = 0; m.prossimo = 0
+    m.tabellone.stato.onda = o - 2
+    await attesa(400)
+    const e = document.querySelector(`[data-onda-preavviso="${o}"]`)
+    return e && { mista: e.dataset.mista, immune: e.dataset.immune, con: e.dataset.immuneCon,
+                  facce: e.querySelectorAll('.faccia').length }
+  }, o)
+  controlla('il preavviso annuncia la mista', !!preavviso?.mista, JSON.stringify(preavviso))
+  uguale('con due facce', preavviso?.facce, 2)
+  uguale('e le immunità di tutti e due, ognuna sulla sua faccia',
+         [preavviso?.immune, preavviso?.con].join(' | '),
+         [attesa.immune.join(','), attesa.con.immune.join(',')].join(' | '))
+  await attendi(page, 300)
+  await scatto(page, 'castello-sprite-mista-preavviso')
+  const campo = await page.evaluate(async o => {
+    const attesa = ms => new Promise(r => setTimeout(r, ms))
+    const T = window.__td, m = T.motore()
+    m.nemici.length = 0; m.daGenerare = 0; m.prossimo = 0
+    m.tabellone.stato.onda = o - 1
+    T.chiamaOnda()
+    /* un pezzo di strada: nella foto i due tipi devono stare dentro il
+       campo, mescolati */
+    const fine = Date.now() + 12000
+    while (Date.now() < fine &&
+           !(new Set(T.nemici().filter(n => n.d > 60).map(n => n.bestia)).size >= 2 &&
+             T.nemici().filter(n => n.d > 0).length >= 6)) await attesa(100)
+    return { onda: T.hud.onda, tipi: [...new Set(T.nemici().map(n => n.bestia))].sort() }
+  }, o)
+  uguale('in campo scendono i due tipi, mescolati', campo.tipi.join(), [attesa.id, attesa.con.id].sort().join())
+  const nomi = await page.locator('[data-scheda-mista] .dati b').first().textContent().catch(() => '')
+  const figura = id => NOMI[figuraDi(vestitoDi(t), id)]
+  uguale('la scheda li chiama coi nomi delle figure', nomi,
+         `${figura(attesa.id)} e ${figura(attesa.con.id)}`)
+  uguale('con una riga di immunità per ciascuno',
+         await page.locator('[data-scheda-mista] [data-scheda-immune]').count(), 2)
+  await togliCartelli()
+  await attendi(page, 300)
+  await scatto(page, 'castello-sprite-mista')
 }
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))

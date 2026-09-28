@@ -98,8 +98,24 @@ frecce ancora basse passava con qualunque vita) e il bestiario, dove ogni
 figura adesso dice a cosa è immune il suo mostro.
 
 Le file delle tappe sono fatte perché nessuna torre, da sola, le vinca, e
-perché la prima ondata la ferisca l'arciere e le prime quattro le torri con
-cui si apre.
+perché la prima ondata la ferisca l'arciere e **le prime otto** le torri con
+cui si apre: all'inizio le risorse non bastano per essere variegati, e un
+mostro che le prime due torri non toccano alla quinta ondata chiedeva una
+terza torre proprio quando serviva salire di livello. In otto tappe la fila
+non ci arriva in nessun ordine — tre mostri che vogliono tre torri diverse,
+o due bocche con la sesta ondata da tutte e due — e il gioco lo tiene
+scritto, tappa per tappa, col perché (`APERTURA_CORTA`).
+
+**Le ondate miste** *(28 settembre)*. Ogni tanto un'ondata porta **due tipi
+di mostri mescolati**, con immunità che si incastrano: un golem (frecce e
+magia non lo toccano) insieme a un grifone (bombe e gelo no). Nessuna torre li
+ferisce tutti e due, quindi una torre sola non basta — è la domanda dopo
+quella dell'ondata di un tipo solo. Nella partita libera arrivano una volta
+su cinque dalla decima ondata in poi (13ª, 18ª, 23ª…), mai insieme al capo;
+nella campagna solo in fondo alle tappe delle Mura e della Palude, quando il
+bambino i mostri della tappa li ha già visti uno alla volta. Il nastro del
+preavviso le mostra con due facce, ognuna con le sue immunità, e il riquadro
+a righe.
 
 ## Chi si divide, chi si rialza, e il capo *(settembre 2026)*
 
@@ -250,15 +266,17 @@ carte (`node strumenti/regali-castello.mjs`; il banco è
 
 | gradi in tasca | 0 | 10 | 20 | 35 | 50 | 100 | 200 | 400 |
 |---|---|---|---|---|---|---|---|---|
-| la radura grande | 21 | 21 | 22 | 22 | 28 | 28 | 31 | 31 |
-| il bivio | 24 | 24 | 25 | 25 | 27 | 32 | 32 | 38 |
-| il bastione | 21 | 22 | 22 | 24 | 24 | 29 | 29 | 34 |
-| il delta | 22 | 27 | 27 | 27 | 31 | 31 | 34 | 38 |
+| la radura grande | 21 | 21 | 23 | 26 | 26 | 31 | 31 | 35 |
+| il bivio | 25 | 26 | 26 | 26 | 27 | 27 | 34 | 37 |
+| il bastione | 21 | 22 | 23 | 24 | 25 | 26 | 31 | 36 |
+| il delta | 21 | 21 | 21 | 22 | 21 | 27 | 27 | 34 |
 
 I salti sono a gradoni e non uno per volta: il record si sposta di colpo
 quando i gradi bastano a passare il mostro del muro, e poi resta fermo fino
 al muro dopo. Dieci gradi quasi non si sentono, cinquanta (una dozzina di
-partite) spostano il record su tutti e quattro i terreni. E il rendimento
+partite) spostano il record su tre terreni, cento (venticinque partite) su
+tutti e quattro: nel delta il muro della ventunesima è un troll che solo le
+bombe aprono, e lo passa solo chi ne ha accumulati tanti. E il rendimento
 cala da sé: oltre la ventesima la vita cresce a moltiplicare (×1,3 a ondata,
 su ogni terreno), i gradi a sommare, e il moltiplicare vince sempre — per
 questo non serve un tetto. Immortali non si diventa, ed è la condizione

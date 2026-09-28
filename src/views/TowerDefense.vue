@@ -51,6 +51,7 @@ import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { GIOCHI } from '../data/giochi.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
 import { TORRI } from '../data/ops.js'
+import { immuniDellOnda } from '../data/mostri.js'
 import { CFG, TAPPE, LIBERE, liberaDi, premioTappa, quantiRegali, blocchettoDi,
          prossimoAcquisto, sequenzaTorri } from '../data/castello.js'
 import ColumnOp from '../components/ColumnOp.vue'
@@ -281,8 +282,9 @@ const mira = computed(() => {
 })
 
 /* le torri a cui chi sta per arrivare è immune: il preavviso, letto nel
-   momento in cui si sceglie che cosa costruire */
-const immune = computed(() => (vista.prossime[0] && vista.prossime[0].immune) || [])
+   momento in cui si sceglie che cosa costruire. In un'ondata mista sono
+   quelle che non toccano nessuno dei due (`immuniDellOnda`) */
+const immune = computed(() => immuniDellOnda(vista.prossime[0]))
 
 /* ── il blocchetto dei potenziamenti ──
    Si apre dal gettone ⬆️ sul campo. È una fotografia presa quando lo si
@@ -587,7 +589,8 @@ onMounted(() => {
                     const m = motore(), t = tappa.value
                     if (!m) return null
                     const mossa = prossimoAcquisto(m.torri.map(x => ({ tipo: x.tipo, lv: x.lv })), t,
-                      { posti: t.posti, largo, sequenza: sequenzaTorri(t, Math.max(32, t.posti)) })
+                      { posti: t.posti, largo, sequenza: sequenzaTorri(t, Math.max(32, t.posti)),
+                        onda: m.tabellone.onda })
                     return mossa && mossa.che === 'salita' ? { ...mossa, torre: m.torri[mossa.indice] } : mossa
                   },
                   nemici: () => motore().nemici, torri: () => motore().torri,

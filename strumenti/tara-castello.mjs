@@ -172,10 +172,12 @@ function taraTappa(tappa, giù) {
   return { vite: spiana(t.vite, tappa), righe }
 }
 
-/* chi arriva all'ondata `o`: il mostro, o «capo» se è l'ondata del capo */
+/* chi arriva all'ondata `o`: il mostro, «capo» se è l'ondata del capo,
+   «mista» se ne arrivano due tipi insieme (`coppiaDellOnda` in
+   `data/mostri.js`) */
 function chiDi(tappa, o) {
   const b = new Ondate(tappa).bestiaDi(o)
-  return b.capo ? 'capo' : b.id
+  return b.capo ? 'capo' : b.con ? 'mista' : b.id
 }
 
 /* ── la curva non torna mai indietro ──
@@ -202,7 +204,17 @@ function chiDi(tappa, o) {
    così il capo. La promessa che `unita/castello` conta è quella che a
    schermo si vede — lo stesso mostro, più avanti, non torna mai più
    debole — e un golem con meno vita di un pipistrello non è un
-   errore: ce l'ha perché lo apre una torre sola. */
+   errore: ce l'ha perché lo apre una torre sola.
+
+   ── le miste fanno gruppo a sé, come il capo ──
+   Un'ondata di golem e pipistrelli mescolati non sta sulla scala dei
+   golem né su quella dei pipistrelli: la ferma una difesa che ha
+   **tutte e due** le risposte, e il suo limite può stare sotto quello
+   di tutti e due da soli (metà dei colpi di ogni torre non ha
+   bersaglio). Spianarla col suo primo mostro avrebbe tirato giù i
+   golem di tutta la tappa al livello della mista, o la mista a quello
+   dei golem, sopra il suo limite. Quindi si spiana **per ondata**:
+   una mista si confronta solo con le altre miste. */
 function spiana(vite, tappa) {
   const out = vite.slice()
   const chi = vite.map((_, i) => chiDi(tappa, i + 1))
@@ -299,8 +311,11 @@ const OLTRE_MINIMO = 1.3
 function passoOltre(righe) {
   /* il capo non conta: la sua vita è scritta in nemici normali ma lo
      ferma un'altra difesa (contro uno solo l'area non serve), e il suo
-     limite farebbe un gradino che la retta leggerebbe come pendenza */
-  const meta = righe.filter(r => r.limite > 0 && r.onda > ONDATE_LIBERE / 2 && r.chi !== 'capo')
+     limite farebbe un gradino che la retta leggerebbe come pendenza. Lo
+     stesso per le miste, che ferma una difesa con tutte e due le
+     risposte */
+  const meta = righe.filter(r => r.limite > 0 && r.onda > ONDATE_LIBERE / 2 &&
+                                r.chi !== 'capo' && r.chi !== 'mista')
   if (meta.length < 3) return 1.2
   const xs = meta.map(r => r.onda), ys = meta.map(r => Math.log(r.limite))
   const mx = xs.reduce((s, x) => s + x, 0) / xs.length

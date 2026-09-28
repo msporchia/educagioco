@@ -279,3 +279,129 @@ export const mostroLibero = onda => {
   const quanti = Math.min(ELENCO.length, 2 + Math.floor(onda / 3))
   return ELENCO[(Math.max(1, onda) - 1) % quanti]
 }
+
+/* ═══════════ le ondate miste ═══════════
+
+   Un'ondata di un tipo solo è una domanda con una risposta: «golem →
+   bombe». Si impara così, ed è giusto che si cominci così. Ma a forza
+   di rispondere la domanda smette di esserlo, e il campo si riduce a
+   cambiare torre a ogni preavviso. L'ondata mista è la domanda dopo:
+   **due tipi insieme, mescolati nella stessa fila, con immunità che si
+   incastrano** — un golem (frecce e magia non lo toccano) insieme a un
+   pipistrello (bombe e gelo no). Nessuna torre li ferisce tutti e due,
+   quindi una torre sola non basta: ci vuole un campo con dentro un po'
+   di tutto, ed è la lezione che le ondate di un tipo solo non danno.
+
+   ── la regola della coppia (`tieneMista`) ──
+     · **nessuna torre della tappa li ferisce tutti e due** — se no non
+       è mista, è un'ondata normale con due vestiti;
+     · almeno **due** torri della tappa feriscono qualcuno dell'ondata,
+       e ognuno dei due lo ferisce almeno una torre: una mista che una
+       torre sola può toccare è un'ondata che passa a metà per forza.
+   Le coppie non si scrivono a mano: si cercano fra i mostri che la
+   tappa manda già (`coppieDi`), così un mostro nuovo in una tappa porta
+   con sé le sue coppie e nessuno deve ricordarsi di aggiornarle. Le
+   controllano il validatore e `unita/immunita-castello`.
+
+   ── dove arrivano (`ondataMista`) ──
+     · **nella partita infinita** una ondata su cinque, dalla decima in
+       poi: la 13ª, la 18ª, la 23ª… (`MISTA`). A ritmo fisso e deciso dal
+       numero dell'ondata, come il capo e il ritmo, così il preavviso la
+       annuncia e la taratura la rigioca uguale. Mai sull'ondata del
+       capo, che è già un'altra eccezione;
+     · **nella campagna** solo nelle ultime due campagne (Mura e
+       Palude), e una sola, in fondo alla tappa: l'ultima ondata, o
+       quella prima (`mista` della tappa, la sceglie `mistaDelPiano` in
+       `data/castello.js` guardando le torri del piano). Mai l'ondata
+       del capo, e mai dentro le prime otto. Prima si impara un tipo alla volta; la
+       mista arriva quando il bambino ha già visto tutti i mostri della
+       tappa da soli, e chiude la tappa chiedendoli insieme.
+
+   ── quanti, e quanto valgono ──
+   Metà e metà, alternati nella fila; chi si divide o si rialza arriva
+   in meno secondo la sua `folla`, come in un'ondata sua. L'energia e il
+   numero dell'ondata sono quelli di un'ondata normale, e la vita è una
+   sola per tutti e due: la taratura la cerca **per ondata** (le miste
+   fanno gruppo a sé, come i capi), perché un golem e un pipistrello
+   insieme non stanno sulla scala di nessuno dei due da soli. */
+export const MISTA = { da: 10, ogni: 5, resto: 3, campagne: ['mura', 'palude'] }
+
+/* se la coppia `a`, `b` fa un'ondata mista con le torri che feriscono
+   di questa tappa */
+function tieneMista(a, b, sparano) {
+  const ferisce = k => feritoDa(a, k) || feritoDa(b, k)
+  return a !== b &&
+    sparano.every(k => !(feritoDa(a, k) && feritoDa(b, k))) &&
+    sparano.filter(ferisce).length >= 2 &&
+    sparano.some(k => feritoDa(a, k)) && sparano.some(k => feritoDa(b, k))
+}
+
+/* tutte le coppie buone fra i mostri della tappa, nell'ordine della fila */
+export function coppieDi({ mostri = [], torri = [] }) {
+  const sparano = torri.filter(k => TORRI[k]?.danno)
+  const ms = [...new Set(mostri)].filter(m => MOSTRI[m])
+  const out = []
+  for (let i = 0; i < ms.length; i++)
+    for (let j = i + 1; j < ms.length; j++)
+      if (tieneMista(ms[i], ms[j], sparano)) out.push([ms[i], ms[j]])
+  return out
+}
+
+/* se l'ondata `o` di questa tappa è una mista (al netto delle coppie:
+   quella la sceglie `coppiaDellOnda`). Una partita infinita si
+   riconosce dai capi a ritmo fisso (`capi`), anche quando la taratura
+   la gioca a venti ondate. */
+export function ondataMista(tappa, o) {
+  if (tappa.capi) return o >= MISTA.da && o % MISTA.ogni === MISTA.resto && o % tappa.capi !== 0
+  if (!tappa.miste || !Number.isFinite(tappa.ondate)) return false
+  /* la campagna dice quale (`mista`, vedi `mistaDelPiano` in
+     `data/castello.js`); di suo è l'ultima prima del capo */
+  return o === (tappa.mista ?? (tappa.capo ? tappa.ondate - 1 : tappa.ondate))
+}
+
+/* I due mostri dell'ondata `o`, o `null` se è un'ondata di un tipo
+   solo. Il primo è quello che la fila avrebbe mandato comunque, se sta
+   in una coppia buona: la mista **allarga** l'ondata che il preavviso
+   racconterebbe, non la cambia. Se no, una coppia a giro. */
+export function coppiaDellOnda(tappa, o) {
+  if (!ondataMista(tappa, o)) return null
+  /* una tappa della campagna porta le sue (`coppie`, vedi `coppieDelPiano`
+     in `data/castello.js`): quelle che le torri del suo piano feriscono */
+  const coppie = tappa.coppie || coppieDi(tappa)
+  if (!coppie.length) return null
+  const primo = mostroDiOnda(tappa.mostri || [], o)
+  const c = coppie.find(x => x.includes(primo)) ||
+            coppie[Math.floor(o / MISTA.ogni) % coppie.length]
+  return c[1] === primo ? [c[1], c[0]] : c
+}
+
+/* Le regole delle miste di una tappa, come `guastiDelleImmunita`:
+   l'elenco dei guasti, vuoto se è tutto a posto. `fino` è fin dove
+   guardare in una partita infinita (le ondate tarate). */
+export function guastiDelleMiste(tappa, fino = tappa.ondate) {
+  const g = []
+  const sparano = (tappa.torri || []).filter(k => TORRI[k]?.danno)
+  const n = Number.isFinite(fino) ? fino : 20
+  let quante = 0
+  for (let o = 1; o <= n; o++) {
+    if (!ondataMista(tappa, o)) continue
+    quante++
+    const c = coppiaDellOnda(tappa, o)
+    if (!c) { g.push(`l'ondata ${o} dovrebbe essere mista, e fra i mostri della tappa non c'è una coppia`); continue }
+    if (!tieneMista(c[0], c[1], sparano))
+      g.push(`l'ondata ${o} mescola ${c[0]} e ${c[1]}, che non fanno una mista con ${sparano.join(' ')}`)
+    if ((tappa.capi && o % tappa.capi === 0) || (tappa.capo && o === tappa.ondate))
+      g.push(`l'ondata ${o} è del capo, e non può essere anche mista`)
+  }
+  if (tappa.miste && !quante) g.push('la tappa dichiara le miste, e nessuna ondata lo è')
+  return g
+}
+
+/* Le torri che non toccano **nessuno** di un'ondata: per un'ondata di un
+   tipo solo sono le sue immunità, per una mista quelle che hanno tutti e
+   due — che per la regola della coppia non sono mai una torre che fa
+   danno (al massimo il ghiaccio). È la domanda che fa la carta di una
+   torre («questa, per chi arriva, serve?»), e chi la fa riceve
+   un'ondata, non un mostro. */
+export const immuniDellOnda = b =>
+  (b ? (b.con ? b.immune.filter(k => b.con.immune.includes(k)) : b.immune) : [])
