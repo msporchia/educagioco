@@ -1,141 +1,27 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA DOMANDA — la sola cosa che un modulo di quiz consegna al gioco.
-
-   Qui non c'è logica: c'è la FORMA. Un modulo di ortografia e uno di
-   orologio non hanno niente in comune tranne questo oggetto, ed è per
-   questo che la stessa scheda li sa mostrare tutti e due, e che
-   Survivors, il dungeon e il castello possono chiedere una domanda
-   senza sapere di che materia sia.
+/* La forma di una domanda: la sola cosa che un modulo di quiz consegna a un
+   gioco (vedi docs/apprendimento/quiz-moduli.md).
 
      {
        testo:    'Quale parola è scritta giusta?',   // la consegna
        soggetto: { testo: '…' } | { scena: {…} },   // opzionale: la cosa da guardare
-                 // e una frase può avere una parola in rilievo:
-                 // { testo: 'Metto lo zaino in spalla.', evidenzia: 'lo' }
        risposte: [ Risposta, … ],                    // da 2 a 6
        giusta:   1,                                  // indice della buona
        chiave:   'orto:gn',                          // il CONCETTO, non l'istanza
-       aiuto:    'gn si scrive senza i',             // la dritta, dopo l'errore
+       aiuto:    'gn si scrive senza i',             // il metodo, dopo l'errore
        dritta:   '6 × 6 = 36: lato per lato',        // la scorciatoia, anche a risposta giusta
      }
 
-   L'`aiuto` E IL `perche` DI UNA RISPOSTA FANNO DUE MESTIERI, e dopo
-   uno sbaglio si leggono **tutti e due**. Il `perche` diagnostica la
-   scelta appena fatta — «hai guardato solo l'ultima cifra» — e vale
-   solo per quel tasto lì; l'`aiuto` insegna il metodo — «47 sta fra 40
-   e 50: l'ultima cifra è 7, quindi si va su» — e vale anche la volta
-   dopo. Per mesi la scheda ne ha mostrato uno solo, il primo dei due
-   che ci fosse, e siccome i moduli scritti bene hanno tutti e due
-   l'insegnamento non l'ha letto nessuno: chi sbagliava si prendeva la
-   diagnosi e basta. Chi li mette a schermo è `spiegazioneDi` qui
-   sotto, che li tiene separati apposta — un paragrafo unico rimette
-   insieme le due cose e il metodo si perde in coda alla correzione.
+   Una risposta è { testo }, { emoji } o { scena }, mai due insieme, con un
+   `perche` opzionale che si legge solo se il bambino sceglie proprio quella.
+   `aiuto`/`perche` e `dritta` sono spiegati in docs/apprendimento/la-domanda.md;
+   `conNome` e la frase con `evidenzia` in quiz-moduli.md. */
 
-   LA `dritta` NON È UN TERZO AIUTO. L'`aiuto` si legge quando si
-   sbaglia, e dice **come si faceva**. La dritta dice che c'era una
-   strada più corta di quella presa, e per questo si legge anche
-   quando la risposta è giusta — ma solo se il bambino ci ha messo
-   troppo, che è il segno che l'ha fatta a mano. Chi risponde in tre
-   secondi la strada corta ce l'ha già, e fermarlo per spiegargliela
-   sarebbe una punizione per aver saputo. Chi la porta è chi ha una
-   formula da offrire: l'area di un rettangolo, il giro di un quadrato.
-
-   Una RISPOSTA è una di queste tre cose, mai due insieme:
-
-     { testo: 'lavagna' }        parole e numeri
-     { emoji: '🐟' }             un'icona grande
-     { scena: { che:'orologio', ore:3, minuti:30 } }   un disegno
-
-   e può portarsi dietro un `perche`, che si legge solo se il bambino
-   sceglie proprio quella: «qui manca il riporto» vale dieci volte
-   «sbagliato».
-
-   UN SOGGETTO PUÒ ESSERE UNA FRASE, CON DENTRO UNA PAROLA IN RILIEVO.
-   `{ testo: 'Metto lo zaino in spalla.', evidenzia: 'lo' }` — la frase si
-   legge intera e la parola di cui si parla si vede a colpo d'occhio.
-   Serve dove **la parola da sola non ha una risposta**: «che parte del
-   discorso è "lo"?» non ne ha nessuna, perché «lo» è articolo in «lo
-   zaino» e pronome in «lo vedo», e il bambino che rispondeva l'altra
-   aveva ragione lui. Nei caratteri di sistema si aggiunge il guaio di
-   sopra: la elle minuscola e la i maiuscola sono lo stesso glifo, quindi
-   «lo» nudo si legge anche «Io».
-
-   L'evidenza è **dato, mai HTML**: `evidenzia` porta la parola così
-   com'è scritta nella frase, e chi mette in scena la ritaglia da sé
-   (`evidenziando` qui sotto). La parola dev'esserci **esattamente una
-   volta**, come parola intera — con due occorrenze non si saprebbe
-   quale delle due si sta chiedendo, con zero si è sbagliato a scriverla
-   e a schermo non si vedrebbe niente di strano. È l'unico modo che un
-   controllo automatico ha di accorgersi di un refuso su una frase su
-   trentasei: lo fa `guastiDi`.
-
-   UNA FIGURA PUÒ AVERE IL SUO NOME SOTTO. `conNome` aggiunge un `nome`
-   accanto all'icona o al disegno — `{ emoji:'🦁', nome:'leone' }`,
-   `{ scena:{…}, nome:'savana' }` — e il tasto diventa disegno sopra,
-   parola sotto. Serve dove la figura da sola non si nomina: un bambino
-   riconosce il giallo con l'acacia molto prima di saper chiamare quel
-   posto «savana», e senza la parola il quiz gli insegna un'immagine
-   invece di un vocabolo.
-
-   MA NON SEMPRE SI PUÒ, E LA RIGA È NETTA: figura e nome stanno
-   insieme **quando dicono la stessa cosa e la domanda ne chiede
-   un'altra**. «Dove vive il leone?» con quattro paesaggi e i loro nomi
-   non anticipa niente. «Come si dice cane in inglese?» con sotto ogni
-   parola la sua figura regala la risposta — il bambino guarda il cane
-   in cima e cerca il cane in basso, e la domanda smette di essere sulla
-   lingua. Lì la coppia sta **su un lato solo**: figura al soggetto,
-   parole nei tasti. Nessun controllo automatico può accorgersene,
-   perché una domanda così è formalmente ineccepibile: è una regola per
-   chi scrive il modulo. Quello che il controllo sa vedere è il caso
-   degenere — un `nome` su una risposta di solo testo, cioè la stessa
-   parola scritta due volte.
-
-   LA CHIAVE È IL CONCETTO. `orto:gn` sta su tutte le domande sul gruppo
-   gn, non su una singola parola: è la stessa scelta di
-   `data/calcolo.js`, ed è quella che un giorno permetterà al motore di
-   ripasso (`store/srs.js`) di seguire *cosa il bambino non sa* invece
-   di *quali domande ha visto*. Un modulo con una chiave sola è un
-   modulo che non si potrà mai dosare: meglio poche chiavi vere che una
-   per istanza.
-
-   I FALSI NON SONO RUMORE. Se i distrattori si scartano a occhio la
-   domanda si risolve per esclusione invece che sapendola: chi scrive un
-   generatore deve prendere i falsi dagli ERRORI TIPICI di quel
-   concetto — la parola scritta come si sente, l'ora letta sulla lancetta
-   sbagliata, il verbo coniugato come lo direbbe un bambino.
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* ── fabbriche delle risposte ──
-   Servono a non sbagliare la forma, e a dare un posto solo dove
-   aggiungere un tipo di risposta il giorno che ne servirà un quarto. */
 export const testo = (t, perche) => perche ? { testo: String(t), perche } : { testo: String(t) }
 export const emoji = (e, perche) => perche ? { emoji: e, perche } : { emoji: e }
 export const scena = (s, perche) => perche ? { scena: s, perche } : { scena: s }
-
-/* la parola sotto la figura. Non è una quarta forma ma un'aggiunta alle
-   altre, e si compone: `conNome(scena({ che:'savana' }), 'savana')`.
-   Sta su un campo suo (`nome`) e non su `testo` apposta — `testo` vuol
-   dire «la risposta È questa parola», e le due cose vanno distinte o il
-   giorno che una domanda mescola tasti scritti e tasti disegnati non si
-   capisce più quale sia quale. */
 export const conNome = (risposta, nome) => ({ ...risposta, nome: String(nome) })
 
-/* ── la parola in rilievo dentro una frase ──
-   Pura, e qui invece che dentro `Domanda.vue`, per i due motivi di
-   sempre: la stessa frase va ritagliata uguale anche dalla scheda in
-   DOM puro (`grafica/scheda.js`), e una regola chiusa in un `.vue` non
-   si prova senza un browser.
-
-   Il confine di parola non è `\b`: in italiano l'apostrofo attacca
-   («l'albero» non contiene la parola «albero»), e `\b` lo tratterebbe
-   come uno spazio. Le lettere accentate, dall'altro lato, `\b` le
-   considererebbe confini. Quindi si guarda il carattere prima e quello
-   dopo, e vale come «dentro un'altra parola» qualunque lettera o
-   apostrofo.
-
-   Con zero o più di una occorrenza non si evidenzia niente e la frase
-   resta intera: a schermo si perde il rilievo, non il testo. Il guasto
-   lo dice `guastiDi`, che è il posto dove va detto. */
+// pura (la condivide grafica/scheda.js). Il confine non è `\b`: l'apostrofo attacca («l'albero») e gli accenti no
 const ATTACCATA = /[\p{L}\p{M}'’]/u
 
 function doveCompare(frase, parola) {
@@ -154,11 +40,7 @@ export function evidenziando(frase, parola) {
   return { prima: f.slice(0, punti[0]), parola: p, dopo: f.slice(punti[0] + p.length), volte: 1 }
 }
 
-/* ── la fabbrica della domanda ──
-   Prende la risposta giusta e i falsi già pronti, li mescola con la
-   sorte e tiene il conto di dov'è finita la buona. È il modo di non
-   scrivere mai più `giusta: 0` per distrazione (e di non lasciare la
-   buona sempre in cima, che i bambini imparano in tre partite). */
+// mescola risposta giusta e falsi con la sorte, e tiene il conto di dov'è finita la buona
 export function domanda({ testo: consegna, soggetto, buona, falsi, chiave, aiuto, dritta, sorte }) {
   const tutte = sorte.mescola([buona, ...falsi])
   const d = {
@@ -173,16 +55,7 @@ export function domanda({ testo: consegna, soggetto, buona, falsi, chiave, aiuto
   return d
 }
 
-/* ── quando la scorciatoia va detta ──
-   Pura, e fuori dal componente apposta: è una regola con dentro una
-   soglia, e una soglia che si può provare solo col telefono in mano
-   non la prova nessuno. La usa `quiz/Domanda.vue`, e la prova
-   `test/unita/griglia-misure`.
-
-   Dodici secondi è il tempo che ci vuole a contare a dito i quadretti
-   di un rettangolo 6×7 — non quello che ci vuole a moltiplicare. Chi
-   sta sotto la strada corta ce l'ha già, e fermarlo per spiegargliela
-   sarebbe una punizione per aver saputo. */
+// 12s: il tempo di contare a dito i quadretti di un 6×7, non di moltiplicare; vedi docs/apprendimento/la-domanda.md
 export const LENTO = 12
 
 export function serveLaDritta(d, { giusto, tempo }) {
@@ -190,46 +63,16 @@ export function serveLaDritta(d, { giusto, tempo }) {
   return giusto ? tempo > LENTO : true
 }
 
-/* ── QUANDO SI È TIRATO A CASO ─────────────────────────────────────
-   Il verso opposto della dritta, e nasce dallo stesso posto: guardando
-   un bambino giocare si vede che certe risposte non sono tentativi, sono
-   **tocchi**. Il tasto è lì, lo si preme, si vede cosa succede. Nei
-   giochi dove sbagliare non toglie niente quella è perfino la strada più
-   corta: quattro tocchi e una domanda è passata.
-
-   Non si può sapere se un bambino stava tirando a caso. Si può sapere
-   una cosa più modesta e sufficiente: **che non ha avuto il tempo di
-   leggere**. Sotto quel tempo, e con la risposta sbagliata, non c'è
-   niente da distinguere fra «non lo sapeva» e «non ha guardato», e il
-   gioco può trattarli allo stesso modo — perché la cura è la stessa:
-   fermarsi un momento e leggere.
-
-   LA SOGLIA NON È UN NUMERO SOLO, e questo è il punto. Un secondo e
-   mezzo è tantissimo per «7 × 8» e non basta per una consegna di venti
-   parole con quattro risposte scritte: una soglia fissa direbbe «hai
-   tirato a caso» a chi le tabelline le sa, che è esattamente il
-   contrario di quello che serve. Si misura quindi la roba da leggere —
-   consegna più risposte — e si conta un tempo di lettura.
-
-   E NON COSTA NIENTE DI QUELLO CHE SI HA. La penalità è **tempo**: si
-   resta fermi più a lungo, con scritto perché. Togliere vita o monete a
-   chi risponde in fretta punirebbe anche chi è svelto e sa, e
-   soprattutto insegnerebbe la cosa sbagliata — che rispondere è
-   pericoloso. Quello che si vuole insegnare è che leggere conviene, e
-   il modo di dirlo è non lasciare andare avanti chi non ha letto. */
+// non si sa se ha tirato a caso, si sa se non ha avuto il tempo di leggere: vedi docs/apprendimento/la-domanda.md
 export const FRETTA = 1.1            // secondi, il minimo per guardare qualunque cosa
 export const A_PAROLA = 0.09         // e quanto costa leggere ogni parola
 export const FRETTA_MAX = 4          // oltre non si sale: sarebbe un'accusa, non una misura
 
-/* quante parole ci sono da leggere, in un pezzo di testo o in tanti */
+// quante parole ci sono da leggere, in un pezzo di testo o in tanti
 const quanteParole = parti =>
   parti.filter(Boolean).join(' ').trim().split(/\s+/).filter(Boolean).length
 
-/* Il soggetto conta se è scritto: da quando una domanda può mettere lì
-   una frase intera — «che parte del discorso è "lo" in questa frase?» —
-   la roba da leggere sta per metà fuori dalla consegna, e senza questa
-   riga la soglia direbbe «hai tirato a caso» a chi ha letto tutto. Il
-   soggetto disegnato non si conta: guardare non è leggere. */
+// il soggetto conta se è scritto (una frase intera va letta anche lei); il soggetto disegnato no, guardare non è leggere
 export function tempoDiLettura(d) {
   if (!d) return FRETTA
   return Math.min(FRETTA_MAX,
@@ -237,16 +80,7 @@ export function tempoDiLettura(d) {
       ...(d.risposte || []).map(r => r?.testo)]) * A_PAROLA)
 }
 
-/* ── COSA SI LEGGE DOPO AVER SBAGLIATO ─────────────────────────────
-   Due righe con due mestieri, e la scheda le tiene separate: vedi il
-   cappello di questo file. Qui c'è solo la scelta di *cosa* mostrare,
-   e sta fuori dal componente per il motivo di sempre — dentro un `.vue`
-   non si prova senza un browser, e infatti il difetto che questa
-   funzione toglie (uno dei due invece di tutti e due) è vissuto per
-   mesi senza che niente diventasse rosso.
-
-   A risposta giusta non si spiega niente: quello che c'era da dire
-   l'ha detto il bambino. */
+// perche e comeSiFa, sempre tutti e due (mai un `||`): vedi docs/apprendimento/la-domanda.md
 export function spiegazioneDi(d, scelto) {
   if (!d || !(scelto >= 0) || scelto === d.giusta) return { perche: '', comeSiFa: '' }
   return {
@@ -255,70 +89,15 @@ export function spiegazioneDi(d, scelto) {
   }
 }
 
-/* ── QUANTO SI STA FERMI, E PERCHÉ CRESCE ──────────────────────────
-   Dopo uno sbaglio la scheda non va avanti subito: c'è da leggere. Il
-   pavimento è `PONDERA`, quattro secondi, ed è tarato su una
-   spiegazione di **una riga** — il respiro che i giochi chiedono è
-   tarato sul ritmo della partita (il sotterraneo ne chiede 900 ms),
-   che è la misura giusta per una risposta giusta e quella sbagliata
-   per un errore. Da quando la scheda dice il perché *e* come si fa le
-   righe sono due, e quattro secondi su venticinque parole vorrebbero
-   dire sei parole al secondo: una spiegazione che passa senza essere
-   letta è peggio di nessuna spiegazione, perché insegna che quel
-   riquadro non contiene niente di utile.
-
-   Quindi si misura la roba da leggere, come già si fa per la fretta —
-   stessa unità, le parole — ma con un passo diverso e per un motivo
-   diverso: `A_PAROLA` è quanto ci vuole a **posare l'occhio** su una
-   parola (serve a dire «non l'ha nemmeno guardata»), `A_CAPIRE` è
-   quanto ci vuole a leggerne una **per capirla**.
-
-   Un quarto di secondo, e il numero non è preso a caso: quattro
-   secondi diviso un quarto fanno sedici parole, che è esattamente la
-   spiegazione di una riga su cui `PONDERA` era stato tarato. Il
-   pavimento e il passo sono lo stesso numero detto due volte, e per
-   questo le spiegazioni corte restano ai quattro secondi di prima
-   invece di scattare in su per un arrotondamento.
-
-   E c'è un tetto, `LEGGERE_MAX`, perché le spiegazioni lunghe
-   esistono (la logica arriva a cinquanta parole) e sette secondi sono
-   già il limite di quanto un bambino sta a guardare una schermata
-   ferma senza toccarla.
-
-   IL TOTALE NON SUPERA MAI `TETTO`. La penalità della fretta
-   (`quiz/fretta.js`) si somma a questa attesa, e dieci secondi sono il
-   punto oltre il quale una pausa smette di sembrare una pausa e
-   comincia a sembrare un gioco rotto — è la stessa soglia dichiarata
-   là, e adesso è scritta una volta sola invece di risultare per caso
-   dalla somma di due numeri. Chi tira a caso su una domanda dalla
-   spiegazione lunga aspetta dieci secondi come chi tira a caso su una
-   corta: la penalità si accorcia, non l'attesa per leggere. */
+// il pavimento (PONDERA) cresce con le parole da leggere (A_CAPIRE), col tetto LEGGERE_MAX e TETTO: vedi la-domanda.md
 export const PONDERA = 4000
 export const A_CAPIRE = 0.25
 export const LEGGERE_MAX = 7000
 export const TETTO = 10000
 
-/* ── QUANTO PUÒ VALERE UNA RISPOSTA, AL MASSIMO ──
-   Il tempo di una risposta finisce in `store/srs.js` (`it.t`), che ne
-   tiene una media pesata **al 45%**: un solo campione storto sposta la
-   media di quasi la metà, e da lì non torna più indietro da solo. Il
-   campione storto esiste ed è facilissimo da produrre — il telefono
-   posato con la domanda a schermo, che `Domanda.vue` adesso non conta
-   più perché ferma l'orologio quando la pagina sparisce.
-
-   Questo è il pavimento sotto quel rimedio, per i casi che l'orologio
-   non vede: il telefono acceso, posato sul tavolo, con la domanda
-   davanti e nessuno che la guarda. Due minuti, e non è la soglia di
-   `TETTO` (quella dice fin dove una pausa sembra una pausa, ed è
-   un'altra domanda): due minuti sono il punto oltre il quale nessun
-   bambino sta ancora pensando a quella domanda lì. Chi ci mette
-   davvero novanta secondi su un problema li vede contati tutti — è il
-   suo tempo, ed è un'informazione vera. */
+// pavimento sotto il fermo-orologio di Domanda.vue: 2 minuti, oltre i quali nessun bambino pensa ancora a quella domanda
 export const TEMPO_MAX = 120000
 
-/* Il tempo da annotare, in secondi: quello che si è guardato davvero,
-   tagliato al tetto. Sta qui e non nel `.vue` per la solita ragione —
-   una taratura chiusa dentro un componente non la prova nessuno. */
 export function tempoDaAnnotare(ms) {
   return Math.min(TEMPO_MAX, Math.max(0, ms || 0)) / 1000
 }
@@ -327,27 +106,18 @@ export function tempoDiCapire(righe = []) {
   return Math.min(LEGGERE_MAX, Math.round(quanteParole(righe) * A_CAPIRE * 1000))
 }
 
-/* Quanto resta a schermo l'esito. `pavimento` è quello che il gioco (o
-   la regola) vuole comunque — `PONDERA` dopo uno sbaglio, il respiro
-   della partita quando si è indovinato — e `penale` è la fretta.
-   È un pavimento e non un'aggiunta: chi già aspettava di più continua
-   ad aspettare quello. */
+// pavimento (PONDERA o il respiro della partita) + penale (la fretta): chi già aspettava di più continua ad aspettare quello
 export function attesaDellEsito({ righe = [], pavimento = 0, penale = 0 } = {}) {
   return Math.min(TETTO, Math.max(pavimento, tempoDiCapire(righe)) + penale)
 }
 
-/* Sbagliata **e** più veloce di quanto ci voglia a leggerla. La risposta
-   giusta non è mai fretta, per veloce che sia: chi la sa la sa. */
+// sbagliata E più veloce del tempo di lettura; la giusta non è mai fretta, per veloce che sia
 export function troppoDiFretta(d, { giusto, tempo }) {
   if (giusto) return false
   return tempo < tempoDiLettura(d)
 }
 
-/* ── il controllo di forma ──
-   Lo usa il banco di prova su ogni domanda generata; è anche la
-   descrizione eseguibile del contratto qui sopra, quindi quando cambia
-   la forma cambia questa funzione e non un commento.
-   Restituisce la lista dei guasti: vuota vuol dire a posto. */
+// il controllo di forma, usato dal banco su ogni domanda generata: descrizione eseguibile del contratto, non un commento
 export function guastiDi(d, { pittori = {} } = {}) {
   const g = []
   const dice = (c, m) => { if (!c) g.push(m) }
@@ -362,9 +132,7 @@ export function guastiDi(d, { pittori = {} } = {}) {
     dice(Number.isInteger(d.giusta) && d.giusta >= 0 && d.giusta < (d.risposte?.length ?? 0),
       `«giusta» fuori dalla lista: ${d.giusta}`)
 
-    /* il nome è la parola sotto la figura: si controlla che ci sia
-       qualcosa scritto, e che non sia appiccicato a una risposta che è
-       già una parola — quella sarebbe scritta due volte */
+    // il nome sotto la figura non può stare su una risposta già di solo testo: sarebbe scritto due volte
     const guastiDelNome = (c, dove) => {
       if (c?.nome === undefined) return
       dice(typeof c.nome === 'string' && c.nome.trim().length > 0, `${dove}: nome vuoto`)
@@ -384,10 +152,7 @@ export function guastiDi(d, { pittori = {} } = {}) {
       if (d.soggetto.scena) dice(!!pittori[d.soggetto.scena.che], `nessun pittore per la scena «${d.soggetto.scena.che}»`)
       guastiDelNome(d.soggetto, 'soggetto')
 
-      /* la parola in rilievo dev'esserci, e una volta sola: è il solo
-         controllo che può accorgersi di una frase scritta storta fra
-         trentasei, e senza di lui a schermo si vedrebbe una frase
-         perfettamente normale con una parola non evidenziata */
+      // il solo controllo che si accorge di una frase scritta storta: la parola evidenziata dev'esserci una volta sola
       if (d.soggetto.evidenzia !== undefined) {
         dice(typeof d.soggetto.evidenzia === 'string' && d.soggetto.evidenzia.trim().length > 0,
           'soggetto: «evidenzia» vuoto')
@@ -401,17 +166,12 @@ export function guastiDi(d, { pittori = {} } = {}) {
       }
     }
 
-    /* due risposte identiche sono un guasto grave: la domanda ha due
-       risposte giuste o una buona nascosta fra i cloni */
+    // due risposte identiche: la domanda ha due giuste o una buona nascosta fra i cloni
     const impronte = (d.risposte || []).map(r =>
       r.testo !== undefined ? 't:' + r.testo : r.emoji !== undefined ? 'e:' + r.emoji : 's:' + JSON.stringify(r.scena))
     dice(new Set(impronte).size === impronte.length, `risposte doppie: ${impronte.join(' | ')}`)
 
-    /* Con la figura e il nome insieme i lati sono due, e l'unicità va
-       chiesta a tutti e due: due tasti con lo stesso disegno e due nomi
-       diversi passerebbero il controllo qui sopra — le impronte sono
-       diverse — ma a schermo sono la stessa risposta due volte, e uno
-       dei due è per forza sbagliato. */
+    // con figura + nome i lati sono due: due disegni uguali con nomi diversi passerebbero il controllo sopra
     const nomi = (d.risposte || []).map(r => r.nome).filter(n => n !== undefined)
     dice(new Set(nomi).size === nomi.length, `nomi doppi fra le risposte: ${nomi.join(' | ')}`)
   }
