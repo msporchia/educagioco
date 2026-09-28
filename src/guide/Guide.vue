@@ -1,23 +1,5 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   COME FUNZIONA — LE GUIDE PER I GRANDI
-
-   ── PERCHÉ STA FUORI DAL CODICE DI CASA ──
-   Sarebbe stata comoda dentro le impostazioni, che è dove stanno le
-   manopole di cui parla. Ma la prima guida è «come si installa», e la
-   legge un genitore che ha appena ricevuto il link da un altro genitore:
-   uno che non sa niente di questa applicazione, tantomeno che il codice
-   di partenza è 0000. Una guida dietro un codice è una guida che legge
-   solo chi non ne ha bisogno.
-   Non c'è niente da proteggere: qui dentro si legge e basta, non si
-   cambia nemmeno una impostazione.
-
-   ── E PERCHÉ NON È IL README ──
-   Il README lo legge chi clona il repo. Nessun genitore ha mai aperto
-   una pagina di GitHub per far giocare un figlio, e una documentazione
-   che vive fuori dall'applicazione invecchia senza che nessuno se ne
-   accorga. Qui invece sta accanto alla cosa che descrive.
-   ═══════════════════════════════════════════════════════════════════ */
+// «Come funziona»: fuori dal codice di casa apposta. Vedi docs/genitori/guide.md.
 import { ref, onMounted } from 'vue'
 import Barra from '../components/Barra.vue'
 import Blocchi from './Blocchi.vue'
@@ -31,21 +13,13 @@ defineEmits(['vai'])
 const aperta = ref(null)
 const esito = ref('')
 
-/* Chi arriva dal nastro della home ha già detto cosa vuole sapere: si
-   apre lì dentro invece di rimandarlo all'elenco a cercarselo. */
 onMounted(() => { const q = raccogli(); if (q) aperta.value = guida(q) })
 
-/* Il link secco, senza messaggio addosso: quello che si manda è
-   l'indirizzo, il resto lo scrive chi manda con parole sue. */
 async function mandaIlLink () {
   const r = await condividi({ url: INDIRIZZO, titolo: 'Educagioco' })
   esito.value = r.come === 'copiato' ? 'Indirizzo copiato: incollalo dove vuoi.'
     : r.come === 'niente' ? INDIRIZZO : ''
 }
-
-/* Il tasto per tornare indietro fa due cose a seconda di dove si è: da
-   una guida aperta torna all'elenco, dall'elenco esce. È la stessa
-   freccia, ed è quello che si aspetta chi la preme. */
 </script>
 
 <template>
@@ -54,7 +28,6 @@ async function mandaIlLink () {
            @indietro="aperta ? (aperta = null, esito = '') : $emit('vai','home')" />
 
     <div class="corpo">
-      <!-- ── l'elenco ── -->
       <template v-if="!aperta">
         <p class="testo intro">Cos'è questo gioco, chi l'ha fatto, e le manopole che
           sono per te e non per lui. In ordine di quanto serve: le prime si leggono
@@ -62,8 +35,6 @@ async function mandaIlLink () {
 
         <Elenco :guide="GUIDE" @apri="aperta = $event" />
 
-        <!-- Sta qui e non solo nelle impostazioni apposta: chi passa il
-             gioco a un'altra famiglia non deve prima entrare col codice. -->
         <button class="manda" data-azione="manda-link" @click="mandaIlLink">
           <b>📤 Manda il link a qualcuno</b>
           <i>{{ INDIRIZZO.replace(/^https?:\/\//, '') }}</i>
@@ -71,7 +42,6 @@ async function mandaIlLink () {
         <p v-if="esito" class="mini esito">{{ esito }}</p>
       </template>
 
-      <!-- ── una guida aperta ── -->
       <template v-else>
         <Blocchi :blocchi="aperta.blocchi" />
         <button class="bottone chiaro torna" @click="aperta = null; esito = ''">
@@ -92,8 +62,6 @@ async function mandaIlLink () {
 .manda b { font-size:14.5px; color:var(--viola-scuro) }
 .manda i { font-size:12px; color:var(--tenue); font-style:normal;
            overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-/* qui dentro finisce l'indirizzo, quando il telefono non sa condividere:
-   va preso a dito, quindi selezione e callout riaccesi (vedi `style.css`) */
 .esito { margin-top:2px; -webkit-user-select:text; user-select:text;
          -webkit-touch-callout:default }
 .torna { align-self:center; margin-top:12px; padding:11px 26px; font-size:15px }

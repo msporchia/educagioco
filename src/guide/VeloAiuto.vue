@@ -1,17 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL VELO DEL `?`
-
-   Quello che si apre dal punto interrogativo della barra. È un foglio
-   che sale dal basso e copre il gioco: chi lo apre sta già giocando, e
-   deve poterlo chiudere senza cercare dove.
-
-   Non mette in pausa niente da sé, e non deve: un foglio non sa quale
-   motore stia girando sotto. La barra avvisa con `@aiuto`, e chi ha un
-   orologio che gira se lo ferma da sé — oggi non più in undici modi
-   diversi, ma con `giochi/pausa.js`, che somma questa condizione alle
-   altre (il telefono posato, il cartello di un traguardo, il ⏸).
-   ═══════════════════════════════════════════════════════════════════ */
+// Il velo del `?`: non mette in pausa da sé, la barra avvisa con @aiuto e
+// chi ha un orologio se lo ferma con giochi/pausa.js (docs/core/interfaccia.md).
 import Blocchi from './Blocchi.vue'
 
 defineProps({
