@@ -170,7 +170,7 @@ megabyte per tutta la casa.
 
 ## 5. Il banco dell'abisso e le monete
 
-- **Fatto: 🪙1 per risposta giusta, pagato risalendo** (`corsa.giuste`,
+- **Fatto: 🪙1 per risposta giusta, pagato subito** (`corsa.giuste`,
   incrementato in `rispondi()` quando `giusto`; mai per una sbagliata). È il
   tasso di oggi per chi esplora («Il fondo» paga 🪙34 × 3 stelle per un
   centinaio di domande); `CALIBRAZIONE` direbbe 🪙3, e si alza quando si

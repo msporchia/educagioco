@@ -379,6 +379,8 @@ function risolvi(giusto) {
   const c = corsa.value
   if (!c) return
   const esito = c.rispondi(giusto)
+  // nell'abisso una risposta giusta paga subito, non a fine discesa
+  if (giusto && nellAbisso.value) addCoins(1)
   tic.value++
   salva()
   if (!esito) return
@@ -457,12 +459,10 @@ function chiudi() {
   if (e.tesori) segna('sotTesori', e.tesori)
   segnaBest('sotGemme', e.gemme)
 
-  // l'abisso non ha né una tappa né una stella (premio×stelle è solo delle tappe vere): paga 🪙1 a
-  // risposta giusta, risalendo — meno dei 🪙3 di una domanda vera perché è il tasso di oggi, non quello
-  // della calibrazione (docs/sotterraneo/abisso-progetto.md, punto 5)
+  // l'abisso ha già pagato 🪙1 a ogni risposta giusta (risolvi): qui si mostra soltanto il totale
   const monete = nellAbisso.value ? e.giuste
     : e.vinta ? CAMPAGNA[tappaIdx.value].premio * Math.max(1, stelle) : 0
-  if (monete) addCoins(monete)
+  if (monete && !nellAbisso.value) addCoins(monete)
   if (e.vinta) { if (e.svenimenti === 0) segna('sotInteri'); suono.livello() } else suono.fine()
 
   fine.value = { vinta: e.vinta, titolo: tappaDi(tappaIdx.value).nome, stelle, monete, fatti: e,
