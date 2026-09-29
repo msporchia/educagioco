@@ -1,24 +1,12 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL COLPO — quello che viaggia fra la torre e il nemico.
-
-   Si porta dietro *chi* ha preso di mira: una freccia colpisce quel
-   nemico lì e nessun altro, e se nel frattempo è morto va a vuoto — ed
-   è giusto così. I colpi a zona invece non guardano in faccia nessuno:
-   prendono tutti quelli dentro il cerchio.
-
-   Il danno lo applica lui, il conto dei morti lo tiene la battaglia:
-   qui non esistono energia né punteggio. E non sa niente di immunità:
-   colpisce chi prende, e chi è immune a quella torre se lo scrolla di
-   dosso da sé (`Nemico.ferisci`).
-   ═══════════════════════════════════════════════════════════════════ */
+// Il colpo: viaggia fra la torre e il nemico. Una freccia si porta dietro
+// chi ha preso di mira (va a vuoto se muore nel frattempo); i colpi a zona
+// prendono tutti quelli dentro il cerchio. Non sa niente di immunità: chi è
+// immune se lo scrolla di dosso da sé (Nemico.ferisci).
 import { dist } from '../../grafica/geometria.js'
 import { Schizzo } from './schizzo.js'
 
-/* quanto in fretta copre la distanza: `t` va da 0 a 1 */
-const VOLO = 4.5
-
-/* quanto lontano cerca il rimbalzo della catena, in unità */
-const RIMBALZO = 78
+const VOLO = 4.5      // quanto in fretta copre la distanza: t va da 0 a 1
+const RIMBALZO = 78   // quanto lontano cerca il rimbalzo della catena
 
 export class Colpo {
   constructor({ x, y, tx, ty, t = 0, tipo, preso = null, danno, area = 0,
@@ -29,21 +17,16 @@ export class Colpo {
     this.tipo = tipo
     this.preso = preso
     this.danno = danno; this.area = area
-    /* quello che il colpo lascia dietro di sé: un male che continua
-       (veleno, o fuoco) e la voglia di rimbalzare su chi sta vicino */
     this.veleno = veleno; this.durata = durata; this.rimbalzi = rimbalzi
     this.fatto = false
   }
 
-  /* torna `true` nel fotogramma in cui arriva */
   avanza(dt) {
     this.t += dt * VOLO
     return this.t >= 1
   }
 
-  /* L'arrivo: chi prende, chi muore, l'esplosione se è un colpo a zona,
-     e i rimbalzi se è una catena. Il gelo non passa da qui — non è un
-     colpo, è una folata. */
+  // il gelo non passa da qui: non è un colpo, è una folata
   impatto(nemici, via, dove = null) {
     this.fatto = true
     const punto = dove || (n => via.puntoA(n.d))
@@ -58,11 +41,7 @@ export class Colpo {
     for (const n of presi) if (n.bersaglio) n.avvelena(this.veleno, this.durata, this.tipo)
     return {
       colpiti: presi.length, morti,
-      /* i rimbalzi della catena: mezzo danno ciascuno, sul vivo più
-         vicino che non abbia già preso. Escono di qui come colpi nuovi,
-         così viaggiano e si vedono come tutti gli altri. */
       rimbalzi: this.rimbalzi ? this.saltaAddosso(nemici, presi, punto) : [],
-      // l'esplosione è secca: si apre subito e si spegne subito
       schizzo: this.area
         ? new Schizzo({ x: this.tx, y: this.ty, max: this.area, tipo: this.tipo,
                         cresce: 9, spegne: 3.2 })
@@ -70,9 +49,8 @@ export class Colpo {
     }
   }
 
-  /* La catena salta solo su chi può ferire: rimbalzare su un immune
-     sarebbe un colpo buttato, e la catena è l'unica torre che sceglie da
-     sola dove andare. */
+  // la catena salta solo su chi può ferire: rimbalzare su un immune
+  // sarebbe un colpo buttato
   saltaAddosso(nemici, presi, punto) {
     const nuovi = []
     const toccati = new Set(presi)
