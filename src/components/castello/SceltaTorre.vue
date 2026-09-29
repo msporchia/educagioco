@@ -1,46 +1,18 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   CHE TORRE COSTRUISCO QUI
-
-   Il foglio che sale quando si tocca una piazzola vuota. Quattro carte,
-   e la piazzola che le riguarda è già illuminata sul campo dietro, col
-   suo raggio d'azione: si sceglie sapendo *dove* finisce la torre, che
-   prima non si sapeva — la metteva il gioco, in fila, senza dirlo.
-
-   Il «non lo tocca» sulla carta è il preavviso che diventa una
-   risposta: se fra poco arriva un Golem, e frecce e magia non gli fanno
-   niente, le carte dell'arciere e della magica se lo portano scritto
-   addosso. Il nastro delle ondate dice chi arriva, qui c'è cosa farci —
-   ed è lo stesso dato, letto nel momento in cui serve invece che tre
-   righe più su.
-
-   La carta segnata **non si disabilita**, e non è una svista: comprarla
-   resta legittimo — una torre vive tutta la tappa e le ondate girano,
-   quindi quella che oggi non morde domani è la migliore che hai. Il
-   segno avverte, non decide al posto di chi gioca.
-
-   ── ogni carta il suo prezzo ──
-   Le torri non costano più uguale (`CARATTERE` in `data/castello.js`):
-   l'arciere è quello debole che costa poco, le bombe le più forti e le
-   più care. Il prezzo sta su ogni carta, ed è la metà della scelta.
-
-   Le carte care non si spengono: toccarle dice quanto manca. Un bottone
-   morto non insegna niente.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il foglio che sale toccando una piazzola vuota: quattro carte col prezzo
+// (listino diverso per torre, vedi docs/castello/torri.md) e il «non lo
+// tocca» di chi sta per arrivare (letto dallo stesso dato del preavviso). La
+// carta segnata non si disabilita: comprarla resta legittimo.
 import { TORRI, segnoDi } from '../../data/ops.js'
 import RitrattoTorre from './RitrattoTorre.vue'
 
 const props = defineProps({
-  /* i pittori della pelle, se il campo ne ha una: il ritratto della
-     torre è allora la figura del campo */
   pittori: { type: Object, default: null },
   tappa: { type: Object, required: true },
   energia: { type: Number, default: 0 },
-  /* quanto costa ognuna, qui e adesso: `{ tipo: ⚡ }` */
-  costi: { type: Object, default: () => ({}) },
+  costi: { type: Object, default: () => ({}) },   // { tipo: ⚡ }
   divisioni: { type: Boolean, default: true },
-  /* le torri a cui chi sta per arrivare è immune */
-  immune: { type: Array, default: () => [] },
+  immune: { type: Array, default: () => [] },     // le torri a cui chi arriva è immune
 })
 defineEmits(['scegli'])
 
