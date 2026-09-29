@@ -831,8 +831,8 @@ for (const eta of [6, 8, 10]) {
 /* ═══════════════════════════════════════════════════════════════════
    E DOVE STA QUELLO CHE NON FUNZIONA
 
-   Un muro fa scattare un avviso nella posta dei grandi
-   (`quiz/allarme.js`), e l'avviso nomina **la tipologia** — «Le
+   Un muro compare fra le «Difficili» della settimana di «Come va»,
+   che nomina **la tipologia** — «Le
    analogie sulle cose del mondo». Nel quadro quel nome sta al terzo
    livello: blocco chiuso, dentro il pezzo di scuola chiuso, dentro la
    domanda. Chi arrivava dall'avviso non trovava niente di rosso
@@ -840,7 +840,7 @@ for (const eta of [6, 8, 10]) {
    in un altro modo («Le analogie»).
 
    Qui si prova che il segnale risale fino al blocco, con la stessa
-   soglia della posta, e che si ferma dove deve: un conto corto o una
+   soglia della settimana, e che si ferma dove deve: un conto corto o una
    quota buona non colorano niente.
    ═══════════════════════════════════════════════════════════════════ */
 {
@@ -863,7 +863,7 @@ for (const eta of [6, 8, 10]) {
          male[0].nome, riga.nome)
   uguale('col pezzo di scuola dove sta, che è la mappa per trovarla',
          male[0].dentro, conTipo.s.nome)
-  uguale('e col numero della posta, non un altro',
+  uguale('e col numero della settimana, non un altro',
          male[0].detto, 'ne ha sbagliate 8 su 10')
 
   uguale('chi le indovina quasi tutte non è un problema e non si colora',

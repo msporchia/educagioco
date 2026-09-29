@@ -54,10 +54,16 @@ cosa si è letto, fuori dai profili.
   Senza nessuna età conosciuta la nota si mostra lo stesso: non sapere non
   è un motivo per nascondere. La scelta è pura (`scegli`, `test/unita/posta`).
 - **Anche il gioco scrive avvisi** (`avvisa`, `avvisaUnaVolta`): il codice
-  rimesso a `0000` ([codice.md](codice.md)) e la domanda che è diventata un
-  muro ([../apprendimento/la-domanda.md](../apprendimento/la-domanda.md)).
-  Quali avvisi «una volta sola» sono già stati detti si ricorda a parte e
-  sopravvive al «Ho letto».
+  rimesso a `0000` ([codice.md](codice.md)). Quali avvisi «una volta sola»
+  sono già stati detti si ricorda a parte e sopravvive al «Ho letto».
+- **Il muro non scrive più.** Una domanda diventata un muro metteva un
+  avviso qui, e arrivava spesso: quasi sempre quando la bambina non sapeva
+  ancora una cosa, a un grande che non sapeva cosa farci. Adesso il gioco la
+  alleggerisce da sé per una settimana
+  ([../apprendimento/la-domanda.md](../apprendimento/la-domanda.md#il-muro-lo-sistema-il-gioco)),
+  e il grande la trova, se va a guardare, fra le «Difficili» della settimana
+  di «Come va» ([come-va.md](come-va.md)) con tre tasti che fanno qualcosa.
+  Gli avvisi di muro già scritti restano finché qualcuno preme «Ho letto».
 
 Il changelog per i bambini è un'altra cosa, con la regola opposta:
 [novita-bambini.md](novita-bambini.md).

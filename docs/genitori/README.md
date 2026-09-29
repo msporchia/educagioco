@@ -17,4 +17,4 @@ le correzioni, la posta, le guide dentro l'app.
 Vedi anche: [../apprendimento/eta-e-portata.md](../apprendimento/eta-e-portata.md)
 (cosa decide l'età), [../apprendimento/saperi.md](../apprendimento/saperi.md)
 (i pezzi di scuola), [../apprendimento/la-domanda.md](../apprendimento/la-domanda.md)
-(l'avviso del muro), [../core/comandi.md](../core/comandi.md) (i cheat e `#admin`).
+(cosa fa il gioco con un muro), [../core/comandi.md](../core/comandi.md) (i cheat e `#admin`).

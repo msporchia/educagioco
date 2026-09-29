@@ -1,7 +1,7 @@
 # La domanda a schermo
 
 Cosa succede dopo una risposta: il tempo per leggere, la fretta, la
-spiegazione, e quando si avvisa un grande. Le regole pure stanno in
+spiegazione, e cosa fa il gioco quando una domanda è un muro. Le regole pure stanno in
 `src/quiz/nucleo/domanda.js`, la messa in scena in `src/quiz/Domanda.vue`
 (una sola per Survivors, Dungeon, sotterraneo e corsa).
 
@@ -79,26 +79,48 @@ il telefono acceso posato sul tavolo (`tempoDaAnnotare`). Il motivo: `it.t`
 di `srs.js` è una media al 45%, e un campione di quaranta minuti bastava a
 far risultare «ci mette venti minuti» per sempre.
 
-## Il muro si dice a un grande
+## Il muro lo sistema il gioco
 
 - `quiz/consiglio.js` legge `store/srs.js`: con almeno `MINIME` (8) risposte,
   **meno di metà giuste** (`MURO`) è un muro, **più di nove su dieci**
-  (`PEDAGGIO`) un pedaggio; in mezzo non si dice niente.
-- `quiz/allarme.js` è **il momento in cui si dice**: `Domanda.vue` chiama
-  `guardaComeVa` a ogni risposta annotata, e al muro scrive un avviso nella
-  posta dei grandi (`frasePerIlGrande`: «Le doppie — ne ha sbagliate 7 su
-  10», col nome del tipo da `nomeDelTipo`; senza nome non si avvisa).
-- **Una volta sola** per bambino e per chiave (`avvisaUnaVolta` in
-  `store/posta.js`): la memoria sopravvive al «Ho letto», se no la stessa
-  riga tornerebbe domani.
+  (`PEDAGGIO`) un pedaggio; in mezzo non si dice niente. È la stessa soglia
+  del rosso nel quadro e delle «Difficili» nella settimana di «Come va»
+  ([../genitori/come-va.md](../genitori/come-va.md)).
+- **Al muro il gioco reagisce da sé, per una settimana** (`quiz/alleggerire.js`,
+  puro; il segno lo scrive `alleggerisciSeServe` in `quiz/memoria.js`, che
+  `Domanda.vue` chiama a ogni risposta annotata):
+  - **esce più di rado**: il bisogno di quella tipologia va al fondo della
+    banda (`BISOGNO.min`, 0,5), dove altrimenti un muro starebbe in cima
+    (1,5). Esce meno, non sparisce: la banda resta quella di
+    [quiz-ripasso.md](quiz-ripasso.md);
+  - **il «Si fa così» si legge prima di rispondere** (`comeSiFaPrima`,
+    `.qz-prima` in cima alla carta): è lo stesso `aiuto` che dopo uno
+    sbaglio compare sotto, portato davanti. Il tempo di lettura lo conta,
+    quindi chi l'ha davanti non viene preso per frettoloso. In molti moduli
+    l'`aiuto` parla dei numeri di quella domanda: diventa un esempio svolto,
+    ed è voluto.
+- **Il segno** sta nel profilo, `settings.alleggerite[<tipologia>] = { quando,
+  ok, err }`: una voce per tipologia, quindi non cresce. Dura `SETTIMANA`;
+  dopo, conta solo quello che è successo da allora (`contoDopo`), e ci
+  vogliono otto prove nuove ancora da muro per ripartire. Un conto azzerato
+  dal grande riparte da zero.
+- **Perché non si scrive più a un grande.** Prima il muro metteva un avviso
+  nella posta («Le doppie — ne ha sbagliate 7 su 10»), e la regola era «non
+  ritocca da sé»: un pomeriggio storto o un fratello al telefono gli
+  avrebbero insegnato la cosa sbagliata. Provato: l'avviso arrivava spesso,
+  quasi sempre quando la bambina non sapeva ancora una cosa, e il grande
+  **non sapeva cosa farci** — il messaggio chiamava un papà per dirgli un
+  numero. Il gioco invece sa cosa fare, e quello che fa è piccolo e
+  reversibile: una settimana, dentro la banda, niente di spento né di
+  ritoccato. Il pomeriggio storto costa sette giorni di una domanda un po'
+  più rara e spiegata prima, cioè niente. Il ritocco vero (la ✎) e lo
+  spegnere restano del grande, e la settimana di «Come va» gli dice «già
+  alleggerita» sulla riga.
 - **Solo il muro, mai il pedaggio**: «le indovina quasi tutte» non è un
-  problema, e nella stessa posta insegnerebbe a scorrere gli avvisi.
-- **Non ritocca da sé**: un pomeriggio storto o un fratello al telefono gli
-  insegnerebbero la cosa sbagliata senza che nessuno lo veda. Il tasto è la
-  ✎ di sempre.
+  problema da sistemare.
 
-Nei test: `unita/consiglio`. Dove porta l'avviso — la schermata «Come va» e
-il rosso nel quadro — sta in [../genitori/come-va.md](../genitori/come-va.md).
+Nei test: `unita/alleggerire`, `unita/tiro-a-caso` (la soglia),
+`integrazione/domanda` (`[data-come-prima]`).
 
 ## Il layout delle risposte
 

@@ -10,10 +10,10 @@
       secondo e mezzo è tantissimo per «7 × 8» e non basta per una
       consegna lunga: la soglia dev'essere quella di *questa* domanda, o
       il gioco direbbe «hai tirato a caso» a chi le tabelline le sa.
-   2. **Quello che va male per settimane lo deve sapere un grande.** Il
-      conto c'era già (`quiz/consiglio.js`) e non lo leggeva nessuno; qui
-      si prova che la soglia è quella e che la frase dice il numero
-      invece del giudizio.
+   2. **Quello che va male ha una soglia sola.** Il conto di
+      `quiz/consiglio.js` è quello che colora il quadro, riempie
+      «Difficili» nella settimana dei grandi e fa alleggerire la
+      tipologia (`unita/alleggerire`); qui si prova la soglia.
 
    `node test/esegui.mjs tiro-a-caso --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
@@ -22,7 +22,6 @@ import { tempoDiLettura, troppoDiFretta, FRETTA, FRETTA_MAX, PONDERA }
 import { pesoDellaFretta, azzeraLaFretta, quanteNeMancano, SCALA, PER_USCIRNE }
   from '../../src/quiz/fretta.js'
 import { contoDi, consiglioDa, MINIME, MURO } from '../../src/quiz/consiglio.js'
-import { frasePerIlGrande } from '../../src/quiz/allarme.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 1. quanto ci vuole a leggere una domanda ══════════ */
@@ -126,10 +125,10 @@ nota(`tabellina ${tempoDiLettura(corta).toFixed(2)}s · figure ` +
        `e ne servono ${PER_USCIRNE} giuste per uscirne`)
 }
 
-/* ══════════ 3. quando lo si dice a un grande ══════════
-   La soglia è quella di `consiglio.js` e non una seconda: se le due
-   divergessero, il numero letto nel quadro e quello letto nella posta
-   direbbero cose diverse sulla stessa riga. */
+/* ══════════ 3. quando è un muro ══════════
+   La soglia è quella di `consiglio.js` e non una seconda: se divergessero,
+   il numero letto nel quadro e quello della settimana direbbero cose
+   diverse sulla stessa riga. */
 const items = q => ({ 'orto:doppie': q })
 
 uguale('sotto le otto risposte non si dice niente: conta più il caso',
@@ -148,17 +147,5 @@ uguale('sette su dieci giuste non sono niente da segnalare',
             !!c && c.verso === 1, JSON.stringify(c))
 }
 nota(`servono ${MINIME} risposte, e il muro è sotto il ${MURO * 100}% di giuste`)
-
-/* ══════════ 4. la frase che arriva in posta ══════════ */
-{
-  const f = frasePerIlGrande({ chi: 'Melody', nome: 'Le doppie',
-                               detto: 'ne ha sbagliate 7 su 10' })
-  controlla('dice di chi si parla', f.includes('Melody'), f)
-  controlla('e di cosa', f.includes('Le doppie'), f)
-  controlla('col numero dentro', f.includes('7 su 10'), f)
-  /* la parte che la rende utile: non è un verdetto, è una cosa da
-     andare a guardare — e dice dove */
-  controlla('e con la cosa da fare', /Come va/.test(f), f)
-}
 
 riassunto('premere a caso')

@@ -12,8 +12,8 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { dipingi } from './grafica/riquadro.js'
 import Giudizio from '../components/Giudizio.vue'
 import { giudiziAccesi } from '../store/giudizi.js'
-import { annota } from './memoria.js'
-import { guardaComeVa } from './allarme.js'
+import { annota, alleggerita, alleggerisciSeServe } from './memoria.js'
+import { comeSiFaPrima } from './alleggerire.js'
 import { serveLaDritta, troppoDiFretta, spiegazioneDi, attesaDellEsito, evidenziando,
          tempoDaAnnotare, PONDERA }
   from './nucleo/domanda.js'
@@ -41,6 +41,8 @@ const CIECA = 320       // finestra cieca al montaggio: vedi docs/core/interfacc
 const pronta = ref(false)
 const attesa = ref(0)   // quanto manca alla prossima (0 = non si aspetta niente)
 const diFretta = ref(false) // vedi docs/apprendimento/la-domanda.md#troppo-di-fretta-il-tempo-non-la-roba
+// il metodo prima di rispondere, per le tipologie alleggerite: deciso a inizio domanda, non ricalcolato a metà
+const prima = ref('')
 // il timer della prossima domanda: non è un `ref` perché non si disegna
 let avanti = null        // il timer
 let vaiAvanti = null     // cosa fa quando scatta
@@ -111,11 +113,8 @@ function scegli(i) {
      il bambino ha dato e che non conta */
   if (props.origine && props.gioco !== 'prova') {
     annota({ chiave: props.domanda.chiave, giusto, tempo })
-    /* e subito dopo si guarda com'è andata **quella tipologia** in
-       generale: se è diventata un muro — otto tiri e meno di metà
-       giuste — un grande se lo trova scritto nella posta. Non tocca
-       niente e non aspetta: vedi `quiz/allarme.js`. */
-    guardaComeVa(props.domanda.chiave)
+    // al muro il gioco alleggerisce da sé per una settimana: vedi quiz/alleggerire.js
+    alleggerisciSeServe(props.domanda.chiave)
   }
   /* Sbagliando si resta fermi più a lungo, perché c'è da leggere il
      perché. Ma un'attesa che non si vede è **indistinguibile da un gioco
@@ -128,7 +127,10 @@ function scegli(i) {
   /* indovinando si tira dritto, a meno che non ci sia una scorciatoia
      da leggere: allora si resta quanto basta per leggerla, che è la
      stessa attesa di quando si sbaglia */
-  diFretta.value = troppoDiFretta(props.domanda, { giusto, tempo })
+  // chi ha avuto il metodo davanti aveva più da leggere: il tempo di lettura lo conta
+  diFretta.value = troppoDiFretta(prima.value
+    ? { ...props.domanda, testo: `${props.domanda.testo} ${prima.value}` } : props.domanda,
+  { giusto, tempo })
   /* il conto della raffica si aggiorna **a ogni risposta**, anche
      quando è stata letta: le risposte giuste sono il modo di uscirne
      (`quiz/fretta.js`, quattro) */
@@ -223,6 +225,7 @@ async function inizia() {
   quantoCiHaMesso.value = 0
   attesa.value = 0
   diFretta.value = false
+  prima.value = comeSiFaPrima(props.domanda, alleggerita(props.domanda.chiave))
   clearTimeout(avanti)
   avanti = null
   vaiAvanti = null
@@ -280,6 +283,10 @@ onUnmounted(() => {
       <div v-if="titolo || giudiziAccesi" class="qz-testa">
         <span>{{ titolo }}</span>
         <Giudizio :voce="daGiudicare" />
+      </div>
+      <!-- alleggerita: il metodo si legge prima, non dopo l'errore (vedi la-domanda.md) -->
+      <div v-if="prima" class="qz-come qz-prima" data-come-prima>
+        <b>Si fa così:</b> {{ prima }}
       </div>
       <div class="qz-consegna">{{ domanda.testo }}</div>
 
@@ -521,5 +528,6 @@ onUnmounted(() => {
   font-size: clamp(12.5px, 3.6vw, 14.5px); line-height: 1.4;
 }
 .qz-come b { color: #8fd0ff; font-weight: 750; }
+.qz-prima { margin: 0 0 8px; text-align: left; } /* in cima: si legge prima della consegna */
 .qz-fretta { margin-top: 4px; font-size: 12.5px; color: #ffd9a0; } /* un consiglio come la dritta, non rossa */
 </style>

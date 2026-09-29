@@ -69,7 +69,7 @@ fino a cinque anni e mezzo — al posto dei blocchi c'è una riga che dice da
 quando arrivano.
 
 Una riga che gli sta andando male porta il suo numero in rosso — «ne ha
-sbagliate 7 su 10» — con la stessa soglia dell'avviso che arriva in posta:
+sbagliate 7 su 10» — con la stessa soglia delle «Difficili» di «Come va»:
 almeno otto risposte, meno di metà giuste. Il rosso si vede già sul blocco
 chiuso. È l'unico rosso del quadro: gli altri stati dicono *dove* sta una
 cosa, questo dice che qualcosa non funziona.
@@ -136,9 +136,11 @@ salva sul vecchio, apri i giochi sul nuovo, rimetti il file.
   ricominciata.
 
 Quando c'è qualcosa che un genitore potrebbe voler sapere — una novità da
-sistemare, una domanda che al bambino va male da un po' — arriva nella
-**posta dei grandi**: un pallino sul tasto ⚙︎ e, in home, un nastro che
+sistemare, il codice rimesso a zero — arriva nella **posta dei grandi**: un pallino sul tasto ⚙︎ e, in home, un nastro che
 chiede al bambino di chiamare la mamma o il papà.
+Una domanda che va male non scrive: il gioco la rende più rara e le mette
+davanti il «si fa così» per una settimana, e la si trova nella settimana di
+«Come va».
 
 ## Chi gioca
 
