@@ -32,7 +32,7 @@ const blank = () => ({
   // `sa`: macrogruppi di scuola spenti (docs/apprendimento/saperi.md).
   // `giochi`: carte spente in home, eccezioni (docs/genitori/interruttori.md).
   // `tuttoAperto`: lucchetti delle campagne tolti, vedi `tappaAperta()` sotto.
-  settings: { tables: [2, 3, 4, 5], sound: true, music: true,
+  settings: { sound: true,
               giochi: {}, sa: {}, tuttoAperto: false },
   totals: { math: 0, mente: 0, en: 0, verbi: 0, frasi: 0, es: 0, verbiEs: 0, frasiEs: 0, td: 0,
             partiteMath: 0, torri: 0, perfette: 0, ondate: 0,

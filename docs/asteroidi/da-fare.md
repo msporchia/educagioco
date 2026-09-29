@@ -13,6 +13,3 @@ ancora giudicato col dito: si guardano giocando, dopo una build.
   `src/store/calcolo.js` vale anche per le stazioni, che nessuno ha ancora
   giocato con quel numero: va guardato se otto domande su dieci sul
   concetto nuovo sono troppe quando il concetto pesa due o tre.
-- **`settings.tables` è rimasto nel profilo e non lo legge più nessuno**
-  (era la scelta delle tabelline da allenare): si toglie la prossima volta
-  che si tocca `src/store/profile.js`.
