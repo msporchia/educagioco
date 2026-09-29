@@ -6,7 +6,7 @@
 // motore/castello/ (regole), grafica/castello/ (pittori), components/castello/
 // (campo, foglio, mappa) e views/castello/ (cassa, scena, trascino).
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
-import { state, answer, level, addCoins, tdProgresso, tdCompleta,
+import { state, answer, addCoins, tdProgresso, tdCompleta,
          segna, segnaBest, divisioniAccese, tuttoAperto,
          guidaGiaVista, segnaGuidaVista } from '../store/profile.js'
 import { saltaLeSpiegazioni } from '../guide/aiuto.js'
@@ -314,7 +314,8 @@ const eventi = {
     if (che === 'onda-massima') segnaBest('onda', valore)
     else segna(che)
   },
-  moneta: () => { addCoins(level.value); suono.moneta() },
+  // 🪙1 ogni CFG.perMoneta ondate rette (docs/castello/taratura.md): niente moltiplicatore di livello
+  moneta: () => { addCoins(1); suono.moneta() },
 }
 
 /* Chi ha già capito non deve stare a guardare: la velocità moltiplica il
@@ -405,7 +406,8 @@ function tappaSuperata() {
   // moneta di cortesia, non uno stipendio
   const giaFatta = progresso.value.tappa > tappaIdx.value
   const p = tdCompleta(tappaIdx.value, TAPPE.length)
-  premio.value = giaFatta ? 1 : level.value * premioTappa(tappaIdx.value)
+  // premioTappa già paga per i conti che la tappa chiede: niente moltiplicatore di livello
+  premio.value = giaFatta ? 1 : premioTappa(tappaIdx.value)
   addCoins(premio.value)
   fase.value = ultima ? 'trionfo' : 'vinta'
   suono.livello(); suono.moneta()

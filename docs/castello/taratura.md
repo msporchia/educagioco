@@ -58,9 +58,11 @@ lì a crescere è la difficoltà tattica (le bocche).
   il ghiaccio dalla parte giusta è *la* mossa, e una mossa che vince non si
   fa a costo zero; due punti fanno solo pensare un secondo.
 - **Le monete.** `premioTappa`: una moneta ogni dieci operazioni della tappa
-  (almeno una), per il livello del giocatore; una sola di cortesia se era già
-  vinta. Nelle libere una ogni `CFG.perMoneta` (5) ondate
-  (`motore/castello/battaglia.js`).
+  (almeno una); una sola di cortesia se era già vinta. Nelle libere una ogni
+  `CFG.perMoneta` (5) ondate (`motore/castello/battaglia.js`). Niente
+  moltiplicatore di livello: era rimasto dai giochi vecchi, e faceva
+  rendere di più lo stesso ⚡ a chi aveva giocato di più altrove
+  ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
 
 ## Le piazzole
 

@@ -57,6 +57,7 @@ export class Corsa {
     this.perche = null
     this.dettoDellArredo = false   // la regola del filo di luce si spiega una volta per discesa
     this.domande = 0
+    this.giuste = 0   // quante di quelle `domande` erano giuste: paga l'abisso, risalendo (docs/sotterraneo/abisso-progetto.md)
     this.mostriBattuti = 0
     this.tesori = 0
     this.stanzeViste = 0
@@ -550,6 +551,7 @@ export class Corsa {
     const f = this.foglio
     if (!f) return null
     this.domande++
+    if (giusto) this.giuste++
 
     if (f.che === 'scontro') return this.rispostaScontro(f.chi, giusto)
     if (f.che === 'porta') return this.rispostaPorta(f.chi, giusto)
@@ -975,7 +977,7 @@ export class Corsa {
 
   get esito() {
     return {
-      vinta: this.vinta, svenimenti: this.svenimenti, domande: this.domande,
+      vinta: this.vinta, svenimenti: this.svenimenti, domande: this.domande, giuste: this.giuste,
       perche: this.perche || null,   // 'svenuto' se il fondo è stato toccato, niente se risalito o vinto
       piani: this.pianiFatti,
       quantiPiani: this.senzaFondo ? null : this.quantiPiani,   // Infinity mostrerebbe "3 piani su ∞"
