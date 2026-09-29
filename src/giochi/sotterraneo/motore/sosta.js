@@ -1,62 +1,19 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA DISCESA LASCIATA A METÀ
-
-   Una discesa è lunga: tre o quattro piani, quaranta domande, venti
-   minuti buoni. Prima, chiudere il gioco voleva dire buttarla via — e
-   un bambino il gioco lo chiude sempre, perché si mangia, perché
-   suonano alla porta, perché il telefono si spegne. Qui si scrive tutto
-   quello che serve a rimetterla in piedi identica, e si rilegge.
-
-   ── IL PIANO NON SI SALVA: SI RIFÀ ────────────────────────────────
-   Un piano è **una funzione del seme** (`generaPiano`), quindi celle,
-   stanze e corridoi non hanno bisogno di stare in archivio: si
-   rigenerano uguali. Quello che invece non si rifà è tutto ciò che è
-   *successo* — chi è caduto, cosa si è aperto, cosa sta per terra —
-   perché lì di mezzo c'è il caso vero (`rnd`), che nel gioco è
-   `Math.random` e non si riavvolge. Perciò le robe si salvano com'è
-   messo ognuna: sono qualche decina, sono dato piano, e sono l'unica
-   cosa che non si può ricostruire.
-
-   ── I MOSTRI TORNANO AL LORO POSTO ────────────────────────────────
-   Chi stava inseguendo si ritrova a casa sua. Non è distrazione: era
-   l'alternativa a riaprire il gioco con l'orco addosso e un colpo già
-   partito, che è il modo più rapido di far pentire qualcuno di aver
-   ripreso. È la stessa regola del risveglio dopo uno svenimento.
-
-   ── SE LA FORMA CAMBIA, SI BUTTA ──────────────────────────────────
-   `VERSIONE` sale ogni volta che questo formato cambia, e un
-   salvataggio di ieri con una forma di ieri **non si legge**: si
-   ricomincia la discesa. Una partita persa è un dispiacere; una partita
-   ripresa a metà con dei campi che non tornano è un gioco rotto in un
-   modo che nessuno sa spiegare.
-   ═══════════════════════════════════════════════════════════════════ */
+// La discesa lasciata a metà (docs/sotterraneo/regole.md, "Lasciare a metà"). Il piano non si salva, si
+// rifà dal seme; le robe (dove il caso vero è già passato) si salvano com'è messo ognuna. I mostri tornano
+// al loro posto, come dopo uno svenimento. Se la forma cambia (VERSIONE sale) un salvataggio vecchio non si
+// legge più: si ricomincia — un campo che non torna è un gioco rotto in un modo che nessuno sa spiegare.
 import { Corsa } from './corsa.js'
 import { COSE, STANZE_TORCIA } from '../dati/cose.js'
 import { DI_PARTENZA } from '../dati/eroi.js'
 import { INDICE_ABISSO, L_ABISSO } from '../dati/campagna.js'
 
-/* Sale ogni volta che cambia la forma. La 2 porta i quattro eroi e la
-   terza casella addosso: un salvataggio della 1 non sa chi fosse a
-   scendere, e non si indovina. La 3 separa **chi** scendeva da **dove**
-   era arrivato, che nella 2 finivano nella stessa casella (vedi sotto).
-
-   ── LA 2 SI LEGGE ANCORA, ED È UN'ECCEZIONE VOLUTA ────────────────
-   La regola di casa è che una forma vecchia si butta, perché un campo
-   che non torna è un gioco rotto in un modo che nessuno sa spiegare.
-   Qui però non c'è niente che non torni: la 2 ha tutto tranne il nome
-   di chi scendeva, e chi scendeva è esattamente quello che la 2
-   sbagliava comunque. Si riprende col cavaliere — cioè come faceva
-   prima — invece di buttare venti minuti di discesa a chi aggiorna
-   proprio adesso. */
+// la 2 si legge ancora (eccezione voluta): non ha niente che non torni, solo il nome di chi scendeva —
+// che sbagliava comunque — e riprende col cavaliere invece di buttare venti minuti di discesa
 export const VERSIONE = 3
 const LEGGIBILI = [2, VERSIONE]
 
-/* ── il campo `visto` ──
-   Duemilaseicento numeri di zero e uno: scritti così sono venti
-   chilobyte di JSON per niente. Si contano invece **le lunghezze** dei
-   tratti, cominciando dagli spenti: `"120.30.8"` vuol dire centoventi
-   celle mai viste, trenta viste, otto no. Una mappa appena cominciata
-   sta in dieci numeri. */
+// `visto`: si contano le lunghezze dei tratti (cominciando dagli spenti), non i 2600 zero/uno per cella:
+// "120.30.8" vuol dire 120 celle mai viste, 30 viste, 8 no
 export function stringaDi(visto) {
   const pezzi = []
   let quanti = 0, valore = 0
@@ -84,20 +41,9 @@ export function vistoDa(stringa, quante) {
   return visto
 }
 
-/* ── quello che si scrive ──
-   `tappa` è l'indice nella campagna, non la tappa intera: la tabella
-   sta nel codice e cambia con le versioni, l'indice no. L'abisso è
-   l'indice **−1** (`INDICE_ABISSO`): il campo non cambia significato,
-   guadagna un valore — e per questo `VERSIONE` non sale. Un salvataggio
-   di ieri porta un indice fra 0 e 5 e si rilegge esattamente come prima.
-
-   ── E UNA DISCESA FINITA NON SI SALVA, TRANNE UNA ─────────────────
-   Non c'è più niente da riprendere: è la regola, e vale per le sei
-   tappe. L'abisso però **non finisce** — quello che finisce è la sera —
-   e quando si risale al fondo degli svenimenti quello che si scrive è
-   *il punto da cui si rientra*. Chi lo vuole lo chiede per nome
-   (`anchePerFinite`), così la regola resta quella e l'eccezione si
-   legge dove viene usata. */
+// `tappa` è l'indice nella campagna (l'abisso è −1, INDICE_ABISSO: il campo guadagna un valore, non cambia
+// significato). Una discesa finita non si salva, tranne l'abisso: là non finisce mai, finisce solo la
+// sera, e chi vuole scriverlo comunque lo chiede per nome (`anchePerFinite`)
 export function scrivi(corsa, tappa, { anchePerFinite = false } = {}) {
   if (!corsa || (corsa.finita && !anchePerFinite)) return null
   return {
@@ -105,35 +51,18 @@ export function scrivi(corsa, tappa, { anchePerFinite = false } = {}) {
     tappa,
     seme: corsa.seme,
     piano: corsa.piano,
-    /* `eroe` è **chi** scende, `dove` è la cella in cui si era: erano
-       tutte e due `eroe`, e in un letterale la seconda cancella la
-       prima senza che niente si lamenti. Il gioco riprendeva quindi
-       sempre col cavaliere, chiunque avessi scelto — e la mappa delle
-       discese, che legge la scelta e non il salvataggio, continuava a
-       mostrare il ritratto giusto. */
+    // `eroe` (chi scende) e `dove` (dov'era) erano lo stesso campo: nel letterale la seconda cancellava la
+    // prima, e si riprendeva sempre col cavaliere
     eroe: corsa.chiEro,
     vita: corsa.vita,
     vitaBase: corsa.vitaBase,
     gemme: corsa.gemme,
     zaino: [...corsa.zaino],
     mano: corsa.mano,
-    /* La mano debole è un campo **aggiunto**, e per questo la versione
-       non sale: un salvataggio che non ce l'ha si rilegge senza niente
-       in quella mano, che è esattamente com'era il gioco prima. La
-       versione sale quando un campo *cambia significato* — quella è la
-       cosa che nessuno saprebbe spiegare, non un campo in più con un
-       ripiego ovvio. */
-    mancina: corsa.mancina,
+    mancina: corsa.mancina,   // campo aggiunto: un salvataggio senza si rilegge senza niente in quella mano
     corpo: corsa.corpo,
     dito: corsa.dito,
-    /* ── la torcia, in tre campi e non in uno ──
-       `torcia` resta quello che è sempre stato — è accesa, sì o no —
-       perché un campo che cambia significato è la cosa che nessuno sa
-       spiegare (vedi `mancina`, qui sopra); quello che è cambiato è il
-       gioco, quindi si **aggiungono** due campi con un ripiego ovvio, e
-       la versione non sale. Un salvataggio di prima diceva soltanto
-       `torcia: true`, e si rilegge come una torcia piena: era, di
-       fatto, una torcia che non finiva mai. */
+    // torcia: sempre accesa sì/no; torciaResta/torce sono campi aggiunti (torcia:true di prima si rilegge come piena)
     torcia: corsa.torciaAccesa,
     torciaResta: corsa.torciaResta,
     torce: corsa.torceInScorta,
@@ -146,38 +75,24 @@ export function scrivi(corsa, tappa, { anchePerFinite = false } = {}) {
       domande: corsa.domande, mostri: corsa.mostriBattuti, tesori: corsa.tesori,
       stanzeViste: corsa.stanzeViste, piani: corsa.pianiFatti,
       svenimenti: corsa.svenimenti, chieste: corsa.contaChieste,
-      /* quante occasioni si sono spese **su questo piano**: serve solo
-         all'abisso, e un salvataggio che non ce l'ha riparte da zero —
-         che è il ripiego ovvio, cioè il motivo per cui la versione non
-         sale */
-      qui: corsa.svenimentiQui,
+      qui: corsa.svenimentiQui,   // spese su QUESTO piano (solo l'abisso); un salvataggio senza riparte da zero
     },
     robe: corsa.livello.robe.map(pulisci),
   }
 }
 
-/* Le robe si salvano come sono, meno quello che serviva solo a chi
-   correva: dove stava un mostro **in questo istante** (`fx`, `fy`) non
-   si riprende, perché riprendendo torna a casa sua. */
+// dove stava un mostro in questo istante (fx, fy) non si riprende: riprendendo torna a casa sua
 function pulisci(r) {
   const { fx, fy, calmo, sveglio, detto, casa, ...resto } = r
   if (casa) { resto.x = casa.x; resto.y = casa.y }
   return resto
 }
 
-/* ── quello che si rilegge ──
-   Torna una `Corsa` pronta a giocare, o `null` se il salvataggio non si
-   può leggere: chi chiama in quel caso comincia una discesa nuova, e
-   non deve saperne il perché. */
+// torna una Corsa pronta a giocare, o null se il salvataggio non si può leggere
 export function leggi(dato, tappa, ripiego = DI_PARTENZA) {
   if (!dato || !LEGGIBILI.includes(dato.v) || !dato.robe) return null
   try {
-    /* Nella 2 `eroe` portava la cella, non il nome: quello che arriva
-       qui è un oggetto, e `eroeDi` di un oggetto torna il primo della
-       lista. Si dichiara invece di lasciarlo capitare — e al posto del
-       cavaliere di sistema si usa il `ripiego` che passa chi chiama,
-       cioè l'eroe scelto in casa: è quasi sempre la stessa persona che
-       aveva cominciato la discesa. */
+    // nella 2 `eroe` portava la cella, non il nome: al posto del cavaliere di sistema si usa il `ripiego`
     const chiEro = typeof dato.eroe === 'string' ? dato.eroe : ripiego
     const dove = dato.dove || (typeof dato.eroe === 'object' ? dato.eroe : null)
     if (!dove) return null
@@ -189,10 +104,7 @@ export function leggi(dato, tappa, ripiego = DI_PARTENZA) {
     corsa.vitaBase = dato.vitaBase
     corsa.vita = dato.vita
     corsa.gemme = dato.gemme
-    /* Quello che non si riconosce più si butta, invece di portarselo
-       dietro: un id sparito è una casella che non si può nemmeno
-       togliere, e un gioco in cui non si può togliere una cosa che non
-       esiste è un gioco fermo. */
+    // quello che non si riconosce più si butta: un id sparito è una casella che non si può nemmeno togliere
     const vera = k => (k && COSE[k] ? k : null)
     corsa.zaino = (dato.zaino || []).filter(k => COSE[k])
     corsa.mano = vera(dato.mano)
@@ -219,37 +131,20 @@ export function leggi(dato, tappa, ripiego = DI_PARTENZA) {
     corsa.contaChieste = c.chieste || 0
 
     corsa.aggiornaLuce()
-    /* si riprende **dov'era**, e riprendere non è entrare in una
-       stanza: senza questa riga il primo passo dopo la ripresa
-       consumerebbe una stanza di torcia che nessuno ha girato */
-    corsa.segnaLaStanza()
-    /* ── e quello che allora si portava e adesso no ──
-       Il caso vero non è un id sparito (quelli li ha già tolti `vera`):
-       è una discesa cominciata **prima** che le classi avessero un
-       limite, che rientra con un'ascia in pugno a un mago. Buttarla
-       sarebbe rubare, lasciarla addosso sarebbe un gioco che si
-       contraddice da solo — quindi va in tasca, o per terra se le
-       tasche sono piene, e lo dice. La versione non sale apposta: la
-       forma del salvataggio è identica, non c'è nessun campo che non
-       torni, e c'è un ripiego ovvio. */
+    corsa.segnaLaStanza()   // riprendere non è entrare in una stanza, o il primo passo consumerebbe torcia
+    // un salvataggio d'un mago che rientra con un'ascia in pugno (da prima del limite di classe): va in
+    // tasca, o per terra se piene, e lo dice — la versione non sale, la forma è identica
     corsa.sistemaIlCorredo()
     return corsa
   } catch (e) {
-    /* un salvataggio storto non porta giù il gioco: si ricomincia. È la
-       stessa scelta dell'archivio, che non lancia mai. */
-    return null
+    return null   // un salvataggio storto non porta giù il gioco: si ricomincia
   }
 }
 
-/* Due righe per la carta «riprendi»: cosa si sta lasciando in sospeso.
-   Le legge la schermata delle discese, che di `Corsa` non sa niente. */
+// due righe per la carta "riprendi": cosa si sta lasciando in sospeso
 export function dice(dato, campagna) {
   if (!dato || !LEGGIBILI.includes(dato.v)) return null
-  /* L'abisso non sta nella campagna, quindi `campagna[-1]` è
-     `undefined`: senza questa riga la carta «riprendi» **sparirebbe in
-     silenzio** invece di dire «l'abisso · piano 23», e venti minuti di
-     discesa sembrerebbero buttati. Una riga, e se ci si dimentica non lo
-     dice nessuno. */
+  // l'abisso non sta nella campagna: senza questa riga la carta "riprendi" sparirebbe in silenzio
   const t = dato.tappa === INDICE_ABISSO ? L_ABISSO : campagna[dato.tappa]
   if (!t) return null
   return {
@@ -257,9 +152,7 @@ export function dice(dato, campagna) {
     nome: t.nome,
     icona: t.icona,
     piano: (dato.piano || 0) + 1,
-    /* quanti piani ha in tutto: l'abisso non lo sa, e chi disegna scrive
-       «piano 23» invece di «piano 23 di …» */
-    piani: t.abisso ? null : t.piani,
+    piani: t.abisso ? null : t.piani,   // l'abisso non lo sa: "piano 23" invece di "piano 23 di …"
     eroe: typeof dato.eroe === 'string' ? dato.eroe : null,
     vita: dato.vita,
     gemme: dato.gemme,
