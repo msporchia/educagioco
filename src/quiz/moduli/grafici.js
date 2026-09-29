@@ -1,73 +1,20 @@
-/* ═══════════════════════════════════════════════════════════════════
-   GRAFICI E TABELLE — leggere i dati, prima di farci i conti.
-
-   È il pezzo del programma che le Indicazioni nazionali chiamano
-   «relazioni, dati e previsioni», e che qui non c'era: pittogrammi in
-   prima («il colore preferito della classe», un disegno per bambino),
-   istogrammi e legende in seconda e terza, tabelle a doppia entrata in
-   terza e quarta, moda e media in quinta. Il traguardo di fine primaria
-   lo dice in una riga — «ricava informazioni da dati rappresentati in
-   tabelle e grafici» — ed è una cosa che si impara solo leggendone
-   tanti, tutti diversi.
-
-   I DATI SONO INVENTATI, LE STORIE NO. Ogni grafico è una storia che un
-   bambino riconosce — i gelati venduti nei giorni della settimana, i
-   voti per l'animale della classe, i libri letti dagli amici, i giorni
-   di pioggia, i gol delle squadre, i cesti del nonno — e i numeri
-   escono dalla sorte ogni volta. Otto storie per centinaia di numeri
-   fanno migliaia di grafici diversi, e la stessa domanda («quanti in
-   più?») torna dentro un pittogramma, un istogramma e una tabella: è la
-   stessa idea vista in tre modi, che è quello che serve a capire che è
-   un'idea sola.
-
-   I FALSI SONO GLI ERRORI VERI, e in questa materia sono pochi e
-   sempre gli stessi:
-     · **la voce accanto** — la fila, la barra o la casella vicina a
-       quella giusta: l'occhio che scivola;
-     · **la legenda dimenticata** — si contano i disegni e non quanto
-       vale ciascuno; e il mezzo disegno contato intero, o lasciato
-       fuori;
-     · **le tacche contate** — su una scala che va di due in due, la
-       barra alta quattro tacche vale otto, non quattro;
-     · **la tacca sotto o sopra** — la cima letta sulla riga sbagliata;
-     · **il totale al posto della differenza** — «quanti in più» è la
-       domanda che più di tutte si risponde sommando;
-     · **un valore solo** — rispondere «quanti in più» col numero della
-       barra più alta, che è la metà del conto;
-     · **una voce lasciata fuori** dalla somma, e **il riporto
-       dimenticato**;
-     · **riga e colonna scambiate** in una tabella;
-     · **la moda confusa con quante volte** — il 3 invece dell'8 che
-       compare tre volte — e **la media senza divisione**: la somma.
-   Ognuno ha il suo `perche`, che dice cosa ha fatto *quella* scelta; e
-   l'`aiuto` dice il gesto giusto con i numeri di quel grafico, perché
-   «parti dalla cima e vai dritto ai numeri» si capisce solo se la cima
-   è quella che si ha davanti.
-
-   IL DISEGNO È LA DOMANDA. I pittori stanno in
-   `grafica/pittori/dati.js` e ricevono fatti — quante icone per fila,
-   quanto è alta una barra, cosa c'è in una casella — senza sapere
-   quale sia la voce chiesta. La moda e la media dalle liste sono
-   l'eccezione: lì i dati sono una fila di numeri o di figure, e una
-   fila si scrive.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Grafici e tabelle: leggere i dati prima di farci i conti («relazioni,
+   dati e previsioni» delle Indicazioni). I dati sono inventati, le storie
+   no: otto storie riconoscibili (gelati venduti, voti in classe, libri
+   letti...) con numeri diversi ogni volta, e la stessa domanda torna
+   dentro pittogramma, istogramma e tabella — è la stessa idea vista in
+   tre modi. I falsi sono gli errori veri e sempre gli stessi: la voce
+   accanto, la legenda dimenticata, le tacche contate come se valessero
+   uno, il totale al posto della differenza, il riporto dimenticato, la
+   moda confusa con quante volte compare. Il disegno è la domanda: i
+   pittori (grafica/pittori/dati.js) ricevono solo fatti già decisi. */
 
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo, emoji, scena } from '../nucleo/domanda.js'
 import { PITTORI_DATI, TACCHE } from '../grafica/pittori/dati.js'
 
-/* ── le voci ──
-   Una voce è quello che sta su una fila o sotto una barra. Si scrive in
-   quattro modi, perché in italiano un nome si porta dietro l'articolo e
-   la preposizione — «la fila del cane», «rispetto alla tartaruga», «la
-   barra di giovedì» — e costruirli a pezzi è il modo di ritrovarsi
-   «la fila di il cane» a schermo:
-     etichetta — quello che si legge sul grafico (tre lettere o un'emoji)
-     nome      — dentro la consegna: «il cane 🐶», «giovedì», «Eva»
-     a / di    — con la preposizione già attaccata
-   Chi ha un'emoji risponde con l'emoji, gli altri con la parola: la
-   risposta è la stessa cosa che si legge sul grafico, così non c'è un
-   passaggio in più fra il disegno e il tasto. */
+// una voce è quello che sta su una fila o una barra, in quattro forme (etichetta, nome, a/di già con la preposizione)
+// per evitare di ritrovarsi «la fila di il cane» costruendo un nome a pezzi
 const aPrep = n => (/^[aA]/.test(n) ? 'ad ' : 'a ')
 
 const figura = ([em, nome, a, di]) =>
@@ -78,11 +25,9 @@ const calendario = nome =>
   ({ etichetta: nome.slice(0, 3), nome, a: aPrep(nome) + nome, di: `di ${nome}` })
 
 const GIORNI = ['lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato', 'domenica'].map(calendario)
-/* l'anno di scuola, da settembre a giugno: i mesi di cui si parla in classe */
-const MESI = ['settembre', 'ottobre', 'novembre', 'dicembre', 'gennaio', 'febbraio',
+const MESI = ['settembre', 'ottobre', 'novembre', 'dicembre', 'gennaio', 'febbraio', // l'anno di scuola
   'marzo', 'aprile', 'maggio', 'giugno'].map(calendario)
-/* nomi corti apposta: sulla tabella stanno in una casella larga un
-   quarto del riquadro */
+// nomi corti apposta: sulla tabella stanno in una casella larga un quarto del riquadro
 const NOMI = ['Ada', 'Leo', 'Eva', 'Ugo', 'Bea', 'Teo', 'Lia', 'Ivo', 'Noa', 'Gio',
   'Sara', 'Luca', 'Anna', 'Nico', 'Omar', 'Rita', 'Dino', 'Mia', 'Zoe', 'Tom'].map(persona)
 const ANIMALI = [
@@ -104,22 +49,8 @@ const FRUTTI = [
 const PAROLE = { 2: 'due', 3: 'tre', 4: 'quattro', 5: 'cinque', 6: 'sei', 7: 'sette', 8: 'otto', 9: 'nove', 10: 'dieci' }
 const volte = n => (n === 1 ? 'una volta' : `${n} volte`)
 
-/* ── le storie dei grafici ──
-   `fila: true` vuol dire che le voci hanno un ordine (i giorni, i mesi)
-   e se ne prende un pezzo di seguito: un grafico con giovedì prima di
-   lunedì insegnerebbe che l'ordine delle barre non conta, e invece è la
-   prima cosa che uno guarda. `tetto` è il numero più grande che ha
-   senso in quella storia — cento gelati in un giorno sì, cento giorni
-   di pioggia in un mese no — e decide quali storie reggono una scala
-   che va di dieci in dieci. `media: null` dove la media non vuol dire
-   niente: i voti medi per animale non li chiede nessuno.
-
-   L'`icona` è il disegno del pittogramma, e si sceglie **tonda e
-   larga**: la legenda che vale due porta il mezzo disegno, e la metà
-   sinistra di una mano (✋, col pollice tutto da una parte) o di un
-   cono stretto si legge come una fettina, non come mezzo. Per questo i
-   voti sono facce — una faccia per bambino, che è anche come si fa
-   alla lavagna — e il gelato è la coppetta. */
+// fila: true = le voci hanno un ordine, se ne prende un pezzo di seguito; tetto = il numero più grande sensato per la storia
+// l'icona è tonda e larga: una forma stretta o asimmetrica letta a metà sembrerebbe una fettina, non un mezzo disegno
 const STORIE = [
   {
     id: 'gelati', icona: '🍨', voci: GIORNI, fila: true, tetto: 100,
@@ -187,11 +118,7 @@ const STORIE = [
   },
 ]
 
-/* ── le storie delle tabelle ──
-   Righe × colonne, e una frase per ogni modo di leggerle: la casella,
-   il totale di una riga, quello di una colonna, e la differenza fra due
-   righe nella stessa colonna. Le colonne hanno anche il loro `di`,
-   perché il `perche` deve poter dire «la colonna di 🦖». */
+// righe × colonne, una frase per ogni modo di leggerle; le colonne hanno il loro `di` per il perche («la colonna di 🦖»)
 const colonna = ([etichetta, nome, di]) => ({ etichetta, nome, di })
 
 const TABELLE = [
@@ -242,11 +169,7 @@ const TABELLE = [
   },
 ]
 
-/* ── la moda dalle liste ──
-   Qui i dati non sono ancora in un grafico: sono una fila, come escono
-   da un'indagine, e la moda si trova **contando** — che è tutto il
-   senso della parola. Dal grafico sarebbe «la barra più alta», cioè una
-   domanda che il bambino sa già fare con un nome nuovo sopra. */
+// qui i dati sono una fila, non ancora un grafico: la moda si trova contando, non leggendo «la barra più alta»
 const MODA_NUMERI = [
   { che: 'Le età dei bambini alla festa di compleanno', da: 6, a: 11 },
   { che: 'Il numero di scarpe dei giocatori della squadra', da: 30, a: 37 },
@@ -268,12 +191,7 @@ const MODA_FIGURE = [
     figure: ['🚶', '🚲', '🚗', '🚌', '🛴'] },
 ]
 
-/* ── la media dalle liste ──
-   Una storia con dentro i numeri, come un problema: la media nasce per
-   dire «quanto a testa, se fosse tutto pari», e senza una storia è un
-   conto e basta. I numeri restano piccoli apposta — la divisione è
-   per tre, quattro o cinque, dentro le tabelline — perché la cosa da
-   imparare è il gesto, non la divisione. */
+// una storia coi numeri dentro, non un conto e basta; numeri piccoli apposta: la divisione è dentro le tabelline
 const MEDIA_STORIE = [
   { da: 3, a: 12, dice: (l, n, chi) => `${chi} ha letto ${l} pagine in ${PAROLE[n]} sere. Quante pagine ha letto in media ogni sera?` },
   { da: 0, a: 5, dice: (l, n) => `In ${PAROLE[n]} partite la squadra ha segnato ${l} gol. Quanti gol ha segnato in media a partita?` },
@@ -283,17 +201,12 @@ const MEDIA_STORIE = [
   { da: 1, a: 9, dice: (l, n, chi) => `${chi} ha trovato ${l} conchiglie in ${PAROLE[n]} giorni al mare. Quante conchiglie ha trovato in media al giorno?` },
 ]
 
-/* «4, 6 e 5»: l'ultima con la «e», come si dice */
+// «4, 6 e 5»: l'ultima con la «e», come si dice
 const elenco = l => (l.length < 2 ? String(l[0]) : `${l.slice(0, -1).join(', ')} e ${l[l.length - 1]}`)
 const somma = l => l.reduce((s, x) => s + x, 0)
 const piu = l => l.join(' + ')
 
-/* il riporto dimenticato: si sommano le colonne e si butta quello che
-   va oltre il nove. È l'errore di somma che si fa davvero — gli altri
-   (una cifra sbagliata a caso) non hanno una diagnosi da dare. Solo
-   dove c'è una colonna da fare: 2 + 5 + 8 si fa a mente, e «hai
-   dimenticato il riporto» su tre numeri da una cifra sarebbe un perché
-   che non vuol dire niente */
+// il riporto dimenticato: si sommano le colonne e si butta quello che va oltre il nove; è l'errore di somma vero
 function senzaRiporto(l) {
   if (l.every(x => x < 10)) return NaN
   let tot = 0
@@ -302,14 +215,7 @@ function senzaRiporto(l) {
   return tot
 }
 
-/* ── i falsi di una domanda a numero ──
-   I candidati sono [numero, perché] in ordine d'importanza: il primo è
-   l'errore principe di quella domanda e resta sempre, gli altri si
-   mescolano e se ne prendono due. Via i doppioni, via la risposta
-   giusta, via i negativi — un «−2 gelati» si scarta a occhio — e via
-   lo zero, che su un grafico dove ogni voce ha almeno una cosa si
-   scarta allo stesso modo. Tranne dove lo zero è un dato vero (i gol
-   di una partita, i fratelli), e lì lo si chiede con `zero`. */
+// candidati [numero, perché] in ordine: il primo resta sempre, gli altri si mescolano; via doppioni, negativi, zero (salvo `zero`)
 function falsiDi(sorte, buona, candidati, { zero = false } = {}) {
   const visti = new Set([buona])
   const ok = []
@@ -322,15 +228,13 @@ function falsiDi(sorte, buona, candidati, { zero = false } = {}) {
   return primo ? [primo, ...sorte.mescola(resto)].slice(0, 3) : []
 }
 
-/* n numeri diversi fra `da` e `a` */
 function diversi(sorte, n, da, a) {
   const tutti = []
   for (let v = da; v <= a; v++) tutti.push(v)
   return sorte.alcuni(tutti, n)
 }
 
-/* le voci di un grafico: un pezzo di seguito se hanno un ordine, a
-   caso se no */
+// le voci di un grafico: un pezzo di seguito se hanno un ordine, a caso se no
 function prendiVoci(sorte, lista, n, fila) {
   if (!fila) return sorte.alcuni(lista, n)
   const da = sorte.fra(0, lista.length - n)
@@ -358,16 +262,13 @@ function unGrafico(sorte, forma, { n = 4, max = 6, passo = 1, vale = 1, mezzi = 
       scena: { che: 'istogramma', voci: voci.map(v => v.etichetta), valori, passo },
     }
   }
-  /* i mezzi disegni: almeno uno, se la legenda li permette, ma non su
-     tutte le file — un grafico fatto solo di mezzi non insegna che il
-     mezzo è un'eccezione */
+  // i mezzi disegni: almeno uno se la legenda li permette, ma non su tutte le file (sarebbe la norma, non l'eccezione)
   let icone = diversi(sorte, n, 1, max)
   if (mezzi) {
     const conMezzo = icone.map(() => sorte.forse(0.4))
     conMezzo[sorte.fra(0, n - 1)] = true
     icone = icone.map((c, i) => (conMezzo[i] && c < max ? c + 0.5 : c))
-    /* 3 e 3½ restano diversi, ma 3½ e 4 con un altro 3½ no: si rifà
-       il giro senza mezzi piuttosto che consegnare due valori uguali */
+    // si rifà il giro senza mezzi piuttosto che consegnare due valori uguali
     if (new Set(icone).size < n) icone = icone.map(Math.floor)
   }
   const valori = icone.map(c => c * vale)
@@ -377,13 +278,9 @@ function unGrafico(sorte, forma, { n = 4, max = 6, passo = 1, vale = 1, mezzi = 
   }
 }
 
-/* come si risponde con una voce: la stessa cosa che si legge sul grafico */
-const rispostaDi = (v, perche) => (v.em ? emoji(v.em, perche) : testo(v.nome, perche))
-
-/* il nome di un segno del grafico, per dirlo nel `perche` */
+const rispostaDi = (v, perche) => (v.em ? emoji(v.em, perche) : testo(v.nome, perche)) // la stessa cosa che si legge sul grafico
 const segno = g => (g.forma === 'barre' ? 'la barra' : 'la fila')
 
-/* ── la tabella ── */
 function unaTabella(sorte, grado, colonne = 3) {
   const t = sorte.uno(TABELLE)
   const righe = prendiVoci(sorte, t.righe, 3, t.fila)
@@ -406,32 +303,8 @@ const SCALETTA = [
   'moda e media',
 ]
 
-/* ── le tipologie, e quanto costano ──
-   Il metro è il programma della primaria (Indicazioni 2012, «relazioni,
-   dati e previsioni»), sulla scala comune: 25 è il primo giorno di
-   prima, 37,5 di seconda, 50 di terza, 62,5 di quarta, 75 di quinta.
-
-   · Il pittogramma semplice sta a 28: in prima si fa l'indagine della
-     classe e si mette un disegno per bambino, e la domanda è contare
-     fino a otto su una fila — il primo mese di scuola è già passato.
-   · L'istogramma con la scala di uno in uno sta a 38 (inizio seconda):
-     è lo stesso pittogramma con le cose impilate, ma la cima va portata
-     fino ai numeri, e i numeri sono scritti a tacche alterne. Con la
-     scala di due in due, a 47, e di cinque o dieci, a 56: leggere una
-     tacca senza numero vuol dire contare per due o per cinque.
-   · La legenda sta a 41 quando vale due e il disegno è intero (in
-     seconda si conta di due in due), a 50 col mezzo disegno o col
-     cinque e il dieci (la metà è di terza), a 56 col quattro e il tre.
-   · Quanti in più e quanti in tutto stanno a 47–50 in terza, dove il
-     grafico è ancora quello facile, e salgono col grafico: in quarta
-     con la legenda e le scale grosse, a 63 con le tabelle da quinta.
-   · La tabella a doppia entrata sta a 56: la si incontra in terza, ma
-     leggerla con i numeri dentro — non solo con le crocette — è del
-     secondo quadrimestre, e da quarta coi numeri grossi (63).
-   · Moda e media stanno in quinta, dove le mette il programma: la moda
-     a 75 (si conta, e il nome si impara dalla consegna), la media a 81,
-     perché vuole una divisione in fondo — e infatti dichiara anche
-     `divisioni`, così chi le divisioni non le ha fatte non la vede. */
+// livelli tarati sul programma (Indicazioni 2012, «relazioni, dati e previsioni»): vedi docs/apprendimento/quiz-livelli.md
+// la media dichiara anche `divisioni`, così chi non le ha fatte non la vede
 const TIPI = [
   { chiave: 'dati:pittogramma', nome: 'Contare nel pittogramma', sa: 'dati',
     livello: 28, gradi: { 1: 1, 2: 0.3 } },
@@ -460,11 +333,7 @@ class Grafici extends Modulo {
       materia: 'matematica',
       chiaro: 'leggere pittogrammi, grafici a barre e tabelle, e ricavarne quanti in più, quanti in tutto, la moda e la media',
       scaletta: SCALETTA,
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e il perché di ogni numero sta sopra
-         le tipologie, che lo dichiarano una per una. Questi sono il
-         loro fondo: il grado vale quanto la sua cosa più facile. */
-      livelli: [28, 38, 47, 55, 63],
+      livelli: [28, 38, 47, 55, 63], // il fondo di ogni grado: vale quanto la sua tipologia più facile
       tipi: TIPI,
       pittori: PITTORI_DATI,
     })
@@ -483,7 +352,6 @@ class Grafici extends Modulo {
     }
   }
 
-  /* ── il pittogramma: quanti sono, e chi ne ha di più ── */
   pittogramma(grado, sorte) {
     const g = unGrafico(sorte, 'pittogramma', { n: sorte.fra(3, 4), max: grado <= 1 ? 6 : 8 })
     if (sorte.forse(0.4)) return this.chi(g, sorte, 'dati:pittogramma')
@@ -506,19 +374,14 @@ class Grafici extends Modulo {
     })
   }
 
-  /* chi ne ha di più, chi di meno: la stessa domanda sul pittogramma e
-     sulle barre, e la risposta è una voce. I falsi sono le altre voci,
-     ognuna col suo perché: la più corta a chi cercava la più lunga (ha
-     letto la domanda al contrario), la seconda (non ha confrontato
-     bene), le altre. */
+  // chi ne ha di più/meno: stessa domanda su pittogramma e barre, la risposta è una voce, i falsi le altre voci
   chi(g, sorte, chiave) {
     const piu = sorte.forse(0.6)
     const ordine = g.voci.map((v, i) => i).sort((a, b) => (piu ? g.valori[b] - g.valori[a] : g.valori[a] - g.valori[b]))
     const [primo, secondo, ...altri] = ordine
     const ultimo = altri.length ? altri.pop() : null
     const barre = g.forma === 'barre'
-    /* «la barra di giovedì arriva a 5», «la fila di Eva ha 5 disegni»:
-       il perché dice cosa si vede, non cosa vuol dire */
+    // il perché dice cosa si vede («la barra di giovedì arriva a 5»), non cosa vuol dire
     const quanto = i => barre
       ? `la barra ${g.voci[i].di} arriva a ${g.valori[i]}`
       : `la fila ${g.voci[i].di} ha ${g.valori[i]} disegni`
@@ -543,17 +406,13 @@ class Grafici extends Modulo {
     })
   }
 
-  /* ── la legenda: ogni disegno vale più di uno ──
-     L'errore principe è contare i disegni e fermarsi lì. Il mezzo
-     disegno ne porta altri due, opposti: lasciarlo fuori, o contarlo
-     intero. */
+  // l'errore principe è contare i disegni e fermarsi lì; il mezzo disegno ne porta altri due, opposti (fuori, o intero)
   legenda(grado, sorte) {
     const scelta = grado <= 2 ? { vale: 2, mezzi: false, max: 6 }
       : grado === 3 ? sorte.uno([{ vale: 2, mezzi: true, max: 6 }, { vale: 5, mezzi: false, max: 6 }, { vale: 10, mezzi: false, max: 6 }])
       : sorte.uno([{ vale: 4, mezzi: true, max: 7 }, { vale: 10, mezzi: true, max: 7 }, { vale: 5, mezzi: false, max: 7 }, { vale: 3, mezzi: false, max: 7 }])
     const g = unGrafico(sorte, 'legenda', { n: sorte.fra(3, 4), ...scelta })
-    /* se c'è un mezzo disegno, di solito si chiede proprio quella fila:
-       è la cosa nuova del grafico */
+    // se c'è un mezzo disegno, di solito si chiede proprio quella fila: è la cosa nuova del grafico
     const conMezzo = g.icone.map((c, i) => (c % 1 ? i : -1)).filter(i => i >= 0)
     const i = conMezzo.length && sorte.forse(0.7) ? sorte.uno(conMezzo) : sorte.fra(0, g.voci.length - 1)
     const v = g.voci[i], c = g.icone[i], V = g.vale, em = g.storia.icona
@@ -583,17 +442,13 @@ class Grafici extends Modulo {
       ]),
       chiave: 'dati:legenda',
       aiuto,
-      /* la strada corta c'è davvero, ed è una tabellina: tanti disegni
-         da tanto l'uno. Col mezzo disegno no — lì la somma è la strada */
+      // la strada corta è una tabellina; col mezzo disegno no, lì la somma è la strada
       dritta: mezzo ? undefined : `c'è una strada corta: ${intere} disegni da ${V} sono ${intere} × ${V} = ${quanti}`,
       sorte,
     })
   }
 
-  /* ── il grafico a barre: leggere quanto è alta una barra ──
-     Col passo di uno la tentazione è la barra accanto e la tacca
-     sbagliata; col passo di due o di cinque arriva l'errore che conta
-     davvero, le tacche contate come se valessero uno. */
+  // col passo di uno la tentazione è la tacca accanto; col passo di due o cinque, contarle come se valessero uno
   barre(grado, sorte) {
     const passo = grado <= 2 ? 1 : grado === 3 ? sorte.uno([1, 2, 2]) : sorte.uno([2, 5, 10])
     const g = unGrafico(sorte, 'barre', { n: sorte.fra(3, grado <= 2 ? 4 : 5), passo })
@@ -622,9 +477,7 @@ class Grafici extends Modulo {
     })
   }
 
-  /* ── dove si prende un grafico per fare un conto ──
-     La stessa domanda su tutte le forme che quel grado conosce: è il
-     modo di far vedere che «quanti in più» è un'idea sola. */
+  // la stessa domanda su tutte le forme che quel grado conosce: fa vedere che «quanti in più» è un'idea sola
   graficoPerConto(grado, sorte, n) {
     if (grado <= 3) return sorte.forse(0.5)
       ? unGrafico(sorte, 'pittogramma', { n, max: 8 })
@@ -634,10 +487,7 @@ class Grafici extends Modulo {
     return unGrafico(sorte, 'barre', { n, passo: grado === 4 ? sorte.uno([2, 5]) : sorte.uno([5, 10]) })
   }
 
-  /* ── quanti in più, quanti in meno ──
-     L'errore che si fa più di tutti è sommare: «in più» suona come
-     «più», e il più è la somma. Il secondo è rispondere con uno dei due
-     numeri, che è la metà del conto. */
+  // l'errore che si fa di più è sommare («in più» suona come «più»); il secondo è rispondere con un solo numero
   differenza(grado, sorte) {
     const tabella = grado >= 4 && sorte.forse(grado === 4 ? 0.3 : 0.5)
     if (tabella) return this.differenzaTabella(grado, sorte)
@@ -702,10 +552,7 @@ class Grafici extends Modulo {
     })
   }
 
-  /* ── quanti in tutto ──
-     Il conto è una somma e la sanno fare tutti: l'errore è nel leggere,
-     cioè lasciare fuori una voce, prendere solo la più grande, o — con
-     la legenda — sommare i disegni invece di quanto valgono. */
+  // l'errore è nel leggere: una voce lasciata fuori, solo la più grande, o (con la legenda) i disegni invece dei valori
   totale(grado, sorte) {
     if (grado >= 4 && sorte.forse(grado === 4 ? 0.3 : 0.5)) return this.totaleTabella(grado, sorte)
     const n = grado <= 3 ? 3 : sorte.fra(3, 4)
@@ -739,8 +586,7 @@ class Grafici extends Modulo {
     })
   }
 
-  /* il totale di una riga o di una colonna: il falso che conta è
-     l'altro verso, sommare una colonna invece della riga */
+  // il falso che conta è l'altro verso: sommare una colonna invece della riga
   totaleTabella(grado, sorte) {
     const tb = unaTabella(sorte, grado, grado >= 5 && sorte.forse(0.4) ? 4 : 3)
     const perRiga = sorte.forse(0.6)
@@ -781,10 +627,7 @@ class Grafici extends Modulo {
     })
   }
 
-  /* ── la tabella: la casella all'incrocio ──
-     I tre errori sono tre caselle: quella accanto nella riga giusta,
-     quella sopra o sotto nella colonna giusta, e quella dove né riga né
-     colonna sono giuste. */
+  // tre errori sono tre caselle: quella accanto nella riga giusta, quella nella colonna giusta, quella in nessuna delle due
   tabella(grado, sorte) {
     const tb = unaTabella(sorte, grado, grado >= 5 && sorte.forse(0.4) ? 4 : 3)
     const i = sorte.fra(0, 2), j = sorte.fra(0, tb.colonne.length - 1)
@@ -807,23 +650,12 @@ class Grafici extends Modulo {
     })
   }
 
-  /* ── la moda ──
-     Si conta quante volte compare ogni valore. La moda è unica per
-     costruzione — una volta di più della seconda — perché due mode a
-     pari merito sono due risposte giuste. I falsi numerici: la seconda
-     più frequente, **quante volte** compare la moda (il valore scambiato
-     con la frequenza, che è il guasto classico della parola), il numero
-     più grande e quanti sono i dati. */
+  // la moda è unica per costruzione (una volta di più della seconda); i falsi: la seconda, quante volte compare, il più grande
   moda(sorte) {
     return sorte.forse(0.5) ? this.modaNumeri(sorte) : this.modaFigure(sorte)
   }
 
-  /* La fila dei dati, lunga `n`: la moda `f` volte, la seconda `f − 1`,
-     e gli altri valori sotto la seconda — così la seconda è davvero la
-     tentazione, e la moda resta una sola. Si cerca a tentativi una
-     combinazione di `f` e di quanti altri valori che faccia tornare la
-     lunghezza; se non la si trova (non succede, con le liste di qui) si
-     accorcia la fila invece di rompere la regola. */
+  // la fila: la moda f volte, la seconda f−1, gli altri sotto la seconda, così la seconda resta la vera tentazione
   filaConModa(sorte, valori, n) {
     for (let t = 0; t < 40; t++) {
       const f = sorte.fra(3, 4)
@@ -885,14 +717,7 @@ class Grafici extends Modulo {
     })
   }
 
-  /* ── la media ──
-     La somma divisa per quanti sono. I falsi: la somma senza divisione
-     (l'errore di chi ricorda metà della regola), il più alto e il più
-     basso (la media sta sempre in mezzo: sceglierli vuol dire non
-     sapere cos'è), il numero che sta in mezzo alla fila scritta, e la
-     somma divisa per un numero sbagliato di dati. I dati si tirano
-     finché la media non viene intera: con una virgola la domanda
-     smetterebbe di essere sulla media e diventerebbe sulle divisioni. */
+  // i falsi: la somma senza divisione, il più alto/basso, il numero in mezzo alla fila; i dati sono tirati finché la media è intera
   media(sorte) {
     const n = sorte.fra(3, 5)
     const dalGrafico = sorte.forse(0.4)
@@ -933,11 +758,7 @@ class Grafici extends Modulo {
     })
   }
 
-  /* n numeri fra `da` e `a` con la somma divisibile per n, non tutti
-     uguali. A tentativi: su cinque numeri uno su cinque va bene, quindi
-     in media si tira cinque volte. Dopo cento tiri andati a vuoto — non
-     succede, ma un generatore non deve poter girare per sempre — una
-     fila fatta a mano intorno al centro, che la regola la rispetta. */
+  // n numeri con somma divisibile per n, non tutti uguali; dopo 100 tentativi una fila fatta a mano che rispetta la regola
   tiroIntero(sorte, n, da, a) {
     for (let t = 0; t < 100; t++) {
       const l = Array.from({ length: n }, () => sorte.fra(da, a))
