@@ -1,0 +1,160 @@
+/* ═══════════════════════════════════════════════════════════════════
+   L'INGLESE A MONDI, NEL BROWSER
+     node test/esegui.mjs inglese-mondi        (la build la fa il lanciatore)
+
+   Quello che il motore da solo non può dire (test/unita/inglese-mondi):
+     · la carta English apre la mappa del tesoro, con i mondi in arrivo
+     · una frase si compone a tocchi, e sbagliandola si legge il perché,
+       «Si fa così» e la frase giusta, con la tessera sbagliata colorata
+     · la frase giusta paga, e l'indicatore delle monete lo diceva prima
+     · il capitolo del libro si legge, una parola si tocca e dice cosa
+       vuol dire, e se il tocco costa lo dice subito; poi si risponde
+   Il progetto è in docs/lingue/mondi.md, i bersagli alla riga «Nei test».
+   ═══════════════════════════════════════════════════════════════════ */
+import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scatto, TELEFONO }
+  from '../aiuto/browser.mjs'
+import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { tappaDi, MONDI } from '../../src/giochi/inglese/dati/mondi.js'
+import { FRASI } from '../../src/giochi/inglese/dati/frasi.js'
+import { PAGA } from '../../src/giochi/inglese/dati/monete.js'
+
+const browser = await apriBrowser()
+const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
+await azzera(page)
+
+/* ---------- 1. dalla home alla mappa ---------- */
+const carta = page.locator('.carta.gioco[data-gioco="inglese"]')
+uguale('in home c’è una carta English sola', await carta.count(), 1)
+await carta.click()
+await page.waitForSelector('[data-mappa-inglese] [data-tappa]', { timeout: 5000 })
+uguale('la prima tappa è aperta', await page.locator('[data-tappa="che-cose-1"]').getAttribute('data-stato'), 'aperta')
+uguale('la seconda no', await page.locator('[data-tappa="che-cose-2"]').getAttribute('data-stato'), 'chiusa')
+uguale('a profilo vuoto il grado è zero', await page.locator('[data-tappa="che-cose-1"]').getAttribute('data-grado'), '0')
+const lontani = MONDI.filter(m => !m.tappe.length).length
+uguale('i mondi senza tappe si vedono in arrivo',
+       await page.locator('[data-mondo][data-pronto="0"]').count(), lontani)
+uguale('senza la campagna di prima finita, il gioco di prima non c’è', await page.locator('[data-prima]').count(), 0)
+await scatto(page, 'inglese-mappa-vuota')
+
+/* ---------- 2. un bambino a metà del primo mondo ----------
+   Le parole della prima tappa sono sapute (forza 6) e le frasi a metà
+   (forza 4): la prima domanda è una frase da mettere in ordine. Le altre
+   quattro tappe sono vinte, così il libro del mondo è aperto. */
+const ora = Date.now()
+const sa = s => ({ s, ok: 5, err: 0, last: ora, seen: 5, t: 0 })
+const t1 = tappaDi('che-cose-1')
+const items = {}
+for (const p of t1.parole) items['en:' + p] = sa(6)
+for (const f of FRASI.filter(f => f.tappa === 'che-cose-1')) items['frase:' + f.id] = sa(4)
+items['forma:it-is'] = sa(4)
+const vinte = Object.fromEntries(['che-cose-1', 'che-cose-2', 'che-cose-3', 'che-cose-4', 'che-cose-5']
+  .map((id, i) => [id, ora - (5 - i) * 86400000]))
+await semina(page, { coins: 100, items,
+                     campagne: { inglese: { tappa: 5, libera: false, stelle: {}, cfg: {}, vinte } } })
+await carta.click()
+await page.waitForSelector('[data-mappa-inglese] [data-tappa]')
+uguale('la tappa saputa è piena', await page.locator('[data-tappa="che-cose-1"]').getAttribute('data-grado'), '10')
+uguale('la bandiera si è aperta', await page.locator('[data-tappa="che-cose-bandiera"]').getAttribute('data-stato'), 'aperta')
+uguale('il libro è aperto', await page.locator('[data-libro="che-cose"]').getAttribute('data-stato'), 'aperta')
+uguale('il cassetto è aperto', await page.locator('[data-cassetto="che-cose"]').getAttribute('data-stato'), 'aperta')
+uguale('il secondo mondo resta chiuso fino alla bandiera',
+       await page.locator('[data-tappa="mie-cose-1"]').getAttribute('data-stato'), 'chiusa')
+await scatto(page, 'inglese-mappa')
+
+/* ---------- 3. una frase composta a tocchi, prima storta ---------- */
+await page.locator('[data-tappa="che-cose-1"]').click()
+await page.waitForSelector('[data-domanda]')
+uguale('la frase a metà si mette in ordine', await page.locator('[data-domanda]').getAttribute('data-formato'), 'monta')
+uguale('l’indicatore dice che la domanda paga',
+       await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
+controlla('e quanto', (await page.locator('[data-paga]').textContent()).includes('+' + PAGA.monta))
+
+// le tessere in ordine di posto nella frase giusta; per sbagliare, al contrario
+const posti = async () => page.locator('[data-banco] [data-tessera]').evaluateAll(
+  els => els.map(e => ({ id: e.dataset.tessera, posto: Number(e.dataset.posto) })))
+async function componi(storta) {
+  await attendi(page, 400)                                 // la finestra cieca
+  const t = (await posti()).sort((a, b) => (storta ? b.posto - a.posto : a.posto - b.posto))
+  for (const x of t) await page.locator(`[data-banco] [data-tessera="${x.id}"]`).click()
+  return t.length
+}
+const quante = await componi(true)
+uguale('le tessere sono tutte in fila', await page.locator('[data-fila] [data-in-fila]').count(), quante)
+uguale('il banco è vuoto', await page.locator('[data-banco] [data-tessera]').count(), 0)
+const frase = await page.locator('[data-fila]').innerText()
+controlla('la fila mette la maiuscola da sé', /^[A-Z]/.test(frase.trim()), frase)
+// una tessera ritoccata torna nel banco, e rimessa torna in coda
+const prima = page.locator('[data-fila] [data-in-fila]').first()
+const idPrima = await prima.getAttribute('data-in-fila')
+await prima.click()
+uguale('ritoccata, torna nel banco', await page.locator(`[data-banco] [data-tessera="${idPrima}"]`).count(), 1)
+await page.locator(`[data-banco] [data-tessera="${idPrima}"]`).click()
+await page.locator('[data-azione="consegna"]').click()
+await page.waitForSelector('[data-esito]')
+uguale('la frase storta è sbagliata', await page.locator('[data-esito]').getAttribute('data-esito'), 'sbagliata')
+controlla('c’è «Si fa così»', await page.locator('[data-si-fa]').count() === 1)
+controlla('c’è la frase giusta', await page.locator('[data-giusta-era]').count() === 1)
+controlla('almeno una tessera è colorata', await page.locator('[data-sbagliata]').count() >= 1)
+controlla('l’attesa si vede', await page.locator('[data-attesa]').count() === 1)
+await scatto(page, 'inglese-sbaglio')
+
+/* ---------- 4. la seconda, giusta: paga ---------- */
+await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 12000 })
+uguale('niente si perde: si va avanti con un’altra frase',
+       await page.locator('[data-domanda]').getAttribute('data-formato'), 'monta')
+const monetePrima = (await leggiProfilo(page)).coins
+await componi(false)
+await scatto(page, 'inglese-componi')
+await page.locator('[data-azione="consegna"]').click()
+await page.waitForSelector('[data-esito="giusta"]')
+await attendi(page, 700)
+const dopo = await leggiProfilo(page)
+uguale('la frase giusta paga', dopo.coins - monetePrima, PAGA.monta)
+controlla('la frase sbagliata è segnata nello SRS',
+          Object.entries(dopo.items).some(([k, v]) => k.startsWith('frase:') && v.err > 0))
+controlla('e il contatore delle frasi è salito', (dopo.totals.frasi || 0) >= 1)
+await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 6000 })
+
+/* ---------- 5. il libro ---------- */
+await page.locator('button[aria-label="indietro"]').click()
+await page.waitForSelector('[data-libro="che-cose"]')
+await page.locator('[data-libro="che-cose"]').click()
+await page.waitForSelector('[data-libro-testo]')
+uguale('il libro dice quanto può rendere', await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
+await scatto(page, 'inglese-libro')
+// «cat» è saputa: toccarla costa il guadagno di una domanda, e lo si vede subito
+await page.locator('[data-libro-testo] [data-parola="cat"]').first().click()
+await page.waitForSelector('[data-traduzione]')
+controlla('la parola toccata dice cosa vuol dire',
+          (await page.locator('[data-traduzione]').innerText()).includes('gatto'))
+controlla('e che quella domanda non paga', /non paga/.test(await page.locator('[data-traduzione]').innerText()))
+uguale('l’indicatore lo dice prima di rispondere', await page.locator('[data-paga]').getAttribute('data-paga-si'), '0')
+await scatto(page, 'inglese-parola')
+const moneteLibro = (await leggiProfilo(page)).coins
+await page.locator('[data-azione="ho-letto"]').click()
+await page.waitForSelector('[data-libro-domanda]')
+const domande = await page.evaluate(() => document.querySelector('[data-libro-domanda] .ing-etichetta').textContent)
+nota(domande)
+while (await page.locator('[data-libro-domanda]').count()) {
+  await attendi(page, 400)
+  await page.locator('[data-libro-domanda] [data-giusta]').click()
+  await page.waitForSelector('[data-libro-domanda] [data-esito], [data-fine]')
+  await page.waitForFunction(() => !document.querySelector('[data-libro-domanda] [data-esito]') ||
+                                   document.querySelector('[data-fine]'), null, { timeout: 8000 })
+  if (await page.locator('[data-fine]').count()) break
+}
+await page.waitForSelector('[data-fine]')
+await attendi(page, 2400)      // la nuvoletta se ne va, il cartello finisce di comparire
+await scatto(page, 'inglese-libro-fine')
+const nDomande = Number((domande.match(/di (\d+)/) || [])[1])
+await attendi(page, 600)
+const pagato = (await leggiProfilo(page)).coins - moneteLibro
+uguale('il tocco a pagamento ha tolto il guadagno di una domanda', pagato, (nDomande - 1) * 4)
+controlla('la parola chiesta conta come non saputa',
+          ((await leggiProfilo(page)).items['en:cat'] || {}).err > 0)
+await page.locator('[data-fine] [data-azione="mappa"]').click()
+await page.waitForSelector('[data-mappa-inglese]')
+
+controlla('nessun errore in console', errori.length === 0, errori.join(' · '))
+await browser.close()
+riassunto('L’inglese a mondi nel browser')
