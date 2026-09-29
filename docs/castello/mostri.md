@@ -38,11 +38,22 @@ mostri stanno in `src/data/mostri.js`, le file delle tappe in
   mostro, quindi a decidere è **la fila** della tappa (chi manda, in che
   ordine). Nel commento accanto a ogni fila, ondata per ondata, le torri che
   quel mostro lascia fuori; il «—» è un comune.
-- **La figura dice l'immunità** (`src/giochi/castello/scena/bestiario.js`):
-  al bambino serve capire che torre mettergli davanti, non chi è. Pietra e
-  piastre reggono frecce e magia, le ossa la magia, i draghi bombe e magia,
-  e le figure dei comuni non sembrano né corazzate né alate. Una figura che
-  fa due mostri li fa con le stesse immunità (`unita/castello-bestiario`).
+- **La figura dice l'immunità** (`src/giochi/castello/scena/bestiario.js`,
+  uno per i quattro vestiti del castello a sprite): al bambino serve capire
+  che torre mettergli davanti, non chi è. Vocabolario corto, uguale in tutti
+  i vestiti — una figura che fa due mostri li fa con le stesse immunità
+  (`unita/castello-bestiario`):
+
+  | figura | immune a |
+  |---|---|
+  | ali o volo (🪽) | 💣, e chi ha le ali di un animale anche ❄️ |
+  | trasparente (👻, i fantasmi) | 🏹 |
+  | drago (🐉) | 💣 🔮 |
+  | pietra o guscio (🪨) | 🏹 🔮 |
+  | fuoco vivo (🔥) | 🔮 🏹 (lo apre solo lo scoppio) |
+  | ossa (💀) | 🔮 ❄️ |
+  | un groviglio (🌿) | 💣 🏹 |
+  | tutti gli altri (🐾) | nessuna: sono i comuni |
 - **Il preavviso lo dice tre ondate prima** (`components/castello/NastroOndate.vue`,
   con le torri sbarrate) e la carta della torre sbagliata dice «non lo
   tocca». Come si comporta una torre davanti a un immune sta in
