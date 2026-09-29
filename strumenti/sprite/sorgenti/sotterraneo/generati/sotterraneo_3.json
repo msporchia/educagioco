@@ -1,0 +1,588 @@
+{
+  "__": "Il foglietto di sotterraneo_3.png: la cripta, cioè sotterraneo_2.png ridisegnato in un altro scenario con i pezzi agli stessi posti (ChatGPT, 29 settembre 2026, un prompt solo allegando sotterraneo_2.png). I ritagli sono quelli di sotterraneo_2.json riportati sulle macchie del foglio nuovo, che hanno un contorno scuro più spesso (5 px invece di 3). Il pavimento dei corridoi è tornato con una cornice: si prende dentro. Fuori il terriccio (è diventato uno stendardo appeso) e la radice (ha sotto un quadrato di roccia). Le cose per terra sono state sostituite da drappi e teschi: restano solo i sassolini.",
+  "prompt": {
+    "scheda": "PROMPT-scenario.md",
+    "base": "sotterraneo_2.png",
+    "generatore": "ChatGPT, 29 settembre 2026",
+    "testo": "la prima versione del prompt corto di «La scorciatoia» in PROMPT-scenario.md, senza le righe su cornici, porte e cose per terra, col blocco LA CRIPTA"
+  },
+  "fondo": "trasparente",
+  "alone": 128,
+  "cella": [
+    1,
+    1
+  ],
+  "famiglie": {
+    "cripta-pav": "fondo",
+    "cripta-tetto": "fondo",
+    "cripta-medaglione": "fondo",
+    "cripta-faccia": "tessera",
+    "cripta-capo": "tessera",
+    "cripta-bordo": "tessera",
+    "cripta-porta": "figura",
+    "cripta-mercante": "figura",
+    "cripta-fontana": "figura"
+  },
+  "trasforma": {
+    "cripta-faccia": {
+      "giri": 1
+    },
+    "cripta-capo": {
+      "giri": 1
+    },
+    "cripta-bordo": {
+      "giri": 1
+    },
+    "cripta-porta": {
+      "giri": 1
+    },
+    "cripta-fianco": {
+      "giri": 1,
+      "specchia": false
+    },
+    "cripta-scala": {
+      "giri": 1,
+      "specchia": false
+    },
+    "cripta-fontana": {
+      "giri": 1
+    },
+    "cripta-mercante": {
+      "giri": 1
+    }
+  },
+  "sprite": {
+    "cripta-pav-stanze": {
+      "da": [
+        19,
+        117
+      ],
+      "cella": [
+        145,
+        149
+      ],
+      "misura": [
+        64,
+        64
+      ]
+    },
+    "cripta-pav-corridoi": {
+      "da": [
+        202,
+        128
+      ],
+      "cella": [
+        121,
+        127
+      ],
+      "misura": [
+        64,
+        64
+      ]
+    },
+    "cripta-tetto": {
+      "da": [
+        524,
+        115
+      ],
+      "cella": [
+        145,
+        151
+      ],
+      "misura": [
+        64,
+        64
+      ]
+    },
+    "cripta-medaglione": {
+      "da": [
+        352,
+        113
+      ],
+      "cella": [
+        151,
+        157
+      ],
+      "misura": [
+        48,
+        48
+      ]
+    },
+    "cripta-faccia-fila": {
+      "da": [
+        15,
+        325
+      ],
+      "cella": [
+        318,
+        74
+      ],
+      "misura": [
+        96,
+        20
+      ]
+    },
+    "cripta-faccia-torcia": {
+      "da": [
+        632,
+        325
+      ],
+      "cella": [
+        52,
+        74
+      ],
+      "misura": [
+        16,
+        20
+      ]
+    },
+    "cripta-faccia-grata": {
+      "da": [
+        702,
+        325
+      ],
+      "cella": [
+        48,
+        74
+      ],
+      "misura": [
+        16,
+        20
+      ]
+    },
+    "cripta-faccia-arco": {
+      "da": [
+        770,
+        325
+      ],
+      "cella": [
+        48,
+        74
+      ],
+      "misura": [
+        16,
+        20
+      ]
+    },
+    "cripta-faccia-liscia": {
+      "da": [
+        835,
+        325
+      ],
+      "cella": [
+        48,
+        74
+      ],
+      "misura": [
+        16,
+        20
+      ]
+    },
+    "cripta-faccia-toppa": {
+      "da": [
+        899,
+        325
+      ],
+      "cella": [
+        47,
+        74
+      ],
+      "misura": [
+        16,
+        20
+      ]
+    },
+    "cripta-faccia-mensola": {
+      "da": [
+        962,
+        325
+      ],
+      "cella": [
+        47,
+        74
+      ],
+      "misura": [
+        16,
+        20
+      ]
+    },
+    "cripta-capo-sx": {
+      "da": [
+        352,
+        325
+      ],
+      "cella": [
+        20,
+        76
+      ],
+      "misura": [
+        6,
+        20
+      ]
+    },
+    "cripta-capo-dx": {
+      "da": [
+        528,
+        325
+      ],
+      "cella": [
+        21,
+        76
+      ],
+      "misura": [
+        6,
+        20
+      ]
+    },
+    "cripta-bordo-e": {
+      "da": [
+        14,
+        697
+      ],
+      "cella": [
+        18,
+        65
+      ],
+      "misura": [
+        4,
+        16
+      ]
+    },
+    "cripta-bordo-o": {
+      "da": [
+        299,
+        697
+      ],
+      "cella": [
+        20,
+        65
+      ],
+      "misura": [
+        4,
+        16
+      ]
+    },
+    "cripta-bordo-n": {
+      "da": [
+        55,
+        872
+      ],
+      "cella": [
+        70,
+        18
+      ],
+      "misura": [
+        16,
+        4
+      ]
+    },
+    "cripta-bordo-angolo": {
+      "da": [
+        14,
+        870
+      ],
+      "cella": [
+        20,
+        20
+      ],
+      "misura": [
+        4,
+        4
+      ]
+    },
+    "cripta-porta-semplice": {
+      "da": [
+        471,
+        641
+      ],
+      "cella": [
+        72,
+        105
+      ],
+      "misura": [
+        16,
+        24
+      ]
+    },
+    "cripta-porta-ferro": {
+      "da": [
+        549,
+        641
+      ],
+      "cella": [
+        68,
+        105
+      ],
+      "misura": [
+        16,
+        24
+      ]
+    },
+    "cripta-porta-oro": {
+      "da": [
+        624,
+        641
+      ],
+      "cella": [
+        70,
+        105
+      ],
+      "misura": [
+        16,
+        24
+      ]
+    },
+    "cripta-porta-teschio": {
+      "da": [
+        701,
+        641
+      ],
+      "cella": [
+        73,
+        105
+      ],
+      "misura": [
+        16,
+        24
+      ]
+    },
+    "cripta-porta-chiara": {
+      "da": [
+        859,
+        641
+      ],
+      "cella": [
+        68,
+        105
+      ],
+      "misura": [
+        16,
+        24
+      ]
+    },
+    "cripta-porta-aperta": {
+      "da": [
+        933,
+        640
+      ],
+      "cella": [
+        71,
+        106
+      ],
+      "misura": [
+        18,
+        24
+      ]
+    },
+    "cripta-fianco-semplice": {
+      "da": [
+        491,
+        784
+      ],
+      "cella": [
+        55,
+        90
+      ],
+      "misura": [
+        12,
+        16
+      ]
+    },
+    "cripta-fianco-ferro": {
+      "da": [
+        579,
+        784
+      ],
+      "cella": [
+        59,
+        90
+      ],
+      "misura": [
+        12,
+        16
+      ]
+    },
+    "cripta-fianco-oro": {
+      "da": [
+        669,
+        784
+      ],
+      "cella": [
+        57,
+        90
+      ],
+      "misura": [
+        12,
+        16
+      ]
+    },
+    "cripta-fianco-teschio": {
+      "da": [
+        757,
+        784
+      ],
+      "cella": [
+        57,
+        89
+      ],
+      "misura": [
+        12,
+        16
+      ]
+    },
+    "cripta-fianco-chiara": {
+      "da": [
+        845,
+        784
+      ],
+      "cella": [
+        55,
+        89
+      ],
+      "misura": [
+        12,
+        16
+      ]
+    },
+    "cripta-fianco-aperta": {
+      "da": [
+        934,
+        784
+      ],
+      "cella": [
+        60,
+        89
+      ],
+      "misura": [
+        12,
+        16
+      ]
+    },
+    "cripta-scala-aperta": {
+      "da": [
+        688,
+        148
+      ],
+      "cella": [
+        80,
+        92
+      ],
+      "misura": [
+        16,
+        19
+      ]
+    },
+    "cripta-scala-chiusa": {
+      "da": [
+        782,
+        148
+      ],
+      "cella": [
+        73,
+        91
+      ],
+      "misura": [
+        16,
+        19
+      ]
+    },
+    "cripta-fontana-piena": {
+      "da": [
+        866,
+        172
+      ],
+      "cella": [
+        68,
+        100
+      ],
+      "misura": [
+        14,
+        22
+      ]
+    },
+    "cripta-fontana-asciutta": {
+      "da": [
+        946,
+        176
+      ],
+      "cella": [
+        68,
+        97
+      ],
+      "misura": [
+        14,
+        22
+      ]
+    },
+    "cripta-mercante-0": {
+      "da": [
+        12,
+        984
+      ],
+      "cella": [
+        107,
+        121
+      ],
+      "misura": [
+        24,
+        27
+      ]
+    },
+    "cripta-mercante-1": {
+      "da": [
+        135,
+        983
+      ],
+      "cella": [
+        107,
+        122
+      ],
+      "misura": [
+        25,
+        28
+      ]
+    },
+    "cripta-sassolini": {
+      "da": [
+        186,
+        1352
+      ],
+      "cella": [
+        68,
+        64
+      ],
+      "misura": [
+        11,
+        10
+      ]
+    },
+    "cripta-ragnatela-sx": {
+      "da": [
+        263,
+        1338
+      ],
+      "cella": [
+        80,
+        82
+      ],
+      "misura": [
+        14,
+        13
+      ]
+    },
+    "cripta-ragnatela-dx": {
+      "da": [
+        941,
+        1340
+      ],
+      "cella": [
+        73,
+        82
+      ],
+      "misura": [
+        12,
+        13
+      ]
+    }
+  }
+}

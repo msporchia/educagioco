@@ -442,15 +442,17 @@ cose in più:
   fondi generati hanno un orlo e non si ripetono come piastrelle, e se ne
   ritagliano toppe.
 
-Il foglio delle torri (`torri-1.json`) è un'altra forma ancora: una
+Il foglio delle torri (`torri-2.json`) è un'altra forma ancora: una
 griglia regolare (`griglia`), quale figura è quale torre (`figure`,
-riga e colonna), una `scala` per stadio, e le due correzioni `erba` e
-`pieno` (dette nel suo `__`).
+riga e colonna), una `scala` (sola o per stadio), `largo_max` e
+`bagliore`; e, per un foglio che le chiedesse, le correzioni `erba`,
+`pieno` e `chiudi` (le leggono `torri_dal_foglio` e i commenti accanto,
+in `vesti.py`).
 
-Una cartella può anche dichiarare `"attrezzo": "terreni"`: vuol dire che
-quei fogli li ritaglia un altro script (`strumenti/sprite/terreni.py`,
-per dire, che scolla la strada dal terreno e misura gli attacchi delle
-tessere), e `atlante.py` la salta invece di provarci. Dichiararlo è
+Una cartella può anche dichiarare `"attrezzo": "vesti"`: vuol dire che
+quei fogli li ritaglia un altro script (`strumenti/sprite/vesti.py`, per
+il castello, che compone i vestiti delle carte e le figure), e
+`atlante.py` la salta invece di provarci. Dichiararlo è
 meglio che dedurlo dal fatto che non esce niente — e comunque un
 bersaglio da cui non esce nessun pezzo viene saltato, non scritto vuoto:
 un modulo vuoto che sovrascrive quello buono si scopre a schermo.

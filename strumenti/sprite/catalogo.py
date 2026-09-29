@@ -178,20 +178,6 @@ class Catalogo:
         v.update({k: q for k, q in extra.items() if q is not None})
         return v
 
-    def scarta(self, pezzo):
-        """Toglie un pezzo, e la voce con lui se resta vuota. Serve a chi
-        genera per sottoinsiemi — quello che il gioco non nomina non si
-        genera (vedi `terreni.py`) — e va fatto qui invece che a mano,
-        se no resta una voce che punta a un ritaglio che non c'è più."""
-        for chi, v in list(self.voci.items()):
-            for posa, pezzi in list(v['pose'].items()):
-                if pezzo in pezzi:
-                    v['pose'][posa] = [p for p in pezzi if p != pezzo]
-                    if not v['pose'][posa]:
-                        del v['pose'][posa]
-            if not v['pose']:
-                del self.voci[chi]
-
     def elenco(self, pezzi_veri=None):
         """L'elenco ordinato, pronto da scrivere. `pezzi_veri` è la mappa
         dei ritagli sopravvissuti: una voce che punta a un pezzo che non

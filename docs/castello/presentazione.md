@@ -4,7 +4,9 @@
 
 *Un tower defense dove ogni torre si paga con un'operazione in colonna.* I
 mostri camminano lungo il sentiero verso il castello; per fermarli servono
-torri, e per costruire una torre bisogna fare il conto.
+torri, e per costruire una torre bisogna fare il conto. Il campo è una
+carta a scacchiera disegnata in quattro vestiti (il bosco, la neve, la lava,
+la palude), con le torri e i mostri presi da un foglio di figure.
 
 <img src="../img/castello-gioco.png" width="230"> <img src="../img/castello-calcolo.png" width="230"> <img src="../img/castello-mappa.png" width="230">
 
@@ -26,7 +28,7 @@ perde la partita.
 | 🏹 Arciere | addizione | colpi rapidi su un nemico | 24 ⚡ |
 | 🔮 Magica | sottrazione | un'onda che colpisce a zona | 40 ⚡ |
 | ❄️ Ghiaccio | moltiplicazione | non fa danno: gela chi passa vicino | 20 ⚡ |
-| 💣 Bombe | divisione | colpo lento e devastante, a zona | 56 ⚡ |
+| 💣 Bombe | divisione | uno scoppio che prende tutti quelli vicini | 56 ⚡ |
 
 Le torri non costano uguale, ed è una scelta: con quello che costa una bomba
 si fanno due arcieri, o un arciere portato al livello tre. Ma un ⚡ speso
@@ -35,9 +37,11 @@ scelta sbagliata.
 
 Una torre nasce al livello 1 con l'operazione più facile che esista, e per
 farla salire si risolve il gradino dopo. Salendo **cambia faccia** tre volte
-(🏹 → 🎯 → 🦅), perché il lavoro fatto deve vedersi. Salire conviene più che
-allargarsi: una torre alta vale quanto tante torri basse, ma occupa un posto
-solo. La matematica difficile è la strada per la torre forte, non una tassa.
+(🏹 → 🎯 → 🦅), perché il lavoro fatto deve vedersi. Salire costa un po' di
+più a ogni gradino: finché ci sono piazzole libere una torre nuova rende di
+più, e quando i posti finiscono si sale — una torre alta occupa un posto
+solo, e la matematica difficile è la strada per la torre forte. Una torre
+per tipo tirata fino in cima non è più la mossa che vince.
 
 ## Si compra toccando il campo
 
@@ -54,7 +58,7 @@ ingrandisce la mappa, e un doppio tocco la rimette in quadro.
 
 ## A metà scaletta una torre sceglie che fare
 
-Dal sottosuolo in poi, al quarto gradino, la torre sceglie un mestiere fra
+Al quarto gradino, in ogni tappa che ci arriva, la torre sceglie un mestiere fra
 **due carte**: l'arciere diventa cecchino o raffica, la magica veleno o
 catena, il ghiaccio bufera o brina, le bombe mortaio o napalm. La scelta non
 costa un calcolo in più, e i due rami valgono lo stesso: cambia la forma del

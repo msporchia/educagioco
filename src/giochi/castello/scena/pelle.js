@@ -1,36 +1,26 @@
-// La pelle a sprite: il gioco `castello` è `views/TowerDefense.vue` con le
-// stesse tappe/conti/salvataggio di `torri`, e cambia solo la pelle passata
-// al campo (CampoDiBattaglia, prop `pelle`). Il verso delle dipendenze è
-// voluto: il gioco nuovo sa del vecchio, non viceversa. Vedi
-// docs/castello/da-fare.md per il conto ancora aperto sulla taratura.
-import { cartaDi, percorsoDi } from '../motore/carta.js'
-import { PITTORI_SPRITE, caricaFigure, usaVestito } from './pittori.js'
+// La pelle del castello: come si vede il campo del tower defense
+// (`views/TowerDefense.vue`, chiave `torri`) — il fondale dipinto sulla
+// carta a scacchiera, le figure del foglio, il nome di ogni mostro nel
+// vestito della tappa. Dove passa la strada non lo sa: lo sa il motore
+// (`sullaCarta`). La monta `components/castello/CampoDiBattaglia.vue`.
+import { sullaCarta } from '../../../motore/castello/carta.js'
+import { PITTORI, caricaFigure, usaVestito } from './pittori.js'
 import { figuraDi, NOMI } from './bestiario.js'
 import { componi, carica, vestitoDi, TINTA_DI } from './vestito.js'
 
-// la carta di una tappa si calcola una volta: la chiedono sia il motore
-// sia il fondale, e a ogni rientro nella stessa tappa
-const carte = new WeakMap()
-const cartaPer = t => {
-  if (!carte.has(t)) carte.set(t, cartaDi(t))
-  return carte.get(t)
-}
-
 export const PELLE = {
-  pittori: PITTORI_SPRITE,
+  pittori: PITTORI,
 
   prepara() { caricaFigure().catch(() => {}) },
 
-  tappa(t) {
-    usaVestito(vestitoDi(t))
-    return { ...t, ...percorsoDi(cartaPer(t)) }
-  },
+  // il vestito della tappa: lo leggono il campo, il nastro e la scheda
+  vesti(t) { usaVestito(vestitoDi(t)) },
 
   nome(t, id) { return NOMI[figuraDi(vestitoDi(t), id)] },
 
   fondale(t, poi) {
     const nome = vestitoDi(t)
-    const cv = componi(cartaPer(t).righe, nome)
+    const cv = componi(sullaCarta(t).carta.righe, nome)
     if (!cv) {
       carica(nome).then(poi, () => {})
       return p => p.rett(0, 0, p.W, p.H, TINTA_DI[nome])

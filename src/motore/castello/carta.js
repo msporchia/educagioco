@@ -1,6 +1,6 @@
 // La carta di una tappa (dato puro, gira in Node): da una tappa del tower
-// defense (le `forme`, curve 0-1) a una carta di 12x22 celle, con gli
-// stessi caratteri della pianta della scheda di prompt
+// defense (le `forme`, lo schizzo 0-1 del percorso) a una carta di 12x22
+// celle, con gli stessi caratteri della pianta della scheda di prompt
 // (strumenti/sprite/sorgenti/castello/generati/PROMPT-scenario.md):
 //   .  fondo          ,  fondo con qualcosa in più     ^  il fitto
 //   ~  acqua          d  decoro sparso                 +  strada
@@ -398,5 +398,22 @@ export function percorsoDi(carta) {
     return spigoli.map(centro)
   })
   const posti = carta.piazzole.map(([x, y, via]) => [...centro([x, y]), via])
-  return { forme, percorso: { spigoli: true, posti } }
+  return { forme, posti }
+}
+
+// La tappa come la gioca il motore: la strada a squadra e le piazzole della
+// sua carta. È l'unico posto dove si passa dallo schizzo alla carta, e ci
+// passano tutti — il gioco, `npm run tara`, il simulatore, `npm run dps`, i
+// test — perché ci passa `Battaglia`: una taratura fatta su un'altra strada
+// sarebbe la taratura di un altro gioco. La carta dipende dallo schizzo, dal
+// nome (il seme e le carte a mano) e da quante piazzole: si fa una volta.
+const campi = new Map()
+export function sullaCarta(tappa) {
+  const chiave = JSON.stringify([tappa.chiave || tappa.nome, tappa.posti,
+                                 tappa.forme || [tappa.forma]])
+  if (!campi.has(chiave)) {
+    const carta = cartaDi(tappa)
+    campi.set(chiave, { carta, ...percorsoDi(carta) })
+  }
+  return campi.get(chiave)
 }

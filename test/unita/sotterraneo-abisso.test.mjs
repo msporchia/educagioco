@@ -21,9 +21,10 @@
    tempo: 300 */
 import { CAMPAGNA, QUANTE_TAPPE, L_ABISSO, INDICE_ABISSO, tappaDi, formaDi,
          durezzaDi, guardianoDi, svenimentiDi, crescitaDi, PIANO_DEL_TETTO,
-         SVENIMENTI_PER_PIANO, guastiDellAbisso } from '../../src/giochi/sotterraneo/dati/campagna.js'
+         SVENIMENTI_PER_PIANO, guastiDellAbisso, TRATTI_DELL_ABISSO, PIANI_PER_TRATTO,
+         brancoDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
-import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
+import { MOSTRI, BRANCO } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
@@ -130,6 +131,37 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   controlla('e la corsa lo dice per nome', c.senzaFondo)
   controlla('mentre una tappa della campagna no', !new Corsa(CAMPAGNA[0],
             { seme: 1, rnd: seminato(1) }).senzaFondo)
+}
+
+/* ══════════ 3b. il posto cambia scendendo ══════════
+   Ogni tratto ha il suo scenario e il suo branco, e per strada si
+   incontra solo chi abita quel posto: un mostro fuori branco vorrebbe dire
+   che il piano è nato col branco sbagliato, e a schermo sarebbe solo uno
+   scheletro nelle cantine. La campagna resta a tutto il bestiario. */
+{
+  const posti = [], fuori = []
+  for (const seme of [7, 41]) {
+    const c = new Corsa(L_ABISSO, { seme, rnd: seminato(seme) })
+    for (let p = 0; p < PIANI_PER_TRATTO * TRATTI_DELL_ABISSO.length * 2; p++) {
+      c.piano = p
+      c.nuovoPiano()
+      const atteso = TRATTI_DELL_ABISSO[Math.floor(p / PIANI_PER_TRATTO) % TRATTI_DELL_ABISSO.length]
+      if (c.scenario !== atteso.scenario || c.posto !== atteso.nome)
+        fuori.push(`seme ${seme} piano ${p + 1}: ${c.scenario} invece di ${atteso.scenario}`)
+      if (seme === 7 && p % PIANI_PER_TRATTO === 0) posti.push(`${p + 1} ${c.posto}`)
+      const qui = new Set(brancoDi(L_ABISSO, p).flat())
+      for (const r of c.livello.robe)
+        if (r.che === 'mostro' && !r.chiave && !qui.has(r.tipo))
+          fuori.push(`seme ${seme} piano ${p + 1}: ${r.tipo} in ${c.scenario}`)
+    }
+  }
+  controlla('ogni piano è nel suo posto, e per strada c\'è solo il suo branco',
+            !fuori.length, fuori.slice(0, 3).join('; '))
+  nota(`i posti scendendo: ${posti.join(' · ')}`)
+  const c = new Corsa(CAMPAGNA[0], { seme: 7, rnd: seminato(7) })
+  uguale('una discesa indossa lo scenario di ripiego', c.scenario, null)
+  uguale('e non dice il posto', c.posto, null)
+  controlla('e incontra tutto il bestiario', c.livello.branco === BRANCO)
 }
 
 /* ══════════ 4. i numeri di laggiù restano numeri ══════════

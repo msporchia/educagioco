@@ -33,15 +33,14 @@ pubblicato.** Per controllare solo che il build passi:
 |---|---|---|
 | `npm run tara` | `src/data/taratura-castello.js` | dopo aver toccato prezzi, potenza delle torri o tappe del castello |
 | `npm run voci` (`-- --lingua es`) | `src/data/voci.js`, `voci-es.js` | dopo aver aggiunto parole da pronunciare ([strumenti.md](strumenti.md)) |
-| `npm run scatti` (`dungeon`, `clip`) | le immagini e le clip di `docs/img/` | quando una schermata cambia faccia ([strumenti.md](strumenti.md)) |
+| `npm run scatti` (`dungeon`, `clip`, `castello`…) | le immagini e le clip di `docs/img/` | quando una schermata cambia faccia ([strumenti.md](strumenti.md)) |
 | `npm run quiz:livelli` | `docs/apprendimento/livelli-delle-domande.md` | dopo aver toccato i `livelli:` di un modulo |
 | `node strumenti/icone.mjs` | i PNG delle icone e l'anteprima del link, da `public/icona.svg` | quando cambia l'icona |
 | `python3 strumenti/sprite/atlante.py` | `src/giochi/*/dati/atlante.js` | dopo aver corretto un ritaglio |
-| `python3 strumenti/sprite/terreni.py` | l'atlante a tessere del castello | idem, per i terreni |
 | `python3 strumenti/sprite/vesti.py --atlante` | `src/giochi/castello/dati/vestiti.js` e `figure.js` | quando arriva un foglio del castello o cambia il bestiario |
 | `python3 strumenti/sprite/cammino.py <video> <creatura> --lato i:p --fronte i:p` | `strumenti/sprite/sorgenti/castello/cammino/<creatura>.png` e `.json` | quando arriva un video di Grok di una creatura che cammina (`--cerca` e `--provino` per trovare i giri); poi `vesti.py --atlante` |
 | `python3 strumenti/sprite/scenario.py`, `scacchiera.py` | gli schemi da allegare ai prompt | dopo aver toccato la pianta di un prompt |
-| `node strumenti/sprite/carte-castello.mjs` | `poc/scatti/castello-carte*.png`, `castello-battaglia*.png` | dopo aver toccato carte, forme o bestiario |
+| `node strumenti/sprite/carte-castello.mjs` | `poc/scatti/castello-carte*.png`, `castello-battaglia*.png` | dopo aver toccato carte, schizzi o bestiario |
 
 Gli altri strumenti degli sprite (`righe.py`, i provini di `vesti.py`) non
 scrivono niente: stanno in [sprite.md](sprite.md).
@@ -55,9 +54,10 @@ scrivono niente: stanno in [sprite.md](sprite.md).
 | `npm run storie` | le scene di «Prima e dopo» |
 | `npm run ambienti` | i paesaggi delle domande sugli animali |
 | `npm run simula` | il tower defense giocato a mente, senza browser |
-| `npm run dps` | quanto fa male ogni torre, per livello e ramo, col motore vero, e quanto rende un ⚡ (un minuto) |
+| `npm run dps` | quanto fa male ogni torre, per livello e ramo, col motore vero sulle carte, quanto rende un ⚡, e quanto rende un ⚡ cumulato salendo (un minuto) |
 | `node strumenti/regali-castello.mjs` | a che ondata cede ogni libera con N regali |
-| `node strumenti/valida-percorsi.mjs` | i tracciati del castello, passati ai raggi X |
+| `node strumenti/valida-percorsi.mjs` | le carte del castello, passate ai raggi X |
+| `node strumenti/simula-castello.mjs --sole div` | le tappe con una torre sola dovunque si può, dal metro e dal pigro |
 | `npm run quiz:banco` | tutti i moduli di quiz, mille domande a testa |
 | `npm run quiz:eta` | chi vede cosa: la calibrazione per età, e i buchi |
 | `node strumenti/generale/piani.mjs` | il simulatore dei piani del Generale |
@@ -77,7 +77,6 @@ testa, e una modifica sparisce senza rumore alla prossima rigenerazione.
 | `src/data/taratura-castello.js` | `npm run tara` — un test confronta una firma e diventa rosso se è stantio |
 | `src/data/voci.js`, `voci-es.js` | `npm run voci` |
 | `src/giochi/fattoria/dati/atlante.js`, `src/giochi/sotterraneo/dati/atlante.js` | `atlante.py` |
-| `src/giochi/castello/dati/atlante.js` | `terreni.py` |
 | `src/giochi/castello/dati/vestiti.js`, `figure.js` | `vesti.py --atlante` |
 | `docs/apprendimento/livelli-delle-domande.md` | `npm run quiz:livelli` |
 | `docs/img/*` | `npm run scatti` |

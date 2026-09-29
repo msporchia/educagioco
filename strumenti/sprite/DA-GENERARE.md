@@ -105,7 +105,7 @@ di 4×4 px».
    bastano i rettangoli. Provino: `python3 strumenti/sprite/vesti.py
    --creature provino.png`;
 2. ✅ la radura grande sulla scacchiera, scritta a mano (`A_MANO` in
-   `src/giochi/castello/motore/carta.js`): `DA_RIDISEGNARE` è vuoto;
+   `src/motore/castello/carta.js`): `DA_RIDISEGNARE` è vuoto;
 3. ✅ i lettori delle immagini che arriveranno, qui sotto voce per voce.
 
 ## Le priorità
@@ -143,13 +143,15 @@ python3 strumenti/sprite/vesti.py --atlante                                # e i
 node strumenti/sprite/carte-castello.mjs                                   # le carte vestite, da guardare
 ```
 
-### 2 — Le torri, nella mano delle scene · 1 immagine · ✅ 27 settembre 2026
+### 2 — Le torri, nella mano delle scene · 1 immagine · ✅ 27 settembre 2026 · superata dalla 2b
 
 **Perché**: le torri della prova venivano da
-`sorgenti/castello/non-usati/PVX1O.png`, che ha la **provenienza non
-documentata**. Adesso vengono da `torri-1.png`; `PVX1O.png` resta in
-`non-usati/` (lo legge ancora `prova-battaglia.py` come ripiego, se il
-foglio nuovo mancasse) ma non entra più nell'atlante.
+`sorgenti/castello/non-usati/PVX1O.png`, che aveva la **provenienza non
+documentata**. Dal 27 settembre vennero da `torri-1.png`, e dal 29 da
+`torri-2.png` (la 2b qui sotto): quel giorno `torri-1.png` e `PVX1O.png`
+sono stati tolti tutti e due, col ripiego che `vesti.py` e
+`prova-battaglia.py` tenevano sul foglio di agosto. Quello che segue è la
+storia del foglio 1.
 
 **Com'è andata**: il foglio è tornato 1248×832 con l'alfa vero e una
 griglia regolare di cinque per quattro, ma **non nell'ordine chiesto** e
@@ -181,12 +183,7 @@ brina si ritrovava in fondo un pezzo di fuoco (`figure_della_griglia` in
 dell'1. E la brina e il napalm al massimo, con l'alone e la fiamma, sono
 più larghi di una cella e mezza: coprono un pezzo di strada.
 
-**Sta in** `strumenti/sprite/sorgenti/castello/generati/torri-1.png`.
-
-```bash
-python3 strumenti/sprite/vesti.py --atlante
-node strumenti/sprite/carte-castello.mjs      # castello-battaglia-figure.png: le venti torri in fila
-```
+**Stava in** `strumenti/sprite/sorgenti/castello/generati/torri-1.png`.
 
 Il prompt che era stato scritto per questa voce, qui sotto, non è quello
 che ha prodotto il foglio (non è stato conservato):
@@ -221,9 +218,14 @@ con **un alone colorato ad alfa bassa** dietro ogni riga. Il foglietto
 `torri-2.json` dice `bagliore` (l'alone sotto 64 si toglie prima di cercare
 le figure), una `scala` sola e `largo_max` (1,6 celle: le torri più larghe
 si riducono un po' di più). `vesti.py` prende il foglio col numero più
-alto, quindi `torri-1.png` resta come storia e non entra più nell'atlante.
+alto; `torri-1.png` è stato tolto il 29 settembre, e oggi il foglio è uno.
 
 **Sta in** `strumenti/sprite/sorgenti/castello/generati/torri-2.png`.
+
+```bash
+python3 strumenti/sprite/vesti.py --atlante
+node strumenti/sprite/carte-castello.mjs      # castello-battaglia-figure.png: le venti torri in fila
+```
 
 Il prompt mandato:
 
@@ -414,7 +416,7 @@ memoria sugli scenari del sotterraneo).
 | # | cosa | immagini | allegati | si salva come | sblocca |
 |---|---|---|---|---|---|
 | 1 ✅ | foglio del terreno, bosco | 1 | `td_1`, schema del foglio | `castello/generati/terreno-bosco.png` | le carte vere |
-| 2 ✅ | le torri | 1 | `td_1`, `PVX1O` | `castello/generati/torri-1.png` | le torri pubblicabili |
+| 2 ✅ | le torri (tolte il 29/9, le ha sostituite la 2b) | 1 | `td_1`, `PVX1O` | ~~`castello/generati/torri-1.png`~~ | le torri pubblicabili |
 | 2b ✅ | le torri rifatte (ChatGPT) | 1 | `td_1`, `torri-1` | `castello/generati/torri-2.png` | quattro torri che si distinguono |
 | 3 — | la lava più calma (non serve più) | 1 | (chat di `td_3`) | — (il nome `td_4.png` è andato alla palude) | un vestito che si legge |
 | 4 ✅ | fogli del terreno, neve e lava | 2 | la scena del vestito | `terreno-neve.png`, `terreno-lava.png` | gli altri due vestiti |
@@ -425,7 +427,7 @@ memoria sugli scenari del sotterraneo).
 Il **minimo per rifare il gioco** sono l'1 e il 2: col bosco, le torri
 nuove e i mostri che ci sono già il castello si gioca e si pubblica. Il
 resto lo fa più bello, non lo fa funzionare. Dopo ognuno,
-`node test/esegui.mjs castello-sprite --scatti` e un'occhiata agli
+`node test/esegui.mjs torri-figure --scatti` e un'occhiata agli
 scatti.
 
 ## Le trappole già note

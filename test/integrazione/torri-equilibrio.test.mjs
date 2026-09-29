@@ -26,7 +26,7 @@ const errori = []
 async function tavolo() {
   const { page, errori: suoi } = await apriGioco(browser)
   page.setDefaultTimeout(0)
-  await page.click('.carta.td')
+  await page.click('.carta.gioco[data-gioco="torri"]')
   await page.waitForSelector('.tappe')
   return { page, suoi }
 }
@@ -122,7 +122,10 @@ for (const i of daProvare) {
   // il confronto fra le due strategie basta farlo dove la difesa conta di più
   if (i === 0 || tutte) {
     const largo = await gioca(i, 'costruisci')
-    controlla(`${nome}: potenziare rende almeno quanto spargere torri deboli`,
+    /* il modello sale quando salire compra più potenza per ⚡ di una
+       torre nuova, e i posti finiscono: chi sparge solo torri basse non
+       deve arrivare più lontano di lui */
+    controlla(`${nome}: chi sale quando conviene arriva almeno lontano quanto chi sparge torri deboli`,
               quantoLontano(alto) >= quantoLontano(largo),
               `alte [${alto.livelli}] ondata ${alto.onda} ${alto.cuori}❤ · ` +
               `basse [${largo.livelli}] ondata ${largo.onda} ${largo.cuori}❤`)

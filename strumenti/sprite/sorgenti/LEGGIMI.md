@@ -11,7 +11,7 @@ altro gioco**.
 sorgenti/
   fattoria/       atlante.json → src/giochi/fattoria/dati/atlante.js
   sotterraneo/    atlante.json → src/giochi/sotterraneo/dati/atlante.js
-  castello/       atlante.json → src/giochi/castello/dati/atlante.js  (lo ritaglia terreni.py)
+  castello/       atlante.json → src/giochi/castello/dati/figure.js e vestiti.js  (li compone vesti.py)
 ```
 
 Dentro ogni gioco, il secondo livello dice **da dove viene** un foglio,

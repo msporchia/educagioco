@@ -12,7 +12,6 @@ const FRECCE = { sinistra: '↙', destra: '↘', ambo: '↙↘' }
 
 defineProps({
   prossime: { type: Array, default: () => [] },  // [{ onda, fra, id, nome, quanti, immune, abilita, capo, con? }]
-  pittori: { type: Object, default: null },
 })
 
 // la frase del titolo, per chi ci tiene il dito sopra o non vede le emoji
@@ -40,7 +39,7 @@ const facce = p => (p.con ? [p, p.con] : [p])
          :data-immune-con="p.con ? p.con.immune.join(',') : null"
          :data-abilita="p.abilita || null" :data-capo="p.capo ? '' : null">
       <span v-for="f in facce(p)" :key="f.id" class="faccia">
-        <RitrattoMostro :bestia="f.id" :pittori="pittori" />
+        <RitrattoMostro :bestia="f.id" />
         <span v-if="f.immune && f.immune.length" class="immuni">
           <span v-for="k in f.immune" :key="k" class="punto">{{ TORRI[k].emoji }}</span>
         </span>

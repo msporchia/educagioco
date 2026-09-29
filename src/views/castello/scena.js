@@ -67,8 +67,6 @@ export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
                 respinto: n.respinto / RESPINTO })
   }
 
-  const via = motore.via
-  roba.push({ che: 'castello', x: via.fine.x - 2 * S, y: via.fine.y + 4 * S })
   for (const c of motore.colpi)
     roba.push({ che: 'colpo', strato: 1, x: c.x, y: c.y, tx: c.tx, ty: c.ty, t: c.t, tipo: c.tipo })
   return roba

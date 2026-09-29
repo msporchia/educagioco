@@ -13,7 +13,8 @@ import { MOSTRI } from '../dati/mostri.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta } from '../dati/eroi.js'
 import { COSE, CURE, NEI_FORZIERI, STANZE_TORCIA, pescaMerce, pescaCosa } from '../dati/cose.js'
 import { CURIOSITA_DI, MALUS } from '../dati/curiosita.js'
-import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi } from '../dati/campagna.js'
+import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi, brancoDi, scenarioDi, trattoDi }
+  from '../dati/campagna.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 
@@ -91,6 +92,9 @@ export class Corsa {
 
   // l'abisso non ha un ultimo piano: `piani: Infinity` lo rende già falso da sé, ma serve dirlo per nome a chi legge
   get senzaFondo() { return !!this.tappa.abisso }
+  // come si disegna questo piano (null: lo scenario di ripiego), e nell'abisso il nome del posto
+  get scenario() { return scenarioDi(this.tappa, this.piano) }
+  get posto() { const t = trattoDi(this.tappa, this.piano); return t ? t.nome : null }
 
   // nella campagna il conto è di tutta la discesa, nell'abisso è di questo piano
   get svenimentiConcessi() { return svenimentiDi(this.tappa) }
@@ -204,6 +208,7 @@ export class Corsa {
       largo: forma.misura, alto: forma.misura, giri: forma.giri,
       guardiano: guardianoDi(t, this.piano),
       crescita: crescitaDi(t),
+      branco: brancoDi(t, this.piano),
     })
     const dentro = this.livello.stanze[0]
     this.eroe = { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }

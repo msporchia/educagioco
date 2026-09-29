@@ -3,7 +3,7 @@
      node strumenti/sprite/carte-castello.mjs
 
    Le carte le fa il generatore vero del gioco (`cartaDi` in
-   `src/giochi/castello/motore/carta.js`) — le venti tappe e le quattro
+   `src/motore/castello/carta.js`) — le venti tappe e le quattro
    partite libere — e le disegna `scacchiera.py --carte` con gli stessi
    colori piatti della pianta da allegare ai prompt. Esce
    `poc/scatti/castello-carte.png`, e in console quali carte non
@@ -27,7 +27,7 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
 import { TAPPE, LIBERE } from '../../src/data/castello.js'
-import { cartaDi } from '../../src/giochi/castello/motore/carta.js'
+import { cartaDi } from '../../src/motore/castello/carta.js'
 import { BESTIARIO } from '../../src/giochi/castello/scena/bestiario.js'
 
 const QUI = dirname(fileURLToPath(import.meta.url))

@@ -108,6 +108,36 @@ raggiunge.
   patto della campagna non si è mosso: venti su venti su cinque tappe,
   diciannove su venti sul labirinto.
 
+## Il posto cambia scendendo
+
+**Ogni cinque piani l'abisso cambia posto** (`TRATTI_DELL_ABISSO`,
+`PIANI_PER_TRATTO` in `dati/campagna.js`): le cantine dal 1° al 5°, la cripta
+dal 6° al 10°, e finita la fila si ricomincia. Un posto è **uno scenario**
+(come si disegna, `SCENARI` in `dati/tessere.js`) **e un branco** (chi si
+incontra per strada, `BRANCHI` in `dati/mostri.js`); la riga sotto il campo
+dice dove si è («la cripta · piano 7»).
+
+- **Un abisso solo, non uno per posto**: due abissi vorrebbero due record,
+  due soste e due corredi, e ognuno mostrerebbe metà dei mostri. Scendendo
+  invece il posto nuovo è un traguardo che si vede.
+- **Un branco ha le cinque fasce di `BRANCO`, e ogni mostro sta nella fascia
+  che ha lì** (`guastiDeiMostri` lo pretende): cambiare posto cambia le
+  facce, non la fatica. Le cantine hanno le bestie (ratto, goblin, melma,
+  fungo, vespone, granchio, serpente), la cripta i morti e la notte
+  (pipistrello, fantasma, scheletro, orco, lupo). Il golem sta in tutti e due
+  finché la quinta fascia ha un mostro solo.
+- **La campagna incontra tutto il bestiario**: le sei discese sono dove i
+  mostri si imparano, e cambiarne il branco ritarerebbe tappe misurate.
+- **I guardiani restano quelli della scaletta**, che è misurata: lo scheletro
+  a guardia delle cantine è un mostro della cripta.
+- **Un posto nuovo** è una voce in `SCENARI`, una in `BRANCHI` e una riga in
+  `TRATTI_DELL_ABISSO`; `guastiDelleTessere` e `guastiDellAbisso` dicono se
+  ne manca un pezzo. Il piano resta una funzione del numero: rientrando si
+  ritrova lo stesso posto.
+
+Nei test: `data-posto` sulla riga sotto il campo (`.sot-piede`), vuoto fuori
+dall'abisso.
+
 ## Svenire: si perdono le tasche, mai il corredo
 
 - **Resta addosso tutto** — arma, mano debole, corpo, dito — **e si svuotano
@@ -192,7 +222,9 @@ come l'arma, il divario si allarga.
 ## Dove guardare
 
 - `dati/campagna.js` — `L_ABISSO`, `INDICE_ABISSO`, `tappaDi`, `durezzaDi`,
-  `guardianoDi`, `formaDi`, `crescitaDi`, `svenimentiDi`, `guastiDellAbisso`.
+  `guardianoDi`, `formaDi`, `crescitaDi`, `svenimentiDi`, `guastiDellAbisso`,
+  `TRATTI_DELL_ABISSO`, `trattoDi`, `scenarioDi`, `brancoDi`.
+- `dati/mostri.js` — `BRANCHI`, i branchi dei posti.
 - `motore/corsa.js` — `senzaFondo`, `svenimentiSpesi`, `rimettiInPiedi`.
 - `motore/banco.js` — `gioca({ fino })`, `costoDeiPiani`, `finoADove`.
 - `test/unita/sotterraneo-abisso.test.mjs` (pesante, `tempo: 300`): il tetto

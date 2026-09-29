@@ -5,7 +5,7 @@
 // una tela piccola.
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { creaTela } from '../grafica/tela.js'
-import { PITTORI } from '../grafica/castello.js'
+import { PITTORI } from '../giochi/castello/scena/pittori.js'
 import { TORRI } from '../data/ops.js'
 import { ABILITA } from '../data/mostri.js'
 
@@ -13,7 +13,6 @@ const props = defineProps({
   bestia: { type: Object, required: true },   // { id, nome, vola, immune, abilita, capo, con? }
   vita: { type: Number, default: 0 },         // quanta ne ha uno solo
   quanti: { type: Number, default: 0 },       // quanti ne restano in campo
-  pittori: { type: Object, default: null },   // i pittori di una pelle (il castello a sprite)
 })
 
 const ritratto = ref(null), ritrattoCon = ref(null)
@@ -25,15 +24,13 @@ function telaDi(i, canvas) {
   if (!tele[i] || tele[i].canvas !== canvas) {
     // unità piccola: il mostro deve riempire il riquadro, non stare al
     // suo posto in una scena
-    tele[i] = creaTela(canvas, props.pittori || PITTORI, { unita: 46, massimo: 3 })
+    tele[i] = creaTela(canvas, PITTORI, { unita: 46, massimo: 3 })
     tele[i].canvas = canvas
     tele[i].ridimensiona()
   }
   return tele[i]
 }
-const figura = id => (props.pittori
-  ? { che: 'ritratto', x: 17, y: 17, bestia: id }
-  : { che: 'mostro', x: 17, y: 23, bestia: id, vola: false, vita: 1, gelo: 0 })
+const figura = id => ({ che: 'ritratto', x: 17, y: 17, bestia: id })
 
 function gira(ts) {
   // il ritratto respira come sul campo: fermo sembrava un francobollo

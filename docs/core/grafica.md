@@ -23,7 +23,13 @@ entrano energia e prezzi: solo fatti già decisi (`potenziabile: true`).
   dove c'è posto. È così che il castello resta lo stesso su ogni schermo.
 - **`geometria.js`** — i tracciati: l'unico posto dove gioco e disegno
   devono essere d'accordo su dove passa la strada.
-- **`castello.js`** — i pittori, nella tabella `PITTORI`.
+- **`castello/`** — i pittori del campo del castello che non sono figure
+  (`PITTORI` in `castello/indice.js`: colpi, scoppi, piazzole, raggio,
+  bocca, e in `segni.js` il livello, «immune» e la corona). Le torri, i
+  mostri e il fondale li dipingono gli sprite: la pelle e i pittori di
+  `giochi/castello/scena/`, sulla carta a scacchiera del motore
+  (`motore/castello/carta.js`). Il castello a poligoni che c'era prima è
+  stato tolto il 29 settembre 2026.
 - **`spazio.js`** — il cielo degli asteroidi (nave, pianeta, sassi, raggi):
   riceve `danno: 0.5`, non sa che esistano le vite.
 - **`corpo.js`** — **lo scheletro**: `persona()` per chi cammina su due
@@ -31,7 +37,8 @@ entrano energia e prezzi: solo fatti già decisi (`potenziabile: true`).
   dati* e si ritrova ombra, respiro, lampo bianco della botta e
   ribaltamento da ko senza chiederli. Le schede stanno in tre cassetti:
   - `personaggi/` — il Generale;
-  - `castello/corpi-mostri.js` — il tower defense;
+  - `castello/corpi-mostri.js` (e `mostri/`) — il tower defense a
+    poligoni, che non c'è più: restano senza chi li legga;
   - `bestiario/` — il dungeon: venti creature viste **grandi e di fronte**,
     dove la paura la fa la forma e mai il macabro, con l'`ingombro` che le
     tiene dentro il riquadro.
@@ -72,8 +79,11 @@ Per disegnare con fogli di figure invece che coi poligoni:
   presto). Il caso è deterministico sulla posizione (`caso(x,y)`), mai su
   un contatore: una strada che si ridisegna diversa a ogni giro si legge
   come un guasto anche quando è bella. Gli attacchi non si dichiarano: li
-  **misura** dal foglio `strumenti/sprite/terreni.py`, che misura anche la
-  griglia dall'alfa a ogni giro.
+  misurava dal foglio `strumenti/sprite/terreni.py`, per il castello a
+  tessere — tolto col suo visore il 29 settembre 2026, quando il castello
+  è passato alla carta a scacchiera. Oggi `componiPercorso` lo usano solo
+  il banco (`npm run mondo`, che la accende quando un atlante porta gli
+  attacchi) e `unita/tessere`.
 - **Le chiavi a quattro vicini sono lettere N/S/O/E**, sempre in
   quell'ordine (rende le chiavi confrontabili). Un pezzo mancante si
   cerca allo specchio (`riflessa`, che scambia O/E) prima di tornare
@@ -219,6 +229,11 @@ la vetrina, i dettagli che pescano `A.lastra` per intonarsi).
 
 ## I terreni del castello (`grafica/terreni/`)
 
+**Non li legge più nessuno**: erano il fondale del castello a poligoni,
+e dal 29 settembre 2026 il campo si veste coi fogli del terreno sulla
+carta a scacchiera (`giochi/castello/scena/vestito.js`). Restano, finché
+non si decide.
+
 Stessa divisione di `ambienti/`+`materiali/`, spostata su un campo libero
 invece che su una griglia di stanze: un **terreno** (`terreni/bosco.js`,
 `mura.js`, `sotterraneo.js`) è *come* si dipinge il campo — le chiavi
@@ -312,4 +327,6 @@ tracciato, altrimenti i percorsi corti restano bui per due terzi.
 - **Un mondo a tessere vuole ingrandimenti interi**, se no gli sprite si
   sfrangiano. Quando il campo è più largo dello schermo e la scala intera
   taglierebbe la mappa, si tiene intera **la cella in pixel dello
-  schermo**, non la scala (`giochi/castello/scena/tela.js`).
+  schermo**, non la scala (lo faceva il visore a tessere del castello,
+  tolto; il castello di oggi compone la carta in un'immagine sola e la
+  stira sul campo, che è dipinto e non a pixel).

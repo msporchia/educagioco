@@ -300,7 +300,7 @@ const inHome = async sel => {
   await page.waitForSelector('.carte', { timeout: 5000 })
   return page.isVisible(sel)
 }
-controlla('di partenza il castello è in home', await inHome('.carta.td'))
+controlla('di partenza il castello è in home', await inHome('.carta.gioco[data-gioco="torri"]'))
 
 await vaiAiGenitori()
 await digita('0000')
@@ -332,7 +332,7 @@ controlla('e la riga lo dice, senza doverla riaprire',
 controlla('la riga di un gioco messo a mano si vede in mezzo alle altre',
   (await page.locator('[data-manopola] [data-riga="torri"] .voce-riga.ritoccata').count()) > 0)
 
-controlla('il castello sparisce dalla home', !(await inHome('.carta.td')))
+controlla('il castello sparisce dalla home', !(await inHome('.carta.gioco[data-gioco="torri"]')))
 controlla('gli altri giochi restano', await page.isVisible('.carta.mate'))
 
 /* spegnere non è cancellare: le monete e i progressi non si toccano */
@@ -346,13 +346,13 @@ uguale('spegnere non tocca i progressi', moneteDopoSpegnimento, moneteVere)
 await page.waitForTimeout(700)   // il salvataggio è a scatto ritardato
 await page.reload()
 await page.waitForSelector('.carte', { timeout: 8000 })
-controlla('la scelta resta dopo un riavvio', !(await page.isVisible('.carta.td')))
+controlla('la scelta resta dopo un riavvio', !(await page.isVisible('.carta.gioco[data-gioco="torri"]')))
 
 await vaiAiGenitori()
 await digita('0000')
 await taraGioco('torri', 'difetto')
 controlla('rimessa su «come dice l\'età», il castello torna in home',
-  await inHome('.carta.td'))
+  await inHome('.carta.gioco[data-gioco="torri"]'))
 
 /* ── e la tacca sa dire anche il contrario ──
    «Ce l'ha» è la posizione che prima non esisteva: tiene un gioco in
@@ -942,7 +942,7 @@ controlla('a chi comincia a otto anni i giochi per i piccoli non compaiono',
   !(await page.isVisible('.carta[data-gioco="conta"]')))
 controlla('e nemmeno il secondo dei due',
   !(await page.isVisible('.carta[data-gioco="prima"]')))
-controlla('ma il castello c\'è', await page.isVisible('.carta.td'))
+controlla('ma il castello c\'è', await page.isVisible('.carta.gioco[data-gioco="torri"]'))
 controlla('e gli asteroidi pure', await page.isVisible('.carta.mate'))
 
 /* Rinominare tocca l'etichetta e non i progressi: è tutto il senso di

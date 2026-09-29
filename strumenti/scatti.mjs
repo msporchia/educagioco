@@ -59,7 +59,10 @@ const PROFILO = {
      README come gli altri, e senza il cancello aperto uscirebbe uno
      scatto della home invece del gioco. */
   settings: { tables: [2, 3, 4, 5], sound: true, music: true,
-              giochi: {}, sa: {}, tuttoAperto: true, sperimentali: true },
+              giochi: {}, sa: {}, tuttoAperto: true, sperimentali: true,
+              /* la riga dei primi passi del castello è della prima partita
+                 in assoluto: un profilo che ha giocato l'ha già vista */
+              guideViste: { 'torri:primi-passi': true } },
   totals: { math: 260, mente: 90, en: 140, verbi: 40, frasi: 25, es: 60,
             td: 45, partiteMath: 22, torri: 30, perfette: 7,
             ondate: 40, misure: 30, pozioni: 12, clienti: 26, mercati: 4,

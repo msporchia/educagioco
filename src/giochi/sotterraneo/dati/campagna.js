@@ -3,6 +3,8 @@
 // regole.md). `dif` sono i due estremi 0..1, si sale in linea retta (durezzaDi) più il rincaro per stanza
 // (motore/corsa.js). `giri` è il numero di tagli del BSP (2 → quattro stanze, 4 → sedici).
 // `portata`: niente `scuola` qui, quello che insegna questa campagna non lo dà nessuna scuola.
+import { BRANCO, BRANCHI } from './mostri.js'
+
 export const CAMPAGNA = [
   { chiave: 'cantine', nome: 'Le cantine', icona: '🕯️',
     portata: 25,
@@ -83,6 +85,32 @@ export const L_ABISSO = {
   // ferma sempre fra il settimo e l'undicesimo, perché i mostri fanno troppo male (misurato dal banco)
   attOgni: 3,
   // niente `portata`: il cancello non è l'età ma "hai finito le sei discese", dimostrato invece che stimato
+}
+
+// l'abisso cambia posto ogni PIANI_PER_TRATTO piani, poi ricomincia: il posto dice lo scenario (SCENARI in
+// dati/tessere.js) e chi si incontra per strada (BRANCHI in dati/mostri.js); i guardiani restano la scaletta
+// misurata. Vedi docs/sotterraneo/abisso.md.
+export const TRATTI_DELL_ABISSO = [
+  { scenario: 'cantine', nome: 'le cantine' },
+  { scenario: 'cripta', nome: 'la cripta' },
+]
+export const PIANI_PER_TRATTO = 5
+
+// il tratto del piano `piano` (da 0); null fuori dall'abisso
+export const trattoDi = (tappa, piano) => (tappa && tappa.abisso
+  ? TRATTI_DELL_ABISSO[Math.floor(Math.max(0, piano) / PIANI_PER_TRATTO) % TRATTI_DELL_ABISSO.length]
+  : null)
+
+// quale scenario si indossa: null è quello di ripiego (SCENARIO)
+export const scenarioDi = (tappa, piano) => {
+  const t = trattoDi(tappa, piano)
+  return t ? t.scenario : (tappa && tappa.scenario) || null
+}
+
+// chi si incontra per strada: la campagna tutto il bestiario
+export const brancoDi = (tappa, piano) => {
+  const t = trattoDi(tappa, piano)
+  return t ? BRANCHI[t.scenario] : BRANCO
 }
 
 // `CAMPAGNA[-1]` è undefined, e un undefined dentro una Corsa non dà errore: dà una discesa senza numeri
@@ -171,6 +199,12 @@ export function guastiDellAbisso() {
   if (!a.capo) g.push('l\'abisso: nessun capo dopo la scaletta')
   if (a.attOgni < 3) g.push(`l'abisso: l'attacco cresce ogni ${a.attOgni} piani, troppo in fretta`)
   if (a.piani !== Infinity) g.push('l\'abisso ha un ultimo piano: non è più un abisso')
+  if (!TRATTI_DELL_ABISSO.length) g.push('l\'abisso: nessun tratto')
+  for (const t of TRATTI_DELL_ABISSO) {
+    if (!t.scenario || !t.nome) g.push('l\'abisso: un tratto senza scenario o nome')
+    else if (!BRANCHI[t.scenario]) g.push(`l'abisso: il tratto ${t.scenario} non ha un branco`)
+  }
+  if (PIANI_PER_TRATTO < 2) g.push(`l'abisso: ${PIANI_PER_TRATTO} piani per tratto, si cambia posto a ogni scala`)
   return g
 }
 

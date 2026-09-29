@@ -18,8 +18,7 @@ in `LIBERE_RACCONTO` di `src/data/campagne-castello.js`.
   record (`campagne.torri.primati[<chiave>]`, vedi `giochi/primati.js`).
   Non si rinominano.
 - **Ognuna eredita dalla sua campagna** tutti i mostri che ci vivono, le
-  torri, i rami e l'`ambiente` dell'ultima tappa (nel bosco niente rami,
-  come nella campagna). Le abilità sono sempre accese, il capo arriva ogni
+  torri, i rami e l'`ambiente` dell'ultima tappa. Le abilità sono sempre accese, il capo arriva ogni
   `CAPO.ogni` ondate; il resto è fisso (`posti` 14, `cap` 10, `attesa` 30).
 - **Si aprono tutte insieme a campagna finita.** `LIBERA` è la prima delle
   quattro, per i banchi che ne vogliono una.
@@ -31,9 +30,8 @@ in `LIBERE_RACCONTO` di `src/data/campagne-castello.js`.
   volte dallo stesso incrocio, dove le torri gli sparano all'andata e al
   ritorno — la difesa divisa nel tempo invece che nello spazio. Lo dichiara
   con `incroci: 1`. Il motore non lo sa (un nemico ha una `d` scalare): lo
-  sa `strumenti/valida-percorsi.mjs`, che conta gli incroci e li vuole
-  netti, ad angolo largo, e `sbroglia()` in `motore/castello/percorso.js`,
-  che scosta le piazzole anche a strada singola.
+  sa `strumenti/valida-percorsi.mjs`, che li conta sulla carta, e la
+  carta, che vuole la cella dell'incrocio attraversata dritta.
 - **I record**: uno per terreno, sul tasto della libera nella mappa e nella
   tabella dei record; in home `recordPiuRecente` racconta quello fatto più
   di recente. Il record della vecchia libera unica lo eredita il bosco
@@ -55,9 +53,10 @@ in `LIBERE_RACCONTO` di `src/data/campagne-castello.js`.
   modalità e non una misura: prima o poi vince lei. Il passo misurato nudo
   sta fra 1,10 e 1,16, e a quel passo la libera non chiude più (con 35
   regali, a ×1,16 si arriva alla 33ª, a ×1,10 non si muore entro un'ora). A
-  ×1,3 senza regali si cede fra la 20ª e la 22ª, con 35 fra la 27ª e la 31ª:
+  ×1,3 senza regali si cede fra la 21ª e la 22ª, con 35 fra la 23ª e la 27ª:
   è la scala su cui sono dimensionati i regali. Sopra 1,3 si tiene quello che
-  il tracciato dice (il bastione: 1,35).
+  il tracciato dice (sulla strada curva il bastione diceva 1,35; sulla carta
+  stanno tutte e quattro sul pavimento).
 - **Il gioco gioca la libera come la taratura**: `ONDATE_TARATE` (20) dice
   al motore da quando le ondate arrivano da tutte e due le bocche anche con
   `ondate: Infinity` (`insiemeDa`). I test la giocano con `Infinity` e
@@ -130,17 +129,21 @@ cede, per gradi in tasca:
 
 | gradi | 0 | 10 | 20 | 35 | 50 | 100 | 200 | 400 |
 |---|---|---|---|---|---|---|---|---|
-| la radura grande | 24 | 24 | 24 | 24 | 26 | 26 | 29 | 35 |
-| il bivio | 22 | 23 | 25 | 27 | 27 | 28 | 35 | 42 |
-| il bastione | 21 | 21 | 21 | 24 | 24 | 24 | 32 | 32 |
-| il delta | 21 | 22 | 23 | 23 | 23 | 31 | 38 | 39 |
+| la radura grande | 22 | 24 | 24 | 25 | 27 | 29 | 29 | 35 |
+| il bivio | 22 | 22 | 25 | 27 | 27 | 27 | 31 | 42 |
+| il bastione | 21 | 21 | 23 | 24 | 24 | 24 | 32 | 32 |
+| il delta | 21 | 23 | 23 | 23 | 23 | 31 | 31 | 39 |
+
+Misurata il 29 settembre 2026 sulle carte a scacchiera, coi prezzi che
+rincarano salendo e le bombe strette. Sulla strada curva era 24 · 22 · 21 ·
+21 a zero gradi, e 26 · 28 · 24 · 31 a cento.
 
 - **Il record si sposta a gradoni**: di colpo quando i gradi bastano a
   passare il mostro del muro, poi resta fermo fino al muro dopo.
 - **Dieci gradi quasi mai, cinquanta (una dozzina di partite) su tre
   terreni su quattro, cento (venticinque partite) su tutti**: è quello che il
-  banco pretende. Sul bastione il muro della ventunesima è uno scheletro, che
-  magia e gelo non toccano, e lo passa solo chi ne ha una trentina.
+  banco pretende. Sul bastione il muro della ventunesima lo passa chi ne ha
+  una ventina.
 - **Provati e tolti**: «+1 cuore» non sposta niente (l'ondata che ferma la
   partita ne fa passare ventotto); «+⚡ per nemico fermato» sposta tutto (al
   muro il metro è a corto di soldi, non di potenza: bastava +2,5% per saltare

@@ -2,7 +2,7 @@
 
 Uno **scenario** è il vestito intero di un sotterraneo: tetto, muri,
 pavimenti, porte, scale, fontana, mercante, arredo e le cose per terra.
-Oggi ce n'è uno solo, ed è il motivo per cui questa scheda esiste.
+Ce ne sono due, le cantine e la cripta, e l'abisso li alterna scendendo.
 
 **Cosa non va adesso**, visto disegnando un piano intero col codice vero:
 
@@ -22,6 +22,38 @@ Il prompt è diviso in due, ed è quello che lo rende gestibile: una
 che non si tocca mai, e un **blocco SCENARIO** in fondo, che è l'unica
 cosa da cambiare per avere la cripta, la fornace o la grotta. Si parte
 dalle cantine.
+
+## La scorciatoia: un prompt solo, sul foglio che c'è
+
+Per uno scenario che cambia i materiali e non la forma dei pezzi basta
+**allegare `sotterraneo_2.png` e chiedere lo stesso foglio in un altro
+scenario**: i pezzi di quel foglio stanno già insieme, e se restano ai
+loro posti il foglietto nuovo si ricava da `sotterraneo_2.json`. Si
+cambia solo il blocco in fondo (vedi «Gli scenari»).
+
+```text
+Ridisegna questo foglio di pezzi in un altro scenario. È lo stesso foglio: ogni pezzo resta ESATTAMENTE dov'è, della stessa misura e della stessa forma — stesse righe, stesse colonne, stessi spazi vuoti fra un pezzo e l'altro. Cambiano solo i materiali e i colori. Stessa mano: stesso contorno scuro sottile, stessa luce piatta da in alto a sinistra, stessa cura.
+
+Fondo trasparente (PNG), 1024×1536 come l'originale. Nessuna ombra, nessun bagliore, nessuna cornice. NESSUNA PAROLA SCRITTA, NESSUN NUMERO.
+
+Ogni pezzo diventa il suo corrispondente nel nuovo scenario:
+- i quattro fondi restano quattro quadrati che si ripetono senza cuciture, SENZA CORNICE né bordo attorno: il pavimento arriva fino al taglio;
+- le facce del muro restano facce alte una cella col loro coronamento;
+- le porte restano PORTE, chiuse, negli stessi sette stati e negli stessi versi: nessuna statua o nicchia al posto dell'anta; quella minacciosa ha il suo segno sopra l'arco, e l'anta resta un'anta;
+- la scala resta una scala (aperta, e chiusa dalla grata col lucchetto), la fontanella una fontanella (piena e asciutta), il mercante un incappucciato dietro il banco nelle stesse due pose;
+- l'arredo di legno (botti, scaffali, panche, legna, macina) diventa l'arredo dello scenario, uno per posto, della stessa misura;
+- le cose per terra restano cose PIATTE PER TERRA, nelle stesse caselle, su fondo trasparente, senza nessun quadrato di pavimento sotto: niente stendardi, drappi o cose appese.
+Niente che si possa scambiare per una cosa da raccogliere, e niente ossa né mucchi di teschi nell'arredo e per terra.
+
+(qui il blocco SCENARIO, da «Gli scenari»)
+```
+
+Quello che il foglio di prova (`sotterraneo_3.png`, la cripta) ha
+sbagliato è già scritto nel prompt qui sopra: una cornice attorno al
+pavimento dei corridoi, una statua al posto della porta col teschio, il
+terriccio diventato uno stendardo, le ragnatele diventate drappi,
+mucchi di teschi nell'arredo. Il resto è venuto al suo posto (entro
+pochi pixel), col contorno più spesso: 5 px invece di 3.
 
 ## Il metodo: due prompt, nella stessa chat
 
@@ -174,8 +206,9 @@ già nella parte fissa: niente che si possa scambiare per una cosa da
 raccogliere (vedi la memoria sul decoro che confonde: un bambino legge
 ogni oggetto in scena come parte del problema).
 
-Quale discesa usa quale scenario **è da decidere**: oggi il gioco ne ha
-uno solo, e agganciarli sarà una riga per tappa in `dati/campagna.js`.
+Le discese indossano le cantine, l'abisso alterna i posti ogni cinque
+piani (`TRATTI_DELL_ABISSO`); una discesa che vuole il suo lo dichiara con
+`scenario:` in `dati/campagna.js`.
 
 ### Le cantine — si parte da qui
 
@@ -207,7 +240,7 @@ Il pavimento dei corridoi: pietre strette e lunghe messe di traverso, consumate 
 Il pavimento speciale: lastre chiare con una stella a otto punte incisa.
 Le porte: ferro battuto scuro, con le borchie.
 Sui muri: una nicchia vuota ad arco, il bassorilievo di un cavaliere, l'edera secca.
-Per terra: polvere, foglie secche, lastre spaccate, cera colata, una grata di scolo, calcinacci.
+Per terra: polvere, foglie secche, lastre spaccate, cera colata, schegge d'ardesia, calcinacci.
 L'arredo del posto: sarcofagi di pietra chiusi, statue di cavalieri addormentati, colonne spezzate, candelabri alti di ferro.
 ```
 
@@ -377,3 +410,20 @@ pezzo cosa si ritaglia e cosa no.
 
 Se si rifà: chiedere il foglio **orizzontale** come prima riga del
 prompt, e le cose per terra «senza nessun quadrato di pavimento sotto».
+
+### `sotterraneo_3.png` — la cripta ✅, montata nell'abisso
+
+29 settembre 2026, ChatGPT: il prompt corto della scorciatoia (nella
+prima versione, senza le righe su cornici, porte e cose per terra) col
+blocco della cripta, allegato solo `sotterraneo_2.png`. 1024×1536 RGBA,
+lo stesso alone a due gobbe.
+
+- **I pezzi sono tornati ai loro posti**, entro pochi pixel e un po' più
+  grandi: il foglietto l'ha ricavato uno script che riporta ogni ritaglio
+  di `sotterraneo_2.json` sulla macchia corrispondente. Il contorno scuro
+  è di 5 px invece di 3.
+- **Da rifare** (è quello che le righe nuove del prompt chiedono): la
+  cornice attorno al pavimento dei corridoi, la statua al posto della
+  porta del teschio, il terriccio diventato uno stendardo, le ragnatele
+  diventate drappi, i mucchi di teschi nell'arredo. Il foglietto dice cosa
+  è rimasto fuori.

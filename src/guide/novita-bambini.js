@@ -29,6 +29,8 @@ export const NOVITA = [
     testo: '✂️ Nel costruttore ora sposti e copi le righe, anche dentro un ripeti' },
   { id: 14, quando: '2026-09-28', gioco: 'torri',
     testo: '🏰 Nel castello arrivano ondate miste: due mostri insieme' },
+  { id: 15, quando: '2026-09-29', gioco: 'torri',
+    testo: '🏰 Il castello è tutto ridisegnato: torri nuove, mostri, quattro mondi' },
 ]
 
 export const PER_GIOCO = 4

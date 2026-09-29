@@ -1,6 +1,6 @@
 import { apriBrowser, apriGioco, attendi, scatto, SCATTI_ACCESI } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
-import { smussa, tracciato } from '../../src/grafica/geometria.js'
+import { tracciato } from '../../src/grafica/geometria.js'
 import { colonnaAdd, colonnaSub, colonnaMul, colonnaMul2, colonnaDiv, generaAdd, generaSub,
          generaMul, generaDiv, LIVELLI } from '../../src/data/ops.js'
 
@@ -131,7 +131,7 @@ for (const [nome, size] of [['mobile', { width: 390, height: 844 }], ['desktop',
   /* l'elenco si riempie mentre il test va avanti: si tiene il riferimento
      e si legge alla fine, copiarlo adesso vorrebbe dire copiarlo vuoto */
   raccolti.push([nome, suoi])
-  await page.click('.carta.td')
+  await page.click('.carta.gioco[data-gioco="torri"]')
   await page.waitForSelector('.tappe')
 
   /* la campagna: dalla mappa si apre solo la prima tappa, che dà una torre sola
@@ -160,20 +160,19 @@ for (const [nome, size] of [['mobile', { width: 390, height: 844 }], ['desktop',
        percorsi tornano su sé stessi, e due punti a un passo l'uno
        dall'altro possono essere a mezza tappa di distanza per chi cammina.
        Il conto lo fa Node, qui si portano fuori solo i numeri. */
-    const c = document.querySelector('.campo canvas').getBoundingClientRect()
     const strada = { posti: T.postazioni().map(p => ({ x: p.x, y: p.y })),
                      torre: { x: T.torri()[0].x, y: T.torri()[0].y },
-                     forma: T.TAPPE[0].forma, W: c.width, H: c.height }
+                     punti: T.motore().via.punti.map(p => ({ x: p.x, y: p.y })) }
     return { tappe: T.TAPPE.length, chiuse, primaDellaTorre, bloccataRifiutata,
              strada, energiaSpesa, attesaDopoLaTorre,
              dopoLaChiamata: { onda: T.hud.onda, nemici: T.nemici().length } }
   })
 
-  /* quanto è avanti lungo la strada: si campiona il tracciato vero — lo
-     stesso `smussa` + `tracciato` che usa il motore — e si prende il punto
+  /* quanto è avanti lungo la strada: si campiona il tracciato vero — la
+     strada a squadra della carta, presa dal motore — e si prende il punto
      più vicino. È l'unico modo onesto di dire «più vicino al castello». */
-  const { posti, torre, forma, W, H } = campagna.strada
-  const via = tracciato(smussa(forma.map(([x, y]) => ({ x: x * W, y: y * H }))))
+  const { posti, torre, punti } = campagna.strada
+  const via = tracciato(punti)
   const avanzamento = p => {
     let migliore = 0, minima = Infinity
     for (let d = 0; d <= via.lunghezza; d += 3) {

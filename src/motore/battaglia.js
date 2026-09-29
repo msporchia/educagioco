@@ -6,7 +6,9 @@
    classi, una per file, sotto `motore/castello/`:
 
      battaglia.js   l'orchestratore: decide l'ordine delle cose
-     percorso.js    la strada e le piazzole
+     carta.js       la carta a scacchiera: dallo schizzo della tappa a
+                    strada a squadra e piazzole (`sullaCarta`)
+     percorso.js    la strada e le piazzole, in unità del mondo
      ondate.js      chi arriva, quanti, quando — e il **preavviso**
      tabellone.js   i cinque numeri della partita e l'energia
      nemico.js      chi cammina e incassa
@@ -25,6 +27,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 export { Battaglia, PREAVVISO } from './castello/battaglia.js'
 export { Percorso } from './castello/percorso.js'
+export { sullaCarta } from './castello/carta.js'
 export { Ondate } from './castello/ondate.js'
 export { Tabellone } from './castello/tabellone.js'
 export { Nemico } from './castello/nemico.js'

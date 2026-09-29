@@ -960,11 +960,11 @@ def main():
         if voluti and bers['nome'] not in voluti:
             continue
         # Una cartella può dichiarare che la ritaglia **un altro
-        # attrezzo** (`"attrezzo": "terreni"`): il castello scolla la
-        # strada dal terreno e misura gli attacchi di ogni tessera, due
-        # cose che qui dentro sarebbero un ramo morto per tutti gli
-        # altri. Dichiararlo è meglio che dedurlo dal fatto che non esce
-        # niente: chi legge sa dove andare a guardare.
+        # attrezzo** (`"attrezzo": "vesti"`): il castello compone i
+        # vestiti delle carte e le figure con `vesti.py`, che qui dentro
+        # sarebbe un ramo morto per tutti gli altri. Dichiararlo è meglio
+        # che dedurlo dal fatto che non esce niente: chi legge sa dove
+        # andare a guardare.
         if bers.get('attrezzo'):
             print(f'{bers["nome"]}: lo ritaglia {bers["attrezzo"]}.py, saltato')
             continue

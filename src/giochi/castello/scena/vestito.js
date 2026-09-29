@@ -1,4 +1,4 @@
-// Il vestito del campo: la carta a celle di una tappa (motore/carta.js)
+// Il vestito del campo: la carta a celle di una tappa (src/motore/castello/carta.js)
 // composta coi pezzi del foglio del terreno di quel vestito, in
 // un'immagine sola grande quanto la carta. È la stessa composizione di
 // `vesti()` in strumenti/sprite/vesti.py, passo per passo: chi cambia

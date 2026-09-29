@@ -423,7 +423,8 @@ export const AIUTI = {
         'Certi mostri sono **immuni** a certe torri: chi vola se ne infischia delle bombe (e quasi sempre anche del ghiaccio), chi ha la corazza delle frecce e della magia, e il mostro stesso te lo fa capire: una melma non sente la magia, uno scorpione non sente le frecce. Il nastro in cima lo dice prima che arrivino, con le torri sbarrate: una torre sola non basta mai.',
         'Le torri **non costano uguale**: l\'arciere costa poco, le bombe tanto — ma fanno anche di più. Con una bomba si fanno due arcieri.',
         'Le torri sparano solo a chi passa **vicino a loro**: metterle tutte insieme all\'inizio lascia scoperto il resto.',
-        'Una torre potenziata vale più di due torri deboli. Il tasto ⬆️ sul campo dice quanti potenziamenti hai preso, e quanto fanno.',
+        'Salire costa un po\' di più a ogni gradino: finché ci sono **piazzole libere**, una torre nuova rende più di un gradino. Quando i posti finiscono, si sale. Il tasto ⬆️ sul campo dice quanti potenziamenti hai preso, e quanto fanno.',
+        'Guarda **da dove entrano**: in certe tappe gli ingressi sono due, e una torre sola non li tiene tutti e due.',
         'A metà scaletta una torre sceglie un mestiere: cambia **come** colpisce, non quanto. Nessuno dei due è quello sbagliato.',
         'Il campo non si ferma mentre fai i conti: i nemici camminano.',
         'Appena un\'ondata è entrata tutta puoi mandare **la prossima** subito: ti danno qualche ⚡ in più, ma te le trovi addosso insieme.',
@@ -433,28 +434,6 @@ export const AIUTI = {
       { titolo: 'Cosa allena', righe: [
         'Le quattro operazioni **in colonna**, coi riporti e i prestiti, su numeri che crescono tappa dopo tappa.',
         'E la parte che non è matematica: decidere dove spendere quello che si ha, che è la cosa che il gioco chiede davvero.',
-      ] },
-    ],
-  },
-
-  castello: {
-    emoji: '🏰', titolo: 'Il castello',
-    blocchi: [
-      'Ogni tappa è un assedio: i nemici arrivano da una parte, tu costruisci le torri lungo la strada.',
-      { titolo: 'Come si gioca', righe: [
-        'Tocca il campo dove vuoi costruire: si apre il foglio con le torri e i prezzi.',
-        'I conti danno i soldi per costruire. Più ne fai, più torri metti.',
-        'Le torri si potenziano toccandole.',
-      ] },
-      { titolo: 'Consigli', righe: [
-        'Una torre sola tenuta forte regge più di quattro appena messe — ma una torre sola non basta: certi mostri sono **immuni** a lei. Il nastro in cima dice a cosa.',
-        'L\'arciere costa poco e le bombe tanto: si sceglie anche col portafoglio.',
-        'Guarda da dove entrano: in certe tappe gli ingressi sono due.',
-        'Il tasto ⬆️ sul campo dice quanti potenziamenti hai preso, e quanto fanno le tue torri.',
-      ] },
-      { titolo: 'Cosa allena', righe: [
-        'Il calcolo in colonna, come il tower defense, ma dentro una mappa che si guarda dall\'alto.',
-        'E il conto della spesa: quanto costa una torre nuova contro quanto costa alzare quella che c\'è.',
       ] },
     ],
   },

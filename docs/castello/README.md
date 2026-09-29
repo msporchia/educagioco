@@ -14,5 +14,5 @@ pagina per chi arriva da fuori e i documenti per chi ci lavora.
 
 Vedi anche: [`../apprendimento/calibrazione.md`](../apprendimento/calibrazione.md)
 (quanto vale una moneta), [`../core/grafica.md`](../core/grafica.md) (la tela,
-la telecamera e il castello a sprite), `strumenti/sprite/DA-GENERARE.md` (le
-immagini che mancano al castello a sprite).
+la telecamera e le figure del castello), `strumenti/sprite/DA-GENERARE.md` (le
+immagini che mancano al castello).

@@ -314,6 +314,20 @@ export const segnoDi = (tipo, sa) => TORRI[contoDi(tipo, sa)].segno
 // il cui `aspetto` è 'magica'. L'ordine (+ − × :) è anche l'ordine di
 // sblocco: il ghiaccio, che non fa danno, non può essere la seconda torre
 // guadagnata (vedi docs/castello/torri.md e operazioni.md).
+// Le misure sono in unità del mondo, e una cella della carta è larga 35
+// (420/12): arciere 92, magica e bombe 104 (tre celle scarse), ghiaccio 86.
+// Le bombe arrivavano a 132 con uno scoppio di 62 — quasi quattro celle di
+// gittata e quasi due di raggio — e sulle strade a squadra, che si
+// ripiegano strette, uno scoppio prendeva due o tre tratti insieme: «fa
+// decisamente troppo effetto» (l'utente). Adesso lo scoppio è una cella
+// (38) e la gittata quella della magica, e sparano più spesso con un colpo
+// più piccolo (1,8 s e 42, erano 2,3 s e 44): con lo scoppio stretto un
+// colpo ne prende due invece di tre, e un'ondata di troll — che solo le
+// bombe feriscono — a 2,3 s non si fermava a nessuna vita, perché i colpi
+// non bastavano per tutti. Un ⚡ di bombe resta al suo listino (1,2
+// arcieri, misurato con `npm run dps` sulle carte). La magica ha perso un
+// filo di zona (42) per la stessa ragione: sulle carte ne prendeva di più
+// di quanto dica il listino.
 export const TORRI = {
   add: { nome: 'Arciere',  aspetto: 'arciere', emoji: '🏹', segno: '+', colore: '#38c172',
          stadi: ['🏹', '🎯', '🦅'],
@@ -326,7 +340,7 @@ export const TORRI = {
          } },
   sub: { nome: 'Magica',   aspetto: 'magica',  emoji: '🔮', segno: '−', colore: '#a06bff',
          stadi: ['🔮', '✨', '🧙'],
-         raggio: 104, danno: 24, ricarica: 1.5,  area: 46, descr: 'onda magica che colpisce a zona',
+         raggio: 104, danno: 25, ricarica: 1.5,  area: 42, descr: 'onda magica che colpisce a zona',
          rami: {
            veleno: { nome: 'Veleno', segno: '☠', colore: '#61b53a',
                      descr: 'colpisce piano ma il male continua da solo' },
@@ -347,10 +361,10 @@ export const TORRI = {
          } },
   div: { nome: 'Bombe',    aspetto: 'bombe',   emoji: '💣', segno: ':', colore: '#ff7a3d',
          stadi: ['💣', '🧨', '🚀'],
-         raggio: 132, danno: 44, ricarica: 2.3,  area: 62, descr: 'colpo lento e devastante',
+         raggio: 104, danno: 42, ricarica: 1.8,  area: 38, descr: 'scoppia e prende tutti quelli vicini',
          rami: {
            mortaio: { nome: 'Mortaio', segno: '🎇', colore: '#d1521c',
-                      descr: 'arriva lontanissimo, e quando arriva pesa' },
+                      descr: 'arriva più lontano di tutte, e quando arriva pesa' },
            napalm:  { nome: 'Napalm',  segno: '🔥', colore: '#ffab3d',
                       descr: 'scoppia più largo e lascia tutti a bruciare' },
          } },

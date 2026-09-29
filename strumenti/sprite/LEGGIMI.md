@@ -7,13 +7,14 @@ modulo generato** che non si scrive a mano.
 |---|---|---|
 | `fattoria` | `atlante.py` | [`src/giochi/fattoria/dati/atlante.js`](../../src/giochi/fattoria/dati/atlante.js) |
 | `sotterraneo` | `atlante.py` | [`src/giochi/sotterraneo/dati/atlante.js`](../../src/giochi/sotterraneo/dati/atlante.js) |
-| `castello` | `terreni.py` | [`src/giochi/castello/dati/atlante.js`](../../src/giochi/castello/dati/atlante.js) |
+| `castello` | `vesti.py --atlante` | [`src/giochi/castello/dati/figure.js`](../../src/giochi/castello/dati/figure.js) e `vestiti.js` |
 
-**Due attrezzi, un formato solo.** `atlante.py` ritaglia figure — una figura
-la si dichiara e si prende, il nome conta — mentre `terreni.py` ritaglia
-mondi a griglia, dove di una tessera bisogna anche sapere *come si attacca
-alle vicine*, e quello non si dichiara: si misura. Quello che scrivono è lo
-stesso modulo, perché la testa la scrive `catalogo.py` per tutti e due.
+Il castello non ha un atlante a tessere: le sue carte a scacchiera si
+vestono coi pezzi dei fogli del terreno e le figure si prendono dal foglio
+delle torri e da quelli dei mostri, e li compone `vesti.py` (vedi
+[`docs/core/sprite.md`](../../docs/core/sprite.md)). C'era un terzo
+attrezzo, `terreni.py`, per il castello a tessere: è stato tolto col
+visore che lo leggeva.
 
 Per quale gioco sia un foglio **lo dice la cartella in cui sta**: il
 primo livello di `sorgenti/` è il gioco, e un `atlante.json` lì dentro
@@ -25,10 +26,8 @@ e non è mai esistito.
 Un attrezzo solo e un comando solo apposta: due script che leggono la
 stessa cartella finiscono, prima o poi, con un atlante e una tabella che
 non combaciano più — e quel guasto si presenta come uno sprite sbagliato
-a schermo, cioè tardi. Per lo stesso motivo `terreni.py` non ha più il
-suo `sorgenti/td/` scritto dentro: cerca la cartella che dichiara
-`"attrezzo": "terreni"`, cioè la stessa riga che dice ad `atlante.py` di
-saltarla.
+a schermo, cioè tardi. La cartella del castello dichiara `"attrezzo":
+"vesti"`, che è la riga che dice ad `atlante.py` di saltarla.
 
 ```bash
 python3 strumenti/sprite/atlante.py              # rifà tutti i bersagli
@@ -134,8 +133,8 @@ doversi ricordare in quale dei tredici fogli stia.
 Il PNG **non si tocca mai**: vedi `STANDARD.md`. Le correzioni sono dato nel
 foglietto, e buttare via tutto il generato e rifarlo dà lo stesso risultato
 al pixel. I fogli del castello compaiono nell'elenco spenti, perché lì i
-ritagli non sono dichiarati: `terreni.py` li **misura** dall'alfa, e non c'è
-nessun rettangolo da spostare.
+ritagli non sono dichiarati: `vesti.py` e `cammino.py` li **misurano**
+dall'alfa, e non c'è nessun rettangolo da spostare.
 
 ## Aggiungere roba
 
@@ -202,10 +201,11 @@ Due cose che quelle carte dicono e vale la pena ripetere qui:
   riferimento di stile da mettere davanti a un generatore è
   `poc/scatti/riferimento-stile.png`, e il formato che i generatori
   restituiscono meglio è quello di `armm1998/character.png`.
-- **il foglio dei terreni del castello non si sa da dove venga.** Si
-  chiamava `d8Rn3.png`, cioè come un file scaricato e non come un file
-  generato, e nel repo non c'è una riga che dica da dove. Sta scritto in
-  `castello/generati/PROVENIENZA.txt` con le due strade per chiuderla.
+- **il foglio dei terreni del castello e quello delle torri di agosto non
+  si sapeva da dove venissero** (`d8Rn3.png` e `PVX1O.png`, nomi da file
+  scaricato). Sono stati tolti tutti e due il 29 settembre 2026, quando il
+  castello è passato ai fogli generati in casa: vedi
+  `castello/generati/PROVENIENZA.txt`.
 
 Il set di ArMM1998 **non contiene un solo animale**, controllati tutti e
 otto i file: tutte le bestie della fattoria sono generate. Il perché, e

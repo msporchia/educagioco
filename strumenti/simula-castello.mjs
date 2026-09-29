@@ -7,6 +7,7 @@
 //   node strumenti/simula-castello.mjs 6                # solo la sesta
 //   node strumenti/simula-castello.mjs libera-mura      # una partita libera
 //   node strumenti/simula-castello.mjs --quote 1,.9,.8  # con che tetti
+//   node strumenti/simula-castello.mjs --sole div       # bombe dove non serve altro
 import { TAPPE, LIBERE, liberaDi, CFG, MONDO, costoNuovaTorre,
          sequenzaTorri, prossimoAcquisto } from '../src/data/castello.js'
 import { creaBattaglia } from '../src/motore/battaglia.js'
@@ -66,7 +67,8 @@ export function gioca(tappa, opzioni = {}) {
   const { quota = 1, strategia = 'potenzia', tOp = 10, sbaglia = 0, svelto = true,
           impaziente = false,
           traOndate = false, immunita = false, misure = TELEFONO, s = 7, finoA = tappa.ondate,
-          da = null, istantanee = null, regali = null, sceglie = null } = opzioni
+          da = null, istantanee = null, regali = null, sceglie = null,
+          sole = null } = opzioni
   const caso = seme(s)
   const stato = { cuori: 0, onda: 0, uccisi: 0, torri: 0, energia: 0 }
   const motore = creaBattaglia({ tappa, misure, stato, regali })
@@ -88,6 +90,10 @@ export function gioca(tappa, opzioni = {}) {
   const disponibile = () => (stato.energia + speso) * quota - speso
 
   const sequenza = sequenzaTorri(tappa, Math.max(32, tappa.posti || 0))
+  // `sole`: le torri che la fila non chiede per forza (l'apertura, e chi
+  // copre un mostro che nessun altro ferisce) sono tutte di quel tipo — il
+  // bambino che ha trovato la sua torre e mette solo quella
+  if (sole) sequenza.forEach((k, j) => { if (!sequenza.urgenti.has(j)) sequenza[j] = sole })
 
   // a quali torri è immune l'ondata in arrivo (non quella in corso: si
   // compra a campo pulito, fra un'ondata e l'altra)
@@ -214,6 +220,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const quali = argv.filter(a => /^\d+$/.test(a)).map(Number)
   const iQuote = argv.indexOf('--quote')
   const quote = iQuote >= 0 ? argv[iQuote + 1].split(',').map(Number) : null
+  const iSole = argv.indexOf('--sole')
+  const sole = iSole >= 0 ? argv[iSole + 1] : null
   // una libera si chiede per chiave, e si gioca come la tara: 20 ondate senza regali
   const libere = argv.filter(a => liberaDi(a)).map(a => {
     const l = liberaDi(a)
@@ -221,6 +229,26 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   })
   const tappe = quali.length || libere.length
     ? [...quali.map(n => [n - 1, TAPPE[n - 1]]), ...libere] : [...TAPPE.entries()]
+
+  if (sole) {
+    // le tappe che offrono quella torre, giocate dal metro e dal pigro
+    // mettendo quella dovunque la fila non chieda altro: se il pigro vince
+    // così, la torre vale più di quello che costa
+    const vinte = { misura: 0, pigro: 0 }
+    let giocate = 0
+    for (const [i, t] of tappe) {
+      if (!t.torri.includes(sole)) continue
+      giocate++
+      for (const nome of Object.keys(vinte)) {
+        const r = gioca(t, { ...PROFILI[nome], sole })
+        if (r.esito === 'vinta') vinte[nome]++
+        console.log(`${String(i + 1).padStart(3)}. ${t.nome.padEnd(20)} ${nome.padEnd(7)} ${etichetta(r)}`)
+      }
+    }
+    console.log(`\n${TORRI[sole].nome} dovunque si può: ` +
+                Object.entries(vinte).map(([n, v]) => `${n} ${v} su ${giocate}`).join(' · '))
+    process.exit(0)
+  }
 
   for (const [i, t] of tappe) {
     console.log(`\n${i + 1}. ${t.nome} — ${t.calcoli ? `${t.calcoli} calcoli promessi` : 'partita libera'}` +

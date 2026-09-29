@@ -1,7 +1,7 @@
 /* Il patto degli atlanti generati.
 
-   Gli atlanti sono **generati** (`strumenti/sprite/atlante.py` e
-   `terreni.py`), e chi li genera non gira mai insieme a chi li legge:
+   Gli atlanti sono **generati** (`strumenti/sprite/atlante.py`), e chi
+   li genera non gira mai insieme a chi li legge:
    si cambia il generatore, si rilancia, e il gioco lo scopre a schermo.
    Questo file è il posto dove lo scopre prima.
 
@@ -22,9 +22,8 @@
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import * as FATTORIA from '../../src/giochi/fattoria/dati/atlante.js'
 import * as SOTTERRANEO from '../../src/giochi/sotterraneo/dati/atlante.js'
-import * as CASTELLO from '../../src/giochi/castello/dati/atlante.js'
 
-const ATLANTI = [['fattoria', FATTORIA], ['sotterraneo', SOTTERRANEO], ['castello', CASTELLO]]
+const ATLANTI = [['fattoria', FATTORIA], ['sotterraneo', SOTTERRANEO]]
 const FAMIGLIE = ['attore', 'oggetto', 'tessera', 'fondo', 'figura']
 
 /* ═══════════ 1. quello che ogni atlante ha, uguale ═══════════ */
@@ -137,20 +136,7 @@ for (const [chi, versi] of Object.entries(FATTORIA.AGGANCI || {})) {
 uguale('ogni aggancio è bestia/verso/dove → [fx, fy] fra 0 e 1', agganciStorti.length, 0,
        agganciStorti.slice(0, 4).join(' · '))
 
-/* ═══════════ 4. quello che il castello dà per scontato ═══════════ */
-nota('il castello, che compone le strade')
-
-const conAttacchi = CASTELLO.VOCI.filter(v => v.famiglia === 'tessera')
-controlla('le tessere portano i loro attacchi',
-          conAttacchi.length > 0 && conAttacchi.every(v => v.attacchi))
-const lati = ['N', 'S', 'O', 'E']
-const attacchiStorti = conAttacchi.filter(v =>
-  !lati.every(l => ['·', 'c', 'sx', 'dx'].includes(v.attacchi[l])))
-uguale('e ogni lato dice una delle quattro cose', attacchiStorti.length, 0)
-controlla('una tessera si può girare', conAttacchi.every(v => v.giri === 4),
-          'girare permuta gli attacchi, ed è quello che fa bastare una curva per quattro gomiti')
-
-/* ═══════════ 5. fotogrammi o varianti ═══════════ */
+/* ═══════════ 4. fotogrammi o varianti ═══════════ */
 nota('quello che scorre e quello che si sceglie')
 
 /* Più pezzi sotto un nome sono due cose opposte, e confonderle si vede:

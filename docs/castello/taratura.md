@@ -1,7 +1,8 @@
 # La taratura del castello
 
 Come escono i numeri di una tappa: il numero di calcoli è l'input, il resto
-si deriva, e la vita dei mostri la misura un simulatore col motore vero.
+si deriva, e la vita dei mostri la misura un simulatore col motore vero —
+sulla carta a scacchiera, la stessa strada che si gioca.
 Quanto vale una moneta rispetto all'esercizio sta in
 [`../apprendimento/calibrazione.md`](../apprendimento/calibrazione.md).
 
@@ -45,12 +46,24 @@ lì a crescere è la difficoltà tattica (le bocche).
 
 - **Ogni nemico fermato lascia ⚡** (`CFG.perNemico` 2), più un premio di fine
   ondata (`fineOnda` 4, `ondataPulita` 6 se non passa nessuno).
-- **Allargarsi rincara, salire quasi no.** Costruire: 40, poi 60, 80…
-  (`costruzione` 40, `costruzionePiu` 20, per il listino della torre);
-  potenziare: 36 +2 a gradino. Un gradino rende il 60% in più. Provato con
-  costruire poco più caro che potenziare: riempire il campo di torri di
-  livello 1 era la mossa migliore, e la matematica difficile diventava una
-  tassa invece della scelta furba.
+- **Salire rende un po' meno che costruire, e sempre meno salendo.**
+  Costruire: 40, poi 50, 60… (`costruzione` 40, `costruzionePiu` 10, per il
+  listino della torre); salire: 30, 34, 38… fino a 62 (`potenziamento` 30,
+  `potenziamentoPiu` 4). La crescita per livello è quasi dritta (ogni
+  gradino aggiunge più o meno quanto il primo), quindi un ⚡ messo nei
+  gradini rende un po' meno di un ⚡ messo in una torre nuova: cumulato,
+  0,75–0,85 al livello 4, 0,7–0,8 al 10 (misurato con `npm run dps`; la
+  tabella per torre è in fondo al suo output). Si sale quando i posti
+  finiscono, o quando serve il fuoco in un punto.
+  Era il contrario: costruire rincarava di 20 a torre e salire di 2, la
+  crescita si moltiplicava su sé stessa e il raggio cresceva coi livelli,
+  e il livello 10 rendeva per ⚡ più di una torre nuova (1,2 l'arciere, 2,9
+  il ghiaccio). La mossa migliore era una torre per tipo e poi solo
+  gradini: «ne crei una per tipo e tanti saluti» (l'utente). Prima ancora
+  era stato provato il verso opposto, costruire poco più caro che
+  potenziare, e riempire il campo di torri di livello 1 era la mossa
+  migliore: il punto giusto sta in mezzo, e il gradino più caro resta
+  sotto il doppio di una torre, perché un acquisto è un calcolo.
 - **Gli errori si pagano in energia, mai in vite** (`malusErrore` 6: un
   sesto di gradino). Con sei calcoli in una tappa, un errore che costasse un
   acquisto toglierebbe un sesto della difesa per un riporto.
@@ -66,6 +79,11 @@ lì a crescere è la difficoltà tattica (le bocche).
 
 ## Le piazzole
 
+- **Le disegna la carta a scacchiera** (`cartaDi` in
+  `src/motore/castello/carta.js`): celle accanto alla strada, in
+  proporzione alla lunghezza di ogni via, lati alterni, occupate
+  dall'ingresso. La tappa dice *quante*; la carta dice *dove*, e il
+  motore gioca su quelle (`sullaCarta`).
 - **Il minimo:** quelle che il piano occupa più una, mai meno di tre né delle
   torri che la tappa offre — se fossero meno dei tipi, la scelta di quale
   torre mettere sarebbe finta.
@@ -77,14 +95,14 @@ lì a crescere è la difficoltà tattica (le bocche).
 - **+3 per ogni ingresso oltre il primo** (`PIAZZOLE_PER_INGRESSO`): con due
   strade la difesa va divisa, e la scelta deve restare «dove metto la
   prossima», non «quale porta lascio aperta».
-- **Le piazzole si occupano dall'ingresso** (`GEOMETRIA.dallIngresso`). Dal
-  castello, con due o tre torri finivano tutte davanti alla porta e il mostro
-  faceva l'85% della strada senza un colpo.
-- **La geometria è equilibrio travestito da disegno.** Sta in `GEOMETRIA` in
-  `data/castello.js` ed entra nella firma della taratura. **Chi tocca
-  `piazzole()` (`motore/castello/percorso.js`) incrementa `GEOMETRIA.v`**:
-  il codice i dati non lo descrivono, e senza il test non vede che il campo
-  è cambiato.
+- **Le piazzole si occupano dall'ingresso.** Dal castello, con due o tre
+  torri finivano tutte davanti alla porta e il mostro faceva l'85% della
+  strada senza un colpo.
+- **La geometria è equilibrio travestito da disegno**, e per questo nella
+  firma della taratura entra la carta intera — strada a squadra e
+  piazzole di ogni tappa, come le dà `sullaCarta` — e non solo lo schizzo:
+  chi tocca il generatore delle carte o una carta scritta a mano cambia la
+  firma senza doverselo ricordare.
 - **Il mondo è uno** (`MONDO`: 420×760, verticale, uguale su ogni schermo):
   cambia solo quanto lo si vede grande. La telecamera sta in
   [`../core/grafica.md`](../core/grafica.md). La scala `S` (1,3) non è a
@@ -107,7 +125,12 @@ lì a crescere è la difficoltà tattica (le bocche).
   il preavviso, non un ottimizzatore.
 - **`prossimoAcquisto` è la stessa mossa** per il piano dei calcoli, per
   `difesaCon` e per il simulatore: se divergessero, la promessa dei calcoli
-  con prezzi diversi non reggerebbe.
+  con prezzi diversi non reggerebbe. Fra salire la torre più bassa e
+  costruire la prossima sceglie quella che compra **più potenza per ⚡**
+  (`dpsDi`): sceglieva la più economica, e con gradini che costavano
+  sempre meno di una torre saliva sempre. Col conto per ⚡ il piano di
+  una tappa è di tre-quattro torri a metà scaletta invece che di due in
+  cima (le isole: 9,9 → 6,5,5,2).
 - **Sa da che ondata le bocche scendono insieme** (`insiemeDa`, la stessa
   del motore). Contandolo sempre dalla quinta, nelle libere comprava torri
   per la strada sbagliata.
@@ -132,6 +155,15 @@ npm run tara -- --da 0.6 --bersaglio 0.85
   `src/motore/castello/`): stesso codice nel gioco e in Node, ed è l'unico
   motivo per cui il bilanciamento si misura invece di provarlo a occhio. Una
   tappa costa qualche decimo di secondo.
+- **Si gioca sulla carta, sempre.** `Battaglia` prende strada e piazzole da
+  `sullaCarta` (`src/motore/castello/carta.js`), quindi il gioco, la
+  taratura, il simulatore, `npm run dps` e i test giocano la stessa
+  strada a squadra: la trasformazione sta in un posto solo. Le vite erano
+  state tarate sulla strada curva, e sulla carta la strada è più lunga di
+  circa un sesto: ritarate sulla carta, salivano in media di un terzo
+  (×1,07 il bosco, ×1,37 il sotterraneo, ×1,25 le mura, ×1,28 la palude);
+  col nuovo equilibrio dei prezzi e delle bombe tornano in media a quelle
+  di prima (×0,99 · ×1,02 · ×0,97 · ×1,10 per ondata).
 - **I profili** (`PROFILI` in `strumenti/simula-castello.mjs`): `misura` (il
   metro: spende tutto, non sbaglia, non corre), `parco` (tiene un decimo),
   `pigro` (tiene un quarto: non deve passare), `pieno`, `pasticcione`
@@ -157,7 +189,10 @@ npm run tara -- --da 0.6 --bersaglio 0.85
   non è un errore. Spianando tutta la fila, un golem in fondo ammorbidiva la
   tappa intera.
 - **La promessa:** chi spende tutto finisce la tappa; chi tiene in tasca un
-  quarto no (perde quattordici volte su quindici); il pasticcione ce la fa.
+  quarto no (perde diciannove volte su venti); il pasticcione ce la fa.
+  L'eccezione sta scritta col suo nome in `unita/castello` (`PERDONANO`):
+  dal passaggio alle carte le isole della Palude lasciano passare anche il
+  pigro, con due gradini in meno del metro sull'ultima ondata.
 
 ## La vecchia curva, e a cosa serve ancora
 
@@ -174,19 +209,28 @@ la tabella non ce l'ha, cioè le partite libere oltre l'ultima ondata tarata.
   `chiaveTappa` = `campagna/nome`), `OLTRE` (il passo delle libere, vedi
   [libere.md](libere.md)), `BERSAGLIO` e `FIRMA`. Non si modifica a mano.
 - **La firma** (`firmaEquilibrio`) è l'impronta di `CFG`, prezzi, torri,
-  rami, `GEOMETRIA`, `MONDO`, mostri (immunità, abilità, capo, miste), tappe
-  e libere coi loro tracciati interi (`forme`, `fronti`): se cambia, `unita/castello` diventa rosso e chiede
-  di rilanciare `npm run tara` invece di giocare su un equilibrio di ieri.
+  rami, `MONDO`, mostri (immunità, abilità, capo, miste), tappe e libere
+  coi loro schizzi (`forme`, `fronti`) e con le loro carte (strada e
+  piazzole): se cambia, `unita/castello` diventa rosso e chiede di
+  rilanciare `npm run tara` invece di giocare su un equilibrio di ieri.
 
 ## Gli strumenti di misura
 
 - **`npm run dps`** (`strumenti/dps-castello.mjs`): una torre sola davanti a
-  un'ondata vera, col motore vero. Tre numeri: `singolo` (danno al secondo su
-  uno), `efficace` (contando tutti quelli presi: area, rimbalzi, veleno),
-  `valore` (vita fermata con nemici che muoiono, in arcieri di livello 1). Il
-  ghiaccio vale la vita in più fermata da due arcieri con lui in mezzo.
-  Accanto, la stima del modello (`dpsDi`) e il rapporto fra le due.
-- **`node strumenti/valida-percorsi.mjs`**: le mappe ai raggi X (vedi
+  un'ondata vera, col motore vero, sulle carte. Tre numeri: `singolo` (danno
+  al secondo su uno), `efficace` (contando tutti quelli presi: area,
+  rimbalzi, veleno), `valore` (vita fermata con nemici che muoiono, in
+  arcieri di livello 1). Il ghiaccio vale la vita in più fermata da due
+  arcieri con lui in mezzo. Accanto, la stima del modello (`dpsDi`) e il
+  rapporto fra le due; in fondo, la **resa per ⚡ cumulato** di ogni torre
+  salita (costruzione più gradini) contro la stessa appena costruita. Una
+  torre lenta da sola non ferma un'ondata fitta a nessuna vita — i colpi
+  non bastano per tutti — e lì il `valore` crolla (il mortaio al quarto
+  livello): è un limite della misura, non del ramo.
+- **`node strumenti/simula-castello.mjs --sole div`**: le tappe giocate
+  mettendo quella torre dovunque la fila non chieda altro, dal metro e dal
+  pigro. Se il pigro vince così, la torre vale più di quello che costa.
+- **`node strumenti/valida-percorsi.mjs`**: le carte ai raggi X (vedi
   [campagne.md](campagne.md)).
 - **`node strumenti/regali-castello.mjs`**: quanto vale un regalo (vedi
   [libere.md](libere.md)).
@@ -194,6 +238,8 @@ la tabella non ce l'ha, cioè le partite libere oltre l'ultima ondata tarata.
 Nei test: `test/unita/castello` gioca tutte le tappe coi profili (chi spende
 tutto finisce, chi tiene un quarto no, a chi spende non avanza più del 10%,
 il pasticcione ce la fa, c'è sempre qualcosa da comprare, la fretta vale al
-più due acquisti, la firma è fresca); `integrazione/torri-equilibrio` gioca nel browser
+più due acquisti — il tetto a ondata è 5, da quando i gradini bassi costano
+meno —, salire rende un po' meno per ⚡ che costruire e a fine tappa batte il
+campo pieno di torri basse, la firma è fresca); `integrazione/torri-equilibrio` gioca nel browser
 la prima e l'ultima tappa (tutte con `TAPPE_PROVA=tutte`) e controlla che
 gioco e simulatore raccontino la stessa partita.

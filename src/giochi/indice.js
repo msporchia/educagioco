@@ -9,14 +9,13 @@ import primaDopo from './prima-dopo/gioco.js'
 import corsa from './corsa/gioco.js'
 import fattoria from './fattoria/gioco.js'
 import sotterraneo from './sotterraneo/gioco.js'
-import castello from './castello/gioco.js'
 import pozioni from './pozioni/gioco.js'
 import passoPasso from './passo-passo/gioco.js'
 import costruttore from './costruttore/gioco.js'
 import inglese from './inglese/gioco.js'
 
 export const GIOCHI_NUOVI = [codiceSegreto, survivors, dungeon, conta, primaDopo, corsa, fattoria,
-                             sotterraneo, castello, pozioni, passoPasso, costruttore, inglese]
+                             sotterraneo, pozioni, passoPasso, costruttore, inglese]
 
 export const gioco = chiave => GIOCHI_NUOVI.find(g => g.chiave === chiave) || null
 
