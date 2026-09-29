@@ -1,28 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL MARMO — la sala del tesoro e quella del trono
-
-   Tre pose e un muro, tutti costruiti sulla stessa idea: **è il vuoto
-   che fa sembrare prezioso un disegno**. La prima versione del mosaico
-   tesserava tutta la stanza a quadretti minuti e a tinte diverse:
-   sembrava carta millimetrata colorata, e i personaggi ci si perdevano
-   dentro. Adesso il motivo è confinato — a una cornice lungo i muri,
-   o a una passatoia in mezzo — e tutto il resto è marmo quieto, tono
-   su tono.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il marmo: è il vuoto che fa sembrare prezioso un disegno. Il motivo è
+// confinato a una cornice o una passatoia, il resto è tono su tono.
 import { mescola, dado, rett, velo, poly } from '../comune.js'
 import { lastra, crepa } from './semina.js'
 
-/* il marmo liscio: lastroni grandi come quelli di `lastre`, ma di
-   **una sola tinta spostata appena** verso il chiaro o lo scuro, con
-   qualche vena calda. È la base su cui il motivo può risaltare.
-
-   `tinte` è la coppia della posa (`mosaico`/`tappeto`), come per ogni
-   altra: il marmo resta tono su tono perché il mescolamento fra le due
-   è tenuto stretto, non perché il colore sia fisso. */
 export function marmoLiscio(c, reg, A, lato, tinte, scoperto, opz = {}) {
   const modo = opz.modo, sm = (opz.seme || 0) * 79
-  // `mancante`: qualche lastrone è saltato, e sotto si vede il vuoto —
-  // lo stesso meccanismo di `lastre`, chiesto da chi lo sa fare
   const perde = modo === 'mancante' ? 0.9 : 2
   const h = lato * 0.53, g = lato * 0.015   // 0.53, non 0.52: vedi `lastre`
   const vuoto = mescola(tinte[1], '#0b0a0c', 0.5)
@@ -42,7 +24,7 @@ export function marmoLiscio(c, reg, A, lato, tinte, scoperto, opz = {}) {
         lastra(c, x + g, k * h + g, w - g * 2, h - g * 2, col,
                mescola(col, '#ffffff', 0.12), mescola(col, '#000000', 0.1),
                m => dado(chiave + m, k, 360 + sm))
-        if (r(4) > 0.84)                          // una vena, non una crepa
+        if (r(4) > 0.84)   // una vena, non una crepa
           velo(c, 0.3, () => crepa(c, x + w * 0.15, k * h + h * 0.4, w * 0.6,
                                    mescola(col, A.giunto, 0.4), m => dado(chiave, k, 370 + m + sm)))
       }
@@ -51,24 +33,13 @@ export function marmoLiscio(c, reg, A, lato, tinte, scoperto, opz = {}) {
   }
 }
 
-/* la cornice: il mosaico vero, confinato a una fascia lungo i muri. Le
-   tessere sono tirate verso il fondo chiaro (poche tinte, smorzate) e
-   l'oro torna in diagonale di riga in riga, non in colonna: una
-   griglia dritta si sarebbe rivista come i «cubetti». */
+// il mosaico vero, confinato a una fascia lungo i muri. L'oro torna in
+// diagonale, non in colonna: una griglia dritta si rivedrebbe come «cubetti».
 function cornice(c, reg, A, lato, banda, opz = {}, tinte) {
   const modo = opz.modo || 'normale', sm = (opz.seme || 0) * 83
-  /* ── LE TESSERE DI CHI NON NE HA ──
-     La tavolozza della cornice (`tessere`) ce l'hanno solo gli ambienti
-     di marmo, cioè i due in cui questo pavimento era nato. Da quando un
-     livello mette il mosaico **cella per cella** (`suoli.mosaico`) lo si
-     posa anche in una cucina o in un camminamento, dove quella tavolozza
-     non c'è: si rompeva il fondale intero, e la mappa restava nera. Chi
-     non ne ha se le ricava dalla coppia della posa, con l'oro che è la
-     firma del mosaico. */
+  // senza tavolozza propria (ambiente non di marmo, mosaico messo cella per cella), si ricava dalla posa
   const T = A.tessere || (tinte ? [tinte[0], tinte[1], '#c9b06a', mescola(tinte[1], '#4a86e8', 0.3)]
                                 : ['#cdc4ad', '#8f96ad', '#c9b06a', '#8e9db4'])
-  // `mancante`: le tessere cadute lasciano un vuoto nella cornice;
-  // `consumato` non le perde, le sbiadisce verso il fondo del marmo
   const salta = modo === 'mancante' ? 0.24 : 0
   const h = lato * 0.22, g = lato * 0.015
   for (let k = Math.floor(reg.y0 / h) - 1; k < Math.ceil(reg.y1 / h); k++) {
@@ -98,7 +69,6 @@ function cornice(c, reg, A, lato, banda, opz = {}, tinte) {
   }
 }
 
-/* ── il pavimento della sala del tesoro ── */
 export function mosaico(c, reg, A, lato, tinte, scoperto, opz = {}) {
   const modo = opz.modo || 'normale'
   marmoLiscio(c, reg, A, lato, tinte, scoperto, opz)
@@ -106,32 +76,19 @@ export function mosaico(c, reg, A, lato, tinte, scoperto, opz = {}) {
 }
 mosaico.modi = ['normale', 'consumato', 'mancante']
 
-/* ── il pavimento della sala del trono ──
-   Marmo, e in mezzo la passatoia rossa che va dalla porta al trono. È
-   l'unico pavimento del gioco con una **direzione**: dice dove si deve
-   andare senza una freccia. */
+// unico pavimento del gioco con una direzione: la passatoia dice dove andare senza una freccia
 export function tappeto(c, reg, A, lato, tinte, scoperto, opz = {}) {
   const modo = opz.modo || 'normale', sm = (opz.seme || 0) * 89
   marmoLiscio(c, reg, A, lato, tinte, scoperto, opz)
   const cx = (reg.x0 + reg.x1) / 2, w = lato * 1.6
   const [base0, scuro0] = A.tappeto || ['#a8322f', '#7a2220']
-  // `logoro`: il rosso si smorza verso il tono spento del marmo intorno
   const base = modo === 'logoro' ? mescola(base0, '#8a7a5e', 0.3) : base0
   const scuro = modo === 'logoro' ? mescola(scuro0, '#8a7a5e', 0.3) : scuro0
-  /* IL TAPPETO A PEZZI, NON UNA STRISCIA SOLA: prima la stoffa (corpo,
-     ombra ai bordi, frangia d'oro) chiedeva il permesso solo per
-     `marmoLiscio` sotto, e poi si stendeva da `reg.y0` a `reg.y1` senza
-     mai chiamare `scoperto` — come voce mascherata usciva dalla sua
-     fetta per tutta l'altezza della stanza. Il pezzo è un corso di
-     tappeto (`h`, lo stesso passo di `marmoLiscio`): un pezzo per corso,
-     un permesso per pezzo. */
-  const h = lato * 0.53
+  const h = lato * 0.53   // a pezzi, un permesso per corso: mai una striscia intera che ignora `scoperto`
   for (let k = Math.floor(reg.y0 / h) - 1; k < Math.ceil(reg.y1 / h); k++) {
     const y = k * h
     if (scoperto && !scoperto(cx - w, y, w * 2, h)) continue
     rett(c, cx - w, y, w * 2, h, base)
-    // l'ombra lungo i due bordi: senza, il tappeto è una striscia di
-    // vernice invece che un tessuto posato sopra
     velo(c, 0.5, () => {
       rett(c, cx - w, y, lato * 0.16, h, scuro)
       rett(c, cx + w - lato * 0.16, y, lato * 0.16, h, scuro)
@@ -141,9 +98,7 @@ export function tappeto(c, reg, A, lato, tinte, scoperto, opz = {}) {
       rett(c, cx + d * w * 0.7 - lato * 0.03, y, lato * 0.06, h, scuro)
     }
   }
-  // il motivo: un rombo ogni due celle, tono su tono — un pezzo per rombo
   for (let k = Math.floor(reg.y0 / (lato * 2)); k < Math.ceil(reg.y1 / (lato * 2)); k++) {
-    // `strappato`: uno strappo salta il rombo e lascia vedere il marmo sotto
     if (modo === 'strappato' && dado(k, 7, 900 + sm) > 0.75) continue
     const y = k * lato * 2 + lato
     if (scoperto && !scoperto(cx - lato * 0.34, y - lato * 0.44, lato * 0.68, lato * 0.88)) continue
@@ -155,17 +110,9 @@ export function tappeto(c, reg, A, lato, tinte, scoperto, opz = {}) {
 }
 tappeto.modi = ['normale', 'logoro', 'strappato']
 
-/* ── il muro di marmo ──
-   Lastroni bassi (la stessa scala delle altre murature) e venature
-   chiare. La fascia d'oro non è legata ai blocchi: corre come un
-   cornicione, a un'altezza fissa — così resta una riga sola anche coi
-   blocchi piccoli. */
+// la fascia d'oro non è legata ai blocchi: corre come un cornicione, a un'altezza fissa
 export function marmo(c, reg, A, lato, tinte, dentro, opz = {}) {
   const modo = opz.modo || 'normale', sm = (opz.seme || 0) * 97
-  /* `venato` raddoppia le vene e le tira più scure; `crepata` aggiunge
-     una crepa vera (non solo la vena) e interrompe la fascia d'oro dove
-     passa — l'oro non attraversa una crepa più di quanto lo faccia
-     un cornicione vero */
   const h = lato * 0.26, g = lato * 0.018
   for (let k = Math.floor(reg.y0 / h) - 1; k < Math.ceil(reg.y1 / h); k++) {
     let x = Math.floor(reg.x0 / lato) * lato - lato * (1 + dado(k, 11, 710 + sm))
@@ -200,10 +147,7 @@ export function marmo(c, reg, A, lato, tinte, dentro, opz = {}) {
   for (let f = Math.floor(reg.y0 / passo) - 1; f < Math.ceil(reg.y1 / passo); f++) {
     if (modo === 'crepata' && dado(f, 3, 770 + sm) > 0.82) continue
     const y = f * passo + passo * 0.58
-    /* lo stesso ripiego del tappeto: il muro di marmo si può scrivere
-       cella per cella (`muri.marmo`) anche dove l'ambiente l'oro non ce
-       l'ha */
-    const oro = A.oro || '#e8c569'
+    const oro = A.oro || '#e8c569'   // ripiego se l'ambiente non ha l'oro
     rett(c, reg.x0, y, reg.x1 - reg.x0, lato * 0.1, oro)
     rett(c, reg.x0, y, reg.x1 - reg.x0, lato * 0.035, mescola(oro, '#ffffff', 0.45))
   }
