@@ -1,36 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE POSATURE — otto modi di stare per terra
-
-   Il compagno di `varianti.js`: là si decide **dove** il pavimento
-   cambia (un reticolo di macchie larghe cinque celle), qui che cosa
-   vuol dire cambiare. Una posatura è una funzione
-
-       (c, cx, cy, raggio, A, lato, r)
-
-   che dipinge dentro una macchia e non sa niente del resto: né dove
-   sono i muri (arrivano dopo e la coprono), né chi ci camminerà sopra.
-   Aggiungerne una è una voce in `POSATURE` più il suo nome nel
-   sacchetto di un ambiente, e nient'altro.
-
-   ── perché le macchie non hanno un colore proprio ──
-   La prima versione tingeva col `chiazze[0]` dell'ambiente, e nelle
-   stanze chiare non si vedeva niente: schiarire un pavimento già
-   chiaro non è un contrasto, è la stessa tinta. Quello che si vede è
-   sempre uno **scostamento**, e chi scurisce lo fa moltiplicando, chi
-   schiarisce sommando: così vale uguale nella cripta e nel cortile.
-
-   L'alone largo abbassa o alza il tono di un dieci-venti per cento; i
-   segni piccoli sopra stanno sotto il mezzo di velo. Si deve vedere
-   che *lì è diverso*, non che lì c'è qualcosa.
-   ═══════════════════════════════════════════════════════════════════ */
+// Le posature (compagno di varianti.js): otto modi di stare per terra.
+// Una posatura è (c, cx, cy, raggio, A, lato, r), dipinge dentro una macchia
+// e non sa altro. Mai un colore proprio, sempre uno scostamento dal fondo
+// (scurisce moltiplicando, schiarisce sommando: vale uguale ovunque).
 import { mescola, ell, velo } from '../comune.js'
 import { crepa } from './semina.js'
 
-/* roba sparsa dentro un disco schiacciato, più fitta verso il centro.
-   Il quarto argomento è **quanto si è vicini al cuore** (1 al centro,
-   0 sul bordo): moltiplicandoci il velo, la macchia si spegne da sola
-   e non ha un contorno. Senza, una chiazza di ghiaia finisce con una
-   linea netta e sembra un tappetino appoggiato lì. */
+// il 4° argomento è quanto si è vicini al cuore (1 = centro): la macchia si spegne da sola, senza bordo
 function sparso(cx, cy, raggio, quanti, r, fn) {
   for (let k = 0; k < quanti; k++) {
     const a = r(k, 1) * 6.2832
@@ -41,24 +16,8 @@ function sparso(cx, cy, raggio, quanti, r, fn) {
   }
 }
 
-/* l'alone morbido: il velo largo che dice «qui la stanza cambia».
-
-   Due scelte, e sono tutte e due state pagate a caro prezzo:
-
-   · è un **gradiente**, non un'ellisse a velo. Un'ellisse piena al
-     dieci per cento ha comunque un bordo, e il bordo si vede più
-     della macchia.
-   · si posa in `multiply` o in `screen`, non in `source-over`. Un
-     velo grigio sopra un pavimento a lastroni **spegne il lastrone**:
-     smorza il filo di luce e l'ombra di ogni pietra insieme al fondo,
-     e la macchia si vede solo se la si tira così forte che diventa
-     una nuvola. Moltiplicato, invece, il pavimento *si abbassa di
-     tono* tenendosi tutto il suo rilievo — è la differenza fra una
-     zona in ombra e una macchia di vernice.
-
-   Il colore arriva come '#rrggbb' e l'opacità gli si attacca in coda
-   in esadecimale. Per `multiply` è un grigio chiaro (quanto scurisce),
-   per `screen` un grigio scuro (quanto schiarisce). */
+// gradiente e non un'ellisse a velo (avrebbe un bordo); multiply/screen e non
+// source-over (un velo grigio spegnerebbe il rilievo del pavimento sotto)
 function alone(c, cx, cy, R, col, a, modo = 'multiply') {
   const q = v => col + Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, '0')
   const prima = c.globalCompositeOperation
@@ -76,27 +35,17 @@ function alone(c, cx, cy, R, col, a, modo = 'multiply') {
 
 const NOTTE = '#151220'                       // lo scuro comune a tutte
 
-/* quanto è chiara una tinta, da 0 a 1 */
 const luce = c => (parseInt(c.slice(1, 3), 16) * 0.3 + parseInt(c.slice(3, 5), 16) * 0.59 +
                    parseInt(c.slice(5, 7), 16) * 0.11) / 255
 
-/* Quanto tirare una macchia. **Non è un numero fisso**, e la grotta è
-   il motivo: scurire una stanza già scura la affoga — due macchie
-   sovrapposte e il pavimento diventa un buco nero in cui il rilievo
-   dei massi sparisce — mentre schiarire una stanza già chiara non si
-   vede per niente. La forza è quindi *quanto margine c'è da quella
-   parte*: si scurisce tanto dove il pavimento è chiaro, si schiarisce
-   tanto dove è scuro. */
+// forza non fissa: si scurisce tanto dove il pavimento è già chiaro, si schiarisce tanto dove è già scuro
 const giu = (A, q) => 0.18 + luce(A.lastra[0]) * q
 const su = (A, q) => 0.18 + (1 - luce(A.lastra[0])) * q
 
 export const POSATURE = {
 
-  /* la più importante di tutte: il pavimento com'è, e basta */
   liscio() {},
 
-  /* consumato dal passaggio: la lastra spianata e un po' sporca, con
-     gli aloni lisci di chi ci ha camminato sopra per anni */
   usura(c, cx, cy, R, A, lato, r) {
     const s = lato / 20, col = mescola(A.chiazze[0], '#fff3d8', 0.4)
     alone(c, cx, cy, R, '#4a4438', su(A, 0.5), 'screen')
@@ -107,7 +56,6 @@ export const POSATURE = {
     })
   },
 
-  /* la zona d'ombra: bagnata, sporca, o solo più bassa */
   ombra(c, cx, cy, R, A, lato, r) {
     const s = lato / 20, col = mescola(A.chiazze[1], NOTTE, 0.4)
     alone(c, cx, cy, R, '#7f7a94', giu(A, 0.52))
@@ -118,8 +66,6 @@ export const POSATURE = {
     })
   },
 
-  /* il ghiaino: tanti granelli grandi un pixel o due. È il modo più
-     economico di dire «qui il pavimento è rotto» senza rompere niente */
   detriti(c, cx, cy, R, A, lato, r) {
     const s = lato / 20
     alone(c, cx, cy, R * 0.9, '#9b958c', giu(A, 0.42))
@@ -133,7 +79,6 @@ export const POSATURE = {
     })
   },
 
-  /* le screpolature: fini, corte, mai una rete */
   screpolato(c, cx, cy, R, A, lato, r) {
     const s = lato / 20
     alone(c, cx, cy, R * 0.95, '#9892a0', giu(A, 0.4))
@@ -143,7 +88,6 @@ export const POSATURE = {
     })
   },
 
-  /* i licheni: verde tenue a chiazzette, mai un prato */
   licheni(c, cx, cy, R, A, lato, r) {
     const s = lato / 20
     alone(c, cx, cy, R * 0.92, A.muschio, 0.22, 'source-over')
@@ -155,8 +99,6 @@ export const POSATURE = {
     })
   },
 
-  /* la polvere: velo neutro e puntini finissimi. È la variante dei
-     posti nobili — non si sporcano, si impolverano */
   polvere(c, cx, cy, R, A, lato, r) {
     const s = lato / 20, col = mescola(A.chiazze[0], '#fff3d8', 0.55)
     alone(c, cx, cy, R, '#554c3c', su(A, 0.5), 'screen')
@@ -166,7 +108,6 @@ export const POSATURE = {
     })
   },
 
-  /* il bagnato: pozzette scure con un filo di riflesso sopra */
   umidiccio(c, cx, cy, R, A, lato, r) {
     const s = lato / 20
     alone(c, cx, cy, R, '#6f7c8e', giu(A, 0.6))
