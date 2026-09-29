@@ -1,4 +1,4 @@
-/* Il bestiario del castello a sprite: quale creatura fa le veci di quale
+/* Il bestiario del castello: quale creatura fa le veci di quale
    mostro, vestito per vestito (`src/giochi/castello/scena/bestiario.js`).
 
    Si prova quello che, sbagliato, si vede a schermo come un guasto:

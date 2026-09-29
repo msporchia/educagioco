@@ -16,9 +16,9 @@ dopo (in fondo, «Dopo il terreno»).
 
 **Cosa non va adesso**, e perché si rifà da zero invece di ritoccare:
 
-- **`terreni.png` ha una provenienza che non si sa** (vedi
-  `PROVENIENZA.txt`): sembra scaricato, non generato. Rifarlo chiude la
-  questione;
+- **`terreni.png` aveva una provenienza che non si sapeva** (vedi
+  `PROVENIENZA.txt`): sembrava scaricato, non generato. Rifarlo ha chiuso
+  la questione, e il 29 settembre 2026 è stato tolto;
 - **le strade sono curve**, e sulla griglia delle tessere una curva non
   sta: il foglio doveva avere strade che toccano il bordo della cella in
   mezzo, a sinistra o a destra (`c`, `sx`, `dx`), e il campo si
@@ -317,10 +317,11 @@ Quattro controlli, in quest'ordine — e nessuno dei quattro è «è bello»:
 
 ## Come si monta nel gioco
 
-**Montato il 26 settembre 2026, coi fogli veri dal 27.** Il gioco
-sperimentale `castello` è il tower defense vero con un'altra pelle
-(`src/giochi/castello/scena/pelle.js`): le carte a scacchiera le fa
-`motore/carta.js`, e il vestito lo compone `scena/vestito.js` coi pezzi
+**Montato il 26 settembre 2026, coi fogli veri dal 27, ed è il castello
+di tutti dal 29.** Il tower defense (chiave `torri`) si gioca sulle carte
+a scacchiera (`src/motore/castello/carta.js`, per il motore, la taratura
+e il disegno) e si veste con la pelle (`src/giochi/castello/scena/pelle.js`):
+il vestito lo compone `scena/vestito.js` coi pezzi
 che scrive `strumenti/sprite/vesti.py --atlante`. I pezzi vengono dai
 quattro fogli del terreno qui accanto (`terreno-bosco.png`, `-neve`,
 `-lava`, `-palude`), ognuno col suo foglietto: quelli del bosco e della
@@ -352,9 +353,9 @@ Quello che segue è com'era stato pensato, e com'è andata:
 - il foglio si ritaglia con un foglietto accanto, una `misura` per
   pezzo come `sotterraneo_2.json` — ma a leggerlo è `vesti.py`
   (`pezzi_dal_foglio`), non `atlante.py`: il foglietto dice
-  `"attrezzo": "vesti"`, e `terreni.py` lo salta. `terreni.py` e le
-  tessere a etichette (`sx`, `dx`, `c`) servono solo alle strade curve,
-  e con la scacchiera si possono lasciare andare.
+  `"attrezzo": "vesti"`. `terreni.py` e le tessere a etichette (`sx`,
+  `dx`, `c`) servivano solo alle strade curve: con la scacchiera se ne
+  sono andati, il 29 settembre.
 
 ## Dopo il terreno: le figure
 
@@ -598,9 +599,12 @@ conservato sta nel foglietto). 1536×1024, RGB, fondo magenta.
   dello scenario chiedeva, e la strada è terra e non la passerella di
   assi. Si legge bene sulle carte, e si usa così.
 
-### `torri-1.png` — le torri ✅, fuori ordine
+### `torri-1.png` — le torri ✅, fuori ordine (tolto il 29 settembre)
 
-27 settembre 2026, ritoccato a mano dall'utente la stessa mattina.
+Il foglio che è stato in gioco dal 27 al 29 settembre, quando l'ha
+sostituito `torri-2.png` (voce 2b di `DA-GENERARE.md`); non c'è più, e
+questa è la sua storia. 27 settembre 2026, ritoccato a mano dall'utente
+la stessa mattina.
 1248×832 con l'alfa vero, cinque per quattro su una griglia regolare, ma
 **non nell'ordine chiesto** e con le figure **tutte grandi uguali**, un
 disco d'erba sotto ognuna. I gettoni erano finiti e si usa questo: la

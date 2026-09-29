@@ -4,12 +4,12 @@
 // vestito della tappa. Dove passa la strada non lo sa: lo sa il motore
 // (`sullaCarta`). La monta `components/castello/CampoDiBattaglia.vue`.
 import { sullaCarta } from '../../../motore/castello/carta.js'
-import { PITTORI_SPRITE, caricaFigure, usaVestito } from './pittori.js'
+import { PITTORI, caricaFigure, usaVestito } from './pittori.js'
 import { figuraDi, NOMI } from './bestiario.js'
 import { componi, carica, vestitoDi, TINTA_DI } from './vestito.js'
 
 export const PELLE = {
-  pittori: PITTORI_SPRITE,
+  pittori: PITTORI,
 
   prepara() { caricaFigure().catch(() => {}) },
 

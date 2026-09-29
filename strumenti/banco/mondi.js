@@ -77,10 +77,11 @@ function mondoASprite({ id, nome, atl }) {
 
   /* ── le strade ──
      Un mondo sa comporre percorsi se le sue tessere portano gli
-     attacchi, cioè se qualcuno li ha misurati dal foglio. Oggi è solo
-     il castello; il giorno che un altro foglio a griglia passa da
-     `terreni.py` questo si accende da sé, perché guarda i dati e non il
-     nome del gioco. */
+     attacchi, cioè se qualcuno li ha misurati dal foglio. Era il
+     castello a tessere, che non c'è più (il castello si disegna sulla
+     carta a scacchiera, `vesti.py`): oggi nessun atlante li porta, e il
+     giorno che un foglio a griglia li porterà questo si accende da sé,
+     perché guarda i dati e non il nome del gioco. */
   const conAttacchi = atl.VOCI.filter(v => v.famiglia === 'tessera' && v.attacchi)
   if (conAttacchi.length) {
     mondo.strade = {
@@ -109,8 +110,6 @@ export const MONDI = [
     carica: () => import('../../src/giochi/fattoria/dati/atlante.js') },
   { id: 'sotterraneo', nome: 'Il sotterraneo',
     carica: () => import('../../src/giochi/sotterraneo/dati/atlante.js') },
-  { id: 'castello', nome: 'Il castello a tessere',
-    carica: () => import('../../src/giochi/castello/dati/atlante.js') },
 ]
 
 const aperti = new Map()

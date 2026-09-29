@@ -1,10 +1,12 @@
-// I pittori a sprite: torri e mostri presi da un foglio invece che
-// disegnati a poligoni (stessa tabella di grafica/castello/indice.js).
-// Finché il foglio non è decodificato disegnano i pittori a poligoni
-// (PITTORI): meglio uno stile diverso per un attimo che un campo vuoto.
-import { PITTORI } from '../../../grafica/castello.js'
-import { targhe } from '../../../grafica/castello/torri.js'
-import { segnoImmune, corona } from '../../../grafica/castello/mostro.js'
+// I pittori del castello: torri e mostri presi dal foglio delle figure,
+// accanto a quelli che non sono figure (colpi, piazzole, raggio, bocca:
+// grafica/castello/indice.js). Finché il foglio non è decodificato torri
+// e mostri non si disegnano: il foglio sta dentro la pagina (un data URL)
+// e si decodifica in una frazione di secondo, prima che la prima ondata
+// parta — un attimo di campo senza figure costa meno che tenere in piedi
+// un secondo castello disegnato a poligoni solo per quell'attimo. Il
+// fondale (la carta dipinta) lo fa la pelle, che ha il suo ripiego.
+import { PITTORI as SEGNI_E_COLPI, targhe, segnoImmune, corona } from '../../../grafica/castello/indice.js'
 import { TORRI, stadioDi } from '../../../data/ops.js'
 import { MONDO } from '../../../data/castello.js'
 import { COLONNE } from '../../../motore/castello/carta.js'
@@ -79,7 +81,7 @@ function figura(ctx, nome, x, y, { specchia = false, scala = 1 } = {}) {
 
 const PIEDE_TORRE = 22 * UNITA   // sotto il centro della piazzola, così sembra piantata
 function torre(p, cosa) {
-  if (!img) return PITTORI.torre(p, cosa)
+  if (!img) return
   const { x, y, tipo, lv, ramo, potenziabile, posso } = cosa
   const base = y + PIEDE_TORRE
   p.ellisse(x, base - 1.5 * p.S, 14 * p.S, 4.5 * p.S, '#00000033')
@@ -93,7 +95,7 @@ const PIEDE_MOSTRO = 8 * UNITA   // un filo sotto la mezzeria, o sembra appeso a
 // gli spara. A metà misura la strada torna a essere una strada.
 const MISURA_MOSTRI = 0.5
 function mostro(p, cosa) {
-  if (!img) return PITTORI.mostro(p, cosa)
+  if (!img) return
   const { x, y, bestia, vita = 1, gelo = 0, vola = false, verso = 0,
           taglia = 1, capo = false, aTerra = false, respinto = 0 } = cosa
   const S = p.S
@@ -120,7 +122,7 @@ function mostro(p, cosa) {
   // le figure del foglio guardano a destra: chi va a sinistra si specchia
   const { lh } = figura(p.ctx, n, x, piede + alto, { specchia: verso < 0, scala })
   if (gelo > 0) {
-    // il gelo: un velo azzurro sul corpo e tre schegge, come nel castello a poligoni
+    // il gelo: un velo azzurro sul corpo e tre schegge
     const cy = piede + alto - lh * 0.45, r = Math.max(9 * S, lh * 0.45)
     p.velo(0.4, () => p.ellisse(x, cy, r * 0.9, r, '#bfe6ff'))
     for (let i = 0; i < 3; i++) {
@@ -144,7 +146,7 @@ function mostro(p, cosa) {
 // Ferma o quasi (di fronte se c'è, se no il respiro): la misura la dà il
 // fotogramma più grande della serie, così respirando non cambia taglia.
 function ritratto(p, cosa) {
-  if (!img) return PITTORI.ritratto ? PITTORI.ritratto(p, cosa) : null
+  if (!img) return
   const chi = creaturaDi(cosa.bestia)
   const pp = pose[chi]
   const serie = pp.fronte.length ? pp.fronte : pp.respiro.length ? pp.respiro : pp.lato
@@ -159,7 +161,7 @@ function ritratto(p, cosa) {
 // grande), non una per figura: se no crescere non si vedrebbe.
 let piuGrande = null
 function ritrattoTorre(p, cosa) {
-  if (!img) return PITTORI.torre(p, { ...cosa, x: p.W / 2, y: p.H * 0.82 })
+  if (!img) return
   if (!piuGrande) {
     const torri = Object.keys(PEZZI).filter(k => k.startsWith('torre:')).map(k => PEZZI[k])
     piuGrande = [Math.max(...torri.map(t => t[2])), Math.max(...torri.map(t => t[3]))]
@@ -171,6 +173,6 @@ function ritrattoTorre(p, cosa) {
 }
 
 // `pronte` non è un pittore: è la promessa che chi dipinge una volta sola
-// aspetta per ridipingersi a foglio pronto
-export const PITTORI_SPRITE = { ...PITTORI, torre, mostro, ritratto, ritrattoTorre, castello: () => {},
-                                pronte: () => caricaFigure() }
+// (i ritratti) aspetta per ridipingersi a foglio pronto
+export const PITTORI = { ...SEGNI_E_COLPI, torre, mostro, ritratto, ritrattoTorre,
+                         pronte: () => caricaFigure() }

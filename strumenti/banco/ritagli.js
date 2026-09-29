@@ -77,11 +77,11 @@ function raduna() {
     const immagine = ['.png', '.jpg', '.jpeg'].map(e => IMMAGINI[base + e]).find(Boolean)
     if (!immagine) continue        // `atlante.json` e `pezzi.json`: non sono fogli
     /* Un foglio che non dichiara i suoi ritagli entra lo stesso
-       nell'elenco, spento. Sono quelli del castello, che `terreni.py`
-       **misura** dall'alfa invece di farseli dire: qui non c'è nessun
-       rettangolo da spostare, e la ragione va scritta dove uno la cerca
-       — se no si scorre l'elenco, non si trova il castello, e si
-       conclude che il banco è a metà. */
+       nell'elenco, spento. Sono quelli del castello, che `vesti.py` e
+       `cammino.py` **misurano** dall'alfa invece di farseli dire: qui
+       non c'è nessun rettangolo da spostare, e la ragione va scritta
+       dove uno la cerca — se no si scorre l'elenco, non si trova il
+       castello, e si conclude che il banco è a metà. */
     R.fogli.push({ chiave, nome: chiave.replace('/strumenti/sprite/sorgenti/', ''),
                    testo, immagine, misurato: !fg.sprite && !fg.ritagli })
   }
@@ -1606,7 +1606,7 @@ export function avviaRitagli() {
   if (!R.fogli.length) return dillo('nessun foglio con foglietto sotto strumenti/sprite/sorgenti/')
   $('#ritagli-foglio').innerHTML = R.fogli
     .map(f => `<option value="${f.chiave}"${f.misurato ? ' disabled' : ''}>${f.nome}` +
-              `${f.misurato ? ' — misurato da terreni.py, niente da spostare' : ''}</option>`).join('')
+              `${f.misurato ? ' — lo misura il suo attrezzo, niente da spostare' : ''}</option>`).join('')
   $('#ritagli-foglio').addEventListener('change', e => {
     if (R.sporco && !confirm('ci sono correzioni non salvate: le butto?')) {
       e.target.value = R.aperto.chiave

@@ -1,8 +1,6 @@
 {
-  "__": "Il castello a tessere: un atlante suo, letto da strumenti/sprite/terreni.py. Sta a parte da quello della fattoria perché non condivide un solo pezzo con lei, e il build deve restare un file solo — chi carica il tower defense non deve tirarsi dietro i cani. `tessera` è quanto grande si ritaglia una casella: 64 è la misura vera dei ritagli sul foglio, e più giù si butterebbe via disegno per niente. `referenze` è il file da cui si legge quali materiali il gioco nomina davvero — quello che nessuno nomina non si genera.",
+  "__": "Il castello: la cartella è sua, ma i fogli non li ritaglia atlante.py — i vestiti delle carte (terreno-*.png), le torri (torri-<n>.png) e i mostri li compone strumenti/sprite/vesti.py --atlante, e i passi dai video strumenti/sprite/cammino.py. Questo file dice a atlante.py di saltarla. Il castello a tessere, che aveva qui il suo atlante (terreni.py), è stato tolto il 29 settembre 2026.",
   "nome": "castello",
-  "modulo": "src/giochi/castello/dati/atlante.js",
-  "tessera": 64,
-  "attrezzo": "terreni",
-  "referenze": "src/giochi/castello/dati/mondo.js"
+  "modulo": "src/giochi/castello/dati/figure.js",
+  "attrezzo": "vesti"
 }

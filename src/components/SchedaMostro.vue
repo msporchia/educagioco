@@ -5,7 +5,7 @@
 // una tela piccola.
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { creaTela } from '../grafica/tela.js'
-import { PITTORI_SPRITE as PITTORI } from '../giochi/castello/scena/pittori.js'
+import { PITTORI } from '../giochi/castello/scena/pittori.js'
 import { TORRI } from '../data/ops.js'
 import { ABILITA } from '../data/mostri.js'
 

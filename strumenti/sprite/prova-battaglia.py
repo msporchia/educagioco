@@ -8,16 +8,10 @@ La lancia `carte-castello.mjs`, che le carte (con le loro vie) le fa col
 generatore vero del gioco. Niente qui è il gioco: è una fotografia messa
 in posa, con tutto quello che c'è già in casa —
 
-  · **le torri** da `sorgenti/castello/non-usati/PVX1O.png`, il foglio di
-    agosto con le torri in tre stadi: dodici colonne, e le nostre quattro
-    coi loro otto rami ci stanno quasi una a una (`FIGURE`). ⚠ Quel foglio
-    ha la provenienza non documentata, come `terreni.png`: va rifatto col
-    generatore prima di pubblicare, ed è anche l'occasione di farlo nella
-    mano delle scene;
+  · **le torri** dal foglio delle torri, come le ritaglia `vesti.py`
+    per il gioco (`torri-<n>.png`);
   · **i mostri** come li ritaglia `vesti.py` per il gioco, e in ogni
     vestito quelli del suo bestiario (`scena/bestiario.js`).
-  · se c'è il foglio nuovo delle torri (`torri-1.png`), le torri sono le
-    sue: le prende `vesti.py` anche quelle.
 
 Cosa manca e con che prompt generarlo: `DA-GENERARE.md`, qui accanto.
 """
@@ -30,34 +24,6 @@ import vesti
 
 QUI = Path(__file__).parent
 C = vesti.C
-FOGLIO_TORRI = QUI / 'sorgenti' / 'castello' / 'non-usati' / 'PVX1O.png'
-
-# ── le torri: dove sta ognuna nel foglio ─────────────────────────────
-# Le colonne del foglio, misurate (i separatori sono righe verticali
-# piene), e le tre bande degli stadi.
-COLONNE = ['Archer', 'Magic', 'Frost', 'Poison', 'Bomb', 'Sniper', 'Rapid Fire Archer',
-           'Fire', 'Lightning', 'Arcane', 'Artillery', 'Support']
-SEPARATORI = [0, 129, 245, 365, 495, 620, 743, 864, 975, 1083, 1193, 1302, 1408]
-STADI = [(19, 106), (125, 233), (256, 373)]
-# (torre, stadio, ramo) → (colonna, riga). Lo stadio 0 è la torre com'è
-# nata (livelli 1-3), poi il ramo sceglie la figura: 1 cresciuta, 2 al
-# massimo. Il ghiaccio col ramo della bufera resta nella sua colonna, che
-# finisce in un tornado; la brina prende i cristalli di «Arcane».
-FIGURE = {
-    ('arciere', 0, None): ('Archer', 0),
-    ('arciere', 1, 'cecchino'): ('Sniper', 1), ('arciere', 2, 'cecchino'): ('Sniper', 2),
-    ('arciere', 1, 'raffica'): ('Rapid Fire Archer', 1), ('arciere', 2, 'raffica'): ('Rapid Fire Archer', 2),
-    ('magica', 0, None): ('Magic', 0),
-    ('magica', 1, 'veleno'): ('Poison', 1), ('magica', 2, 'veleno'): ('Poison', 2),
-    ('magica', 1, 'catena'): ('Lightning', 1), ('magica', 2, 'catena'): ('Lightning', 2),
-    ('ghiaccio', 0, None): ('Frost', 0),
-    ('ghiaccio', 1, 'bufera'): ('Frost', 1), ('ghiaccio', 2, 'bufera'): ('Frost', 2),
-    ('ghiaccio', 1, 'brina'): ('Arcane', 1), ('ghiaccio', 2, 'brina'): ('Arcane', 2),
-    ('bombe', 0, None): ('Bomb', 0),
-    ('bombe', 1, 'mortaio'): ('Artillery', 1), ('bombe', 2, 'mortaio'): ('Artillery', 2),
-    ('bombe', 1, 'napalm'): ('Fire', 1), ('bombe', 2, 'napalm'): ('Fire', 2),
-}
-SCALA_TORRI = 1.0
 
 # ── i mostri ─────────────────────────────────────────────────────────
 # Le creature le ritaglia `vesti.py` (il respiro dai fogli del
@@ -68,16 +34,6 @@ SCALA_TORRI = 1.0
 # una cella da 64 px è 16 pixel del disegno in tutti e due. Ingranditi di
 # due e mezzo (la prima prova) avevano la grana più fine della scena e
 # sembravano appiccicati.
-
-
-def torre(foglio, colonna, riga):
-    i = COLONNE.index(colonna)
-    x0, x1 = SEPARATORI[i] + 3, SEPARATORI[i + 1] - 3
-    y0, y1 = STADI[riga]
-    cella = foglio.crop((x0, y0, x1, y1))
-    box = cella.split()[3].point(lambda v: 255 if v > 100 else 0).getbbox()
-    im = cella.crop(box)
-    return im.resize((round(im.width * SCALA_TORRI), round(im.height * SCALA_TORRI)), Image.LANCZOS)
 
 
 def in_posa(carta, vestito, torri, bestie):

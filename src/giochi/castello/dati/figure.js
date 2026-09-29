@@ -1,6 +1,6 @@
 /* GENERATO da strumenti/sprite/vesti.py --atlante — non si scrive a mano.
 
-   Le torri e i mostri del castello a celle (una cella da 64 px). I
+   Le torri e i mostri del castello (una cella da 64 px). I
    mostri sono alla misura dei loro fogli; le torri alla scala del loro
    stadio, perché sul foglio sono tutte grandi uguali.
 

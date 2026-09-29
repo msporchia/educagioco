@@ -3,7 +3,7 @@
 // non un'immagine. Vedi docs/castello/torri.md.
 import { ref, watch, onMounted } from 'vue'
 import { creaTela } from '../../grafica/tela.js'
-import { PITTORI_SPRITE as PITTORI } from '../../giochi/castello/scena/pittori.js'
+import { PITTORI } from '../../giochi/castello/scena/pittori.js'
 
 const props = defineProps({
   tipo: { type: String, required: true },

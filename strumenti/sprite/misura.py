@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """Misura un foglio di sprite, per poterne scrivere il foglietto.
 
-    python3 strumenti/sprite/misura.py sorgenti/castello/non-usati/PVX1O.png
-    python3 strumenti/sprite/misura.py sorgenti/castello/non-usati/PVX1O.png --regione=0,430,1408,768
-    python3 strumenti/sprite/misura.py sorgenti/castello/non-usati/PVX1O.png --regione=0,0,1408,378 --celle
-    python3 strumenti/sprite/misura.py sorgenti/castello/generati/terreni.png --griglia=13,15,71.31,80,69,76
-    python3 strumenti/sprite/misura.py sorgenti/castello/generati/terreni.png --figure
+    python3 strumenti/sprite/misura.py sorgenti/castello/generati/torri-2.png
+    python3 strumenti/sprite/misura.py sorgenti/castello/generati/torri-2.png --figure
+    python3 strumenti/sprite/misura.py sorgenti/castello/generati/terreno-bosco.png --regione=0,0,512,512 --celle
+    python3 strumenti/sprite/misura.py sorgenti/castello/generati/terreno-bosco.png --griglia=0,0,64,64,64,64
 
 ── PERCHÉ NON È UN'EURISTICA ────────────────────────────────────────
 `torri.py` indovinava la geometria a ogni giro, e sbagliava in silenzio.
