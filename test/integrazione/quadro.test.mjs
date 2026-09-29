@@ -311,15 +311,15 @@ controlla('mentre il castello, chiuso, dice che gliele abbiamo tolte',
 await scatto(page, 'quadro-pezzo-di-scuola')
 
 /* ── 8. QUELLO CHE VA MALE SI VEDE SENZA APRIRE NIENTE ──
-   Un muro fa scattare un avviso nella posta dei grandi, e l'avviso
+   Un muro finisce fra le «Difficili» della settimana di «Come va», che
    nomina la tipologia: «Le analogie sulle cose del mondo». Nel quadro
    quel nome sta al terzo livello — blocco, pezzo di scuola, domanda —
-   e il rosso stava lì con lui: chi arrivava dall'avviso scorreva un
+   e il rosso stava lì con lui: chi arrivava da lì scorreva un
    quadro in cui non c'era niente di rosso da nessuna parte, e cercava
    fra i pezzi di scuola un nome che i pezzi di scuola non hanno.
 
    Il gesto provato qui è quello vero: si entra, si guarda, e si scende
-   seguendo il rosso fino alla riga di cui parlava l'avviso. */
+   seguendo il rosso fino alla riga di cui parla la settimana. */
 {
   const MURO = { ok: 2, err: 8 }
   await semina(page, { coins: 100, settings: { eta: 8 },
@@ -336,11 +336,11 @@ await scatto(page, 'quadro-pezzo-di-scuola')
   uguale('e dice quante righe sono', (await segnati.innerText()).trim(), '1 va male')
 
   const frase = await page.locator('[data-manopola] [data-male-frase]').innerText()
-  controlla('da chiuso il blocco nomina la domanda, com\'è scritta nell\'avviso',
+  controlla('da chiuso il blocco nomina la domanda, com\'è scritta nella settimana',
     frase.includes('Le analogie sulle cose del mondo'), frase)
   controlla('col pezzo di scuola dove sta, che è la mappa per trovarla',
     frase.includes('Le analogie ›'), frase)
-  controlla('e col numero della posta, non un altro',
+  controlla('e col numero della settimana, non un altro',
     frase.includes('8 su 10'), frase)
   await scatto(page, 'quadro-va-male')
 
@@ -361,7 +361,7 @@ await scatto(page, 'quadro-pezzo-di-scuola')
      figli: `dentro` è un rientro, non un annidamento nel DOM */
   const dentro = page.locator(`${dentroIl} .voce-riga.dentro em.va-male`)
   uguale('e sotto, la riga della domanda col numero', await dentro.count(), 1)
-  uguale('che è lo stesso numero letto in posta',
+  uguale('che è lo stesso numero letto nella settimana',
          (await dentro.innerText()).trim(), 'ne ha sbagliate 8 su 10')
 }
 
