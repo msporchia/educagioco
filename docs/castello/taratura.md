@@ -87,7 +87,12 @@ lì a crescere è la difficoltà tattica (le bocche).
   cambia solo quanto lo si vede grande. La telecamera sta in
   [`../core/grafica.md`](../core/grafica.md). La scala `S` (1,3) non è a
   occhio: tiene la stessa area del vecchio campo (390×420 a S=0,93), solo
-  in una forma più stretta e più alta.
+  in una forma più stretta e più alta. Prima del mondo unico il campo aveva
+  un `max-width:520px` che sembrava estetica ed era un guasto di
+  bilanciamento: la strada è disegnata in proporzione al riquadro ma il
+  raggio delle torri no, quindi su un monitor largo la strada si allungava a
+  parità di gittata e i mostri passavano nei buchi — oltre i 520px l'ultima
+  tappa non si finiva più.
 
 ## Il giocatore modello
 
