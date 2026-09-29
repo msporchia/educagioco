@@ -131,7 +131,7 @@ for (const [nome, size] of [['mobile', { width: 390, height: 844 }], ['desktop',
   /* l'elenco si riempie mentre il test va avanti: si tiene il riferimento
      e si legge alla fine, copiarlo adesso vorrebbe dire copiarlo vuoto */
   raccolti.push([nome, suoi])
-  await page.click('.carta.td')
+  await page.click('.carta.gioco[data-gioco="torri"]')
   await page.waitForSelector('.tappe')
 
   /* la campagna: dalla mappa si apre solo la prima tappa, che dà una torre sola

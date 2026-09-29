@@ -28,10 +28,10 @@ await semina(page, {
 })
 
 /* in home la riga del castello racconta il record ereditato */
-const rigaHome = await page.locator('.carta.td').textContent()
+const rigaHome = await page.locator('.carta.gioco[data-gioco="torri"]').textContent()
 controlla('in home il record di ieri sta sotto il bosco', /radura grande.*21 ondate/i.test(rigaHome), rigaHome)
 
-await page.click('.carta.td')
+await page.click('.carta.gioco[data-gioco="torri"]')
 await page.waitForSelector('.tappe')
 
 const tasti = await page.$$eval('[data-tappa^="libera-"]', bs =>
@@ -130,8 +130,8 @@ const nuovo = `${cadutaBosco.onda - 1} ondate`
 controlla(`il tasto del bosco dice subito il record nuovo (${nuovo})`, subito.includes(nuovo), subito)
 controlla('e non più quello di ieri', !/21 ondate/.test(subito), subito)
 await page.click('button[aria-label="indietro"]')
-await page.waitForSelector('.carta.td')
-const rigaDopo = await page.locator('.carta.td').textContent()
+await page.waitForSelector('.carta.gioco[data-gioco="torri"]')
+const rigaDopo = await page.locator('.carta.gioco[data-gioco="torri"]').textContent()
 controlla('e la home racconta il record appena fatto', rigaDopo.includes(nuovo), rigaDopo)
 
 uguale('nessun errore JS', errori.join(' · '), '')

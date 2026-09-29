@@ -427,7 +427,7 @@ memoria sugli scenari del sotterraneo).
 Il **minimo per rifare il gioco** sono l'1 e il 2: col bosco, le torri
 nuove e i mostri che ci sono già il castello si gioca e si pubblica. Il
 resto lo fa più bello, non lo fa funzionare. Dopo ognuno,
-`node test/esegui.mjs castello-sprite --scatti` e un'occhiata agli
+`node test/esegui.mjs torri-figure --scatti` e un'occhiata agli
 scatti.
 
 ## Le trappole già note

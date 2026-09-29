@@ -1,18 +1,18 @@
 /* ═══════════════════════════════════════════════════════════════════
-   IL CASTELLO A SPRITE, GIOCATO
+   IL CASTELLO, COM'È DISEGNATO
 
-   Il gioco `castello` è il tower defense vero con un'altra pelle
-   (`src/giochi/castello/scena/pelle.js`). Le regole le provano già
-   `unita/castello` e `integrazione/torri`; qui si prova quello che la
-   pelle può rompere:
+   Il tower defense si gioca sulla carta a scacchiera e si veste con la
+   pelle a sprite (`src/giochi/castello/scena/pelle.js`). Le regole le
+   provano già `unita/castello` e `integrazione/torri`; qui si prova
+   quello che il disegno può rompere:
 
-     · la carta compare in home coi giochi in prova accesi, e apre la
-       mappa delle tappe di sempre;
+     · in home il castello è una carta sola, `torri`, anche coi giochi in
+       prova accesi — il castello a sprite 🧱 era un gioco a parte e non
+       c'è più — e la barra dice «Castello»;
      · il motore ha **le piazzole della carta**, cioè quelle dipinte sul
        fondale — se fossero altre, il dito toccherebbe una pietra e la
        torre nascerebbe sul prato — e un tocco vero su una di loro apre
        il foglio;
-     · una torre si costruisce, l'ondata parte e i mostri camminano;
      · il campo si vede, e non è il ripiego a tinta unita: la scena
        vestita ha colori che il ripiego non ha;
      · il nastro e la scheda dicono il nome della **figura** che si vede
@@ -20,9 +20,8 @@
      · la radura grande, l'unica carta scritta a mano, si gioca: il
        motore ha le sue piazzole, e i mostri scendono per tutti e due i
        bracci;
-     · le cose nuove si vedono anche con questa pelle: il preavviso
-       dice le immunità, la torre non spreca colpi su chi le è immune,
-       la prossima ondata si chiama a battaglia in corso, e il
+     · il preavviso dice le immunità, la torre non spreca colpi su chi le
+       è immune, la prossima ondata si chiama a battaglia in corso, e il
        blocchetto dei potenziamenti si apre e si chiude con la ✕;
      · il capo è la figura del bestiario di quel vestito, gigante: la
        scheda lo chiama col nome della figura e «gigante»;
@@ -31,17 +30,21 @@
        tipi mescolati, e la scheda li chiama coi nomi delle figure;
      · nessun errore in console, in quattro vestiti diversi.
 
-   Con `--scatti` lascia una foto per vestito (`castello-sprite-*`),
-   una della radura (`castello-sprite-radura`), una del blocchetto
-   (`castello-sprite-blocchetto`), una del capo (`castello-sprite-capo`) e
-   una dell'ondata mista (`castello-sprite-mista`).
-   `node test/esegui.mjs castello-sprite`
+   Era `integrazione/castello-sprite`, quando il castello a sprite era un
+   gioco a parte: l'ondata che parte e i mostri che camminano li prova già
+   `integrazione/torri`, e qui non si ripetono.
+
+   Con `--scatti` lascia una foto per vestito (`castello-*`),
+   una della radura (`castello-radura`), una del blocchetto
+   (`castello-blocchetto`), una del capo (`castello-capo`) e
+   una dell'ondata mista (`castello-mista`).
+   `node test/esegui.mjs torri-figure`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { TAPPE, LIBERE, MONDO } from '../../src/data/castello.js'
-import { cartaDi, percorsoDi } from '../../src/motore/castello/carta.js'
+import { sullaCarta } from '../../src/motore/castello/carta.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -49,12 +52,14 @@ await azzera(page)
 await semina(page, { settings: { sperimentali: true } })
 
 /* ---------- 1. la carta, e la mappa ---------- */
-const carta = page.locator('.carta.gioco[data-gioco="castello"]')
-controlla('la carta è in home coi giochi in prova accesi', await carta.count() === 1)
+uguale('il castello a sprite non è più un gioco a parte, nemmeno coi giochi in prova',
+       await page.locator('.carta.gioco[data-gioco="castello"]').count(), 0)
+const carta = page.locator('.carta.gioco[data-gioco="torri"]')
+uguale('in home il castello è una carta sola', await carta.count(), 1)
 await carta.click()
 await page.waitForSelector('.tappe', { timeout: 5000 })
-controlla('la barra dice che è il castello a sprite',
-          (await page.locator('.barra-app .dove').textContent()).includes('sprite'))
+uguale('la barra dice «Castello»',
+       (await page.locator('.barra-app .dove').textContent()).trim(), 'Castello')
 
 /* le cose da fare dentro la pagina: si gioca col gancio dei test del
    tower defense, lo stesso di `integrazione/torri` */
@@ -95,7 +100,7 @@ nota('il bosco')
 await page.evaluate(() => window.__td.inizia(0))
 await attendi(page, 900)
 
-const attese = percorsoDi(cartaDi(TAPPE[0])).percorso.posti
+const attese = sullaCarta(TAPPE[0]).posti
   .map(([fx, fy]) => [Math.round(fx * MONDO.W), Math.round(fy * MONDO.H)])
 const motore = (await page.evaluate(() => window.__td.postazioni().map(p => [p.x, p.y])))
   .map(([x, y]) => [Math.round(x), Math.round(y)])
@@ -115,10 +120,10 @@ await attendi(page, 300)
 uguale('toccata la piazzola, il foglio chiede che torre',
        await page.evaluate(() => window.__td.foglio.value && window.__td.foglio.value.che), 'costruisci')
 /* le carte del foglio mostrano la figura del campo, non la torre a
-   poligoni: si vede solo a occhio, quindi uno scatto (il foglio di
+   poligoni di prima: si vede solo a occhio, quindi uno scatto (il foglio di
    figure si carica da sé, e i ritratti si ridipingono quando c'è) */
 await attendi(page, 500)
-await scatto(page, 'castello-sprite-scelta')
+await scatto(page, 'castello-scelta')
 
 uguale('la torre si costruisce', await costruisci('add'), 1)
 controlla('ed è nata sulla piazzola toccata', await page.evaluate(() => {
@@ -138,16 +143,14 @@ const cammino = await page.evaluate(async () => {
   const dopo = T.nemici().length ? Math.max(...T.nemici().map(n => n.d)) : null
   return { onda: T.hud.onda, prima, dopo, uccisi: T.hud.uccisi }
 })
-controlla('l\'ondata parte', cammino.onda >= 1, JSON.stringify(cammino))
-controlla('e i mostri camminano', cammino.prima != null &&
-          (cammino.dopo > cammino.prima || cammino.uccisi > 0), JSON.stringify(cammino))
+nota('in campo:', JSON.stringify(cammino))
 /* il nome sulla scheda del mostro in campo è quello della figura */
 const nome = await page.locator('.scheda .dati b').first().textContent().catch(() => '')
 uguale('la scheda dice il nome della figura, non quello del gioco', nome, 'Melma')
 const nelBosco = await colori()
 controlla('il campo è vestito, non una tinta sola', nelBosco > 60, `${nelBosco} colori`)
 await togliCartelli()
-await scatto(page, 'castello-sprite-bosco')
+await scatto(page, 'castello-bosco')
 
 /* ---------- 3. gli altri vestiti ----------
    Il sotterraneo si veste di lava, le mura di neve e la palude del suo
@@ -175,7 +178,7 @@ for (const [i, nome] of [[TAPPE.findIndex(t => t.campagna === 'sotterraneo'), 'l
   controlla(`${TAPPE[i].nome}: il campo è vestito`, quanti > 60, `${quanti} colori`)
   await togliCartelli()
   await attendi(page, 600)
-  await scatto(page, `castello-sprite-${nome}`)
+  await scatto(page, `castello-${nome}`)
 }
 
 /* ---------- 4. la radura grande, scritta a mano ---------- */
@@ -183,7 +186,7 @@ nota('la radura grande')
 const radura = LIBERE.find(l => l.chiave === 'libera-bosco')
 await page.evaluate(() => window.__td.iniziaLibera('libera-bosco'))
 await attendi(page, 900)
-const attesaRadura = percorsoDi(cartaDi(radura)).percorso.posti
+const attesaRadura = sullaCarta(radura).posti
   .map(([fx, fy]) => [Math.round(fx * MONDO.W), Math.round(fy * MONDO.H)])
 const inRadura = (await page.evaluate(() => window.__td.postazioni().map(p => [p.x, p.y])))
   .map(([x, y]) => [Math.round(x), Math.round(y)])
@@ -208,7 +211,7 @@ const bracci = await page.evaluate(async () => {
 uguale('la radura: i mostri scendono per tutti e due i bracci', JSON.stringify(bracci), '[0,1]')
 await togliCartelli()
 await attendi(page, 400)
-await scatto(page, 'castello-sprite-radura')
+await scatto(page, 'castello-radura')
 
 /* ---------- 5. immunità, fretta e blocchetto ----------
    La grotta apre coi pipistrelli, che le bombe non toccano: la bomba
@@ -271,7 +274,7 @@ await scatto(page, 'castello-sprite-radura')
   controlla('con una riga per le bombe e una per gli arcieri',
             await page.locator('[data-blocchetto-torre="div"]').count() === 1 &&
             await page.locator('[data-blocchetto-torre="add"]').count() === 1)
-  await scatto(page, 'castello-sprite-blocchetto')
+  await scatto(page, 'castello-blocchetto')
   await page.locator('.foglio:not(.via) button[aria-label="chiudi"]').click()
   await attendi(page, 400)
   uguale('e la ✕ lo chiude', await page.evaluate(() => window.__td.blocchetto.value), null)
@@ -314,7 +317,7 @@ await scatto(page, 'castello-sprite-radura')
          `👑 ${NOMI[figuraDi('lava', capo.bestia)]} gigante`)
   await togliCartelli()
   await attendi(page, 300)
-  await scatto(page, 'castello-sprite-capo')
+  await scatto(page, 'castello-capo')
 }
 
 /* ---------- 7. l'ondata mista ----------
@@ -352,7 +355,7 @@ await scatto(page, 'castello-sprite-radura')
          [preavviso?.immune, preavviso?.con].join(' | '),
          [attesa.immune.join(','), attesa.con.immune.join(',')].join(' | '))
   await attendi(page, 300)
-  await scatto(page, 'castello-sprite-mista-preavviso')
+  await scatto(page, 'castello-mista-preavviso')
   const campo = await page.evaluate(async o => {
     const attesa = ms => new Promise(r => setTimeout(r, ms))
     const T = window.__td, m = T.motore()
@@ -376,9 +379,9 @@ await scatto(page, 'castello-sprite-radura')
          await page.locator('[data-scheda-mista] [data-scheda-immune]').count(), 2)
   await togliCartelli()
   await attendi(page, 300)
-  await scatto(page, 'castello-sprite-mista')
+  await scatto(page, 'castello-mista')
 }
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))
 await browser.close()
-riassunto('il castello a sprite, giocato')
+riassunto('il castello, com\'è disegnato')
