@@ -30,6 +30,7 @@ import { CAMPAGNA as TAPPE_ES } from '../data/campagna-spagnolo.js'
 import { WORDS } from '../data/words.js'
 import { VERBI } from '../data/verbi.js'
 import { FRASI } from '../data/frasi.js'
+import { FRASI as FRASI_MONDI } from '../giochi/inglese/dati/frasi.js'
 import { PAROLE_ES } from '../data/parole-es.js'
 import { VERBI_ES } from '../data/verbi-es.js'
 import { FRASI_ES } from '../data/frasi-es.js'
@@ -38,6 +39,7 @@ import { FASCE } from '../data/bancarella.js'
 export { AREE, MEDAGLIE, PREMI, TRAGUARDI }
 
 const GIORNO = 86400000
+const FRASI_INGLESI = new Set([...FRASI.map(f => f.id), ...FRASI_MONDI.map(f => f.id)])
 
 /* ═══════════ le materie che si possono davvero sapere ═══════════
    `totale` è quanti elementi esistono in tutto: serve per dire "37 su
@@ -58,7 +60,11 @@ const MATERIE_TUTTE = [
     totale: TOTALE_ELEMENTI },
   { id: 'inglese', prefisso: 'en:',    nome: 'Parole inglesi', emoji: '🔤', totale: WORDS.length },
   { id: 'verbi',   prefisso: 'verbo:', nome: 'Verbi inglesi', emoji: '🎧', totale: VERBI.length },
-  { id: 'frasi',   prefisso: 'frase:', nome: 'Frasi inglesi', emoji: '💬', totale: FRASI.length },
+  /* le frasi del gioco di prima e quelle dei mondi (src/giochi/inglese),
+     contate una volta: alcune sono le stesse, con lo stesso id. Senza
+     `vale` le frasi nuove farebbero passare il cento per cento */
+  { id: 'frasi',   prefisso: 'frase:', nome: 'Frasi inglesi', emoji: '💬', totale: FRASI_INGLESI.size,
+    vale: k => FRASI_INGLESI.has(k.slice('frase:'.length)) },
   { id: 'parole-es', prefisso: 'es:',       nome: 'Parole spagnole', emoji: '🔤', totale: PAROLE_ES.length },
   { id: 'verbi-es',  prefisso: 'verbo-es:', nome: 'Verbi spagnoli', emoji: '🎧', totale: VERBI_ES.length },
   { id: 'frasi-es',  prefisso: 'frase-es:', nome: 'Frasi spagnole', emoji: '💬', totale: FRASI_ES.length },
@@ -256,7 +262,8 @@ export function misure(p, now = Date.now()) {
     /* le strategie che reggono ADESSO: come le tabelline intere, può
        scendere se non si ripassa */
     concettiSaldi: () => concettiSaldiDi(items, now),
-    tappeEn: () => (p.eng && p.eng.tappa) || 0,
+    // la campagna di prima o i mondi, la più avanti: un traguardo preso non torna indietro
+    tappeEn: () => Math.max((p.eng && p.eng.tappa) || 0, (p.campagne && p.campagne.inglese && p.campagne.inglese.tappa) || 0),
     tappeEs: () => (p.esp && p.esp.tappa) || 0,
     tappeGen: () => (p.gen && p.gen.tappa) || 0,
 
