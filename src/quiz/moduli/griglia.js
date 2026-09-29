@@ -1,64 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA GRIGLIA — orientarsi a quadretti: caselle, percorsi, area, bordo.
-
-   È il primo pezzo di geometria che serve davvero, e sta tutto su un
-   foglio a quadretti: dire *dove* è una cosa (B3, non «lì»), muoversi
-   di tante caselle in una direzione, e contare due cose diverse che i
-   bambini confondono per anni — i quadretti dentro (l'area) e i lati
-   del contorno (il perimetro).
-
-   PERCHÉ SI DISEGNA. Una griglia raccontata a parole è un indovinello;
-   guardata è una domanda di geometria. Il modulo decide i fatti — quali
-   caselle sono piene, cosa c'è posato dove — e il pittore li dipinge:
-   qui dentro non c'è una riga di canvas, e in `grafica/pittori/griglia.js`
-   non c'è una riga di difficoltà.
-
-   I FALSI SONO GLI ERRORI VERI, e in questa materia sono sempre gli
-   stessi quattro:
-     · riga e colonna scambiate (3B invece di B3);
-     · il perimetro contato al posto dell'area, e viceversa;
-     · ogni quadretto conta quattro lati anche quando è attaccato a un
-       altro (il perimetro come 4 × area);
-     · un passo di troppo, o la direzione ribaltata.
-   Una casella presa a caso si scarterebbe a occhio; queste no, perché
-   sono esattamente il conto che il bambino ha appena sbagliato.
-
-   LE FIGURE SONO SEMPRE INTERE. Le celle di area e perimetro nascono da
-   una passeggiata a caso che le attacca una all'altra e non lascia
-   buchi (`buchi()` lo verifica): una figura in pezzi sparsi renderebbe
-   la domanda sul bordo senza risposta.
-
-   IL CONFRONTO NON C'È PIÙ, ed è la cosa più importante di questo
-   file. «Quale di queste quattro ha gli stessi quadretti ma il bordo
-   diverso?» sono otto conti a dito su figure che non hanno una forma
-   da cui dedurre niente: il concetto si afferra in tre secondi, il
-   minuto dopo lo occupa l'indice sullo schermo. Chi ha capito e chi
-   non ha capito ci mettono lo stesso tempo, e sbaglia chi perde il
-   conto — cioè la domanda misurava la pazienza. Era stata spostata in
-   cima alla scaletta invece che tolta, e spostare non era la cura.
-
-   QUELLO CHE RESTA È MISURARE, e per lo più su figure dove il conto si
-   fa **a mente**: in un quadrato l'area è lato × lato e il giro è
-   lato × 4, in un rettangolo righe × colonne e due volte la base più
-   due volte l'altezza. Le figure storte restano dove servono davvero —
-   il primo incontro, dove area e perimetro si imparano contando — e
-   sono piccole, da quattro a nove quadretti.
-
-   LA SCORCIATOIA SI INSEGNA QUANDO SERVE. Una domanda che si può fare
-   con la formula porta una `dritta`, e la dritta si legge in due casi:
-   se hai sbagliato, e se hai indovinato ma **ci hai messo troppo** —
-   che è il segno che l'hai contata a dito. «6 × 6 = 36: in un quadrato
-   l'area è lato per lato» detto a chi ha appena contato trentasei
-   quadretti vale dieci volte lo stesso avviso letto prima.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// orientarsi a quadretti su un foglio disegnato (il modulo decide i fatti, il pittore li dipinge senza sapere niente di difficoltà): caselle, percorsi, area, perimetro. I falsi sono i quattro errori veri di questa materia: riga/colonna scambiate, area/perimetro scambiati, il perimetro contato come 4×area, un passo di troppo o la direzione ribaltata. Le figure sono sempre intere (buchi() lo verifica). Il confronto di figure è stato tolto (vedi "Provati e scartati" in docs/apprendimento/quiz-moduli.md). Dal grado 6 si misura a mente (lato×lato, non contare), e la `dritta` si legge anche a chi ha indovinato ma ci ha messo troppo — segno che l'ha contata a dito.
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo, emoji, scena } from '../nucleo/domanda.js'
 import { PITTORI_GRIGLIA } from '../grafica/pittori/griglia.js'
 
-/* ── il vocabolario della griglia ──
-   x cresce verso destra (le lettere), y verso il basso (i numeri):
-   [0,0] è A1, in alto a sinistra. */
+// x cresce a destra (lettere), y in basso (numeri): [0,0] è A1, in alto a sinistra
 const LETTERE = 'ABCDEF'
 const casella = (x, y) => LETTERE[x] + (y + 1)
 const alRovescio = (x, y) => String(y + 1) + LETTERE[x]
@@ -72,8 +17,7 @@ const VERSI = [
   { come: 'sotto', d: [0, 1], freccia: '↓', giro: [1, 0] },
 ]
 
-/* le cose che si posano nelle caselle: emoji nette, che a 20 pixel si
-   distinguono ancora una dall'altra */
+// emoji nette, che a 20 pixel si distinguono ancora una dall'altra
 const COSE = ['🐶', '🦴', '⭐', '🍎', '🐟', '🎈', '🌵', '🐌', '🍄', '🔑', '🐝', '🧸', '🚗', '🌻', '🐢', '🍩', '🐞', '🎁']
 
 const SCALETTA = [
@@ -85,13 +29,7 @@ const SCALETTA = [
   'area e perimetro a mente, sui rettangoli',
 ]
 
-/* Le tipologie. I primi quattro tipi si giocano guardando la griglia e
-   stanno in un gruppo loro; area e perimetro sono due parole di scuola
-   e stanno nel gruppo che c'era già. Sono **due chiavi in tutto**, e
-   ognuna torna due volte: al primo incontro si conta a dito una figura
-   storta, al grado 6 si misura un rettangolo moltiplicando. È la
-   stessa cosa da saper fare — la chiave del ripasso è il concetto, non
-   la forma della figura — e a cambiare è solo come ci si arriva. */
+// due chiavi (area, perimetro) tornano due volte: al primo incontro si conta a dito, al grado 6 si misura moltiplicando — stesso concetto, cambia come ci si arriva
 const TIPI = [
   { chiave: 'gri:coordinate', nome: 'Le caselle: lettera e numero', sa: 'griglia', gradi: { 1: 1 } },
   { chiave: 'gri:direzioni', nome: 'Destra, sinistra, sopra e sotto', sa: 'griglia', gradi: { 2: 1 } },
@@ -105,8 +43,6 @@ const somma = ([x, y], [dx, dy], k = 1) => [x + dx * k, y + dy * k]
 const dentro = (l, a, [x, y]) => x >= 0 && y >= 0 && x < l && y < a
 const uguali = (a, b) => a[0] === b[0] && a[1] === b[1]
 
-/* ── le figure a quadretti ── */
-
 function normalizza(celle) {
   const mx = Math.min(...celle.map(c => c[0]))
   const my = Math.min(...celle.map(c => c[1]))
@@ -118,7 +54,7 @@ const ingombro = celle => [
   Math.max(...celle.map(c => c[1])) + 1,
 ]
 
-/* il giro del bordo: ogni lato che non ha un vicino vale uno */
+// ogni lato che non ha un vicino vale uno
 function perimetro(celle) {
   const pieno = new Set(celle.map(c => c.join(',')))
   let giro = 0
@@ -127,8 +63,7 @@ function perimetro(celle) {
   return giro
 }
 
-/* un buco è un vuoto circondato: il bordo che si vede non sarebbe più
-   quello che si conta, quindi le figure con buchi si scartano */
+// un buco è un vuoto circondato: il bordo che si vede non sarebbe più quello che si conta, si scartano le figure con buchi
 function buchi(celle) {
   const [w, h] = ingombro(celle)
   const pieno = new Set(celle.map(c => c.join(',')))
@@ -148,9 +83,7 @@ function buchi(celle) {
   return visti.size < (w + 2) * (h + 2) - celle.length
 }
 
-/* la passeggiata a caso: si parte da una casella e se ne attacca una
-   vicina alla volta, dentro un ingombro massimo. Esce sempre una figura
-   sola, e i buchi li scarta chi chiama. */
+// si parte da una casella e se ne attacca una vicina alla volta, dentro un ingombro massimo; i buchi li scarta chi chiama
 function passeggiata(quante, sorte, latoMax) {
   const celle = [[0, 0]]
   const prese = new Set(['0,0'])
@@ -166,17 +99,14 @@ function passeggiata(quante, sorte, latoMax) {
   return celle.length === quante ? normalizza(celle) : null
 }
 
-/* una figura buona: intera, senza buchi, dell'area chiesta */
-function figura(quante, sorte, latoMax = 4) {
+function figura(quante, sorte, latoMax = 4) { // una figura intera, senza buchi, dell'area chiesta
   for (let prova = 0; prova < 20; prova++) {
     const c = passeggiata(quante, sorte, latoMax)
     if (c && !buchi(c)) return c
   }
-  /* ripiego che non fallisce mai: righe piene una sotto l'altra */
+  // ripiego che non fallisce mai: righe piene una sotto l'altra
   return normalizza(Array.from({ length: quante }, (_, i) => [i % latoMax, Math.floor(i / latoMax)]))
 }
-
-/* ── le figure che si misurano a mente ── */
 
 const rettangolo = (w, h) => {
   const celle = []
@@ -184,10 +114,7 @@ const rettangolo = (w, h) => {
   return celle
 }
 
-/* Un rettangolo, o un quadrato — che è il caso in cui i due lati sono
-   uguali, e l'unico che porta con sé una scorciatoia in più. Mai un
-   lato solo: un 1×6 è una riga, e lì moltiplicare non si distingue dal
-   contare. */
+// rettangolo o quadrato (lati uguali, scorciatoia in più); mai un lato solo: un 1×6 è una riga, lì moltiplicare non si distingue dal contare
 function rettangoloDa(sorte, min, max) {
   const w = sorte.fra(min, max)
   if (sorte.forse(0.45)) return misure(w, w)
@@ -200,10 +127,7 @@ const misure = (w, h) => ({
   area: w * h, giro: 2 * (w + h),
 })
 
-/* Le scorciatoie, col conto già fatto dentro: «6 × 6 = 36» e non «lato
-   per lato». Una regola senza il suo esempio si legge e non si ricorda,
-   e questa arriva addosso a un numero che il bambino ha appena avuto
-   sotto gli occhi. */
+// il conto già fatto dentro («6 × 6 = 36», non «lato per lato»): una regola senza esempio si legge e non si ricorda
 const DRITTE = {
   area: r => r.quadrato
     ? `in un quadrato l'area è lato per lato: ${r.w} × ${r.w} = ${r.area}`
@@ -213,7 +137,7 @@ const DRITTE = {
     : `il giro di un rettangolo è due volte la base più due volte l'altezza: ${r.w} + ${r.h} = ${r.w + r.h}, e il doppio fa ${r.giro}`,
 }
 
-/* la scena di una figura, centrata in una griglia della misura data */
+// una figura, centrata in una griglia della misura data
 function scenaFigura(celle, larghezza, altezza) {
   const [w, h] = ingombro(celle)
   const dx = Math.floor((larghezza - w) / 2)
@@ -224,8 +148,6 @@ function scenaFigura(celle, larghezza, altezza) {
   }
 }
 
-/* ── il modulo ── */
-
 class Griglia extends Modulo {
   constructor() {
     super({
@@ -235,21 +157,8 @@ class Griglia extends Modulo {
       materia: 'spazio',
       chiaro: 'trovare le caselle, seguire i percorsi, contare area e perimetro a quadretti',
       scaletta: SCALETTA,
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      /* il grado 6 sta a 69 (nove anni e mezzo) e non a 75: misurare
-         un rettangolo moltiplicando è di terza-quarta, mentre il
-         confronto che stava qui prima era roba da dieci anni e mezzo
-         — e non perché fosse più profondo, ma perché era più lungo. */
+      // scala 0-100 comune a tutte le materie (vedi docs/apprendimento/quiz-livelli.md); il grado 6 sta a 69 e non a 75: misurare un rettangolo è di terza-quarta, non più difficile del confronto tolto (era solo più lungo)
       livelli: [25, 29, 33, 56, 63, 69],
-      /* i primi tre gradi si giocano guardando: caselle, direzioni,
-         percorsi. Gli ultimi quattro chiamano per nome due cose che si
-         fanno a scuola — area e perimetro — e senza quei nomi la
-         domanda non si capisce nemmeno. */
       tipi: TIPI,
       pittori: PITTORI_GRIGLIA,
     })
@@ -260,19 +169,14 @@ class Griglia extends Modulo {
       case 'gri:direzioni': return this.direzione(sorte)
       case 'gri:mosse': return this.mosse(sorte)
       case 'gri:percorso': return this.arrivo(sorte)
-      /* al grado 6 la stessa cosa si misura invece di contarla, e la
-         figura è sempre un rettangolo o un quadrato. Sotto, un terzo
-         delle volte, il rettangolo compare lo stesso: è lì che la
-         formula si incontra la prima volta, mentre contare è ancora
-         una strada onesta. */
+      // al grado 6 si misura invece di contare (sempre rettangolo/quadrato); sotto, un terzo delle volte il rettangolo compare lo stesso: è lì che si incontra la formula
       case 'gri:area': return grado >= 6 ? this.misura(sorte, 'area') : this.area(sorte, sorte.forse(0.35))
       case 'gri:perimetro': return grado >= 6 ? this.misura(sorte, 'giro') : this.bordo(sorte, sorte.forse(0.35))
       default: return sorte.forse(0.45) ? this.chiCi(sorte) : this.dove(sorte)
     }
   }
 
-  /* ── grado 1: in che casella è? ── */
-  dove(sorte) {
+  dove(sorte) { // grado 1: in che casella è?
     const lato = sorte.fra(4, 6)
     const x = sorte.fra(0, lato - 1)
     const y = sorte.fra(0, lato - 1)
@@ -304,10 +208,7 @@ class Griglia extends Modulo {
     })
   }
 
-  /* ── grado 1, al contrario: cosa c'è in quella casella? ──
-     I falsi stanno nelle caselle degli sbagli: quella con lettera e
-     numero scambiati, quella della riga accanto, quella della colonna
-     accanto. Chi sbaglia il modo di leggere finisce esattamente lì. */
+  // grado 1 al contrario: cosa c'è in quella casella? I falsi stanno nelle caselle degli sbagli veri (lettera/numero scambiati, riga o colonna accanto)
   chiCi(sorte) {
     const lato = sorte.fra(4, 6)
     const x = sorte.fra(0, lato - 1)
@@ -327,7 +228,7 @@ class Griglia extends Modulo {
       prese.push(c)
       if (prese.length === 4) break
     }
-    /* se la griglia era stretta si riempie con caselle libere */
+    // se la griglia era stretta si riempie con caselle libere
     for (let i = 0; prese.length < 4 && i < lato * lato; i++) {
       const c = [i % lato, Math.floor(i / lato)]
       if (!prese.some(q => uguali(q, c))) prese.push(c)
@@ -347,15 +248,7 @@ class Griglia extends Modulo {
     })
   }
 
-  /* ── grado 2: destra, sinistra, sopra, sotto ──
-     La casella di partenza si sceglie fra quelle che tengono dentro la
-     griglia sia la risposta sia tre sbagli: senza il distrattore
-     «direzione ribaltata» la domanda si risolverebbe per esclusione.
-     Gli sbagli però non sono sempre gli stessi tre — con due caselle di
-     passo una griglia da cinque non tiene insieme «due indietro» e «tre
-     avanti» — quindi si sceglie fra quelli che ci stanno, uno per uno.
-     Cablare le posizioni non si può: erano quelle di «una casella a
-     destra», e finivano sotto la domanda «due caselle sotto». */
+  // grado 2: destra/sinistra/sopra/sotto. La casella di partenza si sceglie fra quelle che tengono dentro la griglia sia la risposta sia tre sbagli — cablare le posizioni non si può, dipende dal verso e dal passo
   direzione(sorte) {
     const lato = sorte.fra(5, 6)
     const verso = sorte.uno(VERSI)
@@ -365,10 +258,7 @@ class Griglia extends Modulo {
       [verso.giro[0] * -segno, verso.giro[1] * -segno],
     ]
 
-    /* gli sbagli veri, in ordine di importanza: la parte opposta, il
-       passo contato male, la riga al posto della colonna. Ne servono
-       tre; quelli che escono dal foglio o che cadono su una casella già
-       presa si saltano. */
+    // gli sbagli veri: la parte opposta, il passo contato male, la riga al posto della colonna; quelli fuori dal foglio o su una casella già presa si saltano
     const sbagli = (qui, quante, dice) => {
       const meta = somma(qui, verso.d, quante)
       const perpendicolare = 'destra e sinistra si contano lungo la riga, sopra e sotto lungo la colonna'
@@ -389,8 +279,7 @@ class Griglia extends Modulo {
       return falsi.length === 3 ? { meta, falsi } : null
     }
 
-    /* due caselle se la griglia le regge, se no una: meglio un passo
-       corto che una domanda senza risposta a schermo */
+    // due caselle se la griglia le regge, se no una: meglio un passo corto che una domanda senza risposta
     const quanti = sorte.fra(1, 2) === 2 ? [2, 1] : [1]
     let scelta = null
     for (const quante of quanti) {
@@ -424,8 +313,7 @@ class Griglia extends Modulo {
     })
   }
 
-  /* ── grado 3: dove arriva chi segue le frecce ── */
-  arrivo(sorte) {
+  arrivo(sorte) { // grado 3: dove arriva chi segue le frecce
     const lato = sorte.fra(5, 6)
     const partenza = [sorte.fra(1, lato - 2), sorte.fra(1, lato - 2)]
     const em = sorte.uno(COSE)
@@ -483,9 +371,7 @@ class Griglia extends Modulo {
     })
   }
 
-  /* ── grado 3, al contrario: quali frecce ci portano ──
-     Ogni falso finisce in una casella diversa dall'osso: si controlla
-     dove arriva, non come è scritto. */
+  // grado 3 al contrario: quali frecce ci portano — ogni falso finisce in una casella diversa dall'osso, si controlla dove arriva
   mosse(sorte) {
     const lato = sorte.fra(5, 6)
     const dx = (sorte.forse() ? 1 : -1) * sorte.fra(1, 3)
@@ -535,12 +421,7 @@ class Griglia extends Modulo {
     })
   }
 
-  /* ── grado 4: l'area, i quadretti dentro ──
-     Un terzo delle volte la figura è un rettangolo piccolo: la domanda
-     si risolve uguale contando, ma la dritta in coda dice che c'era
-     una strada più corta. È il primo posto dove quella strada si vede,
-     e si vede **dopo** aver contato — che è l'unico momento in cui una
-     scorciatoia significa qualcosa. */
+  // grado 4: l'area, i quadretti dentro. Un terzo delle volte è un rettangolo piccolo: si risolve contando, ma la dritta dice che c'era una strada più corta — vista solo DOPO aver contato
   area(sorte, rett = false) {
     const r = rett ? rettangoloDa(sorte, 2, 4) : null
     const quante = r ? r.area : sorte.fra(4, 9)
@@ -577,8 +458,7 @@ class Griglia extends Modulo {
     })
   }
 
-  /* ── grado 5: il perimetro, il giro del bordo ── */
-  bordo(sorte, rett = false) {
+  bordo(sorte, rett = false) { // grado 5: il perimetro, il giro del bordo
     const r = rett ? rettangoloDa(sorte, 2, 4) : null
     const quante = r ? r.area : sorte.fra(4, 8)
     const celle = r ? r.celle : figura(quante, sorte, 4)
@@ -614,17 +494,7 @@ class Griglia extends Modulo {
     })
   }
 
-  /* ── grado 6: misurare, non contare ──
-     Qui la figura è sempre un rettangolo o un quadrato, e i lati
-     arrivano a otto: l'area può fare 64, e nessuno conta 64 quadretti
-     — si moltiplica. È la sola differenza col grado 4, ed è tutta la
-     progressione: la stessa cosa da sapere, con dei numeri che
-     costringono alla strada corta.
-
-     I FALSI SONO I TRE MODI VERI DI SBAGLIARE: dare l'altro dei due
-     numeri (l'area quando si chiede il giro, e viceversa) — che è
-     l'errore che questa materia porta da sempre — sommare invece di
-     moltiplicare, e perdere per strada un lato o una riga. */
+  // grado 6: misurare, non contare. Sempre rettangolo/quadrato, lati fino a otto (area fino a 64: nessuno la conta, si moltiplica). Falsi: l'altro dei due numeri scambiato, sommare invece di moltiplicare, perdere un lato o una riga.
   misura(sorte, quale) {
     const r = rettangoloDa(sorte, 2, 8)
     const lato = Math.max(r.w, r.h) + 1
@@ -636,8 +506,7 @@ class Griglia extends Modulo {
       { v: r.w + r.h, perche: 'i quadretti si moltiplicano, non si sommano' },
       { v: r.area - r.w, perche: 'ti è sfuggita una riga intera' },
       { v: r.area + r.w, perche: 'una riga l\'hai contata due volte' },
-      /* per le figure piccole i due di sopra cadono spesso addosso a
-         un altro candidato: questi tengono la quaterna piena */
+      // per le figure piccole i due sopra cadono spesso addosso a un altro candidato: questi tengono la quaterna piena
       { v: r.area - 1, perche: 'ricontrolla: te n\'è sfuggito uno' },
       { v: r.area + 1, perche: 'ricontrolla: uno l\'hai contato due volte' },
     ] : [
