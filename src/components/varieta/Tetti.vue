@@ -83,7 +83,7 @@ const COME = [
       {{ DOPPIO }} minuti del giorno.</p>
     <ul class="giochi">
       <li v-for="g in giochi" :key="g.chiave" :data-varieta-gioco="g.chiave">
-        <div class="riga">
+        <div class="testa">
           <button type="button" class="stella" :class="{ on: r.consigliati[g.chiave] }"
                   :data-consiglia="g.chiave" :aria-pressed="!!r.consigliati[g.chiave]"
                   @click="consiglia(g.chiave, !r.consigliati[g.chiave])">⭐</button>
@@ -109,7 +109,7 @@ const COME = [
 
     <button type="button" class="dormienti" :class="{ spento: !r.dormienti }"
             data-flag="dormienti" @click="accendiDormienti(!r.dormienti)">
-      <span class="testo"><b>Svegliare i giochi di scuola</b>
+      <span class="parole"><b>Svegliare i giochi di scuola</b>
         <i>{{ r.dormienti
               ? `Un gioco di numeri o di parole che non apre da ${DORMIENTE} giorni prende il 🪙×2 da solo`
               : 'Spento: il 🪙×2 ce l\'hanno solo i giochi ⭐ consigliati' }}</i></span>
@@ -134,7 +134,7 @@ const COME = [
          background:#fff3c4; color:#6a5200; box-shadow:0 2px 0 #e7d9a2 }
 .giochi li { display:flex; flex-direction:column; gap:6px; padding:9px 11px; border-radius:12px;
              background:var(--carta) }
-.riga { display:flex; align-items:center; gap:8px }
+.testa { display:flex; align-items:center; gap:8px }
 .stella { font-size:18px; width:34px; height:34px; border-radius:10px; background:#eef1f6;
           filter:grayscale(1); opacity:.45 }
 .stella.on { filter:none; opacity:1; background:#fff0b8 }
@@ -146,7 +146,8 @@ const COME = [
 .suoi { flex-wrap:wrap; font-size:12.5px }
 .dormienti { display:flex; align-items:center; gap:10px; text-align:left; padding:11px 13px;
              border-radius:14px; background:var(--carta); margin-top:6px }
-.dormienti .testo { flex:1; display:flex; flex-direction:column; gap:2px }
+.dormienti b { color:var(--viola-scuro) }
+.dormienti .parole { flex:1; display:flex; flex-direction:column; gap:2px }
 .dormienti i { font-style:normal; font-size:12.5px; color:var(--tenue) }
 .leva { position:relative; flex:none; width:46px; height:27px; border-radius:999px; background:var(--verde) }
 .pallina { position:absolute; top:3px; left:22px; width:21px; height:21px; border-radius:50%;
