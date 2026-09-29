@@ -1,25 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I CORPI DEI MOSTRI — dieci bestie della stessa famiglia.
-
-   Stesso paio d'occhi tondi, stessa taglia: cambia il corpo e cambia la
-   cattiveria. Sono disegnate a mano e non emoji perché le emoji cambiano
-   faccia da telefono a telefono e non stanno insieme al resto del campo.
-
-   Chi sono — nome, resistenza, se volano — sta in `data/mostri.js`,
-   indicizzato con lo stesso `id`. Qui c'è solo come si disegnano.
-
-   ── la firma, che è un contratto ──
-   Un pittore di mostro è `(p, s)`: il pennello e l'unità di misura.
-   Disegna **attorno all'origine**, in coordinate locali (chi lo chiama
-   ha già spostato e fatto ondeggiare), non tocca la barra della vita e
-   non sa se quel mostro vola: quelle sono cose di `mostro.js`. Se serve
-   il tempo per animarlo, è `p.tempo`.
-
-   Questo file è **isolato apposta**: la tabella `BESTIE` si sostituisce
-   con un'altra cambiando una riga sola di `mostro.js`.
-   ═══════════════════════════════════════════════════════════════════ */
-
-
+// I corpi dei mostri: dieci bestie della stessa famiglia (stessi occhi
+// tondi, stessa taglia). Disegnate a mano e non emoji (che cambiano faccia
+// da telefono a telefono). Un pittore è (p, s): disegna attorno
+// all'origine, in coordinate locali, e non sa niente di vita o volo (cose
+// di mostro.js).
 function occhi(p, s, dx = 2.4, cattivo = false) {
   p.ellisse(-dx * s, -1.6 * s, 2.1 * s, 2.4 * s, '#fff')
   p.ellisse(dx * s, -1.6 * s, 2.1 * s, 2.4 * s, '#fff')

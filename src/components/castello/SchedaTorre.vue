@@ -1,43 +1,20 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA SCHEDA DI UNA TORRE
-
-   Il foglio che sale quando si tocca una torre già in campo. Dice tre
-   cose e ne offre una: chi è, a che punto è della sua scaletta, cosa sa
-   fare — e poi la si fa salire.
-
-   ── spostarla ──
-   Da quando ci sono tappe con due ingressi, portare la torre giusta
-   dalla parte giusta è la mossa che vince, e costa due punti di
-   energia. Si fa in due modi che sono la stessa cosa: trascinandola, o
-   da qui — si preme, il foglio si toglie di mezzo e il campo aspetta
-   che gli si dica dove. Il tasto non toglie il trascinamento: lo
-   racconta a chi non l'ha scoperto, e adesso che la mossa ha un prezzo
-   il prezzo va scritto da qualche parte.
-
-   ── il bivio ──
-   Quando la torre arriva al gradino in cui si specializza, al posto del
-   tasto «potenzia» compaiono due carte. Il calcolo da fare è lo stesso —
-   il bivio non costa un'operazione in più, è quello che l'operazione
-   compra. Si sceglie *dopo* aver deciso di salire, mai prima: la scelta
-   è il premio del conto difficile, non un pedaggio davanti.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il foglio che sale toccando una torre in campo: chi è, a che punto è
+// della scaletta, il bivio quando arriva (due carte, stesso conto, si
+// sceglie dopo aver deciso di salire) e il tasto per spostarla (stessa cosa
+// del trascinamento, ma il prezzo va scritto). Vedi docs/castello/torri.md.
 import { computed } from 'vue'
 import { TORRI, segnoDi } from '../../data/ops.js'
 import RitrattoTorre from './RitrattoTorre.vue'
 
 const props = defineProps({
-  /* i pittori della pelle, se il campo ne ha una: il ritratto della
-     torre è allora la figura del campo */
   pittori: { type: Object, default: null },
   torre: { type: Object, required: true },       // { tipo, lv, ramo }
   cap: { type: Number, default: 10 },
   costo: { type: Number, default: 0 },
   energia: { type: Number, default: 0 },
   divisioni: { type: Boolean, default: true },
-  /* i due mestieri fra cui scegliere, quando è il momento: [{ id, nome, descr }] */
-  rami: { type: Array, default: () => [] },
-  /* quanto costa spostarla, e se c'è un posto dove metterla */
+  rami: { type: Array, default: () => [] },      // [{ id, nome, descr }]
   costoSposta: { type: Number, default: 0 },
   puoiSpostare: { type: Boolean, default: true },
 })
@@ -65,7 +42,6 @@ const gradini = computed(() => Array.from({ length: props.cap }, (_, i) => i + 1
     </span>
   </div>
 
-  <!-- il bivio: due mestieri, lo stesso conto -->
   <template v-if="rami.length && !massimo">
     <div class="dritta">Con questo conto diventa…</div>
     <div class="rami">
@@ -81,7 +57,6 @@ const gradini = computed(() => Array.from({ length: props.cap }, (_, i) => i + 1
     </div>
   </template>
 
-  <!-- il caso di sempre: un gradino alla volta -->
   <button v-else-if="!massimo" class="bottone stretto sale" :class="{ cara: !posso }"
           data-azione="potenzia" @click="$emit('potenzia', null)">
     Potenzia · liv. {{ torre.lv }} → {{ torre.lv + 1 }}

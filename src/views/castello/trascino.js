@@ -1,24 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL DITO SUL CAMPO
-
-   Il campo si tocca in due modi, e sono lo stesso gesto finché non si
-   muove: fermo, si apre la scheda di quello che si è toccato — una
-   torre da far salire, una piazzola dove costruire; scivolando, la
-   torre cambia postazione. Spostare costa poco ma costa
-   (`CFG.spostamento`), e vale solo sulle piazzole libere, che si
-   illuminano mentre si trascina: da quando ci sono tappe con due
-   ingressi, portare la torre giusta dalla parte giusta è la mossa che
-   vince, e una mossa che vince non si fa a costo zero.
-
-   Qui c'è la **regola** del gesto: quando comincia, cosa ha preso il
-   dito, quale piazzola è a tiro, dove finisce. Il DOM — coordinate del
-   canvas, telecamera da invertire, cattura del puntatore — resta nel
-   componente: sono le cose che non si possono provare senza browser, e
-   non devono stare nella stessa scatola.
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* quanto lontano deve andare il dito prima che sia uno spostamento e non
-   un tocco, e fin dove si cerca la torre e la piazzola (in unità) */
+// Il dito sul campo: fermo apre la scheda di quello che si è toccato,
+// scivolando la torre cambia postazione (a pagamento, vedi
+// docs/castello/torri.md). Qui c'è solo la regola del gesto; il DOM resta
+// nel componente.
 const SOGLIA = 10
 const RAGGIO_TORRE = 26
 const RAGGIO_PIAZZOLA = 44
@@ -34,15 +17,11 @@ export class Trascino {
     this.attivo = null              // { torre, da, mosso, posto } oppure { piazzola }
   }
 
-  /* una partita nuova, o uno schermo di misura diversa */
   attacca(motore, S) { this.motore = motore; this.S = S; this.attivo = null }
   misura(S) { this.S = S }
 
   get mosso() { return !!this.attivo && this.attivo.mosso }
-  /* la torre che il dito ha in mano, se ne ha una: il resto del mondo
-     chiede questo e non deve sapere com'è fatto `attivo` */
   get torre() { return this.attivo && this.attivo.torre ? this.attivo.torre : null }
-  /* la piazzola su cui la torre in mano sta per atterrare, se ce n'è una */
   get posto() { return this.attivo && this.attivo.posto != null ? this.attivo.posto : -1 }
 
   torreSotto(x, y) {
@@ -54,8 +33,6 @@ export class Trascino {
     return vicina
   }
 
-  /* la piazzola libera più vicina al dito, se ce n'è una a tiro: torna
-     l'indice, che è come il motore le chiama */
   postoLibero(x, y, sciolta = null) {
     let scelto = -1, minima = RAGGIO_PIAZZOLA * this.S
     this.motore.postazioni.forEach((p, i) => {
@@ -66,8 +43,7 @@ export class Trascino {
     return scelto
   }
 
-  /* torna `true` se ha preso qualcosa: solo allora il componente si
-     tiene il puntatore */
+  // torna true se ha preso qualcosa: solo allora il componente tiene il puntatore
   giu(x, y) {
     if (!this.motore) return false
     const t = this.torreSotto(x, y)
@@ -75,9 +51,6 @@ export class Trascino {
       this.attivo = { torre: t, da: { x: t.x, y: t.y }, mosso: false, posto: -1 }
       return true
     }
-    /* niente torre: se il dito è caduto vicino a una piazzola vuota, è
-       lì che si vuole costruire. Si decide al rilascio, come per le
-       torri, così un tocco storto si può ancora annullare uscendo. */
     const p = this.postoLibero(x, y)
     if (p < 0) return false
     this.attivo = { piazzola: p, da: { x, y }, mosso: false }
@@ -99,10 +72,7 @@ export class Trascino {
     this.attivo = null
     if (g.piazzola != null) { this.apri(g.piazzola); return }
     if (!g.mosso) { this.tocca(g.torre); return }
-    /* chi decide se lo spostamento si può fare — e lo fa pagare — è il
-       motore: la regola è una sola, che la torre l'abbia mossa un
-       trascinamento o un tocco sulla piazzola. Se dice di no, la torre
-       torna dov'era, come quando il dito la lascia cadere sull'erba. */
+    // chi decide se lo spostamento si può fare (e lo fa pagare) è il motore
     if (g.posto < 0 || !this.motore.sposta(g.torre, g.posto)) {
       g.torre.sposta(g.da.x, g.da.y)
       if (g.posto >= 0) this.avvisa(`Servono ${this.costo} ⚡ per spostarla`)
