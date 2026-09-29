@@ -24,6 +24,7 @@ export function rigaDi(tipo, classi, it, { minime = MINIME } = {}) {
     gruppo: prima.gruppo || null,
     gruppoNome: prima.gruppoNome || '',
     modulo: prima.nomeModulo || '',
+    materia: prima.materia || '', // per le mattonelle: «Come va» si filtra per materia
     // un intervallo e non un numero solo: una media non corrisponderebbe a nessuna domanda vera
     da: classi.length ? Math.min(...classi.map(c => c.anni)) : 0,
     a: classi.length ? Math.max(...classi.map(c => c.anni)) : 0,
