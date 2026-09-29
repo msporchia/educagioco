@@ -15,9 +15,14 @@
    entrano, scendono e le torri sparano.
 
    Le torri già in campo si mettono **prima di registrare**, dal motore
-   (`costruisci` e `potenzia` a prezzo zero, sulle piazzole della strada
-   da cui scendono i draghi, dal castello in su: messe vicino alla bocca
-   li fermavano appena usciti, e i draghi non si vedevano camminare).
+   (`costruisci` e `potenzia` a prezzo zero) sulle piazzole **di mezzo**:
+   vicino alla bocca fermavano i draghi appena usciti, vicino al castello
+   la clip finiva prima che ci arrivassero, e nessuna torre sparava.
+   E sono torri che **possono** sparare: il drago è immune alle bombe e
+   alla magica, quindi sui draghi lavorano arcieri e ghiaccio, e subito
+   dopo si chiama la seconda ondata col tasto «Manda la prossima» — i
+   troll, che solo le bombe feriscono — così lavora anche il mortaio, e
+   nella clip si vede la chiamata anticipata.
    L'energia in cima allo schermo resta quella
    vera della tappa, e un 999 sarebbe un gioco che non esiste. Quali torri
    e che livelli lo dice `CAMPO` qui sotto.
@@ -38,11 +43,11 @@ const TAPPA = 'La foce'
 // tipo, livello e ramo delle torri già in campo, dalla bocca in giù
 // (dal castello in su, così i draghi fanno mezzo campo prima dello scontro)
 const CAMPO = [
-  { tipo: 'add', lv: 5, ramo: 'cecchino' },
-  { tipo: 'mul', lv: 4, ramo: 'brina' },
-  { tipo: 'div', lv: 5, ramo: 'napalm' },    // i draghi volano: le bombe non li toccano
-  { tipo: 'sub', lv: 4, ramo: 'catena' },
-  { tipo: 'add', lv: 2 },
+  { tipo: 'add', lv: 5, ramo: 'cecchino' },  // i draghi
+  { tipo: 'mul', lv: 4, ramo: 'brina' },     // gela draghi e troll
+  { tipo: 'div', lv: 5, ramo: 'mortaio' },   // i troll: i draghi volano e le bombe non li toccano
+  { tipo: 'add', lv: 4, ramo: 'raffica' },   // i draghi
+  { tipo: 'div', lv: 2 },                    // i troll
 ]
 
 /* la tappa, e le torri già in piedi sulla strada dei draghi */
@@ -53,11 +58,12 @@ async function preparaIlCampo (page) {
     T.inizia(T.TAPPE.findIndex(t => t.nome === TAPPA))
     await aspetta(1200)
     const m = T.motore()
-    // la prima ondata scende dalla prima bocca: le torri vanno sulla sua
-    // strada, cominciando da quelle più vicine al castello
-    const bocca = m.percorso.postazioni.map((p, i) => ({ ...p, i })).filter(p => p.via === 0).reverse()
+    // le piazzole di mezzo, dall'alto in basso: fra il terzo e i tre
+    // quarti del campo, dove le due strade si sono già unite o quasi
+    const tutte = m.percorso.postazioni.map((p, i) => ({ ...p, i })).sort((a, b) => a.y - b.y)
+    const mezzo = tutte.slice(Math.floor(tutte.length / 3))
     CAMPO.forEach(({ tipo, lv, ramo }, k) => {
-      const posto = bocca[k] ? bocca[k].i : null
+      const posto = mezzo[k] ? mezzo[k].i : null
       const torre = m.costruisci(tipo, { posto })
       for (let l = 1; l < lv; l++) m.potenzia(torre, { ramo: l + 1 >= 4 ? ramo : null })
     })
@@ -109,9 +115,13 @@ export default {
       await attesa(250)
       await page.evaluate(() => {
         window.__td.chiamaOnda()                  // i draghi
-        window.__td.velocita.value = 2            // ⏩: arrivano in tempo per lo scontro
+        window.__td.velocita.value = 3            // ⏩: arrivano in tempo per lo scontro
       })
-      await attesa(6500)                          // scendono, e le torri sparano
+      await attesa(900)
+      /* la seconda subito, col tasto: i troll, per il mortaio */
+      const manda = await page.locator('[data-azione="chiama-prossima"]').boundingBox().catch(() => null)
+      if (manda) await page.mouse.click(manda.x + manda.width / 2, manda.y + manda.height / 2)
+      await attesa(5800)                          // scendono, e le torri sparano
     },
   },
 }
