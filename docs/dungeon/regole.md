@@ -30,6 +30,25 @@ codice: `src/giochi/dungeon/COMBATTIMENTO.md`.
   del corridoio vuoto.
 - **I pezzi di scuola spenti non escono**; se un grado resta senza domande
   valide si scende a uno più facile invece di sparire.
+- **La forza di un mostro** (`dati/mostri.js`, `forzaDi`) è l'indice della
+  tappa più la profondità nella discesa moltiplicata per `PASSO` (2): a metà
+  campagna si possono incontrare mostri più deboli di quelli appena battuti,
+  perché all'ingresso di una discesa si è sempre nudi (l'equipaggiamento non
+  passa la notte, solo l'eroe di base cresce fra una discesa e l'altra).
+- **La difesa dei mostri cresce a un terzo del ritmo dell'attacco**: entra in
+  una sottrazione (attacco − difesa), quindi se crescesse come l'attacco
+  dell'eroe il bottino diventerebbe una decorazione.
+- **Il guardiano di tappa non è battibile con le statistiche di partenza**:
+  è il posto dove si scopre se ci si è equipaggiati per strada.
+- **Il numero di domande non è più l'input come nel castello**: è il
+  risultato di come si combatte e ci si equipaggia (`dati/taratura.js`,
+  `DOMANDE`). A cinque secondi a domanda la prima cantina dura una decina
+  di minuti, il covo del drago una ventina: è una partita, non un
+  esercizio, e i tre piani esistono perché ci si possa fermare a metà.
+- **La soglia del banco per «il bambino» è 0,6 e non 0,7** (`ATTESE` in
+  `dati/taratura.js`): adesso si può anche sbagliare *come strategia* —
+  arrivare al guardiano senza essersi equipaggiati — e perderla lì è come
+  il gioco insegna a farlo meglio la volta dopo.
 
 ## Il bestiario
 
@@ -51,6 +70,12 @@ codice: `src/giochi/dungeon/COMBATTIMENTO.md`.
   tripla si presentava come il topo della prima stanza.
 - **Le cose restano emoji**: uno scrigno, un fuoco, un mercante non sono
   qualcuno.
+- **I quattro mazzi di un ambiente sono una scala, non quattro elenchi**
+  (`mostri`, `grossi`, `capi`, `boss` in `dati/mostri.js`): le ossa crescono
+  di taglia in taglia e la figura deve fare paura in proporzione — un capo
+  di piano che pesca dal mazzo dei mostri normali si legge come «un altro
+  insetto», non come «attento». Nessun controllo automatico lo sa fare, va
+  guardato a occhio quando si ritocca un mazzo.
 
 ## Niente pausa, ma il respiro si ferma
 
