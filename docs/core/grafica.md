@@ -185,6 +185,29 @@ non sono la stessa cosa). Quattro trame (stoffa, cuoio, ferro, pelo), in
 bianco/nero trasparente sopra il colore, disegnate una volta sola su un
 quadretto che si ripete (`ctx.createPattern`).
 
+## Le tessiture (`grafica/materiali/`)
+
+- **Una tessitura è una chiamata, non un nome**: `mattoni('#8f6146',
+  '#5c3a29', { modo: 'rotto', quanto: 0.12 })`. Si porta dietro i colori
+  (due voci vicine sono due muri diversi, e due voci si mescolano — è
+  la varietà a buon mercato), `seme` (sposta tutto il caso: due voci
+  uguali con due semi diversi sono parenti, non gemelli), `dove` (il
+  campo della stanza che decide dove cade), `quanto` (la fetta di
+  superficie) e `sporco` (quanto si interdigita il confine coi vicini).
+  Prima un ambiente diceva solo `muratura: 'mattoni'` e i colori
+  venivano da un dizionario a parte: una stanza aveva una tinta sola per
+  famiglia, e il legame tessitura/colore era implicito e scritto in due
+  punti lontani.
+- **I modi stanno dentro il pittore**, non sono un velo sopra: un muro di
+  mattoni sa venire nuovo, vecchio o mezzo caduto, e conosce lui cosa
+  vuol dire — chi lo chiama dice solo `modo: 'rotto'`. Quando i modi non
+  bastano la risposta è un pittore nuovo, mai un velo: così ogni
+  tessitura resta provabile da sola nel catalogo
+  (`strumenti/banco/catalogo.html`).
+- **Pavimento e muratura restano due tessuti diversi apposta** (i pezzi
+  del pavimento sono sempre più grandi o più piccoli di quelli del muro,
+  mai uguali): fatti della stessa misura, la stanza perde l'architettura.
+
 ## Le misure
 
 - **La scala sta nella trasformazione del contesto** (`dpr × scala`, una
