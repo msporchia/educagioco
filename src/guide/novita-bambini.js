@@ -31,6 +31,18 @@ export const NOVITA = [
     testo: '🏰 Nel castello arrivano ondate miste: due mostri insieme' },
   { id: 15, quando: '2026-09-29', gioco: 'torri',
     testo: '🏰 Il castello è tutto ridisegnato: torri nuove, mostri, quattro mondi' },
+  { id: 16, quando: '2026-09-29', gioco: 'sotterraneo',
+    testo: '🕳️ Nell\'abisso adesso ogni risposta giusta vale una moneta' },
+  { id: 17, quando: '2026-09-29', gioco: 'inglese',
+    testo: '🗺️ English è una mappa del tesoro: frasi da comporre e un libro' },
+  { id: 18, quando: '2026-09-29', gioco: null,
+    testo: '⭐ I giochi con la stella all\'inizio danno il doppio delle monete' },
+  { id: 19, quando: '2026-09-29', gioco: null,
+    testo: '🐷 Lo vedi sulla carta del gioco: quando si svuota, cambia gioco' },
+  { id: 20, quando: '2026-09-29', gioco: null,
+    testo: '🐷 Mezzo vuoto dà metà monete, vuoto non ne dà: domani torna pieno' },
+  { id: 21, quando: '2026-09-29', gioco: null,
+    testo: '🐷 Ogni gioco ha un salvadanaio che si svuota se ci giochi a lungo' },
 ]
 
 export const PER_GIOCO = 4
