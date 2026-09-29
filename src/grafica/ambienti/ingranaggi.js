@@ -1,13 +1,5 @@
-/* ═════ LA SALA DEGLI INGRANAGGI ═════
-   Piastre di metallo e lastre imbullonate, ottone e ferro brunito. È
-   la stanza più «costruita» di tutte: nessuna crepa fra le pietre,
-   solo bulloni e macchie d'olio.
-
-   Tre partite di ferro — sano, unto d'olio, consumato — e dove il
-   rivestimento è del tutto scomparso, la roccia della fondazione. Il
-   pavimento a piastre ha le stesse macchie d'olio del muro (lo stesso
-   campo, la stessa causa) e la ghiaia sotto dove le piastre sono
-   saltate. */
+// La sala degli ingranaggi: la stanza più «costruita» di tutte, nessuna crepa
+// fra le pietre — solo bulloni e macchie d'olio. Vedi docs/core/grafica.md.
 import { ferro, roccia, metallo, pietraia } from '../materiali/pattern.js'
 
 export const INGRANAGGI = {

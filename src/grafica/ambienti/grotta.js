@@ -1,15 +1,5 @@
-/* ═════ LA GROTTA ═════
-   L'opposto del corridoio: là ogni pietra è stata tagliata da
-   qualcuno, qui non c'è una linea dritta. Stessa scala di sempre (i
-   massi valgono poco più di un corso di muratura), ma **niente
-   corsi**: la parete legge «scavata» invece che «costruita».
-
-   Tinte terrose e strette, e la luce delle torce è l'unica cosa
-   calda. Le vene sedimentarie corrono a bande, e dove la volta è
-   franata la roccia si spacca — sotto, un vecchio rinforzo di blocchi
-   squadrati, resto di uno scavo più antico di questa grotta. Il
-   pavimento segue lo stesso disegno del muro: la stessa causa fa
-   cadere la roccia sopra e la ghiaia sotto i piedi. */
+// La grotta: l'opposto del corridoio, niente corsi — la parete legge scavata,
+// non costruita. Vedi docs/core/grafica.md.
 import { roccia, pietra, pietraia, lastre } from '../materiali/pattern.js'
 
 export const GROTTA = {
@@ -42,8 +32,6 @@ export const GROTTA = {
 
   varianti: ['liscio', 'liscio', 'usura', 'detriti', 'licheni', 'ombra'],
 
-  /* i ciottoli guardano ancora il crollo, ma anche il muro — è lì che
-     la ghiaia si ferma rotolando, non in mezzo al passaggio */
   dettagli: [['ciottoli', 2.3, ['crollo', 'controMuro']], ['funghi', 3.6],
              ['crepe', 4.3, 'strati'], ['muschio', 5, 'crollo']],
 }

@@ -1,18 +1,6 @@
-/* ═════ LA SALA DEL TRONO ═════
-   Pietra nobile e passatoia rossa. È la stanza più chiara di tutte e
-   la più vuota: il marmo è quasi tono su tono e tutto il colore sta in
-   una striscia sola in mezzo, che porta l'occhio (e i piedi) dove
-   deve.
-
-   Il marmo ha una macchia più lucida dove la luce lo prende, e dove
-   il rivestimento cede si vede prima la pietra grezza e poi la
-   roccia. La passatoia resta intera — corre da un capo all'altro della
-   sala, non si maschera a pezzi — ma ai suoi margini il marmo affiora
-   dove secoli di passi l'hanno consumata.
-
-   Le colonne non sono qui dentro: sono un oggetto
-   (`{ che: 'colonna' }`), perché è il livello a decidere dove
-   metterle — su una cella di muro, dove non ci cammina nessuno. */
+// La sala del trono: pietra nobile e passatoia rossa, la stanza più vuota.
+// Le colonne non sono qui: sono un oggetto (`{ che: 'colonna' }`) che il livello
+// posiziona. Vedi docs/core/grafica.md.
 import { marmo, pietra, roccia, tappeto, lastre } from '../materiali/pattern.js'
 
 export const TRONO = {
@@ -34,11 +22,9 @@ export const TRONO = {
 
   campi: { lustro: 7, crollo: 6, consumo: 5 },
 
-  /* il pavimento è **caldo** e il muro **freddo**: sono di marmo tutti
-     e due, e senza questo salto di temperatura la sala diventava un
-     unico tessuto chiaro in cui non si vedeva più dove si cammina —
-     era successo, e i personaggi ci sparivano dentro */
-  fondo: ['#6b6252', '#514a3d'],            // i giunti, caldi e scuri
+  // pavimento caldo, muro freddo: stesso marmo, e senza il salto di temperatura
+  // la sala diventava un unico tessuto chiaro in cui i personaggi sparivano
+  fondo: ['#6b6252', '#514a3d'],
   chiazze: ['#d8cfb8', '#4a4438'],
   tessere: ['#cdc4ad', '#8f96ad', '#c9b06a', '#8e9db4'],
   tappeto: ['#a8322f', '#78201e'],

@@ -1,14 +1,5 @@
-/* ═════ LE FOGNE ═════
-   Mattoni bagnati, verde di alghe, acqua ferma. La luce è verde
-   perché il fuoco di una fogna, in un gioco, è verde: è una
-   convenzione che i bambini conoscono già, e serve a non fare una
-   seconda cripta.
-
-   Il mattone ha una macchia dove le alghe l'hanno tinto e una dove
-   l'acqua l'ha marcito — due cause diverse, due campi diversi — e
-   sotto l'umido, la roccia grezza della fogna vera. Il pavimento
-   bagnato torna tre volte, più melmoso al centro, e dove l'acqua ha
-   portato via tutto restano le mattonelle nude. */
+// Le fogne: luce verde per convenzione (il fuoco di una fogna, in un gioco, è
+// verde) — serve a non fare una seconda cripta. Vedi docs/core/grafica.md.
 import { mattoni, roccia, bagnato, mattonelle } from '../materiali/pattern.js'
 
 export const FOGNE = {
@@ -40,8 +31,6 @@ export const FOGNE = {
 
   varianti: ['liscio', 'liscio', 'umidiccio', 'licheni', 'usura'],
 
-  /* i ciottoli restano nella melma, ma anche loro si ammucchiano contro
-     il muro: la corrente li spinge lì, non al centro del canale */
   dettagli: [['pozze', 1.9, 'melma'], ['muschio', 2.9, 'umido'],
              ['crepe', 4.3, 'rotto'], ['ciottoli', 5, ['melma', 'controMuro']]],
 }

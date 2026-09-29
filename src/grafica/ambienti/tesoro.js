@@ -1,14 +1,5 @@
-/* ═════ LA SALA DEL TESORO ═════
-   Mosaico e marmo. Le tessere sono quattro tinte, non dieci, e
-   nessuna a piena gola: ci devono camminare sopra dei personaggi, non
-   è una vetrata. Il motivo sta in una cornice lungo i muri e il resto
-   è vuoto apposta — è il vuoto che fa sembrare prezioso il disegno.
-
-   Il marmo ha una macchia più lucida dove il fuoco lo scalda, e dove
-   il rivestimento è caduto si vede prima la pietra viva e poi la
-   roccia della fondazione. Il mosaico resta uno solo — è già lui il
-   motivo — ma ai margini, dove è saltato, il marmo nudo sotto, sempre
-   più consumato verso il centro della lacuna. */
+// La sala del tesoro: mosaico e marmo, il motivo in una cornice lungo i muri e il
+// resto vuoto apposta — è il vuoto che fa sembrare prezioso il disegno.
 import { marmo, pietra, roccia, mosaico, lastre } from '../materiali/pattern.js'
 
 export const TESORO = {
@@ -23,11 +14,7 @@ export const TESORO = {
   ],
 
   suolo: [
-    /* IL FONDO DEL MOSAICO È MARMO, NON ORO. Con l'oro come tinta di
-       base il pavimento diventava una lastra dorata che si mangiava la
-       stanza — e il commento qui sopra lo diceva già: «nessuna a piena
-       gola, ci devono camminare sopra dei personaggi». L'oro resta
-       dov'era: nelle tessere della cornice (`tessere`, `oro`). */
+    // il fondo del mosaico è marmo, non oro: l'oro come base si mangiava la stanza
     mosaico('#e4d8bd', '#bfae8e'),
     lastre('#b8a37e', '#8f7d5e', { dove: 'crollo', quanto: 0.14, seme: 3 }),
     lastre('#a89572', '#7f6d50', { modo: 'consumato', dove: 'crollo', quanto: 0.08, seme: 6 }),
