@@ -1,10 +1,8 @@
 # English a mondi — il progetto
 
-Stato: **motore e dati dei primi due mondi fatti, la vista no** (29 settembre
-2026). Il gioco a schermo è ancora `views/LinguaGame.vue` con la campagna
-vecchia: la mappa del tesoro e le schermate sono il passo dopo, e partono
-dalla sezione [«L'interfaccia per la vista»](#linterfaccia-per-la-vista) in
-fondo. Cosa manca è in [da-fare.md](da-fare.md).
+Stato: **i primi due mondi si giocano** (29 settembre 2026): motore, dati e
+vista. La carta English apre la mappa del tesoro; com'è fatta la vista sta in
+[mondi-vista.md](mondi-vista.md), cosa manca in [da-fare.md](da-fare.md).
 
 Sostituisce la campagna in fila di `data/campagna-inglese.js`, dove ogni
 tappa portava 42–73 parole nuove e le frasi arrivavano solo all'undicesima:
@@ -133,9 +131,10 @@ del sotterraneo (`docs/apprendimento/la-domanda.md`).
 
 Riparte da zero nella fila nuova, ma **le parole sapute restano sapute**: le
 chiavi `en:` e `frase:` non si rinominano, quindi le prime tappe le passa in
-fretta. Il gioco libero resta a chi l'aveva. La campagna vecchia è un indice
-in `p.eng`: la nuova va sotto un nome suo, e il travaso si pubblica insieme alla
-mappa nuova, mai prima.
+fretta. Il gioco libero resta a chi l'aveva: «Il gioco di prima», in fondo
+alla mappa, per chi aveva finito la campagna vecchia. La campagna vecchia è un
+indice in `p.eng` e non si tocca; la nuova sta sotto un nome suo
+(`campagne.inglese`), quindi un travaso non serve ([mondi-vista.md](mondi-vista.md#il-posto-del-gioco)).
 
 ## Estendibile
 
@@ -167,8 +166,7 @@ che la vista userà.
 Tutto in `src/giochi/inglese/`, con la convenzione dei giochi nuovi
 ([../core/convenzione-giochi.md](../core/convenzione-giochi.md)): `dati/`
 sono tabelle, `motore/` gira in Node e non sa di monete né di schermo.
-Mancano ancora `gioco.js`, `viste/`, `scena/` e `Gioco.vue`: il gioco non è
-registrato in `giochi/indice.js`, quindi in home non cambia niente.
+`gioco.js`, `Gioco.vue`, `viste/` e `scena/` sono in [mondi-vista.md](mondi-vista.md).
 
 | file | cosa tiene |
 |---|---|
@@ -337,5 +335,5 @@ testo, opzioni: [{ testo, giusta }], giusta }] }`. Un `Tocchi` per tutto il
 capitolo; a fine lettura pagano `domandeCheLPagano(giuste, t.aPagamento)`
 domande.
 
-Nei test: `unita/inglese-mondi`, senza browser. I bersagli `data-…` della
-vista si scriveranno qui quando la vista ci sarà.
+Nei test: `unita/inglese-mondi`, senza browser. La vista e i suoi bersagli
+`data-…`: [mondi-vista.md](mondi-vista.md#nei-test).

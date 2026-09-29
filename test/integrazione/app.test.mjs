@@ -23,54 +23,36 @@ const avvio = await page.evaluate(() => ({
 }))
 
 /* ══════════ 2. INGLESE: si gioca, le monete arrivano ══════════
-   English è a campagna: prima la mappa delle tappe, poi il gioco. Le
-   risposte si toccano dall'aggancio `window.__eng`, perché il bersaglio
-   ora non è più sempre una parola scritta — può essere un ascolto o una
-   frase, e cercarlo nel DOM vorrebbe dire riscrivere il gioco nel test. */
-await page.click('.carta.eng')
-await page.waitForSelector('.tappa')
+   English è la mappa del tesoro (src/giochi/inglese): si entra nella
+   prima tappa e si risponde giusto qualche volta, leggendo la risposta
+   dal DOM — `data-giusta` sulle opzioni, `data-posto` sulle tessere. */
+await page.click('.carta.gioco[data-gioco="inglese"]')
+await page.waitForSelector('[data-mappa-inglese] [data-tappa]')
 const mappaEn = await page.evaluate(() => ({
-  tappe: document.querySelectorAll('.tappa').length,
-  aperte: document.querySelectorAll('.tappa:not(.chiusa)').length,
+  tappe: document.querySelectorAll('[data-tappa]').length,
+  aperte: document.querySelectorAll('[data-tappa][data-stato="aperta"]').length,
 }))
-await page.click('.tappa')
-await page.waitForSelector('.scelte .scelta')
-const inglese = await page.evaluate(async () => {
-  const g = window.__eng
-  const visti = [], tipi = {}
-  let giuste = 0
-  for (let i = 0; i < 30 && g.fase.value === 'gioco'; i++) {
-    const t = g.turno.value
-    visti.push(t.chiave)
-    tipi[t.tipo] = (tipi[t.tipo] || 0) + 1
-    g.rispondi(g.giusta()); giuste++
-    for (let j = 0; j < 40 && g.turno.value === t && g.fase.value === 'gioco'; j++)
-      await new Promise(r => setTimeout(r, 50))
-  }
-  // distanza minima fra due comparse dello stesso elemento
-  let minDist = 99
-  const ultima = new Map()
-  visti.forEach((p, i) => {
-    if (ultima.has(p)) minDist = Math.min(minDist, i - ultima.get(p))
-    ultima.set(p, i)
-  })
-  const cont = {}; visti.forEach(p => cont[p] = (cont[p] || 0) + 1)
-  return {
-    turni: visti.length, giuste, tipi,
-    paroleDiverse: new Set(visti).size,
-    distanzaMinima: minDist === 99 ? 'mai ripetute' : minDist,
-    maxRipetizioni: Math.max(...Object.values(cont)),
-    fase: g.fase.value,
-    tappaSuperata: g.progresso.value.tappa,
-  }
-})
-
-/* superata la tappa si finisce sulla schermata del premio, che non ha la
-   barra in alto: prima si torna alla mappa, poi si leggono le monete */
-const giusteEn = await page.evaluate(() => window.__eng.hud.giuste)
-if (await page.locator('.finale').count())
-  await page.getByRole('button', { name: 'La mappa' }).click()
-await page.waitForSelector('.tappa')
+await page.click('[data-tappa="che-cose-1"]')
+const formati = {}
+let giusteEn = 0
+for (let i = 0; i < 6; i++) {
+  await page.waitForSelector('[data-domanda]')
+  await page.waitForTimeout(400)
+  const f = await page.locator('[data-domanda]').getAttribute('data-formato')
+  formati[f] = (formati[f] || 0) + 1
+  if (await page.locator('[data-banco] [data-tessera]').count()) {
+    const t = await page.locator('[data-banco] [data-tessera][data-posto]').evaluateAll(
+      els => els.map(e => [e.dataset.tessera, +e.dataset.posto]).sort((a, b) => a[1] - b[1]))
+    for (const [id] of t) await page.click(`[data-banco] [data-tessera="${id}"]`)
+    await page.click('[data-azione="consegna"]')
+  } else await page.click('[data-opzione][data-giusta]')
+  await page.waitForSelector('[data-esito]')
+  if (await page.locator('[data-esito="giusta"]').count()) giusteEn++
+  await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 12000 })
+}
+const inglese = { turni: 6, giuste: giusteEn, formati }
+await page.click('.barra-app button[aria-label="indietro"]')
+await page.waitForSelector('[data-mappa-inglese]')
 
 const dopoInglese = await page.evaluate(giuste => ({
   monete: +document.querySelector('.gettone b').textContent,

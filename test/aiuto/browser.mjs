@@ -181,7 +181,12 @@ export async function semina(page, profilo, giocatore = GIOCATORE) {
     r.onsuccess = () => {
       const db = r.result, tx = db.transaction('kv', 'readwrite'), s = tx.objectStore('kv')
       const g = s.get('profilo:' + chi)
-      g.onsuccess = () => { s.put({ ...(g.result || {}), ...p }, 'profilo:' + chi) }
+      // il profilo sta in una busta { __v, __t } (store/storage.js): si semina dentro, col tempo di adesso
+      g.onsuccess = () => {
+        const x = g.result
+        const busta = x && typeof x === 'object' && '__v' in x && typeof x.__t === 'number'
+        s.put({ __v: { ...((busta ? x.__v : x) || {}), ...p }, __t: Date.now() }, 'profilo:' + chi)
+      }
       tx.oncomplete = ok
       tx.onerror = () => ko(new Error('scrittura fallita'))
     }
@@ -202,7 +207,10 @@ export function leggiProfilo(page, giocatore = GIOCATORE) {
     r.onerror = () => ko(new Error('IndexedDB non si apre'))
     r.onsuccess = () => {
       const g = r.result.transaction('kv', 'readonly').objectStore('kv').get('profilo:' + chi)
-      g.onsuccess = () => ok(g.result || null)
+      g.onsuccess = () => {
+        const x = g.result
+        ok((x && typeof x === 'object' && '__v' in x && typeof x.__t === 'number' ? x.__v : x) || null)
+      }
       g.onerror = () => ko(new Error('lettura fallita'))
     }
   }), giocatore)

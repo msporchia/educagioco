@@ -3,8 +3,20 @@
    sono spiegati in docs/apprendimento/eta-e-portata.md e saperi.md; i giochi
    in prova in docs/genitori/interruttori.md; senzaFine in
    docs/core/primati.md. L'albo dei progressi resta fuori di proposito. */
-import { GIOCHI_NUOVI } from '../giochi/indice.js'
+import { GIOCHI_NUOVI, gioco } from '../giochi/indice.js'
 import { LIBERE_RACCONTO } from './campagne-castello.js' // le quattro partite libere del castello
+
+// un gioco nuovo che ha preso la carta di uno vecchio sta al suo posto, non in coda
+const AL_POSTO_DI_UNO_VECCHIO = ['inglese']
+function riga(g) {
+  return { chiave: g.chiave, ico: g.icona, nome: g.nome, che: g.che,
+           area: g.area, come: g.come, piccoli: !!g.piccoli,
+           cresce: !!g.cresce, grandi: !!g.grandi, posto: !!g.posto, quiz: !!g.quiz,
+           tinta: g.tinta,
+           sperimentale: !!g.sperimentale, serve: g.serve || [],
+           chiede: g.chiede || [],
+           senzaFine: g.senzaFine || null }
+}
 
 export const GIOCHI = [
   // senza `grandi`: la prima tappa è tarata su 6 anni (arcoDelGioco), la portata già non offre una tappa fuori mira
@@ -16,8 +28,8 @@ export const GIOCHI = [
       dettagli: d => [`livello ${d.livello}`, `${d.centri} centri`, `serie ${d.serie}`],
       vecchio: p => (p && p.best ? p.best.math : 0),
     } },
-  { chiave: 'inglese',    ico: '🌐', nome: 'English',
-    che: 'parole, verbi e frasi in inglese', area: 'parole', come: 'domande', grandi: true },
+  // l'inglese a mondi ha preso il posto della carta di prima, e ne tiene il posto: davanti allo spagnolo
+  riga(gioco('inglese')),
   { chiave: 'spagnolo',   ico: '🇪🇸', nome: 'Spagnolo',
     che: 'parole, verbi e frasi in spagnolo', area: 'parole', come: 'domande', grandi: true },
   // l'esempio per cui `chiede` esiste: la cassa guarda moltiplicazioni/divisioni da sempre (vedi docs/apprendimento/saperi.md)
@@ -38,13 +50,7 @@ export const GIOCHI = [
   { chiave: 'generale',   ico: '🎖️', nome: 'Il generale',
     che: 'sequenze, cicli ed eventi', area: 'logica', come: 'strategia', grandi: true },
   // i giochi di src/giochi/ si aggiungono da soli dal loro manifesto: ripeterli qui sarebbe tenerli allineati a mano
-  ...GIOCHI_NUOVI.map(g => ({ chiave: g.chiave, ico: g.icona, nome: g.nome, che: g.che,
-                              area: g.area, come: g.come, piccoli: !!g.piccoli,
-                              cresce: !!g.cresce, grandi: !!g.grandi, posto: !!g.posto, quiz: !!g.quiz,
-                              tinta: g.tinta,
-                              sperimentale: !!g.sperimentale, serve: g.serve || [],
-                              chiede: g.chiede || [],
-                              senzaFine: g.senzaFine || null })),
+  ...GIOCHI_NUOVI.filter(g => !AL_POSTO_DI_UNO_VECCHIO.includes(g.chiave)).map(riga),
 ]
 
 export const CHIAVI_GIOCHI = GIOCHI.map(g => g.chiave)

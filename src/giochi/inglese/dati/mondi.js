@@ -2,7 +2,7 @@
 // aprono, e le categorie di data/words.js che finiscono nel loro 📦
 // cassetto. Il perché di ogni scelta sta in docs/lingue/mondi.md.
 //
-// Un mondo: { id, nome, insegna, dopo: [id…] (tutti finiti), dopoUno?: [id…]
+// Un mondo: { id, nome, disegno (il disegnino sulla mappa), insegna, dopo: [id…] (tutti finiti), dopoUno?: [id…]
 //   (basta uno), categorie: [cat di words.js], verbi?: true (i verbi di
 //   data/verbi.js vanno nel suo cassetto), tappe: [...] }. Un mondo senza
 //   tappe è «in arrivo»: sta sulla mappa ma non si apre.
@@ -28,7 +28,7 @@ const bandiera = (id, portata) =>
 
 export const MONDI = [
   {
-    id: 'che-cose', nome: 'Che cos’è', insegna: 'it is a …, is it …?, colori, numeri, plurale',
+    id: 'che-cose', nome: 'Che cos’è', disegno: 'lente', insegna: 'it is a …, is it …?, colori, numeri, plurale',
     dopo: [], categorie: ['a', 'c', 'n', 's', 'j'],
     tappe: [
       t('che-cose-1', 'È un cane', 'cane', 'it-is',
@@ -45,7 +45,7 @@ export const MONDI = [
     ],
   },
   {
-    id: 'mie-cose', nome: 'Io e le mie cose', insegna: 'I like, this is my, have got / has got',
+    id: 'mie-cose', nome: 'Io e le mie cose', disegno: 'casetta', insegna: 'I like, this is my, have got / has got',
     dopo: ['che-cose'], categorie: ['f', 'k', 'p', 'b'],
     tappe: [
       t('mie-cose-1', 'Mi piace', 'torta', 'i-like',
@@ -61,19 +61,19 @@ export const MONDI = [
       bandiera('mie-cose-bandiera', 23),
     ],
   },
-  { id: 'dove', nome: 'Dove?', insegna: 'there is / there are, where is, in, on, under',
+  { id: 'dove', nome: 'Dove?', disegno: 'scatola', insegna: 'there is / there are, where is, in, on, under',
     dopo: ['che-cose'], categorie: ['h'], tappe: [] },
-  { id: 'saper-fare', nome: 'Cosa sai fare', insegna: 'can, can’t, can you?',
+  { id: 'saper-fare', nome: 'Cosa sai fare', disegno: 'palla', insegna: 'can, can’t, can you?',
     dopo: ['che-cose'], categorie: ['g'], verbi: true, tappe: [] },
-  { id: 'giornata', nome: 'La mia giornata', insegna: 'il presente con I, you, we; at + ora',
+  { id: 'giornata', nome: 'La mia giornata', disegno: 'sole', insegna: 'il presente con I, you, we; at + ora',
     dopo: ['mie-cose'], categorie: ['d'], tappe: [] },
-  { id: 'lui-e-lei', nome: 'Lui e lei', insegna: 'la s della terza persona, does / doesn’t',
+  { id: 'lui-e-lei', nome: 'Lui e lei', disegno: 'coppia', insegna: 'la s della terza persona, does / doesn’t',
     dopo: ['giornata'], categorie: ['y'], tappe: [] },
-  { id: 'adesso', nome: 'Adesso', insegna: 'am / is / are + -ing',
+  { id: 'adesso', nome: 'Adesso', disegno: 'bicicletta', insegna: 'am / is / are + -ing',
     dopo: ['giornata'], categorie: ['t', 'w'], tappe: [] },
-  { id: 'ieri', nome: 'Ieri', insegna: 'was / were, il passato in -ed e gli irregolari',
+  { id: 'ieri', nome: 'Ieri', disegno: 'clessidra', insegna: 'was / were, il passato in -ed e gli irregolari',
     dopo: [], dopoUno: ['lui-e-lei', 'adesso'], categorie: [], tappe: [] },
-  { id: 'prova-finale', nome: 'La prova finale', insegna: 'tutto insieme', prova: true,
+  { id: 'prova-finale', nome: 'La prova finale', disegno: 'forziere', insegna: 'tutto insieme', prova: true,
     dopo: ['che-cose', 'mie-cose', 'dove', 'saper-fare', 'giornata', 'lui-e-lei', 'adesso', 'ieri'],
     categorie: [], tappe: [] },
 ]

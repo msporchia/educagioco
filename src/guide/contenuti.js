@@ -786,6 +786,27 @@ export const AIUTI = {
       ] },
     ],
   },
+
+  inglese: {
+    emoji: '🗺️', titolo: 'English',
+    blocchi: [
+      'Una mappa del tesoro: ogni isola è un mondo, ogni medaglione una tappa. Finito un mondo, se ne aprono altri.',
+      { titolo: 'Come si gioca', righe: [
+        'Prima si riconoscono le parole e le frasi, poi le frasi **si compongono**: tocca le parole e vanno in fila, ritoccale e tornano giù.',
+        '**Tocca una parola inglese**, o tieni premuta una tessera, per sapere cosa vuol dire. Le prime volte è gratis; dopo, quella domanda non paga, e la moneta in alto lo dice subito.',
+        'Sbagliare non fa perdere niente, nemmeno alla bandiera: il gioco dice il perché e come si fa, e si va avanti.',
+        'Le tacche attorno a una tappa dicono quanto è imparata, da 0 a 10. Col tempo calano e il disegno sbiadisce: rigiocarla le fa risalire.',
+      ] },
+      { titolo: 'Il libro e il cassetto', righe: [
+        '📖 **Il libro**: un capitolo da leggere in inglese e qualche domanda in italiano. Si apre quando arrivi alla bandiera del mondo.',
+        '📦 **Il cassetto**: le altre parole del mondo, per chi ne vuole di più. Si apre alla prima tappa vinta.',
+      ] },
+      { titolo: 'Cosa allena', righe: [
+        'Le parole e le frasi di base, una struttura alla volta: «it is», «is it?», «I like», «have got».',
+        'Leggere un testo breve e capirlo.',
+      ] },
+    ],
+  },
 }
 
 export const guida = id => GUIDE.find(g => g.id === id) || null

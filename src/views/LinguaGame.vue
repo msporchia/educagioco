@@ -14,7 +14,8 @@ import { suono } from '../audio.js'
 import { pronuncia, haVoce, prepara, zittisci } from '../voce.js'
 import Barra from '../components/Barra.vue'
 
-const props = defineProps({ lingua: { type: String, default: 'en' } })
+// `libero`: aperto dall'inglese a mondi, solo per il gioco libero di chi l'aveva (docs/lingue/mondi.md)
+const props = defineProps({ lingua: { type: String, default: 'en' }, libero: { type: Boolean, default: false } })
 const emit = defineEmits(['vai'])
 
 // non reattivo di proposito: la lingua non cambia mentre si gioca
@@ -22,11 +23,11 @@ const L = linguaDi(props.lingua)
 const CAMPAGNA = L.CAMPAGNA
 
 const PER_MONETA = 10
-const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine
+const fase = ref(props.libero ? 'gioco' : 'mappa')   // mappa | gioco | vinta | trionfo | fine
 
 /* ---------- la campagna ---------- */
 const progresso = computed(() => linguaProgresso(L.campo))
-const tappaIdx = ref(0)            // -1 = gioco libero
+const tappaIdx = ref(props.libero ? -1 : 0)   // -1 = gioco libero
 const tappa = computed(() => L.tappaDi(tappaIdx.value))
 const campagna = computed(() => tappaIdx.value >= 0)
 // il lucchetto guarda anche l'età (data/portata.js, campo `portata`)
@@ -191,6 +192,7 @@ function prossimaTappa() { inizia(Math.min(CAMPAGNA.length - 1, tappaIdx.value +
 function allaMappa() {
   clearTimeout(timerId)
   zittisci()
+  if (props.libero) return emit('vai', 'home')
   fase.value = 'mappa'
   tappaIdx.value = Math.min(CAMPAGNA.length - 1, progresso.value.tappa)
 }
@@ -260,7 +262,7 @@ const totaleSapute = computed(() => sapute.value.reduce((a, b) => a + b, 0))
 const totaleChiavi = CAMPAGNA[CAMPAGNA.length - 1].chiavi.length
 
 onMounted(() => {
-  tappaIdx.value = Math.min(CAMPAGNA.length - 1, progresso.value.tappa)
+  if (!props.libero) tappaIdx.value = Math.min(CAMPAGNA.length - 1, progresso.value.tappa)
   /* aggancio per i test automatici: `__eng` per l'inglese e `__es` per lo
      spagnolo, più `__lingua` che punta sempre al gioco aperto adesso. */
   const api = { fase, hud, turno, tappa, tappaIdx, rispondi, inizia, progresso,
@@ -268,6 +270,7 @@ onMounted(() => {
                 giusta: () => turno.value && turno.value.opzioni.find(o => o.giusta) }
   window[L.id === 'en' ? '__eng' : '__es'] = api
   window.__lingua = api
+  if (props.libero) inizia(-1)
 })
 onUnmounted(() => { clearTimeout(timerId); zittisci() })
 </script>
