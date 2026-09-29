@@ -186,6 +186,30 @@ domanda sulla vista.
 Il gemello imperativo non ha la lente: lì guarda un grande, su uno schermo
 grande.
 
+### Il pittore dei grafici e delle tabelle
+
+`grafica/pittori/dati.js` (pittogramma, istogramma, tabella) è l'unico
+gruppo di pittori che disegna **su un foglio chiaro**: un grafico è cosa
+da quaderno (inchiostro scuro su carta), non da carta blu notte come gli
+altri. Il pittogramma riceve **quanti disegni**, non quanto valgono — la
+moltiplicazione per la legenda (`vale`) è la domanda, la fa il bambino.
+Tutto è tarato per un riquadro di 148 pixel: poche voci, etichette corte,
+e nell'istogramma i numeri sull'asse solo una tacca sì e una no (le
+tacche senza numero restano tutte, con la loro riga sottile — leggere
+dove cade una cima fra due numeri scritti è metà della lezione).
+
+### Il pittore delle figure a attributi
+
+`grafica/pittori/figure.js`, condiviso da `sequenze.js` (cosa viene
+dopo, chi non c'entra) e `analogie.js` (A sta a B come C sta a ?): la
+stessa figura disegnata due volte in due moduli si vedrebbe diversa. Una
+figura ha cinque attributi — forma, colore, quante, grande/piccola,
+rotazione — perché sono le cinque cose che una regola può far cambiare;
+il pittore non sa quale sia la regola e quali il rumore, lo sa il modulo.
+**La taglia non si legge confrontando fila e tasto**: `grande` scala
+dentro la propria cella (una figura grande la riempie, una piccola sta
+in mezzo), il paragone si fa solo fra celle vicine nella stessa fila.
+
 ### Il pittore delle bilance
 
 `grafica/pittori/bilance.js` disegna una o due bilance a due piatti,
