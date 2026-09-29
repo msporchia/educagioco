@@ -1,10 +1,4 @@
-/* ═════ LA SERPE ═════
-   Tutta collo: le spire per terra e la testa alzata a mezz'aria, che è
-   la posa di chi sta per scattare. Una serpe disegnata distesa è una
-   corda; è l'alzata che la rende una minaccia.
-
-   La lingua esce a intervalli e non di continuo — una lingua sempre
-   fuori è un pupazzo che fa la linguaccia. */
+// la testa alzata a mezz'aria è la posa di chi sta per scattare: distesa è solo una corda
 import { mescola, tondo } from '../comune.js'
 import { occhi } from '../segni.js'
 

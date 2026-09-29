@@ -1,12 +1,4 @@
-/* ═════ LO SPETTRO ═════
-   Non tocca terra: dove ci sarebbero i piedi il corpo si sfilaccia in
-   code che ondeggiano. È l'unica creatura del bestiario senza appoggio,
-   e per questo l'unica disegnata **in trasparenza** — attraverso di lei
-   si vede la pietra.
-
-   Il cappuccio vuoto con dentro due luci è più inquietante di
-   qualunque teschio, e non mostra niente di macabro: dentro non c'è
-   nessuno, ed è tutto lì. */
+// l'unica creatura senza appoggio, e per questo l'unica disegnata in trasparenza
 import { mescola, tondo } from '../comune.js'
 
 export const SPETTRO = {
@@ -41,8 +33,7 @@ export const SPETTRO = {
         tondo(r, 0, -7.6 * s, 3 * s, 3.2 * s, '#1b1f38')
       })
       if (stato === 'ko') return
-      // le due luci dentro il cappuccio: fuori dal velo, che se no si
-      // spengono insieme al lenzuolo e la faccia sparisce
+      // le luci stanno fuori dal velo, o si spengono insieme al lenzuolo e la faccia sparisce
       const pulsa = 0.8 + Math.sin(t * 3) * 0.2
       for (const v of [-1, 1]) {
         r.velo(0.5, () => r.cerchio(v * 1.3 * s, -8 * s, 1.5 * s * pulsa, C.luce))

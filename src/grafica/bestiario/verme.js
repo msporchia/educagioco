@@ -1,11 +1,4 @@
-/* ═════ IL VERMONE ═════
-   Un anellide grosso quanto un braccio, uscito per metà dal terreno.
-   È fatto di segmenti che si stringono e si allargano a onda: quella è
-   tutta la sua animazione, e senza sarebbe un tubo.
-
-   La bocca è un anello di denti, non una faccia. Non ha occhi apposta
-   — è la cosa che lo rende inquietante a un bambino senza mostrare
-   niente di cruento: quello che non ti guarda è peggio. */
+// bocca ad anello di denti, niente occhi apposta: quello che non ti guarda è peggio, senza niente di cruento
 import { mescola, tondo } from '../comune.js'
 
 export const VERME = {
