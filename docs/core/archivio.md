@@ -59,7 +59,7 @@ scaricano da sole su `visibilitychange` e `pagehide`.
 Chiavi di casa, non di un bambino: stanno fuori perché dentro morirebbero
 con il profilo, o lo gonfierebbero a ogni scrittura. **Un dato fuori dai
 profili non se ne va da solo**: chi elimina un bambino deve portarselo via
-(`scordaSessioni`).
+(`scordaSessioni`, `scordaIstantanee`).
 
 | chiave | cosa | dove si legge |
 |---|---|---|
@@ -67,6 +67,7 @@ profili non se ne va da solo**: chi elimina un bambino deve portarselo via
 | `incidenti` | gli ultimi guasti | [guasti.md](guasti.md) |
 | `giudizi`, `giudizi-accesi` | il quaderno dei giudizi sulle domande | [`../apprendimento/`](../apprendimento/README.md) |
 | `sessioni:<id>` | quanto ha giocato, e a cosa | [sessioni.md](sessioni.md) |
+| `istantanee:<id>` | una fotografia a settimana di quanto sa, per le frecce di «Come va» | [`../genitori/come-va.md`](../genitori/come-va.md) |
 | `cestino` | le ultime copie dei profili cancellati | [`../genitori/`](../genitori/README.md) |
 | `note-lette`, `posta-avvisi`, `posta-detti` | la posta dei grandi | [`../genitori/`](../genitori/README.md) |
 | `costruttore:<id>` | i programmi del costruttore, con una `v` loro | [`../costruttore/`](../costruttore/README.md) |

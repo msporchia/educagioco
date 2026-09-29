@@ -23,7 +23,15 @@ dell'età mostra solo una riga: *«Leonardo ha 10 anni · modifica ›»*.
 sotto **il quadro di quell'età**.
 
 **Come va** risponde all'unica domanda che le altre due non possono: *sta
-funzionando?* Tutte le domande che esistono, ordinate da quella che gli va
+funzionando?* In cima **una mattonella per materia** — italiano, matematica,
+tempo e orologio, le tabelline, l'inglese… — con quanto è saputo e una
+freccia che dice se è salito o sceso rispetto a due settimane fa; toccandola
+si entra (per le tabelline, la tavola pitagorica colorata). Sotto, **la
+settimana**: quanti minuti ha giocato, cosa gli è difficile — con tre tasti:
+provala, rimandala di mezzo anno, va bene così — e cosa è migliorato («da 4
+a 9 su 10»).
+
+Più in basso, tutte le domande che esistono, ordinate da quella che gli va
 peggio a quella che gli va meglio, con cinque cuori sulla percentuale di
 risposte giuste — **sbiaditi finché le prove sono meno di otto**, perché una
 su tre non è «il 33%», è un bambino che ha visto quella cosa tre volte.
@@ -40,7 +48,7 @@ Azzerare butta il conto e **non** il ripasso.
 
 ### Quanto ha giocato
 
-In cima a «Come va», prima delle domande: **oggi**, **sette giorni**,
+In «Come va», dopo la settimana e prima delle domande: **oggi**, **sette giorni**,
 **trenta giorni**. Una fila di barre per i giorni — quelle vuote comprese,
 perché tre giorni di fila a zero sono un'informazione — e sotto *a cosa* ha
 giocato, col tempo accanto. Impostazioni, albo e guide non contano, e
