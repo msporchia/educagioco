@@ -1,40 +1,17 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA TORRE — chi prende di mira e chi spara.
-
-   Di suo tiene quattro cose: dove sta, di che tipo è, a che livello è
-   arrivata, e che mestiere ha scelto di fare (`ramo`). Tutto il resto —
-   quanto fa male, ogni quanto spara, quanto lontano arriva — lo chiede a
-   `data/ops.js` e `data/castello.js`, che sono gli unici a saperlo.
-
-   Non sa quanto costa: il prezzo lo decide chi compra (nel gioco è
-   l'operazione in colonna appena finita), e la torre si limita a
-   nascere, salire di gradino e, una volta sola a metà scaletta,
-   specializzarsi.
-
-   `agisci` è il suo unico verbo: passa un istante, e se è il momento
-   torna i colpi che ha lanciato. Il ghiaccio è il caso strano — non
-   lancia niente, gela sul posto — e resta l'unica riga di questo file
-   che tratta un tipo diversamente dagli altri.
-   ═══════════════════════════════════════════════════════════════════ */
+// La torre: tiene solo dove sta, tipo, livello e ramo. Quanto fa male, ogni
+// quanto spara, quanto lontano arriva lo chiede a data/ops.js e
+// data/castello.js. Non sa quanto costa (lo decide chi compra). `agisci` è
+// il suo unico verbo; il ghiaccio è l'unico caso che non lancia un colpo.
 import { TORRI } from '../../data/ops.js'
 import { tiroConDoni, geloConDoni, raggioDi, doniZero } from '../../data/castello.js'
 import { dist } from '../../grafica/geometria.js'
 import { Colpo } from './colpo.js'
 import { Schizzo } from './schizzo.js'
 
-/* di quanto si allarga il raggio a ogni gradino: poco, perché la
-   crescita che si deve vedere è quella del danno */
-const RAGGIO_PIU = 0.04
-
-/* i doni a riposo, per chi nasce senza regali: una torre della campagna
-   non sa che i regali esistano, e non deve controllare niente */
-const NIENTE = doniZero()
+const RAGGIO_PIU = 0.04   // poco: la crescita che si deve vedere è quella del danno
+const NIENTE = doniZero() // i doni a riposo, per chi nasce senza regali
 
 export class Torre {
-  /* `doni` sono i regali della partita libera, già ridotti a numeri da
-     `doniDi` (`data/castello.js`). Li passa la battaglia, che è l'unica
-     a sapere se la tappa li prevede; qui dentro sono un dato come il
-     livello, e a zero regali la torre spara esattamente come prima. */
   constructor({ x, y, tipo, lv = 1, ramo = null, ricarica = 0, doni = null }) {
     this.x = x; this.y = y
     this.tipo = tipo
@@ -51,39 +28,19 @@ export class Torre {
            raggioDi(this.ramo) * this.doni.raggio
   }
 
-  /* Salire di un gradino, e se è il gradino del bivio anche prendere una
-     strada. Il ramo si sceglie una volta sola: chi ce l'ha già lo tiene. */
+  // il ramo si sceglie una volta sola: chi ce l'ha già lo tiene
   sale(ramo = null) { this.lv++; if (ramo && !this.ramo) this.ramo = ramo; return this }
   sposta(x, y) { this.x = x; this.y = y; return this }
 
-  /* la fotografia da mettere in un'istantanea: dati puri, senza classe,
-     così chi la salva non deve sapere che esiste questo file */
   dati() {
     return { x: this.x, y: this.y, tipo: this.tipo, lv: this.lv,
              ramo: this.ramo, ricarica: this.ricarica }
   }
   static da(dati) { return new Torre(dati) }
 
-  /* ── un istante di torre ──
-     `null` se non è successo niente; se no `{ colpi, schizzi, sparo }`.
-     Chi prende di mira: i nemici più avanti, uno per salva. Le bombe
-     alte ne lanciano due, e se il secondo bersaglio non c'è ripiegano
-     sul primo — due colpi sulla stessa testa, non un colpo sprecato.
-
-     ── e chi è immune non si guarda nemmeno ──
-     La torre prende di mira **solo chi può ferire**. Se a tiro ci sono
-     solo immuni non spara, e non consuma la ricarica: resta pronta, e
-     il primo che può ferire lo prende subito, invece di arrivargli
-     addosso mentre lei ricarica un colpo buttato. Sparava lo stesso,
-     col colpo che rimbalzava: l'idea era che una torre ferma sembrasse
-     rotta, ma un colpo sprecato su chi non si può toccare è proprio
-     quello che un bambino non farebbe mai — e a guardarlo sembrava la
-     torre a sbagliare, non il mostro a essere immune. Il ghiaccio fa
-     lo stesso: la folata parte solo se dentro c'è qualcuno da gelare.
-     Il segno «immune» sopra la testa resta, e adesso dice una cosa
-     sola: un colpo ad area o un rimbalzo della catena, tirato a chi si
-     poteva ferire, ha preso dentro anche un immune (`respingi` in
-     `nemico.js`). Chi è a terra per rialzarsi non si guarda proprio. */
+  // `null` se non succede niente, se no { colpi, schizzi, sparo }. Prende di
+  // mira solo chi può ferire: con solo immuni a tiro resta ferma e non
+  // consuma la ricarica (vedi docs/castello/torri.md).
   agisci(dt, { nemici, via, viaDi, S }) {
     this.ricarica -= dt
     if (this.ricarica > 0) return null
@@ -98,9 +55,6 @@ export class Torre {
     this.ricarica = tiro.ricarica
 
     if (this.gelante) {
-      /* il gelo di una torre alta frena di più e dura di più; l'onda si
-         allarga *piano* e resta lì a sbiadire: è una folata di freddo,
-         non un'esplosione */
       const g = geloConDoni(this.lv, this.ramo, this.doni)
       const largo = raggio
       for (const n of dentro) n.gela(g.durata, g.freno, g.fragile, this.tipo)
