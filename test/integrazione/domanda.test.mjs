@@ -261,6 +261,8 @@ controlla("la classe dell'arrotondamento si trova nel quadro",
           await page.locator(ARROTONDA).count() === 1)
 await page.click(ARROTONDA)
 await page.waitForSelector('.qz-tasto', { timeout: 5000 })
+uguale('una tipologia che va come sempre non mette il metodo prima',
+       await page.locator('[data-come-prima]').count(), 0)
 
 let sbagliata = false
 for (let tiro = 0; tiro < 8 && !sbagliata; tiro++) {
@@ -316,6 +318,44 @@ if (sbagliata) {
   nota(`l'attesa dopo lo sbaglio è di ${attesaVera.toFixed(1)} s`)
 }
 await scatto(page, 'domanda-spiegazione')
+await page.click('.prova-x')
+await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
+
+/* ---------- 3e. ALLEGGERITA, IL METODO SI LEGGE PRIMA ----------
+   Al muro il gioco non scrive più a un grande: per una settimana quella
+   tipologia esce più di rado e, quando esce, il «Si fa così» sta in cima
+   alla carta prima di rispondere (`quiz/alleggerire.js`). Si semina il
+   segno sull'arrotondamento e si riapre la stessa classe: la palestra
+   dei grandi la mostra com'è per il bambino. */
+await page.click('button[aria-label="indietro"]')
+await page.waitForSelector('.carte', { timeout: 5000 })
+await semina(page, { settings: { eta: 9, alleggerite: {
+  'num:arrotonda': { quando: Date.now() - 3600000, ok: 2, err: 8 } } } })
+await page.click('[data-azione="grandi"]')
+await page.waitForSelector('.tastierino', { timeout: 5000 })
+for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
+await page.waitForSelector('.carte', { timeout: 5000 })
+await page.click('[data-scheda="giochi"]')
+await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
+for (const k of ['toste', 'medie', 'facili', 'sotto']) {
+  if (await page.locator(ARROTONDA).count()) break
+  await apriQuadro(k)
+  const chiuse = page.locator(`[data-manopola] [data-apri="${k}"] .voce-riga.apribile:not(.aperta)`)
+  while (!(await page.locator(ARROTONDA).count()) && await chiuse.count()) {
+    await chiuse.first().click()
+    await page.waitForTimeout(60)
+  }
+}
+await page.click(ARROTONDA)
+await page.waitForSelector('.qz-tasto', { timeout: 5000 })
+{
+  const prima = page.locator('[data-come-prima]')
+  controlla('alleggerita, il metodo sta sulla carta prima di rispondere', await prima.count() === 1)
+  const testo = (await prima.innerText().catch(() => '')).replace(/\s+/g, ' ').trim()
+  controlla('ed è il «Si fa così» della domanda', /^Si fa così: .{10,}/.test(testo), testo)
+  uguale('e ancora nessuna risposta è stata data', await risposto(), 0)
+}
+await scatto(page, 'domanda-alleggerita')
 await page.click('.prova-x')
 await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
 
