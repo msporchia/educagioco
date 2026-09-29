@@ -1,73 +1,19 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA TACCA A TRE POSIZIONI — ◀ Come dice l'età ▶
-
-   La sorella di `Taratura.vue` per tutto quello che non si sposta di
-   mezzo anno. Un pezzo di scuola con delle domande dentro ha una
-   difficoltà, quindi una scala; un gioco no, e nemmeno un pezzo di
-   scuola che vive solo dentro un gioco — le divisioni del castello o si
-   danno per sapute o no. Quello che si sceglie lì non è *quanto*, è
-   **chi decide**: l'età, o il grande.
-
-   Le tre posizioni sono sempre quelle, e la seconda è quella che
-   mancava finché l'interruttore era un sì/no: «come dice l'età» è il
-   ripristino di una riga sola, e senza di lui l'unico modo di tornare
-   indietro era ricordarsi com'era.
-
-   ── PERCHÉ È UN COMPONENTE E NON DUE ─────────────────────────────
-   Perché è già successo. `Blocco.vue` e `Riga.vue` esistono perché le
-   stesse righe scritte a mano cinque volte erano finite diverse senza
-   che nessuno l'avesse deciso — una con l'icona, un'altra no. Qui il
-   rischio è lo stesso e vale il doppio: due tacche identiche a
-   guardarle, che si muovono con le stesse frecce e scrivono cose
-   diverse, sono il modo più veloce di far premere «Conferma» a un
-   grande che credeva di stare facendo l'altra cosa.
-
-   Le parole invece cambiano, e devono: «Non ce l'ha» parla di una carta
-   in home, «Non l'ha ancora fatto» parla di scuola. Le porta chi la
-   usa (`InCasa.vue`, `Scuola.vue`), insieme alla riga che spiega la
-   posizione di mezzo — l'unica delle tre che non si spiega da sé.
-
-   ── NON SALVA NIENTE ─────────────────────────────────────────────
-   Muove una bozza e manda su cosa ha deciso: è il patto di tutte le
-   tacche di questa cartella.
-   ═══════════════════════════════════════════════════════════════════ */
+// tacca a tre posizioni condivisa da InCasa.vue e Scuola.vue: sceglie chi decide (età o grande), non "quanto" (vedi docs/genitori/ritocchi.md). Non salva niente.
 import { ref, computed } from 'vue'
 
 const props = defineProps({
-  /* ── I TRE NOMI CON CUI I TEST RITROVANO IL RIQUADRO ──
-     Non sono decorazione: un bersaglio che cambia da solo quando si
-     riscrive un componente è un test che diventa verde smettendo di
-     guardare. Chi usa questa tacca porta i suoi, che sono quelli che
-     aveva prima di essere estratta. */
   radice: { type: String, required: true },   // data-<radice>="<chiave>"
   tasti: { type: String, required: true },    // data-<tasti>="giu|su|applica|lascia"
   ora: { type: String, required: true },      // data-<ora> sul nome della posizione
   chiave: { type: String, default: '' },
-  /* la riga in cima: dice di che decisione si tratta, non cosa fa */
   titolo: { type: String, required: true },
-  /* le tre posizioni, dal meno al più: `{ chiave, nome, che }` */
-  scelte: { type: Array, required: true },
-  /* com'è messa adesso: la chiave di una delle tre */
+  scelte: { type: Array, required: true }, // le tre posizioni, dal meno al più: { chiave, nome, che }
   scelto: { type: String, default: 'difetto' },
-  /* cosa vuol dire «come dice l'età» qui e adesso. La posizione di
-     mezzo è muta per definizione — non dice niente da sé — e senza
-     questa riga sarebbe una posizione che non si sa dove porta. */
-  spiega: { type: String, default: '' },
-  /* ── LE POSIZIONI CHE NON SI RAGGIUNGONO ──
-     Le chiavi delle scelte che qui non vogliono dire niente. Ce n'è
-     sempre almeno un caso: un gioco tutto di un pezzo di scuola spento
-     non si può tenere in casa, e un pezzo di scuola che a quest'età si
-     dà già per saputo non si può «dare per saputo» una seconda volta —
-     scriverebbe lo stesso profilo della posizione di mezzo, e chi ha
-     premuto «Conferma» vedrebbe la riga tornare dov'era.
-
-     Restano visibili, sbiadite: la tacca dice anche **dov'è la casa**,
-     e togliere una posizione dalla fila farebbe sparire quella
-     informazione insieme a lei. */
+  spiega: { type: String, default: '' }, // cosa vuol dire «come dice l'età» qui e adesso: la posizione di mezzo non parla da sé
+  // le chiavi che qui non si raggiungono, restano visibili sbiadite: la tacca dice anche dov'è la casa
   bloccate: { type: Array, default: () => [] },
-  /* cosa leggono le due frecce a chi non vede lo schermo */
-  versi: { type: Array, default: () => ['verso il meno', 'verso il più'] },
+  versi: { type: Array, default: () => ['verso il meno', 'verso il più'] }, // per chi non vede lo schermo
 })
 const emit = defineEmits(['applica', 'chiudi'])
 

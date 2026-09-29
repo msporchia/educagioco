@@ -1,31 +1,5 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA TACCA DI UN GIOCO — ◀ Come dice l'età ▶
-
-   Le tre posizioni e il modo di muoverle stanno in `Tre.vue`; qui ci
-   sono **le parole**, che sono la parte che non si può condividere: «Non
-   ce l'ha» parla di una carta in home, e la stessa tacca sotto un pezzo
-   di scuola direbbe un'altra cosa.
-
-   Le tre posizioni, e la prima è quella che mancava:
-
-     · **Non ce l'ha** — spento a mano (`settings.giochi[k] = false`).
-     · **Come dice l'età** — nessuna eccezione, la riga torna a seguire
-       la portata. È il ripristino di una riga sola, e senza di lui
-       l'unico modo di tornare indietro era ricordarsi com'era.
-     · **Ce l'ha** — tenuto in casa anche se l'età dice di no
-       (`= true`). Serve al caso in cui l'età sbaglia: il Dungeon
-       dichiarato dai sette anni e un bambino di sei che ci gioca col
-       fratello, o un gioco «già passato» che in casa si apre ancora.
-
-   Sotto, sempre, **cosa succede adesso**: «a otto anni arriva più
-   avanti». Perché la scelta di mezzo è muta per definizione — non dice
-   niente da sé — e senza quella riga «Come dice l'età» sarebbe una
-   posizione che non si sa dove porta.
-
-   Non salva niente, come tutte le tacche di questa cartella: manda su
-   cosa ha deciso e chi la usa scrive.
-   ═══════════════════════════════════════════════════════════════════ */
+// la tacca di un gioco, ◀ Come dice l'età ▶: le tre posizioni e il movimento sono di Tre.vue, qui solo le parole (vedi docs/genitori/ritocchi.md). Non salva niente: manda su cosa ha deciso.
 import { computed } from 'vue'
 import Tre from './Tre.vue'
 import { anniInLettere } from './lettere.js'
@@ -49,8 +23,7 @@ const SCELTE = [
   { chiave: 'si', nome: 'Ce l\'ha', che: 'resta in home anche se l\'età dice di no' },
 ]
 
-/* Cosa vuol dire «come dice l'età», detto per questo gioco e a
-   quest'età: è l'unica delle tre che non si spiega da sé. */
+// «come dice l'età» non si spiega da sé: qui si dice cosa farebbe, per questo gioco e a quest'età
 const PERCHE = {
   qui: 'a quest\'età ce l\'ha',
   passato: 'a quest\'età l\'ha già passato',
@@ -61,10 +34,7 @@ const inLettere = anniInLettere
 const spiega = computed(() => (PERCHE[props.difetto] || PERCHE.qui) +
   (props.eta != null ? ` (${inLettere(props.eta)})` : ''))
 
-/* Un gioco che non si può accendere perché gli manca un pezzo di
-   scuola non si forza: la carta aprirebbe domande da indovinare. È la
-   stessa regola di `giocoGiocabile`, e qui si vede come una posizione
-   che non si raggiunge. */
+// un gioco a cui manca un pezzo di scuola non si forza (stessa regola di giocoGiocabile): qui è una posizione che non si raggiunge
 const bloccato = computed(() => props.difetto === 'spento')
 </script>
 

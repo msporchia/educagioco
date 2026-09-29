@@ -1,30 +1,10 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA TACCA: ◀ otto anni e mezzo ▶
-
-   Il pezzo che si tocca, e nient'altro. Non sa cosa succede quando ci
-   si sposta sopra — se si scrive subito, se si aspetta un «Applica»,
-   se si sta solo guardando un elenco muoversi: quello lo sa chi la
-   usa, che adesso è `Manopola.vue` e basta.
-
-   Sta in un file suo perché era scritta due volte, e le due copie erano
-   diverse senza che nessuno l'avesse deciso: una aveva `◀ ▶` e sotto la
-   fascia, l'altra `− +` e sotto una frase — stessa manopola, due
-   aspetti, su due schede della stessa schermata. Poi la seconda scheda
-   è sparita del tutto: si tara nel quadro, dove si vede cosa cambia.
-
-   Il mezzo anno è il passo di tutto il sistema (12,5 punti di
-   difficoltà per anno), e la scala si ferma dove si ferma la scuola
-   primaria: sotto i quattro anni non c'è nessun gioco, sopra i dodici
-   non c'è nessuna domanda.
-   ═══════════════════════════════════════════════════════════════════ */
+// la tacca ◀ 8 anni e mezzo ▶, componente unico (vedi docs/genitori/manopola.md); non sa cosa fa chi la usa
 import { anniInLettere } from './lettere.js'
 
 defineProps({
-  /* gli anni di adesso, o `null` se ancora non sono stati scelti */
-  anni: { type: Number, default: null },
-  /* la riga piccola sotto il numero: la fascia, o cosa decide l'età */
-  sotto: { type: String, default: '' },
+  anni: { type: Number, default: null }, // null se ancora non scelti
+  sotto: { type: String, default: '' }, // riga piccola sotto il numero: la fascia, o cosa decide l'età
   min: { type: Number, default: 4 },
   max: { type: Number, default: 12 },
 })
