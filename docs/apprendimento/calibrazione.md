@@ -27,6 +27,24 @@ Provato: Survivors dava una monetina a chi sbagliava la domanda del
 potenziamento, e nella partita libera era l'unica fonte. Le monete si
 prendono arrivando in fondo a una tappa.
 
+## Lo stesso gioco rende sempre meno
+
+Dopo **20 minuti** di oggi sullo stesso gioco le sue monete si
+**dimezzano**, dopo **altri 20** finiscono; domani tornano piene. I giochi
+⭐ consigliati dal genitore valgono **doppio** nei primi 20 minuti. Le
+soglie le sposta il genitore, per tutti o per un gioco
+([../genitori/varieta.md](../genitori/varieta.md)).
+
+Non cambia l'unità: **🪙1 resta dieci secondi di esercizio**, ma di un
+esercizio *vario*. Il quarantesimo minuto sullo stesso gioco non è
+esercizio che manca al bambino, ed è la ragione per cui smette di pagare —
+non un castigo, e il gioco resta aperto. Nei conti di questa pagina vuol
+dire che **un'ora di esercizi vale 🪙360 se è fatta su tre giochi**; su
+uno solo ne vale la metà. Scrivendo un prezzo si conta ancora 🪙360
+l'ora: è quello che guadagna chi fa quello che si vuole che faccia.
+
+Il cheat, i traguardi e le spese non passano da qui.
+
 ## Il cambio: spendere costa il doppio di studiare
 
 La fattoria è il posto dove si spende. **Cinque minuti a spendere costano
