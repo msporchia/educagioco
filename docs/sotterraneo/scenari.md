@@ -15,15 +15,21 @@ Il sotterraneo è **il calco da guardare** per un mondo a sprite:
   bordi, porte, scala, fontana, mercante e le cose per terra stanno in una
   voce di `SCENARI` (`dati/tessere.js`), e **tutte le voci hanno le stesse
   chiavi**: si cambia vestito a una discesa senza toccare la tela. Aggiungere
-  un pezzo è una riga lì, mai un `if` nel disegno. Oggi ce n'è uno, **le
-  cantine** (`sotterraneo_2.png`), e lo indossano tutte le discese.
+  un pezzo è una riga lì, mai un `if` nel disegno. Oggi ce ne sono due: **le cantine**
+  (`sotterraneo_2.png`), che indossano le sei discese, e **la cripta**
+  (`sotterraneo_3.png`); l'abisso li alterna scendendo
+  ([abisso.md](abisso.md#il-posto-cambia-scendendo)). Una tappa può
+  dichiarare il suo con `scenario:`.
 - **Uno scenario nasce da un prompt** diviso in due:
   `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md` ha una
   **parte fissa** (griglia, regola del muro, luce, divieti) e un **blocco
   SCENARIO** da cambiare per la cripta, la fornace, la grotta di cristallo.
   Si chiede prima **la scena** intera, poi **il foglio** dei pezzi allegando
   la scena buona: un foglio chiesto da solo esce coi pezzi belli uno per uno
-  e che non stanno insieme. Gli schemi da allegare li disegna
+  e che non stanno insieme. **Se cambiano solo i materiali basta un prompt**:
+  si allega `sotterraneo_2.png` e lo si chiede in un altro scenario («La
+  scorciatoia» nella scheda); i pezzi restano ai loro posti e il foglietto
+  si ricava da `sotterraneo_2.json`. Gli schemi da allegare li disegna
   `python3 strumenti/sprite/scenario.py`, che legge la pianta dalla scheda e
   ne controlla la regola del muro.
 - **Quello che non c'è nella tavola non si disegna**: `guastiDelleTessere`
