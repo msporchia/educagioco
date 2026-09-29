@@ -1,26 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL SOTTERRANEO — il terreno delle tappe dalla sesta alla decima
-
-   Roccia scavata, buio vero, e la luce che arriva solo dalle torce
-   piantate lungo il cammino. Il pavimento è `rocciaPosa` di
-   `materiali/roccia.js` — gli stessi massi tondeggianti delle grotte
-   del Generale — e il buio è `luceEBuio` di `luce.js`, che non stende
-   un velo giallo dove sta la fiaccola ma **buca il buio**: dentro il
-   buco si vede il pavimento per com'è, fuori resta la grotta.
-
-   Il pezzo nuovo è dove si appendono le torce. In una stanza a caselle
-   stanno sulla faccia di un muro; qui non ci sono muri, e allora si
-   piantano **lungo la strada**, alternate ai due lati: illuminano
-   quello che serve vedere — il tracciato — e lasciano il resto al
-   buio, che è esattamente il colpo d'occhio di un sotterraneo.
-
-   ── le cinque tavolozze ──
-   Grotta, miniera, fogne, cripta, gola: la stessa roccia con cinque
-   luci diverse. È la luce a fare il posto — arancio di fuoco nella
-   grotta, giallo di lampada nella miniera, verde marcio nelle fogne,
-   menta fredda nella cripta, azzurro di cielo nella gola, che è
-   l'unica di quaggiù ad avere un pezzo di cielo sopra.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il sotterraneo: il terreno delle tappe dalla sesta alla decima. Roccia scavata,
+// torce piantate lungo la strada (non su un muro: qui non ce n'è). Vedi docs/core/grafica.md.
 import { mescola, ell, velo, poly } from '../comune.js'
 import { POSE, DETTAGLI, semina, variazioni } from '../materiali/indice.js'
 import { masso } from '../materiali/semina.js'
@@ -48,7 +27,7 @@ SOTTERRANEO.via = {
 }
 
 export const VARIANTI_SOTTERRANEO = {
-  grotta: {},                                // la roccia com'è, a lume di torcia
+  grotta: {},
   miniera: {
     fondo: ['#2e2820', '#1c1813'], chiazze: ['#63563f', '#161310'],
     lastra: ['#5c5140', '#463d31'], sasso: '#7a6c52', cristallo: '#ffd76a',
@@ -70,8 +49,7 @@ export const VARIANTI_SOTTERRANEO = {
     dettagli: [['crepe', 2.3], ['ossa', 3], ['muschio', 5], ['ciottoli', 4.3]],
   },
   gola: {
-    /* l'unica di quaggiù che ha il cielo sopra: il buio si dimezza e
-       la luce diventa fredda, perché non viene più dal fuoco */
+    // l'unica di quaggiù col cielo sopra: buio dimezzato, luce fredda invece che di fuoco
     fondo: ['#3a352c', '#241f1a'], chiazze: ['#6b6150', '#1c1815'],
     lastra: ['#6b6053', '#4e453a'], sasso: '#8a7d68',
     luce: '#cfe4ff', fiamma: '#8fb8e0', buio: 0.24,
@@ -80,16 +58,9 @@ export const VARIANTI_SOTTERRANEO = {
   },
 }
 
-/* ── dove si appendono le torce ──
-   Una ogni 260 unità di cammino, alternate ai due lati e appena fuori
-   dalla strada. Il passo non è a occhio: una torcia arriva lontano
-   circa 76 unità, quindi la sua pozza è larga 150 — con il passo a 150
-   le pozze si toccavano e tornavano **una fascia arancione continua**
-   lungo tutto il tracciato, che è il difetto peggiore possibile,
-   perché senza buio in mezzo la luce non si vede più. */
+// una torcia ogni 260 unità (la pozza è larga ~150, un passo minore le fonde in
+// una fascia continua), ma almeno tre, o i tracciati corti restano bui per due terzi
 function torceLungo(via, S) {
-  // ...ma almeno tre, se no i tracciati corti della cripta e della gola
-  // restano al buio per due terzi e non si vede più dove si cammina
   const passo = Math.min(260 * S, via.lunghezza / 3.2)
   const out = []
   for (let d = passo * 0.6, i = 0; d < via.lunghezza; d += passo, i++) {
@@ -100,7 +71,7 @@ function torceLungo(via, S) {
   return out
 }
 
-/* uno spuntone di roccia: la sagoma che dice «qui il soffitto scende» */
+// uno spuntone di roccia: la sagoma che dice «qui il soffitto scende»
 function spuntone(p, x, y, s, A) {
   const [c1, c2] = A.parete
   ell(p.ctx, x, y + 2 * s, 9 * s, 3 * s, '#00000030')
@@ -112,8 +83,7 @@ function spuntone(p, x, y, s, A) {
        mescola(c1, '#ffffff', 0.28))
 }
 
-/* un grappolo di cristalli: l'unica cosa chiara del sotterraneo, e
-   serve proprio a quello — dà un punto dove appoggiare l'occhio */
+// un grappolo di cristalli: l'unica cosa chiara del sotterraneo, dà un punto d'appoggio all'occhio
 function grappolo(p, x, y, s, A) {
   ell(p.ctx, x, y + 1.5 * s, 7 * s, 2.4 * s, '#00000028')
   for (const [dx, h, w] of [[-3, 9, 2.2], [3, 7.5, 2], [0, 13, 2.8]])
@@ -164,9 +134,7 @@ export const TERRENO_SOTTERRANEO = {
     }
   },
 
-  /* la piazzola: un lastrone spianato nella roccia, con il giro di
-     schegge attorno. Chiara più del fondo, se no al buio sparisce e
-     non si capisce più dove si può costruire. */
+  // più chiara del fondo, se no al buio sparisce e non si capisce dove si può costruire
   piazzola(p, x, y, A, caso) {
     const { ctx, S } = p
     ell(ctx, x, y, 15 * S, 9.5 * S, '#00000030')
@@ -179,24 +147,8 @@ export const TERRENO_SOTTERRANEO = {
     }
   },
 
-  /* Il buio, e le torce che ci fanno il buco. `luceEBuio` ragiona in
-     caselle perché nasce per le stanze del Generale: gli si passa un
-     `lato` di comodo e le torce già convertite nelle sue coordinate —
-     è più onesto che riscrivere il velo bucato una seconda volta. */
-  /* ── il buio, e le due luci che ci fanno il buco ──
-
-     La prima è **la via stessa**, appena accesa lungo tutto il suo
-     percorso. Non è atmosfera, è una regola: le pozze delle torce sono
-     poche e distanti apposta — senza buio in mezzo la luce non si vede
-     — ma il tracciato dev'essere leggibile *tutto*, sempre, perché è
-     l'unica informazione da cui dipende ogni decisione. Il velo di
-     buio che viene dopo smorza allo stesso modo la via e la roccia
-     attorno, quindi lo stacco resta.
-
-     La seconda sono le torce, e la fa `luceEBuio`, che non stende un
-     velo giallo dove sta la fiaccola ma **buca il nero**. Ragiona in
-     caselle perché nasce per le stanze del Generale: gli si passa un
-     `lato` di comodo e le torce già convertite nelle sue coordinate. */
+  // due luci: la via stessa, sempre accesa (il tracciato dev'essere leggibile tutto,
+  // sempre), e le torce (`luceEBuio`, che buca il nero invece di stendere un velo giallo)
   velo(p, A, { via }) {
     const { ctx, W, H, S } = p
     const prima = ctx.globalCompositeOperation
