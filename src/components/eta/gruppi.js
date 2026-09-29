@@ -1,27 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════
-   COME SI CHIAMANO I BLOCCHI DEL QUADRO
-
-   Le chiavi sono quelle di sempre (`FASCE_ETA` in
-   `quiz/nucleo/catalogo.js`): qui c'è solo **come si dicono a un
-   grande che sta guardando suo figlio**, e cambia perché il momento è
-   un altro. Nell'elenco delle domande si tara riga per riga, e «Facili
-   · Nel segno · Difficili» è il vocabolario giusto per farlo. Qui si
-   decide un'età con una manopola in mano, e la domanda che ci si fa è
-   sul bambino: *cosa sa già, cosa sta imparando, cosa gli chiediamo di
-   provare.*
-
-   Stanno in un file loro perché adesso li chiedono in due: il blocco
-   che raccoglie le righe (`Manopola.vue`) e **la tacca che sposta una
-   riga** (`Taratura.vue`), che deve poter dire dove va a finire quello
-   che si sta muovendo. Se il nome della destinazione non fosse lo
-   stesso del blocco in cui la riga poi atterra, la tacca direbbe una
-   cosa e l'elenco ne mostrerebbe un'altra.
-
-   Il `corto` esiste per la tacca, dove c'è la larghezza di un telefono
-   e non di una riga di elenco: «Nel segno» invece di «Sta imparando
-   queste». È lo stesso posto, detto con meno parole — non un secondo
-   nome.
-   ═══════════════════════════════════════════════════════════════════ */
+// nomi dei blocchi del quadro (vedi docs/genitori/quadro.md); `corto` è la stessa etichetta per la tacca, larga quanto un telefono
 export const GRUPPI = {
   sotto: { nome: 'Superfluo chiedergliele', corto: 'Ovvie',
            che: 'per lui sono ovvie: le indovinerebbe senza pensarci' },
@@ -31,13 +8,7 @@ export const GRUPPI = {
            che: 'la sua misura: sono quelle che vede più spesso' },
   toste: { nome: 'Difficili, ma ce la può fare', corto: 'Difficili',
            che: 'un gradino sopra, quando il gioco chiede molto' },
-  /* Non è una fascia di difficoltà ed è l'ultima apposta: qui dentro
-     non ci finisce quello che è troppo difficile, ma quello che a
-     scuola non si è ancora fatto. Lo toglie la partenza dell'età — la
-     terza spegne da sola sette pezzi di scuola — o un grande che lo
-     dice, e **chi dei due lo dice la riga** (`Manopola.vue`): «le hai
-     tolte tu» scritto sopra tutto il blocco lo diceva anche a chi non
-     aveva toccato niente. */
+  // non è difficoltà: è quello che a scuola non si è ancora fatto, tolto dall'età o da un grande (la riga dice chi dei due, vedi quadro.md)
   spenta: { nome: 'Non ancora spiegate', corto: 'Non ancora spiegate',
             che: 'tolte dall\'età o da te: spariscono dalle domande di tutti i giochi' },
 }

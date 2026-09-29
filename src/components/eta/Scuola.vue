@@ -1,31 +1,5 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA TACCA DI UN PEZZO DI SCUOLA CHE VIVE DENTRO UN GIOCO
-
-   `Taratura.vue` sposta un pezzo di scuola di mezzo anno per volta,
-   perché le sue domande hanno una difficoltà e quindi una scala su cui
-   muoversi. Le divisioni del castello non ce l'hanno: non sono una
-   domanda del mazzo, sono una colonna che la cassa propone o non
-   propone. Sette scatti in mezzi anni, lì, non vorrebbero dire niente —
-   e l'ottavo, quello che spegne, sarebbe l'unico che fa qualcosa.
-
-   Quindi resta solo quello, nella forma che i giochi hanno già
-   (`InCasa.vue`): tre posizioni, e quella che conta è la seconda —
-   **come dice l'età**, che è il ripristino di una riga sola. Le parole
-   stanno qui, il modo di muoverle in `Tre.vue`.
-
-   ── PERCHÉ UN ESTREMO È SEMPRE CHIUSO ────────────────────────────
-   Un gioco ha tre stati veri nel profilo (spento, assente, tenuto
-   comunque); un pezzo di scuola ne ha due, e il terzo è l'assenza —
-   cioè quello che l'età decide. Perciò l'estremo che coincide con
-   l'età non si raggiunge: sceglierlo scriverebbe lo stesso profilo
-   della posizione di mezzo, e la riga tornerebbe dov'era un istante
-   dopo aver premuto «Conferma». Resta in fila, sbiadito, perché la
-   tacca deve continuare a dire **da che parte sta la casa**.
-
-   Non salva niente: manda su cosa ha deciso e chi la usa scrive
-   (`fissaSapere` in `store/profile.js`).
-   ═══════════════════════════════════════════════════════════════════ */
+// tacca a tre posizioni per un pezzo di scuola appeso a un gioco (niente scala in mezzi anni: non è una domanda). Un estremo è sempre chiuso (vedi docs/genitori/ritocchi.md). Non salva niente.
 import { computed } from 'vue'
 import Tre from './Tre.vue'
 import { anniInLettere } from './lettere.js'
@@ -59,7 +33,6 @@ const spiega = computed(() => (props.attesoSpento
   : 'a quest\'età lo diamo per saputo') +
   (props.eta != null ? ` (${inLettere(props.eta)})` : ''))
 
-/* quello che l'età dice già non si può ridire dall'altra parte */
 const bloccate = computed(() => [props.attesoSpento ? 'no' : 'si'])
 </script>
 
