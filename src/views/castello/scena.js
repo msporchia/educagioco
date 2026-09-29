@@ -1,38 +1,13 @@
-/* ═══════════════════════════════════════════════════════════════════
-   DAL MOTORE ALLA SCENA
-
-   Chi gioca non disegna. Il campo non chiama mai un contesto 2D: dice
-   *cosa* c'è e dove, e chi lo dipinge sta in `grafica/`. Questo file è
-   quel travaso, e sta fuori dal componente perché è una traduzione —
-   niente Vue, niente eventi, nessuno stato: entra un motore, esce una
-   lista.
-
-   Lo strato dice solo il piano: −1 per terra, 0 in piedi (e lì la tela
-   ordina da sola per profondità), 1 in volo.
-
-   L'unica regola di gioco che passa di qui è la più piccola possibile:
-   se una torre può ancora salire, se una piazzola è libera, e se
-   l'energia basta. Sono booleani già decisi — in `grafica/` non entrano
-   prezzi.
-
-   ── quando si accendono le piazzole ──
-   Da quando il banco non c'è più, il campo è l'unico posto dove si
-   compra: se le piazzole restassero spente come prima, chi gioca non
-   avrebbe nessun modo di sapere che lì si può costruire. Si accendono
-   quando l'energia basta per una torre nuova — cioè quando toccarle
-   serve a qualcosa — e restano spente quando non basta. È la stessa
-   promessa che il bollino verde fa già sulle torri: acceso vuol dire
-   «adesso puoi».
-   ═══════════════════════════════════════════════════════════════════ */
+// Dal motore alla scena: entra un motore, esce una lista di cose da
+// disegnare (niente Vue, niente eventi, nessuno stato). Lo strato dice il
+// piano (-1 per terra, 0 in piedi, 1 in volo); le piazzole si accendono
+// solo quando toccarle serve a qualcosa (c'è l'energia per una torre nuova).
 import { costoSalita } from '../../data/castello.js'
 import { RESPINTO } from '../../motore/castello/nemico.js'
 
-/* Da che parte guarda chi cammina: 1 a destra, -1 a sinistra, 0 se va
-   dritto in su o in giù per un bel pezzo. Si guarda un po' avanti, e non
-   solo il passo dopo, perché su una strada a squadra un mostro che
-   scende fra due svolte si girerebbe a ogni angolo. Ai pittori a
-   poligoni non serve — il corpo è di fronte — ma a una figura di
-   profilo sì (`giochi/castello/scena/pittori.js`). */
+// Da che parte guarda chi cammina (1 destra, -1 sinistra, 0 dritto): si
+// guarda un po' avanti e non solo il passo dopo, o su una strada a squadra
+// si girerebbe a ogni angolo.
 function versoDi(via, d, p) {
   for (let s = 10; s <= 60; s += 10) {
     const dx = via.puntoA(d + s).x - p.x
@@ -46,12 +21,8 @@ export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
   const roba = []
   if (!motore) return roba
 
-  /* La piazzola che il dito sta guardando: quella sotto il foglio
-     aperto, o quella dove sta per cadere la torre trascinata. */
   const inMano = trascino && trascino.mosso ? trascino.torre : null
   const mirata = mira && mira.piazzola != null ? mira.piazzola : -1
-  /* si accendono quando toccarle serve a qualcosa: c'è l'energia per una
-     torre nuova, oppure una torre sta cercando dove posarsi */
   const posso = (energia >= costoNuova && !occupato) || !!(mira && mira.muovendo)
 
   const sciolta = inMano || (mira && mira.muovendo ? mira.torre : null)
@@ -63,17 +34,11 @@ export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
     roba.push({ che: 'piazzola', strato: -1, x: p.x, y: p.y, scelta, viva: !inMano && !scelta })
   })
 
-  /* Il raggio d'azione si vede in tre momenti, e sono tutti e tre lo
-     stesso momento: quando uno si sta chiedendo «fin dove arriva?».
-     Mentre sposta una torre, mentre guarda la scheda di una torre,
-     mentre sceglie che cosa costruire su una piazzola. */
   const anteprima = mira && mira.raggio
     ? { x: mira.x, y: mira.y, r: mira.raggio, tipo: mira.tipo }
     : inMano ? { x: inMano.x, y: inMano.y, r: inMano.raggio(S), tipo: inMano.tipo } : null
   if (anteprima) roba.push({ che: 'raggio', strato: -1, ...anteprima })
 
-  /* le bocche da cui scendono, quando sono più d'una: quella da cui sta
-     per arrivare l'ondata è accesa, l'altra no */
   if (motore.percorso.quanteVie > 1) {
     const bocca = motore.bocca
     motore.percorso.vie.forEach((v, k) => {
@@ -91,19 +56,11 @@ export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
     roba.push({ che: 'torre', x: t.x, y: t.y, tipo: t.tipo, lv: t.lv, ramo: t.ramo,
                 potenziabile: t.lv < tetto && !occupato,
                 posso: energia >= costoSalita(t.lv, t.tipo),
-                /* la torre di cui è aperta la scheda si stacca dal campo:
-                   è quella di cui si sta parlando */
                 alone: !!(mira && mira.torre === t) })
 
   for (const n of motore.nemici) {
     const via = motore.viaDi(n)
     const p = via.puntoA(n.d)
-    /* Quello che il pittore deve sapere di più, adesso che i mostri
-       fanno cose: quanto è grande (il capo, i pezzi di chi si è diviso),
-       se è a terra per rialzarsi, e da quanto una torre gli è
-       rimbalzata addosso (`respinto`, da 1 a 0: il segno «immune» sopra
-       la testa sbiadisce con lui). Sono fatti già decisi: il pittore non
-       sa cos'è un'immunità. */
     roba.push({ che: 'mostro', x: p.x, y: p.y, bestia: n.bestia, vola: n.vola,
                 vita: n.quota, gelo: n.gelo, verso: versoDi(via, n.d, p),
                 taglia: n.taglia, capo: n.capo, aTerra: n.aTerra > 0,
