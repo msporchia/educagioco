@@ -19,7 +19,7 @@
 
    `node test/esegui.mjs come-va`
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, leggiProfilo } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, leggiProfilo, GIOCATORE } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -32,12 +32,39 @@ await azzera(page)
    `store/srs.js`: `{ s, ok, err, seen, t, last }`. */
 const MURO = 'num:confronto'      // ne sbaglia 8 su 10
 const BENE = 'ora:intere'         // le indovina tutte
+/* per la settimana: un secondo muro, già alleggerito dal gioco, e una
+   tipologia che una settimana fa era 2 su 10 e da allora è salita — il
+   conto intero è ancora a metà, cioè da muro, e non deve dirlo */
+const MURO2 = 'num:linea'
+const MURO3 = 'num:posiziona'   // per «Va bene così»
+const SALITA = 'ora:quarti'
+const ORA = Date.now()
+const GIORNO = 86400000
+/* le fotografie settimanali stanno fuori dal profilo, `istantanee:<id>`:
+   si scrivono in archivio prima della semina, che ricarica */
+await page.evaluate(([chi, voci]) => new Promise((ok, ko) => {
+  const r = indexedDB.open('giochi-bambini', 1)
+  r.onerror = () => ko(new Error('IndexedDB non si apre'))
+  r.onsuccess = () => {
+    const tx = r.result.transaction('kv', 'readwrite')
+    tx.objectStore('kv').put({ voci }, 'istantanee:' + chi)
+    tx.oncomplete = ok
+    tx.onerror = () => ko(new Error('scrittura fallita'))
+  }
+}), [GIOCATORE, [
+  { t: ORA - 14 * GIORNO, m: { tempo: 0 }, c: { [SALITA]: [2, 8] } },
+  { t: ORA - 7 * GIORNO, m: { tempo: 0 }, c: { [SALITA]: [2, 8] } },
+]])
 await semina(page, {
   coins: 100,
-  settings: { eta: 8 },
+  settings: { eta: 8, alleggerite: { [MURO2]: { quando: ORA - GIORNO, ok: 3, err: 7 } } },
   items: {
-    [MURO]: { s: 1, ok: 2, err: 8, seen: 10, t: 9000, last: Date.now() },
-    [BENE]: { s: 5, ok: 12, err: 0, seen: 12, t: 2500, last: Date.now() },
+    [MURO]: { s: 1, ok: 2, err: 8, seen: 10, t: 9000, last: ORA },
+    [BENE]: { s: 5, ok: 12, err: 0, seen: 12, t: 2500, last: ORA },
+    [MURO2]: { s: 0, ok: 3, err: 7, seen: 10, t: 8000, last: ORA },
+    [SALITA]: { s: 3, ok: 10, err: 10, seen: 20, t: 5000, last: ORA },
+    [MURO3]: { s: 1, ok: 4, err: 6, seen: 10, t: 7000, last: ORA },
+    'math:2x3': { s: 4, ok: 6, err: 0, seen: 6, t: 1500, last: ORA },
   },
 })
 
@@ -65,22 +92,23 @@ await page.waitForTimeout(300)
    sbagliata. Da qui i due controlli incrociati. */
 uguale('«Come va» non apre il quadro dell\'età',
        await page.locator('[data-manopola]').count(), 0)
-controlla('e comincia dal tempo di gioco',
-          await page.isVisible('[data-tempo]'))
+controlla('e comincia dalle materie', await page.isVisible('[data-mattonelle]'))
 {
-  const primo = await page.evaluate(() => {
-    const dentro = document.querySelector('[data-tempo]') ? 1 : 0
-    const y = document.querySelector('[data-tempo]')?.getBoundingClientRect().top
-    return { dentro, y }
+  const ordine = await page.evaluate(() => {
+    const y = sel => document.querySelector(sel)?.getBoundingClientRect().top ?? -1
+    return { materie: y('[data-mattonelle]'), settimana: y('[data-settimana]'), tempo: y('[data-tempo]') }
   })
-  controlla('che sta in cima e non due schermate più giù',
-            primo.dentro === 1 && primo.y < 900, JSON.stringify(primo))
+  controlla('in cima le materie, poi la settimana, poi il tempo di gioco',
+            ordine.materie >= 0 && ordine.materie < ordine.settimana && ordine.settimana < ordine.tempo,
+            JSON.stringify(ordine))
+  uguale('a mattonelle chiuse la tavola delle tabelline non si vede',
+         await page.locator('[data-come-va] .mappa').count(), 0)
 }
 
 /* ── 1. il sommario, che è la misura di tutto il resto ── */
 const sommario = await page.locator('[data-sommario]').innerText()
 controlla('in cima dice quante risposte ha dato in tutto',
-          sommario.includes('22'), sommario.replace(/\n/g, ' '))
+          sommario.includes('62'), sommario.replace(/\n/g, ' '))
 
 /* ── 2. l'ordine ── */
 const righe = () => page.evaluate(() =>
@@ -160,6 +188,78 @@ controlla('il ▶ apre una domanda vera', await page.isVisible('.qz-carta'))
    click su una scheda finisce sul suo velo */
 await page.click('[data-prova] .prova-x')
 await page.waitForSelector('[data-prova]', { state: 'detached', timeout: 5000 })
+
+/* ── 7. LE MATERIE ──
+   Una mattonella per materia, con quanto è saputo e la freccia su due
+   settimane fa: il tempo era a zero nella fotografia di allora. */
+const mattonella = k => page.locator(`[data-mattonella="${k}"]`)
+controlla('c\'è la mattonella del tempo, che è una materia dei quiz', await mattonella('tempo').count() === 1)
+controlla('e quella delle tabelline, che il grande prima non vedeva', await mattonella('mate').count() === 1)
+uguale('il tempo è salito rispetto a due settimane fa',
+       await mattonella('tempo').locator('[data-freccia]').getAttribute('data-freccia'), 'su')
+await scatto(page, 'come-va-mattonelle')
+
+await mattonella('mate').click()
+await page.waitForSelector('[data-materia-aperta="mate"]', { timeout: 5000 })
+controlla('toccando le tabelline si entra nella tavola', await page.isVisible('[data-come-va] .mappa'))
+uguale('e il resto della pagina si toglie di mezzo', await page.locator('[data-settimana]').count(), 0)
+await page.click('[data-azione="materie-torna"]')
+await page.waitForSelector('[data-mattonelle]', { timeout: 5000 })
+
+await mattonella('tempo').click()
+await page.waitForSelector('[data-materia-aperta="tempo"]', { timeout: 5000 })
+{
+  const qui = await righe()
+  controlla('dentro il tempo ci sono le sue tipologie', qui.includes(BENE) && qui.includes(SALITA),
+            qui.join(', '))
+  controlla('e non quelle di matematica', !qui.includes(MURO), qui.join(', '))
+}
+await page.click('[data-azione="materie-torna"]')
+await page.waitForSelector('[data-settimana]', { timeout: 5000 })
+
+/* ── 8. LA SETTIMANA ──
+   Al posto dell'avviso in posta: le difficili coi tre tasti, le
+   migliorate col «da … a … su 10». */
+const difficile = k => page.locator(`[data-difficile="${k}"]`)
+controlla('il muro sta fra le difficili', await difficile(MURO2).count() === 1)
+controlla('e dice che il gioco l\'ha già alleggerita',
+          await difficile(MURO2).locator('[data-alleggerita]').count() === 1)
+controlla('quella salita sta fra le migliorate', await page.locator(`[data-migliorata="${SALITA}"]`).count() === 1)
+{
+  const riga = await page.locator(`[data-migliorata="${SALITA}"]`).innerText()
+  controlla('col prima e il dopo', /da 2 a \d+ su 10/.test(riga), riga)
+}
+uguale('e una migliorata non è anche difficile, col conto intero ancora a metà',
+       await difficile(SALITA).count(), 0)
+await scatto(page, 'come-va-settimana')
+
+/* «Più avanti di mezzo anno» è la ✎ di sempre, aperta con lo scatto già fatto */
+await difficile(MURO2).locator('[data-azione="settimana-rimanda"]').click()
+await page.waitForSelector(`[data-difficile="${MURO2}"] [data-taratura]`, { timeout: 5000 })
+{
+  const dice = await page.locator('[data-taratura] [data-tara-ora]').innerText()
+  const sotto = await page.locator('[data-taratura] .valore em').innerText()
+  controlla('si apre già mezzo anno più avanti', /mezzo anno più difficile/.test(sotto), `${dice} · ${sotto}`)
+}
+await page.click('[data-taratura] [data-tara="applica"]')
+await page.waitForTimeout(700)
+{
+  const prof = await leggiProfilo(page)
+  uguale('il ritocco è scritto: mezzo anno più difficile', (prof.settings?.ritocchi || {})[MURO2], -1)
+  controlla('e il conto di adesso diventa la base', !!prof.settings?.vaBene?.[MURO2])
+}
+uguale('rimandata, lascia le difficili', await difficile(MURO2).count(), 0)
+
+/* «Va bene così» la toglie e basta */
+controlla('c\'è anche il terzo muro', await difficile(MURO3).count() === 1)
+await difficile(MURO3).locator('[data-azione="settimana-va-bene"]').click()
+await page.waitForTimeout(700)
+uguale('«Va bene così» la toglie dall\'elenco', await difficile(MURO3).count(), 0)
+{
+  const prof = await leggiProfilo(page)
+  controlla('e se lo ricorda', !!prof.settings?.vaBene?.[MURO3])
+  uguale('senza toccare la taratura', (prof.settings?.ritocchi || {})[MURO3], undefined)
+}
 
 /* ── e il verso contrario ──
    Nella scheda dove si tara non deve comparire il grafico del tempo: è

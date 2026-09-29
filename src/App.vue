@@ -3,6 +3,7 @@ import { ref, watch, onMounted } from 'vue'
 import { init, state } from './store/profile.js'
 import { initPosta } from './store/posta.js'
 import { entra as entraNelGioco, esci as esciDalGioco } from './store/sessioni.js'
+import { fotografa } from './quiz/fotografia.js'
 import { controlla } from './aggiornamento.js'
 import HomeView from './views/HomeView.vue'
 import LinguaGame from './views/LinguaGame.vue'
@@ -70,8 +71,10 @@ const NON_GIOCHI = ['home', 'albo', 'genitori', 'guide', 'novita', 'admin']
 const gioca = v => !!viste[v] && !NON_GIOCHI.includes(v)
 
 function apriSessione(v) {
-  if (gioca(v)) entraNelGioco(v, state.player)
-  else esciDalGioco()
+  if (gioca(v)) {
+    entraNelGioco(v, state.player)
+    fotografa()   // una a settimana, fuori dal profilo: le frecce di «Come va» (docs/genitori/come-va.md)
+  } else esciDalGioco()
 }
 watch(vista, apriSessione)
 
