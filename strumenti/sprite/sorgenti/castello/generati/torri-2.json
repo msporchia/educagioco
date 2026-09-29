@@ -1,0 +1,135 @@
+{
+ "__": "Il foglietto di torri-2.png, arrivato il 29 settembre 2026 da ChatGPT col prompt delle torri riscritto (DA-GENERARE.md, voce 2). 1536x1024 RGBA, cinque colonne per quattro righe, e questa volta NELL'ORDINE CHIESTO: una riga per torre (arciere, magica, ghiaccio, bombe) e in ogni riga la torre appena costruita, il primo ramo cresciuto e al massimo, il secondo ramo cresciuto e al massimo. La crescita e' gia' disegnata (le figure salgono di misura da sole), quindi 'scala' e' una sola; 'largo_max' e' il tetto in pixel di gioco (1,6 celle) che tiene fuori dalla strada le torri al massimo piu' larghe (la raffica, il napalm con la fiammella, la brina): quelle si riducono un po' di piu'. 'bagliore': dietro ogni riga il generatore ha messo un alone colorato ad alfa bassa (quasi tutto sotto 32), che sotto 64 si toglie PRIMA di cercare le figure, se no le macchie d'alfa si toccano e la griglia non si legge. Le torri salite SENZA ramo (le tappe senza rami) prendono le figure di un ramo: l'arciere e le bombe il primo (cecchino, mortaio), la magica e il ghiaccio il secondo (catena, brina) — le stesse scelte di torri-1.",
+ "attrezzo": "vesti",
+ "griglia": [
+  5,
+  4
+ ],
+ "bagliore": 64,
+ "scala": 0.6,
+ "largo_max": 104,
+ "figure": {
+  "arciere:0:": [
+   0,
+   0
+  ],
+  "arciere:1:cecchino": [
+   0,
+   1
+  ],
+  "arciere:2:cecchino": [
+   0,
+   2
+  ],
+  "arciere:1:raffica": [
+   0,
+   3
+  ],
+  "arciere:2:raffica": [
+   0,
+   4
+  ],
+  "arciere:1:": [
+   0,
+   1
+  ],
+  "arciere:2:": [
+   0,
+   2
+  ],
+  "magica:0:": [
+   1,
+   0
+  ],
+  "magica:1:veleno": [
+   1,
+   1
+  ],
+  "magica:2:veleno": [
+   1,
+   2
+  ],
+  "magica:1:catena": [
+   1,
+   3
+  ],
+  "magica:2:catena": [
+   1,
+   4
+  ],
+  "magica:1:": [
+   1,
+   3
+  ],
+  "magica:2:": [
+   1,
+   4
+  ],
+  "ghiaccio:0:": [
+   2,
+   0
+  ],
+  "ghiaccio:1:bufera": [
+   2,
+   1
+  ],
+  "ghiaccio:2:bufera": [
+   2,
+   2
+  ],
+  "ghiaccio:1:brina": [
+   2,
+   3
+  ],
+  "ghiaccio:2:brina": [
+   2,
+   4
+  ],
+  "ghiaccio:1:": [
+   2,
+   3
+  ],
+  "ghiaccio:2:": [
+   2,
+   4
+  ],
+  "bombe:0:": [
+   3,
+   0
+  ],
+  "bombe:1:mortaio": [
+   3,
+   1
+  ],
+  "bombe:2:mortaio": [
+   3,
+   2
+  ],
+  "bombe:1:napalm": [
+   3,
+   3
+  ],
+  "bombe:2:napalm": [
+   3,
+   4
+  ],
+  "bombe:1:": [
+   3,
+   1
+  ],
+  "bombe:2:": [
+   3,
+   2
+  ]
+ },
+ "prompt": {
+  "scheda": "DA-GENERARE.md",
+  "prompt": "2, le torri (riscritto il 29 settembre 2026)",
+  "allegati": [
+   "td_1.png",
+   "torri-1.png"
+  ],
+  "generatore": "ChatGPT, 29 settembre 2026",
+  "testo": "vedi la voce 2 di DA-GENERARE.md, dove il prompt e' conservato intero"
+ }
+}

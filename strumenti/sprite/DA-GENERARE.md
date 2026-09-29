@@ -206,6 +206,44 @@ Quattro righe, una per torre, e in ogni riga cinque figure da sinistra a destra:
 Ogni torre si riconosce da lontano anche piccola, con una sagoma e un colore suoi — l'arciere legno e verde, la magica pietra e viola, il ghiaccio azzurro e bianco, le bombe ferro e arancio — e crescendo si capisce che è la stessa torre diventata più forte.
 ```
 
+### 2b — Le torri rifatte · 1 immagine · ✅ 29 settembre 2026
+
+**Perché**: in `torri-1.png` arciere, magica e bombe erano la stessa
+torretta di pietra grigia con un cappello diverso, e sul campo da piccole
+non si distinguevano; il veleno aveva una figura sola; brina e napalm al
+massimo coprivano la strada.
+
+**Com'è andata**: fatto con **ChatGPT** (non Grok), allegando `td_1.png` e
+`torri-1.png`. È tornato **nell'ordine chiesto**, cinque per quattro, con
+la crescita già disegnata e le quattro basi diverse (tronchi a palizzata,
+guglia viola, ghiaccio, bastione di mattoni rossi), su trasparente vero ma
+con **un alone colorato ad alfa bassa** dietro ogni riga. Il foglietto
+`torri-2.json` dice `bagliore` (l'alone sotto 64 si toglie prima di cercare
+le figure), una `scala` sola e `largo_max` (1,6 celle: le torri più larghe
+si riducono un po' di più). `vesti.py` prende il foglio col numero più
+alto, quindi `torri-1.png` resta come storia e non entra più nell'atlante.
+
+**Sta in** `strumenti/sprite/sorgenti/castello/generati/torri-2.png`.
+
+Il prompt mandato:
+
+```text
+Disegna il foglio delle torri (uno sprite sheet) di un gioco di difesa della torre, nella mano ESATTA della prima immagine allegata: stesso contorno scuro, stessa luce da in alto a sinistra, stessa tavolozza, stessa grana — ogni pixel del disegno è un quadrato pieno di 4×4 px. La seconda immagine sono le torri di adesso: dice cosa fa ogni torre, ma NON copiarne la base, perché lì tre torri su quattro sono la stessa torretta di pietra grigia e da piccole non si distinguono.
+
+Il foglio è ORIZZONTALE, 1536×1024 px, su FONDO TRASPARENTE (PNG). Nessuna ombra sotto, nessun disco d'erba, nessun bagliore, nessuna cornice. NESSUNA PAROLA SCRITTA, NESSUN NUMERO, NESSUNA ETICHETTA.
+
+Quattro righe, una per torre, in quest'ordine. In ogni riga ESATTAMENTE CINQUE figure, da sinistra a destra: 1) la torre appena costruita; 2) il primo ramo, cresciuto; 3) il primo ramo al massimo; 4) il secondo ramo, cresciuto; 5) il secondo ramo al massimo. Le cinque figure sono TUTTE DIVERSE fra loro, e crescendo si vede che è la stessa torre diventata più forte: più alta, più ricca, non solo più grande. Ogni figura sta dentro una cella invisibile di 300×250 px, con la base sulla stessa linea delle altre della riga; fra una figura e l'altra almeno 40 px di trasparente, e niente esce dalla sua cella — fiamme, fulmini, cristalli, fumo compresi, tutto attaccato alla torre. Vista dall'alto a tre quarti, come il castello della prima immagine.
+
+LE MISURE, importanti: la torre appena costruita è larga circa 110 px e alta 150; al massimo è alta fino a 240 px ma MAI PIÙ LARGA DI 160 px, perché accanto passa la strada.
+
+1. L'ARCIERE — legno e verde. Base: una torretta di TRONCHI DI LEGNO con la palizzata appuntita, mai di pietra, con un arciere vestito di verde in cima. Primo ramo, IL CECCHINO: una torre di legno alta e stretta, con il tiratore che mira col cannocchiale; al massimo più alta, con una bandierina. Secondo ramo, LA RAFFICA: una balestra doppia su un perno girevole in cima al legno; al massimo con due balestre e le frecce pronte.
+2. LA MAGICA — pietra viola e oro. Base: una GUGLIA SOTTILE DI PIETRA VIOLA con un cristallo che galleggia in cima, mai la torretta grigia tonda. Primo ramo, IL VELENO: un calderone verde che ribolle sulla guglia; al massimo il calderone è più grande, trabocca e ha le fiale attorno. Secondo ramo, LA CATENA: una bobina di rame con i fulmini azzurri; al massimo due bobine con un arco elettrico fra loro, tutto attaccato alla torre.
+3. IL GHIACCIO — azzurro e bianco. Base: una piccola torre di ghiaccio azzurro, in piedi. Primo ramo, LA BUFERA: la torre di ghiaccio con un piccolo vortice di neve attorno, stretto; al massimo più alta, col vortice che resta dentro i 160 px. Secondo ramo, LA BRINA: una torre di cristalli appuntiti; al massimo più alta, ma i cristalli crescono in alto e NON di lato.
+4. LE BOMBE — ferro scuro e mattoni rossi. Base: un BASTIONE BASSO E QUADRATO DI MATTONI ROSSI con un cannone di ferro sopra, mai la torretta grigia tonda. Primo ramo, IL MORTAIO: un mortaio tozzo che punta al cielo; al massimo più grosso, con una pila di palle accanto. Secondo ramo, IL NAPALM: un cannone con la bocca a testa di drago; al massimo con una fiammella piccola alla bocca, attaccata, non una fiammata lunga.
+
+Da lontano e piccole, le quattro torri si devono riconoscere dalla sola SAGOMA e dal colore: legno a palizzata, guglia viola, ghiaccio, bastione quadrato di mattoni.
+```
+
 ### 3 — La lava più calma · non serve più
 
 Era la scena della lava rifatta con la roccia calma, per ritagliarci i
@@ -343,6 +381,7 @@ memoria sugli scenari del sotterraneo).
 |---|---|---|---|---|---|
 | 1 ✅ | foglio del terreno, bosco | 1 | `td_1`, schema del foglio | `castello/generati/terreno-bosco.png` | le carte vere |
 | 2 ✅ | le torri | 1 | `td_1`, `PVX1O` | `castello/generati/torri-1.png` | le torri pubblicabili |
+| 2b ✅ | le torri rifatte (ChatGPT) | 1 | `td_1`, `torri-1` | `castello/generati/torri-2.png` | quattro torri che si distinguono |
 | 3 — | la lava più calma (non serve più) | 1 | (chat di `td_3`) | — (il nome `td_4.png` è andato alla palude) | un vestito che si legge |
 | 4 ✅ | fogli del terreno, neve e lava | 2 | la scena del vestito | `terreno-neve.png`, `terreno-lava.png` | gli altri due vestiti |
 | 4b ✅ | la scena e il foglio del terreno della palude | 2 | `terreno-neve`, `td_4`, chat nuova | `td_4.png`, `terreno-palude.png` | la palude col suo vestito |

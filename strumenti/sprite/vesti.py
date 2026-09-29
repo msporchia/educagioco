@@ -1014,8 +1014,19 @@ def pezzi_da_atlante(vestito):
 # di cinque per quattro: quale figura è quale torre, di quanto cresce e le
 # due correzioni (il disco d'erba sotto, il verde fatto mezzo trasparente)
 # le dice il suo foglietto, `torri-1.json`.
+#
+# `torri-2.png` (29 settembre 2026, da ChatGPT) è tornato **in ordine** e
+# con la crescita già disegnata: le figure salgono di misura da sole, e le
+# quattro torri hanno una base loro (legno, guglia viola, ghiaccio,
+# bastione di mattoni). Il foglietto dice una `scala` sola, un
+# `largo_max` che tiene le torri al massimo fuori dalla strada, e
+# `bagliore`: l'alone colorato che il generatore ha messo dietro ogni riga,
+# ad alfa bassa, che sotto quella soglia si toglie prima di cercare le
+# figure — se no le macchie d'alfa si toccherebbero tutte. Vince il foglio
+# col numero più alto.
 
-TORRI_NUOVE = GENERATI / 'torri-1.png'
+TORRI_NUOVE = max(GENERATI.glob('torri-[0-9]*.png'), default=GENERATI / 'torri-1.png',
+                  key=lambda p: int(p.stem.split('-')[1]))
 
 
 def senza_erba(im):
@@ -1149,6 +1160,8 @@ def figure_della_griglia(im, col, rig, soglia=24):
 def torri_dal_foglio(png=TORRI_NUOVE):
     fg = json.loads(png.with_suffix('.json').read_text())
     im = Image.open(png).convert('RGBA')
+    if fg.get('bagliore'):
+        im = righe.senza_alone(im, fg['bagliore'])
     col, rig = fg['griglia']
     tagli = {}
     for (r, c), pz in figure_della_griglia(im, col, rig).items():
@@ -1164,8 +1177,11 @@ def torri_dal_foglio(png=TORRI_NUOVE):
         tagli[(r, c)] = pz.crop(tieni)
     fuori = {}
     for chiave, (r, c) in fg['figure'].items():
-        s = fg['scala'][chiave.split(':')[1]]
+        s = fg['scala']
+        s = s if isinstance(s, (int, float)) else s[chiave.split(':')[1]]
         f = tagli[(r, c)]
+        if fg.get('largo_max'):
+            s = min(s, fg['largo_max'] / f.width)
         fuori[f'torre:{chiave}'] = f.resize((round(f.width * s), round(f.height * s)), Image.LANCZOS)
     return fuori
 
@@ -1275,7 +1291,7 @@ def creature_col_respiro(senza=()):
 
 AVVISO_TORRI = '''
                   ⚠ `PVX1O.png` (il foglio di agosto) ha la provenienza non
-                  documentata: non si pubblica. Manca `torri-1.png`'''
+                  documentata: non si pubblica. Manca `torri-<n>.png`'''
 
 
 def figure_da_atlante():
@@ -1288,7 +1304,7 @@ def figure_da_atlante():
         for i, im in enumerate(quadri):
             fuori[f'mostro:{loro}:{i}'] = im
     creature = sorted(set(respiro) | set(camminano))
-    return fuori, creature, {'torri': 'torri-1.png' if TORRI_NUOVE.exists() else 'PVX1O.png (agosto)',
+    return fuori, creature, {'torri': TORRI_NUOVE.name if TORRI_NUOVE.exists() else 'PVX1O.png (agosto)',
                              'camminano': len(camminano)}
 
 
@@ -1426,7 +1442,7 @@ def atlante():
 
      torre:<aspetto>:<stadio>:<ramo>   da {fonte['torri']}{AVVISO_TORRI if fonte['torri'].startswith('PVX1O') else ''}. Il ramo vuoto
                   è la torre salita senza averne preso uno: quale figura
-                  è quale torre lo dice `torri-1.json`, accanto al foglio.
+                  è quale torre lo dice `{fonte['torri'].replace('.png', '.json')}`, accanto al foglio.
      mostro:<creatura>:<fotogramma>   il respiro, dai fogli del sotterraneo
                   (`mostri-1.png`, `mostri-2.png`): le coordinate stanno nei
                   suoi foglietti e in `strumenti/sprite/creature-castello.json`.
