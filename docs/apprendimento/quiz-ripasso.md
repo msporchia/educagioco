@@ -42,6 +42,13 @@ tipologia, dentro `BISOGNO = { min: 0.5, max: 1.5 }`: va male → 1.5, saputa
   forza massima.
 - **Non si spegne**: non toglie né aggiunge domande, sposta solo la
   frequenza. Quello che si spegne sono i saperi ([saperi.md](saperi.md)).
+- **Il muro abbassa, per una settimana**: una tipologia alleggerita
+  (`settings.alleggerite`, vedi [la-domanda.md](la-domanda.md#il-muro-lo-sistema-il-gioco))
+  pesa `BISOGNO.min` invece di quello che direbbe la forza. È il rovescio
+  del ripasso — chi va male esce di più — e vince lui solo per quei sette
+  giorni: una cosa che non si sa ancora, riproposta più spesso, è un muro
+  contro cui sbattere più spesso. Il conto sta in `bisognoDi` di
+  `quiz/memoria.js`, sempre dentro la banda.
 
 ## Il conto a due livelli
 

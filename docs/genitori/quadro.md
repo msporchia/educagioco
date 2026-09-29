@@ -104,14 +104,15 @@ passa dai moduli di quiz (`domandeDiUnEta`).
 
 Una riga che va male è l'unico rosso del quadro (`em.va-male`): gli altri
 stati dicono *dove* sta una cosa, questo dice che qualcosa non funziona. La
-soglia è quella dell'avviso in posta — almeno otto risposte, meno di metà
-giuste — con lo stesso conto e le stesse parole
+soglia è quella delle «Difficili» nella settimana di «Come va» — almeno otto
+risposte, meno di metà giuste — con lo stesso conto e le stesse parole
 ([../apprendimento/la-domanda.md](../apprendimento/la-domanda.md)).
 
 **Il rosso risale fino alla testata del blocco** (`vannoMale` in
-`src/data/quadro.js`, `allarme` di `Blocco.vue`): l'avviso nomina la
+`src/data/quadro.js`, `allarme` di `Blocco.vue`): quello che va male è una
 tipologia, che nel quadro compare solo al terzo livello, e sepolta sotto due
-aperture non la trova nessuno.
+aperture non la trova nessuno. (Nasceva per l'avviso in posta, che non c'è
+più: vedi [cestino-e-posta.md](cestino-e-posta.md).)
 
 - Il blocco chiuso dice «1 va male» e scrive la strada («Le analogie › «Le
   analogie sulle cose del mondo» · ne ha sbagliate 8 su 10»).
@@ -119,8 +120,8 @@ aperture non la trova nessuno.
   domande: la somma delle altre la coprirebbe. Il pezzo si nomina da solo
   solo quando vanno male le sue domande prese insieme e nessuna da sola.
 - Una tipologia senza righe nel quadro (oltre il tetto dell'età) non si
-  segnala lì: la tiene «Come va» ([come-va.md](come-va.md)), dove porta il
-  tasto dell'avviso.
+  segnala lì: la tiene «Come va» ([come-va.md](come-va.md)), fra le
+  «Difficili» della settimana.
 
 Nei test: `[data-manopola] [data-apri="giochi"|"<gruppo>"]`,
 `[data-domande="nessuna"]`, `[data-fascia-pesca="<gruppo>"]`,

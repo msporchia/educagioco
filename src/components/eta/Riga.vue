@@ -63,7 +63,7 @@ em.si { color:#2f6b3f; background:#dff0d8 }
 em.giu { color:#7a6a2f; background:#f3eed6 }
 em.su { color:#5b3fa8; background:#eee7ff }
 em.off { color:#8a4a4a; background:#f5e3e3 }
-/* unico rosso del quadro: soglia identica all'avviso in posta (quiz/consiglio.js) */
+/* unico rosso del quadro: soglia identica alle «Difficili» di «Come va» (quiz/consiglio.js) */
 em.va-male { color:#8c2f2f; background:#ffdede }
 .voce-riga.giu .testo b, .voce-riga.su .testo b, .voce-riga.off .testo b { color:#7a7a8a }
 

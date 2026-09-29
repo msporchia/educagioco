@@ -345,7 +345,7 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false,
   }
 }
 
-// il rosso «va male»: stessa soglia dell'avviso in posta (quiz/consiglio.js), risale fino al blocco — vedi quadro.md
+// il rosso «va male»: stessa soglia delle «Difficili» di «Come va» (quiz/consiglio.js), risale fino al blocco — vedi quadro.md
 const vaMale = (chiavi, risposte) => {
   const c = consiglioDa(contoDi(chiavi.filter(Boolean), risposte))
   return c && c.verso === -1 ? c.detto : null
