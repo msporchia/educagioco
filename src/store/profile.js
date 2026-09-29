@@ -1,6 +1,7 @@
 // Profilo condiviso: monete, campagne, apprendimento. Vedi docs/core/archivio.md.
 import { reactive, computed } from 'vue'
-import { load, save, flush, remove, detectBackend, backend, chiavi } from './storage.js'
+import { load, save, flush, remove, detectBackend, backend, chiavi,
+         travasaRipiego, chiediPersistenza } from './storage.js'
 import { scordaSessioni } from './sessioni.js'
 import { newItem, record as srsRecord, isMastered, strength } from './srs.js'
 import { acceso as suonoAcceso } from '../audio.js'
@@ -226,6 +227,13 @@ export async function eliminaGiocatore(id) {
 /* ---------- caricamento / salvataggio ---------- */
 export async function init() {
   state.storage = await detectBackend()
+  // scritture di ripiego lasciate da una sessione in cui IndexedDB non
+  // rispondeva in tempo: adesso che ha risposto, si spostano lì (vedi
+  // docs/core/archivio.md). Prima di leggere il roster, non dopo: se no
+  // una chiave appena travasata la leggerebbe comunque bene (`load()`
+  // concilia da solo), ma è più chiaro farlo qui una volta sola.
+  await travasaRipiego()
+  chiediPersistenza()   // non si aspetta: non deve rallentare l'avvio
   state.giocatori = await caricaRoster()
   salvaRoster()                    // da qui in poi l'elenco è esplicito
   const last = await load('ultimo-giocatore')
@@ -333,6 +341,13 @@ export async function selectPlayer(id) {
   const p = { ...vuoto, ...(raw && typeof raw === 'object' ? raw : {}) }
   // va letto PRIMA di `p.v = vuoto.v` sotto, che lo timbra: dopo, l'informazione è persa
   const daVersione = Number.isFinite(raw && raw.v) ? raw.v : 0
+  /* Una copia prima di riscrivere: se sta per migrare da una versione
+     vecchia, si mette da parte cosa c'era PRIMA che la migrazione lo
+     tocchi (docs/core/archivio.md). `da === 0` non conta: vuol dire che
+     non c'era nessun profilo da cui migrare (`migraProfilo` lo lascia
+     stare), non che questo profilo sia vecchio. */
+  if (raw && typeof raw === 'object' && daVersione !== vuoto.v)
+    await cestina(id, nomeDi(id) || id, raw, 'migrazione')
   p.v = vuoto.v
   migraProfilo(p, daVersione)
   p.settings = { ...vuoto.settings, ...(p.settings || {}) }
@@ -687,9 +702,41 @@ export async function esportaTutto() {
   return { tipo: FIRMA, v: 2, esportato: new Date().toISOString(), giocatori, profili }
 }
 
-export async function importaTutto(dati) {
+/* «Rimetti da un file» passa dal cestino (docs/core/archivio.md): prima
+   di scrivere si vede CHI verrebbe sostituito, per chiederlo al grande —
+   un file di un'altra famiglia con gli stessi id (`g1`, `g2`) non deve
+   schiacciare i bambini di casa senza che nessuno se ne accorga. Pura e
+   sincrona apposta: una schermata la chiama per mostrare la conferma
+   prima ancora di decidere se importare davvero. */
+export function anteprimaImportazione(dati) {
   if (!dati || !dati.profili || typeof dati.profili !== 'object' || Array.isArray(dati.profili))
     throw new Error('Questo non è un salvataggio dei giochi')
+  const idFile = Object.keys(dati.profili)
+    .filter(id => id && dati.profili[id] && typeof dati.profili[id] === 'object')
+  if (!idFile.length) throw new Error('Nel file non c\'è nessun profilo da ripristinare')
+
+  const nomiFile = new Map()
+  if (Array.isArray(dati.giocatori))
+    for (const v of dati.giocatori.map(normalizzaVoce)) if (v) nomiFile.set(v.id, v.nome)
+
+  const sostituiti = idFile.filter(id => giocatore(id)).map(id => ({
+    id, nomeAttuale: nomeDi(id), nomeFile: nomiFile.get(id) || nomeDi(id) || id,
+  }))
+  return {
+    quanti: idFile.length,
+    sostituiti,
+    esportato: typeof dati.esportato === 'string' ? dati.esportato : null,
+  }
+}
+
+export async function importaTutto(dati) {
+  const anteprima = anteprimaImportazione(dati)   // valida la forma, e lancia se è rotto
+
+  // Prima di scrivere sopra un profilo che c'è già, se ne mette via una
+  // copia — come fanno azzerare ed eliminare: un ripristino sbagliato si
+  // annulla rimettendo quella, non tornando a un file più vecchio.
+  for (const { id } of anteprima.sostituiti)
+    await cestina(id, nomeDi(id) || id, state.player === id ? state.profile : null, 'importazione')
 
   const ripristinati = []
   for (const [id, p] of Object.entries(dati.profili)) {
@@ -697,7 +744,6 @@ export async function importaTutto(dati) {
     save(KEY(id), p)
     ripristinati.push(id)
   }
-  if (!ripristinati.length) throw new Error('Nel file non c\'è nessun profilo da ripristinare')
 
   const nomi = new Map()
   if (Array.isArray(dati.giocatori))

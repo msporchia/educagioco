@@ -22,6 +22,24 @@ alle undici di sera.
   ripristinando quello giusto.
 - **`ripristinaCestinato` rifà anche il roster** (`src/store/profile.js`):
   un profilo che nessuno nomina è un salvataggio invisibile.
+- **«Rimetti da un file» passa di qui anche lei.** `importaTutto()`
+  sovrascriveva senza chiedere: un file di un'altra famiglia con gli
+  stessi id (`g1`, `g2`) — capita, perché gli id nascono `g1`, `g2`, …
+  in tutte le case — schiacciava i bambini di casa senza che nessuno lo
+  vedesse. Adesso `anteprimaImportazione(dati)` (pura, sincrona) dice
+  PRIMA chi verrebbe sostituito — `{ id, nomeAttuale, nomeFile }` per
+  ognuno, più `esportato` (la data del file, se ce l'ha) — e la
+  schermata lo chiede solo se `sostituiti.length` è più di zero (un file
+  su un telefono vuoto non sostituisce nessuno, non c'è niente da
+  chiedere). Confermato, `importaTutto()` mette in cestino ogni profilo
+  di casa che sta per sovrascrivere (`motivo: 'importazione'`) prima di
+  scrivere sopra.
+- **Una migrazione vecchia lascia una copia anche lei.** Quando
+  `selectPlayer` trova un profilo con un `v` più vecchio di quello di
+  oggi, lo mette in cestino (`motivo: 'migrazione'`) **prima** di
+  toccarlo: se una migrazione avesse un guasto, l'originale non si perde
+  con lei. Un profilo già alla versione di oggi non ripassa di qui: non
+  c'è nessuna migrazione da cui proteggersi.
 
 ## La posta dei grandi (`src/guide/novita.js`, `src/store/posta.js`)
 

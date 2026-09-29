@@ -13,9 +13,10 @@
    memoria, che qui è un archivio come un altro.
    ═══════════════════════════════════════════════════════════════════ */
 import { state, init, creaGiocatore, selectPlayer, resetPlayer,
-         eliminaGiocatore, ripristinaCestinato, addCoins } from '../../src/store/profile.js'
-import { leggiCestino, svuotaCestino } from '../../src/store/cestino.js'
-import { remove, chiavi } from '../../src/store/storage.js'
+         eliminaGiocatore, ripristinaCestinato, addCoins,
+         anteprimaImportazione, importaTutto } from '../../src/store/profile.js'
+import { leggiCestino, svuotaCestino, voceCestinata } from '../../src/store/cestino.js'
+import { remove, chiavi, save, load, flush } from '../../src/store/storage.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 async function pulisci() {
@@ -85,6 +86,72 @@ cesto = await leggiCestino()
 uguale('non se ne accumulano più di tre', cesto.length, 3)
 controlla('e la prima è la più fresca',
           cesto[0].quando >= cesto[cesto.length - 1].quando)
+
+/* ── 4. rimettere da un file passa dal cestino ──
+   Un file di un'altra famiglia con lo stesso id (`g1`) non deve
+   schiacciare il bambino di casa senza che il grande lo veda: prima si
+   vede chi verrebbe sostituito, poi — solo se si conferma — si scrive
+   sopra, e quello che c'era finisce in cestino. */
+await pulisci()
+await init()
+const casa = await creaGiocatore('Cinque')
+addCoins(77)
+const dellaCasa = state.profile.coins
+
+const file = {
+  tipo: 'giochi-bambini', v: 2, esportato: '2026-09-12T10:00:00.000Z',
+  giocatori: [{ id: casa, nome: 'Un\'altra famiglia' }],
+  profili: { [casa]: { v: 7, coins: 999, items: {}, totals: {} } },
+}
+
+const anteprima = anteprimaImportazione(file)
+uguale('si vede chi verrebbe sostituito', anteprima.sostituiti.length, 1)
+uguale('col nome di adesso', anteprima.sostituiti[0].nomeAttuale, 'Cinque')
+uguale('e con quello che porta il file', anteprima.sostituiti[0].nomeFile, 'Un\'altra famiglia')
+uguale('e la data del file arriva intera', anteprima.esportato, file.esportato)
+
+await importaTutto(file)
+cesto = await leggiCestino()
+uguale('il profilo di casa, prima di essere sostituito, finisce in cestino', cesto[0].nome, 'Cinque')
+uguale('col motivo giusto', cesto[0].motivo, 'importazione')
+uguale('con le monete di prima', (await voceCestinata(cesto[0].quando)).profilo.coins, dellaCasa)
+uguale('e adesso ci sono quelle del file', state.profile.coins, 999)
+
+await ripristinaCestinato(cesto[0].quando)
+uguale('rimessa la copia, le monete di casa tornano', state.profile.coins, dellaCasa)
+
+/* Un file senza collisioni (un telefono nuovo) non deve mettere via
+   niente: non c'è nessun profilo di casa da proteggere. */
+await pulisci()
+await init()
+const file2 = { tipo: 'giochi-bambini', v: 2, giocatori: [{ id: 'gX', nome: 'Sette' }],
+                profili: { gX: { v: 7, coins: 5, items: {}, totals: {} } } }
+uguale('senza collisioni non c\'è nessuno da sostituire',
+       anteprimaImportazione(file2).sostituiti.length, 0)
+await importaTutto(file2)
+uguale('e il cestino resta vuoto', (await leggiCestino()).length, 0)
+
+/* ── 5. una migrazione da una versione vecchia lascia una copia ──
+   `selectPlayer` la scrive PRIMA che la migrazione tocchi il profilo:
+   se la migrazione fosse sbagliata, l'originale non si perde. */
+await pulisci()
+save('giocatori', [{ id: 'g1', nome: 'Otto' }])
+save('profilo:g1', { v: 6, coins: 42, items: {}, totals: {} })
+await flush()
+await init()
+
+uguale('il profilo è stato migrato alla versione di oggi', state.profile.v, 7)
+cesto = await leggiCestino()
+uguale('e la versione di ieri è finita in cestino', cesto[0].motivo, 'migrazione')
+const primaDellaMigrazione = await voceCestinata(cesto[0].quando)
+uguale('con dentro il suo vecchio numero di versione', primaDellaMigrazione.profilo.v, 6)
+uguale('e le sue monete', primaDellaMigrazione.profilo.coins, 42)
+
+/* Un profilo già alla versione di oggi non deve rimigrare (e non deve
+   riempire il cestino) a ogni riavvio. */
+await selectPlayer('g1')
+uguale('una seconda lettura, già alla versione giusta, non aggiunge copie',
+       (await leggiCestino()).length, 1)
 
 nota('il cestino sta fuori dai profili: dentro morirebbe con quello che si cancella')
 riassunto('Il cestino: cancellare non è più per sempre')
