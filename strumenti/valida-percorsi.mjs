@@ -13,7 +13,7 @@ import { sullaCarta } from '../src/motore/castello/carta.js'
 import { CAMPAGNE, RACCONTO, LIBERE_RACCONTO } from '../src/data/campagne-castello.js'
 import { guastiDelleImmunita, guastiDelleMiste } from '../src/data/mostri.js'
 import { MONDO, LIBERE, TAPPE, coperturaApertura, APERTURA_COPRE, APERTURA_CORTA,
-         ONDATE_TARATE, chiaveTappa }
+         ONDATE_TARATE, chiaveTappa, RAMI_DA }
   from '../src/data/castello.js'
 
 // Le misure, in unità di disegno; il perché di ognuna è in
@@ -158,11 +158,16 @@ function esaminaCampo(t) {
            comune: r.comune, incroci: incroci.length }
 }
 
-// Chi arriva, e a che cosa è immune (vedi docs/castello/mostri.md).
+// Chi arriva, a che cosa è immune (vedi docs/castello/mostri.md), e se al
+// bivio dei rami ci si arriva.
 function esaminaMostri(t) {
   if (!t.mostri || !t.mostri.length) return ['nessun mostro']
   const guasti = guastiDelleImmunita(t)
   guasti.push(...guastiDelleMiste(t, Number.isFinite(t.ondate) ? t.ondate : ONDATE_TARATE))
+  // senza rami solo se il tetto non arriva al bivio: se no la torre sale
+  // oltre il terzo gradino senza mai scegliere un mestiere
+  if (!t.rami && t.cap >= RAMI_DA)
+    guasti.push(`niente rami, ma il tetto (${t.cap}) arriva al bivio (${RAMI_DA}): va \`rami: true\``)
   const copre = coperturaApertura(t)
   const serve = Math.min(APERTURA_COPRE, Number.isFinite(t.ondate) ? t.ondate : APERTURA_COPRE)
   const corta = APERTURA_CORTA[t.chiave || chiaveTappa(t)]

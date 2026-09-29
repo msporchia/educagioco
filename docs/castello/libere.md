@@ -18,8 +18,7 @@ in `LIBERE_RACCONTO` di `src/data/campagne-castello.js`.
   record (`campagne.torri.primati[<chiave>]`, vedi `giochi/primati.js`).
   Non si rinominano.
 - **Ognuna eredita dalla sua campagna** tutti i mostri che ci vivono, le
-  torri, i rami e l'`ambiente` dell'ultima tappa (nel bosco niente rami,
-  come nella campagna). Le abilità sono sempre accese, il capo arriva ogni
+  torri, i rami e l'`ambiente` dell'ultima tappa. Le abilità sono sempre accese, il capo arriva ogni
   `CAPO.ogni` ondate; il resto è fisso (`posti` 14, `cap` 10, `attesa` 30).
 - **Si aprono tutte insieme a campagna finita.** `LIBERA` è la prima delle
   quattro, per i banchi che ne vogliono una.

@@ -28,7 +28,7 @@ import { TAPPE, LIBERE, LIBERA, CFG, difesaCon, difesaLarga, energiaAll, nemiciD
          tiroDi, operazioniDi, premioTappa, geloDi, vitaNemico, costoDifesaPiena,
          energiaMassima, potenzaDi, pianoDi, ondateDi, postiDi, entrataOnda, frontiDi,
          ingressiDi, firmaEquilibrio, firmaTaratura, sequenzaTorri, resaPerEnergia, resaDi,
-         listinoDi }
+         listinoDi, RAMI_DA }
   from '../../src/data/castello.js'
 import { CAMPAGNE, LIBERE_RACCONTO } from '../../src/data/campagne-castello.js'
 import { firmaImmunita, immuniDi, comune } from '../../src/data/mostri.js'
@@ -512,6 +512,16 @@ controlla('il gelo di una torre alta frena di più e dura di più',
    che si controlla qui è **il pavimento** — la primissima partita di
    chi apre la modalità, che di regali non ne ha nessuno. È anche la
    partita su cui `npm run tara` la tara. */
+/* ── una tappa senza rami è una tappa che al bivio non ci arriva ──
+   Il bivio viene al gradino `RAMI_DA`: se la tappa lascia salire fin lì
+   e il bivio non c'è, la torre cresce oltre il terzo gradino senza mai
+   scegliere un mestiere, cioè sale a vuoto. «Quando una tappa non ha
+   specializzazioni è solo perché il livello massimo non ci arriva»
+   (l'utente). */
+for (const t of [...TAPPE, ...LIBERE])
+  controlla(`${t.nome} (${t.campagna}): senza rami solo se il tetto sta sotto il bivio`,
+            t.rami || t.cap < RAMI_DA, `cap ${t.cap}, bivio al ${RAMI_DA}`)
+
 uguale('le partite libere sono quattro, una per campagna',
        LIBERE.map(l => l.campagna).join(), CAMPAGNE.map(c => c.id).join())
 uguale('e le loro chiavi sono quelle del racconto',

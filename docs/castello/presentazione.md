@@ -54,7 +54,7 @@ ingrandisce la mappa, e un doppio tocco la rimette in quadro.
 
 ## A metà scaletta una torre sceglie che fare
 
-Dal sottosuolo in poi, al quarto gradino, la torre sceglie un mestiere fra
+Al quarto gradino, in ogni tappa che ci arriva, la torre sceglie un mestiere fra
 **due carte**: l'arciere diventa cecchino o raffica, la magica veleno o
 catena, il ghiaccio bufera o brina, le bombe mortaio o napalm. La scelta non
 costa un calcolo in più, e i due rami valgono lo stesso: cambia la forma del

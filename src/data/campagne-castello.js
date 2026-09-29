@@ -212,19 +212,19 @@ export const CAMPAGNE = [
         // — · 💣❄️
         mostri: ['slime', 'pipistrello'], forma: BOSCO_SENTIERO },
       { nome: 'Il guado', emoji: '💧', ambiente: 'bosco-guado', calcoli: 7, cap: 4,
-        torri: ['add', 'sub'],
+        torri: ['add', 'sub'], rami: true,
         // — · —
         mostri: ['slime', 'goblin'], forma: BOSCO_GUADO },
       { nome: 'La radura', emoji: '🍀', ambiente: 'bosco-radura', calcoli: 8, cap: 5,
-        torri: ['add', 'sub'],
+        torri: ['add', 'sub'], rami: true,
         // 💣❄️ · — · — · —
         mostri: ['pipistrello', 'ragno', 'slime', 'goblin'], forma: BOSCO_RADURA },
       { nome: 'Il folto', emoji: '🌳', ambiente: 'bosco-fitto', calcoli: 10, cap: 6,
-        torri: ['add', 'sub', 'mul'],
+        torri: ['add', 'sub', 'mul'], rami: true,
         // 💣❄️ · — · — · 🏹💣
         mostri: ['pipistrello', 'slime', 'goblin', 'fantasma'], forma: BOSCO_FOLTO },
       { nome: 'La radice', emoji: '🪵', ambiente: 'bosco-notte', calcoli: 12, cap: 7,
-        torri: ['add', 'sub', 'mul', 'div'], capo: true,
+        torri: ['add', 'sub', 'mul', 'div'], rami: true, capo: true,
         // 💣❄️ · — · 🔮❄️ · 🏹💣 · 🏹🔮 · —
         mostri: ['arpia', 'ragno', 'scheletro', 'fantasma', 'golem', 'orco'],
         forma: BOSCO_RADICE },

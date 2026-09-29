@@ -84,10 +84,15 @@ cresciuta.
 ## I due rami valgono lo stesso
 
 - **Al quarto gradino** (`RAMI_DA`) la torre sceglie un mestiere fra due
-  carte, dal Sotterraneo in poi (`rami: true` sulla tappa). La scelta non
-  costa un calcolo in più: è quello che il calcolo del gradino compra. Nel
-  Bosco no: lì la lezione è ancora «salire conviene», e un bivio davanti a
-  chi non ha capito a cosa serve potenziare è una domanda senza contesto.
+  carte, in ogni tappa che ci arriva (`rami: true`). La scelta non costa un
+  calcolo in più: è quello che il calcolo del gradino compra.
+- **Una tappa senza rami è una tappa il cui tetto sta sotto il bivio**
+  (`cap` < `RAMI_DA`: oggi solo il sentiero, cap 3). La regola è
+  dell'utente, e la tengono `unita/castello` e il validatore: una torre che
+  sale oltre il terzo gradino senza scegliere niente sale a vuoto. Il Bosco
+  una volta ne restava fuori tutto («lì la lezione è ancora salire
+  conviene»), e così dal guado alla radice le torri salivano fino al
+  settimo gradino senza bivio.
 - **Cambia la forma del danno, mai la quantità.** La torre si sceglie
   guardando il listino, il ramo no — si prende al prezzo di un gradino — e se
   uno valesse di più sarebbe un tranello; ed è la condizione perché il

@@ -33,7 +33,7 @@ età agisce solo in alto.
 
 | | racconto | torri | rami, abilità | calcoli |
 |---|---|---|---|---|
-| 🌲 **Bosco** | la scuola: si impara a costruire e potenziare | entrano una alla volta: `add` · +`sub` · `sub` · +`mul` · +`div` | no | 6 · 7 · 8 · 10 · 12 |
+| 🌲 **Bosco** | la scuola: si impara a costruire e potenziare | entrano una alla volta: `add` · +`sub` · `sub` · +`mul` · +`div` | rami dal guado (il sentiero ha cap 3), niente abilità | 6 · 7 · 8 · 10 · 12 |
 | 🕯️ **Sotterraneo** | tutte aperte: non si sblocca più niente, si sceglie | tutte | sì | 9 · 11 · 13 · 16 · 19 |
 | 🏰 **Mura** | dentro il castello, addosso al portone | tutte | sì | 14 · 18 · 22 · 26 · 30 |
 | 🐸 **Palude** | più attenzione e non più conti: due bocche in ogni tappa | tutte | sì | 12 · 14 · 18 · 21 · 24 |
