@@ -1,41 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA SCHEDA — la modale che fa la domanda, uguale per tutti i moduli.
-
-   Il gioco si ferma, esce un cartello, il bambino tocca una risposta,
-   il cartello dice com'è andata e sparisce. Una riga sola, da dovunque:
-
-     const esito = await chiedi(ortografia, { grado: 3 })
-     if (esito.giusto) …
-
-   Chi la apre non sa che materia sia, e il modulo non sa che esiste uno
-   schermo: in mezzo passa solo l'oggetto `domanda`. È il motivo per cui
-   un modulo nuovo non costa una riga di interfaccia — e per cui questa
-   scheda si può innestare in Survivors, nel dungeon e nel castello
-   senza portarsi dietro nient'altro.
-
-   LE RISPOSTE SI DISPONGONO DA SÉ: due grandi affiancate, tre o quattro
-   in griglia, sei piccole. Testo, emoji o disegno cambiano solo cosa
-   c'è dentro il tasto, mai la disposizione.
-
-   DOPO L'ERRORE si vede la risposta giusta accesa di verde, e — se il
-   modulo l'ha scritta — la riga `perche` di quella sbagliata o l'aiuto
-   della domanda. Un secondo e mezzo di lettura, non un rimprovero:
-   niente ✗ rossi che sbattono, nessun punteggio, si torna a giocare.
-
-   Il CSS sta qui dentro come stringa e si inietta una volta sola. Non è
-   pigrizia: il prodotto finale è un HTML unico e questa scheda deve
-   funzionare tale e quale dentro una pagina di prova aperta a mano e
-   dentro il build di Vite.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// il gemello imperativo di Domanda.vue: `await chiedi(modulo, { grado })`, per giochi fuori Vue (Survivors, dungeon, castello). Il CSS è iniettato come stringa una volta sola: il build resta un HTML unico.
 import { dipingi } from './riquadro.js'
 import { sorteQualunque } from '../nucleo/sorte.js'
 import { evidenziando } from '../nucleo/domanda.js'
 
-/* Le misure sono quelle di `Domanda.vue`, e per lo stesso motivo: i
-   disegni fissi a 148 e 118 pixel mandavano metà scheda fuori da uno
-   schermo piccolo. `--qz-h` è l'unità di altezza utile — di regola tutto
-   lo schermo, e chi apre la domanda in un pannello più corto la stringe. */
+// misure identiche a Domanda.vue: --qz-h è l'unità di altezza utile, chi apre in un pannello più corto la stringe
 const STILE = `
 .quiz-velo {
   --qz-h: 1vh;
@@ -128,19 +96,13 @@ function stile() {
   document.head.appendChild(s)
 }
 
-/* Il contenuto di un tasto (o del soggetto): testo, emoji o disegno —
-   e sotto, se c'è, il nome della figura. Il gemello Vue è `Domanda.vue`
-   e le due rese devono restare la stessa cosa: una domanda che qui esce
-   senza la parola sotto è una domanda che a un bambino insegna
-   un'immagine e non un vocabolo. */
+// contenuto di un tasto/soggetto: testo, emoji o disegno + nome sotto; deve restare identico a Domanda.vue
 function riempi(el, cosa, pittori) {
   if (cosa.emoji !== undefined) {
     el.classList.add('emoji')
     el.appendChild(document.createTextNode(cosa.emoji))
   } else if (cosa.testo !== undefined) {
-    /* una frase con la parola in rilievo: tre nodi di testo e un <b> in
-       mezzo, mai una stringa di HTML — nel dato la parola è una parola,
-       e il grassetto lo mette qui */
+    // tre nodi di testo e un <b> in mezzo, mai HTML: nel dato la parola è una parola
     const { prima, parola, dopo } = evidenziando(cosa.testo, cosa.evidenzia)
     if (parola) {
       el.classList.add('frase')
@@ -154,8 +116,7 @@ function riempi(el, cosa, pittori) {
   } else {
     const cv = document.createElement('canvas')
     el.appendChild(cv)
-    /* il canvas prende la misura dal riquadro solo dopo il layout */
-    requestAnimationFrame(() => dipingi(cv, pittori, cosa.scena))
+    requestAnimationFrame(() => dipingi(cv, pittori, cosa.scena)) // la misura arriva dal riquadro solo dopo il layout
   }
   if (cosa.nome) {
     el.classList.add('nominata')
@@ -166,8 +127,7 @@ function riempi(el, cosa, pittori) {
   }
 }
 
-/* ── mostra una domanda già generata ──
-   Torna una promessa con { giusto, indice, tempo, domanda }. */
+// mostra una domanda già generata; torna una promessa con { giusto, indice, tempo, domanda }
 export function mostra(domanda, pittori = {}, { dove = document.body, titolo = '', attesa = 1500 } = {}) {
   stile()
   return new Promise(risolvi => {
@@ -248,9 +208,7 @@ export function mostra(domanda, pittori = {}, { dove = document.body, titolo = '
   })
 }
 
-/* ── la scorciatoia buona per i giochi ──
-   Genera e mostra in un colpo solo. Il titolo di serie dice materia e
-   grado, che nel gioco è quello che serve sapere. */
+// scorciatoia per i giochi: genera e mostra in un colpo solo
 export function chiedi(modulo, { grado = 1, sorte = sorteQualunque(), dove, attesa } = {}) {
   const d = modulo.chiedi(grado, sorte)
   const titolo = `${modulo.icona} <b>${modulo.nome}</b> · grado ${Math.min(grado, modulo.gradi)}`

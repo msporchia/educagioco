@@ -1,36 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I PITTORI DEI GRAFICI E DELLE TABELLE
-
-   Tre scene, i tre modi in cui a scuola si mettono in fila dei dati:
-
-     { che: 'pittogramma', voci: ['🐶', '🐱', '🐰'], icona: '🙂',
-       icone: [4, 2.5, 6], vale: 2 }
-     { che: 'istogramma', voci: ['lun', 'mar', 'mer'], valori: [4, 7, 3],
-       passo: 1 }
-     { che: 'tabella', righe: ['Ada', 'Leo', 'Eva'], colonne: ['⚽', '🦖', '🚗'],
-       celle: [[3, 5, 1], [4, 2, 6], [7, 8, 9]] }
-
-   Come tutti i pittori non sanno niente di risposte giuste: ricevono
-   dei fatti e li disegnano. Il pittogramma riceve **quanti disegni**,
-   non quanto valgono — la moltiplicazione per la legenda è la domanda,
-   e la fa il bambino; `vale` serve solo a scrivere la legenda sotto.
-
-   SI DISEGNA SU UN FOGLIO CHIARO. Gli altri pittori tingono in chiaro
-   sul fondo notte della scheda, ma un grafico è una cosa che a scuola
-   si guarda su un quaderno: inchiostro scuro su carta, righe sottili,
-   e le etichette dove l'occhio le cerca. È la stessa scelta del
-   quadrante dell'orologio, che è bianco per lo stesso motivo.
-
-   LEGGIBILE A 148 PIXEL. Il riquadro vero è largo al massimo 148 pixel
-   (toccandolo si apre a tutto schermo, ma chi risponde senza toccarlo
-   deve poterlo leggere lo stesso): poche voci, etichette di tre lettere
-   o un'emoji, numeri sull'asse solo una tacca sì e una no. Le tacche
-   senza numero ci sono tutte, e hanno la loro riga sottile che
-   attraversa il grafico: leggere dove cade una cima fra due numeri
-   scritti è metà della lezione, e senza quella riga diventerebbe una
-   stima a occhio.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// pittogramma/istogramma/tabella: su foglio chiaro (non blu notte), leggibili a 148px (vedi docs/apprendimento/quiz-moduli.md)
 import { TINTE } from './tinte.js'
 
 const CARTA = '#f6f8fe'
@@ -39,30 +7,17 @@ const MATITA = '#6b7aa3'          // gli assi e le scritte piccole
 const RIGA = '#dde4f3'            // le righe sottili del quaderno
 const TESTATA = '#e3e9f8'         // il fondo delle intestazioni della tabella
 
-/* le barre hanno un colore ciascuna, perché «la barra accanto» sia una
-   cosa che si vede e non solo un posto: presi dalla tavolozza comune,
-   nel tono medio che su carta chiara ha abbastanza corpo */
+// colore per barra, perché «la barra accanto» sia una cosa che si vede
 const BARRE = ['azzurro', 'arancione', 'verde', 'viola', 'rosso', 'giallo'].map(n => TINTE[n].base)
 
-/* un'etichetta è un'emoji o una parola corta, e si scrivono diverse:
-   un'emoji a corpo 7 non si riconosce, una parola a corpo 12 non ci sta */
+// emoji e parole si scrivono a corpo diverso: un'emoji piccola non si riconosce, una parola grande non ci sta
 const eFigura = t => /\p{Extended_Pictographic}/u.test(String(t))
 
 function foglio(p) {
   p.rett(1, 1, 98, 98, CARTA)
 }
 
-/* ── il pittogramma ─────────────────────────────────────────────────
-   Una fila per voce, un disegno per ogni cosa (o per ogni `vale` cose).
-   I disegni stanno **in colonna** da una fila all'altra: è la regola
-   che rende il pittogramma un grafico e non un mucchio, perché la fila
-   più lunga diventa quella che ne ha di più. Per questo il passo fra
-   due disegni è uno solo per tutto il grafico, deciso dalla fila più
-   lunga, e non uno per fila.
-
-   Mezzo disegno è **la metà sinistra** del disegno, tagliata netta: è
-   come lo si trova sui libri, e un disegno rimpicciolito si leggerebbe
-   come un disegno intero un po' più piccolo. */
+// i disegni stanno in colonna fra le file (un passo solo per tutto il grafico): è quello che lo rende un grafico e non un mucchio
 export function pittogramma(p, { voci = [], icona = '⭐', icone = [], vale = 1 }) {
   foglio(p)
   const n = Math.max(1, voci.length)
@@ -86,10 +41,7 @@ export function pittogramma(p, { voci = [], icona = '⭐', icone = [], vale = 1 
     for (let k = 0; k < intere; k++)
       p.testo(icona, x0 + passo * k + passo / 2, cy + dim * 0.06, INCHIOSTRO, dim, 500)
     if (quante > intere) {
-      /* il mezzo disegno: si taglia al centro del suo posto, dove sta
-         anche il centro dell'emoji. Che si legga come mezzo dipende dal
-         disegno — una mano col pollice da una parte, tagliata, resta una
-         fettina — ed è il modulo che sceglie icone tonde e larghe */
+      // mezzo disegno: tagliato al centro del suo posto (il modulo sceglie icone tonde e larghe perché si legga come metà)
       const cx = x0 + passo * intere + passo / 2
       const { ctx } = p
       ctx.save()
@@ -99,17 +51,13 @@ export function pittogramma(p, { voci = [], icona = '⭐', icone = [], vale = 1 
     }
   })
 
-  /* la legenda: in un riquadro suo, perché è la riga che si dimentica */
-  if (legenda) {
+  if (legenda) { // riquadro suo: è la riga che si dimentica
     p.rett(26, 87, 48, 10, TESTATA)
     p.testo(`${icona} = ${vale}`, 50, 92.4, INCHIOSTRO, 8, 800)
   }
 }
 
-/* ── l'istogramma ───────────────────────────────────────────────────
-   Barre verticali su un asse con dieci tacche. `passo` è quanto vale
-   una tacca, e il numero si scrive una tacca sì e una no: con undici
-   numeri su un fianco largo un pollice non se ne legge nessuno. */
+// dieci tacche, numero scritto una sì e una no (undici numeri su un fianco stretto non si leggono)
 export const TACCHE = 10
 
 export function istogramma(p, { voci = [], valori = [], passo = 1 }) {
@@ -118,8 +66,7 @@ export function istogramma(p, { voci = [], valori = [], passo = 1 }) {
   const n = Math.max(1, voci.length)
   const y = v => fondo - (v / (passo * TACCHE)) * (fondo - cima)
 
-  /* le righe del quaderno, una per tacca, e i numeri a tacche alterne */
-  for (let t = 0; t <= TACCHE; t++) {
+  for (let t = 0; t <= TACCHE; t++) { // righe del quaderno, una per tacca, numeri a tacche alterne
     const yy = y(t * passo)
     const scritta = t % 2 === 0
     p.linea([{ x: x0 - (scritta ? 3 : 1.6), y: yy }, { x: x1, y: yy }],
@@ -133,9 +80,7 @@ export function istogramma(p, { voci = [], valori = [], passo = 1 }) {
     const cx = x0 + largo * i + largo / 2
     const alto = y(valori[i] || 0)
     p.rett(cx - barra / 2, alto, barra, fondo - alto, BARRE[i % BARRE.length])
-    /* il bordo in cima, un filo più scuro: è la riga che si segue con
-       il dito fino ai numeri, e deve essere netta */
-    p.linea([{ x: cx - barra / 2, y: alto }, { x: cx + barra / 2, y: alto }], INCHIOSTRO, 0.9)
+    p.linea([{ x: cx - barra / 2, y: alto }, { x: cx + barra / 2, y: alto }], INCHIOSTRO, 0.9) // bordo netto: si segue col dito fino ai numeri
     p.testo(String(v), cx, 91.5, INCHIOSTRO, eFigura(v) ? 10 : 7.5, 800)
   })
 
@@ -143,11 +88,7 @@ export function istogramma(p, { voci = [], valori = [], passo = 1 }) {
   p.linea([{ x: x0, y: fondo }, { x: x1, y: fondo }], MATITA, 1.1)
 }
 
-/* ── la tabella a doppia entrata ────────────────────────────────────
-   Una riga di testa, una colonna di testa, e i numeri all'incrocio. Le
-   due teste hanno lo stesso fondo e stanno dalla parte dove si comincia
-   a leggere — in alto e a sinistra — perché la domanda è sempre
-   «parti da qui, e da qui, e guarda dove si incontrano». */
+// teste in alto e a sinistra, dove si comincia a leggere: la domanda è sempre «parti da qui e da qui, guarda dove si incontrano»
 export function tabella(p, { righe = [], colonne = [], celle = [] }) {
   foglio(p)
   const nr = righe.length + 1, nc = colonne.length + 1
@@ -169,8 +110,7 @@ export function tabella(p, { righe = [], colonne = [], celle = [] }) {
       p.testo(String(celle[i]?.[j] ?? ''), x0 + w * (j + 1) + w / 2, cy, INCHIOSTRO, 11, 800))
   })
 
-  /* la griglia sopra a tutto, così i fondi non la coprono */
-  for (let i = 0; i <= nr; i++)
+  for (let i = 0; i <= nr; i++) // griglia sopra a tutto, così i fondi non la coprono
     p.linea([{ x: x0, y: top + h * i }, { x: x0 + w * nc, y: top + h * i }], i === 1 ? MATITA : '#b9c4de', i === 1 ? 1 : 0.6)
   for (let j = 0; j <= nc; j++)
     p.linea([{ x: x0 + w * j, y: top }, { x: x0 + w * j, y: top + alto }], j === 1 ? MATITA : '#b9c4de', j === 1 ? 1 : 0.6)

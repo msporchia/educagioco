@@ -1,36 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I PITTORI DELLE FIGURE A ATTRIBUTI
-
-   Li dividono i due moduli che fanno domande sulle regole nascoste —
-   `sequenze` (cosa viene dopo, chi non c'entra) e `analogie` (A sta a B
-   come C sta a ?) — perché la figura è la stessa cosa e disegnarla due
-   volte vorrebbe dire vederla diversa in due domande.
-
-   Tre scene, tutte dentro il quadrato 100×100:
-
-     { che: 'cella',    fig: {forma,colore,quante,grande,ruota} }
-     { che: 'fila',     celle: [fig, …], buco: true }
-     { che: 'analogia', a, b, c }        ognuno { fig } oppure { em }
-
-   Una FIGURA qui ha cinque attributi, e sono cinque perché sono le
-   cinque cose che una regola può far cambiare: la forma, il colore,
-   quante ce ne sono, se è grande o piccola, come è girata. Il pittore
-   non sa quale di questi sia la regola e quali siano rumore — quello lo
-   sa il modulo, ed è tutta la difficoltà della domanda.
-
-   LA FILA È IL SOGGETTO, la cella è la risposta: la stessa figura si
-   vede in fila piccola e nel tasto grande, quindi **la taglia non si
-   può leggere confrontando i due disegni**. Per questo `grande` non
-   cambia la cella di quanto cambierebbe una figura sul foglio: dentro
-   la sua cella una figura grande riempie, una piccola sta in mezzo, e
-   il paragone si fa fra celle vicine — mai fra la fila e il tasto.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// { che:'cella'|'fila'|'analogia', ... }, condiviso da sequenze.js e analogie.js — vedi docs/apprendimento/quiz-moduli.md
 import { tinta } from './tinte.js'
 
 const GIRO = Math.PI * 2
 
-/* poligono regolare centrato in (0,0), primo vertice in alto */
+// poligono regolare centrato in (0,0), primo vertice in alto
 function regolare(n, r, fase = 0) {
   const v = []
   for (let i = 0; i < n; i++) {
@@ -40,8 +13,7 @@ function regolare(n, r, fase = 0) {
   return v
 }
 
-/* la stella a cinque punte: raggio grande e piccolo che si alternano */
-function stella(r) {
+function stella(r) { // raggio grande e piccolo che si alternano
   const v = []
   for (let i = 0; i < 10; i++) {
     const a = -Math.PI / 2 + (i / 10) * GIRO
@@ -51,8 +23,7 @@ function stella(r) {
   return v
 }
 
-/* il cuore, per punti: è la forma che i bambini riconoscono da più
-   lontano di tutte, e in una fila piccola serve proprio quello */
+// il cuore: la forma che si riconosce da più lontano, utile in una fila piccola
 function cuore(r) {
   const v = []
   for (let i = 0; i <= 40; i++) {
@@ -76,13 +47,7 @@ const SAGOME = {
 }
 export const FORME_FIGURE = Object.keys(SAGOME)
 
-/* Dove stanno le figurine quando ce n'è più di una, e quanto si
-   rimpiccioliscono. I numeri sono stretti apposta: **niente deve uscire
-   dalla propria cella**. In una fila le celle sono attaccate, e una
-   figura che sborda si legge come se stesse nella cella di fianco —
-   guardando gli scatti si vedevano due quadrati di una cella sola letti
-   come due celle, e la sequenza diventava incontabile. Il conto da
-   rispettare: scarto + raggio × 1.15 (la forma più sporgente) < 0.5. */
+// posti e rimpicciolimento per più figurine: niente deve sbordare dalla cella (scarto + raggio×1.15 < 0.5), o si legge come due celle
 const POSTI = {
   1: [[0, 0]],
   2: [[-0.25, 0], [0.25, 0]],
@@ -91,8 +56,7 @@ const POSTI = {
 }
 const RIMPICCIOLISCE = { 1: 1, 2: 0.5, 3: 0.44, 4: 0.42 }
 
-/* una figura dentro un quadrato di lato `lato` centrato in (cx, cy) */
-function unaFigura(p, fig, cx, cy, lato) {
+function unaFigura(p, fig, cx, cy, lato) { // una figura dentro un quadrato di lato `lato` centrato in (cx, cy)
   const t = tinta(fig.colore)
   const quante = fig.quante || 1
   const grande = fig.grande === undefined ? true : fig.grande
@@ -119,8 +83,7 @@ function unaFigura(p, fig, cx, cy, lato) {
   }
 }
 
-/* il fondo di una cella: serve a far vedere dove finisce una figura e
-   dove comincia la prossima, che in una sequenza è metà del lavoro */
+// dove finisce una figura e comincia la prossima: in una sequenza è metà del lavoro
 function fondo(p, x, y, lato) {
   p.rett(x + lato * 0.05, y + lato * 0.05, lato * 0.9, lato * 0.9, 'rgba(233,240,255,.1)')
 }
@@ -131,10 +94,7 @@ export function cella(p, { fig = {} }) {
   unaFigura(p, fig, 50, 50, 92)
 }
 
-/* la fila, col posto vuoto in fondo. Il «?» non è un vezzo: senza,
-   l'ultima cella vuota si legge come «qui non c'è niente» invece che
-   «questa è la domanda» — e un bambino che conta i posti sbaglia il
-   passo di uno. */
+// il «?» in fondo non è un vezzo: senza, l'ultima cella si legge come «non c'è niente» e si sbaglia il conto dei posti
 export function fila(p, { celle = [], buco = true, colore = 'azzurro' }) {
   const n = celle.length + (buco ? 1 : 0)
   if (!n) return
@@ -154,18 +114,7 @@ export function fila(p, { celle = [], buco = true, colore = 'azzurro' }) {
   p.testo('?', x + lato / 2, 50, tinta(colore).orlo, lato * 0.62, 800)
 }
 
-/* ── l'analogia ──
-     { che: 'analogia', a: {fig|em}, b: {fig|em}, c: {fig|em} }
-
-   Due righe, e sono due righe apposta: «A sta a B» sopra, «C sta a ?»
-   sotto, incolonnate. In fila unica (A B C ?) la coppia da capire e la
-   coppia da completare si leggono come una sequenza sola, e il bambino
-   cerca un ritmo che non c'è. Incolonnate, la freccia si legge due
-   volte e si vede che è la stessa.
-
-   La casella accetta una figura o un'emoji, perché l'analogia vale su
-   tutti e due: «piccolo sta a grande» è la stessa domanda di «la mucca
-   sta al latte». Il layout è uno, il contenuto no. */
+// due righe incolonnate («A sta a B» sopra, «C sta a ?» sotto): in fila unica si leggerebbe come una sequenza sola
 function casella(p, cosa, cx, cy, lato) {
   if (!cosa) return
   if (cosa.em !== undefined) { p.testo(cosa.em, cx, cy + lato * 0.03, '#eaf0ff', lato * 0.72, 400); return }
@@ -190,9 +139,7 @@ export function analogia(p, { a, b, c, colore = 'azzurro' }) {
   casella(p, b, xb, y1, lato)
   casella(p, c, xa, y2, lato)
 
-  /* il posto della risposta: il «?» al posto del disegno, così si vede
-     che manca una cosa e non che ce n'è una vuota */
-  p.rett(xb - lato / 2, y2 - lato / 2, lato, lato, 'rgba(255,209,103,.13)')
+  p.rett(xb - lato / 2, y2 - lato / 2, lato, lato, 'rgba(255,209,103,.13)') // «?»: manca una cosa, non c'è una vuota
   p.testo('?', xb, y2, t.orlo, lato * 0.66, 800)
 
   for (const y of [y1, y2]) freccia(p, xa + lato / 2 + 4, xb - lato / 2 - 4, y, 'rgba(233,240,255,.55)')
