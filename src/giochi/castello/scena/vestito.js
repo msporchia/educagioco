@@ -1,36 +1,14 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL VESTITO DEL CAMPO — la carta a celle, composta coi pezzi delle
-   scene generate
-
-   La carta di una tappa (`motore/carta.js`) dice cosa c'è in ogni cella:
-   prato, fitto, acqua, strada, piazzola, bocca, castello. Qui ogni cella
-   diventa un pezzo preso dal foglio del terreno di quel vestito
-   (`dati/vestiti.js`, che scrive `strumenti/sprite/vesti.py --atlante`;
-   senza foglio, dai ritagli della scena), e ne esce un'immagine
-   sola grande quanto la carta — 12×22 celle da 64 px — che il campo
-   usa come fondale.
-
-   **È la stessa composizione di `vesti()` in `strumenti/sprite/vesti.py`**,
-   passo per passo e con la stessa scelta della variante per posto
-   (`caso`): la battaglia finta di `poc/scatti/` e il gioco devono
-   vestirsi allo stesso modo, se no quello che si guarda nelle prove non
-   è quello che si gioca. Chi cambia l'una cambia l'altra.
-
-   Perché nel browser e non già fatta: ventiquattro carte vestite in tre
-   modi sono settantadue immagini, e il gioco deve restare un file solo.
-   I pezzi pesano mezzo mega; la composizione costa qualche centinaio di
-   `drawImage`, una volta per tappa.
-
-   ── quale vestito per quale campagna ──
-   I vestiti sono quattro — il bosco, la neve, la lava, la palude — e le
-   campagne quattro, ma non si corrispondono una per una: il bosco e la
-   palude hanno il loro, le grotte e le mura ne prendono in prestito un
-   altro. È una scelta dichiarata dell'utente («per il livello senza lo
-   scenario giusto per ora puoi riutilizzarne un altro mettendo un
-   todo»).
-   ═══════════════════════════════════════════════════════════════════ */
+// Il vestito del campo: la carta a celle di una tappa (motore/carta.js)
+// composta coi pezzi del foglio del terreno di quel vestito, in
+// un'immagine sola grande quanto la carta. È la stessa composizione di
+// `vesti()` in strumenti/sprite/vesti.py, passo per passo: chi cambia
+// l'una cambia l'altra, o la prova e il gioco si vestirebbero diversi.
+// Fatta nel browser (e non già pronta) perché 24 carte in 3 vestiti sono
+// 72 immagini, e il gioco deve restare un file solo.
 import { SCENE, PEZZI as TUTTI, CELLA as C, TOPPA, QUANTI as QUANTE, DAL_FOGLIO } from '../dati/vestiti.js'
 
+// I vestiti (bosco/neve/lava/palude) non corrispondono uno a uno alle
+// campagne: grotte e mura ne prendono in prestito uno, in attesa del loro.
 export const VESTITO_DI = {
   bosco: 'bosco',
   sotterraneo: 'lava',   // TODO: la scena delle grotte, quando c'è
@@ -38,16 +16,12 @@ export const VESTITO_DI = {
   palude: 'palude',
 }
 
-/* le partite libere hanno la loro `campagna` come le tappe: seguono quella */
 export const vestitoDi = tappa => VESTITO_DI[tappa && tappa.campagna] || 'bosco'
 
-/* il colore che si vede mentre l'immagine si decodifica: il fondo di
-   ogni scena, all'incirca, perché un lampo nero a ogni tappa sembra un
-   guasto */
+// il colore approssimato del fondo, mentre l'immagine si decodifica (un
+// lampo nero sembrerebbe un guasto)
 export const TINTA_DI = { bosco: '#5f9a3c', neve: '#dfe9f0', lava: '#4a3a4c', palude: '#71732a' }
 
-/* ── caricare ──
-   Un'immagine per scena, decodificata una volta sola e tenuta. */
 const immagini = {}
 const attese = {}
 export function carica(nome) {
@@ -62,14 +36,11 @@ export function carica(nome) {
 }
 export const pronto = nome => !!immagini[nome]
 
-/* la variante per posto: la stessa cella prende sempre lo stesso pezzo.
-   È `caso()` di vesti.py numero per numero — i prodotti stanno sotto
-   2³¹, quindi lo XOR di JavaScript dà lo stesso risultato di Python */
+// la variante per posto (la stessa cella prende sempre lo stesso pezzo): è
+// caso() di vesti.py numero per numero
 const caso = (x, y, n, seme = 0) =>
   ((x * 73856093) ^ (y * 19349663) ^ (seme * 83492791)) % n
 
-/* da che lati la strada prosegue: verso un'altra strada, verso la bocca
-   sopra, verso il castello sotto */
 function versi(a, x, y) {
   let fuori = ''
   for (const [v, dx, dy] of [['N', 0, -1], ['E', 1, 0], ['S', 0, 1], ['O', -1, 0]]) {
@@ -79,17 +50,9 @@ function versi(a, x, y) {
   return fuori
 }
 
-/* ── i decori grandi e le cose per terra ──
-   Due distrazioni che ha solo il foglio del terreno, e che la carta non
-   scrive: le deduce il vestito dai `d` e dal fondo, con `caso` come tutto
-   il resto. È `grandi_e_terra()` di vesti.py, regola per regola:
-     · un decoro grande prende il posto di un `d` (uno su due) che ha
-       libero il quadrato di 2×2 in giù a destra — fondo, non fitto né
-       acqua — e lontano una cella da strada, piazzole, bocca e castello:
-       le distrazioni non toccano il gioco (`motore/carta.js`);
-     · una cosa per terra sta su una cella di fondo su cinque, **dentro la
-       sua cella**: niente sborda sulla strada o su una piazzola.
-   Torna { grandi: Map('x,y' → quale), terra: [[x, y, quale, dx, dy]] }. */
+// I decori grandi e le cose per terra: due distrazioni che ha solo il
+// foglio del terreno, dedotte dai `d` e dal fondo (grandi_e_terra() di
+// vesti.py). Torna { grandi: Map('x,y' → quale), terra: [[x, y, quale, dx, dy]] }.
 export function grandiETerra(a, w, h, nGrandi, misureTerra) {
   const grandi = new Map(), prese = new Set()
   const fondo = c => c === '.' || c === ','
@@ -118,11 +81,8 @@ export function grandiETerra(a, w, h, nGrandi, misureTerra) {
   return { grandi, terra }
 }
 
-/* ── comporre ──
-   Torna un canvas grande quanto la carta, o `null` se l'immagine della
-   scena non è ancora pronta (chi chiama la carica e riprova). Le
-   composizioni si tengono: rientrare in una tappa già vista non rifà
-   niente. */
+// Torna un canvas grande quanto la carta, o null se la scena non è ancora
+// pronta (chi chiama la carica e riprova). Le composizioni si tengono.
 const fatte = new Map()
 export function componi(righe, nome) {
   const img = immagini[nome]
@@ -130,16 +90,12 @@ export function componi(righe, nome) {
   const chiave = nome + '\n' + righe.join('\n')
   if (fatte.has(chiave)) return fatte.get(chiave)
 
-  /* i pezzi di questo vestito: dalla sua scena o dal suo foglio, e
-     allora con misure sue (`vesti.py --atlante`) */
   const PEZZI = TUTTI[nome], QUANTI = QUANTE[nome]
   const h = righe.length, w = righe[0].length
   const cv = document.createElement('canvas')
   cv.width = w * C; cv.height = h * C
   const ctx = cv.getContext('2d')
   const a = (i, j) => (i >= 0 && i < w && j >= 0 && j < h ? righe[j][i] : null)
-  /* un pezzo dell'atlante: l'angolo in alto a sinistra in (x, y), grande
-     quanto è, o quanto si chiede */
   const posa = (nome, x, y, lw, lh) => {
     const [sx, sy, pw, ph] = PEZZI[nome]
     ctx.drawImage(img, sx, sy, pw, ph, x, y, lw ?? pw, lh ?? ph)
@@ -149,27 +105,22 @@ export function componi(righe, nome) {
     posa(nome, x * C - o, y * C - o)
   }
 
-  /* 1 — il prato dappertutto: una toppa tirata su tutto il campo, e
-     sopra le toppe sfumate, posate in un ordine mescolato perché non si
-     veda la trama */
+  // 1 — il prato: una toppa su tutto il campo, poi le toppe sfumate in
+  // ordine mescolato perché non si veda la trama
   const celle = []
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) celle.push([x, y])
   celle.sort((p, q) => caso(p[0], p[1], 997, 5) - caso(q[0], q[1], 997, 5))
   posa('fondo', 0, 0, w * C, h * C)
   for (const [x, y] of celle) toppa(`prato:${caso(x, y, QUANTI.prato)}`, x, y)
-  /* il fondo con qualcosa in più, dove la carta lo chiede e il foglio ce
-     l'ha (la scena no: lì le `,` restano prato) */
   if (QUANTI.qua)
     for (const [x, y] of celle) if (a(x, y) === ',') toppa(`qua:${caso(x, y, QUANTI.qua, 8)}`, x, y)
 
-  /* 2 — sotto il fitto, il sottobosco */
+  // 2 — sotto il fitto, il sottobosco
   for (const [x, y] of celle)
     if (a(x, y) === '^') toppa(`fitto:${caso(x, y, QUANTI.fitto, 4)}`, x, y)
 
-  /* 3 — l'acqua: il lago dal bordo dove lo specchio tocca un bordo
-     (girato se è quello di sinistra); in mezzo al campo lo stagno del
-     foglio, e se non c'è la metà di sinistra del lago e il suo specchio,
-     così la riva c'è da tutti e due i lati. È `acqua()` di vesti.py */
+  // 3 — l'acqua: il lago dal bordo (specchiato se è quello di sinistra), lo
+  // stagno del foglio in mezzo al campo (acqua() di vesti.py)
   const visti = new Set()
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
@@ -204,8 +155,7 @@ export function componi(righe, nome) {
       }
     }
 
-  /* 4 — la strada e le piazzole (nel mezzo della cella: quelle del
-     foglio sono più strette di una cella) */
+  // 4 — la strada e le piazzole, nel mezzo della cella
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const c = a(x, y)
@@ -219,16 +169,14 @@ export function componi(righe, nome) {
       }
     }
 
-  /* 4b — le cose per terra: piatte, sotto a tutte le figure */
+  // 4b — le cose per terra: piatte, sotto a tutte le figure
   const misureTerra = []
   for (let i = 0; i < (QUANTI.terra || 0); i++) misureTerra.push(PEZZI[`terra:${i}`].slice(2))
   const { grandi, terra } = grandiETerra(a, w, h, QUANTI.grande || 0, misureTerra)
   for (const [x, y, k, dx, dy] of terra) posa(`terra:${k}`, x * C + dx, y * C + dy)
 
-  /* 5 — le figure, dall'alto in basso: chi sta più giù copre chi sta su.
-     Il fitto è fatto di alberi interi, tre per cella, e lungo il bordo
-     si spostano verso il prato e ci sbordano, come fa un bosco vero */
-  /* [chiave d'ordine, pezzo, x, y] */
+  // 5 — le figure, dall'alto in basso (chi sta più giù copre chi sta su):
+  // [chiave d'ordine, pezzo, x, y]
   const figure = []
   const centrata = (pz, x, y, sx, sy) => {
     const [, , pw, ph] = PEZZI[pz]
@@ -238,8 +186,6 @@ export function componi(righe, nome) {
     for (let x = 0; x < w; x++) {
       const c = a(x, y)
       if (grandi.has(`${x},${y}`)) {
-        /* un decoro grande: in mezzo alle sue due colonne, coi piedi in
-           fondo alla seconda riga */
         const pz = `grande:${grandi.get(`${x},${y}`)}`
         const [, , pw, ph] = PEZZI[pz]
         figure.push([(y + 1) * C, pz, x * C + C - Math.floor(pw / 2), (y + 2) * C - 6 - ph])
@@ -257,17 +203,10 @@ export function componi(righe, nome) {
         })
       }
     }
-  /* stabile: a chiave pari resta l'ordine in cui sono entrate, come il
-     `sorted` di Python */
-  figure.sort((p, q) => p[0] - q[0])
+  figure.sort((p, q) => p[0] - q[0])   // stabile, come sorted() di Python
   for (const [, pz, x, y] of figure) posa(pz, x, y)
 
-  /* 6 — la bocca e il castello. La tana del foglio è una figura intera
-     col suo sentiero in fondo: nel mezzo delle tre colonne, coi piedi un
-     quarto di cella dentro la prima riga di strada. Quella della scena è
-     un ritaglio di tre celle, e sotto l'arco l'ultimo terzo è la strada
-     nostra, non il moncone della scena. Sotto le mura la strada prosegue,
-     e il castello ci si posa sopra */
+  // 6 — la bocca e il castello
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       if (a(x, y) === 'A' && a(x - 1, y) !== 'A' && a(x, y - 1) !== 'A') {
