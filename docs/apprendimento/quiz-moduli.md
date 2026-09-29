@@ -79,6 +79,20 @@ genera(grado, sorte, tipo) { switch (tipo) { … } }
   `genera(grado, sorte)` e `saperi:` per grado (o una stringa per tutto il
   modulo).
 
+**Un modulo può dichiarare `scala: [0, 0.22]`** per stare tutto sotto il
+primo gradino della scala di scuola (`SCALA_SCUOLA` in `quiz/scelta.js`):
+è il caso di `moduli/lettere.js`, l'unico modulo che non dà per scontato
+che il bambino legga la consegna — tutti gli altri partono da un quarto
+della manopola in su. Non è un'etichetta di comodo: un bambino di sei
+anni riceve queste domande e non quelle di terza, e uno di quinta non si
+vede arrivare «con che lettera comincia 🐝?» come premio di una carta
+tosta. Le parole di `lettere.js` sono scelte apposta, diverse da
+`data/words.js` (per l'inglese): lì l'emoji è un'illustrazione accanto
+alla parola scritta, qui **l'emoji è la domanda** («con che lettera
+comincia» su 🐰 ha due risposte se si può chiamare coniglio o lepre),
+quindi le voci vanno scelte una per una perché si chiamino in un modo
+solo.
+
 ## Aggiungere un modulo
 
 Un file in `moduli/`, più uno in `grafica/pittori/` se disegna. Nient'altro:
@@ -264,3 +278,7 @@ pittore ripiega da solo sull'arancione.
   `src/giochi/`, non qui.
 - **`poc/compagno.html`**: è un tamagotchi che si nutre di ripasso, non un
   quiz.
+- **L'accento tonico** (`moduli/sillabe.js`, come le nomenclature «tronca,
+  piana, sdrucciola»): si risponde solo dicendo la parola a voce alta, e
+  un bambino che gioca in silenzio tira a indovinare — non è una domanda
+  che sullo schermo funziona, non è una lacuna di taratura.

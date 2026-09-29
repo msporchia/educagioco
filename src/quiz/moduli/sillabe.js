@@ -1,44 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   SILLABE — dividere le parole, sentirne le rime, trovare l'accento.
-
-   La divisione in sillabe NON si calcola: le regole italiane (doppie,
-   digrammi gn/gl/sc/ch/gh, gruppi con la s impura, dittonghi) sono
-   troppe e piene di eccezioni, e una regex qui sbaglierebbe più che a
-   indovinare. Le parole di questo file sono divise A MANO — vedi
-   `DIVISE` — e la sola cosa che il codice calcola sono i FALSI: una
-   divisione sbagliata plausibile si ottiene spostando di una lettera
-   un taglio che è già giusto (`sillabeSbagliate`). È lo stesso motivo
-   per cui «pal-la» letta come «pa-lla» o «montagna» letta come
-   «mon-tag-na» sono errori veri, non lettere a caso.
-
-   QUATTRO GRADI, tutti d'orecchio:
-     1. quante sillabe ha la parola (facile, con l'emoji sotto gli occhi)
-     2. come si divide (la doppia spezzata in mezzo, il digramma unito)
-     3. le rime (e il suo rovescio: chi non fa rima)
-     4. la sillaba che manca in un buco
-
-   CE N'ERA UN QUINTO, l'accento tonico: la stessa parola con l'accento
-   disegnato in tre punti diversi, e si sceglieva quello vero. È stato
-   tolto, e il motivo vale la pena scriverlo perché non è di taratura:
-   a quella domanda si risponde **dicendo la parola a voce alta**, e un
-   bambino che gioca in silenzio — cioè quasi sempre — non ha modo di
-   ragionarci e tira a indovinare. Le domande di nomenclatura sopra
-   («tronca, piana, sdrucciola») erano già state tolte per una ragione
-   parente: la risposta non si ricava, si ricorda.
-
-   Le parole con l'accento scritto (città, perché, lunedì) non stanno in
-   questo file: lì il segno risponde da sé, e sono materia di
-   `ortografia`.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// dividere le parole in sillabe (a mano, vedi DIVISE: le regole italiane hanno troppe eccezioni per una regex) e sentirne le rime.
+// Il quinto grado, l'accento tonico, è stato tolto — vedi "Provati e scartati" in docs/apprendimento/quiz-moduli.md.
+// Le parole con l'accento scritto (città, perché) sono materia di ortografia, non di questo file.
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo, emoji } from '../nucleo/domanda.js'
 
-/* ── le parole divise a mano ──
-   [parola, sillabe, emoji?]. L'emoji manca dove non c'è un modo onesto
-   di disegnare la parola (uno strumento, una congiunzione…): resta
-   comunque buona per dividere, solo non per il grado 1 (che vuole
-   vedere la cosa prima di contare). */
+// [parola, sillabe, emoji?]: l'emoji manca dove non c'è modo onesto di disegnare la parola; resta buona per dividere, non per il grado 1
 const DIVISE = [
   ['casa', ['ca', 'sa'], '🏠'], ['sole', ['so', 'le'], '☀️'], ['luna', ['lu', 'na'], '🌙'],
   ['pane', ['pa', 'ne'], '🍞'], ['mano', ['ma', 'no'], '✋'], ['naso', ['na', 'so'], '👃'],
@@ -87,13 +53,9 @@ const DIVISE = [
   ['riccio', ['ric', 'cio'], '🦔'], ['freccia', ['frec', 'cia'], '🎯'],
 ]
 
-/* tutte le sillabe che compaiono, per pescare il finto buco al grado 4 */
-const POOL_SILLABE = [...new Set(DIVISE.flatMap(w => w[1]))]
+const POOL_SILLABE = [...new Set(DIVISE.flatMap(w => w[1]))] // per pescare il finto buco al grado 4
+const FACILI = DIVISE.filter(w => w[2] && w[1].length <= 3) // 2-3 sillabe e con l'emoji: il pubblico del grado 1
 
-/* le parole facili, 2-3 sillabe e con l'emoji: il pubblico del grado 1 */
-const FACILI = DIVISE.filter(w => w[2] && w[1].length <= 3)
-
-/* ── le rime: famiglie che finiscono allo stesso modo ── */
 const RIME = [
   { finale: 'one', parole: [
     { parola: 'pallone', emoji: '⚽' }, { parola: 'limone', emoji: '🍋' },
@@ -137,16 +99,13 @@ const RIME = [
   ] },
 ]
 
-/* ── le frasi, per non chiedere sempre con le stesse parole ── */
 const FRASI_QUANTE = ['Quante sillabe ha questa parola?', 'In quante sillabe si divide?', 'Conta le sillabe: quante sono?']
 const FRASI_DIVIDI = ['Come si divide in sillabe', 'Qual è la sillabazione giusta di', 'Qual è la divisione giusta di']
 const FRASI_MANCA = ['Che sillaba manca?', 'Qual è la sillaba che manca?', 'Con che cosa si completa?']
 const FRASI_RIMA = ['Quale parola fa rima con', 'Che cosa fa rima con', 'Trova la parola che fa rima con']
 const FRASI_INTRUSO = ['Quale di queste NON fa rima con', 'Chi non fa rima con', 'Qual è l\'intruso: chi non fa rima con']
 
-/* ── i confini fra le sillabe, come indici nella parola intera:
-   servono solo a produrre i FALSI (spostare un taglio di una lettera),
-   mai a trovare quello giusto — quello sta scritto sopra, a mano. ── */
+// confini fra le sillabe come indici: servono solo ai FALSI (spostare un taglio), mai a trovare quello giusto (scritto a mano sopra)
 function confiniDi(sillabe) {
   let acc = 0
   const b = []
@@ -161,10 +120,7 @@ function dividiA(parola, confini) {
   return parti.join('-')
 }
 
-/* una divisione sbagliata plausibile: sposta di una lettera un taglio
-   che è già giusto. Su una doppia («pal-la») dà «pa-lla» o «pall-a»;
-   su un digramma («mon-ta-gna») dà «mon-tag-na»: esattamente gli
-   errori che fa un bambino. */
+// sposta di una lettera un taglio già giusto: su una doppia dà «pa-lla», su un digramma «mon-tag-na» — esattamente gli errori veri
 function sillabeSbagliate(sillabeGiuste, sorte, quante) {
   const parola = sillabeGiuste.join('')
   const giusti = confiniDi(sillabeGiuste)
@@ -182,22 +138,12 @@ function sillabeSbagliate(sillabeGiuste, sorte, quante) {
     const s = dividiA(parola, nuovi)
     if (s !== corretto) trovati.add(s)
   }
-  /* ripiego per le parole cortissime, se il giro non ha trovato abbastanza */
+  // ripiego per le parole cortissime, se il giro non ha trovato abbastanza
   if (trovati.size < quante) trovati.add(parola)
   if (trovati.size < quante && parola.length > 2) trovati.add(parola.slice(0, 1) + '-' + parola.slice(1))
   return [...trovati].slice(0, quante)
 }
 
-/* Le tipologie: contare le sillabe e sentire le rime, che è orecchio
-   puro e sta tutto nel suo gruppo.
-
-   Ce n'era una sesta, **l'accento tonico** — «dove batte la voce», la
-   stessa parola con l'accento disegnato in tre punti — e stava col
-   gruppo degli accenti scritti invece che con le sillabe, perché è la
-   stessa lezione. È stata tolta: la domanda si può rispondere solo
-   dicendo la parola a voce alta, e un bambino che gioca in silenzio la
-   tira a indovinare. Non è una lacuna di taratura, è una domanda che
-   sullo schermo non funziona. */
 const TIPI = [
   { chiave: 'sil:quante', nome: 'Quante sillabe ha la parola', sa: 'sillabe', gradi: { 1: 1 } },
   { chiave: 'sil:dividi', nome: 'Dividere in sillabe', sa: 'sillabe', gradi: { 2: 1 } },
@@ -219,13 +165,7 @@ class Sillabe extends Modulo {
         'le rime',
         'la sillaba che manca',
       ],
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [25, 38, 44, 50],
+      livelli: [25, 38, 44, 50], // scala 0-100 comune a tutte le materie (vedi docs/apprendimento/quiz-livelli.md)
       tipi: TIPI,
     })
   }
@@ -239,8 +179,7 @@ class Sillabe extends Modulo {
     }
   }
 
-  /* grado 1: quante sillabe ha la parola, mostrata con l'emoji */
-  quante(sorte) {
+  quante(sorte) { // grado 1: quante sillabe ha la parola, mostrata con l'emoji
     const voce = sorte.uno(FACILI)
     const corretto = voce[1].length
     const papabili = [1, 2, 3, 4, 5].filter(n => n !== corretto && Math.abs(n - corretto) <= 2)
@@ -256,8 +195,7 @@ class Sillabe extends Modulo {
     })
   }
 
-  /* grado 2: come si divide */
-  dividi(sorte) {
+  dividi(sorte) { // grado 2: come si divide
     const voce = sorte.uno(DIVISE)
     const falsi = sillabeSbagliate(voce[1], sorte, 2)
     return domanda({
@@ -271,8 +209,7 @@ class Sillabe extends Modulo {
     })
   }
 
-  /* grado 3: le rime, e ogni tanto il suo rovescio — chi non fa rima */
-  rima(sorte) {
+  rima(sorte) { // grado 3: le rime, e ogni tanto il rovescio — chi non fa rima
     const famiglia = sorte.uno(RIME)
     const base = sorte.uno(famiglia.parole)
     const compagne = famiglia.parole.filter(p => p.parola !== base.parola)
@@ -302,8 +239,7 @@ class Sillabe extends Modulo {
     })
   }
 
-  /* grado 4: la sillaba che manca, in un buco */
-  manca(sorte) {
+  manca(sorte) { // grado 4: la sillaba che manca, in un buco
     const voce = sorte.uno(DIVISE)
     const sill = voce[1]
     const idx = sorte.fra(0, sill.length - 1)
