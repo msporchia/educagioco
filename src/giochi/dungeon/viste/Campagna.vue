@@ -1,15 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA MAPPA DELLE TAPPE
-
-   Tre scalini, nove discese. Riceve tutto già deciso — cosa è aperto,
-   quante stelle, di che colore è l'ambiente — e non sa niente di
-   profili, monete e motore: qui dentro si sceglie dove andare e basta.
-
-   La discesa senza fondo sta in coda, e quando è aperta si porta
-   dietro le sue tre profondità: è l'unico posto del gioco dove la
-   difficoltà si sceglie a mano.
-   ═══════════════════════════════════════════════════════════════════ */
+// La mappa delle tappe: tutto già deciso, qui si sceglie solo dove andare.
+// La discesa senza fondo (in coda) è l'unico posto dove la difficoltà si sceglie a mano.
 defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe }]
   libero: { type: Object, required: true },   // { aperto, quante, fatte }

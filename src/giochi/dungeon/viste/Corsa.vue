@@ -1,36 +1,12 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA DISCESA — la mappa del dungeon
-
-   Le stanze sono **bottoni veri**, non cerchi su tela: si toccano col
-   dito, si trovano in un test, e chi non ci vede bene può ingrandirli.
-   La tela sotto tiene l'atmosfera — pietra, torce, pulviscolo, i
-   sentieri curvi e la pedina che cammina — e non sa niente di regole
-   (`scena/caverna.js`).
-
-   Le due geometrie devono coincidere al pixel, o le stanze si staccano
-   dai loro sentieri: le misure arrivano da un posto solo (`MARGINE`),
-   qui usate in CSS e là in canvas.
-
-   LA DISCESA È PIÙ ALTA DELLO SCHERMO. Quaranta file schiacciate in un
-   telefono sono palline che si toccano: la discesa è alta quanto vuole
-   (`altezzaDiscesa`) e **scorre**, e chi gioca non la scorre a mano —
-   la schermata si sposta da sé su dove si è arrivati, appena comincia
-   la camminata.
-
-   MA LA TELA NO: la tela è grande quanto lo schermo e resta ferma lì,
-   e a ogni scorrimento le si dice a che punto siamo (`inquadratura`).
-   Un canvas alto quanto una discesa da quaranta file sarebbe tremila
-   pixel per la densità dello schermo, cioè oltre il lato massimo che
-   Safari su iPhone accetta: là smetterebbe di disegnare del tutto. Le
-   stanze invece sono bottoni veri e stanno nella discesa alta, perché
-   il DOM quel limite non ce l'ha.
-
-   Questa schermata non decide niente: riceve stanze e sentieri già
-   decisi e manda fuori un solo gesto — «vado lì». La camminata sì, è
-   sua: parte quando si tocca e avvisa quando è arrivata, perché
-   entrare in una stanza prima di averla raggiunta si vede.
-   ═══════════════════════════════════════════════════════════════════ */
+// La discesa: le stanze sono bottoni veri (toccabili, testabili), non cerchi
+// su tela; la tela sotto tiene solo l'atmosfera (scena/caverna.js). Le due
+// geometrie devono coincidere al pixel: le misure vengono da MARGINE, usate
+// qui in CSS e là in canvas. La discesa è più alta dello schermo e scorre da
+// sé; MA la tela resta grande quanto lo schermo e ferma (altrimenti un
+// canvas da 40 file supererebbe il lato massimo che Safari su iPhone
+// accetta) — le stanze, essendo DOM, non hanno quel limite e stanno nella
+// discesa alta. Questa schermata non decide niente: manda solo "vado lì".
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { Caverna, MARGINE, altezzaDiscesa } from '../scena/caverna.js'
 
@@ -49,14 +25,12 @@ const discesa = ref(null)     // la discesa intera, alta quanto serve
 let caverna = null
 const cammina = ref(false)
 
-/* quante file ha questa discesa: la mappa non le dichiara, ma le
-   stanze sì — l'ultima fila è quella del guardiano */
+// le stanze dichiarano la riga; l'ultima fila è quella del guardiano
 const quanteFile = computed(() =>
   props.stanze.reduce((n, s) => Math.max(n, s.riga + 1), 1))
 const alta = computed(() => `max(100%, ${altezzaDiscesa(quanteFile.value)}px)`)
 
-/* le stanze si piazzano dentro gli stessi margini in cui la tela
-   disegna i sentieri: un solo posto in cui è scritto quanto */
+// stessi margini in cui la tela disegna i sentieri
 const posto = s => ({
   left: `calc(${MARGINE.lati}px + ${s.x} * (100% - ${MARGINE.lati * 2}px))`,
   bottom: `calc(${MARGINE.sotto}px + ${s.y} * (100% - ${MARGINE.sopra + MARGINE.sotto}px))`,
@@ -65,21 +39,14 @@ const posto = s => ({
 const ingressi = computed(() =>
   props.pedina ? [] : props.stanze.filter(s => s.stato === 'aperta'))
 
-/* ── inquadrare ──
-   Dove si sta e la fila dopo devono essere sotto gli occhi senza che
-   nessuno trascini niente. Il conto è lo stesso di `Caverna.punto()`,
-   ma da qui — la tela sta dentro la discesa e non sa che si scorre. */
+// stesso conto di Caverna.punto(), ma da qui: la tela non sa che si scorre
 function inquadra(yn, dolce = true) {
   const box = scorri.value, dentro = discesa.value
   if (!box || !dentro) return
   const h = dentro.clientHeight
   const y = h - MARGINE.sotto - yn * (h - MARGINE.sopra - MARGINE.sotto)
-  /* Dove tenere il punto guardato, contato dal bordo alto della
-     finestra. Chi cammina si tiene sotto il centro — la strada da
-     scegliere sta sopra di lui — e chi è appena entrato si mette al
-     fondo della discesa, con sotto lo stesso margine che avrebbe se la
-     mappa ci stesse tutta: se no la prima fila di stanze finisce sotto
-     la riga che dice cosa fare. */
+  // chi cammina si tiene sotto il centro (la strada da scegliere sta sopra);
+  // chi è appena entrato si mette al fondo, con lo stesso margine di sempre
   const quanto = props.pedina || yn > 0
     ? box.clientHeight * 0.62
     : box.clientHeight - MARGINE.sotto
@@ -87,7 +54,6 @@ function inquadra(yn, dolce = true) {
                  behavior: dolce ? 'smooth' : 'auto' })
 }
 
-/* la fetta di discesa che la tela deve disegnare adesso */
 function aggiornaFetta() {
   if (!caverna || !discesa.value || !scorri.value) return
   caverna.inquadratura(discesa.value.clientHeight, scorri.value.scrollTop)
@@ -96,8 +62,7 @@ function aggiornaFetta() {
 function tocca(s) {
   if (s.stato !== 'aperta' || cammina.value) return
   cammina.value = true
-  /* la schermata si sposta insieme alla pedina, non dopo: se aspettasse
-     la fine, il pezzo di camminata fuori dallo schermo non si vedrebbe */
+  // si sposta insieme alla pedina, non dopo: altrimenti il pezzo di camminata fuori schermo non si vedrebbe
   inquadra(s.y)
   caverna.muovi(s.partenza || { x: s.x, y: -0.14 }, { x: s.x, y: s.y }, s.curva || 0, () => {
     cammina.value = false
@@ -113,9 +78,7 @@ onMounted(async () => {
   await nextTick()
   aggiornaFetta()
   inquadra(props.pedina?.y ?? 0, false)
-  /* si ascolta lo scorrimento e basta: il disegno vero lo rifà il
-     fotogramma dopo, che c'è già. Niente `requestAnimationFrame` in
-     più e niente ridisegni fuori tempo. */
+  // si ascolta lo scorrimento e basta: il disegno lo rifà il fotogramma dopo, già in corso
   scorri.value?.addEventListener('scroll', aggiornaFetta, { passive: true })
 })
 onUnmounted(() => {
@@ -126,7 +89,7 @@ onUnmounted(() => {
 watch(() => [props.sentieri, props.pedina, props.stanze], () => {
   caverna?.mostra({ sentieri: props.sentieri, pedina: props.pedina, ingressi: ingressi.value })
 })
-/* una discesa nuova (si riprova, o si cambia tappa) riparte dall'ingresso */
+// una discesa nuova (si riprova, o si cambia tappa) riparte dall'ingresso
 watch(quanteFile, async () => {
   await nextTick(); aggiornaFetta(); inquadra(props.pedina?.y ?? 0, false)
 })
@@ -135,8 +98,7 @@ watch(() => props.vestito, v => caverna?.vesti(v))
 
 <template>
   <div class="dng-campo">
-    <!-- la tela sta FUORI dalla parte che scorre: è grande quanto lo
-         schermo e ferma, e la fetta giusta gliela dice `inquadratura` -->
+    <!-- fuori dalla parte che scorre: ferma, la fetta giusta gliela dice `inquadratura` -->
     <canvas ref="tela" class="dng-tela"></canvas>
 
     <div ref="scorri" class="dng-scorri">
@@ -149,8 +111,7 @@ watch(() => props.vestito, v => caverna?.vesti(v))
                 :aria-label="s.stato === 'buio' ? 'stanza al buio' : s.nome"
                 @click="tocca(s)">
           <span class="dng-icona em">{{ s.stato === 'buio' ? '⋯' : s.icona }}</span>
-          <!-- il bollino dice quanto chiede quella strada, PRIMA di
-               entrarci: è quello che rende il bivio una scelta -->
+          <!-- il bollino, prima di entrarci: rende il bivio una scelta -->
           <span v-if="s.rischio && s.stato !== 'buio' && s.stato !== 'fatta'" class="dng-rischio">
             {{ '⚡'.repeat(s.rischio) }}
           </span>
