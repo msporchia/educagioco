@@ -1,37 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════
-   SEQUENZE — la regola nascosta: cosa viene dopo, e chi non c'entra.
-
-   Viene da due prototipi che stavano fermi in `poc/` — `indovinelli.html`
-   (le sequenze) e `la-regola.html` (l'intrusa): due giochi interi,
-   bellissimi da provare e invisibili a chi gioca, perché un file in
-   `poc/` non è un modulo e nessun gioco gli chiede mai niente. Qui
-   dentro c'è la parte che vale per tutti: una FIGURA con cinque
-   attributi, e una regola che ne muove uno o due.
-
-   forma · colore · quante · grande o piccola · come è girata
-
-   PERCHÉ SONO LO STESSO MODULO. «Cosa viene dopo» e «chi non c'entra»
-   sembrano due giochi e sono due domande sulla stessa cosa: c'è una
-   regola, trovala. Cambia solo dove si nasconde — nel ritmo di una fila
-   o in quello che tre figure hanno in comune — e infatti si alternano
-   grado dopo grado, sempre più difficili tutte e due.
-
-   L'INTRUSA DEVE ESSERE UNA SOLA, e questo è il punto delicato del
-   file. Se sulle quattro figure due attributi diversi facessero 3+1
-   (tre rosse e una blu, ma anche tre grandi e una piccola), ci sarebbero
-   due intruse difendibili e il bambino che sbaglia avrebbe ragione. La
-   ricetta che lo impedisce viene dal prototipo: gli attributi che fanno
-   rumore si distribuiscono 2+2 sulle quattro carte, quelli fermi valgono
-   uguale per tutte e quattro, e solo l'attributo della regola fa 3+1.
-   Poi lo si **verifica lo stesso**, contando: una domanda ambigua non la
-   prende nessun controllo di forma, la vede solo il bambino che perde.
-
-   I FALSI DELLE SEQUENZE SONO IL PASSO SBAGLIATO: il valore che la
-   regola darebbe un posto prima o un posto dopo. È lì che casca chi ha
-   visto il ritmo ma non l'ha contato — e un falso preso a caso, invece,
-   si scarta senza aver capito niente.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// «cosa viene dopo» e «chi non c'entra»: stessa cosa, trova la regola nascosta su una figura a cinque attributi (forma/colore/quante/grande/ruota). Sull'intrusa vedi "l'intrusa dev'essere una sola" in docs/apprendimento/quiz-moduli.md. I falsi delle sequenze sono il passo sbagliato (un posto prima o dopo): quello preso a caso si scarta senza capire niente.
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, scena } from '../nucleo/domanda.js'
 import { PITTORI_FIGURE, FORME_FIGURE } from '../grafica/pittori/figure.js'
@@ -50,7 +17,6 @@ const ATTRIBUTI = ['forma', 'colore', 'quante', 'grande']
 const chiaveFig = f => `${f.forma}/${f.colore}/${f.quante}/${f.grande}/${f.ruota || 0}`
 const copia = (f, cambi) => ({ ...f, ...cambi })
 
-/* come si legge una regola, per la dritta di fine domanda */
 const DICE = {
   forma: v => `le forme tornano a turno: ${v.join(', ')}`,
   colore: v => `i colori tornano a turno: ${v.join(', ')}`,
@@ -58,12 +24,7 @@ const DICE = {
   grande: () => 'grande e piccolo si danno il cambio',
 }
 
-/* Le tipologie. Il ciclo e il passo sono due difficoltà diverse della
-   stessa fila — il ciclo si vede, il passo si conta — e stanno in due
-   voci separate perché un bambino può benissimo leggere «rosso, blu,
-   rosso, blu» e non vedere che le frecce girano sempre dalla stessa
-   parte. L'intrusa è il gioco al contrario: non cosa continua la
-   regola, ma cosa la rompe. */
+// ciclo e passo sono due difficoltà diverse (il ciclo si vede, il passo si conta): un bambino può vedere l'uno e non l'altro
 const TIPI = [
   { chiave: 'seq:ciclo', nome: 'Il ritmo che si ripete', sa: 'sequenze', gradi: { 1: 1, 3: 1, 5: 0.2 } },
   { chiave: 'seq:passo', nome: 'Il passo che cresce o gira', sa: 'sequenze', gradi: { 5: 0.8 } },
@@ -85,25 +46,15 @@ class Sequenze extends Modulo {
         'chi non c\'entra: quante sono e quanto sono grandi',
         'cosa viene dopo: le figure che girano e crescono',
       ],
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [12, 20, 29, 42, 56],
-      /* non c'è una lezione da aver fatto, si guarda: il gruppo serve a
-         isolare le sequenze, non a coprire una lacuna */
-      tipi: TIPI,
+      livelli: [12, 20, 29, 42, 56], // scala 0-100 comune a tutte le materie (vedi docs/apprendimento/quiz-livelli.md)
+      tipi: TIPI, // non c'è una lezione da aver fatto: il gruppo isola le sequenze, non copre una lacuna
       pittori: PITTORI_FIGURE,
     })
   }
 
   genera(grado, sorte, tipo) {
     switch (grado) {
-      /* al grado 1 gli assi sono due — colore e forma — e non tre:
-         «grande, piccolo, grande, …» ha due soli valori, quindi la
-         risposta si indovina anche senza aver visto il ritmo */
+      // al grado 1 niente «grande» fra gli assi: ha due soli valori, si indovina senza vedere il ritmo
       case 1: return this.sequenza(sorte, { assi: 1, lunga: 4, fra: ['colore', 'forma'], vuoi: tipo })
       case 2: return this.intrusa(sorte, { dove: ['colore', 'forma'], rumore: 2 })
       case 3: return this.sequenza(sorte, { assi: 2, lunga: 5, fra: ['colore', 'forma', 'grande'], vuoi: tipo })
@@ -112,8 +63,7 @@ class Sequenze extends Modulo {
     }
   }
 
-  /* ── una figura qualunque, ferma ── */
-  base(sorte) {
+  base(sorte) { // una figura qualunque, ferma
     return {
       forma: sorte.uno(VALORI.forma),
       colore: sorte.uno(VALORI.colore),
@@ -123,24 +73,15 @@ class Sequenze extends Modulo {
     }
   }
 
-  /* ── cosa viene dopo ──
-     Ogni asse scelto si porta una regola: quasi sempre un CICLO (i
-     valori tornano a turno), e nei gradi alti un PASSO — la quantità
-     che cresce di uno, la freccia che gira sempre dalla stessa parte.
-     Il ciclo si vede, il passo si conta: sono due difficoltà diverse. */
   sequenza(sorte, { assi, lunga, passo = false, fra, vuoi }) {
-    /* `vuoi` è la tipologia chiesta: il passo si fa con la freccia che
-       gira o con la quantità che cresce, il ciclo con tutto il resto.
-       Senza, si tira a sorte come sempre. */
+    // `vuoi`: il passo si fa con freccia o quantità, il ciclo con tutto il resto; senza, a sorte
     const conFreccia = passo && (vuoi ? vuoi === 'seq:passo' && sorte.forse(0.5) : sorte.forse(0.5))
     const scelti = conFreccia
       ? ['ruota', ...sorte.alcuni(['colore', 'quante', 'grande'], assi - 1)]
       : vuoi === 'seq:passo'
         ? ['quante', ...sorte.alcuni(fra.filter(a => a !== 'quante'), assi - 1)]
         : sorte.alcuni(vuoi === 'seq:ciclo' && passo ? fra.filter(a => a !== 'quante') : fra, assi)
-    /* le quantità sono quattro: una fila che «cresce di uno» più lunga
-       di quattro sbatterebbe contro il tetto e ripeterebbe l'ultima —
-       la regola smetterebbe di valere proprio sulla risposta */
+    // le quantità sono quattro: più lunga di quattro, «cresce di uno» sbatterebbe contro il tetto proprio sulla risposta
     const cresce = passo && !conFreccia && scelti.includes('quante')
     if (cresce) lunga = 4
 
@@ -170,13 +111,11 @@ class Sequenze extends Modulo {
     }
     const buona = celle[lunga - 1]
 
-    /* i falsi: la stessa fila letta un posto avanti o un posto indietro */
+    // i falsi: la stessa fila letta un posto avanti o indietro
     const visti = new Set([chiaveFig(buona)])
     const falsi = []
     const metti = (f, perche) => {
-      /* «un posto dopo» su una fila che cresce dà cinque figurine, e
-         cinque non esistono: un falso fuori dal mondo si vedrebbe
-         disegnato storto, non sbagliato */
+      // fuori dal mondo (es. cinque figurine) si vedrebbe disegnato storto, non sbagliato: si scarta
       if (!VALORI.quante.includes(f.quante) || !VALORI.ruota.includes(f.ruota || 0)) return
       if (visti.has(chiaveFig(f)) || falsi.length >= 3) return
       visti.add(chiaveFig(f))
@@ -186,8 +125,7 @@ class Sequenze extends Modulo {
       for (const k of [lunga - 2, lunga, lunga - 3, lunga + 1])
         metti(copia(buona, { [r.asse]: r.valore(Math.max(0, k)) }),
           'hai visto il ritmo ma hai contato un posto in più (o in meno): guarda dove tocca esattamente all\'ultima')
-    /* se il ciclo è corto i passi vicini si esauriscono: si riempie con
-       figure che cambiano un attributo qualunque fra quelli in gioco */
+    // se il ciclo è corto i passi vicini si esauriscono: si riempie cambiando un attributo qualunque in gioco
     for (let g = 0; g < 40 && falsi.length < 3; g++) {
       const a = sorte.uno(scelti.length ? scelti : ATTRIBUTI)
       metti(copia(buona, { [a]: sorte.uno(VALORI[a].filter(v => v !== buona[a])) }),
@@ -206,34 +144,18 @@ class Sequenze extends Modulo {
     })
   }
 
-  /* ── chi non c'entra ──
-     Tre figure hanno una cosa in comune, la quarta no. Vedi
-     l'intestazione per il perché della ricetta: qui la difficoltà non
-     sta nella regola ma nel RUMORE — quanti altri attributi cambiano
-     senza voler dire niente, e quanto è appariscente quello che conta. */
+  // tre figure in comune, la quarta no; difficoltà nel RUMORE, non nella regola (vedi docs/apprendimento/quiz-moduli.md)
   intrusa(sorte, { dove, rumore }) {
     for (let giro = 0; giro < 60; giro++) {
       const attr = sorte.uno(dove)
-      /* «quante» e «grande» non stanno mai in ballo insieme. Quattro
-         stelle stanno in una cella solo rimpicciolendosi, quindi una
-         figura grande in quattro copie si vede più piccola di una
-         piccola in due: la taglia si può confrontare solo a parità di
-         numero. Chi non è la regola resta fermo — uguale su tutte e
-         quattro le carte — e il confronto torna onesto. */
-      const litiga = attr === 'quante' ? 'grande' : attr === 'grande' ? 'quante' : null
+      const litiga = attr === 'quante' ? 'grande' : attr === 'grande' ? 'quante' : null // mai insieme: la taglia si confronta solo a parità di numero
       const altri = ATTRIBUTI.filter(a => a !== attr && a !== litiga)
-      /* meno di due attributi rumorosi e due delle tre buone sarebbero
-         la stessa identica figura */
-      const rumorosi = sorte.alcuni(altri, Math.max(2, Math.min(rumore, altri.length)))
-      /* chi litiga con la regola entra fra i fermi: un valore solo per
-         tutte e quattro, così c'è ma non dice niente */
+      const rumorosi = sorte.alcuni(altri, Math.max(2, Math.min(rumore, altri.length))) // <2 e due delle tre buone sarebbero identiche
       const fermi = altri.filter(a => !rumorosi.includes(a)).concat(litiga ? [litiga] : [])
 
       const via = { ruota: 0 }
       for (const a of fermi) via[a] = sorte.uno(VALORI[a])
-      /* ogni attributo rumoroso ha due valori: uno lo tengono due delle
-         tre buone, l'altro la terza — e l'intrusa prende quello spaiato,
-         così sulle quattro carte fa 2+2 e non accusa nessuno */
+      // ogni rumoroso ha due valori: due buone tengono uno, la terza e l'intrusa l'altro (2+2, non accusa nessuno)
       const coppia = {}, spaiato = {}
       for (const a of rumorosi) {
         const due = sorte.alcuni(VALORI[a], 2)
@@ -252,8 +174,8 @@ class Sequenze extends Modulo {
       rumorosi.forEach(a => { intrusa[a] = spaiato[a] })
 
       const tutte = [...carte, intrusa]
-      if (new Set(tutte.map(chiaveFig)).size !== 4) continue      // due gemelle
-      if (!unaSola(tutte, attr)) continue                          // due intruse
+      if (new Set(tutte.map(chiaveFig)).size !== 4) continue // due gemelle
+      if (!unaSola(tutte, attr)) continue // due intruse
 
       const nome = { forma: 'la forma', colore: 'il colore', quante: 'quante sono', grande: 'la grandezza' }[attr]
       return domanda({
@@ -266,8 +188,7 @@ class Sequenze extends Modulo {
         sorte,
       })
     }
-    /* la rete di sicurezza: tre uguali e una col colore cambiato. Non è
-       una bella domanda, ma è una domanda onesta */
+    // rete di sicurezza: tre uguali, una col colore cambiato — non bella, ma onesta
     const f = this.base(sorte)
     const altro = { ...f, colore: sorte.uno(VALORI.colore.filter(c => c !== f.colore)) }
     return domanda({
@@ -281,9 +202,7 @@ class Sequenze extends Modulo {
   }
 }
 
-/* Un solo attributo può fare 3+1: se ne facesse due, ci sarebbero due
-   intruse difendibili. Gli attributi fermi (4+0) e quelli rumorosi
-   (2+2) vanno bene, sono le distribuzioni che non accusano nessuno. */
+// un solo attributo può fare 3+1 (vedi docs/apprendimento/quiz-moduli.md); 4+0 e 2+2 vanno bene, non accusano nessuno
 function unaSola(carte, attr) {
   for (const a of ATTRIBUTI) {
     const conto = new Map()

@@ -210,6 +210,20 @@ il pittore non sa quale sia la regola e quali il rumore, lo sa il modulo.
 dentro la propria cella (una figura grande la riempie, una piccola sta
 in mezzo), il paragone si fa solo fra celle vicine nella stessa fila.
 
+### Sequenze e analogie: l'intrusa dev'essere una sola
+
+`moduli/sequenze.js` e `moduli/analogie.js` condividono la figura a
+cinque attributi di `figure.js`. In «chi non c'entra» un solo attributo
+può fare **3+1** (tre carte che concordano, una no): se ne facesse due,
+ci sarebbero due intruse difendibili e un bambino che sceglie l'altra
+avrebbe ragione. La ricetta: gli attributi rumorosi si distribuiscono
+**2+2** sulle quattro carte, quelli fermi valgono uguale per tutte e
+quattro, e solo l'attributo della regola fa 3+1 — verificato contando
+(`unaSola`), perché una domanda ambigua passa ogni controllo di forma e
+la vede solo il bambino che perde. `quante` e `grande` non stanno mai
+in gioco insieme: quattro figure grandi non entrano in una cella, quindi
+la taglia si confronta solo a parità di numero.
+
 ### Il pittore delle bilance
 
 `grafica/pittori/bilance.js` disegna una o due bilance a due piatti,
