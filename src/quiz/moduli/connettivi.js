@@ -1,60 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   CONNETTIVI — le paroline che legano due frasi e dicono che rapporto
-   c'è fra loro: perché, quindi, ma, quando, se, anche se…
-
-   Non sono lessico da ricordare: sono LOGICA da leggere. La stessa
-   coppia di fatti — «pioveva» e «ho preso l'ombrello» — sta in piedi
-   con «perché» e con «quindi», e cade con «ma» (non c'è nessun
-   contrasto) o con «quindi» messo dalla parte sbagliata (l'effetto non
-   può causare la causa). I FALSI SONO GLI ERRORI VERI: la direzione
-   girata di causa ed effetto, il contrasto inventato dove le due cose
-   vanno d'accordo, l'ipotesi («se») su un fatto già successo.
-
-   LE COPPIE SONO GENERATE da un elenco di situazioni quotidiane, con
-   la relazione già dichiarata nel dato (`CAUSALI`, `CONTRASTI`,
-   `CONDIZIONI`, `QUANDO`, `MENTRE`): la risposta giusta si ricava dalla
-   relazione, non da una frase scritta a mano parola per parola.
-
-   PERCHÉ LA CAUSA REGGE SEMPRE «QUINDI»/«QUANDO»/«SE» COME FALSI, E
-   MAI «MA». In `CAUSALI` la causa è un tratto abituale (presente:
-   «ha molta paura dei temporali») e l'effetto un fatto specifico e
-   datato (passato con «ieri», «stamattina»…): con questo scarto di
-   tempo «quando» e «se» stonano sempre (non è un'ipotesi, è già
-   successo; non è un istante, è un modo di essere) e «quindi» capovolge
-   la direzione. «Ma» invece resta per il contrasto (`CONTRASTI`), dove
-   NON deve mai comparire insieme a «però»/«invece» fra le risposte di
-   una stessa domanda: sono sinonimi, e messi insieme la domanda avrebbe
-   due risposte giuste — sono i tre nomi della stessa relazione, mai
-   tre risposte alternative.
-
-   «PRIMA CHE» NON C'È. Vorrebbe il congiuntivo, che in questa casa
-   nasce spento di default (`congiuntivo` in `data/saperi.js`,
-   `difetto: false`): un connettivo che funziona solo con un modo
-   verbale che la maggioranza dei bambini non ha ancora incontrato non
-   insegnerebbe i connettivi, insegnerebbe il congiuntivo. «Prima di» e
-   «dopo aver» restano fuori per lo stesso motivo dall'altro lato: senza
-   verbi coniugati per ogni situazione la frase richiederebbe un
-   infinito o un participio combinato a mano per ogni voce, ed è un
-   lavoro diverso da quello che questo file fa (coppie di fatti intere,
-   non pezzi di frase da incollare).
-
-   IL SAPERE È «LESSICO», RIUSATO. Capire cosa dice una parolina è la
-   stessa famiglia di capire cosa dice un modo di dire — non c'è una
-   lezione di grammatica da aver fatto, c'è da sapere cosa vuol dire
-   quella parola lì — e `lessico.js` dichiara già lo stesso `sa` per
-   tutte le sue tipologie: chi lo spegne toglie il modulo intero, ed è
-   la stessa scelta qui.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// le paroline che legano due frasi (perché, quindi, ma, quando, se, anche se...): LOGICA da leggere, non lessico da ricordare. Le coppie sono generate da situazioni quotidiane con la relazione già dichiarata nel dato (CAUSALI, CONTRASTI, CONDIZIONI, QUANDO, MENTRE): la risposta si ricava dalla relazione, non da una frase scritta a mano. «Prima che» non c'è (vuole il congiuntivo, spento di default in data/saperi.js); «prima di»/«dopo aver» restano fuori perché servirebbe un infinito/participio combinato a mano per ogni voce. Sapere = `lessico` (stesso sa di lessico.js): non c'è una lezione di grammatica da aver fatto, c'è da sapere cosa vuol dire la parolina.
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo } from '../nucleo/domanda.js'
 
 const maiuscola = s => s.charAt(0).toUpperCase() + s.slice(1)
 const minuscola = s => s.charAt(0).toLowerCase() + s.slice(1)
 
-/* ── CAUSALI: causa (un tratto abituale, al presente) → effetto (un
-   fatto specifico e datato, al passato). Lo scarto di tempo è quello
-   che rende sempre falsi «quando» e «se»: vedi il cappello del file. */
+// causa (tratto abituale, presente) → effetto (fatto specifico e datato, passato): lo scarto di tempo rende sempre falsi «quando» e «se»
 const CAUSALI = [
   { causa: 'ha molta paura dei temporali', effetto: 'Ieri sera si è nascosto sotto il letto', emoji: '⛈️' },
   { causa: 'è allergico ai gatti', effetto: 'Stamattina ha starnutito dieci volte', emoji: '🐱' },
@@ -127,16 +78,14 @@ const FALSI_CAUSA = {
   se: "«se» serve per un'ipotesi: questo invece è già successo davvero",
   'anche se': "«anche se» segnala un ostacolo: qui invece l'effetto è proprio quello che ci si aspetta dalla causa",
 }
-/* usati anche nella forma «causa, connettivo effetto» di `senso()` */
+// usati anche nella forma «causa, connettivo effetto» di senso()
 const FALSI_CAUSA_GIRATA = {
   'perché': "così sembra che l'effetto sia la causa: è al contrario",
   ma: "qui non c'è nessun contrasto: le due cose vanno perfettamente d'accordo",
   se: "con «se» sembra un'ipotesi, ma questo è già successo davvero",
 }
 
-/* ── CONTRASTI: cosa ci aspettavamo (atteso) → cosa succede davvero,
-   contro quell'aspettativa (sorpresa). `spiegazioneAttesa` è la stessa
-   aspettativa detta a parole, e serve a «cosa dice la parolina». */
+// cosa ci aspettavamo (atteso) → cosa succede davvero (sorpresa); spiegazioneAttesa serve a «cosa dice la parolina»
 const CONTRASTI = [
   { atteso: 'Luca era stanchissimo', sorpresa: 'Ha continuato a correre', spiegazioneAttesa: 'che si sarebbe fermato a riposare', emoji: '🏃' },
   { atteso: 'Il cane aveva molta fame', sorpresa: 'Non ha toccato la ciotola', spiegazioneAttesa: 'che avrebbe mangiato subito tutto', emoji: '🐕' },
@@ -185,10 +134,7 @@ const FALSI_CONTRASTO = {
   se: "«se» serve per un'ipotesi: questo invece è già successo davvero",
 }
 
-/* ── CONDIZIONI: un'ipotesi vera — non ancora decisa — e quello che
-   succederebbe. Sempre al futuro o su un esito ancora sconosciuto:
-   è quello che rende «se» l'unica scelta onesta, e «quando» (che dà
-   per certo l'esito) sempre un po' troppo sicuro di sé. */
+// ipotesi non ancora decisa + conseguenza, sempre al futuro: rende «se» l'unica scelta onesta, «quando» sempre troppo sicuro di sé
 const CONDIZIONI = [
   { condizione: 'domani non piove', conseguenza: 'Andremo al parco', emoji: '🌳' },
   { condizione: 'la squadra vince la partita', conseguenza: 'Festeggeremo con una pizza', emoji: '⚽' },
@@ -257,18 +203,13 @@ const CONDIZIONI = [
   { condizione: 'riesci a risolvere l\'enigma del castello', conseguenza: 'Passerai alla stanza segreta del gioco', emoji: '🏰' },
   { condizione: 'il pallone aerostatico si gonfia bene', conseguenza: 'Potremo salire a bordo per il volo di prova', emoji: '🎈' },
 ]
+// «quando» non è un falso qui: «potrai fare la gara quando superi l'esame» è italiano buono quanto «se», un falso difendibile non è un falso
 const FALSI_CONDIZIONE = {
-  /* «quando» non è un falso della condizione, anche se ci assomiglia:
-     «potrai fare la gara vera quando superi l'esame» è italiano buono
-     quanto il «se», e un falso che si può difendere non è un falso */
   'perché': "«perché» spiega un motivo già certo; qui invece non sappiamo se succederà",
   quindi: 'con «quindi» sembra che questo causi quello che sta scritto dopo: qui è al contrario',
 }
 
-/* ── QUANDO: uno sfondo che dura (all'imperfetto) e un fatto puntuale
-   che ci arriva sopra (al passato). Le due cose non hanno NESSUN
-   legame causale — è pura coincidenza di tempo — così «perché»,
-   «quindi» e «se» restano falsi senza bisogno di altro. */
+// sfondo che dura (imperfetto) + fatto puntuale (passato), nessun legame causale: pura coincidenza di tempo, «perché»/«quindi»/«se» restano falsi
 const QUANDO = [
   { sfondo: 'Stavo facendo la doccia', evento: 'È suonato il telefono', emoji: '🚿' },
   { sfondo: 'Stavamo guardando un film', evento: 'È saltata la luce', emoji: '🎬' },
@@ -305,8 +246,7 @@ const QUANDO = [
   { sfondo: 'Stavamo facendo la fila per il gelato', evento: 'È arrivato un temporale a sorpresa', emoji: '🍦' },
   { sfondo: 'Il cane annusava un cespuglio', evento: 'È saltato fuori uno scoiattolo', emoji: '🐿️' },
 ]
-/* ── MENTRE: due azioni che durano insieme (all'imperfetto), di due
-   soggetti diversi e senza nessun legame causale. */
+// due azioni che durano insieme (imperfetto), soggetti diversi, nessun legame causale
 const MENTRE = [
   { azione1: 'La mamma cucinava', azione2: 'i bambini giocavano in giardino', emoji: '👩‍🍳' },
   { azione1: 'Il papà lavava la macchina', azione2: "il cane dormiva all'ombra", emoji: '🚗' },
@@ -349,10 +289,7 @@ const FALSI_TEMPO = {
   se: "«se» serve per un'ipotesi: queste invece sono cose che succedono davvero",
 }
 
-/* ── MENTRE_SENSO: lo stesso «mentre» può dire due cose diverse, e qui
-   non si sceglie una parola — si capisce quale delle due sta dicendo
-   questa frase. Metà delle voci è temporale (due cose insieme), metà
-   è di contrasto (due cose diverse, quasi opposte). */
+// lo stesso «mentre» dice due cose diverse: si capisce quale delle due, non si sceglie una parola. Metà tempo, metà contrasto.
 const MENTRE_SENSO = [
   { frase: 'La mamma stirava mentre il bambino faceva i compiti.', senso: 'tempo' },
   { frase: 'I nonni giocavano a carte mentre i nipoti guardavano un cartone.', senso: 'tempo' },
@@ -384,10 +321,7 @@ const SENSO_MENTRE = {
   contrasto: 'che due cose sono diverse, quasi il contrario',
 }
 
-/* Tre modi equivalenti di fare la stessa domanda: dicono la stessa
-   cosa, e serve a non far ripetere sempre la stessa consegna sulle
-   stesse poche frasi — la ripetizione stanca anche quando il
-   contenuto non è finito. */
+// tre modi equivalenti: la ripetizione stanca anche quando il contenuto non è finito
 const TESTO_CAPISCI = [
   'Leggendo questa frase, cosa ci aspettavamo che succedesse?',
   'Prima di leggere «ma», cosa pensavamo sarebbe successo?',
@@ -399,7 +333,6 @@ const TESTO_MENTRE_DOPPIO = [
   'Leggi bene: cosa comunica «mentre» qui?',
 ]
 
-/* ── che cosa si chiede a ogni grado ── */
 const SCALETTA = [
   'perché: la causa',
   'ma, però, invece: il contrasto',
@@ -429,12 +362,7 @@ class Connettivi extends Modulo {
       materia: 'italiano',
       chiaro: 'capire il rapporto fra due frasi legate da una parolina come perché, ma o quando',
       scaletta: SCALETTA,
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — stessa scala di
-         tutte le materie, 12,5 punti per anno. «Perché» e «ma» sono
-         di prima-seconda, «quindi/quando/mentre» di terza, «se» di
-         quarta, «anche se» e il doppio senso di «mentre» di quarta
-         inoltrata e quinta. */
-      livelli: [31, 38, 50, 69, 81],
+      livelli: [31, 38, 50, 69, 81], // scala 0-100 comune a tutte le materie (vedi docs/apprendimento/quiz-livelli.md)
       tipi: TIPI,
     })
   }
@@ -453,8 +381,7 @@ class Connettivi extends Modulo {
     }
   }
 
-  /* grado 1 — «perché»: la parolina che manca, causa ed effetto */
-  causa(sorte) {
+  causa(sorte) { // grado 1: «perché», la parolina che manca fra causa ed effetto
     const c = sorte.uno(CAUSALI)
     const falsi = sorte.alcuni(Object.keys(FALSI_CAUSA), 2)
     return domanda({
@@ -468,9 +395,7 @@ class Connettivi extends Modulo {
     })
   }
 
-  /* grado 1-3 — «quindi»/«così»: la stessa coppia, ma detta al
-     contrario — prima la causa, poi quello che ne viene */
-  conseguenza(sorte) {
+  conseguenza(sorte) { // grado 1-3: «quindi»/«così», la stessa coppia detta al contrario (prima causa, poi effetto)
     const c = sorte.uno(CAUSALI)
     const buona = sorte.uno(['quindi', 'così'])
     const falsi = sorte.alcuni(['perché', 'anche se', 'quando'], 2)
@@ -486,9 +411,7 @@ class Connettivi extends Modulo {
     })
   }
 
-  /* grado 2 — «ma»/«però»/«invece»: il contrasto con quello che
-     ci si aspettava */
-  contrasto(sorte) {
+  contrasto(sorte) { // grado 2: «ma»/«però»/«invece», il contrasto con l'aspettativa
     const c = sorte.uno(CONTRASTI)
     const buona = sorte.uno(['ma', 'però', 'invece'])
     const falsi = sorte.alcuni(Object.keys(FALSI_CONTRASTO), 2)
@@ -503,9 +426,7 @@ class Connettivi extends Modulo {
     })
   }
 
-  /* grado 2-3 — «cosa dice la parolina»: non si completa una frase,
-     si legge cosa segnala «ma» dentro una frase già scritta */
-  capisci(sorte) {
+  capisci(sorte) { // grado 2-3: non si completa una frase, si legge cosa segnala «ma» in una frase già scritta
     const c = sorte.uno(CONTRASTI)
     const falsi = sorte.distrattori(CONTRASTI, 3, x => x === c).map(x => x.spiegazioneAttesa)
     return domanda({
@@ -519,9 +440,7 @@ class Connettivi extends Modulo {
     })
   }
 
-  /* grado 3 — «quando»/«mentre»: il tempo, senza nessun legame di
-     causa (per questo «perché», «quindi» e «se» restano sempre falsi) */
-  tempo(sorte) {
+  tempo(sorte) { // grado 3: «quando»/«mentre», il tempo senza legame di causa
     if (sorte.forse(0.5)) {
       const c = sorte.uno(QUANDO)
       const falsi = sorte.alcuni(Object.keys(FALSI_TEMPO), 2)
@@ -548,9 +467,7 @@ class Connettivi extends Modulo {
     })
   }
 
-  /* grado 2-4 — «quale frase ha senso»: la stessa coppia di fatti,
-     quattro connettivi diversi, una sola logica */
-  senso(sorte) {
+  senso(sorte) { // grado 2-4: la stessa coppia di fatti, quattro connettivi diversi, una sola logica
     const c = sorte.uno(CAUSALI)
     if (sorte.forse(0.5)) {
       const cap = maiuscola(c.causa), eff = minuscola(c.effetto)
@@ -584,8 +501,7 @@ class Connettivi extends Modulo {
     })
   }
 
-  /* grado 4 — «se»: un'ipotesi ancora aperta, non un fatto */
-  condizione(sorte) {
+  condizione(sorte) { // grado 4: «se», un'ipotesi ancora aperta, non un fatto
     const c = sorte.uno(CONDIZIONI)
     const falsi = sorte.alcuni(Object.keys(FALSI_CONDIZIONE), 2)
     return domanda({
@@ -599,9 +515,7 @@ class Connettivi extends Modulo {
     })
   }
 
-  /* grado 4-5 — «anche se» contro «se»: la condizione (non si sa
-     ancora) contro la concessione (si sa già, ed è un ostacolo) */
-  concessione(sorte) {
+  concessione(sorte) { // grado 4-5: «anche se» (si sa già, è un ostacolo) contro «se» (non si sa ancora)
     if (sorte.forse(0.5)) {
       const c = sorte.uno(CONDIZIONI)
       const falsi = ['anche se', 'perché']
@@ -630,9 +544,7 @@ class Connettivi extends Modulo {
     })
   }
 
-  /* grado 5 — il doppio senso di «mentre»: nello stesso momento,
-     oppure invece? Si legge tutta la frase per saperlo */
-  mentreDoppio(sorte) {
+  mentreDoppio(sorte) { // grado 5: il doppio senso di «mentre» (nello stesso momento, o invece?), si legge tutta la frase
     const c = sorte.uno(MENTRE_SENSO)
     const altro = c.senso === 'tempo' ? 'contrasto' : 'tempo'
     const falsi = [
