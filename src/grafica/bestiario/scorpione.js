@@ -1,12 +1,4 @@
-/* ═════ LO SCORPIONE ═════
-   È lui il motivo per cui questo cassetto esiste: il mostro grosso
-   della cantina era un'emoji di scorpione grande quanto quella del
-   topo, e nessuno poteva capire che picchiava il doppio.
-
-   Disegnato, la differenza si vede da sola: la coda sale sopra la
-   testa col pungiglione in cima, le due chele stanno aperte davanti, e
-   il corpo è **largo**. Quella coda alzata è tutta la posa — abbassata
-   diventa un gambero. */
+// la coda alzata sopra la testa è tutta la posa: abbassata diventa un gambero
 import { mescola, tondo } from '../comune.js'
 import { occhietti, zampe, chela, coda } from './comune.js'
 
@@ -22,9 +14,7 @@ export const SCORPIONE = {
     const respiro = Math.sin(t * 1.8)
     zampe(q, s, 4, { lungo: 6, apri: 1.1, su: 3.4, y: 0.6,
                      col: C.guscioS, sp: 1, fremito: t * 2 })
-    /* La coda parte da dietro, sale, e ricade in avanti **sopra la
-       testa**: è quell'arco a fare lo scorpione. Il pungiglione guarda
-       in giù, verso chi sta davanti, che è dove sta chi legge. */
+    // parte da dietro, sale e ricade in avanti sopra la testa: è quell'arco a fare lo scorpione
     const punta = coda(q, s, { da: { x: 1 * s, y: -4 * s }, lungo: 17, spesso: 1.9,
                                daAngolo: -2.4, aAngolo: 0.9 + respiro * 0.1,
                                col: C.guscio, bordo: b, segmenti: 8 })

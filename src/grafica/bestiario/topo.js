@@ -1,11 +1,4 @@
-/* ═════ IL TOPO ═════
-   Il nemico più debole del gioco intero, e deve sembrarlo: piccolo,
-   tondo, con le orecchie enormi e il naso rosa. Non fa paura ed è
-   giusto così — è quello su cui si impara che rispondere bene fa
-   danno, e se facesse paura la prima lezione arriverebbe storta.
-
-   Le orecchie sono grandi quanto mezza testa: è l'unica cosa che a
-   colpo d'occhio lo distingue da un qualunque batuffolo grigio. */
+// il nemico più debole del gioco, e deve sembrarlo: non fa paura apposta, è quello su cui si impara
 import { mescola, tondo, capsula } from '../comune.js'
 import { occhi } from '../segni.js'
 

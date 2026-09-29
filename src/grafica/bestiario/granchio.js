@@ -1,10 +1,4 @@
-/* ═════ IL GRANCHIONE ═════
-   Roba di fogna e di pozza: guscio largo a piastre, due chele grosse
-   tenute alte, occhi su due steli. Gli steli sono la firma — un
-   granchio con gli occhi sul guscio è un sasso con le pinze.
-
-   Le chele si aprono e si chiudono in controtempo fra loro: due chele
-   sincronizzate sembrano un meccanismo, sfasate sembrano una bestia. */
+// occhi su due steli, la firma: un granchio con gli occhi sul guscio è un sasso con le pinze
 import { mescola, tondo } from '../comune.js'
 import { zampe, chela, corazza } from './comune.js'
 

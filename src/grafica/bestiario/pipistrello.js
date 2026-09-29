@@ -1,11 +1,4 @@
-/* ═════ IL PIPISTRELLO ═════
-   Sta per aria, e si vede da due cose: le ali che battono e il fatto
-   che il corpo è **piccolo in mezzo a un'apertura larga**. Chi lo
-   disegna grosso col le ali corte ottiene un topo con le pinne.
-
-   Il battito è lento apposta. A frequenza vera sarebbe uno sfarfallio
-   che stanca l'occhio; qui serve a dire «è in volo», non a simulare
-   un pipistrello. */
+// il corpo piccolo in mezzo a un'apertura larga: disegnato grosso con ali corte diventa un topo con le pinne
 import { mescola, tondo } from '../comune.js'
 import { occhi } from '../segni.js'
 import { ala } from './comune.js'

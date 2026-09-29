@@ -1,10 +1,4 @@
-/* ═════ IL ROSPO ═════
-   Largo più che alto, accovacciato, con gli occhi che sporgono in cima
-   alla testa e la gola che si gonfia e si sgonfia. È il gonfiarsi a
-   renderlo vivo: un rospo fermo è un sasso verde.
-
-   Le zampe di dietro stanno piegate ai lati come molle caricate — è
-   quello che dice «salta» senza farlo saltare per davvero. */
+// è il gonfiarsi della gola a renderlo vivo: un rospo fermo è un sasso verde
 import { mescola, tondo, capsula, poligono } from '../comune.js'
 import { occhi } from '../segni.js'
 
