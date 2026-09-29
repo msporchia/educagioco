@@ -1,70 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE BILANCE — l'algebra prima dell'algebra.
-
-   Un'uguaglianza è una bilancia in pari, e tutta l'algebra che si fa
-   alle medie sta in una regola sola: **quello che fai da una parte lo
-   fai dall'altra**, e la bilancia resta in pari. A scuola il nome
-   arriva tardi, ma il ragionamento no: «se tre mele pesano dodici, una
-   pesa quattro» un bambino di quarta lo fa da solo, e «su tutti e due i
-   piatti c'è una pera, quindi la pera non conta» anche. Qui si chiede
-   quel ragionamento, con le bilance disegnate e poi senza.
-
-   STA IN ALTO APPOSTA. Il numero nascosto nei più e nei meno
-   (□ + 7 = 15) è roba di seconda e terza, e si apre la scaletta lì.
-   Tutto il resto — dividere un piatto in parti uguali, togliere la
-   stessa cosa da tutte e due le parti, scambiare una cosa con quelle
-   che pesa — è di quarta e quinta, e le due incognite stanno in cima
-   alla scala: il programma della primaria non le chiede, e sono qui
-   perché sono l'ultimo gradino prima della parola «equazione». È una
-   domanda difficile anche per chi ha fatto tutto, e per questo
-   l'`aiuto` non ripete la regola: fa **la mossa**, con quei numeri lì
-   — togli, dividi, metti al posto — in modo che chi a scuola non
-   l'ha mai vista la veda fare una volta, e la volta dopo la rifaccia.
-
-   SI RAGIONA, NON SI RICORDA. Nessuna risposta sta scritta da qualche
-   parte: sta sulla bilancia, e ci si arriva con un conto solo o due.
-   I numeri sono piccoli e si fanno a mente, perché quello che si misura
-   è la mossa e non la divisione.
-
-   I FALSI SONO GLI ERRORI VERI, e ognuno ha il suo perché:
-     · fare l'operazione che si vede invece di disfarla — □ + 7 = 15
-       risolto con 15 + 7, «tre mele pesano dodici» risolto con 12 − 3;
-     · fermarsi a metà — togliere la pera e non dividere, cioè dare il
-       peso di tutte le mele insieme;
-     · guardare una bilancia sola quando sono due, o sommare i due
-       numeri dello scambio invece di moltiplicarli;
-     · «non si può sapere» quando la cosa che non si sa sta su tutti e
-       due i piatti — che è l'errore più istruttivo di tutti, perché è
-       quello di chi ha capito che c'è un'incognita e non ancora che
-       si può togliere;
-     · la risposta vicina di uno, col suo perché che **rifà la prova**
-       («3 mele da 5 pesano 15, non 12»): è il modo di diagnosticare un
-       conto sbagliato senza sapere dove l'ha sbagliato.
-   Mai due vicini di uno insieme: con 7, 8 e 9 fra le risposte quella in
-   mezzo si indovina senza guardare la bilancia.
-
-   UNA SOLA SOLUZIONE, E SI GUARDA. Ogni scena nasce dalla risposta —
-   si sceglie quanto pesa la mela e poi si costruisce la bilancia — e
-   ogni scena è un sistema che ne ha una sola: una bilancia per
-   incognita, e i coefficienti scelti in modo che nessuna divisione
-   lasci il resto. `unaSola` qui sotto lo ricontrolla sui numeri che
-   escono, e se non torna la domanda non parte.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// l'algebra prima dell'algebra: un'uguaglianza è una bilancia in pari, e tutta l'algebra sta in "quello che fai da una parte lo fai dall'altra". Sta in alto apposta: il numero nascosto (□+7=15) è di seconda-terza, tutto il resto (dividere in parti uguali, togliere da entrambi i piatti, scambiare) è di quarta-quinta, le due incognite sono l'ultimo gradino prima di "equazione". Si ragiona, non si ricorda: nessuna risposta è scritta da qualche parte, ci si arriva con un conto o due, numeri piccoli a mente. I falsi sono gli errori veri: fare l'operazione che si vede invece di disfarla, fermarsi a metà, guardare una sola bilancia quando sono due, "non si può sapere" quando invece si toglie la cosa comune, la risposta vicina di uno con perché che rifà la prova (mai due vicini insieme, o quella in mezzo si indovina). Ogni scena nasce dalla risposta ed è un sistema con una sola soluzione: `unaSola` lo ricontrolla, e se non torna la domanda non parte.
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo, scena } from '../nucleo/domanda.js'
 import { PITTORI_BILANCE } from '../grafica/pittori/bilance.js'
 
-/* ── le cose da pesare ──
-   Tre famiglie, per la varietà: la stessa bilancia con le mele o coi
-   conigli è la stessa domanda per chi ragiona e un'altra per chi
-   guarda. `f` è il genere, che serve agli articoli («una 🍎», «un
-   🍋») — nel testo va solo l'emoji, e la parola la dice il bambino.
-
-   `taglia` serve solo allo SCAMBIO, dove una cosa pesa come tante
-   altre: lì si prende sempre dalla più grossa alla più piccola, perché
-   «un'anguria pesa come tre ananas» si può immaginare e «una fragola
-   pesa come tre angurie» è una domanda che fa ridere e basta. */
+// tre famiglie per la varietà; `f` è il genere (serve agli articoli); `taglia` serve solo allo SCAMBIO (si prende dalla più grossa alla più piccola: «una fragola pesa come tre angurie» fa solo ridere)
 const FAMIGLIE = [
   [
     { e: '🍉', f: true, taglia: 9 }, { e: '🍍', f: false, taglia: 7 },
@@ -87,23 +26,18 @@ const FAMIGLIE = [
 ]
 const TUTTE = FAMIGLIE.flat()
 
-/* gli articoli e le desinenze che dipendono dalla cosa */
 const un = c => (c.f ? 'una' : 'un')
 const Un = c => (c.f ? 'Una' : 'Un')
 const quanti = c => (c.f ? 'Quante' : 'Quanti')
 const solo = c => (c.f ? 'sola' : 'solo')
 const suoi = c => (c.f ? 'le sue' : 'i suoi')
 
-/* due cose diverse qualunque */
 function dueCose(sorte) {
   const [x, y] = sorte.alcuni(TUTTE, 2)
   return [x, y]
 }
 
-/* due cose di taglia diversa, la piccola prima: quando la bilancia dice
-   che una pesa più dell'altra, deve pesare di più quella più grossa —
-   «il kiwi pesa come tre angurie» è vero sulla bilancia e fa ridere
-   guardandolo */
+// piccola prima: se la bilancia dice che una pesa più dell'altra, deve essere quella più grossa (o fa ridere guardandola)
 function piccolaEGrossa(sorte) {
   for (;;) {
     const [x, y] = sorte.alcuni(TUTTE, 2)
@@ -111,8 +45,7 @@ function piccolaEGrossa(sorte) {
   }
 }
 
-/* tre cose della stessa famiglia, dalla più grossa alla più piccola,
-   tutte di taglia diversa: la catena dello scambio */
+// tre cose della stessa famiglia, dalla più grossa alla più piccola, tutte di taglia diversa: la catena dello scambio
 function catena(sorte) {
   for (;;) {
     const fam = sorte.uno(FAMIGLIE)
@@ -121,12 +54,10 @@ function catena(sorte) {
   }
 }
 
-/* ── i pezzi della scena ── */
 const cose = (c, n) => ({ e: c.e, n })
 const pesi = (...quanti) => quanti.map(q => ({ peso: q }))
 
-/* un peso in uno, due o tre pezzi, nessuno più piccolo di 2: con due
-   pesi sul piatto si deve anche sommare, ed è un gradino in più */
+// un peso in uno-tre pezzi, nessuno più piccolo di 2: con due pesi si deve anche sommare, un gradino in più
 function spezza(totale, quanti, sorte) {
   if (quanti <= 1 || totale < 2 * quanti + 2) return [totale]
   const parti = []
@@ -140,17 +71,10 @@ function spezza(totale, quanti, sorte) {
   return parti.sort((a, b) => b - a)
 }
 
-/* il piatto con le cose e quello coi pesi non stanno sempre dalla
-   stessa parte: chi ha imparato «la risposta è a sinistra» deve
-   rileggere */
+// il piatto con le cose e quello coi pesi non stanno sempre dalla stessa parte: chi ha imparato «a sinistra» deve rileggere
 const giraSe = (gira, b) => (gira ? { sx: b.dx, dx: b.sx } : b)
 
-/* ── i falsi ──
-   Ogni candidato è { v, perche }: si tengono quelli diversi dalla
-   buona e fra loro, interi e positivi (o la frase «non si può
-   sapere»), nell'ordine in cui arrivano, fino a `quanti`. L'ordine è
-   quello di importanza — prima l'errore della mossa, poi il conto
-   sbagliato di uno. */
+// { v, perche }: si tengono quelli diversi dalla buona e fra loro, interi e positivi, nell'ordine di importanza fino a `quanti`
 function falsi(buona, candidati, quanti = 3) {
   const visti = new Set([String(buona)])
   const out = []
@@ -158,9 +82,7 @@ function falsi(buona, candidati, quanti = 3) {
     if (!c) continue
     const ok = typeof c.v === 'string' || (Number.isInteger(c.v) && c.v > 0)
     if (!ok || visti.has(String(c.v))) continue
-    /* un vicino di uno per parte e la buona starebbe in mezzo: vedi il
-       cappello. Vale anche quando il secondo vicino arriva da un errore
-       vero (la metà di 10 è 5, e la buona è 4): lo si lascia fuori. */
+    // mai due vicini di uno per parte, o la buona starebbe in mezzo — anche se il secondo arriva da un errore vero
     if (typeof c.v === 'number' && Math.abs(c.v - buona) === 1 && visti.has(String(2 * buona - c.v))) continue
     visti.add(String(c.v))
     out.push(testo(c.v, c.perche))
@@ -169,8 +91,7 @@ function falsi(buona, candidati, quanti = 3) {
   return out
 }
 
-/* il vicino di uno, da una parte sola (vedi il cappello): `prova` dice
-   perché quel numero non torna, rifacendo il conto con lui */
+// il vicino di uno, da una parte sola: `prova` dice perché quel numero non torna, rifacendo il conto con lui
 const vicino = (v, sorte, prova) => {
   const w = v <= 2 || sorte.forse(0.5) ? v + 1 : v - 1
   return { v: w, perche: prova(w) }
@@ -179,14 +100,7 @@ const vicino = (v, sorte, prova) => {
 const intero = (a, b) => (b && a % b === 0 ? a / b : null)
 const NON_SI_SA = 'Non si può sapere'
 
-/* ── una soluzione sola ──
-   Le bilance sono equazioni lineari: `righe` è un elenco di
-   { x, y, k } che vuol dire x·A + y·B = k (con B assente se c'è
-   un'incognita sola). Con una incognita la soluzione è unica se il
-   coefficiente non è zero; con due, se il determinante non è zero. Si
-   controlla anche che la soluzione trovata sia quella promessa: è il
-   modo di accorgersi di una bilancia costruita storta, che a schermo
-   sembrerebbe perfettamente normale. */
+// righe: elenco di { x, y, k } che vuol dire x·A + y·B = k (B assente con un'incognita sola). Si controlla anche che la soluzione trovata sia quella promessa: così si scopre una bilancia costruita storta, che a schermo sembrerebbe normale.
 function unaSola(righe, attese) {
   if (righe.length === 1) {
     const [{ x, k }] = righe
@@ -205,9 +119,7 @@ function controllata(righe, attese) {
     throw new Error(`bilancia senza una soluzione sola: ${JSON.stringify(righe)} → ${attese}`)
 }
 
-/* il numero nascosto scritto: un'incognita sola e coefficiente uno,
-   quindi la soluzione è unica per forza — quello che si può sbagliare
-   è la scritta, e si rifà il conto al contrario */
+// un'incognita sola e coefficiente uno: soluzione unica per forza, quello che si può sbagliare è la scritta
 function regge(forma, x, a, b) {
   const vale = { 'x+a': x + a, 'a+x': a + x, 'x-a': x - a, 'a-x': a - x }[forma]
   if (vale !== b) throw new Error(`il numero nascosto non torna: ${forma} con x=${x}, a=${a}, b=${b}`)
@@ -221,29 +133,7 @@ const SCALETTA = [
   'scambi lunghi, e due cose da pesare',
 ]
 
-/* ── le tipologie ──
-   Tutte stanno sotto `bilance`, che è il pezzo di scuola nuovo: un
-   genitore che le vede arrivare prima del tempo le toglie tutte
-   insieme. Quelle che per finire vogliono una divisione o una
-   tabellina lo dichiarano in più, come fanno le parti uguali dei
-   problemi: chi le divisioni non le ha fatte non può dividere un
-   piatto in tre, e la domanda gli arriverebbe muta.
-
-   I livelli, sulla scala comune (12,5 punti per anno, 50 = otto anni,
-   inizio terza):
-     · 44–50 il numero nascosto nei più e nei meno: il «quanto manca a»
-       è di seconda, e girato col quadratino e col meno davanti
-       (30 − □ = 12) è di terza;
-     · 56–63 il numero nascosto nelle tabelline: □ × 6 = 42 è la
-       divisione, cioè fine terza e inizio quarta;
-     · 63–69 quanto pesa uno: una divisione dentro una figura, inizio
-       quarta — la figura aiuta, ma bisogna capire che «in pari» vuol
-       dire «uguale»;
-     · 69–75 togliere dai due piatti: la mossa vera dell'algebra, e la
-       prima volta che una cosa che non si sa si lascia non saputa;
-     · 75–81 lo scambio: due moltiplicazioni in catena, quinta;
-     · 88 le due incognite: sostituire e poi togliere, in cima alla
-       scala, dove il programma della primaria finisce. */
+// tutte sotto `bilance` (pezzo di scuola nuovo: un genitore le toglie tutte insieme); quelle con divisione/tabellina lo dichiarano in più. Livelli sulla scala comune: 44-50 il numero nascosto nei più/meno (seconda-terza), 56-63 nelle tabelline (fine terza-inizio quarta), 63-69 quanto pesa uno, 69-75 togliere dai due piatti (la mossa vera dell'algebra), 75-81 lo scambio (quinta), 88 le due incognite (in cima, dove finisce il programma della primaria)
 const TIPI = [
   { chiave: 'bil:nascosto', nome: 'Il numero nascosto nei più e nei meno (□ + 7 = 15)',
     sa: 'bilance', livello: { 1: 44, 2: 50 }, gradi: { 1: 1, 2: 0.5 } },
@@ -271,11 +161,7 @@ class Bilance extends Modulo {
       materia: 'matematica',
       chiaro: 'trovare quanto pesa quello che non si sa, tenendo la bilancia in pari',
       scaletta: SCALETTA,
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie. Qui conta poco, perché ogni
-         tipologia dichiara il suo (vedi `TIPI`): è la media di quello
-         che un grado mescola. */
-      livelli: [44, 53, 65, 73, 85],
+      livelli: [44, 53, 65, 73, 85], // conta poco: ogni tipologia dichiara il suo (vedi TIPI), qui è solo la media di quello che un grado mescola
       tipi: TIPI,
       pittori: PITTORI_BILANCE,
     })
@@ -292,12 +178,7 @@ class Bilance extends Modulo {
     }
   }
 
-  /* ── il numero nascosto nei più e nei meno ─────────────────────────
-     Senza bilancia, scritto come sul quaderno. Quattro forme, e non
-     costano uguale: □ + 7 e 7 + □ si disfano togliendo, □ − 6 si
-     disfa rimettendo, e 30 − □ è quella difficile — il □ è quello che
-     si toglie, e l'istinto di sommare i due numeri è fortissimo. Per
-     questo la quarta forma arriva solo col grado 2. */
+  // senza bilancia, come sul quaderno. Quattro forme non costano uguale: 30-□=12 è la difficile (il □ è quello che si toglie, l'istinto di sommare è fortissimo) e arriva solo dal grado 2
   nascosto(grado, sorte) {
     const forma = sorte.uno(grado <= 1 ? ['x+a', 'a+x', 'x-a'] : ['x+a', 'a+x', 'x-a', 'a-x', 'a-x'])
     const tetto = grado <= 1 ? 20 : 100
@@ -358,11 +239,7 @@ class Bilance extends Modulo {
     })
   }
 
-  /* ── il numero nascosto nelle tabelline ────────────────────────────
-     □ × 6 = 42 è la divisione vista dall'altra parte, ed è così che la
-     si impara: «quante volte il 6 sta nel 42». Le due forme col diviso
-     arrivano al grado 3, e la più storta è 42 : □ = 6, dove il numero
-     nascosto è quello per cui si divide. */
+  // □×6=42 è la divisione vista dall'altra parte («quante volte il 6 sta nel 42»); le forme col diviso arrivano al grado 3
   nascostoPer(grado, sorte) {
     const forma = sorte.uno(grado <= 2 ? ['x*a', 'a*x'] : ['x*a', 'a*x', 'x:a', 'a:x'])
     let x, scritto, aiuto, cand
@@ -390,8 +267,7 @@ class Bilance extends Modulo {
         { v: c, perche: `${c} è quello che viene dopo aver diviso: □ è più grande` },
         { v: c - a, perche: `hai tolto: ma «: ${a}» si disfa moltiplicando per ${a}` },
       ]
-      /* il vicino qui è una tacca della tabellina, non un'unità:
-         34 : 4 non si fa, e 36 ± 1 si scarterebbe senza pensare */
+      // il vicino qui è una tacca della tabellina, non un'unità: 34:4 non si fa, 36±1 si scarterebbe senza pensare
       cand[1] = { v: cand[1].v * a, perche: cand[1].perche }
     } else {
       x = sorte.fra(2, 9)
@@ -417,10 +293,7 @@ class Bilance extends Modulo {
     })
   }
 
-  /* ── quanto pesa uno ───────────────────────────────────────────────
-     Su un piatto tante cose uguali, sull'altro dei pesi. «In pari» vuol
-     dire che pesano uguale, e il resto è dividere in parti uguali. Coi
-     pesi in due o tre pezzi prima si somma: al grado 4 è la regola. */
+  // un piatto con cose uguali, l'altro con pesi: «in pari» vuol dire uguale, il resto è dividere in parti uguali
   uno(grado, sorte) {
     const c = sorte.uno(TUTTE)
     const k = sorte.fra(2, grado <= 3 ? 4 : 5)
@@ -446,13 +319,7 @@ class Bilance extends Modulo {
     })
   }
 
-  /* La stessa bilancia girata: quanto pesa una cosa si sa, e manca il
-     peso che la mette in pari — scritto «?» sul peso. È la stessa idea
-     («in pari vuol dire che pesano uguale») fatta con la
-     moltiplicazione, e serve a non far diventare «quanto pesa uno» un
-     riflesso («dividi il numero per quante sono») invece di un
-     ragionamento. Al grado 4 dalla parte del «?» c'è già un peso, e
-     quello che manca è la differenza. */
+  // la stessa bilancia girata: quanto pesa una cosa si sa, manca il peso che la mette in pari («?»); serve a non far diventare «quanto pesa uno» un riflesso invece di un ragionamento
   qualePeso(grado, c, k, v, sorte) {
     const N = k * v
     const a = grado >= 4 && sorte.forse(0.5) ? sorte.fra(2, Math.min(9, N - 2)) : 0
@@ -478,15 +345,7 @@ class Bilance extends Modulo {
     })
   }
 
-  /* ── togliere la stessa cosa dai due piatti ────────────────────────
-     La mossa che regge tutto il resto. Tre scene:
-       · la cosa ignota su tutti e due i piatti — 🍐 + 3 🍎 contro
-         🍐 + 12: la pera non si sa, e non serve saperla;
-       · un peso dalla parte delle cose — 3 🍎 + 5 contro 17: si
-         toglie il 5 da tutte e due;
-       · (grado 4) le cose su tutti e due i piatti — 3 🍎 + 2 contro
-         🍎 + 10: si tolgono le mele che si possono togliere, poi il
-         peso. */
+  // la mossa che regge tutto il resto: la cosa ignota su entrambi i piatti (non serve saperla), un peso dalla parte delle cose, o (grado 4) le cose su entrambi i piatti
   togli(grado, sorte) {
     const scene = grado <= 3 ? ['ignota', 'peso'] : ['ignota', 'peso', 'tutte', 'tutte']
     const come = sorte.uno(scene)
@@ -499,8 +358,7 @@ class Bilance extends Modulo {
       const v = sorte.fra(2, 9)
       const N = k * v
       const ps = spezza(N, grado <= 3 ? 1 : sorte.fra(1, 2), sorte)
-      /* la pera sparisce: resta k·A = N, una sola soluzione per A (la
-         pera può pesare qualunque cosa, e la domanda non la chiede) */
+      // la pera sparisce: resta k·A = N, soluzione unica per A (la pera può pesare qualunque cosa, non si chiede)
       controllata([{ x: k, k: N }], [v])
       const quanto = ps.length > 1 ? `${ps.join(' + ')} = ${N}` : `${N}`
       return domanda({
@@ -550,7 +408,7 @@ class Bilance extends Modulo {
       })
     }
 
-    /* le cose su tutti e due i piatti */
+    // le cose su tutti e due i piatti
     const c = sorte.uno(TUTTE)
     const k2 = sorte.fra(1, 2)
     const d = sorte.fra(1, 3)
@@ -559,7 +417,7 @@ class Bilance extends Modulo {
     const v = sorte.fra(2, 9)
     const a = sorte.forse(0.35) ? 0 : sorte.fra(2, 9)
     const b = dd * v + a
-    /* k1·A + a = k2·A + b → (k1 − k2)·A = b − a */
+    // k1·A + a = k2·A + b → (k1 − k2)·A = b − a
     controllata([{ x: dd, k: b - a }], [v])
     const sinistra = a ? [cose(c, k1), ...pesi(a)] : [cose(c, k1)]
     const togliPeso = a ? `, poi togli ${a} da tutti e due` : ''
@@ -582,25 +440,16 @@ class Bilance extends Modulo {
     })
   }
 
-  /* ── lo scambio ────────────────────────────────────────────────────
-     Due bilance: sopra, una cosa grossa pesa come tante medie; sotto,
-     una media pesa come tante piccole (o come un peso). La mossa è
-     **mettere al posto**: ogni media diventa le sue piccole, e il conto
-     è una moltiplicazione — il falso vero è sommare i due numeri. Al
-     grado 5 lo scambio si allunga: due cose grosse invece di una, o la
-     domanda girata («quante grosse pesano come dodici piccole?»). */
+  // due bilance: sopra una cosa grossa pesa come tante medie, sotto una media pesa come tante piccole. La mossa è "mettere al posto": ogni media diventa le sue piccole, il conto è una moltiplicazione (il falso vero è sommare). Al grado 5 si allunga: due grosse, o la domanda girata.
   scambia(grado, sorte) {
     const [X, Y, Z] = catena(sorte)
     const come = sorte.uno(grado <= 4 ? ['conta', 'conta', 'peso'] : ['conta', 'peso', 'due', 'girata'])
-    /* due numeri diversi: con 4 e 4 «una bilancia sola» dà lo stesso
-       falso da sopra e da sotto, e con 2 e 2 sommare e moltiplicare
-       fanno 4 tutti e due — il falso sarebbe la buona */
+    // due numeri diversi: con 4 e 4 il falso sarebbe uguale da sopra e da sotto; con 2 e 2 sommare e moltiplicare farebbero 4 tutti e due
     const a = sorte.fra(2, 4)
     const b = sorte.uno([2, 3, 4, 5].filter(n => n !== a))
     const sopra = { sx: [cose(X, 1)], dx: [cose(Y, a)] }
     const ab = a * b
-    /* le due bilance, con la cosa piccola (o il peso) come unità:
-       X − a·Y = 0 e Y = b — due incognite, due bilance, una soluzione */
+    // le due bilance, con la piccola (o il peso) come unità: X − a·Y = 0 e Y = b — due incognite, due bilance, una soluzione
     const sistema = quantoY => controllata([{ x: 1, y: -a, k: 0 }, { x: 0, y: 1, k: quantoY }], [a * quantoY, quantoY])
 
     if (come === 'peso') {
@@ -687,19 +536,14 @@ class Bilance extends Modulo {
     })
   }
 
-  /* ── due cose da pesare ────────────────────────────────────────────
-     Sopra, le due cose insieme contro un peso; sotto, cosa le lega —
-     una pesa quanto l'altra più qualcosa, o quanto due o tre dell'altra.
-     La mossa è quella dello scambio seguita da quella del togliere:
-     si mette al posto, e poi si toglie o si divide. Si chiede l'una o
-     l'altra, perché «trovare quella sbagliata» è uno dei falsi veri. */
+  // sopra le due cose insieme contro un peso, sotto cosa le lega (una pesa l'altra più qualcosa, o volte); la mossa è scambio + togliere/dividere
   due(sorte) {
     const [X, Y] = piccolaEGrossa(sorte)
     const chiedeY = sorte.forse(0.4)
     const IN = 'Le due bilance sono in pari.'
 
     if (sorte.forse(0.5)) {
-      /* Y = X + D, X + Y = S */
+      // Y = X + D, X + Y = S
       const x = sorte.fra(2, 9)
       const D = sorte.fra(1, 6)
       const y = x + D
@@ -733,7 +577,7 @@ class Bilance extends Modulo {
       })
     }
 
-    /* Y = r·X, X + Y = S */
+    // Y = r·X, X + Y = S
     const r = sorte.fra(2, 3)
     const x = sorte.fra(2, 8)
     const y = r * x
@@ -767,11 +611,7 @@ class Bilance extends Modulo {
   }
 }
 
-/* ── la sottrazione senza prestito ──
-   L'errore più comune in colonna: nelle unità si fa «il più grande
-   meno il più piccolo», perché il 2 − 7 non si può. 52 − 17 fa 45 invece
-   di 35. È un falso solo quando serve davvero il prestito — altrimenti
-   torna il risultato giusto, e `falsi` lo scarta da sé. */
+// errore comune in colonna: nelle unità si fa «il più grande meno il più piccolo» (52−17 fa 45 invece di 35); un falso solo quando serve davvero il prestito, altrimenti `falsi` lo scarta da sé
 function senzaPrestito(a, b) {
   const ua = a % 10, ub = b % 10
   const da = Math.floor(a / 10), db = Math.floor(b / 10)
