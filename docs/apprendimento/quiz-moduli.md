@@ -40,6 +40,14 @@ sotto, tre modi di chiedere la stessa regola) e `moduli/orologio.js` +
 `{ che:'orologio', ore, minuti }`, il pittore li disegna in un quadrato
 100×100 e non sa niente di difficoltà o risposte giuste).
 
+**La tavolozza è una sola** (`grafica/pittori/tinte.js`, `TINTE`/`COLORI`):
+sei tinte, ognuna con `scuro`/`base`/`luce`/`orlo` (le gradazioni che fanno
+sembrare un cubo un cubo, e un contorno chiaro leggibile sul fondo scuro
+della scheda). Il nome della tinta **si legge a voce**: in `indizi.js` e
+`sequenze.js` finisce dentro il testo della domanda («non è rosso»), quindi
+i nomi devono essere parole che un bambino di sei anni ha già — niente
+«corallo» o «turchese».
+
 ## Le tipologie (`tipi`)
 
 Un modulo dichiara le classi di domande che sa fare, una per una, col peso

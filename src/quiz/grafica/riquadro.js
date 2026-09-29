@@ -1,30 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL RIQUADRO — dove finiscono i disegni di una domanda.
-
-   Una risposta disegnata (un orologio, una figura da specchiare, una
-   griglia) sta dentro un quadrato e basta. Qui c'è l'unica cosa che
-   serve a farcela stare: un canvas alla risoluzione vera dello schermo,
-   con il sistema di coordinate portato a un mondo fisso di 100×100.
-
-   È QUESTO IL PATTO CON CHI DISEGNA: un pittore lavora sempre in un
-   quadrato 100×100 con l'origine in alto a sinistra, e non sa quanto
-   sarà grande davvero. `p.testo('3', 50, 50, '#fff', 14)` scrive un 3
-   al centro, alto un settimo del riquadro, sul telefono come sul
-   computer. Nessun pittore deve leggere `canvas.width`.
-
-   Il pennello è quello di `grafica/tela.js` — cerchio, rett, figura,
-   linea, testo, in, velo — perché i pittori dei quiz e quelli del
-   castello devono restare la stessa cosa il giorno che si fondono.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// canvas alla risoluzione vera, coordinate portate a un mondo fisso 100×100: un pittore non legge mai canvas.width (vedi docs/apprendimento/quiz-moduli.md). Pennello condiviso con grafica/tela.js (castello).
 import { pennello } from '../../grafica/tela.js'
 
-export const LATO = 100        // il mondo dei pittori, sempre questo
+export const LATO = 100
 
-/* Dipinge una scena in un canvas quadrato. `pittori` è la tabella del
-   modulo; una scena senza pittore lascia il riquadro vuoto invece di
-   far esplodere la pagina (una domanda mancante è meglio di un gioco
-   morto — il banco di prova la prende comunque). */
+// una scena senza pittore lascia il riquadro vuoto: meglio di un gioco morto
 export function dipingi(canvas, pittori, scena, { fondo = null } = {}) {
   const lato = Math.max(1, Math.round(canvas.clientWidth || canvas.width || 120))
   const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1

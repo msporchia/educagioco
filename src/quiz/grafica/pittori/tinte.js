@@ -1,28 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE TINTE — la tavolozza dei pittori dei quiz.
-
-   Stava dentro `pittori/geometria.js`, ed è uscita il giorno che un
-   secondo modulo ha avuto bisogno di disegnare figure colorate: due
-   tavolozze quasi uguali sarebbero diventate due tavolozze diverse alla
-   prima ritoccata, e in una domanda dove il colore È la regola («i
-   colori tornano a turno: rosso, blu») due rossi diversi sono un
-   guasto, non una sfumatura.
-
-   IL NOME DELLA TINTA SI LEGGE A VOCE. Non è un'etichetta interna: in
-   `indizi` e in `sequenze` finisce dentro il testo della domanda («non
-   è rosso», «i colori tornano a turno: rosso, blu»), quindi la
-   tavolozza può usare solo parole che un bambino di sei anni ha già.
-   C'erano `corallo` e `turchese`, che sono nomi da cartella colori: la
-   domanda restava risolvibile guardando le figure, ma chiedeva di
-   riconoscere un colore da un nome mai sentito — e nello stesso
-   `indizi.js` gli indovinelli sulle cose del mondo dicevano già «sono
-   rosso» e «sono arancione». Adesso il vocabolario è uno solo.
-
-   Ogni tinta ha quattro gradazioni: `scuro` e `luce` servono a far
-   sembrare un cubo un cubo, `orlo` è quasi bianco perché sul fondo
-   scuro della scheda una figura senza contorno chiaro sparisce — e in
-   un riquadro di 118 pixel il contorno è metà della leggibilità.
-   ═══════════════════════════════════════════════════════════════════ */
+// la tavolozza condivisa da tutti i pittori dei quiz (vedi docs/apprendimento/quiz-moduli.md): i nomi si leggono a voce nelle domande, quindi solo parole note a sei anni
 
 export const TINTE = {
   azzurro:   { scuro: '#2f6f9e', base: '#4ea8e8', luce: '#8fd0fb', orlo: '#dcf0ff' },

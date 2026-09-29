@@ -1,23 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I PITTORI DEI SOLDI
-
-   Due scene, tutte e due dentro il quadrato 100×100 del riquadro, e
-   tutte e due sordo: non sanno niente di euro giusti o di risposte —
-   disegnano quello che il modulo gli passa.
-
-     { che: 'monete', pezzi: [{ cents, testo }, …] }        — un mucchietto
-     { che: 'linea-numeri', da, a, punti: [{ lettera, pos }] }   — la riga
-
-   MONETE. `cents` decide solo la forma (cerchio piccolo sotto l'euro,
-   cerchio grande fra 1€ e 2€, rettangolo per le banconote): il colore
-   non c'entra con che moneta sia davvero, è solo per distinguerle a
-   vista in un mucchietto misto. `testo` è già scritto dal modulo
-   («50 c», «2 €»...) — il pittore non fa di conto.
-
-   LA LINEA. Un segmento da `da` a `a` (un'unità intera), diviso in
-   decimi, con dei punti colorati e lettere sopra. `pos` è la frazione
-   fra 0 e 1: il pittore non sa che numero rappresenti quel punto, sa
-   solo dove metterlo. */
+// due scene sorde a euro/risposte: { che:'monete', pezzi:[{cents,testo}] } e { che:'linea-numeri', da, a, punti:[{lettera,pos}] }. `cents` decide solo la forma (colore serve solo a distinguere a vista); `pos` è la frazione 0..1, il pittore non sa che numero rappresenti.
 
 const COLORI_MONETA = { piccola: '#d7a24a', grande: '#e7c565', nota: '#bcd6a3' }
 
@@ -46,13 +27,10 @@ export function monete(p, { pezzi = [] }) {
 
 export function lineaNumeri(p, { da = 0, a = 1, punti = [] }) {
   const x0 = 12, x1 = 88, y = 52
-  /* il foglio chiaro sotto, come i grafici: la carta della domanda è
-     scura, e i numeri degli estremi scritti scuri ci sparivano sopra */
-  p.rett(4, 22, 92, 56, '#f4f6fb')
+  p.rett(4, 22, 92, 56, '#f4f6fb') // foglio chiaro sotto: senza, i numeri scuri sparivano sulla carta scura
   p.linea([{ x: x0, y }, { x: x1, y }], '#7d8cb4', 2)
 
-  /* undici tacche: gli estremi più marcati, i decimi in mezzo */
-  for (let i = 0; i <= 10; i++) {
+  for (let i = 0; i <= 10; i++) { // undici tacche: estremi più marcati, decimi in mezzo
     const x = x0 + (x1 - x0) * (i / 10)
     const capo = i === 0 || i === 10
     p.linea([{ x, y: y - (capo ? 9 : 5) }, { x, y: y + (capo ? 9 : 5) }],
@@ -61,7 +39,6 @@ export function lineaNumeri(p, { da = 0, a = 1, punti = [] }) {
   p.testo(String(da), x0, y + 18, '#22304f', 13, 800)
   p.testo(String(a), x1, y + 18, '#22304f', 13, 800)
 
-  /* i punti, ognuno con la sua lettera sopra un pallino colorato */
   const TINTE = ['#d8574f', '#3d7a3d', '#3d5aa8']
   punti.forEach((pt, i) => {
     const x = x0 + (x1 - x0) * pt.pos
