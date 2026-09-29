@@ -1,20 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LE SEI DISCESE
-
-   Riceve le tappe già decise — cosa è aperto, quante stelle — e non sa
-   niente di profili né di motore: qui dentro si sceglie dove andare.
-
-   Una tappa chiusa dice **cosa ci sarà**, non «prima finisci quella di
-   prima»: la dritta è un motivo per arrivarci, il lucchetto da solo no.
-
-   ── LA DISCESA LASCIATA A METÀ STA IN CIMA ────────────────────────
-   È la prima cosa che si vede, e dice a che punto era: piano, vita,
-   gemme. Sotto ci sono le discese di sempre, e toccarne una **avverte**
-   invece di buttare via la partita in silenzio — perché il dito di un
-   bambino sulla mappa ci finisce comunque, e quello che si perde sono
-   venti minuti.
-   ═══════════════════════════════════════════════════════════════════ */
+// Le sei discese: riceve le tappe già decise, sceglie solo dove andare. Una tappa chiusa dice cosa ci sarà,
+// non "prima finisci quella di prima". La discesa lasciata a metà sta in cima; toccarne un'altra avverte
+// invece di buttare la partita in silenzio.
 import { ref, computed } from 'vue'
 import { figura } from './figura.js'
 import { pezzoAndante } from '../dati/tessere.js'
@@ -23,19 +10,13 @@ const props = defineProps({
   tappe: { type: Array, required: true },   // [{ indice, nome, icona, dritta, piani, aperta, adesso, stelle }]
   ripresa: { type: Object, default: null }, // { tappa, nome, icona, piano, piani, vita, gemme, chi }
   eroe: { type: Object, required: true },   // la scheda di chi scende, da dati/eroi.js
-  /* L'abisso, o niente finché le sei discese non sono finite:
-     { indice, nome, icona, dritta, fondo }. Va **in fondo** e non in
-     cima perché in cima ci sta già la ripresa, che è la cosa urgente. */
-  abisso: { type: Object, default: null },
+  abisso: { type: Object, default: null },   // { indice, nome, icona, dritta, fondo }; in fondo, la ripresa è più urgente
 })
 const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe'])
 
-/* Il ritratto di chi scende: lo sprite vero, non l'emoji. Chi apre
-   questa schermata deve vedere **chi è**, non leggerlo. */
 const ritratto = computed(() => figura(pezzoAndante(props.eroe.sprite, 'fermo', 0), { scala: 2 }))
 
-/* Quale tappa si sta per cominciare avendo una discesa in sospeso. */
-const chiede = ref(null)
+const chiede = ref(null)   // quale tappa si sta per cominciare avendo una discesa in sospeso
 
 function tocca(t, cSospeso) {
   if (!cSospeso) return emit('gioca', t.indice)
@@ -56,10 +37,7 @@ function comincia() {
       <b>Ogni cosa che vale ha un prezzo, e il prezzo è rispondere.</b>
     </p>
 
-    <!-- ═══ chi scende ═══
-         Si sceglie una volta e resta; di qui si cambia. Sta in cima
-         perché è la cosa che decide come andrà la discesa, e perché una
-         scelta fatta un mese fa va ricordata a chi torna. -->
+    <!-- chi scende: si sceglie una volta e resta, di qui si cambia -->
     <button class="sot-chi" data-azione="eroe" @click="$emit('eroe')">
       <span class="sot-ritratto" :style="ritratto ? ritratto.gabbia : null">
         <i v-if="ritratto" :style="ritratto.pezzo"></i>
@@ -72,15 +50,11 @@ function comincia() {
       <span class="sot-cambia">cambio</span>
     </button>
 
-    <!-- ═══ dove eri rimasto ═══ -->
     <div v-if="ripresa" class="sot-ripresa" data-ripresa="1">
       <p class="sot-dove">
         <span class="em">{{ ripresa.icona }}</span>
         <b>{{ ripresa.nome }}</b>
-        <!-- con chi si riprende: si può cambiare eroe dalla mappa
-             mentre una discesa è in sospeso, e chi è sceso è sceso —
-             dirlo qui evita la sorpresa di ritrovarsi un altro in mano -->
-        <!-- l'abisso non ha un «di quanti»: la sua riga è «piano 23» -->
+        <!-- con chi si riprende: chi è sceso è sceso, anche se nel frattempo si è cambiato eroe -->
         <i>{{ ripresa.chi ? ripresa.chi + ' · ' : '' }}piano {{ ripresa.piano
            }}<template v-if="ripresa.piani"> di {{ ripresa.piani }}</template> ·
            ❤️ {{ ripresa.vita }} · 💎 {{ ripresa.gemme }}</i>
@@ -107,10 +81,7 @@ function comincia() {
       </span>
     </button>
 
-    <!-- ═══ l'abisso ═══
-         Non è la settima discesa e non deve sembrarlo: niente stelle,
-         niente lucchetto, niente «di 6». Il conto a destra è il record,
-         che è l'unica cosa misurabile di un posto senza fondo. -->
+    <!-- l'abisso non è la settima discesa: niente stelle, niente lucchetto. A destra il record -->
     <button v-if="abisso" class="sot-tappa sot-abisso" data-abisso="1"
             @click="tocca(abisso, !!ripresa)">
       <span class="sot-faccia em">{{ abisso.icona }}</span>
@@ -123,8 +94,7 @@ function comincia() {
       </span>
     </button>
 
-    <!-- ═══ «ne cominci un'altra?» ═══
-         Detto prima, mai dopo: quello che si perde non torna. -->
+    <!-- detto prima, mai dopo: quello che si perde non torna -->
     <div v-if="chiede" class="sot-velo" @click.self="chiede = null">
       <div class="sot-modale">
         <h2><span class="em">⚠️</span> Hai una discesa a metà</h2>
