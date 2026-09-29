@@ -2,12 +2,11 @@
 import { computed } from 'vue'
 import { state, selectPlayer, level, countMastered,
          traguardi, serieGiorni, livelloOra,
-         mateProgresso, engProgresso, espProgresso, mercatoProgresso,
+         mateProgresso, espProgresso, mercatoProgresso,
          tabellineIntere, genProgresso,
          quantiGiochiAccesi } from '../store/profile.js'
 import { daLeggere } from '../store/posta.js'
 import { SCALETTA, posizioneOra, filaDi } from '../data/asteroidi.js'
-import { CAMPAGNA as TAPPE_EN } from '../data/campagna-inglese.js'
 import { CAMPAGNA as TAPPE_ES } from '../data/campagna-spagnolo.js'
 import { CAMPAGNE as GIORNATE } from '../data/bancarella.js'
 // conta le prove CHE SI VEDONO, non tutte: le non approvate sono dietro il cancello dei giochi in prova
@@ -30,7 +29,6 @@ const siCerca = daUnSito()      // il tasto "cerca aggiornamenti": solo se c'è 
 
 const imparateEn = computed(() =>
   countMastered('en:') + countMastered('verbo:') + countMastered('frase:'))
-const tappaEn = computed(() => engProgresso())
 const imparateEs = computed(() =>
   countMastered('es:') + countMastered('verbo-es:') + countMastered('frase-es:'))
 const tappaEs = computed(() => espProgresso())
@@ -94,9 +92,8 @@ const dove = computed(() => {
       ? `volo infinito ♾️ · ✖️ ${stelleMate.value}/10 tabelline${recordMate.value}`
       : `${fatteMate.value} tapp${fatteMate.value === 1 ? 'a' : 'e'} ` +
         `su ${filaMate.length} · ora ${filaMate[doveMate.value].T.nome}`,
-    inglese: tappaEn.value.libera
-      ? `gioco libero ♾️ · 🎯 ${imparateEn.value} sicure`
-      : `tappa ${q(tappaEn.value.tappa, TAPPE_EN.length)} · 🎯 ${imparateEn.value} sicure`,
+    // l'inglese a mondi (src/giochi/inglese) si racconta dal suo manifesto; le sicure restano quelle di sempre
+    inglese: `${giocoNuovo('inglese').riassunto(progressoDi('inglese'))} · 🎯 ${imparateEn.value} sicure`,
     spagnolo: tappaEs.value.libera
       ? `gioco libero ♾️ · 🎯 ${imparateEs.value} sicure`
       : `tappa ${q(tappaEs.value.tappa, TAPPE_ES.length)} · 🎯 ${imparateEs.value} sicure`,
