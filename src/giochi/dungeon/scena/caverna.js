@@ -1,36 +1,14 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA CAVERNA — quello che si disegna sotto le stanze
+// La caverna: riceve fatti già decisi (sentiero acceso, pedina qui) e
+// dipinge l'atmosfera (pietra, torce, pulviscolo, sentieri curvi). Le stanze
+// non si disegnano qui: sono bottoni veri di viste/Corsa.vue, toccabili col
+// dito. MARGINE è l'unico posto che decide dove comincia il campo — Corsa.vue
+// lo importa per piazzare i bottoni, o si staccherebbero dai loro sentieri.
 
-   Qui non si sa cosa sia un cuore, una gemma o una domanda: si riceve
-   una fila di fatti già decisi — «questo sentiero è acceso», «la pedina
-   sta qui» — e si dipinge. Le stanze invece **non** si disegnano: sono
-   bottoni veri di `viste/Corsa.vue`, perché un cerchio su tela non si
-   può toccare col dito né trovare in un test, e la mappa di un dungeon
-   è fatta di cose da toccare.
-
-   Quello che resta alla tela è l'atmosfera, cioè tutto quello che un
-   template non sa dire: la pietra, le torce che guizzano, il pulviscolo
-   che sale, i sentieri curvi, e la pedina che cammina lungo la curva
-   invece di scivolare in linea retta.
-
-   LE MISURE STANNO QUI. `MARGINE` è l'unico posto in cui si decide dove
-   comincia il campo, e `Corsa.vue` lo importa per piazzare i bottoni:
-   se stessero in due file diverse, un giorno le stanze si troverebbero
-   staccate dai loro sentieri e nessuno saprebbe perché.
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* Dove comincia il campo. Sotto ci sta la riga che dice cosa fare, e le
-   stanze non le devono finire sopra; sopra basta lo spazio del bollino. */
 export const MARGINE = { lati: 34, sopra: 46, sotto: 78 }
 
-/* Quanto spazio vuole una fila. Una stanza è un bottone da 52 px col
-   bollino ⚡ che sborda: sotto questa distanza due file si toccano e la
-   mappa diventa una collana di palline. Le discese lunghe sono più alte
-   dello schermo, e allora la discesa **scorre** — che è meglio di
-   quattordici file schiacciate in una schermata sola. */
+// sotto questa distanza due file di bottoni da 52px si toccano; le discese lunghe scorrono
 export const PASSO_FILA = 76
 
-/* L'altezza che vuole una discesa di `file` file. */
 export const altezzaDiscesa = file =>
   Math.max(0, file - 1) * PASSO_FILA + MARGINE.sopra + MARGINE.sotto
 
@@ -45,28 +23,19 @@ export class Caverna {
     this.cammino = null
     this.L = 0; this.A = 0; this.dpr = 1
     this.tempo = 0
-    /* ── la finestra sulla discesa ──
-       La tela è grande quanto **lo schermo**, non quanto la discesa: una
-       discesa da quaranta file è alta più di tremila pixel, e un canvas
-       così — moltiplicato per la densità dello schermo — sfonda il
-       limite di lato che Safari su iPhone impone (4096), dove poi non
-       disegna più niente. Quindi si disegna solo la fetta che si vede:
-       `totale` è quanto è alta la discesa intera, `scorso` a che punto
-       è arrivato lo scorrimento, e `punto()` fa la sottrazione. Offset
-       e limit, niente di più. */
+    // la tela è grande quanto lo SCHERMO, non la discesa: una discesa da 40
+    // file supera i 4096px che Safari su iPhone accetta per lato. Si disegna
+    // solo la fetta visibile: `totale` l'altezza intera, `scorso` lo scroll.
     this.totale = 0
     this.scorso = 0
   }
 
-  /* Dove siamo arrivati a scorrere. Con `totale` a zero il conto torna
-     quello di prima — la discesa sta tutta nello schermo — così una
-     mappa corta non passa da nessun codice nuovo. */
+  // con `totale` a zero il conto torna quello di prima: una mappa corta non passa da nuovo codice
   inquadratura(totale, scorso) {
     this.totale = totale || 0
     this.scorso = scorso || 0
   }
 
-  /* il colore dell'ambiente: la ghiacciaia non è la fucina */
   vesti(vestito) {
     this.vestito = { ...this.vestito, ...vestito }
     this.fondo = null
@@ -74,14 +43,10 @@ export class Caverna {
 
   mostra(scena) { this.scena = scena || { sentieri: [], pedina: null } }
 
-  /* da 0..1 a pixel. È l'unico posto in cui si fa questo conto, e
-     `Corsa.vue` fa lo stesso con `MARGINE` in CSS. */
+  // da 0..1 a pixel; Corsa.vue fa lo stesso conto con MARGINE in CSS
   punto(xn, yn) {
     const { lati, sopra, sotto } = MARGINE
-    /* l'altezza di riferimento è quella della **discesa intera**, non
-       quella della tela: le stanze stanno lì dentro, e i sentieri
-       devono passarci sopra al pixel. Poi si toglie lo scorrimento, che
-       è quello che porta in vista la fetta giusta. */
+    // riferito alla discesa intera (non alla tela): i sentieri devono passarci sopra al pixel
     const H = this.totale || this.A
     return {
       x: lati + xn * Math.max(1, this.L - lati * 2),
@@ -118,9 +83,7 @@ export class Caverna {
     this.cammino = null
   }
 
-  /* ── la pedina cammina lungo la curva ──
-     Una coreografia a tempo: parte, ci mette il suo, e alla fine
-     avvisa. Chi l'ha chiamata non sa quanti fotogrammi ci vogliono. */
+  // coreografia a tempo: chi chiama non sa quanti fotogrammi ci vogliono
   muovi(da, a, curva, poi) {
     this.cammino = { da, a, curva, t: 0, durata: 0.7, poi, passo: 0 }
   }
@@ -146,8 +109,7 @@ export class Caverna {
     this.pedina(ctx, dt, t)
   }
 
-  /* la pietra: si dipinge una volta e si tiene da parte, perché
-     duecento mattoni per fotogramma sono duecento mattoni di troppo */
+  // si dipinge una volta e si tiene da parte: duecento mattoni per fotogramma sono troppi
   dipingiFondo() {
     const c = document.createElement('canvas')
     c.width = Math.round(this.L * this.dpr)
@@ -168,7 +130,7 @@ export class Caverna {
         x.strokeStyle = 'rgba(0,0,0,0.22)'; x.lineWidth = 1
         x.strokeRect(px + 1.5, y + 1.5, wM - 3, hM - 3)
       }
-    /* macchie di umido e di muffa, col colore dell'ambiente */
+    // macchie di umido e di muffa, col colore dell'ambiente
     for (let i = 0; i < 60; i++) {
       const cx = Math.random() * L, cy = Math.random() * A, r = 6 + Math.random() * 26
       const gg = x.createRadialGradient(cx, cy, 0, cx, cy, r)
@@ -182,8 +144,7 @@ export class Caverna {
     return c
   }
 
-  /* le torce stanno nella striscia laterale dove le stanze non arrivano
-     mai (xn resta fra 0.16 e 0.84): non danno fastidio a nessuno */
+  // stanno nella striscia laterale dove le stanze non arrivano mai (xn resta fra 0.16 e 0.84)
   torce(ctx, t) {
     const posti = [{ s: 0, q: 0.18 }, { s: 1, q: 0.44 }, { s: 0, q: 0.7 }, { s: 1, q: 0.92 }]
     for (const [i, p] of posti.entries()) {
@@ -218,9 +179,7 @@ export class Caverna {
     }
   }
 
-  /* il punto di controllo del sentiero: spostato di lato, ma con la
-     pancia tagliata a 24 px — sui tratti lunghi una curva proporzionale
-     scavallerebbe il sentiero vicino e sembrerebbero incrociarsi */
+  // pancia tagliata a 24px: sui tratti lunghi una curva proporzionale scavallerebbe il sentiero vicino
   controllo(s) {
     const a = this.punto(s.ax, s.ay), b = this.punto(s.bx, s.by)
     const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2
@@ -246,7 +205,7 @@ export class Caverna {
       ctx.lineWidth = 4; ctx.stroke()
       ctx.setLineDash([])
       if (s.stato !== 'acceso') continue
-      /* la strada che si può prendere adesso: corre */
+      // la strada che si può prendere adesso: corre
       this.traccia(ctx, s)
       ctx.setLineDash([3, 10]); ctx.lineDashOffset = -t * 26
       ctx.strokeStyle = 'rgba(255,214,110,0.95)'; ctx.lineWidth = 5.5
@@ -254,8 +213,7 @@ export class Caverna {
       ctx.stroke()
       ctx.shadowBlur = 0; ctx.setLineDash([]); ctx.lineDashOffset = 0
     }
-    /* la prima scelta non ha un sentiero da cui arrivare: un tratteggio
-       che sale dal fondo dice da dove si entra */
+    // la prima scelta non ha un sentiero da cui arrivare: un tratteggio dal fondo dice da dove si entra
     for (const s of this.scena.ingressi || []) {
       const p = this.punto(s.x, s.y)
       ctx.beginPath(); ctx.moveTo(p.x, this.A + 6); ctx.lineTo(p.x, p.y)
@@ -278,9 +236,7 @@ export class Caverna {
       if (c.t >= 1) { const poi = c.poi; this.cammino = null; poi?.() }
     } else if (this.scena.pedina) {
       const p = this.punto(this.scena.pedina.x, this.scena.pedina.y)
-      /* ferma, la pedina sta SOPRA la stanza e non sulla sua icona: se
-         la coprisse non si saprebbe più dove si è finiti */
-      posto = { x: p.x, y: p.y - 30 }
+      posto = { x: p.x, y: p.y - 30 }   // sopra la stanza, non sulla sua icona: se la coprisse non si saprebbe dov'è
     }
     if (!posto) return
 
@@ -296,8 +252,6 @@ export class Caverna {
     ctx.fillText('🧒', posto.x, posto.y - salto - 2)
   }
 
-  /* due comodità di colore: la pietra dell'ambiente schiarita, e
-     l'accento reso trasparente. Servono al fondo e alle macchie. */
   schiara(quanto) {
     const [r, g, b] = leggi(this.vestito.pietra)
     const su = v => Math.round(v + (255 - v) * quanto)
