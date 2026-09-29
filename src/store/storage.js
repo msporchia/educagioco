@@ -83,21 +83,6 @@ function idbRun(mode, fn, timeout) {
 function lsGet(k) { try { return localStorage.getItem(k) } catch (e) { return undefined } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); return true } catch (e) { return false } }
 
-/* ---------- la busta: un segno di tempo su ogni scrittura ----------
-   Serve a decidere chi vince quando la stessa chiave vive in due posti
-   (IndexedDB e il ripiego di localStorage possono raccontare storie
-   diverse: IndexedDB lento all'avvio -> scritto su localStorage). Un dato
-   di prima di questa busta non ce l'ha: si tratta come «non si sa
-   quando», e perde contro qualunque busta vera. `__v`/`__t` e non `v`/`t`
-   per non confondersi con un campo vero del profilo (che ha già un `v` di
-   suo: la sua versione di migrazione). */
-function avvolgi(valore) { return { __v: valore, __t: Date.now() } }
-function svolgi(x) {
-  if (x && typeof x === 'object' && !Array.isArray(x) && '__v' in x && typeof x.__t === 'number')
-    return x;
-  return { __v: x, __t: 0 };
-}
-
 /* ---------- API ---------- */
 export async function detectBackend() {
   // Qui, non altrove: è la lettura di avvio, l'unica per cui vale la pena
@@ -110,16 +95,15 @@ export async function detectBackend() {
   return backend.kind;
 }
 
+/* Il ripiego, quando c'è, è sempre il più recente: vedi la nota sopra
+   `eseguiFlush`. Per questo si guarda PRIMA localStorage (`load()` non
+   deve aspettare IndexedDB per saperlo) e si cade su IndexedDB solo se
+   lì non c'è niente. */
 export async function load(key) {
-  const fromIdb = await idbRun('readonly', s => s.get(key));
-  const daIdb = (fromIdb != null && fromIdb !== true) ? svolgi(fromIdb) : null;
   const raw = lsGet(key);
-  let daLs = null;
-  if (raw != null) { try { daLs = svolgi(JSON.parse(raw)) } catch (e) { /* ignora */ } }
-  // la più recente vince, se ce ne sono due
-  if (daIdb && daLs) return (daLs.__t > daIdb.__t ? daLs : daIdb).__v;
-  if (daIdb) return daIdb.__v;
-  if (daLs) return daLs.__v;
+  if (raw != null) { try { return JSON.parse(raw) } catch (e) { /* non era JSON: si prova IndexedDB */ } }
+  const fromIdb = await idbRun('readonly', s => s.get(key));
+  if (fromIdb != null && fromIdb !== true) return fromIdb;
   return mem.has(key) ? mem.get(key) : null;
 }
 
@@ -149,12 +133,16 @@ export function flush() {
   return giro;
 }
 
+/* Ogni scrittura riuscita in IndexedDB ripulisce un eventuale doppione
+   nel ripiego: è quello che rende vero, senza bisogno di un segno di
+   tempo, che «il ripiego, quando c'è, è il più recente» — nessun'altra
+   strada scrive in IndexedDB, quindi se lì la scrittura per quella
+   chiave fosse già passata il ripiego non ci sarebbe più. */
 async function eseguiFlush() {
   const batch = [...pending]; pending.clear();
   for (const [k, v] of batch) {
-    const busta = avvolgi(v);
-    const ok = await idbRun('readwrite', s => s.put(busta, k));
-    if (ok == null) lsSet(k, JSON.stringify(busta));      // ripiego
+    const ok = await idbRun('readwrite', s => s.put(v, k));
+    if (ok == null) lsSet(k, JSON.stringify(v));      // ripiego
     else { try { localStorage.removeItem(k) } catch (e) { /* pazienza */ } }
   }
 }
@@ -192,10 +180,12 @@ export async function chiavi(prefisso = '') {
 /* ---------- il travaso ----------
    All'avvio, se IndexedDB funziona ma in localStorage sono rimaste
    scritture di ripiego (fatte mentre IndexedDB non rispondeva, magari
-   una sessione fa), le sposta lì: senza, quelle chiavi restano un doppio
-   che nessuno concilia finché non si rilegge, e `load()` da solo le
-   concilia già leggendo (vince la busta più recente) ma non le sposta.
-   Torna quante ne ha spostate, solo per i test. */
+   una sessione fa), le sposta lì. Senza confronti: il ripiego, quando
+   c'è, è **sempre** il più recente (vedi la nota su `eseguiFlush`), quindi
+   vince e basta — comprese le chiavi che in IndexedDB non ci sono ancora.
+   `load()` concilia già le due copie leggendo (guarda prima il ripiego),
+   ma non le sposta: senza il travaso il doppione in localStorage
+   resterebbe lì per sempre. Torna quante ne ha spostate, solo per i test. */
 export async function travasaRipiego() {
   const base = await openDb(TIMEOUT_AVVIO);
   if (!base) return 0;
@@ -207,12 +197,9 @@ export async function travasaRipiego() {
     if (!k || k === '__probe__') continue;
     const raw = lsGet(k);
     if (raw == null) continue;
-    let daLs;
-    try { daLs = svolgi(JSON.parse(raw)) } catch (e) { continue }
-    const fromIdb = await idbRun('readonly', s => s.get(k));
-    const daIdb = (fromIdb != null && fromIdb !== true) ? svolgi(fromIdb) : null;
-    if (daIdb && daIdb.__t >= daLs.__t) { try { localStorage.removeItem(k) } catch (e) {} ; continue }
-    const ok = await idbRun('readwrite', s => s.put(daLs, k));
+    let valore;
+    try { valore = JSON.parse(raw) } catch (e) { continue }
+    const ok = await idbRun('readwrite', s => s.put(valore, k));
     if (ok != null) { try { localStorage.removeItem(k) } catch (e) { /* pazienza */ } quante++ }
   }
   return quante;

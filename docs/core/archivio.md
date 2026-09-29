@@ -38,22 +38,22 @@ scaricano da sole su `visibilitychange` e `pagehide`.
   `detectBackend()` ha aspettato ed è riuscito, le letture del roster e
   del profilo che seguono nello stesso avvio trovano IndexedDB già
   pronto, senza bisogno di un tempo lungo tutto loro.
-- **Ogni scrittura porta una busta con un segno di tempo** (`{ __v:
-  valore, __t: quando }`, invisibile a chi chiama `load`/`save`: campi
-  con doppio underscore apposta, per non confondersi con un `v` vero del
-  profilo). Serve a decidere chi vince quando la stessa chiave vive in
-  due posti — IndexedDB e il ripiego di localStorage possono raccontare
-  storie diverse — e `load()` la usa da solo: se una chiave ha una copia
-  in tutti e due i posti, vince la più recente. Un dato scritto prima di
-  questa busta non ce l'ha: si tratta come «non si sa quando» (`__t: 0`)
-  e perde contro qualunque busta vera.
+- **Il ripiego, quando c'è, è sempre il più recente — senza bisogno di un
+  segno di tempo.** Ogni scrittura riuscita in IndexedDB ripulisce da sé
+  un eventuale doppione lasciato nel ripiego (`eseguiFlush`), e nessun'altra
+  strada scrive in IndexedDB: quindi se una chiave è ancora nel ripiego
+  vuol dire che nessuna scrittura più recente c'è mai arrivata, anche se
+  IndexedDB ha già un'altra copia (più vecchia) della stessa chiave.
+  `load()` guarda perciò **prima** il ripiego e cade su IndexedDB solo se
+  lì non c'è niente — invertito rispetto a prima, che fidandosi sempre di
+  IndexedDB ignorava un ripiego più fresco lasciato da un giro storto.
 - **Il travaso, all'avvio.** Se IndexedDB funziona ma in localStorage sono
   rimaste scritture di ripiego — fatte mentre IndexedDB non rispondeva,
-  magari una sessione fa — `travasaRipiego()` le sposta lì (la più
-  recente vince, con la stessa regola di `load()`) e ripulisce il
-  ripiego. `load()` da solo concilia già le due copie leggendo, ma non le
-  sposta: senza il travaso il doppione in localStorage resterebbe lì per
-  sempre, a rifare il confronto a ogni lettura.
+  magari una sessione fa — `travasaRipiego()` le sposta lì e basta,
+  sovrascrivendo quello che IndexedDB avesse per quella chiave (per la
+  stessa ragione di sopra, vince sempre). `load()` concilia già le due
+  copie leggendo, ma non le sposta: senza il travaso il doppione in
+  localStorage resterebbe lì per sempre.
 - **`flush()` è serializzato.** Due `flush()` in corsa non possono più
   scrivere una chiave vecchia sopra una nuova: gira sempre in coda a
   quello prima (una catena di promesse), quindi chi arriva mentre un
