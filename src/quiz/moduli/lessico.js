@@ -1,31 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LESSICO — sinonimi, contrari, categorie e modi di dire.
-
-   Cinque gradi, dal più concreto al più astratto: il contrario di una
-   parola si sente quasi a pelle, l'intruso vuole sapere a che famiglia
-   appartiene una cosa, il sinonimo chiede una parola più fine per dire
-   la stessa cosa, la frase col buco vuole il verbo che ci sta davvero,
-   e i modi di dire sono l'ultimo gradino perché non si intendono alla
-   lettera — bisogna già sapere che le parole, messe insieme, a volte
-   dicono un'altra cosa.
-
-   I DISTRATTORI VENGONO DA UN SERBATOIO CONDIVISO, non da una lista
-   scritta a mano parola per parola: il contrario sbagliato è un'altra
-   parola della stessa tabella (quindi un aggettivo vero, non rumore),
-   l'intruso finto è un altro membro della stessa categoria, il
-   significato sbagliato di un modo di dire è il significato *vero* di
-   un altro modo di dire. Così bastano poche decine di voci per
-   migliaia di combinazioni, e ogni distrattore è sempre plausibile
-   perché è sempre qualcosa di vero, solo nel posto sbagliato.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// contrari/intruso/sinonimi/frase/modi di dire, dal più concreto al più astratto. I distrattori vengono da un serbatoio condiviso (un'altra voce della stessa tabella), mai da una lista scritta a mano: bastano poche decine di voci per migliaia di combinazioni, e ogni distrattore è plausibile perché è sempre qualcosa di vero, solo nel posto sbagliato.
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo } from '../nucleo/domanda.js'
 
-/* ── grado 1: i contrari ──
-   Ogni parola compare una volta sola in tutta la tabella: se comparisse
-   in due coppie diverse, chiedere il suo contrario avrebbe due risposte
-   giuste possibili. */
+// ogni parola compare una volta sola in tutta la tabella: in due coppie diverse avrebbe due contrari giusti possibili
 const CONTRARI = [
   ['alto', 'basso'], ['grande', 'piccolo'], ['veloce', 'lento'], ['pieno', 'vuoto'],
   ['aperto', 'chiuso'], ['acceso', 'spento'], ['caldo', 'freddo'], ['duro', 'morbido'],
@@ -46,10 +23,7 @@ const CONTRARI = [
 ]
 const PAROLE_CONTRARI = [...new Set(CONTRARI.flat())]
 
-/* ── grado 2: l'intruso ──
-   Ogni membro compare in una sola categoria: senza questa regola
-   «pomodoro» che è insieme frutto e verdura, o simili, romperebbe la
-   promessa che l'intruso è vero e non discutibile. */
+// ogni membro compare in una sola categoria: senza, «pomodoro» (frutto E verdura) romperebbe la promessa che l'intruso è vero e non discutibile
 const CATEGORIE = [
   { nome: 'animali della fattoria', gruppo: 'animali',
     membri: ['mucca', 'maiale', 'gallina', 'cavallo', 'pecora', 'capra', 'tacchino', 'oca', 'asino', 'coniglio'] },
@@ -91,10 +65,7 @@ const CATEGORIE = [
     membri: ['sole', 'luna', 'stella', 'nuvola', 'arcobaleno', 'fulmine', 'cometa', 'pianeta'] },
 ]
 
-/* ── grado 3: i sinonimi ──
-   Separati per categoria grammaticale — aggettivi da una parte, verbi
-   dall'altra — perché il distrattore di un aggettivo dev'essere un
-   altro aggettivo, non un verbo capitato lì per caso. */
+// separati per categoria grammaticale: il distrattore di un aggettivo dev'essere un altro aggettivo, non un verbo capitato lì per caso
 const SINONIMI_AGG = [
   ['bello', 'carino'], ['veloce', 'rapido'], ['grande', 'enorme'], ['piccolo', 'minuscolo'],
   ['felice', 'contento'], ['triste', 'mesto'], ['forte', 'robusto'], ['debole', 'fragile'],
@@ -157,11 +128,7 @@ const SINONIMI_VERBI = [
 const PAROLE_SIN_AGG = [...new Set(SINONIMI_AGG.flat())]
 const PAROLE_SIN_VERBI = [...new Set(SINONIMI_VERBI.flat())]
 
-/* ── grado 4: la parola giusta nella frase ──
-   Il verbo giusto non lo decide il soggetto (tanti animali corrono,
-   saltano, nuotano) ma il complemento che chiude la frase: è quello
-   che rende sbagliati i verbi presi in prestito da un'altra categoria,
-   qualunque sia il soggetto scelto per quella riga. */
+// il verbo giusto lo decide il complemento che chiude la frase, non il soggetto (tanti animali corrono, saltano, nuotano)
 const FRASI_AZIONE = [
   { verbo: 'volò', luogo: 'nel cielo azzurro',
     soggetti: ["L'uccellino", 'Il pipistrello', 'La farfalla', "L'aquila", 'Il moscone', 'Il gabbiano',
@@ -229,14 +196,7 @@ const FRASI_AZIONE = [
     soggetti: ['Il bambino', 'Il gatto', 'Il nonno', 'Il cane'] },
 ]
 
-/* ── grado 5: i modi di dire e le parole difficili ──
-   I falsi vengono dal significato *vero* di un altro modo di dire (o
-   di un'altra parola): mai un significato inventato, perché un
-   distrattore inventato si riconosce anche senza sapere niente. */
-/* Ogni voce: il modo di dire, il suo significato, e la situazione in cui
-   si direbbe davvero — la terza colonna serve alla seconda tipologia
-   («in quale situazione lo diresti?»), che moltiplica il mazzo chiedendo
-   il contesto invece del solo significato. */
+// [modo di dire, significato, situazione in cui si direbbe]: la terza colonna serve a «in quale situazione lo diresti?», la seconda tipologia
 const MODI = [
   ['essere al verde', 'non avere più soldi', 'quando hai finito tutti i soldi e non puoi comprare niente'],
   ['avere le mani in pasta', 'essere coinvolto in qualcosa', 'quando sei coinvolto in un affare o in un progetto importante'],
@@ -362,7 +322,6 @@ const PAROLE_DIFFICILI = [
   ['solitario', 'che sta volentieri da solo'],
 ]
 
-/* ── che cosa si chiede a ogni grado ── */
 const SCALETTA = [
   'i contrari',
   "l'intruso",
@@ -371,10 +330,7 @@ const SCALETTA = [
   'i modi di dire e le parole difficili',
 ]
 
-/* Le tipologie. Sono tutte lo stesso pezzo di scuola — sapere cosa
-   vogliono dire le parole — e infatti dichiarano tutte `lessico`: chi
-   lo spegne toglie il modulo intero, ed è giusto così, perché qui non
-   c'è un grado «di base» che regge senza il resto. */
+// tutte lo stesso pezzo di scuola (`lessico`): chi lo spegne toglie il modulo intero, non c'è un grado «di base» che regge senza il resto
 const TIPI = [
   { chiave: 'less:contrario', nome: 'I contrari', sa: 'lessico', gradi: { 1: 1 } },
   { chiave: 'less:intruso', nome: "L'intruso", sa: 'lessico', gradi: { 2: 1 } },
@@ -393,13 +349,7 @@ class Lessico extends Modulo {
       materia: 'italiano',
       chiaro: 'contrari, sinonimi, categorie e modi di dire',
       scaletta: SCALETTA,
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [25, 29, 56, 63, 75],
+      livelli: [25, 29, 56, 63, 75], // scala 0-100 comune a tutte le materie (vedi docs/apprendimento/quiz-livelli.md)
       tipi: TIPI,
     })
   }
@@ -415,8 +365,7 @@ class Lessico extends Modulo {
     }
   }
 
-  /* grado 1 — il contrario di una parola */
-  contrario(sorte) {
+  contrario(sorte) { // grado 1: il contrario di una parola
     const coppia = sorte.uno(CONTRARI)
     const [a, b] = sorte.forse(0.5) ? coppia : [coppia[1], coppia[0]]
     const falsi = sorte.distrattori(PAROLE_CONTRARI, 3, x => x === a || x === b)
@@ -430,8 +379,7 @@ class Lessico extends Modulo {
     })
   }
 
-  /* grado 2 — l'intruso: tre cose della stessa famiglia e una no */
-  intruso(sorte) {
+  intruso(sorte) { // grado 2: tre cose della stessa famiglia e una no
     const casa = sorte.uno(CATEGORIE)
     const dentro = sorte.alcuni(casa.membri, 3)
     const altre = CATEGORIE.filter(c => c !== casa)
@@ -447,8 +395,7 @@ class Lessico extends Modulo {
     })
   }
 
-  /* grado 3 — un sinonimo, cioè un'altra parola per dire la stessa cosa */
-  sinonimo(sorte) {
+  sinonimo(sorte) { // grado 3: un'altra parola per dire la stessa cosa
     const daAgg = sorte.forse(0.6)
     const tabella = daAgg ? SINONIMI_AGG : SINONIMI_VERBI
     const pool = daAgg ? PAROLE_SIN_AGG : PAROLE_SIN_VERBI
@@ -464,9 +411,7 @@ class Lessico extends Modulo {
     })
   }
 
-  /* grado 4 — il verbo giusto per completare la frase: è il pezzo dopo
-     il buco (dove va il soggetto) a dire quale verbo ci sta davvero */
-  frase(sorte) {
+  frase(sorte) { // grado 4: il pezzo dopo il buco dice quale verbo ci sta davvero
     const cat = sorte.uno(FRASI_AZIONE)
     const soggetto = sorte.uno(cat.soggetti)
     const altre = FRASI_AZIONE.filter(c => c !== cat)
@@ -481,12 +426,7 @@ class Lessico extends Modulo {
     })
   }
 
-  /* grado 5 — modi di dire e parole difficili: qui non si può indovinare
-     dal suono, bisogna già sapere cosa vuol dire davvero. Per i modi di
-     dire si alternano due domande sullo stesso mazzo: il significato
-     («cosa vuol dire?») e il contesto («in quale situazione lo
-     diresti?») — la seconda non si impara a memoria come la prima, fa
-     ragionare su quando quel modo di dire si usa davvero. */
+  // grado 5: non si indovina dal suono, bisogna già saperlo. Due domande sullo stesso mazzo: significato e contesto (non a memoria, fa ragionare su quando si usa)
   significato(sorte, modo) {
     if (modo && sorte.forse(0.5)) return this.situazione(sorte)
     const tabella = modo ? MODI : PAROLE_DIFFICILI
@@ -507,10 +447,7 @@ class Lessico extends Modulo {
     })
   }
 
-  /* la stessa tabella dei modi di dire, vista dal lato del contesto: non
-     «cosa vuol dire» ma «quando lo diresti davvero». I falsi sono le
-     situazioni di ALTRI modi di dire — mai inventate — e l'aiuto
-     ripete il significato, così le due domande si insegnano a vicenda. */
+  // stessa tabella vista dal contesto: i falsi sono situazioni di ALTRI modi di dire, mai inventate
   situazione(sorte) {
     const [modo, giusto, dove] = sorte.uno(MODI)
     const pool = MODI.map(v => v[2])
