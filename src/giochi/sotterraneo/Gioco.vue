@@ -457,8 +457,11 @@ function chiudi() {
   if (e.tesori) segna('sotTesori', e.tesori)
   segnaBest('sotGemme', e.gemme)
 
-  // l'abisso non paga: non c'è né una tappa né una stella; premio×stelle esiste solo per le tappe vere
-  const monete = e.vinta ? CAMPAGNA[tappaIdx.value].premio * Math.max(1, stelle) : 0
+  // l'abisso non ha né una tappa né una stella (premio×stelle è solo delle tappe vere): paga 🪙1 a
+  // risposta giusta, risalendo — meno dei 🪙3 di una domanda vera perché è il tasso di oggi, non quello
+  // della calibrazione (docs/sotterraneo/abisso-progetto.md, punto 5)
+  const monete = nellAbisso.value ? e.giuste
+    : e.vinta ? CAMPAGNA[tappaIdx.value].premio * Math.max(1, stelle) : 0
   if (monete) addCoins(monete)
   if (e.vinta) { if (e.svenimenti === 0) segna('sotInteri'); suono.livello() } else suono.fine()
 

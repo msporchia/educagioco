@@ -328,6 +328,27 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
          t.valore({ best: k => (k === 'sotFondo' ? 26 : 0), tot: () => 0 }), 26)
 }
 
+/* ══════════ 8b. le monete: 🪙1 per risposta giusta ══════════
+   L'abisso non ha una tappa né una stella (premio×stelle è delle sei
+   discese vere): paga il tempo di esplorazione contando le risposte
+   giuste (`corsa.giuste`), mai quelle sbagliate — è quello che a fine
+   discesa (`Gioco.vue`, `chiudi()`) diventa `monete = e.giuste`. */
+{
+  const c = new Corsa(L_ABISSO, { seme: 5, rnd: seminato(5) })
+  uguale('si parte da zero', c.giuste, 0)
+
+  c.foglio = { che: 'fonte', chi: {} }
+  c.rispondi(false)
+  uguale('una risposta sbagliata non conta', c.giuste, 0)
+  uguale('ma fra le domande sì', c.domande, 1)
+
+  c.foglio = { che: 'fonte', chi: {} }
+  c.rispondi(true)
+  uguale('una risposta giusta sì', c.giuste, 1)
+  uguale('e l\'esito la porta con sé', c.esito.giuste, 1)
+  uguale('senza toccare le domande totali', c.esito.domande, 2)
+}
+
 /* ══════════ 9. quanto costa un piano, e fin dove si arriva ══════════
    Le due misure del progetto. La prima è la regola che tiene in piedi
    l'abisso — **il costo di un mostro in domande è una costante, quello

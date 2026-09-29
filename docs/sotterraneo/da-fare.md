@@ -19,9 +19,6 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   stanza della scala (indurisce il minimo senza allungare il giro). Vanno
   provate sul banco insieme al bottino graduato, non prima: oggi la discesa
   si ferma per l'arma che non cresce.
-- **Le monete** (punto 5): l'abisso oggi non paga niente. `corsa.giuste` in
-  `rispondi()`, 🪙1 per risposta giusta pagato risalendo (il commento in
-  `Gioco.vue`, sopra il calcolo di `monete`, dice dove).
 - **Le soglie mancanti del banco** in `unita/sotterraneo-abisso`: costo per
   piano 10–25 fino al 30, forbice oltre 2×, guardiano ≤ 8 risposte con l'arma
   del piano, salvataggio di quaranta piani sotto i 10 KB, risalita senza

@@ -152,8 +152,10 @@ raggiunge.
   buco» (`sot-abisso`, soglie 10 · 25 · 50); l'esperienza passa da
   `sotPiani` come sempre.
 - **Le guide**: `AIUTI` in `src/guide/contenuti.js` ha la sua voce.
-- **Le monete: l'abisso oggi non paga**. Meglio zero che una cifra inventata:
-  il premio è in [abisso-progetto.md](abisso-progetto.md).
+- **Le monete: 🪙1 per risposta giusta, pagato risalendo** (`corsa.giuste`,
+  mai per una sbagliata). È il tasso di oggi, non quello della calibrazione
+  (che direbbe 🪙3 come le altre domande vere): si alza quando si rifanno i
+  premi di tutti i giochi — vedi [abisso-progetto.md](abisso-progetto.md).
 
 ## Fin dove regge, oggi
 
