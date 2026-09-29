@@ -1,24 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE TORRI — il fusto, la corona, le targhe.
-
-   Il fusto si alza di poco a ogni livello; la cima cambia di netto ai
-   tre stadi (1-3, 4-6, 7-10) e sta in `cime.js`.
-
-   ── la sagoma del fusto ──
-   Il cappello da solo non bastava: da lontano, su uno schermo di
-   telefono, una balestra e un arco sono due macchie marroni uguali.
-   Quello che si legge a colpo d'occhio è la *forma*, quindi la torre
-   cambia scheletro a ogni stadio:
-
-     nato       torretta di sasso, tozza, che si stringe verso l'alto;
-     cresciuto  fusto dritto e alto su una scarpa svasata, con il
-                cornicione a metà;
-     massimo    basamento a gradoni, fusto quasi verticale e un
-                ballatoio che sporge tutt'intorno sotto i merli.
-
-   Anche la pietra cambia: sasso grigio a righe grosse, poi conci
-   regolari, poi muratura fine e chiara.
-   ═══════════════════════════════════════════════════════════════════ */
+// Le torri: il fusto, la corona, le targhe. Il fusto si alza di poco a ogni
+// livello, la cima cambia di netto ai tre stadi (1-3, 4-6, 7-10, in
+// cime.js): serve a distinguerle da lontano, dove il solo cappello non
+// basta (una balestra e un arco sono due macchie marroni uguali).
 import { TORRI } from '../../data/ops.js'
 import { TINTA } from './tinte.js'
 import { CIME } from './cime.js'
@@ -108,9 +91,6 @@ function fusto(p, x, y, larg, alt, tinta, stadio) {
   return { cima, tx }
 }
 
-/* Le feritoie: una sola e stretta quando la torre è nata, due più su
-   quando cresce, tre e una finestra accesa quando è al massimo — la
-   luce dentro è il modo più corto per dire «qui c'è qualcuno». */
 function finestre(p, x, y, bx, alt, stadio) {
   const w = bx * 0.24, h = alt * 0.13
   const buco = (fx, fy, acceso) => {
@@ -126,9 +106,6 @@ function finestre(p, x, y, bx, alt, stadio) {
   }
 }
 
-/* La corona: merli e basta quando la torre è nata, poi sempre più merli,
-   e al massimo bordati d'oro con due stendardi ai lati — è il segno che
-   quella torre è arrivata in fondo alla scaletta. */
 function merli(p, x, cima, tx, quanti, s, stadio, tinta) {
   const cw = tx * 2 / (quanti * 2 - 1)
   const colore = stadio === 2 ? '#f2ecdf' : '#dcd2c0'
@@ -149,11 +126,6 @@ function merli(p, x, cima, tx, quanti, s, stadio, tinta) {
   }
 }
 
-/* il gettone d'oro col livello e il ＋ verde per salire: appartengono
-   al disegno della torre, non alle sue regole — il gioco dice soltanto
-   se si può salire e se l'energia basta. Le usa anche la torre a
-   sprite (`giochi/castello/scena/pittori.js`): la figura cambia, quello
-   che dicono no */
 export function targhe(p, x, y, lv, potenziabile, posso) {
   const S = p.S
   p.cerchio(x + 13 * S, y - 6 * S, 7.5 * S, '#ffd76a')
@@ -164,12 +136,8 @@ export function targhe(p, x, y, lv, potenziabile, posso) {
   p.testo('+', x - 13 * S, y + 8.5 * S, '#fff', 11 * S)
 }
 
-/* ── lo stendardo del ramo ──
-   Una torre che ha scelto il suo mestiere lo dice con una bandiera. Non
-   è un vezzo: da metà scaletta in poi due torri dello stesso tipo fanno
-   cose diverse, e su un campo pieno bisogna riconoscerle senza aprire
-   nessuna scheda. Il colore è quello del ramo, il segno è il suo, e
-   sventola perché una bandiera ferma sembra un cartello. */
+// lo stendardo: dice il ramo scelto, così due torri dello stesso tipo si
+// riconoscono senza aprire la scheda
 function stendardo(p, x, cima, tx, s, ramo, tipo) {
   const R = (TORRI[tipo].rami || {})[ramo]
   if (!R) return
@@ -184,9 +152,6 @@ function stendardo(p, x, cima, tx, s, ramo, tipo) {
 export function torre(p, { x, y, tipo, lv, ramo, potenziabile, posso }) {
   const stadio = STADIO(lv), s = p.S * 0.92, tinta = TINTA[tipo]
   const aspetto = TORRI[tipo].aspetto
-  /* La taglia fa un salto vero a ogni stadio: una torre al massimo è alta
-     quasi il doppio di una appena nata, e da lontano è quello che si legge
-     prima di ogni altra cosa. */
   const larg = (8.6 + stadio * 1.3 + lv * 0.1) * s
   const alt = (16 + stadio * 7.5 + lv * 0.7) * s
   const { cima, tx } = fusto(p, x, y, larg, alt, tinta, stadio)
