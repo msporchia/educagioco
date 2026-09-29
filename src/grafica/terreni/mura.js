@@ -1,24 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE MURA — il terreno delle ultime cinque tappe
-
-   Dentro il castello tutto è stato tagliato da qualcuno: il pavimento
-   è a lastroni (`lastre` di `materiali/pietra.js`, la stessa posa dei
-   corridoi del Generale), la via è lastricata di traverso con il suo
-   cordolo, e quello che sta intorno alla strada non sono più alberi o
-   rocce ma **roba messa lì**: casse, barili, bracieri, blocchi di
-   pietra di risulta.
-
-   È il terreno più chiaro dei tre, ed è voluto: le ultime cinque tappe
-   sono anche le più affollate — quattro tipi di torre, sei tipi di
-   mostro, il preavviso delle ondate — e un fondo cupo le renderebbe
-   illeggibili proprio dove c'è più da leggere. Il buio qui è un velo
-   sottile e basta: il dramma lo fanno i mostri, non il pavimento.
-
-   ── le cinque tavolozze ──
-   Cortile (all'aperto, luce piena), camminamento (pietra sbiancata dal
-   sole), corridoio (chiuso, torce), trono (marmo e oro), bastione
-   (tramonto rosso sull'ultima tappa).
-   ═══════════════════════════════════════════════════════════════════ */
+// Le mura: il terreno delle ultime cinque tappe. Il più chiaro dei tre, apposta —
+// le tappe sono le più affollate e un fondo cupo le renderebbe illeggibili.
+// Vedi docs/core/grafica.md.
 import { mescola, ell, rett, velo, poly } from '../comune.js'
 import { POSE, DETTAGLI, semina, variazioni } from '../materiali/indice.js'
 import { concio } from '../materiali/semina.js'
@@ -27,10 +9,6 @@ import { lastricato } from './vie.js'
 export const MURA = {
   nome: 'Le mura',
   posa: 'lastre', via: null,
-  /* il fondo sta **indietro**: fra i lastroni e i loro giunti ci deve
-     essere abbastanza differenza da vedere il selciato e non tanta da
-     farlo diventare un reticolo. Il contrasto forte è riservato alla
-     via, che è la cosa che si deve leggere per prima. */
   fondo: ['#847c6e', '#645d52'],
   chiazze: ['#958e7f', '#575047'],
   lastra: ['#9a9384', '#847d70'],
@@ -49,10 +27,7 @@ MURA.via = {
 
 export const VARIANTI_MURA = {
   cortile: {
-    /* il cortile è all'aperto: fra le lastre spunta l'erba, e non c'è
-       un filo di buio. È anche il metro di paragone per le altre
-       quattro — se una stanza chiusa sembra chiara come questa, non è
-       ancora abbastanza chiusa. */
+    // all'aperto, senza buio: è il metro di paragone per le altre quattro
     fondo: ['#8f8779', '#6b6459'], chiazze: ['#9c9484', '#5e574d'],
     lastra: ['#a49c8d', '#8f8779'], buio: 0,
     varianti: ['liscio', 'usura', 'licheni', 'licheni', 'detriti'],
@@ -92,10 +67,7 @@ export const VARIANTI_MURA = {
   },
 }
 
-/* ═════ la roba del castello ═════
-   Non cresce: qualcuno l'ha messa lì. Sono tre sagome sole, e il
-   colpo d'occhio lo fa il fatto che siano squadrate — in mezzo al
-   bosco tutto è tondo, qui tutto ha un angolo. */
+// la roba del castello: squadrata, non tonda come nel bosco — è quello che dice «costruito»
 function cassa(p, x, y, s, A) {
   const c = A.legno
   ell(p.ctx, x, y + 5 * s, 8 * s, 2.8 * s, '#00000028')
@@ -124,8 +96,6 @@ function braciere(p, x, y, s, A) {
   })
 }
 
-/* il blocco di pietra di risulta: `concio` è quello che squadra i
-   muri delle stanze del Generale, e qui fa un masso appoggiato */
 function blocco(p, x, y, s, A) {
   ell(p.ctx, x, y + 4 * s, 8 * s, 2.8 * s, '#00000026')
   concio(p.ctx, x - 7 * s, y - 6 * s, 14 * s, 11 * s, mescola(A.lastra[0], '#ffffff', 0.1),
@@ -135,22 +105,10 @@ function blocco(p, x, y, s, A) {
 export const TERRENO_MURA = {
   nome: 'Le mura',
   via: 'lastricato',
-  /* lastre piccole: con la maglia delle stanze del Generale il
-     pavimento del cortile leggeva come un muro di mattoni tirato su
-     davanti alla telecamera. Un selciato guardato dall'alto ha le
-     pietre corte. */
   maglia: 19,
 
-  /* ── il selciato, posato in diagonale ──
-     È l'unica stranezza di questo file, e risolve il difetto peggiore
-     che abbiano avuto le Mura: con i corsi orizzontali il pavimento
-     leggeva come **un muro di mattoni tirato su davanti alla
-     telecamera**, non come un cortile guardato dall'alto — perché i
-     corsi orizzontali sono esattamente quello che fa un muro.
-     Ruotandoli di un sesto di giro la cosa sparisce di colpo, e in più
-     un cortile lastricato in diagonale è quello che si vede nei
-     castelli veri. La regione si allarga della diagonale del campo, se
-     no gli angoli restano scoperti. */
+  // ruotato di un sesto di giro: i corsi orizzontali leggevano come un muro, non un
+  // selciato dall'alto. La regione si allarga della diagonale, o gli angoli restano scoperti.
   fondo(p, A, { lato }) {
     const { ctx, W, H } = p
     const g = ctx.createLinearGradient(0, 0, W * 0.35, H)
@@ -177,9 +135,6 @@ export const TERRENO_MURA = {
     }
   },
 
-  /* Meno roba che nel bosco, e apposta: le ultime tappe hanno il campo
-     più pieno di mostri e di torri alte, e uno sfondo affollato le
-     renderebbe illeggibili. Un cortile mezzo vuoto è un cortile. */
   sparso(p, A, { caso, vicino, postazioni }) {
     const { W, H, S } = p
     const roba = []
@@ -187,8 +142,6 @@ export const TERRENO_MURA = {
       const x = caso() * W, y = caso() * H
       if (vicino(x, y) < 36 * S) continue
       if (postazioni.some(q => Math.hypot(q.x - x, q.y - y) < 32 * S)) continue
-      // grandi quanto mezza torre: più piccole erano granelli marroni
-      // sparsi sul pavimento, e non si capiva che cosa fossero
       roba.push({ x, y, s: (0.8 + caso() * 0.5) * S, che: caso() })
     }
     roba.sort((a, b) => a.y - b.y)
@@ -200,9 +153,6 @@ export const TERRENO_MURA = {
     }
   },
 
-  /* la piazzola: una piattaforma di pietra squadrata con il bordo
-     d'oro. Nel castello anche il posto dove si mette una torre è stato
-     costruito da qualcuno. */
   piazzola(p, x, y, A, caso) {
     const { ctx, S } = p
     ell(ctx, x, y, 15 * S, 9.5 * S, '#00000024')
@@ -220,8 +170,6 @@ export const TERRENO_MURA = {
     if (caso() > 0.5) velo(ctx, 0.3, () => ell(ctx, x, y, 4 * S, 2.4 * S, A.giunto))
   },
 
-  /* un velo appena, e la vignettatura calda: qui il buio non serve a
-     fare atmosfera, serve solo a non lasciare i bordi piatti */
   velo(p, A) {
     const { ctx, W, H } = p
     if (A.buio) velo(ctx, A.buio, () => { ctx.fillStyle = '#1a1424'; ctx.fillRect(0, 0, W, H) })

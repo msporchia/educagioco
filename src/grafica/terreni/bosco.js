@@ -1,32 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL BOSCO — il terreno delle prime cinque tappe
-
-   Prato, sottobosco e alberi, con il sole che passa fra le foglie. Il
-   terreno non è disegnato qui riga per riga: la posa la fa `erba` di
-   `materiali/verde.js`, il fondo mosso `variazioni`, i ciuffi e i
-   fiori i `DETTAGLI` — gli stessi che dipingono le stanze del
-   Generale. Qui dentro c'è quello che il campo del castello ha in più
-   di una stanza a caselle: **alberi veri**, messi uno a uno lontano
-   dalla strada e dalle piazzole, e ordinati per profondità.
-
-   ── le cinque tavolozze ──
-   Il bosco si fa più cupo tappa dopo tappa: si entra a mezzogiorno e
-   si arriva alla radice che è quasi sera. È la stessa identica
-   funzione di disegno, cambiano solo i colori e la forza della luce a
-   chiazze — che è quanto basta perché cinque tappe di fila non
-   sembrino la stessa schermata.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il bosco: il terreno delle prime cinque tappe (mezzogiorno a sera).
+// Vedi docs/core/grafica.md.
 import { mescola, rett, ell, velo } from '../comune.js'
 import { POSE, DETTAGLI, semina, variazioni } from '../materiali/indice.js'
 import { chiazzeDiLuce } from '../luce.js'
 import { battuto } from './vie.js'
 
-/* ── la tavolozza di base ──
-   Le chiavi sono quelle degli ambienti del Generale apposta: così
-   `POSE`, `DETTAGLI` e `variazioni` funzionano senza un adattatore in
-   mezzo, ed è tutto il senso di aver messo i materiali fuori dalle
-   stanze. `via` invece è nostro: una stanza a caselle non ha una
-   strada che la attraversa. */
 export const BOSCO = {
   nome: 'Il bosco',
   posa: 'erba', via: null,                  // riempita qui sotto
@@ -47,10 +25,6 @@ BOSCO.via = {
   ciottoloC: '#c9bda8', ciottoloS: '#a99c86', ciottoloOmbra: '#6f5a45',
 }
 
-/* ── le cinque ore del bosco ──
-   Ogni variante è la tavolozza di base con qualche tinta spostata.
-   Scriverle per differenza invece che per intero è il motivo per cui
-   si può aggiungere un'ora del giorno senza rileggere tutto. */
 export const VARIANTI_BOSCO = {
   'bosco-chiaro': {},                       // mezzogiorno: il bosco com'è
   'bosco-guado': {
@@ -86,12 +60,7 @@ export const VARIANTI_BOSCO = {
   },
 }
 
-/* ── la palude ──
-   Cinque tavolozze in più sullo stesso terreno: un bosco allagato non
-   ha bisogno di un'altra tecnica per dipingersi, ha bisogno di altri
-   colori. Verde che vira al marcio, acqua ferma sotto l'erba, e le vie
-   che diventano passerelle di legno bagnato. La luce cala di tappa in
-   tappa: si comincia all'alba e si finisce col fuoco delle torce. */
+// la palude: stesso terreno del bosco, altri colori — dall'alba al fuoco delle torce
 export const VARIANTI_PALUDE = {
   'palude-alba': {
     fondo: ['#7ba876', '#4e7a5f'], chiazze: ['#8fc084', '#3f6a56'],
@@ -139,11 +108,7 @@ export const VARIANTI_PALUDE = {
   },
 }
 
-/* ═════ le figure che stanno in piedi ═════
-   Un albero visto dall'alto è chioma, e la chioma è un grappolo di
-   ellissi con il lume in cima: il tronco si indovina appena. Sono le
-   uniche figure disegnate a mano di questo file — tutto il resto è
-   materiale preso in prestito. */
+// un albero visto dall'alto è chioma: un grappolo di ellissi, il tronco si indovina appena
 function albero(p, x, y, s, A) {
   const [c1, c2] = A.chioma
   ell(p.ctx, x, y + 2 * s, 9 * s, 3.4 * s, '#00000025')
@@ -172,7 +137,6 @@ function sasso(p, x, y, s, A) {
   ell(p.ctx, x - 1.4 * s, y - 1.2 * s, 3.6 * s, 2.4 * s, mescola(A.sasso, '#ffffff', 0.35))
 }
 
-/* ═════ il terreno ═════ */
 export const TERRENO_BOSCO = {
   nome: 'Il bosco',
   via: 'battuto',
@@ -189,9 +153,6 @@ export const TERRENO_BOSCO = {
 
   strada(p, A, { via, caso }) { battuto(p, via, A, caso) },
 
-  /* i dettagli minuti vanno **dopo** la strada e mai sopra: un fiore in
-     mezzo al passaggio dice che lì nessuno cammina, ed è il contrario
-     di quello che il tracciato deve raccontare */
   minuti(p, A, { lato, reg, vicino }) {
     const s = lato / 20, S = p.S
     const libera = (x, y) => vicino(x, y) > 20 * S
@@ -202,17 +163,10 @@ export const TERRENO_BOSCO = {
     }
   },
 
-  /* Alberi, cespugli e sassi: mai sulla strada, mai su una piazzola, e
-     dipinti dal fondo verso il davanti perché chi sta più in basso
-     copra chi sta dietro. È l'unica cosa di questo file che una mappa
-     a caselle non saprebbe fare. */
   sparso(p, A, { caso, vicino, postazioni }) {
     const { W, H, S } = p
     const roba = []
-    /* si tirano novanta posti e si tengono quelli che restano: sui
-       tracciati a pettine — il sentiero, il folto — la strada occupa
-       mezzo campo e con cinquanta tentativi il bosco veniva spelato
-       proprio nelle tappe che dovrebbero essere le più fitte */
+    // 90 tentativi: con 50 il bosco veniva spelato proprio dove la strada occupa mezzo campo
     for (let i = 0; i < 90; i++) {
       const x = caso() * W, y = caso() * H
       if (vicino(x, y) < 34 * S) continue
@@ -227,8 +181,6 @@ export const TERRENO_BOSCO = {
     }
   },
 
-  /* la piazzola: terra spianata con un giro di sassi. Resta sotto la
-     torre quando ci si costruisce sopra, e ferma non chiede niente. */
   piazzola(p, x, y, A, caso) {
     const { ctx, S } = p
     ell(ctx, x, y, 15 * S, 9.5 * S, '#00000018')
@@ -241,8 +193,6 @@ export const TERRENO_BOSCO = {
     }
   },
 
-  /* il sole fra le foglie, e nella tappa notturna un velo di sera. Va
-     per ultimo: se il buio si stendesse dopo, se le mangerebbe. */
   velo(p, A, { lato, reg }) {
     const { ctx, W, H } = p
     if (A.buio) velo(ctx, A.buio, () => { ctx.fillStyle = '#141c2e'; ctx.fillRect(0, 0, W, H) })
