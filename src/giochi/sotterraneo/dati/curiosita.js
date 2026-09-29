@@ -1,51 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE CURIOSITÀ — le cose che si toccano per vedere che succede
+// Le curiosità: cose che si toccano per vedere che succede (docs/sotterraneo/roba.md). La battuta è il
+// premio vero, non i numeri; l'invito dice sempre prima che può andare male; il malus è mite e metà delle
+// volte non c'è ("hai starnutito, e basta") — il costo lo dichiara la frase stessa (`costo`).
 
-   Un libro polveroso, una sfera di cristallo, una clessidra ferma, un
-   calice pieno di qualcosa. Non servono a niente e sono la ragione per
-   cui esiste questo file: un sotterraneo fatto solo di mostri da
-   abbattere e porte da aprire diventa **una fila di esercizi con un
-   tema sopra**, e dopo tre discese si vede benissimo che è quello.
+export const MALUS = { vita: 2, gemme: [2, 6] }   // uniche per tutte: il rischio dev'essere leggibile prima
 
-   ── LA BATTUTA È IL PREMIO VERO ───────────────────────────────────
-   Qui dentro il grosso del lavoro sono le frasi, non i numeri. Quello
-   che un bambino racconta a tavola non è «ho preso otto gemme»: è che
-   ha starnutito talmente forte da spegnere tutte le torce, o che ha
-   bevuto una roba che sapeva di calzino. I numeri fanno il gioco, le
-   frasi fanno la voglia di riaprirlo — e costano un pomeriggio di
-   scrittura invece di un motore nuovo.
-
-   ── SI DICE PRIMA CHE PUÒ ANDARE MALE ─────────────────────────────
-   L'invito lo dichiara («può andare bene, o male»), perché una
-   sorpresa cattiva non annunciata è la cosa che i bambini ricordano
-   peggio, e perché la scommessa è tutto il gioco: se non ci fosse il
-   rischio non ci sarebbe niente da decidere, e la domanda diventerebbe
-   un pedaggio.
-
-   ── IL MALUS È MITE, E METÀ DELLE VOLTE NON C'È ───────────────────
-   Quando c'è: due punti di vita, o qualche gemma. In un gioco dove uno
-   svenimento ti riporta all'ingresso, un malus vero — perdere un
-   oggetto, tornare indietro di un piano — è una punizione che fa
-   chiudere il gioco.
-
-   E spesso non c'è affatto: **hai starnutito, e basta**. Serve che
-   sbagliare qui non sia una tassa ma un fatto che succede, come in una
-   storia; se ogni risposta storta costasse qualcosa, toccare le cose
-   diventerebbe una cosa da evitare — e allora tanto varrebbe non
-   metterle. Il costo lo dichiara la frase stessa (`costo`), così chi
-   scrive una battuta nuova decide lì se pesa o se fa solo ridere.
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* Le due misure del pentimento, quando c'è: due punti di vita, o
-   qualche gemma. Sono uniche per tutte le curiosità, perché il rischio
-   dev'essere leggibile prima e uno che cambia da oggetto a oggetto non
-   lo impara nessuno. */
-export const MALUS = { vita: 2, gemme: [2, 6] }
-
-/* I premi possibili. Ognuno porta la sua frase, perché il premio e la
-   battuta devono raccontare la stessa cosa: «ti si sono rizzati i
-   capelli» accanto a *hai trovato otto gemme* è un non sequitur, e i
-   bambini quelle cose le sentono. */
+// ognuno porta la sua frase: premio e battuta devono raccontare la stessa cosa
 export const CURIOSITA = [
   {
     tipo: 'libro', nome: 'Un libro polveroso', em: '📖', pezzo: 'libro',
@@ -163,25 +122,19 @@ export const CURIOSITA = [
 
 export const CURIOSITA_DI = Object.fromEntries(CURIOSITA.map(c => [c.tipo, c]))
 
-/* I controlli: quello che qui dentro può marcire senza dare nessun
-   errore sono **le frasi** — un elenco vuoto, un premio che non dice
-   niente, una battuta che promette gemme e dà una cura. */
 export function guastiDelleCuriosita(nomi = null) {
   const g = []
   for (const c of CURIOSITA) {
     if (!c.nome || !c.em || !c.dice) g.push(`${c.tipo}: senza nome, emoji o invito`)
     if (nomi && c.pezzo && !nomi.includes(c.pezzo))
       g.push(`${c.tipo}: nell'atlante non c'è lo sprite "${c.pezzo}"`)
-    /* tre e tre: con una sola frase per parte la battuta si brucia alla
-       seconda discesa, ed è proprio quello che deve durare */
+    // tre e tre: con una sola frase per parte la battuta si brucia alla seconda discesa
     if (!c.bene || c.bene.length < 3) g.push(`${c.tipo}: meno di tre modi di andare bene`)
     if (!c.male || c.male.length < 3) g.push(`${c.tipo}: meno di tre modi di andare male`)
     for (const b of c.bene || []) {
       if (!b.dice) g.push(`${c.tipo}: un premio senza frase`)
       const p = b.premio || {}
       if (!p.gemme && !p.cura && !p.vitaPiu && !p.torcia) g.push(`${c.tipo}: un premio che non dà niente`)
-      /* la frase e il premio devono raccontare la stessa cosa: se si
-         parla di gemme, gemme devono arrivare */
       if (/gemm/i.test(b.dice) && !p.gemme) g.push(`${c.tipo}: la frase promette gemme e il premio non ne dà`)
     }
     for (const m of c.male || []) {
@@ -189,8 +142,7 @@ export function guastiDelleCuriosita(nomi = null) {
       if (m && m.costo && !m.costo.vita && !m.costo.gemme)
         g.push(`${c.tipo}: un costo che non toglie né vita né gemme`)
     }
-    /* almeno una che non costa niente: se ogni risposta storta pesa,
-       toccare le cose diventa una cosa da evitare */
+    // almeno una che non costa niente: se ogni risposta storta pesa, toccare le cose diventa una cosa da evitare
     if ((c.male || []).every(m => m && m.costo))
       g.push(`${c.tipo}: sbagliare costa sempre qualcosa, e allora conviene non toccarlo`)
   }

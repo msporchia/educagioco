@@ -1,48 +1,13 @@
-/* ═══════════════════════════════════════════════════════════════════
-   UN PIANO DEL SOTTERRANEO — generato tutto in una volta
-
-   Si genera **contenuti compresi**: quando l'eroe entra in una stanza
-   non si decide niente lì per lì, si accende soltanto la luce su cose
-   già decise. È la differenza fra un posto e un distributore di
-   sorprese, e si sente: un posto lo si può *ricordare*, e tornarci con
-   l'ascia in mano dopo esserne scappati.
-
-   Il metodo è quello classico: si taglia il rettangolo in due, e ancora
-   in due, finché non restano ritagli della misura giusta (BSP); dentro
-   ogni ritaglio si scava una stanza più piccola, e i due lati di ogni
-   taglio si uniscono con un corridoio a elle. Dove il corridoio buca il
-   muro di una stanza nasce una porta.
-
-   ── IL SEME ───────────────────────────────────────────────────────
-   Stesso seme, stesso piano. Serve a poter dire «riaprilo col seme 812 e
-   guarda la stanza in basso a destra» invece di «fidati», e serve al
-   banco di prova, che gioca seicento piani e conta le domande.
-
-   ── IL CONTROLLO È UNA CAMMINATA, NON UN'OCCHIATA ─────────────────
-   `guasti()` cammina davvero dall'ingresso fino alla scala. Le porte
-   chiuse **non sono muri**: si aprono rispondendo, e sbagliando si
-   riprova quante volte si vuole — è il forziere l'unica cosa che si
-   perde per sempre. Quello che si controlla è che la strada esista.
-
-   Prima si camminava trattandole come muri, ed era giusto finché di
-   ogni stanza se ne chiudeva una sola: allora la porta era un pedaggio
-   *facoltativo* e la scala doveva restare libera. Da quando si chiude
-   la stanza intera (vedi `chiudiPorte`) quel controllo bocciava piani
-   perfettamente giocabili — dove alla scala si arriva passando per la
-   fonte, e per entrare nella fonte c'è da rispondere a una domanda
-   facile. Il piano dice comunque **quanto costa arrivarci**
-   (`serveUnaPorta`), perché è la differenza fra una discesa e l'altra e
-   il banco la conta.
-
-   Non c'è niente di grafico qui dentro: gira in Node, e infatti è lì che
-   si prova.
-   ═══════════════════════════════════════════════════════════════════ */
+// Un piano del sotterraneo, generato tutto in una volta (contenuti compresi: entrare in una stanza accende
+// la luce su cose già decise, non ne inventa). BSP classico: taglia il rettangolo, scava una stanza per
+// ritaglio, unisce con corridoi a elle. Stesso seme, stesso piano (serve al banco di prova). `guasti()`
+// cammina davvero dall'ingresso alla scala trattando le porte chiuse come attraversabili (si aprono
+// rispondendo); `serveUnaPorta` dice comunque quanto costa arrivarci senza aprire nulla. Gira in Node.
 import { ROCCIA, PAVIMENTO, PORTA, ARREDI } from '../dati/mondo.js'
 import { CURIOSITA } from '../dati/curiosita.js'
 import { MOSTRI, BRANCO, PASSO_DEL_BRANCO } from '../dati/mostri.js'
 import { raggiungibili } from '../../../motore/passi.js'
 
-/* Il caso che non cambia: xorshift, un numero da 0 a 1. */
 export function seminato(seme) {
   let s = (seme >>> 0) || 1
   return () => {
@@ -54,9 +19,7 @@ export function seminato(seme) {
 }
 
 export class Livello {
-  /* `piano` è da 0. `guardiano` è chi porta la chiave della scala, e lo
-     dichiara la tappa: è l'unica cosa che non si può aggirare, quindi
-     non la si lascia al caso. */
+  // `guardiano`: chi porta la chiave della scala, dichiarato dalla tappa (l'unica cosa che non si può aggirare)
   constructor({ seme = 1, piano = 0, largo = 52, alto = 52, giri = 4,
                 guardiano = 'scheletro', crescita = null } = {}) {
     this.seme = seme
@@ -65,13 +28,7 @@ export class Livello {
     this.alto = alto
     this.giri = giri
     this.chiGuarda = guardiano
-    /* Quanto sono più grossi i mostri a questa profondità. Lo dichiara
-       chi genera il piano e non questo file, perché **dipende da quanto
-       può scendere la discesa**: una fila di quattro piani e un abisso
-       senza fondo non vogliono la stessa curva (vedi `crescitaDi` in
-       `dati/campagna.js`). I valori di sistema sono quelli della
-       campagna, così un piano generato senza dirlo resta quello di
-       sempre. */
+    // dichiarato da chi genera il piano (dipende da quanto può scendere la discesa, vedi crescitaDi in dati/campagna.js)
     this.crescita = crescita || { ossa: 0.22, attOgni: 2 }
     this.celle = new Uint8Array(largo * alto)
     this.stanze = []
@@ -94,9 +51,7 @@ export class Livello {
 
   calpestabile(x, y) { const c = this.a(x, y); return c === PAVIMENTO || c === PORTA }
 
-  /* ── il taglio ricorsivo ──
-     Si ferma quando il pezzo è piccolo abbastanza: sotto quella misura
-     le stanze diventano stanzini e i corridoi più lunghi di loro. */
+  // si ferma quando il pezzo è piccolo abbastanza: sotto quella misura le stanze diventano stanzini
   scava() {
     const foglie = []
     const taglia = (r, giri) => {
@@ -126,12 +81,8 @@ export class Livello {
       for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) this.metti(x + i, y + j, PAVIMENTO)
     }
 
-    /* ── i corridoi ──
-       Ogni stanza si collega alla più vicina fra quelle già collegate
-       (albero di copertura): si arriva ovunque senza fare una ragnatela.
-       Poi due o tre scorciatoie in più, perché un sotterraneo ad albero
-       costringe sempre a tornare dalla stessa strada, e tornare indietro
-       deve poter essere una scelta e non una penitenza. */
+    // ogni stanza si collega alla più vicina fra quelle già collegate (albero di copertura), poi due o
+    // tre scorciatoie in più: un sotterraneo ad albero costringerebbe sempre a tornare dalla stessa strada
     const dentro = [0], fuori = this.stanze.map((_, i) => i).slice(1)
     while (fuori.length) {
       let miglior = null
@@ -166,10 +117,7 @@ export class Livello {
     a.vicine.push(b.id); b.vicine.push(a.id)
   }
 
-  /* Una porta sta dove un corridoio tocca il bordo di una stanza: è
-     l'unico posto dove ha senso, ed è quello che rende una stanza una
-     stanza invece di uno slargo. Gli angoli no: una porta d'angolo si
-     attraversa in diagonale e non chiude niente. */
+  // dove un corridoio tocca il bordo di una stanza; mai gli angoli, che si attraverserebbero in diagonale
   scavaPorte() {
     for (const st of this.stanze) {
       for (let i = -1; i <= st.w; i++) for (let j = -1; j <= st.h; j++) {
@@ -185,18 +133,13 @@ export class Livello {
     }
   }
 
-  /* ── chi e cosa ci sta dentro ──
-     Prima i ruoli delle stanze (ingresso, uscita, tesoro, mercante,
-     fonte), poi si riempiono. L'ordine conta: spargendo prima la roba e
-     scegliendo dopo l'uscita, l'uscita capiterebbe accanto all'ingresso
-     e il piano si attraverserebbe in tre passi. */
+  // ruoli delle stanze prima, poi si riempie: se l'uscita si scegliesse dopo la roba, capiterebbe accanto all'ingresso
   arreda() {
     const st = this.stanze
     const ingresso = st[0]
     ingresso.ruolo = 'ingresso'
 
-    /* l'uscita è la stanza più lontana in linea d'aria: si vuole che il
-       piano si attraversi, non che si sfiori */
+    // la più lontana in linea d'aria: si vuole che il piano si attraversi, non che si sfiori
     let uscita = st[1] || st[0], quanto = -1
     for (const s of st) {
       if (s === ingresso) continue
@@ -207,19 +150,8 @@ export class Livello {
     this.robe.push({ che: 'scala', x: uscita.cx, y: uscita.cy, em: '🕳️',
                      nome: 'La scala che scende' })
 
-    /* ── quello che vale sta in fondo a un ramo ──
-       Le stanze che portano un premio — il mercante, la fonte, i
-       forzieri — si pescano **fra le foglie**: quelle con un solo
-       collegamento, dove non si passa per andare altrove. È la
-       condizione perché la loro porta chiusa possa chiudere davvero
-       (vedi `chiudiPorte`): questo generatore fa passare i corridoi per
-       il centro delle stanze, quindi una stanza di mezzo è un pezzo di
-       strada, e sbarrarla vorrebbe dire mettere un pedaggio sulla via
-       della scala. Le foglie no: chi non le vuole, gira al largo.
-
-       Se le foglie finiscono si ripiega su una stanza qualunque — un
-       piano senza mercante è peggio di un mercante in mezzo alla
-       strada — e a quel punto è `chiudiPorte` a non chiuderla. */
+    // il premio (mercante, fonte, forzieri) si pesca fra le foglie (un solo collegamento): una stanza di
+    // mezzo è un pezzo di strada, e sbarrarla metterebbe un pedaggio sulla via della scala (chiudiPorte)
     const foglia = s => s.vicine.length <= 1
     const libere = st.filter(s => !s.ruolo)
     const pesca = () => {
@@ -241,40 +173,20 @@ export class Livello {
       fonte.ruolo = 'fonte'
       this.robe.push({ che: 'fonte', x: fonte.cx, y: fonte.cy, em: '⛲', nome: 'Una fonte' })
     }
-    /* due o tre stanze del tesoro: la cosa che si va a cercare */
+    // due o tre stanze del tesoro
     for (let i = 0; i < 2 + (this.rnd() < 0.5 ? 1 : 0); i++) {
       const s = pesca(); if (!s) break
       s.ruolo = 'tesoro'
       this.robe.push({ che: 'forziere', x: s.cx, y: s.cy, em: '🎁', nome: 'Un forziere',
-                       /* la pelle si decide qui, una volta: quello d'oro è
-                          raro e si riconosce da lontano, ed è il motivo per
-                          cui vale la pena scostarsi dalla strada */
-                       pelle: this.pelleDelForziere(),
+                       pelle: this.pelleDelForziere(),   // l'oro è raro e si riconosce da lontano
                        aperto: false })
     }
 
-    /* ── i mostri ──
-       Più giù si è, più grossi. Nelle stanze del tesoro c'è la guardia:
-       è il patto che rende leggibile il segno 💀 sopra la porta — se
-       dietro un teschio non ci fosse niente, il segno diventerebbe una
-       decorazione e non lo guarderebbe più nessuno. */
+    // più giù, più grossi; nelle stanze del tesoro c'è la guardia (il patto dietro il segno 💀 sopra la porta)
     const scala = Math.min(1, this.piano / 5)
-    /* La profondità sceglie **la fascia**, il caso sceglie la faccia
-       dentro la fascia: sono due domande diverse e prima erano la
-       stessa, cioè un piano aveva un mostro solo (vedi `BRANCO` in
-       `dati/mostri.js`). Chi sta nella stessa riga costa lo stesso —
-       un controllo lo pretende — quindi questa seconda pesca non
-       sposta la difficoltà di niente. */
+    // un tiro solo: le cifre alte dicono la fascia, quelle basse la faccia. Un secondo rnd() sposterebbe
+    // il flusso del caso e farebbe nascere un piano diverso da quello di ieri stesso seme
     const tipoPer = forza => {
-      /* **un tiro solo**, e le due scelte ne escono tutte e due: le
-         cifre alte dicono la fascia, quelle basse la faccia. Un
-         secondo `this.rnd()` sposterebbe il flusso del caso di un
-         passo, e da lì in giù *tutto* il piano nasce diverso — stanze,
-         porte, forzieri. Il seme è la promessa che una discesa si
-         possa rifare identica (vedi in cima), e il banco di prova la
-         usa per dire se un ritocco ha reso una tappa più dura: con il
-         flusso spostato non confronta più due tarature, confronta due
-         sotterranei diversi. */
       const r = this.rnd()
       const i = Math.min(BRANCO.length - 1,
         Math.floor((forza + scala) * PASSO_DEL_BRANCO + r * 1.4))
@@ -291,17 +203,8 @@ export class Livello {
       }
     }
 
-    /* ── LA CHIAVE DEL PIANO ──────────────────────────────────────
-       Senza questa riga il sotterraneo ha una falla che si vede solo
-       giocando storto: i mostri si possono **aggirare tutti**, quindi un
-       bambino sveglio scende di piano in piano senza rispondere a una
-       sola domanda, e il gioco diventa una passeggiata al buio.
-
-       La cura è quella di sempre: la scala è chiusa e la chiave ce l'ha
-       qualcuno. Il minimo assoluto per scendere diventa **battere un
-       guardiano**, e tutto il resto resta facoltativo — che è quello che
-       si voleva. Il guardiano sta accanto alla scala: la chiave non deve
-       capitare a due passi dalla partenza. */
+    // la scala è chiusa e la chiave ce l'ha qualcuno: senza, i mostri si aggirano tutti e il gioco diventa
+    // una passeggiata al buio. Il guardiano sta accanto alla scala.
     const guardiano = this.mostro(this.chiGuarda, uscita.cx, uscita.cy - 1)
     if (!this.calpestabile(guardiano.x, guardiano.y)) {
       guardiano.x = uscita.cx; guardiano.y = uscita.cy + 1
@@ -310,16 +213,14 @@ export class Livello {
       guardiano.chiave = true
       this.robe.push(guardiano)
     } else {
-      /* nessun posto buono accanto alla scala: la chiave la porta il
-         mostro già in mappa più lontano dall'ingresso */
+      // nessun posto buono accanto alla scala: la chiave la porta il mostro più lontano dall'ingresso
       const lontano = this.robe.filter(r => r.che === 'mostro')
         .sort((a, b) => Math.hypot(b.x - ingresso.cx, b.y - ingresso.cy) -
                         Math.hypot(a.x - ingresso.cx, a.y - ingresso.cy))[0]
       if (lontano) lontano.chiave = true
     }
 
-    /* gemme sparse: fanno tornare la pena di scostarsi dalla strada
-       anche quando in una stanza non c'è niente di scritto */
+    // gemme sparse: fanno valere la pena scostarsi dalla strada anche quando in una stanza non c'è altro
     for (const s of st) {
       if (this.rnd() > 0.55) continue
       const x = s.x + Math.floor(this.rnd() * s.w), y = s.y + Math.floor(this.rnd() * s.h)
@@ -332,30 +233,15 @@ export class Livello {
     this.chiudiPorte()
   }
 
-  /* Un tiro solo, non due annidati: ogni numero pescato sposta tutta la
-     generazione a valle, e due tiri per una cosa che è **una** scelta
-     rendono i piani diversi da quelli di ieri senza nessun motivo. */
+  // un tiro solo, non due annidati: ogni numero pescato sposta tutta la generazione a valle
   pelleDelForziere() {
     const t = this.rnd()
     return t < 0.2 ? 'forziere-oro-chiuso'
       : t < 0.45 ? 'forziere-scuro-chiuso' : 'forziere-chiuso'
   }
 
-  /* ── le curiosità ──
-     Mai nella stanza d'ingresso: sono la cosa che si tocca **dopo**
-     aver capito dove si è. Non bloccano, non valgono una chiave, e si
-     possono saltare tutte senza perdere niente — è proprio quello che
-     le rende una scelta invece di un pedaggio.
-
-     ── QUANTE, E PERCHÉ PIÙ DI PRIMA ──
-     Erano una o due per piano, cioè meno di una stanza su quattro:
-     giocando, la cosa che un bambino cerca non è il mostro seguente ma
-     **cosa fa quel libro**, e trovarne uno ogni due piani vuol dire
-     mandarlo a caccia di una cosa che quasi non c'è. Adesso sono due o
-     tre, e sui piani grandi (dalle otto stanze in su) tre o quattro:
-     una ogni tre stanze circa, che è la stessa densità dei forzieri.
-     Non cambia il costo della discesa — una curiosità non è un
-     pedaggio, si passa oltre — ma cambia quello che c'è da guardare. */
+  // mai nella stanza d'ingresso; due o tre per piano (tre o quattro sui grandi), la stessa densità dei
+  // forzieri: non cambia il costo della discesa (si passa oltre), cambia quello che c'è da guardare
   spargiLeCuriosita(st) {
     const buone = st.filter(s => s.ruolo !== 'ingresso')
     const quante = (buone.length >= 8 ? 3 : 2) + (this.rnd() < 0.6 ? 1 : 0)
@@ -375,22 +261,9 @@ export class Livello {
     }
   }
 
-  /* ── l'arredo ──
-     Roba che non fa niente: barili, ossa, un braciere acceso. Non si
-     tocca, non blocca, non vale gemme — **serve solo a far sembrare che
-     qui sotto ci abbia vissuto qualcuno**. Un sotterraneo di stanze
-     vuote e mostri si legge come un diagramma, e un diagramma non fa
-     venire voglia di girare l'angolo.
-
-     Sta **contro le pareti**, non in mezzo: al centro ci si cammina, e
-     una cassa in mezzo al passaggio che si attraversa come se non ci
-     fosse è peggio di nessuna cassa. Il braciere porta la sua luce, ed
-     è l'unica cosa d'arredo che cambi qualcosa di quello che si vede. */
+  // roba che non fa niente (barili, ossa...): sta contro le pareti, non in mezzo dove si cammina
   arredaLeStanze() {
-    /* I tre generi stanno in `dati/mondo.js` (`ARREDI`) con la frase che
-       ognuno dice a chi lo tocca. Uno solo acceso per stanza: due
-       bracieri nella stessa cantina illuminano tutto, e il buio è metà
-       del gioco. */
+    // uno solo acceso per stanza: due bracieri nella stessa cantina illuminano tutto
     const { appeso: APPESO, posato: POSATO, fuoco: FUOCO } = ARREDI
     const pesca = quali => quali[Math.floor(this.rnd() * quali.length)]
 
@@ -400,8 +273,7 @@ export class Livello {
       for (let i = 0; i < quanti; i++) {
         const appeso = this.rnd() < 0.35
         const fuoco = !appeso && !acceso && this.rnd() < 0.4
-        /* appeso: sulla fila in alto, contro la parete che si vede di
-           faccia. Posato: su un bordo qualunque della stanza. */
+        // appeso: sulla fila in alto, contro la parete di faccia. posato: su un bordo qualunque
         const x = appeso || this.rnd() < 0.6
           ? s.x + Math.floor(this.rnd() * s.w)
           : (this.rnd() < 0.5 ? s.x : s.x + s.w - 1)
@@ -417,18 +289,13 @@ export class Livello {
     }
   }
 
-  /* Una porta chiede di poterci passare davanti: l'arredo si tiene a
-     distanza, o si finisce col chiudere una stanza con una cassa. */
+  // l'arredo si tiene a distanza da una porta, o si rischia di chiuderla con una cassa
   porteVicine(x, y) {
     return this.stanze.some(s => s.porte.some(p =>
       Math.abs(p.x - x) <= 1 && Math.abs(p.y - y) <= 1))
   }
 
-  /* Le ossa crescono col piano: lo stesso scheletro, più giù, costa più
-     risposte — ed è l'unico modo perché scendere si senta. L'attacco le
-     segue più piano, e **la difesa non cresce mai**: entra in una
-     sottrazione, quindi un punto in più lì dentro allunga la battaglia
-     invece di indurirla (è la manopola velenosa di `dati/mostri.js`). */
+  // le ossa crescono col piano, l'attacco le segue più piano; la difesa non cresce mai (la manopola velenosa)
   mostro(tipo, x, y) {
     const m = MOSTRI[tipo]
     const su = 1 + this.piano * this.crescita.ossa
@@ -439,30 +306,9 @@ export class Livello {
              chiave: false, morto: false }
   }
 
-  /* ── le porte chiuse, e il loro segno ──
-     Non tutte le porte si chiudono: solo quelle che danno su qualcosa
-     che vale. Una porta chiusa su una stanza vuota è una bugia, e le
-     bugie qui costano care — il segno sopra la porta è l'unica cosa con
-     cui si sceglie.
-
-     ── SI CHIUDE LA STANZA, NON LA PORTA ──────────────────────────
-     Prima se ne chiudeva **una sola** per stanza, per non far pagare
-     due volte lo stesso posto a chi gira in tondo. Il ragionamento era
-     giusto e la cura sbagliata: una stanza ha due, tre varchi, e con uno
-     solo chiuso il segno 💀 sopra la porta prometteva una guardia che si
-     scavalcava passando dall'altra parte. Peggio ancora dove due
-     corridoi paralleli si affiancano — capita, e lì il varco è **largo
-     due celle**: la porta ne copriva una e si passava letteralmente
-     accanto al battente.
-
-     Adesso si chiudono tutte le porte della stanza, e portano lo stesso
-     `gruppo`: **rispondere ne apre una e con lei tutte le altre**
-     (`Corsa.rispostaPorta`). Il pedaggio resta uno solo — la
-     preoccupazione di prima era giusta — ma non si aggira più.
-
-     Una cella, una porta: i bordi di due stanze vicine possono toccarsi,
-     e due porte sovrapposte sulla stessa cella si aprirebbero una alla
-     volta. */
+  // solo le porte che danno su qualcosa che vale: una porta chiusa su una stanza vuota è una bugia. Si
+  // chiude la STANZA (tutte le sue porte, stesso `gruppo`): rispondere ne apre una e con lei tutte le
+  // altre (Corsa.rispostaPorta), o il segno 💀 prometterebbe una guardia scavalcabile dall'altra parte
   chiudiPorte() {
     const messe = new Map()
     for (const s of this.stanze) {
@@ -472,31 +318,16 @@ export class Livello {
         : s.ruolo === 'mercante' ? 'mercante'
         : s.ruolo === 'fonte' ? 'fonte' : null
       if (!segno) continue
-      /* ── e non si sbarra mai la strada ──
-         Chiudere tutti i varchi di una stanza che sta **in mezzo** al
-         cammino vuol dire mettere un pedaggio obbligatorio davanti alla
-         scala, e trasformare il premio in un casello. Qui si prova
-         prima: se chiudendola alla scala non si arriva più, la stanza
-         resta aperta e senza segno. Meglio una stanza che si visita
-         gratis di una promessa che è in realtà un obbligo. */
+      // non si sbarra mai la strada: se chiudendola alla scala non si arriva più, resta aperta e senza segno
       if (this.taglierebbeLaStrada(s, messe)) continue
-      /* ── un varco, una porta ──
-         I varchi di questo generatore sono larghi quanto capita, e
-         mettere una porta per cella voleva dire **quattro cancelli in
-         fila**, ognuno col suo teschio sopra: da lontano sembra una
-         prigione, e da vicino non si capisce quale sia la porta. Adesso
-         le celle contigue di uno stesso varco si contano come una cosa
-         sola: al centro va la porta, il resto **si mura**, e il passaggio
-         resta largo un passo — che è quello che una porta chiude. */
+      // le celle contigue di uno stesso varco contano come una cosa sola: al centro la porta, il resto si
+      // mura (mai una porta per cella: sembrerebbe una prigione)
       const varchi = this.varchiDi(s.porte)
       const stretti = varchi.map(v => {
         const mezzo = v[Math.floor(v.length / 2)]
         return { mezzo, troppe: v.filter(p => p !== mezzo) }
       })
-      /* o tutti o nessuno: una stanza con un varco murato e un altro
-         rimasto spalancato è una stanza «chiusa» in cui si entra
-         gratis dall'altra parte, ed è il difetto che le porte per
-         stanza erano nate per togliere */
+      // o tutti o nessuno: un varco murato e un altro spalancato si aggirerebbe dall'altra parte
       if (!stretti.every(v => this.stringiIlVarco(v.troppe, v.mezzo))) continue
       for (const { mezzo } of stretti) {
         const k = mezzo.x + ',' + mezzo.y
@@ -509,9 +340,7 @@ export class Livello {
     }
   }
 
-  /* Le celle di porta contigue, raggruppate: un varco largo quattro è
-     una lista di quattro, due varchi lontani sono due liste. Si guarda
-     solo in croce, come si cammina. */
+  // le celle di porta contigue, raggruppate: un varco largo quattro è una lista di quattro
   varchiDi(porte) {
     const restano = porte.map(p => ({ x: p.x, y: p.y }))
     const gruppi = []
@@ -528,13 +357,7 @@ export class Livello {
     return gruppi
   }
 
-  /* Mura le celle in eccesso di un varco, e **si tira indietro se così
-     isola qualcosa**: restringere un passaggio è sicuro quasi sempre —
-     resta comunque un passo di larghezza — ma «quasi sempre» in un
-     generatore vuol dire che una volta su cento si chiude una stanza con
-     dentro la chiave. Si prova prima, e se il piano non regge si lascia
-     il varco com'era e quella stanza senza porta: una stanza che si
-     visita gratis è meglio di un piano che non si finisce. */
+  // mura le celle in eccesso di un varco, e si tira indietro se così isola qualcosa (si prova prima)
   stringiIlVarco(troppe, mezzo) {
     if (!troppe.length) return true
     const prima = troppe.map(p => this.a(p.x, p.y))
@@ -549,9 +372,7 @@ export class Livello {
     return false
   }
 
-  /* Si arriva ancora alla scala se si chiudono anche i varchi di questa
-     stanza? Si cammina davvero, contando come muri le porte già chiuse
-     più quelle che si sta per chiudere. */
+  // si arriva ancora alla scala chiudendo anche i varchi di questa stanza? si cammina davvero
   taglierebbeLaStrada(s, gia) {
     const scala = this.robe.find(r => r.che === 'scala')
     const partenza = this.stanze[0]
@@ -577,11 +398,9 @@ export class Livello {
     if (!partenza) return ['nessuna stanza']
     const da = { x: partenza.cx, y: partenza.cy }
     const chiuse = new Set(this.robe.filter(r => r.che === 'porta').map(r => r.x + ',' + r.y))
-    /* si cammina come si camminerà davvero: le porte si aprono
-       rispondendo, quindi si attraversano */
+    // si cammina come si camminerà davvero: le porte si aprono rispondendo, quindi si attraversano
     const visti = raggiungibili((x, y) => this.calpestabile(x, y), da)
-    /* e si guarda anche **senza** aprirle: non è un guasto, è quanto
-       costa arrivare in fondo su questo piano qui */
+    // senza aprirle: non è un guasto, è quanto costa arrivare in fondo su questo piano
     const senzaAprire = raggiungibili(
       (x, y) => this.calpestabile(x, y) && !chiuse.has(x + ',' + y), da)
 
@@ -600,10 +419,7 @@ export class Livello {
   }
 }
 
-/* Si genera finché non torna un piano sano: capita di rado, ma un piano
-   senza uscita non si dà in mano a un bambino. Dopo venti tentativi si
-   consegna l'ultimo — meglio un piano storto che una schermata bianca —
-   e lo si dice, così in un test diventa rosso. */
+// dopo venti tentativi si consegna l'ultimo comunque (meglio un piano storto che una schermata bianca) e lo si dice
 export function generaPiano(opz) {
   let ultimo = null
   for (let i = 0; i < 20; i++) {
