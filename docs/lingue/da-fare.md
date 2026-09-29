@@ -1,42 +1,26 @@
 # L'inglese a mondi: cosa manca
 
-Il motore e i dati dei primi due mondi ci sono
-([mondi.md](mondi.md#comè-costruito)); il resto, in ordine.
+I primi due mondi si giocano: motore e dati in [mondi.md](mondi.md#comè-costruito),
+la vista in [mondi-vista.md](mondi-vista.md). Il resto, in ordine.
 
-## La vista
+## Rimasto dalla vista
 
-- **`src/giochi/inglese/`**: `gioco.js` (il manifesto, chiave `inglese`),
-  `Gioco.vue`, `viste/` e `scena/`, sulla convenzione
-  ([../core/convenzione-giochi.md](../core/convenzione-giochi.md)).
-  L'interfaccia da usare è in [mondi.md](mondi.md#linterfaccia-per-la-vista).
-- **La mappa del tesoro**: il grafo come la mappa del sotterraneo, su
-  pergamena, sentieri tratteggiati, un disegnino per tappa (il campo
-  `disegno` di `dati/mondi.js` ne dà il nome) fatto coi pittori, niente
-  emoji come figura. La tappa si riempie col grado e sbiadisce quando
-  scende; i mondi senza tappe si vedono «in arrivo».
-- **Le schermate**: le opzioni, la fila di tessere da toccare (niente
-  trascinamento), il capitolo con le sue domande, il «perché» e il «Si fa
-  così» dopo uno sbaglio con l'attesa di `docs/apprendimento/la-domanda.md`,
-  la parola da toccare con l'avviso sull'indicatore delle monete prima di
-  rispondere.
-- **Le monete**: il motore dice solo `paga`. Quanto vale una domanda, una
-  tappa vinta la prima volta e un capitolo si decide con
-  [../apprendimento/calibrazione.md](../apprendimento/calibrazione.md).
-- **Il posto della vista nuova**: al posto di `views/LinguaGame.vue` per
-  l'inglese (lo spagnolo resta sul vecchio finché non ha i suoi mondi), e
-  il **travaso** da `p.eng` — si pubblica insieme alla mappa nuova, mai
-  prima. Il gioco libero resta a chi l'aveva.
-- **L'età**: la `portata` delle tappe è scritta ma `data/portata-giochi.js`
-  non la legge ancora.
-- **I bersagli dei test** (`data-…`) e il test di integrazione
-  (`test/integrazione/inglese-mondi`), da scrivere in mondi.md alla riga
-  «Nei test».
-- **L'albo**: la materia «Frasi inglesi» in `store/progressi.js` ha
-  `totale: FRASI.length` delle frasi vecchie, ma conta tutte le chiavi
-  `frase:`. Le frasi nuove (`m-…`) la farebbero passare il cento per
-  cento: il totale va rifatto sull'unione delle due liste quando la vista
-  comincia a segnarle. Stesso discorso per le chiavi `forma:`, che non
-  appartengono a nessuna materia.
+- **L'età**: la `portata` delle tappe è scritta ma nessuno la legge. Chi
+  decide se la carta English si offre (`TAPPE_DEL_GIOCO.inglese` in
+  `data/portata-giochi.js`) guarda ancora le tappe della campagna vecchia,
+  e le tappe dei mondi non hanno un cancello per età. Da decidere se i
+  mondi ne vogliono uno (il grafo si apre per merito, come il costruttore)
+  o se basta la carta.
+- **Le chiavi `forma:`** non appartengono a nessuna materia dell'albo né
+  di «Come va»: non falsano nessuna percentuale, ma una struttura saputa
+  non si vede da nessuna parte. Se servisse, una materia «Strutture
+  inglesi» col totale delle forme che hanno una tappa.
+- **La traduzione di una frase intera** non c'è: si toccano le parole una
+  per una. Per «riconosci» e «cosa vuol dire» basta; per il libro più
+  lungo dei mondi dopo potrebbe servire.
+- **Il gioco di prima** resta finché qualcuno l'aveva: quando nessun
+  profilo di casa ha più `p.eng.libera` in uso, si può togliere insieme
+  alla campagna vecchia (`data/campagna-inglese.js`), tenendo le sue chiavi.
 
 ## I mondi 3–8 e la prova finale
 

@@ -2,12 +2,35 @@
 
 # 🌐 English e 🇪🇸 Spagnolo
 
-*Parole, verbi e frasi.* Sono **lo stesso gioco con dentro due lingue**:
-quello che cambia è solo il vocabolario e la voce.
+*Parole, frasi e storie.* L'inglese è una **mappa del tesoro**; lo
+spagnolo è ancora la campagna in fila di prima, e ci arriverà.
 
 <img src="../img/inglese-gioco.png" width="230"> <img src="../img/inglese-mappa.png" width="230"> <img src="../img/spagnolo-gioco.png" width="230">
 
-## Come è fatto
+## L'inglese: la mappa del tesoro
+
+Ogni isola della mappa è un **mondo** che insegna un pezzo di grammatica —
+*che cos'è*, *io e le mie cose*, poi *dove*, *cosa sai fare*, la giornata,
+il presente, il passato — e finire un mondo apre i successivi. Ogni tappa
+porta **otto-dieci parole nuove e una struttura**, e le frasi non si
+scelgono soltanto: da un certo punto **si compongono**, toccando le parole
+una dopo l'altra, prima coi buchi da riempire, poi tutte da mettere in
+ordine, poi con qualche parola trappola in mezzo. Chi sbaglia legge il
+perché («*is it* va girato per chiedere») e come si fa, e va avanti: non
+si perde niente.
+
+Attorno a ogni tappa dieci tacche dicono **quanto è imparata**, e col tempo
+calano: il disegno della tappa sbiadisce, e rigiocarla la fa tornare piena.
+In fondo a ogni mondo c'è **un capitolo di un libro** da leggere in inglese
+— con Laura, Leo e il cane Pip, e ogni volta un po' diverso — e qualche
+domanda in italiano per vedere se si è capito. Qualunque parola inglese a
+schermo **si tocca e dice cosa vuol dire**; le prime volte è gratis, poi
+quella domanda non paga, e il gioco lo dice prima di rispondere.
+
+Chi aveva finito la campagna di prima tiene il suo gioco libero, in fondo
+alla mappa.
+
+## Lo spagnolo, e com'era l'inglese
 
 Una campagna di tredici tappe: si parte dagli animali e dai colori, si
 arriva ai verbi e alle frasi intere. Il meccanismo è sempre lo stesso — un
@@ -76,4 +99,9 @@ e i due segni della domanda (`¿…?`).
   senza perdere niente.
 
 Per chi ci lavora: [i vocaboli e i modi di chiedere](vocaboli.md),
-[la voce](voce.md).
+[la voce](voce.md), [l'inglese a mondi](mondi.md) e [la sua vista](mondi-vista.md).
+
+Nei test: `unita/inglese-mondi` e `unita/inglese-vista` (senza browser),
+`integrazione/inglese-mondi`, `integrazione/inglese` (il gioco di prima),
+`integrazione/spagnolo`; i bersagli `data-…` sono in
+[mondi-vista.md](mondi-vista.md#nei-test).
