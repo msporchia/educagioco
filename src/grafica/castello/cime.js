@@ -1,19 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE CIME DELLE TORRI — quello che si vede in punta.
-
-   Coordinate locali, con l'origine sulla corona di merli: ognuna riceve
-   (pennello, unità, stadio, tinta, tempo) e disegna attorno allo zero.
-
-   La cima cambia di netto ai tre stadi (1-3, 4-6, 7-10) ed è lì che si
-   vede il salto: l'arco diventa balestra e poi tripla balestra, la
-   bombarda diventa doppio cannone e poi rampa di missili, il globo si
-   mette anelli e rune. Un calcolo difficile deve *vedersi*, non finire
-   in un numerino.
-
-   Sono indicizzate per **aspetto**, non per operazione: quale torre si
-   compri con quale conto lo decide `data/ops.js`, e scambiarli non deve
-   voler dire venire a rimescolare i disegni qui dentro.
-   ═══════════════════════════════════════════════════════════════════ */
+// Le cime delle torri: coordinate locali (origine sulla corona di merli),
+// indicizzate per aspetto (non per operazione, che sta in `data/ops.js`).
+// Cambiano di netto ai tre stadi (1-3, 4-6, 7-10): un calcolo difficile deve
+// vedersi, non finire in un numerino.
 
 function cimaArciere(p, s, stadio, tinta, t) {
   const { ctx } = p

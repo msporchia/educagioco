@@ -1,13 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL FONDALE — quello che non cambia per tutta la partita.
-
-   Prato, strada, bosco e piazzole: `tela.dipingiFondale` li dipinge una
-   volta su una tela nascosta e poi li ricopia. Qui c'è solo *cosa*
-   dipingere.
-
-   Tutto è seminato: stesso seme, stesso bosco. Un fondale che cambia a
-   ogni ridisegno è un fondale sbagliato.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il fondale (prato, strada, bosco, piazzole): non cambia per tutta la
+// partita, `tela.dipingiFondale` lo dipinge una volta e lo ricopia. Tutto è
+// seminato: stesso seme, stesso bosco.
 import { seminato } from '../tela.js'
 
 function prato(p, vicino, caso) {
