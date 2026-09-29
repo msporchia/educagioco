@@ -1,29 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════
-   CALENDARIO — giorni, mesi, stagioni, e contare il tempo che passa
-   sulle date invece che sulle lancette.
-
-   È il gemello di `orologio.js` nella materia `tempo`, e non ripete
-   niente di suo: qui non c'è un quadrante e non c'è un'ora, c'è la
-   parte che un orologio non sa — l'ordine dei giorni, quanti ne ha un
-   mese, in che stagione cade una data, quanti giorni separano due date.
-
-   NIENTE `new Date()`. Una domanda deve essere la stessa a distanza di
-   un anno quanto a distanza di un minuto: il punto di partenza (il
-   giorno della settimana, la data) lo
-   sceglie sempre la `sorte`, e i conti — il giorno dopo, i giorni fra
-   due date, la stagione di una data — si fanno con l'aritmetica qui
-   dentro, in tabelle fisse (i giorni dei mesi, l'inizio delle
-   stagioni). Un modulo che leggesse l'orologio di sistema darebbe
-   risposte diverse da un giorno all'altro sulla stessa domanda: il
-   contrario di quello che serve a un banco di prova ripetibile.
-
-   I FALSI SONO GLI ERRORI VERI di chi impara a leggere un calendario:
-   il giorno prima invece del giorno dopo, il conteggio dei giorni con
-   il fuori-di-uno («dal 3 al 17 marzo sono 14 giorni, non 15» — il
-   giorno di partenza non si conta due volte), il mese da 30 scambiato
-   con uno da 31, la stagione confinante invece di quella giusta.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// gemello di orologio.js nella materia `tempo`: giorni, mesi, stagioni, contare le date. Niente new Date(): il punto di partenza lo sceglie sempre `sorte`, i conti sono aritmetica su tabelle fisse — un modulo legato all'orologio di sistema darebbe risposte diverse da un giorno all'altro sulla stessa domanda. I falsi sono gli errori veri: il giorno prima invece del dopo, il fuori-di-uno nel contare, il mese da 30 scambiato con uno da 31, la stagione confinante.
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo } from '../nucleo/domanda.js'
 
@@ -46,16 +21,10 @@ const MESI = [
   { nome: 'dicembre', giorni: 31 },
 ]
 
-/* «ad aprile», «a ottobre»: la d eufonica solo davanti alla stessa
-   vocale, che è la regola che si usa oggi. Due mesi su dodici la
-   vogliono — aprile e agosto — e senza si legge «a aprile», che a un
-   bambino che sta imparando a leggere fa inciampare la frase prima
-   ancora di arrivare alla domanda. */
+// d eufonica solo davanti alla stessa vocale (aprile, agosto): senza, «a aprile» fa inciampare la frase
 const aMese = nome => (nome.startsWith('a') ? 'ad ' : 'a ') + nome
 
-/* le quattro stagioni, con dove cominciano (mese 1-12, giorno): l'ordine
-   conta, perché la vicinanza (±1) è quella che genera i falsi «stagione
-   confinante» */
+// l'ordine conta: la vicinanza (±1) genera i falsi «stagione confinante»
 const STAGIONI = [
   { nome: 'primavera', mese: 3, giorno: 21 },
   { nome: 'estate', mese: 6, giorno: 21 },
@@ -63,13 +32,7 @@ const STAGIONI = [
   { nome: 'inverno', mese: 12, giorno: 21 },
 ]
 
-/* qualche festa fissa, per legare le stagioni a qualcosa di conosciuto
-   invece che a numeri qualunque. Servono solo come àncora — «Natale è
-   d'inverno» — mai come domanda a sé: chiedere *che giorno cade* una
-   festa è memoria di date, non calendario, e le feste civili (la
-   Repubblica, i lavoratori) a un bambino non dicono niente. Per lo stesso
-   motivo qui stanno solo feste a data fissa: Pasqua si sposta ogni anno e
-   non si ricava con l'aritmetica di questo file. */
+// solo àncora («Natale è d'inverno»), mai domanda a sé (che giorno cade è memoria, non calendario); solo feste a data fissa, Pasqua si sposta ogni anno
 const FESTE = [
   { nome: 'Capodanno', mese: 1, giorno: 1 },
   { nome: "l'Epifania", mese: 1, giorno: 6 },
@@ -81,40 +44,25 @@ const FESTE = [
 
 /* ── l'aritmetica del calendario ── */
 
-/* il giorno della settimana `delta` posizioni dopo (o prima, se negativo)
-   `idx`, con l'avvolgimento giusto anche sui negativi */
+// il giorno `delta` posizioni dopo (o prima) `idx`, con l'avvolgimento giusto anche sui negativi
 const spostaGiorno = (idx, delta) => ((idx + delta) % 7 + 7) % 7
 
-/* un numero che ordina le date nell'anno (mese*100+giorno): serve solo a
-   confrontare «quanto avanti» cade una data rispetto all'inizio di una
-   stagione, mai a fare aritmetica vera sui giorni */
+// ordina le date nell'anno (mese*100+giorno): solo per confrontare, mai per aritmetica vera sui giorni
 const vNum = (mese, giorno) => mese * 100 + giorno
 
-/* una data è «da confine» se cade a ridosso del cambio di stagione:
-   lì la risposta non si ragiona, si ricorda — sapere che il 19 marzo è
-   ancora inverno vuol dire sapere a memoria che la primavera comincia il
-   21. Le domande sulla stagione di una data stanno alla larga da questa
-   fascia: quello che devono allenare è «luglio è estate», che un bambino
-   ricava da com'è fuori, non il numero esatto sul confine. */
+// a ridosso del cambio stagione la risposta non si ragiona, si ricorda (sapere che il 19 marzo è ancora inverno vuole a memoria che comincia il 21): le domande stanno alla larga da questa fascia
 const MARGINE_CONFINE = 4
 const daConfine = (mese, giorno) =>
   STAGIONI.some(s => s.mese === mese && Math.abs(giorno - s.giorno) <= MARGINE_CONFINE)
 
-/* i mesi che stanno tutti dentro una stagione sola: gli altri quattro
-   (marzo, giugno, settembre, dicembre) sono a cavallo e la domanda «in
-   che stagione cade maggio» su di loro non avrebbe una risposta sola */
+// mesi tutti dentro una stagione sola: gli altri quattro (marzo, giugno, settembre, dicembre) sono a cavallo, niente risposta unica
 const MESI_INTERI = MESI.map((_, i) => i).filter(i => !STAGIONI.some(s => s.mese === i + 1))
 
-/* l'articolo giusto davanti al nome di una stagione: solo la primavera
-   comincia per consonante, le altre tre vogliono l'apostrofo */
+// solo la primavera comincia per consonante, le altre tre vogliono l'apostrofo
 const laStagione = nome => (/^[aeiou]/.test(nome) ? `l'${nome}` : `la ${nome}`)
 const dellaStagione = nome => (/^[aeiou]/.test(nome) ? `dell'${nome}` : `della ${nome}`)
 
-/* in che stagione cade una data (indice in STAGIONI). L'inverno è
-   l'unica che scavalla l'anno (21 dicembre → 20 marzo), ed è per questo
-   che si cerca a ritroso: se una data non ha superato l'inizio di
-   nessuna stagione più recente, è ancora dentro quella dell'inverno
-   scorso. */
+// l'inverno scavalla l'anno (21 dic → 20 mar): si cerca a ritroso, se non supera nessuna stagione più recente è ancora l'inverno scorso
 function stagioneDi(mese, giorno) {
   const v = vNum(mese, giorno)
   for (let i = STAGIONI.length - 1; i >= 0; i--)
@@ -122,11 +70,7 @@ function stagioneDi(mese, giorno) {
   return STAGIONI.length - 1 // prima del 21 marzo: ancora inverno
 }
 
-/* i falsi per «che giorno della settimana è» — li usano sia il grado 1
-   (l'ordine dei giorni) sia il grado 4 (contare i giorni): stesso
-   errore, contesti diversi. Sempre 3 falsi distinti dalla giusta e fra
-   loro: prima i tre errori tipici, poi — solo se due di quelli
-   collidono — si ripesca a caso fra i giorni rimasti. */
+// li usano sia grado 1 (l'ordine) che grado 4 (contare): prima i tre errori tipici, poi si ripesca a caso se collidono
 function propostiErroriGiorno(partenza, delta, sorte) {
   const giusto = spostaGiorno(partenza, delta)
   const verso = delta >= 0 ? 1 : -1
@@ -151,7 +95,6 @@ function propostiErroriGiorno(partenza, delta, sorte) {
   return { giusto, falsi: sorte.mescola(principali).slice(0, 3) }
 }
 
-/* ── che cosa si chiede a ogni grado ── */
 const SCALETTA = [
   "l'ordine dei giorni della settimana",
   "i mesi dell'anno",
@@ -160,11 +103,7 @@ const SCALETTA = [
   'le date e le durate',
 ]
 
-/* Le tipologie. Il taglio è fra quello che si impara **vivendo** — che
-   dopo giovedì viene venerdì, che a dicembre è inverno — e quello che è
-   un **conto**: quanti giorni passano dal 3 al 17. Il primo gruppo lo sa
-   anche chi a scuola non l'ha mai fatto; il secondo o l'hai fatto o
-   tiri a indovinare. */
+// taglio fra quello che si impara vivendo (dopo giovedì viene venerdì) e un conto vero (quanti giorni dal 3 al 17): il secondo o l'hai fatto o tiri a indovinare
 const TIPI = [
   { chiave: 'cal:giorni', nome: 'I giorni della settimana', sa: 'calendario', gradi: { 1: 1 } },
   { chiave: 'cal:mesi', nome: "L'ordine dei mesi", sa: 'calendario', gradi: { 2: 0.66 } },
@@ -184,15 +123,7 @@ class Calendario extends Modulo {
       materia: 'tempo',
       chiaro: "i giorni, i mesi, le stagioni, e quanto tempo passa fra due date",
       scaletta: SCALETTA,
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [20, 25, 29, 56, 63],
-      /* giorni, mesi e stagioni si imparano vivendo; contare i giorni
-         fra due date è un conto che a scuola si fa (o non si è fatto) */
+      livelli: [20, 25, 29, 56, 63], // scala 0-100 comune a tutte le materie (vedi docs/apprendimento/quiz-livelli.md)
       tipi: TIPI,
     })
   }
@@ -213,8 +144,7 @@ class Calendario extends Modulo {
     }
   }
 
-  /* ── grado 1: l'ordine dei giorni ── */
-  giorni(sorte) {
+  giorni(sorte) { // grado 1: l'ordine dei giorni
     const partenza = sorte.fra(0, 6)
     const verso = sorte.forse(0.5) ? 1 : -1
     const passi = sorte.fra(1, 6)
@@ -235,13 +165,8 @@ class Calendario extends Modulo {
     })
   }
 
-  /* ── grado 2: i mesi ──
-     l'ordine e il numero del mese sono la stessa cosa da sapere e
-     stanno sotto la stessa chiave; quanti giorni ha un mese è un'altra
-     cosa, e per un genitore è un'altra voce. */
-
-  /* quale mese viene prima/dopo un altro */
-  mesiOrdine(sorte) {
+  // grado 2: ordine e numero del mese sono la stessa chiave; quanti giorni ha un mese è un'altra voce
+  mesiOrdine(sorte) { // quale mese viene prima/dopo un altro
     const idx = sorte.fra(0, 11)
     const verso = sorte.forse(0.5) ? 1 : -1
     const giusto = (idx + verso + 12) % 12
@@ -263,8 +188,7 @@ class Calendario extends Modulo {
     })
   }
 
-  /* che numero è un mese, o viceversa */
-  mesiNumero(sorte) {
+  mesiNumero(sorte) { // che numero è un mese, o viceversa
     const idx = sorte.fra(0, 11)
     const numero = idx + 1
     const chiedeNumero = sorte.forse(0.5)
@@ -299,8 +223,7 @@ class Calendario extends Modulo {
     })
   }
 
-  /* quanti giorni ha un mese */
-  mesiGiorni(sorte) {
+  mesiGiorni(sorte) { // quanti giorni ha un mese
     const idx = sorte.fra(0, 11)
     const mese = MESI[idx]
     const scambio = mese.giorni === 31 ? 30 : mese.giorni === 30 ? 31 : mese.giorni === 28 ? 29 : 28
@@ -319,18 +242,8 @@ class Calendario extends Modulo {
     })
   }
 
-  /* ── grado 3: le stagioni e le feste ──
-     Qui c'era anche «quando comincia la primavera?»: è uscita per lo
-     stesso motivo per cui le feste sono solo un'àncora e i bisestili non
-     ci sono più. La data esatta di un equinozio non si ricava da niente
-     — la si sa o non la si sa — e sbagliarla di un giorno non è un
-     ragionamento storto, è un ricordo storto. Quello che resta è tutto
-     roba che si ragiona: in che stagione cade un giorno lontano dal
-     confine, in che stagione sta un mese intero, che stagione viene dopo
-     un'altra, in che stagione cade una festa che il bambino conosce. */
-
-  /* in che stagione cade una data, mai a ridosso del cambio */
-  stagioneData(sorte) {
+  // grado 3: «quando comincia la primavera?» è uscita — un equinozio si ricorda o non si ricorda, non si ragiona
+  stagioneData(sorte) { // in che stagione cade una data, mai a ridosso del cambio
     let meseIdx = sorte.fra(0, 11)
     let giorno = sorte.fra(1, MESI[meseIdx].giorni)
     for (let tentativi = 0; tentativi < 20 && daConfine(meseIdx + 1, giorno); tentativi++) {
@@ -353,8 +266,7 @@ class Calendario extends Modulo {
     })
   }
 
-  /* in che stagione sta un mese intero */
-  stagioneMese(sorte) {
+  stagioneMese(sorte) { // in che stagione sta un mese intero
     const meseIdx = sorte.uno(MESI_INTERI)
     const s = stagioneDi(meseIdx + 1, 15)
     const falsi = [
@@ -372,8 +284,7 @@ class Calendario extends Modulo {
     })
   }
 
-  /* che stagione viene dopo (o prima di) un'altra: il giro, non le date */
-  stagioneGiro(sorte) {
+  stagioneGiro(sorte) { // che stagione viene dopo/prima di un'altra: il giro, non le date
     const s = sorte.fra(0, 3)
     const verso = sorte.forse(0.5) ? 1 : -1
     const giusto = (s + verso + 4) % 4
@@ -395,8 +306,7 @@ class Calendario extends Modulo {
     })
   }
 
-  /* in che stagione cade una festa */
-  festaStagione(sorte) {
+  festaStagione(sorte) { // in che stagione cade una festa
     const f = sorte.uno(FESTE)
     const s = stagioneDi(f.mese, f.giorno)
     const falsi = [testo(STAGIONI[(s + 1) % 4].nome), testo(STAGIONI[(s + 2) % 4].nome), testo(STAGIONI[(s + 3) % 4].nome)]
@@ -410,13 +320,11 @@ class Calendario extends Modulo {
     })
   }
 
-  /* ── grado 4: contare i giorni ── */
-  contaGiorni(sorte) {
+  contaGiorni(sorte) { // grado 4: contare i giorni
     return sorte.forse(0.5) ? this.contaStessoMese(sorte) : this.contaFraGiorni(sorte)
   }
 
-  /* oggi è [giorno] [numero]. che giorno della settimana è il [altro numero]? */
-  contaStessoMese(sorte) {
+  contaStessoMese(sorte) { // oggi è [giorno] [numero]. che giorno della settimana è il [altro numero]?
     const partenza = sorte.fra(0, 6)
     const numero1 = sorte.fra(1, 27)
     let numero2 = sorte.fra(1, 28)
@@ -434,8 +342,7 @@ class Calendario extends Modulo {
     })
   }
 
-  /* fra N giorni che giorno sarà */
-  contaFraGiorni(sorte) {
+  contaFraGiorni(sorte) { // fra N giorni che giorno sarà
     const partenza = sorte.fra(0, 6)
     const n = sorte.fra(2, 20)
     const { giusto, falsi } = propostiErroriGiorno(partenza, n, sorte)
@@ -450,16 +357,12 @@ class Calendario extends Modulo {
     })
   }
 
-  /* ── grado 5: le date e le durate ──
-     Qui c'era anche febbraio dei bisestili: è uscita perché non è
-     calendario, è trivia — la si sa o non la si sa, e nemmeno regalando
-     la regola nella domanda diventa un conto che insegna qualcosa. */
+  // grado 5: febbraio dei bisestili è uscita — è trivia, si sa o non si sa, nemmeno la regola la rende un conto
   durate(sorte) {
     return sorte.forse(0.5) ? this.durataGiorni(sorte) : this.durataMesi(sorte)
   }
 
-  /* quanti giorni ci sono dal N al M di un mese */
-  durataGiorni(sorte) {
+  durataGiorni(sorte) { // quanti giorni ci sono dal N al M di un mese
     const meseIdx = sorte.fra(0, 11)
     const giorniMese = MESI[meseIdx].giorni
     const d1 = sorte.fra(1, Math.max(1, giorniMese - 3))
@@ -474,9 +377,7 @@ class Calendario extends Modulo {
     for (const n of sorte.distrattori(pool, Math.max(0, 3 - principali.length))) principali.push(testo(String(n)))
 
     return domanda({
-      /* «quanti giorni passano» e non «quanti giorni ci sono»: la
-         seconda si può contare includendo il primo giorno, e allora la
-         domanda avrebbe due risposte difendibili invece di una */
+      // «passano» e non «ci sono»: la seconda si potrebbe contare includendo il primo giorno, due risposte difendibili
       testo: `Quanti giorni passano dal ${d1} al ${d2} ${MESI[meseIdx].nome}?`,
       buona: testo(String(giusto)),
       falsi: sorte.mescola(principali).slice(0, 3),
@@ -486,27 +387,8 @@ class Calendario extends Modulo {
     })
   }
 
-  /* ── quanti mesi mancano, a partire da adesso ──
-     Diceva «Quanti mesi mancano da marzo a gennaio?», e sono due
-     difetti in una riga sola. Il primo: **da marzo a gennaio non si
-     va avanti**, si va indietro — a meno di sottintendere il giro
-     dell'anno, che nella domanda non c'era scritto da nessuna parte.
-     Il conto giusto era 10 e chi rispondeva 2 aveva contato una cosa
-     sensata: la domanda aveva due risposte difendibili, ed è il
-     difetto peggiore che una domanda possa avere. Tanto è vero che il
-     falso si chiamava «hai contato dalla parte sbagliata», cioè
-     sapevamo che la parte non era dichiarata.
-
-     Il secondo: «mancano **da** X» non è italiano che si parla —
-     mancano *a* qualcosa, a partire da un momento. Ed è la stessa cosa
-     detta bene: «Siamo a marzo» mette il presente, e da un presente si
-     manca solo in avanti. Il giro dell'anno smette di essere un
-     sottinteso e diventa il modo naturale di leggerla, come chiedere a
-     settembre quanto manca a Natale.
-
-     La sorella qui sopra (`durataGiorni`) aveva già fatto la stessa
-     scelta per un'ambiguità diversa — «passano» e non «ci sono», per
-     non contare due volte il giorno di partenza. */
+  // era «Quanti mesi mancano da marzo a gennaio?»: due risposte difendibili (10 andando avanti col giro dell'anno sottinteso, 2 andando indietro).
+  // «Siamo a marzo. Quanti mesi mancano a gennaio?» mette il presente: da un presente si manca solo in avanti, il giro dell'anno non è più un sottinteso.
   durataMesi(sorte) {
     const idx1 = sorte.fra(0, 11)
     let idx2 = sorte.fra(0, 11)
@@ -516,8 +398,7 @@ class Calendario extends Modulo {
 
     const usatiNum = new Set([giusto])
     const principali = []
-    /* adesso è un errore vero e non una lettura possibile: dichiarato
-       il presente, all'indietro non si manca */
+    // dichiarato il presente, all'indietro non si manca: è un errore vero, non una lettura possibile
     if (!usatiNum.has(erroreDirezione)) { usatiNum.add(erroreDirezione); principali.push(testo(String(erroreDirezione), 'hai contato all\'indietro: «manca» vuol dire in avanti')) }
     for (const off of [1, -1]) {
       const n = giusto + off
@@ -531,8 +412,7 @@ class Calendario extends Modulo {
       buona: testo(String(giusto)),
       falsi: sorte.mescola(principali).slice(0, 3),
       chiave: 'cal:durata',
-      /* corto si conta, lungo si dice come si conta: undici nomi in
-         fila non sono un aiuto, sono la risposta scritta male */
+      // corto si conta, lungo si dice come si conta: undici nomi in fila sarebbero la risposta scritta male
       aiuto: giusto <= 4
         ? 'conta in avanti: ' +
           Array.from({ length: giusto }, (_, i) => MESI[(idx1 + i + 1) % 12].nome).join(', ') +
