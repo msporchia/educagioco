@@ -1,15 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL SOTTERRANEO — L'ASPETTO
-
-   Un file solo, e ogni classe comincia per `sot-`. Non è pignoleria: lo
-   stile globale ha già `.carta`, `.riga`, `.tondo`, e due fogli che si
-   contendono lo stesso nome si rompono a distanza di mesi, quando
-   nessuno si ricorda più perché.
-
-   È tutto buio apposta, e la barra in cima è `scura` per lo stesso
-   motivo: una fascia bianca sopra una caverna è una finestra aperta di
-   notte.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Ogni classe comincia per `sot-` (evita scontri con `.carta`, `.riga`, `.tondo` dello stile globale).
+   Tutto buio apposta: la barra in cima è `scura` per lo stesso motivo. */
 
 .sot {
   --sot-fondo: #0b0d16;
@@ -28,31 +18,22 @@
   background: radial-gradient(120% 80% at 50% 0%, #171b2c, var(--sot-fondo) 70%);
 }
 
-/* Il font di testo va PRIMA di quelli delle emoji: Noto Color Emoji ha
-   dentro anche le cifre, e senza questa precedenza un «💎 18» esce con
-   le cifre larghe il doppio del resto. */
+/* il font di testo va prima delle emoji: Noto Color Emoji ha le cifre, senza precedenza «💎 18» esce doppio */
 .sot .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji",
                         "Segoe UI Emoji", "Twemoji Mozilla", sans-serif; line-height: 1 }
 
-/* ═══════════ la fascia in cima ═══════════ */
 .sot-io {
   display: flex; align-items: center; gap: 7px;
   padding: 4px 8px; border: 0; border-radius: 12px;
   background: #ffffff12; color: #e8edf7; font: inherit;
 }
 .sot-polso {
-  /* `flex: none`: dentro la fascia in cima il titolo di una discesa lunga
-     schiacciava la barra della vita fino a mangiarsi il numero — cioè
-     proprio il dato che si guarda mentre si combatte */
+  /* flex: none: senza, il titolo di una discesa lunga schiaccia la barra fino a mangiarsi il numero */
   position: relative; display: inline-block; flex: none; width: 62px; height: 15px;
   border-radius: 999px; background: #00000055; overflow: hidden;
 }
 .sot-polso i { position: absolute; inset: 0 auto 0 0; background: var(--sot-polso, #4fce7c) }
-/* Il numero sta **sopra** la barra, che sotto di lui è verde per un
-   pezzo e scura per il resto: scritto scuro con un alone chiaro si
-   leggeva finché la vita era alta e spariva appena scendeva — cioè
-   proprio quando lo si guarda. Bianco con l'ombra netta si legge su
-   tutti e due i fondi. */
+/* bianco con ombra netta: scuro con alone chiaro spariva appena la vita scendeva, proprio quando conta */
 .sot-polso b {
   position: absolute; inset: 0; display: grid; place-items: center;
   font-size: 11px; font-weight: 800; color: #fff;
@@ -61,16 +42,11 @@
 .sot-n { display: inline-flex; align-items: center; gap: 2px; font-size: 13px }
 .sot-n b { font-size: 13px }
 
-/* ═══════════ la scelta delle discese ═══════════ */
 .sot-tappe { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 14px 24px; display: grid; gap: 10px }
 .sot-invito { margin: 2px 2px 6px; color: var(--sot-tenue); font-size: 13.5px; line-height: 1.5 }
 .sot-invito b { color: var(--sot-inchiostro); font-weight: 650 }
 
-/* ── dove eri rimasto ──
-   In cima e col bordo d'oro, perché è la cosa più importante della
-   schermata: una discesa lasciata a metà vale venti minuti già spesi, e
-   se non si vede subito si ricomincia da capo senza sapere di poterla
-   riprendere. */
+/* in cima e col bordo d'oro: una discesa lasciata a metà vale venti minuti già spesi */
 .sot-ripresa {
   padding: 12px 14px 14px; border-radius: 18px;
   background: linear-gradient(160deg, #2a2410, var(--sot-carta) 70%);
@@ -81,8 +57,7 @@
 .sot-ripresa .sot-dove b { font-size: 16px; align-self: end }
 .sot-ripresa .sot-dove i { font-style: normal; font-size: 12.5px; color: var(--sot-tenue) }
 
-/* la modale la usano anche lo scontro e le conferme: il titolo e il
-   testo stanno qui, non dentro `.sot-foglio` che è un altro pannello */
+/* la modale la usano anche lo scontro e le conferme, non solo `.sot-foglio` */
 .sot-modale h2 { margin: 0 0 6px; font-size: 19px; display: flex; align-items: center; gap: 8px }
 .sot-modale > p { margin: 0 0 10px; color: var(--sot-tenue); font-size: 13.5px; line-height: 1.5 }
 
@@ -100,11 +75,7 @@
 .sot-tappa .sot-testo i { font-style: normal; font-size: 12.5px; color: var(--sot-tenue) }
 .sot-conto { font-size: 13px; color: var(--sot-oro); white-space: nowrap }
 
-/* ── l'abisso ──
-   Sotto le sei, e più scuro di loro: non è la settima discesa, è quello
-   che c'è **sotto** il fondo. Il filo viola lo separa dalla fila senza
-   trasformarlo in un premio che luccica — quello che luccica in questa
-   schermata è la discesa lasciata a metà. */
+/* più scuro delle sei: non è la settima discesa, è quello che c'è sotto il fondo */
 .sot-tappa.sot-abisso {
   margin-top: 4px;
   background: linear-gradient(160deg, #171226, var(--sot-carta) 75%);
@@ -112,22 +83,15 @@
 }
 .sot-tappa.sot-abisso .sot-conto { color: #b39ddb }
 
-/* ═══════════ il campo ═══════════ */
 .sot-campo { flex: 1; min-height: 0; position: relative }
-/* Il canvas è **ancorato**, non semplicemente al 100%: la Tela si misura
-   dal genitore e gli scrive addosso un `height` in pixel, e un canvas nel
-   flusso con un'altezza sua dimensiona il genitore da cui si sta
-   misurando. Il giro si ferma dove capita — il campo resta alto la metà
-   dello schermo per sempre, senza che niente sembri rotto. */
+/* ancorato, non semplicemente al 100%: un canvas nel flusso con un'altezza sua dimensiona il genitore da
+   cui si sta misurando, e il giro si ferma dove capita (il campo resta alto metà schermo per sempre) */
 .sot-tela { position: absolute; inset: 0; display: block; touch-action: none }
 .sot-piede {
   position: absolute; left: 0; right: 0; bottom: 8px; margin: 0;
   text-align: center; font-size: 12.5px; color: #7f8db0; pointer-events: none;
 }
-/* ── il tasto dello zaino ──
-   In basso a destra, dove sta il pollice, e tondo come tutti i tasti
-   che si premono col dito. Non copre il campo utile: sotto c'è la riga
-   del piano, che è testo e non si tocca. */
+/* in basso a destra, dove sta il pollice */
 .sot-zaino-tasto {
   position: absolute; right: 12px; bottom: 34px; z-index: 6;
   width: 62px; height: 62px; display: grid; place-items: center; gap: 0;
@@ -139,15 +103,7 @@
 .sot-zaino-tasto b { font-size: 10.5px; color: var(--sot-oro); line-height: 1 }
 .sot-zaino-tasto:active { transform: scale(.94) }
 
-/* ── il lume, e la fiamma che cala ──
-   In basso a sinistra, in faccia al tasto dello zaino: la colonnina si
-   abbassa di una tacca a ogni stanza, accanto ci sono le stanze che
-   restano e le torce alla cintura. Non si tocca (`pointer-events`), che
-   è la differenza fra un tasto e un cartellino: qui non c'è niente da
-   decidere — la torcia dopo si accende da sé.
-   Il `transition` è quello che la rende una cosa che *cala*: senza, la
-   colonnina salta da una tacca all'altra e si legge come un numero che
-   cambia, non come una luce che si consuma. */
+/* non si tocca (pointer-events): la torcia dopo si accende da sé, qui non c'è niente da decidere */
 .sot-torcia {
   position: absolute; left: 12px; bottom: 34px; z-index: 6; margin: 0;
   display: flex; align-items: center; gap: 6px;
@@ -163,13 +119,11 @@
 .sot-lume u {
   position: absolute; inset: auto 0 0 0; display: block; text-decoration: none;
   background: linear-gradient(180deg, #ffe6a3, #ff9b3d);
-  transition: height .35s ease-out;
+  transition: height .35s ease-out;   /* senza, la colonnina salta invece di calare */
 }
 .sot-torcia b { color: #ffd9a0; font-weight: 700 }
 .sot-torcia em { font-style: normal; font-size: 11.5px; color: var(--sot-tenue) }
-/* agli sgoccioli, e senza niente alla cintura: la fiamma guizza. È
-   l'unico momento in cui questo cartellino chiede di essere guardato —
-   quando la luce sta per finire e non c'è una seconda torcia dietro. */
+/* agli sgoccioli e senza scorta la fiamma guizza: l'unico momento in cui chiede di essere guardato */
 .sot-sgoccioli b { color: #ffb6a3 }
 .sot-sgoccioli .sot-lume u { animation: sot-guizzo 1.1s infinite }
 @keyframes sot-guizzo { 45% { opacity: .4 } }
@@ -181,27 +135,18 @@
 }
 .sot-avviso::first-line { line-height: 1.4 }
 
-/* ═══════════ il foglio che sale dal basso ═══════════ */
 .sot-foglio {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 10;
   padding: 14px 14px max(16px, env(safe-area-inset-bottom));
   background: var(--sot-carta); border-radius: 22px 22px 0 0;
   box-shadow: 0 -12px 40px #000a; animation: sot-sale .16s ease-out;
-  /* in `dvh` e non in percentuale: la percentuale si risolve sull'altezza
-     del contenitore, che in una colonna flex è «auto» e quindi non la
-     limita affatto — il foglio cresceva sotto il bordo dello schermo e le
-     risposte finivano dove nessuno le poteva toccare */
+  /* dvh e non %: in una colonna flex l'altezza del genitore è "auto", e senza il foglio cresce oltre lo schermo */
   max-height: 82dvh; overflow-y: auto;
 }
 @keyframes sot-sale { from { transform: translateY(28px); opacity: 0 } }
 
-/* ═══════════ lo scontro, al centro ═══════════
-   L'unico pannello che non sale dal basso: una battaglia comincia
-   mentre si cammina, e in fondo allo schermo chi guardava il proprio
-   eroe non la vedeva partire. Il velo scurisce la caverna invece di
-   scoprirla — mentre si combatte non c'è niente da decidere lì
-   dietro — e non si chiude toccandolo: da uno scontro si esce
-   rispondendo o scappando, non tornando indietro per sbaglio. */
+/* lo scontro, al centro: l'unico pannello che non sale dal basso (una battaglia comincia mentre si
+   cammina), e non si chiude toccando il velo (si esce rispondendo o scappando) */
 .sot-velo {
   position: absolute; inset: 0; z-index: 12; display: flex;
   align-items: center; justify-content: center; padding: 12px;
@@ -212,13 +157,11 @@
   padding: 14px; background: var(--sot-carta); border-radius: 22px;
   box-shadow: 0 18px 60px #000c; animation: sot-cresce .16s ease-out;
 }
-/* dentro la modale l'altezza la limita già la modale: un secondo tetto
-   in `dvh` qui sotto stringerebbe le risposte due volte */
+/* l'altezza la limita già la modale: un secondo tetto in dvh qui sotto stringerebbe le risposte due volte */
 .sot-modale .sot-domanda { max-height: none }
 @keyframes sot-appare { from { opacity: 0 } }
 @keyframes sot-cresce { from { transform: scale(.94); opacity: 0 } }
-/* la stessa testata del foglio dal basso, per chi sta in mezzo: sono lo
-   stesso pannello messo in due posti, e devono leggersi uguale */
+/* stesso pannello messo in due posti: devono leggersi uguale */
 .sot-foglio h2, .sot-centrale h2 {
   margin: 0 0 2px; font-size: 19px; display: flex; align-items: center; gap: 8px;
 }
@@ -230,17 +173,14 @@
   background: var(--sot-oro); border: 0; border-radius: 16px;
 }
 .sot-chiaro { background: #ffffff16; color: inherit }
-/* il prezzo di un tasto, sotto la sua parola: scappare costa un graffio
-   e il numero deve stare **prima** del gesto, non nell'avviso dopo */
+/* il prezzo prima del gesto (scappare costa un graffio), non nell'avviso dopo */
 .sot-grosso small {
   display: block; margin-top: 2px;
   font-size: 11.5px; font-weight: 600; opacity: .72;
 }
 
-/* ═══════════ chi hai davanti ═══════════ */
 .sot-nemico { display: flex; align-items: center; gap: 12px; margin-bottom: 6px }
-/* la faccia di chi hai davanti: il suo pezzo, grande, e il posto è
-   fisso — un mostro alto e uno basso non devono far ballare la riga */
+/* posto fisso: un mostro alto e uno basso non devono far ballare la riga */
 .sot-nemico .sot-faccia { display: grid; place-items: center; min-width: 52px; min-height: 56px }
 .sot-nemico .sot-faccia.sot-colpito { animation: sot-scossa .22s }
 @keyframes sot-scossa {
@@ -248,8 +188,7 @@
   75% { transform: translateX(4px) rotate(4deg) }
 }
 .sot-dati { flex: 1; min-width: 0 }
-/* la propria vita, dentro lo scontro: mentre si combatte gli occhi
-   stanno qui, e il numero in cima allo schermo lo si scopre dopo */
+/* mentre si combatte gli occhi stanno qui, non sul numero in cima allo schermo */
 .sot-io-vita {
   display: flex; align-items: center; gap: 10px; margin: 2px 0 8px;
   padding-top: 8px; border-top: 1px solid var(--sot-bordo);
@@ -261,18 +200,9 @@
 .sot-ossa { display: flex; gap: 10px; font-size: 12.5px; color: var(--sot-tenue) }
 .sot-costo { font-size: 13px; color: #ffd9a0; margin-top: 3px }
 
-/* ═══════════ la domanda dentro il foglio ═══════════
-   `quiz/Domanda.vue` arriva col suo velo a `position: absolute; inset: 0`,
-   che serve a coprire la schermata di chi la apre a tutto schermo. Qui non
-   c'è niente da coprire — il sotterraneo sta **sopra**, e vederlo mentre si
-   risponde è metà del punto — quindi il velo diventa l'ultimo pezzo del
-   foglio, alto quanto la carta e non un dito di più. Senza questa riga il
-   velo si stende sul foglio e la carta gli esce da sotto: le risposte
-   finiscono fuori dallo schermo, e non è un difetto che si veda leggendo.
-
-   `--qz-h` dice alla carta quanto schermo ha davvero: sta in un pannello
-   alto quattro quinti scarsi, e senza questa riga i disegni si
-   misurerebbero sull'intero telefono. */
+/* quiz/Domanda.vue arriva col suo velo a position:absolute: qui il sotterraneo sta sopra e non c'è niente
+   da coprire, quindi il velo diventa l'ultimo pezzo del foglio. --qz-h dice alla carta quanto schermo ha
+   davvero (un pannello alto quattro quinti scarsi), o i disegni si misurerebbero sull'intero telefono */
 .sot-domanda { margin-top: 8px; position: relative; display: flex;
                max-height: 62dvh; overflow-y: auto }
 .sot .sot-domanda .qz-velo { --qz-h: .62vh;
@@ -283,29 +213,16 @@
                               border-radius: 18px }
 .sot .sot-domanda .qz-esito { margin-top: 8px; min-height: 18px }
 
-/* i titoli si ricolorano: lo stile globale li fa viola scuro, che su una
-   caverna nera non si legge */
 .sot h2, .sot h3 { color: var(--sot-inchiostro) }
 
-/* ═══════════ lo zaino e il mercante ═══════════ */
-/* ═══════════ lo zaino ═══════════
-   Le caselle stanno **intorno alla figura**, non in fila: la mano a
-   destra, l'armatura a sinistra, l'anello sotto, e in mezzo chi le
-   porta. È la differenza fra un elenco di oggetti e un personaggio
-   equipaggiato — guardando la figura si vede come si è messi senza
-   leggere una riga. */
+/* le caselle stanno intorno alla figura, non in fila: guardandola si vede come si è messi senza leggere */
 .sot-riepilogo {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   margin: 0 0 12px; font-size: 13.5px; color: var(--sot-inchiostro);
 }
-/* più larga che nella fascia in cima: qui dentro il numero è «11/16»,
-   non «11» */
+/* più larga che nella fascia in cima: qui il numero è "11/16", non "11" */
 .sot-riepilogo .sot-polso { width: 84px; height: 16px }
 
-/* ── la luce, scritta per esteso ──
-   In cima c'è un numero e una colonnina, che si leggono di sfuggita
-   mentre si cammina; qui c'è il tempo di dirlo in italiano — quante
-   stanze restano, e cosa succede dopo. */
 .sot-torcia-riga {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   margin: -6px 0 12px; font-size: 13px; color: var(--sot-tenue);
@@ -317,11 +234,7 @@
 .sot-corredo {
   display: grid; gap: 8px; margin-bottom: 14px; align-items: center;
   grid-template-columns: 1fr minmax(96px, 1.2fr) 1fr;
-  /* le mani in alto, **una per lato** come stanno addosso a chi le usa —
-     la debole a sinistra, il pugno a destra — e sotto quello che si
-     porta: guardando si vede come si è messi, che è quello che un
-     elenco di caselle non dice. La mano debole sotto quella buona
-     sembrava una seconda casella della destra. */
+  /* le mani in alto, una per lato (debole a sinistra, pugno a destra): sotto quella buona sembrava una seconda casella */
   grid-template-areas:
     "mancina chi mano"
     "corpo   chi dito";
@@ -334,8 +247,7 @@
 .sot-slot-corpo { grid-area: corpo }
 .sot-slot-dito { grid-area: dito }
 .sot-slot-mancina { grid-area: mancina }
-/* la mano che tiene l'altro capo di un'arma a due mani: la stessa
-   figura, spenta e girata */
+/* l'altro capo di un'arma a due mani: la stessa figura, spenta e girata */
 .sot-slot.sot-ombra { opacity: .5 }
 .sot-slot.sot-ombra .sot-dentro { transform: scaleX(-1); filter: grayscale(.6) brightness(.7) }
 .sot-figura { grid-area: chi; position: relative; display: grid; place-items: center; min-height: 118px }
@@ -349,21 +261,9 @@
 }
 .sot-slot i { font-style: normal; font-size: 10.5px; color: var(--sot-tenue); line-height: 1.15 }
 .sot-slot.sot-vuota i { opacity: .75 }
-/* la faccia di una cosa (`viste/Icona.vue`): lo sprite dove c'è,
-   l'emoji dove il foglio non disegna niente. `overflow: hidden` perché
-   il pezzo dentro è ingrandito con un `transform` e sborderebbe. */
-/* ── il pezzo parte dall'angolo, non dal centro ──
-   La gabbia è già grande quanto la figura ingrandita, e il pezzo dentro
-   si ingrandisce con un `transform` che parte **dall'angolo in alto a
-   sinistra** (`viste/figura.js`). Centrandolo, il centraggio avveniva
-   sulla misura *prima* dell'ingrandimento — un'accetta da 8×18 messa in
-   mezzo a una gabbia da 16×36 e poi scalata ×2 usciva in basso a
-   destra, e `overflow` le tagliava il manico. Il difetto si vedeva
-   soltanto sulle figure alte e sembrava un problema di risoluzione: era
-   invece sempre lo stesso, su ogni schermo.
-
-   Il centraggio serve ancora all'emoji di ripiego, che una gabbia non
-   ce l'ha: resta al grid, e il pezzo si sfila con `position: absolute`. */
+/* il pezzo parte dall'angolo in alto a sinistra (viste/figura.js), non dal centro: centrandolo, un'accetta
+   piccola in una gabbia grande scalata ×2 usciva in basso a destra e overflow le tagliava il manico.
+   Il centraggio resta solo per l'emoji di ripiego, che una gabbia non ce l'ha. */
 .sot-icona {
   position: relative; display: inline-grid; place-items: center;
   overflow: hidden; vertical-align: middle;
@@ -371,22 +271,9 @@
 .sot-icona > i, .sot-dentro > i, .sot-ritratto > i,
 .sot-impugnata > i, .sot-imbracciata > i { position: absolute; top: 0; left: 0 }
 .sot-dentro, .sot-ritratto, .sot-impugnata, .sot-imbracciata { position: relative }
-/* ── il filo di luce, anche qui ──
-   Nel campo lo disegna la tela (`grafica/atlante.js`, `alone`); in un
-   pannello non c'è nessun canvas, e il mestiere lo fa `drop-shadow`
-   quattro volte, una per lato, con sfocatura zero: segue l'alfa della
-   figura, quindi il contorno è la sagoma vera e resta netto come vuole
-   la pixel art. Serve per la stessa ragione del campo — uno scudo di
-   ferro è quasi nero, e su un riquadro scuro spariva del tutto — e non
-   dà fastidio a quello che è già chiaro. Il filtro si applica prima del
-   `transform`, quindi il pixel del contorno si ingrandisce con la
-   figura invece di restare un filo sottile addosso a un disegno
-   grande. */
-/* Non sul ritratto: là la figura è ingrandita quattro volte, e il
-   filtro si applica **prima** del transform — un pixel di contorno
-   diventa quattro, e l'eroe sembra ritagliato con le forbici. Serve
-   dove le figure sono piccole e si perdono nel fondo, non dove sono
-   già grandi. */
+/* niente canvas in un pannello: quattro drop-shadow, una per lato, seguono l'alfa e restano nette come la
+   pixel art (uno scudo di ferro è quasi nero e sparirebbe su un fondo scuro). Non sul ritratto: lì il
+   filtro si applica prima del transform ×4 e l'eroe sembrerebbe ritagliato con le forbici. */
 .sot-icona > i, .sot-dentro > i, .sot-impugnata > i, .sot-imbracciata > i {
   display: block;
   filter:
@@ -394,33 +281,21 @@
     drop-shadow(0 1px 0 #ffffff4d) drop-shadow(0 -1px 0 #ffffff4d);
 }
 
-/* ── il riquadro non taglia mai ──
-   Alla scala di casa (×2) l'oggetto più alto del foglio — la spada
-   fiammeggiante, 24 px — viene 48, e un riquadro di 48 lo tagliava di
-   quel poco che basta a farlo sembrare storto: una lama senza punta, un
-   bastone mozzato. Il riquadro è più alto di qualunque cosa ci vada
-   dentro, e `overflow` resta solo come rete di sicurezza per un pezzo
-   che un giorno fosse più grande di tutti. */
+/* il riquadro non taglia mai: alla scala di casa (×2) la spada fiammeggiante (24px) viene 48, e un
+   riquadro di 48 la tagliava quel poco che basta a sembrare storta. overflow resta solo come rete di sicurezza. */
 .sot-dentro { display: grid; place-items: center; width: 100%; height: 54px; overflow: hidden }
-/* tutte le caselle della stessa altezza, quale che sia la figura che ci
-   sta dentro: la misura la dà il riquadro, non lo sprite */
+/* tutte le caselle della stessa altezza: la misura la dà il riquadro, non lo sprite */
 .sot-tasca, .sot-slot { min-height: 92px; align-content: center }
 .sot-dentro .em { font-size: 24px }
 .sot-slot.sot-vuota .sot-dentro { opacity: .35 }
 
-/* il ritratto: pixel art, quindi mai sfocata.
-   `display: block` sul figlio non è cosmetica: un `transform` **non si
-   applica a un elemento inline**, e senza quella riga la figura c'era
-   nel DOM, misurava giusto, e non si vedeva — a differenza delle
-   caselle, dove il contenitore è una griglia e il figlio viene
-   blockificato da sola. Un difetto che non dà nessun errore e si scopre
-   solo guardando lo schermo. */
+/* display:block sul figlio non è cosmetica: transform non si applica a un elemento inline, e senza
+   questa riga la figura misurava giusto ma non si vedeva (le caselle si salvano perché il grid la blockifica) */
 .sot-ritratto { display: block; overflow: hidden; image-rendering: pixelated }
 .sot-ritratto > i, .sot-dentro > i, .sot-impugnata > i { display: block }
 .sot-ritratto .em { font-size: 40px }
 .sot-impugnata { position: absolute; right: 12%; bottom: 24%; overflow: hidden }
-/* l'altra mano, dal lato opposto: uno scudo si porta davanti al fianco
-   sinistro, e nel campo sta esattamente lì */
+/* lato opposto: uno scudo si porta davanti al fianco sinistro, come nel campo */
 .sot-imbracciata { position: absolute; left: 12%; bottom: 22%; overflow: hidden }
 
 .sot-tasche { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px }
@@ -433,10 +308,7 @@
 .sot-tasca em { font-style: normal; font-size: 10.5px; line-height: 1.1; text-align: center }
 .sot-tasca.sot-vuota { opacity: .4 }
 .sot-tasca.sot-vuota .sot-dentro .em { opacity: .5 }
-/* ── quello che questa classe non porta ──
-   Spenta a metà, non nascosta: la si è raccolta apposta, e al banco
-   vale gemme. La ✋ sta **sopra la figura** perché la tasca si guarda
-   prima di toccarla, e un colore da solo non dice cosa vuol dire. */
+/* spenta a metà, non nascosta: si è raccolta apposta, vale gemme al banco */
 .sot-tasca.sot-altrui .sot-dentro > i { opacity: .38; filter: grayscale(.7) }
 .sot-tasca.sot-altrui em { opacity: .5 }
 .sot-vietata {
@@ -444,8 +316,6 @@
   filter: drop-shadow(0 1px 2px #000a);
 }
 .sot-tasca .sot-dentro { position: relative }
-/* il perché no, quando la tasca è aperta: la riga che sostituisce il
-   tasto, più la sola cosa che si può fare con quella roba lì */
 .sot-nonpuoi {
   margin: 7px 0 0; padding: 7px 9px; border-radius: 10px;
   font-size: 13px; font-weight: 700; color: #f0b429;
@@ -454,7 +324,6 @@
 .sot-nonpuoi .em { font-size: 14px }
 .sot-nonpuoi i { display: block; font-style: normal; font-weight: 400; color: var(--sot-tenue); margin-top: 2px }
 
-/* ── chi scende, e come si cambia ── */
 .sot-chi {
   display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px;
   color: inherit; font: inherit; text-align: left;
@@ -477,8 +346,7 @@
 .sot-eroe .sot-testo { flex: 1; min-width: 0; display: grid; gap: 2px }
 .sot-eroe .sot-testo b { font-size: 15px }
 .sot-eroe .sot-testo > i { font-style: normal; font-size: 12px; color: var(--sot-tenue); line-height: 1.35 }
-/* le barrette: davanti a «❤️ 24 · ⚔️ 3» un bambino di sei anni non sa
-   dire chi è più forte, davanti a due barre lunghe diverse sì */
+/* davanti a «❤️ 24 · ⚔️ 3» un bambino non sa dire chi è più forte, davanti a due barre sì */
 .sot-barre { display: flex; align-items: center; gap: 8px; margin-top: 3px }
 .sot-barra {
   position: relative; flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px;
@@ -492,8 +360,7 @@
 .sot-cuore::before { background: linear-gradient(90deg, #e0644f66, #ff9b7a55) }
 .sot-braccio::before { background: linear-gradient(90deg, #ffd23f55, #ffe98a44) }
 .sot-scudo { font-size: 12px; color: var(--sot-tenue) }
-/* cosa impugna e cosa veste, sotto le barrette: pastiglie con l'icona
-   davanti, perché questa carta la guarda anche chi non legge ancora */
+/* pastiglie con l'icona davanti: questa carta la guarda anche chi non legge ancora */
 .sot-porta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px }
 .sot-porta > span {
   display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px 2px;
@@ -502,15 +369,10 @@
 }
 .sot-porta .em { font-size: 12px; font-style: normal }
 
-/* ── quello che si è scelto, e cosa se ne può fare ──
-   La cornice d'oro dice «sto parlando di questa qui»: senza, i due tasti
-   larghi qui sotto sembrano riferirsi all'ultima cosa toccata, che con
-   sei tasche uguali è indistinguibile dalla penultima. */
+/* la cornice d'oro dice "sto parlando di questa qui": senza, con sei tasche uguali non si distingue la scelta */
 .sot-tasca.sot-scelto, .sot-casella.sot-scelto {
   border: 2px solid var(--sot-oro); background: #ffd23f1c; opacity: 1;
 }
-/* la riga che racconta l'ultimo scambio: sta fra il mostro e la propria
-   vita, cioè fra i due numeri di cui parla */
 .sot-scambio {
   margin: 6px 0 0; padding: 5px 8px; border-radius: 10px;
   font-size: 13.5px; font-weight: 700; text-align: center;
@@ -520,31 +382,22 @@
 .sot-scambio.sot-male { background: #e0432f24; color: #ff9b8a }
 .sot-scambio b { font-size: 15px }
 
-/* Le azioni si appiccicano al fondo del pannello: comparendo in coda a
-   una griglia alta quanto lo schermo finivano oltre il bordo, e un
-   tasto che non si vede è un tasto che non c'è. */
+/* si appiccicano al fondo: in coda a una griglia alta quanto lo schermo finivano oltre il bordo */
 .sot-azioni {
   position: sticky; bottom: -14px; z-index: 1;
   margin-top: 10px; padding: 10px 10px 12px;
   border-radius: 16px; background: #0b0f1af2;
   box-shadow: 0 -8px 24px #000a;
 }
-/* nome e faccia sulla stessa riga, incolonnati: l'icona è alta quanto
-   una casella e in una riga di testo sborderebbe sulla riga sotto */
 .sot-dice {
   margin: 0; font-size: 15px; display: flex; align-items: center; gap: 8px;
   min-height: 54px;
 }
-/* la battuta di una curiosità: è il premio vero, quindi si legge come
-   un pezzo di racconto e non come un'etichetta */
-.sot-storia { margin: 4px 0 2px; font-size: 15px; line-height: 1.45 }
+.sot-storia { margin: 4px 0 2px; font-size: 15px; line-height: 1.45 }   /* la battuta è il premio vero */
 
-/* i numeri prima della frase: sono quelli che fanno decidere */
 .sot-numeri { margin: 4px 0 0; font-size: 13.5px; font-weight: 700; color: var(--sot-oro) }
 .sot-detto { margin: 3px 0 0; font-size: 12.5px; color: var(--sot-tenue) }
 .sot-dice .em { font-size: 20px; vertical-align: -3px }
-/* il numero su cui si sceglie: in verde solo quando conviene davvero,
-   perché un colore uguale per ogni caso non dice niente */
 .sot-cambio { margin: 6px 0 0; font-size: 14px; font-weight: 700; color: var(--sot-tenue) }
 .sot-cambio.sot-meglio { color: #4fce7c }
 .sot-grosso[disabled] { opacity: .4 }
@@ -559,23 +412,15 @@
 .sot-merce .sot-testo b { font-size: 14px }
 .sot-merce .sot-testo i { font-style: normal; font-size: 11.5px; color: var(--sot-tenue) }
 .sot-merce.sot-caro { opacity: .45 }
-/* il perché no, sulla riga del banco: ambra come nello zaino, perché è
-   lo stesso avviso e non deve sembrarne un altro */
-.sot-merce .sot-altrui { color: #f0b429; font-weight: 700 }
-/* quello che vendi tu: stessa riga, verso opposto — il prezzo è in
-   entrata, e il fondo lo dice senza scriverlo */
+.sot-merce .sot-altrui { color: #f0b429; font-weight: 700 }   /* ambra come nello zaino: stesso avviso */
 .sot-merce.sot-vendo { background: #4fce7c12; border-color: #4fce7c2e }
 .sot-merce.sot-vendo .sot-prezzo { color: #4fce7c }
 .sot-banco {
   margin: 14px 0 8px; font-size: 13px; font-weight: 700; color: var(--sot-tenue);
 }
 .sot-prezzo { color: var(--sot-oro); font-size: 13px; white-space: nowrap; display: grid; gap: 2px; justify-items: end }
-/* quante ne hai già: sopra il prezzo, in piccolo — serve a non comprare
-   la quarta pozione senza accorgersene */
-.sot-quante { font-size: 11px; font-weight: 700; color: var(--sot-tenue) }
-/* il prezzo di quello che non ti puoi permettere: spento, e con
-   scritto quanto manca. Il verde del «conviene» sparisce, o si legge
-   come un invito a premere un tasto che non fa niente. */
+.sot-quante { font-size: 11px; font-weight: 700; color: var(--sot-tenue) }   /* per non comprare la quarta pozione senza accorgersene */
+/* spento, e con scritto quanto manca: il verde del "conviene" sparirebbe come un invito a un tasto morto */
 .sot-prezzo.sot-manca { color: var(--sot-tenue) }
 .sot-prezzo.sot-manca .sot-quante { color: #e0644f }
 .sot-merce .sot-testo em {
@@ -583,7 +428,6 @@
 }
 .sot-merce .sot-testo em.sot-meglio { color: #4fce7c }
 
-/* ═══════════ com'è finita ═══════════ */
 .sot-velo {
   position: absolute; inset: 0; z-index: 20; display: grid; place-items: center;
   padding: 16px; background: #05060ac9;
