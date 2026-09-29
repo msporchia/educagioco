@@ -1,44 +1,11 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA SCHEDA DI UNA DOMANDA — tutto quello che se ne sa, e cosa farne
-
-   Si apre premendo il punteggio di una riga di «Come va», ed è **il
-   posto dove si decide**. L'elenco dietro serve a trovare la riga; qui
-   si guarda cosa c'è dentro quel numero e si sceglie.
-
-   ── I NUMERI PRIMA, IL GIUDIZIO MAI ───────────────────────────────
-   Quante volte gli è capitata, quante l'ha azzeccata, quanto ci mette,
-   quand'è stata l'ultima volta. Non c'è nessuna frase che dica «tuo
-   figlio è indietro»: chi guarda ha in mano un contesto che il gioco non
-   ha — a scuola l'hanno fatta o no, era stanco, gliel'ha data il
-   fratello — e con i numeri davanti quel giudizio lo fa meglio lui. È la
-   stessa regola di `quiz/consiglio.js`, applicata a una schermata.
-
-   ── E LE TRE COSE CHE SI POSSONO FARE ─────────────────────────────
-   Provarla (▶, `quiz/Prova.vue`: il pannello se lo apre chi ci ospita,
-   qui si emette e basta), spostarla (la tacca di
-   `components/eta/Taratura.vue`, quella già in uso nel quadro dell'età —
-   sette scatti da mezzo anno più «non ancora spiegate», che spegne il
-   pezzo di scuola) e **ricominciare a contare**.
-
-   Il terzo è quello che non c'era e che serve appena si comincia a
-   ritoccare: il conto è appiccicoso. Dopo aver reso una cosa più facile,
-   «ne ha sbagliate 7 su 10» resta scritto per settimane — perché quelle
-   dieci risposte le ha date sulle domande di prima — e l'elenco continua
-   a mettere in cima una riga già sistemata. Azzerare butta il conto e
-   **non** il ripasso: quando quella cosa va ripassata è un'altra
-   faccenda, e rimetterla a zero la farebbe ricomparire domani
-   (`azzeraConto` in `store/profile.js`).
-   ═══════════════════════════════════════════════════════════════════ */
+// la scheda di una domanda, aperta dal punteggio di «Come va»: numeri prima, giudizio mai (stessa regola di quiz/consiglio.js). Tre azioni: provarla, spostarla, ricominciare a contare — vedi docs/genitori/come-va.md.
 import { ref, computed } from 'vue'
 import Taratura from '../components/eta/Taratura.vue'
 import { anniInLettere } from '../components/eta/lettere.js'
 
 const props = defineProps({
-  /* una riga di `quiz/andamento.js` */
-  riga: { type: Object, required: true },
-  /* gli anni del bambino: la tacca dice «vale otto anni» e ha bisogno
-     di sapere rispetto a chi */
+  riga: { type: Object, required: true }, // una riga di quiz/andamento.js
   eta: { type: Number, default: null },
 })
 const emit = defineEmits(['chiudi', 'prova', 'ritocca', 'azzera'])
@@ -47,28 +14,18 @@ const tarando = ref(false)
 const azzerando = ref(false)
 
 const r = computed(() => props.riga)
-/* si chiama `inAnni` e non `eta`: una funzione con lo stesso nome della
-   prop la copre nel template, e `:eta="eta"` passerebbe la funzione
-   invece del numero — un guasto che non dà nessun errore e fa sballare
-   tutta la tacca */
+// non "eta": coprirebbe la prop nel template e :eta="eta" passerebbe la funzione, non il numero
 const inAnni = t => anniInLettere(t)
 
-/* «6 anni» se esce a un'età sola, «da 6 a 8 anni» se la stessa tipologia
-   torna a più gradi. Due numeri e non una media: la media non
-   corrisponde a nessuna domanda vera. */
+// «6 anni» a un'età sola, «da 6 a 8» se la tipologia torna a più gradi (non una media, che non corrisponde a nessuna domanda vera)
 const quando = computed(() =>
   r.value.da === r.value.a ? inAnni(r.value.da)
     : `da ${inAnni(r.value.da)} a ${inAnni(r.value.a)}`)
 
-/* la tacca sposta **tutte** le classi di questa tipologia: se ne dichiarano
-   i livelli, così il riquadro non dice «finisce in Difficili» mentre due su
-   tre restano dov'erano */
+// la tacca sposta tutte le classi di questa tipologia: livelli servono a dire quante attraversano il confine
 const livelli = computed(() => r.value.classi.map(c => c.livello).filter(n => n != null))
 const livello = computed(() => livelli.value.length ? Math.max(...livelli.value) : 50)
 
-/* «tre giorni fa». Il giorno esatto non serve a nessuno — serve sapere
-   se il conto parla di ieri o di tre mesi fa, perché un 3 su 10 di
-   marzo non dice niente su oggi. */
 const ULTIMA = [[1, 'oggi'], [2, 'ieri'], [7, 'questa settimana'],
                 [31, 'questo mese'], [366, 'quest\'anno']]
 const quandoUltima = computed(() => {
@@ -101,10 +58,7 @@ const scarto = computed(() => {
         </div>
       </div>
 
-      <!-- ── il conto, in chiaro ──
-           Quattro riquadri e non una frase: un genitore li scorre in un
-           secondo e si fa l'idea da solo. Il riquadro che manca quando
-           non c'è niente da dire non si mostra vuoto. -->
+      <!-- quattro riquadri e non una frase: si scorrono in un secondo -->
       <div class="numeri">
         <div><b>{{ r.quante }}</b><span>{{ r.quante === 1 ? 'volta' : 'volte' }}</span></div>
         <div><b>{{ r.ok }}</b><span>giuste</span></div>
@@ -127,10 +81,7 @@ const scarto = computed(() => {
         <template v-if="quandoUltima"> L'ultima volta {{ quandoUltima }}.</template>
       </p>
 
-      <!-- ── e cosa se ne fa ──
-           Tre tasti in fila e nessuno di loro è distruttivo: si prova, si
-           sposta, si ricomincia a contare. Spegnere del tutto sta dentro
-           la tacca, all'ottavo scatto, dove c'è scritto cosa vuol dire. -->
+      <!-- nessuno di questi tre è distruttivo: spegnere del tutto sta nella tacca (ottavo scatto) -->
       <div class="azioni">
         <button type="button" class="tasto" data-scheda="prova"
                 @click="$emit('prova', r)">▶ provala</button>
@@ -181,7 +132,6 @@ const scarto = computed(() => {
 .chi b { font-size: 15.5px }
 .chi i { font-style: normal; font-size: 11.5px; color: #8a8a99 }
 
-/* i numeri: quattro riquadri uguali, che si leggono in un secondo */
 .numeri { display: flex; gap: 8px; margin: 14px 0 10px }
 .numeri > div {
   flex: 1; display: grid; gap: 1px; padding: 8px 4px; text-align: center;

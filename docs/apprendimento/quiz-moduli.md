@@ -116,6 +116,28 @@ Due difetti che nessun controllo trova:
   stanno nell'`aiuto`; a memoria solo quello che ha una filastrocca (i
   giorni dei mesi) o che è la materia stessa (contrari, participi).
 
+### `Prova.vue`, i quattro modi di guardare
+
+Ha preso il posto delle palestre per modulo di `poc/`: là si provava un
+modulo a raffica per vedere se le domande erano belle, qui si prova **una
+voce** — perché la domanda che un grande ha in mente è «cosa perdo se
+spengo questa?» — una alla volta, col tasto per chiederne un'altra. Quattro
+modi, e sono quattro domande diverse:
+
+- `chiave` — «cosa perdo se spengo questa voce?» (dalla scheda «Cosa sa»).
+- `sorgente` — «com'è fatta *questa* domanda?»: una classe precisa del
+  catalogo (modulo, grado, tipologia).
+- `giro` — «fammele vedere tutte»: una lista di classi scorsa in ordine,
+  col contatore («7 di 37»).
+- `eta` — «cosa becca un bambino di quest'età?»: pesca come pescherebbe un
+  gioco (`pescaComeUnGioco`, campana e spenti compresi), non scorre niente.
+
+I primi tre mostrano quello che **esiste**, l'ultimo quello che **capita**:
+non si deduce l'uno dall'altro. Il pannello **non decide niente** — profilo
+e progressi restano intatti, spegnere resta un tasto separato sulla carta
+di fuori — e mette in scena la domanda con lo stesso `Domanda.vue` del
+bambino, quindi non ha una copia sua dei disegni da tenere allineata.
+
 ## Usarli in un gioco
 
 **Un gioco non nomina mai un modulo.** Chiede una domanda con una manopola
