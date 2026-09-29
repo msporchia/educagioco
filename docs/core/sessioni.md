@@ -22,6 +22,9 @@ disegno in `components/TempoDiGioco.vue`).
   `test/unita/sessioni`; il grafico è fatto di barre di `div`, nessuna
   libreria.
 - **Eliminare un bambino porta via il suo registro** (`scordaSessioni`).
-- **Il tetto giornaliero per gioco non c'è ancora**, ed è voluto: `oggiDi`
-  è la metà che gli serve, il resto si fa quando si decide (vedi
-  [da-fare.md](da-fare.md)).
+- **Il tetto giornaliero per gioco non c'è, e non ci sarà come tempo**:
+  il registro serve alle monete che calano sullo stesso gioco
+  ([../genitori/varieta.md](../genitori/varieta.md)). Per quello tiene
+  anche **una copia in memoria** (`vociInMemoria`), aggiornata subito da
+  `esci`: chi conta le monete non può aspettare il disco, e la home che si
+  apre uscendo da un gioco nemmeno. `secondiInCorso` è la partita aperta.
