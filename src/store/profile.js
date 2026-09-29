@@ -262,7 +262,7 @@ export function riscuotiCheat() {
     .filter(p => !/^monete=/i.test(p)).join('&')
   try { location.hash = resto } catch (e) { /* pazienza: al massimo si ripete */ }
   if (!n) return 0
-  addCoins(n)
+  metti(n)
   // chi usa il cheat spesso chiude subito la scheda: senza questo il
   // salvataggio ritardato di un terzo di secondo può non arrivare mai
   flush()
@@ -739,7 +739,14 @@ export function countMastered(prefix, now = Date.now()) {
 // Livello unico e moltiplicatore delle monete: vedi docs/core/progressi.md
 export const level = computed(() => livelloTotale(state.profile).n)
 
-export function addCoins(n) {
+// Le monete che dà un gioco passano dal filtro della varietà
+// (store/varieta.js, docs/genitori/varieta.md); il cheat e i traguardi
+// no, non le dà un gioco: usano `metti`.
+let filtro = null
+export function filtraMonete(f) { filtro = f }
+export function addCoins(n) { return metti(n > 0 && filtro ? filtro(n) : n) }
+
+function metti(n) {
   // mai sotto zero: un salvadanaio in rosso non vuol dire niente per un bambino
   state.profile.coins = Math.max(0, (state.profile.coins || 0) + n)
   // il salvadanaio conta quanto è ENTRATO, non quanto è rimasto: comprare
@@ -792,7 +799,7 @@ export function controllaTraguardi(now = Date.now()) {
     const { nuovi, monete } = riscuotiTraguardi(p, now)
     if (primaVolta) { p.badgeInit = 1; persist(); return [] }
     if (!nuovi.length) return []
-    if (monete) addCoins(monete)
+    if (monete) metti(monete)
     state.festa = [...state.festa, ...nuovi]
     flush()          // un traguardo si prende di rado: non deve perdersi
     return nuovi
