@@ -2,6 +2,7 @@
 import { reactive, computed } from 'vue'
 import { load, save, flush, remove, detectBackend, backend, chiavi } from './storage.js'
 import { scordaSessioni } from './sessioni.js'
+import { scordaIstantanee } from './istantanee.js'
 import { newItem, record as srsRecord, isMastered, strength } from './srs.js'
 import { acceso as suonoAcceso } from '../audio.js'
 import { CHIAVI_GIOCHI, eSperimentale, serveA } from '../data/giochi.js'
@@ -210,6 +211,7 @@ export async function eliminaGiocatore(id) {
      più né vedere né cancellare. Nel cestino non ci va: si ripristinano
      i progressi, non le ore passate davanti allo schermo. */
   await scordaSessioni(id)
+  await scordaIstantanee(id)   // le fotografie di «Come va»: fuori dal profilo, per lo stesso motivo
   if (state.player === id) {
     const prossimo = (state.giocatori[0] || {}).id
     if (prossimo) await selectPlayer(prossimo)

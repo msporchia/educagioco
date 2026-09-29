@@ -16,13 +16,14 @@ const props = defineProps({
   attesaSpenta: { type: Boolean, default: false }, // true se la partenza di quest'età la spegne da sola (fissaSapere)
   puoSpegnere: { type: Boolean, default: false }, // l'ultimo scatto c'è solo dove c'è un pezzo di scuola da spegnere
   chiave: { type: String, default: '' },
+  parte: { type: Number, default: 0 }, // scatti già fatti all'apertura (+1 = «più avanti di mezzo anno», dalla settimana di «Come va»)
 })
 const emit = defineEmits(['applica', 'chiudi'])
 
 const TETTO = 3 // deve combaciare col tetto di ritocca() in store/profile.js
 
 // verso della tacca (destra = più difficile); il profilo lo scrive col segno opposto
-const d = ref(-props.ritocco)
+const d = ref(Math.max(-TETTO, Math.min(TETTO, -props.ritocco + props.parte)))
 const via = ref(props.spenta)
 
 const dove = computed(() => doveCadeCon(props.eta))

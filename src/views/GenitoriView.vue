@@ -30,7 +30,6 @@ import { anniInLettere } from '../components/eta/lettere.js'
 import Benvenuto from '../components/Benvenuto.vue'
 import Prova from '../quiz/Prova.vue'
 import ComeVa from '../quiz/ComeVa.vue'
-import TempoDiGioco from '../components/TempoDiGioco.vue'
 
 const emit = defineEmits(['vai'])
 
@@ -945,11 +944,7 @@ async function rimetti(v) {
 
       <!-- ══════════ scheda: come va ══════════ vedi docs/genitori/come-va.md -->
       <template v-if="scheda === 'comeva'">
-        <h2>Quanto ha giocato</h2>
-        <TempoDiGioco />
-
-        <h2>Come sta andando {{ chi }}</h2>
-        <ComeVa @prova="prova = $event" />
+        <ComeVa :chi="chi" @prova="prova = $event" />
       </template>
 
       <p v-if="esito" :class="esito.ok ? 'mini' : 'avviso'">{{ esito.testo }}</p>
