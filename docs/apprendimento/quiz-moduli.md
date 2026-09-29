@@ -297,3 +297,10 @@ pittore ripiega da solo sull'arancione.
   piana, sdrucciola»): si risponde solo dicendo la parola a voce alta, e
   un bambino che gioca in silenzio tira a indovinare — non è una domanda
   che sullo schermo funziona, non è una lacuna di taratura.
+- **Il confronto di figure a quadretti** (`moduli/griglia.js`): «quale di
+  queste quattro ha gli stessi quadretti ma il bordo diverso?» erano otto
+  conti a dito su figure senza una forma da cui dedurre niente — il
+  concetto si afferra in tre secondi, il minuto dopo lo occupa l'indice
+  sullo schermo, e sbaglia chi perde il conto, non chi non ha capito. Era
+  stata spostata in cima alla scaletta invece che tolta: spostare non era
+  la cura.
