@@ -14,9 +14,15 @@ Le voci aperte, con quanto basta per riprenderle.
   nemici è stata trovata su queste forme.
 - **Il castello a sprite prende il posto di quello di oggi.** Il gioco con
   chiave `castello` (`src/giochi/castello/`, in prova) è lo stesso tower
-  defense con un'altra pelle e le stesse tappe di `torri`. L'elenco di cosa
-  manca — vestiti per campagna, camminate, il foglio delle torri da rifare —
-  sta in testa a `src/giochi/castello/Gioco.vue` e in
-  [`../core/grafica.md`](../core/grafica.md). Una voce riguarda la taratura:
-  le tappe sono tarate sulla strada smussata, e quella a squadra della pelle
-  è più lunga (`scena/pelle.js`) — il giorno dello scambio va rimisurata.
+  defense con un'altra pelle e le stesse tappe di `torri`. Manca ancora: i
+  quattro vestiti per campagna (grotte e mura prendono in prestito lava e
+  neve, vedi `VESTITO_DI` in `scena/vestito.js`); i mostri che respirano sul
+  posto ma non camminano ancora (i passi di lato e di fronte arrivano coi
+  fogli del cammino); il foglio delle torri (`dati/figure.js`), di
+  provenienza non documentata, da rifare prima di pubblicare altrove. Il
+  vecchio visore a tessere (`scena/campo.js`, `scena/tela.js`,
+  `dati/atlante.js`) non è più montato: resta per i test e per
+  `npm run mondo`, e va tolto quando arriva il foglio del terreno. Una voce
+  riguarda la taratura: le tappe sono tarate sulla strada smussata, e quella
+  a squadra della pelle è più lunga (`scena/pelle.js`) — il giorno dello
+  scambio va rimisurata.
