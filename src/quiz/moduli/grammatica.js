@@ -1,34 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   GRAMMATICA — l'analisi grammaticale elementare: come sono fatte le
-   parole e come stanno insieme in una frase.
-
-   Cinque gradi che non sono uno il seguito dell'altro ma cinque angoli
-   diversi sulla stessa lingua che un bambino già parla: il genere e il
-   numero delle parole, l'articolo che gli va davanti, che «mestiere»
-   fa una parola (nome, verbo, aggettivo…), l'accordo fra nome e
-   aggettivo, e infine la frase — chi fa l'azione e qual è l'azione.
-
-   I FALSI SONO GLI ERRORI VERI. Non lettere a caso ma le cose che un
-   bambino scrive o dice davvero: «i braccii» invece di «le braccia»,
-   «gli zaino» invece di «lo zaino», «le mano» invece di «le mani»,
-   l'aggettivo lasciato al maschile singolare quando il nome è
-   femminile plurale. I plurali irregolari (braccio, uovo, dito, mano,
-   uomo, ala, bue…) sono presi uno per uno: sbagliarli qui vorrebbe
-   dire insegnare la cosa sbagliata.
-
-   L'ARTICOLO ha una regola vera dietro: s+consonante, gn, ps, z, x
-   vogliono «lo» (e «gli» al plurale); una vocale accorcia l'articolo
-   in «l'» (tranne «le», che al plurale non si accorcia mai — «le
-   amiche», non «l'amiche», ed è proprio lì che un bambino inciampa).
-   ═══════════════════════════════════════════════════════════════════ */
-
+// analisi grammaticale elementare, cinque angoli sulla stessa lingua già parlata: genere/numero, articolo, parte del discorso, concordanza, frase. I falsi sono gli errori veri («i braccii», «gli zaino», «le mano», aggettivo non concordato); i plurali irregolari sono presi uno per uno, sbagliarli insegnerebbe la cosa sbagliata. L'articolo ha una regola vera: s+consonante/gn/ps/z/x vogliono «lo»/«gli», una vocale accorcia in «l'» tranne «le» (mai «l'amiche»).
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo } from '../nucleo/domanda.js'
 
-/* ── i plurali irregolari veri ──
-   Controllati uno per uno: qui un errore insegnerebbe la cosa
-   sbagliata. `errori` è sempre [una forma regolare sbagliata, la
-   parola invariata] — i due modi in cui un bambino la sbaglia. */
+// errori: [una forma regolare sbagliata, la parola invariata] — i due modi in cui un bambino la sbaglia
 const IRREGOLARI = [
   { s: 'braccio', p: 'braccia', errori: ['bracci', 'braccio'], em: '💪' },
   { s: 'uovo', p: 'uova', errori: ['uovi', 'uovo'], em: '🥚' },
@@ -43,9 +17,7 @@ const IRREGOLARI = [
   { s: 'centinaio', p: 'centinaia', errori: ['centinai', 'centinaio'] },
 ]
 
-/* ── i plurali regolari, con l'errore che si sente davvero: la
-   vocale finale scambiata con quella dell'altro genere («bambine»
-   per il plurale di «bambino»), e la parola lasciata invariata. */
+// vocale finale scambiata con l'altro genere («bambine» per il plurale di «bambino»), e la parola lasciata invariata
 const REGOLARI = [
   { s: 'bambino', p: 'bambini', errori: ['bambino', 'bambine'], em: '👦' },
   { s: 'gatto', p: 'gatti', errori: ['gatto', 'gatte'], em: '🐱' },
@@ -64,11 +36,7 @@ const REGOLARI = [
   { s: 'matita', p: 'matite', errori: ['matita', 'matiti'] },
 ]
 
-/* ── il maschile e il femminile della stessa parola ──
-   `mp`/`fp` sono i plurali (usati anche come distrattore: l'errore
-   più comune è cambiare il NUMERO pensando di cambiare il genere).
-   Le parole con un suffisso vero e proprio (-essa, -trice) hanno
-   anche l'errore di chi prova a inventarselo. */
+// mp/fp sono i plurali, usati anche come distrattore (errore comune: cambiare il numero pensando di cambiare il genere)
 const COPPIE_GENERE = [
   { m: 'maestro', mp: 'maestri', f: 'maestra', fp: 'maestre', em: '👨‍🏫' },
   { m: 'bambino', mp: 'bambini', f: 'bambina', fp: 'bambine', em: '👦' },
@@ -112,10 +80,7 @@ const COPPIE_GENERE = [
   { m: 'asino', mp: 'asini', f: 'asina', fp: 'asine' },
 ]
 
-/* ── l'articolo giusto ──
-   `tipo` è la categoria che decide l'articolo: `normale` (consonante
-   qualunque), `vocale` (accorcia in l'/gli), `z-gn-ps-x` (s+consonante,
-   gn, ps, z, x — vuole lo/gli). */
+// `tipo`: normale (consonante), vocale (accorcia in l'/gli), z-gn-ps-x (s+consonante/gn/ps/z/x — vuole lo/gli)
 const ARTICOLI = [
   { parola: 'cane', genere: 'm', numero: 's', tipo: 'normale', em: '🐶' },
   { parola: 'gatto', genere: 'm', numero: 's', tipo: 'normale', em: '🐱' },
@@ -234,8 +199,7 @@ const ARTICOLO_GIUSTO = {
   'f-s-normale': 'la', 'f-s-vocale': "l'",
   'f-p-normale': 'le', 'f-p-vocale': 'le',
 }
-/* i soli errori che un bambino fa davvero — non ogni articolo che
-   esiste, ma quello per cui inciampa proprio quella parola */
+// solo gli errori che un bambino fa davvero, non ogni articolo che esiste
 const CONFUSIONI_ARTICOLO = {
   'm-s-normale': ['lo'],
   'm-s-vocale': ['il', 'lo'],
@@ -253,51 +217,14 @@ const REGOLA_ARTICOLO = {
   vocale: "davanti a una vocale l'articolo si accorcia: l'amico, l'amica — ma «le» non si accorcia mai, nemmeno al plurale",
   'z-gn-ps-x': 'davanti a s+consonante, gn, ps, z, x si usa lo, gli al plurale',
 }
-/* compone l'articolo con la parola, senza spazio se finisce in apostrofo */
 const componi = (art, parola) => (art.endsWith("'") ? art + parola : `${art} ${parola}`)
 
-/* il verso inverso di CONFUSIONI_ARTICOLO: per ogni articolo, le
-   categorie di parole per cui QUELL'articolo è l'errore tipico —
-   serve al formato «per quale di queste parole ci vuole "lo"?» */
+// verso inverso: per ogni articolo, le categorie per cui QUELL'articolo è l'errore tipico — serve a «per quale parola ci vuole "lo"?»
 const CONFUSIONE_INVERSA = {}
 for (const [categoria, sbagli] of Object.entries(CONFUSIONI_ARTICOLO))
   for (const art of sbagli) (CONFUSIONE_INVERSA[art] ??= []).push(categoria)
 
-/* ── che parte del discorso è ──
-
-   OGNI PAROLA STA DENTRO UNA FRASE, E LA FRASE È SCRITTA A MANO. Prima
-   si mostrava la parola nuda — «che parte del discorso è "lo"?» — e
-   quella domanda **non aveva una risposta giusta**: «lo» è articolo in
-   «lo zaino» e pronome in «lo vedo», e lo stesso vale per «la» («la
-   porta» / «la vedo»), «gli» («gli amici» / «gli ho detto»), «legge»
-   («il papà legge» / «la legge»). Un bambino che rispondeva l'altra
-   aveva ragione lui, e siccome `pronome` non è nemmeno fra le risposte
-   possibili si trovava davanti a una domanda senza uscita.
-
-   In più c'era il guaio tipografico, che da solo bastava: nei caratteri
-   di sistema la elle minuscola e la i maiuscola sono **lo stesso
-   glifo**, quindi «lo» nudo si legge anche «Io» — e «Io» è un pronome,
-   che fra le cinque risposte non c'è.
-
-   Le frasi non si compongono da una regola: si scrivono una per una,
-   come le quattro forme degli aggettivi qui sotto. Una regola sola le
-   avrebbe scritte storte proprio dove serve — «lo vedo» è una frase
-   perfetta e darebbe la risposta sbagliata. Ognuna è corta come deve
-   leggerla un bambino di terza (la difficoltà sta nella grammatica, non
-   nella lettura) e **rende la parola non ambigua**: è tutto il punto.
-   La parola compare sempre in mezzo e minuscola, mai in testa, perché
-   la maiuscola d'inizio frase è metà del guaio tipografico.
-
-   L'EMOJI È SPARITA, e non per fare posto. Ce l'avevano tutti e otto i
-   nomi e nessun'altra parola: chi aveva capito quello rispondeva
-   «nome» ogni volta che c'era un disegno, senza leggere niente. Otto
-   domande su trentasei regalavano la risposta.
-
-   L'`aiuto` è scritto a mano anche lui, e parla di *questa* frase — «lo
-   sta davanti al nome zaino» — perché con la frase in mano la regola
-   generale si può far vedere invece che enunciare. Il `perche` dei
-   tasti sbagliati fa il mestiere opposto e dice cos'è la parte scelta:
-   erano la stessa identica stringa, e a schermo si leggeva due volte. */
+// ogni parola sta dentro una frase scritta a mano: nuda («che parte è "lo"?») non ha una risposta giusta, «lo» è articolo in «lo zaino» e pronome in «lo vedo» (idem la/gli/legge) — e c'era pure un guaio tipografico, la elle minuscola e la I maiuscola sono lo stesso glifo, quindi «lo» nudo si legge anche «Io» (pronome, fuori dalle risposte). Le frasi sono scritte a mano una per una, la parola sempre in mezzo e minuscola. L'emoji è sparita: la avevano solo gli otto nomi, e regalava la risposta.
 const PARTI = ['nome', 'verbo', 'aggettivo', 'articolo', 'preposizione']
 const AIUTO_PARTI = {
   nome: 'il nome indica una persona, un animale o una cosa',
@@ -306,8 +233,7 @@ const AIUTO_PARTI = {
   articolo: "l'articolo va sempre davanti al nome: il, lo, la, un…",
   preposizione: 'la preposizione lega le parole della frase: di, a, da, in, con, su, per, tra',
 }
-/* «non è un verbo» / «non è una preposizione»: l'articolo davanti alla
-   parte del discorso, che è l'unica irregolarità di questo elenco */
+// «non è un verbo» / «non è una preposizione»: l'articolo davanti alla parte del discorso
 const UN_UNA = {
   nome: 'un nome', verbo: 'un verbo', aggettivo: 'un aggettivo',
   articolo: 'un articolo', preposizione: 'una preposizione',
@@ -327,8 +253,7 @@ const PAROLE_PARTI = [
   { parola: 'dorme', parte: 'verbo', frase: 'Il cane dorme nella cuccia.', aiuto: '«dorme» dice che cosa fa il cane: è un verbo' },
   { parola: 'gioca', parte: 'verbo', frase: 'Sara gioca con le bambole.', aiuto: '«gioca» dice che cosa fa Sara: è un verbo' },
   { parola: 'canta', parte: 'verbo', frase: 'Il coro canta una canzone.', aiuto: '«canta» dice che cosa fa il coro: è un verbo' },
-  /* qui la frase non è un contorno: «la legge» sarebbe un nome, e senza
-     il papà davanti la domanda non avrebbe una risposta sola */
+  // qui la frase non è un contorno: «la legge» sarebbe un nome, senza il papà davanti non ci sarebbe una risposta sola
   { parola: 'legge', parte: 'verbo', frase: 'Il papà legge il giornale.', aiuto: '«legge» dice che cosa fa il papà: è un verbo — in «la legge dello Stato» sarebbe un nome' },
   { parola: 'nuota', parte: 'verbo', frase: 'Il pesce nuota nello stagno.', aiuto: '«nuota» dice che cosa fa il pesce: è un verbo' },
   { parola: 'bello', parte: 'aggettivo', frase: 'Il quadro è bello.', aiuto: "«bello» dice com'è il quadro: è un aggettivo" },
@@ -340,8 +265,7 @@ const PAROLE_PARTI = [
   { parola: 'alto', parte: 'aggettivo', frase: 'Il palazzo è alto.', aiuto: "«alto» dice com'è il palazzo: è un aggettivo" },
   { parola: 'simpatico', parte: 'aggettivo', frase: 'Il mio maestro è simpatico.', aiuto: "«simpatico» dice com'è il maestro: è un aggettivo" },
   { parola: 'il', parte: 'articolo', frase: 'Ho perso il cappello.', aiuto: '«il» sta davanti al nome «cappello»: è un articolo' },
-  /* «la» e «lo» sono i due che hanno fatto nascere tutto questo: da
-     soli sono articolo o pronome a seconda di quello che viene dopo */
+  // «la» e «lo» hanno fatto nascere tutto questo: da soli sono articolo o pronome a seconda di quello che viene dopo
   { parola: 'la', parte: 'articolo', frase: 'Apro la finestra.', aiuto: '«la» sta davanti al nome «finestra»: è un articolo — in «la vedo» sarebbe un pronome' },
   { parola: 'un', parte: 'articolo', frase: 'Ho visto un cavallo.', aiuto: '«un» sta davanti al nome «cavallo»: è un articolo' },
   { parola: 'gli', parte: 'articolo', frase: 'Ho salutato gli amici.', aiuto: '«gli» sta davanti al nome «amici»: è un articolo — in «gli ho detto tutto» sarebbe un pronome' },
@@ -400,14 +324,7 @@ const PAROLE_PARTI = [
   { parola: 'sotto', parte: 'preposizione', frase: 'Il pallone rotola sotto il letto.', aiuto: '«sotto» dice dove sta il pallone e lega le parole: è una preposizione' },
 ]
 
-/* ── la concordanza: nome e aggettivo devono avere lo stesso genere
-   e numero — ma un aggettivo giusto per genere e numero può essere
-   assurdo per significato («una mela lenta»). Ogni soggetto ha una
-   `categoria` (chi/che cosa è) e ogni aggettivo le `categorie` a cui
-   può riferirsi davvero: si accoppiano solo quelle compatibili.
-   Ogni aggettivo ha le sue quattro forme scritte a mano — «bianco»
-   fa «bianchi» con l'acca, «simpatico» fa «simpatici» senza: dedurle
-   da una regola sola le avrebbe scritte storte. */
+// nome e aggettivo hanno lo stesso genere/numero, ma un aggettivo giusto per forma può essere assurdo per significato («una mela lenta»): si accoppiano solo `categorie` compatibili. Le quattro forme sono scritte a mano (bianco→bianchi con l'acca, simpatico→simpatici senza): una regola sola le scriverebbe storte.
 const SOGGETTI_CONCORDANZA = [
   { testo: 'Il bambino', genere: 'm', numero: 's', categoria: 'persone', em: '👦' },
   { testo: 'La bambina', genere: 'f', numero: 's', categoria: 'persone', em: '👧' },
@@ -463,9 +380,7 @@ const AGGETTIVI = [
   { ms: 'comodo', fs: 'comoda', mp: 'comodi', fp: 'comode', categorie: ['luoghi', 'oggetti'] },
 ]
 
-/* ── la frase: soggetto, predicato, e le altre parole che confondono
-   (un complemento, un avverbio) — sono i falsi veri di questa
-   domanda, non parole a caso. */
+// soggetto, predicato, e le altre parole che confondono (un complemento, un avverbio): i falsi veri di questa domanda, non parole a caso
 const FRASI = [
   { frase: 'Il cane abbaia forte.', soggetto: 'Il cane', predicato: 'abbaia', altre: ['forte'], em: '🐶' },
   { frase: 'La mamma cucina la pasta.', soggetto: 'La mamma', predicato: 'cucina', altre: ['la pasta'], em: '🍝' },
@@ -495,8 +410,7 @@ const FRASI = [
   { frase: 'Gli uccelli cantano al mattino.', soggetto: 'Gli uccelli', predicato: 'cantano', altre: ['al mattino'], em: '🐦' },
   { frase: 'Il bambino costruisce una torre.', soggetto: 'Il bambino', predicato: 'costruisce', altre: ['una torre'], em: '🧱' },
 ]
-/* nomi propri e comuni: i propri vogliono la maiuscola perché
-   indicano proprio uno, non un tipo qualunque */
+// i nomi propri vogliono la maiuscola perché indicano proprio uno, non un tipo qualunque
 const NOMI_PROPRI = ['Marco', 'Sara', 'Luca', 'Anna', 'Giulia', 'Paolo', 'Francesca', 'Matteo', 'Chiara', 'Sofia', 'Elena', 'Davide', 'Roma', 'Milano', 'Napoli', 'Torino', 'Venezia', 'Italia',
   'Giovanni', 'Alessandro', 'Federico', 'Lorenzo', 'Riccardo', 'Simone', 'Andrea', 'Valentina', 'Alice', 'Beatrice', 'Martina', 'Gaia', 'Aurora', 'Emma', 'Leonardo', 'Tommaso',
   'Firenze', 'Bologna', 'Genova', 'Palermo', 'Verona', 'Sicilia', 'Toscana']
@@ -512,11 +426,7 @@ const SCALETTA = [
   'la frase: soggetto, predicato e nomi propri',
 ]
 
-/* Le tipologie, con il peso che hanno a ogni grado. Il taglio fra i due
-   saperi è netto e sta tutto qui: `flessione` è quello che un bambino
-   che parla italiano sente («il cane è bello» stona da solo),
-   `analisi` è la parte che o l'hai fatta a scuola o non c'è verso —
-   dare un NOME alla parte del discorso, dire qual è il soggetto. */
+// `flessione` è quello che un bambino che parla italiano sente («il cane è bello» stona da solo); `analisi` è quello che o l'hai fatto a scuola o no
 const TIPI = [
   { chiave: 'gram:plurale', nome: 'Singolare e plurale', sa: 'flessione', gradi: { 1: 0.5 } },
   { chiave: 'gram:genere', nome: 'Maschile e femminile', sa: 'flessione', gradi: { 1: 0.5 } },
@@ -536,17 +446,7 @@ class Grammatica extends Modulo {
       materia: 'italiano',
       chiaro: 'riconoscere nomi, verbi, articoli e aggettivi, e le regole di genere, numero e concordanza',
       scaletta: SCALETTA,
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [25, 29, 56, 63, 69],
-      /* plurali, generi, articoli e concordanza li sa chi parla
-         italiano — «il cane è bello» si sente. Dare il NOME alla parte
-         del discorso, o dire qual è il soggetto, è analisi
-         grammaticale: quella o l'hai fatta a scuola o no. */
+      livelli: [25, 29, 56, 63, 69], // scala 0-100 comune a tutte le materie (vedi docs/apprendimento/quiz-livelli.md)
       tipi: TIPI,
     })
   }
@@ -564,9 +464,7 @@ class Grammatica extends Modulo {
     }
   }
 
-  /* il plurale — diretto («il plurale di X?») o inverso («il
-     singolare di X?»): la stessa regola vista dai due lati */
-  plurale(sorte) {
+  plurale(sorte) { // diretto o inverso: la stessa regola vista dai due lati
     const irregolare = sorte.forse(0.55)
     const v = sorte.uno(irregolare ? IRREGOLARI : REGOLARI)
     const dritta = irregolare
@@ -595,9 +493,7 @@ class Grammatica extends Modulo {
     })
   }
 
-  /* il genere — maschile/femminile della stessa parola, nei due
-     versi. L'errore vero non è solo la finale sbagliata: è scambiare
-     il cambio di genere con un plurale. */
+  // maschile/femminile nei due versi: l'errore vero è scambiare il cambio di genere con un plurale
   genereSwitch(sorte) {
     const c = sorte.uno(COPPIE_GENERE)
     const versoFemminile = sorte.forse(0.5)
@@ -624,13 +520,11 @@ class Grammatica extends Modulo {
     })
   }
 
-  /* l'articolo giusto — diretto o inverso, alternati */
-  articolo(sorte) {
+  articolo(sorte) { // diretto o inverso, alternati
     return sorte.forse(0.35) ? this.articoloInverso(sorte) : this.articoloDiretto(sorte)
   }
 
-  /* composto con la parola: si vede subito se «lo zaino» suona bene
-     o no, cosa che «lo» da solo non dice */
+  // composto con la parola: si vede subito se «lo zaino» suona bene, cosa che «lo» da solo non dice
   articoloDiretto(sorte) {
     const v = sorte.uno(ARTICOLI)
     const chiaveTipo = `${v.genere}-${v.numero}-${v.tipo}`
@@ -648,8 +542,7 @@ class Grammatica extends Modulo {
     })
   }
 
-  /* dato un articolo, quale parola lo vuole: i falsi sono parole di
-     categorie per cui QUELL'articolo è proprio l'errore tipico */
+  // dato un articolo, quale parola lo vuole: i falsi sono di categorie per cui QUELL'articolo è l'errore tipico
   articoloInverso(sorte) {
     const artPossibili = Object.keys(CONFUSIONE_INVERSA)
     const art = sorte.uno(artPossibili)
@@ -670,11 +563,7 @@ class Grammatica extends Modulo {
     })
   }
 
-  /* che parte del discorso è una parola **dentro una frase**: fuori da
-     una frase metà di queste parole non ha una risposta sola (vedi il
-     cappello di PAROLE_PARTI). I falsi sono le altre categorie, perché
-     è proprio lì che un bambino esita, e ognuno si porta dietro cos'è
-     la parte che ha scelto — l'aiuto invece dice questa frase qui. */
+  // sempre dentro una frase (vedi PAROLE_PARTI): fuori metà di queste parole non ha una risposta sola. I falsi sono le altre categorie.
   partiDelDiscorso(sorte) {
     const v = sorte.uno(PAROLE_PARTI)
     const altre = PARTI.filter(p => p !== v.parte)
@@ -690,9 +579,7 @@ class Grammatica extends Modulo {
     })
   }
 
-  /* la concordanza: il nome dice genere e numero, l'aggettivo li
-     deve seguire — i falsi sono le altre tre forme dello stesso
-     aggettivo, l'errore più diretto che ci sia */
+  // il nome dice genere e numero, l'aggettivo li segue; i falsi sono le altre tre forme dello stesso aggettivo
   concordanza(sorte) {
     const sogg = sorte.uno(SOGGETTI_CONCORDANZA)
     const aggPossibili = AGGETTIVI.filter(a => a.categorie.includes(sogg.categoria))
@@ -712,9 +599,7 @@ class Grammatica extends Modulo {
     })
   }
 
-  /* chi fa l'azione e qual è l'azione sono la stessa domanda vista dai
-     due lati, e per un genitore sono una voce sola: stanno sotto la
-     stessa chiave, e qui dentro si alternano */
+  // soggetto e predicato sono la stessa domanda vista dai due lati: stanno sotto la stessa chiave, e si alternano
   fraseSoggetto(sorte) {
     const f = sorte.uno(FRASI)
     const falsiPool = [f.predicato, ...f.altre]
