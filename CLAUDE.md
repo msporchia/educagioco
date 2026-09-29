@@ -121,8 +121,9 @@ Una riga ciascuna; il perché sta nel documento indicato.
   fallirebbe e si resterebbe su localStorage in silenzio. → `docs/core/archivio.md`
 - **`save(chiave, true)` torna `null` alla rilettura**: si salva un oggetto
   (`{ acceso: true }`). → `docs/core/archivio.md`
-- **Il timeout di 2,5 s in `openDb()` è l'unico modo noto di perdere
-  progressi** (telefono lento → localStorage per tutta la pagina). → `docs/core/archivio.md`
+- **Il timeout di apertura di IndexedDB non è più definitivo**: se risponde
+  dopo, le letture SUCCESSIVE lo trovano pronto; l'avvio aspetta più a
+  lungo delle altre (6 s contro 2,5). → `docs/core/archivio.md`
 - **Gli id dei contenuti non si rinominano** (`en:dog`, `math:7x8`): sono le
   chiavi dello SRS. → `docs/core/archivio.md`
 - **I nomi dei bambini non stanno nel codice**: il roster è un dato, si

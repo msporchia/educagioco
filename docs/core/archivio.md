@@ -21,13 +21,53 @@ scaricano da sole su `visibilitychange` e `pagehide`.
   quindi `save(chiave, true)` si rilegge `null` — un interruttore che si
   spegne a ogni riavvio. Si salva un oggetto (`{ acceso: true }`, come
   `store/giudizi.js`).
-- **Il timeout di 2,5 s in `openDb()` è l'unico modo noto di perdere
-  progressi.** Su un telefono lento IndexedDB non risponde in tempo,
-  `dbPromise` resta memoizzata su `null` per tutta la vita della pagina e
-  si gioca su localStorage; al riavvio `load()` legge prima IndexedDB e
-  ignora quella copia, quindi la sessione appena giocata *sembra*
-  sparita. I dati veri non vengono sovrascritti, e non c'è avviso a
-  schermo. Su desktop non si riproduce.
+- **Il timeout di apertura non è più definitivo.** Prima, se IndexedDB non
+  rispondeva entro 2,5 s (un telefono lento), la promessa di apertura
+  restava memoizzata su `null` per tutta la vita della pagina: da lì in
+  poi si giocava su localStorage anche se IndexedDB era perfettamente
+  funzionante, solo arrivato un attimo tardi. Adesso ogni chiamata registra
+  il proprio ascoltatore con il proprio timeout: se `indexedDB.open`
+  risponde dopo, l'oggetto database si popola comunque, e le chiamate
+  SUCCESSIVE lo trovano già pronto — solo quella che nel frattempo aveva
+  già smesso di aspettare resta con quel giro andato sul ripiego.
+  Due tempi diversi: **2,5 s** per ogni lettura/scrittura durante il
+  gioco (restare reattivi conta più che aspettare), **6 s** per la
+  lettura di avvio (`detectBackend()`, la prima cosa che `profile.js`
+  chiama in `init()`) — concludere troppo presto che IndexedDB non c'è
+  manda un bambino vero a «come ti chiami?». Una volta che
+  `detectBackend()` ha aspettato ed è riuscito, le letture del roster e
+  del profilo che seguono nello stesso avvio trovano IndexedDB già
+  pronto, senza bisogno di un tempo lungo tutto loro.
+- **Ogni scrittura porta una busta con un segno di tempo** (`{ __v:
+  valore, __t: quando }`, invisibile a chi chiama `load`/`save`: campi
+  con doppio underscore apposta, per non confondersi con un `v` vero del
+  profilo). Serve a decidere chi vince quando la stessa chiave vive in
+  due posti — IndexedDB e il ripiego di localStorage possono raccontare
+  storie diverse — e `load()` la usa da solo: se una chiave ha una copia
+  in tutti e due i posti, vince la più recente. Un dato scritto prima di
+  questa busta non ce l'ha: si tratta come «non si sa quando» (`__t: 0`)
+  e perde contro qualunque busta vera.
+- **Il travaso, all'avvio.** Se IndexedDB funziona ma in localStorage sono
+  rimaste scritture di ripiego — fatte mentre IndexedDB non rispondeva,
+  magari una sessione fa — `travasaRipiego()` le sposta lì (la più
+  recente vince, con la stessa regola di `load()`) e ripulisce il
+  ripiego. `load()` da solo concilia già le due copie leggendo, ma non le
+  sposta: senza il travaso il doppione in localStorage resterebbe lì per
+  sempre, a rifare il confronto a ogni lettura.
+- **`flush()` è serializzato.** Due `flush()` in corsa non possono più
+  scrivere una chiave vecchia sopra una nuova: gira sempre in coda a
+  quello prima (una catena di promesse), quindi chi arriva mentre un
+  altro giro sta ancora scrivendo aspetta il suo turno invece di
+  intrecciarsi. Senza, una scrittura vecchia ma lenta (il ripiego su
+  localStorage quando IndexedDB non risponde) poteva arrivare su disco
+  DOPO una nuova ma svelta, cancellandola.
+- **`navigator.storage.persist()`**, chiesto una volta sola
+  (`chiediPersistenza()`, in `profile.js` all'avvio) e mostrato nella
+  pagina dei genitori vicino al salvataggio su file
+  (`components/genitori/Archivio.vue`): senza, su Safari non installato i
+  dati possono sparire dopo una settimana senza giocare. Non è mai un
+  blocco: se il browser non lo supporta o rifiuta, l'archivio funziona
+  lo stesso, e la pagina lo dice.
 
 ## Profili e roster
 
