@@ -172,6 +172,19 @@ stessa curva (`caduta`) con cui le pozze dipinte sul fondale smettono,
 così un personaggio si accende esattamente dove il pavimento è già dorato
 e non prima.
 
+## Le materie (`grafica/materia.js`)
+
+Una tinta piatta non è stoffa: è carta ritagliata. La materia si dichiara
+**per pezzo** e si posa dentro la forma dopo il colore, ritagliata sul
+contorno — nel sistema di coordinate di chi disegna, già traslato sulla
+figura, quindi la trama **è attaccata alla cosa** e ci si muove insieme
+senza calcoli. Un tentativo scartato: un velo di grana su tutto il
+fotogramma, alla fine — restava incollato allo schermo (non si muoveva
+con la mappa) ed era uguale per tutti (uno scettro liscio e un tessuto
+non sono la stessa cosa). Quattro trame (stoffa, cuoio, ferro, pelo), in
+bianco/nero trasparente sopra il colore, disegnate una volta sola su un
+quadretto che si ripete (`ctx.createPattern`).
+
 ## Le misure
 
 - **La scala sta nella trasformazione del contesto** (`dpr × scala`, una

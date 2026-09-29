@@ -1,19 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   GEOMETRIA DI UN TRACCIATO
-
-   Matematica e basta: non sa cosa sia una torre né un pixel. Serve al
-   gioco (dove si trova un nemico dopo tot metri, da che parte è il
-   fianco della strada) e serve al disegno (dove passa la curva), ed è
-   l'unico posto dove queste due cose devono essere d'accordo.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// Geometria di un tracciato: matematica pura, l'unico posto dove gioco e disegno devono essere d'accordo.
 export const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
 
-/* Chaikin: taglia gli angoli della spezzata, due punti nuovi per lato
-   a ogni giro. Il risultato è ancora una spezzata — quindi camminarci
-   sopra costa quanto prima — ma fatta di segmenti così corti da
-   sembrare una curva. Gli spigoli erano il motivo per cui la strada
-   pareva un tubo piegato con le mani. */
+// Chaikin: taglia gli angoli, resta una spezzata (camminarci costa uguale) ma sembra una curva
 export function smussa(punti, giri = 3) {
   let p = punti
   for (let k = 0; k < giri; k++) {
@@ -29,8 +17,6 @@ export function smussa(punti, giri = 3) {
   return p
 }
 
-/* Un tracciato percorribile: i suoi punti, quanto è lungo, dove si sta
-   dopo `d`, e da che parte guarda il suo fianco lì. */
 export function tracciato(punti) {
   let lunghezza = 0
   for (let i = 1; i < punti.length; i++) lunghezza += dist(punti[i - 1], punti[i])
@@ -49,8 +35,7 @@ export function tracciato(punti) {
     return punti[punti.length - 1]
   }
 
-  /* la perpendicolare al cammino, normalizzata: serve a mettere le cose
-     *di fianco* alla strada senza rifare i conti ogni volta */
+  // perpendicolare al cammino, normalizzata: per mettere le cose di fianco alla strada
   function normaleA(d, passo = 8) {
     const a = puntoA(d), b = puntoA(d + passo)
     const nx = -(b.y - a.y), ny = b.x - a.x
@@ -58,8 +43,6 @@ export function tracciato(punti) {
     return { x: nx / L, y: ny / L }
   }
 
-  /* i punti a distanza regolare: chi deve seminare ghiaia o cercare la
-     distanza dalla strada li vuole già pronti */
   function campiona(passo) {
     const out = []
     for (let d = 0; d <= lunghezza; d += passo) out.push(puntoA(d))

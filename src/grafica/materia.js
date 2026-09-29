@@ -1,59 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE MATERIE — di che cosa è fatta una forma
-
-   Il punto di partenza è la domanda che ha smontato tutto il resto:
-   «abbiamo pochi poligoni, ma anche ad averne tanti, se è piatto non
-   aiuta, no?». No. Il difetto sta in una riga ripetuta ovunque:
-
-       ctx.fillStyle = '#3f63c8'; ctx.fill()
-
-   Una tinta uniforme non è stoffa: è carta colorata ritagliata a forma
-   di sopravveste. Cento ritagli di carta fanno una figura complicata
-   di carta.
-
-   ── il primo tentativo, e perché era sbagliato ──
-   La prima versione stendeva un velo di grana **su tutto il
-   fotogramma**, alla fine, in una passata sola. Costava poco ed era
-   sbagliata per tre motivi, tutti visibili a occhio:
-
-     · era una **filigrana**: passava sopra ogni cosa allo stesso modo,
-       compreso il fuori campo e il cielo;
-     · **non si muoveva con la scena.** Era incollata allo schermo,
-       quindi scorrendo la mappa il pavimento scivolava sotto una
-       grana ferma. Non è materia, è sporco sull'obiettivo — ed è la
-       cosa che più di tutte faceva «vecchio»;
-     · era **la stessa per tutti**. Ma uno scettro di metallo è liscio
-       per davvero: è giusto che sia piatto. Un tessuto no.
-
-   ── come è fatto adesso ──
-   La materia si dichiara **per pezzo**, e si posa dentro alla forma,
-   dopo il colore, ritagliata sul suo contorno. Due conseguenze, che
-   sono esattamente le due cose che mancavano:
-
-     · vale il sistema di coordinate di *chi disegna*, cioè quello già
-       traslato sulla figura. La trama quindi **è attaccata alla cosa**
-       e ci si muove insieme, senza che nessuno debba calcolare niente;
-     · ogni pezzo pesca una zona diversa del disegno di trama, perché
-       sta in un punto diverso: due maniche della stessa casacca non
-       vengono mai identiche.
-
-   Le trame sono tre, e la scelta di quale usare è del pittore: chi
-   disegna un mantello sa che è stoffa, e chi disegna una lama sa che
-   il ferro è liscio e non deve chiedere niente.
-   ═══════════════════════════════════════════════════════════════════ */
+// Le materie: di che cosa è fatta una forma. Vedi docs/core/grafica.md.
 import { dado } from './comune.js'
 
 const LATO = 48                      // il quadretto che si ripete
 
-/* ─────────── le tre trame ───────────
-   Sono in bianco e nero trasparente e si posano *sopra* il colore:
-   così la stessa trama serve un panno rosso e uno blu, e non serve
-   una copia per ogni tinta di ogni personaggio — che con la luce
-   della stanza che sposta i colori sarebbero centinaia. */
+// in bianco/nero trasparente sopra il colore: una trama sola serve ogni tinta
 const TRAME = {
-  /* STOFFA: il tessuto ha un ordito, cioè righe incrociate. Fitte e
-     debolissime — quello che si deve vedere è che la superficie *non
-     è liscia*, non le righe. */
+  // stoffa: ordito fitto e debole, deve dire "non liscia" e non "righe"
   stoffa(c) {
     c.strokeStyle = '#ffffff30'; c.lineWidth = 1
     for (let i = 0; i < LATO; i += 4) {
@@ -71,9 +23,7 @@ const TRAME = {
       }
   },
 
-  /* CUOIO: non ha trama, ha **grana** — macchie irregolari, di
-     misura diversa, senza direzione. È la differenza fra un tessuto
-     e una pelle, e si legge subito anche piccolissima. */
+  // cuoio: grana, macchie irregolari senza direzione (non trama)
   cuoio(c) {
     for (let i = 0; i < 260; i++) {
       const x = dado(i, 1, 5) * LATO, y = dado(i, 2, 5) * LATO
@@ -91,10 +41,7 @@ const TRAME = {
     }
   },
 
-  /* FERRO: il metallo battuto **non** è liscio come una plastica: ha
-     venature lunghe nel verso della martellatura e qualche bolla. Va
-     tenuto leggero — se si carica diventa legno — ma toglierlo del
-     tutto era il motivo per cui le corazze restavano macchie grigie. */
+  // ferro: venature nel verso della martellatura, leggero (se si carica diventa legno)
   ferro(c) {
     c.lineWidth = 1; c.lineCap = 'round'
     for (let i = 0; i < 40; i++) {
@@ -112,8 +59,6 @@ const TRAME = {
     }
   },
 
-  /* PELO: ciuffetti corti tutti nello stesso verso. Serve alle
-     bestie, dove una tinta piatta è il difetto più evidente di tutti. */
   pelo(c) {
     c.lineWidth = 1; c.lineCap = 'round'
     for (let i = 0; i < 420; i++) {
@@ -125,10 +70,7 @@ const TRAME = {
   },
 }
 
-/* i quadretti si disegnano una volta sola per tutta la vita della
-   pagina: sono venti righe di conti, ma moltiplicate per sessanta
-   fotogrammi al secondo diventerebbero una sciocchezza cara */
-const quadretti = {}
+const quadretti = {}   // disegnati una volta sola per tutta la vita della pagina
 
 function quadretto(nome) {
   if (quadretti[nome]) return quadretti[nome]
@@ -140,8 +82,6 @@ function quadretto(nome) {
   return cv
 }
 
-/* Il motivo va costruito sul contesto che lo userà, ma può servire lo
-   stesso contesto per tutta la partita: si tiene per nome. */
 const motivi = new WeakMap()
 
 export function trama(ctx, nome) {
