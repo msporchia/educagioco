@@ -30,6 +30,10 @@ export function statoDi(k, oggi = Date.now()) {
                            oggi, inCorso: inPiu })
 }
 
+// quanto ha giocato davvero oggi, senza togliere il tempo ridato: la riga «Oggi» dei grandi
+export const secondiVeri = (k, oggi = Date.now()) =>
+  V.secondiContati({ voci: vociInMemoria(state.player) || [], gioco: V.chiaveDelGioco(k), oggi })
+
 // il gioco aperto adesso, se è di questo bambino
 export function giocoAperto() {
   const a = inCorso()
@@ -59,14 +63,18 @@ function filtro(n) {
   if (!st.paga) return n
   const { dato, resto } = V.incasso(n, st.fattore, resti[k] || 0)
   resti[k] = resto
-  const nome = scheda(k)?.nome || k
-  const frase = V.premioInParole({ chiesto: n, dato, nome,
-                                   prova: dato === 0 ? altroDaProvare(k)?.nome || '' : '' })
+  const frase = premioDetto(k, n, dato)
   ultimo = { chiesto: n, dato, frase }
   if (!zitto && frase && n >= V.AVVISO_DA) dici(frase)
   return dato
 }
 filtraMonete(filtro)
+
+export function premioDetto(k, chiesto, dato) {
+  const chiave = V.chiaveDelGioco(k)
+  return V.premioInParole({ chiesto, dato, nome: scheda(chiave)?.nome || chiave,
+                            prova: dato === 0 ? altroDaProvare(chiave)?.nome || '' : '' })
+}
 
 // Per il cartello di fine tappa: paga e dice com'è andata, senza la scritta volante.
 export function incassa(n) {
