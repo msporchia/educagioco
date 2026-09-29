@@ -1,59 +1,13 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LOGICA — cosa segue di sicuro da quello che è scritto, e cosa no.
-
-   È il solo modulo che non chiede di sapere niente: non c'è una regola
-   di grammatica da ricordare, non c'è una tabellina, non c'è un'unità
-   di misura. Ci sono due o tre frasi e una domanda, e la risposta sta
-   tutta lì dentro. Per questo `saperi` è vuoto a ogni grado: la logica
-   non si è «fatta a scuola», si fa e basta.
-
-   LA TERZA RISPOSTA È IL MODULO. «Tutti i grufoli hanno le ali. Bibo ha
-   le ali. Bibo è un grufolo?» — la risposta è **non si può sapere**, e
-   quasi tutti i bambini (e non solo) rispondono sì. La regola vale in un
-   verso solo: dice cosa fanno tutti i grufoli, non dice che soltanto
-   loro lo fanno. Chi impara a fermarsi lì ha imparato la cosa più utile
-   che c'è in questo file, e la userà per il resto della vita ogni volta
-   che qualcuno gli girerà una frase addosso.
-
-   CREATURE INVENTATE, APPOSTA. Se chiedessimo «tutti i cani abbaiano,
-   questo animale abbaia, è un cane?» il bambino risponderebbe con quello
-   che sa dei cani invece che con quello che c'è scritto — e avrebbe
-   anche ragione a farlo. Con i grufoli e gli snizzi non si può sapere
-   niente per esperienza: l'unica strada è leggere le premesse. Per lo
-   stesso motivo, nel grado del «se… allora» le regole sono cose di casa
-   ma i fatti sono sempre di uno solo (l'ombrello che *questo* bambino
-   prende), mai leggi del mondo che si potrebbero girare da sé.
-
-   I QUATTRO PASSI, e sono le chiavi. Due si possono fare e due no, e
-   sono gli stessi in tutti i gradi — cambia il vestito, non il passo:
-
-     log:diretta   la regola vale, il caso ci sta dentro → sì
-     log:negata    l'effetto non c'è, quindi la causa nemmeno → no
-     log:girata    la regola girata al contrario → non si può sapere
-     log:non-detta la causa non c'è: la regola non dice niente → non si sa
-
-   più `log:nessuno` (l'esclusione), `log:ordine` (i confronti in fila) e
-   `log:catena` (due regole attaccate). Sono concetti, non domande: il
-   giorno che le chiavi finiranno in `store/srs.js`, «sbaglia sempre a
-   girare le regole» sarà una cosa che si può leggere.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// unico modulo che non chiede di sapere niente (saperi vuoto): due o tre frasi, la risposta sta tutta lì. La terza risposta («non si può sapere») è il punto del modulo: una regola vale in un verso solo. Creature inventate apposta, così l'unica strada è leggere le premesse, non l'esperienza. Quattro passi/chiavi che tornano a ogni grado sotto vestiti diversi: log:diretta (sì), log:negata (no), log:girata e log:non-detta (non si sa) — più log:nessuno (esclusione), log:ordine (confronti in fila), log:catena (due regole attaccate).
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo } from '../nucleo/domanda.js'
 
-/* ── le tre risposte ──
-   Sempre scritte così, in tutti i gradi che le usano: quello che cambia
-   da una domanda all'altra è quale delle tre è buona, mai come si legge.
-   Un bambino deve poter smettere di leggere i tasti e pensare solo alle
-   frasi. */
+// sempre scritte così: cambia solo quale è buona, mai come si legge — un bambino deve pensare alle frasi, non ai tasti
 const SI = 'sì, di sicuro'
 const NO = 'no, di sicuro'
 const BOH = 'non si può sapere'
 
-/* ── il bestiario inventato ──
-   Nomi che non vogliono dire niente di proposito (vedi l'intestazione):
-   l'articolo non si scrive a mano perché «uno snizzo» e «un grufolo» si
-   sbagliano da soli dopo la terza voce. */
+// nomi che non vogliono dire niente di proposito; l'articolo non si scrive a mano («uno snizzo»/«un grufolo» si sbagliano da soli)
 const CREATURE = [
   ['grufoli', 'grufolo'], ['snizzi', 'snizzo'], ['tarlocchi', 'tarlocco'],
   ['brindoli', 'brindolo'], ['mufali', 'mufalo'], ['zampiri', 'zampiro'],
@@ -63,18 +17,13 @@ const CREATURE = [
   ['quarnoli', 'quarnolo'], ['scrimoli', 'scrimolo'], ['bufigli', 'bufiglio'],
 ].map(([p, s]) => ({ p, s }))
 
-/* le parole che vogliono «gli», «uno», «nessuno»: vocale, s+consonante,
-   z, gn, ps, x. È la stessa regola per tutti e tre gli articoli, quindi
-   sta scritta una volta sola */
+// vocale, s+consonante, z, gn, ps, x: la stessa regola per tutti e tre gli articoli, scritta una volta sola
 const vuoleLo = n => /^(?:[aeiou]|z|gn|ps|x|s[bcdfgklmnpqrtvz])/.test(n)
 const iPlur = n => (vuoleLo(n) ? 'gli' : 'i')
 const unSing = n => (vuoleLo(n) ? 'uno' : 'un')
 const nessunSing = n => (vuoleLo(n) ? 'nessuno' : 'nessun')
 
-/* ── quello che una creatura può fare o essere ──
-   Al plurale per le regole («tutti i grufoli hanno le ali»), al
-   singolare per i casi («Bibo ha le ali»). Sono proprietà arbitrarie
-   apposta: nessuna si può indovinare sapendo com'è fatto il mondo. */
+// plurale per le regole, singolare per i casi; proprietà arbitrarie apposta, nessuna si indovina sapendo com'è il mondo
 const TRATTI = [
   { p: 'hanno le ali', s: 'ha le ali' },
   { p: 'sono verdi', s: 'è verde' },
@@ -94,22 +43,18 @@ const TRATTI = [
   { p: 'hanno paura del buio', s: 'ha paura del buio' },
 ].map(t => ({ p: t.p, s: t.s, no: 'non ' + t.s }))
 
-/* nomi buffi per i singoli: corti, e nessuno dice il genere — «Nina è un
-   grufolo» dovrebbe restare una frase su un grufolo, non su una bambina */
+// nomi corti che non dicono il genere: «Nina è un grufolo» resta una frase su un grufolo, non su una bambina
 const BESTIE = ['Bibo', 'Momo', 'Kiki', 'Zaza', 'Pippo', 'Milo', 'Teo', 'Gigi',
   'Nino', 'Ciro', 'Lillo', 'Tobi', 'Ubo', 'Fufi', 'Nanà', 'Bombo']
 
-/* ── i bambini dei confronti in fila ──
-   Col genere, perché «più alta» e «più alto» si devono concordare: una
-   frase sgrammaticata in mezzo a un ragionamento è un inciampo gratis */
+// col genere: «più alta»/«più alto» devono concordare, una frase sgrammaticata è un inciampo gratis
 const BAMBINI = [
   ['Ada', 'f'], ['Marco', 'm'], ['Sara', 'f'], ['Luca', 'm'], ['Nina', 'f'],
   ['Teo', 'm'], ['Gaia', 'f'], ['Bruno', 'm'], ['Lia', 'f'], ['Enea', 'm'],
   ['Vera', 'f'], ['Elia', 'm'], ['Mia', 'f'], ['Dario', 'm'],
 ].map(([nome, g]) => ({ nome, g }))
 
-/* i confronti: `piu`/`meno` sono i due capi della stessa fila, e il
-   modulo ne chiede sempre uno dei due, mai «chi è medio» detto così */
+// piu/meno sono i due capi della stessa fila; il modulo chiede sempre uno dei due, mai «chi è medio»
 const CONFRONTI = [
   { piu: { m: 'più alto', f: 'più alta' }, meno: { m: 'più basso', f: 'più bassa' }, cima: 'il più alto', fondo: 'il più basso' },
   { piu: { m: 'più veloce', f: 'più veloce' }, meno: { m: 'più lento', f: 'più lenta' }, cima: 'il più veloce', fondo: 'il più lento' },
@@ -117,12 +62,7 @@ const CONFRONTI = [
   { piu: { m: 'più forte', f: 'più forte' }, meno: { m: 'meno forte', f: 'meno forte' }, cima: 'il più forte', fondo: 'il meno forte' },
 ]
 
-/* ── le regole del «se… allora» ──
-   `se` è una cosa che capita (il tempo, il giorno, la scuola), `fa` è
-   quello che *questo* bambino fa quando capita. La negazione della
-   causa è scritta a mano perché «non il gatto ha fame» non si ricava
-   con un `non ` davanti; i participi sono tutti con «avere», così il
-   nome di chi agisce non trascina nessuna concordanza. */
+// `se` è ciò che capita, `fa` ciò che fa questo bambino; `seNo` è scritta a mano («non il gatto ha fame» non si ricava con un "non" davanti)
 const REGOLE = [
   { se: 'piove', seNo: 'non piove', fa: "prende l'ombrello", fatto: "ha preso l'ombrello" },
   { se: "c'è vento", seNo: "non c'è vento", fa: "porta l'aquilone", fatto: "ha portato l'aquilone" },
@@ -141,18 +81,7 @@ const REGOLE = [
   { se: 'il forno è acceso', seNo: 'il forno è spento', fa: 'mette il grembiule', fatto: 'ha messo il grembiule' },
 ]
 
-/* ── le tre risposte, con il perché di quelle sbagliate ──
-   Il `perche` è quello che il bambino legge quando sbaglia, ed è l'unico
-   posto dove il modulo insegna qualcosa: «era questa» da solo non ha mai
-   fatto capire niente a nessuno. Cambia con la risposta giusta, perché
-   sbagliare «sì» quando era «non si sa» è un errore diverso da
-   sbagliare «sì» quando era «no».
-
-   `perOpposto` è quello che si legge scegliendo il secco sbagliato (il
-   «no» quando era sì, il «sì» quando era no); `perBoh` quello che si
-   legge fermandosi troppo presto, quando invece si poteva concludere.
-   Quando la buona è «non si può sapere» ne serve uno solo che valga per
-   tutte e due le fughe in avanti: `girata`. */
+// perOpposto: si legge scegliendo il secco sbagliato; perBoh: fermandosi troppo presto; girata: le due fughe quando la buona è «non si sa»
 function treRisposte(giusta, { girata, perBoh, perOpposto }) {
   const buona = testo(giusta === 'si' ? SI : giusta === 'no' ? NO : BOH)
   if (giusta === 'boh') {
@@ -169,10 +98,7 @@ function treRisposte(giusta, { girata, perBoh, perOpposto }) {
 
 const maiuscola = s => s.charAt(0).toUpperCase() + s.slice(1)
 
-/* le premesse vanno UNA PER RIGA. Scritte di seguito diventano un
-   paragrafo, e a otto anni un paragrafo si legge di corsa: separate, si
-   vedono per quello che sono — due o tre cose date per vere, e in fondo
-   la domanda. La scheda le rispetta perché la consegna è `pre-line`. */
+// una premessa per riga: di seguito diventano un paragrafo che a otto anni si legge di corsa (la scheda rispetta pre-line)
 const frasi = (...righe) => righe.join('\n')
 
 const SCALETTA = [
@@ -183,18 +109,7 @@ const SCALETTA = [
   'le catene di regole',
 ]
 
-/* Le tipologie sono le FORME LOGICHE, non i gradi: la stessa forma
-   torna a gradi diversi vestita da un'altra storia — la deduzione
-   diretta si incontra col «tutti» al grado 1, con la regola al 3 e col
-   «se… allora» al 4 — e la chiave dice sempre che cosa si è ragionato.
-   È il motivo per cui questo modulo ne aveva bisogno più degli altri:
-   qui la chiave non seguiva il grado, la sceglieva un ramo dentro il
-   generatore, e da fuori non si poteva né chiedere né evitare.
-
-   I gruppi non sono pezzi di scuola (vedi `data/saperi.js`): servono a
-   guardare una forma per volta. Quella che vale di più è
-   `incertezza` — «non si può sapere» è la risposta che quasi tutti
-   sbagliano, e volerla vedere da sola è una richiesta legittima. */
+// le tipologie sono le forme logiche, non i gradi: la stessa forma torna vestita da un'altra storia, la chiave dice sempre cosa si è ragionato
 const TIPI = [
   { chiave: 'log:diretta', nome: 'La regola applicata dritta', sa: 'deduzione',
     gradi: { 1: 0.5, 3: 0.34, 4: 0.26 } },
@@ -221,24 +136,11 @@ class Logica extends Modulo {
       materia: 'logica',
       chiaro: 'ragionare su quello che è scritto: cosa viene di sicuro e cosa non si può sapere',
       scaletta: SCALETTA,
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [25, 29, 56, 63, 75],
-      /* i gruppi qui non sono pezzi di programma scolastico — non c'è
-         una lezione da aver fatto per rispondere — ma tipi di
-         ragionamento che si possono isolare */
-      tipi: TIPI,
+      livelli: [25, 29, 56, 63, 75], // scala 0-100 comune a tutte le materie (vedi docs/apprendimento/quiz-livelli.md)
+      tipi: TIPI, // i gruppi non sono pezzi di programma scolastico: sono tipi di ragionamento da isolare
     })
   }
 
-  /* La stessa forma logica cambia vestito col grado: la deduzione
-     diretta è «tutti i grufoli» al grado 1, la regola al 3, il «se…
-     allora» al 4. Chi chiede sceglie la forma, il grado sceglie la
-     storia in cui incontrarla. */
   genera(grado, sorte, tipo) {
     switch (tipo) {
       case 'log:nessuno': return grado >= 5 ? this.catena(sorte, 'nessuno') : this.tuttiNessuno(sorte, false)
@@ -253,10 +155,7 @@ class Logica extends Modulo {
     }
   }
 
-  /* ── grado 1: tutti e nessuno ──
-     Solo i due passi che si possono fare, e solo due risposte: qui il
-     «non si può sapere» non è mai giusto, e tenerlo in mezzo agli altri
-     insegnerebbe soltanto a scartarlo. Arriva al grado 3, dove è vero. */
+  // solo due risposte: «non si può sapere» qui non è mai giusto (arriva al grado 3, dove è vero)
   tuttiNessuno(sorte, quale) {
     const c = sorte.uno(CREATURE)
     const t = sorte.uno(TRATTI)
@@ -279,16 +178,13 @@ class Logica extends Modulo {
     })
   }
 
-  /* ── grado 2: i confronti in fila ──
-     Le premesse escono mescolate apposta: se arrivassero sempre in
-     ordine («A più di B, B più di C») la fila si leggerebbe senza
-     ragionare, e la domanda diventerebbe una copiatura. */
+  // le premesse escono mescolate apposta: in ordine si leggerebbero senza ragionare, come una copiatura
   inFila(sorte) {
     const quanti = sorte.forse(0.35) ? 4 : 3
     const gente = sorte.alcuni(BAMBINI, quanti)   // gente[0] è il primo della fila
     const c = sorte.uno(CONFRONTI)
 
-    /* le coppie vicine: sono quelle che si dicono, il resto si deduce */
+    // le coppie vicine si dicono, il resto si deduce
     const premesse = []
     for (let i = 0; i < gente.length - 1; i++) {
       const a = gente[i]
@@ -313,10 +209,7 @@ class Logica extends Modulo {
     })
   }
 
-  /* ── grado 3: la regola girata ──
-     Le tre forme escono mescolate e si somigliano parola per parola: è
-     apposta. Se la forma «girata» avesse un aspetto suo, si
-     riconoscerebbe la domanda invece di leggerla. */
+  // le tre forme si somigliano parola per parola apposta: un aspetto suo farebbe riconoscere la domanda invece di leggerla
   regolaGirata(sorte, quale) {
     const c = sorte.uno(CREATURE)
     const t = sorte.uno(TRATTI)
@@ -364,12 +257,7 @@ class Logica extends Modulo {
     })
   }
 
-  /* ── grado 4: se… allora ──
-     Le quattro combinazioni della stessa regola: due si concludono e due
-     no, e sono le stesse due che si sbagliano da grandi leggendo un
-     contratto. La regola si scrive «ogni volta che», non «se… allora»,
-     perché «se» in italiano parlato si sente spesso come «solo se» — e
-     allora la domanda avrebbe due risposte difendibili. */
+  // «ogni volta che» e non «se… allora»: «se» parlato si sente spesso come «solo se», che darebbe due risposte difendibili
   seAllora(sorte, quale) {
     const g = sorte.uno(REGOLE)
     const chi = sorte.uno(BAMBINI).nome
@@ -429,11 +317,7 @@ class Logica extends Modulo {
     })
   }
 
-  /* ── grado 5: le catene ──
-     Due regole attaccate. Quando l'anello combacia si arriva in fondo;
-     quando le due regole finiscono nello stesso posto invece di
-     attaccarsi (A sta in C, B sta in C) non si arriva da nessuna parte,
-     ed è lo stesso errore del grado 3 con un vestito più difficile. */
+  // due regole attaccate: se finiscono nello stesso posto invece di attaccarsi (A sta in C, B sta in C) non si arriva da nessuna parte
   catena(sorte, quale) {
     const [a, b, c] = sorte.alcuni(CREATURE, 3)
     const t = sorte.uno(TRATTI)

@@ -12,6 +12,21 @@ tiene su tutto:
 > un modulo consegna una **domanda**, e non sa chi gliel'ha chiesta;
 > un gioco chiede una domanda, e non sa di che materia sia.
 
+## Si ricava, non si ricorda
+
+Una domanda del tipo «dove vive il koala?» o «quando comincia
+l'inverno?» supera ogni controllo di forma del banco (falsi distinti,
+varietà alta) e non insegna niente: chi sbaglia non ha ragionato storto,
+semplicemente non se lo ricordava — e non c'è nessun passo che porti
+dalla domanda alla risposta. Un modulo che tocca materia enciclopedica
+(`animali.js`, i macrogruppi di scienze) va bene solo se **il passo da
+fare c'è per davvero**: in `animali.js` un animale si porta addosso il
+posto dove vive (il pelo bianco dice il freddo, la gobba il deserto), e
+la scaletta finisce apposta dove non c'è più nessun animale da
+ricordare, solo un indizio del corpo da leggere. Dove il passo non c'è —
+l'accento tonico, le nomenclature «tronca/piana/sdrucciola» — la
+tipologia si toglie (vedi "Provati e scartati").
+
 ## La forma
 
 - `nucleo/domanda.js` — la forma di una domanda: consegna, soggetto
