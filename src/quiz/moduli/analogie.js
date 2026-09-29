@@ -1,38 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   ANALOGIE — «A sta a B come C sta a ?»
-
-   L'ultima famiglia rimasta in `poc/indovinelli.html`, e la più
-   trasversale che ci sia: non chiede di sapere una regola, chiede di
-   **vedere che relazione lega due cose e di riportarla su altre due**.
-   È la stessa mossa che serve a capire una metafora, a usare un esempio
-   e a passare da un problema risolto a uno che gli somiglia.
-
-   DUE MONDI, UNA DOMANDA SOLA. Nei primi gradi le coppie sono di cose
-   (🐄 sta a 🥛 come 🐝 sta a 🍯): lì la relazione è un fatto del mondo,
-   e la difficoltà sta tutta in **da dove arrivano i falsi**. Negli
-   ultimi le coppie sono figure e la relazione è una trasformazione (la
-   piccola diventa grande, una diventa due): lì non c'è niente da
-   sapere, si guarda cosa è cambiato e lo si rifà.
-
-   LA SECONDA COLONNA NON HA DOPPIONI, ed è la regola che tiene in piedi
-   il grado difficile: se due animali mangiassero la stessa cosa, un
-   falso preso dalla stessa colonna sarebbe una risposta giusta. Dove il
-   mondo è ambiguo per davvero — il pinguino vive sul ghiaccio ma nuota
-   anche, il formaggio si fa col latte di capra e anche di mucca — la
-   coppia se lo dichiara (`anche`), e quelle risposte non finiscono mai
-   fra i falsi. È lo stesso problema di «con che cosa misuri un
-   secchio»: una domanda con due risposte oneste passa tutti i controlli
-   di forma e la vede solo chi gioca.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// «A sta a B come C sta a ?»: nei primi gradi coppie di cose (relazione = fatto del mondo, difficoltà in da dove arrivano i falsi), negli ultimi figure (relazione = trasformazione, niente da sapere). La seconda colonna non ha doppioni (altrimenti un falso della stessa colonna sarebbe giusto); dove il mondo è ambiguo per davvero la coppia lo dichiara con `anche`, escluso dai falsi.
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, emoji, scena } from '../nucleo/domanda.js'
 import { PITTORI_FIGURE, FORME_FIGURE } from '../grafica/pittori/figure.js'
 import { COLORI } from '../grafica/pittori/tinte.js'
 
-/* ── le relazioni fra cose ──
-   Ogni voce: [a, b] e, quando serve, le altre risposte che un bambino
-   potrebbe difendere — mai usate come falsi. */
+// ogni voce [a, b] e, quando serve, le altre risposte difendibili (mai usate come falsi)
 const RELAZIONI = [
   {
     id: 'mangia', dice: 'chi mangia cosa',
@@ -75,12 +47,7 @@ const RELAZIONI = [
   coppie: r.coppie.map(([a, b, anche = []]) => ({ a, b, anche })),
 }))
 
-/* ── le trasformazioni fra figure ──
-   `fa` la applica, `dice` la racconta, e `storto` è l'errore vero: la
-   trasformazione fatta al contrario, o non fatta per niente. `quante` e
-   `grande` non si toccano mai nella stessa domanda — quattro stelle
-   stanno in una cella solo rimpicciolendosi, e allora «più grande»
-   diventerebbe illeggibile. */
+// `fa` applica, `dice` racconta, `storto` è l'errore vero (al contrario); quante e grande non si toccano mai insieme (4 grandi non ci starebbero in cella)
 const CAMBI = [
   { id: 'cresce', dice: 'diventa grande', puo: f => !f.grande, fa: f => ({ ...f, grande: true }), storto: f => ({ ...f, grande: false }) },
   { id: 'cala', dice: 'diventa piccola', puo: f => f.grande, fa: f => ({ ...f, grande: false }), storto: f => ({ ...f, grande: true }) },
@@ -90,9 +57,7 @@ const CAMBI = [
   { id: 'gira', dice: 'gira di un quarto verso destra', puo: f => f.forma === 'freccia', fa: f => ({ ...f, ruota: ((f.ruota || 0) + 90) % 360 }), storto: f => ({ ...f, ruota: ((f.ruota || 0) + 270) % 360 }) },
 ]
 
-/* Le tipologie: due, e la difficoltà dentro ognuna la fa il grado —
-   quanto si somigliano i falsi per le cose del mondo, quante
-   trasformazioni insieme per le figure. */
+// due tipologie, la difficoltà dentro ognuna la fa il grado
 const TIPI = [
   { chiave: 'ana:mondo', nome: 'Le analogie sulle cose del mondo', sa: 'analogie', gradi: { 1: 1, 2: 1 } },
   { chiave: 'ana:figure', nome: 'Le analogie fra figure', sa: 'analogie', gradi: { 3: 1, 4: 1 } },
@@ -112,17 +77,8 @@ class Analogie extends Modulo {
         'le figure: una cosa sola che cambia',
         'le figure: due cose che cambiano insieme',
       ],
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [25, 38, 44, 56],
-      /* le prime due classi chiedono cose del mondo che un bambino di
-         sei anni sa già (cosa mangia il cane, da dove viene il latte):
-         non è roba di scuola. Il gruppo serve a isolare le analogie,
-         non a nascondere una lacuna. */
+      livelli: [25, 38, 44, 56], // scala 0-100 comune a tutte le materie (vedi docs/apprendimento/quiz-livelli.md)
+      // le prime due classi chiedono cose del mondo già sapute a sei anni: il gruppo isola le analogie, non nasconde una lacuna
       tipi: TIPI,
       pittori: PITTORI_FIGURE,
     })
@@ -133,10 +89,7 @@ class Analogie extends Modulo {
     return this.diCose(sorte, { vicini: grado >= 2 })
   }
 
-  /* ── 🐄 sta a 🥛 come 🐝 sta a ? ──
-     `vicini` decide da dove arrivano i falsi, ed è tutta la difficoltà:
-     presi da altre relazioni stonano e si scartano a occhio, presi dalla
-     stessa colonna bisogna applicare la regola per scegliere. */
+  // `vicini` decide da dove arrivano i falsi (altre relazioni si scartano a occhio, stessa colonna vuole la regola)
   diCose(sorte, { vicini }) {
     const rel = sorte.uno(RELAZIONI)
     const [mostra, chiede] = sorte.alcuni(rel.coppie, 2)
@@ -161,20 +114,10 @@ class Analogie extends Modulo {
     })
   }
 
-  /* ── la figura piccola sta alla grande come… ──
-     Qui non c'è niente da sapere: si guarda cosa è cambiato da A a B e
-     lo si rifà su C. I falsi sono la trasformazione al contrario, C
-     lasciata com'è, e la trasformazione fatta all'attributo sbagliato:
-     i tre modi veri di sbagliare. */
+  // niente da sapere: si guarda cosa cambia da A a B e si rifà su C. Falsi: al contrario, C invariata, attributo sbagliato
   diFigure(sorte, { quanti }) {
     for (let giro = 0; giro < 40; giro++) {
-      /* Con due trasformazioni servono due attributi che non si pestino
-         i piedi, e gli unici disponibili sono la rotazione più una fra
-         taglia e numero: perciò la figura dev'essere una freccia. Prima
-         `gira` era sempre 30% e il grado 4 scartava tutte le altre
-         figure — quaranta tentativi a vuoto e poi il ripiego, che è la
-         domanda PIÙ FACILE del modulo. Il grado più duro consegnava la
-         cosa più semplice, e non se n'era accorto nessuno. */
+      // due trasformazioni chiedono due attributi liberi (rotazione + uno fra taglia/numero): serve una freccia
       const gira = quanti > 1 || sorte.forse(0.3)
       const via = {
         forma: gira ? 'freccia' : sorte.uno(FORME_FIGURE.filter(f => f !== 'freccia')),
@@ -183,27 +126,15 @@ class Analogie extends Modulo {
         grande: sorte.forse(0.5),
         ruota: 0,
       }
-      /* i cambi possibili su questa figura. Una freccia può girare, e
-         può anche crescere o moltiplicarsi: prima le due cose si
-         escludevano a vicenda — o giri o tutto il resto — ed era il
-         secondo motivo per cui il grado 4 non trovava mai due
-         trasformazioni. */
       const buoni = CAMBI.filter(c => c.puo(via))
       if (!buoni.length) continue
       const primo = sorte.uno(buoni)
-      /* mai due che litigano: due cambi sullo stesso attributo si
-         annullano, e il numero con la taglia non ci sta — quattro
-         figure grandi non entrano nella cella */
-      const secondi = buoni.filter(c => c.id !== primo.id && !litigano(c, primo))
-      /* il grado che promette due trasformazioni ne deve dare due: se
-         su questa figura la seconda non si può fare, si cambia figura
-         invece di consegnare una domanda più facile del suo grado */
+      const secondi = buoni.filter(c => c.id !== primo.id && !litigano(c, primo)) // mai due che litigano
+      // il grado che promette due trasformazioni ne deve dare due: se non si può, si cambia figura
       if (quanti > 1 && !secondi.length) continue
       const cambi = quanti > 1 ? [primo, sorte.uno(secondi)] : [primo]
 
-      /* la seconda coppia parte da una figura diversa — altra forma,
-         altro colore — se no l'analogia si risolve copiando B */
-      const altra = {
+      const altra = { // altra forma/colore, se no l'analogia si risolve copiando B
         ...via,
         forma: gira ? 'freccia' : sorte.uno(FORME_FIGURE.filter(f => f !== 'freccia' && f !== via.forma)),
         colore: sorte.uno(COLORI.filter(c => c !== via.colore)),
@@ -244,14 +175,11 @@ class Analogie extends Modulo {
   }
 }
 
-/* quale attributo tocca un cambio: serve a non mettere insieme due
-   trasformazioni che si pestano i piedi */
+// quale attributo tocca un cambio: serve a non mettere insieme due trasformazioni che si pestano i piedi
 const tocca = c => (['cresce', 'cala'].includes(c.id) ? 'grande'
   : c.id === 'gira' ? 'ruota' : 'quante')
 
-/* due cambi litigano se toccano lo stesso attributo (si annullano) o se
-   sono numero e taglia insieme: quattro figure grandi non ci stanno
-   nella cella. La rotazione invece va d'accordo con tutti. */
+// litigano se toccano lo stesso attributo, o se sono numero+taglia insieme (4 grandi non ci stanno in cella); la rotazione va d'accordo con tutti
 const litigano = (a, b) => {
   const x = tocca(a), y = tocca(b)
   return x === y || (x !== 'ruota' && y !== 'ruota')

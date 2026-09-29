@@ -1,40 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   OROLOGIO — leggere le lancette, e contare il tempo che passa.
-
-   È infinito per costruzione (144 posizioni solo coi cinque minuti,
-   moltiplicate per le durate) ed è una di quelle cose che il digitale
-   ha smesso di insegnare: un bambino che legge 15:47 sul telefono non
-   sa dire quanto manca alle quattro.
-
-   DUE MODI DI CHIEDERE la stessa ora, e cambiano di molto la fatica:
-     · guarda il quadrante, scegli l'ora scritta in cifre;
-     · guarda il quadrante e dì che ora sarà fra un po'.
-
-   Ce n'era un terzo — leggi l'ora in cifre, scegli il quadrante giusto
-   fra quattro — e non si rifà: i quadranti nelle risposte sono piccoli
-   quanto un tasto, sul telefono non si ingrandiscono, e le 8:29 contro
-   le 8:34 non si distinguono. La domanda misurava la vista, non
-   l'orologio. Il quadrante sta sempre nel soggetto, dove è grande.
-
-   I NUMERI SUL QUADRANTE ci sono tutti fino ai cinque minuti — l'aiuto
-   di quei gradi dice «la lancetta è arrivata a 8», e l'8 dev'esserci —
-   e ai minuti spicci, dove le posizioni dei numeri si sanno già a
-   memoria, restano il 12, il 3, il 6 e il 9. Un quadrante
-   senza nessun numero non c'è più: per i piccoli era un muro.
-
-   I FALSI SONO GLI ERRORI DELLE LANCETTE: le due scambiate (le 3:30
-   lette come le 6:15), i minuti letti come numero della tacca (il 5
-   invece del 25), l'ora avanti di uno quando la lancetta corta è già
-   oltre la metà. Un'ora presa a caso si scarterebbe a occhio.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// leggere le lancette e contare il tempo che passa. Due modi: leggere l'ora, e dire che ora sarà fra un po' (un terzo, indovinare il quadrante fra quattro piccoli, è stato scartato: 8:29 e 8:34 non si distinguono a quella scala). Il quadrante sta sempre nel soggetto, grande. I falsi sono gli errori veri delle lancette: scambiate, minuti letti come tacca, un'ora avanti o indietro.
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo, scena } from '../nucleo/domanda.js'
 import { PITTORI_OROLOGIO } from '../grafica/pittori/orologio.js'
 
 const scritta = (o, m) => `${o === 0 ? 12 : o}:${String(m).padStart(2, '0')}`
 
-/* i minuti ammessi a ogni grado, e come si chiama quel passo */
+// i minuti ammessi a ogni grado, e come si chiama quel passo
 const SCALETTA = [
   { dice: 'le ore intere', minuti: [0], salto: [60] },
   { dice: 'le mezze ore', minuti: [0, 30], salto: [30, 60] },
@@ -43,24 +14,14 @@ const SCALETTA = [
   { dice: 'i minuti spicci e le durate', minuti: null, salto: [7, 12, 25, 40] },
 ]
 
-/* i minuti che fanno una tipologia: la chiave non dipende dal grado ma
-   da DOVE finisce la lancetta lunga, e questa tabella è il verso
-   contrario — dato il tipo, quali minuti lo producono, intersecati con
-   quelli che il grado ammette. */
+// la chiave dipende da dove finisce la lancetta lunga: qui il verso contrario, dato il tipo quali minuti lo producono
 const MINUTI_DI = {
   'ora:intere': m => m === 0,
   'ora:quarti': m => m !== 0 && m % 15 === 0,
   'ora:minuti': m => m % 15 !== 0,
 }
 
-/* Le tipologie. Tutte danno per scontata la stessa cosa — che le
-   lancette si sappiano leggere — e infatti dichiarano tutte
-   `orologio`: qui il dettaglio non serve a togliere un pezzo di scuola
-   che manca, serve a fermarsi a metà strada. C'è chi legge le ore e le
-   mezze e si perde sui minuti spicci, e a quel bambino si spengono i
-   minuti lasciandogli i quarti.
-   I pesi ricalcano i minuti ammessi da ogni grado: al grado 1 esistono
-   solo le ore intere, al 5 quasi solo i minuti veri. */
+// tutte dichiarano lo stesso sapere `orologio`: il dettaglio serve a fermarsi a metà (chi sa le mezze ma si perde sui minuti spicci spegne solo quelli)
 const TIPI = [
   { chiave: 'ora:intere', nome: 'Le ore intere', sa: 'orologio',
     gradi: { 1: 1, 2: 0.54, 3: 0.25 } },
@@ -72,13 +33,9 @@ const TIPI = [
     gradi: { 4: 0.39, 5: 0.33 } },
 ]
 
-/* i numeri sul quadrante, grado per grado (vedi in testa) */
 const numeriDel = grado => grado <= 4 ? true : 'quarti'
 
-/* i minuti buoni per quel tipo, fra quelli che il grado ammette. Se
-   l'incrocio è vuoto — non capita, ma un grado nuovo potrebbe farlo — si
-   torna a quelli del grado: meglio una domanda con la chiave di un'altra
-   tipologia che nessuna domanda. */
+// se l'incrocio grado×tipo è vuoto, si torna ai minuti del grado: meglio la chiave sbagliata che nessuna domanda
 function minutiPer(passo, tipo, sorte) {
   const tutti = passo.minuti || Array.from({ length: 60 }, (_, i) => i)
   const filtro = MINUTI_DI[tipo]
@@ -86,23 +43,7 @@ function minutiPer(passo, tipo, sorte) {
   return sorte.uno(buoni.length ? buoni : tutti)
 }
 
-/* ── COME SI LEGGE QUELL'ORA LÌ ────────────────────────────────────
-   «la lancetta corta è l'ora, quella lunga i minuti» era l'aiuto di
-   tutti e tre i modi di leggere il quadrante, e a chi sta ai minuti
-   spicci non dice niente: quella cosa la sa da due anni, ed è il
-   motivo per cui sta guardando i minuti invece delle ore intere. Un
-   aiuto che ripete quello che si sa già è peggio di nessun aiuto,
-   perché insegna che quel riquadro non contiene niente di utile.
-
-   Quello che manca a quel bambino è il pezzo che nessuno gli ha ancora
-   detto — **un numero del quadrante vale cinque minuti**, e le
-   tacchette in mezzo uno — e da lì il conto se lo rifà da solo la
-   volta dopo, che è tutta la differenza fra insegnare e consolare.
-
-   Il numero della lancetta si scrive senza articolo («arrivata a 8» e
-   non «sull'8»): uno, otto e undici lo vorrebbero apostrofato e gli
-   altri no, e una regola grammaticale dentro una stringa generata è il
-   modo di ritrovarsi «sul 8» a schermo. */
+// l'aiuto insegna il pezzo che manca (un numero del quadrante vale 5 minuti), non «lancetta corta=ora» che chi è ai minuti spicci sa già
 function comeSiLegge(minuti) {
   if (minuti === 0) return 'la lancetta corta è l\'ora, quella lunga rossa sono i minuti'
   const tacca = minuti / 5
@@ -117,8 +58,7 @@ function comeSiLegge(minuti) {
        + `${numero} sono ${numero * 5}, più ${minuti - numero * 5} fa ${minuti}`
 }
 
-/* Gli errori tipici, come ore-minuti. Restituisce coppie diverse dalla
-   giusta e fra loro: qui sta il valore del modulo, non nel disegno. */
+// errori tipici come coppie ore-minuti, diverse dalla giusta e fra loro
 function sbagli(ore, minuti, sorte) {
   const dodici = o => ((o % 12) + 12) % 12
   const proposte = [
@@ -129,8 +69,7 @@ function sbagli(ore, minuti, sorte) {
     [dodici(ore - 1), minuti],                              // un'ora indietro
     [ore, (minuti + 30) % 60],                              // mezz'ora di là
   ]
-  /* il confronto si fa sulla scritta, non sui numeri: le 0:00 e le
-     12:00 sono numeri diversi e la stessa risposta */
+  // confronto sulla scritta, non sui numeri: 0:00 e 12:00 sono numeri diversi ma la stessa risposta
   const viste = new Set([scritta(ore, minuti)])
   const buoni = []
   for (const [o, m] of proposte) {
@@ -151,15 +90,7 @@ class Orologio extends Modulo {
       materia: 'tempo',
       chiaro: 'leggere le lancette e contare quanto manca',
       scaletta: SCALETTA.map(s => s.dice),
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [25, 38, 44, 56, 75],
-      /* le lancette o si sanno leggere o no: non c'è un grado facile
-         che si salvi, nemmeno le ore intere */
+      livelli: [25, 38, 44, 56, 75], // scala 0-100 comune a tutte le materie, 12,5 punti per anno (vedi docs/apprendimento/quiz-livelli.md)
       tipi: TIPI,
       pittori: PITTORI_OROLOGIO,
     })
@@ -173,8 +104,7 @@ class Orologio extends Modulo {
     return this.leggi(grado, ore, minuti, sorte)
   }
 
-  /* guarda il quadrante, scegli l'ora */
-  leggi(grado, ore, minuti, sorte) {
+  leggi(grado, ore, minuti, sorte) { // guarda il quadrante, scegli l'ora
     const falsi = sbagli(ore, minuti, sorte).slice(0, 3)
     return domanda({
       testo: 'Che ora segna?',
@@ -187,8 +117,7 @@ class Orologio extends Modulo {
     })
   }
 
-  /* che ora sarà fra un po' */
-  dopo(passo, ore, minuti, sorte) {
+  dopo(passo, ore, minuti, sorte) { // che ora sarà fra un po'
     const salto = sorte.uno(passo.salto)
     const tot = (ore % 12) * 60 + minuti + salto
     const o2 = Math.floor(tot / 60) % 12 || 12
