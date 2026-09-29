@@ -59,7 +59,7 @@ In «Impostazioni › Giochi e domande › Le monete, gioco per gioco»
 - **per ogni gioco**: «come tutti», «numeri suoi» (due soglie sue) o
   «nessun tetto» (`giochi: { survivors: 'libero' | { pieno, meta } }`);
 - **la riga «Oggi»**: ogni gioco giocato oggi col suo stato e i minuti
-  veri («💀 Survivors · 🪙 finite · 43′»), e sui giochi a metà o finiti il
+  veri («🏹 Survivors · 🪙 finite · 43′»), e sui giochi a metà o finiti il
   tasto **«Ridai tempo»**, che azzera il conto di quel gioco per oggi.
 
 «Ridai tempo» **non tocca il registro**: il grafico di «Quanto ha
