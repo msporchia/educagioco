@@ -1,8 +1,8 @@
-// La pelle a sprite: il gioco `castello` è `views/TowerDefense.vue` con le
-// stesse tappe/conti/salvataggio di `torri`, e cambia solo la pelle passata
-// al campo (CampoDiBattaglia, prop `pelle`). Il verso delle dipendenze è
-// voluto: il gioco nuovo sa del vecchio, non viceversa. Vedi
-// docs/castello/da-fare.md per il conto ancora aperto sulla taratura.
+// La pelle del castello: come si vede il campo del tower defense
+// (`views/TowerDefense.vue`, chiave `torri`) — il fondale dipinto sulla
+// carta a scacchiera, le figure del foglio, il nome di ogni mostro nel
+// vestito della tappa. Dove passa la strada non lo sa: lo sa il motore
+// (`sullaCarta`). La monta `components/castello/CampoDiBattaglia.vue`.
 import { sullaCarta } from '../../../motore/castello/carta.js'
 import { PITTORI_SPRITE, caricaFigure, usaVestito } from './pittori.js'
 import { figuraDi, NOMI } from './bestiario.js'
@@ -13,12 +13,8 @@ export const PELLE = {
 
   prepara() { caricaFigure().catch(() => {}) },
 
-  // la strada e le piazzole il motore le prende già dalla carta
-  // (`sullaCarta`): alla pelle resta da sapere che vestito mettere
-  tappa(t) {
-    usaVestito(vestitoDi(t))
-    return t
-  },
+  // il vestito della tappa: lo leggono il campo, il nastro e la scheda
+  vesti(t) { usaVestito(vestitoDi(t)) },
 
   nome(t, id) { return NOMI[figuraDi(vestitoDi(t), id)] },
 

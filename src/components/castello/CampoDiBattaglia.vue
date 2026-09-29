@@ -1,12 +1,12 @@
 <script setup>
 // Il campo di battaglia: il motore (regole, non pixel) e la tela (pixel,
 // non regole) si toccano solo qui, che fa il travaso in una lista di cose
-// in scena e raccoglie il dito. `pelle` cambia solo come il campo si vede e
-// dove passa la strada (il contratto è in giochi/castello/scena/pelle.js).
+// in scena e raccoglie il dito. Come il campo si vede — il fondale della
+// carta, le figure, i nomi dei mostri per vestito — lo dice la pelle
+// (giochi/castello/scena/pelle.js); dove passa la strada lo sa il motore.
 import { ref, onMounted, onUnmounted } from 'vue'
 import { creaTela } from '../../grafica/tela.js'
-import { PITTORI } from '../../grafica/castello.js'
-import { campo as disegnaCampo } from '../../grafica/terreni/indice.js'
+import { PELLE } from '../../giochi/castello/scena/pelle.js'
 import { creaBattaglia } from '../../motore/battaglia.js'
 import { scenaDi } from '../../views/castello/scena.js'
 import { Trascino } from '../../views/castello/trascino.js'
@@ -24,7 +24,6 @@ const props = defineProps({
   // cosa sta guardando il foglio aperto (piazzola/torre/raggio): lo sa la
   // schermata, non il campo
   mira: { type: Object, default: null },
-  pelle: { type: Object, default: null },
 })
 const emit = defineEmits(['esito', 'potenzia', 'piazzola'])
 
@@ -46,10 +45,8 @@ const dito = new Trascino({
 function apparecchia(quale = tappa, s = seme, doni = regali) {
   if (!campo || !quale) return null
   tappa = quale; seme = s; regali = doni
-  // il motore vede la tappa come la vuole la pelle; il resto (tetto,
-  // terreno) resta quello della tappa vera
-  motore = creaBattaglia({ tappa: props.pelle ? props.pelle.tappa(tappa) : tappa,
-                           misure: campo.misure, stato: props.hud,
+  PELLE.vesti(tappa)
+  motore = creaBattaglia({ tappa, misure: campo.misure, stato: props.hud,
                            eventi: props.eventi, regali })
   dito.attacca(motore, campo.misure.S)
   dipingiFondale()
@@ -65,18 +62,13 @@ function avvia(quale, s, doni = null) {
   return motore
 }
 
+// il vestito può non essere pronto: la pelle dà un fondale di ripiego e
+// richiama quando lo è (se non si è cambiata tappa nel frattempo)
 function dipingiFondale() {
-  if (props.pelle) {
-    // la pelle può non essere pronta: dà un fondale di ripiego e richiama
-    // quando lo è (se non si è cambiata tappa nel frattempo)
-    const quella = tappa
-    return campo.dipingiFondale(props.pelle.fondale(tappa, () => {
-      if (campo && tappa === quella) dipingiFondale()
-    }))
-  }
-  campo.dipingiFondale(
-    disegnaCampo({ via: motore.via, vie: motore.percorso.vie, postazioni: motore.postazioni,
-                   ambiente: tappa && tappa.ambiente, seme }))
+  const quella = tappa
+  campo.dipingiFondale(PELLE.fondale(tappa, () => {
+    if (campo && tappa === quella) dipingiFondale()
+  }))
 }
 
 function ridimensiona() {
@@ -91,12 +83,11 @@ function ridimensiona() {
 // La lista che costa (il preavviso) si riscrive solo quando cambia davvero:
 // un array nuovo 60 volte al secondo farebbe ridisegnare mezzo schermo per niente.
 let firmaOnda = -1
-// Il nome di un mostro, se la pelle ne dà uno (la chiave resta quella del
-// motore); `bestia` cambia solo a ogni ondata, e la copia col nome si rifà
-// solo allora.
-const nomeDi = x => ({ ...x, nome: props.pelle.nome(tappa, x.id) || x.nome })
-const conNome = b => (b && props.pelle?.nome
-  ? { ...nomeDi(b), ...(b.con ? { con: nomeDi(b.con) } : {}) } : b)
+// Il nome di un mostro è quello della figura che ha in questo vestito (la
+// chiave resta quella del motore); `bestia` cambia solo a ogni ondata, e
+// la copia col nome si rifà solo allora.
+const nomeDi = x => ({ ...x, nome: PELLE.nome(tappa, x.id) || x.nome })
+const conNome = b => (b ? { ...nomeDi(b), ...(b.con ? { con: nomeDi(b.con) } : {}) } : b)
 let bestiaDa = null, bestiaVista = null
 function aggiornaVista(forza = false) {
   const v = props.vista
@@ -202,8 +193,8 @@ function suIlDito(ev) {
 function rimetti() { campo?.rimetti() } // doppio tocco: la mappa torna tutta in quadro
 
 onMounted(() => {
-  campo = creaTela(tela.value, props.pelle ? props.pelle.pittori : PITTORI, { mondo: MONDO })
-  props.pelle?.prepara?.()
+  campo = creaTela(tela.value, PELLE.pittori, { mondo: MONDO })
+  PELLE.prepara()
   ridimensiona()
   window.addEventListener('resize', ridimensiona)
   raf = requestAnimationFrame(ciclo)
@@ -224,8 +215,7 @@ defineExpose({ apparecchia, avvia, ridimensiona, motore: () => motore,
     <canvas ref="tela" @pointerdown="giuIlDito" @pointermove="muoviIlDito"
             @pointerup="suIlDito" @pointercancel="suIlDito" @dblclick="rimetti"></canvas>
     <SchedaMostro v-if="attivo && vista.bestia && !vista.inAttesa" :bestia="vista.bestia"
-                  :vita="vista.vitaOnda" :quanti="vista.inCampo"
-                  :pittori="pelle ? pelle.pittori : null" />
+                  :vita="vista.vitaOnda" :quanti="vista.inCampo" />
     <div v-if="messaggio.testo" :key="messaggio.n" class="annuncio">{{ messaggio.testo }}</div>
   </div>
 </template>

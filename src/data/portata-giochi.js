@@ -35,7 +35,6 @@ export const TAPPE_DEL_GIOCO = {
   inglese: INGLESE,
   spagnolo: SPAGNOLO,
   torri: CASTELLO,
-  castello: CASTELLO,
   pozioni: POZIONI,
   bancarella: BANCARELLA,
   generale: GENERALE,

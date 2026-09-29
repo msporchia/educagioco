@@ -7,7 +7,6 @@ import { TORRI, segnoDi } from '../../data/ops.js'
 import RitrattoTorre from './RitrattoTorre.vue'
 
 const props = defineProps({
-  pittori: { type: Object, default: null },
   tappa: { type: Object, required: true },
   energia: { type: Number, default: 0 },
   costi: { type: Object, default: () => ({}) },   // { tipo: ⚡ }
@@ -31,7 +30,7 @@ const ignorata = k => props.immune.includes(k)
             @click="$emit('scegli', k)">
       <span v-if="ignorata(k) && disponibile(k)" class="terzo" data-non-tocca>non lo tocca</span>
       <span class="figura">
-        <RitrattoTorre :pittori="pittori" v-if="disponibile(k)" :tipo="k" :lv="1" />
+        <RitrattoTorre v-if="disponibile(k)" :tipo="k" :lv="1" />
         <span v-else class="chiuso">🔒</span>
       </span>
       <b>{{ T.nome }}</b>

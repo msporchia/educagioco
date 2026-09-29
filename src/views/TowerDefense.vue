@@ -3,8 +3,19 @@
 // docs/castello/torri.md), il conto sale dal basso nello stesso foglio, e il
 // campo non si ferma mentre si calcola. Questo file tiene solo la fase
 // (mappa, gioco, fine) e cosa sta guardando il dito, e fa da centralino fra
-// motore/castello/ (regole), grafica/castello/ (pittori), components/castello/
-// (campo, foglio, mappa) e views/castello/ (cassa, scena, trascino).
+// motore/castello/ (regole, e la carta a scacchiera su cui si gioca),
+// components/castello/ (campo, foglio, mappa), views/castello/ (cassa,
+// scena, trascino) e le figure.
+//
+// Le figure — pelle, pittori a sprite, bestiario, vestiti e il foglio delle
+// torri — stanno in giochi/castello/ senza che lì ci sia un gioco: non c'è
+// manifesto né schermata, e il gioco resta questo, chiave `torri`, coi
+// record, i regali e i traguardi che stanno sotto di lei. Stanno lì perché
+// è lì che scrivono gli attrezzi degli sprite (`vesti.py --atlante`,
+// `cammino.py`, il banco) — un bersaglio per gioco, come la fattoria e il
+// sotterraneo — ed è la casa dove il castello andrà tutto il giorno che
+// passerà alla convenzione di giochi/. Il castello a poligoni che c'era
+// prima non c'è più: le figure sono queste.
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { state, answer, level, addCoins, tdProgresso, tdCompleta,
          segna, segnaBest, divisioniAccese, tuttoAperto,
@@ -36,13 +47,6 @@ import { Cassa } from './castello/cassa.js'
 import { suono } from '../audio.js'
 
 defineEmits(['vai'])
-// Il castello a celle (giochi/castello/) è questa stessa schermata con
-// un'altra pelle (`pelle`): tappe, conti e salvataggio restano quelli di `torri`.
-defineProps({
-  pelle: { type: Object, default: null },
-  titolo: { type: String, default: 'Castello' },
-  guida: { type: String, default: 'torri' },
-})
 
 const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine
 
@@ -486,7 +490,7 @@ onMounted(() => {
 <template>
   <div class="schermo td">
     <!-- il ⏸ c'è solo dove il campo cammina -->
-    <Barra :titolo="titolo" :guida="guida" @aiuto="aiuto"
+    <Barra titolo="Castello" guida="torri" @aiuto="aiuto"
            :pausa="fase === 'gioco' && !state.festa.length" @pausa="metti()"
            :monete="fase !== 'gioco'" @indietro="$emit('vai','home')">
       <GettoniCampo v-if="fase === 'gioco'" :hud="hud" :velocita="velocita"
@@ -498,7 +502,7 @@ onMounted(() => {
       <CampoDiBattaglia ref="campo" :hud="hud" :vista="vista" :eventi="eventi"
                         :attivo="!fermo" :calcolando="!!scelta"
                         :velocita="velocita" :messaggio="messaggio"
-                        :mira="mira" :pelle="pelle"
+                        :mira="mira"
                         @esito="finita" @potenzia="apriTorre" @piazzola="apriPiazzola" />
 
       <!-- la prima partita in assoluto: non blocca niente, se ne va da sé -->
@@ -513,8 +517,7 @@ onMounted(() => {
               @click="sposto = null">Tocca dove spostarla · annulla</button>
 
       <template v-else-if="fase === 'gioco' && vista.inAttesa">
-        <div class="preavviso-alto"><NastroOndate :prossime="vista.prossime"
-                                                   :pittori="pelle ? pelle.pittori : null" /></div>
+        <div class="preavviso-alto"><NastroOndate :prossime="vista.prossime" /></div>
         <button class="bottone stretto onda" :class="{ svelto: vista.pronti }"
                 data-azione="chiama-onda" @click="chiamaOnda">
           {{ hud.onda ? 'Manda l\'ondata' : 'Comincia la battaglia' }} ▶<template
@@ -549,12 +552,10 @@ onMounted(() => {
               @chiudi="chiudi" @indietro="indietro">
         <SceltaTorre v-if="foglio && foglio.che === 'costruisci'"
                      :tappa="tappa" :energia="hud.energia" :costi="costi"
-                     :divisioni="divisioni" :immune="immune" @scegli="scegliTorre"
-                     :pittori="pelle ? pelle.pittori : null" />
+                     :divisioni="divisioni" :immune="immune" @scegli="scegliTorre" />
 
         <SchedaTorre v-else-if="foglio && foglio.che === 'torre'"
                      :torre="foglio.torre" :cap="massimo" :costo="costoSalita(foglio.torre)"
-                     :pittori="pelle ? pelle.pittori : null"
                      :energia="hud.energia" :divisioni="divisioni" :rami="rami"
                      :costo-sposta="CFG.spostamento" :puoi-spostare="posti() > 0"
                      @potenzia="salgo" @sposta="chiediSposta" />
@@ -563,7 +564,6 @@ onMounted(() => {
           <div class="intestazione">
             <span class="ritratto">
               <RitrattoTorre :tipo="scelta" :lv="bersaglio ? bersaglio.lv + 1 : 1"
-                             :pittori="pelle ? pelle.pittori : null"
                              :ramo="strada || (bersaglio && bersaglio.ramo)" :unita="52" />
             </span>
             <b>{{ TORRI[scelta].nome }}</b>
@@ -577,8 +577,7 @@ onMounted(() => {
 
       <Foglio v-if="fase === 'gioco'" :aperto="!!blocchetto" titolo="I tuoi potenziamenti"
               @chiudi="blocchetto = null">
-        <Potenziamenti v-if="blocchetto" :blocchetto="blocchetto"
-                       :pittori="pelle ? pelle.pittori : null" />
+        <Potenziamenti v-if="blocchetto" :blocchetto="blocchetto" />
       </Foglio>
 
       <!-- il regalo sta sopra il foglio e sotto la pausa -->
