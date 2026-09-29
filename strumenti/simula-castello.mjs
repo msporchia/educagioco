@@ -117,12 +117,8 @@ export function gioca(tappa, opzioni = {}) {
 
 
   while (t < LIMITE) {
-    /* ── il regalo ──
-       Nella partita libera ogni cinque ondate ce n'è uno da scegliere, e
-       finché non è scelto l'ondata dopo non parte: è la regola vera, e un
-       simulatore che la ignorasse aspetterebbe per sempre. Il finto
-       giocatore prende quello che gli dice `sceglie` — a giro fra le
-       quattro voci che toccano una torre, se non gli si dice altro. */
+    // il regalo: finché non è scelto l'ondata dopo non parte, o il
+    // simulatore aspetterebbe per sempre
     if (motore.regaliDaScegliere > 0) {
       motore.prendiRegalo((sceglie || (n => GIRO_REGALI[n % GIRO_REGALI.length]))(presi))
       presi++
@@ -135,8 +131,7 @@ export function gioca(tappa, opzioni = {}) {
         const conto = { prezzo: inCorso.costo, penale }
         speso += inCorso.costo + penale
         if (inCorso.che === 'nuova') {
-          /* sulla strada che la fila gli dice: la prima piazzola libera di
-             quella strada, e se non ce n'è la prima libera e basta */
+          // sulla strada che la fila gli dice, o la prima piazzola libera
           const posto = motore.liberi().find(i => (motore.postazioni[i].via || 0) === inCorso.strada)
           motore.costruisci(inCorso.tipo, { ...conto, posto: posto ?? null })
         }
@@ -157,10 +152,6 @@ export function gioca(tappa, opzioni = {}) {
         foto = { ...motore.istantanea(), speso }
         istantanee?.set(stato.onda + 1, foto)
         if (stato.onda >= finoA) return rendiconto('arrivato')
-        // chi ha fretta la chiama e si prende il bonus; l'altro non fa
-        // niente e aspetta che parta da sola — a mandarla è il motore,
-        // non lui, ed è per questo che l'ondata nuova si riconosce dal
-        // contatore che cambia e non da chi ha premuto il tasto
         if (svelto) motore.chiamaOnda()
       } else if (impaziente && motore.puoiChiamare()) {
         // l'ondata di prima è ancora in campo, ma è uscita tutta: si
