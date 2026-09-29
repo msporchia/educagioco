@@ -1,44 +1,15 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL REGALO — ogni cinque ondate della partita libera
-
-   Un velo con tre carte: si sceglie un potenziamento e **resta per
-   sempre**, anche nelle partite di domani. Il catalogo, i numeri e
-   quali tre carte toccano a questo giro stanno in `data/castello.js`
-   (`REGALI`, `regaliOfferti`): qui non si decide niente, si mostra.
-
-   ── perché tre e non tutte e sette ──
-   Su uno schermo verticale tre carte si leggono senza scorrere, e
-   scegliere fra sette è un catalogo da studiare, non una decisione. Le
-   tre girano a ogni regalo, quindi quella che si voleva torna: è la
-   ragione per cui si può offrire di meno senza togliere niente.
-
-   ── cosa dice una carta ──
-   Il grado che si ha e quello che diventa (`3 → 4`), non solo il
-   passo: «+8% di danno» da solo non dice se si è al principio o al
-   ventesimo giro, e la cosa che un bambino guarda è **quanto ne ha
-   già**. Chi è a zero non legge nessuna freccia: «nuovo».
-
-   ── il «più tardi» ──
-   Non butta il regalo, lo rimanda: l'ondata dopo non parte finché non
-   si è scelto (la regola sta nel motore, `daScegliere`), quindi il velo
-   torna appena si prova a chiamarla. Serve a poter guardare il campo —
-   cosa c'è in piedi, che ramo hanno le torri — prima di decidere, che è
-   esattamente l'informazione che rende la scelta una scelta.
-
-   La finestra cieca è quella di tutti (`giochi/pausa.js`): il dito che
-   ha chiuso l'ondata si lascia dietro un click, e senza quei 320 ms
-   atterrerebbe sulla prima carta scegliendo al posto del bambino.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il regalo: un velo con tre carte, dal catalogo di data/castello.js
+// (REGALI, regaliOfferti) — qui non si decide niente, si mostra. Vedi
+// docs/castello/libere.md. «Più tardi» rimanda, non butta: l'ondata dopo
+// non parte finché non si è scelto.
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { regaliOfferti } from '../../data/castello.js'
 import { CIECA } from '../../giochi/pausa.js'
 
 const props = defineProps({
-  /* quanti se ne sono già presi in tutto: è il giro delle carte */
-  presi: { type: Number, default: 0 },
-  /* `{ id: quanti }`, i gradi che questo bambino ha già */
-  gradi: { type: Object, default: () => ({}) },
+  presi: { type: Number, default: 0 },     // quanti se ne sono già presi: il giro delle carte
+  gradi: { type: Object, default: () => ({}) },   // { id: quanti }, i gradi già presi
 })
 const emit = defineEmits(['scegli', 'piuTardi'])
 
@@ -88,9 +59,7 @@ function scegli(id) {
 </template>
 
 <style scoped>
-/* Sopra il foglio del castello (4-5) e sotto la pausa (130): la pausa è
-   lo stato più esterno, quindi il telefono posato davanti a un regalo
-   mostra la pausa e dietro il regalo che aspetta. */
+/* sopra il foglio (4-5), sotto la pausa (130) */
 .re-velo { position:absolute; inset:0; z-index:60; display:flex;
            align-items:center; justify-content:center; padding:14px;
            background:#131a2ad9; backdrop-filter:blur(3px);
@@ -105,9 +74,6 @@ function scegli(id) {
 .re-cima h2 { color:#eef2fa; font-size:clamp(20px,5.6vw,25px); margin:2px 0 0 }
 .re-sotto { font-size:12.5px; color:#b9c6e6; margin:2px 0 0 }
 
-/* Una colonna, non una griglia: le carte hanno una riga di testo da
-   leggere, e in verticale tre carte larghe si scorrono con gli occhi
-   invece che con il dito. */
 .re-carte { display:flex; flex-direction:column; gap:8px; width:100% }
 .re-carta { position:relative; background:var(--carta); border-radius:16px;
             padding:9px 12px 9px 52px; text-align:left;
