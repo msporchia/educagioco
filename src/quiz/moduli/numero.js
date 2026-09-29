@@ -1,65 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════
-   SENSO DEL NUMERO — quanto vale un numero, prima di saperci fare i
-   conti.
-
-   Nel repo il calcolo c'è già (`data/calcolo.js`: le strategie, i
-   riporti, le tabelline). Qui non si calcola niente: si allena il
-   *sentire* i numeri, che è un'altra cosa e viene prima. Un bambino
-   che scrive 42 + 17 = 590 non ha sbagliato un riporto: non ha in
-   testa quanto è grande 42. E chi non sa che il 47 sta poco prima
-   della metà di cento non capirà mai perché 47 + 47 fa quasi 100.
-
-   LE CINQUE COSE CHE SI ALLENANO, dalla più antica alla più astratta:
-
-     · il colpo d'occhio — quanti sono senza contarli, e quale mucchio
-       ne ha di più. È l'unica di tutta la matematica che non si
-       impara: si nasce con quella, e poi si arrugginisce;
-     · la linea dei numeri — dove sta un numero fra gli altri, che è il
-       modo in cui il cervello i numeri se li tiene davvero;
-     · prima, dopo, in mezzo — il numero come posto in una fila;
-     · le decine — la cifra a sinistra non è «un tre», è trenta;
-     · la stima — a occhio e croce, e sapere quando un risultato è
-       impossibile senza rifare il conto.
-
-   I FALSI SONO GLI ERRORI VERI, e in questa materia sono sempre gli
-   stessi quattro: le cifre girate (74 per 47), la cifra letta al posto
-   sbagliato (il 7 di 372 letto come sette), l'arrotondamento dalla
-   parte sbagliata, e l'uno di troppo o di meno sul confine. Un numero
-   preso a caso si scarterebbe a occhio, e la domanda si risolverebbe
-   senza guardare niente.
-
-   I CONTI IN FILA SONO L'ECCEZIONE, e sono l'unico posto dove qui si
-   fa un conto. Sono due, e la differenza fra i due è tutta la
-   progressione:
-
-     · **in avanti** — «parto da 6, aggiungo 10, ne prendo la metà e
-       aggiungo 5: dove arrivo?». Un conto solo, nell'ordine in cui è
-       scritto; la fatica è tenere a mente il numero di mezzo. Comincia
-       **in piccolo e presto** (grado 3, sei anni e mezzo): due passi,
-       nessuna divisione e niente sopra il venti — «parto da 4, lo
-       raddoppio e aggiungo 5» è la stessa cosa che si fa a nove anni
-       con numeri che a sei si tengono a mente;
-     · **all'indietro** — la stessa catena raccontata dalla fine:
-       «viene 17, da che numero sono partito?». Qui non basta girare
-       le operazioni, perché con quattro risposte davanti la strada
-       breve è **rifare il viaggio per ognuna delle quattro**. Quattro
-       catene invece di una: la stessa domanda girata costa il triplo.
-
-   È ancora senso del numero: chi ce l'ha capisce subito che il numero
-   di partenza è più piccolo di 18, chi non ce l'ha prova a caso.
-   L'andata arriva prima e si allunga (due passi, poi tre), il ritorno
-   dopo e resta corto (un passo, poi due). **Tre passi da disfare non
-   esistono più**: era la domanda più cara del modulo, la sbagliavano
-   anche i grandi, e si dichiarava otto anni e mezzo come il passo
-   singolo — cioè arrivava a bambini di sette anni e mezzo.
-
-   IL DISEGNO NON È UN ORNAMENTO. La linea dei numeri *è* la domanda:
-   in tre gradi su sei si sceglie fra quattro disegni, non fra quattro
-   parole. I pittori stanno in `grafica/pittori/numero.js` e ricevono
-   solo fatti — `{ che: 'linea', da: 0, a: 100, segna: 47, tacche: 10 }` —
-   senza sapere se quella è la risposta buona o il tranello.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// quanto vale un numero, prima di saperci fare i conti (il calcolo è altrove, data/calcolo.js): colpo d'occhio, linea dei numeri, prima/dopo/in mezzo, decine, stima. I falsi sono i quattro errori veri: cifre girate (74 per 47), cifra al posto sbagliato, arrotondamento dalla parte sbagliata, uno di troppo/meno sul confine. I conti in fila sono l'unica eccezione dove si calcola davvero: in AVANTI è un conto solo nell'ordine scritto, all'INDIETRO con quattro risposte la strada breve è rifare il viaggio quattro volte (costa il triplo, non il doppio) — per questo l'andata arriva prima e si allunga, il ritorno dopo e resta corto (mai più di due passi da disfare). Il disegno non è un ornamento: la linea dei numeri È la domanda in tre gradi su sei, e i pittori (grafica/pittori/numero.js) ricevono solo fatti, mai sapendo qual è la risposta.
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo, scena } from '../nucleo/domanda.js'
 import { PITTORI_NUMERO } from '../grafica/pittori/numero.js'
@@ -73,10 +12,7 @@ const SCALETTA = [
   'la stima, cosa è impossibile, e gli indovinelli a due passi',
 ]
 
-/* Le tipologie. Tre gruppi: quello che si fa contando e confrontando,
-   quello che vuole il valore posizionale (in 47 il 4 vale quaranta), e
-   la stima, che è l'unico posto dove rispondere «circa» è la risposta
-   giusta. Sono tre pezzi di scuola diversi e si spengono separati. */
+// tre pezzi di scuola diversi: contare/confrontare, valore posizionale (in 47 il 4 vale quaranta), e la stima (l'unico posto dove «circa» è giusto)
 const TIPI = [
   { chiave: 'num:colpo-docchio', nome: "Il colpo d'occhio: quanti sono", sa: 'numeri', gradi: { 1: 0.58 } },
   { chiave: 'num:confronto', nome: 'Chi è di più, chi è di meno', sa: 'numeri', gradi: { 1: 0.42 } },
@@ -84,24 +20,7 @@ const TIPI = [
   { chiave: 'num:posiziona', nome: 'Mettere un numero al suo posto', sa: 'numeri', gradi: { 2: 0.38, 4: 0.26 } },
   { chiave: 'num:ordine', nome: 'Prima, dopo, in mezzo e in ordine', sa: 'numeri', gradi: { 3: 0.75 } },
   { chiave: 'num:vicino', nome: 'Il numero più vicino', sa: 'numeri', gradi: { 4: 0.22 } },
-  /* ── i conti in fila, e gli indovinelli: due mestieri, non uno ──
-     Erano la stessa tipologia, e la stessa fatica dichiarata (56, otto
-     anni e mezzo) dal passo singolo alla catena da tre. Sono due cose
-     diverse: fare i conti **in avanti** è calcolo mentale in sequenza —
-     si parte da un numero e si arriva da qualche parte, un conto solo —
-     mentre **disfarli** vuol dire tenere in testa la catena al
-     contrario, e per giunta con quattro risposte davanti la si può
-     risolvere solo rifacendo il viaggio per ognuna delle quattro.
-     Quattro catene invece di una: ecco perché la stessa domanda girata
-     costa il triplo. Adesso l'andata viene prima e l'andata a ritroso
-     dopo, con un livello per grado invece di uno solo per tutti.
-
-     E l'andata scende **sotto** il suo primo grado, perché quello che
-     la rendeva roba da otto anni non era la fila di conti: erano le
-     divisioni e i numeri grossi da attraversare. Tolti quelli restano
-     due passi dentro il venti, che a sei anni e mezzo sono un
-     esercizio onesto — e l'unico posto del modulo dove un numero si
-     tiene a mente mentre se ne fa un altro. */
+  // erano la stessa tipologia (passo singolo e catena da tre): in AVANTI è un conto solo, disfarla vale quattro viaggi (vedi cappello); l'andata scende sotto il suo primo grado (tolte divisioni e numeri grossi, restano due passi dentro il venti, onesti a sei anni e mezzo)
   { chiave: 'num:catena', nome: 'Fare i conti in fila', sa: 'numeri',
     livello: { 3: 30, 4: 44, 5: 52, 6: 60 }, gradi: { 3: 0.25, 4: 0.12, 5: 0.1, 6: 0.12 } },
   { chiave: 'num:indovinello', nome: 'Indovina il numero di partenza', sa: 'numeri',
@@ -113,32 +32,21 @@ const TIPI = [
   { chiave: 'num:grandezza', nome: "L'ordine di grandezza, e cosa è impossibile", sa: 'stima', gradi: { 6: 0.3 } },
 ]
 
-/* le cifre girate: l'errore principe di tutta questa materia. Un
-   numero che finisce per zero girato perde una cifra (50 → 05 → 5) e
-   diventa un falso che si scarta a occhio: meglio nessun falso che uno
-   regalato, e `pescaFalsi` scarta da sé quello che non è un numero. */
+// le cifre girate: l'errore principe. Un numero che finisce per zero girato perde una cifra (50→05→5) e si scarterebbe a occhio: pescaFalsi lo scarta da sé.
 const inverti = n => Number(String(n).split('').reverse().join(''))
 const girate = n => (n % 10 === 0 ? NaN : inverti(n))
 const decina = n => Math.round(n / 10) * 10
 const riga = lista => lista.join(', ')
 
-/* «il 47» ma «l'8»: i numeri che si dicono con la vocale davanti sono
-   uno, otto, undici, gli ottanta e gli ottocento. Una domanda scritta
-   male la legge un bambino, non un compilatore. */
+// «il 47» ma «l'8»: la vocale davanti tocca uno, otto, undici, gli ottanta e gli ottocento
 const vocale = n => n === 1 || n === 8 || n === 11 || /^8\d\d?$/.test(String(n))
 const il = n => vocale(n) ? `l'${n}` : `il ${n}`
 const del = n => vocale(n) ? `dell'${n}` : `del ${n}`
 const nel = n => vocale(n) ? `nell'${n}` : `nel ${n}`
 
-/* un falso è un valore più il motivo per cui ci si casca */
 const F = (v, perche) => ({ v, perche })
 
-/* ── i falsi, scelti uno per uno ──
-   Prende i candidati in ordine (il primo della lista è quello che
-   insegna di più) e tiene i primi che non ripetono, che stanno nei
-   limiti e — quando i falsi sono *disegnati* — che non finiscono così
-   vicini al vero da sembrare lo stesso disegno. Due frecce a tre pixel
-   di distanza il banco non le prende, il bambino sì. */
+// candidati in ordine (il primo insegna di più); scarta ripetuti, fuori limite, e (se disegnati) troppo vicini al vero da sembrare lo stesso disegno
 function pescaFalsi(candidati, quanti, { escludi = [], distanza = 0, dentro = () => true } = {}) {
   const presi = []
   const visti = new Set(escludi)
@@ -152,12 +60,7 @@ function pescaFalsi(candidati, quanti, { escludi = [], distanza = 0, dentro = ()
   return presi
 }
 
-/* ── i passi di un indovinello ──
-   `va` è quello che la domanda racconta, `torna` è il suo contrario
-   (`torna(va(v))` è sempre `v`) e `disfa` è come si dice tornando
-   indietro, che è quello che serve nell'aiuto. `svista` è l'errore di
-   chi scambia il moltiplicare con l'aggiungere, e vale solo quando il
-   passo è uno: con la catena lunga ci sono errori più istruttivi. */
+// `va` è quello che la domanda racconta, `torna` il contrario, `disfa` come si dice tornando indietro; `svista` (scambiare moltiplicare con aggiungere) vale solo col passo singolo
 const RADDOPPIA = { dice: 'lo raddoppio', disfa: 'lo dimezzo', va: v => v * 2, torna: v => v / 2,
   svista: r => F(r - 2, 'raddoppiare non è aggiungere 2: quello lì raddoppiato non fa il numero giusto') }
 const TRIPLICA = { dice: 'lo moltiplico per 3', disfa: 'lo divido per 3', va: v => v * 3, torna: v => v / 3,
@@ -167,7 +70,6 @@ const META = { dice: 'ne prendo la metà', disfa: 'lo raddoppio', va: v => v / 2
 const AGGIUNGI = k => ({ dice: `aggiungo ${k}`, disfa: `tolgo ${k}`, va: v => v + k, torna: v => v - k })
 const TOGLI = k => ({ dice: `tolgo ${k}`, disfa: `rimetto ${k}`, va: v => v - k, torna: v => v + k })
 
-/* «lo raddoppio, aggiungo 3 e tolgo 5» */
 const inFila = dette => dette.length < 2 ? dette.join('')
   : `${dette.slice(0, -1).join(', ')} e ${dette[dette.length - 1]}`
 
@@ -183,22 +85,13 @@ class SensoDelNumero extends Modulo {
       materia: 'matematica',
       chiaro: 'sentire quanto vale un numero: a colpo d\'occhio, sulla linea, a occhio e croce',
       scaletta: SCALETTA,
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [0, 12, 25, 38, 56, 75],
+      livelli: [0, 12, 25, 38, 56, 75], // scala 0-100 comune a tutte le materie (vedi docs/apprendimento/quiz-livelli.md)
       tipi: TIPI,
       pittori: PITTORI_NUMERO,
     })
   }
 
-  /* La linea dei numeri torna due volte — fino a 20 al grado 2, fino a
-     100 al grado 4 — ed è la stessa cosa da saper fare: stessa chiave,
-     e a cambiare è solo fin dove arriva la riga. Il grado serve
-     esattamente a questo. */
+  // la linea torna due volte (fino a 20 al grado 2, fino a 100 al grado 4): stessa chiave, cambia solo fin dove arriva la riga
   genera(grado, sorte, tipo) {
     const fine = grado >= 4 ? 100 : sorte.uno([10, 10, 20])
     switch (tipo) {
@@ -221,10 +114,7 @@ class SensoDelNumero extends Modulo {
     }
   }
 
-  /* ── grado 1: il colpo d'occhio ─────────────────────────────────── */
-
-  /* quanti pallini, senza contarli uno per uno */
-  quanti(sorte) {
+  quanti(sorte) { // grado 1: quanti pallini, senza contarli uno per uno
     const dado = sorte.forse(0.5)
     const quanti = dado ? sorte.fra(3, 9) : sorte.fra(4, 12)
     const disposizione = dado ? 'dado' : 'sparsi'
@@ -252,8 +142,7 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* quale mucchio ne ha di più (o di meno) */
-  confronto(sorte) {
+  confronto(sorte) { // quale mucchio ne ha di più (o di meno)
     const quanti = sorte.forse(0.35) ? 3 : 2
     const disposizione = sorte.forse(0.5) ? 'dado' : 'sparsi'
     const numeri = []
@@ -279,10 +168,7 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* ── gradi 2 e 4: la linea dei numeri ───────────────────────────── */
-
-  /* la freccia indica un numero: quale? */
-  leggiLinea(da, fine, sorte) {
+  leggiLinea(da, fine, sorte) { // gradi 2 e 4: la freccia indica un numero, quale?
     const larga = fine - da > 20
     const tacche = larga ? 10 : fine - da
     const segna = larga ? sorte.fra(2, 19) * 5 : sorte.fra(1, fine - 1)
@@ -311,8 +197,7 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* il contrario: dato il numero, quale linea lo indica */
-  posiziona(da, fine, sorte) {
+  posiziona(da, fine, sorte) { // il contrario: dato il numero, quale linea lo indica
     const larga = fine - da > 20
     const tacche = larga ? 10 : fine - da
     const bersaglio = larga ? sorte.fra(6, 94) : sorte.fra(1, fine - 1)
@@ -335,14 +220,7 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* ── grado 3: il numero come posto in fila ──────────────────────── */
-
-  /* che numero sta esattamente in mezzo fra 37 e 57.
-     Prima gli estremi erano attaccati — «fra 94 e 96» — e la risposta
-     si leggeva senza pensarci: in mezzo a due numeri vicini ce n'è uno
-     solo, e si vede. Larghi, «in mezzo» torna a voler dire qualcosa:
-     stessa distanza da una parte e dall'altra, e per trovarla un passo
-     va fatto. */
+  // grado 3: che numero sta esattamente in mezzo fra 37 e 57. Prima gli estremi erano attaccati e si leggeva senza pensarci; larghi, "in mezzo" torna a voler dire qualcosa (un passo va fatto).
   inMezzo(sorte) {
     const passo = sorte.uno([2, 3, 4, 5, 5, 10, 10, 15, 20])
     const n = sorte.fra(passo + 2, 99 - passo)
@@ -375,8 +253,7 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* subito prima, subito dopo — e quasi sempre sul confine di decina,
-     che è dove i bambini inciampano davvero */
+  // subito prima, subito dopo, quasi sempre sul confine di decina (dove i bambini inciampano davvero)
   subito(sorte) {
     const dopo = sorte.forse(0.5)
     const confine = sorte.forse(0.6)
@@ -406,8 +283,7 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* tre numeri da mettere in fila */
-  ordine(sorte) {
+  ordine(sorte) { // tre numeri da mettere in fila
     let scelti = [23, 31, 45]
     for (let giro = 0; giro < 40; giro++) {
       const tre = [sorte.fra(11, 96), sorte.fra(11, 96), sorte.fra(11, 96)]
@@ -451,9 +327,7 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* ── grado 4: il più vicino ─────────────────────────────────────── */
-
-  vicino(sorte) {
+  vicino(sorte) { // grado 4: il più vicino
     const bersaglio = sorte.uno([20, 30, 40, 50, 60, 70, 80, 100])
     const scarto = sorte.fra(1, 4)
     const buona = bersaglio + (sorte.forse(0.5) ? scarto : -scarto)
@@ -476,10 +350,7 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* ── grado 5: le decine e le cifre ──────────────────────────────── */
-
-  /* le barre da dieci più i cubetti che avanzano */
-  mucchiDiDieci(sorte) {
+  mucchiDiDieci(sorte) { // grado 5: le barre da dieci più i cubetti che avanzano
     const decine = sorte.fra(2, 6)
     const unita = sorte.fra(1, 9)
     const n = decine * 10 + unita
@@ -527,13 +398,11 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* qual è la cifra delle decine di 372 */
-  cifra(sorte) {
+  cifra(sorte) { // qual è la cifra delle decine di 372
     const [a, b, c] = sorte.alcuni([1, 2, 3, 4, 5, 6, 7, 8, 9], 3)
     const n = a * 100 + b * 10 + c
     const posti = [
-      /* `quanto` è l'altro tranello: una cosa è la *cifra* delle
-         centinaia (il 3 di 372), un'altra quanto vale (300) */
+      // `quanto` è l'altro tranello: la CIFRA delle centinaia (il 3 di 372) contro quanto vale (300)
       { dice: 'centinaia', v: a, quanto: a * 100 },
       { dice: 'decine', v: b, quanto: b * 10 },
       { dice: 'unità', v: c, quanto: b * 10 + c },
@@ -555,8 +424,7 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* scomporre 245 in 200 + 40 + 5, e rimetterlo insieme */
-  scomponi(sorte) {
+  scomponi(sorte) { // scomporre 245 in 200 + 40 + 5, e rimetterlo insieme
     const [a, b, c] = sorte.alcuni([1, 2, 3, 4, 5, 6, 7, 8, 9], 3)
     const n = a * 100 + b * 10 + c
 
@@ -591,9 +459,7 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* ── grado 6: la stima ──────────────────────────────────────────── */
-
-  stima(sorte) {
+  stima(sorte) { // grado 6: la stima
     const a = sorte.fra(12, 89)
     const b = sorte.fra(12, 89)
     const tondo = decina(a) + decina(b)
@@ -639,15 +505,12 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* l'ordine di grandezza: dove casca il risultato, senza farlo */
-  grandezza(sorte) {
+  grandezza(sorte) { // l'ordine di grandezza: dove casca il risultato, senza farlo
     const a = sorte.fra(21, 78)
     const b = sorte.fra(21, 78)
     const base = Math.floor((a + b) / 10) * 10
     const fascia = x => `fra ${x} e ${x + 10}`
-    /* l'ordine di grandezza sbagliato: dieci volte tanto, o dieci
-       volte poco quando il dieci volte tanto diventerebbe una scritta
-       lunga il doppio delle altre (e si riconoscerebbe da quello) */
+    // dieci volte tanto, o dieci volte poco se tanto diventerebbe una scritta lunga il doppio delle altre (si riconoscerebbe)
     const fuoriMisura = base < 100 ? base * 10 : decina(base / 10)
 
     return domanda({
@@ -664,9 +527,7 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* uno di questi conti è sbagliato di sicuro: si vede dalla misura,
-     senza rifarlo. Gli altri tre sono veri davvero, così non c'è
-     niente da discutere */
+  // uno di questi conti è sbagliato di sicuro: si vede dalla misura, senza rifarlo; gli altri tre sono veri davvero
   sbagliatoDiSicuro(sorte) {
     const piccolo = sorte.forse(0.5)
     const a = sorte.fra(24, 46)
@@ -697,33 +558,7 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* ── gradi 4, 5 e 6: i conti in fila, e gli indovinelli ─────────────
-     L'unico posto del modulo dove si fa un conto, e ci sono due modi di
-     farlo che sembrano lo stesso e non lo sono.
-
-     ── L'ANDATA È UN CONTO SOLO, IL RITORNO NE VALE QUATTRO ────────
-     «Parto da 6, aggiungo 10, ne prendo la metà e aggiungo 5: dove
-     arrivo?» si risolve **una volta**, in avanti, nell'ordine in cui è
-     scritto: è calcolo mentale in sequenza, e la fatica è tenere a
-     mente il numero di mezzo. La stessa catena girata — «viene 17, da
-     che numero sono partito?» — chiede di disfarla dal fondo, il che è
-     già un'altra cosa; ma soprattutto, con quattro risposte davanti,
-     invita a fare il viaggio **per ognuna delle quattro**. Quattro
-     catene invece di una, ed è per questo che la stessa domanda girata
-     costa il triplo, non il doppio.
-
-     Perciò l'andata viene prima (`num:catena`) e il ritorno dopo
-     (`num:indovinello`), e la catena da tre passi da disfare non
-     esiste più: era la domanda più cara del modulo, e si dichiarava
-     otto anni e mezzo come il passo singolo. Adesso il ritorno arriva a
-     un passo, poi a due, e i tre passi restano solo in andata. */
-
-  /* ── in avanti: si parte da un numero e si arriva da qualche parte ──
-     Il grado 3 è la stessa domanda in piccolo: due passi, **mai una
-     divisione** e niente che superi il venti, cioè la linea dei numeri
-     che a quel grado si sa già leggere. Sette volte su dieci uno dei
-     due passi è il raddoppio (il moltiplicare che a sei anni si fa a
-     mente), le altre sono un aggiungi e un togli. */
+  // gradi 4-6: l'unico posto dove si fa un conto. Il grado 3 (in avanti) è la stessa domanda in piccolo: due passi, mai una divisione, niente sopra il venti (la linea che a quel grado si sa già leggere). Sette volte su dieci uno dei due passi è il raddoppio.
   catenaAvanti(grado, sorte) {
     const piccola = grado <= 3
     const quanti = grado >= 6 ? 3 : grado >= 5 ? sorte.uno([2, 2, 3]) : 2
@@ -733,17 +568,12 @@ class SensoDelNumero extends Modulo {
         ? { cima: 20, salto: 6, molti: sorte.forse(0.7) ? [RADDOPPIA] : [] }
         : { cima: 60, soloDoppi: quanti >= 3 })
 
-    /* i modi veri di sbagliare una catena in avanti: fermarsi prima
-       della fine, invertire due passi (che con un moltiplicare in mezzo
-       cambia tutto), e scambiare il moltiplicare con l'aggiungere */
+    // i modi veri di sbagliare: fermarsi prima della fine, invertire due passi, scambiare moltiplicare con aggiungere
     let v = n
     const tappe = passi.map(p => { v = p.va(v); return v })
     const fermato = tappe[tappe.length - 2]
     const primoSolo = tappe[0]
-    /* gli ultimi due invertiti: con un moltiplicare in mezzo il
-       risultato cambia, ed è l'errore di chi legge la catena a salti
-       invece che in fila. Se viene un mezzo numero `pescaFalsi` lo
-       scarta da sé — una risposta con la virgola qui non esiste. */
+    // gli ultimi due invertiti (con un moltiplicare in mezzo il risultato cambia); un mezzo numero pescaFalsi lo scarta da sé
     const girati = passi.length >= 2
       ? [...passi.slice(0, -2), passi[passi.length - 1], passi[passi.length - 2]]
       : null
@@ -771,24 +601,17 @@ class SensoDelNumero extends Modulo {
   }
 
   indovinello(grado, sorte) {
-    /* al grado 4 metà delle volte la forma corta, quella che si può
-       ancora fare a occhio: nessuna catena, solo il doppio o il triplo
-       che deve cascare dentro una fascia */
+    // al grado 4 metà delle volte la forma corta, che si può ancora fare a occhio
     if (grado <= 4 && sorte.forse(0.5)) return this.fascia(sorte)
 
-    /* mai tre: da disfare, tre passi sono la domanda più cara di tutto
-       il modulo — e la si sbagliava anche da grandi */
+    // mai tre da disfare: era la domanda più cara del modulo, la sbagliavano anche i grandi
     const quanti = grado >= 6 ? 2 : grado >= 5 ? sorte.uno([1, 1, 2]) : 1
-    /* la stessa cima dell'andata: quello che si attraversa in avanti si
-       deve poter disfare all'indietro, e «69 diviso 3» non è un passo
-       indietro, è un secondo esercizio dentro il primo */
+    // la stessa cima dell'andata: «69 diviso 3» non è un passo indietro, è un secondo esercizio dentro il primo
     const c = this.catenaDi(quanti, grado >= 6 ? 30 : grado >= 5 ? 25 : 20, sorte, { cima: 60 })
     const { n, passi, risultato } = c
 
     const ultimo = passi[passi.length - 1]
-    /* i tre modi veri di sbagliare: fermarsi al primo passo indietro,
-       disfarli nell'ordine in cui sono stati detti invece che dal
-       fondo, e rifarli in avanti sul risultato */
+    // i tre modi veri di sbagliare: fermarsi al primo passo indietro, disfarli nell'ordine detto invece che dal fondo, rifarli in avanti
     const soloUltimo = ultimo.torna(risultato)
     const soloPrimo = passi[0].torna(risultato)
     const nellOrdineDetto = passi.reduce((v, p) => p.torna(v), risultato)
@@ -803,8 +626,7 @@ class SensoDelNumero extends Modulo {
       F(risultato, 'quello è quello che viene alla fine, non il numero di partenza'),
     ], 3, { escludi: [n], dentro: v => Number.isInteger(v) && v > 0 && v < 500 })
 
-    /* la strada del ritorno, tappa per tappa: è l'aiuto, ed è anche
-       l'unica spiegazione che serve */
+    // la strada del ritorno, tappa per tappa: è l'aiuto, ed è anche l'unica spiegazione che serve
     let v = risultato
     const ritorno = passi.slice().reverse().map(p => { v = p.torna(v); return `${p.disfa} → ${v}` })
 
@@ -818,15 +640,9 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* una catena che torna: ogni passaggio intero, positivo e sotto il
-     tetto. Si tira e si ritira invece di ragionarci sopra, perché le
-     combinazioni sono poche e il primo tiro buono arriva quasi sempre;
-     il ripiego in fondo è una catena che non può non funzionare. */
+  // ogni passaggio intero, positivo e sotto il tetto; si tira e si ritira invece di ragionarci (il primo tiro buono arriva quasi sempre), il ripiego in fondo non può non funzionare
   catenaDi(quanti, tetto, sorte, { cima = 300, soloDoppi = false, salto = 12, molti = null } = {}) {
-    /* `molti` è l'elenco dei moltiplicare ammessi: una lista vuota vuol
-       dire una catena di sole somme, e allora i due passi vanno in
-       versi opposti — «aggiungo 4 e aggiungo 3» un bambino li somma
-       fra loro, e la fila si accorcia da sé. */
+    // `molti` vuoto = catena di sole somme: i due passi vanno in versi opposti, se no si sommerebbero fra loro
     const soloSomme = molti !== null && molti.length === 0
     const add = () => (sorte.forse(0.5) ? AGGIUNGI(sorte.fra(2, salto)) : TOGLI(sorte.fra(2, salto)))
     for (let giro = 0; giro < 60; giro++) {
@@ -845,26 +661,18 @@ class SensoDelNumero extends Modulo {
       let buona = true
       for (const p of passi) {
         v = p.va(v)
-        /* `cima` è il numero più grosso che si può attraversare **per
-           strada**, non solo alla fine: «27 per 3» a mente non è un
-           passo, è un compito, e in mezzo a una catena da tre fa
-           perdere il filo a chiunque */
+        // `cima` è il numero più grosso attraversabile PER STRADA, non solo alla fine: «27 per 3» a mente fa perdere il filo
         if (!Number.isInteger(v) || v < 2 || v > cima) { buona = false; break }
       }
       if (buona && v !== n) return { n, passi, risultato: v }
     }
-    /* il ripiego rispetta i vincoli di chi ha chiesto: una catena da
-       ripiego che sfora la cima sarebbe un guasto invisibile, perché
-       arriva solo quando i sessanta tiri sono andati tutti male */
+    // rispetta i vincoli di chi ha chiesto: un ripiego che sfora la cima sarebbe un guasto invisibile (arriva solo dopo sessanta tiri falliti)
     const passi = soloSomme ? [AGGIUNGI(3), TOGLI(1)] : [AGGIUNGI(3), RADDOPPIA]
     const n = 4
     return { n, passi, risultato: passi.reduce((v, p) => p.va(v), n) }
   }
 
-  /* «quale di questi ha il doppio fra 50 e 60?» — la fascia è larga
-     dieci e il numero giusto ci casca dentro; i falsi stanno lontani
-     almeno dieci nel prodotto, così nessuno dei quattro è difendibile
-     oltre a quello vero. Si risponde provando: raddoppia e guarda. */
+  // «quale di questi ha il doppio fra 50 e 60?»: i falsi stanno lontani almeno dieci nel prodotto, nessuno difendibile oltre al vero
   fascia(sorte) {
     const molt = sorte.forse(0.6) ? 2 : 3
     const nome = molt === 2 ? 'doppio' : 'triplo'
@@ -874,7 +682,7 @@ class SensoDelNumero extends Modulo {
     const da = Math.floor(prod / 10) * 10
     const a = da + 10
 
-    /* uno scarto che nel prodotto vale almeno una fascia intera */
+    // uno scarto che nel prodotto vale almeno una fascia intera
     const scarti = sorte.mescola(molt === 2 ? [5, 6, 7, 8, 9] : [4, 5, 6, 7])
     const candidati = scarti.flatMap(d => sorte.mescola([n + d, n - d]))
       .map(x => F(x, `il suo ${nome} fa ${x * molt}: ${x * molt < da ? 'troppo poco' : 'troppo'}`))
