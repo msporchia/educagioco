@@ -1,11 +1,4 @@
-/* ═════ IL CINGHIALE ═════
-   Un muro di muscoli col muso basso e le zanne all'insù, visto di
-   fronte mentre sta per partire. È il primo nemico che *pesa*: dove il
-   ragno è largo cinque unità lui ne è largo undici, e la differenza
-   deve sentirsi prima di leggere qualunque numero.
-
-   La criniera sulla schiena è il pezzo che lo distingue da un maiale:
-   una fila di setole dritte, non un dorso liscio. */
+// il primo nemico che pesa: largo undici unità contro le cinque del ragno, si sente prima dei numeri
 import { mescola, tondo, capsula, poligono } from '../comune.js'
 import { occhi } from '../segni.js'
 
@@ -18,11 +11,7 @@ export const CINGHIALE = {
   disegna(q, s, C, dir, sw, stato) {
     const t = q.tempo || 0
     const b = C.bordo, sp = 0.85 * s
-    /* Adimensionale, come tutto quello che poi viene moltiplicato per
-       `s`: scritto `* 0.5 * s` e riusato dentro un `* s` diventava una
-       misura al quadrato — invisibile sulle figure piccole del banco
-       di prova, e una palla di nebbia grande quanto il cinghiale sul
-       campo vero, dove la scala è dieci volte tanto. */
+    // adimensionale: moltiplicato di nuovo per `s` più sotto diventerebbe una misura al quadrato
     const sbuffo = Math.max(0, Math.sin(t * 1.6)) * 0.5
     for (const v of [-1, 1]) {                                       // le quattro zampe tozze
       for (const [dx, dy] of [[3.4, 0], [5.4, -1]]) {
@@ -47,8 +36,7 @@ export const CINGHIALE = {
     tondo(q, 0, -5 * s, 2.8 * s, 2.1 * s, C.muso, b, sp)             // il grugno
     for (const v of [-1, 1]) {
       q.cerchio(v * 1 * s, -5 * s, 0.55 * s, '#2b211a')
-      /* le zanne larghe alla base: strette come le avevo fatte, il
-         bordo se le mangiava e restavano due graffi scuri sul muso */
+      // larghe alla base: strette, il bordo se le mangiava e restavano due graffi scuri sul muso
       poligono(q, [[v * 2 * s, -3.4 * s], [v * 3.4 * s, -3.8 * s],
                    [v * 4.2 * s, -7.8 * s], [v * 3 * s, -4.6 * s]], C.zanne, b, sp * 0.6)
       // lo sbuffo dalle narici: si vede solo quando c'è, e c'è a tempo
