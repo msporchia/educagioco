@@ -1,66 +1,21 @@
-/* ═══════════════════════════════════════════════════════════════════
-   SOLDI E DECIMALI — gli euro sono il modo in cui un bambino incontra
-   i numeri con la virgola, prima ancora di sapere che esistono.
-
-   UNDICI GRADI, e non è un crescendo di una sola cosa:
-     1. quanto fanno queste monete e banconote (i conti tondi);
-     2. il resto — pagare con una banconota e capire quanto torna;
-     3. quanto costano più cose, e quale costa di più;
-     4. lo stesso confronto, ma sui numeri con la virgola senza euro;
-     5. il valore delle cifre dopo la virgola (decimi, centesimi);
-     6. i decimali in ordine — sulla linea, e arrotondare;
-     7. quanto costa una sola cosa, dal prezzo di più (la divisione);
-     8. quanto costano tante cose, dal prezzo di poche (la proporzione);
-     9. cosa conviene comprare, a parità di quantità o di soldi;
-     10. lo stesso confronto quando il peso è in grammi e non in chili;
-     11. quale offerta conviene — «prendi 3 paghi 2» contro uno sconto.
-
-   LA SPESA FURBA (7-11) è un salto: non basta più sapere fare il conto,
-   bisogna scegliere QUALE conto fare. «2 kg a 5 €» contro «1 kg a 3 €»
-   non è un'operazione — è capire che il numero da guardare è il prezzo
-   per kg, non quello scritto sul cartellino né la quantità. Per questo
-   dal grado 9 in su tre risposte sono sempre le stesse forme — la prima
-   confezione, la seconda, «costano uguale» — e **«costano uguale» è la
-   giusta una volta su cinque circa**: se non capitasse mai, un bambino
-   imparerebbe a scartarla senza guardare i numeri, come già visto con
-   «non si può sapere» nelle bilance.
-
-   NIENTE VIRGOLA MOBILE. Ogni conto è fatto in centesimi (interi):
-   `340` e non `3.4`. Si divide per 100 **solo per scrivere** il
-   risultato, con `euro()` — mai per calcolare — e per questo non esce
-   mai un «2,9999999999996» al posto di «3».
-
-   IL FALSO PIÙ VERO DI TUTTI È IL RIPORTO PERSO: 1 € + 80 c + 70 c
-   fanno 2,50 €, ma chi somma gli euro e i centesimi separatamente
-   senza riportare scrive «1,150 €» — la stessa identica dimenticanza
-   ricompare nel resto (si scorda l'euro preso in prestito) e in
-   «quanto costano N cose» (si moltiplicano euro e centesimi a parte).
-   Non sono tre errori: è lo stesso, vestito da tre domande diverse.
-
-   L'ALTRO FALSO VERO, dal grado 4 in su, è la cifra che inganna:
-   «3,45 è più di 3,5» perché 45 sembra più grande di 5 — e non è
-   vero, perché il decimo conta più del centesimo. `trappolaCifre()`
-   lo costruisce apposta, sui numeri nudi: un prezzo vero ha sempre due
-   cifre dopo la virgola, e sui cartellini l'errore vero è un altro —
-   guardare i centesimi prima degli euro (vedi `confronto`).
-
-   DUE SAPERI, PERCHÉ SONO DUE COSE DIVERSE. `denaro` (riconoscere le
-   monete, contare, dare il resto: nasce spento e si accende in terza,
-   quando a scuola si comincia con l'euro) e `decimali` (il numero con
-   la virgola come numero, non come prezzo: si accende in quarta). Un
-   bambino può sapere contare le monete senza sapere cos'è un decimo, e
-   il contrario capita raramente ma capita — sono due gradini diversi
-   della stessa scala, e li spegne chi ne ha bisogno.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Soldi e decimali: gli euro sono come un bambino incontra i numeri con
+   la virgola prima ancora di sapere che esistono. Undici gradi che non
+   sono un crescendo di una sola cosa: monete/resto/confronto di prezzi,
+   poi lo stesso sui decimali nudi, poi la spesa furba (dal grado 7, dove
+   bisogna scegliere quale conto fare, non solo farlo — «costano uguale»
+   è la giusta circa una volta su cinque, mai zero, o si impara a
+   scartarla senza guardare i numeri). Niente virgola mobile: ogni conto
+   è in centesimi interi, si divide per 100 solo per scrivere (`euro()`).
+   Il falso più vero è il riporto perso (1€ + 80c + 70c → «1,150€»);
+   l'altro è la cifra che inganna («3,45 > 3,5»). Due saperi distinti:
+   `denaro` (monete, accesa da terza) e `decimali` (il numero con la
+   virgola come numero, da quarta). */
 
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo, scena, emoji } from '../nucleo/domanda.js'
 import { PITTORI_SOLDI } from '../grafica/pittori/soldi.js'
 
-/* ── scrivere un euro, senza virgola mobile ──
-   `cents` è sempre un intero. Zero centesimi non si scrive («5 €» e
-   non «5,00 €», come si legge un cartellino vero); altrimenti sempre
-   due cifre dopo la virgola, perché un euro ne ha sempre due. */
+// cents è sempre un intero; zero centesimi non si scrive («5 €», come un cartellino vero), altrimenti sempre due cifre
 function euro(cents) {
   const n = Math.round(cents)
   const neg = n < 0
@@ -73,9 +28,7 @@ function euro(cents) {
 
 const capitalizza = s => s.charAt(0).toUpperCase() + s.slice(1)
 
-/* «un cornetto» → «il cornetto», «l'adesivo» se comincia per vocale;
-   «una mela» → «la mela». L'articolo indeterminato «un» non si elide
-   mai (è sempre «un», anche davanti a vocale): quello determinato sì. */
+// l'articolo indeterminato «un» non si elide mai, anche davanti a vocale; quello determinato sì
 function conArticolo(s) {
   const femminile = s.startsWith('una ')
   const resto = femminile ? s.slice(4) : s.slice(3)
@@ -83,15 +36,10 @@ function conArticolo(s) {
   return (vocale ? "l'" : femminile ? 'la ' : 'il ') + resto
 }
 
-/* «un cornetto» → «l'uno», «una mela» → «l'una»: non dipende dalla
-   parola che segue, sempre le stesse due forme. */
+// «l'uno»/«l'una»: non dipende dalla parola che segue, sempre le stesse due forme
 const pezzoDi = s => s.startsWith('una ') ? "l'una" : "l'uno"
 
-/* ── una cassa a due valori: filtra i doppioni contro la risposta
-   buona e fra loro, e si ferma quando ne ha presi abbastanza. Ogni
-   generatore di errori qui dentro produce candidati anche ridondanti
-   apposta — è più semplice scriverli così — e questa è l'unica cosa
-   che deve ricordarsi di scartare i ripetuti. */
+// filtra i doppioni contro la buona e fra loro; i generatori di errori possono produrre candidati ridondanti apposta
 function scartaDoppi(candidati, buonaStr, quanti) {
   const visti = new Set([buonaStr])
   const out = []
@@ -149,12 +97,7 @@ const PREZZI = [60, 75, 80, 90, 95, 110, 120, 130, 150, 175, 180, 199, 220, 250,
 
 /* ══════════════ grado 1-2 — le monete e il resto ══════════════ */
 
-/* i tagli di monete e banconote che esistono davvero. `testo` è come
-   si scrive nella domanda («20 cent», come sui cartellini: «20 c» non lo
-   scrive nessuno), `sulla` quello che c'è stampato sulla moneta, dove
-   una parola in più non ci sta. `facile` è il
-   sottoinsieme del grado 1: niente centesimi piccoli, che è quello che
-   fa sballare i conti tondi promessi da quel grado. */
+// i tagli veri; `sulla` è quello stampato sulla moneta (una parola non ci sta); TAGLI_FACILI evita i centesimi piccoli del grado 1
 const TAGLI = [
   { cents: 1, testo: '1 cent', sulla: '1' }, { cents: 2, testo: '2 cent', sulla: '2' }, { cents: 5, testo: '5 cent', sulla: '5' },
   { cents: 10, testo: '10 cent', sulla: '10' }, { cents: 20, testo: '20 cent', sulla: '20' }, { cents: 50, testo: '50 cent', sulla: '50' },
@@ -163,7 +106,6 @@ const TAGLI = [
 ]
 const TAGLI_FACILI = TAGLI.filter(t => t.cents >= 10 && t.cents <= 500)
 
-/* quanto fanno queste monete e banconote — con o senza riporto */
 function conta(sorte, grado) {
   const facile = grado <= 1
   const pool = facile ? TAGLI_FACILI : TAGLI
@@ -172,19 +114,14 @@ function conta(sorte, grado) {
   const totale = pezzi.reduce((s, t) => s + t.cents, 0)
   const buonaStr = euro(totale)
 
-  /* il riporto perso: euro e centesimi sommati separatamente, scritti
-     uno dopo l'altro senza controllare che i centesimi non sfondino il
-     99 — «1,150 €» al posto di «2,50 €» */
+  // il riporto perso: euro e centesimi sommati separatamente senza controllare che i centesimi sfondino il 99
   const euroPz = pezzi.filter(t => t.cents >= 100).reduce((s, t) => s + t.cents, 0) / 100
   const centPz = pezzi.filter(t => t.cents < 100).reduce((s, t) => s + t.cents, 0)
   const candidati = [
     [euro(totale - sorte.uno(pezzi).cents), 'hai contato un pezzo di meno'],
     [euro(totale + sorte.uno(pool).cents), 'hai contato un pezzo che non c\'era, o uno di troppo'],
   ]
-  /* il riporto perso si vede solo quando i centesimi sfondano il 99:
-     sotto quella soglia «euroPz,centPz» è la stessa scrittura corretta
-     senza lo zero davanti, non un errore — e presentarlo come una
-     risposta diversa sarebbe un refuso, non un tranello */
+  // sotto i 100 centesimi «euroPz,centPz» è la scrittura corretta senza lo zero, non un errore: sarebbe un refuso
   if (centPz >= 100)
     candidati.unshift([`${euroPz},${centPz} €`,
       'hai contato gli euro e i centesimi separati: quando i centesimi superano 99 se ne va un euro in più'])
@@ -203,12 +140,9 @@ function conta(sorte, grado) {
   })
 }
 
-/* il resto: si paga con una banconota, e torna la differenza */
 function resto(sorte, grado) {
   const paid = sorte.uno(grado <= 2 ? [5, 10] : [5, 10, 20])
-  /* la cosa costa quello che costa nel suo negozio, e meno della
-     banconota; nel grado facile i centesimi vanno a decine, che è il
-     conto tondo promesso lì */
+  // nel grado facile i centesimi vanno a decine, il conto tondo promesso lì
   const passo = grado <= 2 ? 10 : 1
   const buone = COSE.filter(c => prezzoPer(sorte, c, 10, paid * 100 - 10, passo) !== null)
   const item = sorte.uno(buone)
@@ -219,9 +153,7 @@ function resto(sorte, grado) {
 
   const candidati = []
   if (costCent > 0) {
-    /* il prestito scordato: si toglie il resto dei centesimi ma non si
-       leva l'euro preso in prestito per farlo — 2,60 € al posto di
-       1,60 €, pagando 5 € una cosa da 3,40 € */
+    // il prestito scordato: si toglie il resto dei centesimi ma non si leva l'euro preso in prestito per farlo
     candidati.push([`${paid - costEuro},${String(100 - costCent).padStart(2, '0')} €`,
       'hai scordato il prestito: per togliere i centesimi ne hai preso uno in prestito dagli euro, e quell\'euro va tolto anche là'])
     candidati.push([euro((paid - costEuro) * 100),
@@ -242,12 +174,9 @@ function resto(sorte, grado) {
   })
 }
 
-/* ══════════════ grado 3-4 — quanto costano, e chi costa di più ══════════════ */
-
-/* quanto costano N cose */
+// grado 3-4: quanto costano, e chi costa di più
 function costo(sorte, grado) {
-  /* i prezzi tondi di `PREZZI`, ma solo quelli che la cosa può avere
-     davvero: niente fumetti da sessanta centesimi */
+  // i prezzi tondi che la cosa può avere davvero: niente fumetti da sessanta centesimi
   const nella = c => PREZZI.filter(x => x >= FASCE[c.singolare][0] && x <= FASCE[c.singolare][1])
   const item = sorte.uno(COSE.filter(c => nella(c).length))
   const prezzo = sorte.uno(nella(item))
@@ -260,8 +189,7 @@ function costo(sorte, grado) {
     [euro(prezzo * (n - 1)), `hai contato ${n - 1}, non ${n}`],
     [euro(prezzo * (n + 1)), `hai contato ${n + 1}, non ${n}`],
   ]
-  /* stesso guasto della «riporto perso» qui sopra: sotto i 100
-     centesimi la scrittura separata è quella corretta, non un errore */
+  // stesso guasto del «riporto perso»: sotto i 100 centesimi la scrittura separata è corretta, non un errore
   if (ce * n >= 100)
     candidati.unshift([`${eu * n},${ce * n} €`,
       'hai moltiplicato gli euro e i centesimi separati: se i centesimi sfondano il 99, un euro passa dall\'altra parte'])
@@ -278,12 +206,7 @@ function costo(sorte, grado) {
   })
 }
 
-/* ── la trappola delle cifre: «3,45» sembra più grande di «3,5»
-   perché ha più cifre, ma vale meno. Stesso intero, un numero scritto
-   con un decimale solo (il vero maggiore) e uno con due (il finto
-   maggiore, sempre appena sotto). `d1` va da 2 in su: con `d1` a 1 il
-   confronto sarebbe con un numero a due cifre che comincia per 0, e
-   non è la stessa trappola. */
+// «3,45» sembra più grande di «3,5» perché ha più cifre, ma vale meno; d1 da 2 in su, altrimenti non è la stessa trappola
 function trappolaCifre(sorte, interoMax) {
   const intero = sorte.fra(0, interoMax)
   const d1 = sorte.fra(2, 9)
@@ -295,25 +218,10 @@ function trappolaCifre(sorte, interoMax) {
   }
 }
 
-/* ── quale prezzo è più alto ──
-   Un prezzo vero ha sempre due cifre dopo la virgola, quindi la
-   trappola del «3,45 contro 3,5» qui non esiste: sta nel grado 4, sui
-   numeri nudi. Quella dei cartellini è un'altra, ed è vera: **guardare
-   i centesimi prima degli euro**. 2,90 € contro 3,05 € — novanta è più
-   di cinque, e chi legge da destra compra la cosa sbagliata. La sua
-   sorella è «5 €» contro «4,95 €», dove il numero più lungo sembra il
-   più grande. Tutte e due si costruiscono attorno a un euro tondo: la
-   cosa che costa meno sta poco sotto, con tanti centesimi, quella che
-   costa di più poco sopra, con pochi o nessuno.
+// quale prezzo è più alto: sui cartellini la trappola vera è guardare i centesimi prima degli euro (2,90€ vs 3,05€)
+// i prezzi restano di un negozio vero (FASCE): una caramella non costa quindici euro
 
-   I prezzi restano quelli di un negozio vero (`FASCE`): una caramella
-   non costa quindici euro, e una domanda con un prezzo assurdo fa
-   ridere invece di far pensare. Si scelgono due cose le cui fasce
-   hanno un euro tondo in comune, con il margine per starci sotto e
-   sopra. */
-
-/* gli euro tondi dove due cose si possono incontrare: la più economica
-   deve poter costare fino a 45 centesimi meno, la più cara 20 in più */
+// gli euro tondi dove due cose si possono incontrare: la più economica fino a 45 centesimi meno, la più cara 20 in più
 function eurTondiComuni(a, b) {
   const [la, ha] = FASCE[a.singolare], [lb, hb] = FASCE[b.singolare]
   const lo = Math.max(la, lb) + 45, hi = Math.min(ha, hb) - 20
@@ -390,18 +298,11 @@ function confrontoNumeri(sorte) {
 
 const valoreDi = (cifra, posizione) => posizione === 'decimi' ? `0,${cifra}` : `0,0${cifra}`
 
-/* «1 decimo», non «1 decimi»: l'unica cifra che cambia l'accordo è 1,
-   ed è anche la più facile da pescare — quindi la più probabile di
-   incontrare storta se non ci si pensa apposta. */
+// «1 decimo», non «1 decimi»: l'unica cifra che cambia l'accordo è 1, ed è anche la più facile da pescare
 const SINGOLARE = { decimi: 'decimo', centesimi: 'centesimo' }
 const paroleDi = (cifra, posizione) => cifra === 1 ? SINGOLARE[posizione] : posizione
 
-/* in 4,37 quanto vale il 3? Decimi o centesimi, e non è la stessa cosa:
-   un bambino che confonde le due posizioni sbaglia di dieci volte.
-   Decimi e centesimi partono da 1 e non da 0: con uno zero in una
-   delle due posizioni «quanto vale» avrebbe la stessa risposta —
-   zero — chiesto in due posti diversi, e la domanda smetterebbe di
-   avere un verso giusto e uno storto. */
+// decimi e centesimi partono da 1, non da 0: con uno zero «quanto vale» darebbe la stessa risposta in due posti diversi
 function cifre(sorte) {
   const intero = sorte.fra(0, 9)
   let decimi, centesimi
@@ -433,10 +334,7 @@ function cifre(sorte) {
   })
 }
 
-/* ══════════════ grado 6 — in ordine, e arrotondare ══════════════ */
-
-/* la linea dei numeri: tre punti su un segmento intero diviso in
-   decimi, e si chiede quale sia un decimale preciso */
+// grado 6: in ordine, e arrotondare. La linea: tre punti su un segmento diviso in decimi
 function linea(sorte) {
   const da = sorte.fra(0, 9)
   const posizioni = new Set()
@@ -458,7 +356,7 @@ function linea(sorte) {
   })
 }
 
-/* la stessa cosa messa in fila, senza disegno */
+// la stessa cosa messa in fila, senza disegno
 function ordina(sorte) {
   const intero = sorte.fra(0, 9)
   const fracs = new Set()
@@ -479,10 +377,7 @@ function ordina(sorte) {
   })
 }
 
-/* arrotondare — all'euro, o alla prima cifra decimale. Tutta la
-   matematica resta sugli interi: `frac` sono i centesimi (0-99) e
-   la soglia del riporto è 50, mai un `Math.round` su un numero con la
-   virgola. */
+// tutta la matematica resta sugli interi (frac = centesimi 0-99, soglia 50): mai un Math.round su un numero con la virgola
 function arrotonda(sorte) {
   const intero = sorte.fra(0, 8)
   const decimi = sorte.fra(0, 9)
@@ -490,7 +385,7 @@ function arrotonda(sorte) {
   const frac = decimi * 10 + centesimi
 
   if (sorte.forse(0.5)) {
-    /* all'euro più vicino */
+    // all'euro più vicino
     const su = frac >= 50
     const rotondo = su ? intero + 1 : intero
     const altro = su ? intero : intero + 1
@@ -510,8 +405,7 @@ function arrotonda(sorte) {
     })
   }
 
-  /* alla prima cifra decimale: se i centesimi arrivano a 5 o più, il
-     decimo sale di uno — e se il decimo era già 9, sale anche l'intero */
+  // alla prima cifra decimale: se i centesimi arrivano a 5+, il decimo sale di uno (e se era già 9, sale anche l'intero)
   const su = centesimi >= 5
   let decimiR = su ? decimi + 1 : decimi
   let interoR = intero
@@ -533,14 +427,7 @@ function arrotonda(sorte) {
   })
 }
 
-/* ══════════════ grado 7-11 — la spesa furba ══════════════
-   Le cose di prima (`COSE`) si comprano a pezzo: una caramella, un
-   pallone. Qui si comprano a peso o a numero di confezioni — le mele a
-   kg, le uova a scatola — perché «cosa conviene» ha senso solo quando
-   la stessa cosa si vende in quantità diverse, e i prezzi sono quelli
-   di un negozio vero: mele e banane 1,50-3 €/kg, formaggio 10-20 €/kg,
-   pane 2-5 €/kg, pasta 1-2,50 €/kg, latte 1-2 €/l, uova 25-50 cent
-   l'una, yogurt 40-90 cent l'uno. */
+// grado 7-11, la spesa furba: qui si compra a peso o a confezione (non a pezzo), perché «cosa conviene» vuole quantità diverse
 const AL_PESO = [
   { nome: 'le mele', un: 'kg', fascia: [150, 300] },
   { nome: 'le banane', un: 'kg', fascia: [150, 250] },
@@ -554,24 +441,17 @@ const A_PEZZO = [
   { nome: 'gli yogurt', pezzo: 'uno yogurt', confezioni: [4, 6, 8], fascia: [40, 90] },
 ]
 
-/* «2 kg» o «1 litro» / «2 litri»: il chilo non cambia forma al plurale,
-   il litro sì */
+// il chilo non cambia forma al plurale, il litro sì
 function pesoLabel(item, n) {
   if (item.un === 'litro') return n === 1 ? '1 litro' : `${n} litri`
   return `${n} kg`
 }
 const pesoUnitLabel = item => item.un === 'litro' ? 'un litro' : 'un kg'
 
-/* «le uova» → «uova»: il nome senza l'articolo, per metterlo dopo un
-   numero («6 uova») o dopo «di» («di formaggio») */
+// per metterlo dopo un numero («6 uova») o dopo «di» («di formaggio»)
 const senzaArticolo = nome => nome.replace(/^(le|gli|i|il|la)\s+/, '')
 
-/* un prezzo diverso da `base` di almeno il 5%, dalla stessa fascia:
-   sotto quella soglia nessuno dei due verdetti («questa conviene») è
-   onesto — sarebbe un pareggio presentato come se non lo fosse. Un
-   tetto ai tentativi invece di un ciclo che confida sempre di trovarlo:
-   con una fascia stretta (le uova, 25 centesimi di ampiezza) è più
-   pulito arrendersi che girare a vuoto. */
+// almeno il 5% diverso da base: sotto quella soglia nessun verdetto «questa conviene» è onesto; tetto ai tentativi
 function prezzoDiverso(sorte, base, lo, hi) {
   for (let i = 0; i < 20; i++) {
     const p = sorte.fra(lo, hi)
@@ -580,9 +460,7 @@ function prezzoDiverso(sorte, base, lo, hi) {
   return Math.min(hi, base + Math.max(2, Math.round(base * 0.1)))
 }
 
-/* ── grado 7: quanto costa una sola cosa ──
-   Si dà il totale di N pezzi o di N kg, e si chiede il prezzo di uno
-   solo: la divisione all'incontrario di «costo» qui sopra. */
+// grado 7: dato il totale di N pezzi/kg, il prezzo di uno solo (la divisione all'incontrario di costo())
 function unitario(sorte) {
   const usaPezzo = sorte.forse(0.5)
   const item = usaPezzo ? sorte.uno(A_PEZZO) : sorte.uno(AL_PESO)
