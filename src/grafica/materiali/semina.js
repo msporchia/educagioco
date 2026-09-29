@@ -1,22 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   GLI ATTREZZI DEI MATERIALI
-
-   Le quattro cose che ogni posa e ogni muratura usano: come si sparge
-   roba su una regione, come si traccia una lastra, un masso, un
-   concio, una crepa. Sono qui e non in `comune.js` perché servono solo
-   a chi dipinge il terreno.
-
-   ── il caso è deterministico ──
-   Non c'è una sequenza casuale da consumare nell'ordine giusto: ogni
-   granello è una **funzione pura della sua posizione** (`dado(i,k,n)`).
-   La stessa stanza esce identica anche se domani la si dipingesse a
-   riquadri, al contrario, o due volte.
-   ═══════════════════════════════════════════════════════════════════ */
+// Gli attrezzi dei materiali: sparge roba su una regione, traccia una lastra, un
+// masso, un concio, una crepa. Qui e non in comune.js perché servono solo al terreno.
 import { mescola, dado, poly } from '../comune.js'
 
-/* semina roba su una regione: una griglia grossa, e dentro ogni maglia
-   `quanti` oggetti messi dove dice il dado. Densità = area / passo².
-   `dove` può rifiutare un posto (per non piantare l'erba nel muro). */
+// densità = area / passo²; `dove` può rifiutare un posto (niente erba nel muro)
 export function semina(reg, passo, seme, quanti, dove, fn) {
   const gx0 = Math.floor(reg.x0 / passo), gx1 = Math.ceil(reg.x1 / passo)
   const gy0 = Math.floor(reg.y0 / passo), gy1 = Math.ceil(reg.y1 / passo)
@@ -31,8 +17,7 @@ export function semina(reg, passo, seme, quanti, dove, fn) {
       }
 }
 
-/* la lastra: un poligono con gli angoli sbeccati, mai un rettangolo.
-   È il rettangolo perfetto che fa sembrare tutto un foglio a quadretti. */
+// la lastra: un poligono con gli angoli sbeccati, mai un rettangolo (che farebbe foglio a quadretti)
 export function lastra(c, x, y, w, h, col, chiaro, scuro, r) {
   const j = Math.min(w, h) * 0.06
   const p = [
@@ -46,20 +31,12 @@ export function lastra(c, x, y, w, h, col, chiaro, scuro, r) {
     [x - j * r(12) * 0.5, y + h * 0.5],
   ]
   poly(c, p, col)
-  // lo smusso: luce da sopra a sinistra, ombra sotto a destra
   poly(c, [p[0], p[1], p[2], [x + w * 0.5, y + h * 0.22], [x + j, y + h * 0.2]], chiaro)
   poly(c, [p[4], p[5], p[6], [x + w * 0.5, y + h * 0.8], [x + w - j, y + h * 0.78]], scuro)
 }
 
-/* il masso di roccia grezza: un poligono a sette lati con il centro
-   spostato a caso. Non è una lastra sbeccata — non ha spigoli retti, e
-   messi uno accanto all'altro non formano corsi.
-
-   `scuro` è facoltativo, e non è un capriccio: di massi ce ne sono
-   migliaia su una mappa grande, e il terzo tracciato di ognuno costa
-   quanto tutti gli altri dettagli della stanza messi insieme. Sulla
-   parete si tiene solo la faccia in luce — l'ombra la fa già il masso
-   accanto. */
+// il masso di roccia grezza: `scuro` è facoltativo perché il terzo tracciato di
+// migliaia di massi costa quanto tutti gli altri dettagli della stanza insieme
 export function masso(c, cx, cy, r, col, chiaro, scuro, dai) {
   const p = []
   for (let i = 0; i < 7; i++) {
@@ -72,7 +49,7 @@ export function masso(c, cx, cy, r, col, chiaro, scuro, dai) {
   if (scuro) poly(c, [p[2], p[3], p[4], [cx, cy + r * 0.12]], scuro)
 }
 
-/* una pietra di taglio irregolare, con la faccia in luce in alto */
+// una pietra di taglio irregolare, con la faccia in luce in alto
 export function concio(c, x, y, w, h, col, r, sbeccata) {
   const j = Math.min(w, h) * 0.1
   const p = [
@@ -95,7 +72,7 @@ export function concio(c, x, y, w, h, col, r, sbeccata) {
   }
 }
 
-/* la crepa: una spezzata che si allarga, con una diramazione ogni tanto */
+// la crepa: una spezzata che si allarga, con una diramazione ogni tanto
 export function crepa(c, x, y, lung, col, r) {
   c.strokeStyle = col; c.lineWidth = Math.max(0.7, lung * 0.035); c.lineCap = 'round'
   c.beginPath()
