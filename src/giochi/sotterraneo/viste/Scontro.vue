@@ -1,16 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   CHI HAI DAVANTI, MENTRE RISPONDI
-
-   La riga sopra la domanda: la faccia, quanta vita gli resta, e —
-   soprattutto — **quante risposte mancano a farlo cadere**. Quel numero
-   è l'unica cosa che rende una spada una spada: senza, trovarne una
-   migliore è un'emoji che cambia in una casella, con, è la fila di
-   domande che si accorcia sotto gli occhi.
-
-   Non calcola niente: riceve i numeri già fatti dal motore, che è
-   l'unico che sa come si sommano.
-   ═══════════════════════════════════════════════════════════════════ */
+// Chi hai davanti mentre rispondi: quante risposte mancano a farlo cadere è l'unica cosa che rende una
+// spada una spada (senza, trovarne una migliore è solo un'emoji che cambia). Non calcola niente: riceve i
+// numeri già fatti dal motore.
 import Icona from './Icona.vue'
 
 defineProps({
@@ -23,16 +14,12 @@ defineProps({
   vita: { type: Number, required: true },
   vitaMax: { type: Number, required: true },
   scosso: { type: Number, default: 0 },
-  /* com'è andato l'ultimo scambio: `{ dato, preso, caduto }`, o niente
-     se non si è ancora risposto. È la riga che mancava — vedi sotto. */
-  scambio: { type: Object, default: null },
+  scambio: { type: Object, default: null },   // com'è andato l'ultimo scambio: { dato, preso, caduto }
 })
 </script>
 
 <template>
-  <!-- Anche rispondendo bene qualcosa passa: il conto sta **davanti**,
-       prima di rispondere, perché è quello che fa decidere se restare o
-       scappare. Dirlo dopo sarebbe raccontare una brutta sorpresa. -->
+  <!-- il conto sta prima di rispondere: è quello che fa decidere se restare o scappare -->
   <div class="sot-scontro">
   <div class="sot-nemico" :key="scosso">
     <div class="sot-faccia" :class="{ 'sot-colpito': scosso }">
@@ -54,13 +41,7 @@ defineProps({
       </div>
     </div>
   </div>
-  <!-- ═══ com'è andato il colpo ═══
-       Il mostro picchia **anche quando rispondi bene**, ed è voluto: è
-       quello che rende utile una pozione. Ma finché la cosa si vedeva
-       solo nella barra che cala, chi aveva appena risposto giusto
-       leggeva «hai sbagliato» — e il suono, che era quello dell'errore,
-       glielo confermava. Detto con due numeri diventa quello che è: uno
-       scambio, e uno scambio in cui hai avuto la meglio. -->
+  <!-- il mostro picchia anche rispondendo bene: senza questi due numeri sembra "hai sbagliato" -->
   <p v-if="scambio" class="sot-scambio" :class="{ 'sot-male': !scambio.dato }">
     <span v-if="scambio.dato" class="em">⚔️ gli hai tolto <b>{{ scambio.dato }}</b></span>
     <span v-if="scambio.dato && scambio.preso"> · </span>

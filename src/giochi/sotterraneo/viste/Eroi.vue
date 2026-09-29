@@ -1,31 +1,8 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   CHI SCENDE
-
-   Quattro figure, due numeri per uno. Si sceglie **una volta** e resta:
-   la scelta è ricordata nel profilo e si cambia da qui, dalla mappa
-   delle discese. Chiederlo prima di ogni discesa sarebbero due tocchi in
-   più ogni volta, e la risposta sarebbe la stessa di ieri.
-
-   I due numeri sono tutta la differenza (`dati/eroi.js`): quanto reggi e
-   quanto fai male. Si mostrano come barrette oltre che come cifre —
-   davanti a «❤️ 24 · ⚔️ 3» un bambino di sei anni non sa dire chi è più
-   forte, davanti a due barre lunghe diverse sì.
-
-   ── E COSA PORTA, PRIMA DI SCEGLIERE ──────────────────────────────
-   La terza riga dice cosa impugna e cosa veste, **con le figure**:
-   «⚔️ spade · 🪓 asce · 🛡️ ferro». È la metà che mancava — da quando le
-   classi hanno un limite, sceglierlo senza saperlo vorrebbe dire
-   scoprirlo tre piani più giù davanti a un forziere, che è il modo di
-   trasformare una scelta in una fregatura. Le icone e non le parole
-   perché questa carta la guarda anche chi non legge ancora: quattro
-   simboli in fila si contano, tre righe di elenco no.
-
-   Quello che **non ha famiglia** non si scrive: gli scudi, i gioielli,
-   le pozioni e il cuoio li porta chiunque, e stamparli su tutte e
-   quattro le carte sarebbe rumore uguale quattro volte. Qui si mostra
-   solo quello che distingue.
-   ═══════════════════════════════════════════════════════════════════ */
+// Chi scende: si sceglie una volta e resta (ricordato nel profilo). I due numeri (dati/eroi.js) si mostrano
+// anche come barrette, che un bambino confronta più facilmente delle cifre. La terza riga dice cosa impugna
+// e cosa veste, con le figure e non le parole (si vede prima di scoprirlo tre piani più giù, e si legge anche
+// senza saper leggere); quello senza famiglia (scudi, gioielli, pozioni, cuoio) non si scrive: non distingue.
 import { figura } from './figura.js'
 import { pezzoAndante } from '../dati/tessere.js'
 import { FAMIGLIE } from '../dati/eroi.js'
@@ -37,16 +14,12 @@ const props = defineProps({
 })
 defineEmits(['scegli', 'chiudi'])
 
-/* Il fotogramma fermo: fermo-0 è quello con la posa più leggibile. */
-const posa = e => figura(pezzoAndante(e.sprite, 'fermo', 0), { scala: 3 })
+const posa = e => figura(pezzoAndante(e.sprite, 'fermo', 0), { scala: 3 })   // fermo-0: la posa più leggibile
 
-/* Le barrette. Il fondo scala è quello dell'eroe più forte in quella
-   colonna, non un massimo inventato: così la differenza si vede tutta. */
+// il fondo scala è l'eroe più forte in quella colonna, non un massimo inventato
 const piuVita = Math.max(...props.eroi.map(e => e.vita))
 const piuAtt = Math.max(...props.eroi.map(e => e.att))
 
-/* Le famiglie di una classe, già pronte da stampare: la vista non sa
-   cosa sia una famiglia, chiede alla tabella. */
 const porta = e => (e.porta || []).map(f => FAMIGLIE[f]).filter(Boolean)
 </script>
 
@@ -78,8 +51,7 @@ const porta = e => (e.porta || []).map(f => FAMIGLIE[f]).filter(Boolean)
             </span>
             <span v-if="e.dif" class="sot-scudo em">🛡️ {{ e.dif }}</span>
           </span>
-          <!-- cosa impugna e cosa veste: con le figure, prima di
-               sceglierlo e non tre piani più sotto -->
+          <!-- cosa impugna e cosa veste, prima di scegliere e non tre piani più sotto -->
           <span class="sot-porta" :data-porta="e.chiave">
             <span v-for="f in porta(e)" :key="f.corto">
               <em class="em">{{ f.em }}</em>{{ f.corto }}

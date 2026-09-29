@@ -1,26 +1,12 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   COM'È FINITA
-
-   Un cartello solo per i due modi di finire, perché è lo stesso gesto:
-   «è finita, ecco com'è andata, si riparte da qui».
-
-   I numeri veri si dicono **sempre**, anche quando è andata male — anzi
-   soprattutto: «ero al terzo piano su quattro» è il motivo per cui un
-   bambino rimette la mano sul telefono, «hai perso» è il motivo per cui
-   lo posa.
-   ═══════════════════════════════════════════════════════════════════ */
+// Un cartello solo per tutti i modi di finire: i numeri veri si dicono SEMPRE, anche perdendo — soprattutto.
 defineProps({
   vinta: { type: Boolean, default: false },
   titolo: { type: String, default: '' },
   stelle: { type: Number, default: 0 },
   monete: { type: Number, default: 0 },
   fatti: { type: Object, required: true },   // { piani, quantiPiani, domande, mostri, tesori, gemme, perche, fondo }
-  /* ── il terzo modo di finire ──
-     Si risale dall'abisso, e non è né «vinta» né «tornato su a mani
-     vuote»: là sotto non c'è niente da vincere e niente da fallire. Il
-     numero che racconta la sera è **fin dove si è arrivati**, e la
-     discesa non si butta — la si riprende da lì. */
+  // il terzo modo di finire: l'abisso non ha niente da vincere né da fallire, si riprende da dove si è arrivati
   abisso: { type: Boolean, default: false },
   record: { type: Boolean, default: false },  // ...ed è il più giù di sempre
 })
@@ -30,13 +16,7 @@ defineEmits(['ancora', 'esci'])
 <template>
   <div class="sot-velo">
     <div class="sot-fine">
-      <!-- ── tre modi di finire, non due ──
-           Vinta, lasciata a metà, e **finita male**: al fondo degli
-           svenimenti si risale per forza, e raccontarlo come «sei
-           tornato su a mani vuote» — la frase di chi ha scelto di
-           smettere — nasconde l'unica cosa che c'è da capire, cioè che
-           si è caduti troppe volte. Il numero degli svenimenti sta
-           sotto, fra i fatti, e la frase ci si appoggia. -->
+      <!-- tre modi di finire: vinta, lasciata a metà, o finita male (svenimenti) — mai la stessa frase -->
       <div class="sot-em em">{{ abisso ? '🕳️' : vinta ? '🏆' : fatti.perche === 'svenuto' ? '💫' : '🕯️' }}</div>
       <h2 :class="vinta || abisso ? 'sot-oro' : 'sot-rosso'">
         {{ abisso ? `Sei risalito dal piano ${fatti.fondo}`
@@ -58,8 +38,7 @@ defineEmits(['ancora', 'esci'])
       <div v-if="stelle" class="sot-stelle em">{{ '⭐'.repeat(stelle) }}</div>
 
       <div class="sot-fatti">
-        <!-- nell'abisso non esiste un «su quanti»: il conto è quanti
-             piani si sono scesi stasera, e basta -->
+        <!-- nell'abisso non esiste un "su quanti" -->
         <div><b>{{ fatti.piani }}<small v-if="fatti.quantiPiani">/{{ fatti.quantiPiani }}</small></b><span>piani</span></div>
         <div><b>{{ fatti.domande }}</b><span>domande</span></div>
         <div><b>{{ fatti.mostri }}</b><span>mostri</span></div>
