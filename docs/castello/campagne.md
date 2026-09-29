@@ -83,7 +83,7 @@ file dati; le regole che devono rispettare in [mostri.md](mostri.md).
   Il raggio va da 86 a 130 unità; una strada che si ripiega si fa battere
   due o tre volte dalla stessa torre. Il validatore la chiama `presidio`
   (strada per postazione, in raggi d'arciere, con le piazzole che la carta
-  ha davvero), e **scende di campagna in campagna**: sulla carta bosco 2,90
+  ha davvero), e **scende di campagna in campagna**: sulla carta bosco 2,82
   (perdona), sotterraneo 2,57, mura 2,28. Pavimento `PRESIDIO_MINIMO` 1,85,
   scalino fra campagne `SCALINO` 0,12. Le fasce per campagna di lunghezza e
   presidio (`FASCE`) erano la misura con cui si disegnava lo schizzo curvo:
