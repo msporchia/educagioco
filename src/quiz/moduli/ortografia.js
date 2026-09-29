@@ -1,31 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   ORTOGRAFIA — le parole che non si scrivono come si sentono.
-
-   È il generatore più infinito che abbiamo in casa e insieme il buco
-   più grosso: i bambini parlano italiano tutto il giorno e nel gioco
-   non c'era una riga di italiano. Trenta parole per regola, dieci
-   regole, e per ognuna gli errori che si fanno davvero: sono già
-   qualche migliaio di domande diverse, e le stesse parole tornano
-   dentro formati diversi.
-
-   I FALSI SONO GLI ERRORI VERI, non lettere spostate a caso: «lavania»
-   e «lavagnia» sono le due cose che un bambino scrive davvero, e
-   riconoscerle costa sapere la regola. Se scrivessimo «lavagxa» la
-   domanda si risolverebbe senza saperne niente.
-
-   LE DOPPIE HANNO BISOGNO DEL DISEGNO. «pala» e «palla» sono due parole
-   vere: chiedere «quale è scritta giusta» senza dire di cosa si parla è
-   una domanda senza risposta. Per questo le parole possono portarsi
-   un'emoji, e quando la portano la domanda mostra la cosa e chiede come
-   si scrive.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// le parole che non si scrivono come si sentono. I falsi sono gli errori veri («lavania», non «lavagxa»): riconoscerli costa sapere la regola. Le doppie hanno bisogno del disegno — «pala»/«palla» sono due parole vere, senza dire di cosa si parla la domanda non ha risposta.
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo } from '../nucleo/domanda.js'
 
-/* ── le parole ──
-   Ogni voce: la parola giusta, gli errori tipici, e — se serve a capire
-   di cosa si parla — un'emoji. */
+// ogni voce: [parola giusta, errori tipici, emoji?]
 const REGOLE = {
   gn: {
     chiave: 'orto:gn', dritta: 'dopo gn la i non ci va: gnomo, non gniomo',
@@ -169,8 +146,7 @@ const REGOLE = {
   },
   doppie: {
     chiave: 'orto:doppie', dritta: 'la doppia si sente: prova a dire la parola piano piano',
-    /* niente `gruppi`: un buco nelle doppie sarebbe «pa__a», e la
-       risposta si vedrebbe senza sapere niente */
+    // niente `gruppi`: un buco nelle doppie sarebbe «pa__a», la risposta si vedrebbe senza sapere niente
     parole: [
       ['palla', ['pala', 'palá'], '⚽'], ['nonna', ['nona', 'nonnna'], '👵'],
       ['cavallo', ['cavalo', 'cavalllo'], '🐴'], ['farfalla', ['farfala', 'ffarfalla'], '🦋'],
@@ -214,17 +190,7 @@ const REGOLE = {
       ['rosa', ['rossa', 'rrosa'], '🌹'], ['fata', ['fatta', 'ffata'], '🧚'],
     ],
   },
-  /* L'ACCENTO: c'è o non c'è, e sta dove batte la voce.
-     Prima metà dei falsi era la direzione — «caffé» contro «caffè»,
-     «perchè» contro «perché» — e non andava bene per due motivi. Sullo
-     schermo di un telefono i due segni sono quattro pixel di
-     differenza, quindi la domanda misura la vista e non l'italiano. E
-     soprattutto non è la regola che serve: quella vera è **ci vuole
-     l'accento o no**, e su quale vocale va. La direzione è una
-     convenzione tipografica che metà degli adulti sbaglia, e a un
-     bambino di otto anni non cambia niente della vita.
-     Restano quindi due errori, tutti e due veri: l'accento dimenticato
-     e l'accento messo sulla sillaba sbagliata. */
+  // due errori, non la direzione dell'accento (`caffé`/`caffè`): sullo schermo sono 4px di differenza, e la regola vera è se ci vuole o no
   accento: {
     chiave: 'orto:accento', dritta: 'l\'accento si mette sull\'ultima vocale quando la voce batte lì',
     parole: [
@@ -287,10 +253,7 @@ const REGOLE = {
   },
 }
 
-/* ── le frasi con l'acca ──
-   Qui non c'è una parola da guardare ma un buco da riempire: ho/o,
-   hai/ai, ha/a, hanno/anno sono la stessa domanda in quattro salse, e
-   l'unico modo di rispondere è chiedersi «è il verbo avere?». */
+// ho/o, hai/ai, ha/a, hanno/anno: la stessa domanda in quattro salse, si risponde chiedendosi «è il verbo avere?»
 const ACCA = [
   ['___ mangiato tutta la pizza.', 'ho', ['o'], '🍕'],
   ['___ visto il mio cane?', 'Hai', ['Ai'], '🐕'],
@@ -344,12 +307,7 @@ const ACCA = [
   ['I bambini ___ raccolto le foglie.', 'hanno', ['anno'], '🍂'],
 ]
 
-/* ── l'accento che cambia il significato ──
-   Questa è la regola dell'accento che serve davvero, ed è fatta come
-   quella dell'acca: non c'è niente da ricordare a memoria, c'è da
-   capire cosa dice la frase. «Il gelato e buono» non è brutto da
-   vedere, è **un'altra cosa** — e finché non lo si sente, l'accento
-   sembra un ghirigoro che i grandi mettono a caso. */
+// «il gelato e buono» non è brutto da vedere, è un'altra cosa: si capisce cosa dice la frase, non si ricorda a memoria
 const CAMBIA = [
   ['Il gelato ___ buono.', 'è', ['e'], '🍦'],
   ['Marco ___ Sara giocano insieme.', 'e', ['è'], '👫'],
@@ -403,9 +361,6 @@ const CAMBIA = [
   ['Il nonno ___ sempre la buonanotte.', 'dà', ['da'], '👴'],
 ]
 
-/* ── che cosa si chiede a ogni grado ──
-   Solo la riga da leggere: quali domande escono a ogni grado lo dicono
-   i tipi qui sotto, ed è l'unico posto dove sta scritto. */
 const SCALETTA = [
   'gn e gl',
   'sc, sce e sci',
@@ -414,11 +369,7 @@ const SCALETTA = [
   'accenti, apostrofi e la lettera h',
 ]
 
-/* Le tipologie. I gruppi di lettere e le doppie sono `suoni-difficili`:
-   si imparano scrivendo, e chi non li ha ancora visti li sbaglia ma può
-   ragionarci sopra. Accento, apostrofo e acca sono l'altro gruppo — i
-   segni che cambiano una parola — e lì senza la regola non c'è niente
-   da ragionare. */
+// gruppi di lettere e doppie sono `suoni-difficili` (si imparano scrivendo); accento/apostrofo/acca cambiano una parola, senza la regola non c'è niente da ragionare
 const TIPI = [
   { chiave: 'orto:gn', nome: 'Il suono gn (montagna)', sa: 'suoni-difficili', gradi: { 1: 0.5, 2: 0.33 } },
   { chiave: 'orto:gl', nome: 'Il suono gl (famiglia)', sa: 'suoni-difficili', gradi: { 1: 0.5, 2: 0.33 } },
@@ -441,13 +392,7 @@ class Ortografia extends Modulo {
       materia: 'italiano',
       chiaro: 'le parole che si scrivono diverse da come si sentono',
       scaletta: SCALETTA,
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [38, 44, 50, 56, 63],
+      livelli: [38, 44, 50, 56, 63], // scala 0-100 comune a tutte le materie (vedi docs/apprendimento/quiz-livelli.md)
       tipi: TIPI,
     })
   }
@@ -460,9 +405,7 @@ class Ortografia extends Modulo {
     if (regola.gruppi && parola.includes(regola.gruppi[0]) && sorte.forse(0.4))
       return this.buco(regola, parola, sorte)
 
-    /* Con l'emoji si guarda la cosa e si sceglie come si scrive; senza,
-       si legge e basta. Le due domande allenano la stessa regola ma non
-       si somigliano, che è quello che tiene sveglio un bambino. */
+    // con l'emoji si guarda la cosa e si sceglie come si scrive; senza, si legge e basta — stessa regola, domande diverse
     return domanda({
       testo: em ? 'Come si scrive?' : 'Quale parola è scritta giusta?',
       soggetto: em ? { emoji: em } : undefined,
@@ -474,9 +417,7 @@ class Ortografia extends Modulo {
     })
   }
 
-  /* il buco nella parola: «lava__a» con gn, ni, gni da scegliere.
-     È la stessa regola dell'altra domanda ma girata al contrario —
-     lì si riconosce la forma giusta, qui si deve produrre. */
+  // il buco: «lava__a» con gn, ni, gni da scegliere — stessa regola dell'altra ma girata (lì si riconosce, qui si produce)
   buco(regola, parola, sorte) {
     const gruppo = regola.gruppi[0]
     return domanda({
@@ -490,8 +431,7 @@ class Ortografia extends Modulo {
     })
   }
 
-  /* la frase col buco: l'acca del verbo avere */
-  frase(sorte) {
+  frase(sorte) { // la frase col buco: l'acca del verbo avere
     const [frase, buona, falsi, em] = sorte.uno(ACCA)
     return domanda({
       testo: frase,
@@ -504,10 +444,7 @@ class Ortografia extends Modulo {
     })
   }
 
-  /* la frase col buco dove l'accento cambia la parola: stessa forma
-     dell'acca, perché è lo stesso mestiere — leggere la frase e capire
-     quale delle due cose sta dicendo */
-  cambia(sorte) {
+  cambia(sorte) { // stessa forma dell'acca: leggere la frase e capire quale delle due cose sta dicendo
     const [frase, buona, falsi, em] = sorte.uno(CAMBIA)
     const dritta = 'l\'accento cambia il significato: leggi la frase e senti quale delle due ci sta'
     return domanda({
