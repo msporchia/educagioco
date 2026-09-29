@@ -1,36 +1,5 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   COME VA — l'elenco delle domande, dalla peggiore alla migliore
-
-   ── PERCHÉ ESISTE, E PERCHÉ LA PRIMA VERSIONE ERA STATA SOSPESA ───
-   Le manopole ci sono tutte e nessuno le tocca, perché **nessuno va a
-   cercare un problema che non sa di avere**: un genitore apre le
-   impostazioni quando qualcosa lo infastidisce, e la taratura sbagliata
-   di una tipologia non infastidisce lui — infastidisce il figlio, che
-   non ha le parole per dirlo. Quindi il verso si gira: invece di
-   aspettare che il grande cerchi, qui si dice cosa si è notato.
-
-   La prima versione mostrava **solo i segnali**: le tre o quattro righe
-   sopra soglia, con il tasto per ritoccarle. Era corretta e non si
-   capiva, per un motivo che si vede solo mettendocisi davanti — un
-   elenco di quattro righe senza il resto non dice se sono quattro su
-   dieci o quattro su centoventi, e senza quel confronto «ne ha sbagliate
-   7 su 10» non si sa se è un disastro o la normalità. Adesso ci sono
-   tutte, ordinate: le peggiori vengono in cima da sole, e intorno c'è la
-   misura per capirle.
-
-   ── UNA RIGA, TRE COSE ────────────────────────────────────────────
-   Il nome, i cuori, e quanto ha risposto. Il **punteggio è il tasto**:
-   premendolo si apre la scheda con tutti i numeri e le tre cose che si
-   possono fare (`SchedaDomanda.vue`). Non c'è una fila di tastini sulla
-   riga — erano quattro nella scheda vecchia, e tre erano triangoli.
-
-   ── E NON RITOCCA NIENTE DA SÉ ────────────────────────────────────
-   Vale parola per parola quello che sta in `quiz/consiglio.js`: un
-   pomeriggio storto o un fratello che ha giocato al posto suo
-   insegnerebbero la cosa sbagliata. Qui si mostra il conto, il tasto lo
-   preme un umano.
-   ═══════════════════════════════════════════════════════════════════ */
+// «Come va»: tutte le tipologie ordinate dalla peggiore alla migliore, con la misura per capirle (vedi docs/genitori/come-va.md). Non ritoccca niente da sé: mostra il conto, il tasto lo preme un umano.
 import { ref, computed } from 'vue'
 import { fasceDelBambino } from './catalogo.js'
 import { andamentoDi, riassuntoDi, CUORI } from './andamento.js'
@@ -39,9 +8,7 @@ import { state, ritocca, azzeraConto, etaDelBambino } from '../store/profile.js'
 
 const emit = defineEmits(['prova'])
 
-/* `giro` è la dipendenza che rifà i conti dopo un ritocco o un azzera:
-   `state.profile.items` è reattivo, ma il catalogo lo si ricalcola a
-   mano — costa, e non serve rifarlo a ogni battito. */
+// dipendenza per rifare i conti dopo un ritocco/azzera: il catalogo si ricalcola a mano, costa
 const giro = ref(0)
 const aperta = ref(null)          // la riga di cui è aperta la scheda
 const mostraMai = ref(false)
@@ -55,21 +22,13 @@ const elenco = computed(() => {
 })
 const conti = computed(() => riassuntoDi(elenco.value))
 
-/* ── i cuori ──
-   Cinque simboli e non una percentuale: la colonna si legge con l'occhio
-   invece che parola per parola. Sbiaditi quando le prove sono poche —
-   il segnale c'è, il verdetto no (vedi `andamento.js`). */
+// cinque simboli e non una percentuale: si legge con l'occhio; sbiaditi con poche prove (vedi andamento.js)
 const cuori = r => '♥'.repeat(r.cuori) + '♡'.repeat(CUORI - r.cuori)
 
 function apri(r) { aperta.value = r }
 function chiudi() { aperta.value = null }
 
-/* La tacca emette `{ ritocco, spenta }` — la stessa forma che riceve il
-   quadro dell'età, perché è lo stesso componente. `spenta` qui è sempre
-   falso: spegnere è roba del **pezzo di scuola** e la tacca lo offre solo
-   dove c'è un pezzo di scuola da spegnere (`puoSpegnere`), mentre qui si
-   guarda una tipologia sola — era il ✕ che, standosene sulla riga di una
-   domanda, ne toglieva otto. */
+// stessa tacca del quadro dell'età, ma `spenta` è sempre falso: qui si ritocca solo una tipologia, mai un intero pezzo di scuola
 function ritoccaRiga({ tipo, ritocco: gradini }) {
   ritocca(tipo, gradini)
   giro.value++
@@ -77,8 +36,7 @@ function ritoccaRiga({ tipo, ritocco: gradini }) {
 function azzeraRiga(r) {
   azzeraConto(r.tipo)
   giro.value++
-  /* la scheda resta aperta e i numeri dentro si azzerano sotto gli
-     occhi: chiuderla lascerebbe il dubbio di non aver premuto */
+  // la scheda resta aperta e i numeri si azzerano sotto gli occhi
   aperta.value = elenco.value.tutte.find(x => x.tipo === r.tipo) || null
 }
 function provaRiga(r) {
@@ -89,10 +47,7 @@ function provaRiga(r) {
 
 <template>
   <div class="come-va" data-come-va>
-    <!-- ── la misura di tutto il resto ──
-         Tre numeri in cima, perché «ne ha sbagliate 7 su 10» detto dopo
-         dodici risposte in tutta la vita è un'altra cosa che detto dopo
-         duemila. -->
+    <!-- tre numeri in cima: «7 su 10» vuol dire una cosa diversa dopo 12 risposte o dopo 2000 -->
     <div class="sommario" data-sommario>
       <div><b>{{ conti.risposte }}</b><span>risposte in tutto</span></div>
       <div><b>{{ conti.incontrate }}</b><span>domande incontrate</span></div>
@@ -112,14 +67,7 @@ function provaRiga(r) {
         troppo poche per dire com'è andata.
       </p>
 
-      <!-- ── LA RIGA INTERA È IL TASTO ──
-           Il punteggio da solo è un bersaglio da novanta pixel in fondo
-           a una riga larga tutto lo schermo: si manca, e chi lo manca
-           conclude che quella riga non si apre. Il `<button>` è la riga
-           — nome, icona e cuori dentro di lui — così il dito atterra
-           dove capita e succede la stessa cosa. I cuori restano
-           disegnati come un tasto perché sono la parte che dice
-           *quanto*, ed è lì che l'occhio va per prima. -->
+      <!-- la riga intera è il tasto: un bersaglio di soli 90px in fondo alla riga si manca -->
       <ul class="righe">
         <li v-for="r in elenco.viste" :key="r.tipo" :data-riga="r.tipo">
           <button type="button" class="riga" :data-voto="r.tipo" @click="apri(r)">
@@ -136,10 +84,7 @@ function provaRiga(r) {
         </li>
       </ul>
 
-      <!-- ── e quelle che non gli sono ancora capitate ──
-           In coda e chiuse: non hanno un voto e non ne possono avere uno,
-           ma si tengono perché è da lì che si spegne in anticipo una cosa
-           che a scuola non hanno ancora fatto. -->
+      <!-- non ancora capitate: ripiegate in fondo, servono a spegnere in anticipo -->
       <button v-if="elenco.mai.length" type="button" class="altre"
               data-altre @click="mostraMai = !mostraMai">
         {{ mostraMai ? '▴' : '▾' }} altre {{ elenco.mai.length }} non gli sono ancora capitate
@@ -181,8 +126,6 @@ function provaRiga(r) {
 .vuoto { margin: 0; font-size: 12.5px; line-height: 1.5; color: #55556a }
 
 .righe { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px }
-/* la riga intera è il tasto: bersaglio largo quanto lo schermo, e il
-   testo dentro resta allineato a sinistra come in un elenco */
 .riga {
   display: flex; align-items: center; gap: 8px; width: 100%;
   padding: 4px 6px; margin: 0 -6px; border: 0; border-radius: 12px;
@@ -195,9 +138,6 @@ function provaRiga(r) {
 .testo b { font-size: 13px; font-weight: 700 }
 .testo i { font-style: normal; font-size: 11px; color: #8a8a99 }
 
-/* il punteggio non è più un tasto per conto suo — lo è tutta la riga —
-   ma resta disegnato come tale: è la parte che dice *quanto*, ed è lì
-   che l'occhio va per prima scorrendo l'elenco */
 .voto {
   display: grid; gap: 1px; min-width: 92px; padding: 6px 9px;
   border-radius: 12px; background: #f5f3fc; color: #5b3fa8;
