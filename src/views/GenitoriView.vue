@@ -31,6 +31,7 @@ import Benvenuto from '../components/Benvenuto.vue'
 import Prova from '../quiz/Prova.vue'
 import ComeVa from '../quiz/ComeVa.vue'
 import TempoDiGioco from '../components/TempoDiGioco.vue'
+import MoneteGiocoPerGioco from '../components/varieta/Tetti.vue'
 
 const emit = defineEmits(['vai'])
 
@@ -898,6 +899,8 @@ async function rimetti(v) {
           <span class="leva"><span class="pallina"></span></span>
         </button>
       </div>
+
+      <MoneteGiocoPerGioco :chi="chi" />
 
       <!-- il quaderno dei giudizi: vedi docs/genitori/come-va.md -->
       <h2>Le domande dei quiz</h2>

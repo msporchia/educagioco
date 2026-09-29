@@ -5,7 +5,8 @@
 import { ref, computed } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { addCoins, segna, segnaBest } from '../../store/profile.js'
+import { segna, segnaBest } from '../../store/profile.js'
+import { incassa, premioDetto } from '../../store/varieta.js'   // pagano e dicono se il salvadanaio è stanco
 import { aperta, adesso, stelleDi, completa } from '../campagne.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino } from './dati/campagna.js'
@@ -28,6 +29,8 @@ const corsa = ref(null)             // la tappa in corso (motore, reso reattivo)
 const finale = ref(null)
 const erroreSegnale = ref(0)        // sale a ogni risposta sbagliata: lo guarda Prato
 const monete = ref(0)               // le monete raccolte in questa tappa
+let chieste = 0                     // quelle che la tappa prometteva: col salvadanaio stanco sono di più
+const premioDellaTappa = () => premioDetto(CHIAVE, chieste, monete.value)
 const serie = ref(0)                // risposte giuste di fila
 
 const tappaCorrente = computed(() => tappaIdx.value >= 0 ? CAMPAGNA[tappaIdx.value] : null)
@@ -54,15 +57,16 @@ function avviaTappa(i) {
   finale.value = null
   erroreSegnale.value = 0
   monete.value = 0
+  chieste = 0
   vista.value = 'gioco'
 }
 
 function rispondi(valore) {
   const giusta = corsa.value.rispondi(valore)
   if (giusta) {
-    const premio = tappaCorrente.value.premio
-    addCoins(premio)
-    monete.value += premio
+    const pagato = incassa(tappaCorrente.value.premio)
+    monete.value += pagato.dato
+    chieste += pagato.chiesto
     segna('contate')
     serie.value++
     segnaBest('serieConta', serie.value)
@@ -77,7 +81,8 @@ function rispondi(valore) {
 function mostraFinale() {
   completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle: corsa.value.stelle })
   segna('contaTappe')
-  finale.value = { titolo: tappaCorrente.value.nome, stelle: corsa.value.stelle, monete: monete.value }
+  finale.value = { titolo: tappaCorrente.value.nome, stelle: corsa.value.stelle, monete: monete.value,
+                   notaMonete: premioDellaTappa() }
   suono.livello()
 }
 
