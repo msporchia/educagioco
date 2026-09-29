@@ -68,39 +68,59 @@ function installa(opzioni) {
   uguale('e l\'archivio lo sa', backend.kind, 'IndexedDB')
 }
 
-/* ── 3. IL TRAVASO: IL RIPIEGO, QUANDO C'È, VINCE SEMPRE ──
-   Nessun confronto da fare: ogni scrittura riuscita in IndexedDB ripulisce
-   da sé il doppione nel ripiego (vedi la nota su `eseguiFlush`), quindi se
-   una chiave è ancora nel ripiego vuol dire che nessuna scrittura più
-   recente è mai arrivata in IndexedDB — anche quando IndexedDB ha già
-   un'altra copia, più vecchia, di quella stessa chiave. */
+/* ── 3. IL TRAVASO: TRACCIATO VINCE, VECCHIO NO ──
+   «Il ripiego è il più recente» è vero SOLO per le chiavi che questo
+   stesso codice ha scritto lui e non ha ancora ripulito (il registro
+   `__ripiego__`): un telefono vero può avere in localStorage chiavi
+   vecchie di mesi, nate quando IndexedDB falliva prima che questa pulizia
+   esistesse, con IndexedDB nel frattempo pieno di dati più freschi — per
+   quelle vince IndexedDB, come sempre. */
 {
-  const { idb, ls } = installa({})
+  // 80 ms: più dei 40 di `apertura` (la scrittura cade sul ripiego), meno
+  // dei 150 di `avvio` (il travaso, che aspetta di più, trova IndexedDB)
+  const { idb, ls } = installa({ ritardoApertura: 80 })
 
-  // IndexedDB ha una copia vecchia (di prima dell'interruzione): il
-  // ripiego, più recente, la sostituisce
-  idb._store.set('gia-in-idb', 'idb-vecchio')
-  ls._dati.set('gia-in-idb', JSON.stringify('ls-nuovo'))
+  // una scrittura VERA, tracciata: cade sul ripiego perché IndexedDB non
+  // risponde in tempo
+  save('tracciata', 'valore-fresco')
+  await flush()
+  controlla('è caduta sul ripiego', ls._dati.has('tracciata'))
 
-  // solo nel ripiego: non c'è nemmeno un doppione da confrontare
-  ls._dati.set('solo-ripiego', JSON.stringify('orfano'))
+  // IndexedDB nel frattempo AVEVA già una sua copia per quella stessa
+  // chiave (uno scenario possibile: un valore vecchio scritto prima
+  // dell'interruzione) — la tracciata vince comunque, perché è lei
+  // l'ultima scrittura fatta per davvero
+  idb._store.set('tracciata', 'idb-piu-vecchio-di-lei')
+
+  // una chiave VECCHIA, mai passata da `save`/`flush` in questa sessione:
+  // localStorage com'era mesi fa, da prima che il ripiego si ripulisse da
+  // solo. IndexedDB ha già la sua, più fresca: non si tocca.
+  idb._store.set('vecchia-con-idb-pieno', 'idb-vero-e-fresco')
+  ls._dati.set('vecchia-con-idb-pieno', JSON.stringify('ls-spazzatura-di-mesi-fa'))
+
+  // una chiave vecchia ma con IndexedDB vuoto: qui non c'è niente da
+  // proteggere, quindi si sposta per riempire il buco
+  ls._dati.set('vecchia-con-idb-vuoto', JSON.stringify('unico-valore-che-esiste'))
 
   // il probe di `detectBackend` non è un dato del gioco: non si tocca
   ls._dati.set('__probe__', '1')
 
   const quante = await travasaRipiego()
 
-  uguale('il ripiego sostituisce la copia vecchia di IndexedDB',
-         idb._store.get('gia-in-idb'), 'ls-nuovo')
-  controlla('e sparisce dal ripiego', !ls._dati.has('gia-in-idb'))
+  uguale('la chiave tracciata vince anche su una copia già in IndexedDB',
+         idb._store.get('tracciata'), 'valore-fresco')
+  controlla('e sparisce dal ripiego', !ls._dati.has('tracciata'))
 
-  uguale('una chiave che stava solo nel ripiego arriva in IndexedDB',
-         idb._store.get('solo-ripiego'), 'orfano')
+  uguale('la chiave vecchia NON scrive sopra IndexedDB, che vince',
+         idb._store.get('vecchia-con-idb-pieno'), 'idb-vero-e-fresco')
+
+  uguale('ma una chiave vecchia senza niente in IndexedDB riempie il buco',
+         idb._store.get('vecchia-con-idb-vuoto'), 'unico-valore-che-esiste')
 
   controlla('il probe di avvio non si travasa', ls._dati.has('__probe__'))
   controlla('e non finisce in IndexedDB', !idb._store.has('__probe__'))
 
-  uguale('due chiavi spostate', quante, 2)
+  uguale('due chiavi davvero spostate (la terza, vecchia, perde e resta ferma)', quante, 2)
 }
 
 /* ── 4. FLUSH SERIALIZZATO ──

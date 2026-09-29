@@ -83,6 +83,39 @@ function idbRun(mode, fn, timeout) {
 function lsGet(k) { try { return localStorage.getItem(k) } catch (e) { return undefined } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); return true } catch (e) { return false } }
 
+/* ---------- il registro del ripiego ----------
+   «Il ripiego, quando c'è, è il più recente» è vero SOLO per le chiavi
+   che questo stesso codice ci ha scritto e non ha ancora ripulito — non
+   per qualunque cosa capiti a stare in localStorage. Un telefono vero può
+   avere chiavi lì dentro vecchie di mesi (`profilo:g1`, il roster: nate
+   quando IndexedDB falliva prima che questa pulizia esistesse, o
+   semplicemente prima che venisse ripulita in tempo), con IndexedDB che
+   nel frattempo ha ricevuto scritture più fresche: per quelle vale la
+   regola di sempre, vince IndexedDB. Il registro (`__ripiego__`, un
+   elenco di chiavi) distingue le due cose: ci entra una chiave quando la
+   scrittura per lei cade sul ripiego, ne esce quando una scrittura
+   successiva arriva in IndexedDB. Solo chi è dentro si fida ciecamente
+   del ripiego. */
+const REGISTRO = '__ripiego__';
+
+function leggiRegistro() {
+  try {
+    const arr = JSON.parse(localStorage.getItem(REGISTRO) || '[]');
+    return Array.isArray(arr) ? arr.filter(k => typeof k === 'string') : [];
+  } catch (e) { return [] }
+}
+function scriviRegistro(arr) { lsSet(REGISTRO, JSON.stringify(arr)) }
+function segnaRipiego(k) {
+  const arr = leggiRegistro();
+  if (!arr.includes(k)) { arr.push(k); scriviRegistro(arr) }
+}
+function smarcaRipiego(k) {
+  const arr = leggiRegistro();
+  const i = arr.indexOf(k);
+  if (i >= 0) { arr.splice(i, 1); scriviRegistro(arr) }
+}
+function èRipiego(k) { return leggiRegistro().includes(k) }
+
 /* ---------- API ---------- */
 export async function detectBackend() {
   // Qui, non altrove: è la lettura di avvio, l'unica per cui vale la pena
@@ -95,15 +128,22 @@ export async function detectBackend() {
   return backend.kind;
 }
 
-/* Il ripiego, quando c'è, è sempre il più recente: vedi la nota sopra
-   `eseguiFlush`. Per questo si guarda PRIMA localStorage (`load()` non
-   deve aspettare IndexedDB per saperlo) e si cade su IndexedDB solo se
-   lì non c'è niente. */
+/* Una chiave nel registro del ripiego è per costruzione la più recente
+   (vedi sopra): per lei si guarda PRIMA localStorage, senza aspettare
+   IndexedDB. Per tutte le altre vale la regola di sempre — IndexedDB
+   prima, localStorage solo come ultima spiaggia se IndexedDB non ha
+   proprio niente — perché una chiave in localStorage ma fuori dal
+   registro potrebbe essere spazzatura vecchia di mesi, non l'ultima
+   scrittura. */
 export async function load(key) {
-  const raw = lsGet(key);
-  if (raw != null) { try { return JSON.parse(raw) } catch (e) { /* non era JSON: si prova IndexedDB */ } }
+  if (èRipiego(key)) {
+    const raw = lsGet(key);
+    if (raw != null) { try { return JSON.parse(raw) } catch (e) { /* non era JSON: si prova IndexedDB */ } }
+  }
   const fromIdb = await idbRun('readonly', s => s.get(key));
   if (fromIdb != null && fromIdb !== true) return fromIdb;
+  const raw = lsGet(key);
+  if (raw != null) { try { return JSON.parse(raw) } catch (e) { /* ignora */ } }
   return mem.has(key) ? mem.get(key) : null;
 }
 
@@ -133,17 +173,15 @@ export function flush() {
   return giro;
 }
 
-/* Ogni scrittura riuscita in IndexedDB ripulisce un eventuale doppione
-   nel ripiego: è quello che rende vero, senza bisogno di un segno di
-   tempo, che «il ripiego, quando c'è, è il più recente» — nessun'altra
-   strada scrive in IndexedDB, quindi se lì la scrittura per quella
-   chiave fosse già passata il ripiego non ci sarebbe più. */
+/* Una scrittura riuscita in IndexedDB ripulisce il doppione nel ripiego
+   E lo toglie dal registro; una caduta sul ripiego lo segna. È quello che
+   tiene vero, per le chiavi segnate, «il ripiego è il più recente». */
 async function eseguiFlush() {
   const batch = [...pending]; pending.clear();
   for (const [k, v] of batch) {
     const ok = await idbRun('readwrite', s => s.put(v, k));
-    if (ok == null) lsSet(k, JSON.stringify(v));      // ripiego
-    else { try { localStorage.removeItem(k) } catch (e) { /* pazienza */ } }
+    if (ok == null) { lsSet(k, JSON.stringify(v)); segnaRipiego(k) }      // ripiego
+    else { try { localStorage.removeItem(k) } catch (e) { /* pazienza */ } smarcaRipiego(k) }
   }
 }
 
@@ -157,6 +195,7 @@ export async function remove(key) {
   mem.delete(key); pending.delete(key);
   await idbRun('readwrite', s => s.delete(key));
   try { localStorage.removeItem(key) } catch (e) { /* ignora */ }
+  smarcaRipiego(key);
 }
 
 // unisce tutti e tre i livelli: possono non raccontare la stessa storia
@@ -173,18 +212,28 @@ export async function chiavi(prefisso = '') {
     }
   } catch (e) { /* niente localStorage: pazienza */ }
   for (const k of mem.keys()) viste.add(k);
-  viste.delete('__probe__');
+  viste.delete('__probe__'); viste.delete(REGISTRO);
   return [...viste].filter(k => typeof k === 'string' && k.startsWith(prefisso)).sort();
 }
 
 /* ---------- il travaso ----------
    All'avvio, se IndexedDB funziona ma in localStorage sono rimaste
    scritture di ripiego (fatte mentre IndexedDB non rispondeva, magari
-   una sessione fa), le sposta lì. Senza confronti: il ripiego, quando
-   c'è, è **sempre** il più recente (vedi la nota su `eseguiFlush`), quindi
-   vince e basta — comprese le chiavi che in IndexedDB non ci sono ancora.
-   `load()` concilia già le due copie leggendo (guarda prima il ripiego),
-   ma non le sposta: senza il travaso il doppione in localStorage
+   una sessione fa), le sposta lì. Due casi, e non si trattano uguale:
+
+   - **tracciata** (nel registro, `èRipiego`): per costruzione è la più
+     recente (vedi la nota su `eseguiFlush`), quindi vince e si sposta
+     senza guardare cosa c'è già in IndexedDB — anche sopra a un valore
+     che ci fosse già.
+   - **non tracciata**: può essere spazzatura vecchia di mesi, di prima
+     che questa pulizia esistesse (`profilo:g1`, il roster, scritti
+     quando IndexedDB falliva e non si ripuliva mai). Vince IndexedDB, se
+     ha già qualcosa per quella chiave: non si tocca né lì né in
+     localStorage. Si sposta SOLO per riempire un buco — una chiave che
+     in IndexedDB non c'è affatto.
+
+   `load()` concilia già le due copie leggendo con la stessa regola, ma
+   non le sposta: senza il travaso il doppione in localStorage
    resterebbe lì per sempre. Torna quante ne ha spostate, solo per i test. */
 export async function travasaRipiego() {
   const base = await openDb(TIMEOUT_AVVIO);
@@ -192,15 +241,27 @@ export async function travasaRipiego() {
   let chs;
   try { chs = []; for (let i = 0; i < localStorage.length; i++) chs.push(localStorage.key(i)) }
   catch (e) { return 0 }
+  const registro = leggiRegistro();
   let quante = 0;
   for (const k of chs) {
-    if (!k || k === '__probe__') continue;
+    if (!k || k === '__probe__' || k === REGISTRO) continue;
     const raw = lsGet(k);
     if (raw == null) continue;
     let valore;
     try { valore = JSON.parse(raw) } catch (e) { continue }
+
+    if (!registro.includes(k)) {
+      // non tracciata: si sposta solo se IndexedDB non ha già la sua
+      const giaInIdb = await idbRun('readonly', s => s.get(k));
+      if (giaInIdb != null && giaInIdb !== true) continue;   // IndexedDB vince: non si tocca niente
+    }
+
     const ok = await idbRun('readwrite', s => s.put(valore, k));
-    if (ok != null) { try { localStorage.removeItem(k) } catch (e) { /* pazienza */ } quante++ }
+    if (ok != null) {
+      try { localStorage.removeItem(k) } catch (e) { /* pazienza */ }
+      smarcaRipiego(k);
+      quante++;
+    }
   }
   return quante;
 }
