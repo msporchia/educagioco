@@ -1,10 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   COLPI ED ESPLOSIONI
-
-   Il colpo è la prova che la torre sta lavorando: scia lunga e corpo
-   grosso, perché su uno schermo di telefono un pallino di cinque pixel
-   semplicemente non si vede.
-   ═══════════════════════════════════════════════════════════════════ */
+// Colpi ed esplosioni: scia lunga e corpo grosso, perché su un telefono un
+// pallino di cinque pixel non si vede.
 import { TORRI } from '../../data/ops.js'
 import { TINTA } from './tinte.js'
 
@@ -50,16 +45,9 @@ export function colpo(p, c) {
   }, Math.atan2(c.ty - c.y, c.tx - c.x))
 }
 
-/* Due effetti diversi, e devono restare diversi.
-
-   L'esplosione è una **palla che si sgonfia**: si apre di colpo, piena,
-   e sparisce. Niente anelli concentrici che scappano verso l'esterno —
-   con quattro torri che sparano il campo diventava un tiro a segno di
-   cerchi e non si capiva più dove fossero i nemici.
-
-   La folata di gelo è l'opposto: un velo azzurro che si allarga piano e
-   resta lì a sbiadire, senza bordo acceso. Il freddo si vede addosso ai
-   mostri, che è la cosa bella; qui basta suggerire da dove viene. */
+// L'esplosione è una palla che si sgonfia, non anelli concentrici che
+// scappano (con più torri il campo diventava un tiro a segno di cerchi).
+// Il gelo è l'opposto: un velo che si allarga piano e sbiadisce.
 export function schizzo(p, s) {
   const q = Math.max(0, Math.min(1, s.vita))
   /* chi si è appena diviso: uno sbuffo bianco con due palline che

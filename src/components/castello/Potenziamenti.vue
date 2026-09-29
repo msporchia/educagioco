@@ -1,22 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL BLOCCHETTO DEI POTENZIAMENTI
-
-   «Ho preso otto potenziamenti, e adesso i miei arcieri fanno +80%.»
-   Il foglio che si apre dal gettone ⬆️ sul campo, durante la partita: per
-   ogni tipo di torre in campo, quante sono, quanti gradini hanno salito
-   e quanto fanno in più di una torre appena costruita; sotto, i regali
-   della partita libera, che restano per sempre.
-
-   I numeri non li fa questo file: li compone `blocchettoDi` in
-   `data/castello.js`, dal modello che decide anche i prezzi — così il
-   «+80%» che si legge qui è lo stesso conto per cui quel gradino è
-   costato quello che è costato.
-
-   Si chiude con la ✕ in alto a destra, come tutti i fogli (quella del
-   `Foglio` che lo contiene), e il campo intanto non si ferma: è un
-   foglio da guardare, non una pausa.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il blocchetto dei potenziamenti (gettone ⬆️ sul campo). I numeri li
+// compone `blocchettoDi` in data/castello.js, vedi docs/castello/torri.md.
 import { computed } from 'vue'
 import { TORRI } from '../../data/ops.js'
 import RitrattoTorre from './RitrattoTorre.vue'
