@@ -304,7 +304,41 @@ python3 strumenti/sprite/vesti.py --atlante
 node strumenti/sprite/carte-castello.mjs
 ```
 
-### 5 — I mostri che camminano · 3 immagini per il bosco, 4 per lava e neve
+### 5 — I mostri che camminano · un video per creatura · in corso
+
+**Come immagine non viene.** Due fogli chiesti a Grok il 28 settembre
+2026, con due prompt diversi (il secondo è quello qui sotto): sempre otto
+figure per riga anche chiedendone quattro, pose quasi uguali, mai la
+vista di fronte, armi che cambiano a metà riga, creature sostituite.
+Non si riprova.
+
+**Come video sì** (Grok Imagine, da immagine a video): una creatura sola,
+ritagliata stretta e centrata su fondo bianco, animata **sul posto**,
+prima di lato e poi di fronte nello stesso video (i crediti gratuiti ne
+danno uno al giorno). `cammino.py` ne tiene solo i passi — sei di lato e
+sei di fronte, in `sorgenti/castello/cammino/<creatura>.png` — e il video
+non si conserva. `vesti.py --atlante` li porta alla misura della creatura
+**senza ridurli alla grana dei fogli**: i mostri fatti così sono più
+nitidi degli altri, ed è una scelta (meglio alcuni belli e altri come
+prima che tutti uguali e brutti). Fatti: il drago (29 settembre).
+
+Il prompt, con il nome della creatura cambiato (per chi cammina: *walks
+in place… legs clearly alternating*):
+
+```text
+Pixel art game sprite animation, two parts in one shot. First half: the red dragon flies in place facing right, side view, a steady looping flight cycle, wings flapping up and down slowly and clearly, body gently rising and falling. Second half: the dragon turns quickly to face the viewer and keeps flying in place, front view, the same steady flight cycle with both wings flapping clearly. No fire, no smoke, no breath effects. The dragon always stays in the center of the frame, does not move forward and does not get bigger. The camera is completely still, no zoom, no pan. Plain flat white background, no shadow, no scenery. Keep the exact same dragon, same colors, same pixel art style.
+```
+
+```bash
+python3 strumenti/sprite/cammino.py video.mp4 drago --cerca --provino /tmp/p.png   # i giri che si chiudono
+python3 strumenti/sprite/cammino.py video.mp4 drago --lato 34:17 --fronte 120:22
+python3 strumenti/sprite/vesti.py --atlante
+```
+
+Quello che segue è il piano di prima, coi fogli di immagini: resta per
+memoria.
+
+#### Il piano coi fogli (non ha funzionato)
 
 **Arricchisce tutti e due**: oggi le creature generate hanno una posa
 sola, il respiro di lato. Nel castello i mostri scendono quasi sempre
@@ -385,7 +419,7 @@ memoria sugli scenari del sotterraneo).
 | 3 — | la lava più calma (non serve più) | 1 | (chat di `td_3`) | — (il nome `td_4.png` è andato alla palude) | un vestito che si legge |
 | 4 ✅ | fogli del terreno, neve e lava | 2 | la scena del vestito | `terreno-neve.png`, `terreno-lava.png` | gli altri due vestiti |
 | 4b ✅ | la scena e il foglio del terreno della palude | 2 | `terreno-neve`, `td_4`, chat nuova | `td_4.png`, `terreno-palude.png` | la palude col suo vestito |
-| 5 | i mostri che camminano | 3 + 4 | `mostri-1`, `mostri-2` | `sotterraneo/generati/mostri-cammino-A.png`… | mostri di fronte, e il sotterraneo tutto in una mano |
+| 5 | i mostri che camminano, un video per creatura | 1 al giorno | la creatura ritagliata | `castello/cammino/<creatura>.png` (`cammino.py`) | mostri che camminano, di lato e di fronte |
 | 6 | gli eroi | 1 | `mostri-1`, una scena | — | l'addio a 0x72 |
 
 Il **minimo per rifare il gioco** sono l'1 e il 2: col bosco, le torri

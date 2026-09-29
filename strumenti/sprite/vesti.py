@@ -62,7 +62,7 @@ import json
 import sys
 from functools import lru_cache
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).parent))
 import righe  # noqa: E402
@@ -1255,6 +1255,63 @@ def cammino_dai_fogli():
     return fuori, chi
 
 
+# **I passi dai video** (`cammino.py`, voce 5 di `DA-GENERARE.md`): una
+# creatura per file, `sorgenti/castello/cammino/<creatura>.png`, con una
+# riga di passi di lato e una di fronte. Qui si portano **alla misura
+# della creatura** — alta quanto il suo respiro, che è di lato: la stessa
+# scala vale per la riga di fronte, così girandosi non cambia taglia — e
+# si ridà il contorno scuro che riducendo si perde. Non si riducono alla
+# grana dei fogli (quattro pixel per punto): a metà misura in campo quella
+# grana era poltiglia, e l'utente ha scelto di avere alcuni mostri nitidi
+# e gli altri come prima, piuttosto che tutti brutti (29 settembre 2026).
+
+CAMMINO_VIDEO = Path(__file__).parent / 'sorgenti' / 'castello' / 'cammino'
+CONTORNO = (28, 16, 22, 255)
+
+
+def contornata(im, spessore=2):
+    """La figura con `spessore` pixel di contorno scuro attorno."""
+    t = Image.new('RGBA', (im.width + 2 * spessore, im.height + 2 * spessore))
+    t.paste(im, (spessore, spessore))
+    for _ in range(spessore):
+        a = t.getchannel('A').point(lambda v: 255 if v >= 128 else 0)
+        attorno = a.filter(ImageFilter.MaxFilter(3))
+        bordo = ImageChops.subtract(attorno, a)
+        t.paste(Image.new('RGBA', t.size, CONTORNO), (0, 0), bordo)
+    return t
+
+
+def cammino_dai_video(respiro):
+    """I passi di chi ha il suo video: `mostro:<creatura>:lato:<i>` e
+    `…:fronte:<i>`, alla misura del suo respiro."""
+    fuori, chi = {}, []
+    for png in sorted(CAMMINO_VIDEO.glob('*.png')):
+        creatura = png.stem
+        if creatura not in respiro:
+            raise SystemExit(f'{png.name}: «{creatura}» non è una creatura del bestiario')
+        fg = json.loads(png.with_suffix('.json').read_text())
+        im = Image.open(png).convert('RGBA')
+        cw, ch = fg['cella']
+        alto = respiro[creatura][0].getbbox()
+        alto = alto[3] - alto[1]
+        righe_ = {}
+        for r, verso in enumerate(fg['righe']):
+            quadri = [im.crop((i * cw, r * ch, (i + 1) * cw, (r + 1) * ch)) for i in range(fg['passi'])]
+            bb = [q.getbbox() for q in quadri]
+            box = (min(b[0] for b in bb), min(b[1] for b in bb), max(b[2] for b in bb), max(b[3] for b in bb))
+            righe_[verso] = [q.crop(box) for q in quadri]
+        base = righe_.get('lato') or righe_['fronte']
+        k = alto / base[0].height
+        for verso, quadri in righe_.items():
+            for i, q in enumerate(quadri):
+                q = q.convert('RGBa').resize((max(1, round(q.width * k)), max(1, round(q.height * k))),
+                                              Image.BOX).convert('RGBA')
+                q.putalpha(q.getchannel('A').point(lambda v: 255 if v >= 128 else 0))
+                fuori[f'mostro:{creatura}:{verso}:{i}'] = contornata(q)
+        chi.append(creatura)
+    return fuori, chi
+
+
 # Sotto quest'alfa un pixel dei fogli del sotterraneo è il bagliore
 # colorato che il generatore ci ha messo dietro ogni riga, non la
 # creatura: il corpo sta quasi tutto sopra 128 e l'orlo morbido fra 64 e
@@ -1297,6 +1354,9 @@ AVVISO_TORRI = '''
 def figure_da_atlante():
     torri = torri_dal_foglio() if TORRI_NUOVE.exists() else torri_di_agosto()
     passi, camminano = cammino_dai_fogli()
+    video, dai_video = cammino_dai_video(creature_col_respiro())
+    passi.update(video)
+    camminano = camminano + [c for c in dai_video if c not in camminano]
     fuori = dict(torri)
     fuori.update(passi)
     respiro = creature_col_respiro(senza=camminano)
