@@ -1,14 +1,5 @@
-/* ═════ IL CORTILE ═════
-   La stanza all'aperto: erba, sole, mura di castello intorno. È
-   l'unica senza buio e senza torce — e serve come metro di paragone
-   per tutte le altre: se una stanza chiusa sembra cupa come questa,
-   non è ancora abbastanza chiusa.
-
-   Il muro è pietra chiara in tre partite (calda, grigia, scaldata dal
-   sole), con un basamento di mattoni e roccia dove la fondazione si
-   vede. Il prato ha un vialetto di lastre che spunta dall'erba, più
-   consumato nel mezzo: è dove passano i piedi, non dove cresce
-   l'erba. */
+// Il cortile: l'unico ambiente senza buio e senza torce — è il metro di paragone
+// per quanto devono restare cupe le altre stanze. Vedi docs/core/grafica.md.
 import { pietra, mattoni, roccia, erba, lastre } from '../materiali/pattern.js'
 
 export const CORTILE = {
@@ -39,8 +30,6 @@ export const CORTILE = {
 
   varianti: ['liscio', 'liscio', 'usura', 'licheni', 'detriti'],
 
-  /* i ciuffi e i fiori restano nel prato, i ciottoli sono quelli
-     scivolati sul vialetto, le foglie si accumulano contro il muro */
   dettagli: [['ciuffi', 0.65, '!sentiero'], ['fiori', 2.3, '!sentiero'],
              ['ciottoli', 2.9, 'sentiero'], ['foglie', 3.6, 'base']],
 }

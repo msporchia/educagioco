@@ -180,6 +180,38 @@ non sono la stessa cosa). Quattro trame (stoffa, cuoio, ferro, pelo), in
 bianco/nero trasparente sopra il colore, disegnate una volta sola su un
 quadretto che si ripete (`ctx.createPattern`).
 
+## Gli ambienti (`grafica/ambienti/`)
+
+Un ambiente è una voce di dati, un file per stanza: `mura` e `suolo`
+(liste di tessiture con le loro tinte — la prima voce è il fondo, le
+altre si applicano in ordine e l'ultima che cade è quella che si vede),
+`campi` (mappe invisibili: una macchia larga con un nome, `umido: 5`
+vuol dire che la stanza cambia umore ogni cinque celle), le tinte
+(ognuna chiesta da qualcuno — `fondo` è quello che si vede nei giunti,
+non «il colore del pavimento», e dev'essere più scuro delle lastre o i
+giunti spariscono), `varianti` (il sacchetto pesato di `materiali/
+varianti.js`, con `liscio` ripetuto due o tre volte) e `dettagli`
+(`[nome, passo in celle, dove]`, dove `dove` può essere un campo o un
+contesto geometrico come `angolo` o `controMuro`).
+
+Due trucchi tornano in ogni file. **Ripetere la stessa tessitura due o
+tre volte con tinte e semi diversi** è la varietà che costa meno di
+tutte — tre righe, nessun pittore nuovo — ed è quello che toglie di
+mezzo «il muro fatto di un colore solo ripetuto trecento volte». **Un
+campo mette d'accordo effetti con la stessa causa**: il muro marcio, il
+muschio e le pozze nominano tutti `umido`, e per questo finiscono nello
+stesso angolo invece che in tre angoli a caso. La regola sopra tutte è
+che **il fondo deve stare indietro** — le tinte di una stanza stanno in
+un fazzoletto stretto, il contrasto forte è riservato ai personaggi, e
+`muro` deve stare lontano da `lastra` (più scuro in una stanza chiara,
+più caldo in una scura) o la stanza perde l'architettura.
+
+**`muratura`, `posa`, `muro` e `lastra` non si scrivono più a mano**:
+`ambienti/indice.js` li deriva dalla prima voce di `mura`/`suolo`, così
+la stessa cosa non sta scritta in due posti che possono discordare — li
+chiede ancora chi non passa dalle liste (l'anteprima di una cella sola,
+la vetrina, i dettagli che pescano `A.lastra` per intonarsi).
+
 ## Le tessiture (`grafica/materiali/`)
 
 - **Una tessitura è una chiamata, non un nome**: `mattoni('#8f6146',

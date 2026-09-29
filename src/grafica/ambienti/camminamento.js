@@ -1,13 +1,5 @@
-/* ═════ IL CAMMINAMENTO ═════
-   Il ballatoio sulle mura: calcare sbiancato dal sole, muro più scuro
-   e più caldo del pavimento. Il salto di tinta fra i due non è un
-   vezzo — sono di pietra tutti e due, e senza quel salto la stanza è
-   un unico tessuto beige in cui non si vede dove si cammina.
-
-   Il muro cede in due punti: dove il sole lo sbianca e dove l'umido
-   lo intacca, con mattoni e roccia sotto l'intonaco. Il pavimento ha
-   una fascia consumata al centro — dove si cammina — e più oltre il
-   lastricato è saltato del tutto, roccia grezza sotto. */
+// Il camminamento: muro e pavimento sono entrambi pietra, e il salto di tinta fra
+// i due è quello che dice dove si cammina. Vedi docs/core/grafica.md.
 import { pietra, mattoni, roccia, lastre, pietraia } from '../materiali/pattern.js'
 
 export const CAMMINAMENTO = {
