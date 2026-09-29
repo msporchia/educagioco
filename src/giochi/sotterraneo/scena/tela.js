@@ -119,7 +119,7 @@ export class Tela {
 
     // il terreno in tre passate: pavimenti, poi tetto e bordi, poi facce (che sale sulla cella sopra e
     // deve coprire quel che trova); il velo del ricordo va per ultimo, o sulla striscia sbordata se ne posano due
-    const sc = SCENARI[SCENARIO]
+    const sc = SCENARI[corsa.scenario] || SCENARI[SCENARIO]
     const forma = this.forma(liv, sc)
     const pietra = (x, y) => liv.a(x, y) === ROCCIA
     const alfaDi = luce => (luce === 2 ? 1 : 0.5)
@@ -213,8 +213,8 @@ export class Tela {
       const k = y * L + x
       if (liv.a(x, y) !== PAVIMENTO || perTerra.has(k) || medaglione.has(k)) continue
       const h = sorteDi(x, y, 1)
-      const nome = h % 67 === 0 ? sc.perTerra[2] : h % 29 === 0 ? sc.perTerra[1]
-        : h % 17 === 0 ? sc.perTerra[0] : null
+      const i = h % 67 === 0 ? 2 : h % 29 === 0 ? 1 : h % 17 === 0 ? 0 : -1
+      const nome = i < 0 ? null : sc.perTerra[i % sc.perTerra.length]
       if (nome) perTerra.set(k, { nome, dove: 'centro', specchia: ((h >>> 9) & 1) === 1 })
     }
     this._forma = { liv, sc, stanza, medaglione, perTerra }

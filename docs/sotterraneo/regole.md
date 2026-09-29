@@ -83,6 +83,8 @@ l'altra *chi trovi*.
 | 5 | golem | sette — solo nell'abisso |
 
 Fuori dalla scaletta i due **capi**, gigante e troll: li mette la tappa.
+Nell'abisso ogni posto ha un branco suo, preso da queste fasce (vedi
+[abisso.md](abisso.md#il-posto-cambia-scendendo)).
 
 - **Dentro una fascia si cambia forma, non quantità**: il serpente ha poche
   ossa e morde forte, il granchio para e lascia scudi, la melma è lenta e fa

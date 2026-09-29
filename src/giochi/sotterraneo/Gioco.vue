@@ -158,6 +158,7 @@ const eroe = dallaCorsa(c => {
     vita: c.vita, vitaMax: c.vitaMax, quota: q,
     att: c.att, dif: c.dif, gemme: c.gemme,
     piano: c.piano + 1, piani: c.senzaFondo ? null : c.quantiPiani,   // null nell'abisso: "piano 3 di ∞" non è un conto
+    posto: c.posto,                   // nell'abisso: dove si è arrivati
     chiave: c.chiaveDelPiano,
     // niente quando non se ne ha nessuna; `quota` (0..1) sta qui e non nella vista, che riceve solo il numero
     torcia: c.torciaAccesa
@@ -629,8 +630,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   @pointercancel="lascia" @touchend="nienteClickDalCampo"
                   @wheel.prevent="rotella"></canvas>
 
-          <p class="sot-piede">
-            piano {{ eroe.piano }}<template v-if="eroe.piani"> di {{ eroe.piani }}</template> ·
+          <p class="sot-piede" :data-posto="eroe.posto || ''">
+            <template v-if="eroe.posto">{{ eroe.posto }} · </template>piano {{ eroe.piano }}<template v-if="eroe.piani"> di {{ eroe.piani }}</template> ·
             <span v-if="eroe.chiave" class="em">🗝️ la scala è aperta</span>
             <span v-else>la chiave ce l'ha qualcuno, qua sotto</span>
           </p>

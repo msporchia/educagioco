@@ -133,6 +133,14 @@ export const PASSO_DEL_BRANCO = 2.4
 
 export const NEL_BRANCO = [...new Set(BRANCO.flat())]
 
+// nell'abisso ogni posto ha il suo branco (TRATTI_DELL_ABISSO in dati/campagna.js): stesse cinque fasce, e
+// ogni mostro nella fascia che ha in BRANCO, così il posto cambia le facce e non la fatica. Il golem sta in
+// tutti e due finché la quinta fascia ha un mostro solo. Vedi docs/sotterraneo/abisso.md.
+export const BRANCHI = {
+  cantine: [['ratto'], ['goblin', 'melma'], ['fungo', 'vespa'], ['granchio', 'serpente'], ['golem']],
+  cripta: [['pipistrello'], ['fantasma'], ['scheletro'], ['orco', 'lupo'], ['golem']],
+}
+
 // lo stesso conto di Corsa.colpiPer, qui perché possa provarlo anche chi guarda solo i dati
 export const colpiPer = (m, attacco) =>
   Math.max(1, Math.ceil(m.ossa / Math.max(1, attacco - m.dif)))
@@ -152,6 +160,14 @@ export function guastiDeiMostri() {
     else if (m.droppa < 0 || m.droppa > 1) g.push(`${k}: droppa ${m.droppa}, e non è una probabilità`)
   }
   for (const t of NEL_BRANCO) if (!MOSTRI[t]) g.push(`nel branco c'è "${t}", che non esiste`)
+  for (const [k, b] of Object.entries(BRANCHI)) {
+    if (b.length !== BRANCO.length) g.push(`il branco ${k} ha ${b.length} fasce invece di ${BRANCO.length}`)
+    b.forEach((f, i) => {
+      if (!f.length) g.push(`il branco ${k}: la fascia ${i + 1} è vuota`)
+      for (const t of f)
+        if (!(BRANCO[i] || []).includes(t)) g.push(`il branco ${k}: "${t}" non sta nella fascia ${i + 1} di BRANCO`)
+    })
+  }
   // dentro una riga i mostri devono equivalersi (costo a mani nude), o il piano diventa una lotteria
   BRANCO.forEach((fascia, i) => {
     if (!fascia.length) return g.push(`la fascia ${i + 1} del branco è vuota`)

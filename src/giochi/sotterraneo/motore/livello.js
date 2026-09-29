@@ -21,13 +21,14 @@ export function seminato(seme) {
 export class Livello {
   // `guardiano`: chi porta la chiave della scala, dichiarato dalla tappa (l'unica cosa che non si può aggirare)
   constructor({ seme = 1, piano = 0, largo = 52, alto = 52, giri = 4,
-                guardiano = 'scheletro', crescita = null } = {}) {
+                guardiano = 'scheletro', crescita = null, branco = BRANCO } = {}) {
     this.seme = seme
     this.piano = piano
     this.largo = largo
     this.alto = alto
     this.giri = giri
     this.chiGuarda = guardiano
+    this.branco = branco              // chi si incontra per strada, fascia per fascia
     // dichiarato da chi genera il piano (dipende da quanto può scendere la discesa, vedi crescitaDi in dati/campagna.js)
     this.crescita = crescita || { ossa: 0.22, attOgni: 2 }
     this.celle = new Uint8Array(largo * alto)
@@ -188,9 +189,9 @@ export class Livello {
     // il flusso del caso e farebbe nascere un piano diverso da quello di ieri stesso seme
     const tipoPer = forza => {
       const r = this.rnd()
-      const i = Math.min(BRANCO.length - 1,
+      const i = Math.min(this.branco.length - 1,
         Math.floor((forza + scala) * PASSO_DEL_BRANCO + r * 1.4))
-      const fascia = BRANCO[Math.max(0, i)]
+      const fascia = this.branco[Math.max(0, i)]
       return fascia[Math.floor(r * 1e6) % fascia.length]
     }
     for (const s of st) {

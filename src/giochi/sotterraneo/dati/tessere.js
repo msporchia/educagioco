@@ -4,6 +4,7 @@
 
 import { EROI } from './eroi.js'
 import { MOSTRI } from './mostri.js'
+import { CAMPAGNA, TRATTI_DELL_ABISSO } from './campagna.js'
 
 export const SCENARI = {
   cantine: {
@@ -34,9 +35,36 @@ export const SCENARI = {
     perTerra: ['cantine-terriccio', 'cantine-sassolini', 'cantine-radice'],
     ragnatele: { sx: 'cantine-ragnatela-sx', dx: 'cantine-ragnatela-dx' },
   },
+  // la cripta (sotterraneo_3.png): il foglio delle cantine ridisegnato coi pezzi agli stessi posti
+  cripta: {
+    pavimento: { stanza: 'cripta-pav-stanze', corridoio: 'cripta-pav-corridoi' },
+    medaglione: 'cripta-medaglione',
+    tetto: 'cripta-tetto',
+    colori: { roccia: '#1e272f' },
+    faccia: 'cripta-faccia-fila',
+    torcia: 'cripta-faccia-torcia',
+    varianti: ['cripta-faccia-grata', 'cripta-faccia-arco', 'cripta-faccia-liscia',
+               'cripta-faccia-toppa', 'cripta-faccia-mensola'],
+    capi: { sx: 'cripta-capo-sx', dx: 'cripta-capo-dx' },
+    bordi: { n: 'cripta-bordo-n', o: 'cripta-bordo-o', e: 'cripta-bordo-e',
+             angolo: 'cripta-bordo-angolo' },
+    porte: {
+      davanti: { guardia: 'cripta-porta-teschio', tesoro: 'cripta-porta-oro',
+                 mercante: 'cripta-porta-chiara', fonte: 'cripta-porta-ferro',
+                 vuoto: 'cripta-porta-semplice', aperta: 'cripta-porta-aperta' },
+      fianco: { guardia: 'cripta-fianco-teschio', tesoro: 'cripta-fianco-oro',
+                mercante: 'cripta-fianco-chiara', fonte: 'cripta-fianco-ferro',
+                vuoto: 'cripta-fianco-semplice', aperta: 'cripta-fianco-aperta' },
+    },
+    scala: { aperta: 'cripta-scala-aperta', chiusa: 'cripta-scala-chiusa' },
+    fontana: { piena: 'cripta-fontana-piena', asciutta: 'cripta-fontana-asciutta' },
+    mercante: ['cripta-mercante-0', 'cripta-mercante-1'],
+    perTerra: ['cripta-sassolini'],
+    ragnatele: { sx: 'cripta-ragnatela-sx', dx: 'cripta-ragnatela-dx' },
+  },
 }
 
-export const SCENARIO = 'cantine'   // quello di tutte le discese; il giorno che ce ne sono due, resta il ripiego
+export const SCENARIO = 'cantine'   // di chi non dichiara il suo: una tappa con `scenario:`, l'abisso dal tratto
 
 // la figura dice quanto vale prima di raccoglierlo: scostarsi per tre gemme o per dodici non è la stessa decisione
 export const pezzoDelleGemme = (quante, t) =>
@@ -93,6 +121,11 @@ export function guastiDelleTessere(nomi = null) {
         if (!(sc.porte && sc.porte[verso] && sc.porte[verso][pelle]))
           g.push(`lo scenario ${k} non ha la porta ${pelle} vista ${verso}`)
   }
+  // chi lo chiede per nome deve trovarlo: la tela ripiegherebbe in silenzio
+  for (const t of [...CAMPAGNA, ...TRATTI_DELL_ABISSO])
+    if (t.scenario && !SCENARI[t.scenario]) g.push(`${t.nome}: lo scenario "${t.scenario}" non esiste`)
+  for (const [k, sc] of Object.entries(SCENARI))
+    if (!(sc.perTerra || []).length) g.push(`lo scenario ${k} non ha niente per terra`)
   for (const q of [1, 6, 12]) chiedi(pezzoDelleGemme(q, 0), `gemme da ${q}`)
   chiedi('forziere-oro-chiuso', 'forziere d\'oro')
   chiedi('forziere-scuro-chiuso', 'forziere scuro')

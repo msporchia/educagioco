@@ -31,11 +31,29 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
 ## Il gioco
 
-- **Altri scenari**: oggi tutte le discese vestono le cantine. La scheda
-  `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md` è pronta
-  per la cripta, la fornace, la grotta di cristallo: si cambia il blocco
-  SCENARIO, si genera scena e foglio, si ritaglia e si aggiunge una voce a
-  `SCENARI` in `dati/tessere.js` (vedi [scenari.md](scenari.md)).
+- **Altri scenari**: la fornace e la grotta di cristallo hanno il blocco
+  pronto nella scheda
+  `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md`, e col
+  prompt corto («La scorciatoia») basta allegare `sotterraneo_2.png`. Poi il
+  foglietto, una voce in `SCENARI`, un branco in `BRANCHI` e un tratto in
+  `TRATTI_DELL_ABISSO` (vedi [scenari.md](scenari.md) e
+  [abisso.md](abisso.md#il-posto-cambia-scendendo)).
+- **La cripta da rendere più carina** (`sotterraneo_3.png`, rigenerando col
+  prompt corto): il pavimento dei corridoi ha una cornice e si ritaglia da
+  dentro, con le cuciture che si vedono; le crepe arancioni del pavimento
+  delle stanze si ripetono ogni quattro celle; il tetto vicino ai muri
+  somiglia al pavimento; la porta del teschio è una statua in una nicchia;
+  le sei porte di fianco sono uguali; per terra ci sono solo i sassolini.
+- **Un mostro di quinta fascia per ogni posto**: oggi il golem sta in tutti
+  i branchi, e cantine e cripta si separano solo fino alla quarta. Con un
+  terzo posto conviene anche una seconda faccia per le fasce che ne hanno una
+  sola (il ratto nelle cantine, pipistrello, fantasma e scheletro nella
+  cripta).
+- **I guardiani dell'abisso per posto**: la scaletta è misurata e non guarda
+  il tratto, quindi lo scheletro fa la guardia alle cantine. Da rifare sul
+  banco insieme al bottino graduato.
+- **Quale discesa indossa la cripta**: oggi nessuna (è una riga, `scenario:`
+  nella tappa).
 - **Il suono**: c'è il minimo (passo, colpo, errore, il graffio). Col suono
   spento il gioco deve restare intero.
 
