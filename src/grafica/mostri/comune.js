@@ -1,16 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL FONDO COMUNE DEGLI OTTO MOSTRI NUOVI
-
-   In `grafica/castello/bestie.js` c'è già un `occhi()` che fa la
-   stessa cosa — due occhi tondi, arrabbiati se serve — ma questo
-   cantiere non importa `grafica/castello.js`: tre altri agenti ci
-   stanno lavorando in parallelo proprio adesso (vedi
-   il vecchio `docs/castello-riassetto.md`) e quel file potrebbe cambiare forma
-   sotto i piedi. Questa è quindi un'implementazione indipendente
-   dello stesso disegno, scritta con `p.cerchio` e `p.linea` invece
-   che con `ctx` nudo. Quando le due famiglie di mostri si
-   aggancieranno, una delle due funzioni potrà sparire.
-   ═══════════════════════════════════════════════════════════════════ */
+// Occhi comuni agli otto mostri nuovi: implementazione duplicata rispetto a
+// `occhi()` di corpi-mostri.js, da unificare (vedi docs/castello/da-fare.md).
 export function occhi(p, s, largo = 2.4, arrabbiato = false) {
   for (const v of [-1, 1]) {
     p.cerchio(v * largo * s, -1.6 * s, 2.1 * s, '#fff')

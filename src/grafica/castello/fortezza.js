@@ -1,11 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LA FORTEZZA — quella che si difende.
-
-   Sta in fondo alla strada e non fa niente: è il posto dove i nemici
-   non devono arrivare. Largo com'è, sul bordo destro gli si taglierebbe
-   una torre e sembrerebbe un pezzo di muro, quindi resta dentro il
-   campo per forza.
-   ═══════════════════════════════════════════════════════════════════ */
+// La fortezza: sta in fondo alla strada, il posto dove i nemici non devono
+// arrivare. Largo com'è, resta dentro il campo per forza (sul bordo si
+// taglierebbe una torre e sembrerebbe un pezzo di muro).
 export function castello(p, { x, y }) {
   const s = p.S * 1.15
   x = Math.min(p.W - 34 * s, x)

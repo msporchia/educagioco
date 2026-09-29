@@ -1,16 +1,6 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL RITRATTO DI UNA TORRE
-
-   Come quello dei mostri, e per la stessa ragione: non è un'immagine,
-   è **lo stesso pittore** che la disegna sul campo, chiamato su una
-   tela piccola. Così la carta con cui la compri e la torre che ti
-   ritrovi in mezzo al prato sono la stessa cosa — compreso il fatto
-   che al livello sette è diventata un'altra roba.
-
-   Prima qui c'era un'emoji, e l'emoji mentiva: 🏹 restava 🏹 anche
-   quando la torre era cresciuta due volte.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il ritratto di una torre: lo stesso pittore del campo su una tela piccola,
+// non un'immagine. Vedi docs/castello/torri.md.
 import { ref, watch, onMounted } from 'vue'
 import { creaTela } from '../../grafica/tela.js'
 import { PITTORI } from '../../grafica/castello.js'

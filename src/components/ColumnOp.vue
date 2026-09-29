@@ -1,7 +1,6 @@
 <script setup>
-/* Operazione in colonna. Si scrivono solo le cifre del risultato, da destra:
-   i riporti si tengono a mente. Nella moltiplicazione a due cifre invece i
-   prodotti parziali sono passaggi veri e vanno scritti tutti e due. */
+/* Operazione in colonna: solo le cifre del risultato (i riporti a mente),
+   tranne la moltiplicazione a due cifre, dove i prodotti parziali si scrivono. */
 import { ref, computed, watch } from 'vue'
 import { cifre, spiegaColonnaAdd } from '../data/ops.js'
 import { suono } from '../audio.js'
@@ -110,9 +109,8 @@ const suggerimento = computed(() => {
   <div class="op">
     <!-- ═════ addizione / sottrazione / moltiplicazione ═════ -->
     <div v-if="op.tipo !== 'div'" class="griglia" :style="{ '--n': nCol }">
-      <!-- i numeri da sommare (o sottrarre, o moltiplicare). Il segno
-           dell'operazione sta in alto a destra, in una colonna sua: in mezzo
-           alle cifre si perdeva, ed è la prima cosa che un bambino cerca. -->
+      <!-- il segno sta in alto a destra, in una colonna sua: in mezzo alle
+           cifre si perdeva -->
       <template v-for="(n, r) in righe" :key="'n'+r">
         <div v-for="i in indici" :key="'n'+r+'-'+i" class="cella fissa">{{ cifraDi(n, i) ?? '' }}</div>
         <div class="cella simbolo">

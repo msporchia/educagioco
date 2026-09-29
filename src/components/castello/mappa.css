@@ -12,10 +12,8 @@
 .tap.chiusa:active { transform:none }
 .spunta { position:absolute; top:5px; right:8px; color:#38c172; font-weight:900; font-size:13px }
 
-/* ── il titolo di un arco ──
-   Una riga sola, larga quanto la fila di tappe che introduce: serve a
-   dire «qui comincia un capitolo», non a farsi guardare. Quando l'arco
-   è finito il conto si tinge di verde, ed è l'unica medaglia che c'è. */
+/* il titolo di un arco: dice «qui comincia un capitolo», si tinge di verde
+   quando l'arco è finito */
 .arco { display:flex; align-items:center; gap:8px; width:100%; max-width:420px;
         margin:10px 0 -2px; padding:0 4px }
 .arco .faccia { font-size:19px }
@@ -25,15 +23,11 @@
 .arco.finito i { color:#1c7a45; background:#dff5e6 }
 /* il primo titolo non ha bisogno di staccarsi da quello che c'è sopra */
 .arco:first-of-type { margin-top:2px }
-/* il record sul tasto di una partita libera: al posto delle ondate di
-   una tappa, e con lo stesso corpo — è quello che c'è da leggere prima
-   di entrare, e va a capo quando il racconto è lungo */
+/* il record sul tasto di una partita libera, al posto delle ondate di una tappa */
 .tap .record { color:var(--arancio, #d1481f); font-weight:800; white-space:normal;
                text-align:center; line-height:1.25 }
-/* i regali stanno nella testata dell'arco e non su un tasto: sono di
-   tutte e quattro le libere insieme, e su un tasto solo «record 12
-   ondate · 🎁 7 potenziamenti» si leggeva come se le ondate fossero
-   sette */
+/* i regali stanno nella testata dell'arco (sono di tutte le libere insieme,
+   non di una tappa) */
 .arco.libere i { color:#8a4a00; background:#fff1d6 }
 .dote { font-size:11.5px; color:var(--tenue); font-weight:700; text-align:center;
         margin:2px 0 0; max-width:420px }
