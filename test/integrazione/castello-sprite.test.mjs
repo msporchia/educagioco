@@ -41,7 +41,7 @@
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { TAPPE, LIBERE, MONDO } from '../../src/data/castello.js'
-import { cartaDi, percorsoDi } from '../../src/giochi/castello/motore/carta.js'
+import { cartaDi, percorsoDi } from '../../src/motore/castello/carta.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)

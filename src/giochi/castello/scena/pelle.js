@@ -3,34 +3,28 @@
 // al campo (CampoDiBattaglia, prop `pelle`). Il verso delle dipendenze è
 // voluto: il gioco nuovo sa del vecchio, non viceversa. Vedi
 // docs/castello/da-fare.md per il conto ancora aperto sulla taratura.
-import { cartaDi, percorsoDi } from '../motore/carta.js'
+import { sullaCarta } from '../../../motore/castello/carta.js'
 import { PITTORI_SPRITE, caricaFigure, usaVestito } from './pittori.js'
 import { figuraDi, NOMI } from './bestiario.js'
 import { componi, carica, vestitoDi, TINTA_DI } from './vestito.js'
-
-// la carta di una tappa si calcola una volta: la chiedono sia il motore
-// sia il fondale, e a ogni rientro nella stessa tappa
-const carte = new WeakMap()
-const cartaPer = t => {
-  if (!carte.has(t)) carte.set(t, cartaDi(t))
-  return carte.get(t)
-}
 
 export const PELLE = {
   pittori: PITTORI_SPRITE,
 
   prepara() { caricaFigure().catch(() => {}) },
 
+  // la strada e le piazzole il motore le prende già dalla carta
+  // (`sullaCarta`): alla pelle resta da sapere che vestito mettere
   tappa(t) {
     usaVestito(vestitoDi(t))
-    return { ...t, ...percorsoDi(cartaPer(t)) }
+    return t
   },
 
   nome(t, id) { return NOMI[figuraDi(vestitoDi(t), id)] },
 
   fondale(t, poi) {
     const nome = vestitoDi(t)
-    const cv = componi(cartaPer(t).righe, nome)
+    const cv = componi(sullaCarta(t).carta.righe, nome)
     if (!cv) {
       carica(nome).then(poi, () => {})
       return p => p.rett(0, 0, p.W, p.H, TINTA_DI[nome])

@@ -27,7 +27,7 @@ peserebbero dieci volte tanto — ma i pezzi, e la composizione la rifà
 qui sotto. **Chi cambia `vesti()` cambia anche quello**, se no la
 battaglia finta e il gioco si vestono in due modi.
 
-Le carte (`src/giochi/castello/motore/carta.js`) sono scritte a
+Le carte (`src/motore/castello/carta.js`) sono scritte a
 caratteri; qui ogni carattere diventa un pezzo **preso dalla scena**
 (`td_1.png`, `td_2.png`, `td_3.png`), senza aspettare il foglio dei
 pezzi. È un provvisorio dichiarato, e serve a vedere se il vestito sta

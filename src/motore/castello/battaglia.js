@@ -8,6 +8,7 @@ import { CFG, doniDi, regaloDi, quantiRegali, OGNI_REGALO, premioDellaFretta }
   from '../../data/castello.js'
 import { ABILITA, CAPO } from '../../data/mostri.js'
 import { Percorso } from './percorso.js'
+import { sullaCarta } from './carta.js'
 import { Ondate } from './ondate.js'
 import { Tabellone } from './tabellone.js'
 import { Nemico } from './nemico.js'
@@ -29,9 +30,9 @@ export class Battaglia {
     this.doni = doniDi(this.regali)
     this.daScegliere = 0
 
-    // `tappa.percorso` c'è solo nel campo a celle (giochi/castello/): le
-    // tappe vere non ce l'hanno, e il percorso è quello di sempre
-    this.percorso = new Percorso(tappa.forme || tappa.forma, tappa.posti, misure, tappa.percorso)
+    // si gioca sulla carta a scacchiera, non sullo schizzo della tappa
+    const { forme, posti } = sullaCarta(tappa)
+    this.percorso = new Percorso(forme, posti, misure)
     this.ondate = new Ondate(tappa)
     this.tabellone = new Tabellone(stato)
 

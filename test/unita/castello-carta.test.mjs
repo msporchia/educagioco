@@ -9,16 +9,16 @@
        ridosso della strada o di una piazzola, niente decori attaccati a
        una piazzola;
      · la stessa tappa esce sempre uguale;
-     · e la carta passata al motore (`percorsoDi`) resta la carta: le
-       piazzole sono quelle delle celle `o`, ognuna accanto alla sua
-       strada, e la strada non è smussata.
+     · e il motore gioca sulla carta (`sullaCarta`, che ci passa da
+       `Battaglia`): le piazzole sono quelle delle celle `o`, ognuna
+       accanto alla sua strada, e la strada non è smussata.
 
    Com'è fatto a occhio lo dice `poc/scatti/castello-carte.png`
    (`node strumenti/sprite/carte-castello.mjs`). */
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { TAPPE, LIBERE } from '../../src/data/castello.js'
-import { cartaDi, percorsoDi, DA_RIDISEGNARE, A_MANO, COLONNE, RIGHE } from '../../src/giochi/castello/motore/carta.js'
-import { Percorso } from '../../src/motore/castello/percorso.js'
+import { cartaDi, sullaCarta, DA_RIDISEGNARE, A_MANO, COLONNE, RIGHE } from '../../src/motore/castello/carta.js'
+import { creaBattaglia } from '../../src/motore/battaglia.js'
 import { MONDO } from '../../src/data/castello.js'
 
 const tutte = [...TAPPE, ...LIBERE]
@@ -52,9 +52,12 @@ for (const t of tutte) {
      quell'ordine, e stanno a una cella dalla loro strada — non di più,
      se no la torre sarebbe su una piazzola e il fondale ne mostrerebbe
      un'altra */
-  const d = percorsoDi(c)
-  const P = new Percorso(d.forme, t.posti, MONDO, d.percorso)
+  const d = sullaCarta(t)
+  uguale(`${dove}: la carta del motore è questa`, d.carta.righe.join('\n'), c.righe.join('\n'))
+  const P = creaBattaglia({ tappa: t, misure: { ...MONDO }, stato: {} }).percorso
   uguale(`${dove}: il motore ha le piazzole della carta`, P.postazioni.length, c.piazzole.length)
+  controlla(`${dove}: nello stesso ordine`, P.postazioni.every((p, i) =>
+    Math.abs(p.x / MONDO.W - d.posti[i][0]) < 1e-9 && Math.abs(p.y / MONDO.H - d.posti[i][1]) < 1e-9))
   const cella = MONDO.W / COLONNE
   const lontane = P.postazioni.filter(p => {
     const via = P.viaN(p.via)

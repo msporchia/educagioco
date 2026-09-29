@@ -7,6 +7,7 @@ import { MOSTRI, ABILITA, CAPO, MISTA, feritoDa, firmaImmunita, guastiDelleImmun
          coppiaDellOnda, coppieDi, comune } from './mostri.js'
 import { RACCONTO, LIBERE_RACCONTO } from './campagne-castello.js'
 import { VITE, FIRMA, OLTRE } from './taratura-castello.js'
+import { sullaCarta } from '../motore/castello/carta.js'
 
 export const CFG = {
   cuori: 5,
@@ -25,16 +26,6 @@ export const CFG = {
   malusErrore: 6,
   spostamento: 2,
   perMoneta: 5,
-}
-
-/* Dove nascono le piazzole: equilibrio travestito da disegno, entra nella
-   firma. **Chi tocca `piazzole()` incrementa `v`**, o il test non vede che
-   il campo è cambiato (vedi docs/castello/taratura.md). */
-export const GEOMETRIA = {
-  v: 7,
-  dallIngresso: true,
-  scostamento: 34,
-  margine: 22,
 }
 
 // Il campo è uno solo, uguale su ogni schermo (verticale): la telecamera
@@ -565,7 +556,7 @@ function mistaDelPiano(tappa) {
 // combacia più col file generato e il test chiede di rifare `npm run tara`.
 export function firmaEquilibrio() {
   const roba = JSON.stringify([
-    CFG, CRESCITA, GEOMETRIA, MONDO, CARATTERE, RAMI, RAMI_DA, PIAZZOLE_PER_INGRESSO,
+    CFG, CRESCITA, MONDO, CARATTERE, RAMI, RAMI_DA, PIAZZOLE_PER_INGRESSO,
     Object.entries(TORRI).map(([k, T]) => [k, T.danno, T.ricarica, T.area, T.raggio, !!T.gela]),
     Object.entries(MOSTRI).map(([id, m]) => [id, m.immune, m.abilita || null, !!m.vola]),
     ABILITA, CAPO, MISTA,
@@ -577,6 +568,10 @@ export function firmaEquilibrio() {
     TAPPE.map(t => [t.ondate, t.posti, t.partenza, t.attesa, t.durezza]),
     LIBERE.map(l => [l.chiave, l.campagna, l.cap, l.posti, l.torri, l.mostri, l.rami,
                      l.forme, l.fronti ?? null, l.partenza, l.attesa, l.capi, !!l.abilita]),
+    // e il campo su cui si gioca davvero: la strada a squadra e le piazzole
+    // della carta, che lo schizzo da solo non dice (le carte a mano, il
+    // generatore di `carta.js`)
+    [...TAPPE, ...LIBERE].map(t => { const c = sullaCarta(t); return [c.forme, c.posti] }),
   ])
   let h = 5381
   for (let i = 0; i < roba.length; i++) h = ((h * 33) ^ roba.charCodeAt(i)) >>> 0

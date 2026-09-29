@@ -105,7 +105,7 @@ di 4×4 px».
    bastano i rettangoli. Provino: `python3 strumenti/sprite/vesti.py
    --creature provino.png`;
 2. ✅ la radura grande sulla scacchiera, scritta a mano (`A_MANO` in
-   `src/giochi/castello/motore/carta.js`): `DA_RIDISEGNARE` è vuoto;
+   `src/motore/castello/carta.js`): `DA_RIDISEGNARE` è vuoto;
 3. ✅ i lettori delle immagini che arriveranno, qui sotto voce per voce.
 
 ## Le priorità

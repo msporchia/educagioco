@@ -27,12 +27,15 @@ import { TAPPE, LIBERE, MONDO, CFG, ingressiDi, postiDi,
          PIAZZOLE_PER_INGRESSO, firmaEquilibrio } from '../../src/data/castello.js'
 import { RACCONTO, LIBERE_RACCONTO } from '../../src/data/campagne-castello.js'
 import { Percorso } from '../../src/motore/castello/percorso.js'
+import { sullaCarta } from '../../src/motore/castello/carta.js'
 import { Ondate } from '../../src/motore/castello/ondate.js'
 import { creaBattaglia } from '../../src/motore/battaglia.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const doppie = TAPPE.filter(t => ingressiDi(t) > 1)
 const misure = { ...MONDO }
+// il campo come lo gioca il motore: la carta a scacchiera della tappa
+const campoDi = t => { const { forme, posti } = sullaCarta(t); return new Percorso(forme, posti, misure) }
 
 controlla('qualche tappa ha due ingressi', doppie.length >= 2)
 nota('a più ingressi:', doppie.map(t => `${t.nome} (${ingressiDi(t)})`).join(' · '))
@@ -51,7 +54,7 @@ controlla('le partite libere senza anello hanno tutte più di una bocca',
 uguale('e una sola ha l\'anello', anelli.map(l => l.chiave).join(), 'libera-mura')
 
 for (const t of [...doppie, ...libereDoppie]) {
-  const p = new Percorso(t.forme, t.posti, misure)
+  const p = campoDi(t)
   const quante = p.quanteVie
   controlla(`${t.nome}: più di una strada (${quante})`, quante >= 2)
 
@@ -95,7 +98,7 @@ for (const t of [...doppie, ...libereDoppie]) {
    del terreno, e senza questa prova un ritocco al tracciato lo
    toglierebbe senza che niente diventi rosso. */
 for (const t of anelli) {
-  const p = new Percorso(t.forme, t.posti, misure)
+  const p = campoDi(t)
   uguale(`${t.nome}: una strada sola`, p.quanteVie, 1)
   const via = p.vie[0]
   const passo = 4 * MONDO.S
@@ -114,8 +117,7 @@ for (const t of anelli) {
   controlla(`${t.nome}: con più di un raggio di strada in mezzo`,
             incrocio.b - incrocio.a > RAGGIO)
   /* quante piazzole vedono tutti e due i passaggi: ce ne vuole almeno
-     una, e `sbroglia` — che qui gira anche a strada singola — non deve
-     averle scostate fuori tiro */
+     una, o l'incrocio non è un regalo per nessuno */
   const vedono = p.postazioni.filter(q => {
     const d = k => Math.hypot(q.x - via.puntoA(k).x, q.y - via.puntoA(k).y)
     return d(incrocio.a) <= RAGGIO && d(incrocio.b) <= RAGGIO
