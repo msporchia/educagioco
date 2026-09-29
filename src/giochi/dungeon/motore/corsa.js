@@ -1,38 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   UNA CORSA — una discesa dall'ingresso al guardiano, in tre piani
-
-   Le regole, a classi e **senza schermo**: qui dentro non si sa cosa sia
-   un canvas, un componente Vue o una moneta della fattoria. Non si sa
-   nemmeno cosa sia una domanda: la corsa dice *quanto dev'essere
-   difficile* (`sfida.difficolta`, da 0 a 1) e poi aspetta un `sì` o un
-   `no`. Chi la domanda la va a prendere davvero — e sa che esistono le
-   materie — è `Gioco.vue`, e nessun altro.
-
-   È questa ignoranza che permette al banco di prova (`banco.js`) di
-   giocare mille discese in Node con un bambino finto che ne sbaglia una
-   su quattro, e di dire se una tappa è battibile invece di sperarlo.
-
-   ── LO SCONTRO ──
-   Un mostro non è più un contatore di risposte: ha vita, attacco e
-   difesa (`dati/mostri.js`), e lo scontro è uno scambio di colpi.
-
-     rispondi bene  → gli togli max(1, tuo attacco − sua difesa)
-                      e lui ti graffia di 1
-     rispondi male  → non gli togli niente
-                      e lui ti picchia: max(1, suo attacco − tua difesa)
-
-   Quindi **quante domande costa una stanza lo decide come sei messo**,
-   non la stanza. Con la lama del drago un mostro cade in due scambi,
-   con lo spadino in cinque: è il motivo per cui vale la pena andare a
-   cercarsi il mostro grosso invece di girargli intorno, ed è tutto il
-   gioco. Le formule stanno in `dati/eroe.js`, non qui: qui si applicano.
-
-   COSA COSTA SBAGLIARE. Mai la corsa, in un colpo solo. Un mostro
-   picchia e rimane lì (si riprova, o si scappa); una serratura non si
-   apre e il tesoro sfuma. Si perde solo finendo la vita, e per finirla
-   bisogna sbagliare parecchie volte — quante, lo dice la difesa, ed è
-   per questo che l'armatura è l'altra metà del bottino.
-   ═══════════════════════════════════════════════════════════════════ */
+// Una corsa: le regole a classi, senza schermo (niente canvas, Vue o
+// monete). Non sa nemmeno cosa sia una domanda: chiede una difficoltà 0..1 e
+// aspetta un sì/no — Gioco.vue è l'unico che sa cos'è una materia. Questa
+// ignoranza è ciò che permette al banco di giocare mille discese in Node.
+// Le formule dello scontro sono in dati/eroe.js: vedi COMBATTIMENTO.md.
+// Sbagliare non finisce mai la corsa in un colpo solo: si perde solo finendo la vita.
 import { STANZE, gradoBottino, pianoDi, finePiano, inizioPiano,
          QUANTI_PIANI } from '../dati/stanze.js'
 import { TESORI, POZIONE, bonusDi, meglioDi, tesoriPossibili } from '../dati/tesori.js'
@@ -51,10 +22,7 @@ export class Corsa {
     this.rnd = rnd
     this.mappa = mappa || generaMappa(tappa, rnd)
     this.ambiente = ambiente(tappa.ambiente)
-    /* quanto è avanti nella campagna chi sta giocando: alza le ossa dei
-       mostri (`forzaDi`) e le statistiche dell'eroe (`statisticheBase`)
-       insieme, che è il solo modo perché la campagna sia una salita e
-       non una parete */
+    // alza insieme le ossa dei mostri (forzaDi) e le statistiche dell'eroe (statisticheBase)
     this.livello = Number.isFinite(tappa.livello) ? tappa.livello : tappeFatte
 
     const base = statisticheBase(tappeFatte)
@@ -83,18 +51,11 @@ export class Corsa {
     this.illumina()
   }
 
-  /* ═══════ com'è messo l'eroe adesso ═══════
-     Base più allenamenti più quello che porta addosso. È l'unico posto
-     dove si sommano: chi vuole sapere quanto picchia l'eroe chiede
-     qui, e non va a guardare dentro le caselle. */
   get equipaggiamento() { return { mano: this.mano, addosso: this.addosso, presi: this.presi } }
   get attacco() { return this.attaccoBase + bonusDi(this.equipaggiamento).attacco }
   get difesa() { return this.difesaBase + bonusDi(this.equipaggiamento).difesa }
 
-  /* ═══════ dove siamo ═══════ */
-  /* La stanza viene prima dell'esito apposta: battuto il guardiano, il
-     cartello «sconfitto!» si deve poter leggere. Si va al riepilogo
-     quando si esce dalla stanza, non un attimo prima. */
+  // la stanza viene prima dell'esito: battuto il guardiano si deve poter leggere "sconfitto!" prima del riepilogo
   get dove() { return this.stanza ? 'stanza' : this.esito ? 'fine' : 'mappa' }
   get finita() { return this.esito !== null }
   get vinta() { return this.esito === 'vinta' }
@@ -107,8 +68,6 @@ export class Corsa {
     this.mappa.illumina(this.riga, TARATURA.vista, !!this.presi.lanterna)
   }
 
-  /* Le stanze in cui si può entrare adesso. Dentro una stanza o a corsa
-     finita non se ne apre nessuna: la mappa aspetta. */
   aperte() {
     if (this.dove !== 'mappa') return []
     return this.qui ? this.qui.verso.slice() : this.mappa.ingressi.slice()
@@ -144,25 +103,14 @@ export class Corsa {
       che: 'sfida', tipo: s.tipo,
       momento: 'domanda',            // domanda | colpito | esito
       nome: s.tipo === 'boss' ? this.ambiente.bossNome : scheda.nome,
-      /* Una serratura non è un mostro e non deve avere una faccia:
-         `faccia()` non sa cosa sia uno scrigno e, non sapendolo,
-         pescava fra i mostri di casa — così davanti al forziere si
-         presentava un ragno. Le cose che non sono vive mostrano la
-         loro icona, che è quella che il bambino ha già visto sulla
-         mappa un attimo prima. */
+      // una serratura non è viva: mostra la sua icona, non pesca fra i mostri di casa
       faccia: scheda.taglia === 'serratura'
         ? scheda.icona
         : faccia(this.tappa.ambiente, s.tipo, this.rnd),
-      /* quanto è grossa la figura in scena, e se le tocca l'aura: chi
-         disegna non deve sapere che il capo ha vita tripla, gli basta
-         sapere che è un capo */
-      taglia: scheda.taglia,
+      taglia: scheda.taglia,   // chi disegna sa solo che è un "capo", non che ha vita tripla
       colore: scheda.colore,
       mostro: { ...ossa, vitaMax: ossa.vita },
-      /* quanto dev'essere tosta la domanda: se l'è segnata la stanza
-         quando la mappa è nata, ed è la stessa che il bollino ⚡ ha
-         mostrato sulla mappa prima di entrare */
-      difficolta: s.difficolta,
+      difficolta: s.difficolta,   // la stessa che il bollino ⚡ ha già mostrato sulla mappa
       sfuma: !!scheda.sfuma,
       scappabile: !!scheda.scappabile,
       colpito: null,
@@ -170,10 +118,6 @@ export class Corsa {
     }
   }
 
-  /* ═══════ rispondere ═══════
-     L'unica cosa che la corsa vuole sapere di una domanda: se è andata
-     bene. Torna cosa è successo, che a chi coordina serve per i suoni,
-     per le animazioni e per capire se serve un'altra domanda. */
   rispondi(giusto) {
     const st = this.stanza
     if (!st || st.che !== 'sfida' || st.momento !== 'domanda') return null
@@ -184,10 +128,7 @@ export class Corsa {
       const danno = colpoDellEroe(this.attacco, m.difesa)
       m.vita = Math.max(0, m.vita - danno)
       if (m.vita <= 0) return this.vinceSfida(danno)
-      /* il graffio: uno scambio vinto costa comunque qualcosa, ed è
-         quello che rende «curati» una scelta vera al fuoco da campo.
-         La serratura non graffia: non è viva. */
-      const graffio = st.tipo === 'scrigno' ? 0 : GRAFFIO
+      const graffio = st.tipo === 'scrigno' ? 0 : GRAFFIO   // la serratura non graffia: non è viva
       if (graffio && this.ferisci(graffio)) return { che: 'morto', danno, graffio }
       return { che: 'colpo', danno, graffio, vita: m.vita, vitaMax: m.vitaMax }
     }
@@ -207,7 +148,6 @@ export class Corsa {
     return { che: 'ferito', colpo, vita: this.vita }
   }
 
-  /* dopo il colpo: si riprova… */
   continua() {
     const st = this.stanza
     if (!st || st.momento !== 'colpito') return false
@@ -216,8 +156,7 @@ export class Corsa {
     return true
   }
 
-  /* …oppure si molla lì. La stanza resta fatta e non dà niente: scappare
-     costa il bottino, non la pelle. */
+  // scappare costa il bottino, non la pelle: la stanza resta fatta e non dà niente
   scappa() {
     const st = this.stanza
     if (!st || !st.scappabile) return false
@@ -238,17 +177,12 @@ export class Corsa {
     }
     const scheda = STANZE[st.tipo]
     const profondita = this.qui.profondita(this.quanteFile)
-    /* IL PATTO DEL BOTTINO: chi è più grosso lascia più spesso e lascia
-       roba migliore — ma non oltre quello che il piano si può
-       permettere, perché al terzo piano un'arma nuova arriverebbe
-       troppo tardi per essere giocata (vedi `gradoBottino`). */
+    // chi è più grosso lascia più spesso, ma non oltre quanto il piano si può permettere: COMBATTIMENTO.md
     const quando = TARATURA.lascia[st.tipo] ?? 0
     const grado = gradoBottino(st.tipo, this.piano, this.livello)
     const conTesoro = grado > 0 && this.rnd() < quando
     const tesoro = conTesoro ? this.dammiTesoro(grado) : null
-    /* lo scrigno che contiene equipaggiamento non contiene anche le
-       gemme: se no aprire uno scrigno sarebbe sempre meglio di
-       qualunque altra cosa e il bivio non sarebbe più una scelta */
+    // lo scrigno con equipaggiamento non dà anche gemme, o sarebbe sempre la scelta migliore
     const gemme = tesoro && st.tipo === 'scrigno'
       ? 0 : bottinoDi(scheda.ricchezza, profondita, this.rnd)
     if (gemme) this.gemme += gemme
@@ -257,17 +191,13 @@ export class Corsa {
       tit: st.tipo === 'scrigno' ? 'Aperto!' : 'Sconfitto!',
       testo: gemme ? `Hai raccolto ${gemme} gemme.` : 'Dentro c\'era qualcosa di meglio delle gemme.',
       gemme,
-      /* alla vista serve già leggibile: qui si sa cosa vuol dire una
-         chiave, in `viste/` no — ed è giusto che resti così */
+      // già leggibile qui: in viste/ non si sa cosa vuol dire una chiave
       tesoro: tesoro ? { chiave: tesoro, em: TESORI[tesoro].em, nome: TESORI[tesoro].nome } : null,
     }
     return { che: 'vinto', gemme, tesoro, danno: ultimoDanno }
   }
 
-  /* ═══════ le stanze in cui non si risponde ═══════ */
   apriRiposo(s) {
-    /* il fuoco prima di un capo rimette in sesto del tutto: si arriva a
-       un capo interi, o la strada fatta prima diventa una lotteria */
     const primaDelCapo = TARATURA.curaPrimaDelCapo &&
       s.riga === finePiano(pianoDi(s.riga, this.quanteFile), this.quanteFile) - 1
     const chiave = this.tesoroACaso(gradoBottino('grosso', this.piano, this.livello))
@@ -331,15 +261,12 @@ export class Corsa {
       voci: e.scelte.map((s, i) => ({
         chiave: 'scelta:' + i, em: '👉', nome: s.nome, desc: s.desc,
         prezzo: s.costo, spento: s.costo ? this.gemme < s.costo : false,
-        /* «questa può finire male»: si ricava dagli esiti dichiarati e
-           non si scrive a mano, così una stranezza nuova lo dice da sé */
-        azzardo: s.esiti.some(x => x.da?.danno),
+        azzardo: s.esiti.some(x => x.da?.danno),   // ricavato dagli esiti dichiarati, non scritto a mano
       })),
     }
   }
 
-  /* Una scelta presa. Torna il cartello da mostrare, o `null` se la
-     stanza resta aperta (il mercante: si compra e si resta lì). */
+  // torna il cartello da mostrare, o null se la stanza resta aperta (il mercante)
   scegli(chiave) {
     const st = this.stanza
     if (!st || st.che !== 'scelte' || st.esito) return null
@@ -375,8 +302,7 @@ export class Corsa {
     const st = this.stanza
     if (chiave === 'riposa') {
       if (this.vita >= this.vitaMax) {
-        /* chi è già pieno non spreca la sosta: la vita massima sale, e
-           resta su per tutta la discesa */
+        // chi è già pieno non spreca la sosta: sale la vita massima, per tutta la discesa
         this.vitaMax += TARATURA.cura
         this.vita = this.vitaMax
         st.esito = { em: '❤️', tit: 'Più resistente',
@@ -409,7 +335,7 @@ export class Corsa {
     const scelta = e.scelte[quale]
     if (scelta.costo) this.gemme -= scelta.costo
 
-    /* l'esito si pesca fra quelli dichiarati, col loro peso */
+    // pescato fra gli esiti dichiarati, col loro peso
     const totale = scelta.esiti.reduce((n, x) => n + x.peso, 0)
     let tiro = this.rnd() * totale
     const esito = scelta.esiti.find(x => (tiro -= x.peso) < 0) || scelta.esiti[0]
@@ -417,8 +343,7 @@ export class Corsa {
     const da = esito.da || {}
     const coda = []
     if (da.gemme) { this.gemme += da.gemme; coda.push(`+${da.gemme} 💎`) }
-    /* le stranezze parlano ancora di «cuori» perché è la parola che usa
-       il racconto: qui si traducono in punti vita, una volta sola */
+    // le stranezze parlano di "cuori" (il racconto), qui si traducono in punti vita
     if (da.cuore) { const q = TARATURA.cura * da.cuore; this.curati(q); coda.push(`+${q} ❤️`) }
     if (da.cuoriMax) {
       const q = TARATURA.cura * da.cuoriMax
@@ -438,7 +363,6 @@ export class Corsa {
     return st.esito
   }
 
-  /* Si esce dalla stanza. Se era il guardiano, la corsa è finita. */
   esci() {
     if (this.stanza?.che === 'scelte' && this.stanza.tipo === 'negozio' && !this.stanza.esito)
       this.stanza.esito = { em: '🚪', tit: 'Alla prossima', testo: '' }
@@ -446,7 +370,6 @@ export class Corsa {
     return this.dove
   }
 
-  /* ═══════ i conti ═══════ */
   ferisci(quanti = 1) {
     this.vita -= quanti
     this.persi += quanti
@@ -461,17 +384,12 @@ export class Corsa {
 
   curati(quanti = 1) { this.vita = Math.min(this.vitaMax, this.vita + quanti) }
 
-  /* Un pezzo di equipaggiamento fra quelli che varrebbe la pena
-     prendere, non oltre il grado che quella stanza si può permettere. */
   tesoroACaso(gradoMax = 3) {
     const possibili = tesoriPossibili(this.equipaggiamento, gradoMax)
     return possibili.length ? possibili[Math.floor(this.rnd() * possibili.length)] : null
   }
 
-  /* Cosa verrebbe lasciato prendendo `chiave`: serve alla schermata per
-     scrivere «al posto di 🗡️ Spadino» **prima** che si tocchi, che è
-     l'unico momento in cui l'informazione serve. Torna già scritto,
-     non una chiave: chi disegna non sa cosa vuol dire "spadino". */
+  // cosa verrebbe lasciato prendendo `chiave`, già scritto (chi disegna non sa cosa vuol dire una chiave)
   chiLascia(chiave) {
     const t = TESORI[chiave]
     if (!t?.casella) return null
@@ -479,9 +397,7 @@ export class Corsa {
     return vecchio ? `${TESORI[vecchio].em} ${TESORI[vecchio].nome}` : null
   }
 
-  /* Il bottino di una stanza vinta. Se non c'è più niente che valga la
-     pena, torna `null` e chi ha chiamato dà gemme: un premio che non
-     arriva è peggio di un premio piccolo. */
+  // se non resta niente che valga, torna null e chi chiama dà gemme
   dammiTesoro(gradoMax = 3) {
     const k = this.tesoroACaso(gradoMax)
     if (!k) return null
@@ -489,9 +405,7 @@ export class Corsa {
     return k
   }
 
-  /* Mette addosso un oggetto. Torna la chiave di quello che ha
-     sostituito, o `null`. Un oggetto peggiore di quello che si ha già
-     non si prende: sarebbe un premio che toglie. */
+  // torna la chiave sostituita, o null. Un oggetto peggiore di quello che si ha non si prende
   prendi(chiave) {
     const t = TESORI[chiave]
     if (!t) return null
@@ -500,9 +414,6 @@ export class Corsa {
     if (t.casella) {
       const lasciato = this[t.casella]
       this[t.casella] = chiave
-      /* quello che si è appena lasciato, già scritto: serve al cartello
-         del bottino, che deve poter dire «lasci lì 🗡️ Spadino» senza
-         andare a rovistare in una casella che ormai è cambiata */
       this.ultimoLasciato = lasciato
         ? `${TESORI[lasciato].em} ${TESORI[lasciato].nome}` : null
       return lasciato
@@ -523,19 +434,10 @@ export class Corsa {
     return a
   }
 
-  /* ═══════ com'è finita ═══════ */
   get stelle() { return this.vinta ? stellePerVita(this.vita, this.vitaMax) : 0 }
-  /* le monete vere, quelle che si spendono in fattoria: le porta la
-     tappa, non il bottino */
-  get monete() { return this.vinta ? this.tappa.premio * this.stelle : 0 }
+  get monete() { return this.vinta ? this.tappa.premio * this.stelle : 0 }   // le porta la tappa, non il bottino
 
-  /* ═══════ quello che serve a chi disegna ═══════
-     La vista non guarda dentro la mappa: riceve una fila di fatti già
-     decisi. Qui non si disegna niente — si dice **cosa** c'è, mai come
-     va dipinto. */
-  /* dove si è dentro il piano: serve solo alla riga sotto la mappa
-     («piano 2 di 3 — fila 5 di 14»), che è come si legge una discesa
-     lunga senza contare quaranta pallini */
+  // dove si è dentro il piano: la riga sotto la mappa ("piano 2 di 3 — fila 5 di 14")
   get filaNelPiano() { return this.riga - inizioPiano(this.piano, this.quanteFile) + 1 }
   get fileDelPiano() {
     return finePiano(this.piano, this.quanteFile) - inizioPiano(this.piano, this.quanteFile) + 1
@@ -553,28 +455,19 @@ export class Corsa {
         tipo: s.tipo, icona: s.icona, colore: s.colore, rischio: s.rischio,
         piano: pianoDi(s.riga, this.quanteFile),
         nome: STANZE[s.tipo].nome, dritta: STANZE[s.tipo].dritta,
-        /* quanti scambi costerebbe **come sei messo adesso**: è la
-           promessa del bivio, e cambia quando trovi una spada. Senza,
-           il bollino direbbe una cosa vera ieri. */
-        scambi: this.scambiPer(s),
+        scambi: this.scambiPer(s),   // come sei messo ADESSO: cambia quando trovi una spada
         stato: this.qui?.id === s.id ? 'qui'
           : aperta ? 'aperta'
           : s.fatta ? 'fatta'
           : s.vista ? 'chiusa' : 'buio',
-        /* da dove ci si arriva e con che curva: serve a chi anima la
-           pedina, che così non deve andarsi a cercare il sentiero
-           giusto fra tutti quelli disegnati. Chi entra adesso nel
-           dungeon viene da sotto la mappa. */
+        // da dove si arriva e con che curva, per chi anima la pedina (chi entra viene da sotto la mappa)
         partenza: !aperta ? null : da ? { x: da.xn, y: y(da.riga) } : { x: s.xn, y: -0.14 },
         curva: k >= 0 ? da.curve[k] : 0,
       }
     })
   }
 
-  /* Quanti scambi costa una stanza con l'equipaggiamento di adesso.
-     Il conto è quello di `eroe.js` sulle ossa medie della taglia: non
-     si tira il caso qui, o la mappa prometterebbe un numero e lo
-     scontro ne userebbe un altro. */
+  // ossa medie della taglia, senza tirare il caso: o la mappa prometterebbe un numero e lo scontro ne userebbe un altro
   scambiPer(s) {
     const scheda = STANZE[s.tipo]
     if (!scheda.taglia) return 0
