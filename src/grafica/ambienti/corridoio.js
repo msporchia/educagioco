@@ -1,14 +1,5 @@
-/* ═════ IL CORRIDOIO ═════
-   La stanza di riferimento del dungeon: pietra fredda, buio a metà,
-   torce arancioni ogni sei colonne. È qui che si è tarato tutto il
-   resto — la scala della muratura, la distanza fra le torce, quanto
-   può essere scuro il buio prima che un personaggio sparisca.
-
-   Tre partite di pietra più una fascia più fredda in ombra, e dove il
-   muro cede — l'umido — sotto ci sono i mattoni della vecchia
-   muratura e poi la roccia viva. Il pavimento ha una fascia consumata
-   al centro e i mattoni del sottofondo dove il lastricato è saltato,
-   la stessa ricetta della cripta. */
+// Il corridoio: la stanza di riferimento del dungeon, dove si è tarato tutto il
+// resto (scala della muratura, distanza delle torce, buio). Vedi docs/core/grafica.md.
 import { pietra, mattoni, roccia, lastre, mattonelle } from '../materiali/pattern.js'
 
 export const CORRIDOIO = {
