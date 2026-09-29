@@ -1,29 +1,12 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA SCHEDA DELL'EROE — chi sei e cosa ti porti dietro
-
-   Nasce da un problema di spazio che era diventato un problema di
-   leggibilità: nella fascia in cima stavano vita, attacco, difesa,
-   gemme **e** una fila di emoji che cresceva a ogni oggetto raccolto.
-   Su un telefono da 390 punti quella fila spingeva fuori il resto, e i
-   pezzi cominciavano a sparire — cioè proprio i numeri che servono a
-   decidere.
-
-   Quindi in cima restano i quattro numeri, e **si toccano**: da lì si
-   apre questa scheda, dove l'equipaggiamento ha lo spazio per dire
-   anche cosa fa. È il posto dove un bambino va a chiedersi «ma la
-   lanterna a cosa serviva?» tre stanze dopo averla presa — che è
-   esattamente quando se lo chiede.
-
-   Non decide niente e non tocca il motore: riceve com'è messo l'eroe e
-   lo mostra.
-   ═══════════════════════════════════════════════════════════════════ */
+// La scheda dell'eroe: in cima restano solo i quattro numeri (vita, attacco,
+// difesa, gemme) perché una fila di emoji per ogni oggetto spingeva fuori i
+// numeri su un telefono stretto. Toccandoli si apre questa scheda, dove
+// l'equipaggiamento ha spazio per dire anche cosa fa. Non decide niente.
 defineProps({
-  /* { vita, vitaMax, quota, attacco, difesa, polso } */
-  eroe: { type: Object, required: true },
+  eroe: { type: Object, required: true },   // { vita, vitaMax, quota, attacco, difesa, polso }
   gemme: { type: Number, default: 0 },
-  /* [{ em, nome, desc, dove }] — dove: 'in mano' | 'addosso' | null */
-  roba: { type: Array, default: () => [] },
+  roba: { type: Array, default: () => [] },   // [{ em, nome, desc, dove }] — dove: 'in mano' | 'addosso' | null
 })
 defineEmits(['chiudi'])
 </script>
@@ -41,8 +24,6 @@ defineEmits(['chiudi'])
         </div>
       </div>
 
-      <!-- i due numeri che contano, con scritto cosa vogliono dire:
-           «attacco 8» da solo non dice niente a chi ha sei anni -->
       <div class="dng-numeroni">
         <div class="dng-numerone">
           <span class="em">⚔️</span>

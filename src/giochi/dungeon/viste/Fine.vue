@@ -1,16 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL CARTELLO DI FINE DISCESA
-
-   Un cartello solo per tutti e due i modi di finire, perché è lo stesso
-   gesto: «è finita, ecco com'è andata, si riparte da qui».
-
-   Quello che è successo si racconta **sempre** con i numeri veri —
-   quante stanze, quante domande, fin dove si è arrivati — anche quando
-   è andata male, anzi soprattutto: «ero alla settima su otto» è il
-   motivo per cui un bambino rimette la mano sul telefono, «hai perso»
-   è il motivo per cui lo posa.
-   ═══════════════════════════════════════════════════════════════════ */
+// Un cartello solo per vittoria e sconfitta (stesso gesto: "ecco com'è
+// andata, si riparte"). I numeri veri si mostrano sempre, anche perdendo:
+// "ero alla settima su otto" è il motivo per cui si riprova.
 defineProps({
   vinta: { type: Boolean, default: false },
   titolo: { type: String, default: '' },
