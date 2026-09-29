@@ -1,26 +1,8 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LA SCHEDA DI CHI STA ARRIVANDO
-
-   Un riquadro in alto a destra sul campo: il mostro dell'ondata
-   ingrandito, quanti ne restano da fermare, quanta vita ha ciascuno, a
-   quali torri è **immune** e — se ce l'ha — cosa fa quando cade.
-
-   Serve a rendere l'immunità una cosa che si *legge*, non che si
-   indovina: sul campo il mostro è alto quindici pixel e il segno
-   «immune» compare solo quando una torre gli rimbalza addosso. Qui è
-   grande, fermo, e c'è posto per scriverlo a parole — «immune a 🏹 🔮»
-   — che è l'unico punto dello schermo dove la frase sta per intero.
-
-   Il ritratto non è un'immagine: è lo stesso pittore che disegna i
-   mostri sul campo, chiamato su una tela piccola. Un mostro nuovo si
-   disegna una volta sola e compare in tutti e due i posti.
-
-   In un'ondata **mista** (`con`, vedi `coppiaDellOnda` in
-   `data/mostri.js`) le facce sono due e le immunità due righe, una per
-   tipo: la cosa da leggere è proprio che non coincidono, quindi non si
-   fondono in una riga sola.
-   ═══════════════════════════════════════════════════════════════════ */
+// La scheda di chi sta arrivando: il mostro dell'ondata ingrandito, quanti
+// ne restano, la vita, a quali torri è immune scritto a parole (vedi
+// docs/castello/mostri.md). Il ritratto è lo stesso pittore del campo, su
+// una tela piccola.
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { creaTela } from '../grafica/tela.js'
 import { PITTORI } from '../grafica/castello.js'
@@ -31,17 +13,13 @@ const props = defineProps({
   bestia: { type: Object, required: true },   // { id, nome, vola, immune, abilita, capo, con? }
   vita: { type: Number, default: 0 },         // quanta ne ha uno solo
   quanti: { type: Number, default: 0 },       // quanti ne restano in campo
-  /* i pittori di una pelle (il castello a sprite): lì il ritratto è la
-     figura del campo, fatta stare nel riquadro dal suo pittore
-     `ritratto`, invece del mostro a poligoni */
-  pittori: { type: Object, default: null },
+  pittori: { type: Object, default: null },   // i pittori di una pelle (il castello a sprite)
 })
 
 const ritratto = ref(null), ritrattoCon = ref(null)
 let tele = [null, null], raf = 0
 
-/* la tela di un riquadro, fatta quando il riquadro c'è: il secondo
-   compare e sparisce con le ondate miste */
+// il secondo riquadro compare e sparisce con le ondate miste
 function telaDi(i, canvas) {
   if (!canvas) { tele[i] = null; return null }
   if (!tele[i] || tele[i].canvas !== canvas) {
@@ -84,8 +62,6 @@ watch(() => [props.bestia.id, props.bestia.con?.id], () => tele.forEach(t => t?.
         {{ ABILITA[bestia.abilita].emoji }} {{ ABILITA[bestia.abilita].nome }}
       </span>
     </div>
-    <!-- la mista: una riga per tipo, perché quello che conta è che le
-         due immunità non coincidono -->
     <div v-else class="dati">
       <b>{{ bestia.nome }} e {{ bestia.con.nome }}</b>
       <span class="riga">❤️ {{ vita }} · ×{{ quanti }}</span>
@@ -107,16 +83,11 @@ watch(() => [props.bestia.id, props.bestia.con?.id], () => tele.forEach(t => t?.
 .dati b { font-size:11px; color:var(--viola-scuro) }
 .dati i { font-style:normal; font-size:9px; font-weight:800; color:#4aa3ff }
 .riga { font-size:9.5px; font-weight:800; color:var(--tenue) }
-/* neutra, non del colore della torre: qui si sta dicendo «non quella»,
-   e il colore di una torre su questo schermo vuol dire «quella» */
 .resiste { font-size:9px; font-weight:800; color:#5b5468;
            background:#eceaf0; border-radius:999px;
            padding:1px 6px; margin-top:2px; white-space:nowrap; overflow:hidden;
            text-overflow:ellipsis }
-/* la mista ha due facce e due righe di immunità: le righe non si
-   devono troncare, perché sono proprio quello che c'è da leggere */
 .scheda[data-scheda-mista] { max-width:66% }
 .scheda[data-scheda-mista] .resiste { white-space:normal }
-/* quello che fa quando cade: non è un divieto, è una cosa da aspettarsi */
 .fa { font-size:9px; font-weight:800; color:var(--viola-scuro); margin-top:1px; white-space:nowrap }
 </style>
