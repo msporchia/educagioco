@@ -1,54 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   LE PRIME LETTERE — il mazzo di chi sta imparando a leggere.
-
-   È il primo modulo che non sta sulla scala di scuola. Tutti gli altri
-   partono da un quarto della manopola in su (`SCALA_SCUOLA`) perché
-   danno per scontata una cosa che nessun macrogruppo di `data/saperi.js`
-   sapeva dire: **che il bambino legga la consegna**. «Qual è il
-   contrario di indietro?» a chi fa la prima elementare non è difficile,
-   è muta — non è una domanda di italiano, è una prova di lettura
-   travestita — e a lungo la fascia sei-sette anni si è ritrovata solo
-   giochi da guardare, perché ogni gioco a domande le chiedeva quella.
-
-   Qui la consegna è sempre la stessa e sempre corta, e quello che si
-   guarda è una figura o una parola sola scritta grande. Chi non legge
-   ancora niente riconosce le figure; chi comincia a leggere ci prova; e
-   la parola scritta è **stampatello maiuscolo**, che è l'unico alfabeto
-   che a scuola hanno visto tutti a novembre.
-
-   DOVE STA SULLA MANOPOLA. `scala: [0, 0.22]`, cioè tutto il mazzo sta
-   sotto il primo gradino della roba di scuola. Non è un'etichetta di
-   comodo: serve a due cose in una. Un bambino di sei anni riceve queste
-   e non quelle di terza; e uno di quinta, che si è guadagnato una carta
-   tosta nel dungeon, non si vede arrivare «con che lettera comincia
-   🐝?» come premio — che sarebbe un premio preso in giro. Il taglio lo
-   fa la fascia del bambino in `quiz/scelta.js`; qui si dichiara solo
-   dove sta la scaletta.
-
-   LE PAROLE STANNO QUI E NON IN `data/words.js`. Quel file serve
-   all'inglese, e le sue voci vanno bene per il gioco «quale figura è
-   dog»: se l'emoji è un po' generica non fa danno, perché la parola
-   inglese è scritta accanto. Qui invece **l'emoji è la domanda**: se
-   🐰 si può chiamare coniglio o lepre, «con che lettera comincia» ha
-   due risposte e nessuna delle due è sbagliata. Le settanta voci qui
-   sotto sono scelte una per una perché un bambino italiano le chiami in
-   un modo solo.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// il mazzo di chi sta imparando a leggere: unico modulo sotto la scala di scuola (scala:[0,0.22]), parole scelte apposta perché l'emoji sia la domanda — vedi docs/apprendimento/quiz-moduli.md
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo, emoji } from '../nucleo/domanda.js'
 
-/* [parola, emoji, gruppo, sillaba iniziale].
-
-   Il gruppo serve ai falsi: una figura sbagliata presa dallo stesso
-   scaffale (un altro animale, un'altra frutta) obbliga a leggere la
-   parola, mentre una presa a caso si scarta perché «non c'entra
-   niente» — e allora la domanda non misura più la lettura.
-
-   La sillaba iniziale è scritta e non calcolata: quasi sempre sarebbe
-   consonante più vocale, ma «gnomo», «scarpa» e «chiave» no, e un conto
-   che indovina sbaglia proprio le parole che i bambini trovano
-   difficili. */
+// [parola, emoji, gruppo, sillaba iniziale]. Il gruppo obbliga a leggere (un falso dello stesso scaffale non si scarta a occhio).
+// La sillaba è scritta e non calcolata: un conto indovinerebbe consonante+vocale, ma «gnomo»/«scarpa»/«chiave» no.
 export const PAROLE = [
   /* ── animali ── */
   ['cane', '🐶', 'animali', 'CA'],
@@ -144,13 +99,7 @@ const sillaba = v => v[3]
 const iniziale = v => v[0][0].toUpperCase()
 const scritta = v => v[0].toUpperCase()
 
-/* ── i falsi della lettera iniziale ──
-   Non lettere a caso: quelle che un bambino di sei anni scambia
-   davvero, e sono due specie diverse. Quelle che **suonano vicine**
-   (P e B, T e D, F e V: cambia solo la voce) e quelle che si
-   **assomigliano scritte** (M e N, E e F). Una lettera presa a caso si
-   scarta senza sapere niente, e la domanda diventa un tiro a sorte fra
-   due. */
+// lettere davvero scambiate a sei anni: quelle che suonano vicine (P/B, T/D) e quelle simili scritte (M/N, E/F)
 const CONFUSE = {
   A: 'EO', B: 'PDV', C: 'GQ', D: 'BTP', E: 'AF', F: 'VE', G: 'CQ',
   H: 'NM', I: 'LJ', L: 'IR', M: 'NW', N: 'MH', O: 'AQ', P: 'BQD',
@@ -165,22 +114,13 @@ class Lettere extends Modulo {
       icona: '🅰️',
       materia: 'italiano',
       chiaro: 'riconoscere le lettere, e leggere una parola corta invece di indovinarla dalla prima lettera',
-      /* Tre gradini e non cinque: sotto la scala di scuola c'è poco
-         spazio (`scala`), e tre passi veri valgono più di cinque
-         sfumature che nessuno distingue. Il salto che conta è il
-         secondo: dalla lettera sola alla parola intera. */
+      // tre gradini e non cinque: sotto la scala di scuola c'è poco spazio, il salto che conta è il secondo (lettera → parola intera)
       scaletta: [
         'con che lettera comincia',
         'leggere la parola, e trovare la figura',
         'la sillaba iniziale, dove la prima lettera non basta',
       ],
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [12, 25, 29],
+      livelli: [12, 25, 29], // scala 0-100 comune a tutte le materie (vedi docs/apprendimento/quiz-livelli.md)
       scala: [0, 0.22],
       tipi: [
         { chiave: 'let:iniziale', nome: 'Con che lettera comincia', sa: 'lettura',
@@ -195,27 +135,20 @@ class Lettere extends Modulo {
 
   genera(grado, sorte, tipo) {
     switch (tipo) {
-      /* al secondo gradino solo parole corte: una parola di tre sillabe
-         a chi ne decifra una alla volta è un'altra domanda, e infatti sta
-         un gradino più su */
+      // al secondo gradino solo parole corte: una di tre sillabe è un'altra domanda, e sta un gradino più su
       case 'let:leggi': return this.leggi(sorte, grado <= 2)
       case 'let:sillaba': return this.sillabaIniziale(sorte)
       default: return this.primaLettera(sorte)
     }
   }
 
-  /* ── grado 1: con che lettera comincia ──
-     La figura è la domanda, e non c'è niente da leggere: si guarda, si
-     dice il nome dentro di sé, si ascolta come comincia. È il compito
-     della prima elementare, ed è anche l'unico modo di fare una domanda
-     di italiano a chi non legge ancora. */
+  // la figura è la domanda, niente da leggere: unico modo di fare una domanda di italiano a chi non legge ancora
   primaLettera(sorte) {
     const voce = sorte.uno(PAROLE)
     const buona = iniziale(voce)
     const vicine = (CONFUSE[buona] || '').split('')
     const ultima = scritta(voce).slice(-1)
-    /* la lettera finale è il falso più onesto che ci sia: è il secondo
-       posto dove un bambino guarda quando non è sicuro */
+    // la lettera finale è il falso più onesto: il secondo posto dove un bambino guarda quando non è sicuro
     const candidati = [...new Set([...vicine, ultima])].filter(l => l !== buona)
     const altre = PAROLE.map(iniziale).filter(l => l !== buona && !candidati.includes(l))
     const falsi = [...sorte.mescola(candidati), ...sorte.mescola([...new Set(altre)])].slice(0, 2)
@@ -232,11 +165,7 @@ class Lettere extends Modulo {
     })
   }
 
-  /* ── grado 2: leggere la parola ──
-     Il falso che conta è quello che comincia con la stessa lettera: chi
-     legge solo la prima e tira a indovinare sbaglia, chi legge fino in
-     fondo no. È l'errore vero di quest'età, e senza quel distrattore la
-     domanda si risolve senza leggere niente. */
+  // il falso che conta è quello con la stessa lettera iniziale: chi legge solo quella e indovina sbaglia
   leggi(sorte, corte = false) {
     const mazzo = corte ? PAROLE.filter(v => parola(v).length <= 6) : PAROLE
     const voce = sorte.uno(mazzo)
@@ -268,14 +197,9 @@ class Lettere extends Modulo {
     })
   }
 
-  /* ── grado 3: la sillaba iniziale ──
-     Lo stesso passo del grado 2 fatto al contrario, e più stretto: qui
-     tutte le figure in campo cominciano con la stessa lettera, quindi
-     la prima lettera non serve a niente e bisogna arrivare almeno alla
-     vocale. È il gradino che porta alla lettura vera. */
+  // tutte le figure cominciano con la stessa lettera: bisogna arrivare almeno alla vocale
   sillabaIniziale(sorte) {
-    /* si parte da una lettera che ha almeno due sillabe diverse fra le
-       parole che ci cominciano: se no non c'è niente da distinguere */
+    // parte da una lettera con almeno due sillabe diverse fra le parole che ci cominciano
     const perLettera = new Map()
     for (const v of PAROLE) {
       const l = iniziale(v)
@@ -290,8 +214,7 @@ class Lettere extends Modulo {
     const voce = sorte.uno(gruppoVoci)
     const diverse = gruppoVoci.filter(v => sillaba(v) !== sillaba(voce))
     const falsi = sorte.alcuni(diverse, Math.min(2, diverse.length))
-    /* il terzo falso viene da fuori, così la domanda non si riduce mai a
-       una scelta fra due */
+    // il terzo falso viene da fuori, così non si riduce mai a una scelta fra due
     const fuori = PAROLE.filter(v =>
       iniziale(v) !== iniziale(voce) && sillaba(v) !== sillaba(voce))
     if (falsi.length < 3 && fuori.length) falsi.push(sorte.uno(fuori))
