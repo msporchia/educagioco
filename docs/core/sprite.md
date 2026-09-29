@@ -25,7 +25,10 @@ strumenti/sprite/sorgenti/<gioco>/generati/<foglio>.png + .json   ← «i ritagl
 - **`vesti.py --atlante`** fa pezzi e figure del castello a sprite;
   `righe.py <foglio> <provino>` conta righe e figure di un foglio a righe
   appena arrivato, e `vesti.py --provino-foglio` / `--provino` fanno i
-  provini senza scrivere niente. Tutti i comandi in [comandi.md](comandi.md).
+  provini senza scrivere niente. **`cammino.py`** tiene di un video di
+  Grok Imagine solo i passi di una creatura (sei di lato, sei di fronte):
+  il video non si conserva, e i passi si portano alla misura della
+  creatura in `vesti.py`. Tutti i comandi in [comandi.md](comandi.md).
 - **Il PNG non si tocca mai.** La sorgente è la verità: un PNG ritoccato a
   mano non dice più cosa gli è stato fatto, e la correzione si perde il
   giorno che arriva un foglio migliore. Le correzioni sono **dato nel
