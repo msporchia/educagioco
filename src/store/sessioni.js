@@ -45,7 +45,7 @@ export function perGiorno(voci, { quanti = 7, oggi = Date.now() } = {}) {
   return fuori
 }
 
-// il conto che servirebbe a un tetto giornaliero (non ancora fatto): docs/core/sessioni.md
+// quanto oggi su quel gioco: lo usano le monete che calano (docs/genitori/varieta.md)
 export function oggiDi(voci, gioco, oggi = Date.now()) {
   const k = chiaveGiorno(oggi)
   let s = 0
@@ -58,16 +58,25 @@ export function potate(voci, { oggi = Date.now(), giorni = GIORNI_TENUTI } = {})
   return voci.filter(v => v.t >= limite)
 }
 
+// l'ultima copia letta o scritta, per chi deve contare subito (le monete, store/varieta.js)
+const memoria = new Map()
+export const vociInMemoria = id => memoria.get(id) || null
+
+const dalDisco = async id => (await load(CHIAVE(id)))?.voci || []
+
 export async function leggiSessioni(id) {
   if (!id) return []
-  return (await load(CHIAVE(id)))?.voci || []
+  const voci = await dalDisco(id)
+  memoria.set(id, voci)
+  return voci
 }
 
 export async function scriviSessione(id, { gioco, quando, secondi }) {
   if (!id || !gioco) return false
   const s = Math.round(Math.min(MAX_SESSIONE, secondi))
   if (s < MINIMA) return false
-  const voci = potate([...(await leggiSessioni(id)), { g: gioco, t: quando, s }])
+  const voci = potate([...(await dalDisco(id)), { g: gioco, t: quando, s }])
+  memoria.set(id, voci)
   save(CHIAVE(id), { voci })
   await flush()
   return true
@@ -86,6 +95,7 @@ export function entra(gioco, id) {
   if (aperta) esci()
   if (!gioco || !id) return null
   aperta = { gioco, id, da: orologio() }
+  if (!memoria.has(id)) leggiSessioni(id).catch(() => {})   // chi conta le monete la vuole già pronta
   return aperta
 }
 
@@ -94,8 +104,14 @@ export function esci() {
   aperta = null
   if (!s) return null
   const secondi = (orologio() - s.da) / 1000
+  // in memoria subito: la home che si apre adesso non deve aspettare il disco
+  const m = memoria.get(s.id)
+  const sec = Math.round(Math.min(MAX_SESSIONE, secondi))
+  if (m && sec >= MINIMA) memoria.set(s.id, [...m, { g: s.gioco, t: s.da, s: sec }])
   scriviSessione(s.id, { gioco: s.gioco, quando: s.da, secondi }).catch(() => {})
   return { ...s, secondi }
 }
 
 export const inCorso = () => aperta
+export const secondiInCorso = () =>
+  aperta ? Math.min(MAX_SESSIONE, Math.max(0, (orologio() - aperta.da) / 1000)) : 0
