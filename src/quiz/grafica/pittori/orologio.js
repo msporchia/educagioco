@@ -1,22 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL PITTORE DELL'OROLOGIO
-
-   Un quadrante dentro il quadrato 100×100 del riquadro. Sa disegnare
-   una scena sola:
-
-     { che: 'orologio', ore: 3, minuti: 25, numeri: true }
-
-   `numeri: 'quarti'` lascia solo il 12, il 3, il 6 e il 9 — com'è
-   fatta metà degli orologi veri di casa, ed è il gradino in più per
-   chi ha imparato a leggerlo con tutte le cifre. `numeri: false` le
-   toglie tutte, e nessun grado lo usa più: un quadrante nudo, grande
-   quanto un riquadro sul telefono, non si legge, si indovina.
-
-   La lancetta delle ore si muove anche coi minuti (alle 3 e mezza sta
-   in mezzo fra il 3 e il 4): senza quel dettaglio l'orologio disegnato
-   insegna a leggere una cosa che non esiste.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// { che:'orologio', ore, minuti, numeri }: numeri:'quarti' mostra solo 12/3/6/9 (com'è metà degli orologi veri), false li toglie tutti (nessun grado lo usa: illeggibile)
 const GIRO = Math.PI * 2
 
 export function orologio(p, { ore = 12, minuti = 0, numeri = true }) {
@@ -25,8 +7,7 @@ export function orologio(p, { ore = 12, minuti = 0, numeri = true }) {
   p.cerchio(cx, cy, r, '#c9d4ee')            // la cassa
   p.cerchio(cx, cy, r - 3, '#f8fbff')        // il quadrante
 
-  /* dodici tacche, quelle delle ore più marcate */
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 60; i++) { // 60 tacche, quelle delle ore più marcate
     const a = (i / 60) * GIRO
     const grossa = i % 5 === 0
     const fuori = r - 6, dentro = r - (grossa ? 12 : 9)
@@ -44,7 +25,7 @@ export function orologio(p, { ore = 12, minuti = 0, numeri = true }) {
     }
   }
 
-  /* le lancette: l'angolo di quella delle ore tiene conto dei minuti */
+  // aOre tiene conto anche dei minuti: alle 3 e mezza sta fra il 3 e il 4
   const aOre = ((ore % 12) + minuti / 60) / 12 * GIRO
   const aMin = (minuti % 60) / 60 * GIRO
   p.in(cx, cy, q => q.linea([{ x: 0, y: 5 }, { x: 0, y: -20 }], '#22304f', 5), aOre)
