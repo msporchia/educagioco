@@ -6,6 +6,7 @@ defineProps({
   titolo: { type: String, required: true },
   stelle: { type: Number, required: true },
   monete: { type: Number, default: 0 },
+  notaMonete: { type: String, default: '' },   // il premio ridotto: docs/genitori/varieta.md
 })
 defineEmits(['avanti'])
 </script>
@@ -16,7 +17,8 @@ defineEmits(['avanti'])
       <div class="ct-faccia em">🏆</div>
       <h2>{{ titolo }}</h2>
       <div class="ct-punteggio em">{{ '⭐'.repeat(stelle) }}</div>
-      <p v-if="monete">+{{ monete }} 🪙</p>
+      <p v-if="notaMonete" class="ct-nota-monete" data-nota-monete>{{ notaMonete }}</p>
+      <p v-else-if="monete">+{{ monete }} 🪙</p>
       <button class="ct-grosso" @click="$emit('avanti')">
         <span class="em">🗺️</span> alla mappa
       </button>

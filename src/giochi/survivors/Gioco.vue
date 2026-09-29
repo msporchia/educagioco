@@ -7,7 +7,8 @@
 import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { addCoins, segna, segnaBest } from '../../store/profile.js'
+import { segna, segnaBest } from '../../store/profile.js'
+import { incassa } from '../../store/varieta.js'   // paga e dice se il salvadanaio è stanco
 import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato,
          sosta, salvaSosta, buttaSosta } from '../campagne.js'
 import { fraseDiFine, recordInParole } from '../primati.js'
@@ -336,7 +337,7 @@ function chiudiPartita() {
   }
   if (extra) monete += Math.min(12, Math.floor(extra / 20))   // il tempo regalato non è gratis
 
-  if (monete) addCoins(monete)
+  const pagato = monete ? incassa(monete) : null
   if (!contata) { segna('survivorsPartite'); contata = true }
   if (p.uccisi > mostriSegnati) {
     segna('survivorsMostri', p.uccisi - mostriSegnati)
@@ -347,7 +348,7 @@ function chiudiPartita() {
 
   finale.value = {
     vinta: p.vinta, titolo: regoleOra.value.nome, stelle: p.stelle,
-    monete, tempo: p.tempo, uccisi: p.uccisi, livello: p.livello,
+    monete: pagato ? pagato.dato : 0, notaMonete: pagato?.frase || '', tempo: p.tempo, uccisi: p.uccisi, livello: p.livello,
     primato, libera: libera.value, extra,
     puoiRestare: p.alTraguardo,
     ultima: p.vinta && !libera.value && tappaIdx.value === QUANTE_TAPPE - 1,
