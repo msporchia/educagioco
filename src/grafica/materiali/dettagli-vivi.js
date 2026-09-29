@@ -1,12 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I DETTAGLI VIVI — erba, fiori, muschio, foglie, funghi, pozze
-
-   Gli stessi patti degli altri dettagli — piccoli, tanti, deterministici,
-   firma `(c, x, y, s, A, r)` — ma questi sono quelli che crescono, e
-   prendono i colori dall'ambiente (`A.erbaC`, `A.erbaS`, `A.muschio`,
-   `A.fungo`), non da una tavolozza loro: lo stesso ciuffo deve poter
-   stare in un cortile assolato e in una cripta.
-   ═══════════════════════════════════════════════════════════════════ */
+// I dettagli vivi: erba, fiori, muschio, foglie, funghi, pozze. Vedi docs/core/grafica.md.
 import { mescola, ell, velo, poly } from '../comune.js'
 
 export function ciuffi(c, x, y, s, A, r) {        // erba a V, come nel castello
@@ -56,9 +48,7 @@ export function pozze(c, x, y, s, A, r) {
   })
 }
 
-/* i funghi della grotta e del bosco: due o tre, minuscoli, il cappello
-   chiaro e il gambo più chiaro ancora. Al buio sono l'unica cosa che
-   si vede, e bastano. */
+// i funghi della grotta e del bosco: al buio sono l'unica cosa che si vede, e bastano
 export function funghi(c, x, y, s, A, r) {
   if (r(1) < 0.55) return
   const n = 1 + Math.floor(r(2) * 3)
@@ -72,9 +62,7 @@ export function funghi(c, x, y, s, A, r) {
   }
 }
 
-/* il sottobosco: un cespuglio è tre ellissi scure e due lumi. Più di
-   così, in una stanza dove ci si deve muovere, diventa un ostacolo
-   che ostacolo non è. */
+// il sottobosco: tre ellissi scure e due lumi, non di più — deve restare non un ostacolo
 export function cespugli(c, x, y, s, A, r) {
   if (r(1) < 0.5) return
   const scuro = A.erbaS, chiaro = A.erbaC

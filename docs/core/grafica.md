@@ -204,9 +204,33 @@ quadretto che si ripete (`ctx.createPattern`).
   bastano la risposta è un pittore nuovo, mai un velo: così ogni
   tessitura resta provabile da sola nel catalogo
   (`strumenti/banco/catalogo.html`).
+- **Il pavimento cambia a macchie, non a celle** (`varianti.js`): un
+  disegno fatto solo di granelli con la stessa densità dappertutto si
+  legge come una stampa, perché ogni cella somiglia alla vicina e
+  l'occhio ritrova la griglia. Un reticolo di macchie ogni `MODULO`
+  celle (5, cioè mezzo schermo di telefono — sotto le 3 le macchie
+  diventano loro il motivo ripetuto, sopra le 8 non si vede più che
+  cambia) pesca una posatura dal sacchetto pesato dell'ambiente
+  (`A.varianti`, dove `liscio` sta quasi sempre due volte: è il vuoto
+  che fa vedere il pieno) e la stende sfumando. Le due metà si toccano
+  in un punto solo, la tabella `POSATURE` di `posature.js`.
 - **Pavimento e muratura restano due tessuti diversi apposta** (i pezzi
   del pavimento sono sempre più grandi o più piccoli di quelli del muro,
   mai uguali): fatti della stessa misura, la stanza perde l'architettura.
+- **I massi non hanno una misura sola** (`roccia.js`, `metallo.js`): la
+  taglia esce da una curva (`r³`, non `r` dritto), che dà pochi pezzi
+  grandi e tanti piccoli — la roccia vera. Con un numero pescato dritto i
+  massi tornano tutti della stessa taglia in una maglia regolare, cioè un
+  motivo che si legge come un tappeto di sassi uguali.
+
+- **I dettagli** (`materiali/dettagli.js`, `dettagli-vivi.js`) hanno tutti
+  la stessa firma (`c, x, y, s, A, r`: contesto, posizione, scala,
+  ambiente, dado) e la stessa scala `s` (lato/20): tanti e piccoli, mai
+  uno che si vede da solo — un dettaglio che si nota è un dettaglio
+  sbagliato, il fondo deve restare indietro. Quelli vivi (erba, muschio,
+  funghi) prendono i colori dall'ambiente (`A.erbaC`, `A.muschio`…) e non
+  da una tavolozza propria, per poter stare in un cortile assolato e in
+  una cripta.
 
 ## Le misure
 

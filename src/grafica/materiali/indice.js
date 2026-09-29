@@ -1,19 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I MATERIALI — l'indice
-
-   Un file per famiglia (pietra, roccia, legno, metallo, marmo, verde,
-   acqua) e qui le tre tabelle che gli ambienti nominano per nome:
-
-     POSE      come è messo il pavimento
-     MURI      di che è fatta la parete
-     DETTAGLI  che cosa si sparge sopra
-     POSATURE  come cambia il pavimento da una zona all'altra
-
-   Un ambiente non contiene un solo `ctx.qualcosa`: dice *quale* posa,
-   *quale* muratura, *quali* dettagli e con che colori. Aggiungere una
-   tecnica è un file nuovo più una riga qui; aggiungere una stanza non
-   richiede quasi mai una tecnica nuova.
-   ═══════════════════════════════════════════════════════════════════ */
+// I materiali — l'indice: un file per famiglia, e qui le tabelle che gli ambienti
+// nominano per nome (POSE, MURI, DETTAGLI, POSATURE). Vedi docs/core/grafica.md.
 import { lastre, mattoniPosa, pietra, mattoni } from './pietra.js'
 import { rocciaPosa, roccia } from './roccia.js'
 import { terra, binari, legno } from './legno.js'

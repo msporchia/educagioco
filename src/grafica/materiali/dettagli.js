@@ -1,16 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I DETTAGLI DI PIETRA — quelli che tolgono la piattezza
-
-   Ciottoli, crepe, ossa, bulloni, monete, ragnatele, assi, cristalli:
-   tutti minuscoli, tutti col loro dado, tutti alla stessa scala `s`
-   (un'unità = lato/20). Il trucco non è che siano belli: è che siano
-   **tanti e piccoli**. Un dettaglio che si vede da solo è un dettaglio
-   sbagliato — il fondo deve stare indietro.
-
-   La firma è sempre `(c, x, y, s, A, r)`: contesto, posizione, scala,
-   ambiente, dado. Aggiungerne uno è una funzione qui e una riga
-   nell'indice; usarlo è una riga nei dati di un ambiente.
-   ═══════════════════════════════════════════════════════════════════ */
+// I dettagli di pietra: ciottoli, crepe, ossa, bulloni, monete, ragnatele, assi, cristalli.
+// Vedi docs/core/grafica.md.
 import { mescola, rett, ell, velo, poly } from '../comune.js'
 import { crepa } from './semina.js'
 
@@ -85,7 +74,7 @@ export function monete(c, x, y, s, A, r) {
   }
 }
 
-/* la ragnatela sparsa: solo negli angoli, e ci pensa chi chiama */
+// la ragnatela sparsa: solo negli angoli, e ci pensa chi chiama
 export function ragnatele(c, x, y, s, A, r) {
   if (r(1) < 0.7) return
   velo(c, 0.4, () => {
@@ -101,7 +90,7 @@ export function ragnatele(c, x, y, s, A, r) {
   })
 }
 
-/* le assi abbandonate della miniera */
+// le assi abbandonate della miniera
 export function assi(c, x, y, s, A, r) {
   if (r(1) < 0.62) return
   const col = mescola('#8a5a30', '#5a3a1c', r(2))
@@ -114,8 +103,7 @@ export function assi(c, x, y, s, A, r) {
   c.restore()
 }
 
-/* i cristalli: il solo dettaglio del gioco che è **acceso**. Rari
-   apposta — se ce n'è uno ogni due celle non è più un tesoro. */
+// i cristalli: il solo dettaglio acceso, raro apposta (un tesoro, non un tappeto)
 export function cristalli(c, x, y, s, A, r) {
   if (r(1) < 0.78) return
   const col = A.cristallo || '#7fd8e0'

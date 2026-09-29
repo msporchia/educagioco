@@ -1,28 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I SUOLI CHE UN LIVELLO PUÒ NOMINARE
-
-   Un ambiente dichiara l'aria di una stanza — la luce, il buio, le
-   torce, le tre partite di muratura, i dettagli sparsi — e finché il
-   pavimento era solo suo, una mappa era **un posto solo**: o tutto
-   cortile o tutto cripta. Ma una storia vera è «porto la roba fuori dal
-   castello», e lì da un lato c'è il lastricato e dall'altro l'erba.
-
-   Questi sono i pavimenti che il livello può mettere **cella per
-   cella**, scrivendoli nella legenda della mappa accanto ai
-   personaggi e alle cose:
-
-       '==': suoli.lastre     '~~': suoli.acqua
-       ',,': suoli.erba       '..': (quello dell'ambiente)
-
-   Le tinte stanno qui e non nel livello: un livello dice DOVE, non di
-   che colore — se no ogni mappa diventerebbe una tavolozza, e due
-   cortili scritti da due persone non si somiglierebbero più.
-   ═══════════════════════════════════════════════════════════════════ */
+// I suoli che un livello può nominare cella per cella nella legenda della mappa
+// ('==' lastre, '~~' acqua, ',,' erba, '..' quello dell'ambiente): un livello dice
+// DOVE, non di che colore, quindi le tinte stanno qui e non nel livello.
 import { erba, lastre, mattonelle, pietraia, terra, metallo, mosaico, tappeto, bagnato,
          pietra, mattoni, roccia, legno, ferro, marmo, alberi } from './pattern.js'
 
-/* ognuno è una funzione senza argomenti: la voce si costruisce quando
-   serve, così due mappe non si passano lo stesso oggetto mutabile */
+// funzioni senza argomenti: la voce si costruisce quando serve, mai un oggetto condiviso
 export const SUOLI = {
   erba: () => erba('#7ec066', '#5b9c50'),
   lastre: () => lastre('#c8bb96', '#a99b73'),
@@ -36,8 +18,6 @@ export const SUOLI = {
 }
 export const NOMI_SUOLI = Object.keys(SUOLI)
 
-/* le murature, per lo stesso mestiere: il livello dice DOVE, le tinte
-   stanno qui */
 export const MURI = {
   pietra: () => pietra('#cdc3b0', '#9a9080'),
   mattoni: () => mattoni('#b89a72', '#82613f'),
