@@ -1,91 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I PROBLEMI A PAROLE — la matematica che smette di essere una
-   tabellina.
-
-   Tutti gli altri moduli di matematica chiedono un conto: `7 × 8`, «5 m
-   quanti cm sono?», «quale numero sta fra 40 e 60?». Qui il conto non
-   c'è scritto da nessuna parte: c'è una storia, e la prima cosa da fare
-   — l'unica che questo modulo allena davvero — è **capire che conto
-   chiede**. Un bambino che sa tutte le tabelline e non sa che «in ogni
-   scatola ce ne sono 6, le scatole sono 4» è una moltiplicazione, alla
-   scuola vera si ferma lì.
-
-   SI RISPONDE SCEGLIENDO FRA QUATTRO NUMERI, come in tutti gli altri
-   quiz. Chiedere di *scrivere* il risultato vorrebbe dire una tastiera,
-   una conferma, un modo di cancellare: un'interfaccia tutta sua, dentro
-   una scheda che oggi sa mostrare qualunque materia proprio perché non
-   ne conosce nessuna. Il prezzo è che una risposta si può azzeccare, e
-   si paga volentieri: i tre falsi sono presi dagli errori veri, e
-   azzeccare tirando a caso costa più fatica che ragionare.
-
-   LA CATENA È LA FONTE UNICA. Un problema qui dentro non è un testo con
-   accanto un risultato scritto a mano — quello è il modo di scrivere
-   due cose che un giorno non si somigliano più. È una **catena**:
-
-     { base: 14, passi: [{ segno: '-', n: 6 }, { segno: '+', n: 9 }] }
-
-   Da lì escono tutte e due le cose: il conto (`esito()`) e la frase
-   («Ne perde 6, poi ne vince ancora 9»). Il testo non può raccontare
-   numeri diversi da quelli che il conto usa, perché è la stessa catena
-   a dettarli — e `test/unita/problemi.test.mjs` lo ricontrolla dal lato
-   opposto, rileggendo le cifre scritte nel testo per un bambino.
-
-   I FALSI SONO I QUATTRO ERRORI DI SEMPRE, e sono gli stessi che fa un
-   bambino a un compito in classe:
-
-     · **l'operazione girata** — ha sommato dove si toglieva. È il
-       primo, ed è quello che dice se ha capito la storia o se ha visto
-       due numeri e li ha messi insieme;
-     · **il passo dimenticato** — ha fatto il primo conto e si è
-       fermato, che nei problemi a due e tre passi è l'errore numero uno;
-     · **il dato in più usato lo stesso** — al grado 6, dove c'è un
-       numero che non serve: chi lo somma dà proprio quella risposta;
-     · **l'uno di troppo** — il conto giusto contato male.
-
-   Un distrattore preso a caso si scarterebbe a occhio e la domanda si
-   risolverebbe per esclusione invece che leggendola, che è esattamente
-   il contrario di quello che serve qui.
-
-   NESSUNA FIGURA SOPRA LA STORIA, ed è stato deciso guardando lo
-   schermo e non prima. C'era: l'emoji della cosa di cui si parla, messa
-   lì per aiutare chi legge piano. In `Domanda.vue` un soggetto sta
-   dentro un riquadro **largo uguale ai tasti delle risposte**, appena
-   sopra i quattro numeri — e su un telefono un bambino non ha nessun
-   modo di sapere che quello non è il quinto tasto. Negli altri moduli
-   il rischio si paga volentieri perché la figura *è* la domanda
-   (l'orologio, la fila di figure); qui non porta niente: la storia
-   nomina già i pastelli tre righe sopra.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// problemi a parole: qui il conto non è scritto, c'è una storia, e la sola cosa che si allena è capire CHE conto chiede. Si sceglie fra quattro numeri come ovunque: i tre falsi sono presi dagli errori veri (operazione girata, passo dimenticato, dato in più usato lo stesso al grado 6, uno di troppo), così azzeccare a caso costa più fatica che ragionare. La CATENA ({ base, passi:[{segno,n}] }) è la fonte unica: da lì escono sia il conto (esito()) sia la frase, così il testo non può raccontare numeri diversi da quelli del conto (test/unita/problemi.test.mjs lo ricontrolla rileggendo le cifre). Nessuna figura sopra la storia: in Domanda.vue un soggetto sta in un riquadro largo come i tasti delle risposte, e su un telefono sembrerebbe un quinto tasto.
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo } from '../nucleo/domanda.js'
 
-/* ═══════════════════════════════════════════════════════════════════
-   IL MONDO — chi, e che cosa.
-
-   Nomi corti, di quelli che si leggono in un colpo: il problema è già
-   una cosa da leggere, e un nome lungo è fatica spesa dove non insegna
-   niente.
-   ═══════════════════════════════════════════════════════════════════ */
+// nomi corti, che si leggono in un colpo: il problema è già una cosa da leggere
 const CHI = ['Nina', 'Teo', 'Milo', 'Zoe', 'Bruno', 'Lea', 'Gigi', 'Vera']
 
-/* Una cosa porta con sé la sua lingua, e i suoi verbi. `f` è il genere
-   del plurale — serve a «Quante mele» contro «Quanti pastelli», e non
-   c'è modo di evitarlo in italiano. Tutto il resto è scritto per NON
-   dover accordare: i verbi cominciano con «ne», che è invariabile, e la
-   domanda finale è «quante gliene restano», che vale per un maschio e
-   per una femmina.
-
-   `piu` e `meno` sono coerenti con la cosa: si raccolgono le mele e si
-   vincono le biglie, non il contrario. Un verbo storto in un problema
-   non è un dettaglio di stile — è una frase che il bambino rilegge tre
-   volte pensando di non aver capito.
-
-   `gruppo` è il contenitore per le moltiplicazioni e le divisioni, con
-   il suo genere. `con` è la seconda specie che compare al grado 6 come
-   dato che non serve: sta di casa insieme alla prima (le mele con le
-   pere, i pastelli con le gomme), se no il dato in più si scarta senza
-   nemmeno leggerlo. */
+// `f` è il genere del plurale («Quante mele»/«Quanti pastelli»); il resto è scritto per NON dover accordare («ne», invariabile). `piu`/`meno` sono coerenti con la cosa (si raccolgono le mele, si vincono le biglie). `gruppo` è il contenitore per moltiplicazioni/divisioni. `con` è la seconda specie del dato-in-più al grado 6: sta di casa con la prima, se no si scarta senza leggerlo.
 const COSE = [
   {
     uno: 'mela', tanti: 'mele', f: true, em: '🍎',
@@ -149,9 +69,7 @@ const COSE = [
   },
   {
     uno: 'palloncino', tanti: 'palloncini', f: false, em: '🎈',
-    /* «ne scoppia 9» no: scoppiare non regge un complemento oggetto,
-       li fa scoppiare — ed è il genere di frase che un bambino rilegge
-       due volte credendo di non aver capito */
+    // «ne scoppia 9» no: scoppiare non regge un complemento oggetto, li fa scoppiare
     piu: ['ne gonfia', 'gliene regalano'], meno: ['ne fa scoppiare', 'ne regala'],
     gruppo: { uno: 'mazzo', tanti: 'mazzi', f: false },
     con: { tanti: 'candeline', f: true },
@@ -164,12 +82,9 @@ const COSE = [
   },
 ]
 
-/* con chi si divide, al grado delle parti uguali */
 const COMPAGNI = ['amici', 'cugini', 'compagni', 'fratelli']
 
-/* i colori del dato inutile «di che colore sono» — con le due forme,
-   perché l'aggettivo deve concordare con `c.tanti` (mele rosse, sassi
-   rossi) */
+// due forme, perché l'aggettivo deve concordare con c.tanti (mele rosse, sassi rossi)
 const COLORI = [
   { f: 'rosse', m: 'rossi' },
   { f: 'blu', m: 'blu' },
@@ -179,16 +94,11 @@ const COLORI = [
 ]
 const coloreDi = (col, c) => (c.f ? col.f : col.m)
 
-/* ── la lingua, in tre righe ──
-   Sono le uniche concordanze che restano: il resto delle frasi è
-   scritto apposta per non averne bisogno. */
+// le uniche concordanze che restano: il resto delle frasi è scritto apposta per non averne bisogno
 const Q = c => (c.f ? 'Quante' : 'Quanti')
 const LI = c => (c.f ? 'le' : 'li')
 
-/* Il verbo che aggiunge non può somigliare a quello che toglie: «ne
-   regala 5, poi gliene regalano ancora 5» è una storia che si rilegge
-   tre volte per capire da che parte vanno le cose. Si confronta
-   l'ultima parola — il verbo vero — e «regalano» conta come «regala». */
+// il verbo che aggiunge non può somigliare a quello che toglie («ne regala 5, poi gliene regalano ancora 5» si rilegge tre volte); si confronta l'ultima parola, «regalano» conta come «regala»
 const radice = v => v.split(' ').pop().replace(/no$/, '')
 function verboPiu(c, sorte, evita = []) {
   const male = new Set(evita.map(radice))
@@ -196,12 +106,7 @@ function verboPiu(c, sorte, evita = []) {
   return sorte.uno(buoni.length ? buoni : c.piu)
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   LA CATENA — il conto, in forma di dato.
-
-   Da qui escono il risultato e la frase, e questo è tutto il punto: non
-   esiste un posto dove il testo possa dire 8 mentre il conto ne usa 9.
-   ═══════════════════════════════════════════════════════════════════ */
+// da qui escono risultato e frase: non esiste un posto dove il testo dica 8 mentre il conto usa 9
 function esito({ base, passi }) {
   let n = base
   for (const p of passi) {
@@ -213,10 +118,7 @@ function esito({ base, passi }) {
   return n
 }
 
-/* i risultati intermedi, che servono a due cose: controllare che una
-   storia non passi mai da un numero negativo («ne regala 9» quando ne
-   ha 4 non è una storia difficile, è una storia impossibile) e
-   costruire il falso di chi si è fermato a metà */
+// servono a due cose: controllare che la storia non passi da un negativo (impossibile, non difficile) e costruire il falso di chi si è fermato a metà
 function tappe({ base, passi }) {
   const fuori = []
   let n = base
@@ -227,14 +129,7 @@ function tappe({ base, passi }) {
   return fuori
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   I FALSI — dagli errori veri, e mai due uguali.
-
-   Si passano i candidati in ordine di bontà: i primi sono gli errori
-   che dicono qualcosa («hai sommato invece di togliere»), gli ultimi
-   sono i tappabuchi. Chi non è un numero intero positivo, o è già in
-   tavola, cade da solo.
-   ═══════════════════════════════════════════════════════════════════ */
+// candidati in ordine di bontà: prima gli errori che dicono qualcosa, poi i tappabuchi. Chi non è intero positivo, o è già in tavola, cade da solo.
 function falsi(buona, candidati, sorte) {
   const visti = new Set([buona])
   const fuori = []
@@ -245,9 +140,7 @@ function falsi(buona, candidati, sorte) {
     visti.add(n)
     fuori.push(testo(n, c.perche))
   }
-  /* la rete: due numeri vicini al giusto. Non sono presi a caso — «il
-     conto contato male di uno» è l'errore più comune che ci sia — ma
-     dicono meno degli altri, e per questo arrivano per ultimi. */
+  // la rete: due numeri vicini al giusto (il conto contato male di uno è l'errore più comune, ma dice meno, arriva per ultimo)
   for (const d of sorte.mescola([1, 2, -1, -2, 3])) {
     if (fuori.length === 3) break
     const n = buona + d
@@ -258,30 +151,16 @@ function falsi(buona, candidati, sorte) {
   return fuori
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   LE STORIE — una funzione per tipologia.
-
-   Ognuna torna il problema **grezzo**: il testo, la catena, i falsi
-   candidati, e i numeri che nel testo compaiono senza entrare nel conto
-   (`inutili`). Vestirlo da `domanda()` è un passo dopo, uguale per
-   tutte, ed è anche il motivo per cui il test può guardare il grezzo
-   senza doversi leggere un testo per bambini.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// una funzione per tipologia: ognuna torna il problema grezzo (testo, catena, falsi candidati, `inutili`); vestirlo da domanda() è un passo dopo uguale per tutte, e il test può guardare il grezzo senza leggere un testo per bambini
 const chi = sorte => sorte.uno(CHI)
 const cosa = sorte => sorte.uno(COSE)
 
-/* ── prob:somma — quello che arriva si somma ──
-   «Nina ha 4 mele. Poi ne raccoglie ancora 3. Quante mele ha adesso?»
-   Il grado 1 tiene il totale entro la decina, che è il posto dove un
-   bambino di sei anni conta ancora con le dita e ci arriva. */
+// «Nina ha 4 mele. Poi ne raccoglie ancora 3. Quante ha adesso?» Il grado 1 tiene il totale entro la decina (si conta ancora con le dita).
 function somma(sorte, grado) {
   const c = cosa(sorte)
   const tetto = grado <= 1 ? 10 : 25
   const a = sorte.fra(3, tetto - 3)
-  /* i due addendi non si allontanano troppo: «ha 2 pastelli e gliene
-     regalano ancora 21» è un conto giusto e una storia che non succede,
-     e la storia è metà di quello che si sta allenando */
+  // i due addendi non si allontanano troppo: «ha 2 e gliene regalano 21» è un conto giusto e una storia che non succede
   const b = sorte.fra(2, Math.min(tetto - a, a + 5))
   const catena = { base: a, passi: [{ segno: '+', n: b }] }
   const buona = esito(catena)
@@ -302,8 +181,7 @@ function somma(sorte, grado) {
   }
 }
 
-/* ── prob:resto — quello che va via si toglie ──
-   «Teo ha 9 biglie. Ne perde 4. Quante gliene restano?» */
+// «Teo ha 9 biglie. Ne perde 4. Quante gliene restano?»
 function resto(sorte, grado) {
   const c = cosa(sorte)
   const tetto = grado <= 2 ? 20 : 40
@@ -327,21 +205,14 @@ function resto(sorte, grado) {
   }
 }
 
-/* ── prob:volte — tante volte tanti ──
-   «Teo ha 4 scatole di biscotti. In ogni scatola ci sono 6 biscotti.
-   Quanti biscotti ha in tutto?»
-   I gruppi restano dentro le tabelline: la difficoltà da allenare è
-   riconoscere che è una moltiplicazione, non moltiplicare numeri
-   grossi — quello lo fa già il castello. */
+// «Teo ha 4 scatole di biscotti, in ogni scatola ce ne sono 6. Quanti in tutto?» I gruppi restano nelle tabelline: la difficoltà è riconoscere che è una moltiplicazione, non moltiplicare numeri grossi.
 function volte(sorte) {
   const c = cosa(sorte)
   const g = c.gruppo
   const quanti = sorte.fra(2, 9)
   const dentro = sorte.fra(2, 9)
   const catena = { base: dentro, passi: [{ segno: '×', n: quanti }] }
-  /* due ordini della stessa storia — «ha N gruppi» prima o «in ogni
-     gruppo ci sono» prima — se no la tipologia ha solo dodici stampi
-     (uno per cosa), sotto la soglia dei venti. */
+  // due ordini della stessa storia, se no la tipologia avrebbe solo dodici stampi
   const primaHa = sorte.forse(0.5)
   const testoDomanda = primaHa
     ? `${chi(sorte)} ha ${quanti} ${g.tanti} di ${c.tanti}. In ogni ${g.uno} ci sono ${dentro} ${c.tanti}. ${Q(c)} ${c.tanti} ha in tutto?`
@@ -362,12 +233,7 @@ function volte(sorte) {
   }
 }
 
-/* ── prob:parti — le parti uguali ──
-   Due modi di dividere, e sono lo stesso conto visto da due parti: fra
-   quante persone (quante ne tocca a ciascuno) e in quanti contenitori
-   (quante ne stanno in ognuno). Si alternano perché la divisione a
-   scuola arriva con tutte e due le facce, e chi ne riconosce una sola
-   davanti all'altra si blocca. */
+// due modi di dividere, stesso conto: fra quante persone o in quanti contenitori. Si alternano perché la divisione a scuola arriva con tutte e due le facce.
 function parti(sorte) {
   const c = cosa(sorte)
   const quante = sorte.fra(2, 9)          // quante ne riceve ognuno
@@ -397,11 +263,7 @@ function parti(sorte) {
   }
 }
 
-/* ── prob:due — due conti di fila ──
-   «Milo ha 14 biglie. Ne perde 6, poi ne vince ancora 9. Quante gliene
-   restano?»
-   Il falso che conta è il primo passo lasciato lì: è l'errore di chi
-   legge fino a metà, e a scuola è il più frequente di tutti. */
+// «Milo ha 14 biglie. Ne perde 6, poi ne vince ancora 9. Quante gliene restano?» Il falso che conta è il primo passo lasciato lì.
 function due(sorte) {
   const c = cosa(sorte)
   const a = sorte.fra(10, 30)
@@ -435,9 +297,7 @@ function due(sorte) {
   }
 }
 
-/* ── prob:due-volte — due conti, e il primo sono i gruppi ──
-   «In ogni sacchetto ci sono 5 caramelle. Nina compra 3 sacchetti, poi
-   ne mangia 4. Quante gliene restano?» */
+// «In ogni sacchetto ci sono 5 caramelle. Nina compra 3 sacchetti, poi ne mangia 4. Quante gliene restano?»
 function dueVolte(sorte) {
   const c = cosa(sorte)
   const g = c.gruppo
@@ -463,11 +323,7 @@ function dueVolte(sorte) {
   }
 }
 
-/* ── prob:tre — tre conti di fila ──
-   Stessa storia di `prob:due` con un passo in più, e proprio per questo
-   il falso «fermato a metà» qui è doppio: chi si ferma dopo il primo e
-   chi si ferma dopo il secondo sbagliano in due modi diversi, e
-   meritano due risposte diverse. */
+// stessa storia di prob:due con un passo in più: il falso «fermato a metà» qui è doppio (dopo il primo o il secondo passo)
 function tre(sorte) {
   const c = cosa(sorte)
   const a = sorte.fra(15, 40)
@@ -499,7 +355,6 @@ function tre(sorte) {
   }
 }
 
-/* ── prob:tre-volte — tre conti, e in mezzo ci sono i gruppi ── */
 function treVolte(sorte) {
   const c = cosa(sorte)
   const g = c.gruppo
@@ -533,26 +388,9 @@ function treVolte(sorte) {
   }
 }
 
-/* ── prob:inutili — i dati che non servono ──
-   È la cosa che davvero si impara, e l'unica del modulo che non si può
-   allenare col conto: **capire cosa serve e cosa no**. Sei storie, e in
-   tutte il numero in più è plausibile — l'età di chi racconta, un'altra
-   specie di cose nello stesso cesto, il giorno del mese, il colore di
-   una parte del mucchio, il prezzo di una cosa, i giorni passati da
-   quando l'ha comprata — se no si scarta senza nemmeno leggerlo, e la
-   lezione non c'è.
+// capire cosa serve e cosa no: sei storie, il numero in più è sempre plausibile (l'età di chi racconta, un'altra specie di cose, il giorno del mese, un colore, un prezzo...) o si scarta senza leggerlo. Due regole: il dato in più non è MAI uguale a un numero che serve o alla risposta (trovata dal test, non dall'occhio); fra i falsi c'è sempre il risultato di chi l'ha usato lo stesso — il falso che vale tutta la domanda.
 
-   Due regole tenute a mano qui dentro, perché sono quelle che rendono
-   la domanda onesta:
-     · il dato in più non è MAI uguale a un numero che serve, né alla
-       risposta. «Zoe ha 5 anni e 30 caramelle, ne regala 5» ha due
-       cinque dentro, uno buono e uno no: non è una storia difficile, è
-       una storia confusa — e l'ha trovata il test, non l'occhio;
-     · fra i falsi c'è sempre il risultato di chi il dato in più l'ha
-       usato lo stesso. È il falso che vale tutta la domanda. */
-
-/* un numero dell'intervallo che non sia già in ballo nella storia:
-   `null` se sono tutti occupati, e allora si cambia storia */
+// un numero libero: null se sono tutti occupati, e allora si cambia storia
 function fuoriDaiPiedi(sorte, da, a, usati) {
   const liberi = []
   for (let n = da; n <= a; n++) if (!usati.has(n)) liberi.push(n)
@@ -563,8 +401,7 @@ function inutili(sorte) {
   const quale = sorte.fra(1, 6)
   const nome = chi(sorte)
 
-  /* 1. l'età di chi racconta: il classico dei quaderni di seconda */
-  if (quale === 1) {
+  if (quale === 1) { // l'età di chi racconta: il classico dei quaderni di seconda
     const a = sorte.fra(8, 30)
     const via = sorte.fra(2, a - 2)
     const catena = { base: a, passi: [{ segno: '-', n: via }] }
@@ -589,8 +426,7 @@ function inutili(sorte) {
     }
   }
 
-  /* 2. due specie nello stesso posto: si contano solo quelle chieste */
-  if (quale === 2) {
+  if (quale === 2) { // due specie nello stesso posto: si contano solo quelle chieste
     const a = sorte.fra(8, 30)
     const via = sorte.fra(2, a - 2)
     const catena = { base: a, passi: [{ segno: '-', n: via }] }
@@ -600,10 +436,7 @@ function inutili(sorte) {
     return {
       chiave: 'prob:inutili',
       cosa: c,
-      /* qui il «ne» dei verbi non si può usare: con due specie sul
-         tavolo «ne prende 5» non dice di quali, e la storia diventa
-         ambigua invece che difficile. Il verbo si scrive per esteso,
-         con il suo complemento oggetto. */
+      // qui il «ne» non si può usare: con due specie «ne prende 5» non dice di quali. Il verbo si scrive per esteso, col suo complemento oggetto.
       testo: `Sul tavolo ci sono ${a} ${c.tanti} e ${altre} ${c.con.tanti}. ` +
              `${nome} prende ${via} ${via === 1 ? c.uno : c.tanti}. ${Q(c)} ${c.tanti} restano sul tavolo?`,
       catena,
@@ -618,9 +451,7 @@ function inutili(sorte) {
     }
   }
 
-  /* 3. il dato in più dentro un problema a gruppi: il numero dei giorni
-     passati, che sembra parte della storia e non lo è */
-  if (quale === 3) {
+  if (quale === 3) { // dentro un problema a gruppi: i giorni passati, che sembrano parte della storia e non lo sono
     const g = c.gruppo
     const dentro = sorte.fra(2, 6)
     const quanti = sorte.fra(2, 5)
@@ -645,9 +476,7 @@ function inutili(sorte) {
     }
   }
 
-  /* 4. una data: il giorno del mese in cui è successo, che non è un
-     numero della storia ma un'etichetta buttata lì sopra */
-  if (quale === 4) {
+  if (quale === 4) { // una data: un'etichetta buttata lì sopra, non un numero della storia
     const a = sorte.fra(8, 30)
     const via = sorte.fra(2, a - 2)
     const catena = { base: a, passi: [{ segno: '-', n: via }] }
@@ -672,9 +501,7 @@ function inutili(sorte) {
     }
   }
 
-  /* 5. un colore: una parte del mucchio ha un colore diverso, ma la
-     domanda chiede il totale — non «quante di quel colore» */
-  if (quale === 5) {
+  if (quale === 5) { // un colore: parte del mucchio, ma la domanda chiede il totale non «quante di quel colore»
     const colore = sorte.uno(COLORI)
     const a = sorte.fra(10, 30)
     const via = sorte.fra(2, a - 2)
@@ -700,8 +527,7 @@ function inutili(sorte) {
     }
   }
 
-  /* 6. un prezzo che non serve: la domanda chiede quante ne restano,
-     non quanto costano — e il prezzo si lascia dov'è */
+  // 6. un prezzo: la domanda chiede quante ne restano, non quanto costano
   const a = sorte.fra(8, 30)
   const via = sorte.fra(2, a - 2)
   const catena = { base: a, passi: [{ segno: '-', n: via }] }
@@ -726,10 +552,7 @@ function inutili(sorte) {
   }
 }
 
-/* la scappatoia dei rari casi in cui il dato in più capiterebbe uguale
-   alla risposta: si racconta la stessa storia con numeri scelti perché
-   non possano coincidere. Meglio una storia in meno che una domanda in
-   cui la risposta sbagliata è difendibile. */
+// scappatoia dei rari casi in cui il dato in più capiterebbe uguale alla risposta: meglio una storia in meno che una risposta sbagliata difendibile
 function inutiliDiRipiego(sorte, c, nome) {
   const a = sorte.fra(12, 30)
   const via = sorte.fra(2, 6)
@@ -754,13 +577,9 @@ function inutiliDiRipiego(sorte, c, nome) {
 
 const maiuscola = s => s.charAt(0).toUpperCase() + s.slice(1)
 
-/* ═══════════════════════════════════════════════════════════════════
-   DAL GREZZO ALLA DOMANDA — uguale per tutte le storie.
-   ═══════════════════════════════════════════════════════════════════ */
+// dal grezzo alla domanda, uguale per tutte le storie
 function vesti(p, sorte) {
-  /* niente `soggetto`: qui la domanda è tutta nella storia, e un
-     riquadro sopra i numeri si legge come una quinta risposta (vedi in
-     testa al file) */
+  // niente `soggetto`: la domanda è tutta nella storia, un riquadro sopra i numeri si leggerebbe come una quinta risposta
   return domanda({
     testo: p.testo,
     buona: testo(p.buona),
@@ -771,12 +590,7 @@ function vesti(p, sorte) {
   })
 }
 
-/* la costruzione grezza, esportata per il test: restituisce la storia
-   prima che diventi una domanda — con la catena, la risposta e i numeri
-   che nel testo ci sono ma nel conto no. È così che
-   `test/unita/problemi.test.mjs` può rileggere le cifre scritte nel
-   testo e controllare che siano esattamente quelle raccontate, senza
-   dover interpretare l'italiano. */
+// costruzione grezza, esportata per il test: la storia prima che diventi domanda, così test/unita/problemi.test.mjs rilegge le cifre senza interpretare l'italiano
 export function costruisci(tipo, grado, sorte) {
   switch (tipo) {
     case 'prob:somma': return somma(sorte, grado)
@@ -792,13 +606,7 @@ export function costruisci(tipo, grado, sorte) {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   LA SCALA DEI GRADI
-
-   Non è una scala di numeri più grandi: è una scala di **passi da
-   fare**. Uno, uno, uno, due, tre, e in cima quello che non è un passo
-   in più ma un passo da non fare — il dato che non serve.
-   ═══════════════════════════════════════════════════════════════════ */
+// non è una scala di numeri più grandi: è una scala di passi da fare (uno, uno, uno, due, tre), e in cima un passo da NON fare (il dato che non serve)
 const SCALETTA = [
   'una storia sola: quello che arriva si somma',
   'quello che va via si toglie',
@@ -808,14 +616,7 @@ const SCALETTA = [
   'i dati che non servono',
 ]
 
-/* Le moltiplicazioni e le divisioni sono le uniche tipologie che
-   dichiarano un pezzo di scuola oltre ai problemi: chi a scuola non le
-   ha ancora fatte non può leggere «in ogni scatola ce ne sono 6» come
-   un conto — e il grado 3 non si chiude, si assottiglia, perché le due
-   metà si spengono una per volta. Tutto il resto sta sotto `problemi`,
-   che spegne il modulo intero: un problema a parole è una storia da
-   leggere, e prima di saperla leggere non è una domanda difficile, è
-   una domanda muta. */
+// moltiplicazioni/divisioni sono le uniche che dichiarano un altro pezzo di scuola: chi non le ha fatte non legge «in ogni scatola ce ne sono 6» come un conto. Tutto il resto sta sotto `problemi`, che spegne il modulo intero.
 const TIPI = [
   { chiave: 'prob:somma', nome: 'Quello che arriva si somma', sa: 'problemi',
     gradi: { 1: 1, 2: 0.3 } },
@@ -846,13 +647,7 @@ class Problemi extends Modulo {
       materia: 'matematica',
       chiaro: 'leggere una storia con dei numeri dentro e capire da solo che conto chiede',
       scaletta: SCALETTA,
-      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
-         sola per tutte le materie, e serve a confrontare questa riga
-         con quelle di tutti gli altri moduli. Zero è il primo giorno
-         di materna, cento la fine della primaria: dodici punti e mezzo
-         per anno di scuola. Non dice a chi arriva — quello lo decide
-         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [38, 44, 56, 63, 75, 81],
+      livelli: [38, 44, 56, 63, 75, 81], // scala 0-100 comune a tutte le materie (vedi docs/apprendimento/quiz-livelli.md)
       tipi: TIPI,
     })
   }
