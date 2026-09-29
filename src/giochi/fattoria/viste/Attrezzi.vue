@@ -1,31 +1,7 @@
 <script setup>
-/* Gli attrezzi della cosa selezionata, **appesi all'oggetto** e non in un
-   pannello che copre lo schermo: girare una staccionata vuol dire vederla
-   girare, e con un pannello davanti non la vedi.
-
-   ── QUANDO COMPAIONO ──────────────────────────────────────────────
-   Al **tocco lungo** su una cosa già posata — lo stesso gesto con cui la
-   si sposta, meno il trascinamento: «tieni premuto per sistemare». Fa
-   eccezione chi non ha niente da fare al tocco secco (una panchina, un
-   albero): lì bastano da soli, perché non c'è altro.
-
-   Al tocco secco su un campo, un silo o una macchina **non** compaiono:
-   quel tocco apre la loro scheda. Prima faceva tutte e due le cose, e il
-   risultato era che chiudendo la scheda — o appena finito di seminare —
-   questi tastini riemergevano da soli sopra la cosa appena lavorata, a
-   proporre di spostarla.
-
-   Spariscono mentre la stai tirando — è quando sono lontani dal dito e
-   non servono a niente — e sotto un foglio aperto, che è la stessa
-   regola detta da un'altra parte (`doveAttrezzi` in `Gioco.vue`). */
-/* ── QUELLO CHE COSTA PORTA IL NUMERO ADDOSSO ──────────────────────
-   Un gesto può dichiarare un `prezzo`, e allora sul tasto compare una
-   monetina col numero. Serve al 📦, che da quando togliere costa
-   quanto spostare toglie una moneta: senza il numero, il gesto è
-   identico a quello di ieri e la moneta se ne va senza che si sia
-   vista chiedere. Gli altri due tasti — girare, rovesciare — non
-   dichiarano niente e restano nudi, che è il modo in cui si vede a
-   colpo d'occhio quale dei tre si paga. */
+/* Gli attrezzi della cosa selezionata, appesi all'oggetto (non in un pannello che la coprirebbe):
+   compaiono al tocco lungo, spariscono mentre si trascina o sotto un foglio aperto (doveAttrezzi
+   in Gioco.vue) — vedi docs/fattoria/come-si-tocca.md. Un gesto con prezzo porta il numero addosso. */
 defineProps({
   x: { type: Number, default: 0 },
   y: { type: Number, default: 0 },
