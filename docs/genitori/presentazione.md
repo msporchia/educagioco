@@ -127,7 +127,9 @@ telefono, senza un backup non tornano.
 - **Salva su file** — scarica un `.json` con dentro tutto: monete, parole
   imparate, tappe, animali, traguardi, di **tutti** i bambini. Conviene
   farlo la prima sera e poi ogni tanto.
-- **Rimetti da un file** — lo rilegge e sostituisce i progressi.
+- **Rimetti da un file** — lo rilegge e sostituisce i progressi. Se nel
+  telefono c'è già un bambino con lo stesso salvataggio, prima lo dice e
+  chiede conferma: quello che c'era resta comunque nel cestino qui sotto.
 
 Sono anche il modo di **passare i progressi da un dispositivo a un altro**:
 salva sul vecchio, apri i giochi sul nuovo, rimetti il file.
@@ -142,6 +144,11 @@ salva sul vecchio, apri i giochi sul nuovo, rimetti il file.
   resta una copia** in fondo alla scheda (le ultime tre), da cui si
   rimettono. Vale anche per un bambino eliminato o una campagna
   ricominciata.
+
+Vicino a «Salva su file» c'è anche scritto se il browser ha promesso di
+non liberare da solo lo spazio dei progressi. Se non lo garantisce (capita
+soprattutto su iPhone, se i giochi non sono installati come app), salvare
+ogni tanto su file resta la rete di sicurezza vera.
 
 Quando c'è qualcosa che un genitore potrebbe voler sapere — una novità da
 sistemare, il codice rimesso a zero — arriva nella **posta dei grandi**: un pallino sul tasto ⚙︎ e, in home, un nastro che

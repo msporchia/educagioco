@@ -1,7 +1,7 @@
 <script setup>
 /* Schermata dei genitori, dietro il PIN (vedi docs/genitori/). */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
+import { state, esportaTutto, resetPlayer, nomeCorrente,
          rinominaGiocatore, eliminaGiocatore, cestinaOra, ripristinaCestinato,
          spostaLEta,
          etaDelBambino,
@@ -31,6 +31,7 @@ import Benvenuto from '../components/Benvenuto.vue'
 import Prova from '../quiz/Prova.vue'
 import ComeVa from '../quiz/ComeVa.vue'
 import MoneteGiocoPerGioco from '../components/varieta/Tetti.vue'
+import ArchivioGenitori from '../components/genitori/Archivio.vue'
 
 const emit = defineEmits(['vai'])
 
@@ -71,7 +72,6 @@ async function hoLetto() {
   await segnaLetta()
   posta.value = await laPosta()
 }
-const file = ref(null)
 // 'nuovo' mentre si sceglie il codice, 'ripeti' mentre lo si conferma
 const modo = ref('')
 const nuovo = ref('')
@@ -281,19 +281,6 @@ function scarica(nome, testo) {
   a.remove()
   // il browser deve fare in tempo a leggere il blob prima che sparisca
   setTimeout(() => URL.revokeObjectURL(url), 2000)
-}
-
-async function importa(ev) {
-  esito.value = null
-  const f = ev.target.files?.[0]
-  if (!f) return
-  try {
-    const nomi = await importaTutto(JSON.parse(await f.text()))
-    esito.value = { ok: true, testo: 'Rimessi i progressi di ' + nomi.join(' e ') + '.' }
-  } catch (e) {
-    esito.value = { ok: false, testo: e.message }
-  }
-  ev.target.value = ''   // stesso file due volte di fila deve poter funzionare
 }
 
 // si condivide l'indirizzo secco, senza messaggio: vedi docs/genitori/guide.md
@@ -697,12 +684,7 @@ async function rimetti(v) {
           <i>A te stesso in chat, nel cloud, sull'altro telefono</i>
         </button>
 
-        <button class="carta" @click="file.click()">
-          <span class="ico">📂</span>
-          <b>Rimetti da un file</b>
-          <i>Sostituisce i progressi con quelli salvati</i>
-        </button>
-        <input ref="file" type="file" accept="application/json,.json" hidden @change="importa">
+        <ArchivioGenitori @esito="v => esito = v" />
 
         <button v-if="!confermaAzzera" class="carta pericolo" @click="confermaAzzera = true">
           <span class="ico">🗑️</span>

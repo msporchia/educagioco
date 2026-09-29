@@ -68,45 +68,39 @@ function installa(opzioni) {
   uguale('e l\'archivio lo sa', backend.kind, 'IndexedDB')
 }
 
-/* ── 3. IL TRAVASO: LA PIÙ RECENTE VINCE ──
-   Ogni scrittura porta un segno di tempo nella sua busta (`__v`/`__t`,
-   invisibile a chi chiama `load`/`save`): è quello che permette di
-   decidere chi vince quando la stessa chiave vive sia nel ripiego sia
-   in IndexedDB. */
+/* ── 3. IL TRAVASO: IL RIPIEGO, QUANDO C'È, VINCE SEMPRE ──
+   Nessun confronto da fare: ogni scrittura riuscita in IndexedDB ripulisce
+   da sé il doppione nel ripiego (vedi la nota su `eseguiFlush`), quindi se
+   una chiave è ancora nel ripiego vuol dire che nessuna scrittura più
+   recente è mai arrivata in IndexedDB — anche quando IndexedDB ha già
+   un'altra copia, più vecchia, di quella stessa chiave. */
 {
   const { idb, ls } = installa({})
 
-  // il ripiego è più recente: vince lui, e si sposta
-  idb._store.set('recente-vince-ls', { __v: 'idb-vecchio', __t: 1000 })
-  ls._dati.set('recente-vince-ls', JSON.stringify({ __v: 'ls-nuovo', __t: 2000 }))
+  // IndexedDB ha una copia vecchia (di prima dell'interruzione): il
+  // ripiego, più recente, la sostituisce
+  idb._store.set('gia-in-idb', 'idb-vecchio')
+  ls._dati.set('gia-in-idb', JSON.stringify('ls-nuovo'))
 
-  // IndexedDB è più recente (o uguale): resta lui, il ripiego si pulisce lo stesso
-  idb._store.set('recente-vince-idb', { __v: 'idb-nuovo', __t: 5000 })
-  ls._dati.set('recente-vince-idb', JSON.stringify({ __v: 'ls-vecchio', __t: 1000 }))
-
-  // solo nel ripiego: non c'è confronto da fare, si sposta e basta
-  ls._dati.set('solo-ripiego', JSON.stringify({ __v: 'orfano', __t: 42 }))
+  // solo nel ripiego: non c'è nemmeno un doppione da confrontare
+  ls._dati.set('solo-ripiego', JSON.stringify('orfano'))
 
   // il probe di `detectBackend` non è un dato del gioco: non si tocca
   ls._dati.set('__probe__', '1')
 
   const quante = await travasaRipiego()
 
-  uguale('la copia più recente del ripiego vince, e si sposta',
-         idb._store.get('recente-vince-ls').__v, 'ls-nuovo')
-  controlla('e sparisce dal ripiego', !ls._dati.has('recente-vince-ls'))
-
-  uguale('quella più vecchia del ripiego perde: IndexedDB resta la sua',
-         idb._store.get('recente-vince-idb').__v, 'idb-nuovo')
-  controlla('ma il doppione nel ripiego si pulisce comunque', !ls._dati.has('recente-vince-idb'))
+  uguale('il ripiego sostituisce la copia vecchia di IndexedDB',
+         idb._store.get('gia-in-idb'), 'ls-nuovo')
+  controlla('e sparisce dal ripiego', !ls._dati.has('gia-in-idb'))
 
   uguale('una chiave che stava solo nel ripiego arriva in IndexedDB',
-         idb._store.get('solo-ripiego').__v, 'orfano')
+         idb._store.get('solo-ripiego'), 'orfano')
 
   controlla('il probe di avvio non si travasa', ls._dati.has('__probe__'))
   controlla('e non finisce in IndexedDB', !idb._store.has('__probe__'))
 
-  uguale('due chiavi davvero spostate (la terza perde e basta, non si sposta)', quante, 2)
+  uguale('due chiavi spostate', quante, 2)
 }
 
 /* ── 4. FLUSH SERIALIZZATO ──
@@ -127,7 +121,7 @@ function installa(opzioni) {
   await Promise.all([p1, p2])
 
   uguale('vince la scrittura nuova, non quella arrivata dopo su disco',
-         idb._store.get('k').__v, 'nuovo')
+         idb._store.get('k'), 'nuovo')
   uguale('e si rilegge quella giusta', await load('k'), 'nuovo')
 }
 
