@@ -3,7 +3,7 @@
    docs/asteroidi/scaletta.md. Quale calcolo esce lo decide
    `store/tabelline.js`, non questo file: qui restano gli asteroidi. */
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
-import { state, item, answer, level, addCoins,
+import { state, item, answer, addCoins,
          segna, segnaBest, mateProgresso, tabellineIntere,
          asteroidiCompleta } from '../store/profile.js'
 import { apertaQui } from '../data/portata-giochi.js'
@@ -541,8 +541,9 @@ function colpisci(a) {
       hud.punti += CFG.puntiOk; suono.ok()
       premia(hud.serie)
     }
+    // un asteroide vale 🪙1 (docs/apprendimento/calibrazione.md): niente più moltiplicatore di livello
     if (hud.giuste % CFG.perMoneta === 0) {
-      addCoins(level.value); mostraCartello('+' + level.value + ' 🪙', '#ffd94a'); suono.moneta()
+      addCoins(CFG.perMoneta); mostraCartello('+' + CFG.perMoneta + ' 🪙', '#ffd94a'); suono.moneta()
     }
     segna(mente.value ? 'mente' : 'math')
     const nuovo = hud.partenza + Math.floor(hud.giuste / CFG.salitaOgni)
@@ -856,9 +857,9 @@ function tappaSuperata() {
   // una moneta di cortesia, non uno stipendio
   const giaFatto = !!v && fattaVoce(v)
   if (v) asteroidiCompleta(v)
-  // il rincaro conta sull'indice DENTRO la campagna (`v.i`), non sulla
-  // posizione in fila (il doppio): vedi docs/apprendimento/calibrazione.md
-  premio.value = giaFatto ? 1 : level.value * (1 + Math.floor((v ? v.i : 0) / 4))
+  // il premio è quanto la tappa chiede in asteroidi giusti (`bersaglio`), a
+  // 🪙1 l'uno: niente più moltiplicatore di livello (docs/apprendimento/calibrazione.md)
+  premio.value = giaFatto ? 1 : tappa.value.bersaglio
   addCoins(premio.value)
   riassunto()
   fase.value = ultima ? 'trionfo' : 'vinta'
