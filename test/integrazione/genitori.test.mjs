@@ -262,6 +262,10 @@ await vaiAiGenitori()
 await digita('0000')
 await page.waitForSelector('.carte', { timeout: 5000 })
 await page.setInputFiles('input[type=file]', salvataggio)
+// lo stesso id c'è già (appena cancellato, non eliminato): chiede conferma
+// prima di sovrascriverlo (docs/genitori/cestino-e-posta.md)
+await page.waitForSelector('[data-conferma="importazione"]', { timeout: 5000 })
+await page.click('[data-azione="importazione-conferma"]')
 await page.waitForTimeout(600)
 
 const dopoImport = await page.evaluate(() => document.body.innerText)

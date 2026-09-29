@@ -84,4 +84,7 @@ Nei test: `[data-posta-pallino]` sul tasto in home, `[data-nastro="posta"]`
 con `[data-azione="nastro-posta"]`, `[data-posta]` nella schermata dei
 grandi con `[data-azione="posta-vai"]` e `[data-azione="ho-letto"]`;
 `[data-azione="rimetti-cestino"]` e `[data-azione="conferma-rimetti"]`;
-`test/unita/cestino`, `test/unita/posta`.
+`test/unita/cestino`, `test/unita/posta`. Per «Rimetti da un file»
+(`components/genitori/Archivio.vue`): `[data-azione="rimetti-da-file"]`,
+`[data-conferma="importazione"]` con `[data-azione="importazione-annulla"|
+"importazione-conferma"]`.

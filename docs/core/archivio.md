@@ -113,4 +113,10 @@ profili non se ne va da solo**: chi elimina un bambino deve portarselo via
 
 Nei test: `apriGioco` semina un giocatore di prova da sé, gli id di prova
 sono `GIOCATORE` e `ALTRO`, e `giocatori: null` prova il primo avvio vero
-(vedi [test.md](test.md)).
+(vedi [test.md](test.md)). Per l'IndexedDB e il localStorage finti che
+provano il timeout non definitivo, il travaso e il flush in coda:
+`test/aiuto/archivio-finto.js`, `test/unita/archivio`. Lo stato di
+`navigator.storage.persist()` nella pagina dei genitori:
+`[data-persistenza]` col suo `data-concessa` (vedi anche
+[`../genitori/cestino-e-posta.md`](../genitori/cestino-e-posta.md) per
+«Rimetti da un file»).
