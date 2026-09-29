@@ -1,13 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   LE SCHERMATE DI FINE
-
-   Tre, e dicono la stessa cosa in tre modi: com'è andata, e cosa si può
-   fare adesso. Quella che conta è la prima — dopo una tappa vinta si
-   annuncia **la torre nuova** della tappa dopo, con l'operazione che la
-   compra: è il momento in cui si capisce che il gioco sta insegnando
-   qualcosa di nuovo, e non va sprecato.
-   ═══════════════════════════════════════════════════════════════════ */
+// Le tre schermate di fine (vinta/trionfo/sconfitta). Dopo una tappa vinta
+// si annuncia la torre nuova della tappa dopo, con l'operazione che la
+// compra: è il momento in cui si vede che il gioco insegna qualcosa di nuovo.
 import { TORRI, segnoDi } from '../../data/ops.js'
 import Festa from '../../giochi/Festa.vue'
 

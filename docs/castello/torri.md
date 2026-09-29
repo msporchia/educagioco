@@ -16,6 +16,13 @@ Salendo cambiano faccia tre volte (`stadi` in `TORRI`, `stadioDi`: livelli
 1-3, 4-6, 7-10): 🏹🎯🦅 · 🔮✨🧙 · ❄️🧊⛄ · 💣🧨🚀. Il lavoro fatto deve
 vedersi, non restare un numeretto in un angolo.
 
+**La carta della torre non è un'immagine, è lo stesso pittore del campo**
+chiamato su una tela piccola (`RitrattoTorre.vue`, e allo stesso modo
+`RitrattoMostro.vue`): così la carta con cui si compra e la torre che si
+ritrova in campo sono la stessa cosa, compreso il salto di stadio. Prima
+c'era un'emoji, e l'emoji mentiva — restava la stessa anche a torre
+cresciuta.
+
 ## Si compra toccando il campo
 
 - **Non c'è un banco di bottoni.** Una piazzola vuota chiede che torre

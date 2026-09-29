@@ -12,6 +12,13 @@ Le voci aperte, con quanto basta per riprenderle.
   sapendo che un tracciato nuovo vuole `node strumenti/valida-percorsi.mjs`
   (fasce del Bosco: presidio 2,15–2,70) e `npm run tara`, perché la vita dei
   nemici è stata trovata su queste forme.
+- **`occhi()` esiste due volte.** `grafica/castello/corpi-mostri.js` e
+  `grafica/mostri/comune.js` disegnano lo stesso paio di occhi con due
+  implementazioni indipendenti (la seconda scritta quando i due cantieri
+  lavoravano in parallelo su file diversi). Le otto bestie di
+  `grafica/mostri/` sono già confluite in `BESTIE` via
+  `grafica/castello/mostro.js`: unificare le due funzioni è solo pulizia,
+  non più un vincolo di non toccarsi a vicenda.
 - **Il castello a sprite prende il posto di quello di oggi.** Il gioco con
   chiave `castello` (`src/giochi/castello/`, in prova) è lo stesso tower
   defense con un'altra pelle e le stesse tappe di `torri`. Manca ancora: i

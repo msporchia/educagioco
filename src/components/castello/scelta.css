@@ -26,11 +26,8 @@
 .carta-torre.cara { opacity:.62 }
 .carta-torre.cara i { color:#b4603f }
 
-/* la torre a cui chi sta arrivando è immune: si spegne invece di gridare.
-   Il segno è al negativo — «non questa» — e un segno al negativo che
-   luccica si legge come un consiglio, cioè come il suo contrario. La
-   carta resta però toccabile e a piena leggibilità: avverte, non
-   vieta. */
+/* la torre a cui chi sta arrivando è immune si spegne (avverte, non vieta:
+   resta toccabile) invece di gridare */
 .carta-torre.fiacca { box-shadow:0 4px 0 #dde3ea, inset 0 0 0 2px #bdb4cc;
                       background:#f4f2f7 }
 .carta-torre.fiacca .figura { filter:grayscale(.8); opacity:.72 }

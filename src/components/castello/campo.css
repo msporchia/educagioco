@@ -1,20 +1,10 @@
-/* IL CAMPO
-   Si prende tutta l'arena, e non ha più una larghezza massima.
-
-   Il `max-width: 520px` di prima non era estetica: la strada è
-   disegnata in proporzione al riquadro, ma il raggio delle torri no,
-   quindi su un monitor largo la stessa strada diventava più lunga a
-   parità di gittata e i mostri passavano nei buchi — la simulazione
-   diceva che oltre i 520px l'ultima tappa non si finiva più. Adesso il
-   mondo è dichiarato una volta per tutte (`MONDO` in
-   `data/castello.js`) e la telecamera lo incornicia: il riquadro può
-   essere grande quanto vuole, la battaglia dentro è la stessa. */
+/* Il campo prende tutta l'arena, nessuna larghezza massima: il mondo è
+   dichiarato una volta (`MONDO`) e la telecamera lo incornicia. Vedi
+   docs/castello/taratura.md. */
 .campo { position:absolute; inset:0; overflow:hidden }
 
-/* `touch-action:none` è ciò che rende possibile il trascinamento sul telefono:
-   senza, al primo movimento del dito il browser decide che è uno scorrimento,
-   si prende il gesto e annulla i pointer event a metà — sul computer con il
-   mouse non succede, ed è per questo che il difetto si vedeva solo lì. */
+/* touch-action:none rende possibile il trascinamento sul telefono: senza, il
+   browser decide che è uno scorrimento e annulla i pointer event a metà. */
 canvas { display:block; width:100%; height:100%; touch-action:none;
          -webkit-user-select:none; user-select:none }
 

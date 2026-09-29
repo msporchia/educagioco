@@ -1,16 +1,7 @@
 <script setup>
-/* ═══════════════════════════════════════════════════════════════════
-   IL RITRATTO DI UN MOSTRO
-
-   Una faccia sola, ferma, dentro un riquadro piccolo. Non è
-   un'immagine: è lo stesso pittore che disegna i mostri sul campo,
-   chiamato su una tela minuscola. Un mostro nuovo si disegna una volta
-   sola e compare dappertutto.
-
-   Ferma apposta: nel nastro del preavviso ce ne stanno tre alla volta,
-   e tre animazioni a sessanta fotogrammi per dire «arriva un goblin»
-   sarebbero tre volte il lavoro per niente.
-   ═══════════════════════════════════════════════════════════════════ */
+// Il ritratto di un mostro: lo stesso pittore del campo su una tela minuscola,
+// fermo apposta (nel nastro ce ne stanno tre alla volta). Vedi
+// docs/castello/torri.md.
 import { ref, watch, onMounted } from 'vue'
 import { creaTela } from '../../grafica/tela.js'
 import { PITTORI } from '../../grafica/castello.js'
