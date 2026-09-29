@@ -1,12 +1,14 @@
 # Le campagne del castello
 
 Le venti tappe in quattro campagne, cosa dichiara una tappa, perché i
-percorsi sono quelli, le tappe a più bocche e i terreni dipinti. Il racconto
-sta in `src/data/campagne-castello.js` (nomi, terreni, mostri, tracciati),
-i numeri in `src/data/castello.js`, i fondali in `src/grafica/terreni/`.
+percorsi sono quelli, le tappe a più bocche e i vestiti. Il racconto sta in
+`src/data/campagne-castello.js` (nomi, mostri, schizzi dei percorsi), i
+numeri in `src/data/castello.js`, la carta a scacchiera su cui si gioca in
+`src/motore/castello/carta.js`, i vestiti in `src/giochi/castello/scena/`.
 
 ```bash
-node strumenti/valida-percorsi.mjs   # le mappe ai raggi X
+node strumenti/valida-percorsi.mjs         # le carte ai raggi X
+node strumenti/sprite/carte-castello.mjs   # le carte vestite, da guardare
 ```
 
 ## Cosa dichiara una tappa
@@ -60,19 +62,33 @@ file dati; le regole che devono rispettare in [mostri.md](mostri.md).
   tagliata), `y ∈ [0.04, 0.95]` (il castello in fondo è alto una cinquantina
   di unità sopra il suo piede). Il percorso **entra dal bordo di sopra ed
   esce in fondo**, dove c'è il castello, vicino al pollice.
-- **Le forme sono spezzate 0–1** che il motore smussa (Chaikin,
-  `grafica/geometria.js`) e su cui dispone le piazzole ai lati, alternate,
-  partendo dall'ingresso.
+- **Le forme sono uno schizzo 0–1, e si gioca sulla carta.** `cartaDi`
+  porta lo schizzo su una scacchiera di 12×22 celle — la strada a squadra,
+  una cella per passo, uscita dritta dalla bocca ed entrata dritta nel
+  castello — e ci mette le piazzole: celle accanto alla strada, in
+  proporzione alla lunghezza di ogni via, lati alterni, occupate
+  dall'ingresso. Il motore gioca su quella (`sullaCarta`, da `Battaglia`),
+  e così la taratura, il simulatore e i test. La radura grande è l'unica
+  carta scritta a mano, cella per cella (`A_MANO`). Le regole della carta
+  le tiene `unita/castello-carta`.
+- **La strada curva non c'è più.** Si giocava sullo schizzo smussato
+  (Chaikin) con le piazzole scostate ai lati; il castello a sprite giocava
+  già sulla carta, e dal 29 settembre 2026 è il castello di tutti. Sulla
+  carta la strada è più lunga di circa un sesto, e le vite sono state
+  ritarate lì ([taratura.md](taratura.md)).
 
 ## La difficoltà che sta nella mappa: il presidio
 
 - **Conta quanta strada ogni torre tiene sotto tiro, non quanto è lunga.**
-  Il raggio va da 86 a 132 unità; una strada che si ripiega si fa battere
+  Il raggio va da 86 a 130 unità; una strada che si ripiega si fa battere
   due o tre volte dalla stessa torre. Il validatore la chiama `presidio`
-  (strada per postazione, in raggi d'arciere), e **scende di campagna in
-  campagna**: bosco ~2,4 (perdona), sotterraneo ~2,1, mura ~1,9 (una torre,
-  un tratto). Fasce e lunghezze in `FASCE`, pavimento `PRESIDIO_MINIMO`
-  1,85, scalino fra campagne `SCALINO`.
+  (strada per postazione, in raggi d'arciere, con le piazzole che la carta
+  ha davvero), e **scende di campagna in campagna**: sulla carta bosco 2,90
+  (perdona), sotterraneo 2,57, mura 2,28. Pavimento `PRESIDIO_MINIMO` 1,85,
+  scalino fra campagne `SCALINO` 0,12. Le fasce per campagna di lunghezza e
+  presidio (`FASCE`) erano la misura con cui si disegnava lo schizzo curvo:
+  sulla carta ogni strada esce più lunga e più ripiegata, e non ci sono
+  più.
 - **La Palude è fuori dalla scala**: strade corte perché sono due, e la
   difficoltà sta nei fronti. Chiederle di scendere sotto le Mura vorrebbe
   dire rettifili nudi su più ingressi.
@@ -80,28 +96,21 @@ file dati; le regole che devono rispettare in [mostri.md](mostri.md).
   gomiti netti e rettifili, dentro il castello angoli retti e tratti corti.
 - **Il presidio è una media, e le medie non hanno buchi.** Il validatore
   misura anche il **buco**: il tratto interno più lungo che nessuna torre
-  vede, con le postazioni che la tappa ha davvero (`postiDi`). Al massimo
-  `BUCO_INTERNO` 60 unità. I buchi in testa e in coda non contano: li lascia
-  la formula che dispone le piazzole a `lunghezza/(n+1)`. In coda prova
-  sempre anche **tre** postazioni (`MAGRO`) e avverte senza fallire, perché
-  quante piazzole aprire è una manopola che si gira spesso.
+  vede, con le piazzole della carta. Al massimo `BUCO_INTERNO` 60 unità; i
+  buchi in testa e in coda non contano. Sulla carta ne sforano due, il
+  guado e la radura del Bosco (63 unità con le loro quattro piazzole):
+  il validatore lo dice, la taratura li regge.
 
-## Le distanze minime, e perché sono due
+## Le regole della carta
 
-- **Fra corsie parallele 62** (`CORRIDOIO`): una postazione sta a 34 unità
-  dal centro della strada, la piazzola è larga 15, mezza strada 17 — sotto
-  66 una piazzola finisce sull'altra corsia.
-- **Dentro un gomito 52** (`GOMITO`): nell'incavo di una curva la torre ci
-  sta apposta, ed è da lì che viene il presidio. Il validatore distingue i
-  due casi dalla distanza **lungo il cammino**: fino a 200 unità è un gomito,
-  oltre due corsie. Provato un minimo solo: bocciava tutte le mappe
-  interessanti.
-- **Lo smussamento stringe i tornanti**: Chaikin porta un vertice a
-  `¼·prima + ½·vertice + ¼·dopo`, e una U di due punti perde metà del
-  raggio. **Le U si scrivono con quattro punti.**
-- **Le piazzole si accavallano dove il tracciato rientra**: il validatore
-  controlla le due più vicine (`PIAZZOLE` 40) da tre fino a quante ne avrà la
-  tappa, più due di margine (`PIAZZOLE_FITTE` 22).
+Le distanze minime dello schizzo curvo (corsie, gomiti, piazzole che si
+accavallano, le U da scrivere con quattro punti per lo smussamento) non ci
+sono più: sulla scacchiera le dice la cella. `cartaDi` stessa segna come
+guasto quattro celle di strada in quadrato, due corsie che si toccano
+senza collegarsi, una strada che ripassa da una cella senza attraversarla
+dritta (l'incrocio del bastione sì), una piazzola attaccata a un'altra;
+`unita/castello-carta` pretende che nessuna tappa ne abbia, e che acqua,
+fitto e decori stiano lontani da strada e piazzole.
 
 ## Le tappe a più bocche
 
@@ -110,7 +119,8 @@ ingressi: due strade, un castello solo, e una difesa da dividere.
 
 - **Le strade si possono fondere** (una Y, un anello, un canale che si
   immette): il `Percorso` chiede solo che ognuna sappia dov'è il suo
-  ingresso e dove il castello. Sotto `FUSE` 9 unità due strade sono la
+  ingresso e dove il castello, e sulla carta due strade fuse passano per
+  le stesse celle. Sotto `FUSE` 9 unità due strade sono la
   stessa strada; il tratto comune non passa mai metà strada (`COMUNE`),
   se no i due ingressi sono un disegno.
 - **Vietata la via di mezzo**: un tratto lungo in cui due strade stanno a
@@ -129,35 +139,21 @@ ingressi: due strade, un castello solo, e una difesa da dividere.
 
 `unita/ingressi-castello` tiene le regole delle tappe a più bocche.
 
-## I terreni
+## I vestiti
 
-- **Tre terreni (come si dipinge) e venti tavolozze (con che colori)**:
-  `bosco.js`, `sotterraneo.js`, `mura.js` in `src/grafica/terreni/`; la
-  palude è un bosco allagato, stesso terreno e altri colori. Una tappa nomina
-  la tavolozza (`ambiente`), le tavolozze sono scritte **per differenza**
-  dalla base della campagna: una tappa nuova costa cinque righe. Un ambiente
-  che non esiste ripiega sul bosco di mezzogiorno (`terrenoDi`): uno sfondo
-  sbagliato si gioca, uno assente no.
-- **Dal Generale si riusa quello che lavora su una regione**:
-  `grafica/materiali/` (`POSE`, `variazioni`, `POSATURE`, `DETTAGLI`,
-  `semina`, `masso`, `concio`, `crepa`) e `luce.js` (`luceEBuio`,
-  `torciaFerma`, `chiazzeDiLuce`).
-- **Non si riusa quello che cammina sulla griglia** (`MURI`, `dipingiMuri`,
-  `dipingiMappa`, `creaFondale`): nel castello non c'è una cella piena, e un
-  muro è un oggetto. Le tavolozze di `grafica/ambienti/` non si importano
-  apposta: un ritocco a una stanza del Generale non deve cambiare una tappa.
-- **Di nuovo**: le vie (`terreni/vie.js`: `battuto`, `acciottolato`,
-  `lastricato`), la roba sparsa lontano da strada e piazzole e ordinata per
-  profondità, le piazzole.
-- **Tre cose imparate guardando**: il selciato delle mura si posa in
-  diagonale (a corsi orizzontali sembrava un muro davanti alla telecamera);
-  le lastre della via stanno due o tre per fila, sfalsate (una per fila
-  faceva una ferrovia); le torce sono poche e lontane, ma sotto la via corre
-  un filo di luce continuo, perché il tracciato è l'informazione da cui
-  dipende ogni decisione.
-
-Il castello a sprite (chiave `castello`, in prova) dipinge lo stesso campo a
-celle con le immagini generate: vedi [`../core/grafica.md`](../core/grafica.md).
+- **Il campo si veste coi pezzi dei fogli del terreno**: la carta di una
+  tappa, carattere per carattere, composta con i pezzi del suo vestito
+  (`scena/vestito.js`, la stessa composizione di `vesti()` in
+  `strumenti/sprite/vesti.py`). I vestiti sono quattro — bosco, neve, lava,
+  palude — e non uno per campagna: grotte e mura ne prendono in prestito uno
+  (`VESTITO_DI`). Come si fanno i fogli: `strumenti/sprite/DA-GENERARE.md`.
+- **Torri e mostri sono figure** di un foglio (`dati/figure.js`, lo scrive
+  `vesti.py --atlante`), e ogni mostro ha in ogni vestito la figura che gli
+  dà il bestiario (`scena/bestiario.js`): la figura dice l'immunità.
+- **I terreni dipinti a poligoni** (`src/grafica/terreni/`, tre terreni e
+  venti tavolozze, nominati dall'`ambiente` di ogni tappa) erano il fondale
+  del castello di prima. Il gioco non li legge più; i file restano, e
+  l'`ambiente` delle tappe con loro.
 
 ## I salvataggi
 

@@ -13,16 +13,20 @@ gesto), `strumenti/sprite/FORMATO.md` (il foglietto, campo per campo),
 ```
 strumenti/sprite/sorgenti/<gioco>/generati/<foglio>.png + .json   ← «i ritagli» guarda qui
                           ▼
-            atlante.py (figure) / terreni.py (tessere)
+            atlante.py (figure) / vesti.py (il castello)
                           ▼
          src/giochi/<gioco>/dati/atlante.js                     ← «il mondo» guarda qui
+         src/giochi/castello/dati/vestiti.js, figure.js
 ```
 
 - **`atlante.py`** ritaglia figure, un bersaglio per gioco (un
-  `atlante.json` per cartella di sorgenti). **`terreni.py`** è il fratello
-  per i mondi a griglia: ritaglia tessere, e misura dall'alfa sia la
-  griglia sia gli attacchi delle strade (vedi [grafica.md](grafica.md)).
-- **`vesti.py --atlante`** fa pezzi e figure del castello a sprite;
+  `atlante.json` per cartella di sorgenti). Il castello ne dichiara uno
+  con `"attrezzo": "vesti"`, e `atlante.py` lo salta: c'era `terreni.py`,
+  per il castello a tessere, tolto col suo visore il 29 settembre 2026.
+- **`vesti.py --atlante`** fa pezzi e figure del castello — i vestiti
+  delle carte dai fogli del terreno, le torri dal foglio delle torri
+  (`torri-<n>.png`, il numero più alto), i mostri dai fogli del
+  sotterraneo e dai passi di `cammino.py`;
   `righe.py <foglio> <provino>` conta righe e figure di un foglio a righe
   appena arrivato, e `vesti.py --provino-foglio` / `--provino` fanno i
   provini senza scrivere niente. **`cammino.py`** tiene di un video di
@@ -48,8 +52,8 @@ capi dello stesso tubo.
   c'entra**. In cima al pannello c'è **come uscirà** la cosa intera, in
   movimento: l'anteprima applica le stesse regole senza aspettare il
   generatore. Una riga gialla segna le voci toccate. I fogli del castello
-  compaiono spenti: lì i ritagli li misura `terreni.py`, non c'è niente da
-  spostare.
+  compaiono spenti: lì i ritagli li misurano `vesti.py` e `cammino.py`, non
+  c'è niente da spostare.
 - **«il mondo» — quello che esce.** L'atlante vero su un campo di prova,
   con quattro attrezzi: **posa** (il piede cade dove deve?), **pennello**
   (come sta una zona: le varianti le sceglie il posto), **strada** (le

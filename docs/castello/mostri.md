@@ -39,7 +39,7 @@ mostri stanno in `src/data/mostri.js`, le file delle tappe in
   ordine). Nel commento accanto a ogni fila, ondata per ondata, le torri che
   quel mostro lascia fuori; il «—» è un comune.
 - **La figura dice l'immunità** (`src/giochi/castello/scena/bestiario.js`,
-  uno per i quattro vestiti del castello a sprite): al bambino serve capire
+  uno per i quattro vestiti del castello): al bambino serve capire
   che torre mettergli davanti, non chi è. Vocabolario corto, uguale in tutti
   i vestiti — una figura che fa due mostri li fa con le stesse immunità
   (`unita/castello-bestiario`):

@@ -5,12 +5,15 @@ chi una torre non colpisce, e il blocchetto dei potenziamenti. I numeri
 stanno in `src/data/castello.js` (`CARATTERE`, `CRESCITA`, `RAMI`) e in
 `src/data/ops.js` (`TORRI`).
 
-| chiave | torre | operazione | listino | resa | la prima costa |
-|---|---|---|---|---|---|
-| `add` | 🏹 arciere | addizione | 0,6 | 1 | 24 ⚡ |
-| `sub` | 🔮 magica | sottrazione | 1 | 1,1 | 40 ⚡ |
-| `mul` | ❄️ ghiaccio | moltiplicazione | 0,5 | 1 | 20 ⚡ |
-| `div` | 💣 bombe | divisione | 1,4 | 1,2 | 56 ⚡ |
+| chiave | torre | operazione | listino | resa | la prima costa | gittata | scoppio |
+|---|---|---|---|---|---|---|---|
+| `add` | 🏹 arciere | addizione | 0,6 | 1 | 24 ⚡ | 92 | — |
+| `sub` | 🔮 magica | sottrazione | 1 | 1,1 | 40 ⚡ | 104 | 42 |
+| `mul` | ❄️ ghiaccio | moltiplicazione | 0,5 | 1 | 20 ⚡ | 86 | — |
+| `div` | 💣 bombe | divisione | 1,4 | 1,2 | 56 ⚡ | 104 | 38 |
+
+Gittata e scoppio sono in unità del mondo: una cella della carta è larga
+35 (420/12). Il raggio non cresce coi livelli.
 
 Salendo cambiano faccia tre volte (`stadi` in `TORRI`, `stadioDi`: livelli
 1-3, 4-6, 7-10): 🏹🎯🦅 · 🔮✨🧙 · ❄️🧊⛄ · 💣🧨🚀. Il lavoro fatto deve
@@ -56,26 +59,62 @@ cresciuta.
   scomode. È un dieci-venti per cento e non un per otto perché con le
   immunità nessuna torre da sola vince una tappa.
 - **Il numero giusto non si stima, si misura** con `npm run dps` (motore
-  vero, vita fermata su un'ondata vera: area, rimbalzi e veleno compresi).
-  `unita/castello` tiene la stima del modello (`dpsDi`) dentro la regola.
-  Provato coi prezzi uguali: le bombe di livello alto valevano otto arcieri
-  e il napalm tredici, e la regola del gioco era «costruisci bombe».
+  vero, sulle carte, vita fermata su un'ondata vera: area, rimbalzi e
+  veleno compresi). `unita/castello` tiene la stima del modello (`dpsDi`)
+  dentro la regola. Provato coi prezzi uguali: le bombe di livello alto
+  valevano otto arcieri e il napalm tredici, e la regola del gioco era
+  «costruisci bombe».
 
   | bombe, in arcieri per ⚡ | liv. 1 | liv. 4 | liv. 7 | liv. 10 |
   |---|---|---|---|---|
-  | a prezzi uguali | 2,8 | 4,2 | 8,2 | 7,9 |
-  | col listino | 1,2 | 1,05 | 1,4 | 1,2 |
+  | a prezzi uguali (curve) | 2,8 | 4,2 | 8,2 | 7,9 |
+  | col listino (curve) | 1,2 | 1,05 | 1,4 | 1,2 |
+  | col listino, sulle carte, gittata 132 e scoppio 62 | 1,22 | 1,22 | 1,42 | 1,30 |
+  | sulle carte, gittata 104 e scoppio 38 (oggi) | 1,05 | 1,10 | 1,14 | 1,09 |
+
+- **Le bombe non arrivano più lontano della magica, e scoppiano di una
+  cella.** Arrivavano a 132 con uno scoppio di 62: quasi quattro celle di
+  gittata e quasi due di raggio, e sulle strade a squadra, che si
+  ripiegano strette, uno scoppio prendeva due o tre tratti insieme — «fa
+  decisamente troppo effetto» (l'utente). Adesso 104 e 38, e il mortaio
+  resta la gittata più lunga (×1,25, 130: meno di una cella in più), il
+  napalm lo scoppio più largo (×1,15). Sparano più spesso con un colpo
+  più piccolo (42 ogni 1,8 s, erano 44 ogni 2,3): con lo scoppio stretto
+  un colpo ne prende due invece di tre, e un'ondata di troll — che solo le
+  bombe feriscono — a 2,3 s non si fermava a nessuna vita, perché i colpi
+  non bastavano per tutti. Sulle carte un ⚡ di bombe rende quanto dice il
+  listino, e non di più (tabella sopra); con sole bombe dovunque la fila
+  non chieda altro il metro vince 9 tappe su 16 (erano 14,
+  `simula-castello --sole div`).
+- **Salire rende un po' meno per ⚡ che costruire** (vedi
+  [taratura.md](taratura.md)): la resa per ⚡ cumulato di una torre salita,
+  contro la stessa appena costruita, misurata sulle carte.
+
+  | torre | liv. 4 | liv. 7 | liv. 10 | prima, liv. 4/7/10 |
+  |---|---|---|---|---|
+  | 🏹 arciere | 0,76 | 0,85 | 0,76 | 0,82 / 1,03 / 1,22 |
+  | 🔮 magica | 1,08 | 0,86 | 0,77 | 1,11 / 0,99 / 1,31 |
+  | ❄️ ghiaccio | 0,77 | 0,86 | 1,26 | 1,14 / 1,57 / 2,86 |
+  | 💣 bombe | 0,80 | 0,93 | 0,79 | 0,82 / 1,20 / 1,30 |
+
+  La stima del modello, che il test tiene (0,70–0,97 al livello 4, fino a
+  0,55 al 10, e che cali), dice 0,77 · 0,74 · 0,73 per l'arciere. La
+  misura ha più rumore del modello (il ghiaccio si misura come vita in più
+  fermata da due arcieri, e al decimo livello gela mezza ondata).
 
 - **Una torre ad area prende in media due-tre nemici a colpo** (`BERSAGLI`,
   misurato), quindi il suo colpo singolo è più debole di quello dell'arciere
   a parità di prezzo: lo stesso danno spalmato su un gruppo.
-- **Tutte salgono con la stessa pendenza** (`CRESCITA`): un livello 7 vale
-  rispetto al suo livello 1 quanto vale l'arciere, se no il listino direbbe
-  una cosa al primo gradino e un'altra al decimo. Ognuna cresce nel suo
-  mestiere: l'arciere in cadenza, la magica in area, le bombe in danno e dal
-  settimo livello con due salve **più piccole** (`perSalva` 0,55: la salva
-  doppia a danno pieno era metà del motivo per cui le bombe valevano otto
-  arcieri), il ghiaccio nel gelo (`geloDi`).
+- **Tutte salgono con la stessa pendenza, quasi dritta** (`CRESCITA`): un
+  livello 7 vale rispetto al suo livello 1 quanto vale l'arciere, se no il
+  listino direbbe una cosa al primo gradino e un'altra al decimo, e ogni
+  gradino aggiunge più o meno quanto il primo. Ognuna cresce nel suo
+  mestiere: l'arciere in cadenza (e un po' in danno), la magica in area, le
+  bombe in danno e dal settimo livello con due salve **più piccole**
+  (`perSalva` 0,65: la salva doppia a danno pieno era metà del motivo per
+  cui le bombe valevano otto arcieri), il ghiaccio nel gelo (`geloDi`). Il
+  raggio non cresce (era +4% a gradino): sulle carte una torre alta con un
+  terzo di gittata in più copriva metà del campo da sola.
 - **Chi compra solo bombe fa meno calcoli e più difficili, chi compra solo
   arcieri di più e più facili**: il piano conta i prezzi delle torri che il
   giocatore modello compra davvero (`sequenzaTorri`, vedi
@@ -103,7 +142,7 @@ cresciuta.
   | 🏹 | cecchino / raffica | pochi colpi forti e vede il 30% più lontano / due frecce su due nemici |
   | 🔮 | veleno / catena | colpo più debole e il male che continua / rimbalza sui vicini (metà, poi un quarto) |
   | ❄️ | bufera / brina | gela larghissimo / frena di più e rende fragile chi è gelato |
-  | 💣 | mortaio / napalm | arriva lontanissimo / scoppia largo e lascia bruciare |
+  | 💣 | mortaio / napalm | la gittata più lunga, e pesa / scoppia più largo e lascia bruciare |
 
 - **Il veleno si scrive in tutto, non al secondo** (`veleno` è il totale
   spalmato su `durata`). Scritto al secondo e contato in tutto, il napalm

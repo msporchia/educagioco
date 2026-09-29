@@ -8,28 +8,31 @@ Le voci aperte, con quanto basta per riprenderle.
   guado* e *la radice* ne sono parenti stretti; l'unica forma davvero sua è
   *la radura*, con l'anello. Sotto terra, sulle mura e nella palude nessuna
   si ripete. I due da rifare sono il sentiero e il folto
-  (`BOSCO_SENTIERO`, `BOSCO_FOLTO` in `src/data/campagne-castello.js`),
-  sapendo che un tracciato nuovo vuole `node strumenti/valida-percorsi.mjs`
-  (fasce del Bosco: presidio 2,15–2,70) e `npm run tara`, perché la vita dei
-  nemici è stata trovata su queste forme.
-- **`occhi()` esiste due volte.** `grafica/castello/corpi-mostri.js` e
-  `grafica/mostri/comune.js` disegnano lo stesso paio di occhi con due
-  implementazioni indipendenti (la seconda scritta quando i due cantieri
-  lavoravano in parallelo su file diversi). Le otto bestie di
-  `grafica/mostri/` sono già confluite in `BESTIE` via
-  `grafica/castello/mostro.js`: unificare le due funzioni è solo pulizia,
-  non più un vincolo di non toccarsi a vicenda.
-- **Il castello a sprite prende il posto di quello di oggi.** Il gioco con
-  chiave `castello` (`src/giochi/castello/`, in prova) è lo stesso tower
-  defense con un'altra pelle e le stesse tappe di `torri`. Manca ancora: i
-  quattro vestiti per campagna (grotte e mura prendono in prestito lava e
-  neve, vedi `VESTITO_DI` in `scena/vestito.js`); i mostri che respirano sul
-  posto ma non camminano ancora (i passi di lato e di fronte arrivano coi
-  fogli del cammino); il foglio delle torri (`dati/figure.js`), di
-  provenienza non documentata, da rifare prima di pubblicare altrove. Il
-  vecchio visore a tessere (`scena/campo.js`, `scena/tela.js`,
-  `dati/atlante.js`) non è più montato: resta per i test e per
-  `npm run mondo`, e va tolto quando arriva il foglio del terreno. Una voce
-  riguarda la taratura: le tappe sono tarate sulla strada smussata, e quella
-  a squadra della pelle è più lunga (`scena/pelle.js`) — il giorno dello
-  scambio va rimisurata.
+  (`BOSCO_SENTIERO`, `BOSCO_FOLTO` in `src/data/campagne-castello.js`, o una
+  carta a mano in `A_MANO` di `src/motore/castello/carta.js`), sapendo che
+  una strada nuova vuole `node strumenti/valida-percorsi.mjs` e
+  `npm run tara`, perché la vita dei nemici è stata trovata su queste carte.
+- **Due buchi nel Bosco.** Sulla carta il guado e la radura lasciano 63
+  unità di strada che nessuna torre vede, con le loro quattro piazzole (il
+  validatore vuole al massimo 60). La taratura le regge; ridisegnandole, si
+  guardi lì.
+- **Il primo bivio non si spiega.** Dal 29 settembre il bivio dei rami c'è
+  anche nel Bosco, dal guado in poi (è la seconda tappa di tutto il gioco):
+  il foglio della torre al quarto gradino mostra le due carte con una riga
+  ciascuna, e la guida del `?` ne parla in una riga. Se serva qualcosa la
+  prima volta che compare — e cosa — è da decidere.
+- **Le isole perdonano il pigro** (`PERDONANO` in `unita/castello`): il
+  taratore guarda fin dove arrivano i nemici e non dove muoiono.
+- **Quello che il castello a poligoni ha lasciato.** Tolto il disegno a
+  poligoni, restano senza nessuno che li legga: i corpi dei mostri
+  (`grafica/castello/corpi-mostri.js` e `grafica/mostri/`, dove `occhi()`
+  esisteva due volte), i terreni dipinti (`grafica/terreni/`) con
+  l'`ambiente` delle tappe che li nomina, e il risolutore delle strade a
+  etichette di `grafica/tessere.js` (`componiPercorso`, che il sotterraneo
+  non usa: lo usano solo il banco e il suo test). Tenerli o toglierli lo
+  decide l'utente.
+- **Il castello a sprite: quello che manca.** I quattro vestiti per
+  campagna (grotte e mura prendono in prestito lava e neve, vedi
+  `VESTITO_DI` in `scena/vestito.js`); i mostri che respirano sul posto ma
+  non camminano ancora, tranne il drago (i passi di lato e di fronte
+  arrivano coi video di `cammino.py`).
