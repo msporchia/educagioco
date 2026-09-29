@@ -181,11 +181,11 @@ export async function semina(page, profilo, giocatore = GIOCATORE) {
     r.onsuccess = () => {
       const db = r.result, tx = db.transaction('kv', 'readwrite'), s = tx.objectStore('kv')
       const g = s.get('profilo:' + chi)
-      // il profilo sta in una busta { __v, __t } (store/storage.js): si semina dentro, col tempo di adesso
+      // l'archivio salva il valore nudo (store/storage.js): una busta { __v, __t } rimasta da un giro vecchio si apre
       g.onsuccess = () => {
         const x = g.result
         const busta = x && typeof x === 'object' && '__v' in x && typeof x.__t === 'number'
-        s.put({ __v: { ...((busta ? x.__v : x) || {}), ...p }, __t: Date.now() }, 'profilo:' + chi)
+        s.put({ ...((busta ? x.__v : x) || {}), ...p }, 'profilo:' + chi)
       }
       tx.oncomplete = ok
       tx.onerror = () => ko(new Error('scrittura fallita'))
