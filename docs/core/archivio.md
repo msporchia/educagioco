@@ -38,22 +38,32 @@ scaricano da sole su `visibilitychange` e `pagehide`.
   `detectBackend()` ha aspettato ed è riuscito, le letture del roster e
   del profilo che seguono nello stesso avvio trovano IndexedDB già
   pronto, senza bisogno di un tempo lungo tutto loro.
-- **Il ripiego, quando c'è, è sempre il più recente — senza bisogno di un
-  segno di tempo.** Ogni scrittura riuscita in IndexedDB ripulisce da sé
-  un eventuale doppione lasciato nel ripiego (`eseguiFlush`), e nessun'altra
-  strada scrive in IndexedDB: quindi se una chiave è ancora nel ripiego
-  vuol dire che nessuna scrittura più recente c'è mai arrivata, anche se
-  IndexedDB ha già un'altra copia (più vecchia) della stessa chiave.
-  `load()` guarda perciò **prima** il ripiego e cade su IndexedDB solo se
-  lì non c'è niente — invertito rispetto a prima, che fidandosi sempre di
-  IndexedDB ignorava un ripiego più fresco lasciato da un giro storto.
-- **Il travaso, all'avvio.** Se IndexedDB funziona ma in localStorage sono
-  rimaste scritture di ripiego — fatte mentre IndexedDB non rispondeva,
-  magari una sessione fa — `travasaRipiego()` le sposta lì e basta,
-  sovrascrivendo quello che IndexedDB avesse per quella chiave (per la
-  stessa ragione di sopra, vince sempre). `load()` concilia già le due
-  copie leggendo, ma non le sposta: senza il travaso il doppione in
-  localStorage resterebbe lì per sempre.
+- **Il ripiego vince solo per le chiavi che questo codice ha scritto lui
+  stesso e non ha ancora ripulito — non per qualunque cosa capiti a stare
+  in localStorage.** Ogni scrittura riuscita in IndexedDB ripulisce da sé
+  un eventuale doppione lasciato nel ripiego (`eseguiFlush`): per QUELLE
+  chiavi, se sono ancora nel ripiego, nessuna scrittura più recente c'è
+  mai arrivata in IndexedDB, quindi vincono senza bisogno di un segno di
+  tempo. Ma un telefono vero può avere in localStorage chiavi vecchie di
+  mesi — `profilo:g1`, il roster — nate quando IndexedDB falliva *prima*
+  che questa pulizia esistesse, con IndexedDB nel frattempo tornato a
+  funzionare e pieno di scritture più fresche: fidarsi ciecamente del
+  ripiego anche lì avrebbe fatto perdere i progressi veri. Un registro
+  (`__ripiego__`, un elenco di chiavi in localStorage, escluso da
+  `chiavi()`) distingue le due cose: ci entra una chiave quando la sua
+  scrittura cade sul ripiego, ne esce quando una scrittura successiva
+  arriva in IndexedDB. **Solo chi è nel registro** fa vincere il ripiego
+  in `load()` senza aspettare IndexedDB; per tutte le altre chiavi vale la
+  regola di sempre — IndexedDB prima, localStorage come ultima spiaggia
+  solo se IndexedDB non ha proprio niente.
+- **Il travaso, all'avvio**, con la stessa distinzione. Se IndexedDB
+  funziona ma in localStorage sono rimaste scritture di ripiego,
+  `travasaRipiego()` le sposta lì: quelle **tracciate** senza guardare
+  cosa c'è già (vincono per costruzione, vedi sopra); quelle **non
+  tracciate** solo per riempire un buco — una chiave che in IndexedDB non
+  c'è affatto — mai sopra a un valore che ci fosse già. `load()` concilia
+  già le due copie leggendo con la stessa regola, ma non le sposta: senza
+  il travaso il doppione in localStorage resterebbe lì per sempre.
 - **`flush()` è serializzato.** Due `flush()` in corsa non possono più
   scrivere una chiave vecchia sopra una nuova: gira sempre in coda a
   quello prima (una catena di promesse), quindi chi arriva mentre un
