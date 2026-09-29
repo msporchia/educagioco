@@ -186,6 +186,33 @@ domanda sulla vista.
 Il gemello imperativo non ha la lente: lì guarda un grande, su uno schermo
 grande.
 
+### Il pittore delle bilance
+
+`grafica/pittori/bilance.js` disegna una o due bilance a due piatti,
+**sempre in pari** (il pittore non controlla i conti, li fa il modulo):
+piatti coi *pesi* (numeri scritti) o le *cose* (emoji × quante). L'ago in
+mezzo, dritto in su, è il segno di «uguale» che si vede prima della trave
+a figura piccola. I piatti **poggiano** sulla trave invece di essere
+appesi: appesi, un filo e il gambo di una pera sarebbero la stessa riga a
+questa risoluzione. Le cose uguali stanno raggruppate vicine (i pesi
+insieme, le specie insieme), perché un mucchio si legge a colpo d'occhio
+solo così; due bilance stanno una sopra l'altra, rimpicciolite.
+
+### Il pittore delle frazioni: i pezzi storti
+
+`grafica/pittori/frazioni.js` disegna torta, barra e tavoletta da
+`{ parti, colorate, tinta, pezzi? }`. Senza `pezzi` le parti sono uguali;
+con `pezzi: [0.6, 0.6, 1.4, 1.4]` ognuna è larga quanto il suo peso —
+serve al falso più importante del modulo: una figura divisa in quattro
+pezzi che non sono quarti. Il pittore disegna, il modulo sa perché.
+
+Tre regole per farle sembrare giuste a 148 pixel: il tratto che separa i
+pezzi è unico e dello stesso spessore ovunque (un bordo esterno più
+grosso farebbe sembrare più stretti i pezzi in cima); il pieno e il vuoto
+non si scambiano mai (niente due colori, che si confondono); e **il
+giallo non si usa** — pieno e vuoto si distinguono troppo poco, il
+pittore ripiega da solo sull'arancione.
+
 ## Provati e scartati
 
 - **Catene alimentari**: proposte, non convincono.
