@@ -364,7 +364,7 @@ export const TORRI = {
          raggio: 104, danno: 42, ricarica: 1.8,  area: 38, descr: 'scoppia e prende tutti quelli vicini',
          rami: {
            mortaio: { nome: 'Mortaio', segno: '🎇', colore: '#d1521c',
-                      descr: 'arriva lontanissimo, e quando arriva pesa' },
+                      descr: 'arriva più lontano di tutte, e quando arriva pesa' },
            napalm:  { nome: 'Napalm',  segno: '🔥', colore: '#ffab3d',
                       descr: 'scoppia più largo e lascia tutti a bruciare' },
          } },
