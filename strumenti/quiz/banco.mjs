@@ -1,31 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL BANCO DI PROVA DEI MODULI DI QUIZ
-
-   Un modulo di quiz è una fabbrica di domande, e una fabbrica non si
-   collauda a mano: si tirano mille pezzi e si guarda quanti escono
-   storti. Questo banco fa girare ogni modulo della cartella per ogni
-   grado, senza browser, e dice cosa non va:
-
-     · la forma della domanda (`nucleo/domanda.js` la conosce);
-     · le risposte doppie, che è come si scopre una domanda con due
-       risposte giuste o un distrattore uguale alla buona;
-     · le scene senza pittore;
-     · la VARIETÀ: se in trecento tiri escono venti domande diverse,
-       quel modulo si impara a memoria in tre partite e non serve a
-       niente — è il guasto che nessuno vedrebbe giocando una volta;
-     · il caso ripetibile: stesso seme, stessa domanda. Un modulo che
-       chiama `Math.random()` di nascosto qui si vede subito.
-
-     node strumenti/quiz/banco.mjs                 tutti
-     node strumenti/quiz/banco.mjs orologio        uno solo
-     node strumenti/quiz/banco.mjs --tiri 2000     più a fondo
-     node strumenti/quiz/banco.mjs --mostra 3      stampa 3 domande per grado
-
-   I moduli si raccolgono dalla cartella: aggiungerne uno non vuol dire
-   toccare questo file, e nessun modulo può dimenticarsi di essere
-   provato.
-   ═══════════════════════════════════════════════════════════════════ */
-
+// banco di prova dei moduli di quiz (vedi docs/apprendimento/quiz-moduli.md): tira mille domande a modulo/grado e controlla forma, doppie, scene senza pittore, varietà, caso ripetibile. I moduli si raccolgono dalla cartella: nessuno può dimenticarsi di essere provato.
+//   node strumenti/quiz/banco.mjs                 tutti
+//   node strumenti/quiz/banco.mjs orologio        uno solo
+//   node strumenti/quiz/banco.mjs --tiri 2000     più a fondo
+//   node strumenti/quiz/banco.mjs --mostra 3      stampa 3 domande per grado
 import { readdirSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve } from 'node:path'
@@ -37,8 +14,7 @@ const MODULI = resolve(QUI, '../../src/quiz/moduli')
 
 const MATERIE = ['italiano', 'matematica', 'spazio', 'tempo', 'logica', 'scienze']
 
-/* l'impronta di una domanda: due domande con la stessa impronta sono la
-   stessa domanda, anche se le risposte sono mescolate diversamente */
+// due domande con la stessa impronta sono la stessa domanda, anche con le risposte mescolate diversamente
 function impronta(d) {
   const r = d.risposte.map(x =>
     x.testo ?? x.emoji ?? JSON.stringify(x.scena)).slice().sort().join('|')
@@ -50,7 +26,6 @@ export function provaModulo(modulo, { tiri = 600, mostra = 0 } = {}) {
   const guasti = []
   const dice = (c, m) => { if (!c) guasti.push(m) }
 
-  /* ── la carta d'identità ── */
   dice(/^[a-z][a-z0-9-]*$/.test(modulo.id || ''), `id malformato: ${modulo.id}`)
   dice(!!modulo.nome, 'manca il nome')
   dice(!!modulo.icona, 'manca l\'icona')
@@ -87,8 +62,7 @@ export function provaModulo(modulo, { tiri = 600, mostra = 0 } = {}) {
       posizioni.set(d.giusta, (posizioni.get(d.giusta) || 0) + 1)
       quante++
 
-      /* il caso ripetibile: rigenerata con lo stesso seme dev'essere
-         identica, altrimenti il banco non prova niente */
+      // il caso ripetibile: rigenerata con lo stesso seme dev'essere identica, altrimenti il banco non prova niente
       if (t < 30) {
         const bis = modulo.chiedi(grado, new Sorte(grado * 100003 + t))
         if (JSON.stringify(bis) !== JSON.stringify(d))
@@ -99,7 +73,7 @@ export function provaModulo(modulo, { tiri = 600, mostra = 0 } = {}) {
 
     const varieta = quante ? viste.size / quante : 0
     dice(viste.size >= 25, `grado ${grado}: solo ${viste.size} domande diverse su ${quante} tiri — troppo poche, si impara a memoria`)
-    /* la giusta non deve stare quasi sempre nello stesso posto */
+    // la giusta non deve stare quasi sempre nello stesso posto
     const massima = Math.max(0, ...posizioni.values())
     dice(!quante || massima / quante < 0.75,
       `grado ${grado}: la risposta giusta è nella stessa posizione ${Math.round(massima / quante * 100)}% delle volte`)
@@ -113,7 +87,6 @@ export function provaModulo(modulo, { tiri = 600, mostra = 0 } = {}) {
   return { guasti, righe, chiavi: [...chiaviTutte].sort(), esempi }
 }
 
-/* ── da riga di comando ── */
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2)
   const num = (nome, difetto) => {
@@ -130,8 +103,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
 
   let guasti = 0
   for (const f of files) {
-    /* un modulo che non si importa nemmeno non deve fermare gli altri:
-       è un guasto suo, e gli altri vanno provati lo stesso */
+    // un modulo che non si importa nemmeno non deve fermare gli altri: è un guasto suo
     let mod = null
     try { mod = (await import(pathToFileURL(resolve(MODULI, f)).href)).default }
     catch (e) { console.log(`\n✗ ${f}: non si importa — ${e.message.split('\n')[0]}`); guasti++; continue }
@@ -148,15 +120,11 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     for (const g of r.righe)
       console.log(`   grado ${g.grado} — ${String(g.dice).padEnd(34)} ${String(g.diverse).padStart(5)} domande diverse, ${g.chiavi} chiavi`)
     if (r.chiavi?.length) console.log('   chiavi: ' + r.chiavi.join(' '))
-    /* la consegna può andare a capo (le premesse della logica stanno
-       una per riga): qui va tutto su una riga sola, o l'elenco degli
-       esempi diventa illeggibile */
+    // la consegna può andare a capo: qui va tutto su una riga sola, o l'elenco esempi diventa illeggibile
     for (const e of r.esempi || [])
       console.log(`   ‹${e.grado}› ${e.d.testo.replace(/\s*\n\s*/g, ' ')}  →  ` +
         e.d.risposte.map((x, i) => {
-          /* il nome sotto la figura è metà della risposta: senza, una
-             domanda a quattro disegni si legge «🖼 🖼 🖼 🖼» e non si
-             può giudicare da qui */
+          // il nome sotto la figura è metà della risposta: senza, quattro disegni si leggono «🖼 🖼 🖼 🖼»
           const corpo = (x.testo ?? x.emoji ?? '🖼') + (x.nome ? ' ' + x.nome : '')
           return i === e.d.giusta ? `[${corpo}]` : corpo
         }).join('  '))
