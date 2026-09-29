@@ -1,11 +1,4 @@
-/* ═════ IL VAMPIRO ═════
-   Il capo di piano elegante: il mantello alzato dietro le spalle è
-   tutta la sagoma, e si riconosce a occhi chiusi. Dentro il gioco fa
-   la parte del nemico che sta un gradino sopra i mostri normali senza
-   essere ancora il padrone di casa — quindi curato, non enorme.
-
-   Colletto alto, pallore, due zanne piccole. Niente sangue: le zanne
-   bastano, e si vedono solo quando è vivo. */
+// il mantello alzato dietro le spalle è tutta la sagoma; curato e non enorme, un gradino sopra i mostri normali
 import { mescola, capsula, poligono, tondo } from '../comune.js'
 import { occhi } from '../segni.js'
 
@@ -22,8 +15,7 @@ export const VAMPIRO = {
   dietro(q, s, C) {
     const t = q.tempo || 0
     const b = C.bordo
-    // il mantello aperto dietro: due ali di stoffa che respirano. È
-    // disegnato *prima* del corpo, così il vampiro ci sta davanti
+    // disegnato prima del corpo, così il vampiro ci sta davanti
     const apre = 1 + Math.sin(t * 1.2) * 0.12
     for (const v of [-1, 1]) {
       q.ctx.fillStyle = v < 0 ? C.mantello : C.mantelloS
@@ -38,8 +30,6 @@ export const VAMPIRO = {
   tronco(q, s, C) {
     const b = C.bordo, sp = 0.8 * s
     capsula(q, 0, -9.4 * s, 4.6 * s, 4.6 * s, 1.6 * s, C.manica, b, sp)
-    // il panciotto chiaro e il fiocco: è il dettaglio che dice
-    // «elegante» e lo separa dagli stracci dello zombi
     poligono(q, [[-2 * s, -13.4 * s], [2 * s, -13.4 * s], [0, -6.4 * s]], '#e6dcd4', b, sp * 0.7)
     for (const v of [-1, 1])
       poligono(q, [[0, -12.4 * s], [v * 2 * s, -13.4 * s], [v * 2 * s, -11.4 * s]], C.mantello)
@@ -47,13 +37,10 @@ export const VAMPIRO = {
   },
   testa(q, s, C, dir, stato) {
     const b = C.bordo, sp = 0.8 * s, R = 4 * s
-    // il colletto alto dietro la nuca, che incornicia la testa
     for (const v of [-1, 1])
       poligono(q, [[v * 1.4 * s, 3 * s], [v * 5.4 * s, -3.6 * s], [v * 1.6 * s, -1 * s]],
                C.mantello, b, sp * 0.8)
     tondo(q, 0, 0, R * 0.88, R, C.pelle, b, sp)
-    // i capelli neri con la punta in mezzo alla fronte: la seconda cosa
-    // che si riconosce dopo il mantello
     q.ctx.fillStyle = '#1a1626'
     q.ctx.beginPath()
     q.ctx.moveTo(-R * 0.9, -1.2 * s)

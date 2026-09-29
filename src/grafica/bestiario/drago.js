@@ -1,18 +1,5 @@
-/* ═════ IL DRAGO ═════
-   L'ultimo di tutti, e l'unico che deve *riempire* lo schermo. Tutto
-   quello che le altre creature hanno una alla volta, lui ce l'ha
-   insieme: ali di membrana, corna, coda, zanne, la luce in gola.
-
-   ── PERCHÉ È DISEGNATO DI TRE QUARTI E NON DI FRONTE ──
-   Di fronte un drago è una faccia con due ali, cioè un pipistrello
-   grosso. È il **collo** a fare il drago, e un collo si vede solo se è
-   di traverso. Costa una posa in più rispetto a tutti gli altri: vale
-   il prezzo, perché questa figura la si vede alla fine di nove tappe e
-   deve valere il viaggio.
-
-   La luce in gola cresce e cala ma non spara mai niente: nel dungeon
-   il fuoco non esiste come regola, e una grafica che promette una cosa
-   che il gioco non fa è una bugia. */
+// di tre quarti e non di fronte: è il collo a fare il drago, e si vede solo di traverso (di fronte è un pipistrello grosso)
+// la luce in gola cresce e cala ma non spara mai: nel dungeon il fuoco non è una regola, e la grafica non deve promettere quello che il gioco non fa
 import { mescola, capsula, poligono, tondo } from '../comune.js'
 import { ala } from './comune.js'
 
@@ -27,9 +14,7 @@ export const DRAGO = {
     const t = q.tempo || 0
     const b = C.bordo, sp = 0.9 * s
     const respiro = Math.sin(t * 1.2)
-    /* Le ali stanno **alte**, all'altezza delle spalle: attaccate al
-       fianco sembravano due pinne e il drago un pesce rosso. Da lì
-       incorniciano il collo, che è la parte che deve leggersi. */
+    // ali alte, all'altezza delle spalle: attaccate al fianco sembravano due pinne
     for (const v of [-1, 1])
       ala(q, s, v, { lungo: 17, alto: 13, col: C.membrana, bordo: b,
                      apertura: 0.86 + respiro * 0.14, x: v * 3 * s, y: -12 * s })
@@ -51,10 +36,7 @@ export const DRAGO = {
     // le piastre chiare della pancia, che è dove sta tutta la luce
     for (let i = 0; i < 4; i++)
       capsula(q, 1 * s, (-1.8 - i * 2) * s, (3.2 - i * 0.35) * s, 0.85 * s, 0.8 * s, C.pancia)
-    /* Il collo: cinque anelli che salgono di traverso, e devono uscire
-       **dalla sagoma del petto** o il drago diventa un rospo con le
-       ali. Ogni anello è più piccolo del precedente: è la rastremazione
-       a dare la profondità, non l'inclinazione. */
+    // cinque anelli che devono uscire dalla sagoma del petto, o il drago diventa un rospo con le ali
     for (let i = 0; i < 5; i++) {
       const d = i / 4
       tondo(q, (0.4 - d * 7.4) * s, (-8.6 - d * 6.4) * s,
