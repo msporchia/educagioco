@@ -1,19 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL DUNGEON — L'ASPETTO
-
-   Un file solo, e ogni classe comincia per `dng-`. Non è pignoleria: lo
-   stile globale dell'applicazione ha già `.carta`, `.riga`, `.tondo`, e
-   due fogli che si contendono lo stesso nome si rompono a distanza di
-   mesi, quando nessuno si ricorda più perché.
-
-   Il colore dell'ambiente arriva da `--dng-accento`, che il gioco scrive
-   sul contenitore: la fungaia è verde e la fucina arancione senza che
-   qui ci sia scritto da nessuna parte cosa sia una fungaia.
-
-   Qui sotto è tutto buio apposta. È l'unico gioco della raccolta che si
-   gioca al buio, e la fascia in cima è `scura` per lo stesso motivo:
-   una barra bianca sopra una caverna è una finestra aperta di notte.
-   ═══════════════════════════════════════════════════════════════════ */
+/* Ogni classe comincia per `dng-` (evita scontri con `.carta`, `.riga`,
+   `.tondo` dello stile globale). Il colore dell'ambiente arriva da
+   `--dng-accento`, scritto dal gioco: qui non si sa cosa sia una fungaia.
+   Tutto buio apposta: l'unico gioco della raccolta che si gioca al buio. */
 
 .dng {
   --dng-accento: #a06fe0;
@@ -32,25 +20,19 @@
   color: var(--dng-inchiostro);
   background: radial-gradient(120% 80% at 50% 0%, #241f38, var(--dng-fondo) 70%);
 }
-/* Il font di testo va PRIMA di quelli delle emoji: Noto Color Emoji ha
-   dentro anche le cifre (gli servono per le keycap 0️⃣), e senza questa
-   precedenza un «0:38» esce con le cifre larghe il doppio del resto. */
+/* il font di testo va prima delle emoji: Noto Color Emoji ha le cifre delle
+   keycap 0️⃣, e senza questa precedenza un «0:38» esce con cifre doppie */
 .dng .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji",
                        "Segoe UI Emoji", "Twemoji Mozilla", sans-serif; line-height: 1 }
 
-/* i gettoni nella fascia in cima: vita, attacco, difesa, gemme */
 .dng-gettone { background: #ffffff14; border: 1px solid var(--dng-bordo);
                border-radius: 999px; padding: 5px 9px; font-size: 13px;
                font-weight: 800; white-space: nowrap; display: flex;
                align-items: center; gap: 3px; color: #eef2fa }
 
-/* La vita dell'eroe è una barretta con dentro il numero, non una fila
-   di cuori: adesso è un numero vero che arriva a novanta, e novanta
-   cuoricini non ci starebbero né si conterebbero. Il colore va dal
-   verde al rosso da sé, così «sto per morire» si vede senza leggere. */
-/* `flex: none` e il padding azzerato non sono pignoleria: la pillola
-   porta anche la classe `dng-gettone`, che ha il suo padding, e senza
-   queste due righe la barra si stringe fino a tagliare il numero. */
+/* barretta col numero, non una fila di cuori: novanta cuoricini non
+   starebbero né si conterebbero. `flex: none` e padding 0 servono perché la
+   pillola porta anche `dng-gettone`, col suo padding, o si stringe */
 .dng-eroe-vita { position: relative; flex: none; box-sizing: border-box;
                  width: 58px; height: 17px; padding: 0;
                  border-radius: 999px; overflow: hidden; background: #00000055 }
@@ -59,7 +41,6 @@
 .dng-eroe-vita b { position: relative; display: block; text-align: center;
                    line-height: 17px; font-size: 11px; text-shadow: 0 1px 2px #0009 }
 
-/* ═══════════ la mappa delle tappe ═══════════ */
 .dng-tappe { flex: 1; min-height: 0; overflow-y: auto;
              display: flex; flex-direction: column; gap: 15px;
              padding: 10px 12px 22px }
@@ -103,11 +84,8 @@
 .dng-scelte button[aria-pressed="true"] { border-color: var(--dng-oro);
                                           color: var(--dng-inchiostro) }
 
-/* ═══════════ la discesa ═══════════
-   Il campo è la finestra, la discesa è quello che ci scorre dentro:
-   una spedizione di quattordici file è più alta di un telefono, e
-   schiacciarla vorrebbe dire stanze che si toccano. La riga di piede
-   resta fuori dallo scorrimento, ferma in basso. */
+/* il campo è la finestra, la discesa è quello che ci scorre dentro; la
+   riga di piede resta fuori dallo scorrimento, ferma in basso */
 .dng-campo { flex: 1; min-height: 0; position: relative; overflow: hidden }
 .dng-scorri { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
               scrollbar-width: none }
@@ -115,8 +93,6 @@
 .dng-discesa { position: relative; width: 100% }
 .dng-tela { position: absolute; inset: 0; width: 100%; height: 100% }
 
-/* una stanza è un bottone, non un cerchio disegnato: si tocca col dito
-   e si trova in un test */
 .dng-stanza {
   position: absolute; transform: translate(-50%, 50%);
   width: 52px; height: 52px; border-radius: 50%;
@@ -139,11 +115,8 @@
 .dng-stanza.dng-qui { border-color: #fff; box-shadow: 0 0 16px #ffffff66 }
 .dng-stanza.dng-fatta { opacity: .55 }
 .dng-stanza.dng-fatta .dng-icona { filter: grayscale(.7) }
-/* Chi chiude un piano si vede da lontano, come si vede grosso una
-   volta dentro. **Ma solo se è già stato illuminato**: al buio si sa
-   che c'è una stanza e non cosa, e un bollino più largo la
-   racconterebbe prima del tempo — il `data-tipo` sta nel DOM anche
-   quando la stanza è ancora un `⋯`. */
+/* solo se già illuminato: al buio si sa che c'è una stanza, non cosa —
+   `data-tipo` sta nel DOM anche quando la stanza è ancora un `⋯` */
 .dng-stanza:not(.dng-buio)[data-tipo="capo"] { width: 60px; height: 60px }
 .dng-stanza:not(.dng-buio)[data-tipo="capo"] .dng-icona { font-size: 29px }
 .dng-stanza:not(.dng-buio)[data-tipo="boss"] { width: 68px; height: 68px; border-width: 4px }
@@ -152,7 +125,6 @@
   0%, 100% { box-shadow: 0 0 14px 1px color-mix(in srgb, var(--dng-accento) 45%, transparent) }
   50% { box-shadow: 0 0 24px 5px color-mix(in srgb, var(--dng-accento) 70%, transparent) }
 }
-/* il bollino del rischio: quante domande, e quanto toste */
 .dng-rischio { position: absolute; top: -8px; right: -12px;
                background: #120e1e; border: 2px solid var(--dng-accento);
                border-radius: 999px; padding: 1px 5px; font-size: 9px;
@@ -165,32 +137,20 @@
              font-weight: 700; pointer-events: none;
              background: linear-gradient(0deg, #12101cf2, #12101c00) }
 
-/* ═══════════ dentro una stanza ═══════════ */
 .dng-stanzone { flex: 1; min-height: 0; display: flex; flex-direction: column;
                 gap: 10px; padding: 10px 12px 14px; overflow-y: auto }
 .dng-arena { flex: 1; min-height: 120px; display: flex; flex-direction: column;
              align-items: center; justify-content: center; gap: 9px; text-align: center;
              background: radial-gradient(ellipse 62% 46% at 50% 42%,
                          color-mix(in srgb, var(--dng-accento) 22%, transparent), transparent 70%) }
-/* ── IL RIQUADRO DI CHI TI ASPETTA ──
-   Dentro c'è una tela, non un'emoji: la creatura è disegnata
-   (`grafica/bestiario/`), respira, sbianca quando la colpisci e si
-   ribalta quando cade. Il riquadro si prende lo spazio che l'arena
-   gli lascia e non cambia misura con la taglia del mostro — la stazza
-   la fa la telecamera dentro la tela (`scena/bestia.js`, `STAZZE`),
-   che è l'unico posto dove è scritta.
-
-   Quello che resta al CSS è l'alone dei due capoccia, che sta *dietro*
-   la tela e non dentro: è atmosfera della stanza, non anatomia della
-   creatura. */
+/* il riquadro non cambia misura con la taglia del mostro: la stazza la fa
+   la telecamera dentro la tela (scena/bestia.js, STAZZE). L'alone dei due
+   capoccia sta dietro la tela: atmosfera della stanza, non anatomia */
 .dng-viva { position: relative; flex: 1 1 auto; width: 100%;
             min-height: 120px; max-height: 56vh; align-self: center }
 .dng-viva canvas { display: block; width: 100%; height: 100% }
-/* Centrato con `left`/`right` e non con una `translate`: l'animazione
-   qui sotto muove la `transform`, e una `transform` ne cancella
-   un'altra — l'alone finiva in un angolo dello schermo invece che
-   dietro la creatura. Chi anima la trasformazione non la usa anche per
-   mettere le cose a posto. */
+/* centrato con left/right e non translate: l'animazione sotto muove la
+   transform, e una transform ne cancella un'altra */
 .dng-viva.dng-s-capo::before, .dng-viva.dng-s-boss::before {
   content: ''; position: absolute; left: 19%; right: 19%; bottom: 4%; height: 62%;
   border-radius: 50%;
@@ -200,11 +160,8 @@
 }
 .dng-viva.dng-s-boss::before { left: 11%; right: 11%; height: 74%; animation-duration: 3.2s }
 
-/* ── LA STAZZA DELLE COSE, che emoji sono rimaste ──
-   Uno scrigno, un fuoco, un mercante: non sono nessuno, e restano
-   scritti col carattere. Vale per loro la stessa regola di prima —
-   cresce la figura e insieme rallenta — perché anche uno scrigno di
-   fine piano deve pesare più di uno di passaggio. */
+/* le cose (scrigno, fuoco, mercante) restano emoji col carattere: cresce
+   la figura e insieme rallenta, come per i mostri disegnati */
 .dng-bestia { --dng-stazza: 68px; --dng-onda: 9px; --dng-lento: 2s; --dng-fattore: 1;
               position: relative; font-size: calc(var(--dng-stazza) * var(--dng-fattore));
               filter: drop-shadow(0 8px 14px #0009);
@@ -213,7 +170,6 @@
 .dng-bestia.dng-s-grosso  { --dng-stazza: 86px; --dng-onda: 8px; --dng-lento: 2.4s }
 .dng-bestia.dng-s-capo    { --dng-stazza: 106px; --dng-onda: 6px; --dng-lento: 3s }
 .dng-bestia.dng-s-boss    { --dng-stazza: 124px; --dng-onda: 5px; --dng-lento: 3.6s }
-/* uno scrigno non respira come una bestia: sta fermo e basta */
 .dng-bestia.dng-s-scrigno { --dng-stazza: 74px; --dng-onda: 3px; --dng-lento: 4s }
 @keyframes dng-ballonzola {
   0%, 100% { transform: translateY(0) rotate(-2deg) }
@@ -230,44 +186,27 @@
   50% { transform: translateX(10px) scale(1.04) }
   80% { transform: translateX(-5px) }
 }
-/* ── il mostro sopra, la domanda sotto ──
-   Con una domanda in scena i due si dividono la schermata in due pezzi
-   che si toccano: la carta si prende quello che le serve appoggiata in
-   fondo, la stanza tiene tutto il resto e ci mette in mezzo il mostro,
-   più piccolo. Mentre si risponde si continua a vedere chi si ha
-   davanti e quanta vita gli resta. */
+/* con una domanda in scena, la carta si appoggia in fondo e la stanza
+   tiene il resto col mostro più piccolo in mezzo */
 .dng-stretta { justify-content: flex-start; gap: 4px;
                padding: 6px 12px 0; overflow: hidden }
 .dng-stretta .dng-arena { flex: 1; min-height: 96px; gap: 4px }
-/* con la domanda in scena la figura si stringe, ma la scala fra le
-   taglie resta: si rimpicciolisce tutto insieme, di un fattore */
-.dng-stretta .dng-bestia { --dng-fattore: .76 }
-/* la creatura non rimpicciolisce: si accorcia il riquadro, e la
-   telecamera dentro la tela la incornicia da sé in quello che resta */
-.dng-stretta .dng-viva { min-height: 96px; max-height: 30vh }
+.dng-stretta .dng-bestia { --dng-fattore: .76 }   /* si rimpicciolisce tutto insieme, la scala fra taglie resta */
+.dng-stretta .dng-viva { min-height: 96px; max-height: 30vh }   /* si accorcia il riquadro, non la creatura */
 .dng-stretta .dng-titolone { font-size: 16px }
-/* con la domanda in scena resta il minimo che serve a decidere: la
-   barra e i colpi che mancano, un filo più bassi */
 .dng-stretta .dng-barra { height: 13px }
 .dng-stretta .dng-barra b { line-height: 13px; font-size: 10px }
 .dng-stretta .dng-ossa { font-size: 12px }
 .dng-stretta .dng-scambi { font-size: 12px }
 
-/* La carta arriva da `quiz/Domanda.vue` col suo velo a
-   `position: absolute`: qui il velo non serve — non c'è niente da
-   coprire, la stanza sta sopra e non sotto — e diventa l'ultimo pezzo
-   della colonna, alto quanto la carta e non un dito di più.
-
-   `flex: none` è la riga che conta. Prima il velo cominciava a un
-   quarto dello schermo e ci centrava dentro la carta: fra il mostro e
-   la prima riga da leggere restava una striscia nera alta quanto la
-   carta stessa, che non era di nessuno. */
+/* la carta arriva da quiz/Domanda.vue col suo velo a position:absolute: qui
+   non serve (niente da coprire), diventa l'ultimo pezzo della colonna.
+   `flex: none` è la riga che conta: senza, il velo si centrava a un quarto
+   di schermo lasciando una striscia nera vuota fra mostro e carta */
 .dng-domanda { flex: none; position: relative; z-index: 40; display: flex;
                max-height: 72%; overflow-y: auto }
-/* `--qz-h` dice alla carta quanto schermo ha: qui non tutto, perché sta
-   in un pannello alto tre quarti scarsi. Senza questa riga i disegni si
-   misurerebbero sull'intero telefono e su uno schermo piccolo la scheda
-   sarebbe più alta del pannello che la contiene. */
+/* `--qz-h` dice alla carta quanto schermo ha (qui, tre quarti scarsi): senza,
+   su uno schermo piccolo la scheda sarebbe più alta del pannello */
 .dng .dng-domanda .qz-velo { --qz-h: .72vh;
                              position: relative; inset: auto; padding: 0; width: 100%;
                              background: none; backdrop-filter: none;
@@ -276,8 +215,6 @@
                               border-radius: 22px 22px 0 0 }
 .dng .dng-domanda .qz-esito { margin-top: 10px; min-height: 20px }
 
-/* i titoli si ricolorano: lo stile globale li fa viola scuro, che su
-   una caverna nera non si legge */
 .dng h2, .dng h3 { color: var(--dng-inchiostro) }
 .dng-titolone { font-size: 21px; font-weight: 900; line-height: 1.15 }
 .dng-racconto { font-size: 14px; color: var(--dng-tenue); line-height: 1.45;
@@ -286,12 +223,6 @@
               animation: dng-lampeggia 1.2s infinite }
 @keyframes dng-lampeggia { 0%, 100% { opacity: .35 } 50% { opacity: 1 } }
 
-/* ── com'è messo chi hai davanti ──
-   I due numeri suoi (⚔️ 🛡️), la sua vita, e quanto gliene togli tu.
-   L'ordine è quello in cui servono: prima si guarda se picchia forte,
-   poi quanta ne ha, e solo alla fine quanti colpi mancano — che è il
-   numero su cui si decide se insistere o scappare, e infatti è
-   l'unico scritto grande. */
 .dng-ossa { display: flex; gap: 14px; justify-content: center;
             font-size: 13px; color: var(--dng-tenue) }
 
@@ -305,20 +236,14 @@
                font-size: 11px; line-height: 16px; color: #fff;
                text-shadow: 0 1px 2px #0009 }
 
-/* «gli togli 5 a colpo — ancora 3 colpi». Non si chiama `dng-conto`
-   perché quel nome è già delle stelle nella mappa delle tappe: due
-   classi con lo stesso nome in due schermate diverse si accorgono la
-   sera che si tocca il font dell'una e cambia l'altra. */
+/* non si chiama `dng-conto`: quel nome è già delle stelle nella mappa delle tappe */
 .dng-scambi { font-size: 13px; color: var(--dng-tenue) }
 .dng-scambi b { color: var(--dng-inchiostro); font-size: 15px }
 
-/* «al posto di 🗡️ Spadino»: la casella è una sola, e lasciare quello
-   che si ha è metà della decisione */
 .dng-invece { display: block; font-size: 11.5px; color: #ffc866;
               font-style: normal; margin-top: 2px }
 .dng-bottino { font-size: 15px }
 
-/* le voci: fuoco, mercante, stranezze */
 .dng-voci { display: flex; flex-direction: column; gap: 9px; flex: none }
 .dng-voce { display: flex; align-items: center; gap: 11px; text-align: left;
             min-height: 62px; padding: 11px 13px; border-radius: 16px;
@@ -335,7 +260,6 @@
               font-size: 14px; white-space: nowrap }
 .dng-prezzo.dng-forse { color: var(--dng-rosso) }
 
-/* il cartello: «ahia», «aperto!», «via di corsa» */
 .dng-cartello { flex: none; display: flex; flex-direction: column; align-items: center;
                 gap: 9px; text-align: center; padding: 14px 12px;
                 background: var(--dng-carta); border: 1px solid var(--dng-bordo);
@@ -356,7 +280,6 @@
                          box-shadow: 0 5px 0 #ffffff10; border: 1px solid var(--dng-bordo) }
 .dng-grosso.dng-chiaro:active { box-shadow: 0 2px 0 #ffffff10 }
 
-/* ═══════════ il cartello di fine discesa ═══════════ */
 .dng-velo { position: absolute; inset: 0; z-index: 30; padding: 16px;
             background: rgba(10, 8, 18, .84);
             display: flex; align-items: center; justify-content: center;
@@ -380,13 +303,6 @@
 .dng-fatti span { font-size: 11px; color: var(--dng-tenue); text-transform: uppercase;
                   letter-spacing: .4px }
 
-/* ═══════════ il cartello del bottino ═══════════
-   Si mette davanti quando si prende qualcosa. Prima un tesoro era una
-   riga in fondo a un cartello — «un tesoro in tasca!» — e passava
-   senza che nessuno capisse cosa avesse preso né perché fosse
-   contento. Qui il premio si ferma, si fa guardare, e soprattutto fa
-   vedere **il numero che cambia**: è quello il momento per cui si è
-   scesi fin lì. */
 .dng-premio { position: relative; width: 100%; max-width: 330px;
               display: flex; flex-direction: column; align-items: center; gap: 9px;
               padding: 22px 18px 18px; border-radius: 22px; text-align: center;
@@ -396,8 +312,6 @@
               animation: dng-arriva .28s cubic-bezier(.2, 1.5, .5, 1) }
 @keyframes dng-arriva { from { transform: scale(.7); opacity: 0 } to { transform: none; opacity: 1 } }
 
-/* il luccichio che passa dietro l'oggetto: dura mezzo secondo e non
-   torna, perché è una festa, non un'animazione di attesa */
 .dng-luccica { position: absolute; inset: -40% -120%; pointer-events: none;
                background: linear-gradient(75deg, transparent 42%, #ffffff33 50%, transparent 58%);
                animation: dng-lampo .85s ease-out }
@@ -413,8 +327,6 @@
 .dng-premio-fa { font-size: 14px; line-height: 1.4; color: var(--dng-inchiostro);
                  max-width: 30ch }
 
-/* il numero che cambia: ⚔️ 3 → 5. La riga più importante di tutte, e
-   infatti è l'unica grossa */
 .dng-salto { display: flex; align-items: center; gap: 9px; margin-top: 2px;
              padding: 7px 14px; border-radius: 999px; background: #00000044 }
 .dng-salto-segno { font-size: 19px }
@@ -425,12 +337,6 @@
 
 .dng-premio-invece { font-size: 12px; color: #ffc866 }
 
-/* ═══════════ i tuoi numeri, nella fascia in cima ═══════════
-   Un bottone solo al posto di cinque gettoni. Prima qui stava anche la
-   fila delle emoji degli oggetti, che cresceva a ogni forziere e
-   spingeva fuori il resto: su un telefono la fascia perdeva pezzi
-   proprio mentre servivano. Adesso l'equipaggiamento sta nella scheda,
-   che si apre di qui. */
 .dng-io { display: flex; align-items: center; gap: 7px; padding: 4px 8px;
           border-radius: 999px; background: #ffffff14;
           border: 1px solid var(--dng-bordo); color: #eef2fa }
@@ -438,7 +344,6 @@
 .dng-io-n { display: flex; align-items: center; gap: 2px; font-size: 12px }
 .dng-io-n b { font-size: 13px; font-weight: 800 }
 
-/* ═══════════ la scheda dell'eroe ═══════════ */
 .dng-scheda { width: 100%; max-width: 360px; max-height: 100%; overflow-y: auto;
               display: flex; flex-direction: column; gap: 12px;
               padding: 18px 16px; border-radius: 20px;
@@ -450,8 +355,6 @@
 .dng-scheda-vita b { font-size: 17px; font-weight: 900 }
 .dng-scheda-vita .dng-barra { max-width: none; height: 13px }
 
-/* i numeri con scritto cosa vogliono dire: «attacco 8» da solo non
-   dice niente a chi ha sei anni */
 .dng-numeroni { display: flex; flex-direction: column; gap: 7px }
 .dng-numerone { display: flex; align-items: center; gap: 10px;
                 padding: 8px 11px; border-radius: 13px; background: #ffffff0e }
@@ -474,7 +377,6 @@
             border: 1px solid #ffc93c55; border-radius: 999px; padding: 2px 7px }
 .dng-zaino-vuoto { font-size: 13px; color: var(--dng-tenue); line-height: 1.45 }
 
-/* lo scrigno: si dice prima che non c'è niente da combattere */
 .dng-serratura { font-size: 14px; color: var(--dng-tenue); line-height: 1.45;
                  max-width: 30ch; margin: 0 auto }
 .dng-serratura b { color: var(--dng-oro) }
