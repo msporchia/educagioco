@@ -8,7 +8,12 @@ import { dist } from '../../grafica/geometria.js'
 import { Colpo } from './colpo.js'
 import { Schizzo } from './schizzo.js'
 
-const RAGGIO_PIU = 0.04   // poco: la crescita che si deve vedere è quella del danno
+// Il raggio non cresce coi livelli (era +4% a gradino): sulle carte a
+// squadra la strada si ripiega stretta, e una torre al decimo livello con
+// un terzo di gittata in più copriva metà del campo da sola — misurato con
+// `npm run dps`, il ghiaccio alto ne valeva il doppio. È la crescita del
+// danno quella che si deve vedere.
+const RAGGIO_PIU = 0
 const NIENTE = doniZero() // i doni a riposo, per chi nasce senza regali
 
 export class Torre {

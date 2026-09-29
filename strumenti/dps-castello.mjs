@@ -180,3 +180,19 @@ for (const lv of LIVELLI) {
     `${TORRI[r.k].emoji} vale ${f(r.valore / arciereA[lv], 2)}× l'arciere` +
     ` (per ⚡ ${f((r.valore / r.prezzo) / (arciereA[lv] / prezzoDi('add', lv)), 2)}×)`).join(' · '))
 }
+
+// Concentrare o allargare: quanto rende ogni ⚡ messo in una torre sola,
+// costruzione più tutti i gradini fino a quel livello, rispetto a quanto
+// rende la stessa torre appena costruita. Sotto 1, salire rende meno che
+// costruirne un'altra: si sale quando i posti finiscono o serve il fuoco
+// in un punto, non sempre (vedi docs/castello/torri.md).
+console.log('\nresa per ⚡ cumulato, rispetto alla stessa torre al livello 1 (misurata · modello):')
+for (const [k, T] of Object.entries(TORRI)) {
+  if (SOLO && !SOLO.includes(k)) continue
+  const sue = righe.filter(r => r.k === k && !r.ramo)
+  const base = sue.find(r => r.lv === 1)
+  if (!base) continue
+  console.log(`${(T.emoji + ' ' + T.nome).padEnd(13)} ` + sue.map(r =>
+    `liv.${r.lv} ${f((r.valore / r.prezzo) / (base.valore / base.prezzo), 2)}` +
+    ` · ${f((r.modello / r.prezzo) / (base.modello / base.prezzo), 2)}`).join('   '))
+}

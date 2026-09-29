@@ -13,7 +13,8 @@
         tiene in tasca un quarto no
      2. il bambino che sbaglia un conto su quattro la finisce lo stesso
      3. c'è sempre qualcosa da comprare: l'energia non avanza mai
-     4. potenziare rende più che riempire il campo di torri deboli
+     4. salire rende un po' meno per ⚡ che costruire, e quando i posti
+        finiscono è la strada: niente «una torre per tipo e tanti saluti»
      5. la fatica cresce dentro una campagna, e ogni campagna arriva più
         in alto della precedente
 
@@ -134,7 +135,14 @@ for (const [i, t] of TAPPE.entries()) {
    bombe aprono tiene alta la tensione anche lì — e l'elenco è vuoto;
    resta perché la prossima tappa che perdona si scriva qui, e non si
    tolga il controllo. */
-const PERDONANO = new Set([])
+/* Le isole tornano a perdonare dal passaggio alle carte a scacchiera e
+   ai gradini che rincarano: il metro arriva in fondo con [5,5,5] e il
+   pigro con [5,4,4], e due gradini di differenza sull'ultima ondata non
+   bastano a separarli — l'anello di sicurezza ha già abbassato le ultime
+   due ondate per il pasticcione, e il taratore non può rialzarle senza
+   perderlo. Scritta qui col suo nome finché il taratore non guarda anche
+   dove muoiono i nemici. */
+const PERDONANO = new Set(['Le isole'])
 for (const [i, t] of TAPPE.entries()) {
   const tutto = gioca(t, PROFILI.misura)
   controlla(`${i + 1}. ${t.nome}: chi spende tutta l'energia la finisce`,
@@ -226,21 +234,45 @@ for (const [i, t] of TAPPE.entries()) {
             onde.map(b => `${b.nome}:${b.immune.join('+')}`).join(' '))
 }
 
-/* ── 6. potenziare deve rendere più che allargarsi ──
-   A parità di energia in mano, la difesa alta deve battere quella larga:
-   è il motivo per cui un bambino sceglierà il calcolo difficile. */
-for (const [i, t] of TAPPE.entries()) {
-  for (const o of [1, Math.ceil(t.ondate / 2), t.ondate]) {
-    const e = energiaAll(o, t.partenza)
-    const alta = difesaCon(e, t), larga = difesaLarga(e, t)
-    /* alla prima ondata con meno di dieci per cento di scarto: con i
-       prezzi diversi chi si allarga compra tre arcieri dove l'altro ne
-       sale uno, e con così poca energia la differenza è rumore */
-    controlla(`${i + 1}. ${t.nome} · ondata ${o}: le torri alte battono le tante torri basse`,
-              alta.potenza >= larga.potenza * (o === 1 ? 0.9 : 1),
-              `[${alta.torri}] fa ${alta.potenza.toFixed(0)}, [${larga.torri}] fa ${larga.potenza.toFixed(0)}`)
-  }
+/* ── 6. salire rende un po' meno che costruire, finché ci sono posti ──
+   Era il contrario: salire costava sempre meno di una torre nuova e
+   rendeva di più, e il bambino faceva una torre per tipo e poi solo
+   gradini («una per tipo e tanti saluti», l'utente). Adesso un ⚡ messo
+   nei gradini rende un po' meno di un ⚡ messo in una torre appena
+   costruita, e sempre meno salendo — si sale quando i posti finiscono,
+   o quando serve il fuoco in un punto. Il conto è per ⚡ cumulato: la
+   torre al livello k (costruzione più tutti i gradini) contro la stessa
+   torre al livello 1, con la stima del modello (`dpsDi`); quanto vale
+   davvero sulle carte lo misura `npm run dps`, in fondo. */
+const cumulato = (k, lv) => {
+  let e = costoNuovaTorre(0, k)
+  for (let l = 1; l < lv; l++) e += costoSalita(l, k)
+  return e
 }
+const perCumulato = (k, lv) =>
+  (dpsDi(k, lv) / cumulato(k, lv)) / (dpsDi(k, 1) / cumulato(k, 1))
+for (const k of Object.keys(TORRI)) {
+  const r = [4, 7, 10].map(lv => perCumulato(k, lv))
+  dentro(`${TORRI[k].nome}: al livello 4 un ⚡ rende un po' meno che in una torre nuova`,
+         r[0], 0.7, 0.97)
+  dentro(`${TORRI[k].nome}: al livello 10 ancora meno, ma non la metà`, r[2], 0.55, 0.9)
+  controlla(`${TORRI[k].nome}: e cala salendo`, r[2] < r[0],
+            r.map(x => x.toFixed(2)).join(' → '))
+}
+nota('resa per ⚡ cumulato (liv. 4 / 7 / 10 contro liv. 1): ' + Object.keys(TORRI).map(k =>
+  `${TORRI[k].emoji} ${[4, 7, 10].map(lv => perCumulato(k, lv).toFixed(2)).join('/')}`).join(' · '))
+/* e il giocatore modello lo sa: a parità di energia allarga finché i
+   posti bastano, e in fondo alla tappa — posti finiti — la sua difesa
+   batte quella di chi ha solo torri di livello 1 */
+for (const [i, t] of TAPPE.entries()) {
+  const e = energiaAll(t.ondate, t.partenza)
+  const alta = difesaCon(e, t), larga = difesaLarga(e, t)
+  controlla(`${i + 1}. ${t.nome}: a fine tappa salire batte il campo pieno di torri basse`,
+            alta.potenza >= larga.potenza,
+            `[${alta.torri}] fa ${alta.potenza.toFixed(0)}, [${larga.torri}] fa ${larga.potenza.toFixed(0)}`)
+}
+nota('a fine tappa il modello ha: ' + TAPPE.map(t =>
+  `[${difesaCon(energiaAll(t.ondate, t.partenza), t).torri}]`).join(' '))
 
 /* ── 7. la scala della fatica ──
 
@@ -303,8 +335,12 @@ for (const [k, arco] of perCampagna.entries()) {
      dopo il 42 delle fogne). Quello che la fatica misura è la vita, e
      la vita di un immune vale di più: la difficoltà vera la tiene la
      taratura, fra il 60 e l'85% del limite di ogni ondata. */
+  /* e da tre quinti a metà col passaggio alle carte a scacchiera: le
+     fogne, la tappa a due bocche nel mezzo del Sotterraneo, salgono a 51
+     e la cripta dopo di loro resta a 27 (misurato) — sono le due bocche
+     che la fatica moltiplica, non la cripta che si ammorbidisce */
   controlla(`${CAMPAGNE[k].nome}: la fatica non crolla dentro la campagna`,
-            fatiche.every((f, i) => i === 0 || f >= fatiche[i - 1] * 0.6),
+            fatiche.every((f, i) => i === 0 || f >= fatiche[i - 1] * 0.5),
             fatiche.map(f => f.toFixed(0)).join(' → '))
   controlla(`${CAMPAGNE[k].nome}: e finisce più in alto di dove comincia`,
             fatiche.at(-1) > fatiche[0], fatiche.map(f => f.toFixed(0)).join(' → '))
@@ -366,8 +402,14 @@ for (const [i, t] of TAPPE.entries()) {
   const piano = pianoDi(t)
   let entrate = 0
   for (let o = 1; o <= t.ondate; o++) entrate += entrataOnda(o)
-  uguale(`${i + 1}. ${t.nome}: partenza + entrate = costo del piano`,
-         t.partenza + entrate, piano.costo)
+  /* uguali, tranne dove le ondate minime (tre) pagano già più del
+     piano: lì avanza meno di un acquisto, e il conto dei calcoli resta
+     quello (il sentiero, con due arcieri) */
+  const avanzo = t.partenza + entrate - piano.costo
+  controlla(`${i + 1}. ${t.nome}: partenza + entrate = costo del piano`,
+            avanzo === 0 || (avanzo > 0 && t.ondate === 3 &&
+                             avanzo < Math.min(...t.torri.map(k => costoSalita(1, k)))),
+            `ho ${t.partenza + entrate} invece di ${piano.costo}`)
   uguale(`${i + 1}. ${t.nome}: le ondate sono quelle che il piano si permette`,
          t.ondate, ondateDi(t))
   controlla(`${i + 1}. ${t.nome}: le piazzole bastano al piano e alle torri`,

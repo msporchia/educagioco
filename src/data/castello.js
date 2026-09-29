@@ -16,12 +16,20 @@ export const CFG = {
   velBase: 26, velPiu: 1.6,
   respiro: 1,
 
-  // Prezzi base, l'energia e la fretta: vedi docs/castello/taratura.md
-  costruzione: 40, costruzionePiu: 20,
-  potenziamento: 36, potenziamentoPiu: 2,
+  // Prezzi base, l'energia e la fretta: vedi docs/castello/taratura.md.
+  // Costruire rincara di poco (+10 a torre, era +20) e salire rincara a
+  // ogni gradino (30, 34, 38… 62, era 36 +2): un ⚡ nei gradini rende un
+  // po' meno di un ⚡ in una torre nuova, e sempre meno salendo — si sale
+  // quando i posti finiscono. Con +20 e +2 la mossa migliore era una
+  // torre per tipo e poi solo gradini (l'utente). Il gradino più caro sta
+  // sotto il doppio di una torre: un acquisto è un calcolo.
+  costruzione: 40, costruzionePiu: 10,
+  potenziamento: 30, potenziamentoPiu: 4,
   perNemico: 2,
   fineOnda: 4, ondataPulita: 6,
-  fretta: { perSecondo: 0.12, tetto: 6 },
+  // il tetto della fretta è a 5 (era 6) da quando i gradini bassi costano
+  // meno: con 6 chi corre sempre arrivava a tre acquisti in più
+  fretta: { perSecondo: 0.12, tetto: 5 },
   attesaLarga: 45, attesaStretta: 20,
   malusErrore: 6,
   spostamento: 2,
@@ -48,21 +56,29 @@ export const resaDi = k => carattereDi(k).resa
 
 /* ── come cresce una torre quando sale di livello ──
 
-   Ogni torre cresce nel suo mestiere (arciere: cadenza, magica e bombe:
-   area, bombe dal 7° livello: doppia salva più piccola). Tutte e tre
-   quelle che feriscono salgono con la stessa pendenza, vedi
-   docs/castello/torri.md. */
+   Ogni torre cresce nel suo mestiere (arciere: cadenza, magica: area,
+   bombe: danno, e dal 7° livello una doppia salva più piccola). Tutte e
+   tre quelle che feriscono salgono con la stessa pendenza, e quasi dritte:
+   ogni gradino aggiunge più o meno quanto il primo, così coi gradini che
+   rincarano il ⚡ cumulato cala piano (0,77 al livello 4, 0,73 al 10 per
+   l'arciere, nel modello). Prima la crescita si moltiplicava su sé stessa
+   (arciere: danno +45% e cadenza +12% a gradino) e il livello 10 rendeva
+   per ⚡ più di una torre nuova. L'area delle bombe non cresce più: il
+   loro scoppio resta di una cella. Vedi docs/castello/torri.md. */
 export const CRESCITA = {
-  arciere:  { danno: 0.45, cadenza: 0.12,  area: 0 },
-  magica:   { danno: 0.62, cadenza: 0,     area: 0.08 },
+  arciere:  { danno: 0.37, cadenza: 0.10,  area: 0 },
+  magica:   { danno: 0.45, cadenza: 0,     area: 0.08 },
   ghiaccio: { danno: 0,    cadenza: 0,     area: 0 },
-  bombe:    { danno: 0.62, cadenza: 0,     area: 0.04, salveDa: 7, salve: 2, perSalva: 0.55 },
+  bombe:    { danno: 0.62, cadenza: 0,     area: 0, salveDa: 7, salve: 2, perSalva: 0.65 },
 }
 const crescitaDi = k => CRESCITA[TORRI[k].aspetto] || CRESCITA.arciere
 
 // I due rami: stesso valore del tronco, misurato con `npm run dps` (non a
 // occhio), perché il ramo si prende al prezzo di un gradino qualunque e non
-// come la torre. Vedi docs/castello/torri.md.
+// come la torre. Il mortaio è la gittata più lunga del campo, ma non di una
+// cella intera: ×1,25 sulle bombe fa 130 (una cella è 35), e spara un po'
+// più spesso di prima perché con lo scoppio stretto a ogni colpo ne prende
+// meno. Vedi docs/castello/torri.md.
 export const RAMI = {
   cecchino: { danno: 1.8,  ricarica: 1.7, raggio: 1.3 },
   raffica:  { danno: 0.55, ricarica: 1.1, salve: 2 },
@@ -70,8 +86,8 @@ export const RAMI = {
   catena:   { danno: 0.95, rimbalzi: 2 },
   bufera:   { freno: 1.0,  raggio: 1.5,   durata: 1.4 },
   brina:    { freno: 1.1,  fragile: 1.08, raggio: 0.9 },
-  mortaio:  { danno: 1.6,  ricarica: 1.5, raggio: 1.3, area: 0.85 },
-  napalm:   { danno: 0.55, veleno: 0.55,  durata: 3, area: 1.1 },
+  mortaio:  { danno: 1.6,  ricarica: 1.35, raggio: 1.25, area: 0.85 },
+  napalm:   { danno: 0.55, veleno: 0.55,  durata: 3, area: 1.15 },
 }
 
 // Quarto gradino: prima ci sono tre salite per capire cosa fa la torre.
@@ -347,6 +363,9 @@ export const APERTURA_CORTA = {}
 // La mossa che il giocatore modello farebbe adesso: `{ che: 'nuova', tipo,
 // costo }` o `{ che: 'salita', indice, costo }`, o `null`. `largo` è chi non
 // potenzia mai; `onda` accende i bisogni delle miste contro le torri in campo.
+// Fra salire la torre più bassa e costruire la prossima sceglie quella che
+// compra più potenza per ⚡ (sceglieva la più economica, e coi gradini che
+// costavano sempre meno di una torre saliva sempre).
 export function prossimoAcquisto(torri, tappa, { posti = Infinity, largo = false,
                                                   sequenza = null, onda = 0 } = {}) {
   const fila = sequenza || sequenzaTorri(tappa)
@@ -368,7 +387,12 @@ export function prossimoAcquisto(torri, tappa, { posti = Infinity, largo = false
              costo: costoNuovaTorre(torri.length, manca.tipo) }
   if (largo) return nuova
   if (!salita || !nuova) return salita || nuova
-  return salita.costo <= nuova.costo ? salita : nuova
+  // il più conveniente per ⚡: quanta potenza in più compra il gradino
+  // contro quanta ne compra la torre nuova
+  const t = torri[indice]
+  const perSalita = (dpsDi(t.tipo, t.lv + 1) - dpsDi(t.tipo, t.lv)) / salita.costo
+  const perNuova = dpsDi(tipo, 1) / nuova.costo
+  return perSalita >= perNuova ? salita : nuova
 }
 
 /* comprare davvero: la stessa mossa applicata a una lista di torri */
