@@ -1,28 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   IL CAMPO DEL CASTELLO — l'indice dei pittori.
-
-   Il gioco manda una lista tipo
-       { che: 'torre', x, y, tipo: 'div', lv: 8, posso: true }
-   e la torre esce disegnata. Qui c'è la tabella che dice chi dipinge
-   cosa; il disegno vero sta nei file accanto, uno per famiglia:
-
-     fondale.js   prato, strada, bosco, piazzole — quello che non cambia
-     fortezza.js  il castello da difendere
-     torri.js     fusto, corona, targhe          (le cime in `cime.js`)
-     mostro.js    il mostro in scena: ombra, volo, vita, resistenza
-     corpi-mostri.js  i corpi delle dieci bestie (isolati apposta)
-     colpi.js     proiettili ed esplosioni
-     indizi.js    le piazzole libere e il raggio, mentre si trascina
-     tinte.js     il colore di ogni torre, chiaro e scuro
-
-   Tutte le misure sono in **unità**, non in pixel: `p.S` è quanto vale
-   un'unità sullo schermo di adesso. Così la stessa scena sta bene sul
-   telefono e sul computer.
-
-   Qui dentro non esistono energia, ondate, prezzi, operazioni in
-   colonna: esistono cose da disegnare. Se domani le torri diventano
-   astronavi si riscrive `torre()` e il gioco non se ne accorge.
-   ═══════════════════════════════════════════════════════════════════ */
+// L'indice dei pittori del campo: ogni voce di PITTORI arriva da un file
+// accanto (fondale/fortezza/torri/mostro/corpi-mostri/colpi/indizi/tinte).
+// Misure in unità (`p.S`), mai in pixel.
 import { castello } from './fortezza.js'
 import { torre } from './torri.js'
 import { mostro, ritratto } from './mostro.js'

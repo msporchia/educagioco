@@ -22,8 +22,11 @@ vedersi, non restare un numeretto in un angolo.
   costruirci (`components/castello/SceltaTorre.vue`), una torre in piedi apre
   la sua scheda (`SchedaTorre.vue`), e il conto sale dal basso nello stesso
   foglio (`Foglio.vue`).
-- **Il campo non si ferma mentre si calcola**: la telecamera si stringe di
-  quanto il foglio copre, e la battaglia resta visibile.
+- **Il campo non si ferma mentre si calcola**: il foglio (`Foglio.vue`) si
+  appoggia sopra senza restringere la telecamera — al massimo due terzi
+  dello schermo, e sopra resta sempre una striscia di campo. Stringere la
+  telecamera di quanto il foglio copre è stato provato e tolto: rifare la
+  scala di un canvas a ogni tocco stanca l'occhio e il telefono.
 - **Dove si può comprare si vede sul campo**: le piazzole respirano quando
   l'energia basta per una torre nuova, le torri hanno il bollino verde quando
   basta per salire.

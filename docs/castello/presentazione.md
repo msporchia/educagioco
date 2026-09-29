@@ -48,9 +48,9 @@ trascinandola su un'altra piazzola. Il conto da fare sta nello stesso foglio.
 
 Le piazzole respirano quando l'energia basta per una torre nuova, e le torri
 hanno un bollino verde quando basta per farle salire. Mentre si calcola **il
-campo non si ferma** — un minimo di fretta ci va — ma si rimpicciolisce per
-restare visibile sopra il foglio. Con due dita si sposta e si ingrandisce la
-mappa, e un doppio tocco la rimette in quadro.
+campo non si ferma** — un minimo di fretta ci va — e resta visibile sotto il
+foglio, che si appoggia sopra senza restringerlo. Con due dita si sposta e si
+ingrandisce la mappa, e un doppio tocco la rimette in quadro.
 
 ## A metà scaletta una torre sceglie che fare
 

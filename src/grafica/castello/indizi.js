@@ -1,20 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════
-   GLI INDIZI DEL DITO
-
-   Le due cose che dicono al dito dove può andare: le piazzole dove una
-   torre può nascere o atterrare, e fin dove arriva a sparare.
-
-   Il raggio si accende solo quando uno se lo sta chiedendo — mentre
-   sposta una torre, mentre ne guarda la scheda, mentre sceglie cosa
-   costruire — perché acceso sempre sarebbe un cerchio colorato che
-   sporca il prato senza dire niente di nuovo.
-
-   Le piazzole invece adesso **respirano da sole** quando l'energia
-   basta per una torre nuova. Non è un ripensamento: da quando il banco
-   dei bottoni non c'è più, il campo è l'unico posto dove si compra, e
-   una piazzola spenta sarebbe un negozio con la saracinesca abbassata.
-   Il respiro è lento apposta — un invito, non un allarme.
-   ═══════════════════════════════════════════════════════════════════ */
+// Gli indizi del dito: le piazzole (respirano da sole quando l'energia
+// basta per una torre nuova) e il raggio (si accende solo quando uno se lo
+// sta chiedendo).
 import { TINTA } from './tinte.js'
 
 export function piazzolaViva(p, { x, y, scelta, viva = false }) {
@@ -32,18 +18,11 @@ export function piazzolaViva(p, { x, y, scelta, viva = false }) {
   p.testo('+', x, y + 1 * S, scelta ? '#1c7a45' : '#2f8a52', (scelta ? 17 : 13) * S)
 }
 
-/* Il tipo può mancare: quando si è appena toccata una piazzola e la
-   torre non è ancora scelta, il cerchio dice comunque «da qui si batte
-   fin lì», e lo dice in bianco. */
+// il tipo può mancare: senza torre scelta il cerchio è bianco
 export function raggio(p, { x, y, r, tipo }) {
   p.cerchio(x, y, r, (tipo && TINTA[tipo] ? TINTA[tipo].chiaro : '#ffffff') + '20')
 }
 
-/* ── da dove entrano ──
-   Dove le strade sono due, il bordo alto ha due bocche e bisogna vederle
-   senza doverle cercare: una freccia che punta dentro, e sotto la
-   strada che comincia. Con una strada sola non si disegna niente — la
-   bocca è una, e indicarla sarebbe rumore. */
 export function ingresso(p, { x, y, acceso }) {
   const S = p.S, w = 11 * S, h = 13 * S
   p.figura([[x, y + h], [x - w, y], [x + w, y]], acceso ? '#e0554d' : '#ffffff88')

@@ -1,24 +1,8 @@
-/* ═══════════════════════════════════════════════════════════════════
-   I MOSTRI NUOVI — l'indice.
-
-   Otto bestie in più rispetto alle dieci di `grafica/castello/`
-   (`corpi-mostri.js`), una per file, stessa firma `(p, s)` dei pittori
-   che ci sono già — studiata lì e riprodotta qui, non importata: questo
-   cantiere non tocca `grafica/castello/`, che altri agenti stanno
-   modificando in parallelo (vedi il vecchio `docs/castello-riassetto.md`).
-
-   Chi sono — nome, resistenza, se volano — sta in `data/mostri.js`,
-   indicizzato con lo stesso `id`. Qui c'è solo come si disegnano.
-
-     Bosco         lupo, corvo (vola), rovo
-     Sotterraneo   verme, blatta, troll
-     Mura          corazziere, balestriere
-
-   Quando questi mostri verranno agganciati al campo vero, la tabella
-   qui sotto (`PITTORI_MOSTRI`) è pensata per confluire in `BESTIE` di
-   `grafica/castello/corpi-mostri.js`, indicizzata allo stesso modo per
-   `id`.
-   ═══════════════════════════════════════════════════════════════════ */
+// Otto bestie in più rispetto alle dieci di `grafica/castello/corpi-mostri.js`
+// (Bosco: lupo, corvo, rovo · Sotterraneo: verme, blatta, troll · Mura:
+// corazziere, balestriere), stessa firma `(p, s)`, confluite in `BESTIE` da
+// `grafica/castello/mostro.js`. Chi sono — nome, resistenza, immunità — sta
+// in `data/mostri.js`, indicizzato allo stesso `id`.
 import { lupo } from './lupo.js'
 import { corvo } from './corvo.js'
 import { rovo } from './rovo.js'

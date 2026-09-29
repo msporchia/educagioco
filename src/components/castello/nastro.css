@@ -1,14 +1,10 @@
-/* IL NASTRO DEL PREAVVISO
-   Tre riquadri in fila sotto il campo, alti quanto una riga di testo e
-   mezzo: devono starci su un telefono verticale senza spingere fuori
-   schermo i bottoni delle torri, che sono la cosa che si tocca. */
+/* Il nastro del preavviso: tre riquadri bassi, non devono spingere fuori
+   schermo i bottoni delle torri. */
 .preavviso { display:flex; align-items:center; gap:5px; width:100%; max-width:420px }
 .titolo { font-size:10px; font-weight:900; color:var(--tenue); text-transform:uppercase;
           letter-spacing:.3px; writing-mode:vertical-rl; transform:rotate(180deg);
           line-height:1; opacity:.75 }
- /* la pastiglia ha una taglia sola: quando le ondate che restano sono
-    una o due, il nastro si accorcia invece di gonfiare i riquadri —
-    una tappa che finisce non deve cambiare aspetto al banco */
+/* taglia fissa: a fine tappa il nastro si accorcia, non gonfia i riquadri */
 .avviso { flex:1 1 0; min-width:0; max-width:calc(33.4% - 4px); position:relative; display:flex; align-items:center; gap:3px;
           background:var(--carta); border-radius:11px; padding:3px 4px;
           box-shadow:0 2px 0 #dde3ea, inset 0 0 0 1.5px #e2dcee }
@@ -22,13 +18,7 @@
 /* da che parte scendono, dove gli ingressi sono due */
 .dati em { font-style:normal; font-size:11px; font-weight:900; color:var(--viola-scuro) }
 .dati em.ambo { color:#b4603f }
-/* le immunità: le emoji delle torri che quel mostro ignora, appiccicate
-   al mostro, **spente e sbarrate**. Il colore della torre qui non ci
-   va: colorare vuol dire indicare, e questo è il segno opposto — contro
-   di lui quella non serve. Grigia più la barra è la grammatica del
-   divieto che un bambino legge già per strada, e resta leggibile anche
-   a chi i colori li distingue male. Possono essere fino a tre: stanno
-   in fila sotto la faccia, un po' sovrapposte. */
+/* le immunità: emoji grigie e sbarrate, vedi docs/castello/mostri.md */
 .immuni { position:absolute; right:-7px; bottom:-6px; display:flex; flex-direction:row-reverse }
 .immuni .punto + .punto { margin-right:-3px }
 .punto { position:relative; font-size:9px; line-height:1;
