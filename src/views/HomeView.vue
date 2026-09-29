@@ -19,6 +19,7 @@ import { GIOCHI } from '../data/giochi.js'
 import { inCasa } from '../data/portata-giochi.js'
 import { AREE, MODI } from '../data/aree.js'
 import Nastri from '../guide/Nastri.vue'
+import Salvadanaio from '../components/varieta/Salvadanaio.vue'
 import Aggiorna from '../guide/Aggiorna.vue'
 import { aggiornando, aggiornaOra, daUnSito } from '../aggiornamento.js'
 
@@ -159,6 +160,7 @@ function aChePunto (chiave) {
             <i>{{ g.che }}</i>
             <small class="modo">{{ MODI[g.come].emoji }} {{ MODI[g.come].nome
               }}<template v-if="aChePunto(g.chiave)"> · {{ aChePunto(g.chiave) }}</template></small>
+            <Salvadanaio :gioco="g.chiave" />
           </button>
         </template>
 

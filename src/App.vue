@@ -17,6 +17,7 @@ import Novita from './guide/Novita.vue'
 import AdminView from './views/AdminView.vue'
 import Traguardo from './components/Traguardo.vue'
 import Benvenuto from './components/Benvenuto.vue'
+import AvvisoMonete from './components/varieta/Avviso.vue'   // importarlo accende anche il filtro delle monete
 import { SCHERMATE } from './giochi/schermate.js'
 
 const vista = ref('home')
@@ -100,5 +101,6 @@ watch(vista, v => { if (v === 'home') controlla() })   // uscire da un gioco è 
       <span class="mini">i giochi si vedono in verticale</span></div>
     <!-- key = state.player: il cartello di un traguardo non deve sopravvivere al cambio di bambino -->
     <Traguardo :key="state.player" />
+    <AvvisoMonete :key="'monete' + state.player" />
   </template>
 </template>
