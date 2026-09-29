@@ -97,6 +97,8 @@ function lsSet(k, v) { try { localStorage.setItem(k, v); return true } catch (e)
    successiva arriva in IndexedDB. Solo chi è dentro si fida ciecamente
    del ripiego. */
 const REGISTRO = '__ripiego__';
+// chiavi che altri scrivono in localStorage da sé (guide/aiuto.js, il banco di prova): non sono archivio, il travaso non le tocca
+const FUORI_ARCHIVIO = new Set(['__probe__', REGISTRO, 'guide-viste']);
 
 function leggiRegistro() {
   try {
@@ -244,7 +246,7 @@ export async function travasaRipiego() {
   const registro = leggiRegistro();
   let quante = 0;
   for (const k of chs) {
-    if (!k || k === '__probe__' || k === REGISTRO) continue;
+    if (!k || FUORI_ARCHIVIO.has(k)) continue;
     const raw = lsGet(k);
     if (raw == null) continue;
     let valore;
