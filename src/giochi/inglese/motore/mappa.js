@@ -51,7 +51,7 @@ export function segnaVinta(c, id, ora = Date.now()) {
 // Tutto quello che la mappa disegna, in un colpo.
 export function statoMappa(c, forzaDi) {
   return MONDI.map(m => ({
-    id: m.id, nome: m.nome, insegna: m.insegna, dopo: m.dopo, dopoUno: m.dopoUno || [],
+    id: m.id, nome: m.nome, disegno: m.disegno || null, insegna: m.insegna, dopo: m.dopo, dopoUno: m.dopoUno || [],
     pronto: pronto(m), aperto: mondoAperto(c, m.id), finito: mondoFinito(c, m.id),
     tappe: m.tappe.map(t => ({
       id: t.id, nome: t.nome, disegno: t.disegno, bandiera: !!t.bandiera,
