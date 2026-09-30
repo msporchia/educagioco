@@ -53,7 +53,9 @@ export const WORDS = [
   ['fourteen','quattordici','','n'],['fifteen','quindici','','n'],['sixteen','sedici','','n'],
   ['seventeen','diciassette','','n'],['eighteen','diciotto','','n'],['nineteen','diciannove','','n'],
   ['twenty','venti','','n'],['thirty','trenta','','n'],['forty','quaranta','','n'],
-  ['fifty','cinquanta','','n'],['hundred','cento','','n'],['thousand','mille','','n'],
+  ['fifty','cinquanta','','n'],['sixty','sessanta','','n'],['seventy','settanta','','n'],
+  ['eighty','ottanta','','n'],['ninety','novanta','','n'],
+  ['hundred','cento','','n'],['thousand','mille','','n'],
   ['first','primo','','n'],['second','secondo','','n'],['third','terzo','','n'],
   // ---- casa ----
   ['house','casa','🏠','h'],['door','porta','🚪','h'],['window','finestra','🪟','h'],
@@ -147,6 +149,11 @@ export const WORDS = [
   ['winter','inverno','⛄','d'],['birthday','compleanno','🎂','d'],['Christmas','Natale','🎄','d'],
   ['holiday','vacanza','🎉','d'],['weekend','fine settimana','','d'],['early','presto','','d'],
   ['late','tardi','','d'],
+  // i mesi: arrivati con l'inglese a mondi (terza elementare)
+  ['January','gennaio','','d'],['February','febbraio','','d'],['March','marzo','','d'],
+  ['April','aprile','','d'],['May','maggio','','d'],['June','giugno','','d'],
+  ['July','luglio','','d'],['August','agosto','','d'],['September','settembre','','d'],
+  ['October','ottobre','','d'],['November','novembre','','d'],['December','dicembre','','d'],
   // ---- luoghi ----
   ['school','scuola','🏫','y'],['shop','negozio','🏪','y'],['hospital','ospedale','🏥','y'],
   ['church','chiesa','⛪','y'],['station','stazione','🚉','y'],['museum','museo','🏛️','y'],
