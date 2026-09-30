@@ -107,7 +107,7 @@ const haVoceOra = p => suono.acceso.value && haVoce(p, 'en')
 
 function avvia(t) {
   tappa.value = t
-  sessione = new Sessione({ tappa: t, itemDi: leggi, haVoce: haVoceOra })
+  sessione = new Sessione({ tappa: t, itemDi: leggi, haVoce: haVoceOra, eta: etaDelBambino() })
   Object.assign(conti, { giuste: 0, errori: 0, monete: 0, chieste: 0, bersaglio: sessione.bersaglio,
                          gradoPrima: t.cassetto ? null : sessione.gradoIniziale })
   fine.value = null

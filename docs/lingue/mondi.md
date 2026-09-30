@@ -108,7 +108,9 @@ fra i colori usciva 🔴 in mezzo a 🏥🐶📓. Chi fa la domanda passa le `fo
 cassetto, che non ha un argomento, tiene i distrattori di sempre. Un
 argomento può dire `figure: false`: le emoji delle emozioni (happy, sad,
 tired) sono tutte della stessa famiglia visiva e una domanda con le figure
-avrebbe due risposte.
+avrebbe due risposte. **Dai dieci anni (la quinta) niente figure**, in
+nessuna tappa (`ETA_SENZA_FIGURE` in `motore/sessione.js`): a quell'età il
+disegnino non insegna niente, e la parola si chiede fra italiano e inglese.
 
 ## I formati, decisi dalla forza
 

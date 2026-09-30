@@ -14,10 +14,14 @@ import { costruisci, giudica, contesto, formatoPerForza } from './formati.js'
 import { chiaveDi } from './lessico.js'
 
 export const TIPI_PAROLE = ['figura', 'ascoltoFigura', 'tradIt', 'ascoltoIt', 'tradStra']
-// i tipi per una parola: senza figure dove l'argomento non le vuole (dati/argomenti.js)
-export function tipiDellaParola(chiave) {
+// dalla quinta i disegnini non insegnano più niente: la parola si chiede in italiano o in inglese
+export const ETA_SENZA_FIGURE = 10
+
+// i tipi per una parola: senza figure dove l'argomento non le vuole (dati/argomenti.js) o per i grandi
+export function tipiDellaParola(chiave, { figure = true } = {}) {
   const t = tappaCheInsegna(chiave)
-  return t && ARGOMENTI[t.argomento].figure === false ? TIPI_PAROLE.filter(x => !TIPI[x].figure) : TIPI_PAROLE
+  const senza = !figure || (t && ARGOMENTI[t.argomento].figure === false)
+  return senza ? TIPI_PAROLE.filter(x => !TIPI[x].figure) : TIPI_PAROLE
 }
 export const RIPESCATE = 3            // frasi dei mondi prima, di una forma debole
 export const FORMA_DEBOLE = 2
@@ -28,12 +32,13 @@ const paroleDi = f => [...new Set(f.en.split(/\s+/).map(chiaveDi).filter(k => k 
 
 export class Sessione {
   constructor({ tappa, itemDi, ora = () => Date.now(), rnd = Math.random, haVoce = () => false,
-                bersaglio = null }) {
+                bersaglio = null, eta = null }) {
     this.tappa = tappa
     this.itemDi = itemDi
     this.ora = ora
     this.rnd = rnd
     this.haVoce = haVoce
+    this.figure = !(eta >= ETA_SENZA_FIGURE)
     this.forzaDi = k => strength(itemDi(k), ora())
     this.giuste = 0
     this.errori = 0
@@ -105,7 +110,8 @@ export class Sessione {
     }
     const v = voceDi(chiave)
     if (!v) return null
-    const tipo = scegliTipo(v, { aperti: tipiDellaParola(chiave), forza, haVoce: this.haVoce })
+    const tipo = scegliTipo(v, { aperti: tipiDellaParola(chiave, { figure: this.figure }), forza,
+                                haVoce: this.haVoce })
     if (!tipo) return null
     // le risposte sbagliate vengono dall'argomento della parola, mai da tutta la lingua
     return { ...componi(v, tipo, 'inglese', { fonti: fontiDi(chiave, voceDi) }), genere: 'parola', formato: tipo }

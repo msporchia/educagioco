@@ -307,6 +307,13 @@ titolo('SESSIONE')
   const cass = new Sessione({ tappa: cassettoDi('prima'), itemDi, ora, rnd: sorte(5) })
   const dc = cass.prossima()
   controlla('il cassetto fa domande sulle parole', dc && dc.genere === 'parola')
+  // dalla quinta niente disegnini: né «che cos'è?» né «ascolta e scegli» con le figure
+  const grande = new Sessione({ tappa: tappaDi('prima-animali'), itemDi: k => newItem(), ora, rnd: sorte(6), eta: 10 })
+  const conFigure = []
+  for (let i = 0; i < 30; i++) { const q = grande.prossima(); if (q && q.figure) conFigure.push(q.formato) }
+  uguale('a dieci anni nessuna domanda con le figure', conFigure.join(), '')
+  const piccolo = new Sessione({ tappa: tappaDi('prima-animali'), itemDi: k => newItem(), ora, rnd: sorte(6), eta: 7 })
+  controlla('a sette sì', Array.from({ length: 10 }, () => piccolo.prossima()).some(q => q && q.figure))
   nota(`${partite} partite giocate, formati visti: ${[...formati].join(', ')}`)
 }
 
