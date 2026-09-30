@@ -321,12 +321,14 @@ await scatto(page, 'domanda-spiegazione')
 await page.click('.prova-x')
 await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
 
-/* ---------- 3e. ALLEGGERITA, IL METODO SI LEGGE PRIMA ----------
+/* ---------- 3e. ALLEGGERITA, PRIMA UN ESEMPIO SVOLTO ----------
    Al muro il gioco non scrive più a un grande: per una settimana quella
-   tipologia esce più di rado e, quando esce, il «Si fa così» sta in cima
-   alla carta prima di rispondere (`quiz/alleggerire.js`). Si semina il
-   segno sull'arrotondamento e si riapre la stessa classe: la palestra
-   dei grandi la mostra com'è per il bambino. */
+   tipologia esce più di rado e, quando esce, in cima alla carta c'è
+   un'ALTRA domanda della stessa tipologia già risolta, col suo «Si fa
+   così» (`quiz/nucleo/svolto.js`). Era il metodo della domanda stessa,
+   e sull'arrotondamento diceva la risposta («42 sta fra 40 e 50… si va
+   giù»). Si semina il segno sull'arrotondamento e si riapre la stessa
+   classe: la palestra dei grandi la mostra com'è per il bambino. */
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.carte', { timeout: 5000 })
 await semina(page, { settings: { eta: 9, alleggerite: {
@@ -349,10 +351,37 @@ for (const k of ['toste', 'medie', 'facili', 'sotto']) {
 await page.click(ARROTONDA)
 await page.waitForSelector('.qz-tasto', { timeout: 5000 })
 {
-  const prima = page.locator('[data-come-prima]')
-  controlla('alleggerita, il metodo sta sulla carta prima di rispondere', await prima.count() === 1)
-  const testo = (await prima.innerText().catch(() => '')).replace(/\s+/g, ' ').trim()
-  controlla('ed è il «Si fa così» della domanda', /^Si fa così: .{10,}/.test(testo), testo)
+  const svolto = page.locator('[data-esempio-svolto]')
+  controlla('alleggerita, prima di rispondere c\'è un esempio svolto', await svolto.count() === 1)
+  const carta = await page.evaluate(() => {
+    const es = document.querySelector('[data-esempio-svolto]')
+    const pulito = el => (el?.textContent || '').replace(/\s+/g, ' ').trim()
+    const consegna = document.querySelector('.qz-consegna')
+    return {
+      esempio: pulito(es),
+      consegnaEsempio: pulito(es?.querySelector('.qz-svolto-consegna')),
+      rispostaEsempio: pulito(es?.querySelector('[data-esempio-risposta] b')),
+      metodo: pulito(es?.querySelector('.qz-come')),
+      consegna: pulito(consegna),
+      giusta: pulito(document.querySelector('.qz-tasto[data-giusta]')),
+      // l'esempio sta sopra, e fra i due c'è il confine
+      ordine: !!(es && consegna && (es.compareDocumentPosition(consegna) & Node.DOCUMENT_POSITION_FOLLOWING)),
+      confine: !!document.querySelector('[data-tocca-a-te]'),
+      tasti: es ? es.querySelectorAll('button').length : -1,
+    }
+  })
+  nota(`esempio: «${carta.esempio}» — vera: «${carta.consegna}» (giusta ${carta.giusta})`)
+  controlla('l\'esempio è un\'altra domanda', carta.consegnaEsempio && carta.consegnaEsempio !== carta.consegna,
+            carta.consegnaEsempio)
+  controlla('con la sua risposta giusta, diversa da quella vera',
+            carta.rispostaEsempio && carta.rispostaEsempio !== carta.giusta,
+            `${carta.rispostaEsempio} / ${carta.giusta}`)
+  controlla('e il suo «Si fa così»', /^Si fa così: .{10,}/.test(carta.metodo), carta.metodo)
+  controlla('e la risposta della vera non compare da nessuna parte nell\'esempio',
+            !new RegExp(`(^|\\D)${carta.giusta}(\\D|$)`).test(carta.esempio), carta.esempio)
+  controlla('l\'esempio sta sopra la domanda vera', carta.ordine)
+  controlla('e un confine a occhio dice «adesso tocca a te»', carta.confine)
+  uguale('nell\'esempio non c\'è niente da toccare: non si annota e non paga', carta.tasti, 0)
   uguale('e ancora nessuna risposta è stata data', await risposto(), 0)
 }
 await scatto(page, 'domanda-alleggerita')

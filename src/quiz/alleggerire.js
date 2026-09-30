@@ -1,7 +1,8 @@
 /* Il muro non si scrive a un grande: il gioco reagisce da sé. Per una
    settimana la tipologia arriva più di rado (il fondo della banda di
-   nucleo/bisogno.js) e, quando arriva, il «Si fa così» si legge prima di
-   rispondere. Puro (test/unita/alleggerire): i segni stanno nel profilo,
+   nucleo/bisogno.js) e, quando arriva, prima c'è un esempio svolto su
+   un'altra domanda della stessa tipologia (nucleo/svolto.js). Puro
+   (test/unita/alleggerire): i segni stanno nel profilo,
    `settings.alleggerite` e `settings.vaBene`, e li scrive quiz/memoria.js.
    Vedi docs/apprendimento/la-domanda.md#il-muro-lo-sistema-il-gioco. */
 
@@ -40,5 +41,4 @@ export const ancoraDifficile = (it, vaBene) => eMuro(contoDopo(it, vaBene))
 // dentro la banda, mai fuori: la tipologia esce meno, non sparisce
 export const bisognoAlleggerito = (base, attiva) => (attiva ? BISOGNO.min : base)
 
-// il metodo prima della domanda: solo se c'è, e solo se alleggerita
-export const comeSiFaPrima = (domanda, attiva) => (attiva && domanda?.aiuto) || ''
+// cosa si mostra prima della domanda (un esempio svolto su un'altra) sta in nucleo/svolto.js

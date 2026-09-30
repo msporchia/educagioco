@@ -4,8 +4,8 @@
    Prima un muro (otto risposte, meno di metà giuste) scriveva un avviso
    nella posta dei grandi, e il grande non sapeva cosa farci. Adesso il
    gioco reagisce da sé: per una settimana quella tipologia esce più di
-   rado — il fondo della banda del ripasso, mai fuori — e il «Si fa
-   così» si legge prima di rispondere.
+   rado — il fondo della banda del ripasso, mai fuori — e prima di
+   rispondere si legge un esempio svolto (unita/svolto).
 
    Le cose da non sbagliare: una settimana e non per sempre; dopo, conta
    solo quello che è successo da allora; un conto azzerato riparte da
@@ -15,7 +15,7 @@
    `node test/esegui.mjs alleggerire --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
 import { SETTIMANA, segnoDa, contoDopo, alleggeritaDa, daAlleggerire,
-         ancoraDifficile, bisognoAlleggerito, comeSiFaPrima } from '../../src/quiz/alleggerire.js'
+         ancoraDifficile, bisognoAlleggerito } from '../../src/quiz/alleggerire.js'
 import { BISOGNO } from '../../src/quiz/nucleo/bisogno.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
@@ -60,13 +60,9 @@ uguale('alleggerita pesa il fondo della banda', bisognoAlleggerito(1.5, true), B
 uguale('e non a zero: esce meno, non sparisce', BISOGNO.min > 0, true)
 uguale('non alleggerita resta com\'era', bisognoAlleggerito(1.3, false), 1.3)
 
-/* ══════════ 5. il metodo prima ══════════ */
-const d = { testo: '47 arrotondato alla decina', aiuto: '47 sta fra 40 e 50' }
-uguale('alleggerita: si legge prima', comeSiFaPrima(d, true), d.aiuto)
-uguale('non alleggerita: niente', comeSiFaPrima(d, false), '')
-uguale('senza aiuto non si inventa niente', comeSiFaPrima({ testo: 'x' }, true), '')
+/* l'esempio svolto che si mostra prima della domanda ha un banco suo: unita/svolto */
 
-/* ══════════ 6. «Va bene così» ══════════ */
+/* ══════════ 5. «Va bene così» ══════════ */
 {
   const segno = segnoDa(muro, T0)
   controlla('senza segno un muro è difficile', ancoraDifficile(muro, null))
