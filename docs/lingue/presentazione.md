@@ -23,9 +23,10 @@ si perde niente.
 
 Attorno a ogni tappa dieci tacche dicono **quanto è imparata**, e col tempo
 calano: il disegno della tappa sbiadisce, e rigiocarla la fa tornare piena.
-In fondo a ogni mondo c'è **un capitolo di un libro** da leggere in inglese
-— con Laura, Leo e il cane Pip, e ogni volta un po' diverso — e qualche
-domanda in italiano per vedere se si è capito. Qualunque parola inglese a
+Lungo ogni mondo si aprono **tre storie di un libro** da leggere in
+inglese, a pagine — con Laura, Leo, Tom e il cane Pip, ogni volta un po'
+diverse e più lunghe di mondo in mondo — e qualche domanda in italiano per
+vedere se si è capito; finita una, se ne legge un'altra. Qualunque parola inglese a
 schermo **si tocca e dice cosa vuol dire**; le prime volte è gratis, poi
 quella domanda non paga, e il gioco lo dice prima di rispondere.
 

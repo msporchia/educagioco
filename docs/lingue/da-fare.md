@@ -1,18 +1,19 @@
 # L'inglese a mondi: cosa manca
 
 Un mondo per anno di scuola: prima, seconda e terza si giocano per intero,
-quarta e quinta hanno le tappe di parole. Motore e dati in
+quarta e quinta hanno le tappe di parole e il libro. Motore e dati in
 [mondi.md](mondi.md#comè-costruito), la vista in [mondi-vista.md](mondi-vista.md).
 Il resto, in ordine.
 
 ## Le frasi di quarta e quinta
 
-I due mondi hanno le tappe di parole, la 🏁 e le strutture dell'anno
-dichiarate in `strutture` (`dati/mondi.js`); mancano le tappe di frasi e il
-capitolo. Per ognuno: le tappe di frasi in `dati/mondi.js` (dopo quelle di
-parole, prima della 🏁: un travaso non serve, gli `id` delle tappe di parole
-restano), le frasi in `dati/frasi/<mondo>.js` (e una riga in `dati/frasi.js`),
-un capitolo in `dati/capitoli/`, e le righe delle trappole che mancano.
+I due mondi hanno le tappe di parole, la 🏁, le strutture dell'anno
+dichiarate in `strutture` (`dati/mondi.js`) e tre storie ciascuno nel
+libro ([libro.md](libro.md)); mancano le tappe di frasi. Per ognuno: le
+tappe di frasi in `dati/mondi.js` (dopo quelle di parole, prima della 🏁:
+un travaso non serve, gli `id` delle tappe di parole restano), le frasi in
+`dati/frasi/<mondo>.js` (e una riga in `dati/frasi.js`), e le righe delle
+trappole che mancano.
 
 - **Quarta**: il presente (*I get up at seven, we play football*), la *s*
   della terza persona (*she plays, he goes*), *does / doesn't*, *-ing*
@@ -23,15 +24,11 @@ un capitolo in `dati/capitoli/`, e le righe delle trappole che mancano.
 - **Quinta**: *was / were*, il passato irregolare (*went, saw, ate* — i
   verbi della tappa «I verbi che cambiano») e in *-ed* (`was-were`,
   `passato`, `passato-ed`; la riga `passato-in-ed` c'è).
-- **Serve prima un pezzo di motore**: `sconosciute()` in `motore/grafo.js`
-  riconosce i plurali dei nomi ma non le forme dei verbi (*plays, playing,
-  played, went*), e le frasi di quarta e quinta sarebbero tutte «parole non
-  note». Una funzione `verboDi(w)` accanto a `nomeDi` in `motore/lessico.js`
-  (la *s*, *-ing*, *-ed*, una tabella degli irregolari), usata anche da
-  `chiaveDi` perché *played* segni `verbo:play`.
-- Il capitolo cresce coi mondi: fino a 12–15 frasi e tre o quattro domande
-  (il perché, l'ordine degli eventi, quello che si capisce senza che sia
-  scritto).
+- **Le forme dei verbi ci sono** (`motore/flessioni.js`, per ora usate dal
+  libro): le frasi componibili le avranno passando a `sconosciute()` le
+  `flessioni` della loro tappa, come fa `guastiDelCapitolo`
+  ([libro.md](libro.md#le-forme-dei-verbi)). Le parolette di quarta e
+  quinta (*to, with, because…*) stanno già nelle forme.
 
 ## Le parole che mancano
 
