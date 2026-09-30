@@ -16,7 +16,11 @@ accanto al confronto fra due specie diverse, ogni domanda va guardata
 davvero invece di essere imparata come la posizione di un tasto.
 
 `premio` sale con lo scalino, non con la singola tappa: è lo scalino a
-dire quanto la tappa è impegnativa.
+dire quanto la tappa è impegnativa. È il prezzo **di una risposta
+giusta**, pagato nel momento in cui si risponde (🪙1 contare fino a
+cinque, 🪙4 sommare due ceste): a fine tappa il cartello somma, e non
+arriva niente di più — la regola di tutti i giochi, che Conta seguiva già
+([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
 
 ## I mondi
 
