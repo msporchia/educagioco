@@ -15,6 +15,7 @@ const LAVORI = [
 ]
 // gli indizi del mestiere di `chi`, uno per mestiere: si accende quello giusto
 const indizi = (chi, lavoro) => Object.entries(INDIZI).map(([id, righe]) => ({
+  id: `${chi}-${id}`,
   se: v => v[lavoro].id === id,
   chi: 'Leo',
   en: righe.join(' ').replace(/\{(P|p|pos)\}/g, (_, k) => `{${chi}.${k}}`),
@@ -67,6 +68,8 @@ export default {
   domande: [
     { testo: 'Che lavoro fa la mamma di Leo?', risposta: v => v.lMamma.f },
     { testo: 'Che lavoro fa il papà di Leo?', risposta: v => v.lPapa.m },
+    { tipo: 'frase', testo: 'Da quale frase si capisce che lavoro fa la mamma di Leo?',
+      frase: v => `mamma-${v.lMamma.id}` },
     { testo: v => (v.nonno.f ? 'La nonna di Leo ha delle mucche.' : 'Il nonno di Leo ha delle mucche.'),
       tipo: 'vf', vero: v => (v.lNonno.id === 'contadino' ? true : null) },
     { testo: 'Dov’è il quadro?', risposta: () => 'Sul muro della cucina',

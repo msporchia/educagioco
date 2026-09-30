@@ -54,5 +54,7 @@ export default {
       risposta: v => (v.caldo ? 'In giardino, perché fa caldo' : 'In camera, perché fa freddo'),
       anche: ['In giardino, perché fa freddo', 'In camera, perché fa caldo'] },
     { testo: 'La sera Tom legge un libro.', tipo: 'vf', vero: v => (v.legge ? true : null) },
+    { tipo: 'ordine', fatti: ['Tom fa colazione', v => `Tom aiuta ${v.chi.en === 'mother' ? 'la mamma' : 'il papà'}`,
+                              'Tom gioca con Leo', 'Tom va a letto'] },
   ],
 }

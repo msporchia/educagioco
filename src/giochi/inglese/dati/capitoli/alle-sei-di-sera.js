@@ -35,7 +35,7 @@ export default {
     ],
     [
       { en: '{altro} is in the garage. {altro.P} is washing the {mezzo}.', forma: 'ing' },
-      { en: 'Leo is in the bathroom. He is washing his hands, because dinner is at {ora} o’clock.',
+      { id: 'mani', en: 'Leo is in the bathroom. He is washing his hands, because dinner is at {ora} o’clock.',
         forma: 'ing' },
     ],
     [
@@ -55,6 +55,7 @@ export default {
     { testo: 'A che ora si cena?', risposta: v => `Alle ${v.ora.it}`, anche: ['Alle sei', 'Alle nove'] },
     { testo: 'Chi cucina la cena?', risposta: v => v.cuoco.it, anche: ['Laura', 'Leo'] },
     { testo: 'Che cosa sta facendo Laura, alle sei?', risposta: v => v.laura.it },
+    { tipo: 'frase', testo: 'Perché Leo si lava le mani?', frase: 'mani' },
     { testo: 'Perché Pip non ha fame, a cena?', risposta: v => `Ha mangiato ${v.dolce.un}`,
       anche: ['Sta male', 'Non gli piace la cena'] },
     { testo: v => `Il papà sta lavando ${v.mezzo.it}.`, tipo: 'vf', vero: v => v.altro === PAPA },
