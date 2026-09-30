@@ -274,6 +274,15 @@ uguale('il libro dice quanto può rendere', await page.locator('[data-paga]').ge
 controlla('il libro apre la storia non ancora letta',
           (await page.locator('[data-libro-testo] .ing-capitolo').innerText()).includes('Lo zaino di Leo'))
 uguale('una pagina sola: niente frecce', await page.locator('[data-azione="pagina-avanti"]').count(), 0)
+// chi parla: ogni battuta va a capo col nome davanti, e le parole si toccano lo stesso
+const battute = await page.locator('[data-libro-testo] [data-battuta]').evaluateAll(els =>
+  els.map(e => [e.dataset.chi, e.querySelector('.ing-chi').textContent.trim(), e.querySelectorAll('[data-parola]').length]))
+nota(battute.map(b => b[1]).join(' · '))
+controlla('le battute dicono chi parla: Leo e Laura',
+          battute.some(b => b[0] === 'Leo' && b[1] === 'Leo') && battute.some(b => b[0] === 'Laura' && b[1] === 'Laura'),
+          JSON.stringify(battute))
+controlla('e le loro parole si toccano', battute.every(b => b[2] > 0))
+uguale('il nome non si tocca', await page.locator('[data-libro-testo] .ing-chi [data-parola]').count(), 0)
 await scatto(page, 'inglese-libro')
 // una parola di struttura è sempre gratis: si dice e basta
 await page.locator('[data-libro-testo] [data-parola="is"]').first().click()

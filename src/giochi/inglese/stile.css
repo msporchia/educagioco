@@ -178,6 +178,19 @@
 .ing-riga { margin: 0 }
 .ing-prima-riga::first-letter { float: left; font-size: 2.6em; line-height: .82; margin: 7px 7px 0 0; color: #8a3b1c }
 .ing-pagina .ing-parola { border-bottom: 1px dotted #c7ad7f }
+.ing-riga + .ing-riga, .ing-battuta + .ing-riga { margin-top: .5em }
+/* una battuta va a capo, col nome di chi parla sopra: il colore aiuta, il nome dice */
+.ing-battuta { margin: .45em 0 0; padding-left: 11px; border-left: 3px solid var(--chi, #b99a6a) }
+.ing-chi { display: block; font: 700 .66em/1.35 system-ui, sans-serif; letter-spacing: .05em;
+           text-transform: uppercase; color: var(--chi, #7a6450) }
+.ing-battuta[data-chi="Laura"] { --chi: #b0412a }
+.ing-battuta[data-chi="Leo"] { --chi: #2f6fb0 }
+.ing-battuta[data-chi="Tom"] { --chi: #3f7d3a }
+.ing-battuta[data-chi="Pip"] { --chi: #8a5a2b }
+.ing-battuta[data-chi="mamma"] { --chi: #9b3f86 }
+.ing-battuta[data-chi="papa"] { --chi: #4b4fa8 }
+.ing-battuta[data-chi="nonna"] { --chi: #a8702a }
+.ing-battuta[data-chi="nonno"] { --chi: #5b6b6f }
 .ing-fregio { text-align: center; color: #b99a6a; font-size: 18px; margin-top: 4px }
 .ing-dopo-lettura { display: flex; flex-direction: column; gap: 8px; align-items: center }
 /* le pagine si sfogliano con due tasti grandi, uno per lato */

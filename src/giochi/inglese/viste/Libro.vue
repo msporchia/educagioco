@@ -8,7 +8,7 @@ import { ref, watch, nextTick } from 'vue'
 import Testo from './Testo.vue'
 
 const props = defineProps({
-  cap: { type: Object, required: true },        // { titolo, pagine: [[{ en }]], domande: [{ testo, opzioni }] }
+  cap: { type: Object, required: true },        // { titolo, pagine, blocchi: [[{ chi, nome, righe }]], domande }
   fase: { type: String, default: 'leggi' },     // leggi | domande
   k: { type: Number, default: 0 },              // la domanda di adesso
   scelta: { type: Number, default: -1 },        // l'opzione toccata, -1 se non ancora
@@ -41,9 +41,13 @@ function classe(d, o, i, scelta) {
     <article ref="foglio" class="ing-pagina" :class="{ 'ing-pagina-corta': fase === 'domande' }" data-libro-testo
              :data-pagina="pagina + 1" :data-pagine="cap.pagine.length">
       <h2 v-if="pagina === 0" class="ing-capitolo">{{ cap.titolo }}</h2>
-      <!-- le frasi di una pagina sono un racconto: si leggono di seguito, come in un libro -->
-      <p class="ing-riga" :class="{ 'ing-prima-riga': pagina === 0 }"><Testo :key="pagina"
-        :testo="cap.pagine[pagina].map(r => r.en).join(' ')" @tocca="el => $emit('tocca', el)" /></p>
+      <!-- la narrazione si legge di seguito, come in un libro; ogni battuta va a capo col nome di chi parla -->
+      <template v-for="(b, i) in cap.blocchi[pagina]" :key="pagina + '-' + i">
+        <p v-if="!b.chi" class="ing-riga" :class="{ 'ing-prima-riga': pagina === 0 && i === 0 }"><Testo
+          :testo="b.righe.map(r => r.en).join(' ')" @tocca="el => $emit('tocca', el)" /></p>
+        <p v-else class="ing-battuta" data-battuta :data-chi="b.chi"><span class="ing-chi">{{ b.nome }}</span><Testo
+          :testo="b.righe.map(r => r.en).join(' ')" @tocca="el => $emit('tocca', el)" /></p>
+      </template>
       <div v-if="pagina === cap.pagine.length - 1" class="ing-fregio" aria-hidden="true">❦</div>
     </article>
 
