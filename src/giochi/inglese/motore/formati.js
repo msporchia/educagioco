@@ -5,7 +5,7 @@
 import { MAX_S } from '../../../store/srs.js'
 import { FORME, chiaveForma } from '../dati/forme.js'
 import { trappoleDi, scegliTrappole, vicineFra } from './trappole.js'
-import { parole, inTappa, normalizza, accettate, eDomanda, inBella } from './testo.js'
+import { parole, inTappa, normalizza, accettate, eDomanda, inBella, aSchermo } from './testo.js'
 import { chiaveDi, DET } from './lessico.js'
 import { paroleNote } from './grafo.js'
 
@@ -51,6 +51,10 @@ export function contesto(frase, { tappa = null, altre = [], forzaForma = () => 0
 }
 
 const opzione = (testo, giusta, trappola = null) => ({ testo, giusta, ...(trappola ? { trappola } : {}) })
+// l'italiano col punto o col «?», l'inglese solo con la maiuscola: la domanda
+// inglese si riconosce dal verbo girato (docs/lingue/vocaboli.md)
+const inBellaTutte = (opzioni, lingua) =>
+  opzioni.map(o => ({ ...o, testo: lingua === 'it' ? aSchermo(o.testo) : inBella(o.testo) }))
 
 // fino a `n` testi diversi fra loro e dai `vietati`
 function pesca(candidati, n, vietati, rnd) {
@@ -83,8 +87,8 @@ export function costruisci(frase, formato, ctx, { forza = 0 } = {}) {
         .map(t => opzione(t.it, false, t)), 3, [frase.it], rnd)
     sbagliate.push(...pesca(altre.map(f => opzione(f.it, false)), 3 - sbagliate.length,
                             [frase.it, ...sbagliate.map(o => o.testo)], rnd))
-    return { ...base, domanda: { testo: en, lingua: 'en' },
-             opzioni: mescola([opzione(frase.it, true), ...sbagliate], rnd) }
+    return { ...base, domanda: { testo: inBella(en), lingua: 'en' },
+             opzioni: inBellaTutte(mescola([opzione(frase.it, true), ...sbagliate], rnd), 'it') }
   }
 
   if (formato === 'scegli') {
@@ -99,14 +103,14 @@ export function costruisci(frase, formato, ctx, { forza = 0 } = {}) {
     }
     sbagliate.push(...pesca(altre.map(f => opzione(inTappa(f.en, tappa), false)), 3 - sbagliate.length,
                             [frase.en, ...sbagliate.map(o => o.testo)], rnd))
-    return { ...base, domanda: { testo: frase.it, lingua: 'it' },
-             opzioni: mescola([opzione(en, true), ...sbagliate], rnd) }
+    return { ...base, domanda: { testo: aSchermo(frase.it), lingua: 'it' },
+             opzioni: inBellaTutte(mescola([opzione(en, true), ...sbagliate], rnd), 'en') }
   }
 
   // i tre «componi»: la fila, le tessere, e dove vanno
   const T = parole(en)
   const tessere = T.map((testo, i) => ({ id: i, testo }))
-  const out = { ...base, domanda: { testo: frase.it, lingua: 'it' }, soluzione: T.slice() }
+  const out = { ...base, domanda: { testo: aSchermo(frase.it), lingua: 'it' }, soluzione: T.slice() }
 
   if (formato === 'completa') {
     const quanti = T.length <= 3 ? 1 : T.length <= 5 ? 2 : 3
@@ -144,7 +148,7 @@ export function composta(d, idTessere) {
   return idTessere.map(testo).filter(Boolean).join(' ')
 }
 
-export const rigaInBella = (d, idTessere) => inBella(composta(d, idTessere), { domanda: d.domandaIt })
+export const rigaInBella = (d, idTessere) => aSchermo(composta(d, idTessere), d.domandaIt)
 
 // le chiavi delle parole (e dei verbi) di una frase che hanno una voce SRS
 export const paroleDellaFrase = frase =>
@@ -188,6 +192,6 @@ export function giudica(frase, d, risposta, { scadutaDi = () => false, ctx = nul
     trappola: trappola ? trappola.id : null,
     perche: giusta ? null : (trappola ? trappola.perche : null),
     siFa: giusta ? null : FORME[(trappola && trappola.forma) || frase.forma].regola,
-    giustaEra: inBella(inTappa(frase.en, d && ctx ? ctx.tappa : null), { domanda: eDomanda(frase) }),
+    giustaEra: aSchermo(inTappa(frase.en, d && ctx ? ctx.tappa : null), eDomanda(frase)),
   }
 }

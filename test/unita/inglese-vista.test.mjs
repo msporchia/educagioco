@@ -46,7 +46,10 @@ titolo('LA FILA')
       uguale(`${f.id} ${formato}: nessuna tessera colorata sulla giusta`, F.sbagliate(d, fila).length, 0)
       const { caselle, punto } = F.caselle(d, fila)
       controlla(`${f.id} ${formato}: la fila comincia con la maiuscola`, /^[A-Z]/.test(caselle[0].testo), caselle[0].testo)
-      uguale(`${f.id} ${formato}: il «?» solo alle domande`, punto, /\?\s*$/.test(f.it) ? '?' : '')
+      uguale(`${f.id} ${formato}: il «?» alle domande, il punto alle altre`, punto, /\?\s*$/.test(f.it) ? '?' : '.')
+      // «è un cane» senza punto si legge anche come domanda: l'italiano lo dice sempre
+      uguale(`${f.id} ${formato}: la consegna italiana finisce col suo segno`, d.domanda.testo.slice(-1),
+             /\?\s*$/.test(f.it) ? '?' : '.')
       // ritoccata, una tessera torna nel banco
       const via = giuste[0].id
       const tolta = F.togli(d, fila, via)

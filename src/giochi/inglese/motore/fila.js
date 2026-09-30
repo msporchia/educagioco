@@ -43,7 +43,7 @@ export const risposta = fila => fila.filter(x => x !== null)
 const testoDi = (d, id) => (d.tessere.find(t => t.id === id) || {}).testo
 
 // le caselle da mostrare, in ordine: parole fisse e tessere (o buchi vuoti),
-// con la maiuscola in testa e il «?» in coda se la frase è una domanda
+// con la maiuscola in testa e in coda il «?» se la frase è una domanda, se no il punto
 export function caselle(d, fila) {
   let out
   if (d.formato === 'completa') {
@@ -56,7 +56,7 @@ export function caselle(d, fila) {
   } else out = fila.map(id => ({ id, testo: testoDi(d, id) }))
   const primo = out.find(c => c.testo)
   if (primo && primo === out[0]) out[0] = { ...out[0], testo: inBella(out[0].testo) }
-  return { caselle: out, punto: d.domandaIt ? '?' : '' }
+  return { caselle: out, punto: d.domandaIt ? '?' : '.' }
 }
 
 // Dopo uno sbaglio: gli id delle tessere della fila da colorare. Prima le

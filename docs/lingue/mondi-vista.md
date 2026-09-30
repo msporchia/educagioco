@@ -155,8 +155,8 @@ Al posto della freccia c'è **una caravella** a inchiostro e acquerello
 
 - **Le tessere si toccano**: dal banco vanno in coda alla fila (in
   «completa», nel primo buco vuoto), dalla fila tornano nel banco. La fila
-  mette la maiuscola alla prima parola e il «?» in coda se la frase è una
-  domanda. «Monta» si consegna con tutte le tessere in fila, «completa» coi
+  mette la maiuscola alla prima parola e in coda il «?» se la frase è una
+  domanda, se no il punto. «Monta» si consegna con tutte le tessere in fila, «completa» coi
   buchi pieni; **«scegli e monta» con una sola**, perché dire quante ne
   vanno regalerebbe la lunghezza della frase.
 - **Tenere premuta una tessera**, o una risposta inglese, dice cosa vuol

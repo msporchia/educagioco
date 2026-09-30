@@ -56,6 +56,14 @@ export const eDomanda = frase => /\?\s*$/.test(frase.it)
 // come la frase si vede in una tappa: lunga o contratta
 export const inTappa = (en, tappa) => (tappa && tappa.contratta ? contrai(en) : en)
 
+// una frase italiana a schermo: maiuscola in testa e sempre il punto o il «?»,
+// perché «è un cane» e «è un cane?» si distinguono solo lì
+export function aSchermo(testo, domanda = /\?\s*$/.test(testo)) {
+  const s = String(testo).trim().replace(/[.?!]+$/, '').trim()
+  if (!s) return s
+  return s[0].toUpperCase() + s.slice(1) + (domanda ? '?' : '.')
+}
+
 // la fila delle tessere composta: maiuscola in testa e il «?» se è una domanda.
 // La punteggiatura non è una tessera: la mette la fila.
 export function inBella(tessere, { domanda = false } = {}) {
