@@ -22,14 +22,14 @@ un mondo per anno, coi contenuti che i libri di testo fanno davvero in
 quell'anno. Il grafo resta un grafo — un mondo può dipendere da due, e
 «basta uno» c'è ancora (`dopoUno`) — ma oggi la fila è dritta.
 
-| mondo | tappe di parole | tappe di frasi | si apre dopo |
-|---|---|---|---|
-| **In prima** | i colori · i numeri fino a dieci · gli animali · a scuola · i giocattoli | *hello, my name is, how are you?* · *it is a …, is it …?* · *a red ball* · *they are two dogs* · *this is …* | — |
-| **In seconda** | il corpo · la famiglia · il cibo · a pranzo · i vestiti · i numeri fino a venti · come sono (big, happy, hungry…) | *I like / I don't like* · *this is my, he is, I am* · *I have got* · *she has got* | In prima |
-| **In terza** | la casa · i mobili · i giorni · le stagioni e i mesi · gli altri mesi · che tempo fa · i numeri fino a cento · che cosa sai fare (verbi) | *there is / there are* · *where is? in, on, under, behind* · *today is Monday, in May* · *I can / I can't* | In seconda |
-| **In quarta** | la giornata · ogni giorno (verbi) · i mestieri · i mezzi | *da scrivere*: il presente, la *s*, *does / doesn't*, *-ing*, l'ora | In terza |
-| **In quinta** | in città · fuori città · i verbi che cambiano | *da scrivere*: *was / were*, il passato irregolare e in *-ed* | In quarta |
-| La prova finale | — | — | tutti |
+| mondo | le tappe in ordine (in corsivo quelle di frasi) | si apre dopo |
+|---|---|---|
+| **In prima** | i colori · *hello, my name is, how are you?* · gli animali · i giocattoli · *it is a …, is it …?* · *a red ball* · a scuola · *this is …* · i numeri fino a dieci · *they are two dogs* | — |
+| **In seconda** | il cibo · a pranzo · *I like / I don't like* · la famiglia · i vestiti · come sono (big, happy, hungry…) · *this is my, he is, I am* · i numeri fino a venti · *I have got* · il corpo · *she has got* | In prima |
+| **In terza** | la casa · i mobili · *where is? in, on, under, behind* · i numeri fino a cento · *there is / there are* · i giorni · le stagioni e i mesi · gli altri mesi · che tempo fa · *today is Monday, in May* · che cosa sai fare (verbi) · *I can / I can't* | In seconda |
+| **In quarta** | la giornata · ogni giorno (verbi) · i mestieri · i mezzi; *da scrivere*: il presente, la *s*, *does / doesn't*, *-ing*, l'ora | In terza |
+| **In quinta** | in città · fuori città · i verbi che cambiano; *da scrivere*: *was / were*, il passato irregolare e in *-ed* | In quarta |
+| La prova finale | — | tutti |
 
 Rifinito sul programma vero, rispetto alla traccia di partenza:
 
@@ -49,8 +49,13 @@ Rifinito sul programma vero, rispetto alla traccia di partenza:
 - **i soldi della quinta non ci sono ancora**: *money, coin, price, cheap,
   expensive* non sono in `data/words.js` (vedi [da-fare.md](da-fare.md)).
 
-**Dentro un mondo: prima le tappe di parole, poi quelle di frasi, poi la
-🏁.** Una tappa di parole ha **8–10 parole di un argomento solo**, col nome
+**Dentro un mondo le frasi sono capitoli fra le parole, e in fondo la
+🏁.** Una tappa di frasi viene subito dopo le tappe di parole che le
+servono (*Mi piace!* dopo il cibo e il pranzo), mai tutte in blocco alla
+fine: chi gioca un mondo compone frasi dalla seconda o terza tappa, e mai
+più di quattro tappe di parole di fila (lo controlla
+`test/unita/inglese-mondi`). Una tappa di parole non chiede frasi, una di
+frasi non insegna parole. Una tappa di parole ha **8–10 parole di un argomento solo**, col nome
 dell'argomento: «I colori» sono solo colori (`dati/argomenti.js`). Una tappa
 di frasi ha **una struttura** (a volte due forme della stessa, *it is / is
 it*) e **nessuna parola nuova**: le sue frasi usano solo parole già viste
@@ -350,6 +355,9 @@ stava in piedi nel codice, si è presa la variante più vicina:
 - **Il «?» nelle opzioni inglesi non c'è** (la regola di
   [vocaboli.md](vocaboli.md): la domanda si riconosce dall'ordine); lo
   mette la fila composta, con la maiuscola (`inBella`, `rigaInBella`).
+  **L'italiano ha sempre il punto o il «?»** (`aSchermo`), in consegna e
+  nelle opzioni: senza, «È un cane» si leggeva anche come domanda e
+  *it is / is it* non aveva una risposta sola.
 - **Il mondo da cui una parola degli elenchi è nota non si scrive**: lo
   ricava il grafo (`paroleNote`), così una parola che entra in una tappa
   arriva da sola a tutti i capitoli che la possono pescare.

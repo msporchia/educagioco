@@ -9,11 +9,11 @@
 //   nel suo cassetto), strutture?: [forma…] (quelle dell'anno che non hanno
 //   ancora una tappa di frasi), tappe: [...] }. Un mondo senza tappe è «in
 //   arrivo»: sta sulla mappa ma non si apre.
-// Le tappe, nell'ordine: prima quelle di PAROLE — { id, nome, disegno,
+// Le tappe si alternano: una di FRASI — { id, nome, disegno, forme: [forma…],
+//   contratta } (una struttura, fatta solo di parole già viste) — viene
+//   subito dopo le tappe di PAROLE che le servono — { id, nome, disegno,
 //   argomento, parole } (8–10 parole di un argomento solo, dati/argomenti.js)
-//   — poi quelle di FRASI — { id, nome, disegno, forme: [forma…],
-//   contratta } (una struttura, fatta solo di parole già viste) — e in fondo
-//   la 🏁 (`bandiera: true`), che ripassa tutto il mondo. La `portata` la
+//   —, e in fondo la 🏁 (`bandiera: true`), che ripassa tutto il mondo. La `portata` la
 //   mette `anno` (vedi `portate`): nessuno la scrive a mano.
 import { WORDS } from '../../../data/words.js'
 import { VERBI } from '../../../data/verbi.js'
@@ -53,19 +53,19 @@ export const MONDI = [
     tappe: [
       parole('prima-colori', 'I colori', 'pennelli', 'colori',
         ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'black', 'white', 'brown']),
-      parole('prima-numeri', 'I numeri fino a dieci', 'dita', 'numeri',
-        ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']),
+      frasi('prima-ciao', 'Ciao! Come ti chiami?', 'coppia', ['saluti']),
       parole('prima-animali', 'Gli animali', 'cane', 'animali',
         ['dog', 'cat', 'fish', 'bird', 'mouse', 'rabbit', 'horse', 'cow', 'pig', 'duck']),
-      parole('prima-scuola', 'A scuola', 'zaino', 'scuola',
-        ['book', 'pencil', 'pen', 'ruler', 'rubber', 'backpack', 'notebook', 'crayon', 'box', 'map']),
       parole('prima-giocattoli', 'I giocattoli', 'palla', 'giocattoli',
         ['ball', 'doll', 'teddy bear', 'kite', 'puzzle', 'game', 'car', 'train', 'plane', 'boat']),
-      frasi('prima-ciao', 'Ciao! Come ti chiami?', 'coppia', ['saluti']),
       frasi('prima-che-cose', 'Che cos’è?', 'punto-di-domanda', ['it-is', 'is-it']),
       frasi('prima-colore', 'Di che colore è?', 'pennelli', ['colore-prima'], true),
-      frasi('prima-quanti', 'Quanti sono?', 'dita', ['plurale'], true),
+      parole('prima-scuola', 'A scuola', 'zaino', 'scuola',
+        ['book', 'pencil', 'pen', 'ruler', 'rubber', 'backpack', 'notebook', 'crayon', 'box', 'map']),
       frasi('prima-questo', 'Questo è…', 'zaino', ['this-is']),
+      parole('prima-numeri', 'I numeri fino a dieci', 'dita', 'numeri',
+        ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']),
+      frasi('prima-quanti', 'Quanti sono?', 'dita', ['plurale'], true),
       bandiera('prima-bandiera'),
     ],
   },
@@ -74,24 +74,24 @@ export const MONDI = [
     insegna: 'I like, this is my, I have got, she has got, i numeri fino a venti',
     dopo: ['prima'], categorie: ['b', 'k', 'f', 'p', 'j'],
     tappe: [
-      parole('seconda-corpo', 'Il corpo', 'faccia', 'corpo',
-        ['head', 'eye', 'ear', 'nose', 'mouth', 'hand', 'foot', 'leg', 'hair']),
-      parole('seconda-famiglia', 'La famiglia', 'famiglia', 'famiglia',
-        ['mother', 'father', 'sister', 'brother', 'grandmother', 'grandfather', 'baby', 'friend']),
       parole('seconda-cibo', 'Il cibo', 'torta', 'cibo',
         ['apple', 'banana', 'pizza', 'cake', 'milk', 'bread', 'cheese', 'chocolate', 'egg', 'cookie']),
       parole('seconda-pranzo', 'A pranzo', 'piatto', 'cibo',
         ['carrot', 'potato', 'tomato', 'salad', 'soup', 'pasta', 'rice', 'juice', 'strawberry', 'grapes']),
+      frasi('seconda-mi-piace', 'Mi piace!', 'torta', ['i-like']),
+      parole('seconda-famiglia', 'La famiglia', 'famiglia', 'famiglia',
+        ['mother', 'father', 'sister', 'brother', 'grandmother', 'grandfather', 'baby', 'friend']),
       parole('seconda-vestiti', 'I vestiti', 'cappello', 'vestiti',
         ['hat', 'cap', 'shirt', 'dress', 'shoe', 'sock', 'coat', 'scarf', 'glove', 'trousers']),
+      parole('seconda-come', 'Come sono', 'faccia', 'aggettivi',
+        ['big', 'small', 'long', 'short', 'happy', 'sad', 'tired', 'hungry', 'hot', 'cold']),
+      frasi('seconda-mio', 'Questo è mio', 'famiglia', ['this-is-my']),
       parole('seconda-venti', 'I numeri fino a venti', 'dita', 'numeri',
         ['eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen',
          'nineteen', 'twenty']),
-      parole('seconda-come', 'Come sono', 'faccia', 'aggettivi',
-        ['big', 'small', 'long', 'short', 'happy', 'sad', 'tired', 'hungry', 'hot', 'cold']),
-      frasi('seconda-mi-piace', 'Mi piace!', 'torta', ['i-like']),
-      frasi('seconda-mio', 'Questo è mio', 'famiglia', ['this-is-my']),
       frasi('seconda-ho', 'Ho un…', 'cappello', ['have-got']),
+      parole('seconda-corpo', 'Il corpo', 'faccia', 'corpo',
+        ['head', 'eye', 'ear', 'nose', 'mouth', 'hand', 'foot', 'leg', 'hair']),
       frasi('seconda-ha', 'Lei ha…', 'faccia', ['has-got'], true),
       bandiera('seconda-bandiera'),
     ],
@@ -105,6 +105,10 @@ export const MONDI = [
         ['house', 'kitchen', 'bedroom', 'bathroom', 'garden', 'garage', 'door', 'window', 'roof', 'wall']),
       parole('terza-mobili', 'I mobili', 'scatola', 'casa',
         ['bed', 'chair', 'table', 'sofa', 'lamp', 'mirror', 'clock', 'picture', 'shower', 'bath']),
+      frasi('terza-dove', 'Dov’è?', 'scatola', ['dove']),
+      parole('terza-cento', 'I numeri fino a cento', 'dita', 'numeri',
+        ['thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred']),
+      frasi('terza-c-e', 'C’è, ci sono', 'casetta', ['there-is']),
       parole('terza-giorni', 'I giorni', 'sole', 'calendario',
         ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'today',
          'tomorrow', 'weekend']),
@@ -114,13 +118,9 @@ export const MONDI = [
         ['July', 'August', 'September', 'October', 'November', 'December', 'birthday', 'Christmas']),
       parole('terza-tempo', 'Che tempo fa', 'sole', 'tempo',
         ['sun', 'rain', 'snow', 'wind', 'cloud', 'storm', 'fog', 'rainbow', 'sky', 'ice']),
-      parole('terza-cento', 'I numeri fino a cento', 'dita', 'numeri',
-        ['thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred']),
+      frasi('terza-oggi', 'Oggi è lunedì', 'sole', ['oggi'], true),
       parole('terza-azioni', 'Che cosa sai fare', 'palla', 'azioni',
         ['swim', 'run', 'jump', 'fly', 'dance', 'climb', 'sing', 'walk', 'read', 'write']),
-      frasi('terza-c-e', 'C’è, ci sono', 'casetta', ['there-is']),
-      frasi('terza-dove', 'Dov’è?', 'scatola', ['dove']),
-      frasi('terza-oggi', 'Oggi è lunedì', 'sole', ['oggi'], true),
       frasi('terza-so-fare', 'So nuotare!', 'palla', ['can'], true),
       bandiera('terza-bandiera'),
     ],
@@ -217,8 +217,7 @@ export function guastiDeiMondi() {
         if (x.parole.length) g.push(`${x.id}: una tappa di frasi non porta parole nuove`)
         continue
       }
-      // una tappa di parole: prima delle frasi, 8–10 parole, un argomento solo
-      if (giaFrasi) g.push(`${x.id}: una tappa di parole dopo quelle di frasi`)
+      // una tappa di parole: 8–10 parole, un argomento solo
       const arg = ARGOMENTI[x.argomento]
       if (!arg) { g.push(`${x.id}: argomento sconosciuto ${x.argomento}`); continue }
       if (x.parole.length < 8 || x.parole.length > 10)

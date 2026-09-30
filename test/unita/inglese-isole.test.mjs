@@ -30,7 +30,7 @@ const LARGHEZZE = [320, 360, 390, 430, 520]
 const extra = () => ({ libro: { aperto: true }, cassetto: { aperto: false } })
 const vuoto = { tappa: 0, stelle: {}, cfg: {} }
 const meta = { tappa: 0, stelle: {}, cfg: {} }
-for (const id of ['prima-colori', 'prima-numeri', 'prima-animali']) segnaVinta(meta, id)
+for (const id of ['prima-colori', 'prima-ciao', 'prima-animali']) segnaVinta(meta, id)
 const tutto = { tappa: 0, stelle: {}, cfg: {} }
 for (const t of TAPPE) segnaVinta(tutto, t.id)
 const quadro = (c, W) => disponi(statoMappa(c, () => 3), W, extra)
@@ -205,14 +205,14 @@ titolo('DOVE STA LA NAVE')
   uguale('un porto chiuso non vale: si torna alla tappa di adesso',
          doveStaLaNave(q, 'tappa:prima-animali').chiave, 'tappa:prima-colori')
   const m = quadro(meta, 390)
-  uguale('a metà mondo la nave sta alla tappa da fare', doveStaLaNave(m, null).chiave, 'tappa:prima-scuola')
-  uguale('ma resta dov’era, se lì si può andare', doveStaLaNave(m, 'tappa:prima-numeri').chiave, 'tappa:prima-numeri')
+  uguale('a metà mondo la nave sta alla tappa da fare', doveStaLaNave(m, null).chiave, 'tappa:prima-giocattoli')
+  uguale('ma resta dov’era, se lì si può andare', doveStaLaNave(m, 'tappa:prima-ciao').chiave, 'tappa:prima-ciao')
   const t = quadro(tutto, 390)
   controlla('a mondi finiti sta su una tappa vinta', doveStaLaNave(t, null).stato === 'vinta')
 
   const s = statoMappa(vuoto, () => 0)
   const n = k => q.nodi.find(x => x.chiave === k)
-  uguale('una tappa chiusa dice quale vincere prima', cosaServe(s, n('tappa:prima-numeri')), 'Prima vinci «I colori»')
+  uguale('una tappa chiusa dice quale vincere prima', cosaServe(s, n('tappa:prima-numeri')), 'Prima vinci «Questo è…»')
   uguale('un mondo chiuso dice quale finire prima', cosaServe(s, n('tappa:seconda-corpo')), 'Prima finisci «In prima»')
   controlla('un mondo in arrivo arriva presto', /arriva presto/.test(cosaServe(s, q.nodi.find(x => x.tipo === 'mondo'))))
   controlla('il libro si apre con la bandiera', /bandiera/.test(cosaServe(s, n('libro:prima'))))
