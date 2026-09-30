@@ -60,7 +60,7 @@ cresciuta.
   immunità nessuna torre da sola vince una tappa.
 - **Il numero giusto non si stima, si misura** con `npm run dps` (motore
   vero, sulle carte, vita fermata su un'ondata vera: area, rimbalzi e
-  veleno compresi). `unita/castello` tiene la stima del modello (`dpsDi`)
+  veleno compresi). `misure/castello` tiene la stima del modello (`dpsDi`)
   dentro la regola. Provato coi prezzi uguali: le bombe di livello alto
   valevano otto arcieri e il napalm tredici, e la regola del gioco era
   «costruisci bombe».
@@ -111,7 +111,7 @@ cresciuta.
   calcolo in più: è quello che il calcolo del gradino compra.
 - **Una tappa senza rami è una tappa il cui tetto sta sotto il bivio**
   (`cap` < `RAMI_DA`: oggi solo il sentiero, cap 3). La regola è
-  dell'utente, e la tengono `unita/castello` e il validatore: una torre che
+  dell'utente, e la tengono `misure/castello` e il validatore: una torre che
   sale oltre il terzo gradino senza scegliere niente sale a vuoto. Il Bosco
   una volta ne restava fuori tutto («lì la lezione è ancora salire
   conviene»), e così dal guado alla radice le torri salivano fino al

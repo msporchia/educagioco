@@ -82,7 +82,7 @@ l'uno ci stanno **le tabelline grandi**.
   11×2 a 1,06, 12×5 a 1,22, 12×12 a 1,40).
 - **Hanno la forma delle altre (`math:8x11`) ma non sono caselle**: non
   contano fra le 55, non stanno in nessuna tappa, né nella mappa, né in una
-  stella, né nella marea. `eCasella` è il filtro, e `unita/asteroidi` lo
+  stella, né nella marea. `eCasella` è il filtro, e `misure/asteroidi` lo
   prova su ogni consumatore.
 - **Una grande su tre scende girata** (96 : 12 = ?, `giraLaGrande`) e si
   segna sulla sua casella. Il boss del volo alto pesca fra le grandi
@@ -93,7 +93,7 @@ l'uno ci stanno **le tabelline grandi**.
   `esercizioDaChiave` come opzione, non come globale. «Quante volte ci sta»
   a taglia piena divide anche per due cifre, col resto.
 
-Quello che esce, per livello (misurato in `unita/asteroidi`):
+Quello che esce, per livello (misurato in `misure/asteroidi`):
 
 | livello | mira | taglia | grandi fra le tabelline | esempi |
 |---|---|---|---|---|

@@ -104,7 +104,7 @@ const partita = await page.evaluate(async () => {
        invece di aspettare i quindici di fila che lo pagano: il bersaglio
        di questa tappa è più corto, quindi giocando non arriverebbe mai —
        e quello che c'è da provare non è la soglia (la conta
-       `unita/asteroidi`) ma il fatto che un sasso sparito così **non
+       `misure/asteroidi`) ma il fatto che un sasso sparito così **non
        lasci niente in archivio**, che è invisibile giocando. */
     if (i === 3) {
       m.tasca.mirino = 1
@@ -157,7 +157,7 @@ controlla('senza chiedere più centri del bersaglio',
    miscela è dichiarata (`QUOTA_TAPPA`, otto su dieci) e il resto è
    ripasso. Qui si guarda una partita sola, quindi la forbice è larga — la
    quota esatta, e il fatto che non ci siano mai sei domande di fila fuori
-   tabellina, li misura `unita/asteroidi` giocando le tappe per davvero. */
+   tabellina, li misura `misure/asteroidi` giocando le tappe per davvero. */
 const suoi = partita.viste.filter(([a, b]) => a === 2 || b === 2).length
 const quota = suoi / partita.viste.length
 dentro('la tabellina nuova è la maggior parte delle domande', Math.round(quota * 100), 65, 100)

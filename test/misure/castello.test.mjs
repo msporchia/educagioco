@@ -545,7 +545,7 @@ controlla('il gelo di una torre alta frena di più e dura di più',
    con due bocche non si tarasse: qui si misura, e se una non reggesse
    il test lo direbbe col nome. */
 /* `regali: false` non è una dimenticanza: la libera regala un
-   potenziamento ogni cinque ondate (`unita/regali-castello`), e quello
+   potenziamento ogni cinque ondate (`misure/regali-castello`), e quello
    che si controlla qui è **il pavimento** — la primissima partita di
    chi apre la modalità, che di regali non ne ha nessuno. È anche la
    partita su cui `npm run tara` la tara. */
@@ -608,7 +608,7 @@ for (const l of LIBERE) {
             `all'ondata 60 i nemici hanno ${Math.round(vitaNemico(l, 60))} di vita, ` +
             `contro ${Math.round(vitaNemico(l, 20))} alla ventesima`)
   /* e dove cede davvero, giocata fino in fondo da chi corre: è il
-     numero che i regali (`unita/regali-castello`) fanno salire */
+     numero che i regali (`misure/regali-castello`) fanno salire */
   const fino = gioca({ ...l, regali: false }, PROFILI.pieno)
   controlla(`${l.nome}: giocata fino in fondo si perde`, fino.esito === 'persa',
             `${fino.esito} all'ondata ${fino.onda}`)

@@ -3,7 +3,7 @@
 
    Il tower defense si gioca sulla carta a scacchiera e si veste con la
    pelle a sprite (`src/giochi/castello/scena/pelle.js`). Le regole le
-   provano già `unita/castello` e `integrazione/torri`; qui si prova
+   provano già `misure/castello` e `integrazione/torri`; qui si prova
    quello che il disegno può rompere:
 
      · in home il castello è una carta sola, `torri`, anche coi giochi in

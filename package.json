@@ -17,6 +17,7 @@
     "test": "node test/esegui.mjs unita",
     "test:unita": "node test/esegui.mjs unita",
     "test:browser": "node test/esegui.mjs integrazione",
+    "test:misure": "node test/esegui.mjs misure",
     "test:svelto": "node test/esegui.mjs --svelti --niente-build",
     "test:tutto": "node test/esegui.mjs",
     "test:commenti": "node strumenti/solo-commenti.mjs",

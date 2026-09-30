@@ -222,7 +222,7 @@ riquadri bianchi); si esce dal tasto della barra. Le tabelline in gioco
 hanno i numeri di riga e colonna accesi, le altre caselle restano smorzate.
 (`src/components/MappaTabelline.vue`, `src/components/MappaConcetti.vue`)
 
-Nei test: `unita/asteroidi` cammina la fila con un finto bambino (nessuna
+Nei test: `misure/asteroidi` cammina la fila con un finto bambino (nessuna
 tappa prima di quello che le serve, nessuna quando è già saputa),
 `unita/calcolo`, `integrazione/campagna-mate` (anche: un centro, una
 moneta), `integrazione/calcolo`. Sui cartelli di fine `[data-monete-prese]`

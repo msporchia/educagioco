@@ -62,7 +62,7 @@ in `LIBERE_RACCONTO` di `src/data/campagne-castello.js`.
   `ondate: Infinity` (`insiemeDa`). I test la giocano con `Infinity` e
   `finoA`, mai come una campagna corta: il bivio giocato come campagna da
   dodici cedeva alla sesta.
-- **Due bocche si tarano**, e `unita/castello` dice per ciascuna dove cede.
+- **Due bocche si tarano**, e `misure/castello` dice per ciascuna dove cede.
   Provata la libera a strada singola «perché con due bocche è intarabile»:
   era una paura.
 
@@ -124,7 +124,7 @@ in `LIBERE_RACCONTO` di `src/data/campagne-castello.js`.
 Dimensionare un regalo non si stima: `node strumenti/regali-castello.mjs`
 stampa la tabella facendo giocare il simulatore su tutte e quattro le libere,
 coi gradi presi come li prende un bambino dal giro delle carte; il banco è
-`unita/regali-castello` (`node test/esegui.mjs regali`). L'ondata a cui si
+`misure/regali-castello` (`node test/esegui.mjs regali`). L'ondata a cui si
 cede, per gradi in tasca:
 
 | gradi | 0 | 10 | 20 | 35 | 50 | 100 |

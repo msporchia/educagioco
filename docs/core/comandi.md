@@ -13,11 +13,12 @@ build non passa più.
 | comando | cosa fa | costa |
 |---|---|---|
 | `npm run dev` | server di sviluppo su `localhost:5173` | — |
-| `npm test` | le prove senza browser (= `test:unita`) | ~25 s |
+| `npm test` | le prove senza browser (= `test:unita`) | ~15 s |
+| `npm run test:misure` | l'equilibrio dei giochi: partite finte, la mappa inglese | ~30 s |
 | `npm run test:svelto` | solo quelle sotto il secondo, senza ricompilare | ~4 s |
 | `npm run build` | `dist/index.html`, il file unico | ~3 s |
 | `npm run test:browser` | solo le prove dentro Chrome | ~1,5 min |
-| `npm run test:tutto` | tutto, browser compreso: prima del push | ~1,5 min |
+| `npm run test:tutto` | tutto, misure e browser compresi: prima del push | ~1,5 min |
 | `node test/esegui.mjs <nome>` | un file solo (`pozioni`, `fattoria`…) | secondi |
 
 Opzioni del lanciatore: `--niente-build`, `--scatti`, `--svelti`,

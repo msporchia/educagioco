@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE QUATTRO PARTITE LIBERE DEL CASTELLO, DAL DITO
 
-   Quello che `unita/castello` non può vedere: che sulla mappa ci siano
+   Quello che `misure/castello` non può vedere: che sulla mappa ci siano
    **quattro tasti**, uno per terreno, ognuno col suo record; che
    toccarne uno apra proprio quella libera; che a fine partita il
    record finisca nel quaderno **di quel terreno** e non in quello di

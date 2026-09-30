@@ -5,6 +5,7 @@
      node test/esegui.mjs              tutto
      node test/esegui.mjs unita        solo quelli che non aprono il browser
      node test/esegui.mjs integrazione solo quelli nel browser
+     node test/esegui.mjs misure       solo le misure (docs/core/test.md)
      node test/esegui.mjs animali      solo i file che contengono "animali"
      node test/esegui.mjs --niente-build   non ricompila prima
      node test/esegui.mjs --tempo=600      alza il tempo massimo per test
@@ -54,7 +55,7 @@ import { dirname, resolve, relative } from 'node:path'
 
 const QUI = dirname(fileURLToPath(import.meta.url))
 const RADICE = resolve(QUI, '..')
-const GRUPPI = ['unita', 'integrazione']
+const GRUPPI = ['unita', 'misure', 'integrazione']
 
 const argomenti = process.argv.slice(2)
 const senzaBuild = argomenti.includes('--niente-build')
@@ -121,7 +122,7 @@ function tempoDichiarato(file) {
    di un secondo prima ancora di toccare un pulsante. Non è una domanda
    di soglia, è la natura del test — dichiararsi svelto non basterebbe. */
 const SOGLIA_SVELTA = 100
-const svelto = t => t.gruppo !== 'integrazione' && t.suo < SOGLIA_SVELTA
+const svelto = t => t.gruppo === 'unita' && t.suo < SOGLIA_SVELTA
 
 function raccogli() {
   const fuori = []
@@ -142,7 +143,8 @@ function raccogli() {
       }
   }
   if (!filtri.length) return fuori
-  return fuori.filter(t => filtri.some(f => t.gruppo === f || t.nome.includes(f)))
+  // il nome di un gruppo vuol dire quel gruppo e basta: «misure» non prende unita/griglia-misure
+  return fuori.filter(t => filtri.some(f => (GRUPPI.includes(f) ? t.gruppo === f : t.nome.includes(f))))
 }
 
 /* `raccogli` è un file dove tenere da parte quello che il test scrive,

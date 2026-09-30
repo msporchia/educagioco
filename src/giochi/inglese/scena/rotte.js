@@ -1,7 +1,7 @@
 // Il mare della mappa del tesoro, per chi ci naviga: dove c'è acqua
 // abbastanza per la nave, dove attracca accanto a ogni tappa, e la rotta
 // da un porto all'altro girando attorno alla terra. Puro, gira in Node
-// (test/unita/inglese-isole). Le scelte in docs/lingue/mondi-vista.md.
+// (test/misure/inglese-isole). Le scelte in docs/lingue/mondi-vista.md.
 
 export const NAVE = 12          // quanta acqua vuole la nave attorno a sé, in px
 const PASSO = 8                 // il lato di una cella del mare

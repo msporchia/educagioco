@@ -281,7 +281,7 @@ Il gioco è a turni e non ha un orologio: niente ⏸
 
 Nei test: `unita/inglese-vista` (la fila su ogni frase in tre formati, la
 mappa a 320/390/520 px senza sovrapposizioni, un pittore per ogni disegno,
-le monete, la materia delle frasi), `unita/inglese-isole` (a cinque
+le monete, la materia delle frasi), `misure/inglese-isole` (a cinque
 larghezze: una costa chiusa per isola con dentro, col margine, tappe, nomi,
 sentieri e titolo; la stessa isola ricalcolata da capo e a ogni punto del
 gioco; forme diverse per mondi diversi; isole che non si toccano; rotte in

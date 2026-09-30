@@ -85,4 +85,4 @@ piazzole cambia la firma senza doverselo ricordare.
 
 Nei test: `unita/castello-carta` (le piazzole promesse, sparse nei tre
 terzi e dai due lati, le prime tre del modello in tre terzi diversi,
-`aSalti`), `unita/castello` (`postiDi`).
+`aSalti`), `misure/castello` (`postiDi`).

@@ -1,5 +1,5 @@
 // Dove cade ogni cosa sulla mappa del tesoro: puro, senza canvas, gira in
-// Node (test/unita/inglese-vista, test/unita/inglese-isole). Riceve lo stato
+// Node (test/unita/inglese-vista, test/misure/inglese-isole). Riceve lo stato
 // della mappa (motore/mappa.js, statoMappa) e la larghezza, e torna nodi,
 // sentieri, le coste delle isole, il mare basso, i porti della nave e il mare
 // dove naviga, in pixel CSS. Si calcola una volta per disposizione: la tela

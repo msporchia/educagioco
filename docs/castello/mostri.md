@@ -180,7 +180,7 @@ di un pipistrello, e non è un errore.
   6. La prossima si chiama anche a battaglia in corso, appena quella di
   adesso è uscita tutta. **Il modello non la conta**: le tappe sono tarate
   su chi si prende il suo tempo, e la fretta è un cuscinetto per chi
-  rischia. `unita/castello` tiene il tetto a due acquisti per tappa: se
+  rischia. `misure/castello` tiene il tetto a due acquisti per tappa: se
   valesse di più diventerebbe un obbligo.
 - **Le ondate si chiudono una per una** (`aperte` nella battaglia), non a
   campo pulito.

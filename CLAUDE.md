@@ -28,10 +28,11 @@ una o due frasi, non la storia di come ci si è arrivati: quella la tiene
 npm ci                 # installazione pulita (non npm install)
 npm run dev            # server di sviluppo
 npm run build          # produce dist/index.html, il file unico
-npm test               # le unità: senza browser, una ventina di secondi
+npm test               # le unità: senza browser, una quindicina di secondi
 npm run test:svelto    # solo i test sotto il secondo, mentre si scrive
 npm run test:browser   # solo dentro Chrome, un minuto e mezzo
-npm run test:tutto     # tutto, browser compreso: prima di pubblicare
+npm run test:misure    # l'equilibrio dei giochi (partite finte, la mappa inglese)
+npm run test:tutto     # tutto, misure e browser compresi: prima di pubblicare
 npm run test:commenti  # fallisce se il codice è cambiato oltre ai commenti
 node test/esegui.mjs animali            # solo i file che contengono "animali"
 node test/esegui.mjs --niente-build     # non ricompilare prima
@@ -44,8 +45,9 @@ browser gira **prima del push**, non prima di ogni commit: sui telefoni
 finisce la punta, non i passaggi. Chi ha toccato una schermata lancia il suo
 file (`node test/esegui.mjs pozioni`). Un agente in un worktree lancia i test
 con `--niente-build` e non fa la build: la build si fa su main. La CI lancia
-solo le unità, quindi un guasto che vive in `test/integrazione/` lo scopre
-solo chi l'ha lanciato a mano. Tutti i comandi, gli strumenti che riscrivono
+solo le unità, quindi un guasto che vive in `test/integrazione/` o in
+`test/misure/` (l'equilibrio dei giochi) lo scopre solo chi l'ha lanciato a
+mano. Tutti i comandi, gli strumenti che riscrivono
 file e i banchi di prova: `docs/core/comandi.md`.
 
 ## La mappa

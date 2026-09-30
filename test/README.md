@@ -57,8 +57,8 @@ Tre cose cambiano a vederlo girare:
   minuto partito per ultimo allungherebbe il giro di un minuto intero.
 - **il giro non finisce prima del suo test più lungo.** Oggi sono i
   file di integrazione attorno al minuto (`torri`, `genitori`,
-  `fattoria`), e per `npm test` è `unita/survivors`, che da
-  solo vale quanto tutte le altre unità insieme. Un test che si allunga
+  `fattoria`), e fra le misure `misure/survivors`, che da solo valeva
+  quanto tutte le unità insieme. Un test che si allunga
   lì si sente subito sul totale, ed è il primo posto dove guardare: la
   fattoria era a due minuti, e metà li passava a cercare la bancarella
   partendo dall'angolo sbagliato.
@@ -92,8 +92,9 @@ secondo.
 `npm test` (= `npm run test:unita`) gira tutta la cartella `unita/`, lenti
 compresi: `--svelti` sceglie chi entra in *quel* giro più stretto, non
 cosa entra in `npm test`. Ed è `npm run test:unita` il comando su cui si
-appoggia la CI prima di pubblicare — un test lento in meno lì sarebbe un
-buco, non un guadagno.
+appoggia la CI prima di pubblicare. Le partite finte e la geometria, che
+provano l'equilibrio e non le regole, stanno in `misure/`: girano con
+`test:tutto` e `test:misure`, non nella CI (docs/core/test.md).
 
 ## Le foto si chiedono
 
@@ -135,6 +136,7 @@ dimenticarsene vuol dire provare la versione di ieri e non accorgersene.
 ```
 test/
   unita/          niente browser, millisecondi: aritmetica, dati, motori
+  misure/         niente browser, secondi: partite finte, equilibrio, la mappa inglese
   integrazione/   il gioco vero dentro Chrome, aperto da file://
   aiuto/          gli attrezzi che servono a tutti e due
   scatti/         gli screenshot lasciati dai test (non versionati)

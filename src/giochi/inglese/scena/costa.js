@@ -1,5 +1,5 @@
 // Le coste delle isole della mappa del tesoro: un campo, una soglia, un
-// contorno. Puro, senza canvas, gira in Node (test/unita/inglese-isole).
+// contorno. Puro, senza canvas, gira in Node (test/misure/inglese-isole).
 // Il perché della forma sta in docs/lingue/mondi-vista.md («Le isole»).
 import { dado } from '../../../grafica/comune.js'
 

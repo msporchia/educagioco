@@ -64,7 +64,7 @@ fermava un'ondata a nessuna vita: i colpi non bastavano per tutti).
   1,6 s al primo livello e cresceva di più: in basso non valeva il prezzo,
   e al decimo sì.
 - **La magica cresce di più in danno e uguale in area** (danno +37% a
-  gradino, era +45%; l'area +8% resta, e la tiene `unita/castello`): l'area
+  gradino, era +45%; l'area +8% resta, e la tiene `misure/castello`): l'area
   che si allarga passa da un nemico a due o tre in fila fra il secondo e il
   terzo livello, e lì la magica faceva un balzo.
 - **La stima del modello conta quel balzo** (`BERSAGLI.largo` 42 e
@@ -84,6 +84,6 @@ fermava un'ondata a nessuna vita: i colpi non bastavano per tutti).
   cumulato, fa 0,86 · 0,84 · 0,86 l'arciere, 0,88 · 0,72 · 0,76 la magica,
   0,77 · 0,80 · 0,84 il ghiaccio, 0,84 · 0,94 · 0,81 le bombe.
 
-Nei test: `unita/castello` (la stima del modello dentro la regola, la
+Nei test: `misure/castello` (la stima del modello dentro la regola, la
 magica che si allarga, il gelo che cresce), `unita/rami-castello` (i rami
 contro il tronco, con la stessa stima).

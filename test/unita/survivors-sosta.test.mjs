@@ -95,7 +95,7 @@ const distanza = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
   controlla('si interrompe una partita viva', !p.finita && p.eroe.cuori > 0)
 
   /* chi riprende risponde a tutto: qui si prova la ripresa, non la
-     taratura della grotta — quella sta in `unita/survivors` */
+     taratura della grotta — quella sta in `misure/survivors` */
   const ripresa = leggi(scrivi(p, 4), t, { rnd: caso(78) })
   const { partita } = gioca(regole, { rnd: caso(78), bravura: 1, esattezza: 1, da: ripresa })
   controlla('una partita ripresa arriva al traguardo', partita.vinta,

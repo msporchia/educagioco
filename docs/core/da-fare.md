@@ -28,10 +28,6 @@ stanno nella sua cartella.
 
 ## Le prove
 
-- **`unita/survivors` in due file.** È il pavimento di `npm test` (22–25 s,
-  quanto tutte le altre unità insieme), e 13 di quei secondi sono la
-  sezione che gioca le nove tappe: in un file suo, otto alla volta,
-  `npm test` scenderebbe verso i 13 s.
 - **Un `--svelti` anche per l'integrazione** (proposta, da decidere): un
   `tempo:` nei file più cari e, dentro `integrazione/`, «fuori chi supera
   la soglia» invece di «sempre tutti fuori», così chi tocca una schermata

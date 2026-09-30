@@ -3,7 +3,7 @@
 
 
    L'equilibrio lo calcola `data/castello.js` e lo verifica, in aritmetica
-   e in un lampo, `test/unita/castello.test.mjs`. Quello che il modello non
+   e in un lampo, `test/misure/castello.test.mjs`. Quello che il modello non
    può sapere è se il gioco vero si comporta come il conto dice: i nemici
    camminano, le torri hanno un raggio, i colpi viaggiano. Qui si gioca
    davvero, per vedere se le due cose combaciano.

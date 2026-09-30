@@ -10,9 +10,10 @@ ripete.
 | quando | cosa | costa |
 |---|---|---|
 | mentre si scrive | `npm run test:svelto` | ~4 s |
-| a ogni commit | `npm test` (= `npm run test:unita`), niente browser né build | ~25 s |
-| toccata una schermata | `node test/esegui.mjs <nome>`, un file solo | secondi |
-| prima del push | `npm run test:tutto` (o `test:browser`) | ~1,5 min |
+| a ogni commit | `npm test` (= `npm run test:unita`), niente browser né build | ~15 s |
+| toccata una schermata, o l'equilibrio di un gioco | `node test/esegui.mjs <nome>`, un file solo | secondi |
+| prima del push | `npm run test:tutto`: unità, misure e browser | ~1,5 min |
+| ogni tanto | `npm run test:misure` | ~30 s |
 
 - **Le unità girano a ogni commit**: costano secondi, non c'è motivo di
   risparmiarle.
@@ -25,24 +26,35 @@ ripete.
   per nome quando serve): la build la fa chi coordina.
 - **La CI lancia solo `npm run test:unita`** prima di costruire e
   pubblicare (Chrome non lo scarica): un guasto che vive solo in
-  `test/integrazione/` lo trova chi lo lancia a mano. Motivo in più per
-  chiederlo quando si tocca lo schermo.
-- Il filtro per nome prende sia il gruppo esatto sia i file che *contengono*
-  il nome, nelle due cartelle: `node test/esegui.mjs pozioni` gira
+  `test/integrazione/` o in `test/misure/` lo trova chi lo lancia a mano.
+  Motivo in più per chiederlo quando si tocca lo schermo o l'equilibrio.
+  La CI non ha il compito di verificare la bilanciatura di un gioco.
+- Il nome di un gruppo (`unita`, `misure`, `integrazione`) prende quel
+  gruppo e basta. Un altro filtro prende i file che *contengono* il nome,
+  in tutte le cartelle: `node test/esegui.mjs pozioni` gira
   `unita/pozioni` **e** `integrazione/pozioni` (ci sono una ventina di
   nomi in comune), quindi apre Chrome anche se si voleva provare solo i
   dati.
 
-## Le tre cartelle
+## Le quattro cartelle
 
 Un file per argomento; il lanciatore raccoglie da solo ogni `*.test.mjs`,
 anche nelle sottocartelle. Un test nuovo non si rifà né il browser né i
 controlli: importa da `../aiuto/`.
 
-- **`test/unita/`** — nessun browser. I motori girano senza schermo, quindi
-  qui si *giocano le partite per davvero*: il castello tappa per tappa con
-  un finto giocatore, i livelli del Generale risolti, il codice segreto
-  vinto ragionando.
+- **`test/unita/`** — nessun browser, le regole: il calcolo è giusto, i
+  dati stanno in piedi, i livelli del Generale si risolvono, il codice
+  segreto si vince ragionando. Costano secondi e si rompono appena si
+  sbaglia una riga.
+- **`test/misure/`** — nessun browser, l'equilibrio: si *giocano le partite
+  per davvero* o si genera tanto per vedere che il risultato abbia ancora
+  senso (il castello tappa per tappa, le nove tappe di Survivors con un
+  finto giocatore che schiva, i regali della partita libera, le domande
+  che scendono negli asteroidi, la mappa delle isole dell'inglese a cinque
+  larghezze). Si rompono solo quando si tocca quella parte, e da sole
+  pesavano metà di `npm test` (sulla CI una passava i quattro minuti): per
+  questo non stanno né nelle unità né nella CI. Una misura nuova va qui
+  quando gioca o genera per più di qualche secondo.
 - **`test/integrazione/`** — Chrome su `dist/index.html`, si gioca col
   dito. Il lanciatore ricompila prima, se non gli si dice
   `--niente-build`.

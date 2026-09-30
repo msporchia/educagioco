@@ -31,9 +31,10 @@ l'albero dei processi, Chrome compresi.
   (`node_modules/.cache/educagioco/tempi-dei-test.json`, misurati otto alla
   volta, quindi un po' gonfiati dal carico): `integrazione/costruttore`
   ~139 s e `integrazione/passo-passo` ~129 s, poi `torri`, `genitori`,
-  `fattoria` attorno al minuto. Per `npm test` il pavimento è
-  `unita/survivors`, 22–25 s — quanto tutte le altre unità insieme — e 13
-  di quei secondi sono la sezione che gioca le nove tappe.
+  `fattoria` attorno al minuto. Fra le misure `misure/survivors`, 22–25 s,
+  e 13 di quei secondi sono la sezione che gioca le nove tappe. Da quando
+  le misure stanno in `test/misure/`, `npm test` fa 6 s (prima un paio di
+  minuti, col pavimento di survivors e della mappa delle isole).
 
 ## Le regole che ne vengono
 

@@ -83,7 +83,7 @@ passano e hanno la curva di sempre.
   «Cosa so» («sai tutte le tabelline fino all'8»), se no la stella si
   spegnerebbe mentre il pool, a ragione, non ripropone.
 
-Nei test: `unita/asteroidi` (blocco 10, i numeri della marea).
+Nei test: `misure/asteroidi` (blocco 10, i numeri della marea).
 
 ## Come lo usano i quiz
 

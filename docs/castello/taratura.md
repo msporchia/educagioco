@@ -173,7 +173,7 @@ npm run tara -- --da 0.6 --bersaglio 0.85
   tappa intera.
 - **La promessa:** chi spende tutto finisce la tappa; chi tiene in tasca un
   quarto no (perde diciannove volte su venti); il pasticcione ce la fa.
-  Un'eccezione si scrive col suo nome in `unita/castello` (`PERDONANO`):
+  Un'eccezione si scrive col suo nome in `misure/castello` (`PERDONANO`):
   con le piazzole del 30 settembre l'elenco è vuoto (la gola, e prima le
   isole, perdonavano con meno posti).
 
@@ -194,7 +194,7 @@ la tabella non ce l'ha, cioè le partite libere oltre l'ultima ondata tarata.
 - **La firma** (`firmaEquilibrio`) è l'impronta di `CFG`, prezzi, torri,
   rami, `MONDO`, mostri (immunità, abilità, capo, miste), tappe e libere
   coi loro schizzi (`forme`, `fronti`) e con le loro carte (strada e
-  piazzole): se cambia, `unita/castello` diventa rosso e chiede di
+  piazzole): se cambia, `misure/castello` diventa rosso e chiede di
   rilanciare `npm run tara` invece di giocare su un equilibrio di ieri.
 
 ## Gli strumenti di misura
@@ -219,7 +219,7 @@ la tabella non ce l'ha, cioè le partite libere oltre l'ultima ondata tarata.
 - **`node strumenti/regali-castello.mjs`**: quanto vale un regalo (vedi
   [libere.md](libere.md)).
 
-Nei test: `test/unita/castello` gioca tutte le tappe coi profili (chi spende
+Nei test: `test/misure/castello` gioca tutte le tappe coi profili (chi spende
 tutto finisce, chi tiene un quarto no, a chi spende non avanza più del 10%,
 il pasticcione ce la fa, c'è sempre qualcosa da comprare, la fretta vale al
 più due acquisti — il tetto a ondata è 5, da quando i gradini bassi costano
