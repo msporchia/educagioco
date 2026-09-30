@@ -118,7 +118,12 @@ La fila, oggi (22 voci):
 
 - **Ogni pianeta porta una tabellina e tiene le precedenti come ripasso.**
   Si supera con un **bersaglio di partita** — tante giuste, di cui un tot
-  sulla tabellina nuova (le «mirate») — e paga in monete la prima volta.
+  sulla tabellina nuova (le «mirate»).
+- **Le monete arrivano col sasso**: 🪙1 a ogni centro, nel momento in cui
+  cade, anche nel volo infinito e anche in una tappa rifatta o persa; ogni
+  dieci centri un cartello dice quante ne sono entrate. **Niente premio di
+  tappa**: c'era, uguale al bersaglio, e faceva pagare doppio la prima
+  volta ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
 - **Otto domande su dieci parlano della tappa** (`QUOTA_TAPPA` 0,8 in
   `src/store/calcolo.js`), le altre sono ripasso. Con meno la tappa era
   un'attesa, con tutto il pool le tabelline di prima si dimenticavano.
@@ -219,4 +224,6 @@ hanno i numeri di riga e colonna accesi, le altre caselle restano smorzate.
 
 Nei test: `unita/asteroidi` cammina la fila con un finto bambino (nessuna
 tappa prima di quello che le serve, nessuna quando è già saputa),
-`unita/calcolo`, `integrazione/campagna-mate`, `integrazione/calcolo`.
+`unita/calcolo`, `integrazione/campagna-mate` (anche: un centro, una
+moneta), `integrazione/calcolo`. Sui cartelli di fine `[data-monete-prese]`
+e, col salvadanaio stanco, `[data-nota-monete]`.

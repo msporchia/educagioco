@@ -784,7 +784,7 @@ export function countMastered(prefix, now = Date.now()) {
     .filter(([k, v]) => k.startsWith(prefix) && isMastered(v, now)).length
 }
 
-// Livello unico e moltiplicatore delle monete: vedi docs/core/progressi.md
+// Livello unico (non moltiplica più le monete): vedi docs/core/progressi.md
 export const level = computed(() => livelloTotale(state.profile).n)
 
 // Le monete che dà un gioco passano dal filtro della varietà

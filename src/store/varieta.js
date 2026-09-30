@@ -2,7 +2,7 @@
 // vedi docs/genitori/varieta.md. I conti sono in data/varieta.js (puro).
 import { ref, reactive } from 'vue'
 import { state, persist, filtraMonete, addCoins } from './profile.js'
-import { inCorso, secondiInCorso, vociInMemoria, leggiSessioni, chiaveGiorno, adesso } from './sessioni.js'
+import { inCorso, secondiInCorso, vociInMemoria, leggiSessioni, chiaveGiorno, ora } from './sessioni.js'
 import { GIOCHI } from '../data/giochi.js'
 import { inCasa } from '../data/portata-giochi.js'
 import * as V from '../data/varieta.js'
@@ -21,7 +21,7 @@ export function ricarica() {
   return inLettura
 }
 
-export function statoDi(k, oggi = adesso()) {
+export function statoDi(k, oggi = ora()) {
   const id = state.player
   const a = inCorso()
   const chiave = V.chiaveDelGioco(k)
@@ -31,7 +31,7 @@ export function statoDi(k, oggi = adesso()) {
 }
 
 // quanto ha giocato davvero oggi, senza togliere il tempo ridato: la riga «Oggi» dei grandi
-export const secondiVeri = (k, oggi = adesso()) =>
+export const secondiVeri = (k, oggi = ora()) =>
   V.secondiContati({ voci: vociInMemoria(state.player) || [], gioco: V.chiaveDelGioco(k), oggi })
 
 // il gioco aperto adesso, se è di questo bambino
@@ -40,7 +40,7 @@ export function giocoAperto() {
   return a && a.id === state.player ? V.chiaveDelGioco(a.gioco) : null
 }
 
-export function altroDaProvare(escluso, oggi = adesso()) {
+export function altroDaProvare(escluso, oggi = ora()) {
   const candidati = GIOCHI
     .filter(g => g.chiave !== escluso && V.paga(g) && inCasa(g.chiave))
     .map(g => ({ chiave: g.chiave, nome: g.nome, stato: statoDi(g.chiave, oggi) }))
@@ -84,6 +84,25 @@ export function incassa(n) {
   return { ...ultimo }
 }
 
+// Le monete di una partita: si pagano quando arrivano (`paga`, una cosa fatta
+// alla volta), e il cartello di fine dice quante e quanto ha tolto il
+// salvadanaio (`nota`). docs/apprendimento/calibrazione.md, «Si paga subito».
+export function borsa(k) {
+  let chiesto = 0, dato = 0
+  return {
+    paga(n) {
+      if (!(n > 0)) return 0
+      const p = incassa(n)
+      chiesto += p.chiesto
+      dato += p.dato
+      return p.dato
+    },
+    get dato() { return dato },
+    get chiesto() { return chiesto },
+    nota: () => premioDetto(k, chiesto, dato),
+  }
+}
+
 // ── le scelte dei grandi, in settings.varieta (per bambino) ──
 function scrivi(cambia) {
   const s = state.profile.settings
@@ -123,7 +142,7 @@ export function consiglia(k, si) {
 export function accendiDormienti(si) { scrivi(v => { v.dormienti = !!si }) }
 
 // «Ridai tempo»: il conto di oggi riparte da zero, il registro resta com'è
-export function ridaiTempo(k, oggi = adesso()) {
+export function ridaiTempo(k, oggi = ora()) {
   const g = chiaveGiorno(oggi)
   const giaRidato = (() => {
     const r = regole().ridato

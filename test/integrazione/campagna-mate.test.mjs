@@ -95,6 +95,7 @@ const partita = await page.evaluate(async () => {
   const viste = [], ritardi = []
   let gettoni = 0, tolti = 0
   const tipi = new Set()
+  const salvadanaio = m.salvadanaio()
   // si risponde sempre giusto: interessa dove porta il bersaglio, non la bravura
   for (let i = 0; i < 200 && m.fase.value === 'gioco'; i++) {
     const giusto = m.asteroidi().find(x => x.ok && !x.morto)
@@ -126,7 +127,8 @@ const partita = await page.evaluate(async () => {
     await new Promise(r => setTimeout(r, 15))
   }
   return { viste, bersaglio, ritardi, fase: m.fase.value, giuste: m.hud.giuste, gettoni, tolti,
-           tipi: [...tipi], mirate: m.hud.mirate, tappa: m.progresso.value.tappa }
+           tipi: [...tipi], mirate: m.hud.mirate, tappa: m.progresso.value.tappa,
+           prese: m.monete.prese, entrate: m.salvadanaio() - salvadanaio }
 })
 
 /* LA RISPOSTA NON SI FA ASPETTARE. Gli asteroidi nascono sfalsati — se no
@@ -141,6 +143,12 @@ nota(`il sasso giusto entra dopo ${Math.min(...partita.ritardi).toFixed(1)}–` 
 
 uguale('il bersaglio chiude la tappa', partita.fase, 'vinta')
 uguale('e la tappa risulta superata', partita.tappa, 1)
+/* LE MONETE ARRIVANO COL SASSO, E BASTA: 🪙1 a centro, nessun premio di
+   tappa sopra (docs/apprendimento/calibrazione.md). Il salvadanaio può
+   crescere di più solo per un traguardo scattato strada facendo. */
+uguale('un centro, una moneta', partita.prese, partita.giuste)
+controlla('e sono entrate davvero nel salvadanaio', partita.entrate >= partita.giuste,
+          `${partita.entrate} monete per ${partita.giuste} centri`)
 controlla('senza chiedere più centri del bersaglio',
           partita.giuste >= partita.bersaglio && partita.giuste <= partita.bersaglio + 4,
           `${partita.giuste} centri per un bersaglio di ${partita.bersaglio}`)

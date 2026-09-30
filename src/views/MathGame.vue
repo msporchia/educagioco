@@ -3,10 +3,12 @@
    docs/asteroidi/scaletta.md. Quale calcolo esce lo decide
    `store/tabelline.js`, non questo file: qui restano gli asteroidi. */
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
-import { state, item, answer, addCoins,
+import { state, item, answer,
          segna, segnaBest, mateProgresso, tabellineIntere,
          asteroidiCompleta } from '../store/profile.js'
 import { apertaQui } from '../data/portata-giochi.js'
+import { PAGA } from '../data/paghe.js'
+import { borsa } from '../store/varieta.js'
 import { createPicker } from '../store/srs.js'
 import { mareaTabelline, mareaCalcolo } from '../store/marea.js'
 import { CAMPAGNA, chiaveCalcolo, fattoriDi, eGrande } from '../data/tabelline.js'
@@ -46,7 +48,7 @@ const CFG = {
   ritmoPasso: 0.05, ritmoTappa: 0.7, ritmoVolo: 0.5,   // vedi `difficolta`, e docs/asteroidi/volo.md
   puntiOk: 10, puntiNo: -5, bossOgni: 8, bossLento: 1.45, difficileLento: 1.25,
   msNonRisposto: 9000,             // il sasso è caduto: non è lentezza, è un buco
-  bossPunti: 40, serieVita: 10, perMoneta: 10,
+  bossPunti: 40, serieVita: 10, cartelloMonete: 10,
 }
 
 /* ---------- elementi: chiave normalizzata, 6×8 e 8×6 sono lo stesso fatto ---------- */
@@ -125,7 +127,9 @@ const cartello = reactive({ testo: '', colore: '', n: 0 })
 const finale = reactive({ punti: 0, giuste: 0, mirate: 0, livello: 1, record: false, ripasso: [],
                           primato: null })       // `primato`: null in una tappa, il record non c'è
 const recordVolo = computed(() => recordInParole(primatoDi('mate'), SFIDA_VOLO))
-const premio = ref(0)
+// le monete di questa partita: un asteroide le paga quando cade (docs/apprendimento/calibrazione.md)
+let borsellino = borsa('mate'), mostrate = 0
+const monete = reactive({ prese: 0, nota: '' })
 
 const tela = ref(null)
 let ctx = null, W = 0, H = 0, S = 1, suolo = 0, altezzaDomanda = 0
@@ -541,9 +545,11 @@ function colpisci(a) {
       hud.punti += CFG.puntiOk; suono.ok()
       premia(hud.serie)
     }
-    // un asteroide vale 🪙1 (docs/apprendimento/calibrazione.md): niente più moltiplicatore di livello
-    if (hud.giuste % CFG.perMoneta === 0) {
-      addCoins(CFG.perMoneta); mostraCartello('+' + CFG.perMoneta + ' 🪙', '#ffd94a'); suono.moneta()
+    borsellino.paga(PAGA.asteroide)
+    // la moneta è già arrivata: il cartello ogni dieci centri dice solo quante ne hai fatte
+    if (hud.giuste % CFG.cartelloMonete === 0 && borsellino.dato > mostrate) {
+      mostraCartello('+' + (borsellino.dato - mostrate) + ' 🪙', '#ffd94a'); suono.moneta()
+      mostrate = borsellino.dato
     }
     segna(mente.value ? 'mente' : 'math')
     const nuovo = hud.partenza + Math.floor(hud.giuste / CFG.salitaOgni)
@@ -803,6 +809,7 @@ function inizia(i = posizione.value) {
   finale.primato = null
   particelle = []; anelli = []; frammenti = []; raggi = []
   scossa = 0; lampo = 0; chieste = 0
+  borsellino = borsa('mate'); mostrate = 0
   // la nave torna nuova a ogni partita, e la tasca si svuota: i gettoni
   // sono il premio di *questa* partita e non un salvataggio — il perché
   // sta in `data/potenziamenti.js`
@@ -836,6 +843,7 @@ function etichettaDi(k) {
 
 function riassunto() {
   finale.punti = hud.punti; finale.giuste = hud.giuste; finale.mirate = hud.mirate
+  monete.prese = borsellino.dato; monete.nota = borsellino.nota()
   finale.livello = hud.livello
   finale.record = segnaBest('math', hud.punti)
   const dove = !campagna.value ? chiaviDelVolo() : mente.value ? poolMente() : chiaviPossibili()
@@ -853,18 +861,12 @@ function tappaSuperata() {
   asteroidi = []
   const v = voce.value
   const ultima = !!v && v.pos === fila.length - 1
-  // il premio è della prima volta: rigiocare una tappa già superata lascia
-  // una moneta di cortesia, non uno stipendio
-  const giaFatto = !!v && fattaVoce(v)
+  // niente premio di tappa: ogni asteroide si è già pagato cadendo
   if (v) asteroidiCompleta(v)
-  // il premio è quanto la tappa chiede in asteroidi giusti (`bersaglio`), a
-  // 🪙1 l'uno: niente più moltiplicatore di livello (docs/apprendimento/calibrazione.md)
-  premio.value = giaFatto ? 1 : tappa.value.bersaglio
-  addCoins(premio.value)
   riassunto()
   fase.value = ultima ? 'trionfo' : 'vinta'
   anello(W / 2, suolo * 0.55, '#ffd94a', Math.max(W, H))
-  suono.livello(); suono.moneta()
+  suono.livello()
 }
 
 /* «avanti» segue la fila: dopo il pianeta del 10 tocca a una stazione,
@@ -928,6 +930,8 @@ onMounted(() => {
                     posizione, voce, mente, magazzino,
                     // -1 è il volo infinito, uno solo
                     iniziaVolo, recordVolo,
+                    // le monete: quelle di questa partita, e il salvadanaio
+                    monete, salvadanaio: () => state.profile.coins,
                     // la fila mescolata, il contatore unico (quante voci
                     // sono superate) e cosa viene dopo dentro la fila
                     fila, dopo, contatore, dove,
@@ -1098,7 +1102,8 @@ onUnmounted(() => {
       <div class="dato"><b>{{ tappa.nome }}</b></div>
       <div class="dato">{{ voce ? voce.n : 0 }} di {{ fila.length }}</div>
       <div class="dato">Centri: <span>{{ finale.giuste }}</span></div>
-      <div class="dato">Premio: <span>+{{ premio }} 🪙</span></div>
+      <div class="dato" data-monete-prese>Monete: <span>+{{ monete.prese }} 🪙</span></div>
+      <div v-if="monete.nota" class="dato nota" data-nota-monete>{{ monete.nota }}</div>
       <!-- «adesso tocca a» segue la fila, non la campagna -->
       <p v-if="dopo" class="dritta">Ora tocca a
         {{ dopo.T.emoji }} {{ dopo.T.nome }}. {{ dopo.T.dritta }}</p>
@@ -1114,7 +1119,7 @@ onUnmounted(() => {
       <h1 class="chiaro">🎉 Scaletta<br><span>finita!</span></h1>
       <p class="testo chiaro">Tutte e {{ fila.length }} le tappe sono superate: i
         {{ CAMPAGNA.length }} pianeti e le {{ STAZIONI.length }} stazioni.
-        Premio: <b>+{{ premio }} 🪙</b>. Si apre il <b>volo infinito</b>, dove i calcoli
+        In quest'ultima: <b>+{{ monete.prese }} 🪙</b>. Si apre il <b>volo infinito</b>, dove i calcoli
         diventano sempre più tosti e non ce n'è un ultimo.</p>
       <div class="dato">✖️ Tabelline imparate: <span>{{ intere.size }}/10</span></div>
       <div class="dato">🧠 Trucchi in mano:
@@ -1132,6 +1137,8 @@ onUnmounted(() => {
         <span>{{ finale.giuste }}/{{ tappa.bersaglio }}</span> centri</div>
       <div class="dato">Punti: <span>{{ finale.punti }}</span></div>
       <div class="dato">Livello: <span>{{ finale.livello }}</span></div>
+      <div v-if="monete.prese" class="dato" data-monete-prese>Monete: <span>+{{ monete.prese }} 🪙</span></div>
+      <div v-if="monete.nota" class="dato nota" data-nota-monete>{{ monete.nota }}</div>
       <!-- nel volo il record dice il numero di adesso e la misura (docs/core/primati.md) -->
       <div v-if="finale.primato" class="dato" data-primato>
         {{ finale.primato.record ? '🏆 ' : '' }}{{ fraseDiFine(finale.primato, SFIDA_VOLO.misura) }}</div>
@@ -1242,6 +1249,7 @@ canvas { position:absolute; inset:0; touch-action:manipulation }
 h1.chiaro span { color:#7fe3ff }
 .dato { font-size:clamp(17px,4.6vw,24px); font-weight:800 }
 .dato span { color:#ffd94a }
+.dato.nota { font-size:14px; font-weight:600; opacity:.85; max-width:92%; text-align:center }
 .dritta { font-size:14px; font-weight:700; color:#cbd5ff; max-width:34ch; line-height:1.45 }
 .ripasso { font-size:16px; font-weight:800; opacity:.9 }
 .ripasso .tit { font-size:12px; letter-spacing:2px; text-transform:uppercase; opacity:.6; margin-bottom:4px }
