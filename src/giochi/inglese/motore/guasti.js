@@ -213,7 +213,7 @@ const CON_OPZIONI = new Set(['scelta', 'vf', 'chi'])
 // Un capitolo si controlla da sé: ogni frase si accende, ogni «se» a volte
 // è falso, nessuna pagina resta vuota, ogni domanda ha una sola giusta, e
 // le parole sono quelle note alla tappa da cui si apre più quelle della
-// storia (docs/lingue/libro.md).
+// storia (docs/lingue/libro.md, docs/lingue/libro-racconti.md).
 export function guastiDelCapitolo(cap) {
   const g = []
   const dove = `capitolo ${cap.id}`
@@ -353,7 +353,7 @@ export function guastiDelCapitolo(cap) {
 
 // Le storie a puntate, tutte insieme: le puntate vanno 1, 2, 3… nello stesso
 // mondo e in ordine di tappa, e ogni mondo tirato in una puntata si ritrova
-// in quelle dopo, sulle variabili che hanno in comune (docs/lingue/libro.md).
+// in quelle dopo, sulle variabili che hanno in comune (docs/lingue/libro-racconti.md).
 export function guastiDelleSerie(capitoli) {
   const g = []
   const serie = new Map()

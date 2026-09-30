@@ -6,7 +6,7 @@
    parole si toccano come dappertutto; quelle della storia sono segnate e
    toccarle è gratis. Le domande sono a scelta, «chi l'ha detto», «tocca la
    frase» (il testo diventa a frasi da toccare) e «metti in ordine» (una
-   fila di fatti, come le tessere). Vedi docs/lingue/mondi-vista.md. */
+   fila di fatti, come le tessere). Vedi docs/lingue/libro-vista.md. */
 import { ref, computed, watch, nextTick } from 'vue'
 import Testo from './Testo.vue'
 import { tenere } from './tenere.js'

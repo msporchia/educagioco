@@ -74,7 +74,7 @@ export function tiraConFissi(cap, fissi = {}, rnd = Math.random) {
 /* ═══════════ le parole della storia ═══════════
    Oltre alle parole note alla sua tappa, una storia può usare le sue
    `nuove` e le parole dei 📦 cassetti del suo mondo e dei mondi prima:
-   tutte insieme al massimo PAROLE_DELLA_STORIA_MAX (docs/lingue/libro.md). */
+   tutte insieme al massimo PAROLE_DELLA_STORIA_MAX (docs/lingue/libro-racconti.md). */
 export const PAROLE_DELLA_STORIA_MAX = 8
 
 const CASSETTI = new Map()

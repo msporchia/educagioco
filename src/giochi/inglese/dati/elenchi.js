@@ -24,7 +24,7 @@ export const CHI_PARLA = {
   pappagallo: 'Il pappagallo', voce: 'Una voce',
 }
 // Le risposte sbagliate di «Chi l'ha detto?» quando nella storia parlano in
-// pochi: la gente di casa, che può aver detto qualunque cosa (docs/lingue/libro.md)
+// pochi: la gente di casa, che può aver detto qualunque cosa (docs/lingue/libro-racconti.md)
 export const CHI_DI_CASA = ['Laura', 'Leo', 'Tom', 'mamma', 'papa', 'nonna', 'nonno']
 
 const a = (en, it, un, il, itPl, ilPl, altro = {}) => ({ en, it, un, il, itPl, ilPl, ...altro })

@@ -360,7 +360,7 @@ function tocca(el) {
   const parola = el && el.dataset && el.dataset.parola
   if (!parola) return
   const box = el.getBoundingClientRect()
-  // una parola della storia è nuova: toccarla è sempre gratis e non segna niente (docs/lingue/libro.md)
+  // una parola della storia è nuova: toccarla è sempre gratis e non segna niente (docs/lingue/libro-racconti.md)
   if (vista.value === 'libro' && libro.value && libro.value.storia.includes(parola.toLowerCase()))
     return svela(parola, box.left + box.width / 2, box.top, { storia: true })
   const t = tocchiQui()

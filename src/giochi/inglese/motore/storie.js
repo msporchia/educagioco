@@ -4,7 +4,7 @@
 // volta che si è arrivati al cartello di fine; le storie a puntate tengono
 // lì le variabili della serie: `serie: { <id>: { valori, fatte } }`. Le
 // regole (`r`) sono quelle di motore/mappa.js. Il perché:
-// docs/lingue/libro.md («Quale storia») e docs/lingue/libro-domande.md.
+// docs/lingue/libro.md («Quale storia») e docs/lingue/libro-racconti.md.
 import { MONDI, mondoDi, tappaDi } from '../dati/mondi.js'
 import { mondoAperto, mondoPassato, vinta } from './mappa.js'
 import { tappaDellaStoria, tira, tiraConFissi, chiaveDelValore } from './libro.js'

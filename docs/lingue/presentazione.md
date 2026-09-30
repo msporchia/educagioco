@@ -28,7 +28,9 @@ calano: il disegno della tappa sbiadisce, e rigiocarla la fa tornare piena.
 Lungo ogni mondo si aprono **tre storie di un libro** da leggere in
 inglese, a pagine — con Laura, Leo, Tom e il cane Pip, ogni volta un po'
 diverse e più lunghe di mondo in mondo — e qualche domanda in italiano per
-vedere se si è capito; finita una, se ne legge un'altra. Qualunque parola inglese a
+vedere se si è capito: chi l'ha detto, qual è la frase che lo dice, in che
+ordine sono successe le cose. In quinta c'è anche una storia a puntate.
+Finita una, se ne legge un'altra. Qualunque parola inglese a
 schermo **si tocca e dice cosa vuol dire**; le prime volte è gratis, poi
 quella domanda non paga, e il gioco lo dice prima di rispondere.
 

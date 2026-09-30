@@ -125,9 +125,10 @@ disegnino non insegna niente.
 
 ## Il libro
 
-Ogni mondo ha **tre storie da leggere**, a pagine, con personaggi che
-tornano e domande in italiano; si aprono lungo l'isola, e dal cartello di
-fine se ne legge un'altra. Tutto in [libro.md](libro.md).
+Ogni mondo ha **almeno tre storie da leggere**, a pagine, con personaggi
+che tornano e domande in italiano; si aprono lungo l'isola, e dal cartello
+di fine se ne legge un'altra. Tutto in [libro.md](libro.md); le parole della
+storia, le domande nuove e le puntate in [libro-racconti.md](libro-racconti.md).
 
 ## Toccare una parola per sapere cosa vuol dire
 
@@ -220,11 +221,15 @@ pittori.
 
 **Il libro.** `CAPITOLI` da `dati/capitoli.js`; la storia da aprire è
 `prossimaStoria(CAPITOLI, c, regole, mondo)` (`motore/storie.js`), poi
-`capitolo(cap)` → `{ titolo, pagine: [[{ en }]], righe, domande: [{ testo,
-opzioni: [{ testo, giusta }], giusta }] }`. Un `Tocchi` per tutta la storia;
-una domanda giusta paga `pagaDelCapitolo(pagine)` quando si risponde, finché
+`racconta(cap, tiraLaStoria(c, cap))` → `{ titolo, puntata, pagine: [[{ en,
+chi, nome, id, i }]], blocchi, righe, storia, domande: [{ tipo, testo, … }] }`
+(le puntate tengono le variabili della serie nel profilo). Una domanda si
+giudica con `eGiusta(domanda, risposta)`. Un `Tocchi` per tutta la storia,
+che le parole della `storia` saltano; una domanda giusta paga
+`pagaDelCapitolo(pagine)` quando si risponde, finché
 `domandeCheLPagano(giuste, t.aPagamento)` supera quelle già pagate. Al
-cartello `segnaLetta(c, id)`, e `unAltraStoria(…)` dice se c'è il tasto.
+cartello `segnaLetta(c, id)` e `segnaPuntata(c, cap)`; `puntataDopo(…)` e
+`unAltraStoria(…)` dicono quali tasti ci sono.
 
 Nei test: `unita/inglese-mondi`, senza browser: il grafo, gli argomenti
 (una tappa di parole ha solo parole del suo argomento e le risposte

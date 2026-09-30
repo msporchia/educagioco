@@ -11,11 +11,15 @@ resto, in ordine.
   indiretto (*she said that…*) sono della media: *while* sta solo in frasi
   al presente, *said / told* senza *that* ([strutture.md](strutture.md)).
 - **How much is it?** aspetta i soldi (qui sotto).
-- **Le storie di quarta e quinta** si aprivano dopo una tappa di parole,
-  perché i due mondi non avevano tappe di frasi; adesso le hanno, e
-  `unita/inglese-libro` vuole che una storia a metà isola si apra dopo una
-  di frasi (`dopo` nei capitoli: in quarta per esempio `quarta-io-gioco` o
-  `quarta-lei-gioca`, in quinta `quinta-ieri` o `quinta-andai`).
+
+## Il libro
+
+- **Una serie sola**, «La vecchia mappa» in quinta, con le tre puntate alla
+  🏁. Se ai bambini piace: una serie di quarta (al presente), e le puntate
+  sparse lungo l'isola con `dopo` ([libro-racconti.md](libro-racconti.md#le-storie-a-puntate)).
+- **Le prime tre storie di quarta e quinta** hanno una domanda di tipo
+  nuovo ciascuna, non due: dove erano già sei, l'ordine ha preso il posto
+  di «Che cosa è successo prima?» ([libro.md](libro.md#le-monete)).
 
 ## Le parole che mancano
 
@@ -23,8 +27,9 @@ resto, in ordine.
   in `data/words.js`. Una tappa «Al negozio» li vuole, con *how much is it?*
   fra le strutture.
 - **Le parole aggiunte il 30 settembre 2026 non hanno ancora la voce**: i
-  dodici mesi (*January … December*), *sixty, seventy, eighty, ninety* e i
-  verbi *say* e *tell*.
+  dodici mesi (*January … December*), *sixty, seventy, eighty, ninety*, i
+  verbi *say, tell, hear, wait, drive* e le parole delle storie *suddenly,
+  treasure, voice*.
   Va lanciato `npm run voci` (vuole rete e ffmpeg; se in coda dice «non
   incise», si rilancia lo stesso comando): finché non gira, `unita/inglese`
   è rosso su «parole senza clip». Il gioco regge comunque: l'audio non
