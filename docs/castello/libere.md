@@ -151,4 +151,6 @@ rincarano salendo e le bombe strette. Sulla strada curva era 24 · 22 · 21 ·
 
 Nei test: `[data-tappa="libera-bosco"]` e le altre tre chiavi sulla mappa;
 `integrazione/torri-libere` (quattro tasti, ognuno apre la sua libera e
-scrive il record nel suo quaderno).
+scrive il record nel suo quaderno; il conto dell'arciere paga 🪙3 anche in
+una partita persa, e il cartello di fine lo dice in `[data-monete-prese]`,
+col salvadanaio stanco `[data-nota-monete]`).

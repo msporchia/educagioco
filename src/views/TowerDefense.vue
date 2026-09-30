@@ -17,7 +17,7 @@
 // passerà alla convenzione di giochi/. Il castello a poligoni che c'era
 // prima non c'è più: le figure sono queste.
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
-import { state, answer, addCoins, tdProgresso, tdCompleta,
+import { state, answer, tdProgresso, tdCompleta,
          segna, segnaBest, divisioniAccese, tuttoAperto,
          guidaGiaVista, segnaGuidaVista } from '../store/profile.js'
 import { saltaLeSpiegazioni } from '../guide/aiuto.js'
@@ -25,10 +25,12 @@ import { usaPausa } from '../giochi/pausa.js'
 import { primatoDi, segnaPrimato, regaliDi, regaloPreso } from '../giochi/campagne.js'
 import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { GIOCHI } from '../data/giochi.js'
+import { PAGA } from '../data/paghe.js'
+import { borsa } from '../store/varieta.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
 import { TORRI } from '../data/ops.js'
 import { immuniDellOnda } from '../data/mostri.js'
-import { CFG, TAPPE, LIBERE, liberaDi, premioTappa, quantiRegali, blocchettoDi,
+import { CFG, TAPPE, LIBERE, liberaDi, quantiRegali, blocchettoDi,
          prossimoAcquisto, sequenzaTorri } from '../data/castello.js'
 import ColumnOp from '../components/ColumnOp.vue'
 import Barra from '../components/Barra.vue'
@@ -74,7 +76,9 @@ const rimandato = ref(false)
 const regaloAperto = computed(() => fase.value === 'gioco' && vista.regalo > 0 &&
                                     !rimandato.value && !state.festa.length)
 
-const premio = ref(0)
+// le monete di questa partita: un conto senza errori le paga quando la torre sale
+let borsellino = borsa('torri')
+const monete = reactive({ prese: 0, nota: '' })
 const primato = ref(null)          // la partita libera appena finita, rispetto al record
 const SENZA_FINE = GIOCHI.find(g => g.chiave === 'torri').senzaFine
 // le quattro libere per la mappa, col record già in parole; si rilegge a
@@ -274,6 +278,9 @@ function operazioneFinita({ errori, ms }) {
   const t = scelta.value, torre = bersaglio.value
   answer(cassa.chiave(t), { correct: errori === 0, ms })
   if (errori === 0) segna('perfette')
+  // un conto senza errori è una risposta giusta, e si paga adesso (docs/apprendimento/calibrazione.md)
+  const presi = errori === 0 ? borsellino.paga(PAGA.operazione) : 0
+  monete.prese = borsellino.dato
   // il conto: il prezzo pattuito più una penale per ogni errore. Si paga in
   // energia, non in vite: sbagliare rallenta la difesa, non la fa crollare.
   const penale = errori * CFG.malusErrore
@@ -282,6 +289,7 @@ function operazioneFinita({ errori, ms }) {
   if (torre) { motore().potenzia(torre, conto); testo = `${TORRI[t].nome} livello ${torre.lv}!` }
   else { motore().costruisci(t, conto); testo = `${TORRI[t].nome} costruita` }
   if (penale) { testo += ` · −${penale} ⚡`; suono.no() }
+  else if (presi) testo += ` · +${presi} 🪙`
   avvisa(testo)
   chiudi()
 }
@@ -318,8 +326,6 @@ const eventi = {
     if (che === 'onda-massima') segnaBest('onda', valore)
     else segna(che)
   },
-  // 🪙1 ogni CFG.perMoneta ondate rette (docs/castello/taratura.md): niente moltiplicatore di livello
-  moneta: () => { addCoins(1); suono.moneta() },
 }
 
 /* Chi ha già capito non deve stare a guardare: la velocità moltiplica il
@@ -392,6 +398,8 @@ function inizia(i = tappaIdx.value, quale = null) {
   // da sé (la tappa non li prevede)
   regali.value = regaliDi('torri')
   rimandato.value = false
+  borsellino = borsa('torri')
+  Object.assign(monete, { prese: 0, nota: '' })
   campo.value.avvia(tappa.value, i + 1, regali.value)
   fase.value = 'gioco'
   avvisa('Tocca una piazzola per costruire')
@@ -406,15 +414,11 @@ function finita(esito) {
 function tappaSuperata() {
   if (!campagna.value) return           // la partita libera non finisce mai
   const ultima = tappaIdx.value === TAPPE.length - 1
-  // il premio è della prima volta: rigiocare una tappa già vinta lascia una
-  // moneta di cortesia, non uno stipendio
-  const giaFatta = progresso.value.tappa > tappaIdx.value
+  // niente premio di tappa: ogni conto si è già pagato quando la torre è salita
   const p = tdCompleta(tappaIdx.value, TAPPE.length)
-  // premioTappa già paga per i conti che la tappa chiede: niente moltiplicatore di livello
-  premio.value = giaFatta ? 1 : premioTappa(tappaIdx.value)
-  addCoins(premio.value)
+  monete.nota = borsellino.nota()
   fase.value = ultima ? 'trionfo' : 'vinta'
-  suono.livello(); suono.moneta()
+  suono.livello()
   return p
 }
 
@@ -428,6 +432,7 @@ function finePartita() {
   chiudi()
   suono.fine()
   primato.value = null
+  monete.nota = borsellino.nota()
   if (!campagna.value) {
     const sfida = sfidaDi(SENZA_FINE, tappa.value.chiave)
     const esito = segnaPrimato('torri', Math.max(0, hud.onda - 1), Date.now(),
@@ -451,7 +456,7 @@ onMounted(() => {
   campo.value.apparecchia(tappa.value, tappaIdx.value + 1)
   // il gancio dei test: gioca una partita senza toccare lo schermo (non lo
   // usa nessuna parte del gioco)
-  window.__td = { hud, fase, scelta, op, inizia, scegliTorre, operazioneFinita,
+  window.__td = { hud, fase, scelta, op, inizia, scegliTorre, operazioneFinita, monete,
                   blocchetto, apriBlocchetto, vista,
                   // la mossa del giocatore modello, con la stessa funzione
                   // del simulatore (`prossimoAcquisto`)
@@ -539,7 +544,7 @@ onMounted(() => {
                     @gioca="inizia" @libera="quale => inizia(-1, quale)"
                     @indietro="$emit('vai','home')" />
         <FineTappa v-else :fase="fase" :tappa="tappa" :prossima="prossima" :hud="hud"
-                   :premio="premio" :quante="TAPPE.length" :campagna="campagna"
+                   :monete="monete.prese" :nota-monete="monete.nota" :quante="TAPPE.length" :campagna="campagna"
                    :divisioni="divisioni" :primato="primato"
                    @avanti="prossimaTappa" @mappa="allaMappa" @libera="inizia(-1, liberaDiQui())"
                    @riprova="inizia()" />

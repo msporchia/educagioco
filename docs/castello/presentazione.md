@@ -152,9 +152,10 @@ perché il gioco aspetta.
   su. Il gioco degrada invece di sbarrare, e nessuna tappa diventa più facile.
 - Se il bambino sbaglia spesso non perde: paga di più in energia. Non c'è
   schermata di fallimento legata al calcolo.
-- Una tappa paga monete in proporzione ai conti che chiede, e una sola di
-  cortesia se era già stata vinta; nelle partite libere una moneta ogni
-  cinque ondate. I regali non comprano monete e non aprono tappe.
+- Ogni conto fatto senza errori paga 🪙3 nel momento in cui la torre sale,
+  anche nelle partite libere e nelle tappe rifatte; a fine tappa non
+  arriva nessun premio in più. I regali non comprano monete e non aprono
+  tappe.
 - Il record di ogni partita libera — ondate rette, mostri fermati, torri — è
   scritto sul suo tasto nella mappa e nella tabella dei record di *I miei
   progressi*; batterlo fa coriandoli e dice di quanto.
