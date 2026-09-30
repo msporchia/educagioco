@@ -115,8 +115,10 @@ sempre lunghe.
   quella partita (`pronta`). Finisce a `min(20, voci + 4)` risposte giuste, e
   sbagliando non si perde niente. Alla 🏁 il primo giro è di 16.
 - **Le forme deboli ripescano**: in una tappa di frasi e alla 🏁, tre frasi
-  di una forma debole (forza < 2) dei mondi già fatti entrano nel giro; in
-  una tappa di parole mai. La chiave **`forma:<id>`** registra le risposte
+  di una forma debole (forza < 2) dei mondi già fatti entrano nel giro,
+  scelte a caso; in una tappa di parole mai. **Debole vuol dire vista e poi
+  calata**: una forma mai vista non ripesca, se no un bambino di quinta con
+  gli anni prima passati per età apriva ogni tappa con «Io sono Leo.». La chiave **`forma:<id>`** registra le risposte
   sulla struttura: una forma debole fa uscire più spesso la sua trappola.
 - **Cosa si segna**: una frase composta giusta conta come ripasso delle sue
   parole **già scadute** (solo quelle), anche dei verbi flessi (*went* è

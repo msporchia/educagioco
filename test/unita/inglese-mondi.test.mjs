@@ -378,8 +378,15 @@ titolo('DIFETTI')
   const diParole = new Sessione({ tappa: tappaDi('seconda-corpo'), itemDi: nuovo, rnd: sorte(1) })
   uguale('una tappa di parole non ripesca frasi', diParole.pool.filter(k => k.startsWith('frase:')).join(), '')
   const diFrasi = new Sessione({ tappa: tappaDi('seconda-mi-piace'), itemDi: nuovo, rnd: sorte(1) })
-  controlla('una tappa di frasi ripesca quelle dei mondi prima, se la forma è debole',
-    diFrasi.pool.some(k => k.startsWith('frase:') && fraseDi(k.slice(6)).mondo === 'prima'))
+  uguale('una forma mai vista (un anno passato per età) non si ripesca',
+    diFrasi.pool.filter(k => k.startsWith('frase:') && fraseDi(k.slice(6)).mondo === 'prima').join(), '')
+  // it is vista un mese fa e calata: quella sì
+  const calata = new Map([['forma:it-is', { ...newItem(), s: 2, last: Date.now() - 30 * 864e5, seen: 3, ok: 3 }]])
+  const conCalata = k => { if (!calata.has(k)) calata.set(k, newItem()); return calata.get(k) }
+  const ripesca = new Sessione({ tappa: tappaDi('seconda-mi-piace'), itemDi: conCalata, rnd: sorte(1) })
+  const ripescate = ripesca.pool.filter(k => k.startsWith('frase:') && fraseDi(k.slice(6)).mondo === 'prima')
+  controlla('una forma vista e poi calata ripesca le sue frasi dai mondi prima',
+    ripescate.length > 0 && ripescate.every(k => fraseDi(k.slice(6)).forma === 'it-is'), ripescate.join())
   const chieste = Array.from({ length: 12 }, () => diFrasi.prossima()).filter(Boolean)
   uguale('e non chiede mai parole, anche se non le sa', chieste.filter(q => q.genere !== 'frase').length, 0)
 

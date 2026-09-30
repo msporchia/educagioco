@@ -60,9 +60,12 @@ export class Sessione {
     const m = tappa.cassetto ? null : mondoDellaTappa(tappa.id)
     if (m && (tappa.frasi || tappa.bandiera)) {
       const prima = garantiti(m.id)
-      const deboli = FRASI.filter(f => prima.has(f.mondo) &&
+      // debole è una forma vista e poi calata: una mai vista (un anno passato per età) non si ripesca
+      const vista = f => !!itemDi(chiaveForma(f.forma)).last
+      const deboli = FRASI.filter(f => prima.has(f.mondo) && vista(f) &&
         this.forzaDi(chiaveForma(f.forma)) < FORMA_DEBOLE && this.forzaDi('frase:' + f.id) < 4)
-      this.pool.push(...deboli.slice(0, RIPESCATE).map(f => 'frase:' + f.id))
+      const mescolate = deboli.map(f => [rnd(), f]).sort((a, b) => a[0] - b[0]).map(x => x[1])
+      this.pool.push(...mescolate.slice(0, RIPESCATE).map(f => 'frase:' + f.id))
     }
     this.altre = m ? frasiDi(tappa) : []
     this.bersaglio = bersaglio ?? (tappa.bersaglio || Math.min(20, giro.length + 4))
