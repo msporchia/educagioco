@@ -90,3 +90,23 @@ export function statoMappa(c, forzaDi, r) {
     cassetto: pronto(m) ? { aperto: cassettoAperto(c, m.id, r), chiavi: cassettoDi(m.id).chiavi.length } : null,
   }))
 }
+
+// Cosa serve per aprire un nodo chiuso della mappa, detto al bambino quando
+// lo tocca (la nave non parte). `stato` è quello di statoMappa, `n` un nodo
+// della disposizione ({ tipo, id, mondo }).
+export function cosaServe(stato, n) {
+  const m = stato.find(x => x.id === n.mondo)
+  if (!m) return ''
+  if (n.tipo === 'mondo' || !m.pronto) return 'Questo mondo arriva presto'
+  const nome = id => `«${(stato.find(x => x.id === id) || {}).nome || id}»`
+  if (!m.aperto) {
+    const fatto = d => { const x = stato.find(y => y.id === d) || {}; return x.finito || x.passato }
+    const manca = m.dopo.filter(d => !fatto(d))
+    if (manca.length) return `Prima finisci ${nome(manca[0])}`
+    if (m.dopoUno.length) return `Prima finisci ${m.dopoUno.map(nome).join(' o ')}`
+  }
+  if (n.tipo === 'libro') return 'Si apre quando arrivi alla bandiera'
+  if (n.tipo === 'cassetto') return 'Si apre quando vinci una tappa di questo mondo'
+  const i = m.tappe.findIndex(t => t.id === n.id)
+  return i > 0 ? `Prima vinci «${m.tappe[i - 1].nome}»` : ''
+}
