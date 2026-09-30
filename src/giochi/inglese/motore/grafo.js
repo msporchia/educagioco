@@ -10,6 +10,7 @@ import { PERSONAGGI } from '../dati/elenchi.js'
 import { chiaveNellArgomento, paroleDellArgomento, ARGOMENTI } from '../dati/argomenti.js'
 import { nomeDi, NOMI_PROPRI } from './lessico.js'
 import { espandi } from './testo.js'
+import { flessa } from './flessioni.js'
 
 // I mondi certamente finiti quando si entra in `id`: le dipendenze «tutti»
 // per intero, e di quelle «basta uno» solo quello che hanno in comune.
@@ -48,14 +49,32 @@ export function paroleNote(mondoId, tappaId = null) {
 export const formeNote = (mondoId, tappaId = null) =>
   new Set(tappeFatte(mondoId, tappaId).flatMap(x => x.forme || []))
 
+// Il libro sa anche le strutture dichiarate dai mondi senza tappe di frasi
+// (quarta, quinta: `strutture`), dal suo e da quelli prima: sono il
+// programma dell'anno, e il libro è il primo posto dove le incontra.
+const struttureDi = mondoId => [...garantiti(mondoId), mondoId].flatMap(id => mondoDi(id).strutture || [])
+export const formeDelLibro = (mondoId, tappaId = null) =>
+  new Set([...formeNote(mondoId, tappaId), ...struttureDi(mondoId)])
+export function paroleDelLibro(mondoId, tappaId = null) {
+  const s = paroleNote(mondoId, tappaId)
+  for (const f of struttureDi(mondoId)) for (const p of FORME[f].parole) s.add(p.toLowerCase())
+  return s
+}
+// le forme dei verbi che quelle strutture ammettono (s, ing, ed, irr)
+export const flessioniDi = forme => new Set([...forme].map(f => FORME[f] && FORME[f].flessione).filter(Boolean))
+
 // Una parola a schermo è nota se lo è lei, la sua forma lunga («it's» → it
-// is) o il suo singolare («dogs» → dog). Torna le parole che non lo sono.
-export function sconosciute(testo, note) {
+// is) o il suo singolare («dogs» → dog), o se è un verbo noto flesso come
+// una struttura ammette (`flessioni`: «went» solo dove c'è il passato).
+// Torna le parole che non lo sono.
+export function sconosciute(testo, note, flessioni = null) {
   const out = []
   for (const w of espandi(testo)) {
     if (note.has(w) || NOMI_PROPRI.has(w)) continue
     const n = nomeDi(w)
     if (n && note.has(n.base)) continue
+    const f = flessioni && flessa(w)
+    if (f && flessioni.has(f.come) && note.has(f.base)) continue
     const poss = w.match(/^(\w+)'s$/)
     if (poss && NOMI_PROPRI.has(poss[1])) continue
     out.push(w)

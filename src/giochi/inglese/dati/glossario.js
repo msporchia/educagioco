@@ -11,4 +11,10 @@ export const GLOSSARIO = {
   can: 'potere, saper fare', cannot: 'non potere', was: 'era', were: 'eravamo, erano',
   these: 'questi, queste', those: 'quelli, quelle',
   fine: 'bene', thank: 'grazie (thank you)', many: 'tanti (how many: quanti)',
+  // le parolette del libro di quarta e quinta (dati/forme.js)
+  to: 'a, verso (go to: andare a)', at: 'a (at seven: alle sette)', every: 'ogni',
+  home: 'casa (at home: a casa)', by: 'con (by bus: in autobus)', me: 'me, mi', us: 'noi, ci',
+  him: 'lui, lo, gli', them: 'loro, li, le', their: 'loro (di loro)', because: 'perché',
+  then: 'poi', after: 'dopo', before: 'prima', from: 'da', for: 'per',
+  'o\'clock': 'in punto (at seven o’clock: alle sette)', last: 'scorso (last Monday: lunedì scorso)',
 }

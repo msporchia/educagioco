@@ -6,6 +6,7 @@ import { VERBI } from '../../../data/verbi.js'
 import { GLOSSARIO } from '../dati/glossario.js'
 import { PERSONAGGI } from '../dati/elenchi.js'
 import { apostrofi } from './testo.js'
+import { flessa, VERBI_DI_STRUTTURA } from './flessioni.js'
 
 const CAT = new Map(WORDS.map(w => [w[0].toLowerCase(), w[3]]))
 const IT = new Map(WORDS.map(w => [w[0].toLowerCase(), w[1]]))
@@ -71,15 +72,20 @@ export function nomeDi(w) {
   return null
 }
 
-// la chiave SRS di una parola a schermo: 'en:dog' anche per «dogs»
+// la chiave SRS di una parola a schermo: 'en:dog' anche per «dogs»,
+// 'verbo:go' anche per «went»
 export function chiaveDi(parola) {
   const w = apostrofi(parola).toLowerCase()
   if (CAT.has(w) && CAT.get(w) !== 'q') return 'en:' + WORDS.find(x => x[0].toLowerCase() === w)[0]
   const n = nomeDi(w)
   if (n) return 'en:' + n.base
   if (VERBO.has(w)) return 'verbo:' + w
+  const f = flessa(w)
+  if (f && VERBO.has(f.base)) return 'verbo:' + f.base
   return null
 }
+
+const COME_E = { s: '', ing: ' (-ing: adesso)', ed: ' (al passato)', irr: ' (al passato)' }
 
 // Cosa vuol dire una parola toccata. `chiave` è null per le parole di
 // struttura e per i nomi dei personaggi: quelle non hanno SRS.
@@ -94,9 +100,17 @@ export function traduci(parola) {
     return { parola, chiave: null, it: `${t1.it} + ${GLOSSARIO[resto] || resto} (${testa} ${resto})` }
   }
   const chiave = chiaveDi(w)
-  if (chiave && chiave.startsWith('en:')) return { parola, chiave, it: IT.get(chiave.slice(3).toLowerCase()) }
-  if (chiave) return { parola, chiave, it: VERBO.get(w) }
+  if (chiave && chiave.startsWith('en:')) {
+    const it = IT.get(chiave.slice(3).toLowerCase())
+    // «cooks» è il plurale di cook e anche he cooks: si dicono tutti e due
+    const f = flessa(w)
+    return { parola, chiave, it: f && f.come === 's' ? `${it} / ${VERBO.get(f.base)}` : it }
+  }
+  // un verbo flesso si traduce con la sua base
+  const f = !VERBO.has(w) && flessa(w)
+  if (chiave) return { parola, chiave, it: f ? VERBO.get(f.base) + COME_E[f.come] : VERBO.get(w) }
   if (GLOSSARIO[w]) return { parola, chiave: null, it: GLOSSARIO[w] }
+  if (f) return { parola, chiave: null, it: VERBI_DI_STRUTTURA[f.base] + COME_E[f.come] }
   if (IT.has(w)) return { parola, chiave: null, it: IT.get(w) }
   return { parola, chiave: null, it: null }
 }

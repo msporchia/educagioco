@@ -159,8 +159,8 @@ titolo('CAPITOLI')
     nessuno(`capitolo ${c.id}`, guastiDelCapitolo(c))
     nota(`${c.id}: ${mondiDi(c).length} varianti`)
   }
-  // il libro usa le strutture del mondo: chi ha solo le tappe di parole (quarta, quinta) non l'ha ancora
-  for (const m of MONDI.filter(x => x.tappe.some(t => t.frasi)))
+  // ogni mondo con le tappe ha il suo libro (quante storie e quanto lunghe: unita/inglese-libro)
+  for (const m of MONDI.filter(x => x.tappe.length))
     controlla(`il mondo ${m.id} ha un capitolo`, capitoli.some(c => c.mondo === m.id))
   // «Non si sa» è la giusta quando il testo non lo dice
   const picnic = capitoli.find(c => c.id === 'il-picnic')
