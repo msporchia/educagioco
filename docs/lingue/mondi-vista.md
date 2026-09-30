@@ -167,7 +167,8 @@ Al posto della freccia c'è **una caravella** a inchiostro e acquerello
   dire la parola sotto il dito (`tenere.js`, 450 ms). Un tocco lì ha già
   un mestiere — mettere in fila, rispondere — e la traduzione non può
   rubarglielo; le parole della consegna e del libro invece si toccano e
-  basta. Il click che arriva dopo la pressione lunga si ingoia — anche
+  basta (tranne quando si tocca una frase del libro per rispondere,
+  [libro-vista.md](libro-vista.md#le-domande)). Il click che arriva dopo la pressione lunga si ingoia — anche
   quando al posto della traduzione compare la domanda (sotto).
 - **Dopo uno sbaglio**, tre righe distinte: «Non così» col perché della
   trappola (se è una trappola nota), «Si dice: …» (solo per le frasi
@@ -185,32 +186,9 @@ Al posto della freccia c'è **una caravella** a inchiostro e acquerello
 
 ## Il libro
 
-Una storia si legge **una pagina alla volta, di seguito, come prosa**, con
-la tipografia di un libro (serif, 19–22 px, capolettera sulla prima
-pagina): le frasi sono un racconto, e una riga per frase lo faceva
-sembrare un esercizio.
-
-- **Le battute vanno a capo**, una per volta come in un copione: sopra,
-  il nome di chi parla in italiano (maiuscoletto, non si tocca), e un filo
-  colorato a sinistra, un colore per personaggio. Il colore aiuta a
-  seguire la conversazione ma non dice niente da solo: il nome c'è
-  sempre. La narrazione resta prosa di seguito. Tutto prosa, le battute di
-  due persone finivano nella stessa riga e non si capiva chi parlava
-  ([libro.md](libro.md#il-formato-di-una-storia)).
-- **Si sfoglia con due tasti grandi**, ← e →, con «pagina 2 di 4» in
-  mezzo; «Ho letto →» c'è solo all'ultima pagina, sotto le frecce e non al
-  loro posto, così un doppio tocco sulla freccia non chiude la lettura.
-  Niente strisciata: i tasti bastano, e una strisciata su un testo che si
-  tocca parola per parola ruberebbe tocchi. Una storia di una pagina non
-  ha frecce.
-- **Le domande** in italiano, una alla volta, col testo sempre sopra
-  (ridotto e scorrevole) **e le frecce ancora lì**: rileggere è lecito,
-  anche tornando indietro di pagina. Le sbagliate non si spiegano —
-  «rileggi la storia, anche sfogliando» — perché la risposta è nel testo.
-- **Il cartello di fine** ha «Un’altra storia →» accanto a «La mappa»,
-  quando c'è un'altra storia da offrire (`unAltraStoria`). La nuova si apre
-  nello stesso componente, quindi `Libro.vue` riparte dalla prima pagina
-  da sé (un `watch` sulla storia).
+Le pagine, le battute col nome, le parole della storia col filo d'oro, le
+domande (a scelta, chi l'ha detto, tocca la frase, metti in ordine), le
+puntate e il cartello di fine stanno in [libro-vista.md](libro-vista.md).
 
 ## La parola da toccare
 
@@ -238,7 +216,9 @@ tocco vero. Tre cose:
 
 Si chiede solo quando c'è qualcosa da perdere: le volte gratis e le parole
 di struttura passano dritte, e così un tocco su una domanda che non paga
-già, o nel libro quando nessuna domanda paga più.
+già, o nel libro quando nessuna domanda paga più. Le parole della storia
+del libro sono sempre gratis e non segnano niente
+([libro-racconti.md](libro-racconti.md#le-parole-della-storia)).
 A domanda chiusa toccare è gratis e non segna niente (`traduci` e basta).
 Il conto dei tocchi gratis sta sull'elemento SRS della parola, quindi dopo
 un tocco si salva il profilo.
@@ -312,9 +292,8 @@ a ogni altro in meno di 1,5 s; dove sta la nave e cosa serve),
 dice cosa serve, fa una tappa di parole e guarda che fra i colori ci siano
 solo colori, la nave naviga fino alla tappa, compone a tocchi, chiede prima
 di un tocco che costa col dito vero, sbaglia, un tocco chiude il viaggio,
-il libro chiuso dice quale tappa vincere, il libro apre la storia non
-letta con le battute di Leo e Laura col loro nome, e risponde, la storia è letta, «Un'altra storia» ne apre un'altra
-che si sfoglia anche durante le domande, e a otto anni trova la prima
+il libro chiuso dice quale tappa vincere, il libro (in
+[libro-vista.md](libro-vista.md#nei-test)), e a otto anni trova la prima
 passata con la nave nella seconda; con `--scatti` anche la tela intera a 390 e a 320 px) e
 `integrazione/inglese` (il gioco di prima). Bersagli: la carta
 `.carta.gioco[data-gioco="inglese"]`; la mappa `[data-mappa-inglese]`,
@@ -333,10 +312,6 @@ con `[data-formato]`, `[data-opzione]` (e `[data-giusta]`), `[data-banco]
 l'indicatore `[data-paga][data-paga-si="1"|"0"]`, la parola
 `[data-parola]` e la nuvoletta `[data-traduzione]`; la domanda prima del
 tocco `[data-svela]` (con `[data-pronta]`) e i suoi
-`[data-azione="svela-si"|"svela-no"]`; il libro
-`[data-libro-testo]` con `[data-pagina]` e `[data-pagine]`, le battute
-`[data-battuta][data-chi="<chiave di CHI_PARLA>"]` (il nome in `.ing-chi`),
-`[data-azione="pagina-indietro"|"pagina-avanti"]`, `[data-pagina-di]`,
-`[data-azione="ho-letto"]`, `[data-libro-domanda]`; il cartello
-`[data-fine]` con `[data-azione="mappa"|"avanti"|"ancora"]` («Un’altra
-storia» nel libro, «Rigioca» dopo una tappa).
+`[data-azione="svela-si"|"svela-no"]`; il cartello `[data-fine]` con
+`[data-azione="mappa"|"avanti"|"ancora"]` («Rigioca» dopo una tappa). I
+bersagli del libro sono in [libro-vista.md](libro-vista.md#nei-test).

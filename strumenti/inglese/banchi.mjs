@@ -56,19 +56,29 @@ async function capitoli() {
 function stampaCapitolo(c) {
   const visti = new Set()
   let n = 0
-  console.log(`\n══ ${c.titolo} (${c.id}, mondo ${c.mondo}) — ${mondiDi(c).length} combinazioni`)
+  const puntata = c.serie ? `, serie ${c.serie}, puntata ${c.puntata}` : ''
+  console.log(`\n══ ${c.titolo} (${c.id}, mondo ${c.mondo}${puntata}) — ${mondiDi(c).length} combinazioni`)
+  if (c.nuove) console.log(`  nuove: ${c.nuove.join(', ')}`)
   for (const v of mondiDi(c)) {
     const r = racconta(c, v, sorte(1))
-    // come si vede: la narrazione di seguito, ogni battuta a capo col nome di chi parla
+    // come si vede: la narrazione di seguito, ogni battuta a capo col nome di chi parla;
+    // le parole della storia col segno ° (a schermo sono sottolineate)
+    const segna = en => en.replace(/[A-Za-z]+(?:[’'][A-Za-z]+)?/g, w => (r.storia.includes(w.toLowerCase()) ? w + '°' : w))
     const testo = r.blocchi.map(p => p.map(b => (b.chi ? `${b.nome.toUpperCase()} — ` : '') +
-      b.righe.map(x => x.en).join(' ')).join('\n    ')).join('\n  ¶ ')
-    const chiave = testo + '|' + r.domande.map(d => d.giusta).join('|')
+      (b.riassunto ? 'NELLA PUNTATA PRIMA — ' : '') + b.righe.map(x => segna(x.en)).join(' ')).join('\n    '))
+      .join('\n  ¶ ')
+    const chiave = testo + '|' + r.domande.map(d => String(d.giusta) + (d.soluzione || '')).join('|')
     if (visti.has(chiave)) continue
     visti.add(chiave)
     if (++n > max) continue
     console.log(`\n  ${testo}`)
-    for (const d of r.domande)
-      console.log(`    ? ${d.testo}  ` + d.opzioni.map(o => (o.giusta ? '✓ ' : '') + o.testo).join(' · '))
+    for (const d of r.domande) {
+      if (d.tipo === 'frase') console.log(`    ? [${d.etichetta}] ${d.testo}  ✓ «${d.soluzione}»`)
+      else if (d.tipo === 'ordine')
+        console.log(`    ? [${d.etichetta}] ${d.soluzione.map((f, i) => `${i + 1}. ${f}`).join('  ')}`)
+      else console.log(`    ? ${d.tipo === 'chi' ? `[${d.etichetta}] «${d.citazione}»` : d.testo}  ` +
+        d.opzioni.map(o => (o.giusta ? '✓ ' : '') + o.testo).join(' · '))
+    }
   }
   console.log(`\n  ${visti.size} varianti diverse${visti.size > max ? ` (stampate ${max})` : ''}`)
   for (const g of guastiDelCapitolo(c)) console.log('  ⚠', g)

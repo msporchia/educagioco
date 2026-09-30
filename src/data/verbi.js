@@ -6,15 +6,17 @@ export const VERBI = [
   ['swim', 'nuotare', '🏊'], ['fly', 'volare', '🕊️'], ['dance', 'ballare', '💃'],
   ['climb', 'arrampicarsi', '🧗'], ['fall', 'cadere', ''], ['sit', 'sedersi', '🪑'],
   ['stand', 'stare in piedi', '🧍'], ['clap', 'applaudire', '👏'], ['kick', 'calciare', '🦵'],
+  ['drive', 'guidare', ''],
   // ---- ogni giorno ----
   ['eat', 'mangiare', '🍽️'], ['drink', 'bere', '🥤'], ['sleep', 'dormire', '😴'],
   ['wash', 'lavare', '🧼'], ['cook', 'cucinare', '🍳'], ['open', 'aprire', ''],
   ['close', 'chiudere', ''], ['clean', 'pulire', '🧹'], ['wear', 'indossare', '👕'],
+  ['wait', 'aspettare', ''],
   // ---- comunicare e sensi ----
   ['read', 'leggere', '📖'], ['write', 'scrivere', '✍️'], ['speak', 'parlare', '🗣️'],
   ['listen', 'ascoltare', '👂'], ['look', 'guardare', '👀'], ['sing', 'cantare', '🎤'],
   ['draw', 'disegnare', '🎨'], ['ask', 'chiedere', ''], ['answer', 'rispondere', ''],
-  ['count', 'contare', '🔢'], ['say', 'dire', ''], ['tell', 'dire a qualcuno', ''],
+  ['count', 'contare', '🔢'], ['say', 'dire', ''], ['tell', 'dire a qualcuno', ''], ['hear', 'sentire', ''],
   // ---- sentimenti e insieme ----
   ['cry', 'piangere', '😢'], ['laugh', 'ridere', '😄'], ['smile', 'sorridere', '🙂'],
   ['love', 'amare', '❤️'], ['help', 'aiutare', '🤝'], ['hug', 'abbracciare', '🤗'],

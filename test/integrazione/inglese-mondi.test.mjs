@@ -19,6 +19,9 @@
        dice subito; poi si risponde, e la storia è letta
      · «Un'altra storia» apre un'altra storia, che si sfoglia con le
        frecce, anche durante le domande
+     · in quinta una parola della storia si tocca gratis e non segna
+       niente; si risponde toccando la frase e componendo l'ordine; il
+       cartello offre «Puntata 2», che ha lo stesso nonno e lo stesso mezzo
    Il progetto è in docs/lingue/mondi.md, i bersagli alla riga «Nei test».
    ═══════════════════════════════════════════════════════════════════ */
 import { writeFileSync, mkdirSync } from 'node:fs'
@@ -368,6 +371,116 @@ await page.waitForSelector('[data-fine]')
 await attendi(page, 900)       // il salvataggio arriva con un piccolo ritardo
 const lette2 = (await leggiProfilo(page)).campagne.inglese.lette
 controlla('anche questa è letta', lette2['il-cane-di-laura'] >= ora)
+await page.locator('[data-fine] [data-azione="mappa"]').click()
+await page.waitForSelector('[data-mappa-inglese]')
+
+/* ---------- 5c. la quinta: parole della storia, domande nuove, puntate ----------
+   Tutti i mondi vinti, e in quinta lette tutte le storie tranne «La
+   vecchia mappa»: il libro apre la sua prima puntata. «tree» è una parola
+   della storia (del cassetto della terza) ed è saputa: toccarla sarebbe a pagamento, ma è gratis e
+   non segna niente. Poi si risponde a tutto, toccando la frase e
+   componendo l'ordine, e «Puntata 2» apre la puntata con lo stesso nonno
+   e lo stesso mezzo. */
+async function rispondiGiusto() {
+  await page.waitForSelector('[data-libro-domanda]')
+  await attendi(page, 400)                                 // la finestra cieca
+  const tipo = await page.locator('[data-libro-domanda]').getAttribute('data-tipo')
+  if (tipo === 'frase') {
+    // la frase giusta può stare in un'altra pagina: si sfoglia dalla prima
+    const indietro = page.locator('[data-azione="pagina-indietro"]')
+    if (await indietro.count()) while (!(await indietro.isDisabled())) await indietro.click()
+    while (!(await page.locator('[data-libro-testo] [data-frase][data-giusta]').count()))
+      await page.locator('[data-azione="pagina-avanti"]').click()
+    uguale('«tocca la frase»: il testo è a frasi', await page.locator('[data-libro-testo]').getAttribute('data-a-frasi'), '1')
+    await scatto(page, 'inglese-libro-frase')
+    await page.locator('[data-libro-testo] [data-frase][data-giusta]').click()
+  } else if (tipo === 'ordine') {
+    const n = await page.locator('[data-libro-domanda] [data-banco] [data-tessera]').count()
+    for (let i = 0; i < n; i++) await page.locator(`[data-libro-domanda] [data-tessera][data-posto="${i}"]`).click()
+    uguale('«metti in ordine»: i fatti sono tutti in fila', await page.locator('[data-libro-domanda] [data-in-fila]').count(), n)
+    await scatto(page, 'inglese-libro-ordine')
+    await page.locator('[data-libro-domanda] [data-azione="consegna"]').click()
+  } else await page.locator('[data-libro-domanda] [data-giusta]').click()
+  await page.waitForSelector('[data-libro-domanda] [data-esito], [data-fine]')
+  const esito = await page.locator('[data-libro-domanda] [data-esito]').getAttribute('data-esito').catch(() => null)
+  await page.waitForFunction(() => !document.querySelector('[data-libro-domanda] [data-esito]') ||
+                                   document.querySelector('[data-fine]'), null, { timeout: 8000 })
+  return { tipo, esito }
+}
+await page.locator('button[aria-label="indietro"]').click()
+await page.waitForSelector('.carte')
+{
+  const tutte = Object.fromEntries(MONDI.flatMap(m => m.tappe).map((t, i) => [t.id, ora - (60 - i) * 3600000]))
+  const giaLette = ['pip-scappa', 'la-gita-al-castello', 'una-voce-nella-notte', 'chi-ha-mangiato-la-torta']
+  await semina(page, { coins: 100, items: { 'en:tree': sa(6) },
+                       campagne: { inglese: { tappa: Object.keys(tutte).length, libera: false, stelle: {}, cfg: {},
+                                              vinte: tutte, lette: Object.fromEntries(giaLette.map(id => [id, ora - 86400000])) } } })
+}
+await carta.click()
+await page.waitForSelector('[data-libro="quinta"]')
+await page.locator('[data-libro="quinta"]').scrollIntoViewIfNeeded()
+await page.locator('[data-libro="quinta"]').click()
+await page.waitForSelector('[data-libro-testo]', { timeout: 4000 })
+uguale('il libro apre la prima puntata', (await page.locator('[data-puntata]').innerText()).trim().toLowerCase(), 'puntata 1')
+const vecchio = await leggiProfilo(page)
+const vecchioTree = JSON.stringify((vecchio.items || {})['en:tree'] || null)
+await page.locator('[data-azione="pagina-avanti"]').click()
+const parolaStoria = page.locator('[data-libro-testo] [data-parola="tree"][data-storia]').first()
+uguale('le parole della storia sono segnate', await parolaStoria.count(), 1)
+await parolaStoria.click()
+await page.waitForSelector('[data-traduzione]')
+uguale('una parola della storia non chiede niente', await page.locator('[data-svela]').count(), 0)
+controlla('dice cosa vuol dire, e che è gratis', /albero/.test(await page.locator('[data-traduzione]').innerText()) &&
+          await page.locator('[data-traduzione] [data-della-storia]').count() === 1)
+uguale('e il libro paga ancora tutto', await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
+await scatto(page, 'inglese-libro-puntata')
+for (let i = 0; i < 4 && !(await page.locator('[data-azione="ho-letto"]').count()); i++)
+  await page.locator('[data-azione="pagina-avanti"]').click()
+await page.locator('[data-azione="ho-letto"]').click()
+const monetePuntata = (await leggiProfilo(page)).coins
+const tipiVisti = []
+while (!(await page.locator('[data-fine]').count())) {
+  const { tipo, esito } = await rispondiGiusto()
+  tipiVisti.push(tipo)
+  if (esito) uguale(`una domanda «${tipo}» risposta giusta`, esito, 'giusta')
+}
+nota(tipiVisti.join(' · '))
+controlla('la prima puntata chiede anche la frase e chi l’ha detto', tipiVisti.includes('frase') && tipiVisti.includes('chi'))
+await attendi(page, 900)
+const dopoP1 = await leggiProfilo(page)
+uguale('ogni domanda ha pagato: la parola della storia era gratis', dopoP1.coins - monetePuntata, tipiVisti.length * 4)
+uguale('e nello SRS non ha segnato niente', JSON.stringify(dopoP1.items['en:tree'] || null), vecchioTree)
+const serie = (dopoP1.campagne.inglese.serie || {})['la-vecchia-mappa'] || {}
+controlla('la serie ha salvato le sue variabili', serie.valori && serie.valori.nonno && serie.valori.mezzo, JSON.stringify(serie))
+uguale('e fin dove si è arrivati', serie.fatte, 1)
+uguale('il cartello offre la puntata dopo', (await page.locator('[data-fine] [data-azione="avanti"]').innerText()).trim(),
+       'Puntata 2 →')
+controlla('e accanto un’altra storia', await page.locator('[data-fine] [data-azione="altra-storia"]').count() === 1)
+await scatto(page, 'inglese-libro-puntata-fine')
+await page.locator('[data-fine] [data-azione="avanti"]').click()
+await page.waitForSelector('[data-libro-testo] [data-riassunto]')
+uguale('è la puntata 2', (await page.locator('[data-puntata]').innerText()).trim().toLowerCase(), 'puntata 2')
+{
+  const testo = await page.locator('[data-libro-testo]').innerText()
+  const nonno = serie.valori.nonno === 'nonno' ? 'Grandfather' : 'Grandmother'
+  controlla('con lo stesso nonno della puntata 1', testo.includes(nonno), testo.slice(0, 200))
+  controlla('e lo stesso mezzo', testo.includes(`by ${serie.valori.mezzo}`), testo.slice(0, 300))
+}
+controlla('comincia con «Nella puntata prima»',
+          /nella puntata prima/i.test(await page.locator('[data-libro-testo] [data-riassunto]').innerText()))
+for (let i = 0; i < 4 && !(await page.locator('[data-azione="ho-letto"]').count()); i++)
+  await page.locator('[data-azione="pagina-avanti"]').click()
+await page.locator('[data-azione="ho-letto"]').click()
+const tipi2 = []
+while (!(await page.locator('[data-fine]').count())) {
+  const { tipo, esito } = await rispondiGiusto()
+  tipi2.push(tipo)
+  if (esito) uguale(`puntata 2: «${tipo}» giusta`, esito, 'giusta')
+}
+controlla('e la puntata 2 fa mettere in ordine', tipi2.includes('ordine'), tipi2.join(' · '))
+await attendi(page, 900)
+uguale('la puntata 2 è letta, e la serie lo sa',
+       ((await leggiProfilo(page)).campagne.inglese.serie['la-vecchia-mappa'] || {}).fatte, 2)
 await page.locator('[data-fine] [data-azione="mappa"]').click()
 await page.waitForSelector('[data-mappa-inglese]')
 

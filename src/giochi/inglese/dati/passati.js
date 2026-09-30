@@ -11,6 +11,8 @@ export const PASSATI = {
   sang: 'sing', wrote: 'write', had: 'have', did: 'do',
   said: 'say', told: 'tell', spoke: 'speak', knew: 'know', fell: 'fall', sat: 'sit', stood: 'stand',
   wore: 'wear', drew: 'draw', built: 'build',
+  // i verbi del cassetto che le storie possono usare (docs/lingue/libro-racconti.md)
+  heard: 'hear', drove: 'drive',
 }
 
 // i verbi il cui passato è uguale alla base: niente -ed, e niente da cercare
