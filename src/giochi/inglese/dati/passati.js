@@ -9,6 +9,9 @@ export const PASSATI = {
   gave: 'give', took: 'take', won: 'win', caught: 'catch', threw: 'throw',
   ate: 'eat', drank: 'drink', slept: 'sleep', ran: 'run', swam: 'swim', flew: 'fly',
   sang: 'sing', wrote: 'write', had: 'have', did: 'do',
+  // i verbi del cassetto che le storie possono usare (docs/lingue/libro.md, «Le parole della storia»)
+  said: 'say', heard: 'hear', drove: 'drive', fell: 'fall', sat: 'sit', stood: 'stand', wore: 'wear',
+  spoke: 'speak', drew: 'draw', built: 'build', knew: 'know',
 }
 
 // i verbi il cui passato è uguale alla base: niente -ed, e niente da cercare

@@ -80,7 +80,7 @@ export const WORDS = [
   ['blackboard','lavagna','','s'],['desk','banco','','s'],['test','verifica','📝','s'],
   ['homework','compiti','','s'],['lesson','lezione','','s'],['word','parola','','s'],
   ['question','domanda','❓','s'],['answer','risposta','','s'],['story','storia','📖','s'],
-  ['song','canzone','🎵','s'],
+  ['song','canzone','🎵','s'],['treasure','tesoro','','s'],
   // ---- mezzi ----
   ['car','automobile','🚗','t'],['bus','autobus','🚌','t'],['train','treno','🚆','t'],
   ['bike','bicicletta','🚲','t'],['plane','aereo','✈️','t'],['boat','barca','⛵','t'],
@@ -97,7 +97,7 @@ export const WORDS = [
   ['arm','braccio','','b'],['finger','dito','👆','b'],['hair','capelli','','b'],
   ['face','faccia','😐','b'],['head','testa','','b'],['back','schiena','','b'],
   ['neck','collo','','b'],['knee','ginocchio','','b'],['shoulder','spalla','','b'],
-  ['stomach','pancia','','b'],
+  ['stomach','pancia','','b'],['voice','voce','','b'],
   // ---- natura e tempo che fa ----
   ['sun','sole','☀️','w'],['moon','luna','🌙','w'],['star','stella','⭐','w'],
   ['cloud','nuvola','☁️','w'],['rain','pioggia','🌧️','w'],['snow','neve','❄️','w'],
@@ -154,6 +154,7 @@ export const WORDS = [
   ['April','aprile','','d'],['May','maggio','','d'],['June','giugno','','d'],
   ['July','luglio','','d'],['August','agosto','','d'],['September','settembre','','d'],
   ['October','ottobre','','d'],['November','novembre','','d'],['December','dicembre','','d'],
+  ['suddenly','all’improvviso','','d'],
   // ---- luoghi ----
   ['school','scuola','🏫','y'],['shop','negozio','🏪','y'],['hospital','ospedale','🏥','y'],
   ['church','chiesa','⛪','y'],['station','stazione','🚉','y'],['museum','museo','🏛️','y'],
