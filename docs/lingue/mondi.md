@@ -114,12 +114,18 @@ Ogni parola inglese a schermo (frase, tessera, capitolo) si tocca e mostra la
 traduzione per un paio di secondi.
 
 - **Gratis 3 volte in tutto** finché la parola è nuova (forza bassa).
-- Dopo, toccarla fa sì che **quella domanda non paghi**, e lo dice subito
-  sull'indicatore delle monete, prima di rispondere. Non costa monete.
+- Dopo, toccarla fa sì che **quella domanda non paghi**. Per questo **prima
+  si chiede**: una bolla accanto alla parola dice perché costerebbe («Hai
+  già chiesto questa parola 3 volte», o «la conosci già») e che la domanda
+  non darà monete, con «Sì, dimmelo» e «No, ci provo». Solo al sì si svela
+  e l'indicatore delle monete si spegne. Le volte gratis passano dritte, e
+  anche un tocco che non toglierebbe più niente (la domanda non paga già).
+  Non costa monete.
 - La parola chiesta conta come **non saputa** nello SRS: non si rafforza anche
   se poi la risposta è giusta.
 - Nel capitolo, ogni parola chiesta oltre le gratuite toglie il guadagno di
-  **una** domanda, non di tutte.
+  **una** domanda, non di tutte: la bolla lo dice così, e non chiede più
+  quando non resta nessuna domanda che paghi.
 
 ## Sbagliare
 
@@ -254,9 +260,10 @@ stava in piedi nel codice, si è presa la variante più vicina:
 - **Il cassetto si apre alla prima tappa vinta del mondo.**
 - **Il grado** è `floor(10 × media(min(forza, 4) / 4))` su parole, frasi e
   forma della tappa; la 🏁 fa la media di tutto il mondo.
-- **La sessione**: il primo giro passa ogni voce una volta, dalla più
-  debole (a pari forza le parole prima delle frasi); poi pesca col picker
-  di `store/srs.js`. Finisce a `min(20, voci + 4)` risposte giuste, e
+- **La sessione**: il primo giro passa le parole una volta, dalla più
+  debole; poi pesca col picker di `store/srs.js`, e una frase entra solo
+  quando ogni sua parola è già saputa (forza ≥ 1) o è stata indovinata in
+  quella partita (`pronta`). Finisce a `min(20, voci + 4)` risposte giuste, e
   sbagliando non si perde niente. Alla 🏁 il primo giro è di 16. Tre frasi
   di una forma debole (forza < 2) dei mondi già fatti entrano nel giro.
 - **Gli `id` nuovi cominciano con `m-`**; dove la frase c'era già in
@@ -311,6 +318,8 @@ const s = new Sessione({ tappa: tappaDi(id) /* o cassettoDi(mondo) */,
                          itemDi: item, haVoce: p => haVoce(p, 'en') })
 const d = s.prossima()                    // la domanda
 const t = new Tocchi({ itemDi: item })    // uno per domanda
+t.prova('dog')                            // { costa, volte, nuova }: non segna niente
+domandaDelTocco(p, { libro })             // la domanda da fare prima, se costa
 t.tocca('dog')                            // { it, gratis, chiave }: se !gratis, «questa non paga»
 const e = s.rispondi(d, risposta, { tocchi: t })
 e.registra.forEach(r => answer(r.chiave, { correct: r.correct }))

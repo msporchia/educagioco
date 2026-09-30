@@ -7,8 +7,14 @@
      · una frase si compone a tocchi, e sbagliandola si legge il perché,
        «Si fa così» e la frase giusta, con la tessera sbagliata colorata
      · la frase giusta paga, e l'indicatore delle monete lo diceva prima
+     · la partita comincia dalle parole, e le frasi arrivano dopo
+     · un tocco che costa si chiede prima, in una bolla accanto alla
+       parola: col dito vero, tenendo premuta una tessera, il click che
+       arriva dopo non la chiude e non muove la tessera; «No» la chiude
+       e la domanda paga ancora
      · il capitolo del libro si legge, una parola si tocca e dice cosa
-       vuol dire, e se il tocco costa lo dice subito; poi si risponde
+       vuol dire; se il tocco costa prima lo chiede, e al sì lo dice
+       subito; poi si risponde
    Il progetto è in docs/lingue/mondi.md, i bersagli alla riga «Nei test».
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scatto, TELEFONO }
@@ -38,8 +44,8 @@ await scatto(page, 'inglese-mappa-vuota')
 
 /* ---------- 2. un bambino a metà del primo mondo ----------
    Le parole della prima tappa sono sapute (forza 6) e le frasi a metà
-   (forza 4): la prima domanda è una frase da mettere in ordine. Le altre
-   quattro tappe sono vinte, così il libro del mondo è aperto. */
+   (forza 4): dopo il giro delle parole, le frasi si mettono in ordine. Le
+   altre quattro tappe sono vinte, così il libro del mondo è aperto. */
 const ora = Date.now()
 const sa = s => ({ s, ok: 5, err: 0, last: ora, seen: 5, t: 0 })
 const t1 = tappaDi('che-cose-1')
@@ -62,8 +68,24 @@ uguale('il secondo mondo resta chiuso fino alla bandiera',
 await scatto(page, 'inglese-mappa')
 
 /* ---------- 3. una frase composta a tocchi, prima storta ---------- */
+// il primo giro fa solo parole (motore/sessione.js): si risponde giusto finché arriva una frase
+async function finoAllaFrase() {
+  let parole = 0
+  for (;;) {
+    await page.waitForSelector('[data-domanda]')
+    if (await page.locator('[data-domanda]').getAttribute('data-genere') === 'frase') return parole
+    if (parole++ > 30) return parole
+    await attendi(page, 400)                               // la finestra cieca
+    await page.locator('[data-domanda] [data-opzione][data-giusta]').click()
+    await page.waitForSelector('[data-esito="giusta"]')
+    await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 6000 })
+  }
+}
 await page.locator('[data-tappa="che-cose-1"]').click()
 await page.waitForSelector('[data-domanda]')
+uguale('si comincia da una parola', await page.locator('[data-domanda]').getAttribute('data-genere'), 'parola')
+const giroParole = await finoAllaFrase()
+controlla('le frasi arrivano dopo le parole', giroParole >= t1.parole.length, `${giroParole} parole prima`)
 uguale('la frase a metà si mette in ordine', await page.locator('[data-domanda]').getAttribute('data-formato'), 'monta')
 uguale('l’indicatore dice che la domanda paga',
        await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
@@ -78,6 +100,37 @@ async function componi(storta) {
   for (const x of t) await page.locator(`[data-banco] [data-tessera="${x.id}"]`).click()
   return t.length
 }
+/* Tenere premuta una tessera chiede cosa vuol dire. «dog» e le altre sono
+   sapute, quindi il tocco costerebbe il guadagno: prima una domanda, in una
+   bolla. Col dito vero (Input.dispatchTouchEvent, docs/core/il-dito.md): il
+   click che arriva dopo l'alzata non deve né chiuderla né muovere la tessera. */
+const cdp = await page.context().newCDPSession(page)
+async function dito(x, y, tieni = 60) {
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
+  await attendi(page, tieni)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  await attendi(page, 250)                                 // il click fantasma arriva qui dentro
+}
+const centro = async loc => { const b = await loc.boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2] }
+await attendi(page, 400)
+const nome = page.locator('[data-banco] [data-tessera]').filter({
+  has: page.locator(t1.parole.map(p => `[data-parola="${p}"]`).join(', ')) }).first()
+const idNome = await nome.getAttribute('data-tessera')
+await dito(...await centro(nome), 700)
+controlla('tenuta premuta una parola saputa, prima si chiede', await page.locator('[data-svela]').count() === 1)
+controlla('la bolla dice che la domanda non darà monete',
+          /non ti darà monete/.test(await page.locator('[data-svela]').innerText()))
+uguale('il click dopo il dito non ha mosso la tessera',
+       await page.locator(`[data-banco] [data-tessera="${idNome}"]`).count(), 1)
+uguale('e non ha tolto il guadagno', await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
+controlla('la traduzione non c’è ancora', await page.locator('[data-traduzione]').count() === 0)
+await scatto(page, 'inglese-chiede')
+await attendi(page, 350)
+await dito(...await centro(page.locator('[data-svela] [data-azione="svela-no"]')))
+uguale('«No, ci provo» chiude la bolla', await page.locator('[data-svela]').count(), 0)
+uguale('e la domanda paga ancora', await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
+uguale('la tessera è ancora nel banco', await page.locator(`[data-banco] [data-tessera="${idNome}"]`).count(), 1)
+
 const quante = await componi(true)
 uguale('le tessere sono tutte in fila', await page.locator('[data-fila] [data-in-fila]').count(), quante)
 uguale('il banco è vuoto', await page.locator('[data-banco] [data-tessera]').count(), 0)
@@ -100,6 +153,7 @@ await scatto(page, 'inglese-sbaglio')
 
 /* ---------- 4. la seconda, giusta: paga ---------- */
 await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 12000 })
+await finoAllaFrase()
 uguale('niente si perde: si va avanti con un’altra frase',
        await page.locator('[data-domanda]').getAttribute('data-formato'), 'monta')
 const monetePrima = (await leggiProfilo(page)).coins
@@ -122,8 +176,25 @@ await page.locator('[data-libro="che-cose"]').click()
 await page.waitForSelector('[data-libro-testo]')
 uguale('il libro dice quanto può rendere', await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
 await scatto(page, 'inglese-libro')
-// «cat» è saputa: toccarla costa il guadagno di una domanda, e lo si vede subito
-await page.locator('[data-libro-testo] [data-parola="cat"]').first().click()
+// una parola di struttura è sempre gratis: si dice e basta
+await page.locator('[data-libro-testo] [data-parola="is"]').first().click()
+await page.waitForSelector('[data-traduzione]')
+controlla('una parola gratis non chiede niente', await page.locator('[data-svela]').count() === 0)
+// «cat» è saputa: toccarla costerebbe il guadagno di una domanda, e prima lo si chiede
+const gatto = page.locator('[data-libro-testo] [data-parola="cat"]').first()
+await gatto.click()
+await page.waitForSelector('[data-svela]')
+const chiede = await page.locator('[data-svela]').innerText()
+controlla('la bolla dice perché costa', /la conosci già/.test(chiede), chiede)
+controlla('e che nel libro è una domanda sola', /Una domanda del libro/.test(chiede), chiede)
+uguale('chiedere non toglie niente', await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
+await attendi(page, 400)
+await page.locator('[data-azione="svela-no"]').click()
+uguale('«No» chiude', await page.locator('[data-svela]').count(), 0)
+await gatto.click()
+await page.waitForSelector('[data-svela]')
+await attendi(page, 400)
+await page.locator('[data-azione="svela-si"]').click()
 await page.waitForSelector('[data-traduzione]')
 controlla('la parola toccata dice cosa vuol dire',
           (await page.locator('[data-traduzione]').innerText()).includes('gatto'))

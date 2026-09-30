@@ -3,7 +3,7 @@
 // monete, contatori e profilo. Regole in `motore/`, tabelle in `dati/`, la
 // mappa in `scena/`, le schermate in `viste/`. Il progetto e l'interfaccia
 // col motore: docs/lingue/mondi.md.
-import { ref, shallowRef, computed, reactive, onUnmounted } from 'vue'
+import { ref, shallowRef, computed, reactive, watch, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { state, item, answer, segna, persist, flushNow, engProgresso, tuttoAperto } from '../../store/profile.js'
@@ -20,7 +20,7 @@ import { CAPITOLI } from './dati/capitoli.js'
 import { pagaDi, PAGA_CAPITOLO } from './dati/monete.js'
 import { statoMappa, segnaVinta, tappaAperta, vinta } from './motore/mappa.js'
 import { Sessione } from './motore/sessione.js'
-import { Tocchi, domandeCheLPagano } from './motore/tocchi.js'
+import { Tocchi, domandeCheLPagano, domandaDelTocco } from './motore/tocchi.js'
 import { cassettoDi, mondoDellaTappa } from './motore/grafo.js'
 import { gradoTappa } from './motore/grado.js'
 import { capitoliDi, capitolo } from './motore/libro.js'
@@ -287,24 +287,51 @@ function avantiLibro() {
 const bolla = ref(null)
 let bollaTimer = 0
 
+// i tocchi che contano adesso: a domanda chiusa guardare non costa niente
+function tocchiQui() {
+  if (vista.value === 'libro' && tocchiLibro) return tocchiLibro
+  if (vista.value === 'tappa' && tocchi && !esito.value) return tocchi
+  return null
+}
+// c'è ancora un guadagno che un tocco toglierebbe? (nel libro, una domanda che paga)
+const siPerde = () => (vista.value === 'libro'
+  ? !!libro.value && libro.value.domande.length > libroPersi.value : pagaQui.value)
+
+// Un tocco che toglierebbe il guadagno si chiede prima, in una bolla accanto
+// alla parola; le volte gratis passano dritte (docs/lingue/mondi-vista.md).
 function tocca(el) {
   const parola = el && el.dataset && el.dataset.parola
   if (!parola) return
-  let r
-  if (vista.value === 'libro' && tocchiLibro) {
-    r = tocchiLibro.tocca(parola)
-    libroPersi.value = tocchiLibro.aPagamento
-  } else if (vista.value === 'tappa' && tocchi && !esito.value) {
-    r = tocchi.tocca(parola)
-    pagaQui.value = tocchi.paga
-  } else r = { ...traduci(parola), gratis: true }   // a domanda chiusa guardare non costa niente
-  persist()   // il conto dei tocchi gratis sta sull'elemento SRS della parola
   const box = el.getBoundingClientRect()
-  const x = Math.min(innerWidth - 90, Math.max(90, box.left + box.width / 2))   // la nuvoletta resta dentro lo schermo
-  bolla.value = { parola, it: r.it || '', costa: !r.gratis, x, y: box.top }
+  const t = tocchiQui()
+  const p = t ? t.prova(parola) : null
+  if (p && p.costa && siPerde()) {
+    clearTimeout(bollaTimer)
+    const x = Math.min(innerWidth - 136, Math.max(136, box.left + box.width / 2))
+    const sotto = box.top < 180     // sopra non ci sta: sotto la parola
+    bolla.value = { parola, x, y: sotto ? box.bottom : box.top, sotto, sopra: box.top, centro: box.left + box.width / 2,
+                    chiede: domandaDelTocco(p, { libro: vista.value === 'libro' }) }
+    return
+  }
+  svela(parola, box.left + box.width / 2, box.top)
+}
+
+function svela(parola, centro, sopra) {
+  const t = tocchiQui()
+  const r = t ? t.tocca(parola) : { ...traduci(parola), gratis: true }
+  if (t && t === tocchiLibro) libroPersi.value = t.aPagamento
+  else if (t) pagaQui.value = t.paga
+  persist()   // il conto dei tocchi gratis sta sull'elemento SRS della parola
+  const x = Math.min(innerWidth - 90, Math.max(90, centro))   // la nuvoletta resta dentro lo schermo
+  bolla.value = { parola, it: r.it || '', costa: !r.gratis, x, y: sopra }
   clearTimeout(bollaTimer)
   bollaTimer = setTimeout(() => { bolla.value = null }, 2200)
 }
+
+const conSi = () => { const b = bolla.value; if (b && b.chiede) svela(b.parola, b.centro, b.sopra) }
+const conNo = () => { if (bolla.value && bolla.value.chiede) bolla.value = null }
+// rispondere chiude la domanda rimasta aperta: a quel punto guardare è gratis
+watch([esito, libroScelta], () => conNo())
 
 function ascolta() {
   const q = d.value
@@ -364,6 +391,7 @@ onUnmounted(() => { clearTimeout(bollaTimer); zittisci() })
            @ho-letto="hoLetto" @rispondi="rispondiLibro" @tocca="tocca" />
 
     <Fine v-if="fine" v-bind="fine" @mappa="allaMappa" @avanti="avantiDaFine" />
-    <Bolla v-if="bolla" v-bind="bolla" />
+    <Bolla v-if="bolla" :parola="bolla.parola" :it="bolla.it" :costa="bolla.costa" :chiede="bolla.chiede"
+           :sotto="bolla.sotto" :x="bolla.x" :y="bolla.y" @si="conSi" @no="conNo" />
   </div>
 </template>
