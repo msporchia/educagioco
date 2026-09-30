@@ -55,8 +55,9 @@ export default {
       anche: ['Pioveva e c’era vento', 'Nevicava'] },
     { testo: 'Perché Pip è scappato?', risposta: v => `Correva dietro a ${v.animale.un}`,
       anche: ['Aveva fame', 'Era stanco'] },
-    { testo: 'Dove l’hanno cercato, dopo il parco?', risposta: v => grande(v.primo.al) },
     { testo: 'Dov’era Pip?', risposta: v => grande(v.dove.al) },
     { testo: 'Pip ha mangiato il pane.', tipo: 'vf', vero: v => (v.dove.en === 'shop' ? true : null) },
+    { tipo: 'ordine', fatti: ['Laura e Leo hanno giocato a palla', v => `Pip è corso dietro a ${v.animale.un}`,
+                              v => `Lo hanno cercato ${v.primo.al}`, v => `Lo hanno trovato ${v.dove.al}`] },
   ],
 }

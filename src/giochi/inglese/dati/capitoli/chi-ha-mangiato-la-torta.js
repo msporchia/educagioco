@@ -57,9 +57,8 @@ export default {
     { testo: 'Dov’è andata Laura, alle due?', risposta: v => grande(v.laura.al) },
     { testo: 'Il papà è andato al parco.', tipo: 'vf', vero: v => v.papa.en === 'park' },
     { testo: 'Che cosa ha comprato la mamma?', risposta: v => v.spesa.it },
-    { testo: 'Che cosa è successo prima?', risposta: () => 'La mamma è andata al mercato',
-      anche: ['La mamma ha trovato la cioccolata', 'La nonna ha mangiato la torta',
-              'La mamma e il papà hanno fatto una torta piccola'] },
+    { tipo: 'ordine', fatti: ['La mamma ha fatto una torta', v => `Laura è andata ${v.laura.al}`,
+                              'La mamma è andata al mercato', 'La mamma è tornata a casa'] },
     { testo: 'Chi ha mangiato la torta?', risposta: v => v.chi, anche: ['Laura', 'La nonna'] },
   ],
 }
