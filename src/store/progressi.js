@@ -433,6 +433,8 @@ export function statoTraguardo(t, m) {
     /* più di un grado: la medaglia dice a che punto sei */
     medaglia: preso && t.soglie.length > 1 ? MEDAGLIE[grado - 1] : '',
     come: t.come(meta),
+    // `come` è la meta dopo (l'albo dice cosa manca); il cartello della festa racconta il grado preso
+    fatto: preso ? t.come(t.soglie[grado - 1]) : '',
     quota: Math.max(0, Math.min(1, (valore - da) / Math.max(1, meta - da))),
   }
 }

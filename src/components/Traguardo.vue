@@ -47,7 +47,7 @@ function chiudi() {
         <em v-if="corrente.medaglia">{{ corrente.medaglia }}</em>
       </div>
       <h2>{{ corrente.nome }}</h2>
-      <p class="come">{{ corrente.come }}</p>
+      <p class="come">{{ corrente.fatto }}</p>
       <p v-if="corrente.premio" class="premio">+{{ corrente.premio }} 🪙</p>
       <p class="mini">tocca per continuare</p>
     </div>

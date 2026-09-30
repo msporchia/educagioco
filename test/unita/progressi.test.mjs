@@ -133,6 +133,10 @@ titolo('Traguardi')
   const r1 = riscuotiTraguardi(p, now)
   ok(r1.nuovi.length === 1 && r1.nuovi[0].id === 'mate-giuste', 'si riscuote una volta sola')
   ok(r1.monete === 15, 'il bronzo porta 15 monete')
+  // il cartello della festa (components/Traguardo.vue) legge `fatto`, non `come` che è la meta dopo
+  ok(r1.nuovi[0].fatto === TRAGUARDI.find(t => t.id === 'mate-giuste').come(50),
+     'il cartello del bronzo dice la soglia raggiunta, non quella dopo')
+  ok(r1.nuovi[0].come !== r1.nuovi[0].fatto, 'e l\'albo continua a dire cosa manca')
   ok(riscuotiTraguardi(p, now).nuovi.length === 0, 'e non si riscuote due volte')
 
   /* 1200 risposte saltano argento e oro in un colpo solo — e per strada
@@ -143,6 +147,21 @@ titolo('Traguardi')
   ok(salto && salto.grado === 3 && salto.gradoPrima === 1, 'saltando avanti si arriva all\'oro')
   ok(r2.monete >= 40 + 100, 'e si pagano tutti i gradini saltati')
   ok(statoTraguardi(p, now).find(t => t.id === 'mate-giuste').finito, 'l\'oro chiude il traguardo')
+  ok(salto.fatto === TRAGUARDI.find(t => t.id === 'mate-giuste').come(1000),
+     'saltando gradi il cartello dice l\'ultimo preso')
+
+  // la prima vittoria «da solo» del Generale: il cartello diceva «Vinci 6 livelli…»
+  const g = nuovo()
+  g.totals.daSolo = 0
+  riscuotiTraguardi(g, now)
+  g.totals.daSolo = 1
+  const par = riscuotiTraguardi(g, now).nuovi.find(t => t.id === 'gen-par')
+  ok(par && par.fatto === 'Vinci un livello senza farti svelare niente',
+     'alla prima vittoria da solo il cartello dice «un livello»')
+  ok(par && par.come === 'Vinci 6 livelli senza farti svelare niente',
+     'e l\'albo dice già il prossimo gradino')
+  const vuoto = statoTraguardi(nuovo(), now).find(t => t.id === 'gen-par')
+  ok(vuoto.fatto === '', 'un traguardo mai preso non ha niente da raccontare')
 
   /* le categorie inglesi: tre parole in una categoria la fanno contare */
   const q = nuovo()
