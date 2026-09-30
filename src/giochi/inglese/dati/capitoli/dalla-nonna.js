@@ -35,7 +35,7 @@ export default {
     ],
   ],
   domande: [
-    { testo: 'Quanti anni ha Leo?', risposta: v => v.anni.it },
+    { testo: 'Quanti anni ha Leo?', risposta: v => v.anni.it, anche: ['otto', 'quattro'] },
     { testo: v => `Di che colore è ${v.vestito.il} di Laura?`, risposta: v => v.colore.it },
     { testo: 'Perché Leo ha freddo?', se: v => !v.ce, risposta: v => `Non ha ${v.caldo.un}`,
       anche: ['Ha fame', 'È stanco'] },

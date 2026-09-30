@@ -35,7 +35,7 @@ export default {
   domande: [
     { testo: 'Che giorno è?', risposta: v => v.giorno.it },
     { testo: 'In che stanza è Pip?', risposta: v => v.stanza.it },
-    { testo: v => `Pip è sopra o sotto ${v.mobile.il}?`, risposta: v => (v.sotto ? 'Sotto' : 'Sopra') },
+    { testo: 'Dov’è Pip, nella stanza?', risposta: v => `${v.sotto ? 'Sotto' : 'Sopra'} ${v.mobile.il}` },
     { testo: 'C’è un gatto in giardino?', tipo: 'vf', etichette: ['Sì', 'No'], vero: v => (v.gatto ? true : null) },
   ],
 }

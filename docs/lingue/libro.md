@@ -38,6 +38,13 @@ Una storia è **scritta a mano** — un inizio, un fatto, una fine — con:
   tirato. Le sbagliate sono le versioni che non sono uscite questa volta,
   più quelle scritte in `anche`. «Non si sa» è la risposta quando il testo
   non lo dice: il nonno ha le mucche solo se è lui il contadino.
+- **una domanda a scelta ha almeno tre risposte** (con `anche` quando le
+  versioni sono due: «cinque / sei» si indovinava una volta su due; il
+  controllo lo pretende), il vero/falso ne ha due o tre; **tutte le risposte
+  con la maiuscola**, la mette il motore (`domandaIn`);
+- **un colpo di scena non si ripete fra storie**: Pip che mangia la torta è
+  il giallo di «Chi ha mangiato la torta?», e nelle altre storie mangia
+  altro.
 
 ## Il formato di una storia
 

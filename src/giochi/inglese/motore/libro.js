@@ -100,6 +100,8 @@ export const TIPI_DOMANDA = {
   },
 }
 
+const maiuscola = s => (s ? s[0].toUpperCase() + s.slice(1) : s)
+
 const mescola = (a, rnd) => {
   const b = a.slice()
   for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [b[i], b[j]] = [b[j], b[i]] }
@@ -116,7 +118,9 @@ export function domandaIn(cap, d, v, rnd = Math.random) {
   if (!POSSIBILI.has(d)) POSSIBILI.set(d, tipo.possibili(d, mondiDi(cap)))
   const sbagliate = mescola(POSSIBILI.get(d).filter(x => x !== giusta), rnd)
     .slice(0, OPZIONI_MAX - 1)
-  const opzioni = mescola([giusta, ...sbagliate], rnd).map(testo => ({ testo, giusta: testo === giusta }))
+  // tutte con la maiuscola: «cinque» accanto a «Pilota» sembrava un'altra specie di risposta
+  const opzioni = mescola([giusta, ...sbagliate], rnd)
+    .map(testo => ({ testo: maiuscola(testo), giusta: testo === giusta }))
   return { testo: typeof d.testo === 'function' ? d.testo(v) : d.testo, opzioni, giusta }
 }
 

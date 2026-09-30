@@ -23,7 +23,8 @@ export default {
     cena: { da: 'cibi', fra: ['pasta', 'soup', 'rice', 'pizza'] },
     ora: { da: 'numeri', fra: ['seven', 'eight'] },
     laura: { fra: FACCENDE },
-    dolce: { da: 'cibi', fra: ['cake', 'cookie', 'apple', 'banana'] },
+    // niente torta: è il giallo di «Chi ha mangiato la torta?», qui toglierebbe la sorpresa
+    dolce: { da: 'cibi', fra: ['cookie', 'apple', 'banana', 'strawberry'] },
   },
   vincoli: [v => v.cuoco !== v.altro],
   pagine: [
@@ -50,7 +51,7 @@ export default {
     ],
   ],
   domande: [
-    { testo: 'A che ora si cena?', risposta: v => `Alle ${v.ora.it}` },
+    { testo: 'A che ora si cena?', risposta: v => `Alle ${v.ora.it}`, anche: ['Alle sei', 'Alle nove'] },
     { testo: 'Chi cucina la cena?', risposta: v => v.cuoco.it, anche: ['Laura', 'Leo'] },
     { testo: 'Che cosa sta facendo Laura, alle sei?', risposta: v => v.laura.it },
     { testo: 'Perché Pip non ha fame, a cena?', risposta: v => `Ha mangiato ${v.dolce.un}`,

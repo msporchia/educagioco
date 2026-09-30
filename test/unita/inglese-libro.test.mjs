@@ -78,7 +78,7 @@ titolo('LE PAGINE')
   uguale('una storia con le frasi è una pagina sola', racconta(zaino, mondiDi(zaino)[0]).pagine.length, 1)
   // i controlli nuovi: pagina vuota, dopo sbagliato, pagine e frasi insieme
   const base = { id: 'prova', mondo: 'prima', titolo: 'Prova', variabili: {},
-                 domande: [{ testo: 'Chi è?', risposta: () => 'Leo', anche: ['Tom'] }] }
+                 domande: [{ testo: 'Chi è?', risposta: () => 'Leo', anche: ['Tom', 'Pip'] }] }
   const g = cap => guastiDelCapitolo({ ...base, ...cap }).join(' · ')
   controlla('una pagina vuota è un guasto', /vuota/.test(g({ pagine: [[{ en: 'Hello, Leo!' }], []] })))
   controlla('una pagina che a volte resta vuota è un guasto', /a volte resta vuota/.test(g({

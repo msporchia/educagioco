@@ -3,7 +3,7 @@
 // una che il testo a volte non dice. Formato in docs/lingue/libro.md.
 const grande = s => s[0].toUpperCase() + s.slice(1)
 const TROVATO = {
-  shop: 'Pip was in the shop, and he ate a big cake there!',
+  shop: 'Pip was in the shop, and he ate the bread!',
   library: 'Pip was in the library. He slept under a table!',
   station: 'Pip was at the station. He looked at the trains!',
   zoo: 'Pip was at the zoo. He swam with the ducks!',
@@ -49,11 +49,12 @@ export default {
     { testo: 'Dove giocavano Laura e Leo?', risposta: () => 'Al parco',
       anche: ['Allo zoo', 'In biblioteca', 'Alla stazione'] },
     { testo: 'Che tempo faceva?',
-      risposta: v => (v.caldo ? 'Faceva caldo e il cielo era blu' : 'Faceva freddo e c’erano nuvole') },
+      risposta: v => (v.caldo ? 'Faceva caldo e il cielo era blu' : 'Faceva freddo e c’erano nuvole'),
+      anche: ['Pioveva e c’era vento', 'Nevicava'] },
     { testo: 'Perché Pip è scappato?', risposta: v => `Correva dietro a ${v.animale.un}`,
       anche: ['Aveva fame', 'Era stanco'] },
     { testo: 'Dove l’hanno cercato, dopo il parco?', risposta: v => grande(v.primo.al) },
     { testo: 'Dov’era Pip?', risposta: v => grande(v.dove.al) },
-    { testo: 'Pip ha mangiato una torta.', tipo: 'vf', vero: v => (v.dove.en === 'shop' ? true : null) },
+    { testo: 'Pip ha mangiato il pane.', tipo: 'vf', vero: v => (v.dove.en === 'shop' ? true : null) },
   ],
 }

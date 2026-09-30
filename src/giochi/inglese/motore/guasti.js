@@ -236,13 +236,16 @@ export function guastiDelCapitolo(cap) {
     const r = racconta(cap, v, sorte(7))
     const attive = cap.domande.filter(d => !d.se || d.se(v))
     attive.forEach(d => poste.set(cap.domande.indexOf(d), true))
-    for (const d of r.domande) {
+    r.domande.forEach((d, i) => {
       const giuste = d.opzioni.filter(o => o.giusta)
       if (giuste.length !== 1) g.push(`${dove}: «${d.testo}» ha ${giuste.length} risposte giuste`)
       if (d.opzioni.length < 2) g.push(`${dove}: «${d.testo}» ha una risposta sola`)
+      // una scelta fra due si indovina una volta su due: vero/falso sì, una domanda a scelta no
+      else if ((attive[i].tipo || 'scelta') === 'scelta' && d.opzioni.length < 3)
+        g.push(`${dove}: «${d.testo}» ha solo due risposte (servono \`anche\`)`)
       if (new Set(d.opzioni.map(o => o.testo)).size !== d.opzioni.length)
         g.push(`${dove}: «${d.testo}» ha due opzioni uguali`)
-    }
+    })
   }
   frasi.forEach((f, i) => {
     if (!accese.has(i)) g.push(`${dove}: la frase ${i + 1} non si accende mai`)
