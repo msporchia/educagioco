@@ -1,4 +1,4 @@
-// In quinta, dopo «Fuori città»: Tom va a vedere un castello, al passato.
+// In quinta, dopo «Sono andato al castello»: Tom va a vedere un castello, al passato.
 // Quattro pagine, sei domande — andata e ritorno da non confondere,
 // l'ordine della giornata, il perché, e un vero/falso che vuole due frasi.
 // Formato in docs/lingue/libro.md.
@@ -8,7 +8,7 @@ const chi = (en, con) => ({ en, con })
 export default {
   id: 'la-gita-al-castello',
   mondo: 'quinta',
-  dopo: 'quinta-fuori',
+  dopo: 'quinta-andai',
   titolo: 'La gita al castello',
   variabili: {
     chi: { fra: [chi('grandfather', 'Con suo nonno'), chi('grandmother', 'Con sua nonna'),

@@ -11,7 +11,7 @@ export default {
   puntata: 1,
   mondo: 'quinta',
   titolo: 'La vecchia mappa',
-  // old, open, river, tree e star stanno nei cassetti
+  // open, river, tree e star stanno nei cassetti
   nuove: ['treasure'],
   variabili: {
     nonno: { fra: NONNI },

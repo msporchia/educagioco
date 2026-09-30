@@ -376,8 +376,8 @@ await page.waitForSelector('[data-mappa-inglese]')
 
 /* ---------- 5c. la quinta: parole della storia, domande nuove, puntate ----------
    Tutti i mondi vinti, e in quinta lette tutte le storie tranne «La
-   vecchia mappa»: il libro apre la sua prima puntata. «old» è una parola
-   della storia ed è saputa: toccarla sarebbe a pagamento, ma è gratis e
+   vecchia mappa»: il libro apre la sua prima puntata. «tree» è una parola
+   della storia (del cassetto della terza) ed è saputa: toccarla sarebbe a pagamento, ma è gratis e
    non segna niente. Poi si risponde a tutto, toccando la frase e
    componendo l'ordine, e «Puntata 2» apre la puntata con lo stesso nonno
    e lo stesso mezzo. */
@@ -410,7 +410,7 @@ await page.waitForSelector('.carte')
 {
   const tutte = Object.fromEntries(MONDI.flatMap(m => m.tappe).map((t, i) => [t.id, ora - (60 - i) * 3600000]))
   const giaLette = ['pip-scappa', 'la-gita-al-castello', 'una-voce-nella-notte', 'chi-ha-mangiato-la-torta']
-  await semina(page, { coins: 100, items: { 'en:old': sa(6) },
+  await semina(page, { coins: 100, items: { 'en:tree': sa(6) },
                        campagne: { inglese: { tappa: Object.keys(tutte).length, libera: false, stelle: {}, cfg: {},
                                               vinte: tutte, lette: Object.fromEntries(giaLette.map(id => [id, ora - 86400000])) } } })
 }
@@ -421,13 +421,14 @@ await page.locator('[data-libro="quinta"]').click()
 await page.waitForSelector('[data-libro-testo]', { timeout: 4000 })
 uguale('il libro apre la prima puntata', (await page.locator('[data-puntata]').innerText()).trim().toLowerCase(), 'puntata 1')
 const vecchio = await leggiProfilo(page)
-const vecchioOld = JSON.stringify((vecchio.items || {})['en:old'] || null)
-const parolaStoria = page.locator('[data-libro-testo] [data-parola="old"][data-storia]').first()
+const vecchioTree = JSON.stringify((vecchio.items || {})['en:tree'] || null)
+await page.locator('[data-azione="pagina-avanti"]').click()
+const parolaStoria = page.locator('[data-libro-testo] [data-parola="tree"][data-storia]').first()
 uguale('le parole della storia sono segnate', await parolaStoria.count(), 1)
 await parolaStoria.click()
 await page.waitForSelector('[data-traduzione]')
 uguale('una parola della storia non chiede niente', await page.locator('[data-svela]').count(), 0)
-controlla('dice cosa vuol dire, e che è gratis', /vecchio/.test(await page.locator('[data-traduzione]').innerText()) &&
+controlla('dice cosa vuol dire, e che è gratis', /albero/.test(await page.locator('[data-traduzione]').innerText()) &&
           await page.locator('[data-traduzione] [data-della-storia]').count() === 1)
 uguale('e il libro paga ancora tutto', await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
 await scatto(page, 'inglese-libro-puntata')
@@ -446,7 +447,7 @@ controlla('la prima puntata chiede anche la frase e chi l’ha detto', tipiVisti
 await attendi(page, 900)
 const dopoP1 = await leggiProfilo(page)
 uguale('ogni domanda ha pagato: la parola della storia era gratis', dopoP1.coins - monetePuntata, tipiVisti.length * 4)
-uguale('e nello SRS non ha segnato niente', JSON.stringify(dopoP1.items['en:old'] || null), vecchioOld)
+uguale('e nello SRS non ha segnato niente', JSON.stringify(dopoP1.items['en:tree'] || null), vecchioTree)
 const serie = (dopoP1.campagne.inglese.serie || {})['la-vecchia-mappa'] || {}
 controlla('la serie ha salvato le sue variabili', serie.valori && serie.valori.nonno && serie.valori.mezzo, JSON.stringify(serie))
 uguale('e fin dove si è arrivati', serie.fatte, 1)

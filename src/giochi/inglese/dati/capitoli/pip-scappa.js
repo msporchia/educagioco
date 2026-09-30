@@ -1,4 +1,4 @@
-// In quinta, a metà isola (dopo «In città»): Pip scappa dal parco, al
+// In quinta, a metà isola (dopo «Ieri ero al parco»): Pip scappa dal parco, al
 // passato. Quattro pagine, sei domande — l'ordine dei posti, il perché, e
 // una che il testo a volte non dice. Formato in docs/lingue/libro.md.
 const grande = s => s[0].toUpperCase() + s.slice(1)
@@ -12,7 +12,7 @@ const TROVATO = {
 export default {
   id: 'pip-scappa',
   mondo: 'quinta',
-  dopo: 'quinta-citta',
+  dopo: 'quinta-ieri',
   titolo: 'Pip scappa',
   variabili: {
     caldo: { fra: [true, false] },

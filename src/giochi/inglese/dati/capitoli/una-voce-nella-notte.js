@@ -1,4 +1,4 @@
-// In quinta, dopo «Fuori città»: una settimana dalla nonna, e ogni notte
+// In quinta, dopo «Ha detto ciao»: una settimana dalla nonna, e ogni notte
 // una voce in cucina. Chi parla lo dice solo l'ultima pagina: il
 // pappagallo. Le battute della voce hanno per nome «Una voce», così il nome
 // non svela il giallo. Cinque pagine, sei domande. Formato in
@@ -6,9 +6,9 @@
 export default {
   id: 'una-voce-nella-notte',
   mondo: 'quinta',
-  dopo: 'quinta-fuori',
+  dopo: 'quinta-disse',
   titolo: 'Una voce nella notte',
-  // parrot, laugh, speak e scared stanno nei cassetti
+  // parrot e scared stanno nei cassetti; laugh e speak sono della tappa prima
   nuove: ['suddenly', 'voice', 'hear'],
   variabili: {
     vicino: { da: 'luoghi', fra: ['church', 'farm', 'castle'] },
@@ -47,7 +47,7 @@ export default {
     [
       { chi: 'pappagallo', en: 'Good night, Laura and Leo!', forma: 'saluti' },
       { id: 'parla', chi: 'nonna', en: 'My parrot speaks every night. He is my friend!', forma: 'terza-s' },
-      { en: 'On Saturday Laura and Leo went home by train.', forma: 'passato' },
+      { en: 'On Saturday Laura and Leo said goodbye to the parrot, and they went home by train.', forma: 'dire' },
       { chi: 'Leo', en: 'Mother, can we have a parrot?', forma: 'can' },
       { chi: 'mamma', en: 'No, Leo, we have got Pip!', forma: 'have-got' },
     ],

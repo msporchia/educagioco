@@ -1,4 +1,4 @@
-// In quarta, dopo «I mestieri»: la maestra non trova gli occhiali, e tutta
+// In quarta, dopo «Lei gioca»: la maestra non trova gli occhiali, e tutta
 // la classe li cerca. Dove sono lo vede chi ride per primo. Quattro pagine,
 // sei domande (una frase da toccare, chi l'ha detto, i fatti in ordine).
 // Formato in docs/lingue/libro.md.
@@ -7,10 +7,10 @@ const bambino = (en, altro) => ({ en, altro })
 export default {
   id: 'gli-occhiali-della-maestra',
   mondo: 'quarta',
-  dopo: 'quarta-mestieri',
+  dopo: 'quarta-lei-gioca',
   titolo: 'Gli occhiali della maestra',
-  // school arriva in quinta; glasses, open, laugh e story stanno nei cassetti
-  nuove: ['suddenly', 'school'],
+  // school e laugh arrivano in quinta; glasses, open e story stanno nei cassetti
+  nuove: ['suddenly', 'school', 'laugh'],
   variabili: {
     giorno: { da: 'giorni', fra: ['Monday', 'Tuesday', 'Wednesday'] },
     ora: { da: 'numeri', fra: ['eight', 'nine'] },

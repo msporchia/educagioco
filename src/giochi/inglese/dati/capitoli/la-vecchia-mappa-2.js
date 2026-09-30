@@ -11,7 +11,7 @@ export default {
   puntata: 2,
   mondo: 'quinta',
   titolo: 'La vecchia mappa: il bosco',
-  // old, tree, river, forest, sit e key stanno nei cassetti
+  // tree, river, forest, sit e key stanno nei cassetti
   nuove: ['treasure', 'suddenly'],
   variabili: {
     nonno: { fra: NONNI },
@@ -34,7 +34,7 @@ export default {
       { chi: 'Laura', en: 'There are very many trees!', forma: 'there-is' },
     ],
     [
-      { en: 'Suddenly Pip ran to a very big tree, and he sat under it.', forma: 'passato' },
+      { en: 'Suddenly Pip ran to a tree, and he sat under it: it was bigger than a house!', forma: 'paragoni' },
       { id: 'albero', chi: v => v.nonno.id, en: 'Look! This is the tree on my map!', forma: 'this-is' },
       { en: 'Leo looked under the tree, and he found a small old box.', forma: 'passato' },
       { en: 'In the box there was not a treasure: there was a key and a very small map, with a {dove} on it.',

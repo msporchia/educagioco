@@ -1,4 +1,4 @@
-// In quarta, dopo «I mezzi»: Tom e il nonno aspettano l'autobus per andare
+// In quarta, dopo «Che cosa stai facendo?»: Tom e il nonno aspettano l'autobus per andare
 // dal dottore, e l'autobus non arriva. Li porta un trattore. Quattro
 // pagine, sei domande (chi l'ha detto, i fatti in ordine, una frase da
 // toccare). Formato in docs/lingue/libro.md.
@@ -7,10 +7,10 @@ const chi = (id, P, p, it) => ({ id, en: 'farmer', P, p, it })
 export default {
   id: 'il-trattore',
   mondo: 'quarta',
-  dopo: 'quarta-mezzi',
+  dopo: 'quarta-adesso',
   titolo: 'Il trattore',
-  // road arriva in quinta; bad, late e laugh stanno nei cassetti
-  nuove: ['wait', 'drive', 'come', 'suddenly', 'road'],
+  // road e laugh arrivano in quinta; bad e late stanno nei cassetti
+  nuove: ['wait', 'drive', 'come', 'suddenly', 'road', 'laugh'],
   variabili: {
     freddo: { fra: [true, false] },
     bus: { da: 'numeri', fra: ['seven', 'eight'] },

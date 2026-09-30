@@ -11,7 +11,7 @@ export default {
   puntata: 3,
   mondo: 'quinta',
   titolo: 'La vecchia mappa: il tesoro',
-  // key, tree, stone, push, old, open e cry stanno nei cassetti
+  // key, tree, stone, push e open stanno nei cassetti
   nuove: ['treasure'],
   variabili: {
     nonno: { fra: NONNI },
@@ -45,7 +45,7 @@ export default {
     ],
     [
       { en: 'They went home by {mezzo}, and they were very happy.', forma: 'passato' },
-      { en: 'At home {nonno} gave the {tesoro} to Laura and Leo.', forma: 'passato' },
+      { en: 'When they were at home, {nonno} gave the {tesoro} to Laura and Leo.', forma: 'quando' },
       { chi: v => v.nonno.id, en: 'Now it is your treasure!', forma: 'presente' },
       { chi: 'Leo', en: 'Thank you, {nonno}!', forma: 'saluti' },
       { en: 'And Pip? Pip was very tired, and he slept on the sofa.', forma: 'passato' },

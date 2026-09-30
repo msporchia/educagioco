@@ -1,11 +1,11 @@
-// In quarta, a metà isola (dopo «Ogni giorno»): il sabato di Tom, al
+// In quarta, a metà isola (dopo «Gioco ogni giorno»): il sabato di Tom, al
 // presente con la s. Quattro pagine, cinque domande — l'ordine delle cose,
 // il perché, e una che il testo a volte non dice. Formato in
 // docs/lingue/libro.md.
 export default {
   id: 'il-sabato-di-tom',
   mondo: 'quarta',
-  dopo: 'quarta-ogni-giorno',
+  dopo: 'quarta-io-gioco',
   titolo: 'Il sabato di Tom',
   variabili: {
     ora: { da: 'numeri', fra: ['eight', 'nine', 'ten'] },

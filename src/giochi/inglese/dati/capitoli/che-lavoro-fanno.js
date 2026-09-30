@@ -1,4 +1,4 @@
-// In quarta, dopo «I mestieri»: Leo racconta la sua famiglia davanti a un
+// In quarta, dopo «Lei gioca»: Leo racconta la sua famiglia davanti a un
 // quadro. Il mestiere non è mai scritto: si capisce da quello che fanno.
 // Quattro pagine, cinque domande. Formato in docs/lingue/libro.md.
 const INDIZI = {
@@ -27,7 +27,7 @@ const lei = en => ({ en, P: 'She', p: 'she', pos: 'her', f: true })
 export default {
   id: 'che-lavoro-fanno',
   mondo: 'quarta',
-  dopo: 'quarta-mestieri',
+  dopo: 'quarta-lei-gioca',
   titolo: 'Che lavoro fanno?',
   variabili: {
     mamma: { fra: [lei('mother')] },

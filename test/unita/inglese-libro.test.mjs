@@ -260,9 +260,12 @@ titolo('LE PAROLE DELLA STORIA')
   controlla('una nuova che non si usa è un guasto', /non si usa mai/.test(g({ nuove: ['suddenly'], frasi: [{ en: 'Leo runs.' }] })))
   const nove = 'Leo has got a fox, a bear, a lion, a tiger, a frog, a monkey, a snake, a bee and a crab.'
   controlla(`più di ${PAROLE_DELLA_STORIA_MAX} parole della storia è un guasto`, /al massimo 8/.test(g({ frasi: [{ en: nove }] })))
-  // «said» è il passato di say: si usa in quinta, dove c'è il passato, e non in quarta
-  const quinta = { ...base, mondo: 'quinta', nuove: ['say'], frasi: [{ en: 'Leo said hello.', forma: 'passato' }] }
-  uguale('«said» in quinta, con say fra le nuove', guastiDelCapitolo(quinta).join(' · '), '')
+  // «said» è il passato di say: si usa in quinta, dove c'è il passato, e non in quarta; prima
+  // della tappa di «dire» con say fra le nuove, dopo da nota (e lì fra le nuove sarebbe un guasto)
+  const quinta = { ...base, mondo: 'quinta', dopo: 'quinta-andai', nuove: ['say'],
+                   frasi: [{ en: 'Leo said hello.', forma: 'passato' }] }
+  uguale('«said» in quinta prima di «Ha detto ciao», con say fra le nuove', guastiDelCapitolo(quinta).join(' · '), '')
+  controlla('dopo, say fra le nuove è già nota', /già nota/.test(guastiDelCapitolo({ ...quinta, dopo: 'quinta-disse' }).join(' ')))
   controlla('in quarta il passato non c’è', /said/.test(g({ nuove: ['say'], frasi: [{ en: 'Leo said hello.' }] })))
   // le nuove stanno in un cassetto: lo SRS le ripassa lì
   controlla('toccata, una nuova dice cosa vuol dire', /improvviso/.test(traduci('suddenly').it))
