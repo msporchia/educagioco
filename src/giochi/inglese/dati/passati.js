@@ -9,6 +9,8 @@ export const PASSATI = {
   gave: 'give', took: 'take', won: 'win', caught: 'catch', threw: 'throw',
   ate: 'eat', drank: 'drink', slept: 'sleep', ran: 'run', swam: 'swim', flew: 'fly',
   sang: 'sing', wrote: 'write', had: 'have', did: 'do',
+  said: 'say', told: 'tell', spoke: 'speak', knew: 'know', fell: 'fall', sat: 'sit', stood: 'stand',
+  wore: 'wear', drew: 'draw', built: 'build',
 }
 
 // i verbi il cui passato è uguale alla base: niente -ed, e niente da cercare

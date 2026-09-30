@@ -2,7 +2,8 @@
 // dati/trappole.js nominano con `fa`. Ogni operazione riceve le parole della
 // frase in forma lunga e torna le alternative sbagliate con i buchi del
 // perché. Da una scrittura escono tutti i formati: le opzioni di «scegli»,
-// l'italiano di «cosa vuol dire», le tessere in più di «componi».
+// l'italiano di «cosa vuol dire», le tessere in più di «componi». Vedi
+// docs/lingue/trappole.md.
 import { TRAPPOLE } from '../dati/trappole.js'
 import { MAX_S } from '../../../store/srs.js'
 import { PRONOMI, DIMOSTRATIVI, DET, NOMI_PROPRI, TEMPO_SOGGETTO, NON_CONTABILI, eAggettivo, eNumero,
@@ -10,11 +11,23 @@ import { PRONOMI, DIMOSTRATIVI, DET, NOMI_PROPRI, TEMPO_SOGGETTO, NON_CONTABILI,
 import { WORDS } from '../../../data/words.js'
 import { VERBI } from '../../../data/verbi.js'
 import { gruppoDi } from './grafo.js'
+import { mondoDi } from '../dati/mondi.js'
 import { parole, normalizza, accettate, eDomanda } from './testo.js'
+import { flessa, flessione, inEd, VERBI_DI_STRUTTURA } from './flessioni.js'
 
 const low = w => (w == null ? null : String(w).toLowerCase())
-const INVERTIBILI = new Set(['am', 'is', 'are', 'have', 'has', 'can'])
-const WH = new Set(['what', 'where', 'how', 'who'])
+const INVERTIBILI = new Set(['am', 'is', 'are', 'was', 'were', 'have', 'has', 'can'])
+const WH = new Set(['what', 'where', 'how', 'who', 'when'])
+const BE_ORA = new Set(['am', 'is', 'are'])
+const SINGOLARI = new Set(['is', 'was', 'has', 'does'])
+// le parole che stanno fra il soggetto e il verbo: she always plays
+const AVVERBI = new Set(['always', 'never', 'sometimes', 'often', 'usually'])
+const dopoAvverbi = (T, j) => { while (j < T.length && AVVERBI.has(low(T[j]))) j++; return j }
+// un verbo alla base: quelli di data/verbi.js e like, do, have
+const eBaseDiVerbo = w => eVerbo(w) || !!VERBI_DI_STRUTTURA[w]
+// la forma flessa di un verbo (non di un aggettivo): { base, come }
+const verboFlesso = w => { const f = flessa(w); return f && !['er', 'est'].includes(f.come) ? f : null }
+const alPassato = base => flessione(base, 'irr') || flessione(base, 'ed') || base
 const IT = new Map(WORDS.map(w => [w[0].toLowerCase(), w[1]]))
 // la parola come si scrive («monday» → Monday): le parole note sono in minuscolo
 const COME_SI_SCRIVE = new Map([...VERBI.map(v => [v[0], v[0]]), ...WORDS.map(w => [w[0].toLowerCase(), w[0]])])
@@ -74,10 +87,15 @@ export const OPERAZIONI = {
   },
   togliDo(T, { domanda }) {
     if (!domanda || !['do', 'does'].includes(low(T[0]))) return []
-    return [alt(T.slice(1), {}, x => senzaPunto(x))]
+    const s = soggetto(T, 1)
+    if (!s) return []
+    const U = T.slice(1)
+    // «she plays basketball?»: senza does il verbo si riprende la s
+    if (low(T[0]) === 'does' && eBaseDiVerbo(low(U[s.a - 1]))) U[s.a - 1] = flessione(low(U[s.a - 1]), 's')
+    return [alt(U, { aus: T[0], chi: s.chi }, x => senzaPunto(x))]
   },
   accordo(T, { domanda }, { verbi }) {
-    const insieme = verbi === 'be' ? ['am', 'is', 'are'] : ['have', 'has']
+    const insieme = { be: ['am', 'is', 'are'], have: ['have', 'has'], do: ['do', 'does'], was: ['was', 'were'] }[verbi]
     let pos, s
     if (domanda && insieme.includes(low(T[0]))) { pos = 0; s = soggetto(T, 1) }
     else if (domanda && WH.has(low(T[0])) && insieme.includes(low(T[1]))) { pos = 1; s = soggetto(T, 2) }
@@ -86,7 +104,7 @@ export const OPERAZIONI = {
     const giusto = low(T[pos])
     const sbagliato = verbi === 'be'
       ? (s.persona === 'i' || s.plurale ? 'is' : 'are')
-      : (giusto === 'has' ? 'have' : 'has')
+      : insieme.find(x => x !== giusto)
     if (sbagliato === giusto) return []
     const U = T.slice(); U[pos] = sbagliato
     return [alt(U, { chi: s.chi, giusto, sbagliato })]
@@ -100,11 +118,15 @@ export const OPERAZIONI = {
     return []
   },
   // «where is the cat» → «where the cat is»: dopo la parola che chiede viene il verbo
+  // («what time is it» → «what time it is»: la parola che chiede può portarsi dietro la cosa)
   giraWh(T, { domanda }) {
-    if (!domanda || !WH.has(low(T[0])) || !INVERTIBILI.has(low(T[1]))) return []
-    const s = soggetto(T, 2)
+    if (!domanda || !WH.has(low(T[0]))) return []
+    const v = INVERTIBILI.has(low(T[1])) ? 1 : nomeDi(low(T[1]) || '') && INVERTIBILI.has(low(T[2])) ? 2 : -1
+    if (v < 0) return []
+    const s = soggetto(T, v + 1)
     if (!s || s.persona === 'there') return []
-    return [alt([T[0], ...T.slice(2, s.a), T[1], ...T.slice(s.a)], { wh: T[0], verbo: T[1] })]
+    const wh = T.slice(0, v).join(' ')
+    return [alt([...T.slice(0, v), ...T.slice(v + 1, s.a), T[v], ...T.slice(s.a)], { wh, verbo: T[v] })]
   },
   // there is ↔ there are, dovunque stia there
   thereAccordo(T) {
@@ -158,7 +180,7 @@ export const OPERAZIONI = {
   notSenzaDo(T) {
     const i = trova(T, (w, k) => ['do', 'does'].includes(w) && low(T[k + 1]) === 'not')
     if (i < 0) return []
-    return [alt([...T.slice(0, i), ...T.slice(i + 1)])]
+    return [alt([...T.slice(0, i), ...T.slice(i + 1)], { aus: T[i] })]
   },
   scambia(T, _, { coppie, it = [], glossa = {}, unVerso = false }) {
     for (let i = 0; i < T.length; i++)
@@ -179,9 +201,14 @@ export const OPERAZIONI = {
     }
     const i = trova(T, w => w === 'not')
     if (i < 0) return []
-    const da = ['do', 'does'].includes(low(T[i - 1])) ? i - 1 : i
+    const aus = low(T[i - 1])
+    const da = ['do', 'does', 'did'].includes(aus) ? i - 1 : i
+    const U = [...T.slice(0, da), ...T.slice(i + 1)]
+    // does not play → plays, did not see → saw: la frase che dice di sì
+    if ((aus === 'does' || aus === 'did') && eBaseDiVerbo(low(U[da])))
+      U[da] = aus === 'does' ? flessione(low(U[da]), 's') : alPassato(low(U[da]))
     const it = x => (/(^|\s)non\s/.test(x) ? x.replace(/(^|\s)non\s/, '$1') : null)
-    return [alt([...T.slice(0, da), ...T.slice(i + 1)], {}, it)]
+    return [alt(U, {}, it)]
   },
   aggiungiNegazione(T, { domanda }) {
     if (domanda || T.some(w => low(w) === 'not')) return []
@@ -215,6 +242,8 @@ export const OPERAZIONI = {
           if (!nomeDi(v)) continue
           if (art >= 0 && !eContabile(v)) continue
           if (n.plurale) { if (NON_CONTABILI.has(v)) continue; nuovo = plurale(nuovo) }
+          // «lunch is…»: davanti a un verbo al singolare il plurale non va, e senza articolo nemmeno un contabile
+          else if (art < 0 && NON_CONTABILI.has(base) && eContabile(v) && SINGOLARI.has(low(T[i + 1]))) continue
           else if (art < 0 && NON_CONTABILI.has(base) && eContabile(v)) nuovo = plurale(nuovo)
           else if (art < 0 && !NON_CONTABILI.has(base) && NON_CONTABILI.has(v)) continue
         } else if (verbo ? !eVerbo(v) : !eAggettivo(v)) continue
@@ -235,28 +264,182 @@ export const OPERAZIONI = {
   },
   togliS(T) {
     const s = soggetto(T, 0)
-    if (!s || s.plurale || s.persona === 'i' || s.persona === 'you') return []
-    const v = low(T[s.a])
-    if (!v || !/[^s]s$/.test(v) || INVERTIBILI.has(v) || v === 'does' || nomeDi(v)) return []
-    const base = /(sh|ch|x|o)es$/.test(v) ? v.slice(0, -2) : v.slice(0, -1)
-    const U = T.slice(); U[s.a] = base
+    if (!s || s.plurale || s.persona === 'i' || s.persona === 'you' || s.persona === 'there') return []
+    const k = dopoAvverbi(T, s.a)
+    const v = low(T[k])
+    const f = verboFlesso(v)
+    // «cooks» è anche il plurale di cook: conta se è un verbo
+    if (!v || !/[^s]s$/.test(v) || INVERTIBILI.has(v) || v === 'does' || (nomeDi(v) && !(f && f.come === 's')))
+      return []
+    const base = f && f.come === 's' ? f.base : /(sh|ch|x|o)es$/.test(v) ? v.slice(0, -2) : v.slice(0, -1)
+    const U = T.slice(); U[k] = base
+    return [alt(U, { chi: s.chi, verbo: v })]
+  },
+  // «I plays»: la s dove non va, con I, you, we, they
+  aggiungiS(T) {
+    const s = soggetto(T, 0)
+    if (!s || !(s.plurale || s.persona === 'i' || s.persona === 'you')) return []
+    const k = dopoAvverbi(T, s.a)
+    const v = low(T[k])
+    // do e have hanno le loro righe (accordo-do, accordo-have)
+    if (!v || !(eVerbo(v) || v === 'like')) return []
+    const U = T.slice(); U[k] = flessione(v, 's')
     return [alt(U, { chi: s.chi, verbo: v })]
   },
   sDopoDoes(T) {
     const i = trova(T, w => w === 'does')
     if (i < 0) return []
     const s = soggetto(T, i + 1)
-    if (!s || !T[s.a] || low(T[s.a]).endsWith('s')) return []
-    const U = T.slice(); U[s.a] = T[s.a] + 's'
+    if (!s || !T[s.a] || !eBaseDiVerbo(low(T[s.a]))) return []
+    const U = T.slice(); U[s.a] = flessione(low(T[s.a]), 's')
     return [alt(U, { chi: s.chi, verbo: T[s.a] })]
   },
+  // «she does not plays»
+  sDopoDoesNot(T) {
+    const i = trova(T, (w, k) => w === 'does' && low(T[k + 1]) === 'not')
+    const v = i < 0 ? null : low(T[i + 2])
+    if (!v || !eBaseDiVerbo(v)) return []
+    const U = T.slice(); U[i + 2] = flessione(v, 's')
+    return [alt(U, { verbo: v })]
+  },
   passatoInEd(T, _, { irregolari }) {
-    const i = trova(T, w => !!irregolari[w])
+    const i = trova(T, w => !!irregolari[w] && w !== 'did')   // «doed» non lo dice nessuno
     if (i < 0) return []
     const base = irregolari[low(T[i])]
-    const sbagliato = base.endsWith('e') ? base + 'd' : base + 'ed'
+    const sbagliato = inEd(base)
     const U = T.slice(); U[i] = sbagliato
     return [alt(U, { base, giusto: T[i], sbagliato })]
+  },
+
+  /* ── -ing ── */
+  // «I playing»: senza am, is, are
+  ingSenzaBe(T, { domanda }) {
+    const k = trova(T, w => (verboFlesso(w) || {}).come === 'ing')
+    if (k < 0) return []
+    const b = domanda && BE_ORA.has(low(T[0])) ? 0 : BE_ORA.has(low(T[k - 1])) ? k - 1 : -1
+    if (b < 0) return []
+    return [alt([...T.slice(0, b), ...T.slice(b + 1)], { be: T[b], verbo: T[k] })]
+  },
+  // «I am play»: senza -ing
+  ingSenzaIng(T) {
+    const k = trova(T, w => (verboFlesso(w) || {}).come === 'ing')
+    if (k < 0) return []
+    const U = T.slice(); U[k] = verboFlesso(T[k]).base
+    return [alt(U, { verbo: T[k] })]
+  },
+
+  /* ── l'ora ── */
+  // «in seven o'clock»: le ore vogliono at
+  oraSenzaAt(T) {
+    const i = trova(T, (w, k) => w === 'at' && eNumero(low(T[k + 1])))
+    if (i < 0) return []
+    const U = T.slice(); U[i] = 'in'
+    return [alt(U)]
+  },
+
+  /* ── il passato ── */
+  // «I go to the park yesterday»: il verbo al presente, accordato con chi lo fa
+  passatoAlPresente(T) {
+    const k = trova(T, w => { const f = verboFlesso(w); return !!f && ['ed', 'irr'].includes(f.come) })
+    if (k < 0) return []
+    const { base } = verboFlesso(T[k])
+    let s = null
+    for (let i = 0; i < k && !s; i++) { const x = soggetto(T, i); if (x && dopoAvverbi(T, x.a) === k) s = x }
+    if (!s && low(T[k]) === 'did') s = soggetto(T, k + 1)
+    const terza = s && !s.plurale && !['i', 'you', 'there'].includes(s.persona)
+    const U = T.slice(); U[k] = terza ? flessione(base, 's') : base
+    return [alt(U, { base, giusto: T[k] })]
+  },
+  // «did you went»: dopo did il verbo torna com'è
+  didColPassato(T) {
+    const d = trova(T, w => w === 'did')
+    if (d < 0) return []
+    let k = d + 1
+    if (low(T[k]) === 'not') k++
+    else { const s = soggetto(T, k); if (s) k = s.a }
+    const v = low(T[k])
+    if (!v || !eBaseDiVerbo(v)) return []
+    const U = T.slice(); U[k] = alPassato(v)
+    return [alt(U, { base: v, sbagliato: U[k] })]
+  },
+  // «you went to the zoo?»: la domanda al passato senza did
+  didMancante(T, { domanda }) {
+    if (!domanda || low(T[0]) !== 'did') return []
+    const s = soggetto(T, 1)
+    const v = s && low(T[s.a])
+    if (!v || !eBaseDiVerbo(v)) return []
+    const U = T.slice(1); U[s.a - 1] = alPassato(v)
+    return [alt(U, { chi: s.chi, verbo: v })]
+  },
+  // «I am tired» per «ero stanco»: was, were al presente
+  beAlPresente(T) {
+    const i = trova(T, w => w === 'was' || w === 'were')
+    if (i < 0) return []
+    const s = i === 0 ? soggetto(T, 1) : soggetto(T, 0)
+    const io = s && s.persona === 'i'
+    const U = T.slice(); U[i] = low(T[i]) === 'were' ? 'are' : io ? 'am' : 'is'
+    return [alt(U, { giusto: T[i], sbagliato: U[i] })]
+  },
+
+  /* ── quando ── */
+  // «when is cold»: il soggetto dopo when, while, because non si lascia
+  togliSoggettoDopo(T, _, { dopo }) {
+    const i = trova(T, (w, k) => dopo.includes(w) && PRONOMI.has(low(T[k + 1])) && k + 2 < T.length)
+    if (i < 0) return []
+    return [alt([...T.slice(0, i + 1), ...T.slice(i + 2)], { dopo: T[i], chi: T[i + 1] })]
+  },
+
+  /* ── going to ── */
+  goingSenzaBe(T, { domanda }) {
+    const g = trova(T, (w, k) => w === 'going' && low(T[k + 1]) === 'to')
+    if (g < 0) return []
+    const p = low(T[g - 1]) === 'not' ? g - 2 : g - 1
+    const b = domanda && BE_ORA.has(low(T[0])) ? 0 : BE_ORA.has(low(T[p])) ? p : -1
+    if (b < 0) return []
+    return [alt([...T.slice(0, b), ...T.slice(b + 1)], { be: T[b] })]
+  },
+  goingSenzaTo(T) {
+    const g = trova(T, (w, k) => w === 'going' && low(T[k + 1]) === 'to' && eBaseDiVerbo(low(T[k + 2])))
+    if (g < 0) return []
+    return [alt([...T.slice(0, g + 1), ...T.slice(g + 2)], { verbo: T[g + 2] })]
+  },
+  goingToIng(T) {
+    const g = trova(T, (w, k) => w === 'going' && low(T[k + 1]) === 'to' && eBaseDiVerbo(low(T[k + 2])))
+    if (g < 0) return []
+    const U = T.slice(); U[g + 2] = flessione(low(T[g + 2]), 'ing')
+    return [alt(U, { verbo: T[g + 2] })]
+  },
+
+  /* ── i paragoni ── */
+  // «more big», «the most big»: un aggettivo corto col more
+  moreCorto(T) {
+    const k = trova(T, w => ['er', 'est'].includes((flessa(w) || {}).come))
+    if (k < 0) return []
+    const { base, come } = flessa(T[k])
+    const piu = come === 'er' ? 'more' : 'most'
+    return [alt([...T.slice(0, k), piu, base, ...T.slice(k + 1)], { base, giusto: T[k], piu })]
+  },
+  // «beautifuller»: un aggettivo lungo con -er
+  lungoInEr(T) {
+    const k = trova(T, (w, j) => (w === 'more' || w === 'most') && eAggettivo(low(T[j + 1])))
+    if (k < 0) return []
+    const base = low(T[k + 1])
+    const sbagliato = base + (low(T[k]) === 'more' ? 'er' : 'est')
+    return [alt([...T.slice(0, k), sbagliato, ...T.slice(k + 2)], { base, giusto: T[k], sbagliato })]
+  },
+  // «more bigger»: il più due volte
+  doppioParagone(T) {
+    const k = trova(T, w => (flessa(w) || {}).come === 'er')
+    if (k < 0 || low(T[k - 1]) === 'more') return []
+    return [alt([...T.slice(0, k), 'more', ...T.slice(k)], { giusto: T[k] })]
+  },
+  // «biggest than» al posto di «bigger than», o «the bigger» al posto di «the biggest»
+  paragoneScambiato(T, _, { da }) {
+    const k = trova(T, w => (flessa(w) || {}).come === da)
+    if (k < 0) return []
+    const { base } = flessa(T[k])
+    const U = T.slice(); U[k] = flessione(base, da === 'er' ? 'est' : 'er')
+    return [alt(U, { giusto: T[k], sbagliato: U[k] })]
   },
 }
 
@@ -308,8 +491,10 @@ export function trappoleDi(frase, ctx = {}) {
     aggiungi({ id: 'a-mano', en: t.en, it: t.it || null, perche: t.perche,
                pesa: t.parola ? 'parola' : 'forma', forma: frase.forma, parola: t.parola || null,
                chiave: t.parola ? 'en:' + t.parola : null })
+  const anno = (mondoDi(frase.mondo) || {}).anno || 0
   for (const riga of TRAPPOLE)
-    if (!(frase.niente || []).includes(riga.id) && (!riga.soloForme || riga.soloForme.includes(frase.forma)))
+    if (!(frase.niente || []).includes(riga.id) && (!riga.soloForme || riga.soloForme.includes(frase.forma)) &&
+        !(riga.dallAnno && anno && anno < riga.dallAnno))
       for (const t of applica(riga, frase, ctx)) aggiungi(t)
   return out
 }

@@ -4,7 +4,8 @@
 // fondo alla frase non diventa mai «yes, it's». Vedi docs/lingue/mondi.md.
 export const CONTRAZIONI = [
   ['is not', 'isn’t'], ['are not', 'aren’t'], ['do not', 'don’t'], ['does not', 'doesn’t'],
-  ['have not', 'haven’t'], ['has not', 'hasn’t'], ['cannot', 'can’t'],
+  ['have not', 'haven’t'], ['has not', 'hasn’t'], ['cannot', 'can’t'], ['was not', 'wasn’t'],
+  ['were not', 'weren’t'], ['did not', 'didn’t'],
   ['I have got', 'I’ve got'], ['you have got', 'you’ve got'], ['we have got', 'we’ve got'],
   ['they have got', 'they’ve got'], ['he has got', 'he’s got'], ['she has got', 'she’s got'],
   ['it has got', 'it’s got'],

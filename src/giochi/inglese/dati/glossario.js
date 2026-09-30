@@ -17,4 +17,8 @@ export const GLOSSARIO = {
   him: 'lui, lo, gli', them: 'loro, li, le', their: 'loro (di loro)', because: 'perché',
   then: 'poi', after: 'dopo', before: 'prima', from: 'da', for: 'per',
   'o\'clock': 'in punto (at seven o’clock: alle sette)', last: 'scorso (last Monday: lunedì scorso)',
+  // le strutture di quarta e quinta (dati/forme.js), e le parole delle loro trappole
+  did: 'come do, al passato', while: 'mentre', than: 'di (bigger than: più grande di)',
+  more: 'più (more beautiful: più bello)', most: 'il più (the most beautiful: il più bello)',
+  next: 'prossimo (next Monday: lunedì prossimo)', of: 'di',
 }
