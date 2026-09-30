@@ -16,7 +16,7 @@ export const VERBI = [
   ['read', 'leggere', '📖'], ['write', 'scrivere', '✍️'], ['speak', 'parlare', '🗣️'],
   ['listen', 'ascoltare', '👂'], ['look', 'guardare', '👀'], ['sing', 'cantare', '🎤'],
   ['draw', 'disegnare', '🎨'], ['ask', 'chiedere', ''], ['answer', 'rispondere', ''],
-  ['count', 'contare', '🔢'], ['say', 'dire', ''], ['hear', 'sentire', ''],
+  ['count', 'contare', '🔢'], ['say', 'dire', ''], ['tell', 'dire a qualcuno', ''], ['hear', 'sentire', ''],
   // ---- sentimenti e insieme ----
   ['cry', 'piangere', '😢'], ['laugh', 'ridere', '😄'], ['smile', 'sorridere', '🙂'],
   ['love', 'amare', '❤️'], ['help', 'aiutare', '🤝'], ['hug', 'abbracciare', '🤗'],

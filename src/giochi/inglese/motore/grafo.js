@@ -49,9 +49,10 @@ export function paroleNote(mondoId, tappaId = null) {
 export const formeNote = (mondoId, tappaId = null) =>
   new Set(tappeFatte(mondoId, tappaId).flatMap(x => x.forme || []))
 
-// Il libro sa anche le strutture dichiarate dai mondi senza tappe di frasi
-// (quarta, quinta: `strutture`), dal suo e da quelli prima: sono il
-// programma dell'anno, e il libro è il primo posto dove le incontra.
+// Il libro sa anche le strutture dichiarate dai mondi (quarta, quinta:
+// `strutture`), dal suo e da quelli prima, già dalla prima pagina: sono il
+// programma dell'anno, e una storia a metà isola le può usare prima della
+// loro tappa di frasi.
 const struttureDi = mondoId => [...garantiti(mondoId), mondoId].flatMap(id => mondoDi(id).strutture || [])
 export const formeDelLibro = (mondoId, tappaId = null) =>
   new Set([...formeNote(mondoId, tappaId), ...struttureDi(mondoId)])
@@ -60,8 +61,11 @@ export function paroleDelLibro(mondoId, tappaId = null) {
   for (const f of struttureDi(mondoId)) for (const p of FORME[f].parole) s.add(p.toLowerCase())
   return s
 }
-// le forme dei verbi che quelle strutture ammettono (s, ing, ed, irr)
-export const flessioniDi = forme => new Set([...forme].map(f => FORME[f] && FORME[f].flessione).filter(Boolean))
+// le forme dei verbi e degli aggettivi che quelle strutture ammettono (s, ing, ed, irr, er, est)
+export const flessioniDi = forme =>
+  new Set([...forme].flatMap(f => [].concat((FORME[f] && FORME[f].flessione) || [])))
+// quelle che una frase componibile può usare alla sua tappa
+export const flessioniNote = (mondoId, tappaId = null) => flessioniDi(formeNote(mondoId, tappaId))
 
 // Una parola a schermo è nota se lo è lei, la sua forma lunga («it's» → it
 // is) o il suo singolare («dogs» → dog), o se è un verbo noto flesso come

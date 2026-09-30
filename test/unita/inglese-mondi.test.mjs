@@ -12,8 +12,10 @@
    di parole ha solo parole del suo argomento e le risposte sbagliate
    vengono da lì; una frase usa solo parole note e la struttura della sua
    tappa; nessuna trappola sgrammaticata per caso (a trousers, two dog);
-   le frasi ripescate solo dove si ripassano le frasi.
-   Il progetto è in docs/lingue/mondi.md.
+   le frasi ripescate solo dove si ripassano le frasi; in quarta e quinta
+   i verbi flessi e i paragoni solo dalla tappa della loro struttura, e la
+   tessera di troppo che contende un buco (goes accanto a go).
+   Il progetto è in docs/lingue/mondi.md, frasi.md, trappole.md e strutture.md.
    ═══════════════════════════════════════════════════════════════════ */
 import { readdirSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -36,8 +38,11 @@ import { TRAPPOLE } from '../../src/giochi/inglese/dati/trappole.js'
 import { FRASI, FILE_DELLE_FRASI, fraseDi } from '../../src/giochi/inglese/dati/frasi.js'
 import { contrai, espandi, accetta, normalizza, inBella } from '../../src/giochi/inglese/motore/testo.js'
 import { applica, OPERAZIONI } from '../../src/giochi/inglese/motore/trappole.js'
-import { doveSta, cassettoDi, vociDi, paroleNote } from '../../src/giochi/inglese/motore/grafo.js'
-import { traduci } from '../../src/giochi/inglese/motore/lessico.js'
+import { doveSta, cassettoDi, vociDi, paroleNote, flessioniNote, sconosciute }
+  from '../../src/giochi/inglese/motore/grafo.js'
+import { traduci, chiaveDi } from '../../src/giochi/inglese/motore/lessico.js'
+import { flessione } from '../../src/giochi/inglese/motore/flessioni.js'
+import { trappoleDi } from '../../src/giochi/inglese/motore/trappole.js'
 import { formatoPerForza, tessereInPiu, costruisci, giudica, contesto } from '../../src/giochi/inglese/motore/formati.js'
 import { grado, gradoTappa, ripresa } from '../../src/giochi/inglese/motore/grado.js'
 import { Tocchi, TOCCHI_GRATIS, domandeCheLPagano, domandaDelTocco } from '../../src/giochi/inglese/motore/tocchi.js'
@@ -94,7 +99,7 @@ uguale('la fila mette maiuscola e ?', inBella(['is', 'it', 'a', 'dog'], { domand
 titolo('TRAPPOLE')
 {
   const ids = new Set()
-  const domanda = en => /^(is|are|am|have|has|can|do|does|where|what|how)\b/i.test(en)
+  const domanda = en => /^(is|are|am|was|were|have|has|can|do|does|did|where|what|how|when)\b/i.test(en)
   for (const r of TRAPPOLE) {
     controlla(`trappola ${r.id}: id unico`, !ids.has(r.id)); ids.add(r.id)
     controlla(`trappola ${r.id}: operazione nota`, !!OPERAZIONI[r.fa])
@@ -401,6 +406,52 @@ titolo('DIFETTI')
   for (const dritta of ['I have got blue trousers', 'she has got long hair', 'it is an orange ball',
                         'they are two fish', 'I like milk', 'there is snow in January', 'they are a cat and a dog'])
     uguale(`«${dritta}» sta in piedi`, sgrammaticata(dritta), null)
+}
+
+/* ═══════════ 11b. quarta e quinta: i verbi flessi e i paragoni ═══════════ */
+titolo('QUARTA E QUINTA')
+{
+  // ogni struttura dell'anno ha la sua tappa di frasi (il libro le sa già dalla prima pagina)
+  for (const m of MONDI.filter(x => x.strutture))
+    uguale(`${m.id}: ogni struttura dichiarata ha una tappa di frasi`,
+      m.strutture.filter(f => !m.tappe.some(t => t.frasi && t.forme.includes(f))).join(), '')
+  // la s arriva con «Lei gioca», il passato col passato, i paragoni con «Chi è più alto?»
+  const ignote = (testo, mondo, tappa) => sconosciute(testo, paroleNote(mondo, tappa), flessioniNote(mondo, tappa))
+  uguale('«she plays» non si scrive prima della s', ignote('she plays tennis', 'quarta', 'quarta-io-gioco').join(), 'plays')
+  uguale('dalla s in poi sì', ignote('she plays tennis', 'quarta', 'quarta-lei-gioca').join(), '')
+  uguale('«went» solo dal passato', ignote('I went to the park', 'quinta', 'quinta-ieri').join(), 'went')
+  uguale('«bigger» solo dai paragoni', ignote('it is bigger', 'quinta', 'quinta-come').join(), 'bigger')
+  uguale('e lì sì', ignote('it is bigger', 'quinta', 'quinta-piu').join(), '')
+  // gli aggettivi corti prendono -er, i lunghi no; toccati, dicono il paragone
+  uguale('big → bigger, the biggest', [flessione('big', 'er'), flessione('big', 'est')].join(), 'bigger,biggest')
+  uguale('happy → happier', flessione('happy', 'er'), 'happier')
+  uguale('beautiful e tired vogliono more', [flessione('beautiful', 'er'), flessione('tired', 'er')].join(), ',')
+  uguale('good → better', flessione('good', 'er'), 'better')
+  uguale('«bigger» toccato', traduci('bigger').it, 'più grande')
+  uguale('e segna l’aggettivo', chiaveDi('taller'), 'en:tall')
+  // le tessere di troppo dei verbi sono le loro forme, e in «completa» contendono un buco
+  for (const [id, verbo, gemella] of [['q-she-plays', 'plays', 'play'], ['v-went-castle', 'went', 'go'],
+                                     ['v-horse-bigger', 'bigger', 'big']]) {
+    const f = fraseDi(id)
+    let viste = 0, contese = 0
+    for (let s = 1; s <= 8; s++) {
+      const ctx = contesto(f, { tappa: tappaDi(f.tappa), altre: FRASI.filter(x => x.tappa === f.tappa), rnd: sorte(s) })
+      const sm = costruisci(f, 'scegliMonta', ctx, { forza: 6 })
+      if (sm.tessere.some(t => t.id >= sm.soluzione.length && t.testo === gemella)) viste++
+      const c = costruisci(f, 'completa', ctx)
+      if (c.rivale != null && c.righe[c.rivale].buco !== undefined) contese++
+      else if (c.rivale == null) contese++
+    }
+    controlla(`${id}: accanto a «${verbo}» esce la tessera «${gemella}»`, viste >= 4, `${viste}/8`)
+    uguale(`${id}: in «completa» la tessera di troppo contende un buco`, contese, 8)
+  }
+  // una trappola rifà il resto della frase: niente due errori in uno
+  const tr = id => trappoleDi(fraseDi(id), contesto(fraseDi(id))).map(t => t.en)
+  controlla('senza does il verbo si riprende la s', tr('q-does-she-play').includes('she plays basketball'))
+  controlla('senza did not la frase dice di sì al passato', tr('v-not-see-bridge').includes('I saw the bridge'))
+  controlla('il presente al posto del passato è accordato', tr('v-bought-apples').includes('she buys apples at the market'))
+  controlla('«doed» non esce', !tr('v-did-you-go').some(e => /doed/.test(e)))
+  controlla('does non esce in seconda', !tr('d-like-pizza').some(e => /\bdoes\b/.test(e)))
 }
 
 /* ═══════════ 12. l'anno di scuola e l'età ═══════════ */

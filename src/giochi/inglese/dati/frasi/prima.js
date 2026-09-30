@@ -2,7 +2,7 @@
 // «?» (la contrazione la fa la tappa, il «?» la fila); gli `id` delle frasi
 // di data/frasi.js e dei mondi di prima restano quelli: sono la chiave SRS.
 // Una frase usa solo parole già viste e almeno un segno della struttura
-// della sua tappa (dati/forme.js). Formato in docs/lingue/mondi.md.
+// della sua tappa (dati/forme.js). Formato in docs/lingue/frasi.md.
 export default {
   mondo: 'prima',
   frasi: [

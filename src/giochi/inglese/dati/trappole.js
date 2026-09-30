@@ -5,18 +5,21 @@
 // perché in una riga — sotto i 70 caratteri, con i buchi {…} riempiti
 // dall'operazione. `esempio` è [giusta, sbagliata]: il test lo rifà.
 // `soloForme`: la riga vale solo per le frasi di quelle forme (in/on è una
-// cosa con i mesi e un'altra con i mobili).
+// cosa con i mesi e un'altra con i mobili). `dallAnno`: solo per le frasi
+// dei mondi di quell'anno in su (does non si sa prima della quarta).
 // Un errore nuovo che somiglia a uno che c'è è una riga; uno di specie
-// nuova è un'operazione nuova. Vedi docs/lingue/mondi.md.
+// nuova è un'operazione nuova. Vedi docs/lingue/trappole.md.
 import { PASSATI } from './passati.js'
 
 // Le gemelle di grammatica: se la frase ne usa una, le altre sono le tessere
 // di troppo che contano (I am / I is, my / your). Solo scambi che cambiano
 // davvero la frase: niente this / it o a / the, che in italiano si somigliano.
+// I verbi e gli aggettivi non stanno qui: le loro gemelle sono le loro forme
+// che la tappa conosce (go → goes, went; big → bigger), in motore/formati.js.
 export const GEMELLE = [
-  ['am', 'is', 'are'], ['was', 'were'], ['have', 'has'], ['do', 'does'],
+  ['am', 'is', 'are', 'was', 'were'], ['have', 'has'], ['do', 'does', 'did'],
   ['my', 'your', 'his', 'her'], ['he', 'she', 'they'], ['a', 'an'],
-  ['in', 'on', 'under', 'behind', 'near'], ['can', 'cannot'], ['there', 'here'],
+  ['in', 'on', 'under', 'behind', 'near'], ['can', 'cannot'], ['there', 'here'], ['more', 'most'],
 ]
 
 export const TRAPPOLE = [
@@ -27,7 +30,7 @@ export const TRAPPOLE = [
     perche: 'Così è una domanda: per dirlo è {chi} {verbo}…',
     esempio: ['it is a dog', 'is it a dog'] },
   { id: 'do-mancante', fa: 'togliDo', forma: 'i-like',
-    perche: 'Per chiedere ci vuole do davanti: do you like…?',
+    perche: 'Per chiedere ci vuole {aus} davanti: {aus} {chi}…?',
     esempio: ['do you like pizza', 'you like pizza'] },
   { id: 'accordo-be', fa: 'accordo', con: { verbi: 'be' }, forma: null,
     perche: 'Con {chi} si dice {giusto}, non {sbagliato}',
@@ -54,7 +57,7 @@ export const TRAPPOLE = [
     perche: 'Per le cose in generale niente the: like {cosa}',
     esempio: ['I like apples', 'I like the apples'] },
   { id: 'not-senza-do', fa: 'notSenzaDo', forma: 'i-like',
-    perche: 'Per dire di no ci vuole do: I do not like',
+    perche: 'Per dire di no ci vuole {aus}: {aus} not',
     esempio: ['I do not like milk', 'I not like milk'] },
   { id: 'lui-lei', fa: 'scambia', forma: 'this-is-my',
     con: { coppie: [['he', 'she'], ['his', 'her']], it: [['lui', 'lei']],
@@ -98,20 +101,108 @@ export const TRAPPOLE = [
     perche: '{giusto} vuol dire {itGiusto}, {sbagliato} vuol dire {itSbagliato}',
     esempio: ['it is a dog', 'it is a cat'] },
 
-  /* ── dei mondi che hanno solo le parole: non trovano ancora frasi, ma si provano ── */
   { id: 'can-to', fa: 'inserisci', con: { dopo: ['can', 'cannot'], parola: 'to' }, forma: 'can',
     perche: 'Dopo can il verbo va da solo, senza to',
     esempio: ['I can swim', 'I can to swim'] },
+
+  /* ── quarta: il presente, la s, does, -ing, l'ora ── */
+  { id: 's-con-io', fa: 'aggiungiS', forma: 'presente', dallAnno: 4,
+    perche: 'Con {chi} il verbo resta com’è: {chi} {verbo}',
+    esempio: ['we play tennis', 'we plays tennis'] },
   { id: 'terza-senza-s', fa: 'togliS', forma: 'terza-s',
     perche: 'Con {chi} il verbo prende la s: {chi} {verbo}',
     esempio: ['she plays football', 'she play football'] },
-  { id: 'does-con-s', fa: 'sDopoDoes', forma: 'terza-s',
+  { id: 'accordo-do', fa: 'accordo', con: { verbi: 'do' }, forma: 'does', dallAnno: 4,
+    perche: 'Con {chi} si dice {giusto}, non {sbagliato}',
+    esempio: ['does he like fish', 'do he like fish'] },
+  { id: 'does-con-s', fa: 'sDopoDoes', forma: 'does',
     perche: 'Dopo does il verbo va senza s: does {chi} {verbo}',
     esempio: ['does he like fish', 'does he likes fish'] },
+  { id: 'doesnt-con-s', fa: 'sDopoDoesNot', forma: 'does',
+    perche: 'Dopo does not il verbo va senza s: does not {verbo}',
+    esempio: ['she does not cook', 'she does not cooks'] },
+  { id: 'ing-senza-be', fa: 'ingSenzaBe', forma: 'ing', soloForme: ['ing'],
+    perche: 'Adesso ci vuole {be} prima di {verbo}',
+    esempio: ['I am eating', 'I eating'] },
+  { id: 'ing-senza-ing', fa: 'ingSenzaIng', forma: 'ing', soloForme: ['ing'],
+    perche: 'Quello che succede adesso vuole -ing: {verbo}',
+    esempio: ['she is sleeping', 'she is sleep'] },
+  { id: 'ora-at', fa: 'oraSenzaAt', forma: 'ora', soloForme: ['ora'],
+    perche: 'Con le ore si dice at: at seven o’clock',
+    esempio: ['I eat lunch at one o\'clock', 'I eat lunch in one o\'clock'] },
+  { id: 'what-hour', fa: 'scambia', forma: 'ora', soloForme: ['ora'],
+    con: { coppie: [['time', 'hour']], unVerso: true },
+    perche: 'L’ora dell’orologio si chiede con what time, non what hour',
+    esempio: ['what time is it', 'what hour is it'] },
+
+  /* ── quinta: was / were, il passato, dire, quando, going to, i paragoni ── */
+  { id: 'accordo-was', fa: 'accordo', con: { verbi: 'was' }, forma: 'was-were',
+    perche: 'Con {chi} si dice {giusto}, non {sbagliato}',
+    esempio: ['we were at the park', 'we was at the park'] },
+  { id: 'be-al-presente', fa: 'beAlPresente', forma: 'was-were',
+    perche: 'Qui è passato: si dice {giusto}, non {sbagliato}',
+    esempio: ['I was tired', 'I am tired'] },
   { id: 'passato-in-ed', fa: 'passatoInEd', forma: 'passato',
     con: { irregolari: PASSATI },
     perche: '{base} al passato fa {giusto}, non {sbagliato}',
     esempio: ['I went to school', 'I goed to school'] },
+  { id: 'passato-al-presente', fa: 'passatoAlPresente', forma: null,
+    perche: 'Qui è passato: {base} diventa {giusto}',
+    esempio: ['she played tennis', 'she plays tennis'] },
+  { id: 'did-col-passato', fa: 'didColPassato', forma: null,
+    perche: 'Dopo did il verbo torna com’è: {base}, non {sbagliato}',
+    esempio: ['did you go to the zoo', 'did you went to the zoo'] },
+  { id: 'did-mancante', fa: 'didMancante', forma: null,
+    perche: 'Per chiedere al passato ci vuole did: did {chi} {verbo}…?',
+    esempio: ['did you go to the zoo', 'you went to the zoo'] },
+  { id: 'said-told', fa: 'scambia', forma: 'dire', soloForme: ['dire'],
+    con: { coppie: [['told', 'said'], ['tell', 'say'], ['tells', 'says']] },
+    perche: 'told vuole a chi (told me a story), said no (said hello)',
+    esempio: ['she told me a story', 'she said me a story'] },
+  { id: 'told-to', fa: 'inserisci', con: { dopo: ['told', 'tell', 'tells'], parola: 'to' }, forma: 'dire',
+    soloForme: ['dire'],
+    perche: 'Chi ascolta viene subito, senza to: told me, tell me',
+    esempio: ['he told me a story', 'he told to me a story'] },
+  { id: 'soggetto-dopo-when', fa: 'togliSoggettoDopo', forma: 'quando',
+    con: { dopo: ['when', 'while', 'because'] },
+    perche: 'In inglese {chi} non si lascia mai a casa: {dopo} {chi}…',
+    esempio: ['I drink milk when it is cold', 'I drink milk when is cold'] },
+  { id: 'quando-mentre', fa: 'scambia', forma: 'quando', soloForme: ['quando'],
+    con: { coppie: [['when', 'while']], it: [['quando', 'mentre']], glossa: { when: 'quando', while: 'mentre' } },
+    perche: '{giusto} vuol dire {itGiusto}, {sbagliato} vuol dire {itSbagliato}',
+    esempio: ['I sing while I cook', 'I sing when I cook'] },
+  { id: 'quando-dove', fa: 'scambia', forma: 'quando', soloForme: ['quando'],
+    con: { coppie: [['when', 'where']], it: [['quando', 'dove']], glossa: { when: 'quando', where: 'dove' } },
+    perche: '{giusto} vuol dire {itGiusto}, {sbagliato} vuol dire {itSbagliato}',
+    esempio: ['when is your birthday', 'where is your birthday'] },
+  { id: 'going-senza-be', fa: 'goingSenzaBe', forma: 'going-to',
+    perche: 'Per quello che farai ci vuole {be}: {be} going to',
+    esempio: ['I am going to swim', 'I going to swim'] },
+  { id: 'going-senza-to', fa: 'goingSenzaTo', forma: 'going-to',
+    perche: 'Dopo going ci vuole to: going to {verbo}',
+    esempio: ['I am going to swim', 'I am going swim'] },
+  { id: 'going-to-ing', fa: 'goingToIng', forma: 'going-to',
+    perche: 'Dopo going to il verbo va com’è: going to {verbo}',
+    esempio: ['I am going to swim', 'I am going to swimming'] },
+  { id: 'more-corto', fa: 'moreCorto', forma: 'paragoni',
+    perche: '{base} è corto: si dice {giusto}, non {piu} {base}',
+    esempio: ['a lion is bigger than a cat', 'a lion is more big than a cat'] },
+  { id: 'er-lungo', fa: 'lungoInEr', forma: 'paragoni',
+    perche: '{base} è lungo: si dice {giusto} {base}, non {sbagliato}',
+    esempio: ['it is more beautiful', 'it is beautifuler'] },
+  { id: 'more-doppio', fa: 'doppioParagone', forma: 'paragoni',
+    perche: '{giusto} vuol già dire «più»: niente more davanti',
+    esempio: ['Tom is taller than Leo', 'Tom is more taller than Leo'] },
+  { id: 'than-superlativo', fa: 'paragoneScambiato', con: { da: 'er' }, forma: 'paragoni',
+    perche: 'Fra due si dice {giusto} than, non {sbagliato}',
+    esempio: ['Tom is taller than Leo', 'Tom is tallest than Leo'] },
+  { id: 'the-comparativo', fa: 'paragoneScambiato', con: { da: 'est' }, forma: 'paragoni',
+    perche: 'Il più di tutti si dice the {giusto}, non the {sbagliato}',
+    esempio: ['Tom is the tallest', 'Tom is the taller'] },
+  { id: 'than-of', fa: 'scambia', forma: 'paragoni', soloForme: ['paragoni'],
+    con: { coppie: [['than', 'of']], unVerso: true },
+    perche: 'Nei paragoni «di» si dice than: bigger than',
+    esempio: ['Tom is taller than Leo', 'Tom is taller of Leo'] },
 ]
 
 export const trappolaDi = id => TRAPPOLE.find(t => t.id === id) || null

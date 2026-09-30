@@ -10,8 +10,8 @@ import { MONDI, mondoDi, tappaDi, pronto } from '../dati/mondi.js'
 import { ARGOMENTI, paroleDellArgomento } from '../dati/argomenti.js'
 import { componi, TIPI } from '../../../data/domande.js'
 import { voceDi } from '../../../data/lessico.js'
-import { paroleNote, formeNote, sconosciute, fontiDi, chiaveDellaTappa, formeDelLibro }
-  from './grafo.js'
+import { paroleNote, formeNote, sconosciute, fontiDi, chiaveDellaTappa, formeDelLibro, flessioniNote } from './grafo.js'
+import { flessa } from './flessioni.js'
 import { eColore, eAggettivo, eNumero, traduci } from './lessico.js'
 import { sgrammaticata, APPOSTA } from './grammatica.js'
 import { tipiDellaParola } from './sessione.js'
@@ -43,6 +43,14 @@ export function sorte(seme = 1) {
 const VECCHIE = new Map(FRASI_VECCHIE.map(f => [f.id, f]))
 const PAROLE = new Set(WORDS.map(w => w[0]))
 
+// i segni che non sono una parola: un colore, un aggettivo, un numero, un
+// verbo o un aggettivo flesso (#s plays, #ing playing, #ed played, #irr
+// went, #er bigger, #est biggest)
+const flessoCome = come => w => (flessa(w) || {}).come === come
+const SEGNI = { '#c': eColore, '#j': eAggettivo, '#n': eNumero }
+for (const come of ['s', 'ing', 'ed', 'irr', 'er', 'est']) SEGNI['#' + come] = flessoCome(come)
+export const haSegno = (T, sg) => (SEGNI[sg] ? T.some(SEGNI[sg]) : T.includes(sg.toLowerCase()))
+
 export function guastiDellaFrase(f, { semi = 6 } = {}) {
   const g = []
   const dove = `frase ${f.id}`
@@ -63,18 +71,19 @@ export function guastiDellaFrase(f, { semi = 6 } = {}) {
   // almeno un segno della struttura della tappa: una frase di «C'è» che non dice there non ripassa niente
   const segni = (tappa.forme || []).flatMap(x => FORME[x].segni)
   const T = espandi(f.en)
-  const haSegno = segni.some(sg => (sg === '#c' ? T.some(eColore) : sg === '#j' ? T.some(eAggettivo)
-    : sg === '#n' ? T.some(eNumero) : T.includes(sg.toLowerCase())))
-  if (segni.length && !haSegno) g.push(`${dove}: non usa la struttura della sua tappa (${segni.join(', ')})`)
+  if (segni.length && !segni.some(sg => haSegno(T, sg)))
+    g.push(`${dove}: non usa la struttura della sua tappa (${segni.join(', ')})`)
 
   for (const testo of [f.en, ...(f.varianti || [])]) {
     const storta = sgrammaticata(testo)
     if (storta) g.push(`${dove}: «${testo}» è sgrammaticata: ${storta}`)
   }
 
+  // i verbi flessi (plays, went) e i paragoni (bigger) solo dove la loro struttura è già arrivata
   const note = paroleNote(f.mondo, f.tappa)
+  const flessioni = flessioniNote(f.mondo, f.tappa)
   for (const testo of [f.en, ...(f.varianti || [])]) {
-    const ignote = sconosciute(testo, note)
+    const ignote = sconosciute(testo, note, flessioni)
     if (ignote.length) g.push(`${dove}: parole non ancora note a ${f.tappa}: ${ignote.join(', ')}`)
   }
   if (!formeNote(f.mondo, f.tappa).has(f.forma)) g.push(`${dove}: la forma ${f.forma} arriva dopo la sua tappa`)
@@ -121,6 +130,9 @@ export function guastiDellaFrase(f, { semi = 6 } = {}) {
         if (!es.giusta) g.push(`${qui}: la fila giusta non è giudicata giusta`)
         if (formato === 'completa' && d.tessere.length !== d.righe.filter(r => r.buco !== undefined).length + d.inPiu)
           g.push(`${qui}: le tessere non sono quante i buchi più quella di troppo`)
+        // la tessera di troppo contende un buco (goes accanto a go), se no non è una scelta
+        if (formato === 'completa' && d.rivale != null && d.righe[d.rivale].buco === undefined)
+          g.push(`${qui}: la tessera di troppo non contende nessun buco`)
         if (formato === 'scegliMonta') {
           if (!d.inPiu) g.push(`${qui}: nessuna tessera trappola`)
           const dentro = new Set(d.soluzione.map(w => w.toLowerCase()))
