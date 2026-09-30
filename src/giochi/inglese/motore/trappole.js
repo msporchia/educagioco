@@ -5,14 +5,20 @@
 // l'italiano di «cosa vuol dire», le tessere in più di «componi».
 import { TRAPPOLE } from '../dati/trappole.js'
 import { MAX_S } from '../../../store/srs.js'
-import { PRONOMI, DIMOSTRATIVI, DET, NOMI_PROPRI, eAggettivo, eNumero, nomeDi, plurale } from './lessico.js'
+import { PRONOMI, DIMOSTRATIVI, DET, NOMI_PROPRI, TEMPO_SOGGETTO, NON_CONTABILI, eAggettivo, eNumero,
+         eVerbo, eContabile, conAn, nomeDi, plurale, itDelVerbo } from './lessico.js'
 import { WORDS } from '../../../data/words.js'
+import { VERBI } from '../../../data/verbi.js'
+import { gruppoDi } from './grafo.js'
 import { parole, normalizza, accettate, eDomanda } from './testo.js'
 
 const low = w => (w == null ? null : String(w).toLowerCase())
 const INVERTIBILI = new Set(['am', 'is', 'are', 'have', 'has', 'can'])
+const WH = new Set(['what', 'where', 'how', 'who'])
 const IT = new Map(WORDS.map(w => [w[0].toLowerCase(), w[1]]))
-const CAT = new Map(WORDS.map(w => [w[0].toLowerCase(), w[3]]))
+// la parola come si scrive («monday» → Monday): le parole note sono in minuscolo
+const COME_SI_SCRIVE = new Map([...VERBI.map(v => [v[0], v[0]]), ...WORDS.map(w => [w[0].toLowerCase(), w[0]])])
+const scritta = w => COME_SI_SCRIVE.get(low(w)) || w
 
 // Il soggetto che comincia in T[i]: { a (fine esclusa), chi, persona, plurale }
 export function soggetto(T, i) {
@@ -20,6 +26,9 @@ export function soggetto(T, i) {
   if (w == null) return null
   if (PRONOMI.has(w)) return { a: i + 1, chi: T[i], persona: w, plurale: ['we', 'they', 'you'].includes(w) }
   if (NOMI_PROPRI.has(w)) return { a: i + 1, chi: T[i], persona: 'he', plurale: false }
+  // «there is»: il numero lo decide quello che viene dopo, e ci pensa la sua riga
+  if (w === 'there') return { a: i + 1, chi: T[i], persona: 'there', plurale: null }
+  if (TEMPO_SOGGETTO.has(w)) return { a: i + 1, chi: T[i], persona: 'it', plurale: false }
   // «this is», «is this your…»: this da solo è il soggetto; «this book» no
   if (DIMOSTRATIVI.has(w) && !(nomeDi(low(T[i + 1]) || '') || eAggettivo(low(T[i + 1])) || eNumero(low(T[i + 1]))))
     return { a: i + 1, chi: T[i], persona: 'it', plurale: w === 'these' || w === 'those' }
@@ -71,8 +80,9 @@ export const OPERAZIONI = {
     const insieme = verbi === 'be' ? ['am', 'is', 'are'] : ['have', 'has']
     let pos, s
     if (domanda && insieme.includes(low(T[0]))) { pos = 0; s = soggetto(T, 1) }
+    else if (domanda && WH.has(low(T[0])) && insieme.includes(low(T[1]))) { pos = 1; s = soggetto(T, 2) }
     else { s = soggetto(T, 0); pos = s ? s.a : -1 }
-    if (!s || pos < 0 || !insieme.includes(low(T[pos]))) return []
+    if (!s || s.persona === 'there' || pos < 0 || !insieme.includes(low(T[pos]))) return []
     const giusto = low(T[pos])
     const sbagliato = verbi === 'be'
       ? (s.persona === 'i' || s.plurale ? 'is' : 'are')
@@ -89,10 +99,33 @@ export const OPERAZIONI = {
       return [alt([T[0], ...T.slice(2)], { chi: T[1] })]
     return []
   },
+  // «where is the cat» → «where the cat is»: dopo la parola che chiede viene il verbo
+  giraWh(T, { domanda }) {
+    if (!domanda || !WH.has(low(T[0])) || !INVERTIBILI.has(low(T[1]))) return []
+    const s = soggetto(T, 2)
+    if (!s || s.persona === 'there') return []
+    return [alt([T[0], ...T.slice(2, s.a), T[1], ...T.slice(s.a)], { wh: T[0], verbo: T[1] })]
+  },
+  // there is ↔ there are, dovunque stia there
+  thereAccordo(T) {
+    const i = trova(T, (w, k) => ['is', 'are'].includes(w) && (low(T[k + 1]) === 'there' || low(T[k - 1]) === 'there'))
+    if (i < 0) return []
+    const U = T.slice(); U[i] = low(T[i]) === 'is' ? 'are' : 'is'
+    return [alt(U, { giusto: T[i], sbagliato: U[i] })]
+  },
+  // «c'è» detto «è»: there is → it is
+  thereInIt(T) {
+    const i = low(T[0]) === 'there' ? 0 : ['is', 'are'].includes(low(T[0])) && low(T[1]) === 'there' ? 1 : -1
+    if (i < 0) return []
+    const U = T.slice(); U[i] = 'it'
+    if (low(U[i === 0 ? 1 : 0]) === 'are') return []      // «it are» non è l'errore di nessuno
+    return [alt(U)]
+  },
   aggettivoDopo(T) {
     const i = trova(T, (w, k) => eAggettivo(w) && nomeDi(low(T[k + 1]) || ''))
     if (i < 0) return []
     const U = T.slice(); [U[i], U[i + 1]] = [U[i + 1], U[i]]
+    if (['a', 'an'].includes(low(U[i - 1]))) U[i - 1] = conAn(U[i]) ? 'an' : 'a'   // l'errore è uno solo
     return [alt(U, { agg: T[i], cosa: T[i + 1] })]
   },
   aggettivoPlurale(T) {
@@ -127,10 +160,10 @@ export const OPERAZIONI = {
     if (i < 0) return []
     return [alt([...T.slice(0, i), ...T.slice(i + 1)])]
   },
-  scambia(T, _, { coppie, it, glossa }) {
+  scambia(T, _, { coppie, it = [], glossa = {}, unVerso = false }) {
     for (let i = 0; i < T.length; i++)
       for (const [a, b] of coppie)
-        for (const [da, per] of [[a, b], [b, a]])
+        for (const [da, per] of (unVerso ? [[a, b]] : [[a, b], [b, a]]))
           if (low(T[i]) === da) {
             const U = T.slice(); U[i] = per
             return [alt(U, { giusto: da, sbagliato: per, itGiusto: glossa[da], itSbagliato: glossa[per] },
@@ -139,6 +172,11 @@ export const OPERAZIONI = {
     return []
   },
   togliNegazione(T) {
+    const c = trova(T, w => w === 'cannot')
+    if (c >= 0) {
+      const U = T.slice(); U[c] = 'can'
+      return [alt(U, {}, x => (/(^|\s)non\s/.test(x) ? x.replace(/(^|\s)non\s/, '$1') : null))]
+    }
     const i = trova(T, w => w === 'not')
     if (i < 0) return []
     const da = ['do', 'does'].includes(low(T[i - 1])) ? i - 1 : i
@@ -151,27 +189,47 @@ export const OPERAZIONI = {
     if (i < 0) return []
     return [alt([...T.slice(0, i), 'do', 'not', ...T.slice(i)], {}, x => (/^(mi|ti) /.test(x) ? 'non ' + x : null))]
   },
-  // una parola della stessa categoria al posto di una della frase: una
-  // alternativa per ogni parola vicina che il bambino conosce
+  /* Una parola dello stesso gruppo al posto di una della frase: una
+     alternativa per ogni parola vicina che il bambino conosce. La frase
+     resta in piedi: l'articolo si rifà (an orange), una cosa che non si
+     conta non prende a/an (niente «a trousers»), e al posto di una che non
+     si conta ne va una al plurale («I like milk» → «I like apples»). */
   parolaVicina(T, { vicine }) {
     if (!vicine) return []
     const out = []
     T.forEach((w, i) => {
       const lw = low(w)
-      if (eNumero(lw)) return
+      if (eNumero(lw) || DET.has(lw) || PRONOMI.has(lw)) return
       const n = nomeDi(lw)
-      const base = n ? n.base : eAggettivo(lw) ? lw : null
+      const verbo = !n && !eAggettivo(lw) && eVerbo(lw)
+      const base = n ? n.base : eAggettivo(lw) || verbo ? lw : null
       if (!base) return
-      for (const v of vicine(base)) {
+      let k = i - 1
+      while (k >= 0 && eAggettivo(low(T[k]))) k--
+      const art = k >= 0 && ['a', 'an'].includes(low(T[k])) ? k : -1
+      for (const vicina of vicine(base)) {
+        const v = low(vicina)
         if (v === base) continue
-        const U = T.slice(); U[i] = n && n.plurale ? plurale(v) : v
-        out.push(alt(U, { giusto: base, sbagliato: v, itGiusto: IT.get(base), itSbagliato: IT.get(v), parola: base }))
+        let nuovo = scritta(v)
+        if (n) {
+          if (!nomeDi(v)) continue
+          if (art >= 0 && !eContabile(v)) continue
+          if (n.plurale) { if (NON_CONTABILI.has(v)) continue; nuovo = plurale(nuovo) }
+          else if (art < 0 && NON_CONTABILI.has(base) && eContabile(v)) nuovo = plurale(nuovo)
+          else if (art < 0 && !NON_CONTABILI.has(base) && NON_CONTABILI.has(v)) continue
+        } else if (verbo ? !eVerbo(v) : !eAggettivo(v)) continue
+        const U = T.slice(); U[i] = nuovo
+        if (art >= 0) U[art] = conAn(U[art + 1]) ? 'an' : 'a'
+        const it = x => IT.get(x) || itDelVerbo(x)
+        out.push(alt(U, { giusto: scritta(base), sbagliato: scritta(v), itGiusto: it(base), itSbagliato: it(v),
+                          parola: verbo ? null : scritta(base), verbo: verbo ? base : null }))
       }
     })
     return out
   },
   inserisci(T, _, { dopo, parola }) {
-    const i = trova(T, w => w === dopo)
+    const dopi = [].concat(dopo)
+    const i = trova(T, w => dopi.includes(w))
     if (i < 0) return []
     return [alt([...T.slice(0, i + 1), parola, ...T.slice(i + 1)])]
   },
@@ -220,15 +278,18 @@ export function applica(riga, frase, ctx = {}) {
       perche: riempi(riga.perche, a.dati),
       pesa: riga.pesa || 'forma',
       forma: riga.forma || frase.forma || null,
-      parola: a.dati.parola || null,
+      parola: a.dati.parola || a.dati.verbo || null,
+      // la voce SRS su cui pesa uno sbaglio di parola (un verbo è `verbo:`)
+      chiave: a.dati.verbo ? 'verbo:' + a.dati.verbo : a.dati.parola ? 'en:' + a.dati.parola : null,
     }
   })
 }
 
-// Le parole vicine a una data: stessa categoria, fra quelle note
+// Le parole vicine a una data: stesso gruppo (l'argomento della tappa che
+// la insegna, se no la categoria), fra quelle note
 export const vicineFra = note => base => {
-  const c = CAT.get(base)
-  return [...note].filter(w => w !== base && CAT.get(w) === c)
+  const g = gruppoDi(base)
+  return g ? [...note].filter(w => w !== low(base) && gruppoDi(w) === g) : []
 }
 
 // Tutte le trappole di una frase: generate dalla tabella (meno quelle in
@@ -245,9 +306,10 @@ export function trappoleDi(frase, ctx = {}) {
   }
   for (const t of frase.trappole || [])
     aggiungi({ id: 'a-mano', en: t.en, it: t.it || null, perche: t.perche,
-               pesa: t.parola ? 'parola' : 'forma', forma: frase.forma, parola: t.parola || null })
+               pesa: t.parola ? 'parola' : 'forma', forma: frase.forma, parola: t.parola || null,
+               chiave: t.parola ? 'en:' + t.parola : null })
   for (const riga of TRAPPOLE)
-    if (!(frase.niente || []).includes(riga.id))
+    if (!(frase.niente || []).includes(riga.id) && (!riga.soloForme || riga.soloForme.includes(frase.forma)))
       for (const t of applica(riga, frase, ctx)) aggiungi(t)
   return out
 }

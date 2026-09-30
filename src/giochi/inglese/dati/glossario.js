@@ -10,4 +10,5 @@ export const GLOSSARIO = {
   like: 'piacere', have: 'avere', has: 'ha', got: 'con have: avere',
   can: 'potere, saper fare', cannot: 'non potere', was: 'era', were: 'eravamo, erano',
   these: 'questi, queste', those: 'quelli, quelle',
+  fine: 'bene', thank: 'grazie (thank you)', many: 'tanti (how many: quanti)',
 }

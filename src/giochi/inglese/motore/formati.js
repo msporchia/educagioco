@@ -146,9 +146,9 @@ export function composta(d, idTessere) {
 
 export const rigaInBella = (d, idTessere) => inBella(composta(d, idTessere), { domanda: d.domandaIt })
 
-// le chiavi delle parole di una frase che hanno una voce SRS
+// le chiavi delle parole (e dei verbi) di una frase che hanno una voce SRS
 export const paroleDellaFrase = frase =>
-  [...new Set(parole(frase.en).map(chiaveDi).filter(k => k && k.startsWith('en:')))]
+  [...new Set(parole(frase.en).map(chiaveDi).filter(k => k && /^(en|verbo):/.test(k)))]
 
 /* Il giudizio: giusta o no, il perché e cosa segnare nello SRS.
    `risposta`: l'opzione toccata, o gli id delle tessere nella fila.
@@ -175,8 +175,8 @@ export function giudica(frase, d, risposta, { scadutaDi = () => false, ctx = nul
   if (giusta)
     registra = [{ chiave: chiaveF, correct: true }, { chiave: formaF, correct: true },
                 ...paroleDellaFrase(frase).filter(scadutaDi).map(chiave => ({ chiave, correct: true }))]
-  else if (trappola && trappola.pesa === 'parola' && trappola.parola)
-    registra = [{ chiave: 'en:' + trappola.parola, correct: false }]
+  else if (trappola && trappola.pesa === 'parola' && trappola.chiave)
+    registra = [{ chiave: trappola.chiave, correct: false }]
   else if (!trappola && (d.formato === 'riconosci' || d.formato === 'senso'))
     registra = [{ chiave: chiaveF, correct: false }]       // ha preso un'altra frase: non è grammatica
   else

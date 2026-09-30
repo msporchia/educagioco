@@ -4,6 +4,8 @@
 // della frase), su cosa pesa uno sbaglio (`pesa`: 'forma' o 'parola') e il
 // perché in una riga — sotto i 70 caratteri, con i buchi {…} riempiti
 // dall'operazione. `esempio` è [giusta, sbagliata]: il test lo rifà.
+// `soloForme`: la riga vale solo per le frasi di quelle forme (in/on è una
+// cosa con i mesi e un'altra con i mobili).
 // Un errore nuovo che somiglia a uno che c'è è una riga; uno di specie
 // nuova è un'operazione nuova. Vedi docs/lingue/mondi.md.
 export const TRAPPOLE = [
@@ -59,12 +61,34 @@ export const TRAPPOLE = [
   { id: 'negazione-aggiunta', fa: 'aggiungiNegazione', forma: 'i-like',
     perche: 'Qui non c’è not: la frase dice di sì',
     esempio: ['I like milk', 'I do not like milk'] },
+  { id: 'wh-ordine', fa: 'giraWh', forma: null,
+    perche: 'Per chiedere, {verbo} va subito dopo {wh}: {wh} {verbo}…',
+    esempio: ['where is the cat', 'where the cat is'] },
+  { id: 'come-cosa', fa: 'scambia', forma: null,
+    con: { coppie: [['how', 'what'], ['where', 'what']], glossa: { how: 'come', what: 'che cosa', where: 'dove' } },
+    perche: '{giusto} vuol dire {itGiusto}, {sbagliato} vuol dire {itSbagliato}',
+    esempio: ['how are you', 'what are you'] },
+  { id: 'there-is-are', fa: 'thereAccordo', forma: 'there-is',
+    perche: 'Per una cosa sola there is, per tante there are',
+    esempio: ['there is a cat in the garden', 'there are a cat in the garden'] },
+  { id: 'c-e', fa: 'thereInIt', forma: 'there-is',
+    perche: 'C’è si dice there is: it is vuol dire «è»',
+    esempio: ['there is a cat in the garden', 'it is a cat in the garden'] },
+  { id: 'preposizioni', fa: 'scambia', forma: null, soloForme: ['dove', 'there-is'],
+    con: { coppie: [['in', 'on'], ['on', 'under'], ['under', 'behind'], ['behind', 'near']],
+           glossa: { in: 'dentro', on: 'sopra', under: 'sotto', behind: 'dietro', near: 'vicino' } },
+    perche: '{giusto} vuol dire {itGiusto}, {sbagliato} vuol dire {itSbagliato}',
+    esempio: ['the cat is under the bed', 'the cat is on the bed'] },
+  { id: 'in-on-tempo', fa: 'scambia', forma: 'oggi', soloForme: ['oggi'],
+    con: { coppie: [['in', 'on']], unVerso: true },
+    perche: 'Con i mesi e le stagioni si dice in, con i giorni on',
+    esempio: ['my birthday is in May', 'my birthday is on May'] },
   { id: 'parola-vicina', fa: 'parolaVicina', forma: null, pesa: 'parola',
     perche: '{giusto} vuol dire {itGiusto}, {sbagliato} vuol dire {itSbagliato}',
     esempio: ['it is a dog', 'it is a cat'] },
 
-  /* ── dei mondi che verranno: non trovano ancora frasi, ma si provano ── */
-  { id: 'can-to', fa: 'inserisci', con: { dopo: 'can', parola: 'to' }, forma: 'can',
+  /* ── dei mondi che hanno solo le parole: non trovano ancora frasi, ma si provano ── */
+  { id: 'can-to', fa: 'inserisci', con: { dopo: ['can', 'cannot'], parola: 'to' }, forma: 'can',
     perche: 'Dopo can il verbo va da solo, senza to',
     esempio: ['I can swim', 'I can to swim'] },
   { id: 'terza-senza-s', fa: 'togliS', forma: 'terza-s',

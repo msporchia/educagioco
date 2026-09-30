@@ -22,17 +22,32 @@ export const NOMI_PROPRI = new Set(PERSONAGGI.map(p => p.nome.toLowerCase()))
 // i plurali che non finiscono con la s, e i nomi che sono già plurali
 const IRREGOLARI = { mice: 'mouse', feet: 'foot', teeth: 'tooth', children: 'child',
                      men: 'man', women: 'woman', people: 'person' }
-const SEMPRE_UGUALI = new Set(['fish', 'sheep', 'deer'])
+export const SEMPRE_UGUALI = new Set(['fish', 'sheep', 'deer'])
 const GIA_PLURALI = new Set(['trousers', 'grapes', 'glasses', 'scissors', 'fries', 'stairs',
                              'pyjamas', 'cards', 'dice'])
 const IN_ES = new Set(['tomato', 'potato', 'box', 'glass', 'bus', 'dress', 'watch', 'sandwich', 'peach'])
+// Le cose che non si contano: niente a/an e niente plurale («long hair»,
+// «I like milk»). Servono alle trappole per non uscire sgrammaticate.
+export const NON_CONTABILI = new Set(['milk', 'bread', 'cheese', 'chocolate', 'pasta', 'rice', 'soup',
+  'juice', 'salad', 'hair', 'water', 'honey', 'butter', 'salt', 'tea', 'coffee', 'meat', 'popcorn',
+  'rain', 'snow', 'wind', 'fog', 'ice', 'music', 'homework', 'paper', 'breakfast', 'lunch', 'dinner',
+  'time', 'glue', 'paint', 'fire', 'grass', 'air', 'sky'])
+// del calendario sono nomi i giorni, i mesi e le stagioni, non gli avverbi
+const AVVERBI_DI_TEMPO = new Set(['today', 'tomorrow', 'yesterday', 'early', 'late'])
+export const TEMPO_SOGGETTO = new Set(['today', 'tomorrow', 'yesterday'])
 
-const eNomeDi = cat => cat && !['c', 'j', 'n', 'q', 'd'].includes(cat)
-export const eNome = w => eNomeDi(CAT.get(w)) || NOMI_PROPRI.has(w)
+const eNomeDi = (cat, w = '') => !!cat && (!['c', 'j', 'n', 'q', 'd'].includes(cat) ||
+                                          (cat === 'd' && !AVVERBI_DI_TEMPO.has(w)))
+const eNomeW = w => eNomeDi(CAT.get(w), w)
+export const eNome = w => eNomeW(w) || NOMI_PROPRI.has(w)
+export const eContabile = w => !NON_CONTABILI.has(w) && !GIA_PLURALI.has(w)
+// «an» davanti a una vocale che si sente (an apple, an orange; ma a uniform)
+export const conAn = w => /^[aeio]/i.test(w) || /^u(?!ni|se|su)/i.test(w) || /^hour/i.test(w)
 export const eColore = w => CAT.get(w) === 'c'
 export const eAggettivo = w => CAT.get(w) === 'j' || CAT.get(w) === 'c'
 export const eNumero = w => CAT.get(w) === 'n'
 export const eVerbo = w => VERBO.has(w)
+export const itDelVerbo = w => VERBO.get(w) || null
 
 export function plurale(en) {
   if (SEMPRE_UGUALI.has(en) || GIA_PLURALI.has(en)) return en
@@ -47,11 +62,11 @@ export function nomeDi(w) {
   w = w.toLowerCase()
   if (IRREGOLARI[w]) return { base: IRREGOLARI[w], plurale: true }
   if (GIA_PLURALI.has(w) && CAT.has(w)) return { base: w, plurale: true }
-  if (eNomeDi(CAT.get(w))) return { base: w, plurale: false }
+  if (eNomeW(w)) return { base: w, plurale: false }
   for (const [coda, via] of [['ies', 'y'], ['es', ''], ['s', '']]) {
     if (!w.endsWith(coda)) continue
     const b = w.slice(0, -coda.length) + via
-    if (eNomeDi(CAT.get(b)) && plurale(b) === w) return { base: b, plurale: true }
+    if (eNomeW(b) && plurale(b) === w) return { base: b, plurale: true }
   }
   return null
 }
