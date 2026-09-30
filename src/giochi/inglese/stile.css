@@ -177,10 +177,17 @@
 .ing-capitolo { text-align: center; font-variant: small-caps; letter-spacing: .05em; color: #6b3b1c;
                 font-size: 1.1em; margin: 0 0 12px }
 .ing-riga { margin: 0 }
-.ing-riga::first-letter { float: left; font-size: 2.6em; line-height: .82; margin: 7px 7px 0 0; color: #8a3b1c }
+.ing-prima-riga::first-letter { float: left; font-size: 2.6em; line-height: .82; margin: 7px 7px 0 0; color: #8a3b1c }
 .ing-pagina .ing-parola { border-bottom: 1px dotted #c7ad7f }
 .ing-fregio { text-align: center; color: #b99a6a; font-size: 18px; margin-top: 4px }
 .ing-dopo-lettura { display: flex; flex-direction: column; gap: 8px; align-items: center }
+/* le pagine si sfogliano con due tasti grandi, uno per lato */
+.ing-sfoglia { display: flex; align-items: center; justify-content: space-between; gap: 10px }
+.ing-freccia-pagina { width: 58px; height: 52px; border-radius: 16px; background: #fffdf6; color: var(--ing-inchiostro);
+                      font-size: 26px; font-weight: 900; box-shadow: 0 4px 0 var(--ing-bordo) }
+.ing-freccia-pagina:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 var(--ing-bordo) }
+.ing-freccia-pagina:disabled { opacity: .35; box-shadow: none }
+.ing-numero-pagina { font: italic 700 16px Georgia, serif; color: #7a6450 }
 .ing-libro-domanda { display: flex; flex-direction: column; gap: 10px }
 
 /* ═══════════ il cartello di fine ═══════════ */

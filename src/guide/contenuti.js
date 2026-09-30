@@ -777,7 +777,7 @@ export const AIUTI = {
         'Le tacche attorno a una tappa dicono quanto è imparata, da 0 a 10. Col tempo calano e il disegno sbiadisce: rigiocarla le fa risalire.',
       ] },
       { titolo: 'Il libro e il cassetto', righe: [
-        '📖 **Il libro**: un capitolo da leggere in inglese e qualche domanda in italiano. Si apre quando arrivi alla bandiera del mondo.',
+        '📖 **Il libro**: storie da leggere in inglese, una pagina alla volta, e qualche domanda in italiano. La prima si apre a metà del mondo; finita una storia, «Un’altra storia» ne apre una nuova.',
         '📦 **Il cassetto**: le altre parole del mondo, per chi ne vuole di più. Si apre alla prima tappa vinta.',
       ] },
       { titolo: 'Cosa allena', righe: [

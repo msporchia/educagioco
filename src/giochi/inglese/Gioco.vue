@@ -18,7 +18,7 @@ import LinguaGame from '../../views/LinguaGame.vue'
 
 import { CHIAVE, mondoDi, tappaDi } from './dati/mondi.js'
 import { CAPITOLI } from './dati/capitoli.js'
-import { pagaDi, PAGA_CAPITOLO } from './dati/monete.js'
+import { pagaDi, pagaDelCapitolo } from './dati/monete.js'
 import { statoMappa, segnaVinta, tappaAperta, vinta } from './motore/mappa.js'
 import { travasa } from './motore/travaso.js'
 import { Sessione } from './motore/sessione.js'
@@ -26,6 +26,7 @@ import { Tocchi, domandeCheLPagano, domandaDelTocco } from './motore/tocchi.js'
 import { cassettoDi, mondoDellaTappa } from './motore/grafo.js'
 import { gradoTappa } from './motore/grado.js'
 import { capitoliDi, capitolo } from './motore/libro.js'
+import { storieAperte, prossimaStoria, unAltraStoria, segnaLetta, cosaServeAlLibro } from './motore/storie.js'
 import { traduci } from './motore/lessico.js'
 import * as F from './motore/fila.js'
 
@@ -62,10 +63,11 @@ const extra = computed(() => {
   const out = {}
   for (const m of stato.value) {
     if (!m.pronto) continue
-    const mondo = mondoDi(m.id)
-    const ultima = mondo.tappe[mondo.tappe.length - 1]
+    // il libro si apre con la prima storia del mondo che si può leggere (motore/storie.js)
     out[m.id] = {
-      libro: capitoliDi(CAPITOLI, m.id).length ? { aperto: tappaAperta(c, ultima.id, regole()) } : null,
+      libro: capitoliDi(CAPITOLI, m.id).length
+        ? { aperto: storieAperte(CAPITOLI, c, regole(), m.id).length > 0, serve: cosaServeAlLibro(CAPITOLI, m.id) }
+        : null,
       cassetto: m.cassetto && m.cassetto.chiavi ? { aperto: m.cassetto.aperto } : null,
     }
   }
@@ -102,6 +104,7 @@ const pagaQui = ref(true)
 const conti = reactive({ giuste: 0, errori: 0, monete: 0, chieste: 0, gradoPrima: null, bersaglio: 1 })
 const fine = ref(null)
 let prossimaId = null
+let altraStoria = null               // la storia di «Un'altra storia», dal cartello di fine
 
 const haVoceOra = p => suono.acceso.value && haVoce(p, 'en')
 
@@ -218,12 +221,14 @@ function chiudiTappa() {
 function avantiDaFine() {
   const id = prossimaId
   fine.value = null
-  if (id) giocaTappa(id)
+  if (vista.value === 'libro' && altraStoria) apriStoria(altraStoria)
+  else if (id) giocaTappa(id)
   else allaMappa()
 }
 
 /* ═══════════ il libro ═══════════ */
 const libro = shallowRef(null)
+let storia = null                    // il capitolo di adesso, come sta nei dati
 const libroFase = ref('leggi')
 const libroK = ref(0)
 const libroScelta = ref(-1)
@@ -232,10 +237,16 @@ let libroGiuste = 0
 let libroPagate = 0                  // le domande del capitolo già pagate, una per volta
 let tocchiLibro = null
 
+// il libro di un mondo apre la prossima storia: la prima non letta, o la letta da più tempo
 function apriLibro(mondo) {
-  const caps = capitoliDi(CAPITOLI, mondo)
-  if (!caps.length) return
-  libro.value = capitolo(caps[Math.floor(Math.random() * caps.length)])
+  const cap = prossimaStoria(CAPITOLI, c, regole(), mondo)
+  if (cap) apriStoria(cap)
+}
+
+function apriStoria(cap) {
+  storia = cap
+  altraStoria = null
+  libro.value = capitolo(cap)
   libroFase.value = 'leggi'
   libroK.value = 0
   libroScelta.value = -1
@@ -245,6 +256,7 @@ function apriLibro(mondo) {
   tocchiLibro = new Tocchi({ itemDi: item })
   Object.assign(conti, { giuste: 0, errori: 0, monete: 0, chieste: 0, gradoPrima: null })
   fine.value = null
+  bolla.value = null
   vista.value = 'libro'
 }
 
@@ -261,7 +273,7 @@ function rispondiLibro(i) {
   // la domanda giusta paga adesso, se un tocco a pagamento non se l'è già mangiata
   if (giusta && domandeCheLPagano(libroGiuste, tocchiLibro.aPagamento) > libroPagate) {
     libroPagate++
-    const p = incassa(PAGA_CAPITOLO)
+    const p = incassa(pagaDelCapitolo(libro.value.pagine.length))
     conti.monete += p.dato
     conti.chieste += p.chiesto
   }
@@ -277,6 +289,10 @@ function avantiLibro() {
     return
   }
   for (const k of tocchiLibro.nonSapute) answer(k, { correct: false })
+  // arrivati al cartello la storia è letta; la prossima è un'altra (motore/storie.js)
+  segnaLetta(c, storia.id)
+  persist()
+  altraStoria = unAltraStoria(CAPITOLI, c, regole(), storia.mondo, storia.id)
   const tot = libro.value.domande.length
   fine.value = {
     titolo: '📖 ' + libro.value.titolo,
@@ -284,7 +300,8 @@ function avantiLibro() {
       (libroPersi.value ? ` · ${libroPersi.value === 1 ? 'una parola chiesta' : libroPersi.value + ' parole chieste'}, ` +
                           `${libroPersi.value === 1 ? 'una domanda' : libroPersi.value + ' domande'} senza monete` : ''),
     giuste: conti.giuste, errori: conti.errori, monete: conti.monete,
-    notaMonete: premioDetto(CHIAVE, conti.chieste, conti.monete), avanti: '',
+    notaMonete: premioDetto(CHIAVE, conti.chieste, conti.monete),
+    avanti: altraStoria ? 'Un’altra storia' : '',
   }
   suono.livello()
 }
@@ -352,7 +369,7 @@ const indicatore = computed(() => {
     return pagaQui.value ? { testo: `+${quanto}`, paga: true } : { testo: '+0', paga: false }
   }
   if (vista.value === 'libro' && libro.value && !fine.value) {
-    const resto = Math.max(0, libro.value.domande.length - libroPersi.value) * PAGA_CAPITOLO
+    const resto = Math.max(0, libro.value.domande.length - libroPersi.value) * pagaDelCapitolo(libro.value.pagine.length)
     return { testo: `fino a +${resto}`, paga: libroPersi.value === 0 }
   }
   return null
