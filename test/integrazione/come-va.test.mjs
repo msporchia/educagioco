@@ -224,6 +224,11 @@ const difficile = k => page.locator(`[data-difficile="${k}"]`)
 controlla('il muro sta fra le difficili', await difficile(MURO2).count() === 1)
 controlla('e dice che il gioco l\'ha già alleggerita',
           await difficile(MURO2).locator('[data-alleggerita]').count() === 1)
+{
+  // e cosa vuol dire: prima della domanda un esempio svolto su un'altra, non il metodo di quella
+  const detto = await difficile(MURO2).locator('[data-alleggerita]').innerText().catch(() => '')
+  controlla('con quello che fa: un esempio svolto prima', /esempio svolto/.test(detto), detto)
+}
 controlla('quella salita sta fra le migliorate', await page.locator(`[data-migliorata="${SALITA}"]`).count() === 1)
 {
   const riga = await page.locator(`[data-migliorata="${SALITA}"]`).innerText()
