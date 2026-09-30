@@ -1,34 +1,21 @@
 # L'inglese a mondi: cosa manca
 
-Un mondo per anno di scuola: prima, seconda e terza si giocano per intero,
-quarta e quinta hanno le tappe di parole e il libro. Motore e dati in
-[mondi.md](mondi.md#comè-costruito), la vista in [mondi-vista.md](mondi-vista.md).
-Il resto, in ordine.
+Un mondo per anno di scuola, tutti e cinque con le tappe di parole, le
+tappe di frasi e il libro. Il grafo in [mondi.md](mondi.md), le frasi in
+[frasi.md](frasi.md), la vista in [mondi-vista.md](mondi-vista.md). Il
+resto, in ordine.
 
-## Le frasi di quarta e quinta
+## Le strutture che restano fuori
 
-I due mondi hanno le tappe di parole, la 🏁, le strutture dell'anno
-dichiarate in `strutture` (`dati/mondi.js`) e tre storie ciascuno nel
-libro ([libro.md](libro.md)); mancano le tappe di frasi. Per ognuno: le
-tappe di frasi in `dati/mondi.js` (dopo quelle di parole, prima della 🏁:
-un travaso non serve, gli `id` delle tappe di parole restano), le frasi in
-`dati/frasi/<mondo>.js` (e una riga in `dati/frasi.js`), e le righe delle
-trappole che mancano.
-
-- **Quarta**: il presente (*I get up at seven, we play football*), la *s*
-  della terza persona (*she plays, he goes*), *does / doesn't*, *-ing*
-  (*I am eating*), l'ora (*what time is it? at three o'clock*). Le forme ci
-  sono già in `dati/forme.js` (`presente`, `terza-s`, `ing`, `ora`), e le
-  righe `terza-senza-s` e `does-con-s` della tabella si provano già sul loro
-  esempio.
-- **Quinta**: *was / were*, il passato irregolare (*went, saw, ate* — i
-  verbi della tappa «I verbi che cambiano») e in *-ed* (`was-were`,
-  `passato`, `passato-ed`; la riga `passato-in-ed` c'è).
-- **Le forme dei verbi ci sono** (`motore/flessioni.js`, per ora usate dal
-  libro): le frasi componibili le avranno passando a `sconosciute()` le
-  `flessioni` della loro tappa, come fa `guastiDelCapitolo`
-  ([libro.md](libro.md#le-forme-dei-verbi)). Le parolette di quarta e
-  quinta (*to, with, because…*) stanno già nelle forme.
+- **Il passato progressivo** (*while I was reading*) e il discorso
+  indiretto (*she said that…*) sono della media: *while* sta solo in frasi
+  al presente, *said / told* senza *that* ([strutture.md](strutture.md)).
+- **How much is it?** aspetta i soldi (qui sotto).
+- **Le storie di quarta e quinta** si aprivano dopo una tappa di parole,
+  perché i due mondi non avevano tappe di frasi; adesso le hanno, e
+  `unita/inglese-libro` vuole che una storia a metà isola si apra dopo una
+  di frasi (`dopo` nei capitoli: in quarta per esempio `quarta-io-gioco` o
+  `quarta-lei-gioca`, in quinta `quinta-ieri` o `quinta-andai`).
 
 ## Le parole che mancano
 
@@ -36,7 +23,8 @@ trappole che mancano.
   in `data/words.js`. Una tappa «Al negozio» li vuole, con *how much is it?*
   fra le strutture.
 - **Le parole aggiunte il 30 settembre 2026 non hanno ancora la voce**: i
-  dodici mesi (*January … December*) e *sixty, seventy, eighty, ninety*.
+  dodici mesi (*January … December*), *sixty, seventy, eighty, ninety* e i
+  verbi *say* e *tell*.
   Va lanciato `npm run voci` (vuole rete e ffmpeg; se in coda dice «non
   incise», si rilancia lo stesso comando): finché non gira, `unita/inglese`
   è rosso su «parole senza clip». Il gioco regge comunque: l'audio non

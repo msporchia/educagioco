@@ -16,7 +16,8 @@ Una caravella segna dove si è arrivati, e toccata una tappa ci naviga,
 girando attorno alle isole. Su ogni isola si alternano **tappe di parole**
 (otto-dieci parole di un argomento solo: i colori, il cibo, la casa) e
 **tappe di frasi**, che usano solo parole già viste e insegnano una
-struttura (*it is / is it*, *I like*, *there is*, *I can*). Le frasi prima
+struttura (*it is / is it*, *I like*, *there is*, *I can*, e in quarta e
+quinta *she plays*, *I am playing*, *I went*, *bigger than*, *I am going to*). Le frasi prima
 si riconoscono, poi **si compongono** toccando le parole: prima coi buchi da
 riempire, poi tutte da mettere in ordine, poi con parole trappola in mezzo
 (*am / is / are*, *my / your*). Chi sbaglia legge il perché («*is it* va

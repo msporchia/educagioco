@@ -10,7 +10,7 @@
    Di una frase: le trappole col loro perché e l'italiano che ricalcano, e un
    banco per ogni formato. Di un capitolo: ogni testo diverso che può uscire,
    con le domande, la giusta (✓) e le sbagliate. In fondo i guasti, gli
-   stessi di test/unita/inglese-mondi. Vedi docs/lingue/mondi.md. */
+   stessi di test/unita/inglese-mondi. Vedi docs/lingue/frasi.md. */
 import { readdirSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve } from 'node:path'

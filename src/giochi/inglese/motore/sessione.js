@@ -1,7 +1,7 @@
 // Una partita a una tappa (o alla 🏁, o al 📦 cassetto): quale domanda
 // viene dopo, e cosa succede a una risposta. Non sa di monete né di
 // schermo: dice `paga` e cosa segnare nello SRS, e chi la usa lo fa.
-// Vedi docs/lingue/mondi.md («L'interfaccia per la vista»).
+// Vedi docs/lingue/frasi.md («La partita» e «L'interfaccia per la vista»).
 import { createPicker, strength, overdue } from '../../../store/srs.js'
 import { scegliTipo, componi, TIPI } from '../../../data/domande.js'
 import { ARGOMENTI } from '../dati/argomenti.js'
@@ -53,7 +53,7 @@ export class Sessione {
     this.primoGiro = giro.filter(k => !k.startsWith('frase:'))
     this.pool = voci.map(v => v.chiave)
     this.indovinate = new Set()
-    // una tappa di frasi non chiede parole: una parola che non sa si tocca (docs/lingue/mondi.md)
+    // una tappa di frasi non chiede parole: una parola che non sa si tocca (docs/lingue/frasi.md)
 
     // una forma debole ripesca le sue frasi dai mondi già fatti: solo dove si
     // ripassano le frasi (una tappa di frasi, la 🏁), mai in una di parole
@@ -114,7 +114,7 @@ export class Sessione {
   // Il gradino del formato: la forza della frase, ma chi sa già la struttura
   // (la forma sale a ogni frase giusta) monta anche le frasi nuove, e in un
   // mondo passato o con tutto aperto si parte da «scegli». Una frase
-  // sbagliata in questa partita torna alla sua forza. Vedi docs/lingue/mondi.md.
+  // sbagliata in questa partita torna alla sua forza. Vedi docs/lingue/frasi.md.
   gradino(chiave, frase) {
     const forza = this.forzaDi(chiave)
     if (this.sbagliate.has(chiave)) return forza
