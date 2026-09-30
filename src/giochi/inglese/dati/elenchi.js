@@ -20,7 +20,12 @@ export const PERSONAGGI = [
 export const CHI_PARLA = {
   Laura: 'Laura', Leo: 'Leo', Tom: 'Tom', Pip: 'Pip',
   mamma: 'La mamma', papa: 'Il papà', nonna: 'La nonna', nonno: 'Il nonno',
+  maestra: 'La maestra', dottore: 'Il dottore', contadino: 'Il contadino', contadina: 'La contadina',
+  pappagallo: 'Il pappagallo', voce: 'Una voce',
 }
+// Le risposte sbagliate di «Chi l'ha detto?» quando nella storia parlano in
+// pochi: la gente di casa, che può aver detto qualunque cosa (docs/lingue/libro.md)
+export const CHI_DI_CASA = ['Laura', 'Leo', 'Tom', 'mamma', 'papa', 'nonna', 'nonno']
 
 const a = (en, it, un, il, itPl, ilPl, altro = {}) => ({ en, it, un, il, itPl, ilPl, ...altro })
 

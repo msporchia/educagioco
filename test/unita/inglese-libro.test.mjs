@@ -6,23 +6,30 @@
    le pagine; quale storia apre il libro e quale «Un'altra storia»; le
    storie lette nel profilo; le forme dei verbi (plays, playing, played,
    went) accettate solo dove una struttura del mondo le ammette; la paga
-   di una domanda; chi parla, a battute. Che ogni capitolo stia in piedi
-   lo controlla unita/inglese-mondi. Il progetto è in docs/lingue/libro.md.
+   di una domanda; chi parla, a battute; le parole della storia (le nuove
+   e i cassetti); le domande «chi», «frase» e «ordine»; le storie a
+   puntate, che tengono le variabili. Che ogni capitolo stia in piedi lo
+   controlla unita/inglese-mondi. Il progetto è in docs/lingue/libro.md.
    ═══════════════════════════════════════════════════════════════════ */
 import { readdirSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { MONDI, mondoDi, tappaDi } from '../../src/giochi/inglese/dati/mondi.js'
+import { CHI_PARLA, CHI_DI_CASA } from '../../src/giochi/inglese/dati/elenchi.js'
 import { pagaDelCapitolo, PAGA_CAPITOLO } from '../../src/giochi/inglese/dati/monete.js'
 import { flessa, flessione } from '../../src/giochi/inglese/motore/flessioni.js'
 import { sconosciute, paroleDelLibro, formeDelLibro, flessioniDi, paroleNote } from '../../src/giochi/inglese/motore/grafo.js'
 import { traduci, chiaveDi } from '../../src/giochi/inglese/motore/lessico.js'
-import { racconta, mondiDi, pagineDi, tappaDellaStoria, blocchiDi } from '../../src/giochi/inglese/motore/libro.js'
-import { guastiDelCapitolo, sorte } from '../../src/giochi/inglese/motore/guasti.js'
+import { racconta, mondiDi, pagineDi, tappaDellaStoria, blocchiDi, domandaIn, eGiusta, paroleDellaStoriaIn,
+         paroleDeiCassetti, tiraConFissi, chiaveDelValore, PAROLE_DELLA_STORIA_MAX }
+  from '../../src/giochi/inglese/motore/libro.js'
+import { guastiDelCapitolo, guastiDelleSerie, sorte } from '../../src/giochi/inglese/motore/guasti.js'
 import { segnaVinta, cosaServe, statoMappa } from '../../src/giochi/inglese/motore/mappa.js'
-import { storieAperte, prossimaStoria, unAltraStoria, segnaLetta, lette, inOrdine, cosaServeAlLibro }
+import { storieAperte, storiaAperta, prossimaStoria, unAltraStoria, segnaLetta, lette, inOrdine, cosaServeAlLibro,
+         tiraLaStoria, segnaPuntata, puntataDopo, serieDi }
   from '../../src/giochi/inglese/motore/storie.js'
+import * as F from '../../src/giochi/inglese/motore/fila.js'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const CARTELLA = resolve(RADICE, 'src/giochi/inglese/dati/capitoli')
@@ -194,8 +201,9 @@ titolo('QUALE STORIA')
   uguale('è quella letta da più tempo', vecchia.id, tutte.filter(x => x.id !== meta.id)[0].id)
 
   // Sblocca tutti e i mondi passati per età aprono tutto
+  // (tranne le puntate dopo la prima: una serie si legge in fila, sempre)
   uguale('sblocca tutti apre le storie', storieAperte(CAPITOLI, nuovo(), { tutto: true }, 'quinta').length,
-    CAPITOLI.filter(x => x.mondo === 'quinta').length)
+    CAPITOLI.filter(x => x.mondo === 'quinta' && !(x.puntata > 1)).length)
   controlla('a otto anni la prima è passata', storieAperte(CAPITOLI, nuovo(), { eta: 8 }, 'prima').length >= 3)
   uguale('ma la seconda no', storieAperte(CAPITOLI, nuovo(), { eta: 8 }, 'seconda').length, 0)
   // dieci anni: tutte lette le sue, «Un'altra storia» cerca prima il mondo vicino
@@ -223,6 +231,178 @@ titolo('LA PAGA')
     const p = pagaDelCapitolo(pagineDi(c).length)
     controlla(`${c.id}: paga intera e fra 4 e 6`, Number.isInteger(p) && p >= 4 && p <= 6, String(p))
   }
+}
+
+/* ═══════════ 6. le parole della storia ═══════════ */
+titolo('LE PAROLE DELLA STORIA')
+{
+  const occhiali = capDi('gli-occhiali-della-maestra')
+  const r = racconta(occhiali, mondiDi(occhiali)[0], sorte(1))
+  controlla('una nuova è parola della storia', r.storia.includes('suddenly'), r.storia.join(' '))
+  controlla('anche una del cassetto (glasses, seconda)', r.storia.includes('glasses'))
+  controlla('e una forma flessa della sua base (opens)', r.storia.includes('opens'))
+  controlla('una parola nota alla tappa no', !r.storia.includes('teacher') && !r.storia.includes('the'))
+  const m = paroleDellaStoriaIn('Suddenly she opens the box.', occhiali)
+  stessaLista('a schermo e la sua base', [...m.entries()].map(([a, b]) => `${a}→${b}`), ['suddenly→suddenly', 'opens→open'])
+  controlla('i cassetti sono del mondo e di quelli prima', paroleDeiCassetti('quarta').has('glasses') &&
+            paroleDeiCassetti('quarta').has('fox') && !paroleDeiCassetti('quarta').has('tent'))
+
+  const base = { id: 'prova', mondo: 'quarta', titolo: 'Prova', variabili: {},
+                 domande: [{ testo: 'Chi è?', risposta: () => 'Leo', anche: ['Tom', 'Pip'] }] }
+  const g = cap => guastiDelCapitolo({ ...base, ...cap }).join(' · ')
+  uguale('una parola del cassetto passa da sola', g({ frasi: [{ en: 'Leo has got glasses.', forma: 'has-got' }] }), '')
+  controlla('una del cassetto di un mondo dopo no', /tent/.test(g({ frasi: [{ en: 'Leo has got a tent.' }] })))
+  uguale('una nuova passa', g({ nuove: ['suddenly'], frasi: [{ en: 'Suddenly Leo runs.', forma: 'terza-s' }] }), '')
+  controlla('una parola di una tappa dopo, senza nuove, no', /school/.test(g({ frasi: [{ en: 'Leo runs to school.' }] })))
+  controlla('una nuova già nota è un guasto', /già nota/.test(g({ nuove: ['teacher'], frasi: [{ en: 'Leo is a teacher.' }] })))
+  controlla('una nuova fuori da words.js è un guasto', /categoria di un mondo/.test(g({ nuove: ['zorp'], frasi: [{ en: 'Leo runs.' }] })))
+  controlla('anche una di struttura, che un cassetto non ha', /categoria di un mondo/.test(g({ nuove: ['why'], frasi: [{ en: 'Why?' }] })))
+  controlla('una nuova che non si usa è un guasto', /non si usa mai/.test(g({ nuove: ['suddenly'], frasi: [{ en: 'Leo runs.' }] })))
+  const nove = 'Leo has got a fox, a bear, a lion, a tiger, a frog, a monkey, a snake, a bee and a crab.'
+  controlla(`più di ${PAROLE_DELLA_STORIA_MAX} parole della storia è un guasto`, /al massimo 8/.test(g({ frasi: [{ en: nove }] })))
+  // «said» è il passato di say: si usa in quinta, dove c'è il passato, e non in quarta
+  const quinta = { ...base, mondo: 'quinta', nuove: ['say'], frasi: [{ en: 'Leo said hello.', forma: 'passato' }] }
+  uguale('«said» in quinta, con say fra le nuove', guastiDelCapitolo(quinta).join(' · '), '')
+  controlla('in quarta il passato non c’è', /said/.test(g({ nuove: ['say'], frasi: [{ en: 'Leo said hello.' }] })))
+  // le nuove stanno in un cassetto: lo SRS le ripassa lì
+  controlla('toccata, una nuova dice cosa vuol dire', /improvviso/.test(traduci('suddenly').it))
+  uguale('e ha la sua chiave SRS', traduci('suddenly').chiave, 'en:suddenly')
+  // ogni storia nuova le usa, e al massimo otto (lo controlla guastiDelCapitolo su ognuna)
+  for (const c of CAPITOLI.filter(x => x.nuove))
+    nota(`${c.id}: nuove ${c.nuove.join(', ')}`)
+}
+
+/* ═══════════ 7. le domande nuove ═══════════ */
+titolo('CHI L’HA DETTO, LA FRASE, L’ORDINE')
+{
+  const occhiali = capDi('gli-occhiali-della-maestra')
+  const v = mondiDi(occhiali).find(x => x.trova === 'Tom')
+  const r = racconta(occhiali, v, sorte(3))
+  const chi = r.domande.find(d => d.tipo === 'chi')
+  uguale('«chi»: la battuta fra le virgolette', chi.citazione, 'Look! Your glasses are on your head!')
+  uguale('la giusta è chi la dice nel mondo tirato', chi.giusta, 'Tom')
+  controlla('le sbagliate sono gli altri che parlano nella storia',
+    chi.opzioni.filter(o => !o.giusta).every(o => ['La maestra', 'Leo', 'La mamma'].includes(o.testo)),
+    chi.opzioni.map(o => o.testo).join(', '))
+  const iGiusta = chi.opzioni.findIndex(o => o.giusta)
+  controlla('si risponde con l’opzione', eGiusta(chi, iGiusta) && !eGiusta(chi, (iGiusta + 1) % chi.opzioni.length))
+  // in una storia dove parlano in due, le altre dalla gente di casa
+  const due = { id: 'due', mondo: 'prima', titolo: 'Due', variabili: {},
+                frasi: [{ id: 'ciao', chi: 'Tom', en: 'Hello!' }, { chi: 'Leo', en: 'Hello, Tom!' }],
+                domande: [{ tipo: 'chi', frase: 'ciao' }] }
+  const d2 = racconta(due, {}, sorte(1)).domande[0]
+  controlla('pochi che parlano: si pesca dalla gente di casa', d2.opzioni.length === 4 &&
+    d2.opzioni.every(o => o.testo === 'Tom' || CHI_DI_CASA.map(k => CHI_PARLA[k]).includes(o.testo)))
+
+  const frase = r.domande.find(d => d.tipo === 'frase')
+  uguale('«frase»: la giusta è una riga del racconto', r.righe[frase.giusta].id, 'perche')
+  controlla('si risponde toccandola', eGiusta(frase, frase.giusta) && !eGiusta(frase, frase.giusta + 1))
+  uguale('e sa in che pagina sta', frase.pagina, r.righe[frase.giusta].pagina)
+
+  const ordine = r.domande.find(d => d.tipo === 'ordine')
+  uguale('«ordine»: i fatti nell’ordine scritto', ordine.soluzione[2], 'Tom ride')
+  for (let s = 1; s <= 30; s++) {
+    const o = racconta(occhiali, v, sorte(s)).domande.find(d => d.tipo === 'ordine')
+    if (o.tessere.every((t, i) => t.id === i)) { controlla('le tessere non nascono mai in ordine', false, String(s)); break }
+  }
+  controlla('giusta in fila, sbagliata girata', eGiusta(ordine, [0, 1, 2, 3]) && !eGiusta(ordine, [1, 0, 2, 3]))
+  controlla('e non a metà', !eGiusta(ordine, [0, 1, 2]))
+  // la fila delle tessere, in sola lettura: si compone e colora le sbagliate come le frasi
+  let fila = F.filaVuota(ordine)
+  for (const id of [1, 0, 2, 3]) fila = F.metti(ordine, fila, id)
+  controlla('la fila è pronta con tutti i fatti', F.pronta(ordine, fila))
+  stessaLista('e colora quelli fuori posto', F.sbagliate(ordine, fila), [1, 0])
+
+  // i guasti dei tipi nuovi
+  const base = { id: 'prova', mondo: 'prima', titolo: 'Prova', variabili: { x: { fra: [true, false] } } }
+  const frasi = [{ id: 'a', chi: 'Tom', en: 'Hello!' }, { id: 'b', se: v => v.x, en: 'It is a dog.' },
+                 { id: 'c', en: 'It is a cat.' }, { chi: 'Leo', en: 'Hello, Tom!' }]
+  const g = domande => guastiDelCapitolo({ ...base, frasi, domande }).join(' · ')
+  uguale('una «frase» e una «chi» giuste passano', g([{ tipo: 'frase', testo: 'Che cos’è?', frase: 'c' },
+                                                    { tipo: 'chi', frase: 'a' }]), '')
+  controlla('rimando a una frase che non c’è', /non c'è \(z\)/.test(g([{ tipo: 'frase', testo: 'Dove?', frase: 'z' }])))
+  controlla('rimando a una frase che non si accende', /non si accende/.test(g([{ tipo: 'frase', testo: 'Dove?', frase: 'b' }])))
+  controlla('«chi» su una frase del narratore', /non è una battuta/.test(g([{ tipo: 'chi', frase: 'c' }])))
+  controlla('«frase» senza domanda', /serve il testo/.test(g([{ tipo: 'frase', frase: 'c' }])))
+  controlla('«ordine» con due fatti', /ne vanno 3 o 4/.test(g([{ tipo: 'ordine', fatti: ['Uno', 'Due'] }])))
+  controlla('«ordine» con due fatti uguali', /due fatti uguali/.test(g([{ tipo: 'ordine', fatti: ['Uno', 'Due', 'Uno'] }])))
+  controlla('due frasi con lo stesso id', /due frasi con l'id/.test(guastiDelCapitolo({ ...base,
+    frasi: [...frasi, { id: 'c', en: 'It is a dog.' }], domande: [{ tipo: 'chi', frase: 'a' }] }).join(' ')))
+  controlla('un tipo sconosciuto', /tipo sconosciuto/.test(g([{ tipo: 'boh', testo: 'Boh?' }])))
+
+  // ogni storia di quarta e quinta ha una domanda di tipo nuovo; le nuove, due tipi diversi
+  const NUOVI = ['chi', 'frase', 'ordine']
+  for (const c of CAPITOLI.filter(x => mondoDi(x.mondo).anno >= 4)) {
+    const tipi = new Set(c.domande.map(d => d.tipo).filter(t => NUOVI.includes(t)))
+    controlla(`${c.id}: una domanda di tipo nuovo`, tipi.size >= 1)
+    if (c.nuove) controlla(`${c.id}: storia nuova, due tipi nuovi`, tipi.size >= 2, [...tipi].join(', '))
+  }
+}
+
+/* ═══════════ 8. le storie a puntate ═══════════ */
+titolo('LE STORIE A PUNTATE')
+{
+  const [p1, p2, p3] = [1, 2, 3].map(n => CAPITOLI.find(x => x.serie === 'la-vecchia-mappa' && x.puntata === n))
+  uguale('le serie stanno in piedi', guastiDelleSerie(CAPITOLI).join(' · '), '')
+  stessaLista('in ordine, una puntata dopo l’altra', inOrdine(CAPITOLI).filter(x => x.serie).map(x => x.puntata), [1, 2, 3])
+  // si aprono in fila, anche a chi ha tutto aperto
+  const c = nuovo()
+  for (const m of ['prima', 'seconda', 'terza', 'quarta', 'quinta']) vinciMondo(c, m)
+  controlla('la prima si apre con la sua tappa', storiaAperta(c, p1, {}, CAPITOLI))
+  controlla('la seconda no, finché la prima non è letta', !storiaAperta(c, p2, {}, CAPITOLI))
+  controlla('nemmeno con «Sblocca tutti»', !storiaAperta(nuovo(), p2, { tutto: true }, CAPITOLI))
+  // la prima tira le variabili e le salva accanto alle lette
+  const v1 = tiraLaStoria(c, p1, sorte(5))
+  const salvate = { ...serieDi(c)['la-vecchia-mappa'].valori }
+  uguale('salvate per chiave', salvate.nonno, v1.nonno.id)
+  uguale('anche quelle da un elenco', salvate.mezzo, v1.mezzo.en)
+  segnaLetta(c, p1.id, 10); segnaPuntata(c, p1)
+  uguale('letta, la serie sa fin dove si è arrivati', serieDi(c)['la-vecchia-mappa'].fatte, 1)
+  uguale('il cartello offre la puntata dopo', (puntataDopo(CAPITOLI, c, {}, p1) || {}).id, p2.id)
+  controlla('e «Un’altra storia» non è un’altra puntata', (unAltraStoria(CAPITOLI, c, {}, 'quinta', p1.id) || {}).serie !== 'la-vecchia-mappa')
+  // la seconda tiene il nonno e il mezzo, e tira il posto del tesoro
+  for (let s = 1; s <= 12; s++) {
+    const v2 = tiraLaStoria(c, p2, sorte(s))
+    if (v2.nonno.id !== v1.nonno.id || v2.mezzo.en !== v1.mezzo.en) {
+      controlla('la puntata 2 ha le stesse variabili', false, `${v2.nonno.id} ${v2.mezzo.en}`); break
+    }
+  }
+  const dove = serieDi(c)['la-vecchia-mappa'].valori.dove
+  controlla('il posto del tesoro si tira alla puntata 2 e si salva', ['church', 'castle', 'farm'].includes(dove))
+  segnaLetta(c, p2.id, 20); segnaPuntata(c, p2)
+  const v3 = tiraLaStoria(c, p3, sorte(9))
+  uguale('la puntata 3 trova il tesoro dove diceva la 2', v3.dove.en, dove)
+  uguale('con lo stesso nonno', v3.nonno.id, v1.nonno.id)
+  // rileggerla da capo è un'altra avventura: la prima ritira tutto
+  const prima = serieDi(c)['la-vecchia-mappa']
+  tiraLaStoria(c, p1, sorte(77))
+  controlla('la prima puntata riletta ricomincia la serie', serieDi(c)['la-vecchia-mappa'] !== prima &&
+            serieDi(c)['la-vecchia-mappa'].fatte === 0 && !('dove' in serieDi(c)['la-vecchia-mappa'].valori))
+  // un profilo storto non rompe niente
+  const storto = { ...nuovo(), serie: 'boh' }
+  controlla('una serie storta nel profilo si rifà', tiraLaStoria(storto, p2, sorte(1)).nonno && serieDi(storto)['la-vecchia-mappa'])
+  // tiraConFissi: i valori già tirati, se ci sono; se no un mondo qualunque
+  uguale('fissi rispettati', chiaveDelValore(tiraConFissi(p2, { nonno: 'nonna' }, sorte(2)).nonno), 'nonna')
+  controlla('fissi impossibili: un mondo qualunque', !!tiraConFissi(p2, { nonno: 'zio' }, sorte(2)))
+
+  // «Nella puntata prima…»: un blocco a sé, in testa alle puntate dopo la prima
+  const r2 = racconta(p2, mondiDi(p2)[0], sorte(1))
+  controlla('la puntata 2 comincia col riassunto', r2.blocchi[0][0].riassunto && r2.blocchi[0].length > 1)
+  const b = blocchiDi([{ en: 'Last time…', chi: null, riassunto: true }, { en: 'On Sunday…', chi: null }])
+  uguale('il riassunto non si attacca alla narrazione', b.length, 2)
+  // i guasti delle serie
+  const pezzo = (n, altro = {}) => ({ id: `s${n}`, serie: 's', puntata: n, mondo: 'prima', titolo: 'S',
+    variabili: { x: { fra: [1, 2] } }, domande: [{ testo: 'Chi è?', risposta: () => 'Leo', anche: ['Tom', 'Pip'] }],
+    frasi: [...(n > 1 ? [{ riassunto: true, en: 'It is a cat.' }] : []), { en: 'Hello, Leo!' }], ...altro })
+  uguale('una serie giusta passa', guastiDelleSerie([pezzo(1), pezzo(2)]).join(' · '), '')
+  controlla('una puntata sola', /una puntata sola/.test(guastiDelleSerie([pezzo(1)]).join(' ')))
+  controlla('puntate che saltano', /1, 2, 3/.test(guastiDelleSerie([pezzo(1), pezzo(3)]).join(' ')))
+  controlla('una variabile che nella puntata dopo non ha lo stesso valore', /non ha «1»/.test(guastiDelleSerie([
+    pezzo(1), pezzo(2, { variabili: { x: { fra: [2, 3] } } })]).join(' ')))
+  controlla('una puntata dopo la prima senza riassunto',
+    /comincia con «Nella puntata prima/.test(guastiDelCapitolo(pezzo(2, { frasi: [{ en: 'Hello, Leo!' }] })).join(' ')))
+  controlla('un riassunto nella prima puntata', /sta solo in testa/.test(guastiDelCapitolo(pezzo(1, {
+    frasi: [{ riassunto: true, en: 'It is a cat.' }, { en: 'Hello, Leo!' }] })).join(' ')))
 }
 
 riassunto('Il libro dell’inglese a mondi')

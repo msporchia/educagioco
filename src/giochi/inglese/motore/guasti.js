@@ -10,7 +10,7 @@ import { MONDI, mondoDi, tappaDi, pronto } from '../dati/mondi.js'
 import { ARGOMENTI, paroleDellArgomento } from '../dati/argomenti.js'
 import { componi, TIPI } from '../../../data/domande.js'
 import { voceDi } from '../../../data/lessico.js'
-import { paroleNote, formeNote, sconosciute, fontiDi, chiaveDellaTappa, paroleDelLibro, formeDelLibro, flessioniDi }
+import { paroleNote, formeNote, sconosciute, fontiDi, chiaveDellaTappa, formeDelLibro }
   from './grafo.js'
 import { eColore, eAggettivo, eNumero, traduci } from './lessico.js'
 import { sgrammaticata, APPOSTA } from './grammatica.js'
@@ -18,8 +18,11 @@ import { tipiDellaParola } from './sessione.js'
 import { trappoleDi } from './trappole.js'
 import { costruisci, composta, giudica, contesto, FORMATI_FRASE } from './formati.js'
 import { normalizza, accetta, espandi } from './testo.js'
-import { mondiDi, racconta, rendi, valoriDi, pagineDi, frasiDelCapitolo, tappaDellaStoria, chiDi } from './libro.js'
+import { mondiDi, racconta, rendi, valoriDi, pagineDi, frasiDelCapitolo, tappaDellaStoria, chiDi,
+         lessicoDelCapitolo, paroleDellaStoriaIn, fuoriDalLessico, chiaveDelValore, domandaIn, TIPI_DOMANDA,
+         PAROLE_DELLA_STORIA_MAX } from './libro.js'
 import { CHI_PARLA } from '../dati/elenchi.js'
+import { VERBI } from '../../../data/verbi.js'
 
 export const PERCHE_MAX = 70
 // le parole di chi parla: in una frase senza `chi` vogliono dire che è una battuta
@@ -187,9 +190,18 @@ export function guastiDelleParole({ giri = 4 } = {}) {
   return [...new Set(g)]
 }
 
+// Una parola nuova di una storia sta in data/words.js (o in verbi.js) con la
+// categoria di un mondo: così finisce nel 📦 cassetto, e lo SRS la ripassa lì.
+const CATEGORIA = new Map(WORDS.map(w => [w[0].toLowerCase(), w[3]]))
+const VERBO = new Set(VERBI.map(v => v[0]))
+const conUnMondo = w => (VERBO.has(w) && MONDI.some(m => m.verbi)) ||
+  (CATEGORIA.has(w) && MONDI.some(m => m.categorie.includes(CATEGORIA.get(w))))
+const CON_OPZIONI = new Set(['scelta', 'vf', 'chi'])
+
 // Un capitolo si controlla da sé: ogni frase si accende, ogni «se» a volte
 // è falso, nessuna pagina resta vuota, ogni domanda ha una sola giusta, e
-// le parole sono quelle note alla tappa da cui si apre (docs/lingue/libro.md).
+// le parole sono quelle note alla tappa da cui si apre più quelle della
+// storia (docs/lingue/libro.md).
 export function guastiDelCapitolo(cap) {
   const g = []
   const dove = `capitolo ${cap.id}`
@@ -204,22 +216,58 @@ export function guastiDelCapitolo(cap) {
     if (!t) return [...g, `${dove}: dopo una tappa che non c'è (${cap.dopo})`]
     if (t.mondo !== cap.mondo) g.push(`${dove}: dopo ${cap.dopo}, che è del mondo ${t.mondo}`)
   }
+  if (cap.nuove !== undefined && !Array.isArray(cap.nuove)) g.push(`${dove}: nuove non è un elenco`)
+  if (cap.serie !== undefined || cap.puntata !== undefined)
+    if (!(typeof cap.serie === 'string' && cap.serie && Number.isInteger(cap.puntata) && cap.puntata >= 1))
+      g.push(`${dove}: una puntata vuole serie (un id) e puntata (1, 2, 3…)`)
   if (g.length) return g
-  const tappa = tappaDellaStoria(cap)
-  const note = paroleDelLibro(cap.mondo, tappa)
+  const { tappa, note, nuove, storia } = lessicoDelCapitolo(cap)
   const forme = formeDelLibro(cap.mondo, tappa)
-  const flessioni = flessioniDi(forme)
   const frasi = frasiDelCapitolo(cap)
   for (const f of frasi)
     if (f.forma && !forme.has(f.forma)) g.push(`${dove}: la forma ${f.forma} non è nota a ${tappa}`)
+
+  // le parole nuove: davvero nuove, e con un cassetto dove ripassarle
+  for (const w of nuove) {
+    if (note.has(w)) g.push(`${dove}: «${w}» fra le nuove è già nota a ${tappa}`)
+    if (!conUnMondo(w)) g.push(`${dove}: «${w}» fra le nuove non è in data/words.js o verbi.js con la categoria di un mondo`)
+  }
+  // le frasi con un nome (per le domande), e «Nella puntata prima…» in testa alle puntate dopo la prima
+  const ids = frasi.filter(f => f.id).map(f => f.id)
+  for (const id of new Set(ids)) if (ids.filter(x => x === id).length > 1) g.push(`${dove}: due frasi con l'id ${id}`)
+  const dopoLaPrima = !!cap.serie && cap.puntata > 1
+  frasi.forEach((f, i) => {
+    if (f.riassunto && (!dopoLaPrima || i > 0)) g.push(`${dove}: «Nella puntata prima…» sta solo in testa a una puntata dopo la prima`)
+    if (f.riassunto && (f.se || f.chi)) g.push(`${dove}: «Nella puntata prima…» c'è sempre, ed è il narratore`)
+  })
+  if (dopoLaPrima && !(frasi[0] && frasi[0].riassunto))
+    g.push(`${dove}: la puntata ${cap.puntata} comincia con «Nella puntata prima…» (una frase con riassunto: true)`)
+  cap.domande.forEach((d, i) => {
+    const tipo = d.tipo || 'scelta'
+    const qui = `${dove}: la domanda ${i + 1}`
+    if (!TIPI_DOMANDA[tipo]) g.push(`${qui} ha un tipo sconosciuto (${tipo})`)
+    if ((tipo === 'chi' || tipo === 'frase') && !d.frase) g.push(`${qui} non dice a quale frase rimanda`)
+    if ((tipo === 'chi' || tipo === 'frase') && typeof d.frase === 'string' && !ids.includes(d.frase))
+      g.push(`${qui} rimanda a una frase che non c'è (${d.frase})`)
+    if (tipo === 'frase' && !d.testo) g.push(`${qui} non chiede niente: a «frase» serve il testo`)
+    if (tipo === 'ordine' && !Array.isArray(d.fatti)) g.push(`${qui}: a «ordine» servono i fatti`)
+  })
+  if (g.length) return [...new Set(g)]
   let mondi
   try {
     for (const nome of Object.keys(cap.variabili)) valoriDi(cap, nome)
     mondi = mondiDi(cap)
   } catch (e) { return [...g, `${dove}: ${e.message}`] }
   if (!mondi.length) return [...g, `${dove}: nessuna combinazione rispetta i vincoli`]
+  // le variabili di una serie si salvano per chiave: due valori con la stessa si confonderebbero
+  if (cap.serie)
+    for (const nome of Object.keys(cap.variabili)) {
+      const chiavi = valoriDi(cap, nome).map(chiaveDelValore)
+      if (new Set(chiavi).size !== chiavi.length) g.push(`${dove}: la variabile ${nome} ha due valori con la stessa chiave`)
+    }
 
   const accese = new Map(), spente = new Map(), poste = new Map()
+  const usate = new Set()                   // le parole della storia, in tutte le varianti
   for (const v of mondi) {
     pagine.forEach((p, i) => { if (!p.some(f => !f.se || f.se(v))) g.push(`${dove}: la pagina ${i + 1} a volte resta vuota`) })
     for (const [i, f] of frasi.entries()) {
@@ -228,8 +276,9 @@ export function guastiDelCapitolo(cap) {
       if (!on) continue
       let testo
       try { testo = rendi(f.en, v) } catch (e) { g.push(`${dove}: ${e.message}`); continue }
-      const ignote = sconosciute(testo, note, flessioni)
+      const ignote = fuoriDalLessico(testo, cap)
       if (ignote.length) g.push(`${dove}: «${testo}» usa parole non note a ${tappa}: ${ignote.join(', ')}`)
+      for (const b of paroleDellaStoriaIn(testo, cap).values()) usate.add(b)
       const storta = sgrammaticata(testo)
       if (storta) g.push(`${dove}: «${testo}» è sgrammaticata: ${storta}`)
       // ogni parola si tocca: deve avere una traduzione
@@ -243,18 +292,37 @@ export function guastiDelCapitolo(cap) {
         g.push(`${dove}: «${testo}» è detta da qualcuno: manca chi`)
     }
     const r = racconta(cap, v, sorte(7))
-    const attive = cap.domande.filter(d => !d.se || d.se(v))
-    attive.forEach(d => poste.set(cap.domande.indexOf(d), true))
-    r.domande.forEach((d, i) => {
-      const giuste = d.opzioni.filter(o => o.giusta)
-      if (giuste.length !== 1) g.push(`${dove}: «${d.testo}» ha ${giuste.length} risposte giuste`)
-      if (d.opzioni.length < 2) g.push(`${dove}: «${d.testo}» ha una risposta sola`)
-      // una scelta fra due si indovina una volta su due: vero/falso sì, una domanda a scelta no
-      else if ((attive[i].tipo || 'scelta') === 'scelta' && d.opzioni.length < 3)
-        g.push(`${dove}: «${d.testo}» ha solo due risposte (servono \`anche\`)`)
-      if (new Set(d.opzioni.map(o => o.testo)).size !== d.opzioni.length)
-        g.push(`${dove}: «${d.testo}» ha due opzioni uguali`)
-    })
+    for (const [i, d] of cap.domande.entries()) {
+      if (d.se && !d.se(v)) continue
+      poste.set(i, true)
+      const tipo = d.tipo || 'scelta'
+      const qui = `${dove}: la domanda ${i + 1} (${tipo})`
+      const x = domandaIn(cap, d, v, sorte(7), r.righe)
+      if (!x) {
+        g.push(tipo === 'ordine' ? `${qui} ha meno di due fatti`
+          : `${qui} rimanda a una frase che non si accende${tipo === 'chi' ? ' o che non è una battuta' : ''}`)
+        continue
+      }
+      if (CON_OPZIONI.has(tipo)) {
+        const nome = x.testo || x.citazione
+        const giuste = x.opzioni.filter(o => o.giusta)
+        if (giuste.length !== 1) g.push(`${dove}: «${nome}» ha ${giuste.length} risposte giuste`)
+        if (x.opzioni.length < 2) g.push(`${dove}: «${nome}» ha una risposta sola`)
+        // una scelta fra due si indovina una volta su due: vero/falso sì, una domanda a scelta no
+        else if (tipo !== 'vf' && x.opzioni.length < 3) g.push(`${dove}: «${nome}» ha solo due risposte (servono \`anche\`)`)
+        if (new Set(x.opzioni.map(o => o.testo)).size !== x.opzioni.length)
+          g.push(`${dove}: «${nome}» ha due opzioni uguali`)
+      }
+      // la stessa battuta detta da due persone, o la stessa frase due volte: non c'è una giusta sola
+      if (tipo === 'chi' && r.righe.some(y => y.en === x.citazione && y.chi !== r.righe[x.riga].chi))
+        g.push(`${qui}: «${x.citazione}» la dicono in due`)
+      if (tipo === 'frase' && r.righe.filter(y => y.en === x.soluzione).length > 1)
+        g.push(`${qui}: «${x.soluzione}» è nel testo due volte`)
+      if (tipo === 'ordine') {
+        if (x.soluzione.length < 3 || x.soluzione.length > 4) g.push(`${qui} ha ${x.soluzione.length} fatti (ne vanno 3 o 4)`)
+        if (new Set(x.soluzione).size !== x.soluzione.length) g.push(`${qui} ha due fatti uguali`)
+      }
+    }
   }
   frasi.forEach((f, i) => {
     if (!accese.has(i)) g.push(`${dove}: la frase ${i + 1} non si accende mai`)
@@ -262,6 +330,40 @@ export function guastiDelCapitolo(cap) {
   })
   cap.domande.forEach((d, i) => { if (!poste.has(i)) g.push(`${dove}: la domanda ${i + 1} non si fa mai`) })
   for (const v of Object.values(cap.variabili))
-    if (v.da && v.fra) for (const en of v.fra) if (!note.has(en.toLowerCase())) g.push(`${dove}: «${en}» non è nota a ${tappa}`)
+    if (v.da && v.fra) for (const en of v.fra)
+      if (!note.has(en.toLowerCase()) && !storia.has(en.toLowerCase())) g.push(`${dove}: «${en}» non è nota a ${tappa}`)
+  // le parole della storia: al massimo otto, e ogni nuova si usa
+  if (usate.size > PAROLE_DELLA_STORIA_MAX)
+    g.push(`${dove}: ${usate.size} parole della storia (al massimo ${PAROLE_DELLA_STORIA_MAX}): ${[...usate].join(', ')}`)
+  for (const w of nuove) if (!note.has(w) && !usate.has(w)) g.push(`${dove}: «${w}» fra le nuove non si usa mai`)
   return [...new Set(g)]
+}
+
+// Le storie a puntate, tutte insieme: le puntate vanno 1, 2, 3… nello stesso
+// mondo e in ordine di tappa, e ogni mondo tirato in una puntata si ritrova
+// in quelle dopo, sulle variabili che hanno in comune (docs/lingue/libro.md).
+export function guastiDelleSerie(capitoli) {
+  const g = []
+  const serie = new Map()
+  for (const c of capitoli) if (c.serie) serie.set(c.serie, [...(serie.get(c.serie) || []), c])
+  for (const [id, tutte] of serie) {
+    const dove = `serie ${id}`
+    const p = tutte.slice().sort((a, b) => a.puntata - b.puntata)
+    if (p.length < 2) g.push(`${dove}: una puntata sola`)
+    if (p.some((c, i) => c.puntata !== i + 1)) g.push(`${dove}: le puntate vanno 1, 2, 3… (${p.map(c => c.puntata).join(', ')})`)
+    if (new Set(p.map(c => c.mondo)).size > 1) g.push(`${dove}: puntate in mondi diversi`)
+    const m = mondoDi(p[0].mondo)
+    const posto = c => (m ? m.tappe.findIndex(t => t.id === tappaDellaStoria(c)) : 0)
+    for (let i = 1; i < p.length; i++)
+      if (posto(p[i]) < posto(p[i - 1])) g.push(`${dove}: la puntata ${p[i].puntata} si apre prima della ${p[i - 1].puntata}`)
+    for (let j = 1; j < p.length; j++) for (let i = 0; i < j; i++) {
+      const comuni = Object.keys(p[i].variabili).filter(n => n in p[j].variabili)
+      if (!comuni.length) continue
+      const proietta = v => comuni.map(n => chiaveDelValore(v[n])).join(' | ')
+      const dopo = new Set(mondiDi(p[j]).map(proietta))
+      const manca = mondiDi(p[i]).map(proietta).find(k => !dopo.has(k))
+      if (manca) g.push(`${dove}: la puntata ${p[j].puntata} non ha «${manca}» (${comuni.join(', ')}) della puntata ${p[i].puntata}`)
+    }
+  }
+  return g
 }
