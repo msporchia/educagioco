@@ -112,26 +112,29 @@ export function costruisci(frase, formato, ctx, { forza = 0 } = {}) {
   const tessere = T.map((testo, i) => ({ id: i, testo }))
   const out = { ...base, domanda: { testo: aSchermo(frase.it), lingua: 'it' }, soluzione: T.slice() }
 
-  if (formato === 'completa') {
-    const quanti = T.length <= 3 ? 1 : T.length <= 5 ? 2 : 3
-    const strutt = T.map((w, i) => i).filter(i => eStruttura(T[i]))
-    const altri = T.map((w, i) => i).filter(i => !eStruttura(T[i]))
-    const buchi = [...mescola(strutt, rnd), ...mescola(altri, rnd)].slice(0, quanti).sort((a, b) => a - b)
-    return { ...out,
-             righe: T.map((testo, i) => (buchi.includes(i) ? { buco: buchi.indexOf(i) } : { testo })),
-             tessere: mescolaDavvero(buchi.map(i => tessere[i]), rnd) }
-  }
-  if (formato === 'monta')
-    return { ...out, tessere: mescolaDavvero(tessere, rnd) }
-
-  // scegli e monta: le tessere in più sono le parole delle trappole che
-  // nella frase giusta non ci sono
+  // le parole delle trappole che nella frase giusta non ci sono
   const presenti = new Set(T.map(w => w.toLowerCase()))
   const extra = []
   for (const t of scegliTrappole(trappole, trappole.length, { forzaForma: ctx.forzaForma, rnd }))
     for (const w of parole(inTappa(t.en, tappa)))
       if (!presenti.has(w.toLowerCase()) && !extra.some(e => e.testo.toLowerCase() === w.toLowerCase()))
         extra.push({ testo: w, trappola: t })
+
+  if (formato === 'completa') {
+    // due buchi da tre parole in su, e una tessera di troppo: un buco con una tessera sola non è una scelta
+    const quanti = T.length <= 2 ? 1 : T.length <= 5 ? 2 : 3
+    const strutt = T.map((w, i) => i).filter(i => eStruttura(T[i]))
+    const altri = T.map((w, i) => i).filter(i => !eStruttura(T[i]))
+    const buchi = [...mescola(strutt, rnd), ...mescola(altri, rnd)].slice(0, quanti).sort((a, b) => a - b)
+    const piu = extra.slice(0, 1).map((e, i) => ({ id: T.length + i, testo: e.testo }))
+    return { ...out,
+             righe: T.map((testo, i) => (buchi.includes(i) ? { buco: buchi.indexOf(i) } : { testo })),
+             tessere: mescolaDavvero([...buchi.map(i => tessere[i]), ...piu], rnd), inPiu: piu.length }
+  }
+  if (formato === 'monta')
+    return { ...out, tessere: mescolaDavvero(tessere, rnd) }
+
+  // scegli e monta: le tessere in più vengono dalle trappole
   const k = tessereInPiu(forza, forzaForma)
   const piu = extra.slice(0, k).map((e, i) => ({ id: T.length + i, testo: e.testo }))
   return { ...out, tessere: mescolaDavvero([...tessere, ...piu], rnd), inPiu: piu.length }

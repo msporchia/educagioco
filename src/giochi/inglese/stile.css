@@ -108,8 +108,7 @@
 
 /* ═══════════ componi: la fila e il banco ═══════════ */
 .ing-fila { min-height: 64px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 7px;
-            padding: 12px; border-radius: 16px; border: 2px dashed #b99a6a;
-            background: repeating-linear-gradient(180deg, #fffaf0 0 30px, #efe2c4 30px 31px) }
+            padding: 12px; border-radius: 16px; border: 2px dashed #b99a6a; background: #fffaf0 }
 .ing-invito { color: #a08a6c; font-weight: 700; font-size: 14px; margin: 0 auto }
 .ing-fisso { font-weight: 800; font-size: 19px; color: var(--ing-inchiostro); padding: 0 2px }
 .ing-punto { margin-left: -4px }

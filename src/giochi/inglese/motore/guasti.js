@@ -112,8 +112,8 @@ export function guastiDellaFrase(f, { semi = 6 } = {}) {
         if (!accetta(composta(d, giuste), f)) g.push(`${qui}: la fila giusta non è accettata`)
         const es = giudica(f, d, giuste, { ctx })
         if (!es.giusta) g.push(`${qui}: la fila giusta non è giudicata giusta`)
-        if (formato === 'completa' && d.tessere.length !== d.righe.filter(r => r.buco !== undefined).length)
-          g.push(`${qui}: le tessere non sono quante i buchi`)
+        if (formato === 'completa' && d.tessere.length !== d.righe.filter(r => r.buco !== undefined).length + d.inPiu)
+          g.push(`${qui}: le tessere non sono quante i buchi più quella di troppo`)
         if (formato === 'scegliMonta') {
           if (!d.inPiu) g.push(`${qui}: nessuna tessera trappola`)
           const dentro = new Set(d.soluzione.map(w => w.toLowerCase()))

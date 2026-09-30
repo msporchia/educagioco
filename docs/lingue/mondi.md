@@ -130,8 +130,9 @@ sbagliata in questa partita torna alla sua forza.
    della grammatica («è un cane» / «è un cane?»).
 3. **Scegli** — la frase italiana e quattro inglesi: la giusta e tre trappole.
 4. **Componi**, a gradini:
-   - **completa**: la frase c'è già con dei buchi, le tessere servono solo per
-     i buchi;
+   - **completa**: la frase c'è già con dei buchi (due da tre parole in su,
+     tre da sei), e le tessere sono quelle dei buchi più una di troppo presa
+     dalle trappole: un buco con una tessera sola non era una scelta;
    - **monta**: solo le tessere giuste, da mettere in ordine;
    - **scegli e monta**: il banco con le parole trappola (una, poi due, poi tre).
 

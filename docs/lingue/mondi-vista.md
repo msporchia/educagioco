@@ -159,6 +159,8 @@ Al posto della freccia c'è **una caravella** a inchiostro e acquerello
   domanda, se no il punto. «Monta» si consegna con tutte le tessere in fila, «completa» coi
   buchi pieni; **«scegli e monta» con una sola**, perché dire quante ne
   vanno regalerebbe la lunghezza della frase.
+- **La fila è un riquadro tratteggiato a fondo pieno.** Provate le righe
+  da quaderno sul fondo: confondevano, sembravano spazi da riempire.
 - **Tenere premuta una tessera**, o una risposta inglese, dice cosa vuol
   dire la parola sotto il dito (`tenere.js`, 450 ms). Un tocco lì ha già
   un mestiere — mettere in fila, rispondere — e la traduzione non può
