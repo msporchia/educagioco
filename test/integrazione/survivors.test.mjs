@@ -53,12 +53,22 @@ async function gioca(ms) {
    domanda (sbagliare non toglie niente), così il campo torna visibile.
    Il tempo di gioco non passa sotto le carte, quindi si aspetta sul
    cronometro e non sull'orologio di parete. */
+/* E si guarda il salvadanaio nella barra: la carta vinta paga 🪙3 subito,
+   quella persa niente (docs/survivors/regole.md). Un traguardo può
+   aggiungerne altre sulla giusta, mai sulla sbagliata. */
+const inBarra = async () => Number(await page.locator('.barra-app .gettone b').first().innerText())
+const pagate = { giuste: [], sbagliate: [] }
 async function sbrigaLeCarte() {
   if (!(await page.locator('.sv-carte').count())) return
   await page.locator('.sv-carta').first().click()
   await page.waitForSelector('.qz-tasto', { timeout: 5000 })
   await attendi(page, 450)                       // la finestra cieca del montaggio
-  await page.locator('.qz-tasto').first().click()
+  const prima = await inBarra()
+  const primo = page.locator('.qz-tasto').first()
+  await primo.click()
+  await page.waitForSelector('.qz-tasto.giusta', { timeout: 5000 })
+  const giusta = await primo.evaluate(el => el.classList.contains('giusta'))
+  pagate[giusta ? 'giuste' : 'sbagliate'].push((await inBarra()) - prima)
   await page.waitForSelector('.qz-tasto', { state: 'hidden', timeout: 15000 })
 }
 /* Si va avanti finché il cronometro non dice `restano`, muovendosi con
@@ -195,4 +205,7 @@ await scatto(page, 'survivors-muro')
 
 uguale('nessun errore in console', errori.join(' · '), '')
 await browser.close()
+nota('carte giuste:', pagate.giuste.join(' ') || '—', '· sbagliate:', pagate.sbagliate.join(' ') || '—')
+controlla('una carta vinta paga subito tre monete', pagate.giuste.every(d => d >= 3), pagate.giuste.join())
+controlla('una carta persa non paga niente', pagate.sbagliate.every(d => d === 0), pagate.sbagliate.join())
 riassunto('survivors — la partita lasciata a metà, col dito')

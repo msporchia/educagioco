@@ -8,7 +8,8 @@ import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { segna, segnaBest } from '../../store/profile.js'
-import { incassa } from '../../store/varieta.js'   // paga e dice se il salvadanaio è stanco
+import { borsa } from '../../store/varieta.js'   // paga e dice se il salvadanaio è stanco
+import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato,
          sosta, salvaSosta, buttaSosta } from '../campagne.js'
 import { fraseDiFine, recordInParole } from '../primati.js'
@@ -35,6 +36,7 @@ defineOptions({ name: 'Survivors' })
 const emit = defineEmits(['vai'])
 
 const CHIAVE = 'survivors'
+let borsellino = borsa(CHIAVE)   // le monete di questa partita, una risposta giusta alla volta
 const RESPIRO = 500          // quanto si guarda il campo prima del cartello
 
 // dove siamo
@@ -132,6 +134,7 @@ function riprendiPartita() {
   pagata = false
   contata = false
   mostriSegnati = 0
+  borsellino = borsa(CHIAVE)
   ripresa.value = null
   if (pittore) prendiTela(pittore.tela)
 }
@@ -242,6 +245,7 @@ function avvia(indice) {
   pagata = false
   contata = false
   mostriSegnati = 0
+  borsellino = borsa(CHIAVE)
   if (pittore) prendiTela(pittore.tela)
 }
 
@@ -273,10 +277,9 @@ function scegliCarta(chiave) {
   suono.ok()
 }
 
-// il potenziamento si vince rispondendo: sbagliare non dà niente (niente
-// monetina di consolazione — sarebbe il modo più veloce di farne, vedi
-// docs/apprendimento/calibrazione.md). Le monete si prendono solo
-// arrivando in fondo a una tappa.
+// il potenziamento si vince rispondendo, e la risposta giusta paga subito;
+// sbagliare non dà niente (niente monetina di consolazione — sarebbe il modo
+// più veloce di farne, vedi docs/apprendimento/calibrazione.md)
 function risposto({ giusto }) {
   const p = partita.value
   ultimoModulo = domanda.value?.modulo || null
@@ -286,6 +289,7 @@ function risposto({ giusto }) {
   // dietro un velo comparso dal niente
   togli()
   if (giusto) {
+    borsellino.paga(PAGA.domanda)
     const presa = p.prendi(voluta.chiave)
     brinda(`${presa.icona} ${presa.nome} — ${presa.chiaro}`, true)
     segna('survivorsCarte')
@@ -307,8 +311,9 @@ function brinda(testo, giusto) {
 }
 
 // finire: una partita si chiude fino a due volte (al traguardo, e
-// quando ti prendono se hai scelto di restare); i premi si pagano una
-// volta sola, i mostri si contano a delta
+// quando ti prendono se hai scelto di restare); la tappa si segna una
+// volta sola, i mostri si contano a delta. Le monete sono già arrivate
+// a ogni risposta giusta (`borsellino`): qui si dice solo quante
 let pagata = false
 let contata = false
 let mostriSegnati = 0
@@ -322,22 +327,16 @@ function chiudiPartita() {
   const secondi = Math.floor(p.tempo)
   const extra = Math.floor(p.extra)
   let primato = null
-  let monete = 0
 
   if (libera.value) {
-    monete = Math.min(20, Math.floor(secondi / 15))
     const esito = segnaPrimato(CHIAVE, secondi, Date.now(),
                                { uccisi: p.uccisi, livello: p.livello })
     primato = { ...esito, frase: fraseDiFine(esito, SENZA_FINE.misura) }
   } else if (p.vinta && !pagata) {
-    monete = p.monete
     completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle: p.stelle })
     segna('survivorsTappe')
     pagata = true
   }
-  if (extra) monete += Math.min(12, Math.floor(extra / 20))   // il tempo regalato non è gratis
-
-  const pagato = monete ? incassa(monete) : null
   if (!contata) { segna('survivorsPartite'); contata = true }
   if (p.uccisi > mostriSegnati) {
     segna('survivorsMostri', p.uccisi - mostriSegnati)
@@ -348,7 +347,7 @@ function chiudiPartita() {
 
   finale.value = {
     vinta: p.vinta, titolo: regoleOra.value.nome, stelle: p.stelle,
-    monete: pagato ? pagato.dato : 0, notaMonete: pagato?.frase || '', tempo: p.tempo, uccisi: p.uccisi, livello: p.livello,
+    monete: borsellino.dato, notaMonete: borsellino.nota(), tempo: p.tempo, uccisi: p.uccisi, livello: p.livello,
     primato, libera: libera.value, extra,
     puoiRestare: p.alTraguardo,
     ultima: p.vinta && !libera.value && tappaIdx.value === QUANTE_TAPPE - 1,
