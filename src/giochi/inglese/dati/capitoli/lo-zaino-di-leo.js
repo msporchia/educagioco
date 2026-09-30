@@ -11,12 +11,12 @@ export default {
     quanti: { da: 'numeri', fra: ['two', 'three', 'four', 'five'] },
   },
   frasi: [
-    { en: 'Hello! I am Leo. This is my backpack.', forma: 'saluti' },
-    { en: 'It is {colore}.', forma: 'it-is' },
-    { en: 'What is this? Is it a pen?', forma: 'is-it' },
-    { se: v => v.cosa.en === 'pen', en: 'Yes, it is a pen.', forma: 'it-is' },
-    { se: v => v.cosa.en !== 'pen', en: 'No, it is not a pen. It is {a:cosa}.', forma: 'it-is' },
-    { en: 'They are {quanti} {cosa.pl}!', forma: 'plurale' },
+    { chi: 'Leo', en: 'Hello! I am Leo. This is my backpack.', forma: 'saluti' },
+    { chi: 'Leo', en: 'It is {colore}.', forma: 'it-is' },
+    { chi: 'Laura', en: 'What is this, Leo? Is it a pen?', forma: 'is-it' },
+    { se: v => v.cosa.en === 'pen', chi: 'Leo', en: 'Yes, it is a pen.', forma: 'it-is' },
+    { se: v => v.cosa.en !== 'pen', chi: 'Leo', en: 'No, it is not a pen. It is {a:cosa}.', forma: 'it-is' },
+    { chi: 'Leo', en: 'They are {quanti} {cosa.pl}!', forma: 'plurale' },
   ],
   domande: [
     { testo: 'Di che colore è lo zaino di Leo?', risposta: v => v.colore.it },

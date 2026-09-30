@@ -16,6 +16,7 @@ const LAVORI = [
 // gli indizi del mestiere di `chi`, uno per mestiere: si accende quello giusto
 const indizi = (chi, lavoro) => Object.entries(INDIZI).map(([id, righe]) => ({
   se: v => v[lavoro].id === id,
+  chi: 'Leo',
   en: righe.join(' ').replace(/\{(P|p|pos)\}/g, (_, k) => `{${chi}.${k}}`),
   forma: 'terza-s',
 }))
@@ -40,23 +41,26 @@ export default {
     [
       { en: 'Tom is in the kitchen with Laura and Leo.', forma: 'presente' },
       { en: 'There is a big picture on the wall.', forma: 'there-is' },
-      { en: 'Who is this, Leo?', forma: 'presente' },
-      { en: 'This is my mother.', forma: 'this-is-my' },
-      { en: 'What does she do?', forma: 'terza-s' },
+      { chi: 'Tom', en: 'Who is this, Leo?', forma: 'presente' },
+      { chi: 'Leo', en: 'This is my mother.', forma: 'this-is-my' },
+      { chi: 'Tom', en: 'What does she do?', forma: 'terza-s' },
       ...indizi('mamma', 'lMamma'),
     ],
     [
-      { en: 'And who is this? This is my father.', forma: 'this-is-my' },
-      { en: 'What does he do?', forma: 'terza-s' },
+      { chi: 'Tom', en: 'And who is this?', forma: 'presente' },
+      { chi: 'Leo', en: 'This is my father.', forma: 'this-is-my' },
+      { chi: 'Tom', en: 'What does he do?', forma: 'terza-s' },
       ...indizi('papa', 'lPapa'),
     ],
     [
-      { en: 'And this is my {nonno}. What does {nonno.p} do?', forma: 'terza-s' },
+      { chi: 'Leo', en: 'And this is my {nonno}.', forma: 'this-is-my' },
+      { chi: 'Tom', en: 'What does {nonno.p} do?', forma: 'terza-s' },
       ...indizi('nonno', 'lNonno'),
     ],
     [
-      { en: 'And this is Pip! What does Pip do?', forma: 'terza-s' },
-      { en: 'He eats, he plays and he sleeps. He is a dog!', forma: 'terza-s' },
+      { chi: 'Leo', en: 'And this is Pip!', forma: 'this-is' },
+      { chi: 'Tom', en: 'What does Pip do?', forma: 'terza-s' },
+      { chi: 'Laura', en: 'He eats, he plays and he sleeps. He is a dog!', forma: 'terza-s' },
       { en: 'Tom looks at the picture and he likes it.', forma: 'terza-s' },
     ],
   ],

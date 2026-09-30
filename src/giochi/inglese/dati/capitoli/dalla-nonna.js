@@ -19,19 +19,19 @@ export default {
   vincoli: [v => v.vestito !== v.caldo],
   pagine: [
     [
-      { en: 'Hello! I am Laura, and I am eight.', forma: 'this-is-my' },
-      { en: 'This is my brother, Leo. He is {anni}.', forma: 'this-is-my' },
-      { en: 'This is my grandmother. She is happy!', forma: 'this-is-my' },
+      { chi: 'Laura', en: 'Hello! I am Laura, and I am eight.', forma: 'this-is-my' },
+      { chi: 'Laura', en: 'This is my brother, Leo. He is {anni}.', forma: 'this-is-my' },
+      { chi: 'Laura', en: 'This is my grandmother. She is happy!', forma: 'this-is-my' },
     ],
     [
-      { en: 'It is cold. I have got {a:colore} {vestito}.', forma: 'have-got' },
-      { en: 'Leo, have you got {a:caldo}?', forma: 'have-got' },
-      { se: v => v.ce, en: 'Yes, I have got {a:caldo}.', forma: 'have-got' },
-      { se: v => !v.ce, en: 'No, I have not got {a:caldo}. I am cold!', forma: 'have-got' },
+      { chi: 'Laura', en: 'It is cold. I have got {a:colore} {vestito}.', forma: 'have-got' },
+      { chi: 'Laura', en: 'Leo, have you got {a:caldo}?', forma: 'have-got' },
+      { se: v => v.ce, chi: 'Leo', en: 'Yes, I have got {a:caldo}.', forma: 'have-got' },
+      { se: v => !v.ce, chi: 'Leo', en: 'No, I have not got {a:caldo}. I am cold!', forma: 'have-got' },
     ],
     [
-      { en: 'Are you hungry? I have got {quanti} {dolce.pl}!', forma: 'have-got' },
-      { en: 'Yes! Thank you, grandmother!', forma: 'saluti' },
+      { chi: 'nonna', en: 'Are you hungry? I have got {quanti} {dolce.pl}!', forma: 'have-got' },
+      { chi: 'Laura', en: 'Yes! Thank you, grandmother!', forma: 'saluti' },
     ],
   ],
   domande: [

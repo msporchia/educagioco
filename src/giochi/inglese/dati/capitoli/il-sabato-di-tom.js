@@ -40,7 +40,8 @@ export default {
       { en: 'In the evening Tom is tired.', forma: 'presente' },
       { en: 'He washes his hands and his feet.', forma: 'terza-s' },
       { se: v => v.legge, en: 'After dinner he reads a book in bed.', forma: 'terza-s' },
-      { en: 'At nine o’clock he goes to bed. Good night, Tom!', forma: 'ora' },
+      { en: 'At nine o’clock he goes to bed.', forma: 'ora' },
+      { chi: v => (v.chi.en === 'mother' ? 'mamma' : 'papa'), en: 'Good night, Tom!', forma: 'saluti' },
     ],
   ],
   domande: [

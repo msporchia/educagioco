@@ -17,15 +17,15 @@ export default {
   vincoli: [v => v.no !== v.piatto],
   pagine: [
     [
-      { en: 'Hello! I am Tom, and this is Leo.', forma: 'this-is' },
-      { en: 'Leo, do you like {frutto.pl}?', forma: 'i-like' },
-      { se: v => v.piace, en: 'Yes, I do. I like {frutto.pl}!', forma: 'i-like' },
-      { se: v => !v.piace, en: 'No, I do not like {frutto.pl}. I like {piatto}.', forma: 'i-like' },
+      { chi: 'Tom', en: 'Hello! I am Tom, and this is Leo.', forma: 'this-is' },
+      { chi: 'Tom', en: 'Leo, do you like {frutto.pl}?', forma: 'i-like' },
+      { se: v => v.piace, chi: 'Leo', en: 'Yes, I do. I like {frutto.pl}!', forma: 'i-like' },
+      { se: v => !v.piace, chi: 'Leo', en: 'No, I do not like {frutto.pl}. I like {piatto}.', forma: 'i-like' },
     ],
     [
-      { en: 'And you, Tom? What do you like?', forma: 'i-like' },
-      { en: 'I like {dolce}, and I like {bevanda}.', forma: 'i-like' },
-      { en: 'I do not like {no}!', forma: 'i-like' },
+      { chi: 'Leo', en: 'And you, Tom? What do you like?', forma: 'i-like' },
+      { chi: 'Tom', en: 'I like {dolce}, and I like {bevanda}.', forma: 'i-like' },
+      { chi: 'Tom', en: 'I do not like {no}!', forma: 'i-like' },
     ],
   ],
   domande: [

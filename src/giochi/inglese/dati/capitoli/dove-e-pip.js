@@ -19,17 +19,20 @@ export default {
   pagine: [
     [
       { en: 'Today is {giorno}. It is {tempo} in the house.', forma: 'oggi' },
-      { en: 'Laura is in the garden. Where is Pip?', forma: 'dove' },
+      { en: 'Laura is in the garden.', forma: 'dove' },
+      { chi: 'Laura', en: 'Where is Pip?', forma: 'dove' },
       { se: v => v.gatto, en: 'There is a cat in the garden, and Pip is not there!', forma: 'there-is' },
     ],
     [
-      { en: 'Is Pip in the {stanza}? Yes, he is!', forma: 'dove' },
+      { chi: 'Laura', en: 'Is Pip in the {stanza}?', forma: 'dove' },
+      { en: 'Yes! Pip is in the {stanza}.', forma: 'dove' },
       { se: v => v.sotto, en: 'He is under the {mobile}.', forma: 'dove' },
       { se: v => !v.sotto, en: 'He is on the {mobile}.', forma: 'dove' },
     ],
     [
       { en: 'Pip can run and he can jump. He cannot fly!', forma: 'can' },
-      { en: 'Laura is happy. Good dog, Pip!', forma: 'saluti' },
+      { en: 'Laura is happy.', forma: 'this-is-my' },
+      { chi: 'Laura', en: 'Good dog, Pip!', forma: 'saluti' },
     ],
   ],
   domande: [

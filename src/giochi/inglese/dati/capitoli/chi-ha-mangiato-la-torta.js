@@ -36,7 +36,7 @@ export default {
       { en: 'At four o’clock she came home.', forma: 'passato' },
       { en: 'She looked at the kitchen table, and she was very sad: the cake was not there!',
         forma: 'passato-ed' },
-      { en: 'Where was the cake? Who took it?', forma: 'passato' },
+      { chi: 'mamma', en: 'Where is my cake? Who took it?', forma: 'passato' },
     ],
     [
       { se: v => v.chi === 'Pip', en: 'Then she found Pip under the sofa. He had chocolate on his nose!',

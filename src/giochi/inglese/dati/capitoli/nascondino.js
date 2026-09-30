@@ -24,19 +24,19 @@ export default {
   pagine: [
     [
       { en: 'Laura, Leo and Pip are in the house.', forma: 'dove' },
-      { en: 'Laura is in the garden: one, two, three, four, five, six, seven, eight, nine, ten!', forma: 'dove' },
-      { en: 'Where is Leo?', forma: 'dove' },
+      { en: 'Laura is in the garden.', forma: 'dove' },
+      { chi: 'Laura', en: 'One, two, three, four, five, six, seven, eight, nine, ten! Where is Leo?', forma: 'dove' },
     ],
     [
-      { en: 'Is Leo in the {primo.stanza}? Is he {primo.en}?', forma: 'dove' },
-      { en: 'No, he is not.', forma: 'dove' },
+      { chi: 'Laura', en: 'Is Leo in the {primo.stanza}? Is he {primo.en}?', forma: 'dove' },
+      { en: 'No! Leo is not in the {primo.stanza}.', forma: 'dove' },
       { se: v => v.pip, en: 'Where is Pip? Pip is near the {posto.stanza} door.', forma: 'dove' },
     ],
     [
-      { en: 'Is Leo in the {posto.stanza}?', forma: 'dove' },
-      { en: 'Yes, he is! He is {posto.en}!', forma: 'dove' },
-      { se: v => v.pip, en: 'Good dog, Pip!', forma: 'saluti' },
-      { se: v => !v.pip, en: 'Hello, Leo!', forma: 'saluti' },
+      { chi: 'Laura', en: 'Is Leo in the {posto.stanza}?', forma: 'dove' },
+      { chi: 'Leo', en: 'Yes! I am {posto.en}!', forma: 'dove' },
+      { se: v => v.pip, chi: 'Laura', en: 'Good dog, Pip!', forma: 'saluti' },
+      { se: v => !v.pip, chi: 'Laura', en: 'Hello, Leo!', forma: 'saluti' },
     ],
   ],
   domande: [

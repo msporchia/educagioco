@@ -15,15 +15,15 @@ export default {
   },
   pagine: [
     [
-      { en: 'I am Laura. This is my brother, Leo.', forma: 'this-is-my' },
-      { en: 'He has got {a:colore} hat.', forma: 'has-got' },
-      { en: 'I have got {quanti} {cibo.pl}. I like {cibo.pl}!', forma: 'have-got' },
+      { chi: 'Laura', en: 'I am Laura. This is my brother, Leo.', forma: 'this-is-my' },
+      { chi: 'Laura', en: 'He has got {a:colore} hat.', forma: 'has-got' },
+      { chi: 'Laura', en: 'I have got {quanti} {cibo.pl}. I like {cibo.pl}!', forma: 'have-got' },
     ],
     [
-      { en: 'Do you like {cibo.pl}, Leo?', forma: 'i-like' },
-      { se: v => v.piace, en: 'Yes, I do!', forma: 'i-like' },
-      { se: v => !v.piace, en: 'No, I do not. I like {altro}.', forma: 'i-like' },
-      { se: v => v.cane, en: 'This is my dog, Pip. He has got big ears.', forma: 'this-is-my' },
+      { chi: 'Laura', en: 'Do you like {cibo.pl}, Leo?', forma: 'i-like' },
+      { se: v => v.piace, chi: 'Leo', en: 'Yes, I do!', forma: 'i-like' },
+      { se: v => !v.piace, chi: 'Leo', en: 'No, I do not. I like {altro}.', forma: 'i-like' },
+      { se: v => v.cane, chi: 'Laura', en: 'This is my dog, Pip. He has got big ears.', forma: 'this-is-my' },
     ],
   ],
   domande: [

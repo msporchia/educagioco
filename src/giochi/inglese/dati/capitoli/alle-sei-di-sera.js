@@ -45,9 +45,10 @@ export default {
     ],
     [
       { en: 'At {ora} o’clock they eat dinner in the kitchen.', forma: 'ora' },
-      { en: 'The {cena} is very good!', forma: 'presente' },
+      { chi: 'Leo', en: 'The {cena} is very good!', forma: 'presente' },
       { en: 'Laura, Leo, Mother and Father are hungry, but Pip is not.', forma: 'presente' },
-      { en: 'He is sleeping under the table. Good night, Pip!', forma: 'ing' },
+      { en: 'He is sleeping under the table.', forma: 'ing' },
+      { chi: 'Laura', en: 'Good night, Pip!', forma: 'saluti' },
     ],
   ],
   domande: [

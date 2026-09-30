@@ -32,7 +32,8 @@ export default {
       { en: 'Then {a:animale} walked near the park.', forma: 'passato-ed' },
       { en: 'Pip looked at the {animale}, and then he ran after it!', forma: 'passato' },
       { en: 'Laura and Leo looked for Pip in the park, but he was not there.', forma: 'passato-ed' },
-      { en: '“Pip! Pip! Where are you?” Leo was very sad.', forma: 'was-were' },
+      { chi: 'Leo', en: 'Pip! Pip! Where are you?', forma: 'dove' },
+      { en: 'Leo was very sad.', forma: 'was-were' },
     ],
     [
       { en: 'They walked to the {primo}, but Pip was not there.', forma: 'passato-ed' },
@@ -42,7 +43,8 @@ export default {
     [
       { en: 'Laura and Leo were very happy.', forma: 'was-were' },
       { en: 'At six o’clock they walked home with Pip.', forma: 'passato-ed' },
-      { en: 'Pip was tired, and he slept after dinner. Good night, Pip!', forma: 'passato' },
+      { en: 'Pip was tired, and he slept after dinner.', forma: 'passato' },
+      { chi: 'Laura', en: 'Good night, Pip!', forma: 'saluti' },
     ],
   ],
   domande: [

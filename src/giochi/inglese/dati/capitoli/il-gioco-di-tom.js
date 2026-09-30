@@ -11,12 +11,12 @@ export default {
     colore: { da: 'colori', fra: ['red', 'blue', 'green', 'yellow', 'orange', 'purple'] },
   },
   frasi: [
-    { en: 'Hello, Leo! How are you?', forma: 'saluti' },
-    { en: 'I am fine, thank you, Tom.', forma: 'saluti' },
-    { en: 'What is it, Leo? Is it {a:prova}?', forma: 'is-it' },
-    { se: v => v.prova === v.cosa, en: 'Yes, it is! It is my {cosa}.', forma: 'it-is' },
-    { se: v => v.prova !== v.cosa, en: 'No, it is not {a:prova}. It is {a:cosa}!', forma: 'it-is' },
-    { en: 'It is {colore}.', forma: 'it-is' },
+    { chi: 'Tom', en: 'Hello, Leo! How are you?', forma: 'saluti' },
+    { chi: 'Leo', en: 'I am fine, thank you, Tom.', forma: 'saluti' },
+    { chi: 'Tom', en: 'What is it, Leo? Is it {a:prova}?', forma: 'is-it' },
+    { se: v => v.prova === v.cosa, chi: 'Leo', en: 'Yes, it is! It is my {cosa}.', forma: 'it-is' },
+    { se: v => v.prova !== v.cosa, chi: 'Leo', en: 'No, it is not {a:prova}. It is {a:cosa}!', forma: 'it-is' },
+    { chi: 'Leo', en: 'It is {colore}.', forma: 'it-is' },
   ],
   domande: [
     { testo: 'Che cos’è il giocattolo di Leo?', risposta: v => v.cosa.un },

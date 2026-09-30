@@ -16,9 +16,9 @@ export default {
   },
   pagine: [
     [
-      { en: 'Hello! I am Leo.', forma: 'saluti' },
-      { en: 'Today is {giorno}, and it is {mese}.', forma: 'oggi' },
-      { en: 'Today is my birthday, and I am {anni}!', forma: 'oggi' },
+      { chi: 'Leo', en: 'Hello! I am Leo.', forma: 'saluti' },
+      { chi: 'Leo', en: 'Today is {giorno}, and it is {mese}.', forma: 'oggi' },
+      { chi: 'Leo', en: 'Today is my birthday, and I am {anni}!', forma: 'oggi' },
     ],
     [
       { se: v => v.sole, en: 'There are no clouds in the sky, and it is hot.', forma: 'there-is' },
@@ -28,8 +28,10 @@ export default {
       { en: 'On the cake there are {anni} strawberries.', forma: 'there-is' },
     ],
     [
-      { en: 'This is my friend Tom. He has got {a:colore} {regalo}.', forma: 'has-got' },
-      { en: 'Thank you, Tom! I like my birthday!', forma: 'i-like' },
+      { chi: 'Leo', en: 'This is my friend Tom.', forma: 'this-is-my' },
+      { chi: 'Tom', en: 'Happy birthday, Leo!', forma: 'saluti' },
+      { en: 'Tom has got {a:colore} {regalo}.', forma: 'has-got' },
+      { chi: 'Leo', en: 'Thank you, Tom! I like my birthday!', forma: 'i-like' },
     ],
   ],
   domande: [
