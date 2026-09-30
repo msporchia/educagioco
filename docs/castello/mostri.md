@@ -188,6 +188,12 @@ di un pipistrello, e non è un errore.
   i giochi (`giochi/pausa.js`).
 - **Da che bocca**: sta in [campagne.md](campagne.md).
 
-Nei test: sul preavviso `[data-immune]`, `[data-abilita]`, `[data-capo]`,
-`[data-mista]`, `[data-immune-con]`; sulla scheda `[data-scheda-mista]`;
-`[data-azione="chiama-prossima"]`.
+Nei test: sul preavviso `[data-immune]`, `[data-abilita]`, `[data-divisioni]`,
+`[data-capo]`, `[data-mista]`, `[data-immune-con]`; sulla scheda
+`[data-scheda-mista]`, `[data-scheda-abilita]` (con `[data-divisioni]`);
+`[data-azione="chiama-prossima"]`. La riga dell'abilità della scheda si
+chiama `sm-abilita` e non `fa`: `.fa` è la radice della fattoria
+(`giochi/fattoria/stile.css`, fondo verde quasi nero), un foglio globale che
+nel file unico raggiunge anche le classi scoped degli altri — e la riga
+usciva su una fascia scura. `integrazione/torri-figure` guarda che il suo
+fondo resti trasparente.

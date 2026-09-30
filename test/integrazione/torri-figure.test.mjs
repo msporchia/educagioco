@@ -28,6 +28,8 @@
      · l'ondata mista (in fondo a una tappa delle Mura): il preavviso la
        annuncia con due facce e due immunità, in campo scendono i due
        tipi mescolati, e la scheda li chiama coi nomi delle figure;
+     · la riga dell'abilità della scheda si legge (niente fondo scuro),
+       per chi si divide, chi si divide due volte e chi si rialza;
      · nessun errore in console, in quattro vestiti diversi.
 
    Era `integrazione/castello-sprite`, quando il castello a sprite era un
@@ -37,7 +39,8 @@
    Con `--scatti` lascia una foto per vestito (`castello-*`),
    una della radura (`castello-radura`), una del blocchetto
    (`castello-blocchetto`), una del capo (`castello-capo`) e
-   una dell'ondata mista (`castello-mista`).
+   una dell'ondata mista (`castello-mista`) e una della scheda di chi si
+   divide due volte (`castello-scheda-abilita`).
    `node test/esegui.mjs torri-figure`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
@@ -380,6 +383,61 @@ await scatto(page, 'castello-radura')
   await togliCartelli()
   await attendi(page, 300)
   await scatto(page, 'castello-mista')
+}
+
+/* ---------- 8. la riga dell'abilità si legge ----------
+   Si chiamava `.fa`, e `.fa` è la radice della fattoria: un foglio globale
+   che le dava un fondo verde quasi nero. Tre abilità, ognuna chiamata con
+   la sua ondata: si divide (il guado della palude), si divide due volte
+   (il corridoio delle mura), si rialza (la gola). Il fondo della riga deve
+   restare trasparente, o almeno chiaro. */
+{
+  const { Ondate } = await import('../../src/motore/castello/ondate.js')
+  const casi = [
+    ['palude', t => t.nome === 'Il guado', b => b.abilita === 'dividi' && b.divisioni === 1, 'si divide'],
+    ['mura', t => t.divisioni === 2, b => b.abilita === 'dividi' && b.divisioni === 2, 'si divide due volte'],
+    ['sotterraneo', t => t.nome === 'La gola', b => b.abilita === 'risorge', 'si rialza'],
+  ]
+  for (const [campagna, quale, chi, frase] of casi) {
+    const i = TAPPE.findIndex(t => t.campagna === campagna && quale(t))
+    const t = TAPPE[i], ondate = new Ondate(t)
+    let o = 1
+    while (o < t.ondate && !(chi(ondate.bestiaDi(o)) && !ondate.bestiaDi(o).con && !ondate.bestiaDi(o).capo)) o++
+    nota(`${t.nome}: l'ondata ${o}, ${ondate.bestiaDi(o).id} che ${frase}`)
+    await page.evaluate(i => window.__td.inizia(i), i)
+    await attendi(page, 900)
+    await costruisci('add')
+    await togliCartelli()
+    const riga = await page.evaluate(async o => {
+      const attesa = ms => new Promise(r => setTimeout(r, ms))
+      const T = window.__td, m = T.motore()
+      m.nemici.length = 0; m.daGenerare = 0; m.prossimo = 0
+      m.tabellone.stato.onda = o - 1
+      T.chiamaOnda()
+      const fine = Date.now() + 8000
+      let e = null
+      while (!(e = document.querySelector('[data-scheda-abilita]')) && Date.now() < fine) await attesa(100)
+      if (!e) return null
+      const fondo = n => getComputedStyle(n).backgroundColor
+      /* il fondo che si vede: il primo non trasparente risalendo fino alla scheda */
+      let n = e, visto = 'rgba(0, 0, 0, 0)'
+      while (n && !n.classList.contains('scheda')) {
+        if (!/rgba\(0, 0, 0, 0\)|transparent/.test(fondo(n))) { visto = fondo(n); break }
+        n = n.parentElement
+      }
+      return { testo: e.textContent.trim(), fondo: fondo(e), visto,
+               divisioni: e.dataset.divisioni || null }
+    }, o)
+    controlla(`${t.nome}: la scheda dice «${frase}»`, !!riga && riga.testo.endsWith(frase), JSON.stringify(riga))
+    uguale(`${t.nome}: la riga dell'abilità non ha un fondo suo`, riga?.fondo, 'rgba(0, 0, 0, 0)')
+    const chiaro = c => { const v = (c.match(/\d+/g) || []).map(Number); return v[3] === 0 || v.slice(0, 3).reduce((s, x) => s + x, 0) > 600 }
+    controlla(`${t.nome}: e sotto c'è un fondo chiaro`, !!riga && chiaro(riga.visto), riga?.visto)
+    if (frase === 'si divide due volte') {
+      uguale('e il segno lo dice: data-divisioni', riga?.divisioni, '2')
+      await attendi(page, 600)
+      await scatto(page, 'castello-scheda-abilita')
+    }
+  }
 }
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))

@@ -2,7 +2,8 @@
 // La scheda di chi sta arrivando: il mostro dell'ondata ingrandito, quanti
 // ne restano, la vita, a quali torri è immune scritto a parole (vedi
 // docs/castello/mostri.md). Il ritratto è lo stesso pittore del campo, su
-// una tela piccola.
+// una tela piccola. Niente classi che un foglio globale usa già: `.fa` era
+// la fattoria (vedi docs/castello/mostri.md, «Nei test»).
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { creaTela } from '../grafica/tela.js'
 import { PITTORI } from '../giochi/castello/scena/pittori.js'
@@ -87,5 +88,5 @@ watch(() => [props.bestia.id, props.bestia.con?.id], () => tele.forEach(t => t?.
            text-overflow:ellipsis }
 .scheda[data-scheda-mista] { max-width:66% }
 .scheda[data-scheda-mista] .resiste { white-space:normal }
-.fa { font-size:9px; font-weight:800; color:var(--viola-scuro); margin-top:1px; white-space:nowrap }
+.sm-abilita { font-size:9px; font-weight:800; color:var(--viola-scuro); margin-top:1px; white-space:nowrap }
 </style>
