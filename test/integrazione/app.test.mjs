@@ -32,7 +32,7 @@ const mappaEn = await page.evaluate(() => ({
   tappe: document.querySelectorAll('[data-tappa]').length,
   aperte: document.querySelectorAll('[data-tappa][data-stato="aperta"]').length,
 }))
-await page.click('[data-tappa="che-cose-1"]')
+await page.click('[data-tappa][data-stato="aperta"]')      // la prima aperta: quale sia lo decide l'età
 const formati = {}
 let giusteEn = 0
 for (let i = 0; i < 6; i++) {

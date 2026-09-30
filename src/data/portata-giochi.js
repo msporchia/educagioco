@@ -13,7 +13,8 @@ import { misure } from '../store/progressi.js'
 import { GIOCHI_NUOVI } from '../giochi/indice.js'
 
 import { SCALETTA } from './asteroidi.js'
-import { CAMPAGNA as INGLESE } from './campagna-inglese.js'
+// l'inglese è quello a mondi, un mondo per anno di scuola (docs/lingue/mondi.md); la campagna vecchia resta al gioco di prima
+import { TAPPE as INGLESE } from '../giochi/inglese/dati/mondi.js'
 import { CAMPAGNA as SPAGNOLO } from './campagna-spagnolo.js'
 import { RACCONTO as CASTELLO } from './campagne-castello.js'
 import { CAMPAGNA as POZIONI } from '../giochi/pozioni/dati/campagna.js'

@@ -44,6 +44,7 @@ import { CAMPAGNA as SOTTERRANEO } from '../../src/giochi/sotterraneo/dati/campa
 import { CAMPAGNA as PASSO_PASSO } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { CAMPAGNA as COSTRUTTORE } from '../../src/giochi/costruttore/dati/campagna.js'
 import { CAMPAGNA as INGLESE } from '../../src/data/campagna-inglese.js'
+import { TAPPE as INGLESE_MONDI } from '../../src/giochi/inglese/dati/mondi.js'
 import { CAMPAGNA as SPAGNOLO } from '../../src/data/campagna-spagnolo.js'
 import { RACCONTO as CASTELLO } from '../../src/data/campagne-castello.js'
 import { CAMPAGNA as POZIONI } from '../../src/giochi/pozioni/dati/campagna.js'
@@ -109,7 +110,7 @@ const CAMPAGNE = [
   ['la corsa', CORSA], ['il sotterraneo', SOTTERRANEO],
   ['passo passo', PASSO_PASSO], ['il costruttore', COSTRUTTORE],
   ['asteroidi', SCALETTA.map(v => v.T)], ['tabelline', TABELLINE], ['calcolo a mente', STAZIONI],
-  ['inglese', INGLESE], ['spagnolo', SPAGNOLO], ['castello', CASTELLO],
+  ['inglese', INGLESE], ['inglese a mondi', INGLESE_MONDI], ['spagnolo', SPAGNOLO], ['castello', CASTELLO],
   ['pozioni', POZIONI], ['bancarella', BANCARELLA],
   ['generale', GENERALE],
 ]
@@ -169,7 +170,7 @@ uguale('ma le frasi scritte a cinque anni no',
 
 /* ── chi si vede e chi no, alle quattro età delle partenze ── */
 const GIOCHI_IN_HOME = [
-  ['conta gli animali', CONTA], ['prima e dopo', PRIMA_DOPO], ['inglese', INGLESE],
+  ['conta gli animali', CONTA], ['prima e dopo', PRIMA_DOPO], ['inglese', INGLESE_MONDI],
   ['asteroidi', SCALETTA.map(v => v.T)], ['pozioni', POZIONI], ['castello', CASTELLO],
 ]
 for (const eta of [5, 6.5, 8, 9.5]) {
