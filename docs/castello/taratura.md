@@ -200,7 +200,8 @@ la tabella non ce l'ha, cioè le partite libere oltre l'ultima ondata tarata.
 ## Gli strumenti di misura
 
 - **`npm run dps`** (`strumenti/dps-castello.mjs`): una torre sola davanti a
-  un'ondata vera, col motore vero, sulle carte. Tre numeri: `singolo` (danno
+  sette ondate vere, col motore vero, sulle carte (la tabella e il metodo in
+  [resa-delle-torri.md](resa-delle-torri.md)). Tre numeri: `singolo` (danno
   al secondo su uno), `efficace` (contando tutti quelli presi: area,
   rimbalzi, veleno), `valore` (vita fermata con nemici che muoiono, in
   arcieri di livello 1). Il ghiaccio vale la vita in più fermata da due

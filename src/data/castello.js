@@ -54,40 +54,26 @@ const carattereDi = k => CARATTERE[TORRI[k]?.aspetto] || { prezzo: 1, resa: 1 }
 export const listinoDi = k => (k ? carattereDi(k).prezzo : 1)
 export const resaDi = k => carattereDi(k).resa
 
-/* ── come cresce una torre quando sale di livello ──
-
-   Ogni torre cresce nel suo mestiere (arciere: cadenza, magica: area,
-   bombe: danno, e dal 7° livello una doppia salva più piccola). Tutte e
-   tre quelle che feriscono salgono con la stessa pendenza, e quasi dritte:
-   ogni gradino aggiunge più o meno quanto il primo, così coi gradini che
-   rincarano il ⚡ cumulato cala piano (0,77 al livello 4, 0,73 al 10 per
-   l'arciere, nel modello). Prima la crescita si moltiplicava su sé stessa
-   (arciere: danno +45% e cadenza +12% a gradino) e il livello 10 rendeva
-   per ⚡ più di una torre nuova. L'area delle bombe non cresce più: il
-   loro scoppio resta di una cella. Vedi docs/castello/torri.md. */
+// Come cresce una torre salendo, ognuna nel suo mestiere, e i due rami:
+// numeri misurati con `npm run dps`, non a occhio. Vedi
+// docs/castello/resa-delle-torri.md.
 export const CRESCITA = {
   arciere:  { danno: 0.37, cadenza: 0.10,  area: 0 },
-  magica:   { danno: 0.45, cadenza: 0,     area: 0.08 },
+  magica:   { danno: 0.37, cadenza: 0,     area: 0.08 },
   ghiaccio: { danno: 0,    cadenza: 0,     area: 0 },
-  bombe:    { danno: 0.62, cadenza: 0,     area: 0, salveDa: 7, salve: 2, perSalva: 0.65 },
+  bombe:    { danno: 0.66, cadenza: 0,     area: 0, salveDa: 7, salve: 2, perSalva: 0.61 },
 }
 const crescitaDi = k => CRESCITA[TORRI[k].aspetto] || CRESCITA.arciere
 
-// I due rami: stesso valore del tronco, misurato con `npm run dps` (non a
-// occhio), perché il ramo si prende al prezzo di un gradino qualunque e non
-// come la torre. Il mortaio è la gittata più lunga del campo, ma non di una
-// cella intera: ×1,25 sulle bombe fa 130 (una cella è 35), e spara un po'
-// più spesso di prima perché con lo scoppio stretto a ogni colpo ne prende
-// meno. Vedi docs/castello/torri.md.
 export const RAMI = {
   cecchino: { danno: 1.8,  ricarica: 1.7, raggio: 1.3 },
   raffica:  { danno: 0.55, ricarica: 1.1, salve: 2 },
-  veleno:   { danno: 0.5,  veleno: 0.75,  durata: 3 },
+  veleno:   { danno: 0.5,  veleno: 0.66,  durata: 3 },
   catena:   { danno: 0.95, rimbalzi: 2 },
-  bufera:   { freno: 1.0,  raggio: 1.5,   durata: 1.4 },
-  brina:    { freno: 1.1,  fragile: 1.08, raggio: 0.9 },
-  mortaio:  { danno: 1.6,  ricarica: 1.35, raggio: 1.25, area: 0.85 },
-  napalm:   { danno: 0.55, veleno: 0.55,  durata: 3, area: 1.15 },
+  bufera:   { freno: 0.95, raggio: 1.3,   durata: 1.2 },
+  brina:    { freno: 1.1,  fragile: 1.03, raggio: 0.9 },
+  mortaio:  { danno: 1.16, ricarica: 1.12, raggio: 1.25, area: 0.85 },
+  napalm:   { danno: 0.55, veleno: 0.64,  durata: 3, area: 1.15 },
 }
 
 // Quarto gradino: prima ci sono tre salite per capire cosa fa la torre.
@@ -121,11 +107,12 @@ export const forzaDi = (k, lv) => dpsDi(k, lv) / dpsDi(k, 1)
 // Il gelo: come il ghiaccio "fa danno" senza farne. Il freno si ferma al
 // 75% (un nemico del tutto bloccato spegne la partita); la brina rende
 // fragile chi è gelato invece di frenare di più.
+export const GELO = { freno: 0.71, frenoPiu: 0.004, frenoMax: 0.75, durata: 3.2, durataPiu: 0.04 }
 export const geloDi = (lv, ramo = null) => {
   const r = RAMI[ramo] || {}
   return {
-    freno: Math.min(0.75, (0.56 + (lv - 1) * 0.02) * (r.freno ?? 1)),
-    durata: (1.6 + (lv - 1) * 0.18) * (r.durata ?? 1),
+    freno: Math.min(GELO.frenoMax, (GELO.freno + (lv - 1) * GELO.frenoPiu) * (r.freno ?? 1)),
+    durata: (GELO.durata + (lv - 1) * GELO.durataPiu) * (r.durata ?? 1),
     fragile: r.fragile || 1,
   }
 }
@@ -136,8 +123,11 @@ export const geloDi = (lv, ramo = null) => {
    prende tre o quattro, ma i nemici veri muoiono e il gruppo si sfoltisce.
    Il ghiaccio non fa danno: il suo valore è quello che la regola gli
    assegna, e `npm run dps` controlla che lo valga davvero. */
-export const BERSAGLI = { area: 45, rimbalzo: 0.5 }
-const bersagliDi = area => 1 + (area || 0) / BERSAGLI.area
+export const BERSAGLI = { area: 45, rimbalzo: 0.5, largo: 42, oltre: 16 }
+// Oltre `largo` lo scoppio prende anche chi segue in fila: uno in più ogni
+// `oltre` unità (misurato sulla magica, vedi docs/castello/torri.md).
+const bersagliDi = (area = 0) =>
+  1 + Math.min(area, BERSAGLI.largo) / BERSAGLI.area + Math.max(0, area - BERSAGLI.largo) / BERSAGLI.oltre
 
 export function dpsDi(k, lv = 1, ramo = null) {
   if (!TORRI[k].danno) {
@@ -589,7 +579,7 @@ function mistaDelPiano(tappa) {
 // combacia più col file generato e il test chiede di rifare `npm run tara`.
 export function firmaEquilibrio() {
   const roba = JSON.stringify([
-    CFG, CRESCITA, MONDO, CARATTERE, RAMI, RAMI_DA, PIAZZOLE_PER_INGRESSO,
+    CFG, CRESCITA, MONDO, CARATTERE, RAMI, RAMI_DA, GELO, PIAZZOLE_PER_INGRESSO,
     Object.entries(TORRI).map(([k, T]) => [k, T.danno, T.ricarica, T.area, T.raggio, !!T.gela]),
     Object.entries(MOSTRI).map(([id, m]) => [id, m.immune, m.abilita || null, !!m.vola]),
     ABILITA, CAPO, MISTA,

@@ -79,7 +79,7 @@ file dati; le regole che devono rispettare in [mostri.md](mostri.md).
 ## La difficoltà che sta nella mappa: il presidio
 
 - **Conta quanta strada ogni torre tiene sotto tiro, non quanto è lunga.**
-  Il raggio va da 86 a 130 unità; una strada che si ripiega si fa battere
+  Il raggio va da 92 a 130 unità; una strada che si ripiega si fa battere
   due o tre volte dalla stessa torre. Il validatore la chiama `presidio`
   (strada per postazione, in raggi d'arciere, con le piazzole che la carta
   ha davvero), e **scende di campagna in campagna**: sulla carta bosco 2,78

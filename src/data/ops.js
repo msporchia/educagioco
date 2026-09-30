@@ -351,7 +351,7 @@ export const TORRI = {
          stadi: ['❄️', '🧊', '⛄'], gela: true,
          /* quanto frena e per quanto lo dice `geloDi()` in data/castello.js,
             perché dipende dal livello: qui resterebbe un numero morto */
-         raggio: 86,  danno: 0,  ricarica: 0.5,  area: 0,
+         raggio: 92,  danno: 0,  ricarica: 0.5,  area: 0,
          descr: 'non fa danno: congela i nemici vicini',
          rami: {
            bufera: { nome: 'Bufera', segno: '🌬', colore: '#7fc6ff',

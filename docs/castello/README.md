@@ -7,6 +7,7 @@ pagina per chi arriva da fuori e i documenti per chi ci lavora.
 - [taratura.md](taratura.md) — i calcoli come input, l'energia, le piazzole, il giocatore modello, `npm run tara` / `simula` / `dps`: prima di toccare un prezzo o una tappa
 - [piazzole.md](piazzole.md) — quante piazzole, dove le mette la carta, in che ordine le occupa il modello
 - [torri.md](torri.md) — comprare toccando il campo, il listino, i due rami, il blocchetto dei potenziamenti
+- [resa-delle-torri.md](resa-delle-torri.md) — quanto rende ogni torre, ramo e livello misurato con `npm run dps`, e cosa si è toccato per metterle nel listino
 - [operazioni.md](operazioni.md) — la scaletta dei dieci gradini, come si scrive un conto, i ripieghi quando un'operazione è spenta
 - [mostri.md](mostri.md) — immuni e comuni, le regole di una fila, le ondate miste, abilità, capo e ritmo delle ondate
 - [campagne.md](campagne.md) — le venti tappe, perché i percorsi sono quelli, le tappe a più bocche, i terreni, i salvataggi
