@@ -11,12 +11,23 @@
        vuol dire, e se il tocco costa lo dice subito; poi si risponde
    Il progetto è in docs/lingue/mondi.md, i bersagli alla riga «Nei test».
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scatto, TELEFONO }
-  from '../aiuto/browser.mjs'
+import { writeFileSync, mkdirSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scatto, TELEFONO,
+         SCATTI, SCATTI_ACCESI } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { tappaDi, MONDI } from '../../src/giochi/inglese/dati/mondi.js'
 import { FRASI } from '../../src/giochi/inglese/dati/frasi.js'
 import { PAGA } from '../../src/giochi/inglese/dati/monete.js'
+
+// la mappa intera, non solo quello che sta nello schermo: la tela si legge
+// com'è, perché le isole si giudicano a occhio (docs/lingue/mondi-vista.md)
+async function scattoTela(page, nome) {
+  if (!SCATTI_ACCESI) return
+  const dati = await page.evaluate(() => document.querySelector('.ing-tela').toDataURL('image/png'))
+  mkdirSync(SCATTI, { recursive: true })
+  writeFileSync(resolve(SCATTI, nome + '.png'), Buffer.from(dati.split(',')[1], 'base64'))
+}
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
@@ -35,6 +46,20 @@ uguale('i mondi senza tappe si vedono in arrivo',
        await page.locator('[data-mondo][data-pronto="0"]').count(), lontani)
 uguale('senza la campagna di prima finita, il gioco di prima non c’è', await page.locator('[data-prima]').count(), 0)
 await scatto(page, 'inglese-mappa-vuota')
+await scattoTela(page, 'inglese-mappa-vuota-intera')
+
+/* ---------- la nave: ancorata alla tappa da fare, e su una chiusa non parte ---------- */
+const nave = page.locator('[data-nave]')
+uguale('la nave è ancorata alla tappa da fare', await nave.getAttribute('data-porto'), 'tappa:che-cose-1')
+await page.locator('[data-tappa="che-cose-2"]').click()
+await page.waitForSelector('[data-serve]', { timeout: 2000 })
+controlla('una tappa chiusa dice cosa serve', (await page.locator('[data-serve]').innerText()).includes('Prima vinci «È un cane»'),
+          await page.locator('[data-serve]').innerText())
+uguale('e la nave non parte', await nave.getAttribute('data-in-viaggio'), '0')
+uguale('e resta dov’era', await nave.getAttribute('data-porto'), 'tappa:che-cose-1')
+uguale('e non si entra nella tappa', await page.locator('[data-domanda]').count(), 0)
+await attendi(page, 300)
+await scatto(page, 'inglese-serve')
 
 /* ---------- 2. un bambino a metà del primo mondo ----------
    Le parole della prima tappa sono sapute (forza 6) e le frasi a metà
@@ -60,10 +85,30 @@ uguale('il cassetto è aperto', await page.locator('[data-cassetto="che-cose"]')
 uguale('il secondo mondo resta chiuso fino alla bandiera',
        await page.locator('[data-tappa="mie-cose-1"]').getAttribute('data-stato'), 'chiusa')
 await scatto(page, 'inglese-mappa')
+await scattoTela(page, 'inglese-mappa-intera')
+if (SCATTI_ACCESI) {
+  // lo schermo più stretto che si prova: le isole si ridisegnano, e restano isole
+  await page.setViewportSize({ width: 320, height: 640 })
+  await attendi(page, 300)
+  await scattoTela(page, 'inglese-mappa-intera-320')
+  await scatto(page, 'inglese-mappa-320')
+  await page.setViewportSize(TELEFONO)
+  await attendi(page, 300)
+}
 
-/* ---------- 3. una frase composta a tocchi, prima storta ---------- */
+/* ---------- 3. una frase composta a tocchi, prima storta ----------
+   La nave sta alla bandiera, la tappa da fare: toccata la prima tappa ci
+   naviga per mare, e arrivata la tappa si apre. */
+uguale('la nave sta alla tappa da fare', await nave.getAttribute('data-porto'), 'tappa:che-cose-bandiera')
+const partenza = Date.now()
 await page.locator('[data-tappa="che-cose-1"]').click()
-await page.waitForSelector('[data-domanda]')
+await page.waitForSelector('[data-nave][data-in-viaggio="1"]', { timeout: 1000 })
+await attendi(page, 300)
+await scatto(page, 'inglese-nave')
+await page.waitForSelector('[data-domanda]', { timeout: 4000 })
+const viaggio = Date.now() - partenza
+controlla('il viaggio dura poco', viaggio < 2500, viaggio + ' ms')
+nota(`dal tocco alla domanda: ${viaggio} ms`)
 uguale('la frase a metà si mette in ordine', await page.locator('[data-domanda]').getAttribute('data-formato'), 'monta')
 uguale('l’indicatore dice che la domanda paga',
        await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
@@ -118,8 +163,14 @@ await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 6000 })
 /* ---------- 5. il libro ---------- */
 await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('[data-libro="che-cose"]')
+uguale('tornati alla mappa, la nave è dove si era giocato', await nave.getAttribute('data-porto'), 'tappa:che-cose-1')
+// un tocco durante il viaggio lo chiude: la nave arriva e il libro si apre subito
 await page.locator('[data-libro="che-cose"]').click()
-await page.waitForSelector('[data-libro-testo]')
+await page.waitForSelector('[data-viaggio]', { timeout: 1000 })
+const tocco = Date.now()
+await page.mouse.click(195, 500)
+await page.waitForSelector('[data-libro-testo]', { timeout: 1500 })
+controlla('un tocco durante il viaggio lo chiude subito', Date.now() - tocco < 700, (Date.now() - tocco) + ' ms')
 uguale('il libro dice quanto può rendere', await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
 await scatto(page, 'inglese-libro')
 // «cat» è saputa: toccarla costa il guadagno di una domanda, e lo si vede subito
