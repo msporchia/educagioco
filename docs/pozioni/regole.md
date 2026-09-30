@@ -124,10 +124,14 @@ dell'unità grande e con `in` che dice in che unità la ricetta li scrive:
   comunque (`stellePer`). Provato: la pazienza che scende, i cuori e la
   mancia 👑 del cliente esigente — con una barra che calava sopra un
   cartello da leggere, si imparava a non leggere.
-- **Tre monete per dose azzeccata al primo colpo** (`MONETE_A_DOSE`): una
-  dose è una domanda vera, letta e ragionata. Una dose sbagliata non paga
-  (vedi [../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
-  Le monete le sa solo `Gioco.vue`.
+- **Tre monete per dose azzeccata al primo colpo** (`MONETE_A_DOSE`),
+  **pagate quando la dose va nel calderone**: una dose è una domanda vera,
+  letta e ragionata. Una dose sbagliata non paga, e a fine tappa non
+  arriva niente di più — nemmeno un terzo per le tappe rifatte, che c'era
+  e pagava a fine tappa (vedi
+  [../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
+  Le monete le sa solo `Gioco.vue`; `partita.monete` dice quanto ha reso
+  la tappa, e serve ai test.
 
 ## Cosa va al motore di apprendimento
 
@@ -173,4 +177,4 @@ Nei test: `unita/pozioni` (gioca tutte le tappe), `integrazione/pozioni`
 `[data-pezzo]`, `[data-lettura]`, `[data-azione="conferma"|"togli"|"svuota"|"riponi"]`,
 `[data-esito][data-codice]`, `[data-spiegazione]`, `[data-aiuto][data-livello]`,
 `[data-consiglio]`, `[data-procedimento]`, `[data-fine="tappa"]`,
-`[data-stelle]`, `[data-monete]`, `[data-azione="avanti"|"mappa"]`.
+`[data-stelle]`, `[data-monete]`, `[data-nota-monete]`, `[data-azione="avanti"|"mappa"]`.

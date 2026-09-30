@@ -6,7 +6,8 @@
 import { ref, computed, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { addCoins, segna, answer } from '../../store/profile.js'
+import { segna, answer } from '../../store/profile.js'
+import { borsa } from '../../store/varieta.js'
 import { progresso, aperta, adesso, stelleDi, completa } from '../campagne.js'
 import { attesaDellEsito, PONDERA, TEMPO_MAX } from '../../quiz/nucleo/domanda.js'
 
@@ -24,7 +25,6 @@ const emit = defineEmits(['vai'])
 const CHIAVE = 'pozioni'
 const CIECO = 320           // una schermata appena comparsa non si tocca subito
 const TUFFO = 900           // quanto si guarda l'ingrediente andare nel calderone
-const REPLICA = 3           // rifare una tappa già fatta paga un terzo
 
 // dove siamo
 const vista = ref('mappa')          // mappa | banco
@@ -59,6 +59,9 @@ const strumentiTutti = computed(() => (partita.value ? partita.value.tappa.strum
 
 // giocare
 let timer = 0, barra = 0, apertaIl = 0
+// una dose giusta al primo colpo paga quando va nel calderone, anche in una tappa rifatta
+// (docs/pozioni/regole.md)
+let borsellino = borsa(CHIAVE)
 onUnmounted(() => { clearTimeout(timer); cancelAnimationFrame(barra) })
 
 function avviaTappa(i) {
@@ -66,6 +69,7 @@ function avviaTappa(i) {
   clearTimeout(timer)
   tappaIdx.value = i
   partita.value = new Partita(CAMPAGNA[i])
+  borsellino = borsa(CHIAVE)
   finale.value = null
   nelCalderone.value = []
   vista.value = 'banco'
@@ -124,6 +128,7 @@ function conferma() {
      c'era e non era scritta — va al motore di apprendimento */
   suono.ok()
   segna('misure')
+  if (p().dosi.at(-1)?.giusta) borsellino.paga(MONETE_A_DOSE)   // al primo colpo, come prima
   annota(e.annota)
   nelCalderone.value = [...nelCalderone.value, { emoji: e.ingrediente.emoji, colore: e.ingrediente.colore }]
   setTimeout(() => suono.nota(320, 150, 0.2, 'sine', 0.1), 400)
@@ -173,11 +178,10 @@ function avanti() {
 function tappaFinita() {
   const q = p()
   const giaFatta = avanza.tappa > tappaIdx.value
-  const monete = giaFatta ? Math.ceil(q.monete / REPLICA) : q.monete
   completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle: q.stelle })
-  if (monete) addCoins(monete)
   const ultima = tappaIdx.value === QUANTE_TAPPE - 1
-  finale.value = { titolo: tappa.value.nome, stelle: q.stelle, monete,
+  finale.value = { titolo: tappa.value.nome, stelle: q.stelle,
+                   monete: borsellino.dato, notaMonete: borsellino.nota(),
                    pozioni: q.pozioni, perfette: q.perfette,
                    maestro: ultima && !giaFatta, ultima }
   suono.livello()

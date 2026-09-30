@@ -106,6 +106,11 @@ nota(`${fatte} dosi giocate`)
 const stelle = (await page.locator('[data-stelle]').innerText()).trim()
 uguale('con uno sbaglio solo, due stelle', stelle, '⭐⭐')
 controlla('e le monete arrivano', (await page.locator('[data-monete]').innerText()).includes('🪙'))
+/* arrivano dose per dose (docs/pozioni/regole.md): il cartello somma quelle
+   pagate, e sono tre per ogni dose giusta al primo colpo, niente di più */
+uguale('tre monete a dose giusta, pagate strada facendo',
+       (await page.locator('[data-monete]').innerText()).trim(),
+       `+${await page.evaluate(() => window.__poz.partita.value.monete)} 🪙`)
 await scatto(page, 'pozioni-fine')
 
 /* ---------- 3. quello che resta ---------- */
