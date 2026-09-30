@@ -9,7 +9,7 @@ stanno in `src/data/castello.js` (`CARATTERE`, `CRESCITA`, `RAMI`) e in
 |---|---|---|---|---|---|---|---|
 | `add` | 🏹 arciere | addizione | 0,6 | 1 | 24 ⚡ | 92 | — |
 | `sub` | 🔮 magica | sottrazione | 1 | 1,1 | 40 ⚡ | 104 | 42 |
-| `mul` | ❄️ ghiaccio | moltiplicazione | 0,5 | 1 | 20 ⚡ | 86 | — |
+| `mul` | ❄️ ghiaccio | moltiplicazione | 0,5 | 1 | 20 ⚡ | 92 | — |
 | `div` | 💣 bombe | divisione | 1,4 | 1,2 | 56 ⚡ | 104 | 38 |
 
 Gittata e scoppio sono in unità del mondo: una cella della carta è larga
@@ -65,12 +65,8 @@ cresciuta.
   valevano otto arcieri e il napalm tredici, e la regola del gioco era
   «costruisci bombe».
 
-  | bombe, in arcieri per ⚡ | liv. 1 | liv. 4 | liv. 7 | liv. 10 |
-  |---|---|---|---|---|
-  | a prezzi uguali (curve) | 2,8 | 4,2 | 8,2 | 7,9 |
-  | col listino (curve) | 1,2 | 1,05 | 1,4 | 1,2 |
-  | col listino, sulle carte, gittata 132 e scoppio 62 | 1,22 | 1,22 | 1,42 | 1,30 |
-  | sulle carte, gittata 104 e scoppio 38 (oggi) | 1,05 | 1,10 | 1,14 | 1,09 |
+  La tabella per torre, ramo e livello, e cosa è stato toccato per
+  starci dentro, sta in [resa-delle-torri.md](resa-delle-torri.md).
 
 - **Le bombe non arrivano più lontano della magica, e scoppiano di una
   cella.** Arrivavano a 132 con uno scoppio di 62: quasi quattro celle di
@@ -82,25 +78,13 @@ cresciuta.
   più piccolo (42 ogni 1,8 s, erano 44 ogni 2,3): con lo scoppio stretto
   un colpo ne prende due invece di tre, e un'ondata di troll — che solo le
   bombe feriscono — a 2,3 s non si fermava a nessuna vita, perché i colpi
-  non bastavano per tutti. Sulle carte un ⚡ di bombe rende quanto dice il
-  listino, e non di più (tabella sopra); con sole bombe dovunque la fila
-  non chieda altro il metro vince 9 tappe su 16 (erano 14,
-  `simula-castello --sole div`).
+  non bastavano per tutti.
 - **Salire rende un po' meno per ⚡ che costruire** (vedi
   [taratura.md](taratura.md)): la resa per ⚡ cumulato di una torre salita,
-  contro la stessa appena costruita, misurata sulle carte.
-
-  | torre | liv. 4 | liv. 7 | liv. 10 | prima, liv. 4/7/10 |
-  |---|---|---|---|---|
-  | 🏹 arciere | 0,76 | 0,85 | 0,76 | 0,82 / 1,03 / 1,22 |
-  | 🔮 magica | 1,08 | 0,86 | 0,77 | 1,11 / 0,99 / 1,31 |
-  | ❄️ ghiaccio | 0,77 | 0,86 | 1,26 | 1,14 / 1,57 / 2,86 |
-  | 💣 bombe | 0,80 | 0,93 | 0,79 | 0,82 / 1,20 / 1,30 |
-
-  La stima del modello, che il test tiene (0,70–0,97 al livello 4, fino a
-  0,55 al 10, e che cali), dice 0,77 · 0,74 · 0,73 per l'arciere. La
-  misura ha più rumore del modello (il ghiaccio si misura come vita in più
-  fermata da due arcieri, e al decimo livello gela mezza ondata).
+  contro la stessa appena costruita, sta fra 0,72 e 0,94 per tutte e
+  quattro, misurata ([resa-delle-torri.md](resa-delle-torri.md)); la stima
+  del modello, che il test tiene (0,70–0,97 al livello 4, fino a 0,55 al
+  10, e che cali), dice 0,77 · 0,74 · 0,73 per l'arciere.
 
 - **Una torre ad area prende in media due-tre nemici a colpo** (`BERSAGLI`,
   misurato), quindi il suo colpo singolo è più debole di quello dell'arciere
@@ -111,7 +95,7 @@ cresciuta.
   gradino aggiunge più o meno quanto il primo. Ognuna cresce nel suo
   mestiere: l'arciere in cadenza (e un po' in danno), la magica in area, le
   bombe in danno e dal settimo livello con due salve **più piccole**
-  (`perSalva` 0,65: la salva doppia a danno pieno era metà del motivo per
+  (`perSalva` 0,61: la salva doppia a danno pieno era metà del motivo per
   cui le bombe valevano otto arcieri), il ghiaccio nel gelo (`geloDi`). Il
   raggio non cresce (era +4% a gradino): sulle carte una torre alta con un
   terzo di gittata in più copriva metà del campo da sola.
@@ -163,8 +147,10 @@ cresciuta.
   ghiaccio soffia solo se c'è qualcuno da gelare.
 - **La pastiglia «immune»** (`respinto`) compare su chi viene preso dentro da
   un colpo ad area tirato a un altro.
-- **La carta di una torre che l'ondata ignora dice «non lo tocca».** Chi è
-  immune a cosa sta in [mostri.md](mostri.md).
+- **La carta di una torre che l'ondata ignora si attenua**, e basta: niente
+  scritta. C'era un «non lo tocca», e diceva due volte quello che la scheda
+  del mostro in alto dice già («immune a»). Chi è immune a cosa sta in
+  [mostri.md](mostri.md).
 
 ## Il blocchetto dei potenziamenti
 

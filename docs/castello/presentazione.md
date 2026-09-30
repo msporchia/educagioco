@@ -80,8 +80,9 @@ sola, vince una tappa. Nelle ultime campagne arriva anche qualche **ondata
 mista**, due tipi di mostri mescolati — un golem con un'arpia — che nessuna
 torre ferisce tutti e due.
 
-Dal sottosuolo in poi lo slime e il verme si dividono in due quando cadono, e
-lo scheletro e il troll si rialzano una volta. In fondo a ogni campagna
+Dal sottosuolo in poi lo slime e il verme si dividono in due quando cadono
+(dalla metà delle mura e della palude i pezzi si dividono ancora), e lo
+scheletro e il troll si rialzano una volta. In fondo a ogni campagna
 arriva **il capo**: un mostro solo, gigante, con la vita di tutta l'ondata —
 se arriva al castello si porta via quattro cuori.
 

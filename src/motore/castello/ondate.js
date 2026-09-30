@@ -3,8 +3,8 @@
 // rende possibile il preavviso, mostrato prima che l'ondata parta.
 import { nemiciDiOnda, intervalloDiOnda, vitaNemico, velocitaNemico, insiemeDa,
          boccaDellOnda } from '../../data/castello.js'
-import { MOSTRI, CAPO, ABILITA, mostroDiOnda, mostroLibero, immuniDi, coppiaDellOnda }
-  from '../../data/mostri.js'
+import { MOSTRI, CAPO, mostroDiOnda, mostroLibero, immuniDi, coppiaDellOnda, divisioniDi,
+         follaDi } from '../../data/mostri.js'
 
 const RITMO = { stretto: 0.5, mosso: 0.25, gruppo: [2, 3], da: 3, quota: 1 / 3, sfalso: 30 }
 // un numero fra 0 e 1 che dipende solo da `a` e `b`: tira sempre lo stesso
@@ -36,21 +36,24 @@ export class Ondate {
     const coppia = capo ? null : coppiaDellOnda(this.tappa, o)
     const id = coppia ? coppia[0]
       : this.tappa.mostri ? mostroDiOnda(this.tappa.mostri, o) : mostroLibero(o)
-    const b = { ...this.schedaDi(id), capo }
-    if (coppia) b.con = this.schedaDi(coppia[1])
+    const b = { ...this.schedaDi(id, o), capo }
+    if (coppia) b.con = this.schedaDi(coppia[1], o)
     return b
   }
-  schedaDi(id) {
+  // `divisioni`: quante volte si divide chi si divide (`divisioniDi`),
+  // zero per tutti gli altri
+  schedaDi(id, o = 1) {
     const m = MOSTRI[id] || {}
-    return { id, nome: m.nome, vola: !!m.vola, immune: immuniDi(id),
-             abilita: this.tappa.abilita ? m.abilita || null : null }
+    const abilita = this.tappa.abilita ? m.abilita || null : null
+    return { id, nome: m.nome, vola: !!m.vola, immune: immuniDi(id), abilita,
+             divisioni: abilita === 'dividi' ? divisioniDi(this.tappa, o) : 0 }
   }
 
   // Quanti per tipo, in una mista: metà e metà, ognuno con la sua `folla`.
   perTipoDi(o) {
     const b = this.bestiaDi(o)
     const n = nemiciDiOnda(o)
-    const folla = x => (x.abilita ? ABILITA[x.abilita].folla : 1)
+    const folla = x => follaDi(x.abilita, x.divisioni)
     return [Math.max(1, Math.round(n / 2 * folla(b))), Math.max(1, Math.round(n / 2 * folla(b.con)))]
   }
   // Chi esce per k-esimo: alternati, spargendo lungo la fila chi è di meno
@@ -75,7 +78,7 @@ export class Ondate {
     if (this.eCapo(o)) return 1
     const b = this.bestiaDi(o)
     if (b.con) return this.quantiDi(o) / nemiciDiOnda(o)
-    return b.abilita ? ABILITA[b.abilita].folla : 1
+    return follaDi(b.abilita, b.divisioni)
   }
   quantiDi(o) {
     if (this.eCapo(o)) return 1

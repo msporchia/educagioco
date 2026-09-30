@@ -1,5 +1,5 @@
 // Chi attacca il castello: chi sono, non come sono disegnati (il disegno
-// sta in grafica/castello.js e grafica/mostri/). Immune, non resistente: le
+// sta in giochi/castello/scena/bestiario.js). Immune, non resistente: le
 // quattro famiglie (vola, corazzato, ossa, rovo/blatta) e perché, in
 // docs/castello/mostri.md.
 import { TORRI } from './ops.js'
@@ -79,16 +79,49 @@ export function guastiDelleImmunita(tappa) {
 // frecce al secondo. Vedi docs/castello/mostri.md.
 export const ABILITA = {
   dividi:  { emoji: '✂️', nome: 'si divide', che: 'quando cade, si divide in due più piccoli',
-             quanti: 2, vita: 1 / 3, taglia: 0.72, folla: 0.4 },
+             quanti: 2, vita: 1 / 3, taglia: 0.72, folla: 0.4,
+             due: { emoji: '✂️✂️', nome: 'si divide due volte',
+                    che: 'quando cade si divide in due, e i pezzi si dividono ancora' } },
   risorge: { emoji: '💫', nome: 'si rialza', che: 'la prima volta che cade, si rialza',
              vita: 0.5, dopo: 1.4, folla: 0.7 },
 }
 export const abilitaDi = id => (MOSTRI[id]?.abilita ? ABILITA[MOSTRI[id].abilita] : null)
 
+// Quante volte si divide chi si divide: due nelle tappe con `divisioni: 2` e
+// nelle libere dall'ondata `libere`, mai più di `tetto`. Vedi docs/castello/mostri.md.
+export const DIVISIONI = { tetto: 2, libere: 20 }
+export function divisioniDi(tappa, o) {
+  if (!tappa.abilita) return 0
+  if (tappa.capi) return o >= DIVISIONI.libere ? DIVISIONI.tetto : 1
+  return Math.min(DIVISIONI.tetto, tappa.divisioni || 1)
+}
+// I bersagli di un mostro che si divide `d` volte (1 + 2 + 4).
+export const bersagliDi = d => {
+  let n = 0
+  for (let g = 0; g <= d; g++) n += ABILITA.dividi.quanti ** g
+  return n
+}
+// Il segno a schermo: chi si divide due volte ha il suo.
+export const segnoDi = (abilita, divisioni = 1) =>
+  (abilita === 'dividi' && divisioni > 1 ? ABILITA.dividi.due : ABILITA[abilita])
+
+// Quanti ne arrivano, per chi fa qualcosa: chi si divide due volte a pari
+// bersagli con chi si divide una volta (mostri.md).
+export function follaDi(abilita, divisioni = 1) {
+  if (!abilita) return 1
+  if (abilita !== 'dividi') return ABILITA[abilita].folla
+  return ABILITA.dividi.folla * bersagliDi(1) / bersagliDi(Math.max(1, divisioni))
+}
+
 // Quanta vita porta davvero un mostro, contando quello che fa quando cade.
-export function vitaEffettiva(id) {
+export function vitaEffettiva(id, divisioni = 1) {
   const a = MOSTRI[id]?.abilita
-  if (a === 'dividi') return 1 + ABILITA.dividi.quanti * ABILITA.dividi.vita
+  if (a === 'dividi') {
+    let v = 1
+    for (let g = 1; g <= Math.max(1, divisioni); g++)
+      v += (ABILITA.dividi.quanti * ABILITA.dividi.vita) ** g
+    return v
+  }
   if (a === 'risorge') return 1 + ABILITA.risorge.vita
   return 1
 }

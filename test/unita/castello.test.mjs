@@ -136,14 +136,8 @@ for (const [i, t] of TAPPE.entries()) {
    bombe aprono tiene alta la tensione anche lì — e l'elenco è vuoto;
    resta perché la prossima tappa che perdona si scriva qui, e non si
    tolga il controllo. */
-/* Le isole tornano a perdonare dal passaggio alle carte a scacchiera e
-   ai gradini che rincarano: il metro arriva in fondo con [5,5,5] e il
-   pigro con [5,4,4], e due gradini di differenza sull'ultima ondata non
-   bastano a separarli — l'anello di sicurezza ha già abbassato le ultime
-   due ondate per il pasticcione, e il taratore non può rialzarle senza
-   perderlo. Scritta qui col suo nome finché il taratore non guarda anche
-   dove muoiono i nemici. */
-const PERDONANO = new Set(['Le isole'])
+/* Con le piazzole raddoppiate di nuovo (30/9) non perdona più nessuna. */
+const PERDONANO = new Set([])
 for (const [i, t] of TAPPE.entries()) {
   const tutto = gioca(t, PROFILI.misura)
   controlla(`${i + 1}. ${t.nome}: chi spende tutta l'energia la finisce`,

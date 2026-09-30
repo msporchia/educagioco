@@ -4,7 +4,12 @@
      · la strada rispetta la scacchiera — una per cella, niente corsie
        che si toccano, esce dritta dalla bocca ed entra dritta nel
        castello (le regole le guarda `cartaDi` stessa);
-     · ci sono le piazzole che la tappa promette;
+     · ci sono le piazzole che la tappa promette, e sono sparse: su ogni
+       strada in ogni terzo (vicino alla bocca, a metà, vicino al
+       castello), da tutti e due i lati, e con due bocche anche prima che
+       le strade si uniscano — dove metterle dev'essere una scelta;
+     · il giocatore modello le occupa a salti: le prime tre di una strada
+       sola stanno in tre terzi diversi;
      · le distrazioni non toccano il gioco: niente acqua o fitto a
        ridosso della strada o di una piazzola, niente decori attaccati a
        una piazzola;
@@ -17,7 +22,8 @@
    (`node strumenti/sprite/carte-castello.mjs`). */
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { TAPPE, LIBERE } from '../../src/data/castello.js'
-import { cartaDi, sullaCarta, DA_RIDISEGNARE, A_MANO, COLONNE, RIGHE } from '../../src/motore/castello/carta.js'
+import { cartaDi, sullaCarta, DA_RIDISEGNARE, A_MANO, COLONNE, RIGHE, guastiDellePiazzole, aSalti }
+  from '../../src/motore/castello/carta.js'
 import { creaBattaglia } from '../../src/motore/battaglia.js'
 import { MONDO } from '../../src/data/castello.js'
 
@@ -47,6 +53,23 @@ for (const t of tutte) {
   uguale(`${dove}: acqua e fitto lontani da strada e piazzole`, invadenti, 0)
   uguale(`${dove}: nessun decoro attaccato a una piazzola`, attaccati, 0)
   uguale(`${dove}: esce sempre uguale`, cartaDi(t).righe.join('\n'), c.righe.join('\n'))
+  uguale(`${dove}: piazzole in ogni terzo di ogni strada, dai due lati`,
+         guastiDellePiazzole(c.vie, c.piazzole).join(' · '), '')
+  /* e per chi non guarda la funzione: la cella di strada più vicina a
+     ogni piazzola, contata a terzi, qui a mano */
+  for (const [iv, via] of c.vie.entries()) {
+    const terzo = ([x, y]) => {
+      const i = via.findIndex(([a, b]) => Math.abs(a - x) + Math.abs(b - y) === 1)
+      return i < 0 ? -1 : Math.min(2, Math.floor(3 * i / via.length))
+    }
+    const terzi = new Set(c.piazzole.map(terzo).filter(x => x >= 0))
+    uguale(`${dove}: strada ${iv + 1}, piazzole in tutti e tre i terzi`, [...terzi].sort().join(), '0,1,2')
+    /* (non sull'anello del bastione: lì una piazzola tocca la strada
+       all'andata e al ritorno, e il terzo non è uno) */
+    if (c.vie.length === 1 && !A_MANO[chiaveDi(t)] && !t.incroci)
+      uguale(`${dove}: le prime tre torri del modello in tre terzi diversi`,
+             new Set(c.piazzole.slice(0, 3).map(terzo)).size, 3)
+  }
 
   /* il motore sulla carta: le piazzole sono quelle della carta, in
      quell'ordine, e stanno a una cella dalla loro strada — non di più,
@@ -83,6 +106,13 @@ for (const t of tutte) {
 /* le carte scritte a mano: nessuna tappa resta da ridisegnare, e quelle
    a mano sono davvero la loro tappa — la radura grande è una bocca sola
    che si sdoppia in due bracci e si richiude nello stesso tronco */
+/* l'ordine a salti: un passo lungo un terzo delle piazzole, le prime tre
+   una per terzo, ognuna una volta sola */
+for (const n of [4, 8, 12, 16, 20])
+  uguale(`a salti su ${n}: ognuna una volta`, aSalti(n).slice().sort((a, b) => a - b).join(),
+         Array.from({ length: n }, (_, i) => i).join())
+uguale('a salti su 12: bocca, metà, castello, e poi i buchi', aSalti(12).join(), '1,5,9,2,6,10,3,7,11,0,4,8')
+
 nota('le carte a mano')
 uguale('nessuna tappa resta da ridisegnare', DA_RIDISEGNARE.join(', '), '')
 for (const chiave of Object.keys(A_MANO))

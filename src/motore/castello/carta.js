@@ -19,23 +19,23 @@ export const A_MANO = {
   'libera-bosco': [
     '............',
     '............',
-    '......+.....',
-    '......+.....',
-    '..++++++++..',
+    '.....o+.....',
+    '..o...+o....',
+    '..++++++++o.',
     '..+o.o..o+..',
-    '..+++..+++..',
+    '.o+++..+++..',
     '...o+o.+o...',
-    '.++++..++++.',
-    '.+........+.',
+    'o++++..++++o',
+    '.+..o..o..+.',
     '.+o......o+.',
-    '.++++..++++.',
+    'o++++..++++o',
     '...o+.o+o...',
     '....++++....',
     '.....o+.....',
-    '...++++o....',
+    '..o++++o....',
     '...+o.......',
-    '...++++.....',
-    '......+.....',
+    '...++++o....',
+    '.....o+.....',
     '............',
     '............',
     '............',
@@ -218,20 +218,77 @@ function stradeAMano(disegno) {
   return { vie, versi, guasti, modo: 'a mano' }
 }
 
-// Le piazzole di una carta a mano: le `o` del disegno, occupate nell'ordine
-// della via più vicina all'ingresso (come fa il motore).
-function piazzoleAMano(disegno, vie) {
+// L'ordine in cui il modello occupa le piazzole di una strada: a salti, le
+// prime tre una per terzo. Vedi docs/castello/taratura.md («Le piazzole»).
+export function aSalti(n) {
+  const passo = Math.max(1, Math.round(n / 3))
+  const inizio = Math.max(0, Math.floor((n - 1 - 2 * passo) / 2))
   const fuori = []
+  for (let r = 0; r < passo; r++)
+    for (let i = (inizio + r) % passo; i < n; i += passo) fuori.push(i)
+  return fuori
+}
+
+// Ogni strada a salti, e le strade una per volta: la prima torre di ognuna
+// sta alla sua bocca.
+function inFila(perVia) {
+  const file = perVia.map(p => aSalti(p.length).map(i => p[i]))
+  const fuori = []
+  for (let i = 0; i < Math.max(0, ...file.map(f => f.length)); i++)
+    for (const f of file) if (f[i]) fuori.push(f[i])
+  return fuori
+}
+
+// Le piazzole di una carta a mano: le `o` del disegno, ognuna della strada
+// che la tocca per prima (a parità, la prima strada), ordinate come le
+// altre (`inFila`).
+function piazzoleAMano(disegno, vie) {
+  const perVia = vie.map(() => [])
   disegno.forEach((r, y) => [...r].forEach((c, x) => {
     if (c !== 'o') return
     let meglio = null
     vie.forEach((via, iv) => via.forEach(([vx, vy], d) => {
       if (Math.abs(vx - x) + Math.abs(vy - y) === 1 && (!meglio || d < meglio.d)) meglio = { d, iv }
     }))
-    fuori.push({ x, y, d: meglio ? meglio.d : Infinity, via: meglio ? meglio.iv : 0 })
+    perVia[meglio ? meglio.iv : 0].push({ x, y, d: meglio ? meglio.d : Infinity })
   }))
-  fuori.sort((p, q) => p.d - q.d || p.via - q.via || p.y - q.y || p.x - q.x)
-  return fuori.map(({ x, y, via }) => [x, y, via])
+  for (const p of perVia) p.sort((a, b) => a.d - b.d || a.y - b.y || a.x - b.x)
+  return inFila(perVia.map((p, iv) => p.map(({ x, y }) => [x, y, iv])))
+}
+
+// Le piazzole sparse: ogni terzo di ogni strada, tutti e due i lati, e il
+// tratto di ogni strada prima di unirsi. Vedi docs/castello/taratura.md.
+export function guastiDellePiazzole(vie, piazzole) {
+  const guasti = []
+  const tocca = (c, [x, y]) => Math.abs(c[0] - x) + Math.abs(c[1] - y) === 1
+  const comune = (c, iv) => vie.some((v, j) => j !== iv && v.some(d => d[0] === c[0] && d[1] === c[1]))
+  vie.forEach((via, iv) => {
+    const terzi = [0, 1, 2].map(t => via.slice(Math.floor(via.length * t / 3), Math.floor(via.length * (t + 1) / 3)))
+    terzi.forEach((celle, t) => {
+      if (!piazzole.some(p => celle.some(c => tocca(c, p))))
+        guasti.push(`strada ${iv + 1}: nessuna piazzola nel ${['primo', 'secondo', 'terzo'][t]} terzo`)
+    })
+    // il lato: a destra o a sinistra di chi cammina
+    const lati = new Set()
+    via.forEach((c, i) => {
+      const [ax, ay] = via[Math.max(0, i - 1)], [bx, by] = via[Math.min(via.length - 1, i + 1)]
+      const [dx, dy] = [bx - ax, by - ay]
+      for (const p of piazzole)
+        if (tocca(c, p)) {
+          const x = dx * (p[1] - c[1]) - dy * (p[0] - c[0])
+          if (x) lati.add(Math.sign(x))
+        }
+    })
+    if (lati.size < 2) guasti.push(`strada ${iv + 1}: piazzole da un lato solo`)
+    if (vie.length > 1) {
+      const sua = via.filter(c => !comune(c, iv))
+      const quante = piazzole.filter(p => sua.some(c => tocca(c, p))).length
+      const servono = sua.length >= 8 ? 2 : sua.length ? 1 : 0
+      if (quante < servono)
+        guasti.push(`strada ${iv + 1}: ${quante} piazzole sul suo tratto prima di unirsi (${sua.length} celle)`)
+    }
+  })
+  return guasti
 }
 
 export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}) {
@@ -259,8 +316,9 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
   for (let dy = 0; dy < CASTELLO.h; dy++)
     for (let dx = 0; dx < CASTELLO.w; dx++) metti(xc + dx, ULTIMA + 1 + dy, 'C')
 
-  // le piazzole: come nel motore (Percorso.piazzole), in proporzione alla
-  // lunghezza di ogni strada, partendo dall'ingresso, lati alterni
+  // le piazzole: in proporzione alla lunghezza di ogni strada, sparse da
+  // un capo all'altro, lati alterni; poi `inFila` dice in che ordine il
+  // motore le occupa
   const quante = posti ?? tappa.posti ?? 6
   const lung = vie.map(v => v.length)
   const tot = lung.reduce((s, l) => s + l, 0)
@@ -280,25 +338,27 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
   const fila = []
   for (let i = 0; i < Math.max(...quote); i++) for (const p of perVia) if (p[i]) fila.push(p[i])
   let messe = 0
-  const piazzole = []          // nell'ordine in cui il motore le occupa: [x, y, via]
+  const messePerVia = vie.map(() => [])
   if (disegno)
     for (const [x, y, via] of piazzoleAMano(disegno, vie)) {
       if (!libera(x, y) || vicinaAPiazzola(x, y)) guasti.push(`(${x},${y}) piazzola non libera o attaccata a un'altra`)
-      metti(x, y, 'o'); piazzole.push([x, y, via]); messe++
+      metti(x, y, 'o'); messePerVia[via].push([x, y, via]); messe++
     }
   for (const { via, d, lato } of disegno ? [] : fila) {
     if (messe >= quante) break
     let fatto = false
     for (let s = 0; s < via.length && !fatto; s++) {
       for (const j of [d + s, d - s]) {
-        const c = via[stringe(j, 0, via.length - 1)]
+        const jj = stringe(j, 0, via.length - 1)
+        const c = via[jj]
         const nx = via[stringe(j + 1, 0, via.length - 1)]
         const v = versoFra(c, nx === c ? via[stringe(j - 1, 0, via.length - 1)] : nx)
         const lati = v === 'N' || v === 'S' ? [[-1, 0], [1, 0]] : [[0, -1], [0, 1]]
         for (const [dx, dy] of lato ? lati : lati.slice().reverse()) {
           const [x, y] = [c[0] + dx, c[1] + dy]
           if (libera(x, y) && !vicinaAPiazzola(x, y)) {
-            metti(x, y, 'o'); piazzole.push([x, y, vie.indexOf(via)])
+            const iv = vie.indexOf(via)
+            metti(x, y, 'o'); messePerVia[iv].push({ p: [x, y, iv], d: jj })
             messe++; fatto = true; break
           }
         }
@@ -306,6 +366,10 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
       }
     }
   }
+  // nell'ordine in cui il motore le occupa: [x, y, via]
+  const piazzole = disegno ? inFila(messePerVia)
+    : inFila(messePerVia.map(p => p.sort((a, b) => a.d - b.d).map(q => q.p)))
+  guasti.push(...guastiDellePiazzole(vie, piazzole))
   if (messe !== quante) guasti.push(`piazzole: ${messe} invece di ${quante}`)
 
   // le distrazioni: vicino = a una cella dalla strada/piazzola/bocca/castello

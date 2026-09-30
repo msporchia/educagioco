@@ -47,6 +47,26 @@ Colpo.prototype.impatto = function (...a) {
   return esito
 }
 
+// Le piazzole in fila lungo la strada: `posto + 1` è quella accanto (la
+// carta le dà nell'ordine a salti del modello).
+const inFila = new Map()
+function lungoLaStrada(b) {
+  if (!inFila.has(b.tappa.nome)) {
+    const via = b.percorso.viaN(0)
+    const dove = p => {
+      let meglio = 0, meno = Infinity
+      for (let s = 0; s <= via.lunghezza; s += 2) {
+        const q = via.puntoA(s), d = Math.hypot(q.x - p.x, q.y - p.y)
+        if (d < meno) { meno = d; meglio = s }
+      }
+      return meglio
+    }
+    inFila.set(b.tappa.nome, b.postazioni.map((p, i) => [dove(p), i])
+      .sort((a, c) => a[0] - c[0]).map(([, i]) => i))
+  }
+  return inFila.get(b.tappa.nome)
+}
+
 // Un'ondata che passa davanti a delle torri (chi fa il conto è la prima):
 // il danno fatto, i secondi a tiro, quanti colpi e bersagli.
 function passaggio(tappa, torri, onda, quanti = nemiciDiOnda(onda), vita = IMMORTALE) {
@@ -54,7 +74,7 @@ function passaggio(tappa, torri, onda, quanti = nemiciDiOnda(onda), vita = IMMOR
   const b = new Battaglia({ tappa, misure: MONDO, stato })
   b.inizia()
   b.torri = torri.filter(t => t.tipo).map(t => {
-    const p = b.postazioni[t.posto]
+    const p = b.postazioni[lungoLaStrada(b)[t.posto]]
     return new Torre({ x: p.x, y: p.y, tipo: t.tipo, lv: t.lv, ramo: t.ramo || null })
   })
   const prima = b.torri[0]
@@ -84,26 +104,27 @@ function passaggio(tappa, torri, onda, quanti = nemiciDiOnda(onda), vita = IMMOR
   return { danno, aTiro, colpi: colpiASegno, bersagli: bersagliPresi, passati }
 }
 
-// Quanta vita ferma: il danno su nemici immortali dice quanto potrebbe
-// fare una torre, non quanto ne ferma (col gruppo che si sfoltisce). Si
-// cerca per bisezione la vita più alta con cui l'ondata è fermata quasi
-// tutta (al più un decimo passa).
-const TENUTA = { onda: 8, posti: RAPIDO ? [0, 2] : [0, 2, 4], giri: 12, passano: 0.1 }
+// Quanta vita ferma: per bisezione la vita più alta con cui l'ondata passa
+// al più per un decimo, in media su sette ondate (docs/castello/taratura.md).
+const TENUTA = { onde: [5, 6, 7, 8, 9, 10, 11], posti: RAPIDO ? [0, 2] : [0, 2, 4],
+                 giri: 12, passano: 0.1 }
 function tenuta(torri) {
   let somma = 0, n = 0
-  const quanti = nemiciDiOnda(TENUTA.onda)
-  for (const tappa of BANCHI)
-    for (const posto of TENUTA.posti) {
-      let tiene = 1, cede = 200000
-      for (let g = 0; g < TENUTA.giri; g++) {
-        const v = Math.sqrt(tiene * cede)
-        const r = passaggio(tappa, torri.map((t, k) => ({ ...t, posto: posto + k })),
-                            TENUTA.onda, quanti, v)
-        if (r.passati <= quanti * TENUTA.passano) tiene = v; else cede = v
+  for (const onda of RAPIDO ? [8] : TENUTA.onde) {
+    const quanti = nemiciDiOnda(onda)
+    for (const tappa of BANCHI)
+      for (const posto of TENUTA.posti) {
+        let tiene = 1, cede = 200000
+        for (let g = 0; g < TENUTA.giri; g++) {
+          const v = Math.sqrt(tiene * cede)
+          const r = passaggio(tappa, torri.map((t, k) => ({ ...t, posto: posto + k })),
+                              onda, quanti, v)
+          if (r.passati <= quanti * TENUTA.passano) tiene = v; else cede = v
+        }
+        somma += Math.log(tiene); n++
       }
-      somma += tiene * quanti; n++
-    }
-  return somma / n
+  }
+  return Math.exp(somma / n)
 }
 
 function misura(torri, { quanti = null } = {}) {
@@ -133,8 +154,8 @@ const tenutaBase = tenuta([{ tipo: 'add', lv: 1 }])
 
 console.log(`banchi: ${BANCHI.map(t => t.nome).join(', ')} · ${PIAZZOLE} piazzole ciascuno · ` +
             `ondate ${ONDE.join(', ')}`)
-console.log(`unità del valore: l'arciere di livello 1, che ferma ${f(tenutaBase, 0)} di vita ` +
-            `all'ondata ${TENUTA.onda}\n`)
+console.log(`unità del valore: l'arciere di livello 1, che ferma nemici da ${f(tenutaBase, 0)} di vita ` +
+            `(media sulle ondate ${RAPIDO ? 8 : TENUTA.onde.join(', ')})\n`)
 console.log('torre         ramo       lv | singolo efficace bersagli | modello  mis/mod |' +
             ' valore atteso val/att | prezzo')
 

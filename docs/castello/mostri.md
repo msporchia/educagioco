@@ -55,8 +55,9 @@ mostri stanno in `src/data/mostri.js`, le file delle tappe in
   | un groviglio (🌿) | 💣 🏹 |
   | tutti gli altri (🐾) | nessuna: sono i comuni |
 - **Il preavviso lo dice tre ondate prima** (`components/castello/NastroOndate.vue`,
-  con le torri sbarrate) e la carta della torre sbagliata dice «non lo
-  tocca». Come si comporta una torre davanti a un immune sta in
+  con le torri sbarrate), la scheda del mostro in campo dice «immune a», e
+  nella scelta della torre la carta sbagliata si attenua, senza scritte.
+  Come si comporta una torre davanti a un immune sta in
   [torri.md](torri.md). **Le emoji sbarrate sono grigie, non del colore
   della torre**: colorare vuol dire indicare, e qui il segno è l'opposto
   — contro quel mostro la torre non serve — e il grigio più la barra
@@ -138,6 +139,29 @@ di un pipistrello, e non è un errore.
   frecce al secondo, e coi vermi a ondata intera la taratura non trovava una
   vita abbastanza bassa. Ognuno paga di più: l'energia di un'ondata non
   cambia mai (il tabellone mette da parte le frazioni).
+- **Più avanti chi si divide si divide due volte** (`divisioniDi`,
+  `DIVISIONI` in `data/mostri.js`): i pezzi di uno slime si dividono
+  ancora, e i pezzi dei pezzi no — al massimo quattro in fondo, più i due
+  di mezzo, con un terzo e poi un nono della vita. È la domanda dopo quella
+  della divisione semplice (quale torre tiene una fila che raddoppia due
+  volte), quindi arriva quando la prima è imparata: nelle tappe che
+  dichiarano `divisioni: 2` — dalla terza di Mura e Palude (il corridoio,
+  la sala del trono, il torrione; le isole, il pantano, la foce) — e nelle
+  libere dall'ondata 20 (`DIVISIONI.libere`). Il tetto è `DIVISIONI.tetto`,
+  due: una terza generazione riempirebbe la strada di coriandoli.
+- **Chi si divide due volte arriva ancora più rado, a pari bersagli**
+  (`follaDi`): sette bersagli per mostro invece di tre, quindi tre settimi
+  della `folla` di chi si divide una volta (0,17), e l'intervallo cresce
+  allo stesso modo. La paga si spartisce a ogni divisione: l'energia
+  dell'ondata è quella di sempre.
+- **La taratura la conta da sé** perché gioca il motore vero: nelle tappe
+  con `divisioni: 2` la vita di quelle ondate esce dalla bisezione come
+  tutte le altre. Oltre la tabella delle libere (dalla 21ª) la vita riparte
+  da chi si divideva una volta sola, e `caricoDi` la corregge perché
+  l'ondata porti la stessa vita di prima e non la metà (arriva in meno).
+- **Il segno è suo**: ✂️✂️ «si divide due volte» sul preavviso
+  (`[data-abilita="dividi"][data-divisioni="2"]`) e sulla scheda del mostro
+  in campo (`[data-scheda-abilita][data-divisioni="2"]`).
 - **Il capo** (`CAPO`): un mostro solo, grande due volte e mezzo, lento, con
   la vita dell'ondata e un decimo; ogni dieci ondate nelle libere, in fondo
   all'ultima tappa di ogni campagna (`capo: true`). Paga come l'ondata, e se
@@ -165,6 +189,12 @@ di un pipistrello, e non è un errore.
   i giochi (`giochi/pausa.js`).
 - **Da che bocca**: sta in [campagne.md](campagne.md).
 
-Nei test: sul preavviso `[data-immune]`, `[data-abilita]`, `[data-capo]`,
-`[data-mista]`, `[data-immune-con]`; sulla scheda `[data-scheda-mista]`;
-`[data-azione="chiama-prossima"]`.
+Nei test: sul preavviso `[data-immune]`, `[data-abilita]`, `[data-divisioni]`,
+`[data-capo]`, `[data-mista]`, `[data-immune-con]`; sulla scheda
+`[data-scheda-mista]`, `[data-scheda-abilita]` (con `[data-divisioni]`);
+`[data-azione="chiama-prossima"]`. La riga dell'abilità della scheda si
+chiama `sm-abilita` e non `fa`: `.fa` è la radice della fattoria
+(`giochi/fattoria/stile.css`, fondo verde quasi nero), un foglio globale che
+nel file unico raggiunge anche le classi scoped degli altri — e la riga
+usciva su una fascia scura. `integrazione/torri-figure` guarda che il suo
+fondo resti trasparente.

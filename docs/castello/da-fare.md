@@ -12,25 +12,11 @@ Le voci aperte, con quanto basta per riprenderle.
   carta a mano in `A_MANO` di `src/motore/castello/carta.js`), sapendo che
   una strada nuova vuole `node strumenti/valida-percorsi.mjs` e
   `npm run tara`, perché la vita dei nemici è stata trovata su queste carte.
-- **Due buchi nel Bosco.** Sulla carta il guado e la radura lasciano 63
-  unità di strada che nessuna torre vede, con le loro quattro piazzole (il
-  validatore vuole al massimo 60). La taratura le regge; ridisegnandole, si
-  guardi lì.
 - **Il primo bivio non si spiega.** Dal 29 settembre il bivio dei rami c'è
   anche nel Bosco, dal guado in poi (è la seconda tappa di tutto il gioco):
   il foglio della torre al quarto gradino mostra le due carte con una riga
   ciascuna, e la guida del `?` ne parla in una riga. Se serva qualcosa la
   prima volta che compare — e cosa — è da decidere.
-- **Le isole perdonano il pigro** (`PERDONANO` in `unita/castello`): il
-  taratore guarda fin dove arrivano i nemici e non dove muoiono.
-- **Quello che il castello a poligoni ha lasciato.** Tolto il disegno a
-  poligoni, restano senza nessuno che li legga: i corpi dei mostri
-  (`grafica/castello/corpi-mostri.js` e `grafica/mostri/`, dove `occhi()`
-  esisteva due volte), i terreni dipinti (`grafica/terreni/`) con
-  l'`ambiente` delle tappe che li nomina, e il risolutore delle strade a
-  etichette di `grafica/tessere.js` (`componiPercorso`, che il sotterraneo
-  non usa: lo usano solo il banco e il suo test). Tenerli o toglierli lo
-  decide l'utente.
 - **Il castello a sprite: quello che manca.** I quattro vestiti per
   campagna (grotte e mura prendono in prestito lava e neve, vedi
   `VESTITO_DI` in `scena/vestito.js`); i mostri che respirano sul posto ma

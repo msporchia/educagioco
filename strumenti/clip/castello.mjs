@@ -75,7 +75,9 @@ async function preparaIlCampo (page) {
 async function costruisci (page, ritmo) {
   const punto = await page.evaluate(() => {
     const T = window.__td
-    const i = T.liberi()[0]
+    // a metà campo: vicino alla bocca fermerebbe i draghi appena usciti
+    const lib = T.liberi().map(i => ({ i, y: T.postazioni()[i].y })).sort((a, b) => a.y - b.y)
+    const i = lib.length ? lib[Math.floor(lib.length / 2)].i : undefined
     if (i === undefined) return null
     const p = T.postazioni()[i]
     return T.versoLoSchermo(p.x, p.y)
@@ -117,11 +119,11 @@ export default {
         window.__td.chiamaOnda()                  // i draghi
         window.__td.velocita.value = 3            // ⏩: arrivano in tempo per lo scontro
       })
-      await attesa(900)
+      await attesa(300)
       /* la seconda subito, col tasto: i troll, per il mortaio */
       const manda = await page.locator('[data-azione="chiama-prossima"]').boundingBox().catch(() => null)
       if (manda) await page.mouse.click(manda.x + manda.width / 2, manda.y + manda.height / 2)
-      await attesa(5800)                          // scendono, e le torri sparano
+      await attesa(6400)                          // scendono, e le torri sparano
     },
   },
 }

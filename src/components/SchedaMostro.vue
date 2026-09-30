@@ -2,15 +2,16 @@
 // La scheda di chi sta arrivando: il mostro dell'ondata ingrandito, quanti
 // ne restano, la vita, a quali torri è immune scritto a parole (vedi
 // docs/castello/mostri.md). Il ritratto è lo stesso pittore del campo, su
-// una tela piccola.
+// una tela piccola. Niente classi che un foglio globale usa già: `.fa` era
+// la fattoria (vedi docs/castello/mostri.md, «Nei test»).
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { creaTela } from '../grafica/tela.js'
 import { PITTORI } from '../giochi/castello/scena/pittori.js'
 import { TORRI } from '../data/ops.js'
-import { ABILITA } from '../data/mostri.js'
+import { segnoDi } from '../data/mostri.js'
 
 const props = defineProps({
-  bestia: { type: Object, required: true },   // { id, nome, vola, immune, abilita, capo, con? }
+  bestia: { type: Object, required: true },   // { id, nome, vola, immune, abilita, divisioni, capo, con? }
   vita: { type: Number, default: 0 },         // quanta ne ha uno solo
   quanti: { type: Number, default: 0 },       // quanti ne restano in campo
 })
@@ -55,8 +56,9 @@ watch(() => [props.bestia.id, props.bestia.con?.id], () => tele.forEach(t => t?.
       <span v-if="bestia.immune && bestia.immune.length" class="resiste" data-scheda-immune>
         immune a {{ bestia.immune.map(k => TORRI[k].emoji).join(' ') }}
       </span>
-      <span v-if="bestia.abilita" class="fa" data-scheda-abilita>
-        {{ ABILITA[bestia.abilita].emoji }} {{ ABILITA[bestia.abilita].nome }}
+      <span v-if="bestia.abilita" class="sm-abilita" data-scheda-abilita
+            :data-divisioni="bestia.divisioni > 1 ? bestia.divisioni : null">
+        {{ segnoDi(bestia.abilita, bestia.divisioni).emoji }} {{ segnoDi(bestia.abilita, bestia.divisioni).nome }}
       </span>
     </div>
     <div v-else class="dati">
@@ -64,7 +66,7 @@ watch(() => [props.bestia.id, props.bestia.con?.id], () => tele.forEach(t => t?.
       <span class="riga">❤️ {{ vita }} · ×{{ quanti }}</span>
       <span v-for="x in [bestia, bestia.con]" :key="x.id" class="resiste"
             data-scheda-immune :data-per="x.id">
-        {{ x.nome }}: {{ x.immune.length ? 'immune a ' + x.immune.map(k => TORRI[k].emoji).join(' ') : 'nessuna immunità' }}{{ x.abilita ? ' · ' + ABILITA[x.abilita].emoji : '' }}
+        {{ x.nome }}: {{ x.immune.length ? 'immune a ' + x.immune.map(k => TORRI[k].emoji).join(' ') : 'nessuna immunità' }}{{ x.abilita ? ' · ' + segnoDi(x.abilita, x.divisioni).emoji : '' }}
       </span>
     </div>
   </div>
@@ -86,5 +88,5 @@ watch(() => [props.bestia.id, props.bestia.con?.id], () => tele.forEach(t => t?.
            text-overflow:ellipsis }
 .scheda[data-scheda-mista] { max-width:66% }
 .scheda[data-scheda-mista] .resiste { white-space:normal }
-.fa { font-size:9px; font-weight:800; color:var(--viola-scuro); margin-top:1px; white-space:nowrap }
+.sm-abilita { font-size:9px; font-weight:800; color:var(--viola-scuro); margin-top:1px; white-space:nowrap }
 </style>

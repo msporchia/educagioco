@@ -9,7 +9,8 @@ export const RESPINTO = 0.7   // quanto resta in aria il segno «immune» sopra 
 
 export class Nemico {
   constructor({ d = 0, vita, vel, bestia, vola = false, immune = [], abilita = null,
-                capo = false, paga = 1, taglia = 1, pezzo = false, via = 0, onda = 0 }) {
+                capo = false, paga = 1, taglia = 1, pezzo = false, via = 0, onda = 0,
+                divisioni = abilita === 'dividi' ? 1 : 0 }) {
     this.d = d                       // quanti metri di strada ha già fatto
     this.via = via                   // e su quale delle strade li ha fatti
     this.onda = onda                 // da che ondata viene: la chiude quando non c'è più nessuno
@@ -18,6 +19,7 @@ export class Nemico {
     this.bestia = bestia; this.vola = vola
     this.immune = immune || []
     this.abilita = abilita
+    this.divisioni = divisioni       // quante volte può ancora dividersi
     this.capo = capo; this.paga = paga; this.taglia = taglia; this.pezzo = pezzo
     this.gelo = 0; this.freno = 0; this.fragile = 1
     this.male = 0; this.perQuanto = 0   // il veleno: quanto al secondo, e per quanto

@@ -19,7 +19,7 @@ in `LIBERE_RACCONTO` di `src/data/campagne-castello.js`.
   Non si rinominano.
 - **Ognuna eredita dalla sua campagna** tutti i mostri che ci vivono, le
   torri, i rami e l'`ambiente` dell'ultima tappa. Le abilità sono sempre accese, il capo arriva ogni
-  `CAPO.ogni` ondate; il resto è fisso (`posti` 14, `cap` 10, `attesa` 30).
+  `CAPO.ogni` ondate; il resto è fisso (`posti` 20, `cap` 10, `attesa` 30; le piazzole in [piazzole.md](piazzole.md)).
 - **Si aprono tutte insieme a campagna finita.** `LIBERA` è la prima delle
   quattro, per i banchi che ne vogliono una.
 - **Il tracciato è il più intricato del suo mondo**: niente da insegnare, e
@@ -127,23 +127,26 @@ coi gradi presi come li prende un bambino dal giro delle carte; il banco è
 `unita/regali-castello` (`node test/esegui.mjs regali`). L'ondata a cui si
 cede, per gradi in tasca:
 
-| gradi | 0 | 10 | 20 | 35 | 50 | 100 | 200 | 400 |
-|---|---|---|---|---|---|---|---|---|
-| la radura grande | 22 | 24 | 24 | 25 | 27 | 29 | 29 | 35 |
-| il bivio | 22 | 22 | 25 | 27 | 27 | 27 | 31 | 42 |
-| il bastione | 21 | 21 | 23 | 24 | 24 | 24 | 32 | 32 |
-| il delta | 21 | 23 | 23 | 23 | 23 | 31 | 31 | 39 |
+| gradi | 0 | 10 | 20 | 35 | 50 | 100 |
+|---|---|---|---|---|---|---|
+| la radura grande | 22 | 22 | 24 | 25 | 25 | 29 |
+| il bivio | 22 | 22 | 22 | 22 | 22 | 28 |
+| il bastione | 23 | 23 | 23 | 24 | 24 | 28 |
+| il delta | 18 | 21 | 21 | 22 | 25 | 33 |
 
-Misurata il 29 settembre 2026 sulle carte a scacchiera, coi prezzi che
-rincarano salendo e le bombe strette. Sulla strada curva era 24 · 22 · 21 ·
-21 a zero gradi, e 26 · 28 · 24 · 31 a cento.
+Misurata il 30 settembre 2026, con le venti piazzole, la doppia divisione
+dalla ventesima e le torri riequilibrate. Il giorno prima, con quattordici
+piazzole: 22 · 22 · 21 · 21 a zero gradi, 27 · 27 · 24 · 23 a cinquanta,
+29 · 27 · 24 · 31 a cento. Il bivio adesso sta fermo fino ai cento gradi,
+e il delta a zero cede prima delle venti tarate (il taratore gioca il
+metro, che spende tutto; il banco dei regali gioca un bambino che prende
+le carte a giro).
 
 - **Il record si sposta a gradoni**: di colpo quando i gradi bastano a
   passare il mostro del muro, poi resta fermo fino al muro dopo.
 - **Dieci gradi quasi mai, cinquanta (una dozzina di partite) su tre
   terreni su quattro, cento (venticinque partite) su tutti**: è quello che il
-  banco pretende. Sul bastione il muro della ventunesima lo passa chi ne ha
-  una ventina.
+  banco pretende.
 - **Provati e tolti**: «+1 cuore» non sposta niente (l'ondata che ferma la
   partita ne fa passare ventotto); «+⚡ per nemico fermato» sposta tutto (al
   muro il metro è a corto di soldi, non di potenza: bastava +2,5% per saltare
