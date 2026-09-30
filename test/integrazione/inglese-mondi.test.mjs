@@ -3,11 +3,13 @@
      node test/esegui.mjs inglese-mondi        (la build la fa il lanciatore)
 
    Quello che il motore da solo non può dire (test/unita/inglese-mondi):
-     · la carta English apre la mappa del tesoro, con i mondi in arrivo
+     · la carta English apre la mappa del tesoro, un mondo per anno di
+       scuola; a otto anni la prima è «passata», aperta da ripassare
+     · una tappa di parole fa domande sulle parole del suo argomento: fra
+       i colori, solo colori
      · una frase si compone a tocchi, e sbagliandola si legge il perché,
        «Si fa così» e la frase giusta, con la tessera sbagliata colorata
      · la frase giusta paga, e l'indicatore delle monete lo diceva prima
-     · la partita comincia dalle parole, e le frasi arrivano dopo
      · un tocco che costa si chiede prima, in una bolla accanto alla
        parola: col dito vero, tenendo premuta una tessera, il click che
        arriva dopo non la chiude e non muove la tessera; «No» la chiude
@@ -19,6 +21,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scatto, TELEFONO }
   from '../aiuto/browser.mjs'
+import { WORDS } from '../../src/data/words.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { tappaDi, MONDI } from '../../src/giochi/inglese/dati/mondi.js'
 import { FRASI } from '../../src/giochi/inglese/dati/frasi.js'
@@ -27,48 +30,80 @@ import { PAGA } from '../../src/giochi/inglese/dati/monete.js'
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
 await azzera(page)
+// l'età decide quali mondi sono «passati»: a sei anni e mezzo nessuno
+const conEta = async (eta, resto = {}) => {
+  const vecchio = await leggiProfilo(page)
+  await semina(page, { ...resto, settings: { ...((vecchio || {}).settings || {}), eta } })
+}
+await conEta(6.5)
 
 /* ---------- 1. dalla home alla mappa ---------- */
 const carta = page.locator('.carta.gioco[data-gioco="inglese"]')
 uguale('in home c’è una carta English sola', await carta.count(), 1)
 await carta.click()
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]', { timeout: 5000 })
-uguale('la prima tappa è aperta', await page.locator('[data-tappa="che-cose-1"]').getAttribute('data-stato'), 'aperta')
-uguale('la seconda no', await page.locator('[data-tappa="che-cose-2"]').getAttribute('data-stato'), 'chiusa')
-uguale('a profilo vuoto il grado è zero', await page.locator('[data-tappa="che-cose-1"]').getAttribute('data-grado'), '0')
+uguale('la prima tappa è aperta', await page.locator('[data-tappa="prima-colori"]').getAttribute('data-stato'), 'aperta')
+uguale('la seconda no', await page.locator('[data-tappa="prima-numeri"]').getAttribute('data-stato'), 'chiusa')
+uguale('a profilo vuoto il grado è zero', await page.locator('[data-tappa="prima-colori"]').getAttribute('data-grado'), '0')
 const lontani = MONDI.filter(m => !m.tappe.length).length
 uguale('i mondi senza tappe si vedono in arrivo',
        await page.locator('[data-mondo][data-pronto="0"]').count(), lontani)
+uguale('a sei anni e mezzo nessun mondo è passato', await page.locator('[data-mondo][data-passato]').count(), 0)
 uguale('senza la campagna di prima finita, il gioco di prima non c’è', await page.locator('[data-prima]').count(), 0)
 await scatto(page, 'inglese-mappa-vuota')
 
+/* ---------- 1b. le parole di una tappa: fra i colori, solo colori ----------
+   Era il difetto: con una categoria piccola le risposte sbagliate venivano
+   da tutta la lingua (🔴 fra 🏥🐶📓). */
+const colori = new Set(WORDS.filter(w => w[3] === 'c').flatMap(w => [w[0], w[1], w[2]]).filter(Boolean))
+await page.locator('[data-tappa="prima-colori"]').click()
+const estranee = []
+for (let i = 0; i < 4; i++) {
+  await page.waitForSelector('[data-domanda]')
+  uguale(`una tappa di parole fa domande sulle parole (${i + 1})`,
+         await page.locator('[data-domanda]').getAttribute('data-genere'), 'parola')
+  const testi = await page.locator('[data-domanda] [data-opzione]').evaluateAll(els => els.map(e => e.textContent.trim()))
+  estranee.push(...testi.filter(t => !colori.has(t)))
+  await attendi(page, 400)                                 // la finestra cieca
+  await page.locator('[data-domanda] [data-opzione][data-giusta]').click()
+  await page.waitForSelector('[data-esito="giusta"]')
+  await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 6000 })
+}
+uguale('le risposte sono tutte colori', estranee.join(' '), '')
+await page.locator('button[aria-label="indietro"]').click()
+await page.waitForSelector('[data-mappa-inglese]')
+await page.locator('button[aria-label="indietro"]').click()
+await page.waitForSelector('.carte')
+
 /* ---------- 2. un bambino a metà del primo mondo ----------
-   Le parole della prima tappa sono sapute (forza 6) e le frasi a metà
-   (forza 4): dopo il giro delle parole, le frasi si mettono in ordine. Le
-   altre quattro tappe sono vinte, così il libro del mondo è aperto. */
+   Le parole delle tappe di parole sono sapute (forza 6) e le frasi di
+   «Che cos'è?» a metà (forza 4): si mettono in ordine. Tutte le tappe
+   tranne la bandiera sono vinte, così il libro del mondo è aperto. */
 const ora = Date.now()
 const sa = s => ({ s, ok: 5, err: 0, last: ora, seen: 5, t: 0 })
-const t1 = tappaDi('che-cose-1')
+const t1 = tappaDi('prima-che-cose')
+const paroleDelMondo = MONDI[0].tappe.flatMap(t => t.parole)
 const items = {}
-for (const p of t1.parole) items['en:' + p] = sa(6)
-for (const f of FRASI.filter(f => f.tappa === 'che-cose-1')) items['frase:' + f.id] = sa(4)
+for (const p of paroleDelMondo) items['en:' + p] = sa(6)
+for (const f of FRASI.filter(f => f.tappa === t1.id)) items['frase:' + f.id] = sa(4)
 items['forma:it-is'] = sa(4)
-const vinte = Object.fromEntries(['che-cose-1', 'che-cose-2', 'che-cose-3', 'che-cose-4', 'che-cose-5']
-  .map((id, i) => [id, ora - (5 - i) * 86400000]))
+items['forma:is-it'] = sa(4)
+const vinte = Object.fromEntries(MONDI[0].tappe.filter(t => !t.bandiera)
+  .map((t, i) => [t.id, ora - (20 - i) * 86400000]))
 await semina(page, { coins: 100, items,
-                     campagne: { inglese: { tappa: 5, libera: false, stelle: {}, cfg: {}, vinte } } })
+                     campagne: { inglese: { tappa: Object.keys(vinte).length, libera: false, stelle: {}, cfg: {}, vinte } } })
 await carta.click()
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]')
-uguale('la tappa saputa è piena', await page.locator('[data-tappa="che-cose-1"]').getAttribute('data-grado'), '10')
-uguale('la bandiera si è aperta', await page.locator('[data-tappa="che-cose-bandiera"]').getAttribute('data-stato'), 'aperta')
-uguale('il libro è aperto', await page.locator('[data-libro="che-cose"]').getAttribute('data-stato'), 'aperta')
-uguale('il cassetto è aperto', await page.locator('[data-cassetto="che-cose"]').getAttribute('data-stato'), 'aperta')
+uguale('la tappa di parole saputa è piena', await page.locator('[data-tappa="prima-animali"]').getAttribute('data-grado'), '10')
+uguale('la bandiera si è aperta', await page.locator('[data-tappa="prima-bandiera"]').getAttribute('data-stato'), 'aperta')
+uguale('il libro è aperto', await page.locator('[data-libro="prima"]').getAttribute('data-stato'), 'aperta')
+uguale('il cassetto è aperto', await page.locator('[data-cassetto="prima"]').getAttribute('data-stato'), 'aperta')
 uguale('il secondo mondo resta chiuso fino alla bandiera',
-       await page.locator('[data-tappa="mie-cose-1"]').getAttribute('data-stato'), 'chiusa')
+       await page.locator('[data-tappa="seconda-corpo"]').getAttribute('data-stato'), 'chiusa')
 await scatto(page, 'inglese-mappa')
 
 /* ---------- 3. una frase composta a tocchi, prima storta ---------- */
-// il primo giro fa solo parole (motore/sessione.js): si risponde giusto finché arriva una frase
+// le parole le sa già: in una tappa di frasi si comincia dalle frasi (motore/sessione.js)
 async function finoAllaFrase() {
   let parole = 0
   for (;;) {
@@ -81,11 +116,10 @@ async function finoAllaFrase() {
     await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 6000 })
   }
 }
-await page.locator('[data-tappa="che-cose-1"]').click()
+await page.locator('[data-tappa="prima-che-cose"]').click()
 await page.waitForSelector('[data-domanda]')
-uguale('si comincia da una parola', await page.locator('[data-domanda]').getAttribute('data-genere'), 'parola')
-const giroParole = await finoAllaFrase()
-controlla('le frasi arrivano dopo le parole', giroParole >= t1.parole.length, `${giroParole} parole prima`)
+uguale('le parole sono sapute: si comincia da una frase', await page.locator('[data-domanda]').getAttribute('data-genere'), 'frase')
+await finoAllaFrase()
 uguale('la frase a metà si mette in ordine', await page.locator('[data-domanda]').getAttribute('data-formato'), 'monta')
 uguale('l’indicatore dice che la domanda paga',
        await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
@@ -114,7 +148,7 @@ async function dito(x, y, tieni = 60) {
 const centro = async loc => { const b = await loc.boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2] }
 await attendi(page, 400)
 const nome = page.locator('[data-banco] [data-tessera]').filter({
-  has: page.locator(t1.parole.map(p => `[data-parola="${p}"]`).join(', ')) }).first()
+  has: page.locator(paroleDelMondo.map(p => `[data-parola="${p}"]`).join(', ')) }).first()
 const idNome = await nome.getAttribute('data-tessera')
 await dito(...await centro(nome), 700)
 controlla('tenuta premuta una parola saputa, prima si chiede', await page.locator('[data-svela]').count() === 1)
@@ -171,8 +205,8 @@ await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 6000 })
 
 /* ---------- 5. il libro ---------- */
 await page.locator('button[aria-label="indietro"]').click()
-await page.waitForSelector('[data-libro="che-cose"]')
-await page.locator('[data-libro="che-cose"]').click()
+await page.waitForSelector('[data-libro="prima"]')
+await page.locator('[data-libro="prima"]').click()
 await page.waitForSelector('[data-libro-testo]')
 uguale('il libro dice quanto può rendere', await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
 await scatto(page, 'inglese-libro')
@@ -180,8 +214,8 @@ await scatto(page, 'inglese-libro')
 await page.locator('[data-libro-testo] [data-parola="is"]').first().click()
 await page.waitForSelector('[data-traduzione]')
 controlla('una parola gratis non chiede niente', await page.locator('[data-svela]').count() === 0)
-// «cat» è saputa: toccarla costerebbe il guadagno di una domanda, e prima lo si chiede
-const gatto = page.locator('[data-libro-testo] [data-parola="cat"]').first()
+// «backpack» è saputa: toccarla costerebbe il guadagno di una domanda, e prima lo si chiede
+const gatto = page.locator('[data-libro-testo] [data-parola="backpack"]').first()
 await gatto.click()
 await page.waitForSelector('[data-svela]')
 const chiede = await page.locator('[data-svela]').innerText()
@@ -197,7 +231,7 @@ await attendi(page, 400)
 await page.locator('[data-azione="svela-si"]').click()
 await page.waitForSelector('[data-traduzione]')
 controlla('la parola toccata dice cosa vuol dire',
-          (await page.locator('[data-traduzione]').innerText()).includes('gatto'))
+          (await page.locator('[data-traduzione]').innerText()).includes('zaino'))
 controlla('e che quella domanda non paga', /non paga/.test(await page.locator('[data-traduzione]').innerText()))
 uguale('l’indicatore lo dice prima di rispondere', await page.locator('[data-paga]').getAttribute('data-paga-si'), '0')
 await scatto(page, 'inglese-parola')
@@ -222,9 +256,27 @@ await attendi(page, 600)
 const pagato = (await leggiProfilo(page)).coins - moneteLibro
 uguale('il tocco a pagamento ha tolto il guadagno di una domanda', pagato, (nDomande - 1) * 4)
 controlla('la parola chiesta conta come non saputa',
-          ((await leggiProfilo(page)).items['en:cat'] || {}).err > 0)
+          ((await leggiProfilo(page)).items['en:backpack'] || {}).err > 0)
 await page.locator('[data-fine] [data-azione="mappa"]').click()
 await page.waitForSelector('[data-mappa-inglese]')
+
+/* ---------- 6. a otto anni la prima è già fatta a scuola ----------
+   Il mondo della prima è «passato»: aperto tutto, bandiera compresa, da
+   ripassare quando vuole — ma non vinto — e il mondo dopo si apre come se
+   l'avesse finito. */
+await page.locator('button[aria-label="indietro"]').click()
+await page.waitForSelector('.carte')
+await conEta(8, { campagne: { inglese: { tappa: 0, libera: false, stelle: {}, cfg: {}, vinte: {} } } })
+await carta.click()
+await page.waitForSelector('[data-mappa-inglese] [data-tappa]')
+uguale('la prima è passata', await page.locator('[data-mondo="prima"]').getAttribute('data-passato'), '1')
+uguale('e lo dice', await page.locator('[data-mondo][data-passato]').count(), 1)
+uguale('la sua bandiera è aperta senza averla vinta',
+       await page.locator('[data-tappa="prima-bandiera"]').getAttribute('data-stato'), 'aperta')
+uguale('la seconda comincia da capo', await page.locator('[data-tappa="seconda-corpo"]').getAttribute('data-stato'), 'aperta')
+uguale('una tappa alla volta', await page.locator('[data-tappa="seconda-famiglia"]').getAttribute('data-stato'), 'chiusa')
+uguale('la freccia di adesso è una sola', await page.locator('.ing-qui').count(), 1)
+await scatto(page, 'inglese-passati')
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))
 await browser.close()

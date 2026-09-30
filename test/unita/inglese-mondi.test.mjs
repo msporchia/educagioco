@@ -8,6 +8,11 @@
    giusta per domanda, ogni ramo raggiungibile, nessuna trappola uguale
    alla giusta o a una variante, ogni parola nota nel suo mondo, ogni
    perché sotto i 70 caratteri (src/giochi/inglese/motore/guasti.js).
+   E i difetti trovati giocando, resi impossibili in generale: una tappa
+   di parole ha solo parole del suo argomento e le risposte sbagliate
+   vengono da lì; una frase usa solo parole note e la struttura della sua
+   tappa; nessuna trappola sgrammaticata per caso (a trousers, two dog);
+   le frasi ripescate solo dove si ripassano le frasi.
    Il progetto è in docs/lingue/mondi.md.
    ═══════════════════════════════════════════════════════════════════ */
 import { readdirSync } from 'node:fs'
@@ -16,7 +21,15 @@ import { dirname, resolve } from 'node:path'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { WORDS } from '../../src/data/words.js'
 import { newItem, record, strength, MAX_S } from '../../src/store/srs.js'
-import { MONDI, TAPPE, tappaDi, guastiDeiMondi, CATEGORIE_DI_STRUTTURA } from '../../src/giochi/inglese/dati/mondi.js'
+import { MONDI, TAPPE, tappaDi, mondoDi, guastiDeiMondi, CATEGORIE_DI_STRUTTURA, inizioDellAnno }
+  from '../../src/giochi/inglese/dati/mondi.js'
+import { guastiDegliArgomenti, paroleDellArgomento } from '../../src/giochi/inglese/dati/argomenti.js'
+import { TAPPE_DI_PRIMA } from '../../src/giochi/inglese/dati/travaso.js'
+import { travasa, travasate, quanteVinte } from '../../src/giochi/inglese/motore/travaso.js'
+import { sgrammaticata } from '../../src/giochi/inglese/motore/grammatica.js'
+import { TAPPE_DEL_GIOCO } from '../../src/data/portata-giochi.js'
+import { giocoDaOffrire } from '../../src/data/portata.js'
+import manifesto from '../../src/giochi/inglese/gioco.js'
 import { guastiDelleForme, FORME } from '../../src/giochi/inglese/dati/forme.js'
 import { guastiDegliElenchi } from '../../src/giochi/inglese/dati/elenchi.js'
 import { TRAPPOLE } from '../../src/giochi/inglese/dati/trappole.js'
@@ -28,10 +41,12 @@ import { traduci } from '../../src/giochi/inglese/motore/lessico.js'
 import { formatoPerForza, tessereInPiu, costruisci, giudica, contesto } from '../../src/giochi/inglese/motore/formati.js'
 import { grado, gradoTappa, ripresa } from '../../src/giochi/inglese/motore/grado.js'
 import { Tocchi, TOCCHI_GRATIS, domandeCheLPagano, domandaDelTocco } from '../../src/giochi/inglese/motore/tocchi.js'
-import { segnaVinta, tappaAperta, mondoAperto, cassettoAperto, statoMappa } from '../../src/giochi/inglese/motore/mappa.js'
+import { segnaVinta, tappaAperta, mondoAperto, cassettoAperto, statoMappa, mondoPassato }
+  from '../../src/giochi/inglese/motore/mappa.js'
 import { Sessione } from '../../src/giochi/inglese/motore/sessione.js'
 import { racconta, mondiDi, NON_SI_SA } from '../../src/giochi/inglese/motore/libro.js'
-import { guastiDelleFrasi, guastiDelCapitolo, sorte, ordineGiusto } from '../../src/giochi/inglese/motore/guasti.js'
+import { guastiDelleFrasi, guastiDelCapitolo, guastiDelleParole, sorte, ordineGiusto }
+  from '../../src/giochi/inglese/motore/guasti.js'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const CARTELLA = resolve(RADICE, 'src/giochi/inglese/dati')
@@ -42,6 +57,7 @@ const GIORNO = 86400000
 /* ═══════════ 1. i dati stanno in piedi ═══════════ */
 titolo('DATI')
 nessuno('il grafo dei mondi', guastiDeiMondi())
+nessuno('gli argomenti', guastiDegliArgomenti())
 nessuno('le forme', guastiDelleForme())
 nessuno('gli elenchi del libro', guastiDegliElenchi(new Set(WORDS.map(w => w[0]))))
 {
@@ -78,7 +94,7 @@ uguale('la fila mette maiuscola e ?', inBella(['is', 'it', 'a', 'dog'], { domand
 titolo('TRAPPOLE')
 {
   const ids = new Set()
-  const domanda = en => /^(is|are|am|have|has|can|do|does)\b/i.test(en)
+  const domanda = en => /^(is|are|am|have|has|can|do|does|where|what|how)\b/i.test(en)
   for (const r of TRAPPOLE) {
     controlla(`trappola ${r.id}: id unico`, !ids.has(r.id)); ids.add(r.id)
     controlla(`trappola ${r.id}: operazione nota`, !!OPERAZIONI[r.fa])
@@ -143,7 +159,8 @@ titolo('CAPITOLI')
     nessuno(`capitolo ${c.id}`, guastiDelCapitolo(c))
     nota(`${c.id}: ${mondiDi(c).length} varianti`)
   }
-  for (const m of MONDI.filter(x => x.tappe.length))
+  // il libro usa le strutture del mondo: chi ha solo le tappe di parole (quarta, quinta) non l'ha ancora
+  for (const m of MONDI.filter(x => x.tappe.some(t => t.frasi)))
     controlla(`il mondo ${m.id} ha un capitolo`, capitoli.some(c => c.mondo === m.id))
   // «Non si sa» è la giusta quando il testo non lo dice
   const picnic = capitoli.find(c => c.id === 'il-picnic')
@@ -160,7 +177,7 @@ titolo('CAPITOLI')
 /* ═══════════ 6. il grado, e da dove si riprende ═══════════ */
 titolo('GRADO')
 {
-  const t1 = tappaDi('che-cose-1')
+  const t1 = tappaDi('prima-animali')
   const voci = vociDi(t1)
   uguale('niente saputo: grado 0', gradoTappa(t1, () => 0), 0)
   uguale('tutto imparato: grado 10', gradoTappa(t1, () => 4), 10)
@@ -173,26 +190,30 @@ titolo('GRADO')
   const oggi = gradoTappa(t1, forzaA(t0 + 13 * GIORNO))
   const fraUnAnno = gradoTappa(t1, forzaA(t0 + 400 * GIORNO))
   controlla('il grado cala col tempo', oggi === 10 && fraUnAnno < oggi, `${oggi} → ${fraUnAnno}`)
-  // si riprende dalle più deboli, le parole prima delle frasi
-  const r = ripresa(t1, k => (k === 'en:cow' ? 3 : k === 'frase:m-dog' ? 1 : 1))
+  // si riprende dalle più deboli, le parole prima delle frasi (alla 🏁, dove ci sono tutte e due)
+  const b = tappaDi('prima-bandiera')
+  const r = ripresa(b, k => (k === 'en:cow' ? 3 : 1))
   controlla('prima le più deboli, a pari forza le parole', r.voci[0].genere === 'parola' && r.voci[r.voci.length - 1].chiave === 'en:cow')
   controlla('ogni voce ha il formato della sua forza',
     r.voci.find(v => v.chiave === 'frase:m-dog').formato === 'senso')
+  controlla('una tappa di parole non ha frasi', vociDi(t1).every(k => k.startsWith('en:')))
+  controlla('una tappa di frasi non ha parole nuove',
+    vociDi(tappaDi('prima-che-cose')).every(k => /^(frase|forma):/.test(k)))
 }
 
 /* ═══════════ 7. la mappa ═══════════ */
 titolo('MAPPA')
 {
   const c = { tappa: 0, libera: false, stelle: {}, cfg: {} }
-  controlla('all’inizio si apre solo la prima tappa', tappaAperta(c, 'che-cose-1') && !tappaAperta(c, 'che-cose-2'))
-  controlla('il secondo mondo è chiuso', !mondoAperto(c, 'mie-cose'))
-  controlla('il cassetto è chiuso', !cassettoAperto(c, 'che-cose'))
-  uguale('la prima vittoria è la prima', segnaVinta(c, 'che-cose-1', 1), true)
-  uguale('la seconda no', segnaVinta(c, 'che-cose-1', 2), false)
-  controlla('vinta una tappa, si apre la dopo e il cassetto', tappaAperta(c, 'che-cose-2') && cassettoAperto(c, 'che-cose'))
+  controlla('all’inizio si apre solo la prima tappa', tappaAperta(c, 'prima-colori') && !tappaAperta(c, 'prima-numeri'))
+  controlla('il secondo mondo è chiuso', !mondoAperto(c, 'seconda'))
+  controlla('il cassetto è chiuso', !cassettoAperto(c, 'prima'))
+  uguale('la prima vittoria è la prima', segnaVinta(c, 'prima-colori', 1), true)
+  uguale('la seconda no', segnaVinta(c, 'prima-colori', 2), false)
+  controlla('vinta una tappa, si apre la dopo e il cassetto', tappaAperta(c, 'prima-numeri') && cassettoAperto(c, 'prima'))
   for (const t of MONDI[0].tappe) segnaVinta(c, t.id)
-  controlla('finito il primo mondo, si apre il secondo', mondoAperto(c, 'mie-cose') && tappaAperta(c, 'mie-cose-1'))
-  controlla('un mondo senza tappe resta chiuso', !mondoAperto(c, 'dove'))
+  controlla('finito il primo mondo, si apre il secondo', mondoAperto(c, 'seconda') && tappaAperta(c, 'seconda-corpo'))
+  controlla('un mondo senza tappe resta chiuso', !mondoAperto(c, 'prova-finale'))
   uguale('tappa conta le vinte', c.tappa, MONDI[0].tappe.length)
   const stato = statoMappa(c, () => 0)
   controlla('la mappa ha tutti i mondi', stato.length === MONDI.length && stato[0].finito)
@@ -244,9 +265,10 @@ titolo('SESSIONE')
   const ora = () => adesso
   const formati = new Set()
   let partite = 0
-  // cinque giorni di fila sulla prima tappa, sempre giusto
-  for (let giorno = 0; giorno < 5; giorno++) {
-    const s = new Sessione({ tappa: tappaDi('che-cose-1'), itemDi, ora, rnd: sorte(giorno + 1) })
+  // cinque giorni di fila sulle parole, poi cinque sulle frasi che le usano, sempre giusto
+  for (let giorno = 0; giorno < 10; giorno++) {
+    const id = giorno < 5 ? 'prima-animali' : 'prima-che-cose'
+    const s = new Sessione({ tappa: tappaDi(id), itemDi, ora, rnd: sorte(giorno + 1) })
     let turni = 0
     while (!s.finita && turni++ < 200) {
       const d = s.prossima()
@@ -262,12 +284,14 @@ titolo('SESSIONE')
     partite++
     adesso += GIORNO
   }
-  const g = gradoTappa(tappaDi('che-cose-1'), k => strength(itemDi(k), adesso))
+  const g = gradoTappa(tappaDi('prima-animali'), k => strength(itemDi(k), adesso))
   controlla('dopo cinque giorni la tappa è salita', g >= 6, `grado ${g}`)
+  const gf = gradoTappa(tappaDi('prima-che-cose'), k => strength(itemDi(k), adesso))
+  controlla('e anche quella delle frasi', gf >= 5, `grado ${gf}`)
   controlla('i formati salgono con la forza', formati.has('riconosci') && (formati.has('completa') || formati.has('monta')),
             [...formati].join(', '))
   // una domanda con un tocco a pagamento non paga, anche giusta
-  const s = new Sessione({ tappa: tappaDi('che-cose-2'), itemDi, ora, rnd: sorte(9) })
+  const s = new Sessione({ tappa: tappaDi('prima-animali'), itemDi, ora, rnd: sorte(9) })
   const d = s.prossima()
   const t = new Tocchi({ itemDi, ora })
   for (let i = 0; i < 5; i++) t.tocca('pig')
@@ -277,10 +301,10 @@ titolo('SESSIONE')
   const es = s.rispondi(d, d.opzioni ? d.opzioni.find(o => o.giusta) : ordineGiusto(d), { tocchi: t2 })
   controlla('giusta ma con un tocco a pagamento: non paga', es.giusta && !es.paga)
   // la 🏁 ripassa tutto il mondo
-  const b = new Sessione({ tappa: tappaDi('che-cose-bandiera'), itemDi, ora, rnd: sorte(4) })
+  const b = new Sessione({ tappa: tappaDi('prima-bandiera'), itemDi, ora, rnd: sorte(4) })
   controlla('la bandiera pesca da tutto il mondo', b.pool.some(k => k === 'frase:e-cat-1') && b.pool.some(k => k === 'en:dog'))
   // il cassetto gioca con le parole di oggi
-  const cass = new Sessione({ tappa: cassettoDi('che-cose'), itemDi, ora, rnd: sorte(5) })
+  const cass = new Sessione({ tappa: cassettoDi('prima'), itemDi, ora, rnd: sorte(5) })
   const dc = cass.prossima()
   controlla('il cassetto fa domande sulle parole', dc && dc.genere === 'parola')
   nota(`${partite} partite giocate, formati visti: ${[...formati].join(', ')}`)
@@ -289,10 +313,131 @@ titolo('SESSIONE')
 /* ═══════════ 10. le parole note ═══════════ */
 titolo('PAROLE NOTE')
 {
-  const note = paroleNote('mie-cose', 'mie-cose-1')
+  const note = paroleNote('seconda', 'seconda-cibo')
   controlla('al secondo mondo si sanno le parole del primo', note.has('dog') && note.has('red') && note.has('apple'))
   controlla('ma non quelle delle tappe dopo', !note.has('hat'))
+  const allaFrase = paroleNote('terza', 'terza-c-e')
+  controlla('in una tappa di frasi si sanno tutte le parole del mondo', allaFrase.has('kitchen') && allaFrase.has('swim'))
+  controlla('e i mesi, in minuscolo come tutto', allaFrase.has('may'))
   controlla('le categorie di struttura non hanno cassetto', CATEGORIE_DI_STRUTTURA.includes('q'))
+}
+
+/* ═══════════ 11. i difetti trovati giocando ═══════════ */
+titolo('DIFETTI')
+{
+  // le risposte sbagliate delle domande sulle parole: dall'argomento, mai da tutta la lingua (🔴 fra 🏥🐶📓)
+  nessuno('le domande sulle parole restano nel loro argomento', guastiDelleParole())
+  // e nella partita vera, per ogni parola di una tappa piccola
+  const items = new Map()
+  const itemDi = k => { if (!items.has(k)) items.set(k, newItem()); return items.get(k) }
+  const colori = new Set(paroleDellArgomento('colori'))
+  const s = new Sessione({ tappa: tappaDi('prima-colori'), itemDi, rnd: sorte(2) })
+  // quello che si può vedere di un colore: la parola, l'italiano, l'emoji
+  const ammessi = new Set(WORDS.filter(w => w[3] === 'c').flatMap(w => [w[0], w[1], w[2]]).filter(Boolean))
+  const fuori = []
+  for (let i = 0; i < 30; i++) {
+    const d = s.prossima()
+    if (!d) break
+    for (const o of d.opzioni) if (!ammessi.has(o.testo)) fuori.push(o.testo)
+    s.rispondi(d, d.opzioni.find(o => o.giusta))
+  }
+  uguale('«I colori» non mostra figure che non sono colori', fuori.join(' '), '')
+
+  // una tappa di parole ha solo parole del suo argomento
+  const miste = TAPPE.filter(t => t.argomento).flatMap(t => {
+    const dentro = new Set(paroleDellArgomento(t.argomento))
+    return t.parole.filter(p => !dentro.has(p)).map(p => `${t.id}: ${p}`)
+  })
+  uguale('una tappa di parole ha solo parole del suo argomento', miste.join(', '), '')
+  controlla('«I colori» sono solo colori', tappaDi('prima-colori').parole.every(p => colori.has(p)))
+
+  // le frasi ripescate dai mondi prima: solo dove si ripassano le frasi
+  const vuoto = new Map()
+  const nuovo = k => { if (!vuoto.has(k)) vuoto.set(k, newItem()); return vuoto.get(k) }
+  const diParole = new Sessione({ tappa: tappaDi('seconda-corpo'), itemDi: nuovo, rnd: sorte(1) })
+  uguale('una tappa di parole non ripesca frasi', diParole.pool.filter(k => k.startsWith('frase:')).join(), '')
+  const diFrasi = new Sessione({ tappa: tappaDi('seconda-mi-piace'), itemDi: nuovo, rnd: sorte(1) })
+  controlla('una tappa di frasi ripesca quelle dei mondi prima, se la forma è debole',
+    diFrasi.pool.some(k => k.startsWith('frase:') && fraseDi(k.slice(6)).mondo === 'prima'))
+  controlla('e comincia dalle parole che le sue frasi usano e che non sa ancora',
+    diFrasi.primoGiro.length > 0 && diFrasi.primoGiro.every(k => /^(en|verbo):/.test(k)))
+
+  // il controllo sulla grammatica del numero: i casi trovati giocando
+  for (const storta of ['I have got a trousers', 'has she got a big hair', 'it is a elephant', 'they are two dog',
+                        'I like a milk', 'it is an ball'])
+    controlla(`«${storta}» è sgrammaticata`, !!sgrammaticata(storta))
+  for (const dritta of ['I have got blue trousers', 'she has got long hair', 'it is an orange ball',
+                        'they are two fish', 'I like milk', 'there is snow in January', 'they are a cat and a dog'])
+    uguale(`«${dritta}» sta in piedi`, sgrammaticata(dritta), null)
+}
+
+/* ═══════════ 12. l'anno di scuola e l'età ═══════════ */
+titolo('ETÀ')
+{
+  const anni = MONDI.filter(m => m.tappe.length).map(m => m.anno)
+  uguale('un mondo per anno di scuola, nell’ordine', anni.join(','), '1,2,3,4,5')
+  const fuoriAnno = TAPPE.filter(t => t.portata < inizioDellAnno(mondoDi(t.mondo).anno) ||
+                                      t.portata >= inizioDellAnno(mondoDi(t.mondo).anno + 1))
+  uguale('ogni tappa ha la portata del suo anno', fuoriAnno.map(t => t.id).join(), '')
+  controlla('prima le parole, poi le frasi, in ogni mondo', MONDI.every(m => {
+    const specie = m.tappe.filter(t => !t.bandiera).map(t => (t.frasi ? 1 : 0))
+    return specie.every((x, i) => i === 0 || x >= specie[i - 1])
+  }))
+  controlla('la carta guarda i mondi, non la campagna di prima', TAPPE_DEL_GIOCO.inglese === TAPPE)
+  controlla('a sei anni e mezzo l’inglese si offre (la prima elementare)', giocoDaOffrire(TAPPE, { eta: 6.5 }))
+  controlla('a sei anni nessun mondo è passato', MONDI.every(m => !mondoPassato(m.id, 6)))
+  controlla('a otto anni la prima è passata, la seconda no', mondoPassato('prima', 8) && !mondoPassato('seconda', 8))
+  controlla('a dieci anni anche seconda e terza', mondoPassato('seconda', 10) && mondoPassato('terza', 10) &&
+                                                   !mondoPassato('quarta', 10))
+  const c = { tappa: 0, stelle: {}, cfg: {} }
+  const r8 = { eta: 8 }
+  controlla('un mondo passato è aperto tutto, da ripassare', mondoPassato('prima', 8) &&
+    tappaAperta(c, 'prima-bandiera', r8) && cassettoAperto(c, 'prima', r8))
+  controlla('ma non è vinto', !statoMappa(c, () => 0, r8)[0].finito)
+  controlla('e apre il mondo dopo come se fosse finito', mondoAperto(c, 'seconda', r8) &&
+    tappaAperta(c, 'seconda-corpo', r8) && !tappaAperta(c, 'seconda-famiglia', r8))
+  controlla('senza età non passa niente', !mondoAperto(c, 'seconda', { eta: null }))
+  uguale('la mappa lo dice', statoMappa(c, () => 0, r8).filter(m => m.passato).map(m => m.id).join(), 'prima')
+}
+
+/* ═══════════ 13. chi aveva vinto le tappe di prima ═══════════ */
+titolo('TRAVASO')
+{
+  const tutte = Object.fromEntries(Object.keys(TAPPE_DI_PRIMA).map((id, i) => [id, 1000 + i]))
+  const dopo = travasate(tutte)
+  const nate = Object.keys(dopo).filter(id => !TAPPE_DI_PRIMA[id]).sort()
+  nota('nascono vinte:', nate.join(' '))
+  for (const id of ['prima-animali', 'prima-numeri', 'prima-scuola', 'prima-che-cose', 'prima-colore',
+                    'prima-quanti', 'prima-questo', 'seconda-corpo', 'seconda-famiglia', 'seconda-cibo',
+                    'seconda-pranzo', 'seconda-vestiti', 'seconda-mi-piace', 'seconda-mio', 'seconda-ho',
+                    'seconda-ha'])
+    controlla(`${id}: tutto quello che insegna era vinto, nasce vinta`, !!dopo[id])
+  for (const id of ['prima-colori', 'prima-giocattoli', 'prima-ciao', 'prima-bandiera', 'seconda-venti',
+                    'seconda-come', 'seconda-bandiera', 'terza-casa'])
+    controlla(`${id}: dentro c'è qualcosa di nuovo, resta da fare`, !dopo[id])
+  // la regola, detta per ogni tappa: nasce vinta se e solo se quello che insegna c'era
+  const parole = new Set(Object.values(TAPPE_DI_PRIMA).flatMap(t => t.parole))
+  const forme = new Set(Object.values(TAPPE_DI_PRIMA).flatMap(t => t.forme))
+  const storte = TAPPE.filter(t => !t.bandiera).filter(t =>
+    !!dopo[t.id] !== (t.frasi ? t.forme.every(f => forme.has(f)) : t.parole.every(p => parole.has(p))))
+  uguale('la regola vale per ogni tappa', storte.map(t => t.id).join(), '')
+  controlla('le vinte di prima restano', Object.keys(TAPPE_DI_PRIMA).every(id => dopo[id]))
+  controlla('col giorno della prima vittoria', dopo['prima-animali'] === 1000)
+  // una sola tappa vinta: nasce solo quello che insegnava tutto intero
+  const poco = travasate({ 'che-cose-1': 5 })
+  uguale('con «gli animali facili» e basta non nasce niente', Object.keys(poco).join(), 'che-cose-1')
+  const due = travasate({ 'che-cose-1': 5, 'che-cose-2': 6 })
+  controlla('con tutte e due le tappe degli animali nascono gli animali e «Che cos’è?»',
+    due['prima-animali'] && due['prima-che-cose'] && !due['prima-colori'])
+  // sul profilo: si conta solo quello che c'è, e una seconda volta non cambia niente
+  const c = { tappa: 12, vinte: { ...tutte } }
+  controlla('il travaso cambia il profilo', travasa(c))
+  uguale('e conta solo le tappe che ci sono', c.tappa, nate.length)
+  controlla('rifatto non cambia più niente', !travasa(c))
+  uguale('chi non aveva niente resta com’era', JSON.stringify(travasate({ 'prima-colori': 3 })), '{"prima-colori":3}')
+  controlla('il riassunto della home conta già le tappe travasate',
+    new RegExp(`^${nate.length} tappe su`).test(manifesto.riassunto({ vinte: tutte })), manifesto.riassunto({ vinte: tutte }))
+  uguale('quanteVinte ignora le chiavi di prima', quanteVinte({ 'che-cose-1': 1, 'prima-colori': 2 }), 1)
 }
 
 riassunto('inglese a mondi')

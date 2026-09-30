@@ -6,7 +6,8 @@
 import { ref, shallowRef, computed, reactive, watch, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { state, item, answer, segna, persist, flushNow, engProgresso, tuttoAperto } from '../../store/profile.js'
+import { state, item, answer, segna, persist, flushNow, engProgresso, tuttoAperto, etaDelBambino }
+  from '../../store/profile.js'
 import { strength, newItem } from '../../store/srs.js'
 import { incassa, premioDetto } from '../../store/varieta.js'
 import { pronuncia, haVoce, prepara, zittisci } from '../../voce.js'
@@ -19,6 +20,7 @@ import { CHIAVE, mondoDi, tappaDi } from './dati/mondi.js'
 import { CAPITOLI } from './dati/capitoli.js'
 import { pagaDi, PAGA_CAPITOLO } from './dati/monete.js'
 import { statoMappa, segnaVinta, tappaAperta, vinta } from './motore/mappa.js'
+import { travasa } from './motore/travaso.js'
 import { Sessione } from './motore/sessione.js'
 import { Tocchi, domandeCheLPagano, domandaDelTocco } from './motore/tocchi.js'
 import { cassettoDi, mondoDellaTappa } from './motore/grafo.js'
@@ -41,6 +43,10 @@ const emit = defineEmits(['vai'])
 
 const vista = ref('mappa')          // mappa | tappa | libro | prima
 const c = progresso(CHIAVE)
+// chi aveva vinto tappe dei mondi di prima le ritrova (motore/travaso.js)
+if (travasa(c)) persist()
+// i lucchetti tolti dai grandi, e i mondi «passati» per l'età
+const regole = () => ({ tutto: tuttoAperto(), eta: etaDelBambino() })
 const orologio = usaOrologio()
 const { attesa, giro } = orologio
 
@@ -50,7 +56,7 @@ const forzaDi = k => strength(leggi(k), Date.now())
 
 /* ═══════════ la mappa ═══════════ */
 const ridisegna = ref(0)
-const stato = computed(() => { void ridisegna.value; return statoMappa(c, forzaDi, tuttoAperto()) })
+const stato = computed(() => { void ridisegna.value; return statoMappa(c, forzaDi, regole()) })
 const extra = computed(() => {
   void ridisegna.value
   const out = {}
@@ -59,7 +65,7 @@ const extra = computed(() => {
     const mondo = mondoDi(m.id)
     const ultima = mondo.tappe[mondo.tappe.length - 1]
     out[m.id] = {
-      libro: capitoliDi(CAPITOLI, m.id).length ? { aperto: tappaAperta(c, ultima.id, tuttoAperto()) } : null,
+      libro: capitoliDi(CAPITOLI, m.id).length ? { aperto: tappaAperta(c, ultima.id, regole()) } : null,
       cassetto: m.cassetto && m.cassetto.chiavi ? { aperto: m.cassetto.aperto } : null,
     }
   }
@@ -194,7 +200,7 @@ function chiudiTappa() {
   }
   const m = t.cassetto ? null : mondoDellaTappa(t.id)
   const dopo = m ? m.tappe[m.tappe.findIndex(x => x.id === t.id) + 1] : null
-  const avanti = dopo && !vinta(c, dopo.id) && tappaAperta(c, dopo.id, tuttoAperto()) ? dopo : null
+  const avanti = dopo && !vinta(c, dopo.id) && tappaAperta(c, dopo.id, regole()) ? dopo : null
   fine.value = {
     titolo: t.cassetto ? 'Il cassetto è in ordine'
       : primaVolta ? (t.bandiera ? 'Il mondo è tuo!' : 'Tappa vinta!') : 'Tappa ripassata',

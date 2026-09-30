@@ -21,6 +21,14 @@ let occhio = null
 let giaScesa = false
 
 const quadro = computed(() => (W.value ? disponi(props.stato, W.value, m => props.extra[m]) : null))
+// i mondi «passati» per età sono aperti da ripassare, ma la freccia di adesso
+// sta dove c'è ancora da fare (se ce n'è)
+const passati = computed(() => new Set(props.stato.filter(m => m.passato).map(m => m.id)))
+const ePassato = id => passati.value.has(id)
+const adessoVero = computed(() => {
+  const qui = quadro.value ? quadro.value.nodi.filter(n => n.adesso) : []
+  return qui.find(n => !ePassato(n.mondo)) || qui[0] || null
+})
 
 function misura() {
   if (!scorre.value) return
@@ -33,7 +41,7 @@ function dipingi() {
 
 function scendi() {
   if (giaScesa || !quadro.value || !scorre.value) return
-  const n = quadro.value.nodi.find(x => x.adesso)
+  const n = adessoVero.value
   giaScesa = true
   if (n) scorre.value.scrollTop = Math.max(0, n.y - scorre.value.clientHeight * 0.42)
 }
@@ -69,9 +77,9 @@ const racconto = n => n.tipo === 'tappa'
 
       <div v-for="t in quadro.titoli" :key="'m' + t.mondo" class="ing-mondo-nome"
            :class="{ 'ing-lontano': !t.pronto, 'ing-chiuso': t.pronto && !t.aperto }"
-           :data-mondo="t.mondo" :data-pronto="t.pronto ? '1' : '0'"
+           :data-mondo="t.mondo" :data-pronto="t.pronto ? '1' : '0'" :data-passato="ePassato(t.mondo) ? '1' : null"
            :style="{ left: t.x + 'px', top: t.y + 'px', width: Math.max(90, t.larg - 8) + 'px' }">
-        {{ t.nome }}
+        {{ t.nome }}<i v-if="ePassato(t.mondo)" class="ing-passato">già fatto a scuola: da ripassare</i>
       </div>
 
       <template v-for="n in quadro.nodi" :key="n.chiave">
@@ -90,7 +98,7 @@ const racconto = n => n.tipo === 'tappa'
           {{ etichetta(n) }}
         </span>
         <!-- di fianco e non sopra: sopra c'è il nome del mondo, o quello della tappa prima -->
-        <span v-if="n.adesso" class="ing-qui" aria-hidden="true"
+        <span v-if="n.adesso && (n === adessoVero || !ePassato(n.mondo))" class="ing-qui" aria-hidden="true"
               :style="{ left: (n.x + n.r + 10) + 'px', top: n.y + 'px' }">◀</span>
       </template>
     </div>
