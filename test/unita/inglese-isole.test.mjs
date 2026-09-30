@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE ISOLE DELLA MAPPA DEL TESORO, E LA NAVE — senza browser.
    `node test/esegui.mjs inglese-isole`
-   tempo: 100
+   tempo: 200
 
    La geometria che scena/disposizione.js calcola una volta per mappa, a
    cinque larghezze da telefono:
@@ -161,11 +161,12 @@ titolo('LA NAVE')
     const lontani = toccabili.filter(n => Math.hypot(n.porto.x - n.x, n.porto.y - n.y) > 140)
     uguale(`${W}px: ogni attracco sta accanto alla sua tappa`, lontani.map(n => n.chiave).join(), '')
     if (W !== 320 && W !== 390) continue
-    // da ogni porto a ogni altro, per mare
+    // da ogni porto a ogni altro, per mare: una coppia una volta sola (la rotta
+    // al contrario è la stessa cercata dall'altro capo), se no con le isole di
+    // quarta e quinta sulla CI si passavano i quattro minuti
     let viaggi = 0, lunga = 0
     const guasti = []
-    for (const a of toccabili) for (const b of toccabili) {
-      if (a === b) continue
+    for (const [i, a] of toccabili.entries()) for (const b of toccabili.slice(i + 1)) {
       const r = rotta(q.mare, a.porto, b.porto)
       viaggi++
       if (!r) { guasti.push(a.chiave + '→' + b.chiave + ' senza rotta'); continue }
