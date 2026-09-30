@@ -59,7 +59,7 @@ const nave = page.locator('[data-nave]')
 uguale('la nave è ancorata alla tappa da fare', await nave.getAttribute('data-porto'), 'tappa:che-cose-1')
 await page.locator('[data-tappa="che-cose-2"]').click()
 await page.waitForSelector('[data-serve]', { timeout: 2000 })
-controlla('una tappa chiusa dice cosa serve', (await page.locator('[data-serve]').innerText()).includes('Prima vinci «È un cane»'),
+controlla('una tappa chiusa dice cosa serve', (await page.locator('[data-serve]').innerText()).includes('Prima vinci «Gli animali facili»'),
           await page.locator('[data-serve]').innerText())
 uguale('e la nave non parte', await nave.getAttribute('data-in-viaggio'), '0')
 uguale('e resta dov’era', await nave.getAttribute('data-porto'), 'tappa:che-cose-1')

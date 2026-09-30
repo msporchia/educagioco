@@ -208,7 +208,7 @@ titolo('DOVE STA LA NAVE')
 
   const s = statoMappa(vuoto, () => 0)
   const n = k => q.nodi.find(x => x.chiave === k)
-  uguale('una tappa chiusa dice quale vincere prima', cosaServe(s, n('tappa:che-cose-2')), 'Prima vinci «È un cane»')
+  uguale('una tappa chiusa dice quale vincere prima', cosaServe(s, n('tappa:che-cose-2')), 'Prima vinci «Gli animali facili»')
   uguale('un mondo chiuso dice quale finire prima', cosaServe(s, n('tappa:mie-cose-1')), 'Prima finisci «Che cos’è»')
   controlla('un mondo in arrivo arriva presto', /arriva presto/.test(cosaServe(s, q.nodi.find(x => x.tipo === 'mondo'))))
   controlla('il libro si apre con la bandiera', /bandiera/.test(cosaServe(s, n('libro:che-cose'))))
