@@ -18,13 +18,8 @@ import LinguaGame from '../../views/LinguaGame.vue'
 
 import { CHIAVE, mondoDi, tappaDi } from './dati/mondi.js'
 import { CAPITOLI } from './dati/capitoli.js'
-<<<<<<< HEAD
-import { pagaDi, PAGA_CAPITOLO } from './dati/monete.js'
-import { statoMappa, segnaVinta, tappaAperta, vinta, mondoPassato } from './motore/mappa.js'
-=======
 import { pagaDi, pagaDelCapitolo } from './dati/monete.js'
-import { statoMappa, segnaVinta, tappaAperta, vinta } from './motore/mappa.js'
->>>>>>> worktree-agent-ac21470677738be78
+import { statoMappa, segnaVinta, tappaAperta, vinta, mondoPassato } from './motore/mappa.js'
 import { travasa } from './motore/travaso.js'
 import { Sessione } from './motore/sessione.js'
 import { Tocchi, domandeCheLPagano, domandaDelTocco } from './motore/tocchi.js'
