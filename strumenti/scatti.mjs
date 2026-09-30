@@ -139,6 +139,9 @@ PROFILO.campagne = {
   codice: { tappa: 5, libera: true, stelle: {}, cfg: {} },
   corsa: { tappa: 5, libera: false, stelle: {}, cfg: {} },
   fattoria: { tappa: 0, libera: false, stelle: {}, cfg: { stato: fattoriaGiocata() } },
+  // tre tappe del primo mondo vinte: la mappa ha un sentiero battuto e la nave a metà
+  inglese: { tappa: 3, libera: false, stelle: {}, cfg: {},
+             vinte: { 'che-cose-1': ADESSO - 3 * 864e5, 'che-cose-2': ADESSO - 2 * 864e5, 'che-cose-3': ADESSO - 864e5 } },
 }
 
 /* ── giocare un pezzo di castello ──
@@ -254,9 +257,11 @@ const RICETTE = [
   { file: 'asteroidi-stazioni', dove: 'mate', attesa: '.scaletta',
     passi: [['.stazione:not(.chiuso)', 7500]] },
 
-  { file: 'inglese-mappa', dove: 'inglese', attesa: '.mappa' },
-  { file: 'inglese-gioco', dove: 'inglese', attesa: '.mappa',
-    passi: [['.tappa:not(.chiusa)', 1600]] },
+  /* l'inglese è la mappa del tesoro: la nave è alla tappa da fare, e
+     toccata una tappa ci naviga prima di aprirla */
+  { file: 'inglese-mappa', dove: 'inglese', attesa: '[data-mappa-inglese] [data-tappa]' },
+  { file: 'inglese-gioco', dove: 'inglese', attesa: '[data-mappa-inglese] [data-tappa]',
+    passi: [['[data-tappa][data-stato="aperta"]', 2600]] },
   { file: 'spagnolo-gioco', dove: 'spagnolo', attesa: '.mappa',
     passi: [['.tappa:not(.chiusa)', 1600]] },
 
