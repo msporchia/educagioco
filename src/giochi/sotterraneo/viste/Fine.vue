@@ -5,6 +5,7 @@ defineProps({
   titolo: { type: String, default: '' },
   stelle: { type: Number, default: 0 },
   monete: { type: Number, default: 0 },
+  notaMonete: { type: String, default: '' },   // il salvadanaio stanco: docs/genitori/varieta.md
   fatti: { type: Object, required: true },   // { piani, quantiPiani, domande, mostri, tesori, gemme, perche, fondo }
   // il terzo modo di finire: l'abisso non ha niente da vincere né da fallire, si riprende da dove si è arrivati
   abisso: { type: Boolean, default: false },
@@ -45,7 +46,8 @@ defineEmits(['ancora', 'esci'])
         <div><b>{{ fatti.tesori }}</b><span>tesori</span></div>
       </div>
 
-      <p v-if="monete" class="sot-coda sot-oro">+{{ monete }} 🪙 nel salvadanaio</p>
+      <p v-if="monete" class="sot-coda sot-oro" data-monete-prese>+{{ monete }} 🪙 nel salvadanaio</p>
+      <p v-if="notaMonete" class="sot-coda" data-nota-monete>{{ notaMonete }}</p>
 
       <button class="sot-grosso" data-fine="ancora" @click="$emit('ancora')">
         <span class="em">{{ vinta || abisso ? '🗺️' : '↻' }}</span>

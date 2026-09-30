@@ -182,10 +182,11 @@ dall'abisso.
   buco» (`sot-abisso`, soglie 10 · 25 · 50); l'esperienza passa da
   `sotPiani` come sempre.
 - **Le guide**: `AIUTI` in `src/guide/contenuti.js` ha la sua voce.
-- **Le monete: 🪙1 per risposta giusta, pagato subito** (`corsa.giuste` conta,
-  mai per una sbagliata; a fine discesa si mostra solo il totale). È il tasso di oggi, non quello della calibrazione
-  (che direbbe 🪙3 come le altre domande vere): si alza quando si rifanno i
-  premi di tutti i giochi — vedi [abisso-progetto.md](abisso-progetto.md).
+- **Le monete: 🪙1 per risposta giusta, pagato subito**, come nelle sei
+  discese (mai per una sbagliata; a fine discesa si mostra solo il
+  totale). È rimasto 🪙1 quando i premi di tutti i giochi sono passati al
+  «si paga subito»: nel sotterraneo la domanda è la mossa, e il perché
+  sta in [regole.md](regole.md#le-monete).
 
 ## Fin dove regge, oggi
 

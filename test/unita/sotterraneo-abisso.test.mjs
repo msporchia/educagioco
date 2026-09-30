@@ -360,11 +360,10 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
          t.valore({ best: k => (k === 'sotFondo' ? 26 : 0), tot: () => 0 }), 26)
 }
 
-/* ══════════ 8b. le monete: 🪙1 per risposta giusta ══════════
-   L'abisso non ha una tappa né una stella (premio×stelle è delle sei
-   discese vere): paga il tempo di esplorazione contando le risposte
-   giuste (`corsa.giuste`), mai quelle sbagliate — è quello che a fine
-   discesa (`Gioco.vue`, `chiudi()`) diventa `monete = e.giuste`. */
+/* ══════════ 8b. le risposte giuste si contano ══════════
+   Le monete le paga `Gioco.vue` a ogni risposta giusta, nell'abisso come
+   nelle discese (🪙1, `PAGA.mossa`); il motore conta le giuste
+   (`corsa.giuste`) per il cartello di fine, mai le sbagliate. */
 {
   const c = new Corsa(L_ABISSO, { seme: 5, rnd: seminato(5) })
   uguale('si parte da zero', c.giuste, 0)

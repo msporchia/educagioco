@@ -10,39 +10,39 @@ export const CAMPAGNA = [
     portata: 25,
     dritta: 'due piani corti: si impara la strada',
     piani: 2, misura: 30, giri: 2, dif: [0.05, 0.22],
-    guardiano: 'scheletro', capo: 'scheletro', premio: 10 },
+    guardiano: 'scheletro', capo: 'scheletro' },
 
   { chiave: 'pozzo', nome: 'Il pozzo', icona: '🪣',
     portata: 32,
     dritta: 'più stanze, e qualcuno che vende',
     piani: 3, misura: 34, giri: 3, dif: [0.12, 0.34],
-    guardiano: 'scheletro', capo: 'orco', premio: 14 },
+    guardiano: 'scheletro', capo: 'orco' },
 
   { chiave: 'gallerie', nome: 'Le gallerie', icona: '🪨',
     portata: 40,
     dritta: 'ci si picchia sul serio',
     piani: 3, misura: 40, giri: 3, dif: [0.22, 0.5],
-    guardiano: 'orco', capo: 'orco', premio: 18 },
+    guardiano: 'orco', capo: 'orco' },
 
   { chiave: 'cisterna', nome: 'La cisterna', icona: '💧',
     portata: 48,
     dritta: 'larga, e in fondo c\'è qualcosa di grosso',
     piani: 4, misura: 44, giri: 3, dif: [0.32, 0.62],
     // guardiano un granchio (non l'orco di sempre): stessa fascia (dati/mostri.js), ma nel posto giusto
-    guardiano: 'granchio', capo: 'gigante', premio: 22 },
+    guardiano: 'granchio', capo: 'gigante' },
 
   { chiave: 'labirinto', nome: 'Il labirinto', icona: '🌀',
     portata: 56,
     dritta: 'sedici stanze: senza mappina ci si perde',
     piani: 3, misura: 52, giri: 4, dif: [0.42, 0.76],
-    guardiano: 'lupo', capo: 'troll', premio: 26 },   // troll e non gigante: le ultime tre finivano con la stessa faccia
+    guardiano: 'lupo', capo: 'troll' },   // troll e non gigante: le ultime tre finivano con la stessa faccia
 
   { chiave: 'fondo', nome: 'Il fondo', icona: '🕳️',
     portata: 64,
     dritta: 'stretto, profondo, e le domande non perdonano',
     piani: 4, misura: 42, giri: 3, dif: [0.52, 0.92],   // stretto: più largo supererebbe le risposte obbligate di una seduta
     // il gigante solo in fondo (a ogni piano: 96 risposte obbligate, misurato dal banco); il serpente ai piani, non l'orco
-    guardiano: 'serpente', capo: 'gigante', premio: 34 },
+    guardiano: 'serpente', capo: 'gigante' },
 ]
 
 export const QUANTE_TAPPE = CAMPAGNA.length
@@ -169,7 +169,6 @@ export function guastiDellaCampagna() {
     if (t.giri < 2 || t.giri > 4) g.push(`${t.chiave}: ${t.giri} giri di taglio, fuori da 2..4`)
     const [da, a] = t.dif
     if (da < 0 || a > 1 || da > a) g.push(`${t.chiave}: difficoltà ${da}..${a} storta`)
-    if (t.premio <= 0) g.push(`${t.chiave}: non paga niente`)
   }
   // la campagna deve salire: due tappe di fila alla stessa difficoltà sembrano una ripetizione
   for (let i = 1; i < CAMPAGNA.length; i++)

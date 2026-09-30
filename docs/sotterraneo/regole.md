@@ -59,6 +59,23 @@ tappe):
   `guastiDellaCampagna`, che pretende anche che ogni tappa chieda più della
   precedente.
 
+## Le monete
+
+- **🪙1 a risposta giusta, pagato nel momento in cui si risponde**
+  (`PAGA.mossa` in `src/data/paghe.js`): nelle sei discese come
+  nell'abisso, anche in una discesa persa o rifatta. A fine discesa il
+  cartello dice il totale (`[data-monete-prese]`) e quanto ha tolto il
+  salvadanaio (`[data-nota-monete]`); una discesa ripresa conta solo le
+  monete di quest'ultima volta, perché le altre sono già in tasca.
+- **Niente premio di tappa**: c'era, `premio × stelle` (🪙30–100 a
+  discesa vinta), e non aveva rapporto con le domande che la discesa
+  chiedeva — il fondo pagava come le cantine a parità di stelle.
+- **Una e non tre**: qui la domanda è la mossa (porte, mostri, forzieri),
+  un centinaio in una discesa da venti minuti. A 🪙3 una discesa
+  renderebbe il doppio dell'ora della calibrazione
+  ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md));
+  a 🪙1 rende quanto prima il premio pieno.
+
 ## Le tre luci e la mappina
 
 Nero = mai stato. Scuro e freddo = ricordato. Pieno e caldo = lo stai
