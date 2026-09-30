@@ -4,8 +4,8 @@
 // parola vengono da lì — mai da tutta la lingua. `vicini`: gli argomenti da
 // cui si prende in prestito quando le parole sono poche. `verbi: true`: le
 // parole sono di data/verbi.js (chiave `verbo:`). `figure: false`: niente
-// domande con le figure, perché le emoji si somigliano tutte (le facce di
-// happy, sad, tired). Vedi docs/lingue/mondi.md.
+// domande con le figure, dove il disegno non ha un significato solo (vedi
+// docs/lingue/mondi.md).
 import { WORDS } from '../../../data/words.js'
 import { VERBI } from '../../../data/verbi.js'
 
@@ -22,7 +22,7 @@ export const ARGOMENTI = {
   corpo: { nome: 'il corpo', cat: ['b'] },
   famiglia: { nome: 'la famiglia e gli amici',
     parole: ['mother', 'father', 'sister', 'brother', 'grandmother', 'grandfather', 'baby', 'friend',
-             'family', 'aunt', 'uncle', 'cousin', 'man', 'woman', 'boy', 'girl', 'child'] },
+             'family', 'aunt', 'uncle', 'cousin', 'man', 'woman', 'boy', 'girl', 'child'], figure: false },
   cibo: { nome: 'il cibo', cat: ['f'] },
   vestiti: { nome: 'i vestiti', cat: ['p'] },
   aggettivi: { nome: 'come sono le cose', cat: ['j'], figure: false },
@@ -36,12 +36,12 @@ export const ARGOMENTI = {
   giornata: { nome: 'la giornata',
     parole: ['morning', 'afternoon', 'evening', 'night', 'breakfast', 'lunch', 'dinner', 'hour',
              'minute', 'time', 'day', 'week', 'month', 'year', 'early', 'late'],
-    vicini: ['calendario'] },
+    vicini: ['calendario'], figure: false },
   mestieri: { nome: 'i mestieri',
     parole: ['teacher', 'doctor', 'farmer', 'cook', 'police officer', 'firefighter', 'pilot', 'nurse',
-             'singer', 'king', 'queen'] },
+             'singer', 'king', 'queen'], figure: false },
   mezzi: { nome: 'i mezzi', cat: ['t'] },
-  luoghi: { nome: 'i luoghi', cat: ['y'] },
+  luoghi: { nome: 'i luoghi', cat: ['y'], figure: false },
   azioni: { nome: 'le azioni', verbi: true },
 }
 

@@ -25,20 +25,21 @@ export function tipiDellaParola(chiave, { figure = true } = {}) {
 }
 export const RIPESCATE = 3            // frasi dei mondi prima, di una forma debole
 export const FORMA_DEBOLE = 2
-export const RISCALDO = 8             // in una tappa di frasi, le parole ancora nuove che le frasi usano
 
 // le chiavi delle parole (e dei verbi) di una frase
 const paroleDi = f => [...new Set(f.en.split(/\s+/).map(chiaveDi).filter(k => k && !k.startsWith('frase:')))]
 
 export class Sessione {
   constructor({ tappa, itemDi, ora = () => Date.now(), rnd = Math.random, haVoce = () => false,
-                bersaglio = null, eta = null }) {
+                bersaglio = null, eta = null, partenza = 0 }) {
     this.tappa = tappa
     this.itemDi = itemDi
     this.ora = ora
     this.rnd = rnd
     this.haVoce = haVoce
     this.figure = !(eta >= ETA_SENZA_FIGURE)
+    this.partenza = partenza
+    this.sbagliate = new Set()
     this.forzaDi = k => strength(itemDi(k), ora())
     this.giuste = 0
     this.errori = 0
@@ -52,14 +53,7 @@ export class Sessione {
     this.primoGiro = giro.filter(k => !k.startsWith('frase:'))
     this.pool = voci.map(v => v.chiave)
     this.indovinate = new Set()
-
-    // una tappa di frasi comincia dalle parole che le sue frasi usano e che
-    // il bambino non sa ancora (chi arriva da un mondo «passato» non le ha giocate)
-    if (tappa.frasi) {
-      const nuove = [...new Set(frasiDi(tappa).flatMap(paroleDi))].filter(k => this.forzaDi(k) < 1)
-      this.primoGiro.push(...nuove.slice(0, RISCALDO))
-      this.pool.push(...nuove.slice(0, RISCALDO))
-    }
+    // una tappa di frasi non chiede parole: una parola che non sa si tocca (docs/lingue/mondi.md)
 
     // una forma debole ripesca le sue frasi dai mondi già fatti: solo dove si
     // ripassano le frasi (una tappa di frasi, la 🏁), mai in una di parole
@@ -105,8 +99,8 @@ export class Sessione {
     if (chiave.startsWith('frase:')) {
       const frase = fraseDi(chiave.slice(6))
       if (!frase) return null
-      const ctx = this.contestoDi(frase)
-      return costruisci(frase, formatoPerForza(forza), ctx, { forza })
+      const g = this.gradino(chiave, frase)
+      return costruisci(frase, formatoPerForza(g), this.contestoDi(frase), { forza: g })
     }
     const v = voceDi(chiave)
     if (!v) return null
@@ -115,6 +109,16 @@ export class Sessione {
     if (!tipo) return null
     // le risposte sbagliate vengono dall'argomento della parola, mai da tutta la lingua
     return { ...componi(v, tipo, 'inglese', { fonti: fontiDi(chiave, voceDi) }), genere: 'parola', formato: tipo }
+  }
+
+  // Il gradino del formato: la forza della frase, ma chi sa già la struttura
+  // (la forma sale a ogni frase giusta) monta anche le frasi nuove, e in un
+  // mondo passato o con tutto aperto si parte da «scegli». Una frase
+  // sbagliata in questa partita torna alla sua forza. Vedi docs/lingue/mondi.md.
+  gradino(chiave, frase) {
+    const forza = this.forzaDi(chiave)
+    if (this.sbagliate.has(chiave)) return forza
+    return Math.max(forza, this.forzaDi(chiaveForma(frase.forma)) - 1, this.partenza)
   }
 
   contestoDi(frase) {
@@ -141,7 +145,7 @@ export class Sessione {
     esito.paga = esito.giusta && (!tocchi || tocchi.paga)
     if (esito.giusta && d.genere !== 'frase' && d.chiave) this.indovinate.add(d.chiave)
     if (esito.giusta) this.giuste++
-    else this.errori++
+    else { this.errori++; if (d.genere === 'frase') this.sbagliate.add(d.chiave) }
     this.picker.afterAnswer(d.chiave, esito.giusta)
     return esito
   }
