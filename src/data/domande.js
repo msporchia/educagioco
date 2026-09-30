@@ -11,7 +11,11 @@ const mescola = a => a.slice().sort(() => Math.random() - 0.5)
 // scritto. Con `conFamiglia`, due emoji della stessa FAMIGLIA VISIVA
 // (`v.famiglia`) non escono mai insieme; se la famiglia del bersaglio
 // occupa quasi tutta la sua categoria, si allarga a tutta la lingua.
-function distrattori(v, quante, mostra, ammessa = () => true, viste = new Set(), conFamiglia = false) {
+// `fonti` (elenchi di voci, in ordine) prende il posto di categoria e
+// lingua: chi le passa sa di che argomento è la domanda, e non si esce da
+// lì nemmeno se restano poche risposte (l'inglese a mondi, docs/lingue/mondi.md).
+function distrattori(v, quante, mostra, ammessa = () => true, viste = new Set(), conFamiglia = false,
+                     fonti = null) {
   viste.add(mostra(v))
   const famiglie = new Set(conFamiglia && v.famiglia ? [v.famiglia] : [])
   const out = []
@@ -25,6 +29,10 @@ function distrattori(v, quante, mostra, ammessa = () => true, viste = new Set(),
       viste.add(testo); out.push(c)
       if (conFamiglia && c.famiglia) famiglie.add(c.famiglia)
     }
+  }
+  if (fonti) {
+    for (const f of fonti) if (out.length < quante) prova(mescola(f))
+    return out
   }
   prova(mescola(compagne(v, quante + 2)))
   if (out.length < quante)
@@ -55,11 +63,11 @@ export const TIPI = {
   figura: {
     livello: 0, quante: 6, figure: true, etichetta: () => 'Che cos’è?',
     puoUsare: (v, ha) => v.genere !== 'frase' && !!v.emoji,
-    costruisci(v) {
+    costruisci(v, fonti) {
       return {
         domanda: { testo: v.str },
         opzioni: mescola([opzEmoji(v, true),
-                          ...distrattori(v, 5, x => x.emoji, x => !!x.emoji, new Set(), true)
+                          ...distrattori(v, 5, x => x.emoji, x => !!x.emoji, new Set(), true, fonti)
                             .map(x => opzEmoji(x))]),
       }
     },
@@ -70,11 +78,11 @@ export const TIPI = {
   ascoltoFigura: {
     livello: 1, quante: 6, figure: true, etichetta: () => 'Ascolta e scegli',
     puoUsare: (v, ha) => v.genere !== 'frase' && !!v.emoji && ha(v.str),
-    costruisci(v) {
+    costruisci(v, fonti) {
       return {
         domanda: { ascolta: v.str, svela: v.str },
         opzioni: mescola([opzEmoji(v, true),
-                          ...distrattori(v, 5, x => x.emoji, x => !!x.emoji, new Set(), true)
+                          ...distrattori(v, 5, x => x.emoji, x => !!x.emoji, new Set(), true, fonti)
                             .map(x => opzEmoji(x))]),
       }
     },
@@ -83,11 +91,11 @@ export const TIPI = {
   tradIt: {
     livello: 1, quante: 5, etichetta: () => 'Che vuol dire?',
     puoUsare: v => v.genere !== 'frase',
-    costruisci(v) {
+    costruisci(v, fonti) {
       return {
         domanda: { testo: v.str, ascolta: v.str },
         opzioni: mescola([opz(v.it, true),
-                          ...distrattori(v, 4, x => x.it).map(x => opz(x.it))]),
+                          ...distrattori(v, 4, x => x.it, undefined, undefined, false, fonti).map(x => opz(x.it))]),
       }
     },
   },
@@ -96,11 +104,11 @@ export const TIPI = {
   ascoltoIt: {
     livello: 2, quante: 5, etichetta: () => 'Ascolta: che vuol dire?',
     puoUsare: (v, ha) => v.genere !== 'frase' && ha(v.str),
-    costruisci(v) {
+    costruisci(v, fonti) {
       return {
         domanda: { ascolta: v.str, svela: v.str },
         opzioni: mescola([opz(v.it, true),
-                          ...distrattori(v, 4, x => x.it).map(x => opz(x.it))]),
+                          ...distrattori(v, 4, x => x.it, undefined, undefined, false, fonti).map(x => opz(x.it))]),
       }
     },
   },
@@ -108,11 +116,11 @@ export const TIPI = {
   tradStra: {
     livello: 2, quante: 5, etichetta: l => `Come si dice in ${l}?`,
     puoUsare: v => v.genere !== 'frase',
-    costruisci(v) {
+    costruisci(v, fonti) {
       return {
         domanda: { testo: v.it, italiano: true },
         opzioni: mescola([opz(v.str, true),
-                          ...distrattori(v, 4, x => x.str).map(x => opz(x.str))]),
+                          ...distrattori(v, 4, x => x.str, undefined, undefined, false, fonti).map(x => opz(x.str))]),
       }
     },
   },
@@ -181,10 +189,11 @@ export function scegliTipo(v, { aperti, forza, haVoce }) {
 }
 
 // Il turno pronto da mostrare. `nomeLingua` finisce solo nell'etichetta:
-// l'unico punto in cui il gioco sa che lingua sta insegnando.
-export function componi(v, tipo, nomeLingua = 'inglese') {
+// l'unico punto in cui il gioco sa che lingua sta insegnando. `fonti`:
+// da dove prendere le risposte sbagliate delle parole (vedi `distrattori`).
+export function componi(v, tipo, nomeLingua = 'inglese', { fonti = null } = {}) {
   const def = TIPI[tipo]
-  const { domanda, opzioni } = def.costruisci(v)
+  const { domanda, opzioni } = def.costruisci(v, fonti)
   return {
     tipo, chiave: v.chiave, voce: v,
     etichetta: def.etichetta(nomeLingua),
