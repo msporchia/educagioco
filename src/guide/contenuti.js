@@ -298,7 +298,7 @@ export const GUIDE = [
     titolo: 'A cosa servono le monete',
     sommario: 'Si guadagnano studiando e si spendono nella fattoria',
     blocchi: [
-      'Ogni risposta giusta, ogni tappa vinta, dà monete. Le monete non servono a niente dentro gli esercizi: servono **fuori**, nella fattoria, dove si comprano terra, animali e cose da mettere.',
+      'Ogni risposta giusta dà monete, subito (nei giochi di programmazione, ogni livello risolto). Le monete non servono a niente dentro gli esercizi: servono **fuori**, nella fattoria, dove si comprano terra, animali e cose da mettere.',
       'È fatto apposta così. La fattoria è il posto dove si spende, gli altri giochi sono il posto dove si guadagna: chi vuole la mucca deve passare dalle tabelline.',
       { titolo: 'Se sembra che non arrivino mai', righe: [
         'Vuol dire che le domande sono troppo difficili: si sbaglia, e chi sbaglia non guadagna. Prima di alzare i premi, guarda la difficoltà.',

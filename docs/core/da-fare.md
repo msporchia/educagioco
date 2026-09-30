@@ -10,10 +10,11 @@ stanno nella sua cartella.
   partenza (`src/store/profile.js`, `settings: { tables: [2, 3, 4, 5], … }`)
   e nessun file di `src/` o `test/` lo usa. Si toglie la prossima volta che
   si tocca `profile.js`.
-- **Il premio ridotto sul cartello di fine, gioco per gioco.** Le monete
-  calano in un punto solo (`addCoins`), ma il cartello di fine lo sa dire
-  solo chi paga con `incassa` (Survivors, Conta); gli altri mostrano
-  ancora il premio pieno, e la frase giusta arriva dalla scritta piccola
+- **Il premio ridotto sul cartello dei giochi a livelli.** I giochi che
+  fanno esercitare pagano tutti dalla `borsa` e il loro cartello dice il
+  salvadanaio stanco; restano Passo passo, il costruttore e il Codice
+  Segreto, che pagano il livello risolto con `addCoins` e sul cartello
+  dicono il premio pieno — la frase giusta arriva dalla scritta piccola
   sopra (vedi [../genitori/varieta.md](../genitori/varieta.md)).
 - **Il cassetto dei concetti disegnati.** Per le parole che nessuna emoji
   dice (tempo, ora, minuto, settimana, mese, anno, le facce, i verbi) la

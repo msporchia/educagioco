@@ -18,7 +18,7 @@ defineEmits(['vai'])
 const CUORI = 3
 // le monete di questa giornata: un cliente servito paga subito (docs/bancarella/regole.md)
 let borsellino = borsa('bancarella')
-const prese = reactive({ monete: 0, nota: '' })
+const guadagno = reactive({ monete: 0, nota: '' })
 /* i dodici tasti della cassa, nell'ordine di un registratore vero: le
    cifre, la virgola e il cancelletto. Il ✓ sta a parte perché è l'unico
    che manda qualcosa — gli altri scrivono e basta. */
@@ -118,7 +118,7 @@ function inizia(i = idx.value) {
   idx.value = i
   nTappa.value = 0
   hud.cuori = CUORI; hud.serviti = 0; hud.perfetti = 0; hud.incasso = 0
-  borsellino = borsa('bancarella'); Object.assign(prese, { monete: 0, nota: '' })
+  borsellino = borsa('bancarella'); Object.assign(guadagno, { monete: 0, nota: '' })
   piatto.value = []; occupato = false; rifiuti = 0; bonus.value = false
   esito.value = ''
   fase.value = 'gioco'
@@ -291,7 +291,7 @@ function consegna() {
   suono.moneta()
   // quanto vale lo dice la giornata (MONETE_CLIENTE in data/bancarella.js), non il livello
   const preso = borsellino.paga(premioCliente(camp.value))
-  prese.monete = borsellino.dato
+  guadagno.monete = borsellino.dato
   if (preso) { moneta.value = preso; setTimeout(() => (moneta.value = 0), 1100) }
   programma(prossimo, 900)
 }
@@ -322,7 +322,7 @@ function scaduto() {
 
 function chiudi(come) {
   esito.value = come
-  prese.nota = borsellino.nota()
+  guadagno.nota = borsellino.nota()
   fase.value = 'fine'
   cancelAnimationFrame(raf)
   spegniOrologio()
@@ -620,8 +620,8 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
       <div class="vetrina">{{ esito === 'vinta' ? '🎉' : hud.serviti >= 5 ? '😊' : '😅' }}</div>
       <p class="testo">Clienti serviti: <b>{{ hud.serviti }}</b> ·
         resti perfetti: <b>{{ hud.perfetti }}</b><br>Incasso: <b>{{ euro(hud.incasso) }}</b><template
-          v-if="prese.monete"> · <b data-monete-prese>+{{ prese.monete }} 🪙</b></template></p>
-      <p v-if="prese.nota" class="mini" data-nota-monete>{{ prese.nota }}</p>
+          v-if="guadagno.monete"> · <b data-monete-prese>+{{ guadagno.monete }} 🪙</b></template></p>
+      <p v-if="guadagno.nota" class="mini" data-nota-monete>{{ guadagno.nota }}</p>
       <p v-if="esito === 'vinta' && idx >= 0" class="mini">{{ camp.nome }} · giornata superata</p>
       <div class="riga">
         <button v-if="esito === 'vinta' && dopo !== null" class="bottone" @click="inizia(dopo)">

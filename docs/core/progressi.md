@@ -7,9 +7,13 @@ Il livello del profilo, i traguardi e la pagina «I miei progressi»
 
 - **Un livello solo per tutto il profilo**, somma dell'esperienza di ogni
   gioco (`XP_AREA`, una funzione per area che legge i contatori di
-  `totals`). **È anche il moltiplicatore delle monete**: giocare a inglese
-  fa guadagnare di più anche alle torri. Ogni gioco ha poi un livello suo,
-  che vive solo nella pagina dei progressi e non tocca il salvadanaio.
+  `totals`). **Non moltiplica più le monete**: lo faceva, e giocare a
+  inglese faceva guadagnare di più anche alle torri — la stessa parola
+  rendeva il triplo a chi aveva giocato di più altrove. Adesso ogni cosa
+  fatta vale lo stesso per tutti
+  ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
+  Ogni gioco ha poi un livello suo, che vive solo nella pagina dei
+  progressi e non tocca il salvadanaio.
 - **Togliere un gioco non abbassa il livello.** Il gioco che se ne va
   lascia la sua riga in `XP_AREA`, letta da contatori che nessuno fa più
   salire; quello che «Tuttofare» contava resta nel conto, perché una

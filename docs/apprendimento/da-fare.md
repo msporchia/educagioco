@@ -46,13 +46,14 @@ nel file del suo argomento.
 
 ## Calibrazione
 
-- **I premi dei giochi non seguono la moneta.** Una tappa rende
-  `premio × stelle` con premi scelti gioco per gioco (dungeon 3→10,
-  sotterraneo 10→34, conta 1→4), senza rapporto con le domande che contiene.
-  La strada: ogni campagna dichiara **quante domande chiede una tappa**, le
-  paga a 🪙3 ([calibrazione.md](calibrazione.md)), e un test confronta il
-  dichiarato con quello che il motore chiede, come `npm run tara` fa per il
-  castello.
+- **Il ritmo delle domande è stimato, non misurato.** Il tasso di una
+  domanda (🪙1 nel dungeon e nel sotterraneo, 🪙3 in Survivors e nel libro
+  della corsa) viene da quante domande una tappa chiede e da quanto dura
+  a occhio ([calibrazione.md](calibrazione.md#si-paga-subito-e-basta)). Il
+  registro delle sessioni sa quanto dura davvero una partita, e l'SRS
+  quanto ci mette il bambino a rispondere: messi insieme direbbero le
+  monete al minuto vere, gioco per gioco, e se una delle due scelte va
+  ritoccata.
 - **Il pezzo di terra della fattoria rincara ancora geometrico**
   (`RINCARO = 1.38` in `src/giochi/fattoria/dati/mondo.js`): il decimo pezzo
   costa già 🪙800, più di due ore. Va portato a una curva lineare o

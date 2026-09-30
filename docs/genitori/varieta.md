@@ -46,8 +46,11 @@ toglierne.
 - **La metà si conta col resto**: un gioco che paga una moneta alla volta
   (gli asteroidi) a metà dà una moneta sì e una no. Arrotondando, darebbe
   sempre una o sempre zero (`incasso`).
-- **Il premio si prende quando arriva**: una tappa pagata a fine partita
-  vale il fattore di quel momento, non una media dei minuti che è durata.
+- **La moneta si prende quando arriva**: i giochi pagano ogni cosa fatta
+  nel momento in cui la si fa ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)),
+  e ognuna vale il fattore di quel momento. Una tappa cominciata piena e
+  finita a metà paga piene le risposte dei primi venti minuti e a metà le
+  altre, che è quello che le soglie promettono.
 
 ## I tetti sono del genitore
 
@@ -102,26 +105,27 @@ giorno lo sovrascrive.
   **Niente velo, niente pausa**, e il dito ci passa attraverso
   (`pointer-events: none`). Entrando in un gioco già a metà o finito lo
   dice subito; entrando pieno sta zitta.
-- **A fine tappa** il premio si vede ridotto: «🪙 24 → 12 · Survivors: il
-  salvadanaio è stanco, domani torna pieno»; a zero «Survivors: monete
-  finite per oggi · prova Asteroidi», dove il gioco proposto è prima un
-  ×2, poi quello con più minuti pieni (`suggerisci`). La frase non usa
-  l'articolo del gioco («di Il sotterraneo» non si può leggere).
-  - **Survivors e Conta** la scrivono sul loro cartello di fine: pagano
-    con `incassa` (`store/varieta.js`), che torna quanto è arrivato
-    davvero e con che parole. Conta paga a ogni risposta e somma la tappa
-    intera.
-  - **Gli altri giochi** non sono ancora stati toccati: la stessa frase
-    arriva dalla scritta piccola, sopra il loro cartello, per ogni premio
-    da almeno 5 monete (`AVVISO_DA`) — sotto è la monetina di un colpo, e
-    la dice la soglia. Il loro cartello dice ancora il premio pieno: si
-    sistemano uno per volta passando da `incassa` (vedi
-    [da-fare](../core/da-fare.md)).
+- **A fine tappa** il cartello dice il totale della partita e quanto ha
+  tolto il salvadanaio: «🪙 24 → 12 · Survivors: il salvadanaio è stanco,
+  domani torna pieno»; a zero «Survivors: monete finite per oggi · prova
+  Asteroidi», dove il gioco proposto è prima un ×2, poi quello con più
+  minuti pieni (`suggerisci`). La frase non usa l'articolo del gioco
+  («di Il sotterraneo» non si può leggere).
+  - **I giochi che fanno esercitare** pagano con la `borsa` della
+    partita (`store/varieta.js`): `paga(n)` a ogni cosa fatta passa da
+    `incassa`, e a fine partita `nota()` somma chiesto e arrivato. È così
+    che «24 → 12» resta una frase sola invece di ventiquattro.
+  - **I giochi a livelli** (Passo passo, il costruttore, il Codice
+    Segreto) pagano il livello risolto con `addCoins`: la frase arriva
+    dalla scritta piccola, sopra il loro cartello, per ogni premio da
+    almeno 5 monete (`AVVISO_DA`) — sotto è la monetina di un colpo, e la
+    dice la soglia (vedi [da-fare](../core/da-fare.md)).
 
 ## Nei test
 
-Unità: `unita/varieta` (i conti, il filtro dentro `addCoins`, e l'elenco
-dei giochi che non pagano letto dai sorgenti). Browser:
+Unità: `unita/varieta` (i conti, il filtro dentro `addCoins`, la `borsa`
+di una partita, e l'elenco dei giochi che non pagano letto dai sorgenti),
+`unita/paghe` (chi fa esercitare paga dalla borsa, mai con `addCoins`). Browser:
 `integrazione/varieta` (la home, i grandi, Conta a metà).
 
 Bersagli: `[data-salvadanaio="pieno|meta|vuoto|doppio"]` sulla carta;
