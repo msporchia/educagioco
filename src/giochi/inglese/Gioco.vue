@@ -19,7 +19,7 @@ import LinguaGame from '../../views/LinguaGame.vue'
 import { CHIAVE, mondoDi, tappaDi } from './dati/mondi.js'
 import { CAPITOLI } from './dati/capitoli.js'
 import { pagaDi, PAGA_CAPITOLO } from './dati/monete.js'
-import { statoMappa, segnaVinta, tappaAperta, vinta } from './motore/mappa.js'
+import { statoMappa, segnaVinta, tappaAperta, vinta, mondoPassato } from './motore/mappa.js'
 import { travasa } from './motore/travaso.js'
 import { Sessione } from './motore/sessione.js'
 import { Tocchi, domandeCheLPagano, domandaDelTocco } from './motore/tocchi.js'
@@ -107,7 +107,10 @@ const haVoceOra = p => suono.acceso.value && haVoce(p, 'en')
 
 function avvia(t) {
   tappa.value = t
-  sessione = new Sessione({ tappa: t, itemDi: leggi, haVoce: haVoceOra, eta: etaDelBambino() })
+  const mondo = t.cassetto ? t.mondo : (mondoDellaTappa(t.id) || {}).id
+  // chi ha tutto aperto, o l'anno già fatto a scuola, non riparte dal «cosa vuol dire»
+  const partenza = tuttoAperto() || mondoPassato(mondo, etaDelBambino()) ? 2 : 0
+  sessione = new Sessione({ tappa: t, itemDi: leggi, haVoce: haVoceOra, eta: etaDelBambino(), partenza })
   Object.assign(conti, { giuste: 0, errori: 0, monete: 0, chieste: 0, bersaglio: sessione.bersaglio,
                          gradoPrima: t.cassetto ? null : sessione.gradoIniziale })
   fine.value = null
@@ -210,9 +213,17 @@ function chiudiTappa() {
     giuste: conti.giuste, errori: conti.errori, monete: conti.monete,
     notaMonete: premioDetto(CHIAVE, conti.chieste, conti.monete),
     avanti: avanti ? avanti.nome : '',
+    ancora: 'Rigioca',
   }
   prossimaId = avanti ? avanti.id : null
   suono.livello()
+}
+
+function ancoraDaFine() {
+  const t = tappa.value
+  fine.value = null
+  if (t) avvia(t)
+  else allaMappa()
 }
 
 function avantiDaFine() {
@@ -396,7 +407,7 @@ onUnmounted(() => { clearTimeout(bollaTimer); zittisci() })
            :scelta="libroScelta" :attesa="attesa" :giro="giro"
            @ho-letto="hoLetto" @rispondi="rispondiLibro" @tocca="tocca" />
 
-    <Fine v-if="fine" v-bind="fine" @mappa="allaMappa" @avanti="avantiDaFine" />
+    <Fine v-if="fine" v-bind="fine" @mappa="allaMappa" @avanti="avantiDaFine" @ancora="ancoraDaFine" />
     <Bolla v-if="bolla" :parola="bolla.parola" :it="bolla.it" :costa="bolla.costa" :chiede="bolla.chiede"
            :sotto="bolla.sotto" :x="bolla.x" :y="bolla.y" @si="conSi" @no="conNo" />
   </div>

@@ -106,19 +106,27 @@ in prestito dallo sport). Era il difetto trovato giocando: `compagne()` di
 fra i colori usciva 🔴 in mezzo a 🏥🐶📓. Chi fa la domanda passa le `fonti` a
 `componi()` di `data/domande.js` (`fontiDi` in `motore/grafo.js`); il
 cassetto, che non ha un argomento, tiene i distrattori di sempre. Un
-argomento può dire `figure: false`: le emoji delle emozioni (happy, sad,
-tired) sono tutte della stessa famiglia visiva e una domanda con le figure
-avrebbe due risposte. **Dai dieci anni (la quinta) niente figure**, in
+argomento può dire `figure: false` quando il disegno non ha **un
+significato solo e netto**: le facce delle emozioni (happy, sad, tired), le
+persone della famiglia (👧 può essere *sister*, *girl* o *friend*, e *friend*
+è 🤝), i mestieri, le ore del giorno (🌅 🌆 🌃), i luoghi (🏛️ e 🏦). Lì la
+parola si chiede fra italiano e inglese. **Dai dieci anni (la quinta) niente figure**, in
 nessuna tappa (`ETA_SENZA_FIGURE` in `motore/sessione.js`): a quell'età il
 disegnino non insegna niente, e la parola si chiede fra italiano e inglese.
 
 ## I formati, decisi dalla forza
 
 Le parole tengono la scala di oggi (figura → ascolto → capisci → produci). Le
-frasi salgono di un gradino a ogni punto di forza:
+frasi salgono di un gradino a ogni punto di forza, **o della forza della
+loro struttura meno uno** (`gradino` in `motore/sessione.js`): la forma sale
+a ogni frase giusta, quindi in una partita sola si arriva alle tessere anche
+con frasi mai viste. Prima il gradino guardava solo la frase, e una partita
+restava ai primi due formati. In un mondo passato per età, o con «Sblocca
+tutti i livelli», si parte dal terzo gradino (`partenza`); una frase
+sbagliata in questa partita torna alla sua forza.
 
 1. **Riconosci** — la frase inglese e quattro italiane (`fraseIt` di oggi).
-2. **Cosa vuol dire** — anche qui le italiane sbagliate ricalcano le trappole
+2. **Cosa vuol dire** («Leggi bene: che vuol dire?») — anche qui le italiane sbagliate ricalcano le trappole
    della grammatica («è un cane» / «è un cane?»).
 3. **Scegli** — la frase italiana e quattro inglesi: la giusta e tre trappole.
 4. **Componi**, a gradini:
@@ -349,11 +357,12 @@ stava in piedi nel codice, si è presa la variante più vicina:
   che le insegna (i giorni con i mesi, non con *morning*), se no la
   categoria; un verbo si scambia con un verbo, e uno sbaglio lì pesa sul
   verbo (`verbo:`).
-- **Una tappa di frasi comincia dalle parole che non sa ancora**: chi
-  arriva da un mondo passato per età non ha giocato le tappe di parole, e
-  una frase entra solo quando le sue parole sono sapute. Il primo giro
-  passa fino a otto parole delle sue frasi con forza sotto 1 (`RISCALDO`),
-  che non entrano nel grado della tappa.
+- **Una tappa di frasi non chiede mai parole.** Provato un riscaldamento
+  che passava prima le parole delle frasi con forza sotto 1: non funziona,
+  perché la forza cala in poche ore e il giorno dopo «Mi piace!» chiedeva
+  di nuovo *strawberry*, e sembrava una tappa di parole. Una parola che non
+  sa si tocca (le prime tre volte gratis); le frasi con tutte le parole
+  sapute escono per prime (`pronta`).
 - **Il «?» nelle opzioni inglesi non c'è** (la regola di
   [vocaboli.md](vocaboli.md): la domanda si riconosce dall'ordine); lo
   mette la fila composta, con la maiuscola (`inBella`, `rigaInBella`).

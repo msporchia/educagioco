@@ -22,7 +22,7 @@ const emit = defineEmits(['opzione', 'metti', 'togli', 'consegna', 'tocca', 'asc
 
 const ETICHETTE = {
   riconosci: 'Che vuol dire?',
-  senso: 'Cosa vuol dire, proprio questa?',
+  senso: 'Leggi bene: che vuol dire?',
   scegli: 'Come si dice in inglese?',
   completa: 'Completa la frase',
   monta: 'Metti le parole in ordine',

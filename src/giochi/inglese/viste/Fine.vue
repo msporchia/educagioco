@@ -14,8 +14,9 @@ defineProps({
   monete: { type: Number, default: 0 },
   notaMonete: { type: String, default: '' },
   avanti: { type: String, default: '' },        // il nome della tappa dopo, se si può andare
+  ancora: { type: String, default: '' },        // «Rigioca», se la stessa cosa si può rifare
 })
-defineEmits(['mappa', 'avanti'])
+defineEmits(['mappa', 'avanti', 'ancora'])
 </script>
 
 <template>
@@ -37,6 +38,8 @@ defineEmits(['mappa', 'avanti'])
         <button v-if="avanti" type="button" class="ing-grosso" data-azione="avanti" @click="$emit('avanti')">
           {{ avanti }} →
         </button>
+        <button v-if="ancora" type="button" class="ing-grosso ing-chiaro" data-azione="ancora"
+                @click="$emit('ancora')">↻ {{ ancora }}</button>
         <button type="button" class="ing-grosso ing-chiaro" data-azione="mappa" @click="$emit('mappa')">
           La mappa
         </button>

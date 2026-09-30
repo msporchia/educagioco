@@ -367,8 +367,24 @@ titolo('DIFETTI')
   const diFrasi = new Sessione({ tappa: tappaDi('seconda-mi-piace'), itemDi: nuovo, rnd: sorte(1) })
   controlla('una tappa di frasi ripesca quelle dei mondi prima, se la forma è debole',
     diFrasi.pool.some(k => k.startsWith('frase:') && fraseDi(k.slice(6)).mondo === 'prima'))
-  controlla('e comincia dalle parole che le sue frasi usano e che non sa ancora',
-    diFrasi.primoGiro.length > 0 && diFrasi.primoGiro.every(k => /^(en|verbo):/.test(k)))
+  const chieste = Array.from({ length: 12 }, () => diFrasi.prossima()).filter(Boolean)
+  uguale('e non chiede mai parole, anche se non le sa', chieste.filter(q => q.genere !== 'frase').length, 0)
+
+  // la struttura saputa fa salire anche le frasi nuove: in una partita si arriva alle tessere
+  const it2 = new Map()
+  const leggi2 = k => { if (!it2.has(k)) it2.set(k, newItem()); return it2.get(k) }
+  const scala = new Sessione({ tappa: tappaDi('prima-che-cose'), itemDi: leggi2, rnd: sorte(3) })
+  const visti = []
+  for (let i = 0; i < 14; i++) {
+    const q = scala.prossima()
+    visti.push(q.formato)
+    const es = scala.rispondi(q, q.opzioni ? q.opzioni.find(o => o.giusta) : ordineGiusto(q))
+    for (const r of es.registra) record(leggi2(r.chiave), { correct: r.correct, now: Date.now() })
+  }
+  controlla('in una partita sola, dal «riconosci» alle tessere',
+            visti[0] === 'riconosci' && visti.some(f => f === 'completa' || f === 'monta'), visti.join(', '))
+  const tuttoAperto = new Sessione({ tappa: tappaDi('prima-che-cose'), itemDi: nuovo, rnd: sorte(3), partenza: 2 })
+  uguale('con tutto aperto si parte da «scegli»', tuttoAperto.prossima().formato, 'scegli')
 
   // il controllo sulla grammatica del numero: i casi trovati giocando
   for (const storta of ['I have got a trousers', 'has she got a big hair', 'it is a elephant', 'they are two dog',

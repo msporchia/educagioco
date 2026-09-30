@@ -308,4 +308,4 @@ l'indicatore `[data-paga][data-paga-si="1"|"0"]`, la parola
 tocco `[data-svela]` (con `[data-pronta]`) e i suoi
 `[data-azione="svela-si"|"svela-no"]`; il libro
 `[data-libro-testo]`, `[data-azione="ho-letto"]`, `[data-libro-domanda]`;
-il cartello `[data-fine]` con `[data-azione="mappa"|"avanti"]`.
+il cartello `[data-fine]` con `[data-azione="mappa"|"avanti"|"ancora"]` (dopo una tappa si può rigiocarla).
