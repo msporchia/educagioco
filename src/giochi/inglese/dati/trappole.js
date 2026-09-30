@@ -8,6 +8,15 @@
 // cosa con i mesi e un'altra con i mobili).
 // Un errore nuovo che somiglia a uno che c'è è una riga; uno di specie
 // nuova è un'operazione nuova. Vedi docs/lingue/mondi.md.
+// Le gemelle di grammatica: se la frase ne usa una, le altre sono le tessere
+// di troppo che contano (I am / I is, my / your). Solo scambi che cambiano
+// davvero la frase: niente this / it o a / the, che in italiano si somigliano.
+export const GEMELLE = [
+  ['am', 'is', 'are'], ['was', 'were'], ['have', 'has'], ['do', 'does'],
+  ['my', 'your', 'his', 'her'], ['he', 'she', 'they'], ['a', 'an'],
+  ['in', 'on', 'under', 'behind', 'near'], ['can', 'cannot'], ['there', 'here'],
+]
+
 export const TRAPPOLE = [
   { id: 'gira-domanda', fa: 'giraDomanda', forma: null,
     perche: 'Per chiedere, {verbo} va prima di {chi}: {verbo} {chi}…',

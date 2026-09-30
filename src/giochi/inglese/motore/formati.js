@@ -5,6 +5,7 @@
 import { MAX_S } from '../../../store/srs.js'
 import { FORME, chiaveForma } from '../dati/forme.js'
 import { trappoleDi, scegliTrappole, vicineFra } from './trappole.js'
+import { GEMELLE } from '../dati/trappole.js'
 import { parole, inTappa, normalizza, accettate, eDomanda, inBella, aSchermo } from './testo.js'
 import { chiaveDi, DET } from './lessico.js'
 import { paroleNote } from './grafo.js'
@@ -15,10 +16,31 @@ export const COMPONI = new Set(['completa', 'monta', 'scegliMonta'])
 export const formatoPerForza = forza =>
   FORMATI_FRASE[Math.max(0, Math.min(FORMATI_FRASE.length - 1, Math.floor(forza || 0)))]
 
-// «scegli e monta»: una tessera trappola, poi due, poi tre — la terza
-// arriva quando anche la forma è al massimo (la forza si ferma a MAX_S)
+// «scegli e monta»: due tessere di troppo, poi tre, poi quattro quando anche
+// la forma è al massimo (la forza si ferma a MAX_S)
 export const tessereInPiu = (forza, forzaForma = 0) =>
-  (forza <= 5 ? 1 : forzaForma >= MAX_S ? 3 : 2)
+  (forza <= 5 ? 2 : forzaForma >= MAX_S ? 4 : 3)
+
+// le tessere di troppo, dalle più istruttive: le parole delle trappole di
+// grammatica, poi le gemelle delle parole della frase, poi le parole vicine
+function tessereDiTroppo(T, trappole, tappa, note, ctx) {
+  const presenti = new Set(T.map(w => w.toLowerCase()))
+  const out = []
+  const metti = (testo, trappola = null) => {
+    const k = testo.toLowerCase()
+    if (presenti.has(k) || out.some(e => e.testo.toLowerCase() === k)) return
+    out.push({ testo, trappola })
+  }
+  const scelte = scegliTrappole(trappole, trappole.length, { forzaForma: ctx.forzaForma, rnd: ctx.rnd })
+  const diGrammatica = scelte.filter(t => t.pesa !== 'parola')
+  for (const t of diGrammatica) for (const w of parole(inTappa(t.en, tappa))) metti(w, t)
+  for (const w of T) {
+    const g = GEMELLE.find(x => x.includes(w.toLowerCase()))
+    if (g) for (const x of ctx.rnd ? mescola(g, ctx.rnd) : g) if (!note || note.has(x)) metti(x)
+  }
+  for (const t of scelte.filter(t => t.pesa === 'parola')) for (const w of parole(inTappa(t.en, tappa))) metti(w, t)
+  return out
+}
 
 // le parole di struttura: quelle che «completa» toglie per prime
 const STRUTTURA = new Set(Object.values(FORME).flatMap(f => f.parole.map(p => p.toLowerCase())))
@@ -112,13 +134,7 @@ export function costruisci(frase, formato, ctx, { forza = 0 } = {}) {
   const tessere = T.map((testo, i) => ({ id: i, testo }))
   const out = { ...base, domanda: { testo: aSchermo(frase.it), lingua: 'it' }, soluzione: T.slice() }
 
-  // le parole delle trappole che nella frase giusta non ci sono
-  const presenti = new Set(T.map(w => w.toLowerCase()))
-  const extra = []
-  for (const t of scegliTrappole(trappole, trappole.length, { forzaForma: ctx.forzaForma, rnd }))
-    for (const w of parole(inTappa(t.en, tappa)))
-      if (!presenti.has(w.toLowerCase()) && !extra.some(e => e.testo.toLowerCase() === w.toLowerCase()))
-        extra.push({ testo: w, trappola: t })
+  const extra = tessereDiTroppo(T, trappole, tappa, ctx.note, ctx)
 
   if (formato === 'completa') {
     // due buchi da tre parole in su, e una tessera di troppo: un buco con una tessera sola non è una scelta

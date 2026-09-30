@@ -151,9 +151,9 @@ col suo perché in una riga (sotto i 70 caratteri): *it is* al posto di *is it*
 nella domanda, *she play*, *does he likes*, *I not like*, *a hat red*, *three
 dog*, *the* davanti a un nome generico, *he/she*, *have/has*, *can to*, *goed*…
 Le trappole scritte a mano (parole vicine: *pen/pencil*) si aggiungono alla
-frase, non sono obbligatorie. Le opzioni sbagliate di «scegli», il buco di
-«completa» e le tessere in più di «componi» vengono tutte dalle stesse
-trappole: una scrittura, tutti i formati.
+frase, non sono obbligatorie. Le opzioni sbagliate di «scegli», la tessera
+di troppo di «completa» e quelle di «componi» vengono dalle stesse
+trappole (più le gemelle di grammatica): una scrittura, tutti i formati.
 
 Una frase componibile ha: `id`, mondo e tappa, `forma` (la struttura), `it`,
 `en`, `varianti` accettate, `trappole` a mano, `niente` (regole da non
@@ -328,10 +328,19 @@ stava in piedi nel codice, si è presa la variante più vicina:
 - **Le parole di struttura** (`is`, `the`, `do`…, `dati/glossario.js`) non
   hanno una chiave SRS sua: si imparano con la forma, e toccarle è sempre
   gratis e non segna niente.
-- **Il formato lo decide la forza, e basta**: 0 riconosci, 1 cosa vuol dire,
-  2 scegli, 3 completa, 4 monta, 5–6 scegli e monta. La forza si ferma a 6,
-  quindi «una, poi due, poi tre» tessere trappola diventa: una a 5, due a 6,
-  **tre a 6 quando anche la forma è a 6** (`tessereInPiu`).
+- **Il formato lo decide il gradino** (la forza, alzata dalla struttura, vedi
+  «I formati»): 0 riconosci, 1 cosa vuol dire, 2 scegli, 3 completa, 4
+  monta, 5–6 scegli e monta. Le tessere di troppo di «scegli e monta» sono
+  due a 5, tre a 6, **quattro a 6 quando anche la forma è a 6**
+  (`tessereInPiu`): con una sola, e per di più una parola vicina, la
+  scelta era *sad* o *tired* e si scartava dal significato.
+- **Le tessere di troppo, dalle più istruttive** (`tessereDiTroppo` in
+  `motore/formati.js`): prima le parole delle trappole di grammatica, poi le
+  **gemelle** delle parole della frase (`GEMELLE` in `dati/trappole.js`:
+  *am/is/are*, *my/your/his/her*, *he/she/they*, *have/has*, *in/on/under*…,
+  solo quelle già note), per ultime le parole vicine. Le gemelle
+  escludono gli scambi che in italiano si somigliano (*this/it*, *a/the*),
+  perché darebbero una seconda frase giusta.
 - **Riconosci e cosa vuol dire** differiscono nelle sbagliate: la prima
   prende l'italiano di altre frasi della tappa, la seconda quello delle
   trappole che hanno un senso in italiano (la domanda girata «è un cane?»,

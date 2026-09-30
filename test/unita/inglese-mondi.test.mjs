@@ -115,9 +115,17 @@ nessuno('tutte le frasi componibili', guastiDelleFrasi())
   uguale('forza 2 → scegli', formatoPerForza(2), 'scegli')
   uguale('forza 3 → completa', formatoPerForza(3), 'completa')
   uguale('forza 6 → scegli e monta', formatoPerForza(6), 'scegliMonta')
-  uguale('una tessera trappola a 5', tessereInPiu(5, 0), 1)
-  uguale('due a 6', tessereInPiu(6, 3), 2)
-  uguale('tre a 6 con la forma al massimo', tessereInPiu(6, MAX_S), 3)
+  uguale('due tessere di troppo a 5', tessereInPiu(5, 0), 2)
+  uguale('tre a 6', tessereInPiu(6, 3), 3)
+  uguale('quattro a 6 con la forma al massimo', tessereInPiu(6, MAX_S), 4)
+  {
+    const f = fraseDi('e-i-happy')
+    const ctx = contesto(f, { tappa: tappaDi(f.tappa), altre: FRASI.filter(x => x.tappa === f.tappa), rnd: sorte(2) })
+    const d = costruisci(f, 'scegliMonta', ctx, { forza: 6 })
+    const inPiu = d.tessere.filter(t => t.id >= d.soluzione.length).map(t => t.testo.toLowerCase())
+    controlla('fra le tessere di troppo c’è una gemella di grammatica (I am → is, are)',
+              inPiu.some(w => ['is', 'are'].includes(w)), inPiu.join(', '))
+  }
 
   // cosa segna uno sbaglio: grammatica su frase e forma, parola vicina sulla parola
   const f = fraseDi('m-pen')
