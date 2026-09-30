@@ -64,8 +64,10 @@ export default {
   vincoli: [v => v.cibo.en !== 'cake'],            // facoltativo
   pagine: [                                         // o `frasi: [...]`, che è una pagina sola
     [
-      { en: 'He has got {a:colore} hat.', forma: 'has-got' },
-      { se: v => v.piace, en: 'Yes, I do!' },       // un ramo
+      { en: 'He has got {a:colore} hat.', forma: 'has-got' },      // narrazione
+      { chi: 'Laura', en: 'Do you like cake, Leo?' },              // una battuta
+      { se: v => v.piace, chi: 'Leo', en: 'Yes, I do!' },          // un ramo
+      { chi: v => (v.aiuta ? 'mamma' : 'papa'), en: 'Good night!' }, // chi da una variabile
     ],
     [ … ],
   ],
@@ -85,7 +87,19 @@ componibili. Un tipo di domanda nuovo è una voce di `TIPI_DOMANDA` in
 `motore/libro.js`. Le **pagine** si leggono una alla volta; i rami e le
 variabili valgono su tutte, e una pagina non resta mai vuota.
 
-Lo script le stampa tutte, una pagina per riga:
+**Chi parla lo dice la frase** (`chi`): era prosa di seguito, e non si
+capiva chi dicesse cosa. Una frase senza `chi` è narrazione; una con `chi`
+sono le parole di **una persona sola** — domanda e risposta sono due
+frasi. `chi` è una chiave di `CHI_PARLA` in `dati/elenchi.js` (Laura, Leo,
+Tom, Pip, `mamma`, `papa`, `nonna`, `nonno`), che dà anche il nome italiano
+da mettere davanti, o una funzione del mondo tirato. Chi racconta di sé al
+lettore («Hello! I am Leo. Today is my birthday») è una battuta di quel
+personaggio. `racconta` dà per ogni pagina i `blocchi` `{ chi, nome, righe }`:
+la narrazione di seguito, e più frasi di fila della stessa persona in una
+battuta sola (`blocchiDi`).
+
+Lo script le stampa tutte, come si vedono (una pagina per paragrafo, ogni
+battuta a capo col nome):
 `node strumenti/inglese/banchi.mjs --capitoli` (o `--capitolo=<id> --max=20`).
 
 ## Quando si apre
@@ -181,6 +195,9 @@ sue varianti: ogni frase si accende, ogni `se` a volte è falso, nessuna
 pagina è vuota o lo resta, `dopo` esiste ed è del suo mondo, ogni parola
 è nota a quella tappa (con le forme dei verbi ammesse lì) e toccata dice
 qualcosa, nessuna frase è sgrammaticata sul numero, ogni domanda si fa e
-ha una giusta sola. Nei test: `unita/inglese-mondi` (ogni capitolo) e
-`unita/inglese-libro` (quante e quanto lunghe, le pagine, quale storia, le
-forme dei verbi, la paga).
+ha una giusta sola. E chi parla: `chi` è un personaggio di `CHI_PARLA` in
+ogni mondo tirato; una battuta con una domanda seguita da *Yes* o *No* sono
+due persone; una frase senza `chi` che dice *I, my, we, you…* o sta fra
+virgolette è una battuta a cui manca chi. Nei test: `unita/inglese-mondi`
+(ogni capitolo) e `unita/inglese-libro` (quante e quanto lunghe, le
+pagine, chi parla e i blocchi, quale storia, le forme dei verbi, la paga).

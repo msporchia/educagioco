@@ -190,6 +190,13 @@ la tipografia di un libro (serif, 19–22 px, capolettera sulla prima
 pagina): le frasi sono un racconto, e una riga per frase lo faceva
 sembrare un esercizio.
 
+- **Le battute vanno a capo**, una per volta come in un copione: sopra,
+  il nome di chi parla in italiano (maiuscoletto, non si tocca), e un filo
+  colorato a sinistra, un colore per personaggio. Il colore aiuta a
+  seguire la conversazione ma non dice niente da solo: il nome c'è
+  sempre. La narrazione resta prosa di seguito. Tutto prosa, le battute di
+  due persone finivano nella stessa riga e non si capiva chi parlava
+  ([libro.md](libro.md#il-formato-di-una-storia)).
 - **Si sfoglia con due tasti grandi**, ← e →, con «pagina 2 di 4» in
   mezzo; «Ho letto →» c'è solo all'ultima pagina, sotto le frecce e non al
   loro posto, così un doppio tocco sulla freccia non chiude la lettura.
@@ -306,7 +313,7 @@ dice cosa serve, fa una tappa di parole e guarda che fra i colori ci siano
 solo colori, la nave naviga fino alla tappa, compone a tocchi, chiede prima
 di un tocco che costa col dito vero, sbaglia, un tocco chiude il viaggio,
 il libro chiuso dice quale tappa vincere, il libro apre la storia non
-letta e risponde, la storia è letta, «Un'altra storia» ne apre un'altra
+letta con le battute di Leo e Laura col loro nome, e risponde, la storia è letta, «Un'altra storia» ne apre un'altra
 che si sfoglia anche durante le domande, e a otto anni trova la prima
 passata con la nave nella seconda; con `--scatti` anche la tela intera a 390 e a 320 px) e
 `integrazione/inglese` (il gioco di prima). Bersagli: la carta
@@ -327,7 +334,8 @@ l'indicatore `[data-paga][data-paga-si="1"|"0"]`, la parola
 `[data-parola]` e la nuvoletta `[data-traduzione]`; la domanda prima del
 tocco `[data-svela]` (con `[data-pronta]`) e i suoi
 `[data-azione="svela-si"|"svela-no"]`; il libro
-`[data-libro-testo]` con `[data-pagina]` e `[data-pagine]`,
+`[data-libro-testo]` con `[data-pagina]` e `[data-pagine]`, le battute
+`[data-battuta][data-chi="<chiave di CHI_PARLA>"]` (il nome in `.ing-chi`),
 `[data-azione="pagina-indietro"|"pagina-avanti"]`, `[data-pagina-di]`,
 `[data-azione="ho-letto"]`, `[data-libro-domanda]`; il cartello
 `[data-fine]` con `[data-azione="mappa"|"avanti"|"ancora"]` («Un’altra
