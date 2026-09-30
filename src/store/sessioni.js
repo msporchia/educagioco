@@ -90,6 +90,10 @@ let aperta = null      // { gioco, id, da }
 let orologio = () => Date.now()
 
 export function usaOrologio(f) { orologio = f || (() => Date.now()) }
+// l'ora di adesso per chi decide «oggi» fuori dal cronometro (la varietà a
+// monete): la stessa dell'orologio, se no una prova che lo sposta vede due
+// giorni diversi — e passa solo il giorno in cui la data finta è quella vera
+export const adesso = () => orologio()
 
 export function entra(gioco, id) {
   if (aperta) esci()
