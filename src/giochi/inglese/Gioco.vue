@@ -6,7 +6,7 @@
 import { ref, shallowRef, computed, reactive, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { state, item, answer, segna, persist, flushNow, engProgresso } from '../../store/profile.js'
+import { state, item, answer, segna, persist, flushNow, engProgresso, tuttoAperto } from '../../store/profile.js'
 import { strength, newItem } from '../../store/srs.js'
 import { incassa, premioDetto } from '../../store/varieta.js'
 import { pronuncia, haVoce, prepara, zittisci } from '../../voce.js'
@@ -50,7 +50,7 @@ const forzaDi = k => strength(leggi(k), Date.now())
 
 /* ═══════════ la mappa ═══════════ */
 const ridisegna = ref(0)
-const stato = computed(() => { void ridisegna.value; return statoMappa(c, forzaDi) })
+const stato = computed(() => { void ridisegna.value; return statoMappa(c, forzaDi, tuttoAperto()) })
 const extra = computed(() => {
   void ridisegna.value
   const out = {}
@@ -59,7 +59,7 @@ const extra = computed(() => {
     const mondo = mondoDi(m.id)
     const ultima = mondo.tappe[mondo.tappe.length - 1]
     out[m.id] = {
-      libro: capitoliDi(CAPITOLI, m.id).length ? { aperto: tappaAperta(c, ultima.id) } : null,
+      libro: capitoliDi(CAPITOLI, m.id).length ? { aperto: tappaAperta(c, ultima.id, tuttoAperto()) } : null,
       cassetto: m.cassetto && m.cassetto.chiavi ? { aperto: m.cassetto.aperto } : null,
     }
   }
@@ -198,7 +198,7 @@ function chiudiTappa() {
   }
   const m = t.cassetto ? null : mondoDellaTappa(t.id)
   const dopo = m ? m.tappe[m.tappe.findIndex(x => x.id === t.id) + 1] : null
-  const avanti = dopo && !vinta(c, dopo.id) && tappaAperta(c, dopo.id) ? dopo : null
+  const avanti = dopo && !vinta(c, dopo.id) && tappaAperta(c, dopo.id, tuttoAperto()) ? dopo : null
   fine.value = {
     titolo: t.cassetto ? 'Il cassetto è in ordine'
       : primaVolta ? (t.bandiera ? 'Il mondo è tuo!' : 'Tappa vinta!') : 'Tappa ripassata',

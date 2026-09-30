@@ -16,24 +16,27 @@ export function mondoFinito(c, id) {
   return !!m && pronto(m) && vinta(c, m.tappe[m.tappe.length - 1].id)
 }
 
-export function mondoAperto(c, id) {
+// `tutto`: «Sblocca tutti i livelli» dei grandi (settings.tuttoAperto), che passa davanti a tutto
+export function mondoAperto(c, id, tutto = false) {
   const m = mondoDi(id)
   if (!m || !pronto(m)) return false
+  if (tutto) return true
   if (!m.dopo.every(d => mondoFinito(c, d))) return false
   return !m.dopoUno || !m.dopoUno.length || m.dopoUno.some(d => mondoFinito(c, d))
 }
 
-export function tappaAperta(c, id) {
+export function tappaAperta(c, id, tutto = false) {
   const m = MONDI.find(x => x.tappe.some(t => t.id === id))
-  if (!m || !mondoAperto(c, m.id)) return false
+  if (!m || !mondoAperto(c, m.id, tutto)) return false
+  if (tutto) return true
   const i = m.tappe.findIndex(t => t.id === id)
   return i === 0 || vinta(c, m.tappe[i - 1].id) || vinta(c, id)
 }
 
 // il cassetto si apre alla prima tappa vinta del mondo
-export const cassettoAperto = (c, id) => {
+export const cassettoAperto = (c, id, tutto = false) => {
   const m = mondoDi(id)
-  return !!m && pronto(m) && m.tappe.some(t => vinta(c, t.id))
+  return !!m && pronto(m) && (tutto || m.tappe.some(t => vinta(c, t.id)))
 }
 
 // Segna una tappa vinta (la prima volta resta la data della prima volta).
@@ -49,14 +52,14 @@ export function segnaVinta(c, id, ora = Date.now()) {
 }
 
 // Tutto quello che la mappa disegna, in un colpo.
-export function statoMappa(c, forzaDi) {
+export function statoMappa(c, forzaDi, tutto = false) {
   return MONDI.map(m => ({
     id: m.id, nome: m.nome, disegno: m.disegno || null, insegna: m.insegna, dopo: m.dopo, dopoUno: m.dopoUno || [],
-    pronto: pronto(m), aperto: mondoAperto(c, m.id), finito: mondoFinito(c, m.id),
+    pronto: pronto(m), aperto: mondoAperto(c, m.id, tutto), finito: mondoFinito(c, m.id),
     tappe: m.tappe.map(t => ({
       id: t.id, nome: t.nome, disegno: t.disegno, bandiera: !!t.bandiera,
-      aperta: tappaAperta(c, t.id), vinta: vinta(c, t.id), grado: gradoTappa(t, forzaDi),
+      aperta: tappaAperta(c, t.id, tutto), vinta: vinta(c, t.id), grado: gradoTappa(t, forzaDi),
     })),
-    cassetto: pronto(m) ? { aperto: cassettoAperto(c, m.id), chiavi: cassettoDi(m.id).chiavi.length } : null,
+    cassetto: pronto(m) ? { aperto: cassettoAperto(c, m.id, tutto), chiavi: cassettoDi(m.id).chiavi.length } : null,
   }))
 }
