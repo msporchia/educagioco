@@ -13,7 +13,9 @@ import { dipingi } from './grafica/riquadro.js'
 import Giudizio from '../components/Giudizio.vue'
 import { giudiziAccesi } from '../store/giudizi.js'
 import { annota, alleggerita, alleggerisciSeServe } from './memoria.js'
-import { comeSiFaPrima } from './alleggerire.js'
+import { esempioSvolto, generatoreDi, daLeggerePrima } from './nucleo/svolto.js'
+import { perId } from './nucleo/registro.js'
+import { sorteQualunque } from './nucleo/sorte.js'
 import { serveLaDritta, troppoDiFretta, spiegazioneDi, attesaDellEsito, evidenziando,
          tempoDaAnnotare, PONDERA }
   from './nucleo/domanda.js'
@@ -41,8 +43,12 @@ const CIECA = 320       // finestra cieca al montaggio: vedi docs/core/interfacc
 const pronta = ref(false)
 const attesa = ref(0)   // quanto manca alla prossima (0 = non si aspetta niente)
 const diFretta = ref(false) // vedi docs/apprendimento/la-domanda.md#troppo-di-fretta-il-tempo-non-la-roba
-// il metodo prima di rispondere, per le tipologie alleggerite: deciso a inizio domanda, non ricalcolato a metà
-const prima = ref('')
+// per le tipologie alleggerite, l'esempio svolto (o il solo metodo) prima di rispondere: deciso a inizio domanda
+const prima = ref(null)
+const svolto = computed(() => prima.value?.esempio || null)
+const svoltaGiusta = computed(() => svolto.value?.risposte?.[svolto.value.giusta] || null)
+const teloSvolto = ref(null)
+const teloSvoltaGiusta = ref(null)
 // il timer della prossima domanda: non è un `ref` perché non si disegna
 let avanti = null        // il timer
 let vaiAvanti = null     // cosa fa quando scatta
@@ -127,9 +133,10 @@ function scegli(i) {
   /* indovinando si tira dritto, a meno che non ci sia una scorciatoia
      da leggere: allora si resta quanto basta per leggerla, che è la
      stessa attesa di quando si sbaglia */
-  // chi ha avuto il metodo davanti aveva più da leggere: il tempo di lettura lo conta
-  diFretta.value = troppoDiFretta(prima.value
-    ? { ...props.domanda, testo: `${props.domanda.testo} ${prima.value}` } : props.domanda,
+  // chi ha avuto l'esempio davanti aveva più da leggere: il tempo di lettura lo conta
+  const inPiu = daLeggerePrima(prima.value)
+  diFretta.value = troppoDiFretta(inPiu
+    ? { ...props.domanda, testo: `${props.domanda.testo} ${inPiu}` } : props.domanda,
   { giusto, tempo })
   /* il conto della raffica si aggiorna **a ogni risposta**, anche
      quando è stata letta: le risposte giuste sono il modo di uscirne
@@ -143,7 +150,9 @@ function scegli(i) {
      seconda di chi la chiama. */
   const { perche, comeSiFa } = spiegazione.value
   const quanto = attesaDellEsito({
-    righe: giusto ? [dritta.value] : ['Era questa.', perche, comeSiFa, dritta.value],
+    // sbagliando si torna a guardare il metodo dell'esempio sopra, e anche quello si legge
+    righe: giusto ? [dritta.value]
+      : ['Era questa.', perche, comeSiFa, dritta.value, svolto.value?.aiuto],
     pavimento: giusto
       ? (dritta.value ? props.respiro + 900 : Math.min(props.respiro, 700))
       : Math.max(PONDERA, props.respiro),
@@ -225,7 +234,11 @@ async function inizia() {
   quantoCiHaMesso.value = 0
   attesa.value = 0
   diFretta.value = false
-  prima.value = comeSiFaPrima(props.domanda, alleggerita(props.domanda.chiave))
+  prima.value = alleggerita(props.domanda.chiave) ? esempioSvolto({
+    vera: props.domanda,
+    genera: generatoreDi(perId(props.origine?.modulo), props.origine?.grado, props.domanda.chiave),
+    sorte: sorteQualunque(),
+  }) : null
   clearTimeout(avanti)
   avanti = null
   vaiAvanti = null
@@ -241,6 +254,11 @@ async function inizia() {
   risposte.value.forEach((r, i) => {
     if (r.scena && tele.value[i]) dipingi(tele.value[i], props.pittori, r.scena)
   })
+  // l'esempio viene dallo stesso modulo: i suoi disegni li fanno gli stessi pittori
+  if (svolto.value?.soggetto?.scena && teloSvolto.value)
+    dipingi(teloSvolto.value, props.pittori, svolto.value.soggetto.scena)
+  if (svoltaGiusta.value?.scena && teloSvoltaGiusta.value)
+    dipingi(teloSvoltaGiusta.value, props.pittori, svoltaGiusta.value.scena)
 }
 
 // il telefono si posa e torna: il tempo riparte, l'attesa dell'esito riparte da quello che restava
@@ -284,9 +302,29 @@ onUnmounted(() => {
         <span>{{ titolo }}</span>
         <Giudizio :voce="daGiudicare" />
       </div>
-      <!-- alleggerita: il metodo si legge prima, non dopo l'errore (vedi la-domanda.md) -->
-      <div v-if="prima" class="qz-come qz-prima" data-come-prima>
-        <b>Si fa così:</b> {{ prima }}
+      <!-- alleggerita: un'altra domanda della stessa tipologia, già risolta, e poi la vera (vedi la-domanda.md) -->
+      <div v-if="svolto" class="qz-svolto" data-come-prima data-esempio-svolto>
+        <div class="qz-svolto-titolo">Guarda come si fa</div>
+        <div class="qz-svolto-consegna">{{ svolto.testo }}</div>
+        <div v-if="svolto.soggetto" class="qz-svolto-soggetto">
+          <canvas v-if="svolto.soggetto.scena" ref="teloSvolto" class="qz-svolto-telo" />
+          <span v-else-if="svolto.soggetto.emoji">{{ svolto.soggetto.emoji }}</span>
+          <span v-else>{{ svolto.soggetto.testo }}</span>
+          <span v-if="svolto.soggetto.nome" class="qz-nome">{{ svolto.soggetto.nome }}</span>
+        </div>
+        <div class="qz-svolto-risposta" data-esempio-risposta>
+          <span>Risposta:</span>
+          <canvas v-if="svoltaGiusta.scena" ref="teloSvoltaGiusta" class="qz-svolto-telo" />
+          <b v-else-if="svoltaGiusta.emoji !== undefined" class="emoji">{{ svoltaGiusta.emoji }}</b>
+          <b v-else>{{ svoltaGiusta.testo }}</b>
+          <span v-if="svoltaGiusta.nome" class="qz-nome">{{ svoltaGiusta.nome }}</span>
+        </div>
+        <div class="qz-come"><b>Si fa così:</b> {{ svolto.aiuto }}</div>
+      </div>
+      <div v-if="svolto" class="qz-tocca" data-tocca-a-te>Adesso tocca a te</div>
+      <!-- nessun esempio diverso da questa: il metodo solo se non ha numeri, che direbbero la risposta -->
+      <div v-else-if="prima?.metodo" class="qz-come qz-prima" data-come-prima data-metodo-prima>
+        <b>Si fa così:</b> {{ prima.metodo }}
       </div>
       <div class="qz-consegna">{{ domanda.testo }}</div>
 
@@ -529,5 +567,33 @@ onUnmounted(() => {
 }
 .qz-come b { color: #8fd0ff; font-weight: 750; }
 .qz-prima { margin: 0 0 8px; text-align: left; } /* in cima: si legge prima della consegna */
+/* l'esempio svolto: più piccolo e più spento della domanda vera, dentro un riquadro suo, perché non si confonda */
+.qz-svolto {
+  margin: 0 0 6px; padding: 8px 10px 9px; text-align: left;
+  border-radius: 14px; border: 1px dashed rgba(143, 208, 255, .45);
+  background: rgba(111, 196, 255, .06); color: #cfdcf5;
+  font-size: clamp(12.5px, 3.6vw, 14.5px); line-height: 1.35;
+}
+.qz-svolto-titolo {
+  font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase;
+  color: #8fd0ff; font-weight: 750; margin-bottom: 3px;
+}
+.qz-svolto-consegna { font-weight: 650; white-space: pre-line; }
+.qz-svolto-soggetto, .qz-svolto-risposta {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;
+}
+.qz-svolto-risposta b { color: #7ee6a4; font-weight: 800; }
+.qz-svolto-risposta b.emoji { font-size: 22px; }
+.qz-svolto-telo { width: clamp(44px, calc(9 * var(--qz-h)), 72px); height: auto; aspect-ratio: 1; }
+.qz-svolto .qz-come { margin-top: 6px; }
+/* il confine fra l'esempio e la domanda vera: a occhio, non solo a parole */
+.qz-tocca {
+  display: flex; align-items: center; gap: 8px; margin: 8px 0 6px;
+  font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase;
+  color: #ffd58a; font-weight: 750;
+}
+.qz-tocca::before, .qz-tocca::after {
+  content: ''; flex: 1; height: 1px; background: rgba(255, 213, 138, .35);
+}
 .qz-fretta { margin-top: 4px; font-size: 12.5px; color: #ffd9a0; } /* un consiglio come la dritta, non rossa */
 </style>

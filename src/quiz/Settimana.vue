@@ -56,7 +56,7 @@ function applica(r, { ritocco }) {
             <b>{{ r.nome }}</b>
             <i>{{ r.detto }}</i>
             <em v-if="r.alleggerita" class="alleggerita" data-alleggerita>
-              già alleggerita: esce meno spesso e prima gli mostra come si fa<template
+              già alleggerita: esce meno spesso e prima gli mostra un esempio svolto<template
                 v-if="finoA(r.tipo)">, fino a {{ finoA(r.tipo) }}</template>
             </em>
           </span>

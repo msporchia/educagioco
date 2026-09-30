@@ -78,7 +78,11 @@ sono migliorate** e **quante difficili**, e i due elenchi corti.
   quadro (`quiz/consiglio.js`) e il numero, non un giudizio («ne ha
   sbagliate 7 su 10»). Se il gioco l'ha già alleggerita
   ([../apprendimento/la-domanda.md](../apprendimento/la-domanda.md#il-muro-lo-sistema-il-gioco))
-  la riga lo dice, e fino a che giorno. Tre tasti:
+  la riga lo dice, e fino a che giorno: «già alleggerita: esce meno spesso e
+  prima gli mostra un esempio svolto» — un'altra domanda della stessa
+  tipologia già risolta, non il metodo di quella che deve fare, che spesso
+  conteneva la risposta ([l'esempio svolto](../apprendimento/la-domanda.md#lesempio-svolto)).
+  Tre tasti:
   - **▶ Prova** — la palestra di sempre (`Prova.vue`);
   - **Più avanti di mezzo anno** — la ✎ di `components/eta/Taratura.vue`
     ([ritocchi.md](ritocchi.md)), aperta con lo scatto già fatto (`parte`):
