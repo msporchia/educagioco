@@ -435,7 +435,6 @@ export class Corsa {
   }
 
   get stelle() { return this.vinta ? stellePerVita(this.vita, this.vitaMax) : 0 }
-  get monete() { return this.vinta ? this.tappa.premio * this.stelle : 0 }   // le porta la tappa, non il bottino
 
   // dove si è dentro il piano: la riga sotto la mappa ("piano 2 di 3 — fila 5 di 14")
   get filaNelPiano() { return this.riga - inizioPiano(this.piano, this.quanteFile) + 1 }

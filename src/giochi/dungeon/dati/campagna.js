@@ -20,43 +20,43 @@ export const CAMPAGNA = [
   /* ── scalino 1: le cantine ── */
   { chiave: 'cantina', nome: 'La cantina', ambiente: 'cantina', scalino: 'cantine',
     portata: 18,
-    file: 18, dif: [0, 0.25], premio: 3,
+    file: 18, dif: [0, 0.25],
     racconto: 'Una botola in giardino, e sotto una scala che non finisce.' },
   { chiave: 'cripta', nome: 'La cripta', ambiente: 'cripta', scalino: 'cantine',
     portata: 22,
-    file: 21, dif: [0.05, 0.35], premio: 3,
+    file: 21, dif: [0.05, 0.35],
     racconto: 'Ossa impilate con ordine. Qualcuna si muove.' },
   { chiave: 'grotta', nome: 'La grotta', ambiente: 'grotta', scalino: 'cantine',
     portata: 26,
-    file: 24, dif: [0.1, 0.45], premio: 4,
+    file: 24, dif: [0.1, 0.45],
     racconto: 'Gocce, echi e un battito d\'ali sopra la testa.' },
 
   /* ── scalino 2: le gallerie ── */
   { chiave: 'fungaia', nome: 'La fungaia', ambiente: 'fungaia', scalino: 'gallerie',
     portata: 38,
-    file: 27, dif: [0.2, 0.55], premio: 5,
+    file: 27, dif: [0.2, 0.55],
     racconto: 'Funghi alti come te, e qualcosa che striscia fra i gambi.' },
   { chiave: 'fogne', nome: 'Le fogne', ambiente: 'fogne', scalino: 'gallerie',
     portata: 42,
-    file: 30, dif: [0.25, 0.6], premio: 5,
+    file: 30, dif: [0.25, 0.6],
     racconto: 'Acqua nera fino alle caviglie. Meglio non guardare cosa nuota.' },
   { chiave: 'fucina', nome: 'La fucina', ambiente: 'fucina', scalino: 'gallerie',
     portata: 46,
-    file: 33, dif: [0.3, 0.7], premio: 6,
+    file: 33, dif: [0.3, 0.7],
     racconto: 'Fa caldo. Qualcuno, laggiù, batte il martello.' },
 
   // ── scalino 3: il fondo — spedizioni, non più una manciata di stanze
   { chiave: 'ghiacciaia', nome: 'La ghiacciaia', ambiente: 'ghiacciaia', scalino: 'fondo',
     portata: 58,
-    file: 36, dif: [0.35, 0.8], premio: 7,
+    file: 36, dif: [0.35, 0.8],
     racconto: 'Il fiato si vede. Le pareti sono di ghiaccio vecchio.' },
   { chiave: 'tana', nome: 'La tana', ambiente: 'tana', scalino: 'fondo',
     portata: 62,
-    file: 39, dif: [0.4, 0.9], premio: 8,
+    file: 39, dif: [0.4, 0.9],
     racconto: 'Ossa spolpate e un odore che non promette niente di buono.' },
   { chiave: 'covo', nome: 'Il covo del drago', ambiente: 'covo', scalino: 'fondo',
     portata: 66,
-    file: 42, dif: [0.45, 1], premio: 10,
+    file: 42, dif: [0.45, 1],
     racconto: 'In fondo si vede una luce arancione. Non è una torcia.' },
 ]
 
@@ -72,9 +72,9 @@ export const tappeDelloScalino = chiave =>
 
 // la discesa senza fondo: qui la profondità si sceglie a mano, non capita
 export const LIBERE = [
-  { chiave: 'corta', nome: 'una corsa', icona: '🕯️', file: 21, dif: [0.1, 0.5], premio: 2 },
-  { chiave: 'lunga', nome: 'una discesa', icona: '🪨', file: 33, dif: [0.3, 0.75], premio: 3 },
-  { chiave: 'abisso', nome: "l'abisso", icona: '🐉', file: 45, dif: [0.5, 1], premio: 5 },
+  { chiave: 'corta', nome: 'una corsa', icona: '🕯️', file: 21, dif: [0.1, 0.5] },
+  { chiave: 'lunga', nome: 'una discesa', icona: '🪨', file: 33, dif: [0.3, 0.75] },
+  { chiave: 'abisso', nome: "l'abisso", icona: '🐉', file: 45, dif: [0.5, 1] },
 ]
 
 export const PREDEFINITA = 'lunga'
@@ -98,7 +98,6 @@ export function guastiDellaCampagna(campagna = CAMPAGNA, ambienti, libere = LIBE
     if (ambienti && !ambienti[t.ambiente]) guasti.push(`${dove}: l'ambiente "${t.ambiente}" non esiste`)
     if (!SCALINI.some(s => s.chiave === t.scalino)) guasti.push(`${dove}: lo scalino "${t.scalino}" non esiste`)
     guasti.push(...guastiDiUnaDiscesa(t, dove))
-    if (!(t.premio > 0)) guasti.push(`${dove}: premio ${t.premio}`)
   }
   for (const l of libere) guasti.push(...guastiDiUnaDiscesa(l, `profondità "${l.chiave}"`))
 

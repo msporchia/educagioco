@@ -68,3 +68,5 @@ partita. È il gioco che introduce il **rischio calcolato**.
   sparire.
 - Si può sempre risalire prima di rischiare: il gioco non punisce chi si
   ferma, e quello che si porta a casa resta.
+- Ogni risposta giusta vale una moneta, subito; a fine discesa non arriva
+  nessun premio in più.

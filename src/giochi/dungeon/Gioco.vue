@@ -7,7 +7,9 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { addCoins, segna, segnaBest } from '../../store/profile.js'
+import { segna, segnaBest } from '../../store/profile.js'
+import { borsa } from '../../store/varieta.js'
+import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, stelleDi, completa, scelta, ricorda } from '../campagne.js'
 import { domandaPerGioco } from '../../quiz/scelta.js'
 import Domanda from '../../quiz/Domanda.vue'
@@ -40,6 +42,9 @@ const fine = ref(null)            // il cartello di fine discesa
 let ultimoModulo = null           // per non ripetere la stessa materia
 
 const avanza = progresso(CHIAVE)
+// una risposta giusta paga subito, e basta: niente premio a fine discesa
+// (docs/apprendimento/calibrazione.md). Una ogni cinque secondi: 🪙1, non 3
+let borsellino = borsa(CHIAVE)
 const libera = computed(() => tappaIdx.value < 0)
 const dove = computed(() => corsa.value ? corsa.value.dove : 'campagna')
 const stanza = computed(() => corsa.value?.stanza || null)
@@ -244,6 +249,7 @@ function avvia(tappa, indice) {
   fine.value = null
   domanda.value = null
   corsa.value = new Corsa(tappa, { tappeFatte: avanza.tappa })
+  borsellino = borsa(CHIAVE)
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
 }
 
@@ -292,6 +298,7 @@ function chiedi() {
 
 function risposto({ giusto }) {
   domanda.value = null
+  if (giusto) borsellino.paga(PAGA.mossa)
   risolvi(giusto)
 }
 
@@ -359,7 +366,6 @@ function chiudi() {
   if (c.tesori) segna('dungeonTesori', c.tesori)
   segnaBest('dungeonFila', c.piuGiu + 1)
   if (vinta) {
-    addCoins(c.monete)
     segna('dungeonBoss')
     // "interi" vuol dire quasi interi (un graffio si prende comunque): soglia alle tre stelle, come il bambino vede
     if (c.stelle === 3) segna('dungeonInteri')
@@ -371,7 +377,8 @@ function chiudi() {
     titolo: libera.value ? 'discesa senza fondo' : CAMPAGNA[tappaIdx.value].nome,
     bossNome: c.ambiente.bossNome,
     stelle: c.stelle,
-    monete: c.monete,
+    monete: borsellino.dato,
+    notaMonete: borsellino.nota(),
     doni: roba.value,
     libera: libera.value,
     fatti: { stanze: c.visitate, domande: c.domande, gemme: c.gemme,

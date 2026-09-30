@@ -8,6 +8,7 @@ defineProps({
   bossNome: { type: String, default: '' },
   stelle: { type: Number, default: 0 },
   monete: { type: Number, default: 0 },
+  notaMonete: { type: String, default: '' },   // il salvadanaio stanco: docs/genitori/varieta.md
   fatti: { type: Object, required: true },   // { stanze, domande, fila, file, gemme }
   doni: { type: Array, default: () => [] },  // [{ em, nome }]
   libera: { type: Boolean, default: false },
@@ -39,7 +40,8 @@ defineEmits(['ancora', 'esci'])
       <p v-if="doni.length" class="dng-coda">
         avevi: <span v-for="d in doni" :key="d.nome">{{ d.em }} {{ d.nome }} </span>
       </p>
-      <p v-if="monete" class="dng-coda dng-oro">+{{ monete }} 🪙 nel salvadanaio</p>
+      <p v-if="monete" class="dng-coda dng-oro" data-monete-prese>+{{ monete }} 🪙 nel salvadanaio</p>
+      <p v-if="notaMonete" class="dng-coda" data-nota-monete>{{ notaMonete }}</p>
 
       <button class="dng-grosso" data-fine="ancora" @click="$emit('ancora')">
         <span class="em">{{ vinta ? '🗺️' : '↻' }}</span>

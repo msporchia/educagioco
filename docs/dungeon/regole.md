@@ -50,6 +50,19 @@ codice: `src/giochi/dungeon/COMBATTIMENTO.md`.
   arrivare al guardiano senza essersi equipaggiati — e perderla lì è come
   il gioco insegna a farlo meglio la volta dopo.
 
+## Le monete
+
+- **🪙1 a risposta giusta, pagato nel momento in cui si risponde**
+  (`PAGA.mossa` in `src/data/paghe.js`), anche in una discesa persa, rifatta
+  o senza fondo; a fine discesa il cartello dice il totale
+  (`[data-monete-prese]`) e, se il salvadanaio era stanco, di quanto
+  (`[data-nota-monete]`). Niente premio di tappa: c'era, `premio × stelle`
+  (🪙9–30), e pagava venti minuti di domande come due minuti di asteroidi.
+- **Una e non tre, come le altre domande vere**: qui la domanda è la mossa,
+  e se ne fa una ogni cinque secondi (sopra). A 🪙3 la cantina renderebbe
+  🪙150 in dieci minuti, due volte e mezza l'ora della calibrazione
+  ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
+
 ## Il bestiario
 
 - **Un mostro del dungeon non è un'emoji.** Le emoji le disegna il telefono:

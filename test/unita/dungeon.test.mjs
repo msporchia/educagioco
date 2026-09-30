@@ -365,7 +365,6 @@ function corsaCon(tipo, opzioni = {}) {
   controlla('ancora', corsa.finita === false)
   corsa.rispondi(false)
   uguale('finita la vita, la discesa è finita', corsa.esito, 'persa')
-  uguale('e non si porta a casa niente', corsa.monete, 0)
   uguale('nemmeno una stella', corsa.stelle, 0)
 }
 {
@@ -460,12 +459,11 @@ uguale('e non si scende mai sotto una', stellePerVita(0, 100), 1)
             bottinoDi(STANZE.mostro.ricchezza, 1, rnd) < TESORI.spadino.prezzo)
 }
 {
+  /* le monete non le porta la tappa: le paga ogni risposta giusta, subito
+     (Gioco.vue, docs/apprendimento/calibrazione.md) */
   const corsa = new Corsa(CAMPAGNA[0], { rnd: caso(3) })
-  uguale('una discesa non finita non vale niente', corsa.monete, 0)
-  corsa.esito = 'vinta'
-  uguale('vinta senza un graffio: premio pieno', corsa.monete, CAMPAGNA[0].premio * 3)
-  corsa.vita = 1
-  uguale('vinta a fatica: premio a una stella', corsa.monete, CAMPAGNA[0].premio)
+  uguale('il motore non sa niente di monete', 'monete' in corsa, false)
+  controlla('e una tappa non dichiara un premio', CAMPAGNA.every(t => !('premio' in t)))
 }
 {
   /* l'equipaggiamento che si ha già non ricapita, e quello peggiore
