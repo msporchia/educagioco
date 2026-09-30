@@ -9,7 +9,9 @@
 import { ref, computed, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { addCoins, segna, segnaBest } from '../../store/profile.js'
+import { segna, segnaBest } from '../../store/profile.js'
+import { borsa } from '../../store/varieta.js'
+import { PAGA } from '../../data/paghe.js'
 import { aperta, adesso, chiusaPerEta, stelleDi, completa } from '../campagne.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino } from './dati/campagna.js'
@@ -70,6 +72,7 @@ const suoni = {
 }
 
 let attesa = 0
+let borsellino = borsa(CHIAVE)   // le monete di questa tappa, una storia alla volta
 let sbarra = 0
 onUnmounted(() => { clearTimeout(attesa); clearTimeout(sbarra) })
 
@@ -83,6 +86,7 @@ function alTavolo(nuovaCorsa, indice) {
   clearTimeout(attesa)
   tappaIdx.value = indice
   corsa.value = nuovaCorsa
+  borsellino = borsa(CHIAVE)
   finale.value = null
   spiega.value = null
   fase.value = 'gioca'
@@ -108,7 +112,7 @@ function vinta() {
   segna('storie')
   serie.value++
   segnaBest('serieStorie', serie.value)
-  addCoins(2)
+  borsellino.paga(PAGA.storia)   // subito, e a fine tappa niente di più: docs/prima-dopo/presentazione.md
   suono.ok()
   fase.value = 'vinta'
   attesa = setTimeout(prossimo, RESPIRO)
@@ -143,7 +147,7 @@ function mostraFinale() {
   completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle: c.stelle })
   segna('storieTappe')
   finale.value = { titolo: CAMPAGNA[tappaIdx.value].nome, stelle: c.stelle,
-                   monete: c.monete, errori: c.errori }
+                   monete: borsellino.dato, notaMonete: borsellino.nota(), errori: c.errori }
   suono.livello()
 }
 

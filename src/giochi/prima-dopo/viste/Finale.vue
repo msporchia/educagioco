@@ -6,6 +6,7 @@ defineProps({
   titolo: { type: String, required: true },
   stelle: { type: Number, default: 1 },
   monete: { type: Number, default: 0 },
+  notaMonete: { type: String, default: '' },   // il salvadanaio stanco: docs/genitori/varieta.md
   errori: { type: Number, default: 0 },
 })
 defineEmits(['avanti'])
@@ -17,7 +18,8 @@ defineEmits(['avanti'])
       <div class="pd-faccia em">🏆</div>
       <h2>{{ titolo }}</h2>
       <div class="pd-punteggio em">{{ '⭐'.repeat(stelle) }}</div>
-      <p v-if="monete">+{{ monete }} 🪙</p>
+      <p v-if="monete" data-monete-prese>+{{ monete }} 🪙</p>
+      <p v-if="notaMonete" data-nota-monete>{{ notaMonete }}</p>
       <p v-if="errori === 0">tutte le storie giuste al primo colpo</p>
       <p v-else>qualche storia si è dovuta rivedere, e va benissimo così</p>
       <button class="pd-grosso" @click="$emit('avanti')">
