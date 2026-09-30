@@ -30,7 +30,7 @@ export const NOVITA = [
   { id: 14, quando: '2026-09-28', gioco: 'torri',
     testo: '🏰 Nel castello arrivano ondate miste: due mostri insieme' },
   { id: 15, quando: '2026-09-29', gioco: 'torri',
-    testo: '🏰 Il castello è tutto ridisegnato: torri nuove, mostri, quattro mondi' },
+    testo: '🏰 Il castello è tutto ridisegnato, con quattro mondi nuovi. Ogni torre ha il suo prezzo e il suo modo di colpire, e i mostri si comportano in modo diverso: alcuni certe torri non li toccano, altri si dividono o si rialzano. È tutto da riprovare!' },
 ]
 
 export const PER_GIOCO = 4

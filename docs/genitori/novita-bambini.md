@@ -32,9 +32,11 @@ riaprono per vedere se sono cambiati.
 
 `{ id, quando, gioco?, testo }`: `id` è quello dopo il più alto e non si
 riusa mai; `quando` è il giorno in cui esce (`AAAA-MM-GG`); `gioco` è la
-chiave di `src/data/giochi.js`; `testo` sta **sotto i 70 caratteri**, con
-l'emoji della cosa in testa, senza HTML né `**`. Lo controlla
-`test/unita/novita-bambini` (lunghezza, gioco, niente HTML).
+chiave di `src/data/giochi.js`; `testo` comincia con l'emoji
+della cosa, senza HTML né `**`, ed è lungo quanto serve a dire cosa c'è
+di nuovo: c'era un tetto di 70 caratteri, tolto il 29 settembre 2026
+perché costringeva a tagliare proprio la parte utile («è tutto da
+riprovare»). Lo controlla `test/unita/novita-bambini` (gioco, niente HTML).
 
 ## Per chi lavora al codice: si propone, non si scrive
 
