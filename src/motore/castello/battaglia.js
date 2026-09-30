@@ -162,22 +162,25 @@ export class Battaglia {
       vita: this.ondate.vitaDi(o),
       vel: this.ondate.velocitaDi(o) * this.misure.S,
       bestia: b.id, vola: !!b.vola, immune: b.immune, abilita: b.abilita,
+      divisioni: b.divisioni || 0,
       capo: !!b.capo, taglia: b.capo ? CAPO.taglia : 1, paga: this.ondate.pagaDi(o),
     }))
   }
 
   // Chi cade paga quanto vale; se si divide i pezzi si spartiscono la sua
-  // paga, così un'ondata di slime non lascia più energia di un'altra.
+  // paga, così un'ondata di slime non lascia più energia di un'altra; i
+  // pezzi si dividono ancora se gli resta una divisione (`divisioniDi`).
   caduto(n) {
     const div = ABILITA.dividi
-    if (n.abilita === 'dividi' && !n.pezzo) {
+    if (n.abilita === 'dividi' && n.divisioni > 0) {
+      const ancora = n.divisioni - 1
       for (let k = 0; k < div.quanti; k++) {
         const scarto = (k - (div.quanti - 1) / 2) * 9 * this.misure.S
         this.nati.push(new Nemico({
           d: Math.max(0, n.d + scarto), via: n.via, onda: n.onda,
           vita: n.vitaMax * div.vita, vel: n.vel, bestia: n.bestia, vola: n.vola,
           immune: n.immune, paga: n.paga / div.quanti, taglia: n.taglia * div.taglia,
-          pezzo: true,
+          pezzo: true, abilita: ancora ? 'dividi' : null, divisioni: ancora,
         }))
       }
       const p = this.viaDi(n).puntoA(n.d)

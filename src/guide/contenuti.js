@@ -428,7 +428,7 @@ export const AIUTI = {
         'A metà scaletta una torre sceglie un mestiere: cambia **come** colpisce, non quanto. Nessuno dei due è quello sbagliato.',
         'Il campo non si ferma mentre fai i conti: i nemici camminano.',
         'Appena un\'ondata è entrata tutta puoi mandare **la prossima** subito: ti danno qualche ⚡ in più, ma te le trovi addosso insieme.',
-        'Qualche mostro fa una cosa quando cade: **si divide** in due più piccoli ✂️, o **si rialza** 💫 una volta. E ogni tanto arriva il **capo** 👑: uno solo, gigante.',
+        'Qualche mostro fa una cosa quando cade: **si divide** in due più piccoli ✂️ (più avanti anche i pezzi si dividono ✂️✂️), o **si rialza** 💫 una volta. E ogni tanto arriva il **capo** 👑: uno solo, gigante.',
         'Nella **partita libera** ogni cinque ondate arriva un 🎁 regalo: scegli un potenziamento, e quello resta anche nelle partite dopo.',
       ] },
       { titolo: 'Cosa allena', righe: [

@@ -3,8 +3,9 @@
    una promessa sola: una tappa costa il numero di calcoli che promette.
    Vedi docs/castello/taratura.md e torri.md. */
 import { TORRI } from './ops.js'
-import { MOSTRI, ABILITA, CAPO, MISTA, feritoDa, firmaImmunita, guastiDelleImmunita, mostroDiOnda,
-         coppiaDellOnda, coppieDi, comune } from './mostri.js'
+import { MOSTRI, ABILITA, CAPO, MISTA, DIVISIONI, divisioniDi, follaDi, vitaEffettiva, feritoDa,
+         firmaImmunita, guastiDelleImmunita, mostroDiOnda, coppiaDellOnda, coppieDi, comune }
+  from './mostri.js'
 import { RACCONTO, LIBERE_RACCONTO } from './campagne-castello.js'
 import { VITE, FIRMA, OLTRE } from './taratura-castello.js'
 import { sullaCarta } from '../motore/castello/carta.js'
@@ -196,7 +197,16 @@ export function vitaNemico(tappa, onda) {
   const fine = livello(n - giro + 1, n), prima = livello(n - 2 * giro + 1, n - giro)
   if (!ultima) return Math.round((fine || Math.max(...v)) * Math.pow(passo, onda - n))
   const ritmo = fine && prima ? Math.min(passo, Math.max(1, Math.pow(fine / prima, 1 / giro))) : passo
-  return Math.round(v[ultima - 1] * Math.pow(ritmo, n - ultima) * Math.pow(passo, onda - n))
+  return Math.round(v[ultima - 1] * Math.pow(ritmo, n - ultima) * Math.pow(passo, onda - n) *
+                    caricoDi(tappa, chi(ultima), ultima) / caricoDi(tappa, chi(onda), onda))
+}
+
+// La vita di un'ondata di chi si divide, per punto di vita del mostro: oltre
+// la tabella delle libere tiene pari chi si divide due volte (mostri.md).
+function caricoDi(tappa, id, o) {
+  if (!tappa.abilita || MOSTRI[id]?.abilita !== 'dividi') return 1
+  const d = divisioniDi(tappa, o)
+  return follaDi('dividi', d) * vitaEffettiva(id, d)
 }
 export const velocitaNemico = (tappa, onda) =>
   (CFG.velBase + onda * CFG.velPiu) * (0.85 + 0.15 * tappa.durezza)
@@ -586,7 +596,9 @@ export function firmaEquilibrio() {
     // il tracciato entra per intero (forma o forme): decide quanta strada
     // ogni torre tiene sotto tiro
     RACCONTO.map(t => [chiaveTappa(t), t.calcoli, t.cap, t.torri, t.mostri,
-                       !!t.abilita, !!t.capo, !!t.rami, t.forme || [t.forma], t.fronti ?? null]),
+                       !!t.abilita, !!t.capo, !!t.rami, t.forme || [t.forma], t.fronti ?? null,
+                       t.divisioni || 1]),
+    DIVISIONI,
     // `durezza` muove la velocità dei nemici
     TAPPE.map(t => [t.ondate, t.posti, t.partenza, t.attesa, t.durezza]),
     LIBERE.map(l => [l.chiave, l.campagna, l.cap, l.posti, l.torri, l.mostri, l.rami,

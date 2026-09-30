@@ -269,18 +269,18 @@ export const CAMPAGNE = [
         // 💣❄️ · 🏹💣 · 💣❄️ · 🏹🔮
         mostri: ['arpia', 'fantasma', 'pipistrello', 'corazziere'], forma: MURA_CAMMINAMENTO },
       { nome: 'Il corridoio', emoji: '🗝️', ambiente: 'corridoio', calcoli: 22, cap: 9,
-        torri: ['add', 'sub', 'mul', 'div'], rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], rami: true, divisioni: 2,
         // 💣❄️ · — · 🔮❄️ · 💣❄️ · — · 🏹💣
         mostri: ['pipistrello', 'slime', 'scheletro', 'arpia', 'orco', 'fantasma'],
         forma: MURA_CORRIDOIO },
       { nome: 'La sala del trono', emoji: '👑', ambiente: 'trono', calcoli: 26, cap: 10,
-        torri: ['add', 'sub', 'mul', 'div'], rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], rami: true, divisioni: 2,
         // 💣❄️ · — · 🏹💣 · — · 💣❄️ · 🔮💣 · — · — · 🏹🔮
         mostri: ['arpia', 'orco', 'fantasma', 'balestriere', 'pipistrello', 'drago',
                  'ragno', 'slime', 'golem'],
         forma: MURA_TRONO },
       { nome: 'Il torrione', emoji: '🏰', ambiente: 'bastione', calcoli: 30, cap: 10,
-        torri: ['add', 'sub', 'mul', 'div'], rami: true, capo: true,
+        torri: ['add', 'sub', 'mul', 'div'], rami: true, divisioni: 2, capo: true,
         // 💣❄️ · 🏹🔮 · — · 🏹💣 · — · — · — · — · 🔮💣
         mostri: ['arpia', 'golem', 'ragno', 'fantasma', 'orco', 'balestriere', 'slime',
                  'ragno', 'drago'],
@@ -299,16 +299,16 @@ export const CAMPAGNE = [
         // 💣❄️ · 🏹🔮 · 🏹💣 · — · — · —
         mostri: ['corvo', 'troll', 'rovo', 'lupo', 'verme', 'lupo'], fronti: 1.9, forme: PALUDE_CANNETO },
       { nome: 'Le isole', emoji: '🏝️', ambiente: 'palude-stagno', calcoli: 18, cap: 9,
-        torri: ['add', 'sub', 'mul', 'div'], rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], rami: true, divisioni: 2,
         // 🔮💣 · 🏹🔮 · — · 💣❄️ · — · —
         mostri: ['blatta', 'troll', 'verme', 'corvo', 'lupo', 'verme'], fronti: 1.5, forme: PALUDE_ISOLE },
       { nome: 'Il pantano', emoji: '🪵', ambiente: 'palude-marcio', calcoli: 21, cap: 10,
-        torri: ['add', 'sub', 'mul', 'div'], rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], rami: true, divisioni: 2,
         // — · 🏹🔮 · — · 💣❄️ · — · — · 🏹💣 · — · 🔮💣
         mostri: ['lupo', 'troll', 'verme', 'corvo', 'lupo', 'verme', 'rovo', 'lupo', 'blatta'],
         forme: PALUDE_PANTANO },
       { nome: 'La foce', emoji: '🌊', ambiente: 'palude-torce', calcoli: 24, cap: 10,
-        torri: ['add', 'sub', 'mul', 'div'], rami: true, capo: true,
+        torri: ['add', 'sub', 'mul', 'div'], rami: true, divisioni: 2, capo: true,
         // 🔮💣 · 🏹🔮 · 🔮💣 · 💣❄️ · — · —
         mostri: ['drago', 'troll', 'blatta', 'corvo', 'lupo', 'verme'], fronti: 1.6, forme: PALUDE_FOCE },
     ],
@@ -321,6 +321,7 @@ export const CAMPAGNE = [
 const LIVELLO_CAP = cap => Math.round(37 + (cap - 3) * (75 - 37) / 7)
 
 const CON_ABILITA = new Set(['sotterraneo', 'mura', 'palude'])
+// `divisioni: 2` sulla tappa: chi si divide si divide due volte (mostri.md).
 
 export const RACCONTO = CAMPAGNE.flatMap(c =>
   c.tappe.map(t => ({ ...t, campagna: c.id, abilita: CON_ABILITA.has(c.id), capo: !!t.capo,

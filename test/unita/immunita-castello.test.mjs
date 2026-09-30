@@ -9,9 +9,9 @@
         «immune» sopra la testa lo lascia chi viene preso dentro da un
         colpo ad area tirato a un altro;
      2. **le abilità non cambiano l'energia**: chi si divide lascia dei
-        pezzi che si spartiscono quello che lui avrebbe pagato, chi si
-        rialza paga una volta sola, e le ondate con le abilità arrivano
-        in meno ma valgono lo stesso;
+        pezzi che si spartiscono quello che lui avrebbe pagato (anche
+        quando si divide due volte), chi si rialza paga una volta sola, e
+        le ondate con le abilità arrivano in meno ma valgono lo stesso;
      3. **il capo è un'ondata**: uno solo, con la vita di tutta l'ondata
         e un decimo, più lento, e paga come l'ondata intera — se no la
         promessa dei `calcoli` saltava ogni dieci ondate;
@@ -29,7 +29,8 @@ import { TAPPE, LIBERE, CFG, MONDO, premioDellaFretta, coperturaApertura, APERTU
          chiaveTappa,
          nemiciDiOnda, capiAperti } from '../../src/data/castello.js'
 import { MOSTRI, ABILITA, CAPO, IMMUNITA_MAX, MISTA, immuniDi, feritoDa, gelabile, guastiDelleImmunita,
-         guastiDelleMiste, coppieDi, immuniDellOnda, vitaEffettiva } from '../../src/data/mostri.js'
+         guastiDelleMiste, coppieDi, immuniDellOnda, vitaEffettiva, divisioniDi, DIVISIONI,
+         bersagliDi } from '../../src/data/mostri.js'
 import { TORRI } from '../../src/data/ops.js'
 import { creaBattaglia } from '../../src/motore/battaglia.js'
 import { Nemico } from '../../src/motore/castello/nemico.js'
@@ -171,6 +172,71 @@ function campo(tappa) {
   for (const p of b.nemici) { p.vita = 0; p.cade(); b.caduto(p) }
   uguale('i due pezzi insieme pagano quanto lui', stato.energia - prima, 2 * CFG.perNemico)
   controlla('e un pezzo non si divide ancora', b.nati.length === 0)
+}
+{
+  /* chi si divide due volte: i pezzi si dividono ancora, e i pezzi dei
+     pezzi no — quattro in fondo, più i due di mezzo, e la paga è sempre
+     quella del mostro intero */
+  const { b, stato } = campo({ ...tappaDi('Il corridoio'), vite: Array(20).fill(90) })
+  const n = new Nemico({ d: 100, vita: 90, vel: 0, bestia: 'slime', abilita: 'dividi',
+                         divisioni: 2, paga: 2, onda: 1 })
+  b.nemici.push(n)
+  const prima = stato.energia
+  const cadi = x => { x.vita = 0; x.cade(); b.caduto(x) }
+  const giro = () => { b.nemici = b.nemici.filter(x => x.vivo); b.nemici.push(...b.nati); b.nati = [] }
+  cadi(n); giro()
+  uguale('lo slime che si divide due volte lascia due pezzi', b.nemici.length, 2)
+  controlla('che si divideranno ancora', b.nemici.every(p => p.abilita === 'dividi' && p.divisioni === 1))
+  for (const p of [...b.nemici]) cadi(p)
+  giro()
+  uguale('e ognuno ne lascia due: quattro in fondo', b.nemici.length, 4)
+  controlla('con un nono della vita', b.nemici.every(p => Math.abs(p.vitaMax - 10) < 1e-9))
+  uguale('fin qui non ha pagato niente nessuno', stato.energia, prima)
+  for (const p of [...b.nemici]) cadi(p)
+  giro()
+  uguale('i pezzi dei pezzi non si dividono più', b.nemici.length + b.nati.length, 0)
+  uguale('e i quattro insieme pagano quanto lui', stato.energia - prima, 2 * CFG.perNemico)
+}
+/* dove si divide due volte: la seconda metà di Mura e Palude, e le libere
+   dall'ondata DIVISIONI.libere; nel resto una volta, nel Bosco mai */
+{
+  const doppie = TAPPE.filter(t => divisioniDi(t, 1) === 2).map(t => `${t.campagna}/${t.nome}`)
+  uguale('si divide due volte dalla terza tappa di Mura e Palude', doppie.join(', '),
+         'mura/Il corridoio, mura/La sala del trono, mura/Il torrione, ' +
+         'palude/Le isole, palude/Il pantano, palude/La foce')
+  controlla('nel resto della campagna una volta, e nel Bosco mai',
+            TAPPE.every(t => doppie.includes(`${t.campagna}/${t.nome}`) ||
+                             divisioniDi(t, 1) === (t.abilita ? 1 : 0)))
+  controlla(`nelle libere una volta fino all'ondata ${DIVISIONI.libere - 1}, poi due`,
+            LIBERE.every(l => divisioniDi(l, DIVISIONI.libere - 1) === 1 &&
+                              divisioniDi(l, DIVISIONI.libere) === 2 && divisioniDi(l, 60) === 2))
+  controlla('il tetto è due', TAPPE.concat(LIBERE).every(t => divisioniDi(t, 999) <= DIVISIONI.tetto))
+  /* e chi si divide due volte arriva ancora più rado: a pari bersagli */
+  for (const t of TAPPE.filter(x => divisioniDi(x, 1) === 2)) {
+    const ondate = new Ondate(t), semplice = new Ondate({ ...t, divisioni: 1 })
+    for (let o = 1; o <= t.ondate; o++) {
+      const bb = ondate.bestiaDi(o)
+      if (bb.capo || bb.con || bb.abilita !== 'dividi') continue
+      uguale(`${t.nome} · ondata ${o}: la scheda dice che si divide due volte`, bb.divisioni, 2)
+      controlla(`${t.nome} · ondata ${o}: ne arrivano meno che con una divisione sola`,
+                ondate.quantiDi(o) <= semplice.quantiDi(o) &&
+                ondate.intervalloDi(o) > semplice.intervalloDi(o),
+                `${ondate.quantiDi(o)} contro ${semplice.quantiDi(o)}`)
+      dentro(`${t.nome} · ondata ${o}: con quasi gli stessi bersagli`,
+             ondate.quantiDi(o) * bersagliDi(2) / (semplice.quantiDi(o) * bersagliDi(1)), 0.6, 1.4)
+    }
+  }
+  /* oltre la tabella delle libere la vita di chi si divide due volte
+     porta la stessa vita per ondata di prima, non la metà */
+  const l = LIBERE.find(x => x.mostri.includes('slime') || x.mostri.includes('verme'))
+  const ondate = new Ondate(l)
+  let o = DIVISIONI.libere + 1
+  while (ondate.bestiaDi(o).abilita !== 'dividi' || ondate.bestiaDi(o).capo || ondate.bestiaDi(o).con) o++
+  const o1 = o - l.mostri.length
+  const perOnda = k => ondate.quantiDi(k) * ondate.vitaDi(k) * vitaEffettiva(ondate.bestiaDi(k).id, ondate.bestiaDi(k).divisioni)
+  nota(`${l.nome}: all'ondata ${o} ${ondate.bestiaDi(o).nome} si divide due volte`)
+  controlla(`${l.nome}: la sua ondata non porta meno vita della stessa di un giro prima`,
+            perOnda(o) >= perOnda(o1), `${perOnda(o1).toFixed(0)} → ${perOnda(o).toFixed(0)}`)
 }
 {
   const n = new Nemico({ vita: 60, vel: 10, bestia: 'scheletro', abilita: 'risorge' })
