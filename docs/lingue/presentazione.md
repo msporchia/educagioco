@@ -11,7 +11,9 @@ spagnolo è ancora la campagna in fila di prima, e ci arriverà.
 
 Ogni isola della mappa è un **mondo** che insegna un pezzo di grammatica —
 *che cos'è*, *io e le mie cose*, poi *dove*, *cosa sai fare*, la giornata,
-il presente, il passato — e finire un mondo apre i successivi. Ogni tappa
+il presente, il passato — e finire un mondo apre i successivi. Una
+caravella segna dove si è arrivati, e toccata una tappa ci naviga, girando
+attorno alle isole. Ogni tappa
 porta **otto-dieci parole nuove e una struttura**, e le frasi non si
 scelgono soltanto: da un certo punto **si compongono**, toccando le parole
 una dopo l'altra, prima coi buchi da riempire, poi tutte da mettere in

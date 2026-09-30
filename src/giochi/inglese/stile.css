@@ -29,16 +29,27 @@
 .ing-mondo-nome.ing-chiuso { opacity: .75 }
 .ing-nodo { position: absolute; border-radius: 50%; background: transparent; border: 0; padding: 0;
             box-shadow: none; transition: transform .12s }
-.ing-nodo:not(:disabled):active { transform: scale(.94) }
-.ing-nodo:disabled { cursor: default }
+.ing-nodo:not([data-chiuso]):active { transform: scale(.94) }
+.ing-nodo[data-chiuso] { cursor: default }
 .ing-nodo-nome { position: absolute; transform: translateX(-50%); text-align: center; pointer-events: none;
                  font: 700 12.5px/1.15 Georgia, 'Times New Roman', serif; color: var(--ing-inchiostro);
                  text-shadow: 0 0 3px #f3e6c4, 0 0 2px #f3e6c4 }
 .ing-nodo-nome.ing-spento { opacity: .55 }
-.ing-qui { position: absolute; transform: translateY(-50%); color: var(--ing-rosso); font-size: 22px;
-           pointer-events: none; animation: ing-indica 1.1s ease-in-out infinite;
-           text-shadow: 0 0 3px #f3e6c4 }
-@keyframes ing-indica { 0%, 100% { margin-left: 0 } 50% { margin-left: 7px } }
+/* la nave: la sua tela la sposta scena/nave.js, a fotogrammi */
+.ing-nave { position: absolute; left: 0; top: 0; width: 120px; height: 120px; pointer-events: none;
+            will-change: transform }
+.ing-nave canvas { width: 120px; height: 120px; display: block }
+.ing-scossa { animation: ing-scossa .42s ease-in-out }
+@keyframes ing-scossa { 0%, 100% { transform: none } 20% { transform: translateX(-4px) rotate(-5deg) }
+                        45% { transform: translateX(4px) rotate(4deg) } 70% { transform: translateX(-2px) rotate(-2deg) } }
+/* cosa serve per una tappa chiusa: un cartiglio sopra la tappa, che se ne va da solo */
+.ing-serve { position: absolute; transform: translate(-50%, -100%); max-width: 220px; width: max-content;
+             padding: 6px 11px; border-radius: 10px; background: var(--ing-carta);
+             border: 1.5px solid var(--ing-seppia); box-shadow: 0 3px 0 var(--ing-ombra);
+             font: 700 13.5px/1.2 Georgia, 'Times New Roman', serif; color: var(--ing-inchiostro);
+             text-align: center; pointer-events: none; z-index: 2; animation: ing-appare .18s ease-out }
+@keyframes ing-appare { from { opacity: 0; margin-top: 6px } to { opacity: 1; margin-top: 0 } }
+.ing-viaggio { position: absolute; inset: 0; z-index: 3 }
 .ing-prima { display: flex; align-items: center; gap: 12px; text-align: left; margin: 4px auto 0;
              width: calc(100% - 28px); max-width: 480px; padding: 12px 16px; border-radius: 16px;
              background: var(--ing-carta); border: 2px solid var(--ing-seppia); box-shadow: 0 4px 0 var(--ing-ombra) }
