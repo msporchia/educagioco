@@ -173,11 +173,9 @@ npm run tara -- --da 0.6 --bersaglio 0.85
   tappa intera.
 - **La promessa:** chi spende tutto finisce la tappa; chi tiene in tasca un
   quarto no (perde diciannove volte su venti); il pasticcione ce la fa.
-  L'eccezione sta scritta col suo nome in `unita/castello` (`PERDONANO`):
-  dalle piazzole sparse è la gola del Sotterraneo, che il pigro finisce con
-  un cuore ([5,4,4] contro il [7,6,6] del metro) perché il capo in fondo
-  toglie quattro cuori a tutti e due; le isole, che perdonavano dal
-  passaggio alle carte, non perdonano più.
+  Un'eccezione si scrive col suo nome in `unita/castello` (`PERDONANO`):
+  con le piazzole del 30 settembre l'elenco è vuoto (la gola, e prima le
+  isole, perdonavano con meno posti).
 
 ## La vecchia curva, e a cosa serve ancora
 

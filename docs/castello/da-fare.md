@@ -17,9 +17,6 @@ Le voci aperte, con quanto basta per riprenderle.
   il foglio della torre al quarto gradino mostra le due carte con una riga
   ciascuna, e la guida del `?` ne parla in una riga. Se serva qualcosa la
   prima volta che compare — e cosa — è da decidere.
-- **La gola perdona il pigro** (`PERDONANO` in `unita/castello`): il
-  taratore guarda fin dove arrivano i nemici e non dove muoiono, e il capo
-  in fondo toglie quattro cuori al metro e al pigro allo stesso modo.
 - **Il castello a sprite: quello che manca.** I quattro vestiti per
   campagna (grotte e mura prendono in prestito lava e neve, vedi
   `VESTITO_DI` in `scena/vestito.js`); i mostri che respirano sul posto ma

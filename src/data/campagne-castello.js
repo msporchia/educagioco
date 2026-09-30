@@ -272,7 +272,8 @@ export const CAMPAGNE = [
         // 💣❄️ · — · 🔮❄️ · 💣❄️ · — · 🏹💣
         mostri: ['pipistrello', 'slime', 'scheletro', 'arpia', 'orco', 'fantasma'],
         forma: MURA_CORRIDOIO },
-      { nome: 'La sala del trono', emoji: '👑', calcoli: 26, cap: 10,
+      // la strada è raccolta: a passi uguali, e a una cella l'una dall'altra, ce ne stanno 15 (con 16 le prime tre del modello cadono in due terzi)
+      { nome: 'La sala del trono', emoji: '👑', calcoli: 26, cap: 10, piazzoleMax: 15,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, divisioni: 2,
         // 💣❄️ · — · 🏹💣 · — · 💣❄️ · 🔮💣 · — · — · 🏹🔮
         mostri: ['arpia', 'orco', 'fantasma', 'balestriere', 'pipistrello', 'drago',

@@ -136,9 +136,8 @@ for (const [i, t] of TAPPE.entries()) {
    bombe aprono tiene alta la tensione anche lì — e l'elenco è vuoto;
    resta perché la prossima tappa che perdona si scriva qui, e non si
    tolga il controllo. */
-/* Con le piazzole sparse (docs/castello/piazzole.md) le isole non
-   perdonano più, e perdona la gola: vedi docs/castello/taratura.md. */
-const PERDONANO = new Set(['La gola'])
+/* Con le piazzole raddoppiate di nuovo (30/9) non perdona più nessuna. */
+const PERDONANO = new Set([])
 for (const [i, t] of TAPPE.entries()) {
   const tutto = gioca(t, PROFILI.misura)
   controlla(`${i + 1}. ${t.nome}: chi spende tutta l'energia la finisce`,

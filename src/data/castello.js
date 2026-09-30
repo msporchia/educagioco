@@ -448,9 +448,9 @@ export function partenzaDi(tappa) {
 
 // Almeno il doppio delle torri del piano e mai meno delle torri offerte;
 // sopra, una quota per campagna. Vedi docs/castello/taratura.md («Le piazzole»).
-export const PIAZZOLE = { bosco: 8, sotterraneo: 12, mura: 14, palude: 12 }
-export const PIAZZOLE_PER_INGRESSO = 4
-export const PIAZZOLE_LIBERE = 20
+export const PIAZZOLE = { bosco: 14, sotterraneo: 18, mura: 20, palude: 18 }
+export const PIAZZOLE_PER_INGRESSO = 6
+export const PIAZZOLE_LIBERE = 28
 export const ingressiDi = t => (t.forme || [t.forma || []]).length
 // Quante difese separate chiede davvero una tappa: non è il numero di
 // bocche. Due strade che restano separate ne chiedono due; due che si
@@ -459,8 +459,9 @@ export const frontiDi = t => t.fronti || ingressiDi(t)
 export function postiDi(tappa) {
   const piano = pianoDi(tappa).torri.length
   const minimo = Math.max(2 * piano, piano + 1, 3, (tappa.torri || []).length)
-  return Math.max(minimo, PIAZZOLE[tappa.campagna] || 0) +
-         (ingressiDi(tappa) - 1) * PIAZZOLE_PER_INGRESSO
+  return Math.min(tappa.piazzoleMax ?? Infinity,
+                  Math.max(minimo, PIAZZOLE[tappa.campagna] || 0) +
+                  (ingressiDi(tappa) - 1) * PIAZZOLE_PER_INGRESSO)
 }
 
 // Comprare tutto: occupare ogni posto e portare ogni torre in cima.
