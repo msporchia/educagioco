@@ -17,7 +17,7 @@ import LinguaGame from '../../views/LinguaGame.vue'
 
 import { CHIAVE, mondoDi, tappaDi } from './dati/mondi.js'
 import { CAPITOLI } from './dati/capitoli.js'
-import { pagaDi, PAGA_CAPITOLO, PREMIO_TAPPA, PREMIO_BANDIERA } from './dati/monete.js'
+import { pagaDi, PAGA_CAPITOLO } from './dati/monete.js'
 import { statoMappa, segnaVinta, tappaAperta, vinta } from './motore/mappa.js'
 import { Sessione } from './motore/sessione.js'
 import { Tocchi, domandeCheLPagano } from './motore/tocchi.js'
@@ -190,11 +190,7 @@ function chiudiTappa() {
     primaVolta = segnaVinta(c, t.id)
     persist()
     flushNow()      // una tappa si vince di rado: non deve perdersi
-    if (primaVolta) {
-      const p = incassa(t.bandiera ? PREMIO_BANDIERA : PREMIO_TAPPA)
-      conti.monete += p.dato
-      conti.chieste += p.chiesto
-    }
+    // niente premio d'arrivo: ogni risposta giusta si è già pagata (docs/lingue/mondi-vista.md)
   }
   const m = t.cassetto ? null : mondoDellaTappa(t.id)
   const dopo = m ? m.tappe[m.tappe.findIndex(x => x.id === t.id) + 1] : null
@@ -227,6 +223,7 @@ const libroK = ref(0)
 const libroScelta = ref(-1)
 const libroPersi = ref(0)            // tocchi a pagamento nel capitolo: ognuno toglie una domanda
 let libroGiuste = 0
+let libroPagate = 0                  // le domande del capitolo già pagate, una per volta
 let tocchiLibro = null
 
 function apriLibro(mondo) {
@@ -238,6 +235,7 @@ function apriLibro(mondo) {
   libroScelta.value = -1
   libroPersi.value = 0
   libroGiuste = 0
+  libroPagate = 0
   tocchiLibro = new Tocchi({ itemDi: item })
   Object.assign(conti, { giuste: 0, errori: 0, monete: 0, chieste: 0, gradoPrima: null })
   fine.value = null
@@ -254,6 +252,13 @@ function rispondiLibro(i) {
   libroScelta.value = i
   const giusta = !!libro.value.domande[libroK.value].opzioni[i].giusta
   if (giusta) { libroGiuste++; conti.giuste++; suono.ok() } else { conti.errori++; suono.no() }
+  // la domanda giusta paga adesso, se un tocco a pagamento non se l'è già mangiata
+  if (giusta && domandeCheLPagano(libroGiuste, tocchiLibro.aPagamento) > libroPagate) {
+    libroPagate++
+    const p = incassa(PAGA_CAPITOLO)
+    conti.monete += p.dato
+    conti.chieste += p.chiesto
+  }
   const quanto = giusta ? 900 : attesaDellEsito({ righe: ['Non così: rileggi il testo qui sopra.'], pavimento: 2500 })
   orologio.aspetta(quanto, avantiLibro)
 }
@@ -264,12 +269,6 @@ function avantiLibro() {
     libroScelta.value = -1
     orologio.riparti()
     return
-  }
-  const n = domandeCheLPagano(libroGiuste, tocchiLibro.aPagamento)
-  if (n) {
-    const p = incassa(n * PAGA_CAPITOLO)
-    conti.monete += p.dato
-    conti.chieste += p.chiesto
   }
   for (const k of tocchiLibro.nonSapute) answer(k, { correct: false })
   const tot = libro.value.domande.length

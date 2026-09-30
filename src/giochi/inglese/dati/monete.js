@@ -13,8 +13,7 @@ export const PAGA = {
 }
 
 export const PAGA_CAPITOLO = 4   // una domanda del libro: dentro c'è anche la lettura del testo
-export const PREMIO_TAPPA = 5    // la prima volta che una tappa si vince
-export const PREMIO_BANDIERA = 10
+// niente premio d'arrivo né per la 🏁: ogni risposta giusta si paga subito, e basta
 
 export const pagaDi = d => (d.genere === 'parola' ? PAGA.parola : PAGA[d.formato] || 0)
 
@@ -22,6 +21,5 @@ export function guastiDelleMonete() {
   const g = []
   for (const [k, v] of Object.entries(PAGA))
     if (!(Number.isInteger(v) && v > 0 && v <= 3)) g.push(`${k}: ${v} monete per una domanda (fra 1 e 3)`)
-  if (!(PREMIO_TAPPA < PREMIO_BANDIERA)) g.push('la 🏁 deve valere più di una tappa')
   return g
 }
