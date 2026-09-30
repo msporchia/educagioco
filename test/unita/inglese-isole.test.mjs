@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE ISOLE DELLA MAPPA DEL TESORO, E LA NAVE — senza browser.
    `node test/esegui.mjs inglese-isole`
-   tempo: 200
+   tempo: 100
 
    La geometria che scena/disposizione.js calcola una volta per mappa, a
    cinque larghezze da telefono:
@@ -161,12 +161,16 @@ titolo('LA NAVE')
     const lontani = toccabili.filter(n => Math.hypot(n.porto.x - n.x, n.porto.y - n.y) > 140)
     uguale(`${W}px: ogni attracco sta accanto alla sua tappa`, lontani.map(n => n.chiave).join(), '')
     if (W !== 320 && W !== 390) continue
-    // da ogni porto a ogni altro, per mare: una coppia una volta sola (la rotta
-    // al contrario è la stessa cercata dall'altro capo), se no con le isole di
-    // quarta e quinta sulla CI si passavano i quattro minuti
+    // Il mare è uno e una rotta vale nei due sensi: se ogni porto arriva al
+    // primo, la nave va da ogni porto a ogni altro. Provarle tutte le coppie
+    // (4830 viaggi) non diceva di più e passava i quattro minuti sulla CI; in
+    // più ogni porto fa un viaggio verso un altro scelto a passo fisso, perché
+    // la rotta sfoltita non tagli la terra anche fra isole lontane.
     let viaggi = 0, lunga = 0
     const guasti = []
-    for (const [i, a] of toccabili.entries()) for (const b of toccabili.slice(i + 1)) {
+    const coppie = toccabili.flatMap((a, i) => [[a, toccabili[0]], [a, toccabili[(i * 7 + 13) % toccabili.length]]])
+    for (const [a, b] of coppie) {
+      if (a === b) continue
       const r = rotta(q.mare, a.porto, b.porto)
       viaggi++
       if (!r) { guasti.push(a.chiave + '→' + b.chiave + ' senza rotta'); continue }
