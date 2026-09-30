@@ -183,14 +183,14 @@
 .ing-battuta { margin: .45em 0 0; padding-left: 11px; border-left: 3px solid var(--chi, #b99a6a) }
 .ing-chi { display: block; font: 700 .66em/1.35 system-ui, sans-serif; letter-spacing: .05em;
            text-transform: uppercase; color: var(--chi, #7a6450) }
-.ing-battuta[data-chi="Laura"] { --chi: #b0412a }
-.ing-battuta[data-chi="Leo"] { --chi: #2f6fb0 }
-.ing-battuta[data-chi="Tom"] { --chi: #3f7d3a }
-.ing-battuta[data-chi="Pip"] { --chi: #8a5a2b }
-.ing-battuta[data-chi="mamma"] { --chi: #9b3f86 }
-.ing-battuta[data-chi="papa"] { --chi: #4b4fa8 }
-.ing-battuta[data-chi="nonna"] { --chi: #a8702a }
-.ing-battuta[data-chi="nonno"] { --chi: #5b6b6f }
+.ing-libro [data-chi="Laura"] { --chi: #b0412a }
+.ing-libro [data-chi="Leo"] { --chi: #2f6fb0 }
+.ing-libro [data-chi="Tom"] { --chi: #3f7d3a }
+.ing-libro [data-chi="Pip"] { --chi: #8a5a2b }
+.ing-libro [data-chi="mamma"] { --chi: #9b3f86 }
+.ing-libro [data-chi="papa"] { --chi: #4b4fa8 }
+.ing-libro [data-chi="nonna"] { --chi: #a8702a }
+.ing-libro [data-chi="nonno"] { --chi: #5b6b6f }
 .ing-fregio { text-align: center; color: #b99a6a; font-size: 18px; margin-top: 4px }
 .ing-dopo-lettura { display: flex; flex-direction: column; gap: 8px; align-items: center }
 /* le pagine si sfogliano con due tasti grandi, uno per lato */
@@ -201,11 +201,11 @@
 .ing-freccia-pagina:disabled { opacity: .35; box-shadow: none }
 .ing-numero-pagina { font: italic 700 16px Georgia, serif; color: #7a6450 }
 .ing-libro-domanda { display: flex; flex-direction: column; gap: 10px }
-.ing-battuta[data-chi="maestra"] { --chi: #7b5ea7 }
-.ing-battuta[data-chi="dottore"] { --chi: #2a7f8a }
-.ing-battuta[data-chi="contadino"], .ing-battuta[data-chi="contadina"] { --chi: #6f7d2a }
-.ing-battuta[data-chi="pappagallo"] { --chi: #2f8a4c }
-.ing-battuta[data-chi="voce"] { --chi: #6b6b6b }
+.ing-libro [data-chi="maestra"] { --chi: #7b5ea7 }
+.ing-libro [data-chi="dottore"] { --chi: #2a7f8a }
+.ing-libro [data-chi="contadino"], .ing-libro [data-chi="contadina"] { --chi: #6f7d2a }
+.ing-libro [data-chi="pappagallo"] { --chi: #2f8a4c }
+.ing-libro [data-chi="voce"] { --chi: #6b6b6b }
 /* le parole della storia: nuove, e toccarle è gratis; un filo d'oro al posto dei puntini, niente di più */
 .ing-pagina .ing-parola.ing-della-storia, .ing-citazione .ing-parola.ing-della-storia {
   border-bottom: 2px solid #d9a441 }

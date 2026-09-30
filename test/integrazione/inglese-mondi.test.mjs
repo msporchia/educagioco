@@ -392,11 +392,13 @@ async function rispondiGiusto() {
     while (!(await page.locator('[data-libro-testo] [data-frase][data-giusta]').count()))
       await page.locator('[data-azione="pagina-avanti"]').click()
     uguale('«tocca la frase»: il testo è a frasi', await page.locator('[data-libro-testo]').getAttribute('data-a-frasi'), '1')
+    await scatto(page, 'inglese-libro-frase')
     await page.locator('[data-libro-testo] [data-frase][data-giusta]').click()
   } else if (tipo === 'ordine') {
     const n = await page.locator('[data-libro-domanda] [data-banco] [data-tessera]').count()
     for (let i = 0; i < n; i++) await page.locator(`[data-libro-domanda] [data-tessera][data-posto="${i}"]`).click()
     uguale('«metti in ordine»: i fatti sono tutti in fila', await page.locator('[data-libro-domanda] [data-in-fila]').count(), n)
+    await scatto(page, 'inglese-libro-ordine')
     await page.locator('[data-libro-domanda] [data-azione="consegna"]').click()
   } else await page.locator('[data-libro-domanda] [data-giusta]').click()
   await page.waitForSelector('[data-libro-domanda] [data-esito], [data-fine]')

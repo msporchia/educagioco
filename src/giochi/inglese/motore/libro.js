@@ -215,7 +215,7 @@ export const TIPI_DOMANDA = {
       let tessere = mescola(fatti.map((testo, id) => ({ id, testo })), rnd)
       // mai già in ordine: sarebbe una domanda con la risposta data
       if (tessere.every((t, i) => t.id === i)) tessere = [...tessere.slice(1), tessere[0]]
-      return { testo: valore(d.testo, v) || 'Metti in ordine quello che succede.', formato: 'monta', tessere,
+      return { testo: valore(d.testo, v) || 'Metti in ordine i fatti della storia.', formato: 'monta', tessere,
                soluzione: fatti }
     },
   },
