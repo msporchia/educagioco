@@ -59,7 +59,9 @@ function stampaCapitolo(c) {
   console.log(`\n══ ${c.titolo} (${c.id}, mondo ${c.mondo}) — ${mondiDi(c).length} combinazioni`)
   for (const v of mondiDi(c)) {
     const r = racconta(c, v, sorte(1))
-    const testo = r.pagine.map(p => p.map(x => x.en).join(' ')).join('\n  ¶ ')
+    // come si vede: la narrazione di seguito, ogni battuta a capo col nome di chi parla
+    const testo = r.blocchi.map(p => p.map(b => (b.chi ? `${b.nome.toUpperCase()} — ` : '') +
+      b.righe.map(x => x.en).join(' ')).join('\n    ')).join('\n  ¶ ')
     const chiave = testo + '|' + r.domande.map(d => d.giusta).join('|')
     if (visti.has(chiave)) continue
     visti.add(chiave)

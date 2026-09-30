@@ -15,6 +15,13 @@ export const PERSONAGGI = [
   { nome: 'Pip', cane: true },
 ]
 
+// Chi può parlare in una storia (`chi` di una frase) e il nome che il libro
+// gli mette davanti, in italiano: uno per chiave, in un posto solo.
+export const CHI_PARLA = {
+  Laura: 'Laura', Leo: 'Leo', Tom: 'Tom', Pip: 'Pip',
+  mamma: 'La mamma', papa: 'Il papà', nonna: 'La nonna', nonno: 'Il nonno',
+}
+
 const a = (en, it, un, il, itPl, ilPl, altro = {}) => ({ en, it, un, il, itPl, ilPl, ...altro })
 
 export const ELENCHI = {

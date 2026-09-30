@@ -6,8 +6,8 @@
    le pagine; quale storia apre il libro e quale «Un'altra storia»; le
    storie lette nel profilo; le forme dei verbi (plays, playing, played,
    went) accettate solo dove una struttura del mondo le ammette; la paga
-   di una domanda. Che ogni capitolo stia in piedi lo controlla
-   unita/inglese-mondi. Il progetto è in docs/lingue/libro.md.
+   di una domanda; chi parla, a battute. Che ogni capitolo stia in piedi
+   lo controlla unita/inglese-mondi. Il progetto è in docs/lingue/libro.md.
    ═══════════════════════════════════════════════════════════════════ */
 import { readdirSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -18,7 +18,7 @@ import { pagaDelCapitolo, PAGA_CAPITOLO } from '../../src/giochi/inglese/dati/mo
 import { flessa, flessione } from '../../src/giochi/inglese/motore/flessioni.js'
 import { sconosciute, paroleDelLibro, formeDelLibro, flessioniDi, paroleNote } from '../../src/giochi/inglese/motore/grafo.js'
 import { traduci, chiaveDi } from '../../src/giochi/inglese/motore/lessico.js'
-import { racconta, mondiDi, pagineDi, tappaDellaStoria } from '../../src/giochi/inglese/motore/libro.js'
+import { racconta, mondiDi, pagineDi, tappaDellaStoria, blocchiDi } from '../../src/giochi/inglese/motore/libro.js'
 import { guastiDelCapitolo, sorte } from '../../src/giochi/inglese/motore/guasti.js'
 import { segnaVinta, cosaServe, statoMappa } from '../../src/giochi/inglese/motore/mappa.js'
 import { storieAperte, prossimaStoria, unAltraStoria, segnaLetta, lette, inOrdine, cosaServeAlLibro }
@@ -92,6 +92,35 @@ titolo('LE PAGINE')
   uguale('alla fine sì', g({ frasi: [{ en: 'It is a pen.', forma: 'it-is' }] }), '')
   uguale('senza dopo, la tappa prima della 🏁', tappaDellaStoria(zaino), 'prima-quanti')
   controlla('ogni parola toccata dice qualcosa', /toccata non dice niente/.test(g({ frasi: [{ en: 'It is a zorp.' }] })))
+}
+
+/* ═══════════ 2b. chi parla ═══════════ */
+titolo('CHI PARLA')
+{
+  // la narrazione di seguito, le battute a sé, due frasi di fila della stessa persona in una
+  const righe = [{ en: 'Tom is here.', chi: null }, { en: 'Leo is here.', chi: null }, { en: 'Hello!', chi: 'Tom' },
+                 { en: 'How are you?', chi: 'Tom' }, { en: 'Fine!', chi: 'Leo' }, { en: 'They play.', chi: null }]
+  stessaLista('i blocchi di una pagina', blocchiDi(righe).map(b => [b.chi, b.righe.length]),
+    [[null, 2], ['Tom', 2], ['Leo', 1], [null, 1]])
+  uguale('col nome in italiano', blocchiDi([{ en: 'Good night!', chi: 'mamma' }])[0].nome, 'La mamma')
+  const r = racconta(capDi('il-gioco-di-tom'), mondiDi(capDi('il-gioco-di-tom'))[0], sorte(1))
+  stessaLista('una storia a battute: Tom, Leo, Tom, Leo', r.blocchi[0].map(b => b.chi), ['Tom', 'Leo', 'Tom', 'Leo'])
+  controlla('ogni storia ha qualcuno che parla, tranne la gita', CAPITOLI.filter(c => c.id !== 'la-gita-al-castello')
+    .every(c => racconta(c, mondiDi(c)[0], sorte(1)).righe.some(x => x.chi)))
+  // chi parla anche da una variabile
+  const s = capDi('il-sabato-di-tom')
+  const nomi = new Set(mondiDi(s).map(v => racconta(s, v, sorte(1)).righe.find(x => x.chi).chi))
+  stessaLista('chi dice buonanotte a Tom dipende da chi ha aiutato', [...nomi].sort(), ['mamma', 'papa'])
+
+  const base = { id: 'prova', mondo: 'prima', titolo: 'Prova', variabili: {},
+                 domande: [{ testo: 'Chi è?', risposta: () => 'Leo', anche: ['Tom', 'Pip'] }] }
+  const g = frasi => guastiDelCapitolo({ ...base, frasi }).join(' · ')
+  controlla('chi dev’essere un personaggio', /non è un personaggio/.test(g([{ chi: 'Zorro', en: 'Hello!' }])))
+  controlla('anche quando è una funzione', /non è un personaggio/.test(g([{ chi: () => 'Zorro', en: 'Hello!' }])))
+  controlla('domanda e risposta sono due battute', /due battute/.test(g([{ chi: 'Tom', en: 'Is it a cat? Yes, it is.' }])))
+  controlla('narrazione che dice «I»: manca chi', /manca chi/.test(g([{ en: 'I am Leo.' }])))
+  controlla('narrazione fra virgolette: manca chi', /manca chi/.test(g([{ en: '“Hello!”' }])))
+  uguale('una battuta giusta passa', g([{ en: 'It is a cat.' }, { chi: 'Tom', en: 'I am Tom.' }]), '')
 }
 
 /* ═══════════ 3. le forme dei verbi ═══════════ */

@@ -2,7 +2,7 @@
 // calcola le domande con le loro risposte. Le sbagliate sono le versioni
 // che questa volta non sono uscite; «Non si sa» è la giusta quando il
 // testo non lo dice. Il formato di un capitolo sta in docs/lingue/libro.md.
-import { ELENCHI } from '../dati/elenchi.js'
+import { ELENCHI, CHI_PARLA } from '../dati/elenchi.js'
 import { mondoDi } from '../dati/mondi.js'
 import { paroleDelLibro } from './grafo.js'
 import { plurale } from './lessico.js'
@@ -124,13 +124,29 @@ export function domandaIn(cap, d, v, rnd = Math.random) {
   return { testo: typeof d.testo === 'function' ? d.testo(v) : d.testo, opzioni, giusta }
 }
 
+// chi dice una frase nel mondo `v`: una chiave di CHI_PARLA, o null se è narrazione
+export const chiDi = (f, v) => (typeof f.chi === 'function' ? f.chi(v) : f.chi) || null
+
+// Le righe di una pagina a blocchi: la narrazione di seguito, e ogni battuta
+// a sé, con più frasi di fila della stessa persona in una battuta sola.
+export function blocchiDi(righe) {
+  const out = []
+  for (const r of righe) {
+    const ultimo = out[out.length - 1]
+    if (ultimo && ultimo.chi === r.chi) ultimo.righe.push(r)
+    else out.push({ chi: r.chi, nome: r.chi ? CHI_PARLA[r.chi] || r.chi : null, righe: [r] })
+  }
+  return out
+}
+
 // Il capitolo tirato: le pagine con le righe accese (e tutte le righe di
-// seguito), e le domande con le risposte.
+// seguito), le stesse a blocchi di chi parla, e le domande con le risposte.
 export function racconta(cap, v, rnd = Math.random) {
   const pagine = pagineDi(cap).map(p => p.filter(f => acceso(f, v))
-    .map(f => ({ en: rendi(f.en, v), forma: f.forma || null })))
+    .map(f => ({ en: rendi(f.en, v), forma: f.forma || null, chi: chiDi(f, v) })))
   return {
     id: cap.id, titolo: cap.titolo, mondo: cap.mondo, variabili: v, pagine, righe: pagine.flat(),
+    blocchi: pagine.map(blocchiDi),
     domande: cap.domande.filter(d => acceso(d, v)).map(d => domandaIn(cap, d, v, rnd)),
   }
 }

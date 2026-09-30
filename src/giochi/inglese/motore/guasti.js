@@ -18,9 +18,12 @@ import { tipiDellaParola } from './sessione.js'
 import { trappoleDi } from './trappole.js'
 import { costruisci, composta, giudica, contesto, FORMATI_FRASE } from './formati.js'
 import { normalizza, accetta, espandi } from './testo.js'
-import { mondiDi, racconta, rendi, valoriDi, pagineDi, frasiDelCapitolo, tappaDellaStoria } from './libro.js'
+import { mondiDi, racconta, rendi, valoriDi, pagineDi, frasiDelCapitolo, tappaDellaStoria, chiDi } from './libro.js'
+import { CHI_PARLA } from '../dati/elenchi.js'
 
 export const PERCHE_MAX = 70
+// le parole di chi parla: in una frase senza `chi` vogliono dire che è una battuta
+const IO_E_TU = new Set(['i', 'me', 'my', 'we', 'us', 'our', 'you', 'your'])
 
 // un caso ripetibile: la stessa frase deve dare gli stessi banchi
 export function sorte(seme = 1) {
@@ -232,6 +235,12 @@ export function guastiDelCapitolo(cap) {
       // ogni parola si tocca: deve avere una traduzione
       for (const w of testo.match(/[A-Za-z]+(?:[’'][A-Za-z]+)?/g) || [])
         if (!traduci(w).it) g.push(`${dove}: «${w}» toccata non dice niente`)
+      // chi parla: un personaggio noto, una persona sola; la narrazione non dice io né tu
+      const chi = chiDi(f, v)
+      if (chi && !CHI_PARLA[chi]) g.push(`${dove}: «${testo}» la dice «${chi}», che non è un personaggio`)
+      if (chi && /\?\s*(Yes|No)\b/.test(testo)) g.push(`${dove}: «${testo}» è domanda e risposta: due battute`)
+      if (!chi && (/[“"]/.test(testo) || espandi(testo).some(w => IO_E_TU.has(w))))
+        g.push(`${dove}: «${testo}» è detta da qualcuno: manca chi`)
     }
     const r = racconta(cap, v, sorte(7))
     const attive = cap.domande.filter(d => !d.se || d.se(v))
