@@ -20,14 +20,6 @@ Le voci aperte, con quanto basta per riprenderle.
 - **La gola perdona il pigro** (`PERDONANO` in `unita/castello`): il
   taratore guarda fin dove arrivano i nemici e non dove muoiono, e il capo
   in fondo toglie quattro cuori al metro e al pigro allo stesso modo.
-- **Quello che il castello a poligoni ha lasciato.** Tolto il disegno a
-  poligoni, restano senza nessuno che li legga: i corpi dei mostri
-  (`grafica/castello/corpi-mostri.js` e `grafica/mostri/`, dove `occhi()`
-  esisteva due volte), i terreni dipinti (`grafica/terreni/`) con
-  l'`ambiente` delle tappe che li nomina, e il risolutore delle strade a
-  etichette di `grafica/tessere.js` (`componiPercorso`, che il sotterraneo
-  non usa: lo usano solo il banco e il suo test). Tenerli o toglierli lo
-  decide l'utente.
 - **Il castello a sprite: quello che manca.** I quattro vestiti per
   campagna (grotte e mura prendono in prestito lava e neve, vedi
   `VESTITO_DI` in `scena/vestito.js`); i mostri che respirano sul posto ma

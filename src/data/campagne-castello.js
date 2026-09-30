@@ -198,8 +198,7 @@ export const LIBERE_RACCONTO = [
     fronti: 1.5, forme: LIBERA_PALUDE },
 ]
 
-// `ambiente` è la chiave di `grafica/terreni/indice.js`: tre terreni veri —
-// bosco, sotterraneo, mura — e venti tavolozze, una per tappa. `mostri` è la
+// `mostri` è la
 // fila da cui `mostroDiOnda` pesca; il commento accanto dice, ondata per
 // ondata, le torri a cui quel mostro è immune (🏹 arciere, 🔮 magica, 💣
 // bombe, ❄️ ghiaccio). Vedi docs/castello/campagne.md e mostri.md.
@@ -207,23 +206,23 @@ export const CAMPAGNE = [
   {
     id: 'bosco', nome: 'Il bosco', emoji: '🌲',
     tappe: [
-      { nome: 'Il sentiero', emoji: '🌱', ambiente: 'bosco-chiaro', calcoli: 6, cap: 3,
+      { nome: 'Il sentiero', emoji: '🌱', calcoli: 6, cap: 3,
         torri: ['add'],
         // — · 💣❄️
         mostri: ['slime', 'pipistrello'], forma: BOSCO_SENTIERO },
-      { nome: 'Il guado', emoji: '💧', ambiente: 'bosco-guado', calcoli: 7, cap: 4,
+      { nome: 'Il guado', emoji: '💧', calcoli: 7, cap: 4,
         torri: ['add', 'sub'], rami: true,
         // — · —
         mostri: ['slime', 'goblin'], forma: BOSCO_GUADO },
-      { nome: 'La radura', emoji: '🍀', ambiente: 'bosco-radura', calcoli: 8, cap: 5,
+      { nome: 'La radura', emoji: '🍀', calcoli: 8, cap: 5,
         torri: ['add', 'sub'], rami: true,
         // 💣❄️ · — · — · —
         mostri: ['pipistrello', 'ragno', 'slime', 'goblin'], forma: BOSCO_RADURA },
-      { nome: 'Il folto', emoji: '🌳', ambiente: 'bosco-fitto', calcoli: 10, cap: 6,
+      { nome: 'Il folto', emoji: '🌳', calcoli: 10, cap: 6,
         torri: ['add', 'sub', 'mul'], rami: true,
         // 💣❄️ · — · — · 🏹💣
         mostri: ['pipistrello', 'slime', 'goblin', 'fantasma'], forma: BOSCO_FOLTO },
-      { nome: 'La radice', emoji: '🪵', ambiente: 'bosco-notte', calcoli: 12, cap: 7,
+      { nome: 'La radice', emoji: '🪵', calcoli: 12, cap: 7,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, capo: true,
         // 💣❄️ · — · 🔮❄️ · 🏹💣 · 🏹🔮 · —
         mostri: ['arpia', 'ragno', 'scheletro', 'fantasma', 'golem', 'orco'],
@@ -233,24 +232,24 @@ export const CAMPAGNE = [
   {
     id: 'sotterraneo', nome: 'Il sotterraneo', emoji: '🕯️',
     tappe: [
-      { nome: 'La grotta', emoji: '🕳️', ambiente: 'grotta', calcoli: 9, cap: 5,
+      { nome: 'La grotta', emoji: '🕳️', calcoli: 9, cap: 5,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
         // 💣❄️ · 🏹🔮 · 🔮❄️
         mostri: ['pipistrello', 'golem', 'scheletro'], forma: SOTTO_GROTTA },
-      { nome: 'La miniera', emoji: '⛏️', ambiente: 'miniera', calcoli: 11, cap: 6,
+      { nome: 'La miniera', emoji: '⛏️', calcoli: 11, cap: 6,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
         // 🔮❄️ · — · — · 🏹🔮 · 💣❄️
         mostri: ['scheletro', 'goblin', 'verme', 'golem', 'pipistrello'], forma: SOTTO_MINIERA },
-      { nome: 'Le fogne', emoji: '🕸️', ambiente: 'fogne', calcoli: 13, cap: 7,
+      { nome: 'Le fogne', emoji: '🕸️', calcoli: 13, cap: 7,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
         // — · — · — · 💣🔮 · 🏹💣
         mostri: ['verme', 'ragno', 'slime', 'blatta', 'fantasma'], forme: SOTTO_FOGNE },
-      { nome: 'La cripta', emoji: '⚰️', ambiente: 'cripta', calcoli: 16, cap: 8,
+      { nome: 'La cripta', emoji: '⚰️', calcoli: 16, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
         // 💣❄️ · 🏹💣 · 🔮❄️ · 🏹🔮 · 💣❄️ · —
         mostri: ['pipistrello', 'fantasma', 'scheletro', 'golem', 'arpia', 'orco'],
         forma: SOTTO_CRIPTA },
-      { nome: 'La gola', emoji: '⛰️', ambiente: 'gola', calcoli: 19, cap: 8,
+      { nome: 'La gola', emoji: '⛰️', calcoli: 19, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, capo: true,
         // 🔮❄️ · 🏹🔮 · — · 💣❄️ · 🏹💣 · —
         mostri: ['scheletro', 'golem', 'orco', 'arpia', 'fantasma', 'ragno'],
@@ -260,26 +259,26 @@ export const CAMPAGNE = [
   {
     id: 'mura', nome: 'Le mura', emoji: '🏰',
     tappe: [
-      { nome: 'Il cortile', emoji: '🚪', ambiente: 'cortile', calcoli: 14, cap: 7,
+      { nome: 'Il cortile', emoji: '🚪', calcoli: 14, cap: 7,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
         // 💣❄️ · 🏹🔮 · —
         mostri: ['arpia', 'golem', 'orco'], forma: MURA_CORTILE },
-      { nome: 'Il camminamento', emoji: '🧱', ambiente: 'camminamento', calcoli: 18, cap: 8,
+      { nome: 'Il camminamento', emoji: '🧱', calcoli: 18, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
         // 💣❄️ · 🏹💣 · 💣❄️ · 🏹🔮
         mostri: ['arpia', 'fantasma', 'pipistrello', 'corazziere'], forma: MURA_CAMMINAMENTO },
-      { nome: 'Il corridoio', emoji: '🗝️', ambiente: 'corridoio', calcoli: 22, cap: 9,
+      { nome: 'Il corridoio', emoji: '🗝️', calcoli: 22, cap: 9,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, divisioni: 2,
         // 💣❄️ · — · 🔮❄️ · 💣❄️ · — · 🏹💣
         mostri: ['pipistrello', 'slime', 'scheletro', 'arpia', 'orco', 'fantasma'],
         forma: MURA_CORRIDOIO },
-      { nome: 'La sala del trono', emoji: '👑', ambiente: 'trono', calcoli: 26, cap: 10,
+      { nome: 'La sala del trono', emoji: '👑', calcoli: 26, cap: 10,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, divisioni: 2,
         // 💣❄️ · — · 🏹💣 · — · 💣❄️ · 🔮💣 · — · — · 🏹🔮
         mostri: ['arpia', 'orco', 'fantasma', 'balestriere', 'pipistrello', 'drago',
                  'ragno', 'slime', 'golem'],
         forma: MURA_TRONO },
-      { nome: 'Il torrione', emoji: '🏰', ambiente: 'bastione', calcoli: 30, cap: 10,
+      { nome: 'Il torrione', emoji: '🏰', calcoli: 30, cap: 10,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, divisioni: 2, capo: true,
         // 💣❄️ · 🏹🔮 · — · 🏹💣 · — · — · — · — · 🔮💣
         mostri: ['arpia', 'golem', 'ragno', 'fantasma', 'orco', 'balestriere', 'slime',
@@ -290,24 +289,24 @@ export const CAMPAGNE = [
   {
     id: 'palude', nome: 'La palude', emoji: '🐸',
     tappe: [
-      { nome: 'Il guado', emoji: '💧', ambiente: 'palude-alba', calcoli: 12, cap: 8,
+      { nome: 'Il guado', emoji: '💧', calcoli: 12, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
         // — · — · — · 🔮💣 · 🏹💣
         mostri: ['verme', 'lupo', 'verme', 'blatta', 'rovo'], fronti: 1.5, forme: PALUDE_GUADO },
-      { nome: 'Il canneto', emoji: '🌾', ambiente: 'palude-verde', calcoli: 14, cap: 8,
+      { nome: 'Il canneto', emoji: '🌾', calcoli: 14, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], rami: true,
         // 💣❄️ · 🏹🔮 · 🏹💣 · — · — · —
         mostri: ['corvo', 'troll', 'rovo', 'lupo', 'verme', 'lupo'], fronti: 1.9, forme: PALUDE_CANNETO },
-      { nome: 'Le isole', emoji: '🏝️', ambiente: 'palude-stagno', calcoli: 18, cap: 9,
+      { nome: 'Le isole', emoji: '🏝️', calcoli: 18, cap: 9,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, divisioni: 2,
         // 🔮💣 · 🏹🔮 · — · 💣❄️ · — · —
         mostri: ['blatta', 'troll', 'verme', 'corvo', 'lupo', 'verme'], fronti: 1.5, forme: PALUDE_ISOLE },
-      { nome: 'Il pantano', emoji: '🪵', ambiente: 'palude-marcio', calcoli: 21, cap: 10,
+      { nome: 'Il pantano', emoji: '🪵', calcoli: 21, cap: 10,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, divisioni: 2,
         // — · 🏹🔮 · — · 💣❄️ · — · — · 🏹💣 · — · 🔮💣
         mostri: ['lupo', 'troll', 'verme', 'corvo', 'lupo', 'verme', 'rovo', 'lupo', 'blatta'],
         forme: PALUDE_PANTANO },
-      { nome: 'La foce', emoji: '🌊', ambiente: 'palude-torce', calcoli: 24, cap: 10,
+      { nome: 'La foce', emoji: '🌊', calcoli: 24, cap: 10,
         torri: ['add', 'sub', 'mul', 'div'], rami: true, divisioni: 2, capo: true,
         // 🔮💣 · 🏹🔮 · 🔮💣 · 💣❄️ · — · —
         mostri: ['drago', 'troll', 'blatta', 'corvo', 'lupo', 'verme'], fronti: 1.6, forme: PALUDE_FOCE },

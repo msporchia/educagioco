@@ -149,10 +149,6 @@ ingressi: due strade, un castello solo, e una difesa da dividere.
 - **Torri e mostri sono figure** di un foglio (`dati/figure.js`, lo scrive
   `vesti.py --atlante`), e ogni mostro ha in ogni vestito la figura che gli
   dà il bestiario (`scena/bestiario.js`): la figura dice l'immunità.
-- **I terreni dipinti a poligoni** (`src/grafica/terreni/`, tre terreni e
-  venti tavolozze, nominati dall'`ambiente` di ogni tappa) erano il fondale
-  del castello di prima. Il gioco non li legge più; i file restano, e
-  l'`ambiente` delle tappe con loro.
 
 ## I salvataggi
 

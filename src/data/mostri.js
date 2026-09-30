@@ -1,5 +1,5 @@
 // Chi attacca il castello: chi sono, non come sono disegnati (il disegno
-// sta in grafica/castello.js e grafica/mostri/). Immune, non resistente: le
+// sta in giochi/castello/scena/bestiario.js). Immune, non resistente: le
 // quattro famiglie (vola, corazzato, ossa, rovo/blatta) e perché, in
 // docs/castello/mostri.md.
 import { TORRI } from './ops.js'

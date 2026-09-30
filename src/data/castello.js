@@ -871,7 +871,7 @@ export const LIBERE = LIBERE_RACCONTO.map(r => {
   const ultima = ultimaDi(r.campagna)
   const libera = {
     ...r, ondate: Infinity, posti: PIAZZOLE_LIBERE, cap: 10,
-    torri: ultima.torri, ambiente: ultima.ambiente,
+    torri: ultima.torri,
     rami: !!ultima.rami,
     abilita: true, capi: CAPO.ogni,
     regali: true, // solo qui: nella campagna il motore li ignora

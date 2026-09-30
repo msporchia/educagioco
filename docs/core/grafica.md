@@ -35,10 +35,8 @@ entrano energia e prezzi: solo fatti già decisi (`potenziabile: true`).
 - **`corpo.js`** — **lo scheletro**: `persona()` per chi cammina su due
   gambe, `bestia()` per tutti gli altri. Chi lo usa scrive una *scheda di
   dati* e si ritrova ombra, respiro, lampo bianco della botta e
-  ribaltamento da ko senza chiederli. Le schede stanno in tre cassetti:
+  ribaltamento da ko senza chiederli. Le schede stanno in due cassetti:
   - `personaggi/` — il Generale;
-  - `castello/corpi-mostri.js` (e `mostri/`) — il tower defense a
-    poligoni, che non c'è più: restano senza chi li legga;
   - `bestiario/` — il dungeon: venti creature viste **grandi e di fronte**,
     dove la paura la fa la forma e mai il macabro, con l'`ingombro` che le
     tiene dentro il riquadro.
@@ -226,50 +224,6 @@ più caldo in una scura) o la stanza perde l'architettura.
 la stessa cosa non sta scritta in due posti che possono discordare — li
 chiede ancora chi non passa dalle liste (l'anteprima di una cella sola,
 la vetrina, i dettagli che pescano `A.lastra` per intonarsi).
-
-## I terreni del castello (`grafica/terreni/`)
-
-**Non li legge più nessuno**: erano il fondale del castello a poligoni,
-e dal 29 settembre 2026 il campo si veste coi fogli del terreno sulla
-carta a scacchiera (`giochi/castello/scena/vestito.js`). Restano, finché
-non si decide.
-
-Stessa divisione di `ambienti/`+`materiali/`, spostata su un campo libero
-invece che su una griglia di stanze: un **terreno** (`terreni/bosco.js`,
-`mura.js`, `sotterraneo.js`) è *come* si dipinge il campo — le chiavi
-della sua tavolozza sono apposta quelle degli ambienti del Generale,
-così `POSE`, `DETTAGLI` e `variazioni` funzionano senza un adattatore —
-e una **tavolozza** è *con che colori* (venti in tutto, una per tappa).
-`terreni/indice.js` le compone scrivendo solo la differenza dalla base
-(`tavolozze()`): una tappa nuova costa cinque righe, non cinquanta. Se
-una tappa nomina un terreno che non esiste si dipinge il bosco di
-mezzogiorno invece di un campo bianco.
-
-Un terreno espone sei funzioni con la stessa firma (`p, A, scena`):
-`fondo`, `strada`, `minuti` (ciuffi e crepe, mai sulla strada), `sparso`
-(alberi, casse — mai sulla strada né sulle piazzole, ordinati per `y`
-così chi sta più in basso copre chi sta dietro), `piazzola`, `velo`
-(buio e luce, per ultimo — prima lo mangerebbe). Quello che una stanza
-a caselle non può fare — oggetti sparsi liberamente, una strada che
-attraversa il campo — sta qui e non in `ambienti/`.
-
-**Le vie (`vie.js`) sono tre tecniche, non tre posti**: `battuto` (terra
-pestata, il bosco), `acciottolato` (ciottoli lungo la curva — mai a
-griglia, che in una curva si vede finta — con un filo di riflesso: sotto
-terra l'acqua c'è sempre), `lastricato` (lastre sfalsate **due o tre per
-fila**, mai una fila con la lastra intera — file allineate leggono come
-una scala a pioli). `MEZZA` (17 unità) non è una scelta di gusto: le
-piazzole stanno a 34 unità dal centro e sono larghe 15, quindi una via
-più larga se le mangia.
-
-Due dettagli misurati che vale la pena non ritoccare a occhio: in
-`terreni/mura.js` il selciato è ruotato di un sesto di giro (0.52 rad)
-perché i corsi orizzontali leggevano come un muro tirato su davanti
-alla telecamera, non un cortile guardato dall'alto; in
-`terreni/sotterraneo.js` le torce stanno ogni 260 unità (la pozza di una
-torcia è larga ~150 — un passo minore le fonde in una fascia arancione
-continua, che spegne il contrasto buio/luce) ma non meno di tre per
-tracciato, altrimenti i percorsi corti restano bui per due terzi.
 
 ## Le tessiture (`grafica/materiali/`)
 
