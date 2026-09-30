@@ -93,12 +93,8 @@ far risultare «ci mette venti minuti» per sempre.
     banda (`BISOGNO.min`, 0,5), dove altrimenti un muro starebbe in cima
     (1,5). Esce meno, non sparisce: la banda resta quella di
     [quiz-ripasso.md](quiz-ripasso.md);
-  - **il «Si fa così» si legge prima di rispondere** (`comeSiFaPrima`,
-    `.qz-prima` in cima alla carta): è lo stesso `aiuto` che dopo uno
-    sbaglio compare sotto, portato davanti. Il tempo di lettura lo conta,
-    quindi chi l'ha davanti non viene preso per frettoloso. In molti moduli
-    l'`aiuto` parla dei numeri di quella domanda: diventa un esempio svolto,
-    ed è voluto.
+  - **prima di rispondere c'è un esempio svolto su un'altra domanda**
+    della stessa tipologia: vedi [la sezione dopo](#lesempio-svolto).
 - **Il segno** sta nel profilo, `settings.alleggerite[<tipologia>] = { quando,
   ok, err }`: una voce per tipologia, quindi non cresce. Dura `SETTIMANA`;
   dopo, conta solo quello che è successo da allora (`contoDopo`), e ci
@@ -121,6 +117,60 @@ far risultare «ci mette venti minuti» per sempre.
 
 Nei test: `unita/alleggerire`, `unita/tiro-a-caso` (la soglia),
 `integrazione/domanda` (`[data-come-prima]`).
+
+## L'esempio svolto
+
+Una tipologia alleggerita si presenta con **un'altra domanda della stessa
+tipologia già risolta** in cima alla carta — la consegna, la risposta giusta
+e il suo «Si fa così» — e sotto, staccata da un confine («Adesso tocca a
+te»), la domanda vera. La scelta è pura in `quiz/nucleo/svolto.js`
+(`esempioSvolto`), la messa in scena in `Domanda.vue`, e vale anche per la
+palestra dei grandi (`Prova.vue`), che passa dallo stesso componente.
+
+- **Perché non il metodo della domanda stessa.** Era così: il «Si fa così»
+  di quella domanda portato davanti. Provato: in molti moduli l'`aiuto`
+  parla dei numeri di quella domanda («42 sta fra 40 e 50: l'ultima cifra è
+  2, quindi si va giù»), quindi conteneva la risposta. Il bambino rispondeva
+  giusto, il ripasso lo contava come saputo, e «Come va» segnava la
+  tipologia come migliorata senza che lo fosse. Un esempio su un'altra
+  domanda insegna lo stesso metodo e lascia da fare il lavoro vero.
+- **Da dove viene.** Dallo stesso modulo, con un'altra sorte:
+  `generatoreDi(modulo, grado, chiave)` chiede al modulo la tipologia per
+  chiave (`genera(grado, sorte, chiave)` la rispetta sempre, e `unita/svolto`
+  lo controlla su tutto il catalogo); il modulo e il grado li dice
+  l'`origine` che ogni gioco passa già a `Domanda.vue`, e il modulo si trova
+  nel registro (`perId`). Nessun modulo scrive niente di suo.
+- **Diverso davvero.** Si provano `TENTATIVI` (12) domande e si scartano:
+  quelle di un'altra tipologia, quelle con la stessa risposta giusta o la
+  stessa consegna, e quelle in cui **la risposta giusta della vera compare**
+  (parola intera: il 4 non si trova dentro il 40) — tranne quando compaiono
+  anche tutti i falsi, perché un elenco dei giorni della settimana nomina la
+  giusta senza distinguerla. Fra le buone si tiene, prima di tutto, una la
+  cui risposta **non sta fra i tasti della vera**: la prima prova a schermo
+  aveva «Arrotonda 34 → 30» sopra «Arrotonda 93», che fra i falsi ha
+  proprio il 30, e «è quella dell'esempio» è un'esca. Poi quella che divide
+  meno numeri con la vera. Dove non c'è di meglio (le tipologie a due
+  risposte) l'esca resta: sul banco di `unita/svolto` capita 9 volte su
+  un migliaio di prove.
+- **Il ripiego.** Se in dodici tentativi non ce n'è una buona, si mostra il
+  solo metodo (`[data-metodo-prima]`) **se non ha cifre** e non dice la
+  risposta; se no niente. Oggi sul catalogo: 241 classi su 265 hanno
+  l'esempio, 16 il solo metodo, 8 niente — sono i connettivi, dove la
+  risposta è sempre la stessa parola («perché») e il metodo la nomina.
+- **L'esempio non si tocca**: non ha tasti, quindi non si annota nel
+  ripasso e non paga.
+- **Il tempo lo conta.** Le parole dell'esempio (consegna, risposta, metodo;
+  `daLeggerePrima`) entrano in `tempoDiLettura`, col suo tetto di sempre,
+  così chi l'ha letto non viene preso per frettoloso; e dopo uno sbaglio il
+  metodo dell'esempio entra fra le righe di `attesaDellEsito`, perché è lì
+  che si torna a guardare per confrontare.
+- **Non si spiega a nessuno**: né una riga nelle novità dei bambini né una
+  nota ai grandi. «Come va» dice «già alleggerita: esce meno spesso e prima
+  gli mostra un esempio svolto» sulla riga della tipologia.
+
+Nei test: `unita/svolto`, `integrazione/domanda` (`[data-esempio-svolto]`,
+`[data-esempio-risposta]`, `[data-tocca-a-te]`, `[data-metodo-prima]`;
+tutti e due i blocchi portano anche `[data-come-prima]`).
 
 ## Il layout delle risposte
 
