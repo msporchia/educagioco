@@ -15,6 +15,7 @@ const props = defineProps({
   parola: { type: String, required: true },
   it: { type: String, default: '' },
   costa: { type: Boolean, default: false },
+  storia: { type: Boolean, default: false },   // una parola della storia: sempre gratis, e lo dice
   chiede: { type: Object, default: null },     // { perche, chiede, costo } di domandaDelTocco
   sotto: { type: Boolean, default: false },    // sotto la parola: sopra non ci sta
   x: { type: Number, required: true },
@@ -55,6 +56,7 @@ const premi = cosa => { if (pronta.value) emit(cosa) }
     <div v-else class="ing-bolla" data-traduzione :style="{ left: x + 'px', top: y + 'px' }">
       <b>{{ parola }}</b> = {{ it || '…' }}
       <small v-if="costa">questa domanda non paga</small>
+      <small v-else-if="storia" data-della-storia>parola nuova della storia: è gratis</small>
     </div>
   </Teleport>
 </template>

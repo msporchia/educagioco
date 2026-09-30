@@ -25,8 +25,9 @@ import { Sessione } from './motore/sessione.js'
 import { Tocchi, domandeCheLPagano, domandaDelTocco } from './motore/tocchi.js'
 import { cassettoDi, mondoDellaTappa } from './motore/grafo.js'
 import { gradoTappa } from './motore/grado.js'
-import { capitoliDi, capitolo } from './motore/libro.js'
-import { storieAperte, prossimaStoria, unAltraStoria, segnaLetta, cosaServeAlLibro } from './motore/storie.js'
+import { capitoliDi, racconta, eGiusta } from './motore/libro.js'
+import { storieAperte, prossimaStoria, unAltraStoria, segnaLetta, cosaServeAlLibro, tiraLaStoria, segnaPuntata,
+         puntataDopo } from './motore/storie.js'
 import { traduci } from './motore/lessico.js'
 import * as F from './motore/fila.js'
 
@@ -105,6 +106,7 @@ const conti = reactive({ giuste: 0, errori: 0, monete: 0, chieste: 0, gradoPrima
 const fine = ref(null)
 let prossimaId = null
 let altraStoria = null               // la storia di «Un'altra storia», dal cartello di fine
+let puntataOfferta = null            // «Puntata 2 →», dal cartello di fine di una puntata
 
 const haVoceOra = p => suono.acceso.value && haVoce(p, 'en')
 
@@ -232,8 +234,14 @@ function ancoraDaFine() {
 function avantiDaFine() {
   const id = prossimaId
   fine.value = null
-  if (vista.value === 'libro' && altraStoria) apriStoria(altraStoria)
+  if (vista.value === 'libro' && (puntataOfferta || altraStoria)) apriStoria(puntataOfferta || altraStoria)
   else if (id) giocaTappa(id)
+  else allaMappa()
+}
+// «Un'altra storia» accanto a «Puntata 2»
+function altroDaFine() {
+  fine.value = null
+  if (altraStoria) apriStoria(altraStoria)
   else allaMappa()
 }
 
@@ -242,7 +250,8 @@ const libro = shallowRef(null)
 let storia = null                    // il capitolo di adesso, come sta nei dati
 const libroFase = ref('leggi')
 const libroK = ref(0)
-const libroScelta = ref(-1)
+const libroRisposta = ref(null)      // quello che si è risposto alla domanda di adesso, null se ancora niente
+const libroGiusta = ref(false)
 const libroPersi = ref(0)            // tocchi a pagamento nel capitolo: ognuno toglie una domanda
 let libroGiuste = 0
 let libroPagate = 0                  // le domande del capitolo già pagate, una per volta
@@ -257,10 +266,13 @@ function apriLibro(mondo) {
 function apriStoria(cap) {
   storia = cap
   altraStoria = null
-  libro.value = capitolo(cap)
+  puntataOfferta = null
+  // una puntata tiene le variabili della serie, salvate nel profilo (motore/storie.js)
+  libro.value = racconta(cap, tiraLaStoria(c, cap))
+  if (cap.serie) persist()
   libroFase.value = 'leggi'
   libroK.value = 0
-  libroScelta.value = -1
+  libroRisposta.value = null
   libroPersi.value = 0
   libroGiuste = 0
   libroPagate = 0
@@ -276,10 +288,13 @@ function hoLetto() {
   orologio.riparti()
 }
 
-function rispondiLibro(i) {
-  if (libroScelta.value >= 0 || !orologio.pronta.value) return
-  libroScelta.value = i
-  const giusta = !!libro.value.domande[libroK.value].opzioni[i].giusta
+// La risposta: un'opzione, la riga toccata («frase») o la fila dei fatti («ordine»)
+function rispondiLibro(risposta) {
+  if (libroRisposta.value !== null || !orologio.pronta.value) return
+  const dom = libro.value.domande[libroK.value]
+  const giusta = eGiusta(dom, risposta)
+  libroRisposta.value = risposta
+  libroGiusta.value = giusta
   if (giusta) { libroGiuste++; conti.giuste++; suono.ok() } else { conti.errori++; suono.no() }
   // la domanda giusta paga adesso, se un tocco a pagamento non se l'è già mangiata
   if (giusta && domandeCheLPagano(libroGiuste, tocchiLibro.aPagamento) > libroPagate) {
@@ -288,21 +303,28 @@ function rispondiLibro(i) {
     conti.monete += p.dato
     conti.chieste += p.chiesto
   }
-  const quanto = giusta ? 900 : attesaDellEsito({ righe: ['Non così: rileggi il testo qui sopra.'], pavimento: 2500 })
+  // dopo uno sbaglio su «frase» e «ordine» c'è anche la soluzione da leggere
+  const righe = dom.tipo === 'frase' ? ['Non così: la frase che lo dice è quella in verde.', dom.soluzione]
+    : dom.tipo === 'ordine' ? ['Non così. L’ordine giusto è questo:', ...dom.soluzione]
+    : ['Non così: rileggi il testo qui sopra.']
+  const quanto = giusta ? 900 : attesaDellEsito({ righe, pavimento: 2500 })
   orologio.aspetta(quanto, avantiLibro)
 }
 
 function avantiLibro() {
   if (libroK.value + 1 < libro.value.domande.length) {
     libroK.value++
-    libroScelta.value = -1
+    libroRisposta.value = null
     orologio.riparti()
     return
   }
   for (const k of tocchiLibro.nonSapute) answer(k, { correct: false })
   // arrivati al cartello la storia è letta; la prossima è un'altra (motore/storie.js)
   segnaLetta(c, storia.id)
+  segnaPuntata(c, storia)
   persist()
+  if (storia.serie) flushNow()     // le variabili della serie servono alla puntata dopo: non devono perdersi
+  puntataOfferta = puntataDopo(CAPITOLI, c, regole(), storia)
   altraStoria = unAltraStoria(CAPITOLI, c, regole(), storia.mondo, storia.id)
   const tot = libro.value.domande.length
   fine.value = {
@@ -312,7 +334,8 @@ function avantiLibro() {
                           `${libroPersi.value === 1 ? 'una domanda' : libroPersi.value + ' domande'} senza monete` : ''),
     giuste: conti.giuste, errori: conti.errori, monete: conti.monete,
     notaMonete: premioDetto(CHIAVE, conti.chieste, conti.monete),
-    avanti: altraStoria ? 'Un’altra storia' : '',
+    avanti: puntataOfferta ? `Puntata ${puntataOfferta.puntata}` : altraStoria ? 'Un’altra storia' : '',
+    altro: puntataOfferta && altraStoria ? 'Un’altra storia' : '',
   }
   suono.livello()
 }
@@ -337,6 +360,9 @@ function tocca(el) {
   const parola = el && el.dataset && el.dataset.parola
   if (!parola) return
   const box = el.getBoundingClientRect()
+  // una parola della storia è nuova: toccarla è sempre gratis e non segna niente (docs/lingue/libro.md)
+  if (vista.value === 'libro' && libro.value && libro.value.storia.includes(parola.toLowerCase()))
+    return svela(parola, box.left + box.width / 2, box.top, { storia: true })
   const t = tocchiQui()
   const p = t ? t.prova(parola) : null
   if (p && p.costa && siPerde()) {
@@ -350,14 +376,14 @@ function tocca(el) {
   svela(parola, box.left + box.width / 2, box.top)
 }
 
-function svela(parola, centro, sopra) {
-  const t = tocchiQui()
+function svela(parola, centro, sopra, { storia = false } = {}) {
+  const t = storia ? null : tocchiQui()
   const r = t ? t.tocca(parola) : { ...traduci(parola), gratis: true }
   if (t && t === tocchiLibro) libroPersi.value = t.aPagamento
   else if (t) pagaQui.value = t.paga
-  persist()   // il conto dei tocchi gratis sta sull'elemento SRS della parola
+  if (t) persist()   // il conto dei tocchi gratis sta sull'elemento SRS della parola
   const x = Math.min(innerWidth - 90, Math.max(90, centro))   // la nuvoletta resta dentro lo schermo
-  bolla.value = { parola, it: r.it || '', costa: !r.gratis, x, y: sopra }
+  bolla.value = { parola, it: r.it || '', costa: !r.gratis, x, y: sopra, storia }
   clearTimeout(bollaTimer)
   bollaTimer = setTimeout(() => { bolla.value = null }, 2200)
 }
@@ -365,7 +391,7 @@ function svela(parola, centro, sopra) {
 const conSi = () => { const b = bolla.value; if (b && b.chiede) svela(b.parola, b.centro, b.sopra) }
 const conNo = () => { if (bolla.value && bolla.value.chiede) bolla.value = null }
 // rispondere chiude la domanda rimasta aperta: a quel punto guardare è gratis
-watch([esito, libroScelta], () => conNo())
+watch([esito, libroRisposta], () => conNo())
 
 function ascolta() {
   const q = d.value
@@ -421,11 +447,13 @@ onUnmounted(() => { clearTimeout(bollaTimer); zittisci() })
     </div>
 
     <Libro v-else-if="vista === 'libro' && libro" :cap="libro" :fase="libroFase" :k="libroK"
-           :scelta="libroScelta" :attesa="attesa" :giro="giro"
+           :risposta="libroRisposta" :giusta="libroGiusta" :attesa="attesa" :giro="giro"
            @ho-letto="hoLetto" @rispondi="rispondiLibro" @tocca="tocca" />
 
-    <Fine v-if="fine" v-bind="fine" @mappa="allaMappa" @avanti="avantiDaFine" @ancora="ancoraDaFine" />
+    <Fine v-if="fine" v-bind="fine" @mappa="allaMappa" @avanti="avantiDaFine" @ancora="ancoraDaFine"
+          @altro="altroDaFine" />
     <Bolla v-if="bolla" :parola="bolla.parola" :it="bolla.it" :costa="bolla.costa" :chiede="bolla.chiede"
+           :storia="bolla.storia"
            :sotto="bolla.sotto" :x="bolla.x" :y="bolla.y" @si="conSi" @no="conNo" />
   </div>
 </template>

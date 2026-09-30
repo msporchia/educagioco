@@ -201,6 +201,36 @@
 .ing-freccia-pagina:disabled { opacity: .35; box-shadow: none }
 .ing-numero-pagina { font: italic 700 16px Georgia, serif; color: #7a6450 }
 .ing-libro-domanda { display: flex; flex-direction: column; gap: 10px }
+.ing-battuta[data-chi="maestra"] { --chi: #7b5ea7 }
+.ing-battuta[data-chi="dottore"] { --chi: #2a7f8a }
+.ing-battuta[data-chi="contadino"], .ing-battuta[data-chi="contadina"] { --chi: #6f7d2a }
+.ing-battuta[data-chi="pappagallo"] { --chi: #2f8a4c }
+.ing-battuta[data-chi="voce"] { --chi: #6b6b6b }
+/* le parole della storia: nuove, e toccarle è gratis; un filo d'oro al posto dei puntini, niente di più */
+.ing-pagina .ing-parola.ing-della-storia, .ing-citazione .ing-parola.ing-della-storia {
+  border-bottom: 2px solid #d9a441 }
+/* le storie a puntate: il numero sopra il titolo, e «Nella puntata prima…» in corsivo */
+.ing-puntata { text-align: center; font: 700 .62em/1 system-ui, sans-serif; letter-spacing: .12em;
+               text-transform: uppercase; color: #9a7b55; margin-bottom: 4px }
+.ing-riassunto { margin: 0 0 .6em; font-style: italic; color: #5c4633; padding: 4px 0 8px;
+                 border-bottom: 1px solid #e6d6b4 }
+/* «tocca la frase»: ogni frase è un blocco da toccare, e dopo la risposta si colora */
+.ing-frase-scelta { display: block; width: 100%; text-align: left; margin: 0 0 7px; padding: 6px 10px;
+                    font: inherit; line-height: 1.45; color: inherit; background: #fffdf6;
+                    border: 2px dashed #d9c9a3; border-radius: 10px; -webkit-user-select: none; user-select: none }
+.ing-frase-scelta:active { background: #f7e3b0 }
+.ing-frase-scelta .ing-parola { border-bottom: 0 }
+.ing-frase-scelta.ing-giusta, .ing-frase-scelta.ing-sbagliata { border-style: solid }
+.ing-frase-scelta.ing-spenta { opacity: .55 }
+/* «chi l'ha detto?»: la battuta fra virgolette, in inglese */
+.ing-citazione { margin: 0; padding: 10px 14px; border-left: 4px solid #b99a6a; background: #fdf8ec;
+                 border-radius: 6px; font: italic clamp(18px, 5vw, 21px)/1.45 Georgia, 'Times New Roman', serif;
+                 color: #2e2218 }
+/* «metti in ordine»: i fatti sono tessere lunghe, in italiano */
+.ing-tessera.ing-fatto { font-size: 15.5px; font-weight: 700; text-align: left; line-height: 1.3; max-width: 100% }
+.ing-fila-fatti { flex-direction: column; align-items: stretch }
+.ing-banco-fatti { flex-direction: column; align-items: stretch }
+.ing-soluzione { margin: 0; padding-left: 22px; font-weight: 700 }
 
 /* ═══════════ il cartello di fine ═══════════ */
 .ing-velo { position: absolute; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;

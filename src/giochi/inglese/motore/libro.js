@@ -272,9 +272,11 @@ export function blocchiDi(righe) {
 // vanno a schermo (`storia`, in minuscolo).
 export function racconta(cap, v, rnd = Math.random) {
   let i = 0
-  const pagine = pagineDi(cap).map((p, pagina) => p.filter(f => acceso(f, v))
-    .map(f => ({ en: rendi(f.en, v), forma: f.forma || null, chi: chiDi(f, v), id: f.id || null,
-                 riassunto: !!f.riassunto, pagina, i: i++ })))
+  const pagine = pagineDi(cap).map((p, pagina) => p.filter(f => acceso(f, v)).map(f => {
+    const chi = chiDi(f, v)
+    return { en: rendi(f.en, v), forma: f.forma || null, chi, nome: chi ? CHI_PARLA[chi] || chi : null,
+             id: f.id || null, riassunto: !!f.riassunto, pagina, i: i++ }
+  }))
   const righe = pagine.flat()
   const storia = new Set(righe.flatMap(r => [...paroleDellaStoriaIn(r.en, cap).keys()]))
   return {
