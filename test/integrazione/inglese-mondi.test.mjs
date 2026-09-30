@@ -54,7 +54,7 @@ uguale('in home c’è una carta English sola', await carta.count(), 1)
 await carta.click()
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]', { timeout: 5000 })
 uguale('la prima tappa è aperta', await page.locator('[data-tappa="prima-colori"]').getAttribute('data-stato'), 'aperta')
-uguale('la seconda no', await page.locator('[data-tappa="prima-numeri"]').getAttribute('data-stato'), 'chiusa')
+uguale('la seconda no', await page.locator('[data-tappa="prima-ciao"]').getAttribute('data-stato'), 'chiusa')
 uguale('a profilo vuoto il grado è zero', await page.locator('[data-tappa="prima-colori"]').getAttribute('data-grado'), '0')
 const lontani = MONDI.filter(m => !m.tappe.length).length
 uguale('i mondi senza tappe si vedono in arrivo',
@@ -67,7 +67,7 @@ await scattoTela(page, 'inglese-mappa-vuota-intera')
 /* ---------- la nave: ancorata alla tappa da fare, e su una chiusa non parte ---------- */
 const nave = page.locator('[data-nave]')
 uguale('la nave è ancorata alla tappa da fare', await nave.getAttribute('data-porto'), 'tappa:prima-colori')
-await page.locator('[data-tappa="prima-numeri"]').click()
+await page.locator('[data-tappa="prima-ciao"]').click()
 await page.waitForSelector('[data-serve]', { timeout: 2000 })
 controlla('una tappa chiusa dice cosa serve', (await page.locator('[data-serve]').innerText()).includes('Prima vinci «I colori»'),
           await page.locator('[data-serve]').innerText())
@@ -124,7 +124,7 @@ uguale('la bandiera si è aperta', await page.locator('[data-tappa="prima-bandie
 uguale('il libro è aperto', await page.locator('[data-libro="prima"]').getAttribute('data-stato'), 'aperta')
 uguale('il cassetto è aperto', await page.locator('[data-cassetto="prima"]').getAttribute('data-stato'), 'aperta')
 uguale('il secondo mondo resta chiuso fino alla bandiera',
-       await page.locator('[data-tappa="seconda-corpo"]').getAttribute('data-stato'), 'chiusa')
+       await page.locator('[data-tappa="seconda-cibo"]').getAttribute('data-stato'), 'chiusa')
 await scatto(page, 'inglese-mappa')
 await scattoTela(page, 'inglese-mappa-intera')
 if (SCATTI_ACCESI) {
@@ -324,9 +324,9 @@ uguale('la prima è passata', await page.locator('[data-mondo="prima"]').getAttr
 uguale('e lo dice', await page.locator('[data-mondo][data-passato]').count(), 1)
 uguale('la sua bandiera è aperta senza averla vinta',
        await page.locator('[data-tappa="prima-bandiera"]').getAttribute('data-stato'), 'aperta')
-uguale('la seconda comincia da capo', await page.locator('[data-tappa="seconda-corpo"]').getAttribute('data-stato'), 'aperta')
+uguale('la seconda comincia da capo', await page.locator('[data-tappa="seconda-cibo"]').getAttribute('data-stato'), 'aperta')
 uguale('una tappa alla volta', await page.locator('[data-tappa="seconda-famiglia"]').getAttribute('data-stato'), 'chiusa')
-uguale('la nave attracca nel primo mondo che non è passato', await nave.getAttribute('data-porto'), 'tappa:seconda-corpo')
+uguale('la nave attracca nel primo mondo che non è passato', await nave.getAttribute('data-porto'), 'tappa:seconda-cibo')
 await page.locator('[data-tappa="terza-casa"]').click()
 await page.waitForSelector('[data-serve]', { timeout: 2000 })
 controlla('il cartiglio conta la prima passata come finita: manca la seconda',
