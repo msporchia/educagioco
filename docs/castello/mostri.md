@@ -55,8 +55,9 @@ mostri stanno in `src/data/mostri.js`, le file delle tappe in
   | un groviglio (🌿) | 💣 🏹 |
   | tutti gli altri (🐾) | nessuna: sono i comuni |
 - **Il preavviso lo dice tre ondate prima** (`components/castello/NastroOndate.vue`,
-  con le torri sbarrate) e la carta della torre sbagliata dice «non lo
-  tocca». Come si comporta una torre davanti a un immune sta in
+  con le torri sbarrate), la scheda del mostro in campo dice «immune a», e
+  nella scelta della torre la carta sbagliata si attenua, senza scritte.
+  Come si comporta una torre davanti a un immune sta in
   [torri.md](torri.md). **Le emoji sbarrate sono grigie, non del colore
   della torre**: colorare vuol dire indicare, e qui il segno è l'opposto
   — contro quel mostro la torre non serve — e il grigio più la barra

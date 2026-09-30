@@ -1,8 +1,6 @@
 <script setup>
-// Il foglio che sale toccando una piazzola vuota: quattro carte col prezzo
-// (listino diverso per torre, vedi docs/castello/torri.md) e il «non lo
-// tocca» di chi sta per arrivare (letto dallo stesso dato del preavviso). La
-// carta segnata non si disabilita: comprarla resta legittimo.
+// Il foglio che sale toccando una piazzola vuota: quattro carte col prezzo,
+// e quella a cui chi arriva è immune attenuata, senza scritte (torri.md).
 import { TORRI, segnoDi } from '../../data/ops.js'
 import RitrattoTorre from './RitrattoTorre.vue'
 
@@ -28,7 +26,6 @@ const ignorata = k => props.immune.includes(k)
             :class="{ bloccata: !disponibile(k), cara: cara(k), fiacca: ignorata(k) }"
             :disabled="!disponibile(k)" :data-torre="k" :data-costo="costo(k)"
             @click="$emit('scegli', k)">
-      <span v-if="ignorata(k) && disponibile(k)" class="terzo" data-non-tocca>non lo tocca</span>
       <span class="figura">
         <RitrattoTorre v-if="disponibile(k)" :tipo="k" :lv="1" />
         <span v-else class="chiuso">🔒</span>

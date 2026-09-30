@@ -163,8 +163,10 @@ cresciuta.
   ghiaccio soffia solo se c'è qualcuno da gelare.
 - **La pastiglia «immune»** (`respinto`) compare su chi viene preso dentro da
   un colpo ad area tirato a un altro.
-- **La carta di una torre che l'ondata ignora dice «non lo tocca».** Chi è
-  immune a cosa sta in [mostri.md](mostri.md).
+- **La carta di una torre che l'ondata ignora si attenua**, e basta: niente
+  scritta. C'era un «non lo tocca», e diceva due volte quello che la scheda
+  del mostro in alto dice già («immune a»). Chi è immune a cosa sta in
+  [mostri.md](mostri.md).
 
 ## Il blocchetto dei potenziamenti
 
