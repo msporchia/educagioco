@@ -59,7 +59,8 @@ In `src/giochi/inglese/`, accanto a `dati/` e `motore/`:
   dire la parola sotto il dito (`tenere.js`, 450 ms). Un tocco lì ha già
   un mestiere — mettere in fila, rispondere — e la traduzione non può
   rubarglielo; le parole della consegna e del libro invece si toccano e
-  basta. Il click che arriva dopo la pressione lunga si ingoia.
+  basta. Il click che arriva dopo la pressione lunga si ingoia — anche
+  quando al posto della traduzione compare la domanda (sotto).
 - **Dopo uno sbaglio**, tre righe distinte: «Non così» col perché della
   trappola (se è una trappola nota), «Si dice: …» (solo per le frasi
   composte: nelle altre la giusta si accende fra le opzioni) e «Si fa
@@ -88,6 +89,28 @@ testo qui sopra» — perché la risposta è nel testo.
 La nuvoletta dice la traduzione per 2,2 s. Il conto è quello del motore
 (`Tocchi`): **se il tocco costa, l'indicatore delle monete nella barra
 diventa grigio e con la 🔍 subito**, e la nuvoletta lo dice anche lei.
+
+**Un tocco che toglierebbe il guadagno si chiede prima.** Il bambino lo
+scopriva dopo, a guadagno già sparito. Adesso `prova` del motore dice se
+il tocco costerebbe, senza segnare niente, e al posto della traduzione
+compare una **bolla accanto alla parola** (`Bolla.vue` con `chiede`): il
+perché («Hai già chiesto questa parola 3 volte» / «la conosci già»), la
+domanda, «questa domanda non ti darà monete» (nel libro «una domanda del
+libro»), e due tasti, «Sì, dimmelo» e «No, ci provo». Solo al sì si fa il
+tocco vero. Tre cose:
+
+- **non è un velo**: sta sopra la parola (sotto, se sopra non c'è posto),
+  il resto dello schermo si tocca, e un dito appoggiato altrove vale «no»;
+  rispondere la chiude;
+- **i tasti sono ciechi per 320 ms**, come ogni schermata appena comparsa;
+- **col dito**: dalla pressione lunga su una tessera la bolla compare con
+  il dito ancora giù e sopra la tessera, quindi il click dell'alzata
+  arriva alla tessera, che lo ingoia (`tenere.js`). La prova è un tocco
+  vero in `integrazione/inglese-mondi`.
+
+Si chiede solo quando c'è qualcosa da perdere: le volte gratis e le parole
+di struttura passano dritte, e così un tocco su una domanda che non paga
+già, o nel libro quando nessuna domanda paga più.
 A domanda chiusa toccare è gratis e non segna niente (`traduci` e basta).
 Il conto dei tocchi gratis sta sull'elemento SRS della parola, quindi dopo
 un tocco si salva il profilo.
@@ -146,7 +169,8 @@ Il gioco è a turni e non ha un orologio: niente ⏸
 Nei test: `unita/inglese-vista` (la fila su ogni frase in tre formati, la
 mappa a 320/390/520 px senza sovrapposizioni, un pittore per ogni disegno,
 le monete, la materia delle frasi), `integrazione/inglese-mondi` (entra,
-compone a tocchi, sbaglia, legge il libro e risponde) e
+passa le parole, compone a tocchi, chiede prima di un tocco che costa col
+dito vero, sbaglia, legge il libro e risponde) e
 `integrazione/inglese` (il gioco di prima). Bersagli: la carta
 `.carta.gioco[data-gioco="inglese"]`; la mappa `[data-mappa-inglese]`,
 `[data-tappa="<id>"]` con `[data-stato]` (`aperta`, `chiusa`, `vinta`) e
@@ -158,6 +182,8 @@ con `[data-formato]`, `[data-opzione]` (e `[data-giusta]`), `[data-banco]
 `[data-esito="giusta"|"sbagliata"]` con `[data-perche]`,
 `[data-giusta-era]`, `[data-si-fa]`, `[data-sbagliata]` e `[data-attesa]`;
 l'indicatore `[data-paga][data-paga-si="1"|"0"]`, la parola
-`[data-parola]` e la nuvoletta `[data-traduzione]`; il libro
+`[data-parola]` e la nuvoletta `[data-traduzione]`; la domanda prima del
+tocco `[data-svela]` (con `[data-pronta]`) e i suoi
+`[data-azione="svela-si"|"svela-no"]`; il libro
 `[data-libro-testo]`, `[data-azione="ho-letto"]`, `[data-libro-domanda]`;
 il cartello `[data-fine]` con `[data-azione="mappa"|"avanti"]`.

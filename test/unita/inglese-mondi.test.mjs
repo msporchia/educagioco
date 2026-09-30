@@ -27,7 +27,7 @@ import { doveSta, cassettoDi, vociDi, paroleNote } from '../../src/giochi/ingles
 import { traduci } from '../../src/giochi/inglese/motore/lessico.js'
 import { formatoPerForza, tessereInPiu, costruisci, giudica, contesto } from '../../src/giochi/inglese/motore/formati.js'
 import { grado, gradoTappa, ripresa } from '../../src/giochi/inglese/motore/grado.js'
-import { Tocchi, TOCCHI_GRATIS, domandeCheLPagano } from '../../src/giochi/inglese/motore/tocchi.js'
+import { Tocchi, TOCCHI_GRATIS, domandeCheLPagano, domandaDelTocco } from '../../src/giochi/inglese/motore/tocchi.js'
 import { segnaVinta, tappaAperta, mondoAperto, cassettoAperto, statoMappa } from '../../src/giochi/inglese/motore/mappa.js'
 import { Sessione } from '../../src/giochi/inglese/motore/sessione.js'
 import { racconta, mondiDi, NON_SI_SA } from '../../src/giochi/inglese/motore/libro.js'
@@ -206,18 +206,29 @@ titolo('TOCCHI')
   const ora = () => Date.parse('2026-05-01')
   for (let i = 0; i < TOCCHI_GRATIS; i++) {
     const t = new Tocchi({ itemDi, ora })
+    controlla(`prima del tocco ${i + 1}: gratis, niente da chiedere`, !t.prova('dog').costa)
     const x = t.tocca('dog')
     controlla(`tocco ${i + 1} di una parola nuova: gratis`, x.gratis && t.paga && x.it === 'cane')
     uguale(`e conta come non saputa (${i + 1})`, JSON.stringify(t.correggi([{ chiave: 'en:dog', correct: true }])),
            JSON.stringify([{ chiave: 'en:dog', correct: false }]))
   }
   const t = new Tocchi({ itemDi, ora })
+  // prima di un tocco che costa si chiede: provare non segna niente
+  const p = t.prova('dogs')
+  controlla('il quarto costerebbe, e provarlo non costa', p.costa && p.volte === TOCCHI_GRATIS && t.paga && t.nonSapute.length === 0)
+  const q = domandaDelTocco(p)
+  controlla('la domanda dice quante volte, e che non darà monete',
+            /3 volte/.test(q.perche) && /non ti darà monete/.test(q.costo) && q.perche.length + q.chiede.length < 90)
+  controlla('nel libro è una domanda sola', /Una domanda del libro/.test(domandaDelTocco(p, { libro: true }).costo))
   controlla('il quarto costa: la domanda non paga', !t.tocca('dogs').gratis && !t.paga)
+  controlla('toccata una volta, ritoccarla non chiede più', !t.prova('dog').costa)
   const forte = itemDi('en:cat')
   for (let i = 0; i < 3; i++) record(forte, { correct: true, now: ora() })
   const t2 = new Tocchi({ itemDi, ora })
+  controlla('una parola già nota si chiede subito', t2.prova('cat').costa && /la conosci già/.test(domandaDelTocco(t2.prova('cat')).perche))
   controlla('una parola già nota costa subito', !t2.tocca('cat').gratis)
   const t3 = new Tocchi({ itemDi, ora })
+  controlla('le parole di struttura non si chiedono', !t3.prova('is').costa)
   controlla('le parole di struttura sono gratis e non contano', t3.tocca('is').gratis && t3.nonSapute.length === 0)
   controlla('la traduzione di una forma contratta', /non/.test(traduci('don’t').it))
   uguale('nel capitolo un tocco toglie una domanda sola', domandeCheLPagano(3, 1), 2)
