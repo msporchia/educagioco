@@ -10,7 +10,8 @@ const props = defineProps({
   tappa: { type: Object, required: true },
   prossima: { type: Object, default: null },
   hud: { type: Object, required: true },
-  premio: { type: Number, default: 0 },
+  monete: { type: Number, default: 0 },        // prese in questa partita, un conto alla volta
+  notaMonete: { type: String, default: '' },   // il salvadanaio stanco: docs/genitori/varieta.md
   quante: { type: Number, default: 0 },        // le tappe della campagna
   campagna: { type: Boolean, default: true },
   /* cosa il bambino può calcolare: { div, mul }. Era un booleano
@@ -35,7 +36,8 @@ const segno = k => segnoDi(k, props.sa)
     <h2>{{ tappa.emoji }} Tappa superata!</h2>
     <p class="testo"><b>{{ tappa.nome }}</b> è al sicuro: {{ tappa.ondate }} ondate,
       <b>{{ hud.uccisi }}</b> nemici fermati, <b>{{ hud.torri }}</b> torri costruite.
-      Premio: <b>+{{ premio }} 🪙</b></p>
+      <template v-if="monete">Coi conti: <b data-monete-prese>+{{ monete }} 🪙</b></template></p>
+    <p v-if="notaMonete" class="dritta" data-nota-monete>{{ notaMonete }}</p>
     <p v-if="prossima" class="dritta">Ora tocca a
       {{ prossima.emoji }} {{ prossima.nome }}<template v-for="k in nuove()" :key="k">
         — nuova torre {{ TORRI[k].emoji }} {{ TORRI[k].nome }} ({{ segno(k) }})</template>
@@ -50,8 +52,9 @@ const segno = k => segnoDi(k, props.sa)
   <template v-else-if="fase === 'trionfo'">
     <h2>🎉 Campagna vinta!</h2>
     <p class="testo">Tutte e {{ quante }} le tappe sono superate: il regno è salvo.
-      Premio: <b>+{{ premio }} 🪙</b>. Si aprono le <b>partite libere</b>, senza fine:
-      una per terreno.</p>
+      <template v-if="monete">Coi conti di quest'ultima: <b data-monete-prese>+{{ monete }} 🪙</b>. </template>Si
+      aprono le <b>partite libere</b>, senza fine: una per terreno.</p>
+    <p v-if="notaMonete" class="dritta" data-nota-monete>{{ notaMonete }}</p>
     <div class="riga">
       <button class="bottone" @click="$emit('libera')">{{ tappa.emoji }} Partita libera ♾️</button>
       <button class="bottone chiaro" @click="$emit('mappa')">Mappa</button>
@@ -66,7 +69,9 @@ const segno = k => segnoDi(k, props.sa)
       <template v-if="campagna">{{ tappa.emoji }} {{ tappa.nome }}: ondate superate
         <b>{{ hud.onda - 1 }}</b> su {{ tappa.ondate }}</template>
       <template v-else>Ondate superate: <b>{{ hud.onda - 1 }}</b></template>
-      · nemici fermati: <b>{{ hud.uccisi }}</b> · torri costruite: <b>{{ hud.torri }}</b></p>
+      · nemici fermati: <b>{{ hud.uccisi }}</b> · torri costruite: <b>{{ hud.torri }}</b><template
+        v-if="monete"> · coi conti: <b data-monete-prese>+{{ monete }} 🪙</b></template></p>
+    <p v-if="notaMonete" class="dritta" data-nota-monete>{{ notaMonete }}</p>
     <p v-if="primato && primato.record" class="primato" data-primato="nuovo">🥇 {{ primato.frase }}</p>
     <p v-else-if="primato && primato.frase" class="dritta" data-primato="no">🏁 {{ primato.frase }}</p>
     <div class="riga">

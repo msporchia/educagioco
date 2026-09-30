@@ -70,12 +70,16 @@ lì a crescere è la difficoltà tattica (le bocche).
 - **Spostare una torre costa 2 ⚡** (`spostamento`). Con due ingressi portare
   il ghiaccio dalla parte giusta è *la* mossa, e una mossa che vince non si
   fa a costo zero; due punti fanno solo pensare un secondo.
-- **Le monete.** `premioTappa`: una moneta ogni dieci operazioni della tappa
-  (almeno una); una sola di cortesia se era già vinta. Nelle libere una ogni
-  `CFG.perMoneta` (5) ondate (`motore/castello/battaglia.js`). Niente
-  moltiplicatore di livello: era rimasto dai giochi vecchi, e faceva
-  rendere di più lo stesso ⚡ a chi aveva giocato di più altrove
+- **Le monete: 🪙3 a conto senza errori, quando la torre sale**
+  (`PAGA.operazione` in `src/data/paghe.js`), nella campagna e nelle
+  libere, in una tappa nuova e in una rifatta. Niente premio di tappa e
+  niente monete a ondate rette: c'erano (una moneta ogni dieci operazioni
+  a tappa vinta, una di cortesia se era già vinta, una ogni cinque ondate
+  nelle libere) e pagavano un'ora di colonne come due minuti di
+  asteroidi. Un conto con un errore non paga: l'errore costa già energia,
+  e la risposta è sbagliata anche per lo SRS
   ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
+  L'energia ⚡ resta fuori: non si cambia in monete.
 
 ## Le piazzole
 

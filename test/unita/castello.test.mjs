@@ -26,7 +26,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { TAPPE, LIBERE, LIBERA, CFG, difesaCon, difesaLarga, energiaAll, nemiciDiOnda,
          costoNuovaTorre, costoSalita, forzaDi, partenzaDi, resaTipi, dpsDi,
-         tiroDi, operazioniDi, premioTappa, geloDi, vitaNemico, costoDifesaPiena,
+         tiroDi, operazioniDi, geloDi, vitaNemico, costoDifesaPiena,
          energiaMassima, potenzaDi, pianoDi, ondateDi, postiDi, entrataOnda, frontiDi,
          ingressiDi, firmaEquilibrio, firmaTaratura, sequenzaTorri, resaPerEnergia, resaDi,
          listinoDi, RAMI_DA }
@@ -35,6 +35,7 @@ import { CAMPAGNE, LIBERE_RACCONTO } from '../../src/data/campagne-castello.js'
 import { firmaImmunita, immuniDi, comune } from '../../src/data/mostri.js'
 import { migraCastello, TD_VERSIONE } from '../../src/store/profile.js'
 import { TORRI } from '../../src/data/ops.js'
+import { PAGA } from '../../src/data/paghe.js'
 import { Ondate } from '../../src/motore/castello/ondate.js'
 import { gioca, PROFILI } from '../../strumenti/simula-castello.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -622,22 +623,14 @@ for (const l of LIBERE) {
 }
 controlla('`LIBERA` è la prima delle quattro, per chi ne vuole una sola', LIBERA === LIBERE[0])
 
-/* ── 13. le monete: pagare come gli altri giochi ──
-   Tabelline, inglese e verbi danno una moneta (per il livello) ogni dieci
-   risposte giuste. Il castello chiede operazioni in colonna, che valgono di
-   più di una risposta a quiz — ma non cinque volte tanto, o gli altri giochi
-   diventano tempo perso. */
-const PER_RISPOSTA = 1 / 10
-for (const [i, t] of TAPPE.entries()) {
-  const operazioni = operazioniDi(t)
-  const perOperazione = premioTappa(i) / operazioni
-  controlla(`${i + 1}. ${t.nome}: la paga sta nella scala degli altri giochi`,
-            perOperazione >= PER_RISPOSTA * 0.6 && perOperazione <= PER_RISPOSTA * 2,
-            `${premioTappa(i)} monete per ${operazioni} operazioni = ` +
-            `${(perOperazione / PER_RISPOSTA).toFixed(1)}× una risposta giusta altrove`)
-}
+/* ── 13. le monete: un'operazione in colonna, pagata quando è fatta ──
+   Niente premio di tappa: ogni conto senza errori vale PAGA.operazione nel
+   momento in cui la torre sale (docs/apprendimento/calibrazione.md). Vale
+   più di un asteroide — è un conto a più cifre, riporti compresi — ma non
+   cinque volte tanto, o gli altri giochi diventano tempo perso. */
+dentro('un\'operazione vale da due a cinque asteroidi', PAGA.operazione / PAGA.asteroide, 2, 5)
 nota('operazioni per tappa: ' + TAPPE.map(operazioniDi).join(' → ') +
-     ' · monete: ' + TAPPE.map((_, i) => premioTappa(i)).join(' → '))
+     ' · monete, tutte senza errori: ' + TAPPE.map(t => operazioniDi(t) * PAGA.operazione).join(' → '))
 
 /* ── 14. i salvataggi di chi giocava alle sei tappe ──
    Il castello aveva sei tappe e ne ha quindici: `td.tappa` è un indice

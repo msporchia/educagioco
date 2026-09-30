@@ -33,7 +33,6 @@ export const CFG = {
   attesaLarga: 45, attesaStretta: 20,
   malusErrore: 6,
   spostamento: 2,
-  perMoneta: 5,
 }
 
 // Il campo è uno solo, uguale su ogni schermo (verticale): la telecamera
@@ -535,7 +534,6 @@ export function operazioniDi(t) {
   return finale.torri.length + finale.torri.reduce((s, lv) => s + lv - 1, 0)
 }
 
-export const premioTappa = i => Math.max(1, Math.round(operazioniDi(TAPPE[i]) / 10))
 
 // Il termine di paragone: solo torri di livello 1, mai potenziate.
 export const difesaLarga = (energia, tappa) => difesaCon(energia, tappa, { largo: true })

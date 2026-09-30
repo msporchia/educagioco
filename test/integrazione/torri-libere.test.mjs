@@ -79,7 +79,8 @@ const perdi = (daOnda = 0) => page.evaluate(async daOnda => {
     if (T.inAttesa.value) T.chiamaOnda()
     await attesa(25)
   }
-  return { fase: T.fase.value, onda: T.hud.onda, cuori: T.hud.cuori, torri: T.hud.torri }
+  return { fase: T.fase.value, onda: T.hud.onda, cuori: T.hud.cuori, torri: T.hud.torri,
+           monete: T.monete.prese }
 }, daOnda)
 /* il contatore si spinge a tre: da quando le libere si aprono coi
    comuni, la prima ondata del bastione è un orco che le due torri di
@@ -88,6 +89,10 @@ const perdi = (daOnda = 0) => page.evaluate(async daOnda => {
    zero, e un record zero il tasto non lo scrive */
 const caduta = await perdi(3)
 uguale('con un arciere solo il castello cade', caduta.fase, 'fine', JSON.stringify(caduta))
+/* il conto dell'arciere si è pagato quando la torre è salita, anche in una
+   partita persa: niente monete a ondate rette (docs/apprendimento/calibrazione.md) */
+uguale('un conto senza errori, tre monete', caduta.monete, 3)
+uguale('e il cartello di fine le dice', await page.locator('[data-monete-prese]').first().innerText(), '+3 🪙')
 const cartello = await page.locator('[data-primato]').textContent()
 controlla('e il cartello dice del primo risultato su questo terreno',
           /primo risultato/.test(cartello), cartello)

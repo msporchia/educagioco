@@ -39,7 +39,6 @@ export class Battaglia {
     this.avvisa = eventi.avvisa || zitto
     this.suona = eventi.suona || zitto
     this.segna = eventi.segna || zitto
-    this.moneta = eventi.moneta || zitto
 
     this.nemici = []; this.torri = []; this.colpi = []; this.schizzi = []
     this.nati = []                     // i pezzi di chi si è diviso, in campo al prossimo passo
@@ -300,9 +299,6 @@ export class Battaglia {
       const premio = this.tabellone.perOnda(pulita)
       this.avvisa(pulita ? `Ondata pulita +${premio} ⚡` : `Ondata finita +${premio} ⚡`)
       this.suona('moneta')
-      // nella campagna le monete arrivano dal traguardo, non dal tempo passato:
-      // qui paga solo la partita libera, che un traguardo non ce l'ha
-      if (!this.ondate.campagna && o % CFG.perMoneta === 0) this.moneta()
       // e ogni tanto un regalo, che è l'altra cosa che la partita libera
       // ha da dare: un potenziamento che resta anche domani
       if (this.tappa.regali && o % OGNI_REGALO === 0) this.daScegliere++
