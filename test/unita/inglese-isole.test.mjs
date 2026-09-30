@@ -122,8 +122,15 @@ titolo('IL MARE')
   for (const W of LARGHEZZE) {
     const q = quadro(meta, W)
     let vicine = Infinity, sopra = 0
+    // due isole i cui riquadri distano più di due canali non si guardano punto per punto
+    const scatola = c => c.reduce((b, [x, y]) => [Math.min(b[0], x), Math.min(b[1], y), Math.max(b[2], x), Math.max(b[3], y)],
+                                  [Infinity, Infinity, -Infinity, -Infinity])
+    const lontane = (a, b) => a[0] - b[2] > 2 * CANALE || b[0] - a[2] > 2 * CANALE ||
+                              a[1] - b[3] > 2 * CANALE || b[1] - a[3] > 2 * CANALE
+    const scatole = q.isole.map(is => scatola(is.costa))
     for (let i = 0; i < q.isole.length; i++) for (let j = i + 1; j < q.isole.length; j++) {
       const A = q.isole[i], B = q.isole[j]
+      if (lontane(scatole[i], scatole[j])) continue
       for (const p of A.costa) {
         if (dentroAnello(B.costa, p[0], p[1])) sopra++
         for (const r of B.costa) vicine = Math.min(vicine, Math.hypot(p[0] - r[0], p[1] - r[1]))
