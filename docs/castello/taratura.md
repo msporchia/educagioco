@@ -174,8 +174,10 @@ npm run tara -- --da 0.6 --bersaglio 0.85
 - **La promessa:** chi spende tutto finisce la tappa; chi tiene in tasca un
   quarto no (perde diciannove volte su venti); il pasticcione ce la fa.
   L'eccezione sta scritta col suo nome in `unita/castello` (`PERDONANO`):
-  dal passaggio alle carte le isole della Palude lasciano passare anche il
-  pigro, con due gradini in meno del metro sull'ultima ondata.
+  dalle piazzole sparse è la gola del Sotterraneo, che il pigro finisce con
+  un cuore ([5,4,4] contro il [7,6,6] del metro) perché il capo in fondo
+  toglie quattro cuori a tutti e due; le isole, che perdonavano dal
+  passaggio alle carte, non perdonano più.
 
 ## La vecchia curva, e a cosa serve ancora
 
