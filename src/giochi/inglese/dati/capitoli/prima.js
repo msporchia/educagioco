@@ -1,0 +1,26 @@
+// Il capitolo del mondo «In prima»: cinque frasi e tre domande, ognuna su
+// una frase sola. Solo le strutture di quel mondo (hello, it is, is it,
+// this is, they are). Formato in docs/lingue/mondi.md.
+export default {
+  id: 'lo-zaino-di-leo',
+  mondo: 'prima',
+  titolo: 'Lo zaino di Leo',
+  variabili: {
+    colore: { da: 'colori', fra: ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'black'] },
+    cosa: { da: 'scuola', fra: ['pen', 'pencil', 'ruler', 'rubber', 'crayon', 'book'] },
+    quanti: { da: 'numeri', fra: ['two', 'three', 'four', 'five'] },
+  },
+  frasi: [
+    { en: 'Hello! I am Leo. This is my backpack.', forma: 'saluti' },
+    { en: 'It is {colore}.', forma: 'it-is' },
+    { en: 'What is this? Is it a pen?', forma: 'is-it' },
+    { se: v => v.cosa.en === 'pen', en: 'Yes, it is a pen.', forma: 'it-is' },
+    { se: v => v.cosa.en !== 'pen', en: 'No, it is not a pen. It is {a:cosa}.', forma: 'it-is' },
+    { en: 'They are {quanti} {cosa.pl}!', forma: 'plurale' },
+  ],
+  domande: [
+    { testo: 'Di che colore è lo zaino di Leo?', risposta: v => v.colore.it },
+    { testo: 'Che cosa c’è nello zaino?', risposta: v => v.cosa.itPl },
+    { testo: 'Quante sono?', risposta: v => v.quanti.it },
+  ],
+}

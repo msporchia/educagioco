@@ -769,7 +769,7 @@ export const AIUTI = {
   inglese: {
     emoji: '🗺️', titolo: 'English',
     blocchi: [
-      'Una mappa del tesoro: ogni isola è un mondo, ogni medaglione una tappa. Finito un mondo, se ne aprono altri.',
+      'Una mappa del tesoro: un’isola per ogni anno di scuola, dalla prima alla quinta, e ogni medaglione una tappa. In ogni isola prima le parole, poi le frasi fatte con quelle parole. Finito un anno si apre il dopo; quelli già fatti a scuola sono aperti, da ripassare.',
       { titolo: 'Come si gioca', righe: [
         'Prima si riconoscono le parole e le frasi, poi le frasi **si compongono**: tocca le parole e vanno in fila, ritoccale e tornano giù.',
         '**Tocca una parola inglese**, o tieni premuta una tessera, per sapere cosa vuol dire. Le prime volte è gratis; dopo, quella domanda non paga, e la moneta in alto lo dice subito.',

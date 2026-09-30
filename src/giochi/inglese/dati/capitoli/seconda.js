@@ -1,9 +1,9 @@
-// Il capitolo del mondo «Io e le mie cose»: racconta Laura. Otto frasi,
-// tre domande — una su una frase, una su due frasi, una a cui il testo
-// a volte non risponde. Formato in docs/lingue/mondi.md.
+// Il capitolo del mondo «In seconda»: racconta Laura. Otto frasi, tre
+// domande — una su una frase, una su due frasi, una a cui il testo a volte
+// non risponde. Formato in docs/lingue/mondi.md.
 export default {
   id: 'il-picnic',
-  mondo: 'mie-cose',
+  mondo: 'seconda',
   titolo: 'Il picnic',
   variabili: {
     colore: { da: 'colori', fra: ['red', 'blue', 'green', 'yellow', 'black', 'white', 'brown', 'pink'] },

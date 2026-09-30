@@ -101,7 +101,7 @@ titolo('LA MAPPA')
     }
   }
   const q = disponi(statoMappa(vuoto, () => 0), 390)
-  uguale('a profilo vuoto una tappa sola è «adesso»', q.nodi.filter(n => n.adesso).map(n => n.id).join(), 'che-cose-1')
+  uguale('a profilo vuoto una tappa sola è «adesso»', q.nodi.filter(n => n.adesso).map(n => n.id).join(), 'prima-colori')
   const dopo = disponi(statoMappa(tutto, () => 0), 390)
   controlla('a mondi finiti non c’è niente di chiuso fra le tappe',
             dopo.nodi.filter(n => n.tipo === 'tappa').every(n => n.stato === 'vinta'))
@@ -128,8 +128,8 @@ titolo('LE MONETE')
   controlla('comporre paga più che riconoscere', PAGA.monta > PAGA.riconosci)
   uguale('il riassunto a profilo vuoto', manifesto.riassunto({}), `${TAPPE.length} tappe sulla mappa del tesoro`)
   const c = {}
-  segnaVinta(c, 'che-cose-1')
-  controlla('il riassunto dice quante e dove', /1 tappa su \d+ · Che cos/.test(manifesto.riassunto(c)), manifesto.riassunto(c))
+  segnaVinta(c, 'prima-colori')
+  controlla('il riassunto dice quante e dove', /1 tappa su \d+ · In prima/.test(manifesto.riassunto(c)), manifesto.riassunto(c))
 }
 
 /* ═══════════ 5. la materia «Frasi inglesi» ═══════════ */

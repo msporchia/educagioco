@@ -2,7 +2,7 @@
 /* Stampa i banchi dell'inglese a mondi, per rileggerli in blocco.
 
      node strumenti/inglese/banchi.mjs                  tutte le frasi di tutti i mondi
-     node strumenti/inglese/banchi.mjs che-cose         le frasi di un mondo (o di una tappa)
+     node strumenti/inglese/banchi.mjs terza            le frasi di un mondo (o di una tappa: terza-c-e)
      node strumenti/inglese/banchi.mjs m-pen            una frase sola
      node strumenti/inglese/banchi.mjs --capitoli       i capitoli, in tutte le varianti
      node strumenti/inglese/banchi.mjs --capitolo=il-picnic [--max=20]

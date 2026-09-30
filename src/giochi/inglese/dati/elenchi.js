@@ -42,7 +42,7 @@ export const ELENCHI = {
     a('orange', 'arancione'), a('purple', 'viola'), a('grey', 'grigio'),
   ],
   aggettivi: [
-    a('big', 'grande'), a('small', 'piccolo'), a('long', 'lungo'),
+    a('big', 'grande'), a('small', 'piccolo'), a('long', 'lungo'), a('hot', 'caldo'), a('cold', 'freddo'),
   ],
   numeri: [
     a('two', 'due', null, null, null, null, { n: 2 }), a('three', 'tre', null, null, null, null, { n: 3 }),
@@ -68,6 +68,30 @@ export const ELENCHI = {
     a('pasta', 'pasta', null, 'la pasta'),
     a('milk', 'latte', null, 'il latte'),
     a('soup', 'zuppa', null, 'la zuppa'),
+  ],
+  scuola: [
+    a('pen', 'penna', 'una penna', 'la penna', 'penne', 'le penne'),
+    a('pencil', 'matita', 'una matita', 'la matita', 'matite', 'le matite'),
+    a('ruler', 'righello', 'un righello', 'il righello', 'righelli', 'i righelli'),
+    a('rubber', 'gomma', 'una gomma', 'la gomma', 'gomme', 'le gomme'),
+    a('crayon', 'pastello', 'un pastello', 'il pastello', 'pastelli', 'i pastelli'),
+    a('book', 'libro', 'un libro', 'il libro', 'libri', 'i libri'),
+  ],
+  stanze: [
+    a('kitchen', 'cucina', 'una cucina', 'la cucina', 'cucine', 'le cucine'),
+    a('bedroom', 'camera', 'una camera', 'la camera', 'camere', 'le camere'),
+    a('bathroom', 'bagno', 'un bagno', 'il bagno', 'bagni', 'i bagni'),
+    a('garden', 'giardino', 'un giardino', 'il giardino', 'giardini', 'i giardini'),
+  ],
+  mobili: [
+    a('bed', 'letto', 'un letto', 'il letto', 'letti', 'i letti'),
+    a('table', 'tavolo', 'un tavolo', 'il tavolo', 'tavoli', 'i tavoli'),
+    a('chair', 'sedia', 'una sedia', 'la sedia', 'sedie', 'le sedie'),
+    a('sofa', 'divano', 'un divano', 'il divano', 'divani', 'i divani'),
+  ],
+  giorni: [
+    a('Monday', 'lunedì'), a('Tuesday', 'martedì'), a('Wednesday', 'mercoledì'), a('Thursday', 'giovedì'),
+    a('Friday', 'venerdì'), a('Saturday', 'sabato'), a('Sunday', 'domenica'),
   ],
   vestiti: [
     a('hat', 'cappello', 'un cappello', 'il cappello', 'cappelli', 'i cappelli'),

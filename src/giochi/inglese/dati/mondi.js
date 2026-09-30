@@ -1,93 +1,182 @@
-// Il grafo dei mondi dell'inglese: i mondi, le loro tappe, da cosa si
-// aprono, e le categorie di data/words.js che finiscono nel loro 📦
-// cassetto. Il perché di ogni scelta sta in docs/lingue/mondi.md.
+// Il grafo dei mondi dell'inglese: un mondo per anno della scuola
+// primaria, le sue tappe, da cosa si apre, e le categorie di data/words.js
+// che finiscono nel suo 📦 cassetto. Il perché di ogni scelta, e il
+// programma di ogni anno, stanno in docs/lingue/mondi.md.
 //
-// Un mondo: { id, nome, disegno (il disegnino sulla mappa), insegna, dopo: [id…] (tutti finiti), dopoUno?: [id…]
-//   (basta uno), categorie: [cat di words.js], verbi?: true (i verbi di
-//   data/verbi.js vanno nel suo cassetto), tappe: [...] }. Un mondo senza
-//   tappe è «in arrivo»: sta sulla mappa ma non si apre.
-// Una tappa: { id, nome, disegno, forma, parole: [inglese…], contratta,
-//   portata } — 8–10 parole nuove più una struttura. L'ultima di ogni mondo è
-//   la 🏁 (`bandiera: true`): niente di nuovo, ripassa tutto il mondo.
+// Un mondo: { id, anno (1–5), nome, disegno, insegna, dopo: [id…] (tutti
+//   finiti), dopoUno?: [id…] (basta uno), categorie: [cat di words.js],
+//   verbi?: true (i verbi di data/verbi.js che nessuna tappa insegna vanno
+//   nel suo cassetto), strutture?: [forma…] (quelle dell'anno che non hanno
+//   ancora una tappa di frasi), tappe: [...] }. Un mondo senza tappe è «in
+//   arrivo»: sta sulla mappa ma non si apre.
+// Le tappe, nell'ordine: prima quelle di PAROLE — { id, nome, disegno,
+//   argomento, parole } (8–10 parole di un argomento solo, dati/argomenti.js)
+//   — poi quelle di FRASI — { id, nome, disegno, forme: [forma…],
+//   contratta } (una struttura, fatta solo di parole già viste) — e in fondo
+//   la 🏁 (`bandiera: true`), che ripassa tutto il mondo. La `portata` la
+//   mette `anno` (vedi `portate`): nessuno la scrive a mano.
 import { WORDS } from '../../../data/words.js'
 import { VERBI } from '../../../data/verbi.js'
 import { FORME } from './forme.js'
+import { ARGOMENTI, paroleDellArgomento } from './argomenti.js'
 
-// dove sta l'avanzamento nel profilo: profile.campagne[CHIAVE] (non p.eng,
-// che resta al gioco vecchio finché la vista nuova non lo sostituisce)
+// dove sta l'avanzamento nel profilo: profile.campagne[CHIAVE] (p.eng resta al gioco di prima)
 export const CHIAVE = 'inglese'
 
-// le parole «che tengono insieme le frasi» non hanno un cassetto: arrivano
-// con le forme
+// le parole «che tengono insieme le frasi» non hanno un cassetto: arrivano con le forme
 export const CATEGORIE_DI_STRUTTURA = ['q']
 
-const t = (id, nome, disegno, forma, parole, portata, contratta = false) =>
-  ({ id, nome, disegno, forma, parole, portata, contratta })
-const bandiera = (id, portata) =>
-  ({ id, nome: 'La bandiera', disegno: 'bandiera', bandiera: true, parole: [], portata, contratta: true })
+const parole = (id, nome, disegno, argomento, lista) => ({ id, nome, disegno, argomento, parole: lista, forme: [] })
+const frasi = (id, nome, disegno, forme, contratta = false) =>
+  ({ id, nome, disegno, forme, parole: [], contratta, frasi: true })
+const bandiera = id => ({ id, nome: 'La bandiera', disegno: 'bandiera', bandiera: true, parole: [], forme: [],
+                          contratta: true })
+
+// La portata di una tappa viene dall'anno di scuola: l'anno n va dai 5+n ai
+// 6+n anni, cioè da 12,5·(n+1) a 12,5·(n+2) sulla scala di data/portata.js;
+// le tappe si spargono dentro quell'anno, dalla prima all'ultima.
+export const PUNTI_PER_ANNO = 12.5
+export const inizioDellAnno = anno => PUNTI_PER_ANNO * (anno + 1)
+function portate(m) {
+  const n = m.tappe.length
+  m.tappe.forEach((t, i) => {
+    t.portata = Math.round(inizioDellAnno(m.anno) + (n > 1 ? (PUNTI_PER_ANNO - 1.5) * i / (n - 1) : 0))
+  })
+  return m
+}
 
 export const MONDI = [
   {
-    id: 'che-cose', nome: 'Che cos’è', disegno: 'lente', insegna: 'it is a …, is it …?, colori, numeri, plurale',
-    dopo: [], categorie: ['a', 'c', 'n', 's', 'j'],
+    id: 'prima', anno: 1, nome: 'In prima', disegno: 'palla',
+    insegna: 'hello, it is a …, is it …?, i colori, i numeri fino a dieci, this is …',
+    dopo: [], categorie: ['a', 'c', 's', 'g'],
     tappe: [
-      t('che-cose-1', 'Gli animali facili', 'cane', 'it-is',
-        ['dog', 'cat', 'fish', 'bird', 'mouse', 'rabbit', 'horse', 'cow'], 12),
-      t('che-cose-2', 'Gli animali più difficili', 'punto-di-domanda', 'is-it',
-        ['pig', 'duck', 'frog', 'sheep', 'lion', 'bear', 'monkey', 'elephant'], 13),
-      t('che-cose-3', 'I colori', 'pennelli', 'colore-prima',
-        ['red', 'blue', 'green', 'yellow', 'black', 'white', 'brown', 'pink', 'big', 'small'], 14, true),
-      t('che-cose-4', 'I numeri', 'dita', 'plurale',
-        ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'], 15, true),
-      t('che-cose-5', 'A scuola', 'zaino', 'this-is',
-        ['book', 'pencil', 'pen', 'ruler', 'rubber', 'backpack', 'notebook', 'crayon', 'box', 'map'], 16),
-      bandiera('che-cose-bandiera', 17),
+      parole('prima-colori', 'I colori', 'pennelli', 'colori',
+        ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'black', 'white', 'brown']),
+      parole('prima-numeri', 'I numeri fino a dieci', 'dita', 'numeri',
+        ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']),
+      parole('prima-animali', 'Gli animali', 'cane', 'animali',
+        ['dog', 'cat', 'fish', 'bird', 'mouse', 'rabbit', 'horse', 'cow', 'pig', 'duck']),
+      parole('prima-scuola', 'A scuola', 'zaino', 'scuola',
+        ['book', 'pencil', 'pen', 'ruler', 'rubber', 'backpack', 'notebook', 'crayon', 'box', 'map']),
+      parole('prima-giocattoli', 'I giocattoli', 'palla', 'giocattoli',
+        ['ball', 'doll', 'teddy bear', 'kite', 'puzzle', 'game', 'car', 'train', 'plane', 'boat']),
+      frasi('prima-ciao', 'Ciao! Come ti chiami?', 'coppia', ['saluti']),
+      frasi('prima-che-cose', 'Che cos’è?', 'punto-di-domanda', ['it-is', 'is-it']),
+      frasi('prima-colore', 'Di che colore è?', 'pennelli', ['colore-prima'], true),
+      frasi('prima-quanti', 'Quanti sono?', 'dita', ['plurale'], true),
+      frasi('prima-questo', 'Questo è…', 'zaino', ['this-is']),
+      bandiera('prima-bandiera'),
     ],
   },
   {
-    id: 'mie-cose', nome: 'Io e le mie cose', disegno: 'casetta', insegna: 'I like, this is my, have got / has got',
-    dopo: ['che-cose'], categorie: ['f', 'k', 'p', 'b'],
+    id: 'seconda', anno: 2, nome: 'In seconda', disegno: 'casetta',
+    insegna: 'I like, this is my, I have got, she has got, i numeri fino a venti',
+    dopo: ['prima'], categorie: ['b', 'k', 'f', 'p', 'j'],
     tappe: [
-      t('mie-cose-1', 'Il cibo', 'torta', 'i-like',
-        ['apple', 'banana', 'pizza', 'cake', 'milk', 'bread', 'cheese', 'chocolate', 'egg', 'cookie'], 18),
-      t('mie-cose-2', 'La mia famiglia', 'famiglia', 'this-is-my',
-        ['mother', 'father', 'sister', 'brother', 'grandmother', 'grandfather', 'baby', 'friend', 'teacher'], 19),
-      t('mie-cose-3', 'I vestiti', 'cappello', 'have-got',
-        ['hat', 'cap', 'shirt', 'dress', 'shoe', 'sock', 'coat', 'scarf', 'glove', 'trousers'], 20),
-      t('mie-cose-4', 'Il corpo', 'faccia', 'has-got',
-        ['hand', 'foot', 'eye', 'ear', 'nose', 'mouth', 'hair', 'head', 'leg', 'long'], 21),
-      t('mie-cose-5', 'Frutta e verdura', 'piatto', 'i-like',
-        ['carrot', 'potato', 'tomato', 'salad', 'soup', 'pasta', 'rice', 'juice', 'strawberry', 'grapes'], 22, true),
-      bandiera('mie-cose-bandiera', 23),
+      parole('seconda-corpo', 'Il corpo', 'faccia', 'corpo',
+        ['head', 'eye', 'ear', 'nose', 'mouth', 'hand', 'foot', 'leg', 'hair']),
+      parole('seconda-famiglia', 'La famiglia', 'famiglia', 'famiglia',
+        ['mother', 'father', 'sister', 'brother', 'grandmother', 'grandfather', 'baby', 'friend']),
+      parole('seconda-cibo', 'Il cibo', 'torta', 'cibo',
+        ['apple', 'banana', 'pizza', 'cake', 'milk', 'bread', 'cheese', 'chocolate', 'egg', 'cookie']),
+      parole('seconda-pranzo', 'A pranzo', 'piatto', 'cibo',
+        ['carrot', 'potato', 'tomato', 'salad', 'soup', 'pasta', 'rice', 'juice', 'strawberry', 'grapes']),
+      parole('seconda-vestiti', 'I vestiti', 'cappello', 'vestiti',
+        ['hat', 'cap', 'shirt', 'dress', 'shoe', 'sock', 'coat', 'scarf', 'glove', 'trousers']),
+      parole('seconda-venti', 'I numeri fino a venti', 'dita', 'numeri',
+        ['eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen',
+         'nineteen', 'twenty']),
+      parole('seconda-come', 'Come sono', 'faccia', 'aggettivi',
+        ['big', 'small', 'long', 'short', 'happy', 'sad', 'tired', 'hungry', 'hot', 'cold']),
+      frasi('seconda-mi-piace', 'Mi piace!', 'torta', ['i-like']),
+      frasi('seconda-mio', 'Questo è mio', 'famiglia', ['this-is-my']),
+      frasi('seconda-ho', 'Ho un…', 'cappello', ['have-got']),
+      frasi('seconda-ha', 'Lei ha…', 'faccia', ['has-got'], true),
+      bandiera('seconda-bandiera'),
     ],
   },
-  { id: 'dove', nome: 'Dove?', disegno: 'scatola', insegna: 'there is / there are, where is, in, on, under',
-    dopo: ['che-cose'], categorie: ['h'], tappe: [] },
-  { id: 'saper-fare', nome: 'Cosa sai fare', disegno: 'palla', insegna: 'can, can’t, can you?',
-    dopo: ['che-cose'], categorie: ['g'], verbi: true, tappe: [] },
-  { id: 'giornata', nome: 'La mia giornata', disegno: 'sole', insegna: 'il presente con I, you, we; at + ora',
-    dopo: ['mie-cose'], categorie: ['d'], tappe: [] },
-  { id: 'lui-e-lei', nome: 'Lui e lei', disegno: 'coppia', insegna: 'la s della terza persona, does / doesn’t',
-    dopo: ['giornata'], categorie: ['y'], tappe: [] },
-  { id: 'adesso', nome: 'Adesso', disegno: 'bicicletta', insegna: 'am / is / are + -ing',
-    dopo: ['giornata'], categorie: ['t', 'w'], tappe: [] },
-  { id: 'ieri', nome: 'Ieri', disegno: 'clessidra', insegna: 'was / were, il passato in -ed e gli irregolari',
-    dopo: [], dopoUno: ['lui-e-lei', 'adesso'], categorie: [], tappe: [] },
+  {
+    id: 'terza', anno: 3, nome: 'In terza', disegno: 'scatola',
+    insegna: 'there is / there are, where is …?, in, on, under, today is …, can / cannot',
+    dopo: ['seconda'], categorie: ['h', 'd', 'w', 'n'], verbi: true,
+    tappe: [
+      parole('terza-casa', 'La casa', 'casetta', 'casa',
+        ['house', 'kitchen', 'bedroom', 'bathroom', 'garden', 'garage', 'door', 'window', 'roof', 'wall']),
+      parole('terza-mobili', 'I mobili', 'scatola', 'casa',
+        ['bed', 'chair', 'table', 'sofa', 'lamp', 'mirror', 'clock', 'picture', 'shower', 'bath']),
+      parole('terza-giorni', 'I giorni', 'sole', 'calendario',
+        ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'today',
+         'tomorrow', 'weekend']),
+      parole('terza-stagioni', 'Le stagioni e i mesi', 'clessidra', 'calendario',
+        ['spring', 'summer', 'autumn', 'winter', 'January', 'February', 'March', 'April', 'May', 'June']),
+      parole('terza-mesi', 'Gli altri mesi', 'clessidra', 'calendario',
+        ['July', 'August', 'September', 'October', 'November', 'December', 'birthday', 'Christmas']),
+      parole('terza-tempo', 'Che tempo fa', 'sole', 'tempo',
+        ['sun', 'rain', 'snow', 'wind', 'cloud', 'storm', 'fog', 'rainbow', 'sky', 'ice']),
+      parole('terza-cento', 'I numeri fino a cento', 'dita', 'numeri',
+        ['thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred']),
+      parole('terza-azioni', 'Che cosa sai fare', 'palla', 'azioni',
+        ['swim', 'run', 'jump', 'fly', 'dance', 'climb', 'sing', 'walk', 'read', 'write']),
+      frasi('terza-c-e', 'C’è, ci sono', 'casetta', ['there-is']),
+      frasi('terza-dove', 'Dov’è?', 'scatola', ['dove']),
+      frasi('terza-oggi', 'Oggi è lunedì', 'sole', ['oggi'], true),
+      frasi('terza-so-fare', 'So nuotare!', 'palla', ['can'], true),
+      bandiera('terza-bandiera'),
+    ],
+  },
+  {
+    // solo parole, per ora: le frasi di queste strutture sono in docs/lingue/da-fare.md
+    id: 'quarta', anno: 4, nome: 'In quarta', disegno: 'sole',
+    insegna: 'la giornata, i mestieri, i mezzi; poi il presente, la s, does, -ing, l’ora',
+    dopo: ['terza'], categorie: ['t'], strutture: ['presente', 'terza-s', 'ing', 'ora'],
+    tappe: [
+      parole('quarta-giornata', 'La giornata', 'sole', 'giornata',
+        ['morning', 'afternoon', 'evening', 'night', 'breakfast', 'lunch', 'dinner', 'hour', 'minute',
+         'time']),
+      parole('quarta-ogni-giorno', 'Ogni giorno', 'torta', 'azioni',
+        ['eat', 'drink', 'sleep', 'wash', 'cook', 'play', 'go', 'listen', 'look', 'help']),
+      parole('quarta-mestieri', 'I mestieri', 'coppia', 'mestieri',
+        ['teacher', 'doctor', 'farmer', 'cook', 'police officer', 'firefighter', 'pilot', 'nurse',
+         'singer']),
+      parole('quarta-mezzi', 'I mezzi', 'bicicletta', 'mezzi',
+        ['bus', 'bike', 'taxi', 'truck', 'ship', 'helicopter', 'tractor', 'scooter', 'motorbike',
+         'rocket']),
+      bandiera('quarta-bandiera'),
+    ],
+  },
+  {
+    id: 'quinta', anno: 5, nome: 'In quinta', disegno: 'clessidra',
+    insegna: 'i luoghi e i verbi che cambiano; poi was / were e il passato',
+    dopo: ['quarta'], categorie: ['y'], strutture: ['was-were', 'passato', 'passato-ed'],
+    tappe: [
+      parole('quinta-citta', 'In città', 'casetta', 'luoghi',
+        ['shop', 'school', 'hospital', 'park', 'station', 'museum', 'bank', 'cinema', 'library', 'zoo']),
+      parole('quinta-fuori', 'Fuori città', 'bicicletta', 'luoghi',
+        ['castle', 'bridge', 'airport', 'city', 'village', 'road', 'church', 'market', 'restaurant',
+         'farm']),
+      parole('quinta-verbi', 'I verbi che cambiano', 'clessidra', 'azioni',
+        ['see', 'come', 'make', 'buy', 'find', 'give', 'take', 'win', 'catch', 'throw']),
+      bandiera('quinta-bandiera'),
+    ],
+  },
   { id: 'prova-finale', nome: 'La prova finale', disegno: 'forziere', insegna: 'tutto insieme', prova: true,
-    dopo: ['che-cose', 'mie-cose', 'dove', 'saper-fare', 'giornata', 'lui-e-lei', 'adesso', 'ieri'],
-    categorie: [], tappe: [] },
-]
+    dopo: ['prima', 'seconda', 'terza', 'quarta', 'quinta'], categorie: [], tappe: [] },
+].map(m => (m.tappe.length ? portate(m) : m))
 
 export const mondoDi = id => MONDI.find(m => m.id === id) || null
 export const pronto = m => m.tappe.length > 0
 export const TAPPE = MONDI.flatMap(m => m.tappe.map(x => ({ ...x, mondo: m.id })))
 export const tappaDi = id => TAPPE.find(x => x.id === id) || null
+// tre specie di tappa: di parole, di frasi, la 🏁
+export const specieDi = t => (t.bandiera ? 'bandiera' : t.frasi ? 'frasi' : 'parole')
 
 // Il dato si controlla da solo: un riferimento sbagliato è rosso in
 // test/unita/inglese-mondi, non una mappa bianca su un telefono.
 export function guastiDeiMondi() {
   const g = []
-  const parole = new Map(WORDS.map(w => [w[0], w[3]]))
+  const inWords = new Map(WORDS.map(w => [w[0], w[3]]))
+  const inVerbi = new Set(VERBI.map(v => v[0]))
   const ids = new Set()
   const categorie = new Map()
   const inTappa = new Map()
@@ -98,30 +187,54 @@ export function guastiDeiMondi() {
       if (categorie.has(c)) g.push(`categoria ${c} in due mondi: ${categorie.get(c)} e ${m.id}`)
       categorie.set(c, m.id)
     }
+    for (const f of m.strutture || []) if (!FORME[f]) g.push(`${m.id}: struttura sconosciuta ${f}`)
   }
+  let annoPrima = 0
   for (const m of MONDI) {
     for (const d of [...m.dopo, ...(m.dopoUno || [])])
       if (!ids.has(d)) g.push(`${m.id}: dipende da un mondo che non c'è (${d})`)
     if (!pronto(m)) continue
+    if (!(m.anno >= 1 && m.anno <= 5)) g.push(`${m.id}: senza anno di scuola (1–5)`)
+    if (m.anno < annoPrima) g.push(`${m.id}: l'anno ${m.anno} viene dopo l'anno ${annoPrima}`)
+    annoPrima = m.anno
     const ultima = m.tappe[m.tappe.length - 1]
     if (!ultima.bandiera) g.push(`${m.id}: l'ultima tappa non è la 🏁`)
+    let giaFrasi = false
     for (const x of m.tappe) {
       if (ids.has(x.id)) g.push(`id doppio: ${x.id}`)
       ids.add(x.id)
       if (typeof x.portata !== 'number') g.push(`${x.id}: senza portata`)
+      else if (x.portata < inizioDellAnno(m.anno) || x.portata >= inizioDellAnno(m.anno + 1))
+        g.push(`${x.id}: portata ${x.portata} fuori dal suo anno (${m.anno})`)
       if (x.bandiera) {
         if (x !== ultima) g.push(`${x.id}: la 🏁 sta in mezzo al mondo`)
         continue
       }
-      if (!FORME[x.forma]) g.push(`${x.id}: forma sconosciuta ${x.forma}`)
+      if (x.frasi) {
+        giaFrasi = true
+        if (!x.forme.length) g.push(`${x.id}: una tappa di frasi senza struttura`)
+        for (const f of x.forme) if (!FORME[f]) g.push(`${x.id}: forma sconosciuta ${f}`)
+        if (x.parole.length) g.push(`${x.id}: una tappa di frasi non porta parole nuove`)
+        continue
+      }
+      // una tappa di parole: prima delle frasi, 8–10 parole, un argomento solo
+      if (giaFrasi) g.push(`${x.id}: una tappa di parole dopo quelle di frasi`)
+      const arg = ARGOMENTI[x.argomento]
+      if (!arg) { g.push(`${x.id}: argomento sconosciuto ${x.argomento}`); continue }
       if (x.parole.length < 8 || x.parole.length > 10)
         g.push(`${x.id}: ${x.parole.length} parole nuove (ne vanno 8–10)`)
+      const dellArgomento = new Set(paroleDellArgomento(x.argomento))
       for (const p of x.parole) {
-        if (!parole.has(p)) g.push(`${x.id}: «${p}» non è in data/words.js`)
-        if (inTappa.has(p)) g.push(`«${p}» in due tappe: ${inTappa.get(p)} e ${x.id}`)
-        inTappa.set(p, x.id)
+        if (arg.verbi ? !inVerbi.has(p) : !inWords.has(p))
+          g.push(`${x.id}: «${p}» non è in data/${arg.verbi ? 'verbi' : 'words'}.js`)
+        if (!dellArgomento.has(p)) g.push(`${x.id}: «${p}» non è ${arg.nome}`)
+        const k = (arg.verbi ? 'verbo:' : 'en:') + p
+        if (inTappa.has(k)) g.push(`«${p}» in due tappe: ${inTappa.get(k)} e ${x.id}`)
+        inTappa.set(k, x.id)
       }
     }
+    // un mondo che ha le frasi ha anche il suo libro; chi non le ha ancora dichiara le strutture
+    if (!giaFrasi && !(m.strutture || []).length) g.push(`${m.id}: né tappe di frasi né strutture dichiarate`)
   }
   // ogni categoria (tranne quelle di struttura) ha un mondo: nessuna parola resta fuori
   for (const c of new Set(WORDS.map(w => w[3])))

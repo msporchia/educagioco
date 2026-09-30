@@ -23,7 +23,7 @@ export function valoriDi(cap, nome) {
   })
   // senza `fra`: tutto quello che il bambino conosce alla fine del mondo
   const note = paroleNote(cap.mondo)
-  return elenco.filter(x => note.has(x.en) && (!def.dove || def.dove(x)))
+  return elenco.filter(x => note.has(x.en.toLowerCase()) && (!def.dove || def.dove(x)))
 }
 
 // Tutti i mondi possibili del capitolo (le combinazioni che rispettano i vincoli)
