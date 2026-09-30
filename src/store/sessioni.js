@@ -90,6 +90,7 @@ let aperta = null      // { gioco, id, da }
 let orologio = () => Date.now()
 
 export function usaOrologio(f) { orologio = f || (() => Date.now()) }
+export const ora = () => orologio()
 
 export function entra(gioco, id) {
   if (aperta) esci()

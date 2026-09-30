@@ -24,7 +24,7 @@ import { GIOCHI } from '../../src/data/giochi.js'
 import { state, init, creaGiocatore, addCoins } from '../../src/store/profile.js'
 import { entra, esci, usaOrologio, scriviSessione, leggiSessioni } from '../../src/store/sessioni.js'
 import { statoDi, incassa, ridaiTempo, consiglia, tettoDelGioco, scegliSoglie,
-         accendiDormienti, avviso } from '../../src/store/varieta.js'
+         accendiDormienti, avviso, borsa } from '../../src/store/varieta.js'
 import { remove, chiavi } from '../../src/store/storage.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -175,7 +175,7 @@ const R = V.regoleDi({})
     if (g.posto) continue
     const f = fileDi(g.chiave)
     if (!f) { controlla(`trovo la schermata di ${g.chiave}`, false); continue }
-    const paga = /\baddCoins\(|\bincassa\(/.test(readFileSync(f, 'utf8'))
+    const paga = /\baddCoins\(|\bincassa\(|\bborsa\(/.test(readFileSync(f, 'utf8'))
     uguale(`${g.chiave}: ${paga ? 'paga' : 'non paga'}, e NON_PAGANO lo sa`, V.paga(g), paga)
   }
 }
@@ -206,6 +206,14 @@ usaOrologio(() => adesso)
   const p = incassa(24)
   uguale('incassa dice quanto è arrivato', p.dato, 12)
   controlla('e con che parole', p.frase.includes('stanco'), p.frase)
+
+  // la borsa di una partita: si paga una cosa alla volta, e a fine partita si dice il totale
+  const borsellino = borsa('survivors')
+  for (let i = 0; i < 4; i++) borsellino.paga(3)
+  uguale('quattro domande a metà: chieste 12', borsellino.chiesto, 12)
+  uguale('arrivate 6, col resto che non si perde', borsellino.dato, 6)
+  controlla('e il cartello lo dice col totale', borsellino.nota().includes('12 → 6'), borsellino.nota())
+  uguale('una paga a zero non conta', borsellino.paga(0), 0)
 
   adesso += min(16) * 1000   // la partita va avanti: 41 minuti
   uguale('passati i quaranta, finite', statoDi('survivors', adesso).fase, 'vuoto')
