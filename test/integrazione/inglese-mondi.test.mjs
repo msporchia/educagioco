@@ -7,6 +7,7 @@
      · una frase si compone a tocchi, e sbagliandola si legge il perché,
        «Si fa così» e la frase giusta, con la tessera sbagliata colorata
      · la frase giusta paga, e l'indicatore delle monete lo diceva prima
+     · la partita comincia dalle parole, e le frasi arrivano dopo
      · il capitolo del libro si legge, una parola si tocca e dice cosa
        vuol dire, e se il tocco costa lo dice subito; poi si risponde
    Il progetto è in docs/lingue/mondi.md, i bersagli alla riga «Nei test».
@@ -38,8 +39,8 @@ await scatto(page, 'inglese-mappa-vuota')
 
 /* ---------- 2. un bambino a metà del primo mondo ----------
    Le parole della prima tappa sono sapute (forza 6) e le frasi a metà
-   (forza 4): la prima domanda è una frase da mettere in ordine. Le altre
-   quattro tappe sono vinte, così il libro del mondo è aperto. */
+   (forza 4): dopo il giro delle parole, le frasi si mettono in ordine. Le
+   altre quattro tappe sono vinte, così il libro del mondo è aperto. */
 const ora = Date.now()
 const sa = s => ({ s, ok: 5, err: 0, last: ora, seen: 5, t: 0 })
 const t1 = tappaDi('che-cose-1')
@@ -62,8 +63,24 @@ uguale('il secondo mondo resta chiuso fino alla bandiera',
 await scatto(page, 'inglese-mappa')
 
 /* ---------- 3. una frase composta a tocchi, prima storta ---------- */
+// il primo giro fa solo parole (motore/sessione.js): si risponde giusto finché arriva una frase
+async function finoAllaFrase() {
+  let parole = 0
+  for (;;) {
+    await page.waitForSelector('[data-domanda]')
+    if (await page.locator('[data-domanda]').getAttribute('data-genere') === 'frase') return parole
+    if (parole++ > 30) return parole
+    await attendi(page, 400)                               // la finestra cieca
+    await page.locator('[data-domanda] [data-opzione][data-giusta]').click()
+    await page.waitForSelector('[data-esito="giusta"]')
+    await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 6000 })
+  }
+}
 await page.locator('[data-tappa="che-cose-1"]').click()
 await page.waitForSelector('[data-domanda]')
+uguale('si comincia da una parola', await page.locator('[data-domanda]').getAttribute('data-genere'), 'parola')
+const giroParole = await finoAllaFrase()
+controlla('le frasi arrivano dopo le parole', giroParole >= t1.parole.length, `${giroParole} parole prima`)
 uguale('la frase a metà si mette in ordine', await page.locator('[data-domanda]').getAttribute('data-formato'), 'monta')
 uguale('l’indicatore dice che la domanda paga',
        await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
@@ -100,6 +117,7 @@ await scatto(page, 'inglese-sbaglio')
 
 /* ---------- 4. la seconda, giusta: paga ---------- */
 await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 12000 })
+await finoAllaFrase()
 uguale('niente si perde: si va avanti con un’altra frase',
        await page.locator('[data-domanda]').getAttribute('data-formato'), 'monta')
 const monetePrima = (await leggiProfilo(page)).coins

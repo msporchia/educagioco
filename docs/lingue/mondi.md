@@ -254,9 +254,10 @@ stava in piedi nel codice, si è presa la variante più vicina:
 - **Il cassetto si apre alla prima tappa vinta del mondo.**
 - **Il grado** è `floor(10 × media(min(forza, 4) / 4))` su parole, frasi e
   forma della tappa; la 🏁 fa la media di tutto il mondo.
-- **La sessione**: il primo giro passa ogni voce una volta, dalla più
-  debole (a pari forza le parole prima delle frasi); poi pesca col picker
-  di `store/srs.js`. Finisce a `min(20, voci + 4)` risposte giuste, e
+- **La sessione**: il primo giro passa le parole una volta, dalla più
+  debole; poi pesca col picker di `store/srs.js`, e una frase entra solo
+  quando ogni sua parola è già saputa (forza ≥ 1) o è stata indovinata in
+  quella partita (`pronta`). Finisce a `min(20, voci + 4)` risposte giuste, e
   sbagliando non si perde niente. Alla 🏁 il primo giro è di 16. Tre frasi
   di una forma debole (forza < 2) dei mondi già fatti entrano nel giro.
 - **Gli `id` nuovi cominciano con `m-`**; dove la frase c'era già in
