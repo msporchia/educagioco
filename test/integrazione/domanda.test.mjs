@@ -537,7 +537,9 @@ await scatto(page, 'domanda-incatenata')
    Nessun gioco chiama `annota`: lo fa `quiz/Domanda.vue`, una volta per
    tutti e cinque. È il motivo per cui questo controllo sta qui e non in
    un test del sotterraneo. */
-const segnate = await chiaviDiQuiz()
+// l'archivio scrive a lotti (store/storage.js, flush in coda): si aspetta che la scrittura arrivi
+let segnate = await chiaviDiQuiz()
+for (let i = 0; i < 20 && !segnate.length; i++) { await attendi(page, 150); segnate = await chiaviDiQuiz() }
 controlla('rispondere in partita scrive il ripasso', segnate.length > 0,
           `nessuna chiave di quiz in items dopo ${risposteDate} risposte`)
 nota(`il ripasso si è segnato: ${segnate.join(', ') || 'niente'}`)
