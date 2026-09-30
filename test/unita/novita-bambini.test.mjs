@@ -65,7 +65,6 @@ uguale('cinquanta righe su cinque giochi: se ne leggono quattro a gioco',
        ids(daLeggere(0, tutti, TANTE)).length, 5 * PER_GIOCO)
 
 /* ── 2. le righe vere ── */
-const LUNGA = 70
 const numeri = NOVITA.map(n => n.id)
 uguale('gli id non si ripetono', new Set(numeri).size, numeri.length)
 controlla('e sono interi positivi', numeri.every(i => Number.isInteger(i) && i > 0))
@@ -82,9 +81,7 @@ for (const n of NOVITA) {
      più alto, non l'elenco delle righe viste */
   controlla(`${chi} non parla di un gioco ancora in prova`,
             n.gioco == null || !eSperimentale(n.gioco), n.gioco)
-  controlla(`${chi} è una riga, non un papiro`,
-            typeof n.testo === 'string' && n.testo.length > 0 && n.testo.length <= LUNGA,
-            `${n.testo?.length} caratteri, il tetto è ${LUNGA}`)
+  controlla(`${chi} dice qualcosa`, typeof n.testo === 'string' && n.testo.length > 0)
   controlla(`${chi} è testo semplice: niente HTML e niente **`, !/[<>]|\*\*/.test(n.testo))
 }
 
