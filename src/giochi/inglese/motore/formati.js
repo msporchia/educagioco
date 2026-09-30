@@ -1,14 +1,15 @@
 // Da una frase tutti i formati, e il giudizio di una risposta. Il formato
 // lo decide la forza della frase (un gradino per punto): riconosci → cosa
 // vuol dire → scegli → completa → monta → scegli e monta. Le parole tengono
-// i tipi di oggi (data/domande.js). Vedi docs/lingue/mondi.md.
+// i tipi di oggi (data/domande.js). Vedi docs/lingue/frasi.md.
 import { MAX_S } from '../../../store/srs.js'
 import { FORME, chiaveForma } from '../dati/forme.js'
 import { trappoleDi, scegliTrappole, vicineFra } from './trappole.js'
 import { GEMELLE } from '../dati/trappole.js'
 import { parole, inTappa, normalizza, accettate, eDomanda, inBella, aSchermo } from './testo.js'
-import { chiaveDi, DET } from './lessico.js'
-import { paroleNote } from './grafo.js'
+import { chiaveDi, DET, eVerbo, eAggettivo, eColore } from './lessico.js'
+import { paroleNote, flessioniNote } from './grafo.js'
+import { flessa, formeDi, MODI, MODI_AGG } from './flessioni.js'
 
 export const FORMATI_FRASE = ['riconosci', 'senso', 'scegli', 'completa', 'monta', 'scegliMonta']
 export const COMPONI = new Set(['completa', 'monta', 'scegliMonta'])
@@ -21,24 +22,49 @@ export const formatoPerForza = forza =>
 export const tessereInPiu = (forza, forzaForma = 0) =>
   (forza <= 5 ? 2 : forzaForma >= MAX_S ? 4 : 3)
 
-// le tessere di troppo, dalle più istruttive: le parole delle trappole di
-// grammatica, poi le gemelle delle parole della frase, poi le parole vicine
+// Le gemelle di una parola: quelle di GEMELLE (am / is / are…) e le altre
+// forme dello stesso verbo o aggettivo che la tappa conosce (go → goes,
+// went; big → bigger). Solo quelle note: una tessera mai vista non è una scelta.
+function gemelleDi(w, note, flessioni) {
+  const lw = w.toLowerCase()
+  const g = GEMELLE.find(x => x.includes(lw))
+  if (g) return g
+  const f = flessa(lw)
+  const base = f ? f.base : eVerbo(lw) || (eAggettivo(lw) && !eColore(lw)) ? lw : null
+  if (!base || !flessioni) return []
+  const modi = eVerbo(base) || MODI.includes(f && f.come) ? MODI : MODI_AGG
+  return formeDi(base, [...flessioni].filter(c => modi.includes(c)))
+}
+const eNota = (x, note, flessioni) => {
+  if (!note || note.has(x)) return true
+  const f = flessa(x)
+  return !!(f && flessioni && flessioni.has(f.come) && note.has(f.base))
+}
+
+// Le tessere di troppo, dalle più istruttive: le parole delle trappole di
+// grammatica, poi le gemelle delle parole della frase, poi le parole vicine.
+// `rivale` è il posto della frase che la tessera contende (plays → play).
 function tessereDiTroppo(T, trappole, tappa, note, ctx) {
   const presenti = new Set(T.map(w => w.toLowerCase()))
   const out = []
-  const metti = (testo, trappola = null) => {
+  const metti = (testo, trappola, rivale) => {
     const k = testo.toLowerCase()
     if (presenti.has(k) || out.some(e => e.testo.toLowerCase() === k)) return
-    out.push({ testo, trappola })
+    out.push({ testo, trappola, rivale: rivale >= 0 ? rivale : null })
+  }
+  const daTrappola = t => {
+    const U = parole(inTappa(t.en, tappa))
+    const dentro = new Set(U.map(w => w.toLowerCase()))
+    const rivale = T.findIndex(w => !dentro.has(w.toLowerCase()))
+    for (const w of U) metti(w, t, rivale)
   }
   const scelte = scegliTrappole(trappole, trappole.length, { forzaForma: ctx.forzaForma, rnd: ctx.rnd })
-  const diGrammatica = scelte.filter(t => t.pesa !== 'parola')
-  for (const t of diGrammatica) for (const w of parole(inTappa(t.en, tappa))) metti(w, t)
-  for (const w of T) {
-    const g = GEMELLE.find(x => x.includes(w.toLowerCase()))
-    if (g) for (const x of ctx.rnd ? mescola(g, ctx.rnd) : g) if (!note || note.has(x)) metti(x)
-  }
-  for (const t of scelte.filter(t => t.pesa === 'parola')) for (const w of parole(inTappa(t.en, tappa))) metti(w, t)
+  scelte.filter(t => t.pesa !== 'parola').forEach(daTrappola)
+  T.forEach((w, i) => {
+    const g = gemelleDi(w, note, ctx.flessioni)
+    for (const x of ctx.rnd ? mescola(g, ctx.rnd) : g) if (eNota(x, note, ctx.flessioni)) metti(x, null, i)
+  })
+  scelte.filter(t => t.pesa === 'parola').forEach(daTrappola)
   return out
 }
 
@@ -69,7 +95,7 @@ const mescolaDavvero = (a, rnd) => {
 export function contesto(frase, { tappa = null, altre = [], forzaForma = () => 0, rnd = Math.random } = {}) {
   const note = paroleNote(frase.mondo, frase.tappa)
   return { tappa, altre: altre.filter(f => f.id !== frase.id), forzaForma, rnd,
-           vicine: vicineFra(note), note }
+           vicine: vicineFra(note), note, flessioni: flessioniNote(frase.mondo, frase.tappa) }
 }
 
 const opzione = (testo, giusta, trappola = null) => ({ testo, giusta, ...(trappola ? { trappola } : {}) })
@@ -137,13 +163,16 @@ export function costruisci(frase, formato, ctx, { forza = 0 } = {}) {
   const extra = tessereDiTroppo(T, trappole, tappa, ctx.note, ctx)
 
   if (formato === 'completa') {
-    // due buchi da tre parole in su, e una tessera di troppo: un buco con una tessera sola non è una scelta
+    // due buchi da tre parole in su, e una tessera di troppo che ne contende
+    // uno (goes accanto a go): un buco con una tessera sola non è una scelta
     const quanti = T.length <= 2 ? 1 : T.length <= 5 ? 2 : 3
     const strutt = T.map((w, i) => i).filter(i => eStruttura(T[i]))
     const altri = T.map((w, i) => i).filter(i => !eStruttura(T[i]))
-    const buchi = [...mescola(strutt, rnd), ...mescola(altri, rnd)].slice(0, quanti).sort((a, b) => a - b)
+    const rivale = extra.length ? extra[0].rivale : null
+    const buchi = [...new Set([...(rivale != null ? [rivale] : []), ...mescola(strutt, rnd), ...mescola(altri, rnd)])]
+      .slice(0, quanti).sort((a, b) => a - b)
     const piu = extra.slice(0, 1).map((e, i) => ({ id: T.length + i, testo: e.testo }))
-    return { ...out,
+    return { ...out, rivale,
              righe: T.map((testo, i) => (buchi.includes(i) ? { buco: buchi.indexOf(i) } : { testo })),
              tessere: mescolaDavvero([...buchi.map(i => tessere[i]), ...piu], rnd), inPiu: piu.length }
   }

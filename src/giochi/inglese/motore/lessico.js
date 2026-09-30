@@ -82,10 +82,13 @@ export function chiaveDi(parola) {
   if (VERBO.has(w)) return 'verbo:' + w
   const f = flessa(w)
   if (f && VERBO.has(f.base)) return 'verbo:' + f.base
+  // bigger, the biggest: la chiave dell'aggettivo
+  if (f && CAT.has(f.base)) return 'en:' + f.base
   return null
 }
 
 const COME_E = { s: '', ing: ' (-ing: adesso)', ed: ' (al passato)', irr: ' (al passato)' }
+const PARAGONE = { er: it => `più ${it}`, est: it => `il più ${it}` }
 
 // Cosa vuol dire una parola toccata. `chiave` è null per le parole di
 // struttura e per i nomi dei personaggi: quelle non hanno SRS.
@@ -104,6 +107,7 @@ export function traduci(parola) {
     const it = IT.get(chiave.slice(3).toLowerCase())
     // «cooks» è il plurale di cook e anche he cooks: si dicono tutti e due
     const f = flessa(w)
+    if (f && PARAGONE[f.come]) return { parola, chiave, it: PARAGONE[f.come](IT.get(f.base)) }
     return { parola, chiave, it: f && f.come === 's' ? `${it} / ${VERBO.get(f.base)}` : it }
   }
   // un verbo flesso si traduce con la sua base
