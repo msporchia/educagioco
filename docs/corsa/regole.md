@@ -102,6 +102,21 @@ correndo è tirare a indovinare.
   male**, e chi tira dritto si confronta solo coi due cancelli normali: se no
   la stella punirebbe chi ha provato.
 
+## Le monete
+
+- **Si pagano quando succede la cosa, e basta** (`PAGA` in
+  `src/data/paghe.js`): 🪙1 a **cancello migliore** preso (lo stesso
+  conto della terza stella: leggere tre numeri e scegliere, un colpo
+  d'occhio), 🪙3 a **libro indovinato** (una domanda vera, a corsa ferma).
+  Anche perdendo, anche nella corsa infinita. Il cartello di fine dice il
+  totale (`[data-monete-prese]`) e quanto ha tolto il salvadanaio
+  (`[data-nota-monete]`).
+- **Niente premio di tappa, niente monete in metri**: c'erano
+  `premio × stelle` a tappa vinta, una moneta ogni sessanta metri nella
+  infinita e i soldati oltre il tetto «che diventano monete». Nessuno dei
+  tre pagava un esercizio; senza, una tappa rende circa due terzi di prima
+  ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
+
 ## La corsa infinita
 
 Si apre finita la campagna: niente traguardo, il punteggio è quanto lontano si

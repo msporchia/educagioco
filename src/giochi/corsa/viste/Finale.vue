@@ -12,6 +12,7 @@ defineProps({
   titolo: { type: String, default: '' },
   stelle: { type: Number, default: 0 },
   monete: { type: Number, default: 0 },
+  notaMonete: { type: String, default: '' },   // il salvadanaio stanco: docs/genitori/varieta.md
   metri: { type: Number, default: 0 },
   truppa: { type: Number, default: 0 },
   vinti: { type: Number, default: 0 },
@@ -55,8 +56,9 @@ defineEmits(['ancora', 'esci'])
         🥇 {{ primato.frase }}
       </p>
       <p v-else-if="primato && primato.frase" data-primato="no">🏁 {{ primato.frase }}</p>
-      <p v-if="monete">+{{ monete }} 🪙</p>
-      <p v-else-if="!vinta">non hai perso niente: la tappa ti aspetta</p>
+      <p v-if="monete" data-monete-prese>+{{ monete }} 🪙</p>
+      <p v-if="notaMonete" data-nota-monete>{{ notaMonete }}</p>
+      <p v-if="!vinta && !libera">non hai perso niente: la tappa ti aspetta</p>
 
       <button class="co-grosso" @click="$emit('ancora')">
         <span class="em">{{ vinta && !libera ? '▶' : '↻' }}</span>

@@ -46,7 +46,6 @@ export class Regole {
     this.studio = t.studio
     this.mira = t.mira
     this.coni = t.coni
-    this.premio = t.premio
   }
 
   get infinita() { return !Number.isFinite(this.metri) }
@@ -79,7 +78,6 @@ export class Partita {
     this.meglio = 0            // quante volte hai preso il migliore dei tre
     this.libriProvati = 0
     this.libriGiusti = 0
-    this.eccesso = 0           // i soldati oltre il tetto, che non entrano in terra
     this.causa = ''
 
     this.offerta = null        // il cancello d'oro appena attraversato
@@ -107,13 +105,6 @@ export class Partita {
     return s
   }
 
-  // i soldati che non entrano più in terra corrono al traguardo e diventano monete
-  get avanzo() { return Math.min(15, Math.floor(this.eccesso / 40)) }
-
-  get monete() {
-    if (this.regole.infinita) return Math.min(20, Math.floor(this.dist / 60)) + this.avanzo
-    return this.vinta ? this.regole.premio * this.stelle + this.avanzo : 0
-  }
 
   segnala(che) { if (this.eventi.length < 60) this.eventi.push(che) }
   svuotaEventi() { const e = this.eventi; this.eventi = []; return e }
@@ -325,13 +316,10 @@ export class Partita {
     }
   }
 
-  // il tetto della truppa: quelli in più non spariscono, si contano a
-  // parte e il cartello di fine li dice
+  // il tetto della truppa: quelli in più restano fuori (diventavano monete,
+  // e non pagavano nessun esercizio: docs/corsa/regole.md)
   applica(n) {
-    const tetto = this.regole.tetto
-    const v = Math.max(0, Math.floor(n))
-    if (v > tetto) { this.eccesso += v - tetto; this.truppa = tetto }
-    else this.truppa = v
+    this.truppa = Math.min(this.regole.tetto, Math.max(0, Math.floor(n)))
   }
 
   // la truppa spara da sola per tutto l'avvicinamento: il numero è la
