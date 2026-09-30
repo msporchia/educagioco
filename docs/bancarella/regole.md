@@ -140,8 +140,11 @@ mestieri per un bambino di otto anni (`generaCliente`, `comePuoPagare`).
 
 - **Un cliente vale da 🪙2 a 🪙4** secondo il lavoro (`MONETE_CLIENTE`:
   `niente` 2 · `totale` 3 · `resto` 3 · `tutto` 4, cioè ~20-40 secondi di
-  esercizio). Una giornata va da 🪙18 a 🪙48. Un cliente che se ne va non
-  paga niente. Provato: il premio legato al livello del bambino — la stessa
+  esercizio), **pagate nel momento in cui è servito** — prima arrivavano a
+  gruppi di tre clienti, e gli ultimi due di una giornata finita a metà non
+  pagavano. Una giornata va da 🪙18 a 🪙48, e a fine giornata il cartello
+  dice il totale (`[data-monete-prese]`) e il salvadanaio stanco
+  (`[data-nota-monete]`). Un cliente che se ne va non paga niente. Provato: il premio legato al livello del bambino — la stessa
   giornata pagava il doppio a chi giocava da più tempo. (Vedi
   [../apprendimento/calibrazione.md](../apprendimento/calibrazione.md).)
 - **Nel motore di apprendimento l'elemento è il pezzo più piccolo che
