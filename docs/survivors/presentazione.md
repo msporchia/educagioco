@@ -32,8 +32,10 @@ rischiando una domanda difficile, o quella debole che si è sicuri di
 indovinare? Un bambino che vuole vincere **sceglie da solo le domande
 difficili**, che è esattamente il punto.
 
-Le monete si prendono in un modo solo: arrivando in fondo a una tappa. Una
-risposta sbagliata non paga mai niente.
+Le monete si prendono in un modo solo: rispondendo giusto, 🪙3 a carta
+vinta, subito, anche nella partita libera e in una tappa che poi si perde.
+A fine tappa non arriva nessun premio in più, e una risposta sbagliata non
+paga mai niente.
 
 ## Si può lasciare a metà, e fermare
 

@@ -7,7 +7,9 @@
 import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { addCoins, segna, segnaBest } from '../../store/profile.js'
+import { segna, segnaBest } from '../../store/profile.js'
+import { borsa } from '../../store/varieta.js'
+import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, stelleDi, completa,
          primatoDi, segnaPrimato } from '../campagne.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
@@ -33,6 +35,10 @@ defineOptions({ name: 'Corsa' })
 const emit = defineEmits(['vai'])
 
 const CHIAVE = 'corsa'
+// le monete di questa corsa: un cancello preso giusto e un libro indovinato pagano
+// quando succedono, a fine corsa si dice solo quante (docs/corsa/regole.md)
+let borsellino = borsa(CHIAVE)
+let cancelliPagati = 0
 const RESPIRO = 700          // quanto si guarda la pista prima del cartello
 
 // dove siamo
@@ -148,6 +154,10 @@ function passo(dt) {
   const bloccato = fermo.value || p.finita || p.inPausa
   if (!bloccato) p.avanza(dt)
   if (p.eventi.length) reagisci(p.svuotaEventi())
+  if (p.meglio > cancelliPagati) {
+    borsellino.paga((p.meglio - cancelliPagati) * PAGA.cancello)
+    cancelliPagati = p.meglio
+  }
 
   // il cancello d'oro: la domanda arriva quando il motore si è fermato,
   // e finché è a schermo la corsa non avanza
@@ -180,6 +190,8 @@ function avvia(indice) {
   contata = false
   mostriSegnati = 0
   cancelliSegnati = 0
+  borsellino = borsa(CHIAVE)
+  cancelliPagati = 0
   if (pittore) prendiTela(pittore.tela)
 }
 
@@ -219,6 +231,7 @@ function risposto({ giusto }) {
   const esito = p?.rispondi(giusto)
   if (!esito) return
   if (giusto) {
+    borsellino.paga(PAGA.domanda)
     segna('corsaLibri')
     brinda(`📚 la truppa passa da ${esito.prima} a ${esito.dopo}!`, true)
   } else {
@@ -247,7 +260,6 @@ function chiudiPartita() {
   if (!p) return
   giostra.ferma()
   let primato = null
-  let monete = p.monete
 
   if (libera.value) {
     // nella corsa infinita non si vince: si dura, e il conto/la frase
@@ -258,11 +270,8 @@ function chiudiPartita() {
     completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle: p.stelle })
     segna('corsaTappe')
     pagata = true
-  } else if (!p.vinta) {
-    monete = 0
   }
 
-  if (monete) addCoins(monete)
   if (!contata) { segna('corsaPartite'); contata = true }
   if (p.vinti > mostriSegnati) { segna('corsaMostri', p.vinti - mostriSegnati); mostriSegnati = p.vinti }
   if (p.cancelli > cancelliSegnati) {
@@ -273,7 +282,8 @@ function chiudiPartita() {
   segnaBest('corsaMetri', Math.floor(p.dist))
 
   finale.value = {
-    vinta: p.vinta, titolo: regoleOra.value.nome, stelle: p.stelle, monete,
+    vinta: p.vinta, titolo: regoleOra.value.nome, stelle: p.stelle,
+    monete: borsellino.dato, notaMonete: borsellino.nota(),
     metri: Math.floor(p.dist), truppa: p.truppa, vinti: p.vinti,
     cancelli: p.cancelli, meglio: p.meglio, libri: p.libriGiusti,
     causa: p.causa, primato, libera: libera.value,

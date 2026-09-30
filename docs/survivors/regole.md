@@ -56,8 +56,16 @@ verso il grumo quando ha un'arma che guarda avanti.
 - **Sbagliando, niente carta.** Provata una monetina di consolazione: era il
   buco più grosso del gioco, perché le monete sono quello che un bambino vuole
   e una moneta per errore è il modo più veloce di farne (nella partita libera
-  era l'unica fonte). Le monete si prendono solo arrivando in fondo a una
-  tappa ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
+  era l'unica fonte).
+- **La carta vinta paga 🪙3, subito** (`PAGA.domanda` in
+  `src/data/paghe.js`): è una domanda che ferma il campo, la domanda vera
+  della calibrazione. Niente premio di tappa (`premio × stelle`, 🪙9–30),
+  niente monete per i secondi della partita libera (una ogni quindici) o
+  per quelli resistiti dopo il traguardo: pagavano il tempo passato a
+  schivare, e il tempo di gioco è il premio, non l'esercizio
+  ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
+  Il cartello di fine dice il totale e quanto ha tolto il salvadanaio
+  (`[data-nota-monete]`).
 
 ## Uscire e riprendere
 
@@ -75,8 +83,8 @@ imparato che di là si esce non deve scoprire che qui no.
 - **Il campo riprende fermo**, e riparte al tocco. Il cartello è il velo della
   pausa ([../core/interfaccia.md](../core/interfaccia.md#la-pausa-una-sola)),
   che qui ha preso il posto di un `inAttesa` scritto a mano.
-- **Dopo il traguardo non si salva più**: stelle e monete sono già contate, e
-  un salvataggio che se lo scorda paga la tappa due volte.
+- **Dopo il traguardo non si salva più**: le stelle sono già contate, e un
+  salvataggio che se lo scorda segna la tappa due volte.
 - **Le tre carte in attesa si salvano per chiave** e si rivestono: ripescarle
   farebbe uscire e rientrare finché non capita un'offerta migliore.
 - **Il ⏸ sparisce** dove il gioco è già fermo dietro un altro velo — le tre

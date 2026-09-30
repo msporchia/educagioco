@@ -375,7 +375,7 @@ for (const i of [0, 8]) {
   const t = CAMPAGNA[0]
   const p = new Partita(new Regole(t), { rnd: caso(5) })
   uguale('a partita in corso nessuna stella', p.stelle, 0)
-  uguale('e nessuna moneta', p.monete, 0)
+  uguale('e il motore non sa niente di monete', 'monete' in p, false)
 }
 
 /* i traguardi: a profilo finito si prendono tutti, a profilo vuoto

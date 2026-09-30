@@ -8,7 +8,9 @@
 import { ref, shallowRef, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { addCoins, segna, segnaBest } from '../../store/profile.js'
+import { segna, segnaBest } from '../../store/profile.js'
+import { borsa } from '../../store/varieta.js'
+import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, stelleDi, completa, sosta, salvaSosta, buttaSosta,
          scelta, ricorda } from '../campagne.js'
 import { usaPausa } from '../pausa.js'
@@ -64,6 +66,7 @@ const tic = ref(0)                 // batte quando cambia qualcosa che si vede
 // la corsa è uno shallowRef: niente computed a mano su quello che sta dentro (vedi viste/occhio.js)
 const dallaCorsa = occhio(corsa, tic)
 let ultimoModulo = null
+let borsellino = borsa(CHIAVE)      // le monete di questa discesa, pagate a ogni risposta giusta
 let pittore = null
 let orologio = 0
 let ultimoAvviso = 0
@@ -120,6 +123,7 @@ function riprendiDiscesa() {
   domanda.value = null
   zainoAperto.value = false
   corsa.value = c
+  borsellino = borsa(CHIAVE)
   ripresa.value = null
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
   nextTick(() => accendi())
@@ -283,6 +287,7 @@ function avvia(i) {
   domanda.value = null
   zainoAperto.value = false
   corsa.value = new Corsa(tappaDi(i), { seme: semeDallIndirizzo(), eroe: chiEro.value || DI_PARTENZA })
+  borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
   pianoDaProva(corsa.value)
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
@@ -373,6 +378,8 @@ function risposto({ giusto }) {
   domanda.value = null
   // rispondere È il tocco che riprende: il freno può essersi acceso durante la domanda
   togli()
+  // una risposta giusta paga subito, nelle discese come nell'abisso: docs/sotterraneo/regole.md
+  if (giusto) borsellino.paga(PAGA.mossa)
   risolvi(giusto)
 }
 
@@ -380,8 +387,6 @@ function risolvi(giusto) {
   const c = corsa.value
   if (!c) return
   const esito = c.rispondi(giusto)
-  // nell'abisso una risposta giusta paga subito, non a fine discesa
-  if (giusto && nellAbisso.value) addCoins(1)
   tic.value++
   salva()
   if (!esito) return
@@ -460,13 +465,11 @@ function chiudi() {
   if (e.tesori) segna('sotTesori', e.tesori)
   segnaBest('sotGemme', e.gemme)
 
-  // l'abisso ha già pagato 🪙1 a ogni risposta giusta (risolvi): qui si mostra soltanto il totale
-  const monete = nellAbisso.value ? e.giuste
-    : e.vinta ? CAMPAGNA[tappaIdx.value].premio * Math.max(1, stelle) : 0
-  if (monete && !nellAbisso.value) addCoins(monete)
+  // niente premio di fine discesa: ogni risposta giusta si è già pagata (risposto), qui si dice il totale
   if (e.vinta) { if (e.svenimenti === 0) segna('sotInteri'); suono.livello() } else suono.fine()
 
-  fine.value = { vinta: e.vinta, titolo: tappaDi(tappaIdx.value).nome, stelle, monete, fatti: e,
+  fine.value = { vinta: e.vinta, titolo: tappaDi(tappaIdx.value).nome, stelle, fatti: e,
+                 monete: borsellino.dato, notaMonete: borsellino.nota(),
                  abisso: nellAbisso.value, record: e.fondo > eraIlFondo }
 }
 

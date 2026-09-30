@@ -80,6 +80,10 @@ leggere una riga. È anche una delle poche cose in questo repertorio che non
 - **Nessuna domanda scritta**, nessun conto: si gioca guardando.
 - **Non si perde**, e le stelle dicono solo quanto è filata liscia: tre
   senza errori, due fino a due, una comunque.
+- **Ogni storia rimessa in ordine vale 🪙2, subito** (`PAGA.storia` in
+  `src/data/paghe.js`), anche al secondo tentativo; a fine tappa non
+  arriva niente di più, e il cartello dice il totale
+  ([la calibrazione](../apprendimento/calibrazione.md)).
 - **Si spegne con «Sequenze e ritmi»**, il pezzo di scuola che dichiara.
 - La sua campagna sta **fra i quattro e i sei anni e mezzo**: più avanti la
   carta non viene più offerta a chi non l'ha mai aperta — vedi

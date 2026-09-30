@@ -373,18 +373,17 @@ controlla('il riassunto conta le stelle',
   finisci(p)                                  // fermo: prima o poi lo prendono
   uguale('fermo con un cuore si perde', p.esito, 'persa')
   uguale('perdere non dà stelle', p.stelle, 0)
-  uguale('perdere non dà monete', p.monete, 0)
   controlla('ma la partita è durata', p.tempo > 0)
 }
 {
-  /* vincere senza farsi toccare vale tre stelle e il premio pieno */
+  /* vincere senza farsi toccare vale tre stelle (le monete no: le paga ogni risposta giusta) */
   const t = CAMPAGNA[0]
   const p = new Partita(new Regole(t), { rnd: caso(13), campo })
   p.tempo = t.durata - 0.01
   p.avanza(1 / 30)
   uguale('allo scadere si vince', p.esito, 'vinta')
   uguale('senza ferite tre stelle', p.stelle, 3)
-  uguale('e le monete sono il premio per le stelle', p.monete, t.premio * 3)
+  uguale('e il motore non sa niente di monete', 'monete' in p, false)
 }
 {
   /* il caso arriva da fuori: due partite con lo stesso seme devono

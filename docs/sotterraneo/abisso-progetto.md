@@ -170,12 +170,10 @@ megabyte per tutta la casa.
 
 ## 5. Il banco dell'abisso e le monete
 
-- **Fatto: 🪙1 per risposta giusta, pagato subito** (`corsa.giuste`,
-  incrementato in `rispondi()` quando `giusto`; mai per una sbagliata). È il
-  tasso di oggi per chi esplora («Il fondo» paga 🪙34 × 3 stelle per un
-  centinaio di domande); `CALIBRAZIONE` direbbe 🪙3, e si alza quando si
-  rifanno i premi di tutti i giochi
-  ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
+- **Fatto: 🪙1 per risposta giusta, pagato subito**, mai per una
+  sbagliata. Quando i premi di tutti i giochi sono passati al «si paga
+  subito» è restato 🪙1, e le sei discese ci sono arrivate anche loro
+  ([regole.md](regole.md#le-monete)).
 - **Il rischio non è la quantità ma la varietà**: ogni cosa costa una
   risposta, quindi un'ora sul piano 19 è un'ora di esercizio. La stessa
   classe ripetuta la sorvegliano già la banda della pesca

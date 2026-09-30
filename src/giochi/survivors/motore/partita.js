@@ -33,7 +33,6 @@ export class Regole {
     this.fretta = t.fretta
     this.rincaro = t.rincaro || 0
     this.squadra = (t.squadra || ['melma']).slice()
-    this.premio = t.premio || 3
     this.cuori = t.cuori || CFG.cuoriIniziali
   }
 
@@ -135,7 +134,6 @@ export class Partita {
   get inPausa() { return this.offerta !== null }
   get alTraguardo() { return this.esito === 'vinta' }
   get stelle() { return this.conquistata ? stellePerFerite(this.feriteVinte) : 0 }
-  get monete() { return this.conquistata ? this.regole.premio * this.stelle : 0 }
   get extra() {
     return this.conquistata && !this.regole.infinita
       ? Math.max(0, this.tempo - this.regole.durata) : 0

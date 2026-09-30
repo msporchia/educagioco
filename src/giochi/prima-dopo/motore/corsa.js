@@ -1,6 +1,6 @@
 // Una tappa è `quante` storie rimesse in fila una dopo l'altra: la Corsa
-// pesca le storie idonee, genera il quesito e tiene il conto di errori
-// e monete. Un errore non fa perdere la storia: `registraErrore()` la
+// pesca le storie idonee, genera il quesito e tiene il conto degli
+// errori (le monete le paga Gioco.vue). Un errore non fa perdere la storia: `registraErrore()` la
 // conta e poi `riprova()` genera un nuovo quesito sulla stessa storia.
 import { STORIE } from '../dati/storie.js'
 import { CHIAVI_VERBI, verbo as datiVerbo } from '../dati/verbi.js'
@@ -29,7 +29,6 @@ export class Corsa {
     this.richieste = tappa.quante
     this.fatte = 0
     this.errori = 0
-    this.monete = 0
     this.recenti = []   // ultime storie proposte, solo per varietà
     this.verbo = null
     this.quesito = null
@@ -74,7 +73,6 @@ export class Corsa {
 
   registraSuccesso() {
     this.fatte++
-    this.monete += 2
   }
 
   avanti() {

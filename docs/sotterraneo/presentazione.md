@@ -73,3 +73,5 @@ piano o correre alla scala.
 - Si può perdere: dopo troppi svenimenti si risale e la discesa si rifà.
   Rispondendo bene otto volte su dieci si arriva in fondo quasi sempre;
   premendo a caso quasi mai.
+- Ogni risposta giusta vale una moneta, subito, anche in una discesa che
+  poi si perde; in fondo non arriva nessun premio in più.

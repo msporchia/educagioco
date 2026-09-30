@@ -70,3 +70,5 @@ posizionale visto per terra, gruppo per gruppo.
   le sue domande si fanno più toste tappa dopo tappa.
 - Una corsa lasciata con «indietro» non si salva: per smettere un attimo c'è
   il ⏸.
+- Le monete arrivano correndo: una a ogni cancello scelto bene, tre a ogni
+  esercizio del cancello d'oro indovinato. In fondo non c'è un premio in più.
