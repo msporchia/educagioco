@@ -5,6 +5,7 @@ defineProps({
   titolo: { type: String, required: true },
   stelle: { type: Number, default: 0 },
   monete: { type: Number, default: 0 },
+  notaMonete: { type: String, default: '' },   // il salvadanaio stanco: docs/genitori/varieta.md
   pozioni: { type: Number, default: 0 },
   perfette: { type: Number, default: 0 },
   maestro: { type: Boolean, default: false },
@@ -22,7 +23,8 @@ defineEmits(['avanti', 'mappa'])
       <div class="pz-punteggio em" data-stelle>{{ '⭐'.repeat(stelle) }}</div>
       <p v-if="maestro">Pesi, lunghezze e liquidi: tutte le conversioni, in tutti e due i versi.</p>
       <p v-else>{{ pozioni }} pozioni consegnate, {{ perfette }} senza uno sbaglio.</p>
-      <p v-if="monete" class="pz-monete" data-monete>+{{ monete }} 🪙</p>
+      <p v-if="monete" class="pz-monete" data-monete data-monete-prese>+{{ monete }} 🪙</p>
+      <p v-if="notaMonete" data-nota-monete>{{ notaMonete }}</p>
       <button v-if="!ultima" class="pz-grosso" data-azione="avanti" @click="$emit('avanti')">
         Tappa dopo ▶
       </button>

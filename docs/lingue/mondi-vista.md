@@ -12,7 +12,7 @@ In `src/giochi/inglese/`, accanto a `dati/` e `motore/`:
 |---|---|
 | `gioco.js` | il manifesto: chiave `inglese`, la stessa della carta di prima |
 | `Gioco.vue` | il coordinatore: sessione, libro, monete, profilo |
-| `dati/monete.js` | quanto paga ogni formato, il libro, la prima vittoria |
+| `dati/monete.js` | quanto paga ogni formato e una domanda del libro |
 | `motore/fila.js` | la fila delle tessere: metti, togli, quando si consegna, quali colorare |
 | `scena/disposizione.js` | dove cade ogni cosa sulla mappa (puro, gira in Node) |
 | `scena/mappa.js`, `scena/pittori.js` | la pergamena e i disegnini, su canvas |
@@ -94,9 +94,10 @@ un tocco si salva il profilo.
 
 ## Le monete
 
-🪙1 = dieci secondi di esercizio, **niente moltiplicatore di livello**,
-tutto passa da `incassa` (quindi dalla varietà), e il cartello di fine
-dice quanto è arrivato davvero.
+🪙1 = dieci secondi di esercizio, **pagate nel momento in cui si risponde
+giusto**, niente moltiplicatore di livello e niente premio d'arrivo; tutto
+passa da `incassa` (quindi dalla varietà), e il cartello di fine dice
+quanto è arrivato davvero.
 
 | cosa | 🪙 | perché |
 |---|---|---|
@@ -104,11 +105,15 @@ dice quanto è arrivato davvero.
 | riconosci, cosa vuol dire, scegli, completa | 2 | leggere una frase e quattro risposte, o due buchi |
 | monta, scegli e monta | 3 | una frase intera messa in fila: una domanda vera |
 | una domanda del libro | 4 | dentro c'è anche la lettura del testo |
-| una tappa vinta la prima volta | 5 | il premio d'arrivo; la 🏁 10 |
 
-Una tappa da diciotto risposte rende ~30 monete in quattro-cinque minuti,
-cioè quello che la calibrazione dice. Il cassetto non ha premio d'arrivo:
-è facoltativo e si rigioca quanto si vuole.
+Una tappa da diciotto risposte rende ~25 monete in quattro-cinque minuti,
+cioè quello che la calibrazione dice. **Il premio d'arrivo non c'è più**
+(🪙5 alla prima vittoria di una tappa, 🪙10 alla 🏁): il proprietario
+vuole la cosa lineare, «appena fai qualcosa per ottenerla, la moneta la
+ottieni» ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
+Nel libro una domanda giusta paga quando si risponde, **se un tocco a
+pagamento non se l'è già mangiata**: ogni parola chiesta toglie la
+prossima domanda che pagherebbe, non quella di prima.
 
 ## Il posto del gioco
 

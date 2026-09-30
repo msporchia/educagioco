@@ -23,6 +23,7 @@
 import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi,
          TELEFONO } from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
+import { CAMPAGNE, premioCliente } from '../../src/data/bancarella.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
@@ -262,7 +263,10 @@ uguale('l\'incasso segnato è quello del banco', p.totals.incasso, giornata.inca
 const chiavi = Object.keys(p.items).filter(k => k.startsWith('bancarella:'))
 controlla('il motore di apprendimento ha visto le fasce del resto', chiavi.length >= 1,
           'nessuna chiave bancarella: nel profilo')
-controlla('ogni tanto arriva una moneta', p.coins > 0, `${p.coins} monete`)
+/* ogni cliente servito paga subito quello che vale la giornata, e a fine
+   giornata non arriva altro (docs/bancarella/regole.md) */
+controlla('ogni cliente servito ha pagato', p.coins >= giornata.serviti * premioCliente(CAMPAGNE[0]),
+          `${p.coins} monete per ${giornata.serviti} clienti`)
 nota('fasce incontrate: ' + chiavi.join(' · ') + ` · ${p.coins} monete guadagnate`)
 
 /* la giornata dopo adesso è aperta */

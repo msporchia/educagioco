@@ -78,8 +78,9 @@ manca, e si riprova.
 Il tempo non è un avversario: una barra che scende sopra un cartello da
 leggere insegna a non leggere. **La tappa si finisce sempre**, e a
 cambiare sono le stelle — tre senza sbagli, due con pochi, una comunque.
-Le monete sono tre per ogni dose azzeccata al primo colpo, e una dose
-sbagliata non paga.
+Le monete sono tre per ogni dose azzeccata al primo colpo, e arrivano
+quando la dose va nel calderone; una dose sbagliata non paga, e a fine
+tappa non c'è un premio in più.
 
 ## Cosa allena
 

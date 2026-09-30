@@ -332,8 +332,8 @@ if (s.finita) segnaVinta(c, id)           // vero la prima volta: il premio gros
 **Il capitolo.** `CAPITOLI` da `dati/capitoli.js`, `capitoliDi(CAPITOLI,
 mondo)`, poi `capitolo(cap)` → `{ titolo, righe: [{ en }], domande: [{
 testo, opzioni: [{ testo, giusta }], giusta }] }`. Un `Tocchi` per tutto il
-capitolo; a fine lettura pagano `domandeCheLPagano(giuste, t.aPagamento)`
-domande.
+capitolo; una domanda giusta paga quando si risponde, finché
+`domandeCheLPagano(giuste, t.aPagamento)` supera quelle già pagate.
 
 Nei test: `unita/inglese-mondi`, senza browser. La vista e i suoi bersagli
 `data-…`: [mondi-vista.md](mondi-vista.md#nei-test).
