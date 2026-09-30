@@ -6,9 +6,10 @@
 // Un mondo: { id, anno (1–5), nome, disegno, insegna, dopo: [id…] (tutti
 //   finiti), dopoUno?: [id…] (basta uno), categorie: [cat di words.js],
 //   verbi?: true (i verbi di data/verbi.js che nessuna tappa insegna vanno
-//   nel suo cassetto), strutture?: [forma…] (quelle dell'anno che non hanno
-//   ancora una tappa di frasi), tappe: [...] }. Un mondo senza tappe è «in
-//   arrivo»: sta sulla mappa ma non si apre.
+//   nel suo cassetto), strutture?: [forma…] (le strutture dell'anno che il
+//   libro sa dalla prima pagina del mondo, prima della loro tappa di
+//   frasi), tappe: [...] }. Un mondo senza tappe è «in arrivo»: sta sulla
+//   mappa ma non si apre.
 // Le tappe si alternano: una di FRASI — { id, nome, disegno, forme: [forma…],
 //   contratta } (una struttura, fatta solo di parole già viste) — viene
 //   subito dopo le tappe di PAROLE che le servono — { id, nome, disegno,
@@ -126,37 +127,55 @@ export const MONDI = [
     ],
   },
   {
-    // solo parole, per ora: le frasi di queste strutture sono in docs/lingue/da-fare.md
     id: 'quarta', anno: 4, nome: 'In quarta', disegno: 'sole',
-    insegna: 'la giornata, i mestieri, i mezzi; poi il presente, la s, does, -ing, l’ora',
-    dopo: ['terza'], categorie: ['t'], strutture: ['presente', 'terza-s', 'ing', 'ora'],
+    insegna: 'what time is it?, I play, she plays, does she play?, I am playing',
+    dopo: ['terza'], categorie: ['t'], strutture: ['presente', 'terza-s', 'does', 'ing', 'ora'],
     tappe: [
       parole('quarta-giornata', 'La giornata', 'sole', 'giornata',
         ['morning', 'afternoon', 'evening', 'night', 'breakfast', 'lunch', 'dinner', 'hour', 'minute',
          'time']),
+      frasi('quarta-ora', 'Che ore sono?', 'clessidra', ['ora'], true),
       parole('quarta-ogni-giorno', 'Ogni giorno', 'torta', 'azioni',
         ['eat', 'drink', 'sleep', 'wash', 'cook', 'play', 'go', 'listen', 'look', 'help']),
+      parole('quarta-sport', 'Sport e musica', 'palla', 'sport',
+        ['tennis', 'basketball', 'piano', 'guitar', 'violin', 'drum', 'trumpet', 'music', 'team']),
+      frasi('quarta-io-gioco', 'Gioco ogni giorno', 'palla', ['presente'], true),
       parole('quarta-mestieri', 'I mestieri', 'coppia', 'mestieri',
         ['teacher', 'doctor', 'farmer', 'cook', 'police officer', 'firefighter', 'pilot', 'nurse',
          'singer']),
+      frasi('quarta-lei-gioca', 'Lei gioca', 'coppia', ['terza-s']),
+      frasi('quarta-does', 'Lui gioca?', 'punto-di-domanda', ['does']),
       parole('quarta-mezzi', 'I mezzi', 'bicicletta', 'mezzi',
         ['bus', 'bike', 'taxi', 'truck', 'ship', 'helicopter', 'tractor', 'scooter', 'motorbike',
          'rocket']),
+      frasi('quarta-adesso', 'Che cosa stai facendo?', 'bicicletta', ['ing']),
       bandiera('quarta-bandiera'),
     ],
   },
   {
     id: 'quinta', anno: 5, nome: 'In quinta', disegno: 'clessidra',
-    insegna: 'i luoghi e i verbi che cambiano; poi was / were e il passato',
-    dopo: ['quarta'], categorie: ['y'], strutture: ['was-were', 'passato', 'passato-ed'],
+    insegna: 'I was, I went, I played, she said, when, going to, bigger than',
+    dopo: ['quarta'], categorie: ['y'],
+    strutture: ['was-were', 'passato', 'passato-ed', 'dire', 'quando', 'going-to', 'paragoni'],
     tappe: [
       parole('quinta-citta', 'In città', 'casetta', 'luoghi',
         ['shop', 'school', 'hospital', 'park', 'station', 'museum', 'bank', 'cinema', 'library', 'zoo']),
+      frasi('quinta-ieri', 'Ieri ero al parco', 'casetta', ['was-were']),
       parole('quinta-fuori', 'Fuori città', 'bicicletta', 'luoghi',
         ['castle', 'bridge', 'airport', 'city', 'village', 'road', 'church', 'market', 'restaurant',
          'farm']),
       parole('quinta-verbi', 'I verbi che cambiano', 'clessidra', 'azioni',
         ['see', 'come', 'make', 'buy', 'find', 'give', 'take', 'win', 'catch', 'throw']),
+      frasi('quinta-andai', 'Sono andato al castello', 'clessidra', ['passato']),
+      frasi('quinta-giocai', 'Ho giocato', 'palla', ['passato-ed']),
+      parole('quinta-parlare', 'Chi parla, chi ride', 'coppia', 'azioni',
+        ['say', 'tell', 'ask', 'speak', 'laugh', 'cry', 'smile', 'know']),
+      frasi('quinta-disse', 'Ha detto ciao', 'coppia', ['dire'], true),
+      frasi('quinta-quando', 'Quando fa freddo', 'sole', ['quando'], true),
+      parole('quinta-come', 'Alto e veloce', 'faccia', 'aggettivi',
+        ['tall', 'fast', 'slow', 'old', 'young', 'strong', 'beautiful', 'difficult', 'easy', 'funny']),
+      frasi('quinta-piu', 'Chi è più alto?', 'faccia', ['paragoni'], true),
+      frasi('quinta-domani', 'Domani andrò', 'bicicletta', ['going-to']),
       bandiera('quinta-bandiera'),
     ],
   },
