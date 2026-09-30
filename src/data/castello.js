@@ -446,18 +446,19 @@ export function partenzaDi(tappa) {
   return Math.max(primeTorri(tappa), pianoDi(tappa).costo - entrate)
 }
 
-// Il minimo: le piazzole che il piano occupa più una, mai meno delle torri
-// offerte (se no la scelta di quale mettere davanti a un'ondata è finta).
-// Sopra, una quota per campagna che cresce col terreno. Vedi taratura.md.
-export const PIAZZOLE = { bosco: 4, sotterraneo: 6, mura: 8, palude: 5 }
-export const PIAZZOLE_PER_INGRESSO = 3
+// Almeno il doppio delle torri del piano e mai meno delle torri offerte;
+// sopra, una quota per campagna. Vedi docs/castello/taratura.md («Le piazzole»).
+export const PIAZZOLE = { bosco: 8, sotterraneo: 12, mura: 14, palude: 12 }
+export const PIAZZOLE_PER_INGRESSO = 4
+export const PIAZZOLE_LIBERE = 20
 export const ingressiDi = t => (t.forme || [t.forma || []]).length
 // Quante difese separate chiede davvero una tappa: non è il numero di
 // bocche. Due strade che restano separate ne chiedono due; due che si
 // fondono ne chiedono meno (`fronti`, dichiarato dalla tappa).
 export const frontiDi = t => t.fronti || ingressiDi(t)
 export function postiDi(tappa) {
-  const minimo = Math.max(3, pianoDi(tappa).torri.length + 1, (tappa.torri || []).length)
+  const piano = pianoDi(tappa).torri.length
+  const minimo = Math.max(2 * piano, piano + 1, 3, (tappa.torri || []).length)
   return Math.max(minimo, PIAZZOLE[tappa.campagna] || 0) +
          (ingressiDi(tappa) - 1) * PIAZZOLE_PER_INGRESSO
 }
@@ -867,7 +868,7 @@ function filaCostruita(tappa, va, copre) {
 export const LIBERE = LIBERE_RACCONTO.map(r => {
   const ultima = ultimaDi(r.campagna)
   const libera = {
-    ...r, ondate: Infinity, posti: 14, cap: 10,
+    ...r, ondate: Infinity, posti: PIAZZOLE_LIBERE, cap: 10,
     torri: ultima.torri, ambiente: ultima.ambiente,
     rami: !!ultima.rami,
     abilita: true, capi: CAPO.ogni,

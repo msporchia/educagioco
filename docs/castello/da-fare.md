@@ -12,10 +12,6 @@ Le voci aperte, con quanto basta per riprenderle.
   carta a mano in `A_MANO` di `src/motore/castello/carta.js`), sapendo che
   una strada nuova vuole `node strumenti/valida-percorsi.mjs` e
   `npm run tara`, perché la vita dei nemici è stata trovata su queste carte.
-- **Due buchi nel Bosco.** Sulla carta il guado e la radura lasciano 63
-  unità di strada che nessuna torre vede, con le loro quattro piazzole (il
-  validatore vuole al massimo 60). La taratura le regge; ridisegnandole, si
-  guardi lì.
 - **Il primo bivio non si spiega.** Dal 29 settembre il bivio dei rami c'è
   anche nel Bosco, dal guado in poi (è la seconda tappa di tutto il gioco):
   il foglio della torre al quarto gradino mostra le due carte con una riga

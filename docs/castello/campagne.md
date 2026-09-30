@@ -65,9 +65,8 @@ file dati; le regole che devono rispettare in [mostri.md](mostri.md).
 - **Le forme sono uno schizzo 0–1, e si gioca sulla carta.** `cartaDi`
   porta lo schizzo su una scacchiera di 12×22 celle — la strada a squadra,
   una cella per passo, uscita dritta dalla bocca ed entrata dritta nel
-  castello — e ci mette le piazzole: celle accanto alla strada, in
-  proporzione alla lunghezza di ogni via, lati alterni, occupate
-  dall'ingresso. Il motore gioca su quella (`sullaCarta`, da `Battaglia`),
+  castello — e ci mette le piazzole, sparse su tutta la strada
+  ([piazzole.md](piazzole.md)). Il motore gioca su quella (`sullaCarta`, da `Battaglia`),
   e così la taratura, il simulatore e i test. La radura grande è l'unica
   carta scritta a mano, cella per cella (`A_MANO`). Le regole della carta
   le tiene `unita/castello-carta`.
@@ -83,8 +82,8 @@ file dati; le regole che devono rispettare in [mostri.md](mostri.md).
   Il raggio va da 86 a 130 unità; una strada che si ripiega si fa battere
   due o tre volte dalla stessa torre. Il validatore la chiama `presidio`
   (strada per postazione, in raggi d'arciere, con le piazzole che la carta
-  ha davvero), e **scende di campagna in campagna**: sulla carta bosco 2,82
-  (perdona), sotterraneo 2,57, mura 2,28. Pavimento `PRESIDIO_MINIMO` 1,85,
+  ha davvero), e **scende di campagna in campagna**: sulla carta bosco 2,78
+  (perdona), sotterraneo 2,52, mura 2,26. Pavimento `PRESIDIO_MINIMO` 1,85,
   scalino fra campagne `SCALINO` 0,12. Le fasce per campagna di lunghezza e
   presidio (`FASCE`) erano la misura con cui si disegnava lo schizzo curvo:
   sulla carta ogni strada esce più lunga e più ripiegata, e non ci sono
@@ -97,9 +96,9 @@ file dati; le regole che devono rispettare in [mostri.md](mostri.md).
 - **Il presidio è una media, e le medie non hanno buchi.** Il validatore
   misura anche il **buco**: il tratto interno più lungo che nessuna torre
   vede, con le piazzole della carta. Al massimo `BUCO_INTERNO` 60 unità; i
-  buchi in testa e in coda non contano. Sulla carta ne sforano due, il
-  guado e la radura del Bosco (63 unità con le loro quattro piazzole):
-  il validatore lo dice, la taratura li regge.
+  buchi in testa e in coda non contano. Con le piazzole sparse su tutta la
+  strada nessuna tappa ne ha più di 12 (la radura del Bosco); con quattro
+  piazzole il guado e la radura ne lasciavano 63.
 
 ## Le regole della carta
 

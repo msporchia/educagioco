@@ -19,7 +19,7 @@ in `LIBERE_RACCONTO` di `src/data/campagne-castello.js`.
   Non si rinominano.
 - **Ognuna eredita dalla sua campagna** tutti i mostri che ci vivono, le
   torri, i rami e l'`ambiente` dell'ultima tappa. Le abilità sono sempre accese, il capo arriva ogni
-  `CAPO.ogni` ondate; il resto è fisso (`posti` 14, `cap` 10, `attesa` 30).
+  `CAPO.ogni` ondate; il resto è fisso (`posti` 20, `cap` 10, `attesa` 30; le piazzole in [piazzole.md](piazzole.md)).
 - **Si aprono tutte insieme a campagna finita.** `LIBERA` è la prima delle
   quattro, per i banchi che ne vogliono una.
 - **Il tracciato è il più intricato del suo mondo**: niente da insegnare, e

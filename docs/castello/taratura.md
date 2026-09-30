@@ -81,32 +81,11 @@ lì a crescere è la difficoltà tattica (le bocche).
   ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
   L'energia ⚡ resta fuori: non si cambia in monete.
 
-## Le piazzole
+## Le piazzole e il campo
 
-- **Le disegna la carta a scacchiera** (`cartaDi` in
-  `src/motore/castello/carta.js`): celle accanto alla strada, in
-  proporzione alla lunghezza di ogni via, lati alterni, occupate
-  dall'ingresso. La tappa dice *quante*; la carta dice *dove*, e il
-  motore gioca su quelle (`sullaCarta`).
-- **Il minimo:** quelle che il piano occupa più una, mai meno di tre né delle
-  torri che la tappa offre — se fossero meno dei tipi, la scelta di quale
-  torre mettere sarebbe finta.
-- **Sopra, una quota per campagna** (`PIAZZOLE`: bosco 4, sotterraneo 6, mura
-  8, palude 5): nel Bosco il campo è stretto apposta, finito lo spazio si
-  impara a salire. Le piazzole in più non spostano i calcoli: il modello non
-  ne approfitta perché salire costa meno che costruire (il test lo ricontrolla
-  tappa per tappa).
-- **+3 per ogni ingresso oltre il primo** (`PIAZZOLE_PER_INGRESSO`): con due
-  strade la difesa va divisa, e la scelta deve restare «dove metto la
-  prossima», non «quale porta lascio aperta».
-- **Le piazzole si occupano dall'ingresso.** Dal castello, con due o tre
-  torri finivano tutte davanti alla porta e il mostro faceva l'85% della
-  strada senza un colpo.
-- **La geometria è equilibrio travestito da disegno**, e per questo nella
-  firma della taratura entra la carta intera — strada a squadra e
-  piazzole di ogni tappa, come le dà `sullaCarta` — e non solo lo schizzo:
-  chi tocca il generatore delle carte o una carta scritta a mano cambia la
-  firma senza doverselo ricordare.
+Quante sono, dove stanno e in che ordine le occupa il giocatore modello:
+[piazzole.md](piazzole.md).
+
 - **Il mondo è uno** (`MONDO`: 420×760, verticale, uguale su ogni schermo):
   cambia solo quanto lo si vede grande. La telecamera sta in
   [`../core/grafica.md`](../core/grafica.md). La scala `S` (1,3) non è a
