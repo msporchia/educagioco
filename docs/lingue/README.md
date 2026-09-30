@@ -9,7 +9,7 @@ tiene anche il gioco libero di chi aveva finito la campagna inglese vecchia.
 - [voce.md](voce.md) — la pronuncia incisa a monte, gli sprite, `npm run voci`
 - [mondi.md](mondi.md) — la campagna a mondi: il progetto (mappa, gradi, formati, trappole, il libro), com'è costruito il motore, l'interfaccia per la vista
 - [mondi-vista.md](mondi-vista.md) — quello che il bambino vede: la mappa del tesoro, le tessere, il libro, la parola da toccare, le monete, il posto della carta e il gioco di prima
-- [da-fare.md](da-fare.md) — cosa manca all'inglese a mondi: la vista, i mondi 3–8, lo spagnolo, le voci
+- [da-fare.md](da-fare.md) — cosa manca all'inglese a mondi: le frasi di quarta e quinta, le parole e le voci, la mappa, lo spagnolo
 
 Vedi anche: [../apprendimento/srs.md](../apprendimento/srs.md) (la forza di
 una parola).

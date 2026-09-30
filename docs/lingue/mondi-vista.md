@@ -35,6 +35,13 @@ In `src/giochi/inglese/`, accanto a `dati/` e `motore/`:
   grado**: a 0 è quasi pergamena, a 10 pieno, e quando la forza cala
   sbiadisce da solo (`sbiadito`). Chiusa: più sbiadita, col lucchetto.
   Vinta: il bordo d'oro, anche se il grado è sceso.
+- **Un mondo «passato» per età** (la scuola gliel'ha già dato, vedi
+  [mondi.md](mondi.md#un-mondo-per-anno-di-scuola)) ha tutte le tappe
+  aperte e sotto il nome la riga «già fatto a scuola: da ripassare». La
+  freccia ◀ di adesso non sta lì ma nel primo mondo che non è passato
+  (`adessoVero` in `viste/Mappa.vue`), e la mappa si apre scorrendo fin
+  lì: un bambino di otto anni non deve ritrovarsi davanti i colori della
+  prima come se fossero la cosa da fare.
 - **I mondi senza tappe** sono un'isola piccola col bordo tratteggiato,
   il loro disegnino (`disegno` del mondo) e «in arrivo».
 - **Il libro e il cassetto** sono due medaglioni piccoli sotto la
@@ -174,12 +181,14 @@ Il gioco è a turni e non ha un orologio: niente ⏸
 Nei test: `unita/inglese-vista` (la fila su ogni frase in tre formati, la
 mappa a 320/390/520 px senza sovrapposizioni, un pittore per ogni disegno,
 le monete, la materia delle frasi), `integrazione/inglese-mondi` (entra,
-passa le parole, compone a tocchi, chiede prima di un tocco che costa col
-dito vero, sbaglia, legge il libro e risponde) e
+fa una tappa di parole e guarda che fra i colori ci siano solo colori,
+compone a tocchi, chiede prima di un tocco che costa col dito vero,
+sbaglia, legge il libro e risponde, e a otto anni trova la prima passata) e
 `integrazione/inglese` (il gioco di prima). Bersagli: la carta
 `.carta.gioco[data-gioco="inglese"]`; la mappa `[data-mappa-inglese]`,
 `[data-tappa="<id>"]` con `[data-stato]` (`aperta`, `chiusa`, `vinta`) e
-`[data-grado]`, `[data-mondo][data-pronto]`, `[data-libro="<mondo>"]`,
+`[data-grado]`, `[data-mondo][data-pronto]` (e `[data-passato="1"]` sul
+nome di un mondo passato per età), `[data-libro="<mondo>"]`,
 `[data-cassetto="<mondo>"]`, `[data-prima]`; la domanda `[data-domanda]`
 con `[data-formato]`, `[data-opzione]` (e `[data-giusta]`), `[data-banco]
 [data-tessera]` con `[data-posto]` (dove va nella frase giusta),

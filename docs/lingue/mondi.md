@@ -1,32 +1,81 @@
 # English a mondi — il progetto
 
-Stato: **i primi due mondi si giocano** (29 settembre 2026): motore, dati e
-vista. La carta English apre la mappa del tesoro; com'è fatta la vista sta in
-[mondi-vista.md](mondi-vista.md), cosa manca in [da-fare.md](da-fare.md).
+Stato: **un mondo per anno di scuola** (30 settembre 2026): prima, seconda e
+terza si giocano per intero, quarta e quinta hanno le tappe di parole e le
+strutture dichiarate. La carta English apre la mappa del tesoro; com'è fatta
+la vista sta in [mondi-vista.md](mondi-vista.md), cosa manca in
+[da-fare.md](da-fare.md).
 
 Sostituisce la campagna in fila di `data/campagna-inglese.js`, dove ogni
 tappa portava 42–73 parole nuove e le frasi arrivavano solo all'undicesima:
 un blocco mnemonico. Lo spagnolo segue dopo, con lo stesso motore.
 
-## I mondi, non una fila
+## Un mondo per anno di scuola
 
 L'inglese non si monta tutto su sé stesso, quindi la campagna è un **grafo di
-mondi** (come Duolingo): ogni mondo insegna un pezzo, e finire certi mondi ne
-apre altri. Proposta di partenza (da rifinire costruendola):
+mondi** (come Duolingo). Il proprietario, dopo averlo provato: «le frasi
+dovrebbero essere un capitolo: prima parole semplici, poi frasi usando
+ovviamente le parole conosciute; ma va considerato il normale percorso
+scolastico, questo ci aiuta anche a piazzare il gioco per età». Quindi
+**l'ordine di fondo è quello della primaria italiana** (inglese dalla prima):
+un mondo per anno, coi contenuti che i libri di testo fanno davvero in
+quell'anno. Il grafo resta un grafo — un mondo può dipendere da due, e
+«basta uno» c'è ancora (`dopoUno`) — ma oggi la fila è dritta.
 
-| mondo | insegna | parole | si apre dopo |
+| mondo | tappe di parole | tappe di frasi | si apre dopo |
 |---|---|---|---|
-| Che cos'è | *it is a …*, *is it …?*, colori, numeri, plurale | animali, colori, 1–10, scuola | — |
-| Io e le mie cose | *I like / I don't like*, *have got / has got*, *this is my* | cibo, famiglia, vestiti, corpo | Che cos'è |
-| Dove? | *there is / there are*, *where is*, in/on/under… | casa, giocattoli | Che cos'è |
-| Cosa sai fare | *can / can't / can you?* | verbi di movimento, sport | Che cos'è |
-| La mia giornata | presente con I/you/we, *at* + ora | giorni, verbi di ogni giorno | Io e le mie cose |
-| Lui e lei | la *s* della terza persona, *does / doesn't* | mestieri, luoghi | La mia giornata |
-| Adesso | *am / is / are + -ing* | mezzi, verbi | La mia giornata |
-| Ieri | *was / were*, passato in *-ed* e irregolari | luoghi, verbi | Lui e lei o Adesso |
+| **In prima** | i colori · i numeri fino a dieci · gli animali · a scuola · i giocattoli | *hello, my name is, how are you?* · *it is a …, is it …?* · *a red ball* · *they are two dogs* · *this is …* | — |
+| **In seconda** | il corpo · la famiglia · il cibo · a pranzo · i vestiti · i numeri fino a venti · come sono (big, happy, hungry…) | *I like / I don't like* · *this is my, he is, I am* · *I have got* · *she has got* | In prima |
+| **In terza** | la casa · i mobili · i giorni · le stagioni e i mesi · gli altri mesi · che tempo fa · i numeri fino a cento · che cosa sai fare (verbi) | *there is / there are* · *where is? in, on, under, behind* · *today is Monday, in May* · *I can / I can't* | In seconda |
+| **In quarta** | la giornata · ogni giorno (verbi) · i mestieri · i mezzi | *da scrivere*: il presente, la *s*, *does / doesn't*, *-ing*, l'ora | In terza |
+| **In quinta** | in città · fuori città · i verbi che cambiano | *da scrivere*: *was / were*, il passato irregolare e in *-ed* | In quarta |
+| La prova finale | — | — | tutti |
 
-Ogni mondo ha poche tappe da **8–10 parole nuove + una struttura**, e una 🏁
-in fondo. In fondo alla mappa c'è la prova finale.
+Rifinito sul programma vero, rispetto alla traccia di partenza:
+
+- **i saluti in prima sono una tappa di frasi, non di parole**: *hello,
+  goodbye, please, thank you* sono sei parole di struttura (categoria `q`),
+  troppo poche per una tappa, e a scuola si imparano come frasi fatte;
+- **big, small e le emozioni in seconda** (*I am happy, are you hungry?*),
+  dove i libri le mettono con *I am* e la famiglia; in prima i colori
+  bastano a fare *a red ball*;
+- **gli animali selvatici non hanno una tappa**: in prima quelli di casa e
+  della fattoria, gli altri nel 📦 cassetto della prima;
+- **i verbi arrivano in terza con *can*** (nuotare, correre, saltare…), che
+  è dove i libri li usano la prima volta, e in quarta quelli di ogni giorno
+  per il presente;
+- **i mestieri in quarta con *he / she* + la *s***, i luoghi in quinta con
+  il passato (*I went to the park*);
+- **i soldi della quinta non ci sono ancora**: *money, coin, price, cheap,
+  expensive* non sono in `data/words.js` (vedi [da-fare.md](da-fare.md)).
+
+**Dentro un mondo: prima le tappe di parole, poi quelle di frasi, poi la
+🏁.** Una tappa di parole ha **8–10 parole di un argomento solo**, col nome
+dell'argomento: «I colori» sono solo colori (`dati/argomenti.js`). Una tappa
+di frasi ha **una struttura** (a volte due forme della stessa, *it is / is
+it*) e **nessuna parola nuova**: le sue frasi usano solo parole già viste
+nelle tappe di parole di quel mondo o dei mondi prima, e ognuna contiene
+almeno un **segno** della struttura (`segni` in `dati/forme.js`: una frase di
+«C'è» dice *there*). La 🏁 ripassa tutto il mondo, e il capitolo del libro
+usa solo quello che il mondo ha insegnato.
+
+**L'età.** Ogni tappa porta la sua `portata` dall'anno di scuola (l'anno n
+va da 12,5·(n+1) a 12,5·(n+2), cioè dai 5+n ai 6+n anni, sulla scala di
+[../apprendimento/eta-e-portata.md](../apprendimento/eta-e-portata.md)), e
+nessuno la scrive a mano: la mette `portate()` in `dati/mondi.js`
+spargendo le tappe dentro l'anno. La carta English la legge come quella di
+ogni gioco (`TAPPE_DEL_GIOCO.inglese` in `data/portata-giochi.js`), e il
+manifesto non dice più `grandi`: il primo mondo è la prima elementare. **Chi
+è più grande trova i mondi degli anni già fatti «passati»**: un mondo le cui
+tappe stanno tutte sotto la mira dell'età (`miraDi` di `data/portata.js`, la
+stessa di ogni campagna) è aperto per intero — bandiera, libro e cassetto
+compresi — da ripassare quando vuole, **non è vinto**, e apre il mondo dopo
+come se fosse finito. A otto anni è passata la prima, a dieci anche seconda
+e terza. Il passato si decide sul mondo intero e non tappa per tappa: metà
+mondo aperto per età e metà no sarebbe un mondo che non si capisce.
+Perché non con `scuola:` come le tabelline: quel campo vuole un sapere di
+`data/saperi.js` da spegnere, e «l'inglese della prima» non è una cosa che un
+genitore spegne; qui l'anno è già nel dato.
 
 **La mappa è una mappa del tesoro**: il grafo come quello della mappa del
 sotterraneo, su filigrana di pergamena, sentieri tratteggiati, e per ogni
@@ -43,6 +92,18 @@ voci più deboli prima), non da capo. Un grado calato non richiude niente.
 Le parole dei dati che non entrano in nessuna tappa stanno nel **📦 cassetto**
 del mondo della loro categoria: facoltativo, si apre a tappa vinta, e si gioca
 coi formati delle parole di oggi. Nessuna chiave sparisce.
+
+**Le risposte sbagliate di una domanda su una parola vengono dal suo
+argomento**, mai da tutta la lingua: prima le altre parole della tappa, poi
+il resto dell'argomento, poi gli argomenti `vicini` (i giocattoli prendono
+in prestito dallo sport). Era il difetto trovato giocando: `compagne()` di
+`data/lessico.js` allarga a tutta la lingua quando la categoria è piccola, e
+fra i colori usciva 🔴 in mezzo a 🏥🐶📓. Chi fa la domanda passa le `fonti` a
+`componi()` di `data/domande.js` (`fontiDi` in `motore/grafo.js`); il
+cassetto, che non ha un argomento, tiene i distrattori di sempre. Un
+argomento può dire `figure: false`: le emoji delle emozioni (happy, sad,
+tired) sono tutte della stessa famiglia visiva e una domanda con le figure
+avrebbe due risposte.
 
 ## I formati, decisi dalla forza
 
@@ -81,11 +142,25 @@ trappole: una scrittura, tutti i formati.
 Una frase componibile ha: `id`, mondo e tappa, `forma` (la struttura), `it`,
 `en`, `varianti` accettate, `trappole` a mano, `niente` (regole da non
 applicare perché qui darebbero una frase giusta). Le frasi di oggi tengono il
-loro `id` (è la chiave SRS).
+loro `id` (è la chiave SRS). Una riga della tabella può valere solo per
+certe forme (`soloForme`): *in/on* è un errore di mesi in «Oggi è lunedì» e
+di posto in «Dov'è?», e le due spiegazioni sono diverse.
+
+**Una trappola sbaglia per il motivo che dice, e per nessun altro.** Le
+parole vicine si generavano senza guardare il numero: «I have got a
+trousers», «has she got a big hair», «it is a orange ball». Adesso la parola
+vicina rifà l'articolo (*an orange*), non mette una cosa che non si conta o
+già plurale dopo *a* (`NON_CONTABILI` in `motore/lessico.js`), e al posto di
+una che non si conta ne mette una al plurale («I like milk» → «I like
+apples»). Lo controlla per ogni frase e ogni trappola `sgrammaticata()` di
+`motore/grammatica.js`: *a/an* giusti, niente *a* davanti a un plurale o a
+una cosa che non si conta, il plurale dopo un numero. Le righe che sbagliano
+apposta proprio questo (`a-an`, `plurale-senza-s`) stanno in `APPOSTA`.
 
 La chiave **`forma:<id>`** registra le risposte sulla struttura: una forma
 debole fa uscire più spesso la sua trappola e ripesca le sue frasi nei mondi
-dopo. Una frase composta giusta conta come ripasso delle sue parole **già
+dopo — **solo nelle tappe di frasi e nella 🏁**, dove si ripassano le frasi;
+una tappa di parole fa solo parole. Una frase composta giusta conta come ripasso delle sue parole **già
 scadute** (solo quelle). Uno sbaglio su una parola vicina pesa sulla parola,
 uno di grammatica sulla frase e sulla forma.
 
@@ -135,9 +210,24 @@ del sotterraneo (`docs/apprendimento/la-domanda.md`).
 
 ## Chi ha già giocato
 
-Riparte da zero nella fila nuova, ma **le parole sapute restano sapute**: le
-chiavi `en:` e `frase:` non si rinominano, quindi le prime tappe le passa in
-fretta. Il gioco libero resta a chi l'aveva: «Il gioco di prima», in fondo
+**Le parole sapute restano sapute**: le chiavi `en:`, `verbo:`, `frase:` e
+`forma:` non si rinominano, e le frasi dei primi due mondi di prima che
+stanno ancora in piedi hanno tenuto il loro `id`. Le tappe invece hanno
+cambiato `id` (da `che-cose-1` a `prima-animali`), e l'avanzamento si
+travasa con una regola sola (`motore/travaso.js`): **una tappa nuova nasce
+vinta se tutto quello che insegna era in tappe vinte** — una di parole se
+ogni sua parola c'era, una di frasi se c'era la sua struttura, la 🏁 se tutto
+il resto del suo mondo è vinto. Chi aveva finito i due mondi di prima trova
+vinte sedici tappe su ventitré della prima e della seconda; restano da fare
+quelle con dentro qualcosa di nuovo (i colori, perché ci sono orange e
+purple; i giocattoli; i saluti; i numeri fino a venti; come sono) e le due
+bandiere. Cosa insegnavano le tappe vecchie sta fermo in `dati/travaso.js`,
+le chiavi vecchie restano in `vinte` (niente si butta) e non si contano più
+(`quanteVinte`). Il travaso gira all'apertura del gioco ed è idempotente; il
+riassunto della home lo applica già in lettura. Alcune frasi dei mondi di
+prima non ci sono più, perché usavano parole che adesso arrivano dopo (*frog,
+sheep, elephant, monkey, big* in prima): le loro chiavi restano nel
+profilo, e tornano se una frase le riprende. Il gioco libero resta a chi l'aveva: «Il gioco di prima», in fondo
 alla mappa, per chi aveva finito la campagna vecchia. La campagna vecchia è un
 indice in `p.eng` e non si tocca; la nuova sta sotto un nome suo
 (`campagne.inglese`), quindi un travaso non serve ([mondi-vista.md](mondi-vista.md#il-posto-del-gioco)).
@@ -176,8 +266,10 @@ sono tabelle, `motore/` gira in Node e non sa di monete né di schermo.
 
 | file | cosa tiene |
 |---|---|
-| `dati/mondi.js` | il grafo: i nove mondi, le tappe dei primi due, le categorie dei cassetti, `CHIAVE` |
-| `dati/forme.js` | le strutture (`forma:<id>`): parole di struttura e «Si fa così» |
+| `dati/mondi.js` | il grafo: un mondo per anno, le tappe (parole, frasi, 🏁), le categorie dei cassetti, la portata, `CHIAVE` |
+| `dati/argomenti.js` | gli argomenti delle tappe di parole: quali parole, i vicini, `figure` |
+| `dati/forme.js` | le strutture (`forma:<id>`): parole di struttura, `segni` e «Si fa così» |
+| `dati/travaso.js` | cosa insegnavano le tappe di prima, per il travaso |
 | `dati/trappole.js` | la tabella degli errori tipici, una riga per errore |
 | `dati/frasi/<mondo>.js` | le frasi componibili di un mondo (elencate in `dati/frasi.js`) |
 | `dati/capitoli/<mondo>.js` | un capitolo del libro per file (raccolti da `dati/capitoli.js`) |
@@ -185,19 +277,21 @@ sono tabelle, `motore/` gira in Node e non sa di monete né di schermo.
 | `dati/contrazioni.js`, `dati/glossario.js` | forma lunga ↔ contratta; le parole di struttura toccate |
 | `motore/testo.js` | parole, contrai/espandi, `accetta`, la fila in bella |
 | `motore/lessico.js` | che cos'è una parola (nome, colore, pronome…), plurali, `traduci` |
-| `motore/grafo.js` | mondi garantiti, parole note a una tappa, voci di una tappa, cassetto |
+| `motore/grafo.js` | mondi garantiti, parole note a una tappa, voci di una tappa, l'argomento di una parola (`fontiDi`, `gruppoDi`), cassetto |
+| `motore/grammatica.js` | `sgrammaticata`: a/an, cose che non si contano, plurale dopo un numero |
+| `motore/travaso.js` | le tappe vinte di prima diventano tappe vinte di adesso |
 | `motore/trappole.js` | le operazioni della tabella, `trappoleDi`, `scegliTrappole` |
 | `motore/formati.js` | da una frase tutti i formati (`costruisci`) e il giudizio (`giudica`) |
 | `motore/grado.js` | il grado 0–10 e `ripresa` |
 | `motore/sessione.js` | una partita a una tappa, alla 🏁 o al cassetto |
 | `motore/tocchi.js` | la parola da toccare |
-| `motore/mappa.js` | aperto, vinto, finito; `statoMappa` |
+| `motore/mappa.js` | aperto, vinto, finito, passato per età; `statoMappa` |
 | `motore/libro.js` | il libro: variabili, rami, domande |
 | `motore/guasti.js` | i controlli su ogni frase e ogni capitolo |
 
 Lo script `node strumenti/inglese/banchi.mjs` stampa i banchi: tutte le
-frasi, un mondo (`che-cose`), una tappa, una frase (`m-pen`), o i capitoli
-in tutte le varianti (`--capitoli`, `--capitolo=il-picnic --max=20`).
+frasi, un mondo (`terza`), una tappa (`terza-c-e`), una frase (`m-pen`), o i
+capitoli in tutte le varianti (`--capitoli`, `--capitolo=il-picnic --max=20`).
 
 ## Le scelte prese costruendolo
 
@@ -244,32 +338,47 @@ stava in piedi nel codice, si è presa la variante più vicina:
 - **Contratta o lunga lo dice la tappa** (`contratta: true`), non la
   struttura: la prima tappa di una forma è lunga, le dopo contratte. Le
   frasi nei dati sono sempre lunghe.
+- **Le parole vicine sono dello stesso gruppo**: l'argomento della tappa
+  che le insegna (i giorni con i mesi, non con *morning*), se no la
+  categoria; un verbo si scambia con un verbo, e uno sbaglio lì pesa sul
+  verbo (`verbo:`).
+- **Una tappa di frasi comincia dalle parole che non sa ancora**: chi
+  arriva da un mondo passato per età non ha giocato le tappe di parole, e
+  una frase entra solo quando le sue parole sono sapute. Il primo giro
+  passa fino a otto parole delle sue frasi con forza sotto 1 (`RISCALDO`),
+  che non entrano nel grado della tappa.
 - **Il «?» nelle opzioni inglesi non c'è** (la regola di
   [vocaboli.md](vocaboli.md): la domanda si riconosce dall'ordine); lo
   mette la fila composta, con la maiuscola (`inBella`, `rigaInBella`).
 - **Il mondo da cui una parola degli elenchi è nota non si scrive**: lo
   ricava il grafo (`paroleNote`), così una parola che entra in una tappa
   arriva da sola a tutti i capitoli che la possono pescare.
-- **I mondi 3–9 sono già nel grafo, senza tappe**: la mappa li può
-  disegnare «in arrivo» e le categorie di `words.js` hanno già il loro
-  cassetto. Scelte: gli aggettivi (`j`) a «Che cos'è», sport e giocattoli
-  (`g`) e i verbi a «Cosa sai fare», natura (`w`) e mezzi (`t`) ad
-  «Adesso»; le parole di struttura (`q`) non hanno cassetto. «Lui e lei o
-  Adesso» si scrive `dopoUno`, e le parole note dopo un «o» sono quelle
-  comuni ai due rami. La prova finale è un mondo (`prova-finale`).
-- **Il cassetto si apre alla prima tappa vinta del mondo.**
+- **I cassetti per anno**: animali, colori, scuola e giochi (`a c s g`) in
+  prima; corpo, persone, cibo, vestiti e aggettivi (`b k f p j`) in
+  seconda; casa, calendario, natura e numeri (`h d w n`) in terza, coi
+  verbi; mezzi (`t`) in quarta, luoghi (`y`) in quinta. Le parole di
+  struttura (`q`) non hanno cassetto. Una categoria sta in un mondo solo,
+  anche quando le sue tappe sono sparse su tre anni (i numeri). La prova
+  finale è un mondo (`prova-finale`), senza tappe.
+- **Quarta e quinta hanno solo le parole**: le tappe di parole, la 🏁 e le
+  strutture dell'anno dichiarate in `strutture` (il controllo pretende o le
+  tappe di frasi o la dichiarazione). Non hanno ancora un capitolo.
+- **Il cassetto si apre alla prima tappa vinta del mondo** (o col mondo passato per età).
 - **Il grado** è `floor(10 × media(min(forza, 4) / 4))` su parole, frasi e
   forma della tappa; la 🏁 fa la media di tutto il mondo.
 - **La sessione**: il primo giro passa le parole una volta, dalla più
   debole; poi pesca col picker di `store/srs.js`, e una frase entra solo
   quando ogni sua parola è già saputa (forza ≥ 1) o è stata indovinata in
   quella partita (`pronta`). Finisce a `min(20, voci + 4)` risposte giuste, e
-  sbagliando non si perde niente. Alla 🏁 il primo giro è di 16. Tre frasi
-  di una forma debole (forza < 2) dei mondi già fatti entrano nel giro.
+  sbagliando non si perde niente. Alla 🏁 il primo giro è di 16. In una tappa
+  di frasi e alla 🏁, tre frasi di una forma debole (forza < 2) dei mondi
+  già fatti entrano nel giro; in una tappa di parole mai.
 - **Gli `id` nuovi cominciano con `m-`**; dove la frase c'era già in
   `data/frasi.js` si è tenuto il suo `id`, e il test pretende che sia la
   stessa frase (`e-cat-1`, `d-like-pizza`, `e-have-dog`…).
-- **La portata delle tappe** (12–23) è scritta ma nessuno la legge ancora.
+- **La portata delle tappe** la mette l'anno (25–36 la prima, 38–49 la
+  seconda, 50–61 la terza, 63–74 la quarta, 75–86 la quinta), la legge la
+  carta e decide i mondi passati.
 
 ## Il libro: il formato di un capitolo
 
@@ -306,11 +415,13 @@ domanda nuovo è una voce di `TIPI_DOMANDA` in `motore/libro.js`.
 Tutto puro; la vista tiene lo stato reattivo e scrive il profilo.
 
 **La mappa.** `c = progresso(CHIAVE)` (da `giochi/campagne.js`), poi
-`statoMappa(c, forzaDi)` → per mondo `{ id, nome, insegna, dopo, dopoUno,
-pronto, aperto, finito, tappe: [{ id, nome, disegno, bandiera, aperta,
-vinta, grado }], cassetto: { aperto, chiavi } }`, con `forzaDi =
-strengthOf` di `store/profile.js`. `disegno` è il nome del disegnino della
-tappa per i pittori.
+`travasa(c)` (e se torna vero si salva), poi `statoMappa(c, forzaDi, { tutto,
+eta })` → per mondo `{ id, anno, nome, insegna, dopo, dopoUno, pronto,
+aperto, finito, passato, tappe: [{ id, nome, disegno, bandiera, frasi,
+aperta, vinta, grado }], cassetto: { aperto, chiavi } }`, con `forzaDi =
+strengthOf` di `store/profile.js`, `tutto` = `tuttoAperto()` ed `eta` =
+`etaDelBambino()`. `disegno` è il nome del disegnino della tappa per i
+pittori.
 
 **Una partita.**
 ```js
@@ -344,5 +455,11 @@ testo, opzioni: [{ testo, giusta }], giusta }] }`. Un `Tocchi` per tutto il
 capitolo; una domanda giusta paga quando si risponde, finché
 `domandeCheLPagano(giuste, t.aPagamento)` supera quelle già pagate.
 
-Nei test: `unita/inglese-mondi`, senza browser. La vista e i suoi bersagli
+Nei test: `unita/inglese-mondi`, senza browser: oltre ai controlli di ogni
+frase e capitolo, i difetti trovati giocando resi impossibili in generale
+(una tappa di parole ha solo parole del suo argomento e le risposte
+sbagliate vengono da lì; una frase usa solo parole note e un segno della
+sua struttura; nessuna trappola sgrammaticata per caso; niente frasi
+ripescate in una tappa di parole), l'anno e la portata, i mondi passati e
+il travaso. La vista e i suoi bersagli
 `data-…`: [mondi-vista.md](mondi-vista.md#nei-test).

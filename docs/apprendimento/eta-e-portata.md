@@ -102,5 +102,10 @@ senso, a sei «7×8» nemmeno, a otto vanno bene tutti e due.
   toglie a chi c'è.
 - **I giochi senza campagna** (la fattoria) non si giudicano: l'assenza
   vuol dire «non si giudica», non «si nasconde».
+- **L'inglese a mondi ha la portata dall'anno di scuola** (un mondo per
+  anno, dalla prima): nessuno la scrive a mano, e i mondi che stanno tutti
+  sotto la mira nascono «passati», aperti da ripassare e non vinti. Non
+  passa da `scuola:` perché non c'è un sapere da spegnere; il perché sta in
+  [../lingue/mondi.md](../lingue/mondi.md#un-mondo-per-anno-di-scuola).
 
 Nei test: `unita/portata`, `unita/partenze`.
