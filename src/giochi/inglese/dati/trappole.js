@@ -8,6 +8,8 @@
 // cosa con i mesi e un'altra con i mobili).
 // Un errore nuovo che somiglia a uno che c'è è una riga; uno di specie
 // nuova è un'operazione nuova. Vedi docs/lingue/mondi.md.
+import { PASSATI } from './passati.js'
+
 // Le gemelle di grammatica: se la frase ne usa una, le altre sono le tessere
 // di troppo che contano (I am / I is, my / your). Solo scambi che cambiano
 // davvero la frase: niente this / it o a / the, che in italiano si somigliano.
@@ -107,8 +109,7 @@ export const TRAPPOLE = [
     perche: 'Dopo does il verbo va senza s: does {chi} {verbo}',
     esempio: ['does he like fish', 'does he likes fish'] },
   { id: 'passato-in-ed', fa: 'passatoInEd', forma: 'passato',
-    con: { irregolari: { went: 'go', saw: 'see', ate: 'eat', ran: 'run', swam: 'swim',
-                         had: 'have', made: 'make', came: 'come', drank: 'drink', sang: 'sing' } },
+    con: { irregolari: PASSATI },
     perche: '{base} al passato fa {giusto}, non {sbagliato}',
     esempio: ['I went to school', 'I goed to school'] },
 ]

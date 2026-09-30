@@ -1,6 +1,6 @@
-// Il capitolo del mondo «In seconda»: racconta Laura. Otto frasi, tre
-// domande — una su una frase, una su due frasi, una a cui il testo a volte
-// non risponde. Formato in docs/lingue/mondi.md.
+// In seconda, alla 🏁: racconta Laura. Due pagine, tre domande — una su
+// una frase, una su due frasi, una a cui il testo a volte non risponde.
+// Formato in docs/lingue/libro.md.
 export default {
   id: 'il-picnic',
   mondo: 'seconda',
@@ -13,14 +13,18 @@ export default {
     piace: { fra: [true, false] },
     cane: { fra: [true, false] },
   },
-  frasi: [
-    { en: 'I am Laura. This is my brother, Leo.', forma: 'this-is-my' },
-    { en: 'He has got {a:colore} hat.', forma: 'has-got' },
-    { en: 'I have got {quanti} {cibo.pl}. I like {cibo.pl}!', forma: 'have-got' },
-    { en: 'Do you like {cibo.pl}, Leo?', forma: 'i-like' },
-    { se: v => v.piace, en: 'Yes, I do!', forma: 'i-like' },
-    { se: v => !v.piace, en: 'No, I do not. I like {altro}.', forma: 'i-like' },
-    { se: v => v.cane, en: 'This is my dog, Pip. He has got big ears.', forma: 'this-is-my' },
+  pagine: [
+    [
+      { en: 'I am Laura. This is my brother, Leo.', forma: 'this-is-my' },
+      { en: 'He has got {a:colore} hat.', forma: 'has-got' },
+      { en: 'I have got {quanti} {cibo.pl}. I like {cibo.pl}!', forma: 'have-got' },
+    ],
+    [
+      { en: 'Do you like {cibo.pl}, Leo?', forma: 'i-like' },
+      { se: v => v.piace, en: 'Yes, I do!', forma: 'i-like' },
+      { se: v => !v.piace, en: 'No, I do not. I like {altro}.', forma: 'i-like' },
+      { se: v => v.cane, en: 'This is my dog, Pip. He has got big ears.', forma: 'this-is-my' },
+    ],
   ],
   domande: [
     { testo: 'Di che colore è il cappello di Leo?', risposta: v => v.colore.it },

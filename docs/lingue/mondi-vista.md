@@ -55,9 +55,11 @@ In `src/giochi/inglese/`, accanto a `dati/` e `motore/`:
 - **I mondi senza tappe** sono un'isola piccola col bordo tratteggiato,
   il loro disegnino (`disegno` del mondo) e «in arrivo».
 - **Il libro e il cassetto** sono due medaglioni piccoli sotto la
-  bandiera. Il libro si apre con la bandiera (quando si può giocare la
-  🏁): il capitolo usa tutte le strutture del mondo. Il cassetto si apre
-  alla prima tappa vinta, come dice il motore.
+  bandiera. Il libro si apre appena c'è una storia da leggere nel mondo —
+  la prima si apre a metà isola ([libro.md](libro.md#quando-si-apre)) —, e
+  toccato apre la prossima: la prima non letta, o la letta da più tempo.
+  Chiuso, il cartiglio dice quale tappa vincere. Il cassetto si apre alla
+  prima tappa vinta, come dice il motore.
 - **Dove si è arrivati lo dice la nave**, non più una freccia: vedi «La
   nave» qui sotto. La mappa si apre scorrendo fino a lei.
 - I nomi e i tasti sono HTML sopra la tela, negli stessi punti: il canvas
@@ -183,12 +185,25 @@ Al posto della freccia c'è **una caravella** a inchiostro e acquerello
 
 ## Il libro
 
-Il capitolo si legge **di seguito, come prosa**, con la tipografia di un
-libro (serif, 19–22 px, capolettera): le frasi di un capitolo sono un
-racconto, e una riga per frase lo faceva sembrare un esercizio. Poi le
-domande in italiano, una alla volta, col testo sempre sopra (ridotto e
-scorrevole): rileggere è lecito. Le sbagliate non si spiegano — «rileggi il
-testo qui sopra» — perché la risposta è nel testo.
+Una storia si legge **una pagina alla volta, di seguito, come prosa**, con
+la tipografia di un libro (serif, 19–22 px, capolettera sulla prima
+pagina): le frasi sono un racconto, e una riga per frase lo faceva
+sembrare un esercizio.
+
+- **Si sfoglia con due tasti grandi**, ← e →, con «pagina 2 di 4» in
+  mezzo; «Ho letto →» c'è solo all'ultima pagina, sotto le frecce e non al
+  loro posto, così un doppio tocco sulla freccia non chiude la lettura.
+  Niente strisciata: i tasti bastano, e una strisciata su un testo che si
+  tocca parola per parola ruberebbe tocchi. Una storia di una pagina non
+  ha frecce.
+- **Le domande** in italiano, una alla volta, col testo sempre sopra
+  (ridotto e scorrevole) **e le frecce ancora lì**: rileggere è lecito,
+  anche tornando indietro di pagina. Le sbagliate non si spiegano —
+  «rileggi la storia, anche sfogliando» — perché la risposta è nel testo.
+- **Il cartello di fine** ha «Un’altra storia →» accanto a «La mappa»,
+  quando c'è un'altra storia da offrire (`unAltraStoria`). La nuova si apre
+  nello stesso componente, quindi `Libro.vue` riparte dalla prima pagina
+  da sé (un `watch` sulla storia).
 
 ## La parola da toccare
 
@@ -233,7 +248,7 @@ quanto è arrivato davvero.
 | una parola | 1 | un colpo d'occhio, come un asteroide |
 | riconosci, cosa vuol dire, scegli, completa | 2 | leggere una frase e quattro risposte, o due buchi |
 | monta, scegli e monta | 3 | una frase intera messa in fila: una domanda vera |
-| una domanda del libro | 4 | dentro c'è anche la lettura del testo |
+| una domanda del libro | 4, 5 da quattro pagine | dentro c'è anche la lettura del testo ([libro.md](libro.md#le-monete)) |
 
 Una tappa da diciotto risposte rende ~25 monete in quattro-cinque minuti,
 cioè quello che la calibrazione dice. **Il premio d'arrivo non c'è più**
@@ -285,12 +300,15 @@ sentieri e titolo; la stessa isola ricalcolata da capo e a ogni punto del
 gioco; forme diverse per mondi diversi; isole che non si toccano; rotte in
 mare; un attracco in mare accanto a ogni tappa, e da ognuno la nave arriva
 a ogni altro in meno di 1,5 s; dove sta la nave e cosa serve),
+`unita/inglese-libro` (le storie, vedi [libro.md](libro.md#si-controlla-da-sé)),
 `integrazione/inglese-mondi` (entra, la nave è ancorata, una tappa chiusa
 dice cosa serve, fa una tappa di parole e guarda che fra i colori ci siano
 solo colori, la nave naviga fino alla tappa, compone a tocchi, chiede prima
 di un tocco che costa col dito vero, sbaglia, un tocco chiude il viaggio,
-legge il libro e risponde, e a otto anni trova la prima passata con la
-nave nella seconda; con `--scatti` anche la tela intera a 390 e a 320 px) e
+il libro chiuso dice quale tappa vincere, il libro apre la storia non
+letta e risponde, la storia è letta, «Un'altra storia» ne apre un'altra
+che si sfoglia anche durante le domande, e a otto anni trova la prima
+passata con la nave nella seconda; con `--scatti` anche la tela intera a 390 e a 320 px) e
 `integrazione/inglese` (il gioco di prima). Bersagli: la carta
 `.carta.gioco[data-gioco="inglese"]`; la mappa `[data-mappa-inglese]`,
 `[data-tappa="<id>"]` con `[data-stato]` (`aperta`, `chiusa`, `vinta`),
@@ -309,5 +327,8 @@ l'indicatore `[data-paga][data-paga-si="1"|"0"]`, la parola
 `[data-parola]` e la nuvoletta `[data-traduzione]`; la domanda prima del
 tocco `[data-svela]` (con `[data-pronta]`) e i suoi
 `[data-azione="svela-si"|"svela-no"]`; il libro
-`[data-libro-testo]`, `[data-azione="ho-letto"]`, `[data-libro-domanda]`;
-il cartello `[data-fine]` con `[data-azione="mappa"|"avanti"|"ancora"]` (dopo una tappa si può rigiocarla).
+`[data-libro-testo]` con `[data-pagina]` e `[data-pagine]`,
+`[data-azione="pagina-indietro"|"pagina-avanti"]`, `[data-pagina-di]`,
+`[data-azione="ho-letto"]`, `[data-libro-domanda]`; il cartello
+`[data-fine]` con `[data-azione="mappa"|"avanti"|"ancora"]` («Un’altra
+storia» nel libro, «Rigioca» dopo una tappa).

@@ -1,10 +1,10 @@
 # English a mondi — il progetto
 
 Stato: **un mondo per anno di scuola** (30 settembre 2026): prima, seconda e
-terza si giocano per intero, quarta e quinta hanno le tappe di parole e le
-strutture dichiarate. La carta English apre la mappa del tesoro; com'è fatta
-la vista sta in [mondi-vista.md](mondi-vista.md), cosa manca in
-[da-fare.md](da-fare.md).
+terza si giocano per intero, quarta e quinta hanno le tappe di parole, le
+strutture dichiarate e il loro libro. La carta English apre la mappa del
+tesoro; com'è fatta la vista sta in [mondi-vista.md](mondi-vista.md), il
+libro in [libro.md](libro.md), cosa manca in [da-fare.md](da-fare.md).
 
 Sostituisce la campagna in fila di `data/campagna-inglese.js`, dove ogni
 tappa portava 42–73 parole nuove e le frasi arrivavano solo all'undicesima:
@@ -61,8 +61,8 @@ di frasi ha **una struttura** (a volte due forme della stessa, *it is / is
 it*) e **nessuna parola nuova**: le sue frasi usano solo parole già viste
 nelle tappe di parole di quel mondo o dei mondi prima, e ognuna contiene
 almeno un **segno** della struttura (`segni` in `dati/forme.js`: una frase di
-«C'è» dice *there*). La 🏁 ripassa tutto il mondo, e il capitolo del libro
-usa solo quello che il mondo ha insegnato.
+«C'è» dice *there*). La 🏁 ripassa tutto il mondo, e una storia del libro
+usa solo quello che il mondo ha insegnato fino alla tappa da cui si apre.
 
 **L'età.** Ogni tappa porta la sua `portata` dall'anno di scuola (l'anno n
 va da 12,5·(n+1) a 12,5·(n+2), cioè dai 5+n ai 6+n anni, sulla scala di
@@ -180,24 +180,11 @@ una tappa di parole fa solo parole. Una frase composta giusta conta come ripasso
 scadute** (solo quelle). Uno sbaglio su una parola vicina pesa sulla parola,
 uno di grammatica sulla frase e sulla forma.
 
-## Il libro a capitoli
+## Il libro
 
-Ogni mondo ha un **mini capitolo di un libro**, con personaggi che tornano
-(Laura, Leo, Tom, un cagnolino). Il capitolo è **scritto a mano** — un inizio,
-un fatto, una fine — con:
-
-- **variabili** tirate a sorte e coerenti fra loro (il cibo, il posto, il
-  tempo, chi è amico di chi);
-- **frasi a rami** accese da una condizione (se c'è vento il cappello vola, e
-  lo riporta il cane *oppure* Leo);
-- **domande in italiano** con risposte in italiano, calcolate dal mondo tirato,
-  ognuna con la sua condizione. Le sbagliate sono le versioni che non sono
-  uscite questa volta. «Non si sa» è una risposta quando il testo non lo dice.
-
-Usa solo le strutture dei mondi già fatti. Cresce coi mondi: da 4 frasi e una
-domanda (fatti in una frase) a 12–15 frasi e tre o quattro domande (chi/cosa
-su due frasi, il perché, l'ordine degli eventi, quello che si capisce senza
-che sia scritto, vero/falso su più frasi).
+Ogni mondo ha **tre storie da leggere**, a pagine, con personaggi che
+tornano e domande in italiano; si aprono lungo l'isola, e dal cartello di
+fine se ne legge un'altra. Tutto in [libro.md](libro.md).
 
 ## Toccare una parola per sapere cosa vuol dire
 
@@ -288,7 +275,8 @@ sono tabelle, `motore/` gira in Node e non sa di monete né di schermo.
 | `dati/travaso.js` | cosa insegnavano le tappe di prima, per il travaso |
 | `dati/trappole.js` | la tabella degli errori tipici, una riga per errore |
 | `dati/frasi/<mondo>.js` | le frasi componibili di un mondo (elencate in `dati/frasi.js`) |
-| `dati/capitoli/<mondo>.js` | un capitolo del libro per file (raccolti da `dati/capitoli.js`) |
+| `dati/capitoli/<id>.js` | una storia del libro per file (raccolte da `dati/capitoli.js`) |
+| `dati/passati.js` | il passato irregolare dei verbi noti |
 | `dati/elenchi.js` | personaggi, animali, colori, cibi… con le forme italiane |
 | `dati/contrazioni.js`, `dati/glossario.js` | forma lunga ↔ contratta; le parole di struttura toccate |
 | `motore/testo.js` | parole, contrai/espandi, `accetta`, la fila in bella |
@@ -302,7 +290,9 @@ sono tabelle, `motore/` gira in Node e non sa di monete né di schermo.
 | `motore/sessione.js` | una partita a una tappa, alla 🏁 o al cassetto |
 | `motore/tocchi.js` | la parola da toccare |
 | `motore/mappa.js` | aperto, vinto, finito, passato per età; `statoMappa` |
-| `motore/libro.js` | il libro: variabili, rami, domande |
+| `motore/libro.js` | il libro: variabili, rami, pagine, domande |
+| `motore/storie.js` | quando si apre una storia, quale si legge adesso e quale dopo, le storie lette |
+| `motore/flessioni.js` | le forme dei verbi (plays, playing, played, went) |
 | `motore/guasti.js` | i controlli su ogni frase e ogni capitolo |
 
 Lo script `node strumenti/inglese/banchi.mjs` stampa i banchi: tutte le
@@ -389,9 +379,10 @@ stava in piedi nel codice, si è presa la variante più vicina:
   struttura (`q`) non hanno cassetto. Una categoria sta in un mondo solo,
   anche quando le sue tappe sono sparse su tre anni (i numeri). La prova
   finale è un mondo (`prova-finale`), senza tappe.
-- **Quarta e quinta hanno solo le parole**: le tappe di parole, la 🏁 e le
-  strutture dell'anno dichiarate in `strutture` (il controllo pretende o le
-  tappe di frasi o la dichiarazione). Non hanno ancora un capitolo.
+- **Quarta e quinta non hanno tappe di frasi**: le tappe di parole, la 🏁 e
+  le strutture dell'anno dichiarate in `strutture` (il controllo pretende o
+  le tappe di frasi o la dichiarazione). Le strutture le usa il libro
+  ([libro.md](libro.md#le-strutture-di-quarta-e-quinta)).
 - **Il cassetto si apre alla prima tappa vinta del mondo** (o col mondo passato per età).
 - **Il grado** è `floor(10 × media(min(forza, 4) / 4))` su parole, frasi e
   forma della tappa; la 🏁 fa la media di tutto il mondo.
@@ -409,35 +400,10 @@ stava in piedi nel codice, si è presa la variante più vicina:
   seconda, 50–61 la terza, 63–74 la quarta, 75–86 la quinta), la legge la
   carta e decide i mondi passati.
 
-## Il libro: il formato di un capitolo
+## Il libro: il formato di una storia
 
-```js
-export default {
-  id, mondo, titolo,
-  variabili: {
-    colore: { da: 'colori', fra: ['red', 'blue'] }, // valori di un elenco
-    cibo:   { da: 'cibi' },                         // senza fra: tutto il noto del mondo
-    piace:  { fra: [true, false] },                 // valori liberi
-  },
-  vincoli: [v => v.cibo.en !== 'cake'],            // facoltativo
-  frasi: [
-    { en: 'He has got {a:colore} hat.', forma: 'has-got' },
-    { se: v => v.piace, en: 'Yes, I do!' },         // un ramo
-  ],
-  domande: [
-    { testo: 'Che cosa piace a Leo?', risposta: v => v.cibo.ilPl },   // a scelta
-    { testo: 'Laura ha un cane?', tipo: 'vf', etichette: ['Sì', 'No'],
-      vero: v => (v.cane ? true : null) },                            // null = non si sa
-  ],
-}
-```
-
-Nei modelli: `{x}` è l'inglese, `{x.pl}` il plurale, `{x.campo}` un campo
-dell'elenco, `{a:x}`/`{A:x}` con l'articolo giusto (a/an). Le sbagliate
-sono le risposte degli altri mondi possibili più quelle in `anche`, al
-massimo tre; una risposta vuota è «Non si sa». Il testo del capitolo ha la
-sua punteggiatura, a differenza delle frasi componibili. Un tipo di
-domanda nuovo è una voce di `TIPI_DOMANDA` in `motore/libro.js`.
+In [libro.md](libro.md#il-formato-di-una-storia), con le forme dei verbi
+di quarta e quinta e la regola di quale storia si apre.
 
 ## L'interfaccia per la vista
 
@@ -478,11 +444,13 @@ if (s.finita) segnaVinta(c, id)           // vero la prima volta: il premio gros
 - L'esito sbagliato porta `perche` (una riga, o null se lo sbaglio non è
   una trappola nota), `siFa` (la regola della forma) e `giustaEra`.
 
-**Il capitolo.** `CAPITOLI` da `dati/capitoli.js`, `capitoliDi(CAPITOLI,
-mondo)`, poi `capitolo(cap)` → `{ titolo, righe: [{ en }], domande: [{
-testo, opzioni: [{ testo, giusta }], giusta }] }`. Un `Tocchi` per tutto il
-capitolo; una domanda giusta paga quando si risponde, finché
-`domandeCheLPagano(giuste, t.aPagamento)` supera quelle già pagate.
+**Il libro.** `CAPITOLI` da `dati/capitoli.js`; la storia da aprire è
+`prossimaStoria(CAPITOLI, c, regole, mondo)` (`motore/storie.js`), poi
+`capitolo(cap)` → `{ titolo, pagine: [[{ en }]], righe, domande: [{ testo,
+opzioni: [{ testo, giusta }], giusta }] }`. Un `Tocchi` per tutta la storia;
+una domanda giusta paga `pagaDelCapitolo(pagine)` quando si risponde, finché
+`domandeCheLPagano(giuste, t.aPagamento)` supera quelle già pagate. Al
+cartello `segnaLetta(c, id)`, e `unAltraStoria(…)` dice se c'è il tasto.
 
 Nei test: `unita/inglese-mondi`, senza browser: oltre ai controlli di ogni
 frase e capitolo, i difetti trovati giocando resi impossibili in generale

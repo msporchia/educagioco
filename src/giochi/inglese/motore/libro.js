@@ -1,14 +1,26 @@
 // Il libro a capitoli: tira le variabili di un capitolo, accende i rami e
 // calcola le domande con le loro risposte. Le sbagliate sono le versioni
 // che questa volta non sono uscite; «Non si sa» è la giusta quando il
-// testo non lo dice. Il formato di un capitolo sta in testa a
-// docs/lingue/mondi.md («Il libro a capitoli»).
+// testo non lo dice. Il formato di un capitolo sta in docs/lingue/libro.md.
 import { ELENCHI } from '../dati/elenchi.js'
-import { paroleNote } from './grafo.js'
+import { mondoDi } from '../dati/mondi.js'
+import { paroleDelLibro } from './grafo.js'
 import { plurale } from './lessico.js'
 
 export const NON_SI_SA = 'Non si sa'
 export const OPZIONI_MAX = 4
+
+// Le pagine di un capitolo: `pagine`, o le sue `frasi` come pagina sola
+export const pagineDi = cap => cap.pagine || (cap.frasi ? [cap.frasi] : [])
+export const frasiDelCapitolo = cap => pagineDi(cap).flat()
+
+// La tappa da cui un capitolo si legge: la sua `dopo`, o quella prima
+// della 🏁 (il capitolo si apre quando la bandiera si può giocare)
+export function tappaDellaStoria(cap) {
+  if (cap.dopo) return cap.dopo
+  const m = mondoDi(cap.mondo)
+  return m && m.tappe.length > 1 ? m.tappe[m.tappe.length - 2].id : null
+}
 
 // i valori possibili di una variabile
 export function valoriDi(cap, nome) {
@@ -21,8 +33,8 @@ export function valoriDi(cap, nome) {
     if (!v) throw new Error(`capitolo ${cap.id}: «${en}» non è nell'elenco ${def.da}`)
     return v
   })
-  // senza `fra`: tutto quello che il bambino conosce alla fine del mondo
-  const note = paroleNote(cap.mondo)
+  // senza `fra`: tutto quello che il bambino conosce quando il capitolo si apre
+  const note = paroleDelLibro(cap.mondo, tappaDellaStoria(cap))
   return elenco.filter(x => note.has(x.en.toLowerCase()) && (!def.dove || def.dove(x)))
 }
 
@@ -108,11 +120,13 @@ export function domandaIn(cap, d, v, rnd = Math.random) {
   return { testo: typeof d.testo === 'function' ? d.testo(v) : d.testo, opzioni, giusta }
 }
 
-// Il capitolo tirato: le righe accese e le domande con le risposte.
+// Il capitolo tirato: le pagine con le righe accese (e tutte le righe di
+// seguito), e le domande con le risposte.
 export function racconta(cap, v, rnd = Math.random) {
+  const pagine = pagineDi(cap).map(p => p.filter(f => acceso(f, v))
+    .map(f => ({ en: rendi(f.en, v), forma: f.forma || null })))
   return {
-    id: cap.id, titolo: cap.titolo, mondo: cap.mondo, variabili: v,
-    righe: cap.frasi.filter(f => acceso(f, v)).map(f => ({ en: rendi(f.en, v), forma: f.forma || null })),
+    id: cap.id, titolo: cap.titolo, mondo: cap.mondo, variabili: v, pagine, righe: pagine.flat(),
     domande: cap.domande.filter(d => acceso(d, v)).map(d => domandaIn(cap, d, v, rnd)),
   }
 }

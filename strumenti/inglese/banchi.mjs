@@ -59,7 +59,7 @@ function stampaCapitolo(c) {
   console.log(`\n══ ${c.titolo} (${c.id}, mondo ${c.mondo}) — ${mondiDi(c).length} combinazioni`)
   for (const v of mondiDi(c)) {
     const r = racconta(c, v, sorte(1))
-    const testo = r.righe.map(x => x.en).join(' ')
+    const testo = r.pagine.map(p => p.map(x => x.en).join(' ')).join('\n  ¶ ')
     const chiave = testo + '|' + r.domande.map(d => d.giusta).join('|')
     if (visti.has(chiave)) continue
     visti.add(chiave)

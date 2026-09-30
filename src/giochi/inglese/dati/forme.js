@@ -94,21 +94,28 @@ export const FORME = {
     regola: 'Dopo can il verbo va da solo: I can swim. Non so: I cannot swim.',
   },
   /* Le forme dei mondi che hanno solo le tappe di parole (quarta e
-     quinta): le frasi non ci sono ancora, ma le strutture sono dichiarate,
-     e le righe della tabella delle trappole si provano già sul loro esempio. */
-  presente: { nome: 'I play', parole: ['I', 'you', 'we', 'they', 'at'], segni: ['at'],
+     quinta): non hanno ancora frasi da comporre, ma sono il programma
+     dell'anno e il libro di quel mondo le usa (docs/lingue/libro.md). Le
+     loro `parole` sono anche le parolette che servono a raccontare;
+     `flessione` è la forma dei verbi che la struttura ammette nel libro
+     (motore/flessioni.js: s, ing, ed, irr). */
+  presente: { nome: 'I play',
+              parole: ['I', 'you', 'we', 'they', 'at', 'to', 'every', 'day', 'always', 'never', 'sometimes',
+                       'with', 'home', 'by', 'me', 'us', 'them', 'our', 'their', 'because', 'but', 'very',
+                       'then', 'after', 'before', 'from', 'for', 'who'],
+              segni: ['at'],
               regola: 'Con I, you, we e they il verbo resta com’è: I play, we go.' },
-  'terza-s': { nome: 'she plays', parole: ['does'], segni: ['does'],
-               regola: 'Con he, she e it il verbo prende la s: she plays.' },
-  ing: { nome: 'I am playing', parole: ['am', 'is', 'are'], segni: ['am', 'is', 'are'],
+  'terza-s': { nome: 'she plays', parole: ['does', 'he', 'she', 'his', 'her', 'him'], segni: ['does'],
+               flessione: 's', regola: 'Con he, she e it il verbo prende la s: she plays.' },
+  ing: { nome: 'I am playing', parole: ['am', 'is', 'are', 'now'], segni: ['am', 'is', 'are'], flessione: 'ing',
          regola: 'Adesso: am, is o are, e il verbo con -ing: I am playing.' },
-  ora: { nome: 'what time is it?', parole: ['what', 'time', 'it', 'is', 'at'], segni: ['time', 'at'],
+  ora: { nome: 'what time is it?', parole: ['what', 'time', 'it', 'is', 'at', 'o\'clock'], segni: ['time', 'at'],
          regola: 'Che ore sono?: what time is it? Alle tre: at three o’clock.' },
-  'was-were': { nome: 'I was, we were', parole: ['was', 'were'], segni: ['was', 'were'],
+  'was-were': { nome: 'I was, we were', parole: ['was', 'were', 'yesterday', 'last'], segni: ['was', 'were'],
                 regola: 'Ieri: I was, he was, we were, they were.' },
-  passato: { nome: 'I went', parole: ['was', 'were'], segni: [],
+  passato: { nome: 'I went', parole: ['was', 'were'], segni: [], flessione: 'irr',
              regola: 'Tanti verbi al passato cambiano forma: go → went.' },
-  'passato-ed': { nome: 'I played', parole: [], segni: [],
+  'passato-ed': { nome: 'I played', parole: [], segni: [], flessione: 'ed',
                   regola: 'Al passato tanti verbi prendono -ed: play → played.' },
 }
 
@@ -122,6 +129,8 @@ export function guastiDelleForme() {
     else if (f.regola.length > 110) g.push(`forma ${id}: regola troppo lunga`)
     if (!Array.isArray(f.parole)) g.push(`forma ${id}: parole non è un elenco`)
     if (!Array.isArray(f.segni)) g.push(`forma ${id}: segni non è un elenco`)
+    if (f.flessione && !['s', 'ing', 'ed', 'irr'].includes(f.flessione))
+      g.push(`forma ${id}: flessione sconosciuta ${f.flessione}`)
   }
   return g
 }

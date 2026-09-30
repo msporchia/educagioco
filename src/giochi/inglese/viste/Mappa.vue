@@ -104,7 +104,7 @@ function apri(n) {
 // una tappa chiusa: la nave dà uno scossone e non parte, e si dice cosa serve
 function nonSiParte(n) {
   const largo = quadro.value.W
-  serve.value = { chiave: n.chiave, testo: cosaServe(props.stato, n) || 'Non ancora',
+  serve.value = { chiave: n.chiave, testo: cosaServe(props.stato, n, props.extra[n.mondo]) || 'Non ancora',
                   x: Math.max(Math.min(n.x, largo - 116), 116), y: n.y - n.r - 10 }
   clearTimeout(timerServe)
   timerServe = setTimeout(() => { serve.value = null }, 2600)

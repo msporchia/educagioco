@@ -7,7 +7,7 @@ import { CONTRAZIONI } from '../dati/contrazioni.js'
 export const apostrofi = s => s.replace(/[’‘`]/g, '\'')
 
 // le parole di una frase, con l'apostrofo tipografico e la maiuscola dov'erano
-export const parole = s => String(s).replace(/[.,!?;:"«»()]/g, ' ').split(/\s+/).filter(Boolean)
+export const parole = s => String(s).replace(/[.,!?;:"“”«»()]/g, ' ').split(/\s+/).filter(Boolean)
 
 // forma lunga → contratta, sulle righe di dati/contrazioni.js
 export function contrai(s) {

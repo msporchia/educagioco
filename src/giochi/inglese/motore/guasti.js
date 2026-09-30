@@ -10,14 +10,15 @@ import { MONDI, mondoDi, tappaDi, pronto } from '../dati/mondi.js'
 import { ARGOMENTI, paroleDellArgomento } from '../dati/argomenti.js'
 import { componi, TIPI } from '../../../data/domande.js'
 import { voceDi } from '../../../data/lessico.js'
-import { paroleNote, formeNote, sconosciute, fontiDi, chiaveDellaTappa } from './grafo.js'
-import { eColore, eAggettivo, eNumero } from './lessico.js'
+import { paroleNote, formeNote, sconosciute, fontiDi, chiaveDellaTappa, paroleDelLibro, formeDelLibro, flessioniDi }
+  from './grafo.js'
+import { eColore, eAggettivo, eNumero, traduci } from './lessico.js'
 import { sgrammaticata, APPOSTA } from './grammatica.js'
 import { tipiDellaParola } from './sessione.js'
 import { trappoleDi } from './trappole.js'
 import { costruisci, composta, giudica, contesto, FORMATI_FRASE } from './formati.js'
 import { normalizza, accetta, espandi } from './testo.js'
-import { mondiDi, racconta, rendi, valoriDi } from './libro.js'
+import { mondiDi, racconta, rendi, valoriDi, pagineDi, frasiDelCapitolo, tappaDellaStoria } from './libro.js'
 
 export const PERCHE_MAX = 70
 
@@ -183,16 +184,31 @@ export function guastiDelleParole({ giri = 4 } = {}) {
   return [...new Set(g)]
 }
 
+// Un capitolo si controlla da sé: ogni frase si accende, ogni «se» a volte
+// è falso, nessuna pagina resta vuota, ogni domanda ha una sola giusta, e
+// le parole sono quelle note alla tappa da cui si apre (docs/lingue/libro.md).
 export function guastiDelCapitolo(cap) {
   const g = []
   const dove = `capitolo ${cap.id}`
   const m = mondoDi(cap.mondo)
   if (!m || !pronto(m)) return [`${dove}: il mondo ${cap.mondo} non c'è o non ha tappe`]
-  if (!cap.titolo || !cap.frasi?.length || !cap.domande?.length) g.push(`${dove}: senza titolo, frasi o domande`)
-  const note = paroleNote(cap.mondo)
-  const forme = formeNote(cap.mondo)
-  for (const f of cap.frasi)
-    if (f.forma && !forme.has(f.forma)) g.push(`${dove}: la forma ${f.forma} non è di un mondo già fatto`)
+  if (cap.pagine && cap.frasi) g.push(`${dove}: o pagine o frasi, non tutte e due`)
+  const pagine = pagineDi(cap)
+  if (!cap.titolo || !pagine.length || !cap.domande?.length) g.push(`${dove}: senza titolo, frasi o domande`)
+  pagine.forEach((p, i) => { if (!Array.isArray(p) || !p.length) g.push(`${dove}: la pagina ${i + 1} è vuota`) })
+  if (cap.dopo) {
+    const t = tappaDi(cap.dopo)
+    if (!t) return [...g, `${dove}: dopo una tappa che non c'è (${cap.dopo})`]
+    if (t.mondo !== cap.mondo) g.push(`${dove}: dopo ${cap.dopo}, che è del mondo ${t.mondo}`)
+  }
+  if (g.length) return g
+  const tappa = tappaDellaStoria(cap)
+  const note = paroleDelLibro(cap.mondo, tappa)
+  const forme = formeDelLibro(cap.mondo, tappa)
+  const flessioni = flessioniDi(forme)
+  const frasi = frasiDelCapitolo(cap)
+  for (const f of frasi)
+    if (f.forma && !forme.has(f.forma)) g.push(`${dove}: la forma ${f.forma} non è nota a ${tappa}`)
   let mondi
   try {
     for (const nome of Object.keys(cap.variabili)) valoriDi(cap, nome)
@@ -202,18 +218,24 @@ export function guastiDelCapitolo(cap) {
 
   const accese = new Map(), spente = new Map(), poste = new Map()
   for (const v of mondi) {
-    for (const [i, f] of cap.frasi.entries()) {
+    pagine.forEach((p, i) => { if (!p.some(f => !f.se || f.se(v))) g.push(`${dove}: la pagina ${i + 1} a volte resta vuota`) })
+    for (const [i, f] of frasi.entries()) {
       const on = !f.se || f.se(v)
       ;(on ? accese : spente).set(i, true)
       if (!on) continue
       let testo
       try { testo = rendi(f.en, v) } catch (e) { g.push(`${dove}: ${e.message}`); continue }
-      const ignote = sconosciute(testo, note)
-      if (ignote.length) g.push(`${dove}: «${testo}» usa parole non note: ${ignote.join(', ')}`)
+      const ignote = sconosciute(testo, note, flessioni)
+      if (ignote.length) g.push(`${dove}: «${testo}» usa parole non note a ${tappa}: ${ignote.join(', ')}`)
+      const storta = sgrammaticata(testo)
+      if (storta) g.push(`${dove}: «${testo}» è sgrammaticata: ${storta}`)
+      // ogni parola si tocca: deve avere una traduzione
+      for (const w of testo.match(/[A-Za-z]+(?:[’'][A-Za-z]+)?/g) || [])
+        if (!traduci(w).it) g.push(`${dove}: «${w}» toccata non dice niente`)
     }
     const r = racconta(cap, v, sorte(7))
     const attive = cap.domande.filter(d => !d.se || d.se(v))
-    attive.forEach((d, i) => poste.set(cap.domande.indexOf(d), true))
+    attive.forEach(d => poste.set(cap.domande.indexOf(d), true))
     for (const d of r.domande) {
       const giuste = d.opzioni.filter(o => o.giusta)
       if (giuste.length !== 1) g.push(`${dove}: «${d.testo}» ha ${giuste.length} risposte giuste`)
@@ -222,12 +244,12 @@ export function guastiDelCapitolo(cap) {
         g.push(`${dove}: «${d.testo}» ha due opzioni uguali`)
     }
   }
-  cap.frasi.forEach((f, i) => {
+  frasi.forEach((f, i) => {
     if (!accese.has(i)) g.push(`${dove}: la frase ${i + 1} non si accende mai`)
     if (f.se && !spente.has(i)) g.push(`${dove}: la frase ${i + 1} ha un «se» che è sempre vero`)
   })
   cap.domande.forEach((d, i) => { if (!poste.has(i)) g.push(`${dove}: la domanda ${i + 1} non si fa mai`) })
   for (const v of Object.values(cap.variabili))
-    if (v.da && v.fra) for (const en of v.fra) if (!note.has(en.toLowerCase())) g.push(`${dove}: «${en}» non è nota nel mondo`)
+    if (v.da && v.fra) for (const en of v.fra) if (!note.has(en.toLowerCase())) g.push(`${dove}: «${en}» non è nota a ${tappa}`)
   return [...new Set(g)]
 }

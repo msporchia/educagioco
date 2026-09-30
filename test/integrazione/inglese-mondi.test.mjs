@@ -14,9 +14,11 @@
        parola: col dito vero, tenendo premuta una tessera, il click che
        arriva dopo non la chiude e non muove la tessera; «No» la chiude
        e la domanda paga ancora
-     · il capitolo del libro si legge, una parola si tocca e dice cosa
-       vuol dire; se il tocco costa prima lo chiede, e al sì lo dice
-       subito; poi si risponde
+     · il libro apre la storia non ancora letta; una parola si tocca e
+       dice cosa vuol dire; se il tocco costa prima lo chiede, e al sì lo
+       dice subito; poi si risponde, e la storia è letta
+     · «Un'altra storia» apre un'altra storia, che si sfoglia con le
+       frecce, anche durante le domande
    Il progetto è in docs/lingue/mondi.md, i bersagli alla riga «Nei test».
    ═══════════════════════════════════════════════════════════════════ */
 import { writeFileSync, mkdirSync } from 'node:fs'
@@ -76,6 +78,12 @@ uguale('e resta dov’era', await nave.getAttribute('data-porto'), 'tappa:prima-
 uguale('e non si entra nella tappa', await page.locator('[data-domanda]').count(), 0)
 await attendi(page, 300)
 await scatto(page, 'inglese-serve')
+// il libro chiuso dice quale tappa lo apre: quella della prima storia, a metà isola
+await page.locator('[data-libro="prima"]').click()
+await page.waitForSelector('[data-serve-per="libro:prima"]', { timeout: 2000 })
+controlla('il libro chiuso dice quale tappa vincere',
+          (await page.locator('[data-serve]').innerText()).includes('Si apre quando vinci «Che cos’è?»'),
+          await page.locator('[data-serve]').innerText())
 
 /* ---------- 1b. le parole di una tappa: fra i colori, solo colori ----------
    Era il difetto: con una categoria piccola le risposte sbagliate venivano
@@ -103,7 +111,8 @@ await page.waitForSelector('.carte')
 /* ---------- 2. un bambino a metà del primo mondo ----------
    Le parole delle tappe di parole sono sapute (forza 6) e le frasi di
    «Che cos'è?» a metà (forza 4): si mettono in ordine. Tutte le tappe
-   tranne la bandiera sono vinte, così il libro del mondo è aperto. */
+   tranne la bandiera sono vinte, così il libro del mondo è aperto; due
+   storie su tre sono già lette, «Il cane di Laura» da più tempo. */
 const ora = Date.now()
 const sa = s => ({ s, ok: 5, err: 0, last: ora, seen: 5, t: 0 })
 const t1 = tappaDi('prima-che-cose')
@@ -115,8 +124,10 @@ items['forma:it-is'] = sa(4)
 items['forma:is-it'] = sa(4)
 const vinte = Object.fromEntries(MONDI[0].tappe.filter(t => !t.bandiera)
   .map((t, i) => [t.id, ora - (20 - i) * 86400000]))
+const lette = { 'il-cane-di-laura': ora - 2 * 86400000, 'il-gioco-di-tom': ora - 86400000 }
 await semina(page, { coins: 100, items,
-                     campagne: { inglese: { tappa: Object.keys(vinte).length, libera: false, stelle: {}, cfg: {}, vinte } } })
+                     campagne: { inglese: { tappa: Object.keys(vinte).length, libera: false, stelle: {}, cfg: {}, vinte,
+                                            lette } } })
 await carta.click()
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]')
 uguale('la tappa di parole saputa è piena', await page.locator('[data-tappa="prima-animali"]').getAttribute('data-grado'), '10')
@@ -260,6 +271,9 @@ await page.mouse.click(195, 500)
 await page.waitForSelector('[data-libro-testo]', { timeout: 1500 })
 controlla('un tocco durante il viaggio lo chiude subito', Date.now() - tocco < 700, (Date.now() - tocco) + ' ms')
 uguale('il libro dice quanto può rendere', await page.locator('[data-paga]').getAttribute('data-paga-si'), '1')
+controlla('il libro apre la storia non ancora letta',
+          (await page.locator('[data-libro-testo] .ing-capitolo').innerText()).includes('Lo zaino di Leo'))
+uguale('una pagina sola: niente frecce', await page.locator('[data-azione="pagina-avanti"]').count(), 0)
 await scatto(page, 'inglese-libro')
 // una parola di struttura è sempre gratis: si dice e basta
 await page.locator('[data-libro-testo] [data-parola="is"]').first().click()
@@ -308,6 +322,43 @@ const pagato = (await leggiProfilo(page)).coins - moneteLibro
 uguale('il tocco a pagamento ha tolto il guadagno di una domanda', pagato, (nDomande - 1) * 4)
 controlla('la parola chiesta conta come non saputa',
           ((await leggiProfilo(page)).items['en:backpack'] || {}).err > 0)
+const letteDopo = (await leggiProfilo(page)).campagne.inglese.lette || {}
+controlla('arrivati al cartello la storia è letta', letteDopo['lo-zaino-di-leo'] >= ora, JSON.stringify(letteDopo))
+
+/* ---------- 5b. un'altra storia, a pagine ----------
+   Lette tutte e tre, «Un'altra storia» apre quella letta da più tempo (non
+   quella appena finita): «Il cane di Laura», su due pagine. */
+uguale('il cartello offre un’altra storia', (await page.locator('[data-fine] [data-azione="avanti"]').innerText()).trim(),
+       'Un’altra storia →')
+await page.locator('[data-fine] [data-azione="avanti"]').click()
+await page.waitForSelector('[data-libro-testo][data-pagine="2"]')
+controlla('è un’altra storia', (await page.locator('[data-libro-testo] .ing-capitolo').innerText()).includes('Il cane di Laura'))
+uguale('comincia dalla prima pagina', await page.locator('[data-libro-testo]').getAttribute('data-pagina'), '1')
+uguale('e lo dice', (await page.locator('[data-pagina-di]').innerText()).trim(), 'pagina 1 di 2')
+uguale('prima dell’ultima pagina non si chiude', await page.locator('[data-azione="ho-letto"]').count(), 0)
+controlla('indietro, alla prima, non va', await page.locator('[data-azione="pagina-indietro"]').isDisabled())
+await attendi(page, 350)
+await page.locator('[data-azione="pagina-avanti"]').click()
+uguale('la freccia sfoglia', await page.locator('[data-libro-testo]').getAttribute('data-pagina'), '2')
+controlla('la seconda pagina è un’altra', /Pip/.test(await page.locator('[data-libro-testo]').innerText()))
+await scatto(page, 'inglese-libro-pagine')
+await page.locator('[data-azione="ho-letto"]').click()
+await page.waitForSelector('[data-libro-domanda]')
+await page.locator('[data-azione="pagina-indietro"]').click()
+uguale('durante le domande si sfoglia ancora', await page.locator('[data-libro-testo]').getAttribute('data-pagina'), '1')
+controlla('e la domanda resta', await page.locator('[data-libro-domanda]').count() === 1)
+while (await page.locator('[data-libro-domanda]').count()) {
+  await attendi(page, 400)
+  await page.locator('[data-libro-domanda] [data-giusta]').click()
+  await page.waitForSelector('[data-libro-domanda] [data-esito], [data-fine]')
+  await page.waitForFunction(() => !document.querySelector('[data-libro-domanda] [data-esito]') ||
+                                   document.querySelector('[data-fine]'), null, { timeout: 8000 })
+  if (await page.locator('[data-fine]').count()) break
+}
+await page.waitForSelector('[data-fine]')
+await attendi(page, 900)       // il salvataggio arriva con un piccolo ritardo
+const lette2 = (await leggiProfilo(page)).campagne.inglese.lette
+controlla('anche questa è letta', lette2['il-cane-di-laura'] >= ora)
 await page.locator('[data-fine] [data-azione="mappa"]').click()
 await page.waitForSelector('[data-mappa-inglese]')
 
@@ -327,6 +378,8 @@ uguale('la sua bandiera è aperta senza averla vinta',
 uguale('la seconda comincia da capo', await page.locator('[data-tappa="seconda-cibo"]').getAttribute('data-stato'), 'aperta')
 uguale('una tappa alla volta', await page.locator('[data-tappa="seconda-famiglia"]').getAttribute('data-stato'), 'chiusa')
 uguale('la nave attracca nel primo mondo che non è passato', await nave.getAttribute('data-porto'), 'tappa:seconda-cibo')
+uguale('il libro di un mondo passato è aperto', await page.locator('[data-libro="prima"]').getAttribute('data-stato'), 'aperta')
+uguale('quello della seconda no', await page.locator('[data-libro="seconda"]').getAttribute('data-stato'), 'chiusa')
 await page.locator('[data-tappa="terza-casa"]').click()
 await page.waitForSelector('[data-serve]', { timeout: 2000 })
 controlla('il cartiglio conta la prima passata come finita: manca la seconda',

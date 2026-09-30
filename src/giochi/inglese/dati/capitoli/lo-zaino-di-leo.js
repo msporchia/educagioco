@@ -1,6 +1,6 @@
-// Il capitolo del mondo «In prima»: cinque frasi e tre domande, ognuna su
-// una frase sola. Solo le strutture di quel mondo (hello, it is, is it,
-// this is, they are). Formato in docs/lingue/mondi.md.
+// In prima, alla 🏁: lo zaino di Leo. Una pagina, tre domande, ognuna su
+// una frase sola; tutte le strutture della prima (hello, it is, is it,
+// this is, they are). Formato in docs/lingue/libro.md.
 export default {
   id: 'lo-zaino-di-leo',
   mondo: 'prima',

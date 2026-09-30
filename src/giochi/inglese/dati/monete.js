@@ -13,6 +13,8 @@ export const PAGA = {
 }
 
 export const PAGA_CAPITOLO = 4   // una domanda del libro: dentro c'è anche la lettura del testo
+// una storia più lunga fa leggere di più per ogni domanda: +1 ogni quattro pagine (docs/lingue/libro.md)
+export const pagaDelCapitolo = pagine => PAGA_CAPITOLO + Math.floor(Math.max(1, pagine) / 4)
 // niente premio d'arrivo né per la 🏁: ogni risposta giusta si paga subito, e basta
 
 export const pagaDi = d => (d.genere === 'parola' ? PAGA.parola : PAGA[d.formato] || 0)
