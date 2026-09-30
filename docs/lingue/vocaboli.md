@@ -24,6 +24,14 @@ sta in [voce.md](voce.md).
   stato del motore, e cambiarli fa tornare una parola «mai vista».
 - **Chi giocava prima della campagna** la trova aperta fin dove arrivava
   (`allineaInglese` in `src/store/profile.js`).
+- **Una parola giusta vale 🪙1, pagata subito** (`PAGA.parola` in
+  `src/data/paghe.js`, lo stesso tasso delle parole dell'inglese a mondi),
+  nella campagna e nel gioco libero; ogni dieci giuste un cartello dice
+  quante ne sono entrate. Niente premio di tappa e niente moltiplicatore
+  di livello: c'erano (`livello × (2 + tappa/2)` alla prima vittoria, una
+  di cortesia dopo, `livello` ogni dieci nel libero) e facevano rendere la
+  stessa parola il triplo a chi aveva giocato di più altrove
+  ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
 - **Prima le parole che somigliano all'italiano** (`ordine` in
   `LinguaGame.vue`, per bigrammi in comune): sono regali, e cominciare con
   un regalo tiene dentro. Le frasi vanno in fondo.
@@ -93,7 +101,8 @@ giusta — e la progressione sta in cosa c'è nel bersaglio e nei bottoni
   parole che i bambini sentiranno davvero.
 
 Nei test: `unita/inglese`, `unita/spagnolo`, `integrazione/inglese`,
-`integrazione/spagnolo`.
+`integrazione/spagnolo` (una moneta a parola giusta: `[data-monete-prese]`
+sul cartello di fine tappa, `[data-nota-monete]` col salvadanaio stanco).
 
 ## Formato dei dati
 

@@ -3,7 +3,7 @@
 // docs/lingue/README.md e vocaboli.md. Di ogni lingua sa solo quello che
 // gli passa `data/lingue.js`: campagna, dove segnare i progressi, nome.
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
-import { state, item, answer, level, addCoins, mastered, segna,
+import { state, item, answer, mastered, segna,
          linguaProgresso, linguaCompleta, tappaAperta } from '../store/profile.js'
 import { apertaQui } from '../data/portata-giochi.js'
 import { createPicker, activeSet, overdue, strength, SRS } from '../store/srs.js'
@@ -11,6 +11,8 @@ import { linguaDi } from '../data/lingue.js'
 import { voceDi } from '../data/lessico.js'
 import { TIPI, scegliTipo, componi } from '../data/domande.js'
 import { suono } from '../audio.js'
+import { borsa } from '../store/varieta.js'
+import { PAGA } from '../data/paghe.js'
 import { pronuncia, haVoce, prepara, zittisci } from '../voce.js'
 import Barra from '../components/Barra.vue'
 
@@ -22,7 +24,7 @@ const emit = defineEmits(['vai'])
 const L = linguaDi(props.lingua)
 const CAMPAGNA = L.CAMPAGNA
 
-const PER_MONETA = 10
+const CARTELLO = 10       // ogni quante giuste un cartello dice le monete entrate
 const fase = ref(props.libero ? 'gioco' : 'mappa')   // mappa | gioco | vinta | trionfo | fine
 
 /* ---------- la campagna ---------- */
@@ -67,8 +69,11 @@ function ordine(k) {
 const turno = ref(null)            // il turno pronto da mostrare (vedi domande.js)
 const esito = ref({})              // testo opzione -> 'bene' | 'male' | 'mostra'
 const svelato = ref(false)         // in ascolto: dopo la risposta si vede la parola
-const premio = ref(0)
 const moneta = ref(0)
+// le monete di questa partita: una parola giusta le paga subito, e a fine tappa
+// niente di più (docs/apprendimento/calibrazione.md)
+let borsellino = borsa(L.id === 'es' ? 'spagnolo' : 'inglese'), mostrate = 0
+const prese = reactive({ monete: 0, nota: '' })
 const hud = reactive({ giuste: 0, mirate: 0, errori: 0, serie: 0 })
 let occupato = false, timerId = null
 
@@ -140,10 +145,10 @@ function rispondi(o) {
     hud.serie++
     if (nuoveDiTappa.value.has(t.chiave)) hud.mirate++
     segna(conta)
-    if (hud.giuste % PER_MONETA === 0 && !campagna.value) {
-      // nella campagna le monete arrivano dal traguardo, non dal tempo passato
-      const g = level.value
-      addCoins(g); moneta.value = g
+    borsellino.paga(PAGA.parola)
+    prese.monete = borsellino.dato
+    if (hud.giuste % CARTELLO === 0 && borsellino.dato > mostrate) {
+      moneta.value = borsellino.dato - mostrate; mostrate = borsellino.dato
       setTimeout(() => (moneta.value = 0), 1100)
       suono.moneta()
     }
@@ -167,6 +172,8 @@ function inizia(i = tappaIdx.value) {
   clearTimeout(timerId)
   tappaIdx.value = i
   hud.giuste = 0; hud.mirate = 0; hud.errori = 0; hud.serie = 0
+  borsellino = borsa(L.id === 'es' ? 'spagnolo' : 'inglese'); mostrate = 0
+  Object.assign(prese, { monete: 0, nota: '' })
   picker.reset()
   cacheOrdine.clear()
   fase.value = 'gioco'
@@ -178,13 +185,11 @@ function inizia(i = tappaIdx.value) {
 function tappaSuperata() {
   clearTimeout(timerId)
   const ultima = tappaIdx.value === CAMPAGNA.length - 1
-  // il premio è della prima volta: rigiocare una tappa già vinta lascia solo una moneta di cortesia
-  const giaFatta = progresso.value.tappa > tappaIdx.value
+  // niente premio di tappa: ogni parola giusta si è già pagata
   linguaCompleta(L.campo, tappaIdx.value, CAMPAGNA.length)
-  premio.value = giaFatta ? 1 : level.value * (2 + Math.floor(tappaIdx.value / 2))
-  addCoins(premio.value)
+  prese.nota = borsellino.nota()
   fase.value = ultima ? 'trionfo' : 'vinta'
-  suono.livello(); suono.moneta()
+  suono.livello()
 }
 
 function prossimaTappa() { inizia(Math.min(CAMPAGNA.length - 1, tappaIdx.value + 1)) }
@@ -254,7 +259,7 @@ const cartaParla = computed(() => {
 })
 const avanzamento = computed(() => campagna.value
   ? Math.min(100, (hud.giuste / tappa.value.bersaglio) * 100)
-  : (hud.giuste % PER_MONETA) * (100 / PER_MONETA))
+  : (hud.giuste % CARTELLO) * (100 / CARTELLO))
 const quota = (n, tot) => Math.min(100, Math.round((n / tot) * 100)) + '%'
 
 const sapute = computed(() => CAMPAGNA.map(saputeDi))
@@ -365,7 +370,8 @@ onUnmounted(() => { clearTimeout(timerId); zittisci() })
         <p v-if="fase === 'trionfo'">Hai fatto tutte e {{ CAMPAGNA.length }} le tappe.
           Da adesso c'è il gioco libero: tutto insieme, senza fine.</p>
         <p v-else class="dritta">{{ tappa.dritta }}</p>
-        <div class="premio">+{{ premio }} 🪙</div>
+        <div v-if="prese.monete" class="premio" data-monete-prese>+{{ prese.monete }} 🪙</div>
+        <div v-if="prese.nota" class="conti" data-nota-monete>{{ prese.nota }}</div>
         <div class="conti">✅ {{ hud.giuste }} giuste · ✋ {{ hud.errori }} errori</div>
         <div class="bottoni">
           <button v-if="fase !== 'trionfo'" class="grosso" @click="prossimaTappa()">Avanti →</button>

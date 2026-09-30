@@ -93,7 +93,10 @@ uguale('la tappa si supera', partita.fase, 'vinta')
 controlla('centrando il bersaglio', partita.giuste >= partita.bersaglio,
           `${partita.giuste} giuste su ${partita.bersaglio}`)
 uguale('e la tappa dopo si apre', partita.tappa, 1)
-uguale('con il premio in monete', await page.locator('.finale .premio').count(), 1)
+/* una parola giusta, una moneta, subito: il cartello somma quelle, e un
+   premio di tappa sopra non c'è più (docs/lingue/vocaboli.md) */
+uguale('e il cartello dice una moneta a parola giusta',
+       (await page.locator('.finale [data-monete-prese]').innerText()).trim(), `+${partita.giuste} 🪙`)
 nota(`tappa superata in ${partita.turni} turni`)
 
 /* ---------- 4. le due lingue non si mescolano ----------
