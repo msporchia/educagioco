@@ -65,8 +65,11 @@ async function sbrigaLeCarte() {
   await attendi(page, 450)                       // la finestra cieca del montaggio
   const prima = await inBarra()
   const primo = page.locator('.qz-tasto').first()
-  await primo.click()
-  await page.waitForSelector('.qz-tasto.giusta', { timeout: 5000 })
+  // a macchina carica la finestra cieca può inghiottire il tocco: si riprova
+  for (let i = 0; i < 6 && !(await page.locator('.qz-tasto.giusta').count()); i++) {
+    await primo.click().catch(() => {})
+    await page.waitForSelector('.qz-tasto.giusta', { timeout: 1500 }).catch(() => {})
+  }
   const giusta = await primo.evaluate(el => el.classList.contains('giusta'))
   pagate[giusta ? 'giuste' : 'sbagliate'].push((await inBarra()) - prima)
   await page.waitForSelector('.qz-tasto', { state: 'hidden', timeout: 15000 })
