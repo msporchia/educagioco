@@ -9,17 +9,18 @@ spagnolo è ancora la campagna in fila di prima, e ci arriverà.
 
 ## L'inglese: la mappa del tesoro
 
-Ogni isola della mappa è un **mondo** che insegna un pezzo di grammatica —
-*che cos'è*, *io e le mie cose*, poi *dove*, *cosa sai fare*, la giornata,
-il presente, il passato — e finire un mondo apre i successivi. Una
-caravella segna dove si è arrivati, e toccata una tappa ci naviga, girando
-attorno alle isole. Ogni tappa
-porta **otto-dieci parole nuove e una struttura**, e le frasi non si
-scelgono soltanto: da un certo punto **si compongono**, toccando le parole
-una dopo l'altra, prima coi buchi da riempire, poi tutte da mettere in
-ordine, poi con qualche parola trappola in mezzo. Chi sbaglia legge il
-perché («*is it* va girato per chiedere») e come si fa, e va avanti: non
-si perde niente.
+Ogni isola della mappa è **un anno di scuola**, dalla prima alla quinta, coi
+contenuti che i libri fanno davvero in quell'anno; finire un'isola apre la
+successiva, e quelle degli anni già fatti a scuola sono aperte da subito.
+Una caravella segna dove si è arrivati, e toccata una tappa ci naviga,
+girando attorno alle isole. Su ogni isola si alternano **tappe di parole**
+(otto-dieci parole di un argomento solo: i colori, il cibo, la casa) e
+**tappe di frasi**, che usano solo parole già viste e insegnano una
+struttura (*it is / is it*, *I like*, *there is*, *I can*). Le frasi prima
+si riconoscono, poi **si compongono** toccando le parole: prima coi buchi da
+riempire, poi tutte da mettere in ordine, poi con parole trappola in mezzo
+(*am / is / are*, *my / your*). Chi sbaglia legge il perché («*is it* va
+girato per chiedere») e come si fa, e va avanti: non si perde niente.
 
 Attorno a ogni tappa dieci tacche dicono **quanto è imparata**, e col tempo
 calano: il disegno della tappa sbiadisce, e rigiocarla la fa tornare piena.

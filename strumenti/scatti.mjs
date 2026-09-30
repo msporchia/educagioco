@@ -141,7 +141,8 @@ PROFILO.campagne = {
   fattoria: { tappa: 0, libera: false, stelle: {}, cfg: { stato: fattoriaGiocata() } },
   // tre tappe del primo mondo vinte: la mappa ha un sentiero battuto e la nave a metà
   inglese: { tappa: 3, libera: false, stelle: {}, cfg: {},
-             vinte: { 'che-cose-1': ADESSO - 3 * 864e5, 'che-cose-2': ADESSO - 2 * 864e5, 'che-cose-3': ADESSO - 864e5 } },
+             vinte: { 'prima-colori': ADESSO - 3 * 864e5, 'prima-ciao': ADESSO - 2 * 864e5,
+                      'prima-animali': ADESSO - 864e5 } },
 }
 
 /* ── giocare un pezzo di castello ──
@@ -243,6 +244,8 @@ function unaDomanda (chiave) {
 /* nove anni: a quell'età le tre tipologie della vetrina stanno tutte nel
    quadro, e nessuna è ancora «superflua» */
 const NOVE_ANNI = p => { p.settings.eta = 9; return p }
+// sette anni: nell'inglese la prima isola non è ancora «passata», e la nave sta lì
+const SETTE_ANNI = p => { p.settings.eta = 7; return p }
 
 /* le ricette. `dove` è il frammento dell'indirizzo, `passi` quello che
    si fa prima di scattare. Un passo è [selettore, attesa dopo]. */
@@ -259,9 +262,9 @@ const RICETTE = [
 
   /* l'inglese è la mappa del tesoro: la nave è alla tappa da fare, e
      toccata una tappa ci naviga prima di aprirla */
-  { file: 'inglese-mappa', dove: 'inglese', attesa: '[data-mappa-inglese] [data-tappa]' },
-  { file: 'inglese-gioco', dove: 'inglese', attesa: '[data-mappa-inglese] [data-tappa]',
-    passi: [['[data-tappa][data-stato="aperta"]', 2600]] },
+  { file: 'inglese-mappa', dove: 'inglese', attesa: '[data-mappa-inglese] [data-tappa]', profilo: SETTE_ANNI },
+  { file: 'inglese-gioco', dove: 'inglese', attesa: '[data-mappa-inglese] [data-tappa]', profilo: SETTE_ANNI,
+    passi: [['[data-tappa="prima-che-cose"]', 2600]] },
   { file: 'spagnolo-gioco', dove: 'spagnolo', attesa: '.mappa',
     passi: [['.tappa:not(.chiusa)', 1600]] },
 
