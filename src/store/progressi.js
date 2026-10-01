@@ -31,6 +31,7 @@ import { WORDS } from '../data/words.js'
 import { VERBI } from '../data/verbi.js'
 import { FRASI } from '../data/frasi.js'
 import { FRASI as FRASI_MONDI } from '../giochi/inglese/dati/frasi.js'
+import { FRASI as FRASI_MONDI_ES } from '../giochi/spagnolo/dati/frasi.js'
 import { PAROLE_ES } from '../data/parole-es.js'
 import { VERBI_ES } from '../data/verbi-es.js'
 import { FRASI_ES } from '../data/frasi-es.js'
@@ -40,6 +41,7 @@ export { AREE, MEDAGLIE, PREMI, TRAGUARDI }
 
 const GIORNO = 86400000
 const FRASI_INGLESI = new Set([...FRASI.map(f => f.id), ...FRASI_MONDI.map(f => f.id)])
+const FRASI_SPAGNOLE = new Set([...FRASI_ES.map(f => f.id), ...FRASI_MONDI_ES.map(f => f.id)])
 
 /* ═══════════ le materie che si possono davvero sapere ═══════════
    `totale` è quanti elementi esistono in tutto: serve per dire "37 su
@@ -67,7 +69,8 @@ const MATERIE_TUTTE = [
     vale: k => FRASI_INGLESI.has(k.slice('frase:'.length)) },
   { id: 'parole-es', prefisso: 'es:',       nome: 'Parole spagnole', emoji: '🔤', totale: PAROLE_ES.length },
   { id: 'verbi-es',  prefisso: 'verbo-es:', nome: 'Verbi spagnoli', emoji: '🎧', totale: VERBI_ES.length },
-  { id: 'frasi-es',  prefisso: 'frase-es:', nome: 'Frasi spagnole', emoji: '💬', totale: FRASI_ES.length },
+  { id: 'frasi-es',  prefisso: 'frase-es:', nome: 'Frasi spagnole', emoji: '💬', totale: FRASI_SPAGNOLE.size,
+    vale: k => FRASI_SPAGNOLE.has(k.slice('frase-es:'.length)) },
   { id: 'torri',   prefisso: 'op:',    nome: 'Operazioni in colonna', emoji: '➗', totale: 4 },
   /* nel resto l'elemento non è la cifra ma il pezzo più piccolo che serve
      per comporla: cinque fasce, dagli euro tondi ai centesimi */
@@ -264,7 +267,7 @@ export function misure(p, now = Date.now()) {
     concettiSaldi: () => concettiSaldiDi(items, now),
     // la campagna di prima o i mondi, la più avanti: un traguardo preso non torna indietro
     tappeEn: () => Math.max((p.eng && p.eng.tappa) || 0, (p.campagne && p.campagne.inglese && p.campagne.inglese.tappa) || 0),
-    tappeEs: () => (p.esp && p.esp.tappa) || 0,
+    tappeEs: () => Math.max((p.esp && p.esp.tappa) || 0, (p.campagne && p.campagne.spagnolo && p.campagne.spagnolo.tappa) || 0),
     tappeGen: () => (p.gen && p.gen.tappa) || 0,
 
     /* ---------- le campagne dei giochi nuovi ----------

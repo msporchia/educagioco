@@ -2,12 +2,11 @@
 import { computed } from 'vue'
 import { state, selectPlayer, level, countMastered,
          traguardi, serieGiorni, livelloOra,
-         mateProgresso, espProgresso, mercatoProgresso,
+         mateProgresso, mercatoProgresso,
          tabellineIntere, genProgresso,
          quantiGiochiAccesi } from '../store/profile.js'
 import { daLeggere } from '../store/posta.js'
 import { SCALETTA, posizioneOra, filaDi } from '../data/asteroidi.js'
-import { CAMPAGNA as TAPPE_ES } from '../data/campagna-spagnolo.js'
 import { CAMPAGNE as GIORNATE } from '../data/bancarella.js'
 // conta le prove CHE SI VEDONO, non tutte: le non approvate sono dietro il cancello dei giochi in prova
 import { fatte as proveFatte, quante as proveQuante } from './generale/fila.js'
@@ -31,7 +30,6 @@ const imparateEn = computed(() =>
   countMastered('en:') + countMastered('verbo:') + countMastered('frase:'))
 const imparateEs = computed(() =>
   countMastered('es:') + countMastered('verbo-es:') + countMastered('frase-es:'))
-const tappaEs = computed(() => espProgresso())
 const pianeta = computed(() => mateProgresso())
 const stelleMate = computed(() => tabellineIntere().length)
 // tabelline e conti a mente sono una scaletta sola (data/asteroidi.js): un contatore, non due
@@ -94,9 +92,7 @@ const dove = computed(() => {
         `su ${filaMate.length} · ora ${filaMate[doveMate.value].T.nome}`,
     // l'inglese a mondi (src/giochi/inglese) si racconta dal suo manifesto; le sicure restano quelle di sempre
     inglese: `${giocoNuovo('inglese').riassunto(progressoDi('inglese'))} · 🎯 ${imparateEn.value} sicure`,
-    spagnolo: tappaEs.value.libera
-      ? `gioco libero ♾️ · 🎯 ${imparateEs.value} sicure`
-      : `tappa ${q(tappaEs.value.tappa, TAPPE_ES.length)} · 🎯 ${imparateEs.value} sicure`,
+    spagnolo: `${giocoNuovo('spagnolo').riassunto(progressoDi('spagnolo'))} · 🎯 ${imparateEs.value} sicure`,
     torri: recordTorri.value ? `♾️ ${recordTorri.value}` : '',
     bancarella: mercato.value.libera
       ? `♾️ mercato libero · ✨ ${restiPerfetti.value} resti precisi`

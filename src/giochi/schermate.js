@@ -13,6 +13,7 @@ import Pozioni from './pozioni/Gioco.vue'
 import PassoPasso from './passo-passo/Gioco.vue'
 import Costruttore from './costruttore/Gioco.vue'
 import Inglese from './inglese/Gioco.vue'
+import Spagnolo from './spagnolo/Gioco.vue'
 
 export const SCHERMATE = {
   codice: CodiceSegreto,
@@ -27,4 +28,5 @@ export const SCHERMATE = {
   passo: PassoPasso,
   costruttore: Costruttore,
   inglese: Inglese,      // prende il posto di LinguaGame per l'inglese: vince su `viste` di App.vue
+  spagnolo: Spagnolo,    // idem per lo spagnolo
 }

@@ -7,7 +7,7 @@ import { GIOCHI_NUOVI, gioco } from '../giochi/indice.js'
 import { LIBERE_RACCONTO } from './campagne-castello.js' // le quattro partite libere del castello
 
 // un gioco nuovo che ha preso la carta di uno vecchio sta al suo posto, non in coda
-const AL_POSTO_DI_UNO_VECCHIO = ['inglese']
+const AL_POSTO_DI_UNO_VECCHIO = ['inglese', 'spagnolo']
 function riga(g) {
   return { chiave: g.chiave, ico: g.icona, nome: g.nome, che: g.che,
            area: g.area, come: g.come, piccoli: !!g.piccoli,
@@ -28,10 +28,9 @@ export const GIOCHI = [
       dettagli: d => [`livello ${d.livello}`, `${d.centri} centri`, `serie ${d.serie}`],
       vecchio: p => (p && p.best ? p.best.math : 0),
     } },
-  // l'inglese a mondi ha preso il posto della carta di prima, e ne tiene il posto: davanti allo spagnolo
+  // l'inglese e lo spagnolo a mondi hanno preso il posto delle carte di prima, e ne tengono il posto
   riga(gioco('inglese')),
-  { chiave: 'spagnolo',   ico: '🇪🇸', nome: 'Spagnolo',
-    che: 'parole, verbi e frasi in spagnolo', area: 'parole', come: 'domande', grandi: true },
+  riga(gioco('spagnolo')),
   // l'esempio per cui `chiede` esiste: la cassa guarda moltiplicazioni/divisioni da sempre (vedi docs/apprendimento/saperi.md)
   { chiave: 'torri',      ico: '🏰', nome: 'Difendi il Castello',
     che: 'operazioni in colonna, torri e nemici', area: 'numeri', come: 'strategia',

@@ -15,7 +15,8 @@ import { GIOCHI_NUOVI } from '../giochi/indice.js'
 import { SCALETTA } from './asteroidi.js'
 // l'inglese è quello a mondi, un mondo per anno di scuola (docs/lingue/mondi.md); la campagna vecchia resta al gioco di prima
 import { TAPPE as INGLESE } from '../giochi/inglese/dati/mondi.js'
-import { CAMPAGNA as SPAGNOLO } from './campagna-spagnolo.js'
+// lo spagnolo pure (docs/lingue/spagnolo.md)
+import { TAPPE as SPAGNOLO } from '../giochi/spagnolo/dati/mondi.js'
 import { RACCONTO as CASTELLO } from './campagne-castello.js'
 import { CAMPAGNA as POZIONI } from '../giochi/pozioni/dati/campagna.js'
 import { FILA as BANCARELLA } from './bancarella.js'
