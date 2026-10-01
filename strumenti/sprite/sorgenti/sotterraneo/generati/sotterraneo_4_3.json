@@ -1,0 +1,19 @@
+{
+  "__": "Il foglietto di sotterraneo_4_3.png: le cose per terra della cripta (ChatGPT, 1 ottobre 2026, nella chat della scena), chieste su fondo magenta e tornate già trasparenti. La tela ne usa tre per scenario: foglie, schegge e lastra spaccata. Fuori la cera (la candela in piedi sembra una cosa da prendere), i calcinacci e i sassolini (un mucchio di sassi, come quelli che sostituiscono).",
+  "prompt": {
+    "scheda": "PROMPT-scenario.md",
+    "base": "sotterraneo_4.png",
+    "generatore": "ChatGPT, 1 ottobre 2026",
+    "testo": "il prompt delle cose per terra su fondo magenta: foglie secche, colatura di cera, schegge d'ardesia, calcinacci, lastra spaccata, sassolini chiari, le due ragnatele d'angolo"
+  },
+  "fondo": "trasparente",
+  "alone": 128,
+  "cella": [1, 1],
+  "sprite": {
+    "cripta-foglie": { "da": [158, 158], "cella": [240, 210], "misura": [12, 10] },
+    "cripta-schegge": { "da": [167, 500], "cella": [230, 198], "misura": [12, 10] },
+    "cripta-lastra": { "da": [158, 862], "cella": [244, 196], "misura": [12, 10] },
+    "cripta-ragnatela-sx": { "da": [182, 1210], "cella": [170, 171], "misura": [14, 14] },
+    "cripta-ragnatela-dx": { "da": [672, 1210], "cella": [170, 179], "misura": [13, 14] }
+  }
+}

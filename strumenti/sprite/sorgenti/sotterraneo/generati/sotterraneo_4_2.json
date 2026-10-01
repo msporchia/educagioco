@@ -1,0 +1,41 @@
+{
+  "__": "Il foglietto di sotterraneo_4_2.png: i pezzi che mancano alla scena della cripta (ChatGPT, 30 settembre 2026, nella chat della scena, allegata la scena), più un secondo passaggio coi tasti di modifica per togliere la scacchiera dipinta. Si prendono porte, scala chiusa, mercante e medaglione. Fuori: la fontana (è a muro, quella della scena sta su un piede), le tre facce (nicchie alte una cella e mezza) e le cose per terra e le ragnatele (hanno sotto un quadrato di pavimento).",
+  "prompt": {
+    "scheda": "PROMPT-scenario.md",
+    "base": "sotterraneo_4.png",
+    "generatore": "ChatGPT, 30 settembre 2026",
+    "testo": "il prompt dei pezzi mancanti (porte di fronte e di fianco, scala chiusa, fontana asciutta, mercante, pavimento speciale 3×3, tre facce, otto cose per terra), poi «Rimuovi lo sfondo da questa immagine. Mantieni tutti i soggetti in primo piano invariati e completamente intatti, con bordi puliti e uniformi. Rendi lo sfondo trasparente.»"
+  },
+  "fondo": "trasparente",
+  "alone": 128,
+  "cella": [1, 1],
+  "famiglie": {
+    "cripta-medaglione": "fondo",
+    "cripta-porta": "figura",
+    "cripta-mercante": "figura"
+  },
+  "trasforma": {
+    "cripta-porta": { "giri": 1 },
+    "cripta-fianco": { "giri": 1, "specchia": false },
+    "cripta-scala": { "giri": 1, "specchia": false },
+    "cripta-mercante": { "giri": 1 }
+  },
+  "sprite": {
+    "cripta-porta-semplice": { "da": [30, 113], "cella": [128, 179], "misura": [16, 22] },
+    "cripta-porta-ferro": { "da": [191, 113], "cella": [133, 179], "misura": [16, 22] },
+    "cripta-porta-oro": { "da": [357, 113], "cella": [134, 179], "misura": [16, 22] },
+    "cripta-porta-teschio": { "da": [524, 107], "cella": [136, 185], "misura": [16, 23] },
+    "cripta-porta-chiara": { "da": [693, 113], "cella": [134, 179], "misura": [16, 22] },
+    "cripta-porta-aperta": { "da": [859, 113], "cella": [133, 179], "misura": [16, 22] },
+    "cripta-fianco-semplice": { "da": [57, 346], "cella": [70, 176], "misura": [10, 20] },
+    "cripta-fianco-ferro": { "da": [223, 346], "cella": [72, 176], "misura": [10, 20] },
+    "cripta-fianco-oro": { "da": [389, 346], "cella": [69, 176], "misura": [10, 20] },
+    "cripta-fianco-teschio": { "da": [553, 346], "cella": [71, 176], "misura": [10, 20] },
+    "cripta-fianco-chiara": { "da": [722, 346], "cella": [70, 176], "misura": [10, 20] },
+    "cripta-fianco-aperta": { "da": [889, 346], "cella": [69, 176], "misura": [10, 20] },
+    "cripta-scala-chiusa": { "da": [33, 623], "cella": [162, 153], "misura": [16, 15] },
+    "cripta-mercante-0": { "da": [476, 623], "cella": [238, 179], "misura": [28, 21] },
+    "cripta-mercante-1": { "da": [760, 623], "cella": [234, 179], "misura": [28, 21] },
+    "cripta-medaglione": { "da": [47, 851], "cella": [291, 282], "misura": [48, 48] }
+  }
+}

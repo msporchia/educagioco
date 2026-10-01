@@ -35,19 +35,19 @@ export const SCENARI = {
     perTerra: ['cantine-terriccio', 'cantine-sassolini', 'cantine-radice'],
     ragnatele: { sx: 'cantine-ragnatela-sx', dx: 'cantine-ragnatela-dx' },
   },
-  // la cripta (sotterraneo_3.png): il foglio delle cantine ridisegnato coi pezzi agli stessi posti
+  // la cripta (sotterraneo_4*.png): ritagliata da una scena, più due fogli coi pezzi che la scena non ha
   cripta: {
     pavimento: { stanza: 'cripta-pav-stanze', corridoio: 'cripta-pav-corridoi' },
     medaglione: 'cripta-medaglione',
     tetto: 'cripta-tetto',
-    colori: { roccia: '#1e272f' },
+    colori: { roccia: '#14181b' },
     faccia: 'cripta-faccia-fila',
     torcia: 'cripta-faccia-torcia',
-    varianti: ['cripta-faccia-grata', 'cripta-faccia-arco', 'cripta-faccia-liscia',
-               'cripta-faccia-toppa', 'cripta-faccia-mensola'],
+    varianti: ['cripta-faccia-grata', 'cripta-faccia-liscia', 'cripta-faccia-toppa'],
     capi: { sx: 'cripta-capo-sx', dx: 'cripta-capo-dx' },
+    // bordi con la fascia scura: `luce` è quanto è larga la riga chiara, da ripassare (scena/tela.js)
     bordi: { n: 'cripta-bordo-n', o: 'cripta-bordo-o', e: 'cripta-bordo-e',
-             angolo: 'cripta-bordo-angolo' },
+             angolo: 'cripta-bordo-angolo', luce: 3 },
     porte: {
       davanti: { guardia: 'cripta-porta-teschio', tesoro: 'cripta-porta-oro',
                  mercante: 'cripta-porta-chiara', fonte: 'cripta-porta-ferro',
@@ -59,7 +59,7 @@ export const SCENARI = {
     scala: { aperta: 'cripta-scala-aperta', chiusa: 'cripta-scala-chiusa' },
     fontana: { piena: 'cripta-fontana-piena', asciutta: 'cripta-fontana-asciutta' },
     mercante: ['cripta-mercante-0', 'cripta-mercante-1'],
-    perTerra: ['cripta-sassolini'],
+    perTerra: ['cripta-foglie', 'cripta-schegge', 'cripta-lastra'],
     ragnatele: { sx: 'cripta-ragnatela-sx', dx: 'cripta-ragnatela-dx' },
   },
 }

@@ -1,0 +1,41 @@
+{
+  "__": "Il foglietto di sotterraneo_4.png: la scena della cripta (ChatGPT, 30 settembre 2026, il prompt 1 col blocco LA CRIPTA, allegati sotterraneo_1.png e la pianta). Dalla scena si prendono pavimenti, tetto, facce, bordi e la scala aperta; porte, mercante, fontana e medaglione restano quelli di sotterraneo_3.png. Il pavimento dei corridoi è una colonna di una cella per quattro, la fila del muro è lunga due celle: la tela ripete quello che il pezzo è largo.",
+  "prompt": {
+    "scheda": "PROMPT-scenario.md",
+    "base": "sotterraneo_1.png, PROMPT-scenario-pianta.png",
+    "generatore": "ChatGPT, 30 settembre 2026",
+    "testo": "il prompt 1 della scheda col blocco LA CRIPTA; lo stile è sotterraneo_1.png invece di bottino-e-arredo.png, e due righe in più: il tetto più scuro e liscio di ogni pavimento, i pavimenti senza segni che saltano all'occhio, niente ossa, teschi, stendardi o drappi"
+  },
+  "fondo": "trasparente",
+  "cella": [1, 1],
+  "famiglie": {
+    "cripta-pav": "fondo",
+    "cripta-tetto": "fondo",
+    "cripta-faccia": "tessera",
+    "cripta-capo": "tessera",
+    "cripta-bordo": "tessera"
+  },
+  "trasforma": {
+    "cripta-faccia": { "giri": 1 },
+    "cripta-capo": { "giri": 1 },
+    "cripta-bordo": { "giri": 1 },
+    "cripta-scala": { "giri": 1, "specchia": false }
+  },
+  "sprite": {
+    "cripta-pav-stanze": { "da": [520, 1000], "cella": [256, 192], "misura": [64, 48] },
+    "cripta-pav-corridoi": { "da": [720, 400], "cella": [46, 260], "misura": [16, 64] },
+    "cripta-tetto": { "da": [0, 0], "cella": [256, 100], "misura": [64, 64] },
+    "cripta-faccia-fila": { "da": [384, 877], "cella": [128, 64], "misura": [32, 16] },
+    "cripta-faccia-torcia": { "da": [320, 877], "cella": [64, 64], "misura": [16, 16] },
+    "cripta-faccia-grata": { "da": [512, 877], "cella": [64, 64], "misura": [16, 16] },
+    "cripta-faccia-liscia": { "da": [640, 877], "cella": [64, 64], "misura": [16, 16] },
+    "cripta-faccia-toppa": { "da": [448, 877], "cella": [64, 64], "misura": [16, 16] },
+    "cripta-capo-sx": { "da": [198, 877], "cella": [24, 64], "misura": [6, 16] },
+    "cripta-capo-dx": { "da": [198, 877], "cella": [24, 64], "misura": [6, 16], "specchia": true },
+    "cripta-bordo-n": { "da": [256, 626], "cella": [64, 32], "misura": [16, 8] },
+    "cripta-bordo-o": { "da": [772, 400], "cella": [32, 64], "misura": [8, 16] },
+    "cripta-bordo-e": { "da": [40, 800], "cella": [32, 64], "misura": [8, 16] },
+    "cripta-bordo-angolo": { "da": [60, 600], "cella": [10, 10], "misura": [4, 4] },
+    "cripta-scala-aperta": { "da": [704, 1200], "cella": [72, 76], "misura": [16, 17] }
+  }
+}
