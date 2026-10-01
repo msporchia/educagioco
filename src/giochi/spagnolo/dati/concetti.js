@@ -5,4 +5,12 @@
 // due esempi almeno e almeno uno con [quadre] attorno a quello che cambia
 // («[una] vaca»). Il formato e i controlli: docs/lingue/concetti.md e
 // motore/concetti.js (`guastiDeiConcetti`).
-export const CONCETTI = {}
+import PRIMA from './concetti/prima.js'
+import SECONDA from './concetti/seconda.js'
+import TERZA from './concetti/terza.js'
+import QUARTA from './concetti/quarta.js'
+import QUINTA from './concetti/quinta.js'
+import SESTA from './concetti/sesta.js'
+
+// un file per mondo in concetti/: ogni agente e ogni mano tocca il suo
+export const CONCETTI = Object.assign({}, PRIMA, SECONDA, TERZA, QUARTA, QUINTA, SESTA)
