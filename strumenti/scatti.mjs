@@ -141,8 +141,8 @@ PROFILO.campagne = {
   fattoria: { tappa: 0, libera: false, stelle: {}, cfg: { stato: fattoriaGiocata() } },
   // tre tappe del primo mondo vinte: la mappa ha un sentiero battuto e la nave a metà
   inglese: { tappa: 3, libera: false, stelle: {}, cfg: {},
-             vinte: { 'prima-colori': ADESSO - 3 * 864e5, 'prima-ciao': ADESSO - 2 * 864e5,
-                      'prima-animali': ADESSO - 864e5 } },
+             vinte: { 'prima-colori': ADESSO - 3 * 864e5, 'prima-animali': ADESSO - 2 * 864e5,
+                      'prima-giocattoli': ADESSO - 864e5 } },
 }
 
 /* ── giocare un pezzo di castello ──
@@ -244,8 +244,37 @@ function unaDomanda (chiave) {
 /* nove anni: a quell'età le tre tipologie della vetrina stanno tutte nel
    quadro, e nessuna è ancora «superflua» */
 const NOVE_ANNI = p => { p.settings.eta = 9; return p }
-// sette anni: nell'inglese la prima isola non è ancora «passata», e la nave sta lì
+// sette anni: l'età di chi gioca la prima isola dell'inglese
 const SETTE_ANNI = p => { p.settings.eta = 7; return p }
+/* L'inglese fotografato mentre si sbaglia: è lì che si vede quello che il
+   gioco insegna (il perché, la frase giusta, «Si fa così»). «Che cos'è?» è
+   già vinta, così si entra dritti nelle frasi senza la pagina del concetto,
+   e it is / is it sono a metà: la frase arriva come «scegli», l'inglese da
+   trovare fra le trappole. Si tocca una trappola. */
+const UNO_SBAGLIO = p => {
+  SETTE_ANNI(p)
+  p.campagne.inglese = { ...p.campagne.inglese, tappa: 4,
+                         vinte: { ...p.campagne.inglese.vinte, 'prima-che-cose': ADESSO - 3600e3 } }
+  p.items = { ...(p.items || {}) }
+  for (const w of ['dog', 'cat', 'fish', 'bird', 'mouse', 'rabbit', 'horse', 'cow', 'pig', 'duck', 'ball', 'doll',
+                   'kite', 'puzzle', 'game', 'car', 'train', 'plane', 'boat'])
+    p.items['en:' + w] = { s: 6, ok: 5, err: 0, last: ADESSO, seen: 5, t: 0 }
+  for (const f of ['it-is', 'is-it']) p.items['forma:' + f] = { s: 3, ok: 3, err: 0, last: ADESSO, seen: 3, t: 0 }
+  return p
+}
+async function sbagliaUnaFrase (page) {
+  await page.waitForSelector('[data-domanda][data-genere="frase"]', { timeout: 5000 })
+  await page.waitForTimeout(4500)                               // il tempo di leggere: se no è «troppo di fretta»
+  const tessere = await page.locator('[data-banco] [data-tessera][data-posto]').evaluateAll(
+    els => els.map(e => ({ id: e.dataset.tessera, posto: Number(e.dataset.posto) })).sort((a, b) => a.posto - b.posto))
+  if (tessere.length > 1) {
+    // le prime due scambiate: «is it a dog» per «it is a dog», l'errore più tipico
+    for (const t of [tessere[1], tessere[0], ...tessere.slice(2)]) await page.locator(`[data-banco] [data-tessera="${t.id}"]`).click()
+    await page.locator('[data-azione="consegna"]').click()
+  } else await page.locator('[data-domanda] [data-opzione]:not([data-giusta])').first().click()
+  await page.waitForSelector('[data-esito="sbagliata"]', { timeout: 3000 })
+  await page.waitForTimeout(900)
+}
 
 /* le ricette. `dove` è il frammento dell'indirizzo, `passi` quello che
    si fa prima di scattare. Un passo è [selettore, attesa dopo]. */
@@ -263,8 +292,8 @@ const RICETTE = [
   /* l'inglese è la mappa del tesoro: la nave è alla tappa da fare, e
      toccata una tappa ci naviga prima di aprirla */
   { file: 'inglese-mappa', dove: 'inglese', attesa: '[data-mappa-inglese] [data-tappa]', profilo: SETTE_ANNI },
-  { file: 'inglese-gioco', dove: 'inglese', attesa: '[data-mappa-inglese] [data-tappa]', profilo: SETTE_ANNI,
-    passi: [['[data-tappa="prima-che-cose"]', 2600]] },
+  { file: 'inglese-gioco', dove: 'inglese', attesa: '[data-mappa-inglese] [data-tappa]', profilo: UNO_SBAGLIO,
+    passi: [['[data-tappa="prima-che-cose"]', 2600], sbagliaUnaFrase] },
   { file: 'spagnolo-gioco', dove: 'spagnolo', attesa: '.mappa',
     passi: [['.tappa:not(.chiusa)', 1600]] },
 
