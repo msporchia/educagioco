@@ -61,16 +61,21 @@ rileggere i banchi; `node test/esegui.mjs inglese-mondi` li controlla tutti.
 
 ## Lo spagnolo
 
-Stesso motore, dati suoi: un grafo di mondi con le difficoltà dello
-spagnolo (ser/estar, il genere, tener, gustar: vedi
-[vocaboli.md](vocaboli.md#lo-spagnolo)), le sue forme (`forma-es:`, da
-scegliere guardando `store/progressi.js`), la sua tabella di trappole e le
-sue contrazioni (`del`, `al`). Oggi il motore è scritto per l'inglese in
-quattro punti: `motore/lessico.js` (i pronomi, i verbi, i plurali, le cose
-che non si contano), `motore/grammatica.js`, le operazioni di
-`motore/trappole.js` e `dati/contrazioni.js`; vanno resi per lingua prima di
-cominciare. Il `¿…?` è una regola dei dati spagnoli: le trappole di una
-domanda devono essere domande anche loro.
+Fatto il 1° ottobre 2026 ([spagnolo.md](spagnolo.md)): sei isole, 77 tappe,
+610 frasi, 122 concetti e un libro. Il motore è una copia di quello
+dell'inglese con la lingua rifatta ([spagnolo-motore.md](spagnolo-motore.md)):
+se si corregge un difetto del motore comune, va corretto in due posti. Manca:
+
+- **Il motore comune**: grafo, sessione, formati, grado, mappa e storie sono
+  copie identiche; fattorizzarle (un motore che prende i dati di una lingua)
+  è il lavoro da fare quando la terza lingua lo chiederà.
+- **Parole che le storie chiedono**: `nadar`, `cantar`, `bailar`, `tocar`
+  (quarta e sesta), `niño`/`niña` (la quinta ne ha bisogno per «del niño»),
+  `para`, `lo`, `Bolivia` e i nomi di luogo, `usted` per dare del lei.
+- **Le voci delle frasi** (come l'inglese, sotto).
+- **I disegnini della mappa** sono quelli dell'inglese.
+- **La campagna di prima** (`p.esp`) non si travasa: chi l'aveva finita
+  ricomincia dalle isole, e le sue parole sapute restano sapute (stesse chiavi).
 
 ## Le voci delle frasi
 

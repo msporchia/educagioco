@@ -14,7 +14,7 @@ le tappe; il resto sta accanto:
 
 Sostituisce la campagna in fila di `data/campagna-inglese.js`, dove ogni
 tappa portava 42–73 parole nuove e le frasi arrivavano solo all'undicesima:
-un blocco mnemonico. Lo spagnolo segue dopo, con lo stesso motore.
+un blocco mnemonico. Lo spagnolo ha lo stesso metodo e un percorso suo: [spagnolo.md](spagnolo.md).
 
 ## Un mondo per anno di scuola
 

@@ -33,12 +33,24 @@ I nomi sono posti, mai l'anno (vedi [mondi.md](mondi.md#un-mondo-per-anno-di-scu
 
 | isola (anno) | le tappe in ordine (in corsivo le frasi) |
 |---|---|
-| **1** | i colori · gli animali · i giocattoli · *un/una (es un perro)* · *el, la* · *hola, me llamo* · a scuola · *este, esta* · i numeri fino a dieci · *un gato negro* |
-| **2** | il cibo · *los, las, i plurali* · a pranzo · *me gusta / me gustan* · la famiglia · i vestiti · *mi, tu, su* · come sono · *yo soy, tú eres* · i numeri fino a venti · *tengo* · il corpo · *ella tiene* |
-| **3** | la casa · i mobili · *¿dónde está? en, sobre, debajo* · i numeri fino a cento · *hay* · *¿quién? ¿qué? ¿cómo?* · i giorni · le stagioni e i mesi · gli altri mesi · che tempo fa · *hoy es lunes* · che cosa sai fare · *ser o estar* |
-| **4** | la giornata · *¿qué hora es?* · ogni giorno · sport e musica · *yo juego* · primo, secondo, terzo · *el primero de mayo, a las siete* · *un poco de, algunos* · i mestieri · *ella come, él vive* · *me levanto* · i mezzi · *estoy jugando* |
-| **5** | in città · per strada · *gira a la izquierda, al lado del* · i soldi · *¿cuánto cuesta?* · *el perro de Tom* · *quiero, puedo, voy* |
-| **6** | *ayer estuve* · fuori città · i verbi che cambiano · *fui, hice* · *jugué* · chi parla, chi ride · *dijo* · *cuando, mientras* · alto e veloce · *más alto que* · *voy a nadar* |
+| **1** | i colori · gli animali · i giocattoli · *è un cane, è una mucca* · *il gatto, la mucca* · *un gatto nero* · le feste · *ciao! come ti chiami?* · a scuola · *questo è…* · i numeri fino a dieci |
+| **2** | il cibo · *due gatti, i gatti* · a pranzo · *mi piace!* · la famiglia · i vestiti · *questo è mio* · come sono · *io sono, tu sei* · i numeri fino a venti · *ho un…, ho fame* · il corpo · *lei ha…* |
+| **3** | la casa · i mobili · *dov’è?* · i numeri fino a cento · *c’è, ci sono* · *chi? che cosa? come?* · i giorni · le stagioni e i mesi · gli altri mesi · *oggi è lunedì* · che tempo fa · *fa freddo, piove* · come stai? · *essere o stare?* |
+| **4** | la giornata · *che ore sono?* · ogni giorno · sport e musica · *io lavo, tu ascolti* · *il cinque di maggio* · *un po’ di…, alcuni* · i mestieri · *lei mangia, lui vive* · la mattina · *mi alzo alle sette* · i mezzi · *che cosa stai facendo?* |
+| **5** | in città · *vado al parco* · per strada · *gira a sinistra* · i soldi · *quanto costa?* · *il cane di Tom* · i verbi che cambiano · *voglio, posso* |
+| **6** | *ieri ero al parco* · fuori città · che cosa è successo · *sono andato al castello* · *ho giocato* · chi parla, chi ride · *ha detto ciao* · *quando fa freddo* · alto e veloce · *chi è più alto?* · *domani andrò* |
 
-Da riempire man mano; il gioco di prima (`views/LinguaGame.vue`) resta come
-«Il gioco di prima» in fondo alla mappa.
+La tabella si rifà dai dati (`dati/mondi.js`): se i due divergono ha ragione il
+codice. Il gioco di prima (`views/LinguaGame.vue`) resta come «Il gioco di
+prima» in fondo alla mappa.
+
+## Stato (1° ottobre 2026)
+
+Sei isole, 77 tappe (le parole 35, le frasi 36, le 🏁 6), 610 frasi, 122
+concetti, 26 storie (le prime cinque isole quattro ciascuna, la sesta tre più
+una serie a puntate, «Il mercato della nonna»). Le chiavi delle parole sono
+quelle di sempre (`es:perro`, `verbo-es:jugar`), le frasi `frase-es:`, le
+strutture `forma-es:`; l'avanzamento sta in `profile.campagne.spagnolo`.
+Il motore e il contratto per scrivere frasi, concetti e capitoli:
+[spagnolo-motore.md](spagnolo-motore.md) e [spagnolo-trappole.md](spagnolo-trappole.md).
+Cosa manca: [da-fare.md](da-fare.md#lo-spagnolo).

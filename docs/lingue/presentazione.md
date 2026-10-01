@@ -2,8 +2,10 @@
 
 # 🌐 English e 🇪🇸 Spagnolo
 
-*Parole, frasi e storie.* L'inglese è una **mappa del tesoro**; lo
-spagnolo è ancora la campagna in fila di prima, e ci arriverà.
+*Parole, frasi e storie.* L'inglese e lo spagnolo sono due **mappe del
+tesoro**, con sei isole ciascuna. Lo spagnolo ha un percorso suo: genere,
+`ser` ed `estar`, `tener`, `gustar`, i verbi e i passati, spiegati prima di
+essere chiesti ([spagnolo.md](spagnolo.md)).
 
 <img src="../img/inglese-gioco.png" width="230"> <img src="../img/inglese-mappa.png" width="230"> <img src="../img/spagnolo-gioco.png" width="230">
 
