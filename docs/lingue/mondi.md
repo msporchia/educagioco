@@ -28,7 +28,7 @@ quell'anno. Il grafo resta un grafo — un mondo può dipendere da due, e
 
 | mondo | le tappe in ordine (in corsivo quelle di frasi) | si apre dopo |
 |---|---|---|
-| **In prima** | i colori · *hello, my name is, how are you?* · gli animali · i giocattoli · *it is a …, is it …?* · *a red ball* · a scuola · *this is …* · i numeri fino a dieci · *they are two dogs* | — |
+| **In prima** | i colori · gli animali · i giocattoli · *it is a …, is it …?* · *a red ball* · *hello, my name is, how are you?* · a scuola · *this is …* · i numeri fino a dieci · *they are two dogs* | — |
 | **In seconda** | il cibo · a pranzo · *I like / I don't like* · la famiglia · i vestiti · come sono (big, happy, hungry…) · *this is my, he is, I am* · i numeri fino a venti · *I have got* · il corpo · *she has got* | In prima |
 | **In terza** | la casa · i mobili · *where is? in, on, under, behind* · i numeri fino a cento · *there is / there are* · i giorni · le stagioni e i mesi · gli altri mesi · che tempo fa · *today is Monday, in May* · che cosa sai fare (verbi) · *I can / I can't* | In seconda |
 | **In quarta** | la giornata · *what time is it?* · ogni giorno (verbi) · sport e musica · *I play every day* · i mestieri · *she plays* · *does she play?* · i mezzi · *I am playing* | In terza |
@@ -39,7 +39,10 @@ Rifinito sul programma vero, rispetto alla traccia di partenza:
 
 - **i saluti in prima sono una tappa di frasi, non di parole**: *hello,
   goodbye, please, thank you* sono sei parole di struttura (categoria `q`),
-  troppo poche per una tappa, e a scuola si imparano come frasi fatte;
+  troppo poche per una tappa, e a scuola si imparano come frasi fatte.
+  **Vengono dopo *it is / is it***, non subito: le trappole chiedono *I am*
+  e non *I is*, *what is your name* e non *what your name is*, e quel *is*
+  e la domanda girata li insegna «Che cos'è?»;
 - **big, small e le emozioni in seconda** (*I am happy, are you hungry?*),
   dove i libri le mettono con *I am* e la famiglia; in prima i colori
   bastano a fare *a red ball*;
@@ -55,8 +58,8 @@ Rifinito sul programma vero, rispetto alla traccia di partenza:
   expensive* non sono in `data/words.js` (vedi [da-fare.md](da-fare.md)).
 
 **Le tappe si alternano**: una di frasi subito dopo le tappe di parole che
-le servono, mai più di quattro di parole di fila, e le frasi dalla seconda
-o terza tappa ([frasi.md](frasi.md#le-tappe-di-frasi)). Una tappa di parole
+le servono, mai più di quattro di parole di fila, e le frasi entro la
+quarta tappa ([frasi.md](frasi.md#le-tappe-di-frasi)). Una tappa di parole
 ha **8–10 parole di un argomento solo**, col nome dell'argomento: «I colori»
 sono solo colori (`dati/argomenti.js`). La 🏁 ripassa tutto il mondo, e una
 storia del libro usa solo quello che il mondo ha insegnato fino alla tappa

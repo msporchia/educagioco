@@ -10,7 +10,7 @@ sbagliate in [trappole.md](trappole.md), le strutture di quarta e quinta in
 **Dentro un mondo le frasi sono capitoli fra le parole, e in fondo la
 🏁.** Una tappa di frasi viene subito dopo le tappe di parole che le
 servono (*Mi piace!* dopo il cibo e il pranzo), mai tutte in blocco alla
-fine: chi gioca un mondo compone frasi dalla seconda o terza tappa, e mai
+fine: chi gioca un mondo compone frasi entro la quarta tappa, e mai
 più di quattro tappe di parole di fila (lo controlla
 `test/unita/inglese-mondi`). Una tappa di parole non chiede frasi, una di
 frasi non insegna parole.

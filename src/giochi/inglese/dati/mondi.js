@@ -49,18 +49,18 @@ function portate(m) {
 export const MONDI = [
   {
     id: 'prima', anno: 1, nome: 'In prima', disegno: 'palla',
-    insegna: 'hello, it is a …, is it …?, i colori, i numeri fino a dieci, this is …',
+    insegna: 'i colori, it is a …, is it …?, hello, my name is, i numeri fino a dieci, this is …',
     dopo: [], categorie: ['a', 'c', 's', 'g'],
     tappe: [
       parole('prima-colori', 'I colori', 'pennelli', 'colori',
         ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'black', 'white', 'brown']),
-      frasi('prima-ciao', 'Ciao! Come ti chiami?', 'coppia', ['saluti']),
       parole('prima-animali', 'Gli animali', 'cane', 'animali',
         ['dog', 'cat', 'fish', 'bird', 'mouse', 'rabbit', 'horse', 'cow', 'pig', 'duck']),
       parole('prima-giocattoli', 'I giocattoli', 'palla', 'giocattoli',
         ['ball', 'doll', 'teddy bear', 'kite', 'puzzle', 'game', 'car', 'train', 'plane', 'boat']),
       frasi('prima-che-cose', 'Che cos’è?', 'punto-di-domanda', ['it-is', 'is-it']),
       frasi('prima-colore', 'Di che colore è?', 'pennelli', ['colore-prima'], true),
+      frasi('prima-ciao', 'Ciao! Come ti chiami?', 'coppia', ['saluti']),
       parole('prima-scuola', 'A scuola', 'zaino', 'scuola',
         ['book', 'pencil', 'pen', 'ruler', 'rubber', 'backpack', 'notebook', 'crayon', 'box', 'map']),
       frasi('prima-questo', 'Questo è…', 'zaino', ['this-is']),

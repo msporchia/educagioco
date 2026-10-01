@@ -1,9 +1,9 @@
-// In prima, a metà isola (dopo «Che cos’è?»): Tom indovina il giocattolo di
+// In prima, a metà isola (dopo «Ciao! Come ti chiami?»): Tom indovina il giocattolo di
 // Leo. Una pagina, tre domande. Formato in docs/lingue/libro.md.
 export default {
   id: 'il-gioco-di-tom',
   mondo: 'prima',
-  dopo: 'prima-che-cose',
+  dopo: 'prima-ciao',
   titolo: 'Che cos’ha Leo?',
   variabili: {
     cosa: { da: 'giocattoli', fra: ['ball', 'doll', 'kite', 'car', 'train', 'plane', 'boat'] },
