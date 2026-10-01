@@ -73,17 +73,16 @@ spargendo le tappe dentro l'anno (25–36 la prima, 38–49 la seconda, 50–61
 la terza, 63–74 la quarta, 75–86 la quinta). La carta English la legge come
 quella di ogni gioco (`TAPPE_DEL_GIOCO.inglese` in `data/portata-giochi.js`),
 e il manifesto non dice più `grandi`: il primo mondo è la prima
-elementare. **Chi è più grande trova i mondi degli anni già fatti
-«passati»**: un mondo le cui tappe stanno tutte sotto la mira dell'età
-(`miraDi` di `data/portata.js`, la stessa di ogni campagna) è aperto per
-intero — bandiera, libro e cassetto compresi — da ripassare quando vuole,
-**non è vinto**, e apre il mondo dopo come se fosse finito. A otto anni è
-passata la prima, a dieci anche seconda e terza. Il passato si decide sul
-mondo intero e non tappa per tappa: metà mondo aperto per età e metà no
-sarebbe un mondo che non si capisce. Perché non con `scuola:` come le
-tabelline: quel campo vuole un sapere di `data/saperi.js` da spegnere, e
-«l'inglese della prima» non è una cosa che un genitore spegne; qui l'anno è
-già nel dato.
+elementare. **L'età non apre mondi: anche un bambino di quarta comincia
+dalla prima** e la attraversa tappa per tappa, come tutti. Vincere una tappa
+non chiede padronanza, quindi chi l'inglese della prima lo sa la passa in
+fretta, e intanto lo dimostra. Provato aprire «passati» i mondi sotto la
+mira dell'età: non va, perché un bambino di dieci anni si trovava in quarta
+senza aver mai risposto a una domanda. **Un mondo con una tappa vinta resta
+aperto** anche senza il mondo prima finito (`mondoAperto` in
+`motore/mappa.js`): chi l'aveva aperto così non se lo vede richiudere, ma
+il mondo dopo vuole quello finito. L'età decide ancora se la carta si offre
+in home (la portata) e se le parole si chiedono con le figure.
 
 **La mappa è una mappa del tesoro**: il grafo come quello della mappa del
 sotterraneo, su filigrana di pergamena, sentieri tratteggiati, e per ogni
@@ -101,7 +100,7 @@ della tappa; la 🏁 fa la media di tutto il mondo.
 
 Le parole dei dati che non entrano in nessuna tappa stanno nel **📦 cassetto**
 del mondo della loro categoria: facoltativo, si apre alla prima tappa vinta
-del mondo (o col mondo passato per età), e si gioca coi formati delle parole
+del mondo, e si gioca coi formati delle parole
 di oggi. Nessuna chiave sparisce. I cassetti per anno: animali, colori,
 scuola e giochi (`a c s g`) in prima; corpo, persone, cibo, vestiti e
 aggettivi (`b k f p j`) in seconda; casa, calendario, natura e numeri (`h d
@@ -203,7 +202,7 @@ sono tabelle, `motore/` gira in Node e non sa di monete né di schermo.
 | `motore/grafo.js` | mondi garantiti, parole e flessioni note a una tappa, voci di una tappa, `fontiDi`, `gruppoDi`, cassetto |
 | `motore/grammatica.js`, `motore/trappole.js` | `sgrammaticata`; le operazioni della tabella, `trappoleDi`, `scegliTrappole` |
 | `motore/formati.js`, `motore/sessione.js` | da una frase tutti i formati e il giudizio; una partita |
-| `motore/grado.js`, `motore/tocchi.js`, `motore/mappa.js`, `motore/travaso.js` | il grado e `ripresa`; la parola da toccare; aperto, vinto, passato; il travaso |
+| `motore/grado.js`, `motore/tocchi.js`, `motore/mappa.js`, `motore/travaso.js` | il grado e `ripresa`; la parola da toccare; aperto e vinto; il travaso |
 | `motore/libro.js`, `motore/storie.js` | il libro: variabili, rami, pagine, domande; quale storia si apre |
 | `motore/guasti.js` | i controlli su ogni frase e ogni capitolo |
 
@@ -212,12 +211,11 @@ sono tabelle, `motore/` gira in Node e non sa di monete né di schermo.
 Tutto puro; la vista tiene lo stato reattivo e scrive il profilo.
 
 **La mappa.** `c = progresso(CHIAVE)` (da `giochi/campagne.js`), poi
-`travasa(c)` (e se torna vero si salva), poi `statoMappa(c, forzaDi, { tutto,
-eta })` → per mondo `{ id, anno, nome, insegna, dopo, dopoUno, pronto,
-aperto, finito, passato, tappe: [{ id, nome, disegno, bandiera, frasi,
+`travasa(c)` (e se torna vero si salva), poi `statoMappa(c, forzaDi, { tutto })`
+→ per mondo `{ id, anno, nome, insegna, dopo, dopoUno, pronto,
+aperto, finito, tappe: [{ id, nome, disegno, bandiera, frasi,
 aperta, vinta, grado }], cassetto: { aperto, chiavi } }`, con `forzaDi =
-strengthOf` di `store/profile.js`, `tutto` = `tuttoAperto()` ed `eta` =
-`etaDelBambino()`. `disegno` è il nome del disegnino della tappa per i
+strengthOf` di `store/profile.js` e `tutto` = `tuttoAperto()`. `disegno` è il nome del disegnino della tappa per i
 pittori.
 
 **Una partita**: in [frasi.md](frasi.md#linterfaccia-per-la-vista-una-partita).
@@ -236,6 +234,6 @@ cartello `segnaLetta(c, id)` e `segnaPuntata(c, cap)`; `puntataDopo(…)` e
 
 Nei test: `unita/inglese-mondi`, senza browser: il grafo, gli argomenti
 (una tappa di parole ha solo parole del suo argomento e le risposte
-sbagliate vengono da lì), l'anno e la portata, i mondi passati, il
+sbagliate vengono da lì), l'anno e la portata, l'età che non apre mondi, il
 travaso, e le frasi ([frasi.md](frasi.md#estendibile)). La vista e i suoi
 bersagli `data-…`: [mondi-vista.md](mondi-vista.md#nei-test).

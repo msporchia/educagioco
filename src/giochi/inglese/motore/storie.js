@@ -6,7 +6,7 @@
 // regole (`r`) sono quelle di motore/mappa.js. Il perché:
 // docs/lingue/libro.md («Quale storia») e docs/lingue/libro-racconti.md.
 import { MONDI, mondoDi, tappaDi } from '../dati/mondi.js'
-import { mondoAperto, mondoPassato, vinta } from './mappa.js'
+import { mondoAperto, vinta } from './mappa.js'
 import { tappaDellaStoria, tira, tiraConFissi, chiaveDelValore } from './libro.js'
 
 const regole = r => (typeof r === 'boolean' ? { tutto: r } : r || {})
@@ -40,16 +40,16 @@ export const serieDi = c => (c && oggetto(c.serie) ? c.serie : {})
 export const puntataDi = (capitoli, serie, n) => capitoli.find(x => x.serie === serie && x.puntata === n) || null
 
 // Una storia si legge quando la sua tappa è vinta, come la tappa dopo;
-// «Sblocca tutti» e un mondo passato per età aprono tutto. Una puntata dopo
+// «Sblocca tutti» apre tutto. Una puntata dopo
 // la prima vuole anche la puntata prima letta, sempre: una serie si legge in fila.
 export function storiaAperta(c, cap, r, capitoli = []) {
-  const { tutto = false, eta = null } = regole(r)
+  const { tutto = false } = regole(r)
   if (!mondoAperto(c, cap.mondo, r)) return false
   if (cap.serie && cap.puntata > 1) {
     const prima = puntataDi(capitoli, cap.serie, cap.puntata - 1)
     if (!prima || !lette(c)[prima.id]) return false
   }
-  if (tutto || mondoPassato(cap.mondo, eta)) return true
+  if (tutto) return true
   const t = tappaDellaStoria(cap)
   return !!t && vinta(c, t)
 }

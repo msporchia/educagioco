@@ -4,7 +4,7 @@
 
    Quello che il motore da solo non può dire (test/unita/inglese-mondi):
      · la carta English apre la mappa del tesoro, un mondo per anno di
-       scuola; a otto anni la prima è «passata», aperta da ripassare
+       scuola; l'età non apre mondi, si comincia dalla prima
      · una tappa di parole fa domande sulle parole del suo argomento: fra
        i colori, solo colori
      · una frase si compone a tocchi, e sbagliandola si legge il perché,
@@ -46,7 +46,7 @@ async function scattoTela(page, nome) {
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
 await azzera(page)
-// l'età decide quali mondi sono «passati»: a sei anni e mezzo nessuno
+// l'età non apre mondi (lo prova il punto 6)
 const conEta = async (eta, resto = {}) => {
   const vecchio = await leggiProfilo(page)
   await semina(page, { ...resto, settings: { ...((vecchio || {}).settings || {}), eta } })
@@ -59,12 +59,11 @@ uguale('in home c’è una carta English sola', await carta.count(), 1)
 await carta.click()
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]', { timeout: 5000 })
 uguale('la prima tappa è aperta', await page.locator('[data-tappa="prima-colori"]').getAttribute('data-stato'), 'aperta')
-uguale('la seconda no', await page.locator('[data-tappa="prima-ciao"]').getAttribute('data-stato'), 'chiusa')
+uguale('la seconda no', await page.locator('[data-tappa="prima-animali"]').getAttribute('data-stato'), 'chiusa')
 uguale('a profilo vuoto il grado è zero', await page.locator('[data-tappa="prima-colori"]').getAttribute('data-grado'), '0')
 const lontani = MONDI.filter(m => !m.tappe.length).length
 uguale('i mondi senza tappe si vedono in arrivo',
        await page.locator('[data-mondo][data-pronto="0"]').count(), lontani)
-uguale('a sei anni e mezzo nessun mondo è passato', await page.locator('[data-mondo][data-passato]').count(), 0)
 uguale('senza la campagna di prima finita, il gioco di prima non c’è', await page.locator('[data-prima]').count(), 0)
 await scatto(page, 'inglese-mappa-vuota')
 await scattoTela(page, 'inglese-mappa-vuota-intera')
@@ -72,7 +71,7 @@ await scattoTela(page, 'inglese-mappa-vuota-intera')
 /* ---------- la nave: ancorata alla tappa da fare, e su una chiusa non parte ---------- */
 const nave = page.locator('[data-nave]')
 uguale('la nave è ancorata alla tappa da fare', await nave.getAttribute('data-porto'), 'tappa:prima-colori')
-await page.locator('[data-tappa="prima-ciao"]').click()
+await page.locator('[data-tappa="prima-animali"]').click()
 await page.waitForSelector('[data-serve]', { timeout: 2000 })
 controlla('una tappa chiusa dice cosa serve', (await page.locator('[data-serve]').innerText()).includes('Prima vinci «I colori»'),
           await page.locator('[data-serve]').innerText())
@@ -85,7 +84,7 @@ await scatto(page, 'inglese-serve')
 await page.locator('[data-libro="prima"]').click()
 await page.waitForSelector('[data-serve-per="libro:prima"]', { timeout: 2000 })
 controlla('il libro chiuso dice quale tappa vincere',
-          (await page.locator('[data-serve]').innerText()).includes('Si apre quando vinci «Che cos’è?»'),
+          (await page.locator('[data-serve]').innerText()).includes('Si apre quando vinci «Ciao! Come ti chiami?»'),
           await page.locator('[data-serve]').innerText())
 
 /* ---------- 1b. le parole di una tappa: fra i colori, solo colori ----------
@@ -484,30 +483,25 @@ uguale('la puntata 2 è letta, e la serie lo sa',
 await page.locator('[data-fine] [data-azione="mappa"]').click()
 await page.waitForSelector('[data-mappa-inglese]')
 
-/* ---------- 6. a otto anni la prima è già fatta a scuola ----------
-   Il mondo della prima è «passato»: aperto tutto, bandiera compresa, da
-   ripassare quando vuole — ma non vinto — e il mondo dopo si apre come se
-   l'avesse finito. */
+/* ---------- 6. a dieci anni si comincia dalla prima ----------
+   L'età non apre mondi; uno in cui ha già vinto una tappa resta aperto
+   (chi l'aveva aperto per età lo ritrova). */
 await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('.carte')
-await conEta(8, { campagne: { inglese: { tappa: 0, libera: false, stelle: {}, cfg: {}, vinte: {} } } })
+await conEta(10, { campagne: { inglese: { tappa: 0, libera: false, stelle: {}, cfg: {}, vinte: { 'quarta-giornata': 1 } } } })
 await carta.click()
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]')
-uguale('la prima è passata', await page.locator('[data-mondo="prima"]').getAttribute('data-passato'), '1')
-uguale('e lo dice', await page.locator('[data-mondo][data-passato]').count(), 1)
-uguale('la sua bandiera è aperta senza averla vinta',
-       await page.locator('[data-tappa="prima-bandiera"]').getAttribute('data-stato'), 'aperta')
-uguale('la seconda comincia da capo', await page.locator('[data-tappa="seconda-cibo"]').getAttribute('data-stato'), 'aperta')
-uguale('una tappa alla volta', await page.locator('[data-tappa="seconda-famiglia"]').getAttribute('data-stato'), 'chiusa')
-uguale('la nave attracca nel primo mondo che non è passato', await nave.getAttribute('data-porto'), 'tappa:seconda-cibo')
-uguale('il libro di un mondo passato è aperto', await page.locator('[data-libro="prima"]').getAttribute('data-stato'), 'aperta')
-uguale('quello della seconda no', await page.locator('[data-libro="seconda"]').getAttribute('data-stato'), 'chiusa')
-await page.locator('[data-tappa="terza-casa"]').click()
+uguale('la prima comincia da capo', await page.locator('[data-tappa="prima-colori"]').getAttribute('data-stato'), 'aperta')
+uguale('una tappa alla volta', await page.locator('[data-tappa="prima-animali"]').getAttribute('data-stato'), 'chiusa')
+uguale('la seconda è chiusa', await page.locator('[data-tappa="seconda-cibo"]').getAttribute('data-stato'), 'chiusa')
+uguale('la quarta, con una tappa vinta, resta aperta',
+       await page.locator('[data-tappa="quarta-ora"]').getAttribute('data-stato'), 'aperta')
+uguale('il libro della prima è chiuso', await page.locator('[data-libro="prima"]').getAttribute('data-stato'), 'chiusa')
+await page.locator('[data-tappa="seconda-cibo"]').click()
 await page.waitForSelector('[data-serve]', { timeout: 2000 })
-controlla('il cartiglio conta la prima passata come finita: manca la seconda',
-          (await page.locator('[data-serve]').innerText()).includes('Prima finisci «In seconda»'),
+controlla('il cartiglio chiede la prima finita',
+          (await page.locator('[data-serve]').innerText()).includes('Prima finisci «In prima»'),
           await page.locator('[data-serve]').innerText())
-await scatto(page, 'inglese-passati')
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))
 await browser.close()

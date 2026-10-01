@@ -27,7 +27,6 @@
                   text-shadow: 0 0 4px #f3e6c4, 0 0 2px #f3e6c4 }
 .ing-mondo-nome.ing-lontano { font-size: 13.5px; opacity: .72 }
 .ing-mondo-nome.ing-chiuso { opacity: .75 }
-.ing-passato { display: block; font: italic 400 11.5px/1.2 Georgia, 'Times New Roman', serif; opacity: .85 }
 .ing-nodo { position: absolute; border-radius: 50%; background: transparent; border: 0; padding: 0;
             box-shadow: none; transition: transform .12s }
 .ing-nodo:not([data-chiuso]):active { transform: scale(.94) }

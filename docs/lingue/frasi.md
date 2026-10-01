@@ -41,8 +41,8 @@ frasi salgono di un gradino a ogni punto di forza, **o della forza della
 loro struttura meno uno** (`gradino` in `motore/sessione.js`): la forma sale
 a ogni frase giusta, quindi in una partita sola si arriva alle tessere anche
 con frasi mai viste. Prima il gradino guardava solo la frase, e una partita
-restava ai primi due formati. In un mondo passato per età, o con «Sblocca
-tutti i livelli», si parte dal terzo gradino (`partenza`); una frase
+restava ai primi due formati. Con «Sblocca tutti i livelli» si parte dal
+terzo gradino (`partenza`); una frase
 sbagliata in questa partita torna alla sua forza.
 
 1. **Riconosci** — la frase inglese e quattro italiane (`fraseIt` di oggi).
@@ -117,8 +117,8 @@ sempre lunghe.
 - **Le forme deboli ripescano**: in una tappa di frasi e alla 🏁, tre frasi
   di una forma debole (forza < 2) dei mondi già fatti entrano nel giro,
   scelte a caso; in una tappa di parole mai. **Debole vuol dire vista e poi
-  calata**: una forma mai vista non ripesca, se no un bambino di quinta con
-  gli anni prima passati per età apriva ogni tappa con «Io sono Leo.». La chiave **`forma:<id>`** registra le risposte
+  calata**: una forma mai vista non ripesca, se no chi salta i mondi con
+  «Sblocca tutti» apriva ogni tappa con «Io sono Leo.». La chiave **`forma:<id>`** registra le risposte
   sulla struttura: una forma debole fa uscire più spesso la sua trappola.
 - **Cosa si segna**: una frase composta giusta conta come ripasso delle sue
   parole **già scadute** (solo quelle), anche dei verbi flessi (*went* è

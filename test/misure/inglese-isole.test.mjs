@@ -229,13 +229,11 @@ titolo('DOVE STA LA NAVE')
   controlla('un mondo in arrivo arriva presto', /arriva presto/.test(cosaServe(s, q.nodi.find(x => x.tipo === 'mondo'))))
   controlla('il libro si apre con la bandiera', /bandiera/.test(cosaServe(s, n('libro:prima'))))
 
-  // a otto anni la prima è passata: aperta tutta, e conta come finita per chi viene dopo
-  const s8 = statoMappa(vuoto, () => 0, { eta: 8 })
-  const q8 = disponi(s8, 390, extra)
-  const n8 = k => q8.nodi.find(x => x.chiave === k)
-  uguale('un mondo passato: il cartiglio chiede il mondo dopo, non lui',
-         cosaServe(s8, n8('tappa:terza-casa')), 'Prima finisci «In seconda»')
-  controlla('e dalla sua bandiera la nave può partire', doveStaLaNave(q8, 'tappa:prima-bandiera').chiave === 'tappa:prima-bandiera')
+  // l'età non apre mondi: un mondo con una tappa vinta resta aperto, ma non conta come finito
+  const sq = statoMappa({ vinte: { 'quarta-giornata': 1 } }, () => 0, { eta: 10 })
+  const qq = disponi(sq, 390, extra)
+  uguale('un mondo aperto da una tappa vinta: il cartiglio di quello dopo chiede lui',
+         cosaServe(sq, qq.nodi.find(x => x.chiave === 'tappa:quinta-citta')), 'Prima finisci «In quarta»')
 }
 
 /* ═══════════ 6. quanto costa ═══════════ */

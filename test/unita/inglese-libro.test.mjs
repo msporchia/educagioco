@@ -200,12 +200,11 @@ titolo('QUALE STORIA')
     vecchia && vecchia.mondo === 'prima' && vecchia.id !== meta.id, vecchia && vecchia.id)
   uguale('è quella letta da più tempo', vecchia.id, tutte.filter(x => x.id !== meta.id)[0].id)
 
-  // Sblocca tutti e i mondi passati per età aprono tutto
+  // Sblocca tutti apre tutto, l'età niente
   // (tranne le puntate dopo la prima: una serie si legge in fila, sempre)
   uguale('sblocca tutti apre le storie', storieAperte(CAPITOLI, nuovo(), { tutto: true }, 'quinta').length,
     CAPITOLI.filter(x => x.mondo === 'quinta' && !(x.puntata > 1)).length)
-  controlla('a otto anni la prima è passata', storieAperte(CAPITOLI, nuovo(), { eta: 8 }, 'prima').length >= 3)
-  uguale('ma la seconda no', storieAperte(CAPITOLI, nuovo(), { eta: 8 }, 'seconda').length, 0)
+  uguale('a otto anni nessuna storia aperta da sé', storieAperte(CAPITOLI, nuovo(), { eta: 8 }, 'prima').length, 0)
   // dieci anni: tutte lette le sue, «Un'altra storia» cerca prima il mondo vicino
   const g = nuovo()
   vinciMondo(g, 'quarta'); vinciMondo(g, 'quinta')

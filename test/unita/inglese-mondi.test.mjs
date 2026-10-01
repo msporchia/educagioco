@@ -46,7 +46,7 @@ import { trappoleDi } from '../../src/giochi/inglese/motore/trappole.js'
 import { formatoPerForza, tessereInPiu, costruisci, giudica, contesto } from '../../src/giochi/inglese/motore/formati.js'
 import { grado, gradoTappa, ripresa } from '../../src/giochi/inglese/motore/grado.js'
 import { Tocchi, TOCCHI_GRATIS, domandeCheLPagano, domandaDelTocco } from '../../src/giochi/inglese/motore/tocchi.js'
-import { segnaVinta, tappaAperta, mondoAperto, cassettoAperto, statoMappa, mondoPassato }
+import { segnaVinta, tappaAperta, mondoAperto, cassettoAperto, statoMappa }
   from '../../src/giochi/inglese/motore/mappa.js'
 import { Sessione } from '../../src/giochi/inglese/motore/sessione.js'
 import { racconta, mondiDi, NON_SI_SA } from '../../src/giochi/inglese/motore/libro.js'
@@ -218,12 +218,12 @@ titolo('GRADO')
 titolo('MAPPA')
 {
   const c = { tappa: 0, libera: false, stelle: {}, cfg: {} }
-  controlla('all’inizio si apre solo la prima tappa', tappaAperta(c, 'prima-colori') && !tappaAperta(c, 'prima-ciao'))
+  controlla('all’inizio si apre solo la prima tappa', tappaAperta(c, 'prima-colori') && !tappaAperta(c, 'prima-animali'))
   controlla('il secondo mondo è chiuso', !mondoAperto(c, 'seconda'))
   controlla('il cassetto è chiuso', !cassettoAperto(c, 'prima'))
   uguale('la prima vittoria è la prima', segnaVinta(c, 'prima-colori', 1), true)
   uguale('la seconda no', segnaVinta(c, 'prima-colori', 2), false)
-  controlla('vinta una tappa, si apre la dopo e il cassetto', tappaAperta(c, 'prima-ciao') && cassettoAperto(c, 'prima'))
+  controlla('vinta una tappa, si apre la dopo e il cassetto', tappaAperta(c, 'prima-animali') && cassettoAperto(c, 'prima'))
   for (const t of MONDI[0].tappe) segnaVinta(c, t.id)
   controlla('finito il primo mondo, si apre il secondo', mondoAperto(c, 'seconda') && tappaAperta(c, 'seconda-cibo'))
   controlla('un mondo senza tappe resta chiuso', !mondoAperto(c, 'prova-finale'))
@@ -475,23 +475,23 @@ titolo('ETÀ')
   const conFrasi = MONDI.filter(m => m.tappe.some(t => t.frasi))
   uguale('mai più di quattro tappe di parole di fila, dove ci sono le frasi',
          conFrasi.filter(m => inFila(m) > 4).map(m => m.id).join(), '')
-  uguale('e le frasi cominciano entro la terza tappa',
-         conFrasi.filter(m => m.tappe.findIndex(t => t.frasi) > 2).map(m => m.id).join(), '')
+  uguale('e le frasi cominciano entro la quarta tappa',
+         conFrasi.filter(m => m.tappe.findIndex(t => t.frasi) > 3).map(m => m.id).join(), '')
+  // i saluti dopo it is: is e la domanda girata li sa già (docs/lingue/mondi.md)
+  const ordine = MONDI[0].tappe.map(t => t.id)
+  controlla('«Ciao!» viene dopo «Che cos’è?»', ordine.indexOf('prima-ciao') > ordine.indexOf('prima-che-cose'))
   controlla('la carta guarda i mondi, non la campagna di prima', TAPPE_DEL_GIOCO.inglese === TAPPE)
   controlla('a sei anni e mezzo l’inglese si offre (la prima elementare)', giocoDaOffrire(TAPPE, { eta: 6.5 }))
-  controlla('a sei anni nessun mondo è passato', MONDI.every(m => !mondoPassato(m.id, 6)))
-  controlla('a otto anni la prima è passata, la seconda no', mondoPassato('prima', 8) && !mondoPassato('seconda', 8))
-  controlla('a dieci anni anche seconda e terza', mondoPassato('seconda', 10) && mondoPassato('terza', 10) &&
-                                                   !mondoPassato('quarta', 10))
+  // l'età non apre mondi: anche a dieci anni si comincia dalla prima
   const c = { tappa: 0, stelle: {}, cfg: {} }
-  const r8 = { eta: 8 }
-  controlla('un mondo passato è aperto tutto, da ripassare', mondoPassato('prima', 8) &&
-    tappaAperta(c, 'prima-bandiera', r8) && cassettoAperto(c, 'prima', r8))
-  controlla('ma non è vinto', !statoMappa(c, () => 0, r8)[0].finito)
-  controlla('e apre il mondo dopo come se fosse finito', mondoAperto(c, 'seconda', r8) &&
-    tappaAperta(c, 'seconda-cibo', r8) && !tappaAperta(c, 'seconda-pranzo', r8))
-  controlla('senza età non passa niente', !mondoAperto(c, 'seconda', { eta: null }))
-  uguale('la mappa lo dice', statoMappa(c, () => 0, r8).filter(m => m.passato).map(m => m.id).join(), 'prima')
+  uguale('a dieci anni è aperta solo la prima', statoMappa(c, () => 0, { eta: 10 }).filter(m => m.aperto)
+    .map(m => m.id).join(), 'prima')
+  // chi aveva la quarta aperta per età e ci ha vinto una tappa la ritrova
+  const q = { tappa: 0, stelle: {}, cfg: {}, vinte: { 'quarta-giornata': 1 } }
+  controlla('un mondo con una tappa vinta resta aperto', mondoAperto(q, 'quarta') &&
+    tappaAperta(q, 'quarta-ora') && !tappaAperta(q, 'quarta-ogni-giorno'))
+  controlla('ma non apre il mondo dopo', !mondoAperto(q, 'quinta'))
+  controlla('e i mondi prima si fanno in fila', tappaAperta(q, 'prima-colori') && !mondoAperto(q, 'seconda'))
 }
 
 /* ═══════════ 13. chi aveva vinto le tappe di prima ═══════════ */

@@ -60,7 +60,7 @@ export class Sessione {
     const m = tappa.cassetto ? null : mondoDellaTappa(tappa.id)
     if (m && (tappa.frasi || tappa.bandiera)) {
       const prima = garantiti(m.id)
-      // debole è una forma vista e poi calata: una mai vista (un anno passato per età) non si ripesca
+      // debole è una forma vista e poi calata: una mai vista (un mondo saltato con «Sblocca tutti») non si ripesca
       const vista = f => !!itemDi(chiaveForma(f.forma)).last
       const deboli = FRASI.filter(f => prima.has(f.mondo) && vista(f) &&
         this.forzaDi(chiaveForma(f.forma)) < FORMA_DEBOLE && this.forzaDi('frase:' + f.id) < 4)
@@ -115,8 +115,8 @@ export class Sessione {
   }
 
   // Il gradino del formato: la forza della frase, ma chi sa già la struttura
-  // (la forma sale a ogni frase giusta) monta anche le frasi nuove, e in un
-  // mondo passato o con tutto aperto si parte da «scegli». Una frase
+  // (la forma sale a ogni frase giusta) monta anche le frasi nuove, e con
+  // tutto aperto si parte da «scegli». Una frase
   // sbagliata in questa partita torna alla sua forza. Vedi docs/lingue/frasi.md.
   gradino(chiave, frase) {
     const forza = this.forzaDi(chiave)

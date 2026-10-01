@@ -48,8 +48,6 @@ resto, in ordine.
   saluti (una mano che saluta), giocattoli (un orsetto), la casa e i mobili
   (un letto), i giorni e i mesi (un calendario), che tempo fa (una nuvola),
   i verbi (un omino che corre), i mestieri, i mezzi (un autobus), la città.
-- **Un mondo passato** ha solo una riga sotto il nome («già fatto a
-  scuola: da ripassare»): la pergamena potrebbe dirlo anche lei.
 
 ## Rimasto dalla vista
 

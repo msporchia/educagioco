@@ -39,14 +39,8 @@ let giaScesa = false
 let timerServe = 0, timerScossa = 0
 
 const quadro = computed(() => (W.value ? disponi(props.stato, W.value, m => props.extra[m]) : null))
-// i mondi «passati» per età sono aperti da ripassare, ma la nave, la prima
-// volta, attracca dove c'è ancora da fare (se ce n'è)
-const passati = computed(() => new Set(props.stato.filter(m => m.passato).map(m => m.id)))
-const ePassato = id => passati.value.has(id)
-const adessoVero = computed(() => {
-  const qui = quadro.value ? quadro.value.nodi.filter(n => n.adesso) : []
-  return qui.find(n => !ePassato(n.mondo)) || qui[0] || null
-})
+// la prima volta la nave attracca dove c'è da fare
+const adessoVero = computed(() => (quadro.value && quadro.value.nodi.find(n => n.adesso)) || null)
 
 function misura() {
   if (!scorre.value) return
@@ -148,9 +142,9 @@ const racconto = n => n.tipo === 'tappa'
 
       <div v-for="t in quadro.titoli" :key="'m' + t.mondo" class="ing-mondo-nome"
            :class="{ 'ing-lontano': !t.pronto, 'ing-chiuso': t.pronto && !t.aperto }"
-           :data-mondo="t.mondo" :data-pronto="t.pronto ? '1' : '0'" :data-passato="ePassato(t.mondo) ? '1' : null"
+           :data-mondo="t.mondo" :data-pronto="t.pronto ? '1' : '0'"
            :style="{ left: t.x + 'px', top: t.y + 'px', width: Math.max(90, t.larg - 8) + 'px' }">
-        {{ t.nome }}<i v-if="ePassato(t.mondo)" class="ing-passato">già fatto a scuola: da ripassare</i>
+        {{ t.nome }}
       </div>
 
       <template v-for="n in quadro.nodi" :key="n.chiave">

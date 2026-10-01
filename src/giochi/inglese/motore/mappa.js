@@ -1,17 +1,15 @@
-// La mappa del tesoro come stato: cosa è aperto, cosa è vinto, cosa è
-// «passato» per età, il grado di ogni tappa. L'avanzamento sta in
+// La mappa del tesoro come stato: cosa è aperto, cosa è vinto, il grado di
+// ogni tappa. L'avanzamento sta in
 // profile.campagne.inglese (CHIAVE in dati/mondi.js), scritto da
 // src/giochi/campagne.js come per tutti:
 //   { tappa, libera, stelle, cfg,   ← la forma comune (tappa = quante vinte)
 //     vinte: { <id tappa>: <quando> } }
 // Un grado calato non richiude niente: aperto vuol dire vinto una volta.
 //
-// Le regole (`r`): { tutto, eta }. `tutto` è «Sblocca tutti i livelli» dei
-// grandi (settings.tuttoAperto), che passa davanti a tutto; `eta` apre come
-// «passati» i mondi degli anni di scuola che il bambino ha già fatto. Per
-// compatibilità `r` può essere anche solo il booleano di `tutto`.
+// Le regole (`r`): { tutto }, «Sblocca tutti i livelli» dei grandi
+// (settings.tuttoAperto), che passa davanti a tutto; può essere anche solo
+// il booleano. L'età non apre niente: vedi docs/lingue/mondi.md.
 import { MONDI, mondoDi, pronto } from '../dati/mondi.js'
-import { miraDi } from '../../../data/portata.js'
 import { gradoTappa } from './grado.js'
 import { cassettoDi } from './grafo.js'
 import { quanteVinte } from './travaso.js'
@@ -21,46 +19,35 @@ const regole = r => (typeof r === 'boolean' ? { tutto: r } : r || {})
 export const vinte = c => (c && c.vinte && typeof c.vinte === 'object' ? c.vinte : {})
 export const vinta = (c, id) => !!vinte(c)[id]
 
-// Un mondo è passato quando tutte le sue tappe stanno sotto la mira
-// dell'età (data/portata.js, la stessa di ogni campagna): la scuola gliel'ha
-// già dato. Si apre tutto, da ripassare quando vuole; non è vinto.
-export function mondoPassato(id, eta) {
-  const m = mondoDi(id)
-  const mira = miraDi(eta)
-  return !!m && pronto(m) && !!mira && m.tappe.every(t => t.portata < mira[0])
-}
-
 export function mondoFinito(c, id) {
   const m = mondoDi(id)
   return !!m && pronto(m) && vinta(c, m.tappe[m.tappe.length - 1].id)
 }
 
-// una dipendenza è soddisfatta da un mondo finito o passato
-const fatto = (c, id, eta) => mondoFinito(c, id) || mondoPassato(id, eta)
-
+// un mondo con una tappa vinta resta aperto, anche senza il mondo prima (vedi docs/lingue/mondi.md)
 export function mondoAperto(c, id, r) {
-  const { tutto = false, eta = null } = regole(r)
+  const { tutto = false } = regole(r)
   const m = mondoDi(id)
   if (!m || !pronto(m)) return false
-  if (tutto || mondoPassato(id, eta)) return true
-  if (!m.dopo.every(d => fatto(c, d, eta))) return false
-  return !m.dopoUno || !m.dopoUno.length || m.dopoUno.some(d => fatto(c, d, eta))
+  if (tutto || m.tappe.some(t => vinta(c, t.id))) return true
+  if (!m.dopo.every(d => mondoFinito(c, d))) return false
+  return !m.dopoUno || !m.dopoUno.length || m.dopoUno.some(d => mondoFinito(c, d))
 }
 
 export function tappaAperta(c, id, r) {
-  const { tutto = false, eta = null } = regole(r)
+  const { tutto = false } = regole(r)
   const m = MONDI.find(x => x.tappe.some(t => t.id === id))
   if (!m || !mondoAperto(c, m.id, r)) return false
-  if (tutto || mondoPassato(m.id, eta)) return true
+  if (tutto) return true
   const i = m.tappe.findIndex(t => t.id === id)
   return i === 0 || vinta(c, m.tappe[i - 1].id) || vinta(c, id)
 }
 
-// il cassetto si apre alla prima tappa vinta del mondo (o col mondo passato)
+// il cassetto si apre alla prima tappa vinta del mondo
 export const cassettoAperto = (c, id, r) => {
-  const { tutto = false, eta = null } = regole(r)
+  const { tutto = false } = regole(r)
   const m = mondoDi(id)
-  return !!m && pronto(m) && (tutto || mondoPassato(id, eta) || m.tappe.some(t => vinta(c, t.id)))
+  return !!m && pronto(m) && (tutto || m.tappe.some(t => vinta(c, t.id)))
 }
 
 // Segna una tappa vinta (la prima volta resta la data della prima volta).
@@ -77,12 +64,10 @@ export function segnaVinta(c, id, ora = Date.now()) {
 
 // Tutto quello che la mappa disegna, in un colpo.
 export function statoMappa(c, forzaDi, r) {
-  const { eta = null } = regole(r)
   return MONDI.map(m => ({
     id: m.id, anno: m.anno || null, nome: m.nome, disegno: m.disegno || null, insegna: m.insegna,
     dopo: m.dopo, dopoUno: m.dopoUno || [],
     pronto: pronto(m), aperto: mondoAperto(c, m.id, r), finito: mondoFinito(c, m.id),
-    passato: mondoPassato(m.id, eta),
     tappe: m.tappe.map(t => ({
       id: t.id, nome: t.nome, disegno: t.disegno, bandiera: !!t.bandiera, frasi: !!t.frasi,
       aperta: tappaAperta(c, t.id, r), vinta: vinta(c, t.id), grado: gradoTappa(t, forzaDi),
@@ -101,8 +86,7 @@ export function cosaServe(stato, n, extra = null) {
   if (n.tipo === 'mondo' || !m.pronto) return 'Questo mondo arriva presto'
   const nome = id => `«${(stato.find(x => x.id === id) || {}).nome || id}»`
   if (!m.aperto) {
-    const fatto = d => { const x = stato.find(y => y.id === d) || {}; return x.finito || x.passato }
-    const manca = m.dopo.filter(d => !fatto(d))
+    const manca = m.dopo.filter(d => !(stato.find(y => y.id === d) || {}).finito)
     if (manca.length) return `Prima finisci ${nome(manca[0])}`
     if (m.dopoUno.length) return `Prima finisci ${m.dopoUno.map(nome).join(' o ')}`
   }

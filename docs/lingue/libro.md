@@ -123,7 +123,7 @@ ogni tipo): `node strumenti/inglese/banchi.mjs --capitoli` (o
 - **Una storia con `dopo`** si apre quando quella tappa è vinta, come la
   tappa che viene dopo. **Senza `dopo`** vale la tappa prima della 🏁: si
   apre quando la bandiera si può giocare, come il libro di una volta.
-  «Sblocca tutti» dei grandi e un mondo passato per età aprono tutto, come
+  «Sblocca tutti» dei grandi apre tutto, come
   per le tappe (`storiaAperta` in `motore/storie.js`), tranne l'ordine
   delle puntate: la puntata 2 vuole la 1 letta, sempre.
 - **Le parole sono quelle note a quella tappa**, non a fine mondo

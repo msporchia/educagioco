@@ -19,7 +19,7 @@ import LinguaGame from '../../views/LinguaGame.vue'
 import { CHIAVE, mondoDi, tappaDi } from './dati/mondi.js'
 import { CAPITOLI } from './dati/capitoli.js'
 import { pagaDi, pagaDelCapitolo } from './dati/monete.js'
-import { statoMappa, segnaVinta, tappaAperta, vinta, mondoPassato } from './motore/mappa.js'
+import { statoMappa, segnaVinta, tappaAperta, vinta } from './motore/mappa.js'
 import { travasa } from './motore/travaso.js'
 import { Sessione } from './motore/sessione.js'
 import { Tocchi, domandeCheLPagano, domandaDelTocco } from './motore/tocchi.js'
@@ -47,8 +47,8 @@ const vista = ref('mappa')          // mappa | tappa | libro | prima
 const c = progresso(CHIAVE)
 // chi aveva vinto tappe dei mondi di prima le ritrova (motore/travaso.js)
 if (travasa(c)) persist()
-// i lucchetti tolti dai grandi, e i mondi «passati» per l'età
-const regole = () => ({ tutto: tuttoAperto(), eta: etaDelBambino() })
+// i lucchetti tolti dai grandi: l'età non apre mondi, si fanno tutti in fila
+const regole = () => ({ tutto: tuttoAperto() })
 const orologio = usaOrologio()
 const { attesa, giro } = orologio
 
@@ -112,9 +112,8 @@ const haVoceOra = p => suono.acceso.value && haVoce(p, 'en')
 
 function avvia(t) {
   tappa.value = t
-  const mondo = t.cassetto ? t.mondo : (mondoDellaTappa(t.id) || {}).id
-  // chi ha tutto aperto, o l'anno già fatto a scuola, non riparte dal «cosa vuol dire»
-  const partenza = tuttoAperto() || mondoPassato(mondo, etaDelBambino()) ? 2 : 0
+  // chi ha tutto aperto non riparte dal «cosa vuol dire»
+  const partenza = tuttoAperto() ? 2 : 0
   sessione = new Sessione({ tappa: t, itemDi: leggi, haVoce: haVoceOra, eta: etaDelBambino(), partenza })
   Object.assign(conti, { giuste: 0, errori: 0, monete: 0, chieste: 0, bersaglio: sessione.bersaglio,
                          gradoPrima: t.cassetto ? null : sessione.gradoIniziale })
