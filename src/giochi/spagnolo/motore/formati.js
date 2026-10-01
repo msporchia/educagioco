@@ -9,7 +9,7 @@ import { GEMELLE } from '../dati/trappole.js'
 import { parole, normalizza, accettate, eDomanda, inBella, aSchermo } from './testo.js'
 import { chiaveDi, DET, aggettivoDi, nomeDi, accordaAgg, plurale, nudo, GIA_PLURALI, INVARIABILI,
          NON_CONTABILI } from './lessico.js'
-import { paroleNote, flessioniNote, chiaveFrase } from './grafo.js'
+import { paroleNote, flessioniNote, formeNote, chiaveFrase } from './grafo.js'
 import { flesse, formeDi, PERSONE } from './flessioni.js'
 
 export const FORMATI_FRASE = ['riconosci', 'senso', 'scegli', 'completa', 'monta', 'scegliMonta']
@@ -98,12 +98,15 @@ const mescolaDavvero = (a, rnd) => {
   return a.slice().reverse()
 }
 
-// il contesto di una frase: la tappa e le altre frasi
-// da cui pescare quando le trappole non bastano
+// il contesto di una frase: la tappa, le altre frasi da cui pescare quando le
+// trappole non bastano, le parole note; `soloAr` se del presente è arrivato
+// solo «Io lavo» (i verbi in -er e -ir al presente non sono ancora noti)
 export function contesto(frase, { tappa = null, altre = [], forzaForma = () => 0, rnd = Math.random } = {}) {
   const note = paroleNote(frase.mondo, frase.tappa)
+  const forme = formeNote(frase.mondo, frase.tappa)
   return { tappa, altre: altre.filter(f => f.id !== frase.id), forzaForma, rnd,
-           vicine: vicineFra(note), note, flessioni: flessioniNote(frase.mondo, frase.tappa) }
+           vicine: vicineFra(note), note, flessioni: flessioniNote(frase.mondo, frase.tappa),
+           soloAr: forme.has('presente-ar') && !forme.has('presente-er-ir') }
 }
 
 const opzione = (testo, giusta, trappola = null) => ({ testo, giusta, ...(trappola ? { trappola } : {}) })

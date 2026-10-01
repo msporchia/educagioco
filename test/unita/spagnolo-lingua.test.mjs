@@ -13,7 +13,7 @@
    capitoli) li controlla il test dei mondi; qui i guasti dei dati delle
    altre parti si stampano e basta. Il progetto: docs/lingue/spagnolo-motore.md.
    ═══════════════════════════════════════════════════════════════════ */
-import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { PAROLE_ES } from '../../src/data/parole-es.js'
 import { VERBI_ES } from '../../src/data/verbi-es.js'
 import { newItem, record } from '../../src/store/srs.js'
@@ -347,6 +347,13 @@ titolo('LIBRO')
   uguale('{c~x}: il colore accordato', rendi('{un:x} {c~x}', { x: vaca, c: negro }), 'una vaca negra')
   uguale('{c~x.pl}', rendi('{los:x} {c~x.pl}', { x: vaca, c: negro }), 'las vacas negras')
   uguale('{x.f}, {x.pl}', rendi('{c.f} {x.pl}', { x: perro, c: negro }), 'negra perros')
+  const posto = es => ({ es, it: es })
+  uguale('{al:x}, {del:x}', rendi('{al:a} {al:b} {al:c} {Del:a} {del:b}', { a: posto('parque'), b: posto('escuela'),
+    c: posto('agua') }), 'al parque a la escuela al agua Del parque de la escuela')
+  uguale('{este:x}', rendi('{este:a} y {Este:b}', { a: vaca, b: perro }), 'esta vaca y Este perro')
+  uguale('{bonito~x}: un aggettivo scritto', rendi('{un:x} {bonito~x}', { x: vaca }), 'una vaca bonita')
+  uguale('sgrammaticata non passa la virgola', sgrammaticata('A las ocho, mamá abre la puerta'), null)
+  stessaLista('i puntini tagliano', parole('Leo… hoy'), ['Leo', 'hoy'])
   nessunoStampa('gli elenchi del libro', guastiDegliElenchi(new Set(PAROLE_ES.map(w => w[0]))))
 }
 

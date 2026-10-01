@@ -62,10 +62,15 @@ Un file per mondo in `dati/frasi/<mondo>.js`, già elencati in
   nota, e le forme dei verbi noti dove una struttura arrivata le ammette
   (`flessione` della forma: `pres` da «Io canto», `ger` da «Che cosa stai
   facendo?», `ind` dal passato). `sconosciute()` di `motore/grafo.js` lo dice.
-- **Almeno un segno** della forma (`segni` in `dati/forme.js`): una parola, o
-  `#c` un colore, `#j` un aggettivo, `#n` un numero (anche accordati:
-  `negra`, `grandes`), `#pres` `#ger` `#ind` un verbo di `data/verbi-es.js`
-  flesso così (`canto`, `cantando`, `canté`; `soy` e `tengo` non contano).
+- **Almeno un segno della sua forma** (`segni` in `dati/forme.js`, quelli
+  della forma della frase, non di tutta la tappa): una parola (un aggettivo
+  o una quantità anche accordati: `caro` vale `cara`, `poca` vale `pocos`;
+  gli articoli no), o `#c` un colore, `#j` un aggettivo, `#n` un numero,
+  `#mese`, `#giorno`, `#stagione`, `#pres` `#ger` `#ind` un verbo di
+  `data/verbi-es.js` flesso così (`canto`, `cantando`, `canté`; `soy` e
+  `tengo` non contano). Un segno di più parole vuole quelle parole di fila:
+  `son las`, `a la una`, `#n de #mese`, `en #stagione`. I segni dicono la
+  struttura, non parole che stanno in ogni frase (`el`, `en`, `de` da soli no).
 - **Sta in piedi** (`sgrammaticata` è null), e ha almeno tre trappole.
 - **Il soggetto si scrive quando l'italiano lo dice** («io gioco» → `yo
   juego`, «gioco» → `juego`). Le trappole sulla persona del verbo nascono
@@ -97,57 +102,32 @@ irregolare. I segnaposto:
 | `{un:x}` · `{Un:x}` | `un perro`, `una vaca`, `un agua` | indeterminativo col genere |
 | `{el:x}` · `{El:x}` | `el perro`, `la vaca`, `el agua` | determinativo |
 | `{los:x}` · `{Los:x}` | `los perros`, `las vacas` | plurale con l'articolo |
-| `{c~x}` · `{c~x.pl}` | `negra`, `negras` (x è una vaca) | l'aggettivo c accordato col nome x |
+| `{este:x}` · `{Este:x}` | `este perro`, `esta vaca`, `esta agua` | il dimostrativo col genere |
+| `{al:x}` · `{Al:x}` | `al parque`, `a la escuela`, `al agua` | a + l'articolo, contratto se va |
+| `{del:x}` · `{Del:x}` | `del banco`, `de la tienda` | de + l'articolo, contratto se va |
+| `{c~x}` · `{c~x.pl}` | `negra`, `negras` (x è una vaca) | l'aggettivo c accordato col nome x; c è una variabile o un aggettivo scritto lì (`{bonito~cosa}`) |
 | `{x.f}` · `{x.fpl}` | `negra` · `negras` | il femminile di un aggettivo |
+| `{x.campo}` | quello che c'è nel campo | un campo che il capitolo dà ai suoi valori (`{vicino.de}`: `de: 'del banco'`); per «del banco / de la tienda» c'è `{del:x}` |
 
 Chi parla lo dice `chi`: una frase con `yo`, `mi`, `tú`, `te`… o con un
 verbo alla prima o seconda persona (`tengo`, `juegas`) senza `chi` è un
-guasto, perché la narrazione non dice io né tu.
+guasto, perché la narrazione non dice io né tu. Una battuta che si chiede e
+si risponde (`¿Es un gato? No, es un perro`) sono due battute; non lo è chi
+ripete una domanda senza verbo (`¿Pip? No, no es Pip.`, `¿La pelota de Tom?
+No, no la vi.`) né chi nella risposta ripete le parole della domanda.
+
+`sgrammaticata` guarda ogni pezzo fra due segni da sé (`A las ocho, mamá
+abre la puerta`: *las* non va con *mamá*), e i puntini sono un segno come
+la virgola (`Leo… hoy`). Le parolette per raccontare nella sesta (`lo`,
+`para`, `todo`, `otra vez`, `algo`, `nada`, `desde`) sono `parole` della
+forma `ayer`, la prima dell'isola.
 
 ## Le trappole
 
-La tabella (`dati/trappole.js`) ha una riga per errore tipico di chi parla
-italiano, con il suo perché per un bambino (sotto i 70 caratteri, a frase
-riempita) e un `esempio` che il test rifà. Ogni forma di `dati/forme.js` ha
-almeno una riga. **Nascono da sole**, su ogni frase dove l'errore si può
-fare:
-
-| dove | righe |
-|---|---|
-| genere e numero | `un-una` (*una perro*), `el-la`, `el-agua` (*la agua*), `este-esta`, `aggettivo-genere` (*una vaca negro*, *la vaca es negro*), `aggettivo-numero`, `aggettivo-prima` (*un negro gato*), `buenos-buenas`, `plurale-mancante` (*dos perro*, *los gato*), `plurale-in-piu` (*un gatos*), `plurale-sbagliato` (*lápizes*), `mi-mis`, `mucho-accordo`, `un-poco-de` |
-| all'italiana | `mi-me` (*mi llamo*), `te-ti`, `ho-he` (*he un perro*), `tener-ser` (*soy hambre*, *soy siete años*), `gustar-io` (*yo gusto el pan*), `gusta-gustan`, `hace-es` (*es frío*), `muy-mucho` (*muy frío*), `en-a` (*estoy a casa*), `a-en` (*voy en el parque*), `costa` |
-| ser, estar, hay | `ser-al-posto-di-estar` (*soy cansado*, *es en casa*, *soy bien*), `estar-al-posto-di-ser` (*está un perro*), `hay-es`, `hay-el`, `estuve-fui` |
-| i verbi | `persona-ser`, `persona-tener`, `persona-verbo` (*yo juega*: solo col soggetto scritto), `desinenza-classe` (*ella coma*, *vivemos*), `dittongo` (*quero*), `dittongo-in-piu` (*puedemos*), `infinito-dopo-querer` (*quiero nado*), `riflessivo-mancante`, `riflessivo-persona`, `gerundio-senza-estar`, `gerundio-infinito` (*estoy comer*), `gerundio-classe` (*comando*), `voy-senza-a`, `voy-a-gerundio` |
-| il passato | `passato-al-presente`, `passato-regolare` (*hací*), `dijo-regolare` (*deció*), `passato-accento` (*comio*), `passato-ortografia` (*jugé*) |
-| al, del, la strada | `contrazione-a` (*a el*), `contrazione-de`, `al-femminile` (*al escuela*), `del-femminile`, `direzione-senza-la`, `al-lado-al`, `posto-scambiato`, `sinistra-destra` |
-| l'ora e le date | `ora-es-son` (*es las tres*), `ora-a-en`, `data-senza-de`, `giorno-con-en`, `mese-con-el` |
-| la scrittura | `accento-domanda` (*¿que es?*), `accento-in-piu` (*más alto qué*), `el-él`, `tu-tú` |
-| il senso | `parola-che-chiede`, `mio-tuo`, `lui-lei`, `oggi-domani`, `cuando-mientras`, `negazione-tolta`, `negazione-aggiunta`, `parola-vicina` |
-| i paragoni | `mas-de` (*más alto de*), `mas-bueno`, `mas-mejor` |
-
-**Una trappola sbaglia in un punto solo.** Cambiare una parola rifà il
-resto: la parola vicina si porta il suo genere (*el gato negro* → *la vaca
-negra*, *esta es mi regla* → *este es mi libro*, *a la* → *al*), tiene il
-numero (mai una cosa già plurale al posto di una sola, mai *un* davanti a
-una cosa che non si conta), e un verbo resta nella sua persona e nel suo
-tempo (*juego* → *canto*); *él* al posto di *ella* riaccorda il predicato
-(*él es alto*), e allora l'italiano non si offre. Le trappole di una
-domanda sono domande: non ce n'è nessuna che la gira in affermazione.
-**`sgrammaticata` controlla** ogni frase e ogni trappola: articolo,
-dimostrativo, possessivo e quantità col genere e il numero del nome,
-l'aggettivo prima e dopo, il predicato del soggetto in testa, il plurale
-dopo un numero, *un* con le cose che non si contano, *el agua*, *a el*,
-*primer*. Le righe che sbagliano apposta queste cose stanno in `APPOSTA`.
-Un aggettivo che è anche un verbo (*limpia*) non si controlla.
-
-**Le gemelle** (`GEMELLE`, la prima parola di ogni fila è quella a cui la
-fila appartiene): *es/son*, *soy/eres*, *estoy/estás/está*, *tengo/tiene*,
-*un/una*, *el/la/los/las*, *mi/mis/me*, *gusta/gustan*, *al/a/el*,
-*a/en*, *qué/que*… Niente *es/está* né *en/sobre*: darebbero una seconda
-frase giusta. Le altre gemelle le fa `motore/formati.js`: le forme dello
-stesso verbo che la tappa ammette (*juego* → *juegas*, *jugar*),
-l'aggettivo nell'altro genere e numero (*negro* → *negra*, *negros*), il
-nome nell'altro numero (*gato* → *gatos*).
+Nascono da sole dalla tabella `dati/trappole.js`, su ogni frase dove
+l'errore si può fare: le righe, come si riaccordano, quali parole possono
+mostrare, le gemelle e le scelte di ogni operazione stanno in
+[spagnolo-trappole.md](spagnolo-trappole.md).
 
 ## Le scelte
 
@@ -161,7 +141,18 @@ nome nell'altro numero (*gato* → *gatos*).
 - **I nomi di genere comune** (*el cantante / la cantante*, *el policía /
   la policía*, *bebé*): il genere lo dice l'articolo, e la parola vicina
   non li scambia con gli altri.
-- **rio, sonrio** senza accento (RAE 2010, monosillabi).
+- **rio** senza accento (RAE 2010: monosillabo, come *vio*, *dio*, *fue*,
+  *fui*); **sonrió** lo tiene, è di due sillabe.
+- **I femminili delle persone e degli animali** (*gata*, *cocinera*,
+  *doctora*, *niña*): il nome in *-o* o *-or* delle categorie animali e
+  persone fa da sé il femminile, con la chiave della voce maschile
+  (`es:gato`) e il genere femminile; toccato dice *gatta*, *cuoca*,
+  *dottoressa* (se l'italiano non si sa fare: «… (femmina)»).
+- **Una parola con due letture le dice tutte**: *mañana* «mattina /
+  domani», *tarde* «pomeriggio / tardi», *viste* «vedere (al passato) /
+  vestirsi (lui/lei)».
+- **L'altro genere di una parola nota è noto** (*ninguna* da *ningún*,
+  *esta* da *este*), l'altro numero no (*mis* non è noto da *mi*).
 - **Lo spagnolo è quello di casa**: *tú* (niente *vosotros* né *vos*),
   *ustedes* per «voi».
 
@@ -172,7 +163,8 @@ nome nell'altro numero (*gato* → *gatos*).
   ogni pezzo di una voce lunga è noto.
 - **Le forme di due verbi**: *lavo* è *lavar* (non *lavarse*), *pongo* è
   *ponerse*, *fui* è *ir* e *ser* (toccata dice tutti e due), *viste* è
-  *ver* e *vestirse*. La chiave SRS è della prima.
+  *ver* e *vestirse*. La chiave SRS è della prima. Le trappole su *fue* e
+  *fui* scelgono: *ir* se dopo c'è *a* o *al*, se no *ser*.
 - **I pronomi attaccati** (*levantarme*, *dámelo*) e l'imperfetto non ci
   sono; il futuro è solo *voy a*.
 - **Un nome che è anche un verbo** (*cocina*, *juego*, *cuento*) conta come

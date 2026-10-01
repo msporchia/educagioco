@@ -5,20 +5,20 @@
 // parola ne scombina un'altra (el gato → la vaca), il resto si riaccorda.
 // Da una scrittura escono tutti i formati: le opzioni di «scegli»,
 // l'italiano di «cosa vuol dire», le tessere in più di «componi».
-// Vedi docs/lingue/spagnolo-motore.md.
+// Vedi docs/lingue/spagnolo-trappole.md.
 import { TRAPPOLE } from '../dati/trappole.js'
 import { MAX_S } from '../../../store/srs.js'
 import { PAROLE_ES as WORDS } from '../../../data/parole-es.js'
 import { CON_DITTONGO, IRREGOLARI } from '../dati/irregolari.js'
 import { PRONOMI, CLITICI, NOMI_PROPRI, DET, DIMOSTRATIVI, determinante, accordaDet, accordaAgg, aggettivoDi, nomeDi, eNumero,
          eCardinale, eColore, NON_CONTABILI, GIA_PLURALI, INVARIABILI, plurale, nudo, generoDe, genereDelNome,
-         GENERE_DEL_PRONOME, itDelVerbo, eGenereComune, conATonica, ACCORCIATI, eVerbo } from './lessico.js'
-import { gruppoDi } from './grafo.js'
+         GENERE_DEL_PRONOME, itDelVerbo, eGenereComune, conATonica, ACCORCIATI, eVerbo, traduci } from './lessico.js'
+import { gruppoDi, sconosciute } from './grafo.js'
 import { mondoDi } from '../dati/mondi.js'
-import { parole, normalizza, accettate, eDomanda } from './testo.js'
+import { parole, normalizza, accettate, eDomanda, minuscole } from './testo.js'
 import { flesse, flessione, regolare, classe, eRiflessivo, PERSONE, PERSONA_DI, VERBI_DI_STRUTTURA }
   from './flessioni.js'
-import { eCopula, nomeDopo, soloAggettivo } from './grammatica.js'
+import { eCopula, nomeDopo, soloAggettivo, sgrammaticata } from './grammatica.js'
 
 const low = w => (w == null ? null : String(w).toLowerCase())
 const IT = new Map(WORDS.map(w => [low(w[0]), w[1]]))
@@ -29,9 +29,16 @@ const GENERE_IT = { m: 'maschile', f: 'femminile' }
 const IN_MEZZO = new Set(['no', 'también', 'siempre', 'nunca', 'ya', 'todavía'])
 const INTENSITA = new Set(['muy', 'tan', 'más', 'menos', 'bastante'])
 const PLURALI_DI_PERSONA = new Set(['nosotros', 'ellos'])
+// le parole dopo cui comincia un'altra frase: yo soy alto y ella es baja
+const DOPO_LA_FRASE = new Set(['y', 'pero', 'que', 'cuando', 'porque', 'mientras'])
 const MESI = new Set(['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre',
                       'octubre', 'noviembre', 'diciembre'])
 const GIORNI = new Set(['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'])
+const STAGIONI = new Set(['primavera', 'verano', 'otoño', 'invierno'])
+// le parole del tempo che non vanno al plurale in una trappola: los eneros, las mañanas
+const SENZA_PLURALE = new Set([...MESI, ...STAGIONI, 'mañana', 'tarde', 'noche', 'hoy', 'ayer'])
+// il tempo che «fa»: hace frío, hace mucho viento (non «hace mucha nube»)
+const DEL_HACE = new Set(['frío', 'calor', 'sol', 'viento', 'fresco'])
 const LE_ORE = w => eCardinale(w) || w === 'una'
 
 // le forme coniugate (non il gerundio) di un verbo: [{ base, come, persona }]
@@ -70,25 +77,46 @@ export function soggetto(T, i) {
   return s
 }
 
-// il soggetto in testa alla frase, anche dopo hoy, ayer, mañana…
-function soggettoInTesta(T) {
-  for (let i = 0; i < Math.min(2, T.length); i++) {
-    const s = soggetto(T, i)
-    if (s) return s
-    if (!['hoy', 'ayer', 'mañana', 'ahora', 'anoche'].includes(low(T[i]))) return null
+// dove finiscono i complementi di tempo in testa: hoy, ayer, el sábado, en mayo, a las siete
+const AVVERBI_IN_TESTA = new Set(['hoy', 'ayer', 'mañana', 'ahora', 'anoche', 'luego', 'después', 'antes'])
+function dopoIlTempo(T) {
+  let i = 0
+  for (;;) {
+    const w = low(T[i])
+    if (AVVERBI_IN_TESTA.has(w)) i++
+    else if (['el', 'los'].includes(w) && GIORNI.has(low(T[i + 1]))) i += 2
+    else if (w === 'en' && (MESI.has(low(T[i + 1])) || STAGIONI.has(low(T[i + 1])))) i += 2
+    else if (w === 'a' && ['la', 'las'].includes(low(T[i + 1])) && LE_ORE(low(T[i + 2] || ''))) i += 3
+    else return i
   }
-  return null
+}
+// il soggetto in testa alla frase, anche dopo hoy, ayer, el sábado…
+function soggettoInTesta(T) {
+  return soggetto(T, dopoIlTempo(T))
 }
 
+// un verbo coniugato qui (Leo è un nome, non «leo» di leer)
+const verboQui = w => !!w && coniugato(w).length > 0 && !(NOMI_PROPRI.has(low(w)) && /^[A-ZÁÉÍÓÚÑ]/.test(w))
 // dal posto `k` salta no, siempre e i pronomi attaccati: il primo verbo coniugato, o -1
 function verboDa(T, k) {
-  while (k < T.length && (IN_MEZZO.has(low(T[k])) || (CLITICI.has(low(T[k])) && coniugato(T[k + 1]).length))) k++
-  return k < T.length && coniugato(T[k]).length ? k : -1
+  while (k < T.length && (IN_MEZZO.has(low(T[k])) || (CLITICI.has(low(T[k])) && verboQui(T[k + 1])))) k++
+  return k < T.length && verboQui(T[k]) ? k : -1
 }
 
 const alt = (T, dati = {}, it = null) => ({ T: T.filter(x => x !== null && x !== ''), dati, it })
 const trova = (T, prova, da = 0) => { for (let i = da; i < T.length; i++) if (prova(low(T[i]), i)) return i; return -1 }
 const metti = (T, i, w) => { const U = T.slice(); U[i] = w; return U }
+
+// vicino la porta → vicino alla porta; sopra alla porta → sopra la porta
+const A_IT = { il: 'al', lo: 'allo', la: 'alla', i: 'ai', gli: 'agli', le: 'alle' }
+const DA_A_IT = Object.fromEntries(Object.entries(A_IT).map(([a, b]) => [b, a]))
+function vicinoA(it) {
+  if (!it) return it
+  return it.replace(/\bvicino (il|lo|la|i|gli|le) /g, (_, a) => `vicino ${A_IT[a]} `)
+    .replace(/\bvicino l(’|')/g, (_, ap) => `vicino all${ap}`)
+    .replace(/\b(sopra|sotto|dietro) (al|allo|alla|ai|agli|alle) /g, (_, p, a) => `${p} ${DA_A_IT[a]} `)
+    .replace(/\b(sopra|sotto|dietro) all(’|')/g, (_, p, ap) => `${p} l${ap}`)
+}
 
 function sostituisciIt(it, coppie) {
   for (const [a, b] of coppie) {
@@ -98,6 +126,16 @@ function sostituisciIt(it, coppie) {
     }
   }
   return null
+}
+
+// T[i] è il nome del predicato di un soggetto col suo genere (nosotros somos hermanos, Leo es mi amigo)?
+function nelPredicato(T, i) {
+  const s = soggettoInTesta(T)
+  if (!s || !s.genere) return false
+  let k = s.a
+  while (IN_MEZZO.has(low(T[k]))) k++
+  if (!eCopula(T[k] || '') || i <= k) return false
+  return T.slice(k + 1, i).every(w => determinante(w) || eNumero(w) || aggettivoDi(w))
 }
 
 /* Riaccorda quello che dipende dal nome in U[i] (appena cambiato): gli
@@ -131,17 +169,34 @@ function riaccorda(U0, i, genere, pl) {
   U[k] = d
   return U
 }
-// l'aggettivo del predicato (la vaca es negra) accordato con `genere` e `pl`
-function riaccordaPredicato(U, genere, pl) {
-  const s = soggetto(U, 0)
-  if (!s) return U
-  let k = s.a
+// l'aggettivo del predicato (la vaca es negra) accordato con `genere` e `pl`;
+// `da` è dove finisce il soggetto (se no quello in testa). Anche «es la mejor»
+// e «es la más alta»: l'articolo davanti a un aggettivo senza nome.
+const MEJOR = /^(mejor|peor)(es)?$/
+function riaccordaPredicato(U, genere, pl, da = null) {
+  let k = da
+  if (k == null) {
+    const s = soggetto(U, 0)
+    if (!s) return U
+    k = s.a
+    genere = genere || s.genere
+  }
   while (IN_MEZZO.has(low(U[k]))) k++
   if (!eCopula(U[k] || '')) return U
   k++
   while (INTENSITA.has(low(U[k]))) k++
+  if (determinante(U[k] || '') && !nomeDi(U[k + 1] || '')) {
+    let j = k + 1
+    while (INTENSITA.has(low(U[j]))) j++
+    const a = aggettivoDi(U[j] || '')
+    if ((a || MEJOR.test(low(U[j] || ''))) && !nomeDi(U[j]) && !(U[j + 1] && nomeDi(U[j + 1]))) {
+      U[k] = accordaDet(U[k], genere || 'm', pl)
+      if (a) U[j] = accordaAgg(a.base, genere || 'm', pl)
+    }
+    return U
+  }
   const a = aggettivoDi(U[k] || '')
-  if (a && !(U[k + 1] && nomeDi(U[k + 1]))) U[k] = accordaAgg(a.base, genere || s.genere || 'm', pl)
+  if (a && !(U[k + 1] && nomeDi(U[k + 1]))) U[k] = accordaAgg(a.base, genere || 'm', pl)
   return U
 }
 
@@ -343,7 +398,10 @@ export const OPERAZIONI = {
     if (i < 0) return []
     const f = formeDi('tener')(T[i]).find(x => x.come !== 'ger')
     const sbagliato = comeLei('ser', f)
-    return [alt(metti(T, i, sbagliato), { giusto: T[i], sbagliato })]
+    const U = metti(T, i, sbagliato)
+    // ellos tienen frío → «ellos son frío»: con ser frío si legge aggettivo, e sarebbe un secondo sbaglio
+    if (sgrammaticata(U.join(' '))) return []
+    return [alt(U, { giusto: T[i], sbagliato })]
   },
   // tengo un perro → he un perro: «ho» all'italiana
   tenerHaber(T) {
@@ -353,16 +411,23 @@ export const OPERAZIONI = {
     const f = formeDi('tener')(T[i]).find(x => x.come === 'pres')
     return [alt(metti(T, i, HABER[f.persona]), { giusto: T[i], sbagliato: HABER[f.persona] })]
   },
-  // me gusta el pan → yo gusto el pan
-  gustarIo(T) {
+  // me gusta el pan → yo gusto el pan; yo gusta, se «gusto» la tappa non l'ha mai visto
+  gustarIo(T, ctx) {
     const CHI = { me: 'yo', te: 'tú', le: 'él', nos: 'nosotros', les: 'ellos' }
-    const i = trova(T, (w, k) => !!CHI[w] && ['gusta', 'gustan'].includes(low(T[k + 1])) && low(T[k - 1]) !== 'mí' &&
-                                 low(T[k - 2]) !== 'a')
-    if (i < 0) return []
+    const i = trova(T, (w, k) => !!CHI[w] && ['gusta', 'gustan'].includes(low(T[k + 1])))
+    // a mí me gusta, a Leo le gusta: chi è lo dice già «a …»
+    if (i < 0 || T.slice(0, i).some(w => low(w) === 'a')) return []
     const chi = CHI[low(T[i])]
-    const verbo = flessione('gustar', 'pres', PERSONA_DI[chi])
-    const no = low(T[i - 1]) === 'no' ? i - 1 : i
-    const U = [...T.slice(0, no), chi, ...(no < i ? ['no'] : []), verbo, ...T.slice(i + 2)]
+    let verbo = flessione('gustar', 'pres', PERSONA_DI[chi])
+    if (ctx.note && ignota(verbo, ctx)) {
+      // «yo gustan las uvas» non lo direbbe nessuno: senza gusto, solo con gusta
+      if (low(T[i + 1]) !== 'gusta') return []
+      verbo = 'gusta'
+    }
+    // yo no gusto, yo también gusto: il soggetto va prima di no e también
+    let no = i
+    while (no > 0 && IN_MEZZO.has(low(T[no - 1]))) no--
+    const U = [...T.slice(0, no), chi, ...T.slice(no, i), verbo, ...T.slice(i + 2)]
     return [alt(U, { giusto: `${T[i]} ${T[i + 1]}`, sbagliato: `${chi} ${verbo}` })]
   },
   // me gustan las uvas → me gusta las uvas
@@ -411,11 +476,13 @@ export const OPERAZIONI = {
   },
   // él come → él coma, nosotros vivimos → nosotros vivemos: le desinenze dell'altra classe
   desinenzaClasse(T) {
+    // anche senza soggetto (come pan): la persona la dice il verbo
     const s = soggettoInTesta(T)
-    if (!s || s.persona === 'yo') return []
-    const k = verboDa(T, s.a)
+    if (s && s.persona === 'yo') return []
+    const k = verboDa(T, s ? s.a : dopoIlTempo(T))
     if (k < 0) return []
-    const f = coniugato(T[k]).find(x => x.come === 'pres' && x.persona === s.persona && eVerbo(x.base))
+    const f = coniugato(T[k]).find(x => x.come === 'pres' && (s ? x.persona === s.persona : x.persona !== 'yo') &&
+                                        eVerbo(x.base))
     if (!f || flessione(f.base, 'pres', f.persona) !== regolare(f.base, 'pres', f.persona)) return []
     const cl = classe(f.base)
     // comamos, cantemos con nosotros sono un invito («mangiamo!»): una frase giusta, non una trappola
@@ -427,11 +494,20 @@ export const OPERAZIONI = {
     return [alt(metti(T, k, sbagliato), { base: f.base, classe: cl, giusto: T[k], sbagliato })]
   },
   // quiero → quero, puedo → podo: la vocale che cambia, dimenticata
+  // Non su una forma che è anche altro (este juego: il gioco; viste: hai visto), né
+  // se la forma sbagliata è una parola vera (juego → jugo, il succo).
   senzaDittongo(T) {
-    const i = trova(T, w => coniugato(w).some(f => f.come === 'pres' && CON_DITTONGO.has(f.base.replace(/se$/, '')) &&
-                                             regolare(f.base, 'pres', f.persona) !== w))
+    const dit = f => f.come === 'pres' && CON_DITTONGO.has(f.base.replace(/se$/, ''))
+    const i = trova(T, (w, k) => {
+      const fs = coniugato(w)
+      const f = fs.find(dit)
+      if (!f || regolare(f.base, 'pres', f.persona) === w || fs.some(x => !dit(x))) return false
+      if (nomeDi(w) && determinante(T[k - 1] || '')) return false
+      const sb = regolare(f.base, 'pres', f.persona)
+      return !traduci(sb).it && !nomeDi(sb) && !aggettivoDi(sb)
+    })
     if (i < 0) return []
-    const f = coniugato(T[i]).find(x => x.come === 'pres' && CON_DITTONGO.has(x.base.replace(/se$/, '')))
+    const f = coniugato(T[i]).find(dit)
     const sbagliato = regolare(f.base, 'pres', f.persona)
     return [alt(metti(T, i, sbagliato), { base: f.base, giusto: T[i], sbagliato })]
   },
@@ -497,13 +573,13 @@ export const OPERAZIONI = {
     const f = coniugato(T[i + 1]).find(x => eRiflessivo(x.base))
     return [alt(metti(T, i, null), { base: f.base, giusto: `${T[i]} ${T[i + 1]}`, sbagliato: T[i + 1] })]
   },
-  // me levanto → se levanto
+  // me levanto → se levanto: solo con io, tu, noi (papá me levanta, con se, è un'altra frase giusta)
   riflessivoPersona(T) {
-    const i = trova(T, (w, k) => ['me', 'te', 'se', 'nos'].includes(w) &&
-      coniugato(T[k + 1] || '').some(f => eRiflessivo(f.base)))
+    const CHI = { me: ['yo', 'Io'], te: ['tú', 'Tu'], nos: ['nosotros', 'Noi'] }
+    const i = trova(T, (w, k) => !!CHI[w] &&
+      coniugato(T[k + 1] || '').some(f => eRiflessivo(f.base) && f.persona === CHI[w][0]))
     if (i < 0) return []
-    const sbagliato = low(T[i]) === 'se' ? 'me' : 'se'
-    return [alt(metti(T, i, sbagliato), { giusto: T[i], sbagliato, verbo: T[i + 1] })]
+    return [alt(metti(T, i, 'se'), { chi: CHI[low(T[i])][1], giusto: low(T[i]), sbagliato: 'se', verbo: T[i + 1] })]
   },
   // me llamo → mi llamo, te gusta → ti gusta: il pronome all'italiana
   cliticoItaliano(T, _, { da, a }) {
@@ -517,7 +593,13 @@ export const OPERAZIONI = {
   passatoAlPresente(T) {
     const i = trova(T, w => coniugato(w).some(f => f.come === 'ind') && !coniugato(w).some(f => f.come === 'pres'))
     if (i < 0) return []
-    const f = coniugato(T[i]).find(x => x.come === 'ind')
+    const fs = coniugato(T[i]).filter(x => x.come === 'ind')
+    let f = fs[0]
+    // fue, fui: ir se va da qualche parte (fue al parque), se no ser (ayer fue lunes → es)
+    if (fs.some(x => x.base === 'ser') && fs.some(x => x.base === 'ir')) {
+      const va = ['a', 'al'].includes(low(T[i + 1])) || T.slice(0, i).some(w => low(w) === 'adónde')
+      f = fs.find(x => x.base === (va ? 'ir' : 'ser'))
+    }
     const sbagliato = flessione(f.base, 'pres', f.persona)
     if (!sbagliato) return []
     return [alt(metti(T, i, sbagliato), { base: f.base, giusto: T[i], sbagliato })]
@@ -538,6 +620,13 @@ export const OPERAZIONI = {
     if (i < 0) return []
     const sbagliato = low(T[i]).replace(/[áéíóú]$/, c => ({ á: 'a', é: 'e', í: 'i', ó: 'o', ú: 'u' }[c]))
     return [alt(metti(T, i, sbagliato), { giusto: T[i], sbagliato })]
+  },
+  // vio → vió, dio → dió, fue → fué: i passati di una sillaba non hanno l'accento
+  accentoCorto(T) {
+    const CON = { vio: 'vió', dio: 'dió', fue: 'fué', fui: 'fuí' }
+    const i = trova(T, w => !!CON[w])
+    if (i < 0) return []
+    return [alt(metti(T, i, CON[low(T[i])]), { giusto: T[i], sbagliato: CON[low(T[i])] })]
   },
   // jugué → jugé, busqué → buscé, empecé → empezé
   passatoOrtografia(T) {
@@ -615,7 +704,7 @@ export const OPERAZIONI = {
         if (low(T[i + 1]) === 'el') U[i + 1] = 'del'
         else U = [...U.slice(0, i + 1), 'de', ...U.slice(i + 1)]
       }
-      const it = x => sostituisciIt(x, [[glossa[da], glossa[per]]])
+      const it = x => vicinoA(sostituisciIt(x, [[glossa[da], glossa[per]]]))
       return [alt(U, { giusto: da, sbagliato: per, itGiusto: glossa[da], itSbagliato: glossa[per] }, it)]
     }
     return []
@@ -649,8 +738,8 @@ export const OPERAZIONI = {
   },
   // en mayo → en el mayo
   meseConEl(T) {
-    const i = trova(T, (w, k) => w === 'en' && (MESI.has(low(T[k + 1])) ||
-      ['primavera', 'verano', 'otoño', 'invierno'].includes(low(T[k + 1]))))
+    // solo i mesi: «en el invierno» si dice anche
+    const i = trova(T, (w, k) => w === 'en' && MESI.has(low(T[k + 1])))
     if (i < 0) return []
     return [alt([...T.slice(0, i + 1), 'el', ...T.slice(i + 1)], { cosa: T[i + 1] })]
   },
@@ -658,7 +747,9 @@ export const OPERAZIONI = {
   haceEs(T) {
     const i = trova(T, (w, k) => w === 'hace' && ['frío', 'calor', 'sol', 'viento', 'mucho', 'buen', 'mal'].includes(low(T[k + 1])))
     if (i < 0) return []
-    return [alt(metti(T, i, 'es'), { cosa: T[i + 1] })]
+    // hace mucho frío: la cosa è il frío, col suo mucho
+    const cosa = ['mucho', 'buen', 'mal'].includes(low(T[i + 1])) && T[i + 2] ? `${T[i + 1]} ${T[i + 2]}` : T[i + 1]
+    return [alt(metti(T, i, 'es'), { cosa })]
   },
   // hace mucho frío → hace muy frío, tengo mucha hambre → tengo muy hambre
   muyMucho(T) {
@@ -686,7 +777,10 @@ export const OPERAZIONI = {
   masDe(T) {
     const i = trova(T, (w, k) => w === 'que' && ['más', 'menos'].includes(low(T[k - 2])) && !!aggettivoDi(T[k - 1] || ''))
     if (i < 0) return []
-    return [alt(metti(T, i, 'de'), {})]
+    const mas = low(T[i - 2])
+    // que el perro → del perro: «de el» sarebbe un secondo sbaglio
+    const U = low(T[i + 1]) === 'el' ? [...T.slice(0, i), 'del', ...T.slice(i + 2)] : metti(T, i, 'de')
+    return [alt(U, { piu: mas === 'más' ? 'Più' : 'Meno', mas, agg: T[i - 1] })]
   },
   // mejor → más bueno, peor → más malo
   masBueno(T) {
@@ -715,9 +809,9 @@ export const OPERAZIONI = {
             // ella es alta → él es alto: il predicato segue chi lo dice (e l'italiano,
             // che andrebbe accordato anche lui, non si offre)
             let cambiato = false
-            if (rifai && i === 0 && GENERE_DEL_PRONOME[per]) {
+            if (rifai && GENERE_DEL_PRONOME[per] && (i === 0 || DOPO_LA_FRASE.has(low(T[i - 1])))) {
               const prima = U.join(' ')
-              riaccordaPredicato(U, GENERE_DEL_PRONOME[per], false)
+              riaccordaPredicato(U, GENERE_DEL_PRONOME[per], PLURALI_DI_PERSONA.has(PERSONA_DI[per]), i + 1)
               cambiato = U.join(' ') !== prima
             }
             // l'italiano si offre solo se non ha niente da accordare (è stanca, è venuta)
@@ -742,21 +836,34 @@ export const OPERAZIONI = {
     return [alt(metti(T, i, sbagliato), { giusto: T[i], sbagliato })]
   },
   togliNegazione(T) {
-    const i = trova(T, (w, k) => w === 'no' && (coniugato(T[k + 1] || '').length > 0 || CLITICI.has(low(T[k + 1]))))
-    if (i < 0 || T.some(w => ['nada', 'nunca', 'nadie', 'ningún', 'ninguna'].includes(low(w)))) return []
-    return [alt(metti(T, i, null), {}, x => (/(^|\s)non\s/.test(x) ? x.replace(/(^|\s)non\s/, '$1') : null))]
+    const i = trova(T, (w, k) => w === 'no' && (verboQui(T[k + 1]) || CLITICI.has(low(T[k + 1]))))
+    if (i < 0 || T.some(w => ['nada', 'nunca', 'nadie', 'ningún', 'ninguna', 'tampoco'].includes(low(w)))) return []
+    // «non … mai», «non … niente»: senza il non l'italiano resta storto
+    const it = x => (/(^|\s)non\s/.test(x) && !/\b(mai|niente|nulla|nessun\w*|neanche|nemmeno)\b/.test(x)
+      ? x.replace(/(^|\s)non\s/, '$1') : null)
+    return [alt(metti(T, i, null), {}, it)]
   },
+  // il «no» davanti al verbo; l'italiano solo se si sa dov'è il verbo (docs/lingue/spagnolo-trappole.md)
   aggiungiNegazione(T, { domanda }) {
-    if (domanda || T.some(w => ['no', 'nunca', 'nada'].includes(low(w)))) return []
+    // con también ci vorrebbe tampoco: «también no» non è la stessa frase negata
+    if (domanda || T.some(w => ['no', 'nunca', 'nada', 'también', 'tampoco'].includes(low(w)))) return []
     const s = soggettoInTesta(T)
-    let k = verboDa(T, s ? s.a : 0)
+    const inizio = s ? s.a : dopoIlTempo(T)
+    let k = verboDa(T, inizio)
     if (k < 0) return []
     while (k > 0 && CLITICI.has(low(T[k - 1]))) k--
     if (s && k < s.a) return []
+    const pronome = s && PRONOMI.has(low(s.chi))
+    // gira, sigue, cruza: in italiano un «vai» che col no diventerebbe «lui non gira»
+    const comando = ['gira', 'sigue', 'cruza'].includes(low(T[k]))
     const it = x => {
-      if (/^(mi|ti|gli|le|ci|si) /i.test(x)) return 'non ' + x
-      const m = x.match(/^(io|tu|lui|lei|noi|loro) (.+)$/i)
-      return m ? `${m[1]} non ${m[2]}` : null
+      if (comando) return null
+      const m = x.match(/^(io|tu|lui|lei|noi|voi|loro) (.+)$/i)
+      if (m && pronome) return `${m[1]} non ${m[2]}`
+      if (s || inizio > 0) return null
+      if (/^(il|lo|la|i|gli|le|l’|l'|un|una|uno|a|in|di|da|con|su|per|oggi|ieri|domani|anche|sempre|mai|e|io|tu|lui|lei|noi|voi|loro)(\s|’|')/i.test(x))
+        return null
+      return 'non ' + x
     }
     return [alt([...T.slice(0, k), 'no', ...T.slice(k)], {}, it)]
   },
@@ -781,6 +888,8 @@ export const OPERAZIONI = {
       const base = n ? n.base : a ? a.base : v ? v.base : null
       if (!base) return
       const conDet = i > 0 && (!!determinante(T[i - 1]) || eNumero(T[i - 1]) || !!aggettivoDi(T[i - 1]))
+      const dopoHace = low(T[i - 1]) === 'hace' || (low(T[i - 2]) === 'hace' && /^(mucho|mucha|muy|buen|mal)$/.test(low(T[i - 1])))
+      const predicato = !!n && nelPredicato(T, i)
       // senza articolo (en casa, hoy es lunes) si scambia solo un giorno con un giorno, un mese con un mese
       const nudoOk = x => GIORNI.has(low(x)) || MESI.has(low(x))
       for (const vicina of vicine(low(base))) {
@@ -792,8 +901,12 @@ export const OPERAZIONI = {
           const nuovo = nudo(scritta(vicina))
           if (!vn || /\s/.test(nuovo) || !vn.genere || eGenereComune(vicina) !== eGenereComune(base)) continue
           const giaPl = GIA_PLURALI.has(low(nuovo))
+          // hace mucho viento → hace mucho sol, non «hace mucha nube»
+          if (dopoHace && !DEL_HACE.has(low(nuovo))) continue
+          // nosotros somos hermanos: il nome del predicato tiene il genere del soggetto
+          if (predicato && vn.genere !== n.genere) continue
           if (n.plurale) {
-            if (NON_CONTABILI.has(low(nuovo))) continue
+            if (NON_CONTABILI.has(low(nuovo)) || SENZA_PLURALE.has(low(nuovo))) continue
             U[i] = giaPl ? nuovo : plurale(nuovo)
           } else {
             if (giaPl) continue
@@ -859,6 +972,7 @@ export function applica(riga, frase, ctx = {}) {
       parola: a.dati.parola || a.dati.verbo || null,
       // la voce SRS su cui pesa uno sbaglio di parola (un verbo è `verbo-es:`)
       chiave: a.dati.verbo ? 'verbo-es:' + a.dati.verbo : a.dati.parola ? 'es:' + a.dati.parola : null,
+      ...(riga.calco ? { calco: low(a.dati.sbagliato) } : {}),
     }
   })
 }
@@ -870,9 +984,33 @@ export const vicineFra = note => base => {
   return g ? [...note].filter(w => w !== low(base) && gruppoDi(w) === g) : []
 }
 
+// Una parola che la tappa non conosce (ctx: note, flessioni, soloAr). Con solo
+// «Io lavo» arrivato, «como» e «vives» non sono ancora note.
+function ignota(w, ctx) {
+  const l = low(w)
+  if (ctx.note.has(l)) return false
+  if (sconosciute(l, ctx.note, ctx.flessioni).length) return true
+  return !!ctx.soloAr && coniugato(l).length > 0 && coniugato(l).every(f => f.come === 'pres' && classe(f.base) !== 'ar')
+}
+const senzaAccenti = w => w.normalize('NFD').replace(/[\u0301]/g, '').normalize('NFC')
+// Quante parole vere (che si traducono) e mai viste alla tappa una trappola
+// generata mostra: «el gato soy negro» in prima. Non contano i refusi, la
+// stessa parola senza accento (como per cómo), il calco italiano (mi llamo).
+// Vedi docs/lingue/spagnolo-trappole.md.
+function ignoteIn(t, frase, ctx) {
+  if (!ctx.note) return 0
+  const giuste = new Set([frase.es, ...(frase.varianti || [])].flatMap(minuscole))
+  const gemelle = new Set([...giuste].map(senzaAccenti))
+  return minuscole(t.es).filter(w => !giuste.has(w) && w !== t.calco && !gemelle.has(senzaAccenti(w)) &&
+                                     !!traduci(w).it && ignota(w, ctx)).length
+}
+
 // Tutte le trappole di una frase: generate dalla tabella (meno quelle in
-// `niente`) più quelle scritte a mano; nessuna uguale alla giusta o a una
-// variante, nessun doppione.
+// `niente` e quelle con parole che la tappa non sa) più quelle scritte a mano;
+// nessuna uguale alla giusta o a una variante, nessun doppione. Una trappola
+// con parole mai viste torna solo se senza non se ne fanno tre, prima quelle
+// con meno parole nuove.
+export const TRAPPOLE_MIN = 3
 export function trappoleDi(frase, ctx = {}) {
   const giuste = new Set(accettate(frase))
   const viste = new Set()
@@ -887,11 +1025,18 @@ export function trappoleDi(frase, ctx = {}) {
                pesa: t.parola ? 'parola' : 'forma', forma: frase.forma, parola: t.parola || null,
                chiave: t.parola ? 'es:' + t.parola : null })
   const anno = (mondoDi(frase.mondo) || {}).anno || 0
+  const riserva = []
   for (const riga of TRAPPOLE)
     if (!(frase.niente || []).includes(riga.id) && (!riga.soloForme || riga.soloForme.includes(frase.forma)) &&
         !(riga.dallAnno && anno && anno < riga.dallAnno))
-      for (const t of applica(riga, frase, ctx)) aggiungi(t)
-  return out
+      for (const t of applica(riga, frase, ctx)) {
+        const n = ignoteIn(t, frase, ctx)
+        if (n) riserva.push({ t, n })
+        else aggiungi(t)
+      }
+  riserva.sort((a, b) => a.n - b.n)
+  for (const { t } of riserva) if (out.length < TRAPPOLE_MIN) aggiungi(t)
+  return out.map(({ calco, ...t }) => t)
 }
 
 // Ne sceglie `n`, una per riga della tabella: una forma debole fa uscire più

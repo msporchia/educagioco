@@ -4,8 +4,8 @@
 // non è que); ¿ ? ¡ ! e la punteggiatura non sono parole; al e del restano
 // una parola sola. Vedi docs/lingue/spagnolo-motore.md.
 
-// le parole di una frase, con gli accenti e la maiuscola dov'erano
-export const parole = s => String(s).replace(/[.,!?¿¡;:"“”«»()]/g, ' ').split(/\s+/).filter(Boolean)
+// le parole di una frase, con gli accenti e la maiuscola dov'erano (anche «Leo… hoy»)
+export const parole = s => String(s).replace(/[.,!?¿¡;:"“”«»()…]/g, ' ').split(/\s+/).filter(Boolean)
 
 // le parole in minuscolo: serve a confrontare e a cercare
 export const minuscole = s => parole(s).map(w => w.toLowerCase())

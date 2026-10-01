@@ -45,9 +45,9 @@ export const IRREGOLARI = {
             ger: 'vistiendo' },
   seguir: { pres: 'sigo sigues sigue seguimos siguen', ind: 'seguí seguiste siguió seguimos siguieron',
             ger: 'siguiendo' },
-  // rio senza accento: l'ortografia della RAE del 2010 (monosillabo)
+  // rio senza accento (RAE 2010: monosillabo, come vio, dio, fue); sonrió è di due sillabe e lo tiene
   reír: { pres: 'río ríes ríe reímos ríen', ind: 'reí reíste rio reímos rieron', ger: 'riendo' },
-  sonreír: { pres: 'sonrío sonríes sonríe sonreímos sonríen', ind: 'sonreí sonreíste sonrio sonreímos sonrieron',
+  sonreír: { pres: 'sonrío sonríes sonríe sonreímos sonríen', ind: 'sonreí sonreíste sonrió sonreímos sonrieron',
              ger: 'sonriendo' },
 }
 

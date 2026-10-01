@@ -206,6 +206,17 @@ const SINGOLARI_DEI_PLURALI = new Map(Object.entries({ uva: 'uvas', fideo: 'fide
   tijera: 'tijeras', palomita: 'palomitas', pintura: 'pinturas', vacación: 'vacaciones', 'papa frita': 'papas fritas' })
   .filter(([s, p]) => CAT.has(p) && !CAT.has(s)))
 for (const n of ALTRI_NOMI) if (!NOMI.has(n)) NOMI.set(n, n)
+// la gata, la cocinera, la doctora: il femminile di una persona o di un animale
+// in -o o in -or è la voce maschile (stessa chiave), col genere femminile
+const FEMMINILI = new Map()
+for (const w of WORDS) {
+  const m = low(w[0])
+  if (!['a', 'k'].includes(w[3]) || /\s/.test(m) || GENERE_COMUNE.has(m) || GENERI[m]) continue
+  const f = /o$/.test(m) ? m.slice(0, -1) + 'a' : /or$/.test(m) ? m + 'a' : null
+  if (!f || CAT.has(f) || NOMI.has(f) || AGG.has(f)) continue
+  FEMMINILI.set(f, { voce: w[0], plurale: false })
+  FEMMINILI.set(plurale(f), { voce: w[0], plurale: true })
+}
 for (const [n, voce] of NOMI) if (!GIA_PLURALI.has(n) && !INVARIABILI.has(n)) {
   const p = plurale(n)
   if (p !== n && !PLURALI.has(p) && !NOMI.has(p)) PLURALI.set(p, voce)
@@ -235,6 +246,7 @@ export function nomeDi(w) {
   if (NOMI.has(l)) return con(NOMI.get(l), GIA_PLURALI.has(l))
   if (PLURALI.has(l)) return con(PLURALI.get(l), true)
   if (SINGOLARI_DEI_PLURALI.has(l)) return con(SINGOLARI_DEI_PLURALI.get(l), false)
+  if (FEMMINILI.has(l)) return { base: FEMMINILI.get(l).voce, plurale: FEMMINILI.get(l).plurale, genere: 'f' }
   return null
 }
 export const eNome = w => !!nomeDi(w) || NOMI_PROPRI.has(low(w))
@@ -259,11 +271,23 @@ export function chiaveDi(parola) {
 const PERSONA_IT = { yo: 'io', tú: 'tu', él: 'lui/lei', nosotros: 'noi', ellos: 'loro' }
 const COME_E = { pres: p => ` (${PERSONA_IT[p]})`, ger: () => ' (adesso)', ind: () => ' (al passato)' }
 const itDellaBase = b => VERBO.get(b) || VERBI_DI_STRUTTURA[b] || null
-// «juega» → giocare (lui/lei); «fui» → andare / essere (al passato)
+// «juega» → giocare (lui/lei); «fui» → andare / essere (al passato); «viste» →
+// vedere (al passato) / vestirsi (lui/lei): ogni lettura col suo tempo
 function descriviFlessa(fs) {
-  const basi = [...new Set(fs.map(f => itDellaBase(f.base)).filter(Boolean))]
-  return basi.length ? basi.join(' / ') + COME_E[fs[0].come](fs[0].persona) : null
+  const gruppi = new Map()
+  for (const f of fs) {
+    const it = itDellaBase(f.base)
+    if (!it) continue
+    const k = COME_E[f.come](f.persona)
+    if (!gruppi.has(k)) gruppi.set(k, new Set())
+    gruppi.get(k).add(it)
+  }
+  return gruppi.size ? [...gruppi].map(([k, basi]) => [...basi].join(' / ') + k).join(' / ') : null
 }
+// gatto → gatta, cuoco → cuoca, pittore → pittrice
+const FEMMINILE_IT = { cane: 'cagna', dottore: 'dottoressa', professore: 'professoressa' }
+const itFemminile = it => FEMMINILE_IT[it] || (/o$/.test(it) ? it.slice(0, -1) + 'a'
+  : /tore$/.test(it) ? it.slice(0, -3) + 'rice' : `${it} (femmina)`)
 
 // Cosa vuol dire una parola toccata. `chiave` è null per le parole di
 // struttura e per i nomi dei personaggi: quelle non hanno SRS.
@@ -273,7 +297,11 @@ export function traduci(parola) {
   const chiave = chiaveDi(w)
   const fs = flesse(w).filter(f => itDellaBase(f.base))
   if (chiave && chiave.startsWith('es:')) {
-    const it = IT.get(low(chiave.slice(3)))
+    let it = IT.get(low(chiave.slice(3)))
+    if (FEMMINILI.has(w)) it = itFemminile(it)
+    // «mañana» è domani e anche la mattina (la voce con l'articolo): tutti e due
+    const n = nomeDi(w)
+    if (n && low(n.base) !== low(chiave.slice(3)) && IT.get(low(n.base))) it = `${IT.get(low(n.base))} / ${it}`
     // «cocina» è la cucina e anche «cucina» (lui/lei): si dicono tutti e due
     return { parola, chiave, it: fs.length && !COMPONENTI.has(w) ? `${it} / ${descriviFlessa(fs)}` : it }
   }

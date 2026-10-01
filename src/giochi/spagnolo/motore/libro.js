@@ -139,20 +139,28 @@ const maiuscola = s => (s ? s[0].toUpperCase() + s.slice(1) : s)
    aggettivo · {x.fpl} femminile plurale · {x.campo} un altro campo ·
    {un:x} un perro, una vaca, un agua · {el:x} el perro, la vaca, el agua ·
    {los:x} los perros, las vacas (Un:, El:, Los: con la maiuscola) ·
-   {c~x} l'aggettivo c accordato col nome x (un gato negro, una vaca negra) ·
+   {este:x} este perro, esta vaca · {al:x} al parque, a la escuela, al agua ·
+   {del:x} del banco, de la tienda (Un:, El:, Los:, Este:, Al:, Del: con la
+   maiuscola) · {c~x} l'aggettivo c accordato col nome x (un gato negro, una
+   vaca negra); c è una variabile o un aggettivo scritto ({bonito~x}) ·
    {c~x.pl} lo stesso al plurale (los gatos negros). */
+const ARTICOLI = { un: 'un', el: 'el', los: 'el', este: 'este', al: 'al', del: 'del' }
 export function rendi(modello, v) {
-  const re = /\{(un|Un|el|El|los|Los):(\w+)\}|\{(\w+)~(\w+)(\.pl)?\}|\{(\w+)(?:\.(\w+))?\}/g
+  const re = /\{(un|Un|el|El|los|Los|este|Este|al|Al|del|Del):(\w+)\}|\{([\wáéíóúñü]+)~(\w+)(\.pl)?\}|\{(\w+)(?:\.(\w+))?\}/g
   return modello.replace(re, (tutto, art, nomeA, agg, nomeC, pl, nome, campo) => {
     const prendi = n => { if (v[n] === undefined) throw new Error(`variabile sconosciuta: ${tutto}`); return v[n] }
     if (art) {
       const x = prendi(nomeA)
       const piu = art.toLowerCase() === 'los'
-      const a = accordaDet(art.toLowerCase() === 'un' ? 'un' : 'el', genereDi(x), piu, spagnolo(x))
+      const a = accordaDet(ARTICOLI[art.toLowerCase()], genereDi(x), piu, spagnolo(x))
       const testo = `${a} ${piu ? pluraleDi(x) : spagnolo(x)}`
       return art[0] === art[0].toUpperCase() ? maiuscola(testo) : testo
     }
-    if (agg) return accordaAgg(spagnolo(prendi(agg)), genereDi(prendi(nomeC)), !!pl)
+    if (agg) {
+      // l'aggettivo è una variabile, o è scritto lì: {bonito~cosa}
+      const a = v[agg] !== undefined ? spagnolo(v[agg]) : aggettivoDi(agg) ? aggettivoDi(agg).base : spagnolo(prendi(agg))
+      return accordaAgg(a, genereDi(prendi(nomeC)), !!pl)
+    }
     const x = prendi(nome)
     if (!campo) return spagnolo(x)
     if (campo === 'pl') return pluraleDi(x)

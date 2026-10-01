@@ -5,7 +5,9 @@
 // il perché in una riga (sotto i 70 caratteri, a frase riempita), su quale
 // struttura pesa lo sbaglio (`forma`, o quella della frase se null), dove
 // vale (`soloForme`, `dallAnno`) e un `esempio` [giusta, sbagliata] che il
-// test rifà (una domanda si scrive con ¿…?). Vedi docs/lingue/spagnolo-motore.md.
+// test rifà (una domanda si scrive con ¿…?). `calco`: la parola sbagliata è
+// quella italiana (mi llamo), nota anche se la tappa non l'ha mostrata.
+// Vedi docs/lingue/spagnolo-trappole.md.
 
 // Le gemelle di grammatica: le tessere di troppo che contano, perché
 // scambiarle fa una frase sbagliata (es / son, un / una). Quelle dei verbi
@@ -57,10 +59,10 @@ export const TRAPPOLE = [
   { id: 'buenos-buenas', fa: 'aggettivoDavanti', con: { parole: ['bueno', 'buena', 'buenos', 'buenas'] },
     forma: 'saludos', perche: '{cosa} è {genere}: {giusto} {cosa}',
     esempio: ['buenos días', 'buenas días'] },
-  { id: 'mi-me', fa: 'cliticoItaliano', con: { da: 'me', a: 'mi' }, forma: null,
+  { id: 'mi-me', fa: 'cliticoItaliano', con: { da: 'me', a: 'mi' }, forma: null, calco: true,
     perche: 'Mi chiamo, mi piace: in spagnolo me (mi vuol dire «mio»)',
     esempio: ['me llamo Leo', 'mi llamo Leo'] },
-  { id: 'te-ti', fa: 'cliticoItaliano', con: { da: 'te', a: 'ti' }, forma: null,
+  { id: 'te-ti', fa: 'cliticoItaliano', con: { da: 'te', a: 'ti' }, forma: null, calco: true,
     perche: 'Ti chiami, ti piace: in spagnolo te, non ti',
     esempio: ['¿cómo te llamas?', '¿cómo ti llamas?'] },
   { id: 'tu-tú', fa: 'scambia', con: { coppie: [['tú', 'tu']] }, forma: null,
@@ -133,7 +135,7 @@ export const TRAPPOLE = [
     esempio: ['¿qué es?', '¿que es?'] },
   { id: 'accento-in-piu', fa: 'mettiAccento', forma: null, dallAnno: 3,
     con: { coppie: [['que', 'qué'], ['cuando', 'cuándo'], ['donde', 'dónde']] },
-    perche: 'Senza domanda {giusto} non ha l’accento',
+    perche: 'Qui {giusto} non chiede: niente accento',
     esempio: ['es más alto que Leo', 'es más alto qué Leo'] },
   { id: 'parola-che-chiede', fa: 'scambia', forma: null,
     con: { coppie: [['qué', 'cómo'], ['dónde', 'cuándo'], ['quién', 'qué'], ['cómo', 'dónde']],
@@ -147,7 +149,7 @@ export const TRAPPOLE = [
     con: { coppie: [['hoy', 'mañana']], it: [['oggi', 'domani']], glossa: { hoy: 'oggi', mañana: 'domani' } },
     perche: PAROLA, esempio: ['hoy es lunes', 'mañana es lunes'] },
   { id: 'hace-es', fa: 'haceEs', forma: 'hace',
-    perche: 'Il tempo si dice con hace: hace {cosa}, come «fa freddo»',
+    perche: 'Il tempo si dice con hace («fa»): hace {cosa}',
     esempio: ['hace frío', 'es frío'] },
   { id: 'muy-mucho', fa: 'muyMucho', forma: null,
     perche: 'Davanti a una cosa ({cosa}) si dice {giusto}, non muy',
@@ -169,7 +171,7 @@ export const TRAPPOLE = [
     perche: 'Nelle date ci vuole de: el cinco de mayo',
     esempio: ['es el cinco de mayo', 'es el cinco mayo'] },
   { id: 'mese-con-el', fa: 'meseConEl', forma: 'fechas',
-    perche: 'Con i mesi e le stagioni niente el: en {cosa}',
+    perche: 'Con i mesi niente el: en {cosa}',
     esempio: ['en mayo hace calor', 'en el mayo hace calor'] },
   { id: 'mucho-accordo', fa: 'muchoAccordo', forma: 'cantidad',
     perche: 'Mucho e poco vanno d’accordo con la cosa: {giusto} {cosa}',
@@ -181,7 +183,7 @@ export const TRAPPOLE = [
     perche: '{base} vuole me, te, se davanti: {giusto}',
     esempio: ['me levanto a las siete', 'levanto a las siete'] },
   { id: 'riflessivo-persona', fa: 'riflessivoPersona', forma: 'reflexivos',
-    perche: 'Io: me {verbo}; lui, lei: se. Qui ci vuole {giusto}',
+    perche: '{chi}: {giusto} {verbo}. Se va con lui, lei e loro',
     esempio: ['me levanto temprano', 'se levanto temprano'] },
   { id: 'gerundio-senza-estar', fa: 'gerundioSenzaEstar', forma: 'gerundio',
     perche: 'Adesso si dice con estar: {estar} {ger}',
@@ -251,6 +253,9 @@ export const TRAPPOLE = [
   { id: 'passato-accento', fa: 'passatoSenzaAccento', forma: 'pasado-reg',
     perche: 'Al passato l’accento conta: {giusto}, non {sbagliato}',
     esempio: ['ella comió pan', 'ella comio pan'] },
+  { id: 'accento-corto', fa: 'accentoCorto', forma: 'pasado-irr',
+    perche: '{giusto} è corto: niente accento (vi, di, vio, dio, fue, fui)',
+    esempio: ['Leo vio un pájaro', 'Leo vió un pájaro'] },
   { id: 'passato-ortografia', fa: 'passatoOrtografia', forma: 'pasado-reg',
     perche: 'Per tenere il suono si scrive {giusto}, non {sbagliato}',
     esempio: ['ayer jugué', 'ayer jugé'] },
@@ -265,7 +270,7 @@ export const TRAPPOLE = [
     perche: 'Dopo {ir} a il verbo resta com’è: {ir} a {inf}',
     esempio: ['voy a nadar', 'voy a nadando'] },
   { id: 'mas-de', fa: 'masDe', forma: 'comparativos',
-    perche: 'Più … di si dice más … que: más alto que',
+    perche: '{piu} … di si dice {mas} … que: {mas} {agg} que',
     esempio: ['es más alto que Leo', 'es más alto de Leo'] },
   { id: 'mas-bueno', fa: 'masBueno', forma: 'comparativos',
     perche: 'Più buono si dice {giusto}, non {sbagliato}',

@@ -31,11 +31,11 @@ export const GLOSSARIO = {
   en: 'in, a, su (en casa: a casa)', a: 'a, verso', de: 'di, da', lado: 'lato (al lado de: accanto a)',
   izquierda: 'sinistra', derecha: 'destra', recto: 'dritto', hasta: 'fino a', entre: 'fra, tra',
   enfrente: 'di fronte (enfrente de: di fronte a)', gira: 'gira', sigue: 'vai avanti, continua',
-  cruza: 'attraversa', por: 'per, da', para: 'per', sin: 'senza', luego: 'poi, dopo',
+  cruza: 'attraversa', por: 'per, da', para: 'per', sin: 'senza', luego: 'poi, dopo', desde: 'da (desde ayer: da ieri)',
   // quante cose
   mucho: 'molto, tanto', mucha: 'molta, tanta', muchos: 'molti, tanti', muchas: 'molte, tante',
-  poco: 'poco (un poco de: un po’ di)', algunos: 'alcuni, qualche', algunas: 'alcune, qualche',
-  ningún: 'nessuno', nada: 'niente', todo: 'tutto', todos: 'tutti', otro: 'altro', otra: 'altra',
+  poco: 'poco (un poco de: un po’ di)', poca: 'poca', pocos: 'pochi', pocas: 'poche', algunos: 'alcuni, qualche', algunas: 'alcune, qualche',
+  ningún: 'nessuno', ninguna: 'nessuna', algún: 'qualche, un', alguna: 'qualche, una', algo: 'qualcosa', nada: 'niente', todo: 'tutto', todos: 'tutti', otro: 'altro', otra: 'altra',
   // le ore e il tempo
   menos: 'meno', media: 'mezza (y media: e mezza)', cuarto: 'quarto', punto: 'punto (en punto: in punto)',
   veces: 'volte (a veces: a volte)', vez: 'volta', después: 'dopo', antes: 'prima', anoche: 'ieri sera',
@@ -44,7 +44,7 @@ export const GLOSSARIO = {
   // il passato di estar (fui, fue e dijo li traduce il verbo: ir, ser, decir)
   estuve: 'sono stato, ero', estuvo: 'è stato, era',
   // legare le frasi, i paragoni
-  que: 'che (più alto que: più alto di)', cuando: 'quando', mientras: 'mentre', porque: 'perché',
+  que: 'che (più alto que: più alto di)', cuando: 'quando', mientras: 'mentre', porque: 'perché', pero: 'ma',
   más: 'più', mejor: 'migliore, meglio', peor: 'peggiore, peggio', tan: 'così (tan alto como: alto come)',
   como: 'come',
   no: 'no, non', sí: 'sì', y: 'e',

@@ -79,7 +79,17 @@ function soggettoInTesta(T) {
 }
 
 // Il primo errore di concordanza della frase, in parole; null se non ce n'è.
+// Ogni pezzo fra due segni (A las ocho, mamá abre la puerta) si guarda da sé:
+// la concordanza non passa una virgola.
 export function sgrammaticata(es) {
+  for (const pezzo of String(es).split(/[,;:.!?¿¡…()“”"«»]+/)) {
+    const storta = sgrammaticataUna(pezzo)
+    if (storta) return storta
+  }
+  return null
+}
+
+function sgrammaticataUna(es) {
   const T = minuscole(es)
   for (let i = 0; i < T.length; i++) {
     const w = T[i]

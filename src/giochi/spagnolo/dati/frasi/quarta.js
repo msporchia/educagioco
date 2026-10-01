@@ -82,7 +82,7 @@ export default {
     fecha('qa-en-invierno-frio', 'in inverno fa freddo', 'en invierno hace frío', {
       varianti: ['en el invierno hace frío'] }),
     fecha('qa-en-primavera-pajaros', 'in primavera guardo gli uccelli', 'en primavera miro los pájaros', {
-      varianti: ['en la primavera miro los pájaros'], niente: ['mese-con-el'] }),
+      varianti: ['en la primavera miro los pájaros'] }),
     fecha('qa-vacaciones-en-julio', 'le vacanze sono a luglio?', 'las vacaciones son en julio'),
     fecha('qa-sabado-lavamos', 'sabato laviamo la macchina', 'el sábado lavamos el auto', {
       trappole: [{ es: 'sábado lavamos el auto', perche: 'Con i giorni ci vuole el: el sábado' }] }),
@@ -149,12 +149,11 @@ export default {
     me('qa-me-siento-silla', 'mi siedo sulla sedia', 'me siento en la silla'),
     me('qa-te-lavas-manos', 'ti lavi le mani?', 'te lavas las manos'),
     me('qa-te-peinas', 'ti pettini la mattina?', 'te peinas por la mañana', { varianti: ['te peinas en la mañana'] }),
-    me('qa-laura-se-viste', 'Laura si veste e si pettina', 'Laura se viste y se peina', { niente: ['riflessivo-persona'] }),
-    me('qa-tom-se-lava-manos', 'Tom si lava le mani', 'Tom se lava las manos', { niente: ['riflessivo-persona'] }),
-    me('qa-papa-se-levanta', 'papà si alza alle sei e mezza', 'papá se levanta a las seis y media', {
-      niente: ['riflessivo-persona'] }),
-    me('qa-bebe-se-acuesta', 'il bebè va a letto presto', 'el bebé se acuesta temprano', { niente: ['riflessivo-persona'] }),
-    me('qa-ellos-se-sientan', 'loro si siedono sul divano', 'ellos se sientan en el sofá', { niente: ['riflessivo-persona'] }),
+    me('qa-laura-se-viste', 'Laura si veste e si pettina', 'Laura se viste y se peina'),
+    me('qa-tom-se-lava-manos', 'Tom si lava le mani', 'Tom se lava las manos'),
+    me('qa-papa-se-levanta', 'papà si alza alle sei e mezza', 'papá se levanta a las seis y media'),
+    me('qa-bebe-se-acuesta', 'il bebè va a letto presto', 'el bebé se acuesta temprano'),
+    me('qa-ellos-se-sientan', 'loro si siedono sul divano', 'ellos se sientan en el sofá'),
     me('qa-nos-acostamos', 'andiamo a letto alle nove', 'nos acostamos a las nueve'),
     me('qa-nos-duchamos-vestimos', 'facciamo la doccia e poi ci vestiamo', 'nos duchamos y después nos vestimos'),
     me('qa-nos-levantamos-tarde', 'sabato ci alziamo tardi', 'el sábado nos levantamos tarde'),

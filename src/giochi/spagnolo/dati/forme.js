@@ -2,8 +2,10 @@
 // `forma-es:<id>`. `parole` sono le parole di struttura che la forma porta con
 // sé (note da quando la forma si incontra); `regola` è il «Si fa così» che
 // si mostra dopo uno sbaglio; `segni` sono le parole da cui si riconosce
-// che una frase usa quella struttura: una frase di una tappa ne contiene
-// almeno uno (`#c` vuol dire un colore, `#j` un aggettivo, `#n` un numero).
+// che una frase usa quella struttura: una frase di quella forma ne contiene
+// almeno uno (`#c` vuol dire un colore, `#j` un aggettivo, `#n` un numero,
+// `#mese`, `#giorno`, `#stagione`; più parole di fila: «son las», «#n de #mese»;
+// un aggettivo o una quantità valgono anche accordati: caro → cara).
 // Vedi docs/lingue/frasi.md e, per quarta e quinta, docs/lingue/strutture.md.
 export const PREFISSO_FORMA = 'forma-es:'
 
@@ -63,7 +65,7 @@ export const FORME = {
     nome: 'yo soy, tú eres',
     parole: ['yo', 'tú', 'él', 'ella', 'nosotros', 'ellos', 'ellas', 'soy', 'eres', 'es', 'somos', 'son', 'no',
              'muy', 'y'],
-    segni: ['soy', 'eres', 'somos', 'son', 'yo', 'tú'],
+    segni: ['soy', 'eres', 'es', 'somos', 'son', 'yo', 'tú'],
     regola: 'Ser: yo soy, tú eres, él es, nosotros somos, ellos son. Dice chi o come sei: soy alto.',
   },
   tener: {
@@ -84,7 +86,7 @@ export const FORME = {
     nome: '¿dónde está? en, sobre, debajo',
     parole: ['dónde', 'está', 'están', 'estoy', 'estás', 'estamos', 'en', 'sobre', 'debajo', 'detrás', 'cerca',
              'al lado de', 'no', 'y', 'aquí', 'allí'],
-    segni: ['está', 'están', 'estoy', 'estás', 'dónde', 'sobre', 'debajo', 'detrás', 'cerca', 'en'],
+    segni: ['está', 'están', 'estoy', 'estás', 'estamos', 'dónde', 'sobre', 'debajo', 'detrás', 'cerca', 'al lado'],
     regola: '¿Dónde está? Per un posto si usa estar: el gato está en la mesa. Sobre è sopra, debajo è sotto.',
   },
   hay: {
@@ -103,7 +105,7 @@ export const FORME = {
   'hoy-es': {
     nome: 'hoy es lunes, en mayo',
     parole: ['hoy', 'mañana', 'es', 'el', 'en', 'de', 'mi', 'son', 'no', 'cuándo', 'qué', 'día'],
-    segni: ['hoy', 'mañana', 'en', 'el'],
+    segni: ['hoy', 'mañana', 'día', 'cuándo es', '#giorno', 'en #mese', 'en #stagione'],
     regola: 'Hoy es lunes. Con i giorni «el»: el lunes juego. Con i mesi e le stagioni: en mayo, en verano.',
   },
   hace: {
@@ -130,27 +132,28 @@ export const FORME = {
     nome: '¿qué hora es?',
     parole: ['qué', 'hora', 'es', 'son', 'la', 'las', 'una', 'y', 'menos', 'media', 'cuarto', 'a', 'en punto',
              'de la mañana', 'de la tarde', 'de la noche'],
-    segni: ['hora', 'las', 'la', 'una'],
+    segni: ['hora', 'son las', 'es la una', 'a las', 'a la una', 'media', 'cuarto', 'en punto'],
     regola: '¿Qué hora es? Es la una, son las tres. A che ora: a las tres. «Y media» è «e mezza».',
   },
   'presente-ar': {
-    nome: 'yo canto, tú cantas',
+    nome: 'yo lavo, tú lavas',
     parole: ['yo', 'tú', 'él', 'ella', 'nosotros', 'ellos', 'ellas', 'no', 'siempre', 'nunca', 'a veces', 'mucho',
              'y', 'también', 'con', 'en', 'a'],
     segni: ['#pres'], flessione: 'pres',
-    regola: 'Verbi in -ar: -o, -as, -a, -amos, -an. Yo canto, tú cantas, él canta. Il pronome spesso non si dice.',
+    regola: 'Verbi in -ar: -o, -as, -a, -amos, -an. Yo lavo, tú lavas, él lava. Il pronome spesso non si dice.',
   },
   fechas: {
     nome: 'el cinco de mayo, a las siete',
     parole: ['el', 'de', 'en', 'a', 'las', 'la', 'es', 'hoy', 'cuándo', 'qué', 'día'],
-    segni: ['de', 'en', 'a', 'el'],
+    segni: ['#n de #mese', 'en #mese', 'en #stagione', 'el #giorno', 'los #giorno', 'a las', 'a la una'],
     regola: 'Date: el cinco de mayo. Con i giorni «el»: el lunes. Con i mesi: en mayo. Con le ore: a las siete.',
   },
   cantidad: {
     nome: 'unos, un poco de, mucho',
     parole: ['unos', 'unas', 'algunos', 'algunas', 'un poco de', 'mucho', 'mucha', 'muchos', 'muchas', 'poco',
-             'nada', 'ningún', 'no', 'hay', 'de', 'tengo', 'tiene'],
-    segni: ['unos', 'unas', 'algunos', 'algunas', 'poco', 'mucho', 'mucha', 'muchos', 'muchas', 'nada'],
+             'poca', 'pocos', 'pocas', 'nada', 'ningún', 'no', 'hay', 'de', 'tengo', 'tiene'],
+    segni: ['unos', 'unas', 'algunos', 'algunas', 'poco', 'poca', 'pocos', 'pocas', 'mucho', 'mucha', 'muchos',
+            'muchas', 'nada', 'ningún'],
     regola: 'Unos, unas: alcuni. Un poco de: un po’ di (non cambia). Mucho, mucha, muchos, muchas concordano.',
   },
   'presente-er-ir': {
@@ -209,13 +212,15 @@ export const FORME = {
     segni: ['quiero', 'quieres', 'quiere', 'queremos', 'quieren', 'puedo', 'puedes', 'puede', 'podemos',
             'pueden', '#pres'],
     flessione: 'pres',
-    regola: 'Querer e poder cambiano la vocale: quiero, puedo. Dopo di loro il verbo resta com’è: quiero nadar.',
+    regola: 'Querer e poder cambiano la vocale: quiero, puedo. Dopo di loro il verbo resta com’è: quiero jugar.',
   },
   /* ── La città tra le nuvole ── */
   ayer: {
     nome: 'ayer estuve, fui',
+    // lo, para, todo, otra vez, algo, nada, desde: le parolette per raccontare nella sesta (anche nel libro)
     parole: ['ayer', 'estuve', 'estuviste', 'estuvo', 'estuvimos', 'estuvieron', 'fui', 'fuiste', 'fue', 'fuimos',
-             'fueron', 'anoche', 'en', 'al', 'a', 'no', 'y', 'yo', 'tú', 'él', 'ella', 'nosotros', 'ellos'],
+             'fueron', 'anoche', 'en', 'al', 'a', 'no', 'y', 'yo', 'tú', 'él', 'ella', 'nosotros', 'ellos', 'lo', 'para',
+             'todo', 'otra vez', 'algo', 'nada', 'desde'],
     segni: ['ayer', 'estuve', 'estuviste', 'estuvo', 'estuvimos', 'estuvieron', 'fui', 'fuiste', 'fue',
             'fuimos', 'fueron'],
     regola: 'Ieri: ayer + passato. Estar fa estuve, estuvo; ir e ser fanno fui, fue.',
@@ -241,16 +246,16 @@ export const FORME = {
   },
   cuando: {
     nome: 'cuando, mientras',
-    parole: ['cuando', 'mientras', 'que', 'porque', 'y', 'no', 'yo', 'él', 'ella', 'nosotros', 'ellos', 'hace'],
+    parole: ['cuando', 'mientras', 'que', 'porque', 'pero', 'y', 'no', 'yo', 'él', 'ella', 'nosotros', 'ellos', 'hace'],
     segni: ['cuando', 'mientras'],
     regola: 'Quando: cuando (senza accento). Mentre: mientras. Dopo cuando c’è un verbo: cuando hace frío.',
   },
   'voy-a': {
-    nome: 'voy a nadar',
+    nome: 'voy a jugar',
     parole: ['voy', 'vas', 'va', 'vamos', 'van', 'a', 'mañana', 'luego', 'pronto', 'no', 'yo', 'tú', 'él', 'ella',
              'nosotros', 'ellos', 'qué', 'y'],
     segni: ['voy', 'vas', 'va', 'vamos', 'van'], flessione: 'pres',
-    regola: 'Per il futuro vicino: ir + a + il verbo com’è: voy a nadar. La a non si dimentica.',
+    regola: 'Per il futuro vicino: ir + a + il verbo com’è: voy a jugar. La a non si dimentica.',
   },
   comparativos: {
     nome: 'más alto que, el más alto',

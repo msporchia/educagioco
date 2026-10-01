@@ -135,7 +135,7 @@ export const MONDI = [
   },
   {
     id: 'quarta', anno: 4, nome: 'Il rifugio d’inverno', disegno: 'sole', paesaggio: 'inverno',
-    insegna: 'qué hora es, canto, como, me levanto, el cinco de mayo, unos, un poco de, estoy jugando',
+    insegna: 'qué hora es, lavo, como, me levanto, el cinco de mayo, unos, un poco de, estoy jugando',
     dopo: ['terza'], categorie: ['t'], verbi: true, strutture: ['hora', 'presente-ar', 'presente-er-ir', 'reflexivos', 'gerundio'],
     tappe: [
       parole('quarta-dia', 'La giornata', 'sole', 'dia',
@@ -147,7 +147,7 @@ export const MONDI = [
       parole('quarta-deportes', 'Sport e musica', 'palla', 'deportes',
         ['tenis', 'básquet', 'natación', 'guitarra', 'tambor', 'piano', 'trompeta', 'violín', 'música',
          'equipo']),
-      frasi('quarta-canto', 'Io canto, tu balli', 'palla', ['presente-ar']),
+      frasi('quarta-canto', 'Io lavo, tu ascolti', 'palla', ['presente-ar']),
       frasi('quarta-fechas', 'Il cinque di maggio', 'clessidra', ['fechas']),
       frasi('quarta-unos', 'Un po’ di…, alcuni', 'torta', ['cantidad']),
       parole('quarta-oficios', 'I mestieri', 'coppia', 'oficios',
@@ -189,7 +189,7 @@ export const MONDI = [
   },
   {
     id: 'sesta', anno: 6, nome: 'La città tra le nuvole', disegno: 'clessidra', paesaggio: 'nuvole',
-    insegna: 'ayer estuve, fui, jugué, dijo, cuando, mientras, más alto que, voy a nadar',
+    insegna: 'ayer estuve, fui, jugué, dijo, cuando, mientras, más alto que, voy a jugar',
     dopo: ['quinta'], categorie: [],
     strutture: ['ayer', 'pasado-irr', 'pasado-reg', 'decir', 'cuando', 'voy-a', 'comparativos'],
     tappe: [

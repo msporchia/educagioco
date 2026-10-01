@@ -8,7 +8,7 @@ import { FORME, chiaveForma } from '../dati/forme.js'
 import { FRASI } from '../dati/frasi.js'
 import { PERSONAGGI } from '../dati/elenchi.js'
 import { chiaveNellArgomento, paroleDellArgomento, ARGOMENTI } from '../dati/argomenti.js'
-import { nomeDi, aggettivoDi, NOMI_PROPRI } from './lessico.js'
+import { nomeDi, aggettivoDi, determinante, accordaDet, NOMI_PROPRI } from './lessico.js'
 import { minuscole } from './testo.js'
 import { flesse } from './flessioni.js'
 
@@ -82,6 +82,9 @@ export function sconosciute(testo, note, flessioni = null) {
     if (n && note.has(n.base.toLowerCase())) continue
     const a = aggettivoDi(w)
     if (a && note.has(a.base)) continue
+    // ninguna da ningún, esta da este: l'altro genere di una parola nota (l'altro numero no: mis non è mi)
+    const d = determinante(w)
+    if (d && d.genere && note.has(accordaDet(w, d.genere === 'f' ? 'm' : 'f', d.plurale))) continue
     if (flessioni && flesse(w).some(f => flessioni.has(f.come) && note.has(f.base))) continue
     out.push(w)
   }

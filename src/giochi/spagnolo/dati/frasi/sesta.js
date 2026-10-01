@@ -26,16 +26,15 @@ export default {
     ayer('sx-fuiste-parque', 'fuiste al parque ayer', 'sei andato al parco ieri?'),
     ayer('sx-abuelos-museo', 'ayer mis abuelos fueron al museo', 'ieri i miei nonni sono andati al museo'),
     ayer('sx-leo-zoologico', 'Leo fue al zoológico el sábado', 'Leo è andato allo zoo sabato'),
-    // fue di ser: passato-al-presente scriverebbe «va» (ir), qui serve «es»
-    ayer('sx-fue-lunes', 'ayer fue lunes y hoy es martes', 'ieri era lunedì e oggi è martedì', { niente: ['passato-al-presente'],
+    ayer('sx-fue-lunes', 'ayer fue lunes y hoy es martes', 'ieri era lunedì e oggi è martedì', {
       trappole: [{ es: 'ayer es lunes y hoy es martes', perche: 'Ieri è già passato: fue, non es' },
                  { es: 'ayer estuvo lunes y hoy es martes', perche: 'Che giorno era si dice con ser: fue, non estuvo' },
                  { es: 'ayer fue lunes y hoy fue martes', perche: 'Oggi è adesso: hoy es, non hoy fue' }] }),
-    ayer('sx-cumpleanos', 'ayer fue mi cumpleaños', 'ieri è stato il mio compleanno', { niente: ['passato-al-presente'],
+    ayer('sx-cumpleanos', 'ayer fue mi cumpleaños', 'ieri è stato il mio compleanno', {
       trappole: [{ es: 'ayer es mi cumpleaños', perche: 'Ieri è già passato: fue, non es' }] }),
-    ayer('sx-fiesta-bonita', 'la fiesta fue muy bonita', 'la festa è stata molto bella', { niente: ['passato-al-presente'],
+    ayer('sx-fiesta-bonita', 'la fiesta fue muy bonita', 'la festa è stata molto bella', {
       trappole: [{ es: 'la fiesta es muy bonita', perche: 'La festa è già finita: fue, non es' }] }),
-    ayer('sx-fiesta-sabado', 'la fiesta de Laura fue el sábado', 'la festa di Laura è stata sabato', { niente: ['passato-al-presente'],
+    ayer('sx-fiesta-sabado', 'la fiesta de Laura fue el sábado', 'la festa di Laura è stata sabato', {
       trappole: [{ es: 'la fiesta de Laura estuvo el sábado', perche: 'Quando c’è stata una festa si dice con ser: fue' }] }),
 
     /* ── Sono andato al castello: hice, vi, di, vine ── */
@@ -45,8 +44,7 @@ export default {
     fui('sx-no-hice-nada', 'ayer no hice nada', 'ieri non ho fatto niente'),
     fui('sx-hicimos-fiesta', 'hicimos una fiesta en el jardín', 'abbiamo fatto una festa in giardino'),
     fui('sx-vi-caballo', 'ayer vi un caballo en la granja', 'ieri ho visto un cavallo nella fattoria'),
-    // viste è anche vestir: niente «veste»
-    fui('sx-viste-castillo', 'viste el castillo y el puente', 'hai visto il castello e il ponte?', { niente: ['dittongo'] }),
+    fui('sx-viste-castillo', 'viste el castillo y el puente', 'hai visto il castello e il ponte?'),
     fui('sx-leo-vio', 'Leo vio un pájaro en el puente', 'Leo ha visto un uccello sul ponte',
         { trappole: [{ es: 'Leo vió un pájaro en el puente', perche: 'Vio è corto: niente accento, come vi, di, dio' }] }),
     fui('sx-vimos-vacas', 'vimos muchas vacas en la granja', 'abbiamo visto molte mucche nella fattoria'),
@@ -115,23 +113,12 @@ export default {
 
     /* ── Chi è più alto? más … que, el más, mejor ── */
     mas('sx-hermano-alto', 'mi hermano es más alto que yo', 'mio fratello è più alto di me'),
-    // «que el» non diventa «de el» (mas-de non contrae): la trappola giusta è a mano
-    mas('sx-caballo-rapido', 'el caballo es más rápido que el perro', 'il cavallo è più veloce del cane',
-      { niente: ['mas-de'],
-      trappole: [{ es: 'el caballo es más rápido del perro', perche: 'Più … di si dice más … que: más rápido que' }] }),
+    mas('sx-caballo-rapido', 'el caballo es más rápido que el perro', 'il cavallo è più veloce del cane'),
     mas('sx-abuelo-viejo', 'mi abuelo es más viejo que mi abuela', 'mio nonno è più vecchio di mia nonna'),
-    mas('sx-vaca-menos', 'la vaca es menos rápida que el caballo', 'la mucca è meno veloce del cavallo',
-      { niente: ['mas-de'],
-      trappole: [{ es: 'la vaca es menos rápida del caballo', perche: 'Meno … di si dice menos … que: menos rápida que' }] }),
-    mas('sx-avion-tren', 'el avión es más rápido que el tren', 'l’aereo è più veloce del treno',
-      { niente: ['mas-de'],
-      trappole: [{ es: 'el avión es más rápido del tren', perche: 'Più … di si dice más … que: más rápido que' }] }),
-    mas('sx-dormitorio-grande', 'mi dormitorio es más grande que el baño', 'la mia camera è più grande del bagno',
-      { niente: ['mas-de'],
-      trappole: [{ es: 'mi dormitorio es más grande del baño', perche: 'Più … di si dice más … que: más grande que' }] }),
-    mas('sx-juego-facil', 'este juego es más fácil que el rompecabezas', 'questo gioco è più facile del puzzle',
-      { niente: ['mas-de', 'dittongo'],
-      trappole: [{ es: 'este juego es más fácil del rompecabezas', perche: 'Più … di si dice más … que: más fácil que' }] }),
+    mas('sx-vaca-menos', 'la vaca es menos rápida que el caballo', 'la mucca è meno veloce del cavallo'),
+    mas('sx-avion-tren', 'el avión es más rápido que el tren', 'l’aereo è più veloce del treno'),
+    mas('sx-dormitorio-grande', 'mi dormitorio es más grande que el baño', 'la mia camera è più grande del bagno'),
+    mas('sx-juego-facil', 'este juego es más fácil que el rompecabezas', 'questo gioco è più facile del puzzle'),
     mas('sx-hoy-frio', 'hoy hace más frío que ayer', 'oggi fa più freddo di ieri'),
     mas('sx-quien-alto', 'quién es más alto que Tom', 'chi è più alto di Tom?'),
     mas('sx-laura-alta', 'Laura es la más alta de mis amigos', 'Laura è la più alta dei miei amici',
@@ -147,8 +134,7 @@ export default {
     mas('sx-pizza-mejor', 'la pizza es mejor que la sopa', 'la pizza è più buona della minestra'),
     // qui mejor è «meglio»: «más bueno» non è l'errore giusto
     mas('sx-tom-mejor', 'Tom juega al tenis mejor que yo', 'Tom gioca a tennis meglio di me', { niente: ['mas-bueno'] }),
-    // lui-lei non riaccorda «la mejor»: darebbe «él es la mejor»
-    mas('sx-ella-mejor', 'ella es la mejor', 'lei è la migliore', { niente: ['lui-lei'] }),
+    mas('sx-ella-mejor', 'ella es la mejor', 'lei è la migliore'),
     mas('sx-auto-peor', 'el auto viejo es peor que el auto nuevo', 'la macchina vecchia è peggiore di quella nuova'),
 
     /* ── Domani andrò: voy a + verbo ── */

@@ -12,7 +12,8 @@ import { componi, TIPI } from '../../../data/domande.js'
 import { voceDi } from '../../../data/lessico.js'
 import { paroleNote, formeNote, sconosciute, fontiDi, chiaveDellaTappa, formeDelLibro, flessioniNote } from './grafo.js'
 import { flesse } from './flessioni.js'
-import { eColore, eAggettivo, eNumero, eVerbo, traduci } from './lessico.js'
+import { eColore, eAggettivo, eNumero, eVerbo, traduci, NOMI_PROPRI, nomeDi, aggettivoDi, determinante,
+         accordaDet } from './lessico.js'
 import { sgrammaticata, APPOSTA } from './grammatica.js'
 import { tipiDellaParola } from './sessione.js'
 import { trappoleDi } from './trappole.js'
@@ -28,10 +29,28 @@ export const PERCHE_MAX = 70
 // le parole di chi parla: in una frase senza `chi` vogliono dire che è una battuta
 const IO_E_TU = new Set(['yo', 'me', 'mi', 'mis', 'nosotros', 'nosotras', 'nos', 'nuestro', 'nuestra', 'tú', 'te', 'tu',
                          'tus', 'ti', 'conmigo', 'contigo'])
-// anche il verbo lo dice: tengo, tienes, jugamos (lo spagnolo il soggetto spesso non lo scrive)
+// anche il verbo lo dice: tengo, tienes, jugamos (lo spagnolo il soggetto spesso non lo scrive);
+// un nome che è anche un verbo (cuento, juego) no
+// «Leo» è anche leo (leer, io): i nomi dei personaggi non dicono chi parla
+const senzaNomi = t => t.replace(/[A-ZÁÉÍÓÚÑ][a-záéíóúüñ]+/g, w => (NOMI_PROPRI.has(w.toLowerCase()) ? ' ' : w))
 const dettoDaQualcuno = T => T.some(w => IO_E_TU.has(w) ||
-  (flesse(w).length && flesse(w).every(f => ['yo', 'tú', 'nosotros'].includes(f.persona))))
+  (!nomeDi(w) && flesse(w).length && flesse(w).every(f => ['yo', 'tú', 'nosotros'].includes(f.persona))))
 const LETTERE = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g
+// Una battuta che chiede e si risponde da sola («¿Es un gato? No, es un perro»)
+// sono due persone. Non lo è chi ripete una domanda senza verbo («¿Pip? No, no
+// es Pip», «¿La pelota de Tom? No, no la vi»), né chi ripete le parole della
+// domanda nella risposta.
+const DI_CONTORNO = new Set(['es', 'son', 'un', 'una', 'el', 'la', 'los', 'las', 'de', 'del', 'al', 'a', 'en', 'y', 'no',
+                             'sí', 'que', 'qué', 'muy'])
+function domandaERisposta(testo) {
+  const m = String(testo).match(/¿([^?]*)\?\s*(Sí|No)(?![A-Za-zÁÉÍÓÚÜÑáéíóúüñ])(.*)$/)
+  if (!m) return false
+  const D = minuscole(m[1])
+  const conVerbo = D.some(w => !NOMI_PROPRI.has(w) && !nomeDi(w) && flesse(w).some(f => f.come !== 'ger'))
+  if (!conVerbo) return false
+  const R = new Set(minuscole(m[3]))
+  return !D.some(w => !DI_CONTORNO.has(w) && R.has(w))
+}
 
 // un caso ripetibile: la stessa frase deve dare gli stessi banchi
 export function sorte(seme = 1) {
@@ -50,11 +69,30 @@ const PAROLE = new Set(WORDS.map(w => w[0]))
 
 // i segni che non sono una parola: un colore, un aggettivo, un numero (anche
 // accordati: negra, grandes), un verbo di data/verbi-es.js flesso (#pres
-// canto, #ger cantando, #ind canté)
+// canto, #ger cantando, #ind canté), un mese, un giorno, una stagione
 const flessoCome = come => w => flesse(w).some(f => f.come === come && eVerbo(f.base))
-const SEGNI = { '#c': eColore, '#j': eAggettivo, '#n': eNumero }
+const MESI = new Set(['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre',
+                      'octubre', 'noviembre', 'diciembre'])
+const GIORNI = new Set(['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'])
+const STAGIONI = new Set(['primavera', 'verano', 'otoño', 'invierno'])
+const SEGNI = { '#c': eColore, '#j': eAggettivo, '#n': eNumero, '#mese': w => MESI.has(w), '#giorno': w => GIORNI.has(w),
+                '#stagione': w => STAGIONI.has(w) }
 for (const come of ['pres', 'ger', 'ind']) SEGNI['#' + come] = flessoCome(come)
-export const haSegno = (T, sg) => (SEGNI[sg] ? T.some(SEGNI[sg]) : T.includes(sg.toLowerCase()))
+// una parola del segno: sé stessa, accordata (caro → cara, poca → pocos) o un #
+const pezzo = sg => {
+  if (SEGNI[sg]) return SEGNI[sg]
+  const l = sg.toLowerCase()
+  const a = aggettivoDi(l)
+  // gli articoli no: «la» non vuol dire «el»
+  const d = determinante(l) && !['el', 'un', 'al', 'del'].includes(accordaDet(l, 'm', false)) && determinante(l)
+  return w => w === l || (!!a && aggettivoDi(w)?.base === a.base) ||
+    (!!d && !!determinante(w) && accordaDet(w, 'm', false) === accordaDet(l, 'm', false))
+}
+// un segno è una parola o più di fila («son las», «#n de #mese»)
+export const haSegno = (T, sg) => {
+  const p = sg.split(' ').map(pezzo)
+  return T.some((_, i) => p.every((prova, k) => T[i + k] !== undefined && prova(T[i + k])))
+}
 
 export function guastiDellaFrase(f, { semi = 6 } = {}) {
   const g = []
@@ -73,11 +111,11 @@ export function guastiDellaFrase(f, { semi = 6 } = {}) {
   if (!tappa || !FORME[f.forma]) return g
   if (!tappa.frasi) g.push(`${dove}: sta in una tappa di parole (${f.tappa}): le frasi vanno nelle tappe di frasi`)
 
-  // almeno un segno della struttura della tappa: una frase di «C'è» che non dice hay non ripassa niente
-  const segni = (tappa.forme || []).flatMap(x => FORME[x].segni)
+  // almeno un segno della sua struttura: una frase di «C'è» che non dice hay non ripassa niente
+  const segni = FORME[f.forma].segni
   const T = minuscole(f.es)
   if (segni.length && !segni.some(sg => haSegno(T, sg)))
-    g.push(`${dove}: non usa la struttura della sua tappa (${segni.join(', ')})`)
+    g.push(`${dove}: non usa la sua struttura, ${f.forma} (${segni.join(', ')})`)
 
   for (const testo of [f.es, ...(f.varianti || [])]) {
     const storta = sgrammaticata(testo)
@@ -304,11 +342,12 @@ export function guastiDelCapitolo(cap) {
       // chi parla: un personaggio noto, una persona sola; la narrazione non dice io né tu
       const chi = chiDi(f, v)
       if (chi && !CHI_PARLA[chi]) g.push(`${dove}: «${testo}» la dice «${chi}», che non è un personaggio`)
-      if (chi && /\?\s*(Sí|No)\b/.test(testo)) g.push(`${dove}: «${testo}» è domanda e risposta: due battute`)
-      if (!chi && (/[“"]/.test(testo) || dettoDaQualcuno(minuscole(testo))))
+      if (chi && domandaERisposta(testo)) g.push(`${dove}: «${testo}» è domanda e risposta: due battute`)
+      if (!chi && (/[“"]/.test(testo) || dettoDaQualcuno(minuscole(senzaNomi(testo)))))
         g.push(`${dove}: «${testo}» è detta da qualcuno: manca chi`)
     }
-    const r = racconta(cap, v, sorte(7))
+    let r
+    try { r = racconta(cap, v, sorte(7)) } catch (e) { g.push(`${dove}: ${e.message}`); continue }
     for (const [i, d] of cap.domande.entries()) {
       if (d.se && !d.se(v)) continue
       poste.set(i, true)
