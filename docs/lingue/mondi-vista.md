@@ -103,6 +103,17 @@ nautiche disegnate a mano.
   costa tratteggiata e l'inchiostro tenue, come una terra non ancora
   rilevata. Sulla terra libera alberelli, monticelli e ciuffi a
   inchiostro (`decori`, mai sotto una tappa, un nome o il sentiero).
+- **Ogni isola ha il suo paesaggio** (`paesaggio` del mondo in
+  `dati/mondi.js`, i colori e i pittori in `PAESAGGI` e `DECORI` di
+  `scena/mappa.js`), perché cinque isole uguali non si distinguevano: la
+  prima in fiore, la seconda d'estate (palme, dune, stelle marine), la terza
+  d'autunno (alberi rossi, funghi), la quarta d'inverno (neve, abeti,
+  montagne bianche, pupazzi), la quinta coi vulcani (terra di cenere, pini,
+  rocce). La disposizione sceglie solo il posto e il genere di ogni decoro
+  (albero, monte, ciuffo); il paesaggio decide come si disegna. Chiusa,
+  la terra va verso la pergamena ma resta del suo colore. Provato un
+  decoro grande per isola (il vulcano, la montagna): sulle isole strette di
+  un telefono non c'era mai spazio senza coprire un nome o il sentiero.
 - **Costa una volta sola.** La geografia (coste, mare, porti, rotte) non
   dipende da cosa è vinto ma solo da dove sta ogni cosa, quindi si tiene
   da parte per forma (`geografia`, le ultime sei): la prima volta sono

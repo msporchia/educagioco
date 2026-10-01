@@ -238,7 +238,8 @@ export function disponi(stato, W, extra = () => ({})) {
   const aperto = new Map(stato.map(m => [m.id, m.aperto]))
   sentieri.push(...sfoltisci(geo.rotte.map(r => ({ ...r, battuto: !!aperto.get(r.a) }))))
   const statoIsola = new Map(pezzi.map(p => [p.isola.mondo, p.isola.stato]))
-  const isole = geo.isole.map(is => ({ ...is, stato: statoIsola.get(is.mondo) }))
+  const paesaggio = new Map(stato.map(m => [m.id, m.paesaggio || null]))
+  const isole = geo.isole.map(is => ({ ...is, stato: statoIsola.get(is.mondo), paesaggio: paesaggio.get(is.mondo) }))
   return { W, H, nodi, sentieri, titoli, isole, mareBasso: geo.mareBasso, mare: geo.mare,
            rosa: geo.rosa, decori: geo.decori }
 }
@@ -380,12 +381,12 @@ function decori(is, campo) {
       if (leggi(campo, px, py, 99) > -12) continue
       if (unione(is.deve, px, py) < 14 || unione(is.strade, px, py) < 10) continue
       const q = dado(is.seme, i, 2900 + j)
-      if (q < 0.42) continue
+      if (q < 0.3) continue
       const tipo = q < 0.7 ? 'albero' : q < 0.86 ? 'monte' : 'ciuffo'
       if (leggi(campo, px, py - 10, 99) > -6) continue          // la chioma o la cima non escono dalla costa
-      const spazio = tipo === 'monte' ? 24 : 17
+      const spazio = tipo === 'monte' ? 26 : 19
       if (out.some(d => Math.hypot(d.x - px, d.y - py) < spazio)) continue
-      out.push({ mondo: is.mondo, tipo, x: Math.round(px), y: Math.round(py), s: 0.8 + dado(is.seme, i, 3900 + j) * 0.4 })
+      out.push({ mondo: is.mondo, tipo, x: Math.round(px), y: Math.round(py), s: 1 + dado(is.seme, i, 3900 + j) * 0.4 })
     }
   }
   return out

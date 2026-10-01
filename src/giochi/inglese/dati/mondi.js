@@ -5,6 +5,7 @@
 //
 // Un mondo: { id, anno (1–5), nome, disegno, insegna, dopo: [id…] (tutti
 //   finiti), dopoUno?: [id…] (basta uno), categorie: [cat di words.js],
+//   paesaggio (la stagione o il carattere dell'isola sulla mappa, scena/mappa.js),
 //   verbi?: true (i verbi di data/verbi.js che nessuna tappa insegna vanno
 //   nel suo cassetto), strutture?: [forma…] (le strutture dell'anno che il
 //   libro sa dalla prima pagina del mondo, prima della loro tappa di
@@ -48,7 +49,7 @@ function portate(m) {
 
 export const MONDI = [
   {
-    id: 'prima', anno: 1, nome: 'In prima', disegno: 'palla',
+    id: 'prima', anno: 1, nome: 'In prima', disegno: 'palla', paesaggio: 'primavera',
     insegna: 'i colori, it is a …, is it …?, hello, my name is, i numeri fino a dieci, this is …',
     dopo: [], categorie: ['a', 'c', 's', 'g'],
     tappe: [
@@ -71,7 +72,7 @@ export const MONDI = [
     ],
   },
   {
-    id: 'seconda', anno: 2, nome: 'In seconda', disegno: 'casetta',
+    id: 'seconda', anno: 2, nome: 'In seconda', disegno: 'casetta', paesaggio: 'estate',
     insegna: 'I like, this is my, I have got, she has got, i numeri fino a venti',
     dopo: ['prima'], categorie: ['b', 'k', 'f', 'p', 'j'],
     tappe: [
@@ -98,7 +99,7 @@ export const MONDI = [
     ],
   },
   {
-    id: 'terza', anno: 3, nome: 'In terza', disegno: 'scatola',
+    id: 'terza', anno: 3, nome: 'In terza', disegno: 'scatola', paesaggio: 'autunno',
     insegna: 'there is / there are, where is …?, in, on, under, today is …, can / cannot',
     dopo: ['seconda'], categorie: ['h', 'd', 'w', 'n'], verbi: true,
     tappe: [
@@ -127,7 +128,7 @@ export const MONDI = [
     ],
   },
   {
-    id: 'quarta', anno: 4, nome: 'In quarta', disegno: 'sole',
+    id: 'quarta', anno: 4, nome: 'In quarta', disegno: 'sole', paesaggio: 'inverno',
     insegna: 'what time is it?, I play, she plays, does she play?, I am playing',
     dopo: ['terza'], categorie: ['t'], strutture: ['presente', 'terza-s', 'does', 'ing', 'ora'],
     tappe: [
@@ -153,7 +154,7 @@ export const MONDI = [
     ],
   },
   {
-    id: 'quinta', anno: 5, nome: 'In quinta', disegno: 'clessidra',
+    id: 'quinta', anno: 5, nome: 'In quinta', disegno: 'clessidra', paesaggio: 'vulcano',
     insegna: 'I was, I went, I played, she said, when, going to, bigger than',
     dopo: ['quarta'], categorie: ['y'],
     strutture: ['was-were', 'passato', 'passato-ed', 'dire', 'quando', 'going-to', 'paragoni'],

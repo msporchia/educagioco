@@ -13,6 +13,22 @@ export const PERGAMENA = '#efe0bb'
 export const INCHIOSTRO = '#4a3222'
 const TERRA = { aperto: '#d8d397', chiuso: '#ddd0a0', arrivo: '#e6dbbb' }
 const SABBIA = { aperto: '#efdfae', chiuso: '#eddfb5', arrivo: '#efe3c4' }
+// Il carattere di un'isola (`paesaggio` del mondo): la terra, la sabbia e i
+// decori. Chiusa, la terra va verso la pergamena ma resta riconoscibile.
+// Vedi docs/lingue/mondi-vista.md («Le isole»).
+const PAESAGGI = {
+  primavera: { terra: '#c3db8c', sabbia: '#ecebb6' },
+  estate: { terra: '#ecd28a', sabbia: '#f7e9bd' },
+  autunno: { terra: '#dcb877', sabbia: '#eedaa8' },
+  inverno: { terra: '#e9eff0', sabbia: '#f6f8f7' },
+  vulcano: { terra: '#c9c1b2', sabbia: '#ddd5c4' },
+}
+const SBIADISCE = { aperto: 0, chiuso: 0.5, arrivo: 0.75 }
+const coloreDi = (is, chi, base) => {
+  const p = PAESAGGI[is.paesaggio]
+  const stato = is.stato || 'chiuso'
+  return p ? mescola(p[chi], PERGAMENA, SBIADISCE[stato] ?? 0.5) : (base[stato] || base.chiuso)
+}
 // quanto l'inchiostro di un'isola è pieno: un mondo in arrivo è appena abbozzato
 const TINTA = { aperto: 1, chiuso: 0.8, arrivo: 0.45 }
 const SENTIERO = '#8a3b1c'
@@ -116,10 +132,10 @@ function isole(ctx, elenco) {
     const tutti = [is.costa, ...is.isolotti].filter(Boolean)
     const terra = new Path2D()
     for (const a of tutti) anello(terra, a)
-    ctx.fillStyle = TERRA[stato] || TERRA.chiuso; ctx.fill(terra)
+    ctx.fillStyle = coloreDi(is, 'terra', TERRA); ctx.fill(terra)
     ctx.save(); ctx.clip(terra)
     // la sabbia: una striscia chiara appena dentro la costa
-    ctx.strokeStyle = SABBIA[stato] || SABBIA.chiuso; ctx.lineWidth = 13; ctx.stroke(terra)
+    ctx.strokeStyle = coloreDi(is, 'sabbia', SABBIA); ctx.lineWidth = 13; ctx.stroke(terra)
     ctx.fillStyle = `rgba(150,120,60,${0.22 * alfa})`
     for (const a of tutti) for (let i = 0; i < a.length; i += 3) {
       const d = 2 + dado(i, 7, is.seme) * 4, q = dado(i, 8, is.seme)
@@ -137,34 +153,161 @@ function isole(ctx, elenco) {
   }
 }
 
-// alberelli, monticelli e ciuffi a inchiostro, dove la terra è libera
-function decori(ctx, q) {
-  const stati = new Map(q.isole.map(is => [is.mondo, is.stato]))
-  for (const d of q.decori) {
-    const stato = stati.get(d.mondo) || 'chiuso', alfa = TINTA[stato] ?? 1
-    const ink = mescola(INCHIOSTRO, TERRA[stato] || TERRA.chiuso, 1 - alfa * 0.85)
-    const tinta = c => mescola(c, TERRA[stato] || TERRA.chiuso, 1 - alfa * 0.8)
-    const s = d.s
-    ctx.save(); ctx.translate(d.x, d.y); ctx.scale(s, s)
-    ctx.strokeStyle = ink; ctx.lineWidth = 1.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
-    if (d.tipo === 'albero') {
-      ctx.beginPath(); ctx.moveTo(0, 6); ctx.lineTo(0, 0); ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(-5, 1); ctx.quadraticCurveTo(-8, -4, -3, -6); ctx.quadraticCurveTo(0, -11, 3, -6)
-      ctx.quadraticCurveTo(8, -4, 5, 1); ctx.closePath()
-      ctx.fillStyle = tinta('#8fae62'); ctx.fill(); ctx.stroke()
-    } else if (d.tipo === 'monte') {
-      ctx.beginPath(); ctx.moveTo(-10, 5); ctx.quadraticCurveTo(-3, -9, 0, -8); ctx.quadraticCurveTo(4, -8, 10, 5)
-      ctx.fillStyle = tinta('#cdb47c'); ctx.fill(); ctx.stroke()
-      ctx.beginPath()
-      for (const x of [2.5, 5, 7.5]) { ctx.moveTo(x, -4 + x * 0.6); ctx.lineTo(x - 1.5, 4) }
-      ctx.lineWidth = 0.8; ctx.stroke()
-    } else {
+// I decori a inchiostro, dove la terra è libera: tre posti (albero, monte,
+// ciuffo, scelti da disposizione.js) che ogni paesaggio riempie a modo suo.
+// `t(colore)` sbiadisce il colore con lo stato dell'isola.
+function chioma(ctx, colore) {
+  ctx.beginPath()
+  ctx.moveTo(-5, 1); ctx.quadraticCurveTo(-8, -4, -3, -6); ctx.quadraticCurveTo(0, -11, 3, -6)
+  ctx.quadraticCurveTo(8, -4, 5, 1); ctx.closePath()
+  ctx.fillStyle = colore; ctx.fill(); ctx.stroke()
+}
+function tronco(ctx) { ctx.beginPath(); ctx.moveTo(0, 6); ctx.lineTo(0, 0); ctx.stroke() }
+function collina(ctx, colore) {
+  ctx.beginPath(); ctx.moveTo(-10, 5); ctx.quadraticCurveTo(-3, -9, 0, -8); ctx.quadraticCurveTo(4, -8, 10, 5)
+  ctx.fillStyle = colore; ctx.fill(); ctx.stroke()
+  ctx.beginPath()
+  for (const x of [2.5, 5, 7.5]) { ctx.moveTo(x, -4 + x * 0.6); ctx.lineTo(x - 1.5, 4) }
+  ctx.lineWidth = 0.8; ctx.stroke()
+}
+function puntini(ctx, punti, colore, r = 1.1) {
+  ctx.fillStyle = colore
+  for (const [x, y] of punti) { ctx.beginPath(); ctx.arc(x, y, r, 0, GIRO); ctx.fill() }
+}
+const COLORI_DEI_FIORI = ['#d9453a', '#f2c230', '#3a86d4', '#e27fb0', '#f08a2a']
+function fiore(ctx, t, k, x, y) {
+  ctx.beginPath(); ctx.moveTo(x, y + 4); ctx.lineTo(x, y - 1); ctx.lineWidth = 1; ctx.stroke()
+  ctx.fillStyle = t(COLORI_DEI_FIORI[k % COLORI_DEI_FIORI.length])
+  for (let i = 0; i < 5; i++) {
+    const a = i / 5 * GIRO
+    ctx.beginPath(); ctx.arc(x + Math.cos(a) * 2.2, y - 3 + Math.sin(a) * 2.2, 1.6, 0, GIRO); ctx.fill()
+  }
+  puntini(ctx, [[x, y - 3]], t('#f7e27a'), 1.2)
+}
+
+const DECORI = {
+  base: {
+    albero: (ctx, t) => { tronco(ctx); chioma(ctx, t('#8fae62')) },
+    monte: (ctx, t) => collina(ctx, t('#cdb47c')),
+    ciuffo: ctx => {
       ctx.beginPath(); ctx.moveTo(-3, 3); ctx.lineTo(-4, -2); ctx.moveTo(0, 3); ctx.lineTo(0, -3.5)
       ctx.moveTo(3, 3); ctx.lineTo(4, -2); ctx.lineWidth = 1; ctx.stroke()
-    }
+    },
+  },
+  // la prima: alberi in fiore e fiori di tutti i colori
+  primavera: {
+    albero: (ctx, t) => { tronco(ctx); chioma(ctx, t('#86b85c')); puntini(ctx, [[-4, -3], [1, -7], [4, -2], [-1, -1]], t('#f4a6c4')) },
+    // un'aiuola: tre fiori di colori diversi
+    monte: (ctx, t, d) => [[-5, 2], [0, -1], [5, 2]].forEach(([x, y], i) => fiore(ctx, t, d.k + i, x, y)),
+    ciuffo: (ctx, t, d) => fiore(ctx, t, d.k, 0, 0),
+  },
+  // la seconda: palme, dune e stelle marine
+  estate: {
+    albero: (ctx, t) => {
+      ctx.beginPath(); ctx.moveTo(-1, 7); ctx.quadraticCurveTo(-2, 1, 1, -5); ctx.lineWidth = 1.6; ctx.stroke()
+      ctx.lineWidth = 1.1; ctx.fillStyle = t('#6fa84e')
+      for (const [dx, dy] of [[-8, -3], [-6, -9], [1, -11], [7, -8], [8, -2]]) {
+        ctx.beginPath(); ctx.moveTo(1, -5)
+        ctx.quadraticCurveTo((1 + dx) / 2 + dy * 0.15, (-5 + dy) / 2 - 3, dx, dy)
+        ctx.quadraticCurveTo((1 + dx) / 2, (-5 + dy) / 2, 1, -5); ctx.fill(); ctx.stroke()
+      }
+      puntini(ctx, [[0, -4], [2, -4.5]], t('#8a5a2b'), 1.2)
+    },
+    monte: (ctx, t) => {
+      ctx.beginPath(); ctx.moveTo(-11, 4); ctx.quadraticCurveTo(-4, -6, 2, -5); ctx.quadraticCurveTo(7, -4, 11, 4)
+      ctx.fillStyle = t('#f0d48e'); ctx.fill(); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(-5, 0); ctx.quadraticCurveTo(0, -3, 5, 0); ctx.lineWidth = 0.7; ctx.stroke()
+    },
+    ciuffo: (ctx, t) => {
+      ctx.beginPath()
+      for (let i = 0; i < 10; i++) {
+        const a = -Math.PI / 2 + i / 10 * GIRO, r = i % 2 ? 1.8 : 4.4
+        ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r)
+      }
+      ctx.closePath(); ctx.fillStyle = t('#ef8a4a'); ctx.lineWidth = 0.9; ctx.fill(); ctx.stroke()
+    },
+  },
+  // la terza: le foglie rosse e arancioni, e i funghi
+  autunno: {
+    albero: (ctx, t, d) => { tronco(ctx); chioma(ctx, t(d.k % 2 ? '#d9822b' : '#c4532c')) },
+    monte: (ctx, t) => collina(ctx, t('#c79a5a')),
+    ciuffo: (ctx, t) => {
+      ctx.beginPath(); ctx.moveTo(-1.6, 4); ctx.lineTo(-1.2, -1); ctx.lineTo(1.2, -1); ctx.lineTo(1.6, 4); ctx.closePath()
+      ctx.fillStyle = t('#f6ecd6'); ctx.lineWidth = 0.9; ctx.fill(); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(-5, -1); ctx.quadraticCurveTo(0, -9, 5, -1); ctx.closePath()
+      ctx.fillStyle = t('#c8352a'); ctx.fill(); ctx.stroke()
+      puntini(ctx, [[-2, -3.5], [1.5, -4.5], [3, -2]], t('#fff8ec'), 0.8)
+    },
+  },
+  // la quarta: neve, abeti, montagne bianche e qualche pupazzo
+  inverno: {
+    albero: (ctx, t) => {
+      tronco(ctx)
+      ctx.fillStyle = t('#3f7a5a')
+      for (const [y, l] of [[2, 6], [-2.5, 4.8], [-6.5, 3.4]]) {
+        ctx.beginPath(); ctx.moveTo(-l, y); ctx.lineTo(0, y - 5.5); ctx.lineTo(l, y); ctx.closePath(); ctx.fill(); ctx.stroke()
+      }
+      puntini(ctx, [[-3, 1.4], [2.5, 1.3], [-1.8, -3], [1.6, -3.2], [0, -7.5]], t('#ffffff'), 0.9)
+    },
+    monte: (ctx, t) => {
+      ctx.beginPath(); ctx.moveTo(-11, 5); ctx.lineTo(-1, -10); ctx.lineTo(11, 5); ctx.closePath()
+      ctx.fillStyle = t('#a9bccb'); ctx.fill(); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(-5, -4); ctx.lineTo(-1, -10); ctx.lineTo(3.4, -3.6); ctx.lineTo(1, -5); ctx.lineTo(-1.5, -3.2)
+      ctx.closePath(); ctx.fillStyle = t('#ffffff'); ctx.fill(); ctx.lineWidth = 0.8; ctx.stroke()
+    },
+    ciuffo: (ctx, t, d) => {
+      if (d.k % 3) {           // un cumulo di neve
+        ctx.beginPath(); ctx.moveTo(-5, 3); ctx.quadraticCurveTo(-3, -2, 0, 0); ctx.quadraticCurveTo(3, -3, 5, 3)
+        ctx.fillStyle = t('#ffffff'); ctx.lineWidth = 0.9; ctx.fill(); ctx.stroke()
+        return
+      }
+      ctx.fillStyle = t('#ffffff'); ctx.lineWidth = 0.9
+      ctx.beginPath(); ctx.arc(0, 1.5, 3.6, 0, GIRO); ctx.fill(); ctx.stroke()
+      ctx.beginPath(); ctx.arc(0, -4, 2.5, 0, GIRO); ctx.fill(); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(3, -3.6); ctx.lineTo(0, -3.4); ctx.closePath()
+      ctx.fillStyle = t('#ef8a2a'); ctx.fill()
+      puntini(ctx, [[-0.9, -4.8]], t(INCHIOSTRO), 0.45)
+    },
+  },
+  // la quinta: vulcani che fumano, pini a ombrello e rocce
+  vulcano: {
+    albero: (ctx, t) => {
+      ctx.beginPath(); ctx.moveTo(0, 6); ctx.quadraticCurveTo(1, 0, 0, -3); ctx.lineWidth = 1.3; ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(-7, -3); ctx.quadraticCurveTo(-5, -9, 0, -8); ctx.quadraticCurveTo(5, -9, 7, -3)
+      ctx.closePath(); ctx.fillStyle = t('#5f8a4a'); ctx.lineWidth = 1.2; ctx.fill(); ctx.stroke()
+    },
+    monte: (ctx, t) => {
+      ctx.beginPath(); ctx.moveTo(-10, 5); ctx.lineTo(-2.5, -7); ctx.lineTo(2.5, -7); ctx.lineTo(10, 5); ctx.closePath()
+      ctx.fillStyle = t('#8f7660'); ctx.fill(); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(-1.2, -7); ctx.quadraticCurveTo(-2.5, -2, -4.5, 1.5); ctx.quadraticCurveTo(-0.8, -1.5, 1.2, -7)
+      ctx.fillStyle = t('#e0582a'); ctx.fill()
+      ctx.fillStyle = t('#b9b2a8')
+      for (const [x, y, r] of [[0.5, -9.5, 1.8], [2.5, -12, 2.2]]) { ctx.beginPath(); ctx.arc(x, y, r, 0, GIRO); ctx.fill() }
+    },
+    ciuffo: (ctx, t) => {
+      ctx.lineWidth = 0.9; ctx.fillStyle = t('#9c958c')
+      ctx.beginPath(); ctx.ellipse(-2, 2, 3.4, 2.4, 0, 0, GIRO); ctx.fill(); ctx.stroke()
+      ctx.beginPath(); ctx.ellipse(2.6, 3, 2.4, 1.7, 0, 0, GIRO); ctx.fill(); ctx.stroke()
+    },
+  },
+}
+
+function decori(ctx, q) {
+  const isole = new Map(q.isole.map(is => [is.mondo, is]))
+  q.decori.forEach((d, k) => {
+    const is = isole.get(d.mondo) || { stato: 'chiuso' }
+    const stato = is.stato || 'chiuso', alfa = TINTA[stato] ?? 1
+    const fondo = coloreDi(is, 'terra', TERRA)
+    const ink = mescola(INCHIOSTRO, fondo, 1 - alfa * 0.85)
+    const t = c => mescola(c, fondo, 1 - alfa * 0.8)
+    const pittore = (DECORI[is.paesaggio] || DECORI.base)[d.tipo] || DECORI.base[d.tipo]
+    // i decori di un paesaggio sono un po' più grandi: sono loro a dare il carattere
+    const s = d.s * (DECORI[is.paesaggio] ? 1.2 : 1)
+    ctx.save(); ctx.translate(d.x, d.y); ctx.scale(s, s)
+    ctx.strokeStyle = ink; ctx.lineWidth = 1.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+    pittore(ctx, t, { k })
     ctx.restore()
-  }
+  })
 }
 
 // qualche onda nel mare aperto, lontano dalle coste
