@@ -14,6 +14,8 @@ export default {
     { id: 'm-i-am-fine', tappa: 'prima-ciao', forma: 'saluti', it: 'sto bene, grazie', en: 'I am fine thank you' },
     { id: 'e-good-morning', tappa: 'prima-ciao', forma: 'saluti', it: 'buongiorno', en: 'good morning' },
     { id: 'e-good-night', tappa: 'prima-ciao', forma: 'saluti', it: 'buonanotte', en: 'good night' },
+    { id: 'm-my-name-tom', tappa: 'prima-ciao', forma: 'saluti', it: 'mi chiamo Tom', en: 'my name is Tom' },
+    { id: 'm-good-night-laura', tappa: 'prima-ciao', forma: 'saluti', it: 'buonanotte, Laura', en: 'good night Laura' },
 
     /* ── Che cos'è? ── */
     { id: 'm-dog', tappa: 'prima-che-cose', forma: 'it-is', it: 'è un cane', en: 'it is a dog' },
@@ -28,6 +30,8 @@ export default {
     { id: 'm-is-pig', tappa: 'prima-che-cose', forma: 'is-it', it: 'è un maiale?', en: 'is it a pig' },
     { id: 'm-is-duck', tappa: 'prima-che-cose', forma: 'is-it', it: 'è un’anatra?', en: 'is it a duck' },
     { id: 'm-is-doll', tappa: 'prima-che-cose', forma: 'is-it', it: 'è una bambola?', en: 'is it a doll' },
+    { id: 'm-not-cow', tappa: 'prima-che-cose', forma: 'it-is', it: 'non è una mucca', en: 'it is not a cow' },
+    { id: 'm-not-ball', tappa: 'prima-che-cose', forma: 'it-is', it: 'non è una palla', en: 'it is not a ball' },
 
     /* ── Di che colore è? ── */
     { id: 'm-red-fish', tappa: 'prima-colore', forma: 'colore-prima', it: 'è un pesce rosso', en: 'it is a red fish' },
@@ -47,6 +51,8 @@ export default {
     { id: 'm-cat-and-dog', tappa: 'prima-quanti', forma: 'plurale', it: 'sono un gatto e un cane', en: 'they are a cat and a dog' },
     { id: 'e-cats-are-black', tappa: 'prima-quanti', forma: 'plurale', it: 'i gatti sono neri', en: 'the cats are black' },
     { id: 'm-six-crayons', tappa: 'prima-quanti', forma: 'plurale', it: 'sono sei pastelli verdi', en: 'they are six green crayons' },
+    { id: 'm-are-ducks', tappa: 'prima-quanti', forma: 'plurale', it: 'sono anatre?', en: 'are they ducks' },
+    { id: 'm-are-birds', tappa: 'prima-quanti', forma: 'plurale', it: 'sono uccelli?', en: 'are they birds' },
 
     /* ── Questo è… ── */
     { id: 'e-cat-1', tappa: 'prima-questo', forma: 'this-is', it: 'questo è un gatto', en: 'this is a cat' },
@@ -59,5 +65,7 @@ export default {
     { id: 'm-is-ruler', tappa: 'prima-questo', forma: 'this-is', it: 'questo è un righello?', en: 'is this a ruler' },
     { id: 'm-not-map', tappa: 'prima-questo', forma: 'this-is', it: 'questa non è una mappa', en: 'this is not a map' },
     { id: 'm-my-backpack', tappa: 'prima-questo', forma: 'this-is', it: 'questo è il mio zaino', en: 'this is my backpack' },
+    { id: 'm-is-book', tappa: 'prima-questo', forma: 'this-is', it: 'questo è un libro?', en: 'is this a book' },
+    { id: 'm-not-pencil', tappa: 'prima-questo', forma: 'this-is', it: 'questa non è una matita', en: 'this is not a pencil' },
   ],
 }

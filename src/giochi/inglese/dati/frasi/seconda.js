@@ -27,6 +27,8 @@ export default {
     { id: 'd-you-happy', tappa: 'seconda-mio', forma: 'this-is-my', it: 'sei felice?', en: 'are you happy' },
     { id: 'e-i-tired', tappa: 'seconda-mio', forma: 'this-is-my', it: 'sono stanco', en: 'I am tired' },
     { id: 'm-brother-hungry', tappa: 'seconda-mio', forma: 'this-is-my', it: 'mio fratello ha fame', en: 'my brother is hungry' },
+    { id: 'm-he-father', tappa: 'seconda-mio', forma: 'this-is-my', it: 'lui è mio padre', en: 'he is my father' },
+    { id: 'm-she-tired', tappa: 'seconda-mio', forma: 'this-is-my', it: 'lei è stanca', en: 'she is tired' },
 
     /* ── Ho un… ── */
     { id: 'e-have-dog', tappa: 'seconda-ho', forma: 'have-got', it: 'ho un cane', en: 'I have got a dog' },
@@ -40,6 +42,8 @@ export default {
     { id: 'm-blue-trousers', tappa: 'seconda-ho', forma: 'have-got', it: 'ho i pantaloni blu', en: 'I have got blue trousers' },
     { id: 'm-twelve-crayons', tappa: 'seconda-ho', forma: 'have-got', it: 'ho dodici pastelli', en: 'I have got twelve crayons' },
     { id: 'm-have-sister', tappa: 'seconda-ho', forma: 'have-got', it: 'hai una sorella?', en: 'have you got a sister' },
+    { id: 'm-not-got-cat', tappa: 'seconda-ho', forma: 'have-got', it: 'non ho un gatto', en: 'I have not got a cat' },
+    { id: 'm-not-got-sister', tappa: 'seconda-ho', forma: 'have-got', it: 'non ho una sorella', en: 'I have not got a sister' },
 
     /* ── Lei ha… (contratta) ── */
     { id: 'e-she-hair', tappa: 'seconda-ha', forma: 'has-got', it: 'lei ha i capelli lunghi', en: 'she has got long hair' },
@@ -52,5 +56,7 @@ export default {
     { id: 'm-has-she-hat', tappa: 'seconda-ha', forma: 'has-got', it: 'lei ha un cappello?', en: 'has she got a hat' },
     { id: 'm-brother-ball', tappa: 'seconda-ha', forma: 'has-got', it: 'mio fratello ha una palla', en: 'my brother has got a ball' },
     { id: 'm-baby-small', tappa: 'seconda-ha', forma: 'has-got', it: 'il bebè ha le mani piccole', en: 'the baby has got small hands' },
+    { id: 'm-has-he-eyes', tappa: 'seconda-ha', forma: 'has-got', it: 'lui ha gli occhi azzurri?', en: 'has he got blue eyes' },
+    { id: 'm-has-dog-ears', tappa: 'seconda-ha', forma: 'has-got', it: 'il cane ha le orecchie grandi?', en: 'has the dog got big ears' },
   ],
 }

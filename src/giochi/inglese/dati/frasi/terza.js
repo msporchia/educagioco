@@ -11,6 +11,7 @@ export default {
     { id: 'm-is-there-lamp', tappa: 'terza-c-e', forma: 'there-is', it: 'c’è una lampada in bagno?', en: 'is there a lamp in the bathroom' },
     { id: 'm-no-clock', tappa: 'terza-c-e', forma: 'there-is', it: 'non c’è un orologio in cucina', en: 'there is not a clock in the kitchen' },
     { id: 'm-thirty-books', tappa: 'terza-c-e', forma: 'there-is', it: 'ci sono trenta libri in camera', en: 'there are thirty books in the bedroom' },
+    { id: 'm-is-there-cat', tappa: 'terza-c-e', forma: 'there-is', it: 'c’è un gatto in giardino?', en: 'is there a cat in the garden' },
 
     /* ── Dov'è? ── */
     { id: 'd-where-pencil', tappa: 'terza-dove', forma: 'dove', it: 'dov’è la mia matita?', en: 'where is my pencil' },
@@ -22,6 +23,7 @@ export default {
     { id: 'm-dog-behind', tappa: 'terza-dove', forma: 'dove', it: 'il cane è dietro il divano', en: 'the dog is behind the sofa' },
     { id: 'm-lamp-near', tappa: 'terza-dove', forma: 'dove', it: 'la lampada è vicino al letto', en: 'the lamp is near the bed' },
     { id: 'm-where-shoes', tappa: 'terza-dove', forma: 'dove', it: 'dove sono le mie scarpe?', en: 'where are my shoes' },
+    { id: 'm-cat-behind-door', tappa: 'terza-dove', forma: 'dove', it: 'il gatto è dietro la porta', en: 'the cat is behind the door' },
 
     /* ── Oggi è lunedì (contratta) ── */
     { id: 'm-today-monday', tappa: 'terza-oggi', forma: 'oggi', it: 'oggi è lunedì', en: 'today is Monday' },
@@ -34,6 +36,7 @@ export default {
     { id: 'e-is-cold', tappa: 'terza-oggi', forma: 'oggi', it: 'oggi fa freddo', en: 'it is cold today' },
     { id: 'd-is-cold', tappa: 'terza-oggi', forma: 'oggi', it: 'fa freddo oggi?', en: 'is it cold today' },
     { id: 'm-snow-january', tappa: 'terza-oggi', forma: 'oggi', it: 'c’è la neve a gennaio', en: 'there is snow in January' },
+    { id: 'm-hot-today', tappa: 'terza-oggi', forma: 'oggi', it: 'oggi fa caldo', en: 'it is hot today' },
 
     /* ── So nuotare! (contratta) ── */
     { id: 'e-i-can-swim', tappa: 'terza-so-fare', forma: 'can', it: 'so nuotare', en: 'I can swim' },
@@ -46,5 +49,6 @@ export default {
     { id: 'm-cats-jump', tappa: 'terza-so-fare', forma: 'can', it: 'i gatti sanno saltare', en: 'cats can jump' },
     { id: 'm-fish-cannot-run', tappa: 'terza-so-fare', forma: 'can', it: 'i pesci non sanno correre', en: 'fish cannot run' },
     { id: 'm-can-read', tappa: 'terza-so-fare', forma: 'can', it: 'sai leggere?', en: 'can you read' },
+    { id: 'm-he-cannot-swim', tappa: 'terza-so-fare', forma: 'can', it: 'lui non sa nuotare', en: 'he cannot swim' },
   ],
 }

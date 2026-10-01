@@ -37,6 +37,7 @@ export default {
       en: 'I always wash my hands' },
     { id: 'q-help-mother', tappa: 'quarta-io-gioco', forma: 'presente', it: 'aiutano la loro mamma?',
       en: 'do they help their mother' },
+    { id: 'q-play-guitar', tappa: 'quarta-io-gioco', forma: 'presente', it: 'suono la chitarra ogni giorno', en: 'I play the guitar every day' },
 
     /* ── Lei gioca ── */
     { id: 'q-she-plays', tappa: 'quarta-lei-gioca', forma: 'terza-s', it: 'lei gioca a tennis', en: 'she plays tennis' },
@@ -80,6 +81,7 @@ export default {
       en: 'does he help his father' },
     { id: 'q-baby-night', tappa: 'quarta-does', forma: 'does', it: 'il bebè non dorme di notte',
       en: 'the baby does not sleep at night' },
+    { id: 'q-what-dog-eat', tappa: 'quarta-does', forma: 'does', it: 'che cosa mangia il cane?', en: 'what does the dog eat' },
 
     /* ── Che cosa stai facendo? ── */
     { id: 'q-i-am-eating', tappa: 'quarta-adesso', forma: 'ing', it: 'sto mangiando', en: 'I am eating' },
@@ -99,5 +101,7 @@ export default {
       en: 'are you drinking juice' },
     { id: 'q-helicopter-sky', tappa: 'quarta-adesso', forma: 'ing', it: 'un elicottero sta volando nel cielo',
       en: 'a helicopter is flying in the sky' },
+    { id: 'q-not-sleeping', tappa: 'quarta-adesso', forma: 'ing', it: 'non sto dormendo', en: 'I am not sleeping' },
+    { id: 'q-she-not-eating', tappa: 'quarta-adesso', forma: 'ing', it: 'lei non sta mangiando', en: 'she is not eating' },
   ],
 }

@@ -21,6 +21,7 @@ export default {
     { id: 'v-library-sunday', tappa: 'quinta-ieri', forma: 'was-were', it: 'domenica scorsa eravamo in biblioteca',
       en: 'we were at the library last Sunday' },
     { id: 'v-was-hot', tappa: 'quinta-ieri', forma: 'was-were', it: 'ieri faceva caldo', en: 'it was hot yesterday' },
+    { id: 'v-were-they-zoo', tappa: 'quinta-ieri', forma: 'was-were', it: 'erano allo zoo?', en: 'were they at the zoo' },
 
     /* ── Sono andato al castello ── */
     { id: 'v-went-castle', tappa: 'quinta-andai', forma: 'passato', it: 'sono andato al castello',
@@ -42,6 +43,7 @@ export default {
       en: 'the dog caught the ball' },
     { id: 'v-came-train', tappa: 'quinta-andai', forma: 'passato', it: 'mia nonna è venuta in treno',
       en: 'my grandmother came by train' },
+    { id: 'v-did-see-castle', tappa: 'quinta-andai', forma: 'passato', it: 'hai visto il castello?', en: 'did you see the castle' },
 
     /* ── Ho giocato ── */
     { id: 'v-played-tennis', tappa: 'quinta-giocai', forma: 'passato-ed', it: 'ieri ho giocato a tennis',
@@ -64,6 +66,7 @@ export default {
       en: 'the cat jumped on the table' },
     { id: 'v-looked-bridge', tappa: 'quinta-giocai', forma: 'passato-ed', it: 'abbiamo guardato il ponte',
       en: 'we looked at the bridge' },
+    { id: 'v-did-play-tennis', tappa: 'quinta-giocai', forma: 'passato-ed', it: 'hai giocato a tennis?', en: 'did you play tennis' },
 
     /* ── Ha detto ciao (contratta) ── */
     { id: 'v-said-hello', tappa: 'quinta-disse', forma: 'dire', it: 'Leo ha detto ciao', en: 'Leo said hello' },
@@ -103,6 +106,7 @@ export default {
       en: 'my sister laughed when she saw Pip', niente: ['lui-lei'] },
     { id: 'v-tom-laughs', tappa: 'quinta-quando', forma: 'quando', it: 'Tom ride quando gioca con Pip',
       en: 'Tom laughs when he plays with Pip', niente: ['lui-lei'] },
+    { id: 'v-mother-sings-while', tappa: 'quinta-quando', forma: 'quando', it: 'la mamma canta mentre cucina', en: 'my mother sings while she cooks' },
 
     /* ── Chi è più alto? (contratta) ── */
     { id: 'v-horse-bigger', tappa: 'quinta-piu', forma: 'paragoni', it: 'il cavallo è più grande del cane',
@@ -125,6 +129,7 @@ export default {
       en: 'is summer hotter than spring' },
     { id: 'v-pip-funniest', tappa: 'quinta-piu', forma: 'paragoni', it: 'Pip è il cane più buffo',
       en: 'Pip is the funniest dog' },
+    { id: 'v-castle-more-beautiful', tappa: 'quinta-piu', forma: 'paragoni', it: 'questo castello è più bello', en: 'this castle is more beautiful' },
 
     /* ── Domani andrò ── */
     { id: 'v-going-swim', tappa: 'quinta-domani', forma: 'going-to', it: 'domani vado a nuotare',
@@ -145,5 +150,6 @@ export default {
       en: 'what are you going to do tomorrow' },
     { id: 'v-going-train', tappa: 'quinta-domani', forma: 'going-to', it: 'sabato prossimo prenderemo il treno',
       en: 'we are going to take the train next Saturday' },
+    { id: 'v-is-tom-going-swim', tappa: 'quinta-domani', forma: 'going-to', it: 'Tom andrà a nuotare?', en: 'is Tom going to swim' },
   ],
 }
