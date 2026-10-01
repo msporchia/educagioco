@@ -30,17 +30,18 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
 - **Altri scenari**: la fornace e la grotta di cristallo hanno il blocco
   pronto nella scheda
-  `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md`, e col
-  prompt corto («La scorciatoia») basta allegare `sotterraneo_2.png`. Poi il
-  foglietto, una voce in `SCENARI`, un branco in `BRANCHI` e un tratto in
-  `TRATTI_DELL_ABISSO` (vedi [scenari.md](scenari.md) e
+  `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md`, da
+  fare come la cripta: la scena, poi i pezzi che mancano nella stessa chat.
+  Poi i foglietti, una voce in `SCENARI`, un branco in `BRANCHI` e un tratto
+  in `TRATTI_DELL_ABISSO` (vedi [scenari.md](scenari.md) e
   [abisso.md](abisso.md#il-posto-cambia-scendendo)).
-- **La cripta da rendere più carina** (`sotterraneo_3.png`, rigenerando col
-  prompt corto): il pavimento dei corridoi ha una cornice e si ritaglia da
-  dentro, con le cuciture che si vedono; le crepe arancioni del pavimento
-  delle stanze si ripetono ogni quattro celle; il tetto vicino ai muri
-  somiglia al pavimento; la porta del teschio è una statua in una nicchia;
-  le sei porte di fianco sono uguali; per terra ci sono solo i sassolini.
+- **L'arredo per scenario**: botti, casse e stendardi rossi sono di tutto il
+  sotterraneo e nella cripta sembrano portati dalle cantine. La scena della
+  cripta ha sarcofagi, statue, candelabri e colonne spezzate, ma con dietro
+  il pavimento: vanno chiesti su fondo magenta, e l'arredo diventa una voce
+  dello scenario.
+- **La fontana della cripta** è ancora quella di `sotterraneo_3.png`, piena e
+  asciutta: quella del foglio dei pezzi è a muro, e bevendo cambierebbe forma.
 - **Un mostro di quinta fascia per ogni posto**: oggi il golem sta in tutti
   i branchi, e cantine e cripta si separano solo fino alla quarta. Con un
   terzo posto conviene anche una seconda faccia per le fasce che ne hanno una

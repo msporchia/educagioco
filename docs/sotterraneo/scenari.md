@@ -17,7 +17,7 @@ Il sotterraneo è **il calco da guardare** per un mondo a sprite:
   chiavi**: si cambia vestito a una discesa senza toccare la tela. Aggiungere
   un pezzo è una riga lì, mai un `if` nel disegno. Oggi ce ne sono due: **le cantine**
   (`sotterraneo_2.png`), che indossano le sei discese, e **la cripta**
-  (`sotterraneo_3.png`); l'abisso li alterna scendendo
+  (`sotterraneo_4.png` e i due fogli `_2`, `_3`); l'abisso li alterna scendendo
   ([abisso.md](abisso.md#il-posto-cambia-scendendo)). Una tappa può
   dichiarare il suo con `scenario:`.
 - **Uno scenario nasce da un prompt** diviso in due:
@@ -31,7 +31,19 @@ Il sotterraneo è **il calco da guardare** per un mondo a sprite:
   scorciatoia» nella scheda); i pezzi restano ai loro posti e il foglietto
   si ricava da `sotterraneo_2.json`. Gli schemi da allegare li disegna
   `python3 strumenti/sprite/scenario.py`, che legge la pianta dalla scheda e
-  ne controlla la regola del muro.
+  ne controlla la regola del muro. Provato col foglio delle cantine
+  ridisegnato (la prima cripta): i pezzi tornano ai posti ma non stanno
+  insieme fra loro.
+- **Uno scenario si può ritagliare dalla scena**: è il modo della cripta.
+  Pavimenti, tetto, facce, bordi e scala si prendono dalla scena, che ha una
+  mano sola; un foglio piccolo chiesto nella stessa chat porta solo quello
+  che la scena non ha (le porte, il mercante, le cose per terra). Per questo
+  la tela ripete un pezzo **per quanto è largo e alto**: il pavimento della
+  cripta è 4×3 celle, il corridoio 1×4, la fila del muro due celle.
+- **Ritagliare la scena vuole la stessa scala per bordi e facce** (4 px di
+  scena per pixel di gioco), partendo dalla riga dove il coronamento
+  ricalca il bordo: a 3,5 il coronamento usciva una riga più in basso e la
+  giunzione col muro spesso si vedeva.
 - **Quello che non c'è nella tavola non si disegna**: `guastiDelleTessere`
   chiede all'atlante ogni nome di ogni scenario, e un pezzo mancante è rosso
   nei test invece che un muro invisibile.
@@ -57,11 +69,19 @@ in Node) e si prova in `unita/muri-sotterraneo`.
   **gli angoli sono blocchi** decisi per quarto di cella guardando tre vicini
   — lato orizzontale, verticale, diagonale — come i «quarti» di RPG Maker:
   quattro casi per quarto invece di quarantasette figure.
-- **I pavimenti sono quadrati di 4×4 celle** da cui ogni cella prende la sua
-  parte, uno per le stanze e uno per i corridoi (è la prima cosa che dice
-  dove si è); sotto la fontana c'è un **medaglione** di mosaico di 3×3. Il
-  tetto ha la trama solo vicino a dove si cammina: ripetuta dappertutto
-  faceva carta da parati.
+- **Un bordo con la fascia scura** (la cripta) stende il suo scuro sulla
+  riga chiara dell'altro bordo della stessa cella: `bordi.luce` dice quanto
+  è larga la riga chiara, e la tela la ripassa dopo aver posato i bordi.
+- **Gli angoli in fondo** raccordano un coronamento che sale sulla cella di
+  sopra (la faccia delle cantine è alta 20): con una faccia alta una cella,
+  come quella della cripta, non si mettono, o sporgono sopra il coronamento.
+- **I pavimenti sono quadrati di celle** da cui ogni cella prende la sua
+  parte (4×4 nelle cantine), uno per le stanze e uno per i corridoi (è la
+  prima cosa che dice dove si è); sotto la fontana c'è un **medaglione** di
+  mosaico di 3×3. Il tetto ha la trama solo vicino a dove si cammina:
+  ripetuta dappertutto faceva carta da parati.
+- **Le cose per terra** stanno su una cella di pavimento su venticinque,
+  sempre le stesse: una su dieci copriva le stanze di sassi.
 
 ## I fogli e l'atlante
 

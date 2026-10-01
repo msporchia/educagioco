@@ -55,6 +55,43 @@ terriccio diventato uno stendardo, le ragnatele diventate drappi,
 mucchi di teschi nell'arredo. Il resto è venuto al suo posto (entro
 pochi pixel), col contorno più spesso: 5 px invece di 3.
 
+## Il modo della cripta: la scena, e i pezzi che le mancano
+
+La scorciatoia rifà i pezzi ai loro posti, ma ognuno per conto suo: la
+cripta di `sotterraneo_3.png` non stava insieme. Quella in uso si ritaglia
+**dalla scena** (`sotterraneo_4.png`), che ha una mano sola, e i pezzi che
+la scena non ha arrivano da due fogli piccoli chiesti **nella stessa chat**,
+allegando la scena.
+
+1. **Una chat nuova**, sempre: continuando quella di un foglio vecchio il
+   generatore ritocca la sua ultima immagine invece di disegnarne una.
+2. **La scena**: il prompt 1 qui sotto col blocco dello scenario. Come stile
+   si allega la scena di uno scenario già fatto (`sotterraneo_1.png`) al
+   posto di `bottino-e-arredo.png`, e si aggiunge: «I materiali e i colori
+   NON sono quelli delle cantine: sono quelli dello scenario in fondo», «Il
+   tetto è più scuro e più liscio di ogni pavimento», «niente ossa, teschi,
+   stendardi o drappi appesi».
+3. **I pezzi che mancano**, su fondo magenta (sotto). Chiesto «trasparente»
+   il fondo torna una scacchiera dipinta, e serve un secondo passaggio coi
+   tasti di modifica («Rimuovi lo sfondo da questa immagine…»).
+4. **I foglietti** si scrivono guardando: la scena a 4 px per pixel di gioco
+   per bordi e facce (vedi `docs/sotterraneo/scenari.md`).
+
+```text
+Disegna su un fondo MAGENTA PIENO (#FF00FF), uniforme, senza sfumature e senza ombre, i pezzi che MANCANO alla scena che hai appena fatto: stessi materiali, stessa tavolozza, stessa mano. Ogni pezzo staccato dagli altri; il magenta non compare in nessun pezzo. NESSUNA PAROLA SCRITTA, NESSUN NUMERO.
+
+1. Sei porte ad arco come quelle della scena, tutte diverse: semplice; rinforzata di ferro; ricca, con la cornice e le borchie d'oro; minacciosa, con un piccolo teschio di pietra SOPRA l'arco e l'anta che resta un'anta; chiara, di legno chiaro; e la semplice APERTA, col buio del passaggio dentro l'arco.
+2. Le stesse sei in un muro laterale, viste da sopra: una tavola stretta in verticale, riconoscibile dagli stessi colori e dagli stessi segni.
+3. La scala della scena chiusa da una grata col lucchetto; la fontanella della scena asciutta, DELLA STESSA FORMA di quella piena.
+4. Il mercante: un incappucciato dietro un banchetto, in due pose: fermo, e che saluta.
+5. Il pavimento speciale della scena come un quadrato intero di 3×3 celle, senza niente sopra.
+6. Cose PIATTE PER TERRA, SENZA NESSUN QUADRATO DI PAVIMENTO SOTTO: foglie secche, schegge d'ardesia, una lastra spaccata, e una ragnatela per l'angolo in alto a sinistra e la stessa per quello in alto a destra.
+Niente che si possa scambiare per una cosa da raccogliere.
+```
+
+Il foglietto di un foglio magenta dichiara `"fondo": [255, 0, 255]`,
+`"ombra": true` e `"colori": 0` (`strumenti/sprite/FORMATO.md`).
+
 ## Il metodo: due prompt, nella stessa chat
 
 1. **La scena** — un pezzo di sotterraneo intero, come lo vedrebbe un
@@ -427,3 +464,21 @@ lo stesso alone a due gobbe.
   porta del teschio, il terriccio diventato uno stendardo, le ragnatele
   diventate drappi, i mucchi di teschi nell'arredo. Il foglietto dice cosa
   è rimasto fuori.
+
+### `sotterraneo_4.png` e i suoi due fogli — la cripta ✅, montata nell'abisso
+
+30 settembre e 1 ottobre 2026, ChatGPT, una chat sola.
+
+- **La scena** è venuta al primo colpo con la regola del muro giusta e la
+  griglia entro 10-20 px. Si prendono pavimenti (stanze 4×3 celle, corridoi
+  1×4 da quello pulito a destra), colore del tetto, facce, bordi con la
+  fascia scura, scala aperta. La porta in alto è chiusa invece che aperta,
+  il pavimento speciale è 2×2 con la fontana sopra: non servono.
+- **`sotterraneo_4_2.png`**, i pezzi che mancano chiesti «trasparenti»:
+  scacchiera dipinta, tolta con un secondo passaggio. Si prendono porte,
+  scala chiusa, mercante, medaglione. Fuori la fontana (a muro), le tre
+  facce (alte una cella e mezza) e le cose per terra (su un quadrato di
+  pavimento).
+- **`sotterraneo_4_3.png`**, le cose per terra su magenta: tornate già
+  trasparenti. Si prendono foglie, schegge, lastra e ragnatele; fuori la
+  cera (la candela in piedi sembra da prendere) e i due mucchi di sassi.
