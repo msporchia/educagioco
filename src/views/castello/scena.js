@@ -5,15 +5,14 @@
 import { costoSalita } from '../../data/castello.js'
 import { RESPINTO } from '../../motore/castello/nemico.js'
 
-// Da che parte guarda chi cammina (1 destra, -1 sinistra, 0 dritto): si
-// guarda un po' avanti e non solo il passo dopo, o su una strada a squadra
-// si girerebbe a ogni angolo.
+// Da che parte va chi cammina (1 destra, -1 sinistra, 0 in giù o in su):
+// il tratto su cui sta adesso, perché il verso sceglie anche la posa (di
+// lato o di fronte). Provato a guardare 60 unità avanti: si girava quasi due
+// celle prima dell'angolo.
 function versoDi(via, d, p) {
-  for (let s = 10; s <= 60; s += 10) {
-    const dx = via.puntoA(d + s).x - p.x
-    if (Math.abs(dx) > 1) return Math.sign(dx)
-  }
-  return 0
+  const q = via.puntoA(d + 2)
+  const dx = q.x - p.x
+  return Math.abs(dx) > Math.abs(q.y - p.y) ? Math.sign(dx) : 0
 }
 
 export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
