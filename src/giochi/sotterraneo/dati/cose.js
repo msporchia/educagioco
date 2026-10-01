@@ -120,7 +120,7 @@ export const COSE = {
                    usa: 'cresci', cresce: 3, prezzo: 22,
                    dice: 'Tre punti di vita massima, per tutta la discesa.' },
   // l'unità è la stanza e non il tempo: un conto a orologio farebbe pagare la luce a chi legge piano
-  torcia: { em: '🔦', nome: 'Torcia', sprite: 'torcia', usa: 'luce',
+  torcia: { em: '🔥', nome: 'Torcia', sprite: 'torcia', usa: 'luce',
             stanze: STANZE_TORCIA, prezzo: 5,
             dice: `La prendi e si accende: ${STANZE_TORCIA} stanze di luce, poi si spegne.` },
   chiave: { em: '🗝️', nome: 'Chiave', sprite: 'chiave-oro', usa: 'porta', prezzo: 6,

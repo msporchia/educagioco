@@ -90,7 +90,7 @@ const numeri = computed(() => {
   if (c.vita) n.push(`❤️ +${c.vita}`)
   if (c.cura) n.push(`❤️ ${c.cura} subito`)
   if (c.cresce) n.push(`❤️ +${c.cresce} per sempre`)
-  if (c.luce) n.push('🔦 vedi più lontano')
+  if (c.luce) n.push('🔥 vedi più lontano')
   if (c.gemme) n.push(`💎 ×${(1 + c.gemme).toString().replace('.', ',')}`)
   if (c.mani === 2) n.push('✋✋ due mani')
   return n
@@ -134,7 +134,7 @@ const cambio = computed(() => {
     </p>
 
     <p v-if="torcia" class="sot-torcia-riga" data-torcia-zaino>
-      <span class="em">🔦</span>
+      <Icona sprite="torcia" em="🔥" :emAlto="16" />
       <i class="sot-lume"><u :style="{ height: torcia.quota * 100 + '%' }"></u></i>
       <b>ancora {{ torcia.resta }} {{ torcia.resta === 1 ? 'stanza' : 'stanze' }}</b>
       <em v-if="torcia.scorta">

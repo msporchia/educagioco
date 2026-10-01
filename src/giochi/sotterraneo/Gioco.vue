@@ -652,8 +652,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
                sinistra e non nella fascia in cima, che è già piena (`.sot-io` non ha posto per un'altra colonnina) -->
           <p v-if="eroe.torcia" class="sot-torcia" data-torcia
              :class="{ 'sot-sgoccioli': eroe.torcia.agliSgoccioli }">
-            <!-- l'emoji dice di cosa è la colonnina: da sola è solo una barretta arancione -->
-            <span class="em">🔦</span>
+            <!-- la torcia dice di cosa è la colonnina: da sola è solo una barretta arancione -->
+            <Icona sprite="torcia" em="🔥" :emAlto="16" />
             <i class="sot-lume"><u :style="{ height: eroe.torcia.quota * 100 + '%' }"></u></i>
             <b>{{ eroe.torcia.resta }}</b>
             <em v-if="eroe.torcia.scorta">+{{ eroe.torcia.scorta }}</em>

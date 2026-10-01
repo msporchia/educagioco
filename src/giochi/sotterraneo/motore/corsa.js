@@ -444,12 +444,12 @@ export class Corsa {
     const quante = (COSE[k] && COSE[k].stanze) || STANZE_TORCIA
     if (this.torciaAccesa) {
       this.torceInScorta++
-      this.dilloDi(k, ` 🔦 alla cintura · ne hai ${this.torceInScorta} di scorta`)
+      this.dilloDi(k, ` alla cintura · ne hai ${this.torceInScorta} di scorta`)
       return true
     }
     this.torciaResta = quante
     this.aggiornaLuce()
-    this.dilloDi(k, ` 🔦 si vede più lontano · ${quante} stanze`)
+    this.dilloDi(k, ` accesa · si vede più lontano · ${quante} stanze`)
     return true
   }
 
@@ -472,9 +472,9 @@ export class Corsa {
     if (this.torceInScorta > 0) {
       this.torceInScorta--
       this.torciaResta = STANZE_TORCIA
-      this.dillo(`🔦 la torcia si spegne, ne accendi un'altra`)
+      this.dilloDi('torcia', ` spenta, ne accendi un'altra`)
     } else {
-      this.dillo('🔦 la torcia si è spenta')
+      this.dilloDi('torcia', ' spenta')
     }
     this.aggiornaLuce()
   }
@@ -636,7 +636,7 @@ export class Corsa {
     if (p.gemme) parti.push(`💎 +${p.gemme}`)
     if (p.cura) parti.push(`❤️ +${p.cura}`)
     if (p.vitaPiu) parti.push(`❤️ +${p.vitaPiu} per sempre`)
-    if (p.torcia) parti.push('🔦 una torcia')   // "una torcia" e non "accesa": può finire di scorta
+    if (p.torcia) parti.push('🔥 una torcia')   // "una torcia" e non "accesa": può finire di scorta
     return parti.join(' · ')
   }
 
