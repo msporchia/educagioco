@@ -5,7 +5,7 @@ import { WORDS } from '../../../data/words.js'
 import { VERBI } from '../../../data/verbi.js'
 import { GLOSSARIO } from '../dati/glossario.js'
 import { PERSONAGGI } from '../dati/elenchi.js'
-import { apostrofi } from './testo.js'
+import { apostrofi, CON_LA_S } from './testo.js'
 import { flessa, VERBI_DI_STRUTTURA } from './flessioni.js'
 
 const CAT = new Map(WORDS.map(w => [w[0].toLowerCase(), w[3]]))
@@ -100,6 +100,9 @@ export function traduci(parola) {
     const [, testa, coda] = c
     const resto = { 'n\'t': 'not', '\'m': 'am', '\'re': 'are', '\'s': 'is / has', '\'ve': 'have' }[coda]
     const t1 = traduci(testa === 'ca' ? 'can' : testa === 'wo' ? 'will' : testa)
+    // Tom's dog: dopo un nome ’s vuol dire «di»
+    if (coda === '\'s' && !CON_LA_S.has(testa))
+      return { parola, chiave: null, it: `di ${NOMI_PROPRI.has(testa) ? parola.replace(/['’]s$/, '') : t1.it}` }
     return { parola, chiave: null, it: `${t1.it} + ${GLOSSARIO[resto] || resto} (${testa} ${resto})` }
   }
   const chiave = chiaveDi(w)

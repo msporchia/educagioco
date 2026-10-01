@@ -4,6 +4,10 @@
 // sempre tutte e due (docs/lingue/mondi.md, «Forma lunga prima…»).
 import { CONTRAZIONI } from '../dati/contrazioni.js'
 
+// le parole dopo cui 's è is (o has): le altre lo tengono come genitivo
+export const CON_LA_S = new Set(['it', 'he', 'she', 'that', 'what', 'where', 'there', 'who', 'here', 'how', 'when', 'this',
+                          'let'])
+
 export const apostrofi = s => s.replace(/[’‘`]/g, '\'')
 
 // le parole di una frase, con l'apostrofo tipografico e la maiuscola dov'erano
@@ -35,8 +39,8 @@ export function espandi(s) {
     if ((m = w.match(/^(\w+)'re$/))) { out.push(m[1], 'are'); continue }
     if ((m = w.match(/^(\w+)'ve$/))) { out.push(m[1], 'have'); continue }
     if ((m = w.match(/^(\w+)'ll$/))) { out.push(m[1], 'will'); continue }
-    // «he's got» è has, «he's happy» è is
-    if ((m = w.match(/^(\w+)'s$/))) { out.push(m[1], t[i + 1] === 'got' ? 'has' : 'is'); continue }
+    // «he's got» è has, «he's happy» è is; dopo un nome è di chi è (Tom's dog) e resta com'è
+    if ((m = w.match(/^(\w+)'s$/)) && CON_LA_S.has(m[1])) { out.push(m[1], t[i + 1] === 'got' ? 'has' : 'is'); continue }
     out.push(w)
   }
   return out

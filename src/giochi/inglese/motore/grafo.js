@@ -80,7 +80,7 @@ export function sconosciute(testo, note, flessioni = null) {
     const f = flessioni && flessa(w)
     if (f && flessioni.has(f.come) && note.has(f.base)) continue
     const poss = w.match(/^(\w+)'s$/)
-    if (poss && NOMI_PROPRI.has(poss[1])) continue
+    if (poss && (NOMI_PROPRI.has(poss[1]) || note.has(poss[1]))) continue
     out.push(w)
   }
   return out
