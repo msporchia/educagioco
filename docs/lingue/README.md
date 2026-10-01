@@ -18,6 +18,7 @@ tiene anche il gioco libero di chi aveva finito la campagna inglese vecchia.
 - [libro-racconti.md](libro-racconti.md) — raccontare di più in quarta e quinta: le parole della storia, le domande «chi», «frase» e «ordine», le storie a puntate
 - [libro-vista.md](libro-vista.md) — il libro a schermo: le pagine, le battute, le parole della storia, le tre domande nuove, le puntate, i bersagli dei test
 - [da-fare.md](da-fare.md) — cosa manca all'inglese a mondi: le strutture fuori programma, le parole e le voci, la mappa, lo spagnolo
+- [spagnolo-motore.md](spagnolo-motore.md) — lo spagnolo a mondi: cosa è per lingua nel motore, il contratto per frasi, concetti e capitoli, le trappole che nascono da sole, i limiti
 
 Vedi anche: [../apprendimento/srs.md](../apprendimento/srs.md) (la forza di
 una parola).

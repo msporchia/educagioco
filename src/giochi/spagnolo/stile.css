@@ -1,0 +1,267 @@
+/* ═══════════════════════════════════════════════════════════════════
+   L'INGLESE A MONDI — L'ASPETTO
+   Ogni classe comincia per `ing-` (docs/core/convenzione-giochi.md).
+   Tutto il gioco sta sulla stessa carta della mappa: pergamena,
+   inchiostro seppia, e il rosso dei sentieri per le cose da fare.
+   ═══════════════════════════════════════════════════════════════════ */
+.ing {
+  --ing-carta: #fdf6e3;
+  --ing-pergamena: #efe0bb;
+  --ing-inchiostro: #3b2616;
+  --ing-seppia: #4a3222;
+  --ing-bordo: #d9c9a3;
+  --ing-ombra: #c9b184;
+  --ing-rosso: #b0412a;
+  --ing-verde: #2f8a4c;
+  background: #e8d6ab;
+}
+
+/* ═══════════ la mappa ═══════════ */
+.ing-mappa { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+             padding-bottom: calc(16px + env(safe-area-inset-bottom)) }
+.ing-tavola { position: relative; margin: 0 auto }
+.ing-tela { position: absolute; left: 0; top: 0; pointer-events: none }
+.ing-mondo-nome { position: absolute; transform: translate(-50%, -50%); text-align: center;
+                  font: italic 700 clamp(15px, 4.4vw, 18px)/1.1 Georgia, 'Times New Roman', serif;
+                  color: var(--ing-seppia); pointer-events: none;
+                  text-shadow: 0 0 4px #f3e6c4, 0 0 2px #f3e6c4 }
+.ing-mondo-nome.ing-lontano { font-size: 13.5px; opacity: .72 }
+.ing-mondo-nome.ing-chiuso { opacity: .75 }
+.ing-nodo { position: absolute; border-radius: 50%; background: transparent; border: 0; padding: 0;
+            box-shadow: none; transition: transform .12s }
+.ing-nodo:not([data-chiuso]):active { transform: scale(.94) }
+.ing-nodo[data-chiuso] { cursor: default }
+.ing-nodo-nome { position: absolute; transform: translateX(-50%); text-align: center; pointer-events: none;
+                 font: 700 12.5px/1.15 Georgia, 'Times New Roman', serif; color: var(--ing-inchiostro);
+                 text-shadow: 0 0 3px #f3e6c4, 0 0 2px #f3e6c4 }
+.ing-nodo-nome.ing-spento { opacity: .55 }
+/* la nave: la sua tela la sposta scena/nave.js, a fotogrammi */
+.ing-nave { position: absolute; left: 0; top: 0; width: 120px; height: 120px; pointer-events: none;
+            will-change: transform }
+.ing-nave canvas { width: 120px; height: 120px; display: block }
+.ing-scossa { animation: ing-scossa .42s ease-in-out }
+@keyframes ing-scossa { 0%, 100% { transform: none } 20% { transform: translateX(-4px) rotate(-5deg) }
+                        45% { transform: translateX(4px) rotate(4deg) } 70% { transform: translateX(-2px) rotate(-2deg) } }
+/* cosa serve per una tappa chiusa: un cartiglio sopra la tappa, che se ne va da solo */
+.ing-serve { position: absolute; transform: translate(-50%, -100%); max-width: 220px; width: max-content;
+             padding: 6px 11px; border-radius: 10px; background: var(--ing-carta);
+             border: 1.5px solid var(--ing-seppia); box-shadow: 0 3px 0 var(--ing-ombra);
+             font: 700 13.5px/1.2 Georgia, 'Times New Roman', serif; color: var(--ing-inchiostro);
+             text-align: center; pointer-events: none; z-index: 2; animation: ing-appare .18s ease-out }
+@keyframes ing-appare { from { opacity: 0; margin-top: 6px } to { opacity: 1; margin-top: 0 } }
+.ing-viaggio { position: absolute; inset: 0; z-index: 3 }
+.ing-prima { display: flex; align-items: center; gap: 12px; text-align: left; margin: 4px auto 0;
+             width: calc(100% - 28px); max-width: 480px; padding: 12px 16px; border-radius: 16px;
+             background: var(--ing-carta); border: 2px solid var(--ing-seppia); box-shadow: 0 4px 0 var(--ing-ombra) }
+.ing-prima .em { font-size: 28px }
+.ing-prima b { display: block; font-size: 16px; color: var(--ing-inchiostro) }
+.ing-prima i { display: block; font-style: normal; font-size: 12.5px; color: #7a6450 }
+
+/* ═══════════ l'indicatore delle monete, nella barra ═══════════ */
+.ing-paga { font-weight: 900; font-size: 14px; padding: 5px 10px; border-radius: 999px; white-space: nowrap;
+            background: #fff3c4; color: #7a5a00; transition: background .2s }
+.ing-paga.ing-non-paga { background: #e9e2d4; color: #8a7f70 }
+.ing-perso { margin-left: 3px }
+
+/* ═══════════ una domanda ═══════════ */
+.ing-palco { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column;
+             width: 100%; max-width: 560px; margin: 0 auto;
+             padding: 8px 14px calc(16px + env(safe-area-inset-bottom)) }
+.ing-conto { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 13px; color: #7a6450 }
+.ing-barretta { flex: 1; height: 7px; border-radius: 5px; background: #f6ecd2; overflow: hidden }
+.ing-barretta i { display: block; height: 100%; background: linear-gradient(90deg, #d9a441, var(--ing-verde));
+                  transition: width .35s }
+/* la domanda sta in mezzo quando c'è posto, e scorre quando non ce n'è */
+.ing-domanda { margin: auto 0; display: flex; flex-direction: column; gap: 12px; padding-top: 10px }
+.ing-etichetta { text-align: center; font-size: 12.5px; font-weight: 800; letter-spacing: .08em;
+                 text-transform: uppercase; color: #8a6f52 }
+.ing-consegna { position: relative; text-align: center; padding: 16px 18px; border-radius: 18px;
+                background: var(--ing-carta); border: 2px solid var(--ing-seppia); box-shadow: 0 5px 0 var(--ing-ombra);
+                color: var(--ing-inchiostro); font-weight: 800; font-size: clamp(24px, 7vw, 34px); line-height: 1.25 }
+.ing-consegna.ing-lunga { font-size: clamp(19px, 5.4vw, 25px) }
+.ing-consegna.ing-it { background: #fff0d9; font-weight: 700 }
+.ing-sotto { text-align: center; font-size: 13.5px; font-weight: 700; color: #7a6450 }
+.ing-parola { border-bottom: 2px dotted #b99a6a; cursor: pointer; border-radius: 3px }
+.ing-parola:active { background: #f7e3b0 }
+.ing-opzione .ing-parola { border-bottom: 0 }
+.ing-voce { position: absolute; right: 8px; bottom: 6px; font-size: 16px; background: none; box-shadow: none;
+            padding: 4px; opacity: .75 }
+.ing-ascolta { background: none; box-shadow: none; font-size: inherit; font-weight: inherit; color: inherit;
+               width: 100%; padding: 0 }
+.ing-ascolta .em { font-size: clamp(38px, 11vw, 54px) }
+
+.ing-opzioni { display: grid; grid-template-columns: 1fr 1fr; gap: 9px }
+.ing-opzioni.ing-lunghe { grid-template-columns: 1fr }
+.ing-opzioni.ing-figure { grid-template-columns: repeat(3, 1fr) }
+.ing-opzione { background: #fffdf6; color: var(--ing-inchiostro); font-weight: 800;
+               font-size: clamp(15px, 4.2vw, 19px); line-height: 1.3; padding: 13px 10px; border-radius: 16px;
+               border: 3px solid transparent; box-shadow: 0 5px 0 var(--ing-bordo);
+               transition: transform .12s, border-color .12s, opacity .2s }
+.ing-opzioni.ing-figure .ing-opzione { aspect-ratio: 1; font-size: clamp(30px, 9vh, 50px); padding: 0;
+                                       display: flex; align-items: center; justify-content: center }
+.ing-opzione:active { transform: translateY(2px); box-shadow: 0 3px 0 var(--ing-bordo) }
+.ing-giusta { border-color: var(--ing-verde) !important; background: #e4f6e8 !important }
+.ing-sbagliata { border-color: #c0392b !important; background: #fde7e3 !important; animation: ing-scuoti .4s }
+.ing-spenta { opacity: .5 }
+@keyframes ing-scuoti { 0%, 100% { translate: 0 } 25% { translate: -7px } 50% { translate: 7px } 75% { translate: -4px } }
+
+/* ═══════════ componi: la fila e il banco ═══════════ */
+.ing-fila { min-height: 64px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 7px;
+            padding: 12px; border-radius: 16px; border: 2px dashed #b99a6a; background: #fffaf0 }
+.ing-invito { color: #a08a6c; font-weight: 700; font-size: 14px; margin: 0 auto }
+.ing-fisso { font-weight: 800; font-size: 19px; color: var(--ing-inchiostro); padding: 0 2px }
+.ing-punto { margin-left: -4px }
+.ing-buco { display: inline-block; min-width: 58px; height: 38px; border-bottom: 3px solid var(--ing-rosso);
+            border-radius: 4px; background: #fff4df }
+.ing-banco { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; min-height: 46px }
+.ing-tessera { background: #fff8e6; color: var(--ing-inchiostro); border: 2px solid var(--ing-seppia);
+               border-radius: 12px; padding: 8px 13px; font-weight: 800; font-size: clamp(16px, 4.6vw, 19px);
+               box-shadow: 0 4px 0 var(--ing-ombra); transition: transform .1s }
+.ing-tessera:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--ing-ombra) }
+.ing-tessera.ing-in-fila { background: #fffdf6 }
+.ing-grosso { align-self: center; background: #f4c430; color: #4a2f00; font-weight: 900; font-size: 18px;
+              padding: 12px 28px; border-radius: 999px; box-shadow: 0 5px 0 #b8901c }
+.ing-grosso:disabled { opacity: .42; box-shadow: none }
+.ing-grosso:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 3px 0 #b8901c }
+.ing-grosso.ing-chiaro { background: #fffdf6; color: var(--ing-inchiostro); box-shadow: 0 5px 0 var(--ing-bordo) }
+
+/* ═══════════ l'esito ═══════════ */
+.ing-esito { background: #fffaf0; border: 2px solid var(--ing-bordo); border-radius: 16px; padding: 11px 14px;
+             color: var(--ing-inchiostro); font-size: 15px; line-height: 1.4; display: flex;
+             flex-direction: column; gap: 7px }
+.ing-bene { color: var(--ing-verde); font-weight: 900; font-size: 18px; text-align: center }
+.ing-male { font-weight: 700 }
+.ing-era b { font-size: 17px }
+.ing-come { background: #edf4fb; border-left: 4px solid #3a86d4; border-radius: 8px; padding: 7px 10px }
+.ing-fretta { color: #8a6f52; font-weight: 700 }
+.ing-avanti { height: 4px; border-radius: 999px; background: #ecdfc0; overflow: hidden }
+.ing-avanti i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #d9a441, #b0412a);
+                animation: ing-riempi linear forwards }
+@keyframes ing-riempi { to { width: 100% } }
+
+/* ═══════════ la pagina di un concetto ═══════════ */
+.ing-concetto { margin: auto 0; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px;
+                background: #fffaf0; border: 2px solid var(--ing-bordo); border-radius: 18px;
+                color: var(--ing-inchiostro); line-height: 1.4 }
+.ing-concetto-sopra { font-weight: 700; color: #8a6f52; font-size: 14px }
+.ing-concetto-titolo { margin: 0; font-size: 24px; font-weight: 900 }
+.ing-concetto-spiega { margin: 0; font-size: 17px }
+.ing-concetto-esempi { display: flex; flex-direction: column; gap: 10px }
+.ing-concetto-esempio { background: #fffdf6; border-radius: 12px; padding: 9px 12px; box-shadow: 0 2px 0 var(--ing-bordo) }
+.ing-concetto-en { font-size: 21px; font-weight: 700 }
+.ing-concetto-forte { color: #b0412a; background: #fbe7c6; border-radius: 6px; padding: 0 3px; font-weight: 900 }
+.ing-concetto-it { color: #8a6f52; font-size: 15px }
+.ing-concetto .ing-grosso { margin-top: 4px }
+
+/* ═══════════ la traduzione di una parola ═══════════ */
+.ing-bolla { position: fixed; z-index: 90; transform: translate(-50%, calc(-100% - 10px));
+             background: #3b2616; color: #fff8e6; padding: 7px 13px; border-radius: 12px; text-align: center;
+             font-weight: 700; font-size: 16px; white-space: nowrap; pointer-events: none;
+             box-shadow: 0 6px 18px #2a1a0c55; animation: ing-appare .15s ease }
+.ing-bolla::after { content: ''; position: absolute; left: 50%; bottom: -6px; margin-left: -6px;
+                    border: 6px solid transparent; border-bottom: 0; border-top-color: #3b2616 }
+.ing-bolla small { display: block; font-size: 12px; color: #ffd58a; font-weight: 700 }
+@keyframes ing-appare { from { opacity: 0 } to { opacity: 1 } }
+/* la domanda prima di un tocco che costa: si tocca, e va a capo */
+.ing-bolla-chiede { pointer-events: auto; white-space: normal; width: min(260px, calc(100vw - 24px));
+                    padding: 10px 12px 12px; font-size: 15px; line-height: 1.3 }
+.ing-bolla-chiede p { margin: 4px 0 2px; font-weight: 600 }
+.ing-bolla-parola { font-size: 18px }
+.ing-bolla-tasti { display: flex; gap: 8px; margin-top: 9px }
+.ing-bolla-tasti button { flex: 1; min-height: 42px; border: 0; border-radius: 10px; font: inherit;
+                          font-weight: 800; font-size: 15px; cursor: pointer }
+.ing-bolla-tasti [data-azione="svela-si"] { background: #ffd58a; color: #3b2616 }
+.ing-bolla-tasti [data-azione="svela-no"] { background: #fff8e6; color: #3b2616 }
+.ing-bolla-chiede[data-pronta="0"] .ing-bolla-tasti button { opacity: .6 }
+.ing-bolla-sotto { transform: translate(-50%, 10px) }
+.ing-bolla-sotto::after { bottom: auto; top: -6px; border: 6px solid transparent; border-top: 0;
+                          border-bottom-color: #3b2616 }
+
+/* ═══════════ il libro ═══════════ */
+.ing-libro { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;
+             width: 100%; max-width: 600px; margin: 0 auto;
+             padding: 14px 14px calc(16px + env(safe-area-inset-bottom)) }
+.ing-pagina { background: #fdf8ec; color: #2e2218; border-radius: 6px 18px 18px 6px; padding: 22px 22px 12px;
+              box-shadow: inset 14px 0 16px -12px #b99a6a, 0 6px 18px #6b4a2233;
+              font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+              font-size: clamp(19px, 5.2vw, 22px); line-height: 1.65 }
+.ing-pagina.ing-pagina-corta { max-height: 42vh; overflow-y: auto; font-size: clamp(17px, 4.6vw, 20px) }
+.ing-capitolo { text-align: center; font-variant: small-caps; letter-spacing: .05em; color: #6b3b1c;
+                font-size: 1.1em; margin: 0 0 12px }
+.ing-riga { margin: 0 }
+.ing-prima-riga::first-letter { float: left; font-size: 2.6em; line-height: .82; margin: 7px 7px 0 0; color: #8a3b1c }
+.ing-pagina .ing-parola { border-bottom: 1px dotted #c7ad7f }
+.ing-riga + .ing-riga, .ing-battuta + .ing-riga { margin-top: .5em }
+/* una battuta va a capo, col nome di chi parla sopra: il colore aiuta, il nome dice */
+.ing-battuta { margin: .45em 0 0; padding-left: 11px; border-left: 3px solid var(--chi, #b99a6a) }
+.ing-chi { display: block; font: 700 .66em/1.35 system-ui, sans-serif; letter-spacing: .05em;
+           text-transform: uppercase; color: var(--chi, #7a6450) }
+.ing-libro [data-chi="Laura"] { --chi: #b0412a }
+.ing-libro [data-chi="Leo"] { --chi: #2f6fb0 }
+.ing-libro [data-chi="Tom"] { --chi: #3f7d3a }
+.ing-libro [data-chi="Pip"] { --chi: #8a5a2b }
+.ing-libro [data-chi="mamma"] { --chi: #9b3f86 }
+.ing-libro [data-chi="papa"] { --chi: #4b4fa8 }
+.ing-libro [data-chi="nonna"] { --chi: #a8702a }
+.ing-libro [data-chi="nonno"] { --chi: #5b6b6f }
+.ing-fregio { text-align: center; color: #b99a6a; font-size: 18px; margin-top: 4px }
+.ing-dopo-lettura { display: flex; flex-direction: column; gap: 8px; align-items: center }
+/* le pagine si sfogliano con due tasti grandi, uno per lato */
+.ing-sfoglia { display: flex; align-items: center; justify-content: space-between; gap: 10px }
+.ing-freccia-pagina { width: 58px; height: 52px; border-radius: 16px; background: #fffdf6; color: var(--ing-inchiostro);
+                      font-size: 26px; font-weight: 900; box-shadow: 0 4px 0 var(--ing-bordo) }
+.ing-freccia-pagina:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 var(--ing-bordo) }
+.ing-freccia-pagina:disabled { opacity: .35; box-shadow: none }
+.ing-numero-pagina { font: italic 700 16px Georgia, serif; color: #7a6450 }
+.ing-libro-domanda { display: flex; flex-direction: column; gap: 10px }
+.ing-libro [data-chi="maestra"] { --chi: #7b5ea7 }
+.ing-libro [data-chi="dottore"] { --chi: #2a7f8a }
+.ing-libro [data-chi="contadino"], .ing-libro [data-chi="contadina"] { --chi: #6f7d2a }
+.ing-libro [data-chi="pappagallo"] { --chi: #2f8a4c }
+.ing-libro [data-chi="voce"] { --chi: #6b6b6b }
+/* le parole della storia: nuove, e toccarle è gratis; un filo d'oro al posto dei puntini, niente di più */
+.ing-pagina .ing-parola.ing-della-storia, .ing-citazione .ing-parola.ing-della-storia {
+  border-bottom: 2px solid #d9a441 }
+/* le storie a puntate: il numero sopra il titolo, e «Nella puntata prima…» in corsivo */
+.ing-puntata { text-align: center; font: 700 .62em/1 system-ui, sans-serif; letter-spacing: .12em;
+               text-transform: uppercase; color: #9a7b55; margin-bottom: 4px }
+.ing-riassunto { margin: 0 0 .6em; font-style: italic; color: #5c4633; padding: 4px 0 8px;
+                 border-bottom: 1px solid #e6d6b4 }
+/* «tocca la frase»: ogni frase è un blocco da toccare, e dopo la risposta si colora */
+.ing-frase-scelta { display: block; width: 100%; text-align: left; margin: 0 0 7px; padding: 6px 10px;
+                    font: inherit; line-height: 1.45; color: inherit; background: #fffdf6;
+                    border: 2px dashed #d9c9a3; border-radius: 10px; -webkit-user-select: none; user-select: none }
+.ing-frase-scelta:active { background: #f7e3b0 }
+.ing-frase-scelta .ing-parola { border-bottom: 0 }
+.ing-frase-scelta.ing-giusta, .ing-frase-scelta.ing-sbagliata { border-style: solid }
+.ing-frase-scelta.ing-spenta { opacity: .55 }
+/* «chi l'ha detto?»: la battuta fra virgolette, in inglese */
+.ing-citazione { margin: 0; padding: 10px 14px; border-left: 4px solid #b99a6a; background: #fdf8ec;
+                 border-radius: 6px; font: italic clamp(18px, 5vw, 21px)/1.45 Georgia, 'Times New Roman', serif;
+                 color: #2e2218 }
+/* «metti in ordine»: i fatti sono tessere lunghe, in italiano */
+.ing-tessera.ing-fatto { font-size: 15.5px; font-weight: 700; text-align: left; line-height: 1.3; max-width: 100% }
+.ing-fila-fatti { flex-direction: column; align-items: stretch }
+.ing-banco-fatti { flex-direction: column; align-items: stretch }
+.ing-soluzione { margin: 0; padding-left: 22px; font-weight: 700 }
+
+/* ═══════════ il cartello di fine ═══════════ */
+.ing-velo { position: absolute; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;
+            padding: 16px; background: rgba(40, 25, 10, .55); animation: ing-appare .2s ease }
+.ing-cartello { position: relative; width: 100%; max-width: 380px; text-align: center; color: var(--ing-inchiostro);
+                background: var(--ing-carta); border: 3px solid var(--ing-seppia); border-radius: 20px;
+                padding: 24px 18px 18px; display: flex; flex-direction: column; gap: 10px;
+                box-shadow: 0 18px 50px #2a1a0c66 }
+.ing-cartello h2 { font: italic 700 24px Georgia, serif; margin: 0; color: var(--ing-inchiostro) }
+.ing-chiudi { position: sticky; top: 0; align-self: flex-end; margin: -14px -8px -26px 0; width: 38px; height: 38px;
+              border-radius: 50%; background: #fff; color: var(--ing-inchiostro); font-size: 17px; font-weight: 900;
+              box-shadow: 0 2px 0 var(--ing-bordo); z-index: 1 }
+.ing-gradi { display: flex; align-items: baseline; justify-content: center; gap: 8px; font-weight: 900 }
+.ing-grado-num { font-size: 30px; color: #8a6f52 }
+.ing-grado-ora { font-size: 40px; color: var(--ing-verde) }
+.ing-freccia { font-size: 22px; color: #b99a6a }
+.ing-su-dieci { font-size: 14px; color: #8a6f52 }
+.ing-conti { font-weight: 800; font-size: 14px; color: #7a6450 }
+.ing-premio { font-size: 28px; font-weight: 900; color: #c98a00 }
+.ing-nota-monete { font-weight: 700; font-size: 14px; color: #7a5a00; margin: 0 }
+.ing-bottoni { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 4px }
