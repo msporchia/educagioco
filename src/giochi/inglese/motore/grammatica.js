@@ -8,9 +8,10 @@ import { espandi } from './testo.js'
 import { nomeDi, eAggettivo, eNumero, eContabile, conAn, SEMPRE_UGUALI } from './lessico.js'
 
 // le righe di dati/trappole.js il cui errore è proprio questo
-export const APPOSTA = new Set(['a-an', 'plurale-senza-s'])
+export const APPOSTA = new Set(['a-an', 'an-davanti-consonante', 'plurale-senza-s'])
 
-const ORDINALI = new Set(['first', 'second', 'third'])
+const ORDINALI = new Set(['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth',
+                          'tenth'])
 
 // il nome dopo T[i], saltando gli aggettivi: { j, n } o null
 function nomeDopo(T, i) {

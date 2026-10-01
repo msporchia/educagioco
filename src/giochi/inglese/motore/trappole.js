@@ -172,6 +172,27 @@ export const OPERAZIONI = {
     const U = T.slice(); U[i] = 'a'
     return [alt(U, { cosa: T[i + 1] })]
   },
+  aDavantiConsonante(T) {
+    const i = trova(T, (w, k) => w === 'a' && T[k + 1] && !conAn(low(T[k + 1])))
+    if (i < 0) return []
+    const U = T.slice(); U[i] = 'an'
+    return [alt(U, { cosa: T[i + 1] })]
+  },
+  // Tom's dog: il calco italiano (the dog of Tom) e la 's dimenticata (Tom dog)
+  genitivoCalco(T) {
+    const i = trova(T, (w, k) => /^\w+'s$/.test(w) && T[k + 1])
+    if (i < 0) return []
+    const chi = T[i].replace(/'s$/, ''), cosa = T[i + 1]
+    const prima = ['my', 'your', 'his', 'her'].includes(low(T[i - 1])) ? i - 1 : i
+    const di = T.slice(prima, i).concat(chi)
+    return [alt([...T.slice(0, prima), 'the', cosa, 'of', ...di, ...T.slice(i + 2)], { chi: di.join(' '), cosa })]
+  },
+  genitivoSenzaS(T) {
+    const i = trova(T, (w, k) => /^\w+'s$/.test(w) && T[k + 1])
+    if (i < 0) return []
+    const U = T.slice(); U[i] = T[i].replace(/'s$/, '')
+    return [alt(U, { chi: U[i], cosa: T[i + 1] })]
+  },
   theGenerico(T) {
     const i = trova(T, (w, k) => w === 'like' && nomeDi(low(T[k + 1]) || ''))
     if (i < 0) return []

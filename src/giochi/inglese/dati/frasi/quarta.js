@@ -1,4 +1,4 @@
-// Le frasi componibili del mondo «In quarta». Stesso formato di prima.js;
+// Le frasi componibili del quarto mondo, «Il fortino d’inverno». Stesso formato di prima.js;
 // i verbi flessi (plays, playing) valgono dalla tappa della loro struttura.
 export default {
   mondo: 'quarta',
@@ -38,6 +38,26 @@ export default {
     { id: 'q-help-mother', tappa: 'quarta-io-gioco', forma: 'presente', it: 'aiutano la loro mamma?',
       en: 'do they help their mother' },
     { id: 'q-play-guitar', tappa: 'quarta-io-gioco', forma: 'presente', it: 'suono la chitarra ogni giorno', en: 'I play the guitar every day' },
+
+    /* ── Il primo di maggio (contratta) ── */
+    { id: 'q-first-may', tappa: 'quarta-date', forma: 'date', it: 'oggi è il primo maggio', en: 'today is the first of May' },
+    { id: 'q-second-march', tappa: 'quarta-date', forma: 'date', it: 'è il due marzo', en: 'it is the second of March' },
+    { id: 'q-is-today-fifth', tappa: 'quarta-date', forma: 'date', it: 'oggi è il cinque giugno?', en: 'is today the fifth of June' },
+    { id: 'q-birthday-on-fourth', tappa: 'quarta-date', forma: 'date', it: 'il mio compleanno è il quattro luglio', en: 'my birthday is on the fourth of July' },
+    { id: 'q-tennis-on-monday', tappa: 'quarta-date', forma: 'date', it: 'gioco a tennis il lunedì', en: 'I play tennis on Monday' },
+    { id: 'q-pizza-on-sunday', tappa: 'quarta-date', forma: 'date', it: 'mangiamo la pizza la domenica', en: 'we eat pizza on Sunday' },
+    { id: 'q-breakfast-at-seven', tappa: 'quarta-date', forma: 'date', it: 'mangio la colazione alle sette', en: 'I eat breakfast at seven o\'clock' },
+    { id: 'q-tennis-afternoon', tappa: 'quarta-date', forma: 'date', it: 'gioco a tennis il pomeriggio', en: 'I play tennis in the afternoon' },
+    { id: 'q-sleep-at-nine', tappa: 'quarta-date', forma: 'date', it: 'dormiamo alle nove', en: 'we sleep at nine o\'clock' },
+
+    /* ── Un po’ di… (contratta) ── */
+    { id: 'q-some-milk', tappa: 'quarta-un-po', forma: 'some-any', it: 'c’è un po’ di latte', en: 'there is some milk' },
+    { id: 'q-some-apples', tappa: 'quarta-un-po', forma: 'some-any', it: 'ho qualche mela', en: 'I have got some apples' },
+    { id: 'q-some-cookies', tappa: 'quarta-un-po', forma: 'some-any', it: 'ci sono dei biscotti sul tavolo', en: 'there are some cookies on the table' },
+    { id: 'q-any-bread', tappa: 'quarta-un-po', forma: 'some-any', it: 'c’è del pane?', en: 'is there any bread' },
+    { id: 'q-any-juice', tappa: 'quarta-un-po', forma: 'some-any', it: 'non ho succo', en: 'I have not got any juice' },
+    { id: 'q-any-apples', tappa: 'quarta-un-po', forma: 'some-any', it: 'ci sono delle mele?', en: 'are there any apples' },
+    { id: 'q-not-any-cheese', tappa: 'quarta-un-po', forma: 'some-any', it: 'non c’è formaggio', en: 'there is not any cheese' },
 
     /* ── Lei gioca ── */
     { id: 'q-she-plays', tappa: 'quarta-lei-gioca', forma: 'terza-s', it: 'lei gioca a tennis', en: 'she plays tennis' },

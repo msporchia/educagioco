@@ -11,8 +11,8 @@ export const FORME = {
   saluti: {
     nome: 'hello, my name is …',
     parole: ['hello', 'goodbye', 'good', 'morning', 'afternoon', 'evening', 'night', 'my', 'name',
-             'is', 'I', 'am', 'what', 'your', 'how', 'are', 'you', 'fine', 'thank', 'yes', 'no'],
-    segni: ['name', 'hello', 'goodbye', 'how', 'fine', 'morning', 'night', 'am'],
+             'is', 'I', 'am', 'what', 'your', 'how', 'are', 'you', 'fine', 'thank', 'yes', 'no', 'happy', 'merry'],
+    segni: ['name', 'hello', 'goodbye', 'how', 'fine', 'morning', 'night', 'am', 'happy', 'merry'],
     regola: 'Per presentarti: my name is Leo, o I am Leo. Per chiedere: what is your name?',
   },
   'it-is': {
@@ -93,6 +93,18 @@ export const FORME = {
     segni: ['can', 'cannot'],
     regola: 'Dopo can il verbo va da solo: I can swim. Non so: I cannot swim.',
   },
+  'a-an': {
+    nome: 'a, an, the',
+    parole: ['a', 'an', 'the'],
+    segni: ['a', 'an', 'the'],
+    regola: 'Davanti a una vocale a diventa an: an apple, an egg. The è «il, la»: quella cosa lì.',
+  },
+  domande: {
+    nome: 'who, what, how',
+    parole: ['who', 'what', 'how', 'old', 'many', 'is', 'are'],
+    segni: ['who', 'what', 'how'],
+    regola: 'Chi? who. Che cosa? what. Come? how. La parola della domanda va prima, poi is o are.',
+  },
   /* Le forme di quarta e quinta. Le loro `parole` sono anche le parolette
      che servono a raccontare nel libro, che le sa dalla prima pagina del
      mondo (docs/lingue/libro.md); `flessione` è la forma dei verbi (o degli
@@ -111,6 +123,20 @@ export const FORME = {
           regola: 'Con he, she e it: does she play? she does not play. Dopo does il verbo non prende la s.' },
   ing: { nome: 'I am playing', parole: ['am', 'is', 'are', 'now'], segni: ['#ing'], flessione: 'ing',
          regola: 'Adesso: am, is o are, e il verbo con -ing: I am playing.' },
+  date: { nome: 'the first of May, on Monday', parole: ['the', 'of', 'on', 'in', 'at'], segni: ['of', 'on', 'in', 'at'],
+          regola: 'Le date: the first of May. Con giorni e date si dice on, con mesi e stagioni in, con le ore at.' },
+  'some-any': { nome: 'some, any', parole: ['some', 'any'], segni: ['some', 'any'],
+                regola: 'Some vuol dire «un po’ di», «qualche». Nelle domande e con not si dice any: is there any milk?' },
+  /* Le forme della quinta: la strada, i soldi, di chi è. */
+  strada: { nome: 'turn left, next to', parole: ['turn', 'go', 'left', 'right', 'straight', 'on', 'next', 'to',
+                                                 'opposite', 'between', 'and', 'at', 'the'],
+            segni: ['turn', 'left', 'right', 'straight', 'next', 'opposite', 'between'],
+            regola: 'Per dare la strada il verbo va in testa: turn left, go straight on. Accanto: next to.' },
+  costa: { nome: 'how much is it?', parole: ['how', 'much', 'is', 'are', 'it', 'they'],
+           segni: ['much', 'pound', 'pounds', 'cheap', 'expensive'],
+           regola: 'Quanto costa?: how much is it? Per più cose: how much are they? Due sterline: two pounds.' },
+  genitivo: { nome: 'Tom’s dog', parole: [], segni: ['#gen'],
+              regola: 'Di chi è: chi ha la cosa, poi ’s, poi la cosa. Tom’s dog è il cane di Tom.' },
   ora: { nome: 'what time is it?', parole: ['what', 'time', 'it', 'is', 'at', 'o\'clock'],
          segni: ['time', 'o\'clock'],
          regola: 'Che ore sono?: what time is it? Sono le tre: it is three o’clock. Alle tre: at three.' },

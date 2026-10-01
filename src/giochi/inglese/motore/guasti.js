@@ -49,6 +49,7 @@ const PAROLE = new Set(WORDS.map(w => w[0]))
 const flessoCome = come => w => (flessa(w) || {}).come === come
 const SEGNI = { '#c': eColore, '#j': eAggettivo, '#n': eNumero }
 for (const come of ['s', 'ing', 'ed', 'irr', 'er', 'est']) SEGNI['#' + come] = flessoCome(come)
+SEGNI['#gen'] = w => /^\w+'s$/.test(w)
 export const haSegno = (T, sg) => (SEGNI[sg] ? T.some(SEGNI[sg]) : T.includes(sg.toLowerCase()))
 
 export function guastiDellaFrase(f, { semi = 6 } = {}) {

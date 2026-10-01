@@ -13,7 +13,7 @@ const domanda = f => f.domanda
 const con = rx => f => rx.test(f.en)
 
 export const CONCETTI = {
-  /* ── In prima ── */
+  /* ── Il prato in fiore ── */
   'it-is': [
     { id: 'it-is:e', titolo: 'È un…',
       spiega: 'Per dire che cos’è una cosa: it is a… It è la cosa, is vuol dire «è».',
@@ -45,6 +45,9 @@ export const CONCETTI = {
     { id: 'saluti:come', titolo: 'Come ti chiami? Come stai?', prende: con(/\b(what|how|fine)\b/),
       spiega: 'What vuol dire «che cosa», how vuol dire «come». Chi chiede mette prima what o how, poi is o are.',
       esempi: [['[what] is your name?', 'come ti chiami?'], ['[how] are you?', 'come stai?']] },
+    { id: 'saluti:auguri', titolo: 'Buon Natale!', prende: con(/\b(happy|merry)\b/),
+      spiega: 'Per fare gli auguri: a Natale merry Christmas, a Pasqua happy Easter, ad Halloween happy Halloween.',
+      esempi: [['[merry] Christmas', 'buon Natale'], ['[happy] Easter', 'buona Pasqua']] },
   ],
   'this-is': [
     { id: 'this-is:e', titolo: 'Questo è…',
@@ -66,7 +69,18 @@ export const CONCETTI = {
       esempi: [['they are dogs', 'sono cani'], ['[are they] dogs?', 'sono cani?']] },
   ],
 
-  /* ── In seconda ── */
+  /* ── La spiaggia d’estate ── */
+  'a-an': [
+    { id: 'a-an:a', titolo: 'Una banana: a',
+      spiega: '«Un» e «una» si dicono a, sempre uguale: a banana, a cookie.',
+      esempi: [['[a] banana', 'una banana'], ['[a] cookie', 'un biscotto']] },
+    { id: 'a-an:an', titolo: 'Una mela: an', prende: con(/\ban\b/),
+      spiega: 'Davanti a una parola che comincia con a, e, i, o, u, a diventa an: si dice meglio.',
+      esempi: [['[a] banana', 'una banana'], ['[an] apple', 'una mela']] },
+    { id: 'a-an:the', titolo: 'La mela: the', prende: con(/^the\b/),
+      spiega: 'The vuol dire «il, lo, la»: si usa per una cosa precisa, quella di cui stai parlando.',
+      esempi: [['[an] apple', 'una mela'], ['[the] apple is red', 'la mela è rossa']] },
+  ],
   'i-like': [
     { id: 'i-like:si', titolo: 'Mi piace',
       spiega: 'Mi piace si dice I like: «io» e poi like. Le cose che ti piacciono vanno dopo.',
@@ -109,7 +123,7 @@ export const CONCETTI = {
       esempi: [['she has got a cat', 'lei ha un gatto'], ['[has she] got a cat?', 'lei ha un gatto?']] },
   ],
 
-  /* ── In terza ── */
+  /* ── Il bosco d’autunno ── */
   dove: [
     { id: 'dove:dove', titolo: 'Dov’è?', prende: con(/^where\b/),
       spiega: 'Dov’è si dice where is. Per più cose: where are.',
@@ -158,7 +172,38 @@ export const CONCETTI = {
       esempi: [['I can fly', 'so volare'], ['I [cannot] fly', 'non so volare']] },
   ],
 
-  /* ── In quarta ── */
+  domande: [
+    { id: 'domande:who', titolo: 'Chi?', prende: con(/^who\b/),
+      spiega: '«Chi?» si dice who. Va in testa alla domanda, e dopo viene is.',
+      esempi: [['she is my friend', 'lei è mia amica'], ['[who] is she?', 'chi è lei?']] },
+    { id: 'domande:what', titolo: 'Che cosa?', prende: con(/^what\b/),
+      spiega: '«Che cosa?» si dice what: what is in the box?, che cosa c’è nella scatola?',
+      esempi: [['[what] is this?', 'che cos’è questo?'], ['[what] is in the box?', 'che cosa c’è nella scatola?']] },
+    { id: 'domande:how', titolo: 'Come? Quanti?',
+      spiega: '«Come?» si dice how. How old vuol dire «quanti anni», how many «quanti».',
+      esempi: [['[how] are you?', 'come stai?'], ['[how old] are you?', 'quanti anni hai?']] },
+  ],
+
+  /* ── Il fortino d’inverno ── */
+  date: [
+    { id: 'date:il-primo', titolo: 'Il primo di maggio',
+      spiega: 'Le date si dicono coi numeri «primo, secondo»: the first of May, il primo maggio.',
+      esempi: [['[first]', 'primo'], ['[the first of] May', 'il primo maggio']] },
+    { id: 'date:on', titolo: 'Il lunedì: on', prende: con(/\bon\b/),
+      spiega: 'Con i giorni e con le date si dice on: on Monday, il lunedì.',
+      esempi: [['I play tennis', 'gioco a tennis'], ['I play tennis [on] Monday', 'gioco a tennis il lunedì']] },
+    { id: 'date:at-in', titolo: 'Alle sette, il pomeriggio', prende: con(/\b(at|in)\b/),
+      spiega: 'Con le ore si dice at: at seven o’clock. Con le parti del giorno, i mesi e le stagioni in.',
+      esempi: [['[at] seven o\'clock', 'alle sette'], ['[in] the afternoon', 'il pomeriggio']] },
+  ],
+  'some-any': [
+    { id: 'some-any:some', titolo: 'Un po’ di: some',
+      spiega: 'Some vuol dire «un po’ di» o «qualche»: there is some milk, c’è un po’ di latte.',
+      esempi: [['there is milk', 'c’è il latte'], ['there is [some] milk', 'c’è un po’ di latte']] },
+    { id: 'some-any:any', titolo: 'Nelle domande: any', prende: con(/\bany\b/),
+      spiega: 'Nelle domande e con not, some diventa any.',
+      esempi: [['there is [some] bread', 'c’è del pane'], ['is there [any] bread?', 'c’è del pane?']] },
+  ],
   ora: [
     { id: 'ora:domanda', titolo: 'Che ore sono?', prende: domanda,
       spiega: '«Che ore sono?» si dice what time is it? Time vuol dire «ora», «tempo».',
@@ -212,7 +257,37 @@ export const CONCETTI = {
       esempi: [['I am sleeping', 'sto dormendo'], ['I am [not] sleeping', 'non sto dormendo']] },
   ],
 
-  /* ── In quinta ── */
+  /* ── L’isola dei vulcani ── */
+  strada: [
+    { id: 'strada:gira', titolo: 'Gira a sinistra',
+      spiega: 'Per dare la strada il verbo va in testa, da solo: turn left, gira a sinistra. Left è sinistra, right destra.',
+      esempi: [['[turn left]', 'gira a sinistra'], ['[go straight on]', 'vai dritto']] },
+    { id: 'strada:dove', titolo: 'Accanto, di fronte', prende: con(/\b(next|opposite|between)\b/),
+      spiega: 'Next to vuol dire «accanto a», opposite «di fronte a», between «fra».',
+      esempi: [['the bank is [next to] the school', 'la banca è accanto alla scuola'],
+               ['the bank is [opposite] the school', 'la banca è di fronte alla scuola']] },
+  ],
+  costa: [
+    { id: 'costa:quanto', titolo: 'Quanto costa?', prende: domanda,
+      spiega: '«Quanto costa?» si dice how much is it? Per più cose: how much are they?',
+      esempi: [['[how much] is the cake?', 'quanto costa la torta?'], ['[how much are] the apples?', 'quanto costano le mele?']] },
+    { id: 'costa:sterline', titolo: 'Due sterline',
+      spiega: 'Il prezzo si dice con is: it is two pounds, costa due sterline. Pound è la sterlina inglese.',
+      esempi: [['two', 'due'], ['it is two [pounds]', 'costa due sterline']] },
+    { id: 'costa:caro', titolo: 'Caro, economico', prende: con(/\b(cheap|expensive)\b/),
+      spiega: 'Expensive vuol dire «caro», cheap vuol dire «che costa poco».',
+      esempi: [['the bike is [expensive]', 'la bicicletta è cara'], ['the bike is [cheap]', 'la bicicletta costa poco']] },
+  ],
+  genitivo: [
+    { id: 'genitivo:nome', titolo: 'Il cane di Tom',
+      spiega: 'Per dire di chi è: prima chi ha la cosa, poi ’s, poi la cosa. Tom’s dog è il cane di Tom.',
+      esempi: [['the dog', 'il cane'], ['[Tom\'s] dog', 'il cane di Tom']] },
+    { id: 'genitivo:mio', titolo: 'Il gatto di mia sorella', prende: con(/\bmy \w+'s\b/),
+      spiega: 'Funziona con tutte le persone: my sister’s cat è il gatto di mia sorella.',
+      esempi: [['my sister', 'mia sorella'], ['my [sister\'s] cat', 'il gatto di mia sorella']] },
+  ],
+
+  /* ── Il castello tra le nuvole ── */
   'was-were': [
     { id: 'was-were:was', titolo: 'Ero, era',
       spiega: 'Al passato is e am diventano was: I was (ero), he was (era).',

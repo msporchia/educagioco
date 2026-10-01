@@ -1,8 +1,19 @@
-// Le frasi componibili del mondo «In seconda». Stesso formato di prima.js;
+// Le frasi componibili del secondo mondo, «La spiaggia d’estate». Stesso formato di prima.js;
 // `niente` toglie le regole che qui darebbero una frase giusta.
 export default {
   mondo: 'seconda',
   frasi: [
+    /* ── Una mela, un uovo ── */
+    { id: 'm-an-apple', tappa: 'seconda-un', forma: 'a-an', it: 'è una mela', en: 'it is an apple' },
+    { id: 'm-an-egg', tappa: 'seconda-un', forma: 'a-an', it: 'è un uovo', en: 'it is an egg' },
+    { id: 'm-an-orange-cake', tappa: 'seconda-un', forma: 'a-an', it: 'è una torta arancione', en: 'it is an orange cake' },
+    { id: 'm-a-banana', tappa: 'seconda-un', forma: 'a-an', it: 'è una banana', en: 'it is a banana' },
+    { id: 'm-a-cookie', tappa: 'seconda-un', forma: 'a-an', it: 'è un biscotto?', en: 'is it a cookie' },
+    { id: 'm-a-pizza', tappa: 'seconda-un', forma: 'a-an', it: 'non è una pizza', en: 'it is not a pizza' },
+    { id: 'm-the-apple-red', tappa: 'seconda-un', forma: 'a-an', it: 'la mela è rossa', en: 'the apple is red' },
+    { id: 'm-the-banana-yellow', tappa: 'seconda-un', forma: 'a-an', it: 'la banana è gialla', en: 'the banana is yellow' },
+    { id: 'm-the-milk-white', tappa: 'seconda-un', forma: 'a-an', it: 'il latte è bianco', en: 'the milk is white' },
+
     /* ── Mi piace! ── */
     { id: 'e-like-chocolate', tappa: 'seconda-mi-piace', forma: 'i-like', it: 'mi piace il cioccolato', en: 'I like chocolate' },
     { id: 'd-like-pizza', tappa: 'seconda-mi-piace', forma: 'i-like', it: 'ti piace la pizza?', en: 'do you like pizza' },

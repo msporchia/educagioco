@@ -1,4 +1,4 @@
-// Le frasi componibili del mondo «In terza». Stesso formato di prima.js.
+// Le frasi componibili del terzo mondo, «Il bosco d’autunno». Stesso formato di prima.js.
 export default {
   mondo: 'terza',
   frasi: [
@@ -24,6 +24,17 @@ export default {
     { id: 'm-lamp-near', tappa: 'terza-dove', forma: 'dove', it: 'la lampada è vicino al letto', en: 'the lamp is near the bed' },
     { id: 'm-where-shoes', tappa: 'terza-dove', forma: 'dove', it: 'dove sono le mie scarpe?', en: 'where are my shoes' },
     { id: 'm-cat-behind-door', tappa: 'terza-dove', forma: 'dove', it: 'il gatto è dietro la porta', en: 'the cat is behind the door' },
+
+    /* ── Chi? Che cosa? Come? (contratta) ── */
+    { id: 'm-who-she', tappa: 'terza-chi', forma: 'domande', it: 'chi è lei?', en: 'who is she' },
+    { id: 'm-who-garden', tappa: 'terza-chi', forma: 'domande', it: 'chi c’è in giardino?', en: 'who is in the garden' },
+    { id: 'm-who-friend', tappa: 'terza-chi', forma: 'domande', it: 'chi è il tuo amico?', en: 'who is your friend' },
+    { id: 'm-what-box', tappa: 'terza-chi', forma: 'domande', it: 'che cosa c’è nella scatola?', en: 'what is in the box' },
+    { id: 'm-what-table', tappa: 'terza-chi', forma: 'domande', it: 'che cosa c’è sul tavolo?', en: 'what is on the table' },
+    { id: 'm-what-this', tappa: 'terza-chi', forma: 'domande', it: 'che cos’è questo?', en: 'what is this' },
+    { id: 'm-how-old', tappa: 'terza-chi', forma: 'domande', it: 'quanti anni hai?', en: 'how old are you' },
+    { id: 'm-how-mother', tappa: 'terza-chi', forma: 'domande', it: 'come sta tua madre?', en: 'how is your mother' },
+    { id: 'm-how-many-books', tappa: 'terza-chi', forma: 'domande', it: 'quanti libri ci sono?', en: 'how many books are there' },
 
     /* ── Oggi è lunedì (contratta) ── */
     { id: 'm-today-monday', tappa: 'terza-oggi', forma: 'oggi', it: 'oggi è lunedì', en: 'today is Monday' },

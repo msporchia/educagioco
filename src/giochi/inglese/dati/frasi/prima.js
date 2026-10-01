@@ -1,4 +1,4 @@
-// Le frasi componibili del mondo «In prima». `en` in forma lunga e senza
+// Le frasi componibili del primo mondo, «Il prato in fiore». `en` in forma lunga e senza
 // «?» (la contrazione la fa la tappa, il «?» la fila); gli `id` delle frasi
 // di data/frasi.js e dei mondi di prima restano quelli: sono la chiave SRS.
 // Una frase usa solo parole già viste e almeno un segno della struttura
@@ -16,6 +16,9 @@ export default {
     { id: 'e-good-night', tappa: 'prima-ciao', forma: 'saluti', it: 'buonanotte', en: 'good night' },
     { id: 'm-my-name-tom', tappa: 'prima-ciao', forma: 'saluti', it: 'mi chiamo Tom', en: 'my name is Tom' },
     { id: 'm-good-night-laura', tappa: 'prima-ciao', forma: 'saluti', it: 'buonanotte, Laura', en: 'good night Laura' },
+    { id: 'm-merry-christmas', tappa: 'prima-ciao', forma: 'saluti', it: 'buon Natale', en: 'merry Christmas', varianti: ['happy Christmas'] },
+    { id: 'm-happy-easter', tappa: 'prima-ciao', forma: 'saluti', it: 'buona Pasqua', en: 'happy Easter' },
+    { id: 'm-happy-halloween', tappa: 'prima-ciao', forma: 'saluti', it: 'buon Halloween', en: 'happy Halloween' },
 
     /* ── Che cos'è? ── */
     { id: 'm-dog', tappa: 'prima-che-cose', forma: 'it-is', it: 'è un cane', en: 'it is a dog' },
@@ -67,5 +70,8 @@ export default {
     { id: 'm-my-backpack', tappa: 'prima-questo', forma: 'this-is', it: 'questo è il mio zaino', en: 'this is my backpack' },
     { id: 'm-is-book', tappa: 'prima-questo', forma: 'this-is', it: 'questo è un libro?', en: 'is this a book' },
     { id: 'm-not-pencil', tappa: 'prima-questo', forma: 'this-is', it: 'questa non è una matita', en: 'this is not a pencil' },
+    { id: 'm-this-pumpkin', tappa: 'prima-questo', forma: 'this-is', it: 'questa è una zucca', en: 'this is a pumpkin' },
+    { id: 'm-is-this-present', tappa: 'prima-questo', forma: 'this-is', it: 'questo è un regalo?', en: 'is this a present' },
+    { id: 'm-not-ghost', tappa: 'prima-questo', forma: 'this-is', it: 'questo non è un fantasma', en: 'this is not a ghost' },
   ],
 }
