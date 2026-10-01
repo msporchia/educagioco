@@ -1,7 +1,11 @@
-# English a mondi — le strutture di quarta e quinta
+# English a mondi — le strutture delle ultime isole
 
-Quarta e quinta hanno le tappe di frasi dal 30 settembre 2026. Qui cosa
-insegnano, cosa si è scelto sul programma e le forme dei verbi e degli
+Le strutture del fortino d'inverno (la quarta) e del castello tra le
+nuvole (la sesta: il passato, *going to* e i paragoni, che fino al 1°
+ottobre 2026 stavano in quinta; perché si sono spostati in
+[programma.md](programma.md)). Le strutture nuove della quarta (date,
+*some/any*) e della quinta (strada, soldi, genitivo) sono descritte lì e in
+[concetti.md](concetti.md). Qui cosa insegnano, cosa si è scelto sul programma e le forme dei verbi e degli
 aggettivi nelle frasi. Il formato delle frasi è in [frasi.md](frasi.md), le
 righe delle trappole in [trappole.md](trappole.md), il libro (che queste
 strutture le usa da prima) in [libro.md](libro.md).
@@ -39,9 +43,8 @@ strutture le usa da prima) in [libro.md](libro.md).
 | *Chi è più alto?* (dopo «Alto e veloce») | `paragoni` | *my brother is taller than me, the rocket is the fastest, it's the most beautiful castle* |
 | *Domani andrò* | `going-to` | *I am going to swim tomorrow, are you going to play tennis on Saturday?* |
 
-Il programma della quinta (più o meno quello dei libri di testo): presente
-e *-ing* ripassati, il passato di *be* e dei verbi, *going to*, i paragoni.
-Cosa si è scelto dove era al limite:
+Quello che la sesta isola insegna: il passato di *be* e dei verbi, *going
+to*, i paragoni. Cosa si è scelto dove era al limite:
 
 - **Did c'è**: senza, il passato non ha né domande né negazioni, e *did you
   went* è l'errore più tipico. *Did* è il passato di *do* (in

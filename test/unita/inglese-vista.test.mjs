@@ -132,7 +132,7 @@ titolo('LE MONETE')
   uguale('il riassunto a profilo vuoto', manifesto.riassunto({}), `${TAPPE.length} tappe sulla mappa del tesoro`)
   const c = {}
   segnaVinta(c, 'prima-colori')
-  controlla('il riassunto dice quante e dove', /1 tappa su \d+ · In prima/.test(manifesto.riassunto(c)), manifesto.riassunto(c))
+  controlla('il riassunto dice quante e dove', /1 tappa su \d+ · Il prato in fiore/.test(manifesto.riassunto(c)), manifesto.riassunto(c))
 }
 
 /* ═══════════ 5. la materia «Frasi inglesi» ═══════════ */

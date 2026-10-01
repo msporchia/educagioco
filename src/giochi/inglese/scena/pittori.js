@@ -190,6 +190,16 @@ export const PITTORI = {
     tratto(p, c, [[-18, -24], [-18, 30]], 2); tratto(p, c, [[18, -24], [18, 30]], 2)
     tratto(p, c, [[-10, 16], [10, 26]], 3, '#c0392b'); tratto(p, c, [[10, 16], [-10, 26]], 3, '#c0392b')
   },
+  // le feste: una zucca di Halloween
+  zucca(p, c) {
+    tondo(p, c, -13, 6, 15, 22, '#e07d24')
+    tondo(p, c, 13, 6, 15, 22, '#e07d24')
+    tondo(p, c, 0, 6, 15, 24, '#f2973a')
+    forma(p, c, k => { k.moveTo(-3, -16); k.quadraticCurveTo(-1, -26, 6, -30); k.lineTo(8, -26); k.quadraticCurveTo(3, -22, 3, -16); k.closePath() }, '#5f8a3a', 1.8)
+    poli(p, c, [[-12, -2], [-6, 4], [-14, 6]], '#4a2a10', 1.2)
+    poli(p, c, [[12, -2], [6, 4], [14, 6]], '#4a2a10', 1.2)
+    forma(p, c, k => { k.moveTo(-12, 14); k.quadraticCurveTo(0, 24, 12, 14); k.quadraticCurveTo(0, 18, -12, 14) }, '#4a2a10', 1.2)
+  },
 
   /* ── il libro e il cassetto ── */
   libro(p, c) {

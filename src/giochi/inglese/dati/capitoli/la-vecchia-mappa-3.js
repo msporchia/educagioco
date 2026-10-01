@@ -1,4 +1,4 @@
-// In quinta, l'ultima puntata di «La vecchia mappa»: il tesoro. Sotto un
+// Nella sesta isola, l'ultima puntata di «La vecchia mappa»: il tesoro. Sotto un
 // sasso, nel posto della mappa piccola, c'è la scatola; la chiave la apre,
 // e dentro c'è il giocattolo del nonno di quando aveva dieci anni. Il nonno
 // piange perché è felice, e lo dice. Quattro pagine, sei domande.
@@ -9,7 +9,7 @@ export default {
   id: 'la-vecchia-mappa-3',
   serie: 'la-vecchia-mappa',
   puntata: 3,
-  mondo: 'quinta',
+  mondo: 'sesta',
   titolo: 'La vecchia mappa: il tesoro',
   // key, tree, stone, push e open stanno nei cassetti
   nuove: ['treasure'],

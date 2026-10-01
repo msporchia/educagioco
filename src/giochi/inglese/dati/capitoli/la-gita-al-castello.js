@@ -1,4 +1,4 @@
-// In quinta, dopo «Sono andato al castello»: Tom va a vedere un castello, al passato.
+// Nella sesta isola, dopo «Sono andato al castello»: Tom va a vedere un castello, al passato.
 // Quattro pagine, sei domande — andata e ritorno da non confondere,
 // l'ordine della giornata, il perché, e un vero/falso che vuole due frasi.
 // Formato in docs/lingue/libro.md.
@@ -7,7 +7,7 @@ const chi = (en, con) => ({ en, con })
 
 export default {
   id: 'la-gita-al-castello',
-  mondo: 'quinta',
+  mondo: 'sesta',
   dopo: 'quinta-andai',
   titolo: 'La gita al castello',
   variabili: {

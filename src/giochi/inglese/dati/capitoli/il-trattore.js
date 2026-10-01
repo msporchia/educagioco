@@ -9,7 +9,7 @@ export default {
   mondo: 'quarta',
   dopo: 'quarta-adesso',
   titolo: 'Il trattore',
-  // road e laugh arrivano in quinta; bad e late stanno nei cassetti
+  // road e laugh arrivano nella sesta isola; bad e late stanno nei cassetti
   nuove: ['wait', 'drive', 'come', 'suddenly', 'road', 'laugh'],
   variabili: {
     freddo: { fra: [true, false] },

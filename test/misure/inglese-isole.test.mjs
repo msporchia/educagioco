@@ -225,15 +225,15 @@ titolo('DOVE STA LA NAVE')
   const s = statoMappa(vuoto, () => 0)
   const n = k => q.nodi.find(x => x.chiave === k)
   uguale('una tappa chiusa dice quale vincere prima', cosaServe(s, n('tappa:prima-numeri')), 'Prima vinci «Questo è…»')
-  uguale('un mondo chiuso dice quale finire prima', cosaServe(s, n('tappa:seconda-corpo')), 'Prima finisci «In prima»')
-  controlla('un mondo in arrivo arriva presto', /arriva presto/.test(cosaServe(s, q.nodi.find(x => x.tipo === 'mondo'))))
+  uguale('un mondo chiuso dice quale finire prima', cosaServe(s, n('tappa:seconda-corpo')), 'Prima finisci «Il prato in fiore»')
+  uguale('nessun mondo «in arrivo» sulla mappa', q.nodi.filter(x => x.tipo === 'mondo').length, 0)
   controlla('il libro si apre con la bandiera', /bandiera/.test(cosaServe(s, n('libro:prima'))))
 
   // l'età non apre mondi: un mondo con una tappa vinta resta aperto, ma non conta come finito
   const sq = statoMappa({ vinte: { 'quarta-giornata': 1 } }, () => 0, { eta: 10 })
   const qq = disponi(sq, 390, extra)
   uguale('un mondo aperto da una tappa vinta: il cartiglio di quello dopo chiede lui',
-         cosaServe(sq, qq.nodi.find(x => x.chiave === 'tappa:quinta-citta')), 'Prima finisci «In quarta»')
+         cosaServe(sq, qq.nodi.find(x => x.chiave === 'tappa:quinta-citta')), 'Prima finisci «Il fortino d’inverno»')
 }
 
 /* ═══════════ 6. quanto costa ═══════════ */

@@ -1,12 +1,12 @@
 // Il grafo dei mondi dell'inglese: un mondo per anno della scuola
-// primaria, le sue tappe, da cosa si apre, e le categorie di data/words.js
-// che finiscono nel suo 📦 cassetto. Il perché di ogni scelta, e il
-// programma di ogni anno, stanno in docs/lingue/mondi.md.
+// primaria (più uno dopo), le sue tappe, da cosa si apre, e le categorie di
+// data/words.js che finiscono nel suo 📦 cassetto. Il perché di ogni
+// scelta, e il programma di ogni anno, stanno in docs/lingue/mondi.md.
 //
-// Un mondo: { id, anno (1–5), nome, disegno, insegna, dopo: [id…] (tutti
-//   finiti), dopoUno?: [id…] (basta uno), categorie: [cat di words.js],
-//   paesaggio (la stagione o il carattere dell'isola sulla mappa, scena/mappa.js),
-//   verbi?: true (i verbi di data/verbi.js che nessuna tappa insegna vanno
+// Un mondo: { id, anno (1–5 la primaria, 6 dopo), nome (un posto, mai
+//   l'anno di scuola), disegno, insegna, dopo: [id…] (tutti finiti),
+//   dopoUno?: [id…] (basta uno), categorie: [cat di words.js], paesaggio
+//   (il carattere dell'isola sulla mappa, scena/mappa.js), verbi?: true (i verbi di data/verbi.js che nessuna tappa insegna vanno
 //   nel suo cassetto), strutture?: [forma…] (le strutture dell'anno che il
 //   libro sa dalla prima pagina del mondo, prima della loro tappa di
 //   frasi), tappe: [...] }. Un mondo senza tappe è «in arrivo»: sta sulla
@@ -49,9 +49,9 @@ function portate(m) {
 
 export const MONDI = [
   {
-    id: 'prima', anno: 1, nome: 'In prima', disegno: 'palla', paesaggio: 'primavera',
-    insegna: 'i colori, it is a …, is it …?, hello, my name is, i numeri fino a dieci, this is …',
-    dopo: [], categorie: ['a', 'c', 's', 'g'],
+    id: 'prima', anno: 1, nome: 'Il prato in fiore', disegno: 'palla', paesaggio: 'primavera',
+    insegna: 'i colori, it is a …, is it …?, le feste, hello, my name is, i numeri fino a dieci, this is …',
+    dopo: [], categorie: ['a', 'c', 's', 'g', 'e'],
     tappe: [
       parole('prima-colori', 'I colori', 'pennelli', 'colori',
         ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'black', 'white', 'brown']),
@@ -61,6 +61,9 @@ export const MONDI = [
         ['ball', 'doll', 'teddy bear', 'kite', 'puzzle', 'game', 'car', 'train', 'plane', 'boat']),
       frasi('prima-che-cose', 'Che cos’è?', 'punto-di-domanda', ['it-is', 'is-it']),
       frasi('prima-colore', 'Di che colore è?', 'pennelli', ['colore-prima'], true),
+      parole('prima-feste', 'Le feste', 'zucca', 'feste',
+        ['Halloween', 'pumpkin', 'witch', 'ghost', 'Christmas', 'Father Christmas', 'present', 'reindeer',
+         'Easter', 'Easter egg']),
       frasi('prima-ciao', 'Ciao! Come ti chiami?', 'coppia', ['saluti']),
       parole('prima-scuola', 'A scuola', 'zaino', 'scuola',
         ['book', 'pencil', 'pen', 'ruler', 'rubber', 'backpack', 'notebook', 'crayon', 'box', 'map']),
@@ -72,12 +75,13 @@ export const MONDI = [
     ],
   },
   {
-    id: 'seconda', anno: 2, nome: 'In seconda', disegno: 'casetta', paesaggio: 'estate',
-    insegna: 'I like, this is my, I have got, she has got, i numeri fino a venti',
+    id: 'seconda', anno: 2, nome: 'La spiaggia d’estate', disegno: 'casetta', paesaggio: 'estate',
+    insegna: 'a, an, the, I like, this is my, I have got, she has got, i numeri fino a venti',
     dopo: ['prima'], categorie: ['b', 'k', 'f', 'p', 'j'],
     tappe: [
       parole('seconda-cibo', 'Il cibo', 'torta', 'cibo',
         ['apple', 'banana', 'pizza', 'cake', 'milk', 'bread', 'cheese', 'chocolate', 'egg', 'cookie']),
+      frasi('seconda-un', 'Una mela, un uovo', 'torta', ['a-an']),
       parole('seconda-pranzo', 'A pranzo', 'piatto', 'cibo',
         ['carrot', 'potato', 'tomato', 'salad', 'soup', 'pasta', 'rice', 'juice', 'strawberry', 'grapes']),
       frasi('seconda-mi-piace', 'Mi piace!', 'torta', ['i-like']),
@@ -99,8 +103,8 @@ export const MONDI = [
     ],
   },
   {
-    id: 'terza', anno: 3, nome: 'In terza', disegno: 'scatola', paesaggio: 'autunno',
-    insegna: 'there is / there are, where is …?, in, on, under, today is …, can / cannot',
+    id: 'terza', anno: 3, nome: 'Il bosco d’autunno', disegno: 'scatola', paesaggio: 'autunno',
+    insegna: 'there is / there are, where is …?, who, what, how, in, on, under, today is …, can / cannot',
     dopo: ['seconda'], categorie: ['h', 'd', 'w', 'n'], verbi: true,
     tappe: [
       parole('terza-casa', 'La casa', 'casetta', 'casa',
@@ -111,13 +115,14 @@ export const MONDI = [
       parole('terza-cento', 'I numeri fino a cento', 'dita', 'numeri',
         ['thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred']),
       frasi('terza-c-e', 'C’è, ci sono', 'casetta', ['there-is']),
+      frasi('terza-chi', 'Chi? Che cosa? Come?', 'punto-di-domanda', ['domande'], true),
       parole('terza-giorni', 'I giorni', 'sole', 'calendario',
         ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'today',
          'tomorrow', 'weekend']),
       parole('terza-stagioni', 'Le stagioni e i mesi', 'clessidra', 'calendario',
         ['spring', 'summer', 'autumn', 'winter', 'January', 'February', 'March', 'April', 'May', 'June']),
       parole('terza-mesi', 'Gli altri mesi', 'clessidra', 'calendario',
-        ['July', 'August', 'September', 'October', 'November', 'December', 'birthday', 'Christmas']),
+        ['July', 'August', 'September', 'October', 'November', 'December', 'birthday', 'holiday']),
       parole('terza-tempo', 'Che tempo fa', 'sole', 'tempo',
         ['sun', 'rain', 'snow', 'wind', 'cloud', 'storm', 'fog', 'rainbow', 'sky', 'ice']),
       frasi('terza-oggi', 'Oggi è lunedì', 'sole', ['oggi'], true),
@@ -128,8 +133,8 @@ export const MONDI = [
     ],
   },
   {
-    id: 'quarta', anno: 4, nome: 'In quarta', disegno: 'sole', paesaggio: 'inverno',
-    insegna: 'what time is it?, I play, she plays, does she play?, I am playing',
+    id: 'quarta', anno: 4, nome: 'Il fortino d’inverno', disegno: 'sole', paesaggio: 'inverno',
+    insegna: 'what time is it?, I play, the first of May, some, any, she plays, does she play?, I am playing',
     dopo: ['terza'], categorie: ['t'], strutture: ['presente', 'terza-s', 'does', 'ing', 'ora'],
     tappe: [
       parole('quarta-giornata', 'La giornata', 'sole', 'giornata',
@@ -141,6 +146,10 @@ export const MONDI = [
       parole('quarta-sport', 'Sport e musica', 'palla', 'sport',
         ['tennis', 'basketball', 'piano', 'guitar', 'violin', 'drum', 'trumpet', 'music', 'team']),
       frasi('quarta-io-gioco', 'Gioco ogni giorno', 'palla', ['presente'], true),
+      parole('quarta-ordinali', 'Primo, secondo, terzo', 'dita', 'numeri',
+        ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth']),
+      frasi('quarta-date', 'Il primo di maggio', 'clessidra', ['date'], true),
+      frasi('quarta-un-po', 'Un po’ di…', 'torta', ['some-any'], true),
       parole('quarta-mestieri', 'I mestieri', 'coppia', 'mestieri',
         ['teacher', 'doctor', 'farmer', 'cook', 'police officer', 'firefighter', 'pilot', 'nurse',
          'singer']),
@@ -154,13 +163,29 @@ export const MONDI = [
     ],
   },
   {
-    id: 'quinta', anno: 5, nome: 'In quinta', disegno: 'clessidra', paesaggio: 'vulcano',
-    insegna: 'I was, I went, I played, she said, when, going to, bigger than',
-    dopo: ['quarta'], categorie: ['y'],
-    strutture: ['was-were', 'passato', 'passato-ed', 'dire', 'quando', 'going-to', 'paragoni'],
+    id: 'quinta', anno: 5, nome: 'L’isola dei vulcani', disegno: 'casetta', paesaggio: 'vulcano',
+    insegna: 'turn left, next to, how much is it?, two pounds, Tom’s dog',
+    dopo: ['quarta'], categorie: ['y', 'm'], strutture: ['strada', 'costa', 'genitivo'],
     tappe: [
       parole('quinta-citta', 'In città', 'casetta', 'luoghi',
         ['shop', 'school', 'hospital', 'park', 'station', 'museum', 'bank', 'cinema', 'library', 'zoo']),
+      parole('quinta-strada', 'Per strada', 'bicicletta', 'luoghi',
+        ['street', 'corner', 'square', 'traffic lights', 'bus stop', 'car park', 'crossing', 'roundabout',
+         'pavement', 'sign']),
+      frasi('quinta-gira', 'Gira a sinistra', 'bicicletta', ['strada'], true),
+      parole('quinta-soldi', 'I soldi', 'forziere', 'soldi',
+        ['money', 'coin', 'pound', 'penny', 'price', 'wallet', 'cheap', 'expensive']),
+      frasi('quinta-quanto', 'Quanto costa?', 'forziere', ['costa'], true),
+      frasi('quinta-di-chi', 'Il cane di Tom', 'cane', ['genitivo'], true),
+      bandiera('quinta-bandiera'),
+    ],
+  },
+  {
+    id: 'sesta', anno: 6, nome: 'Il castello tra le nuvole', disegno: 'clessidra', paesaggio: 'nuvole',
+    insegna: 'I was, I went, I played, she said, when, going to, bigger than',
+    dopo: ['quinta'], categorie: [],
+    strutture: ['was-were', 'passato', 'passato-ed', 'dire', 'quando', 'going-to', 'paragoni'],
+    tappe: [
       frasi('quinta-ieri', 'Ieri ero al parco', 'casetta', ['was-were']),
       parole('quinta-fuori', 'Fuori città', 'bicicletta', 'luoghi',
         ['castle', 'bridge', 'airport', 'city', 'village', 'road', 'church', 'market', 'restaurant',
@@ -177,11 +202,9 @@ export const MONDI = [
         ['tall', 'fast', 'slow', 'old', 'young', 'strong', 'beautiful', 'difficult', 'easy', 'funny']),
       frasi('quinta-piu', 'Chi è più alto?', 'faccia', ['paragoni'], true),
       frasi('quinta-domani', 'Domani andrò', 'bicicletta', ['going-to']),
-      bandiera('quinta-bandiera'),
+      bandiera('sesta-bandiera'),
     ],
   },
-  { id: 'prova-finale', nome: 'La prova finale', disegno: 'forziere', insegna: 'tutto insieme', prova: true,
-    dopo: ['prima', 'seconda', 'terza', 'quarta', 'quinta'], categorie: [], tappe: [] },
 ].map(m => (m.tappe.length ? portate(m) : m))
 
 export const mondoDi = id => MONDI.find(m => m.id === id) || null
@@ -214,7 +237,7 @@ export function guastiDeiMondi() {
     for (const d of [...m.dopo, ...(m.dopoUno || [])])
       if (!ids.has(d)) g.push(`${m.id}: dipende da un mondo che non c'è (${d})`)
     if (!pronto(m)) continue
-    if (!(m.anno >= 1 && m.anno <= 5)) g.push(`${m.id}: senza anno di scuola (1–5)`)
+    if (!(m.anno >= 1 && m.anno <= 6)) g.push(`${m.id}: senza anno di scuola (1–5, 6 la prima media)`)
     if (m.anno < annoPrima) g.push(`${m.id}: l'anno ${m.anno} viene dopo l'anno ${annoPrima}`)
     annoPrima = m.anno
     const ultima = m.tappe[m.tappe.length - 1]

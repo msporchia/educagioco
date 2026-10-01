@@ -1,4 +1,4 @@
-// In quinta, dopo la prima puntata: «La vecchia mappa», il bosco. Con la
+// Nella sesta isola, dopo la prima puntata: «La vecchia mappa», il bosco. Con la
 // mappa vanno a cercare l'albero; nel bosco ce ne sono cento, e l'albero
 // giusto lo trova Pip. Sotto non c'è il tesoro ma una chiave e una mappa
 // più piccola, che dice dov'è. Quattro pagine, cinque domande.
@@ -9,7 +9,7 @@ export default {
   id: 'la-vecchia-mappa-2',
   serie: 'la-vecchia-mappa',
   puntata: 2,
-  mondo: 'quinta',
+  mondo: 'sesta',
   titolo: 'La vecchia mappa: il bosco',
   // tree, river, forest, sit e key stanno nei cassetti
   nuove: ['treasure', 'suddenly'],

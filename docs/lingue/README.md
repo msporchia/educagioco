@@ -8,6 +8,7 @@ tiene anche il gioco libero di chi aveva finito la campagna inglese vecchia.
 - [vocaboli.md](vocaboli.md) — gli otto modi di chiedere, le lingue che non si mescolano, cosa cambia fra inglese e spagnolo
 - [voce.md](voce.md) — la pronuncia incisa a monte, gli sprite, `npm run voci`
 - [mondi.md](mondi.md) — la campagna a mondi: un mondo per anno, le tappe, l'età, il grado, il cassetto, la parola da toccare, dove sta cosa, l'interfaccia per la vista
+- [programma.md](programma.md) — il confronto col programma della scuola (Indicazioni 2025, libri, Cambridge): cosa si è aggiunto, cosa no e perché
 - [frasi.md](frasi.md) — le tappe di frasi: come si scrive una frase, i sei formati, le tessere di troppo e le gemelle, la partita
 - [concetti.md](concetti.md) — i due o tre concetti di ogni tappa di frasi: la pagina che li presenta la prima volta, e che torna dopo cinque sbagli
 - [trappole.md](trappole.md) — le frasi sbagliate: la tabella degli errori tipici, perché una trappola sbaglia per un motivo solo, su cosa pesa

@@ -34,8 +34,8 @@ In `src/giochi/inglese/`, accanto a `dati/` e `motore/`:
   po' a destra e a sinistra perché non sembrino piastrelle. Accanto a un
   mondo lungo non ci stavano: a qualunque larghezza da telefono le isole si
   toccavano, e fra due isole che si toccano la nave non passa. Una rotta si
-  disegna solo dalla fila appena sopra: la prova finale dipende da tutti, e
-  un filo da ognuno sarebbe una ragnatela. Due rotte che partono dallo
+  disegna solo dalla fila appena sopra: un mondo che dipendesse da tutti,
+  con un filo da ognuno, farebbe una ragnatela. Due rotte che partono dallo
   stesso porto fanno un pezzo di mare insieme, e lì se ne disegna una
   (`sfoltisci`): si stacca come un ramo, invece di due binari paralleli.
 - **Il medaglione di una tappa** porta il suo disegnino (`disegno` in
@@ -109,7 +109,8 @@ nautiche disegnate a mano.
   prima in fiore, la seconda d'estate (palme, dune, stelle marine), la terza
   d'autunno (alberi rossi, funghi), la quarta d'inverno (neve, abeti,
   montagne bianche, pupazzi), la quinta coi vulcani (terra di cenere, pini,
-  rocce). La disposizione sceglie solo il posto e il genere di ogni decoro
+  rocce), la sesta tra le nuvole (terra lilla, torrette, nuvole, stelle).
+  Il paesaggio dà anche il nome all'isola ([mondi.md](mondi.md)). La disposizione sceglie solo il posto e il genere di ogni decoro
   (albero, monte, ciuffo); il paesaggio decide come si disegna. Chiusa,
   la terra va verso la pergamena ma resta del suo colore. Provato un
   decoro grande per isola (il vulcano, la montagna): sulle isole strette di

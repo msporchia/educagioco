@@ -275,8 +275,8 @@ function geografia(pezzi, stato, prof, W, H) {
   for (const p of pezzi) for (const n of p.nodi) porti.set(n.chiave, attracco(mare, n.x, n.y, latoDi.get(n.mondo) || 1))
   const entrata = new Map(pezzi.map(p => [p.entrata.mondo, porti.get(p.entrata.chiave)]))
   const uscita = new Map(pezzi.map(p => [p.uscita.mondo, porti.get(p.uscita.chiave)]))
-  // fra i mondi: solo dalla fila appena sopra (la prova finale dipende da
-  // tutti, ma un filo da ognuno sarebbe una ragnatela)
+  // fra i mondi: solo dalla fila appena sopra (un mondo che dipendesse da
+  // tutti con un filo da ognuno farebbe una ragnatela)
   const rotte = []
   for (const m of stato) {
     const p = prof.get(m.id)

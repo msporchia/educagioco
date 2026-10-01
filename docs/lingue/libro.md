@@ -24,7 +24,7 @@ dal cartello di fine se ne legge un'altra.
 | terza | 3 | 10–12 | 4–5 | il perché che si capisce dal tempo, l'ordine |
 | quarta, quinta | 3–5 | 15–25 | 4–6 | il perché, l'ordine degli eventi, chi l'ha detto, la frase che lo dice, quello che si capisce senza che sia scritto, «Non si sa» |
 
-In quarta e quinta sono **testi veri**, e **racconti**: un narratore, un
+Dalla quarta isola in poi sono **testi veri**, e **racconti**: un narratore, un
 problema, un fatto che cambia le cose, un finale, e i dialoghi dove
 servono. Uno dei bambini fa la quinta, e per lui un racconto di sei frasi
 non è lettura; dopo aver letto le prime, il giudizio fu «le storie sono

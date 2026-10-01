@@ -19,7 +19,7 @@
        dice subito; poi si risponde, e la storia è letta
      · «Un'altra storia» apre un'altra storia, che si sfoglia con le
        frecce, anche durante le domande
-     · in quinta una parola della storia si tocca gratis e non segna
+     · nella sesta isola una parola della storia si tocca gratis e non segna
        niente; si risponde toccando la frase e componendo l'ordine; il
        cartello offre «Puntata 2», che ha lo stesso nonno e lo stesso mezzo
    Il progetto è in docs/lingue/mondi.md, i bersagli alla riga «Nei test».
@@ -61,9 +61,7 @@ await page.waitForSelector('[data-mappa-inglese] [data-tappa]', { timeout: 5000 
 uguale('la prima tappa è aperta', await page.locator('[data-tappa="prima-colori"]').getAttribute('data-stato'), 'aperta')
 uguale('la seconda no', await page.locator('[data-tappa="prima-animali"]').getAttribute('data-stato'), 'chiusa')
 uguale('a profilo vuoto il grado è zero', await page.locator('[data-tappa="prima-colori"]').getAttribute('data-grado'), '0')
-const lontani = MONDI.filter(m => !m.tappe.length).length
-uguale('i mondi senza tappe si vedono in arrivo',
-       await page.locator('[data-mondo][data-pronto="0"]').count(), lontani)
+uguale('nessun mondo «in arrivo» che non arriva', await page.locator('[data-mondo][data-pronto="0"]').count(), 0)
 uguale('senza la campagna di prima finita, il gioco di prima non c’è', await page.locator('[data-prima]').count(), 0)
 await scatto(page, 'inglese-mappa-vuota')
 await scattoTela(page, 'inglese-mappa-vuota-intera')
@@ -373,8 +371,8 @@ controlla('anche questa è letta', lette2['il-cane-di-laura'] >= ora)
 await page.locator('[data-fine] [data-azione="mappa"]').click()
 await page.waitForSelector('[data-mappa-inglese]')
 
-/* ---------- 5c. la quinta: parole della storia, domande nuove, puntate ----------
-   Tutti i mondi vinti, e in quinta lette tutte le storie tranne «La
+/* ---------- 5c. la sesta isola: parole della storia, domande nuove, puntate ----------
+   Tutti i mondi vinti, e nella sesta lette tutte le storie tranne «La
    vecchia mappa»: il libro apre la sua prima puntata. «tree» è una parola
    della storia (del cassetto della terza) ed è saputa: toccarla sarebbe a pagamento, ma è gratis e
    non segna niente. Poi si risponde a tutto, toccando la frase e
@@ -416,9 +414,9 @@ await page.waitForSelector('.carte')
                                               vinte: tutte, lette: Object.fromEntries(giaLette.map(id => [id, ora - 86400000])) } } })
 }
 await carta.click()
-await page.waitForSelector('[data-libro="quinta"]')
-await page.locator('[data-libro="quinta"]').scrollIntoViewIfNeeded()
-await page.locator('[data-libro="quinta"]').click()
+await page.waitForSelector('[data-libro="sesta"]')
+await page.locator('[data-libro="sesta"]').scrollIntoViewIfNeeded()
+await page.locator('[data-libro="sesta"]').click()
 await page.waitForSelector('[data-libro-testo]', { timeout: 4000 })
 uguale('il libro apre la prima puntata', (await page.locator('[data-puntata]').innerText()).trim().toLowerCase(), 'puntata 1')
 const vecchio = await leggiProfilo(page)
@@ -525,7 +523,7 @@ uguale('il libro della prima è chiuso', await page.locator('[data-libro="prima"
 await page.locator('[data-tappa="seconda-cibo"]').click()
 await page.waitForSelector('[data-serve]', { timeout: 2000 })
 controlla('il cartiglio chiede la prima finita',
-          (await page.locator('[data-serve]').innerText()).includes('Prima finisci «In prima»'),
+          (await page.locator('[data-serve]').innerText()).includes('Prima finisci «Il prato in fiore»'),
           await page.locator('[data-serve]').innerText())
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))

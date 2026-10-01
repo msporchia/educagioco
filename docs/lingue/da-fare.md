@@ -1,7 +1,7 @@
 # L'inglese a mondi: cosa manca
 
-Un mondo per anno di scuola, tutti e cinque con le tappe di parole, le
-tappe di frasi e il libro. Il grafo in [mondi.md](mondi.md), le frasi in
+Sei isole, una per anno della primaria più una dopo, tutte con le tappe di
+parole, le tappe di frasi e il libro. Il grafo in [mondi.md](mondi.md), le frasi in
 [frasi.md](frasi.md), la vista in [mondi-vista.md](mondi-vista.md). Il
 resto, in ordine.
 
@@ -10,11 +10,12 @@ resto, in ordine.
 - **Il passato progressivo** (*while I was reading*) e il discorso
   indiretto (*she said that…*) sono della media: *while* sta solo in frasi
   al presente, *said / told* senza *that* ([strutture.md](strutture.md)).
-- **How much is it?** aspetta i soldi (qui sotto).
+- **L'alfabeto e lo spelling**: sono suoni, e l'audio non porta
+  informazione ([programma.md](programma.md#cosa-non-si-è-aggiunto)).
 
 ## Il libro
 
-- **Una serie sola**, «La vecchia mappa» in quinta, con le tre puntate alla
+- **Una serie sola**, «La vecchia mappa» nella sesta isola, con le tre puntate alla
   🏁. Se ai bambini piace: una serie di quarta (al presente), e le puntate
   sparse lungo l'isola con `dopo` ([libro-racconti.md](libro-racconti.md#le-storie-a-puntate)).
 - **Le prime tre storie di quarta e quinta** hanno una domanda di tipo
@@ -23,17 +24,10 @@ resto, in ordine.
 
 ## Le parole che mancano
 
-- **I soldi della quinta**: *money, coin, price, cheap, expensive* non sono
-  in `data/words.js`. Una tappa «Al negozio» li vuole, con *how much is it?*
-  fra le strutture.
-- **Le parole aggiunte il 30 settembre 2026 non hanno ancora la voce**: i
-  dodici mesi (*January … December*), *sixty, seventy, eighty, ninety*, i
-  verbi *say, tell, hear, wait, drive* e le parole delle storie *suddenly,
-  treasure, voice*.
-  Va lanciato `npm run voci` (vuole rete e ffmpeg; se in coda dice «non
-  incise», si rilancia lo stesso comando): finché non gira, `unita/inglese`
-  è rosso su «parole senza clip». Il gioco regge comunque: l'audio non
-  porta informazione.
+- Nessuna, per ora: tutte hanno la loro voce (incise il 1° ottobre 2026).
+  Una parola nuova vuole `npm run voci` (rete e ffmpeg; se in coda dice
+  «non incise», si rilancia): finché non gira, `unita/inglese` è rosso su
+  «parole senza clip».
 
 ## La mappa
 
@@ -61,7 +55,6 @@ resto, in ordine.
 - **Il gioco di prima** resta finché qualcuno l'aveva: quando nessun
   profilo di casa ha più `p.eng.libera` in uso, si può togliere insieme
   alla campagna vecchia (`data/campagna-inglese.js`), tenendo le sue chiavi.
-- **La prova finale** è ancora un mondo senza tappe.
 
 `node strumenti/inglese/banchi.mjs <mondo o tappa>` e `--capitolo=<id>` per
 rileggere i banchi; `node test/esegui.mjs inglese-mondi` li controlla tutti.

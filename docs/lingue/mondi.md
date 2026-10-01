@@ -1,13 +1,15 @@
 # English a mondi — il grafo e le tappe
 
-Stato: **un mondo per anno di scuola** (30 settembre 2026), tutti e cinque
-con tappe di parole, tappe di frasi e il loro libro. La carta English apre
-la mappa del tesoro. Questo file dice come sono fatti i mondi e le tappe;
-il resto sta accanto:
+Stato: **sei isole** (1° ottobre 2026), una per anno della primaria più una
+dopo, tutte con tappe di parole, tappe di frasi e il loro libro. La carta
+English apre la mappa del tesoro. Questo file dice come sono fatti i mondi e
+le tappe; il resto sta accanto:
 
+- [programma.md](programma.md) — il confronto col programma della scuola: cosa c'era, cosa si è aggiunto, cosa no e perché;
 - [frasi.md](frasi.md) — le tappe di frasi, i sei formati, le tessere di troppo, la partita;
+- [concetti.md](concetti.md) — i concetti di ogni tappa di frasi e la loro pagina;
 - [trappole.md](trappole.md) — le frasi sbagliate: la tabella, perché sbagliano, su cosa pesano;
-- [strutture.md](strutture.md) — cosa insegnano quarta e quinta, e le forme dei verbi e degli aggettivi;
+- [strutture.md](strutture.md) — cosa insegnano le ultime isole, e le forme dei verbi e degli aggettivi;
 - [mondi-vista.md](mondi-vista.md) — la vista; [libro.md](libro.md) — il libro; [da-fare.md](da-fare.md) — cosa manca.
 
 Sostituisce la campagna in fila di `data/campagna-inglese.js`, dove ogni
@@ -23,39 +25,31 @@ ovviamente le parole conosciute; ma va considerato il normale percorso
 scolastico, questo ci aiuta anche a piazzare il gioco per età». Quindi
 **l'ordine di fondo è quello della primaria italiana** (inglese dalla prima):
 un mondo per anno, coi contenuti che i libri di testo fanno davvero in
-quell'anno. Il grafo resta un grafo — un mondo può dipendere da due, e
-«basta uno» c'è ancora (`dopoUno`) — ma oggi la fila è dritta.
+quell'anno, e **un sesto mondo dopo** con quello che va oltre la primaria
+(il passato, *going to*, i paragoni). Il grafo resta un grafo — un mondo può
+dipendere da due, e «basta uno» c'è ancora (`dopoUno`) — ma oggi la fila è
+dritta.
 
-| mondo | le tappe in ordine (in corsivo quelle di frasi) | si apre dopo |
-|---|---|---|
-| **In prima** | i colori · gli animali · i giocattoli · *it is a …, is it …?* · *a red ball* · *hello, my name is, how are you?* · a scuola · *this is …* · i numeri fino a dieci · *they are two dogs* | — |
-| **In seconda** | il cibo · a pranzo · *I like / I don't like* · la famiglia · i vestiti · come sono (big, happy, hungry…) · *this is my, he is, I am* · i numeri fino a venti · *I have got* · il corpo · *she has got* | In prima |
-| **In terza** | la casa · i mobili · *where is? in, on, under, behind* · i numeri fino a cento · *there is / there are* · i giorni · le stagioni e i mesi · gli altri mesi · che tempo fa · *today is Monday, in May* · che cosa sai fare (verbi) · *I can / I can't* | In seconda |
-| **In quarta** | la giornata · *what time is it?* · ogni giorno (verbi) · sport e musica · *I play every day* · i mestieri · *she plays* · *does she play?* · i mezzi · *I am playing* | In terza |
-| **In quinta** | in città · *I was, we were* · fuori città · i verbi che cambiano · *I went, did you go?* · *I played* · chi parla, chi ride (verbi) · *she said, he told me* · *when, while* · alto e veloce · *bigger than, the biggest* · *I am going to* | In quarta |
-| La prova finale | — | tutti |
+**I nomi sono posti, mai l'anno di scuola.** «In quarta» faceva sentire un
+bambino indietro o avanti, e diceva a uno di quinta «questa è roba di
+quarta, non serve che la faccia». L'anno resta nel dato (`anno`, che dà la
+portata) ma non si vede: le isole si chiamano col loro paesaggio
+([mondi-vista.md](mondi-vista.md#le-isole)). Lo controlla
+`test/unita/inglese-mondi`. **Niente mondi «in arrivo»**: la prova finale
+era un'isola senza tappe che non arrivava mai, e confondeva; tolta.
 
-Rifinito sul programma vero, rispetto alla traccia di partenza:
+| mondo (anno) | le tappe in ordine (in corsivo quelle di frasi) |
+|---|---|
+| **Il prato in fiore** (1) | i colori · gli animali · i giocattoli · *it is a …, is it …?* · *a red ball* · le feste · *hello, my name is, how are you?, merry Christmas* · a scuola · *this is …* · i numeri fino a dieci · *they are two dogs* |
+| **La spiaggia d'estate** (2) | il cibo · *a, an, the* · a pranzo · *I like / I don't like* · la famiglia · i vestiti · come sono · *this is my, he is, I am* · i numeri fino a venti · *I have got* · il corpo · *she has got* |
+| **Il bosco d'autunno** (3) | la casa · i mobili · *where is? in, on, under* · i numeri fino a cento · *there is / there are* · *who, what, how* · i giorni · le stagioni e i mesi · gli altri mesi · che tempo fa · *today is Monday, in May* · che cosa sai fare · *I can / I can't* |
+| **Il fortino d'inverno** (4) | la giornata · *what time is it?* · ogni giorno · sport e musica · *I play every day* · primo, secondo, terzo · *the first of May, on Monday, at seven* · *some, any* · i mestieri · *she plays* · *does she play?* · i mezzi · *I am playing* |
+| **L'isola dei vulcani** (5) | in città · per strada · *turn left, next to* · i soldi · *how much is it? two pounds* · *Tom's dog* |
+| **Il castello tra le nuvole** (6) | *I was, we were* · fuori città · i verbi che cambiano · *I went, did you go?* · *I played* · chi parla, chi ride · *she said, he told me* · *when, while* · alto e veloce · *bigger than, the biggest* · *I am going to* |
 
-- **i saluti in prima sono una tappa di frasi, non di parole**: *hello,
-  goodbye, please, thank you* sono sei parole di struttura (categoria `q`),
-  troppo poche per una tappa, e a scuola si imparano come frasi fatte.
-  **Vengono dopo *it is / is it***, non subito: le trappole chiedono *I am*
-  e non *I is*, *what is your name* e non *what your name is*, e quel *is*
-  e la domanda girata li insegna «Che cos'è?»;
-- **big, small e le emozioni in seconda** (*I am happy, are you hungry?*),
-  dove i libri le mettono con *I am* e la famiglia; in prima i colori
-  bastano a fare *a red ball*;
-- **gli animali selvatici non hanno una tappa**: in prima quelli di casa e
-  della fattoria, gli altri nel 📦 cassetto della prima;
-- **i verbi arrivano in terza con *can*** (nuotare, correre, saltare…), che
-  è dove i libri li usano la prima volta, in quarta quelli di ogni giorno
-  per il presente, in quinta quelli irregolari e quelli per raccontare;
-- **i mestieri in quarta con *he / she* + la *s***, i luoghi in quinta con
-  il passato (*I went to the park*); il perché delle tappe di quarta e
-  quinta in [strutture.md](strutture.md);
-- **i soldi della quinta non ci sono ancora**: *money, coin, price, cheap,
-  expensive* non sono in `data/words.js` (vedi [da-fare.md](da-fare.md)).
+Ogni isola si apre finita quella prima. Le scelte sul programma (perché i
+saluti dopo *it is*, le feste in prima, i soldi in quinta, niente
+alfabeto) stanno in [programma.md](programma.md).
 
 **Le tappe si alternano**: una di frasi subito dopo le tappe di parole che
 le servono, mai più di quattro di parole di fila, e le frasi entro la
@@ -70,8 +64,8 @@ va da 12,5·(n+1) a 12,5·(n+2), cioè dai 5+n ai 6+n anni, sulla scala di
 [../apprendimento/eta-e-portata.md](../apprendimento/eta-e-portata.md)), e
 nessuno la scrive a mano: la mette `portate()` in `dati/mondi.js`
 spargendo le tappe dentro l'anno (25–36 la prima, 38–49 la seconda, 50–61
-la terza, 63–74 la quarta, 75–86 la quinta). La carta English la legge come
-quella di ogni gioco (`TAPPE_DEL_GIOCO.inglese` in `data/portata-giochi.js`),
+la terza, 63–74 la quarta, 75–86 la quinta, 88–99 la sesta). La carta
+English la legge come quella di ogni gioco (`TAPPE_DEL_GIOCO.inglese` in `data/portata-giochi.js`),
 e il manifesto non dice più `grandi`: il primo mondo è la prima
 elementare. **L'età non apre mondi: anche un bambino di quarta comincia
 dalla prima** e la attraversa tappa per tappa, come tutti. Vincere una tappa
@@ -101,13 +95,13 @@ della tappa; la 🏁 fa la media di tutto il mondo.
 Le parole dei dati che non entrano in nessuna tappa stanno nel **📦 cassetto**
 del mondo della loro categoria: facoltativo, si apre alla prima tappa vinta
 del mondo, e si gioca coi formati delle parole
-di oggi. Nessuna chiave sparisce. I cassetti per anno: animali, colori,
-scuola e giochi (`a c s g`) in prima; corpo, persone, cibo, vestiti e
-aggettivi (`b k f p j`) in seconda; casa, calendario, natura e numeri (`h d
-w n`) in terza, coi verbi; mezzi (`t`) in quarta, luoghi (`y`) in quinta. Le
-parole di struttura (`q`) non hanno cassetto. Una categoria sta in un mondo
-solo, anche quando le sue tappe sono sparse su tre anni (i numeri, gli
-aggettivi). La prova finale è un mondo (`prova-finale`), senza tappe.
+di oggi. Nessuna chiave sparisce. I cassetti per isola: animali, colori,
+scuola, giochi e feste (`a c s g e`) nella prima; corpo, persone, cibo,
+vestiti e aggettivi (`b k f p j`) nella seconda; casa, calendario, natura e
+numeri (`h d w n`) nella terza, coi verbi; mezzi (`t`) nella quarta, luoghi
+e soldi (`y m`) nella quinta; la sesta non ne ha. Le parole di struttura
+(`q`) non hanno cassetto. Una categoria sta in un mondo solo, anche quando
+le sue tappe sono sparse su più isole (i numeri, gli aggettivi).
 
 **Le risposte sbagliate di una domanda su una parola vengono dal suo
 argomento**, mai da tutta la lingua: prima le altre parole della tappa, poi

@@ -22,6 +22,7 @@ const PAESAGGI = {
   autunno: { terra: '#dcb877', sabbia: '#eedaa8' },
   inverno: { terra: '#e9eff0', sabbia: '#f6f8f7' },
   vulcano: { terra: '#c9c1b2', sabbia: '#ddd5c4' },
+  nuvole: { terra: '#d9cdea', sabbia: '#ece5f4' },
 }
 const SBIADISCE = { aperto: 0, chiuso: 0.5, arrivo: 0.75 }
 const coloreDi = (is, chi, base) => {
@@ -288,6 +289,31 @@ const DECORI = {
       ctx.lineWidth = 0.9; ctx.fillStyle = t('#9c958c')
       ctx.beginPath(); ctx.ellipse(-2, 2, 3.4, 2.4, 0, 0, GIRO); ctx.fill(); ctx.stroke()
       ctx.beginPath(); ctx.ellipse(2.6, 3, 2.4, 1.7, 0, 0, GIRO); ctx.fill(); ctx.stroke()
+    },
+  },
+  // la sesta: torrette di castello, nuvole e stelle
+  nuvole: {
+    albero: (ctx, t) => {
+      ctx.beginPath(); ctx.rect(-3.5, -5, 7, 11); ctx.fillStyle = t('#e9e2d4'); ctx.fill(); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(-4.5, -5); ctx.lineTo(0, -12); ctx.lineTo(4.5, -5); ctx.closePath()
+      ctx.fillStyle = t('#7a6bb0'); ctx.fill(); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(0, -16); ctx.lineTo(4, -15); ctx.lineTo(0, -14)
+      ctx.lineWidth = 0.9; ctx.fillStyle = t('#d9453a'); ctx.fill(); ctx.stroke()
+      ctx.beginPath(); ctx.rect(-1.2, 0, 2.4, 3); ctx.fillStyle = t(INCHIOSTRO); ctx.fill()
+    },
+    monte: (ctx, t) => {
+      ctx.beginPath()
+      ctx.moveTo(-10, 4); ctx.quadraticCurveTo(-12, -2, -6, -2); ctx.quadraticCurveTo(-5, -8, 1, -7)
+      ctx.quadraticCurveTo(7, -10, 8, -3); ctx.quadraticCurveTo(13, -2, 10, 4); ctx.closePath()
+      ctx.fillStyle = t('#ffffff'); ctx.fill(); ctx.stroke()
+    },
+    ciuffo: (ctx, t) => {
+      ctx.beginPath()
+      for (let i = 0; i < 10; i++) {
+        const a = -Math.PI / 2 + i / 10 * GIRO, r = i % 2 ? 1.6 : 4
+        ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r)
+      }
+      ctx.closePath(); ctx.fillStyle = t('#f2c230'); ctx.lineWidth = 0.9; ctx.fill(); ctx.stroke()
     },
   },
 }

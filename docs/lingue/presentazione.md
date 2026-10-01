@@ -9,9 +9,11 @@ spagnolo è ancora la campagna in fila di prima, e ci arriverà.
 
 ## L'inglese: la mappa del tesoro
 
-Ogni isola della mappa è **un anno di scuola**, dalla prima alla quinta, coi
-contenuti che i libri fanno davvero in quell'anno; finire un'isola apre la
-successiva, e quelle degli anni già fatti a scuola sono aperte da subito.
+Ogni isola della mappa segue **un anno di scuola**, dalla prima alla quinta,
+coi contenuti che i libri fanno davvero in quell'anno, più una sesta isola
+dopo; finire un'isola apre la successiva, e tutti cominciano dalla prima.
+Le isole hanno un nome di posto — il prato in fiore, il fortino d'inverno —
+e mai l'anno: nessuno si sente indietro o avanti.
 Una caravella segna dove si è arrivati, e toccata una tappa ci naviga,
 girando attorno alle isole. Su ogni isola si alternano **tappe di parole**
 (otto-dieci parole di un argomento solo: i colori, il cibo, la casa) e
@@ -29,7 +31,7 @@ Lungo ogni mondo si aprono **tre storie di un libro** da leggere in
 inglese, a pagine — con Laura, Leo, Tom e il cane Pip, ogni volta un po'
 diverse e più lunghe di mondo in mondo — e qualche domanda in italiano per
 vedere se si è capito: chi l'ha detto, qual è la frase che lo dice, in che
-ordine sono successe le cose. In quinta c'è anche una storia a puntate.
+ordine sono successe le cose. Nell'ultima isola c'è anche una storia a puntate.
 Finita una, se ne legge un'altra. Qualunque parola inglese a
 schermo **si tocca e dice cosa vuol dire**; le prime volte è gratis, poi
 quella domanda non paga, e il gioco lo dice prima di rispondere.

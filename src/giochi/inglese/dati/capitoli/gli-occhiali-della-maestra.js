@@ -9,7 +9,7 @@ export default {
   mondo: 'quarta',
   dopo: 'quarta-lei-gioca',
   titolo: 'Gli occhiali della maestra',
-  // school e laugh arrivano in quinta; glasses, open e story stanno nei cassetti
+  // school arriva nella quinta isola, laugh nella sesta; glasses, open e story stanno nei cassetti
   nuove: ['suddenly', 'school', 'laugh'],
   variabili: {
     giorno: { da: 'giorni', fra: ['Monday', 'Tuesday', 'Wednesday'] },

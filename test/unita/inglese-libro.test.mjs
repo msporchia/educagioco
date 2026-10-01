@@ -48,7 +48,7 @@ const vinciMondo = (c, id) => mondoDi(id).tappe.forEach(t => segnaVinta(c, t.id,
 /* ═══════════ 1. tre storie per mondo, che crescono ═══════════ */
 titolo('LE STORIE')
 {
-  const MISURE = { 1: [1, 2], 2: [2, 3], 3: [3, 3], 4: [3, 5], 5: [3, 5] }
+  const MISURE = { 1: [1, 2], 2: [2, 3], 3: [3, 3], 4: [3, 5], 5: [3, 5], 6: [3, 5] }
   for (const m of MONDI.filter(x => x.tappe.length)) {
     const qui = CAPITOLI.filter(c => c.mondo === m.id)
     controlla(`${m.id}: almeno tre storie`, qui.length >= 3, qui.map(c => c.id).join(', '))
@@ -143,14 +143,14 @@ titolo('LE FORME DEI VERBI')
   uguale('swimmed non è niente', flessa('swimmed'), null)
 
   const ammesse = mondo => [paroleDelLibro(mondo), flessioniDi(formeDelLibro(mondo))]
-  const [n3, f3] = ammesse('terza'), [n4, f4] = ammesse('quarta'), [n5, f5] = ammesse('quinta')
+  const [n3, f3] = ammesse('terza'), [n4, f4] = ammesse('quarta'), [n5, f5] = ammesse('sesta')
   stessaLista('in terza «she swims» no: la s arriva in quarta', sconosciute('she swims', n3, f3), ['swims'])
   stessaLista('in quarta sì', sconosciute('she swims', n4, f4), [])
   stessaLista('in quarta -ing sì', sconosciute('he is running', n4, f4), [])
   stessaLista('in quarta il passato no', sconosciute('he went and played', n4, f4), ['went', 'played'])
-  stessaLista('in quinta sì', sconosciute('he went and played', n5, f5), [])
-  stessaLista('la base dev’essere nota: «saw» in quinta prima dei verbi che cambiano no',
-    sconosciute('he saw', paroleDelLibro('quinta', 'quinta-citta'), f5), ['saw'])
+  stessaLista('nella sesta isola sì', sconosciute('he went and played', n5, f5), [])
+  stessaLista('la base dev’essere nota: «saw» nella sesta prima dei verbi che cambiano no',
+    sconosciute('he saw', paroleDelLibro('sesta', 'quinta-ieri'), f5), ['saw'])
   stessaLista('goed non è mai giusto', sconosciute('he goed', n5, f5), ['goed'])
   stessaLista('senza flessioni come prima', sconosciute('she plays', n5), ['plays'])
   controlla('le parole delle frasi componibili non cambiano', !paroleNote('quarta').has('went'))
@@ -202,15 +202,15 @@ titolo('QUALE STORIA')
 
   // Sblocca tutti apre tutto, l'età niente
   // (tranne le puntate dopo la prima: una serie si legge in fila, sempre)
-  uguale('sblocca tutti apre le storie', storieAperte(CAPITOLI, nuovo(), { tutto: true }, 'quinta').length,
-    CAPITOLI.filter(x => x.mondo === 'quinta' && !(x.puntata > 1)).length)
+  uguale('sblocca tutti apre le storie', storieAperte(CAPITOLI, nuovo(), { tutto: true }, 'sesta').length,
+    CAPITOLI.filter(x => x.mondo === 'sesta' && !(x.puntata > 1)).length)
   uguale('a otto anni nessuna storia aperta da sé', storieAperte(CAPITOLI, nuovo(), { eta: 8 }, 'prima').length, 0)
   // dieci anni: tutte lette le sue, «Un'altra storia» cerca prima il mondo vicino
   const g = nuovo()
-  vinciMondo(g, 'quarta'); vinciMondo(g, 'quinta')
-  for (const x of CAPITOLI.filter(x => x.mondo === 'quinta')) segnaLetta(g, x.id, 5)
-  uguale('dalla quinta si passa alla quarta, non alla prima',
-    (unAltraStoria(CAPITOLI, g, { eta: 10 }, 'quinta', 'chi-ha-mangiato-la-torta') || {}).mondo, 'quarta')
+  vinciMondo(g, 'quarta'); vinciMondo(g, 'quinta'); vinciMondo(g, 'sesta')
+  for (const x of CAPITOLI.filter(x => x.mondo === 'sesta')) segnaLetta(g, x.id, 5)
+  uguale('dalla sesta si passa alla quinta, non alla prima',
+    (unAltraStoria(CAPITOLI, g, { eta: 10 }, 'sesta', 'chi-ha-mangiato-la-torta') || {}).mondo, 'quinta')
 
   // il medaglione chiuso dice quale tappa vincere
   const s = cosaServeAlLibro(CAPITOLI, 'prima')
@@ -259,11 +259,11 @@ titolo('LE PAROLE DELLA STORIA')
   controlla('una nuova che non si usa è un guasto', /non si usa mai/.test(g({ nuove: ['suddenly'], frasi: [{ en: 'Leo runs.' }] })))
   const nove = 'Leo has got a fox, a bear, a lion, a tiger, a frog, a monkey, a snake, a bee and a crab.'
   controlla(`più di ${PAROLE_DELLA_STORIA_MAX} parole della storia è un guasto`, /al massimo 8/.test(g({ frasi: [{ en: nove }] })))
-  // «said» è il passato di say: si usa in quinta, dove c'è il passato, e non in quarta; prima
+  // «said» è il passato di say: si usa nella sesta, dove c'è il passato, e non in quarta; prima
   // della tappa di «dire» con say fra le nuove, dopo da nota (e lì fra le nuove sarebbe un guasto)
-  const quinta = { ...base, mondo: 'quinta', dopo: 'quinta-andai', nuove: ['say'],
+  const quinta = { ...base, mondo: 'sesta', dopo: 'quinta-andai', nuove: ['say'],
                    frasi: [{ en: 'Leo said hello.', forma: 'passato' }] }
-  uguale('«said» in quinta prima di «Ha detto ciao», con say fra le nuove', guastiDelCapitolo(quinta).join(' · '), '')
+  uguale('«said» nella sesta prima di «Ha detto ciao», con say fra le nuove', guastiDelCapitolo(quinta).join(' · '), '')
   controlla('dopo, say fra le nuove è già nota', /già nota/.test(guastiDelCapitolo({ ...quinta, dopo: 'quinta-disse' }).join(' ')))
   controlla('in quarta il passato non c’è', /said/.test(g({ nuove: ['say'], frasi: [{ en: 'Leo said hello.' }] })))
   // le nuove stanno in un cassetto: lo SRS le ripassa lì
@@ -349,7 +349,7 @@ titolo('LE STORIE A PUNTATE')
   stessaLista('in ordine, una puntata dopo l’altra', inOrdine(CAPITOLI).filter(x => x.serie).map(x => x.puntata), [1, 2, 3])
   // si aprono in fila, anche a chi ha tutto aperto
   const c = nuovo()
-  for (const m of ['prima', 'seconda', 'terza', 'quarta', 'quinta']) vinciMondo(c, m)
+  for (const m of ['prima', 'seconda', 'terza', 'quarta', 'quinta', 'sesta']) vinciMondo(c, m)
   controlla('la prima si apre con la sua tappa', storiaAperta(c, p1, {}, CAPITOLI))
   controlla('la seconda no, finché la prima non è letta', !storiaAperta(c, p2, {}, CAPITOLI))
   controlla('nemmeno con «Sblocca tutti»', !storiaAperta(nuovo(), p2, { tutto: true }, CAPITOLI))
@@ -361,7 +361,7 @@ titolo('LE STORIE A PUNTATE')
   segnaLetta(c, p1.id, 10); segnaPuntata(c, p1)
   uguale('letta, la serie sa fin dove si è arrivati', serieDi(c)['la-vecchia-mappa'].fatte, 1)
   uguale('il cartello offre la puntata dopo', (puntataDopo(CAPITOLI, c, {}, p1) || {}).id, p2.id)
-  controlla('e «Un’altra storia» non è un’altra puntata', (unAltraStoria(CAPITOLI, c, {}, 'quinta', p1.id) || {}).serie !== 'la-vecchia-mappa')
+  controlla('e «Un’altra storia» non è un’altra puntata', (unAltraStoria(CAPITOLI, c, {}, 'sesta', p1.id) || {}).serie !== 'la-vecchia-mappa')
   // la seconda tiene il nonno e il mezzo, e tira il posto del tesoro
   for (let s = 1; s <= 12; s++) {
     const v2 = tiraLaStoria(c, p2, sorte(s))

@@ -1,4 +1,4 @@
-// In quinta, alla 🏁: un giallo in cinque pagine, al passato con i verbi
+// Nella sesta isola, alla 🏁: un giallo in cinque pagine, al passato con i verbi
 // che cambiano. Chi ha mangiato la torta non è mai scritto: lo dice chi è
 // rimasto a casa, e la cioccolata. Sei domande. Formato in
 // docs/lingue/libro.md.
@@ -11,7 +11,7 @@ const SPESA = [
 
 export default {
   id: 'chi-ha-mangiato-la-torta',
-  mondo: 'quinta',
+  mondo: 'sesta',
   titolo: 'Chi ha mangiato la torta?',
   variabili: {
     chi: { fra: ['Pip', 'Leo'] },

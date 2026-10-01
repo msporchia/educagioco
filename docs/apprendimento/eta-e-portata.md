@@ -103,7 +103,7 @@ senso, a sei «7×8» nemmeno, a otto vanno bene tutti e due.
 - **I giochi senza campagna** (la fattoria) non si giudicano: l'assenza
   vuol dire «non si giudica», non «si nasconde».
 - **L'inglese a mondi ha la portata dall'anno di scuola** (un mondo per
-  anno, dalla prima): nessuno la scrive a mano, e decide solo se la carta
+  anno, dalla prima, più uno dopo con anno 6): nessuno la scrive a mano, e decide solo se la carta
   si offre. Dentro il gioco l'età non apre mondi, si comincia dalla prima:
   il perché sta in
   [../lingue/mondi.md](../lingue/mondi.md#un-mondo-per-anno-di-scuola).

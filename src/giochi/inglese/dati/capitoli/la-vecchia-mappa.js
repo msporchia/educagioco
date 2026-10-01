@@ -1,4 +1,4 @@
-// In quinta, alla 🏁: la prima puntata di «La vecchia mappa». In garage dal
+// Nella sesta isola, alla 🏁: la prima puntata di «La vecchia mappa». In garage dal
 // nonno (o dalla nonna) Laura e Leo trovano una mappa fatta da lui a dieci
 // anni, con un tesoro sotto una stella. Il nonno, il mezzo e il posto del
 // tesoro restano quelli per tutta la serie. Tre pagine, cinque domande.
@@ -9,7 +9,7 @@ export default {
   id: 'la-vecchia-mappa',
   serie: 'la-vecchia-mappa',
   puntata: 1,
-  mondo: 'quinta',
+  mondo: 'sesta',
   titolo: 'La vecchia mappa',
   // open, river, tree e star stanno nei cassetti
   nuove: ['treasure'],

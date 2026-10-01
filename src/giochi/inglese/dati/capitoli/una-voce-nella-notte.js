@@ -1,11 +1,11 @@
-// In quinta, dopo «Ha detto ciao»: una settimana dalla nonna, e ogni notte
+// Nella sesta isola, dopo «Ha detto ciao»: una settimana dalla nonna, e ogni notte
 // una voce in cucina. Chi parla lo dice solo l'ultima pagina: il
 // pappagallo. Le battute della voce hanno per nome «Una voce», così il nome
 // non svela il giallo. Cinque pagine, sei domande. Formato in
 // docs/lingue/libro.md.
 export default {
   id: 'una-voce-nella-notte',
-  mondo: 'quinta',
+  mondo: 'sesta',
   dopo: 'quinta-disse',
   titolo: 'Una voce nella notte',
   // parrot e scared stanno nei cassetti; laugh e speak sono della tappa prima
