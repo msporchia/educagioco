@@ -139,6 +139,20 @@
                 animation: ing-riempi linear forwards }
 @keyframes ing-riempi { to { width: 100% } }
 
+/* ═══════════ la pagina di un concetto ═══════════ */
+.ing-concetto { margin: auto 0; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px;
+                background: #fffaf0; border: 2px solid var(--ing-bordo); border-radius: 18px;
+                color: var(--ing-inchiostro); line-height: 1.4 }
+.ing-concetto-sopra { font-weight: 700; color: #8a6f52; font-size: 14px }
+.ing-concetto-titolo { margin: 0; font-size: 24px; font-weight: 900 }
+.ing-concetto-spiega { margin: 0; font-size: 17px }
+.ing-concetto-esempi { display: flex; flex-direction: column; gap: 10px }
+.ing-concetto-esempio { background: #fffdf6; border-radius: 12px; padding: 9px 12px; box-shadow: 0 2px 0 var(--ing-bordo) }
+.ing-concetto-en { font-size: 21px; font-weight: 700 }
+.ing-concetto-forte { color: #b0412a; background: #fbe7c6; border-radius: 6px; padding: 0 3px; font-weight: 900 }
+.ing-concetto-it { color: #8a6f52; font-size: 15px }
+.ing-concetto .ing-grosso { margin-top: 4px }
+
 /* ═══════════ la traduzione di una parola ═══════════ */
 .ing-bolla { position: fixed; z-index: 90; transform: translate(-50%, calc(-100% - 10px));
              background: #3b2616; color: #fff8e6; padding: 7px 13px; border-radius: 12px; text-align: center;

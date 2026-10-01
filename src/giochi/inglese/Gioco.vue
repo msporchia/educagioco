@@ -33,6 +33,7 @@ import * as F from './motore/fila.js'
 
 import Mappa from './viste/Mappa.vue'
 import Domanda from './viste/Domanda.vue'
+import Pagina from './viste/Pagina.vue'
 import Libro from './viste/Libro.vue'
 import Fine from './viste/Fine.vue'
 import Bolla from './viste/Bolla.vue'
@@ -84,6 +85,7 @@ function allaMappa() {
   fine.value = null
   sessione = null
   d.value = null
+  pagina.value = null
   libro.value = null
   ridisegna.value++
   vista.value = 'mappa'
@@ -99,6 +101,7 @@ let sessione = null
 let tocchi = null
 const tappa = shallowRef(null)
 const d = shallowRef(null)
+const pagina = shallowRef(null)      // la pagina di un concetto, al posto della domanda (motore/concetti.js)
 const fila = ref([])
 const esito = ref(null)
 const pagaQui = ref(true)
@@ -114,7 +117,9 @@ function avvia(t) {
   tappa.value = t
   // chi ha tutto aperto non riparte dal «cosa vuol dire»
   const partenza = tuttoAperto() ? 2 : 0
-  sessione = new Sessione({ tappa: t, itemDi: leggi, haVoce: haVoceOra, eta: etaDelBambino(), partenza })
+  // i concetti si presentano la prima volta; rigiocando, la pagina torna solo con gli sbagli
+  const presenta = !t.cassetto && !!t.frasi && !vinta(c, t.id)
+  sessione = new Sessione({ tappa: t, itemDi: leggi, haVoce: haVoceOra, eta: etaDelBambino(), partenza, presenta })
   Object.assign(conti, { giuste: 0, errori: 0, monete: 0, chieste: 0, bersaglio: sessione.bersaglio,
                          gradoPrima: t.cassetto ? null : sessione.gradoIniziale })
   fine.value = null
@@ -128,6 +133,8 @@ const giocaCassetto = m => avvia(cassettoDi(m))
 function prossima() {
   const q = sessione && sessione.prossima()
   if (!q) return chiudiTappa()
+  if (q.genere === 'pagina') return mostraPagina(q)
+  pagina.value = null
   d.value = q
   fila.value = F.filaVuota(q)
   esito.value = null
@@ -136,6 +143,22 @@ function prossima() {
   bolla.value = null
   orologio.riparti()
   if (q.genere === 'parola' && q.domanda.ascolta) setTimeout(() => pronuncia(q.domanda.ascolta, 'en'), 260)
+}
+
+// la pagina non ha attesa: resta finché non tocca «Ho capito» (la finestra cieca sì)
+function mostraPagina(p) {
+  d.value = null
+  esito.value = null
+  tocchi = null
+  bolla.value = null
+  pagina.value = p
+  orologio.riparti()
+}
+function capito() {
+  if (!pagina.value || !orologio.pronta.value) return
+  pagina.value = null
+  if (sessione && sessione.finita) chiudiTappa()
+  else prossima()
 }
 
 const caselle = computed(() => (d.value && d.value.tessere ? F.caselle(d.value, fila.value) : null))
@@ -193,6 +216,8 @@ function rispondi(risposta, scelta) {
   const quanto = e.giusta ? 900
     : attesaDellEsito({ righe: ['Non così.', e.perche, e.siFa, giustaEra ? 'Si dice: ' + giustaEra : ''],
                         pavimento: PONDERA, penale: penale.attesa })
+  // dopo troppi sbagli sullo stesso concetto, al posto dell'attesa torna la sua pagina
+  if (e.pagina) return orologio.aspetta(1200, () => mostraPagina(e.pagina))
   orologio.aspetta(quanto, () => (sessione && sessione.finita ? chiudiTappa() : prossima()))
 }
 
@@ -434,12 +459,13 @@ onUnmounted(() => { clearTimeout(bollaTimer); zittisci() })
     <Mappa v-if="vista === 'mappa'" :stato="stato" :extra="extra" :prima="diPrima"
            @tappa="giocaTappa" @libro="apriLibro" @cassetto="giocaCassetto" @prima="vista = 'prima'" />
 
-    <div v-else-if="vista === 'tappa' && d" class="ing-palco">
+    <div v-else-if="vista === 'tappa' && (d || pagina)" class="ing-palco">
       <div class="ing-conto" data-conto>
         <span>✅ {{ Math.min(conti.giuste, conti.bersaglio) }} / {{ conti.bersaglio }}</span>
         <span class="ing-barretta"><i :style="{ width: Math.min(100, 100 * conti.giuste / conti.bersaglio) + '%' }"></i></span>
       </div>
-      <Domanda :d="d" :caselle="caselle" :banco="banco" :pronto="pronto" :esito="esito"
+      <Pagina v-if="pagina" :p="pagina" :pronta="orologio.pronta.value" @capito="capito" @tocca="tocca" />
+      <Domanda v-else :d="d" :caselle="caselle" :banco="banco" :pronto="pronto" :esito="esito"
                :attesa="attesa" :giro="giro" :parla="parla"
                @opzione="i => rispondi(d.opzioni[i], i)" @metti="metti" @togli="togli"
                @consegna="rispondi(F.risposta(fila), null)" @tocca="tocca" @ascolta="ascolta" />

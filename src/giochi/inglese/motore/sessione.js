@@ -12,6 +12,8 @@ import { mondoDellaTappa, frasiDi, garantiti, fontiDi, tappaCheInsegna } from '.
 import { ripresa } from './grado.js'
 import { costruisci, giudica, contesto, formatoPerForza } from './formati.js'
 import { chiaveDi } from './lessico.js'
+import { concettiDellaTappa, concettoDi, frasiDelConcetto, paginaDi, PER_CONCETTO, SBAGLI_PER_LA_PAGINA }
+  from './concetti.js'
 
 export const TIPI_PAROLE = ['figura', 'ascoltoFigura', 'tradIt', 'ascoltoIt', 'tradStra']
 // dalla quinta i disegnini non insegnano più niente: la parola si chiede in italiano o in inglese
@@ -31,7 +33,7 @@ const paroleDi = f => [...new Set(f.en.split(/\s+/).map(chiaveDi).filter(k => k 
 
 export class Sessione {
   constructor({ tappa, itemDi, ora = () => Date.now(), rnd = Math.random, haVoce = () => false,
-                bersaglio = null, eta = null, partenza = 0 }) {
+                bersaglio = null, eta = null, partenza = 0, presenta = false }) {
     this.tappa = tappa
     this.itemDi = itemDi
     this.ora = ora
@@ -70,12 +72,30 @@ export class Sessione {
     this.altre = m ? frasiDi(tappa) : []
     this.bersaglio = bersaglio ?? (tappa.bersaglio || Math.min(20, giro.length + 4))
     this.picker = createPicker({ getItem: itemDi, pausaDopo: 3 })
+
+    // La prima volta una tappa di frasi presenta i suoi concetti uno alla
+    // volta: la pagina, poi PER_CONCETTO giuste su quello; e la pagina torna
+    // ogni SBAGLI_PER_LA_PAGINA sbagli di grammatica sullo stesso concetto.
+    // Vedi docs/lingue/concetti.md.
+    this.daPresentare = presenta ? concettiDellaTappa(tappa) : []
+    this.passo = 0
+    this.giusteQui = 0
+    this.paginaFatta = false
+    this.chiesteQui = []
+    this.sbagliDi = new Map()
   }
 
-  get finita() { return this.giuste >= this.bersaglio }
+  get inPresentazione() { return this.passo < this.daPresentare.length }
+  get finita() { return this.giuste >= this.bersaglio && !this.inPresentazione }
 
-  // la prossima domanda, pronta da mostrare
+  // la prossima domanda (o la pagina di un concetto), pronta da mostrare
   prossima() {
+    if (this.inPresentazione) {
+      const c = this.daPresentare[this.passo]
+      if (!this.paginaFatta) { this.paginaFatta = true; return paginaDi(c.id) }
+      const d = this.domandaPer(this.dalConcetto(c.id))
+      if (d) { this.fatte++; return d }
+    }
     for (let tentativi = 0; tentativi < 12; tentativi++) {
       let chiave
       if (this.primoGiro.length) { chiave = this.primoGiro.shift(); this.picker.annota(chiave) }
@@ -87,6 +107,19 @@ export class Sessione {
       if (d) { this.fatte++; return d }
     }
     return null
+  }
+
+  // una frase del concetto: prima quelle non ancora chieste in questo giro, e quelle pronte
+  dalConcetto(id) {
+    const tutte = frasiDelConcetto(id, this.tappa.id).map(f => 'frase:' + f.id)
+    let libere = tutte.filter(k => !this.chiesteQui.includes(k))
+    if (!libere.length) { this.chiesteQui = this.chiesteQui.slice(-1); libere = tutte.filter(k => !this.chiesteQui.includes(k)) }
+    const pronte = libere.filter(k => this.pronta(k))
+    const fra = pronte.length ? pronte : libere
+    const chiave = fra[Math.floor(this.rnd() * fra.length)]
+    this.chiesteQui.push(chiave)
+    this.picker.annota(chiave)
+    return chiave
   }
 
   // una frase è pronta quando ogni sua parola è già saputa o indovinata in questa partita
@@ -150,6 +183,25 @@ export class Sessione {
     if (esito.giusta) this.giuste++
     else { this.errori++; if (d.genere === 'frase') this.sbagliate.add(d.chiave) }
     this.picker.afterAnswer(d.chiave, esito.giusta)
+    if (d.genere === 'frase') this.seguiIlConcetto(d, esito)
     return esito
+  }
+
+  // la presentazione va avanti a giuste sul concetto di turno; uno sbaglio di
+  // grammatica (pesa sulla forma) conta sul concetto della frase
+  seguiIlConcetto(d, esito) {
+    const c = concettoDi(d.frase)
+    if (!c) return
+    if (esito.giusta && this.inPresentazione && this.daPresentare[this.passo].id === c.id &&
+        ++this.giusteQui >= PER_CONCETTO) {
+      this.passo++
+      this.giusteQui = 0
+      this.paginaFatta = false
+      this.chiesteQui = []
+    }
+    if (esito.giusta || !esito.registra.some(r => r.chiave.startsWith('forma:') && !r.correct)) return
+    const n = (this.sbagliDi.get(c.id) || 0) + 1
+    this.sbagliDi.set(c.id, n)
+    if (n % SBAGLI_PER_LA_PAGINA === 0) esito.pagina = paginaDi(c.id, { ripresa: true, giustaEra: esito.giustaEra })
   }
 }

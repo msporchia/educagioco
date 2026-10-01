@@ -103,6 +103,9 @@ sempre lunghe.
 
 ## La partita
 
+- **La prima volta i concetti si presentano uno alla volta**, ognuno con
+  la sua pagina e tre giuste, e la pagina torna dopo cinque sbagli sullo
+  stesso concetto: tutto in [concetti.md](concetti.md).
 - **Una tappa di frasi non chiede mai parole.** Provato un riscaldamento
   che passava prima le parole delle frasi con forza sotto 1: non funziona,
   perché la forza cala in poche ore e il giorno dopo «Mi piace!» chiedeva

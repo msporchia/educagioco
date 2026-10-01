@@ -483,6 +483,31 @@ uguale('la puntata 2 è letta, e la serie lo sa',
 await page.locator('[data-fine] [data-azione="mappa"]').click()
 await page.waitForSelector('[data-mappa-inglese]')
 
+/* ---------- la pagina di un concetto ----------
+   La prima volta in «Che cos'è?» viene prima la pagina del primo concetto,
+   ferma finché non si tocca «Ho capito»; poi le frasi (docs/lingue/concetti.md). */
+await page.locator('button[aria-label="indietro"]').click()
+await page.waitForSelector('.carte')
+const primeTre = Object.fromEntries(['prima-colori', 'prima-animali', 'prima-giocattoli'].map((id, i) => [id, i + 1]))
+await conEta(6.5, { campagne: { inglese: { tappa: 3, libera: false, stelle: {}, cfg: {}, vinte: primeTre } } })
+await carta.click()
+await page.waitForSelector('[data-tappa="prima-che-cose"][data-stato="aperta"]')
+await page.locator('[data-tappa="prima-che-cose"]').click()
+await page.waitForSelector('[data-pagina]', { timeout: 5000 })
+uguale('la pagina è del primo concetto', await page.locator('[data-pagina]').getAttribute('data-concetto'), 'it-is:e')
+uguale('non è una ripresa', await page.locator('[data-pagina]').getAttribute('data-ripresa'), '0')
+uguale('due esempi', await page.locator('[data-pagina] [data-esempio]').count(), 2)
+controlla('quello che conta è colorato', await page.locator('[data-pagina] [data-forte]').count() > 0)
+uguale('nessuna domanda sotto', await page.locator('[data-domanda]').count(), 0)
+await attendi(page, 2000)
+uguale('e nessuna attesa: dopo due secondi è ancora lì', await page.locator('[data-pagina]').count(), 1)
+await scatto(page, 'inglese-pagina')
+await page.locator('[data-azione="capito"]').click()
+await page.waitForSelector('[data-domanda][data-genere="frase"]', { timeout: 3000 })
+uguale('«Ho capito» porta alle frasi', await page.locator('[data-pagina]').count(), 0)
+await page.locator('button[aria-label="indietro"]').click()
+await page.waitForSelector('[data-mappa-inglese]')
+
 /* ---------- 6. a dieci anni si comincia dalla prima ----------
    L'età non apre mondi; uno in cui ha già vinto una tappa resta aperto
    (chi l'aveva aperto per età lo ritrova). */
