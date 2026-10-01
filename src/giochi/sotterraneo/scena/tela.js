@@ -226,7 +226,8 @@ export class Tela {
     const ctx = this.ctx, f = this.foglio
     const k = y * forma.liv.largo + x
     const nome = forma.stanza[k] >= 0 ? sc.pavimento.stanza : sc.pavimento.corridoio
-    f.ritaglio(ctx, nome, (x & 3) * T, (y & 3) * T, T, T, x * T, y * T, { alfa })
+    const q = f.misura(nome) || { w: 4 * T, h: 4 * T }
+    f.ritaglio(ctx, nome, (x % Math.round(q.w / T)) * T, (y % Math.round(q.h / T)) * T, T, T, x * T, y * T, { alfa })
     const m = forma.medaglione.get(k)
     if (m) f.ritaglio(ctx, sc.medaglione, m[0] * T, m[1] * T, T, T, x * T, y * T, { alfa })
     const d = forma.perTerra.get(k)
@@ -257,10 +258,21 @@ export class Tela {
     if (b.n) f.pezzo(ctx, sc.bordi.n, x * T, y * T, { alfa })
     if (b.o) f.pezzo(ctx, sc.bordi.o, x * T, y * T, { alfa })
     if (b.e) f.pezzo(ctx, sc.bordi.e, x * T + T - f.misura(sc.bordi.e).w, y * T, { alfa })
+    // un bordo con la fascia scura verso l'interno la stende sulla riga chiara dell'altro: le righe si ripassano
+    const L = sc.bordi.luce
+    if (L) {
+      if (b.n) f.ritaglio(ctx, sc.bordi.n, 0, 0, T, L, x * T, y * T, { alfa })
+      if (b.o) f.ritaglio(ctx, sc.bordi.o, 0, 0, L, T, x * T, y * T, { alfa })
+      if (b.e) f.ritaglio(ctx, sc.bordi.e, f.misura(sc.bordi.e).w - L, 0, L, T, x * T + T - L, y * T, { alfa })
+    }
     const a = f.misura(sc.bordi.angolo)
-    for (const q of b.angoli)
+    // gli angoli in fondo raccordano un coronamento che sale sulla cella di sopra: con la faccia alta una cella sporgerebbero
+    const sale = (f.misura(sc.faccia) || { h: T }).h > T
+    for (const q of b.angoli) {
+      if (q[0] === 's' && !sale) continue
       f.pezzo(ctx, sc.bordi.angolo, x * T + (q[1] === 'o' ? 0 : T - a.w),
               y * T + (q[0] === 'n' ? 0 : T - a.h), { alfa })
+    }
   }
 
   // striscia di sei celle, con varianti (torcia, grata, arco); torna true se torcia, la sua luce si disegna dopo
@@ -268,11 +280,12 @@ export class Tela {
     const ctx = this.ctx, f = this.foglio
     const h = sorteDi(x, y, 2)
     const torcia = h % 9 === 0
-    let nome = sc.faccia, rx = (x % 6) * T
-    if (torcia) { nome = sc.torcia; rx = 0 }
-    else if (h % 5 === 1) { nome = sc.varianti[(h >>> 8) % sc.varianti.length]; rx = 0 }
+    let nome = sc.faccia, fila = true
+    if (torcia) { nome = sc.torcia; fila = false }
+    else if (h % 5 === 1) { nome = sc.varianti[(h >>> 8) % sc.varianti.length]; fila = false }
     const m = f.misura(nome)
     if (!m) return false
+    const rx = fila ? (x % Math.round(m.w / T)) * T : 0
     const y0 = y * T + T - m.h
     f.ritaglio(ctx, nome, rx, 0, T, m.h, x * T, y0, { alfa })
     const c = capiDellaFaccia(pietra, (a, b) => liv.a(a, b) === PORTA, x, y)
