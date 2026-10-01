@@ -335,6 +335,7 @@ Pixel art game sprite animation, two parts in one shot. First half: the red drag
 python3 strumenti/sprite/cammino.py video.mp4 drago --cerca --provino /tmp/p.png   # i giri che si chiudono
 python3 strumenti/sprite/cammino.py video.mp4 drago --lato 34:17 --fronte 120:22
 python3 strumenti/sprite/vesti.py --atlante
+npm run build && node strumenti/sprite/in-campo.mjs drago   # le GIF in tmp/in-campo/drago/
 ```
 
 Quello che segue è il piano di prima, coi fogli di immagini: resta per
