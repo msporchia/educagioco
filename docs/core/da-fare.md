@@ -59,4 +59,4 @@ nessun test prende.
 - **I 320 ms di finestra cieca** delle domande incatenate (`CIECA` in
   `quiz/Domanda.vue`): la differenza fra un tocco fantasma ingoiato e un
   tasto che sembra lento la dice solo un dito vero. Riguarda sotterraneo,
-  Dungeon, Corsa e Survivors insieme.
+  Dungeon e Survivors insieme.

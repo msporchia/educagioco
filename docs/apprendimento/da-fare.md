@@ -47,8 +47,7 @@ nel file del suo argomento.
 ## Calibrazione
 
 - **Il ritmo delle domande è stimato, non misurato.** Il tasso di una
-  domanda (🪙1 nel dungeon e nel sotterraneo, 🪙3 in Survivors e nel libro
-  della corsa) viene da quante domande una tappa chiede e da quanto dura
+  domanda (🪙1 nel dungeon e nel sotterraneo, 🪙3 in Survivors) viene da quante domande una tappa chiede e da quanto dura
   a occhio ([calibrazione.md](calibrazione.md#si-paga-subito-e-basta)). Il
   registro delle sessioni sa quanto dura davvero una partita, e l'SRS
   quanto ci mette il bambino a rispondere: messi insieme direbbero le

@@ -26,7 +26,7 @@ const VOCI = [
   /* la partita di ieri sera tardi: in UTC sarebbe già il giorno dopo,
      e contarla domani vorrebbe dire dire a un genitore che ieri il
      bambino non ha giocato */
-  { g: 'corsa', t: alle(21, 23, 40), s: 6 * 60 },
+  { g: 'conta', t: alle(21, 23, 40), s: 6 * 60 },
 ]
 
 /* ══════════ 1. il giorno è quello di casa ══════════ */
@@ -68,7 +68,7 @@ uguale('e una delle 00:20 al giorno dopo', chiaveGiorno(alle(22, 0, 20)), '2026-
 uguale('la fattoria oggi: ventidue minuti', oggiDi(VOCI, 'fattoria', OGGI), 22 * 60)
 uguale('il dungeon oggi: niente', oggiDi(VOCI, 'dungeon', OGGI), 0)
 /* ieri la fattoria l'ha giocata, ma «oggi» chiede oggi */
-uguale('e ieri non conta', oggiDi(VOCI, 'corsa', OGGI), 0)
+uguale('e ieri non conta', oggiDi(VOCI, 'conta', OGGI), 0)
 
 /* ══════════ 5. la potatura ══════════ */
 {

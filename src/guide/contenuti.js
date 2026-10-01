@@ -631,21 +631,6 @@ export const AIUTI = {
     ],
   },
 
-  corsa: {
-    emoji: '🏁', titolo: 'La corsa dei numeri',
-    blocchi: [
-      'Si corre lungo una strada e ai cancelli si sceglie da che parte passare: la scelta si fa **col conto**, al volo.',
-      { titolo: 'Consigli', righe: [
-        'Sbagliare un cancello non toglie niente: si è perso solo il tempo di provarci.',
-        'Ma il tempo conta: chi arriva agli scontri col fiato corto fa più fatica.',
-      ] },
-      { titolo: 'Cosa allena', righe: [
-        'Il calcolo **rapido**: non i conti difficili, ma quelli facili fatti senza fermarsi a pensare.',
-        'È l\'esercizio che rende automatico quello che si è già capito altrove.',
-      ] },
-    ],
-  },
-
   codice: {
     emoji: '🔐', titolo: 'Il codice segreto',
     blocchi: [

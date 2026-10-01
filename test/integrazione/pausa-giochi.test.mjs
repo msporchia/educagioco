@@ -1,9 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA PAUSA NEGLI ALTRI TRE — Survivors, il sotterraneo, il Dungeon
 
-   `integrazione/pausa` prova il pezzo comune sulla Corsa, che è il primo
-   gioco ad averlo. Qui si prova che **ci è arrivato davvero** negli
-   altri, e la ragione per cui non basta fidarsi è che ognuno dei tre lo
+   Il pezzo comune (`giochi/pausa.js`) è nato sulla Corsa, che non c'è
+   più. Qui si prova che **ci è arrivato davvero** in ognuno, e la ragione per cui non basta fidarsi è che ognuno dei tre lo
    monta su un orologio diverso: Survivors su una giostra a fotogrammi,
    il sotterraneo su un `requestAnimationFrame` suo, il Dungeon **su
    niente** — è a turni, e l'unica cosa che scorre è il respiro prima

@@ -3,8 +3,7 @@
 # ❓ Le domande di tutte le materie
 
 Alcuni giochi — [il Dungeon](../dungeon/presentazione.md),
-[Survivors](../survivors/presentazione.md), [il sotterraneo](../sotterraneo/presentazione.md)
-e il cancello d'oro della [Corsa dei numeri](../corsa/presentazione.md) — non
+[Survivors](../survivors/presentazione.md) e [il sotterraneo](../sotterraneo/presentazione.md) — non
 hanno un contenuto scolastico proprio: chiedono **una domanda** e basta. Le
 domande arrivano da un magazzino comune, e questa pagina spiega cosa c'è
 dentro.
@@ -54,9 +53,6 @@ Giochi diversissimi usano la stessa scorta in modi opposti:
 - nel **Dungeon** la durezza dipende da quanto si è scesi;
 - in **Survivors** la sceglie il bambino, perché ogni carta ha il suo prezzo
   in difficoltà;
-- nella **Corsa dei numeri** la dice la tappa, e la domanda non è mai
-  obbligatoria: paga il cancello d'oro, che si vede prima e che si può non
-  prendere.
 
 Si pesca direttamente **una classe di domande** (tipo + grado) fra quelle
 adatte, così le domande più facili e più difficili di ogni tipo si vedono

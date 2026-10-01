@@ -195,8 +195,8 @@ vale e non sa la materia. Un gioco può restringere le materie
 (`materie: ['matematica', 'spazio']`, elenco in `MATERIE` di `scelta.js`).
 Chi sa del profilo (età, saperi spenti, ripasso) è **solo `scelta.js`**.
 Fuori da Vue c'è il gemello imperativo: `await chiedi(ortografia, { grado: 3 })`
-(`grafica/scheda.js`). Oggi passano da qui Survivors, Dungeon, sotterraneo e
-corsa, e lo dichiarano con `quiz: true` nel manifesto.
+(`grafica/scheda.js`). Oggi passano da qui Survivors, Dungeon e sotterraneo,
+e lo dichiarano con `quiz: true` nel manifesto.
 
 ## Il disegno si guarda grande
 

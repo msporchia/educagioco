@@ -26,7 +26,6 @@ import { CAMPAGNA as PRIMA_DOPO } from '../giochi/prima-dopo/dati/campagna.js'
 import { CAMPAGNA as CODICE } from '../giochi/codice-segreto/dati/campagna.js'
 import { CAMPAGNA as DUNGEON } from '../giochi/dungeon/dati/campagna.js'
 import { CAMPAGNA as SURVIVORS } from '../giochi/survivors/dati/campagna.js'
-import { CAMPAGNA as CORSA } from '../giochi/corsa/dati/campagna.js'
 import { CAMPAGNA as SOTTERRANEO } from '../giochi/sotterraneo/dati/campagna.js'
 import { CAMPAGNA as PASSO_PASSO } from '../giochi/passo-passo/dati/campagna.js'
 import { CAMPAGNA as COSTRUTTORE } from '../giochi/costruttore/dati/campagna.js'
@@ -45,7 +44,6 @@ export const TAPPE_DEL_GIOCO = {
   codice: CODICE,
   dungeon: DUNGEON,
   survivors: SURVIVORS,
-  corsa: CORSA,
   sotterraneo: SOTTERRANEO,
   passo: PASSO_PASSO,
   costruttore: COSTRUTTORE,

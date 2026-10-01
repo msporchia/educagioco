@@ -137,7 +137,6 @@ PROFILO.campagne = {
   dungeon: { tappa: 7, libera: true, stelle: {}, cfg: {} },
   survivors: { tappa: 6, libera: true, stelle: {}, cfg: {} },
   codice: { tappa: 5, libera: true, stelle: {}, cfg: {} },
-  corsa: { tappa: 5, libera: false, stelle: {}, cfg: {} },
   fattoria: { tappa: 0, libera: false, stelle: {}, cfg: { stato: fattoriaGiocata() } },
   // tre tappe del primo mondo vinte: la mappa ha un sentiero battuto e la nave a metà
   inglese: { tappa: 3, libera: false, stelle: {}, cfg: {},
@@ -329,14 +328,6 @@ const RICETTE = [
      tutta addosso all'eroe, e lo scatto racconterebbe una stanza sola */
   { file: 'sotterraneo-gioco', dove: 'sotterraneo', attesa: '.sot-tappe',
     passi: [['.sot-tappa:not([disabled])', 2200]] },
-
-  { file: 'corsa-mappa', dove: 'corsa', attesa: '.co-mappa' },
-  /* La corsa si fotografa **dopo qualche secondo**: al primo istante i
-     cancelli sono ancora un puntino all'orizzonte, e lo scatto
-     racconterebbe una strada vuota invece della scelta fra tre numeri,
-     che è il gioco. */
-  { file: 'corsa-gioco', dove: 'corsa', attesa: '.co-mappa',
-    passi: [['.co-tappa.co-adesso, .co-tappa', 4200]] },
 
   /* ── i due dei piccoli ──
      Si fotografano **dentro una tappa**, non alla mappa: quello che

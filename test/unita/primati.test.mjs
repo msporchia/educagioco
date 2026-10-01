@@ -12,7 +12,7 @@
      2. un pareggio contato come record: chi rifà esattamente lo stesso
         numero non ha migliorato niente, e i coriandoli a ogni partita
         uguale non sono più una notizia
-     3. il record del mese scorso buttato via. La corsa e Survivors lo
+     3. il record del mese scorso buttato via. Il codice segreto e Survivors lo
         tenevano in `cfg.primato`: se `apriQuaderno` non leggesse più
         quel posto, gli unici a ripartire da zero sarebbero i due
         bambini che avevano giocato di più, e a schermo non si vedrebbe
@@ -251,16 +251,16 @@ uguale('una misura sconosciuta non pianta niente', inParole(7, 'boh'), '7')
   await init()
   await creaGiocatore('Prova')
 
-  const uno = segnaPrimato('corsa', 312.7, 1000)
-  controlla('la prima corsa infinita nasce un record', uno.record && uno.primo)
+  const uno = segnaPrimato('codice', 12.7, 1000)
+  controlla('la prima partita libera nasce un record', uno.record && uno.primo)
   uguale('il record finisce accanto alle stelle',
-         state.profile.campagne.corsa.primato.best, 312)
-  uguale('e si rilegge da lì', primatoDi('corsa').best, 312)
+         state.profile.campagne.codice.primato.best, 12)
+  uguale('e si rilegge da lì', primatoDi('codice').best, 12)
 
-  const due = segnaPrimato('corsa', 280, 2000)
-  controlla('una corsa più corta non è un record', !due.record)
-  uguale('e il record non si muove', primatoDi('corsa').best, 312)
-  uguale('le partite si contano', primatoDi('corsa').partite, 2)
+  const due = segnaPrimato('codice', 9, 2000)
+  controlla('una fila più corta non è un record', !due.record)
+  uguale('e il record non si muove', primatoDi('codice').best, 12)
+  uguale('le partite si contano', primatoDi('codice').partite, 2)
 
   /* il posto vecchio si abbandona alla prima scrittura: due numeri che
      dicono la stessa cosa divergono al primo giro */
@@ -274,16 +274,16 @@ uguale('una misura sconosciuta non pianta niente', inParole(7, 'boh'), '7')
   /* ── la tabella dell'albo ── */
   const righe = tabellaDeiPrimati()
   uguale('due sfide giocate, due righe', righe.length, 2)
-  const corsa = righe.find(r => r.chiave === 'corsa')
-  uguale('il record è già scritto in parole', corsa.parole, '312 m')
+  const riga = righe.find(r => r.chiave === 'codice')
+  uguale('il record è già scritto in parole', riga.parole, '12 di fila')
   uguale('e le ultime partite vanno dalla più vecchia alla più nuova',
-         corsa.ultime.map(u => u.v).join(','), '312,280')
+         riga.ultime.map(u => u.v).join(','), '12,9')
   uguale('il tempo si scrive come tempo',
          righe.find(r => r.chiave === 'survivors').parole, '2:05')
 
   /* un gioco senza fine a cui non si è mai giocato non fa riga: una
      tabella di record a zero è un elenco di cose che non hai fatto */
-  delete state.profile.campagne.corsa
+  delete state.profile.campagne.codice
   uguale('resta solo quello giocato', tabellaDeiPrimati().length, 1)
 
   /* il castello è un gioco vecchio, senza manifesto: la sua partita

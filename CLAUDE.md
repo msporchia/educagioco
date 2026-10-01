@@ -69,7 +69,7 @@ quale file.
 | `docs/generale/` | Il Generale: didattica, mappe, livelli, cosa manca (come si scrive un livello: `src/data/livelli/GUIDA.md`) |
 | `docs/costruttore/` | Il costruttore: linguaggio, progetti e attrezzi, il porto, gli algoritmi, la campagna |
 | `docs/sotterraneo/` | Il sotterraneo: regole, roba, scenari e muri, l'abisso com'è e il suo progetto |
-| `docs/dungeon/`, `docs/survivors/`, `docs/corsa/` | un gioco ciascuna, con le sue regole |
+| `docs/dungeon/`, `docs/survivors/` | un gioco ciascuna, con le sue regole |
 | `docs/codice-segreto/`, `docs/conta/`, `docs/prima-dopo/` | un gioco ciascuna; in `prima-dopo/disegni.md` la regola delle icone disegnate |
 | `docs/fattoria/` | La fattoria: regole, campi e silos, catena, macchine, chi chiede, livelli, animali, come si tocca, la pagina dell'albero, stagioni, sprite, dove sta cosa |
 | `docs/img/` | le immagini del README (le rifà `npm run scatti`) |
