@@ -208,12 +208,12 @@ export class Tela {
       if (pietra(xd, s.y - 1) && pietra(xd + 1, s.y))
         perTerra.set(s.y * L + xd, { nome: sc.ragnatele.dx, dove: 'ne' })
     }
-    // qua e là per terra: poche, mai sul medaglione, sempre le stesse
+    // qua e là per terra: poche (una cella su venticinque; una su dieci copriva le stanze), mai sul medaglione, sempre le stesse
     for (let y = 0; y < A; y++) for (let x = 0; x < L; x++) {
       const k = y * L + x
       if (liv.a(x, y) !== PAVIMENTO || perTerra.has(k) || medaglione.has(k)) continue
       const h = sorteDi(x, y, 1)
-      const i = h % 67 === 0 ? 2 : h % 29 === 0 ? 1 : h % 17 === 0 ? 0 : -1
+      const i = h % 151 === 0 ? 2 : h % 79 === 0 ? 1 : h % 47 === 0 ? 0 : -1
       const nome = i < 0 ? null : sc.perTerra[i % sc.perTerra.length]
       if (nome) perTerra.set(k, { nome, dove: 'centro', specchia: ((h >>> 9) & 1) === 1 })
     }
