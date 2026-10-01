@@ -24,7 +24,7 @@ const radice = resolve(import.meta.dirname, '../..')
 const SUBITO = [
   'src/views/MathGame.vue', 'src/views/TowerDefense.vue', 'src/views/LinguaGame.vue',
   'src/views/BancarellaGame.vue',
-  ...['dungeon', 'sotterraneo', 'survivors', 'corsa', 'conta', 'prima-dopo', 'pozioni', 'inglese']
+  ...['dungeon', 'sotterraneo', 'survivors', 'conta', 'prima-dopo', 'pozioni', 'inglese']
     .map(g => `src/giochi/${g}/Gioco.vue`),
 ]
 for (const f of SUBITO) {

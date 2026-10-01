@@ -6,7 +6,6 @@ import Dungeon from './dungeon/Gioco.vue'
 import Survivors from './survivors/Gioco.vue'
 import Conta from './conta/Gioco.vue'
 import PrimaDopo from './prima-dopo/Gioco.vue'
-import Corsa from './corsa/Gioco.vue'
 import Fattoria from './fattoria/Gioco.vue'
 import Sotterraneo from './sotterraneo/Gioco.vue'
 import Pozioni from './pozioni/Gioco.vue'
@@ -21,7 +20,6 @@ export const SCHERMATE = {
   survivors: Survivors,
   conta: Conta,
   prima: PrimaDopo,
-  corsa: Corsa,
   fattoria: Fattoria,
   sotterraneo: Sotterraneo,
   pozioni: Pozioni,

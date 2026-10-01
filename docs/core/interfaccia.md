@@ -35,7 +35,7 @@ Nei test: `button[aria-label="indietro"]` (mai il carattere),
 `src/giochi/VeloPausa.vue`. A pagina nascosta un gioco a orologio si
 congela da sé; il guasto è **la ripresa**, istantanea, in faccia a chi ha
 appena riacceso il telefono — e senza pausa l'unico modo di fermarsi era
-«indietro», che nella corsa butta la gara.
+«indietro», che butta la partita.
 
 ```js
 const { inPausa, fermo, metti, togli, aiuto } = usaPausa()
@@ -83,7 +83,7 @@ Nei test: `button[aria-label="pausa"]`, `[data-pausa]`,
 ## Un `v-if` che non si spegne mai non rimonta niente
 
 Il guasto più costoso trovato finora. `src/quiz/Domanda.vue` (una sola per
-sotterraneo, Dungeon, Corsa e Survivors) passa dalla domanda A alla B nello
+sotterraneo, Dungeon e Survivors) passa dalla domanda A alla B nello
 stesso giro di aggiornamento: Vue non smonta e **riusa l'istanza** con lo
 stato di prima. La domanda nuova nasce con un tasto già colorato e il gioco
 si ferma, senza nessun errore.

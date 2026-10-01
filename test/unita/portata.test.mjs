@@ -39,7 +39,6 @@ import { CAMPAGNA as PRIMA_DOPO } from '../../src/giochi/prima-dopo/dati/campagn
 import { CAMPAGNA as CODICE } from '../../src/giochi/codice-segreto/dati/campagna.js'
 import { CAMPAGNA as DUNGEON } from '../../src/giochi/dungeon/dati/campagna.js'
 import { CAMPAGNA as SURVIVORS } from '../../src/giochi/survivors/dati/campagna.js'
-import { CAMPAGNA as CORSA } from '../../src/giochi/corsa/dati/campagna.js'
 import { CAMPAGNA as SOTTERRANEO } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { CAMPAGNA as PASSO_PASSO } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { CAMPAGNA as COSTRUTTORE } from '../../src/giochi/costruttore/dati/campagna.js'
@@ -107,7 +106,7 @@ uguale('e un gioco tutto sopra non si offre ancora',
 const CAMPAGNE = [
   ['conta gli animali', CONTA], ['prima e dopo', PRIMA_DOPO],
   ['codice segreto', CODICE], ['dungeon', DUNGEON], ['survivors', SURVIVORS],
-  ['la corsa', CORSA], ['il sotterraneo', SOTTERRANEO],
+  ['il sotterraneo', SOTTERRANEO],
   ['passo passo', PASSO_PASSO], ['il costruttore', COSTRUTTORE],
   ['asteroidi', SCALETTA.map(v => v.T)], ['tabelline', TABELLINE], ['calcolo a mente', STAZIONI],
   ['inglese', INGLESE], ['inglese a mondi', INGLESE_MONDI], ['spagnolo', SPAGNOLO], ['castello', CASTELLO],

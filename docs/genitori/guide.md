@@ -64,7 +64,7 @@ che esistono prima che esista un bambino.
   che apre un foglio vuoto è peggio di nessun `?`. Il foglio è
   `src/guide/VeloAiuto.vue`.
 - Chi ha un orologio che gira ascolta **`@aiuto`** e si ferma (il tower
-  defense e la corsa; `usaPausa` ne dà uno già pronto).
+  defense; `usaPausa` ne dà uno già pronto).
 - **Il `?` non si apre mai da solo.** Provato il foglio al primo ingresso di
   un gioco: i bambini lo chiudono per riflesso, e si insegna proprio quello,
   che i cartelli si mandano via. O un tutorial dentro la partita, o il tasto

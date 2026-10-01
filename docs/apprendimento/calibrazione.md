@@ -9,10 +9,10 @@ perché scelti guardando il proprio gioco.
 
 | quanto | monete | perché |
 |---|---|---|
-| un asteroide abbattuto, una parola (lingue), un cancello della corsa preso giusto | 🪙1 | un colpo d'occhio |
+| un asteroide abbattuto, una parola (lingue) | 🪙1 | un colpo d'occhio |
 | una domanda del dungeon o del sotterraneo | 🪙1 | lì la domanda è la mossa: una ogni 5–15 secondi |
 | una storia di Prima e dopo rimessa in ordine | 🪙2 | |
-| una domanda vera che ferma il gioco (la carta di Survivors, il libro della corsa) | 🪙3 | leggere una consegna e scegliere fra quattro: mezzo minuto |
+| una domanda vera che ferma il gioco (la carta di Survivors) | 🪙3 | leggere una consegna e scegliere fra quattro: mezzo minuto |
 | un'operazione in colonna senza errori (castello), una dose giusta (pozioni) | 🪙3 | un conto a più passi |
 | un cliente servito (bancarella) | 🪙2–4 | secondo quanto lavoro chiede la giornata |
 | un minuto di esercizi | 🪙6 | |
@@ -51,7 +51,7 @@ stessa domanda di `src/quiz/` costa lo stesso a leggerla, ma non allo
 stesso ritmo: nel dungeon e nel sotterraneo si risponde a raffica (la
 cantina fa sessanta domande in dieci minuti, una discesa un centinaio in
 venti), e a 🪙3 renderebbero due o tre volte l'ora qui sopra. In Survivors
-e nel libro della corsa la domanda è una sosta, e ce ne sono poche.
+la domanda è una sosta, e ce ne sono poche.
 
 **Fuori dalla regola**, e va bene così: i giochi dove la cosa fatta è
 risolvere un livello (Passo passo, il costruttore, il Generale, il Codice
@@ -70,7 +70,6 @@ Il giorno del cambio (settembre 2026), per una tappa tipica giocata bene:
 | dungeon, la cantina · il covo del drago | 3–9 · 10–30 | ~50 · ~90 |
 | sotterraneo, le cantine · il fondo | 10–30 · 34–102 | ~15–20 · ~25–80 |
 | Survivors, il prato · la tana | 3–9 · 10–30 | ~15 · ~45 |
-| la corsa, il sentiero · la cima | ~11 · ~42 | ~8 · ~31 |
 | spagnolo, tappa 1 · tappa 7 (livello 5) | 10 · 25 | 12 · 24 |
 | inglese a mondi, una tappa da diciotto risposte | ~25 + 5 (🏁 +10) | ~25 |
 | pozioni, una tappa da dieci dosi | 30, un terzo rifatta | 30 |

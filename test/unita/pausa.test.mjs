@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA PAUSA — la parte che si prova senza browser
 
-   Il velo e il tasto ⏸ si guardano col dito (`integrazione/pausa`).
+   Il velo e il tasto ⏸ si guardano col dito (`integrazione/pausa-giochi`).
    Quello che si conta qui è la regola sotto, che è dove stanno i due
    guasti veri: **cosa ferma una partita** (quattro condizioni, e
    bastava che un gioco ne dimenticasse una perché il cartello di un

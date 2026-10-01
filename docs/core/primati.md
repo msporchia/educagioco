@@ -18,7 +18,7 @@ file, `test/unita/primati`); scrive nel profilo solo
 - **Un pareggio non è un record**: coriandoli a ogni partita uguale non
   sono più una notizia.
 - **Il record vecchio non si butta**: `apriQuaderno` legge ancora
-  `cfg.primato` (corsa, Survivors) e, con la funzione `vecchio` del
+  `cfg.primato` (Survivors) e, con la funzione `vecchio` del
   `senzaFine`, `best.math` (asteroidi), finché un quaderno non c'è; la
   prima scrittura lascia andare il posto vecchio. Ripartire da zero
   punirebbe chi ha giocato di più.

@@ -152,6 +152,12 @@ export const XP_AREA = {
      scende e non sale più. */
   cameretta: m => m.tot('pasti') * 3 + m.tot('camerettaAnimali') * 30
                   + m.tot('camerettaOggetti') * 12,
+  /* La corsa dei numeri è stata tolta (1 ottobre 2026) e con lei le sue
+     medaglie: l'esperienza che aveva dato resta nel livello, con la
+     formula di quando esisteva, letta dai contatori `corsa*` che nessuno
+     fa più salire. */
+  corsa: m => m.tot('corsaCancelli') + m.tot('corsaLibri') * 4
+              + m.stelleDi('corsa') * 5 + m.tappeDi('corsa') * 40,
   /* i giochi nuovi (`src/giochi/`) portano la loro formula nel manifesto:
      qui non c'è una riga per ognuno, e aggiungerne uno non si fa più qui */
   ...XP_GIOCHI,
