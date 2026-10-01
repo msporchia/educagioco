@@ -20,5 +20,9 @@ export const GLOSSARIO = {
   // le strutture di quarta e quinta (dati/forme.js), e le parole delle loro trappole
   did: 'come do, al passato', while: 'mentre', than: 'di (bigger than: più grande di)',
   more: 'più (more beautiful: più bello)', most: 'il più (the most beautiful: il più bello)',
-  next: 'prossimo (next Monday: lunedì prossimo)', of: 'di',
+  next: 'prossimo (next Monday: lunedì prossimo; next to: accanto a)', of: 'di',
+  // le feste, le date, la strada e i soldi
+  merry: 'buon (merry Christmas: buon Natale)', some: 'un po’ di, qualche', any: 'qualche, nessuno (nelle domande e con not)',
+  turn: 'girare', left: 'sinistra (turn left: gira a sinistra)', straight: 'dritto (go straight on: vai dritto)',
+  opposite: 'di fronte a', between: 'fra, tra', much: 'molto (how much: quanto)', old: 'vecchio (how old: quanti anni)',
 }

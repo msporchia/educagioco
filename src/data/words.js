@@ -57,6 +57,8 @@ export const WORDS = [
   ['eighty','ottanta','','n'],['ninety','novanta','','n'],
   ['hundred','cento','','n'],['thousand','mille','','n'],
   ['first','primo','','n'],['second','secondo','','n'],['third','terzo','','n'],
+  ['fourth','quarto','','n'],['fifth','quinto','','n'],['sixth','sesto','','n'],
+  ['seventh','settimo','','n'],['eighth','ottavo','','n'],['ninth','nono','','n'],['tenth','decimo','','n'],
   // ---- casa ----
   ['house','casa','🏠','h'],['door','porta','🚪','h'],['window','finestra','🪟','h'],
   ['bed','letto','🛏️','h'],['chair','sedia','🪑','h'],['sofa','divano','🛋️','h'],
@@ -166,6 +168,19 @@ export const WORDS = [
   ['zoo','zoo','','y'],['restaurant','ristorante','','y'],['farm','fattoria','','y'],
   ['playground','cortile','','y'],['swimming pool','piscina','','y'],['country','paese, nazione','','y'],
   ['world','mondo','','y'],
+  ['street','via','','y'],['corner','angolo','','y'],['square','piazza','','y'],
+  ['traffic lights','semaforo','🚦','y'],['bus stop','fermata','🚏','y'],
+  ['car park','parcheggio','🅿️','y'],['crossing','strisce pedonali','','y'],
+  ['roundabout','rotonda','','y'],['pavement','marciapiede','','y'],['sign','cartello','🪧','y'],
+  // ---- le feste ----
+  ['Halloween','Halloween','','e'],['pumpkin','zucca','🎃','e'],['witch','strega','🧙','e'],
+  ['ghost','fantasma','👻','e'],['Father Christmas','Babbo Natale','🎅','e'],['present','regalo','🎁','e'],
+  ['reindeer','renna','','e'],['Easter','Pasqua','','e'],['Easter egg','uovo di Pasqua','','e'],
+  ['bunny','coniglietto','🐇','e'],
+  // ---- i soldi ----
+  ['money','soldi','💰','m'],['coin','moneta','🪙','m'],['pound','sterlina','💷','m'],
+  ['penny','centesimo','','m'],['price','prezzo','🏷️','m'],['wallet','portafoglio','👛','m'],
+  ['cheap','economico','','m'],['expensive','caro','','m'],['receipt','scontrino','🧾','m'],
   // ---- come sono le cose: aggettivi ----
   ['big','grande','','j'],['small','piccolo','','j'],['tall','alto','','j'],
   ['short','basso, corto','','j'],['long','lungo','','j'],['new','nuovo','','j'],
@@ -180,7 +195,7 @@ export const WORDS = [
   ['loud','rumoroso','','j'],['soft','morbido','','j'],['hard','duro','','j'],
   ['wet','bagnato','','j'],['dry','asciutto','','j'],['scared','spaventato','😨','j','facce'],
   ['sick','malato','🤒','j','facce'],['ready','pronto','','j'],['kind','gentile','','j'],
-  ['brave','coraggioso','','j'],['sweet','dolce','','j'],['right','giusto','','j'],
+  ['brave','coraggioso','','j'],['sweet','dolce','','j'],['right','giusto, a destra','','j'],
   ['wrong','sbagliato','','j'],['same','uguale','','j'],['different','diverso','','j'],
   // ---- parole che tengono insieme le frasi ----
   ['I','io','','q'],['you','tu','','q'],['he','lui','','q'],
@@ -202,4 +217,4 @@ export const WORDS = [
 export const CATS = { a:'animali', f:'cibo', c:'colori', n:'numeri', h:'casa',
                       s:'scuola', t:'mezzi', b:'corpo', w:'natura', p:'vestiti',
                       g:'sport e giochi', k:'persone', d:'tempo e giorni',
-                      y:'luoghi', j:'com’è fatto', q:'parole di tutti i giorni' }
+                      y:'luoghi', e:'le feste', m:'i soldi', j:'com’è fatto', q:'parole di tutti i giorni' }

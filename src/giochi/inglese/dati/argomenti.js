@@ -30,7 +30,7 @@ export const ARGOMENTI = {
   calendario: { nome: 'il calendario',
     parole: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'today',
              'tomorrow', 'yesterday', 'weekend', 'spring', 'summer', 'autumn', 'winter', 'birthday',
-             'Christmas', 'holiday', 'January', 'February', 'March', 'April', 'May', 'June', 'July',
+             'holiday', 'January', 'February', 'March', 'April', 'May', 'June', 'July',
              'August', 'September', 'October', 'November', 'December'] },
   tempo: { nome: 'il tempo che fa', cat: ['w'] },
   giornata: { nome: 'la giornata',
@@ -43,6 +43,8 @@ export const ARGOMENTI = {
   mezzi: { nome: 'i mezzi', cat: ['t'] },
   luoghi: { nome: 'i luoghi', cat: ['y'], figure: false },
   azioni: { nome: 'le azioni', verbi: true },
+  feste: { nome: 'le feste', cat: ['e'], parole: ['Christmas'] },
+  soldi: { nome: 'i soldi', cat: ['m'], vicini: ['luoghi'] },
 }
 
 const CAT = new Map(WORDS.map(w => [w[0], w[3]]))
