@@ -44,7 +44,7 @@ const T = [
     portata: 40,
     apre: [],
     dritta: 'Il tempo che fa in spagnolo si FA: hace frío, hace calor, hace sol. Non «è freddo»: hace frío.' },
-  { emoji: '🚗', nome: 'In giro', cats: ['t', 'y', 'g'],
+  { emoji: '🚗', nome: 'In giro', cats: ['t', 'y', 'g', 'e', 'm'],
     portata: 44,
     apre: [],
     dritta: 'Mezzi, posti e giochi. Occhio a due parole che sembrano italiane e non lo sono: «burro» in spagnolo è l’asino, e il burro si chiama mantequilla.' },

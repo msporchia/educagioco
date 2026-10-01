@@ -43,7 +43,7 @@ export const PAROLE_ES = [
   ['rojo','rosso','🔴','c'],['azul','blu','🔵','c'],['verde','verde','🟢','c'],
   ['amarillo','giallo','🟡','c'],['naranja','arancione','🟠','c'],['morado','viola','🟣','c'],
   ['marrón','marrone','🟤','c'],['negro','nero','⚫','c'],['blanco','bianco','⚪','c'],
-  ['rosado','rosa','','c'],['gris','grigio','','c'],['dorado','oro','','c'],
+  ['rosado','rosa','','c'],['gris','grigio','','c'],['dorado','dorato','','c'],
   ['plateado','argento','','c'],['color','colore','','c'],
   // ---- numeri ----
   ['uno','uno','1️⃣','n'],['dos','due','2️⃣','n'],['tres','tre','3️⃣','n'],
@@ -54,7 +54,8 @@ export const PAROLE_ES = [
   ['catorce','quattordici','','n'],['quince','quindici','','n'],['dieciséis','sedici','','n'],
   ['diecisiete','diciassette','','n'],['dieciocho','diciotto','','n'],['diecinueve','diciannove','','n'],
   ['veinte','venti','','n'],['treinta','trenta','','n'],['cuarenta','quaranta','','n'],
-  ['cincuenta','cinquanta','','n'],['cien','cento','','n'],['mil','mille','','n'],
+  ['cincuenta','cinquanta','','n'],['sesenta','sessanta','','n'],['setenta','settanta','','n'],
+  ['ochenta','ottanta','','n'],['noventa','novanta','','n'],['cien','cento','','n'],['mil','mille','','n'],
   ['primero','primo','','n'],['segundo','secondo','','n'],['tercero','terzo','','n'],
   // ---- casa ----
   ['casa','casa','🏠','h'],['puerta','porta','🚪','h'],['ventana','finestra','🪟','h'],
@@ -133,7 +134,7 @@ export const PAROLE_ES = [
   ['bombero','pompiere','🧑‍🚒','k','mestieri'],['rey','re','🤴','k'],['reina','regina','👸','k'],
   ['piloto','pilota','🧑‍✈️','k','mestieri'],['enfermera','infermiera','','k'],['cantante','cantante','🎤','k'],
   ['amigo','amico','🤝','k'],['familia','famiglia','🏡','k'],['hombre','uomo','','k'],
-  ['mujer','donna','','k'],['chico','maschio','','k'],['chica','femmina','','k'],
+  ['mujer','donna','','k'],['chico','ragazzo','','k'],['chica','ragazza','','k'],
   ['niño','bambino','','k'],['gente','gente','','k'],['nombre','nome','','k'],
   ['tía','zia','','k'],['tío','zio','','k'],['primo','cugino','','k'],
   // ---- tempo, giorni, stagioni ----
@@ -148,6 +149,11 @@ export const PAROLE_ES = [
   ['invierno','inverno','⛄','d'],['cumpleaños','compleanno','🎂','d'],['Navidad','Natale','🎄','d'],
   ['vacaciones','vacanza','🎉','d'],['fin de semana','fine settimana','','d'],['temprano','presto','','d'],
   ['tarde','tardi','','d'],
+  // i mesi (terza elementare)
+  ['enero','gennaio','','d'],['febrero','febbraio','','d'],['marzo','marzo','','d'],
+  ['abril','aprile','','d'],['mayo','maggio','','d'],['junio','giugno','','d'],
+  ['julio','luglio','','d'],['agosto','agosto','','d'],['septiembre','settembre','','d'],
+  ['octubre','ottobre','','d'],['noviembre','novembre','','d'],['diciembre','dicembre','','d'],
   // ---- luoghi ----
   ['escuela','scuola','🏫','y'],['tienda','negozio','🏪','y'],['hospital','ospedale','🏥','y'],
   ['iglesia','chiesa','⛪','y'],['estación','stazione','🚉','y'],['museo','museo','🏛️','y'],
@@ -159,6 +165,18 @@ export const PAROLE_ES = [
   ['zoológico','zoo','','y'],['restaurante','ristorante','','y'],['granja','fattoria','','y'],
   ['patio','cortile','','y'],['piscina','piscina','','y'],['país','paese, nazione','','y'],
   ['mundo','mondo','','y'],
+  ['calle','via','','y'],['esquina','angolo','','y'],['plaza','piazza','','y'],
+  ['semáforo','semaforo','🚦','y'],['parada','fermata','🚏','y'],
+  ['estacionamiento','parcheggio','🅿️','y'],['cruce','strisce pedonali','','y'],
+  ['rotonda','rotonda','','y'],['vereda','marciapiede','','y'],['letrero','cartello','🪧','y'],
+  // ---- le feste ----
+  ['fiesta','festa','','e'],['regalo','regalo','🎁','e'],['globo','palloncino','🎈','e'],
+  ['Pascua','Pasqua','🐣','e'],['Carnaval','Carnevale','🎭','e'],['calabaza','zucca','🎃','e'],
+  ['bruja','strega','🧙','e'],['fantasma','fantasma','👻','e'],['disfraz','costume','','e'],
+  // ---- i soldi (boliviani) ----
+  ['dinero','soldi','💰','m'],['moneda','moneta','🪙','m'],['billete','banconota','💵','m'],
+  ['centavo','centesimo','','m'],['precio','prezzo','🏷️','m'],['billetera','portafoglio','👛','m'],
+  ['barato','economico','','m'],['caro','caro','💸','m'],['boliviano','boliviano (la moneta)','','m'],
   // ---- come sono le cose: aggettivi ----
   ['grande','grande','','j'],['pequeño','piccolo','','j'],['alto','alto','','j'],
   ['bajo','basso, corto','','j'],['largo','lungo','','j'],['nuevo','nuovo','','j'],
@@ -174,7 +192,7 @@ export const PAROLE_ES = [
   ['mojado','bagnato','','j'],['seco','asciutto','','j'],['asustado','spaventato','😨','j','facce'],
   ['enfermo','malato','🤒','j','facce'],['listo','pronto','','j'],['amable','gentile','','j'],
   ['valiente','coraggioso','','j'],['dulce','dolce','','j'],['correcto','giusto','','j'],
-  ['equivocado','sbagliato','','j'],['igual','uguale','','j'],['diferente','diverso','','j'],
+  ['equivocado','sbagliato','','j'],['contento','contento','','j'],['igual','uguale','','j'],['diferente','diverso','','j'],
   // ---- parole che tengono insieme le frasi ----
   ['yo','io','','q'],['tú','tu','','q'],['él','lui','','q'],
   ['ella','lei','','q'],['nosotros','noi','','q'],['ellos','loro','','q'],
@@ -197,4 +215,4 @@ export const PAROLE_ES = [
 export const CATS_ES = { a:'animali', f:'cibo', c:'colori', n:'numeri', h:'casa',
                          s:'scuola', t:'mezzi', b:'corpo', w:'natura', p:'vestiti',
                          g:'sport e giochi', k:'persone', d:'tempo e giorni',
-                         y:'luoghi', j:'com’è fatto', q:'parole di tutti i giorni' }
+                         y:'luoghi', e:'le feste', m:'i soldi', j:'com’è fatto', q:'parole di tutti i giorni' }
