@@ -1,0 +1,36 @@
+{
+ "video": "grok-video-826e2c01-ac26-496f-83db-33916d520065.mp4",
+ "passi": 6,
+ "lato": {
+  "inizio": 60,
+  "periodo": 12,
+  "fotogrammi": [
+   60,
+   62,
+   64,
+   66,
+   68,
+   70
+  ]
+ },
+ "fronte": {
+  "inizio": 102,
+  "periodo": 8,
+  "fotogrammi": [
+   102,
+   103,
+   105,
+   106,
+   107,
+   109
+  ]
+ },
+ "righe": [
+  "lato",
+  "fronte"
+ ],
+ "cella": [
+  177,
+  160
+ ]
+}
