@@ -126,6 +126,12 @@ in Node) e si prova in `unita/muri-sotterraneo`.
 - **Di emoji in scena restano solo i segni sopra le porte.** La fontana e il
   mercante vengono dallo scenario, e la fonte bevuta resta al suo posto,
   asciutta.
+- **L'arredo cambia pelle e frase con lo scenario**: il piano decide *cosa*
+  (`barile`, `ossa`, `braciere`... in `ARREDI`, `dati/mondo.js`) e dove sta e
+  chi fa luce; `arredo` nella voce di `SCENARI` dice con quale sprite si
+  disegna e `dice` cosa risponde a chi lo tocca. Vuoti, vale quello di tutti
+  (cantine, cripta). La fornace: botte, carbone, incudine, gargoyle,
+  calderone, rastrelliera, banco.
 - **L'arredo** (barili, casse, ossa, uno stendardo, un braciere che fa luce)
   non si tocca, non blocca e non vale niente: serve a far sembrare che qui
   sotto ci abbia vissuto qualcuno. Un sotterraneo di stanze vuote si legge

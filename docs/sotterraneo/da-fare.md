@@ -38,14 +38,12 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 - **La fornace: cosa manca.** La fontanella asciutta (le due fontane sono lo
   stesso ottagono, quindi bevendo non cambia: prompt pronto nella chat, va
   allegata la scena e chiesta «IDENTICA a quella piena, ma asciutta»); le
-  fuliggini; l'arredo di `sotterraneo_5_3.png` (calderone, incudine, banco,
-  panca, gargoyle, carbone, botte, rastrelliera) è nel repo ma non montato,
-  perché l'arredo non è per scenario. Quale discesa la indossa: nessuna.
-- **L'arredo per scenario**: botti, casse e stendardi rossi sono di tutto il
-  sotterraneo e nella cripta sembrano portati dalle cantine. La scena della
-  cripta ha sarcofagi, statue, candelabri e colonne spezzate, ma con dietro
-  il pavimento: vanno chiesti su fondo magenta, e l'arredo diventa una voce
-  dello scenario.
+  fuliggini. Quale discesa la indossa: nessuna.
+- **L'arredo della cripta**: la fornace ha il suo (`arredo` e `dice` nella voce
+  di `SCENARI`), le cantine e la cripta no, e botti, casse e stendardi rossi
+  nella cripta sembrano portati dalle cantine. La scena della cripta ha
+  sarcofagi, statue, candelabri e colonne spezzate ma col pavimento dietro:
+  vanno chiesti su fondo magenta e mappati con `arredo`.
 - **La fontana della cripta** è ancora quella di `sotterraneo_3.png`, piena e
   asciutta: quella del foglio dei pezzi è a muro, e bevendo cambierebbe forma.
 - **Un mostro di quinta fascia per ogni posto**: oggi il golem sta in tutti
