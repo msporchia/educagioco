@@ -35,6 +35,12 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   Poi i foglietti, una voce in `SCENARI`, un branco in `BRANCHI` e un tratto
   in `TRATTI_DELL_ABISSO` (vedi [scenari.md](scenari.md) e
   [abisso.md](abisso.md#il-posto-cambia-scendendo)).
+- **La fornace: cosa manca.** La fontanella asciutta (le due fontane sono lo
+  stesso ottagono, quindi bevendo non cambia: prompt pronto nella chat, va
+  allegata la scena e chiesta «IDENTICA a quella piena, ma asciutta»); le
+  fuliggini; l'arredo di `sotterraneo_5_3.png` (calderone, incudine, banco,
+  panca, gargoyle, carbone, botte, rastrelliera) è nel repo ma non montato,
+  perché l'arredo non è per scenario. Quale discesa la indossa: nessuna.
 - **L'arredo per scenario**: botti, casse e stendardi rossi sono di tutto il
   sotterraneo e nella cripta sembrano portati dalle cantine. La scena della
   cripta ha sarcofagi, statue, candelabri e colonne spezzate, ma con dietro

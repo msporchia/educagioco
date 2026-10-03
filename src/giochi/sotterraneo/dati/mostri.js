@@ -139,6 +139,7 @@ export const NEL_BRANCO = [...new Set(BRANCO.flat())]
 export const BRANCHI = {
   cantine: [['ratto'], ['goblin', 'melma'], ['fungo', 'vespa'], ['granchio', 'serpente'], ['golem']],
   cripta: [['pipistrello'], ['fantasma'], ['scheletro'], ['orco', 'lupo'], ['golem']],
+  fornace: [['pipistrello'], ['goblin', 'melma'], ['scheletro', 'vespa'], ['orco', 'serpente'], ['golem']],
 }
 
 // lo stesso conto di Corsa.colpiPer, qui perché possa provarlo anche chi guarda solo i dati

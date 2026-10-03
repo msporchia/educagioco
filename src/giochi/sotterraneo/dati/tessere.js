@@ -62,6 +62,31 @@ export const SCENARI = {
     perTerra: ['cripta-foglie', 'cripta-schegge', 'cripta-lastra'],
     ragnatele: { sx: 'cripta-ragnatela-sx', dx: 'cripta-ragnatela-dx' },
   },
+  // la fornace (sotterraneo_5*.png): ritagliata da una scena, più un foglio coi pezzi che la scena non ha
+  fornace: {
+    pavimento: { stanza: 'fornace-pav-stanze', corridoio: 'fornace-pav-corridoi' },
+    medaglione: 'fornace-medaglione',
+    tetto: 'fornace-tetto',
+    colori: { roccia: '#1b1312' },
+    faccia: 'fornace-faccia-fila',
+    torcia: 'fornace-faccia-torcia',
+    varianti: ['fornace-faccia-grata', 'fornace-faccia-liscia', 'fornace-faccia-toppa'],
+    capi: { sx: 'fornace-capo-sx', dx: 'fornace-capo-dx' },
+    bordi: { n: 'fornace-bordo-n', o: 'fornace-bordo-o', e: 'fornace-bordo-e', angolo: 'fornace-bordo-angolo' },
+    porte: {
+      davanti: { guardia: 'fornace-porta-corna', tesoro: 'fornace-porta-oro',
+                 mercante: 'fornace-porta-chiara', fonte: 'fornace-porta-ferro',
+                 vuoto: 'fornace-porta-semplice', aperta: 'fornace-porta-aperta' },
+      fianco: { guardia: 'fornace-fianco-corna', tesoro: 'fornace-fianco-oro',
+                mercante: 'fornace-fianco-chiara', fonte: 'fornace-fianco-ferro',
+                vuoto: 'fornace-fianco-semplice', aperta: 'fornace-fianco-aperta' },
+    },
+    scala: { aperta: 'fornace-scala-aperta', chiusa: 'fornace-scala-chiusa' },
+    fontana: { piena: 'fornace-fontana-piena', asciutta: 'fornace-fontana-asciutta' },   // lo stesso ottagono: vedi sotterraneo_5_2.json
+    mercante: ['fornace-mercante-0', 'fornace-mercante-1'],
+    perTerra: ['fornace-cenere', 'fornace-sassi', 'fornace-scoria'],
+    ragnatele: { sx: 'fornace-ragnatela-sx', dx: 'fornace-ragnatela-dx' },
+  },
 }
 
 export const SCENARIO = 'cantine'   // di chi non dichiara il suo: una tappa con `scenario:`, l'abisso dal tratto

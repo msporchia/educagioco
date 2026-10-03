@@ -93,6 +93,7 @@ export const L_ABISSO = {
 export const TRATTI_DELL_ABISSO = [
   { scenario: 'cantine', nome: 'le cantine' },
   { scenario: 'cripta', nome: 'la cripta' },
+  { scenario: 'fornace', nome: 'la fornace' },
 ]
 export const PIANI_PER_TRATTO = 5
 

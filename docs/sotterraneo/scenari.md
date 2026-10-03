@@ -15,9 +15,9 @@ Il sotterraneo è **il calco da guardare** per un mondo a sprite:
   bordi, porte, scala, fontana, mercante e le cose per terra stanno in una
   voce di `SCENARI` (`dati/tessere.js`), e **tutte le voci hanno le stesse
   chiavi**: si cambia vestito a una discesa senza toccare la tela. Aggiungere
-  un pezzo è una riga lì, mai un `if` nel disegno. Oggi ce ne sono due: **le cantine**
-  (`sotterraneo_2.png`), che indossano le sei discese, e **la cripta**
-  (`sotterraneo_4.png` e i due fogli `_2`, `_3`); l'abisso li alterna scendendo
+  un pezzo è una riga lì, mai un `if` nel disegno. Oggi ce ne sono tre: **le cantine**
+  (`sotterraneo_2.png`), che indossano le sei discese, **la cripta**
+  (`sotterraneo_4.png` e i due fogli `_2`, `_3`) e **la fornace** (`sotterraneo_5.png` e il foglio `_2`); l'abisso li alterna scendendo
   ([abisso.md](abisso.md#il-posto-cambia-scendendo)). Una tappa può
   dichiarare il suo con `scenario:`.
 - **Uno scenario nasce da un prompt** diviso in due:
@@ -44,6 +44,11 @@ Il sotterraneo è **il calco da guardare** per un mondo a sprite:
   scena per pixel di gioco), partendo dalla riga dove il coronamento
   ricalca il bordo: a 3,5 il coronamento usciva una riga più in basso e la
   giunzione col muro spesso si vedeva.
+- **La scena può avere la griglia deformata** (la fornace: cella di 64 px
+  nella stanza in alto, 69 in quella in basso, facce più alte): allora ogni
+  pezzo si ritaglia dalla zona che ha la scala giusta, e il pavimento da una
+  toppa senza carbone né porte, o ripetuto mostra i mucchi come una carta da
+  parati.
 - **Quello che non c'è nella tavola non si disegna**: `guastiDelleTessere`
   chiede all'atlante ogni nome di ogni scenario, e un pezzo mancante è rosso
   nei test invece che un muro invisibile.
