@@ -135,6 +135,8 @@ def main():
     ap.add_argument('--provino')
     ap.add_argument('--lato', help='inizio:periodo in fotogrammi')
     ap.add_argument('--fronte', help='inizio:periodo in fotogrammi')
+    ap.add_argument('--misura', choices=['alto', 'area'], default='alto',
+                    help="area per chi si schiaccia e salta (la melma): vedi vesti.py")
     a = ap.parse_args()
     with tempfile.TemporaryDirectory() as tmp:
         quadri = fotogrammi(a.video, tmp)
@@ -164,6 +166,8 @@ def main():
     CAMMINO.mkdir(parents=True, exist_ok=True)
     png = CAMMINO / f'{a.creatura}.png'
     foglio.save(png, optimize=True)
+    if a.misura != 'alto':
+        fonte['misura'] = a.misura
     fonte['righe'] = [v for v, _ in righe]
     fonte['cella'] = [cw, ch]
     png.with_suffix('.json').write_text(json.dumps(fonte, ensure_ascii=False, indent=1) + '\n')

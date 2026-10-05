@@ -1262,6 +1262,12 @@ def contornata(im, spessore=2):
     return t
 
 
+def pieni(quadri):
+    """Quanti pixel pieni in media in un fotogramma."""
+    return sum(q.getchannel('A').point(lambda v: 255 if v >= 128 else 0).histogram()[255]
+               for q in quadri) / len(quadri)
+
+
 def cammino_dai_video(respiro):
     """I passi di chi ha il suo video: `mostro:<creatura>:lato:<i>` e
     `…:fronte:<i>`, alla misura del suo respiro."""
@@ -1283,6 +1289,10 @@ def cammino_dai_video(respiro):
             righe_[verso] = [q.crop(box) for q in quadri]
         base = righe_.get('lato') or righe_['fronte']
         k = alto / base[0].height
+        if fg.get('misura') == 'area':
+            # chi salta e si schiaccia ha il riquadro alto quanto il salto:
+            # a misurarlo così la melma a terra veniva metà di prima
+            k = (pieni(respiro[creatura]) / pieni(base)) ** 0.5
         for verso, quadri in righe_.items():
             for i, q in enumerate(quadri):
                 q = q.convert('RGBa').resize((max(1, round(q.width * k)), max(1, round(q.height * k))),
