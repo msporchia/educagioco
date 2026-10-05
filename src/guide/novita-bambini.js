@@ -43,6 +43,8 @@ export const NOVITA = [
     testo: '🐷 Mezzo vuoto dà metà monete, vuoto non ne dà: domani torna pieno' },
   { id: 21, quando: '2026-09-29', gioco: null,
     testo: '🐷 Ogni gioco ha un salvadanaio che si svuota se ci giochi a lungo' },
+  { id: 22, quando: '2026-10-05', gioco: 'sotterraneo',
+    testo: '🔥 Nell\'abisso, scendendo, arriva un posto nuovo: la fornace dei diavoletti' },
 ]
 
 export const PER_GIOCO = 4
