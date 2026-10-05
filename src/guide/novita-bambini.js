@@ -45,6 +45,8 @@ export const NOVITA = [
     testo: '🐷 Ogni gioco ha un salvadanaio che si svuota se ci giochi a lungo' },
   { id: 22, quando: '2026-10-05', gioco: 'sotterraneo',
     testo: '🔥 Nell\'abisso, scendendo, arriva un posto nuovo: la fornace dei diavoletti' },
+  { id: 23, quando: '2026-10-05', gioco: 'sotterraneo',
+    testo: '🕯️ Nel sotterraneo le discese hanno posti diversi: cantine, cripta e fornace' },
 ]
 
 export const PER_GIOCO = 4
