@@ -51,8 +51,6 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 - **I guardiani dell'abisso per posto**: la scaletta è misurata e non guarda
   il tratto, quindi lo scheletro fa la guardia alle cantine. Da rifare sul
   banco insieme al bottino graduato.
-- **Quale discesa indossa la cripta**: oggi nessuna (è una riga, `scenario:`
-  nella tappa).
 - **Il suono**: c'è il minimo (passo, colpo, errore, il graffio). Col suono
   spento il gioco deve restare intero.
 
