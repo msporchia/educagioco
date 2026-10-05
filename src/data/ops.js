@@ -351,13 +351,13 @@ export const TORRI = {
          stadi: ['❄️', '🧊', '⛄'], gela: true,
          /* quanto frena e per quanto lo dice `geloDi()` in data/castello.js,
             perché dipende dal livello: qui resterebbe un numero morto */
-         raggio: 92,  danno: 0,  ricarica: 0.5,  area: 0,
+         raggio: 92,  danno: 0,  ricarica: 1.6,  area: 0,
          descr: 'non fa danno: congela i nemici vicini',
          rami: {
            bufera: { nome: 'Bufera', segno: '🌬', colore: '#7fc6ff',
-                     descr: 'gela molto più largo, ma frena di meno' },
+                     descr: 'gela più largo e più a lungo: un tratto intero di strada rallenta' },
            brina:  { nome: 'Brina',  segno: '💎', colore: '#2b7fd4',
-                     descr: 'frena di più, e chi è gelato prende più danno' },
+                     descr: 'raggio stretto, ma frena al massimo e chi è gelato prende il 15% di danno in più da tutte le torri' },
          } },
   div: { nome: 'Bombe',    aspetto: 'bombe',   emoji: '💣', segno: ':', colore: '#ff7a3d',
          stadi: ['💣', '🧨', '🚀'],

@@ -9,7 +9,7 @@ stanno in `src/data/castello.js` (`CARATTERE`, `CRESCITA`, `RAMI`) e in
 |---|---|---|---|---|---|---|---|
 | `add` | 🏹 arciere | addizione | 0,6 | 1 | 24 ⚡ | 92 | — |
 | `sub` | 🔮 magica | sottrazione | 1 | 1,1 | 40 ⚡ | 104 | 42 |
-| `mul` | ❄️ ghiaccio | moltiplicazione | 0,5 | 1 | 20 ⚡ | 92 | — |
+| `mul` | ❄️ ghiaccio | moltiplicazione | 1,6 | 1 | 20 ⚡ | 92 | — |
 | `div` | 💣 bombe | divisione | 1,4 | 1,2 | 56 ⚡ | 104 | 38 |
 
 Gittata e scoppio sono in unità del mondo: una cella della carta è larga
@@ -125,7 +125,7 @@ cresciuta.
   |---|---|---|
   | 🏹 | cecchino / raffica | pochi colpi forti e vede il 30% più lontano / due frecce su due nemici |
   | 🔮 | veleno / catena | colpo più debole e il male che continua / rimbalza sui vicini (metà, poi un quarto) |
-  | ❄️ | bufera / brina | gela larghissimo / frena di più e rende fragile chi è gelato |
+  | ❄️ | bufera / brina | gela più largo e più a lungo (raggio ×1,2, durata ×1,4) / raggio stretto (×0,75) ma frena al massimo e rende fragile chi è gelato (+15% di danno da tutte le torri) |
   | 💣 | mortaio / napalm | la gittata più lunga, e pesa / scoppia più largo e lascia bruciare |
 
 - **Il veleno si scrive in tutto, non al secondo** (`veleno` è il totale

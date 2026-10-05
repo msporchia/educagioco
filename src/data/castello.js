@@ -69,9 +69,9 @@ export const RAMI = {
   cecchino: { danno: 1.8,  ricarica: 1.7, raggio: 1.3 },
   raffica:  { danno: 0.55, ricarica: 1.1, salve: 2 },
   veleno:   { danno: 0.5,  veleno: 0.66,  durata: 3 },
-  catena:   { danno: 0.95, rimbalzi: 2 },
-  bufera:   { freno: 0.95, raggio: 1.3,   durata: 1.2 },
-  brina:    { freno: 1.1,  fragile: 1.03, raggio: 0.9 },
+  catena:   { danno: 0.98, rimbalzi: 2 },
+  bufera:   { raggio: 1.2, durata: 1.4 },
+  brina:    { freno: 1.1, fragile: 1.15, raggio: 0.75 },
   mortaio:  { danno: 1.16, ricarica: 1.12, raggio: 1.25, area: 0.85 },
   napalm:   { danno: 0.55, veleno: 0.64,  durata: 3, area: 1.15 },
 }

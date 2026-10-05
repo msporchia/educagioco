@@ -43,20 +43,20 @@ for (const [k, T] of Object.entries(TORRI)) {
 controlla('la catena da sola fa meno del tronco',
           tiroDi('sub', 5, 'catena').danno < tiroDi('sub', 5).danno)
 
-/* ══════════ 2. il gelo: largo o cattivo, mai tutti e due ══════════
-   La bufera arriva più lontano e gela più a lungo, ma non frena di più;
-   la brina frena di più e rende fragili, ma arriva meno lontano. Prima
-   la bufera frenava anche meno del ghiaccio semplice, e misurata col
-   motore valeva meno di lui: un ramo che toglie è un tranello. */
+/* ══════════ 2. il gelo: largo o fragile, e tutti e due meglio del tronco ══════════
+   La bufera arriva più lontano e gela più a lungo, senza frenare meno; la
+   brina frena al massimo e rende fragili, ma arriva meno lontano. Misurati
+   col motore valgono entrambi più del ghiaccio semplice (`npm run dps`):
+   un ramo che vale meno del tronco è un tranello. */
 const bufera = geloDi(6, 'bufera'), brina = geloDi(6, 'brina'), liscio = geloDi(6)
-controlla('la bufera non frena più del ghiaccio semplice', bufera.freno <= liscio.freno)
-controlla('ma gela più a lungo', bufera.durata > liscio.durata)
-controlla('e arriva più lontano', raggioDi('bufera') > 1 && raggioDi('brina') < raggioDi('bufera'))
-controlla('la brina frena più del ghiaccio semplice', brina.freno > liscio.freno)
-uguale('e solo la brina rende fragili', bufera.fragile, 1)
-controlla('la brina sì', brina.fragile > 1)
-nota(`gelo al livello 6: liscio ${liscio.freno.toFixed(2)} · ` +
-     `bufera ${bufera.freno.toFixed(2)} · brina ${brina.freno.toFixed(2)} ×${brina.fragile}`)
+controlla('la bufera non frena meno del ghiaccio semplice', bufera.freno >= liscio.freno)
+controlla('ma gela molto più a lungo', bufera.durata > liscio.durata * 1.3)
+controlla('e arriva più lontano', raggioDi('bufera') >= 1.2)
+controlla('la brina frena almeno quanto il ghiaccio semplice', brina.freno >= liscio.freno)
+controlla('ma la brina arriva meno lontano: è stretta e cattiva', raggioDi('brina') < 1)
+uguale('solo la brina rende fragili', bufera.fragile, 1)
+controlla('la brina sì, e in modo che si sente', brina.fragile >= 1.1)
+nota(`bufera ${bufera.freno.toFixed(2)} · brina ${brina.freno.toFixed(2)} ×${brina.fragile}`)
 
 /* ══════════ 3. il veleno fa male da solo ══════════ */
 {
