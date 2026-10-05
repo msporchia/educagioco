@@ -1,5 +1,5 @@
 {
-  "__": "Il foglietto di sotterraneo_5_2.png: i pezzi che mancano alla scena della fornace (ChatGPT, 2 ottobre 2026, nella chat della scena, su fondo magenta). Le porte sono a 8 px per pixel di gioco, il doppio della scena. Si prendono porte, scala chiusa, mercante, medaglione, cenere, sassi, scoria e le due ragnatele. Fuori la fuliggine viola (ha l'alone magenta dentro). Le due fontane sono lo stesso ottagono di ferro: il prompt chiedeva la coppa della scena asciutta, e quella non è arrivata. Bevendo, la fonte non cambia forma: da rifare (vedi docs/sotterraneo/da-fare.md).",
+  "__": "Il foglietto di sotterraneo_5_2.png: i pezzi che mancano alla scena della fornace (ChatGPT, 2 ottobre 2026, nella chat della scena, su fondo magenta). Le porte sono a 8 px per pixel di gioco, il doppio della scena. Si prendono porte, scala chiusa, mercante, medaglione, cenere, sassi, scoria e le due ragnatele. Fuori la fuliggine viola (ha l'alone magenta dentro). L'ottagono di ferro che il foglio porta come fontana è stato sostituito da sotterraneo_5_4.png e _5_5.png (la stessa fontana asciutta e piena).",
   "prompt": {
     "scheda": "PROMPT-scenario.md",
     "base": "sotterraneo_4.png",
@@ -20,8 +20,7 @@
   "famiglie": {
     "fornace-medaglione": "fondo",
     "fornace-porta": "figura",
-    "fornace-mercante": "figura",
-    "fornace-fontana": "figura"
+    "fornace-mercante": "figura"
   },
   "trasforma": {
     "fornace-porta": {
@@ -36,9 +35,6 @@
       "specchia": false
     },
     "fornace-mercante": {
-      "giri": 1
-    },
-    "fornace-fontana": {
       "giri": 1
     }
   },
@@ -223,34 +219,6 @@
       "misura": [
         16,
         17
-      ]
-    },
-    "fornace-fontana-piena": {
-      "da": [
-        280,
-        684
-      ],
-      "cella": [
-        144,
-        224
-      ],
-      "misura": [
-        14,
-        22
-      ]
-    },
-    "fornace-fontana-asciutta": {
-      "da": [
-        280,
-        684
-      ],
-      "cella": [
-        144,
-        224
-      ],
-      "misura": [
-        14,
-        22
       ]
     },
     "fornace-mercante-0": {

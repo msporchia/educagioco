@@ -84,7 +84,7 @@ export const SCENARI = {
                 vuoto: 'fornace-fianco-semplice', aperta: 'fornace-fianco-aperta' },
     },
     scala: { aperta: 'fornace-scala-aperta', chiusa: 'fornace-scala-chiusa' },
-    fontana: { piena: 'fornace-fontana-piena', asciutta: 'fornace-fontana-asciutta' },   // lo stesso ottagono: vedi sotterraneo_5_2.json
+    fontana: { piena: 'fornace-fontana-piena', asciutta: 'fornace-fontana-asciutta' },
     mercante: ['fornace-mercante-0', 'fornace-mercante-1'],
     perTerra: ['fornace-cenere', 'fornace-sassi', 'fornace-scoria'],
     ragnatele: { sx: 'fornace-ragnatela-sx', dx: 'fornace-ragnatela-dx' },

@@ -35,10 +35,7 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   Poi i foglietti, una voce in `SCENARI`, un branco in `BRANCHI` e un tratto
   in `TRATTI_DELL_ABISSO` (vedi [scenari.md](scenari.md) e
   [abisso.md](abisso.md#il-posto-cambia-scendendo)).
-- **La fornace: cosa manca.** La fontanella asciutta (le due fontane sono lo
-  stesso ottagono, quindi bevendo non cambia: prompt pronto nella chat, va
-  allegata la scena e chiesta «IDENTICA a quella piena, ma asciutta»); le
-  fuliggini. Quale discesa la indossa: nessuna.
+- **La fornace: quale discesa la indossa.** Oggi nessuna (è una riga, `scenario:` nella tappa). Le fuliggini non sono state usate.
 - **L'arredo della cripta**: la fornace ha il suo (`arredo` e `dice` nella voce
   di `SCENARI`), le cantine e la cripta no, e botti, casse e stendardi rossi
   nella cripta sembrano portati dalle cantine. La scena della cripta ha

@@ -513,8 +513,11 @@ l'arredo (`_3`, col prompt vecchio).
   non servono.
 - **`_2`**: magenta pulito, sei porte diverse con la sesta davvero aperta, di
   fianco, scala chiusa, mercante, medaglione con cornice. Fuori la fuliggine
-  viola (alone magenta dentro). **La fontanella asciutta è un'altra forma**
-  (ottagono di ferro): usata per entrambe, da rifare.
+  viola (alone magenta dentro) e la fontanella (un ottagono, altra forma).
 - **`_3`**: nove pezzi d'arredo puliti, non montati.
 - Il pavimento delle stanze è una toppa di 186×140 scelta cercando la zona
   senza carbone: con 232×174 i mucchi si ripetevano ogni 4 celle.
+- **`_4` e `_5`, la fontanella**: l'asciutta chiesta da sola (un pezzo su
+  magenta), poi la piena allegando l'asciutta — «la STESSA fontanella,
+  identica per forma e misura, ma piena»: è tornata identica pietra per
+  pietra. Chiedere le due insieme sarebbe stato meglio ancora (un solo prompt).
