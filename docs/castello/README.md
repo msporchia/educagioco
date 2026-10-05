@@ -8,6 +8,7 @@ pagina per chi arriva da fuori e i documenti per chi ci lavora.
 - [piazzole.md](piazzole.md) — quante piazzole, dove le mette la carta, in che ordine le occupa il modello
 - [torri.md](torri.md) — comprare toccando il campo, il listino, i due rami, il blocchetto dei potenziamenti
 - [resa-delle-torri.md](resa-delle-torri.md) — quanto rende ogni torre, ramo e livello misurato con `npm run dps`, e cosa si è toccato per metterle nel listino
+- [effetti.md](effetti.md) — il disegno di ogni colpo e di ogni ramo, in volo e all'impatto: dove stanno e come si aggiungono
 - [operazioni.md](operazioni.md) — la scaletta dei dieci gradini, come si scrive un conto, i ripieghi quando un'operazione è spenta
 - [mostri.md](mostri.md) — immuni e comuni, le regole di una fila, le ondate miste, abilità, capo e ritmo delle ondate
 - [campagne.md](campagne.md) — le venti tappe, perché i percorsi sono quelli, le tappe a più bocche, i terreni, i salvataggi

@@ -6,6 +6,7 @@ import { ABILITA } from '../../data/mostri.js'
 
 const FRENO_BASE = 0.45   // di quanto rallenta un gelo che non dice quanto frena
 export const RESPINTO = 0.7   // quanto resta in aria il segno «immune» sopra la testa
+export const LAMPO = 0.14     // quanto resta bianco chi ha appena preso un colpo
 
 export class Nemico {
   constructor({ d = 0, vita, vel, bestia, vola = false, immune = [], abilita = null,
@@ -25,6 +26,8 @@ export class Nemico {
     this.male = 0; this.perQuanto = 0   // il veleno: quanto al secondo, e per quanto
     this.aTerra = 0; this.risorto = false
     this.respinto = 0                // da quanto una torre gli è rimbalzata addosso
+    this.lampo = 0                   // da quanto ha preso un colpo: lo vede chi disegna
+    this.malTipo = null              // chi gli ha dato il male: il veleno è verde, il napalm brucia
     this.arrivato = false
   }
 
@@ -34,6 +37,7 @@ export class Nemico {
   // cuore). Passa anche il tempo del gelo, del veleno e di chi è a terra.
   cammina(dt, lunghezza) {
     this.respinto = Math.max(0, this.respinto - dt)
+    this.lampo = Math.max(0, this.lampo - dt)
     if (this.aTerra > 0) {
       // a terra non si cammina e non si soffre: rialzarsi è tornare in
       // piedi con metà della vita, sgelato e pulito
@@ -73,6 +77,7 @@ export class Nemico {
     if (!quanto || !durata || (tipo && this.immuneA(tipo)) || this.aTerra > 0) return
     this.male = Math.max(this.male, quanto)
     this.perQuanto = Math.max(this.perQuanto, durata)
+    this.malTipo = tipo
   }
 
   // torna true solo se l'ha finito davvero, non se è solo caduto per rialzarsi
@@ -81,6 +86,7 @@ export class Nemico {
     if (!this.bersaglio) return false
     if (this.immuneA(tipo)) { this.respingi(); return false }
     this.vita -= danno * (this.fragile || 1)
+    this.lampo = LAMPO
     return this.vita <= 0 ? this.cade() : false
   }
 

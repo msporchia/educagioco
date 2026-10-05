@@ -7,6 +7,7 @@ import { colpo, schizzo } from './colpi.js'
 import { piazzolaViva, raggio, ingresso } from './indizi.js'
 
 export { targhe, segnoImmune, corona } from './segni.js'
+export { statiMostro } from './stati.js'
 export { TINTA } from './tinte.js'
 
 export const PITTORI = { colpo, schizzo, piazzola: piazzolaViva, raggio, ingresso }

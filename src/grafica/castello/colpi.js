@@ -1,54 +1,54 @@
-// Colpi ed esplosioni: scia lunga e corpo grosso, perché su un telefono un
-// pallino di cinque pixel non si vede.
+// Colpi ed esplosioni. Il volo e quello che resta dopo l'impatto stanno in
+// effetti-volo.js e effetti-impatto.js, uno per ogni tiro e ogni ramo
+// (docs/castello/effetti.md); qui si sceglie quale, e si tengono i due
+// effetto semplice che non è di nessuna torre (lo sbuffo di chi si divide).
 import { TORRI } from '../../data/ops.js'
+import { chiaveEffetto, VEL_EFFETTI } from '../../motore/castello/schizzo.js'
 import { TINTA } from './tinte.js'
+import { clamp, locale } from './effetti-base.js'
+import { VOLI } from './effetti-volo.js'
+import { IMPATTI } from './effetti-impatto.js'
+
+// la tinta è quella del ramo, se c'è: è lì che si riconosce chi ha sparato
+const tintaDi = (tipo, ramo) => (ramo && TORRI[tipo].rami?.[ramo]?.colore) || TINTA[tipo].chiaro
+// quanto sale l'arco, in parti della distanza (zero: dritto)
+const ALTO = { div: 0.3, mortaio: 0.55, napalm: 0.38 }
+// la scala di frecce, sfere e scintille
+const PICCOLO = 0.6
+// quanto è grande l'effetto: una scelta estetica, con un tetto, non la zona colpita (che può essere
+// molto più larga): con più torri insieme i cerchi grandi coprivano il campo. Si calibra dopo.
+const AREA = 0.5, TETTO_AREA = 26
+const GELO = 0.38
+const TETTO_GELO = { bufera: 42, brina: 20 }, TETTO_GELO_BASE = 24   // il gelo: decorazioni vicino alla torre, e un cerchio sottile fin dove arriva
 
 export function colpo(p, c) {
-  const S = p.S, tinta = TINTA[c.tipo], aspetto = TORRI[c.tipo].aspetto
   // la seconda salva parte con un po' di ritardo: fino ad allora è ancora
   // dentro la bocca da fuoco, e non si disegna niente
   if (c.t < 0) return
-  const x = c.x + (c.tx - c.x) * c.t, y = c.y + (c.ty - c.y) * c.t
-  const lungo = Math.hypot(c.tx - c.x, c.ty - c.y)
-  const scia = Math.min(38 * S, lungo * c.t)
-  p.in(x, y, q => {
-    const g = q.ctx.createLinearGradient(-scia, 0, 0, 0)
-    g.addColorStop(0, tinta.chiaro + '00'); g.addColorStop(0.6, tinta.chiaro + '77')
-    g.addColorStop(1, tinta.chiaro + 'ee')
-    q.ctx.strokeStyle = g; q.ctx.lineWidth = (aspetto === 'bombe' ? 6 : 4.6) * S; q.ctx.lineCap = 'round'
-    q.ctx.beginPath(); q.ctx.moveTo(-scia, 0); q.ctx.lineTo(0, 0); q.ctx.stroke()
-    if (aspetto === 'arciere') {
-      // la freccia: asta chiara col suo contorno scuro, punta e penne
-      q.ctx.strokeStyle = '#3f3427'; q.ctx.lineWidth = 3.6 * S
-      q.ctx.beginPath(); q.ctx.moveTo(-9 * S, 0); q.ctx.lineTo(5 * S, 0); q.ctx.stroke()
-      q.ctx.strokeStyle = '#f7efdd'; q.ctx.lineWidth = 2 * S
-      q.ctx.beginPath(); q.ctx.moveTo(-9 * S, 0); q.ctx.lineTo(5 * S, 0); q.ctx.stroke()
-      q.figura([[11 * S, 0], [4 * S, -4 * S], [4 * S, 4 * S]], '#3f3427')
-      q.figura([[-8 * S, 0], [-13 * S, -3.6 * S], [-9.6 * S, 0], [-13 * S, 3.6 * S]], tinta.chiaro)
-    } else if (aspetto === 'bombe') {
-      q.in(0, 0, r => {                       // la bomba rotola in aria
-        r.cerchio(0, 0, 6 * S, '#2f2a26')
-        r.ellisse(-2 * S, -2 * S, 2 * S, 1.6 * S, '#5c554d')
-        r.ctx.strokeStyle = '#c9a06a'; r.ctx.lineWidth = 1.4 * S
-        r.ctx.beginPath(); r.ctx.moveTo(3 * S, -4.6 * S)
-        r.ctx.quadraticCurveTo(7 * S, -7 * S, 5 * S, -9 * S); r.ctx.stroke()
-        r.cerchio(5 * S, -9.6 * S, 2.2 * S, '#ffd76a')
-        r.cerchio(5 * S, -10 * S, 1.1 * S, '#fff3c4')
-      }, p.tempo * 7)
-    } else {
-      // il dardo magico: alone largo, nucleo pieno, lampo bianco al centro
-      q.cerchio(0, 0, 11 * S, tinta.chiaro + '3a')
-      q.cerchio(0, 0, 7 * S, tinta.chiaro + '99')
-      q.cerchio(0, 0, 4.6 * S, tinta.chiaro)
-      q.cerchio(-1 * S, -1 * S, 2.6 * S, '#ffffff')
-    }
-  }, Math.atan2(c.ty - c.y, c.tx - c.x))
+  const S = p.S * PICCOLO, chiave = c.ramo || c.tipo
+  const E = { x: (c.tx - c.x) / S, y: (c.ty - c.y) / S }
+  const u = clamp(c.t)
+  const k = { E, u, an: Math.atan2(E.y, E.x), col: tintaDi(c.tipo, c.ramo), volo: c.volo,
+              tt: u / c.volo, alto: Math.hypot(E.x, E.y) * (ALTO[chiave] || 0) }
+  locale(p, c.x, c.y, g => VOLI[chiave](g, k), 0, PICCOLO)
 }
 
-// L'esplosione è una palla che si sgonfia, non anelli concentrici che
-// scappano (con più torri il campo diventava un tiro a segno di cerchi).
-// Il gelo è l'opposto: un velo che si allarga piano e sbiadisce.
+// `s.parte` dice a che strato si disegna: 'suolo' sotto i mostri, 'aria' sopra
+function impatto(p, s) {
+  const f = IMPATTI[chiaveEffetto(s.tipo, s.ramo)]?.[s.parte]
+  if (!f) return
+  const S = p.S * PICCOLO
+  const D = s.da ? { x: (s.da.x - s.x) / S, y: (s.da.y - s.y) / S } : { x: 0, y: 0 }
+  const mondo = s.gelo ? Math.min(s.max * GELO, (TETTO_GELO[s.ramo] || TETTO_GELO_BASE) * p.S) : Math.min(s.max * AREA, TETTO_AREA * p.S)
+  const R = mondo / S
+  const Rvero = s.gelo ? s.max / S : 0
+  const P = s.punti ? s.punti.map(q => ({ x: (q.x - s.x) / S, y: (q.y - s.y) / S })) : []
+  locale(p, s.x, s.y, g => f(g, { eta: s.eta * VEL_EFFETTI, R, an: Math.atan2(-D.y, -D.x), col: tintaDi(s.tipo, s.ramo), D, P, Rv: Rvero, t: p.tempo }), 0, PICCOLO)
+}
+
+// Lo sbuffo di chi si è appena diviso; tutto il resto è un impatto.
 export function schizzo(p, s) {
+  if (s.stile) return impatto(p, s)
   const q = Math.max(0, Math.min(1, s.vita))
   /* chi si è appena diviso: uno sbuffo bianco con due palline che
      schizzano via ai lati — «non è morto, adesso sono due» */
@@ -61,16 +61,4 @@ export function schizzo(p, s) {
     })
     return
   }
-  const col = TINTA[s.tipo].chiaro
-  if (s.gelo) {
-    p.velo(q * 0.22, () => p.cerchio(s.x, s.y, s.r, col))
-    p.velo(q * 0.4, () => {
-      p.ctx.strokeStyle = col; p.ctx.lineWidth = 1.6 * p.S
-      p.ctx.beginPath(); p.ctx.arc(s.x, s.y, s.r, 0, 6.29); p.ctx.stroke()
-    })
-    return
-  }
-  // la palla: grande quando è appena scoppiata, e cala con la vita
-  p.velo(q * 0.55, () => p.cerchio(s.x, s.y, s.r * (0.55 + q * 0.45), col))
-  p.velo(q * 0.9, () => p.cerchio(s.x, s.y, s.r * (0.3 + q * 0.3), '#fff8'))
 }

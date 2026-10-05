@@ -3,7 +3,7 @@
 // piano (-1 per terra, 0 in piedi, 1 in volo); le piazzole si accendono
 // solo quando toccarle serve a qualcosa (c'è l'energia per una torre nuova).
 import { costoSalita } from '../../data/castello.js'
-import { RESPINTO } from '../../motore/castello/nemico.js'
+import { RESPINTO, LAMPO } from '../../motore/castello/nemico.js'
 
 // Da che parte va chi cammina (1 destra, -1 sinistra, 0 in giù o in su):
 // il tratto su cui sta adesso, perché il verso sceglie anche la posa (di
@@ -47,9 +47,13 @@ export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
     })
   }
 
-  for (const s of motore.schizzi)
-    roba.push({ che: 'schizzo', strato: -1, x: s.x, y: s.y, r: s.r,
-                vita: s.vita, tipo: s.tipo, gelo: s.gelo, dividi: s.dividi })
+  for (const s of motore.schizzi) {
+    const cosa = { che: 'schizzo', x: s.x, y: s.y, r: s.r, max: s.max, vita: s.vita, tipo: s.tipo,
+                   ramo: s.ramo, gelo: s.gelo, dividi: s.dividi, stile: s.stile, da: s.da, punti: s.punti, eta: s.eta }
+    // un effetto ha due strati: pozze e bruciature sotto i mostri, il resto sopra
+    if (s.stile) roba.push({ ...cosa, strato: -1, parte: 'suolo' }, { ...cosa, strato: 1, parte: 'aria' })
+    else roba.push({ ...cosa, strato: -1 })
+  }
 
   for (const t of motore.torri)
     roba.push({ che: 'torre', x: t.x, y: t.y, tipo: t.tipo, lv: t.lv, ramo: t.ramo,
@@ -63,10 +67,12 @@ export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
     roba.push({ che: 'mostro', x: p.x, y: p.y, bestia: n.bestia, vola: n.vola,
                 vita: n.quota, gelo: n.gelo, verso: versoDi(via, n.d, p),
                 taglia: n.taglia, capo: n.capo, aTerra: n.aTerra > 0,
-                respinto: n.respinto / RESPINTO })
+                respinto: n.respinto / RESPINTO, lampo: n.lampo / LAMPO,
+                male: n.perQuanto > 0 ? n.malTipo : null, fragile: n.fragile > 1 })
   }
 
   for (const c of motore.colpi)
-    roba.push({ che: 'colpo', strato: 1, x: c.x, y: c.y, tx: c.tx, ty: c.ty, t: c.t, tipo: c.tipo })
+    roba.push({ che: 'colpo', strato: 1, x: c.x, y: c.y, tx: c.tx, ty: c.ty, t: c.t, tipo: c.tipo,
+                ramo: c.ramo, volo: c.volo })
   return roba
 }

@@ -6,7 +6,7 @@ import { TORRI } from '../../data/ops.js'
 import { tiroConDoni, geloConDoni, raggioDi, doniZero } from '../../data/castello.js'
 import { dist } from '../../grafica/geometria.js'
 import { Colpo } from './colpo.js'
-import { Schizzo } from './schizzo.js'
+import { Schizzo, DURATE, chiaveEffetto } from './schizzo.js'
 
 // Il raggio non cresce coi livelli (era +4% a gradino): sulle carte a
 // squadra la strada si ripiega stretta, e una torre al decimo livello con
@@ -63,8 +63,8 @@ export class Torre {
       const g = geloConDoni(this.lv, this.ramo, this.doni)
       const largo = raggio
       for (const n of dentro) n.gela(g.durata, g.freno, g.fragile, this.tipo)
-      return { schizzi: [new Schizzo({ x: this.x, y: this.y, max: largo, tipo: this.tipo,
-                                       gelo: true, cresce: 1.1, spegne: 0.8 })] }
+      return { schizzi: [new Schizzo({ x: this.x, y: this.y, max: largo, tipo: this.tipo, ramo: this.ramo,
+                                       gelo: true, stile: true, dura: DURATE[chiaveEffetto(this.tipo, this.ramo)] })] }
     }
 
     const inFila = dentro.filter(n => !n.immuneA(this.tipo)).sort((a, b) => b.d - a.d)
@@ -75,7 +75,7 @@ export class Torre {
       // Il colpo parte dalla cima della torre, non dai suoi piedi.
       colpi.push(new Colpo({ x: this.x + (k ? 5 * S : 0), y: this.y - (17 + this.lv * 0.6) * S,
                              tx: p.x, ty: p.y, t: k * -0.18,
-                             tipo: this.tipo, preso,
+                             tipo: this.tipo, ramo: this.ramo, preso,
                              danno: tiro.danno, area: tiro.area * S,
                              veleno: tiro.veleno, durata: tiro.durata,
                              rimbalzi: tiro.rimbalzi }))

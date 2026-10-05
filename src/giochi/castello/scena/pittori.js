@@ -6,7 +6,7 @@
 // parta — un attimo di campo senza figure costa meno che tenere in piedi
 // un secondo castello disegnato a poligoni solo per quell'attimo. Il
 // fondale (la carta dipinta) lo fa la pelle, che ha il suo ripiego.
-import { PITTORI as SEGNI_E_COLPI, targhe, segnoImmune, corona } from '../../../grafica/castello/indice.js'
+import { PITTORI as SEGNI_E_COLPI, targhe, segnoImmune, corona, statiMostro } from '../../../grafica/castello/indice.js'
 import { TORRI, stadioDi } from '../../../data/ops.js'
 import { MONDO } from '../../../data/castello.js'
 import { COLONNE } from '../../../motore/castello/carta.js'
@@ -97,7 +97,8 @@ const MISURA_MOSTRI = 0.5
 function mostro(p, cosa) {
   if (!img) return
   const { x, y, bestia, vita = 1, gelo = 0, vola = false, verso = 0,
-          taglia = 1, capo = false, aTerra = false, respinto = 0 } = cosa
+          taglia = 1, capo = false, aTerra = false, respinto = 0,
+          lampo = 0, male = null, fragile = false } = cosa
   const S = p.S
   const { serie, passi } = serieDi(creaturaDi(bestia), verso)
   // respiro a 5 fotogrammi al secondo, passi a 8; sfasati per posto, così
@@ -132,6 +133,8 @@ function mostro(p, cosa) {
                 [x + Math.cos(a - 0.3) * r, cy + Math.sin(a - 0.3) * r]], '#e8f7ff')
     }
   }
+  statiMostro(p, { x, cy: piede + alto - lh * 0.45, r: Math.max(9 * S, lh * 0.45),
+                   lampo, male, fragile, gelo })
   // la barra della vita, ferma anche se il mostro vola (misurata dalla
   // testa senza l'ondeggio)
   const testa = piede + (vola ? -9 * S : 0) - lh
