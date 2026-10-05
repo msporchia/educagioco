@@ -142,13 +142,13 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   const posti = [], fuori = []
   for (const seme of [7, 41]) {
     const c = new Corsa(L_ABISSO, { seme, rnd: seminato(seme) })
-    for (let p = 0; p < PIANI_PER_TRATTO * TRATTI_DELL_ABISSO.length * 2; p++) {
+    for (let p = 0; p < PIANI_PER_TRATTO * TRATTI_DELL_ABISSO.length + 6; p++) {   // e qualche piano oltre l'ultimo posto, che non finisce
       c.piano = p
       c.nuovoPiano()
-      const atteso = TRATTI_DELL_ABISSO[Math.floor(p / PIANI_PER_TRATTO) % TRATTI_DELL_ABISSO.length]
+      const atteso = TRATTI_DELL_ABISSO[Math.min(Math.floor(p / PIANI_PER_TRATTO), TRATTI_DELL_ABISSO.length - 1)]
       if (c.scenario !== atteso.scenario || c.posto !== atteso.nome)
         fuori.push(`seme ${seme} piano ${p + 1}: ${c.scenario} invece di ${atteso.scenario}`)
-      if (seme === 7 && p % PIANI_PER_TRATTO === 0) posti.push(`${p + 1} ${c.posto}`)
+      if (seme === 7 && p < PIANI_PER_TRATTO * TRATTI_DELL_ABISSO.length && p % PIANI_PER_TRATTO === 0) posti.push(`${p + 1} ${c.posto}`)
       const qui = new Set(brancoDi(L_ABISSO, p).flat())
       for (const r of c.livello.robe)
         if (r.che === 'mostro' && !r.chiave && !qui.has(r.tipo))
@@ -159,7 +159,9 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
             !fuori.length, fuori.slice(0, 3).join('; '))
   nota(`i posti scendendo: ${posti.join(' · ')}`)
   const c = new Corsa(CAMPAGNA[0], { seme: 7, rnd: seminato(7) })
-  uguale('una discesa indossa lo scenario di ripiego', c.scenario, null)
+  uguale('una discesa indossa il suo scenario', c.scenario, CAMPAGNA[0].scenario)
+  uguale('e le sei ne mostrano tre, due a testa',
+         CAMPAGNA.map(t => t.scenario).join(), 'cantine,cantine,cripta,cripta,fornace,fornace')
   uguale('e non dice il posto', c.posto, null)
   controlla('e incontra tutto il bestiario', c.livello.branco === BRANCO)
 }

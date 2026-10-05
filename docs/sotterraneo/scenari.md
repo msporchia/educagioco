@@ -16,10 +16,11 @@ Il sotterraneo è **il calco da guardare** per un mondo a sprite:
   voce di `SCENARI` (`dati/tessere.js`), e **tutte le voci hanno le stesse
   chiavi**: si cambia vestito a una discesa senza toccare la tela. Aggiungere
   un pezzo è una riga lì, mai un `if` nel disegno. Oggi ce ne sono tre: **le cantine**
-  (`sotterraneo_2.png`), che indossano le sei discese, **la cripta**
-  (`sotterraneo_4.png` e i due fogli `_2`, `_3`) e **la fornace** (`sotterraneo_5.png` e il foglio `_2`); l'abisso li alterna scendendo
-  ([abisso.md](abisso.md#il-posto-cambia-scendendo)). Una tappa può
-  dichiarare il suo con `scenario:`.
+  (`sotterraneo_2.png`), **la cripta**
+  (`sotterraneo_4.png` e i due fogli `_2`, `_3`) e **la fornace** (`sotterraneo_5.png` e il foglio `_2`); le sei discese ne mostrano due a testa (cantine e
+  pozzo, gallerie e cisterna, labirinto e fondo) e l'abisso li attraversa
+  scendendo ([abisso.md](abisso.md#il-posto-cambia-scendendo)). Ogni tappa lo
+  dichiara con `scenario:`; chi non lo dichiara indossa le cantine (`SCENARIO`).
 - **Uno scenario nasce da un prompt** diviso in due:
   `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md` ha una
   **parte fissa** (griglia, regola del muro, luce, divieti) e un **blocco

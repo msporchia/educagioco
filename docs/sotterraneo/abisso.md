@@ -110,9 +110,11 @@ raggiunge.
 
 ## Il posto cambia scendendo
 
-**Ogni cinque piani l'abisso cambia posto** (`TRATTI_DELL_ABISSO`,
-`PIANI_PER_TRATTO` in `dati/campagna.js`): le cantine dal 1° al 5°, la cripta
-dal 6° al 10°, la fornace dall'11° al 15°, e finita la fila si ricomincia. Un posto è **uno scenario**
+**Ogni quattro piani l'abisso cambia posto** (`TRATTI_DELL_ABISSO`,
+`PIANI_PER_TRATTO` in `dati/campagna.js`): le cantine dal 1° al 4°, la cripta
+dal 5° all'8°, la fornace dal 9° in poi, **e l'ultimo posto resta per sempre**:
+un abisso senza fondo non ha un giro da rifare, e la fornace è l'ultima
+tappa visiva. Un posto è **uno scenario**
 (come si disegna, `SCENARI` in `dati/tessere.js`) **e un branco** (chi si
 incontra per strada, `BRANCHI` in `dati/mostri.js`); la riga sotto il campo
 dice dove si è («la cripta · piano 7»).
