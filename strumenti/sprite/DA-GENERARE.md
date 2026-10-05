@@ -322,7 +322,7 @@ sei di fronte, in `sorgenti/castello/cammino/<creatura>.png` — e il video
 non si conserva. `vesti.py --atlante` li porta alla misura della creatura
 **senza ridurli alla grana dei fogli**: i mostri fatti così sono più
 nitidi degli altri, ed è una scelta (meglio alcuni belli e altri come
-prima che tutti uguali e brutti). Fatti: il drago (29 settembre), il lupo (1 ottobre), lo scorpione (2 ottobre).
+prima che tutti uguali e brutti). Fatti: il drago (29 settembre), il lupo (1 ottobre), lo scorpione (2 ottobre), la melma (5 ottobre).
 
 Il prompt, con il nome della creatura cambiato (per chi cammina: *walks
 in place… legs clearly alternating*):
@@ -334,6 +334,7 @@ Pixel art game sprite animation, two parts in one shot. First half: the red drag
 ```bash
 python3 strumenti/sprite/cammino.py video.mp4 drago --cerca --provino /tmp/p.png   # i giri che si chiudono
 python3 strumenti/sprite/cammino.py video.mp4 drago --lato 34:17 --fronte 120:22
+python3 strumenti/sprite/cammino.py video.mp4 melma --lato 28:24 --fronte 92:24 --misura area   # chi salta: misurata sull'area, non sull'altezza
 python3 strumenti/sprite/vesti.py --atlante
 npm run build && node strumenti/sprite/in-campo.mjs drago   # le GIF in tmp/in-campo/drago/
 ```
