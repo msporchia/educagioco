@@ -45,6 +45,10 @@ c'è da dire su una tappa sta lì. Il pezzo comune è
 - **Si apre al `click`** ([il-dito.md](il-dito.md)); il fumetto si prende
   il proprio click, e la mappa chiude al click fuori. Un altro bersaglio
   rimonta il fumetto (`:key`).
+- **Il segnalino va alla tappa toccata, e il fumetto non lo aspetta**: si
+  apre subito sopra la tappa, ci si gioca dal suo tasto, e non si chiude né
+  si sposta mentre il segnalino viaggia (un tocco fuori, durante il viaggio,
+  non fa niente). Sta sopra il segnalino, che gli passa sotto.
 - I colori si cambiano con `--fumetto-fondo`, `--fumetto-tenue` (una cosa
   chiusa, `tenue`) e `--fumetto-testo`.
 
