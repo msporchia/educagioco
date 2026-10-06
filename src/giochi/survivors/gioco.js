@@ -22,7 +22,7 @@ export default {
   che: 'schivare i mostri e scegliere i potenziamenti',
   area: 'avventure',
   come: 'riflessi',
-  copertina: { fondo: '#5c3d6e', disegno: '#7b5891', scena: 'stelle' },
+  copertina: { fondo: '#6e2f3a', disegno: '#4a1e27', scena: 'alberi' },
   // il pedaggio passa da src/quiz/ (il mazzo che l'età del bambino taglia),
   // non domande sue come Conta gli animali
   quiz: true,

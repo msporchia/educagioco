@@ -20,7 +20,7 @@ export default {
   che: 'dare gli ordini in fila',
   area: 'logica',
   come: 'pensare',
-  copertina: { fondo: '#8fd3b4', disegno: '#6cbf99', scena: 'colline' },
+  copertina: { fondo: '#f29e5c', disegno: '#e07d3a', scena: 'caselle' },
   tappe: QUANTE_TAPPE,
   senzaFine: SENZA_FINE,
 

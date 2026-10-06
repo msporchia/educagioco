@@ -22,7 +22,7 @@ export const GIOCHI = [
   // senza `grandi`: la prima tappa è tarata su 6 anni (arcoDelGioco), la portata già non offre una tappa fuori mira
   { chiave: 'mate',       ico: '☄️', nome: 'Asteroidi',
     che: 'tabelline e calcolo a mente', area: 'numeri', come: 'domande',
-    copertina: { fondo: '#2f3b73', disegno: '#4a5aa3', scena: 'stelle' },
+    copertina: { fondo: '#26305e', disegno: '#3d4a8a', scena: 'stelle' },
     // sfida sola; best.math resta fuori dalla campagna finché un quaderno non c'è (vedi docs/core/primati.md)
     senzaFine: {
       nome: 'Volo infinito', icona: '♾️', misura: 'punti', che: 'quanti punti fai',
@@ -36,7 +36,7 @@ export const GIOCHI = [
   { chiave: 'torri',      ico: '🏰', nome: 'Difendi il Castello',
     che: 'operazioni in colonna, torri e nemici', area: 'numeri', come: 'strategia',
     grandi: true, chiede: ['moltiplicazioni', 'divisioni'],
-    copertina: { fondo: '#7bb662', disegno: '#5c9a47', scena: 'colline' },
+    copertina: { fondo: '#5b8fd1', disegno: '#8d96a3', scena: 'mura' },
     // quattro sfide, una per terreno; la prima (il bosco) eredita il record di quando la libera era una sola
     senzaFine: {
       misura: 'ondate', che: 'quante ondate reggi',

@@ -77,8 +77,10 @@ Quindici giochi stanno su due righe a 375 px, e su tre a 320.
 
 Un gioco porta `copertina: { fondo, disegno, scena }` nel suo manifesto (i
 giochi vecchi nella loro riga di `data/giochi.js`). `scena` è uno dei
-disegni piatti di `components/home/scene.js` (`stelle`, `colline`, `tenda`, `bolle`,
-`onde`, `griglia`, `mattoni`, `grotta`), sopra ci va l'icona grande. Senza
+disegni piatti di `components/home/scene.js`, sopra ci va l'icona grande.
+Ogni gioco ha un fondo e una scena sua, da riconoscere a colpo d'occhio
+(il castello è cielo e mura, non un prato come la fattoria), e niente di
+giallo in un angolo: il sole sembrava il pallino di una notifica. Senza
 `copertina` il gioco uscirebbe grigio: `unita/aree` è rosso. Sono provvisorie: la copertina vera è un
 disegno del gioco, ancora da fare.
 

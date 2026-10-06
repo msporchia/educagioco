@@ -11,7 +11,7 @@ export default {
   che: 'contare davvero: in fila, sparpagliati e a insiemi',
   area: 'numeri',
   come: 'domande',
-  copertina: { fondo: '#a8dc7a', disegno: '#86c25a', scena: 'colline' },
+  copertina: { fondo: '#9fd6ef', disegno: '#a8774a', scena: 'staccionata' },
   tappe: QUANTE_TAPPE,
   piccoli: true,
 

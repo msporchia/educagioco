@@ -16,7 +16,7 @@ export default {
   che: 'parole, frasi e un libro in spagnolo',
   area: 'parole',
   come: 'domande',
-  copertina: { fondo: '#f2c14e', disegno: '#e05a47', scena: 'onde' },
+  copertina: { fondo: '#d8544a', disegno: '#f2c14e', scena: 'onde' },
   tappe: TAPPE.length,
   // niente `grandi`: il primo mondo è la prima elementare (portata 25), e chi
   // la carta la vede lo decide la portata delle tappe, come per gli altri giochi
