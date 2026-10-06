@@ -28,21 +28,15 @@ stanno nella sua cartella.
 
 ## La partita lasciata a metà
 
-Uscire non deve buttare la partita ([ripresa.md](ripresa.md)). Ce l'hanno
-sotterraneo, Survivors e castello; gli altri, da quello che perde di più:
+Uscire non deve buttare la partita ([ripresa.md](ripresa.md)). Restano:
 
-- **La bancarella**: una giornata fino a otto minuti, e il ← in gioco va
-  dritto a casa (`views/BancarellaGame.vue`).
-- **Il Generale e Passo passo**: si perde il piano o la fila di carte
-  scritta, che è lavoro e non punteggio. Il modello è il costruttore (il
-  programma di ogni livello in archivio), più della sosta.
-- **Asteroidi**: nel volo senza fine il ← non segna nemmeno il record
-  (`segnaPrimato` sta solo in `finePartita` di `views/MathGame.vue`).
-- **Le tappe brevi** (Conta, Prima e dopo, Pozioni, Codice segreto, le
-  tappe delle lingue): monete e ripasso si scrivono a ogni risposta, si
-  perde solo la strada verso le stelle, da uno a cinque minuti.
-- **Costruttore e fattoria** salvano già, ma non ascoltano `pagehide`:
-  chiudendo la scheda si può perdere l'ultimo secondo.
+- **`views/LinguaGame.vue`** (i verbi e il libero delle lingue): ha un'altra
+  struttura dalle tappe a mondi, e non ha ancora la sosta.
+- **I programmi e i piani di un bambino eliminato**: `costruttore:<id>` e
+  `generale:<id>` stanno fuori dal profilo e nessuno li porta via (vedi
+  [archivio.md](archivio.md#fuori-dai-profili)).
+- **Una tappa richiusa dai grandi a partita aperta**: il Codice segreto
+  riprende la sosta senza guardare se la tappa è ancora aperta per età.
 
 ## Le prove
 

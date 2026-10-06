@@ -43,8 +43,26 @@ Nei test: `[data-ripresa]`, `[data-chiede]`, `[data-azione="riprendi"]`,
 
 ## Chi ce l'ha
 
-- **Sì**: sotterraneo ([../sotterraneo/regole.md](../sotterraneo/regole.md)),
-  Survivors ([../survivors/regole.md](../survivors/regole.md)), il castello
-  ([../castello/sosta.md](../castello/sosta.md)). Il costruttore e la fattoria
-  salvano a modo loro (il programma di ogni livello, il mondo).
-- **Non ancora**: le voci sono in [da-fare.md](da-fare.md#la-partita-lasciata-a-metà).
+- **La sosta con la carta in cima alla mappa**:
+  - sotterraneo ([../sotterraneo/regole.md](../sotterraneo/regole.md));
+  - Survivors ([../survivors/regole.md](../survivors/regole.md));
+  - castello ([../castello/sosta.md](../castello/sosta.md));
+  - bancarella ([../bancarella/regole.md](../bancarella/regole.md));
+  - Asteroidi ([../asteroidi/sosta.md](../asteroidi/sosta.md));
+  - Conta ([../conta/regole.md](../conta/regole.md));
+  - Prima e dopo ([../prima-dopo/sosta.md](../prima-dopo/sosta.md));
+  - pozioni ([../pozioni/sosta.md](../pozioni/sosta.md));
+  - Codice segreto ([../codice-segreto/sosta.md](../codice-segreto/sosta.md));
+  - English ed Español ([../lingue/sosta.md](../lingue/sosta.md)).
+- **Un posto per livello, senza carta**, perché aprire un livello non butta
+  quello di un altro: il costruttore (il programma, in archivio
+  `costruttore:<id>`), il Generale (il piano, in archivio `generale:<id>`:
+  [../generale/lasciare-a-meta.md](../generale/lasciare-a-meta.md)), Passo
+  passo (la fila e il gradino del 💡, nella sosta comune; il sentiero ha la
+  carta: [../passo-passo/sosta.md](../passo-passo/sosta.md)). La mappa segna
+  i livelli lasciati a metà (`[data-a-meta]`).
+- **Un mondo che si salva da sé**: la fattoria.
+- **Nessuno**: `views/LinguaGame.vue` (i verbi e il libero delle lingue).
+- **Il record dei giochi senza fine** (volo, sentiero, libero del Codice) si
+  scrive quando la partita finisce davvero o con «lascio perdere», mai
+  uscendo: uscire non chiude la serie.
