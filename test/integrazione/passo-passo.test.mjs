@@ -26,8 +26,8 @@
    · e nessun errore in console.
    `DIST=… node test/esegui.mjs passo-passo --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, scatto, semina, attendi, leggiProfilo, TELEFONO, scegli }
-  from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, scatto, semina, attendi, leggiProfilo, TELEFONO, scegli,
+         giocaSullIsola, statoSullIsola } from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA, TAPPE_PICCOLE } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
@@ -46,7 +46,7 @@ async function componi(mosse) {
   }
 }
 async function entraNellaTappa(i) {
-  await page.locator(`.pp-tappa[data-tappa="${i}"]`).click()
+  await giocaSullIsola(page, i)
   await page.waitForSelector('.pp-campo', { timeout: 5000 })
   await attendi(page, 450)            // la finestra cieca dei 320 ms, e il primo fotogramma
 }
@@ -69,12 +69,11 @@ const carta = page.locator('.carta.gioco[data-gioco="passo"]')
 uguale('a sei anni la carta è in home', await carta.count(), 1)
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa', { timeout: 5000 })
-uguale('la mappa elenca tutte le tappe', await page.locator('.pp-tappa').count(), CAMPAGNA.length)
-controlla('la prima tappa è aperta', await page.locator('.pp-tappa[data-tappa="0"]').isEnabled())
-controlla('la seconda no, finché non si fa la prima',
-          !(await page.locator('.pp-tappa[data-tappa="1"]').isEnabled()))
-controlla('il sentiero senza fine è chiuso a campagna da fare',
-          !(await page.locator('[data-tappa="senza-fine"]').isEnabled()))
+uguale('la mappa ha tutte le tappe', await page.locator('[data-mappa] [data-tappa]:not([data-tappa="senza-fine"])').count(),
+       CAMPAGNA.length)
+uguale('la prima tappa è quella di adesso', await statoSullIsola(page, 0), 'ora')
+uguale('la seconda no, finché non si fa la prima', await statoSullIsola(page, 1), 'chiusa')
+uguale('il sentiero senza fine è chiuso a campagna da fare', await statoSullIsola(page, 'senza-fine'), 'chiusa')
 await scatto(page, 'passo-mappa')
 
 /* ---------- 3. la prima tappa, giocata col dito ---------- */
@@ -330,8 +329,8 @@ await semina(page, { settings: { eta: 8 },
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 controlla('a campagna finita il sentiero si apre',
-          await page.locator('[data-tappa="senza-fine"]').isEnabled())
-await page.locator('[data-tappa="senza-fine"]').click()
+          await statoSullIsola(page, 'senza-fine') !== 'chiusa')
+await giocaSullIsola(page, 'senza-fine')
 await page.waitForSelector('.pp-campo', { timeout: 5000 })
 await attendi(page, 450)
 controlla('il sentiero ha una mappa', (await page.locator('.pp-tela').boundingBox()).width > 100)
@@ -375,7 +374,7 @@ await semina(page, { settings: { eta: 8 },
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 controlla('a otto anni la prima tappa dello zaino è aperta',
-          await page.locator(`.pp-tappa[data-tappa="${TAPPE_PICCOLE}"]`).isEnabled())
+          await statoSullIsola(page, TAPPE_PICCOLE) !== 'chiusa')
 await entraNellaTappa(TAPPE_PICCOLE)
 const viale = CAMPAGNA[TAPPE_PICCOLE]
 uguale('c\'è il tasto del ripeti', await page.locator('[data-carta="ripeti"]').count(), 1)
@@ -460,10 +459,9 @@ await semina(page, { settings: { eta: 6 },
                      campagne: { passo: { tappa: TAPPE_PICCOLE, stelle: {}, cfg: {} } } })
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
-controlla('a sei anni la prima tappa dello zaino è chiusa',
-          !(await page.locator(`.pp-tappa[data-tappa="${TAPPE_PICCOLE}"]`).isEnabled()))
+uguale('a sei anni la prima tappa dello zaino è chiusa', await statoSullIsola(page, TAPPE_PICCOLE), 'chiusa')
 controlla('e il sentiero senza fine, alla fine delle tappe dei piccoli, è aperto',
-          await page.locator('[data-tappa="senza-fine"]').isEnabled())
+          await statoSullIsola(page, 'senza-fine') !== 'chiusa')
 await scatto(page, 'passo-zaino-chiuso')
 
 /* ---------- 14. il «fino a» e il «se», col dito ---------- */

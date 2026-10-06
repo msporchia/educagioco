@@ -5,7 +5,8 @@
    cima «torno da dove ero», uscire non chiude la serie, un sentiero nuovo
    chiede prima e «lascio perdere» scrive il record. Vedi docs/passo-passo/sosta.md.
    `DIST=… node test/esegui.mjs passo-passo-sosta --niente-build` */
-import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scatto, scegli } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scatto, scegli, giocaSullIsola }
+  from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
@@ -25,7 +26,7 @@ async function allaMappaDelGioco() {
   await page.waitForSelector('.pp-mappa', { timeout: 5000 })
 }
 async function entraNellaTappa(i) {
-  await page.locator(`.pp-tappa[data-tappa="${i}"]`).click()
+  await giocaSullIsola(page, i)
   await page.waitForSelector('.pp-campo', { timeout: 5000 })
   await attendi(page, 450)            // la finestra cieca dei 320 ms
 }
@@ -61,7 +62,7 @@ controlla('la prova parte da una fila scritta e una carta del 💡 comprata',
 
 await indietro()
 controlla('sulla mappa il livello lasciato a metà ha la matita',
-          await page.locator(`.pp-tappa[data-tappa="1"] [data-a-meta]`).count() === 1)
+          await page.locator(`[data-mappa] [data-tappa="1"] [data-a-meta]`).count() === 1)
 uguale('e la carta in cima non c\'è: la fila si ritrova entrando', await page.locator('[data-ripresa]').count(), 0)
 {
   const s = (await passo()).sosta
@@ -148,7 +149,7 @@ await indietro()
 uguale('e il posto non è cambiato', (await passo()).sosta.sentiero.posto.mappa.join('/'), mappaPrima)
 
 /* un sentiero nuovo chiede prima */
-await page.locator('[data-tappa="senza-fine"]').click()
+await giocaSullIsola(page, 'senza-fine')
 uguale('il tasto del sentiero chiede prima', await page.locator('[data-chiede]').count(), 1)
 await page.click('[data-chiede] [data-azione="riprendi-invece"]')
 await page.waitForSelector('.pp-campo')
@@ -166,7 +167,7 @@ uguale('«lascio perdere» toglie la carta', await page.locator('[data-ripresa]'
   uguale('una volta sola', (p.primato || {}).partite, 1)
   uguale('la sosta non tiene più il sentiero', (p.sosta || {}).sentiero || null, null)
 }
-await page.locator('[data-tappa="senza-fine"]').click()
+await giocaSullIsola(page, 'senza-fine')
 await page.waitForSelector('.pp-campo')
 uguale('senza sosta il sentiero parte senza chiedere', (await page.locator('.barra-app .dove').innerText()).includes('1'), true)
 await indietro()

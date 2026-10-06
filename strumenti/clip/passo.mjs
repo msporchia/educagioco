@@ -52,7 +52,8 @@ const tastoDi = m => (m.startsWith('salto-') ? `[data-salto="${m.slice(6)}"]` : 
 export default {
   file: 'clip-passo', dove: 'passo', attesa: '.pp-mappa',
   profilo: p => { p.campagne = { ...p.campagne, passo: { tappa: Math.max(INDICE, 0), stelle: {}, cfg: {} } }; return p },
-  passi: [[`.pp-tappa[data-tappa="${INDICE}"]`, 900]],
+  // il tocco apre il fumetto della casella, «gioca» la comincia (docs/passo-passo/mappa.md)
+  passi: [[`[data-mappa] [data-tappa="${INDICE}"]`, 900], ['[data-fumetto] [data-azione="parti"]', 900]],
   clip: {
     secondi: 8,
     async durante (page) {
