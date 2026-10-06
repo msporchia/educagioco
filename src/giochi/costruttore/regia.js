@@ -38,7 +38,7 @@ function quadroDi(m) {
     w: m.w, h: m.h, suolo: m.suolo, mattoni: m.mattoni, bersaglio: m.bersaglio,
     robot: m.robot, robotDa: null, dal: 0, durata: 0,
     omino: m.omino, ominoDa: null, bandiera: m.bandiera,
-    posa: null, guarda: null, fermo: null, confronto: null, esito: null,
+    posa: null, guarda: null, fermo: null, contento: null, confronto: null, esito: null,
     come: null, verso: 1,
     mondo: m,
   })
@@ -51,7 +51,7 @@ function quadroDelPorto(p, livello) {
     mondo: 'porto', porto: p, tema: livello.tema || 'molo',
     w: p.w, h: p.h,
     robot: { ...p.robot }, robotDa: null, dal: 0, durata: 0, verso: p.verso,
-    voli: [], mezzi: [], guarda: null, legge: null, fermo: null, guaio: null,
+    voli: [], mezzi: [], guarda: null, legge: null, fermo: null, contento: null, guaio: null,
     mancano: null, sbagliati: null, umore: null, nastroDal: 0,
     passo: VELOCITA.normale, seguiRobot: false,
   })
@@ -297,6 +297,8 @@ export class Regia {
     this.stato.esiti[i] = esito.vinto ? 'vinto' : 'perso'
     this.stato.esiti = [...this.stato.esiti]
     if (this.porto) this.quadro.seguiRobot = false
+    // il robot fa festa: la tela lo dipinge contento (docs/costruttore/scheda.md, «Il robot»)
+    if (esito.vinto) this.quadro.contento = performance.now()
     if (esito.errore) {
       /* un guaio del mondo (una cassa in mare, un cliente arrabbiato) non
          è colpa di una riga: il segno va dove è successo, non sul robot */

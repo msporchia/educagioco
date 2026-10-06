@@ -10,6 +10,7 @@ import { disponiScheda, stradaDelRobot, durataViaggio, lunghezza, toccano, ALONE
 import { disegnaDecoro, disegnaCoperchi } from '../../src/giochi/costruttore/scena/scheda.js'
 import { guidaScheda, SULLA_SCHEDA } from '../../src/giochi/costruttore/motore/guida.js'
 import { impronta } from '../../src/giochi/costruttore/motore/zaino.js'
+import { pezzi, ALTO, PIEDI } from '../../src/giochi/costruttore/scena/robot.js'
 import { programma, fai } from '../../src/giochi/costruttore/dati/scrivi.js'
 import { controlla, uguale, dentro, riassunto } from '../aiuto/verifica.mjs'
 
@@ -115,6 +116,34 @@ uguale('vinto il primo tace', guidaScheda({ primoVinto: true }), null)
   uguale('due programmi uguali a meno degli id hanno la stessa impronta', impronta(a), impronta(b))
   const c = programma({ principale: [fai.metti('rosso'), fai.vai('destra'), fai.metti('rosso')] })
   controlla('una riga in più cambia l\'impronta', impronta(a) !== impronta(c))
+}
+
+/* il robot è uno solo (scena/robot.js): ogni posa sta fra l'antenna e i
+   cingoli, e in piedi è largo quanto il suo posto sulla scheda */
+{
+  const confini = posa => {
+    const xs = [], ys = []
+    for (const k of pezzi(posa)) {
+      if (k.t === 'rett') { xs.push(k.x, k.x + k.w); ys.push(k.y, k.y + k.h) }
+      else if (k.t === 'cerchio') { xs.push(k.x - k.r, k.x + k.r); ys.push(k.y - k.r, k.y + k.r) }
+      else for (const [x, y] of k.punti) { xs.push(x); ys.push(y) }
+    }
+    return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }
+  }
+  const pose = []
+  for (const verso of ['fronte', 'destra', 'sinistra', 'retro'])
+    for (const braccia of ['giu', 'avanti', 'su'])
+      for (const occhi of ['aperti', 'spalancati', 'contenti', 'strizzati'])
+        pose.push({ verso, braccia, occhi, giro: 1.3 })
+  controlla('ogni posa del robot sta fra l\'antenna e i cingoli', pose.every(p => {
+    const c = confini(p)
+    return c.y0 >= PIEDI - ALTO - 0.01 && c.y1 <= PIEDI + 0.01 && c.x0 >= -15 && c.x1 <= 15
+  }))
+  const fermo = confini({})
+  controlla('in piedi è largo quanto il suo posto sulla scheda', fermo.x1 - fermo.x0 <= ROBOT.largo)
+  /* sulla scheda dondola tutto tranne i cingoli: quello che non è suolo sta sopra */
+  controlla('i cingoli sono il suolo, e il resto sta sopra',
+            pezzi({}).some(k => k.suolo) && pezzi({}).every(k => k.suolo || k.t !== 'rett' || k.y + k.h <= 11.5))
 }
 
 riassunto('costruttore — la scheda del robot')

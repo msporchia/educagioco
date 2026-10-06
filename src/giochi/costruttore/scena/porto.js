@@ -1,5 +1,6 @@
 // il porto disegnato, dall'alto e con una telecamera (docs/costruttore/porto.md)
 import { colore } from '../dati/colori.js'
+import { dipingiRobot, COLORI as COLORI_ROBOT } from './robot.js'
 
 /* le quattro frecce, come nel motore: `y` cresce verso il basso */
 const DIREZIONI = { su: [0, -1], giu: [0, 1], destra: [1, 0], sinistra: [-1, 0] }
@@ -22,7 +23,6 @@ const MANO = { destra: [0.44, 0.04], sinistra: [-0.44, 0.04], giu: [0, 0.19], su
 
 const INCHIOSTRO = '#2d2a26', CARTA = '#fffdf9'
 const ROSSO = '#c0262d', VERDE = '#2f9e44', GRIGIO = '#868e96'
-const GIALLO = '#f5b82e', GIALLO_BORDO = '#8a6112'
 const MARE = { fondo: '#3f8ecf', onda: 'rgba(190,228,250,.6)', ombra: 'rgba(12,40,80,.3)' }
 const MURO = { fondo: '#8d8880', chiaro: '#a9a39a', scuro: '#7f7a72', giunto: '#615c55', faccia: '#6b665f', bordo: '#4f4b45' }
 const STRADA = { asfalto: '#4f5358', chiaro: '#5d6167', scuro: '#44484d', riga: 'rgba(242,240,230,.92)', cordolo: '#cfc9bd', cordoloScuro: '#8f897e' }
@@ -1853,81 +1853,38 @@ export class TelaPorto {
     const verso = MANO[q.verso || p.verso] ? (q.verso || p.verso) : 'destra'
     const orizz = verso === 'destra' || verso === 'sinistra'
     const v = verso === 'sinistra' ? -1 : 1
-    const cx = R.x, cy = R.y - R.salto
-    const fase = R.cammina ? Math.sin(R.f * Math.PI * 2) : 0
     const mano = p.mano && !inVolo.has(p.mano.id) ? p.mano : null
     const M = this.manoDi(q, p, t)
-    const lw = Math.max(1, c * 0.05)
+    /* giornata vinta: due saltelli, e poi resta contento */
+    const festa = q.contento ? t - q.contento : -1
+    const balzo = festa >= 0 && festa < 700 ? Math.abs(Math.sin((festa / 700) * Math.PI * 2)) * c * 0.1 : 0
+    const cx = R.x, cy = R.y - R.salto - balzo
 
     ctx.fillStyle = 'rgba(0,0,0,.2)'
     ctx.beginPath()
-    ctx.ellipse(R.x, R.y + c * 0.35, c * 0.27, c * 0.09, 0, 0, Math.PI * 2)
+    ctx.ellipse(R.x, R.y + c * 0.36, c * 0.27, c * 0.09, 0, 0, Math.PI * 2)
     ctx.fill()
-    ctx.fillStyle = '#3d4450'
-    const lg = c * 0.1
-    if (orizz) {
-      ctx.fillRect(cx - c * 0.16 + fase * c * 0.06, cy + c * 0.16, lg, c * 0.2)
-      ctx.fillRect(cx + c * 0.06 - fase * c * 0.06, cy + c * 0.16, lg, c * 0.2)
-    } else {
-      ctx.fillRect(cx - c * 0.15, cy + c * 0.16, lg, c * 0.2 - Math.max(0, fase) * c * 0.06)
-      ctx.fillRect(cx + c * 0.05, cy + c * 0.16, lg, c * 0.2 - Math.max(0, -fase) * c * 0.06)
-    }
     /* guardando in su la cosa sta dietro la testa: si disegna prima */
     if (mano && verso === 'su') this.cosa(M.x, M.y, IN_MANO, mano, false)
-    ctx.fillStyle = GIALLO
-    ctx.strokeStyle = GIALLO_BORDO
-    ctx.lineWidth = lw
-    rett(ctx, cx - c * 0.26, cy - c * 0.09, c * 0.52, c * 0.3, c * 0.08)
-    ctx.fill()
-    ctx.stroke()
-    ctx.fillStyle = 'rgba(138,97,18,.35)'
-    ctx.fillRect(cx - c * 0.12, cy + c * 0.03, c * 0.24, Math.max(1, c * 0.04))
-    ctx.fillStyle = GIALLO_BORDO
-    if (!mano) {
-      if (orizz) ctx.fillRect(v > 0 ? cx + c * 0.22 : cx - c * 0.36, cy - c * 0.01 + fase * c * 0.02, c * 0.14, c * 0.07)
-      else for (const s of [-1, 1]) ctx.fillRect(cx + s * c * 0.3 - c * 0.035, cy - c * 0.05 + s * fase * c * 0.03, c * 0.07, c * 0.16)
-    } else if (verso === 'su') {
-      for (const s of [-1, 1]) ctx.fillRect(cx + s * c * 0.27 - c * 0.035, cy - c * 0.34, c * 0.07, c * 0.28)
-    }
-    ctx.fillStyle = '#e9edf2'
-    ctx.strokeStyle = '#4a5260'
-    rett(ctx, cx - c * 0.22, cy - c * 0.39, c * 0.44, c * 0.31, c * 0.08)
-    ctx.fill()
-    ctx.stroke()
-    ctx.fillStyle = '#23303d'
-    if (orizz) {
-      ctx.beginPath()
-      ctx.arc(cx + v * c * 0.08, cy - c * 0.23, c * 0.068, 0, Math.PI * 2)
-      ctx.fill()
-    } else if (verso === 'giu') {
-      ctx.beginPath()
-      ctx.arc(cx, cy - c * 0.21, c * 0.075, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.fillStyle = '#ffffff'
-      ctx.beginPath()
-      ctx.arc(cx + c * 0.025, cy - c * 0.235, c * 0.022, 0, Math.PI * 2)
-      ctx.fill()
-    } else {
-      ctx.fillStyle = '#9aa3ae'
-      for (let i = 0; i < 3; i++) ctx.fillRect(cx - c * 0.1, cy - c * 0.3 + i * c * 0.06, c * 0.2, Math.max(1, c * 0.03))
-    }
-    ctx.fillStyle = '#4a5260'
-    ctx.fillRect(cx - c * 0.015, cy - c * 0.49, c * 0.03, c * 0.1)
-    ctx.fillStyle = q.fermo ? ROSSO : '#ff8a3d'
-    ctx.beginPath()
-    ctx.arc(cx, cy - c * 0.49, c * 0.05, 0, Math.PI * 2)
-    ctx.fill()
+    dipingiRobot(ctx, cx, cy + c * 0.36, c / 40, {
+      verso: orizz ? verso : verso === 'su' ? 'retro' : 'fronte',
+      braccia: mano ? (verso === 'su' ? 'su' : orizz ? 'avanti' : 'giu') : festa >= 0 ? 'su' : orizz ? 'avanti' : 'giu',
+      occhi: q.fermo ? 'strizzati' : festa >= 0 ? 'contenti' : 'aperti',
+      allarme: !!q.fermo,
+      giro: R.cammina ? v * R.f * Math.PI * 2 : 0,
+    })
     // sul numero di un biglietto non ci va niente sopra
     if (mano && verso !== 'su') {
-      ctx.fillStyle = GIALLO_BORDO
-      if (orizz) ctx.fillRect(v > 0 ? cx + c * 0.2 : cx - c * 0.34, cy - c * 0.01, c * 0.14, c * 0.07)
       this.cosa(M.x, M.y, IN_MANO, mano, false)
-      ctx.fillStyle = GIALLO_BORDO
+      /* le pinze: una dalla parte del robot, o una per lato se la tiene davanti */
+      ctx.fillStyle = COLORI_ROBOT.braccia
+      ctx.strokeStyle = COLORI_ROBOT.inchiostro
+      ctx.lineWidth = Math.max(1, c * 0.03)
       const meta = (LATO_CASSA * c * IN_MANO) / 2
-      if (orizz) {
-        ctx.fillRect(M.x - v * meta - c * 0.035, M.y - meta * 0.55, c * 0.07, meta * 1.1)
-      } else {
-        for (const s of [-1, 1]) ctx.fillRect(M.x + s * meta - c * 0.035, M.y - c * 0.08, c * 0.07, c * 0.16)
+      for (const x of orizz ? [M.x - v * meta] : [M.x - meta, M.x + meta]) {
+        rett(ctx, x - c * 0.04, M.y - c * 0.09, c * 0.08, c * 0.18, c * 0.03)
+        ctx.fill()
+        ctx.stroke()
       }
     }
     if (q.fermo) {

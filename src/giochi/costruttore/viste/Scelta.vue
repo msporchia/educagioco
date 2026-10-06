@@ -2,6 +2,7 @@
 // la scelta di una casella, aperta sotto la riga (docs/costruttore/linguaggio.md)
 import { ref, computed, watch } from 'vue'
 import { colore } from '../dati/colori.js'
+import Robot from './Robot.vue'
 import { DOVE, COSE, CONFRONTI, OPERAZIONI, LATI } from '../dati/scrivi.js'
 import { VERSI_IN_PAROLE, POSTI_IN_PAROLE, DOVE_IN_PAROLE, COSE_IN_PAROLE, CONFRONTI_IN_PAROLE, numeroInParole,
          LATI_PRENDI, LATI_POSA, FRECCE }
@@ -254,7 +255,9 @@ const scegli = v => { emit('scegli', v); emit('avanti') }
         <div v-if="pezzoCond === 'dove'" class="cst-fila cst-fila-intorno">
           <div class="cst-intorno" data-intorno>
             <template v-for="(d, k) in intorno" :key="k">
-              <span v-if="d === 'robot'" class="cst-intorno-robot" aria-hidden="true">🤖</span>
+              <span v-if="d === 'robot'" class="cst-intorno-robot" aria-hidden="true">
+                <svg viewBox="-17 -21 34 39"><Robot fermo /></svg>
+              </span>
               <button v-else-if="d" type="button" class="cst-intorno-cella" :class="{ 'cst-su': cond.dove === d }"
                       :data-dove="d" :aria-label="DOVE_IN_PAROLE[d]" @click="cambiaCond('dove', d)">{{ FRECCE_DOVE[d] }}</button>
               <span v-else></span>

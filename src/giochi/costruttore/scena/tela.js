@@ -1,5 +1,6 @@
 // il cantiere disegnato: riceve un quadro già deciso (docs/costruttore/linguaggio.md)
 import { colore } from '../dati/colori.js'
+import { dipingiRobot, ALTO } from './robot.js'
 
 const CIELO = '#d9eefb'
 const CIELO_BASSO = '#eef7fd'
@@ -273,50 +274,20 @@ export class Tela {
     const inMoto = q.robotDa && f < 1
     const cade = inMoto && q.come === 'cade'
     const cammina = inMoto && !cade
-    const salto = cammina ? Math.sin(f * Math.PI) * c * (q.come === 'sale' ? 0.12 : 0.06) : 0
-    const px = x * c, py = y * c - salto
-    const cx = px + c / 2
-    const v = q.verso || 1
-
-    ctx.fillStyle = '#3d4450'
-    const fase = cammina ? Math.sin(f * Math.PI * 2) : 0
-    const lg = c * 0.1, alt = c * 0.2
-    if (cade) {
-      ctx.fillRect(cx - c * 0.1, py + c * 0.78, lg, alt)
-      ctx.fillRect(cx + c * 0.0, py + c * 0.78, lg, alt)
-    } else {
-      ctx.fillRect(cx - c * 0.16 + fase * c * 0.05, py + c * 0.78, lg, alt)
-      ctx.fillRect(cx + c * 0.06 - fase * c * 0.05, py + c * 0.78, lg, alt)
-    }
-    ctx.fillStyle = '#f5b82e'
-    ctx.strokeStyle = '#8a6112'
-    ctx.lineWidth = Math.max(1, c * 0.05)
-    ctx.beginPath()
-    // roundRect manca su Safari <16: lì il robot è squadrato, ma c'è
-    if (ctx.roundRect) ctx.roundRect(cx - c * 0.26, py + c * 0.42, c * 0.52, c * 0.38, c * 0.08)
-    else ctx.rect(cx - c * 0.26, py + c * 0.42, c * 0.52, c * 0.38)
-    ctx.fill()
-    ctx.stroke()
-    ctx.fillStyle = '#8a6112'
-    if (cade) ctx.fillRect(cx + v * c * 0.24, py + c * 0.28, c * 0.07, c * 0.2)
-    else ctx.fillRect(cx + v * c * 0.24, py + c * 0.52, c * 0.14, c * 0.07)
-    ctx.fillStyle = '#e9edf2'
-    ctx.strokeStyle = '#4a5260'
-    ctx.beginPath()
-    if (ctx.roundRect) ctx.roundRect(cx - c * 0.22, py + c * 0.1, c * 0.44, c * 0.32, c * 0.08)
-    else ctx.rect(cx - c * 0.22, py + c * 0.1, c * 0.44, c * 0.32)
-    ctx.fill()
-    ctx.stroke()
-    ctx.fillStyle = '#23303d'
-    ctx.beginPath()
-    ctx.arc(cx + v * c * 0.07, py + c * 0.26, c * 0.07, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.fillStyle = '#4a5260'
-    ctx.fillRect(cx - c * 0.015, py + c * 0.01, c * 0.03, c * 0.1)
-    ctx.fillStyle = q.fermo ? '#c0262d' : '#ff8a3d'
-    ctx.beginPath()
-    ctx.arc(cx, py + c * 0.02, c * 0.05, 0, Math.PI * 2)
-    ctx.fill()
+    /* vinto l'ordine fa due saltelli, e poi resta contento */
+    const festa = q.contento ? t - q.contento : -1
+    const salto = cammina ? Math.sin(f * Math.PI) * c * (q.come === 'sale' ? 0.12 : 0.06)
+      : festa >= 0 && festa < 700 ? Math.abs(Math.sin(festa / 700 * Math.PI * 2)) * c * 0.12 : 0
+    const py = y * c - salto
+    const cx = x * c + c / 2
+    const verso = (q.verso || 1) > 0 ? 'destra' : 'sinistra'
+    const posa = q.fermo ? { verso, braccia: 'giu', occhi: 'strizzati', allarme: true }
+      : cade ? { verso, braccia: 'su', occhi: 'spalancati' }
+      : festa >= 0 ? { verso: 'fronte', braccia: 'su', occhi: 'contenti' }
+      : { verso, braccia: 'avanti', occhi: 'aperti' }
+    /* i mozzi girano di un giro a passo, all'indietro se va a sinistra */
+    posa.giro = cammina ? (q.verso || 1) * f * Math.PI * 2 : 0
+    dipingiRobot(ctx, cx, py + c * 0.99, (c * 0.95) / ALTO, posa)
     if (q.fermo) {
       ctx.fillStyle = '#c0262d'
       ctx.beginPath()

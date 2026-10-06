@@ -1,24 +1,34 @@
 <script setup>
-// Il robot del costruttore, disegnato: da mettere dentro un <svg>, centrato
-// nell'origine, alto una trentina di pixel. Vedi docs/costruttore/scheda.md.
-defineProps({ fermo: { type: Boolean, default: false } })   // fermo: senza il dondolio
+// Il Robot disegnato, da mettere dentro un <svg>: centrato nell'origine, alto
+// una trentina di pixel. I pezzi sono quelli della tela (scena/robot.js), così
+// è lo stesso dappertutto. Vedi docs/costruttore/scheda.md.
+import { computed } from 'vue'
+import { pezzi } from '../scena/robot.js'
+
+const props = defineProps({
+  fermo: { type: Boolean, default: false },              // senza il dondolio
+  verso: { type: String, default: 'fronte' },
+  braccia: { type: String, default: 'giu' },
+  occhi: { type: String, default: 'aperti' },
+})
+const disegno = computed(() => pezzi({ verso: props.verso, braccia: props.braccia, occhi: props.occhi }))
+const corpo = computed(() => disegno.value.filter(k => !k.suolo))
+const suolo = computed(() => disegno.value.filter(k => k.suolo))
+const punti = l =>l.map(p => p.join(',')).join(' ')
 </script>
 
 <template>
   <g class="cst-robot" :class="{ 'cst-robot-fermo': fermo }">
-    <g class="cst-robot-corpo">
-      <line x1="0" y1="-12" x2="0" y2="-16.5" stroke="#1c2420" stroke-width="1.6" />
-      <circle cx="0" cy="-17" r="2.4" fill="#ffc857" stroke="#1c2420" stroke-width="1.2" />
-      <rect x="-12.5" y="2" width="3.5" height="7" rx="1.5" fill="#9fb0a8" stroke="#1c2420" stroke-width="1.2" />
-      <rect x="9" y="2" width="3.5" height="7" rx="1.5" fill="#9fb0a8" stroke="#1c2420" stroke-width="1.2" />
-      <rect x="-10" y="-12" width="20" height="12" rx="4" fill="#e3ebe7" stroke="#1c2420" stroke-width="1.4" />
-      <rect x="-6.5" y="-8.5" width="13" height="5.5" rx="2.5" fill="#1c2420" />
-      <circle cx="-3.2" cy="-5.75" r="1.5" fill="#7fe0f0" />
-      <circle cx="3.2" cy="-5.75" r="1.5" fill="#7fe0f0" />
-      <rect x="-8.5" y="0.5" width="17" height="10.5" rx="2.5" fill="#cbd6d1" stroke="#1c2420" stroke-width="1.4" />
-      <rect x="-3" y="3.5" width="6" height="3.5" rx="1" fill="#e8a24f" />
+    <g v-for="(parte, j) in [corpo, suolo]" :key="j" :class="{ 'cst-robot-corpo': j === 0 }">
+      <template v-for="(k, i) in parte" :key="i">
+        <rect v-if="k.t === 'rett'" :x="k.x" :y="k.y" :width="k.w" :height="k.h" :rx="k.r"
+              :fill="k.fill" :stroke="k.stroke || undefined" :stroke-width="k.sw || undefined" />
+        <circle v-else-if="k.t === 'cerchio'" :cx="k.x" :cy="k.y" :r="k.r"
+                :fill="k.fill" :stroke="k.stroke || undefined" :stroke-width="k.sw || undefined" />
+        <polyline v-else :points="punti(k.punti)" fill="none" :stroke="k.stroke" :stroke-width="k.sw"
+                  stroke-linecap="round" stroke-linejoin="round" />
+      </template>
     </g>
-    <rect x="-9.5" y="11.5" width="19" height="4.5" rx="2.25" fill="#1c2420" />
   </g>
 </template>
 

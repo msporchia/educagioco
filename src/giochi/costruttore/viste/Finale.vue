@@ -3,6 +3,7 @@
 // retto il programma (vedi docs/costruttore/campagna.md).
 import { ref, onMounted, onUnmounted } from 'vue'
 import Festa from '../../Festa.vue'
+import Robot from './Robot.vue'
 
 defineProps({
   titolo: { type: String, required: true },
@@ -26,7 +27,9 @@ onUnmounted(() => clearTimeout(timer))
     <!-- i coriandoli cadono dietro il cartello: quello che c'è scritto resta leggibile -->
     <Festa :quanti="90" />
     <div class="cst-cartello">
-      <div class="cst-faccia-grande">🏗️</div>
+      <svg class="cst-faccia-grande" viewBox="-17 -21 34 39" aria-hidden="true" data-robot-contento>
+        <Robot braccia="su" occhi="contenti" />
+      </svg>
       <h2>{{ titolo }}</h2>
       <div class="cst-stelle-grandi">{{ '⭐'.repeat(stelle) }}<span class="cst-spenta">{{ '⭐'.repeat(2 - stelle) }}</span></div>
       <p v-if="ordini.length > 1">Il tuo programma ha retto su tutti gli ordini: <b>{{ ordini.join(' · ') }}</b>.</p>
