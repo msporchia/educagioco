@@ -5,7 +5,7 @@
    ritardi (500 ms del costruttore + 350 ms dell'archivio).
    Vedi docs/costruttore/campagna.md.
    `node test/esegui.mjs costruttore-salvataggio` */
-import { apriBrowser, apriGioco, azzera, semina, attendi, scegli } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, costruisci } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -19,7 +19,7 @@ const righe = () => page.locator('[data-editor] .cst-riga').count()
 async function apriIlPrimo() {
   await scegli(page, 'costruttore')
   await page.waitForSelector('.cst-mappa', { timeout: 5000 })
-  await tocca('[data-livello="0"]')
+  await costruisci(page, 0)
   await page.waitForSelector('[data-editor]', { timeout: 5000 })
 }
 async function aggiungiMetti() {

@@ -268,6 +268,15 @@ export async function scegli(page, chiave) {
   await page.click(`.carta.gioco.davanti[data-gioco="${chiave}"]`)
 }
 
+/* Apre un livello del costruttore dalla scheda: il tocco sul led apre il
+   fumetto e «▶ costruisci» lo apre (docs/costruttore/scheda.md). `quale` è
+   l'indice del livello, o 'libero' per il cantiere libero. */
+export async function costruisci(page, quale) {
+  await page.waitForSelector('[data-scheda-robot] [data-livello]', { timeout: 5000 })
+  await page.locator(quale === 'libero' ? '[data-libero]' : `[data-livello="${quale}"]`).click()
+  await page.click(`[data-fumetto-per="${quale}"] [data-azione="costruisci"]`)
+}
+
 /* Parte una tappa degli asteroidi dalla rotta: il tocco apre il fumetto e
    «▶ parti» la comincia (docs/asteroidi/mappa.md). `quale` è un selettore
    o un locator del nodo; di un selettore si prende il primo. */
