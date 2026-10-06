@@ -6,7 +6,7 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, onUnmounted } from
 import { state, item, answer,
          segna, segnaBest, mateProgresso, tabellineIntere,
          asteroidiCompleta } from '../store/profile.js'
-import { apertaQui } from '../data/portata-giochi.js'
+import { apertaQui, tappaChiusaPerEtaQui } from '../data/portata-giochi.js'
 import { PAGA } from '../data/paghe.js'
 import { borsa } from '../store/varieta.js'
 import { createPicker } from '../store/srs.js'
@@ -39,6 +39,7 @@ import VeloPausa from '../giochi/VeloPausa.vue'
 import { TEMPO_MAX } from '../quiz/nucleo/domanda.js'
 import MappaTabelline from '../components/MappaTabelline.vue'
 import MappaConcetti from '../components/MappaConcetti.vue'
+import RottaAsteroidi from '../components/RottaAsteroidi.vue'
 import Barra from '../components/Barra.vue'
 
 const emit = defineEmits(['vai'])
@@ -74,10 +75,6 @@ const progresso = computed(() => mateProgresso())
 const contatore = computed(() => filaDi(progresso.value))
 const fila = SCALETTA
 const dove = computed(() => posizioneOra(contatore.value))
-// i capitoli: su un telefono ventidue righe di fila sono un muro
-const capitoli = computed(() => CAPITOLI
-  .map((c, i) => ({ ...c, voci: fila.filter(v => v.cap === i) }))
-  .filter(c => c.voci.length))
 
 // il posto nella fila, o -1 per il volo infinito: lì il mestiere non è
 // un fatto della fila ma della domanda, e lo dice `magazzino` (store/volo.js)
@@ -115,6 +112,31 @@ const prossima = computed(() => daAssaggiare(voce.value))
 const cheChiede = v => (v.tipo === 'mente'
   ? v.T.esempio
   : v.T.nuova ? 'la tabellina del ' + v.T.nuova : 'tutte le tabelline')
+
+/* La rotta (docs/asteroidi/mappa.md): ogni tappa col suo stato già deciso.
+   Chiusa vince su superata: una tappa superata e poi chiusa dall'età resta chiusa. */
+const statoVoce = v => (!apertaVoce(v) ? 'chiusa' : fattaVoce(v) ? 'fatta'
+  : v.pos === dove.value ? 'ora' : 'aperta')
+function serveDi(v) {
+  if (tappaChiusaPerEtaQui(CHIAVE, v.pos)) return 'Questa tappa per ora è chiusa.'
+  const prima = fila[dove.value]
+  if (!prima) return 'Non ancora.'
+  const altre = v.pos - dove.value - 1
+  return `Prima tocca a «${prima.T.nome}»` +
+    (altre === 1 ? ", poi a un'altra tappa." : altre > 1 ? `, poi ad altre ${altre} tappe.` : '.')
+}
+const vociRotta = computed(() => fila.map(v => ({
+  pos: v.pos, n: v.n, tipo: v.tipo, cap: v.cap, nome: v.T.nome,
+  che: `${cheChiede(v)} · ${v.T.bersaglio} centri`,
+  stato: statoVoce(v), serve: serveDi(v),
+  disegno: v.tipo === 'mente' ? { tipo: 'mente', i: v.i, ultima: v.i === STAZIONI.length - 1 }
+                              : { tipo: 'pianeta', nuova: v.T.nuova || 0 },
+})))
+const voloRotta = computed(() => ({
+  aperto: !!progresso.value.libera, nome: VOLO.nome, record: recordVolo.value,
+  che: 'tabelline e conti a mente insieme, sempre più tosti',
+}))
+const partiDa = pos => (pos < 0 ? iniziaVolo() : vuoleIniziare(pos))
 
 /* le tabelline in gioco: quelle della tappa, e nel volo infinito tutte e
    dieci — non si spuntano più a mano da nessuna parte */
@@ -1149,64 +1171,30 @@ onUnmounted(() => {
       {{ cartello.testo }}
     </div>
 
-    <!-- ════════ la mappa della campagna: qui il gioco parla la lingua degli altri ════════ -->
-    <div v-if="fase === 'mappa'" class="schermo campagna">
-      <Barra titolo="Asteroidi" guida="mate" monete @indietro="$emit('vai','home')">
+    <!-- ════════ la rotta: la mappa dello spazio, una tappa dopo l'altra (docs/asteroidi/mappa.md) ════════ -->
+    <div v-if="fase === 'mappa'" class="schermo campagna spaziale">
+      <Barra titolo="Asteroidi" guida="mate" monete scura @indietro="$emit('vai','home')">
         <!-- i due conti di «Cosa so»: scendono se non si ripassa, la fila non lo dice più -->
         <div class="gettone">✖️ <b>{{ intere.size }}/10</b></div>
         <div class="gettone">🧠 <b>{{ stelleMente }}/{{ STAZIONI.length }}</b></div>
       </Barra>
-      <div class="centro elenco">
-        <h1>Asteroidi</h1>
-        <!-- la partita lasciata a metà (docs/asteroidi/sosta.md) -->
+      <!-- la partita lasciata a metà (docs/asteroidi/sosta.md): ferma sopra la mappa -->
+      <div v-if="ripresa" class="sopra-rotta">
         <Ripresa :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
                  @riprendi="riprendiPartita" @scorda="scorda"
                  @comincia="comincia" @annulla="chiede = null" />
-        <!-- una fila sola (docs/asteroidi/scaletta.md); i capitoli sono per
-             il telefono: ventidue righe sono un muro, tre-quattro una lista -->
-        <p class="testo">Una tappa per volta: chi porta una tabellina nuova, chi un trucco
-          da fare a mente. Superata, la tappa prende la sua ⭐. Quanto ti resta in
-          mano lo dice «Cosa so», qui in fondo.</p>
-
-        <template v-for="(c, ci) in capitoli" :key="'c' + ci">
-          <div class="capitolo">{{ c.emoji }} {{ c.titolo }}</div>
-          <p class="mini che">{{ c.che }}</p>
-          <div class="scaletta">
-            <button v-for="v in c.voci" :key="v.pos"
-                    :class="[v.tipo === 'mente' ? 'stazione' : 'pianeta',
-                             { fatto: fattaVoce(v), chiuso: !apertaVoce(v),
-                               ora: v.pos === dove }]"
-                    :disabled="!apertaVoce(v)" @click="vuoleIniziare(v.pos)">
-              <span class="em">{{ apertaVoce(v) ? v.T.emoji : '🔒' }}</span>
-              <b>{{ v.n }}. {{ v.T.nome }}</b>
-              <i>{{ cheChiede(v) }} · {{ v.T.bersaglio }} centri</i>
-              <!-- un segno solo: ⭐ = superata (docs/asteroidi/scaletta.md) -->
-              <span class="stato">
-                <em v-if="fattaVoce(v)" title="superata">⭐</em>
-              </span>
-            </button>
-          </div>
-        </template>
-
-        <!-- il volo infinito: uno solo (docs/asteroidi/volo.md), record letto prima di entrare -->
-        <div class="riga">
-          <button v-if="progresso.libera" class="bottone volo" data-volo
-                  @click="iniziaVolo()">{{ VOLO.nome }} ♾️
-            <i v-if="recordVolo" data-record>record {{ recordVolo }}</i></button>
-        </div>
-        <p v-if="!progresso.libera" class="mini">Il volo infinito — tabelline e conti a
-          mente insieme, sempre più tosti, senza bersaglio — si apre quando la fila
-          è finita.</p>
-
+      </div>
+      <RottaAsteroidi :voci="vociRotta" :capitoli="CAPITOLI" :volo="voloRotta" :arrivo="dove"
+                      :chi="state.player || ''" @parti="partiDa">
         <!-- l'astronave e i gettoni: si guadagnano giocando, quindi va
              detto una volta che esistono. Altrimenti il primo ❄️ che
              compare in basso è un'icona che nessuno ha capito. -->
         <div class="hangar">
-          <div class="capitolo">🚀 La tua astronave</div>
-          <p class="testo">Le vite sono la nave: intatta, poi con un'<b>ala strappata</b> che
+          <div class="titoletto">La tua astronave</div>
+          <p>Le vite sono la nave: intatta, poi con un'<b>ala strappata</b> che
             fuma e la spia che lampeggia, poi in fiamme. Se cresce di livello diventa più
             grossa. A fine partita torna com'era.</p>
-          <p class="testo">Ogni <b>cinque risposte giuste di fila</b> guadagni un gettone.
+          <p>Ogni <b>cinque risposte giuste di fila</b> guadagni un gettone.
             Resta lì in basso finché non lo premi tu — anche per tutta la partita, se
             vuoi — e sbagliando non si perde.</p>
           <div v-for="(P, id) in POTENZIAMENTI" :key="id" class="potere">
@@ -1215,11 +1203,8 @@ onUnmounted(() => {
             <i>{{ P.spiega }}</i>
           </div>
         </div>
-
-        <div class="riga">
-          <button class="bottone chiaro" @click="apriTavola">📊 Cosa so</button>
-        </div>
-      </div>
+      </RottaAsteroidi>
+      <button class="cosa-so" data-azione="cosa-so" @click="apriTavola">📊 Cosa so</button>
     </div>
 
     <!-- cosa so: una pagina di progressi, non un velo sopra la partita —
@@ -1400,46 +1385,33 @@ h1.chiaro span { color:#7fe3ff }
 .ripasso .tit { font-size:12px; letter-spacing:2px; text-transform:uppercase; opacity:.6; margin-bottom:4px }
 .ripasso i { font-style:normal; color:#ef5f5f }
 
-/* la mappa: sta sopra il canvas e parla la lingua del resto del gioco */
+/* le pagine sopra il canvas: «Cosa so» parla la lingua del resto del gioco */
 .campagna { background:linear-gradient(180deg,#fff4e6,#ffe6ef 55%,#e9e4ff); color:var(--testo);
             z-index:5 }
 .campagna .elenco { justify-content:flex-start; gap:12px; padding-bottom:26px }
-.campagna h1 { margin-bottom:2px }
-.scaletta { display:flex; flex-direction:column; gap:9px; width:100%; max-width:400px }
-/* le stazioni si vestono come i pianeti: sono la stessa cosa, una tappa con un bersaglio */
-.pianeta, .stazione {
-           display:grid; grid-template-columns:auto 1fr auto; grid-template-rows:auto auto;
-           gap:1px 13px; align-items:center; text-align:left; padding:12px 15px;
-           border-radius:18px; background:var(--carta);
-           box-shadow:0 4px 0 #dde3ea, 0 8px 18px #8593a822 }
-.pianeta:active, .stazione:active { transform:translateY(2px); box-shadow:0 2px 0 #dde3ea }
-.pianeta .em, .stazione .em { grid-row:1/3; font-size:31px }
-.pianeta b, .stazione b { font-size:16px; font-weight:900; color:var(--viola-scuro) }
-.pianeta i, .stazione i { font-style:normal; font-size:12px; color:var(--tenue) }
-/* il record sotto il nome del volo: la riga da battere, sul tasto */
-.bottone.volo { display:flex; flex-direction:column; align-items:center; gap:2px }
-.bottone.volo i { font-style:normal; font-size:12.5px; font-weight:600; opacity:.85 }
-.pianeta .stato, .stazione .stato { grid-row:1/3; font-size:22px }
-.pianeta .stato em, .stazione .stato em { font-style:normal }
-/* superato: resta acceso ma smette di chiamare */
-.pianeta.fatto, .stazione.fatto { background:linear-gradient(120deg,#e9f7ea,#fffffff0) }
-/* adesso tocca a questa, e a una sola: vedi docs/asteroidi/scaletta.md */
-.pianeta.ora, .stazione.ora { background:linear-gradient(120deg,#e8f0ff,#fffffff0);
-               box-shadow:0 4px 0 #c9d8f5, 0 0 0 2px var(--viola) }
-.pianeta.chiuso, .stazione.chiuso { opacity:.5; box-shadow:0 3px 0 #e9ddf5 }
-.pianeta.chiuso b, .pianeta.chiuso i,
-.stazione.chiuso b, .stazione.chiuso i { color:var(--tenue) }
+/* la rotta invece è lo spazio: fondo scuro piatto, come la tela che dipinge */
+.campagna.spaziale { background:#0b1029; color:#e6ebff }
+.sopra-rotta { flex:none; display:flex; justify-content:center; padding:8px 16px 4px }
 
-/* l'hangar: non è un negozio, spiega cosa può capitare alla nave */
-.hangar { width:100%; max-width:400px; display:flex; flex-direction:column; gap:7px;
-          margin-top:6px }
-.hangar .testo { margin:0; text-align:left }
+/* «Cosa so» resta a portata di dito, sopra la mappa che scorre */
+.cosa-so { position:absolute; right:14px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:6;
+           padding:10px 16px; border-radius:999px; border:1px solid #ffffff2e;
+           background:#1d2550; color:#e6ebff; font-size:15px; font-weight:600 }
+.cosa-so:active { transform:translateY(2px) }
+
+/* l'hangar, in fondo alla rotta: non è un negozio, spiega cosa può capitare alla nave */
+.hangar { width:calc(100% - 32px); max-width:420px; margin:6px auto 0; display:flex;
+          flex-direction:column; gap:8px; text-align:left }
+.hangar .titoletto { font-size:11.5px; font-weight:600; letter-spacing:2px; text-transform:uppercase;
+                     color:#8fa0d8 }
+.hangar p { margin:0; font-size:14px; line-height:1.45; color:#aab6dc }
+.hangar p b { color:#e6ebff; font-weight:600 }
 .potere { display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto;
           gap:0 11px; align-items:center; text-align:left; padding:9px 13px;
-          border-radius:16px; background:#ffffffb8; box-shadow:0 3px 0 #e6dcf2 }
-.potere .em { grid-row:1/3; font-size:25px }
-.potere b { font-size:14px; font-weight:900; color:var(--viola-scuro) }
-.potere i { font-style:normal; font-size:12px; color:var(--tenue); line-height:1.35 }
+          border-radius:14px; background:#ffffff0f; border:1px solid #ffffff1a }
+.potere .em { grid-row:1/3; font-size:24px }
+.potere b { font-size:14px; font-weight:600; color:#e6ebff }
+.potere i { font-style:normal; font-size:12.5px; color:#aab6dc; line-height:1.35 }
 
 /* le due facce di "Cosa so": i fatti in tavola, le strategie in elenco */
 .schede { display:flex; gap:8px; width:100%; max-width:420px }
@@ -1449,13 +1421,4 @@ h1.chiaro span { color:#7fe3ff }
 .schede button.on { background:var(--carta); color:var(--viola-scuro);
                     box-shadow:0 3px 0 #c9d8f5, 0 0 0 2px var(--viola) }
 
-/* il titolino di un capitolo: a sinistra, si legge come inizio di un blocco */
-.capitolo { align-self:flex-start; margin:10px 0 -4px; font-size:13px; font-weight:900;
-            letter-spacing:.6px; text-transform:uppercase; color:var(--viola-scuro);
-            opacity:.75 }
-.capitolo + .che { align-self:flex-start; max-width:400px; margin:0 0 2px;
-                   text-align:left; line-height:1.35 }
-
-/* una fila di ventidue tappe non entra in uno schermo: `.elenco` scorre,
-   i capitoli danno dei punti dove fermarsi */
 </style>
