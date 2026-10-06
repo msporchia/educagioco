@@ -97,8 +97,8 @@ compra e cosa si tocca per vedere che succede. Il codice: `dati/eroi.js`,
 - **Dura dodici stanze** (`STANZE_TORCIA`). **L'unità è la stanza, non il
   tempo**: sotto una domanda l'orologio è fermo, e un conto che scorre farebbe
   pagare la luce a chi legge piano. Scendere e risvegliarsi non consumano.
-  Dodici è misurato: chi tocca tutto entra in 34 stanze nel pozzo, 36 nelle
-  gallerie, 45 nella cisterna, 44 nel fondo, 83 nel labirinto — undici o
+  Dodici è misurato: chi tocca tutto entra in 34 stanze nel pozzo, 36 nella
+  grotta, 45 nella scala sommersa, 44 nella miniera, 83 nella botola — undici o
   dodici per piano. Una torcia vale un piano.
 - **Costa 5 gemme**, appena sotto la boccetta: un piano di luce è una
   comodità, non la sopravvivenza. Il prezzo è l'unica scala su cui sta tutto

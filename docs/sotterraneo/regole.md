@@ -41,12 +41,12 @@ tappe):
 
 | discesa | piani | solo il guardiano | tutto il piano |
 |---|---|---|---|
-| Le cantine | 2 | 14 | 25 |
-| Il pozzo | 3 | 38 | 82 |
-| Le gallerie | 3 | 40 | 70 |
-| La cisterna | 4 | 54 | 88 |
-| Il labirinto | 3 | 25 | 102 |
-| Il fondo | 4 | 28 | 97 |
+| La scalinata antica | 2 | 14 | 25 |
+| Il pozzo dal tetto rosso | 3 | 38 | 82 |
+| La grotta della scaletta | 3 | 40 | 70 |
+| La scala sommersa | 4 | 54 | 88 |
+| La botola segreta | 3 | 25 | 102 |
+| La miniera abbandonata | 4 | 28 | 97 |
 
 - **La forbice è il punto**: se «tutto» costasse quanto «il minimo» non ci
   sarebbe niente da scegliere.
@@ -54,7 +54,7 @@ tappe):
   `unita/sotterraneo` diventa rosso (anche per ognuno dei quattro eroi).
 - **Il patto del banco**: rispondendo bene otto volte su dieci si arriva in
   fondo tutte le volte.
-- **Stanze per piano: da quattro a sedici** (il labirinto ne ha sedici
+- **Stanze per piano: da quattro a sedici** (la botola segreta ne ha sedici
   invece di otto). La forma del piano (`misura`, `giri` 2..4) la controlla
   `guastiDellaCampagna`, che pretende anche che ogni tappa chieda più della
   precedente.
@@ -69,7 +69,7 @@ tappe):
   monete di quest'ultima volta, perché le altre sono già in tasca.
 - **Niente premio di tappa**: c'era, `premio × stelle` (🪙30–100 a
   discesa vinta), e non aveva rapporto con le domande che la discesa
-  chiedeva — il fondo pagava come le cantine a parità di stelle.
+  chiedeva — la miniera pagava come la scalinata a parità di stelle.
 - **Una e non tre**: qui la domanda è la mossa (porte, mostri, forzieri),
   un centinaio in una discesa da venti minuti. A 🪙3 una discesa
   renderebbe il doppio dell'ora della calibrazione
@@ -108,7 +108,7 @@ Nell'abisso ogni posto ha un branco suo, preso da queste fasce (vedi
   poco male. Due costi diversi nella stessa fascia sarebbero una lotteria.
 - **Il passo di discesa è una costante** (`PASSO_DEL_BRANCO`, con un `min`
   sulla lunghezza). Provato a derivarlo da `BRANCO.length`: aggiungere una
-  fascia in fondo ricalibrava anche le cantine, e la cisterna passava da 36 a
+  fascia in fondo ricalibrava anche la scalinata, e la scala sommersa passava da 36 a
   58 risposte obbligate.
 - **La faccia si sceglie dallo stesso tiro della fascia** (cifre alte la
   fascia, basse la faccia). Un `rnd()` in più sposta stanze, porte e forzieri
@@ -164,13 +164,13 @@ possibilissimi.
   (almeno 6) e i mostri tornati a casa loro (`rimettiInPiedi`). Il cartello
   dice che le gemme in tasca non ci sono più, ma quello che si ha addosso sì.
 - **Le occasioni sono contate: quattro più una per piano**
-  (`SVENIMENTI_IN_REGALO` + `piani`, da sei nelle cantine a otto nel fondo).
+  (`SVENIMENTI_IN_REGALO` + `piani`, da sei nella scalinata a otto nella miniera).
   All'ultima si risale, la tappa non è superata e si rigioca da capo. Il
   cartello dice sempre quante ne restano. Senza tetto la discesa si vinceva
   anche rispondendo giusto quattro volte su dieci.
 - **Il numero è misurato**, venti discese per tappa: a otto su dieci si
   arriva in fondo diciotto volte su venti o più; a sei su dieci circa metà;
-  a quattro su dieci quasi mai, salvo nelle cantine, che devono perdonare.
+  a quattro su dieci quasi mai, salvo nella scalinata, che deve perdonare.
   Con tre in regalo cadeva anche chi risponde bene. Le vite degli eroi sono
   tarate con questo tetto (vedi [roba.md](roba.md)).
 - **Le stelle** (`stelleDella`): tre senza svenire, due con uno, una con di

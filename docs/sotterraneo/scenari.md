@@ -17,8 +17,8 @@ Il sotterraneo è **il calco da guardare** per un mondo a sprite:
   chiavi**: si cambia vestito a una discesa senza toccare la tela. Aggiungere
   un pezzo è una riga lì, mai un `if` nel disegno. Oggi ce ne sono tre: **le cantine**
   (`sotterraneo_2.png`), **la cripta**
-  (`sotterraneo_4.png` e i due fogli `_2`, `_3`) e **la fornace** (`sotterraneo_5.png` e il foglio `_2`); le sei discese ne mostrano due a testa (cantine e
-  pozzo, gallerie e cisterna, labirinto e fondo) e l'abisso li attraversa
+  (`sotterraneo_4.png` e i due fogli `_2`, `_3`) e **la fornace** (`sotterraneo_5.png` e il foglio `_2`); le sei discese ne mostrano due a testa (la scalinata e
+  il pozzo, la grotta e la scala sommersa, la botola e la miniera) e l'abisso li attraversa
   scendendo ([abisso.md](abisso.md#il-posto-cambia-scendendo)). Ogni tappa lo
   dichiara con `scenario:`; chi non lo dichiara indossa le cantine (`SCENARIO`).
 - **Uno scenario nasce da un prompt** diviso in due:

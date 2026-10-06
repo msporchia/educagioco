@@ -67,7 +67,7 @@ Il giorno del cambio (settembre 2026), per una tappa tipica giocata bene:
 | asteroidi, pianeta del 5 (21 centri) | 41 la prima volta, 21 rifatta | 21 |
 | castello, il sentiero · il torrione | 1 · 3 (1 rifatta) | fino a 18 · fino a 90 |
 | castello, partita libera fino alla 20ª ondata | 4 | ~3 a conto |
-| sotterraneo, le cantine · il fondo | 10–30 · 34–102 | ~15–20 · ~25–80 |
+| sotterraneo, la scalinata · la miniera | 10–30 · 34–102 | ~15–20 · ~25–80 |
 | Survivors, il prato · la tana | 3–9 · 10–30 | ~15 · ~45 |
 | spagnolo, tappa 1 · tappa 7 (livello 5) | 10 · 25 | 12 · 24 |
 | inglese a mondi, una tappa da diciotto risposte | ~25 + 5 (🏁 +10) | ~25 |

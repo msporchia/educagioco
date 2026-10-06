@@ -76,25 +76,41 @@ Le aperture sono sette per sei discese più l'abisso. Il criterio: **le prime
 vicino a casa, le ultime in cima, l'abisso nel pozzo che dicono non abbia
 fondo**; a parità, il nome che somiglia al posto (`POSTO_DI` in `dati/terra.js`).
 
-| discesa | posto | perché |
+| discesa (la chiave resta) | posto | perché |
 |---|---|---|
-| Le cantine | la scala sotto l'arco di pietra, al centro | la prima grossa cosa su per la strada da casa; una scala che scende sotto un arco è una cantina |
-| Il pozzo | il pozzo coi coppi, accanto a casa | è un pozzo; ed è la prima cosa chiusa che si vede, col lucchetto, appena usciti |
-| Le gallerie | il buco nella roccia con la scaletta, a destra | a metà strada; un buco nella roccia porta alle gallerie |
-| La cisterna | la scala dentro lo stagno, a sinistra | a metà strada; l'acqua |
-| Il labirinto | la botola nel prato, in cima | in cima, oltre il cartello |
-| Il fondo | la miniera dentro il monte, in cima a destra | in fondo alla strada, la più lontana da casa |
+| La scalinata antica (`cantine`) | la scala sotto l'arco di pietra, al centro | la prima grossa cosa su per la strada da casa |
+| Il pozzo dal tetto rosso (`pozzo`) | il pozzo coi coppi, accanto a casa | il tetto rosso lo distingue dal pozzo d'ardesia; è la prima cosa chiusa che si vede, col lucchetto, appena usciti |
+| La grotta della scaletta (`gallerie`) | il buco nella roccia con la scaletta, a destra | a metà strada |
+| La scala sommersa (`cisterna`) | la scala dentro lo stagno, a sinistra | a metà strada; l'acqua |
+| La botola segreta (`labirinto`) | la botola nel prato, in cima | in cima, oltre il cartello |
+| La miniera abbandonata (`fondo`) | la miniera dentro il monte, in cima a destra | in fondo alla strada, la più lontana da casa |
 | l'abisso | il pozzo vecchio d'ardesia, in cima a sinistra | «dicono che non abbia fondo»; prima di finire le sei si vede ma non si scende |
+
+- **Cambiano solo i nomi mostrati** (`nome` in `CAMPAGNA`): le chiavi, gli
+  indici, le stelle e i salvataggi sono quelli di sempre. Il nome dice cosa
+  c'è disegnato, in italiano semplice; «Si apre quando finisci …» lo
+  riscrive in minuscolo, quindi deve reggere anche in mezzo a una frase.
+- **Le scale in acqua si prendono da dove si vede l'apertura**: la scala
+  sommersa ha i gradini che scendono verso sud, e l'eroe ci arriva dalla
+  riva sud dello stagno (`piede` [7, 24]), mai dall'alto; la riva est
+  accanto ai gradini è chiusa nella maschera. `unita/sotterraneo-terra`
+  controlla che la strada non passi a nord del punto d'arrivo.
 
 - **Si parte fra le case**, sulla strada sotto il pozzo di casa
   (`partenza`). Chi giocava prima della mappa si ritrova scoperto il posto
   delle discese già fatte.
+- **Una discesa trovata e aperta ha un cerchietto attorno all'ingresso**
+  (`ingresso` nel foglietto, un'ellisse in pixel della mappa, `.sot-anello`):
+  un anello sobrio che non copre il disegno, d'oro e che respira per la
+  prossima da fare. Niente targhette con disegnini sopra le discese, e
+  niente emoji nei nomi del fumetto, dell'avviso e del cartello; la chiusa
+  tiene il suo lucchetto, e le stelle si leggono nel fumetto.
 - **Toccando una discesa trovata l'eroe ci va e si apre il fumetto** sopra
   (sotto, se sopra non c'è posto; la vista scorre se esce): nome, dritta,
   piani, stelle e «scendo»; dell'abisso il piano più giù toccato. Toccare il
   prato col fumetto aperto lo chiude e basta.
 - **Una chiusa dice cosa ci sarà e cosa la apre** («Si apre quando finisci
-  le cantine»), senza tasto; chiusa per l'età non promette niente.
+  la scalinata antica»), senza tasto; chiusa per l'età non promette niente.
 - **Sopra una chiusa si posa una pezza**: il riquadro della stessa mappa
   ritoccata con le discese sbarrate (`PEZZE`), finché non c'è un velo scuro
   sfumato col lucchetto disegnato in codice (`viste/pixel.js`). Come si
@@ -105,7 +121,7 @@ fondo**; a parità, il nome che somiglia al posto (`POSTO_DI` in `dati/terra.js`
 ## Chi indica la strada
 
 - **Il vecchio minatore**, accanto a casa: toccato, dice dov'è la prossima
-  discesa aperta («Le cantine: su per la strada, sempre dritto, giù per la
+  discesa aperta («La scalinata antica: su per la strada, sempre dritto, giù per la
   scala sotto l'arco di pietra. Segui i sassi che luccicano.»); finite le
   sei, dov'è l'abisso. Finché non ha parlato ha i puntini sopra la testa.
 - **Il cartello all'incrocio**: tre frecce, coi posti; accanto ai posti i
@@ -127,7 +143,7 @@ fondo**; a parità, il nome che somiglia al posto (`POSTO_DI` in `dati/terra.js`
   browser stira sfumando.
 - **Si scopre camminando** (`VISTA`, otto celle attorno all'eroe), e un
   posto è trovato quando se ne vede il cuore: lo dice una riga in fondo
-  («Hai trovato 🕯️ Le cantine!»). Un posto nel buio è prato come il resto.
+  («Hai trovato la scalinata antica!»). Un posto nel buio è prato come il resto.
 - **Si ricorda per bambino** in `profile.campagne.sotterraneo.cfg.terra`:
   `{ nebbia, dove, parlato }`, la nebbia un bit per cella in esadecimale
   (384 caratteri). Un codice che non torna (altra mappa) è nebbia nuova.
@@ -137,6 +153,6 @@ Nei test: `[data-terra]` (la vista, con `data-camera`), `[data-eroe-terra]`
 `data-abisso`, `data-aperta`, `data-trovato`), `[data-chiusa]` (la pezza o il
 velo), `[data-minatore]`, `[data-cartello]`, `[data-sasso]`, `[data-fumetto]`
 (con `data-fumetto-di`), `[data-azione="scendi"]`, `[data-detto]`,
-`[data-chiusa-perche]`, `[data-avviso-terra]`; `unita/sotterraneo-terra`,
+`[data-chiusa-perche]`, `[data-avviso-terra]`, `.sot-anello` (il cerchietto); `unita/sotterraneo-terra`,
 `integrazione/sotterraneo-terra`, e `scendiNelSotterraneo` in
 `test/aiuto/browser.mjs` per chi deve solo scendere.
