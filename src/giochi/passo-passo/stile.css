@@ -36,47 +36,152 @@
 .pp .pp-em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
                           "Twemoji Mozilla", sans-serif; line-height: 1 }
 
-/* ═══════════ la mappa della campagna ═══════════ */
-.pp-mappa { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column;
-            gap: 18px; padding: 10px 12px 28px }
-.pp-scalino > h3 { display: flex; align-items: baseline; gap: 7px; font-size: 15px;
-                   color: var(--pp-tenue); margin-bottom: 8px }
-.pp-scalino > h3 .pp-em { font-size: 20px; align-self: center }
-.pp-scalino > h3 b { color: var(--pp-inchiostro); font-size: 16px; white-space: nowrap }
-.pp-scalino > h3 i { font-style: normal; font-size: 11.5px; flex: 1; text-align: right; line-height: 1.2 }
-.pp-tappe { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px }
+/* ═══════════ la mappa della campagna: le isole ═══════════
+   Il mare è il fondo della copertina in home, le caselle hanno lo
+   spessore del suo disegno. Piatto, niente sfumature. Vedi
+   docs/passo-passo/mappa.md. */
+.pp-mappa { --is-mare: #f29e5c; --is-onda: #f7b783; --is-riva: #fbd9b0; --is-spessore: #e07d3a;
+            --is-casella: #fffaf3; --is-scuro: #6b310c; --is-oro: #ffc21a; --is-stella: #f6b100;
+            --is-stella-spenta: #ecdcc8; --is-strada: #f4e2bd;
+            --is-ponte: #b9773f; --is-asse: #8f5426;
+            flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--is-mare) }
+.pp-mappa-cima { display: flex; justify-content: center; padding: 0 12px }
+.pp-mappa-cima > .ri-carta { margin: 8px 0 4px }
+.pp-scorre { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+             touch-action: pan-y; padding-bottom: env(safe-area-inset-bottom) }
+.pp-tavola { position: relative; margin: 0 auto; isolation: isolate }
+.pp-fondo { position: absolute; left: 0; top: 0; pointer-events: none }
 
-.pp-tappa { position: relative; min-height: 92px; padding: 16px 3px 7px;
-            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-            gap: 3px; background: var(--pp-carta); border-radius: 15px;
-            box-shadow: 0 3px 0 var(--pp-bordo); color: var(--pp-inchiostro);
-            transition: transform .12s }
-.pp-tappa:active { transform: scale(.96) }
-.pp-tappa .pp-numero { position: absolute; top: 5px; left: 7px; font-size: 11px; font-weight: 800;
-                       color: var(--pp-tenue) }
-.pp-tappa .pp-faccia { font-size: 30px }
-/* una fila lasciata a metà, che entrando si ritrova */
-.pp-tappa .pp-a-meta { position: absolute; top: 4px; right: 6px; font-size: 13px }
-.pp-mappa > .ri-carta { align-self: center }
-.pp-tappa .pp-nome { font-size: 11px; line-height: 1.15; text-align: center; color: var(--pp-tenue);
-                     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-                     overflow: hidden; min-height: 2.3em }
-.pp-tappa .pp-stelle { font-size: 11px; letter-spacing: 0 }
+.pp-onda { fill: none; stroke: var(--is-onda); stroke-width: 2.4; stroke-linecap: round }
+.pp-ponte { fill: none; stroke: var(--is-ponte); stroke-width: 24; stroke-linejoin: round }
+.pp-ponte-assi { fill: none; stroke: var(--is-asse); stroke-width: 24; stroke-dasharray: 2.5 7.5; stroke-linejoin: round }
+.pp-tunnel { fill: none; stroke: #a5562a; stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 0.1 9; opacity: .75 }
+
+/* le isole: la riva di sabbia, la terra del vestito */
+.pp-riva { fill: var(--is-riva); stroke: var(--is-riva); stroke-width: 10; stroke-linejoin: round }
+.pp-terra { fill: #a9d77f }
+.pp-prato .pp-terra { fill: #a9d77f }
+.pp-orto .pp-terra { fill: #b8d98a }
+.pp-stagno .pp-terra { fill: #9fd5a6 }
+.pp-ghiaccio .pp-terra { fill: #dcecfa }
+.pp-ghiaccio .pp-riva { fill: #f3f9ff; stroke: #f3f9ff }
+.pp-pascolo .pp-terra { fill: #d4e69c }
+.pp-sentiero .pp-terra { fill: #ffd977 }
+.pp-sentiero .pp-riva { fill: #fff0c2; stroke: #fff0c2 }
+.pp-solco { fill: #a7cc79 }
+.pp-crepa { fill: none; stroke: #f7fbff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round }
+.pp-steccato { fill: none; stroke: #b98552; stroke-width: 3 }
+.pp-paletto { fill: #a8703e }
+.pp-petalo { fill: #ffffff }
+.pp-bottone { fill: #ffcc33 }
+.pp-ciuffo { fill: #86bf5a }
+.pp-pascolo .pp-ciuffo { fill: #a9c96a }
+.pp-stagno .pp-ciuffo { fill: #74b46a }
+.pp-germoglio { fill: none; stroke: #6aa84a; stroke-width: 2; stroke-linecap: round }
+.pp-canna { fill: none; stroke: #5d9b55; stroke-width: 2.4; stroke-linecap: round }
+.pp-cristallo { fill: none; stroke: #ffffff; stroke-width: 1.6; stroke-linecap: round }
+.pp-neve { fill: #f4f9ff }
+.pp-pozza-riva { fill: #c9ecd0 }
+.pp-pozza { fill: #74c3df }
+.pp-pozza-luce { fill: none; stroke: #c4eaf6; stroke-width: 2.2; stroke-linecap: round }
+.pp-nebbia { fill: #fde9d3; opacity: .62 }
+
+.pp-strada { fill: none; stroke: var(--is-strada); stroke-width: 20; stroke-linecap: round; stroke-linejoin: round }
+
+/* la tana: un monticello di terra col buco; chiusa, il sasso davanti */
+.pp-tana-monte { fill: #c98a54 }
+.pp-tana-buco { fill: #4a2814 }
+.pp-tana-sasso { fill: #b8b0a6 }
+.pp-tana[data-aperta="0"] .pp-tana-buco { fill: #7d5434 }
+
+/* il cartello di un'isola: un'assicella, piatta */
+.pp-insegna { position: absolute; display: flex; align-items: center; gap: 7px; height: 32px; padding: 0 13px 0 3px;
+              border-radius: 999px; background: var(--is-casella); color: var(--is-scuro);
+              box-shadow: 0 3px 0 var(--is-spessore); pointer-events: none; white-space: nowrap }
+.pp-insegna b { font-size: 14px; font-weight: 800; letter-spacing: .2px; overflow: hidden; text-overflow: ellipsis }
+.pp-insegna-icona { flex: none; width: 26px; height: 26px; border-radius: 50%; background: #fde3c8;
+                    display: flex; align-items: center; justify-content: center; font-size: 15px }
+.pp-distintivo { position: absolute; width: 26px; height: 26px; border-radius: 50%; background: var(--is-casella);
+                 box-shadow: 0 2px 0 var(--is-spessore); display: flex; align-items: center; justify-content: center;
+                 font-size: 14px; pointer-events: none }
+.pp-insegna-velata { opacity: .6 }
+
+/* il bivio: un paletto con due assi, il coniglio da una parte e il cane dall'altra */
+.pp-bivio { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; gap: 3px;
+            align-items: center; pointer-events: none; z-index: 0 }
+.pp-bivio::before { content: ''; position: absolute; left: 50%; top: 6px; bottom: -12px; width: 5px; margin-left: -2.5px;
+                    border-radius: 2px; background: #a8703e; z-index: -1 }
+.pp-bivio-asse { display: flex; align-items: center; gap: 2px; height: 22px; padding: 0 5px 0 6px; border-radius: 7px;
+                 background: var(--is-casella); box-shadow: 0 2px 0 var(--is-spessore); font-size: 13px }
+.pp-bivio-asse svg { width: 13px; height: 13px; fill: none; stroke: var(--is-scuro); stroke-width: 2;
+                     stroke-linecap: round; stroke-linejoin: round }
+
+/* la casella: una tessera col suo spessore, come i tasti del gioco */
+.pp-casella { position: absolute; padding: 0; border: 0; border-radius: 15px;
+              display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+              background: var(--is-casella); color: var(--is-scuro); box-shadow: 0 4px 0 var(--is-spessore);
+              transition: transform .12s }
+.pp-casella:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--is-spessore) }
+.pp-casella-faccia { font-size: 22px; margin-top: 2px }
+.pp-casella-stelle { display: flex; gap: 1px }
+.pp-casella-stelle svg { width: 10px; height: 10px; fill: var(--is-stella-spenta) }
+.pp-casella-stelle svg.pp-presa, .pp-fumetto-stelle svg.pp-presa { fill: var(--is-stella) }
+.pp-casella .pp-a-meta { position: absolute; right: -7px; top: -7px; width: 21px; height: 21px; border-radius: 50%;
+                         background: #fff; box-shadow: 0 1px 0 var(--is-spessore);
+                         display: flex; align-items: center; justify-content: center; font-size: 11px }
+.pp-casella.pp-ora { box-shadow: 0 0 0 3px var(--is-oro), 0 4px 0 var(--is-spessore);
+                     animation: pp-respira 1.8s ease-in-out infinite }
+@keyframes pp-respira { 50% { box-shadow: 0 0 0 7px rgba(255,194,26,.5), 0 4px 0 var(--is-spessore) } }
+.pp-casella.pp-chiusa { background: #f7d2b0; box-shadow: 0 3px 0 #e9a877; color: #cf7a3c }
+.pp-casella.pp-velata { opacity: .7 }
+.pp-lucchetto { width: 20px; height: 20px }
+
+/* il sentiero senza fine: la casella tonda e d'oro in fondo alla strada */
+.pp-casella-sentiero { border-radius: 50%; background: #fff3c9; box-shadow: 0 4px 0 #d39a1c }
+.pp-casella-sentiero.pp-ora { box-shadow: 0 0 0 3px #fff4e6, 0 4px 0 #d39a1c }
+.pp-infinito { width: 44px; height: 22px; fill: none; stroke: var(--is-scuro); stroke-width: 4;
+               stroke-linecap: round }
+.pp-sentiero-nome { position: absolute; transform: translateY(-50%); display: flex; flex-direction: column;
+                    gap: 2px; line-height: 1.2; pointer-events: none; color: var(--is-scuro) }
+.pp-sentiero-nome.pp-a-sinistra { align-items: flex-end; text-align: right }
+.pp-sentiero-nome b { font-size: 15px; font-weight: 800 }
+.pp-sentiero-nome i { font-style: normal; font-size: 12.5px; color: #7a3b12 }
+
+/* il segnalino: lo sposta la vista, a fotogrammi; da fermo respira appena */
+.pp-segnalino, .pp-ombra { position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform }
+.pp-segnalino { width: 52px; height: 52px; z-index: 2 }
+.pp-segnalino-corpo { width: 100%; height: 100%; transform-origin: 50% 94% }
+.pp-animale-svg { display: block; width: 100%; height: 100%; transform-origin: 50% 94% }
+.pp-segnalino[data-in-viaggio="0"] .pp-animale-svg { animation: pp-fiato 2.6s ease-in-out infinite }
+@keyframes pp-fiato { 50% { transform: scale(1.02, .97) } }
+.pp-ombra { width: 28px; height: 6px; border-radius: 50%; background: rgba(110,45,8,.22); z-index: 1 }
+
+/* il fumetto: sopra la casella (e sopra l'animale), la coda punta a lei */
+.pp-fumetto { position: absolute; transform: translate(-50%, -100%); z-index: 3;
+              display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center;
+              padding: 11px 14px 13px; border-radius: 18px; background: #fffdf9; color: var(--is-scuro);
+              box-shadow: 0 8px 22px rgba(110,45,8,.28); animation: pp-compare .16s ease-out }
+.pp-fumetto.pp-sotto { transform: translate(-50%, 0) }
+.pp-fumetto::after { content: ''; position: absolute; left: calc(50% + var(--coda) - 9px); bottom: -8px;
+                     border: 9px solid transparent; border-bottom: 0; border-top-color: #fffdf9 }
+.pp-fumetto.pp-sotto::after { bottom: auto; top: -8px; border-top: 0; border-bottom: 9px solid #fffdf9;
+                              border-left-color: transparent; border-right-color: transparent }
+.pp-fumetto small { font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #b0703f }
+.pp-fumetto > b { font-size: 18px; font-weight: 800; color: var(--is-scuro) }
+.pp-fumetto-racconto { font-size: 13px; line-height: 1.28; color: #7c5638 }
+.pp-fumetto-stelle { display: flex; gap: 3px; margin-top: 3px }
+.pp-fumetto-stelle svg { width: 24px; height: 24px; fill: var(--is-stella-spenta) }
+.pp-fumetto-record { margin-top: 2px; font-size: 13px; font-weight: 700; color: #8a4a1c }
+.pp-fumetto-serve { margin-top: 4px; font-size: 13.5px; font-weight: 700; line-height: 1.35; color: #7c5638 }
+.pp-fumetto-gioca { margin-top: 8px; padding: 10px 30px; border: 0; border-radius: 999px;
+                    background: var(--pp-via); color: #fff; font-size: 17px; font-weight: 800;
+                    box-shadow: 0 4px 0 var(--pp-via-scuro); display: flex; align-items: center; gap: 9px }
+.pp-triangolo { width: 13px; height: 15px; fill: currentColor }
+.pp-fumetto-gioca:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--pp-via-scuro) }
+@keyframes pp-compare { from { opacity: 0; margin-top: 6px } }
+
+.pp-in-viaggio { position: absolute; inset: 0; z-index: 4 }
 .pp-spenta { opacity: .22; filter: grayscale(1) }
-.pp-tappa.pp-chiusa { opacity: .5; box-shadow: none }
-/* la prossima da giocare respira con la luce, non con la misura: un
-   bersaglio che cambia grandezza è un bersaglio che scappa al dito */
-.pp-tappa.pp-adesso { box-shadow: 0 0 0 3px var(--pp-luce), 0 3px 0 var(--pp-bordo);
-                      animation: pp-respira 1.8s ease-in-out infinite }
-@keyframes pp-respira { 50% { box-shadow: 0 0 0 6px rgba(255,194,26,.55), 0 3px 0 var(--pp-bordo) } }
-
-.pp-sentiero { display: flex; align-items: center; gap: 12px; text-align: left; padding: 14px 16px;
-               border-radius: 18px; background: linear-gradient(135deg, #fff6d8, #ffe7b8);
-               box-shadow: 0 3px 0 #efd08a; color: var(--pp-inchiostro) }
-.pp-sentiero > .pp-em { font-size: 32px; flex: none }
-.pp-sentiero b { display: block; font-size: 16px }
-.pp-sentiero i { display: block; font-style: normal; font-size: 12.5px; color: var(--pp-tenue) }
-.pp-sentiero.pp-chiusa { opacity: .55; box-shadow: none }
 
 /* ═══════════ il campo ═══════════ */
 .pp-campo { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px;
