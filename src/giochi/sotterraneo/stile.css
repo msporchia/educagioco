@@ -42,9 +42,6 @@
 .sot-n { display: inline-flex; align-items: center; gap: 2px; font-size: 13px }
 .sot-n b { font-size: 13px }
 
-.sot-tappe { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 14px 24px; display: grid; gap: 10px }
-.sot-invito { margin: 2px 2px 6px; color: var(--sot-tenue); font-size: 13.5px; line-height: 1.5 }
-.sot-invito b { color: var(--sot-inchiostro); font-weight: 650 }
 
 /* in cima e col bordo d'oro: una discesa lasciata a metà vale venti minuti già spesi */
 .sot-ripresa {
@@ -61,27 +58,116 @@
 .sot-modale h2 { margin: 0 0 6px; font-size: 19px; display: flex; align-items: center; gap: 8px }
 .sot-modale > p { margin: 0 0 10px; color: var(--sot-tenue); font-size: 13.5px; line-height: 1.5 }
 
-.sot-tappa {
-  display: flex; align-items: center; gap: 12px; width: 100%;
-  padding: 12px 14px; text-align: left; color: inherit; font: inherit;
-  background: var(--sot-carta); border: 1px solid var(--sot-bordo); border-radius: 18px;
-}
-.sot-tappa:active { transform: scale(.99) }
-.sot-tappa.sot-chiusa { opacity: .45 }
-.sot-tappa.sot-adesso { border-color: var(--sot-oro); box-shadow: 0 0 0 1px #ffd23f44 }
 .sot-faccia { font-size: 30px }
-.sot-tappa .sot-testo { flex: 1; min-width: 0; display: grid }
-.sot-tappa .sot-testo b { font-size: 16px }
-.sot-tappa .sot-testo i { font-style: normal; font-size: 12.5px; color: var(--sot-tenue) }
-.sot-conto { font-size: 13px; color: var(--sot-oro); white-space: nowrap }
 
-/* più scuro delle sei: non è la settima discesa, è quello che c'è sotto il fondo */
-.sot-tappa.sot-abisso {
-  margin-top: 4px;
-  background: linear-gradient(160deg, #171226, var(--sot-carta) 75%);
-  border-color: #7a5cc266;
+/* ═══════════ la terra di sopra (viste/Terra.vue, docs/sotterraneo/terra-di-sopra.md) ═══════════
+   La mappa sta in un mondo che si sposta (translate3d a mano, una volta per fotogramma); le carte in cima e in
+   fondo galleggiano sopra e la vista lo sa (le misura). Niente si trascina col dito: `touch-action: none`. */
+.sot-tappe { flex: 1; min-height: 0; position: relative; display: flex }
+.sot-terra {
+  position: relative; flex: 1; min-height: 0; overflow: hidden;
+  touch-action: none; background: #07060b; cursor: pointer;
 }
-.sot-tappa.sot-abisso .sot-conto { color: #b39ddb }
+.sot-mondo { position: absolute; left: 0; top: 0; will-change: transform }
+.sot-mappa, .sot-nebbia { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block }
+.sot-mappa { image-rendering: pixelated; pointer-events: none; user-select: none; -webkit-user-drag: none }
+/* la nebbia è a un quarto: stirata col suo sfumato, così il bordo del buio viene a nuvole */
+.sot-nebbia { pointer-events: none; image-rendering: auto }
+
+.sot-chiusa-pezza { position: absolute; pointer-events: none; display: grid; place-items: center }
+.sot-chiusa-pezza > img { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated }
+/* il velo finché non c'è la mappa sbarrata: una macchia scura che sfuma, non un rettangolo */
+.sot-chiusa-pezza.sot-velata { background: radial-gradient(closest-side, #0a0812b0, #0a081290 62%, #0a081200) }
+.sot-chiusa-pezza svg { filter: drop-shadow(0 2px 0 #0008) }
+
+.sot-sasso { position: absolute; width: 18px; height: 12px; transform: translate(-50%, -50%); pointer-events: none }
+.sot-sasso > svg { position: absolute; left: 0; top: 0 }
+.sot-sasso > .sot-luccica {
+  left: 4px; top: -9px; opacity: 0;
+  animation: sot-luccica 2.4s steps(1) infinite; animation-delay: var(--ritardo, 0s);
+}
+/* tre fotogrammi: acceso, mezzo, spento; il sasso resta, cambia solo la scintilla */
+@keyframes sot-luccica { 0% { opacity: 1 } 20% { opacity: .5 } 40%, 100% { opacity: 0 } }
+
+.sot-minatore, .sot-posto {
+  position: absolute; padding: 0; margin: 0; border: 0; background: none; color: inherit; font: inherit;
+}
+.sot-minatore { transform: translate(-50%, -88%); line-height: 0 }
+.sot-minatore > svg, .sot-minatore > .sot-ritratto { display: block }
+.sot-tre-punti {
+  position: absolute; right: -14px; top: -8px; min-width: 24px; padding: 1px 5px 6px;
+  font-size: 15px; line-height: 12px; color: #2b2433; background: #fffaf0;
+  border: 2px solid #2b2433; border-radius: 10px; animation: sot-respira 1.6s ease-in-out infinite;
+}
+@keyframes sot-respira { 50% { transform: translateY(-3px) } }
+
+.sot-io-sopra { position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform }
+.sot-io-sopra > .sot-ritratto { position: absolute; left: 0; top: 0; transform: translate(-50%, -94%) }
+.sot-io-sopra.sot-specchio > .sot-ritratto { transform: translate(-50%, -94%) scaleX(-1) }
+
+.sot-segno {
+  position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%;
+  border: 2px solid #fffaf0; pointer-events: none; animation: sot-segno .5s ease-out forwards;
+}
+@keyframes sot-segno { to { transform: scale(2.4); opacity: 0 } }
+
+.sot-posto { border-radius: 16px }
+.sot-posto.sot-buio { pointer-events: none }
+.sot-posto:focus-visible { outline: 2px solid var(--sot-oro) }
+/* la targa: cosa c'è sotto, appesa sopra il posto; la prossima da fare respira d'oro */
+.sot-targa {
+  position: absolute; left: 50%; top: -6px; transform: translate(-50%, -100%);
+  display: inline-flex; align-items: center; gap: 3px; padding: 4px 8px;
+  font-size: 17px; line-height: 1; white-space: nowrap;
+  background: #fffaf0; color: #2b2433; border: 2px solid #2b2433; border-radius: 999px;
+}
+.sot-targa i { font-style: normal; font-size: 11px }
+.sot-posto.sot-adesso .sot-targa { box-shadow: 0 0 0 3px var(--sot-oro); animation: sot-respira 1.6s ease-in-out infinite }
+
+.sot-fumetto {
+  position: absolute; z-index: 3; box-sizing: border-box; padding: 11px 13px 12px; border-radius: 14px;
+  font-size: 13.5px; line-height: 1.4; text-align: left; cursor: default;
+  background: #fffaf0; color: #2b2433; border: 2px solid #2b2433;
+  box-shadow: 0 8px 24px #0007; animation: sot-appare .16s ease-out;
+}
+.sot-fumetto.sot-tenue { background: #e4ded3 }
+.sot-fumetto::after {
+  content: ''; position: absolute; left: calc(var(--coda, 50%) - 8px); bottom: -9px; width: 14px; height: 14px;
+  background: inherit; border: 2px solid #2b2433; border-top: 0; border-left: 0; transform: rotate(45deg);
+}
+.sot-fumetto.sot-sotto::after { bottom: auto; top: -9px; transform: rotate(225deg) }
+.sot-fum-nome { display: flex; align-items: center; gap: 6px; font-size: 16px; color: #2b2433 }
+.sot-fum-dritta { display: block; margin-top: 2px; font-style: normal; color: #6b6272; font-size: 13px }
+.sot-fum-conto { margin: 6px 0 0; font-size: 13px }
+.sot-fum-chiusa { margin: 8px 0 0; padding: 6px 9px; border-radius: 9px; background: #d2cabd; font-weight: 600 }
+.sot-fum-detto { margin: 6px 0 0 }
+.sot-fum-freccia { margin: 6px 0 0 }
+.sot-fum-freccia b { display: inline-block; width: 18px; font-size: 16px }
+.sot-fum-freccia i { font-style: normal; font-size: 12px; color: #6b6272; padding-left: 22px }
+.sot-fumetto .sot-grosso { margin-top: 10px; padding: 11px }
+
+/* le carte che galleggiano: in cima la discesa a metà, in fondo chi scende */
+.sot-terra-sopra, .sot-terra-sotto {
+  position: absolute; left: 0; right: 0; z-index: 4; padding: 10px 12px;
+  display: grid; gap: 8px; pointer-events: none;
+}
+.sot-terra-sopra { top: 0 }
+.sot-terra-sotto { bottom: 0; justify-items: start }
+.sot-terra-sopra > *, .sot-terra-sotto > * { pointer-events: auto }
+.sot-terra-sopra .sot-ripresa { box-shadow: 0 10px 30px #000a }
+.sot-ripresa-tasti { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px }
+.sot-ripresa-tasti .sot-grosso { margin-top: 6px; padding: 11px 8px; font-size: 14.5px }
+.sot-terra-sotto .sot-chi { width: auto; padding: 6px 10px 6px 6px; gap: 9px; background: #141826e8; box-shadow: 0 6px 20px #0008 }
+.sot-terra-sotto .sot-chi .sot-testo b { font-size: 14px }
+.sot-trovato {
+  justify-self: center; margin: 0; padding: 7px 13px; border-radius: 14px; pointer-events: none !important;
+  font-size: 13.5px; color: #f3ece0; background: #24202be6; border: 1px solid #4a4252;
+  animation: sot-appare .2s ease-out;
+}
+.sot-trovato.sot-piano { color: var(--sot-tenue) }
+@media (prefers-reduced-motion: reduce) {
+  .sot-targa, .sot-tre-punti, .sot-posto.sot-adesso .sot-targa { animation: none }
+}
 
 .sot-campo { flex: 1; min-height: 0; position: relative }
 /* ancorato, non semplicemente al 100%: un canvas nel flusso con un'altezza sua dimensiona il genitore da

@@ -11,7 +11,7 @@ import { suono } from '../../audio.js'
 import { segna, segnaBest } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { PAGA } from '../../data/paghe.js'
-import { progresso, aperta, adesso, stelleDi, completa, sosta, salvaSosta, buttaSosta,
+import { progresso, aperta, adesso, chiusaPerEta, stelleDi, completa, sosta, salvaSosta, buttaSosta,
          scelta, ricorda } from '../campagne.js'
 import { usaPausa } from '../pausa.js'
 import VeloPausa from '../VeloPausa.vue'
@@ -135,7 +135,12 @@ const tappe = computed(() => CAMPAGNA.map((t, i) => ({
   aperta: aperta(CHIAVE, i),
   adesso: adesso(CHIAVE, i),
   stelle: stelleDi(CHIAVE, i),
+  perEta: chiusaPerEta(CHIAVE, i),
+  fatta: i < (avanza.tappa || 0),
 })))
+
+// la terra di sopra si ricorda per bambino (cfg.terra): la nebbia, dove si era, se il minatore ha già parlato
+const ricordaTerra = v => ricorda(CHIAVE, 'terra', v)
 
 const titolo = computed(() =>
   corsa.value ? tappaDi(tappaIdx.value).nome : 'Il sotterraneo')
@@ -622,6 +627,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
     <div class="sot">
       <template v-if="!corsa">
         <Campagna :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
+                  :terra="scelta(CHIAVE, 'terra', null)" @terra="ricordaTerra"
                   @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda"
                   @eroe="scegliEroe = true" />
         <Eroi v-if="scegliEroe" :eroi="EROI" :scelto="chiEro || ''" :primo="!chiEro"
