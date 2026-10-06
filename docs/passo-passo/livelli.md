@@ -87,6 +87,51 @@ Le soluzioni scritte più corte le verifica `strumenti/passo-passo/minimi.mjs`.
   cane): lì si apre il sentiero senza fine e lì si fermano i traguardi di
   prima — una soglia che si allunga con la campagna farebbe tornare
   d'argento l'oro di chi le aveva finite tutte.
+- **`cfg.eredita` è un cursore come `tappa`**: se la fila cambia si travasa
+  con lei (in `Gioco.vue`, accanto a `riordina`).
+
+## Le due strade
+
+La campagna resta una fila sola (le stelle sotto l'indice), ma sulla mappa
+le strade sono due ([mappa.md](mappa.md)). Le ricava `motore/strade.js`
+dai dati, senza elenchi scritti a mano:
+
+- **una tappa con le pecore nella mappa è del cane**, le altre del
+  coniglio. Il coniglio è la **strada maestra**: tutte le sue tappe in fila.
+- **Il cane è un ramo**: le sue tappe di uno scalino fanno un'isola, che
+  parte da una tana sulla strada del coniglio (l'`attacco`): la prima tappa
+  del coniglio dello stesso scalino, quella che insegna la carta (il viale,
+  i gradini storti, le colline, la spirale di ghiaccio); se lo scalino è
+  tutto del cane, l'ultima del coniglio prima di lui (la fine delle buche).
+
+Chi apre cosa:
+
+- **il coniglio**: fatta la tappa del coniglio prima. Non chiede mai il cane.
+- **il cane**: fatta la tappa del cane prima, **e** fatta la tappa del
+  coniglio da cui si apre la sua tana. Il primo gregge si apre alla fine
+  delle buche, come prima; le stalle quando c'è il gregge e il viale.
+- **fatta** vuol dire con almeno una stella, o sotto il cursore di prima.
+- **Quello che il cursore di prima apriva resta aperto**: alla prima
+  apertura il gioco scrive `cfg.eredita` (la `tappa` di quel momento), e
+  tutto fino a lì resta aperto e conta come fatto. Il cursore `tappa`
+  continua a salire con `completa()` (al massimo), e lo leggono il sentiero,
+  i traguardi, l'esperienza e la riga della home; le aperture no.
+- **L'età e i grandi valgono su tutte e due**: `chiusaPerEta` vince su tutto,
+  e una tappa che l'età dà per passata è aperta comunque.
+- **Il ▶ a fine partita resta sulla strada che si sta facendo**
+  (`prossima`): il coniglio va avanti sulla strada maestra; il cane va
+  avanti nella sua isola, e finita l'isola torna sulla strada maestra alla
+  tappa dopo la tana. Al bivio, con la strada maestra chiusa dall'età, il
+  ramo. Davanti allo zaino chiuso o in fondo, il sentiero.
+- **La campagna è finita quando è finita la strada del coniglio** (l'ultima
+  tappa è sua): la riga della home dice «tutte le tane». Il cane conta per
+  le stelle.
+- **Il sentiero mescola il cane** solo a pascolo finito (il gregge vinto):
+  un gradino si conta finito dalla sua ultima tappa, non dalla dopo.
+
+Il cane non insegna niente che serva al coniglio dopo: le sue carte e le
+cose del mondo che usa le ha già portate il coniglio, e
+`unita/passo-passo-strade` lo pretende.
 
 ## Le tappe di oggi
 

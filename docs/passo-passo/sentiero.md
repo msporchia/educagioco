@@ -12,7 +12,8 @@ La modalità che non finisce: posti fatti al momento da
   posti del finale.
 - **Mescola solo quello che si è finito** (`INGREDIENTI`): ogni gradino
   **finito** della campagna porta una cosa — una regola del mondo, il cane,
-  una carta. Finito e non visto: il gradino in corso si sta imparando.
+  una carta. Finito e non visto: il gradino in corso si sta imparando. Il
+  cane arriva a pascolo finito, anche per chi ha tirato dritto col coniglio.
   «Tutto il mondo» non porta niente di nuovo.
 - **Si apre alla fine delle buche** (`TAPPE_PRIME` in `dati/campagna.js`),
   anche se sulla mappa sta in fondo: a sei anni lo zaino è chiuso per età e

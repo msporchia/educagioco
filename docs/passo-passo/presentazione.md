@@ -36,7 +36,9 @@ ponte), le **buche** collegate a coppie.
 
 Poi arriva il **cane pastore**: le frecce sono le stesse, ma non è il cane a
 dover arrivare, sono le pecore. Una pecora si sposta solo scappando dal cane,
-quindi la fila si scrive pensando a dove andrà a finire lei.
+quindi la fila si scrive pensando a dove andrà a finire lei. Il cane è una
+strada laterale: sulla mappa delle isole parte da una tana, e chi vuole
+può tirare dritto col coniglio.
 
 Dai sette anni e mezzo cresce **la lingua**: una carta 🔁 che ripete quello
 che ha dentro, poi il «ripeti **fino a**» un colore e il «**se**» sono su

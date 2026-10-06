@@ -7,13 +7,15 @@ import { ref, shallowRef, reactive, computed, watch, nextTick, onMounted, onBefo
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { state, addCoins, segna, segnaBest, tappaAperta, spendi } from '../../store/profile.js'
-import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato, ricorda,
-         sosta, salvaSosta } from '../campagne.js'
+import { progresso, stelleDi, completa, primatoDi, segnaPrimato, ricorda,
+         sosta, salvaSosta, chiusaPerEta } from '../campagne.js'
+import { tappaApertaQui } from '../../data/portata-giochi.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
 
 import { SENZA_FINE } from './gioco.js'
-import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_PRIME, tappeDelloScalino,
+import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_PRIME,
          FILE, FILA_ATTUALE, riordina } from './dati/campagna.js'
+import { STRADE, aperture, cosaManca, prossima, seguente, tappaDiAdesso, ereditaDi } from './motore/strade.js'
 import { MASSIMO_FILA, LEGENDA } from './dati/mondo.js'
 import { apri, apriSe, carteDi, conCicli, daScegliere, eApri, eSe, valoreDi, COLORI } from './dati/carte.js'
 import { Livello } from './motore/livello.js'
@@ -97,10 +99,25 @@ const avanza = progresso(CHIAVE)
 // riordino della fila di livelli: vedi docs/passo-passo/livelli.md
 if (avanza.cfg.fila !== FILA_ATTUALE) {
   const vecchia = FILE[avanza.cfg.fila || 1]
-  if (vecchia && ((avanza.tappa || 0) > 0 || Object.keys(avanza.stelle || {}).length))
+  if (vecchia && ((avanza.tappa || 0) > 0 || Object.keys(avanza.stelle || {}).length)) {
     Object.assign(avanza, riordina(avanza, vecchia))
+    // il cursore di prima delle due strade è un cursore come `tappa`, e si travasa con lei
+    if (typeof avanza.cfg.eredita === 'number') avanza.cfg.eredita = riordina({ tappa: avanza.cfg.eredita }, vecchia).tappa
+  }
   ricorda(CHIAVE, 'fila', FILA_ATTUALE)
 }
+/* le due strade: quello che il cursore di prima apriva resta aperto, e da
+   qui si apre andando avanti su una strada (docs/passo-passo/livelli.md) */
+if (typeof avanza.cfg.eredita !== 'number') ricorda(CHIAVE, 'eredita', avanza.tappa || 0)
+const fatta = i => stelleDi(CHIAVE, i) > 0 || i < ereditaDi(avanza)
+const perEta = i => chiusaPerEta(CHIAVE, i)
+// aperta dall'età o dai grandi anche senza averci giocato
+const daFuori = i => tappaApertaQui(CHIAVE, i, -1)
+const strade = aperture(STRADE, { fatta, daFuori, perEta, eredita: ereditaDi(avanza) })
+const aperta = i => strade.aperta(i)
+const prossimaDopo = i => prossima(STRADE, i, aperta)
+// in fondo a una strada (o davanti allo zaino chiuso) ▶ porta al sentiero, se è aperto
+const sentieroDopo = i => { const s = seguente(STRADE, i); return s === null || s === TAPPE_PICCOLE }
 
 /* ═══════════ la partita lasciata a metà ═══════════
    La fila di ogni livello e il sentiero in corso: vedi docs/passo-passo/sosta.md */
@@ -131,28 +148,40 @@ const sentieroAperto = () => tappaAperta(TAPPE_PRIME, avanza.tappa)
 // ingredienti sbloccati: vedi docs/passo-passo/sentiero.md
 const sbloccati = () => SCALINI.filter(s => INGREDIENTI[s.chiave]).filter(s => {
   const u = CAMPAGNA.map(t => t.scalino).lastIndexOf(s.chiave)
-  return stelleDi(CHIAVE, u) > 0 || (u + 1 < QUANTE_TAPPE && aperta(CHIAVE, u + 1))
+  return fatta(u) || daFuori(u)
 }).map(s => INGREDIENTI[s.chiave])
 
-/* ═══════════ la mappa ═══════════ */
-const scalini = computed(() => SCALINI.map(s => ({
-  ...s,
-  tappe: tappeDelloScalino(s.chiave).map(t => ({
-    ...t,
-    aperta: aperta(CHIAVE, t.indice),
-    adesso: adesso(CHIAVE, t.indice),
-    stelle: stelleDi(CHIAVE, t.indice),
+/* ═══════════ la mappa ═══════════
+   Lo stato di ogni casella lo decide il gioco, la mappa lo disegna
+   (docs/passo-passo/mappa.md): chiusa vince su fatta. */
+const adessoQui = computed(() => tappaDiAdesso(STRADE, {
+  ultima: Number.isInteger(avanza.cfg.ultima) ? avanza.cfg.ultima : null,
+  cursore: avanza.tappa || 0, aperta, fatta,
+}))
+const voci = computed(() => CAMPAGNA.map((t, i) => {
+  const s = SCALINI.find(x => x.chiave === t.scalino)
+  const qui = aperta(i), stelle = stelleDi(CHIAVE, i)
+  return {
+    indice: i, nome: t.nome, icona: t.icona, racconto: t.racconto, stelle,
+    stato: !qui ? 'chiusa' : i === adessoQui.value ? 'ora' : stelle > 0 ? 'fatta' : 'aperta',
     aMeta: !!quaderno.livelli[t.chiave],
-  })),
-})))
+    serve: qui ? '' : cosaManca(STRADE, i, { fatta, aperta, perEta }),
+    scalino: { icona: s.icona, nome: s.nome },
+  }
+}))
+// dove sta il segnalino: la tappa di adesso; non restando niente, il sentiero o l'ultima giocata
+const doveSegnalino = computed(() => {
+  if (adessoQui.value !== null) return adessoQui.value
+  if (sentieroAperto()) return 'senza-fine'
+  const u = avanza.cfg.ultima
+  return Number.isInteger(u) && aperta(u) ? u : 0
+})
 
 const statoSentiero = computed(() => ({
   aperto: sentieroAperto(),
   record: primatoInParole(primatoDi(CHIAVE), SENZA_FINE.misura),
   quante: TAPPE_PRIME,
   fatte: Math.min(avanza.tappa, TAPPE_PRIME),
-  /* sulla mappa sta in fondo, dopo l'ultimo gradino */
-  dopo: SCALINI.at(-1).chiave,
 }))
 
 // la guida della prima volta (motore/guida.js, docs/passo-passo/regole.md)
@@ -322,7 +351,8 @@ function entra(t, indice, gia = indice >= 0 ? quaderno.livelli[t.chiave] : null)
   })
 }
 
-const avviaTappa = i => entra(CAMPAGNA[i], i)
+// la tappa giocata per ultima: lì torna il segnalino (docs/passo-passo/mappa.md)
+const avviaTappa = i => { ricorda(CHIAVE, 'ultima', i); entra(CAMPAGNA[i], i) }
 
 /* ═══════════ comporre la fila ═══════════
    Ogni tocco passa da `motore/fila.js`, che dice com'è la fila dopo. */
@@ -685,8 +715,8 @@ function scriviVittoria(esito) {
     carota: esito.carota, cane: !!(liv && liv.cane), svelato: svelato.value, monete,
     ...strada, zaino: !!liv.zaino,
     racconto: CAMPAGNA[i].racconto,
-    // dopo l'ultima tappa (dei piccoli, o di tutte) ▶ può portare al sentiero senza fine
-    prossima: aperta(CHIAVE, i + 1) || ((i + 1 === TAPPE_PICCOLE || i + 1 === QUANTE_TAPPE) && sentieroAperto()),
+    // ▶ va avanti sulla strada che si sta facendo; in fondo può portare al sentiero senza fine
+    prossima: prossimaDopo(i) !== null || (sentieroDopo(i) && sentieroAperto()),
   }
 }
 
@@ -775,10 +805,10 @@ function vittoriaSentiero(esito, strada) {
 /* ═══════════ dopo il cartello ═══════════ */
 function avanti() {
   if (sentiero.value) return prossimoSentiero()
-  const i = tappaIdx.value + 1
-  if (i < QUANTE_TAPPE && aperta(CHIAVE, i)) avviaTappa(i)
+  const i = tappaIdx.value, p = prossimaDopo(i)
+  if (p !== null) avviaTappa(p)
   // il sentiero lasciato a metà si riprende: cominciarne un altro ne chiuderebbe la serie
-  else if ((i === TAPPE_PICCOLE || i === QUANTE_TAPPE) && sentieroAperto()) riprendiSentiero()
+  else if (sentieroDopo(i) && sentieroAperto()) riprendiSentiero()
   else allaMappa()
 }
 
@@ -821,7 +851,8 @@ function indietro() {
     <Barra :titolo="titolo" guida="passo" monete @indietro="indietro" />
 
     <div class="pp">
-      <Mappa v-if="vista === 'mappa'" :scalini="scalini" :senza-fine="statoSentiero"
+      <Mappa v-if="vista === 'mappa'" :voci="voci" :senza-fine="statoSentiero"
+             :dove="doveSegnalino" :chi="state.player || ''"
              @gioca="avviaTappa" @senza-fine="vuoleSentiero">
         <Ripresa :ripresa="ripresa" :chiede="chiede"
                  @riprendi="riprendiSentiero" @scorda="scordaSentiero"

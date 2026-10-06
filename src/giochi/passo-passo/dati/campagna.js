@@ -786,9 +786,6 @@ export function riordina(av, vecchia, nuova = CAMPAGNA.map(t => t.chiave)) {
   return { stelle, tappa, libera: tappa >= nuova.length }
 }
 
-export const tappeDelloScalino = chiave =>
-  CAMPAGNA.map((t, i) => ({ ...t, indice: i })).filter(t => t.scalino === chiave)
-
 /* lo zaino, le carte e le soluzioni scritte, senza giocarle: se una
    soluzione vince e se il ciclo serve lo dice il test, non questa funzione */
 function guastiDelloZaino(t, dove) {

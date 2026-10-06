@@ -1,6 +1,7 @@
 /* Passo passo — il manifesto. Dato puro, struttura di
    `docs/core/convenzione-giochi.md`: vedi `docs/passo-passo/README.md`. */
 import { CAMPAGNA, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_ZAINO, TAPPE_PRIME } from './dati/campagna.js'
+import { stradeDi } from './motore/strade.js'
 import { apriQuaderno, primatoInParole } from '../primati.js'
 
 export const CHIAVE = 'passo'
@@ -31,10 +32,13 @@ export default {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
     const coda = stelle ? ` · ⭐ ${stelle}` : ''
     const record = primatoInParole(apriQuaderno(av), SENZA_FINE.misura)
+    // finita la strada del coniglio la campagna è finita: il cane conta per le stelle
     if ((av.tappa || 0) >= QUANTE_TAPPE)
       return record ? `sentiero senza fine · record ${record}${coda}` : `tutte le tane${coda}`
-    const i = Math.min(av.tappa || 0, QUANTE_TAPPE - 1)  // sentiero: vedi docs/passo-passo/sentiero.md
-    const sentiero = i >= TAPPE_PRIME && record ? ` · sentiero ${record}` : ''
+    // la tappa di adesso, su qualunque strada (docs/passo-passo/livelli.md, «Le due strade»)
+    const adesso = stradeDi(av).adesso()
+    const i = adesso ?? Math.min(av.tappa || 0, QUANTE_TAPPE - 1)
+    const sentiero = (av.tappa || 0) >= TAPPE_PRIME && record ? ` · sentiero ${record}` : ''  // vedi docs/passo-passo/sentiero.md
     return `tappa ${i + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[i].nome}${sentiero}${coda}`
   },
 

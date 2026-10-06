@@ -108,13 +108,15 @@ pecore (`p`). L'osso è la sua carota.
   ripetere sono lunghi diversi. Per il cane «ripeti fino a 🏠» vuol dire
   «finché il gregge non è dentro».
 
-**Il cane non è un'isola.** Dopo i primi quattro posti il suo gradino rifà
-le regole che il bambino ha già — il ghiaccio, la buca che lo fa sbucare
+**Il cane è una strada laterale.** Dopo i primi quattro posti il suo gradino
+rifà le regole che il bambino ha già — il ghiaccio, la buca che lo fa sbucare
 alle spalle della pecora, il fiume che il cane salta e la pecora no, il
 masso che fa il ponte per lei — e lui torna in ogni gradino dello zaino con
 la carta di quel gradino: le stalle col 🔁, le stalle a gradini col «fino
 a», le nicchie col ❓, il lago delle stalle in «tutto il mondo».
-`test/unita/passo-passo` lo pretende.
+`test/unita/passo-passo` lo pretende. Non insegna niente di nuovo, quindi è
+facoltativo: sulla mappa è un ramo che parte da una tana, e la strada del
+coniglio va avanti anche senza (vedi [livelli.md](livelli.md#le-due-strade)).
 
 Provato: pecore che si comportano da massi, e una fila che non si spinge.
 Non va: il gregge si riunisce proprio mettendo le pecore in fila e
