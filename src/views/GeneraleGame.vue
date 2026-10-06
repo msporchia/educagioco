@@ -52,6 +52,7 @@ import { state, genProgresso, genCompleta, daSolo, genAiutiPresi, genSegnaAiuti,
   from '../store/profile.js'
 import { scrive as scriveNelPiano, SVELA } from '../giochi/aiuti.js'
 import { suono } from '../audio.js'
+import Confine from '../giochi/Confine.vue'
 import { LIVELLI, proveDi } from '../data/generale.js'
 import { filaFinita } from './generale/fila.js'
 import { creaMondo, avvia, passo, esegui, pianoCompleto, mieUnita, altruiUnita, altriInCampo,
@@ -888,6 +889,7 @@ async function ridimensiona () {
            Si scrivono in `EditorPiano.vue`: una riga per ordine, fatta
            di caselle che si toccano, e in fondo a ogni fila il posto
            vuoto da cui ne nasce un altro. -->
+      <Confine />
       <EditorPiano v-if="!letta" ref="editor" :ordini="ordini" :mondo-ora="mondoOra"
                    :tic="tic" :unita-ora="unitaOra" :indica="guida === 'posto'"
                    @mira="chiediMira" />

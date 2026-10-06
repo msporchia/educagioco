@@ -40,6 +40,7 @@ import { cerchio } from './segni.js'
 import { creaTela } from '../../grafica/tela.js'
 import { PITTORI, OGGETTI } from '../../grafica/generale.js'
 import { creaFondale } from '../../grafica/ambienti.js'
+import { posto, altezzaCampo, grandeUtile } from '../../giochi/confine.js'
 
 const props = defineProps({
   /* IL MONDO ARRIVA COME FUNZIONE, non come oggetto. Non è un vezzo: il
@@ -131,6 +132,9 @@ function zoomMinimo () {
 }
 
 /* ═══════════ misurare ═══════════ */
+const latoPer = sta => sta >= 36 ? Math.min(46, sta)   // ci sta comoda: si prende quello che c'è
+                     : sta >= 32 ? sta                 // ci sta di misura: meglio tutta che da scorrere
+                     : 36                              // non ci sta: si legge e si scorre
 async function misura () {
   if (!telaEl.value || !mondo()) return
   const largo = telaEl.value.parentElement.getBoundingClientRect().width
@@ -139,7 +143,8 @@ async function misura () {
      trascinare che dei personaggi grandi come una briciola. Deciso il
      lato, il campo si stringe sulla mappa invece di lasciare due bande
      nere — tranne quando la mappa è più alta di quanto ci sta. */
-  const massimo = Math.max(150, Math.round(window.innerHeight * 0.4))
+  const base = Math.max(150, Math.round(window.innerHeight * 0.4))
+  const massimo = altezzaCampo(base, window.innerHeight)
   /* LA CELLA NON SI RIMPICCIOLISCE PER FAR STARE LA MAPPA. Le mappe
      delle storie sono 30×18: farcele stare tutte in un telefono voleva
      dire celle da venti pixel, e a venti pixel un orco e una cassa sono
@@ -154,9 +159,13 @@ async function misura () {
      quel vincolo. Le mappe grandi si trascinano: è quello che il campo
      sa fare da sempre, ed è anche quello che rende un piano lungo, cioè
      un lavoro invece di un gesto. */
-  latoBase = sta >= 36 ? Math.min(46, sta)   // ci sta comoda: si prende quello che c'è
-       : sta >= 32 ? sta                 // ci sta di misura: meglio tutta che da scorrere
-       : 36                              // non ci sta: si legge e si scorre
+  latoBase = latoPer(sta)
+  /* col confine abbassato il campo crescerebbe? (vedi giochi/confine.js) */
+  const altoCon = dove => {
+    const m = altezzaCampo(base, window.innerHeight, dove)
+    return Math.min(m, mondo().h * latoPer(Math.floor(Math.min(largo / mondo().w, m / mondo().h))))
+  }
+  grandeUtile(altoCon(1) > altoCon(0))
   lato = Math.round(latoBase * zoom)   // i limiti si applicano sotto, quando la tela c'è
   /* l'altezza del campo resta quella della mappa **a zoom 1**: se
      crescesse con l'ingrandimento, avvicinarsi spingerebbe giù gli
@@ -270,7 +279,7 @@ function mostraTutto () {
    mostrando, mai più di quanto `misura()` gli aveva concesso. */
 function stringiSullaMappa () {
   if (!telaEl.value || !mondo()) return
-  const tetto = Math.max(150, Math.round(window.innerHeight * 0.4))
+  const tetto = altezzaCampo(Math.max(150, Math.round(window.innerHeight * 0.4)), window.innerHeight)
   const alto = Math.min(tetto, mondo().h * lato) + 'px'
   if (altoCampo.value === alto) return
   altoCampo.value = alto
@@ -681,6 +690,8 @@ let contaVign = 0
    vorrebbe dire aprire la tappa dopo già dentro un angolo, senza
    sapere che c'è dell'altro fuori dallo schermo. */
 watch(() => props.liv && props.liv.id, () => { zoom = 1; pizzico = null; dita.clear() })
+/* spostato il confine col programma si rimisura, e si rivede la stanza intera */
+watch(posto, async () => { await misura(); mostraTutto(); disegna() })
 
 const vignette = ref([])
 const scordaVignette = () => { vignette.value = [] }
@@ -883,7 +894,7 @@ defineExpose({ misura, disegna, inquadraSu, mostraTutto, azzera, animaPasso, fer
 </script>
 
 <template>
-  <section class="campo" :style="{ height: altoCampo }">
+  <section class="campo" :style="{ height: altoCampo, minHeight: posto === -1 ? '90px' : null }">
     <canvas ref="telaEl" @pointerdown="ditoGiu" @pointermove="ditoMuovi"
             @pointerup="ditoSu" @pointercancel="ditoSu"></canvas>
     <!-- avvicinarsi si può fare con due dita, ma due dita non si

@@ -31,6 +31,8 @@ import FoglioProgetto from './viste/FoglioProgetto.vue'
 import FoglioLavagnetta from './viste/FoglioLavagnetta.vue'
 import FoglioAiuto from './viste/FoglioAiuto.vue'
 import Finale from './viste/Finale.vue'
+import Confine from '../Confine.vue'
+import { posto as confine } from '../confine.js'
 import './stile.css'
 
 defineOptions({ name: 'Costruttore' })
@@ -587,7 +589,7 @@ const progettoAperto = computed(() =>
              @gioca="apriLivello" @libero="apriLivello(LIBERO_IDX)" />
 
       <div v-else-if="liv && prog" class="cst-cantiere">
-        <div class="cst-sopra">
+        <div class="cst-sopra" :class="{ 'cst-stretto': confine === -1 }">
           <Ordine :livello="liv" :visto="ordineVisto" :esiti="stato.esiti" :in-corso="stato.inCorso" @vedi="vedi" />
           <div v-if="stato.montaggio && stato.inCorso" class="cst-montaggio" data-montaggio>
             e adesso con «{{ liv.ordini[stato.ordine].nome }}»…
@@ -602,6 +604,7 @@ const progettoAperto = computed(() =>
                    @nuova-lavagnetta="nuovaLavagnetta(null)" />
           <p v-if="messaggio" class="cst-messaggio" :class="'cst-' + messaggio.tipo" data-messaggio>{{ messaggio.testo }}</p>
         </div>
+        <Confine />
         <Editor :programma="prog" :livello="liv" :tab="tabMostrato" :sel="sel" :aperta="aperta_"
                 :accesa="stato.inCorso ? stato.riga : null" :guasto="stato.guasto" :problemi="problemi"
                 :giro="stato.inCorso ? stato.giro : null" :sola="stato.inCorso" :pila="stato.pila"

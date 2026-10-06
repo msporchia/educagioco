@@ -7,6 +7,12 @@ const ERBA = '#6fbf4a', ERBA_SCURA = '#4f9a33'
 const TERRA = '#a8744a', TERRA_SCURA = '#8a5c37', SASSO = '#c49a70'
 const ACQUA = '#4f9fdc', ACQUA_LUCE = '#9fd0f3', ACQUA_SCURA = '#3a7fb8'
 
+const cellaDi = (larghezza, altezzaMassima, w, h) =>
+  Math.max(10, Math.floor(Math.min(larghezza / w, altezzaMassima / h)))
+
+// quanto viene alto il disegno in quello spazio (il confine col programma)
+export const altoDisegno = (larghezza, altezzaMassima, w, h) => cellaDi(larghezza, altezzaMassima, w, h) * h
+
 export class Tela {
   constructor(canvas) {
     this.canvas = canvas
@@ -26,7 +32,7 @@ export class Tela {
 
   // prepara il canvas per il devicePixelRatio
   misura(larghezza, altezzaMassima, w, h) {
-    const cella = Math.max(10, Math.floor(Math.min(larghezza / w, altezzaMassima / h)))
+    const cella = cellaDi(larghezza, altezzaMassima, w, h)
     this.cella = cella
     const dpr = Math.min(window.devicePixelRatio || 1, 3)
     this.dpr = dpr

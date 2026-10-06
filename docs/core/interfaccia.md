@@ -29,6 +29,29 @@ sua pagina: [il-dito.md](il-dito.md).
 Nei test: `button[aria-label="indietro"]` (mai il carattere),
 `[data-chiudi]`.
 
+## Il confine fra campo e programma
+
+Nei giochi a due piani (il costruttore, il Generale) sopra c'è il campo e
+sotto il programma, e su un telefono basso un «ripeti dentro ripeti» non
+ci sta. Fra i due c'è una striscia sola, `src/giochi/Confine.vue`: ▲ alza
+il confine (più programma), ▼ lo abbassa (più campo), tre posti in tutto.
+
+- **Si sposta l'altezza del campo, non si nasconde niente**: il campo
+  chiede la sua altezza come prima e la passa da `altezzaCampo()`
+  (`src/giochi/confine.js`), che la stringe o la allarga — mai sotto i
+  90 px, mai oltre due terzi dello schermo. Col confine alzato il
+  racconto del costruttore sta in due righe.
+- **Il ▼ si spegne dove non serve**: il cantiere è già largo quanto lo
+  schermo e più alto non diventa più grande. Il campo lo dice a ogni
+  misura (`grandeUtile`), e il confine abbassato lì torna a metà.
+- **Il posto vale per la sessione e per tutti e due i giochi**: è il
+  telefono a essere basso, non il livello. Non si salva.
+- **Tasti, non trascinamento**: una maniglia da tirare su un elenco che
+  scorre litiga col dito (vedi [il-dito.md](il-dito.md)).
+
+Nei test: `[data-confine]` (con `data-posto` −1/0/1),
+`[data-azione="piu-programma"]`, `[data-azione="piu-campo"]`.
+
 ## La pausa, una sola
 
 `src/giochi/pausa.js` (contratto in testa al file) e
