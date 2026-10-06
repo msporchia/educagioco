@@ -362,9 +362,6 @@ export const CATEGORIE = [
 
   // Le feste: stagione: è una chiave di FINESTRE — vedi docs/fattoria/stagioni.md.
   { chiave: 'feste', zona: 'bello', nome: 'Feste', icona: '🎉', stagionale: true, voci: [
-    V('zucche_halloween', 'campo_zucche6',  'Zucche di Halloween', 9,
-      { sotto: true, piede: [2, 2], stagione: 'halloween' }),
-    V('teschio',       'teschio',           'Teschio',            6, { stagione: 'halloween' }),
     V('albero_natale', 'albero_verde',      'Albero con le lucine', 24,
       { stagione: 'natale', luci: true }),
   ] },

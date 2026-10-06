@@ -74,8 +74,9 @@ lavorare da sola mentre si fa altro.
   gioco, come tutti gli altri ([la pagina dei genitori](../genitori/README.md)).
   Non c'è un modo di tenere l'arredamento e togliere i campi: senza la
   catena resterebbe un prato con dei mobili.
-- A Halloween e a Natale la fattoria si addobba da sola: zucche e
-  pipistrelli, poi neve e lucine.
+- A ottobre gli animali dei recinti si travestono da soli (mummie,
+  streghe, fantasmini, pipistrelli); da novembre all'Epifania arrivano neve
+  e lucine.
 
 Il resto — le regole, i numeri, i perché — sta nei file di questa
 cartella: [README.md](README.md).

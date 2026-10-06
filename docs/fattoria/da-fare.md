@@ -9,6 +9,13 @@ Il gioco è intero anche senza: chi aspetta usa un ripiego e lo dichiara in
 `aspetta` (vedi [sprite.md](sprite.md)). I prompt sono già scritti in
 `strumenti/sprite/sorgenti/fattoria/generati/PROMPT-secondo-albero.md`.
 
+- [ ] **Rifare alcuni costumi di Halloween** (fogli `animali_halloween_1` e
+      `_2`, vedi [stagioni.md](stagioni.md)). Galline e capre sono due
+      fantasmini quasi uguali, e nelle galline che dormono sembrano pecore;
+      le pecore sono quasi senza costume; le anatre e gli asini cambiano
+      vestito da uno stato all'altro (vampiro, poi strega); l'alpaca è
+      diventata grigia come un asino; le api non sono vestite. I prompt
+      usati sono nei foglietti.
 - [ ] **`animali_3.png` — i ritratti della peschiera** (calmo, mangia,
       pronto…). È un recinto, e si chiede accanto ai recinti, col prato che
       hanno tutti. Arrivato il foglio, `peschiera` in `dati/catalogo.js`

@@ -1,19 +1,20 @@
-# Le feste: zucche a Halloween, neve a Natale
+# Le feste: gli animali in costume a Halloween, neve a Natale
 
-La fattoria si addobba da sola in due periodi dell'anno, e in quei giorni
-il baule vende due o tre cose della festa. Il codice è
+La fattoria cambia faccia da sola in due periodi dell'anno. Il codice è
 `dati/stagioni.js` (puro) e la scena `scena/tela.js`.
 
 La fattoria è il posto dove si torna tutti i giorni, e tutti i giorni è
-uguale a ieri: aprire il gioco a dicembre e trovare la neve è **una cosa
-che succede** senza che nessuno l'abbia comprata.
+uguale a ieri: aprire il gioco a dicembre e trovare la neve, o a ottobre
+e trovare le mucche con il cappello da strega, è **una cosa che succede**
+senza che nessuno l'abbia comprata.
 
 ## Le finestre
 
-- **Halloween dal 20 ottobre al 2 novembre, Natale dal 6 dicembre al 6
-  gennaio**, estremi compresi (`FINESTRE`, `[mese, giorno]`): si
-  ritoccano lì e in nessun altro posto, e i test provano i bordi leggendo
-  quella tabella.
+- **Halloween dal 1 al 31 ottobre, Natale dal 1 novembre al 6 gennaio**,
+  estremi compresi (`FINESTRE`, `[mese, giorno]`): si ritoccano lì e in
+  nessun altro posto, e i test provano i bordi leggendo quella tabella.
+  Le due feste si toccano: Natale parte il giorno dopo Halloween, e non
+  c'è nessun giorno «vuoto» tra l'una e l'altra.
 - **In ora locale** (`stagioneDi(data)`, `getMonth`/`getDate`): la vigilia
   alle 23:30 è ancora la vigilia anche se a Greenwich è domani. Natale
   scavalca l'anno, ed è il caso che una finestra scritta «da ≤ giorno ≤ a»
@@ -22,10 +23,30 @@ che succede** senza che nessuno l'abbia comprata.
 - **`#stagione=natale`** (o `halloween`) nell'indirizzo le accende fuori
   stagione, per guardarle a settembre.
 
-## Gli addobbi che compaiono da soli
+## Halloween: i recinti si travestono
 
-- A Halloween 🎃 sparse sul prato, 🕸️ e 🦇 agli angoli delle case; a Natale
-  i fiocchi che cadono, una crosta bianca sui tetti e sulle chiome,
+- **Solo sprite, niente emoji**: i recinti hanno un foglio vestito per ogni
+  foglio normale (`animali_halloween_1.png` per i primi cinque,
+  `_2` per anatre, capre, api, alpaca e asini; `animali_halloween_*.png` in `strumenti/sprite/sorgenti/fattoria/generati/`),
+  e i suoi pezzi si chiamano come gli altri con il suffisso `_halloween`
+  (`recinto_mucche_dorme_halloween`). Un fatto dell'atlante, non del
+  catalogo: il recinto è lo stesso, cambia il disegno.
+- **Chi sceglie è la tela**: se `quadro.stagione === 'halloween'` e il
+  pezzo `<nome>_halloween` esiste, lo disegna; se non esiste (una specie
+  non ancora vestita) resta il disegno di sempre. Per vestire una specie
+  nuova basta il suo foglio e `python3 strumenti/sprite/atlante.py fattoria`.
+- **Si guarda soltanto**: nessuna voce nel baule, nessun prezzo, e il
+  salvataggio non sa niente (finita la festa i recinti tornano com'erano).
+- Il foglio 2 ha l'alfa vera ma mai piena (250-253): `alone` 128 la porta a 255, e le `toppa` che tolgono i fumetti dipinti sono quelle di `animali_2.json`.
+- Il foglio 1 è RGB su fondo nero: nel foglietto `fondo: auto` e `colori: 0`
+  (coi 12 colori di ripiego i recinti viravano al rosso).
+- Provate e tolte: le 🎃 sul prato, le 🕸️ e 🦇 sulle case e le voci
+  «zucche» e «teschio» nel baule — emoji Apple in mezzo alla pixel art,
+  e non c'entravano con gli animali.
+
+## Natale: gli addobbi che compaiono da soli
+
+- A Natale i fiocchi che cadono, una crosta bianca sui tetti e sulle chiome,
   chiazze di neve sull'erba, lucine gialle e rosse sotto le grondaie, ⭐ e
   🔔 sui tetti e un 🎄 accanto agli edifici.
 - **Niente si tinge e non c'è nessuno sprite nuovo**: è un velo sopra il
@@ -44,12 +65,10 @@ che succede** senza che nessuno l'abbia comprata.
 
 ## Le voci della festa nel baule
 
-- Solo nella finestra compare la linguetta **Feste**, con le voci
-  `stagione:` del catalogo: zucche intagliate e teschio (Halloween),
-  l'albero con le lucine (Natale), a prezzi da cosetta (🪙6–30,
-  `unita/stagioni-fattoria`).
+- Solo a Natale compare la linguetta **Feste**, con l'albero con le lucine
+  (🪙24, `unita/stagioni-fattoria`).
 - **Quello che si è comprato resta**, posato tutto l'anno o nel baule:
-  una zucca pagata a ottobre che si dissolve a novembre romperebbe la
+  un albero pagato a dicembre che si dissolve a marzo romperebbe la
   regola «niente si perde».
 - **Non sono premi di livello** e non entrano nella fila del livello: si
   aprono con la finestra, non spendendo.

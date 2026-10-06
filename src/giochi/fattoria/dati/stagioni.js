@@ -4,8 +4,8 @@ import { caso } from './mondo.js'
 
 // [mese, giorno], estremi compresi; si ritoccano qui e in nessun altro posto.
 export const FINESTRE = {
-  halloween: { da: [10, 20], a: [11, 2], nome: 'Halloween', icona: '🎃' },
-  natale:    { da: [12, 6],  a: [1, 6],  nome: 'Natale',    icona: '🎄' },
+  halloween: { da: [10, 1],  a: [10, 31], nome: 'Halloween', icona: '🎃' },
+  natale:    { da: [11, 1],  a: [1, 6],  nome: 'Natale',    icona: '🎄' },
 }
 
 const giornoDellAnno = (mese, giorno) => mese * 100 + giorno
@@ -46,18 +46,7 @@ export function addobbiStagionali(stagione, { libere = [], edifici = [], seme = 
   // solo le cose alte almeno due celle hanno un tetto: una panchina addobbata è una panchina coperta
   const alti = edifici.filter(e => e.alto >= 2)
 
-  if (stagione === 'halloween') {
-    for (const c of ordinate.slice(0, quante))
-      fuori.push({ testo: '🎃', x: c.x + .5, y: c.y + .55, misura: MISURA.terra })
-    for (const e of alti) {
-      const q = caso(e.x, e.y, seme + 1)
-      if (q > .75) continue
-      const cima = e.y + e.h - e.alto
-      fuori.push(q < .4
-        ? { testo: '🕸️', x: e.x + .4, y: cima + .45, misura: MISURA.angolo }
-        : { testo: '🦇', x: e.x + e.w - .4, y: cima + .35, misura: MISURA.angolo, ondeggia: true })
-    }
-  } else if (stagione === 'natale') {
+  if (stagione === 'natale') {
     const libereK = new Set(libere.map(([x, y]) => x + ',' + y))
     for (const e of alti) {
       const q = caso(e.x, e.y, seme + 2)

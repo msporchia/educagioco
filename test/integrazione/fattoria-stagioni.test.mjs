@@ -2,15 +2,15 @@
    LA FATTORIA NELLE FESTE, A SCHERMO
 
    Quello che `unita/stagioni-fattoria` non può dire: che a Natale si
-   **vede** nevicare, che a Halloween le zucche stanno sul prato e che
-   il baule apre la linguetta delle feste. Si entra col cheat
+   **vede** nevicare, che a Halloween i recinti prendono il foglio vestito e che
+   il baule apre la linguetta delle feste solo a Natale. Si entra col cheat
    `#stagione=natale|halloween` (`Gioco.vue`), che accende una stagione
    fuori dal suo periodo — se no questo file girerebbe verde undici
    mesi l'anno senza provare niente.
 
    Le foto sono per un occhio umano (`--scatti`): un test non guarda i
    pixel, quindi qui si controlla quello che si può leggere dal DOM —
-   il baule — e si lascia allo scatto la neve e le zucche.
+   il baule — e si lascia allo scatto la neve e i costumi.
    `node test/esegui.mjs fattoria-stagioni --scatti`
    tempo: 30
    ═══════════════════════════════════════════════════════════════════ */
@@ -91,11 +91,8 @@ await entra('halloween')
 await scatto(page, 'fattoria-halloween')
 await page.locator('[data-baule="bello"]').click()
 await page.waitForSelector('.fa-voce', { timeout: 3000 })
-await linguettaFeste().click()
-await attendi(page, 200)
-const zucche = await voci()
-controlla('a Halloween ci sono le zucche', zucche.some(t => /zucche/i.test(t)), zucche.join(' · '))
-controlla('e non l\'albero di Natale', !zucche.some(t => /lucine/i.test(t)))
+uguale('a Halloween il baule non ha la linguetta delle feste: la festa sta negli animali',
+       await linguettaFeste().count(), 0)
 await esci()
 
 /* ---------- un giorno qualunque ----------
@@ -107,7 +104,7 @@ await attendi(page, 800)
 await page.locator('[data-baule="bello"]').click()
 await page.waitForSelector('.fa-voce', { timeout: 3000 })
 const oggi = new Date(), m = oggi.getMonth() + 1, d = oggi.getDate()
-const festa = (m === 10 && d >= 20) || (m === 11 && d <= 2) || (m === 12 && d >= 6) || (m === 1 && d <= 6)
+const festa = m >= 11 || (m === 1 && d <= 6)      // la linguetta è di Natale
 uguale(festa ? 'oggi è festa e la linguetta c\'è' : 'un giorno qualunque non ha la linguetta',
        await linguettaFeste().count(), festa ? 1 : 0)
 
