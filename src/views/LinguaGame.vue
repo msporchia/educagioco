@@ -2,7 +2,7 @@
 // Il gioco di lingua, uno solo a campagna per English e Spagnolo — vedi
 // docs/lingue/README.md e vocaboli.md. Di ogni lingua sa solo quello che
 // gli passa `data/lingue.js`: campagna, dove segnare i progressi, nome.
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import { state, item, answer, mastered, segna,
          linguaProgresso, linguaCompleta, tappaAperta } from '../store/profile.js'
 import { apertaQui } from '../data/portata-giochi.js'
@@ -14,7 +14,10 @@ import { suono } from '../audio.js'
 import { borsa } from '../store/varieta.js'
 import { PAGA } from '../data/paghe.js'
 import { pronuncia, haVoce, prepara, zittisci } from '../voce.js'
+import { sosta, salvaSosta, buttaSosta } from '../giochi/campagne.js'
+import { scrivi as scriviSosta, leggi as leggiSosta, dice as diceSosta, chiaveSosta } from '../motore/lingua/sosta.js'
 import Barra from '../components/Barra.vue'
+import Ripresa from '../giochi/Ripresa.vue'
 
 // `libero`: aperto dall'inglese a mondi, solo per il gioco libero di chi l'aveva (docs/lingue/mondi.md)
 const props = defineProps({ lingua: { type: String, default: 'en' }, libero: { type: Boolean, default: false } })
@@ -25,7 +28,13 @@ const L = linguaDi(props.lingua)
 const CAMPAGNA = L.CAMPAGNA
 
 const CARTELLO = 10       // ogni quante giuste un cartello dice le monete entrate
-const fase = ref(props.libero ? 'gioco' : 'mappa')   // mappa | gioco | vinta | trionfo | fine
+const BORSA = L.id === 'es' ? 'spagnolo' : 'inglese'
+// la tappa (o il libero) lasciata a metà: una per lingua, a parte da quella dei mondi (docs/lingue/sosta.md)
+const CHIAVE_SOSTA = chiaveSosta(L.id)
+const ripresa = ref(diceSosta(sosta(CHIAVE_SOSTA), L))
+const chiede = ref(null)   // { nome, avvia }: la tappa che butterebbe quella a metà
+// mappa | ripresa (il libero con una partita a metà) | gioco | vinta | trionfo
+const fase = ref(props.libero ? (ripresa.value ? 'ripresa' : 'gioco') : 'mappa')
 
 /* ---------- la campagna ---------- */
 const progresso = computed(() => linguaProgresso(L.campo))
@@ -72,7 +81,7 @@ const svelato = ref(false)         // in ascolto: dopo la risposta si vede la pa
 const moneta = ref(0)
 // le monete di questa partita: una parola giusta le paga subito, e a fine tappa
 // niente di più (docs/apprendimento/calibrazione.md)
-let borsellino = borsa(L.id === 'es' ? 'spagnolo' : 'inglese'), mostrate = 0
+let borsellino = borsa(BORSA), mostrate = 0
 const prese = reactive({ monete: 0, nota: '' })
 const hud = reactive({ giuste: 0, mirate: 0, errori: 0, serie: 0 })
 let occupato = false, timerId = null
@@ -120,6 +129,7 @@ function nuovoTurno() {
     occupato = false
     if (turno.value.domanda.ascolta)
       setTimeout(() => pronuncia(turno.value.domanda.ascolta, L.id), 260)
+    salva()
     return
   }
   occupato = false                                  // meglio ripetere che bloccarsi
@@ -153,6 +163,7 @@ function rispondi(o) {
       suono.moneta()
     }
     if (centrato()) return tappaSuperata()
+    salva()
     timerId = setTimeout(nuovoTurno, 620)
   } else {
     const giusta = t.opzioni.find(x => x.giusta)
@@ -160,6 +171,7 @@ function rispondi(o) {
     suono.no()
     hud.errori++
     hud.serie = 0
+    salva()
     timerId = setTimeout(nuovoTurno, 2100)
   }
 }
@@ -172,7 +184,7 @@ function inizia(i = tappaIdx.value) {
   clearTimeout(timerId)
   tappaIdx.value = i
   hud.giuste = 0; hud.mirate = 0; hud.errori = 0; hud.serie = 0
-  borsellino = borsa(L.id === 'es' ? 'spagnolo' : 'inglese'); mostrate = 0
+  borsellino = borsa(BORSA); mostrate = 0
   Object.assign(prese, { monete: 0, nota: '' })
   picker.reset()
   cacheOrdine.clear()
@@ -184,6 +196,7 @@ function inizia(i = tappaIdx.value) {
 
 function tappaSuperata() {
   clearTimeout(timerId)
+  buttaSosta(CHIAVE_SOSTA)         // una tappa vinta non lascia niente a metà
   const ultima = tappaIdx.value === CAMPAGNA.length - 1
   // niente premio di tappa: ogni parola giusta si è già pagata
   linguaCompleta(L.campo, tappaIdx.value, CAMPAGNA.length)
@@ -197,9 +210,74 @@ function prossimaTappa() { inizia(Math.min(CAMPAGNA.length - 1, tappaIdx.value +
 function allaMappa() {
   clearTimeout(timerId)
   zittisci()
+  salva({ subito: true })          // uscire a metà non butta via la partita
+  ripresa.value = diceSosta(sosta(CHIAVE_SOSTA), L)
   if (props.libero) return emit('vai', 'home')
   fase.value = 'mappa'
   tappaIdx.value = Math.min(CAMPAGNA.length - 1, progresso.value.tappa)
+}
+
+/* ---------- la partita lasciata a metà ---------- */
+const cartaRipresa = computed(() => {
+  const r = ripresa.value
+  return r && { emoji: r.emoji, nome: r.nome,
+                dettaglio: r.libero ? `✅ ${r.giuste} giuste` : `✅ ${r.giuste} di ${r.bersaglio}` }
+})
+
+// si scrive solo mentre si gioca: nella mappa o a tappa vinta non c'è niente da tenere
+function salva({ subito = false } = {}) {
+  if (fase.value !== 'gioco') return
+  const dato = scriviSosta({ L, tappa: tappaIdx.value, hud, monete: borsellino, mostrate,
+                             turno: occupato ? null : turno.value })
+  if (!dato && !sosta(CHIAVE_SOSTA)) return
+  salvaSosta(CHIAVE_SOSTA, dato, { subito })
+}
+
+function scorda() {
+  buttaSosta(CHIAVE_SOSTA)
+  ripresa.value = null
+}
+
+// «Torno da dove ero»; se il salvataggio non torna, si butta e si riparte dalla mappa
+function riprendiPartita() {
+  const r = leggiSosta(sosta(CHIAVE_SOSTA), L, { siGioca: i => sbloccata(i) })
+  chiede.value = null
+  if (!r) {
+    scorda()
+    if (props.libero) inizia(-1)
+    return
+  }
+  clearTimeout(timerId)
+  tappaIdx.value = r.tappa
+  Object.assign(hud, r.hud)
+  borsellino = borsa(BORSA, r.monete); mostrate = r.mostrate   // le monete già prese restano nel conto
+  Object.assign(prese, { monete: borsellino.dato, nota: '' })
+  picker.reset()
+  cacheOrdine.clear()
+  ripresa.value = null
+  fase.value = 'gioco'
+  prepara(tappa.value.nuove.map(k => (voceDi(k) || {}).str).filter(Boolean), L.id)
+  if (!r.turno) return nuovoTurno()
+  // la domanda com'era, con le stesse risposte: rifarla ripescherebbe un formato più facile
+  turno.value = { ...componi(voceDi(r.turno.chiave), r.turno.tipo, L.nome), opzioni: r.turno.opzioni }
+  picker.annota(r.turno.chiave)
+  esito.value = {}
+  svelato.value = false
+  occupato = false
+}
+
+// una tappa nuova con una a metà in sospeso chiede prima, e non la butta in silenzio
+const vuole = (nome, avvia) => { if (ripresa.value) chiede.value = { nome, avvia }; else avvia() }
+function cominciaComunque() {
+  const f = chiede.value && chiede.value.avvia
+  chiede.value = null
+  scorda()
+  if (f) f()
+}
+
+// quando la pagina sparisce (su un telefono l'app non si chiude, sparisce) si scrive prima
+function seSparisce(e) {
+  if (e && (e.type === 'pagehide' || document.visibilityState === 'hidden')) salva({ subito: true })
 }
 
 // ---------- trascinamento: solo quando le risposte sono figure ----------
@@ -275,7 +353,16 @@ onMounted(() => {
                 giusta: () => turno.value && turno.value.opzioni.find(o => o.giusta) }
   window[L.id === 'en' ? '__eng' : '__es'] = api
   window.__lingua = api
-  if (props.libero) inizia(-1)
+  document.addEventListener('visibilitychange', seSparisce)
+  addEventListener('pagehide', seSparisce)
+  // il libero con una partita a metà chiede prima: la carta, non una partita nuova in silenzio
+  if (props.libero && fase.value === 'gioco') inizia(-1)
+})
+// prima di smontare: dopo, lo stato è già andato
+onBeforeUnmount(() => {
+  salva({ subito: true })
+  document.removeEventListener('visibilitychange', seSparisce)
+  removeEventListener('pagehide', seSparisce)
 })
 onUnmounted(() => { clearTimeout(timerId); zittisci() })
 </script>
@@ -284,11 +371,12 @@ onUnmounted(() => { clearTimeout(timerId); zittisci() })
   <div class="schermo">
     <!-- ═══════════ la mappa delle tappe ═══════════ -->
     <template v-if="fase === 'mappa'">
-      <Barra :titolo="L.titolo" guida="lingua" monete @indietro="$emit('vai','home')">
-        <div class="gettone">⭐ <b>{{ level }}</b></div>
-      </Barra>
+      <Barra :titolo="L.titolo" guida="lingua" monete @indietro="$emit('vai','home')" />
 
       <div class="mappa">
+        <Ripresa :ripresa="cartaRipresa" :chiede="chiede ? chiede.nome : ''"
+                 @riprendi="riprendiPartita" @scorda="scorda"
+                 @comincia="cominciaComunque" @annulla="chiede = null" />
         <div class="riepilogo">
           <b>{{ totaleSapute }}</b> parole e frasi che sai · tappa
           {{ Math.min(progresso.tappa + 1, CAMPAGNA.length) }} di {{ CAMPAGNA.length }}
@@ -296,7 +384,8 @@ onUnmounted(() => { clearTimeout(timerId); zittisci() })
 
         <button v-for="t in CAMPAGNA" :key="t.i" class="tappa"
                 :class="{ chiusa: !sbloccata(t.i), fatta: progresso.tappa > t.i }"
-                :disabled="!sbloccata(t.i)" @click="inizia(t.i)">
+                :data-tappa-lingua="t.i" :disabled="!sbloccata(t.i)"
+                @click="vuole(t.nome, () => inizia(t.i))">
           <span class="em">{{ sbloccata(t.i) ? t.emoji : '🔒' }}</span>
           <span class="testo">
             <b>{{ t.nome }}</b>
@@ -309,10 +398,19 @@ onUnmounted(() => { clearTimeout(timerId); zittisci() })
           <span v-if="progresso.tappa > t.i" class="spunta">✓</span>
         </button>
 
-        <button v-if="progresso.libera" class="tappa libera" @click="inizia(-1)">
+        <button v-if="progresso.libera" class="tappa libera" data-libero @click="vuole('Gioco libero', () => inizia(-1))">
           <span class="em">♾️</span>
           <span class="testo"><b>Gioco libero</b><i>tutto insieme, senza fine</i></span>
         </button>
+      </div>
+    </template>
+
+    <!-- ═══════════ il libero con una partita a metà ═══════════ -->
+    <template v-else-if="fase === 'ripresa'">
+      <Barra :titolo="L.titolo" guida="lingua" @indietro="$emit('vai','home')" />
+      <div class="mappa">
+        <Ripresa :ripresa="cartaRipresa" @riprendi="riprendiPartita"
+                 @scorda="scorda(); inizia(-1)" />
       </div>
     </template>
 
