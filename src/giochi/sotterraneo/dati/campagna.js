@@ -6,28 +6,28 @@
 import { BRANCO, BRANCHI } from './mostri.js'
 
 export const CAMPAGNA = [
-  { chiave: 'cantine', nome: 'Le cantine', icona: '🕯️',
+  { chiave: 'cantine', nome: 'La scalinata antica', icona: '🕯️',
     scenario: 'cantine',
     portata: 25,
     dritta: 'due piani corti: si impara la strada',
     piani: 2, misura: 30, giri: 2, dif: [0.05, 0.22],
     guardiano: 'scheletro', capo: 'scheletro' },
 
-  { chiave: 'pozzo', nome: 'Il pozzo', icona: '🪣',
+  { chiave: 'pozzo', nome: 'Il pozzo dal tetto rosso', icona: '🪣',
     scenario: 'cantine',
     portata: 32,
     dritta: 'più stanze, e qualcuno che vende',
     piani: 3, misura: 34, giri: 3, dif: [0.12, 0.34],
     guardiano: 'scheletro', capo: 'orco' },
 
-  { chiave: 'gallerie', nome: 'Le gallerie', icona: '🪨',
+  { chiave: 'gallerie', nome: 'La grotta della scaletta', icona: '🪨',
     scenario: 'cripta',
     portata: 40,
     dritta: 'ci si picchia sul serio',
     piani: 3, misura: 40, giri: 3, dif: [0.22, 0.5],
     guardiano: 'orco', capo: 'orco' },
 
-  { chiave: 'cisterna', nome: 'La cisterna', icona: '💧',
+  { chiave: 'cisterna', nome: 'La scala sommersa', icona: '💧',
     scenario: 'cripta',
     portata: 48,
     dritta: 'larga, e in fondo c\'è qualcosa di grosso',
@@ -35,17 +35,17 @@ export const CAMPAGNA = [
     // guardiano un granchio (non l'orco di sempre): stessa fascia (dati/mostri.js), ma nel posto giusto
     guardiano: 'granchio', capo: 'gigante' },
 
-  { chiave: 'labirinto', nome: 'Il labirinto', icona: '🌀',
+  { chiave: 'labirinto', nome: 'La botola segreta', icona: '🌀',
     scenario: 'fornace',
     portata: 56,
-    dritta: 'sedici stanze: senza mappina ci si perde',
+    dritta: 'un labirinto di sedici stanze: senza mappina ci si perde',
     piani: 3, misura: 52, giri: 4, dif: [0.42, 0.76],
     guardiano: 'lupo', capo: 'troll' },   // troll e non gigante: le ultime tre finivano con la stessa faccia
 
-  { chiave: 'fondo', nome: 'Il fondo', icona: '🕳️',
+  { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '🕳️',
     scenario: 'fornace',
     portata: 64,
-    dritta: 'stretto, profondo, e le domande non perdonano',
+    dritta: 'stretta, profonda, e le domande non perdonano',
     piani: 4, misura: 42, giri: 3, dif: [0.52, 0.92],   // stretto: più largo supererebbe le risposte obbligate di una seduta
     // il gigante solo in fondo (a ogni piano: 96 risposte obbligate, misurato dal banco); il serpente ai piani, non l'orco
     guardiano: 'serpente', capo: 'gigante' },
@@ -145,7 +145,7 @@ export function durezzaDi(tappa, piano) {
   return da + (a - da) * q
 }
 
-// quattro in regalo più uno per piano (da sei nelle cantine a otto nel fondo): misurato su venti discese per
+// quattro in regalo più uno per piano (da sei nella scalinata a otto nella miniera): misurato su venti discese per
 // tappa (docs/sotterraneo/regole.md, "svenire e il fondo degli svenimenti")
 export const SVENIMENTI_IN_REGALO = 4
 // nell'abisso il conto si azzera scendendo: qui torna quante occasioni ha QUESTO piano (Corsa.svenimentiSpesi)

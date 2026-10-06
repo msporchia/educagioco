@@ -140,7 +140,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
     controlla(`${e.chiave}: nessuna discesa esce dalla seduta`, peggio <= 85,
               `la peggiore costa ${peggio} domande`)
     const v = quanteVolteSiVince(CAMPAGNA[3], { quante: 4, bravura: 0.8, eroe: e.chiave })
-    controlla(`${e.chiave}: la cisterna si vince rispondendo bene 8 volte su 10`,
+    controlla(`${e.chiave}: la scala sommersa si vince rispondendo bene 8 volte su 10`,
               v.vinte === v.quante, `${v.vinte}/${v.quante} ${v.guasti.slice(0, 1).join('')}`)
     righe.push(`  ${e.nome.padEnd(10)} ❤️ ${String(e.vita).padStart(2)} ⚔️ ${e.att} · ` +
                `domande per discesa: ${costi.join(' · ')}`)
@@ -214,10 +214,10 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   const t = CAMPAGNA[3]
   const bene = quanteVolteSiVince(t, { quante: 8, bravura: 0.85 })
   const caso = quanteVolteSiVince(t, { quante: 8, bravura: 0.35 })
-  controlla('rispondendo bene la cisterna si vince', bene.vinte >= 7,
+  controlla('rispondendo bene la scala sommersa si vince', bene.vinte >= 7,
             `${bene.vinte}/${bene.quante}`)
   controlla('premendo a caso no', caso.vinte <= 1, `${caso.vinte}/${caso.quante}`)
-  nota(`la cisterna: ${bene.vinte}/8 vinte all'85% di risposte giuste, ` +
+  nota(`la scala sommersa: ${bene.vinte}/8 vinte all'85% di risposte giuste, ` +
        `${caso.vinte}/8 al 35%`)
 }
 
@@ -766,8 +766,8 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   }
   const gallerie = entrate(CAMPAGNA[2])
   const perPiano = gallerie / CAMPAGNA[2].piani
-  dentro('un piano delle gallerie costa una torcia', perPiano, 8, 18)
-  nota(`le gallerie: ${gallerie} stanze entrate in ${CAMPAGNA[2].piani} piani, ` +
+  dentro('un piano della grotta costa una torcia', perPiano, 8, 18)
+  nota(`la grotta: ${gallerie} stanze entrate in ${CAMPAGNA[2].piani} piani, ` +
        `${perPiano.toFixed(1)} per piano, e una torcia ne dura ${COSE.torcia.stanze}`)
 }
 
@@ -1001,7 +1001,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   const fondo = prezzoMedio(CAMPAGNA[5], CAMPAGNA[5].piani - 1)
   controlla('in fondo il banco vende roba molto più cara che in cima',
             fondo > cima * 1.5, `${cima.toFixed(1)} gemme contro ${fondo.toFixed(1)}`)
-  nota(`prezzo medio sul banco: ${cima.toFixed(1)} nelle cantine, ${fondo.toFixed(1)} in fondo`)
+  nota(`prezzo medio sul banco: ${cima.toFixed(1)} nella scalinata, ${fondo.toFixed(1)} nella miniera`)
 
   /* ── i due modi di sbagliarla ──
      Un banco tutto fuori portata al primo piano è una stanza
@@ -1029,13 +1029,13 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
      è il motivo per tornare, e un banco che offre solo il comprabile
      quel motivo non lo dà mai (`viste/Mercante.vue`) */
   const sognoInCima = quota(durezzaDi(CAMPAGNA[0], 0), x => x >= PREGIATO)
-  dentro('nelle cantine la roba da 30 gemme si intravede, e resta rara',
+  dentro('nella scalinata la roba da 30 gemme si intravede, e resta rara',
          Math.round(sognoInCima * 100), 5, 40)
   const roboInFondo = quota(durezzaDi(CAMPAGNA[5], CAMPAGNA[5].piani - 1), x => x >= PREGIATO)
   controlla('mentre in fondo è la norma', roboInFondo >= 0.8,
             `${(roboInFondo * 100).toFixed(0)}% dei banchi`)
-  nota(`roba da ${PREGIATO}+ gemme: ${(sognoInCima * 100).toFixed(0)}% dei banchi nelle cantine, ` +
-       `${(roboInFondo * 100).toFixed(0)}% in fondo`)
+  nota(`roba da ${PREGIATO}+ gemme: ${(sognoInCima * 100).toFixed(0)}% dei banchi nella scalinata, ` +
+       `${(roboInFondo * 100).toFixed(0)}% nella miniera`)
 }
 
 /* ══════════ 5-bis. scappare costa, e si può cadere per sempre ══════════
@@ -1066,7 +1066,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   const t = CAMPAGNA[0]
   const c = new Corsa(t, { seme: 11, rnd: seminato(11) })
   const quante = svenimentiDi(t)
-  controlla('il fondo cresce coi piani', svenimentiDi(CAMPAGNA[5]) > svenimentiDi(CAMPAGNA[0]),
+  controlla('la miniera ha più svenimenti della scalinata', svenimentiDi(CAMPAGNA[5]) > svenimentiDi(CAMPAGNA[0]),
             `${svenimentiDi(CAMPAGNA[0])} contro ${svenimentiDi(CAMPAGNA[5])}`)
 
   for (let i = 1; i < quante; i++) {

@@ -127,8 +127,8 @@ export const BRANCO = [
   ['golem'],
 ]
 
-// una costante propria (non BRANCO.length * 0.6): legarla al numero di fasce ritarava anche le cantine
-// ogni volta che se ne aggiungeva una in fondo (misurato: la cisterna passava da 36 a 58 risposte obbligate)
+// una costante propria (non BRANCO.length * 0.6): legarla al numero di fasce ritarava anche la scalinata
+// ogni volta che se ne aggiungeva una in fondo (misurato: la scala sommersa passava da 36 a 58 risposte obbligate)
 export const PASSO_DEL_BRANCO = 2.4
 
 export const NEL_BRANCO = [...new Set(BRANCO.flat())]

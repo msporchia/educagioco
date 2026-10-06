@@ -13,12 +13,12 @@ export const POSTO_DI = {
   abisso: 'pozzo-vecchio',
 }
 
-// come il minatore spiega la strada («Le cantine: …»): parte da casa, dove sta lui
+// come il minatore spiega la strada («La scalinata antica: …»): parte da casa, dove sta lui
 export const LUOGHI = {
   arco: 'su per la strada, sempre dritto, giù per la scala sotto l\'arco di pietra',
-  'pozzo-di-casa': 'il pozzo qui dietro, quello col tetto di coppi',
+  'pozzo-di-casa': 'il pozzo qui dietro, quello dal tetto rosso',
   buco: 'su per la strada e poi a destra, nel buco della roccia con la scaletta',
-  stagno: 'su per la strada e poi a sinistra, la scala che scende dentro lo stagno',
+  stagno: 'su per la strada e poi a sinistra, alla riva di sotto dello stagno: da lì si vede la scala che scende sott\'acqua',
   botola: 'fino in cima, oltre il cartello, la botola di legno nel prato',
   miniera: 'fino in cima e poi a destra, la miniera dentro il monte',
   'pozzo-vecchio': 'fino in cima e poi a sinistra, il pozzo vecchio col tetto d\'ardesia',
@@ -35,7 +35,7 @@ export const POZZO_VECCHIO = {
 export const FRECCE = [
   { verso: '↖', posti: ['botola', 'pozzo-vecchio'], detto: 'la botola e il pozzo vecchio' },
   { verso: '↗', posti: ['miniera'], detto: 'la miniera' },
-  { verso: '↓', posti: ['buco', 'stagno', 'arco', 'pozzo-di-casa'], detto: 'il buco, lo stagno, l\'arco e casa' },
+  { verso: '↓', posti: ['buco', 'stagno', 'arco', 'pozzo-di-casa'], detto: 'la grotta, lo stagno, l\'arco e casa' },
 ]
 
 /* le misure: una cella della mappa (64 px) è grande quanto l'eroe a scala 3 (16 px × 3 = 48 px sullo schermo),

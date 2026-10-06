@@ -300,7 +300,7 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
 /* ══════════ 7. la sosta: si riprende, e la versione non sale ══════════
    Una discesa in corso il giorno del rilascio non si butta: `tappa`
    **non cambia significato**, guadagna un valore (−1), e chi ha lasciato
-   a metà «Il labirinto» ieri sera lo riprende oggi. */
+   a metà «La botola segreta» ieri sera lo riprende oggi. */
 {
   uguale('la versione del salvataggio non è salita', VERSIONE, 3)
 

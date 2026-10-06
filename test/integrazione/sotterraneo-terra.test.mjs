@@ -90,7 +90,7 @@ uguale('il minatore ha qualcosa da dire', await page.locator('[data-minatore] .s
 await toccaIl('[data-minatore]')
 await page.waitForSelector('[data-fumetto-di="minatore"]', { timeout: 8000 })
 const detto = await page.locator('[data-detto]').innerText()
-controlla('il minatore dice dove sta la prossima discesa', detto.includes('Le cantine') && detto.includes('arco'), detto)
+controlla('il minatore dice dove sta la prossima discesa', detto.includes('La scalinata antica') && detto.includes('arco'), detto)
 controlla('e di seguire i sassi', detto.includes('sassi'))
 {
   const [x, y] = (await cella()).split(',').map(Number)
@@ -110,7 +110,7 @@ uguale('e basta: quel tocco non fa camminare', await cella(), davanti)
 await toccaIl('[data-posto="pozzo-di-casa"]')
 await page.waitForSelector('[data-fumetto-di="pozzo-di-casa"]', { timeout: 8000 })
 const chiusa = await page.locator('[data-chiusa-perche]').innerText()
-controlla('la chiusa dice cosa la apre', chiusa.includes('le cantine'), chiusa)
+controlla('la chiusa dice cosa la apre', chiusa.includes('la scalinata antica'), chiusa)
 uguale('e non ha il tasto per scendere', await page.locator('[data-fumetto] [data-azione="scendi"]').count(), 0)
 controlla('sopra c\'è il velo col lucchetto', await page.locator('[data-chiusa="pozzo-di-casa"] svg').count() === 1)
 await attendi(page, 300)
@@ -148,7 +148,7 @@ controlla('a passi piccoli, non a scatti', Math.max(...salti) < 40 && new Set(pa
           `salto massimo ${Math.max(...salti)}, ${new Set(passi).size} posizioni`)
 await scatto(page, 'terra-scorre')
 
-/* ---------- 7. si arriva alle cantine, e il fumetto le apre ---------- */
+/* ---------- 7. si arriva alla scalinata, e il fumetto la apre ---------- */
 const cantine = page.locator('[data-discesa="0"]')
 for (let giro = 0; giro < 10; giro++) {
   const b = await cantine.boundingBox()
@@ -157,13 +157,17 @@ for (let giro = 0; giro < 10; giro++) {
   await tocca(Math.max(vista.x + 30, Math.min(vista.x + vista.width - 30, x)), vista.y + su + 40)
   await fermo()
 }
-uguale('le cantine si sono trovate camminando', await cantine.getAttribute('data-trovato'), '1')
+uguale('la scalinata si è trovata camminando', await cantine.getAttribute('data-trovato'), '1')
 await toccaIl('[data-discesa="0"]')
 await page.waitForSelector('[data-fumetto-di="arco"] [data-azione="scendi"]', { timeout: 10000 })
 uguale('l\'eroe si ferma ai piedi della scala', await cella(), POSTI.arco.piede.join(','))
 const fum = await page.locator('[data-fumetto]').innerText()
-controlla('il fumetto dice nome, dritta e piani', fum.includes('Le cantine') && fum.includes('si impara la strada')
+controlla('il fumetto dice nome, dritta e piani', fum.includes('La scalinata antica') && fum.includes('si impara la strada')
           && fum.includes('2 piani'), fum)
+// niente targhette con disegnini sopra le discese: un cerchietto attorno all'ingresso di quelle trovate e aperte
+uguale('sopra le discese non ci sono icone', await page.locator('[data-posto] .em').count(), 0)
+uguale('la discesa trovata ha il suo cerchietto', await cantine.locator('.sot-anello').count(), 1)
+controlla('e il fumetto non ha l\'icona della discesa', !fum.includes('🕯'), fum)
 // il tocco che ha aperto il fumetto non lo preme anche: il click arriva una volta sola
 await toccaIl('[data-discesa="0"]')
 await attendi(page, 500)
@@ -183,7 +187,7 @@ await scegli(page, 'sotterraneo')
 await page.waitForSelector('[data-terra]', { timeout: 5000 })
 await attendi(page, 500)
 uguale('rientrando si è dove ci si era fermati', await cella(), POSTI.arco.piede.join(','))
-uguale('le cantine restano trovate', await page.locator('[data-discesa="0"]').getAttribute('data-trovato'), '1')
+uguale('la scalinata resta trovata', await page.locator('[data-discesa="0"]').getAttribute('data-trovato'), '1')
 uguale('e il minatore non ha più i puntini', await page.locator('[data-minatore] .sot-tre-punti').count(), 0)
 await scatto(page, 'terra-nebbia')
 
