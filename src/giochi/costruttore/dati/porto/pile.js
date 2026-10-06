@@ -93,6 +93,8 @@ const TORRE = {
   mondo: 'porto', tema: 'magazzino', prova: 'giornata', capitolo: 'pile',
   chi: CASARO,
   cassetta: ['prendi', 'posa', 'se', 'progetti'],
+  // la torre si sposta solo chiamando: un ripeti salterebbe la ricorsione
+  senza: ['ripeti', 'finche', 'sempre'],
   colori: COLORI_ASSI,
   cose: ['forma', 'niente'], leggere: false,
 }

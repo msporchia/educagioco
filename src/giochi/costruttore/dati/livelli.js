@@ -1265,9 +1265,24 @@ const DEL_CANTIERE = [
   },
 ]
 
+/* Un concetto imparato resta in cassetta in tutti i livelli dopo, anche dove
+   non serve: capire cosa usare è parte della sfida. Le azioni no, dipendono
+   dal mondo; e un livello toglie con `senza` solo ciò che salterebbe la sua
+   lezione. Vedi docs/costruttore/livelli.md. */
+export const CONCETTI = ['ripeti', 'finche', 'sempre', 'se', 'assegna', 'progetti', 'aspetta', 'pausa']
+export function cassetteCumulate(livelli) {
+  const visti = new Set()
+  return livelli.map(l => {
+    const dichiarata = l.cassetta || []
+    const portati = [...visti].filter(b => !dichiarata.includes(b) && !(l.senza || []).includes(b))
+    for (const b of dichiarata) if (CONCETTI.includes(b)) visti.add(b)
+    return portati.length ? { ...l, cassetta: [...dichiarata, ...portati] } : l
+  })
+}
+
 // la fila: vedi `FILE` in dati/campagna.js per come si riordina senza
 // spostare le stelle di nessuno
-export const LIVELLI = [
+export const LIVELLI = cassetteCumulate([
   ...DEL_CANTIERE.filter(l => l.capitolo !== 'sfide'),
   ...LIVELLI_PORTO,
   ...LIVELLI_POSTI,
@@ -1276,7 +1291,7 @@ export const LIVELLI = [
   ...IN_ORDINE,
   ...CERCARE,
   ...PILE,
-]
+])
 
 const BLOCCHI = ['vai', 'metti', 'prendi', 'posa', 'ripeti', 'finche', 'se', 'aspetta', 'pausa', 'sempre', 'assegna', 'progetti']
 
@@ -1298,6 +1313,7 @@ export function guastiDeiLivelli(livelli = LIVELLI) {
     if (porto && !Array.isArray(l.cose)) guasti.push(`${dove}: un livello del porto dice quali cose offrono le domande (\`cose\`)`)
     if (!Array.isArray(l.ordini) || !l.ordini.length) guasti.push(`${dove}: nessun ordine`)
     for (const b of l.cassetta || []) if (!BLOCCHI.includes(b)) guasti.push(`${dove}: il blocco «${b}» non esiste`)
+    for (const b of l.senza || []) if (!CONCETTI.includes(b)) guasti.push(`${dove}: «senza» toglie solo concetti, non «${b}»`)
     for (const p of l.posti || []) if (!POSTI.includes(p)) guasti.push(`${dove}: il posto «${p}» non esiste`)
     if (!(l.colori || []).length) guasti.push(`${dove}: nessun colore in pulsantiera`)
     /* la scala degli aiuti comincia con due gradini gratis che fanno
