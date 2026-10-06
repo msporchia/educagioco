@@ -8,7 +8,7 @@ let ricordato = null
 import { ref, computed, watch } from 'vue'
 import Copertina from './Copertina.vue'
 import Salvadanaio from '../varieta/Salvadanaio.vue'
-import { MODI, area } from '../../data/aree.js'
+import { MODI } from '../../data/aree.js'
 
 const props = defineProps({
   giochi: { type: Array, required: true },   // righe di data/giochi.js, con `punto` e `classe`
@@ -98,7 +98,6 @@ function tocca (i) {
 }
 
 const modo = g => MODI[g.come] ? `${MODI[g.come].emoji} ${MODI[g.come].nome}` : ''
-const tinta = g => area(g.area)?.tinta || '#eceff4'
 </script>
 
 <template>
@@ -109,9 +108,9 @@ const tinta = g => area(g.area)?.tinta || '#eceff4'
       <button v-for="(g, i) in giochi" :key="g.chiave" type="button"
               class="carta gioco" :class="[g.classe, { davanti: i === qui }]" :data-gioco="g.chiave"
               :tabindex="i === qui ? 0 : -1" :aria-hidden="Math.abs(i - qui) > 2 ? 'true' : null"
-              :style="[{ width: L + 'px', height: A + 'px', marginLeft: -L / 2 + 'px', background: g.copertina?.fondo || '#fff' }, stile(i)]"
+              :style="[{ width: L + 'px', height: A + 'px', marginLeft: -L / 2 + 'px' }, stile(i)]"
               @click="tocca(i)">
-        <Copertina class="arte" :style="{ height: ARTE + 'px' }" :copertina="g.copertina" :ico="g.ico" :grande="66" />
+        <Copertina class="arte" :style="{ height: ARTE + 'px' }" :copertina="g.copertina" :ico="g.ico" :grande="62" chiaro />
         <span class="pan" :style="pannello(i)">
           <b>{{ g.nome }}</b>
           <i>{{ g.che }}</i>
@@ -126,7 +125,7 @@ const tinta = g => area(g.area)?.tinta || '#eceff4'
 
     <div class="indice">
       <button v-for="(g, i) in giochi" :key="g.chiave" type="button"
-              :class="{ on: i === qui, ultimo: g.chiave === ultimo }" :style="{ background: tinta(g) }"
+              :class="{ on: i === qui, ultimo: g.chiave === ultimo }"
               :data-indice="g.chiave" :aria-label="g.nome" @click="vai(i)">{{ g.ico }}</button>
     </div>
   </div>
@@ -137,30 +136,29 @@ const tinta = g => area(g.area)?.tinta || '#eceff4'
 .giro { position:relative; isolation:isolate; overflow:hidden; touch-action:pan-y; cursor:grab; margin:0 -16px }
 .giro.tira { cursor:grabbing }
 .carta { position:absolute; left:50%; top:8px; display:flex; flex-direction:column; padding:6px;
-         border-radius:22px; text-align:center; background:var(--fondo-carta, #ffffff);
-         box-shadow:0 5px 0 #0000001a, 0 10px 22px #8593a833; will-change:transform }
+         border-radius:18px; text-align:center; background:#fff;
+         box-shadow:0 1px 2px #1f243312, 0 8px 24px #1f24330f; will-change:transform }
 .scatta .carta { transition:transform .28s cubic-bezier(.2,.8,.3,1), opacity .28s }
-.arte { flex:none }
+.arte { flex:none; border-radius:13px }
 .pan { flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; gap:2px;
-       margin-top:6px; padding:6px 8px 8px; border-radius:16px; background:#fff }
-.pan b { font-size:17px; font-weight:900; line-height:1.15; color:var(--viola-scuro) }
-.pan i { font-style:normal; font-size:12.5px; line-height:1.25; color:var(--tenue) }
-.modo { font-size:11.5px; line-height:1.3; color:var(--tenue); opacity:.9;
+       padding:10px 8px 6px }
+.pan b { font-size:17px; font-weight:600; line-height:1.2; color:#1f2433 }
+.pan i { font-style:normal; font-size:12.5px; line-height:1.3; color:#7a8193 }
+.modo { font-size:11.5px; line-height:1.3; color:#9aa0ae;
         display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
-.gioca { margin-top:auto; width:100%; padding:8px 0; border-radius:999px; font-size:15px; font-weight:900;
-         background:#ffcf3f; color:#2d2a32 }
+.gioca { margin-top:auto; width:100%; padding:9px 0; border-radius:999px; font-size:14px; font-weight:600;
+         background:#1f2433; color:#fff }
 .carta:not(.davanti) .gioca { visibility:hidden }
 .carta.davanti:active { transform:scale(.98) !important }
-.fr { position:absolute; top:72px; z-index:200; width:34px; height:34px; border-radius:50%;
-      background:#fff; color:var(--viola-scuro); font-size:20px; font-weight:900; line-height:1;
-      box-shadow:0 2px 0 #d4dce6 }
+.fr { position:absolute; top:70px; z-index:200; width:34px; height:34px; border-radius:50%;
+      background:#fff; color:#1f2433; font-size:20px; line-height:1; box-shadow:0 1px 3px #1f243326 }
 .fr.sx { left:20px } .fr.dx { right:20px }
 .fr:disabled { opacity:0; pointer-events:none }
 
-.indice { display:grid; grid-template-columns:repeat(auto-fill, minmax(34px, 1fr)); gap:6px; margin-top:12px }
-.indice button { position:relative; height:40px; border-radius:11px; font-size:20px; line-height:1;
-                 box-shadow:inset 0 0 0 2px transparent }
-.indice button.on { background:#fff !important; box-shadow:inset 0 0 0 2px var(--viola-scuro) }
-.indice button.ultimo::after { content:""; position:absolute; top:-4px; right:-4px; width:11px; height:11px;
-                               border-radius:50%; background:#ffcf3f; box-shadow:0 0 0 2px #2d2a32 }
+.indice { display:grid; grid-template-columns:repeat(auto-fill, minmax(34px, 1fr)); gap:6px; margin-top:14px }
+.indice button { position:relative; height:40px; border-radius:10px; font-size:20px; line-height:1;
+                 background:#fff; box-shadow:0 1px 2px #1f243312 }
+.indice button.on { box-shadow:inset 0 0 0 2px #1f2433 }
+.indice button.ultimo::after { content:""; position:absolute; top:-3px; right:-3px; width:9px; height:9px;
+                               border-radius:50%; background:#ffd54f; box-shadow:0 0 0 2px #f6f7f9 }
 </style>
