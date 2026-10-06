@@ -62,8 +62,12 @@ cosa, il gioco le dice in che stato è ogni tappa. Chi apre cosa sta in
   (`percorso`): di casella in casella fino a cinque salti, oltre un balzo
   solo. Se la casella è su un'isola dell'altro animale va alla tana, ci
   sparisce dentro, e dall'altra parte sbuca l'altro animale, che salta fino
-  alla casella. Arrivato, si apre il fumetto.
-- **Su una chiusa non va**: il fumetto dice cosa manca.
+  alla casella. Il fumetto non aspetta l'arrivo: compare subito sopra la
+  casella toccata, e «gioca» si può premere anche a viaggio in corso.
+- **Un altro tocco durante il viaggio** porta il fumetto sulla nuova tappa
+  e cambia la meta, da dove il segnalino è atterrato (finisce il salto che
+  stava facendo). Un tocco fuori chiude il fumetto e il viaggio finisce.
+- **Su una chiusa non va**: il fumetto subito, e dice cosa manca.
 - **All'apertura sta sulla tappa di adesso** (`tappaDiAdesso` in
   `motore/strade.js`): l'ultima giocata se non è vinta, se no quella dopo
   come col ▶; non restando niente, il sentiero. La mappa si apre scorrendo
@@ -72,8 +76,8 @@ cosa, il gioco le dice in che stato è ogni tappa. Chi apre cosa sta in
   `Mappa.vue`), non il profilo: tornando con una tappa di adesso nuova parte
   da dov'era e ci va, anche passando da una tana.
 - **A fotogrammi, fermo a schermo nascosto** (al massimo 50 ms per
-  fotogramma). Un tocco durante il viaggio lo fa arrivare subito e non apre
-  niente: un velo trasparente si prende il tocco.
+  fotogramma). Non rincorre con lo scorrimento chi è lontano fuori dallo
+  schermo: si guarda il fumetto.
 
 ## Il fumetto
 
@@ -86,6 +90,8 @@ cosa, il gioco le dice in che stato è ogni tappa. Chi apre cosa sta in
   a «X», poi ad altre N tappe», e per il cane «si apre quando il coniglio
   impara 🔁 («Il viale»)» o «finisce «Le buche»»; chiusa dall'età, «Questa
   tappa per ora è chiusa».
+- **Resta fermo e sopra il segnalino** (`z-index` più alto) mentre quello
+  viaggia; sta sopra la meta come se l'animale ci fosse già seduto.
 - **Si apre al `click`, non al `pointerup`**, e una strisciata oltre 16 px
   (o la mappa che scorre di tanto) non apre niente
   ([../core/il-dito.md](../core/il-dito.md)). Toccando fuori si chiude.
@@ -117,7 +123,7 @@ con `[data-stato]` e `[data-strada="coniglio"|"cane"]`, la matita
 `[data-tana="<id>"]` con `[data-aperta]`; i bivi `[data-bivio]` con
 `[data-ramo]` e le assi `[data-verso="coniglio"|"cane"]`; il segnalino
 `[data-segnalino]` con `[data-animale]`, `[data-al]` e `[data-in-viaggio]`;
-il velo del viaggio `[data-viaggio]`; il fumetto `[data-fumetto]` con
+il fumetto `[data-fumetto]` con
 `[data-fumetto-per]`, `[data-azione="parti"]` e `[data-serve]`.
 `giocaSullIsola(page, indice)` in `test/aiuto/browser.mjs` aspetta il
-segnalino fermo e fa i due tocchi; `statoSullIsola` legge lo stato.
+segnalino fermo (per non far scorrere la casella sotto il click) e fa i due tocchi; `statoSullIsola` legge lo stato.
