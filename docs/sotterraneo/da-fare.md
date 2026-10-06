@@ -35,11 +35,12 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   Poi i foglietti, una voce in `SCENARI`, un branco in `BRANCHI` e un tratto
   in `TRATTI_DELL_ABISSO` (vedi [scenari.md](scenari.md) e
   [abisso.md](abisso.md#il-posto-cambia-scendendo)).
-- **L'arredo per scenario**: botti, casse e stendardi rossi sono di tutto il
-  sotterraneo e nella cripta sembrano portati dalle cantine. La scena della
-  cripta ha sarcofagi, statue, candelabri e colonne spezzate, ma con dietro
-  il pavimento: vanno chiesti su fondo magenta, e l'arredo diventa una voce
-  dello scenario.
+- **Le fuliggini della fornace** non sono state usate (alone magenta).
+- **L'arredo della cripta**: la fornace ha il suo (`arredo` e `dice` nella voce
+  di `SCENARI`), le cantine e la cripta no, e botti, casse e stendardi rossi
+  nella cripta sembrano portati dalle cantine. La scena della cripta ha
+  sarcofagi, statue, candelabri e colonne spezzate ma col pavimento dietro:
+  vanno chiesti su fondo magenta e mappati con `arredo`.
 - **La fontana della cripta** è ancora quella di `sotterraneo_3.png`, piena e
   asciutta: quella del foglio dei pezzi è a muro, e bevendo cambierebbe forma.
 - **Un mostro di quinta fascia per ogni posto**: oggi il golem sta in tutti
@@ -50,8 +51,6 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 - **I guardiani dell'abisso per posto**: la scaletta è misurata e non guarda
   il tratto, quindi lo scheletro fa la guardia alle cantine. Da rifare sul
   banco insieme al bottino graduato.
-- **Quale discesa indossa la cripta**: oggi nessuna (è una riga, `scenario:`
-  nella tappa).
 - **Il suono**: c'è il minimo (passo, colpo, errore, il graffio). Col suono
   spento il gioco deve restare intero.
 

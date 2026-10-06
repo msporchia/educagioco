@@ -15,11 +15,12 @@ Il sotterraneo è **il calco da guardare** per un mondo a sprite:
   bordi, porte, scala, fontana, mercante e le cose per terra stanno in una
   voce di `SCENARI` (`dati/tessere.js`), e **tutte le voci hanno le stesse
   chiavi**: si cambia vestito a una discesa senza toccare la tela. Aggiungere
-  un pezzo è una riga lì, mai un `if` nel disegno. Oggi ce ne sono due: **le cantine**
-  (`sotterraneo_2.png`), che indossano le sei discese, e **la cripta**
-  (`sotterraneo_4.png` e i due fogli `_2`, `_3`); l'abisso li alterna scendendo
-  ([abisso.md](abisso.md#il-posto-cambia-scendendo)). Una tappa può
-  dichiarare il suo con `scenario:`.
+  un pezzo è una riga lì, mai un `if` nel disegno. Oggi ce ne sono tre: **le cantine**
+  (`sotterraneo_2.png`), **la cripta**
+  (`sotterraneo_4.png` e i due fogli `_2`, `_3`) e **la fornace** (`sotterraneo_5.png` e il foglio `_2`); le sei discese ne mostrano due a testa (cantine e
+  pozzo, gallerie e cisterna, labirinto e fondo) e l'abisso li attraversa
+  scendendo ([abisso.md](abisso.md#il-posto-cambia-scendendo)). Ogni tappa lo
+  dichiara con `scenario:`; chi non lo dichiara indossa le cantine (`SCENARIO`).
 - **Uno scenario nasce da un prompt** diviso in due:
   `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md` ha una
   **parte fissa** (griglia, regola del muro, luce, divieti) e un **blocco
@@ -44,6 +45,11 @@ Il sotterraneo è **il calco da guardare** per un mondo a sprite:
   scena per pixel di gioco), partendo dalla riga dove il coronamento
   ricalca il bordo: a 3,5 il coronamento usciva una riga più in basso e la
   giunzione col muro spesso si vedeva.
+- **La scena può avere la griglia deformata** (la fornace: cella di 64 px
+  nella stanza in alto, 69 in quella in basso, facce più alte): allora ogni
+  pezzo si ritaglia dalla zona che ha la scala giusta, e il pavimento da una
+  toppa senza carbone né porte, o ripetuto mostra i mucchi come una carta da
+  parati.
 - **Quello che non c'è nella tavola non si disegna**: `guastiDelleTessere`
   chiede all'atlante ogni nome di ogni scenario, e un pezzo mancante è rosso
   nei test invece che un muro invisibile.
@@ -121,6 +127,12 @@ in Node) e si prova in `unita/muri-sotterraneo`.
 - **Di emoji in scena restano solo i segni sopra le porte.** La fontana e il
   mercante vengono dallo scenario, e la fonte bevuta resta al suo posto,
   asciutta.
+- **L'arredo cambia pelle e frase con lo scenario**: il piano decide *cosa*
+  (`barile`, `ossa`, `braciere`... in `ARREDI`, `dati/mondo.js`) e dove sta e
+  chi fa luce; `arredo` nella voce di `SCENARI` dice con quale sprite si
+  disegna e `dice` cosa risponde a chi lo tocca. Vuoti, vale quello di tutti
+  (cantine, cripta). La fornace: botte, carbone, incudine, gargoyle,
+  calderone, rastrelliera, banco.
 - **L'arredo** (barili, casse, ossa, uno stendardo, un braciere che fa luce)
   non si tocca, non blocca e non vale niente: serve a far sembrare che qui
   sotto ci abbia vissuto qualcuno. Un sotterraneo di stanze vuote si legge

@@ -7,24 +7,28 @@ import { BRANCO, BRANCHI } from './mostri.js'
 
 export const CAMPAGNA = [
   { chiave: 'cantine', nome: 'Le cantine', icona: '🕯️',
+    scenario: 'cantine',
     portata: 25,
     dritta: 'due piani corti: si impara la strada',
     piani: 2, misura: 30, giri: 2, dif: [0.05, 0.22],
     guardiano: 'scheletro', capo: 'scheletro' },
 
   { chiave: 'pozzo', nome: 'Il pozzo', icona: '🪣',
+    scenario: 'cantine',
     portata: 32,
     dritta: 'più stanze, e qualcuno che vende',
     piani: 3, misura: 34, giri: 3, dif: [0.12, 0.34],
     guardiano: 'scheletro', capo: 'orco' },
 
   { chiave: 'gallerie', nome: 'Le gallerie', icona: '🪨',
+    scenario: 'cripta',
     portata: 40,
     dritta: 'ci si picchia sul serio',
     piani: 3, misura: 40, giri: 3, dif: [0.22, 0.5],
     guardiano: 'orco', capo: 'orco' },
 
   { chiave: 'cisterna', nome: 'La cisterna', icona: '💧',
+    scenario: 'cripta',
     portata: 48,
     dritta: 'larga, e in fondo c\'è qualcosa di grosso',
     piani: 4, misura: 44, giri: 3, dif: [0.32, 0.62],
@@ -32,12 +36,14 @@ export const CAMPAGNA = [
     guardiano: 'granchio', capo: 'gigante' },
 
   { chiave: 'labirinto', nome: 'Il labirinto', icona: '🌀',
+    scenario: 'fornace',
     portata: 56,
     dritta: 'sedici stanze: senza mappina ci si perde',
     piani: 3, misura: 52, giri: 4, dif: [0.42, 0.76],
     guardiano: 'lupo', capo: 'troll' },   // troll e non gigante: le ultime tre finivano con la stessa faccia
 
   { chiave: 'fondo', nome: 'Il fondo', icona: '🕳️',
+    scenario: 'fornace',
     portata: 64,
     dritta: 'stretto, profondo, e le domande non perdonano',
     piani: 4, misura: 42, giri: 3, dif: [0.52, 0.92],   // stretto: più largo supererebbe le risposte obbligate di una seduta
@@ -87,18 +93,19 @@ export const L_ABISSO = {
   // niente `portata`: il cancello non è l'età ma "hai finito le sei discese", dimostrato invece che stimato
 }
 
-// l'abisso cambia posto ogni PIANI_PER_TRATTO piani, poi ricomincia: il posto dice lo scenario (SCENARI in
+// l'abisso cambia posto ogni PIANI_PER_TRATTO piani, e l'ultimo resta per sempre: il posto dice lo scenario (SCENARI in
 // dati/tessere.js) e chi si incontra per strada (BRANCHI in dati/mostri.js); i guardiani restano la scaletta
 // misurata. Vedi docs/sotterraneo/abisso.md.
 export const TRATTI_DELL_ABISSO = [
   { scenario: 'cantine', nome: 'le cantine' },
   { scenario: 'cripta', nome: 'la cripta' },
+  { scenario: 'fornace', nome: 'la fornace' },
 ]
-export const PIANI_PER_TRATTO = 5
+export const PIANI_PER_TRATTO = 4
 
 // il tratto del piano `piano` (da 0); null fuori dall'abisso
 export const trattoDi = (tappa, piano) => (tappa && tappa.abisso
-  ? TRATTI_DELL_ABISSO[Math.floor(Math.max(0, piano) / PIANI_PER_TRATTO) % TRATTI_DELL_ABISSO.length]
+  ? TRATTI_DELL_ABISSO[Math.min(Math.floor(Math.max(0, piano) / PIANI_PER_TRATTO), TRATTI_DELL_ABISSO.length - 1)]
   : null)
 
 // quale scenario si indossa: null è quello di ripiego (SCENARIO)

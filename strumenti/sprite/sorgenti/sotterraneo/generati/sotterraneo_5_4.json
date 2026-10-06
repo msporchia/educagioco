@@ -1,0 +1,44 @@
+{
+  "__": "Il foglietto di sotterraneo_5_4.png: la fontanella della fornace asciutta (ChatGPT, 5 ottobre 2026, su fondo magenta). La piena è la stessa fontana dell'asciutta con la lava nella coppa: sono state chieste in due giri, la seconda allegando la prima, perché bevendo la fonte non cambi forma.",
+  "prompt": {
+    "scheda": "PROMPT-scenario.md",
+    "base": "sotterraneo_5.png",
+    "generatore": "ChatGPT, 5 ottobre 2026",
+    "testo": "la fontanella della scena, asciutta, su magenta: vasca vuota, fondo di ferro a vista, una crepa"
+  },
+  "fondo": [
+    255,
+    0,
+    255
+  ],
+  "ombra": true,
+  "colori": 0,
+  "cella": [
+    1,
+    1
+  ],
+  "famiglie": {
+    "fornace-fontana": "figura"
+  },
+  "trasforma": {
+    "fornace-fontana": {
+      "giri": 1
+    }
+  },
+  "sprite": {
+    "fornace-fontana-asciutta": {
+      "da": [
+        350,
+        544
+      ],
+      "cella": [
+        326,
+        382
+      ],
+      "misura": [
+        15,
+        18
+      ]
+    }
+  }
+}

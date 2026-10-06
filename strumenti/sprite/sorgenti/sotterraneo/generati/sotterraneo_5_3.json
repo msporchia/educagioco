@@ -1,0 +1,143 @@
+{
+  "__": "Il foglietto di sotterraneo_5_3.png: l'arredo della fornace (ChatGPT, 2 ottobre 2026, nella chat della scena, su fondo magenta, col prompt vecchio dei pezzi senza la fontanella). Pezzi a circa 14 px di foglio per pixel di gioco. Fuori la panca (nessun arredo la chiede). Quale pezzo per quale arredo lo dice `arredo` nella voce `fornace` di dati/tessere.js.",
+  "prompt": {
+    "scheda": "PROMPT-scenario.md",
+    "base": "sotterraneo_5.png",
+    "generatore": "ChatGPT, 2 ottobre 2026",
+    "testo": "il prompt dell'arredo su magenta: calderone sulle braci, incudine sul ceppo, banco da lavoro, panca, gargoyle in due pose, pila di carbone, botte di ferro, rastrelliera di catene"
+  },
+  "fondo": [
+    255,
+    0,
+    255
+  ],
+  "ombra": true,
+  "colori": 0,
+  "cella": [
+    1,
+    1
+  ],
+  "famiglie": {
+    "fornace-calderone": "oggetto",
+    "fornace-incudine": "oggetto",
+    "fornace-banco": "oggetto",
+    "fornace-gargoyle": "oggetto",
+    "fornace-carbone": "oggetto",
+    "fornace-botte": "oggetto",
+    "fornace-rastrelliera": "oggetto"
+  },
+  "sprite": {
+    "fornace-calderone": {
+      "da": [
+        56,
+        204
+      ],
+      "cella": [
+        248,
+        276
+      ],
+      "misura": [
+        18,
+        20
+      ]
+    },
+    "fornace-incudine": {
+      "da": [
+        396,
+        240
+      ],
+      "cella": [
+        204,
+        236
+      ],
+      "misura": [
+        15,
+        17
+      ]
+    },
+    "fornace-banco": {
+      "da": [
+        672,
+        176
+      ],
+      "cella": [
+        284,
+        308
+      ],
+      "misura": [
+        20,
+        22
+      ]
+    },
+    "fornace-gargoyle-0": {
+      "da": [
+        464,
+        592
+      ],
+      "cella": [
+        196,
+        312
+      ],
+      "misura": [
+        14,
+        22
+      ]
+    },
+    "fornace-gargoyle-1": {
+      "da": [
+        736,
+        572
+      ],
+      "cella": [
+        216,
+        336
+      ],
+      "misura": [
+        15,
+        24
+      ]
+    },
+    "fornace-carbone": {
+      "da": [
+        68,
+        1040
+      ],
+      "cella": [
+        256,
+        264
+      ],
+      "misura": [
+        18,
+        19
+      ]
+    },
+    "fornace-botte": {
+      "da": [
+        424,
+        1024
+      ],
+      "cella": [
+        192,
+        268
+      ],
+      "misura": [
+        14,
+        19
+      ]
+    },
+    "fornace-rastrelliera": {
+      "da": [
+        708,
+        1012
+      ],
+      "cella": [
+        256,
+        300
+      ],
+      "misura": [
+        18,
+        21
+      ]
+    }
+  }
+}

@@ -1,0 +1,249 @@
+{
+  "__": "Il foglietto di sotterraneo_5.png: la scena della fornace (ChatGPT, 2 ottobre 2026, il prompt 1 col blocco LA FORNACE, allegata solo sotterraneo_4.png). La griglia della scena non è regolare: la stanza in alto ha la cella di 64 px, quella in basso di 69 e le facce di sotto sono più alte. Per questo il pavimento delle stanze (una toppa di 186×140, più piccola di 4×3 celle perché il resto ha la porta, la fossa e mucchi di carbone che ripetuti fanno carta da parati) viene dalla stanza in basso, il tetto dalla roccia, e facce, capi e bordi dalla stanza in alto. Dalla scena si prendono pavimenti, tetto, facce, bordi e la scala aperta; porte, mercante, medaglione, fontana e cose per terra vengono da sotterraneo_5_2.png.",
+  "prompt": {
+    "scheda": "PROMPT-scenario.md",
+    "base": "sotterraneo_4.png",
+    "generatore": "ChatGPT, 2 ottobre 2026",
+    "testo": "il prompt 1 della scheda col blocco LA FORNACE, con la sola scena della cripta come stile (niente pianta allegata: sta già in caratteri nel testo), più il pavimento sempre più chiaro del tetto di due toni"
+  },
+  "fondo": "trasparente",
+  "cella": [
+    1,
+    1
+  ],
+  "famiglie": {
+    "fornace-pav": "fondo",
+    "fornace-tetto": "fondo",
+    "fornace-faccia": "tessera",
+    "fornace-capo": "tessera",
+    "fornace-bordo": "tessera"
+  },
+  "trasforma": {
+    "fornace-faccia": {
+      "giri": 1
+    },
+    "fornace-capo": {
+      "giri": 1
+    },
+    "fornace-bordo": {
+      "giri": 1
+    },
+    "fornace-scala": {
+      "giri": 1,
+      "specchia": false
+    }
+  },
+  "sprite": {
+    "fornace-pav-stanze": {
+      "da": [
+        482,
+        1148
+      ],
+      "cella": [
+        186,
+        140
+      ],
+      "misura": [
+        64,
+        48
+      ]
+    },
+    "fornace-pav-corridoi": {
+      "da": [
+        704,
+        430
+      ],
+      "cella": [
+        64,
+        256
+      ],
+      "misura": [
+        16,
+        64
+      ]
+    },
+    "fornace-tetto": {
+      "da": [
+        800,
+        400
+      ],
+      "cella": [
+        224,
+        224
+      ],
+      "misura": [
+        64,
+        64
+      ]
+    },
+    "fornace-faccia-fila": {
+      "da": [
+        452,
+        235
+      ],
+      "cella": [
+        128,
+        64
+      ],
+      "misura": [
+        32,
+        16
+      ]
+    },
+    "fornace-faccia-torcia": {
+      "da": [
+        237,
+        235
+      ],
+      "cella": [
+        64,
+        64
+      ],
+      "misura": [
+        16,
+        16
+      ]
+    },
+    "fornace-faccia-grata": {
+      "da": [
+        511,
+        842
+      ],
+      "cella": [
+        72,
+        76
+      ],
+      "misura": [
+        16,
+        16
+      ]
+    },
+    "fornace-faccia-liscia": {
+      "da": [
+        296,
+        235
+      ],
+      "cella": [
+        64,
+        64
+      ],
+      "misura": [
+        16,
+        16
+      ]
+    },
+    "fornace-faccia-toppa": {
+      "da": [
+        716,
+        121
+      ],
+      "cella": [
+        64,
+        66
+      ],
+      "misura": [
+        16,
+        16
+      ]
+    },
+    "fornace-capo-sx": {
+      "da": [
+        194,
+        235
+      ],
+      "cella": [
+        24,
+        64
+      ],
+      "misura": [
+        6,
+        16
+      ]
+    },
+    "fornace-capo-dx": {
+      "da": [
+        194,
+        235
+      ],
+      "cella": [
+        24,
+        64
+      ],
+      "misura": [
+        6,
+        16
+      ],
+      "specchia": true
+    },
+    "fornace-bordo-n": {
+      "da": [
+        330,
+        602
+      ],
+      "cella": [
+        64,
+        32
+      ],
+      "misura": [
+        16,
+        8
+      ]
+    },
+    "fornace-bordo-o": {
+      "da": [
+        630,
+        380
+      ],
+      "cella": [
+        32,
+        64
+      ],
+      "misura": [
+        8,
+        16
+      ]
+    },
+    "fornace-bordo-e": {
+      "da": [
+        161,
+        380
+      ],
+      "cella": [
+        32,
+        64
+      ],
+      "misura": [
+        8,
+        16
+      ]
+    },
+    "fornace-bordo-angolo": {
+      "da": [
+        630,
+        300
+      ],
+      "cella": [
+        16,
+        16
+      ],
+      "misura": [
+        4,
+        4
+      ]
+    },
+    "fornace-scala-aperta": {
+      "da": [
+        698,
+        1178
+      ],
+      "cella": [
+        80,
+        84
+      ],
+      "misura": [
+        16,
+        17
+      ]
+    }
+  }
+}

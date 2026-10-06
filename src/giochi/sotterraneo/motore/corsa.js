@@ -10,6 +10,7 @@ import {
   ARREDO_DICE, ARREDO_LA_PRIMA_VOLTA,
 } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
+import { SCENARI, SCENARIO } from '../dati/tessere.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta } from '../dati/eroi.js'
 import { COSE, CURE, NEI_FORZIERI, STANZE_TORCIA, pescaMerce, pescaCosa } from '../dati/cose.js'
 import { CURIOSITA_DI, MALUS } from '../dati/curiosita.js'
@@ -297,7 +298,8 @@ export class Corsa {
       this.dillo(ARREDO_LA_PRIMA_VOLTA)
       return
     }
-    this.dillo(ARREDO_DICE[a.pezzo] || 'Non c\'è niente da fare, qui.')
+    const sua = (SCENARI[this.scenario || SCENARIO] || {}).dice || {}
+    this.dillo(sua[a.pezzo] || ARREDO_DICE[a.pezzo] || 'Non c\'è niente da fare, qui.')
   }
 
   sopra(che) { return ['scala', 'mercante', 'fonte', 'cosa', 'gemme'].includes(che) }

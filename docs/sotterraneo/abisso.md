@@ -110,9 +110,11 @@ raggiunge.
 
 ## Il posto cambia scendendo
 
-**Ogni cinque piani l'abisso cambia posto** (`TRATTI_DELL_ABISSO`,
-`PIANI_PER_TRATTO` in `dati/campagna.js`): le cantine dal 1° al 5°, la cripta
-dal 6° al 10°, e finita la fila si ricomincia. Un posto è **uno scenario**
+**Ogni quattro piani l'abisso cambia posto** (`TRATTI_DELL_ABISSO`,
+`PIANI_PER_TRATTO` in `dati/campagna.js`): le cantine dal 1° al 4°, la cripta
+dal 5° all'8°, la fornace dal 9° in poi, **e l'ultimo posto resta per sempre**:
+un abisso senza fondo non ha un giro da rifare, e la fornace è l'ultima
+tappa visiva. Un posto è **uno scenario**
 (come si disegna, `SCENARI` in `dati/tessere.js`) **e un branco** (chi si
 incontra per strada, `BRANCHI` in `dati/mostri.js`); la riga sotto il campo
 dice dove si è («la cripta · piano 7»).
@@ -124,7 +126,9 @@ dice dove si è («la cripta · piano 7»).
   che ha lì** (`guastiDeiMostri` lo pretende): cambiare posto cambia le
   facce, non la fatica. Le cantine hanno le bestie (ratto, goblin, melma,
   fungo, vespone, granchio, serpente), la cripta i morti e la notte
-  (pipistrello, fantasma, scheletro, orco, lupo). Il golem sta in tutti e due
+  (pipistrello, fantasma, scheletro, orco, lupo), la fornace i diavoletti e le
+  bestie del fuoco (pipistrello, goblin, melma, scheletro, vespone, orco,
+  serpente). Il golem sta in tutti e tre
   finché la quinta fascia ha un mostro solo.
 - **La campagna incontra tutto il bestiario**: le sei discese sono dove i
   mostri si imparano, e cambiarne il branco ritarerebbe tappe misurate.

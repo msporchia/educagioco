@@ -2,7 +2,7 @@
 
 Uno **scenario** è il vestito intero di un sotterraneo: tetto, muri,
 pavimenti, porte, scale, fontana, mercante, arredo e le cose per terra.
-Ce ne sono due, le cantine e la cripta, e l'abisso li alterna scendendo.
+Ce ne sono tre, le cantine, la cripta e la fornace, e l'abisso li alterna scendendo.
 
 **Cosa non va adesso**, visto disegnando un piano intero col codice vero:
 
@@ -78,15 +78,24 @@ allegando la scena.
    per bordi e facce (vedi `docs/sotterraneo/scenari.md`).
 
 ```text
-Disegna su un fondo MAGENTA PIENO (#FF00FF), uniforme, senza sfumature e senza ombre, i pezzi che MANCANO alla scena che hai appena fatto: stessi materiali, stessa tavolozza, stessa mano. Ogni pezzo staccato dagli altri; il magenta non compare in nessun pezzo. NESSUNA PAROLA SCRITTA, NESSUN NUMERO.
+Disegna su un fondo MAGENTA PIENO (#FF00FF), uniforme, senza sfumature, senza ombre e senza nessuna scacchiera, i pezzi che MANCANO alla scena che hai appena fatto: stessi materiali, stessa tavolozza, stessa mano, e la STESSA SCALA della scena (celle da 64×64 px, ogni pixel del disegno è un quadrato di 4×4 px). Immagine 1024×1536 px verticale. Ogni pezzo sta da solo, staccato dagli altri da almeno mezza cella di magenta; il magenta non compare mai DENTRO un pezzo. NESSUNA PAROLA SCRITTA, NESSUN NUMERO. Nessun pezzo ha un quadrato di pavimento, un'ombra o un bagliore sotto o attorno: è disegnato solo il pezzo.
 
-1. Sei porte ad arco come quelle della scena, tutte diverse: semplice; rinforzata di ferro; ricca, con la cornice e le borchie d'oro; minacciosa, con un piccolo teschio di pietra SOPRA l'arco e l'anta che resta un'anta; chiara, di legno chiaro; e la semplice APERTA, col buio del passaggio dentro l'arco.
-2. Le stesse sei in un muro laterale, viste da sopra: una tavola stretta in verticale, riconoscibile dagli stessi colori e dagli stessi segni.
-3. La scala della scena chiusa da una grata col lucchetto; la fontanella della scena asciutta, DELLA STESSA FORMA di quella piena.
-4. Il mercante: un incappucciato dietro un banchetto, in due pose: fermo, e che saluta.
-5. Il pavimento speciale della scena come un quadrato intero di 3×3 celle, senza niente sopra.
-6. Cose PIATTE PER TERRA, SENZA NESSUN QUADRATO DI PAVIMENTO SOTTO: foglie secche, schegge d'ardesia, una lastra spaccata, e una ragnatela per l'angolo in alto a sinistra e la stessa per quello in alto a destra.
-Niente che si possa scambiare per una cosa da raccogliere.
+Dall'alto in basso, una fila per riga:
+1. Sei porte ad arco, una cella di larghezza, TUTTE DIVERSE: semplice; rinforzata di ferro; ricca, con la cornice e le borchie d'oro; minacciosa, col segno dello scenario SOPRA l'arco e l'anta che resta un'anta; chiara; e la semplice APERTA, con l'anta girata contro lo stipite e il buio del passaggio dentro l'arco (non una porta chiusa).
+2. Le stesse sei in un muro laterale, viste da sopra: una tavola stretta in verticale in mezzo a una cella, con gli stessi colori e gli stessi segni.
+3. La scala della scena chiusa da una grata col lucchetto, alta e larga come quella aperta; la fontanella della scena asciutta, DELLA STESSA FORMA e della stessa misura di quella piena, in piedi e non incassata in un muro.
+4. Il mercante: un incappucciato dietro un banchetto, largo e alto una cella e mezza, in due pose: fermo, e che saluta.
+5. Il pavimento speciale della scena come un solo quadrato intero di 3×3 celle, a filo, senza niente sopra, senza fontana e senza bordo.
+6. Sei cose PIATTE PER TERRA, ognuna dentro una sola cella e DIPINTE DIRETTAMENTE SUL MAGENTA: il fondo attorno resta magenta, non pavimento. Sono quelle della riga «Per terra» dello scenario, più una ragnatela per l'angolo in alto a sinistra e la stessa per quello in alto a destra.
+Niente che si possa scambiare per una cosa da raccogliere: niente candele in piedi, monete, gemme, chiavi, pozioni.
+```
+
+Controllo prima di andare avanti: **sfondo davvero magenta** (non una scacchiera), porte tutte diverse e quella aperta davvero aperta, fontanella asciutta della stessa forma, **cose per terra senza quadrato di pavimento**. Una o due correzioni mirate («rifai solo la riga 6, direttamente sul magenta»); oltre, si riparte da zero con l'ultima buona allegata.
+
+Poi, **nella stessa chat**, l'arredo (è la voce aperta di `docs/sotterraneo/da-fare.md`: senza, botti e stendardi delle cantine stonano):
+
+```text
+Sullo stesso fondo MAGENTA PIENO (#FF00FF), l'arredo di questo posto, della stessa mano e della stessa scala della scena (celle da 64×64 px). Ogni pezzo da solo, staccato dagli altri da almeno mezza cella, SENZA pavimento sotto e senza ombra: [elenco dall'«arredo del posto» dello scenario, UNO per tipo, più una seconda posa di un pezzo che ha una faccia]. Fissi, visti dall'alto a tre quarti, grandi da una a due celle. Niente ossa, teschi, stendardi o drappi appesi, niente che si possa scambiare per una cosa da raccogliere. NESSUNA PAROLA SCRITTA.
 ```
 
 Il foglietto di un foglio magenta dichiara `"fondo": [255, 0, 255]`,
@@ -115,7 +124,14 @@ descritto a parole.
 |---|---|
 | 1, la scena | [`bottino-e-arredo.png`](bottino-e-arredo.png) (lo stile: porte, forzieri e torce che già ci sono) e [`PROMPT-scenario-pianta.png`](PROMPT-scenario-pianta.png) (dove sta ogni cosa) |
 | 2, il foglio | la scena buona del prompt 1 e [`PROMPT-scenario-foglio.png`](PROMPT-scenario-foglio.png) (dove va ogni pezzo) |
-| uno scenario nuovo | la scena buona dello scenario di prima al posto di `bottino-e-arredo.png`, così la mano resta la stessa |
+| uno scenario nuovo | **solo** la scena buona dello scenario di prima (`sotterraneo_4.png`), senza la pianta: la pianta in caratteri sta già nel testo del prompt, e un'immagine in meno costa meno e non fa copiare i colori piatti. Nel prompt 1 si sostituisce la frase degli allegati con quella qui sotto |
+
+Per uno scenario nuovo, con la sola scena allegata, la frase degli
+allegati del prompt 1 («Allego due immagini… la PIANTA…») diventa:
+
+```text
+Allego un'immagine: la scena di un altro posto dello stesso gioco. È lo STILE: stesso contorno scuro, stessa luce da in alto a sinistra, stessa cura, stessi muri alti una cella. I materiali e i colori NON sono i suoi: sono quelli dello scenario in fondo. La dimensione delle celle e la regola del muro valgono come in quella scena; la PIANTA qui sotto, in caratteri, dice dove sta ogni cosa.
+```
 
 I due schemi li disegna `python3 strumenti/sprite/scenario.py`, e la
 pianta **la legge da questa scheda** — dal prompt 1 — e controlla che
@@ -164,14 +180,14 @@ COME SI VEDONO I MURI — vale ovunque, senza eccezioni:
 
 Le porte ad arco sono larghe una cella e stanno nella fila delle facce; il loro arco sale di mezza cella sul tetto.
 
-La luce è piatta e uguale dappertutto: niente pozze di luce sul pavimento, niente angoli in ombra, niente vignettatura, niente nebbia. Le fiamme ci sono ma non illuminano niente: la luce la mette il gioco. Il terreno è il fondo: colori più spenti e meno contrastati di tutto quello che ci camminerà sopra.
+Il pavimento è sempre PIÙ CHIARO del tetto, di almeno due toni: da un solo colpo d'occhio si vede dove si cammina. La luce è piatta e uguale dappertutto: niente pozze di luce sul pavimento, niente angoli in ombra, niente vignettatura, niente nebbia. Le fiamme ci sono ma non illuminano niente: la luce la mette il gioco. Il terreno è il fondo: colori più spenti e meno contrastati di tutto quello che ci camminerà sopra.
 
 Nella scena non c'è nessuno e non c'è niente da prendere: niente personaggi, mostri, monete, gemme, chiavi, pozioni, armi, forzieri. NESSUNA PAROLA SCRITTA, NESSUN NUMERO, NESSUNA INTERFACCIA.
 
 L'arredo del posto mettilo dove ha senso: contro i muri e negli angoli, mai nei corridoi, lasciando libero il centro delle stanze. Se ti viene in mente altro che renda vivo un posto così, aggiungilo — con un limite solo: niente che si possa scambiare per una cosa da raccogliere.
 
 La pianta, cella per cella, 16 caratteri per riga. È una guida per te, non va disegnata:
-# tetto · = faccia del muro · t faccia con una torcia accesa · g faccia con una grata · . pavimento delle stanze · , pavimento dei corridoi · o pavimento speciale · A porta aperta · P porta chiusa · L porta chiusa in un muro laterale, vista da sopra: l'anta di traverso nel varco · l la stessa aperta, accostata al muro · F fontanella · S scala che scende: un buco quadrato con i gradini che vanno giù nel buio
+# tetto · = faccia del muro · t faccia con una torcia accesa · g faccia con una grata · . pavimento delle stanze · , pavimento dei corridoi · o pavimento speciale: un medaglione di 3×3 celle, con la fontanella F che ne copre solo il centro · A porta ad arco APERTA: l'anta spalancata contro lo stipite e il buio del passaggio dentro l'arco, non una porta chiusa · P porta ad arco chiusa · L porta chiusa in un muro laterale, vista da sopra: l'anta di traverso nel varco · l la stessa aperta, accostata al muro · F fontanella: un oggetto IN PIEDI sul pavimento, alto una cella e mezza, non incassato nel muro · S scala che scende: un buco quadrato con i gradini che vanno giù nel buio
 
 ################
 ################
@@ -287,14 +303,14 @@ L'arredo del posto: sarcofagi di pietra chiusi, statue di cavalieri addormentati
 SCENARIO: LA FORNACE
 Atmosfera: le fucine dei diavoletti sotto un vulcano: rossa e nera, calda, un po' minacciosa ma da cartone animato. Niente sangue, niente simboli.
 Tavolozza: nero, rosso cupo, arancio di brace, ferro brunito.
-Il tetto: roccia vulcanica nera e porosa, con qualche crepa rosso cupo.
+Il tetto: roccia vulcanica nero-bruna, opaca e porosa, la cosa più scura di tutta la scena, con qualche crepa rosso cupo.
 La faccia del muro: mattoni neri anneriti dal fumo, con le fughe color brace; il coronamento è una fascia di ferro chiodato.
-Il pavimento delle stanze: basalto a esagoni neri, con le fughe rosso spento.
-Il pavimento dei corridoi: lastre di ferro scuro rivettate.
+Il pavimento delle stanze: grandi lastre irregolari di basalto grigio-bruno, più chiare del tetto, con le fughe rosso spento (non esagoni regolari: ripetuti fanno una tabella).
+Il pavimento dei corridoi: lunghe lastre di ferro brunito messe di traverso, con poche borchie.
 Il pavimento speciale: una piattaforma di ferro a raggiera, arancio spento.
 Le porte: ferro nero, con due corna ricurve sopra l'arco.
 Sui muri: una colata di lava rappresa, un mantice appeso, una testa di gargoyle che sbuffa fumo.
-Per terra: cenere, crepe che brillano appena, sassi neri, braci spente, fuliggine, una scoria di ferro.
+Per terra: cenere, sassi neri, fuliggine, una scoria di ferro, schegge di basalto, una crepa che brilla appena (mai braci accese, che si scambiano per cose da prendere).
 L'arredo del posto: calderoni sulle braci, incudini, catene appese, statue di gargoyle, bocche di fornace chiuse da una grata.
 ```
 
@@ -482,3 +498,26 @@ lo stesso alone a due gobbe.
 - **`sotterraneo_4_3.png`**, le cose per terra su magenta: tornate già
   trasparenti. Si prendono foglie, schegge, lastra e ragnatele; fuori la
   cera (la candela in piedi sembra da prendere) e i due mucchi di sassi.
+
+### `sotterraneo_5.png` e i suoi fogli — la fornace ✅, montata nell'abisso
+
+2 ottobre 2026, ChatGPT, una chat nuova. Prompt 1 con la sola scena della
+cripta allegata (senza la pianta, che sta in caratteri nel testo) e il blocco
+LA FORNACE; poi, nella stessa chat, i pezzi che mancano su magenta (`_2`) e
+l'arredo (`_3`, col prompt vecchio).
+
+- **La scena**: regola del muro giusta e contrasto buono (pavimento bruno
+  contro tetto quasi nero), ma **la griglia si deforma**: cella di 64 px
+  nella stanza in alto, 69 in quella in basso. Pezzi presi zona per zona.
+  La porta in alto è chiusa e il medaglione 2,5 celle con la fontana sopra:
+  non servono.
+- **`_2`**: magenta pulito, sei porte diverse con la sesta davvero aperta, di
+  fianco, scala chiusa, mercante, medaglione con cornice. Fuori la fuliggine
+  viola (alone magenta dentro) e la fontanella (un ottagono, altra forma).
+- **`_3`**: nove pezzi d'arredo puliti, non montati.
+- Il pavimento delle stanze è una toppa di 186×140 scelta cercando la zona
+  senza carbone: con 232×174 i mucchi si ripetevano ogni 4 celle.
+- **`_4` e `_5`, la fontanella**: l'asciutta chiesta da sola (un pezzo su
+  magenta), poi la piena allegando l'asciutta — «la STESSA fontanella,
+  identica per forma e misura, ma piena»: è tornata identica pietra per
+  pietra. Chiedere le due insieme sarebbe stato meglio ancora (un solo prompt).
