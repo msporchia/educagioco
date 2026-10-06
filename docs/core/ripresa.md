@@ -54,7 +54,7 @@ del gioco appena ha una ripresa preme da sola «torno da dove ero»
 Survivors), e cambiando schermata la richiesta si scorda (`lasciaRipresa`
 in `App.vue`): tornati alla mappa, la carta resta ferma. Senza partita a
 metà si apre la mappa come sempre. I giochi con un posto per livello
-(costruttore, Generale, Passo passo) aprono la mappa, col livello segnato.
+(Robot, Generale, Passo passo) aprono la mappa, col livello segnato.
 Lo prova `integrazione/pozioni-sosta`.
 
 ## Chi ce l'ha
@@ -72,7 +72,7 @@ Lo prova `integrazione/pozioni-sosta`.
   - English ed Español, anche i verbi e il gioco di prima (`views/LinguaGame.vue`):
     [../lingue/sosta.md](../lingue/sosta.md).
 - **Un posto per livello, senza carta**, perché aprire un livello non butta
-  quello di un altro: il costruttore (il programma, in archivio
+  quello di un altro: il Robot (il programma, in archivio
   `costruttore:<id>`), il Generale (il piano, in archivio `generale:<id>`:
   [../generale/lasciare-a-meta.md](../generale/lasciare-a-meta.md)), Passo
   passo (la fila e il gradino del 💡, nella sosta comune; il sentiero ha la

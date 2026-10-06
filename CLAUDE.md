@@ -67,7 +67,7 @@ quale file.
 | `docs/pozioni/` | Il laboratorio delle pozioni: regole e tappe |
 | `docs/passo-passo/` | Passo passo: regole del mondo, cane pastore, zaino e carte, stelle, sentiero, come si scrive un livello |
 | `docs/generale/` | Il Generale: didattica, mappe, livelli, cosa manca (come si scrive un livello: `src/data/livelli/GUIDA.md`) |
-| `docs/costruttore/` | Il costruttore: linguaggio, progetti e attrezzi, il porto, gli algoritmi, la campagna |
+| `docs/costruttore/` | Il Robot (era «Il costruttore»: chiave e cartelle restano `costruttore`): linguaggio, progetti e attrezzi, il porto, gli algoritmi, la campagna, la scheda e il robot disegnato |
 | `docs/sotterraneo/` | Il sotterraneo: regole, roba, scenari e muri, l'abisso com'è e il suo progetto |
 | `docs/survivors/` | Survivors, con le sue regole |
 | `docs/codice-segreto/`, `docs/conta/`, `docs/prima-dopo/` | un gioco ciascuna; in `prima-dopo/disegni.md` la regola delle icone disegnate |
@@ -154,7 +154,7 @@ Una riga ciascuna; il perché sta nel documento indicato.
   `store/progressi.js`**: finiscono nello stesso cassetto. → `docs/apprendimento/quiz-ripasso.md`
 - **Le partenze scrivono eccezioni**: una riga si confronta con quello che
   l'età scriverebbe, non con «nessuna eccezione». → `docs/genitori/ritocchi.md`
-- **Le stelle di Passo passo e del costruttore stanno sotto l'indice**:
+- **Le stelle di Passo passo e del Robot stanno sotto l'indice**:
   riordinare la fila vuole una voce in `FILE` di `dati/campagna.js`. Quelle
   del Generale stanno sotto l'`id`. → `docs/passo-passo/livelli.md`, `docs/costruttore/campagna.md`
 - **Un livello del Generale non ha un test suo**: dichiara `verifiche`, e

@@ -54,7 +54,7 @@ volte l'ora qui sopra. In Survivors la domanda è una sosta, e ce ne sono
 poche.
 
 **Fuori dalla regola**, e va bene così: i giochi dove la cosa fatta è
-risolvere un livello (Passo passo, il costruttore, il Generale, il Codice
+risolvere un livello (Passo passo, il Robot, il Generale, il Codice
 Segreto) — lì pagare il livello risolto *è* pagare subito —; la fattoria,
 che non guadagna; i traguardi.
 
@@ -129,7 +129,7 @@ Una spesa che non sta nella scala è sbagliata lei, non la scala.
 
 ## Gli aiuti che si comprano
 
-Il 💡 del Generale, di Passo passo e del costruttore (`src/giochi/aiuti.js`):
+Il 💡 del Generale, di Passo passo e del Robot (`src/giochi/aiuti.js`):
 i primi due gradini sono **gratis** (fanno ragionare), poi
 
 | gradino | prezzo | in esercizio |
@@ -146,7 +146,7 @@ i primi due gradini sono **gratis** (fanno ragionare), poi
   sente, e il livello era bruciato.
 - **Nessun aiuto rende monete**: il premio alla prima vittoria è sempre
   molto meno della scala.
-- **Un gradino pagato resta** (Generale, costruttore): pagarlo due volte
+- **Un gradino pagato resta** (Generale, Robot): pagarlo due volte
   per un tocco di troppo sarebbe una moneta tolta senza niente in cambio.
 
 ## Le curve: mai esponenziali

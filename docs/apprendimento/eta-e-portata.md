@@ -89,7 +89,7 @@ senso, a sei «7×8» nemmeno, a otto vanno bene tutti e due.
   fila accorciata in testa sposterebbe l'avanzamento di tutti.
 - **Per merito** (`perMerito: true` nel manifesto): `AVANTI` non ferma chi
   ci arriva vincendo la tappa prima. L'età decide ancora se la carta si
-  offre in home. Oggi lo dice solo il costruttore.
+  offre in home. Oggi lo dice solo il Robot.
 - **La testa si taglia solo a quello che la scuola ha già dato**: la
   tappa dichiara `scuola: '<chiave di data/saperi.js>'`, e chi non la
   dichiara non si taglia mai in testa (`dog` a dieci anni serve: nessuna

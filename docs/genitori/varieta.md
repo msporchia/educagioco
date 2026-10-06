@@ -115,7 +115,7 @@ giorno lo sovrascrive.
     partita (`store/varieta.js`): `paga(n)` a ogni cosa fatta passa da
     `incassa`, e a fine partita `nota()` somma chiesto e arrivato. È così
     che «24 → 12» resta una frase sola invece di ventiquattro.
-  - **I giochi a livelli** (Passo passo, il costruttore, il Codice
+  - **I giochi a livelli** (Passo passo, il Robot, il Codice
     Segreto) pagano il livello risolto con `addCoins`: la frase arriva
     dalla scritta piccola, sopra il loro cartello, per ogni premio da
     almeno 5 monete (`AVVISO_DA`) — sotto è la monetina di un colpo, e la

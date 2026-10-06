@@ -37,7 +37,7 @@ usaGuida(radice, passoGuida)
   regola del gioco (`.cst-piu[data-indicato]`).
 - **`mano: true` aggiunge la manina 👆** sopra il tasto, per chi non legge
   (Passo passo): lì la riga non si mostra, conta il dito.
-- **Si spegne da sé**: alla prima vittoria del livello (costruttore, Passo
+- **Si spegne da sé**: alla prima vittoria del livello (Robot, Passo
   passo), al primo ▶ (Generale), a battaglia partita (castello, memoria in
   `settings.guideViste`). Il banco salta le spiegazioni del castello
   (`saltaLeSpiegazioni`).
@@ -46,7 +46,7 @@ usaGuida(radice, passoGuida)
 
 | Gioco | Funzione | Quando |
 |---|---|---|
-| Il costruttore | `costruttore/motore/guida.js` | il primo muretto, finché non è vinto (`guida: true`): comincia sulla scheda, dal led 1 |
+| Il Robot | `costruttore/motore/guida.js` | il primo muretto, finché non è vinto (`guida: true`): comincia sulla scheda, dal led 1 |
 | Passo passo | `passo-passo/motore/guida.js` | il primo prato, e 🔁 alla prima tappa dello zaino |
 | Il Generale | `passoGuida` in `views/GeneraleGame.vue` | il primo livello della vita, fino al primo ▶ |
 | Difendi il Castello | `passoGuida` in `views/TowerDefense.vue` | la prima partita della vita |

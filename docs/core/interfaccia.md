@@ -48,7 +48,7 @@ c'è da dire su una tappa sta lì. Il pezzo comune è
 - I colori si cambiano con `--fumetto-fondo`, `--fumetto-tenue` (una cosa
   chiusa, `tenue`) e `--fumetto-testo`.
 
-Chi lo usa: la scheda del costruttore ([../costruttore/scheda.md](../costruttore/scheda.md)).
+Chi lo usa: la scheda del Robot ([../costruttore/scheda.md](../costruttore/scheda.md)).
 La rotta degli asteroidi ha ancora il suo, venuto prima, e può passare a
 questo ([../asteroidi/mappa.md](../asteroidi/mappa.md#il-fumetto)).
 
@@ -56,7 +56,7 @@ Nei test: `[data-fumetto]`.
 
 ## Il programma a tutto schermo
 
-Nei giochi a due piani (il costruttore, il Generale) sopra c'è il campo e
+Nei giochi a due piani (il Robot, il Generale) sopra c'è il campo e
 sotto il programma, e su un telefono basso un «ripeti dentro ripeti» non
 ci sta. Nella fila di ▶ c'è ⬆: il campo sparisce (`v-show`, la tela
 resta) e il programma prende tutto lo spazio; ⬇ lo rimette.

@@ -1,4 +1,4 @@
-# Il costruttore — i progetti devono servire
+# Il Robot — i progetti devono servire
 
 Progetti (funzioni), attrezzi, lo zaino di righe e l'editor. Codice in
 `src/giochi/costruttore/`.

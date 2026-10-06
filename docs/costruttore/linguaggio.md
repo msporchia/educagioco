@@ -1,4 +1,4 @@
-# Il costruttore — il linguaggio e il cantiere
+# Il Robot — il linguaggio e il cantiere
 
 Le regole del mondo di lato, come si scrive una riga, e cosa rende un
 livello una sfida. Codice in `src/giochi/costruttore/`: l'esecutore è
@@ -42,7 +42,8 @@ per aria non dava nessun ordine alle cose.
 - **Dove c'è già un mattone non ne mette un altro**, e si ferma dicendolo:
   se no «metti dappertutto» vincerebbe senza guardare.
 - **L'omino che prova la costruzione** sale un gradino alla volta, cade per
-  tre al massimo e nell'acqua non entra.
+  tre al massimo e nell'acqua non entra. È una persona e resta tale: non
+  esegue programmi, usa quello che il robot ha costruito.
 - Un programma si ferma in due modi che non si somigliano
   (`motore/inciampo.js`): l'`Inciampo` è un errore (un muro davanti, le mani
   piene, una N da scegliere), la `Sera` è la giornata del porto finita, e non

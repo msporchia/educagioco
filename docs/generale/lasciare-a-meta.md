@@ -3,12 +3,12 @@
 Un livello del Generale è un piano da scrivere in cinque-quindici minuti:
 chi esce a metà (la cena, il telefono in tasca) ritrova il piano com'era.
 La regola comune è in [../core/ripresa.md](../core/ripresa.md); qui il
-Generale segue il modello del costruttore, non la sosta unica.
+Generale segue il modello del Robot, non la sosta unica.
 
 ## Un piano per livello, in archivio
 
 - **In archivio sotto `generale:<id del giocatore>`**, `{ piani: { <id del
-  livello>: … } }`, come i programmi del costruttore
+  livello>: … } }`, come i programmi del Robot
   ([../costruttore/campagna.md](../costruttore/campagna.md)). Sotto l'`id`,
   come le stelle: la fila si riordina.
 - **Perché non la sosta unica con la carta in cima**: tutto quello che vale

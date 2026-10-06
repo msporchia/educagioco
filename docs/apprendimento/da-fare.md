@@ -39,7 +39,7 @@ nel file del suo argomento.
   delle quattro fasce nessun modulo che ha un grado libero deve perderli
   tutti (`m.gradiLiberi(spenti, regole)`, caricando i moduli dalla cartella
   come fa `unita/saperi`).
-- **`perMerito` per tutti i giochi?** Oggi lo dichiara solo il costruttore
+- **`perMerito` per tutti i giochi?** Oggi lo dichiara solo il Robot
   ([eta-e-portata.md](eta-e-portata.md)). Nei giochi di scuola la risposta
   non è ovvia: una tappa lì è anche un pezzo di programma che il bambino non
   ha ancora fatto.

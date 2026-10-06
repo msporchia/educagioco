@@ -1,4 +1,4 @@
-# Il costruttore — salvataggi, fila, stelle e aiuti
+# Il Robot — salvataggi, fila, stelle e aiuti
 
 Dove stanno i programmi e l'avanzamento, come si riordina la fila, e cosa
 vale un livello. Codice in `src/giochi/costruttore/` (`Gioco.vue`,

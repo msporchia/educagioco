@@ -12,7 +12,7 @@ stanno nella sua cartella.
   si tocca `profile.js`.
 - **Il premio ridotto sul cartello dei giochi a livelli.** I giochi che
   fanno esercitare pagano tutti dalla `borsa` e il loro cartello dice il
-  salvadanaio stanco; restano Passo passo, il costruttore e il Codice
+  salvadanaio stanco; restano Passo passo, il Robot e il Codice
   Segreto, che pagano il livello risolto con `addCoins` e sul cartello
   dicono il premio pieno — la frase giusta arriva dalla scritta piccola
   sopra (vedi [../genitori/varieta.md](../genitori/varieta.md)).

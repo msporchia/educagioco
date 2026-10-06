@@ -1,6 +1,6 @@
 # La scala del 💡
 
-Il 💡 del Generale, di Passo passo e del costruttore: una scala sola, un
+Il 💡 del Generale, di Passo passo e del Robot: una scala sola, un
 tasto solo, ogni tocco scende di un gradino. Il pezzo comune è
 `src/giochi/aiuti.js` (puro, `test/unita/aiuti`): sa quanto costa un
 gradino, non cosa fa.
@@ -21,7 +21,7 @@ senza pensarci — un livello svelato è bruciato.
   niente**: niente credito, niente sconto, se no conviene spendere tutto
   altrove e poi farsi svelare.
 - **Dai 50 in su ci vuole un secondo tocco** (`CONFERMA_DA`).
-- **Quello che si è pagato resta**: nel Generale e nel costruttore i
+- **Quello che si è pagato resta**: nel Generale e nel Robot i
   gradini scesi stanno nel profilo (`gen.aiuti`, `campagne[k].aiuti`, via
   `segnaAiutiPresi`) e un pezzo di programma si rimette gratis. In Passo
   passo la scala riparte a ogni ingresso, perché ogni gradino guarda la

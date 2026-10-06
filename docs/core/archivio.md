@@ -122,7 +122,7 @@ le ore giocate né i programmi a metà.
 | `istantanee:<id>` | una fotografia a settimana di quanto sa, per le frecce di «Come va» | [`../genitori/come-va.md`](../genitori/come-va.md) |
 | `cestino` | le ultime copie dei profili cancellati | [`../genitori/`](../genitori/README.md) |
 | `note-lette`, `posta-avvisi`, `posta-detti` | la posta dei grandi | [`../genitori/`](../genitori/README.md) |
-| `costruttore:<id>` | i programmi del costruttore, con una `v` loro | [`../costruttore/`](../costruttore/README.md) |
+| `costruttore:<id>` | i programmi del Robot, con una `v` loro | [`../costruttore/`](../costruttore/README.md) |
 | `generale:<id>` | i piani del Generale lasciati a metà, uno per livello | [`../generale/lasciare-a-meta.md`](../generale/lasciare-a-meta.md) |
 
 Nei test: `apriGioco` semina un giocatore di prova da sé, gli id di prova

@@ -1,12 +1,17 @@
 [← torna al README](../../README.md)
 
-# 🏗️ Il costruttore
+# 🤖 Il Robot
 
 *Programmare davvero, senza scrivere codice.* Qualcuno ordina una cosa — un
 muro, una scala, un castello — e il bambino scrive il programma con cui un
 robot la costruisce. Poi preme ▶ e guarda il cantiere venir su.
 
-![Il costruttore](../img/clip-costruttore.webp)
+Perché un robot: **fa alla lettera quello che gli scrivi**, una riga dopo
+l'altra, e da solo non fa niente. Se il muro esce storto non è lui a non
+aver capito: è il programma che dice così. Da una persona ci si
+aspetterebbe che indovini cosa volevi; da una macchina no.
+
+![Il Robot](../img/clip-costruttore.webp)
 
 È il gioco che [il Generale](../generale.md) lasciava a un domani: là si
 insegnano sequenze, cicli ed eventi fra più personaggi; qui l'altra metà del

@@ -14,7 +14,8 @@ basso (il primo capitolo) e si sale.
 | `motore/scheda.js` | dove stanno chip, led, piste, componenti sopra la pista e decoro; la strada del robot da un led a un altro (puro, gira in Node) |
 | `scena/scheda.js` | com'è fatto ogni componente, come tracciati SVG a strati; i colori |
 | `viste/Scheda.vue` | la vista: SVG, i tasti sopra i led, il fumetto, la corrente e il robot che viaggiano |
-| `viste/Robot.vue` | il robot disegnato, da mettere dentro un `<svg>`: il personaggio del gioco |
+| `scena/robot.js` | il robot come dati (`pezzi`): rettangoli, cerchi e linee in unità sue, e `dipingiRobot` che li mette su un canvas |
+| `viste/Robot.vue` | lo stesso robot dentro un `<svg>`: scheda, cartello di fine livello, quadretto «attorno al robot» |
 | `Gioco.vue` | decide lo stato di ogni livello, il lasciato a metà e cosa dice il cantiere libero (`livelliScheda`, `libero`) |
 
 ## La disposizione
@@ -108,6 +109,30 @@ Lo decide `Gioco.vue`, la scheda lo dipinge.
   testa a `stroke-dasharray`: col capo tondo è un puntino che resta al
   posto di partenza. L'inizio si sposta con `stroke-dashoffset`.
 
+## Il robot
+
+Il personaggio del gioco, e il suo nome. **Un robot fa alla lettera quello
+che gli si scrive**: che da solo non faccia niente, e che sbagli quando il
+programma è sbagliato, è quello che ci si aspetta da una macchina, non da
+una persona. Lo dicono la guida in app e la guida del primo livello.
+
+- **È uno solo**: i pezzi stanno in `scena/robot.js` e li dipingono la
+  scheda e il cartello (SVG, `viste/Robot.vue`), il cantiere e il porto
+  (canvas). Cambiarne uno è cambiarli tutti.
+- **Le pose** sono tre scelte: `verso` (`fronte`, `destra`, `sinistra`,
+  `retro`: il porto dall'alto lo vede di spalle quando va in su), `braccia`
+  (`giu`, `avanti` verso dove guarda, `su`) e `occhi` (`aperti`,
+  `spalancati`, `contenti`, `strizzati`). Il cantiere: cammina con le
+  braccia avanti e i mozzi dei cingoli che girano; cade a braccia alzate e
+  occhi spalancati; ha sbattuto (`fermo`) con gli occhi strizzati,
+  l'antenna rossa e il «!»; vinto l'ordine fa due saltelli e resta di
+  fronte, contento (`contento` nel quadro, lo scrive la regia). Nel porto
+  le pinze tengono la cosa in mano.
+- **I cingoli sono il suolo** (`suolo: true`): sulla scheda dondola il
+  resto, loro stanno fermi.
+- **L'omino che prova un passaggio resta una persona**: non esegue niente,
+  è chi usa quello che il robot ha costruito.
+
 ## La guida del primo giro
 
 Finché il primo livello non è vinto la guida comincia sulla scheda
@@ -122,7 +147,7 @@ livello e un chip per capitolo, nell'ordine; la pista una sola, dritta o a
 45°, che tocca tutti i led in ordine; niente sopra niente, il decoro e il
 robot fuori dalla pista; i componenti sopra la pista con le loro vie; da
 ogni led il robot va al dopo; la stessa scheda a ogni apertura; la guida;
-l'impronta), `integrazione/scheda-costruttore` (col dito vero: il fumetto
+l'impronta; ogni posa del robot nel suo riquadro), `integrazione/scheda-costruttore` (col dito vero: il fumetto
 si apre e non parte niente, fuori si chiude, un led spento dice cosa fare
 prima, il cantiere libero chiuso dice quando si apre, il segno del lasciato
 a metà, vinto un livello la corrente corre e il robot la segue, oltre un
@@ -134,6 +159,8 @@ e `[data-a-meta]`; il cantiere libero `[data-libero]` con
 `[data-acceso]`; il fumetto `[data-fumetto]` con `[data-fumetto-per]`,
 `[data-azione="costruisci"]`, `[data-serve]`, `[data-stelle]`; il robot
 `[data-robot]` con `[data-al]` (l'indice del livello), `[data-in-viaggio]`
-e `[data-visibile]`; il velo del viaggio `[data-viaggio]`.
+e `[data-visibile]`; il velo del viaggio `[data-viaggio]`; il robot
+contento sul cartello di fine livello `[data-robot-contento]`
+(`integrazione/costruttore`).
 `costruisci(page, indice)` in `test/aiuto/browser.mjs` fa i due tocchi
 (`'libero'` per il cantiere libero). La foto: `npm run scatti costruttore`.

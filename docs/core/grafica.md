@@ -7,7 +7,7 @@ tessere.
 ## La regola di fondo
 
 **Il tetto della resa grafica.** Dove un personaggio è disegnato a poligoni
-e non a sprite (il robot del costruttore, per esempio), è una scelta di
+e non a sprite (il Robot, per esempio), è una scelta di
 stile e non un ripiego: altri giochi (il castello, il sotterraneo) sono
 passati agli sprite quando la scena lo chiedeva.
 
