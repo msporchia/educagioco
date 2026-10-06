@@ -51,6 +51,8 @@ export const NOVITA = [
     testo: '🎃 Gli animali della fattoria si sono travestiti per Halloween' },
   { id: 25, quando: '2026-10-06', gioco: 'sotterraneo',
     testo: '🗝️ Il Dungeon ha chiuso le sue porte: l\'avventura continua nel sotterraneo, più grande e tutto da esplorare' },
+  { id: 26, quando: '2026-10-06', gioco: null,
+    testo: '🎮 Ora puoi uscire da un gioco quando vuoi, anche dalla pausa: la partita ti aspetta. Quando torni, in cima alla mappa trovi «torno da dove ero» e riprendi proprio da lì.' },
 ]
 
 export const PER_GIOCO = 4
