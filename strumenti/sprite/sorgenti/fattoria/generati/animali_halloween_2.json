@@ -1,0 +1,553 @@
+{
+ "__": "Il secondo foglio dei recinti vestiti per Halloween (ottobre 2026): anatre, capre, api, alpaca e asini, tre stati per specie (calmo, mangia, dorme) e il fumetto dipinto che si rattoppa via come in `animali_2.json` (stesse `toppa`, i pezzi con il suffisso `_halloween`). Il foglio ha anche altre cinque righe che rifanno mucche, galline, maiali, conigli: non entrano, quello che nessuno nomina non sta nel file unico. PNG con alfa vera ma mai piena (250-253): `alone` 128 la porta a 255. Costumi non del tutto coerenti fra gli stati (le anatre cambiano da vampiro a strega, gli asini idem) e api senza costume: accettato. Le coordinate sono i bordi dei pixel opachi di ogni riquadro, misurati da uno script. Il prompt è nel campo `prompt`.",
+ "fondo": "trasparente",
+ "alone": 128,
+ "cella": [
+  1,
+  1
+ ],
+ "famiglia": "figura",
+ "prompt": "Allego un foglio di sprite pixel art di recinti di una fattoria, visti dall'alto in prospettiva, in una griglia regolare. È la fattoria di un gioco per bambini e sta per entrare nella sua versione di Halloween: tocca a te inventare come gli animali si vestono e si trasformano per la festa.\n\nTi lascio ampia libertà creativa. Ogni specie deve avere un travestimento diverso, buffo, tenero e pieno di fantasia, mai spaventoso: pensa a una festa in costume, non a un film horror. Puoi vestire l'animale, farlo uscire da qualcosa, fargli indossare accessori, trasformarlo in un personaggio, e puoi cambiare l'oggetto che ha intorno (un nido, una mangiatoia, una pozza) se serve all'idea.\n\nNel primo foglio di questa serie (te lo allego come riferimento di stile) ho già usato: mummia, cappello da strega, fantasmino con lenzuolo, ali da pipistrello. Per questo foglio inventa costumi DIVERSI da quelli, senza ripeterli, ma con lo stesso tono tenero e la stessa leggibilità. Per le specie più \"magiche\" (api, alpaca) puoi osare di più.\n\nQuello che NON deve cambiare, perché il foglio viene ritagliato da un programma: la griglia e la posizione di ogni riquadro, la misura del foglio e il fondo; l'inquadratura, le staccionate e il prato di ogni recinto; gli indicatori di stato (cuori, \"Zzz\", scintille e fumetti restano dove sono); il numero di riquadri, con il travestimento coerente in tutti gli stati.\n\nPer leggersi a schermo (un recinto è largo circa 70 pixel): forme grandi e leggibili, pochi dettagli; l'animale riconoscibile come quella specie, muso visibile; stesso stile pixel art del foglio allegato; niente testo; niente decorazioni di Halloween sul prato o sulle staccionate.\n\nQuesto foglio ha 3 riquadri per specie (calmo, mangia, dorme), con un fumetto dipinto in alto a destra nei primi due: lascialo com'è. Rifai solo anatre, capre, api, alpaca e asini.\n\n[Prompt riassunto dalla conversazione del 5-6 ottobre 2026: è quello dato, con lo stesso testo dei vincoli; allegata come immagine di base il foglio `animali.png` / `animali_2.png`.]",
+ "sprite": {
+  "recinto_anatre_calmo_halloween": {
+   "da": [
+    769,
+    226
+   ],
+   "cella": [
+    242,
+    189
+   ],
+   "misura": [
+    72,
+    56
+   ],
+   "toppa": [
+    {
+     "zona": [
+      128,
+      0,
+      59,
+      42
+     ],
+     "da": "recinto_anatre_dorme_halloween"
+    },
+    {
+     "zona": [
+      128,
+      42,
+      29,
+      17
+     ],
+     "da": "recinto_anatre_dorme_halloween"
+    },
+    {
+     "zona": [
+      157,
+      42,
+      30,
+      17
+     ],
+     "da": "recinto_anatre_calmo_halloween",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_anatre_mangia_halloween": {
+   "da": [
+    1029,
+    227
+   ],
+   "cella": [
+    239,
+    189
+   ],
+   "misura": [
+    71,
+    56
+   ],
+   "toppa": [
+    {
+     "zona": [
+      129,
+      0,
+      59,
+      42
+     ],
+     "da": "recinto_anatre_dorme_halloween"
+    },
+    {
+     "zona": [
+      129,
+      42,
+      28,
+      17
+     ],
+     "da": "recinto_anatre_dorme_halloween"
+    },
+    {
+     "zona": [
+      157,
+      42,
+      31,
+      17
+     ],
+     "da": "recinto_anatre_mangia_halloween",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_anatre_dorme_halloween": {
+   "da": [
+    1283,
+    247
+   ],
+   "cella": [
+    237,
+    169
+   ],
+   "misura": [
+    70,
+    50
+   ]
+  },
+  "recinto_capre_calmo_halloween": {
+   "da": [
+    13,
+    425
+   ],
+   "cella": [
+    238,
+    186
+   ],
+   "misura": [
+    70,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      120,
+      0,
+      60,
+      39
+     ],
+     "da": "recinto_capre_dorme_halloween"
+    },
+    {
+     "zona": [
+      120,
+      39,
+      37,
+      20
+     ],
+     "da": "recinto_capre_dorme_halloween"
+    },
+    {
+     "zona": [
+      157,
+      39,
+      23,
+      20
+     ],
+     "da": "recinto_capre_calmo_halloween",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_capre_mangia_halloween": {
+   "da": [
+    265,
+    425
+   ],
+   "cella": [
+    235,
+    186
+   ],
+   "misura": [
+    70,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      119,
+      0,
+      60,
+      39
+     ],
+     "da": "recinto_capre_dorme_halloween"
+    },
+    {
+     "zona": [
+      119,
+      39,
+      38,
+      20
+     ],
+     "da": "recinto_capre_dorme_halloween"
+    },
+    {
+     "zona": [
+      157,
+      39,
+      22,
+      20
+     ],
+     "da": "recinto_capre_mangia_halloween",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_capre_dorme_halloween": {
+   "da": [
+    515,
+    447
+   ],
+   "cella": [
+    239,
+    165
+   ],
+   "misura": [
+    70,
+    50
+   ]
+  },
+  "recinto_api_calmo_halloween": {
+   "da": [
+    777,
+    623
+   ],
+   "cella": [
+    243,
+    184
+   ],
+   "misura": [
+    71,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      119,
+      0,
+      59,
+      43
+     ],
+     "da": "recinto_api_dorme_halloween"
+    },
+    {
+     "zona": [
+      119,
+      43,
+      40,
+      16
+     ],
+     "da": "recinto_api_dorme_halloween"
+    },
+    {
+     "zona": [
+      159,
+      43,
+      19,
+      16
+     ],
+     "da": "recinto_api_calmo_halloween",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_api_mangia_halloween": {
+   "da": [
+    1035,
+    623
+   ],
+   "cella": [
+    239,
+    184
+   ],
+   "misura": [
+    71,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      111,
+      0,
+      61,
+      43
+     ],
+     "da": "recinto_api_dorme_halloween"
+    },
+    {
+     "zona": [
+      111,
+      43,
+      48,
+      16
+     ],
+     "da": "recinto_api_dorme_halloween"
+    },
+    {
+     "zona": [
+      159,
+      43,
+      13,
+      16
+     ],
+     "da": "recinto_api_mangia_halloween",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_api_dorme_halloween": {
+   "da": [
+    1289,
+    643
+   ],
+   "cella": [
+    236,
+    164
+   ],
+   "misura": [
+    71,
+    49
+   ]
+  },
+  "recinto_alpaca_calmo_halloween": {
+   "da": [
+    12,
+    814
+   ],
+   "cella": [
+    241,
+    185
+   ],
+   "misura": [
+    71,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      117,
+      0,
+      59,
+      43
+     ],
+     "da": "recinto_alpaca_dorme_halloween"
+    },
+    {
+     "zona": [
+      117,
+      43,
+      43,
+      16
+     ],
+     "da": "recinto_alpaca_dorme_halloween"
+    },
+    {
+     "zona": [
+      160,
+      43,
+      16,
+      16
+     ],
+     "da": "recinto_alpaca_calmo_halloween",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_alpaca_mangia_halloween": {
+   "da": [
+    269,
+    814
+   ],
+   "cella": [
+    236,
+    185
+   ],
+   "misura": [
+    71,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      115,
+      0,
+      59,
+      43
+     ],
+     "da": "recinto_alpaca_dorme_halloween"
+    },
+    {
+     "zona": [
+      115,
+      43,
+      45,
+      16
+     ],
+     "da": "recinto_alpaca_dorme_halloween"
+    },
+    {
+     "zona": [
+      160,
+      43,
+      14,
+      16
+     ],
+     "da": "recinto_alpaca_mangia_halloween",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_alpaca_dorme_halloween": {
+   "da": [
+    521,
+    834
+   ],
+   "cella": [
+    241,
+    165
+   ],
+   "misura": [
+    72,
+    49
+   ]
+  },
+  "recinto_asini_calmo_halloween": {
+   "da": [
+    780,
+    815
+   ],
+   "cella": [
+    241,
+    184
+   ],
+   "misura": [
+    72,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      114,
+      0,
+      60,
+      42
+     ],
+     "da": "recinto_asini_dorme_halloween"
+    },
+    {
+     "zona": [
+      114,
+      42,
+      47,
+      17
+     ],
+     "da": "recinto_asini_dorme_halloween"
+    },
+    {
+     "zona": [
+      161,
+      42,
+      13,
+      17
+     ],
+     "da": "recinto_asini_calmo_halloween",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_asini_mangia_halloween": {
+   "da": [
+    1037,
+    815
+   ],
+   "cella": [
+    240,
+    184
+   ],
+   "misura": [
+    71,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      113,
+      0,
+      60,
+      42
+     ],
+     "da": "recinto_asini_dorme_halloween"
+    },
+    {
+     "zona": [
+      113,
+      42,
+      48,
+      17
+     ],
+     "da": "recinto_asini_dorme_halloween"
+    },
+    {
+     "zona": [
+      161,
+      42,
+      12,
+      17
+     ],
+     "da": "recinto_asini_mangia_halloween",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_asini_dorme_halloween": {
+   "da": [
+    1292,
+    835
+   ],
+   "cella": [
+    234,
+    164
+   ],
+   "misura": [
+    71,
+    49
+   ]
+  }
+ }
+}

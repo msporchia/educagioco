@@ -1,0 +1,363 @@
+{
+ "__": "Il primo foglio dei recinti vestiti per Halloween (ottobre 2026): maiali mummia, mucche con cappello da strega, galline e pecore fantasmini, conigli pipistrello. Stessa griglia di `animali.png`, stessi cinque stati (il `_fame` non si ritaglia, come nell'originale). PNG RGB con fondo nero pieno: `fondo` auto e `colori` 0 (come `animali_2.json`: con i 12 colori di ripiego i recinti viravano al rosso). Le coordinate sono i bordi dei pixel non neri di ogni riquadro, misurati da uno script; `misura` porta ogni recinto a 70 px di larghezza come `animali.json`. Nel gioco i pezzi si chiamano `*_halloween` e sostituiscono i normali solo nella finestra della festa (`dati/stagioni.js`). Il prompt è nel campo `prompt`.",
+ "fondo": "auto",
+ "cella": [
+  1,
+  1
+ ],
+ "famiglia": "figura",
+ "prompt": "Allego un foglio di sprite pixel art di recinti di una fattoria, visti dall'alto in prospettiva, in una griglia regolare. È la fattoria di un gioco per bambini e sta per entrare nella sua versione di Halloween: tocca a te inventare come gli animali si vestono e si trasformano per la festa.\n\nTi lascio ampia libertà creativa. Ogni specie deve avere un travestimento diverso, buffo, tenero e pieno di fantasia, mai spaventoso: pensa a una festa in costume, non a un film horror. Puoi vestire l'animale, farlo uscire da qualcosa, fargli indossare accessori, trasformarlo in un personaggio, e puoi cambiare l'oggetto che ha intorno (un nido, una mangiatoia, una pozza) se serve all'idea.\n\nEsempi per darti il tono, da NON copiare alla lettera: una gallina che spunta da una zucca, una mucca con un cappello da strega, un maiale fasciato da mummia. Sorprendimi con idee mie, soprattutto per le specie dove non ti ho dato niente.\n\nQuello che NON deve cambiare, perché il foglio viene ritagliato da un programma: la griglia e la posizione di ogni riquadro, la misura del foglio e il fondo; l'inquadratura, le staccionate e il prato di ogni recinto; gli indicatori di stato (cuori, \"Zzz\", scintille e fumetti restano dove sono); il numero di riquadri, con il travestimento coerente in tutti gli stati.\n\nPer leggersi a schermo (un recinto è largo circa 70 pixel): forme grandi e leggibili, pochi dettagli; l'animale riconoscibile come quella specie, muso visibile; stesso stile pixel art del foglio allegato; niente testo; niente decorazioni di Halloween sul prato o sulle staccionate.\n\n[Prompt riassunto dalla conversazione del 5-6 ottobre 2026: è quello dato, con lo stesso testo dei vincoli; allegata come immagine di base il foglio `animali.png` / `animali_2.png`.]",
+ "sprite": {
+  "recinto_maiali_calmo_halloween": {
+   "da": [
+    20,
+    42
+   ],
+   "cella": [
+    235,
+    170
+   ],
+   "misura": [
+    70,
+    51
+   ]
+  },
+  "recinto_maiali_mangia_halloween": {
+   "da": [
+    520,
+    42
+   ],
+   "cella": [
+    242,
+    170
+   ],
+   "misura": [
+    70,
+    49
+   ]
+  },
+  "recinto_maiali_felice_halloween": {
+   "da": [
+    775,
+    35
+   ],
+   "cella": [
+    244,
+    177
+   ],
+   "misura": [
+    70,
+    51
+   ]
+  },
+  "recinto_maiali_dorme_halloween": {
+   "da": [
+    1028,
+    42
+   ],
+   "cella": [
+    243,
+    170
+   ],
+   "misura": [
+    70,
+    49
+   ]
+  },
+  "recinto_maiali_pronto_halloween": {
+   "da": [
+    1280,
+    42
+   ],
+   "cella": [
+    238,
+    169
+   ],
+   "misura": [
+    70,
+    50
+   ]
+  },
+  "recinto_mucche_calmo_halloween": {
+   "da": [
+    20,
+    243
+   ],
+   "cella": [
+    239,
+    175
+   ],
+   "misura": [
+    70,
+    51
+   ]
+  },
+  "recinto_mucche_mangia_halloween": {
+   "da": [
+    520,
+    244
+   ],
+   "cella": [
+    242,
+    175
+   ],
+   "misura": [
+    70,
+    51
+   ]
+  },
+  "recinto_mucche_felice_halloween": {
+   "da": [
+    775,
+    244
+   ],
+   "cella": [
+    245,
+    174
+   ],
+   "misura": [
+    70,
+    50
+   ]
+  },
+  "recinto_mucche_dorme_halloween": {
+   "da": [
+    1030,
+    244
+   ],
+   "cella": [
+    240,
+    174
+   ],
+   "misura": [
+    70,
+    51
+   ]
+  },
+  "recinto_mucche_pronto_halloween": {
+   "da": [
+    1281,
+    244
+   ],
+   "cella": [
+    237,
+    174
+   ],
+   "misura": [
+    70,
+    51
+   ]
+  },
+  "recinto_galline_calmo_halloween": {
+   "da": [
+    20,
+    448
+   ],
+   "cella": [
+    238,
+    169
+   ],
+   "misura": [
+    70,
+    50
+   ]
+  },
+  "recinto_galline_mangia_halloween": {
+   "da": [
+    520,
+    448
+   ],
+   "cella": [
+    242,
+    169
+   ],
+   "misura": [
+    70,
+    49
+   ]
+  },
+  "recinto_galline_felice_halloween": {
+   "da": [
+    775,
+    441
+   ],
+   "cella": [
+    243,
+    176
+   ],
+   "misura": [
+    70,
+    51
+   ]
+  },
+  "recinto_galline_dorme_halloween": {
+   "da": [
+    1028,
+    447
+   ],
+   "cella": [
+    242,
+    170
+   ],
+   "misura": [
+    70,
+    49
+   ]
+  },
+  "recinto_galline_pronto_halloween": {
+   "da": [
+    1281,
+    448
+   ],
+   "cella": [
+    237,
+    169
+   ],
+   "misura": [
+    70,
+    50
+   ]
+  },
+  "recinto_pecore_calmo_halloween": {
+   "da": [
+    20,
+    642
+   ],
+   "cella": [
+    238,
+    169
+   ],
+   "misura": [
+    70,
+    50
+   ]
+  },
+  "recinto_pecore_mangia_halloween": {
+   "da": [
+    520,
+    643
+   ],
+   "cella": [
+    242,
+    170
+   ],
+   "misura": [
+    70,
+    49
+   ]
+  },
+  "recinto_pecore_felice_halloween": {
+   "da": [
+    775,
+    638
+   ],
+   "cella": [
+    244,
+    174
+   ],
+   "misura": [
+    70,
+    50
+   ]
+  },
+  "recinto_pecore_dorme_halloween": {
+   "da": [
+    1029,
+    642
+   ],
+   "cella": [
+    241,
+    171
+   ],
+   "misura": [
+    70,
+    50
+   ]
+  },
+  "recinto_pecore_pronto_halloween": {
+   "da": [
+    1281,
+    642
+   ],
+   "cella": [
+    237,
+    170
+   ],
+   "misura": [
+    70,
+    50
+   ]
+  },
+  "recinto_conigli_calmo_halloween": {
+   "da": [
+    20,
+    836
+   ],
+   "cella": [
+    238,
+    167
+   ],
+   "misura": [
+    70,
+    49
+   ]
+  },
+  "recinto_conigli_mangia_halloween": {
+   "da": [
+    519,
+    836
+   ],
+   "cella": [
+    243,
+    168
+   ],
+   "misura": [
+    70,
+    48
+   ]
+  },
+  "recinto_conigli_felice_halloween": {
+   "da": [
+    775,
+    837
+   ],
+   "cella": [
+    243,
+    166
+   ],
+   "misura": [
+    70,
+    48
+   ]
+  },
+  "recinto_conigli_dorme_halloween": {
+   "da": [
+    1028,
+    836
+   ],
+   "cella": [
+    241,
+    167
+   ],
+   "misura": [
+    70,
+    49
+   ]
+  },
+  "recinto_conigli_pronto_halloween": {
+   "da": [
+    1281,
+    836
+   ],
+   "cella": [
+    237,
+    167
+   ],
+   "misura": [
+    70,
+    49
+   ]
+  }
+ },
+ "colori": 0
+}

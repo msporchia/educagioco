@@ -309,6 +309,8 @@ export class Tela {
       const a = fattoria.aspettoDellaCosa ? fattoria.aspettoDellaCosa(c) : null
       // invece: certe cose cambiano faccia (un recinto ha sei disegni secondo l'ora, decisa dal mondo).
       if (a && a.invece) nome = a.invece
+      // A Halloween un recinto prende il foglio vestito, se c'è il pezzo `<nome>_halloween` (docs/fattoria/stagioni.md).
+      if (a && a.invece && quadro.stagione === 'halloween' && PEZZI[nome + '_halloween']) nome += '_halloween'
       scena.push({ nome, x: c.x, y: c.y, piede, cosa: c, sopra: a, verso,
                    fondo: v.sotto ? -1 : c.y + piede[1] })
       // Una coltura alta non è terreno: va in scena per conto suo, ordinata come un oggetto normale.
