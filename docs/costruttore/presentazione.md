@@ -50,6 +50,12 @@ di Hanoi e al **progetto che chiama sé stesso**.
 Finito il primo capitolo si apre **il cantiere libero**: tutti i blocchi e
 tutti i colori, non si vince e non paga, si costruisce.
 
+I livelli si scelgono sulla **scheda del robot**: un circuito stampato dove
+ogni capitolo è un chip e ogni livello un led. La corrente arriva fin dove
+si è arrivati, e vinto un livello corre al led dopo, col robot dietro.
+
+![La scheda del robot](../img/costruttore-scheda.png)
+
 ## Cosa allena
 
 Scomporre un problema in pezzi riusabili (le **funzioni**), riconoscere

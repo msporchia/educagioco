@@ -46,7 +46,7 @@ usaGuida(radice, passoGuida)
 
 | Gioco | Funzione | Quando |
 |---|---|---|
-| Il costruttore | `costruttore/motore/guida.js` | il primo muretto, finché non è vinto (`guida: true`) |
+| Il costruttore | `costruttore/motore/guida.js` | il primo muretto, finché non è vinto (`guida: true`): comincia sulla scheda, dal led 1 |
 | Passo passo | `passo-passo/motore/guida.js` | il primo prato, e 🔁 alla prima tappa dello zaino |
 | Il Generale | `passoGuida` in `views/GeneraleGame.vue` | il primo livello della vita, fino al primo ▶ |
 | Difendi il Castello | `passoGuida` in `views/TowerDefense.vue` | la prima partita della vita |

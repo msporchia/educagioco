@@ -11,7 +11,7 @@ i programmi si scrivono con `dati/scrivi.js`. Sta in `dati/livelli.js`.
 |:--|:--|
 | `chiave`, `nome`, `icona` | chi è: la chiave non si rinomina, è il posto dove si salvano le stelle e il programma |
 | `capitolo` | in quale capitolo sta (`CAPITOLI`) |
-| `impara` | la cosa nuova, in tre parole: la dice la mappa |
+| `impara` | la cosa nuova, in tre parole: la dice il fumetto della scheda ([scheda.md](scheda.md)) |
 | `portata` | quanto è difficile, sulla scala 0–100 del repo |
 | `premio` | le monete della prima vittoria |
 | `chi`, `racconto` | chi ordina e cosa dice — l'unica consegna |
