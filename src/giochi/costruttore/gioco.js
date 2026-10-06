@@ -1,12 +1,13 @@
-// Il manifesto del costruttore. Vedi docs/costruttore/presentazione.md.
+// Il manifesto del Robot. La chiave e la cartella restano «costruttore»: la
+// chiave è nei salvataggi. Vedi docs/costruttore/presentazione.md.
 import { CAMPAGNA, QUANTE_TAPPE } from './dati/campagna.js'
 
 export const CHIAVE = 'costruttore'
 
 export default {
   chiave: CHIAVE,
-  nome: 'Il costruttore',
-  icona: '🏗️',
+  nome: 'Il Robot',
+  icona: '🤖',
   che: 'programmare con funzioni e variabili',
   area: 'logica',
   come: 'pensare',
@@ -25,24 +26,24 @@ export default {
 
   // coMattoni: mattoni posati in qualunque prova, sommato da Gioco.vue con segna()
   albo: {
-    area: { nome: 'Il costruttore', emoji: '🏗️' },
+    area: { nome: 'Il Robot', emoji: '🤖' },
 
     xp: m => m.tappeDi(CHIAVE) * 40 + m.stelleDi(CHIAVE) * 10 + Math.floor(m.tot('coMattoni') / 20),
     provato: m => m.tot('coMattoni') > 0 || m.tappeDi(CHIAVE) > 0,
 
     traguardi: [
       { id: 'co-livelli', emoji: '🏗️', nome: 'Capomastro',
-        come: n => n === 1 ? 'Finisci il primo livello del costruttore'
-                           : `Finisci ${n} livelli del costruttore`,
+        come: n => n === 1 ? 'Finisci il primo livello del Robot'
+                           : `Finisci ${n} livelli del Robot`,
         soglie: [1, 6, QUANTE_TAPPE], valore: m => m.tappeDi(CHIAVE) },
       { id: 'co-stelle', emoji: '⭐', nome: 'Tutto da solo',
-        come: n => `Raccogli ${n} stelle nel costruttore`,
+        come: n => `Raccogli ${n} stelle col Robot`,
         soglie: [5, 14, QUANTE_TAPPE * 2], valore: m => m.stelleDi(CHIAVE) },
       { id: 'co-mattoni', emoji: '🧱', nome: 'Mille mattoni',
         come: n => `Fai posare al robot ${n} mattoni`,
         soglie: [100, 1000, 5000], valore: m => m.tot('coMattoni') },
       { id: 'co-fine', emoji: '🏁', nome: 'Il cantiere è finito',
-        come: () => 'Finisci tutti i livelli del costruttore',
+        come: () => 'Finisci tutti i livelli del Robot',
         soglie: [1], valore: m => m.finita(CHIAVE) },
     ],
   },

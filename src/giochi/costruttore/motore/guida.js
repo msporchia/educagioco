@@ -34,7 +34,7 @@ export function guida({ righe = [], cassetta = false, scegliendo = false, proble
   if (scegliendo) return { dove: null, testo: 'Scegli qui sotto. Il prossimo mattone va a destra, a un passo.' }
   if (!righe.length) return { dove: BERSAGLI.aggiungi, testo: 'Tocca «＋ aggiungi» qui sotto, e scegli cosa fa il robot.' }
   if (problemi) return { dove: null, testo: 'Tocca la casella che lampeggia, e scegli.' }
-  if (!provato || cambiato) return { dove: BERSAGLI.via, testo: 'Premi ▶ Via, e guarda cosa fa il robot.' }
-  if (mancano) return { dove: BERSAGLI.aggiungi, testo: 'Il muretto non è finito: aggiungi ancora «metti» e «vai», poi riprova ▶.' }
+  if (!provato || cambiato) return { dove: BERSAGLI.via, testo: 'Premi ▶ Via: il robot fa proprio quello che hai scritto, una riga dopo l\'altra.' }
+  if (mancano) return { dove: BERSAGLI.aggiungi, testo: 'Il robot ha fatto solo quello che c\'era scritto, e il muretto non è finito: aggiungi ancora «metti» e «vai», poi riprova ▶.' }
   return null
 }

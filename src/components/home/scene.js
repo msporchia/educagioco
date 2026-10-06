@@ -37,7 +37,7 @@ export const SCENE = {
     const p = [[6, 132], [32, 132], [58, 132], [84, 132], [110, 132], [136, 132], [162, 132], [6, 106], [6, 80], [174, 106], [174, 80], [174, 54]]
     return p.map(([x, y]) => `<rect x="${x}" y="${y}" width="20" height="20" rx="4" fill="${k}"/>`).join('')
   },
-  // il costruttore: le piste della scheda del robot
+  // il Robot: le piste della sua scheda
   circuito: k => ['M0 30 H36 L56 50 H76', 'M200 118 H156 L136 138 H108', 'M24 160 V132 L44 112', 'M176 0 V22 L156 42', 'M0 92 H18 L30 104']
     .map(d => `<path d="${d}" fill="none" stroke="${k}" stroke-width="4" stroke-linejoin="round"/>`).join('') +
     cerchi([[76, 50, 5], [108, 138, 5], [44, 112, 5], [156, 42, 5], [30, 104, 5]], k) +

@@ -528,9 +528,10 @@ export const AIUTI = {
     ],
   },
   costruttore: {
-    emoji: '🏗️', titolo: 'Il costruttore',
+    emoji: '🤖', titolo: 'Il Robot',
     blocchi: [
       'Qualcuno ordina una cosa — un muro, una scala, un castello — e tu scrivi **il programma** con cui il robot la costruisce. Poi premi ▶ e guardi.',
+      'Il robot non è una persona: non indovina cosa volevi, e da solo non fa niente. Fa **alla lettera** quello che gli scrivi, una riga dopo l\'altra — anche quando è sbagliato.',
       { titolo: 'Come si scrive', righe: [
         'Si tocca «＋», si sceglie un blocco dalla cassetta, e si riempiono le caselle toccandole: tutto quello che ha il ▾ si cambia. Una **N** è un numero ancora da scegliere, un **?** una freccia o un colore.',
         'Toccando una riga compaiono i suoi tasti: ✂ la **sposta** e ⧉ la **copia**, poi si tocca 📥 dove va — anche dentro un ripeti, o in un progetto.',

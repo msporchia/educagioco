@@ -68,6 +68,7 @@ uguale('a dieci anni la carta del costruttore è in home, senza accendere niente
        await carta.count(), 1)
 await scegli(page, 'costruttore')
 await page.waitForSelector('.cst-mappa', { timeout: 5000 })
+uguale('il gioco si chiama Il Robot', (await page.locator('b.dove').first().innerText()).trim(), 'Il Robot')
 uguale('la scheda ha un led per livello', await page.locator('[data-livello]').count(), LIVELLI.length)
 uguale('e in fondo il cantiere libero, chiuso finché il primo capitolo non è finito',
        await page.locator('[data-libero][data-stato="chiuso"]').count(), 1)
@@ -115,6 +116,7 @@ await tocca('[data-velocita="veloce"]')
 await tocca('[data-azione="via"]')
 await page.waitForSelector('[data-fine="livello"]', { timeout: 15000 })
 controlla('il primo livello si vince', true)
+uguale('sul cartello c\'è il robot, contento', await page.locator('[data-fine="livello"] [data-robot-contento]').count(), 1)
 uguale('premuto ▶ il racconto si è chiuso', await page.locator('[data-racconto]').count(), 0)
 await scatto(page, 'costruttore-vinto')
 {

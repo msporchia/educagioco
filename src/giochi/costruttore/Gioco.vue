@@ -636,7 +636,7 @@ onUnmounted(() => {
   regia?.ferma(); salvaOra(); clearTimeout(ricominciaTimer)
 })
 
-const titolo = computed(() => (liv.value ? liv.value.nome : 'Il costruttore'))
+const titolo = computed(() => (liv.value ? liv.value.nome : 'Il Robot'))
 const progettoAperto = computed(() =>
   progettoInModifica.value ? (prog.value.progetti || []).find(p => p.id === progettoInModifica.value) : null)
 </script>
