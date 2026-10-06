@@ -138,7 +138,7 @@ const ripresa = computed(() => elenco.value.find(g => g.chiave === ultimo.value)
 
       <!-- chi gioca, a che punto è, le monete: tocca e si apre il profilo (docs/core/home.md) -->
       <button class="fascia" data-azione="profilo" @click="$emit('vai','profilo')">
-        <Iniziale :id="state.player" :nome="nomeCorrente()" :misura="38" />
+        <Iniziale :id="state.player" :nome="nomeCorrente()" :misura="34" />
         <span class="dove">
           <b data-nome>{{ nomeCorrente() }}</b>
           <i>{{ salita.titolo }} · livello {{ level }}</i>
@@ -234,15 +234,17 @@ const ripresa = computed(() => elenco.value.find(g => g.chiave === ultimo.value)
 
 <style scoped>
 .home { background:#f6f7f9 }
+/* in cima, non in mezzo: su un telefono alto il centrato lasciava un vuoto sopra il profilo */
+.home .centro { justify-content:flex-start }
 .carte { width:100%; max-width:400px }
 /* la riga del profilo */
 .fascia { display:flex; align-items:center; gap:11px; width:100%; max-width:400px; padding:9px 12px;
           border-radius:16px; text-align:left; background:#fff; box-shadow:0 1px 2px #1f243312 }
 .fascia:active { transform:scale(.99) }
 .dove { flex:1; min-width:0; display:flex; flex-direction:column }
-.dove b { font-size:15px; font-weight:600; color:#1f2433; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-.dove i { font-style:normal; font-size:12px; color:#7a8193 }
-.numeri { flex:none; font-size:14px; font-weight:600; color:#1f2433 }
+.dove b { font-size:14px; font-weight:600; color:#1f2433; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.dove i { font-style:normal; font-size:11.5px; color:#7a8193 }
+.numeri { flex:none; font-size:13px; font-weight:600; color:#1f2433 }
 .freccia { flex:none; font-size:20px; color:#a3a9b8 }
 .vuoto { text-align:center; padding:6px 0 2px }
 /* le monete regalate dall'indirizzo: si vedono e poi se ne vanno */
@@ -273,7 +275,7 @@ const ripresa = computed(() => elenco.value.find(g => g.chiave === ultimo.value)
                 background:#fff; box-shadow:0 1px 2px #1f243312 }
 .impostazioni:active { background:#ffffffaa }
 .impostazioni.guide { margin-top:8px }
-.impostazioni b { display:block; font-size:14px; font-weight:600; color:#1f2433 }
+.impostazioni b { display:block; font-size:13px; font-weight:600; color:#1f2433 }
 .impostazioni i { font-style:normal; font-size:11.5px; color:var(--tenue); opacity:.75 }
 
 .piede { display:flex; align-items:baseline; justify-content:center; gap:9px;

@@ -27,7 +27,7 @@ function aggiungi() {
   <div class="schermo profilo" data-profilo>
     <Barra titolo="Il profilo" @indietro="$emit('vai', 'home')" />
     <div class="corpo">
-      <Iniziale :id="io.id" :nome="io.nome" :misura="76" />
+      <Iniziale :id="io.id" :nome="io.nome" :misura="64" />
       <h2 class="nome">{{ io.nome }}</h2>
       <p class="titolo">{{ salita.titolo }} · livello {{ level }}</p>
       <span class="barretta"><i :style="{ width: Math.round(salita.quota * 100) + '%' }"></i></span>
@@ -56,21 +56,21 @@ function aggiungi() {
 .profilo { background:#f6f7f9 }
 .corpo { flex:1; overflow-y:auto; display:flex; flex-direction:column; align-items:center;
          gap:6px; padding:22px 18px 30px; width:100%; max-width:436px; margin:0 auto }
-.nome { margin-top:8px; font-size:22px; font-weight:600; color:#1f2433 }
-.titolo { font-size:14px; color:#7a8193 }
+.nome { margin-top:6px; font-size:19px; font-weight:600; color:#1f2433 }
+.titolo { font-size:13px; color:#7a8193 }
 .barretta { display:block; width:60%; height:6px; margin:6px 0 10px; border-radius:999px; background:#e3e7ef; overflow:hidden }
 .barretta i { display:block; height:100%; border-radius:999px; background:#5b7cfa }
 .numeri { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; width:100% }
 .numero { display:flex; flex-direction:column; align-items:center; gap:3px; padding:12px 4px;
           border-radius:14px; background:#fff; box-shadow:0 1px 2px #1f243312 }
-.numero b { font-size:16px; font-weight:600; color:#1f2433 }
-.numero i { font-style:normal; font-size:12px; color:#7a8193 }
+.numero b { font-size:14px; font-weight:600; color:#1f2433 }
+.numero i { font-style:normal; font-size:11px; color:#7a8193 }
 .sopra { align-self:flex-start; margin:18px 0 2px 4px; font-size:13px; font-weight:600; color:#7a8193 }
 .altro { display:flex; align-items:center; gap:12px; width:100%; padding:10px 12px; border-radius:14px;
          text-align:left; background:#fff; box-shadow:0 1px 2px #1f243312 }
 .altro span { display:flex; flex-direction:column }
-.altro b, .aggiungi b { font-size:15px; font-weight:600; color:#1f2433 }
-.altro i, .aggiungi i { font-style:normal; font-size:12px; color:#7a8193 }
+.altro b, .aggiungi b { font-size:14px; font-weight:600; color:#1f2433 }
+.altro i, .aggiungi i { font-style:normal; font-size:11px; color:#7a8193 }
 .aggiungi { display:flex; flex-direction:column; align-items:center; gap:2px; width:100%; margin-top:14px;
             padding:12px; border-radius:14px; background:transparent; box-shadow:inset 0 0 0 1.5px #c3c9d6 }
 .altro:active, .numero:active, .aggiungi:active { transform:scale(.98) }

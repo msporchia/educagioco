@@ -16,7 +16,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['apri'])
 
-const L = 188, A = 288, ARTE = 128            // la copertina in mezzo: larga, alta, il disegno
+const L = 188, A = 288, ARTE = 114            // la copertina in mezzo: larga, alta, il disegno
 const X = [0, 146, 252], S = [1, 0.8, 0.66]   // dove stanno e quanto sono grandi le vicine
 const SOGLIA = 16                             // docs/core/il-dito.md
 
@@ -108,9 +108,9 @@ const modo = g => MODI[g.come] ? `${MODI[g.come].emoji} ${MODI[g.come].nome}` : 
       <button v-for="(g, i) in giochi" :key="g.chiave" type="button"
               class="carta gioco" :class="[g.classe, { davanti: i === qui }]" :data-gioco="g.chiave"
               :tabindex="i === qui ? 0 : -1" :aria-hidden="Math.abs(i - qui) > 2 ? 'true' : null"
-              :style="[{ width: L + 'px', height: A + 'px', marginLeft: -L / 2 + 'px' }, stile(i)]"
+              :style="[{ width: L + 'px', height: A + 'px', marginLeft: -L / 2 + 'px' , background: g.copertina?.fondo || '#8593a8' }, stile(i)]"
               @click="tocca(i)">
-        <Copertina class="arte" :style="{ height: ARTE + 'px' }" :copertina="g.copertina" :ico="g.ico" :grande="62" chiaro />
+        <Copertina class="arte" :style="{ height: ARTE + 'px' }" :copertina="g.copertina" :ico="g.ico" :grande="58" />
         <span class="pan" :style="pannello(i)">
           <b>{{ g.nome }}</b>
           <i>{{ g.che }}</i>
@@ -136,17 +136,17 @@ const modo = g => MODI[g.come] ? `${MODI[g.come].emoji} ${MODI[g.come].nome}` : 
 .giro { position:relative; isolation:isolate; overflow:hidden; touch-action:pan-y; cursor:grab; margin:0 -16px }
 .giro.tira { cursor:grabbing }
 .carta { position:absolute; left:50%; top:8px; display:flex; flex-direction:column; padding:6px;
-         border-radius:18px; text-align:center; background:#fff;
-         box-shadow:0 1px 2px #1f243312, 0 8px 24px #1f24330f; will-change:transform }
+         border-radius:18px; text-align:center;
+         box-shadow:0 1px 2px #1f243318, 0 8px 24px #1f243314; will-change:transform }
 .scatta .carta { transition:transform .28s cubic-bezier(.2,.8,.3,1), opacity .28s }
 .arte { flex:none; border-radius:13px }
 .pan { flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; gap:2px;
-       padding:10px 8px 6px }
-.pan b { font-size:17px; font-weight:600; line-height:1.2; color:#1f2433 }
-.pan i { font-style:normal; font-size:12.5px; line-height:1.3; color:#7a8193 }
-.modo { font-size:11.5px; line-height:1.3; color:#9aa0ae;
+       margin-top:6px; padding:8px 8px 7px; border-radius:13px; background:#fff }
+.pan b { font-size:15px; font-weight:600; line-height:1.2; color:#1f2433 }
+.pan i { font-style:normal; font-size:12px; line-height:1.3; color:#7a8193 }
+.modo { font-size:11px; line-height:1.3; color:#9aa0ae;
         display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
-.gioca { margin-top:auto; width:100%; padding:9px 0; border-radius:999px; font-size:14px; font-weight:600;
+.gioca { margin-top:auto; width:100%; padding:8px 0; border-radius:999px; font-size:13px; font-weight:600;
          background:#1f2433; color:#fff }
 .carta:not(.davanti) .gioca { visibility:hidden }
 .carta.davanti:active { transform:scale(.98) !important }
@@ -155,8 +155,8 @@ const modo = g => MODI[g.come] ? `${MODI[g.come].emoji} ${MODI[g.come].nome}` : 
 .fr.sx { left:20px } .fr.dx { right:20px }
 .fr:disabled { opacity:0; pointer-events:none }
 
-.indice { display:grid; grid-template-columns:repeat(auto-fill, minmax(34px, 1fr)); gap:6px; margin-top:14px }
-.indice button { position:relative; height:40px; border-radius:10px; font-size:20px; line-height:1;
+.indice { display:grid; grid-template-columns:repeat(auto-fill, minmax(42px, 1fr)); gap:6px; margin-top:14px }
+.indice button { position:relative; height:48px; border-radius:12px; font-size:26px; line-height:1;
                  background:#fff; box-shadow:0 1px 2px #1f243312 }
 .indice button.on { box-shadow:inset 0 0 0 2px #1f2433 }
 .indice button.ultimo::after { content:""; position:absolute; top:-3px; right:-3px; width:9px; height:9px;

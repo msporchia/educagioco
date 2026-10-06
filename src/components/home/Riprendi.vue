@@ -11,7 +11,7 @@ defineEmits(['apri'])
 
 <template>
   <button class="riprendi" :data-riprendi="gioco.chiave" @click="$emit('apri', gioco.chiave)">
-    <Copertina class="arte" :copertina="gioco.copertina" :ico="gioco.ico" :grande="40" chiaro />
+    <Copertina class="arte" :copertina="gioco.copertina" :ico="gioco.ico" :grande="36" />
     <span class="parole">
       <b>riprendi da qui</b>
       <strong>{{ gioco.nome }}</strong>
@@ -25,12 +25,12 @@ defineEmits(['apri'])
 .riprendi { display:flex; align-items:center; gap:12px; width:100%; max-width:400px;
             padding:8px 12px 8px 8px; border-radius:18px; text-align:left; color:#fff; background:#1f2433 }
 .riprendi:active { transform:scale(.99) }
-.arte { flex:none; width:72px; height:72px; border-radius:12px }
+.arte { flex:none; width:64px; height:64px; border-radius:12px }
 .parole { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
-.parole b { font-size:12px; font-weight:400; color:#aab3c9 }
-.parole strong { font-size:18px; font-weight:600; line-height:1.2 }
-.parole span { font-size:12.5px; line-height:1.3; color:#aab3c9;
+.parole b { font-size:11px; font-weight:400; color:#aab3c9 }
+.parole strong { font-size:15px; font-weight:600; line-height:1.2 }
+.parole span { font-size:11.5px; line-height:1.3; color:#aab3c9;
                display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
-.via { flex:none; width:44px; height:44px; border-radius:50%; display:grid; place-items:center;
-       padding-left:3px; font-size:17px; background:#ffd54f; color:#1f2433 }
+.via { flex:none; width:40px; height:40px; border-radius:50%; display:grid; place-items:center;
+       padding-left:3px; font-size:15px; background:#ffd54f; color:#1f2433 }
 </style>

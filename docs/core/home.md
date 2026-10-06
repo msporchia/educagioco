@@ -14,8 +14,11 @@ disegna (`Riprendi.vue`, `Carosello.vue`, `Copertina.vue`, `scene.js`,
 
 Pulito, scelto dall'utente fra due proposte («più elegante», non
 cartonato): fondo grigio chiarissimo, superfici bianche, pesi 600 e 400,
-ombre appena accennate, testo `#1f2433` e grigio `#7a8193`. Il colore lo
-mettono le copertine (stinte) e il riquadro scuro di «riprendi».
+caratteri piccoli, ombre appena accennate, testo `#1f2433` e grigio
+`#7a8193`. Il colore lo mettono le copertine, ognuna sul fondo del suo
+gioco (stinte erano più tristi), e il riquadro scuro di «riprendi».
+La home parte dall'alto e non si centra: letti i nastri, il centrato
+lasciava un vuoto sopra il profilo.
 
 ## Il profilo
 
@@ -75,9 +78,7 @@ Quindici giochi stanno su due righe a 375 px, e su tre a 320.
 Un gioco porta `copertina: { fondo, disegno, scena }` nel suo manifesto (i
 giochi vecchi nella loro riga di `data/giochi.js`). `scena` è uno dei
 disegni piatti di `components/home/scene.js` (`stelle`, `colline`, `tenda`, `bolle`,
-`onde`, `griglia`, `mattoni`, `grotta`), sopra ci va l'icona grande. Con
-`chiaro` (carosello e «riprendi») il fondo è stinto e la scena appena
-accennata. Senza
+`onde`, `griglia`, `mattoni`, `grotta`), sopra ci va l'icona grande. Senza
 `copertina` il gioco uscirebbe grigio: `unita/aree` è rosso. Sono provvisorie: la copertina vera è un
 disegno del gioco, ancora da fare.
 
