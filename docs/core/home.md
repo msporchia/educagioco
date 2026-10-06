@@ -1,13 +1,38 @@
 # La home
 
-Sotto la fascia del livello, tre pezzi: **«riprendi da qui»**, il
+In cima la **riga del profilo**, poi **«riprendi da qui»**, il
 **carosello** delle copertine e l'**indice** di tutti i giochi. Prima era
 una lista di carte larghe, una per gioco: quindici giochi erano cinque
-schermate da scorrere, e nessuna diceva «è un gioco». Il resto (nastri,
-chi gioca, Impostazioni, Come funziona, versione) è rimasto com'era.
+schermate da scorrere, e nessuna diceva «è un gioco». Nastri, Impostazioni,
+Come funziona e versione sono rimasti dov'erano.
 
 I file: `src/views/HomeView.vue` mette insieme, `src/components/home/`
-disegna (`Riprendi.vue`, `Carosello.vue`, `Copertina.vue`, `scene.js`).
+disegna (`Riprendi.vue`, `Carosello.vue`, `Copertina.vue`, `scene.js`,
+`Iniziale.vue`), `src/views/ProfiloView.vue` è il profilo.
+
+## Lo stile
+
+Pulito, scelto dall'utente fra due proposte («più elegante», non
+cartonato): fondo grigio chiarissimo, superfici bianche, pesi 600 e 400,
+ombre appena accennate, testo `#1f2433` e grigio `#7a8193`. Il colore lo
+mettono le copertine (stinte) e il riquadro scuro di «riprendi».
+
+## Il profilo
+
+- **La riga in cima** sostituisce la fila dei nomi e la fascia del
+  livello: l'iniziale del bambino in un tondo, nome, titolo e livello, le
+  monete. Toccata apre il profilo.
+- **L'iniziale** (`Iniziale.vue`) prende il colore dall'id, quindi non
+  cambia rinominando; non è un campo del profilo. Il personaggio scelto
+  aggiungendo il bambino (`aspetto`) è caricato solo per chi gioca: per
+  usarlo anche per gli altri va letto il loro profilo.
+- **La pagina profilo**: nome, livello, monete, medaglie (apre l'albo),
+  giorni di fila, gli altri bambini (uno tocco e si gioca lui: il watch su
+  `state.player` in `App.vue` riporta in home) e «＋ aggiungi un bambino».
+- **Aggiungere vuole il codice dei grandi**: il profilo lo chiede con
+  `chiediDopoIlCodice('aggiungi')` (`store/pin.js`) e va nelle
+  Impostazioni, che appena dentro aprono l'aggiunta di sempre. Uscendo
+  senza codice la richiesta si scorda.
 
 ## Riprendi da qui
 
@@ -40,8 +65,8 @@ disegna (`Riprendi.vue`, `Carosello.vue`, `Copertina.vue`, `scene.js`).
 
 ## L'indice
 
-Un'icona per gioco, sul colore della sua area (`tinta` in `AREE`), quella
-in mezzo bordata, l'ultimo giocato col pallino giallo. Serve a trovare un
+Un'icona per gioco su un tassello bianco, quella in mezzo bordata,
+l'ultimo giocato col pallino giallo. Serve a trovare un
 gioco senza scorrere: la copertina fa riconoscere, l'indice fa arrivare.
 Quindici giochi stanno su due righe a 375 px, e su tre a 320.
 
@@ -50,12 +75,18 @@ Quindici giochi stanno su due righe a 375 px, e su tre a 320.
 Un gioco porta `copertina: { fondo, disegno, scena }` nel suo manifesto (i
 giochi vecchi nella loro riga di `data/giochi.js`). `scena` è uno dei
 disegni piatti di `components/home/scene.js` (`stelle`, `colline`, `tenda`, `bolle`,
-`onde`, `griglia`, `mattoni`, `grotta`), sopra ci va l'icona grande. Senza
+`onde`, `griglia`, `mattoni`, `grotta`), sopra ci va l'icona grande. Con
+`chiaro` (carosello e «riprendi») il fondo è stinto e la scena appena
+accennata. Senza
 `copertina` il gioco uscirebbe grigio: `unita/aree` è rosso. Sono provvisorie: la copertina vera è un
 disegno del gioco, ancora da fare.
 
 ## Nei test
 
+- `[data-azione="profilo"]`: la riga in cima (classe `.fascia`, il nome in
+  `[data-nome]`, le monete in `.numeri`); `[data-profilo]` la pagina, il
+  nome in `.nome`, gli altri bambini `[data-giocatore="…"]`,
+  `[data-azione="aggiungi"]` e `[data-azione="medaglie"]`.
 - `.carte`: la home è pronta.
 - `.carta.gioco[data-gioco="…"]`: la copertina di un gioco, con `.davanti`
   quella in mezzo; dentro, `b` è il nome e `i` cosa insegna.
@@ -65,4 +96,5 @@ disegno del gioco, ancora da fare.
   (`test/aiuto/browser.mjs`): indice, poi la copertina in mezzo. Un
   `page.click` su una copertina che non è in mezzo la sposta e basta.
 - `integrazione/home` prova col dito vero (CDP): strisciata, vicina,
-  indice, apertura, ritorno e «riprendi».
+  indice, apertura, ritorno e «riprendi»; poi il profilo e «aggiungi» col
+  codice. Il cambio di bambino lo prova `integrazione/app`.

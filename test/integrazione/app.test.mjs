@@ -17,7 +17,7 @@ async function apri(size) {
 const page = await apri({ width: 390, height: 844 })
 const avvio = await page.evaluate(() => ({
   // la home non ha più un'intestazione col nome: si guarda chi è acceso
-  giocatore: document.querySelector('.gioc.on')?.textContent || '(uno solo)',
+  giocatore: document.querySelector('.fascia [data-nome]')?.textContent,
   giochi: [...document.querySelectorAll('.carta b')].map(x => x.textContent),
   archivio: document.querySelector('.mini,.avviso')?.textContent.trim().slice(0, 40),
 }))
@@ -86,7 +86,7 @@ await page.reload()
 await page.waitForSelector('.carte')
 const dopoReload = await page.evaluate(() => ({
   riga: document.querySelector('.carta.mate i').textContent.replace(/\s+/g, ' ').trim(),
-  giocatore: document.querySelector('.gioc.on')?.textContent,
+  giocatore: document.querySelector('.fascia [data-nome]')?.textContent,
 }))
 
 /* ══════════ 5. profili separati ══════════
@@ -94,20 +94,22 @@ const dopoReload = await page.evaluate(() => ({
    no, quindi se i due numeri sono uguali i profili si stanno
    mescolando. La riga dei pianeti da sola non basterebbe — a inizio
    partita sono entrambi al primo. */
-const separati = await page.evaluate(async ([primo, secondo]) => {
-  const foto = () => ({
-    monete: +document.querySelector('.fascia .numeri').textContent.replace(/\D+/g, '').slice(0, 4) || 0,
-    pianeta: document.querySelector('.carta.mate i').textContent.replace(/\s+/g, ' ').trim(),
-  })
-  const bottone = chi => [...document.querySelectorAll('.gioc')].find(b => b.textContent === chi)
-  const prima = foto()
-  bottone(secondo).click()
-  await new Promise(r => setTimeout(r, 400))
-  const altro = foto()
-  bottone(primo).click()
-  await new Promise(r => setTimeout(r, 400))
-  return { primo: prima, altro, tornatoAlPrimo: foto() }
-}, [GIOCATORE, ALTRO])
+const foto = () => page.evaluate(() => ({
+  monete: +document.querySelector('.fascia .numeri').textContent.replace(/\D+/g, '').slice(0, 4) || 0,
+  pianeta: document.querySelector('.carta.mate i').textContent.replace(/\s+/g, ' ').trim(),
+}))
+// si cambia bambino dal profilo, che si apre dalla riga in cima alla home
+async function cambia(chi) {
+  await page.click('[data-azione="profilo"]')
+  await page.click(`[data-giocatore="${chi}"]`)
+  await page.waitForSelector('.carte')
+  await page.waitForTimeout(400)
+}
+const prima = await foto()
+await cambia(ALTRO)
+const altro = await foto()
+await cambia(GIOCATORE)
+const separati = { primo: prima, altro, tornatoAlPrimo: await foto() }
 
 for (const elenco of raccolti) errors.push(...elenco)
 console.log(JSON.stringify({ avvio, mappaEn, inglese, dopoInglese, mate,

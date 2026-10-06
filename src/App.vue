@@ -12,6 +12,7 @@ import TowerDefense from './views/TowerDefense.vue'
 import BancarellaGame from './views/BancarellaGame.vue'
 import GeneraleGame from './views/GeneraleGame.vue'
 import AlboView from './views/AlboView.vue'
+import ProfiloView from './views/ProfiloView.vue'
 import GenitoriView from './views/GenitoriView.vue'
 import Guide from './guide/Guide.vue'
 import Novita from './guide/Novita.vue'
@@ -29,7 +30,7 @@ const viste = { home: HomeView,
                 mate: MathGame, torri: TowerDefense,
                 bancarella: BancarellaGame,
                 generale: GeneraleGame,
-                albo: AlboView, genitori: GenitoriView,
+                albo: AlboView, profilo: ProfiloView, genitori: GenitoriView,
                 guide: Guide,
                 novita: Novita,
                 admin: AdminView,   // #admin: nessuna carta ci porta
@@ -67,7 +68,7 @@ onMounted(async () => {
 function vai(v) { vista.value = v }
 
 // solo i giochi contano il tempo: home, impostazioni, albo, guide e novità non sono tempo di gioco
-const NON_GIOCHI = ['home', 'albo', 'genitori', 'guide', 'novita', 'admin']
+const NON_GIOCHI = ['home', 'albo', 'profilo', 'genitori', 'guide', 'novita', 'admin']
 const gioca = v => !!viste[v] && !NON_GIOCHI.includes(v)
 
 function apriSessione(v) {

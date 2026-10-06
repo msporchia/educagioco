@@ -920,7 +920,16 @@ await page.waitForSelector('.carte', { timeout: 8000 })
    È il cambiamento che si nota di più: prima si tornava alle
    impostazioni del bambino di prima. Adesso il gioco è suo. */
 controlla('finito il wizard si è in home', await page.isVisible('.carta.gioco'))
-uguale('e adesso la home lascia scegliere', await page.locator('.gioc').count(), 2)
+// gli altri bambini si scelgono dal profilo, che si apre dalla riga in cima alla home
+async function altriNelProfilo() {
+  await page.click('[data-azione="profilo"]')
+  await page.waitForSelector('[data-profilo]', { timeout: 5000 })
+  const n = await page.locator('[data-giocatore]').count()
+  await page.click('button[aria-label="indietro"]')
+  await page.waitForSelector('.carta.gioco', { timeout: 5000 })
+  return n
+}
+uguale('e adesso il profilo lascia scegliere l\'altro', await altriNelProfilo(), 1)
 
 /* Il profilo nuovo è suo e parte da zero: se ereditasse le monete
    dell'altro, i due bambini starebbero giocando lo stesso profilo. */
@@ -987,7 +996,7 @@ await page.waitForSelector('.carta.gioco', { timeout: 8000 })
    dire il tastierino del codice davanti, su un profilo che non esiste
    più. Si va in home, dove si sceglie chi gioca. */
 controlla('eliminato chi giocava si torna in home', await page.isVisible('.carta.gioco'))
-uguale('e resta un bambino solo', await page.locator('.gioc').count(), 0)
+uguale('e resta un bambino solo', await altriNelProfilo(), 0)
 controlla('e con lui è sparito il suo salvataggio', !(await page.evaluate(() =>
   new Promise(ok => {
     const r = indexedDB.open('giochi-bambini', 1)
@@ -1071,7 +1080,7 @@ await page.waitForTimeout(200)
    l'audio era una variabile globale riaccesa a ogni avvio. */
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.carte', { timeout: 5000 })
-// il tasto sta nella barra, e la home non ce l'ha: si passa dall'albo
+// il tasto sta nella barra, e la home non ce l'ha: si passa dal profilo
 await page.click('.fascia')
 await page.waitForSelector('button[aria-label="suono"]', { timeout: 5000 })
 await page.click('button[aria-label="suono"]')

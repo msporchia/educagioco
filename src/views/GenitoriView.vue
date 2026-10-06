@@ -1,6 +1,6 @@
 <script setup>
 /* Schermata dei genitori, dietro il PIN (vedi docs/genitori/). */
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { state, esportaTutto, resetPlayer, nomeCorrente,
          rinominaGiocatore, eliminaGiocatore, cestinaOra, ripristinaCestinato,
          spostaLEta,
@@ -15,7 +15,7 @@ import { leggiCestino } from '../store/cestino.js'
 import { laPosta, segnaLetta, avvisa } from '../store/posta.js'
 import { inGrassetto } from '../guide/aiuto.js'
 import SceltaAspetto from '../components/SceltaAspetto.vue'
-import { leggiPin, scriviPin, azzeraPin, PIN_INIZIALE, DOMANDA, rispostaGiusta,
+import { leggiPin, scriviPin, azzeraPin, PIN_INIZIALE, DOMANDA, rispostaGiusta, cosaDopoIlCodice,
          segnaSbaglio, azzeraSbagli, attesa } from '../store/pin.js'
 import { leggi as leggiIncidenti, dimentica as scordaIncidenti, ripara } from '../incidenti.js'
 import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
@@ -385,6 +385,9 @@ function apriElimina(g) { chiudiTutto(); eliminando.value = g.id }
 // il bambino nuovo apre il wizard del primo avvio e finisce entrando in
 // partita con lui; il codice non si richiede due volte
 function apriAggiungi() { chiudiTutto(); aggiungendo.value = true }
+// dal profilo si arriva qui per aggiungere un bambino: entrati col codice, si apre quello
+watch(dentro, d => { if (d && cosaDopoIlCodice() === 'aggiungi') apriAggiungi() })
+onUnmounted(cosaDopoIlCodice)
 function fattoIlBambino() {
   aggiungendo.value = false
   // state.player è cambiato: App.vue rimonterebbe con un tastierino davanti

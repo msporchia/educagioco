@@ -21,6 +21,9 @@ Gli altri cheat dell'indirizzo e la pagina `#admin` stanno in
   undici giochi dice «qui c'è un tesoro», e «per i grandi» è una
   proibizione, cioè pubblicità. Nasconderla del tutto è stato provato: chi
   non sa che c'è non la trova.
+- **Dal profilo dei bambini c'è una seconda porta, per una cosa sola**:
+  «＋ aggiungi un bambino» chiede questo codice e poi apre l'aggiunta
+  (`chiediDopoIlCodice`, [../core/home.md](../core/home.md#il-profilo)).
 - **Sbagliare costa un'attesa**: 3 s, poi 10, poi 30, col tastierino spento
   e una barretta che si riempie (`segnaSbaglio`/`attesa`, `ATTESE`). Il
   conto sta nel modulo, non in un `ref` della schermata, se no uscire e

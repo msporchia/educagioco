@@ -167,19 +167,18 @@ controlla('l\'età scelta spegne i giochi da grandi',
 controlla('e lascia quelli per i piccoli',
   carteNuovo.includes('conta'), carteNuovo.join(','))
 controlla('e l\'onboarding non torna più', !(await nuovo.isVisible('.benvenuto')))
-controlla('con un giocatore solo non c\'è niente da scegliere',
-  !(await nuovo.isVisible('.gioc')))
 
 /* Il nome, non l'id. Chi si iscrive da oggi ha un id opaco (`g1`), e
    dove il gioco lo nomina deve dire come si chiama: fino a ieri id e nome
    erano la stessa stringa, quindi uno scambio non si sarebbe visto né a
-   schermo né in un test scritto sui profili di casa. In home il nome non
-   c'è più — non serviva a niente e rubava il posto ai giochi — quindi il
-   posto dove si controlla è l'albo. */
+   schermo né in un test scritto sui profili di casa. Si legge nella riga
+   in cima alla home e nel profilo che apre. */
+uguale('in cima alla home si legge il nome, non l\'id',
+  await nuovo.evaluate(() => document.querySelector('.fascia [data-nome]').textContent.trim()), 'Pippo')
 await nuovo.click('.fascia')
-await nuovo.waitForSelector('.testata', { timeout: 8000 })
-uguale('nell\'albo si legge il nome, non l\'id',
-  await nuovo.evaluate(() => document.querySelector('.chi h2').textContent.trim()), 'Pippo')
+await nuovo.waitForSelector('[data-profilo]', { timeout: 8000 })
+uguale('e nel profilo pure', await nuovo.evaluate(() => document.querySelector('[data-profilo] .nome').textContent.trim()), 'Pippo')
+uguale('con un giocatore solo non c\'è nessun altro da scegliere', await nuovo.locator('[data-giocatore]').count(), 0)
 await nuovo.click('button[aria-label="indietro"]')
 await nuovo.waitForSelector('.carte', { timeout: 8000 })
 
@@ -187,9 +186,9 @@ await nuovo.reload()
 await nuovo.waitForSelector('.carte', { timeout: 8000 })
 controlla('e riaprendo è ancora suo', !(await nuovo.isVisible('.benvenuto')))
 await nuovo.click('.fascia')
-await nuovo.waitForSelector('.testata', { timeout: 8000 })
+await nuovo.waitForSelector('[data-profilo]', { timeout: 8000 })
 uguale('con il suo nome', await nuovo.evaluate(
-  () => document.querySelector('.chi h2').textContent.trim()), 'Pippo')
+  () => document.querySelector('[data-profilo] .nome').textContent.trim()), 'Pippo')
 await nuovo.click('button[aria-label="indietro"]')
 await nuovo.waitForSelector('.carte', { timeout: 8000 })
 uguale('nessun errore durante il primo avvio', erroriNuovo.length, 0)

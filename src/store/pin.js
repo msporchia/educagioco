@@ -56,3 +56,9 @@ export function azzeraSbagli() { sbagli = 0; liberoDa = 0; ultima = 0 }
 
 export const attesa = (ora = Date.now()) =>
   ({ resta: Math.max(0, liberoDa - ora), quanto: ultima })
+
+// cosa aprire appena entrati col codice: «aggiungi un bambino» dal profilo
+// chiede il codice e poi apre l'aggiunta (docs/core/home.md, «Il profilo»)
+let dopoIlCodice = null
+export const chiediDopoIlCodice = cosa => { dopoIlCodice = cosa }
+export function cosaDopoIlCodice() { const c = dopoIlCodice; dopoIlCodice = null; return c }

@@ -1,7 +1,6 @@
 <script setup>
 import { computed, onMounted, watch } from 'vue'
-import { state, selectPlayer, level, countMastered,
-         traguardi, serieGiorni, livelloOra,
+import { state, level, countMastered, nomeCorrente, livelloOra,
          mateProgresso, mercatoProgresso,
          tabellineIntere, genProgresso,
          quantiGiochiAccesi } from '../store/profile.js'
@@ -19,6 +18,7 @@ import { AREE } from '../data/aree.js'
 import Nastri from '../guide/Nastri.vue'
 import Carosello from '../components/home/Carosello.vue'
 import Riprendi from '../components/home/Riprendi.vue'
+import Iniziale from '../components/home/Iniziale.vue'
 import { vociInMemoria } from '../store/sessioni.js'
 import { giro, ricarica } from '../store/varieta.js'
 import { chiaveDelGioco } from '../data/varieta.js'
@@ -50,8 +50,6 @@ const generale = computed(() => genProgresso())
 const stelleGen = computed(() =>
   Object.values(generale.value.stelle || {}).reduce((n, s) => n + s, 0))
 
-const badge = computed(() => traguardi().filter(t => t.preso).length)
-const serie = computed(() => serieGiorni())
 const salita = computed(() => livelloOra())
 
 // azzerare i progressi vive dietro il PIN in GenitoriView, non qui
@@ -133,29 +131,20 @@ const ripresa = computed(() => elenco.value.find(g => g.chiave === ultimo.value)
 
 <template>
   <!-- data-archivio: usato dai test di avvio per verificare IndexedDB vs memoria -->
-  <div class="schermo" :data-archivio="state.storage">
+  <div class="schermo home" :data-archivio="state.storage">
     <div class="centro">
       <!-- i nastri (installazione, versione nuova...) stanno solo qui: vedi docs/genitori/guide.md -->
       <Nastri @vai="v => $emit('vai', v)" />
 
-      <!-- con un giocatore solo non c'è niente da scegliere -->
-      <div class="giocatori" v-if="state.giocatori.length > 1">
-        <button v-for="g in state.giocatori" :key="g.id" class="gioc"
-                :class="{ on: state.player === g.id }"
-                @click="selectPlayer(g.id)">{{ g.nome }}</button>
-      </div>
-
-      <!-- la fascia è il riassunto di dove sei, e porta all'albo -->
-      <button class="fascia" @click="$emit('vai','albo')">
-        <span class="stella">⭐<b>{{ level }}</b></span>
+      <!-- chi gioca, a che punto è, le monete: tocca e si apre il profilo (docs/core/home.md) -->
+      <button class="fascia" data-azione="profilo" @click="$emit('vai','profilo')">
+        <Iniziale :id="state.player" :nome="nomeCorrente()" :misura="38" />
         <span class="dove">
-          <b>{{ salita.titolo }}</b>
-          <span class="barretta"><i :style="{ width: Math.round(salita.quota * 100) + '%' }"></i></span>
+          <b data-nome>{{ nomeCorrente() }}</b>
+          <i>{{ salita.titolo }} · livello {{ level }}</i>
         </span>
-        <span class="numeri">
-          🪙 {{ state.profile.coins }}<br>
-          <em>🏅 {{ badge }}<span v-if="serie > 1"> · 🔥 {{ serie }}</span></em>
-        </span>
+        <span class="numeri">🪙 {{ state.profile.coins }}</span>
+        <span class="freccia" aria-hidden="true">›</span>
       </button>
 
       <Riprendi v-if="ripresa" :gioco="ripresa" :dove="ripresa.punto" @apri="k => $emit('vai', k)" />
@@ -244,36 +233,17 @@ const ripresa = computed(() => elenco.value.find(g => g.chiave === ultimo.value)
 </template>
 
 <style scoped>
-/* Va a capo, e i nomi lunghi si stringono invece di sfondare: finché i
-   giocatori erano due scritti nel codice bastava una fila, adesso i
-   genitori ne possono aggiungere quanti vogliono e su un telefono
-   stretto tre nomi in fila escono già dallo schermo. */
-.giocatori { display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
-             max-width:100%; padding:0 8px }
-.gioc { padding:13px 26px; border-radius:999px; background:#ffffffcc; color:var(--viola-scuro);
-        font-size:19px; font-weight:800; box-shadow:0 4px 0 #d4dce6; transition:.14s;
-        max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-.gioc.on { background:linear-gradient(180deg,var(--viola),var(--viola-scuro)); color:#fff;
-           box-shadow:0 4px 0 #2c4283; transform:translateY(-1px) }
+.home { background:#f6f7f9 }
 .carte { width:100%; max-width:400px }
-/* la fascia: livello, quanto manca al prossimo, monete e medaglie */
-.fascia { display:flex; align-items:center; gap:11px; width:100%; max-width:400px;
-          padding:9px 14px; border-radius:18px; text-align:left;
-          background:linear-gradient(120deg,#e8edf8,#fffffff0);
-          box-shadow:0 4px 0 #dde3ea, 0 8px 18px #8593a822 }
-.fascia:active { transform:translateY(2px); box-shadow:0 2px 0 #dde3ea }
-.stella { position:relative; font-size:29px; flex:none }
-.stella b { position:absolute; inset:0; display:grid; place-items:center; font-size:12.5px;
-            font-weight:900; color:#7a4b00; padding-top:2px }
-.dove { flex:1; min-width:0 }
-.dove b { display:block; font-size:13px; font-weight:900; color:var(--viola-scuro);
-          margin-bottom:4px }
-.barretta { display:block; height:8px; border-radius:999px; background:#d7dfea; overflow:hidden }
-.barretta i { display:block; height:100%; border-radius:999px; transition:width .5s;
-              background:linear-gradient(90deg,var(--viola),var(--rosa)) }
-.numeri { flex:none; font-size:13px; font-weight:900; color:var(--viola-scuro); text-align:right;
-          line-height:1.35 }
-.numeri em { font-style:normal; font-size:11.5px; color:var(--tenue) }
+/* la riga del profilo */
+.fascia { display:flex; align-items:center; gap:11px; width:100%; max-width:400px; padding:9px 12px;
+          border-radius:16px; text-align:left; background:#fff; box-shadow:0 1px 2px #1f243312 }
+.fascia:active { transform:scale(.99) }
+.dove { flex:1; min-width:0; display:flex; flex-direction:column }
+.dove b { font-size:15px; font-weight:600; color:#1f2433; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.dove i { font-style:normal; font-size:12px; color:#7a8193 }
+.numeri { flex:none; font-size:14px; font-weight:600; color:#1f2433 }
+.freccia { flex:none; font-size:20px; color:#a3a9b8 }
 .vuoto { text-align:center; padding:6px 0 2px }
 /* le monete regalate dall'indirizzo: si vedono e poi se ne vanno */
 .regalo { position:fixed; left:50%; top:21%; z-index:60; pointer-events:none;
@@ -300,10 +270,10 @@ const ripresa = computed(() => elenco.value.find(g => g.chiave === ultimo.value)
 
 .impostazioni { display:block; width:100%; max-width:400px; margin-top:18px;
                 padding:11px 16px; border-radius:14px; text-align:left;
-                background:#ffffff66; box-shadow:inset 0 0 0 1px #d7dfea }
+                background:#fff; box-shadow:0 1px 2px #1f243312 }
 .impostazioni:active { background:#ffffffaa }
 .impostazioni.guide { margin-top:8px }
-.impostazioni b { display:block; font-size:14px; font-weight:800; color:var(--tenue) }
+.impostazioni b { display:block; font-size:14px; font-weight:600; color:#1f2433 }
 .impostazioni i { font-style:normal; font-size:11.5px; color:var(--tenue); opacity:.75 }
 
 .piede { display:flex; align-items:baseline; justify-content:center; gap:9px;

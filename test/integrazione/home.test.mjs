@@ -78,6 +78,21 @@ uguale('nell’indice il gioco ha il segno dell’ultimo', await page.locator('[
 await page.click('[data-riprendi]')
 uguale('e «riprendi» lo riapre', await page.locator('.carte').count(), 0)
 
+/* ── il profilo: dalla riga in cima, e «aggiungi» passa dal codice dei grandi ── */
+await page.reload()
+await page.waitForSelector('.carte', { timeout: 10000 })
+await page.click('[data-azione="profilo"]')
+await page.waitForSelector('[data-profilo]', { timeout: 5000 })
+uguale('il profilo dice chi gioca', await page.locator('[data-profilo] .nome').textContent(),
+       await page.evaluate(() => JSON.parse(localStorage.getItem('giocatori'))[0].nome))
+await page.click('[data-profilo] [data-azione="aggiungi"]')
+await page.waitForSelector('.tasto', { timeout: 5000 })
+uguale('«aggiungi» chiede prima il codice', await page.locator('.benvenuto').count(), 0)
+const zero = page.locator('.tasto', { hasText: /^0$/ })
+for (let i = 0; i < 4; i++) await zero.click()
+await page.waitForSelector('.benvenuto', { timeout: 5000 })
+controlla('e col codice si apre l’aggiunta di un bambino', true)
+
 uguale('nessun errore nella pagina', errori.join(' | '), '')
 await browser.close()
 riassunto('home')
