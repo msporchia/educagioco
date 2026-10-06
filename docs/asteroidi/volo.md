@@ -114,6 +114,8 @@ Quello che esce, per livello (misurato in `misure/asteroidi`):
   livello 9 in tutto. Senza record si parte da 1.
 - **Il record è in punti** (`senzaFine` di `mate` in `src/data/giochi.js`,
   misura `punti`), raccontato «livello 7 · 43 centri · serie 12».
+- **Un volo lasciato a metà** scrive il suo record quando finisce o quando si
+  lascia perdere la sosta: [sosta.md](sosta.md#il-record-del-volo).
 - **Il record vecchio sta in `best.math`**, fuori dalla campagna: il
   manifesto lo dichiara con `vecchio`, e si legge finché un quaderno non
   c'è. Si scrive **prima** di `riassunto()`, che riscrive `best.math` coi

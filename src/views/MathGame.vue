@@ -2,7 +2,7 @@
 /* Asteroidi: tabelline e calcolo a mente in un'unica fila di tappe, vedi
    docs/asteroidi/scaletta.md. Quale calcolo esce lo decide
    `store/tabelline.js`, non questo file: qui restano gli asteroidi. */
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import { state, item, answer,
          segna, segnaBest, mateProgresso, tabellineIntere,
          asteroidiCompleta } from '../store/profile.js'
@@ -24,7 +24,9 @@ import { poolVoloTabelline, poolVoloMente, chiaviDelVolo, creaAlternanza,
 import { CAPITOLI, SCALETTA, VOLO, superata, dopoDi, daAssaggiare,
          posizioneOra, filaDi } from '../data/asteroidi.js'
 import { GIOCHI } from '../data/giochi.js'
-import { segnaPrimato, primatoDi } from '../giochi/campagne.js'
+import { segnaPrimato, primatoDi, sosta, salvaSosta, buttaSosta } from '../giochi/campagne.js'
+import { scrivi, leggi, dice, recordDi, chiaveDi } from '../motore/asteroidi/sosta.js'
+import Ripresa from '../giochi/Ripresa.vue'
 import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
 import Festa from '../giochi/Festa.vue'
 import { suono } from '../audio.js'
@@ -347,11 +349,14 @@ function gridoBoss() {
                      : `☄️ BOSS DAL PIANETA DEL ${t.nuova}!`
 }
 
-function ondata() {
+/* `salvata`: la domanda aperta di una sosta (docs/asteroidi/sosta.md). Si
+   rimette la stessa, e il sasso giusto riparte da dov'era: i sassi non si
+   salvano, ma chi esce e rientra non deve ritrovare tempo che non aveva. */
+function ondata(salvata = null) {
   asteroidi = []
-  const boss = chieste > 0 && chieste % CFG.bossOgni === 0
-  nuovaDomanda(boss)
-  chieste++
+  const boss = salvata ? salvata.boss : chieste > 0 && chieste % CFG.bossOgni === 0
+  if (salvata) rimettiDomanda(salvata)
+  else { nuovaDomanda(boss); chieste++ }
 
   const { caduta, quanti } = difficolta(hud.livello, domanda.peso, !campagna.value)
   // `esercizio` c'è per un conto a mente e per una grande girata: i
@@ -393,7 +398,32 @@ function ondata() {
       }),
     })
   })
-  if (boss) mostraCartello(gridoBoss(), '#ff6b6b')
+  if (salvata) rimettiCielo(salvata)
+  else if (boss) mostraCartello(gridoBoss(), '#ff6b6b')
+  salva()
+}
+
+// la domanda di prima, com'era: stesso verso, stessi numeri, gelo già speso
+function rimettiDomanda(d) {
+  esercizio = d.esercizio
+  Object.assign(domanda, { chiave: d.chiave, a: d.a, b: d.b, ris: d.ris, testo: d.testo,
+                           peso: d.peso, difficile: d.difficile })
+  anticipo = d.anticipo
+  apertoIl = performance.now()
+  gelo = d.gelo; gelato.value = d.gelo; nave.gelo = d.gelo ? 1 : 0
+}
+
+/* i falsi sono nuovi (si rifanno dal codice), ma quelli tolti dal mirino o
+   toccati restano tolti; e tutto il cielo scende quanto serve perché il
+   sasso giusto sia alla stessa quota di prima, col cronometro di prima */
+function rimettiCielo(d) {
+  const giusto = asteroidi.find(a => a.ok)
+  const falsi = asteroidi.filter(a => !a.ok)
+  for (let n = 0; n < d.tolti && falsi.length; n++)
+    falsi.splice(Math.floor(Math.random() * falsi.length), 1)[0].morto = true
+  const dy = d.quota * suolo - giusto.y
+  for (const a of asteroidi) a.y = Math.min(a.y + dy, suolo - a.r * 1.2)
+  prontaIl = performance.now() - d.ms
 }
 
 /* ---------- interazione ---------- */
@@ -495,6 +525,7 @@ function usaGelo() {
   mostraCartello(POTENZIAMENTI.gelo.grido, POTENZIAMENTI.gelo.colore)
   anello(nave.x, nave.y, '#9fd8ff', Math.max(W, H))
   suono.compra()
+  salva()                          // un gettone speso non si ridà uscendo
 }
 
 // 🎯 il mirino: toglie una risposta sbagliata a caso (mai la più vicina o
@@ -510,6 +541,7 @@ function usaMirino() {
   v.morto = true
   spara(v, '#8cff9d'); rompi(v, '#8cff9d')
   suono.ok()
+  salva()
 }
 
 function colpisci(a) {
@@ -601,6 +633,7 @@ function perdiVita() {
   nave.botta = 1
   if (--hud.vite <= 0) { sincronizzaNave(); return finePartita() }
   sincronizzaNave()
+  salva()                          // una vita persa non si ridà uscendo
 }
 
 function salitaLivello() {
@@ -795,7 +828,9 @@ function ciclo(ts) {
 
 /* ---------- partite ----------
    `i` è il posto nella fila, oppure -1 per un volo infinito. */
-function inizia(i = posizione.value) {
+function inizia(i = posizione.value, dato = null) {
+  // una partita nuova butta quella lasciata a metà (la mappa ha già chiesto)
+  if (!dato) scorda()
   // una partita non comincia in pausa: senza, il freno lasciato acceso
   // sulla mappa la farebbe nascere dietro un velo che nessuno ha chiesto
   togli()
@@ -822,14 +857,106 @@ function inizia(i = posizione.value) {
   sincronizzaNave()
   picker.reset(); miscela.azzera(); alternanza.azzera()
   sbagli.clear(); dritta.value = ''
-  segna('partiteMath')
+  if (dato) rimettiPartita(dato)
+  else segna('partiteMath')
   fase.value = 'gioco'
-  ondata()
+  ondata(dato && dato.aperta)
 }
 
 // dalla mappa si tocca una voce e basta: pianeta o stazione lo dice il dato
-const iniziaVoce = v => inizia(v.pos)
-const iniziaVolo = () => inizia(-1)   // il volo infinito: si apre a fila finita
+const iniziaVoce = v => vuoleIniziare(v.pos)
+const iniziaVolo = () => vuoleIniziare(-1)   // il volo infinito: si apre a fila finita
+
+/* ---------- la partita lasciata a metà ----------
+   Uscire non butta via niente: si scrive dove si era (motore/asteroidi/sosta.js)
+   e la mappa la offre in cima. Vedi docs/asteroidi/sosta.md. */
+const CHIAVE = 'mate'
+const contestoSosta = () => ({ aperta: apertaVoce, libera: !!progresso.value.libera })
+function laRipresa() {
+  const d = dice(sosta(CHIAVE), contestoSosta())
+  if (!d) return null
+  const vite = `❤️ ${d.vite}`
+  return d.volo
+    ? { emoji: d.emoji, nome: d.nome, dettaglio: `⭐ ${d.punti} punti · livello ${d.livello} · ${vite}` }
+    : { emoji: d.emoji, nome: d.nome,
+        dettaglio: `🎯 ${d.giuste}/${d.bersaglio} centri · livello ${d.livello} · ${vite}` }
+}
+const ripresa = ref(laRipresa())
+const chiede = ref(null)           // { nome, voce }: la partita nuova che butterebbe quella a metà
+
+// la domanda in corso, per la sosta: dov'è il sasso giusto e da quanto è raggiungibile
+function domandaAperta() {
+  const giusto = asteroidi.find(a => a.ok && !a.morto)
+  if (!giusto || !suolo) return null
+  return { chiave: domanda.chiave, a: domanda.a, b: domanda.b, ris: domanda.ris, testo: domanda.testo,
+           peso: domanda.peso, difficile: domanda.difficile, esercizio, boss: giusto.boss,
+           anticipo, gelo, tolti: asteroidi.filter(a => a.morto && !a.ok).length,
+           quota: giusto.y / suolo, ms: performance.now() - prontaIl }
+}
+
+function salva({ subito = false } = {}) {
+  if (fase.value !== 'gioco') return
+  salvaSosta(CHIAVE, scrivi({
+    chiave: chiaveDi(voce.value), hud, tasca, ultimoGettone, chieste, magazzino: magazzino.value,
+    monete: { chiesto: borsellino.chiesto, dato: borsellino.dato, mostrate },
+    aperta: domandaAperta(),
+  }), { subito })
+}
+
+/* Si butta la sosta. Un volo lasciato a metà ha già fatto i suoi punti: se si
+   lascia perdere, il record si scrive adesso (`registra: false` è per chi ha
+   appena finito la partita e ha già scritto il suo). */
+function scorda({ registra = true } = {}) {
+  const dato = sosta(CHIAVE)
+  if (dato) {
+    const r = registra && recordDi(dato)
+    if (r) {
+      segnaPrimato('mate', r.punti, Date.now(), r.dettagli)
+      segnaBest('math', r.punti)          // dopo il quaderno: vedi `finePartita`
+    }
+    buttaSosta(CHIAVE)
+  }
+  ripresa.value = null
+  chiede.value = null
+}
+
+function vuoleIniziare(i) {
+  if (!ripresa.value) return inizia(i)
+  chiede.value = { nome: i < 0 ? VOLO.nome : fila[i].T.nome, i }
+}
+function comincia() {
+  const { i } = chiede.value
+  inizia(i)
+}
+
+// quello che la sosta aveva e `inizia` non azzera: i numeri di prima
+function rimettiPartita(d) {
+  Object.assign(hud, d.hud)
+  chieste = d.chieste
+  magazzino.value = d.magazzino
+  borsellino = borsa(CHIAVE, d.monete); mostrate = d.monete.mostrate
+  Object.assign(tasca, d.tasca)
+  ultimoGettone = d.ultimoGettone
+  nave.lv = stazzaDi(hud.livello)          // la nave di adesso, senza il cartello del livello
+  sincronizzaNave()
+}
+
+// se il salvataggio non si legge più la carta sparisce e resta la mappa
+function riprendiPartita() {
+  const dato = leggi(sosta(CHIAVE), contestoSosta())
+  if (!dato) return scorda()
+  inizia(dato.posizione, dato)
+  ripresa.value = null
+  chiede.value = null
+  metti({ auto: true })              // il cielo ripreso nasce fermo: riparte al tocco
+}
+
+function esci() { salva({ subito: true }) }
+
+// su un telefono l'app non si chiude, sparisce: è l'ultimo momento per scrivere
+function seSparisce(e) {
+  if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true })
+}
 
 // il «da ripassare»: il calcolo se è un fatto, il nome della strategia se
 // è un concetto — «68+75» non direbbe niente, «somme col riporto» sì
@@ -859,6 +986,7 @@ function riassunto() {
 
 function tappaSuperata() {
   asteroidi = []
+  scorda({ registra: false })
   const v = voce.value
   const ultima = !!v && v.pos === fila.length - 1
   // niente premio di tappa: ogni asteroide si è già pagato cadendo
@@ -880,6 +1008,7 @@ function prossimaTappa() {
 function finePartita() {
   fase.value = 'fine'
   asteroidi = []
+  scorda({ registra: false })      // il record è questo qui sotto, non quello della sosta
   suono.fine()
   // il record del volo: va scritto PRIMA di `riassunto()`, che riscrive
   // `best.math` — letto dopo, ogni prima partita sarebbe un pareggio con sé
@@ -893,12 +1022,14 @@ function finePartita() {
 /* tornando alla mappa ci si rimette su **dove è arrivata la fila**: il
    posto è uno solo, e il mestiere lo dice la voce che ci sta sopra */
 function allaMappa() {
+  esci()
   /* si esce anche da sotto il velo (il tocco riprende, il tasto indietro
      no): un freno lasciato acceso qui si ritroverebbe alla partita dopo */
   togli()
   fase.value = 'mappa'
   asteroidi = []
   dritta.value = ''
+  ripresa.value = laRipresa()
   suFrontiera()
 }
 
@@ -923,7 +1054,7 @@ onMounted(() => {
   suFrontiera()
   // aggancio per i test automatici: permette di colpire l'asteroide giusto
   // senza dover indovinare dove il numero e' disegnato sul canvas
-  window.__mate = { hud, domanda, colpisci, inizia, CAMPAGNA, STAZIONI, tappa,
+  window.__mate = { hud, domanda, colpisci, inizia, CAMPAGNA, STAZIONI, tappa, ripresa, salva,
                     asteroidi: () => asteroidi, fase, finale, progresso, nave,
                     // dove si è nella fila, e che mestiere è quel posto lì
                     // (nel volo, il magazzino della domanda in corso)
@@ -932,6 +1063,8 @@ onMounted(() => {
                     iniziaVolo, recordVolo,
                     // le monete: quelle di questa partita, e il salvadanaio
                     monete, salvadanaio: () => state.profile.coins,
+                    // quanto ha già incassato la partita in corso (la sosta lo rimette)
+                    incassato: () => borsellino.dato,
                     // la fila mescolata, il contatore unico (quante voci
                     // sono superate) e cosa viene dopo dentro la fila
                     fila, dopo, contatore, dove,
@@ -945,7 +1078,15 @@ onMounted(() => {
   ctx = tela.value.getContext('2d')
   ridimensiona()
   window.addEventListener('resize', ridimensiona)
+  document.addEventListener('visibilitychange', seSparisce)
+  addEventListener('pagehide', seSparisce)
   raf = requestAnimationFrame(ciclo)
+})
+// prima che la tela se ne vada: dopo, la partita non c'è più
+onBeforeUnmount(() => {
+  salva({ subito: true })
+  document.removeEventListener('visibilitychange', seSparisce)
+  removeEventListener('pagehide', seSparisce)
 })
 onUnmounted(() => {
   cancelAnimationFrame(raf)
@@ -1017,6 +1158,10 @@ onUnmounted(() => {
       </Barra>
       <div class="centro elenco">
         <h1>Asteroidi</h1>
+        <!-- la partita lasciata a metà (docs/asteroidi/sosta.md) -->
+        <Ripresa :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
+                 @riprendi="riprendiPartita" @scorda="scorda"
+                 @comincia="comincia" @annulla="chiede = null" />
         <!-- una fila sola (docs/asteroidi/scaletta.md); i capitoli sono per
              il telefono: ventidue righe sono un muro, tre-quattro una lista -->
         <p class="testo">Una tappa per volta: chi porta una tabellina nuova, chi un trucco
@@ -1031,7 +1176,7 @@ onUnmounted(() => {
                     :class="[v.tipo === 'mente' ? 'stazione' : 'pianeta',
                              { fatto: fattaVoce(v), chiuso: !apertaVoce(v),
                                ora: v.pos === dove }]"
-                    :disabled="!apertaVoce(v)" @click="iniziaVoce(v)">
+                    :disabled="!apertaVoce(v)" @click="vuoleIniziare(v.pos)">
               <span class="em">{{ apertaVoce(v) ? v.T.emoji : '🔒' }}</span>
               <b>{{ v.n }}. {{ v.T.nome }}</b>
               <i>{{ cheChiede(v) }} · {{ v.T.bersaglio }} centri</i>

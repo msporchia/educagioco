@@ -167,6 +167,8 @@ await page.waitForSelector('.scaletta', { timeout: 5000 })
 await posa()
 uguale('sulla mappa il velo non compare', await veli(), 0)
 await riprendiIlTelefono()
+// la partita lasciata a metà è in cima alla mappa (docs/asteroidi/sosta.md): qui si vuole una tappa nuova
+await page.click('[data-ripresa] [data-azione="scorda"]')
 await page.locator('.pianeta').first().click()
 await page.waitForSelector('button[aria-label="pausa"]', { timeout: 5000 })
 uguale('e la tappa nuova non nasce in pausa', await veli(), 0)
