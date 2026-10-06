@@ -13,10 +13,8 @@ export default {
   che: 'terra da comprare e una casa da arredare',
   area: 'avventure',
   come: 'fare',
+  copertina: { fondo: '#9bd46a', disegno: '#c89b5a', scena: 'colline' },
   tappe: 0,
-
-  // Ha preso il posto della cameretta (tolta, salvataggi compresi): il money pit dev'essere uno solo.
-  tinta: '#f4ecc8',
 
   // Un posto, non un'estremità: piccoli la farebbe sparire ai bambini di nove anni (le partenze la spengono).
   posto: true,

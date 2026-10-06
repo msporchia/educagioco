@@ -10,8 +10,8 @@ export default {
   che: 'programmare con funzioni e variabili',
   area: 'logica',
   come: 'pensare',
+  copertina: { fondo: '#f6b93b', disegno: '#d9952a', scena: 'mattoni' },
   tappe: QUANTE_TAPPE,
-  tinta: '#f3e3d3',
   grandi: true,
   perMerito: true, // vedi docs/costruttore/campagna.md
 

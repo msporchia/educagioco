@@ -11,8 +11,8 @@ export default {
   che: 'rimettere in fila una storia',
   area: 'logica',
   come: 'pensare',
+  copertina: { fondo: '#f59dbf', disegno: '#e47aa3', scena: 'bolle' },
   tappe: QUANTE_TAPPE,
-  tinta: '#e7f5e0',
   piccoli: true,
 
   riassunto(av = { tappa: 0, stelle: {} }) {

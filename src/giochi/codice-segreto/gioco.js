@@ -21,8 +21,8 @@ export default {
   che: 'dedurre il codice dagli indizi',
   area: 'logica',
   come: 'pensare',
+  copertina: { fondo: '#3c4651', disegno: '#566472', scena: 'griglia' },
   tappe: QUANTE_TAPPE,
-  tinta: '#f7ecd6',
   senzaFine: SENZA_FINE,
 
   riassunto(av = { tappa: 0, libera: false, stelle: {} }) {

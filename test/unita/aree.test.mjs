@@ -28,6 +28,7 @@
 import { GIOCHI } from '../../src/data/giochi.js'
 import { AREE, MODI, CHIAVI_AREE } from '../../src/data/aree.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { SCENE } from '../../src/components/home/scene.js'
 
 /* ── ogni gioco si dichiara ── */
 const senzaArea = GIOCHI.filter(g => !g.area).map(g => g.chiave)
@@ -68,5 +69,10 @@ controlla('ci sono almeno quattro aree, che è quanto serve per spezzare la fila
 const perArea = AREE.map(a =>
   `${a.nome} ${GIOCHI.filter(g => g.area === a.chiave).length}`).join(' · ')
 nota(`${GIOCHI.length} giochi in ${AREE.length} aree — ${perArea}`)
+
+/* ── la copertina del carosello (docs/core/home.md): senza, il gioco esce grigio e nessuno lo nota ── */
+const senzaCopertina = GIOCHI.filter(g => !g.copertina || !/^#[0-9a-f]{6}$/i.test(g.copertina.fondo || '')
+  || !/^#[0-9a-f]{6}$/i.test(g.copertina.disegno || '') || !SCENE[g.copertina.scena]).map(g => g.chiave)
+uguale('ogni gioco ha una copertina con fondo, disegno e una scena che esiste', senzaCopertina.join(',') || '—', '—')
 
 riassunto('le aree e i modi di giocare')

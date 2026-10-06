@@ -16,6 +16,7 @@ export default {
   che: 'parole, frasi e un libro in inglese',
   area: 'parole',
   come: 'domande',
+  copertina: { fondo: '#4d8de0', disegno: '#2f6fc4', scena: 'onde' },
   tappe: TAPPE.length,
   // niente `grandi`: il primo mondo è la prima elementare (portata 25), e chi
   // la carta la vede lo decide la portata delle tappe, come per gli altri giochi

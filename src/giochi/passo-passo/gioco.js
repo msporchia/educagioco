@@ -20,8 +20,8 @@ export default {
   che: 'dare gli ordini in fila',
   area: 'logica',
   come: 'pensare',
+  copertina: { fondo: '#8fd3b4', disegno: '#6cbf99', scena: 'colline' },
   tappe: QUANTE_TAPPE,
-  tinta: '#e6f4d7',
   senzaFine: SENZA_FINE,
 
   piccoli: true,

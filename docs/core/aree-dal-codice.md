@@ -1,8 +1,8 @@
 # Perché `area` e `come` sono due campi separati (dal codice di `data/aree.js`)
 
 `area` è *di cosa parla* un gioco (numeri, parole, ragionare, avventure):
-poche categorie grosse per spezzare la home in blocchi che si saltano con
-un pollice, non per catalogare per materia. `come` è *che tipo di attività*
+poche categorie grosse che danno l'ordine al carosello della home e il
+colore alle icone del suo indice, non per catalogare per materia. `come` è *che tipo di attività*
 è (domande, pensare, riflessi, strategia, con le mani) e non si raggruppa
 con l'area: due giochi di numeri possono chiedere cose oppostissime (gli
 asteroidi sono domande a raffica, la bancarella è contare con calma).

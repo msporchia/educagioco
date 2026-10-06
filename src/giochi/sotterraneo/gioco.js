@@ -33,6 +33,7 @@ export default {
   che: 'un posto da girare, dove tutto ha un prezzo',
   area: 'avventure',
   come: 'domande',
+  copertina: { fondo: '#6b5443', disegno: '#47372b', scena: 'grotta' },
   /* ── LE DOMANDE QUI SONO QUELLE DEI MODULI DI QUIZ ──
      Non «questo gioco fa domande» — le fa anche Conta gli animali, ma
      sono sue — bensì **il pedaggio passa da `src/quiz/`**, cioè dal
@@ -51,10 +52,6 @@ export default {
      quello che cambia è che adesso qualcuno ci gioca, che è l'unico modo
      per sapere se quei numeri sono giusti. Un gioco chiuso in un cancello
      non riceve mai la sola prova che conta. */
-  /* chiara anche se il gioco è notturno: in home il testo è blu scuro
-     per tutti, e una carta color caverna lo renderebbe illeggibile */
-  tinta: '#dfe4f2',
-
   /* La riga sotto il nome in home: la scrive il gioco perché è il gioco
      a sapere cosa vuol dire il suo avanzamento. Riceve il record di
      `src/giochi/campagne.js` e non se lo va a prendere, così resta una

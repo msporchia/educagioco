@@ -18,8 +18,8 @@ export default {
   che: 'litri, chili e metri',
   area: 'numeri',
   come: 'fare',
+  copertina: { fondo: '#7d5bb5', disegno: '#9e80d1', scena: 'bolle' },
   tappe: QUANTE_TAPPE,
-  tinta: '#e9e0f7',
   grandi: true,
   serve: ['misure', 'conversioni'],
 

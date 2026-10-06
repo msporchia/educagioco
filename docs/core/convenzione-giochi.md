@@ -82,8 +82,8 @@ di import è un guasto che si presenta mesi dopo.
 `test/unita/aree.test.mjs` è rosso se `area` o `come` mancano o citano una
 chiave che non esiste.
 
-Facoltativi: `tinta` (lo sfondo della carta: i giochi nuovi non hanno una
-riga di CSS dedicata) e le bandierine della scala d'età, che non sono
+Facoltativi: `copertina` (il disegno nel carosello della home,
+[home.md](home.md#le-copertine)) e le bandierine della scala d'età, che non sono
 interruttori ma le legge `src/data/partenze.js` quando si aggiunge un
 bambino:
 
