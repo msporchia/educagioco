@@ -42,6 +42,7 @@ import { Fattoria } from '../src/giochi/fattoria/motore/fattoria.js'
 import { PRIMA, CELLE } from '../src/giochi/fattoria/dati/mondo.js'
 import { PER_COLTURA, PER_RICETTA, MINUTO } from '../src/giochi/fattoria/dati/coltivazioni.js'
 import { sogliaDi } from '../src/giochi/fattoria/dati/livelli.js'
+import { FILA_ATTUALE } from '../src/giochi/costruttore/dati/campagna.js'
 
 const LIVELLO_FOTO = 10
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -244,6 +245,15 @@ function unaDomanda (chiave) {
 const NOVE_ANNI = p => { p.settings.eta = 9; return p }
 // sette anni: l'età di chi gioca la prima isola dell'inglese
 const SETTE_ANNI = p => { p.settings.eta = 7; return p }
+/* La scheda del costruttore a metà strada: due capitoli finiti (una stella
+   sola dove si è vista la soluzione), il robot al primo led del terzo, e
+   coi lucchetti: si vedono i led spenti e il rame che si ferma al robot. */
+const SCHEDA_A_META = p => {
+  p.settings = { ...p.settings, eta: 10, tuttoAperto: false }
+  const stelle = Object.fromEntries(Array.from({ length: 11 }, (_, i) => [i, i === 2 || i === 8 ? 1 : 2]))
+  p.campagne = { ...p.campagne, costruttore: { tappa: 11, libera: false, stelle, cfg: { fila: FILA_ATTUALE } } }
+  return p
+}
 /* L'inglese fotografato mentre si sbaglia: è lì che si vede quello che il
    gioco insegna (il perché, la frase giusta, «Si fa così»). «Che cos'è?» è
    già vinta, così si entra dritti nelle frasi senza la pagina del concetto,
@@ -296,6 +306,10 @@ const RICETTE = [
     passi: [['[data-tappa="prima-che-cose"]', 2600], sbagliaUnaFrase] },
   { file: 'spagnolo-gioco', dove: 'spagnolo', attesa: '.mappa',
     passi: [['.tappa:not(.chiusa)', 1600]] },
+
+  /* la scheda del robot: si apre scorsa fino al robot (docs/costruttore/scheda.md) */
+  { file: 'costruttore-scheda', dove: 'costruttore', attesa: '[data-scheda-robot] [data-robot]', profilo: SCHEDA_A_META,
+    passi: [page => page.waitForTimeout(900)] },
 
   { file: 'castello-mappa', dove: 'torri', attesa: '.tappe' },
   /* Il castello va giocato per davvero prima di fotografarlo: appena

@@ -8,12 +8,13 @@
    è la SOLUZIONE dichiarata del livello (`LIVELLI[…].soluzione`).
 
    La tappa si sceglie per **chiave stabile** (`chiave: 'tempio'`), non
-   per posizione: `Mappa.vue` mette l'indice vero in `[data-livello]`,
-   quindi il click resta valido anche se la fila si allunga; se la
-   chiave sparisse, `INDICE` diventa -1 e la clip si ferma sulla mappa.
+   per posizione: la scheda mette l'indice vero sul led in `[data-livello]`,
+   quindi il tocco resta valido anche se la fila si allunga; se la
+   chiave sparisse, `INDICE` diventa -1 e la clip si ferma sulla scheda.
 
-   Dipende da: `.cst-livello` (mappa pronta), `[data-livello]` (aprire
-   per indice), `.cst-cantiere` (livello montato), `[data-azione="via"]`
+   Dipende da: `[data-scheda-robot] [data-livello]` (scheda pronta, e il
+   led che apre il fumetto), `[data-fumetto-per] [data-azione="costruisci"]`
+   (aprire il livello), `.cst-cantiere` (livello montato), `[data-azione="via"]`
    e `[data-fine="livello"]` (velo di vittoria). Se uno di questi cambia
    forma, è qui che va aggiornata la ricetta. */
 import { LIVELLI } from '../../src/giochi/costruttore/dati/livelli.js'
@@ -31,7 +32,7 @@ async function seminaProgramma (page) {
     try { localStorage.setItem('costruttore:g1', JSON.stringify(a)) } catch (e) { /* lo dirà lo scatto */ }
   }, ARCHIVIO)
   await page.reload()
-  await page.waitForSelector('.cst-livello', { timeout: 12000 })
+  await page.waitForSelector('[data-scheda-robot] [data-livello]', { timeout: 12000 })
 }
 
 /* apre il cantiere per indice, e aspetta che l'editor sia montato col
@@ -39,6 +40,7 @@ async function seminaProgramma (page) {
 async function apriIlCantiere (page) {
   if (INDICE < 0) return
   await page.click(`[data-livello="${INDICE}"]`, { timeout: 6000 })
+  await page.click(`[data-fumetto-per="${INDICE}"] [data-azione="costruisci"]`, { timeout: 6000 })
   await page.waitForSelector('.cst-cantiere', { timeout: 8000 })
   await page.waitForTimeout(400)
 }
@@ -49,7 +51,7 @@ async function apriIlCantiere (page) {
 const PRIMA_COLONNA = 3800
 
 export default {
-  file: 'clip-costruttore', dove: 'costruttore', attesa: '.cst-livello',
+  file: 'clip-costruttore', dove: 'costruttore', attesa: '[data-scheda-robot] [data-livello]',
   passi: [seminaProgramma, apriIlCantiere],
   clip: {
     // prima colonna a passo normale (si legge il progetto), poi 🚀 fino al velo
