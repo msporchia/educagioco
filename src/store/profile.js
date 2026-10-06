@@ -495,7 +495,7 @@ export function accendiGioco(chiave, si) {
 /* ── «TIENILO COMUNQUE» ──
    `true` scritto per esteso è una cosa che prima non si poteva dire.
    Acceso è l'assenza — quindi `accendiGioco(k, true)` cancella la voce
-   e lascia decidere all'età — ma l'età a volte sbaglia: il Dungeon
+   e lascia decidere all'età — ma l'età a volte sbaglia: il sotterraneo
    dichiarato dai sette anni e un bambino di sei che ci gioca col
    fratello, oppure il contrario, un gioco «già passato» che in casa si
    apre ancora. Da qui si può fissare l'una o l'altra cosa, e

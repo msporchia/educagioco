@@ -37,7 +37,6 @@ import { SCALETTA } from '../../src/data/asteroidi.js'
 import { CAMPAGNA as CONTA } from '../../src/giochi/conta/dati/campagna.js'
 import { CAMPAGNA as PRIMA_DOPO } from '../../src/giochi/prima-dopo/dati/campagna.js'
 import { CAMPAGNA as CODICE } from '../../src/giochi/codice-segreto/dati/campagna.js'
-import { CAMPAGNA as DUNGEON } from '../../src/giochi/dungeon/dati/campagna.js'
 import { CAMPAGNA as SURVIVORS } from '../../src/giochi/survivors/dati/campagna.js'
 import { CAMPAGNA as SOTTERRANEO } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { CAMPAGNA as PASSO_PASSO } from '../../src/giochi/passo-passo/dati/campagna.js'
@@ -105,7 +104,7 @@ uguale('e un gioco tutto sopra non si offre ancora',
 
 const CAMPAGNE = [
   ['conta gli animali', CONTA], ['prima e dopo', PRIMA_DOPO],
-  ['codice segreto', CODICE], ['dungeon', DUNGEON], ['survivors', SURVIVORS],
+  ['codice segreto', CODICE], ['survivors', SURVIVORS],
   ['il sotterraneo', SOTTERRANEO],
   ['passo passo', PASSO_PASSO], ['il costruttore', COSTRUTTORE],
   ['asteroidi', SCALETTA.map(v => v.T)], ['tabelline', TABELLINE], ['calcolo a mente', STAZIONI],

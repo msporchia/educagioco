@@ -22,10 +22,9 @@ apre.
 | ⛲ una fonte | una domanda, e ti ridà vita |
 | 🏪 un mercante | niente domande: qui si **spende** quello che le domande hanno fruttato |
 
-Non è [il Dungeon](../dungeon/presentazione.md) e non lo sostituisce: quello
-è un gioco a carte, un bivio alla volta; questo è un posto. Fanno cose
-diverse con gli stessi esercizi, e se un giorno se ne terrà uno solo lo
-diranno i bambini.
+Fino al 6 ottobre 2026 accanto c'era il Dungeon, un gioco a carte con un
+bivio alla volta: gli stessi esercizi, ma in un diagramma invece che in un
+posto. Se ne è tenuto uno solo, ed è questo.
 
 ## L'esercizio è la chiave, la spada e il piede di porco
 

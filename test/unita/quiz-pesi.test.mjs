@@ -84,7 +84,7 @@ controlla('a due bande di distanza è trascurabile', pesoDi(50 - 2 * BANDA, 50) 
 
 /* ═══════════ mille tiri per ogni difficoltà ═══════════
    Le difficoltà sono quelle vere: le tre fasce delle carte di
-   Survivors, più gli estremi della rampa del dungeon. */
+   Survivors, più gli estremi della rampa del sotterraneo. */
 const ETA = [
   ['chi comincia adesso', 5],
   ['prima o seconda', 6.5],

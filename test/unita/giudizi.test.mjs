@@ -23,7 +23,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto }
 
 const voce = (id, verdetto = 'difficile', extra = {}) => ({
   id, verdetto, quando: '2026-08-15T18:22:00.000Z',
-  chi: 'Melody', gioco: 'dungeon', modulo: 'ortografia', grado: 3,
+  chi: 'Melody', gioco: 'sotterraneo', modulo: 'ortografia', grado: 3,
   chiave: 'orto:gn', tempo: 12.4, esito: 'sbagliata',
   testo: 'Quale parola si scrive con GN?', ...extra,
 })

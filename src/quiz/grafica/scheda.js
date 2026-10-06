@@ -1,4 +1,4 @@
-// il gemello imperativo di Domanda.vue: `await chiedi(modulo, { grado })`, per giochi fuori Vue (Survivors, dungeon, castello). Il CSS è iniettato come stringa una volta sola: il build resta un HTML unico.
+// il gemello imperativo di Domanda.vue: `await chiedi(modulo, { grado })`, per giochi fuori Vue (Survivors, sotterraneo, castello). Il CSS è iniettato come stringa una volta sola: il build resta un HTML unico.
 import { dipingi } from './riquadro.js'
 import { sorteQualunque } from '../nucleo/sorte.js'
 import { evidenziando } from '../nucleo/domanda.js'

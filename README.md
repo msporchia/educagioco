@@ -66,8 +66,8 @@ sbaglio si legge il perché, e come si fa.
 <table>
 <tr>
 <td align="center" width="33%" valign="top"><img src="docs/img/clip-sotterraneo.webp" width="220"><br><b><a href="docs/sotterraneo/presentazione.md">🗺️ Il sotterraneo</a></b><br>Porte, forzieri e mostri al buio: ogni cosa che vale costa una risposta.</td>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-dungeon.webp" width="220"><br><b><a href="docs/dungeon/presentazione.md">⚔️ Il Dungeon</a></b><br>Di stanza in stanza, e ogni risposta giusta porta bottino.</td>
 <td align="center" width="33%" valign="top"><img src="docs/img/clip-survivors.webp" width="220"><br><b><a href="docs/survivors/presentazione.md">🏹 Survivors</a></b><br>Sopravvivenza a ondate: la carta più forte costa la domanda più tosta.</td>
+<td width="33%"></td>
 </tr>
 </table>
 

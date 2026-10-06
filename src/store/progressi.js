@@ -158,6 +158,12 @@ export const XP_AREA = {
      fa più salire. */
   corsa: m => m.tot('corsaCancelli') + m.tot('corsaLibri') * 4
               + m.stelleDi('corsa') * 5 + m.tappeDi('corsa') * 40,
+  /* Il Dungeon è stato tolto (6 ottobre 2026): il sotterraneo fa lo stesso
+     mestiere meglio. Come la corsa, le medaglie se ne vanno e l'esperienza
+     resta, con la formula del suo manifesto; `campagne.dungeon` e i
+     contatori `dungeon*` restano nel profilo apposta. */
+  dungeon: m => m.tot('dungeonStanze') * 2 + m.tot('dungeonBoss') * 15
+                + m.stelleDi('dungeon') * 5 + m.tappeDi('dungeon') * 40,
   /* i giochi nuovi (`src/giochi/`) portano la loro formula nel manifesto:
      qui non c'è una riga per ognuno, e aggiungerne uno non si fa più qui */
   ...XP_GIOCHI,
@@ -318,11 +324,12 @@ export function misure(p, now = Date.now()) {
        chi ha l'oro se lo vedrebbe tornare indietro sotto gli occhi.
        Per lo stesso motivo un gioco che se ne va **resta nel conto**:
        `pasti` sono gli animali della cameretta, che non c'è più, e il
-       contatore è rimasto apposta (`sgomberaLaCameretta`). */
+       contatore è rimasto apposta (`sgomberaLaCameretta`); così
+       `dungeonStanze`, il Dungeon tolto. */
     giochiProvati: () => {
       const t = p.totals || {}
       return [t.math > 0, t.en > 0 || t.verbi > 0, t.es > 0, t.torri > 0, t.pasti > 0,
-              t.clienti > 0, t.missioni > 0]
+              t.clienti > 0, t.missioni > 0, t.dungeonStanze > 0]
         .filter(Boolean).length + giochiNuoviProvati(m)
     },
   }

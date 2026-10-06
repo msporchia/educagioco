@@ -432,8 +432,8 @@ await init()
 await creaGiocatore('Piccola', true, 'prima')
 uguale('chi parte da «prima o seconda» ha sei anni e mezzo', etaDelBambino(), 6.5)
 controlla('e il castello non ce l\'ha in home', !giocoAcceso('torri'))
-controlla('ma il dungeon sì: le domande adesso sanno farsi piccole',
-  giocoAcceso('dungeon'))
+controlla('ma il sotterraneo sì: le domande adesso sanno farsi piccole',
+  giocoAcceso('sotterraneo'))
 controlla('e le moltiplicazioni restano fuori dalle domande',
   saperiSpenti().includes('moltiplicazioni'))
 
@@ -498,19 +498,19 @@ uguale('e un numero assurdo non entra', etaDelBambino(), 7)
    quindi un `true` che finisse cancellato per abitudine lascerebbe il
    gioco a decidere all'età senza che nessuno se ne accorga. */
 {
-  fissaGioco('dungeon', 'no')
-  uguale('spento si scrive false', state.profile.settings.giochi.dungeon, false)
-  controlla('e il gioco è spento', !giocoAcceso('dungeon'))
+  fissaGioco('sotterraneo', 'no')
+  uguale('spento si scrive false', state.profile.settings.giochi.sotterraneo, false)
+  controlla('e il gioco è spento', !giocoAcceso('sotterraneo'))
 
-  fissaGioco('dungeon', 'si')
-  uguale('tenuto comunque si scrive true', state.profile.settings.giochi.dungeon, true)
-  controlla('e si riconosce', giocoForzato('dungeon'))
-  controlla('un gioco forzato è anche acceso', giocoAcceso('dungeon'))
+  fissaGioco('sotterraneo', 'si')
+  uguale('tenuto comunque si scrive true', state.profile.settings.giochi.sotterraneo, true)
+  controlla('e si riconosce', giocoForzato('sotterraneo'))
+  controlla('un gioco forzato è anche acceso', giocoAcceso('sotterraneo'))
 
-  fissaGioco('dungeon', 'difetto')
+  fissaGioco('sotterraneo', 'difetto')
   uguale('e «come dice l\'età» non lascia nessuna voce',
-         state.profile.settings.giochi.dungeon, undefined)
-  controlla('né una forzatura', !giocoForzato('dungeon'))
+         state.profile.settings.giochi.sotterraneo, undefined)
+  controlla('né una forzatura', !giocoForzato('sotterraneo'))
 }
 
 /* ── UN GIOCO CHE IL PROFILO NON NOMINA ──
@@ -598,7 +598,7 @@ uguale('e un numero assurdo non entra', etaDelBambino(), 7)
   spostaLEta(8)
   const monete = state.profile.coins
   fissaGioco('torri', 'no')
-  fissaGioco('dungeon', 'si')
+  fissaGioco('sotterraneo', 'si')
   ritocca('math:x7', 2)
   const sapere = SAPERI.map(x => x.chiave).find(c => !saperiSpenti().includes(c))
   accendiSapere(sapere, false)
@@ -609,7 +609,7 @@ uguale('e un numero assurdo non entra', etaDelBambino(), 7)
   uguale('coi ritocchi', mossa.perde.ritocchi, 1)
   uguale('non resta nessun ritocco', ritoccoSapere('math:x7'), 0)
   uguale('né il gioco spento a mano', state.profile.settings.giochi.torri, undefined)
-  uguale('né quello tenuto a mano', state.profile.settings.giochi.dungeon, undefined)
+  uguale('né quello tenuto a mano', state.profile.settings.giochi.sotterraneo, undefined)
   controlla('il pezzo di scuola torna acceso', !saperiSpenti().includes(sapere))
   uguale('l\'età resta quella che era', etaDelBambino(), 8)
   uguale('e le monete non si toccano', state.profile.coins, monete)

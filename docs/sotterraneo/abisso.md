@@ -82,8 +82,8 @@ dif  = base.dif                       ferma per sempre
 ```
 
 **Il costo di un mostro in domande è una costante; quello che cresce è il
-prezzo di restare indietro.** È il mestiere che il Dungeon fa con `forzaDi` e
-`gradoBottino` (`giochi/dungeon/dati/mostri.js`).
+prezzo di restare indietro.** Era il mestiere che il Dungeon, tolto il 6
+ottobre 2026, faceva con `forzaDi` e `gradoBottino`.
 
 Provato con l'attacco a `floor(p / 2)`: ci si fermava fra il settimo e
 l'undicesimo piano, sempre, perché i mostri **fanno troppo male** — al piano

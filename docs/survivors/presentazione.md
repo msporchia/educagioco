@@ -59,12 +59,12 @@ Tutte le materie: italiano, matematica, spazio, tempo, logica.
 
 La difficoltà non dipende da quanto è lunga la partita ma **da cosa scegli**:
 quale carta, e quanto l'hai già cresciuta. Nel
-[Dungeon](../dungeon/presentazione.md) invece dipende da quanto si è scesi —
+[sotterraneo](../sotterraneo/presentazione.md) invece dipende da quanto si è scesi —
 stesse domande, due modi di dosarle.
 
 ## Cosa allena
 
-Lo stesso contenuto del Dungeon, con un'abitudine mentale diversa:
+Lo stesso contenuto del sotterraneo, con un'abitudine mentale diversa:
 **valutare quanto si è sicuri di sé prima di impegnarsi**. È metacognizione
 mascherata da gioco d'azione.
 

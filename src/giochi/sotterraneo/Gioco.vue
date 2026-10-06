@@ -1,6 +1,6 @@
 <script setup>
 // Il coordinatore: un sotterraneo che si cammina col dito, un posto
-// invece che un diagramma (non è il Dungeon a bivi, non lo sostituisce).
+// invece che un diagramma.
 // L'unico file che sa che esistono monete, avanzamento salvato e quiz: le
 // regole stanno in motore/, i numeri in dati/, il disegno in scena/, le
 // schermate in viste/. `corsa.chiesta` dice solo quanto dev'essere

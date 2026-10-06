@@ -1,4 +1,4 @@
-// Il corridoio: la stanza di riferimento del dungeon, dove si è tarato tutto il
+// Il corridoio: la stanza di riferimento degli ambienti, dove si è tarato tutto il
 // resto (scala della muratura, distanza delle torce, buio). Vedi docs/core/grafica.md.
 import { pietra, mattoni, roccia, lastre, mattonelle } from '../materiali/pattern.js'
 

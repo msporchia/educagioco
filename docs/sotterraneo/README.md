@@ -13,7 +13,6 @@ senza fondo sotto le sei discese. Il codice sta in `src/giochi/sotterraneo/`.
 
 Vedi anche: [../core/grafica.md](../core/grafica.md) (tela, atlante, tessere),
 [../core/interfaccia.md](../core/interfaccia.md) (la pausa),
-[../dungeon/README.md](../dungeon/README.md) (l'altro gioco a discese),
 `strumenti/sprite/FORMATO.md` (i foglietti degli sprite),
 `poc/sotterraneo.html` e `poc/sotterraneo.md` (i prototipi: il posto dove
 provare un'idea prima di metterla nel gioco),

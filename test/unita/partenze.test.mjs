@@ -288,14 +288,14 @@ const difettiDi = anni => eccezioniPerEta(anni)
    È la promessa che rende la manopola usabile: da 8 a 8,5 si sposta la
    mira delle domande e tutto quello che il grande ha sistemato a mano
    resta dov'era. */
-const dentro = spostandoLEta({ da: 8, a: 8.5, giochi: { dungeon: false }, sa: {},
+const dentro = spostandoLEta({ da: 8, a: 8.5, giochi: { sotterraneo: false }, sa: {},
                                ritocchi: { 'math:x7': 1 } })
 uguale('mezzo anno nella stessa fascia non riscrive', dentro.riscrive, false)
 uguale('non chiede niente', dentro.chiede, false)
 uguale('e non porta via nessun gioco', dentro.perde.giochi, 0)
 uguale('nessun sapere', dentro.perde.sa, 0)
 uguale('nessun ritocco', dentro.perde.ritocchi, 0)
-uguale('i giochi restano quelli di prima', dentro.giochi.dungeon, false)
+uguale('i giochi restano quelli di prima', dentro.giochi.sotterraneo, false)
 
 /* ── cambiando fascia, chi stava sui difetti non perde niente ──
    Non c'è niente di suo da difendere: si riscrive e si va dritti, e il
@@ -318,7 +318,7 @@ uguale('né saperi', suiDifetti.perde.sa, 0)
    saperi la terza elementare spegne oggi. */
 const sapereAcceso = CHIAVI_SAPERI.find(c => difettiDi(8).sa[c] !== false)
 const aMano = {
-  giochi: { ...difettiDi(8).giochi, dungeon: false },
+  giochi: { ...difettiDi(8).giochi, sotterraneo: false },
   sa: { ...difettiDi(8).sa, [sapereAcceso]: false },
   ritocchi: { 'math:x7': 1, 'orologio:mezze': -1 },
 }
@@ -376,7 +376,7 @@ nota('in home con «prima o seconda»:', accesiPrima.join(', '))
 
   const sporco = rimettendoLEta({
     eta: 8,
-    giochi: { ...difettiDi(8).giochi, torri: false, dungeon: true },
+    giochi: { ...difettiDi(8).giochi, torri: false, sotterraneo: true },
     /* uno che a otto anni è acceso di suo: spegnere quello che l'età
        spegneva già non è una differenza, e infatti non si conta */
     sa: { ...difettiDi(8).sa, [sapereAcceso]: false },

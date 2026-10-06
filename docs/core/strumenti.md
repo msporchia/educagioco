@@ -21,7 +21,7 @@ Rifà le immagini di `docs/img/`, che sono versionate (README e pagine dei
 giochi). Non c'entrano con gli scatti dei test (`test/scatti/`, ignorati):
 quelli servono a guardare un difetto, questi a far vedere il gioco.
 
-- `npm run scatti dungeon` fa solo quelle che contengono «dungeon»;
+- `npm run scatti castello` fa solo quelle che contengono «castello»;
   `npm run scatti clip` solo le clip animate del README
   (`docs/img/clip-*.webp`).
 - Il profilo è **finto e pieno** (monete, tappe aperte): un gioco

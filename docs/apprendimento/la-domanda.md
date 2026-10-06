@@ -3,7 +3,7 @@
 Cosa succede dopo una risposta: il tempo per leggere, la fretta, la
 spiegazione, e cosa fa il gioco quando una domanda è un muro. Le regole pure stanno in
 `src/quiz/nucleo/domanda.js`, la messa in scena in `src/quiz/Domanda.vue`
-(una sola per Survivors, Dungeon e sotterraneo).
+(una sola per Survivors e sotterraneo).
 
 ## Dopo uno sbaglio: il perché E come si fa
 

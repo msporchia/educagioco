@@ -2,8 +2,8 @@
 
 # ❓ Le domande di tutte le materie
 
-Alcuni giochi — [il Dungeon](../dungeon/presentazione.md),
-[Survivors](../survivors/presentazione.md) e [il sotterraneo](../sotterraneo/presentazione.md) — non
+Alcuni giochi — [Survivors](../survivors/presentazione.md) e
+[il sotterraneo](../sotterraneo/presentazione.md) — non
 hanno un contenuto scolastico proprio: chiedono **una domanda** e basta. Le
 domande arrivano da un magazzino comune, e questa pagina spiega cosa c'è
 dentro.
@@ -50,7 +50,7 @@ di dieci anni arrivano i pallini da contare.
 
 Giochi diversissimi usano la stessa scorta in modi opposti:
 
-- nel **Dungeon** la durezza dipende da quanto si è scesi;
+- nel **sotterraneo** la durezza dipende da quanto si è scesi;
 - in **Survivors** la sceglie il bambino, perché ogni carta ha il suo prezzo
   in difficoltà;
 

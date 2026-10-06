@@ -11,7 +11,7 @@ import { persona } from '../../../grafica/corpo.js'
 import { PERSONE, ginocchio } from './persone.js'
 import { COSE } from './cose.js'
 import { LUOGHI, LATO, SUOLO } from './luoghi.js'
-// il gatto è preso in prestito dal cassetto del Generale/dungeon: le
+// il gatto è preso in prestito dal cassetto del Generale: le
 // figure si condividono, le schede di scena no
 import { PITTORI_PERSONE } from '../../../grafica/personaggi/indice.js'
 

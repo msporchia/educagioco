@@ -1,9 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA DOMANDA, TOCCATA COL DITO
 
-   `quiz/Domanda.vue` è una schermata sola usata da cinque posti — il
-   sotterraneo, il Dungeon, la Corsa, Survivors e il banco di prova dei
-   grandi — quindi un suo difetto non è di un gioco: è di tutti. Questo
+   `quiz/Domanda.vue` è una schermata sola usata da tre posti — il
+   sotterraneo, Survivors e il banco di prova dei grandi — quindi un suo difetto non è di un gioco: è di tutti. Questo
    file prova la cosa che nessun test unitario può vedere, perché non è
    logica ma **tempo e dito**.
 

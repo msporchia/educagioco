@@ -8,8 +8,8 @@ tessere.
 
 **Il tetto della resa grafica.** Dove un personaggio è disegnato a poligoni
 e non a sprite (il robot del costruttore, per esempio), è una scelta di
-stile e non un ripiego: altri giochi (il castello, il bestiario del
-dungeon) sono passati agli sprite quando la scena lo chiedeva.
+stile e non un ripiego: altri giochi (il castello, il sotterraneo) sono
+passati agli sprite quando la scena lo chiedeva.
 
 **Chi gioca non disegna.** Una view passa a `tela.disegna()` la lista delle
 cose in scena (`{ che: 'torre', x, y, tipo, lv }`); una figura nuova è una
@@ -35,15 +35,12 @@ entrano energia e prezzi: solo fatti già decisi (`potenziabile: true`).
 - **`corpo.js`** — **lo scheletro**: `persona()` per chi cammina su due
   gambe, `bestia()` per tutti gli altri. Chi lo usa scrive una *scheda di
   dati* e si ritrova ombra, respiro, lampo bianco della botta e
-  ribaltamento da ko senza chiederli. Le schede stanno in due cassetti:
-  - `personaggi/` — il Generale;
-  - `bestiario/` — il dungeon: venti creature viste **grandi e di fronte**,
-    dove la paura la fa la forma e mai il macabro, con l'`ingombro` che le
-    tiene dentro il riquadro.
+  ribaltamento da ko senza chiederli. Le schede stanno in `personaggi/`
+  (il Generale); il cassetto `bestiario/` se n'è andato col Dungeon.
 - **`coriandoli.js`** — la festa. Dentro Vue si usa da `giochi/Festa.vue`,
   non si monta a mano.
 
-**Un mostro del dungeon non è un'emoji.** Le emoji le disegna il telefono:
+**Un mostro non è un'emoji.** Le emoji le disegna il telefono:
 hanno lo stile di Apple in mezzo a uno schermo disegnato a mano, non si
 tingono dell'ambiente e non tremano quando le colpisci.
 
@@ -87,7 +84,7 @@ Per disegnare con fogli di figure invece che coi poligoni:
   cerca allo specchio (`riflessa`, che scambia O/E) prima di tornare
   `null` — un foglio quasi mai disegna tutti e quattro gli angoli.
 - **`bordoOtto` guarda anche le diagonali**, dove `fettaDi` si ferma ai
-  quattro vicini in croce: serve al dungeon, per l'angolo concavo dove
+  quattro vicini in croce: serve ai corridoi, per l'angolo concavo dove
   due corridoi si saldano da dentro. Non tutte le 256 combinazioni di
   otto vicini contano — una diagonale cambia la forma solo se i due lati
   che la affiancano sono entrambi dentro (`angoliInterni`) — ed è la

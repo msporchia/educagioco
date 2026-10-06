@@ -58,5 +58,5 @@ nessun test prende.
   ~400 tocchi.
 - **I 320 ms di finestra cieca** delle domande incatenate (`CIECA` in
   `quiz/Domanda.vue`): la differenza fra un tocco fantasma ingoiato e un
-  tasto che sembra lento la dice solo un dito vero. Riguarda sotterraneo,
-  Dungeon e Survivors insieme.
+  tasto che sembra lento la dice solo un dito vero. Riguarda sotterraneo
+  e Survivors insieme.

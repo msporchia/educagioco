@@ -37,7 +37,7 @@ const registro = voci => page.evaluate(([chi, voci]) => new Promise((ok, ko) => 
 
 await registro([
   { g: 'survivors', s: 25 * MIN },   // a metà
-  { g: 'dungeon', s: 45 * MIN },     // finite
+  { g: 'sotterraneo', s: 45 * MIN },     // finite
   { g: 'conta', s: 25 * MIN },       // a metà: è il gioco che si gioca sotto
 ])
 /* conta tenuto in casa contro l'età, e gli asteroidi consigliati */
@@ -49,13 +49,13 @@ await attendi(page, 400)
 const salvadanaio = k => page.locator(`.carta.gioco[data-gioco="${k}"] [data-salvadanaio]`)
 const segno = async k => (await salvadanaio(k).count()) ? salvadanaio(k).getAttribute('data-salvadanaio') : null
 uguale('Survivors, 25 minuti oggi: salvadanaio a metà', await segno('survivors'), 'meta')
-uguale('il Dungeon, 45 minuti: vuoto', await segno('dungeon'), 'vuoto')
+uguale('il sotterraneo, 45 minuti: vuoto', await segno('sotterraneo'), 'vuoto')
 uguale('gli asteroidi consigliati: ×2', await segno('mate'), 'doppio')
 controlla('e la carta lo scrive', (await salvadanaio('mate').innerText()).includes('🪙×2'))
 controlla('Survivors dice quanto resta a metà',
           /a metà · ancora 15′/.test(await salvadanaio('survivors').innerText()),
           await salvadanaio('survivors').innerText())
-uguale('un gioco non ancora aperto oggi non dice niente', await segno('sotterraneo'), null)
+uguale('un gioco non ancora aperto oggi non dice niente', await segno('codice'), null)
 uguale('la fattoria non paga, e non ha salvadanaio', await segno('fattoria'), null)
 await scatto(page, 'varieta-home')
 
@@ -67,15 +67,15 @@ await page.waitForSelector('.schede', { timeout: 5000 })
 await page.click('.schede button[data-scheda="giochi"]')
 await page.waitForSelector('[data-varieta]', { timeout: 5000 })
 
-uguale('la riga Oggi dice che il Dungeon è finito',
-       await page.locator('[data-varieta-oggi="dungeon"]').getAttribute('data-fase'), 'vuoto')
-controlla('con i minuti', (await page.locator('[data-varieta-oggi="dungeon"]').innerText()).includes('45′'))
-await page.click('[data-varieta-oggi="dungeon"] [data-azione="ridai-tempo"]')
+uguale('la riga Oggi dice che il sotterraneo è finito',
+       await page.locator('[data-varieta-oggi="sotterraneo"]').getAttribute('data-fase'), 'vuoto')
+controlla('con i minuti', (await page.locator('[data-varieta-oggi="sotterraneo"]').innerText()).includes('45′'))
+await page.click('[data-varieta-oggi="sotterraneo"] [data-azione="ridai-tempo"]')
 await attendi(page, 200)
 uguale('«Ridai tempo» lo riporta pieno',
-       await page.locator('[data-varieta-oggi="dungeon"]').getAttribute('data-fase'), 'pieno')
+       await page.locator('[data-varieta-oggi="sotterraneo"]').getAttribute('data-fase'), 'pieno')
 uguale('e il tasto sparisce',
-       await page.locator('[data-varieta-oggi="dungeon"] [data-azione="ridai-tempo"]').count(), 0)
+       await page.locator('[data-varieta-oggi="sotterraneo"] [data-azione="ridai-tempo"]').count(), 0)
 
 await page.click('[data-varieta-soglia="pieno"] [data-varieta-passo="su"]')
 controlla('la soglia sale di cinque minuti',
@@ -92,14 +92,14 @@ uguale('nel profilo: la soglia nuova', v.pieno, 25)
 uguale('Survivors senza tetto', v.giochi?.survivors, 'libero')
 uguale('English consigliato', v.consigliati?.inglese, true)
 uguale('i dormienti accesi', v.dormienti, true)
-controlla('e il tempo ridato al Dungeon', (v.ridato?.s?.dungeon || 0) >= 45 * MIN, JSON.stringify(v.ridato))
+controlla('e il tempo ridato al sotterraneo', (v.ridato?.s?.sotterraneo || 0) >= 45 * MIN, JSON.stringify(v.ridato))
 /* i dormienti accesi non devono accendere tutto: questo bambino gioca da oggi */
 
 await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('.carte .carta.gioco', { timeout: 5000 })
 await attendi(page, 300)
 uguale('in home, Survivors senza tetto non ha più salvadanaio', await segno('survivors'), null)
-uguale('il Dungeon, ridato, non dice niente (è pieno come stamattina)', await segno('dungeon'), null)
+uguale('il sotterraneo, ridato, non dice niente (è pieno come stamattina)', await segno('sotterraneo'), null)
 uguale('English consigliato ha il suo ×2', await segno('inglese'), 'doppio')
 
 /* ── 3. un gioco che paga: Conta, a metà ── */

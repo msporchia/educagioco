@@ -24,7 +24,6 @@ import { TAPPE as GENERALE } from './generale.js'
 import { CAMPAGNA as CONTA } from '../giochi/conta/dati/campagna.js'
 import { CAMPAGNA as PRIMA_DOPO } from '../giochi/prima-dopo/dati/campagna.js'
 import { CAMPAGNA as CODICE } from '../giochi/codice-segreto/dati/campagna.js'
-import { CAMPAGNA as DUNGEON } from '../giochi/dungeon/dati/campagna.js'
 import { CAMPAGNA as SURVIVORS } from '../giochi/survivors/dati/campagna.js'
 import { CAMPAGNA as SOTTERRANEO } from '../giochi/sotterraneo/dati/campagna.js'
 import { CAMPAGNA as PASSO_PASSO } from '../giochi/passo-passo/dati/campagna.js'
@@ -42,7 +41,6 @@ export const TAPPE_DEL_GIOCO = {
   conta: CONTA,
   prima: PRIMA_DOPO,
   codice: CODICE,
-  dungeon: DUNGEON,
   survivors: SURVIVORS,
   sotterraneo: SOTTERRANEO,
   passo: PASSO_PASSO,

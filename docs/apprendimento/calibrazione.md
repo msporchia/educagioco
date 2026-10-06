@@ -10,7 +10,7 @@ perché scelti guardando il proprio gioco.
 | quanto | monete | perché |
 |---|---|---|
 | un asteroide abbattuto, una parola (lingue) | 🪙1 | un colpo d'occhio |
-| una domanda del dungeon o del sotterraneo | 🪙1 | lì la domanda è la mossa: una ogni 5–15 secondi |
+| una domanda del sotterraneo | 🪙1 | lì la domanda è la mossa: una ogni 5–15 secondi |
 | una storia di Prima e dopo rimessa in ordine | 🪙2 | |
 | una domanda vera che ferma il gioco (la carta di Survivors) | 🪙3 | leggere una consegna e scegliere fra quattro: mezzo minuto |
 | un'operazione in colonna senza errori (castello), una dose giusta (pozioni) | 🪙3 | un conto a più passi |
@@ -46,12 +46,12 @@ dose — e non a fine tappa. Quindi:
   a ogni cosa fatta, e il cartello di fine dice il totale e quanto ha
   tolto il salvadanaio.
 
-**Perché la domanda del dungeon vale 1 e quella di Survivors 3.** La
+**Perché la domanda del sotterraneo vale 1 e quella di Survivors 3.** La
 stessa domanda di `src/quiz/` costa lo stesso a leggerla, ma non allo
-stesso ritmo: nel dungeon e nel sotterraneo si risponde a raffica (la
-cantina fa sessanta domande in dieci minuti, una discesa un centinaio in
-venti), e a 🪙3 renderebbero due o tre volte l'ora qui sopra. In Survivors
-la domanda è una sosta, e ce ne sono poche.
+stesso ritmo: nel sotterraneo si risponde a raffica (una discesa fa un
+centinaio di domande in venti minuti), e a 🪙3 renderebbero due o tre
+volte l'ora qui sopra. In Survivors la domanda è una sosta, e ce ne sono
+poche.
 
 **Fuori dalla regola**, e va bene così: i giochi dove la cosa fatta è
 risolvere un livello (Passo passo, il costruttore, il Generale, il Codice
@@ -67,7 +67,6 @@ Il giorno del cambio (settembre 2026), per una tappa tipica giocata bene:
 | asteroidi, pianeta del 5 (21 centri) | 41 la prima volta, 21 rifatta | 21 |
 | castello, il sentiero · il torrione | 1 · 3 (1 rifatta) | fino a 18 · fino a 90 |
 | castello, partita libera fino alla 20ª ondata | 4 | ~3 a conto |
-| dungeon, la cantina · il covo del drago | 3–9 · 10–30 | ~50 · ~90 |
 | sotterraneo, le cantine · il fondo | 10–30 · 34–102 | ~15–20 · ~25–80 |
 | Survivors, il prato · la tana | 3–9 · 10–30 | ~15 · ~45 |
 | spagnolo, tappa 1 · tappa 7 (livello 5) | 10 · 25 | 12 · 24 |
@@ -75,9 +74,9 @@ Il giorno del cambio (settembre 2026), per una tappa tipica giocata bene:
 | pozioni, una tappa da dieci dosi | 30, un terzo rifatta | 30 |
 | Conta, Prima e dopo, bancarella | già a risposta | uguale, e la bancarella non perde più gli ultimi clienti |
 
-Dungeon e castello salgono tanto perché prima erano i deserti: pagavano
-venti minuti di domande o di colonne come due minuti di asteroidi. Adesso
-stanno sull'ora della calibrazione, e il salvadanaio della varietà ne
+Il castello sale tanto perché prima era un deserto: pagava
+venti minuti di colonne come due minuti di asteroidi. Adesso
+sta sull'ora della calibrazione, e il salvadanaio della varietà ne
 taglia il tempo come per tutti.
 
 ## Nessun gioco paga una risposta sbagliata

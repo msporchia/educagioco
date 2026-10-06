@@ -37,7 +37,7 @@
    cella non ancora illuminata non si può mirare: ci si limita a
    camminarci); il secondo, da lì, lo mira davvero e apre lo scontro.
 
-   UNA DOMANDA PER COLPO. Come `dungeon.mjs`: `Domanda.vue` non si
+   UNA DOMANDA PER COLPO. `Domanda.vue` non si
    rimonta da un colpo all'altro, quindi una domanda è «nuova» quando il
    suo tasto giusto (`data-giusta`) non ha ancora nessuno dei tre colori
    (`giusta`/`sbagliata`/`spenta`). Si aspetta che sia nuova, si legge

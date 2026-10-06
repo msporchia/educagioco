@@ -5,7 +5,7 @@
    il mazzo, il ripasso pesa poco (banda stretta, nucleo/bisogno.js). Vedi
    docs/apprendimento/quiz-moduli.md e quiz-livelli.md. */
 
-import { MODULI, perId } from './nucleo/registro.js'
+import { MODULI } from './nucleo/registro.js'
 import { sorteQualunque } from './nucleo/sorte.js'
 import { classiDi, pescaClasse } from './nucleo/classi.js'
 import { ilBisogno } from './memoria.js'
@@ -61,24 +61,5 @@ export function domandaPerGioco({
     icona: modulo.icona,
     materia: modulo.materia,
     grado,
-  }
-}
-
-// comodità per chi vuole una materia per forza (il dungeon con la stanza di matematica): id già deciso
-export function domandaDa(id, { difficolta = 0, sorte = sorteQualunque(),
-                                spenti = saperiSpenti(), bisogno = ilBisogno(),
-                                regole = regoleDomande() } = {}) {
-  const modulo = perId(id)
-  if (!modulo || !modulo.gradiLiberi(spenti).length)
-    return domandaPerGioco({ difficolta, sorte, spenti, bisogno, regole })
-  // l'età qui NON taglia: chi chiede un modulo per nome lo vuole, meglio il suo grado più vicino che la materia sbagliata
-  const { grado } = pescaClasse(sorte,
-    classiAmmesse({ moduli: [id], spenti, difficolta, bisogno,
-                    regole: regole ? { ...regole, eta: null } : null }))
-  return {
-    domanda: modulo.chiedi(grado, sorte, spenti, bisogno, regole),
-    pittori: modulo.pittori,
-    modulo: modulo.id, nome: modulo.nome, icona: modulo.icona,
-    materia: modulo.materia, grado,
   }
 }

@@ -59,7 +59,7 @@ dice *non chiede di leggere e non si può perdere*. «dog» è facile e a cinque
 anni non si sa leggere; Survivors sta nella portata di un bambino di cinque
 anni e si perde. Misurato: `restaQualcosa` chiede se esiste *una* tappa
 nella mira, e una campagna lunga ne ha sempre una — senza i flag a cinque
-anni comparirebbero English, Spagnolo, Asteroidi, Dungeon e Survivors.
+anni comparirebbero English, Spagnolo, Asteroidi e Survivors.
 Nell'altro verso la portata basta quasi sempre: sopra i sette anni «Conta
 gli animali» sparisce da sé. Le partenze scrivono alla creazione, la
 portata filtra in continuo, e non si contraddicono.
@@ -73,11 +73,10 @@ conto sta in `src/data/portata.js`, il ponte coi giochi in
 `apertaQui`). Il caso che l'ha fatta nascere: a nove anni «2×2» non ha
 senso, a sei «7×8» nemmeno, a otto vanno bene tutti e due.
 
-- **Si chiama `portata` e non `livello`** perché una tappa del Dungeon ha
-  già `livello`, la potenza a cui si scende
-  (`giochi/dungeon/motore/corsa.js`): scriverci 0–100 non dava errori,
-  rendeva solo i mostri imbattibili. Un nome nuovo si cerca **anche nei
-  motori**.
+- **Si chiama `portata` e non `livello`** perché una tappa del Dungeon
+  (tolto il 6 ottobre 2026) aveva già `livello`, la potenza a cui si
+  scendeva: scriverci 0–100 non dava errori, rendeva solo i mostri
+  imbattibili. Un nome nuovo si cerca **anche nei motori**.
 - **La larghezza è la mira, non l'ammissione** (`miraDi`: un anno sotto,
   un anno e mezzo sopra; a otto anni `[38, 69]`). Nei quiz il taglio largo
   è ammorbidito dalla campana (`pesoDi`); in una campagna non c'è un «2%

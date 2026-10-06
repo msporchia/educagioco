@@ -71,8 +71,8 @@
 
    PERCHÉ NON C'È MAI UNA DOMANDA RISPOSTA MALE. Le carte di
    potenziamento (`.sv-carte`) portano anch'esse `quiz/Domanda.vue`, con
-   la stessa attesa lunga di ogni domanda sbagliata (vedi `dungeon.mjs`
-   per come la si aggirerebbe col `page.clock`). Qui però non serve
+   la stessa attesa lunga di ogni domanda sbagliata (la si aggirerebbe
+   col `page.clock`). Qui però non serve
    aggirare niente: come nota `test/integrazione/survivors.test.mjs`,
    sbagliare una carta «non toglie niente» — niente cuori, niente
    game over, solo un potenziamento in meno. Ma nel filmato uno sbaglio

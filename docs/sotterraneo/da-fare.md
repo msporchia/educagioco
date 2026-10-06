@@ -70,8 +70,8 @@ il telefono in mano.
   ferma non è mai stata vista a schermo — pilotare l'esplorazione da fuori
   non ha mai portato a un incontro (~400 tocchi in tre tentativi). Guardare
   anche **quanto ci mette un incontro a capitare**, che è un dato sospetto.
-- **Le domande che si incatenano** (riguarda anche Dungeon, Corsa e
-  Survivors: tutti passano da `quiz/Domanda.vue`): il componente si azzera
+- **Le domande che si incatenano** (riguarda anche Survivors:
+  passano tutti e due da `quiz/Domanda.vue`): il componente si azzera
   da sé fra una domanda e l'altra, ma i **320 ms di finestra cieca** al
   montaggio vanno sentiti col dito — sono la differenza fra un tocco fantasma
   ingoiato e un tasto che sembra lento.

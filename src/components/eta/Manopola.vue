@@ -199,7 +199,7 @@ const quantiQui = computed(() =>
   quadro.value ? quadro.value.giochi.filter(g => g.stato === 'qui').length : 0)
 
 const ARTICOLI = ['il', 'lo', 'la', 'i', 'gli', 'le', "l'"]
-// dentro una frase l'articolo va minuscolo, il nome proprio no: «con Survivors, il Dungeon e il sotterraneo»
+// dentro una frase l'articolo va minuscolo, il nome proprio no: «con Survivors e il sotterraneo»
 const inFrase = nome => {
   const [prima, ...resto] = String(nome || '').split(' ')
   return ARTICOLI.includes(prima.toLowerCase()) && resto.length

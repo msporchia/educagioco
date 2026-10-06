@@ -81,7 +81,7 @@ gioco chiede quello che chiede.
 
 Se in casa non c'è nessun gioco che passi da `src/quiz/`, i blocchi delle
 domande non ci sono: al loro posto una riga sola che dice da quando
-arrivano («arrivano a 6 anni, con Survivors, il Dungeon e il sotterraneo»).
+arrivano («arrivano a 6 anni, con Survivors e il sotterraneo»).
 Da quattro a cinque anni e mezzo è così, e un elenco lì si leggerebbe come
 «ecco cosa gli chiederemo». Chi le chiede lo dichiara nel manifesto con
 **`quiz: true`** — non «fa domande» (le fa anche Conta gli animali), ma

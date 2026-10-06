@@ -69,7 +69,7 @@ quale file.
 | `docs/generale/` | Il Generale: didattica, mappe, livelli, cosa manca (come si scrive un livello: `src/data/livelli/GUIDA.md`) |
 | `docs/costruttore/` | Il costruttore: linguaggio, progetti e attrezzi, il porto, gli algoritmi, la campagna |
 | `docs/sotterraneo/` | Il sotterraneo: regole, roba, scenari e muri, l'abisso com'è e il suo progetto |
-| `docs/dungeon/`, `docs/survivors/` | un gioco ciascuna, con le sue regole |
+| `docs/survivors/` | Survivors, con le sue regole |
 | `docs/codice-segreto/`, `docs/conta/`, `docs/prima-dopo/` | un gioco ciascuna; in `prima-dopo/disegni.md` la regola delle icone disegnate |
 | `docs/fattoria/` | La fattoria: regole, campi e silos, catena, macchine, chi chiede, livelli, animali, come si tocca, la pagina dell'albero, stagioni, sprite, dove sta cosa |
 | `docs/img/` | le immagini del README (le rifà `npm run scatti`) |
@@ -79,7 +79,7 @@ fuori (linkata dal README) e `da-fare.md`, dove c'è, tiene le voci aperte.
 Altri documenti vivono accanto al codice che descrivono: `test/README.md`
 (come sono fatti i test), `src/data/livelli/GUIDA.md` (i livelli del
 Generale), `strumenti/sprite/*.md` (fogli e foglietti degli sprite),
-`src/giochi/dungeon/COMBATTIMENTO.md`, `poc/*.md`.
+`poc/*.md`.
 
 ## Convenzioni
 
@@ -146,8 +146,8 @@ Una riga ciascuna; il perché sta nel documento indicato.
   per fotogramma: moltiplicarla riga per riga la raddoppia. → `docs/core/grafica.md`
 - **Una `fetch` della pagina passa dal service worker**, che risponde dalla
   cache: «cerca aggiornamenti» chiede `no-store` con `?aggiorna=<id>`. → `docs/core/aggiornamento.md`
-- **Un nome nuovo si cerca anche nei motori**: `portata` si chiama così
-  perché `livello` di una tappa del Dungeon è già la potenza dei mostri. → `docs/apprendimento/eta-e-portata.md`
+- **Un nome nuovo si cerca anche nei motori**: un campo omonimo non dà
+  errori, cambia il gioco (così è nata `portata`). → `docs/apprendimento/eta-e-portata.md`
 - **Un prefisso nuovo per le chiavi dei quiz si sceglie guardando
   `store/progressi.js`**: finiscono nello stesso cassetto. → `docs/apprendimento/quiz-ripasso.md`
 - **Le partenze scrivono eccezioni**: una riga si confronta con quello che

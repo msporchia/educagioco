@@ -74,9 +74,8 @@ e nel battito `if (!fermo.value) p.avanza(dt)`.
   partita nuova nasce dietro un velo.
 - **Senza pausa**: chi non ha orologio (la fattoria: sarebbe un tasto che
   non fa niente); il Generale (ha Via/Stop, e fermare il tempo lì è una
-  mossa); il Dungeon (a turni: da fermare ci sono solo i `setTimeout`); la
-  domanda di quiz, che è già un velo — il ⏸ sparisce e rispondere *è* il
-  tocco che riprende.
+  mossa); la domanda di quiz, che è già un velo — il ⏸ sparisce e
+  rispondere *è* il tocco che riprende.
 
 Nei test: `button[aria-label="pausa"]`, `[data-pausa]`,
 `[data-azione="riprendi"]`.
@@ -99,7 +98,7 @@ Nei test: `button[aria-label="pausa"]`, `[data-pausa]`,
 ## Un `v-if` che non si spegne mai non rimonta niente
 
 Il guasto più costoso trovato finora. `src/quiz/Domanda.vue` (una sola per
-sotterraneo, Dungeon e Survivors) passa dalla domanda A alla B nello
+sotterraneo e Survivors) passa dalla domanda A alla B nello
 stesso giro di aggiornamento: Vue non smonta e **riusa l'istanza** con lo
 stato di prima. La domanda nuova nasce con un tasto già colorato e il gioco
 si ferma, senza nessun errore.

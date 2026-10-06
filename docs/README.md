@@ -10,7 +10,7 @@ da fuori, e `da-fare.md` tiene le voci aperte.
 - [genitori/](genitori/README.md) — cosa si spegne, manopola dell'età, quadro, codice, cestino e posta, novità, guide
 - [asteroidi/](asteroidi/README.md) · [castello/](castello/README.md) · [lingue/](lingue/README.md) · [bancarella/](bancarella/README.md) · [pozioni/](pozioni/README.md)
 - [passo-passo/](passo-passo/README.md) · [generale/](generale/README.md) · [costruttore/](costruttore/README.md)
-- [sotterraneo/](sotterraneo/README.md) · [dungeon/](dungeon/README.md) · [survivors/](survivors/README.md)
+- [sotterraneo/](sotterraneo/README.md) · [survivors/](survivors/README.md)
 - [codice-segreto/](codice-segreto/README.md) · [fattoria/](fattoria/README.md) · [conta/](conta/README.md) · [prima-dopo/](prima-dopo/README.md)
 - `img/` — le immagini e le clip del README (le rifà `npm run scatti`)
 

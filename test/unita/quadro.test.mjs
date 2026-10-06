@@ -116,8 +116,8 @@ for (const eta of [4, 7, 9]) {
 }
 /* e il contrario: quello che spegne un grande si vede come suo */
 uguale('un gioco spento a mano si dichiara spento a mano',
-  giochiDiUnEta({ eta: 9, giochi: { dungeon: false }, sa: {} })
-    .find(g => g.chiave === 'dungeon').stato, 'spento')
+  giochiDiUnEta({ eta: 9, giochi: { sotterraneo: false }, sa: {} })
+    .find(g => g.chiave === 'sotterraneo').stato, 'spento')
 
 /* Il caso che ha fatto nascere la conversazione: a sette anni la
    bancarella si vede. La sua prima giornata è tarata su 7 anni, e il
@@ -330,7 +330,7 @@ for (const eta of [6, 8, 10]) {
   const sei = quadroDi({ eta: 6, ...eccezioniPerEta(6) }, { classi })
   uguale('a 6 anni invece qualcuno le chiede', sei.domande.chiedono, true)
   controlla('e sono i giochi che pescano da src/quiz/',
-            sei.domande.quali.length >= 3, sei.domande.quali.join(', '))
+            sei.domande.quali.length >= 2, sei.domande.quali.join(', '))
   /* La riga che dice che il conto guarda i giochi e non un numero: chi
      è in casa a quell'età deve dichiarare `quiz`, e almeno uno di quei
      giochi deve essere davvero fra le carte accese. */

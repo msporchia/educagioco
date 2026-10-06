@@ -1,17 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════════
-   LA PAUSA NEGLI ALTRI TRE — Survivors, il sotterraneo, il Dungeon
+   LA PAUSA NEGLI ALTRI DUE — Survivors e il sotterraneo
 
    Il pezzo comune (`giochi/pausa.js`) è nato sulla Corsa, che non c'è
-   più. Qui si prova che **ci è arrivato davvero** in ognuno, e la ragione per cui non basta fidarsi è che ognuno dei tre lo
-   monta su un orologio diverso: Survivors su una giostra a fotogrammi,
-   il sotterraneo su un `requestAnimationFrame` suo, il Dungeon **su
-   niente** — è a turni, e l'unica cosa che scorre è il respiro prima
-   che la domanda compaia.
-
-   Per questo il Dungeon qui si prova al contrario: che il ⏸ **non ci
-   sia** (un tasto di pausa dove non si muove nulla è un tasto che
-   mente) e che quell'unico `setTimeout` si congeli col telefono in
-   tasca, invece di far trovare la domanda già lì al ritorno.
+   più. Qui si prova che **ci è arrivato davvero** in ognuno, e la
+   ragione per cui non basta fidarsi è che ognuno dei due lo monta su un
+   orologio diverso: Survivors su una giostra a fotogrammi, il
+   sotterraneo su un `requestAnimationFrame` suo.
 
    Il telefono posato si finge con `visibilityState`: la pagina resta
    davvero visibile, quindi gli orologi continuano a girare — ed è
@@ -28,10 +22,10 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
-/* i tre giochi si tengono in casa a mano: il test non deve dipendere da
+/* i due giochi si tengono in casa a mano: il test non deve dipendere da
    quale fascia d'età li offra oggi, né da quali siano ancora in prova */
 await semina(page, { settings: { eta: 9, sperimentali: true,
-  giochi: { survivors: true, sotterraneo: true, dungeon: true } } })
+  giochi: { survivors: true, sotterraneo: true } } })
 
 const veli = () => page.locator('[data-pausa]').count()
 const pausaInBarra = () => page.locator('button[aria-label="pausa"]').count()
@@ -185,38 +179,6 @@ uguale('si riparte solo toccando', await veli(), 0)
 await aCasa()                        // alla mappa
 await aCasa()                        // in home
 
-/* ═══════════════════════════════════════════════════════════════════
-   3. IL DUNGEON — niente ⏸, e l'unico orologio che si congela
-
-   Il Dungeon è a turni: la stanza aspetta, e un ⏸ lì non fermerebbe
-   niente. Quello che c'è da fermare è il respiro prima che la domanda
-   compaia — un `setTimeout`, che a schermo spento scatta uguale e fa
-   trovare la domanda già lì a chi riaccende il telefono mezz'ora dopo.
-   ═══════════════════════════════════════════════════════════════════ */
-await page.locator('.carta.gioco[data-gioco="dungeon"]').click()
-await page.waitForSelector('.dng-tappa', { timeout: 5000 })
-await page.locator('.dng-tappa[data-tappa="0"]').click()
-await page.waitForSelector('.dng-stanza', { timeout: 5000 })
-uguale('dungeon: niente ⏸, qui non scorre niente', await pausaInBarra(), 0)
-
-/* la prima fila è sempre un mostro (`ingresso: ['mostro']`), quindi la
-   sfida — e il respiro prima della domanda — arriva di sicuro */
-const porta = page.locator('.dng-stanza[data-tipo="mostro"]:not([disabled])').first()
-uguale('la prima stanza è una sfida', await porta.count(), 1)
-await porta.click()
-/* si posa il telefono **subito**: il respiro dura 750 ms, e la domanda
-   non deve arrivare mentre il telefono è in tasca */
-await posa()
-await attendi(page, 1600)
-uguale('a telefono posato la domanda non arriva', await page.locator('.qz-velo').count(), 0)
-uguale('e nessun velo di pausa: non è un gioco che si mette in pausa', await veli(), 0)
-
-await riprendiIlTelefono()
-await page.waitForSelector('.qz-velo', { timeout: 4000 })
-uguale('riaprendolo arriva, e riparte da quello che le restava',
-       await page.locator('.qz-velo').count(), 1)
-await scatto(page, 'pausa-dungeon')
-
 uguale('nessun errore in console', errori.join(' · '), '')
 await browser.close()
-riassunto('la pausa negli altri tre')
+riassunto('la pausa negli altri due')

@@ -2,7 +2,7 @@
    LE FOTO PER LA DOCUMENTAZIONE
 
      npm run scatti          tutte
-     npm run scatti dungeon  solo quelle che contengono "dungeon"
+     npm run scatti castello solo quelle che contengono "castello"
 
    Escono in `docs/img/`, che è versionata: sono le immagini del README e
    delle pagine dei singoli giochi, quindi devono stare nel repo.
@@ -134,7 +134,6 @@ function fattoriaGiocata() {
 }
 
 PROFILO.campagne = {
-  dungeon: { tappa: 7, libera: true, stelle: {}, cfg: {} },
   survivors: { tappa: 6, libera: true, stelle: {}, cfg: {} },
   codice: { tappa: 5, libera: true, stelle: {}, cfg: {} },
   fattoria: { tappa: 0, libera: false, stelle: {}, cfg: { stato: fattoriaGiocata() } },
@@ -314,10 +313,6 @@ const RICETTE = [
   { file: 'bancarella-mappa', dove: 'bancarella', attesa: '.giornata, .tappe, .mappa' },
   { file: 'bancarella-gioco', dove: 'bancarella', attesa: '.giornata, .tappe, .mappa',
     passi: [['.tappa:not(.chiusa), .giornata', 1800]] },
-
-  { file: 'dungeon-mappa', dove: 'dungeon', attesa: '.dng-tappe' },
-  { file: 'dungeon-gioco', dove: 'dungeon', attesa: '.dng-tappe',
-    passi: [['.dng-tappa.dng-adesso, .dng-tappa', 2000]] },
 
   { file: 'survivors-mappa', dove: 'survivors', attesa: '.sv-mappa' },
   { file: 'survivors-gioco', dove: 'survivors', attesa: '.sv-mappa',

@@ -15,7 +15,7 @@ Sparisce la carta in home, i progressi restano.
   stessa home qualunque sia il giorno in cui sono nati.
 - **Un gioco già aperto non sparisce** per età (`giaProvato`, vedi
   [eta-e-portata](../apprendimento/eta-e-portata.md)).
-- **Si dice anche il contrario**: `{ dungeon: true }` lo tiene in casa
+- **Si dice anche il contrario**: `{ sotterraneo: true }` lo tiene in casa
   contro l'età (`fissaGioco` in `src/store/profile.js`), e la home lo
   rispetta (`giocoForzato` vince su `giocoDaVedere`). Vince sull'età, non
   sui saperi spenti.

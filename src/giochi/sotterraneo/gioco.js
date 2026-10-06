@@ -17,10 +17,8 @@
    gioco non sa di che materia siano: chiede una difficoltà da 0 a 1 che
    cresce scendendo.
 
-   **Non sostituisce il Dungeon a bivi** (`src/giochi/dungeon/`): quello
-   è un gioco a carte dove si sceglie un bivio alla volta e non si torna
-   indietro, questo è un posto invece che un diagramma. Fanno cose
-   diverse con gli stessi esercizi.
+   Ha preso il posto del Dungeon a bivi, tolto il 6 ottobre 2026: gli
+   stessi esercizi, ma in un posto invece che in un diagramma.
    ═══════════════════════════════════════════════════════════════════ */
 import { CAMPAGNA, QUANTE_TAPPE } from './dati/campagna.js'
 

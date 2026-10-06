@@ -29,12 +29,10 @@ vale qualcosa ha un prezzo, e **il prezzo è rispondere**.
 | ⛲ una fonte | una domanda, e ti ridà vita |
 | 🏪 un mercante | niente domande: qui si **spende** quello che le domande hanno fruttato |
 
-**Non è il Dungeon di `src/giochi/dungeon/`, e non lo sostituisce.**
-Quello è un gioco a carte: una mappa a nodi, un bivio alla volta, non si
-torna indietro. Questo è un posto invece che un diagramma. I due possono
-convivere: fanno cose diverse con gli stessi esercizi. Se un giorno se ne
-tiene uno solo, sarà perché i bambini avranno detto quale, non perché si
-somigliano nel nome.
+**Non era il Dungeon, e alla fine l'ha sostituito.** Quello era un gioco
+a carte: una mappa a nodi, un bivio alla volta, non si tornava indietro.
+Questo è un posto invece che un diagramma. Per un po' hanno convissuto;
+il 6 ottobre 2026 il Dungeon è stato tolto e si è tenuto questo.
 
 ## Cosa c'è già
 

@@ -18,7 +18,7 @@ const MIRA_SOTTO = 12
 const MIRA_SOPRA = 19
 
 // non confondere con bersaglio() di classi.js, che interpola con la manopola 0..1: qui la finestra è la stessa per tutte
-// «portata» e non «livello»: livello era già preso dal Dungeon (la potenza a cui si scende) — cercare prima nei motori
+// «portata» e non «livello»: un nome nuovo si cerca prima nei motori (docs/apprendimento/eta-e-portata.md)
 export const miraDi = eta => {
   if (eta == null) return null
   const qui = livelloDegliAnni(eta)

@@ -7,7 +7,7 @@
 export const PAGA = {
   asteroide: 1,      // una tabellina o un calcolo a mente: un colpo d'occhio
   parola: 1,         // una parola dello spagnolo: come quelle dell'inglese
-  mossa: 1,          // una domanda che è la mossa stessa (dungeon, sotterraneo): una ogni pochi secondi
+  mossa: 1,          // una domanda che è la mossa stessa (sotterraneo): una ogni pochi secondi
   domanda: 3,        // una domanda che ferma il gioco (survivors)
   operazione: 3,     // un'operazione in colonna del castello, senza errori
   storia: 2,         // una storia di Prima e dopo rimessa in ordine

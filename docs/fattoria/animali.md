@@ -133,7 +133,7 @@ non lo mette nessuno.
 
 ### Solo cappelli e occhiali, per ora
 
-Gli addobbi sono **emoji**, e il ragionamento del dungeon (le emoji le
+Gli addobbi sono **emoji**, e il ragionamento dei mostri (le emoji le
 disegna il telefono, stile Apple in mezzo alla pixel art) qui pesa meno: un
 cappello si ridimensiona, si specchia e segue il passo con lo sprite.
 Regge in testa e sul muso, **non al collo e sulla schiena**: un'emoji di

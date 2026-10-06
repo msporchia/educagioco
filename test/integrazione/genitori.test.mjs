@@ -31,7 +31,7 @@ await semina(page, { coins: 777, totals: { math: 42, en: 0, verbi: 0, frasi: 0, 
   partiteMath: 0, torri: 0, perfette: 0, ondate: 0, monete: 0 },
   items: { 'en:dog': { n: 3, ef: 2.2, i: 4, due: Date.now() + 3 * 86400000, r: 3, w: 1 } },
   td: { tappa: 4, libera: false, v: 2 },
-  campagne: { dungeon: { tappa: 2, libera: false, stelle: {}, cfg: {} } } })
+  campagne: { sotterraneo: { tappa: 2, libera: false, stelle: {}, cfg: {} } } })
 
 const vaiAiGenitori = async () => {
   await page.click('[data-azione="grandi"]')
@@ -226,7 +226,7 @@ if (dati) {
   uguale('c\'è lo stato di apprendimento, elemento per elemento',
     mio?.items?.['en:dog']?.r, 3)
   uguale('e dove è arrivato nelle campagne', mio?.td?.tappa, 4)
-  uguale('anche quelle dei giochi nuovi', mio?.campagne?.dungeon?.tappa, 2)
+  uguale('anche quelle dei giochi nuovi', mio?.campagne?.sotterraneo?.tappa, 2)
   controlla('e i traguardi presi', !!mio?.badge)
   controlla('il file si porta dietro anche i nomi', Array.isArray(dati.giocatori))
 } else {
@@ -1108,7 +1108,7 @@ await vaiAiGenitori()
 await digita('0000')
 /* Prima si spegne un gioco a mano: è quello che rende questo bambino
    «su misura», ed è quello che la conferma deve annunciare. */
-await taraGioco('dungeon', 'no')
+await taraGioco('sotterraneo', 'no')
 await apriScheda('giochi')
 await page.waitForSelector('[data-manopola]', { timeout: 5000 })
 
@@ -1133,7 +1133,7 @@ await page.click('[data-azione="eta-applica"]')
 await page.waitForTimeout(500)
 uguale('applicando si sposta davvero', (await leggiProfilo(page)).settings.eta, etaPrima + 0.5)
 controlla('col gioco spento a mano rimasto spento',
-  (await leggiProfilo(page)).settings.giochi.dungeon === false)
+  (await leggiProfilo(page)).settings.giochi.sotterraneo === false)
 await page.click('[data-eta="giu"]')          // rimesso com'era
 await page.waitForTimeout(300)
 await page.click('[data-azione="eta-applica"]')
@@ -1170,7 +1170,7 @@ controlla('e si vede senza scorrere, appiccicato in fondo',
 await page.click('[data-azione="eta-annulla"]')
 await page.waitForTimeout(400)
 controlla('annullando, il gioco spento resta spento',
-  (await leggiProfilo(page)).settings.giochi.dungeon === false)
+  (await leggiProfilo(page)).settings.giochi.sotterraneo === false)
 uguale('e l\'età nemmeno', (await leggiProfilo(page)).settings.eta, etaPrima)
 uguale('la tacca torna sull\'età vera',
   (await page.locator('[data-eta-ora]').first().innerText()).trim(),
@@ -1185,7 +1185,7 @@ controlla('applicando lo dice invece di restare muta',
   await page.evaluate(() => document.body.innerText.includes('è tarato su')))
 uguale('e stavolta si è mosso', (await leggiProfilo(page)).settings.eta, etaPrima - 0.5)
 controlla('con le scelte a mano ripartite dai difetti',
-  (await leggiProfilo(page)).settings.giochi.dungeon === undefined)
+  (await leggiProfilo(page)).settings.giochi.sotterraneo === undefined)
 
 /* Scendere di sei tacche è **un solo Applica**: la bozza si muove
    quanto si vuole e si scrive una volta. Prima ogni tacca era una

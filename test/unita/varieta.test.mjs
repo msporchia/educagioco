@@ -55,7 +55,7 @@ const R = V.regoleDi({})
     { g: 'survivors', t: alle(28, 23, 40), s: min(50) },   // ieri sera tardi
     { g: 'survivors', t: alle(29, 9), s: min(15) },
     { g: 'survivors', t: alle(29, 15), s: min(10) },
-    { g: 'dungeon', t: alle(29, 16), s: min(30) },
+    { g: 'sotterraneo', t: alle(29, 16), s: min(30) },
   ]
   uguale('conta solo oggi, e solo quel gioco',
          V.secondiContati({ voci, gioco: 'survivors', oggi: OGGI }), min(25))
@@ -73,9 +73,9 @@ const R = V.regoleDi({})
 /* ══════════ 3. i numeri dei grandi ══════════ */
 {
   const r = V.regoleDi({ pieno: 30, meta: 10,
-                         giochi: { dungeon: 'libero', corsa: { pieno: 5, meta: 5 } } })
+                         giochi: { sotterraneo: 'libero', corsa: { pieno: 5, meta: 5 } } })
   uguale('le soglie di tutti', V.tettiDi(r, 'survivors').pieno, 30)
-  uguale('un gioco senza tetto', V.tettiDi(r, 'dungeon'), null)
+  uguale('un gioco senza tetto', V.tettiDi(r, 'sotterraneo'), null)
   uguale('un gioco coi suoi numeri', V.tettiDi(r, 'corsa').meta, 5)
   uguale('e la tacca lo legge', V.comeDi(r, 'corsa'), 'suoi')
   uguale('un numero storto torna al difetto', V.regoleDi({ pieno: 'boh' }).pieno, 20)
@@ -222,7 +222,7 @@ usaOrologio(() => adesso)
   uguale('e non arriva niente', state.profile.coins, b)
   esci()
 
-  entra('dungeon', id)
+  entra('sotterraneo', id)
   const c = state.profile.coins
   addCoins(24)
   uguale('un altro gioco paga pieno', state.profile.coins - c, 24)
@@ -231,13 +231,13 @@ usaOrologio(() => adesso)
   ridaiTempo('survivors', adesso)
   uguale('ridato il tempo, Survivors torna pieno', statoDi('survivors', adesso).fase, 'pieno')
 
-  tettoDelGioco('dungeon', 'libero')
-  uguale('un gioco senza tetto', statoDi('dungeon', adesso).fase, 'libero')
-  tettoDelGioco('dungeon', 'tutti')
+  tettoDelGioco('sotterraneo', 'libero')
+  uguale('un gioco senza tetto', statoDi('sotterraneo', adesso).fase, 'libero')
+  tettoDelGioco('sotterraneo', 'tutti')
   scegliSoglie({ pieno: 1, meta: 0 })
-  uguale('una soglia di un minuto', statoDi('dungeon', adesso).fase, 'pieno')
-  entra('dungeon', id); adesso += min(2) * 1000
-  uguale('dopo due minuti di partita è finito', statoDi('dungeon', adesso).fase, 'vuoto')
+  uguale('una soglia di un minuto', statoDi('sotterraneo', adesso).fase, 'pieno')
+  entra('sotterraneo', id); adesso += min(2) * 1000
+  uguale('dopo due minuti di partita è finito', statoDi('sotterraneo', adesso).fase, 'vuoto')
   esci()
 
   consiglia('mate', true)

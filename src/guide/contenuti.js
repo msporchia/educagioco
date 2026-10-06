@@ -616,21 +616,6 @@ export const AIUTI = {
     ],
   },
 
-  dungeon: {
-    emoji: '⚔️', titolo: 'Il dungeon',
-    blocchi: [
-      'Si scende in fondo al sotterraneo e si combatte rispondendo: ogni risposta giusta è un colpo dato, ogni sbaglio è un colpo preso.',
-      { titolo: 'Consigli', righe: [
-        'Dopo uno sbaglio il gioco si ferma un paio di secondi **apposta**: serve a leggere la risposta giusta, non è un tasto rotto.',
-        'Le pozioni e i tesori raccolti restano per gli scontri dopo: non conviene tenerli da parte fino alla fine.',
-      ] },
-      { titolo: 'Cosa allena', righe: [
-        'Le stesse domande del sotterraneo — tutte le materie, sulla misura del bambino — ma chieste una dietro l\'altra, senza mappa da guardare.',
-        'È il gioco giusto per fare tanti esercizi in poco tempo.',
-      ] },
-    ],
-  },
-
   codice: {
     emoji: '🔐', titolo: 'Il codice segreto',
     blocchi: [

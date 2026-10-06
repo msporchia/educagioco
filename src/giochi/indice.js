@@ -3,7 +3,6 @@
 // L'ordine è quello delle carte in home.
 import codiceSegreto from './codice-segreto/gioco.js'
 import survivors from './survivors/gioco.js'
-import dungeon from './dungeon/gioco.js'
 import conta from './conta/gioco.js'
 import primaDopo from './prima-dopo/gioco.js'
 import fattoria from './fattoria/gioco.js'
@@ -14,7 +13,7 @@ import costruttore from './costruttore/gioco.js'
 import inglese from './inglese/gioco.js'
 import spagnolo from './spagnolo/gioco.js'
 
-export const GIOCHI_NUOVI = [codiceSegreto, survivors, dungeon, conta, primaDopo, fattoria,
+export const GIOCHI_NUOVI = [codiceSegreto, survivors, conta, primaDopo, fattoria,
                              sotterraneo, pozioni, passoPasso, costruttore, inglese, spagnolo]
 
 export const gioco = chiave => GIOCHI_NUOVI.find(g => g.chiave === chiave) || null

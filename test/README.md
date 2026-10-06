@@ -72,7 +72,7 @@ test/esegui.mjs pozioni`) scorre sempre dal vivo.
 
 `npm test` costa una ventina di secondi, e non è colpa di tutti: un pugno
 di test giocano una campagna intera con un finto giocatore — il castello
-tappa per tappa, il tower defense, il dungeon a bivi, i livelli del
+tappa per tappa, il tower defense, i livelli del
 Generale — e da soli si mangiano la maggior parte del tempo. Sono giusti
 così: è il prezzo di provare le regole giocandole invece di fidarsi a
 occhio. Ma è un prezzo che ha senso pagare quando si tocca *quella*
@@ -166,7 +166,7 @@ Seminare un profilo è la cosa che fa la differenza: provare la terza tappa
 senza giocarsi le prime due.
 
 ```js
-await semina(page, { coins: 200, campagne: { dungeon: { tappa: 2 /* ... */ } } })
+await semina(page, { coins: 200, campagne: { sotterraneo: { tappa: 2 /* ... */ } } })
 ```
 
 `aiuto/sito.mjs` — per l'unica cosa che da `file://` non esiste: il service

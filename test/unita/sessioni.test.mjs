@@ -66,7 +66,7 @@ uguale('e una delle 00:20 al giorno dopo', chiaveGiorno(alle(22, 0, 20)), '2026-
    Il tetto giornaliero per gioco non esiste ancora, ed è deliberato: qui
    si raccoglie solo quello che gli servirebbe. Questa è la sua metà. */
 uguale('la fattoria oggi: ventidue minuti', oggiDi(VOCI, 'fattoria', OGGI), 22 * 60)
-uguale('il dungeon oggi: niente', oggiDi(VOCI, 'dungeon', OGGI), 0)
+uguale('il codice oggi: niente', oggiDi(VOCI, 'codice', OGGI), 0)
 /* ieri la fattoria l'ha giocata, ma «oggi» chiede oggi */
 uguale('e ieri non conta', oggiDi(VOCI, 'conta', OGGI), 0)
 
