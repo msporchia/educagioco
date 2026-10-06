@@ -53,6 +53,8 @@ export const NOVITA = [
     testo: '🗝️ Il Dungeon ha chiuso le sue porte: l\'avventura continua nel sotterraneo, più grande e tutto da esplorare' },
   { id: 26, quando: '2026-10-06', gioco: null,
     testo: '🎮 Ora puoi uscire da un gioco quando vuoi, anche dalla pausa: la partita ti aspetta. Quando torni, in cima alla mappa trovi «torno da dove ero» e riprendi proprio da lì.' },
+  { id: 27, quando: '2026-10-06', gioco: null,
+    testo: '🏠 La pagina dei giochi è nuova: le copertine si scorrono col dito, e in cima trovi il gioco dell\'ultima volta pronto a ripartire' },
 ]
 
 export const PER_GIOCO = 4
