@@ -54,6 +54,21 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 - **Il suono**: c'è il minimo (passo, colpo, errore, il graffio). Col suono
   spento il gioco deve restare intero.
 
+## La terra di sopra
+
+- **La mappa con le discese sbarrate** (`mappa_sotterraneo_chiusa.png`): il
+  prompt e il giro stanno nella scheda `PROMPT-terra-di-sopra.md`; fino ad
+  allora le chiuse hanno il velo col lucchetto disegnato in codice.
+- **I personaggi del prompt 4** (minatore, ragazza del pozzo, boscaiolo, con
+  le pose che parla e che indica): oggi il minatore è disegnato in codice e
+  gli altri due non ci sono. La bussola del mock (il minatore che la dà, lei
+  che punta alla prossima discesa) non è fatta.
+- **Le porte che si aprono**: una discesa appena aperta non ha ancora un
+  momento suo sulla mappa (le assi che cadono, la grata che si alza).
+- Da guardare col dito: la velocità del passo (`PASSO_TERRA`), quanto
+  presto scorre la vista (`BORDO`, `MORBIDA`), quanto si vede attorno
+  (`VISTA`, `LUCE`), e se i sassi si notano.
+
 ## Da guardare col dito
 
 Cose tarate a occhio o provate solo dai test: le giudica solo un bambino con

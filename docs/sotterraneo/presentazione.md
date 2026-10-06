@@ -14,6 +14,11 @@ si entra nelle stanze, si toccano le cose. Nessuna azione interessante si
 compie senza rispondere, e nessuna risposta resta senza qualcosa che si
 apre.
 
+Le discese stanno sotto una campagna da girare a piedi, nella nebbia: la
+botola, i pozzi, la miniera, la scala nello stagno. Si trovano esplorando,
+e un vecchio minatore dice dov'è la prossima
+([terra-di-sopra.md](terra-di-sopra.md)).
+
 | cosa si tocca | cosa costa |
 |---|---|
 | 🚪 una porta chiusa | una domanda facile — sbagliando si riprova |

@@ -578,6 +578,7 @@ export const AIUTI = {
     emoji: '🗝️', titolo: 'Il sotterraneo',
     blocchi: [
       'Si scende di stanza in stanza cercando la chiave e la scala. Quasi tutto quello che c\'è dentro chiede una domanda.',
+      'Le discese stanno sotto la campagna di sopra: tocca dove vuoi andare e l\'eroe ci cammina. Si trovano esplorando, e il **vecchio minatore** vicino a casa dice dov\'è la prossima; i sassi che luccicano segnano la strada.',
       { titolo: 'Cosa chiede cosa', righe: [
         '🚪 **una porta chiusa** — una domanda facile: se sbagli si riprova.',
         '🎁 **un forziere** — una domanda sola, tosta: se sbagli resta chiuso.',

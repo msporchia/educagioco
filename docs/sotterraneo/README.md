@@ -4,6 +4,7 @@ Il posto da girare col dito dove ogni cosa costa una risposta, e l'abisso
 senza fondo sotto le sei discese. Il codice sta in `src/giochi/sotterraneo/`.
 
 - [presentazione.md](presentazione.md) — per chi arriva da fuori: cos'è, cosa allena, note per i genitori
+- [terra-di-sopra.md](terra-di-sopra.md) — la mappa da cui si scende: la vista che segue l'eroe, la maschera di dove si cammina e come si corregge, le discese sui posti, chi indica la strada, la nebbia
 - [regole.md](regole.md) — la discesa: scala e guardiano, quanto costa in domande, il branco a fasce, la stanza come confine, lo scontro, gli svenimenti, la sosta
 - [roba.md](roba.md) — gli eroi e cosa portano, due mani, la torcia, per terra e nello zaino, il mercante, curiosità e arredo
 - [scenari.md](scenari.md) — come è disegnato: lo scenario generato da un prompt, il muro alto una cella, i fogli e l'atlante
@@ -17,4 +18,5 @@ Vedi anche: [../core/grafica.md](../core/grafica.md) (tela, atlante, tessere),
 `poc/sotterraneo.html` e `poc/sotterraneo.md` (i prototipi: il posto dove
 provare un'idea prima di metterla nel gioco),
 `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md` (la
-scheda di prompt degli scenari).
+scheda di prompt degli scenari), `PROMPT-terra-di-sopra.md` accanto (la
+mappa di sopra, le discese chiuse, i personaggi).

@@ -207,4 +207,4 @@ L'abisso non rompe la regola: è una discesa sola che non finisce.
 
 Nei test: `unita/sotterraneo` (le sei tappe col giocatore finto, i quattro
 eroi, le soglie qui sopra), `unita/sotterraneo-sosta`,
-`integrazione/sotterraneo` (`.sot-tappa[data-tappa="0"]` sulla mappa).
+`integrazione/sotterraneo` (ci si arriva con `scendiNelSotterraneo`: la mappa sta in [terra-di-sopra.md](terra-di-sopra.md)).

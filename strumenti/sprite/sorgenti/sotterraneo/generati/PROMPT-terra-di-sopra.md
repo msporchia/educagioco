@@ -160,9 +160,36 @@ Le chiusure stanno DENTRO la sagoma di ogni passaggio, non la allargano. Nient'a
 Controllo: affiancata all'originale, fuori dalle sette discese non deve
 cambiare niente (si guarda ai bordi dei riquadri).
 
+### Come entra nel gioco
+
+Il meccanismo c'è già: ogni posto ha il suo riquadro nel foglietto
+`../terra-di-sopra.json` (`posti.<nome>.riquadro`, in pixel della mappa), e
+sopra una discesa chiusa il gioco posa il ritaglio di quel riquadro; finché
+il ritaglio non c'è, un velo scuro col lucchetto.
+
+1. Si salva qui accanto come **`mappa_sotterraneo_chiusa.png`** (se torna a
+   un'altra misura, lo strumento la riporta a 1024×1536 prima di ritagliare).
+2. `python3 strumenti/sprite/terra-di-sopra.py --provino` e si guarda
+   `tmp/terra/provino.png`: ogni sbarramento deve stare dentro il suo
+   riquadro giallo. Se ne esce, si allarga il riquadro nel foglietto (non
+   l'immagine).
+3. `python3 strumenti/sprite/terra-di-sopra.py`: il modulo
+   `src/giochi/sotterraneo/dati/terra-mappa.js` ora ha le sette `PEZZE`, e
+   il gioco smette da solo di disegnare il velo.
+4. Si guarda col dito il confine di ogni pezza aprendo una discesa chiusa
+   (`node test/esegui.mjs sotterraneo-terra --scatti`, foto `terra-chiusa`):
+   un riquadro che si vede è un ritocco che ha spostato qualcosa.
+
+I personaggi del prompt 4, quando arrivano, si ritagliano come gli altri
+fogli (`atlante.py`, un foglietto accanto): il minatore che si chiama
+`minatore-fermo-0` prende da solo il posto della figura disegnata in codice.
+
 ## Com'è andata
 
 - `mappa_sotterraneo.png` — il prompt 1, al primo colpo, il 6/10/2026:
   tutte le discese riconoscibili, i sentieri continui, nessuna scritta.
   I pozzi sono due (in alto a sinistra e in basso al centro): sette
-  aperture per sei discese.
+  aperture per sei discese. Nel gioco dal 6/10/2026, com'è
+  ([docs/sotterraneo/terra-di-sopra.md](../../../../../docs/sotterraneo/terra-di-sopra.md)).
+  Non è pixel art vera: il pixel è morbido e non cade su una griglia di 4,
+  quindi non si riduce a 256×384 (verrebbe impastata) ma si tiene intera.
