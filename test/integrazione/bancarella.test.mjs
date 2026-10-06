@@ -25,6 +25,15 @@ import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi,
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNE, premioCliente } from '../../src/data/bancarella.js'
 
+/* la giornata di prima, lasciata a metà dal `semina` che ricarica, resta in
+   sospeso: la mappa chiede prima di buttarla (integrazione/bancarella-sosta) */
+async function apriGiornata(id) {
+  await page.locator(`.giornata[data-camp="${id}"]`).click()
+  if (await page.locator('[data-chiede]').count())
+    await page.click('[data-chiede] [data-azione="comincia"]')
+  await page.waitForSelector('.banco', { timeout: 5000 })
+}
+
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
 await azzera(page)
@@ -288,8 +297,7 @@ uguale('e quella dopo si è aperta', dopo.chiuse, dopo.quante - 2)
 await semina(page, { mercato: { tappa: 2, libera: false, v: 2 } })
 await page.getByText('La bancarella').click()
 await page.waitForSelector('.giornate', { timeout: 5000 })
-await page.locator('.giornata[data-camp="conto-dieci"]').click()
-await page.waitForSelector('.banco', { timeout: 5000 })
+await apriGiornata('conto-dieci')
 await page.waitForFunction(() => !window.__shop.cambio.value, { timeout: 5000 })
 
 const conto = await page.evaluate(async () => {
@@ -352,8 +360,7 @@ nota(`totale battuto: ${conto.scritto} € su ${conto.totale}c`)
 await semina(page, { mercato: { tappa: 14, libera: false, v: 2 } })
 await page.getByText('La bancarella').click()
 await page.waitForSelector('.giornate', { timeout: 5000 })
-await page.locator('.giornata[data-camp="resto-copie"]').click()
-await page.waitForSelector('.banco', { timeout: 5000 })
+await apriGiornata('resto-copie')
 await page.waitForFunction(() => !window.__shop.cambio.value, { timeout: 5000 })
 
 const fiera = await page.evaluate(async () => {
@@ -415,8 +422,7 @@ nota(`due cose uguali: pezzi per articolo [${fiera.quanti.join(',')}] · ` +
 await semina(page, { mercato: { tappa: 15, libera: false, v: 2 } })
 await page.getByText('La bancarella').click()
 await page.waitForSelector('.giornate', { timeout: 5000 })
-await page.locator('.giornata[data-camp="mente"]').click()
-await page.waitForSelector('.banco', { timeout: 5000 })
+await apriGiornata('mente')
 await page.waitForFunction(() => !window.__shop.cambio.value, { timeout: 5000 })
 
 const rotta = await page.evaluate(async () => {

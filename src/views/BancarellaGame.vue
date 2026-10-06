@@ -1,7 +1,7 @@
 <script setup>
 /* LA BANCARELLA — il negoziante sei tu, il mercato si gira a tappe.
    Vedi docs/bancarella/presentazione.md e regole.md. */
-import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import { state, answer, segna, segnaBest,
          mercatoProgresso, mercatoCompleta, tappaAperta } from '../store/profile.js'
 import { generaCliente, esposizione, tappaDi, campagnaDi, scomponi, euro,
@@ -12,8 +12,11 @@ import { borsa } from '../store/varieta.js'
 import Barra from '../components/Barra.vue'
 import { usaPausa } from '../giochi/pausa.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
+import Ripresa from '../giochi/Ripresa.vue'
+import { sosta, salvaSosta, buttaSosta } from '../giochi/campagne.js'
+import { scrivi, leggi, dice } from '../motore/bancarella/sosta.js'
 
-defineEmits(['vai'])
+const emit = defineEmits(['vai'])
 
 const CUORI = 3
 // le monete di questa giornata: un cliente servito paga subito (docs/bancarella/regole.md)
@@ -77,6 +80,8 @@ let timer = 0, scadeIl = 0, restaAl = 0, faPoi = null
 function programma(fn, ms) {
   clearTimeout(timer)
   faPoi = fn
+  // a velo su resta congelato, come farebbe il `watch` qui sotto
+  if (inPausa.value || aiutoAperto.value) { timer = 0; restaAl = ms; return }
   scadeIl = performance.now() + ms
   timer = setTimeout(() => { timer = 0; const f = faPoi; faPoi = null; f() }, ms)
 }
@@ -112,6 +117,7 @@ const UFFA     = ['Me ne vado!', 'Troppo lento!', 'Uffa…']
 /* la giornata */
 function inizia(i = idx.value) {
   if (i >= 0 && !sbloccata(i)) return
+  scorda()
   // il freno della mappa non deve restare acceso sul mercato nuovo
   togliLaPausa()
   spegniOrologio()
@@ -163,8 +169,9 @@ function alBanco() {
 function prossimo() {
   coda.value.shift()
   piatto.value = []; rifiuti = 0; occupato = false; bonus.value = false
-  if (!coda.value.length) return tappaFinita()
-  alBanco()
+  if (!coda.value.length) tappaFinita()
+  else alBanco()
+  salva()
 }
 
 function tappaFinita() {
@@ -321,6 +328,7 @@ function scaduto() {
 }
 
 function chiudi(come) {
+  scorda()
   esito.value = come
   guadagno.nota = borsellino.nota()
   fase.value = 'fine'
@@ -399,9 +407,114 @@ onMounted(() => {
                     cliente, dato, manca, battuta, scomponi, momento, presi, aMente,
                     daPrendere, esposti, tappa: nTappa, camp, T, cambio, esito,
                     batti, confermaTotale, digitato, contoFatto, chiediTotale, TASTI,
-                    CAMPAGNE, BANCHI, prog }
+                    CAMPAGNE, BANCHI, prog, guadagno, inPausa }
 })
 onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
+
+/* ── la giornata lasciata a metà ──
+   Uscire non butta via niente: si scrive dove si era (motore/bancarella/sosta.js)
+   e la mappa la offre in cima. Vedi docs/bancarella/regole.md, «Lasciare a metà». */
+const CHIAVE = 'bancarella'
+const laRipresa = () => {
+  const d = dice(sosta(CHIAVE))
+  if (!d) return null
+  const dove = d.libera ? `banco ${d.n}` : `banco ${d.n} di ${d.di}`
+  return { emoji: d.emoji, nome: d.nome,
+           dettaglio: `${d.banco.icona} ${dove} · ${'❤️'.repeat(d.cuori)} · 🧾 ${d.serviti}` }
+}
+const ripresa = ref(laRipresa())
+const chiede = ref(null)           // { nome, i }: la giornata nuova che butterebbe quella a metà
+
+const foto = () => ({
+  idx: idx.value, nTappa: nTappa.value, hud, esposti: esposti.value, coda: coda.value,
+  momento: momento.value, presi: presi.value, piatto: piatto.value, digitato: digitato.value,
+  contoFatto: contoFatto.value, rifiuti, cartello: !!cambio.value,
+  trascorso: performance.now() - apertoIl,
+  monete: { chiesto: borsellino.chiesto, dato: borsellino.dato },
+})
+
+function salva({ subito = false } = {}) {
+  if (fase.value !== 'gioco') return
+  // il cliente appena servito ha già pagato: il suo giro si chiude prima di scrivere
+  if (occupato && faPoi === prossimo) {
+    spegniOrologio(); prossimo()
+    if (fase.value !== 'gioco') return       // era l'ultimo della giornata
+  }
+  salvaSosta(CHIAVE, scrivi(foto()), { subito })
+}
+
+function scorda() {
+  if (sosta(CHIAVE)) buttaSosta(CHIAVE)
+  ripresa.value = null
+  chiede.value = null
+}
+
+function vuoleIniziare(i) {
+  if (i >= 0 && !sbloccata(i)) return
+  if (!ripresa.value) return inizia(i)
+  chiede.value = { nome: campagnaDi(i).nome, i }
+}
+const comincia = () => inizia(chiede.value.i)
+
+// se il salvataggio non si legge più la carta sparisce e resta la mappa
+function riprendiPartita() {
+  const g = leggi(sosta(CHIAVE))
+  if (!g || (g.idx >= 0 && !sbloccata(g.idx))) return scorda()
+  spegniOrologio()
+  // la giornata ripresa nasce ferma, dietro il velo: riparte al tocco
+  mettiInPausa({ auto: true })
+  idx.value = g.idx
+  nTappa.value = g.nTappa
+  Object.assign(hud, g.hud)
+  borsellino = borsa(CHIAVE, g.monete)
+  Object.assign(guadagno, { monete: borsellino.dato, nota: '' })
+  esposti.value = g.esposti
+  coda.value = g.coda
+  occupato = false; bonus.value = false; esito.value = ''
+  ripresa.value = null
+  chiede.value = null
+  fase.value = 'gioco'
+  if (g.cartello) {
+    momento.value = 'raccolta'; presi.value = []; piatto.value = []
+    cambio.value = { banco: T.value.banco, n: nTappa.value }
+    programma(() => { cambio.value = null; alBanco() }, 1500)
+  } else {
+    const b = g.banco
+    cambio.value = null
+    momento.value = b.momento
+    presi.value = b.presi
+    piatto.value = b.piatto
+    digitato.value = b.digitato
+    contoFatto.value = b.contoFatto
+    rifiuti = b.rifiuti
+    apertoIl = performance.now() - b.trascorso
+    dettoFretta = barra(cliente.value) < 30
+    battuta.value = pick(b.momento === 'cassa' ? OFFERTE : CHIEDE)
+  }
+  ultimo = 0
+  cancelAnimationFrame(raf)
+  raf = requestAnimationFrame(ciclo)
+}
+
+function esci() {
+  salva({ subito: true })
+  emit('vai', 'home')
+}
+
+// su un telefono l'app non si chiude, sparisce: è l'ultimo momento per scrivere
+function seSparisce(e) {
+  if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true })
+}
+onMounted(() => {
+  document.addEventListener('visibilitychange', seSparisce)
+  addEventListener('pagehide', seSparisce)
+})
+// prima di smontare: dopo, la fila non c'è più
+onBeforeUnmount(() => {
+  salva({ subito: true })
+  document.removeEventListener('visibilitychange', seSparisce)
+  removeEventListener('pagehide', seSparisce)
+})
 </script>
 
 <template>
@@ -410,7 +523,7 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
     <!-- il ⏸ c'è solo dove la fila si spazientisce -->
     <Barra titolo="Bancarella" guida="bancarella" :monete="fase !== 'gioco'"
            :pausa="fase === 'gioco' && !state.festa.length" @pausa="mettiInPausa()"
-           @aiuto="leggeLaGuida" @indietro="$emit('vai','home')">
+           @aiuto="leggeLaGuida" @indietro="esci">
       <template v-if="fase === 'gioco'">
         <div class="gettone">{{ '❤️'.repeat(Math.max(0, hud.cuori)) || '💔' }}</div>
         <div class="gettone">🧾 <b>{{ hud.serviti }}</b></div>
@@ -421,12 +534,15 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
     <!-- le giornate di mercato -->
     <div v-if="fase === 'mappa'" class="centro mappa">
       <h1>Al <span>mercato</span></h1>
+      <Ripresa :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
+               @riprendi="riprendiPartita" @scorda="scorda"
+               @comincia="comincia" @annulla="chiede = null" />
       <p class="testo">Una giornata è un giro di banchi, tre clienti per banco:
         prendi la roba dalle ceste, poi dai il resto giusto.</p>
       <div class="giornate">
         <button v-for="(g, i) in CAMPAGNE" :key="g.id" class="giornata"
                 :data-camp="g.id" :class="{ chiusa: !sbloccata(i), fatta: i < prog.tappa }"
-                @click="inizia(i)">
+                @click="vuoleIniziare(i)">
           <span class="bollo">{{ g.emoji }}</span>
           <span class="che">
             <b>{{ g.nome }}</b>
@@ -437,7 +553,7 @@ onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
           <span class="mini">{{ g.nuovo ? '＋ ' + g.nuovo
                                         : g.tappe.length + ' banchi · ' + g.tempo[1] + 's a cliente' }}</span>
         </button>
-        <button v-if="prog.libera" class="giornata libera" data-camp="libera" @click="inizia(-1)">
+        <button v-if="prog.libera" class="giornata libera" data-camp="libera" @click="vuoleIniziare(-1)">
           <span class="bollo">♾️</span>
           <span class="che"><b>Giornata libera</b>
             <span class="banchini"><i>🍎</i><i>🥬</i><i>🥖</i><i>🧀</i><i>🍬</i></span></span>

@@ -136,6 +136,36 @@ mestieri per un bambino di otto anni (`generaCliente`, `comePuoPagare`).
   cartello di un traguardo no, perché passa da sé e la pazienza è già
   ferma. (`usaPausa`, vedi [../core/interfaccia.md](../core/interfaccia.md))
 
+## Lasciare a metà
+
+La regola comune è [../core/ripresa.md](../core/ripresa.md): la giornata
+lasciata a metà si ritrova al rientro com'era. Il formato sta in
+`src/motore/bancarella/sosta.js`, sotto `profile.campagne.bancarella.sosta`
+(l'avanzamento delle giornate resta in `profile.mercato`).
+
+- **Si scrive**: la giornata (per `id`, `libera` compresa), il banco a cui
+  si è, cuori, serviti, perfetti, incasso, le ceste **nello stesso
+  ordine**, la fila con la spesa, la banconota e la pazienza di ognuno, e
+  il cliente al banco com'è: la roba già data, le monete posate, la cifra
+  battuta a metà, il totale già indovinato, gli sbagli. Prezzi, resto,
+  monete del cassetto e tempi si rifanno dal listino e dalla giornata.
+- **Si perde** poco: la battuta nel fumetto, e il pezzo di cartello del
+  banco già passato (ripreso lì, il cartello riparte da capo).
+- **Uscire non è una mossa**: la fila non si rimescola, la pazienza non
+  torna piena, i cuori e gli sbagli restano quelli, e il cliente a metà non
+  cambia spesa né banconota. Il cliente appena servito (i 900 ms
+  del «grazie») si chiude prima di scrivere: ha già pagato, e ripreso non
+  ripagherebbe.
+- **Quando**: col ←, a pagina nascosta, prima di smontare, e a ogni cliente
+  che lascia il posto. La giornata ripresa nasce dietro il velo della pausa.
+- **Un salvataggio che non torna** (giornata sparita, merce tolta dal
+  listino, più roba data di quella chiesta) si butta e la mappa resta
+  com'è. Una giornata vinta o persa la toglie, cominciarne un'altra chiede
+  prima.
+
+Nei test: `unita/bancarella-sosta`, `integrazione/bancarella-sosta`; i
+bersagli della carta sono quelli comuni di [../core/ripresa.md](../core/ripresa.md).
+
 ## Quanto rende, e cosa si segna
 
 - **Un cliente vale da 🪙2 a 🪙4** secondo il lavoro (`MONETE_CLIENTE`:
