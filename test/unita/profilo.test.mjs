@@ -123,8 +123,15 @@ save('profilo:g2', profiloFinto(66))
 state.giocatori.push({ id: 'g2', nome: 'Bea' })
 await flush()
 await selectPlayer('g2')
+// il lavoro a metà fuori dal profilo: se ne va col bambino, quello dell'altro resta
+save('costruttore:g2', { v: 2, programmi: {} })
+save('generale:g2', { piani: {} })
+save('generale:g1', { piani: {} })
+await flush()
 
 await eliminaGiocatore('g2')
+stessaLista('i suoi programmi e i suoi piani se ne vanno con lui',
+            [...await chiavi('costruttore:'), ...await chiavi('generale:')], ['generale:g1'])
 uguale('la voce sparisce dal roster', state.giocatori.length, 1)
 stessaLista('e il salvataggio pure', await chiavi('profilo:'), ['profilo:g1'])
 uguale('chi cancella se stesso finisce nell\'altro profilo', state.player, 'g1')

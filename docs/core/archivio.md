@@ -109,7 +109,9 @@ scaricano da sole su `visibilitychange` e `pagehide`.
 Chiavi di casa, non di un bambino: stanno fuori perché dentro morirebbero
 con il profilo, o lo gonfierebbero a ogni scrittura. **Un dato fuori dai
 profili non se ne va da solo**: chi elimina un bambino deve portarselo via
-(`scordaSessioni`, `scordaIstantanee`).
+(`scordaSessioni`, `scordaIstantanee`, e per il lavoro a metà dei giochi
+`LAVORI_FUORI` in `store/profile.js`). Nel cestino tornano i progressi, non
+le ore giocate né i programmi a metà.
 
 | chiave | cosa | dove si legge |
 |---|---|---|

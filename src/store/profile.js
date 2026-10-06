@@ -194,6 +194,10 @@ export function rinominaGiocatore(id, nome) {
    altrimenti resterebbe aperto un profilo che non esiste più e il primo
    salvataggio lo farebbe rinascere. Se non resta nessuno si torna al
    primo avvio, che è la verità: non c'è più nessun giocatore. */
+// i giochi che tengono il lavoro di un bambino fuori dal profilo, sotto `<gioco>:<id>`
+// (docs/core/archivio.md, «Fuori dai profili»)
+const LAVORI_FUORI = ['costruttore', 'generale']
+
 export async function eliminaGiocatore(id) {
   const i = state.giocatori.findIndex(g => g.id === id)
   if (i < 0) throw new Error('Questo giocatore non c\'è')
@@ -213,6 +217,8 @@ export async function eliminaGiocatore(id) {
      i progressi, non le ore passate davanti allo schermo. */
   await scordaSessioni(id)
   await scordaIstantanee(id)   // le fotografie di «Come va»: fuori dal profilo, per lo stesso motivo
+  // i programmi e i piani lasciati a metà, idem; nel cestino tornano le stelle, non il lavoro a metà
+  for (const gioco of LAVORI_FUORI) await remove(`${gioco}:${id}`)
   if (state.player === id) {
     const prossimo = (state.giocatori[0] || {}).id
     if (prossimo) await selectPlayer(prossimo)
