@@ -5,7 +5,7 @@
    ricarica: il pezzo c'è. Niente `#fattoria-tipo=`: butterebbe la fattoria.
    Vedi docs/fattoria/regole.md.
    `node test/esegui.mjs fattoria-salvataggio` */
-import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, attendi } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, attendi, scegli } from '../aiuto/browser.mjs'
 import { controlla, riassunto } from '../aiuto/verifica.mjs'
 import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
 
@@ -28,7 +28,7 @@ const nascondi = () => page.evaluate(() => {
 const chiudiLaPagina = () => page.evaluate(() => dispatchEvent(new Event('pagehide')))
 
 async function entra() {
-  await page.locator('.carta.gioco[data-gioco="fattoria"]').click()
+  await scegli(page, 'fattoria')
   await page.waitForSelector('.fa-tela', { timeout: 5000 })
   await attendi(page, 500)
 }

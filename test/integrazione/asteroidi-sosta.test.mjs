@@ -6,7 +6,7 @@
    docs/asteroidi/sosta.md.
    `node test/esegui.mjs asteroidi-sosta`
    tempo: 60 */
-import { apriBrowser, apriGioco, azzera, attendi, scatto, leggiProfilo } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, attendi, scatto, leggiProfilo, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -14,7 +14,7 @@ const { page, errori } = await apriGioco(browser)
 await azzera(page)
 
 async function entra() {
-  await page.getByText('Asteroidi', { exact: true }).click()
+  await scegli(page, 'mate')
   await page.waitForSelector('.scaletta', { timeout: 5000 })
 }
 const indietro = () => page.click('button[aria-label="indietro"]')

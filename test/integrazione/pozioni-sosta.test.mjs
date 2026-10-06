@@ -5,7 +5,7 @@
    nuova chiede prima di buttarla. Vedi docs/pozioni/sosta.md.
    `node test/esegui.mjs pozioni-sosta`
    tempo: 60 */
-import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi }
+import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
@@ -17,7 +17,7 @@ await semina(page, { settings: { eta: 9 },
                      campagne: { pozioni: { tappa: 1, libera: false, stelle: {}, cfg: {} } } })
 
 async function entra() {
-  await page.click('.carta.gioco[data-gioco="pozioni"]')
+  await scegli(page, 'pozioni')
   await page.waitForSelector('.pz-mappa')
 }
 const indietro = () => page.click('button[aria-label="indietro"]')

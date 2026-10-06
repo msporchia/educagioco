@@ -32,7 +32,7 @@
    `node test/esegui.mjs domanda`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, leggiProfilo } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, leggiProfilo, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -419,7 +419,7 @@ await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.carte', { timeout: 5000 })
 await semina(page, { coins: 300, settings: { sperimentali: true } })
 await page.waitForSelector('.carta.gioco[data-gioco="sotterraneo"]', { timeout: 5000 })
-await page.click('.carta.gioco[data-gioco="sotterraneo"]')
+await scegli(page, 'sotterraneo')
 await page.waitForSelector('.sot-tappe', { timeout: 5000 })
 /* ── prima si sceglie chi scende ──
    Alla prima apertura il sotterraneo mette davanti i quattro eroi

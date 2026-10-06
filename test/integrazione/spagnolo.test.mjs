@@ -11,7 +11,7 @@
      · le due lingue non si toccano: giocare in spagnolo non muove l'inglese
      · la voce non passa mai da speechSynthesis
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, TELEFONO } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, TELEFONO, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -31,13 +31,13 @@ uguale('e quella inglese è rimasta al suo posto', await page.locator('.carta.gi
 
 /* ---------- 2. senza la campagna vecchia finita, niente ---------- */
 await semina(page, { esp: { tappa: 4, libera: false } })
-await page.locator('.carta.gioco[data-gioco="spagnolo"]').click()
+await scegli(page, 'spagnolo')
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]', { timeout: 5000 })
 uguale('a campagna vecchia a metà il gioco di prima non c’è', await page.locator('[data-prima]').count(), 0)
 
 /* ---------- 3. chi l'aveva finita ce l'ha in fondo alla mappa ---------- */
 await semina(page, { esp: { tappa: 13, libera: true } })
-await page.locator('.carta.gioco[data-gioco="spagnolo"]').click()
+await scegli(page, 'spagnolo')
 await page.waitForSelector('[data-prima]', { timeout: 5000 })
 await page.locator('[data-prima]').click()
 await page.waitForSelector('.scelte .scelta', { timeout: 5000 })

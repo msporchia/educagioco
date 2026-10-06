@@ -29,7 +29,7 @@
    `node test/esegui.mjs pausa-asteroidi --niente-build`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, attendi, scatto, leggiProfilo } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, attendi, scatto, leggiProfilo, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -44,7 +44,7 @@ const veli = () => page.locator('[data-pausa]').count()
 const bottoni = (nome) => page.locator(`button[aria-label="${nome}"]`)
 
 /* ---------- 1. si entra in una tappa ---------- */
-await page.getByText('Asteroidi', { exact: true }).click()
+await scegli(page, 'mate')
 await page.waitForSelector('.scaletta', { timeout: 5000 })
 uguale('sulla mappa non c\'è niente da fermare', await bottoni('pausa').count(), 0)
 

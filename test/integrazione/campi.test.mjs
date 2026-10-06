@@ -20,7 +20,7 @@
    `node test/esegui.mjs campi`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi }
+import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { PRODOTTI } from '../../src/giochi/fattoria/dati/coltivazioni.js'
@@ -33,7 +33,7 @@ const vecchio = await leggiProfilo(page)
 await semina(page, { coins: 3000, settings: { ...((vecchio || {}).settings || {}) } })
 
 async function entra() {
-  await page.locator('.carta.gioco[data-gioco="fattoria"]').click()
+  await scegli(page, 'fattoria')
   await page.waitForSelector('.fa-tela', { timeout: 5000 })
   await attendi(page, 600)
 }

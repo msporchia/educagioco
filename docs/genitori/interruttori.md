@@ -41,5 +41,6 @@ un gioco che a seconda di un flag ne è uno o due è due giochi, e si porta
 dietro file filtrate e numerazioni doppie. Chi vuole meno di qualcosa usa
 l'età o il pezzo di scuola, che valgono per tutti i giochi insieme.
 
-Nei test: `.carta.gioco[data-gioco="…"]`, `.carta[data-flag="…"]`
+Nei test: `.carta.gioco[data-gioco="…"]` (per aprirla, `scegli`: vedi
+[../core/home.md](../core/home.md#nei-test)), `.carta[data-flag="…"]`
 (`sperimentali`, `tuttoAperto`, `giudizi`), `.carta[data-azione="…"]`.

@@ -27,7 +27,7 @@
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scatto, TELEFONO,
-         SCATTI, SCATTI_ACCESI } from '../aiuto/browser.mjs'
+         SCATTI, SCATTI_ACCESI, scegli } from '../aiuto/browser.mjs'
 import { WORDS } from '../../src/data/words.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { tappaDi, MONDI } from '../../src/giochi/inglese/dati/mondi.js'
@@ -56,7 +56,7 @@ await conEta(6.5)
 /* ---------- 1. dalla home alla mappa ---------- */
 const carta = page.locator('.carta.gioco[data-gioco="inglese"]')
 uguale('in home c’è una carta English sola', await carta.count(), 1)
-await carta.click()
+await scegli(page, 'inglese')
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]', { timeout: 5000 })
 uguale('la prima tappa è aperta', await page.locator('[data-tappa="prima-colori"]').getAttribute('data-stato'), 'aperta')
 uguale('la seconda no', await page.locator('[data-tappa="prima-animali"]').getAttribute('data-stato'), 'chiusa')
@@ -128,7 +128,7 @@ const lette = { 'il-cane-di-laura': ora - 2 * 86400000, 'il-gioco-di-tom': ora -
 await semina(page, { coins: 100, items,
                      campagne: { inglese: { tappa: Object.keys(vinte).length, libera: false, stelle: {}, cfg: {}, vinte,
                                             lette } } })
-await carta.click()
+await scegli(page, 'inglese')
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]')
 uguale('la tappa di parole saputa è piena', await page.locator('[data-tappa="prima-animali"]').getAttribute('data-grado'), '10')
 uguale('la bandiera si è aperta', await page.locator('[data-tappa="prima-bandiera"]').getAttribute('data-stato'), 'aperta')
@@ -413,7 +413,7 @@ await page.waitForSelector('.carte')
                        campagne: { inglese: { tappa: Object.keys(tutte).length, libera: false, stelle: {}, cfg: {},
                                               vinte: tutte, lette: Object.fromEntries(giaLette.map(id => [id, ora - 86400000])) } } })
 }
-await carta.click()
+await scegli(page, 'inglese')
 await page.waitForSelector('[data-libro="sesta"]')
 await page.locator('[data-libro="sesta"]').scrollIntoViewIfNeeded()
 await page.locator('[data-libro="sesta"]').click()
@@ -488,7 +488,7 @@ await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('.carte')
 const primeTre = Object.fromEntries(['prima-colori', 'prima-animali', 'prima-giocattoli'].map((id, i) => [id, i + 1]))
 await conEta(6.5, { campagne: { inglese: { tappa: 3, libera: false, stelle: {}, cfg: {}, vinte: primeTre } } })
-await carta.click()
+await scegli(page, 'inglese')
 await page.waitForSelector('[data-tappa="prima-che-cose"][data-stato="aperta"]')
 await page.locator('[data-tappa="prima-che-cose"]').click()
 await page.waitForSelector('[data-pagina]', { timeout: 5000 })
@@ -512,7 +512,7 @@ await page.waitForSelector('[data-mappa-inglese]')
 await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('.carte')
 await conEta(10, { campagne: { inglese: { tappa: 0, libera: false, stelle: {}, cfg: {}, vinte: { 'quarta-giornata': 1 } } } })
-await carta.click()
+await scegli(page, 'inglese')
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]')
 uguale('la prima comincia da capo', await page.locator('[data-tappa="prima-colori"]').getAttribute('data-stato'), 'aperta')
 uguale('una tappa alla volta', await page.locator('[data-tappa="prima-animali"]').getAttribute('data-stato'), 'chiusa')

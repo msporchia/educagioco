@@ -4,7 +4,7 @@
    corso; vinto il livello, il piano a metà se ne va. Un livello non butta
    il piano di un altro. Vedi docs/generale/lasciare-a-meta.md.
    `node test/esegui.mjs generale-sosta` */
-import { apriBrowser, apriGioco, azzera, attendi, scatto } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, attendi, scatto, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -12,7 +12,7 @@ const { page, errori } = await apriGioco(browser)
 await azzera(page)
 
 const elenco = async () => {
-  await page.click('.carta.gen')
+  await scegli(page, 'generale')
   await page.waitForSelector('.tappa')
 }
 const entraNel = async k => {

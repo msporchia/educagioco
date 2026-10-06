@@ -15,7 +15,7 @@
    si aggiusta il modello — la RESA del danno o la durata dell'ondata sono
    lì apposta — e si rilancia. I numeri delle tappe non si scrivono.
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, scegli } from '../aiuto/browser.mjs'
 import { controlla, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -26,7 +26,7 @@ const errori = []
 async function tavolo() {
   const { page, errori: suoi } = await apriGioco(browser)
   page.setDefaultTimeout(0)
-  await page.click('.carta.gioco[data-gioco="torri"]')
+  await scegli(page, 'torri')
   await page.waitForSelector('.tappe')
   return { page, suoi }
 }

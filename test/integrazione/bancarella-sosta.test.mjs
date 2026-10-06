@@ -5,7 +5,7 @@
    pagina, e mai in silenzio: una giornata nuova chiede prima di buttarla.
    Vedi docs/bancarella/regole.md, «Lasciare a metà».
    `node test/esegui.mjs bancarella-sosta` */
-import { apriBrowser, apriGioco, azzera, attendi, scatto } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, attendi, scatto, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -13,7 +13,7 @@ const { page, errori } = await apriGioco(browser)
 await azzera(page)
 
 async function entra() {
-  await page.getByText('La bancarella').click()
+  await scegli(page, 'bancarella')
   await page.waitForSelector('.giornate')
 }
 

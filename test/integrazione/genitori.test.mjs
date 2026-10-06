@@ -14,7 +14,7 @@ import { readFileSync, writeFileSync, rmSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 import { apriBrowser, apriGioco, semina, azzera, scatto, leggiProfilo,
-         GIOCATORE } from '../aiuto/browser.mjs'
+         GIOCATORE, scegli } from '../aiuto/browser.mjs'
 import { GIOCHI } from '../../src/data/giochi.js'
 import { SAPERI } from '../../src/data/saperi.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -460,7 +460,7 @@ if (IN_PROVA.length) {
      dall'altra parte, cioè dalla mappa che un bambino apre davvero */
   await page.click('button[aria-label="indietro"]')
   await page.waitForSelector('.carte', { timeout: 5000 })
-  await page.getByText('Asteroidi', { exact: true }).click()
+  await scegli(page, 'mate')
   await page.waitForSelector('.scaletta', { timeout: 5000 })
   const conto = await page.evaluate(() => ({
     pianeti: document.querySelectorAll('.pianeta').length,

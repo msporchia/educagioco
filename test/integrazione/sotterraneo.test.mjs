@@ -22,7 +22,7 @@
    `node test/esegui.mjs sotterraneo`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -36,7 +36,7 @@ await semina(page, { coins: 300, settings: { sperimentali: true } })
 /* ---------- 1. la carta, e le sei discese ---------- */
 const carta = page.locator('.carta.gioco[data-gioco="sotterraneo"]')
 controlla('la carta è in home coi giochi in prova accesi', await carta.count() === 1)
-await carta.click()
+await scegli(page, 'sotterraneo')
 await page.waitForSelector('.sot-tappe', { timeout: 5000 })
 
 /* ---------- 1b. chi scende ----------

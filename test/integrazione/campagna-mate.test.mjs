@@ -12,7 +12,7 @@
        che mescola tabelline e calcolo a mente e a fine partita dice di
        quanto sei migliorato
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, leggiProfilo, TELEFONO } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, leggiProfilo, TELEFONO, scegli } from '../aiuto/browser.mjs'
 import { CAMPAGNA as PIANETI } from '../../src/data/tabelline.js'
 import { statoDellaTappa, PASSATA } from '../../src/data/portata.js'
 import { ETA_DIFETTO } from '../../src/store/profile.js'
@@ -24,7 +24,7 @@ const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
 await azzera(page)
 
 /* ---------- 1. si entra e c'è la mappa ---------- */
-await page.getByText('Asteroidi', { exact: true }).click()
+await scegli(page, 'mate')
 await page.waitForSelector('.scaletta', { timeout: 5000 })
 
 const testo = await page.evaluate(() => document.body.innerText)
@@ -227,7 +227,7 @@ controlla('la home conta le tappe della fila unica',
           new RegExp(`${dovuto} tappe su ${SCALETTA.length}`).test(home),
           home.split('\n').find(r => /tapp/i.test(r)) || 'nessuna riga sugli asteroidi')
 
-await page.getByText('Asteroidi', { exact: true }).click()
+await scegli(page, 'mate')
 await page.waitForSelector('.scaletta', { timeout: 5000 })
 const dopo = await page.evaluate(() =>
   [...document.querySelectorAll('.pianeta')].filter(b => !b.disabled).length)
@@ -275,7 +275,7 @@ controlla('e il tasto riporta alla mappa', await page.locator('.scaletta').first
    la frase coi due numeri. */
 await semina(page, { mate: { tappa: 10, fila: SCALETTA.length, libera: true },
                      best: { math: 40 } })
-await page.getByText('Asteroidi', { exact: true }).click()
+await scegli(page, 'mate')
 await page.waitForSelector('.scaletta', { timeout: 5000 })
 const tasti = await page.evaluate(() => ({
   voli: document.querySelectorAll('[data-volo]').length,

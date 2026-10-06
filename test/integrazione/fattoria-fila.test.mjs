@@ -32,7 +32,7 @@
    `node test/esegui.mjs fattoria-fila`
    tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi }
+import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
@@ -95,7 +95,7 @@ await semina(page, {
               fattoria: { tappa: 0, libera: false, stelle: {},
                           cfg: { stato: f.serializza() } } },
 })
-await page.locator('.carta.gioco[data-gioco="fattoria"]').click()
+await scegli(page, 'fattoria')
 await page.waitForSelector('.fa-tela', { timeout: 5000 })
 await attendi(page, 700)
 

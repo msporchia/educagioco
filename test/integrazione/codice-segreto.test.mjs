@@ -14,7 +14,7 @@
    stelle e le monete arrivano, e tutto finisce nel profilo salvato.
    `node test/esegui.mjs codice-segreto`
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, scatto, leggiProfilo, semina, attendi }
+import { apriBrowser, apriGioco, azzera, scatto, leggiProfilo, semina, attendi, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/codice-segreto/dati/campagna.js'
@@ -28,7 +28,7 @@ await azzera(page)
 /* ---------- 1. si entra dalla home ---------- */
 const carta = page.locator('.carta.gioco[data-gioco="codice"]')
 controlla('la carta del gioco è in home', await carta.count() === 1)
-await carta.click()
+await scegli(page, 'codice')
 await page.waitForSelector('.cs-mappa', { timeout: 5000 })
 
 uguale('la mappa elenca tutte le tappe', await page.locator('.cs-tappa').count(), CAMPAGNA.length)

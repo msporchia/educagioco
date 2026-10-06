@@ -14,7 +14,7 @@
    `node test/esegui.mjs fattoria-stagioni --scatti`
    tempo: 30
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi }
+import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
@@ -55,7 +55,7 @@ await semina(page, {
 
 async function entra(stagione) {
   await page.evaluate(s => { location.hash = 'stagione=' + s }, stagione)
-  await page.locator('.carta.gioco[data-gioco="fattoria"]').click()
+  await scegli(page, 'fattoria')
   await page.waitForSelector('.fa-tela', { timeout: 5000 })
   await attendi(page, 1200)       // la lista stagionale si rifà nel primo battito
 }
@@ -98,7 +98,7 @@ await esci()
 /* ---------- un giorno qualunque ----------
    Senza cheat oggi non è (quasi mai) festa: la linguetta non c'è. Se
    il test gira davvero a Natale, la linguetta c'è ed è giusto così. */
-await page.locator('.carta.gioco[data-gioco="fattoria"]').click()
+await scegli(page, 'fattoria')
 await page.waitForSelector('.fa-tela', { timeout: 5000 })
 await attendi(page, 800)
 await page.locator('[data-baule="bello"]').click()

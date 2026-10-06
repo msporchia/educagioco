@@ -12,7 +12,7 @@
    `node test/esegui.mjs fattoria-tipo`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi, GIOCO }
+import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi, GIOCO, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
@@ -49,7 +49,7 @@ const fattoria = async () => {
 /* ── 0. una fattoria sua, da non perdere ──
    Il bambino ci è già entrato: la sua fattoria appena nata è salvata,
    ed è quella che il cestino deve tenere. */
-await page.locator('.carta.gioco[data-gioco="fattoria"]').click()
+await scegli(page, 'fattoria')
 await page.waitForSelector('.fa-tela', { timeout: 5000 })
 await attendi(page, 600)
 await esci()
@@ -83,7 +83,7 @@ await esci()
 /* ── 2. ricaricare non la rifà ── */
 await page.reload()
 await page.waitForSelector('.carte', { timeout: 10000 })
-await page.locator('.carta.gioco[data-gioco="fattoria"]').click()
+await scegli(page, 'fattoria')
 await page.waitForSelector('.fa-tela', { timeout: 5000 })
 await attendi(page, 600)
 await esci()

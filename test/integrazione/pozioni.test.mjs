@@ -12,7 +12,7 @@
    `node test/esegui.mjs pozioni`
    tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi }
+import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/pozioni/dati/campagna.js'
@@ -29,7 +29,7 @@ await semina(page, { settings: { eta: 9 } })
 /* ---------- 1. si entra dalla home ---------- */
 const carta = page.locator('.carta.gioco[data-gioco="pozioni"]')
 controlla('la carta del gioco è in home', await carta.count() === 1)
-await carta.click()
+await scegli(page, 'pozioni')
 await page.waitForSelector('.pz-mappa', { timeout: 5000 })
 uguale('la mappa elenca tutte le tappe', await page.locator('.pz-tappa').count(), CAMPAGNA.length)
 uguale('quattro blocchi: tre famiglie e il calderone', await page.locator('.pz-blocco').count(), 4)
@@ -161,7 +161,7 @@ const centro = async sel => {
    prendere l'ingrediente: è la schermata che crollava con «cannot read
    properties of null (reading 'dose')». */
 await semina(page, { settings: { eta: 9 }, campagne: { pozioni: { tappa: 5, libera: false, stelle: {}, cfg: {} } } })
-await page.locator('.carta.gioco[data-gioco="pozioni"]').click()
+await scegli(page, 'pozioni')
 await page.waitForSelector('.pz-mappa', { timeout: 5000 })
 await page.locator('.pz-tappa[data-tappa="5"]').click()
 await page.waitForSelector('.pz-banco', { timeout: 5000 })

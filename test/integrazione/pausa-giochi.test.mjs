@@ -16,7 +16,7 @@
    `node test/esegui.mjs pausa-giochi --niente-build`
    tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, attendi, scatto } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -54,7 +54,7 @@ const secondi = async () => {
   return Number(m) * 60 + Number(s)
 }
 
-await page.locator('.carta.gioco[data-gioco="survivors"]').click()
+await scegli(page, 'survivors')
 await page.waitForSelector('.sv-mappa', { timeout: 5000 })
 uguale('survivors: sulla mappa non c\'è niente da fermare', await pausaInBarra(), 0)
 
@@ -128,7 +128,7 @@ const caverna = () => page.evaluate(() => {
   return h
 })
 
-await page.locator('.carta.gioco[data-gioco="sotterraneo"]').click()
+await scegli(page, 'sotterraneo')
 await page.waitForSelector('.sot-tappe', { timeout: 5000 })
 /* la prima volta si sceglie chi scende, e finché quella carta è aperta
    non si è ancora dentro niente */

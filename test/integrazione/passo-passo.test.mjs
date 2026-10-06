@@ -26,7 +26,7 @@
    · e nessun errore in console.
    `DIST=… node test/esegui.mjs passo-passo --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, scatto, semina, attendi, leggiProfilo, TELEFONO }
+import { apriBrowser, apriGioco, azzera, scatto, semina, attendi, leggiProfilo, TELEFONO, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA, TAPPE_PICCOLE } from '../../src/giochi/passo-passo/dati/campagna.js'
@@ -67,7 +67,7 @@ uguale('a quattro anni la carta è in home, senza accendere niente',
 await semina(page, { settings: { eta: 6 }, coins: 2000 })
 const carta = page.locator('.carta.gioco[data-gioco="passo"]')
 uguale('a sei anni la carta è in home', await carta.count(), 1)
-await carta.click()
+await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa', { timeout: 5000 })
 uguale('la mappa elenca tutte le tappe', await page.locator('.pp-tappa').count(), CAMPAGNA.length)
 controlla('la prima tappa è aperta', await page.locator('.pp-tappa[data-tappa="0"]').isEnabled())
@@ -270,7 +270,7 @@ controlla('e l\'aiuto prenotato arriva', await page.locator('[data-in-coda]').co
 await allaMappa()
 await semina(page, { settings: { eta: 6 },
                      campagne: { passo: { tappa: 6, stelle: { 0: 3, 1: 1 }, cfg: {} } } })
-await page.locator('.carta.gioco[data-gioco="passo"]').click()
+await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 await entraNellaTappa(5)
 uguale('nel ruscello ci sono le quattro frecce-salto', await page.locator('[data-salto]').count(), 4)
@@ -290,7 +290,7 @@ await page.waitForSelector('.pp-mappa')
    permette. Deve stare intera in larghezza e in poco più di metà
    dell'altezza, con tessere e tasti sotto. */
 await semina(page, { settings: { eta: 8, tuttoAperto: true } })
-await page.locator('.carta.gioco[data-gioco="passo"]').click()
+await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 await entraNellaTappa(CAMPAGNA.length - 1)
 {
@@ -310,7 +310,7 @@ await scatto(page, 'passo-grande')
 /* ---------- 10. uscire mentre il coniglio entra in casa non butta la tana ---------- */
 await allaMappa()
 await semina(page, { settings: { eta: 6 }, campagne: {} })
-await page.locator('.carta.gioco[data-gioco="passo"]').click()
+await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 await entraNellaTappa(0)
 await componi(soluzione)
@@ -327,7 +327,7 @@ await page.waitForSelector('.pp-mappa', { timeout: 5000 })
 /* ---------- 11. il sentiero senza fine, a campagna finita ---------- */
 await semina(page, { settings: { eta: 8 },
                      campagne: { passo: { tappa: CAMPAGNA.length, libera: true, stelle: {}, cfg: {} } } })
-await page.locator('.carta.gioco[data-gioco="passo"]').click()
+await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 controlla('a campagna finita il sentiero si apre',
           await page.locator('[data-tappa="senza-fine"]').isEnabled())
@@ -372,7 +372,7 @@ await allaMappa()
 /* ---------- 12. lo zaino, col dito ---------- */
 await semina(page, { settings: { eta: 8 },
                      campagne: { passo: { tappa: TAPPE_PICCOLE, stelle: {}, cfg: {} } } })
-await page.locator('.carta.gioco[data-gioco="passo"]').click()
+await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 controlla('a otto anni la prima tappa dello zaino è aperta',
           await page.locator(`.pp-tappa[data-tappa="${TAPPE_PICCOLE}"]`).isEnabled())
@@ -458,7 +458,7 @@ await scatto(page, 'passo-zaino-aiuto')
 await allaMappa()
 await semina(page, { settings: { eta: 6 },
                      campagne: { passo: { tappa: TAPPE_PICCOLE, stelle: {}, cfg: {} } } })
-await page.locator('.carta.gioco[data-gioco="passo"]').click()
+await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 controlla('a sei anni la prima tappa dello zaino è chiusa',
           !(await page.locator(`.pp-tappa[data-tappa="${TAPPE_PICCOLE}"]`).isEnabled()))
@@ -491,7 +491,7 @@ async function vinci(chiave) {
 }
 await semina(page, { settings: { eta: 10, tuttoAperto: true },
                      campagne: { passo: { tappa: CAMPAGNA.length - 1, stelle: {}, cfg: {} } } })
-await page.locator('.carta.gioco[data-gioco="passo"]').click()
+await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 await entraNellaTappa(CAMPAGNA.findIndex(t => t.chiave === 'gradini-storti'))
 controlla('nel «fino a» c\'è il 🔁 e non ancora il ❓',

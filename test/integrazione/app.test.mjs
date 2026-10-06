@@ -1,4 +1,4 @@
-import { apriBrowser, apriGioco, scatto, GIOCATORE, ALTRO } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, scatto, GIOCATORE, ALTRO, scegli } from '../aiuto/browser.mjs'
 
 const browser = await apriBrowser()
 const errors = []
@@ -26,7 +26,7 @@ const avvio = await page.evaluate(() => ({
    English è la mappa del tesoro (src/giochi/inglese): si entra nella
    prima tappa e si risponde giusto qualche volta, leggendo la risposta
    dal DOM — `data-giusta` sulle opzioni, `data-posto` sulle tessere. */
-await page.click('.carta.gioco[data-gioco="inglese"]')
+await scegli(page, 'inglese')
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]')
 const mappaEn = await page.evaluate(() => ({
   tappe: document.querySelectorAll('[data-tappa]').length,
@@ -64,7 +64,7 @@ const dopoInglese = await page.evaluate(giuste => ({
    barra, uguale in ogni schermata. */
 await page.click('.barra-app button[aria-label="indietro"]')
 await page.waitForSelector('.carte')
-await page.click('.carta.mate')
+await scegli(page, 'mate')
 // non più un menu di spunte: la campagna dei pianeti, e si parte dal primo aperto
 await page.waitForSelector('.scaletta')
 const mate = await page.evaluate(async () => {

@@ -5,7 +5,7 @@
    cima «torno da dove ero», uscire non chiude la serie, un sentiero nuovo
    chiede prima e «lascio perdere» scrive il record. Vedi docs/passo-passo/sosta.md.
    `DIST=… node test/esegui.mjs passo-passo-sosta --niente-build` */
-import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scatto } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scatto, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
@@ -21,7 +21,7 @@ async function componi(mosse) {
   for (const m of mosse) { await page.locator(tasto(m)).click(); await attendi(page, 60) }
 }
 async function allaMappaDelGioco() {
-  await page.locator('.carta.gioco[data-gioco="passo"]').click()
+  await scegli(page, 'passo')
   await page.waitForSelector('.pp-mappa', { timeout: 5000 })
 }
 async function entraNellaTappa(i) {

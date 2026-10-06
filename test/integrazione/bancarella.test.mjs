@@ -21,7 +21,7 @@
        è un `setTimeout` e quindi scatterebbe anche col velo davanti
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi,
-         TELEFONO } from '../aiuto/browser.mjs'
+         TELEFONO, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNE, premioCliente } from '../../src/data/bancarella.js'
 
@@ -39,13 +39,13 @@ const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
 await azzera(page)
 
 /* ---------- 1. dalla home si entra e si torna ---------- */
-await page.getByText('La bancarella').click()
+await scegli(page, 'bancarella')
 await page.waitForSelector('.negozio', { timeout: 5000 })
 uguale('c\'è un solo tasto per tornare indietro',
        await page.locator('button[aria-label="indietro"]').count(), 1)
 await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('.carte', { timeout: 5000 })
-await page.getByText('La bancarella').click()
+await scegli(page, 'bancarella')
 await page.waitForSelector('.giornate', { timeout: 5000 })
 
 /* ---------- 2. le giornate di mercato ---------- */
@@ -295,7 +295,7 @@ uguale('e quella dopo si è aperta', dopo.chiuse, dopo.quante - 2)
    cifra non è giusta il cassetto **non si apre nemmeno** — dare il resto
    senza sapere quanto costa la spesa non vuol dire niente. */
 await semina(page, { mercato: { tappa: 2, libera: false, v: 2 } })
-await page.getByText('La bancarella').click()
+await scegli(page, 'bancarella')
 await page.waitForSelector('.giornate', { timeout: 5000 })
 await apriGiornata('conto-dieci')
 await page.waitForFunction(() => !window.__shop.cambio.value, { timeout: 5000 })
@@ -358,7 +358,7 @@ nota(`totale battuto: ${conto.scritto} € su ${conto.totale}c`)
    Le prime giornate non hanno copie né monete piccole per scelta: quello che
    cresce si vede solo più avanti, e va provato lì. */
 await semina(page, { mercato: { tappa: 14, libera: false, v: 2 } })
-await page.getByText('La bancarella').click()
+await scegli(page, 'bancarella')
 await page.waitForSelector('.giornate', { timeout: 5000 })
 await apriGiornata('resto-copie')
 await page.waitForFunction(() => !window.__shop.cambio.value, { timeout: 5000 })
@@ -420,7 +420,7 @@ nota(`due cose uguali: pezzi per articolo [${fiera.quanti.join(',')}] · ` +
    display non dice il resto, le monete si posano tutte (anche troppe) e
    la risposta la dà il bambino col tasto ✓. */
 await semina(page, { mercato: { tappa: 15, libera: false, v: 2 } })
-await page.getByText('La bancarella').click()
+await scegli(page, 'bancarella')
 await page.waitForSelector('.giornate', { timeout: 5000 })
 await apriGiornata('mente')
 await page.waitForFunction(() => !window.__shop.cambio.value, { timeout: 5000 })

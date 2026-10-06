@@ -13,7 +13,7 @@
        aver riaperto il gioco
      · sbagliando due volte lo stesso concetto arriva il trucco
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, scatto, TELEFONO } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, scatto, TELEFONO, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CONCETTI, STAZIONI, concettoDiChiave } from '../../src/data/calcolo.js'
 import { eNuovo } from '../../src/store/calcolo.js'
@@ -39,7 +39,7 @@ const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
 await azzera(page)
 
 /* ---------- 1. una mappa sola, coi due mestieri mescolati ---------- */
-await page.getByText('Asteroidi', { exact: true }).click()
+await scegli(page, 'mate')
 await page.waitForSelector('.scaletta', { timeout: 5000 })
 
 const mappa = await page.evaluate(() => ({
@@ -200,7 +200,7 @@ controlla('la home conta le tappe della fila unica',
           new RegExp(`1 tappa su ${SCALETTA.length}`).test(home),
           home.split('\n').find(r => /tapp/i.test(r)) || 'nessuna riga sugli asteroidi')
 
-await page.getByText('Asteroidi', { exact: true }).click()
+await scegli(page, 'mate')
 await page.waitForSelector('.scaletta', { timeout: 5000 })
 const dopo = await page.evaluate(() =>
   [...document.querySelectorAll('.stazione')].filter(b => !b.disabled).length)

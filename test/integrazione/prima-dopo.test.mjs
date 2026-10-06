@@ -20,7 +20,7 @@
    schermate incatenate era vivo in quattro (vedi `docs/core/interfaccia.md`).
    `node test/esegui.mjs prima-dopo`
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, scatto, semina, attendi }
+import { apriBrowser, apriGioco, azzera, scatto, semina, attendi, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/prima-dopo/dati/campagna.js'
@@ -38,7 +38,7 @@ await semina(page, { settings: { eta: 5 } })
 /* ---------- 1. si entra dalla home ---------- */
 const carta = page.locator('.carta.gioco[data-gioco="prima"]')
 controlla('la carta del gioco è in home', await carta.count() === 1)
-await carta.click()
+await scegli(page, 'prima')
 await page.waitForSelector('.pd-mappa', { timeout: 5000 })
 uguale('la mappa elenca tutte le tappe', await page.locator('.pd-tappa').count(), CAMPAGNA.length)
 /* a cinque anni l'ultima tappa è chiusa per età, e sotto non c'è
@@ -125,7 +125,7 @@ uguale('la domanda dopo si lascia toccare davvero',
    dentro una faccia è di nuovo un francobollo. Due e due ne fanno 158,
    e l'ordine lo dicono i numeri nelle buche. */
 await semina(page, { campagne: { prima: { tappa: 9, stelle: {}, cfg: {} } } })
-await page.locator('.carta.gioco[data-gioco="prima"]').click()
+await scegli(page, 'prima')
 await page.waitForSelector('.pd-mappa', { timeout: 5000 })
 /* la prossima sarebbe la decima, che a cinque anni è chiusa per età:
    per lui il gioco finisce qui, e il segno di adesso non va da nessuna

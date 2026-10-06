@@ -25,7 +25,7 @@
    `node test/esegui.mjs survivors --niente-build`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, attendi, scatto }
+import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -101,7 +101,7 @@ const traccheggia = async () => { await tasto('ArrowRight', 150); await tasto('A
 /* ---------- 1. si entra e si gioca un pezzo ---------- */
 const carta = page.locator('.carta.gioco[data-gioco="survivors"]')
 uguale('la carta è in home', await carta.count(), 1)
-await carta.click()
+await scegli(page, 'survivors')
 await page.waitForSelector('.sv-mappa', { timeout: 5000 })
 await page.locator('.sv-tappa[data-tappa="0"]').click()
 await page.waitForSelector('.sv-tela', { timeout: 5000 })

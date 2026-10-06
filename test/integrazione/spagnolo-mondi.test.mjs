@@ -28,7 +28,7 @@
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scatto, TELEFONO,
-         SCATTI, SCATTI_ACCESI } from '../aiuto/browser.mjs'
+         SCATTI, SCATTI_ACCESI, scegli } from '../aiuto/browser.mjs'
 import { PAROLE_ES as PAROLE } from '../../src/data/parole-es.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { tappaDi, MONDI } from '../../src/giochi/spagnolo/dati/mondi.js'
@@ -58,7 +58,7 @@ await conEta(6.5)
 /* ---------- 1. dalla home alla mappa ---------- */
 const carta = page.locator('.carta.gioco[data-gioco="spagnolo"]')
 uguale('in home c’è una carta Español sola', await carta.count(), 1)
-await carta.click()
+await scegli(page, 'spagnolo')
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]', { timeout: 5000 })
 uguale('la prima tappa è aperta', await page.locator('[data-tappa="prima-colores"]').getAttribute('data-stato'), 'aperta')
 uguale('la seconda no', await page.locator('[data-tappa="prima-animales"]').getAttribute('data-stato'), 'chiusa')
@@ -130,7 +130,7 @@ const lette = { 'chi-c-e-sotto': ora - 3 * 86400000, 'la-scatola-di-leo': ora - 
 await semina(page, { coins: 100, items,
                      campagne: { spagnolo: { tappa: Object.keys(vinte).length, libera: false, stelle: {}, cfg: {}, vinte,
                                             lette } } })
-await carta.click()
+await scegli(page, 'spagnolo')
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]')
 uguale('la tappa di parole saputa è piena', await page.locator('[data-tappa="prima-animales"]').getAttribute('data-grado'), '10')
 uguale('la bandiera si è aperta', await page.locator('[data-tappa="prima-bandera"]').getAttribute('data-stato'), 'aperta')
@@ -428,7 +428,7 @@ await page.waitForSelector('.carte')
                        campagne: { spagnolo: { tappa: Object.keys(tutte).length, libera: false, stelle: {}, cfg: {},
                                               vinte: tutte, lette: Object.fromEntries(giaLette.map(id => [id, ora - 86400000])) } } })
 }
-await carta.click()
+await scegli(page, 'spagnolo')
 await page.waitForSelector('[data-libro="sesta"]')
 await page.locator('[data-libro="sesta"]').scrollIntoViewIfNeeded()
 await page.locator('[data-libro="sesta"]').click()
@@ -500,7 +500,7 @@ await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('.carte')
 const primeTre = Object.fromEntries(['prima-colores', 'prima-animales', 'prima-juguetes'].map((id, i) => [id, i + 1]))
 await conEta(6.5, { campagne: { spagnolo: { tappa: 3, libera: false, stelle: {}, cfg: {}, vinte: primeTre } } })
-await carta.click()
+await scegli(page, 'spagnolo')
 await page.waitForSelector('[data-tappa="prima-es-un"][data-stato="aperta"]')
 await page.locator('[data-tappa="prima-es-un"]').click()
 await page.waitForSelector('[data-pagina]', { timeout: 5000 })
@@ -524,7 +524,7 @@ await page.waitForSelector('[data-mappa-inglese]')
 await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('.carte')
 await conEta(10, { campagne: { spagnolo: { tappa: 0, libera: false, stelle: {}, cfg: {}, vinte: { 'quarta-dia': 1 } } } })
-await carta.click()
+await scegli(page, 'spagnolo')
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]')
 uguale('la prima comincia da capo', await page.locator('[data-tappa="prima-colores"]').getAttribute('data-stato'), 'aperta')
 uguale('una tappa alla volta', await page.locator('[data-tappa="prima-animales"]').getAttribute('data-stato'), 'chiusa')
@@ -544,7 +544,7 @@ controlla('il cartiglio chiede la prima finita',
 await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('.carte')
 await conEta(10, { esp: { tappa: 13, libera: true } })
-await carta.click()
+await scegli(page, 'spagnolo')
 await page.waitForSelector('[data-prima]', { timeout: 5000 })
 await page.locator('[data-prima]').scrollIntoViewIfNeeded()
 await page.locator('[data-prima]').click()

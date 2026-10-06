@@ -44,7 +44,7 @@
    `node test/esegui.mjs torri-figure`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { TAPPE, LIBERE, MONDO } from '../../src/data/castello.js'
 import { sullaCarta } from '../../src/motore/castello/carta.js'
@@ -59,7 +59,7 @@ uguale('il castello a sprite non è più un gioco a parte, nemmeno coi giochi in
        await page.locator('.carta.gioco[data-gioco="castello"]').count(), 0)
 const carta = page.locator('.carta.gioco[data-gioco="torri"]')
 uguale('in home il castello è una carta sola', await carta.count(), 1)
-await carta.click()
+await scegli(page, 'torri')
 await page.waitForSelector('.tappe', { timeout: 5000 })
 uguale('la barra dice «Castello»',
        (await page.locator('.barra-app .dove').textContent()).trim(), 'Castello')

@@ -260,3 +260,10 @@ export const moneteInHome = page =>
   })
 
 export const attendi = (page, ms) => page.waitForTimeout(ms)
+
+/* Apre un gioco dalla home: la copertina si porta in mezzo dall'indice, e
+   solo quella in mezzo apre (docs/core/home.md). */
+export async function scegli(page, chiave) {
+  await page.click(`[data-indice="${chiave}"]`)
+  await page.click(`.carta.gioco.davanti[data-gioco="${chiave}"]`)
+}

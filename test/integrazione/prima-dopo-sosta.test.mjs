@@ -4,7 +4,7 @@
    spiegazione aperta, e dopo aver ricaricato. Una tappa nuova chiede prima.
    Una tappa vinta toglie la carta. Vedi docs/prima-dopo/sosta.md.
    `node test/esegui.mjs prima-dopo-sosta` */
-import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, attendi, scatto }
+import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, attendi, scatto, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { VERSIONE } from '../../src/giochi/prima-dopo/motore/sosta.js'
@@ -14,7 +14,7 @@ const { page, errori } = await apriGioco(browser)
 await azzera(page)
 
 const entra = async () => {
-  await page.locator('.carta.gioco[data-gioco="prima"]').click()
+  await scegli(page, 'prima')
   await page.waitForSelector('.pd-mappa', { timeout: 5000 })
 }
 const sosta = async () => (await leggiProfilo(page))?.campagne?.prima?.sosta || null

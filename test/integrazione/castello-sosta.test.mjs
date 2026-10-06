@@ -3,14 +3,14 @@
    com'era. Anche dopo aver ricaricato la pagina, e mai in silenzio: una
    tappa nuova chiede prima di buttarla. Vedi docs/castello/sosta.md.
    `node test/esegui.mjs castello-sosta` */
-import { apriBrowser, apriGioco, attendi, scatto } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, attendi, scatto, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 
 async function entra() {
-  await page.click('.carta.gioco[data-gioco="torri"]')
+  await scegli(page, 'torri')
   await page.waitForSelector('.tappe')
 }
 

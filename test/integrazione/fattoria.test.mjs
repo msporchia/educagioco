@@ -17,7 +17,7 @@
    `node test/esegui.mjs fattoria`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi }
+import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 /* Il mercato si prova su **una fattoria seminata**: la si costruisce
@@ -45,7 +45,7 @@ await semina(page, {
 const carta = page.locator('.carta.gioco[data-gioco="fattoria"]')
 controlla('la carta della fattoria è in home coi giochi in prova accesi',
           await carta.count() === 1)
-await carta.click()
+await scegli(page, 'fattoria')
 await page.waitForSelector('.fa-tela', { timeout: 5000 })
 await attendi(page, 500)
 
@@ -144,7 +144,7 @@ async function chiudi() {
 await page.evaluate(() => { location.hash = 'fattoria=64' })
 await page.reload()
 await page.waitForSelector('.carta.gioco[data-gioco="fattoria"]', { timeout: 5000 })
-await page.locator('.carta.gioco[data-gioco="fattoria"]').click()
+await scegli(page, 'fattoria')
 await page.waitForSelector('.fa-tela', { timeout: 5000 })
 await attendi(page, 600)
 controlla('col cheat la fattoria è cresciuta',
@@ -883,7 +883,7 @@ await chiudi()
                 fattoria: { tappa: 0, libera: false, stelle: {},
                             cfg: { stato: f.serializza() } } },
   })
-  await page.locator('.carta.gioco[data-gioco="fattoria"]').click()
+  await scegli(page, 'fattoria')
   await page.waitForSelector('.fa-tela', { timeout: 5000 })
   await attendi(page, 700)
 

@@ -16,7 +16,7 @@
      · il livello superato finisce nel profilo, con le sue stelle
      · niente sborda dallo schermo e niente errori in console
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, leggiProfilo, TELEFONO }
+import { apriBrowser, apriGioco, azzera, semina, scatto, leggiProfilo, TELEFONO, scegli }
        from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 /* da dove si entra dipende da un dato, non da com'è fatta la vista: se
@@ -44,7 +44,7 @@ const carte = await page.$$eval('.carta b', e => e.map(x => x.textContent.trim()
 controlla('la carta del generale è in home', carte.some(c => /generale/i.test(c)),
           carte.join(' · '))
 
-await page.locator('.carta.gen').click()
+await scegli(page, 'generale')
 
 let entrata = true
 try {
@@ -216,7 +216,7 @@ if (entrata) {
      fila: un piano che compare vuol dire tre righe, non una, e un solo
      ordine non distinguerebbe «ha svelato» da «era già lì». */
   const entraNelSecondo = async () => {
-    await page.locator('.carta.gen').click()
+    await scegli(page, 'generale')
     await page.waitForSelector('.tappa', { timeout: 5000 })
     await page.evaluate(() => window.__gen.apri(1))
     await page.waitForTimeout(400)

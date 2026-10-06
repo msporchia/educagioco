@@ -1,4 +1,4 @@
-import { apriBrowser, apriGioco, attendi, scatto, SCATTI_ACCESI } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, attendi, scatto, SCATTI_ACCESI, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { tracciato } from '../../src/grafica/geometria.js'
 import { colonnaAdd, colonnaSub, colonnaMul, colonnaMul2, colonnaDiv, generaAdd, generaSub,
@@ -131,7 +131,7 @@ for (const [nome, size] of [['mobile', { width: 390, height: 844 }], ['desktop',
   /* l'elenco si riempie mentre il test va avanti: si tiene il riferimento
      e si legge alla fine, copiarlo adesso vorrebbe dire copiarlo vuoto */
   raccolti.push([nome, suoi])
-  await page.click('.carta.gioco[data-gioco="torri"]')
+  await scegli(page, 'torri')
   await page.waitForSelector('.tappe')
 
   /* la campagna: dalla mappa si apre solo la prima tappa, che dà una torre sola

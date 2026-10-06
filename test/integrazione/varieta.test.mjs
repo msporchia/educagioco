@@ -14,7 +14,7 @@
    `node test/esegui.mjs varieta`
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, attendi, scatto, semina, leggiProfilo,
-         GIOCATORE } from '../aiuto/browser.mjs'
+         GIOCATORE, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -106,7 +106,7 @@ uguale('English consigliato ha il suo ×2', await segno('inglese'), 'doppio')
 const monete = async () => (await leggiProfilo(page))?.coins || 0
 await attendi(page, 500)
 const prima = await monete()
-await page.click('.carta.gioco[data-gioco="conta"]')
+await scegli(page, 'conta')
 await page.waitForSelector('.ct-tappa[data-tappa="0"]', { timeout: 5000 })
 await page.waitForSelector('[data-varieta-avviso]', { timeout: 5000 })
 controlla('entrando a metà, la scritta piccola lo dice',

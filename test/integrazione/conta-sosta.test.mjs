@@ -5,7 +5,7 @@
    ricaricato la pagina, e mai in silenzio: una tappa nuova chiede prima.
    Vedi docs/conta/regole.md.
    `node test/esegui.mjs conta-sosta` */
-import { apriBrowser, apriGioco, azzera, attendi, scatto, semina, leggiProfilo }
+import { apriBrowser, apriGioco, azzera, attendi, scatto, semina, leggiProfilo, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
@@ -15,7 +15,7 @@ await azzera(page)
 await semina(page, { settings: { eta: 5 } })     // il gioco dei piccoli, in home
 
 async function entra() {
-  await page.click('.carta.gioco[data-gioco="conta"]')
+  await scegli(page, 'conta')
   await page.waitForSelector('.ct-tappa[data-tappa="0"]')
 }
 const pronta = () => page.waitForSelector('.ct-cifra:not([disabled])', { timeout: 8000 })

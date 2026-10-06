@@ -5,7 +5,7 @@
    chiede prima di buttarla. Una tappa vinta toglie la carta.
    Vedi docs/lingue/sosta.md.
    `node test/esegui.mjs inglese-sosta` */
-import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scatto } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scatto, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const PRIMA = 'prima-colori'
@@ -19,7 +19,7 @@ await semina(page, { coins: 50, campagne: { inglese: { tappa: 1, libera: false, 
                                                         vinte: { [PRIMA]: Date.now() - 86400000 } } } })
 
 async function entra() {
-  await page.click('.carta.gioco[data-gioco="inglese"]')
+  await scegli(page, 'inglese')
   await page.waitForSelector('[data-mappa-inglese] [data-tappa]')
 }
 const esci = async () => {

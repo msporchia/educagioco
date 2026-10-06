@@ -11,7 +11,7 @@
 
    `node test/esegui.mjs torri-libere`
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, semina, leggiProfilo, attendi, scatto } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, semina, leggiProfilo, attendi, scatto, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -31,7 +31,7 @@ await semina(page, {
 const rigaHome = await page.locator('.carta.gioco[data-gioco="torri"]').textContent()
 controlla('in home il record di ieri sta sotto il bosco', /radura grande.*21 ondate/i.test(rigaHome), rigaHome)
 
-await page.click('.carta.gioco[data-gioco="torri"]')
+await scegli(page, 'torri')
 await page.waitForSelector('.tappe')
 
 const tasti = await page.$$eval('[data-tappa^="libera-"]', bs =>

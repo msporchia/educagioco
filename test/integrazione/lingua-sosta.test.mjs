@@ -7,7 +7,7 @@
    butta la vecchia in silenzio. Lo spagnolo ha la sua sosta, a parte.
    Vedi docs/lingue/sosta.md.
    `node test/esegui.mjs lingua-sosta` */
-import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -38,7 +38,7 @@ async function rispondi(giusta = true) {
 /* ================= 1. il libero dell'inglese ================= */
 await semina(page, { coins: 50, eng: { tappa: 13, libera: true } })
 const entraLibero = async () => {
-  await page.locator('.carta.gioco[data-gioco="inglese"]').click()
+  await scegli(page, 'inglese')
   await page.waitForSelector('[data-prima]', { timeout: 5000 })
   await page.locator('[data-prima]').click()
 }
@@ -115,7 +115,7 @@ await page.waitForSelector('[data-mappa-inglese]')
 await indietro()
 await page.waitForSelector('.carte')
 await semina(page, { esp: { tappa: 13, libera: true } })
-await page.locator('.carta.gioco[data-gioco="spagnolo"]').click()
+await scegli(page, 'spagnolo')
 await page.waitForSelector('[data-prima]')
 await page.locator('[data-prima]').click()
 await page.waitForSelector('.scelte .scelta')
