@@ -324,11 +324,34 @@ non si conserva. `vesti.py --atlante` li porta alla misura della creatura
 nitidi degli altri, ed è una scelta (meglio alcuni belli e altri come
 prima che tutti uguali e brutti). Fatti: il drago (29 settembre), il lupo (1 ottobre), lo scorpione (2 ottobre), la melma (5 ottobre).
 
-Il prompt, con il nome della creatura cambiato (per chi cammina: *walks
-in place… legs clearly alternating*):
+I prompt **non nominano mai la creatura** («the creature in the attached
+image»): col nome dentro basta allegare l'immagine sbagliata, o il prompt
+di un altro, e Grok disegna la creatura del nome (il 6 ottobre, col ragno
+allegato e il prompt del serpente, ha fatto un serpente). Uno per modo di
+muoversi:
+
+chi cammina (lupo, scorpione, ragno, troll, cinghiale, golem):
 
 ```text
-Pixel art game sprite animation, two parts in one shot. First half: the red dragon flies in place facing right, side view, a steady looping flight cycle, wings flapping up and down slowly and clearly, body gently rising and falling. Second half: the dragon turns quickly to face the viewer and keeps flying in place, front view, the same steady flight cycle with both wings flapping clearly. No fire, no smoke, no breath effects. The dragon always stays in the center of the frame, does not move forward and does not get bigger. The camera is completely still, no zoom, no pan. Plain flat white background, no shadow, no scenery. Keep the exact same dragon, same colors, same pixel art style.
+Pixel art game sprite animation of the creature in the attached image, two parts in one shot. First half: the creature walks in place facing right, side view, a steady looping walk cycle, legs clearly alternating. Second half: the creature turns quickly to face the viewer and keeps walking in place, front view, the same steady cycle. The creature always stays in the center of the frame, does not move forward and does not get bigger. The camera is completely still, no zoom, no pan. Plain flat white background, no shadow, no scenery. Do not change the creature into another animal: keep the exact same creature, same body, same colors, same pixel art style.
+```
+
+chi vola (drago, pipistrelli, draghetto):
+
+```text
+Pixel art game sprite animation of the creature in the attached image, two parts in one shot. First half: the creature flies in place facing right, side view, a steady looping flight cycle, wings flapping up and down slowly and clearly, body gently rising and falling. Second half: the creature turns quickly to face the viewer and keeps flying in place, front view, the same steady cycle. No fire, no smoke, no breath effects. The creature always stays in the center of the frame, does not move forward and does not get bigger. The camera is completely still, no zoom, no pan. Plain flat white background, no shadow, no scenery. Do not change the creature into another animal: keep the exact same creature, same body, same colors, same pixel art style.
+```
+
+chi striscia (serpente):
+
+```text
+Pixel art game sprite animation of the creature in the attached image, two parts in one shot. First half: the creature slithers in place facing right, side view, a steady looping slither, the body waving in small S-curves while it keeps its coiled shape. Second half: the creature turns quickly to face the viewer and keeps slithering in place, front view, the same steady cycle. The creature always stays in the center of the frame, does not move forward and does not get bigger. The camera is completely still, no zoom, no pan. Plain flat white background, no shadow, no scenery. Do not change the creature into another animal: keep the exact same creature, same body, same colors, same pixel art style.
+```
+
+chi salta (melme; poi `--misura area`):
+
+```text
+Pixel art game sprite animation of the creature in the attached image, two parts in one shot. First half: the creature hops in place facing right, side view, a steady looping hop cycle, squashing flat before each jump and stretching up in the air, always landing on the same spot. Second half: the creature turns quickly to face the viewer and keeps hopping in place, front view, the same steady cycle. The creature always stays in the center of the frame, does not move forward and does not get bigger. The camera is completely still, no zoom, no pan. Plain flat white background, no shadow, no scenery. Do not change the creature into another animal: keep the exact same creature, same body, same colors, same pixel art style.
 ```
 
 ```bash
