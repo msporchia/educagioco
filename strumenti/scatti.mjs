@@ -279,13 +279,15 @@ async function sbagliaUnaFrase (page) {
 const RICETTE = [
   { file: 'home', dove: '', attesa: '.carte' },
 
-  { file: 'asteroidi-mappa', dove: 'mate', attesa: '.scaletta' },
-  { file: 'asteroidi-gioco', dove: 'mate', attesa: '.scaletta',
-    passi: [['.pianeta:not(.chiuso)', 7500]] },
-  /* la fila è una sola: la seconda foto è la stessa mappa più in basso,
-     dove si vede che pianeti e stazioni si alternano */
-  { file: 'asteroidi-stazioni', dove: 'mate', attesa: '.scaletta',
-    passi: [['.stazione:not(.chiuso)', 7500]] },
+  /* la rotta: il tocco apre il fumetto della tappa, «▶ parti» la comincia */
+  { file: 'asteroidi-mappa', dove: 'mate', attesa: '[data-rotta] [data-tappa]' },
+  { file: 'asteroidi-gioco', dove: 'mate', attesa: '[data-rotta] [data-tappa]',
+    passi: [['[data-rotta] [data-tipo="pianeta"]:not([data-stato="chiusa"])', 300],
+            ['[data-fumetto] [data-azione="parti"]', 7500]] },
+  /* la fila è una sola: la seconda partita è su una stazione, il calcolo a mente */
+  { file: 'asteroidi-stazioni', dove: 'mate', attesa: '[data-rotta] [data-tappa]',
+    passi: [['[data-rotta] [data-tipo="stazione"]:not([data-stato="chiusa"])', 300],
+            ['[data-fumetto] [data-azione="parti"]', 7500]] },
 
   /* l'inglese è la mappa del tesoro: la nave è alla tappa da fare, e
      toccata una tappa ci naviga prima di aprirla */

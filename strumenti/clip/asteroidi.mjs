@@ -3,8 +3,8 @@
    cima, il sasso giusto che scende, il tocco, l'esplosione — perché uno
    solo non basta a capire che è un ritmo e non un colpo di fortuna.
 
-   Si entra nel pianeta **a cui è arrivato** il profilo finto (`.scaletta .ora`,
-   il segno della mappa per «sei qui», pianeta o stazione), non nel primo: al primo pianeta
+   Si entra nel pianeta **a cui è arrivato** il profilo finto (`[data-stato="ora"]`,
+   la tappa della rotta dove sta il razzo, pianeta o stazione), non nel primo: al primo pianeta
    scende un sasso alla volta, piano, e il 2×2 non racconta il gioco. Quale sasso è
    quello giusto lo dice il gancio di prova `window.__mate`
    (`asteroidi()`, il campo `ok`) — mai scritto a mano, così la clip
@@ -22,9 +22,10 @@
    dell'inizio partita non dicono niente. Sono sei colpi e non tre: con tre il cannone
    finiva a metà degli otto secondi.
 
-   Dipende da `window.__mate` (`fase`, `asteroidi`) e dai selettori
-   `.scaletta` e `.scaletta .ora`: se uno cambia forma, è qui che
-   va aggiornata la ricetta. */
+   Dipende da `window.__mate` (`fase`, `asteroidi`) e dai bersagli della
+   rotta (`[data-rotta]`, `[data-stato="ora"]`, il fumetto e «▶ parti»,
+   docs/asteroidi/mappa.md): se uno cambia forma, è qui che va aggiornata
+   la ricetta. */
 
 /* appena sotto la barra in cima, in pixel: il sasso è entrato tutto */
 const IN_VISTA = 45
@@ -32,8 +33,9 @@ const IN_VISTA = 45
 const ASPETTA_GLI_ALTRI = 1250
 
 export default {
-  file: 'clip-asteroidi', dove: 'mate', attesa: '.scaletta',
-  passi: [['.scaletta .ora', 600],
+  file: 'clip-asteroidi', dove: 'mate', attesa: '[data-rotta] [data-tappa]',
+  passi: [['[data-rotta] [data-stato="ora"]', 300],
+          ['[data-fumetto] [data-azione="parti"]', 600],
           async page => page.waitForFunction(margine => window.__mate.asteroidi()
             .some(a => !a.morto && a.y - a.r > margine), IN_VISTA, { timeout: 8000 })],
   /* i sassi di un'ondata entrano sfalsati e piano, e fra un'ondata e
