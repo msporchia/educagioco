@@ -214,10 +214,10 @@ Le tabelline sono 55 fatti e finiscono; il calcolo a mente no: 27+38 e
 
 ## Cosa so
 
-Dalla mappa e da fine partita, **📊 Cosa so** apre la tavola pitagorica
+Dalla rotta (il tasto in basso a destra) e da fine partita, **📊 Cosa so** apre la tavola pitagorica
 dei propri progressi: una casella per calcolo, colorata con la forza
 efficace. Risponde a «quali calcoli so», non a «com'è andata stasera». È
-una pagina di progressi, vestita come l'albo e la mappa (fondo chiaro,
+una pagina di progressi, vestita come l'albo (fondo chiaro,
 riquadri bianchi); si esce dal tasto della barra. Le tabelline in gioco
 hanno i numeri di riga e colonna accesi, le altre caselle restano smorzate.
 (`src/components/MappaTabelline.vue`, `src/components/MappaConcetti.vue`)

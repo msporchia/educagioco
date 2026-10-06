@@ -9,8 +9,8 @@ si colpisce quello giusto prima che arrivi in fondo.
 
 ## Come è fatto
 
-C'è **una scaletta sola**, spezzata in capitoli, con due specie di tappe
-mescolate:
+C'è **una scaletta sola**, una rotta che serpeggia nello spazio fra le
+costellazioni dei capitoli, con due specie di tappe mescolate:
 
 - **I pianeti** sono le tabelline, dalla ×2 in su.
 - **Le stazioni** sono il calcolo a mente: somme con il riporto,
