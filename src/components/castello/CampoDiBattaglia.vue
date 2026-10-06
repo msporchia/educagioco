@@ -8,6 +8,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { creaTela } from '../../grafica/tela.js'
 import { PELLE } from '../../giochi/castello/scena/pelle.js'
 import { creaBattaglia } from '../../motore/battaglia.js'
+import { leggi } from '../../motore/castello/sosta.js'
 import { scenaDi } from '../../views/castello/scena.js'
 import { Trascino } from '../../views/castello/trascino.js'
 import { costoNuovaTorre, MONDO, CFG } from '../../data/castello.js'
@@ -60,6 +61,15 @@ function avvia(quale, s, doni = null) {
   chiuso = false
   aggiornaVista(true)
   return motore
+}
+
+// la partita lasciata a metà, sulla stessa tappa: `false` se non torna più
+function riprendi(quale, s, doni, dato) {
+  apparecchia(quale, s, doni)
+  if (!leggi(dato, motore)) return false
+  chiuso = false
+  aggiornaVista(true)
+  return true
 }
 
 // il vestito può non essere pronto: la pelle dà un fondale di ripiego e
@@ -205,7 +215,7 @@ onUnmounted(() => {
 })
 
 
-defineExpose({ apparecchia, avvia, ridimensiona, motore: () => motore,
+defineExpose({ apparecchia, avvia, riprendi, ridimensiona, motore: () => motore,
                misure: () => campo?.misure,
                versoLoSchermo: (x, y) => campo?.versoLoSchermo(x, y) })
 </script>

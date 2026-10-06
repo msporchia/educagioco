@@ -16,13 +16,16 @@
 // sotterraneo — ed è la casa dove il castello andrà tutto il giorno che
 // passerà alla convenzione di giochi/. Il castello a poligoni che c'era
 // prima non c'è più: le figure sono queste.
-import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
+import { ref, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { state, answer, tdProgresso, tdCompleta,
          segna, segnaBest, divisioniAccese, tuttoAperto,
          guidaGiaVista, segnaGuidaVista } from '../store/profile.js'
 import { saltaLeSpiegazioni } from '../guide/aiuto.js'
 import { usaPausa } from '../giochi/pausa.js'
-import { primatoDi, segnaPrimato, regaliDi, regaloPreso } from '../giochi/campagne.js'
+import { primatoDi, segnaPrimato, regaliDi, regaloPreso,
+         sosta, salvaSosta, buttaSosta } from '../giochi/campagne.js'
+import { scrivi, dice, tappaDi } from '../motore/castello/sosta.js'
+import Ripresa from '../giochi/Ripresa.vue'
 import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { GIOCHI } from '../data/giochi.js'
 import { PAGA } from '../data/paghe.js'
@@ -50,7 +53,7 @@ import Potenziamenti from '../components/castello/Potenziamenti.vue'
 import { Cassa } from './castello/cassa.js'
 import { suono } from '../audio.js'
 
-defineEmits(['vai'])
+const emit = defineEmits(['vai'])
 
 const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine
 
@@ -395,6 +398,7 @@ watch(fase, () => nextTick(() => campo.value?.ridimensiona()))
    dice `quale` (la chiave di una di `LIBERE`), e chi non lo dice
    rigioca quella di prima. */
 function inizia(i = tappaIdx.value, quale = null) {
+  scorda()
   accendiPrimiPassi()
   /* una tappa che comincia non comincia in pausa: il telefono posato
      sulla mappa, o davanti al cartello di fine, lascia il freno acceso —
@@ -417,6 +421,7 @@ function inizia(i = tappaIdx.value, quale = null) {
 }
 
 function finita(esito) {
+  scorda()
   if (esito === 'vinta') tappaSuperata()
   else finePartita()
 }
@@ -451,6 +456,89 @@ function finePartita() {
     primato.value = { ...esito, frase: fraseDiFine(esito, sfida.misura) }
   }
 }
+
+/* ── la partita lasciata a metà ──
+   Uscire non butta via niente: si scrive dove si era (motore/castello/sosta.js)
+   e la mappa la offre in cima. Vedi docs/castello/sosta.md. */
+const CHIAVE = 'torri'
+const laRipresa = () => {
+  const d = dice(sosta(CHIAVE))
+  if (!d) return null
+  const dove = d.libera ? `ondata ${d.onda}` : `ondata ${d.onda} di ${d.ondate}`
+  return { emoji: d.emoji, nome: d.nome,
+           dettaglio: `⚔️ ${dove} · ❤️ ${d.cuori} · ⚡ ${d.energia} · 🏰 ${d.torri} ${d.torri === 1 ? 'torre' : 'torri'}` }
+}
+const ripresa = ref(laRipresa())
+const chiede = ref(null)           // { nome, i, quale }: la partita nuova che butterebbe quella a metà
+
+function salva({ subito = false } = {}) {
+  const m = motore()
+  if (fase.value !== 'gioco' || !m) return
+  salvaSosta(CHIAVE, scrivi(m, tappaIdx.value, {
+    monete: { chiesto: borsellino.chiesto, dato: borsellino.dato }, velocita: velocita.value,
+  }), { subito })
+}
+
+function scorda() {
+  if (sosta(CHIAVE)) buttaSosta(CHIAVE)
+  ripresa.value = null
+  chiede.value = null
+}
+
+function vuoleIniziare(i, quale = null) {
+  if (!ripresa.value) return inizia(i, quale)
+  const t = i < 0 ? liberaDi(quale) : TAPPE[i]
+  chiede.value = { nome: t ? t.nome : 'una partita nuova', i, quale }
+}
+function comincia() {
+  const { i, quale } = chiede.value
+  inizia(i, quale)
+}
+
+// se il salvataggio non si legge più la carta sparisce e resta la mappa
+function riprendiPartita() {
+  const dato = sosta(CHIAVE)
+  const t = tappaDi(dato)
+  if (!t) return scorda()
+  if (dato.tappa < 0) liberaScelta.value = t.chiave
+  tappaIdx.value = dato.tappa
+  cassa.perTappa(tappa.value)
+  chiudi()
+  regali.value = regaliDi('torri')
+  rimandato.value = false
+  borsellino = borsa('torri', dato.monete)
+  Object.assign(monete, { prese: borsellino.dato, nota: '' })
+  if (!campo.value.riprendi(tappa.value, tappaIdx.value + 1, regali.value, dato)) {
+    scorda()
+    return allaMappa()
+  }
+  primiPassi.value = false           // la riga dei primi passi è per chi comincia
+  velocita.value = VELOCITA.includes(dato.velocita) ? dato.velocita : 1
+  ripresa.value = null
+  chiede.value = null
+  fase.value = 'gioco'
+  metti({ auto: true })              // il campo ripreso nasce fermo: riparte al tocco
+}
+
+function esci() {
+  salva({ subito: true })
+  emit('vai', 'home')
+}
+
+// su un telefono l'app non si chiude, sparisce: è l'ultimo momento per scrivere
+function seSparisce(e) {
+  if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true })
+}
+onMounted(() => {
+  document.addEventListener('visibilitychange', seSparisce)
+  addEventListener('pagehide', seSparisce)
+})
+// prima che il campo se ne vada: dopo, il motore non c'è più
+onBeforeUnmount(() => {
+  salva({ subito: true })
+  document.removeEventListener('visibilitychange', seSparisce)
+  removeEventListener('pagehide', seSparisce)
+})
 
 function allaMappa() {
   togli()
@@ -510,7 +598,7 @@ onMounted(() => {
     <!-- il ⏸ c'è solo dove il campo cammina -->
     <Barra titolo="Castello" guida="torri" @aiuto="aiuto"
            :pausa="fase === 'gioco' && !state.festa.length" @pausa="metti()"
-           :monete="fase !== 'gioco'" @indietro="$emit('vai','home')">
+           :monete="fase !== 'gioco'" @indietro="esci">
       <GettoniCampo v-if="fase === 'gioco'" :hud="hud" :velocita="velocita"
                     :ondate="campagna ? tappa.ondate : ''" @velocita="cambiaVelocita" />
     </Barra>
@@ -550,10 +638,15 @@ onMounted(() => {
       </button>
 
       <div v-else class="banco">
-        <MappaTappe v-if="fase === 'mappa'" :tappe="TAPPE" :fatte="progresso.tappa"
-                    :libera="libera" :libere="libere" :regali="doteLibera"
-                    @gioca="inizia" @libera="quale => inizia(-1, quale)"
-                    @indietro="$emit('vai','home')" />
+        <template v-if="fase === 'mappa'">
+          <Ripresa :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
+                   @riprendi="riprendiPartita" @scorda="scorda"
+                   @comincia="comincia" @annulla="chiede = null" />
+          <MappaTappe :tappe="TAPPE" :fatte="progresso.tappa"
+                      :libera="libera" :libere="libere" :regali="doteLibera"
+                      @gioca="i => vuoleIniziare(i)" @libera="quale => vuoleIniziare(-1, quale)"
+                      @indietro="$emit('vai','home')" />
+        </template>
         <FineTappa v-else :fase="fase" :tappa="tappa" :prossima="prossima" :hud="hud"
                    :monete="monete.prese" :nota-monete="monete.nota" :quante="TAPPE.length" :campagna="campagna"
                    :divisioni="divisioni" :primato="primato"

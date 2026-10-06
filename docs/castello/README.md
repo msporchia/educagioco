@@ -13,6 +13,7 @@ pagina per chi arriva da fuori e i documenti per chi ci lavora.
 - [mostri.md](mostri.md) — immuni e comuni, le regole di una fila, le ondate miste, abilità, capo e ritmo delle ondate
 - [campagne.md](campagne.md) — le venti tappe, perché i percorsi sono quelli, le tappe a più bocche, i terreni, i salvataggi
 - [libere.md](libere.md) — le quattro partite libere, come si tarano, i regali e quanto valgono
+- [sosta.md](sosta.md) — la battaglia lasciata a metà: cosa si salva, cosa no, e quando
 - [da-fare.md](da-fare.md) — le voci aperte
 
 Vedi anche: [`../apprendimento/calibrazione.md`](../apprendimento/calibrazione.md)
