@@ -26,18 +26,6 @@ stanno nella sua cartella.
   `famiglia` 🏡, `amico` 🤝, `cantante` 🎤, `parco` 🎠, `gara` 🏁,
   `gioco` 🎮.
 
-## La partita lasciata a metà
-
-Uscire non deve buttare la partita ([ripresa.md](ripresa.md)). Restano:
-
-- **`views/LinguaGame.vue`** (i verbi e il libero delle lingue): ha un'altra
-  struttura dalle tappe a mondi, e non ha ancora la sosta.
-- **I programmi e i piani di un bambino eliminato**: `costruttore:<id>` e
-  `generale:<id>` stanno fuori dal profilo e nessuno li porta via (vedi
-  [archivio.md](archivio.md#fuori-dai-profili)).
-- **Una tappa richiusa dai grandi a partita aperta**: il Codice segreto
-  riprende la sosta senza guardare se la tappa è ancora aperta per età.
-
 ## Le prove
 
 - **Un `--svelti` anche per l'integrazione** (proposta, da decidere): un

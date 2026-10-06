@@ -56,7 +56,8 @@ Nei test: `[data-ripresa]`, `[data-chiede]`, `[data-azione="riprendi"]`,
   - Prima e dopo ([../prima-dopo/sosta.md](../prima-dopo/sosta.md));
   - pozioni ([../pozioni/sosta.md](../pozioni/sosta.md));
   - Codice segreto ([../codice-segreto/sosta.md](../codice-segreto/sosta.md));
-  - English ed Español ([../lingue/sosta.md](../lingue/sosta.md)).
+  - English ed Español, anche i verbi e il gioco di prima (`views/LinguaGame.vue`):
+    [../lingue/sosta.md](../lingue/sosta.md).
 - **Un posto per livello, senza carta**, perché aprire un livello non butta
   quello di un altro: il costruttore (il programma, in archivio
   `costruttore:<id>`), il Generale (il piano, in archivio `generale:<id>`:
@@ -65,7 +66,6 @@ Nei test: `[data-ripresa]`, `[data-chiede]`, `[data-azione="riprendi"]`,
   carta: [../passo-passo/sosta.md](../passo-passo/sosta.md)). La mappa segna
   i livelli lasciati a metà (`[data-a-meta]`).
 - **Un mondo che si salva da sé**: la fattoria.
-- **Nessuno**: `views/LinguaGame.vue` (i verbi e il libero delle lingue).
 - **Il record dei giochi senza fine** (volo, sentiero, libero del Codice) si
   scrive quando la partita finisce davvero o con «lascio perdere», mai
   uscendo: uscire non chiude la serie.
