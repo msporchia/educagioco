@@ -3,9 +3,8 @@
 // quadro, che la regia muta sul posto. Si cambia tela senza smontare il
 // campo quando cambia il mondo (`delPorto`).
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { Tela, altoDisegno } from '../scena/tela.js'
-import { TelaPorto, vistaPorto } from '../scena/porto.js'
-import { posto, altezzaCampo, grandeUtile } from '../../confine.js'
+import { Tela } from '../scena/tela.js'
+import { TelaPorto } from '../scena/porto.js'
 
 const props = defineProps({
   quadro: { type: Object, default: null },
@@ -27,10 +26,7 @@ function misura() {
   const alta = porto
     ? Math.max(180, Math.min(window.innerHeight * 0.44, 440))
     : Math.max(150, Math.min(window.innerHeight * 0.36, 360))
-  const { w, h } = props.quadro, H = window.innerHeight
-  tela.misura(larga, altezzaCampo(alta, H), w, h)
-  const alto = porto ? A => vistaPorto(larga, A, w, h).vistaH : A => altoDisegno(larga, A, w, h)
-  grandeUtile(alto(altezzaCampo(alta, H, 1)) > alto(altezzaCampo(alta, H, 0)))
+  tela.misura(larga, alta, props.quadro.w, props.quadro.h)
 }
 
 function montaTela(q) {
@@ -51,7 +47,6 @@ onMounted(() => {
 })
 onUnmounted(() => { tela?.ferma(); osserva?.disconnect() })
 
-watch(posto, misura)
 watch(() => props.quadro, q => {
   if (!tela) return
   if (delPorto(q) !== porto) return montaTela(q)

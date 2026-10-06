@@ -11,17 +11,6 @@ const DA_SU = { su: 0, destra: Math.PI / 2, giu: Math.PI, sinistra: -Math.PI / 2
 
 // sotto i 26px una cella non si conta più a colpo d'occhio, sopra i 48 diventa un poster
 const CELLA_MIN = 26, CELLA_MAX = 48, CELLA_TELECAMERA = 30
-// la cella e la finestra in quello spazio: la mappa intera, o la telecamera se non ci sta
-export function vistaPorto(larghezza, altezzaMassima, w, h) {
-  const L = Math.max(0, Math.floor(larghezza)), A = Math.max(0, Math.floor(altezzaMassima))
-  const piena = Math.floor(Math.min(L / w, A / h))
-  if (piena >= CELLA_MIN) {
-    const cella = Math.min(CELLA_MAX, piena)
-    return { telecamera: false, cella, vistaW: cella * w, vistaH: cella * h }
-  }
-  const cella = CELLA_TELECAMERA
-  return { telecamera: true, cella, vistaW: Math.min(L, cella * w), vistaH: Math.min(A, cella * h) }
-}
 // oltre questa misura un tocco diventa un trascinamento (docs/core/il-dito.md)
 const SOGLIA_DITO = 16
 const LATO_CASSA = 0.74, IN_MANO = 0.7
@@ -137,8 +126,20 @@ export class TelaPorto {
     const p = this.quadro && this.quadro.porto
     w = w || (p && p.w) || 1
     h = h || (p && p.h) || 1
+    const L = Math.max(0, Math.floor(larghezza)), A = Math.max(0, Math.floor(altezzaMassima))
+    const piena = Math.floor(Math.min(L / w, A / h))
     const prima = this.cella, aveva = this.telecamera
-    Object.assign(this, vistaPorto(larghezza, altezzaMassima, w, h))
+    if (piena >= CELLA_MIN) {
+      this.telecamera = false
+      this.cella = Math.min(CELLA_MAX, piena)
+      this.vistaW = this.cella * w
+      this.vistaH = this.cella * h
+    } else {
+      this.telecamera = true
+      this.cella = CELLA_TELECAMERA
+      this.vistaW = Math.min(L, this.cella * w)
+      this.vistaH = Math.min(A, this.cella * h)
+    }
     this.w = w
     this.h = h
     const dpr = Math.min(window.devicePixelRatio || 1, 3)

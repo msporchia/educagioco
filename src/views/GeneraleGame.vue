@@ -52,7 +52,6 @@ import { state, genProgresso, genCompleta, daSolo, genAiutiPresi, genSegnaAiuti,
   from '../store/profile.js'
 import { scrive as scriveNelPiano, SVELA } from '../giochi/aiuti.js'
 import { suono } from '../audio.js'
-import Confine from '../giochi/Confine.vue'
 import { LIVELLI, proveDi } from '../data/generale.js'
 import { filaFinita } from './generale/fila.js'
 import { creaMondo, avvia, passo, esegui, pianoCompleto, mieUnita, altruiUnita, altriInCampo,
@@ -77,6 +76,12 @@ const unitaOra = ref('')           // di chi stiamo scrivendo il piano
 const letta = ref(null)            // di chi stiamo LEGGENDO gli ordini
 const editor = ref(null)           // chi scrive gli ordini: `generale/EditorPiano.vue`
 const pannello = ref('')           // '' | 'registro' | 'cartello' | 'scheda'
+/* il piano a tutto schermo, finché non si preme ▶ o si deve toccare la
+   mappa (docs/core/interfaccia.md); tornando, il campo si rimisura */
+const soloPiano = ref(false)
+watch(soloPiano, solo => {
+  if (!solo) nextTick(async () => { await campo.value?.misura(); campo.value?.mostraTutto(); campo.value?.disegna() })
+})
 const scheda = ref(null)
 /* ── LA SCALA DEGLI AIUTI ──
    `aiuti` è a che gradino si è scesi — la scala la compone
@@ -169,7 +174,7 @@ function avviaLivello (l) {
   livOra.value = l
   piano.value = Object.fromEntries(mieUnita(l).map(id => [id, []]))
   unitaOra.value = mieUnita(l)[0]
-  letta.value = null; scegliendo.value = null
+  letta.value = null; scegliendo.value = null; soloPiano.value = false
   gettoni.value = l.gettoni || 0
   scoperte.value = l.mostraNemici === true ? altriInCampo(l) : []
   aiuti.value = genAiutiPresi(l.id); svelato.value = ''; finito.value = null; andato.value = null
@@ -239,6 +244,7 @@ function via () {
      qui in poi la riga in fondo torna a essere quella dell'obiettivo */
   guidaFinita.value = true
   if (auto.value || montaggio.value) { ferma(); return }
+  soloPiano.value = false
   /* Non si fa partire una scena che non può finire: si dice cosa manca
      e si resta fermi. Prima il giro senza uscita partiva e girava per
      trecento passi. */
@@ -463,6 +469,7 @@ function tocca ({ x, y }) {
 const scegliendo = ref(null)          // { verbo } — un verbo in cerca di bersaglio
 function chiediMira ({ verbo }) {
   pannello.value = ''
+  soloPiano.value = false
   scegliendo.value = { verbo }
 }
 /* dove sono adesso le cose che il verbo in corso può prendere: la lista
@@ -789,7 +796,7 @@ async function ridimensiona () {
       <!-- la scivolata dura quanto il passo: nel montaggio i passi sono
            più fitti, e un'andatura tarata su 420 ms resterebbe indietro
            mostrando le unità a metà casella per tutto il tempo -->
-      <CampoLivello ref="campo" :mondo-ora="mondoOra" :liv="liv" :vel="battito" :tic="tic"
+      <CampoLivello v-show="!soloPiano" ref="campo" :mondo-ora="mondoOra" :liv="liv" :vel="battito" :tic="tic"
                     :giri="giri" :bersagli="bersagli()" :mirando="!!scegliendo"
                     :mie="mieie" :aperta="pannello === 'scheda' ? (scheda || '') : ''"
                     @tocca="tocca">
@@ -865,6 +872,9 @@ async function ridimensiona () {
         <button class="tasto q registro" :class="{ qui: pannello === 'registro' }"
                 aria-label="registro" @click="pannello = pannello === 'registro' ? '' : 'registro'">
           📜<span v-if="rosse" class="pallo">{{ rosse }}</span></button>
+        <button class="tasto q alza" :class="{ qui: soloPiano }" :aria-pressed="soloPiano"
+                :aria-label="soloPiano ? 'rimetti il campo' : 'più spazio al piano'"
+                data-azione="solo-programma" @click="soloPiano = !soloPiano">{{ soloPiano ? '⬇' : '⬆' }}</button>
       </div>
 
       <!-- chi comanda: una pastiglia per unità -->
@@ -889,7 +899,6 @@ async function ridimensiona () {
            Si scrivono in `EditorPiano.vue`: una riga per ordine, fatta
            di caselle che si toccano, e in fondo a ogni fila il posto
            vuoto da cui ne nasce un altro. -->
-      <Confine />
       <EditorPiano v-if="!letta" ref="editor" :ordini="ordini" :mondo-ora="mondoOra"
                    :tic="tic" :unita-ora="unitaOra" :indica="guida === 'posto'"
                    @mira="chiediMira" />

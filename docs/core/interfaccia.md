@@ -29,28 +29,21 @@ sua pagina: [il-dito.md](il-dito.md).
 Nei test: `button[aria-label="indietro"]` (mai il carattere),
 `[data-chiudi]`.
 
-## Il confine fra campo e programma
+## Il programma a tutto schermo
 
 Nei giochi a due piani (il costruttore, il Generale) sopra c'è il campo e
 sotto il programma, e su un telefono basso un «ripeti dentro ripeti» non
-ci sta. Fra i due c'è una striscia sola, `src/giochi/Confine.vue`: ▲ alza
-il confine (più programma), ▼ lo abbassa (più campo), tre posti in tutto.
+ci sta. Nella fila di ▶ c'è ⬆: il campo sparisce (`v-show`, la tela
+resta) e il programma prende tutto lo spazio; ⬇ lo rimette.
 
-- **Si sposta l'altezza del campo, non si nasconde niente**: il campo
-  chiede la sua altezza come prima e la passa da `altezzaCampo()`
-  (`src/giochi/confine.js`), che la stringe o la allarga — mai sotto i
-  90 px, mai oltre due terzi dello schermo. Col confine alzato il
-  racconto del costruttore sta in due righe.
-- **Il ▼ si spegne dove non serve**: il cantiere è già largo quanto lo
-  schermo e più alto non diventa più grande. Il campo lo dice a ogni
-  misura (`grandeUtile`), e il confine abbassato lì torna a metà.
-- **Il posto vale per la sessione e per tutti e due i giochi**: è il
-  telefono a essere basso, non il livello. Non si salva.
-- **Tasti, non trascinamento**: una maniglia da tirare su un elenco che
-  scorre litiga col dito (vedi [il-dito.md](il-dito.md)).
+- **È temporaneo, come la lente dei quiz**: il campo torna da solo con ▶,
+  quando un ordine del Generale chiede di toccare la mappa, e cambiando
+  livello. Mentre si guarda, si guarda tutto.
+- **Niente striscia fra i due piani**: provata una con ▲/▼ e tre altezze,
+  toglieva spazio proprio a chi ne cercava. Il tasto sta dove ci sono già
+  gli altri.
 
-Nei test: `[data-confine]` (con `data-posto` −1/0/1),
-`[data-azione="piu-programma"]`, `[data-azione="piu-campo"]`.
+Nei test: `[data-azione="solo-programma"]` (con `aria-pressed`).
 
 ## La pausa, una sola
 

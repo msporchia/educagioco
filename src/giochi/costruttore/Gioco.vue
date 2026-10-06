@@ -31,8 +31,6 @@ import FoglioProgetto from './viste/FoglioProgetto.vue'
 import FoglioLavagnetta from './viste/FoglioLavagnetta.vue'
 import FoglioAiuto from './viste/FoglioAiuto.vue'
 import Finale from './viste/Finale.vue'
-import Confine from '../Confine.vue'
-import { posto as confine } from '../confine.js'
 import './stile.css'
 
 defineOptions({ name: 'Costruttore' })
@@ -96,6 +94,7 @@ const liberoAperto = computed(() => (avanza.tappa || 0) >= APRE_DOPO)
 async function apriLivello(i) {
   await pronto
   const l = i === LIBERO_IDX ? LIBERO : LIVELLI[i]
+  soloProgramma.value = false
   const salvato = archivio.programmi[l.chiave]
   archivio.programmi[l.chiave] = salvato ? conAttrezzi(salvato, l) : inizio(l)
   idx.value = i
@@ -117,6 +116,8 @@ const tab = ref(null)
 const sel = ref(null)
 const aperta_ = ref(null)
 const foglio = ref(null)               // cassetta | progetto | lavagnetta | aiuto
+// il programma a tutto schermo, finché non si preme ▶ (docs/core/interfaccia.md)
+const soloProgramma = ref(false)
 const dove = ref(null)                 // dove andrà la riga scelta in cassetta
 const progettoInModifica = ref(null)
 const attesaLavagnetta = ref(null)     // { riga } o { inserisci: dove }
@@ -444,6 +445,7 @@ const tabDellaRiga = id => {
 
 function via() {
   if (!prog.value || stato.inCorso) return
+  soloProgramma.value = false
   aperta_.value = null
   sel.value = null
   mano.value = null
@@ -589,22 +591,22 @@ const progettoAperto = computed(() =>
              @gioca="apriLivello" @libero="apriLivello(LIBERO_IDX)" />
 
       <div v-else-if="liv && prog" class="cst-cantiere">
-        <div class="cst-sopra" :class="{ 'cst-stretto': confine === -1 }">
-          <Ordine :livello="liv" :visto="ordineVisto" :esiti="stato.esiti" :in-corso="stato.inCorso" @vedi="vedi" />
-          <div v-if="stato.montaggio && stato.inCorso" class="cst-montaggio" data-montaggio>
+        <div class="cst-sopra">
+          <Ordine v-show="!soloProgramma" :livello="liv" :visto="ordineVisto" :esiti="stato.esiti" :in-corso="stato.inCorso" @vedi="vedi" />
+          <div v-if="stato.montaggio && stato.inCorso && !soloProgramma" class="cst-montaggio" data-montaggio>
             e adesso con «{{ liv.ordini[stato.ordine].nome }}»…
           </div>
-          <Campo :quadro="quadro" />
+          <Campo v-show="!soloProgramma" :quadro="quadro" />
           <Comandi :in-corso="stato.inCorso" :velocita="velocita"
                    :ordine="liv.ordini[ordineVisto].lavagnette || {}"
                    :lavagnette="prog.lavagnette || []" :valori="stato.inCorso || stato.guasto ? stato.valori : {}"
                    :con-lavagnette="liv.cassetta.includes('assegna')" :aiuti="aiutiVisti"
                    :turno="liv.mondo === 'porto' && stato.inCorso ? (stato.turno || 0) : null"
+                   :solo-programma="soloProgramma" @solo-programma="soloProgramma = !soloProgramma"
                    @via="via" @stop="stop" @velocita="cambiaVelocita" @aiuto="apriAiuti"
                    @nuova-lavagnetta="nuovaLavagnetta(null)" />
           <p v-if="messaggio" class="cst-messaggio" :class="'cst-' + messaggio.tipo" data-messaggio>{{ messaggio.testo }}</p>
         </div>
-        <Confine />
         <Editor :programma="prog" :livello="liv" :tab="tabMostrato" :sel="sel" :aperta="aperta_"
                 :accesa="stato.inCorso ? stato.riga : null" :guasto="stato.guasto" :problemi="problemi"
                 :giro="stato.inCorso ? stato.giro : null" :sola="stato.inCorso" :pila="stato.pila"

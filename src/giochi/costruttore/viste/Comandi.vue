@@ -11,9 +11,10 @@ defineProps({
   conLavagnette: { type: Boolean, default: false },     // si possono creare
   aiuti: { type: Number, default: 0 },                  // quanti aiuti ha già visto
   turno: { type: Number, default: null },               // nel porto: il turno che passa
+  soloProgramma: { type: Boolean, default: false },     // il campo è nascosto: tutto lo spazio al programma
 })
 import { colore } from '../dati/colori.js'
-const emit = defineEmits(['via', 'stop', 'velocita', 'aiuto', 'nuova-lavagnetta'])
+const emit = defineEmits(['via', 'stop', 'velocita', 'aiuto', 'nuova-lavagnetta', 'solo-programma'])
 const VELOCITA = [['lenta', '🐢'], ['normale', '🐇'], ['veloce', '🚀']]
 </script>
 
@@ -27,6 +28,10 @@ const VELOCITA = [['lenta', '🐢'], ['normale', '🐇'], ['veloce', '🚀']]
                 :data-velocita="v" :aria-label="v" @click="emit('velocita', v)">{{ e }}</button>
       </div>
       <span v-if="turno !== null" class="cst-turno" data-turno>🕘 {{ turno }}</span>
+      <button type="button" class="cst-lampadina cst-alza" data-azione="solo-programma" :aria-pressed="soloProgramma"
+              :aria-label="soloProgramma ? 'rimetti il campo' : 'più spazio al programma'" @click="emit('solo-programma')">
+        {{ soloProgramma ? '⬇' : '⬆' }}
+      </button>
       <!-- `suggerimento` e non `aiuto`: quello è il ? della barra, che c'è in tutti i giochi -->
       <button type="button" class="cst-lampadina" data-azione="suggerimento" aria-label="suggerimento" @click="emit('aiuto')">
         💡

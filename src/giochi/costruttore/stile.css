@@ -54,8 +54,6 @@
 .cst-chi { display: flex; gap: 8px; align-items: flex-start }
 .cst-chi .cst-faccia { font-size: 28px; line-height: 1 }
 .cst-chi p { margin: 0; font-size: 14px; line-height: 1.35 }
-/* col confine alzato il racconto, già letto, sta in due righe */
-.cst-stretto .cst-chi p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden }
 .cst-gettoni { display: flex; gap: 6px; flex-wrap: wrap }
 .cst-gettone {
   display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 4px;
@@ -94,6 +92,8 @@
   min-width: 46px; min-height: 46px; border-radius: 14px; border: 1.5px solid var(--cst-bordo);
   background: var(--cst-carta); font-size: 20px; position: relative;
 }
+.cst-alza { font-size: 18px; color: var(--cst-inchiostro) }
+.cst-alza[aria-pressed="true"] { background: var(--cst-giallo-chiaro) }
 .cst-lampadina small { position: absolute; right: 4px; bottom: 2px; font-size: 10px; color: var(--cst-tenue) }
 /* il turno del porto: largo fisso, perché non faccia ballare i tasti accanto */
 .cst-turno {
@@ -123,7 +123,7 @@
 /* l'editor */
 .cst-editor {
   flex: 1 1 auto; min-height: 0; overflow: auto;
-  padding: 6px 10px 90px; background: var(--cst-carta);
+  padding: 6px 10px 90px; border-top: 1.5px solid var(--cst-bordo); background: var(--cst-carta);
 }
 .cst-pila { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 12px; color: var(--cst-tenue); margin: 4px 0 6px }
 .cst-carta-pila { background: var(--cst-giallo-chiaro); color: var(--cst-inchiostro); padding: 2px 8px; border-radius: 8px }
