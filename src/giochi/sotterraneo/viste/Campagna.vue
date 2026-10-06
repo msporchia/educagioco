@@ -2,6 +2,7 @@
 // Le sei discese: riceve le tappe già decise, sceglie solo dove andare. Una tappa chiusa dice cosa ci sarà,
 // non "prima finisci quella di prima". La discesa lasciata a metà sta in cima; toccarne un'altra avverte
 // invece di buttare la partita in silenzio.
+import { riprendiSeChiesta } from '../../ripresa.js'
 import { ref, computed } from 'vue'
 import { figura } from './figura.js'
 import { pezzoAndante } from '../dati/tessere.js'
@@ -13,6 +14,7 @@ const props = defineProps({
   abisso: { type: Object, default: null },   // { indice, nome, icona, dritta, fondo }; in fondo, la ripresa è più urgente
 })
 const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe'])
+riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 
 const ritratto = computed(() => figura(pezzoAndante(props.eroe.sprite, 'fermo', 0), { scala: 2 }))
 

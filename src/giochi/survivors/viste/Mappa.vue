@@ -4,6 +4,7 @@
 // metà sta in cima (a che punto era): toccare un'altra tappa avverte
 // invece di buttarla via in silenzio, perché il dito di un bambino
 // sulla mappa ci finisce comunque.
+import { riprendiSeChiesta } from '../../ripresa.js'
 import { ref } from 'vue'
 
 const props = defineProps({
@@ -12,6 +13,7 @@ const props = defineProps({
   ripresa: { type: Object, default: null },   // { nome, libera, restano, livello, cuori… }
 })
 const emit = defineEmits(['gioca', 'libero', 'riprendi', 'scorda'])
+riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 
 const durata = s => s < 60 ? `${s}s` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 

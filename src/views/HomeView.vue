@@ -19,13 +19,14 @@ import Nastri from '../guide/Nastri.vue'
 import Carosello from '../components/home/Carosello.vue'
 import Riprendi from '../components/home/Riprendi.vue'
 import Iniziale from '../components/home/Iniziale.vue'
+import { chiediRipresa } from '../giochi/ripresa.js'
 import { vociInMemoria } from '../store/sessioni.js'
 import { giro, ricarica } from '../store/varieta.js'
 import { chiaveDelGioco } from '../data/varieta.js'
 import Aggiorna from '../guide/Aggiorna.vue'
 import { aggiornando, aggiornaOra, daUnSito } from '../aggiornamento.js'
 
-defineEmits(['vai'])
+const emit = defineEmits(['vai'])
 
 const versione = __VERSIONE__   // la stringa la mette il build (vite.config.js)
 const siCerca = daUnSito()      // il tasto "cerca aggiornamenti": solo se c'è un sito a cui chiedere
@@ -127,6 +128,8 @@ const ultimo = computed(() => {
   return k && elenco.value.some(g => g.chiave === k) ? k : null
 })
 const ripresa = computed(() => elenco.value.find(g => g.chiave === ultimo.value) || null)
+// la partita a metà riparte da sola, senza «torno da dove ero» (docs/core/ripresa.md)
+function riprendi (k) { chiediRipresa(k); emit('vai', k) }
 </script>
 
 <template>
@@ -147,7 +150,7 @@ const ripresa = computed(() => elenco.value.find(g => g.chiave === ultimo.value)
         <span class="freccia" aria-hidden="true">›</span>
       </button>
 
-      <Riprendi v-if="ripresa" :gioco="ripresa" :dove="ripresa.punto" @apri="k => $emit('vai', k)" />
+      <Riprendi v-if="ripresa" :gioco="ripresa" :dove="ripresa.punto" @apri="riprendi" />
 
       <div class="carte">
         <Carosello v-if="elenco.length" :giochi="elenco" :ultimo="ultimo" @apri="k => $emit('vai', k)" />

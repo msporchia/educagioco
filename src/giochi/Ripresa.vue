@@ -2,11 +2,14 @@
 // La partita lasciata a metà, in cima alla mappa di un gioco: dove si era e
 // due tasti. E l'avviso prima di cominciarne un'altra, detto prima e mai
 // dopo. Una per tutti i giochi: vedi docs/core/ripresa.md.
-defineProps({
+import { riprendiSeChiesta } from './ripresa.js'
+
+const props = defineProps({
   ripresa: { type: Object, default: null },   // { emoji, nome, dettaglio }
   chiede: { type: String, default: '' },      // il nome di quella che si sta per cominciare
 })
-defineEmits(['riprendi', 'scorda', 'comincia', 'annulla'])
+const emit = defineEmits(['riprendi', 'scorda', 'comincia', 'annulla'])
+riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 </script>
 
 <template>

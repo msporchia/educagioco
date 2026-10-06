@@ -21,6 +21,7 @@ import Traguardo from './components/Traguardo.vue'
 import Benvenuto from './components/Benvenuto.vue'
 import AvvisoMonete from './components/varieta/Avviso.vue'   // importarlo accende anche il filtro delle monete
 import { SCHERMATE } from './giochi/schermate.js'
+import { lasciaRipresa } from './giochi/ripresa.js'
 
 const vista = ref('home')
 const pronto = ref(false)
@@ -78,6 +79,7 @@ function apriSessione(v) {
   } else esciDalGioco()
 }
 watch(vista, apriSessione)
+watch(vista, lasciaRipresa)
 
 // pagehide copre il caso in cui la scheda venga chiusa e basta: su iOS visibilitychange non arriva sempre
 function guardaLoSchermo() {

@@ -44,6 +44,19 @@ Nei test: `[data-ripresa]`, `[data-chiede]`, `[data-azione="riprendi"]`,
 `[data-azione="scorda"]`, `[data-azione="riprendi-invece"]`,
 `[data-azione="comincia"]`.
 
+## Dalla home
+
+«Riprendi da qui» in home ([home.md](home.md)) è già la scelta di
+riprendere: la partita a metà riparte senza la carta in mezzo
+(`src/giochi/ripresa.js`). La home la chiede (`chiediRipresa`), la carta
+del gioco appena ha una ripresa preme da sola «torno da dove ero»
+(`riprendiSeChiesta`, in `Ripresa.vue` e nelle carte di sotterraneo e
+Survivors), e cambiando schermata la richiesta si scorda (`lasciaRipresa`
+in `App.vue`): tornati alla mappa, la carta resta ferma. Senza partita a
+metà si apre la mappa come sempre. I giochi con un posto per livello
+(costruttore, Generale, Passo passo) aprono la mappa, col livello segnato.
+Lo prova `integrazione/pozioni-sosta`.
+
 ## Chi ce l'ha
 
 - **La sosta con la carta in cima alla mappa**:

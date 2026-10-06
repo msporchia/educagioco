@@ -155,6 +155,18 @@ await indietro()
 await page.waitForSelector('[data-ripresa]')
 controlla('la carta è quella della tappa nuova',
           /Arriva il chilo/.test(await page.locator('[data-ripresa]').textContent()))
+/* dalla home «riprendi da qui» non passa dalla carta: la partita riparte e basta
+   (docs/core/ripresa.md, «Dalla home») */
+await indietro()
+await page.waitForSelector('.carte')
+uguale('in home «riprendi da qui» è il laboratorio',
+       await page.locator('[data-riprendi]').getAttribute('data-riprendi'), 'pozioni')
+await page.click('[data-riprendi]')
+await page.waitForSelector('.pz-banco', { timeout: 5000 })
+uguale('«riprendi» riapre il banco della partita a metà', (await stato()).pozione !== undefined, true)
+await indietro()
+await page.waitForSelector('[data-ripresa]')
+uguale('tornati alla mappa non riparte da sola', await page.locator('.pz-banco').count(), 0)
 await page.click('[data-ripresa] [data-azione="scorda"]')
 uguale('«lascio perdere» toglie la carta', await page.locator('[data-ripresa]').count(), 0)
 await attendi(page, 500)
