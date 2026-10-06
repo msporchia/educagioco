@@ -87,8 +87,9 @@ export function incassa(n) {
 // Le monete di una partita: si pagano quando arrivano (`paga`, una cosa fatta
 // alla volta), e il cartello di fine dice quante e quanto ha tolto il
 // salvadanaio (`nota`). docs/apprendimento/calibrazione.md, «Si paga subito».
-export function borsa(k) {
-  let chiesto = 0, dato = 0
+// `da`: quello che la partita aveva già incassato prima di una sosta
+export function borsa(k, da = {}) {
+  let chiesto = da.chiesto || 0, dato = da.dato || 0
   return {
     paga(n) {
       if (!(n > 0)) return 0

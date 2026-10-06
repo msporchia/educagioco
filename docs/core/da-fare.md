@@ -26,6 +26,24 @@ stanno nella sua cartella.
   `famiglia` 🏡, `amico` 🤝, `cantante` 🎤, `parco` 🎠, `gara` 🏁,
   `gioco` 🎮.
 
+## La partita lasciata a metà
+
+Uscire non deve buttare la partita ([ripresa.md](ripresa.md)). Ce l'hanno
+sotterraneo, Survivors e castello; gli altri, da quello che perde di più:
+
+- **La bancarella**: una giornata fino a otto minuti, e il ← in gioco va
+  dritto a casa (`views/BancarellaGame.vue`).
+- **Il Generale e Passo passo**: si perde il piano o la fila di carte
+  scritta, che è lavoro e non punteggio. Il modello è il costruttore (il
+  programma di ogni livello in archivio), più della sosta.
+- **Asteroidi**: nel volo senza fine il ← non segna nemmeno il record
+  (`segnaPrimato` sta solo in `finePartita` di `views/MathGame.vue`).
+- **Le tappe brevi** (Conta, Prima e dopo, Pozioni, Codice segreto, le
+  tappe delle lingue): monete e ripasso si scrivono a ogni risposta, si
+  perde solo la strada verso le stelle, da uno a cinque minuti.
+- **Costruttore e fattoria** salvano già, ma non ascoltano `pagehide`:
+  chiudendo la scheda si può perdere l'ultimo secondo.
+
 ## Le prove
 
 - **Un `--svelti` anche per l'integrazione** (proposta, da decidere): un

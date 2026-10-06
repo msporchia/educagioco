@@ -22,6 +22,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [interfaccia.md](interfaccia.md) — barra, fogli con la ✕, pausa, schermate verticali, `v-if`, orologi
 - [il-dito.md](il-dito.md) — tocco, click fantasma, scorrimento, selezione
 - [primati.md](primati.md) — i giochi senza fine e i record
+- [ripresa.md](ripresa.md) — uscire non butta via la partita: la sosta, quando si scrive, la carta in cima alla mappa
 - [aiuti.md](aiuti.md) — la scala del 💡 a monete
 - [guida.md](guida.md) — la guida del primo giro: la riga col 👇 e l'anello, comuni a tutti i giochi
 - [da-fare.md](da-fare.md) — le voci aperte che non sono di un gioco solo

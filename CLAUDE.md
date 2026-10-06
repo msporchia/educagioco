@@ -57,7 +57,7 @@ quale file.
 
 | Cartella | Cosa c'è — leggila prima di toccare… |
 |---|---|
-| `docs/core/` | architettura e file unico, archivio e salvataggi, progressi, sessioni, aggiornamento e service worker, guasti, test, comandi, pubblicare, la convenzione dei giochi nuovi, interfaccia (barra, ✕, pausa, v-if), il dito, primati, aiuti a monete, la guida del primo giro, grafica, sprite, strumenti — prima di toccare `src/store/`, `src/grafica/`, `vite.config.js`, un componente comune o un gioco nuovo |
+| `docs/core/` | architettura e file unico, archivio e salvataggi, progressi, sessioni, aggiornamento e service worker, guasti, test, comandi, pubblicare, la convenzione dei giochi nuovi, interfaccia (barra, ✕, pausa, v-if), la partita lasciata a metà, il dito, primati, aiuti a monete, la guida del primo giro, grafica, sprite, strumenti — prima di toccare `src/store/`, `src/grafica/`, `vite.config.js`, un componente comune o un gioco nuovo |
 | `docs/apprendimento/` | il motore SRS, i moduli di quiz, livelli 0–100 e banda, ripasso, la domanda (fretta, perché e come si fa, il muro), saperi, età e portata delle tappe, **la calibrazione delle monete** — prima di toccare `src/store/srs.js`, `src/quiz/`, `data/partenze.js`, `data/portata*.js`, o di scrivere un prezzo o un premio |
 | `docs/genitori/` | cosa si può spegnere, la manopola dell'età, il quadro, i ritocchi ✎, «Come va», codice dei genitori, cestino e posta, le novità per i bambini, le guide in app — prima di toccare `components/eta/`, `src/guide/`, `store/pin.js`, `store/cestino.js`, `store/posta.js` |
 | `docs/asteroidi/` | Tabelline Asteroidi: la scaletta unica di pianeti e stazioni, il volo |
@@ -97,6 +97,8 @@ Generale), `strumenti/sprite/*.md` (fogli e foglietti degli sprite),
 - **La barra in cima è una sola** (`components/Barra.vue`), indietro sempre
   primo a sinistra; **un foglio si chiude con la ✕ in alto a destra**;
   **la pausa è una sola** (`giochi/pausa.js`). → `docs/core/interfaccia.md`
+- **Uscire non butta via la partita**: una sosta in `profile.campagne`, e la
+  mappa la offre in cima (`giochi/Ripresa.vue`). → `docs/core/ripresa.md`
 - **Chi gioca non disegna**: una view passa la lista delle cose in scena alla
   tela, e in `grafica/` non entrano prezzi ed energia. → `docs/core/grafica.md`
 - **Il dito non è un mouse**: click fantasma, soglia di ~16 px, elenchi che
