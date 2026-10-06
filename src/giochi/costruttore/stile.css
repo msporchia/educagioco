@@ -26,26 +26,8 @@
 .cst-piccolo { font-size: 13px; color: var(--cst-tenue); margin: 2px 0 8px }
 .cst-ico { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; line-height: 1 }
 
-/* la mappa */
-.cst-mappa { flex: 1; min-height: 0; overflow: auto; padding: 10px 12px 24px }
-.cst-capitolo { margin-bottom: 18px }
-.cst-capitolo h3 { margin: 6px 0 0; font-size: 18px; display: flex; align-items: center; gap: 8px }
-.cst-livelli { display: flex; flex-direction: column; gap: 8px }
-.cst-livello {
-  display: flex; align-items: center; gap: 12px; text-align: left;
-  padding: 10px 12px; border-radius: 14px;
-  background: var(--cst-carta); border: 1.5px solid var(--cst-bordo);
-}
-.cst-livello:active { transform: scale(.98) }
-.cst-livello.cst-adesso { border-color: var(--cst-giallo); box-shadow: 0 0 0 3px var(--cst-giallo-chiaro) }
-.cst-livello.cst-chiuso { opacity: .55 }
-/* un livello vinto resta com'è, col bordo appena verde: le stelle dicono il resto */
-.cst-livello.cst-livello-vinto { border-color: #bfe3c6 }
-.cst-livello.cst-libero { width: 100%; margin-bottom: 14px; background: #fff7df; border-color: var(--cst-giallo) }
-.cst-livello .cst-faccia { font-size: 30px; width: 40px; text-align: center }
-.cst-testo-livello { flex: 1; display: flex; flex-direction: column; min-width: 0 }
-.cst-testo-livello i { font-style: normal; font-size: 13px; color: var(--cst-tenue) }
-.cst-stelline { font-size: 14px; white-space: nowrap }
+/* la mappa è la scheda del robot (viste/Scheda.vue): qui solo la riga della guida sopra */
+.cst-guida-scheda { flex: none; padding: 6px 10px; background: #0d3b2c }
 
 .cst-cantiere { flex: 1; min-height: 0; display: flex; flex-direction: column }
 .cst-sopra { flex: 0 0 auto; padding: 6px 10px 4px; display: flex; flex-direction: column; gap: 6px }

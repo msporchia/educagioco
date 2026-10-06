@@ -14,6 +14,15 @@ export const righeDi = fila =>
 export const righeScritte = prog =>
   righeDi(prog.principale) + (prog.progetti || []).filter(p => !p.attrezzo).reduce((n, p) => n + righeDi(p.corpo), 0)
 
+/* quello che ha scritto il bambino, senza gli id e gli attrezzi: due programmi
+   con la stessa impronta dicono la stessa cosa (il livello lasciato a metà,
+   docs/costruttore/scheda.md) */
+export const impronta = prog => JSON.stringify({
+  principale: (prog && prog.principale) || [],
+  progetti: ((prog && prog.progetti) || []).filter(p => !p.attrezzo),
+  lavagnette: (prog && prog.lavagnette) || [],
+}, (k, v) => (k === 'id' || k === 'prossimo' ? undefined : v))
+
 /* il programma sta nello zaino del livello? (senza zaino, sempre) */
 export const ciSta = (prog, zaino) => !zaino || righeScritte(prog) <= zaino
 

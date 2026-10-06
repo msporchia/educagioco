@@ -10,6 +10,18 @@ export const BERSAGLI = {
   via: '[data-azione="via"]',
 }
 
+/* sulla scheda, finché il primo livello non è vinto: il suo led, poi «▶ costruisci» */
+export const SULLA_SCHEDA = {
+  led: '[data-livello="0"]',
+  costruisci: '[data-fumetto-per="0"] [data-azione="costruisci"]',
+}
+export function guidaScheda({ primoVinto = false, aperto = null }) {
+  if (primoVinto) return null
+  return aperto === 0
+    ? { dove: SULLA_SCHEDA.costruisci, testo: 'Tocca «▶ costruisci»: il robot ti aspetta in cantiere.' }
+    : { dove: SULLA_SCHEDA.led, testo: 'Tocca il led 1: è il primo lavoro del robot.' }
+}
+
 export function guida({ righe = [], cassetta = false, scegliendo = false, problemi = false,
                         inCorso = false, provato = false, cambiato = false, mancano = false }) {
   if (inCorso) return null

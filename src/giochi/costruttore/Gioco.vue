@@ -18,13 +18,13 @@ import { copia, programma as scriviProgramma } from './dati/scrivi.js'
 import * as mod from './motore/modifica.js'
 import { fraseDi } from './motore/esecutore.js'
 import { conAttrezzi } from './motore/attrezzi.js'
-import { righeDi, righeScritte } from './motore/zaino.js'
-import { guida } from './motore/guida.js'
+import { righeDi, righeScritte, impronta } from './motore/zaino.js'
+import { guida, guidaScheda } from './motore/guida.js'
 import { usaGuida } from '../guida.js'
 import Guida from '../Guida.vue'
 import { Regia, quadroFermo } from './regia.js'
 
-import Mappa from './viste/Mappa.vue'
+import Scheda from './viste/Scheda.vue'
 import Ordine from './viste/Ordine.vue'
 import Campo from './viste/Campo.vue'
 import Comandi from './viste/Comandi.vue'
@@ -81,21 +81,33 @@ const prog = computed(() => (liv.value ? archivio.programmi[liv.value.chiave] : 
 const lavagnetteOrdine = computed(() => (liv.value ? liv.value.ordini[0].lavagnette || {} : {}))
 const nomiOrdine = computed(() => Object.keys(lavagnetteOrdine.value))
 
-/* ═══════════ la mappa ═══════════ */
-const capitoli = computed(() => CAPITOLI.map(c => ({
-  ...c,
-  livelli: LIVELLI.map((l, i) => ({ ...l, indice: i })).filter(l => l.capitolo === c.chiave).map(l => ({
-    ...l,
-    aperta: aperta(CHIAVE, l.indice),
-    adesso: adesso(CHIAVE, l.indice),
-    stelle: stelleDi(CHIAVE, l.indice),
-    /* chiuso per età: andare avanti non lo apre, quindi sotto non si
-       promette niente */
-    perEta: chiusaPerEta(CHIAVE, l.indice),
-  })),
-})))
+/* ═══════════ la mappa: la scheda del robot (docs/costruttore/scheda.md) ═══════════ */
+// lasciato a metà: non vinto, e il programma salvato non è più quello con cui si comincia
+const impronteDiInizio = new Map()
+const improntaDiInizio = l => {
+  if (!impronteDiInizio.has(l.chiave)) impronteDiInizio.set(l.chiave, impronta(inizio(l)))
+  return impronteDiInizio.get(l.chiave)
+}
+const lasciatoAMeta = (l, i) => {
+  const p = archivio.programmi[l.chiave]
+  return !!p && stelleDi(CHIAVE, i) === 0 && impronta(p) !== improntaDiInizio(l)
+}
+const livelliScheda = computed(() => LIVELLI.map((l, i) => {
+  const stelle = stelleDi(CHIAVE, i)
+  return {
+    indice: i, nome: l.nome, impara: l.impara, capitolo: l.capitolo, stelle,
+    stato: !aperta(CHIAVE, i) ? 'spento' : stelle > 0 ? 'vinto' : adesso(CHIAVE, i) ? 'adesso' : 'aperto',
+    aMeta: lasciatoAMeta(l, i),
+    /* chiuso per età: andare avanti non lo apre, quindi il fumetto non promette niente */
+    perEta: chiusaPerEta(CHIAVE, i),
+  }
+}))
+const fumettoMappa = ref(null)
 
 const liberoAperto = computed(() => (avanza.tappa || 0) >= APRE_DOPO)
+const libero = computed(() => ({ ...LIBERO, aperto: liberoAperto.value,
+  dice: liberoAperto.value ? 'Costruisci quello che vuoi, coi progetti dei livelli.'
+    : `Si apre finito il livello ${APRE_DOPO}, «${LIVELLI[APRE_DOPO - 1].nome}».` }))
 
 async function apriLivello(i) {
   await pronto
@@ -224,6 +236,8 @@ const righe = computed(() => (prog.value ? righeScritte(prog.value) : 0))
 // la guida accompagna un livello che la chiede finché non è vinto (motore/guida.js)
 const radice = ref(null)
 const passoGuida = computed(() => {
+  if (vista.value === 'mappa')
+    return LIVELLI[0].guida && adesso(CHIAVE, 0) ? guidaScheda({ primoVinto: stelleDi(CHIAVE, 0) > 0, aperto: fumettoMappa.value }) : null
   const l = liv.value
   if (!l || !l.guida || !prog.value || finale.value || stelleDi(CHIAVE, idx.value) > 0) return null
   return guida({ righe: prog.value.principale, cassetta: foglio.value === 'cassetta', scegliendo: !!aperta_.value,
@@ -582,6 +596,7 @@ function allaMappa() {
   salvaOra()
   finale.value = null
   foglio.value = null
+  fumettoMappa.value = null
   idx.value = -1
   vista.value = 'mappa'
 }
@@ -631,8 +646,12 @@ const progettoAperto = computed(() =>
     <Barra :titolo="titolo" guida="costruttore" monete @indietro="indietro" />
 
     <div ref="radice" class="cst">
-      <Mappa v-if="vista === 'mappa'" :capitoli="capitoli" :libero="{ ...LIBERO, aperto: liberoAperto }"
-             @gioca="apriLivello" @libero="apriLivello(LIBERO_IDX)" />
+      <template v-if="vista === 'mappa'">
+        <div v-if="passoGuida" class="cst-guida-scheda"><Guida :passo="passoGuida" /></div>
+        <Scheda v-model:aperto="fumettoMappa" :livelli="livelliScheda" :capitoli="CAPITOLI"
+                :tappa="avanza.tappa || 0" :libero="libero" :chi="state.player || ''"
+                @gioca="apriLivello" @libero="apriLivello(LIBERO_IDX)" />
+      </template>
 
       <div v-else-if="liv && prog" class="cst-cantiere">
         <div class="cst-sopra">
