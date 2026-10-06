@@ -60,7 +60,7 @@ export function dipingiRotta(canvas, quadro, { stati, disegni, fino }) {
     const stato = stati[k] || 'chiusa'
     nodo(ctx, n, disegni[k], stato === 'chiusa')
     if (stato === 'chiusa') lucchetto(ctx, n.x, n.y, n.r * 0.42)
-    if (stato === 'fatta') stella(ctx, n.x + n.r * 0.78, n.y - n.r * 0.78, 9)
+    // la stella di «superata» sta sopra, in HTML (RottaAsteroidi.vue): così la si conta
   })
 }
 

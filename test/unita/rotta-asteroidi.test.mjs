@@ -1,11 +1,13 @@
 /* La disposizione della rotta degli asteroidi, senza browser: a ogni
    larghezza da telefono le tappe stanno dentro lo schermo, la rotta non
    passa sopra un nome, il razzo si posa accanto alla sua tappa e da ognuna
-   vola alla dopo. Vedi docs/asteroidi/mappa.md.
+   vola alla dopo, e a ogni altra, avanti o indietro, anche partendo da un
+   punto del volo; la stella di una tappa sta fuori dal nome e dal razzo.
+   Vedi docs/asteroidi/mappa.md.
    `node test/esegui.mjs rotta-asteroidi --niente-build` */
 import { SCALETTA, CAPITOLI } from '../../src/data/asteroidi.js'
 import { STAZIONI } from '../../src/data/calcolo.js'
-import { disponiRotta, stradaDelRazzo, lunghezza, durataVolo, giro } from '../../src/motore/asteroidi/rotta.js'
+import { disponiRotta, stradaDelRazzo, stradaDaPunto, agganciaARotta, lunghezza, lungo, durataVolo, giro } from '../../src/motore/asteroidi/rotta.js'
 import { ingombro } from '../../src/grafica/rotta.js'
 import { controlla, uguale, dentro, riassunto } from '../aiuto/verifica.mjs'
 
@@ -62,6 +64,45 @@ for (const W of [320, 360, 390, 430, 520]) {
   const durate = voli.map(v => durataVolo(lunghezza(v)))
   dentro(`${W} px: un volo dura fra 0,9 e 2,4 s`, Math.min(...durate), 0.9, 2.4)
   dentro(`${W} px: anche il più lungo`, Math.max(...durate), 0.9, 2.4)
+
+  /* indietro, da lontano, e da un punto qualunque del volo */
+  const guasti = []
+  const vicino = (p, x, y) => Math.hypot(p[0] - x, p[1] - y) < 0.5
+  for (const [da, a] of [[5, 4], [20, 2], [0, q.nodi.length - 1], [q.nodi.length - 1, 0], [10, 3]]) {
+    const v = stradaDelRazzo(q, da, a)
+    if (!v) { guasti.push(`${da}→${a}: nessuna strada`); continue }
+    if (!vicino(v[0], q.nodi[da].razzo.x, q.nodi[da].razzo.y) || !vicino(v.at(-1), q.nodi[a].razzo.x, q.nodi[a].razzo.y))
+      guasti.push(`${da}→${a}: non va da un posto all'altro`)
+    const d = durataVolo(lunghezza(v))
+    if (d < 0.9 || d > 2.4) guasti.push(`${da}→${a}: dura ${d.toFixed(2)} s`)
+  }
+  for (const [da, a] of [[2, 12], [12, 2], [0, 20]]) {
+    const v = stradaDelRazzo(q, da, a)
+    for (const f of [0.1, 0.4, 0.75]) {
+      const p = lungo(v, f)
+      for (const meta of [da, a, 6, 15]) {
+        const i = agganciaARotta(q, p.x, p.y, q.nodi[da].punto, q.nodi[a].punto)
+        const w = stradaDaPunto(q, { x: p.x, y: p.y, i }, meta)
+        if (!w) { guasti.push(`da un punto di ${da}→${a} a ${meta}: nessuna strada`); continue }
+        if (!vicino(w[0], p.x, p.y) || !vicino(w.at(-1), q.nodi[meta].razzo.x, q.nodi[meta].razzo.y))
+          guasti.push(`da un punto di ${da}→${a} a ${meta}: non parte da dov'è o non arriva`)
+        if (i < Math.min(q.nodi[da].punto, q.nodi[a].punto) || i > Math.max(q.nodi[da].punto, q.nodi[a].punto))
+          guasti.push(`il punto ${i} sta fuori dal volo ${da}→${a}`)
+      }
+    }
+  }
+  uguale(`${W} px: il razzo va avanti e indietro, e riparte da un punto`, guasti.slice(0, 4).join(' · '), '')
+
+  /* la stella di una tappa superata sta in alto a destra del disegno: fuori dal nome e dal razzo */
+  const sulla = []
+  q.nodi.forEach((n, k) => {
+    if (n.tipo === 'volo') return
+    const x = n.x + n.r * 0.78, y = n.y - n.r * 0.78
+    if (x - 11 < 0 || x + 11 > W) sulla.push(`la stella di «${nomi[k]}» esce dallo schermo`)
+    if (dentroScatola([x, y], scatola(n, nomi[k]), 11)) sulla.push(`la stella di «${nomi[k]}» sta sul nome`)
+    if (Math.hypot(n.razzo.x - x, n.razzo.y - y) < 11 + 15) sulla.push(`la stella di «${nomi[k]}» sta sul razzo`)
+  })
+  uguale(`${W} px: le stelle stanno fuori dai nomi e dal razzo`, sulla.join(' · '), '')
 }
 
 uguale('la stessa mappa a ogni apertura',

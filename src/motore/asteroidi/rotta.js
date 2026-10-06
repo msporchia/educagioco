@@ -114,15 +114,35 @@ export function sorte(seme) {
 
 // dal posto del razzo alla rotta e di nuovo fuori; i punti vicini ai disegni si saltano, se no ci passa sopra
 export function stradaDelRazzo(quadro, da, a) {
-  const n0 = quadro.nodi[da], n1 = quadro.nodi[a]
-  if (!n0 || !n1 || da === a) return null
-  const [i0, i1] = da < a ? [n0.punto, n1.punto] : [n1.punto, n0.punto]
-  let pezzo = quadro.punti.slice(i0, i1 + 1)
-  if (da > a) pezzo = pezzo.reverse()
+  const n0 = quadro.nodi[da]
+  if (!n0 || da === a) return null
+  return stradaDaPunto(quadro, { x: n0.razzo.x, y: n0.razzo.y, i: n0.punto, nodo: da }, a)
+}
+
+/* la stessa strada, ma da un punto qualunque (`inizio`: { x, y, i }, i è il punto della rotta
+   dove ci si aggancia, `nodo` la tappa che si lascia, se ancora si sta lì): per chi cambia meta in volo */
+export function stradaDaPunto(quadro, inizio, a) {
+  const n1 = quadro.nodi[a]
+  if (!inizio || !n1) return null
+  const i0 = inizio.i, i1 = n1.punto
+  let pezzo = quadro.punti.slice(Math.min(i0, i1), Math.max(i0, i1) + 1)
+  if (i0 > i1) pezzo = pezzo.reverse()
+  const n0 = inizio.nodo != null ? quadro.nodi[inizio.nodo] : null
   const lontano = (p, n) => Math.hypot(p[0] - n.x, p[1] - n.y) > n.mezzo + 14
-  const dentro = pezzo.filter(p => lontano(p, n0) && lontano(p, n1))
-  const grezza = [[n0.razzo.x, n0.razzo.y], ...dentro, [n1.razzo.x, n1.razzo.y]]
+  const dentro = pezzo.filter(p => lontano(p, n1) && (!n0 || lontano(p, n0)))
+  const grezza = [[inizio.x, inizio.y], ...dentro, [n1.razzo.x, n1.razzo.y]]
+  if (lunghezza(grezza) < 1) return null
   return smussa(smussa(grezza))
+}
+
+// il punto della rotta più vicino a (x, y), fra due estremi: dove ci si aggancia partendo da lì
+export function agganciaARotta(quadro, x, y, i0, i1) {
+  let meglio = Math.min(i0, i1), d = Infinity
+  for (let i = Math.min(i0, i1); i <= Math.max(i0, i1); i++) {
+    const q = Math.hypot(quadro.punti[i][0] - x, quadro.punti[i][1] - y)
+    if (q < d) { d = q; meglio = i }
+  }
+  return meglio
 }
 
 // Chaikin: tiene il primo e l'ultimo punto, taglia gli angoli

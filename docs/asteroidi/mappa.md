@@ -53,9 +53,16 @@ Lo decide `MathGame.vue` (`statoVoce`), la mappa lo dipinge:
 | `aperta` | il disegno pieno, niente segno (aperta dall'età o da `tuttoAperto`) |
 | `chiusa` | sbiadita verso il grigio, col lucchetto sopra |
 
+- **La stella è in HTML, sopra la tela** (`.stelle-tappa`), non dipinta: così
+  si conta, e un'altra stella sullo stesso posto è un'altra `<svg>`. Una
+  tappa ha **una stella sola** (superata o no, non c'è un «quanto bene»: il
+  motore lo sa nei due conti in cima, vedi sopra), quindi sulla rotta non
+  ci sono stelle vuote; sulle chiuse non c'è niente.
 - **Chiusa vince su superata**: una tappa superata e poi chiusa dall'età
   resta chiusa, come prima.
-- **La rotta è d'oro fino al razzo**, tenue dopo.
+- **La rotta è d'oro fino alla tappa da fare**, tenue dopo: non guarda dove
+  il razzo è andato a posarsi toccando una tappa (`oro` in
+  `RottaAsteroidi.vue`), si allunga all'arrivo del volo dopo una vittoria.
 - **Lo sbiadito si fa a mano**: il nodo si dipinge su una tela a parte, si
   tinge di grigio sopra i suoi pixel (`source-atop`) e si posa trasparente.
   `ctx.filter` su Safari non c'è.
@@ -75,7 +82,8 @@ Lo decide `MathGame.vue` (`statoVoce`), la mappa lo dipinge:
   Il fumetto non compare mai sotto il dito (sta sopra la tappa, o sotto
   per le prime in cima, dove sopra non c'è posto), quindi «▶ parti» non si
   preme da solo.
-- **Toccando fuori si chiude**; toccando un'altra tappa si apre il suo.
+- **Toccando fuori si chiude**; toccando un'altra tappa si apre il suo. Non
+  si chiude finché il razzo vola, e non si sposta: tocca a chi guarda.
 - **Si vede tutto**: se sborda, la mappa scorre quanto basta, tenendo
   libero in basso il posto di «📊 Cosa so».
 - La spiegazione lunga che stava in cima è diventata una riga sola.
@@ -99,12 +107,23 @@ verso dove va, sulla sua tela piccola che la vista sposta.
   rotazioni finali. Un volo dura fra 0,9 e 2,4 s (`durataVolo`).
 - **Dove era l'ultima volta lo ricorda la sessione**, per bambino
   (`ultimo` in `RottaAsteroidi.vue`), non il profilo: tornando senza una
-  tappa nuova lo si ritrova lì, girato com'era. La prima volta guarda
+  tappa nuova lo si ritrova lì, girato com'era, anche se l'ultimo tocco
+  l'aveva mandato su una tappa vecchia. Il volo dopo una vittoria parte da
+  lì (e `gioco`, la tappa da fare di allora, dice se ce n'è una nuova). La prima volta guarda
   lungo la rotta, in avanti.
 - **A fotogrammi, e fermo a schermo nascosto**: il tempo avanza al massimo
   50 ms per fotogramma, come la nave dell'inglese. Fermo, non anima niente.
-- **Un tocco durante il volo lo chiude**: un velo trasparente si prende il
-  tocco (e il click che segue), il razzo arriva subito e non si apre niente.
+- **Un tocco durante il volo dopo una vittoria lo chiude**: un velo
+  trasparente si prende il tocco (e il click che segue), il razzo arriva
+  subito e non si apre niente. Il volo verso una tappa toccata non ha il velo.
+- **Toccata una tappa aperta il razzo ci va**, avanti o indietro, mentre il
+  fumetto si apre subito (si parte da lì senza aspettare l'arrivo): stesso
+  volo di prima, `stradaDaPunto` in `motore/asteroidi/rotta.js`, ma la mappa
+  non scorre. Un altro tocco in volo cambia meta e il razzo riparte da dove
+  si trova (si aggancia al punto più vicino della rotta fra gli estremi del
+  volo, `agganciaARotta`, e prima gira sul posto se serve). Una chiusa apre il
+  suo fumetto e non muove il razzo, né ferma quello che vola; toccare di
+  nuovo la meta non fa niente. Un volo non dura mai più di 2,4 s.
 
 ## Il resto della schermata
 
@@ -117,16 +136,21 @@ verso dove va, sulla sua tela piccola che la vista sposta.
 
 Nei test: `unita/rotta-asteroidi` (a cinque larghezze: tappe dentro lo
 schermo, la rotta che non passa sopra un nome né un capitolo, il razzo
-accanto alla sua tappa e da ognuna alla dopo, la stessa mappa a ogni
-apertura), `integrazione/rotta-asteroidi` (col dito vero: il fumetto si
+accanto alla sua tappa e da ognuna alla dopo e a ogni altra, avanti e indietro,
+anche da un punto del volo; le stelle fuori da nomi e razzo; la stessa mappa a
+ogni apertura), `integrazione/rotta-asteroidi` (col dito vero: il fumetto si
 apre e non parte niente, fuori si chiude, una chiusa dice cosa fare prima,
 «▶ parti», vinta la tappa il razzo vola alla nuova e resta girato, un tocco
-chiude il volo senza aprire niente). Bersagli: la mappa `[data-rotta]`; le
+chiude il volo senza aprire niente; toccata una tappa aperta il razzo ci va
+col fumetto già aperto, un altro tocco cambia meta, una chiusa non lo muove,
+un tocco fuori in volo non chiude il fumetto; le stelle delle tappe fatte,
+non delle altre). Bersagli: la mappa `[data-rotta]`; le
 tappe `[data-tappa="<pos>"]` con `[data-tipo="pianeta"|"stazione"]` e
-`[data-stato="fatta"|"ora"|"aperta"|"chiusa"]`; il volo `[data-volo]` con
+`[data-stato="fatta"|"ora"|"aperta"|"chiusa"]`; la stella di una tappa fatta `[data-stelle-tappa]` con `[data-tappa-di]`,
+`[data-piene]` e `[data-di]`; il volo `[data-volo]` con
 `[data-stato]` e il record `[data-record]`; i capitoli `[data-capitolo]`;
 il fumetto `[data-fumetto]` con `[data-fumetto-per="<pos>"|"volo"]`,
 `[data-azione="parti"]` e `[data-serve]`; il razzo `[data-razzo]` con
 `[data-al]` (il nodo), `[data-in-viaggio="1"|"0"]` e `[data-verso]` (i
-gradi); il velo del volo `[data-viaggio]`; `[data-azione="cosa-so"]`.
+gradi); il velo del volo dopo una vittoria `[data-viaggio]`; `[data-azione="cosa-so"]`.
 `parti(page, nodo)` in `test/aiuto/browser.mjs` fa i due tocchi.

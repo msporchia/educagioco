@@ -1,6 +1,6 @@
 <script>
 // dove il razzo si è posato l'ultima volta, per bambino: dura la sessione, non va nel profilo
-let ultimo = null      // { chi, arrivo, angolo }
+let ultimo = null      // { chi, arrivo: dov'è il razzo, angolo, gioco: la tappa da fare in quel momento }
 </script>
 
 <script setup>
@@ -9,7 +9,7 @@ let ultimo = null      // { chi, arrivo, angolo }
    già deciso di ogni tappa e dice solo quale si vuole giocare.
    Vedi docs/asteroidi/mappa.md. */
 import { ref, shallowRef, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { disponiRotta, stradaDelRazzo, lunghezza, lungo, durataVolo, giro, GIRA_PRIMA,
+import { disponiRotta, stradaDaPunto, agganciaARotta, lunghezza, lungo, durataVolo, giro, GIRA_PRIMA,
          versoDellaRotta, LARGO_MAX } from '../motore/asteroidi/rotta.js'
 import { dipingiRotta, dipingiRazzo, ingombro, LATO_RAZZO } from '../grafica/rotta.js'
 
@@ -32,6 +32,7 @@ const fumetto = ref(null)
 const W = ref(0)
 const aperto = ref(null)          // il nodo col fumetto
 const posato = ref(null)          // il nodo dove sta il razzo adesso
+const oro = ref(null)             // fin dove la rotta è d'oro: la tappa da fare, non dove si è andati a guardare
 const viaggio = shallowRef(null)
 let angolo = Math.PI / 2
 let occhio = null
@@ -57,12 +58,14 @@ function dipingi() {
   if (!tela.value || !quadro.value) return
   dipingiRotta(tela.value, quadro.value, {
     stati: nodi.value.map(n => n.stato), disegni: nodi.value.map(n => n.disegno),
-    fino: posato.value ?? arrivoVero.value,
+    fino: oro.value ?? arrivoVero.value,
   })
 }
 
 /* ---------- il razzo ---------- */
+let qui = { x: 0, y: 0 }          // dov'è il razzo adesso, per ripartire da lì
 function sposta(x, y) {
+  qui = { x, y }
   if (razzo.value) razzo.value.style.transform =
     `translate(${Math.round(x - LATO_RAZZO / 2)}px, ${Math.round(y - LATO_RAZZO / 2)}px)`
 }
@@ -73,7 +76,8 @@ function posa() {
   dipingiRazzo(telaRazzo.value, { angolo })
   razzo.value.dataset.verso = Math.round(angolo * 180 / Math.PI)     // per i test: com'è girato
 }
-const ricorda = () => { ultimo = { chi: props.chi, arrivo: posato.value, angolo } }
+const ricorda = () => { ultimo = { chi: props.chi, arrivo: posato.value, angolo, gioco: arrivoVero.value } }
+const dalNodo = k => { const n = quadro.value.nodi[k]; return { x: n.razzo.x, y: n.razzo.y, i: n.punto, nodo: k } }
 
 // la tavola non comincia in cima allo scorrimento: sopra c'è la riga che spiega
 const inCima = () => (tavola.value ? tavola.value.offsetTop : 0)
@@ -81,10 +85,13 @@ function scorriA(y) {
   if (scorre.value) scorre.value.scrollTop = Math.max(0, inCima() + y - scorre.value.clientHeight * 0.45)
 }
 
-// il volo: fermo per `attesa`, gira sul posto, segue la rotta, resta girato com'è arrivato (docs/asteroidi/mappa.md)
-function vola(da, a, attesa = 0) {
-  const punti = stradaDelRazzo(quadro.value, da, a)
-  if (!punti) { posato.value = a; posa(); ricorda(); return }
+// il volo: fermo per `attesa`, gira sul posto, segue la rotta, resta girato com'è arrivato (docs/asteroidi/mappa.md).
+// `vittoria`: il volo dopo una tappa vinta, che porta la mappa con sé e dà l'oro alla rotta;
+// altrimenti il razzo va dove si è toccato, e la mappa sta ferma sotto il dito.
+function vola(inizio, a, { attesa = 0, vittoria = false } = {}) {
+  const punti = stradaDaPunto(quadro.value, inizio, a)
+  if (!punti) { posato.value = a; if (vittoria) oro.value = arrivoVero.value; posa(); ricorda(); return }
+  const finestra = [inizio.i, quadro.value.nodi[a].punto]
   const dur = durataVolo(lunghezza(punti))
   const a0 = angolo, verso = lungo(punti, 0.03).angolo
   const svolta = giro(a0, verso)
@@ -105,6 +112,7 @@ function vola(da, a, attesa = 0) {
     angolo = Math.atan2(fine[1] - penultimo[1], fine[0] - penultimo[0])
     posato.value = a
     viaggio.value = null
+    oro.value = arrivoVero.value
     posa(); ricorda(); dipingi()
   }
   const fotogramma = ora => {
@@ -123,13 +131,28 @@ function vola(da, a, attesa = 0) {
       const p = lungo(punti, molle(q))
       angolo += giro(angolo, p.angolo) * 0.3
       sposta(p.x, p.y)
-      segui(p.y)
+      if (vittoria) segui(p.y)
       dipingiRazzo(telaRazzo.value, { angolo, spinta: 0.4 + Math.sin(Math.PI * q) * 0.6, t })
     }
     id = requestAnimationFrame(fotogramma)
   }
   id = requestAnimationFrame(fotogramma)
-  viaggio.value = { chiudi: arriva, ferma() { finito = true; cancelAnimationFrame(id) }, verso: a }
+  viaggio.value = {
+    chiudi: arriva, ferma() { finito = true; cancelAnimationFrame(id) }, verso: a, vittoria,
+    // dov'è adesso, per ripartire da lì verso un'altra meta
+    posizione: () => ({ x: qui.x, y: qui.y, i: agganciaARotta(quadro.value, qui.x, qui.y, finestra[0], finestra[1]) }),
+  }
+}
+
+// toccata una tappa aperta: il razzo ci va, da dov'è (o da dove si trova a metà volo)
+function vai(k) {
+  const v = viaggio.value
+  if (v) {
+    if (v.verso === k) return
+    const da = v.posizione()
+    v.ferma()
+    vola(da, k)
+  } else if (posato.value !== k) vola(dalNodo(posato.value), k)
 }
 
 let pronto = false
@@ -137,20 +160,25 @@ function prepara() {
   if (pronto || !quadro.value) return
   pronto = true
   const a = arrivoVero.value
-  const prima = ultimo && ultimo.chi === props.chi ? ultimo : null
-  if (prima && prima.arrivo < a) {
+  const prima = ultimo && ultimo.chi === props.chi && quadro.value.nodi[ultimo.arrivo] ? ultimo : null
+  const gioco = prima ? (prima.gioco ?? prima.arrivo) : null
+  if (prima && gioco < a) {
     // si è aperta una tappa nuova: il razzo parte da dov'era e ci vola
     posato.value = prima.arrivo
+    oro.value = gioco
     angolo = prima.angolo
     dipingi(); posa()
     const n0 = quadro.value.nodi[prima.arrivo], n1 = quadro.value.nodi[a]
     scorriA(Math.abs(n1.y - n0.y) < (scorre.value.clientHeight * 0.5) ? (n0.y + n1.y) / 2 : n0.y)
-    vola(prima.arrivo, a, 0.45)
+    vola(dalNodo(prima.arrivo), a, { attesa: 0.45, vittoria: true })
   } else {
-    posato.value = a
-    angolo = prima && prima.arrivo === a ? prima.angolo : versoDellaRotta(quadro.value, a)
+    // il razzo sta dove l'ultima volta l'abbiamo lasciato, se lo sappiamo
+    const dove = prima ? prima.arrivo : a
+    posato.value = dove
+    oro.value = a
+    angolo = prima && prima.arrivo === dove ? prima.angolo : versoDellaRotta(quadro.value, dove)
     dipingi(); posa(); ricorda()
-    scorriA(quadro.value.nodi[a].y)
+    scorriA(quadro.value.nodi[dove].y)
   }
 }
 
@@ -158,14 +186,15 @@ watch(quadro, async () => {
   await nextTick()
   if (!pronto) return prepara()
   if (viaggio.value) viaggio.value.chiudi()
+  oro.value = arrivoVero.value
   dipingi(); posa()
 })
 watch(firma, () => nextTick(dipingi))
 watch(arrivoVero, (a, prima) => {
   if (!pronto || a === prima) return
   if (viaggio.value) viaggio.value.chiudi()
-  if (a > posato.value) vola(posato.value, a)
-  else { posato.value = a; posa(); ricorda(); dipingi() }
+  if (a > posato.value) vola(dalNodo(posato.value), a, { vittoria: true })
+  else { posato.value = a; oro.value = a; posa(); ricorda(); dipingi() }
 })
 
 onMounted(() => {
@@ -184,9 +213,12 @@ onUnmounted(() => {
 /* ---------- il fumetto ---------- */
 const FUMETTO = 236
 async function tocca(k) {
-  if (viaggio.value) { viaggio.value.chiudi(); return }
-  aperto.value = aperto.value === k ? null : k
-  if (aperto.value === null) return
+  const v = viaggio.value
+  // il volo dopo una vittoria si chiude col tocco; l'altro no: si cambia meta
+  if (v && v.vittoria) { v.chiudi(); return }
+  if (aperto.value === k) { if (!v) aperto.value = null; return }
+  aperto.value = k
+  if (info(k).stato !== 'chiusa') vai(k)
   await nextTick()
   // il fumetto si vede tutto: se sborda, si scorre quanto basta
   const f = fumetto.value, s = scorre.value
@@ -196,7 +228,11 @@ async function tocca(k) {
   // in basso c'è «Cosa so», che resta sopra la mappa
   else if (rf.bottom > rs.bottom - 76) s.scrollTop += rf.bottom - rs.bottom + 76
 }
-const chiudi = () => { aperto.value = null }
+// il fumetto non si chiude mentre il razzo vola
+const chiudi = () => {
+  const v = viaggio.value
+  if (v) { if (v.vittoria) v.chiudi() } else aperto.value = null
+}
 const nodoAperto = computed(() => (aperto.value === null ? null : nodi.value[aperto.value]))
 const posto = computed(() => {
   const n = nodoAperto.value
@@ -214,6 +250,11 @@ function parti(n) {
   aperto.value = null
   emit('parti', n.pos)
 }
+// la stella di «superata»: piatta, d'oro, col bordo scuro per staccarsi dal disegno (come quella dei capitoli)
+const STELLA_D = Array.from({ length: 10 }, (_, i) => {
+  const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 4.05 : 9
+  return `${i ? 'L' : 'M'}${(Math.cos(a) * r).toFixed(2)} ${(Math.sin(a) * r).toFixed(2)}`
+}).join('') + 'Z'
 const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato === 'fatta' ? 'superata' : 'aperta'}`
 </script>
 
@@ -248,6 +289,13 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
         </span>
       </template>
 
+      <!-- le stelle prese da una tappa (una sola: superata), sul suo bordo in alto a destra -->
+      <svg v-for="n in nodi.filter(m => m.stato === 'fatta' && m.tipo !== 'volo')" :key="'s' + n.k" class="stelle-tappa"
+           viewBox="-12 -12 24 24" aria-hidden="true" data-stelle-tappa :data-tappa-di="n.pos" data-piene="1" data-di="1"
+           :style="{ left: (n.x + n.r * 0.78 - 12) + 'px', top: (n.y - n.r * 0.78 - 12) + 'px' }">
+        <path :d="STELLA_D" />
+      </svg>
+
       <!-- il razzo: la nave della partita, posata accanto alla tappa a cui si è arrivati -->
       <div ref="razzo" class="razzo" aria-hidden="true" data-razzo :data-al="posato"
            :data-in-viaggio="viaggio ? '1' : '0'">
@@ -273,8 +321,8 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
         </template>
       </div>
 
-      <!-- durante il volo un tocco qualunque lo chiude: il razzo arriva subito -->
-      <div v-if="viaggio" class="in-viaggio" data-viaggio @click.stop="viaggio.chiudi()"></div>
+      <!-- dopo una vittoria un tocco qualunque chiude il volo: il razzo arriva subito -->
+      <div v-if="viaggio && viaggio.vittoria" class="in-viaggio" data-viaggio @click.stop="viaggio.chiudi()"></div>
     </div>
     <slot />
   </div>
@@ -312,6 +360,8 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
 .nome-ora b { color:#ffd94a }
 .nome-chiusa b { color:#6f789c }
 
+.stelle-tappa { position:absolute; width:24px; height:24px; pointer-events:none; overflow:visible }
+.stelle-tappa path { fill:#ffd94a; stroke:#0b1029; stroke-width:2.5; stroke-linejoin:round; paint-order:stroke }
 .razzo { position:absolute; left:0; top:0; width:64px; height:64px; pointer-events:none;
          will-change:transform; z-index:1 }
 .razzo canvas { width:64px; height:64px; display:block }
