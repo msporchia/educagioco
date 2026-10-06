@@ -281,9 +281,19 @@ function piazzaFumetto() {
   const ax = (r[0] + r[2] / 2) * S
   const su = r[1] * S, giu = (r[1] + r[3]) * S
   const cima = mira.y * S + sopra
-  const sottoAlla = su - h - 14 < cima + 6
-  const top = sottoAlla ? giu + 14 : su - h - 14
   const left = stringi(ax - w / 2, [mira.x * S + 8, mira.x * S + vL - w - 8])
+  // l'eroe che aspetta ai piedi di un posto non deve finire sotto il fumetto (la scala sommersa: ci si ferma
+  // sulla riva, quattro celle sotto i gradini): se il lato scelto lo copre, si prova l'altro, sempre che ci sia mappa
+  const hx = io.x * CELLA * S, hy = io.y * CELLA * S
+  const copre = t => left < hx + 24 && left + w > hx - 24 && t < hy + 3 && t + h > hy - 45
+  const sopraT = su - h - 14, sottoT = giu + 14
+  let sottoAlla = sopraT < cima + 6
+  if (copre(sottoAlla ? sottoT : sopraT)) {
+    const altro = !sottoAlla
+    const t = altro ? sottoT : sopraT
+    if (!copre(t) && (altro || t >= limiti().y[0] * S + sopra + 6)) sottoAlla = altro
+  }
+  const top = sottoAlla ? sottoT : sopraT
   fumPos.value = { left, top, w, sotto: sottoAlla, coda: stringi(ax - left, [16, w - 16]) }
   // la vista scorre se il fumetto esce: in cima sotto la carta, in fondo sopra la fascia
   const { y } = limiti()

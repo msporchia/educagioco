@@ -72,6 +72,23 @@ const liscia = terra.liscia(casa, via)
 controlla('lisciata, gira molte meno volte', liscia.length < via.length / 2, `${liscia.length} su ${via.length}`)
 stessaLista('e arriva nello stesso posto', liscia.at(-1), via.at(-1))
 
+// la cisterna è una scala che scende sott'acqua con l'apertura verso sud: ci si arriva da sotto, dalla riva sud
+{
+  const { piede: [sx, sy], riquadro: [, ry, , rh] } = POSTI.stagno
+  controlla('la scala sommersa: si sta sulla riva sud, sotto i gradini',
+            sy * CELLA >= ry + rh, `${sx},${sy}`)
+  const verso = terra.strada(casa, { x: sx, y: sy })
+  controlla('e ci si arriva', Array.isArray(verso) && verso.length > 0)
+  const celle = [casa, ...verso]
+  controlla('la strada non passa mai più a nord del punto d\'arrivo: non gira attorno allo stagno',
+            celle.every(c => c.y >= sy), JSON.stringify(celle.find(c => c.y < sy)))
+  const ultimo = celle.at(-1), penultimo = celle.at(-2)
+  controlla('l\'ultimo passo viene da sotto (o dal fianco, sulla riva), mai dall\'alto', penultimo.y >= ultimo.y,
+            `${penultimo.x},${penultimo.y} → ${ultimo.x},${ultimo.y}`)
+  // lisciata, la strada resta fuori dall'acqua: ogni segmento si vede dritto passando solo per celle libere
+  const lisc = [casa, ...terra.liscia(casa, verso)]
+  controlla('lisciata, non taglia dall\'acqua dello stagno', lisc.every(c => c.y >= sy))
+}
 // l'acqua dello stagno: un tocco là in mezzo porta alla riva, non a niente
 const acqua = { x: 4, y: 17 }
 controlla('nello stagno non si cammina', !terra.passa(acqua.x, acqua.y))
