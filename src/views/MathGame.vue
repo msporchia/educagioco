@@ -1304,7 +1304,7 @@ onUnmounted(() => {
     </div>
 
     <!-- `fase === 'gioco'` non è ridondante: senza, due veli si sovrapporrebbero -->
-    <VeloPausa v-if="inPausa && fase === 'gioco'" :dove="dovEravamo" @riprendi="togli" />
+    <VeloPausa v-if="inPausa && fase === 'gioco'" :dove="dovEravamo" @riprendi="togli" @esci="allaMappa" />
   </div>
 </template>
 

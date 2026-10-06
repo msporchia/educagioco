@@ -808,7 +808,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
       </template>
 
       <!-- sta in fondo e fuori da tutto: la domanda e il cartello di fine hanno già la loro pausa -->
-      <VeloPausa v-if="inPausa && siGioca" :dove="dovEravamo" @riprendi="togli" />
+      <VeloPausa v-if="inPausa && siGioca" :dove="dovEravamo" @riprendi="togli" @esci="indietro" />
     </div>
   </div>
 </template>

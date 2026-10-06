@@ -696,7 +696,7 @@ onMounted(() => {
               @scegli="prendiRegalo" @piu-tardi="rimandato = true" />
 
       <VeloPausa v-if="inPausa && fase === 'gioco' && !state.festa.length"
-                 :dove="dovEravamo" @riprendi="togli" />
+                 :dove="dovEravamo" @riprendi="togli" @esci="esci" />
     </div>
   </div>
 </template>

@@ -468,7 +468,7 @@ onUnmounted(() => {
 
       <!-- il velo copre tutto lo schermo: le carte, la domanda e il
            cartello finale hanno già la loro pausa -->
-      <VeloPausa v-if="inPausa && siGioca" :dove="dovEravamo" @riprendi="togli" />
+      <VeloPausa v-if="inPausa && siGioca" :dove="dovEravamo" @riprendi="togli" @esci="indietro" />
     </div>
   </div>
 </template>

@@ -8,7 +8,7 @@ import { CIECA } from './pausa.js'
 defineProps({
   dove: { type: String, default: '' },   // «tappa 3 · 240 m»: per riconoscere la partita, non per giocare
 })
-const emit = defineEmits(['riprendi'])
+const emit = defineEmits(['riprendi', 'esci'])
 
 const pronto = ref(false)
 let cieca = 0
@@ -18,6 +18,13 @@ onUnmounted(() => clearTimeout(cieca))
 function riprendi() {
   if (!pronto.value) return
   emit('riprendi')
+}
+
+// il velo copre anche il ←: chi è chiamato a tavola esce da qui, senza far
+// ripartire il campo (la partita si salva, docs/core/ripresa.md)
+function esci() {
+  if (!pronto.value) return
+  emit('esci')
 }
 </script>
 
@@ -31,6 +38,9 @@ function riprendi() {
       <div v-if="dove" class="pa-dove">{{ dove }}</div>
       <button type="button" class="bottone" data-azione="riprendi">
         <span class="em">▶</span> tocca per continuare
+      </button>
+      <button type="button" class="pa-esci" data-azione="esci" @click.stop="esci">
+        ← esco, la partita mi aspetta
       </button>
     </div>
   </div>
@@ -53,5 +63,8 @@ function riprendi() {
 .pa-dove { font-size:14px; color:#b9c6e6 }
 .pa-foglio .bottone { margin-top:6px; opacity:.45; transition:opacity .18s ease }
 .pa-velo.pronto .bottone { opacity:1 }
+.pa-esci { margin-top:14px; padding:10px 18px; border-radius:999px; border:2px solid #b9c6e680;
+           background:transparent; color:#dfe6f6; font-size:15px; font-weight:800; opacity:.45 }
+.pa-velo.pronto .pa-esci { opacity:1 }
 .pa-foglio .em { font-style:normal }
 </style>

@@ -91,6 +91,31 @@ await entra()
 await page.click('[data-ripresa] [data-azione="scorda"]')
 uguale('«lascio perdere» toglie la carta', await page.locator('[data-ripresa]').count(), 0)
 
+/* dalla pausa si esce senza far ripartire il campo: il velo copre il ← */
+await page.click('.tap:not(.chiusa)')
+await attendi(page, 200)
+await page.evaluate(() => {
+  const T = window.__td
+  T.scegliTorre('add')
+})
+await attendi(page, 80)
+await page.evaluate(() => {
+  const T = window.__td
+  const tasti = [...document.querySelectorAll('.tastiera button')]
+  T.op.value.passi.forEach(p => tasti.find(x => +x.textContent === p.atteso).click())
+  T.chiamaOnda()
+})
+await attendi(page, 800)
+await page.click('button[aria-label="pausa"]')
+const inPausa = await comEra()
+await page.click('[data-pausa] [data-azione="esci"]', { delay: 400 })
+await page.waitForSelector('.carte')
+await entra()
+await page.click('[data-ripresa] [data-azione="riprendi"]')
+await attendi(page, 300)
+const dopoLaPausa = await comEra()
+uguale('«esco» dalla pausa salva la battaglia ferma com\'era', dopoLaPausa.strada, inPausa.strada)
+
 uguale('nessun errore in console', errori.join(' · '), '')
 await browser.close()
 riassunto('castello — la battaglia lasciata a metà, nel browser')

@@ -78,7 +78,8 @@ e nel battito `if (!fermo.value) p.avanza(dt)`.
   rispondere *è* il tocco che riprende.
 
 Nei test: `button[aria-label="pausa"]`, `[data-pausa]`,
-`[data-azione="riprendi"]`.
+`[data-azione="riprendi"]`, `[data-azione="esci"]` (esce senza ripartire:
+[ripresa.md](ripresa.md)).
 
 ## I tempi
 

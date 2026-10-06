@@ -20,7 +20,6 @@ Si esce con ← anche in mezzo a un'ondata, e rientrando la mappa offre in cima
   nel conto della partita.
 - **A partita finita** (vinta o persa) la sosta si toglie; una tappa o una
   libera nuova la butta, dopo aver chiesto.
-- Il velo della pausa copre anche il ←: per uscire si riprende e si preme ←.
 
 Nei test: `unita/castello-sosta` (la stessa battaglia dopo JSON, la libera
 col regalo in sospeso, quello che non si legge), `integrazione/castello-sosta`

@@ -753,7 +753,7 @@ onBeforeUnmount(() => {
     <!-- niente velo sopra un altro velo: dove il gioco è già fermo dietro
          il suo (fine giornata, traguardo) non se ne mette un secondo -->
     <VeloPausa v-if="inPausa && fase === 'gioco' && !state.festa.length"
-               :dove="dovEravamo" @riprendi="togliLaPausa" />
+               :dove="dovEravamo" @riprendi="togliLaPausa" @esci="esci" />
   </div>
 </template>
 
