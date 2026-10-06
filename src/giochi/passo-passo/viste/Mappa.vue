@@ -6,8 +6,8 @@ let ultimo = null      // { chi, al, dove, verso }: `al` e `dove` sono id (l'ind
 <script setup>
 /* La mappa della campagna: isole una sotto l'altra. La strada maestra è
    del coniglio, i rami del cane partono da una tana; il segnalino salta
-   fino alla casella toccata (e nelle tane cambia animale), poi il fumetto
-   dice cos'è. Il racconto di ogni posto sta nell'`aria-label`, per il
+   fino alla casella toccata (e nelle tane cambia animale), e il fumetto
+   dice cos'è subito, senza aspettarlo. Il racconto di ogni posto sta nell'`aria-label`, per il
    grande che legge. Riceve lo stato già deciso di ogni tappa.
    Vedi docs/passo-passo/mappa.md. */
 import { ref, shallowRef, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
@@ -36,6 +36,7 @@ const aperto = ref(null)          // l'id della casella col fumetto
 const posato = ref(null)          // l'id del nodo dove sta il segnalino
 const animale = ref('coniglio')
 const viaggiando = shallowRef(null)
+const mira = ref(null)            // la casella dove sta andando il segnalino
 let verso = 1                     // guarda a destra (1) o a sinistra (-1)
 let occhio = null
 
@@ -124,34 +125,45 @@ function scorriA(y) {
 }
 
 /* il viaggio: salti da casella a casella (un balzo solo da lontano), e
-   nelle tane l'animale entra e dall'altra parte esce l'altro */
-function vai(da, a, { attesa = 0, apri = false } = {}) {
-  const passi = viaggio(quadro.value, da, a)
-  if (!passi.length) { posato.value = a; posa(); ricorda(); if (apri) apriFumetto(a); return }
-  let i = 0, t = -attesa, prima = null, id = 0, finito = false
+   nelle tane l'animale entra e dall'altra parte esce l'altro. Il fumetto
+   è già aperto sulla meta: un altro tocco cambia meta, ma solo a salto
+   finito (`viaggiando.vai`), da dove il segnalino è atterrato. */
+function vai(da, a, { attesa = 0 } = {}) {
+  let passi = viaggio(quadro.value, da, a)
+  if (!passi.length) { posato.value = a; posa(); ricorda(); return }
+  let i = 0, t = -attesa, prima = null, id = 0, finito = false, cambia = null
+  mira.value = a
   const segui = y => {
     const s = scorre.value
     if (!s) return
     const su = inCima() + y - s.scrollTop, h = s.clientHeight
+    // non rincorre chi è lontano fuori dallo schermo: il bambino guarda il fumetto
+    if (su < -40 || su > h + 40) return
     if (su < h * 0.22 || su > h * 0.72) s.scrollTop += (su - h * 0.45) * 0.12
   }
-  // arrivato da sé apre il fumetto; chiuso da un tocco arriva e basta
-  const arriva = (fumetto = apri) => {
+  const arriva = () => {
     if (finito) return
     finito = true
     cancelAnimationFrame(id)
-    posato.value = a
+    posato.value = mira.value
+    mira.value = null
     viaggiando.value = null
     posa(); ricorda()
-    if (fumetto) apriFumetto(a)
+    if (aperto.value !== null) mostraFumetto()
   }
+  // da fermo (prima di partire) si cambia subito, se no appena atterrato
+  const strada = nuova => { passi = viaggio(quadro.value, posato.value, nuova); i = 0; t = Math.max(0, t); mira.value = nuova }
   const fotogramma = ora => {
     if (finito) return
     const nascosto = typeof document !== 'undefined' && document.hidden
     if (prima !== null && !nascosto) t += Math.min(0.05, Math.max(0, (ora - prima) / 1000))
     prima = ora
-    while (i < passi.length && t >= passi[i].dur) { t -= passi[i].dur; posato.value = passi[i].al; i++ }
-    if (i >= passi.length) return arriva(apri)
+    while (i < passi.length && t >= passi[i].dur) {
+      t -= passi[i].dur; posato.value = passi[i].al; i++
+      if (cambia) { strada(cambia); cambia = null }
+    }
+    if (cambia && i === 0 && t < 0) { strada(cambia); cambia = null }
+    if (i >= passi.length) return arriva()
     if (t >= 0) {
       const p = passi[i]
       const q = t / p.dur
@@ -175,7 +187,11 @@ function vai(da, a, { attesa = 0, apri = false } = {}) {
     id = requestAnimationFrame(fotogramma)
   }
   id = requestAnimationFrame(fotogramma)
-  viaggiando.value = { chiudi: () => arriva(false), ferma() { finito = true; cancelAnimationFrame(id) }, verso: a }
+  viaggiando.value = {
+    chiudi: arriva,
+    ferma() { finito = true; cancelAnimationFrame(id) },
+    vai(nuova) { cambia = nuova },
+  }
 }
 
 let pronto = false
@@ -220,7 +236,7 @@ onMounted(() => {
 onUnmounted(() => {
   if (occhio) occhio.disconnect()
   // uscendo a metà viaggio si conta come arrivato
-  if (viaggiando.value) { const a = viaggiando.value.verso; viaggiando.value.ferma(); posato.value = a; ricorda() }
+  if (viaggiando.value) { const a = mira.value; viaggiando.value.ferma(); posato.value = a; ricorda() }
 })
 
 /* ---------- il dito: un tocco apre, una strisciata scorre e basta ---------- */
@@ -235,18 +251,20 @@ const strisciato = () => !!premuto &&
 
 /* ---------- il fumetto ---------- */
 const FUMETTO = 276
+/* Il fumetto compare subito sopra la casella toccata, e intanto il
+   segnalino ci va; su una chiusa non va e dice cosa manca. Un tocco durante
+   il viaggio cambia fumetto e meta. */
 function tocca(id) {
   if (strisciato()) return
-  if (viaggiando.value) { viaggiando.value.chiudi(); return }
   if (aperto.value === id) { aperto.value = null; return }
-  aperto.value = null
   const c = vocePer(id)
-  // su una chiusa il segnalino non va: il fumetto dice cosa manca
-  if (!c || c.stato === 'chiusa' || id === posato.value) return apriFumetto(id)
-  vai(posato.value, id, { apri: true })
-}
-async function apriFumetto(id) {
   aperto.value = id
+  mostraFumetto()
+  if (!c || c.stato === 'chiusa') return
+  if (viaggiando.value) { if (mira.value !== id) viaggiando.value.vai(id) }
+  else if (id !== posato.value) vai(posato.value, id)
+}
+async function mostraFumetto() {
   await nextTick()
   // il fumetto si vede tutto: se sborda, si scorre quanto basta
   const f = fumetto.value, s = scorre.value
@@ -267,7 +285,8 @@ const posto = computed(() => {
   const largo = Math.min(FUMETTO, W0 - 16)
   const x = Math.max(largo / 2 + 8, Math.min(W0 - largo / 2 - 8, n.x))
   // sopra la casella, e sopra l'animale se ci è seduto; in cima non c'è posto e va sotto
-  const sopra = n.y - n.lato / 2 - (aperto.value === posato.value ? ANIMALE.alto - ANIMALE.piede + 4 : 0) - 10
+  const seduto = aperto.value === (viaggiando.value ? mira.value : posato.value)
+  const sopra = n.y - n.lato / 2 - (seduto ? ANIMALE.alto - ANIMALE.piede + 4 : 0) - 10
   const sotto = sopra < 230
   return { x, largo, sotto, y: sotto ? n.y + n.lato / 2 + 12 : sopra, coda: n.x - x }
 })
@@ -455,8 +474,6 @@ const etichetta = c => (c.tipo === 'sentiero'
           </template>
         </div>
 
-        <!-- durante il viaggio un tocco qualunque lo chiude: il segnalino arriva subito -->
-        <div v-if="viaggiando" class="pp-in-viaggio" data-viaggio @click.stop="viaggiando.chiudi()"></div>
       </div>
     </div>
   </div>

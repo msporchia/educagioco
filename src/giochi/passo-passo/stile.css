@@ -180,7 +180,6 @@
 .pp-fumetto-gioca:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--pp-via-scuro) }
 @keyframes pp-compare { from { opacity: 0; margin-top: 6px } }
 
-.pp-in-viaggio { position: absolute; inset: 0; z-index: 4 }
 .pp-spenta { opacity: .22; filter: grayscale(1) }
 
 /* ═══════════ il campo ═══════════ */
