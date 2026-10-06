@@ -8,13 +8,19 @@ import { generaDomanda } from './scena.js'
 export class Corsa {
   static perTappa(t, opzioni = {}) { return new Corsa(t, opzioni) }
 
-  constructor(tappa, { rnd = Math.random } = {}) {
+  // Una tappa lasciata a metà (motore/sosta.js): la domanda aperta resta
+  // quella, non se ne genera un'altra.
+  static ripresa(t, { indice, errori, domanda, ...opzioni }) {
+    return new Corsa(t, { ...opzioni, indice, errori, domanda })
+  }
+
+  constructor(tappa, { rnd = Math.random, indice = 0, errori = 0, domanda = null } = {}) {
     this.tappa = tappa
     this.rnd = rnd
     this.richieste = tappa.partite
-    this.indice = 0      // quante domande già risposte giuste
-    this.errori = 0      // errori in tutta la tappa: decidono le stelle
-    this.domanda = generaDomanda(tappa, rnd)
+    this.indice = indice      // quante domande già risposte giuste
+    this.errori = errori      // errori in tutta la tappa: decidono le stelle
+    this.domanda = domanda || generaDomanda(tappa, rnd)
   }
 
   get finita() { return this.indice >= this.richieste }

@@ -44,3 +44,33 @@ per chi legge — non c'è ancora una voce incisa in italiano.
 
 Il conteggio delle domande, con l'anti-ripetizione e i casi per verbo, è
 in [domande.md](domande.md).
+
+## Lasciare a metà
+
+Si esce con ← (o la pagina sparisce) anche a tappa aperta, e rientrando la
+mappa offre in cima «torno da dove ero». La regola comune è in
+[../core/ripresa.md](../core/ripresa.md); qui quello che è di Conta
+(`motore/sosta.js`, `profile.campagne.conta.sosta`).
+
+- **Si scrive**: la tappa (per chiave), le giuste fatte, gli errori (sono
+  le stelle), le monete già prese (`chiesto`/`dato`, per il cartello del
+  salvadanaio), la serie di fila e **la domanda aperta com'è**, gettoni e
+  posti compresi. Rifarla a caso sarebbe una mossa: può uscire più facile.
+- **La specie si scrive per chiave** e si rivede dal mondo; una specie o un
+  verbo che non ci sono più, una risposta giusta fuori dalle opzioni, un
+  «porta» coi conti che non tornano: il salvataggio si butta e la tappa
+  ricomincia.
+- **Si perde** quello che il bambino stava toccando (i gettoni già contati
+  di un «portamene»), il «conta insieme» dopo uno sbaglio e l'animazione di
+  «uno in più» e degli «stessi»: si rivedono dall'inizio, e non danno
+  niente a chi esce.
+- **Senza orologio non c'è pausa**: la tappa ripresa nasce com'era.
+- **Si salva** a ogni risposta (giusta o sbagliata), col ←, su
+  `visibilitychange`/`pagehide` e prima di smontare. Una tappa finita toglie
+  la sosta; cominciarne una nuova la butta, dopo aver chiesto.
+- Le monete non si ripagano: sono già nel conto a ogni giusta (`incassa`).
+
+Nei test: `unita/conta-sosta` (ogni tappa a metà torna la stessa, quello che
+non torna non si legge), `integrazione/conta-sosta` (←, rientro, stelle,
+ricarica della pagina, l'avviso della tappa nuova). Bersagli comuni:
+`[data-ripresa]`, `[data-chiede]`, `[data-azione=…]`.
