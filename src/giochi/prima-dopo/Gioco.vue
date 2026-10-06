@@ -6,18 +6,20 @@
 // — questo file decide solo *quando* aprirla. È l'unico file del gioco
 // che sa che esistono le monete: le regole stanno in `motore/`, le
 // storie e i verbi in `dati/`, le schermate in `viste/`.
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { segna, segnaBest } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { PAGA } from '../../data/paghe.js'
-import { aperta, adesso, chiusaPerEta, stelleDi, completa } from '../campagne.js'
+import { aperta, adesso, chiusaPerEta, stelleDi, completa,
+         sosta, salvaSosta, buttaSosta } from '../campagne.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino } from './dati/campagna.js'
 import { verbo as datiVerbo } from './dati/verbi.js'
 import { Corsa } from './motore/corsa.js'
 import { spiegazione } from './motore/quesito.js'
+import { scrivi, leggi, dice } from './motore/sosta.js'
 
 import Mappa from './viste/Mappa.vue'
 import Storia from './viste/Storia.vue'
@@ -74,7 +76,83 @@ const suoni = {
 let attesa = 0
 let borsellino = borsa(CHIAVE)   // le monete di questa tappa, una storia alla volta
 let sbarra = 0
-onUnmounted(() => { clearTimeout(attesa); clearTimeout(sbarra) })
+
+/* ── la tappa lasciata a metà ──
+   Uscire non butta via niente: si scrive dove si era (motore/sosta.js) e
+   la mappa la offre in cima. Vedi docs/prima-dopo/sosta.md. */
+function laRipresa() {
+  const d = dice(sosta(CHIAVE))
+  if (!d || !aperta(CHIAVE, d.indice)) return null
+  return { emoji: d.icona, nome: d.nome, dettaglio: `📖 ${d.fatte} storie su ${d.quante}` }
+}
+const ripresa = ref(laRipresa())
+const chiede = ref(null)            // { i, nome }: la tappa nuova che butterebbe quella a metà
+
+// `uscendo`: si lascia la schermata (o la pagina sparisce). Una tappa con
+// l'ultima storia appena giusta aspetta il respiro del ✔️ prima del
+// cartello; uscendo non c'è più tempo, e si chiude lì.
+function salva({ subito = false, uscendo = false } = {}) {
+  const c = corsa.value
+  if (vista.value !== 'tavolo' || !c) return
+  if (c.finita && !finale.value) {
+    if (!uscendo) return            // sta per chiudersi da sé
+    clearTimeout(attesa)
+    mostraFinale({ muto: true })
+  }
+  // `scrivi` torna null a tappa finita: la sosta si toglie
+  salvaSosta(CHIAVE, scrivi(c, { serie: serie.value,
+    monete: { chiesto: borsellino.chiesto, dato: borsellino.dato } }), { subito })
+}
+
+function scorda() {
+  buttaSosta(CHIAVE)
+  ripresa.value = null
+  chiede.value = null
+}
+
+function vuoleIniziare(i) {
+  if (!ripresa.value) return avviaTappa(i)
+  chiede.value = { i, nome: CAMPAGNA[i].nome }
+}
+
+function comincia() {
+  const { i } = chiede.value
+  chiede.value = null
+  avviaTappa(i)
+}
+
+// se il salvataggio non si legge più la carta sparisce e la mappa resta
+function riprendiPartita() {
+  const r = leggi(sosta(CHIAVE))
+  if (!r || !aperta(CHIAVE, r.indice)) return scorda()
+  alTavolo(r.corsa, r.indice, r)
+  const q = r.corsa.quesito
+  // l'esito era già stato contato (la storia fatta, lo sbaglio): si riparte da lì
+  if (q.esito === 'giusta') prossimo()
+  else if (q.esito === 'sbagliata') {
+    spiega.value = spiegazione(q)
+    fase.value = 'spiega'
+  }
+}
+
+// il telefono che si mette in tasca: visibilitychange è l'ultimo momento
+// in cui si può ancora scrivere
+function seSparisce(e) {
+  if (e?.type === 'pagehide' || document.visibilityState === 'hidden')
+    salva({ subito: true, uscendo: true })
+}
+onMounted(() => {
+  document.addEventListener('visibilitychange', seSparisce)
+  addEventListener('pagehide', seSparisce)
+})
+// prima di smontare, non dopo: a smontaggio fatto i figli non ci sono più
+onBeforeUnmount(() => {
+  salva({ subito: true, uscendo: true })
+  document.removeEventListener('visibilitychange', seSparisce)
+  removeEventListener('pagehide', seSparisce)
+  clearTimeout(attesa)
+  clearTimeout(sbarra)
+})
 
 function domandaNuova() {
   clearTimeout(sbarra)
@@ -82,16 +160,21 @@ function domandaNuova() {
   sbarra = setTimeout(() => { cieco.value = false }, CIECA)
 }
 
-function alTavolo(nuovaCorsa, indice) {
+// `ripreso`: quello che `leggi` ha rimesso insieme; senza, una tappa nuova
+function alTavolo(nuovaCorsa, indice, ripreso = null) {
   clearTimeout(attesa)
   tappaIdx.value = indice
   corsa.value = nuovaCorsa
-  borsellino = borsa(CHIAVE)
+  borsellino = borsa(CHIAVE, ripreso?.monete)
+  if (ripreso) serie.value = ripreso.serie
   finale.value = null
   spiega.value = null
   fase.value = 'gioca'
   vista.value = 'tavolo'
+  ripresa.value = null
+  chiede.value = null
   domandaNuova()
+  if (!ripreso) salva()          // una tappa nuova butta la sosta di prima
 }
 
 const avviaTappa = i => alTavolo(Corsa.perTappa(CAMPAGNA[i]), i)
@@ -101,10 +184,11 @@ function tocca(id) {
   const q = quesito.value
   const esito = q.tocca(id)
   if (!esito) return                // tocco ignorato: fuori posto, o niente da togliere
-  if (!q.finita) { suoni.posa(); return }   // un posa/togli che non ha ancora deciso niente
+  if (!q.finita) { suoni.posa(); salva(); return }   // un posa/togli che non ha ancora deciso niente
 
   if (q.esito === 'giusta') vinta()
   else sbagliata()
+  salva()
 }
 
 function vinta() {
@@ -124,6 +208,7 @@ function prossimo() {
   fase.value = 'gioca'
   c.avanti()
   domandaNuova()
+  salva()
 }
 
 function sbagliata() {
@@ -140,15 +225,17 @@ function fineSpiegazione() {
   spiega.value = null
   fase.value = 'gioca'
   domandaNuova()
+  salva()
 }
 
-function mostraFinale() {
+function mostraFinale({ muto = false } = {}) {
   const c = corsa.value
   completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle: c.stelle })
   segna('storieTappe')
   finale.value = { titolo: CAMPAGNA[tappaIdx.value].nome, stelle: c.stelle,
                    monete: borsellino.dato, notaMonete: borsellino.nota(), errori: c.errori }
-  suono.livello()
+  scorda()                       // tappa finita: niente da riprendere
+  if (!muto) suono.livello()
 }
 
 function allaMappa() {
@@ -157,11 +244,14 @@ function allaMappa() {
   spiega.value = null
   corsa.value = null
   vista.value = 'mappa'
+  ripresa.value = laRipresa()
 }
 
+// ← dal tavolo non chiude la tappa: si scrive dove si era, e la mappa la offre
 function indietro() {
-  if (vista.value === 'mappa') emit('vai', 'home')
-  else allaMappa()
+  if (vista.value === 'mappa') return emit('vai', 'home')
+  salva({ subito: true, uscendo: true })
+  allaMappa()
 }
 </script>
 
@@ -170,7 +260,10 @@ function indietro() {
     <Barra :titolo="titolo" guida="prima" monete @indietro="indietro" />
 
     <div class="pd" :style="{ '--pd-accento': accento }">
-      <Mappa v-if="vista === 'mappa'" :scalini="scalini" @gioca="avviaTappa" />
+      <Mappa v-if="vista === 'mappa'" :scalini="scalini"
+             :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
+             @gioca="vuoleIniziare" @riprendi="riprendiPartita" @scorda="scorda"
+             @comincia="comincia" @annulla="chiede = null" />
 
       <Storia v-else-if="quesito" :quesito="quesito" :verbo="verboAttuale" :fase="fase"
               @tocca="tocca" />

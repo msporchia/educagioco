@@ -152,7 +152,10 @@ await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('.pd-mappa', { timeout: 5000 })
 
 /* ---------- 8. l'intruso: la spiegazione dice anche chi non c'entrava ---------- */
+/* la quarta tappa è rimasta a metà (docs/prima-dopo/sosta.md): cominciarne
+   un'altra lo chiede prima, e qui si dice di sì */
 await page.locator('.pd-tappa[data-tappa="8"]').click()
+await page.locator('[data-chiede] [data-azione="comincia"]').click()
 await page.waitForSelector('.pd-storia', { timeout: 5000 })
 await attendi(page, 400)
 
