@@ -2,12 +2,12 @@
 // Il coordinatore: l'unico file del gioco che sa che esistono le monete.
 // Regole in `motore/`, disegni e tappe in `dati/`, animazioni in `scena/`,
 // schermate in `viste/`.
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { addCoins, segna, segnaBest } from '../../store/profile.js'
 import { progresso, aperta, adesso, stelleDi, completa, scelta, ricorda,
-         primatoDi, segnaPrimato } from '../campagne.js'
+         primatoDi, segnaPrimato, sosta, salvaSosta, buttaSosta } from '../campagne.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
 
 import { SENZA_FINE } from './gioco.js'
@@ -17,6 +17,7 @@ import { TEMI, CHIAVI_TEMI } from './dati/temi.js'
 import { Regole } from './motore/partita.js'
 import { Corsa } from './motore/corsa.js'
 import { passiSpiegazione } from './motore/indizi.js'
+import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Coriandoli } from '../../grafica/coriandoli.js'
 
 import Mappa from './viste/Mappa.vue'
@@ -43,6 +44,9 @@ const serie = ref(0)                // codici indovinati di fila (per l'albo)
 // La serie del gioco libero: alimenta il record (`giochi/primati.js`) e
 // riparte da zero ogni volta che si entra nel libero, a differenza di `serie`.
 const fila = ref(0)
+// Difficoltà e tema del libero in corso: le manopole della mappa possono
+// essere cambiate dopo, e una partita ripresa porta le sue.
+let delLibero = { difficolta: '', tema: '' }
 
 const avanza = progresso(CHIAVE)
 const libero = computed(() => tappaIdx.value < 0)
@@ -108,22 +112,25 @@ const avviaTappa = i => alTavolo(Corsa.perTappa(CAMPAGNA[i]), i)
 
 const avviaLibero = () => {
   fila.value = 0
-  alTavolo(new Corsa(Regole.libere(scDifficolta.value, scTema.value), Infinity), -1)
+  delLibero = { difficolta: scDifficolta.value, tema: scTema.value }
+  alTavolo(new Corsa(Regole.libere(delLibero.difficolta, delLibero.tema), Infinity), -1)
 }
 
-// La serie si chiude (e si scrive) al codice sbagliato o lasciando il
-// tavolo: se si scrivesse a ogni vittoria le «ultime partite» del quaderno
-// sarebbero i gradini di una stessa serie invece di partite diverse.
-function chiudiLaFila() {
-  if (!fila.value) return null
-  const esito = segnaPrimato(CHIAVE, fila.value)
+// La serie si chiude (e si scrive) al codice sbagliato o col «lascio
+// perdere» della carta: uscire non la chiude più, resta nella sosta. Se si
+// scrivesse a ogni vittoria le «ultime partite» del quaderno sarebbero i
+// gradini di una stessa serie invece di partite diverse.
+let esitoFila = null       // il primato scritto all'ultimo codice sbagliato, per il cartello
+function chiudiLaFila(quanti = fila.value) {
+  if (!quanti) return null
+  const esito = segnaPrimato(CHIAVE, quanti)
   fila.value = 0
   return esito
 }
 
 function primatoDelLibero(vinta) {
   if (!vinta) {
-    const esito = chiudiLaFila()
+    const esito = esitoFila
     return esito ? { record: esito.record, frase: fraseDiFine(esito, SENZA_FINE.misura) } : null
   }
   const prima = primatoDi(CHIAVE).best
@@ -141,12 +148,14 @@ function posa(simbolo) {
   if (buca === false) { rifiuti.value++; suono.no(); return }
   posata.value = buca
   suoni.posa(buca)
+  salva()
 }
 
 function togli(i) {
   if (partita.value.togli(i)) {
     posata.value = -1
     suono.nota(300, 300, 0.09, 'sine', 0.08)
+    salva()
   }
 }
 
@@ -159,13 +168,24 @@ function conferma() {
   if (!p.finita) return
 
   const tappaFinita = corsa.value.registra()
+  esitoFila = null
   if (p.vinta) {
     addCoins(p.monete)
     segna('codici')
     serie.value++
     segnaBest('serieCodici', serie.value)
     if (libero.value) fila.value++
-  } else serie.value = 0
+  } else {
+    serie.value = 0
+    if (libero.value) esitoFila = chiudiLaFila()
+  }
+  // la tappa si porta a casa subito, non dopo il respiro: chi esce nel
+  // frattempo non deve perdere le stelle di un codice già vinto
+  if (tappaFinita) {
+    completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle: corsa.value.stelle })
+    segna('codiciTappe')
+  }
+  salva({ subito: true })
 
   attesa = setTimeout(() => mostraFinale(tappaFinita), RESPIRO)
 }
@@ -174,8 +194,6 @@ function mostraFinale(tappaFinita) {
   const p = partita.value
   const c = corsa.value
   if (tappaFinita) {
-    completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle: c.stelle })
-    segna('codiciTappe')
     finale.value = { che: 'tappa', vinta: true, codice: p.codice, stelle: c.stelle,
                      monete: c.monete, titolo: CAMPAGNA[tappaIdx.value].nome, rimaste: 0 }
     suono.livello()
@@ -199,12 +217,93 @@ function avanti() {
 function allaMappa() {
   clearTimeout(attesa)
   festa?.ferma()
-  chiudiLaFila()           // una serie lasciata a metà vale quanto una chiusa
+  salva({ subito: true })  // uscire non butta via niente: si scrive dov'era
   finale.value = null
   corsa.value = null
   vista.value = 'mappa'
+  ripresa.value = laRipresa()
 }
-onUnmounted(chiudiLaFila)  // anche chi esce dal gioco con la serie in corso
+
+/* ── la partita lasciata a metà ──
+   Uscire non butta via niente (motore/sosta.js, docs/codice-segreto/sosta.md):
+   i codici vinti della tappa, il codice in corso con le righe già giocate
+   e la serie del libero. La mappa la offre in cima. */
+const ripresa = ref(laRipresa())
+const chiede = ref(null)   // { nome, i }: la partita nuova che butterebbe quella a metà
+
+function laRipresa() {
+  const d = dice(sosta(CHIAVE))
+  if (!d) return null
+  const righe = !d.righe ? '' : d.righe === 1 ? ' · 1 riga giocata' : ` · ${d.righe} righe giocate`
+  const dove = d.libero ? `${d.fila} di fila` : `codice ${d.codice} di ${d.di}`
+  return { emoji: d.libero ? '🎲' : TEMI[d.tema].icona, nome: d.nome,
+           dettaglio: `🔑 ${dove}${righe}` }
+}
+
+// Scrive dov'era la partita. A partita finita (o non ancora cominciata)
+// `scrivi` torna null e la sosta si toglie.
+function salva({ subito = false } = {}) {
+  if (!corsa.value || vista.value !== 'tavolo') return
+  const chiave = libero.value ? '' : CAMPAGNA[tappaIdx.value].chiave
+  salvaSosta(CHIAVE, scrivi(corsa.value, { chiave, ...delLibero, fila: fila.value,
+                                           serie: serie.value }), { subito })
+}
+
+// «Lascio perdere»: la serie del libero si scrive adesso, come primato
+function scorda() {
+  const dato = sosta(CHIAVE)
+  if (dato && !dato.chiave && Number.isInteger(dato.fila)) chiudiLaFila(dato.fila)
+  buttaSosta(CHIAVE)
+  ripresa.value = null
+  chiede.value = null
+}
+
+// una tappa nuova con una sosta aperta chiede prima: il dito di un bambino
+// sulla mappa ci finisce comunque
+function vuoleIniziare(i) {
+  if (!ripresa.value) return parti(i)
+  chiede.value = { nome: i < 0 ? 'il gioco libero' : CAMPAGNA[i].nome, i }
+}
+function comincia() {
+  const { i } = chiede.value
+  scorda()
+  parti(i)
+}
+const parti = i => i < 0 ? vista.value = 'manopole' : avviaTappa(i)
+
+// un salvataggio che non torna si butta, e la mappa resta com'è
+function riprendiPartita() {
+  const r = leggi(sosta(CHIAVE))
+  if (!r) return scorda()
+  clearTimeout(attesa)
+  delLibero = { difficolta: r.difficolta || '', tema: r.tema || '' }
+  fila.value = r.fila
+  serie.value = r.serie
+  esitoFila = null
+  tappaIdx.value = r.indice
+  corsa.value = r.corsa
+  finale.value = null
+  posata.value = -1
+  vista.value = 'tavolo'     // il gioco non ha orologio: riprende com'era
+  ripresa.value = null
+  chiede.value = null
+}
+
+// il telefono che si mette in tasca: visibilitychange è l'ultimo momento
+// in cui si può ancora scrivere
+function seSparisce(e) {
+  if (e?.type === 'pagehide' || document.visibilityState === 'hidden')
+    salva({ subito: true })
+}
+onMounted(() => {
+  document.addEventListener('visibilitychange', seSparisce)
+  addEventListener('pagehide', seSparisce)
+})
+onBeforeUnmount(() => {   // prima: dopo, il tavolo non c'è più
+  salva({ subito: true })
+  document.removeEventListener('visibilitychange', seSparisce)
+  removeEventListener('pagehide', seSparisce)
+})
 
 function indietro() {
   if (vista.value === 'mappa') emit('vai', 'home')
@@ -243,7 +342,10 @@ function chiudiSpiegazione() {
 
     <div class="cs" :style="{ '--cs-accento': accento }">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" :libero="statoLibero"
-             @gioca="avviaTappa" @libero="vista = 'manopole'" />
+             :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
+             @gioca="vuoleIniziare" @libero="vuoleIniziare(-1)"
+             @riprendi="riprendiPartita" @scorda="scorda"
+             @comincia="comincia" @annulla="chiede = null" />
 
       <Libero v-else-if="vista === 'manopole'"
               :scaglioni="SCAGLIONI" :temi="temiInElenco"

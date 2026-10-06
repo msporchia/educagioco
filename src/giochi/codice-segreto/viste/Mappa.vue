@@ -1,15 +1,22 @@
 <script setup>
+import Ripresa from '../../Ripresa.vue'
 // La mappa della campagna: tre scalini, nove tappe. Riceve tutto già
 // deciso (aperto, stelle, colore) e non sa niente di profili o motore.
 defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
   libero: { type: Object, required: true },   // { aperto, quante, fatte, primato }
+  ripresa: { type: Object, default: null },   // la partita a metà: { emoji, nome, dettaglio }
+  chiede: { type: String, default: '' },      // la partita nuova che la butterebbe
 })
-defineEmits(['gioca', 'libero'])
+defineEmits(['gioca', 'libero', 'riprendi', 'scorda', 'comincia', 'annulla'])
 </script>
 
 <template>
   <div class="cs-mappa">
+    <Ripresa :ripresa="ripresa" :chiede="chiede"
+             @riprendi="$emit('riprendi')" @scorda="$emit('scorda')"
+             @comincia="$emit('comincia')" @annulla="$emit('annulla')" />
+
     <section v-for="s in scalini" :key="s.chiave" class="cs-scalino">
       <h3>
         <span class="em">{{ s.icona }}</span>

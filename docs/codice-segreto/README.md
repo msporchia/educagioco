@@ -5,6 +5,7 @@ giochi nuovi: chi scrive un gioco parte da qui.
 
 - [presentazione.md](presentazione.md) — il gioco per chi arriva da fuori, le nove tappe, le note per i genitori
 - [regole.md](regole.md) — gli scaglioni di difficoltà, i temi, il conteggio dei pallini
+- [sosta.md](sosta.md) — la partita lasciata a metà: cosa si salva, la serie del libero, il record
 
 Vedi anche: [../core/convenzione-giochi.md](../core/convenzione-giochi.md)
 (com'è fatto un gioco nuovo, sul modello di questo);
