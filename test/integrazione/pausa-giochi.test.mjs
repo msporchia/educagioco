@@ -16,7 +16,8 @@
    `node test/esegui.mjs pausa-giochi --niente-build`
    tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli,
+         scendiNelSotterraneo } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -138,7 +139,7 @@ if (await page.locator('[data-eroe="cavaliere"]').count()) {
 }
 uguale('sotterraneo: sulla mappa non c\'è niente da fermare', await pausaInBarra(), 0)
 
-await page.locator('.sot-tappa[data-tappa="0"]').click()
+await scendiNelSotterraneo(page, 0)
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
 await attendi(page, 700)
 uguale('nella discesa il ⏸ c\'è', await pausaInBarra(), 1)

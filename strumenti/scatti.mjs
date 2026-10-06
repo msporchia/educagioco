@@ -43,6 +43,8 @@ import { PRIMA, CELLE } from '../src/giochi/fattoria/dati/mondo.js'
 import { PER_COLTURA, PER_RICETTA, MINUTO } from '../src/giochi/fattoria/dati/coltivazioni.js'
 import { sogliaDi } from '../src/giochi/fattoria/dati/livelli.js'
 import { FILA_ATTUALE } from '../src/giochi/costruttore/dati/campagna.js'
+// le discese del sotterraneo stanno sulla terra di sopra: ci si va a piedi, come nelle prove
+import { scendiNelSotterraneo } from '../test/aiuto/browser.mjs'
 
 const LIVELLO_FOTO = 10
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -334,11 +336,11 @@ const RICETTE = [
   { file: 'survivors-gioco', dove: 'survivors', attesa: '.sv-mappa',
     passi: [['.sv-tappa.sv-adesso, .sv-tappa', 2200]] },
 
-  { file: 'sotterraneo-mappa', dove: 'sotterraneo', attesa: '.sot-tappe' },
+  { file: 'sotterraneo-mappa', dove: 'sotterraneo', attesa: '[data-terra]' },
   /* il campo dopo un paio di secondi: appena entrati la luce è ancora
      tutta addosso all'eroe, e lo scatto racconterebbe una stanza sola */
-  { file: 'sotterraneo-gioco', dove: 'sotterraneo', attesa: '.sot-tappe',
-    passi: [['.sot-tappa:not([disabled])', 2200]] },
+  { file: 'sotterraneo-gioco', dove: 'sotterraneo', attesa: '[data-terra]',
+    passi: [async page => { await scendiNelSotterraneo(page, 0); await page.waitForTimeout(2200) }] },
 
   /* ── i due dei piccoli ──
      Si fotografano **dentro una tappa**, non alla mappa: quello che

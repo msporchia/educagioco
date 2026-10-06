@@ -300,3 +300,41 @@ export async function giocaSullIsola(page, quale) {
 // lo stato di una casella della mappa di Passo passo: fatta, ora, aperta o chiusa
 export const statoSullIsola = (page, quale) =>
   page.locator(`[data-mappa] [data-tappa="${quale}"]`).getAttribute('data-stato')
+
+/* Scende in una discesa del sotterraneo dalla terra di sopra
+   (docs/sotterraneo/terra-di-sopra.md). L'eroe ci va a piedi, come farebbe
+   un bambino che sa dove andare: si tocca il punto dello schermo più vicino
+   alla discesa, si aspetta che si fermi, si ripete finché la discesa è
+   trovata e sta sullo schermo; poi la si tocca e si preme «scendo» nel
+   fumetto. Coi tocchi del mouse: quelli del dito vero li prova
+   `integrazione/sotterraneo-terra`. `quale` è l'indice della discesa o
+   'abisso'; con `scendi: false` si ferma al fumetto aperto. */
+export async function scendiNelSotterraneo(page, quale, { scendi = true } = {}) {
+  const posto = page.locator(quale === 'abisso' ? '[data-posto][data-abisso]' : `[data-discesa="${quale}"]`)
+  await page.waitForSelector('[data-terra]', { timeout: 5000 })
+  const fermo = async () => {
+    await page.waitForFunction(() => document.querySelector('[data-eroe-terra]')?.dataset.cammina === '0',
+                               null, { timeout: 15000 })
+    await attendi(page, 150)
+  }
+  const fumettoGiusto = () => page.locator(`[data-fumetto] [data-azione="scendi"]`).count()
+  for (let giro = 0; giro < 16; giro++) {
+    const v = await page.locator('[data-terra]').boundingBox()
+    const su = (await page.locator('.sot-terra-sopra').boundingBox())?.height || 0
+    const giu = (await page.locator('.sot-terra-sotto').boundingBox())?.height || 0
+    const b = await posto.boundingBox()
+    const x = b.x + b.width / 2, y = b.y + b.height / 2
+    const lim = [v.x + 30, v.x + v.width - 30, v.y + su + 40, v.y + v.height - giu - 40]
+    const visibile = x > lim[0] && x < lim[1] && y > lim[2] && y < lim[3]
+    if (visibile && await posto.getAttribute('data-trovato') === '1') {
+      await page.mouse.click(x, y)
+      await fermo()
+      if (await fumettoGiusto()) break
+      continue
+    }
+    await page.mouse.click(Math.max(lim[0], Math.min(lim[1], x)), Math.max(lim[2], Math.min(lim[3], y)))
+    await fermo()
+  }
+  await page.waitForSelector('[data-fumetto] [data-azione="scendi"]', { timeout: 5000 })
+  if (scendi) await page.click('[data-fumetto] [data-azione="scendi"]')
+}

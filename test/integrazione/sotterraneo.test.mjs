@@ -22,7 +22,7 @@
    `node test/esegui.mjs sotterraneo`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -50,11 +50,13 @@ await attendi(page, 300)
 uguale('scelto, la scelta sparisce', await page.locator('[data-eroe]').count(), 0)
 controlla('e la mappa dice con chi si scende',
           (await page.locator('[data-azione="eroe"]').textContent()).includes('Cavaliere'))
-uguale('ci sono sei discese', await page.locator('.sot-tappa').count(), 6)
+/* le discese stanno sulla terra di sopra (docs/sotterraneo/terra-di-sopra.md):
+   si arriva a piedi, e lì la prova col dito vero è `integrazione/sotterraneo-terra` */
+uguale('ci sono sei discese sulla mappa', await page.locator('[data-discesa]').count(), 6)
 controlla('solo la prima è aperta',
-          await page.locator('.sot-tappa:not([disabled])').count() === 1)
+          await page.locator('[data-discesa][data-aperta="1"]').count() === 1)
 
-await page.locator('.sot-tappa[data-tappa="0"]').click()
+await scendiNelSotterraneo(page, 0)
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
 await attendi(page, 600)
 
@@ -164,7 +166,7 @@ await page.waitForSelector('.sot-tappe', { timeout: 5000 })
 await page.locator('[data-azione="scorda"]').click()
 await attendi(page, 300)
 uguale('lasciata perdere, la carta sparisce', await page.locator('[data-ripresa]').count(), 0)
-await page.locator('.sot-tappa[data-tappa="0"]').click()
+await scendiNelSotterraneo(page, 0)
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
 controlla('e si ricomincia senza che nessuno chieda niente',
           await page.locator('.sot-velo').count() === 0)
@@ -182,7 +184,7 @@ await page.waitForSelector('.sot-tappe', { timeout: 5000 })
 await page.locator('[data-azione="scorda"]').click()
 await attendi(page, 300)
 await page.evaluate(() => { location.hash = 'sotterraneo=roba' })
-await page.locator('.sot-tappa[data-tappa="0"]').click()
+await scendiNelSotterraneo(page, 0)
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
 await attendi(page, 400)
 

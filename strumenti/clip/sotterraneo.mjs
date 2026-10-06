@@ -51,13 +51,14 @@
    in `scatti.mjs` lo stampa come «(la partita: …)» nella riga di
    `npm run scatti`.
 
-   Dipende da: `.sot-tappa[data-tappa="0"]`, `.sot-tela` (e
+   Dipende da: `scendiNelSotterraneo` (test/aiuto/browser.mjs), `.sot-tela` (e
    `data-eroe-schermo`), `.sot-domanda`, `.qz-tasto[data-giusta]` con le
    sue tre classi di colore. */
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { tappaDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { viaVerso } from '../../src/motore/passi.js'
 import { T, SCALA_INIZIALE, PASSO_EROE } from '../../src/giochi/sotterraneo/dati/mondo.js'
+import { scendiNelSotterraneo } from '../../test/aiuto/browser.mjs'
 
 const PIXEL_PER_CELLA = T * SCALA_INIZIALE
 const LETTURA = 1000          // oltre i 320ms di finestra cieca di Domanda.vue
@@ -122,7 +123,7 @@ function cercaSemeConMostro () {
 const TROVATO = cercaSemeConMostro()
 
 export default {
-  file: 'clip-sotterraneo', dove: 'sotterraneo', attesa: '.sot-tappe',
+  file: 'clip-sotterraneo', dove: 'sotterraneo', attesa: '[data-terra]',
   profilo: p => {
     p.campagne = { ...p.campagne,
       sotterraneo: { tappa: 3, libera: false, stelle: {}, cfg: { eroe: 'cavaliere' } } }
@@ -135,7 +136,7 @@ export default {
       if (!TROVATO) return
       await page.evaluate(seme => { location.hash = 'seme=' + seme }, TROVATO.seme)
     },
-    ['.sot-tappa[data-tappa="0"]', 900],
+    async page => { await scendiNelSotterraneo(page, 0); await page.waitForTimeout(900) },
   ],
   clip: {
     secondi: 10,
