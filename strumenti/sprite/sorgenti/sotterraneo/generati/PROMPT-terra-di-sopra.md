@@ -134,6 +134,35 @@ Controllo: le tre pose dello stesso personaggio hanno la stessa
 sagoma e gli stessi colori; il braccio che indica si legge; sono alti
 come un eroe del gioco, non giganti.
 
+## La mappa si tiene intera
+
+Il prompt 1 è uscito così bene (`mappa_sotterraneo.png`) che la mappa si
+tiene **com'è**, un'immagine sola: le strade ci sono già, e il codice ci
+mette sopra solo le cose che cambiano (le discese chiuse, chi ti indica
+la strada, i sassi che luccicano, la nebbia) e lo spazio dove si cammina.
+I prompt 2 e 3 non servono più; il 4 (i personaggi) sì, nella stessa chat.
+
+Le discese chiuse si chiedono **come la stessa mappa ritoccata**, sempre
+nella chat della mappa: il codice ritaglia dal ritocco solo il riquadro
+di ogni discesa e lo posa sopra l'originale, quindi conta che dentro quei
+riquadri le cose stiano esattamente dov'erano.
+
+```text
+Rifai ESATTAMENTE questa mappa, identica in ogni pixel — stessa inquadratura, stessa misura (1024×1536), stessi alberi, sentieri, case e sassi, nello stesso posto — con una sola differenza: tutti i passaggi che scendono sotto terra sono CHIUSI, sbarrati in modo che si capisca che per ora non si entra, e che un giorno si aprirà:
+- i due pozzi: un coperchio di assi inchiodate sulla bocca;
+- la botola di legno: due assi inchiodate di traverso e una catena col lucchetto;
+- l'ingresso della miniera: assi inchiodate a croce sull'armatura, il binario resta;
+- la scala nello stagno e la scala sotto l'arco di pietra: una grata di ferro col lucchetto sopra i gradini;
+- il buco con la scaletta: la scaletta tirata su e assi di traverso sulla bocca.
+Le chiusure stanno DENTRO la sagoma di ogni passaggio, non la allargano. Nient'altro cambia. NESSUNA PAROLA SCRITTA.
+```
+
+Controllo: affiancata all'originale, fuori dalle sette discese non deve
+cambiare niente (si guarda ai bordi dei riquadri).
+
 ## Com'è andata
 
-(vuoto: si scrive quando arrivano i fogli)
+- `mappa_sotterraneo.png` — il prompt 1, al primo colpo, il 6/10/2026:
+  tutte le discese riconoscibili, i sentieri continui, nessuna scritta.
+  I pozzi sono due (in alto a sinistra e in basso al centro): sette
+  aperture per sei discese.
