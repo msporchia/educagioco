@@ -1,6 +1,6 @@
 <script>
 // dove si è fermato il robot l'ultima volta, per bambino: dura la sessione, non va nel profilo
-let ultimo = null      // { chi, arrivo }
+let ultimo = null      // { chi, arrivo: dov'è il robot, gioco: il led da fare in quel momento }
 </script>
 
 <script setup>
@@ -11,8 +11,8 @@ let ultimo = null      // { chi, arrivo }
 import { ref, shallowRef, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import Fumetto from '../../../components/Fumetto.vue'
 import Robot from './Robot.vue'
-import { disponiScheda, stradaDelRobot, durataViaggio, lungo, larghezzaScheda, ALONE, R_LED, CONNETTORE }
-  from '../motore/scheda.js'
+import { disponiScheda, stradaDaPunto, partenzaDa, durataViaggio, lungo, larghezzaScheda, ALONE, R_LED, CONNETTORE,
+         STELLE_MAX, STELLA } from '../motore/scheda.js'
 import { disegnaDecoro, disegnaCoperchi, piediniChip, tracciato, STRATI, COLORI } from '../scena/scheda.js'
 
 const props = defineProps({
@@ -57,24 +57,28 @@ function mettiRobot() {
   const n = nodoDi(posato.value)
   if (n) robot.value = { x: n.robot.x, y: n.robot.y, visibile: true }
 }
-const ricorda = () => { ultimo = { chi: props.chi, arrivo: posato.value } }
+const ricorda = () => { ultimo = { chi: props.chi, arrivo: posato.value, gioco: arrivo.value } }
 
 const inCima = () => (tavola.value ? tavola.value.offsetTop : 0)
 function scorriA(y) {
   if (scorre.value) scorre.value.scrollTop = Math.max(0, inCima() + y - scorre.value.clientHeight * 0.55)
 }
 
-// la corrente corre davanti, il robot la segue: vedi docs/costruttore/scheda.md
+// la corrente corre davanti, il robot la segue: vedi docs/costruttore/scheda.md.
+// `vittoria`: il viaggio dopo un livello vinto, che accende il rame e porta la scheda con sé;
+// altrimenti è il robot che va dove si è toccato, e il rame resta com'è.
 const RITARDO = 0.35
-function viaggia(da, a, attesa = 0) {
-  const strada = stradaDelRobot(scheda.value, da, a)
-  if (!strada) { posato.value = a; fino.value = nodoDi(a).k; mettiRobot(); ricorda(); return }
-  const dur = durataViaggio(strada.L)
-  const s0 = strada.tappe[0].s, s1 = strada.tappe[strada.tappe.length - 1].s
+function viaggia(inizio, a, { attesa = 0, vittoria = false } = {}) {
+  const strada = stradaDaPunto(scheda.value, inizio, a)
+  if (!strada) { posato.value = a; if (vittoria) fino.value = nodoDi(a).k; mettiRobot(); ricorda(); return }
+  const dur = durataViaggio(strada.L), ritardo = vittoria ? RITARDO : 0.15
+  const s0 = strada.primo, s1 = strada.ultimo
   const molle = q => { q = Math.max(0, Math.min(1, q)); return q < 0.5 ? 2 * q * q : 1 - (-2 * q + 2) ** 2 / 2 }
-  let t = -attesa, prima = null, id = 0, finito = false
-  appena.value = new Set([nodoDi(da).k])
-  scia.value = { d: tracciato(strada.punti), da: s0, a: s0 }
+  let t = -attesa, prima = null, id = 0, finito = false, fatto = 0
+  if (vittoria) {
+    appena.value = new Set(strada.tappe.slice(0, 1).map(tp => tp.k))
+    scia.value = { d: tracciato(strada.punti), da: s0, a: s0 }
+  }
   const segui = y => {
     const s = scorre.value
     if (!s) return
@@ -86,7 +90,7 @@ function viaggia(da, a, attesa = 0) {
     finito = true
     cancelAnimationFrame(id)
     posato.value = a
-    fino.value = nodoDi(a).k
+    if (vittoria) fino.value = nodoDi(a).k
     scia.value = null
     scintilla.value = null
     viaggio.value = null
@@ -97,27 +101,45 @@ function viaggia(da, a, attesa = 0) {
     const nascosto = typeof document !== 'undefined' && document.hidden
     if (prima !== null && !nascosto) t += Math.min(0.05, Math.max(0, (ora - prima) / 1000))
     prima = ora
-    if (t >= dur + RITARDO) return arriva()
+    if (t >= dur + ritardo) return arriva()
     if (t >= 0) {
-      // la scintilla, da un led all'altro
+      // la scintilla, da un punto all'altro della pista
       const sc = s0 + (s1 - s0) * molle(t / dur)
       const [sx, sy] = lungo(strada.punti, sc)
       const sotto = strada.nascosti.some(([p, q]) => sc > p && sc < q)
       scintilla.value = t < dur && !sotto ? { x: sx, y: sy } : null
-      scia.value = { ...scia.value, a: sc }
-      let k = fino.value
-      for (const tp of strada.tappe) if (tp.s <= sc + 0.5 && tp.k > k) { k = tp.k; appena.value = new Set([...appena.value, k]) }
-      fino.value = k
+      if (vittoria) {
+        scia.value = { ...scia.value, a: sc }
+        let k = fino.value
+        for (const tp of strada.tappe) if (tp.s <= sc + 0.5 && tp.k > k) { k = tp.k; appena.value = new Set([...appena.value, k]) }
+        fino.value = k
+      }
       // il robot, dal suo posto al posto accanto all'altro
-      const sr = strada.L * molle((t - RITARDO) / dur)
-      const [rx, ry] = lungo(strada.punti, sr)
-      robot.value = { x: rx, y: ry, visibile: !strada.nascosti.some(([p, q]) => sr > p && sr < q) }
-      segui(Math.min(sy, ry))
+      fatto = strada.L * molle((t - ritardo) / dur)
+      const [rx, ry] = lungo(strada.punti, fatto)
+      robot.value = { x: rx, y: ry, visibile: !strada.nascosti.some(([p, q]) => fatto > p && fatto < q) }
+      if (vittoria) segui(Math.min(sy, ry))
     }
     id = requestAnimationFrame(fotogramma)
   }
   id = requestAnimationFrame(fotogramma)
-  viaggio.value = { chiudi: arriva, ferma() { finito = true; cancelAnimationFrame(id) }, verso: a }
+  viaggio.value = {
+    chiudi: arriva, ferma() { finito = true; cancelAnimationFrame(id) }, verso: a, vittoria,
+    // dov'è adesso, per ripartire da lì verso un'altra meta
+    posizione: () => ({ x: robot.value.x, y: robot.value.y, s: strada.suPista(fatto) }),
+  }
+}
+const partenza = led => partenzaDa(scheda.value, led)
+
+// toccato un led aperto: il robot ci va, da dov'è (o da dove si trova a metà viaggio)
+function vai(i) {
+  const v = viaggio.value
+  if (v) {
+    if (v.verso === i) return
+    const da = v.posizione()
+    v.ferma()
+    viaggia(da, i)
+  } else if (posato.value !== i) viaggia(partenza(posato.value), i)
 }
 
 let pronto = false
@@ -125,20 +147,23 @@ function prepara() {
   if (pronto || !scheda.value) return
   pronto = true
   const a = arrivo.value
-  const prima = ultimo && ultimo.chi === props.chi ? ultimo.arrivo : null
-  if (prima !== null && prima < a && nodoDi(prima)) {
+  const prima = ultimo && ultimo.chi === props.chi && nodoDi(ultimo.arrivo) ? ultimo : null
+  const gioco = prima ? (prima.gioco ?? prima.arrivo) : null
+  if (prima && gioco < a && nodoDi(gioco)) {
     // si è aperto un livello nuovo: la corrente ci corre, e il robot la segue
-    posato.value = prima
-    fino.value = nodoDi(prima).k
+    posato.value = prima.arrivo
+    fino.value = nodoDi(gioco).k
     mettiRobot()
-    const n0 = nodoDi(prima), n1 = nodoDi(a)
+    const n0 = nodoDi(prima.arrivo), n1 = nodoDi(a)
     scorriA(Math.abs(n1.y - n0.y) < scorre.value.clientHeight * 0.5 ? (n0.y + n1.y) / 2 : n0.y)
-    viaggia(prima, a, 0.45)
+    viaggia(partenza(prima.arrivo), a, { attesa: 0.45, vittoria: true })
   } else {
-    posato.value = a
+    // il robot sta dove l'ultima volta l'abbiamo lasciato, se lo sappiamo
+    const dove = prima ? prima.arrivo : a
+    posato.value = dove
     fino.value = nodoDi(a).k
     mettiRobot(); ricorda()
-    scorriA(nodoDi(a).y)
+    scorriA(nodoDi(dove).y)
   }
 }
 
@@ -147,13 +172,13 @@ watch(scheda, async () => {
   await nextTick()
   if (!pronto) return prepara()
   if (viaggio.value) viaggio.value.chiudi()
-  fino.value = nodoDi(posato.value).k
+  fino.value = nodoDi(arrivo.value).k
   mettiRobot()
 })
 watch(arrivo, (a, prima) => {
   if (!pronto || a === prima) return
   if (viaggio.value) viaggio.value.chiudi()
-  if (a > posato.value) viaggia(posato.value, a)
+  if (a > posato.value) viaggia(partenza(posato.value), a, { vittoria: true })
   else { posato.value = a; fino.value = nodoDi(a).k; mettiRobot(); ricorda() }
 })
 onMounted(() => {
@@ -182,11 +207,11 @@ const perIndice = computed(() => Object.fromEntries(props.livelli.map(l => [l.in
 const statoDi = n => {
   const l = perIndice.value[n.indice]
   if (!l) return 'spento'
-  return viaggio.value && !acceso(n.k) ? 'spento' : l.stato
+  return viaggio.value && viaggio.value.vittoria && !acceso(n.k) ? 'spento' : l.stato
 }
 const leds = computed(() => (scheda.value ? scheda.value.nodi.filter(n => n.tipo === 'led').map(n => {
   const l = perIndice.value[n.indice] || {}
-  return { ...n, nome: l.nome, stato: statoDi(n), aMeta: !!l.aMeta && l.stato !== 'spento', guizzo: appena.value.has(n.k) }
+  return { ...n, nome: l.nome, stato: statoDi(n), stelle: l.stelle || 0, aMeta: !!l.aMeta && l.stato !== 'spento', guizzo: appena.value.has(n.k) }
 }) : []))
 const chips = computed(() => (scheda.value ? scheda.value.nodi.filter(n => n.tipo === 'chip').map(n => {
   const cap = props.capitoli.find(c => c.chiave === n.cap) || {}
@@ -197,10 +222,20 @@ const chips = computed(() => (scheda.value ? scheda.value.nodi.filter(n => n.tip
 
 /* ---------- il fumetto ---------- */
 function tocca(chiave) {
-  if (viaggio.value) { viaggio.value.chiudi(); return }
-  emit('update:aperto', props.aperto === chiave ? null : chiave)
+  const v = viaggio.value
+  // il viaggio dopo una vittoria si chiude col tocco; l'altro no: si cambia meta
+  if (v && v.vittoria) { v.chiudi(); return }
+  if (props.aperto === chiave) { if (!v) emit('update:aperto', null); return }
+  emit('update:aperto', chiave)
+  const l = perIndice.value[chiave]
+  if (chiave !== 'libero' && l && l.stato !== 'spento') vai(chiave)
 }
-const chiudi = () => { if (viaggio.value) viaggio.value.chiudi(); else if (props.aperto !== null) emit('update:aperto', null) }
+// il fumetto non si chiude mentre il robot viaggia
+const chiudi = () => {
+  const v = viaggio.value
+  if (v) { if (v.vittoria) v.chiudi() }
+  else if (props.aperto !== null) emit('update:aperto', null)
+}
 const fumetto = computed(() => {
   const s = scheda.value, k = props.aperto
   if (!s || k === null || k === undefined) return null
@@ -208,7 +243,16 @@ const fumetto = computed(() => {
   const n = s.ledDi[k], l = perIndice.value[k]
   return n && l ? { x: n.x, y: n.y, raggio: ALONE, l } : null
 })
-const stelline = s => '⭐'.repeat(s) + '☆'.repeat(Math.max(0, 2 - s))
+const stelline = s => '⭐'.repeat(s) + '☆'.repeat(Math.max(0, STELLE_MAX - s))
+// la stellina disegnata, centrata nell'origine
+const STELLA_D = (() => {
+  const R = STELLA.r, r = R * 0.46
+  return Array.from({ length: 10 }, (_, i) => {
+    const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? r : R
+    return `${i ? 'L' : 'M'}${(Math.cos(a) * q).toFixed(2)} ${(Math.sin(a) * q).toFixed(2)}`
+  }).join('') + 'Z'
+})()
+const postoStella = q => (q - (STELLE_MAX - 1) / 2) * STELLA.passo
 const prossimo = computed(() => Math.min(props.tappa, N.value - 1) + 1)
 function costruisci(i) { emit('update:aperto', null); emit('gioca', i) }
 function entra() { emit('update:aperto', null); emit('libero') }
@@ -275,6 +319,12 @@ function entra() { emit('update:aperto', null); emit('libero') }
           <circle :r="R_LED" :fill="COLORI.scheda" stroke-width="3" :stroke="n.stato === 'spento' ? COLORI.spento : COLORI.rame" />
           <circle class="cst-led-corpo" r="10" stroke-width="2" />
           <text y="4" class="cst-led-numero">{{ n.indice + 1 }}</text>
+          <!-- le stelle prese, piene o vuote, dalla parte opposta al robot -->
+          <g v-if="n.stato === 'vinto' && n.stelline" :transform="`translate(${n.stelline.dx},${n.stelline.dy})`"
+             class="cst-stelle" :data-stelle-tappa="n.indice" :data-piene="n.stelle" :data-di="STELLE_MAX">
+            <path v-for="q in STELLE_MAX" :key="q" :d="STELLA_D" :transform="`translate(${postoStella(q - 1)},0)`"
+                  class="cst-stella" :class="q <= n.stelle ? 'cst-stella-piena' : 'cst-stella-vuota'" />
+          </g>
           <!-- lasciato a metà: una matita sul bordo, dalla parte opposta al robot -->
           <g v-if="n.aMeta" :transform="`translate(${-n.lato * 16},-16) scale(1.2)`">
             <circle r="7.5" fill="#f6f2e4" stroke="#1c2420" stroke-width="1.2" />
@@ -323,8 +373,8 @@ function entra() { emit('update:aperto', null); emit('libero') }
         </template>
       </Fumetto>
 
-      <!-- durante il viaggio un tocco qualunque lo chiude: il robot arriva subito -->
-      <div v-if="viaggio" class="cst-in-viaggio" data-viaggio @click.stop="viaggio.chiudi()"></div>
+      <!-- dopo una vittoria un tocco qualunque chiude il viaggio: il robot arriva subito -->
+      <div v-if="viaggio && viaggio.vittoria" class="cst-in-viaggio" data-viaggio @click.stop="viaggio.chiudi()"></div>
     </div>
   </div>
 </template>
@@ -351,6 +401,9 @@ function entra() { emit('update:aperto', null); emit('libero') }
 .cst-led-vinto .cst-led-numero, .cst-led-adesso .cst-led-numero { fill:#4a3200 }
 .cst-led-aperto .cst-led-corpo { fill:#2a2412; stroke:#e8a24f }
 .cst-led-aperto .cst-led-numero { fill:#ffd9a3 }
+.cst-stella { stroke-width:1.2; stroke-linejoin:round }
+.cst-stella-piena { fill:#ffc857; stroke:#0d3b2c }
+.cst-stella-vuota { fill:#17332a; stroke:#4d7d6a }
 .cst-guizzo:not(.cst-led-spento) .cst-led-corpo { transform-box:fill-box; transform-origin:center; animation:cst-guizzo .5s ease-out }
 @keyframes cst-guizzo { from { transform:scale(1.7) } }
 

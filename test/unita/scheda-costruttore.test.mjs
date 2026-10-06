@@ -1,11 +1,13 @@
 /* La scheda del robot, senza browser: a ogni larghezza da telefono i led
    stanno dentro, uno sopra l'altro in ordine; la pista è una sola, a tratti
    dritti o a 45°, e tocca tutti i led nell'ordine della fila; niente si
-   sovrappone (decoro, chip, led, robot, componenti sopra la pista); il
-   robot va da ogni led al dopo. Vedi docs/costruttore/scheda.md.
+   sovrappone (decoro, chip, led, robot, stelline, componenti sopra la pista);
+   il robot va da ogni led a ogni altro, avanti e indietro, e riparte anche
+   da un punto della strada. Vedi docs/costruttore/scheda.md.
    `node test/esegui.mjs scheda-costruttore --niente-build` */
 import { CAPITOLI, LIVELLI } from '../../src/giochi/costruttore/dati/livelli.js'
-import { disponiScheda, stradaDelRobot, durataViaggio, lunghezza, toccano, ALONE, ROBOT, MISURE, LARGO_MAX }
+import { disponiScheda, stradaDelRobot, stradaDaPunto, partenzaDa, pistaIntera, durataViaggio, lunghezza, lungo, toccano, ALONE, ROBOT, MISURE,
+         LARGO_MAX, STELLE_MAX }
   from '../../src/giochi/costruttore/motore/scheda.js'
 import { disegnaDecoro, disegnaCoperchi } from '../../src/giochi/costruttore/scena/scheda.js'
 import { guidaScheda, SULLA_SCHEDA } from '../../src/giochi/costruttore/motore/guida.js'
@@ -52,11 +54,15 @@ for (const W of [300, 340, 390, 430, 480]) {
   const ingombri = [
     ...leds.map(n => ({ nome: `led ${n.indice + 1}`, r: scatola(n.x, n.y, 2 * ALONE, 2 * ALONE) })),
     ...leds.map(n => ({ nome: `robot del ${n.indice + 1}`, r: scatola(n.robot.x, n.robot.y, ROBOT.largo, ROBOT.alto) })),
+    ...leds.map(n => ({ nome: `stelline del ${n.indice + 1}`, stelline: true,
+                        r: n.stelline && scatola(n.x + n.stelline.dx, n.y + n.stelline.dy, n.stelline.w, n.stelline.h) })),
     ...chips.map(n => ({ nome: `chip ${n.cap}`, r: scatola(n.x, n.y, 2 * n.mezzo + 18, 80) })),
     ...s.coperchi.map((c, i) => ({ nome: `coperchio ${i}`, r: scatola(c.x, c.y, c.w, c.h) })),
     ...s.decoro.map((d, i) => ({ nome: `${d.tipo} ${i}`, r: scatola(d.x, d.y, d.w, d.h), decoro: true })),
     { nome: 'cantiere libero', r: scatola(s.connettore.x, s.connettore.y, 160, 46) },
   ]
+  controlla(`${W} px: ogni led ha il posto per le sue stelline`, leds.every(n => n.stelline && n.stelline.w >= STELLE_MAX * 10))
+  for (let i = ingombri.length - 1; i >= 0; i--) if (!ingombri[i].r) ingombri.splice(i, 1)
   for (let i = 0; i < ingombri.length; i++) for (let j = i + 1; j < ingombri.length; j++) {
     const a = ingombri[i], b = ingombri[j]
     // il robot di un led e un altro robot possono stare vicini: non ci sono mai due robot
@@ -65,8 +71,8 @@ for (const W of [300, 340, 390, 430, 480]) {
   }
   for (const g of ingombri) {
     if (g.r.x0 < 0 || g.r.x1 > W || g.r.y0 < 0 || g.r.y1 > s.H) sopra.push(`${g.nome} esce dalla scheda`)
-    // la pista non passa sotto il decoro né sotto il robot posato
-    if ((g.decoro || g.nome.startsWith('robot')) && s.puntiPista.some(p => p[0] > g.r.x0 - 2 && p[0] < g.r.x1 + 2 &&
+    // la pista non passa sotto il decoro, le stelline né il robot posato
+    if ((g.decoro || g.stelline || g.nome.startsWith('robot')) && s.puntiPista.some(p => p[0] > g.r.x0 - 2 && p[0] < g.r.x1 + 2 &&
                                                                         p[1] > g.r.y0 - 2 && p[1] < g.r.y1 + 2))
       sopra.push(`la pista passa sotto ${g.nome}`)
   }
@@ -93,7 +99,43 @@ for (const W of [300, 340, 390, 430, 480]) {
   dentro(`${W} px: un viaggio dura fra 0,9 e 2,8 s`, Math.min(...durate), 0.9, 2.8)
   dentro(`${W} px: anche il più lungo`, Math.max(...durate), 0.9, 2.8)
   uguale(`${W} px: lunghezza e tappe tornano`, Math.round(tutta.tappe.at(-1).s) <= Math.round(lunghezza(tutta.punti)), true)
-  uguale(`${W} px: indietro non si va`, stradaDelRobot(s, 3, 2), null)
+  uguale(`${W} px: da un led a se stesso non si va`, stradaDelRobot(s, 3, 3), null)
+
+  /* e indietro: la stessa strada al contrario, dal posto accanto al led alto a quello del basso */
+  const avanti = stradaDelRobot(s, 2, 9), indietro = stradaDelRobot(s, 9, 2)
+  controlla(`${W} px: indietro si va`, indietro && indietro.punti.length === avanti.punti.length && !indietro.avanti)
+  controlla(`${W} px: e la strada è la stessa`, Math.abs(indietro.L - avanti.L) < 0.5 &&
+    vicino(indietro.punti[0], [leds[9].robot.x, leds[9].robot.y]) && vicino(indietro.punti.at(-1), [leds[2].robot.x, leds[2].robot.y]))
+  controlla(`${W} px: i nodi si incontrano in ordine, dall'alto al basso`, indietro.tappe.map(t => t.k).join() ===
+    Array.from({ length: leds[9].k - leds[2].k + 1 }, (_, j) => leds[9].k - j).join() &&
+    indietro.tappe.every((t, i, a) => !i || t.s >= a[i - 1].s))
+  uguale(`${W} px: si nasconde sotto gli stessi componenti`, indietro.nascosti.length, avanti.nascosti.length)
+  controlla(`${W} px: indietro i pezzi nascosti stanno dentro la strada`, indietro.nascosti.every(([p, q]) => p < q && p >= -1 && q <= indietro.L + 1))
+  for (const [da, a] of [[0, 1], [5, 3], [LIVELLI.length - 1, 0], [12, 20]]) {
+    const v = stradaDelRobot(s, da, a)
+    controlla(`${W} px: ${da + 1} → ${a + 1}: dura fra 0,9 e 2,8 s anche da lontano`,
+              v && durataViaggio(v.L) >= 0.9 && durataViaggio(v.L) <= 2.8)
+  }
+
+  /* chi cambia meta in volo riparte da dov'è: un punto qualunque della strada, anche dentro un chip */
+  {
+    const lunga = stradaDelRobot(s, 0, LIVELLI.length - 1)
+    const guasti = []
+    for (const q of [0.05, 0.2, 0.37, 0.5, 0.66, 0.83, 0.97]) {
+      const d = lunga.L * q, [x, y] = lungo(lunga.punti, d)
+      for (const meta of [0, 7, 11, LIVELLI.length - 1]) {
+        const v = stradaDaPunto(s, { x, y, s: lunga.suPista(d) }, meta)
+        if (!v) { guasti.push(`da ${q} a ${meta}: nessuna strada`); continue }
+        if (!vicino(v.punti[0], [x, y])) guasti.push(`da ${q} a ${meta}: non parte da dov'è`)
+        if (!vicino(v.punti.at(-1), [leds[meta].robot.x, leds[meta].robot.y])) guasti.push(`da ${q} a ${meta}: non arriva`)
+        if (v.nascosti.some(([p, r]) => !(p < r))) guasti.push(`da ${q} a ${meta}: pezzo nascosto storto`)
+      }
+    }
+    uguale(`${W} px: da un punto della strada si va a ogni altro led`, guasti.slice(0, 4).join(' · '), '')
+    const sosta = partenzaDa(s, 4), led = leds[4]
+    controlla(`${W} px: il robot fermo accanto a un led si aggancia alla pista sul led`,
+              vicino([sosta.x, sosta.y], [led.robot.x, led.robot.y]) && vicino(lungo(pistaIntera(s).punti, sosta.s), [led.x, led.y]))
+  }
 
   const d = disegnaDecoro(s), c = disegnaCoperchi(s)
   controlla(`${W} px: il decoro si disegna`, d.strati.corpo.length > 1000 && !/NaN|undefined/.test(Object.values(d.strati).join('')))

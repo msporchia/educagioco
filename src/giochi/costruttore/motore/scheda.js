@@ -8,6 +8,8 @@ export const ALONE = 21                  // l'alone del led acceso
 export const ROBOT = { largo: 26, alto: 32 }
 export const CHIP = { alto: 64, piedino: 8 }
 export const CONNETTORE = { largo: 160, alto: 46 }
+export const STELLE_MAX = 2              // le stelle del gioco: fatto, e fatto senza la soluzione
+export const STELLA = { passo: 16, r: 7.5 }      // le stelline accanto a un led vinto
 const SCOSTA_ROBOT = 38                  // dal centro del led al centro del robot
 const LUNGO = 0.75                       // da quanto di ampiezza una diagonale passa sotto un componente
 const SEME = 7
@@ -184,6 +186,22 @@ export function disponiScheda(largo, capitoli) {
   const coperchi = tratti.filter(t => t.coperchio).map(t => t.coperchio)
   for (const cp of coperchi) ostacolo(scatola(cp.x, cp.y, cp.w + 6, cp.h + 6))
 
+  /* le stelline di un led vinto: dalla parte opposta al robot, dove non passa la pista;
+     se lì non c'è posto, una delle altre. `dx`, `dy` dal centro del led. */
+  const wS = STELLE_MAX * STELLA.passo + 2, hS = 2 * STELLA.r + 3
+  const scartiS = lato => [[-lato, 0], [-lato, -1], [-lato, 1], [lato, -2], [lato, 2], [-lato, -2], [-lato, 2]]
+    .map(([s, k]) => [s * (ALONE + 8 + wS / 2), k * 14])
+  for (const n of nodi) {
+    if (n.tipo !== 'led') continue
+    for (const [dx, dy] of scartiS(n.lato)) {
+      const r = scatola(n.x + dx, n.y + dy, wS, hS)
+      if (r.x0 < 4 || r.x1 > W - 4 || passaPista(r, 3) || urta(r, 1)) continue
+      n.stelline = { dx, dy, w: wS, h: hS }
+      ostacolo(r)
+      break
+    }
+  }
+
   const rnd = caso(SEME)
   const tra = (r, m = 0) => r.x0 >= 40 && r.x1 <= W - 40 && r.y0 >= 50 && r.y1 <= H - 50
   const decoro = [], fili = [], vie = []
@@ -239,27 +257,94 @@ export function disponiScheda(largo, capitoli) {
            ostacoli, puntiPista }
 }
 
-/* la strada del robot da un led a un altro più avanti: scende dal suo posto
-   al led, segue la pista (attraverso i chip) e sale al posto accanto all'altro.
-   `nascosti` sono i pezzi sotto un componente, `tappe` dove incontra ogni nodo. */
-export function stradaDelRobot(scheda, da, a) {
-  const n0 = scheda.ledDi[da], n1 = scheda.ledDi[a]
-  if (!n0 || !n1 || n1.k <= n0.k) return null
-  const punti = [[n0.robot.x, n0.robot.y], [n0.x, n0.y]]
-  const nascosti = [], tappe = [{ k: n0.k, s: lunghezza(punti) }]
-  for (let k = n0.k; k < n1.k; k++) {
-    const t = scheda.tratti[k]
-    // dal chip si esce dall'altra parte: il tratto prima finiva sotto, questo parte sopra
-    if (Math.hypot(t.punti[0][0] - punti[punti.length - 1][0], t.punti[0][1] - punti[punti.length - 1][1]) > 0.5)
-      punti.push(t.punti[0].slice())
+
+/* ---------- la strada del robot ---------- */
+
+/* la pista intera, in una spezzata sola dal primo chip all'ultimo nodo: `S[k]` è dove
+   si incontra il nodo k (il centro di un led, l'ingresso di un chip), `nascosti` i pezzi
+   sotto un componente. Dal chip si esce dall'altra parte: il tratto prima finiva sotto,
+   questo parte sopra, e il robot lo attraversa in linea retta. */
+const pisteIntere = new WeakMap()
+export function pistaIntera(scheda) {
+  if (pisteIntere.has(scheda)) return pisteIntere.get(scheda)
+  const n0 = scheda.nodi[0]
+  const punti = [[n0.x, n0.tipo === 'chip' ? n0.y + CHIP.alto / 2 + CHIP.piedino : n0.y]]
+  const S = [0], nascosti = []
+  scheda.tratti.forEach((t, k) => {
+    const ultimo = punti[punti.length - 1]
+    if (Math.hypot(t.punti[0][0] - ultimo[0], t.punti[0][1] - ultimo[1]) > 0.5) punti.push(t.punti[0].slice())
     const s0 = lunghezza(punti)
     for (let i = 1; i < t.punti.length; i++) punti.push(t.punti[i].slice())
     if (t.coperchio) nascosti.push([s0 + t.coperchio.da, s0 + t.coperchio.a])
-    tappe.push({ k: k + 1, s: lunghezza(punti) })
-  }
-  punti.push([n1.robot.x, n1.robot.y])
-  return { punti, nascosti, tappe, L: lunghezza(punti) }
+    S[k + 1] = lunghezza(punti)
+  })
+  const pista = { punti, S, nascosti, L: lunghezza(punti) }
+  pisteIntere.set(scheda, pista)
+  return pista
 }
+
+// i punti della pista fra le distanze `a` e `b`, nel verso da `a` a `b`
+function tagliaPista(pista, a, b) {
+  const lo = Math.min(a, b), hi = Math.max(a, b)
+  const fuori = [lungo(pista.punti, lo)]
+  let s = 0
+  for (let i = 1; i < pista.punti.length; i++) {
+    s += Math.hypot(pista.punti[i][0] - pista.punti[i - 1][0], pista.punti[i][1] - pista.punti[i - 1][1])
+    if (s > lo + 0.01 && s < hi - 0.01) fuori.push(pista.punti[i].slice())
+  }
+  fuori.push(lungo(pista.punti, hi))
+  return a <= b ? fuori : fuori.reverse()
+}
+
+/* il posto da cui parte un robot fermo accanto a un led: sul led, dove si aggancia alla pista */
+export function partenzaDa(scheda, led) {
+  const n = scheda.ledDi[led]
+  return n ? { x: n.robot.x, y: n.robot.y, s: pistaIntera(scheda).S[n.k] } : null
+}
+
+/* la strada del robot da dove sta (`inizio`: { x, y, s }, s è dove si aggancia alla pista) al
+   posto accanto al led `a`, avanti o indietro: va alla pista, la segue (attraverso i chip) e
+   sale al posto accanto al led. Parte anche da un punto qualunque, per chi cambia meta in volo.
+   `nascosti` sono i pezzi sotto un componente, `tappe` dove incontra ogni nodo, `primo` e
+   `ultimo` dove comincia e finisce la pista dentro la strada, `suPista(d)` a che punto della
+   pista sta chi ha fatto `d` di strada. */
+export function stradaDaPunto(scheda, inizio, a) {
+  const n1 = scheda.ledDi[a]
+  if (!inizio || !n1) return null
+  const pista = pistaIntera(scheda), sFine = pista.S[n1.k], s0 = inizio.s
+  const punti = [[inizio.x, inizio.y]]
+  const aggancio = lungo(pista.punti, s0)
+  if (Math.hypot(aggancio[0] - inizio.x, aggancio[1] - inizio.y) > 0.5) punti.push(aggancio)
+  const primo = lunghezza(punti)
+  if (Math.abs(sFine - s0) > 0.5) for (const p of tagliaPista(pista, s0, sFine).slice(1)) punti.push(p)
+  const ultimo = lunghezza(punti)
+  punti.push([n1.robot.x, n1.robot.y])
+  if (lunghezza(punti) < 1) return null
+
+  const dir = sFine >= s0 ? 1 : -1
+  const lo = Math.min(s0, sFine), hi = Math.max(s0, sFine)
+  const alla = g => primo + dir * (g - s0)
+  const nascosti = []
+  for (const [h0, h1] of pista.nascosti) {
+    const c0 = Math.max(h0, lo), c1 = Math.min(h1, hi)
+    if (c0 >= c1) continue
+    // un pezzo che comincia prima di noi (o finisce dopo) si estende un poco fuori strada
+    const p = alla(dir > 0 ? c0 : c1) - (c0 === lo && dir > 0 || c1 === hi && dir < 0 ? 1 : 0)
+    const q = alla(dir > 0 ? c1 : c0) + (c1 === hi && dir > 0 || c0 === lo && dir < 0 ? 1 : 0)
+    nascosti.push([p, q])
+  }
+  const tappe = []
+  scheda.nodi.forEach(n => {
+    const g = pista.S[n.k]
+    if (g >= lo - 0.5 && g <= hi + 0.5) tappe.push({ k: n.k, s: alla(g) })
+  })
+  tappe.sort((x, y) => x.s - y.s)
+  const suPista = d => (d <= primo ? s0 : d >= ultimo ? sFine : s0 + dir * (d - primo))
+  return { punti, nascosti, tappe, L: lunghezza(punti), primo, ultimo, suPista, avanti: dir > 0 }
+}
+
+// dal posto accanto a un led al posto accanto a un altro, avanti o indietro
+export const stradaDelRobot = (scheda, da, a) => (da === a ? null : stradaDaPunto(scheda, partenzaDa(scheda, da), a))
 
 // quanto dura il viaggio, in secondi: più lungo, più tempo, ma sempre poco
 export const durataViaggio = L => Math.max(0.9, Math.min(2.8, 0.45 + L / 300))

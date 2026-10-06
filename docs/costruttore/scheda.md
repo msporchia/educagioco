@@ -11,7 +11,7 @@ basso (il primo capitolo) e si sale.
 
 | file | cosa tiene |
 |---|---|
-| `motore/scheda.js` | dove stanno chip, led, piste, componenti sopra la pista e decoro; la strada del robot da un led a un altro (puro, gira in Node) |
+| `motore/scheda.js` | dove stanno chip, led, piste, componenti sopra la pista, stelline e decoro; la strada del robot da un led a un altro o da un punto qualunque (puro, gira in Node) |
 | `scena/scheda.js` | com'è fatto ogni componente, come tracciati SVG a strati; i colori |
 | `viste/Scheda.vue` | la vista: SVG, i tasti sopra i led, il fumetto, la corrente e il robot che viaggiano |
 | `scena/robot.js` | il robot come dati (`pezzi`): rettangoli, cerchi e linee in unità sue, e `dipingiRobot` che li mette su un canvas |
@@ -61,7 +61,12 @@ Lo decide `Gioco.vue`, la scheda lo dipinge.
 - **La corrente arriva fin dove sei**: il rame è lucido fino al led da fare,
   opaco dopo. Un chip è acceso quando la corrente l'ha raggiunto.
 - **Le stelle** sono quelle del gioco, due al massimo
-  ([campagna.md](campagna.md#stelle-monete-e-il-)): stanno nel fumetto.
+  ([campagna.md](campagna.md#stelle-monete-e-il-)): su un led **vinto**
+  stanno anche accanto al led, due stelline (`STELLE_MAX`), piene quelle
+  prese e vuote le altre; sui led aperti, da fare e spenti non ci sono.
+  Il posto lo sceglie il motore (`stelline`): dalla parte opposta al robot,
+  dove non passa la pista, e conta come ostacolo per il decoro. Stanno
+  anche nel fumetto.
 - **Lasciato a metà**: un livello non vinto il cui programma in archivio
   non è più quello con cui si comincia (`impronta` in `motore/zaino.js`,
   che non guarda gli id). Sul led c'è una matita, dalla parte opposta al
@@ -85,9 +90,22 @@ Lo decide `Gioco.vue`, la scheda lo dipinge.
 
 ## La corrente e il robot
 
-- **Il robot sta accanto al led da fare** (o all'ultimo, a fila finita),
-  dalla parte di fuori se lì non passa la pista. La scheda si apre scorsa
-  fin lì.
+- **Il robot sta accanto al led dove l'abbiamo lasciato**: la prima volta
+  quello da fare (o l'ultimo, a fila finita), dalla parte di fuori se lì
+  non passa la pista. La scheda si apre scorsa fin lì.
+- **Toccato un led aperto il robot ci va**, avanti o indietro, mentre il
+  fumetto si apre subito: si gioca dal suo tasto senza aspettare. Stessa
+  animazione del viaggio dopo una vittoria (la scintilla davanti, il robot
+  0,15 s dietro, sotto i componenti dove la pista passa sotto), ma il rame
+  resta com'è e la scheda non scorre: tocca a chi guarda. Un altro tocco in
+  viaggio cambia meta e il robot riparte da dove si trova
+  (`stradaDaPunto`); un led spento, o il cantiere libero, apre il suo
+  fumetto e non muove il robot, né ferma quello che viaggia. Un tocco fuori
+  non chiude il fumetto finché il robot viaggia, e toccare di nuovo il led
+  della meta non fa niente. Un viaggio non dura mai più di 2,8 s, da 1 a 30
+  compreso.
+- **La corrente segue la partita, non il robot**: il rame è lucido fino al
+  led da fare anche se il robot sta altrove (`gioco` in `ultimo`).
 - **Vinto un livello che ne apre uno nuovo, la corrente corre**: tornando
   alla scheda il robot è ancora dov'era; dopo 0,45 s una scintilla corre
   lungo la pista fino al led dopo, accendendo il rame, i chip e i led che
@@ -103,8 +121,9 @@ Lo decide `Gioco.vue`, la scheda lo dipinge.
   frattempo.
 - **A fotogrammi, e fermo a schermo nascosto**: il tempo avanza al massimo
   50 ms per fotogramma.
-- **Un tocco durante il viaggio lo chiude**: un velo trasparente si prende
-  il tocco, il robot arriva subito e non si apre niente.
+- **Un tocco durante il viaggio dopo una vittoria lo chiude**: un velo
+  trasparente si prende il tocco, il robot arriva subito e non si apre
+  niente. Il viaggio verso un led toccato non ha il velo.
 - Provato: il rame che si accende disegnato con un trattino lungo zero in
   testa a `stroke-dasharray`: col capo tondo è un puntino che resta al
   posto di partenza. L'inizio si sposta con `stroke-dashoffset`.
@@ -146,18 +165,24 @@ Nei test: `unita/scheda-costruttore` (a cinque larghezze: un led per
 livello e un chip per capitolo, nell'ordine; la pista una sola, dritta o a
 45°, che tocca tutti i led in ordine; niente sopra niente, il decoro e il
 robot fuori dalla pista; i componenti sopra la pista con le loro vie; da
-ogni led il robot va al dopo; la stessa scheda a ogni apertura; la guida;
+ogni led il robot va al dopo, a ogni altro e indietro, e riparte da un punto della
+strada; le stelline fuori dalla pista e dagli altri pezzi; la stessa scheda a ogni apertura; la guida;
 l'impronta; ogni posa del robot nel suo riquadro), `integrazione/scheda-costruttore` (col dito vero: il fumetto
 si apre e non parte niente, fuori si chiude, un led spento dice cosa fare
 prima, il cantiere libero chiuso dice quando si apre, il segno del lasciato
 a metà, vinto un livello la corrente corre e il robot la segue, oltre un
-chip, un tocco chiude il viaggio). Bersagli: la scheda
+chip, un tocco chiude il viaggio; le stelline sui vinti e non sugli altri,
+col numero giusto e senza coprire robot e led; il robot va al led toccato col
+fumetto già aperto, un altro tocco cambia meta, un led spento non lo muove, un
+tocco fuori non chiude il fumetto in viaggio). Bersagli: la scheda
 `[data-scheda-robot]` (con la classe `.cst-mappa`); i led
 `[data-livello="<indice>"]` con `[data-stato="vinto"|"adesso"|"aperto"|"spento"]`
 e `[data-a-meta]`; il cantiere libero `[data-libero]` con
 `[data-stato="aperto"|"chiuso"]`; i chip `[data-capitolo="<chiave>"]` con
 `[data-acceso]`; il fumetto `[data-fumetto]` con `[data-fumetto-per]`,
-`[data-azione="costruisci"]`, `[data-serve]`, `[data-stelle]`; il robot
+`[data-azione="costruisci"]`, `[data-serve]`, `[data-stelle]`; le stelline di
+un led vinto `[data-stelle-tappa="<indice>"]` con `[data-piene]` e `[data-di]`
+(e dentro `.cst-stella-piena` / `.cst-stella-vuota`); il robot
 `[data-robot]` con `[data-al]` (l'indice del livello), `[data-in-viaggio]`
 e `[data-visibile]`; il velo del viaggio `[data-viaggio]`; il robot
 contento sul cartello di fine livello `[data-robot-contento]`
