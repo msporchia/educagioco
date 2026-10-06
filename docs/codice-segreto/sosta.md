@@ -44,6 +44,8 @@ stelle.
 - Un salvataggio che non torna (altra `VERSIONE`, tappa sparita, disegno non
   del tema, riga di lunghezza sbagliata, più righe del tabellone, monete
   negative) si butta e la mappa resta com'è. La tappa si ritrova per `chiave`.
+- Una tappa che non è più aperta (i grandi l'hanno richiusa con l'età o un
+  ritocco) non si offre: la sosta resta, e la carta torna se la riaprono.
 - Il gioco non ha un orologio: la partita ripresa nasce com'era, senza velo
   di pausa.
 - Si scrive a ogni casella posata o tolta, a ogni codice finito, col ←, su

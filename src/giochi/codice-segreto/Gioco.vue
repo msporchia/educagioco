@@ -231,8 +231,16 @@ function allaMappa() {
 const ripresa = ref(laRipresa())
 const chiede = ref(null)   // { nome, i }: la partita nuova che butterebbe quella a metà
 
+// una tappa che i grandi hanno richiuso (l'età, un ritocco) non si offre: la
+// sosta resta lì, e torna se la riaprono
+function apertaLaSosta(dato) {
+  return !!dato &&
+    aperta(CHIAVE, dato.chiave ? CAMPAGNA.findIndex(t => t.chiave === dato.chiave) : QUANTE_TAPPE)
+}
+
 function laRipresa() {
-  const d = dice(sosta(CHIAVE))
+  const dato = sosta(CHIAVE)
+  const d = apertaLaSosta(dato) ? dice(dato) : null
   if (!d) return null
   const righe = !d.righe ? '' : d.righe === 1 ? ' · 1 riga giocata' : ` · ${d.righe} righe giocate`
   const dove = d.libero ? `${d.fila} di fila` : `codice ${d.codice} di ${d.di}`
@@ -273,7 +281,9 @@ const parti = i => i < 0 ? vista.value = 'manopole' : avviaTappa(i)
 
 // un salvataggio che non torna si butta, e la mappa resta com'è
 function riprendiPartita() {
-  const r = leggi(sosta(CHIAVE))
+  const dato = sosta(CHIAVE)
+  if (!apertaLaSosta(dato)) { ripresa.value = null; return }
+  const r = leggi(dato)
   if (!r) return scorda()
   clearTimeout(attesa)
   delLibero = { difficolta: r.difficolta || '', tema: r.tema || '' }

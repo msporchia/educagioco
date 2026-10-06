@@ -9,6 +9,7 @@ import { apriBrowser, apriGioco, attendi, azzera, semina, leggiProfilo, scatto, 
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/codice-segreto/dati/campagna.js'
+import { VERSIONE } from '../../src/giochi/codice-segreto/motore/sosta.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -192,6 +193,23 @@ await page.click('[data-ripresa] [data-azione="scorda"]')
 const profilo2 = await leggiProfilo(page)
 uguale('«lascio perdere» scrive il record della serie', profilo2.campagne.codice.primato?.best, 3)
 uguale('e toglie la sosta', profilo2.campagne.codice.sosta, undefined)
+
+/* ── una tappa che non è più aperta (i grandi l'hanno richiusa) non si offre,
+   e la sosta aspetta: riaperta, la carta torna ── */
+const aMetaDellaTerza = { v: VERSIONE, chiave: CAMPAGNA[2].chiave, vinte: 1, partita: null }
+// `semina` ricarica e aspetta la home: l'indirizzo non deve riaprire il gioco
+const aCasa = () => page.evaluate(() => history.replaceState(null, '', location.pathname))
+await aCasa()
+await semina(page, { campagne: { codice: { tappa: 0, stelle: {}, cfg: { spiegata: true },
+                                           sosta: aMetaDellaTerza } } })
+await aMappa()
+uguale('una tappa chiusa non offre la ripresa', await page.locator('[data-ripresa]').count(), 0)
+controlla('ma la sosta resta', !!(await sostaScritta()))
+await aCasa()
+await semina(page, { campagne: { codice: { tappa: 2, stelle: {}, cfg: { spiegata: true },
+                                           sosta: aMetaDellaTerza } } })
+await aMappa()
+uguale('riaperta, la carta torna', await page.locator('[data-ripresa]').count(), 1)
 
 uguale('nessun errore in console', errori.join(' · '), '')
 await browser.close()
