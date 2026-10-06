@@ -43,7 +43,9 @@ TESTA = """/* GENERATO da strumenti/sprite/terra-di-sopra.py — non si scrive a
    CELLA     il lato di una cella della maschera, in pixel della mappa
    MASCHERA  una riga per fila di celle: `.` si cammina, `#` no
    POSTI     le sette aperture: `riquadro` [x, y, largo, alto] in pixel della
-             mappa, `piede` la cella dove l'eroe si ferma per entrare
+             mappa, `piede` la cella dove l'eroe si ferma per entrare,
+             `ingresso` [x, y, largo, alto] l'ellisse del cerchietto attorno
+             all'ingresso (sta dentro la mappa, non copre il disegno)
    PARTENZA, MINATORE, CARTELLO  dove si comincia, dove sta il minatore (e
              `accanto`, dove ci si ferma per parlargli), il cartello
    PEZZE     posto → il riquadro ritagliato dalla mappa con le discese
@@ -91,6 +93,11 @@ def controlla(fg, im):
     for nome, p in fg['posti'].items():
         if not passa(*p['piede']):
             guasti.append(f'il piede di {nome} {p["piede"]} non è camminabile')
+        i = p.get('ingresso')
+        if not i or len(i) != 4 or i[2] <= 0 or i[3] <= 0:
+            guasti.append(f'{nome}: manca l\'ingresso [x, y, largo, alto] del cerchietto')
+        elif i[0] < 0 or i[1] < 0 or i[0] + i[2] > im.size[0] or i[1] + i[3] > im.size[1]:
+            guasti.append(f'{nome}: il cerchietto {i} esce dalla mappa')
     for nome in ('partenza', 'minatore'):
         if not passa(*fg[nome]['piede']):
             guasti.append(f'{nome}: il piede {fg[nome]["piede"]} non è camminabile')
@@ -219,6 +226,8 @@ def provino():
         x, y, w, h = p['riquadro']
         d.rectangle([x, y, x + w, y + h], outline=(255, 220, 60, 255), width=3)
         d.text((x + 4, y + 4), nome, fill=(255, 255, 255, 255))
+        ix, iy, iw, ih = p['ingresso']
+        d.ellipse([ix, iy, ix + iw, iy + ih], outline=(255, 255, 255, 255), width=3)
         piede(p['piede'], (255, 220, 60, 255))
     x, y, w, h = fg['cartello']['riquadro']
     d.rectangle([x, y, x + w, y + h], outline=(120, 200, 255, 255), width=3)

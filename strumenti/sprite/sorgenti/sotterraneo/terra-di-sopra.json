@@ -6,13 +6,13 @@
   "qualita": 75,
   "cella": 32,
   "posti": {
-    "arco": { "riquadro": [428, 570, 256, 200], "piede": [17, 24] },
-    "pozzo-di-casa": { "riquadro": [552, 1082, 144, 176], "piede": [19, 40] },
-    "buco": { "riquadro": [788, 450, 204, 160], "piede": [24, 18] },
-    "stagno": { "riquadro": [178, 510, 132, 140], "piede": [7, 24] },
-    "botola": { "riquadro": [434, 224, 96, 80], "piede": [15, 10] },
-    "miniera": { "riquadro": [734, 134, 168, 160], "piede": [25, 10] },
-    "pozzo-vecchio": { "riquadro": [184, 160, 104, 150], "piede": [7, 10] }
+    "arco": { "riquadro": [428, 570, 256, 200], "piede": [17, 24], "ingresso": [480, 590, 156, 200] },
+    "pozzo-di-casa": { "riquadro": [552, 1082, 144, 176], "piede": [19, 40], "ingresso": [548, 1090, 160, 170] },
+    "buco": { "riquadro": [788, 450, 204, 160], "piede": [24, 18], "ingresso": [815, 455, 185, 160] },
+    "stagno": { "riquadro": [178, 510, 132, 140], "piede": [7, 24], "ingresso": [185, 510, 130, 150] },
+    "botola": { "riquadro": [434, 224, 96, 80], "piede": [15, 10], "ingresso": [425, 222, 115, 80] },
+    "miniera": { "riquadro": [734, 134, 168, 160], "piede": [25, 10], "ingresso": [735, 135, 150, 170] },
+    "pozzo-vecchio": { "riquadro": [184, 160, 104, 150], "piede": [7, 10], "ingresso": [175, 160, 115, 150] }
   },
   "partenza": { "piede": [17, 41] },
   "minatore": { "piede": [14, 40], "accanto": [16, 40] },

@@ -36,7 +36,7 @@ const posti = computed(() => Object.entries(POSTI).map(([nome, p]) => {
   const daAbisso = POSTO_DI.abisso === nome
   const cosa = t || (daAbisso && props.abisso) || null
   return {
-    nome, riquadro: p.riquadro, piede: cella(p.piede),
+    nome, riquadro: p.riquadro, ingresso: p.ingresso, piede: cella(p.piede),
     tappa: t || null, abisso: daAbisso,
     cosa: cosa || POZZO_VECCHIO,
     aperto: t ? t.aperta : !!props.abisso,
@@ -207,7 +207,7 @@ function guarda() {
     if (trovati.value.has(p.nome) || !visto(centroDi(p.riquadro))) continue
     trovati.value = new Set([...trovati.value, p.nome])
     const c = p.cosa
-    dillo(p.aperto ? `Hai trovato ${c.icona} ${c.nome}!` : `Hai trovato ${minuscolo(c.nome)}: per ora non si scende.`)
+    dillo(p.aperto ? `Hai trovato ${minuscolo(c.nome)}!` : `Hai trovato ${minuscolo(c.nome)}: per ora non si scende.`)
   }
   if (!trovati.value.has('cartello') && visto(centroDi(CARTELLO.riquadro)))
     trovati.value = new Set([...trovati.value, 'cartello'])
@@ -357,7 +357,7 @@ const detto = computed(() => {
 
 const frecce = computed(() => FRECCE.map(f => {
   const nomi = f.posti.filter(n => trovati.value.has(n))
-    .map(n => posti.value.find(p => p.nome === n).cosa).map(c => `${c.icona} ${c.nome}`)
+    .map(n => posti.value.find(p => p.nome === n).cosa.nome)
   return { verso: f.verso, detto: f.detto, nomi }
 }))
 
@@ -408,6 +408,11 @@ onBeforeUnmount(() => {
 })
 
 const quadro = r => ({ left: r[0] * S + 'px', top: r[1] * S + 'px', width: r[2] * S + 'px', height: r[3] * S + 'px' })
+// il cerchietto attorno all'ingresso, in pixel dentro il bottone del posto (`ingresso` è in pixel della mappa)
+const anello = p => {
+  const [x, y, w, h] = p.ingresso, r = p.riquadro
+  return { left: (x - r[0]) * S + 'px', top: (y - r[1]) * S + 'px', width: w * S + 'px', height: h * S + 'px' }
+}
 const nomeDi = p => p.cosa.nome
 // una chiusa dice cosa la apre; quella chiusa per l'età non promette niente («finisci quella di prima» sarebbe falso)
 const chiusaPerche = p => {
@@ -469,9 +474,7 @@ const chiusaPerche = p => {
               :aria-label="trovati.has(p.nome) ? nomeDi(p) : null" :aria-hidden="trovati.has(p.nome) ? null : 'true'"
               :tabindex="trovati.has(p.nome) ? 0 : -1"
               @click.stop="toccaPosto(p)">
-        <span v-if="p.aperto && trovati.has(p.nome)" class="sot-targa em">
-          {{ p.cosa.icona }}<i v-if="p.tappa && p.tappa.stelle">{{ '⭐'.repeat(p.tappa.stelle) }}</i>
-        </span>
+        <span v-if="p.aperto && trovati.has(p.nome)" class="sot-anello" :style="anello(p)"></span>
       </button>
       <button class="sot-posto sot-cartello" :class="{ 'sot-buio': !trovati.has('cartello') }" data-cartello
               aria-label="il cartello" :style="quadro(CARTELLO.riquadro)" @click.stop="toccaCartello"></button>
@@ -483,7 +486,7 @@ const chiusaPerche = p => {
                           : { visibility: 'hidden', left: '0px', top: '0px', width: LARGO_FUM + 'px' }"
            @click.stop>
         <template v-if="aperto.tipo === 'posto'">
-          <b class="sot-fum-nome"><span class="em">{{ aperto.p.aperto ? aperto.p.cosa.icona : '🔒' }}</span>
+          <b class="sot-fum-nome"><span v-if="!aperto.p.aperto" class="em">🔒</span>
             {{ aperto.p.cosa.nome }}</b>
           <i class="sot-fum-dritta">{{ aperto.p.cosa.dritta }}</i>
           <template v-if="aperto.p.aperto">

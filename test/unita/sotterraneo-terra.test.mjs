@@ -74,9 +74,9 @@ stessaLista('e arriva nello stesso posto', liscia.at(-1), via.at(-1))
 
 // la cisterna è una scala che scende sott'acqua con l'apertura verso sud: ci si arriva da sotto, dalla riva sud
 {
-  const { piede: [sx, sy], riquadro: [, ry, , rh] } = POSTI.stagno
+  const { piede: [sx, sy], riquadro: [, ry, , rh], ingresso: [, iy, , ih] } = POSTI.stagno
   controlla('la scala sommersa: si sta sulla riva sud, sotto i gradini',
-            sy * CELLA >= ry + rh, `${sx},${sy}`)
+            sy * CELLA >= ry + rh && sy * CELLA >= iy + ih, `${sx},${sy}`)
   const verso = terra.strada(casa, { x: sx, y: sy })
   controlla('e ci si arriva', Array.isArray(verso) && verso.length > 0)
   const celle = [casa, ...verso]
@@ -89,6 +89,14 @@ stessaLista('e arriva nello stesso posto', liscia.at(-1), via.at(-1))
   const lisc = [casa, ...terra.liscia(casa, verso)]
   controlla('lisciata, non taglia dall\'acqua dello stagno', lisc.every(c => c.y >= sy))
 }
+for (const [nome, p] of Object.entries(POSTI)) {
+  const [x, y, w, h] = p.ingresso
+  controlla(`${nome}: il cerchietto sta dentro la mappa e attorno al posto`,
+            x >= 0 && y >= 0 && x + w <= LARGO && y + h <= ALTO && w > 0 && h > 0
+            && x + w > p.riquadro[0] && x < p.riquadro[0] + p.riquadro[2]
+            && y + h > p.riquadro[1] && y < p.riquadro[1] + p.riquadro[3])
+}
+
 // l'acqua dello stagno: un tocco là in mezzo porta alla riva, non a niente
 const acqua = { x: 4, y: 17 }
 controlla('nello stagno non si cammina', !terra.passa(acqua.x, acqua.y))

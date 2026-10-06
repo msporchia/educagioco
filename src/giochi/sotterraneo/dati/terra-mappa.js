@@ -8,7 +8,9 @@
    CELLA     il lato di una cella della maschera, in pixel della mappa
    MASCHERA  una riga per fila di celle: `.` si cammina, `#` no
    POSTI     le sette aperture: `riquadro` [x, y, largo, alto] in pixel della
-             mappa, `piede` la cella dove l'eroe si ferma per entrare
+             mappa, `piede` la cella dove l'eroe si ferma per entrare,
+             `ingresso` [x, y, largo, alto] l'ellisse del cerchietto attorno
+             all'ingresso (sta dentro la mappa, non copre il disegno)
    PARTENZA, MINATORE, CARTELLO  dove si comincia, dove sta il minatore (e
              `accanto`, dove ci si ferma per parlargli), il cartello
    PEZZE     posto → il riquadro ritagliato dalla mappa con le discese
@@ -70,13 +72,13 @@ export const MASCHERA = [
 ]
 
 export const POSTI = {
-  "arco": {"riquadro":[428,570,256,200],"piede":[17,24]},
-  "pozzo-di-casa": {"riquadro":[552,1082,144,176],"piede":[19,40]},
-  "buco": {"riquadro":[788,450,204,160],"piede":[24,18]},
-  "stagno": {"riquadro":[178,510,132,140],"piede":[7,24]},
-  "botola": {"riquadro":[434,224,96,80],"piede":[15,10]},
-  "miniera": {"riquadro":[734,134,168,160],"piede":[25,10]},
-  "pozzo-vecchio": {"riquadro":[184,160,104,150],"piede":[7,10]},
+  "arco": {"riquadro":[428,570,256,200],"piede":[17,24],"ingresso":[480,590,156,200]},
+  "pozzo-di-casa": {"riquadro":[552,1082,144,176],"piede":[19,40],"ingresso":[548,1090,160,170]},
+  "buco": {"riquadro":[788,450,204,160],"piede":[24,18],"ingresso":[815,455,185,160]},
+  "stagno": {"riquadro":[178,510,132,140],"piede":[7,24],"ingresso":[185,510,130,150]},
+  "botola": {"riquadro":[434,224,96,80],"piede":[15,10],"ingresso":[425,222,115,80]},
+  "miniera": {"riquadro":[734,134,168,160],"piede":[25,10],"ingresso":[735,135,150,170]},
+  "pozzo-vecchio": {"riquadro":[184,160,104,150],"piede":[7,10],"ingresso":[175,160,115,150]},
 }
 
 export const PARTENZA = {"piede":[17,41]}

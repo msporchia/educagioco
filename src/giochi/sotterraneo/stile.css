@@ -114,15 +114,17 @@
 .sot-posto { border-radius: 16px }
 .sot-posto.sot-buio { pointer-events: none }
 .sot-posto:focus-visible { outline: 2px solid var(--sot-oro) }
-/* la targa: cosa c'è sotto, appesa sopra il posto; la prossima da fare respira d'oro */
-.sot-targa {
-  position: absolute; left: 50%; top: -6px; transform: translate(-50%, -100%);
-  display: inline-flex; align-items: center; gap: 3px; padding: 4px 8px;
-  font-size: 17px; line-height: 1; white-space: nowrap;
-  background: #fffaf0; color: #2b2433; border: 2px solid #2b2433; border-radius: 999px;
+/* il cerchietto attorno all'ingresso di una discesa trovata e aperta: un anello e basta, il disegno resta
+   com'è; la prossima da fare è d'oro e respira */
+.sot-anello {
+  position: absolute; box-sizing: border-box; border-radius: 50%; pointer-events: none;
+  border: 2px solid #fffaf0cc; box-shadow: 0 0 0 1px #2b243399, inset 0 0 0 1px #2b243366;
 }
-.sot-targa i { font-style: normal; font-size: 11px }
-.sot-posto.sot-adesso .sot-targa { box-shadow: 0 0 0 3px var(--sot-oro); animation: sot-respira 1.6s ease-in-out infinite }
+.sot-posto.sot-adesso .sot-anello {
+  border-color: var(--sot-oro); box-shadow: 0 0 0 1px #2b2433b3, 0 0 10px 1px #ffd23f99;
+  animation: sot-anello 1.8s ease-in-out infinite;
+}
+@keyframes sot-anello { 50% { opacity: .55 } }
 
 .sot-fumetto {
   position: absolute; z-index: 3; box-sizing: border-box; padding: 11px 13px 12px; border-radius: 14px;
@@ -166,7 +168,7 @@
 }
 .sot-trovato.sot-piano { color: var(--sot-tenue) }
 @media (prefers-reduced-motion: reduce) {
-  .sot-targa, .sot-tre-punti, .sot-posto.sot-adesso .sot-targa { animation: none }
+  .sot-tre-punti, .sot-posto.sot-adesso .sot-anello { animation: none }
 }
 
 .sot-campo { flex: 1; min-height: 0; position: relative }
