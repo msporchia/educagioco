@@ -27,9 +27,10 @@ const props = defineProps({
   scritte: { type: Number, default: 0 },         // quante ne ha scritte il bambino (gli attrezzi no)
   livelli: { type: Array, default: () => [] },   // per dire da quale livello viene un attrezzo
   mano: { type: Object, default: null },         // { id, copia }: la riga presa per spostarla o copiarla
+  racconto: { type: Boolean, default: true },    // il racconto di chi chiede è aperto, in cima
 })
 const emit = defineEmits(['tab', 'seleziona', 'apri', 'imposta', 'avanti', 'aggiungi', 'azione', 'annulla',
-                          'nuova-lavagnetta', 'progetto', 'ricomincia', 'mano', 'posa'])
+                          'nuova-lavagnetta', 'progetto', 'ricomincia', 'mano', 'posa', 'racconto'])
 
 const progetti = computed(() => props.programma.progetti || [])
 /* cambiando scheda si riparte dalla cima: la testa di un progetto (e la
@@ -173,8 +174,11 @@ const valoriDi = p => (inCima.value && inCima.value.progetto === p.id ? inCima.v
         {{ attivo ? 'Il progetto è vuoto: scrivici dentro come si costruisce.' : 'Il programma è vuoto: tocca «＋ aggiungi».' }}
       </p>
       <Righe :righe="righe" :dove="{ progetto: tab, dentro: null, ramo: 'corpo' }" :bloccata="!!(attivo && attivo.attrezzo)" />
-      <div v-if="!sola && !(attivo && attivo.attrezzo)" class="cst-piede-editor">
-        <button type="button" class="cst-ricomincia" data-azione="ricomincia" @click="emit('ricomincia')">↺ ricomincia da capo</button>
+      <div v-if="!sola" class="cst-piede-editor">
+        <button type="button" class="cst-ricomincia" data-azione="racconto" :aria-pressed="racconto"
+                @click="emit('racconto')">📜 {{ racconto ? 'nascondi' : 'obiettivo' }}</button>
+        <button v-if="!(attivo && attivo.attrezzo)" type="button" class="cst-ricomincia" data-azione="ricomincia"
+                @click="emit('ricomincia')">↺ ricomincia da capo</button>
       </div>
     </div>
   </section>

@@ -78,16 +78,24 @@ await tocca('[data-livello="0"]')
 await page.waitForSelector('[data-editor]', { timeout: 5000 })
 const canvas = await page.locator('.cst-campo canvas').boundingBox()
 controlla('il cantiere si vede', canvas && canvas.width > 200 && canvas.height > 80, JSON.stringify(canvas))
-for (let k = 0; k < 4; k++) {
+/* si parte col primo mattone già scritto, e la guida dice cosa toccare */
+uguale('il primo muretto parte con metti e un passo già scritti', await page.locator('[data-editor] .cst-riga').count(), 2)
+uguale('e la guida indica ▶', await page.locator('.cst[data-guida="via"] [data-guida-riga]').count(), 1)
+uguale('il racconto si legge entrando', await page.locator('[data-racconto]').count(), 1)
+await tocca('[data-aggiungi="principale"]')
+await page.waitForSelector('[data-cassetta]', { timeout: 3000 })
+uguale('con la cassetta aperta dopo un vai, la guida indica metti', await page.locator('.cst[data-guida="metti"]').count(), 1)
+await tocca('[data-chiudi]')
+for (let k = 1; k < 4; k++) {
   await aggiungi('principale', 'metti')
   if (k < 3) {
     await aggiungi('principale', 'vai')
     /* la freccia: la scelta si è aperta da sola, sulla riga */
     await page.waitForSelector('[data-scelta="verso"]', { timeout: 3000 })
-    if (!k) controlla('un «vai» nuovo nasce col punto di domanda sulla freccia',
+    if (k === 1) controlla('un «vai» nuovo nasce col punto di domanda sulla freccia',
                       (await page.locator('[data-editor] .cst-riga').last().locator('[data-casella="verso"]').innerText()).startsWith('?'))
     await tocca('[data-scelta="verso"] [data-verso="destra"]')
-    if (!k) {
+    if (k === 1) {
       uguale('scelta la freccia, i passi non si chiedono', await page.locator('[data-scelta]').count(), 0)
       uguale('e sono uno', (await page.locator('[data-editor] .cst-riga').last().locator('[data-casella="quanto"]').innerText()).trim().replace('▾', ''), '1')
     }
@@ -101,6 +109,7 @@ await tocca('[data-velocita="veloce"]')
 await tocca('[data-azione="via"]')
 await page.waitForSelector('[data-fine="livello"]', { timeout: 15000 })
 controlla('il primo livello si vince', true)
+uguale('premuto ▶ il racconto si è chiuso', await page.locator('[data-racconto]').count(), 0)
 await scatto(page, 'costruttore-vinto')
 {
   const p = await leggiProfilo(page)

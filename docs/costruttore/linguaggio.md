@@ -72,6 +72,25 @@ per aria non dava nessun ordine alle cose.
   robot non mette (nei nidi si mette il giallo e si guarda il rosso). Capire
   quale domanda ha senso fa parte della sfida.
 
+## Il racconto e la guida del primo livello
+
+- **Il racconto si legge entrando e si chiude al primo ▶**: su un telefono
+  il «voglio un castello con due torri larghe…» occupava mezzo schermo per
+  tutto il livello. Lo riapre «📜 obiettivo», in fondo al
+  programma accanto a «ricomincia da capo». I gettoni degli ordini restano.
+- **Il primo muretto parte scritto a metà** (`inizio`): con un mattone già
+  scritto, ▶ fa vedere subito cosa vuol dire un programma.
+- **La guida legge lo schermo, non un copione** (`motore/guida.js`, pura):
+  programma vuoto → «＋ aggiungi»; cassetta aperta → «metti», o «vai» se
+  l'ultima riga è un metti; una scelta aperta → «scegli qui sotto»; una
+  casella da riempire → lampeggia già; mai provato o cambiato → ▶;
+  mancano mattoni → «aggiungi ancora». Chi fa le cose in un altro ordine
+  trova comunque la riga giusta. L'anello sul bersaglio è solo CSS
+  (`.cst[data-guida=…]`), e se ne va alla prima vittoria.
+
+Nei test: `[data-racconto]`, `[data-azione="racconto"]`, `[data-guida-riga]`,
+`.cst[data-guida]`.
+
 ## Cosa sta dentro un blocco
 
 - **Ogni blocco abbraccia le sue righe a forma di C** (`viste/Righe.vue`):
@@ -85,7 +104,7 @@ per aria non dava nessun ordine alle cose.
   «＋ altrimenti» sta in vista sul fondo di ogni «se» che non ce l'ha,
   invece che fra i tasti della riga selezionata.
 
-Nei test: `[data-fine]`, `[data-altrimenti]`, `[data-azione="aggiungi-altrimenti"]`.
+Nei test: `[data-chiude]`, `[data-altrimenti]`, `[data-azione="aggiungi-altrimenti"]`.
 
 ## Le parole degli aiuti
 

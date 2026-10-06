@@ -242,7 +242,19 @@
   border: 1.5px dashed var(--cst-bordo); background: transparent; color: var(--cst-tenue); font-size: 15px;
 }
 .cst-piu span { font-size: 13px }
-.cst-piede-editor { margin-top: 18px; display: flex; justify-content: flex-end }
+.cst-piede-editor { margin-top: 18px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap }
+.cst-piede-editor .cst-ricomincia:only-child { margin-left: auto }
+/* la guida del primo livello: la riga, e un anello su quello che va toccato */
+.cst-guida { margin: 0; padding: 8px 10px; border-radius: 10px; font-size: 14px; line-height: 1.35;
+             background: #fff6d6; border: 1.5px solid #f3c64a; color: #4a3600; font-weight: 600 }
+.cst-guida span { display: inline-block; animation: cst-dito 1s ease-in-out infinite }
+@keyframes cst-dito { 50% { transform: translateY(3px) } }
+.cst[data-guida="aggiungi"] [data-aggiungi="principale"],
+.cst[data-guida="metti"] [data-cassetta] [data-blocco="metti"],
+.cst[data-guida="vai"] [data-cassetta] [data-blocco="vai"],
+.cst[data-guida="via"] [data-azione="via"] { animation: cst-indica 1.2s ease-in-out infinite }
+.cst[data-guida="aggiungi"] [data-aggiungi="principale"] { border-style: solid; border-color: #f3c64a; color: var(--cst-inchiostro) }
+@keyframes cst-indica { 50% { box-shadow: 0 0 0 5px #f3c64a } }
 .cst-ricomincia { border: none; background: none; color: var(--cst-tenue); font-size: 13px; text-decoration: underline }
 
 /* la scelta di una casella */

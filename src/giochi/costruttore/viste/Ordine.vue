@@ -6,6 +6,7 @@ defineProps({
   visto: { type: Number, default: 0 },
   esiti: { type: Array, default: () => [] },
   inCorso: { type: Boolean, default: false },
+  racconto: { type: Boolean, default: true },   // chiuso, lo riapre «cosa chiede» in fondo al programma
 })
 const emit = defineEmits(['vedi'])
 
@@ -14,7 +15,7 @@ const valori = o => Object.entries(o.lavagnette || {})
 
 <template>
   <div class="cst-ordine" data-ordine>
-    <div class="cst-chi">
+    <div v-if="racconto" class="cst-chi" data-racconto>
       <span class="cst-faccia">{{ livello.chi.emoji }}</span>
       <p><b>{{ livello.chi.nome }}:</b> {{ livello.racconto }}</p>
     </div>

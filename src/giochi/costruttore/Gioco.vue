@@ -19,6 +19,7 @@ import * as mod from './motore/modifica.js'
 import { fraseDi } from './motore/esecutore.js'
 import { conAttrezzi } from './motore/attrezzi.js'
 import { righeDi, righeScritte } from './motore/zaino.js'
+import { guida } from './motore/guida.js'
 import { Regia, quadroFermo } from './regia.js'
 
 import Mappa from './viste/Mappa.vue'
@@ -70,7 +71,9 @@ function salvaOra() {
 const salvaPresto = () => { clearTimeout(salvaTimer); salvaTimer = setTimeout(salvaOra, 500) }
 
 // gli attrezzi non si salvano: li rimette conAttrezzi ad ogni apertura (docs/costruttore/progetti.md)
-const inizio = l => ({ ...conAttrezzi(scriviProgramma({ principale: [], progetti: [], lavagnette: [] }), l), svelato: false })
+// `inizio` di un livello: il programma già scritto a metà (il primo muretto)
+const inizio = l => ({ ...conAttrezzi(scriviProgramma(l.inizio ? copia(l.inizio) : { principale: [], progetti: [], lavagnette: [] }), l),
+                       svelato: false })
 const prog = computed(() => (liv.value ? archivio.programmi[liv.value.chiave] : null))
 const lavagnetteOrdine = computed(() => (liv.value ? liv.value.ordini[0].lavagnette || {} : {}))
 const nomiOrdine = computed(() => Object.keys(lavagnetteOrdine.value))
@@ -95,6 +98,9 @@ async function apriLivello(i) {
   await pronto
   const l = i === LIBERO_IDX ? LIBERO : LIVELLI[i]
   soloProgramma.value = false
+  raccontoAperto.value = true
+  provato.value = null
+  mancano.value = false
   const salvato = archivio.programmi[l.chiave]
   archivio.programmi[l.chiave] = salvato ? conAttrezzi(salvato, l) : inizio(l)
   idx.value = i
@@ -118,6 +124,11 @@ const aperta_ = ref(null)
 const foglio = ref(null)               // cassetta | progetto | lavagnetta | aiuto
 // il programma a tutto schermo, finché non si preme ▶ (docs/core/interfaccia.md)
 const soloProgramma = ref(false)
+// il racconto si legge entrando, si chiude al primo ▶ e si riapre dal fondo
+const raccontoAperto = ref(true)
+// per la guida: il programma dell'ultimo ▶, e se a quel giro mancavano mattoni
+const provato = ref(null)
+const mancano = ref(false)
 const dove = ref(null)                 // dove andrà la riga scelta in cassetta
 const progettoInModifica = ref(null)
 const attesaLavagnetta = ref(null)     // { riga } o { inserisci: dove }
@@ -207,6 +218,14 @@ function annulla() {
 // lo zaino: quante righe tiene il programma, attrezzi esclusi (docs/costruttore/progetti.md)
 const zaino = computed(() => (liv.value && liv.value.zaino) || null)
 const righe = computed(() => (prog.value ? righeScritte(prog.value) : 0))
+// la guida accompagna un livello che la chiede finché non è vinto (motore/guida.js)
+const passoGuida = computed(() => {
+  const l = liv.value
+  if (!l || !l.guida || !prog.value || finale.value || stelleDi(CHIAVE, idx.value) > 0) return null
+  return guida({ righe: prog.value.principale, cassetta: foglio.value === 'cassetta', scegliendo: !!aperta_.value,
+                 problemi: problemi.value.size > 0, inCorso: !!stato.inCorso, provato: provato.value !== null,
+                 cambiato: provato.value !== JSON.stringify(prog.value.principale), mancano: mancano.value })
+})
 function troppoPerLoZaino(quante) {
   if (!zaino.value || quante <= zaino.value) return false
   messaggio.value = { tipo: 'errore', testo: fraseZainoPieno() }
@@ -446,6 +465,9 @@ const tabDellaRiga = id => {
 function via() {
   if (!prog.value || stato.inCorso) return
   soloProgramma.value = false
+  raccontoAperto.value = false
+  provato.value = JSON.stringify(prog.value.principale)
+  mancano.value = false
   aperta_.value = null
   sel.value = null
   mano.value = null
@@ -517,7 +539,11 @@ function fine(esito) {
   if (esito.errore) {
     tab.value = tabDellaRiga(esito.errore.id)
     messaggio.value = { tipo: 'errore', testo: prefisso + esito.errore.frase }
-  } else if (esito.confronto) messaggio.value = { tipo: 'sbagliato', testo: prefisso + fraseConfronto(esito.confronto) }
+  } else if (esito.confronto) {
+    messaggio.value = { tipo: 'sbagliato', testo: prefisso + fraseConfronto(esito.confronto) }
+    const c = esito.confronto
+    mancano.value = c.mancano.length > 0 && !c.troppi.length && !c.sbagliati.length
+  }
   /* il porto: a sera, cosa non torna — con i numeri, non «riprova» */
   else if (esito.giornata) messaggio.value = { tipo: 'sbagliato', testo: prefisso + esito.giornata.frasi.join(' ') }
   else if (esito.omino) messaggio.value = { tipo: 'sbagliato', testo: prefisso + (FRASI_OMINO[esito.omino.esito] || 'L\'omino non arriva.') }
@@ -586,13 +612,13 @@ const progettoAperto = computed(() =>
   <div class="schermo">
     <Barra :titolo="titolo" guida="costruttore" monete @indietro="indietro" />
 
-    <div class="cst">
+    <div class="cst" :data-guida="passoGuida && passoGuida.dove">
       <Mappa v-if="vista === 'mappa'" :capitoli="capitoli" :libero="{ ...LIBERO, aperto: liberoAperto }"
              @gioca="apriLivello" @libero="apriLivello(LIBERO_IDX)" />
 
       <div v-else-if="liv && prog" class="cst-cantiere">
         <div class="cst-sopra">
-          <Ordine v-show="!soloProgramma" :livello="liv" :visto="ordineVisto" :esiti="stato.esiti" :in-corso="stato.inCorso" @vedi="vedi" />
+          <Ordine v-show="!soloProgramma" :racconto="raccontoAperto" :livello="liv" :visto="ordineVisto" :esiti="stato.esiti" :in-corso="stato.inCorso" @vedi="vedi" />
           <div v-if="stato.montaggio && stato.inCorso && !soloProgramma" class="cst-montaggio" data-montaggio>
             e adesso con «{{ liv.ordini[stato.ordine].nome }}»…
           </div>
@@ -606,6 +632,7 @@ const progettoAperto = computed(() =>
                    @via="via" @stop="stop" @velocita="cambiaVelocita" @aiuto="apriAiuti"
                    @nuova-lavagnetta="nuovaLavagnetta(null)" />
           <p v-if="messaggio" class="cst-messaggio" :class="'cst-' + messaggio.tipo" data-messaggio>{{ messaggio.testo }}</p>
+          <p v-if="passoGuida" class="cst-guida" data-guida-riga><span>👇</span> {{ passoGuida.testo }}</p>
         </div>
         <Editor :programma="prog" :livello="liv" :tab="tabMostrato" :sel="sel" :aperta="aperta_"
                 :accesa="stato.inCorso ? stato.riga : null" :guasto="stato.guasto" :problemi="problemi"
@@ -613,7 +640,8 @@ const progettoAperto = computed(() =>
                 :indietro="passiIndietro" :zaino="zaino" :scritte="righe" :livelli="LIVELLI" :mano="manoViva"
                 @tab="t => { tab = t; sel = null; aperta_ = null }" @seleziona="seleziona" @apri="apri"
                 @imposta="imposta" @avanti="sceltaFatta" @mano="prendiInMano" @posa="posa" @aggiungi="aggiungi" @azione="azione" @annulla="annulla"
-                @nuova-lavagnetta="nuovaLavagnetta" @progetto="apriProgetto" @ricomincia="ricomincia" />
+                @nuova-lavagnetta="nuovaLavagnetta" @progetto="apriProgetto" @ricomincia="ricomincia"
+                :racconto="raccontoAperto" @racconto="raccontoAperto = !raccontoAperto" />
         <p v-if="ricominciaArmato" class="cst-messaggio cst-errore cst-fisso">Tocca ancora «ricomincia» per cancellare tutto il programma di questo livello.</p>
       </div>
 

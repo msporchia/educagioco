@@ -18,6 +18,8 @@ i programmi si scrivono con `dati/scrivi.js`. Sta in `dati/livelli.js`.
 | `prova` | `disegno` \| `passaggio` (vedi [linguaggio.md](linguaggio.md)) |
 | `ordini` | `[{ nome, lavagnette, mappa, robot? }]`: le situazioni su cui il programma deve reggere |
 | `cassetta` | i blocchi che il livello porta; in gioco si aggiungono da soli i concetti dei livelli prima (`CONCETTI`: ripeti, smetti quando, per sempre, se, lavagnette, progetti, aspetta), anche dove non servono — capire cosa usare è parte della sfida. Le azioni (vai, metti, prendi, posa) no: dipendono dal mondo |
+| `inizio` | il programma già scritto a metà con cui si parte (e si ricomincia): il primo muretto ha «metti» e «vai →». Il banco pretende che da solo non vinca |
+| `guida` | `true`: finché il livello non è vinto, una riga e un dito sull'unica cosa da toccare (`motore/guida.js`, vedi [linguaggio.md](linguaggio.md)) |
 | `senza` | i concetti che il livello toglie perché salterebbero la sua lezione: la torre del casaro non vuole cicli, la torre si sposta solo chiamando |
 | `colori` | i colori della pulsantiera (il primo è il colore di partenza di «metti») |
 | `posti` | dove si può posare un mattone: di solito solo ↓ sotto i piedi; i lati (↘ ↙) nei livelli che li chiedono — il bosco, il ponte |

@@ -60,6 +60,9 @@ const DEL_CANTIERE = [
       '#########',
     ] }],
     cassetta: ['vai', 'metti'], colori: ['rosso'],
+    // si parte con un mattone già scritto, e la guida dice cosa toccare (docs/costruttore/livelli.md)
+    guida: true,
+    inizio: programma({ principale: [fai.metti('rosso'), fai.vai('destra', 1)] }),
     ragiona: [
       'Quattro mattoni in fila, sul disegno. Il robot però un mattone lo sa mettere solo sotto i suoi piedi, e poi ci resta sopra: per il prossimo deve spostarsi.',
       'Prova con un mattone solo, e premi ▶: dove si trova il robot? E da lassù, come arriva al posto del secondo mattone?',

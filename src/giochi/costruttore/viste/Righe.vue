@@ -145,7 +145,7 @@ const apertaQui = i => ed.aperta.value && ed.aperta.value.id === i.id
                  :senza-posti="senzaPosti || !!(spostando() && mano().id === i.id)"
                  :dove="{ progetto: dove.progetto, dentro: i.id, ramo: 'altrimenti' }" />
         </template>
-        <div class="cst-fine" :data-fine="i.id">
+        <div class="cst-fine" :data-chiude="i.id">
           <button v-if="i.tipo === 'se' && !i.altrimenti && !ferma() && !mano()" type="button"
                   data-azione="aggiungi-altrimenti" @click="ed.azione('altrimenti', i.id)">＋ altrimenti</button>
         </div>

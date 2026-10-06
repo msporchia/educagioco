@@ -24,6 +24,7 @@ import { fai, guarda, confronta, piu, meno, N, tinta, progetto, programma, istru
 import { Mondo, camminaOmino } from '../../src/giochi/costruttore/motore/mondo.js'
 import { Esecuzione, TETTO_PILA, fraseDi, PERCHE } from '../../src/giochi/costruttore/motore/esecutore.js'
 import { provaLivello } from '../../src/giochi/costruttore/motore/prova.js'
+import { guida } from '../../src/giochi/costruttore/motore/guida.js'
 import * as mod from '../../src/giochi/costruttore/motore/modifica.js'
 import { conAttrezzi } from '../../src/giochi/costruttore/motore/attrezzi.js'
 import { righeDi, righeScritte, srotola, ciSta, chiamaSeStesso } from '../../src/giochi/costruttore/motore/zaino.js'
@@ -243,6 +244,8 @@ for (const l of LIVELLI) {
   }
   if (l.ordini.length > 1)
     controlla(`«${l.nome}»: con più ordini c'è almeno una mossa ingenua da far perdere`, (l.fragili || []).length > 0)
+  /* il programma scritto a metà non vince da solo: il resto tocca al bambino */
+  if (l.inizio) controlla(`«${l.nome}»: il programma di partenza non vince`, !provaLivello(l, l.inizio).vinto)
 
   /* la soluzione si scrive con la pulsantiera del livello: un blocco
      che il livello non offre è una soluzione che il bambino non può
@@ -494,6 +497,22 @@ for (const l of LIVELLI) {
   controlla('chi finisce tutto li prende tutti', presi.every(s => s.finito),
             presi.filter(s => !s.finito).map(s => `${s.id} fermo a ${s.valore}`).join(' · '))
   controlla('e l\'area vale esperienza', manifesto.albo.xp(mFinito) > 0)
+}
+
+/* ══════════ la guida del primo livello ══════════
+   Legge lo schermo, non un copione: chi fa le cose in un altro ordine
+   trova comunque la riga giusta. */
+{
+  const m = fai.metti('rosso'), v = fai.vai('destra', 1)
+  uguale('programma vuoto: si tocca «aggiungi»', guida({}).dove, 'aggiungi')
+  uguale('cassetta aperta dopo un metti: si tocca «vai»', guida({ righe: [m], cassetta: true }).dove, 'vai')
+  uguale('cassetta aperta dopo un vai: si tocca «metti»', guida({ righe: [m, v], cassetta: true }).dove, 'metti')
+  uguale('una casella da scegliere: nessun dito, la casella lampeggia già', guida({ righe: [v], problemi: true }).dove, null)
+  uguale('mai provato: si preme ▶', guida({ righe: [m, v] }).dove, 'via')
+  uguale('provato e cambiato: di nuovo ▶', guida({ righe: [m, v], provato: true, cambiato: true }).dove, 'via')
+  uguale('provato, mancano mattoni: si aggiunge', guida({ righe: [m, v], provato: true, mancano: true }).dove, 'aggiungi')
+  uguale('mentre gira tace', guida({ righe: [m, v], inCorso: true }), null)
+  uguale('provato e sbagliato in un altro modo: tace, parla il messaggio', guida({ righe: [m, v], provato: true }), null)
 }
 
 nota(`${COLORI.length} colori, ${LIVELLI.length} livelli in ${CAPITOLI.length} capitoli`)
