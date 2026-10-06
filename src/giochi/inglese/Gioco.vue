@@ -85,7 +85,7 @@ const ripresa = ref(diceSosta(sosta(CHIAVE)))
 const chiede = ref(null)             // { nome, avvia }: la tappa che butterebbe quella a metà
 const cartaRipresa = computed(() => {
   const r = ripresa.value
-  return r && { emoji: '🌐', nome: r.nome,
+  return r && { emoji: '🇬🇧', nome: r.nome,
                 dettaglio: `${r.mondo ? r.mondo + ' · ' : ''}✅ ${r.giuste} di ${r.bersaglio}` }
 })
 

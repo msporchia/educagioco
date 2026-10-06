@@ -1,6 +1,6 @@
 [← torna al README](../../README.md)
 
-# 🌐 English e 🇪🇸 Spagnolo
+# 🇬🇧 English e 🇪🇸 Spagnolo
 
 *Parole, frasi e storie.* L'inglese e lo spagnolo sono due **mappe del
 tesoro**, con sei isole ciascuna. Lo spagnolo ha un percorso suo: genere,

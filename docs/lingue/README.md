@@ -1,4 +1,4 @@
-# 🌐 English e 🇪🇸 Español
+# 🇬🇧 English e 🇪🇸 Español
 
 Tutte e due le lingue sono a mondi: l'inglese in `src/giochi/inglese/`, lo
 spagnolo in `src/giochi/spagnolo/` (un percorso suo, non una traduzione

@@ -12,7 +12,7 @@ export { CHIAVE }
 export default {
   chiave: CHIAVE,
   nome: 'English',
-  icona: '🌐',
+  icona: '🇬🇧',
   che: 'parole, frasi e un libro in inglese',
   area: 'parole',
   come: 'domande',

@@ -10,7 +10,7 @@ export const GENERALE_ATTIVO = true
 
 const AREE_TUTTE = [
   { id: 'mate',     nome: 'Tabelline Asteroidi', emoji: '☄️', classe: 'mate' },
-  { id: 'inglese',  nome: 'English',             emoji: '🌐', classe: 'eng' },
+  { id: 'inglese',  nome: 'English',             emoji: '🇬🇧', classe: 'eng' },
   { id: 'spagnolo', nome: 'Español',             emoji: '🇪🇸', classe: 'esp' },
   { id: 'torri',    nome: 'Difendi il Castello', emoji: '🏰', classe: 'td' },
   { id: 'bancarella', nome: 'La bancarella',       emoji: '🛒', classe: 'banco' },

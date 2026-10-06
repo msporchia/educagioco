@@ -10,7 +10,7 @@ export const LINGUE = {
     id: 'en',
     nome: 'inglese',              // come finisce nell'etichetta della domanda
     titolo: 'English',            // come si chiama il gioco
-    emoji: '🌐',
+    emoji: '🇬🇧',
     classe: 'eng',                // la carta in home e il colore
     campo: 'eng',                 // dove sta la campagna dentro il profilo
     vista: 'inglese',             // il nome della schermata in App.vue
