@@ -17,6 +17,8 @@
 }
 
 /* ═══════════ la mappa ═══════════ */
+/* la carta «torno da dove ero», sopra la mappa (giochi/Ripresa.vue) */
+.ing-ripresa { flex: none; display: flex; justify-content: center; padding: 6px 12px 0 }
 .ing-mappa { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
              padding-bottom: calc(16px + env(safe-area-inset-bottom)) }
 .ing-tavola { position: relative; margin: 0 auto }

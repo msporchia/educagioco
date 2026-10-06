@@ -17,10 +17,11 @@ export function usaOrologio() {
 
   function ferma() { clearTimeout(timer); timer = null; poi = null; attesa.value = 0 }
 
-  // una domanda nuova: il conto riparte, e per 320 ms il dito non vale
-  function riparti() {
+  // una domanda nuova: il conto riparte, e per 320 ms il dito non vale.
+  // `giaVisto` (secondi): una domanda ripresa dopo una sosta riparte da lì
+  function riparti(giaVisto = 0) {
     ferma()
-    visto = 0
+    visto = giaVisto * 1000
     partenza = performance.now()
     pronta.value = false
     clearTimeout(cieca)

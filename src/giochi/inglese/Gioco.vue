@@ -3,7 +3,7 @@
 // monete, contatori e profilo. Regole in `motore/`, tabelle in `dati/`, la
 // mappa in `scena/`, le schermate in `viste/`. Il progetto e l'interfaccia
 // col motore: docs/lingue/mondi.md.
-import { ref, shallowRef, computed, reactive, watch, onUnmounted } from 'vue'
+import { ref, shallowRef, computed, reactive, watch, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { state, item, answer, segna, persist, flushNow, engProgresso, tuttoAperto, etaDelBambino }
@@ -13,13 +13,14 @@ import { incassa, premioDetto } from '../../store/varieta.js'
 import { pronuncia, haVoce, prepara, zittisci } from '../../voce.js'
 import { troppoDiFretta, attesaDellEsito, PONDERA } from '../../quiz/nucleo/domanda.js'
 import { pesoDellaFretta } from '../../quiz/fretta.js'
-import { progresso } from '../campagne.js'
+import { progresso, sosta, salvaSosta, buttaSosta } from '../campagne.js'
+import Ripresa from '../Ripresa.vue'
 import LinguaGame from '../../views/LinguaGame.vue'
 
 import { CHIAVE, mondoDi, tappaDi } from './dati/mondi.js'
 import { CAPITOLI } from './dati/capitoli.js'
 import { pagaDi, pagaDelCapitolo } from './dati/monete.js'
-import { statoMappa, segnaVinta, tappaAperta, vinta } from './motore/mappa.js'
+import { statoMappa, segnaVinta, tappaAperta, cassettoAperto, vinta } from './motore/mappa.js'
 import { travasa } from './motore/travaso.js'
 import { Sessione } from './motore/sessione.js'
 import { Tocchi, domandeCheLPagano, domandaDelTocco } from './motore/tocchi.js'
@@ -29,6 +30,7 @@ import { capitoliDi, racconta, eGiusta } from './motore/libro.js'
 import { storieAperte, prossimaStoria, unAltraStoria, segnaLetta, cosaServeAlLibro, tiraLaStoria, segnaPuntata,
          puntataDopo } from './motore/storie.js'
 import { traduci } from './motore/lessico.js'
+import { scrivi as scriviSosta, leggi as leggiSosta, dice as diceSosta } from './motore/sosta.js'
 import * as F from './motore/fila.js'
 
 import Mappa from './viste/Mappa.vue'
@@ -78,6 +80,62 @@ const extra = computed(() => {
 // il gioco libero di prima resta a chi aveva finito la campagna vecchia (docs/lingue/mondi.md)
 const diPrima = computed(() => !!engProgresso().libera)
 
+/* ═══════════ la tappa lasciata a metà ═══════════ */
+const ripresa = ref(diceSosta(sosta(CHIAVE)))
+const chiede = ref(null)             // { nome, avvia }: la tappa che butterebbe quella a metà
+const cartaRipresa = computed(() => {
+  const r = ripresa.value
+  return r && { emoji: '🌐', nome: r.nome,
+                dettaglio: `${r.mondo ? r.mondo + ' · ' : ''}✅ ${r.giuste} di ${r.bersaglio}` }
+})
+
+function salva({ subito = false } = {}) {
+  if (vista.value !== 'tappa' || !sessione || !tappa.value) return
+  if (sessione.finita) vinci()       // uscire dopo l'ultima giusta: la tappa è vinta
+  const dato = finePronta || fine.value ? null : scriviSosta({
+    tappa: tappa.value, sessione, conti, domanda: esito.value ? null : d.value,
+    pagina: pagina.value || inArrivo, fila: fila.value, tocchi, pagaQui: pagaQui.value,
+    visto: d.value && !esito.value ? orologio.guardata() : 0,
+  })
+  if (!dato && !sosta(CHIAVE)) return
+  salvaSosta(CHIAVE, dato, { subito })
+}
+
+function scorda() {
+  buttaSosta(CHIAVE)
+  ripresa.value = null
+}
+
+// «Torno da dove ero»; se il salvataggio non torna, la carta sparisce e la mappa resta
+function riprendiPartita() {
+  const dato = sosta(CHIAVE)
+  const r = dato && leggiSosta(dato,
+    { itemDi: leggi, haVoce: haVoceOra, eta: etaDelBambino(), partenza: tuttoAperto() ? 2 : 0 },
+    { siGioca: t => (t.cassetto ? cassettoAperto(c, t.mondo, regole()) : tappaAperta(c, t.id, regole())) })
+  if (!r) return scorda()
+  sessione = r.sessione
+  tappa.value = r.tappa
+  Object.assign(conti, r.conti)
+  fine.value = null
+  finePronta = null
+  inArrivo = null
+  ripresa.value = null
+  vista.value = 'tappa'
+  if (r.tappa.parole) prepara(r.tappa.parole, 'en')
+  if (r.pagina) mostraPagina(r.pagina)
+  else if (r.aperta) mostra(r.aperta, r)
+  else prossima()
+}
+
+// una tappa nuova con una a metà in sospeso chiede prima, e non la butta in silenzio
+const vuole = (nome, avvia) => { if (ripresa.value) chiede.value = { nome, avvia }; else avvia() }
+function cominciaComunque() {
+  const f = chiede.value && chiede.value.avvia
+  chiede.value = null
+  scorda()
+  if (f) f()
+}
+
 function allaMappa() {
   orologio.ferma()
   zittisci()
@@ -87,13 +145,19 @@ function allaMappa() {
   d.value = null
   pagina.value = null
   libro.value = null
+  finePronta = null
+  inArrivo = null
+  ripresa.value = diceSosta(sosta(CHIAVE))
   ridisegna.value++
   vista.value = 'mappa'
 }
 
+// uscire a metà non butta via la tappa: si scrive dove si era (motore/sosta.js)
+// e la mappa la offre in cima. Vedi docs/lingue/sosta.md
 function indietro() {
-  if (vista.value === 'mappa') emit('vai', 'home')
-  else allaMappa()
+  if (vista.value === 'mappa') return emit('vai', 'home')
+  salva({ subito: true })
+  allaMappa()
 }
 
 /* ═══════════ una tappa (o il cassetto) ═══════════ */
@@ -108,6 +172,8 @@ const pagaQui = ref(true)
 const conti = reactive({ giuste: 0, errori: 0, monete: 0, chieste: 0, gradoPrima: null, bersaglio: 1 })
 const fine = ref(null)
 let prossimaId = null
+let finePronta = null                // il cartello di una tappa già vinta, che aspetta l'esito
+let inArrivo = null                  // la pagina del concetto che segue uno sbaglio, finché non compare
 let altraStoria = null               // la storia di «Un'altra storia», dal cartello di fine
 let puntataOfferta = null            // «Puntata 2 →», dal cartello di fine di una puntata
 
@@ -123,6 +189,8 @@ function avvia(t) {
   Object.assign(conti, { giuste: 0, errori: 0, monete: 0, chieste: 0, bersaglio: sessione.bersaglio,
                          gradoPrima: t.cassetto ? null : sessione.gradoIniziale })
   fine.value = null
+  finePronta = null
+  inArrivo = null
   vista.value = 'tappa'
   if (t.parole) prepara(t.parole, 'en')
   prossima()
@@ -133,16 +201,25 @@ const giocaCassetto = m => avvia(cassettoDi(m))
 function prossima() {
   const q = sessione && sessione.prossima()
   if (!q) return chiudiTappa()
+  mostra(q)
+}
+
+// `ripreso`: la domanda tornata da una sosta, con la fila, le parole già
+// toccate e il tempo già guardato; riparte com'era, senza rileggersi ad alta voce
+function mostra(q, ripreso = null) {
   if (q.genere === 'pagina') return mostraPagina(q)
   pagina.value = null
+  inArrivo = null
   d.value = q
-  fila.value = F.filaVuota(q)
+  fila.value = ripreso ? ripreso.fila : F.filaVuota(q)
   esito.value = null
   tocchi = new Tocchi({ itemDi: item })
-  pagaQui.value = true
+  if (ripreso) tocchi.toccate = new Map(ripreso.toccate)
+  pagaQui.value = ripreso ? ripreso.pagaQui : true
   bolla.value = null
-  orologio.riparti()
-  if (q.genere === 'parola' && q.domanda.ascolta) setTimeout(() => pronuncia(q.domanda.ascolta, 'en'), 260)
+  orologio.riparti(ripreso ? ripreso.visto : 0)
+  if (!ripreso && q.genere === 'parola' && q.domanda.ascolta) setTimeout(() => pronuncia(q.domanda.ascolta, 'en'), 260)
+  salva()
 }
 
 // la pagina non ha attesa: resta finché non tocca «Ho capito» (la finestra cieca sì)
@@ -151,8 +228,10 @@ function mostraPagina(p) {
   esito.value = null
   tocchi = null
   bolla.value = null
+  inArrivo = null
   pagina.value = p
   orologio.riparti()
+  salva()
 }
 function capito() {
   if (!pagina.value || !orologio.pronta.value) return
@@ -216,12 +295,19 @@ function rispondi(risposta, scelta) {
   const quanto = e.giusta ? 900
     : attesaDellEsito({ righe: ['Non così.', e.perche, e.siFa, giustaEra ? 'Si dice: ' + giustaEra : ''],
                         pavimento: PONDERA, penale: penale.attesa })
+  // la risposta è data e pagata: uscire adesso non la rifà (la domanda non è più aperta)
+  inArrivo = e.pagina || null
+  if (sessione.finita) vinci()
+  salva()
   // dopo troppi sbagli sullo stesso concetto, al posto dell'attesa torna la sua pagina
   if (e.pagina) return orologio.aspetta(1200, () => mostraPagina(e.pagina))
   orologio.aspetta(quanto, () => (sessione && sessione.finita ? chiudiTappa() : prossima()))
 }
 
-function chiudiTappa() {
+// La tappa vinta si registra appena data l'ultima risposta; il cartello
+// compare dopo l'esito (chiudiTappa). Così uscire in mezzo non perde la vittoria.
+function vinci() {
+  if (finePronta || fine.value || !tappa.value) return
   const t = tappa.value
   let primaVolta = false
   if (!t.cassetto) {
@@ -233,7 +319,7 @@ function chiudiTappa() {
   const m = t.cassetto ? null : mondoDellaTappa(t.id)
   const dopo = m ? m.tappe[m.tappe.findIndex(x => x.id === t.id) + 1] : null
   const avanti = dopo && !vinta(c, dopo.id) && tappaAperta(c, dopo.id, regole()) ? dopo : null
-  fine.value = {
+  finePronta = {
     titolo: t.cassetto ? 'Il cassetto è in ordine'
       : primaVolta ? (t.bandiera ? 'Il mondo è tuo!' : 'Tappa vinta!') : 'Tappa ripassata',
     sotto: t.cassetto ? mondoDi(t.mondo).nome : t.nome,
@@ -245,6 +331,13 @@ function chiudiTappa() {
     ancora: 'Rigioca',
   }
   prossimaId = avanti ? avanti.id : null
+}
+
+function chiudiTappa() {
+  vinci()
+  if (!finePronta) return
+  fine.value = finePronta
+  finePronta = null
   suono.livello()
 }
 
@@ -406,6 +499,7 @@ function svela(parola, centro, sopra, { storia = false } = {}) {
   if (t && t === tocchiLibro) libroPersi.value = t.aPagamento
   else if (t) pagaQui.value = t.paga
   if (t) persist()   // il conto dei tocchi gratis sta sull'elemento SRS della parola
+  if (t && t === tocchi) salva()   // una parola chiesta costa: uscire non la ridà
   const x = Math.min(innerWidth - 90, Math.max(90, centro))   // la nuvoletta resta dentro lo schermo
   bolla.value = { parola, it: r.it || '', costa: !r.gratis, x, y: sopra, storia }
   clearTimeout(bollaTimer)
@@ -442,6 +536,20 @@ const titolo = computed(() => {
   return 'English'
 })
 
+// il telefono che si mette in tasca: visibilitychange è l'ultimo momento in
+// cui si può ancora scrivere; prima di smontare, perché dopo il campo non c'è più
+function seSparisce(e) {
+  if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true })
+}
+onMounted(() => {
+  document.addEventListener('visibilitychange', seSparisce)
+  addEventListener('pagehide', seSparisce)
+})
+onBeforeUnmount(() => {
+  salva({ subito: true })
+  document.removeEventListener('visibilitychange', seSparisce)
+  removeEventListener('pagehide', seSparisce)
+})
 onUnmounted(() => { clearTimeout(bollaTimer); zittisci() })
 </script>
 
@@ -456,8 +564,14 @@ onUnmounted(() => { clearTimeout(bollaTimer); zittisci() })
       </div>
     </Barra>
 
+    <div v-if="vista === 'mappa' && cartaRipresa" class="ing-ripresa">
+      <Ripresa :ripresa="cartaRipresa" :chiede="chiede ? chiede.nome : ''"
+               @riprendi="chiede = null; riprendiPartita()" @scorda="scorda"
+               @comincia="cominciaComunque" @annulla="chiede = null" />
+    </div>
     <Mappa v-if="vista === 'mappa'" :stato="stato" :extra="extra" :prima="diPrima"
-           @tappa="giocaTappa" @libro="apriLibro" @cassetto="giocaCassetto" @prima="vista = 'prima'" />
+           @tappa="id => vuole(tappaDi(id).nome, () => giocaTappa(id))" @libro="apriLibro"
+           @cassetto="m => vuole('Il cassetto', () => giocaCassetto(m))" @prima="vista = 'prima'" />
 
     <div v-else-if="vista === 'tappa' && (d || pagina)" class="ing-palco">
       <div class="ing-conto" data-conto>
