@@ -167,14 +167,30 @@
 .cst-vuoto { color: var(--cst-tenue); font-size: 14px; margin: 6px 4px }
 
 .cst-righe { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px }
-.cst-righe.cst-dentro { margin: 4px 0 2px 16px; padding-left: 8px; border-left: 3px solid var(--cst-bordo) }
+.cst-righe.cst-dentro { margin: 4px 6px 4px 8px }
+/* il blocco abbraccia le sue righe: testa, barra a sinistra e fondo, a forma di C;
+   i colori li dà Righe.vue, uno per blocco */
+.cst-abbraccio { border-left: 10px solid var(--ab); border-radius: 12px; background: var(--ab-pancia) }
+.cst-abbraccio > .cst-riga { border-left: none; border-radius: 0 10px 10px 0 }
+.cst-fine, .cst-abbraccio > .cst-altrimenti {
+  display: flex; align-items: center; gap: 8px; padding: 2px 6px 2px 8px;
+  background: var(--ab); color: #fff; font-size: 12px; font-weight: 600;
+}
+/* il fondo della C: un bordino, che si allarga solo per «＋ altrimenti» */
+.cst-fine { min-height: 8px; padding: 0 4px; border-radius: 0 10px 10px 0 }
+.cst-fine:has(button) { padding: 3px 4px }
+.cst-abbraccio > .cst-altrimenti { min-height: 28px; font-size: 13px; margin: 2px 0 }
+.cst-fine button {
+  margin-left: auto; min-height: 30px; padding: 2px 10px; border-radius: 8px;
+  border: 1.5px dashed #fff; background: rgba(255,255,255,.18); color: #fff; font-size: 13px; font-weight: 600;
+}
 .cst-riga {
   display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
   padding: 6px 8px; border-radius: 10px; min-height: 40px;
   background: #fff; border: 1.5px solid var(--cst-bordo); font-size: 15px;
   transition: background .12s, border-color .12s;
 }
-.cst-riga.cst-blocco { background: #f5f0ff; border-color: #d6c9f2 }
+.cst-riga.cst-blocco { background: var(--ab-testa, #f5f0ff); border-color: var(--ab, #d6c9f2) }
 .cst-riga .cst-ico { font-size: 17px }
 .cst-riga.cst-sel { border-color: #5b8def; box-shadow: 0 0 0 2px #dbe6fd }
 .cst-riga.cst-accesa { background: var(--cst-giallo-chiaro); border-color: var(--cst-giallo); box-shadow: 0 0 0 3px #ffe29a }
@@ -221,7 +237,6 @@
   border: 1.5px dashed #5b8def; background: #f4f7fe; color: #2f5bb7; font-size: 13px; font-weight: 600;
 }
 
-.cst-altrimenti { margin: 4px 0 0 18px; font-size: 13px; font-weight: 600; color: #6b4fb0 }
 .cst-piu {
   align-self: flex-start; min-height: 34px; padding: 4px 12px; border-radius: 10px;
   border: 1.5px dashed var(--cst-bordo); background: transparent; color: var(--cst-tenue); font-size: 15px;

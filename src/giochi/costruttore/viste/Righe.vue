@@ -16,10 +16,31 @@ const props = defineProps({
   bloccata: { type: Boolean, default: false },
   /* dentro la riga che si sta spostando: qui non si posa */
   senzaPosti: { type: Boolean, default: false },
+  /* i colori dei blocchi che contengono questo elenco: un blocco dentro non li ripete */
+  tinte: { type: Array, default: () => [] },
 })
 
 const ed = inject('editore')
 const conCorpo = i => ['ripeti', 'finche', 'sempre', 'se'].includes(i.tipo)
+/* un blocco abbraccia le sue righe e si chiude con una barra, col colore
+   suo: la sola rientranza non diceva a un bambino cosa sta dentro
+   (docs/costruttore/linguaggio.md). Il colore viene dall'id, quindi resta
+   finché il blocco esiste; se lo ha già chi lo contiene, si passa al dopo. */
+const TINTE = [
+  ['#8a6fd1', '#ece5fb', '#f8f5fe'], ['#e0892b', '#fcebd6', '#fef7ee'], ['#2a9488', '#dcf2ef', '#f2faf9'],
+  ['#3f74d6', '#dfe8fb', '#f3f7fe'], ['#cf4f93', '#f9e0ee', '#fdf3f8'], ['#6f9a2e', '#e6f1d6', '#f6faef'],
+]
+function tinta(i) {
+  const n = parseInt(String(i.id).replace(/\D/g, ''), 10) || 0
+  let t = n % TINTE.length
+  while (props.tinte.includes(t) && props.tinte.length < TINTE.length) t = (t + 1) % TINTE.length
+  return t
+}
+const stileDi = i => {
+  if (!conCorpo(i)) return null
+  const [ab, testa, pancia] = TINTE[tinta(i)]
+  return { '--ab': ab, '--ab-testa': testa, '--ab-pancia': pancia }
+}
 /* ferme mentre il programma gira, e sempre in un attrezzo */
 const ferma = () => ed.sola.value || props.bloccata
 
@@ -69,7 +90,7 @@ const apertaQui = i => ed.aperta.value && ed.aperta.value.id === i.id
     <li v-if="postoSopra(k)" class="cst-riga-posto">
       <button type="button" class="cst-posa" :data-posa="'prima:' + i.id" @click="ed.posa({ prima: i.id })">📥 qui</button>
     </li>
-    <li class="cst-riga-posto">
+    <li class="cst-riga-posto" :class="{ 'cst-abbraccio': conCorpo(i) }" :style="stileDi(i)">
       <div class="cst-riga" :data-riga="i.id"
            :class="{ 'cst-sel': ed.sel.value === i.id, 'cst-accesa': ed.accesa.value === i.id,
                      'cst-in-mano': mano() && mano().id === i.id,
@@ -114,14 +135,20 @@ const apertaQui = i => ed.aperta.value && ed.aperta.value.id === i.id
       <!-- i corpi dei blocchi -->
       <template v-if="conCorpo(i)">
         <Righe :righe="i.corpo || i.allora || []" :profondita="profondita + 1" :bloccata="bloccata"
+               :tinte="[...tinte, tinta(i)]"
                :senza-posti="senzaPosti || !!(spostando() && mano().id === i.id)"
                :dove="{ progetto: dove.progetto, dentro: i.id, ramo: i.tipo === 'se' ? 'allora' : 'corpo' }" />
         <template v-if="i.tipo === 'se' && i.altrimenti">
-          <div class="cst-altrimenti">altrimenti</div>
+          <div class="cst-altrimenti" data-altrimenti>altrimenti</div>
           <Righe :righe="i.altrimenti" :profondita="profondita + 1" :bloccata="bloccata"
+                 :tinte="[...tinte, tinta(i)]"
                  :senza-posti="senzaPosti || !!(spostando() && mano().id === i.id)"
                  :dove="{ progetto: dove.progetto, dentro: i.id, ramo: 'altrimenti' }" />
         </template>
+        <div class="cst-fine" :data-fine="i.id">
+          <button v-if="i.tipo === 'se' && !i.altrimenti && !ferma() && !mano()" type="button"
+                  data-azione="aggiungi-altrimenti" @click="ed.azione('altrimenti', i.id)">＋ altrimenti</button>
+        </div>
       </template>
     </li>
     </template>

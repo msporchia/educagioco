@@ -72,6 +72,21 @@ per aria non dava nessun ordine alle cose.
   robot non mette (nei nidi si mette il giallo e si guarda il rosso). Capire
   quale domanda ha senso fa parte della sfida.
 
+## Cosa sta dentro un blocco
+
+- **Ogni blocco abbraccia le sue righe a forma di C** (`viste/Righe.vue`):
+  testa, barra a sinistra e un bordino in fondo, dello stesso colore. La
+  sola rientranza era chiara a un grande, non a un bambino; una scritta
+  sul fondo («fin qui si ripete») non serviva, basta il colore.
+- **Ogni blocco ha un colore suo**, da una tavolozza di sei, preso dall'id:
+  lo tiene finché esiste, e se lo ha già chi lo contiene passa al dopo.
+  Niente colore per tipo: anche i «se» si annidano.
+- **L'altrimenti ha il colore del suo «se»**, una barra a metà della C; e
+  «＋ altrimenti» sta in vista sul fondo di ogni «se» che non ce l'ha,
+  invece che fra i tasti della riga selezionata.
+
+Nei test: `[data-fine]`, `[data-altrimenti]`, `[data-azione="aggiungi-altrimenti"]`.
+
 ## Le parole degli aiuti
 
 - **Un programma non «gira» e non «si esegue»: si preme ▶ e si guarda.**
