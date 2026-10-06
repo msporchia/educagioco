@@ -286,10 +286,11 @@ export async function parti(page, quale) {
   await page.click('[data-fumetto] [data-azione="parti"]')
 }
 
-/* Parte una tappa di Passo passo dalla mappa delle isole: si aspetta che
-   il segnalino sia fermo (un tocco durante il viaggio lo chiude e basta),
-   poi il tocco lo fa saltare fin lì e apre il fumetto, e «gioca» la
-   comincia (docs/passo-passo/mappa.md). `quale` è l'indice della tappa,
+/* Parte una tappa di Passo passo dalla mappa delle isole: il tocco apre
+   subito il fumetto sulla tappa (il segnalino ci va intanto) e «gioca» la
+   comincia anche a viaggio in corso (docs/passo-passo/mappa.md). Qui si
+   aspetta comunque il segnalino fermo: la mappa che lo segue scorrendo
+   sposterebbe la casella sotto il click. `quale` è l'indice della tappa,
    'senza-fine', o un selettore. */
 export async function giocaSullIsola(page, quale) {
   const sel = typeof quale === 'string' && /[\[.#]/.test(quale) ? quale : `[data-mappa] [data-tappa="${quale}"]`

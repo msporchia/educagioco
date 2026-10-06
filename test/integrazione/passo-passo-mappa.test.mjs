@@ -1,7 +1,9 @@
 /* La mappa delle isole di Passo passo, col dito vero: il tocco su una
-   casella apre il fumetto e non parte niente, trascinare scorre e basta,
-   fuori si chiude; una chiusa dice cosa manca e non fa partire niente; il
-   segnalino salta fino alla casella toccata; «gioca» comincia, e il ▶ a
+   casella apre il fumetto subito e non parte niente, trascinare scorre e
+   basta, fuori si chiude; una chiusa dice cosa manca e non fa partire
+   niente; il segnalino salta fino alla casella toccata mentre il fumetto
+   è già lì, un altro tocco cambia fumetto e meta, e «gioca» parte anche a
+   viaggio in corso; «gioca» comincia, e il ▶ a
    fine partita resta sulla strada maestra; al bivio si va sull'isola del
    cane e il segnalino diventa il cane (e torna coniglio); la strada del
    coniglio va avanti senza fare il cane. Il dito passa da CDP
@@ -32,6 +34,18 @@ const centro = async sel => {
   return [Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2)]
 }
 const toccaSu = async sel => { const [x, y] = await centro(sel); await tocco(x, y) }
+// un tocco che non aspetta: chi guarda il viaggio lo guarda mentre dura
+const toccoVivo = async sel => {
+  const [x, y] = await centro(sel)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
+  await attendi(page, 40)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+}
+// dove sta il fumetto sulla mappa (non sullo schermo: lo scorrimento non c'entra)
+const postoFumetto = () => page.evaluate(() => {
+  const f = document.querySelector('[data-fumetto]')
+  return f ? `${f.style.left}/${f.style.top}` : null
+})
 const casella = i => `[data-mappa] [data-tappa="${i}"]`
 const segnalino = () => page.evaluate(() => ({ ...document.querySelector('[data-segnalino]').dataset }))
 const fermo = () => page.waitForSelector('[data-segnalino][data-in-viaggio="0"]', { timeout: 8000 })
@@ -128,32 +142,64 @@ await toccaSu(casella(STALLE))
 }
 await toccaFuori()
 
-/* ══════════ 4. il segnalino salta fino alla casella toccata ══════════ */
-await toccaSu(casella(TUTTO - 2))
-await page.waitForSelector('[data-segnalino][data-in-viaggio="1"]', { timeout: 2000 })
+/* ══════════ 4. il fumetto è subito sulla meta, e il segnalino ci va ══════════ */
+await toccoVivo(casella(TUTTO - 4))
+uguale('il fumetto della meta c\'è subito', await fumettoPer(), String(TUTTO - 4))
 {
+  const s = await segnalino()
+  uguale('mentre il segnalino sta ancora saltando', s.inViaggio, '1')
+  controlla('e non è ancora arrivato', s.al !== String(TUTTO - 4), s.al)
+  const posto = await postoFumetto()
   const prima = await page.locator('[data-segnalino]').evaluate(e => e.style.transform)
   await attendi(page, 120)
   await scatto(page, 'passo-mappa-salto')
   const durante = await page.locator('[data-segnalino]').evaluate(e => e.style.transform)
   controlla('il coniglio salta', prima !== durante, `${prima} → ${durante}`)
+  uguale('il fumetto resta fermo dov\'è', await postoFumetto(), posto)
+  controlla('e sta sopra il segnalino, mai dietro', await page.evaluate(() => {
+    const z = sel => Number(getComputedStyle(document.querySelector(sel)).zIndex)
+    return z('[data-fumetto]') > z('[data-segnalino]')
+  }))
+  controlla('si può già premere «gioca»', await page.locator('[data-fumetto] [data-azione="parti"]').count() === 1)
+}
+
+/* un altro tocco durante il viaggio: il fumetto passa subito alla nuova tappa e
+   il segnalino cambia meta da dove si trova */
+await toccoVivo(casella(TUTTO - 6))
+uguale('un tocco durante il salto cambia il fumetto subito', await fumettoPer(), String(TUTTO - 6))
+uguale('e il segnalino sta ancora viaggiando', (await segnalino()).inViaggio, '1')
+await fermo()
+uguale('arriva alla nuova meta, non alla prima', (await segnalino()).al, String(TUTTO - 6))
+uguale('il fumetto è ancora quello della meta', await fumettoPer(), String(TUTTO - 6))
+
+/* un tocco fuori chiude il fumetto, ma il viaggio finisce */
+await toccoVivo(casella(TUTTO - 2))
+uguale('di nuovo il fumetto subito', await fumettoPer(), String(TUTTO - 2))
+{
+  const [x, y] = await vuoto()
+  await tocco(x, y)
+  uguale('un tocco fuori chiude il fumetto', await page.locator('[data-fumetto]').count(), 0)
 }
 await fermo()
-uguale('e arriva sulla casella toccata', (await segnalino()).al, String(TUTTO - 2))
-uguale('poi si apre il suo fumetto', await fumettoPer(), String(TUTTO - 2))
+uguale('e il segnalino arriva lo stesso', (await segnalino()).al, String(TUTTO - 2))
+uguale('senza riaprire il fumetto', await page.locator('[data-fumetto]').count(), 0)
 
-/* un tocco durante il viaggio lo chiude, e non apre niente */
+/* una chiusa: il fumetto subito, e il segnalino non si muove */
+await toccoVivo(casella(TAPPE_PRIME))
+controlla('una chiusa dà il suo fumetto subito', (await page.locator('[data-fumetto] [data-serve]').count()) === 1)
+await attendi(page, 300)
+uguale('e il segnalino non parte', (await segnalino()).inViaggio, '0')
+uguale('resta dov\'era', (await segnalino()).al, String(TUTTO - 2))
 await toccaFuori()
-await toccaSu(casella(TUTTO))
-await page.waitForSelector('[data-segnalino][data-in-viaggio="1"]', { timeout: 2000 })
-await toccaFuori()
-uguale('un tocco durante il salto lo fa arrivare subito', (await segnalino()).inViaggio, '0')
-uguale('senza aprire il fumetto', await page.locator('[data-fumetto]').count(), 0)
-uguale('ed è arrivato', (await segnalino()).al, String(TUTTO))
 
 /* ══════════ 5. «gioca» comincia; vinta, il ▶ resta sulla strada maestra ══════════ */
-await toccaSu(casella(TUTTO))
-await toccaSu('[data-fumetto] [data-azione="parti"]')
+// il segnalino è lontano e sta ancora saltando: «gioca» parte lo stesso
+await toccoVivo(casella(TUTTO))
+{
+  const s = await segnalino()
+  uguale('il segnalino è in viaggio', s.inViaggio, '1')
+  await page.evaluate(() => document.querySelector('[data-fumetto] [data-azione="parti"]').click())
+}
 await page.waitForSelector('.pp-campo', { timeout: 5000 })
 controlla('«gioca» comincia la tappa', (await page.locator('.barra-app .dove').innerText()).includes(CAMPAGNA[TUTTO].nome))
 await attendi(page, 450)
