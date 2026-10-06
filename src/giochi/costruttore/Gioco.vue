@@ -1,11 +1,11 @@
 <script setup>
 /* Il coordinatore: l'unico file che sa di monete, profilo e archivio.
    Vedi docs/costruttore/campagna.md. */
-import { ref, reactive, computed, shallowRef, watch, nextTick, onUnmounted } from 'vue'
+import { ref, reactive, computed, shallowRef, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { state, addCoins, segna, spendi } from '../../store/profile.js'
-import { load, save } from '../../store/storage.js'
+import { load, save, flush } from '../../store/storage.js'
 import { progresso, aperta, adesso, chiusaPerEta, stelleDi, completa, scelta, ricorda,
          aiutiPresi, segnaAiutiPresi } from '../campagne.js'
 import { scrive as scriveNelProgramma, SVELA } from '../aiuti.js'
@@ -69,6 +69,7 @@ function salvaOra() {
   clearTimeout(salvaTimer)
   if (!state.player) return
   save(chiaveArchivio(), { v: VERSIONE, programmi: JSON.parse(JSON.stringify(archivio.programmi)) })
+  flush()      // `save` aspetta 350 ms: uscendo, la pagina può sparire prima
 }
 const salvaPresto = () => { clearTimeout(salvaTimer); salvaTimer = setTimeout(salvaOra, 500) }
 
@@ -605,7 +606,20 @@ watch(() => stato.guasto, id => {
 const tabMostrato = computed(() =>
   stato.inCorso && !stato.montaggio && velocita.value !== 'veloce' ? stato.progetto : tab.value)
 
-onUnmounted(() => { regia?.ferma(); salvaOra(); clearTimeout(ricominciaTimer) })
+// Scheda nascosta o chiusa: l'ultimo momento utile per scrivere il programma (docs/costruttore/campagna.md).
+// Il listener di storage.js gira prima e ha già svuotato la coda: qui si riscrive e si svuota di nuovo.
+function seSparisce(e) {
+  if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salvaOra()
+}
+onMounted(() => {
+  document.addEventListener('visibilitychange', seSparisce)
+  addEventListener('pagehide', seSparisce)
+})
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', seSparisce)
+  removeEventListener('pagehide', seSparisce)
+  regia?.ferma(); salvaOra(); clearTimeout(ricominciaTimer)
+})
 
 const titolo = computed(() => (liv.value ? liv.value.nome : 'Il costruttore'))
 const progettoAperto = computed(() =>

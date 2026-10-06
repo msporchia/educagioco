@@ -22,6 +22,15 @@ prezzo, un premio o un rifiuto.
   premio in esperienza sta sotto il tempo che costa: `premio ≤ 🪙6·minuti`
   (`guastiDelMercato`, `guastiDellaMongolfiera`).
 
+## Il salvataggio
+
+- **`salva()` scrive fra 1,2 s dentro il ciclo dei fotogrammi**, che a scheda
+  nascosta si ferma: per questo `salvaOra({ subito: true })` scrive e
+  svuota la coda (`flushNow`) su `visibilitychange` (pagina nascosta),
+  `pagehide` e smontaggio, e l'ultimo gesto non si perde. Nei test:
+  `integrazione/fattoria-salvataggio` (si compra un pezzo di terra, si
+  nasconde la pagina, si ricarica; mai con `#fattoria-tipo=`).
+
 ## Quello che non succede mai
 
 - **Niente marcisce.** Un campo maturo resta maturo, una macchina che ha

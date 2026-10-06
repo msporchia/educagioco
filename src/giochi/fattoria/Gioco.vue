@@ -3,7 +3,7 @@
    in dati/. Salva in profile.campagne.fattoria.cfg.stato, a ritardo. Vedi docs/fattoria/regole.md. */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, toRaw } from 'vue'
 import Barra from '../../components/Barra.vue'
-import { state, addCoins, segna, segnaBest, aspettoDi, cestinaOra } from '../../store/profile.js'
+import { state, addCoins, segna, segnaBest, aspettoDi, cestinaOra, flushNow } from '../../store/profile.js'
 import { scelta, ricorda } from '../campagne.js'
 
 import { Fattoria } from './motore/fattoria.js'
@@ -150,11 +150,18 @@ function reclama(chiave) {
   annotaIPremi()
   salvaOra()
 }
-function salvaOra() {
+function salvaOra({ subito = false } = {}) {
   salvaFra = 0
   if (!mondo) return
   annotaLeBestie()
   ricorda(CHIAVE, 'stato', mondo.serializza())
+  if (subito) flushNow()      // `ricorda` scrive con 350 ms di ritardo: uscendo, la pagina può sparire prima
+}
+
+// Scheda nascosta o chiusa: il ciclo rAF si ferma e il ritardo del salvataggio non scatta più
+// (docs/fattoria/regole.md). Il listener di storage.js gira prima: qui si riscrive e si svuota di nuovo.
+function seSparisce(e) {
+  if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salvaOra({ subito: true })
 }
 
 // Si scrive solo al salvataggio, non a ogni passo: il motore non deve sapere che si cammina 20 volte al secondo.
@@ -239,6 +246,8 @@ onMounted(() => {
   scena.avvia()
   giro = requestAnimationFrame(passo)
   addEventListener('resize', vaiACasa)
+  document.addEventListener('visibilitychange', seSparisce)
+  addEventListener('pagehide', seSparisce)
   // Un puntatore può finire fuori dal canvas (mouse trascinato oltre la finestra, app in secondo
   // piano, gesto preso dal sistema): questi tre ascolti fermano solo lo scorrimento.
   addEventListener('pointerup', fermaLaSpinta)
@@ -255,7 +264,9 @@ onBeforeUnmount(() => {
   removeEventListener('pointerup', fermaLaSpinta)
   removeEventListener('pointercancel', fermaLaSpinta)
   removeEventListener('blur', fermaLaSpinta)
-  salvaOra()
+  document.removeEventListener('visibilitychange', seSparisce)
+  removeEventListener('pagehide', seSparisce)
+  salvaOra({ subito: true })
 })
 
 // Quelle senza sprite si saltano in silenzio: restano salvate, torneranno con il disegno.
