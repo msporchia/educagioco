@@ -89,7 +89,7 @@ const apertaQui = i => ed.aperta.value && ed.aperta.value.id === i.id
           <span v-else class="cst-testo" :class="{ 'cst-nome-prog': p.progetto, 'cst-misura': p.misura }">{{ p.testo }}</span>
         </template>
         <span v-if="ed.giro.value && ed.giro.value.id === i.id" class="cst-giro">
-          giro {{ ed.giro.value.n }}<template v-if="ed.giro.value.di"> di {{ ed.giro.value.di }}</template>
+          volta {{ ed.giro.value.n }}<template v-if="ed.giro.value.di"> di {{ ed.giro.value.di }}</template>
         </span>
       </div>
 

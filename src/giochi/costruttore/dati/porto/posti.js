@@ -81,7 +81,7 @@ export const LIVELLI_POSTI = [
       'Fai finta di avere in mano una cassa verde: cosa fa il robot dal piazzale? E con una rossa, e con una blu? Da cosa capisce quale dei tre lavori gli tocca?',
     ],
     indizi: [
-      'Un giro per ogni cassa: prendila ← dal deposito, esci, fai il lavoro del suo colore, rientra. Finché nel deposito c\'è qualcosa.',
+      'Lo stesso lavoro per ogni cassa: prendila ← dal deposito, esci, fai il lavoro del suo colore, rientra. E si ripete finché nel deposito c\'è qualcosa.',
       'Dal piazzale: il cassone verde è 6 passi a sinistra, la nave 1 passo su, la bottega 5 passi a destra. Si posa di fianco, e si torna al piazzale.',
       '«se ✋ c\'è una cassa verde» fa il lavoro del cassone; altrimenti, dentro, «se ✋ c\'è una cassa rossa» quello della nave; altrimenti la bottega.',
     ],

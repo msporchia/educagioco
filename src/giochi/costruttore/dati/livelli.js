@@ -133,7 +133,7 @@ const DEL_CANTIERE = [
     ],
     indizi: [
       'Quello che fai per un mattone è sempre uguale: metti, e un passo a destra.',
-      '«Ripeti N volte» esegue quello che ha dentro N volte: mettici dentro il mattone e il passo, e al posto di N scegli 10.',
+      '«Ripeti N volte» fa N volte quello che ha dentro: mettici dentro il mattone e il passo, e al posto di N scegli 10.',
     ],
     soluzione: programma({ principale: [
       fai.ripeti(10, [fai.metti('rosso'), fai.vai('destra', 1)]),
@@ -220,7 +220,7 @@ const DEL_CANTIERE = [
     cassetta: ['vai', 'metti', 'ripeti'], colori: ['rosso'],
     ragiona: [
       '«largo» e «alto» cambiano tutti e due: il muro è 6 × 3 in un ordine e 4 × 5 nell\'altro. E il lavoro si ripete in due direzioni: in su, e verso destra.',
-      'Comincia da una colonna sola e falla girare: quale lavagnetta dice quanti mattoni ha, e dove finisce il robot? Poi guarda il muro intero: cosa si ripete, e quante volte?',
+      'Comincia da una colonna sola, premi ▶ e guarda cosa fa il robot: quale lavagnetta dice quanti mattoni ha, e dove finisce il robot? Poi guarda il muro intero: cosa si ripete, e quante volte?',
     ],
     indizi: [
       'Una colonna è «ripeti alto volte: metti un mattone sotto i piedi».',
@@ -448,7 +448,7 @@ const DEL_CANTIERE = [
     cassetta: ['vai', 'metti', 'ripeti', 'se'], colori: ['rosso', 'giallo'],
     ragiona: [
       'I muri sono lunghi 7 e 10, e 7 è dispari: a coppie rosso-giallo non torna mai. Ogni mattone deve scegliere da solo il suo colore, e il robot non si ricorda quello di prima.',
-      'Fai girare piano 🐢 un programma di prova e guarda il robot prima di ogni mattone: cosa ha accanto, che gli dica il colore giusto? E al primo mattone di tutti, lì accanto cosa c\'è?',
+      'Scrivi un programma di prova, metti la tartaruga 🐢 e premi ▶: guarda il robot prima di ogni mattone: cosa ha accanto, che gli dica il colore giusto? E al primo mattone di tutti, lì accanto cosa c\'è?',
     ],
     indizi: [
       'Dopo il passo, il mattone appena messo il robot ce l\'ha ← a sinistra: basta guardarlo per sapere quale colore tocca.',

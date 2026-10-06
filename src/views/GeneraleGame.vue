@@ -955,7 +955,7 @@ async function ridimensiona () {
           con <b>{{ finito.ordini }} ordin{{ finito.ordini === 1 ? 'e' : 'i' }}</b>.
           {{ finito.caduti ? (finito.caduti === 1 ? 'Ma uno dei tuoi è rimasto sul campo: questa vale una stella. Portali a casa tutti, e sono due.'
                                                   : `Ma ${finito.caduti} dei tuoi sono rimasti sul campo: questa vale una stella. Portali a casa tutti, e sono due.`)
-             : finito.svelato === 'svela' ? 'Questa volta il piano te l’ho scritto io: vale una stella. Adesso che l’hai visto girare, riprova a scriverlo tu — e sono due.'
+             : finito.svelato === 'svela' ? 'Questa volta il piano te l’ho scritto io: vale una stella. Adesso che l’hai visto funzionare, riprova a scriverlo tu — e sono due.'
              : finito.svelato === 'forma' ? 'La forma te l’ho data io, i bersagli li hai trovati tu.'
              : finito.svelato ? 'Un pezzo di piano te l’ho scritto io, il resto l’hai trovato tu.'
              : 'Questo piano l’hai scritto tutto tu.' }}</p>

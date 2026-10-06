@@ -72,6 +72,14 @@ per aria non dava nessun ordine alle cose.
   robot non mette (nei nidi si mette il giallo e si guarda il rosso). Capire
   quale domanda ha senso fa parte della sfida.
 
+## Le parole degli aiuti
+
+- **Un programma non «gira» e non «si esegue»: si preme ▶ e si guarda.**
+  Il robot gira davvero, e chi non sa cos'è un ciclo sente il movimento,
+  non il programma che parte. Vale anche per il Generale.
+- **Le ripetizioni si contano a «volte»**, come dice il blocco «ripeti N
+  volte»: «la volta dopo», «una cassa per volta», mai «il giro dopo».
+
 ## La scelta di una casella (`viste/Scelta.vue`)
 
 - **Un numero può essere un conto con una sola operazione** («h + 1»): dalla
@@ -131,7 +139,7 @@ vedi [../core/grafica.md](../core/grafica.md)).
 - **L'esecutore è un generatore** che srotola il programma **un fatto per
   volta** — un `yield` per chiamata di `prossimo()` — e `regia.js` li anima.
 - È così che mentre gira la riga che lavora si accende, le lavagnette
-  cambiano sotto gli occhi, un ripeti dice a che giro è, e **la scheda di un
+  cambiano sotto gli occhi, un ripeti dice a che volta è («volta 3 di 7»), e **la scheda di un
   progetto si apre con le misure di quella chiamata** («rettangolo · largo 2
   · alto 5»): la pila delle chiamate fatta vedere.
 - **Un generatore e non una pila propria**, perché la ricorsione del

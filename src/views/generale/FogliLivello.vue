@@ -56,7 +56,7 @@ const FACCIA = {
            sotto: 'ti scrivo quali ordini e in che disposizione: i bersagli li trovi tu',
            fatto: 'La struttura è nel piano' },
   svela: { em: '✅', tasto: 'Svelami la soluzione', ancora: 'Svelami la soluzione',
-           sotto: 'ti scrivo il piano intero: premi ▶ e guardalo girare',
+           sotto: 'ti scrivo il piano intero: premi ▶ e guarda cosa succede',
            fatto: 'Il piano è scritto' },
 }
 const faccia = p => (p && FACCIA[p.aiuto]) || FACCIA.dice

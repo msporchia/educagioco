@@ -490,7 +490,7 @@ const FRASI_OMINO = {
   splash: 'Splash! L\'omino è finito in acqua.',
   caduta: 'Ahia! Un salto troppo alto per l\'omino.',
   fuori: 'L\'omino è uscito dal cantiere.',
-  perso: 'L\'omino gira a vuoto e non arriva alla bandiera.',
+  perso: 'L\'omino cammina e cammina, ma alla bandiera non arriva.',
 }
 const quanti = (n, uno, tanti) => `${n} ${n === 1 ? uno : tanti}`
 function fraseConfronto(c) {

@@ -42,7 +42,7 @@ const AL_CONTRARIO = {
     'Nel cassone le casse stanno una sull\'altra, e si prende sempre quella in cima. Quale esce per prima: la prima che ci è entrata, o l\'ultima?',
   ],
   indizi: [
-    'Due giri: nel primo tutte le casse del nastro vanno nel cassone, una alla volta; nel secondo escono dal cassone e scendono sul nastro del camion.',
+    'Due «ripeti», uno dopo l\'altro: nel primo tutte le casse del nastro vanno nel cassone, una alla volta; nel secondo escono dal cassone e scendono sul nastro del camion.',
     'Il primo: prendi →, posa ↑, finché a destra non c\'è più niente. Il secondo: prendi ↑, posa ↓, finché nel cassone non c\'è più niente.',
   ],
   soluzione: programma({ principale: [

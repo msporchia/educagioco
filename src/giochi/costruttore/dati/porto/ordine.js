@@ -184,7 +184,7 @@ export const IN_ORDINE = [
     indizi: [
       'Il confronto di due vicine è quello di «Due lettere»: prima diventa 📖 ↑, un passo a destra, dopo diventa 📖 ↑, e se prima è maggiore di dopo, scambia.',
       'Lo scaffale ha «lettere» lettere, cioè «lettere − 1» coppie di vicine: ripeti il confronto tante volte quante sono le coppie.',
-      'Lo scambio lascia il robot dov\'era, sotto la lettera di destra: è lì che il giro dopo legge la «prima».',
+      'Lo scambio lascia il robot dov\'era, sotto la lettera di destra: è lì che, la volta dopo, legge la «prima».',
     ],
     soluzione: programma({ lavagnette: ['prima', 'dopo'], principale: [passata()] }),
     fragili: [
@@ -409,7 +409,7 @@ export const IN_ORDINE = [
     impara: 'unire due file in ordine', portata: 98, premio: 40,
     mondo: 'porto', tema: 'molo', prova: 'giornata',
     chi: { emoji: '🚚', nome: 'L\'autista' },
-    racconto: 'Due postini mi hanno già consegnato le lettere in ordine, su due nastri. Io le voglio in una fila sola, in ordine: a ogni giro, prendi la più piccola delle due che hai davanti.',
+    racconto: 'Due postini mi hanno già consegnato le lettere in ordine, su due nastri. Io le voglio in una fila sola, in ordine: ogni volta prendi la più piccola delle due che hai davanti.',
     ordini: [
       giornoCerniera('lunedì', [1, 2, 3], [4, 5, 6]),
       giornoCerniera('martedì', [1, 3, 5, 7], [2, 4, 6]),

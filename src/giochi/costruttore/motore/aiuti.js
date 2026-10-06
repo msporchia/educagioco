@@ -76,7 +76,7 @@ export function pezzoDi(liv) {
     const giro = dentro.map(senzaDomande)
     return { sostituisce: 'principale', programma: { principale: giro, progetti: [], lavagnette },
              dati: giro,
-             testo: 'Ti ho scritto il lavoro di un giro, fuori dal blocco che lo contiene. Quale blocco, quante volte o fino a quando, e le domande: quelle le scegli tu.' }
+             testo: 'Ti ho scritto il lavoro da fare una volta, fuori dal blocco che lo ripete. Quale blocco, quante volte o fino a quando, e le domande: quelle le scegli tu.' }
   }
   return null
 }

@@ -259,10 +259,10 @@ export const GIORNATE = [
     attrezzi: [attrezzoCerca()],
     ...consigli([
       'Dallo stesso posto arrivano due lavori: i camion da caricare sotto, i clienti al bancone a sinistra. Se ne fai uno solo, l\'altro aspetta finché si stufa.',
-      'A ogni giro chiediti: c\'è qualcuno che aspetta? Chi? E se non c\'è nessuno, cosa fa il robot perché il tempo passi?',
+      'Ogni volta che il lavoro ricomincia, chiediti: c\'è qualcuno che aspetta? Chi? E se non c\'è nessuno, cosa fa il robot perché il tempo passi?',
     ], [
-      'Un giro solo, per sempre, che ogni volta guarda sotto e a sinistra e fa un pezzo del lavoro che trova.',
-      'Per il camion basta una cassa per giro: al giro dopo si guarda di nuovo, così un cliente arrivato nel frattempo non resta lì.',
+      'Un «ripeti» solo, per sempre, che ogni volta guarda sotto e a sinistra e fa un pezzo del lavoro che trova.',
+      'Per il camion basta una cassa per volta: la volta dopo si guarda di nuovo, così un cliente arrivato nel frattempo non resta lì.',
       '«se ↓ c\'è un camion»: «prendi ↑», «posa ↓». Altrimenti, «se ← c\'è un cliente»: servilo con «cerca». Altrimenti: «aspetta un turno».',
     ]),
     soluzione: programma({
