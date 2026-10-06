@@ -49,6 +49,8 @@ export const NOVITA = [
     testo: '🕯️ Nel sotterraneo le discese hanno posti diversi: cantine, cripta e fornace' },
   { id: 24, quando: '2026-10-05', gioco: 'fattoria',
     testo: '🎃 Gli animali della fattoria si sono travestiti per Halloween' },
+  { id: 25, quando: '2026-10-06', gioco: 'sotterraneo',
+    testo: '🗝️ Il Dungeon ha chiuso le sue porte: l\'avventura continua nel sotterraneo, più grande e tutto da esplorare' },
 ]
 
 export const PER_GIOCO = 4
