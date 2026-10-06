@@ -29,7 +29,7 @@
    `node test/esegui.mjs pausa-asteroidi --niente-build`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, attendi, scatto, leggiProfilo, scegli } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, attendi, scatto, leggiProfilo, scegli, parti } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -45,10 +45,10 @@ const bottoni = (nome) => page.locator(`button[aria-label="${nome}"]`)
 
 /* ---------- 1. si entra in una tappa ---------- */
 await scegli(page, 'mate')
-await page.waitForSelector('.scaletta', { timeout: 5000 })
+await page.waitForSelector('[data-rotta]', { timeout: 5000 })
 uguale('sulla mappa non c\'è niente da fermare', await bottoni('pausa').count(), 0)
 
-await page.locator('.pianeta').first().click()
+await parti(page, '[data-rotta] [data-tipo="pianeta"]')
 await page.waitForSelector('button[aria-label="pausa"]', { timeout: 5000 })
 uguale('in volo il ⏸ c\'è', await bottoni('pausa').count(), 1)
 
@@ -163,13 +163,13 @@ uguale('e nemmeno di un pixel', await cielo(), posati)
 await attendi(page, 400)
 await page.locator('[data-azione="riprendi"]').click()
 await bottoni('indietro').click()
-await page.waitForSelector('.scaletta', { timeout: 5000 })
+await page.waitForSelector('[data-rotta]', { timeout: 5000 })
 await posa()
 uguale('sulla mappa il velo non compare', await veli(), 0)
 await riprendiIlTelefono()
 // la partita lasciata a metà è in cima alla mappa (docs/asteroidi/sosta.md): qui si vuole una tappa nuova
 await page.click('[data-ripresa] [data-azione="scorda"]')
-await page.locator('.pianeta').first().click()
+await parti(page, '[data-rotta] [data-tipo="pianeta"]')
 await page.waitForSelector('button[aria-label="pausa"]', { timeout: 5000 })
 uguale('e la tappa nuova non nasce in pausa', await veli(), 0)
 const appena = await cielo()

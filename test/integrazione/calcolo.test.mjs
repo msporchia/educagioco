@@ -40,16 +40,16 @@ await azzera(page)
 
 /* ---------- 1. una mappa sola, coi due mestieri mescolati ---------- */
 await scegli(page, 'mate')
-await page.waitForSelector('.scaletta', { timeout: 5000 })
+await page.waitForSelector('[data-rotta]', { timeout: 5000 })
 
 const mappa = await page.evaluate(() => ({
   // l'ordine è quello del DOM, cioè quello della fila
-  fila: [...document.querySelectorAll('.pianeta, .stazione')]
-    .map(b => ({ mente: b.classList.contains('stazione'), chiusa: b.disabled })),
-  stazioni: [...document.querySelectorAll('.stazione')]
-    .map(b => ({ testo: b.innerText, chiusa: b.disabled })),
+  fila: [...document.querySelectorAll('[data-rotta] [data-tappa]')]
+    .map(b => ({ mente: b.dataset.tipo === 'stazione', chiusa: b.dataset.stato === 'chiusa' })),
+  stazioni: [...document.querySelectorAll('[data-rotta] [data-tipo="stazione"]')]
+    .map(b => ({ testo: b.getAttribute('aria-label'), chiusa: b.dataset.stato === 'chiusa' })),
   schede: !!document.querySelector('.campagna .schede'),
-  volo: !!document.querySelector('[data-volo]'),
+  volo: !!document.querySelector('[data-volo]:not([data-stato="chiusa"])'),
   testo: document.body.innerText,
 }))
 uguale('c\'è un bottone per ogni stazione', mappa.stazioni.length, STAZIONI.length)
@@ -69,13 +69,16 @@ uguale('la fila apre una tappa sola, più quelle già sapute per età',
 const aperteDopoLaPrima = mappa.fila.filter((v, i) => i > 0 && !v.chiusa).length
 uguale('e passata la prima non ce n\'è nessun\'altra che il progresso abbia aperto',
        aperteDopoLaPrima, APERTE_ALL_INIZIO - 1)
-controlla('si vede di che calcoli si tratta', /3\+4/.test(mappa.testo), mappa.stazioni[0].testo)
 controlla('il volo infinito è ancora chiuso', !mappa.volo)
 
 await scatto(page, 'calcolo-mappa')
 
 /* ---------- 2. si gioca la prima stazione ---------- */
-await page.locator('.stazione').first().click()
+// di che calcoli si tratta lo dice il fumetto della tappa (docs/asteroidi/mappa.md)
+await page.locator('[data-rotta] [data-tipo="stazione"]').first().click()
+const fumetto = await page.locator('[data-fumetto]').innerText()
+controlla('il fumetto dice di che calcoli si tratta', /3\+4/.test(fumetto), fumetto)
+await page.click('[data-fumetto] [data-azione="parti"]')
 await page.waitForTimeout(300)
 
 const partita = await page.evaluate(async () => {
@@ -201,9 +204,10 @@ controlla('la home conta le tappe della fila unica',
           home.split('\n').find(r => /tapp/i.test(r)) || 'nessuna riga sugli asteroidi')
 
 await scegli(page, 'mate')
-await page.waitForSelector('.scaletta', { timeout: 5000 })
+await page.waitForSelector('[data-rotta]', { timeout: 5000 })
 const dopo = await page.evaluate(() =>
-  [...document.querySelectorAll('.stazione')].filter(b => !b.disabled).length)
+  [...document.querySelectorAll('[data-rotta] [data-tipo="stazione"]')]
+    .filter(b => b.dataset.stato !== 'chiusa').length)
 /* Le stazioni sole, non la fila intera: la prima è superata, la seconda
    è quella che la fila tiene aperta adesso, e dietro restano quelle che
    a nove anni sono già passate. */

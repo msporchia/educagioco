@@ -1,4 +1,4 @@
-import { apriBrowser, apriGioco, scatto, GIOCATORE, ALTRO, scegli } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, scatto, GIOCATORE, ALTRO, scegli, parti } from '../aiuto/browser.mjs'
 
 const browser = await apriBrowser()
 const errors = []
@@ -65,10 +65,10 @@ const dopoInglese = await page.evaluate(giuste => ({
 await page.click('.barra-app button[aria-label="indietro"]')
 await page.waitForSelector('.carte')
 await scegli(page, 'mate')
-// non più un menu di spunte: la campagna dei pianeti, e si parte dal primo aperto
-await page.waitForSelector('.scaletta')
+// non più un menu di spunte: la rotta dei pianeti, e si parte dal primo aperto
+await page.waitForSelector('[data-rotta]')
+await parti(page, '[data-rotta] [data-tipo="pianeta"]:not([data-stato="chiusa"])')
 const mate = await page.evaluate(async () => {
-  document.querySelector('.pianeta:not([disabled])').click()
   await new Promise(r => setTimeout(r, 200))
   return { inGioco: !!document.querySelector('.domanda'),
            domanda: document.querySelector('.domanda')?.textContent.replace(/\s+/g, ' ').trim(),

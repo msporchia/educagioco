@@ -6,7 +6,7 @@
    docs/asteroidi/sosta.md.
    `node test/esegui.mjs asteroidi-sosta`
    tempo: 60 */
-import { apriBrowser, apriGioco, azzera, attendi, scatto, leggiProfilo, scegli } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, attendi, scatto, leggiProfilo, scegli, parti } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -15,8 +15,9 @@ await azzera(page)
 
 async function entra() {
   await scegli(page, 'mate')
-  await page.waitForSelector('.scaletta', { timeout: 5000 })
+  await page.waitForSelector('[data-rotta]', { timeout: 5000 })
 }
+const pianetaAperto = n => page.locator('[data-rotta] [data-tipo="pianeta"]:not([data-stato="chiusa"])').nth(n)
 const indietro = () => page.click('button[aria-label="indietro"]')
 
 // colpisce il sasso giusto n volte (o uno sbagliato: `giusto: false`)
@@ -40,7 +41,7 @@ const comEra = () => page.evaluate(() => {
 
 /* ══════════ 1. la tappa: ← e si ritrova ══════════ */
 await entra()
-await page.locator('.pianeta:not(.chiuso)').first().click()
+await parti(page, pianetaAperto(0))
 await page.waitForSelector('button[aria-label="pausa"]', { timeout: 5000 })
 // sei centri e uno sbagliato, un gelo e un mirino in tasca (spesi, e il mirino toglie un falso)
 await colpisci(6)
@@ -93,7 +94,7 @@ const ricaricata = await page.locator('[data-ripresa]').textContent()
 controlla('con i centri di dopo', /7\/\d+ centri/.test(ricaricata), ricaricata)
 
 /* toccare un'altra tappa non la butta in silenzio */
-await page.locator('.pianeta:not(.chiuso)').nth(1).click()
+await parti(page, pianetaAperto(1))
 uguale('una tappa nuova chiede prima', await page.locator('[data-chiede]').count(), 1)
 await page.click('[data-chiede] [data-azione="riprendi-invece"]')
 await attendi(page, 300)
@@ -101,19 +102,19 @@ uguale('«torno a quella di prima» la riprende', (await comEra()).giuste, 7)
 await page.click('[data-pausa] [data-azione="riprendi"]', { delay: 400 })   // il velo copre anche il ←
 await indietro()
 await page.waitForSelector('[data-ripresa]')
-await page.locator('.pianeta:not(.chiuso)').nth(1).click()
+await parti(page, pianetaAperto(1))
 await page.click('[data-chiede] [data-azione="comincia"]')
 await attendi(page, 300)
 const nuova = await comEra()
 controlla('scelta la nuova, si gioca quella, da zero',
           nuova.giuste === 0 && nuova.vite === 3, JSON.stringify(nuova))
 await indietro()                 // appena cominciata: niente da riprendere
-await page.waitForSelector('.scaletta')
+await page.waitForSelector('[data-rotta]')
 uguale('una tappa appena aperta non lascia la carta', await page.locator('[data-ripresa]').count(), 0)
 
 /* ══════════ 2. il volo: il record non si perde ══════════ */
 await page.evaluate(() => { window.__mate.progresso.value.libera = true })
-await page.locator('[data-volo]').click()
+await parti(page, '[data-volo]')
 await page.waitForSelector('button[aria-label="pausa"]')
 await colpisci(4)
 const punti = (await comEra()).punti
@@ -146,11 +147,11 @@ controlla('il record è scritto una volta sola', q1.primati?.[Object.keys(q1.pri
           q1.primato?.partite === 1, JSON.stringify(q1.primato || q1.primati))
 controlla('e la sosta si è tolta', !q1.sosta)
 await page.click('.velo .bottone.chiaro')           // Mappa
-await page.waitForSelector('.scaletta')
+await page.waitForSelector('[data-rotta]')
 uguale('niente carta dopo una partita finita', await page.locator('[data-ripresa]').count(), 0)
 
 /* ma un volo lasciato a metà e poi «lascio perdere» scrive il suo record */
-await page.locator('[data-volo]').click()
+await parti(page, '[data-volo]')
 await page.waitForSelector('button[aria-label="pausa"]')
 await colpisci(12)
 const alto = (await comEra()).punti

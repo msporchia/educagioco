@@ -267,3 +267,12 @@ export async function scegli(page, chiave) {
   await page.click(`[data-indice="${chiave}"]`)
   await page.click(`.carta.gioco.davanti[data-gioco="${chiave}"]`)
 }
+
+/* Parte una tappa degli asteroidi dalla rotta: il tocco apre il fumetto e
+   «▶ parti» la comincia (docs/asteroidi/mappa.md). `quale` è un selettore
+   o un locator del nodo; di un selettore si prende il primo. */
+export async function parti(page, quale) {
+  const nodo = typeof quale === 'string' ? page.locator(quale).first() : quale
+  await nodo.click()
+  await page.click('[data-fumetto] [data-azione="parti"]')
+}

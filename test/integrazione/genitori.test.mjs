@@ -461,12 +461,13 @@ if (IN_PROVA.length) {
   await page.click('button[aria-label="indietro"]')
   await page.waitForSelector('.carte', { timeout: 5000 })
   await scegli(page, 'mate')
-  await page.waitForSelector('.scaletta', { timeout: 5000 })
+  await page.waitForSelector('[data-rotta]', { timeout: 5000 })
   const conto = await page.evaluate(() => ({
-    pianeti: document.querySelectorAll('.pianeta').length,
-    stazioni: document.querySelectorAll('.stazione').length,
-    numeri: [...document.querySelectorAll('.pianeta b, .stazione b')]
-      .map(b => parseInt(b.textContent, 10)),
+    pianeti: document.querySelectorAll('[data-rotta] [data-tipo="pianeta"]').length,
+    stazioni: document.querySelectorAll('[data-rotta] [data-tipo="stazione"]').length,
+    // la posizione nella fila, nell'ordine in cui la rotta le mette
+    numeri: [...document.querySelectorAll('[data-rotta] [data-tappa]')]
+      .map(b => Number(b.dataset.tappa) + 1),
   }))
   uguale('la mappa ha tutti i pianeti', conto.pianeti, 10)
   controlla('e anche le stazioni', conto.stazioni > 0)

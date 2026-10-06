@@ -12,7 +12,7 @@
        che mescola tabelline e calcolo a mente e a fine partita dice di
        quanto sei migliorato
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, leggiProfilo, TELEFONO, scegli } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, leggiProfilo, TELEFONO, scegli, parti } from '../aiuto/browser.mjs'
 import { CAMPAGNA as PIANETI } from '../../src/data/tabelline.js'
 import { statoDellaTappa, PASSATA } from '../../src/data/portata.js'
 import { ETA_DIFETTO } from '../../src/store/profile.js'
@@ -25,16 +25,18 @@ await azzera(page)
 
 /* ---------- 1. si entra e c'è la mappa ---------- */
 await scegli(page, 'mate')
-await page.waitForSelector('.scaletta', { timeout: 5000 })
+await page.waitForSelector('[data-rotta]', { timeout: 5000 })
 
 const testo = await page.evaluate(() => document.body.innerText)
 controlla('la mappa dei pianeti sostituisce la scelta delle tabelline',
           !/Quali tabelline vuoi allenare/i.test(testo))
 controlla('si vede il primo pianeta', /Il pianeta del 2/.test(testo))
-controlla('e il volo infinito è ancora chiuso', !/Volo infinito/.test(testo))
+controlla('e il volo infinito è ancora chiuso',
+          await page.locator('[data-volo][data-stato="chiusa"]').count() === 1)
 
 const pianeti = await page.evaluate(() =>
-  [...document.querySelectorAll('.pianeta')].map(b => ({ testo: b.innerText, chiuso: b.disabled })))
+  [...document.querySelectorAll('[data-rotta] [data-tipo="pianeta"]')]
+    .map(b => ({ testo: b.getAttribute('aria-label'), chiuso: b.dataset.stato === 'chiusa' })))
 uguale('dieci pianeti in fila', pianeti.length, 10)
 /* Quanti pianeti nascono aperti non è più «il primo, più…»: il contatore
    è uno solo e a profilo azzerato sta a zero, quindi la tappa aperta
@@ -50,7 +52,7 @@ uguale('sono aperti i pianeti che a quell\'età sono già roba saputa',
 await scatto(page, 'campagna-mate-mappa')
 
 /* ---------- 2. si gioca il primo pianeta ---------- */
-await page.locator('.pianeta').first().click()
+await parti(page, '[data-rotta] [data-tipo="pianeta"]')
 await page.waitForTimeout(300)
 
 /* Il cannone della nave non deve **mai** inseguire un asteroide prima che
@@ -228,9 +230,10 @@ controlla('la home conta le tappe della fila unica',
           home.split('\n').find(r => /tapp/i.test(r)) || 'nessuna riga sugli asteroidi')
 
 await scegli(page, 'mate')
-await page.waitForSelector('.scaletta', { timeout: 5000 })
+await page.waitForSelector('[data-rotta]', { timeout: 5000 })
 const dopo = await page.evaluate(() =>
-  [...document.querySelectorAll('.pianeta')].filter(b => !b.disabled).length)
+  [...document.querySelectorAll('[data-rotta] [data-tipo="pianeta"]')]
+    .filter(b => b.dataset.stato !== 'chiusa').length)
 /* Quanti pianeti devono risultare aperti non è più un numero fisso: da
    quando ogni tappa dice la sua `portata`, quelle che il bambino ha già
    passato per età **nascono aperte** — a nove anni non si ricomincia
@@ -264,9 +267,8 @@ controlla('non è un velo sopra la partita', !tavola.velo)
 await scatto(page, 'campagna-mate-cosa-so')
 
 await page.locator('.barra-app button[aria-label="indietro"]').click()
-await page.waitForSelector('.scaletta', { timeout: 5000 })
-// `.scaletta` è un blocco per capitolo: la mappa è tornata se c'è il primo
-controlla('e il tasto riporta alla mappa', await page.locator('.scaletta').first().isVisible())
+await page.waitForSelector('[data-rotta]', { timeout: 5000 })
+controlla('e il tasto riporta alla mappa', await page.locator('[data-rotta]').isVisible())
 
 /* ---------- 4. il volo infinito: uno, col record sul tasto ---------- */
 /* Si semina una fila finita e il record di ieri, che stava in
@@ -276,17 +278,18 @@ controlla('e il tasto riporta alla mappa', await page.locator('.scaletta').first
 await semina(page, { mate: { tappa: 10, fila: SCALETTA.length, libera: true },
                      best: { math: 40 } })
 await scegli(page, 'mate')
-await page.waitForSelector('.scaletta', { timeout: 5000 })
+await page.waitForSelector('[data-rotta]', { timeout: 5000 })
 const tasti = await page.evaluate(() => ({
-  voli: document.querySelectorAll('[data-volo]').length,
-  record: document.querySelector('[data-volo] [data-record]')?.textContent.trim() || '',
+  voli: document.querySelectorAll('[data-volo]:not([data-stato="chiusa"])').length,
+  // il record sta sotto il nome del volo, sulla rotta
+  record: document.querySelector('[data-rotta] [data-record]')?.textContent.trim() || '',
   vecchi: /Volo libero|Volo a mente/.test(document.body.innerText),
 }))
 uguale('a fila finita il tasto del volo è uno solo', tasti.voli, 1)
 controlla('e non ci sono più i due voli di prima', !tasti.vecchi)
 uguale('sul tasto c\'è il record di ieri, letto da best.math', tasti.record, 'record 40 punti')
 
-await page.locator('[data-volo]').click()
+await parti(page, '[data-volo]')
 await page.waitForFunction(() => window.__mate && window.__mate.fase.value === 'gioco', null, { timeout: 5000 })
 const volo = await page.evaluate(async () => {
   const m = window.__mate
