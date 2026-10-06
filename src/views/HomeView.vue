@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { state, selectPlayer, level, countMastered,
          traguardi, serieGiorni, livelloOra,
          mateProgresso, mercatoProgresso,
@@ -15,9 +15,13 @@ import { progresso as progressoDi, primatoDi } from '../giochi/campagne.js'
 import { recordPiuRecente, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { GIOCHI } from '../data/giochi.js'
 import { inCasa } from '../data/portata-giochi.js'
-import { AREE, MODI } from '../data/aree.js'
+import { AREE } from '../data/aree.js'
 import Nastri from '../guide/Nastri.vue'
-import Salvadanaio from '../components/varieta/Salvadanaio.vue'
+import Carosello from '../components/home/Carosello.vue'
+import Riprendi from '../components/home/Riprendi.vue'
+import { vociInMemoria } from '../store/sessioni.js'
+import { giro, ricarica } from '../store/varieta.js'
+import { chiaveDelGioco } from '../data/varieta.js'
 import Aggiorna from '../guide/Aggiorna.vue'
 import { aggiornando, aggiornaOra, daUnSito } from '../aggiornamento.js'
 
@@ -56,9 +60,7 @@ const salita = computed(() => livelloOra())
 const acceso = inCasa
 const nessunGioco = computed(() => quantiGiochiAccesi() === 0)
 
-// le carte si costruiscono da data/giochi.js e data/aree.js, non a mano.
-// il colore resta CSS per i sette giochi vecchi (sotto); i nuovi portano
-// la loro `tinta` nel manifesto
+// le classi dei giochi vecchi restano: le usano i test (`.carta.mate`)
 const CLASSE = {
   mate: 'mate', inglese: 'eng', spagnolo: 'esp', torri: 'td',
   bancarella: 'banco', generale: 'gen',
@@ -111,6 +113,22 @@ function aChePunto (chiave) {
   const m = giocoNuovo(chiave)
   return m ? m.riassunto(progressoDi(chiave)) : ''
 }
+
+// il carosello: tutti i giochi accesi, nell'ordine delle aree (docs/core/home.md)
+const elenco = computed(() => gruppi.value.flatMap(a => a.giochi)
+  .map(g => ({ ...g, classe: CLASSE[g.chiave], punto: aChePunto(g.chiave) })))
+
+// l'ultimo gioco giocato, dal registro delle sessioni; uno spento non si ripropone
+onMounted(ricarica)
+watch(() => state.player, ricarica)
+const ultimo = computed(() => {
+  void giro.value
+  const voci = vociInMemoria(state.player) || []
+  const v = voci.reduce((a, b) => (!a || b.t > a.t ? b : a), null)
+  const k = v && chiaveDelGioco(v.g)
+  return k && elenco.value.some(g => g.chiave === k) ? k : null
+})
+const ripresa = computed(() => elenco.value.find(g => g.chiave === ultimo.value) || null)
 </script>
 
 <template>
@@ -140,28 +158,15 @@ function aChePunto (chiave) {
         </span>
       </button>
 
+      <Riprendi v-if="ripresa" :gioco="ripresa" :dove="ripresa.punto" @apri="k => $emit('vai', k)" />
+
       <div class="carte">
-        <!-- un ciclo solo: un gioco nuovo compare senza toccare questo file -->
-        <template v-for="a in gruppi" :key="a.chiave">
-          <h2 class="area">{{ a.emoji }} {{ a.nome }}</h2>
-          <button v-for="g in a.giochi" :key="g.chiave"
-                  class="carta gioco tre" :class="CLASSE[g.chiave]" :data-gioco="g.chiave"
-                  :style="g.tinta ? { background: `linear-gradient(120deg,${g.tinta},#fffffff0)` } : null"
-                  @click="$emit('vai', g.chiave)">
-            <span class="ico">{{ g.ico }}</span>
-            <b>{{ g.nome }}</b>
-            <i>{{ g.che }}</i>
-            <small class="modo">{{ MODI[g.come].emoji }} {{ MODI[g.come].nome
-              }}<template v-if="aChePunto(g.chiave)"> · {{ aChePunto(g.chiave) }}</template></small>
-            <Salvadanaio :gioco="g.chiave" />
-          </button>
-        </template>
+        <Carosello v-if="elenco.length" :giochi="elenco" :ultimo="ultimo" @apri="k => $emit('vai', k)" />
 
         <!-- se i genitori li hanno spenti tutti, la home lo dice: senza,
              sarebbe una schermata rotta invece di una scelta -->
         <p v-if="nessunGioco" class="mini vuoto">I giochi sono spenti.
           Si riaccendono da <b>Impostazioni</b>, qui sotto.</p>
-
       </div>
 
       <div v-if="state.regalo.n" :key="state.regalo.k" class="regalo">
@@ -250,35 +255,7 @@ function aChePunto (chiave) {
         max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .gioc.on { background:linear-gradient(180deg,var(--viola),var(--viola-scuro)); color:#fff;
            box-shadow:0 4px 0 #2c4283; transform:translateY(-1px) }
-.carte { display:flex; flex-direction:column; gap:11px; width:100%; max-width:400px }
-.carta { display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto; gap:2px 14px;
-         align-items:center; text-align:left; padding:14px 18px; border-radius:20px;
-         background:var(--carta); box-shadow:0 5px 0 #dde3ea, 0 10px 22px #8593a822 }
-.carta:active { transform:translateY(2px); box-shadow:0 3px 0 #dde3ea }
-.carta .ico { grid-row:1/3; font-size:38px }
-.carta b { font-size:18px; font-weight:900; color:var(--viola-scuro) }
-.carta i { font-style:normal; font-size:13px; color:var(--tenue) }
-.carta.mate { background:linear-gradient(120deg,#e8f0ff,#fffffff0) }
-.carta.eng  { background:linear-gradient(120deg,#ffeaf2,#fffffff0) }
-.carta.verbi { background:linear-gradient(120deg,#e8edf8,#fffffff0) }
-.carta.esp  { background:linear-gradient(120deg,#fff0d9,#fffffff0) }
-.carta.td   { background:linear-gradient(120deg,#e6f7e2,#fffffff0) }
-.carta.banco{ background:linear-gradient(120deg,#fff0dc,#fffffff0) }
-.carta.gen  { background:linear-gradient(120deg,#e4f0e8,#fffffff0) }
-
-/* ── il titolo di un gruppo ──
-   Non è una carta e non si tocca: sta fuori dal riquadro, in piccolo e
-   in maiuscoletto, e serve a dire «da qui in giù sono numeri». Grosso
-   com'era una carta si sarebbe letto come una cosa da aprire. */
-.area { align-self:flex-start; margin:13px 0 -3px 7px; font-size:12px; font-weight:900;
-        letter-spacing:.8px; text-transform:uppercase; color:var(--viola-scuro); opacity:.55 }
-.area:first-child { margin-top:0 }
-
-/* tre righe invece di due: il nome, cosa insegna, e come si gioca più
-   dove sei arrivato. L'icona le attraversa tutte e tre. */
-.carta.tre { grid-template-rows:auto auto auto }
-.carta.tre .ico { grid-row:1/4 }
-.modo { font-size:11.5px; color:var(--tenue); opacity:.9; line-height:1.3 }
+.carte { width:100%; max-width:400px }
 /* la fascia: livello, quanto manca al prossimo, monete e medaglie */
 .fascia { display:flex; align-items:center; gap:11px; width:100%; max-width:400px;
           padding:9px 14px; border-radius:18px; text-align:left;

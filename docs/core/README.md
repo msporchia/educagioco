@@ -19,6 +19,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [sprite-a-mano-dal-codice.md](sprite-a-mano-dal-codice.md) — disegnare uno sprite come dato nel codice, quando l'atlante non ce l'ha
 - [strumenti.md](strumenti.md) — voci, scatti e clip, icone, la guardia dei commenti
 - [convenzione-giochi.md](convenzione-giochi.md) — come è fatto un gioco nuovo in `src/giochi/`
+- [home.md](home.md) — la home: «riprendi da qui», il carosello delle copertine, l'indice, come la aprono i test
 - [interfaccia.md](interfaccia.md) — barra, fogli con la ✕, pausa, schermate verticali, `v-if`, orologi
 - [il-dito.md](il-dito.md) — tocco, click fantasma, scorrimento, selezione
 - [primati.md](primati.md) — i giochi senza fine e i record
