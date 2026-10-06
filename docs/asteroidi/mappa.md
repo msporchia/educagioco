@@ -79,6 +79,9 @@ Lo decide `MathGame.vue` (`statoVoce`), la mappa lo dipinge:
 - **Si vede tutto**: se sborda, la mappa scorre quanto basta, tenendo
   libero in basso il posto di «📊 Cosa so».
 - La spiegazione lunga che stava in cima è diventata una riga sola.
+- Il fumetto è ancora scritto qui dentro, venuto prima di quello comune
+  (`src/components/Fumetto.vue`, [../core/interfaccia.md](../core/interfaccia.md#il-fumetto)):
+  può passare a quello, tenendo i suoi colori con le variabili.
 
 ## Il razzo
 

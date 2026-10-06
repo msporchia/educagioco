@@ -29,6 +29,31 @@ sua pagina: [il-dito.md](il-dito.md).
 Nei test: `button[aria-label="indietro"]` (mai il carattere),
 `[data-chiudi]`.
 
+## Il fumetto
+
+Su una mappa, toccando una tappa compare **un fumetto sopra di lei**, non un
+foglio dal basso, e nell'elenco non ci sono descrizioni: tutto quello che
+c'è da dire su una tappa sta lì. Il pezzo comune è
+`src/components/Fumetto.vue`; il contenuto è nello slot.
+
+- **Sta sopra il bersaglio**, sotto se sopra non c'è posto (le tappe in
+  cima): non compare mai sotto il dito, così il suo tasto non si preme da
+  solo. La punta segue il bersaglio anche quando il fumetto, vicino al
+  bordo, si sposta per stare nello schermo.
+- **Si vede tutto**: se esce dallo scorrimento (`scorre`), la mappa scorre
+  quanto basta.
+- **Si apre al `click`** ([il-dito.md](il-dito.md)); il fumetto si prende
+  il proprio click, e la mappa chiude al click fuori. Un altro bersaglio
+  rimonta il fumetto (`:key`).
+- I colori si cambiano con `--fumetto-fondo`, `--fumetto-tenue` (una cosa
+  chiusa, `tenue`) e `--fumetto-testo`.
+
+Chi lo usa: la scheda del costruttore ([../costruttore/scheda.md](../costruttore/scheda.md)).
+La rotta degli asteroidi ha ancora il suo, venuto prima, e può passare a
+questo ([../asteroidi/mappa.md](../asteroidi/mappa.md#il-fumetto)).
+
+Nei test: `[data-fumetto]`.
+
 ## Il programma a tutto schermo
 
 Nei giochi a due piani (il costruttore, il Generale) sopra c'è il campo e
