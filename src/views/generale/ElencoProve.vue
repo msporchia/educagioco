@@ -28,6 +28,8 @@ import { FILA, apribile } from './fila.js'
 import { genProgresso } from '../../store/profile.js'
 
 defineEmits(['apri'])
+/* i livelli lasciati a metà: { id: { testo } } (docs/generale/lasciare-a-meta.md) */
+defineProps({ aMeta: { type: Object, default: () => ({}) } })
 
 /* I lucchetti li toglie il flag che c'è già, quello della schermata dei
    genitori (`settings.tuttoAperto`): un interruttore solo per tutti i
@@ -48,7 +50,8 @@ const progresso = computed(() => genProgresso())
               :class="{ chiusa: !apribile(k), fatta: (progresso.stelle[r.liv.id] || 0) > 0 }"
               :disabled="!apribile(k)" @click="$emit('apri', r.i)">
         <span class="num">{{ apribile(k) ? (progresso.stelle[r.liv.id] ? '✓' : k + 1) : '🔒' }}</span>
-        <span class="che"><b>{{ r.liv.nome }}<span v-if="r.liv.impara" class="impara"> — {{ r.liv.impara }}</span><template v-if="r.prova"> 🧪</template></b><i>{{ r.liv.idea }}</i></span>
+        <span class="che"><b>{{ r.liv.nome }}<span v-if="r.liv.impara" class="impara"> — {{ r.liv.impara }}</span><template v-if="r.prova"> 🧪</template></b><i>{{ r.liv.idea }}</i><em v-if="aMeta[r.liv.id]" class="a-meta"
+              data-a-meta>✎ lasciato a metà · {{ aMeta[r.liv.id].testo }}</em></span>
         <!-- le stelle prese, e niente altro: qui sotto c'era «par 4»,
              cioè un compito annunciato prima ancora di aprire il
              livello. Chi non l'ha ancora fatto vede due stelle spente,
@@ -75,6 +78,8 @@ const progresso = computed(() => genProgresso())
 .tappa .voto { flex:none; font-size:13px; text-align:right }
 .tappa .voto small { display:block; font-size:10px; color:var(--tenue); font-weight:800 }
 .tappa.chiusa { opacity:.55; box-shadow:none }
+.tappa .che .a-meta { display:block; font-style:normal; font-size:11px; font-weight:800;
+                     color:var(--viola-scuro); margin-top:2px }
 .che .impara { font-weight:700; color:var(--tenue) }
 .riga-titolo { font-size:10px; font-weight:900; letter-spacing:.7px; text-transform:uppercase;
                color:var(--tenue); margin:10px 2px 7px }

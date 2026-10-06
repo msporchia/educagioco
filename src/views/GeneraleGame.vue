@@ -37,7 +37,7 @@
      passa a `tela.disegna()`. L'unica cosa che passa di qui è il
      fondale già dipinto, ricopiato dalla finestra che si vede.
    ═══════════════════════════════════════════════════════════════════ */
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, onUnmounted, nextTick } from 'vue'
 import Barra from '../components/Barra.vue'
 import ElencoProve from './generale/ElencoProve.vue'
 import CartelloScena from './generale/CartelloScena.vue'
@@ -52,6 +52,9 @@ import { state, genProgresso, genCompleta, daSolo, genAiutiPresi, genSegnaAiuti,
   from '../store/profile.js'
 import { scrive as scriveNelPiano, SVELA } from '../giochi/aiuti.js'
 import { suono } from '../audio.js'
+import { load, save, flush } from '../store/storage.js'
+import { scrivi as scriviSosta, leggi as leggiSosta, dice as diceSosta }
+  from '../motore/generale/sosta.js'
 import Guida from '../giochi/Guida.vue'
 import { usaGuida } from '../giochi/guida.js'
 import { LIVELLI, proveDi } from '../data/generale.js'
@@ -169,22 +172,64 @@ const campo = ref(null)
    un altro nello stesso istante, e una prop arriverebbe un disegno dopo */
 const mondoOra = () => mondo
 
+/* ═══════════ il piano a metà ═══════════
+   Uno per livello, in archivio come i programmi del costruttore: uscire
+   e rientrare ritrova il piano com'era. Vedi docs/generale/lasciare-a-meta.md. */
+const piani = ref({})              // { id del livello: dato di motore/generale/sosta.js }
+const chiaveArchivio = () => `generale:${state.player || 'nessuno'}`
+let caricato = false, salvaTimer = 0
+/* il piano con cui si è appena vinto: la partita è finita e non si riscrive */
+let vintoCon = ''
+const pronto = load(chiaveArchivio()).then(d => {
+  if (d && d.piani && typeof d.piani === 'object') piani.value = { ...d.piani, ...piani.value }
+}).catch(() => {}).finally(() => { caricato = true })
+function fotografa () {
+  const l = livOra.value
+  if (!l || fase.value !== 'gioco') return
+  // a scena in corso si salva il piano, non l'esecuzione: si riparte da fermi
+  const d = scriviSosta({ piano: piano.value, svelato: svelato.value, unita: unitaOra.value,
+                          scena: auto.value || montaggio.value ? 0 : serieI.value,
+                          scoperte: scoperte.value,
+                          vinto: JSON.stringify(piano.value) === vintoCon }, l)
+  const p = { ...piani.value }
+  if (d) p[l.id] = d; else delete p[l.id]
+  piani.value = p
+}
+function salvaOra () {
+  clearTimeout(salvaTimer)
+  fotografa()
+  // prima che l'archivio abbia risposto, scrivere cancellerebbe gli altri livelli
+  if (!caricato || !state.player) return
+  save(chiaveArchivio(), { piani: JSON.parse(JSON.stringify(piani.value)) })
+  flush()          // `save` aspetta: uscendo, la pagina può sparire prima
+}
+const salvaPresto = () => { clearTimeout(salvaTimer); salvaTimer = setTimeout(salvaOra, 600) }
+/* cosa dice l'elenco accanto a un livello lasciato a metà */
+const aMeta = computed(() => Object.fromEntries(Object.entries(piani.value)
+  .map(([id, d]) => [id, diceSosta(d)]).filter(([, t]) => t)))
+async function apriProva (i) { await pronto; apri(i) }
+
 /* ═══════════ preparare la partita ═══════════
    Il livello arriva già scelto: da qui in giù la partita non sa da dove
    venga, e questa vista non ha due modi di giocare. */
 function avviaLivello (l) {
+  if (livOra.value) salvaOra()         // il livello di prima, prima di cambiarlo
+  vintoCon = ''
   livOra.value = l
-  piano.value = Object.fromEntries(mieUnita(l).map(id => [id, []]))
-  unitaOra.value = mieUnita(l)[0]
+  const salvato = leggiSosta(piani.value[l.id], l)
+  if (piani.value[l.id] && !salvato) { const p = { ...piani.value }; delete p[l.id]; piani.value = p }
+  piano.value = salvato ? salvato.piano : Object.fromEntries(mieUnita(l).map(id => [id, []]))
+  unitaOra.value = salvato ? salvato.unita : mieUnita(l)[0]
   letta.value = null; scegliendo.value = null; soloPiano.value = false
-  gettoni.value = l.gettoni || 0
-  scoperte.value = l.mostraNemici === true ? altriInCampo(l) : []
-  aiuti.value = genAiutiPresi(l.id); svelato.value = ''; finito.value = null; andato.value = null
+  gettoni.value = salvato ? salvato.gettoni : l.gettoni || 0
+  scoperte.value = salvato ? salvato.scoperte : l.mostraNemici === true ? altriInCampo(l) : []
+  aiuti.value = genAiutiPresi(l.id); svelato.value = salvato ? salvato.svelato : ''
+  finito.value = null; andato.value = null
   guidaFinita.value = false
   cambio.value = null; fermaAttesa(); montaggio.value = false
   serieI.value = 0; esiti.value = []; auto.value = false; caduttiFondo = 0
   pannello.value = 'cartello'          // la prima cosa è la spiegazione, e non costa niente
-  nuovoMondo(0)
+  nuovoMondo(salvato ? Math.min(salvato.scena, prove.value - 1) : 0)
   /* entrando in un livello la tela non c'è ancora, quindi «mostrala
      tutta» dentro `nuovoMondo` non ha niente da misurare: si rifà qui,
      appena la tela è stata misurata. Senza questa riga il primo schermo
@@ -410,6 +455,7 @@ function vittoria () {
   const conto = { ordini: n, svelato: svelato.value === SVELA, caduti, avanzato }
   genCompleta(liv.value.id, { ...conto, finita: filaFinita(liv.value.id) })
   finito.value = { ordini: n, daSolo: daSolo(conto), caduti, svelato: svelato.value }
+  vintoCon = JSON.stringify(piano.value); salvaOra()   // la partita è finita: il piano a metà se ne va
 }
 
 /* ═══════════ il battito ═══════════
@@ -727,22 +773,31 @@ function scrivi (passo) {
 function avanti () { finito.value = null; auto.value = false; nav.avanti() }
 /* uscire dalla partita ferma la scena e chiude i fogli aperti: il resto
    — dove si torna — lo sa la navigazione */
-function torna () { auto.value = false; pannello.value = ''; indietro() }
+function torna () { salvaOra(); auto.value = false; pannello.value = ''; indietro() }
+/* ogni ritocco al piano si scrive da sé; la scena che gira no */
+watch([piano, svelato, unitaOra, scoperte, serieI], salvaPresto, { deep: true })
+/* su un telefono l'app non si chiude, sparisce */
+const seSparisce = () => { if (document.visibilityState === 'hidden') salvaOra() }
 
 onMounted(() => {
   raf = requestAnimationFrame(giro)
   window.addEventListener('resize', ridimensiona)
+  document.addEventListener('visibilitychange', seSparisce)
+  window.addEventListener('pagehide', salvaOra)
   window.__gen = { apri, via, unPasso, ferma, riavvolgi,
                    piano, LIVELLI, fase, L, esiti, finito, cambio,
                    montaggio, saltaMontaggio, serieI,
-                   mondo: () => mondo, scegliendo, unitaOra,
+                   mondo: () => mondo, scegliendo, unitaOra, piani, svelato, gettoni,
                    /* dove sta una cella sullo schermo: serve ai test per
                       toccare il bersaglio come lo tocca un dito */
                    dove: (x, y) => campo.value.puntoDi(x, y) }
 })
+onBeforeUnmount(salvaOra)
 onUnmounted(() => {
-  cancelAnimationFrame(raf); fermaAttesa()
+  cancelAnimationFrame(raf); fermaAttesa(); clearTimeout(salvaTimer)
   window.removeEventListener('resize', ridimensiona)
+  document.removeEventListener('visibilitychange', seSparisce)
+  window.removeEventListener('pagehide', salvaOra)
 })
 async function ridimensiona () {
   if (fase.value !== 'gioco') return
@@ -793,7 +848,7 @@ async function ridimensiona () {
     </Barra>
 
     <!-- ════════ LE PROVE ════════ -->
-    <ElencoProve v-if="fase === 'prove'" @apri="apri" />
+    <ElencoProve v-if="fase === 'prove'" :a-meta="aMeta" @apri="apriProva" />
 
     <!-- ════════ IL GIOCO ════════ -->
     <template v-else>

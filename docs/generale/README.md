@@ -7,6 +7,7 @@ quello che resta da fare.
 - [didattica.md](didattica.md) — con quali regole si giudica se un livello insegna; da leggere prima di progettare un livello o un blocco di livelli
 - [livelli.md](livelli.md) — dove sta un livello nel codice, la fila, il banco di prova e il campo `verifiche`
 - [mappe.md](mappe.md) — i tre token di serie, la legenda, la mappa piena e l'arredamento automatico
+- [lasciare-a-meta.md](lasciare-a-meta.md) — il piano di ogni livello resta in archivio uscendo a metà: cosa si salva, quando se ne va, perché non la sosta unica
 - [da-fare.md](da-fare.md) — voci aperte: scorciatoie mancanti, quello che la didattica chiede, gli attriti del mondo
 
 La pagina per chi arriva da fuori è ancora [`docs/generale.md`](../generale.md)
