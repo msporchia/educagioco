@@ -12,6 +12,8 @@ defineEmits(['gioca', 'senza-fine'])
 
 <template>
   <div class="pp-mappa" data-mappa>
+    <!-- in cima, la partita lasciata a metà (docs/passo-passo/sosta.md) -->
+    <slot />
     <template v-for="s in scalini" :key="s.chiave">
       <section class="pp-scalino" :data-scalino="s.chiave">
         <h3>
@@ -26,6 +28,7 @@ defineEmits(['gioca', 'senza-fine'])
                   :aria-label="`${t.indice + 1}. ${t.nome}: ${t.racconto}`"
                   @click="$emit('gioca', t.indice)">
             <span class="pp-numero">{{ t.indice + 1 }}</span>
+            <span v-if="t.aMeta && t.aperta" class="pp-a-meta pp-em" data-a-meta>✏️</span>
             <span class="pp-faccia pp-em">{{ t.aperta ? t.icona : '🔒' }}</span>
             <span class="pp-nome">{{ t.nome }}</span>
             <span class="pp-stelle">

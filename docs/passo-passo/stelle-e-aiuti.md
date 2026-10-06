@@ -60,9 +60,9 @@ Ogni tocco scende di un gradino (`motore/aiuti.js`):
   partire da dove la fila va bene. Il risolutore dà la prossima freccia
   giusta, mai la soluzione intera, finché non la si compra.
 - **Una freccia pagata e non ancora messa si riaccende gratis.**
-- **La scala riparte a ogni ingresso**: ogni gradino guarda la fila di
-  adesso, e la fila riparte vuota. (Nel Generale e nel costruttore invece
-  quello che si è pagato resta nel profilo.)
+- **Quello che si è pagato resta** finché il livello non è vinto, insieme
+  alla fila: uscire e rientrare non fa ripagare niente. Vinto, rigiocarlo
+  riparte da capo (vedi [sosta.md](sosta.md)).
 - **Il 💡 non si spegne mai**: premuto mentre il coniglio corre si accende e
   aspetta, e il gradino arriva quando il coniglio si ferma — è mentre lo si
   vede sbattere che lo si cerca.

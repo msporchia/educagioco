@@ -71,5 +71,6 @@ carota: chi lascia perdere la carota non deve trovare un posto da tre frecce.
 Un sentiero vinto vale 🪙3, 🪙6 con lo zaino. Stelle non ce ne sono, ma la riga
 «si può fare con N frecce» sì. Il record è **quanti sentieri di fila senza
 comprare aiuti**: sbagliare non chiude la serie, e nemmeno i due gradini
-gratis del 💡; comprarne uno sì. Sta sul tasto della mappa e nella tabella dei
-primati (vedi `src/giochi/primati.js`).
+gratis del 💡; comprarne uno sì. Nemmeno uscire la chiude: la serie si
+riprende dalla carta in cima alla mappa ([sosta.md](sosta.md)). Sta sul tasto
+della mappa e nella tabella dei primati (vedi `src/giochi/primati.js`).

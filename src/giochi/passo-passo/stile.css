@@ -55,6 +55,9 @@
 .pp-tappa .pp-numero { position: absolute; top: 5px; left: 7px; font-size: 11px; font-weight: 800;
                        color: var(--pp-tenue) }
 .pp-tappa .pp-faccia { font-size: 30px }
+/* una fila lasciata a metà, che entrando si ritrova */
+.pp-tappa .pp-a-meta { position: absolute; top: 4px; right: 6px; font-size: 13px }
+.pp-mappa > .ri-carta { align-self: center }
 .pp-tappa .pp-nome { font-size: 11px; line-height: 1.15; text-align: center; color: var(--pp-tenue);
                      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
                      overflow: hidden; min-height: 2.3em }

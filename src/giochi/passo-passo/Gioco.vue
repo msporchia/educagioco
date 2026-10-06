@@ -3,11 +3,12 @@
    (monete, stelle, contatori dell'albo). Regole in `motore/`, disegno e
    tempi in `scena/`, schermate in `viste/`. Vedi docs/passo-passo/regole.md
    e docs/passo-passo/stelle-e-aiuti.md. */
-import { ref, shallowRef, computed, nextTick, onUnmounted } from 'vue'
+import { ref, shallowRef, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { state, addCoins, segna, segnaBest, tappaAperta, spendi } from '../../store/profile.js'
-import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato, ricorda } from '../campagne.js'
+import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato, ricorda,
+         sosta, salvaSosta } from '../campagne.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
 
 import { SENZA_FINE } from './gioco.js'
@@ -26,6 +27,8 @@ import { Proiezione } from './scena/proiezione.js'
 import { Regia } from './scena/regia.js'
 import { guidaDelPrato, guidaDelRipeti } from './motore/guida.js'
 import { usaGuida } from '../guida.js'
+import { scrivi, leggi, dice, scriviFila, scriviSerie, pagatoDa, svelatoDa } from './motore/sosta.js'
+import Ripresa from '../Ripresa.vue'
 
 import Mappa from './viste/Mappa.vue'
 import Campo from './viste/Campo.vue'
@@ -98,6 +101,18 @@ if (avanza.cfg.fila !== FILA_ATTUALE) {
     Object.assign(avanza, riordina(avanza, vecchia))
   ricorda(CHIAVE, 'fila', FILA_ATTUALE)
 }
+
+/* ═══════════ la partita lasciata a metà ═══════════
+   La fila di ogni livello e il sentiero in corso: vedi docs/passo-passo/sosta.md */
+const quaderno = reactive(leggi(sosta(CHIAVE)))
+// quello che non tornava se n'è andato: lo si dice anche all'archivio
+if (JSON.stringify(scrivi(quaderno)) !== JSON.stringify(sosta(CHIAVE) || null))
+  salvaSosta(CHIAVE, scrivi(quaderno))
+let vinta = false                   // il posto in gioco è vinto: la sua fila non si tiene
+const chiede = ref('')              // il sentiero nuovo che butterebbe quello a metà
+// sulla mappa solo se il sentiero è ancora aperto a quell'età
+const ripresa = computed(() => (sentieroAperto() ? dice(scrivi(quaderno)) : null))
+
 const sentiero = computed(() => tappaIdx.value < 0)
 /* quante carte tiene la fila: lo zaino, dove c'è, se no il tetto tecnico */
 const piena = computed(() => (tappa.value && tappa.value.zaino
@@ -127,6 +142,7 @@ const scalini = computed(() => SCALINI.map(s => ({
     aperta: aperta(CHIAVE, t.indice),
     adesso: adesso(CHIAVE, t.indice),
     stelle: stelleDi(CHIAVE, t.indice),
+    aMeta: !!quaderno.livelli[t.chiave],
   })),
 })))
 
@@ -205,12 +221,48 @@ const regia = new Regia({
   guasto: () => { if (esitoInCorsa) guasto.value = esitoInCorsa.dove },
   fine: () => fineGiro(),
 })
-onUnmounted(() => {
+/* ═══════════ tenere la fila ═══════════
+   Si scrive col ←, a pagina nascosta, prima di smontare, a ogni gradino
+   del 💡 pagato e, mezzo secondo dopo, a ogni tocco sulla fila. */
+function fotografa() {
+  if (vista.value !== 'campo' || !tappa.value) return
+  const qui = vinta ? null
+    : scriviFila({ fila: fila.value, cursore: cursore.value, presi: presi.value, carta: ultimaCarta })
+  if (sentiero.value)
+    quaderno.sentiero = scriviSerie({ seme: semeSeduta, sentieri: sentieri.value, serie: serie.value,
+                                      prima: famigliaPrima, chiusa: vinta ? null : chiusaDallAiuto,
+                                      posto: vinta ? null : tappa.value, fila: qui })
+  else if (qui) quaderno.livelli[tappa.value.chiave] = qui
+  else delete quaderno.livelli[tappa.value.chiave]
+}
+let salvaTimer = 0
+function salvaOra() {
+  clearTimeout(salvaTimer)
+  fotografa()
+  salvaSosta(CHIAVE, scrivi(quaderno), { subito: true })
+}
+function salvaPresto() {
+  clearTimeout(salvaTimer)
+  salvaTimer = setTimeout(() => { fotografa(); salvaSosta(CHIAVE, scrivi(quaderno)) }, 500)
+}
+watch([fila, cursore, presi], () => { if (vista.value === 'campo') salvaPresto() })
+
+// su un telefono l'app non si chiude, sparisce: è l'ultimo momento per scrivere
+function seSparisce(e) {
+  if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salvaOra()
+}
+onMounted(() => {
+  document.addEventListener('visibilitychange', seSparisce)
+  addEventListener('pagehide', seSparisce)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('visibilitychange', seSparisce)
+  removeEventListener('pagehide', seSparisce)
   regia.spegni()
   clearTimeout(sbarra)
   clearTimeout(timerArmato)
   vintaAMeta()
-  if (sentiero.value) chiudiLaSerie()
+  salvaOra()
 })
 
 function finestraCieca() {
@@ -219,8 +271,9 @@ function finestraCieca() {
   sbarra = setTimeout(() => { cieco = false }, CIECA)
 }
 
-/* ═══════════ entrare in un livello ═══════════ */
-function entra(t, indice) {
+/* ═══════════ entrare in un livello ═══════════
+   `gia` è la fila lasciata lì l'ultima volta, coi gradini del 💡 già pagati */
+function entra(t, indice, gia = indice >= 0 ? quaderno.livelli[t.chiave] : null) {
   tappa.value = t
   tappaIdx.value = indice
   liv = Livello.da(t)
@@ -251,6 +304,15 @@ function entra(t, indice) {
   esitoInCorsa = null
   inTana = false
   chiusaDallAiuto = null
+  vinta = false
+  if (gia) {
+    fila.value = gia.fila.slice()
+    cursore.value = gia.cursore
+    presi.value = gia.presi
+    pagato.value = pagatoDa(gia.presi)
+    svelato.value = svelatoDa(gia.presi)
+    ultimaCarta = gia.carta
+  }
   vista.value = 'campo'
   finestraCieca()
   nextTick(() => {
@@ -454,7 +516,15 @@ let timerArmato = 0
 function disarma() { armato.value = false; clearTimeout(timerArmato) }
 const firma = () => JSON.stringify([fila.value, cursore.value])
 
+/* un gradino pagato si scrive subito, insieme alle monete spese: uscendo
+   e rientrando non si ripaga */
 function aiuto() {
+  const prima = presi.value
+  scendi()
+  if (presi.value !== prima) salvaOra()
+}
+
+function scendi() {
   if (cieco || finale.value) return
   if (inCorsa.value) {
     if (!aiutoInCoda.value) suono.nota(660, 880, 0.08, 'sine', 0.04)
@@ -590,8 +660,16 @@ function misuraLaStrada(esito) {
            lunga: !!minimo && carota && usate > minimo.carte }
 }
 
-/* scrive la vittoria e torna il cartello da mostrare alla fine */
+/* scrive la vittoria e torna il cartello da mostrare alla fine; un posto
+   vinto non tiene più la sua fila (rigiocarlo è una partita nuova) */
 function vittoria(esito) {
+  const cartello = scriviVittoria(esito)
+  vinta = true
+  salvaOra()
+  return cartello
+}
+
+function scriviVittoria(esito) {
   const strada = misuraLaStrada(esito)
   const stelle = stelleDellaVittoria({ carota: esito.carota, svelato: svelato.value, corta: strada.corta })
   if (sentiero.value) return vittoriaSentiero(esito, strada)
@@ -614,6 +692,7 @@ function vittoria(esito) {
 
 /* ═══════════ il sentiero senza fine ═══════════ */
 function avviaSentiero() {
+  if (quaderno.sentiero) scordaSentiero()
   sentieri.value = 0
   serie.value = 0
   semeSeduta = (Date.now() % 100000) + 1
@@ -630,12 +709,47 @@ function prossimoSentiero() {
   entra({ ...t, chiave: `sentiero-${sentieri.value}` }, -1)
 }
 
-// la serie è un risultato solo quando si chiude, non a ogni sentiero vinto
+/* la serie è un risultato solo quando si chiude, non a ogni sentiero vinto:
+   con un aiuto pagato, con «lascio perdere» o con un sentiero nuovo, mai
+   uscendo. La sosta la perde nello stesso salvataggio che scrive il
+   record, così non si scrive due volte */
 function chiudiLaSerie() {
-  if (!serie.value) return null
-  const esito = segnaPrimato(CHIAVE, serie.value)
+  const n = serie.value
+  if (!n) return null
   serie.value = 0
-  return esito
+  if (quaderno.sentiero) { quaderno.sentiero.serie = 0; salvaSosta(CHIAVE, scrivi(quaderno)) }
+  return segnaPrimato(CHIAVE, n)
+}
+
+/* «torno da dove ero»: il posto di allora con la sua fila, o il prossimo,
+   che rinasce uguale dal seme */
+function riprendiSentiero() {
+  const s = quaderno.sentiero
+  chiede.value = ''
+  if (!s) return avviaSentiero()
+  sentieri.value = s.sentieri
+  serie.value = s.serie
+  semeSeduta = s.seme
+  famigliaPrima = s.prima
+  if (!s.posto) return prossimoSentiero()
+  const posto = JSON.parse(JSON.stringify(s.posto))
+  entra({ ...posto, chiave: `sentiero-${s.sentieri}` }, -1, s.fila)
+  chiusaDallAiuto = s.chiusa
+}
+
+// «lascio perdere»: la serie finisce davvero, e il suo record si scrive
+function scordaSentiero() {
+  const s = quaderno.sentiero
+  chiede.value = ''
+  if (s && s.serie) { serie.value = s.serie; chiudiLaSerie() }
+  serie.value = 0
+  quaderno.sentiero = null
+  salvaSosta(CHIAVE, scrivi(quaderno), { subito: true })
+}
+
+function vuoleSentiero() {
+  if (ripresa.value) chiede.value = 'un sentiero nuovo'
+  else avviaSentiero()
 }
 
 function vittoriaSentiero(esito, strada) {
@@ -663,7 +777,8 @@ function avanti() {
   if (sentiero.value) return prossimoSentiero()
   const i = tappaIdx.value + 1
   if (i < QUANTE_TAPPE && aperta(CHIAVE, i)) avviaTappa(i)
-  else if ((i === TAPPE_PICCOLE || i === QUANTE_TAPPE) && sentieroAperto()) avviaSentiero()
+  // il sentiero lasciato a metà si riprende: cominciarne un altro ne chiuderebbe la serie
+  else if ((i === TAPPE_PICCOLE || i === QUANTE_TAPPE) && sentieroAperto()) riprendiSentiero()
   else allaMappa()
 }
 
@@ -683,7 +798,7 @@ function vintaAMeta() {
 
 function allaMappa() {
   vintaAMeta()
-  if (sentiero.value) chiudiLaSerie()
+  salvaOra()
   regia.ferma()
   regia.spegni()
   finale.value = null
@@ -707,7 +822,11 @@ function indietro() {
 
     <div class="pp">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" :senza-fine="statoSentiero"
-             @gioca="avviaTappa" @senza-fine="avviaSentiero" />
+             @gioca="avviaTappa" @senza-fine="vuoleSentiero">
+        <Ripresa :ripresa="ripresa" :chiede="chiede"
+                 @riprendi="riprendiSentiero" @scorda="scordaSentiero"
+                 @comincia="avviaSentiero" @annulla="chiede = ''" />
+      </Mappa>
 
       <Campo v-else ref="campo"
              :fila="fila" :cursore="cursore" :corrente="corrente" :guasto="guasto"
