@@ -23,6 +23,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [il-dito.md](il-dito.md) — tocco, click fantasma, scorrimento, selezione
 - [primati.md](primati.md) — i giochi senza fine e i record
 - [aiuti.md](aiuti.md) — la scala del 💡 a monete
+- [guida.md](guida.md) — la guida del primo giro: la riga col 👇 e l'anello, comuni a tutti i giochi
 - [da-fare.md](da-fare.md) — le voci aperte che non sono di un gioco solo
 - [z-index-dal-codice.md](z-index-dal-codice.md) — la scala degli z-index dei veli
 - [aree-dal-codice.md](aree-dal-codice.md) — perché `area` e `come` sono due campi separati in `data/aree.js`

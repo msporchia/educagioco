@@ -69,11 +69,12 @@ che esistono prima che esista un bambino.
   un gioco: i bambini lo chiudono per riflesso, e si insegna proprio quello,
   che i cartelli si mandano via. O un tutorial dentro la partita, o il tasto
   e basta.
-- **Il posto dove si insegna giocando** è la riga dei primi passi del tower
-  defense (`.primi-passi`, `src/views/castello/td.css`): in fondo al campo
-  durante la prima partita in assoluto, non blocca niente, non si chiude per
-  sbaglio, e dice quello che dal campo non si vede — che le torri si pagano
-  coi conti. Sparisce quando la prima torre è in piedi e non torna
+- **Il posto dove si insegna giocando** è la guida del primo giro, comune a
+  tutti i giochi ([../core/guida.md](../core/guida.md)). Nel tower defense è
+  la riga dei primi passi (`.primi-passi`): in fondo al campo durante la
+  prima partita in assoluto, non blocca niente, e dice quello che dal campo
+  non si vede — che le torri si pagano coi conti; indica la torre nel foglio
+  e «Comincia la battaglia», e se ne va a battaglia partita, per non tornare
   (`settings.guideViste`, per bambino).
 - **Il banco di prova le salta** (`saltaLeSpiegazioni`, acceso da
   `apriGioco`): un test rigioca la stessa «prima volta» a ogni giro. Chi

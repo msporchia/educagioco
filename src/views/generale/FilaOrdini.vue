@@ -180,8 +180,7 @@ function caselle (o) {
     <!-- l'evento serve a una cosa sola: la domanda si apre attaccata a
          QUESTO tasto, non in fondo allo schermo -->
     <button v-if="!E.sola" class="posto"
-            :class="{ solo: !voci.length && !perc.length,
-                      indicato: E.indica() && !voci.length && !perc.length }"
+            :class="{ solo: !voci.length && !perc.length }"
             @click.stop="E.chiedi(perc, $event)">
       ＋<span v-if="!voci.length"> {{ perc.length ? 'un ordine' : 'Scrivi il primo ordine' }}</span></button>
   </div>
@@ -258,12 +257,9 @@ function caselle (o) {
          font-size:14px; font-weight:900 }
 .posto:active { background:var(--giallo); color:#3a2c00; border-style:solid }
 .posto.solo { min-height:44px; font-size:12.5px; color:var(--tenue) }
-/* la guida del primissimo giro lo sta indicando: bordo pieno e un alone
-   che respira. Non lampeggia — deve farsi trovare, non gridare. */
-.posto.indicato { border-style:solid; border-color:#e8c05a; background:#fff8e8;
-                  color:#6b4310; animation:cerca 1.6s ease-in-out infinite }
-@keyframes cerca { 0%,100% { box-shadow:0 0 0 0 #ffd45c00 }
-                   50% { box-shadow:0 0 0 6px #ffd45c55 } }
+/* la guida del primo giro lo indica (l'anello è comune, giochi/guida.js):
+   il tratteggio diventa pieno */
+.posto[data-indicato] { border-style:solid; color:#6b4310 }
 
 /* ── i due rami ── rientrati di un dito, appesi alla riga di sopra */
 .rami { margin:0 0 6px 10px }

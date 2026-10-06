@@ -48,11 +48,6 @@ const props = defineProps({
      deve costare una riga in un posto, non in due. Qui l'unica
      differenza è che niente si può cambiare. */
   sola: { type: Boolean, default: false },
-  /* la guida del primissimo giro sta indicando il posto vuoto: qui non
-     si sa perché, si sa solo che va acceso. Chi decide è
-     `GeneraleGame.vue`, ed è l'unico che sappia se questa è la prima
-     partita della vita. */
-  indica: { type: Boolean, default: false },
   /* ── E COM'È FATTO, SOTTO IL SUO PIANO ──
      Le reazioni di un personaggio del livello (`reazioniDi` del motore):
      «quando sente «Grugno!»: corre lì», «quando vede la ladra: le tira il
@@ -476,10 +471,9 @@ provide('editor', props.sola
   ? { chiedi: niente, tocca: niente, togli: niente, sposta: niente,
       presaGiu: niente, presaMuovi: niente, presaSu: niente,
       statoRiga, ramoPreso, perche: () => '', frase, comeSiChiama,
-      mirando: () => false, sola: true, indica: () => false }
+      mirando: () => false, sola: true }
   : { chiedi, tocca, togli, sposta, presaGiu, presaMuovi, presaSu,
-      statoRiga, ramoPreso, perche, frase, comeSiChiama, mirando, sola: false,
-      indica: () => props.indica })
+      statoRiga, ramoPreso, perche, frase, comeSiChiama, mirando, sola: false })
 defineExpose({ posaBersaglio, nienteMira })
 </script>
 

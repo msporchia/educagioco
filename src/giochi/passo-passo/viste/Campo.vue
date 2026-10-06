@@ -26,7 +26,6 @@ const props = defineProps({
   pensiero: { type: Object, default: null },     // la frase del gradino: { testo, che }
   sospette: { type: Boolean, default: false },
   piena: { type: Boolean, default: false },      // la fila ha toccato il tetto tecnico
-  manina: { type: String, default: null },       // la prima volta: dove toccare
   consiglio: { type: String, default: null },    // la carta che l'aiuto propone
   colpo: { type: Number, default: 0 },           // ogni 💡 premuto: la lampadina sobbalza
   inCoda: { type: Boolean, default: false },     // 💡 premuto durante la corsa: arriva alla fine
@@ -91,7 +90,6 @@ defineExpose({ tela })
                   :data-freccia="v" :aria-label="nomeDellaMossa(v)"
                   :disabled="inCorsa || piena" @click="emit('freccia', v)">
             <Icona :mossa="v" />
-            <span v-if="manina === v" class="pp-manina pp-em" data-manina aria-hidden="true">👆</span>
           </button>
         </div>
         <div v-if="salti" class="pp-riga">
@@ -106,7 +104,6 @@ defineExpose({ tela })
           <button v-if="conRipeti" class="pp-tasto pp-ripeti" :class="{ 'pp-brilla': brilla === 'ripeti' }"
                   data-carta="ripeti" aria-label="ripeti" :disabled="inCorsa || piena" @click="emit('scatola', 'ripeti')">
             <span class="pp-em" aria-hidden="true">🔁</span><span class="pp-parola">ripeti</span>
-            <span v-if="manina === 'ripeti'" class="pp-manina pp-em" data-manina aria-hidden="true">👆</span>
           </button>
           <button v-if="conSe" class="pp-tasto pp-ripeti pp-tasto-se" :class="{ 'pp-brilla': brilla === 'se' }"
                   data-carta="se" aria-label="se" :disabled="inCorsa || piena" @click="emit('scatola', 'se')">
@@ -143,7 +140,6 @@ defineExpose({ tela })
           <svg viewBox="-20 -20 40 40" aria-hidden="true">
             <path class="pp-icona-pieno" d="M-9 -14 L15 0 L-9 14 Z" />
           </svg>
-          <span v-if="manina === 'via'" class="pp-manina pp-em" data-manina aria-hidden="true">👆</span>
         </button>
         <button v-else class="pp-tasto pp-ferma" data-azione="ferma" aria-label="ferma" @click="emit('ferma')">
           <svg viewBox="-20 -20 40 40" aria-hidden="true">

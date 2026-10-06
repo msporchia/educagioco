@@ -24,7 +24,7 @@ import { fai, guarda, confronta, piu, meno, N, tinta, progetto, programma, istru
 import { Mondo, camminaOmino } from '../../src/giochi/costruttore/motore/mondo.js'
 import { Esecuzione, TETTO_PILA, fraseDi, PERCHE } from '../../src/giochi/costruttore/motore/esecutore.js'
 import { provaLivello } from '../../src/giochi/costruttore/motore/prova.js'
-import { guida } from '../../src/giochi/costruttore/motore/guida.js'
+import { guida, BERSAGLI as B } from '../../src/giochi/costruttore/motore/guida.js'
 import * as mod from '../../src/giochi/costruttore/motore/modifica.js'
 import { conAttrezzi } from '../../src/giochi/costruttore/motore/attrezzi.js'
 import { righeDi, righeScritte, srotola, ciSta, chiamaSeStesso } from '../../src/giochi/costruttore/motore/zaino.js'
@@ -504,13 +504,13 @@ for (const l of LIVELLI) {
    trova comunque la riga giusta. */
 {
   const m = fai.metti('rosso'), v = fai.vai('destra', 1)
-  uguale('programma vuoto: si tocca «aggiungi»', guida({}).dove, 'aggiungi')
-  uguale('cassetta aperta dopo un metti: si tocca «vai»', guida({ righe: [m], cassetta: true }).dove, 'vai')
-  uguale('cassetta aperta dopo un vai: si tocca «metti»', guida({ righe: [m, v], cassetta: true }).dove, 'metti')
+  uguale('programma vuoto: si tocca «aggiungi»', guida({}).dove, B.aggiungi)
+  uguale('cassetta aperta dopo un metti: si tocca «vai»', guida({ righe: [m], cassetta: true }).dove, B.vai)
+  uguale('cassetta aperta dopo un vai: si tocca «metti»', guida({ righe: [m, v], cassetta: true }).dove, B.metti)
   uguale('una casella da scegliere: nessun dito, la casella lampeggia già', guida({ righe: [v], problemi: true }).dove, null)
-  uguale('mai provato: si preme ▶', guida({ righe: [m, v] }).dove, 'via')
-  uguale('provato e cambiato: di nuovo ▶', guida({ righe: [m, v], provato: true, cambiato: true }).dove, 'via')
-  uguale('provato, mancano mattoni: si aggiunge', guida({ righe: [m, v], provato: true, mancano: true }).dove, 'aggiungi')
+  uguale('mai provato: si preme ▶', guida({ righe: [m, v] }).dove, B.via)
+  uguale('provato e cambiato: di nuovo ▶', guida({ righe: [m, v], provato: true, cambiato: true }).dove, B.via)
+  uguale('provato, mancano mattoni: si aggiunge', guida({ righe: [m, v], provato: true, mancano: true }).dove, B.aggiungi)
   uguale('mentre gira tace', guida({ righe: [m, v], inCorso: true }), null)
   uguale('provato e sbagliato in un altro modo: tace, parla il messaggio', guida({ righe: [m, v], provato: true }), null)
 }

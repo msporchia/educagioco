@@ -27,11 +27,13 @@ legenda delle celle sta in `dati/mondo.js`, le regole in `motore/mondo.js`.
   aggiungono. ■ ferma tutto e rimette il mondo com'era.
 - **Niente tempo, niente vite, niente suoni che puniscono** (lo sbaglio è un
   tonfo morbido), e nessuna informazione sta solo nel suono.
-- **La manina della prima volta** (`Gioco.vue`): chi apre il primo livello
-  non sa leggere e non sa cosa fare, quindi una manina indica la freccia e
-  poi ▶ — non blocca niente, non si chiude, e sparisce al primo ▶ per non
-  tornare più. La stessa manina indica 🔁 la prima volta che si arriva allo
-  zaino, finché nella fila non c'è una scatola.
+- **La manina della prima volta** (`motore/guida.js`, sulla guida comune di
+  [../core/guida.md](../core/guida.md)): chi apre il primo livello non sa
+  leggere, quindi una manina indica la freccia, poi ▶; se il coniglio si
+  ferma prima della tana torna sulla freccia, se sbatte su ⌫. Non blocca
+  niente e se ne va quando il primo prato è vinto. La stessa manina indica
+  🔁 la prima volta che si arriva allo zaino, finché nella fila non c'è una
+  scatola.
 
 ## Le regole del mondo
 

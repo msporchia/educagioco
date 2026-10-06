@@ -80,16 +80,16 @@ per aria non dava nessun ordine alle cose.
   programma accanto a «ricomincia da capo». I gettoni degli ordini restano.
 - **Il primo muretto parte scritto a metà** (`inizio`): con un mattone già
   scritto, ▶ fa vedere subito cosa vuol dire un programma.
-- **La guida legge lo schermo, non un copione** (`motore/guida.js`, pura):
+- **La guida legge lo schermo, non un copione** (`motore/guida.js`, pura,
+  sulla guida comune di [../core/guida.md](../core/guida.md)):
   programma vuoto → «＋ aggiungi»; cassetta aperta → «metti», o «vai» se
   l'ultima riga è un metti; una scelta aperta → «scegli qui sotto»; una
   casella da riempire → lampeggia già; mai provato o cambiato → ▶;
   mancano mattoni → «aggiungi ancora». Chi fa le cose in un altro ordine
-  trova comunque la riga giusta. L'anello sul bersaglio è solo CSS
-  (`.cst[data-guida=…]`), e se ne va alla prima vittoria.
+  trova comunque la riga giusta. Se ne va alla prima vittoria.
 
 Nei test: `[data-racconto]`, `[data-azione="racconto"]`, `[data-guida-riga]`,
-`.cst[data-guida]`.
+`[data-indicato]`.
 
 ## Cosa sta dentro un blocco
 

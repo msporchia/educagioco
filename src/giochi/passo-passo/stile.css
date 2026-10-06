@@ -294,10 +294,6 @@
 .pp-sobbalza { display: inline-block; animation: pp-sobbalza .45s ease-out }
 @keyframes pp-sobbalza { 35% { transform: scale(1.35) rotate(-10deg) } }
 
-/* la manina della prima volta: indica e basta — non prende i tocchi */
-.pp-manina { position: absolute; left: 50%; top: 62%; font-size: 34px; pointer-events: none;
-             filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); animation: pp-manina 1.1s ease-in-out infinite }
-@keyframes pp-manina { 0%, 100% { transform: translate(-30%, 0) } 50% { transform: translate(-30%, -9px) } }
 
 /* le icone disegnate, piene del colore del tasto */
 .pp-icona { display: block; overflow: visible }

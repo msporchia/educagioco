@@ -38,6 +38,7 @@ import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { guastiDelleSfide } from '../../src/giochi/primati.js'
 import { misure, statoTraguardo } from '../../src/store/progressi.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
+import { guidaDelPrato, guidaDelRipeti, BERSAGLI as GB } from '../../src/giochi/passo-passo/motore/guida.js'
 
 const L = (mappa, salti = false) => new Livello(mappa, { salti })
 const FRECCE = { su: '↑', giu: '↓', sinistra: '←', destra: '→',
@@ -973,6 +974,21 @@ for (const [i, t] of CAMPAGNA.entries()) {
   const usate = new Set(CAMPAGNA.flatMap(t => t.mappa.join('').split('')))
   const mai = Object.keys(LEGENDA).filter(ch => !usate.has(ch) && !['2', '3'].includes(ch))
   nota('lettere della legenda mai usate dalla campagna:', mai.join(' ') || 'nessuna')
+}
+
+/* ══════════ la guida della prima volta ══════════
+   La manina va dove serve adesso, letto dallo schermo: anche dopo un ▶
+   premuto troppo presto, quando il coniglio si ferma prima della tana. */
+{
+  uguale('fila vuota: la manina sulla freccia', guidaDelPrato({}).dove, GB.destra)
+  controlla('ed è proprio la manina, per chi non legge', guidaDelPrato({}).mano === true)
+  uguale('una freccia e mai provato: ▶', guidaDelPrato({ fila: ['destra'] }).dove, GB.via)
+  uguale('fermo prima della tana: di nuovo la freccia', guidaDelPrato({ fila: ['destra'], provato: true, fermoPrima: true }).dove, GB.destra)
+  uguale('aggiunta una freccia: di nuovo ▶', guidaDelPrato({ fila: ['destra', 'destra'], provato: true, cambiato: true }).dove, GB.via)
+  uguale('ha sbattuto: si toglie la freccia', guidaDelPrato({ fila: ['su'], provato: true, sbattuto: true }).dove, GB.togli)
+  uguale('mentre corre, o a cartello aperto, tace', guidaDelPrato({ fila: ['destra'], fermo: true }), null)
+  uguale('allo zaino indica 🔁', guidaDelRipeti({}).dove, GB.ripeti)
+  uguale('e tace quando nella fila c\'è una scatola', guidaDelRipeti({ conScatola: true }), null)
 }
 
 riassunto('passo passo')

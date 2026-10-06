@@ -28,6 +28,8 @@ import { GIOCHI } from '../data/giochi.js'
 import { PAGA } from '../data/paghe.js'
 import { borsa } from '../store/varieta.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
+import Guida from '../giochi/Guida.vue'
+import { usaGuida } from '../giochi/guida.js'
 import { TORRI } from '../data/ops.js'
 import { immuniDellOnda } from '../data/mostri.js'
 import { CFG, TAPPE, LIBERE, liberaDi, quantiRegali, blocchettoDi,
@@ -131,19 +133,28 @@ function accendiPrimiPassi () {
   passoFatto.value = false
 }
 
-// La riga cambia una volta sola: prima dice cosa toccare, poi (prima torre
-// in piedi) che i soldi per la prossima escono dai conti.
-const dritta = computed(() => {
-  if (!primiPassi.value || fase.value !== 'gioco') return ''
-  if (hud.torri === 0) return 'Tocca una piazzola: il conto che esce paga la torre'
-  return 'Le torri sparano da sole · i soldi per la prossima escono dai conti'
+// Cosa toccare adesso (la riga e l'anello sono comuni: giochi/guida.js). La
+// piazzola è disegnata sul campo: lì niente anello, solo la riga. Partita la
+// battaglia dice che i soldi per la prossima escono dai conti, e se ne va.
+const radice = ref(null)
+const passoGuida = computed(() => {
+  if (!primiPassi.value || fase.value !== 'gioco') return null
+  const f = foglio.value
+  if (f && f.che === 'costruisci') return { dove: '[data-torre]:not([disabled])', testo: 'Scegli la torre: la paghi con un conto.' }
+  if (f && f.che === 'conto') return { dove: null, testo: 'Fai il conto: il risultato paga la torre.' }
+  if (hud.torri === 0) return { dove: null, testo: 'Tocca una piazzola: il conto che esce paga la torre' }
+  if (vista.inAttesa && !hud.onda) return { dove: '[data-azione="chiama-onda"]', testo: 'Le torri sparano da sole. Premi «Comincia la battaglia».' }
+  return { dove: null, testo: 'Le torri sparano da sole · i soldi per la prossima escono dai conti' }
 })
+usaGuida(radice, passoGuida)
 
 watch(() => hud.torri, n => {
   if (!primiPassi.value || !n || passoFatto.value) return
   passoFatto.value = true
   segnaGuidaVista(PRIMI_PASSI)
-  setTimeout(() => { primiPassi.value = false }, 6000)
+})
+watch(() => hud.onda, n => {
+  if (primiPassi.value && n && passoFatto.value) setTimeout(() => { primiPassi.value = false }, 6000)
 })
 
 const op = ref(null)
@@ -495,7 +506,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="schermo td">
+  <div ref="radice" class="schermo td">
     <!-- il ⏸ c'è solo dove il campo cammina -->
     <Barra titolo="Castello" guida="torri" @aiuto="aiuto"
            :pausa="fase === 'gioco' && !state.festa.length" @pausa="metti()"
@@ -513,7 +524,7 @@ onMounted(() => {
                         @esito="finita" @potenzia="apriTorre" @piazzola="apriPiazzola" />
 
       <!-- la prima partita in assoluto: non blocca niente, se ne va da sé -->
-      <div v-if="dritta" class="primi-passi">{{ dritta }}</div>
+      <Guida class="primi-passi" :passo="passoGuida" />
 
       <button v-if="fase === 'gioco' && !foglio && !blocchetto" class="tondo su-potenziamenti"
               data-azione="potenziamenti" aria-label="potenziamenti" @click="apriBlocchetto">

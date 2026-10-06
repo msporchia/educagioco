@@ -24,6 +24,8 @@ import { mancano, chiedeConferma, SVELA } from '../aiuti.js'
 import { generaSentiero, caso, premioDi, INGREDIENTI } from './motore/generatore.js'
 import { Proiezione } from './scena/proiezione.js'
 import { Regia } from './scena/regia.js'
+import { guidaDelPrato, guidaDelRipeti } from './motore/guida.js'
+import { usaGuida } from '../guida.js'
 
 import Mappa from './viste/Mappa.vue'
 import Campo from './viste/Campo.vue'
@@ -66,7 +68,8 @@ const consiglioTesta = ref(null)    // la scatola a cui l'aiuto cambia il numero
 const giri = ref(null)              // a che giro sono le scatole: mentre corre, o dove si è fermata
 const scossa = ref(0)               // ▶ fermato da una N ancora da scegliere
 const finale = ref(null)
-const partito = ref(false)          // in questo livello si è già premuto ▶
+const provato = ref(null)           // la fila dell'ultimo ▶ in questo livello, per la guida
+const fermoPrima = ref(false)       // all'ultimo ▶ il coniglio si è fermato prima della tana
 
 let liv = null
 let cieco = false
@@ -136,14 +139,18 @@ const statoSentiero = computed(() => ({
   dopo: SCALINI.at(-1).chiave,
 }))
 
-// la manina della prima volta: vedi docs/passo-passo/regole.md
-const manina = computed(() => {
-  if (inCorsa.value || finale.value) return null
+// la guida della prima volta (motore/guida.js, docs/passo-passo/regole.md)
+const radice = ref(null)
+const passoGuida = computed(() => {
+  const fermo = inCorsa.value || !!finale.value
   if (tappaIdx.value === TAPPE_PICCOLE && stelleDi(CHIAVE, TAPPE_PICCOLE) === 0)
-    return conCicli(fila.value) || scelta.value != null ? null : 'ripeti'
-  if (tappaIdx.value !== 0 || avanza.tappa > 0 || partito.value) return null
-  return fila.value.length ? 'via' : 'destra'
+    return guidaDelRipeti({ fermo, conScatola: conCicli(fila.value) || scelta.value != null })
+  if (tappaIdx.value !== 0 || avanza.tappa > 0) return null
+  return guidaDelPrato({ fila: fila.value, fermo, provato: provato.value !== null,
+                         cambiato: provato.value !== JSON.stringify(fila.value),
+                         sbattuto: guasto.value != null, fermoPrima: fermoPrima.value })
 })
+usaGuida(radice, passoGuida)
 
 const titolo = computed(() => {
   if (vista.value !== 'campo' || !tappa.value) return 'Passo passo'
@@ -237,7 +244,8 @@ function entra(t, indice) {
   consiglioTesta.value = null
   giri.value = null
   finale.value = null
-  partito.value = false
+  provato.value = null
+  fermoPrima.value = false
   ultimoGiro = null
   passoCorrente = -1
   esitoInCorsa = null
@@ -361,7 +369,8 @@ function via() {
   passoCorrente = -1
   corrente.value = -1
   inCorsa.value = true
-  partito.value = true
+  provato.value = JSON.stringify(fila.value)
+  fermoPrima.value = false
   partitoAlle = performance.now()
   ultimoSuono = ''
   regia.suona(pro)
@@ -426,6 +435,7 @@ function fineGiro() {
     giri.value = ultimo && ultimo.giri && ultimo.giri.length ? ultimo.giri : null
   } else {
     giri.value = null
+    fermoPrima.value = true
   }
   aiutoPrenotato()
 }
@@ -692,7 +702,7 @@ function indietro() {
 </script>
 
 <template>
-  <div class="schermo">
+  <div ref="radice" class="schermo">
     <Barra :titolo="titolo" guida="passo" monete @indietro="indietro" />
 
     <div class="pp">
@@ -704,7 +714,7 @@ function indietro() {
              :in-corsa="inCorsa" :salti="!!(tappa && tappa.salti)" :brilla="brilla"
              :prezzo="prezzoDelProssimo" :povero="povero" :armato="armato" :povero-scossa="poveroScossa"
              :pensiero="pensiero" :sospette="sospette" :piena="piena"
-             :manina="manina" :consiglio="consiglio" :colpo="colpo" :in-coda="aiutoInCoda"
+             :consiglio="consiglio" :colpo="colpo" :in-coda="aiutoInCoda"
              :carte="(tappa && tappa.carte) || []" :zaino="(tappa && tappa.zaino) || null"
              :giri="giri" :scelta="scelta" :scelta-tipo="sceltaTipo" :valore-ora="valoreOra"
              :consiglio-valore="consiglioValore" :consiglio-testa="consiglioTesta" :scossa="scossa"

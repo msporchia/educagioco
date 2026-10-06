@@ -20,6 +20,8 @@ import { fraseDi } from './motore/esecutore.js'
 import { conAttrezzi } from './motore/attrezzi.js'
 import { righeDi, righeScritte } from './motore/zaino.js'
 import { guida } from './motore/guida.js'
+import { usaGuida } from '../guida.js'
+import Guida from '../Guida.vue'
 import { Regia, quadroFermo } from './regia.js'
 
 import Mappa from './viste/Mappa.vue'
@@ -219,6 +221,7 @@ function annulla() {
 const zaino = computed(() => (liv.value && liv.value.zaino) || null)
 const righe = computed(() => (prog.value ? righeScritte(prog.value) : 0))
 // la guida accompagna un livello che la chiede finché non è vinto (motore/guida.js)
+const radice = ref(null)
 const passoGuida = computed(() => {
   const l = liv.value
   if (!l || !l.guida || !prog.value || finale.value || stelleDi(CHIAVE, idx.value) > 0) return null
@@ -226,6 +229,7 @@ const passoGuida = computed(() => {
                  problemi: problemi.value.size > 0, inCorso: !!stato.inCorso, provato: provato.value !== null,
                  cambiato: provato.value !== JSON.stringify(prog.value.principale), mancano: mancano.value })
 })
+usaGuida(radice, passoGuida)
 function troppoPerLoZaino(quante) {
   if (!zaino.value || quante <= zaino.value) return false
   messaggio.value = { tipo: 'errore', testo: fraseZainoPieno() }
@@ -612,7 +616,7 @@ const progettoAperto = computed(() =>
   <div class="schermo">
     <Barra :titolo="titolo" guida="costruttore" monete @indietro="indietro" />
 
-    <div class="cst" :data-guida="passoGuida && passoGuida.dove">
+    <div ref="radice" class="cst">
       <Mappa v-if="vista === 'mappa'" :capitoli="capitoli" :libero="{ ...LIBERO, aperto: liberoAperto }"
              @gioca="apriLivello" @libero="apriLivello(LIBERO_IDX)" />
 
@@ -632,7 +636,7 @@ const progettoAperto = computed(() =>
                    @via="via" @stop="stop" @velocita="cambiaVelocita" @aiuto="apriAiuti"
                    @nuova-lavagnetta="nuovaLavagnetta(null)" />
           <p v-if="messaggio" class="cst-messaggio" :class="'cst-' + messaggio.tipo" data-messaggio>{{ messaggio.testo }}</p>
-          <p v-if="passoGuida" class="cst-guida" data-guida-riga><span>👇</span> {{ passoGuida.testo }}</p>
+          <Guida :passo="passoGuida" />
         </div>
         <Editor :programma="prog" :livello="liv" :tab="tabMostrato" :sel="sel" :aperta="aperta_"
                 :accesa="stato.inCorso ? stato.riga : null" :guasto="stato.guasto" :problemi="problemi"

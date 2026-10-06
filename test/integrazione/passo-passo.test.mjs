@@ -81,9 +81,9 @@ await scatto(page, 'passo-mappa')
 await entraNellaTappa(0)
 controlla('nella prima tappa non ci sono i salti', await page.locator('[data-salto]').count() === 0)
 controlla('né il ripeti, né lo zaino', await page.locator('[data-carta], [data-libero]').count() === 0)
-/* la manina della prima volta: indica la freccia, poi ▶, poi se ne va */
+/* la manina della prima volta (la guida comune): indica la freccia, poi ▶, poi se ne va */
 controlla('la prima volta una manina indica la freccia',
-          await page.locator('[data-freccia="destra"] [data-manina]').count() === 1)
+          await page.locator('[data-freccia="destra"][data-indicato="mano"]').count() === 1)
 {
   const tela = await page.locator('.pp-tela').boundingBox()
   controlla('la mappa è disegnata', tela && tela.width > 100 && tela.height > 80, JSON.stringify(tela))
@@ -93,12 +93,12 @@ const soluzione = risolvi(Livello.da(CAMPAGNA[0]))
 await componi(soluzione)
 uguale('la fila ha una tessera per freccia', await page.locator('[data-tessera]').count(), soluzione.length)
 controlla('con la fila scritta, la manina passa su ▶',
-          await page.locator('[data-azione="via"] [data-manina]').count() === 1)
+          await page.locator('[data-azione="via"][data-indicato="mano"]').count() === 1)
 await scatto(page, 'passo-fila')
 await page.locator('[data-azione="via"]').click()
 await attendi(page, 350)
 controlla('mentre corre, ▶ diventa ■', await page.locator('[data-azione="ferma"]').count() === 1)
-controlla('e la manina se n\'è andata', await page.locator('[data-manina]').count() === 0)
+controlla('e la manina se n\'è andata', await page.locator('[data-indicato]').count() === 0)
 controlla('e una tessera è accesa', await page.locator('[data-tessera][data-corrente]').count() === 1)
 await scatto(page, 'passo-corsa')
 await page.waitForSelector('[data-fine="tappa"]', { timeout: 12000 })
@@ -380,7 +380,7 @@ await entraNellaTappa(TAPPE_PICCOLE)
 const viale = CAMPAGNA[TAPPE_PICCOLE]
 uguale('c\'è il tasto del ripeti', await page.locator('[data-carta="ripeti"]').count(), 1)
 controlla('e la prima volta la manina lo indica',
-          await page.locator('[data-carta="ripeti"] [data-manina]').count() === 1)
+          await page.locator('[data-carta="ripeti"][data-indicato="mano"]').count() === 1)
 uguale('lo zaino mostra i suoi posti vuoti', await page.locator('[data-libero]').count(), viale.zaino)
 await componi(['destra', 'destra', 'destra'])
 controlla('pieno lo zaino, le frecce non entrano più',

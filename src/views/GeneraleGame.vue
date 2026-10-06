@@ -52,6 +52,8 @@ import { state, genProgresso, genCompleta, daSolo, genAiutiPresi, genSegnaAiuti,
   from '../store/profile.js'
 import { scrive as scriveNelPiano, SVELA } from '../giochi/aiuti.js'
 import { suono } from '../audio.js'
+import Guida from '../giochi/Guida.vue'
+import { usaGuida } from '../giochi/guida.js'
 import { LIVELLI, proveDi } from '../data/generale.js'
 import { filaFinita } from './generale/fila.js'
 import { creaMondo, avvia, passo, esegui, pianoCompleto, mieUnita, altruiUnita, altriInCampo,
@@ -615,14 +617,18 @@ function riavvolgi (t) {
    questa partita, nemmeno se il piano si svuota. Chi ha visto girare la
    scena ha capito il giro. */
 const guidaFinita = ref(false)
-const guida = computed(() => {
+const radice = ref(null)
+const passoGuida = computed(() => {
   tic.value
-  if (guidaFinita.value || !liv.value.guida) return ''
-  if (auto.value || montaggio.value || finito.value || andato.value) return ''
+  if (fase.value !== 'gioco' || guidaFinita.value || !liv.value.guida) return null
+  if (auto.value || montaggio.value || finito.value || andato.value) return null
   /* la sola volta della vita: nessun livello chiuso, in nessuna fila */
-  if (Object.keys(progresso.value.stelle || {}).length) return ''
-  return quantiOrdini.value ? 'via' : 'posto'
+  if (Object.keys(progresso.value.stelle || {}).length) return null
+  return quantiOrdini.value
+    ? { dove: '.comandi .tasto.via', testo: 'Ordine firmato. Adesso premi ▶ Via e guarda se il piano regge.' }
+    : { dove: '.posto.solo', testo: 'Tocca «＋ Scrivi il primo ordine» qui sotto, e scegli cosa deve fare.' }
 })
+usaGuida(radice, passoGuida)
 
 /* l'avviso vale finché il pezzo manca davvero */
 const avvisoOra = computed(() => (manchevole.value && incompleti.value.length ? manchevole.value : ''))
@@ -745,7 +751,7 @@ async function ridimensiona () {
 </script>
 
 <template>
-  <div class="schermo generale">
+  <div ref="radice" class="schermo generale">
     <Barra :titolo="fase === 'gioco' ? liv.nome : titolo" guida="generale" @indietro="torna">
       <template v-if="fase === 'gioco'">
         <!-- ── E IL NUMERO DELLA PROVA NON C'È PIÙ ──
@@ -835,23 +841,9 @@ async function ridimensiona () {
       <p class="dritta" :class="{ male: (mondo && mondo.finita && !mondo.vinto) || !!avvisoOra,
                                   bene: mondo && mondo.finita && mondo.vinto }" v-html="dritta"></p>
 
-      <!-- ═════ LA GUIDA DEL PRIMISSIMO GIRO ═════
-           Una riga sola, che dice dove si tocca. Non ha una ✕ perché
-           non c'è niente da chiudere: se ne va da sé appena il gesto è
-           fatto, e la freccia punta all'unica cosa da toccare adesso.
-           Sta SOTTO l'obiettivo e sopra i comandi, cioè in mezzo alle
-           due cose di cui parla. -->
-      <!-- il testo sta in UN solo figlio: qui il contenitore è un flex,
-           e lasciare le parole nude accanto a un <b> spezzava la frase
-           in tre colonne — «premi», «▶ Via», «e guarda» uno di fianco
-           all'altro invece che in fila -->
-      <p v-if="guida" class="guidina">
-        <span class="dito">👇</span>
-        <span v-if="guida === 'posto'">Tocca <b>«＋ Scrivi il primo ordine»</b> qui sotto,
-          e scegli cosa deve fare.</span>
-        <span v-else>Ordine firmato. Adesso premi <b>▶ Via</b> e guarda se il piano
-          regge.</span>
-      </p>
+      <!-- la guida del primo giro (giochi/Guida.vue): sotto l'obiettivo e
+           sopra i comandi, in mezzo alle due cose di cui parla -->
+      <Guida class="guida-giro" :passo="passoGuida" />
 
       <div class="comandi">
         <!-- il tasto grande dice cosa fa premendolo, e non c'è nient'altro
@@ -862,7 +854,7 @@ async function ridimensiona () {
              girando il livello, e un «Via» offerto in quell'istante
              rimetterebbe tutto alla prima scena proprio mentre si sta
              guardando la seconda -->
-        <button class="tasto via" :class="{ gira: auto || montaggio, indicato: guida === 'via' }"
+        <button class="tasto via" :class="{ gira: auto || montaggio }"
                 @click="via">
           {{ auto || montaggio ? '⏹ Stop' : '▶ Via' }}</button>
         <button v-if="liv.mostraNemici === 'gettoni'" class="tasto q spia"
@@ -900,7 +892,7 @@ async function ridimensiona () {
            di caselle che si toccano, e in fondo a ogni fila il posto
            vuoto da cui ne nasce un altro. -->
       <EditorPiano v-if="!letta" ref="editor" :ordini="ordini" :mondo-ora="mondoOra"
-                   :tic="tic" :unita-ora="unitaOra" :indica="guida === 'posto'"
+                   :tic="tic" :unita-ora="unitaOra"
                    @mira="chiediMira" />
 
       <!-- ═════ GLI ORDINI DI QUALCUN ALTRO ═════
@@ -1022,26 +1014,8 @@ async function ridimensiona () {
 .dritta.male { color:#a8322c; background:#ffe6e3 }
 .dritta.bene { color:#1c6b3f; background:#dff5e6 }
 
-/* ── la guida del primissimo giro ──
-   Un colore che non è quello di nessun altro messaggio del gioco (né
-   l'obiettivo, né l'errore, né la vittoria): è una voce che parla una
-   volta sola. Il dito respira piano — non lampeggia: un lampeggio in
-   uno schermo per bambini si prende tutta l'attenzione, e qui
-   l'attenzione deve andare al tasto che indica. */
-.guidina { flex:none; display:flex; align-items:center; gap:7px; margin:0;
-           padding:7px 12px; font-size:12.5px; line-height:1.3; font-weight:800;
-           color:#6b4310; background:#fff5e0; border-top:1px solid #f0dcae }
-.guidina b { color:#3a2c00 }
-.guidina span:not(.dito) { flex:1; min-width:0 }
-.guidina .dito { flex:none; font-size:15px; animation:respira 1.6s ease-in-out infinite }
-@keyframes respira { 0%,100% { transform:translateY(0); opacity:.85 }
-                     50% { transform:translateY(3px); opacity:1 } }
-/* il tasto indicato: un alone giallo che pulsa piano, senza toccare il
-   colore del tasto — resta il tasto verde di sempre, con addosso un
-   dito che lo mostra */
-.tasto.via.indicato { animation:alone 1.6s ease-in-out infinite }
-@keyframes alone { 0%,100% { box-shadow:0 3px 0 #2b8a53, 0 0 0 0 #ffd45c00 }
-                   50% { box-shadow:0 3px 0 #2b8a53, 0 0 0 7px #ffd45c66 } }
+/* la guida del primo giro: la riga è comune, qui solo il suo posto */
+.guida-giro { margin:4px 8px 0 }
 
 /* ── i comandi ── */
 .comandi { flex:none; display:flex; gap:6px; padding:6px 8px }

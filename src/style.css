@@ -63,3 +63,13 @@ h2{font-size:clamp(20px,5.4vw,26px);font-weight:900;color:var(--viola-scuro)}
   .schermo { display:none }
 }
 @keyframes ruota { 0%,45%{transform:rotate(-90deg)} 60%,100%{transform:rotate(0)} }
+
+/* la guida del primo giro (giochi/guida.js): un anello che respira, non
+   lampeggia; outline e non box-shadow, così l'ombra del tasto resta sua */
+[data-indicato] { outline:4px solid #ffd45c; outline-offset:2px; animation:indica 1.6s ease-in-out infinite }
+@keyframes indica { 50% { outline-color:#ffd45c55; outline-offset:5px } }
+/* per chi non legge ancora: anche la manina, sopra il tasto */
+[data-indicato="mano"] { position:relative }
+[data-indicato="mano"]::after { content:'👆'; position:absolute; left:50%; top:62%; font-size:34px; line-height:1;
+  pointer-events:none; filter:drop-shadow(0 2px 2px rgba(0,0,0,.35)); animation:manina 1.1s ease-in-out infinite }
+@keyframes manina { 0%,100% { transform:translate(-30%,0) } 50% { transform:translate(-30%,-9px) } }
