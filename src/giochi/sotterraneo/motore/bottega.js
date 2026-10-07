@@ -1,10 +1,12 @@
 // I mercanti di sopra: la roba dell'avventuriero (Corredo) davanti a un banco. Ogni mercante pesca il suo
 // banco una volta per giro (fra una discesa finita e l'altra) e quello che si compra se ne va; le cose che non
-// finiscono (le cure, la torcia) stanno in cima. Gira in Node: il giocatore finto ci fa la spesa (banco.js).
+// finiscono (le cure, la torcia) stanno in cima. L'armaiolo e il rigattiere portano la riga della storia con cui
+// si entra nella prossima discesa (motore/storia.js). Gira in Node: il giocatore finto ci fa la spesa (banco.js).
 // Le regole: docs/sotterraneo/roba.md, "I mercanti di sopra".
 import { Corredo } from './corredo.js'
 import { COSE, pescaMerce } from '../dati/cose.js'
-import { mercanteDi, vendeLa, righeDi, tettoDi, profonditaDelBanco } from '../dati/mercanti.js'
+import { mercanteDi, vendeLa, righeDi, profonditaDelBanco } from '../dati/mercanti.js'
+import { bancoDelPasso } from './storia.js'
 
 export class Bottega extends Corredo {
   // `finite`: discese finite (avanza.tappa). `banchi`: quello che è già stato pescato in questo giro
@@ -24,12 +26,12 @@ export class Bottega extends Corredo {
     const m = mercanteDi(chiave)
     if (!m) return null
     if (!this.banchi[chiave]) {
-      this.banchi[chiave] = pescaMerce(profonditaDelBanco(this.finite), {
-        quante: righeDi(m, this.finite), rnd: this.rnd,
-        ammessa: k => vendeLa(m, k) && !m.sempre.includes(k) && !this.possiedo(k) &&
-          COSE[k].prezzo <= tettoDi(m, this.finite),
-        tua: k => this.posso(k),
-      })
+      const ammessa = k => vendeLa(m, k) && !m.sempre.includes(k) && !this.possiedo(k)
+      this.banchi[chiave] = m.passo
+        ? bancoDelPasso(m, this, this.finite, { rnd: this.rnd, ammessa })
+        : pescaMerce(profonditaDelBanco(this.finite), {
+          quante: righeDi(m, this.finite), rnd: this.rnd, ammessa, tua: k => this.posso(k),
+        })
     }
     return { roba: this.banchi[chiave], sempre: m.sempre }
   }

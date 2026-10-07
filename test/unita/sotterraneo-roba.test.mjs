@@ -11,7 +11,7 @@
 import { CAMPAGNA, L_ABISSO, svenimentiDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { COSE, CURE, SEGNI, IN_VENDITA, STANZE_TORCIA } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
-import { MERCANTI, mercanteDi, vendeLa, righeDi, tettoDi, profonditaDelBanco, guastiDeiMercanti }
+import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti }
   from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { MERCANTI as DOVE_MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
@@ -19,7 +19,10 @@ import { Corredo, ROBA_VUOTA, rileggiRoba } from '../../src/giochi/sotterraneo/m
 import { Bottega } from '../../src/giochi/sotterraneo/motore/bottega.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
-import { gioca, misuraConLaRoba } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { gioca, misuraLaStoria } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { robaAttesa, migliora } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { passoDi, premiDella } from '../../src/giochi/sotterraneo/dati/storia.js'
+import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 1. i dati ══════════ */
@@ -157,44 +160,46 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   stessaLista('chi comincia scende nudo', c.roba, ROBA_VUOTA())
 }
 
-/* ══════════ 7. i banchi ══════════ */
+/* ══════════ 7. i banchi portano il passo dopo ══════════
+   L'armaiolo e il rigattiere hanno la riga della storia con cui si entra
+   nella prossima discesa (dati/storia.js): a chi non ha raccolto niente
+   offrono i pezzi che mancano, a chi li ha già nient'altro di più forte,
+   e qualche cosa in più che non costa più del pezzo del passo. */
 {
-  /* ogni mercante vende solo il suo, e più discese finite vuol dire più
-     righe e roba più cara (il tetto dell'armaiolo, la profondità) */
   const righe = []
-  for (let finite = 0; finite <= CAMPAGNA.length; finite++) {
-    const riga = []
-    for (const m of MERCANTI) {
-      let quante = 0, prezzo = 0, banchi = 0, fuori = 0, sopraIlTetto = 0
-      for (let s = 0; s < 40; s++) {
-        const b = new Bottega({ finite, rnd: seminato(100 + s * 7 + finite) })
-        const r = b.mercanzia(m.chiave)
-        const pescati = r.filter(x => !x.sempre).map(x => x.chiave)
-        quante += pescati.length
-        prezzo += pescati.reduce((a, k) => a + COSE[k].prezzo, 0)
-        banchi++
-        fuori += pescati.filter(k => !vendeLa(m, k)).length
-        sopraIlTetto += pescati.filter(k => COSE[k].prezzo > tettoDi(m, finite)).length
-        controlla(`${m.chiave}, ${finite} finite: in cima quello che non finisce`,
-                  r.filter(x => x.sempre).map(x => x.chiave).join() === m.sempre.join())
+  let fuori = 0, avanti = 0, troppoCare = 0, mancati = 0
+  for (const eroe of EROI.map(e => e.chiave)) {
+    for (let finite = 1; finite <= CAMPAGNA.length; finite++) {
+      const riga = passoDi(eroe, finite)
+      const tetto = c => Math.max(0, ...c.map(x => (riga[x] ? COSE[riga[x]].prezzo : 0)))
+      for (let s = 0; s < 6; s++) {
+        // chi arriva con la riga di prima: i pezzi del passo ci sono tutti
+        const indietro = new Bottega({ eroe, roba: robaAttesa(eroe, finite - 1), finite, rnd: seminato(100 + s * 7 + finite) })
+        const dovuti = premiDella(eroe, finite - 1).filter(k => migliora(indietro, k))
+        const offerti = [...indietro.banco('armaiolo').roba, ...indietro.banco('rigattiere').roba]
+        mancati += dovuti.filter(k => !offerti.includes(k)).length
+        // chi ha già la riga: niente della riga dopo, e niente sopra il prezzo del passo
+        const pari = new Bottega({ eroe, roba: robaAttesa(eroe, finite), finite, rnd: seminato(200 + s * 7 + finite) })
+        const dopo = new Set(premiDella(eroe, finite))
+        for (const m of MERCANTI) {
+          const r = pari.mercanzia(m.chiave)
+          controlla(`${m.chiave}, ${finite} finite: in cima quello che non finisce`,
+                    r.filter(x => x.sempre).map(x => x.chiave).join() === m.sempre.join())
+          const pescati = r.filter(x => !x.sempre).map(x => x.chiave)
+          fuori += pescati.filter(k => !vendeLa(m, k)).length
+          avanti += pescati.filter(k => dopo.has(k)).length
+          if (m.passo) troppoCare += pescati.filter(k => COSE[k].prezzo > tetto(m.passo)).length
+          else uguale(`${m.chiave}, ${finite} finite: tante righe quante dichiara`, pescati.length, righeDi(m, finite))
+        }
       }
-      uguale(`${m.chiave}, ${finite} finite: vende solo il suo`, fuori, 0)
-      uguale(`${m.chiave}, ${finite} finite: niente sopra il tetto`, sopraIlTetto, 0)
-      uguale(`${m.chiave}, ${finite} finite: tante righe quante dichiara`, quante, righeDi(m, finite) * banchi)
-      riga.push(`${m.chiave} ${righeDi(m, finite)} ${righeDi(m, finite) === 1 ? 'riga' : 'righe'}, ${quante ? (prezzo / quante).toFixed(0) : '-'} 💎`)
-      m.medi = m.medi || []
-      m.medi.push(quante ? prezzo / quante : 0)
+      if (eroe === 'cavaliere') righe.push(`  ${finite} finite: ${premiDella(eroe, finite - 1).join(', ')}`)
     }
-    righe.push(`  ${finite} finite: ${riga.join(' · ')}`)
   }
-  const armi = mercanteDi('armaiolo').medi
-  controlla('dall\'armaiolo, più discese finite vuol dire roba più cara', armi[CAMPAGNA.length] > armi[0] * 1.8,
-            armi.map(x => x.toFixed(0)).join(' → '))
-  controlla('e il terzo gradino solo dopo la grotta', tettoDi(mercanteDi('armaiolo'), 2) < COSE.spadone.prezzo &&
-            tettoDi(mercanteDi('armaiolo'), 3) >= COSE.spadone.prezzo)
-  controlla('la profondità del banco cresce', [0, 1, 2, 3, 4, 5, 6].every(f => !f ||
-            profonditaDelBanco(f) > profonditaDelBanco(f - 1)))
-  nota('i banchi, per discese finite:')
+  uguale('chi arriva senza i pezzi del passo li trova al banco', mancati, 0)
+  uguale('ogni mercante vende solo il suo', fuori, 0)
+  uguale('nessun banco porta la riga dopo', avanti, 0)
+  uguale('e niente costa più del pezzo del passo', troppoCare, 0)
+  nota('il passo che il banco porta al cavaliere, per discese finite:')
   righe.forEach(r => nota(r))
   controlla('l\'erborista ha sempre le tre cure e la torcia', CURE.every(k => mercanteDi('erborista').sempre.includes(k)) &&
             mercanteDi('erborista').sempre.includes('torcia'))
@@ -244,17 +249,18 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
 }
 
 /* ══════════ 8. l'equilibrio, in piccolo ══════════
-   La misura intera (venti file, otto/sei/quattro su dieci) sta in
-   `misure/sotterraneo`; qui sei file, per accorgersi subito se la roba
+   La misura intera (venti semi, otto/sei/quattro su dieci, la roba di una
+   discesa prima e di due avanti) sta in `misure/sotterraneo`; qui sei semi
+   col cavaliere e la roba attesa, per accorgersi subito se la tabella
    rende una discesa una passeggiata o un muro. */
 {
-  const m = misuraConLaRoba({ semi: 6, fila: 'minimo' })
-  const [otto, , quattro] = m.vinte
+  const m = misuraLaStoria({ eroe: 'cavaliere', semi: 6, prove: [0.8, 0.4], scarti: [0] })
+  const [otto, quattro] = m.vinte[0]
   for (const [k, t] of CAMPAGNA.entries()) {
-    controlla(`${t.chiave}: con la roba, a otto su dieci si arriva in fondo`, otto[k] >= 5, `${otto[k]}/6`)
-    if (k) controlla(`${t.chiave}: con la roba, a quattro su dieci quasi mai`, quattro[k] <= 1, `${quattro[k]}/6`)
+    controlla(`${t.chiave}: con la roba attesa, a otto su dieci si arriva in fondo`, otto[k] >= 5, `${otto[k]}/6`)
+    if (k) controlla(`${t.chiave}: con la roba attesa, a quattro su dieci quasi mai`, quattro[k] <= 1, `${quattro[k]}/6`)
   }
-  nota(`sei file con la roba: a 8/10 ${otto.join(' · ')}, a 4/10 ${quattro.join(' · ')}`)
+  nota(`sei semi con la roba attesa: a 8/10 ${Object.values(otto).join(' · ')}, a 4/10 ${Object.values(quattro).join(' · ')}`)
 }
 
 riassunto('la roba che resta e i mercanti')

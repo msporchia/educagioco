@@ -10,6 +10,7 @@ import { COSE } from '../dati/cose.js'
 import { TASCHE } from '../dati/mondo.js'
 import { CAMPAGNA } from '../dati/campagna.js'
 import { seminato } from './livello.js'
+import { robaAttesa } from './storia.js'
 import { viaVerso, percorso } from '../../../motore/passi.js'
 
 const DT = 1 / 30
@@ -365,6 +366,35 @@ export function misuraConLaRoba({ semi = 20, prove = [0.8, 0.6, 0.4], allenata =
     }
   }
   return { vinte, semi, zaini, prove }
+}
+
+// La tabella della storia sotto il banco (dati/storia.js, docs/sotterraneo/la-grande-storia.md): ogni discesa
+// giocata con la roba della riga sua spostata di `scarto` (0 la roba attesa, −1 quella di una discesa prima, 2
+// quella di due discese avanti), con le pozioni attese, a ognuna delle `prove`. Torna, per scarto, per bravura e
+// per discesa, quante volte si arriva in fondo; e le gemme con cui si esce con la roba attesa (`gemme[k]`, la
+// media), che sono quelle che il banco del passo dopo deve far tornare
+export function misuraLaStoria({ eroe = 'cavaliere', semi = 20, prove = [0.8, 0.6, 0.4], scarti = [0, -1, 2],
+                                 come = 'minimo', quali = null } = {}) {
+  const discese = quali || CAMPAGNA.map((_, k) => k)
+  const vinte = {}
+  const gemme = {}
+  for (const scarto of scarti) {
+    vinte[scarto] = prove.map(() => ({}))
+    for (const k of discese) {
+      const riga = Math.max(0, Math.min(CAMPAGNA.length, k + scarto))
+      prove.forEach((bravura, j) => {
+        let n = 0
+        for (let s = 0; s < semi; s++) {
+          const g = gioca(CAMPAGNA[k], { seme: 7000 + s * 89 + k * 11 + j * 5, bravura, eroe, come,
+                                        roba: robaAttesa(eroe, riga) })
+          if (g.esito.vinta) n++
+          if (scarto === 0 && j === 0) gemme[k] = (gemme[k] || 0) + g.esito.gemme / semi
+        }
+        vinte[scarto][j][k] = n
+      })
+    }
+  }
+  return { vinte, gemme, semi, prove, scarti, discese }
 }
 
 // La roba con cui si arriva alla discesa `indice` andando dritti alla scala e rispondendo bene otto volte su
