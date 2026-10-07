@@ -26,8 +26,10 @@
   "mercanti": {
     "armaiolo": { "piede": [41, 42], "accanto": [39, 42] },
     "erborista": { "piede": [50, 43], "accanto": [48, 43] },
-    "rigattiere": { "piede": [56, 45], "accanto": [54, 45] }
+    "rigattiere": { "piede": [54, 43], "accanto": [52, 43] }
   },
+  "portale": { "piede": [51, 38], "accanto": [49, 38] },
+  "icone": { "modulo": "src/giochi/sotterraneo/dati/terra-icone.js", "lato": 96, "margine": 1.1, "pieno": 0.72, "qualita": 80 },
   "cartello": { "riquadro": [586, 330, 72, 80], "piede": [19, 13] },
   "maschera": [
     "################################################################",

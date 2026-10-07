@@ -10,7 +10,7 @@ import Armato from './Armato.vue'
 
 const props = defineProps({
   // le schede di dati/eroi.js, ognuna col suo punto e i numeri con la roba: { nuova, vita, att, dif, tratti, mano,
-  // mancina, discese, quante, stelle, addosso, gemme, fondo, aMeta }
+  // mancina, discese, quante, stelle, addosso, gemme, fondo, aMeta, aMetaIcona }
   avventure: { type: Array, required: true },
   scelto: { type: String, default: '' },
   primo: { type: Boolean, default: false },  // la prima volta non si può annullare
@@ -50,7 +50,10 @@ const porta = e => (e.porta || []).map(f => FAMIGLIE[f]).filter(Boolean)
             <span v-if="e.gemme">💎 {{ e.gemme }}</span>
             <span v-if="e.fondo" data-fondo>🕳️ {{ e.fondo }}</span>
           </span>
-          <span v-if="e.aMeta" class="sot-a-meta" data-a-meta>a metà: {{ e.aMeta.toLowerCase() }}</span>
+          <span v-if="e.aMeta" class="sot-a-meta" data-a-meta>
+            <img v-if="e.aMetaIcona" class="sot-ritaglio" :src="e.aMetaIcona" alt="" data-ritaglio>
+            a metà: {{ e.aMeta.toLowerCase() }}
+          </span>
           <i>{{ e.dice }}</i>
           <span class="sot-barre">
             <span class="sot-barra sot-cuore" :style="{ '--q': e.vita / piuVita }">

@@ -10,7 +10,7 @@
    strumento). docs/sotterraneo/terra-di-sopra.md
    ═══════════════════════════════════════════════════════════════════ */
 import { readFileSync } from 'node:fs'
-import { MASCHERA, CELLA, POSTI, PARTENZA, MINATORE, CARTELLO, LARGO, ALTO, MERCANTI }
+import { MASCHERA, CELLA, POSTI, PARTENZA, MINATORE, CARTELLO, LARGO, ALTO, MERCANTI, PORTALE }
   from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { MERCANTI as CHI_VENDE } from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { POSTO_DI, LUOGHI } from '../../src/giochi/sotterraneo/dati/terra.js'
@@ -30,6 +30,7 @@ stessaLista('la maschera del gioco è quella del foglietto (rilancia strumenti/s
             MASCHERA, fg.maschera)
 stessaLista('e anche i posti', POSTI, fg.posti)
 stessaLista('e i mercanti', MERCANTI, fg.mercanti)
+stessaLista('e il portale', PORTALE, fg.portale)
 uguale('la maschera copre tutta la mappa, in larghezza', MASCHERA[0].length * CELLA, LARGO)
 uguale('e in altezza', MASCHERA.length * CELLA, ALTO)
 controlla('solo . e #', MASCHERA.every(r => /^[.#]+$/.test(r) && r.length === MASCHERA[0].length))
@@ -81,8 +82,26 @@ for (const [nome, p] of Object.entries(POSTI)) {
   for (const [chi, [bx, by]] of Object.entries(banchi)) {
     const [px, py] = MERCANTI[chi].piede
     controlla(`${chi}: sta nel villaggio, a destra della giunta`, px >= 32, `${px},${py}`)
-    controlla(`${chi}: davanti al suo banco (a non più di tre celle, sotto di lui)`,
-              Math.abs(px - bx) <= 2 && py > by && py - by <= 3, `${px},${py} contro ${bx},${by}`)
+    controlla(`${chi}: accanto al suo banco (a non più di due celle di lato, tre sotto)`,
+              Math.abs(px - bx) <= 2 && py >= by && py - by <= 3, `${px},${py} contro ${bx},${by}`)
+  }
+  /* chi sta fermo non chiude la strada a nessuno: togliendolo, non si raggiunge niente di più. Il rigattiere
+     stava in fondo a un passaggio largo una cella fra il carretto e i cespugli, e lo chiudeva */
+  for (const [chi, m] of Object.entries(MERCANTI)) {
+    const senza = creaTerra(MASCHERA, { ostacoli: [MINATORE.piede, ...Object.values(MERCANTI).filter(x => x !== m).map(x => x.piede)] })
+    const con = fermi.raggiungibili(casa), via = senza.raggiungibili(casa)
+    uguale(`${chi}: non chiude la strada (togliendolo si arriva solo dove sta lui)`, via.size - con.size, 1)
+  }
+  /* il portale gemello: compare con una discesa lasciata a metà, nel villaggio; ci si ferma accanto e lì si
+     sbuca risalendo. Non è un ostacolo (Terra.vue non lo passa a `ostacoli`) */
+  {
+    const [gx, gy] = PORTALE.piede, [ax, ay] = PORTALE.accanto
+    controlla('il portale sta nel villaggio, a destra della giunta', gx >= 32, `${gx},${gy}`)
+    controlla('su una cella dove si cammina', fermi.passa(gx, gy))
+    controlla('e ci si arriva accanto da casa', !!fermi.strada(casa, { x: ax, y: ay }), `${ax},${ay}`)
+    controlla('accanto vuol dire a due celle, sulla stessa fila', Math.abs(ax - gx) === 2 && ay === gy)
+    controlla('fra i mercanti (a meno di sei celle dal più vicino)',
+              Math.min(...Object.values(MERCANTI).map(m => Math.hypot(gx - m.piede[0], gy - m.piede[1]))) < 6)
   }
   // dalla partenza si arriva a ogni cella dove si cammina, tranne dove chi sta fermo le chiude (il piede suo
   // e il tratto stretto dietro al rigattiere) e le tre del vecchio angolo in alto a sinistra

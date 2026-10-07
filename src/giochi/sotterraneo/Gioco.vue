@@ -126,6 +126,7 @@ const avventure = computed(() => EROI.map(e => {
     gemme: r.gemme,
     fondo: (a.abisso && a.abisso.fondo) || 0,
     aMeta: meta ? meta.nome : null,
+    aMetaIcona: meta ? iconaDi(meta.chiave) : null,
   }
 }))
 
@@ -135,7 +136,8 @@ const roba = computed(() => rileggiRoba(qui.value.roba) || ROBA_VUOTA())
 
 // la carta "riprendi" dice la sosta dell'avventura aperta (motore/sosta.js). Le gemme sono quelle della roba:
 // sopra si può essere passati da un mercante
-const conNome = d => (d ? { ...d, chi: d.eroe ? eroeDi(d.eroe).nome : '', gemme: roba.value.gemme } : null)
+const conNome = d => (d ? { ...d, chi: d.eroe ? eroeDi(d.eroe).nome : '', gemme: roba.value.gemme,
+                              immagine: iconaDi(d.chiave) } : null)
 const ripresa = computed(() => conNome(dice(qui.value.sosta, CAMPAGNA)))
 let ultimoSalvato = 0
 

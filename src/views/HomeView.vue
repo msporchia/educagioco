@@ -127,7 +127,14 @@ const ultimo = computed(() => {
   const k = v && chiaveDelGioco(v.g)
   return k && elenco.value.some(g => g.chiave === k) ? k : null
 })
-const ripresa = computed(() => elenco.value.find(g => g.chiave === ultimo.value) || null)
+// un gioco nuovo può dire da sé cosa riprendere e con che immagine (il sotterraneo: la discesa a metà)
+const ripresa = computed(() => {
+  const g = elenco.value.find(g => g.chiave === ultimo.value)
+  if (!g) return null
+  const m = giocoNuovo(g.chiave)
+  const r = m && m.ripresa ? m.ripresa(progressoDi(g.chiave)) : null
+  return r ? { ...g, punto: r.dove, immagine: r.immagine } : g
+})
 // la partita a metà riparte da sola, senza «torno da dove ero» (docs/core/ripresa.md)
 function riprendi (k) { chiediRipresa(k); emit('vai', k) }
 </script>
@@ -150,7 +157,8 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
         <span class="freccia" aria-hidden="true">›</span>
       </button>
 
-      <Riprendi v-if="ripresa" :gioco="ripresa" :dove="ripresa.punto" @apri="riprendi" />
+      <Riprendi v-if="ripresa" :gioco="ripresa" :dove="ripresa.punto" :immagine="ripresa.immagine"
+                @apri="riprendi" />
 
       <div class="carte">
         <Carosello v-if="elenco.length" :giochi="elenco" :ultimo="ultimo" @apri="k => $emit('vai', k)" />

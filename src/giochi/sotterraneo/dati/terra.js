@@ -1,6 +1,7 @@
 // La terra di sopra, la parte scritta a mano: quale discesa sta in quale posto della mappa e cosa dicono il
 // minatore e il cartello. Dove stanno i posti, dove si cammina e la mappa stessa li dà dati/terra-mappa.js
 // (generato). Il criterio delle discese sui posti: docs/sotterraneo/terra-di-sopra.md.
+import { ICONE } from './terra-icone.js'
 
 // le prime vicino a casa, le ultime in cima; l'abisso nel pozzo vecchio, quello che dicono non abbia fondo
 export const POSTO_DI = {
@@ -12,6 +13,9 @@ export const POSTO_DI = {
   fondo: 'miniera',
   abisso: 'pozzo-vecchio',
 }
+
+// l'icona di una discesa (la chiave della tappa, o 'abisso'): il suo posto ritagliato dalla mappa, non un'emoji
+export const iconaDi = chiave => ICONE[POSTO_DI[chiave]] || null
 
 // come il minatore spiega la strada («La scalinata antica: …»): parte da casa, dove sta lui
 export const LUOGHI = {

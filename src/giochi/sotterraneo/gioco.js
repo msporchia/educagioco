@@ -20,7 +20,9 @@
    Ha preso il posto del Dungeon a bivi, tolto il 6 ottobre 2026: gli
    stessi esercizi, ma in un posto invece che in un diagramma.
    ═══════════════════════════════════════════════════════════════════ */
-import { CAMPAGNA, QUANTE_TAPPE } from './dati/campagna.js'
+import { CAMPAGNA, QUANTE_TAPPE, INDICE_ABISSO, L_ABISSO } from './dati/campagna.js'
+import { iconaDi } from './dati/terra.js'
+import { MONDO } from './motore/avventure.js'
 
 export const CHIAVE = 'sotterraneo'
 
@@ -64,14 +66,31 @@ export default {
        conta è il più giù dove si è arrivati. Si dice solo da quando c'è
        un record: prima la riga direbbe «piano più profondo 0».
        Il record è di ogni avventura (docs/sotterraneo/avventure.md): qui il
-       più giù fra tutte, come tappa e stelle, che fuori sono già il massimo.
-       `cfg.abisso` è dove stava prima del passaggio alle avventure. */
+       più giù fra tutte, come tappa e stelle, che fuori sono già il massimo. */
     const cfg = av.cfg || {}
-    const fondo = Math.max((cfg.abisso && cfg.abisso.fondo) || 0,
+    const fondo = Math.max(0,
       ...Object.values(cfg.avventure || {}).map(a => (a && a.abisso && a.abisso.fondo) || 0))
     if (av.libera && fondo) return `abisso · piano più profondo ${fondo}${coda}`
     const i = Math.min(av.tappa || 0, QUANTE_TAPPE - 1)
     return `discesa ${i + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[i].nome}${coda}`
+  },
+
+  /* «Riprendi da qui» in home, quando l'avventura aperta ha una discesa
+     a metà: dice quale e a che piano, e al posto della copertina mostra
+     il suo posto ritagliato dalla mappa (docs/sotterraneo/terra-di-sopra.md,
+     «Le icone delle discese»). Senza, null: la home usa `riassunto`.
+     Un profilo non ancora azzerato (`cfg.mondo`) non ha niente da riprendere. */
+  ripresa(av = {}) {
+    const cfg = av.cfg || {}
+    const a = cfg.mondo === MONDO && cfg.avventure ? cfg.avventure[cfg.eroe] : null
+    const s = a && a.sosta
+    const t = s ? (s.tappa === INDICE_ABISSO ? L_ABISSO : CAMPAGNA[s.tappa]) : null
+    if (!t) return null
+    const piano = (s.piano || 0) + 1
+    return {
+      dove: `${t.nome} · piano ${piano}${t.abisso ? '' : ` di ${t.piani}`}`,
+      immagine: iconaDi(t.abisso ? 'abisso' : t.chiave),
+    }
   },
 
   /* ═══════════ quello che il gioco porta all'albo ═══════════

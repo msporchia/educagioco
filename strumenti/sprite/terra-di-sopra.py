@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """La terra di sopra del sotterraneo: dalla mappa generata al modulo del gioco.
 
-    python3 strumenti/sprite/terra-di-sopra.py             # rifà src/giochi/sotterraneo/dati/terra-mappa.js
+    python3 strumenti/sprite/terra-di-sopra.py             # rifà src/giochi/sotterraneo/dati/terra-mappa.js e terra-icone.js
     python3 strumenti/sprite/terra-di-sopra.py --proponi   # tmp/terra/proposta.txt: la maschera letta dai colori
     python3 strumenti/sprite/terra-di-sopra.py --provino   # tmp/terra/provino.png: maschera, posti e chi indica sopra la mappa
     python3 strumenti/sprite/terra-di-sopra.py --giunta    # tmp/terra/giunta-*.png: la giunta ingrandita, com'è e accostata a secco
@@ -13,7 +13,9 @@ mostra la tela intera e ci posa sopra solo le cose che cambiano. Tutto quello
 che il codice sa della mappa — dove si cammina, dove stanno le aperture, dove
 si parte — sta nel foglietto `sorgenti/sotterraneo/terra-di-sopra.json`, e qui
 si copia nel modulo insieme all'immagine in WebP (il build resta un file solo).
-Il perché e come si corregge la maschera: `docs/sotterraneo/terra-di-sopra.md`.
+Dalla stessa tela ritaglia le icone delle discese (un tondo sfumato per posto,
+in un modulo a parte: la home le usa senza tirarsi dietro la mappa).
+Il perché e come si corregge la maschera: `docs/sotterraneo/terra-strumento.md`.
 
 Serve `pillow` (con WebP).
 """
@@ -49,6 +51,18 @@ TESTA = """/* GENERATO da strumenti/sprite/terra-di-sopra.py — non si scrive a
              `accanto`, dove ci si ferma per parlargli), il cartello
    MERCANTI  chi vende sulla terra di sopra (dati/mercanti.js): `piede` dove
              sta fermo, `accanto` dove ci si ferma per aprire il banco
+   PORTALE   il portale gemello, che compare con una discesa lasciata a metà:
+             `piede` dove sta, `accanto` dove ci si ferma e dove si arriva
+*/
+"""
+
+TESTA_ICONE = """/* GENERATO da strumenti/sprite/terra-di-sopra.py — non si scrive a mano.
+
+   Le icone delle discese: un tondo ritagliato dalla mappa della terra di
+   sopra attorno al `riquadro` di ogni posto, sfumato ai bordi, {lato}×{lato}
+   in WebP ({kb} KB in tutto). Si mostrano dove una discesa compare in piccolo
+   (la discesa a metà, «riprendi da qui», il portale). Il posto di una discesa:
+   POSTO_DI in dati/terra.js. Vedi docs/sotterraneo/terra-di-sopra.md.
 */
 """
 
@@ -292,11 +306,13 @@ def controlla(fg, im):
             guasti.append(f'{nome}: manca l\'ingresso [x, y, largo, alto] del cerchietto')
         elif i[0] < 0 or i[1] < 0 or i[0] + i[2] > im.size[0] or i[1] + i[3] > im.size[1]:
             guasti.append(f'{nome}: il cerchietto {i} esce dalla mappa')
-    for nome in ('partenza', 'minatore'):
+    for nome in ('partenza', 'minatore', 'portale'):
         if not passa(*fg[nome]['piede']):
             guasti.append(f'{nome}: il piede {fg[nome]["piede"]} non è camminabile')
     if not passa(*fg['minatore']['accanto']):
         guasti.append(f'minatore: dove si sta per parlargli {fg["minatore"]["accanto"]} non è camminabile')
+    if not passa(*fg['portale']['accanto']):
+        guasti.append(f'portale: dove ci si ferma {fg["portale"]["accanto"]} non è camminabile')
     fermi = [tuple(fg['minatore']['piede'])]
     for nome, chi in fg.get('mercanti', {}).items():   # non `m`: è la maschera, e `passa` la legge
         for campo in ('piede', 'accanto'):
@@ -325,11 +341,49 @@ def genera():
     corpo += 'export const MASCHERA = [\n' + ''.join(f"  '{r}',\n" for r in fg['maschera']) + ']\n\n'
     corpo += 'export const POSTI = {\n' + ''.join(
         f"  {js(n)}: {js(p)},\n" for n, p in fg['posti'].items()) + '}\n\n'
-    for nome in ('partenza', 'minatore', 'cartello', 'mercanti'):
+    for nome in ('partenza', 'minatore', 'cartello', 'mercanti', 'portale'):
         corpo += f"export const {nome.upper()} = {js(fg.get(nome, {}))}\n"
     corpo += f"\nexport const MAPPA = 'data:image/webp;base64,{b64}'\n"
     dest.write_text(corpo)
     print(f'{dest.relative_to(REPO)}: mappa {im.size[0]}×{im.size[1]}, {kb} KB')
+    icone(fg, im)
+
+
+# ── le icone delle discese ──────────────────────────────────────────
+# Un'emoji non dice quale pozzo: un pezzo della mappa sì. Si ritaglia un
+# quadrato attorno al `riquadro` del posto (`margine` volte il lato più
+# lungo), lo si rimpicciolisce a `lato` e lo si chiude in un tondo pieno fino
+# a `pieno` del raggio e sfumato oltre, così sta su qualunque fondo.
+def icona(im, riquadro, ic):
+    x, y, w, h = riquadro
+    cx, cy = x + w / 2, y + h / 2
+    mezzo = max(w, h) * ic.get('margine', 1.1) / 2
+    lato = ic.get('lato', 96)
+    c = im.crop((round(cx - mezzo), round(cy - mezzo), round(cx + mezzo), round(cy + mezzo)))
+    c = c.resize((lato, lato), Image.LANCZOS).convert('RGBA')
+    pieno = ic.get('pieno', 0.72)
+    m = Image.new('L', (lato, lato), 0)
+    mp = m.load()
+    for j in range(lato):
+        for i in range(lato):
+            d = math.hypot(i + 0.5 - lato / 2, j + 0.5 - lato / 2) / (lato / 2)
+            a = 1 if d < pieno else 0 if d >= 1 else 1 - liscia((d - pieno) / (1 - pieno))
+            mp[i, j] = round(a * 255)
+    c.putalpha(m)
+    return c
+
+
+def icone(fg, im):
+    ic = fg['icone']
+    dati = {n: in_base64(icona(im, p['riquadro'], ic), 'WEBP', quality=ic.get('qualita', 80), method=6)
+            for n, p in fg['posti'].items()}
+    kb = sum(len(b) for b in dati.values()) * 3 // 4 // 1024
+    dest = REPO / ic['modulo']
+    corpo = TESTA_ICONE.format(lato=ic.get('lato', 96), kb=kb)
+    corpo += '\nexport const ICONE = {\n' + ''.join(
+        f"  {js(n)}: 'data:image/webp;base64,{b}',\n" for n, b in dati.items()) + '}\n'
+    dest.write_text(corpo)
+    print(f'{dest.relative_to(REPO)}: {len(dati)} icone, {kb} KB')
 
 
 # ── la proposta dai colori ──────────────────────────────────────────
@@ -445,6 +499,8 @@ def provino():
     for m in fg.get('mercanti', {}).values():
         piede(m['piede'], (255, 140, 40, 255))
         piede(m['accanto'], (255, 200, 120, 160))
+    piede(fg['portale']['piede'], (150, 120, 255, 255))
+    piede(fg['portale']['accanto'], (190, 170, 255, 160))
     TMP.mkdir(parents=True, exist_ok=True)
     Image.alpha_composite(im, velo).save(TMP / 'provino.png')
     print('tmp/terra/provino.png')

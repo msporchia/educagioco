@@ -5,13 +5,15 @@ import Copertina from './Copertina.vue'
 defineProps({
   gioco: { type: Object, required: true },   // una riga di data/giochi.js
   dove: { type: String, default: '' },
+  immagine: { type: String, default: '' },   // al posto della copertina, se il gioco ne dà una (il manifesto, `ripresa`)
 })
 defineEmits(['apri'])
 </script>
 
 <template>
   <button class="riprendi" :data-riprendi="gioco.chiave" @click="$emit('apri', gioco.chiave)">
-    <Copertina class="arte" :copertina="gioco.copertina" :ico="gioco.ico" :grande="36" />
+    <img v-if="immagine" class="arte ritaglio" :src="immagine" alt="" data-ritaglio>
+    <Copertina v-else class="arte" :copertina="gioco.copertina" :ico="gioco.ico" :grande="36" />
     <span class="parole">
       <b>riprendi da qui</b>
       <strong>{{ gioco.nome }}</strong>
@@ -26,6 +28,7 @@ defineEmits(['apri'])
             padding:8px 12px 8px 8px; border-radius:18px; text-align:left; color:#fff; background:#1f2433 }
 .riprendi:active { transform:scale(.99) }
 .arte { flex:none; width:64px; height:64px; border-radius:12px }
+.ritaglio { border-radius:0; object-fit:contain }
 .parole { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
 .parole b { font-size:11px; font-weight:400; color:#aab3c9 }
 .parole strong { font-size:15px; font-weight:600; line-height:1.2 }
