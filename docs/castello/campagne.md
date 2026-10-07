@@ -107,9 +107,15 @@ accavallano, le U da scrivere con quattro punti per lo smussamento) non ci
 sono più: sulla scacchiera le dice la cella. `cartaDi` stessa segna come
 guasto quattro celle di strada in quadrato, due corsie che si toccano
 senza collegarsi, una strada che ripassa da una cella senza attraversarla
-dritta (l'incrocio del bastione sì), una piazzola attaccata a un'altra;
+dritta, **una strada che risale**, una piazzola attaccata a un'altra;
 `unita/castello-carta` pretende che nessuna tappa ne abbia, e che acqua,
 fitto e decori stiano lontani da strada e piazzole.
+
+**La strada scende sempre, o va di lato.** In salita un mostro col passo
+camminerebbe all'indietro: le figure hanno il lato e il fronte, non la
+schiena (`versoDi` in `views/castello/scena.js` sceglie la posa dal tratto).
+Per questo il bastione non fa più il cappio che si attraversava da sé:
+una strada che non sale non può incrociarsi.
 
 ## Le tappe a più bocche
 

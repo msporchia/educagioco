@@ -18,7 +18,7 @@ const BOSCO_GUADO = [
   [0.62, 0.95]]
 
 const BOSCO_RADURA = [
-  [0.46, 0.04], [0.26, 0.11], [0.22, 0.22], [0.54, 0.28], [0.76, 0.22],
+  [0.46, 0.04], [0.26, 0.11], [0.22, 0.22], [0.54, 0.30], [0.76, 0.30],
   [0.80, 0.34], [0.44, 0.40], [0.24, 0.48], [0.28, 0.60], [0.66, 0.66],
   [0.62, 0.80], [0.44, 0.95]]
 
@@ -125,10 +125,9 @@ const PALUDE_FOCE = [
      il bivio           due cunicoli a squadra, uno per bocca, che
                         scendono a zig-zag e si incontrano a metà campo;
                         da lì una galleria sola, a scala, fino in fondo
-     il bastione        una strada sola che fa un cappio a squadra e
-                        **si attraversa da sé**: l'unica a una bocca,
-                        e l'unica dove un mostro passa due volte dallo
-                        stesso punto
+     il bastione        una strada sola che va e viene da un lato
+                        all'altro del campo in cinque traverse: l'unica
+                        a una bocca
      il delta           due canali che serpeggiano, si fondono in un
                         tronco, e il tronco si sdoppia attorno a
                         un'isola per richiudersi davanti alla porta
@@ -136,9 +135,8 @@ const PALUDE_FOCE = [
    I vincoli sono gli stessi delle tappe (`strumenti/valida-percorsi.mjs`
    le passa ai raggi X con le altre): niente tornanti a spillo, niente
    corsie che si sfiorano senza fondersi, e mai più di metà strada in
-   comune — se no le due bocche sono un disegno. Un incrocio si
-   **dichiara** (`incroci: 1`), e vale solo se è netto: due tratti che
-   si tagliano a angolo largo, non due che si sfiorano. */
+   comune — se no le due bocche sono un disegno. E nessuna strada
+   risale: vedi docs/castello/campagne.md. */
 
 const RADURA_TRONCO = [[0.50, 0.68], [0.28, 0.76], [0.34, 0.86], [0.50, 0.95]]
 const LIBERA_BOSCO = [
@@ -155,27 +153,10 @@ const LIBERA_SOTTERRANEO = [
   [[0.80, 0.04], [0.80, 0.16], [0.60, 0.16], [0.60, 0.28], [0.86, 0.28], [0.86, 0.40],
    [0.60, 0.40], [0.60, 0.50], ...BIVIO_GALLERIA]]
 
-/* ── il bastione: una strada sola, che si incrocia da sé ──
-   È l'unica libera a una bocca, ed è **un anello vero**: la strada
-   scende lungo il cortile, gira a sinistra sotto la torre, risale, e
-   attraversa sé stessa — a squadra, com'è tutto sulle mura — prima di
-   scendere dall'altra parte fino alla porta. Un mostro passa **due
-   volte** dallo stesso punto (l’incrocio, a `(0.58, 0.21)`), e le torri
-   piazzate lì gli sparano all’andata e al ritorno: è il regalo di
-   questo terreno, come i due bracci lo sono della radura. Non ha una
-   seconda bocca perché le due cose insieme non ci stanno — un
-   cappio largo tutto il campo è già la difesa divisa in due, solo
-   che qui si divide **nel tempo** e non nello spazio.
-
-   Le due braccia del cappio distano fra loro più delle corsie (109u fra
-   il gambo e la discesa, 182 fra la traversa e il fondo), e
-   l'incrocio è dichiarato (`incroci: 1`): il validatore ammette
-   quello, netto e a angolo retto, e continua a vietare le corsie che
-   si sfiorano senza incrociarsi. Nel fondale la cella dell'incrocio
-   chiede la tessera a croce, che il foglio delle mura ha. */
+// il bastione: una bocca sola, e le traverse vicine perché una torre ne copra due
 const LIBERA_MURA = [
-  [0.58, 0.04], [0.58, 0.45], [0.20, 0.45], [0.20, 0.21], [0.84, 0.21], [0.84, 0.64],
-  [0.50, 0.64], [0.50, 0.95]]
+  [0.50, 0.04], [0.50, 0.12], [0.16, 0.12], [0.16, 0.30], [0.84, 0.30], [0.84, 0.48],
+  [0.16, 0.48], [0.16, 0.66], [0.84, 0.66], [0.84, 0.82], [0.50, 0.82], [0.50, 0.95]]
 
 const DELTA_TRONCO = [[0.50, 0.44], [0.50, 0.54]]
 const DELTA_PORTA = [[0.50, 0.84], [0.50, 0.95]]
@@ -193,7 +174,7 @@ export const LIBERE_RACCONTO = [
   { chiave: 'libera-sotterraneo', campagna: 'sotterraneo', nome: 'Il bivio', emoji: '🕯️',
     fronti: 1.5, forme: LIBERA_SOTTERRANEO },
   { chiave: 'libera-mura', campagna: 'mura', nome: 'Il bastione', emoji: '🏰',
-    forme: [LIBERA_MURA], incroci: 1 },
+    forme: [LIBERA_MURA] },
   { chiave: 'libera-palude', campagna: 'palude', nome: 'Il delta', emoji: '🐸',
     fronti: 1.5, forme: LIBERA_PALUDE },
 ]

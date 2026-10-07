@@ -169,13 +169,14 @@ function controllaVie(vie) {
     }
     for (const via of vie) {
       const gia = new Set()
-      for (const c of via) {
-        // una via che ripassa da una cella la deve attraversare dritta:
-        // è l'incrocio del bastione, non un nodo
+      via.forEach((c, i) => {
+        // in salita il mostro camminerebbe all'indietro: non ha la figura di schiena
+        if (via[i + 1] && versoFra(c, via[i + 1]) === 'N')
+          guasti.push(`(${c}) la strada risale`)
         if (gia.has(k(...c)) && versi.get(k(...c)).size !== 4)
           guasti.push(`(${c}) la strada ripassa da una cella senza attraversarla`)
         gia.add(k(...c))
-      }
+      })
     }
     return { versi, guasti }
   }

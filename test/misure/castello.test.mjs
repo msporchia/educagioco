@@ -540,8 +540,8 @@ controlla('il gelo di una torre alta frena di più e dura di più',
    una schermata fissa, non un gioco.
 
    Sono quattro, e ognuna si controlla **da sola**: hanno tracciati a
-   due bocche diversi fra loro, e quello che una Y perdona un anello
-   non lo perdona. La vecchia libera era a strada singola per paura che
+   due bocche diversi fra loro, e quello che una Y perdona una strada
+   sola non lo perdona. La vecchia libera era a strada singola per paura che
    con due bocche non si tarasse: qui si misura, e se una non reggesse
    il test lo direbbe col nome. */
 /* `regali: false` non è una dimenticanza: la libera regala un
@@ -583,11 +583,10 @@ for (const l of LIBERE) {
               return (comune(m) && comune(dopo)) || firmaImmunita(m) !== firmaImmunita(dopo)
             }),
             l.mostri.map(m => firmaImmunita(m)).join(' '))
-  /* due bocche, o una strada che si attraversa da sé: il bastione è
-     l'anello vero, e la sua difesa si divide nel tempo (vedi
+  /* due bocche, o il bastione: la sua difesa si divide nel tempo (vedi
      `unita/ingressi-castello`) */
-  controlla(`${l.nome}: ha più di una bocca, o un anello`,
-            ingressiDi(l) >= 2 || l.incroci >= 1, `${ingressiDi(l)} bocche, incroci ${l.incroci || 0}`)
+  controlla(`${l.nome}: ha più di una bocca, o è il bastione`,
+            ingressiDi(l) >= 2 || l.chiave === 'libera-mura', `${ingressiDi(l)} bocche`)
   controlla(`${l.nome}: ogni ondata tarata ha la sua vita`,
             Array.isArray(l.vite) && l.vite.length === 20 && l.vite.every(v => v > 0),
             `${l.vite ? l.vite.length : 0} vite`)

@@ -64,9 +64,7 @@ for (const t of tutte) {
     }
     const terzi = new Set(c.piazzole.map(terzo).filter(x => x >= 0))
     uguale(`${dove}: strada ${iv + 1}, piazzole in tutti e tre i terzi`, [...terzi].sort().join(), '0,1,2')
-    /* (non sull'anello del bastione: lì una piazzola tocca la strada
-       all'andata e al ritorno, e il terzo non è uno) */
-    if (c.vie.length === 1 && !A_MANO[chiaveDi(t)] && !t.incroci)
+    if (c.vie.length === 1 && !A_MANO[chiaveDi(t)])
       uguale(`${dove}: le prime tre torri del modello in tre terzi diversi`,
              new Set(c.piazzole.slice(0, 3).map(terzo)).size, 3)
   }

@@ -11,7 +11,7 @@ in `LIBERE_RACCONTO` di `src/data/campagne-castello.js`.
 |---|---|---|
 | `libera-bosco` | La radura grande 🌲 | una bocca che si sdoppia attorno a una radura e si richiude in un tronco che si ripiega |
 | `libera-sotterraneo` | Il bivio 🕯️ | due cunicoli a squadra che si incontrano a metà campo, poi una galleria a scala |
-| `libera-mura` | Il bastione 🏰 | una strada sola che fa un cappio a squadra e **si attraversa da sé** |
+| `libera-mura` | Il bastione 🏰 | una strada sola che va e viene in cinque traverse da un lato all'altro del campo |
 | `libera-palude` | Il delta 🐸 | due canali che si fondono, e il tronco si sdoppia attorno a un'isola |
 
 - **Le chiavi sono stabili**: sono le chiavi di `VITE`, di `OLTRE` e dei
@@ -26,12 +26,11 @@ in `LIBERE_RACCONTO` di `src/data/campagne-castello.js`.
   una torre ben messa deve poter battere la stessa strada due o tre volte.
   `fronti` (1,5) dice quante difese separate chiede davvero: meno di due,
   perché le strade si fondono.
-- **Il bastione è un anello vero**: una bocca sola, e un mostro passa due
-  volte dallo stesso incrocio, dove le torri gli sparano all'andata e al
-  ritorno — la difesa divisa nel tempo invece che nello spazio. Lo dichiara
-  con `incroci: 1`. Il motore non lo sa (un nemico ha una `d` scalare): lo
-  sa `strumenti/valida-percorsi.mjs`, che li conta sulla carta, e la
-  carta, che vuole la cella dell'incrocio attraversata dritta.
+- **Il bastione è l'unica a una bocca**, con le traverse vicine perché una
+  torre in mezzo ne copra due. Provato un cappio che si attraversava da sé
+  (un mostro passava due volte dall'incrocio): tolto il 7 ottobre 2026,
+  perché nel tratto in salita il mostro camminava all'indietro
+  ([campagne.md](campagne.md), «Le regole della carta»).
 - **I record**: uno per terreno, sul tasto della libera nella mappa e nella
   tabella dei record; in home `recordPiuRecente` racconta quello fatto più
   di recente. Il record della vecchia libera unica lo eredita il bosco
@@ -129,16 +128,14 @@ cede, per gradi in tasca:
 
 | gradi | 0 | 10 | 20 | 35 | 50 | 100 |
 |---|---|---|---|---|---|---|
-| la radura grande | 22 | 22 | 24 | 25 | 25 | 29 |
-| il bivio | 22 | 22 | 22 | 22 | 22 | 28 |
-| il bastione | 23 | 23 | 23 | 24 | 24 | 28 |
-| il delta | 18 | 21 | 21 | 22 | 25 | 33 |
+| la radura grande | 21 | 22 | 24 | 24 | 24 | 28 |
+| il bivio | 22 | 22 | 22 | 22 | 25 | 28 |
+| il bastione | 23 | 23 | 24 | 24 | 24 | 28 |
+| il delta | 21 | 21 | 21 | 23 | 23 | 27 |
 
-Misurata il 30 settembre 2026, con le venti piazzole, la doppia divisione
-dalla ventesima e le torri riequilibrate. Il giorno prima, con quattordici
-piazzole: 22 · 22 · 21 · 21 a zero gradi, 27 · 27 · 24 · 23 a cinquanta,
-29 · 27 · 24 · 31 a cento. Il bivio adesso sta fermo fino ai cento gradi,
-e il delta a zero cede prima delle venti tarate (il taratore gioca il
+Misurata il 7 ottobre 2026, col bastione a serpentone. Il bivio sta fermo
+fino ai cinquanta gradi, e la radura grande a zero cede prima delle venti
+tarate (il taratore gioca il
 metro, che spende tutto; il banco dei regali gioca un bambino che prende
 le carte a giro).
 

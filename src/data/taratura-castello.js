@@ -10,7 +10,7 @@
 export const VITE = {
   "bosco/Il sentiero": [53, 55, 77],
   "bosco/Il guado": [77, 94, 106, 124],
-  "bosco/La radura": [103, 109, 134, 140],
+  "bosco/La radura": [103, 112, 124, 140],
   "bosco/Il folto": [123, 95, 133, 83, 169],
   "bosco/La radice": [60, 128, 57, 49, 104, 178, 86, 67],
   "sotterraneo/La grotta": [40, 55, 75, 79, 56, 119],
@@ -30,11 +30,11 @@ export const VITE = {
   "palude/La foce": [27, 26, 48, 42, 89, 145, 68, 94, 72, 99, 67, 254, 32],
   "libera-bosco": [45, 14, 100, 32, 64, 34, 125, 59, 49, 14, 53, 138, 113, 234, 78, 263, 149, 129, 338, 14],
   "libera-sotterraneo": [45, 20, 47, 32, 15, 67, 64, 154, 67, 21, 154, 230, 99, 263, 42, 19, 370, 229, 250, 21],
-  "libera-mura": [145, 82, 47, 89, 181, 68, 67, 244, 191, 24, 40, 311, 180, 124, 226, 454, 222, 245, 1523, 67],
+  "libera-mura": [116, 75, 47, 45, 139, 76, 67, 174, 158, 18, 40, 288, 180, 124, 226, 358, 196, 236, 1171, 52],
   "libera-palude": [40, 46, 21, 14, 33, 15, 107, 132, 98, 23, 217, 43, 61, 96, 37, 173, 328, 104, 270, 48],
 }
 /* di quanto cresce la vita in ogni partita libera dopo l'ultima ondata
    tarata: da lì in poi non c'è tabella, c'è questa progressione */
-export const OLTRE = {"libera-bosco":1.3,"libera-sotterraneo":1.3,"libera-mura":1.35,"libera-palude":1.3}
-export const FIRMA = "3a634547"
+export const OLTRE = {"libera-bosco":1.3,"libera-sotterraneo":1.3,"libera-mura":1.31,"libera-palude":1.3}
+export const FIRMA = "389f3563"
 export const BERSAGLIO = [0.6, 0.85]
