@@ -67,11 +67,12 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
 - **Le tane**: quella del pascolo (`da`, `a`, `punto`) è un passaggio sotto
   terra fra le buche e il pascolo, quella dello zaino (`isola`, `punto`,
   `cartello`, il centro del suo nome) porta all'altro mondo.
-- **Le caselle speciali**: `senza-fine` (il sentiero senza fine, in cima
-  alle buche) e `sentiero-cane`, un posto già pronto sul pascolo per il
-  sentiero del cane, che oggi è solo un punto della strada (`SPECIALI` in
-  `scena/valle.js` dice quali hanno una tappa). `etichetta` è dove comincia
-  il nome.
+- **I due sentieri senza fine** ([sentiero.md](sentiero.md)) sono due caselle
+  tonde e d'oro, col loro animale in un tondino sul bordo anche da chiuse e il
+  record nel fumetto: `senza-fine`, il sentiero del coniglio, in cima alle
+  buche; `senza-fine-cane` (`SENTIERO_CANE`), quello del cane, in fondo al
+  pascolo dopo il gregge. `etichetta` è dove comincia il nome, col record o
+  cosa manca.
 - **Il giro di correzione**: si corregge il foglietto,
   `python3 strumenti/sprite/isole-passo-passo.py --provino` scrive
   `tmp/isole/provino.png` (sentieri in giallo, l'erba a puntini, ponti in
@@ -138,7 +139,8 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
   solo.
 - **All'apertura sta sulla tappa di adesso** (`tappaDiAdesso` in
   `motore/strade.js`): l'ultima giocata se non è vinta, se no quella dopo
-  come col ▶; non restando niente, il sentiero. La mappa si apre nel mondo
+  come col ▶; non restando niente, il sentiero lasciato a metà, se no
+  quello del coniglio, se no quello del cane. La mappa si apre nel mondo
   dove sta.
 - **Dove si era fermato lo ricorda la sessione**, per bambino (`ultimo` in
   `Mappa.vue`, col mondo), non il profilo: tornando con una tappa di adesso
@@ -212,16 +214,17 @@ niente, la tana in cima da cui si arriva a tutto), `integrazione/passo-passo-map
 la vista `[data-isole]` (nella valle con `[data-camera]`); i cartelli
 `[data-insegna]` con `[data-scalino]` (nella valle anche `[data-isola]`,
 `[data-animale]`, `[data-velata]`; nello zaino questi stanno sulle isole
-`[data-isola="<chiave>"]`); le caselle `[data-tappa="<indice>"|"senza-fine"]`
-con `[data-stato]` e `[data-strada="coniglio"|"cane"]`, la matita
+`[data-isola="<chiave>"]`); le caselle `[data-tappa="<indice>"|"senza-fine"|"senza-fine-cane"]`
+con `[data-stato]` e `[data-strada="coniglio"|"cane"]`, l'animale di un
+sentiero `[data-sentiero-di="coniglio"|"cane"]`, la matita
 `[data-a-meta]`; i blocchi `[data-blocco="<ponte>"]` con `[data-chiude]`;
 le tane `[data-tana]` con `[data-aperta]`; i passaggi `[data-passaggio="zaino"|"valle"]`;
 i bivi dello zaino `[data-bivio]` con `[data-ramo]` e le assi
 `[data-verso="coniglio"|"cane"]`; il segnalino `[data-segnalino]` con
 `[data-animale]`, `[data-al]` e `[data-in-viaggio]`, la nuvoletta `.pp-sbuffo`;
 il fumetto `[data-fumetto]` con `[data-fumetto-per]` (un indice,
-`senza-fine`, `blocco:<ponte>`, `zaino`), `[data-azione="parti"]` e
-`[data-serve]`. `giocaSullIsola(page, indice)` in `test/aiuto/browser.mjs`
+un sentiero, `blocco:<ponte>`, `zaino`), `[data-azione="parti"]`,
+`[data-serve]` e, su un sentiero, `[data-record]`. `giocaSullIsola(page, indice)` in `test/aiuto/browser.mjs`
 passa di là dalla tana se la casella sta nell'altro mondo, aspetta il
 segnalino fermo e fa i due tocchi; `statoSullIsola` legge lo stato (di là
 da una tana chiusa è `chiusa`).
