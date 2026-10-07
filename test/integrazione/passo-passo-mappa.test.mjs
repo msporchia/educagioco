@@ -8,14 +8,16 @@
    due versi; un ponte bloccato non si passa. Vinta l'ultima delle buche, ▶
    resta sulla strada del coniglio e la mappa si apre nel mondo dello zaino;
    dalla tana si torna alla valle, si va al pascolo e il segnalino diventa il
-   cane (nella tana, e su un ponte del pascolo in una nuvoletta); la strada
-   del coniglio va avanti senza fare il cane. Il dito passa da CDP
+   cane; l'animale cambia solo entrando in una tana (quella fra le buche e il
+   pascolo, o quella al capo dei ponti dal prato e dal salto), mai a metà
+   ponte; la strada del coniglio va avanti senza fare il cane. Il dito passa da CDP
    (docs/core/il-dito.md). Vedi docs/passo-passo/mappa.md.
    `DIST=… node test/esegui.mjs passo-passo-mappa --niente-build` */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, scatto, statoSullIsola, leggiProfilo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA, TAPPE_PRIME, TAPPE_PICCOLE, FILA_ATTUALE } from '../../src/giochi/passo-passo/dati/campagna.js'
+import { STRADE } from '../../src/giochi/passo-passo/motore/strade.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
 import { risolvi } from '../../src/giochi/passo-passo/motore/risolutore.js'
 
@@ -73,19 +75,28 @@ const vista = () => page.evaluate(() => {
   const v = document.querySelector('[data-isole]')
   return { x: v.scrollLeft, y: v.scrollTop }
 })
-// gli animali che il segnalino è stato, dal tocco in poi, e se è passata una nuvoletta
+// gli animali che il segnalino è stato, dal tocco in poi, e dove e come stava quando è cambiato
+// (nascosto nel buco di una tana: la distanza dal centro della tana, e quanto si vedeva)
 const spia = () => page.evaluate(() => {
   const s = document.querySelector('[data-segnalino]')
   window.__animali = [s.dataset.animale]
-  window.__sbuffo = false
+  window.__cambi = []
   window.__spia?.disconnect()
   window.__spia = new MutationObserver(() => {
-    if (window.__animali.at(-1) !== s.dataset.animale) window.__animali.push(s.dataset.animale)
-    if (document.querySelector('.pp-sbuffo')) window.__sbuffo = true
+    if (window.__animali.at(-1) === s.dataset.animale) return
+    window.__animali.push(s.dataset.animale)
+    const r = s.getBoundingClientRect()
+    const vicina = [...document.querySelectorAll('[data-tana]')].map(t => {
+      const b = t.getBoundingClientRect()
+      return { tana: t.dataset.tana, d: Math.round(Math.hypot(b.x + b.width / 2 - (r.x + r.width / 2), b.y + b.height / 2 - (r.y + r.height / 2))) }
+    }).sort((a, b) => a.d - b.d)[0]
+    window.__cambi.push({ tana: vicina && vicina.tana, d: vicina ? vicina.d : 999, visto: Number(s.style.opacity || 1) })
   })
   window.__spia.observe(document.querySelector('[data-isole]'), { attributes: true, childList: true, subtree: true })
 })
 const animali = () => page.evaluate(() => window.__animali.join(' '))
+// i cambi di animale dal tocco in poi: «tana:dentro/fuori», dentro se era nascosto e a due passi dal centro della tana
+const cambi = () => page.evaluate(() => window.__cambi.map(c => `${c.tana}:${c.visto < 0.6 && c.d < 60 ? 'nel buco' : 'FUORI ' + c.d + '/' + c.visto}`).join(' '))
 // un punto della mappa dove non c'è niente da toccare: il mare o la terra di un'isola
 const vuoto = () => page.evaluate(() => {
   for (let y = 780; y > 150; y -= 23)
@@ -335,6 +346,7 @@ await attendi(page, 300)
   const s = await segnalino()
   uguale('sul pascolo il segnalino è il cane', `${s.al}/${s.animale}`, `${TAPPE_PRIME}/cane`)
   uguale('passando dalla tana: prima coniglio, poi cane', await animali(), 'coniglio cane')
+  uguale('che è quella fra le buche e il pascolo, e lo si vede sparire', await cambi(), 'pecore-cane:nel buco')
   uguale('e c\'è il fumetto del primo gregge', await fumettoPer(), String(TAPPE_PRIME))
   controlla('che si può giocare', await page.locator('[data-fumetto] [data-azione="parti"]').count() === 1)
 }
@@ -350,7 +362,7 @@ await page.locator('[data-tappa="senza-fine"]').evaluate(e => e.scrollIntoView({
 await attendi(page, 200)
 await scatto(page, 'passo-mappa-buche')
 
-/* dal pascolo al prato sul ponte: sul capo del pascolo il cane torna coniglio, in una nuvoletta */
+/* dal pascolo al prato sul ponte: il cane entra nella tana del ponte e ne esce il coniglio, mai a metà ponte */
 await spia()
 await toccaSu(casella(3))
 await fermo()
@@ -358,7 +370,8 @@ await fermo()
   const s = await segnalino()
   uguale('sul prato torna il coniglio', `${s.al}/${s.animale}`, '3/coniglio')
   uguale('passando dal ponte del pascolo', await animali(), 'cane coniglio')
-  controlla('in una nuvoletta', await page.evaluate(() => window.__sbuffo))
+  uguale('cambiando nella tana del ponte', await cambi(), 'prato-pascolo:nel buco')
+  uguale('e niente nuvoletta', await page.locator('.pp-sbuffo').count(), 0)
 }
 await toccaFuori()
 
@@ -396,6 +409,32 @@ await fermo()
   uguale('il primo gregge aspetta, aperto', await statoSullIsola(page, TAPPE_PRIME), 'aperta')
   controlla('l\'isola del pascolo non è velata',
             await page.locator('[data-isola="pecore-cane"][data-velata="0"]').count() === 1)
+}
+
+/* ══════════ 6. dal salto e dal prato al pascolo: l'animale cambia nella tana al capo del ponte ══════════ */
+{
+  const PASCOLO = STRADE.isole.find(s => s.chiave === 'pecore-cane').tappe
+  const ULTIMA = PASCOLO.at(-1)
+  await apri(ULTIMA)
+  uguale('il pascolo è tutto aperto: si apre sul cane', `${(await segnalino()).al}/${(await segnalino()).animale}`, `${ULTIMA}/cane`)
+  uguale('con le due tane dei ponti, aperte e col loro disegno',
+         await page.locator('[data-tana="prato-pascolo"], [data-tana="salto-pascolo"]').count(), 2)
+  uguale('né il masso né la sbarra davanti', await page.locator('[data-blocco="prato-pascolo"], [data-blocco="salto-pascolo"]').count(), 0)
+  for (const [ponte, altro] of [['salto-pascolo', SALTO], ['prato-pascolo', 0]]) {
+    await spia()
+    await toccaSu(casella(altro))
+    await fermo()
+    uguale(`${ponte}: dal pascolo al coniglio`, `${(await segnalino()).al}/${(await segnalino()).animale} ${await animali()}`, `${altro}/coniglio cane coniglio`)
+    uguale(`${ponte}: si cambia nella tana, nascosti`, await cambi(), `${ponte}:nel buco`)
+    await toccaFuori()
+    await spia()
+    await toccaSu(casella(ULTIMA))
+    await fermo()
+    uguale(`${ponte}: e dal coniglio al cane`, `${(await segnalino()).al}/${(await segnalino()).animale} ${await animali()}`, `${ULTIMA}/cane coniglio cane`)
+    uguale(`${ponte}: nella stessa tana`, await cambi(), `${ponte}:nel buco`)
+    await toccaFuori()
+  }
+  uguale('nessuna nuvoletta', await page.locator('.pp-sbuffo').count(), 0)
 }
 
 uguale('nessun errore in console', errori.join(' · '), '')
