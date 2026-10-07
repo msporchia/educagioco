@@ -7,8 +7,8 @@ sette anni e mezzo le carte e lo zaino. Codice in `src/giochi/passo-passo/`.
 - [regole.md](regole.md) — la fila come programma, le regole del mondo, il cane pastore e le pecore
 - [zaino.md](zaino.md) — carte, zaino, ripeti / fino a / se, le lastre, le soluzioni scritte
 - [stelle-e-aiuti.md](stelle-e-aiuti.md) — le quattro stelle, la strada più corta, monete, la scala del 💡
-- [sentiero.md](sentiero.md) — il sentiero senza fine: cosa mescola, il pavimento, i controlli
-- [mappa.md](mappa.md) — la mappa delle isole: ponti, tane, bivi, il segnalino che salta, il fumetto
+- [sentiero.md](sentiero.md) — i due sentieri senza fine, del coniglio e del cane: le forme, il pavimento prima e dopo coi numeri misurati, i controlli, un record ciascuno
+- [mappa.md](mappa.md) — la mappa delle isole: ponti, tane, bivi, le due caselle dei sentieri, il segnalino che salta, il fumetto
 - [sosta.md](sosta.md) — lasciare a metà: la fila di ogni livello resta, il sentiero si riprende dalla carta in cima
 - [livelli.md](livelli.md) — come si scrive un livello, cosa pretende il banco, riordinare la fila, le due strade (chi apre cosa), le tappe di oggi
 

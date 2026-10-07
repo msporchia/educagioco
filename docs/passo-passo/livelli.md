@@ -90,7 +90,7 @@ lo lancia: una ricerca così vuole minuti.
   costruttore (vedi [../costruttore/campagna.md](../costruttore/campagna.md)): un livello che ieri c'era
   e oggi è chiuso è la cosa che non deve succedere.
 - **`TAPPE_PRIME`** è la fine delle buche (l'indice della prima tappa del
-  cane): lì si apre il sentiero senza fine e lì si fermano i traguardi di
+  cane): lì si apre il sentiero del coniglio e lì si fermano i traguardi di
   prima — una soglia che si allunga con la campagna farebbe tornare
   d'argento l'oro di chi le aveva finite tutte.
 - **`cfg.eredita` è un cursore come `tappa`**: se la fila cambia si travasa
@@ -149,11 +149,12 @@ Chi apre cosa:
   (`prossima`): il coniglio va avanti sulla strada maestra; il cane va
   avanti nella sua isola, e finita l'isola torna sulla strada maestra alla
   tappa dopo la tana. Al bivio, con la strada maestra chiusa dall'età, il
-  ramo. Davanti allo zaino chiuso o in fondo, il sentiero.
+  ramo. Davanti allo zaino chiuso o in fondo, il sentiero: quello del cane
+  dopo una tappa del cane, se è aperto, se no quello del coniglio.
 - **La campagna è finita quando è finita la strada del coniglio**
   (`FINE_STRADA`, vedi sopra): la riga della home dice «tutte le tane». Il
   cane conta per le stelle.
-- **Il sentiero mescola il cane** solo a pascolo finito (il gregge vinto):
+- **Il sentiero del cane si apre** solo a pascolo finito (il gregge vinto):
   un gradino si conta finito dalla sua ultima tappa, non dalla dopo.
 
 Il cane non insegna niente che serva al coniglio dopo: le sue carte e le

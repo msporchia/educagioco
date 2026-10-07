@@ -50,14 +50,16 @@ bambino, e non in un campo nuovo del profilo.
 
 ## Più sfide senza fine
 
-Il castello ne ha quattro, una per terreno: il manifesto le elenca in
+Il castello ne ha quattro, una per terreno, Passo passo due, il sentiero
+del coniglio e quello del cane ([../passo-passo/sentiero.md](../passo-passo/sentiero.md)): il manifesto le elenca in
 `senzaFine.sfide` — `{ chiave, nome, icona, eredita? }` — con misura, `che`
 e `dettagli` scritti una volta in cima come difetti.
 
 - Ogni record sta in `campagne[chiave].primati[<sfida>]`; la chiave della
   sfida è una chiave di salvataggio e non si rinomina.
 - **Una sola dice `eredita: true`** e si prende il `primato` di quando la
-  sfida era una (la libera del bosco): la migrazione è una lettura in
+  sfida era una (la libera del bosco; in Passo passo il sentiero del
+  coniglio): la migrazione è una lettura in
   `apriQuaderno`, non una riscrittura.
 - `sfideDi` torna sempre un elenco; `primatoDi` e `segnaPrimato` prendono
   la sfida in coda, e chi ne ha una sola non cambia una riga.

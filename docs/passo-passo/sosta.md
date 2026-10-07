@@ -35,7 +35,13 @@ Codice in `src/giochi/passo-passo/motore/sosta.js` (puro) e `Gioco.vue`.
 ## Il sentiero senza fine: la sosta con la carta
 
 - **Uscire non chiude la serie.** La mappa offre in cima «torno da dove ero»
-  (`Ripresa.vue`), con il numero del sentiero e quanti di fila.
+  (`Ripresa.vue`), con l'animale del sentiero, il numero e quanti di fila.
+- **I sentieri sono due, la sosta una** (`strada`, «coniglio» o «cane»; una
+  sosta di prima, senza, era del coniglio). Toccare l'altro sentiero con
+  una sosta aperta chiede prima, come un sentiero nuovo: «lascio perdere»
+  scrive il record della serie nel suo sentiero. Il ▶ in fondo a una tappa
+  del cane porta al sentiero del cane, e se c'è una sosta del coniglio
+  torna alla mappa e chiede.
 - **Si scrive il posto in gioco così com'è**, con la sua fila: è fatto a caso
   con quello che il bambino sapeva allora, e rifarlo dal seme dopo un gradino
   finito darebbe un posto diverso, cioè un'offerta rimescolata. Se il posto

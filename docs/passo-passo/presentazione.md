@@ -45,8 +45,9 @@ che ha dentro, poi il «ripeti **fino a**» un colore e il «**se**» sono su
 una lastra. E uno **zaino** che tiene poche carte: scritta freccia per
 freccia, la strada non ci sta.
 
-In fondo c'è il **sentiero senza fine**: posti fatti al momento, che
-mescolano tutto quello che il bambino ha già finito, sempre difficili.
+In fondo ci sono i **sentieri senza fine**, uno per il coniglio e uno per
+il cane: posti fatti al momento, che mescolano tutto quello che il
+bambino ha già finito, sempre difficili.
 
 ## Cosa allena
 

@@ -24,7 +24,16 @@ cosa, il gioco le dice in che stato è ogni tappa. Chi apre cosa sta in
   sul telefono (tre sotto i 340 px), e la strada fa la curva oltre l'ultima.
 - **La strada maestra è del coniglio**: da un'isola del coniglio alla dopo
   si passa su un ponte di assi, dalla parte dove la riga è finita. In fondo
-  c'è il sentiero senza fine, un'isola tonda e d'oro.
+  c'è il sentiero del coniglio, un'isola tonda e d'oro.
+- **I sentieri senza fine sono due caselle tonde e d'oro**
+  ([sentiero.md](sentiero.md)): quella del coniglio in fondo alla strada
+  maestra, col nome e il record accanto; quella del cane in fondo al
+  pascolo, nella fila delle sue caselle (l'id `SENTIERO_CANE`,
+  `senza-fine-cane`), dopo il gregge. Ognuna ha il suo animale in un
+  tondino sul bordo, anche da chiusa, e il suo record nel fumetto. Il
+  sentiero del cane sta nell'isola del pascolo e non in un'isola sua: la
+  mappa sarà rifatta coi fondali dipinti, e intanto si tocca il meno
+  possibile.
 - **I rami del cane stanno nello spazio dopo l'isola della loro tana**,
   dalla parte opposta al ponte: il pascolo dopo le buche (largo, undici
   caselle), un'isoletta di tre caselle dopo ripeti, fino a, se e tutto il
@@ -76,7 +85,8 @@ cosa, il gioco le dice in che stato è ogni tappa. Chi apre cosa sta in
 - **Su una chiusa non va**: il fumetto subito, e dice cosa manca.
 - **All'apertura sta sulla tappa di adesso** (`tappaDiAdesso` in
   `motore/strade.js`): l'ultima giocata se non è vinta, se no quella dopo
-  come col ▶; non restando niente, il sentiero. La mappa si apre scorrendo
+  come col ▶; non restando niente, il sentiero lasciato a metà, se no
+  quello del coniglio, se no quello del cane. La mappa si apre scorrendo
   fino a lui.
 - **Dove si era fermato lo ricorda la sessione**, per bambino (`ultimo` in
   `Mappa.vue`), non il profilo: tornando con una tappa di adesso nuova parte
@@ -119,17 +129,20 @@ metà del sentiero (`Ripresa.vue`) sta ferma in cima, sopra lo scorrimento.
 Nei test: `unita/passo-passo-isole` (a cinque larghezze: caselle nello
 schermo e nella loro isola, isole che non si toccano, il ponte che non
 passa sopra il cane, il bivio che non copre niente, il coniglio che resta
-coniglio sulla sua strada e diventa cane solo da una tana),
+coniglio sulla sua strada e diventa cane solo da una tana, il sentiero del
+cane in fondo al pascolo, a un salto dal gregge),
 `integrazione/passo-passo-mappa` (col dito vero). Bersagli: la mappa
 `[data-mappa]`, lo scorrimento `[data-isole]`; le isole
 `[data-isola="<chiave>"]` con `[data-animale="coniglio"|"cane"]` e
-`[data-velata="1"|"0"]`; le caselle `[data-tappa="<indice>"|"senza-fine"]`
-con `[data-stato]` e `[data-strada="coniglio"|"cane"]`, la matita
+`[data-velata="1"|"0"]`; le caselle `[data-tappa="<indice>"|"senza-fine"|"senza-fine-cane"]`
+con `[data-stato]` e `[data-strada="coniglio"|"cane"]`, l'animale di un
+sentiero `[data-sentiero-di="coniglio"|"cane"]`, la matita
 `[data-a-meta]`; i cartelli `[data-insegna]` (con `[data-scalino]`); le tane
 `[data-tana="<id>"]` con `[data-aperta]`; i bivi `[data-bivio]` con
 `[data-ramo]` e le assi `[data-verso="coniglio"|"cane"]`; il segnalino
 `[data-segnalino]` con `[data-animale]`, `[data-al]` e `[data-in-viaggio]`;
 il fumetto `[data-fumetto]` con
-`[data-fumetto-per]`, `[data-azione="parti"]` e `[data-serve]`.
+`[data-fumetto-per]`, `[data-azione="parti"]`, `[data-serve]` e, su un
+sentiero, `[data-record]`.
 `giocaSullIsola(page, indice)` in `test/aiuto/browser.mjs` aspetta il
 segnalino fermo (per non far scorrere la casella sotto il click) e fa i due tocchi; `statoSullIsola` legge lo stato.
