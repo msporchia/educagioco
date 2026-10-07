@@ -106,4 +106,17 @@ const posto = (n, prima = null) => generaSentiero(n, caso(seme * 1009 + n), { sb
          dice(scrivi({ livelli: { [prato.chiave]: scriviFila({ fila: ['su'], cursore: 1 }) } })), null)
 }
 
+/* ══════════ 6. i due sentieri: la sosta dice quale ══════════ */
+{
+  const cane = generaSentiero(1, caso(77), { sbloccati, strada: 'cane' })
+  const s = perArchivio(scriviSerie({ seme, sentieri: 1, serie: 1, prima: cane.famiglia, posto: cane, strada: 'cane' }))
+  uguale('il sentiero del cane resta del cane', leggiSerie(s).strada, 'cane')
+  const d = dice(perArchivio(scrivi({ sentiero: s })))
+  controlla('e la mappa lo dice col suo animale', d && d.strada === 'cane' && d.emoji === '🐕' && /cane/.test(d.nome), JSON.stringify(d))
+  /* una sosta di prima non sa niente dei due sentieri: era del coniglio */
+  const { strada, ...diPrima } = perArchivio(scriviSerie({ seme, sentieri: 2, serie: 2, prima: 'prato', posto: null }))
+  uguale('una sosta di prima è del sentiero del coniglio', leggiSerie(diPrima).strada, 'coniglio')
+  uguale('e una strada che non c\'è anche', leggiSerie({ ...diPrima, strada: 'gatto' }).strada, 'coniglio')
+}
+
 riassunto('Passo passo — la fila e il sentiero lasciati a metà')

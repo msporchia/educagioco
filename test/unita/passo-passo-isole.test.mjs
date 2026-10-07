@@ -7,7 +7,7 @@
    `node test/esegui.mjs passo-passo-isole --niente-build` */
 import { CAMPAGNA } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { STRADE } from '../../src/giochi/passo-passo/motore/strade.js'
-import { disponiIsole, viaggio, percorso, decori, ANIMALE } from '../../src/giochi/passo-passo/scena/isole.js'
+import { disponiIsole, viaggio, percorso, decori, ANIMALE, SENTIERO_CANE } from '../../src/giochi/passo-passo/scena/isole.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const S = STRADE
@@ -16,7 +16,17 @@ const dentroRett = (x, y, r, m = 0) => x >= r.x - m && x <= r.x + r.w + m && y >
 for (const W of [320, 360, 390, 430, 520]) {
   const q = disponiIsole(W, S)
   const caselle = q.nodi.filter(n => n.tipo !== 'tana')
-  uguale(`${W} px: una casella per tappa, più il sentiero`, caselle.length, CAMPAGNA.length + 1)
+  uguale(`${W} px: una casella per tappa, più i due sentieri`, caselle.length, CAMPAGNA.length + 2)
+  /* il sentiero del coniglio in fondo alla strada maestra, quello del
+     cane in fondo al pascolo: ci si arriva saltando, senza tane */
+  const sC = q.nodi.find(n => n.id === 'senza-fine'), sD = q.nodi.find(n => n.id === SENTIERO_CANE)
+  const pascolo = q.isole.find(s => s.animale === 'cane' && s.scalino === 'pecore')
+  controlla(`${W} px: il sentiero del cane sta nel pascolo, ed è del cane`,
+            sD && sD.tipo === 'sentiero' && sD.animale === 'cane' && q.isole[sD.isola] === pascolo)
+  controlla(`${W} px: e il sentiero del coniglio è del coniglio`, sC && sC.tipo === 'sentiero' && sC.animale === 'coniglio')
+  const finePascolo = pascolo.tappe.at(-1)
+  uguale(`${W} px: dall'ultimo gregge al sentiero del cane si salta e basta`,
+         viaggio(q, finePascolo, SENTIERO_CANE).map(p => `${p.che}:${p.animale}`).join(' '), 'salto:cane')
   controlla(`${W} px: le caselle stanno nello schermo`,
             caselle.every(n => n.x - n.lato / 2 >= 4 && n.x + n.lato / 2 <= W - 4))
   controlla(`${W} px: e nella loro isola`, caselle.every(n => {

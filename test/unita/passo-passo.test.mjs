@@ -9,8 +9,8 @@
    pecore scappano come dice la regola, si incastrano dove non si
    recuperano, e chi aveva giocato la fila di prima ritrova le sue
    stelle al posto giusto; chi
-   segue solo gli aiuti arriva a casa, e nello zaino ci sta; il sentiero
-   senza fine fa livelli che si vincono; i traguardi scattano a profilo
+   segue solo gli aiuti arriva a casa, e nello zaino ci sta (i sentieri
+   senza fine stanno in `unita/passo-passo-sentiero`); i traguardi scattano a profilo
    finito e non a profilo vuoto, e nessuno torna indietro quando la
    campagna si allunga.
    `node test/esegui.mjs passo-passo --niente-build` */
@@ -29,9 +29,6 @@ import { risolvi, suggerisci, serveLaRegola, serveLaCarta, misura, mosseDi, mini
   from '../../src/giochi/passo-passo/motore/risolutore.js'
 import { mettiCarta, mettiCiclo, mettiScatola, togliPrima, scegliVolte, scegliTesta, seguiConsiglio }
   from '../../src/giochi/passo-passo/motore/fila.js'
-import { generaSentiero, caso, famigliaDi, premioDi, INGREDIENTI, DI_BASE, PAVIMENTO,
-         RISERVA, RISERVA_CANE, RISERVA_ZAINO } from '../../src/giochi/passo-passo/motore/generatore.js'
-import { SAGOME, generaZaino, provaLoZaino, ZAINO_MIN, STRADA_MIN } from '../../src/giochi/passo-passo/motore/sagome.js'
 import { Proiezione, fotogrammaIniziale } from '../../src/giochi/passo-passo/scena/proiezione.js'
 import manifesto, { CHIAVE, SENZA_FINE } from '../../src/giochi/passo-passo/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
@@ -47,7 +44,6 @@ const SEGNO = { rosso: '🔴', blu: '🔵', giallo: '🟡', casa: '🏠' }
 const inFrecce = f => (f || []).map(m => FRECCE[m] || (m === FINE ? ')'
   : m.startsWith('se-') ? `❓${SEGNO[m.slice(3)] || m.slice(3)}(` : `🔁${SEGNO[m.slice(7)] || m.slice(7)}(`)).join(' ')
 const dove = (r) => r.mondo.pos
-const VOLTE_PROVA = [2, 3, 4, 5, 6, 7, 8, 9]
 
 /* ══════════ 1. i dati stanno in piedi ══════════ */
 {
@@ -769,148 +765,7 @@ for (const [i, t] of CAMPAGNA.entries()) {
             ps.fotogramma(ps.durata + 0.5).tornato)
 }
 
-/* ══════════ 6. il sentiero senza fine ══════════ */
-{
-  const TUTTI = Object.values(INGREDIENTI)
-  const PICCOLI = [...DI_BASE, 'cane']
-  controlla('ogni gradino dopo i primi passi porta un ingrediente, tranne l\'ultimo',
-            SCALINI.slice(1, -1).every(s => INGREDIENTI[s.chiave]) && !INGREDIENTI[SCALINI.at(-1).chiave])
-  controlla('lo zaino paga più di un prato', premioDi({ zaino: 3 }) > premioDi({ mappa: [] }))
-
-  /* la famiglia esce solo fra le cose sbloccate, e quella di prima pesa meno */
-  const famiglie = (sbl, n = 400, prima = null) => {
-    const r = caso(11), c = {}
-    for (let i = 0; i < n; i++) { const f = famigliaDi(r, sbl, prima); c[f] = (c[f] || 0) + 1 }
-    return c
-  }
-  uguale('finite le buche, solo prati', Object.keys(famiglie(DI_BASE)).join(), 'prato')
-  uguale('finito il cane, prati e pascoli', Object.keys(famiglie(PICCOLI)).sort().join(), 'cane,prato')
-  uguale('finita la campagna, tutte e cinque', Object.keys(famiglie(TUTTI)).sort().join(), 'cane,fino,prato,ripeti,se')
-  controlla('la famiglia appena giocata esce di rado', (famiglie(TUTTI, 400, 'se').se || 0) < 400 / 10,
-            JSON.stringify(famiglie(TUTTI, 400, 'se')))
-
-  /* un giro lungo, con tutto sbloccato: ogni posto si vince, e nel
-     modo che la sua famiglia dice */
-  let tutti = 0, buoni = 0, riserve = 0, regole = 0, servono = 0, stesse = 0, bassi = 0
-  const viste = new Set(), sagomeViste = new Set()
-  for (let seme = 1; seme <= 4; seme++) {
-    let prima = null
-    for (let fatti = 0; fatti < 24; fatti++) {
-      const t = generaSentiero(fatti, caso(97 * fatti + seme), { sbloccati: TUTTI, prima })
-      if (t.famiglia === prima) stesse++
-      prima = t.famiglia
-      tutti++
-      viste.add(t.famiglia)
-      if (t.sagoma) sagomeViste.add(t.sagoma)
-      if (!t.misure) riserve++
-      const liv = Livello.da(t)
-      const g = guastiDellaMappa(t.mappa)
-      let vince
-      if (t.zaino) {
-        const r = esegui(liv, t.soluzioni[0])
-        vince = r.esito === TANA && r.carota && serveLaCarta(liv) && carteDi(t.soluzioni[0]) === t.zaino
-      } else {
-        const m = misura(liv, { limite: 40000 })
-        vince = !!m.conCarota && esegui(liv, m.conCarota).esito === TANA
-      }
-      /* le pecore stanno nei pascoli, e nello zaino solo nelle stalle */
-      const pecore = t.famiglia === 'cane' ? liv.cane : t.famiglia === 'prato' ? !liv.cane : liv.cane === (t.sagoma === 'stalle')
-      if (!g.length && vince && pecore) buoni++
-      else nota('un sentiero storto', `${t.famiglia} ${t.sagoma || ''} ${g.join(' ')} ${t.mappa.join('/')}`)
-      if (t.famiglia === 'prato' && t.regole.length) {
-        regole++
-        if (t.regole.every(r => serveLaRegola(liv, { salto: 'salto', ghiaccio: 'ghiaccio', massi: 'spinta', buche: 'buche' }[r]))) servono++
-      }
-      /* il pavimento: dal primo sentiero, la strada più corta — anche
-         lasciando perdere la carota — non è mai corta */
-      const corta = risolvi(liv, { carota: false, limite: 40000 })
-      const pavimento = t.zaino ? 8 : PAVIMENTO[t.famiglia] - 3
-      if (!corta || corta.length < pavimento) { bassi++; nota('un sentiero basso', `${t.famiglia} ${t.sagoma || ''} ${corta && corta.length}`) }
-    }
-  }
-  uguale('ogni sentiero è una mappa scritta bene e si vince con la carota', buoni, tutti)
-  uguale('in un giro lungo escono tutte e cinque le famiglie', [...viste].sort().join(), 'cane,fino,prato,ripeti,se')
-  controlla('e molte sagome diverse dello zaino', sagomeViste.size >= 8, [...sagomeViste].join(' '))
-  controlla('quasi mai il posto di riserva', riserve <= tutti * 0.05, `${riserve} su ${tutti}`)
-  controlla('quasi mai due posti di fila della stessa famiglia', stesse <= tutti * 0.2, `${stesse} su ${tutti}`)
-  uguale('nei prati le regole servono tutte', servono, regole)
-  uguale('nessun sentiero sotto il pavimento, dal primo all\'ultimo', bassi, 0)
-
-  const a = generaSentiero(5, caso(42), { sbloccati: TUTTI }), b = generaSentiero(5, caso(42), { sbloccati: TUTTI })
-  uguale('lo stesso seme fa lo stesso sentiero', a.mappa.join('/'), b.mappa.join('/'))
-  controlla('senza il cane, niente pecore nel sentiero',
-            Array.from({ length: 12 }, (_, f) => Livello.da(generaSentiero(f, caso(f + 1))).cane).every(c => !c))
-  controlla('senza le carte, niente zaino nel sentiero',
-            Array.from({ length: 12 }, (_, f) => generaSentiero(f, caso(f + 3), { sbloccati: PICCOLI })).every(t => !t.zaino))
-  controlla('i pascoli hanno due o tre pecore, dal primo sentiero', (() => {
-    const n = []
-    for (let s = 1; s < 40; s++) {
-      const t = generaSentiero(0, caso(s), { sbloccati: PICCOLI })
-      if (t.famiglia === 'cane') n.push(Livello.da(t).pecore.length)
-    }
-    return n.length > 5 && n.every(k => k >= 2) && n.includes(3)
-  })())
-  controlla('con le quattro regole, un prato ne mette insieme due o tre, dal primo sentiero',
-            Array.from({ length: 10 }, (_, f) => generaSentiero(0, caso(f + 5)))
-              .every(t => t.regole.length >= 2 && t.regole.length <= 3))
-  controlla('i salti compaiono solo dove c\'è il fiume da saltare',
-            Array.from({ length: 16 }, (_, f) => generaSentiero(f, caso(f + 9)))
-              .every(t => !!t.salti === (t.regole || []).includes('salto')))
-  controlla('il posto di riserva del prato si vince', !!misura(Livello.da(RISERVA)).conCarota)
-  controlla('il posto di riserva del cane si vince anche lui', !!misura(Livello.da(RISERVA_CANE)).conCarota)
-  controlla('e quello dello zaino vince, vuole la scatola e sta sopra il pavimento',
-            provaLoZaino({ ...RISERVA_ZAINO, carte: ['ripeti'] }))
-
-  /* ── le sagome, una per una ──
-     Ognuna, a ogni livello da cui compare e con semi diversi: si vince
-     con la carota, la scatola serve, le mosse ingenue perdono (col «fino
-     a» e col «se» dopo almeno due passi: la falsa pista), e chi segue
-     soltanto gli aiuti arriva a casa senza sforare lo zaino. */
-  for (const g of SAGOME) {
-    let fatte = 0, prove = 0, sane = 0, aiutate = 0, piste = 0, pisteBuone = 0
-    const forme = new Set()
-    for (let seme = 1; seme <= 16; seme++) {
-      prove++
-      const t = generaZaino(g.carta, TUTTI, caso(1000 + seme * 7), { sagoma: g.chiave })
-      if (!t) continue
-      fatte++
-      forme.add(t.mappa.join('/'))
-      const liv = Livello.da(t)
-      if (provaLoZaino(t, { strada: g.strada || STRADA_MIN }) && t.zaino >= ZAINO_MIN && !guastiDellaFila(t.soluzioni[0]).length &&
-          t.fragili.every(f => { const r = esegui(liv, f); return !(r.esito === TANA && r.carota) })) sane++
-      if (g.carta !== 'ripeti') for (const f of t.fragili) {
-        piste++
-        if (esegui(liv, f).passi.length >= 2) pisteBuone++
-      }
-      let fila = [], cur = 0, u = null, sfora = false
-      for (let k = 0; k < 40; k++) {
-        u = suggerisci(liv, fila)
-        if (!u || u.che === 'via') break
-        ;({ fila, cursore: cur } = seguiConsiglio(fila, cur, u))
-        if (carteDi(fila) > t.zaino) sfora = true
-      }
-      const r = esegui(liv, fila)
-      if (u && u.che === 'via' && r.esito === TANA && r.carota && !sfora) aiutate++
-    }
-    uguale(`sagoma «${g.chiave}»: esce sempre`, fatte, prove)
-    uguale(`sagoma «${g.chiave}»: si vince con la carota, la scatola serve, le mosse ingenue perdono`, sane, fatte)
-    uguale(`sagoma «${g.chiave}»: seguendo gli aiuti si arriva, dentro lo zaino`, aiutate, fatte)
-    if (piste) uguale(`sagoma «${g.chiave}»: le mosse ingenue fanno almeno due passi`, pisteBuone, piste)
-    controlla(`sagoma «${g.chiave}»: posti diversi l'uno dall'altro`, forme.size >= fatte * 0.8, `${forme.size} su ${fatte}`)
-  }
-  /* col «fino a» contare non basta: la stessa sagoma, coi numeri al
-     posto del colore, non vince mai */
-  {
-    const t = generaZaino('fino', TUTTI, caso(5), { sagoma: 'gradini' })
-    const liv = Livello.da(t)
-    const contando = VOLTE_PROVA.every(n => {
-      const f = t.soluzioni[0].map(x => (/^ripeti-(rosso|blu|giallo)$/.test(x) ? `ripeti-${n}` : x))
-      const r = esegui(liv, f)
-      return !(r.esito === TANA && r.carota)
-    })
-    controlla('nei gradini storti nessun numero fa le veci del colore', contando)
-  }
-}
+/* ══════════ 6. il sentiero senza fine: in `unita/passo-passo-sentiero` ══════════ */
 
 /* ══════════ 7. quello che il gioco porta all'albo ══════════ */
 {
@@ -960,8 +815,12 @@ for (const [i, t] of CAMPAGNA.entries()) {
   uguale('in home, all\'inizio', manifesto.riassunto({ tappa: 0, stelle: {} }), `tappa 1 di ${QUANTE_TAPPE} · Il prato`)
   controlla('a campagna finita parla del sentiero',
             manifesto.riassunto({ tappa: QUANTE_TAPPE, stelle: { 0: 3 } }).startsWith('tutte le tane'))
-  controlla('e col record lo dice', manifesto.riassunto({ tappa: QUANTE_TAPPE, stelle: {},
-    primato: { best: 5, quando: 1, partite: 2, ultime: [] } }).includes('5 di fila'))
+  /* il record di quando il sentiero era uno è del sentiero del coniglio */
+  uguale('e col record di ieri lo dice, sul sentiero del coniglio', manifesto.riassunto({ tappa: QUANTE_TAPPE, stelle: {},
+    primato: { best: 5, quando: 1, partite: 2, ultime: [] } }), 'sentiero del coniglio · record 5 di fila')
+  uguale('dei due record dice il più recente', manifesto.riassunto({ tappa: QUANTE_TAPPE, stelle: {},
+    primati: { coniglio: { best: 7, quando: 1, partite: 2, ultime: [] }, cane: { best: 3, quando: 9, partite: 1, ultime: [] } } }),
+    'sentiero del cane · record 3 di fila')
   controlla('arrivato allo zaino, il record del sentiero lo dice lo stesso',
     manifesto.riassunto({ tappa: TAPPE_PICCOLE, stelle: {},
       primato: { best: 4, quando: 1, partite: 2, ultime: [] } }).includes('sentiero 4 di fila'))

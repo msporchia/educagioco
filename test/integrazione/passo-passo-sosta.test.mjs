@@ -163,8 +163,11 @@ await attendi(page, 200)
 uguale('«lascio perdere» toglie la carta', await page.locator('[data-ripresa]').count(), 0)
 {
   const p = await passo()
-  uguale('e scrive il record della serie', (p.primato || {}).best, 2)
-  uguale('una volta sola', (p.primato || {}).partite, 1)
+  /* la sosta di prima non diceva quale sentiero: era del coniglio, e il
+     record va lì (il posto vecchio, `primato`, se ne va) */
+  uguale('e scrive il record della serie, nel sentiero del coniglio', ((p.primati || {}).coniglio || {}).best, 2)
+  uguale('una volta sola', ((p.primati || {}).coniglio || {}).partite, 1)
+  uguale('il sentiero del cane non lo tocca', (p.primati || {}).cane, undefined)
   uguale('la sosta non tiene più il sentiero', (p.sosta || {}).sentiero || null, null)
 }
 await giocaSullIsola(page, 'senza-fine')

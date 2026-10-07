@@ -69,7 +69,7 @@ const carta = page.locator('.carta.gioco[data-gioco="passo"]')
 uguale('a sei anni la carta è in home', await carta.count(), 1)
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa', { timeout: 5000 })
-uguale('la mappa ha tutte le tappe', await page.locator('[data-mappa] [data-tappa]:not([data-tappa="senza-fine"])').count(),
+uguale('la mappa ha tutte le tappe', await page.locator('[data-mappa] [data-tappa]:not([data-tappa^="senza-fine"])').count(),
        CAMPAGNA.length)
 uguale('la prima tappa è quella di adesso', await statoSullIsola(page, 0), 'ora')
 uguale('la seconda no, finché non si fa la prima', await statoSullIsola(page, 1), 'chiusa')
@@ -365,6 +365,59 @@ await scatto(page, 'passo-sentiero')
   await page.waitForSelector('.pp-campo')
   const titolo = await page.locator('.barra-app .dove').innerText()
   controlla('▶ porta al sentiero dopo', titolo.includes('2'), titolo)
+}
+await allaMappa()
+
+/* ---------- 11b. i due sentieri: il cane, e un record ciascuno ----------
+   Un profilo di prima, col record di quando il sentiero era uno: lo
+   ritrova il sentiero del coniglio, e quello del cane non ne ha. */
+await semina(page, { settings: { eta: 8 },
+                     campagne: { passo: { tappa: CAMPAGNA.length, libera: true, stelle: {}, cfg: {},
+                                          primato: { best: 4, quando: 1, partite: 3, ultime: [] } } } })
+await scegli(page, 'passo')
+await page.waitForSelector('.pp-mappa')
+controlla('a campagna finita c\'è anche il sentiero del cane, aperto',
+          await statoSullIsola(page, 'senza-fine-cane') !== 'chiusa')
+uguale('ognuno col suo animale',
+       [await page.locator('[data-tappa="senza-fine"] [data-sentiero-di]').getAttribute('data-sentiero-di'),
+        await page.locator('[data-tappa="senza-fine-cane"] [data-sentiero-di]').getAttribute('data-sentiero-di')].join(), 'coniglio,cane')
+const fumettoDi = async quale => {
+  await page.waitForSelector('[data-segnalino][data-in-viaggio="0"]', { timeout: 8000 })
+  await page.locator(`[data-mappa] [data-tappa="${quale}"]`).click()
+  await page.waitForSelector(`[data-fumetto][data-fumetto-per="${quale}"]`, { timeout: 3000 })
+  const testo = await page.locator('[data-fumetto] [data-record]').innerText()
+  await page.waitForSelector('[data-segnalino][data-in-viaggio="0"]', { timeout: 8000 })
+  return testo
+}
+controlla('il record di prima è del sentiero del coniglio', /4 di fila/.test(await fumettoDi('senza-fine')))
+uguale('quello del cane non ne ha ancora', await fumettoDi('senza-fine-cane'), 'Ancora nessun record')
+await scatto(page, 'passo-due-sentieri')
+await page.click('[data-fumetto] [data-azione="parti"]')
+await page.waitForSelector('.pp-campo', { timeout: 5000 })
+{
+  const titolo = await page.locator('.barra-app .dove').innerText()
+  controlla('il sentiero del cane si gioca col cane', titolo.startsWith('🐕'), titolo)
+  // una freccia nella fila (passata la finestra cieca): un sentiero non toccato non si tiene
+  await attendi(page, 450)
+  await page.locator('[data-freccia="destra"]').first().click()
+  await attendi(page, 150)
+}
+await allaMappa()
+/* uscito, la carta in cima dice che era il sentiero del cane; toccare
+   quello del coniglio chiede prima */
+{
+  const s = ((((await leggiProfilo(page)).campagne || {}).passo || {}).sosta || {}).sentiero || {}
+  controlla('la sosta è del sentiero del cane, e il posto ha le pecore',
+            s.strada === 'cane' && !!s.posto && s.posto.mappa.join('').includes('p'), JSON.stringify(s).slice(0, 200))
+  const testo = await page.locator('[data-ripresa]').innerText().catch(() => '')
+  controlla('la carta in cima dice il sentiero del cane', /cane/.test(testo), testo)
+  await giocaSullIsola(page, 'senza-fine')
+  uguale('il sentiero del coniglio chiede prima di lasciare quello del cane', await page.locator('[data-chiede]').count(), 1)
+  controlla('e dice quale', /coniglio/.test(await page.locator('[data-chiede]').innerText()))
+  await page.click('[data-azione="comincia"]')
+  await page.waitForSelector('.pp-campo', { timeout: 5000 })
+  const titolo = await page.locator('.barra-app .dove').innerText()
+  controlla('«comincio» parte il sentiero del coniglio', titolo.startsWith('🐇'), titolo)
 }
 await allaMappa()
 
