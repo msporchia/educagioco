@@ -25,6 +25,15 @@ campagna), `Gioco.vue` (chi legge e scrive), `viste/Eroi.vue` (la scelta).
   addosso (arma e armatura), le gemme, il record dell'abisso, la discesa a
   metà; una mai cominciata dice «nuova avventura» (`cominciata`: una discesa
   vinta o a metà, della roba, un record).
+- **La scheda dice i numeri veri e mostra la roba in mano**: vita, braccio e
+  difesa sono quelli che la discesa userà con la roba addosso
+  (`schedaConLaRoba` in `motore/corredo.js`, lo stesso `Corredo` della Corsa),
+  con i tratti che contano (`💎 ×1,5`, `🔥 vedi più lontano`); un'avventura
+  nuova ha lo zaino vuoto e quindi quelli di base. Il ritratto (`viste/Armato.vue`,
+  alla scala della figura) impugna l'arma e imbraccia lo scudo; l'armatura e il
+  gioiello restano due iconcine accanto. Vale anche per la carta di chi
+  scende in fondo alla terra di sopra. Le barre della scelta si misurano sul
+  più forte di loro, con la sua roba, e non sbordano.
 
 ## Dove sta, nel salvataggio
 
@@ -101,6 +110,8 @@ aperta, con l'abisso, da prima della roba), `integrazione/sotterraneo-avventure`
 (col dito: un profilo di prima passa al cavaliere, il mago comincia da capo, si
 torna al cavaliere e si ritrova tutto, e «riprendi da qui»). Nella scelta
 `.sot-eroe[data-eroe="<eroe>"]` con `data-nuova` (1 se mai cominciata),
-`[data-punto]` (a che punto è), `[data-addosso="<cosa>"]`, `[data-fondo]`,
+`[data-punto]` (a che punto è), `[data-addosso="<cosa>"]` (l'arma in mano, l'armatura
+e il gioiello), `[data-in-mano]` / `[data-in-braccio]` sul ritratto, `[data-tratti]`,
+`[data-fondo]`,
 `[data-a-meta]`; `[data-azione="eroe"]` la apre dalla terra di sopra;
 `scegliAvventura` in `test/aiuto/browser.mjs` per chi deve solo scegliere.
