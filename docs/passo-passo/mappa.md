@@ -27,8 +27,11 @@ cosa, il gioco le dice in che stato è ogni tappa. Chi apre cosa sta in
   c'è il sentiero senza fine, un'isola tonda e d'oro.
 - **I rami del cane stanno nello spazio dopo l'isola della loro tana**,
   dalla parte opposta al ponte: il pascolo dopo le buche (largo, undici
-  caselle), un isolotto con una casella sola dopo ripeti, fino a, se e
-  tutto il mondo. Il ponte del coniglio ci passa accanto, mai sopra.
+  caselle), un'isoletta di tre caselle dopo ripeti, fino a, se e tutto il
+  mondo (le tappe in coda, [livelli.md](livelli.md#le-tappe-in-coda)). Il
+  ponte del coniglio ci passa accanto, mai sopra — tranne sotto i 340 px,
+  dove oggi un'isoletta di tre caselle è larga quanto la riga e il ponte
+  ci passa sopra (`unita/passo-passo-isole` lo dice a 320 px).
 - **Ogni isola ha il suo vestito** (`VESTITI` in `scena/isole.js`, solo
   disegno): prato, orto coi solchi, stagno con la pozza, ghiaccio con le
   crepe; quelle del cane sono pascoli con lo steccato. Il nome dello scalino

@@ -69,7 +69,13 @@ giusta) e fa i sentieri senza fine. `test/unita/passo-passo` pretende:
   ingenue dello zaino facciano almeno due passi prima di fermarsi, e che il
   cane torni nei gradini dello zaino.
 
-Le soluzioni scritte più corte le verifica `strumenti/passo-passo/minimi.mjs`.
+Le soluzioni scritte più corte le verifica `strumenti/passo-passo/minimi.mjs`,
+che nei gradini del «fino a» e del «se» cerca anche un programma che stia
+nello zaino **senza la carta del gradino**: se c'è, il livello insegna a
+contare, non la carta (le nicchie di prima si vincevano con 🔁8(→ ← →),
+perché passando avanti e indietro il cane spingeva la pecora fino in
+fondo dal corridoio; oggi la stalla è fuori dalla sua vista). Il banco non
+lo lancia: una ricerca così vuole minuti.
 
 ## Quando la fila cambia
 
@@ -89,6 +95,27 @@ Le soluzioni scritte più corte le verifica `strumenti/passo-passo/minimi.mjs`.
   d'argento l'oro di chi le aveva finite tutte.
 - **`cfg.eredita` è un cursore come `tappa`**: se la fila cambia si travasa
   con lei (in `Gioco.vue`, accanto a `riordina`).
+
+### Le tappe in coda
+
+Le tappe nuove del cane si aggiungono **in fondo a `CAMPAGNA`**, dopo
+l'ultima del coniglio: gli indici di prima non cambiano, quindi non serve
+una fila nuova in `FILE` né un travaso (`FILE[4]` si allunga e basta).
+Messe in mezzo, finivano sotto `cfg.eredita` di chi era già più avanti, e
+si sarebbero aperte già fatte.
+
+- **Sulla mappa vanno nella loro isola** (`motore/strade.js` le riconosce
+  dalle pecore e dallo scalino), dopo quelle che c'erano; la strada del
+  cane va di isola in isola, non per indice.
+- **`FINE_STRADA`** è la fine della strada del coniglio: lì la campagna è
+  finita («tutte le tane», `libera`), e lì si ferma il cursore. Le tappe in
+  coda non lo muovono (`postoNelCursore`, il `posto` di `completa`), se no
+  il cane portava la riga della home, i traguardi e l'esperienza in fondo
+  alla fila. I gradini del sentiero si contano finiti fino a lì.
+- **Una tappa fatta resta aperta**: le stalle a gradini vinte prima che nel
+  ripeti arrivassero il cortile e il pettine non si chiudono.
+- Gli scalini in fila, la portata e il premio si controllano fino a
+  `FINE_STRADA` e lungo la strada del cane.
 
 ## Le due strade
 
@@ -123,9 +150,9 @@ Chi apre cosa:
   avanti nella sua isola, e finita l'isola torna sulla strada maestra alla
   tappa dopo la tana. Al bivio, con la strada maestra chiusa dall'età, il
   ramo. Davanti allo zaino chiuso o in fondo, il sentiero.
-- **La campagna è finita quando è finita la strada del coniglio** (l'ultima
-  tappa è sua): la riga della home dice «tutte le tane». Il cane conta per
-  le stelle.
+- **La campagna è finita quando è finita la strada del coniglio**
+  (`FINE_STRADA`, vedi sopra): la riga della home dice «tutte le tane». Il
+  cane conta per le stelle.
 - **Il sentiero mescola il cane** solo a pascolo finito (il gregge vinto):
   un gradino si conta finito dalla sua ultima tappa, non dalla dopo.
 
@@ -200,10 +227,19 @@ risolutore; per i livelli con lo zaino è quante carte tiene lo zaino.
 | **❓ Il se** | *guarda cosa ha sotto i piedi, e decide* | zaino |
 | 50. Le colline | sul rosso si scende, sul giallo si sale | 6 |
 | 51. Il sentiero dei segni | ogni lastra dice dove andare | 9 |
-| 52. Le nicchie | la pecora va spinta sopra o sotto | 8 |
+| 52. Le nicchie | il cane entra nella nicchia sopra o sotto | 8 |
 | **🌍 Tutto il mondo** | *ghiaccio, massi, salti e segnali, con le scatole* | zaino |
 | 53. La spirale di ghiaccio | quattro frecce, fermano i sassi | 5 |
 | 54. Le pozze | la stessa scatola spinge un masso a ogni gradino | 5 |
 | 55. Il fiume dei sassi | fino al rosso, e un salto oltre la siepe | 7 |
 | 56. Il lago delle stalle | la seconda spinta scivolandole dietro | 7 |
 | 57. Il bosco ghiacciato | quattordici scivolate, un programma che legge i segnali | 8 |
+| **🐕 In coda: le isolette del cane** | *ognuna nell'isola del suo scalino* | zaino |
+| 58. Il cortile (🔁) | due file di stalle ad angolo: una scatola per lato | 4 |
+| 59. Il pettine (🔁) | entra nel vicolo, esci, avanti di due | 5 |
+| 60. Il pettine storto (🚩) | i vicoli non sono in fila: fino al rosso | 5 |
+| 61. I vicoli (🚩) | giù fino al blu, su fino al rosso | 7 |
+| 62. Il sentiero del gregge (❓) | le lastre dicono la strada, le pecore stanno ai lati | 9 |
+| 63. Le nicchie fonde (❓) | il rosso è fondo due, il blu uno | 10 |
+| 64. Le gallerie (🌍) | dentro e fuori dalla buca, poi giù per il guado gelato | 5 |
+| 65. Gli steccati (🌍) | fino al rosso, e si salta lo steccato | 4 |

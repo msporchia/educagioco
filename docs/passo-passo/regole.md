@@ -112,8 +112,10 @@ pecore (`p`). L'osso è la sua carota.
 rifà le regole che il bambino ha già — il ghiaccio, la buca che lo fa sbucare
 alle spalle della pecora, il fiume che il cane salta e la pecora no, il
 masso che fa il ponte per lei — e lui torna in ogni gradino dello zaino con
-la carta di quel gradino: le stalle col 🔁, le stalle a gradini col «fino
-a», le nicchie col ❓, il lago delle stalle in «tutto il mondo».
+la carta di quel gradino, tre tappe per gradino: col 🔁 le stalle, il
+cortile e il pettine; col «fino a» le stalle a gradini, il pettine storto e
+i vicoli; col ❓ le nicchie, il sentiero del gregge e le nicchie fonde; in
+«tutto il mondo» il lago delle stalle, le gallerie e gli steccati.
 `test/unita/passo-passo` lo pretende. Non insegna niente di nuovo, quindi è
 facoltativo: sulla mappa è un ramo che parte da una tana, e la strada del
 coniglio va avanti anche senza (vedi [livelli.md](livelli.md#le-due-strade)).

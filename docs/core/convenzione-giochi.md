@@ -112,7 +112,9 @@ gioco era una migrazione in più. Qui tutto sta in
 { tappa: 0, libera: false, stelle: {}, cfg: {} }
 ```
 
-- `tappa` — quante tappe superate (l'indice della prossima);
+- `tappa` — quante tappe superate (l'indice della prossima); `completa(…, { posto })`
+  lo sposta altrove, per le tappe aggiunte in coda a una campagna che non sono la
+  sua fila (il cane di Passo passo, [../passo-passo/livelli.md](../passo-passo/livelli.md));
 - `libera` — la campagna è finita, il gioco libero è aperto;
 - `stelle` — il **primato** per tappa, non la somma: rigiocare non gonfia,
   e una partita storta non toglie una stella già presa;
