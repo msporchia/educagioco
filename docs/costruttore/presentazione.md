@@ -57,7 +57,7 @@ tutti i colori, non si vince e non paga, si costruisce.
 
 I livelli si scelgono sulla **scheda del robot**: un circuito stampato dove
 ogni capitolo è un chip e ogni livello un led. La corrente arriva fin dove
-si è arrivati, e vinto un livello corre al led dopo, col robot dietro.
+si è arrivati, e vinto un livello è il robot a portarla al led dopo.
 
 ![La scheda del robot](../img/costruttore-scheda.png)
 

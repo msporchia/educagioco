@@ -13,7 +13,7 @@ basso (il primo capitolo) e si sale.
 |---|---|
 | `motore/scheda.js` | dove stanno chip, led, piste, componenti sopra la pista, stelline e decoro; la strada del robot da un led a un altro o da un punto qualunque (puro, gira in Node) |
 | `scena/scheda.js` | com'è fatto ogni componente, come tracciati SVG a strati; i colori |
-| `viste/Scheda.vue` | la vista: SVG, i tasti sopra i led, il fumetto, la corrente e il robot che viaggiano |
+| `viste/Scheda.vue` | la vista: SVG, i tasti sopra i led, il fumetto, il robot che viaggia e il rame che si accende |
 | `scena/robot.js` | il robot come dati (`pezzi`): rettangoli, cerchi e linee in unità sue, e `dipingiRobot` che li mette su un canvas |
 | `viste/Robot.vue` | lo stesso robot dentro un `<svg>`: scheda, cartello di fine livello, quadretto «attorno al robot» |
 | `Gioco.vue` | decide lo stato di ogni livello, il lasciato a metà e cosa dice il cantiere libero (`livelliScheda`, `libero`) |
@@ -95,9 +95,9 @@ Lo decide `Gioco.vue`, la scheda lo dipinge.
   non passa la pista. La scheda si apre scorsa fin lì.
 - **Toccato un led aperto il robot ci va**, avanti o indietro, mentre il
   fumetto si apre subito: si gioca dal suo tasto senza aspettare. Stessa
-  animazione del viaggio dopo una vittoria (la scintilla davanti, il robot
-  0,15 s dietro, sotto i componenti dove la pista passa sotto), ma il rame
-  resta com'è e la scheda non scorre: tocca a chi guarda. Un altro tocco in
+  camminata del viaggio dopo una vittoria (sparisce sotto i componenti dove
+  la pista passa sotto), ma il rame non si accende né si spegne e la scheda
+  non scorre: tocca a chi guarda. Un altro tocco in
   viaggio cambia meta e il robot riparte da dove si trova
   (`stradaDaPunto`); un led spento, o il cantiere libero, apre il suo
   fumetto e non muove il robot, né ferma quello che viaggia. Un tocco fuori
@@ -106,13 +106,13 @@ Lo decide `Gioco.vue`, la scheda lo dipinge.
   compreso.
 - **La corrente segue la partita, non il robot**: il rame è lucido fino al
   led da fare anche se il robot sta altrove (`gioco` in `ultimo`).
-- **Vinto un livello che ne apre uno nuovo, la corrente corre**: tornando
-  alla scheda il robot è ancora dov'era; dopo 0,45 s una scintilla corre
-  lungo la pista fino al led dopo, accendendo il rame, i chip e i led che
-  incontra, e il robot la segue 0,35 s dietro (`RITARDO`) fino al posto
-  accanto al led nuovo. Attraversa i chip e sparisce sotto i componenti
-  dove la pista passa sotto. Un viaggio dura fra 0,9 e 2,8 s
-  (`durataViaggio`).
+- **Vinto un livello che ne apre uno nuovo, il robot porta la corrente**:
+  tornando alla scheda il robot è ancora dov'era; dopo 0,45 s cammina lungo
+  la pista fino al posto accanto al led dopo, e il rame, i chip e i led che
+  si lascia alle spalle si accendono al suo passaggio: la corrente è sua, e
+  la parte già percorsa è la parte accesa. Attraversa i chip e sparisce
+  sotto i componenti dove la pista passa sotto. Un viaggio dura fra 0,9 e
+  2,8 s (`durataViaggio`).
 - **Dove era l'ultima volta lo ricorda la sessione**, per bambino (`ultimo`
   in `Scheda.vue`), non il profilo, come il razzo degli asteroidi
   ([../asteroidi/mappa.md](../asteroidi/mappa.md#il-razzo)). Si arriva al
@@ -124,6 +124,9 @@ Lo decide `Gioco.vue`, la scheda lo dipinge.
 - **Un tocco durante il viaggio dopo una vittoria lo chiude**: un velo
   trasparente si prende il tocco, il robot arriva subito e non si apre
   niente. Il viaggio verso un led toccato non ha il velo.
+- Provato: una scintilla gialla che corre davanti al robot, a portare la
+  corrente: non funziona perché a schermo sembra un cane che insegue la
+  palla, e nessuno la legge come corrente.
 - Provato: il rame che si accende disegnato con un trattino lungo zero in
   testa a `stroke-dasharray`: col capo tondo è un puntino che resta al
   posto di partenza. L'inizio si sposta con `stroke-dashoffset`.
@@ -170,10 +173,10 @@ strada; le stelline fuori dalla pista e dagli altri pezzi; la stessa scheda a og
 l'impronta; ogni posa del robot nel suo riquadro), `integrazione/scheda-costruttore` (col dito vero: il fumetto
 si apre e non parte niente, fuori si chiude, un led spento dice cosa fare
 prima, il cantiere libero chiuso dice quando si apre, il segno del lasciato
-a metà, vinto un livello la corrente corre e il robot la segue, oltre un
-chip, un tocco chiude il viaggio; le stelline sui vinti e non sugli altri,
+a metà, vinto un livello il robot porta la corrente: il rame si accende dietro di lui e
+non davanti, anche oltre un chip, e un tocco chiude il viaggio; le stelline sui vinti e non sugli altri,
 col numero giusto e senza coprire robot e led; il robot va al led toccato col
-fumetto già aperto, un altro tocco cambia meta, un led spento non lo muove, un
+fumetto già aperto, un altro tocco cambia meta, un led spento non lo muove, il rame non cambia, un
 tocco fuori non chiude il fumetto in viaggio). Bersagli: la scheda
 `[data-scheda-robot]` (con la classe `.cst-mappa`); i led
 `[data-livello="<indice>"]` con `[data-stato="vinto"|"adesso"|"aperto"|"spento"]`
@@ -184,7 +187,8 @@ e `[data-a-meta]`; il cantiere libero `[data-libero]` con
 un led vinto `[data-stelle-tappa="<indice>"]` con `[data-piene]` e `[data-di]`
 (e dentro `.cst-stella-piena` / `.cst-stella-vuota`); il robot
 `[data-robot]` con `[data-al]` (l'indice del livello), `[data-in-viaggio]`
-e `[data-visibile]`; il velo del viaggio `[data-viaggio]`; il robot
+e `[data-visibile]`; il velo del viaggio `[data-viaggio]`; il rame acceso `[data-rame-acceso]` e, solo dopo una
+vittoria e mentre il robot cammina, il pezzo che si accende `[data-scia]`; il robot
 contento sul cartello di fine livello `[data-robot-contento]`
 (`integrazione/costruttore`).
 `costruisci(page, indice)` in `test/aiuto/browser.mjs` fa i due tocchi
