@@ -3,19 +3,20 @@
 // attacco, misurati col giocatore finto che si porta dietro lo zaino (docs/sotterraneo/regole.md). `dif` sono
 // i due estremi 0..1, si sale in linea retta (durezzaDi) più il rincaro per stanza (motore/corsa.js). `giri`
 // è il numero di tagli del BSP (2 → quattro stanze, 4 → sedici); `largo` e `alto`, se ci sono, danno la forma
-// al posto del quadrato `misura` (la torre alta e stretta, la scala sommersa lunga).
+// al posto del quadrato `misura` (la torre alta e stretta, la scala sommersa lunga). `dove` è il posto in mezzo
+// a una frase («sotto la torre non duri», motore/storia.js).
 // `portata`: niente `scuola` qui, quello che insegna questa campagna non lo dà nessuna scuola.
 import { BRANCO, BRANCHI } from './mostri.js'
 
 export const CAMPAGNA = [
-  { chiave: 'altare', nome: 'La cripta dell\'altare', icona: '🕯️',
+  { chiave: 'altare', nome: 'La cripta dell\'altare', icona: '🕯️', dove: 'nella cripta',
     scenario: 'cripta',
     portata: 25,
     dritta: 'due piani corti: si impara la strada',
     piani: 2, misura: 30, giri: 2, dif: [0.05, 0.22],
     guardiano: 'scheletro', capo: 'scheletro' },
 
-  { chiave: 'cantine', nome: 'La scalinata antica', icona: '🪜',
+  { chiave: 'cantine', nome: 'La scalinata antica', icona: '🪜', dove: 'giù per la scalinata',
     scenario: 'cantine',
     portata: 31,
     dritta: 'larga, con tante stanze: si gira parecchio',
@@ -23,7 +24,7 @@ export const CAMPAGNA = [
     guardiano: 'scheletro', capo: 'orco' },
 
   // alta e stretta come la torre: le stanze una sopra l'altra
-  { chiave: 'torre', nome: 'La torre in rovina', icona: '🏰',
+  { chiave: 'torre', nome: 'La torre in rovina', icona: '🏰', dove: 'sotto la torre',
     scenario: 'fornace',
     portata: 37,
     dritta: 'stretta e alta: si sale e si scende per le stanze',
@@ -31,7 +32,7 @@ export const CAMPAGNA = [
     guardiano: 'scheletro', capo: 'troll' },
 
   // tutta in profondità: piani piccoli, tanti
-  { chiave: 'gallerie', nome: 'La grotta della scaletta', icona: '🪨',
+  { chiave: 'gallerie', nome: 'La grotta della scaletta', icona: '🪨', dove: 'nella grotta',
     scenario: 'cantine',
     portata: 43,
     dritta: 'piani piccoli, ma tanti: si scende sempre',
@@ -39,7 +40,7 @@ export const CAMPAGNA = [
     guardiano: 'orco', capo: 'orco' },
 
   // lunga e stretta: un canale sott'acqua
-  { chiave: 'cisterna', nome: 'La scala sommersa', icona: '💧',
+  { chiave: 'cisterna', nome: 'La scala sommersa', icona: '💧', dove: 'nella scala sommersa',
     scenario: 'cripta',
     portata: 50,
     dritta: 'lunga e stretta, e in fondo c\'è qualcosa di grosso',
@@ -47,14 +48,14 @@ export const CAMPAGNA = [
     // guardiano un granchio (non l'orco di sempre): stessa fascia (dati/mostri.js), ma nel posto giusto
     guardiano: 'granchio', capo: 'gigante' },
 
-  { chiave: 'labirinto', nome: 'La botola segreta', icona: '🌀',
+  { chiave: 'labirinto', nome: 'La botola segreta', icona: '🌀', dove: 'sotto la botola',
     scenario: 'cantine',
     portata: 57,
     dritta: 'un labirinto di sedici stanze: senza mappina ci si perde',
     piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 2.2, spinta: 2,
     guardiano: 'lupo', capo: 'troll' },
 
-  { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '⛏️',
+  { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '⛏️', dove: 'nella miniera',
     scenario: 'fornace',
     portata: 64,
     dritta: 'stretta, profonda, e le domande non perdonano',
@@ -190,7 +191,7 @@ export function guastiDellaCampagna() {
   for (const t of CAMPAGNA) {
     if (viste.has(t.chiave)) g.push(`due tappe con la chiave "${t.chiave}"`)
     viste.add(t.chiave)
-    if (!t.nome || !t.icona || !t.dritta) g.push(`${t.chiave}: senza nome, icona o dritta`)
+    if (!t.nome || !t.icona || !t.dritta || !t.dove) g.push(`${t.chiave}: senza nome, icona, dritta o dove`)
     if (t.piani < 1) g.push(`${t.chiave}: zero piani`)
     const f = formaDi(t, 0)
     if (Math.min(f.largo, f.alto) < 22 || f.largo * f.alto < 24 * 24)

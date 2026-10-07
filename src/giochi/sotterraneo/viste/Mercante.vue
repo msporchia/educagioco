@@ -49,6 +49,11 @@ defineEmits(['compra', 'vendi'])
         <b v-if="!c.posso && !c.nonPuoi" class="sot-quante">ti mancano {{ c.mancano }}</b>
       </span>
     </button>
+    <!-- il banco porta il passo dopo della storia (motore/storia.js): prima della prima discesa, o a chi ha già
+         tutto, non c'è niente da vendere, e lo si dice invece di aprire un banco vuoto -->
+    <p v-if="!roba.length" class="sot-banco sot-vuote" data-banco-vuoto>
+      Per ora non ho niente per te: torna quando avrai finito la prossima discesa.
+    </p>
 
     <!-- chi compra mostra le tasche; gli altri dicono dove si vende -->
     <template v-if="tasche">
