@@ -286,21 +286,41 @@ export async function parti(page, quale) {
   await page.click('[data-fumetto] [data-azione="parti"]')
 }
 
+/* La mappa di Passo passo ha due mondi, la valle dipinta e lo zaino
+   (docs/passo-passo/mappa.md): una casella che non c'è sta di là, e ci si
+   passa dalla tana come farebbe un bambino. Torna false se la tana è
+   chiusa: allora di là è chiuso tutto. */
+async function diLaSeServe(page, sel) {
+  await page.waitForSelector('[data-mappa] [data-tappa]', { timeout: 8000 })
+  if (await page.locator(sel).count()) return true
+  const tana = page.locator('[data-mappa] [data-passaggio]')
+  if ((await tana.getAttribute('data-aperta')) === '0') return false
+  await page.waitForSelector('[data-segnalino][data-in-viaggio="0"]', { timeout: 8000 })
+  await tana.click()
+  await page.waitForSelector(sel, { timeout: 15000 })
+  return true
+}
+
 /* Parte una tappa di Passo passo dalla mappa delle isole: il tocco apre
    subito il fumetto sulla tappa (il segnalino ci va intanto) e «gioca» la
    comincia anche a viaggio in corso (docs/passo-passo/mappa.md). Qui si
-   aspetta comunque il segnalino fermo: la mappa che lo segue scorrendo
-   sposterebbe la casella sotto il click. `quale` è l'indice della tappa,
-   'senza-fine', o un selettore. */
+   aspetta comunque il segnalino fermo: la vista che lo segue sposterebbe
+   la casella sotto il click. `quale` è l'indice della tappa, 'senza-fine',
+   o un selettore; se sta nell'altro mondo ci si passa dalla tana. */
 export async function giocaSullIsola(page, quale) {
   const sel = typeof quale === 'string' && /[\[.#]/.test(quale) ? quale : `[data-mappa] [data-tappa="${quale}"]`
+  await diLaSeServe(page, sel)
   await page.waitForSelector('[data-segnalino][data-in-viaggio="0"]', { timeout: 8000 })
   await parti(page, sel)
 }
 
-// lo stato di una casella della mappa di Passo passo: fatta, ora, aperta o chiusa
-export const statoSullIsola = (page, quale) =>
-  page.locator(`[data-mappa] [data-tappa="${quale}"]`).getAttribute('data-stato')
+/* lo stato di una casella della mappa di Passo passo: fatta, ora, aperta o
+   chiusa; se sta nell'altro mondo ci si passa, e se la tana è chiusa è chiusa */
+export async function statoSullIsola(page, quale) {
+  const sel = `[data-mappa] [data-tappa="${quale}"]`
+  if (!(await diLaSeServe(page, sel))) return 'chiusa'
+  return page.locator(sel).getAttribute('data-stato')
+}
 
 /* Scende in una discesa del sotterraneo dalla terra di sopra
    (docs/sotterraneo/terra-di-sopra.md). L'eroe ci va a piedi, come farebbe

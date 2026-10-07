@@ -69,8 +69,9 @@ const carta = page.locator('.carta.gioco[data-gioco="passo"]')
 uguale('a sei anni la carta è in home', await carta.count(), 1)
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa', { timeout: 5000 })
-uguale('la mappa ha tutte le tappe', await page.locator('[data-mappa] [data-tappa]:not([data-tappa^="senza-fine"])').count(),
-       CAMPAGNA.length)
+// la valle ha le tappe prima dello zaino; quelle dello zaino stanno di là dalla tana (docs/passo-passo/mappa.md)
+uguale('la valle ha tutte le tappe prima dello zaino',
+       await page.locator('[data-mappa] [data-tappa]:not([data-tappa^="senza-fine"])').count(), TAPPE_PICCOLE)
 uguale('la prima tappa è quella di adesso', await statoSullIsola(page, 0), 'ora')
 uguale('la seconda no, finché non si fa la prima', await statoSullIsola(page, 1), 'chiusa')
 uguale('il sentiero senza fine è chiuso a campagna da fare', await statoSullIsola(page, 'senza-fine'), 'chiusa')

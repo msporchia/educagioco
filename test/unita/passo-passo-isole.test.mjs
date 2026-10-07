@@ -1,32 +1,29 @@
-/* La mappa delle isole di Passo passo, senza browser: a ogni larghezza da
-   telefono le caselle stanno nello schermo e nella loro isola, le isole
-   non si toccano, il ponte del coniglio non passa sopra un'isola del cane,
-   il cartello del bivio non copre niente; da ogni casella si arriva a ogni
-   altra, il coniglio resta coniglio sulla sua strada e diventa cane solo
-   passando da una tana. Vedi docs/passo-passo/mappa.md.
+/* Il mondo dello zaino di Passo passo (le isole disegnate in codice),
+   senza browser: a ogni larghezza da telefono le caselle stanno nello
+   schermo e nella loro isola, le isole non si toccano, il ponte del
+   coniglio non passa sopra un'isola del cane, il cartello del bivio non
+   copre niente; in cima c'è l'isoletta con la tana che torna alla valle, da
+   lì si arriva a ogni casella, il coniglio resta coniglio sulla sua strada e
+   diventa cane solo da una tana. Vedi docs/passo-passo/mappa.md.
    `node test/esegui.mjs passo-passo-isole --niente-build` */
-import { CAMPAGNA } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { STRADE } from '../../src/giochi/passo-passo/motore/strade.js'
-import { disponiIsole, viaggio, percorso, decori, ANIMALE, SENTIERO_CANE } from '../../src/giochi/passo-passo/scena/isole.js'
+import { disponiIsole, viaggio, percorso, decori, ANIMALE } from '../../src/giochi/passo-passo/scena/isole.js'
+import { nellaValle } from '../../src/giochi/passo-passo/scena/valle.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
-const S = STRADE
+const S = { ...STRADE, isole: STRADE.isole.filter(s => !nellaValle(s.chiave)) }
+const tappe = S.isole.flatMap(s => s.tappe)
+const coniglio = STRADE.coniglio.filter(i => tappe.includes(i))
+const cane = STRADE.cane.filter(i => tappe.includes(i))
 const dentroRett = (x, y, r, m = 0) => x >= r.x - m && x <= r.x + r.w + m && y >= r.y - m && y <= r.y + r.h + m
+const OPZ = { ingresso: true }
 
+controlla('lo zaino ha isole del coniglio e del cane', S.isole.some(s => s.animale === 'coniglio') && S.isole.some(s => s.animale === 'cane'))
 for (const W of [320, 360, 390, 430, 520]) {
-  const q = disponiIsole(W, S)
+  const q = disponiIsole(W, S, OPZ)
   const caselle = q.nodi.filter(n => n.tipo !== 'tana')
-  uguale(`${W} px: una casella per tappa, più i due sentieri`, caselle.length, CAMPAGNA.length + 2)
-  /* il sentiero del coniglio in fondo alla strada maestra, quello del
-     cane in fondo al pascolo: ci si arriva saltando, senza tane */
-  const sC = q.nodi.find(n => n.id === 'senza-fine'), sD = q.nodi.find(n => n.id === SENTIERO_CANE)
-  const pascolo = q.isole.find(s => s.animale === 'cane' && s.scalino === 'pecore')
-  controlla(`${W} px: il sentiero del cane sta nel pascolo, ed è del cane`,
-            sD && sD.tipo === 'sentiero' && sD.animale === 'cane' && q.isole[sD.isola] === pascolo)
-  controlla(`${W} px: e il sentiero del coniglio è del coniglio`, sC && sC.tipo === 'sentiero' && sC.animale === 'coniglio')
-  const finePascolo = pascolo.tappe.at(-1)
-  uguale(`${W} px: dall'ultimo gregge al sentiero del cane si salta e basta`,
-         viaggio(q, finePascolo, SENTIERO_CANE).map(p => `${p.che}:${p.animale}`).join(' '), 'salto:cane')
+  uguale(`${W} px: una casella per tappa dello zaino`, caselle.map(n => n.id).sort((a, b) => a - b).join(','),
+         [...tappe].sort((a, b) => a - b).join(','))
   controlla(`${W} px: le caselle stanno nello schermo`,
             caselle.every(n => n.x - n.lato / 2 >= 4 && n.x + n.lato / 2 <= W - 4))
   controlla(`${W} px: e nella loro isola`, caselle.every(n => {
@@ -58,28 +55,33 @@ for (const W of [320, 360, 390, 430, 520]) {
   controlla(`${W} px: le cose sparse non stanno sotto una casella`, decori(q).every(c =>
     caselle.every(n => Math.hypot(n.x - c.x, n.y - c.y) > n.lato / 2)))
 
-  // da ogni casella si arriva a ogni altra
-  const ids = caselle.map(n => n.id)
-  controlla(`${W} px: da ogni casella si arriva a ogni altra`, ids.every(id => percorso(q, ids[0], id)))
+  // in cima, la tana che torna alla valle: sta su un'isoletta sua, sopra tutte le altre
+  const uscita = q.nodi.find(n => n.id === 'tana:valle')
+  controlla(`${W} px: in cima c'è la tana che torna alla valle`, !!uscita && q.nodi.every(n => n === uscita || n.y > uscita.y))
+  controlla(`${W} px: e il suo nome ci sta accanto`, !!uscita && uscita.etichetta.largo >= 100 && uscita.etichetta.x > uscita.x)
+  // da lì si arriva a ogni casella
+  controlla(`${W} px: dalla tana si arriva a ogni casella`, caselle.every(n => percorso(q, 'tana:valle', n.id)))
+  uguale(`${W} px: e alla prima del coniglio si va saltando, da coniglio`,
+         viaggio(q, 'tana:valle', coniglio[0]).map(p => `${p.che}:${p.animale}`).join(' '), 'salto:coniglio')
   // il coniglio resta coniglio sulla sua strada: fra due tappe del coniglio nessuna tana
   const conTana = []
-  for (let k = 1; k < S.coniglio.length; k++) {
-    const v = viaggio(q, S.coniglio[k - 1], S.coniglio[k])
-    if (v.some(p => p.che !== 'salto' || p.animale !== 'coniglio')) conTana.push(S.coniglio[k])
+  for (let k = 1; k < coniglio.length; k++) {
+    const v = viaggio(q, coniglio[k - 1], coniglio[k])
+    if (v.some(p => p.che !== 'salto' || p.animale !== 'coniglio')) conTana.push(coniglio[k])
   }
   uguale(`${W} px: sulla strada maestra salta sempre il coniglio`, conTana.join(' '), '')
-  const sulCane = viaggio(q, 0, S.cane[0])
-  uguale(`${W} px: dal prato al primo gregge si passa da una tana sola`,
+  const sulCane = viaggio(q, coniglio[0], cane[0])
+  uguale(`${W} px: dalla prima del coniglio alla prima del cane si passa da una tana sola`,
          sulCane.filter(p => p.che !== 'salto').map(p => `${p.che}:${p.animale}`).join(' '), 'entra:coniglio esce:cane')
   controlla(`${W} px: e ogni salto lo fa l'animale dell'isola dove atterra`, sulCane.every(p =>
     p.che !== 'salto' || p.animale === q.nodi.find(n => n.id === p.al).animale))
-  const traIsole = viaggio(q, S.cane.at(-1), S.cane[0])
+  const traIsole = viaggio(q, cane.at(-1), cane[0])
   controlla(`${W} px: da un'isola del cane all'altra si torna coniglio in mezzo`,
             traIsole.filter(p => p.che === 'esce').map(p => p.animale).join(' ') === 'coniglio cane')
 }
 
 // la stessa mappa a ogni apertura
-uguale('la stessa mappa a ogni apertura', JSON.stringify(disponiIsole(390, S)), JSON.stringify(disponiIsole(390, S)))
-uguale('e le stesse cose sparse', JSON.stringify(decori(disponiIsole(390, S))), JSON.stringify(decori(disponiIsole(390, S))))
+uguale('la stessa mappa a ogni apertura', JSON.stringify(disponiIsole(390, S, OPZ)), JSON.stringify(disponiIsole(390, S, OPZ)))
+uguale('e le stesse cose sparse', JSON.stringify(decori(disponiIsole(390, S, OPZ))), JSON.stringify(decori(disponiIsole(390, S, OPZ))))
 
-riassunto('passo passo — la mappa delle isole')
+riassunto('passo passo — il mondo dello zaino')
