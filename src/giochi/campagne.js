@@ -33,9 +33,10 @@ export const stelleDi = (chiave, indice) => progresso(chiave).stelle[indice] || 
 export const stelleInTutto = chiave =>
   Object.values(progresso(chiave).stelle).reduce((n, s) => n + s, 0)
 
-export function completa(chiave, indice, quante, { stelle = 0 } = {}) {
+// `posto`: dove la tappa sposta il cursore, se non è il suo indice (-1: non lo sposta)
+export function completa(chiave, indice, quante, { stelle = 0, posto = indice } = {}) {
   const c = progresso(chiave)
-  c.tappa = Math.max(c.tappa || 0, indice + 1)
+  c.tappa = Math.max(c.tappa || 0, posto + 1)
   if (c.tappa >= quante) c.libera = true
   if (stelle > (c.stelle[indice] || 0)) c.stelle[indice] = stelle
   persist()

@@ -1,6 +1,6 @@
 /* Passo passo — il manifesto. Dato puro, struttura di
    `docs/core/convenzione-giochi.md`: vedi `docs/passo-passo/README.md`. */
-import { CAMPAGNA, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_ZAINO, TAPPE_PRIME } from './dati/campagna.js'
+import { CAMPAGNA, QUANTE_TAPPE, FINE_STRADA, TAPPE_PICCOLE, TAPPE_ZAINO, TAPPE_PRIME } from './dati/campagna.js'
 import { stradeDi } from './motore/strade.js'
 import { apriQuaderno, primatoInParole } from '../primati.js'
 
@@ -33,7 +33,7 @@ export default {
     const coda = stelle ? ` · ⭐ ${stelle}` : ''
     const record = primatoInParole(apriQuaderno(av), SENZA_FINE.misura)
     // finita la strada del coniglio la campagna è finita: il cane conta per le stelle
-    if ((av.tappa || 0) >= QUANTE_TAPPE)
+    if ((av.tappa || 0) >= FINE_STRADA)
       return record ? `sentiero senza fine · record ${record}${coda}` : `tutte le tane${coda}`
     // la tappa di adesso, su qualunque strada (docs/passo-passo/livelli.md, «Le due strade»)
     const adesso = stradeDi(av).adesso()

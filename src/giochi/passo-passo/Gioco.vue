@@ -13,7 +13,7 @@ import { tappaApertaQui } from '../../data/portata-giochi.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
 
 import { SENZA_FINE } from './gioco.js'
-import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_PRIME,
+import { CAMPAGNA, SCALINI, FINE_STRADA, postoNelCursore, TAPPE_PICCOLE, TAPPE_PRIME,
          FILE, FILA_ATTUALE, riordina } from './dati/campagna.js'
 import { STRADE, aperture, cosaManca, prossima, seguente, tappaDiAdesso, ereditaDi } from './motore/strade.js'
 import { MASSIMO_FILA, LEGENDA } from './dati/mondo.js'
@@ -147,7 +147,7 @@ const colori = computed(() => {
 const sentieroAperto = () => tappaAperta(TAPPE_PRIME, avanza.tappa)
 // ingredienti sbloccati: vedi docs/passo-passo/sentiero.md
 const sbloccati = () => SCALINI.filter(s => INGREDIENTI[s.chiave]).filter(s => {
-  const u = CAMPAGNA.map(t => t.scalino).lastIndexOf(s.chiave)
+  const u = CAMPAGNA.slice(0, FINE_STRADA).map(t => t.scalino).lastIndexOf(s.chiave)
   return fatta(u) || daFuori(u)
 }).map(s => INGREDIENTI[s.chiave])
 
@@ -708,7 +708,8 @@ function scriviVittoria(esito) {
   const primaVolta = stelleDi(CHIAVE, i) === 0  // il premio si paga una volta sola: docs/passo-passo/stelle-e-aiuti.md
   const monete = primaVolta ? CAMPAGNA[i].premio : 0
   if (monete) addCoins(monete)
-  completa(CHIAVE, i, QUANTE_TAPPE, { stelle })
+  // le tappe del cane in coda non muovono il cursore (docs/passo-passo/livelli.md)
+  completa(CHIAVE, i, FINE_STRADA, { stelle, posto: postoNelCursore(i) })
   contaLaVittoria(esito)
   return {
     che: 'tappa', titolo: CAMPAGNA[i].nome, stelle,

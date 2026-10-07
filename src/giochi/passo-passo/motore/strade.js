@@ -3,10 +3,9 @@
    restano sotto l'indice della campagna: qui si decide solo chi viene
    dopo chi e cosa apre cosa. Puro, gira in Node.
    Vedi «Le due strade» in docs/passo-passo/livelli.md. */
-import { CAMPAGNA, SCALINI } from '../dati/campagna.js'
-import { LEGENDA } from '../dati/mondo.js'
+import { CAMPAGNA, SCALINI, delCane } from '../dati/campagna.js'
 
-export const delCane = t => t.mappa.some(r => [...r].some(ch => !!(LEGENDA[ch] || {}).pecora))
+export { delCane }
 
 /* Le isole nell'ordine della mappa: per ogni scalino quella del coniglio,
    e subito dopo il ramo del cane che parte da lei. Il ramo ha il suo
@@ -15,8 +14,7 @@ export const delCane = t => t.mappa.some(r => [...r].some(ch => !!(LEGENDA[ch] |
    del cane l'ultima del coniglio prima di lui (la fine delle buche). */
 export function disegnaStrade(campagna = CAMPAGNA, scalini = SCALINI) {
   const animale = campagna.map(t => (delCane(t) ? 'cane' : 'coniglio'))
-  const coniglio = [], cane = []
-  animale.forEach((a, i) => (a === 'cane' ? cane : coniglio).push(i))
+  const coniglio = animale.map((a, i) => i).filter(i => animale[i] === 'coniglio')
 
   const perScalino = new Map(scalini.map(s => [s.chiave, { coniglio: [], cane: [] }]))
   campagna.forEach((t, i) => perScalino.get(t.scalino)?.[animale[i]].push(i))
@@ -30,6 +28,9 @@ export function disegnaStrade(campagna = CAMPAGNA, scalini = SCALINI) {
                   carta: c.length && attacco !== null })
     }
   }
+  /* la strada del cane va di isola in isola: una tappa aggiunta in coda
+     alla campagna viene dopo quelle della sua isola, non dopo tutte */
+  const cane = rami.flatMap(r => r.tappe)
   // un ramo sta subito dopo l'isola della sua tana; senza tana, in cima
   const isole = []
   for (const r of rami.filter(r => r.attacco === null)) isole.push(r)
@@ -58,7 +59,8 @@ const isolaDella = (S, i) => S.isole[S.isolaDi[i]]
    aperto.
    - il coniglio: fatta la tappa del coniglio prima;
    - il cane: fatta la tappa del cane prima, e fatta la tappa del
-     coniglio da cui si apre la sua tana. */
+     coniglio da cui si apre la sua tana;
+   - e una tappa fatta resta aperta. */
 export function aperture(S, { fatta, daFuori = () => false, perEta = () => false, eredita = 0 }) {
   const tanaAperta = i => {
     const a = (isolaDella(S, i) || {}).attacco
@@ -72,7 +74,8 @@ export function aperture(S, { fatta, daFuori = () => false, perEta = () => false
   const aperta = i => {
     if (!(i >= 0 && i < S.quante)) return false
     if (perEta(i)) return false
-    return daFuori(i) || i <= eredita || perStrada(i)
+    // una tappa già fatta resta aperta anche se le si mette davanti una tappa nuova
+    return daFuori(i) || i <= eredita || fatta(i) || perStrada(i)
   }
   return { aperta, tanaAperta, perStrada }
 }
