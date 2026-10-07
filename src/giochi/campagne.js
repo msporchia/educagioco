@@ -20,13 +20,14 @@ export function progresso(chiave) {
   return c
 }
 
-export const aperta = (chiave, indice) => tappaApertaQui(chiave, indice, progresso(chiave).tappa)
+// `fatte`: di difetto il cursore della campagna; il sotterraneo passa quello dell'avventura aperta
+export const aperta = (chiave, indice, fatte = progresso(chiave).tappa) => tappaApertaQui(chiave, indice, fatte)
 
 export const chiusaPerEta = (chiave, indice) => tappaChiusaPerEtaQui(chiave, indice)
 
 // la prossima da giocare, SE si può giocare: sopra la mira dell'età resta chiusa
-export const adesso = (chiave, indice) =>
-  indice === progresso(chiave).tappa && aperta(chiave, indice)
+export const adesso = (chiave, indice, fatte = progresso(chiave).tappa) =>
+  indice === fatte && aperta(chiave, indice, fatte)
 
 export const stelleDi = (chiave, indice) => progresso(chiave).stelle[indice] || 0
 
@@ -93,6 +94,16 @@ export const buttaSosta = chiave => salvaSosta(chiave, null, { subito: true })
 export const haGiocato = chiave => {
   const c = state.profile.campagne
   return !!(c && c[chiave])
+}
+
+// Per chi tiene in `cfg` una forma sua più ricca (le avventure del sotterraneo): `fn` ritocca il record e
+// torna false se non ha cambiato niente, e allora non si scrive
+export function ritocca(chiave, fn, { subito = false } = {}) {
+  const c = progresso(chiave)
+  if (fn(c) === false) return c
+  persist()
+  if (subito) flushNow()
+  return c
 }
 
 export function ricorda(chiave, campo, valore) {
