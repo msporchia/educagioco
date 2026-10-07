@@ -134,6 +134,26 @@ Controllo: le tre pose dello stesso personaggio hanno la stessa
 sagoma e gli stessi colori; il braccio che indica si legge; sono alti
 come un eroe del gioco, non giganti.
 
+## Prompt 5 — i mercanti del villaggio
+
+Dal 7/10/2026 la roba si porta su e il mercante sta fuori, sulla terra di
+sopra, come in Diablo. Si chiede nella chat della mappa, dopo il prompt 4,
+alla stessa scala.
+
+```text
+Sullo stesso fondo MAGENTA PIENO (#FF00FF), tre mercanti del villaggio, della stessa mano e della STESSA SCALA della mappa (celle da 64×64 px, ogni pixel del disegno è un quadrato di 4×4 px): ognuno largo una cella e alto una cella e mezza, visto dall'alto a tre quarti come gli eroi di un gioco di ruolo a 16 bit, dietro un piccolo banco o accanto alla sua merce. Immagine 1024×1536 px verticale. Ogni posa sta da sola, staccata dalle altre da almeno mezza cella di magenta, senza ombra e senza prato sotto. NESSUNA PAROLA SCRITTA, NESSUN FUMETTO.
+
+Una riga per mercante, due pose ciascuno: FERMO, e CHE SALUTA (una mano alzata, sorridente).
+1. L'armaiolo: grembiule di cuoio, braccia forti, un'incudine e una spada appoggiata accanto.
+2. L'erborista: mantella verde, un cesto di boccette colorate e mazzi d'erbe, una torcia spenta appesa al banco.
+3. Il rigattiere: cappello a tesa larga, un carretto o un banco pieno di cianfrusaglie (un elmo ammaccato, un calice, un sacco), l'aria furba ma simpatica.
+Sono amici del villaggio: nessuno punta un'arma verso chi guarda.
+```
+
+Controllo: le due pose dello stesso mercante hanno la stessa sagoma e gli
+stessi colori; si capisce a colpo d'occhio chi vende armi, chi pozioni e
+chi compra; sono alti come un eroe del gioco.
+
 ## La mappa si tiene intera
 
 Il prompt 1 è uscito così bene (`mappa_sotterraneo.png`) che la mappa si
