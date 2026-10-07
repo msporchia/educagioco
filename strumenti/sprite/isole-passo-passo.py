@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""La mappa delle isole di Passo passo: dal fondale dipinto al modulo del gioco.
+"""Le mappe delle isole di Passo passo: dal fondale dipinto al modulo del gioco.
 
-    python3 strumenti/sprite/isole-passo-passo.py             # rifà src/giochi/passo-passo/dati/isole-mappa.js
-    python3 strumenti/sprite/isole-passo-passo.py --provino   # tmp/isole/provino.png: sentieri, caselle, ponti e blocchi sopra il fondale
+    python3 strumenti/sprite/isole-passo-passo.py             # rifà i moduli di tutti i foglietti
+    python3 strumenti/sprite/isole-passo-passo.py zaino       # solo quello dello zaino (o valle)
+    python3 strumenti/sprite/isole-passo-passo.py --provino   # tmp/isole/provino*.png: sentieri, caselle, ponti e blocchi sopra il fondale
 
-Il fondale (`sorgenti/passo-passo/isole_1.png`) si tiene com'è: il gioco lo
+Due mondi, un foglietto ciascuno: la valle (`isole.json`, fondale
+`isole_1.png`, modulo `dati/isole-mappa.js`) e lo zaino (`zaino.json`,
+`isole_2.png`, `dati/zaino-mappa.js`). Il fondale si tiene com'è: il gioco lo
 mostra intero e ci posa sopra le caselle, il segnalino, i blocchi e il
 fumetto. Quello che il codice sa del fondale sta nel foglietto
-`sorgenti/passo-passo/isole.json`: per ogni isola la linea dei sentieri (una
+(`sorgenti/passo-passo/`): per ogni isola la linea dei sentieri (una
 spezzata in pixel dell'immagine), i ponti, le tane, le caselle speciali.
 Lo strumento distribuisce le caselle sui sentieri, cuce sentieri e ponti in
 un grafo (incroci dove una linea tocca l'altra) e lo copia nel modulo insieme
@@ -27,7 +30,8 @@ from PIL import Image, ImageDraw
 
 QUI = Path(__file__).parent
 REPO = Path(__file__).resolve().parents[2]
-FOGLIETTO = QUI / 'sorgenti' / 'passo-passo' / 'isole.json'
+SORGENTI = QUI / 'sorgenti' / 'passo-passo'
+FOGLIETTI = {'valle': 'isole.json', 'zaino': 'zaino.json'}     # il mondo e il suo foglietto
 TMP = REPO / 'tmp' / 'isole'
 
 AGGANCIO = 30        # un capo di sentiero più vicino di così a un altro sentiero ci si attacca
@@ -39,29 +43,31 @@ SOSTA = 150          # un arco più lungo si spezza in soste
 TESTA = """/* GENERATO da strumenti/sprite/isole-passo-passo.py — non si scrive a mano.
 
    Il fondale della mappa delle isole e il grafo che ci sta sopra, ricavati
-   dal foglietto `strumenti/sprite/sorgenti/passo-passo/isole.json`: si
+   dal foglietto `strumenti/sprite/sorgenti/passo-passo/{foglietto}`: si
    corregge lì e si rilancia lo strumento. Vedi docs/passo-passo/mappa.md.
 
    MAPPA   il fondale ({largo}×{alto}), WebP in base64 ({kb} KB)
    ISOLE   per isola (la chiave è quella di motore/strade.js): quante caselle, dove sta il cartello
    NODI    {{ id, tipo, isola, x, y }}: `casella` (con `k`, l'ordine sull'isola), `incrocio`, `capo`
            (un sentiero che finisce), `sosta` (a metà di un arco lungo: su un ponte
-           non è di un'isola), `tana`, `zaino` (la tana che porta allo zaino, con
+           non è di un'isola), `tana` (con `nuvola` se sul fondale non c'è il buco: l'animale
+           cambia in una nuvoletta), `passaggio` (la tana che porta all'altro mondo, con
            `cartello` [x, y], il centro del suo nome), `sentiero` (le caselle speciali, con
            `etichetta` [x, y], dove comincia il nome: a metà altezza, da lì verso destra)
    ARCHI   {{ a, b, tipo: terra | erba | ponte | tunnel, ponte?, punti }}: i pezzi di strada fra due nodi
    PONTI   per ponte: le due isole e il blocco di ciascun capo [x, y, gradi]
+   LIBERE  le isole sempre aperte (la riva da cui si arriva): non hanno caselle
    FIRMA   l'impronta del foglietto: un test la confronta
 */
 """
 
 
-def leggi():
-    return json.loads(FOGLIETTO.read_text())
+def leggi(mondo):
+    return json.loads((SORGENTI / FOGLIETTI[mondo]).read_text())
 
 
-def firma():
-    return hashlib.sha1(FOGLIETTO.read_bytes()).hexdigest()[:12]
+def firma(mondo):
+    return hashlib.sha1((SORGENTI / FOGLIETTI[mondo]).read_bytes()).hexdigest()[:12]
 
 
 # ── le spezzate ─────────────────────────────────────────────────────
@@ -144,15 +150,19 @@ def distribuisci(p, cum, n, m0, m1):
         else:
             alto = d
     out = posa(basso)
-    # quello che avanza in fondo si spartisce: le caselle stanno in mezzo fra i margini
+    # quello che avanza in fondo si spartisce: le caselle stanno in mezzo fra i margini (se non
+    # si stringono in una curva: allora restano dove sono)
     resto = (L - m1) - out[-1]
-    return [s + resto / 2 for s in out]
+    spostate = [s + resto / 2 for s in out]
+    minimo = lambda v: min(stacco(punto_a(p, cum, a), punto_a(p, cum, b)) for a, b in zip(v, v[1:]))
+    return spostate if minimo(spostate) >= minimo(out) - 1.0 else out
 
 
 # ── il grafo ────────────────────────────────────────────────────────
 class Grafo:
     def __init__(self, fg):
         self.fg = fg
+        self.prefisso = fg.get('prefisso', '')      # gli id dei punti senza nome non si scambiano fra mondi
         self.nodi = {}
         self.ordine = []
         self.strade = []
@@ -171,7 +181,7 @@ class Grafo:
 
     def nuovo(self, tipo, isola, xy):
         self.conta[tipo] += 1
-        return self.nodo(f'{tipo}:{self.conta[tipo]}', tipo, isola, xy)
+        return self.nodo(f'{self.prefisso}{tipo}:{self.conta[tipo]}', tipo, isola, xy)
 
     def taglia(self, strada, s, fai):
         """Un taglio sulla strada a s: se ce n'è già uno lì vicino è quello, se no lo fa `fai(punto)`."""
@@ -244,16 +254,22 @@ class Grafo:
         self.tane = []
         for nome, t in fg.get('tane', {}).items():
             if 'da' in t:          # un passaggio sotto terra: da un'isola all'altra, l'animale cambia
+                # un punto solo (la valle: tutte e due le bocche lì) o due: quello di `da` e quello di `a`
+                punti = t['punti'] if 'punti' in t else [t['punto'], t['punto']]
                 ids = []
-                for lato, isola in (('da', t['da']), ('a', t['a'])):
-                    tid = self.nodo(f'tana:{nome}:{lato}', 'tana', isola, t['punto'])
-                    st, s, _ = self.vicina(isola, t['punto'])
+                for lato, isola, punto in (('da', t['da'], punti[0]), ('a', t['a'], punti[1])):
+                    extra = {'nuvola': True} if lato == 'da' and t.get('nuvola') else {}
+                    tid = self.nodo(f'tana:{nome}:{lato}', 'tana', isola, punto, **extra)
+                    v = self.vicina(isola, punto)
+                    if not v or v[2] > 70:
+                        raise SystemExit(f'la tana {nome}/{lato}: {punto} sta lontana da un sentiero di {isola}')
+                    st, s, _ = v
                     attacco = self.taglia(st, s, lambda p, isola=isola: self.nuovo('incrocio', isola, p))
                     self.tane.append({'a': attacco, 'b': tid, 'tipo': 'terra'})
                     ids.append(tid)
                 self.tane.append({'a': ids[0], 'b': ids[1], 'tipo': 'tunnel'})
-            else:                  # la tana che porta allo zaino
-                tid = self.nodo(f'tana:{nome}', 'zaino', t['isola'], t['punto'], cartello=t['cartello'])
+            else:                  # la tana che porta all'altro mondo
+                tid = self.nodo(f'tana:{nome}', 'passaggio', t['isola'], t['punto'], cartello=t['cartello'])
                 st, s, _ = self.vicina(t['isola'], t['punto'])
                 attacco = self.taglia(st, s, lambda p, isola=t['isola']: self.nuovo('incrocio', isola, p))
                 self.tane.append({'a': attacco, 'b': tid, 'tipo': 'terra'})
@@ -374,19 +390,20 @@ def js(v):
     return json.dumps(v, ensure_ascii=False, separators=(',', ':'))
 
 
-def genera():
-    fg = leggi()
-    im = Image.open(FOGLIETTO.parent / fg['immagine']).convert('RGB')
+def genera(mondo):
+    fg = leggi(mondo)
+    im = Image.open(SORGENTI / fg['immagine']).convert('RGB')
     g = Grafo(fg).costruisci()
     controlla(fg, g, im)
     b = io.BytesIO()
     im.save(b, 'WEBP', quality=fg['qualita'], method=6)
     b64 = base64.b64encode(b.getvalue()).decode()
     kb = len(b.getvalue()) // 1024
-    corpo = TESTA.format(largo=im.size[0], alto=im.size[1], kb=kb)
+    corpo = TESTA.format(largo=im.size[0], alto=im.size[1], kb=kb, foglietto=FOGLIETTI[mondo])
     corpo += f"\nexport const LARGO = {im.size[0]}, ALTO = {im.size[1]}\n"
     corpo += f"export const LATO = {fg['lato']}\n"
-    corpo += f"export const FIRMA = '{firma()}'\n\n"
+    corpo += f"export const FIRMA = '{firma(mondo)}'\n"
+    corpo += f"export const LIBERE = {js(fg.get('libere', []))}\n\n"
     corpo += 'export const ISOLE = {\n' + ''.join(f"  {js(k)}: {js(v)},\n" for k, v in fg['isole'].items()) + '}\n\n'
     corpo += 'export const NODI = [\n' + ''.join(f"  {js(g.nodi[id])},\n" for id in g.ordine) + ']\n\n'
     corpo += 'export const ARCHI = [\n' + ''.join(f"  {js(e)},\n" for e in g.archi) + ']\n\n'
@@ -398,12 +415,12 @@ def genera():
           f'{len(g.nodi)} nodi, {len(g.archi)} archi')
 
 
-def provino():
+def provino(mondo):
     """Il fondale con sopra quello che sa il gioco: i sentieri (gialli; l'erba a
     puntini), i ponti (arancio) col blocco di ogni capo, le caselle numerate,
     le speciali, le tane, gli incroci e i cartelli."""
-    fg = leggi()
-    im = Image.open(FOGLIETTO.parent / fg['immagine']).convert('RGBA')
+    fg = leggi(mondo)
+    im = Image.open(SORGENTI / fg['immagine']).convert('RGBA')
     g = Grafo(fg).costruisci()
     velo = Image.new('RGBA', im.size, (0, 0, 0, 0))
     d = ImageDraw.Draw(velo)
@@ -433,8 +450,10 @@ def provino():
             d.text((x - 20, y - 6), n['id'], fill=(20, 20, 20, 255))
             ex, ey = n['etichetta']
             d.rounded_rectangle([ex, ey - 22, ex + 180, ey + 22], radius=12, outline=(255, 210, 40, 255), width=2)
-        elif n['tipo'] in ('tana', 'zaino'):
-            d.ellipse([x - 12, y - 12, x + 12, y + 12], outline=(200, 80, 255, 255), width=4)
+        elif n['tipo'] in ('tana', 'passaggio'):
+            d.ellipse([x - 12, y - 12, x + 12, y + 12], outline=(255, 120, 255, 255) if n.get('nuvola') else (200, 80, 255, 255),
+                      width=4)
+            d.text((x + 14, y - 6), n['id'].replace('tana:', ''), fill=(255, 255, 255, 255))
             if 'cartello' in n:
                 cx, cy = n['cartello']
                 d.rounded_rectangle([cx - 52, cy - 14, cx + 52, cy + 14], radius=14, outline=(200, 80, 255, 255), width=2)
@@ -449,16 +468,20 @@ def provino():
             d.rectangle([x - 14, y - 9, x + 14, y + 9], outline=(230, 30, 30, 255), width=3)
     for isola, dati in fg['isole'].items():
         x, y = dati['cartello']
-        d.rectangle([x - 90, y - 27, x + 90, y + 27], fill=(255, 250, 240, 200),
+        mx, my = (14, 14) if dati.get('stemma') else (90, 27)
+        d.rectangle([x - mx, y - my, x + mx, y + my], fill=(255, 250, 240, 200),
                             outline=(110, 50, 10, 255), width=2)
-        d.text((x - 60, y - 6), isola, fill=(110, 50, 10, 255))
+        d.text((x - mx + 3, y - 6), isola[:3] if dati.get('stemma') else isola, fill=(110, 50, 10, 255))
     TMP.mkdir(parents=True, exist_ok=True)
-    Image.alpha_composite(im, velo).save(TMP / 'provino.png')
-    print('tmp/isole/provino.png')
+    nome = 'provino.png' if mondo == 'valle' else f'provino-{mondo}.png'
+    Image.alpha_composite(im, velo).save(TMP / nome)
+    print(f'tmp/isole/{nome}')
 
 
 if __name__ == '__main__':
-    if '--provino' in sys.argv:
-        provino()
-    else:
-        genera()
+    mondi = [m for m in FOGLIETTI if m in sys.argv] or list(FOGLIETTI)
+    for m in mondi:
+        if '--provino' in sys.argv:
+            provino(m)
+        else:
+            genera(m)

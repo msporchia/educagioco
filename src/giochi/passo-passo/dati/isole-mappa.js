@@ -8,17 +8,20 @@
    ISOLE   per isola (la chiave è quella di motore/strade.js): quante caselle, dove sta il cartello
    NODI    { id, tipo, isola, x, y }: `casella` (con `k`, l'ordine sull'isola), `incrocio`, `capo`
            (un sentiero che finisce), `sosta` (a metà di un arco lungo: su un ponte
-           non è di un'isola), `tana`, `zaino` (la tana che porta allo zaino, con
+           non è di un'isola), `tana` (con `nuvola` se sul fondale non c'è il buco: l'animale
+           cambia in una nuvoletta), `passaggio` (la tana che porta all'altro mondo, con
            `cartello` [x, y], il centro del suo nome), `sentiero` (le caselle speciali, con
            `etichetta` [x, y], dove comincia il nome: a metà altezza, da lì verso destra)
    ARCHI   { a, b, tipo: terra | erba | ponte | tunnel, ponte?, punti }: i pezzi di strada fra due nodi
    PONTI   per ponte: le due isole e il blocco di ciascun capo [x, y, gradi]
+   LIBERE  le isole sempre aperte (la riva da cui si arriva): non hanno caselle
    FIRMA   l'impronta del foglietto: un test la confronta
 */
 
 export const LARGO = 1536, ALTO = 1024
 export const LATO = 52
 export const FIRMA = '1f5e27b19008'
+export const LIBERE = []
 
 export const ISOLE = {
   "passi": {"caselle":5,"cartello":[150,640]},
@@ -89,7 +92,7 @@ export const NODI = [
   {"id":"incrocio:19","tipo":"incrocio","isola":"buche","x":775.0,"y":253.0},
   {"id":"tana:pecore-cane:a","tipo":"tana","isola":"pecore-cane","x":775,"y":288},
   {"id":"incrocio:20","tipo":"incrocio","isola":"pecore-cane","x":775.0,"y":330.0},
-  {"id":"tana:zaino","tipo":"zaino","isola":"buche","x":823,"y":84,"cartello":[823,30]},
+  {"id":"tana:zaino","tipo":"passaggio","isola":"buche","x":823,"y":84,"cartello":[823,30]},
   {"id":"incrocio:21","tipo":"incrocio","isola":"buche","x":823.7,"y":118.7},
   {"id":"capo:1","tipo":"capo","isola":"passi","x":228,"y":852},
   {"id":"capo:2","tipo":"capo","isola":"passi","x":440,"y":655},

@@ -1,0 +1,66 @@
+{
+  "immagine": "isole_2.png",
+  "modulo": "src/giochi/passo-passo/dati/zaino-mappa.js",
+  "qualita": 80,
+  "lato": 48,
+  "prefisso": "z-",
+  "libere": ["riva"],
+  "isole": {
+    "ripeti": { "caselle": 8, "cartello": [335, 492] },
+    "ripeti-cane": { "caselle": 3, "cartello": [120, 448], "stemma": true },
+    "fino": { "caselle": 4, "cartello": [250, 82] },
+    "fino-cane": { "caselle": 3, "cartello": [772, 860], "stemma": true },
+    "se": { "caselle": 2, "cartello": [880, 100] },
+    "se-cane": { "caselle": 3, "cartello": [1488, 190], "stemma": true },
+    "mondo": { "caselle": 4, "cartello": [990, 755] },
+    "mondo-cane": { "caselle": 3, "cartello": [1355, 560], "stemma": true }
+  },
+  "sentieri": [
+    { "isola": "riva", "punti": [[92, 938], [100, 952], [140, 960], [200, 964], [260, 962], [310, 952], [335, 942]] },
+
+    { "isola": "ripeti", "caselle": 8, "margini": [45, 40],
+      "punti": [[414, 870], [440, 854], [455, 815], [462, 792], [472, 752], [490, 732], [527, 728], [527, 668], [527, 606],
+                [527, 544], [500, 531], [465, 530], [452, 500], [455, 468], [485, 466], [513, 455]] },
+    { "isola": "ripeti", "punti": [[527, 668], [480, 672], [420, 672], [360, 680], [320, 678], [295, 660], [287, 630],
+                                   [290, 608], [262, 598]] },
+    { "isola": "ripeti", "punti": [[527, 668], [600, 668], [660, 672], [720, 670], [782, 660]] },
+    { "isola": "ripeti-cane", "caselle": 3, "margini": [40, 0],
+      "punti": [[60, 562], [66, 545], [78, 526], [136, 536], [194, 552]] },
+
+    { "isola": "fino", "caselle": 4, "margini": [40, 40],
+      "punti": [[500, 372], [492, 345], [485, 300], [470, 272], [440, 254], [400, 250], [365, 250], [330, 240], [300, 237],
+                [285, 215], [290, 190], [310, 168], [340, 153], [380, 147], [420, 143], [450, 148], [485, 152], [522, 150]] },
+    { "isola": "fino", "punti": [[588, 142], [630, 132], [665, 143], [695, 165], [715, 190], [720, 204]] },
+    { "isola": "fino", "erba": true, "punti": [[718, 196], [745, 203], [770, 216]] },
+    { "isola": "fino-cane", "caselle": 3, "margini": [30, 0],
+      "punti": [[824, 928], [826, 898], [884, 900], [942, 890]] },
+
+    { "isola": "se", "caselle": 2, "margini": [60, 60],
+      "punti": [[815, 216], [870, 212], [925, 205], [940, 170], [965, 140], [1000, 125], [1050, 124], [1100, 138],
+                [1150, 160], [1200, 190], [1225, 225], [1245, 250], [1265, 252]] },
+    { "isola": "se-cane", "caselle": 3, "margini": [40, 0],
+      "punti": [[1463, 328], [1462, 288], [1425, 226], [1367, 240]] },
+
+    { "isola": "mondo", "caselle": 4, "margini": [50, 20],
+      "punti": [[864, 664], [900, 660], [935, 660], [940, 625], [950, 590], [972, 568], [1000, 558], [1050, 572],
+                [1092, 577], [1130, 587], [1160, 610], [1172, 640], [1165, 655], [1130, 672], [1090, 678], [1050, 678],
+                [1020, 664]] },
+    { "isola": "mondo-cane", "caselle": 3, "margini": [34, 0],
+      "punti": [[1468, 678], [1466, 644], [1490, 586], [1432, 570]] }
+  ],
+  "ponti": [
+    { "nome": "riva-ripeti", "isole": ["riva", "ripeti"], "punti": [[336, 942], [372, 908], [414, 870]], "blocco": [24, 70] },
+    { "nome": "ripeti-fino", "isole": ["ripeti", "fino"], "punti": [[513, 455], [507, 412], [500, 372]] },
+    { "nome": "fino-nel-passaggio", "isole": ["fino", "fino"], "punti": [[522, 150], [555, 152], [588, 142]] },
+    { "nome": "fino-se", "isole": ["fino", "se"], "punti": [[770, 216], [792, 216], [815, 216]], "blocco": [16, 16] },
+    { "nome": "ripeti-mondo", "isole": ["ripeti", "mondo"], "punti": [[782, 660], [822, 662], [864, 664]] }
+  ],
+  "tane": {
+    "ripeti-cane": { "da": "ripeti", "a": "ripeti-cane", "punti": [[265, 598], [60, 562]], "nuvola": true },
+    "fino-cane": { "da": "fino", "a": "fino-cane", "punti": [[719, 212], [823, 930]] },
+    "se-cane": { "da": "se", "a": "se-cane", "punti": [[1014, 94], [1463, 328]] },
+    "mondo-cane": { "da": "mondo", "a": "mondo-cane", "punti": [[1174, 636], [1468, 678]], "nuvola": true },
+    "valle": { "isola": "riva", "punto": [90, 925], "cartello": [170, 995] }
+  },
+  "speciali": {}
+}
