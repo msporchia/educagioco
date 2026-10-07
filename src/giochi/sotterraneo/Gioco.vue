@@ -26,7 +26,9 @@ import { pezzoAndante } from './dati/tessere.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
-import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba } from './motore/corredo.js'
+import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo } from './motore/corredo.js'
+import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer }
+  from './motore/missioni.js'
 import { Bottega } from './motore/bottega.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
 import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata }
@@ -142,12 +144,39 @@ const conNome = d => (d ? { ...d, chi: d.eroe ? eroeDi(d.eroe).nome : '', gemme:
 const ripresa = computed(() => conNome(dice(qui.value.sosta, CAMPAGNA)))
 let ultimoSalvato = 0
 
-// la roba e la sosta nello stesso giro: un telefono spento fra le due perderebbe quello che si è raccolto
+// la roba e la sosta nello stesso giro: un telefono spento fra le due perderebbe quello che si è raccolto. Le
+// missioni fatte giù (la cosa trovata, il mostro col nome) passano subito nell'avventura: sopra si consegnano
 function salva({ subito = false } = {}) {
   const c = corsa.value
   if (!c || c.finita || tappaIdx.value == null) return
   ultimoSalvato = orologio
-  nellAvventura({ roba: c.roba, sosta: scrivi(c, tappaIdx.value) }, { subito })
+  nellAvventura({ roba: c.roba, sosta: scrivi(c, tappaIdx.value), ...fatteGiu(c) }, { subito })
+}
+function fatteGiu(c) {
+  const n = c.missioniFatte.size ? missioniFatte(qui.value.missioni, [...c.missioniFatte]) : null
+  return n ? { missioni: n } : {}
+}
+
+/* ═══════════ le missioni dei personaggi (motore/missioni.js) ═══════════
+   Si prendono parlando con chi le dà, si fanno giù (Corsa.missioni), si consegnano sopra: il premio va sulla
+   roba dell'avventura, gemme o un gioiello, mai monete (docs/sotterraneo/missioni.md) */
+const missioni = computed(() => qui.value.missioni || {})
+function azioneMissione(id, azione) {
+  if (azione === 'prendi') {
+    const n = prendiMissione(missioni.value, id)
+    if (!n) return null
+    nellAvventura({ missioni: n }, { subito: true })
+    suono.ok()
+    return 'presa'
+  }
+  const b = new Corredo({ eroe: eroeQui(), roba: roba.value })
+  const r = consegnaMissione(missioni.value, id, b)
+  if (!r) return null
+  if (r.esito === 'consegnata') {
+    nellAvventura({ missioni: r.stati, roba: b.roba }, { subito: true })
+    suono.livello()
+  } else suono.no()
+  return r.esito
 }
 
 function scorda() {
@@ -170,7 +199,8 @@ function salgoDalPortale() {
 // carta in cima, da «riprendi da qui» e dal portale di sopra: è la stessa sosta
 function riprendiDiscesa() {
   const dato = qui.value.sosta
-  const c = dato ? leggi(dato, tappaDi(dato.tappa), roba.value) : null
+  const t = dato ? tappaDi(dato.tappa) : null
+  const c = t ? leggi(dato, t, roba.value, presePer(missioni.value, t.chiave || '')) : null
   if (!c) { scorda(); return }
   togli()   // il telefono posato sulla mappa lascia acceso il freno, o si ritroverebbe dietro un velo non chiesto
   tappaIdx.value = dato.tappa
@@ -397,7 +427,8 @@ function avvia(i) {
   fine.value = null
   domanda.value = null
   zainoAperto.value = false
-  corsa.value = new Corsa(tappaDi(i), { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value })
+  corsa.value = new Corsa(tappaDi(i), { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value,
+                                        missioni: presePer(missioni.value, tappaDi(i).chiave) })
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
   pianoDaProva(corsa.value)
@@ -557,7 +588,7 @@ function chiudi() {
   if (!c.finita) c.risali()
   // la roba viene su (vinta, persa o finita la sera): quello che è rimasto per terra resta giù. Un giro nuovo: i
   // mercanti hanno roba nuova sul banco
-  nellAvventura({ roba: c.roba, botteghe: null })
+  nellAvventura({ roba: c.roba, botteghe: null, ...fatteGiu(c) })
   const e = c.esito
   const stelle = stelleDella(e)
   // l'abisso non si butta (finisce la sera, non la discesa): si scrive il punto da cui si rientra
@@ -737,6 +768,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->
         <Campagna :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
+                  :missioni="missioni" :azione-missione="azioneMissione"
                   @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda"
                   @eroe="scegliEroe = true" @bottega="apriBottega" />
         <!-- il banco di un mercante di sopra: al centro, la ✕ in alto a destra, niente domande -->
@@ -817,8 +849,11 @@ function ridimensiona() { if (pittore) pittore.misura() }
           </button>
         </Foglio>
 
-        <Foglio v-else-if="foglio && foglio.che === 'forziere'" em="🎁" titolo="Un forziere"
-                dice="Una domanda sola. Se la sbagli, resta chiuso per sempre.">
+        <!-- il forziere di una missione dice cosa c'è dentro, e non si perde: sbagliando si riprova -->
+        <Foglio v-else-if="foglio && foglio.che === 'forziere'" :em="foglio.chi.missione ? foglio.chi.em : '🎁'"
+                :titolo="foglio.chi.missione ? foglio.chi.nome : 'Un forziere'" :data-missione="foglio.chi.missione || null"
+                :dice="foglio.chi.missione ? 'È quello che cercavi. Rispondi giusto e lo prendi; se sbagli, riprovi.'
+                                           : 'Una domanda sola. Se la sbagli, resta chiuso per sempre.'">
           <div v-if="domanda" class="sot-domanda">
             <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
                      :origine="domanda" gioco="sotterraneo" :respiro="900"

@@ -340,6 +340,8 @@ export class Tela {
       if (!this.posa(suo, px - 0.5, py - 0.5, { alfa, specchia: r.guarda === 'sx' }))
         this.emoji(r.em, px, py, alfa)
       if (r.chiave) this.emoji('🗝️', px + 0.42, py - 0.55, alfa, 0.42)
+      // il mostro col nome di una missione porta la corona: si riconosce prima di entrare nella stanza
+      if (r.missione) this.emoji('👑', px - 0.05, py - 0.95 + Math.sin(t * 3) * 0.05, alfa, 0.5)
       if (!r.sveglio) this.emoji('💤', px + 0.4, py - 0.4, alfa * 0.8, 0.32)
       if (r.ossa < r.ossaMax) this.barretta(px, py, r.ossa / r.ossaMax, alfa)
       return
@@ -378,6 +380,10 @@ export class Tela {
     if (tocca && !nome) this.aureola(px, py + su, t)
     if (!nome || !this.posa(nome, px - 0.5, py - 0.5 + su, { alfa }))
       this.emoji(r.em, px, py + su, alfa)
+
+    // la cosa da trovare per una missione galleggia sopra il suo forziere d'oro, finché non si apre
+    if (r.che === 'forziere' && r.missione && !r.aperto)
+      this.emoji(r.em, px, py - 1.05 + Math.sin(t * 2.4) * 0.08, alfa, 0.6)
 
     // il segno sopra una porta chiusa: l'unica cosa con cui si sceglie dove andare, si vede anche in un piano già girato
     if (r.che === 'porta' && !r.aperta && SEGNI[r.segno])
@@ -501,7 +507,8 @@ export class Tela {
     for (const r of liv.robe) {
       if (r.presa || r.morto || !corsa.visto[r.y * liv.largo + r.x]) continue
       // un baule già aperto sparisce; la roba per terra si segna, perché ora va toccata e una spada dimenticata è persa
-      const colore = r.che === 'mostro' && r.chiave ? '#ffd23f'
+      const colore = r.missione && !r.aperto ? '#ff7ad9'
+        : r.che === 'mostro' && r.chiave ? '#ffd23f'
         : r.che === 'porta' && !r.aperta ? '#c9a227'
         : r.che === 'scala' ? '#6fc6ff'
         : r.che === 'portale' ? '#b48cff'

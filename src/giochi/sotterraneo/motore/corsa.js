@@ -20,6 +20,7 @@ import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 import { Corredo } from './corredo.js'
 import { indiceDella, premioPer } from './storia.js'
+import { robaDellaMissione } from './missioni.js'
 
 // nella storia i forzieri e i mostri di tutti i giorni danno solo quello che si consuma: la roba la dà la riga
 // della storia (dati/storia.js), o la discesa diventerebbe una lotteria e la tabella una bugia
@@ -33,11 +34,14 @@ const RINCARO = { porta: -0.05, forziere: 0.25, fonte: 0, mostro: 0.05, capo: 0.
 // la roba dell'avventuriero (gemme, addosso, tasche, torce) sta in Corredo e scende con lui: `roba` è quella
 // che si porta da sopra (motore/corredo.js); vita e piano sono della discesa, e restano giù
 export class Corsa extends Corredo {
-  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, roba = null } = {}) {
+  // `missioni`: quelle prese che riguardano questa discesa (motore/missioni.js, presePer)
+  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, roba = null, missioni = [] } = {}) {
     super({ eroe, roba })
     this.tappa = tappa
     // il posto nella storia (−1 l'abisso, che pesca come sempre): dice cosa deve dare questa discesa
     this.indice = indiceDella(tappa)
+    this.missioni = missioni || []
+    this.missioniFatte = new Set()   // le cose trovate e i mostri col nome battuti: Gioco.vue li porta nell'avventura
     this.rnd = rnd
     this.seme = seme == null ? Math.floor(rnd() * 100000) : seme
     this.piano = 0
@@ -64,6 +68,7 @@ export class Corsa extends Corredo {
     this.pianiFatti = 0
 
     this.nuovoPiano()
+    this.posaLeMissioni()
     // le torce comprate di sopra aspettano alla cintura: si scende con una accesa, come se la si fosse appena presa
     if (!this.torciaAccesa && this.torceInScorta > 0) {
       this.torceInScorta--
@@ -72,6 +77,17 @@ export class Corsa extends Corredo {
     // la roba di prima delle avventure (una per tutti) può avere addosso quello che non porta: in tasca, o per terra
     this.sistemaIlCorredo()
     this.vita = this.vitaMax   // si scende in piedi: col dito o l'amuleto il massimo è già più alto
+  }
+
+  // la cosa da trovare e il mostro col nome stanno nel loro piano, sopra quello nato dal seme: la sosta li
+  // salva fra le cose nuove, e chi riprende dopo aver preso una missione se la ritrova (motore/sosta.js)
+  posaLeMissioni() {
+    for (const m of this.missioni) {
+      if (m.piano !== this.piano || this.missioniFatte.has(m.id)) continue
+      if (this.livello.robe.some(r => r.missione === m.id)) continue
+      const r = robaDellaMissione(this.livello, m, this.tappa)
+      if (r) this.livello.robe.push(r)
+    }
   }
 
   // non è un campo: cresce coi piani (vitaBase) e con il dito, o si scorderebbe di alzarla/abbassarla
@@ -553,7 +569,10 @@ export class Corsa extends Corredo {
       const cosa = pescaCosa(possibili, { rnd: () => this.rnd(), tua: k => this.posso(k) })
       this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, { x: m.x + 1, y: m.y })
     }
-    this.dillo(`${m.em} è caduto!`)
+    if (m.missione) {
+      this.missioniFatte.add(m.missione)
+      this.dillo(`👑 ${m.nome} è caduto! Torna su a dirlo`)
+    } else this.dillo(`${m.em} è caduto!`)
   }
 
   // il prossimo pezzo della riga dopo (motore/storia.js) che serve ancora e non è già per terra in questo piano
@@ -622,6 +641,16 @@ export class Corsa extends Corredo {
 
   // l'unica cosa che si perde per sempre, apposta: senza, niente nel sotterraneo fa un po' di batticuore
   rispostaForziere(f, giusto) {
+    // il forziere di una missione non si perde: sbagliando resta chiuso e si riprova, come una porta
+    if (f.missione) {
+      if (!giusto) { this.dillo('la serratura non si muove: riprova'); this.chiudi(); return { che: 'chiusa' } }
+      f.aperto = true
+      this.tesori++
+      this.missioniFatte.add(f.missione)
+      this.dillo(`${f.em} ${f.nome}! Torna su, da chi l'aspetta`)
+      this.chiudi()
+      return { che: 'missione', id: f.missione }
+    }
     f.aperto = true
     if (!giusto) {
       f.vuoto = true
@@ -778,6 +807,7 @@ export class Corsa extends Corredo {
     this.vitaBase += VITA_PER_PIANO
     this.vita = Math.min(this.vitaMax, this.vita + RIPOSO_SCALA)
     this.nuovoPiano()
+    this.posaLeMissioni()
     this.chiudi()
     this.dillo(`piano ${this.piano + 1}`)
     return { che: 'sceso', piano: this.piano }

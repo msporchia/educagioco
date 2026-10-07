@@ -6,16 +6,21 @@
 // Le regole: docs/sotterraneo/terra-di-sopra.md.
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO,
-         MERCANTI as DOVE_MERCANTI, PORTALE as DOVE_PORTALE } from '../dati/terra-mappa.js'
+         MERCANTI as DOVE_MERCANTI, PORTALE as DOVE_PORTALE, PERSONAGGI as DOVE_PERSONAGGI } from '../dati/terra-mappa.js'
+import { PERSONAGGI } from '../dati/missioni.js'
+import { segnoDi } from '../motore/missioni.js'
 import { MERCANTI } from '../dati/mercanti.js'
 import { POSTO_DI, LUOGHI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, PASSO_TERRA, VISTA, LUCE,
          BORDO, MORBIDA } from '../dati/terra.js'
 import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice } from '../motore/terra.js'
 import { figura, haFigura } from './figura.js'
-import { MINATORE, ARMAIOLO, ERBORISTA, RIGATTIERE, DIVIETO } from './pixel.js'
+import { dettoDelLivello } from '../motore/storia.js'
+import { MINATORE, ARMAIOLO, ERBORISTA, RIGATTIERE, DIVIETO, RAGAZZA, MUGNAIO, EREMITA, GUARDIA, PESCATORE,
+         BOSCAIOLO } from './pixel.js'
 import Pixel from './Pixel.vue'
 import Armato from './Armato.vue'
 import Portale from './Portale.vue'
+import Missione from './Missione.vue'
 
 const props = defineProps({
   tappe: { type: Array, required: true },     // [{ indice, chiave, nome, icona, dritta, piani, aperta, adesso, stelle, perEta, fatta }]
@@ -26,15 +31,18 @@ const props = defineProps({
   // la discesa lasciata a metà è un portale aperto: il gemello sta nel villaggio. { nome, piano, piani, immagine }
   portale: { type: Object, default: null },
   roba: { type: Object, default: null },       // per l'arma in pugno: { mano, mancina }
+  missioni: { type: Object, default: () => ({}) },   // { [id]: 'presa' | 'fatta' | 'consegnata' } (motore/missioni.js)
+  azioneMissione: { type: Function, default: null },  // (id, 'prendi' | 'consegna') → l'esito
 })
 const emit = defineEmits(['scendi', 'terra', 'bottega', 'riprendi'])
 
 const SCARTO_DITO = 16   // sotto, il dito è fermo (docs/core/il-dito.md)
 const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
 const L = MASCHERA[0].length, A = MASCHERA.length
-// chi sta fermo non si attraversa: il minatore e i mercanti
+// chi sta fermo non si attraversa: il minatore, i mercanti e chi dà le missioni
 const mondo = creaTerra(MASCHERA, {
-  ostacoli: [DOVE_MINATORE.piede, ...Object.values(DOVE_MERCANTI).map(m => m.piede)],
+  ostacoli: [DOVE_MINATORE.piede, ...Object.values(DOVE_MERCANTI).map(m => m.piede),
+             ...Object.values(DOVE_PERSONAGGI).map(m => m.piede)],
 })
 const cella = ([x, y]) => ({ x, y })
 
@@ -65,6 +73,21 @@ const mercanti = MERCANTI.filter(m => DOVE_MERCANTI[m.chiave]).map(m => {
   }
 })
 
+// chi dà le missioni (dati/missioni.js): figure di pixel.js finché l'atlante non ha `<nome>-fermo-0`
+const FIGURE_PERSONAGGI = { ragazza: RAGAZZA, mugnaio: MUGNAIO, eremita: EREMITA, guardia: GUARDIA,
+                            pescatore: PESCATORE, boscaiolo: BOSCAIOLO }
+const personaggi = Object.entries(DOVE_PERSONAGGI).filter(([k]) => PERSONAGGI[k]).map(([k, d]) => {
+  const vero = haFigura(`${PERSONAGGI[k].sprite}-fermo-0`)
+  return {
+    chiave: k, ...PERSONAGGI[k], piede: cella(d.piede), accanto: cella(d.accanto),
+    figura: FIGURE_PERSONAGGI[k] || MINATORE,
+    ritratto: vero ? figura(`${PERSONAGGI[k].sprite}-fermo-0`, { scala: SCALA_EROE }) : null,
+  }
+})
+// «!» ha qualcosa da chiederti, «?» aspetta quello che hai fatto (motore/missioni.js)
+const apertaLa = k => { const t = props.tappe.find(x => x.chiave === k); return !!(t && t.aperta) }
+const segnoSopra = chi => segnoDi(chi, props.missioni, apertaLa)
+
 const nebbia = (() => {
   const salvata = props.terra && nebbiaDaCodice(props.terra.nebbia, L, A)
   if (salvata) return salvata
@@ -94,6 +117,7 @@ const portalePiede = cella(DOVE_PORTALE.piede)
 const trovati = ref(new Set([
   ...daTrovare.filter(([, p]) => visto(centroDi(p.riquadro))).map(([n]) => n),
   ...mercanti.filter(m => visto(m.piede)).map(m => m.chiave),
+  ...personaggi.filter(m => visto(m.piede)).map(m => m.chiave),
   ...(visto(portalePiede) ? ['portale'] : []),
 ]))
 
@@ -244,6 +268,8 @@ function guarda() {
     trovati.value = new Set([...trovati.value, m.chiave])
     dillo(`Hai trovato ${minuscolo(m.nome)}!`)
   }
+  for (const m of personaggi)
+    if (!trovati.value.has(m.chiave) && visto(m.piede)) trovati.value = new Set([...trovati.value, m.chiave])
   if (!trovati.value.has('portale') && visto(portalePiede)) trovati.value = new Set([...trovati.value, 'portale'])
 }
 
@@ -317,6 +343,7 @@ function piazzaFumetto() {
   const r = m.tipo === 'posto' ? m.p.riquadro
     : m.tipo === 'cartello' ? CARTELLO.riquadro
     : m.tipo === 'portale' ? [portalePiede.x * CELLA - 16, portalePiede.y * CELLA - 64, CELLA + 32, 88]
+    : m.tipo === 'personaggio' ? [m.chi.piede.x * CELLA, m.chi.piede.y * CELLA - 40, CELLA, 72]
     : [DOVE_MINATORE.piede[0] * CELLA, DOVE_MINATORE.piede[1] * CELLA - 40, CELLA, 72]
   const w = Math.min(LARGO_FUM, vL - 16), h = f.offsetHeight
   const ax = (r[0] + r[2] / 2) * S
@@ -376,6 +403,16 @@ function verso(c, m) {
 const toccaPosto = p => verso(p.piede, { tipo: 'posto', p })
 // al minatore ci si ferma accanto, non addosso: due figure nella stessa cella si mangiano a vicenda
 const toccaMinatore = () => verso(cella(DOVE_MINATORE.accanto), { tipo: 'minatore' })
+// a chi dà le missioni come al minatore: accanto, e il fumetto dice cosa chiede
+const toccaPersonaggio = m => verso(m.accanto, { tipo: 'personaggio', chi: m })
+// prendere e consegnare li fa Gioco.vue (lo stato è dell'avventura): qui si dice com'è andata
+function faiMissione(id, azione) {
+  const e = props.azioneMissione ? props.azioneMissione(id, azione) : null
+  if (e === 'presa') dillo('Missione presa: la trovi scendendo.')
+  else if (e === 'consegnata') dillo('Missione compiuta!')
+  else if (e === 'pieno') dillo('Hai le tasche piene: libera un posto e torna.')
+  nextTick(piazzaFumetto)
+}
 const toccaCartello = () => verso(cella(CARTELLO.piede), { tipo: 'cartello' })
 // ai mercanti come al minatore: ci si ferma accanto, e arrivati si apre il banco
 const toccaMercante = m => verso(m.accanto, { tipo: 'mercante', chi: m })
@@ -392,9 +429,14 @@ function scendi(p) {
 }
 
 /* ═══════════ chi indica la strada ═══════════ */
+// chi tocca una discesa con la roba sotto la riga d'entrata (dati/storia.js) lo sa prima di scendere: il
+// minatore lo dice con le cose che ha in mano (motore/storia.js). Solo per quelle ancora da finire
+const livelloDi = t => (t && !t.fatta && props.roba ? dettoDelLivello(props.eroe.chiave, props.roba, t, t.indice) : null)
+
 const detto = computed(() => {
   const t = props.tappe.find(t => t.adesso)
-  if (t) return `«${t.nome}: ${LUOGHI[POSTO_DI[t.chiave]]}.»`
+  const sotto = livelloDi(t)
+  if (t) return `«${t.nome}: ${LUOGHI[POSTO_DI[t.chiave]]}.${sotto ? ' ' + sotto.detto : ''}»`
   if (props.abisso)
     return `«Le discese le hai fatte tutte. Resta l'abisso: ${LUOGHI[POSTO_DI.abisso]}.»`
   return '«Per ora le discese aperte le hai fatte tutte. Tornaci quando vuoi: là sotto cambia sempre.»'
@@ -480,6 +522,18 @@ const chiusaPerche = p => {
           <i :style="ritrattoMinatore.pezzo"></i></span>
         <Pixel v-else :figura="MINATORE" :scala="SCALA_EROE" />
         <b v-if="!parlato" class="sot-tre-punti">…</b>
+        <b v-else-if="segnoSopra('minatore')" class="sot-tre-punti sot-segno-missione" data-segno>{{ segnoSopra('minatore') }}</b>
+      </button>
+
+      <!-- chi dà le missioni: il segno sopra la testa dice se ha qualcosa per te -->
+      <button v-for="m in personaggi" :key="'personaggio-' + m.chiave" class="sot-minatore sot-personaggio"
+              :class="{ 'sot-buio': !trovati.has(m.chiave) }" :data-personaggio="m.chiave" :aria-label="m.nome"
+              :data-segno="segnoSopra(m.chiave) || null" :tabindex="trovati.has(m.chiave) ? 0 : -1"
+              :style="{ left: (m.piede.x + 0.5) * CELLA * S + 'px', top: (m.piede.y + 0.5) * CELLA * S + 'px' }"
+              @click.stop="toccaPersonaggio(m)">
+        <span v-if="m.ritratto" class="sot-ritratto" :style="m.ritratto.gabbia"><i :style="m.ritratto.pezzo"></i></span>
+        <Pixel v-else :figura="m.figura" :scala="SCALA_EROE" />
+        <b v-if="segnoSopra(m.chiave)" class="sot-tre-punti sot-segno-missione">{{ segnoSopra(m.chiave) }}</b>
       </button>
 
       <button v-for="m in mercanti" :key="'mercante-' + m.chiave" class="sot-minatore sot-mercante"
@@ -532,7 +586,7 @@ const chiusaPerche = p => {
 
       <div v-if="aperto" ref="fumetto" class="sot-fumetto" data-fumetto
            :class="{ 'sot-sotto': fumPos && fumPos.sotto, 'sot-tenue': aperto.tipo === 'posto' && !aperto.p.aperto }"
-           :data-fumetto-di="aperto.tipo === 'posto' ? aperto.p.nome : aperto.tipo"
+           :data-fumetto-di="aperto.tipo === 'posto' ? aperto.p.nome : aperto.tipo === 'personaggio' ? aperto.chi.chiave : aperto.tipo"
            :style="fumPos ? { left: fumPos.left + 'px', top: fumPos.top + 'px', width: fumPos.w + 'px', '--coda': fumPos.coda + 'px' }
                           : { visibility: 'hidden', left: '0px', top: '0px', width: LARGO_FUM + 'px' }"
            @click.stop>
@@ -546,6 +600,10 @@ const chiusaPerche = p => {
             </p>
             <p v-else class="sot-fum-conto em" data-fondo>
               {{ aperto.p.cosa.fondo ? `il più giù: piano ${aperto.p.cosa.fondo}` : 'mai sceso' }}
+            </p>
+            <p v-if="livelloDi(aperto.p.tappa)" class="sot-fum-avviso" data-sotto-livello
+               :data-manca="livelloDi(aperto.p.tappa).manca">
+              <b>Il minatore ti ha visto passare:</b> «{{ livelloDi(aperto.p.tappa).detto }}»
             </p>
             <button class="sot-grosso" data-azione="scendi" @click="scendi(aperto.p)">
               <span class="em">🪜</span> {{ aperto.p.tappa && aperto.p.tappa.stelle ? 'ci torno giù' : 'scendo' }}
@@ -566,6 +624,12 @@ const chiusaPerche = p => {
         <template v-else-if="aperto.tipo === 'minatore'">
           <b class="sot-fum-nome">Il vecchio minatore</b>
           <p class="sot-fum-detto" data-detto>{{ detto }}</p>
+          <Missione chi="minatore" :stati="missioni" :tappe="tappe" @azione="faiMissione" />
+        </template>
+        <template v-else-if="aperto.tipo === 'personaggio'">
+          <b class="sot-fum-nome">{{ aperto.chi.nome }}</b>
+          <Missione :chi="aperto.chi.chiave" :stati="missioni" :tappe="tappe" :saluto="aperto.chi.saluto"
+                    @azione="faiMissione" />
         </template>
         <template v-else>
           <b class="sot-fum-nome">Il cartello</b>

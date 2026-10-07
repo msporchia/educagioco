@@ -152,6 +152,14 @@
 .sot-fum-conto { margin: 6px 0 0; font-size: 13px }
 .sot-fum-chiusa { margin: 8px 0 0; padding: 6px 9px; border-radius: 9px; background: #d2cabd; font-weight: 600 }
 .sot-fum-detto { margin: 6px 0 0 }
+/* le missioni: dove e cosa dà, sotto la richiesta */
+.sot-fum-premio { margin: 6px 0 4px; font-size: 13px; color: #5d4b2c }
+.sot-missione .sot-grosso { margin-top: 6px }
+/* il segno sopra chi ha una missione per te: «!» da prendere, «?» da consegnare, d'oro come le cose da toccare */
+.sot-segno-missione { background: #ffd23f; font-weight: 800 }
+/* sotto il livello atteso per entrare: lo si sa prima di scendere, non da svenuti */
+.sot-fum-avviso { margin: 8px 0 2px; padding: 6px 9px; border-radius: 9px; background: #f3d9b8; color: #4a2a12; font-size: 13px }
+.sot-fum-avviso b { display: block; font-size: 12px; color: #7a4a22 }
 .sot-fum-freccia { margin: 6px 0 0 }
 .sot-fum-freccia b { display: inline-block; width: 18px; font-size: 16px }
 .sot-fum-freccia i { font-style: normal; font-size: 12px; color: #6b6272; padding-left: 22px }

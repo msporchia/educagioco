@@ -14,6 +14,8 @@ const props = defineProps({
   eroe: { type: Object, required: true },   // la scheda di chi scende, da dati/eroi.js
   abisso: { type: Object, default: null },   // { indice, nome, icona, dritta, fondo }; in fondo, la ripresa è più urgente
   terra: { type: Object, default: null },    // la terra dell'avventura: la nebbia, dove si era, se il minatore ha già parlato
+  missioni: { type: Object, default: () => ({}) },   // lo stato delle missioni dell'avventura (motore/missioni.js)
+  azioneMissione: { type: Function, default: null },  // (id, 'prendi' | 'consegna') → l'esito, da Gioco.vue
   roba: { type: Object, default: null },     // quello che ci si porta dietro, già contato (schedaConLaRoba): { vita, att, dif, gemme, mano, mancina, corpo, tratti… }
 })
 const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe', 'terra', 'bottega'])
@@ -40,6 +42,7 @@ function comincia() {
   <div class="sot-tappe">
     <!-- la discesa a metà è anche il portale gemello nel villaggio: tutti e due riprendono la stessa sosta -->
     <Terra :tappe="tappe" :abisso="abisso" :eroe="eroe" :terra="terra" :roba="roba"
+           :missioni="missioni" :azione-missione="azioneMissione"
            :giaScesa="ripresa ? ripresa.tappa : null" :portale="ripresa"
            @scendi="tocca" @terra="v => $emit('terra', v)" @bottega="k => $emit('bottega', k)"
            @riprendi="$emit('riprendi')">

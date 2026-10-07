@@ -84,16 +84,18 @@ export function scrivi(corsa, tappa, { anchePerFinite = false } = {}) {
       qui: corsa.svenimentiQui,   // spese su QUESTO piano (solo l'abisso)
     },
     robe: cambiDelPiano(corsa.livello.robe, corsa.robeDelSeme),
+    missioni: [...corsa.missioniFatte],   // quelle fatte giù e non ancora portate su
   }
 }
 
 // torna una Corsa pronta a giocare, o null se il salvataggio non si può leggere. `roba`: quella dell'avventura
-// (cfg.avventure[eroe].roba), che sopra può essere cambiata dai mercanti
-export function leggi(dato, tappa, roba = null) {
+// (cfg.avventure[eroe].roba), che sopra può essere cambiata dai mercanti; `missioni`: quelle prese adesso per
+// questa discesa (una presa sopra, passando dal portale, compare nel suo piano)
+export function leggi(dato, tappa, roba = null, missioni = []) {
   if (!dato || dato.v !== VERSIONE || !dato.robe || !dato.dove || typeof dato.eroe !== 'string') return null
   try {
     // la roba si indossa dopo, sul piano già rimesso: quello che la classe non porta può finire per terra
-    const corsa = new Corsa(tappa, { seme: dato.seme, eroe: dato.eroe })
+    const corsa = new Corsa(tappa, { seme: dato.seme, eroe: dato.eroe, missioni })
     corsa.piano = dato.piano || 0
     corsa.nuovoPiano()   // lo stesso piano di allora, dal seme
 
@@ -133,6 +135,8 @@ export function leggi(dato, tappa, roba = null) {
     corsa.svenimenti = c.svenimenti || 0
     corsa.svenimentiQui = c.qui || 0
     corsa.contaChieste = c.chieste || 0
+    corsa.missioniFatte = new Set(Array.isArray(dato.missioni) ? dato.missioni : [])
+    corsa.posaLeMissioni()
 
     corsa.aggiornaLuce()
     corsa.segnaLaStanza()   // riprendere non è entrare in una stanza, o il primo passo consumerebbe torcia
