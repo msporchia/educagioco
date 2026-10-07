@@ -116,6 +116,8 @@ export class Corsa extends Corredo {
       crescita: crescitaDi(t),
       branco: brancoDi(t, this.piano),
     })
+    // com'è nato: la sosta salva solo quello che cambia rispetto a qui (motore/sosta.js)
+    this.robeDelSeme = this.livello.robe.map(r => ({ ...r }))
     const dentro = this.livello.stanze[0]
     this.eroe = { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }
     this.guarda = 'dx'

@@ -13,7 +13,8 @@
      indice dentro il profilo: un settimo posto in fila lo farebbe
      scivolare per tutti, in silenzio, e la prova che non succede è che
      l'abisso non sta nella campagna affatto;
-   - che il salvataggio di ieri si legga ancora (`VERSIONE` ferma a 3).
+   - che la sosta dell'abisso si scriva e si rilegga come quella di una
+     tappa, con un indice in più (−1) e non un formato suo.
 
    E poi le misure, che sono il resto del lavoro: quanto costa un piano
    in domande, e fin dove si arriva col bottino di oggi.
@@ -298,13 +299,11 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   uguale('anche nella campagna le tasche si svuotano', t.zaino.length, 0)
 }
 
-/* ══════════ 7. la sosta: si riprende, e la versione non sale ══════════
-   Una discesa in corso il giorno del rilascio non si butta: `tappa`
-   **non cambia significato**, guadagna un valore (−1), e chi ha lasciato
-   a metà «La botola segreta» ieri sera lo riprende oggi. */
+/* ══════════ 7. la sosta: si riprende ══════════
+   `tappa` guadagna un valore (−1) e non cambia significato: la sosta
+   dell'abisso è quella di una tappa. La roba sta nell'avventura e si
+   ripassa a `leggi`, come fa Gioco.vue. */
 {
-  uguale('la versione del salvataggio non è salita', VERSIONE, 3)
-
   const c = new Corsa(L_ABISSO, { seme: 77, rnd: seminato(77), eroe: 'nano' })
   c.piano = 22
   c.nuovoPiano()
@@ -323,8 +322,9 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   uguale('col piano dove si era', riga.piano, 23)
   uguale('e senza un «di quanti» che non esiste', riga.piani, null)
 
-  const b = leggi(dato, tappaDi(dato.tappa), 'nano')
+  const b = leggi(dato, tappaDi(dato.tappa), c.roba)
   controlla('e la discesa si rilegge', !!b)
+  uguale('col nano', b.chiEro, 'nano')
   uguale('allo stesso piano', b.piano, 22)
   uguale('con l\'ascia ancora in pugno', b.mano, 'ascia')
   uguale('e le sue gemme', b.gemme, 210)
@@ -350,7 +350,7 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   const av = { tappa: 6, libera: true, stelle: { 0: 3 }, cfg: {} }
   controlla('finita la campagna ma senza record, la riga è quella di sempre',
             manifesto.riassunto(av).startsWith('discesa'), manifesto.riassunto(av))
-  av.cfg.abisso = { fondo: 23 }
+  av.cfg.avventure = { nano: { abisso: { fondo: 23 } } }
   controlla('col record, la riga racconta l\'abisso',
             manifesto.riassunto(av).includes('piano più profondo 23'), manifesto.riassunto(av))
   const chiuso = manifesto.riassunto({ tappa: 2, libera: false, stelle: {}, cfg: {} })

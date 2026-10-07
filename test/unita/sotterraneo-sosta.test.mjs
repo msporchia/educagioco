@@ -1,18 +1,28 @@
-/* La discesa lasciata a metà: si scrive, si rilegge, e **si finisce**.
-   Una discesa dura venti minuti e tre piani, e prima chiudere il gioco
-   voleva dire buttarla via. Qui si prova la cosa che conta davvero —
-   non che il salvataggio «esista», ma che una partita ripresa sia la
-   stessa partita e arrivi in fondo.
+/* La discesa lasciata a metà, che è anche il portale lasciato aperto:
+   si scrive, si rilegge, e **si finisce**. Qui si prova la cosa che
+   conta davvero — non che il salvataggio «esista», ma che una partita
+   ripresa sia la stessa partita, nel punto esatto, coi mostri dove
+   erano, e arrivi in fondo. E che pesi poco: si salvano il seme e i
+   cambiamenti, non il piano (docs/sotterraneo/regole.md).
    `node test/esegui.mjs sosta --niente-build` */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { COSE, STANZE_TORCIA } from '../../src/giochi/sotterraneo/dati/cose.js'
-import { TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
+import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { CALMA, TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
+import { ROBA_VUOTA } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { gioca, robaPer } from '../../src/giochi/sotterraneo/motore/banco.js'
 import { scrivi, leggi, dice, stringaDi, vistoDa, VERSIONE }
   from '../../src/giochi/sotterraneo/motore/sosta.js'
-import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
+
+// una cosa del piano com'è adesso, senza quello che un mostro rifà da sé a ogni fotogramma
+const firmaDi = r => { const { fx, fy, calmo, sveglio, detto, casa, ...resto } = r; return JSON.stringify(resto) }
+const firmeDelPiano = c => c.livello.robe.map(firmaDi)
+// si gioca un pezzo di discesa per davvero, cosa per cosa, come farebbe il dito
+function rispondiFinche(c, giusto = () => true, giri = 40) {
+  for (let i = 0; i < giri && c.foglio && c.chiesta; i++) c.rispondi(giusto(i))
+}
 
 /* ══════════ 1. la mappa vista, compressa ══════════
    Duemilaseicento zeri e uno scritti tali e quali sono venti chilobyte
@@ -29,111 +39,120 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
   uguale('una mappa mai vista è un numero solo', stringaDi(tutta), '2704')
 }
 
-/* ══════════ 2. quello che si è fatto non si perde ══════════ */
+/* ══════════ 2. si riprende esattamente dove si era ══════════
+   Una porta aperta, un mostro ferito che ti insegue a metà stanza, un
+   forziere aperto, un altro sbagliato, una cosa buttata per terra, e
+   l'eroe fermo a metà di un passo: la ripresa è lo stesso piano, cosa per
+   cosa. */
 {
-  const c = new Corsa(CAMPAGNA[1], { seme: 314, rnd: seminato(314) })
-  /* si gioca un pezzo per davvero: si cammina, si apre un forziere, si
-     batte qualcuno, si mette qualcosa in mano */
-  const f = c.livello.robe.find(r => r.che === 'forziere')
-  c.foglio = { che: 'forziere', chi: f }
+  const c = new Corsa(CAMPAGNA[1], { seme: 314, rnd: seminato(314), roba: { ...ROBA_VUOTA(), gemme: 40 } })
+  const robe = c.livello.robe
+  const porta = robe.find(r => r.che === 'porta')
+  controlla('il piano ha una porta da aprire', !!porta)
+  c.foglio = { che: 'porta', chi: porta }; c.chiedi('porta', 0)
+  rispondiFinche(c)
+  controlla('la porta si è aperta', porta.aperta)
+
+  const [f1, f2] = robe.filter(r => r.che === 'forziere')
+  c.foglio = { che: 'forziere', chi: f1 }; c.chiedi('forziere', 0); rispondiFinche(c)
+  if (f2) { c.foglio = { che: 'forziere', chi: f2 }; c.chiedi('forziere', 0); rispondiFinche(c, () => false) }
+
+  const ferito = robe.find(r => r.che === 'mostro' && !r.chiave && r.ossa > c.colpo(r))
+  controlla('c\'è un mostro che non cade al primo colpo', !!ferito)
+  c.foglio = { che: 'scontro', chi: ferito }; c.chiedi('scontro', 0)
   c.rispondi(true)
-  const m = c.livello.robe.find(r => r.che === 'mostro' && !r.chiave)
-  c.foglio = { che: 'scontro', chi: m }
-  for (let i = 0; i < 30 && !m.morto; i++) { c.rispondi(true); if (!c.foglio) break }
-  c.zaino.push('pozione')
-  c.accendi('torcia')       // una accesa e una alla cintura: sono due campi diversi
-  c.accendi('torcia')
-  c.mano = 'spada'
-  c.mancina = 'accetta'      // la seconda arma si riprende com'era
-  c.gemme = 77
+  c.scappa()
+  const ossa = ferito.ossa
+  controlla('il mostro è ferito', ossa < ferito.ossaMax, `${ossa}/${ferito.ossaMax}`)
+  // e ti insegue: lo si sposta di due celle dentro la sua stanza, come farebbe camminando
+  for (let i = 0; i < 5; i++) c.passo(1 / 30)
+  const st = c.livello.stanzaDi(ferito.x, ferito.y)
+  const dove = { x: Math.min(st.x + st.w - 1, ferito.x + 2), y: ferito.y }
+  ferito.fx = dove.x + 0.5; ferito.fy = dove.y + 0.5; ferito.x = dove.x; ferito.y = dove.y
+
+  c.zaino.push('ascia')
+  c.butta(c.zaino.length - 1)
+  c.eroe = { x: 7.37, y: 9.81 }   // a metà di un passo
+  c.aggiornaLuce()
+  c.visto[5] = 1
   c.vita = 13
-  for (let i = 0; i < 40; i++) c.passo(1 / 30)
 
   const dato = scrivi(c, 1)
-  const b = leggi(dato, CAMPAGNA[1])
+  const b = leggi(dato, CAMPAGNA[1], c.roba)
   controlla('il salvataggio si rilegge', !!b)
-
-  const firma = x => [x.piano, x.vita, x.vitaMax, x.gemme, x.mano, x.mancina, x.corpo,
-                      x.zaino.join(), x.chiaveDelPiano, x.torciaResta, x.torceInScorta,
-                      Math.floor(x.eroe.x), Math.floor(x.eroe.y),
-                      x.domande, x.mostriBattuti, x.tesori, x.stanzeViste].join('|')
-  uguale('e la discesa è la stessa', firma(b), firma(c))
-  uguale('il piano è quello di prima, rifatto dal seme',
-         b.livello.celle.join(), c.livello.celle.join())
+  stessaLista('ogni cosa del piano è com\'era (porte, forzieri, mostri, roba per terra)', firmeDelPiano(b), firmeDelPiano(c))
+  uguale('il piano è quello di prima, rifatto dal seme', b.livello.celle.join(), c.livello.celle.join())
+  uguale('l\'eroe nel punto esatto, anche a metà di un passo', `${b.eroe.x},${b.eroe.y}`, '7.37,9.81')
   uguale('la mappa esplorata è quella', b.visto.join(), c.visto.join())
-  uguale('e le cose stanno dove stavano', b.livello.robe.length, c.livello.robe.length)
-  controlla('il forziere aperto è ancora aperto',
-            b.livello.robe.some(r => r.che === 'forziere' && r.aperto))
-  controlla('e chi era caduto è ancora caduto',
-            b.livello.robe.filter(r => r.che === 'mostro' && r.morto).length ===
-            c.livello.robe.filter(r => r.che === 'mostro' && r.morto).length)
+  const lui = b.livello.robe[robe.indexOf(ferito)]
+  uguale('il mostro ferito è dove ti inseguiva, non a casa sua', `${lui.x},${lui.y}`, `${dove.x},${dove.y}`)
+  uguale('con le ossa che gli restano', lui.ossa, ossa)
+  stessaLista('e sa ancora dov\'è casa sua', lui.casa, c.robeDelSeme[robe.indexOf(ferito)] &&
+              { x: c.robeDelSeme[robe.indexOf(ferito)].x, y: c.robeDelSeme[robe.indexOf(ferito)].y })
+  uguale('e prima di ripartire si calma: riaprire con un colpo già partito fa pentire', lui.calmo, CALMA)
+  controlla('la porta aperta è ancora aperta', b.livello.robe[robe.indexOf(porta)].aperta)
+  controlla('il forziere aperto è ancora aperto', b.livello.robe[robe.indexOf(f1)].aperto)
+  controlla('l\'ascia lasciata per terra è ancora lì',
+            b.livello.robe.some(r => r.che === 'cosa' && r.cosa === 'ascia' && !r.presa))
 
-  nota(`un salvataggio pesa ${JSON.stringify(dato).length} byte con ${dato.robe.length} cose in giro`)
+  const firma = x => [x.piano, x.vita, x.vitaMax, x.gemme, x.chiaveDelPiano, x.domande, x.giuste,
+                      x.mostriBattuti, x.tesori, x.stanzeViste, x.contaChieste].join('|')
+  uguale('e i conti della discesa sono gli stessi', firma(b), firma(c))
+
+  /* il peso: il seme e i cambiamenti, non il piano disegnato né le cose intere */
+  const pesa = JSON.stringify(dato).length
+  const intere = JSON.stringify(c.livello.robe.map(firmaDi)).length
+  controlla('una sosta a metà piano pesa meno di un chilobyte e mezzo', pesa < 1500, `${pesa} byte`)
+  controlla('e meno di un terzo delle cose scritte intere', pesa * 3 < intere, `${pesa} contro ${intere}`)
+  nota(`una sosta a metà piano pesa ${pesa} byte (le cose intere ne peserebbero ${intere}): ` +
+       `${Object.keys(dato.robe.cambi).length} cose cambiate su ${dato.robe.n}, ${dato.robe.nuove.length} nuove`)
+
+  /* riscritta subito, la ripresa è identica: niente si sposta a ogni giro */
+  stessaLista('riscrivere una ripresa dà la stessa sosta', scrivi(b, 1).robe, dato.robe)
 }
 
-/* ══════════ 2-bis. una torcia di ieri era una torcia che non finiva ══════════
-   `torcia: true` è tutto quello che i salvataggi di prima dicevano, e
-   allora voleva dire luce fino alla risalita. Il ripiego ovvio è quindi
-   **una torcia piena**: chi rientra in una discesa cominciata ieri non
-   si ritrova al buio, e nemmeno con una luce eterna che nel gioco di
-   oggi non esiste più. È il motivo per cui la versione non sale — il
-   campo vecchio vuol dire ancora quello che voleva dire. */
+/* ══════════ 3. il portale: si sale e si torna nello stesso posto ══════════
+   La stanza del mercante (salito sopra) ha il portale. Toccarlo non
+   chiede niente: apre il foglio per salire, e la sosta scritta allora
+   rimette l'eroe accanto a lui. */
+{
+  const c = new Corsa(CAMPAGNA[2], { seme: 8, rnd: seminato(8) })
+  const portale = c.livello.robe.find(r => r.che === 'portale')
+  controlla('il piano ha il suo portale', !!portale)
+  uguale('nella stanza che era del mercante', c.livello.stanze.find(s => s.ruolo === 'portale')?.cx, portale.x)
+  controlla('si tocca quando lo si vede', (c.luce.add(portale.y * c.livello.largo + portale.x), c.toccabile(portale)))
+  c.interagisci(portale)
+  uguale('toccarlo apre il foglio del portale', c.foglio && c.foglio.che, 'portale')
+  uguale('senza nessuna domanda', c.chiesta, null)
+  c.chiudi()
+  c.eroe = { x: portale.x - 0.5, y: portale.y + 0.5 }
+  const b = leggi(scrivi(c, 2), CAMPAGNA[2], c.roba)
+  uguale('tornando giù si è accanto al portale', `${b.eroe.x},${b.eroe.y}`, `${portale.x - 0.5},${portale.y + 0.5}`)
+  controlla('e il portale c\'è ancora: si può risalire quante volte si vuole',
+            b.livello.robe.some(r => r.che === 'portale' && r.x === portale.x && r.y === portale.y))
+}
+
+/* ══════════ 4. riprendere non è entrare in una stanza ══════════
+   La torcia paga la strada girata al buio: un piano nuovo, il risveglio
+   e una discesa ripresa non sono strada. */
 {
   const c = new Corsa(CAMPAGNA[0], { seme: 77, rnd: seminato(77) })
-  const dato = scrivi(c, 0)
-  const vecchio = { ...dato, torcia: true }
-  delete vecchio.torciaResta
-  delete vecchio.torce
-  const b = leggi(vecchio, CAMPAGNA[0])
-  uguale('una torcia di ieri si riaccende piena', b.torciaResta, STANZE_TORCIA)
-  uguale('e senza scorte, che ieri non c\'erano', b.torceInScorta, 0)
-
-  const spenta = { ...dato, torcia: false }
-  delete spenta.torciaResta
-  const nessuna = leggi(spenta, CAMPAGNA[0])
-  uguale('chi non ne aveva riparte senza', nessuna.torciaAccesa, false)
-
-  /* e quello di oggi si rilegge com'è: mezza torcia resta mezza */
   c.accendi('torcia'); c.accendi('torcia')
   c.torciaResta = 3
-  const oggi = leggi(scrivi(c, 0), CAMPAGNA[0])
-  uguale('una torcia a metà resta a metà', oggi.torciaResta, 3)
+  const oggi = leggi(scrivi(c, 0), CAMPAGNA[0], c.roba)
+  uguale('una torcia a metà resta a metà (sta nella roba)', oggi.torciaResta, 3)
   uguale('e la scorta si riprende', oggi.torceInScorta, 1)
 
-  /* ── e riprendere non è entrare in una stanza ──
-     La torcia paga la strada girata al buio: un piano nuovo, il
-     risveglio dopo uno svenimento e una discesa ripresa non sono
-     strada. Senza `segnaLaStanza`, chi riprende in una stanza qualunque
-     risulta arrivato adesso da quella d'ingresso, e il primo passo gli
-     costa una stanza di luce che nessuno ha girato. */
   const altrove = c.livello.stanze[2] || c.livello.stanze[1]
   c.eroe = { x: altrove.cx + 0.5, y: altrove.cy + 0.5 }
-  const li = leggi(scrivi(c, 0), CAMPAGNA[0])
+  const li = leggi(scrivi(c, 0), CAMPAGNA[0], c.roba)
   uguale('si riprende nella stanza in cui si era', li.stanzaOra, altrove.id)
   const prima = li.torciaResta
   li.bruciaLaTorcia()
   uguale('e il primo passo non costa luce', li.torciaResta, prima)
 }
 
-/* ══════════ 3. i mostri tornano al loro posto ══════════
-   Riaprire il gioco con l'orco addosso e un colpo già partito è il modo
-   più rapido di far pentire qualcuno di aver ripreso. */
-{
-  const c = new Corsa(CAMPAGNA[2], { seme: 8, rnd: seminato(8) })
-  const m = c.livello.robe.find(r => r.che === 'mostro')
-  m.fx = m.x + 6.5; m.fy = m.y + 0.5
-  m.casa = { x: m.x, y: m.y }
-  m.sveglio = true
-  m.calmo = 0
-  const casa = { x: m.x, y: m.y }
-
-  const b = leggi(scrivi(c, 2), CAMPAGNA[2])
-  const stesso = b.livello.robe.find(r => r.che === 'mostro')
-  uguale('chi inseguiva si ritrova a casa sua', `${stesso.x},${stesso.y}`, `${casa.x},${casa.y}`)
-  uguale('e non è più sveglio', !!stesso.sveglio, false)
-}
-
-/* ══════════ 4. una discesa ripresa si finisce ══════════
+/* ══════════ 5. una discesa ripresa si finisce ══════════
    È la prova vera: non che il dato torni indietro, ma che la partita
    arrivi in fondo dopo essere stata interrotta. Con la roba di chi
    arriva alla grotta: la roba resta, e la grotta conta su di lei. */
@@ -141,122 +160,79 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
   const t = CAMPAGNA[2]
   const roba = robaPer(2)
   const c = new Corsa(t, { seme: 101, rnd: seminato(101), roba })
-  /* mezza discesa vera, poi si chiude l'applicazione di colpo */
   const mezzo = gioca(t, { seme: 101, bravura: 1, come: 'minimo', da: c })
   controlla('la prova parte da una discesa giocata', mezzo.esito.domande > 0)
 
   const dopo = new Corsa(t, { seme: 202, rnd: seminato(202), roba })
   const salvato = scrivi(dopo, 2)
   for (let i = 0; i < 60; i++) dopo.passo(1 / 30)
-  const ripresa = leggi(salvato, t)
+  const ripresa = leggi(salvato, t, roba)
   const finita = gioca(t, { seme: 202, bravura: 1, come: 'minimo', da: ripresa })
   controlla('una discesa ripresa arriva in fondo', finita.esito.vinta,
             finita.guasto || `${finita.esito.piani}/${finita.esito.quantiPiani} piani`)
+
+  /* e una ripresa a metà della discesa vera, al secondo piano, si finisce lo stesso */
+  const giu = new Corsa(t, { seme: 303, rnd: seminato(303), roba })
+  gioca(t, { seme: 303, bravura: 1, come: 'tutto', da: giu, fino: 1 })
+  const daMeta = leggi(scrivi(giu, 2), t, giu.roba)
+  controlla('una sosta scritta a metà discesa si rilegge', !!daMeta)
+  const fine = daMeta && gioca(t, { seme: 303, bravura: 1, come: 'minimo', da: daMeta })
+  controlla('e arriva in fondo', !!fine && fine.esito.vinta, fine && (fine.guasto || `${fine.esito.piani} piani`))
 }
 
-/* ══════════ 5. quello che non si sa leggere si butta ══════════
+/* ══════════ 6. quello che non si sa leggere si butta ══════════
    Una partita persa è un dispiacere; una partita ripresa a metà con dei
    campi che non tornano è un gioco rotto in un modo che nessuno sa
-   spiegare. */
+   spiegare. Le soste di prima (versione 3: le cose intere e la roba
+   dentro) si buttano con l'azzeramento delle avventure. */
 {
   const c = new Corsa(CAMPAGNA[0], { seme: 5, rnd: seminato(5) })
   const dato = scrivi(c, 0)
-  uguale('un salvataggio di ieri non si legge', !!leggi({ ...dato, v: 1 }, CAMPAGNA[0]), false)
+  uguale('una sosta della 3 non si legge', !!leggi({ ...dato, v: 3 }, CAMPAGNA[0]), false)
   uguale('e nemmeno un dato storto', leggi({ v: VERSIONE, robe: null }, CAMPAGNA[0]), null)
   uguale('niente salvataggio, niente ripresa', leggi(null, CAMPAGNA[0]), null)
+  uguale('se il piano non nasce più con le stesse cose, non si indovina',
+         leggi({ ...dato, robe: { ...dato.robe, n: dato.robe.n + 1 } }, CAMPAGNA[0]), null)
 
-  /* una discesa finita non si salva: non c'è più niente da riprendere */
   c.finita = true
   uguale('una discesa finita non lascia soste', scrivi(c, 0), null)
 
   const riga = dice(dato, CAMPAGNA)
   uguale('la carta dice da che tappa si riprende', riga.nome, CAMPAGNA[0].nome)
+  uguale('con la sua chiave, per l\'icona ritagliata dalla mappa', riga.chiave, CAMPAGNA[0].chiave)
   uguale('e a che piano si era', riga.piano, 1)
 }
 
-/* ══════════ 6. chi scendeva è chi risale ══════════
-   `eroe` voleva dire due cose nello stesso oggetto — chi scende e dove
-   sta — e la seconda cancellava la prima: si riprendeva col cavaliere
-   qualunque eroe si fosse scelto, mentre la mappa delle discese
-   continuava a mostrare il ritratto giusto. Da fuori si vedeva così:
-   «ogni tanto mi ritrovo con l'eroe sbagliato». */
+/* ══════════ 7. chi scendeva è chi risale ══════════ */
 {
   for (const chi of ['mago', 'nano', 'elfa', 'cavaliere']) {
     const c = new Corsa(CAMPAGNA[1], { seme: 42, rnd: seminato(42), eroe: chi })
     for (let i = 0; i < 30; i++) c.passo(1 / 30)
     const dato = scrivi(c, 1)
-    const b = leggi(dato, CAMPAGNA[1])
+    const b = leggi(dato, CAMPAGNA[1], c.roba)
     uguale(`si riprende da ${chi}`, b.chiEro, chi)
     uguale('con la sua vita', b.vitaMax, c.vitaMax)
-    uguale('e dove si era', `${Math.floor(b.eroe.x)},${Math.floor(b.eroe.y)}`,
-           `${Math.floor(c.eroe.x)},${Math.floor(c.eroe.y)}`)
+    uguale('e dove si era', `${b.eroe.x},${b.eroe.y}`, `${c.eroe.x},${c.eroe.y}`)
     uguale('e la carta lo dice', dice(dato, CAMPAGNA).eroe, chi)
   }
-
-  /* un salvataggio della 2 — dove `eroe` portava la cella — si legge
-     ancora: si riprende col cavaliere, che è quello che il gioco dava
-     comunque, invece di buttare venti minuti di discesa */
-  const c = new Corsa(CAMPAGNA[1], { seme: 42, rnd: seminato(42), eroe: 'mago' })
-  const vecchio = { ...scrivi(c, 1), v: 2 }
-  delete vecchio.dove
-  vecchio.eroe = { x: c.eroe.x, y: c.eroe.y }
-  const b = leggi(vecchio, CAMPAGNA[1])
-  controlla('un salvataggio della 2 si riprende lo stesso', !!b)
-  uguale('e senza un nome scritto tocca al cavaliere', b && b.chiEro, 'cavaliere')
-
-  /* ...a meno che chi chiama non sappia chi gioca in questa casa. È il
-     caso vero: la discesa l'aveva cominciata l'elfa, il salvataggio
-     vecchio non se n'è accorto, e il campo mostrava un cavaliere mentre
-     l'inventario mostrava l'elfa — due fonti per la stessa cosa. */
-  const conRipiego = leggi(vecchio, CAMPAGNA[1], 'elfa')
-  uguale('col ripiego di casa si riprende da chi gioca', conRipiego.chiEro, 'elfa')
-  uguale('e la carta non inventa un nome che non ha',
-         dice(vecchio, CAMPAGNA).eroe, null)
-  uguale('e dalla cella giusta', b && `${Math.floor(b.eroe.x)},${Math.floor(b.eroe.y)}`,
-         `${Math.floor(c.eroe.x)},${Math.floor(c.eroe.y)}`)
 }
 
-/* le cose per terra sopravvivono alla chiusura: sono l'unica cosa che
-   non si rigenera dal seme, e quindi l'unica che si può perdere */
-{
-  const c = new Corsa(CAMPAGNA[0], { seme: 61, rnd: seminato(61) })
-  c.zaino = ['ascia']   // gradino 2 della famiglia delle asce
-  c.butta(0)
-  const b = leggi(scrivi(c, 0), CAMPAGNA[0])
-  controlla('l\'ascia lasciata per terra è ancora lì',
-            b.livello.robe.some(r => r.che === 'cosa' && r.cosa === 'ascia' && !r.presa))
-  uguale('e si sa ancora com\'è fatta', COSE.ascia.att, 3)
-}
-
-/* ── e quello che allora si portava e adesso no ──
-   Il caso non è un id sparito, che `leggi` toglieva già: è una discesa
-   cominciata **prima** che le classi avessero un limite, e ripresa da
-   una classe che quella roba non la porta. Non si butta e non resta
-   addosso di nascosto: va in tasca, o per terra se le tasche sono
-   piene, che è la stessa regola dello sfratto delle due mani. */
+/* ── la roba dell'avventura e la classe ──
+   La roba passa a `leggi` dall'avventura: quello che la classe non porta
+   va in tasca, o per terra se le tasche sono piene — mai nel niente. */
 {
   const c = new Corsa(CAMPAGNA[0], { seme: 77, rnd: seminato(77), eroe: 'mago' })
   const dato = scrivi(c, 0)
-  dato.mano = 'ascia'          // un mago non impugna le asce
-  dato.corpo = 'corazza'       // e non veste il ferro
-  dato.zaino = []
-  const b = leggi(dato, CAMPAGNA[0])
-  uguale('l\'ascia di ieri esce dal pugno', b.mano, null)
+  const b = leggi(dato, CAMPAGNA[0], { ...ROBA_VUOTA(), mano: 'ascia', corpo: 'corazza' })
+  uguale('l\'ascia esce dal pugno del mago', b.mano, null)
   uguale('e la corazza da addosso', b.corpo, null)
   controlla('ma finiscono in tasca, non nel niente',
             b.zaino.includes('ascia') && b.zaino.includes('corazza'), b.zaino.join())
-  controlla('e la riga dice perché', b.avvisi.some(a => String(a).includes('non impugna')),
-            JSON.stringify(b.avvisi))
-
-  /* con le tasche piene non c'è posto: allora per terra, dove ci si può
-     tornare — mai buttata via */
-  const pieno = scrivi(c, 0)
-  pieno.mano = 'ascia'
-  pieno.zaino = new Array(TASCHE).fill('pozione')
-  const d = leggi(pieno, CAMPAGNA[0])
+  const d = leggi(dato, CAMPAGNA[0], { ...ROBA_VUOTA(), mano: 'ascia', zaino: new Array(TASCHE).fill('pozione') })
   uguale('con lo zaino pieno il pugno si svuota lo stesso', d.mano, null)
   controlla('e l\'ascia è per terra, non persa',
             d.livello.robe.some(r => r.che === 'cosa' && r.cosa === 'ascia' && !r.presa))
+  uguale('e si sa ancora com\'è fatta', COSE.ascia.att, 3)
 }
 
-riassunto('la discesa lasciata a metà')
+riassunto('la discesa lasciata a metà, e il portale')
