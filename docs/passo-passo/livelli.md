@@ -106,7 +106,9 @@ si sarebbero aperte già fatte.
 
 - **Sulla mappa vanno nella loro isola** (`motore/strade.js` le riconosce
   dalle pecore e dallo scalino), dopo quelle che c'erano; la strada del
-  cane va di isola in isola, non per indice.
+  cane va di isola in isola, non per indice. Un'isola della valle dipinta
+  vuole la sua casella in più nel foglietto (`"caselle"`), e si rilancia lo
+  strumento ([mappa.md](mappa.md#il-foglietto-e-lo-strumento)).
 - **`FINE_STRADA`** è la fine della strada del coniglio: lì la campagna è
   finita («tutte le tane», `libera`), e lì si ferma il cursore. Le tappe in
   coda non lo muovono (`postoNelCursore`, il `posto` di `completa`), se no

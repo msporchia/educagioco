@@ -62,4 +62,26 @@ Su ogni isola e isoletta un SENTIERO largo e libero (fra i ponti, o dalla tana i
 
 ## Com'è andata
 
-(vuoto: si scrive quando arrivano i fondali)
+- **`isole_1.png` (prompt 1)**: le sei isole ci sono e si riconoscono, i
+  sentieri sono continui e quasi tutti liberi. Ma **il giro chiuso non
+  segue l'ordine dei capitoli**: i ponti vanno prato–salto–ghiaccio–buche–
+  massi–prato, e i massi (il quarto) stanno fra le buche (il quinto) e il
+  prato; il pascolo ha in più due ponti, dal prato e dal salto. Si è scelto
+  di tenerlo così: un ponte verso un'isola chiusa ha il blocco, e dal
+  ghiaccio ai massi si torna giù dal prato. Non si è rigenerato.
+- **Il fondale nel gioco** si fa col foglietto `isole.json` e lo strumento
+  `strumenti/sprite/isole-passo-passo.py` (`--provino` per guardarlo):
+  docs/passo-passo/mappa.md.
+- **Due difetti del disegno**, girati attorno nel foglietto: sul pascolo il
+  sentiero che scende dalla tana passa dietro il fienile e la staccionata
+  (lì non si mettono caselle: un raccordo senza caselle), e sul prato la
+  strada della tana e quella dei massi non si toccano (un passaggio
+  sull'erba, `"erba": true`). La tana delle buche in cima, che il prompt
+  voleva per il bivio, porta allo zaino; il cartello a due frecce resta
+  disegno.
+- **Dal secondo fondale serve**: un giro con un **ingresso** riconoscibile
+  (la tana o la barca da cui si arriva dalla valle, in un angolo) e i
+  capitoli in fila sui ponti (ripeti, fino a, se, tutto il mondo), ogni
+  isoletta del cane staccata ma con la sua tana di fronte; sentieri lunghi
+  abbastanza (ripeti ha 8 tappe, ogni isoletta 3) e liberi da staccionate e
+  case; e niente sentieri che spariscono dietro un edificio.
