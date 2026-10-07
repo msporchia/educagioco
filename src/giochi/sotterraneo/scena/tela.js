@@ -383,7 +383,7 @@ export class Tela {
 
     // la cosa da trovare per una missione galleggia sopra il suo forziere d'oro, finché non si apre
     if (r.che === 'forziere' && r.missione && !r.aperto)
-      this.emoji(r.em, px, py - 1.05 + Math.sin(t * 2.4) * 0.08, alfa, 0.6)
+      this.emoji(r.em, px, py - 1.1 + Math.sin(t * 2.4) * 0.08, alfa, 0.95)
 
     // il segno sopra una porta chiusa: l'unica cosa con cui si sceglie dove andare, si vede anche in un piano già girato
     if (r.che === 'porta' && !r.aperta && SEGNI[r.segno])
