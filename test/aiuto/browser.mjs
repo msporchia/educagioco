@@ -312,10 +312,10 @@ export async function giocaGiornata(page, id) {
   await page.waitForSelector('.banco', { timeout: 5000 })
 }
 
-/* La mappa di Passo passo ha due mondi, la valle dipinta e lo zaino
-   (docs/passo-passo/mappa.md): una casella che non c'è sta di là, e ci si
-   passa dalla tana come farebbe un bambino. Torna false se la tana è
-   chiusa: allora di là è chiuso tutto. */
+/* La mappa di Passo passo ha due valli dipinte, quella dei piccoli e lo
+   zaino (docs/passo-passo/mappa.md): una casella che non c'è sta nell'altra,
+   e ci si passa dalla tana come farebbe un bambino (ognuna ha la sua).
+   Torna false se la tana è chiusa: allora di là è chiuso tutto. */
 async function diLaSeServe(page, sel) {
   await page.waitForSelector('[data-mappa] [data-tappa]', { timeout: 8000 })
   if (await page.locator(sel).count()) return true
