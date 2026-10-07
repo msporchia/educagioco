@@ -205,3 +205,36 @@ export function misuraSvelta(liv, { limite = 20000, corta: minimo = 0 } = {}) {
   return { senzaCarota: senza, conCarota: con, corta: senza.length, lunga: con ? con.length : null,
            deviazione: con ? con.length - senza.length : null }
 }
+
+/* lo stesso mondo come un numero, con le domande di `Mondo` che servono a
+   chi lo clona milioni di volte: la ricerca dei programmi più corti
+   (motore/programmi.js). `mossa` torna 'tana', 'sbatte' o null */
+const VERSO = Object.fromEntries(PASSI.map((v, d) => [v, d]))
+export class MondoSvelto {
+  constructor(liv, T = tavole(liv)) {
+    this.liv = liv
+    this.T = T
+    P = liv.partenza; PRESA = 0; N = liv.pecore.length
+    for (let j = 0; j < N; j++) PEC[j] = liv.pecore[j]
+    this.k = chiude()
+    this.p = P
+    this.presa = false
+  }
+  clona() {
+    const m = Object.create(MondoSvelto.prototype)
+    m.liv = this.liv; m.T = this.T; m.k = this.k; m.p = this.p; m.presa = this.presa
+    return m
+  }
+  chiave() { return this.k }
+  lastra() { return this.liv.lastra[this.p] }
+  mossa(m) {
+    apre(this.k)
+    const esito = muovi(this.T, VERSO[m])
+    if (esito === PERSO) return 'sbatte'
+    this.p = P
+    this.presa = PRESA === 1
+    this.k = chiude()
+    return esito === VINTO ? 'tana' : null
+  }
+}
+
