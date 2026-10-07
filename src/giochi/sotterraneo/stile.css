@@ -79,15 +79,6 @@
 .sot-divieto { position: absolute; transform: translate(-50%, -100%); pointer-events: none; line-height: 0 }
 .sot-divieto > svg { display: block; filter: drop-shadow(0 2px 0 #0007) }
 
-.sot-sasso { position: absolute; width: 18px; height: 12px; transform: translate(-50%, -50%); pointer-events: none }
-.sot-sasso > svg { position: absolute; left: 0; top: 0 }
-.sot-sasso > .sot-luccica {
-  left: 4px; top: -9px; opacity: 0;
-  animation: sot-luccica 2.4s steps(1) infinite; animation-delay: var(--ritardo, 0s);
-}
-/* tre fotogrammi: acceso, mezzo, spento; il sasso resta, cambia solo la scintilla */
-@keyframes sot-luccica { 0% { opacity: 1 } 20% { opacity: .5 } 40%, 100% { opacity: 0 } }
-
 .sot-minatore, .sot-posto {
   position: absolute; padding: 0; margin: 0; border: 0; background: none; color: inherit; font: inherit;
 }

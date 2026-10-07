@@ -154,10 +154,3 @@ export function nebbiaDaCodice(s, L, A) {
   }
   return n
 }
-
-// i sassi che luccicano: uno ogni `ogni` passi lungo la strada, lasciando libere le prime e l'ultima cella
-export function sassiLungo(via, ogni = 4) {
-  const fuori = []
-  for (let i = 2; i < via.length - 1; i += ogni) fuori.push(via[i])
-  return fuori
-}

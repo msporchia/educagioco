@@ -10,17 +10,19 @@
    strumento). docs/sotterraneo/terra-di-sopra.md
    ═══════════════════════════════════════════════════════════════════ */
 import { readFileSync } from 'node:fs'
-import { MASCHERA, CELLA, POSTI, PARTENZA, MINATORE, CARTELLO, LARGO, ALTO, MERCANTI, PORTALE }
+import { MASCHERA, CELLA, POSTI, PARTENZA, MINATORE, CARTELLO, LARGO, ALTO, MERCANTI, PORTALE, PERSONAGGI }
   from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { MERCANTI as CHI_VENDE } from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { POSTO_DI, LUOGHI } from '../../src/giochi/sotterraneo/dati/terra.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice, sassiLungo }
+import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice }
   from '../../src/giochi/sotterraneo/motore/terra.js'
-import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
+import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const [px, py] = PARTENZA.piede
-const terra = creaTerra(MASCHERA, { ostacoli: [MINATORE.piede] })
+// chi sta fermo non si attraversa: il minatore, i mercanti e chi dà le missioni (Terra.vue li passa a `ostacoli`)
+const FERMI = [MINATORE.piede, ...Object.values(MERCANTI).map(m => m.piede), ...Object.values(PERSONAGGI).map(m => m.piede)]
+const terra = creaTerra(MASCHERA, { ostacoli: FERMI })
 const casa = { x: px, y: py }
 
 /* ── il modulo è quello del foglietto ── */
@@ -31,13 +33,14 @@ stessaLista('la maschera del gioco è quella del foglietto (rilancia strumenti/s
 stessaLista('e anche i posti', POSTI, fg.posti)
 stessaLista('e i mercanti', MERCANTI, fg.mercanti)
 stessaLista('e il portale', PORTALE, fg.portale)
+stessaLista('e chi dà le missioni', PERSONAGGI, fg.personaggi)
 uguale('la maschera copre tutta la mappa, in larghezza', MASCHERA[0].length * CELLA, LARGO)
 uguale('e in altezza', MASCHERA.length * CELLA, ALTO)
 controlla('solo . e #', MASCHERA.every(r => /^[.#]+$/.test(r) && r.length === MASCHERA[0].length))
 
 /* ── da casa si arriva dappertutto ── */
 controlla('si parte da una cella dove si cammina', terra.passa(px, py))
-uguale('sette posti: sei discese più l\'abisso', Object.keys(POSTI).length, 7)
+uguale('otto posti: sette discese più l\'abisso', Object.keys(POSTI).length, CAMPAGNA.length + 1)
 for (const t of CAMPAGNA)
   controlla(`${t.nome} sta su un posto della mappa`, !!POSTI[POSTO_DI[t.chiave]], POSTO_DI[t.chiave])
 controlla('anche l\'abisso', !!POSTI[POSTO_DI.abisso])
@@ -52,12 +55,12 @@ for (const [nome, p] of Object.entries(POSTI)) {
 /* i mercanti: stanno fermi dove si cammina, ci si arriva da casa, e ci si
    ferma accanto a loro come al minatore (Terra.vue li passa a `ostacoli`) */
 {
-  const fermi = creaTerra(MASCHERA, { ostacoli: [MINATORE.piede, ...Object.values(MERCANTI).map(m => m.piede)] })
+  const fermi = creaTerra(MASCHERA, { ostacoli: FERMI })
   for (const m of CHI_VENDE) {
     const dove = MERCANTI[m.chiave]
     controlla(`${m.chiave}: ha un posto sulla mappa`, !!dove)
     if (!dove) continue
-    controlla(`${m.chiave}: sta su una cella dove si cammina`, terra.passa(...dove.piede))
+    controlla(`${m.chiave}: sta su una cella dove si cammina`, creaTerra(MASCHERA).passa(...dove.piede))
     controlla(`${m.chiave}: non gli si passa attraverso`, !fermi.passa(...dove.piede))
     const [ax, ay] = dove.accanto
     controlla(`${m.chiave}: da casa si arriva accanto a lui`, !!fermi.strada(casa, { x: ax, y: ay }), `${ax},${ay}`)
@@ -72,7 +75,7 @@ for (const [nome, p] of Object.entries(POSTI)) {
   const A = MASCHERA.length, Lm = MASCHERA[0].length
   uguale('la tela è due pezzi larghi uguali', LARGO, 2048)
   uguale('e la maschera la copre tutta: 64 celle', Lm, 64)
-  const fermi = creaTerra(MASCHERA, { ostacoli: [MINATORE.piede, ...Object.values(MERCANTI).map(m => m.piede)] })
+  const fermi = creaTerra(MASCHERA, { ostacoli: FERMI })
   const dist = fermi.raggiungibili(casa)
   const banchi = {              // dove sta il banco, in celle: [colonna, riga] del suo centro
     armaiolo: [41, 40],         // l'incudine sotto la tettoia
@@ -87,8 +90,9 @@ for (const [nome, p] of Object.entries(POSTI)) {
   }
   /* chi sta fermo non chiude la strada a nessuno: togliendolo, non si raggiunge niente di più. Il rigattiere
      stava in fondo a un passaggio largo una cella fra il carretto e i cespugli, e lo chiudeva */
-  for (const [chi, m] of Object.entries(MERCANTI)) {
-    const senza = creaTerra(MASCHERA, { ostacoli: [MINATORE.piede, ...Object.values(MERCANTI).filter(x => x !== m).map(x => x.piede)] })
+  for (const [chi, piede] of [['minatore', MINATORE.piede], ...Object.entries(MERCANTI).map(([k, m]) => [k, m.piede]),
+                              ...Object.entries(PERSONAGGI).map(([k, m]) => [k, m.piede])]) {
+    const senza = creaTerra(MASCHERA, { ostacoli: FERMI.filter(x => x !== piede) })
     const con = fermi.raggiungibili(casa), via = senza.raggiungibili(casa)
     uguale(`${chi}: non chiude la strada (togliendolo si arriva solo dove sta lui)`, via.size - con.size, 1)
   }
@@ -107,8 +111,8 @@ for (const [nome, p] of Object.entries(POSTI)) {
   // e il tratto stretto dietro al rigattiere) e le tre del vecchio angolo in alto a sinistra
   const chiuse = []
   MASCHERA.forEach((riga, y) => [...riga].forEach((c, x) => { if (x >= 32 && c === '.' && !dist.has(y * Lm + x)) chiuse.push(`${x},${y}`) }))
-  stessaLista('nel pezzo di destra ogni cella dove si cammina si raggiunge da casa (tranne i piedi dei mercanti)',
-              chiuse.sort(), Object.values(MERCANTI).map(m => m.piede.join(',')).sort())
+  stessaLista('nel pezzo di destra ogni cella dove si cammina si raggiunge da casa (tranne i piedi di chi sta fermo)',
+              chiuse.sort(), FERMI.filter(([x]) => x >= 32).map(p => p.join(',')).sort())
   // la giunta: il sentiero che esce dal pezzo di sinistra entra in quello di destra senza interrompersi
   const uscita = MASCHERA.map((r, y) => [y, r[31], r[32]]).filter(([, a, b]) => a === '.' && b === '.')
   controlla('il sentiero attraversa la giunta (almeno una riga con terreno su tutti e due i lati)', uscita.length >= 1,
@@ -141,6 +145,29 @@ controlla('toccandolo in mezzo al prato si va vicino a lui', !!accanto
 const [ax, ay] = MINATORE.accanto
 controlla('e per parlargli ci si ferma al suo fianco, dove ci si arriva',
           !!terra.strada(casa, { x: ax, y: ay }) && Math.abs(ax - mx) === 2 && ay === my)
+
+/* ── la grande storia: si parte dal villaggio, e le discese sono in fila per strada ──
+   docs/sotterraneo/la-grande-storia.md. La partenza e il minatore stanno nel
+   pezzo di destra, fra le case; la discesa k è più lontana da casa della k−1;
+   l'abisso è il posto più lontano di tutti. */
+{
+  controlla('si parte nel villaggio, a destra della giunta', px >= 32, `${px},${py}`)
+  controlla('e il minatore sta lì', MINATORE.piede[0] >= 32 && Math.hypot(MINATORE.piede[0] - px, MINATORE.piede[1] - py) < 14)
+  const dist = terra.raggiungibili(casa)
+  const passi = k => dist.get(POSTI[POSTO_DI[k]].piede[1] * MASCHERA[0].length + POSTI[POSTO_DI[k]].piede[0])
+  const fila = [...CAMPAGNA.map(t => t.chiave), 'abisso']
+  nota('passi da casa: ' + fila.map(k => `${k} ${passi(k)}`).join(' · '))
+  for (let i = 1; i < fila.length; i++)
+    controlla(`${fila[i]} è più lontana da casa di ${fila[i - 1]}`, passi(fila[i]) > passi(fila[i - 1]),
+              `${passi(fila[i])} contro ${passi(fila[i - 1])}`)
+  controlla('il pozzo dal tetto rosso non è più una discesa', !POSTI['pozzo-di-casa'])
+  for (const [chi, m] of Object.entries(PERSONAGGI)) {
+    controlla(`${chi}: sta dove si cammina`, creaTerra(MASCHERA).passa(...m.piede))
+    controlla(`${chi}: da casa si arriva accanto a lui`, !!terra.strada(casa, { x: m.accanto[0], y: m.accanto[1] }))
+    controlla(`${chi}: accanto vuol dire a due celle, sulla stessa fila`,
+              Math.abs(m.accanto[0] - m.piede[0]) === 2 && m.accanto[1] === m.piede[1])
+  }
+}
 
 /* ── la strada ── */
 const lontano = POSTI['pozzo-vecchio'].piede
@@ -216,9 +243,5 @@ uguale('un codice che non torna è nebbia nuova', nebbiaDaCodice('zz', L, A), nu
   uguale('un codice lungo come quello vecchio ma con cifre che non sono esadecimali è nebbia nuova',
          nebbiaDaCodice('z'.repeat(384), L, A), null)
 }
-
-/* ── i sassi ── */
-const sassi = sassiLungo(via, 4)
-controlla('i sassi stanno sulla strada', sassi.length > 5 && sassi.every(s => terra.passa(s.x, s.y)), `${sassi.length}`)
 
 riassunto('la terra di sopra')

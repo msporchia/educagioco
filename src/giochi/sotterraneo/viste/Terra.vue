@@ -4,15 +4,15 @@
 // Riceve le tappe già decise e dice solo «si scende qui» (`scendi`), «apro il banco di…» (`bottega`), «torno
 // giù dal portale» (`riprendi`) e «ricordati questo» (`terra`).
 // Le regole: docs/sotterraneo/terra-di-sopra.md.
-import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO,
          MERCANTI as DOVE_MERCANTI, PORTALE as DOVE_PORTALE } from '../dati/terra-mappa.js'
 import { MERCANTI } from '../dati/mercanti.js'
 import { POSTO_DI, LUOGHI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, PASSO_TERRA, VISTA, LUCE,
-         SASSI_OGNI, BORDO, MORBIDA } from '../dati/terra.js'
-import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice, sassiLungo } from '../motore/terra.js'
+         BORDO, MORBIDA } from '../dati/terra.js'
+import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice } from '../motore/terra.js'
 import { figura, haFigura } from './figura.js'
-import { MINATORE, ARMAIOLO, ERBORISTA, RIGATTIERE, DIVIETO, SASSO, LUCCICHIO } from './pixel.js'
+import { MINATORE, ARMAIOLO, ERBORISTA, RIGATTIERE, DIVIETO } from './pixel.js'
 import Pixel from './Pixel.vue'
 import Armato from './Armato.vue'
 import Portale from './Portale.vue'
@@ -392,13 +392,9 @@ function scendi(p) {
 }
 
 /* ═══════════ chi indica la strada ═══════════ */
-const prossima = computed(() => props.tappe.find(t => t.adesso) ||
-  (props.abisso && !props.abisso.fondo ? props.abisso : null))
-const postoDi = t => POSTI[POSTO_DI[t.abisso ? 'abisso' : t.chiave]]
-
 const detto = computed(() => {
   const t = props.tappe.find(t => t.adesso)
-  if (t) return `«${t.nome}: ${LUOGHI[POSTO_DI[t.chiave]]}. Segui i sassi che luccicano.»`
+  if (t) return `«${t.nome}: ${LUOGHI[POSTO_DI[t.chiave]]}.»`
   if (props.abisso)
     return `«Le discese le hai fatte tutte. Resta l'abisso: ${LUOGHI[POSTO_DI.abisso]}.»`
   return '«Per ora le discese aperte le hai fatte tutte. Tornaci quando vuoi: là sotto cambia sempre.»'
@@ -409,21 +405,6 @@ const frecce = computed(() => FRECCE.map(f => {
     .map(n => posti.value.find(p => p.nome === n).cosa.nome)
   return { verso: f.verso, detto: f.detto, nomi }
 }))
-
-// i sassi partono da dove sei quando arrivi sulla mappa: portano alla prossima, non tornano a casa
-const sassi = ref([])
-function semina() {
-  const t = prossima.value
-  if (!t) { sassi.value = []; return }
-  const p = postoDi(t)
-  const v = mondo.strada(cellaDiMe(), cella(p.piede)) || []
-  sassi.value = sassiLungo(v, SASSI_OGNI).map((c, i) => ({
-    i, x: (c.x + 0.5 + (dado(c.x, c.y, 5) - 0.5) * 0.6) * CELLA * S,
-    y: (c.y + 0.5 + (dado(c.x, c.y, 6) - 0.5) * 0.6) * CELLA * S,
-    ritardo: (dado(c.x, c.y, 7) * 2.4).toFixed(2),
-  }))
-}
-watch(prossima, semina)
 
 const minatoreVero = haFigura('minatore-fermo-0')   // quando arriva lo sprite (prompt 4), si usa quello
 const ritrattoMinatore = minatoreVero ? figura('minatore-fermo-0', { scala: SCALA_EROE }) : null
@@ -441,7 +422,6 @@ onMounted(() => {
   preparaNebbia()
   guarda()
   dipingiNebbia()
-  semina()
   posa()
   prima = performance.now()
   raf = requestAnimationFrame(battito)
@@ -491,12 +471,6 @@ const chiusaPerche = p => {
           <Pixel :figura="DIVIETO" :scala="2" />
         </span>
       </template>
-
-      <span v-for="s in sassi" :key="'sasso-' + s.i" class="sot-sasso" data-sasso
-            :style="{ left: s.x + 'px', top: s.y + 'px', '--ritardo': s.ritardo + 's' }">
-        <Pixel :figura="SASSO" :scala="3" />
-        <Pixel class="sot-luccica" :figura="LUCCICHIO" :scala="3" />
-      </span>
 
       <button class="sot-minatore" data-minatore aria-label="il vecchio minatore"
               :style="{ left: (DOVE_MINATORE.piede[0] + 0.5) * CELLA * S + 'px',

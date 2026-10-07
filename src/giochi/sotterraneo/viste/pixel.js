@@ -146,19 +146,3 @@ export const DIVIETO = pixel([
   '...kkPpkk...',
   '..kkkkkkkk..',
 ], { k: '#241812', R: '#c8281e', r: '#ea5a45', w: '#f6efe0', P: '#b27a45', p: '#7d5230' })
-
-// un sasso del sentiero, con la vena chiara che luccica; il luccichio è a parte, perché si accende e si spegne
-export const SASSO = pixel([
-  '.kkk..',
-  'kNyNk.',
-  'knnynk',
-  '.kkkk.',
-], { k: '#4d463e', n: '#9a9284', N: '#c9c1b2', y: '#f0cf55' })
-
-export const LUCCICHIO = pixel([
-  '..y..',
-  '.yYy.',
-  'yYYYy',
-  '.yYy.',
-  '..y..',
-], { y: '#f0cf55', Y: '#fff6c2' })

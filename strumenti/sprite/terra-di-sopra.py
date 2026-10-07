@@ -43,7 +43,7 @@ TESTA = """/* GENERATO da strumenti/sprite/terra-di-sopra.py — non si scrive a
    MAPPA     la tela intera ({largo}×{alto}, i due pezzi accostati), WebP in base64 ({kb} KB)
    CELLA     il lato di una cella della maschera, in pixel della mappa
    MASCHERA  una riga per fila di celle: `.` si cammina, `#` no
-   POSTI     le sette aperture: `riquadro` [x, y, largo, alto] in pixel della
+   POSTI     le aperture (le discese e l'abisso): `riquadro` [x, y, largo, alto] in pixel della
              mappa, `piede` la cella dove l'eroe si ferma per entrare,
              `ingresso` [x, y, largo, alto] l'ellisse del cerchietto attorno
              all'ingresso (sta dentro la mappa, non copre il disegno)
@@ -51,6 +51,8 @@ TESTA = """/* GENERATO da strumenti/sprite/terra-di-sopra.py — non si scrive a
              `accanto`, dove ci si ferma per parlargli), il cartello
    MERCANTI  chi vende sulla terra di sopra (dati/mercanti.js): `piede` dove
              sta fermo, `accanto` dove ci si ferma per aprire il banco
+   PERSONAGGI chi dà le missioni (dati/missioni.js): `piede` e `accanto` come
+             i mercanti
    PORTALE   il portale gemello, che compare con una discesa lasciata a metà:
              `piede` dove sta, `accanto` dove ci si ferma e dove si arriva
 */
@@ -314,12 +316,15 @@ def controlla(fg, im):
     if not passa(*fg['portale']['accanto']):
         guasti.append(f'portale: dove ci si ferma {fg["portale"]["accanto"]} non è camminabile')
     fermi = [tuple(fg['minatore']['piede'])]
-    for nome, chi in fg.get('mercanti', {}).items():   # non `m`: è la maschera, e `passa` la legge
+    fissi = {**fg.get('mercanti', {}), **fg.get('personaggi', {})}
+    for nome, chi in fissi.items():   # non `m`: è la maschera, e `passa` la legge
         for campo in ('piede', 'accanto'):
             if not passa(*chi[campo]):
                 guasti.append(f'{nome}: {campo} {chi[campo]} non è camminabile')
         fermi.append(tuple(chi['piede']))
-    for nome, chi in fg.get('mercanti', {}).items():
+    if len(set(fermi)) != len(fermi):
+        guasti.append('due che stanno fermi nella stessa cella')
+    for nome, chi in [('minatore', fg['minatore']), ('portale', fg['portale'])] + list(fissi.items()):
         if tuple(chi['accanto']) in fermi:
             guasti.append(f'{nome}: ci si fermerebbe addosso a qualcuno che sta fermo ({chi["accanto"]})')
     if not passa(*fg['cartello']['piede']):
@@ -341,7 +346,7 @@ def genera():
     corpo += 'export const MASCHERA = [\n' + ''.join(f"  '{r}',\n" for r in fg['maschera']) + ']\n\n'
     corpo += 'export const POSTI = {\n' + ''.join(
         f"  {js(n)}: {js(p)},\n" for n, p in fg['posti'].items()) + '}\n\n'
-    for nome in ('partenza', 'minatore', 'cartello', 'mercanti', 'portale'):
+    for nome in ('partenza', 'minatore', 'cartello', 'mercanti', 'personaggi', 'portale'):
         corpo += f"export const {nome.upper()} = {js(fg.get(nome, {}))}\n"
     corpo += f"\nexport const MAPPA = 'data:image/webp;base64,{b64}'\n"
     dest.write_text(corpo)
@@ -499,6 +504,10 @@ def provino():
     for m in fg.get('mercanti', {}).values():
         piede(m['piede'], (255, 140, 40, 255))
         piede(m['accanto'], (255, 200, 120, 160))
+    for nome, m in fg.get('personaggi', {}).items():
+        piede(m['piede'], (40, 220, 220, 255))
+        piede(m['accanto'], (150, 240, 240, 160))
+        d.text((m['piede'][0] * c, m['piede'][1] * c - 12), nome, fill=(255, 255, 255, 255))
     piede(fg['portale']['piede'], (150, 120, 255, 255))
     piede(fg['portale']['accanto'], (190, 170, 255, 160))
     TMP.mkdir(parents=True, exist_ok=True)
