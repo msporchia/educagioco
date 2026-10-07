@@ -9,7 +9,7 @@ import { COSE, STANZE_TORCIA } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
-import { gioca } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { gioca, robaPer } from '../../src/giochi/sotterraneo/motore/banco.js'
 import { scrivi, leggi, dice, stringaDi, vistoDa, VERSIONE }
   from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -135,15 +135,17 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 4. una discesa ripresa si finisce ══════════
    È la prova vera: non che il dato torni indietro, ma che la partita
-   arrivi in fondo dopo essere stata interrotta. */
+   arrivi in fondo dopo essere stata interrotta. Con la roba di chi
+   arriva alla grotta: la roba resta, e la grotta conta su di lei. */
 {
   const t = CAMPAGNA[2]
-  const c = new Corsa(t, { seme: 101, rnd: seminato(101) })
+  const roba = robaPer(2)
+  const c = new Corsa(t, { seme: 101, rnd: seminato(101), roba })
   /* mezza discesa vera, poi si chiude l'applicazione di colpo */
   const mezzo = gioca(t, { seme: 101, bravura: 1, come: 'minimo', da: c })
   controlla('la prova parte da una discesa giocata', mezzo.esito.domande > 0)
 
-  const dopo = new Corsa(t, { seme: 202, rnd: seminato(202) })
+  const dopo = new Corsa(t, { seme: 202, rnd: seminato(202), roba })
   const salvato = scrivi(dopo, 2)
   for (let i = 0; i < 60; i++) dopo.passo(1 / 30)
   const ripresa = leggi(salvato, t)

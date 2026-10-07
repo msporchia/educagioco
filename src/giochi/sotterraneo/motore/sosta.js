@@ -3,6 +3,8 @@
 // al loro posto, come dopo uno svenimento. Se la forma cambia (VERSIONE sale) un salvataggio vecchio non si
 // legge più: si ricomincia — un campo che non torna è un gioco rotto in un modo che nessuno sa spiegare.
 import { Corsa } from './corsa.js'
+import { rileggiRoba, ROBA_VUOTA, VERSIONE_ROBA } from './corredo.js'
+import { gemmeDiBentornato } from '../dati/mercanti.js'
 import { COSE, STANZE_TORCIA } from '../dati/cose.js'
 import { DI_PARTENZA } from '../dati/eroi.js'
 import { INDICE_ABISSO, L_ABISSO } from '../dati/campagna.js'
@@ -88,8 +90,10 @@ function pulisci(r) {
   return resto
 }
 
-// torna una Corsa pronta a giocare, o null se il salvataggio non si può leggere
-export function leggi(dato, tappa, ripiego = DI_PARTENZA) {
+// torna una Corsa pronta a giocare, o null se il salvataggio non si può leggere. `roba`: quella
+// dell'avventuriero (cfg.roba), che comanda su quella scritta qui — sopra si può essere passati dai mercanti.
+// La copia nella sosta serve solo ai salvataggi di prima che la roba restasse (docs/sotterraneo/regole.md)
+export function leggi(dato, tappa, ripiego = DI_PARTENZA, roba = null) {
   if (!dato || !LEGGIBILI.includes(dato.v) || !dato.robe) return null
   try {
     // nella 2 `eroe` portava la cella, non il nome: al posto del cavaliere di sistema si usa il `ripiego`
@@ -114,6 +118,7 @@ export function leggi(dato, tappa, ripiego = DI_PARTENZA) {
     corsa.torciaResta = dato.torciaResta != null ? dato.torciaResta
       : (dato.torcia ? STANZE_TORCIA : 0)
     corsa.torceInScorta = dato.torce || 0
+    if (roba) corsa.indossa(roba)
     corsa.chiaveDelPiano = !!dato.chiave
     corsa.eroe = { x: dove.x, y: dove.y }
     corsa.guarda = dato.guarda || 'dx'
@@ -139,6 +144,29 @@ export function leggi(dato, tappa, ripiego = DI_PARTENZA) {
   } catch (e) {
     return null   // un salvataggio storto non porta giù il gioco: si ricomincia
   }
+}
+
+// la roba di una sosta scritta prima che la roba restasse: chi aveva lasciato una discesa a metà se la ritrova
+// sopra (Gioco.vue, la prima volta che legge cfg.roba). null se la sosta non si legge
+export function robaDi(dato) {
+  if (!dato || !LEGGIBILI.includes(dato.v)) return null
+  return rileggiRoba({
+    v: VERSIONE_ROBA, gemme: dato.gemme, zaino: dato.zaino,
+    mano: dato.mano, mancina: dato.mancina, corpo: dato.corpo, dito: dato.dito,
+    torcia: dato.torciaResta != null ? dato.torciaResta : (dato.torcia ? STANZE_TORCIA : 0),
+    torce: dato.torce || 0,
+  })
+}
+
+// La roba dell'avventuriero com'è nel profilo (cfg.roba), o — la prima volta — quella della discesa lasciata
+// a metà prima che la roba restasse, più le gemme di bentornato a chi aveva già finito delle discese. Torna
+// anche se va scritta (`nuova`): chi legge la prima volta la deve salvare, o il regalo tornerebbe a ogni avvio
+export function robaDiCasa({ salvata = null, sosta = null, finite = 0 } = {}) {
+  const r = rileggiRoba(salvata)
+  if (r) return { roba: r, nuova: false }
+  const prima = robaDi(sosta) || ROBA_VUOTA()
+  prima.gemme += gemmeDiBentornato(finite)
+  return { roba: prima, nuova: true }
 }
 
 // due righe per la carta "riprendi": cosa si sta lasciando in sospeso

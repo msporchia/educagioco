@@ -5,51 +5,41 @@
 // a prendere la domanda vera da src/quiz/ e non nomina mai una materia qui.
 // `foglio` è un dato ({ che: 'scontro', chi }): finché è aperto il tempo è fermo.
 import {
-  EROE, TASCHE, RAGGIO, RAGGIO_TORCIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
+  TASCHE, RAGGIO, RAGGIO_TORCIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
   CALMA, SORSO, RIPOSO_SCALA, VITA_PER_PIANO,
   ARREDO_DICE, ARREDO_LA_PRIMA_VOLTA,
 } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { SCENARI, SCENARIO } from '../dati/tessere.js'
-import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta } from '../dati/eroi.js'
-import { COSE, CURE, NEI_FORZIERI, STANZE_TORCIA, pescaMerce, pescaCosa } from '../dati/cose.js'
+import { DI_PARTENZA } from '../dati/eroi.js'
+import { COSE, NEI_FORZIERI, STANZE_TORCIA, pescaCosa } from '../dati/cose.js'
 import { CURIOSITA_DI, MALUS } from '../dati/curiosita.js'
 import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi, brancoDi, scenarioDi, trattoDi }
   from '../dati/campagna.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
+import { Corredo } from './corredo.js'
 
 // quanto rincara la domanda, per ogni cosa: la porta meno del piano, il forziere molto di più
 const RINCARO = { porta: -0.05, forziere: 0.25, fonte: 0, mostro: 0.05, capo: 0.2,
   curiosita: 0 }
 
-export class Corsa {
-  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA } = {}) {
+// la roba dell'avventuriero (gemme, addosso, tasche, torce) sta in Corredo e scende con lui: `roba` è quella
+// che si porta da sopra (motore/corredo.js); vita e piano sono della discesa, e restano giù
+export class Corsa extends Corredo {
+  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, roba = null } = {}) {
+    super({ eroe, roba })
     this.tappa = tappa
     this.rnd = rnd
     this.seme = seme == null ? Math.floor(rnd() * 100000) : seme
     this.piano = 0
 
-    // la scheda dice vita, braccio e difesa di partenza; il resto del motore non sa che esistano quattro eroi
-    this.chiEro = eroe
-    this.io = eroeDi(eroe)
     this.vitaBase = this.io.vita
-    this.vita = this.io.vita
-    this.gemme = 0
-    this.zaino = []
-    this.mano = null
-    this.mancina = null   // seconda arma leggera, o l'ombra di una a due mani (vedi `mani` in dati/cose.js)
-    this.corpo = null
-    this.dito = null
-    // `torciaResta`: stanze davanti alla torcia accesa (0 = spenta). `torceInScorta`: quante aspettano alla cintura, senza consumarsi
-    this.torciaResta = 0
-    this.torceInScorta = 0
     this.stanzaOra = null   // unità in cui brucia la torcia (bruciaLaTorcia)
 
     this.foglio = null          // cosa è aperto adesso, o niente
     this.chiesta = null         // la domanda che serve: { id, che, difficolta }
     this.contaChieste = 0
-    this.avvisi = []            // le righe da far comparire a schermo, in coda
 
     this.finita = false
     this.vinta = false
@@ -66,27 +56,16 @@ export class Corsa {
     this.pianiFatti = 0
 
     this.nuovoPiano()
+    // le torce comprate di sopra aspettano alla cintura: si scende con una accesa, come se la si fosse appena presa
+    if (!this.torciaAccesa && this.torceInScorta > 0) {
+      this.torceInScorta--
+      this.accendi('torcia')
+    }
+    // un eroe cambiato sulla mappa può avere addosso quello che non porta: in tasca, o per terra all'ingresso
+    this.sistemaIlCorredo()
+    this.vita = this.vitaMax   // si scende in piedi: col dito o l'amuleto il massimo è già più alto
   }
 
-  get att() { return this.io.att + this.addosso('att') }   // unico posto dove si sommano
-
-  get torciaAccesa() { return this.torciaResta > 0 }
-
-  // metà arrotondata per eccesso: due armi non fanno il doppio, o le pesanti non si prenderebbe più nessuno
-  get attaccoMancino() {
-    const c = COSE[this.mancina]
-    return c ? Math.ceil((c.att || 0) / 2) : 0
-  }
-
-  // quanto picchierebbero due mani messe così: per decidere dove mettere un'arma trovata, non tocca niente
-  attaccoDelleMani(destra, sinistra) {
-    const d = COSE[destra] ? (COSE[destra].att || 0) : 0
-    const s = COSE[sinistra] ? Math.ceil((COSE[sinistra].att || 0) / 2) : 0
-    return d + s
-  }
-
-  aDueMani(k) { return !!(COSE[k] && COSE[k].mani === 2) }
-  get dif() { return this.io.dif + this.addosso('dif') }
   // non è un campo: cresce coi piani (vitaBase) e con il dito, o si scorderebbe di alzarla/abbassarla
   get vitaMax() { return this.vitaBase + this.addosso('vita') }
   get quantiPiani() { return this.tappa.piani }
@@ -101,83 +80,18 @@ export class Corsa {
   get svenimentiConcessi() { return svenimentiDi(this.tappa) }
   get svenimentiSpesi() { return this.senzaFondo ? this.svenimentiQui : this.svenimenti }
 
-  addosso(campo) {
-    let n = 0
-    for (const k of [this.mano, this.corpo, this.dito])
-      if (k && COSE[k]) n += COSE[k][campo] || 0
-    // la seconda arma vale piena per tutto il resto (la luce illumina uguale in qualunque mano), metà solo per il braccio
-    if (this.mancina && COSE[this.mancina])
-      n += campo === 'att' ? this.attaccoMancino : (COSE[this.mancina][campo] || 0)
-    return n
+  // quello che non trova posto in tasca resta per terra, dove ci si può tornare: nella discesa non si perde niente
+  nonCiSta(k) {
+    this.posaRoba({ che: 'cosa', cosa: k, em: COSE[k].em },
+                  { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) })
   }
 
-  // il limite è sull'indossare, mai sul prendere: `posso` non blocca la raccolta, solo il vestirsi da sé
-  posso(k) { return portaLa(this.io, COSE[k]) }
-  perchéNo(k) { return nonLaPorta(this.io, COSE[k]) }
+  luceCambiata() { if (this.livello) this.aggiornaLuce() }
 
-  // per il rientro: un salvataggio vecchio può avere in pugno cose che la classe non porta più
+  // togliendo un amuleto il massimo scende, e la vita lo segue
   sistemaIlCorredo() {
-    for (const dove of ['mano', 'mancina', 'corpo', 'dito']) {
-      const k = this.casella(dove)
-      if (!k || this.posso(k)) continue
-      this.metti(dove, null)
-      if (this.zaino.length < TASCHE) this.zaino.push(k)
-      else this.posaRoba({ che: 'cosa', cosa: k, em: COSE[k].em },
-                         { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) })
-      this.dillo(`${COSE[k].em} ${COSE[k].nome}: ${this.perchéNo(k).toLowerCase()}`)
-    }
-    this.vita = Math.min(this.vita, this.vitaMax)   // togliendo un amuleto il massimo scende, e la vita lo segue
-  }
-
-  casella(dove) {
-    if (dove === 'mano') return this.mano
-    if (dove === 'mancina') return this.mancina
-    if (dove === 'corpo') return this.corpo
-    return this.dito
-  }
-
-  metti(dove, k) {
-    if (dove === 'mano') this.mano = k
-    else if (dove === 'mancina') this.mancina = k
-    else if (dove === 'corpo') this.corpo = k
-    else this.dito = k
-  }
-
-  // stessa domanda in tre posti (per terra, comprato, banco di prova): vuota e non impegnata dall'altra mano
-  mancinaLibera() { return !this.mancina && !this.aDueMani(this.mano) }
-
-  // un'arma a due mani sfratta la sinistra, che non si perde: torna in tasca o per terra
-  sistemaLeMani() {
-    if (!this.mancina) return
-    // l'arma rimasta di là col pugno vuoto ci passa: è la stessa arma che cambia mano, niente da sfrattare
-    if (!this.mano && COSE[this.mancina] && COSE[this.mancina].dove === 'mano') {
-      this.mano = this.mancina
-      this.mancina = null
-      return
-    }
-    if (this.aDueMani(this.mano) || this.aDueMani(this.mancina)) {
-      const sfrattata = this.mancina
-      this.mancina = null
-      if (this.zaino.length < TASCHE) this.zaino.push(sfrattata)
-      else this.posaRoba({ che: 'cosa', cosa: sfrattata, em: COSE[sfrattata].em },
-                         { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) })
-      this.dillo(`${COSE[sfrattata].em} ${COSE[sfrattata].nome}: serve l'altra mano`)
-    }
-  }
-
-  // si provano le sistemazioni possibili e si tiene la migliore
-  postoDellArma(k) {
-    const c = COSE[k]
-    const ora = this.attaccoDelleMani(this.mano, this.mancina)
-    const scelte = [{
-      dove: 'mano',
-      att: this.attaccoDelleMani(k, this.aDueMani(k) ? null : this.mancina),
-    }]
-    // la mano debole si riempie da sola solo se è vuota: fra "più braccio" e "più pelle" non c'è un più forte
-    if (!this.aDueMani(k) && this.mano && !this.aDueMani(this.mano) && !this.mancina)
-      scelte.push({ dove: 'mancina', att: this.attaccoDelleMani(this.mano, k) })
-    const meglio = scelte.sort((a, b) => b.att - a.att)[0]
-    return { dove: meglio.dove, delta: meglio.att - ora }
+    super.sistemaIlCorredo()
+    this.vita = Math.min(this.vita, this.vitaMax)
   }
 
   colpo(m) { return Math.max(1, this.att - m.dif) }
@@ -189,15 +103,6 @@ export class Corsa {
 
   durezza(rincaro = 0) {
     return Math.max(0, Math.min(1, durezzaDi(this.tappa, this.piano) + rincaro))
-  }
-
-  dillo(testo) { this.avvisi.push(testo) }
-
-  // l'avviso porta la chiave (non una stringa già scritta), così a schermo compare lo sprite vero e non l'emoji di ripiego
-  dilloDi(k, coda = '') {
-    const c = COSE[k]
-    if (!c) return
-    this.avvisi.push({ cosa: k, testo: c.nome + coda })
   }
 
   nuovoPiano() {
@@ -273,7 +178,7 @@ export class Corsa {
     if (r.che === 'porta') return !r.aperta
     if (r.che === 'forziere') return !r.aperto
     if (r.che === 'curiosita') return !r.visto   // una volta sola, poi è arredo
-    return ['mostro', 'mercante', 'fonte', 'scala', 'cosa', 'gemme'].includes(r.che)
+    return ['mostro', 'fonte', 'scala', 'cosa', 'gemme'].includes(r.che)
   }
 
   // le gemme si prendono camminandoci sopra: restano toccabili senza rubare il tocco a un forziere accanto
@@ -302,7 +207,7 @@ export class Corsa {
     this.dillo(sua[a.pezzo] || ARREDO_DICE[a.pezzo] || 'Non c\'è niente da fare, qui.')
   }
 
-  sopra(che) { return ['scala', 'mercante', 'fonte', 'cosa', 'gemme'].includes(che) }
+  sopra(che) { return ['scala', 'fonte', 'cosa', 'gemme'].includes(che) }
 
   // `preciso` distingue il tocco dal trascinamento: trascinando l'eroe insegue senza aprire pannelli
   vaiVerso(c, preciso = true) {
@@ -441,20 +346,6 @@ export class Corsa {
     this.dilloDi(r.cosa, perché ? ` · ${perché.charAt(0).toLowerCase()}${perché.slice(1)}` : '')
   }
 
-  // una torcia si prende sempre: la prima si accende, le altre aspettano alla cintura senza tetto (docs/sotterraneo/roba.md)
-  accendi(k) {
-    const quante = (COSE[k] && COSE[k].stanze) || STANZE_TORCIA
-    if (this.torciaAccesa) {
-      this.torceInScorta++
-      this.dilloDi(k, ` alla cintura · ne hai ${this.torceInScorta} di scorta`)
-      return true
-    }
-    this.torciaResta = quante
-    this.aggiornaLuce()
-    this.dilloDi(k, ` accesa · si vede più lontano · ${quante} stanze`)
-    return true
-  }
-
   // chi arriva senza camminare (piano nuovo, risveglio, ripresa) non consuma torcia
   segnaLaStanza() {
     const st = this.livello.stanzaDi(Math.floor(this.eroe.x), Math.floor(this.eroe.y))
@@ -498,22 +389,6 @@ export class Corsa {
     return { che: 'addosso', cosa: r.cosa }
   }
 
-  // rispetto a quella che si ha già addosso: il motore lo sa, chi disegna non deve sommare niente
-  confronto(k) {
-    const c = COSE[k]
-    if (!c || !c.dove) return null
-    // le armi hanno due caselle: il confronto è col totale delle mani, non "uguale a quella che hai"
-    if (c.dove === 'mano') {
-      const posto = this.postoDellArma(k)
-      return { dove: posto.dove, campo: 'att', addosso: this.casella(posto.dove), delta: posto.delta }
-    }
-    const campo = c.dove === 'corpo' || c.dove === 'mancina' ? 'dif' : 'dono'
-    const addosso = this.casella(c.dove)
-    // `?.`: un salvataggio vecchio può avere una chiave che non esiste più, e non deve spegnersi su una schermata nera
-    const mio = addosso ? (COSE[addosso]?.[campo] || 0) : 0
-    return { dove: c.dove, campo, addosso, delta: (c[campo] || 0) - mio }
-  }
-
   interagisci(r) {
     if (r.morto || r.presa || this.finita) return
     if (r.che === 'mostro') return this.scontro(r)
@@ -521,7 +396,6 @@ export class Corsa {
     // un forziere già aperto non arriva nemmeno qui: `toccabile` lo ha già spento
     if (r.che === 'forziere') return r.aperto ? undefined : this.apri('forziere', r, RINCARO.forziere)
     if (r.che === 'fonte') return this.apri('fonte', r, RINCARO.fonte)
-    if (r.che === 'mercante') return this.mercante(r)
     if (r.che === 'scala') return this.allaScala()
     if (r.che === 'cosa') return this.trovata(r)
     if (r.che === 'gemme') return this.raccogli()
@@ -655,7 +529,11 @@ export class Corsa {
     this.livello.robe.push({ che: 'gemme', x: m.x, y: m.y, em: '💎',
                              quante: scheda.gemme + Math.floor(this.piano * 1.5) })
     const possibili = scheda.lascia || []
-    if (possibili.length && this.rnd() < (scheda.droppa != null ? scheda.droppa : 0.5)) {
+    // chi porta la chiave lascia sempre qualcosa: è l'unico che non si aggira, quindi l'unico bottino che
+    // arriva anche a chi va dritto alla scala (la roba resta, e la distanza da chi gira tutto non si apre).
+    // Il tiro si fa comunque, o il caso di tutto il piano si sposterebbe
+    const tiro = this.rnd()
+    if (possibili.length && (m.chiave || tiro < (scheda.droppa != null ? scheda.droppa : 0.5))) {
       const cosa = pescaCosa(possibili, { rnd: () => this.rnd(), tua: k => this.posso(k) })
       this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, { x: m.x + 1, y: m.y })
     }
@@ -676,20 +554,21 @@ export class Corsa {
     this.chiesta = null
   }
 
+  // all'ultima occasione si risale (la tappa non è superata; nell'abisso finisce la sera): ci si rimette in
+  // piedi comunque, perché quello che si porta su lo decide rimettiInPiedi
   riprendi() {
-    // nella campagna l'ultima è la risalita (tappa non superata); nell'abisso finisce la sera, non la discesa: ci si rimette in piedi comunque
-    if (this.ultimoSvenimento && !this.senzaFondo) { this.perche = 'svenuto'; this.risali(); return }
     this.rimettiInPiedi()
     if (this.ultimoSvenimento) { this.perche = 'svenuto'; this.risali(); return }
     this.chiudi()
   }
 
-  // metà gemme, mezza vita, mostri a casa loro: risvegliarsi con l'orco ancora addosso non sarebbe una seconda occasione
+  // metà gemme, mezza vita, mostri a casa loro: risvegliarsi con l'orco ancora addosso non sarebbe una seconda
+  // occasione. L'ultimo svenimento, e ogni svenimento nell'abisso, svuota anche le sei tasche: quello addosso
+  // resta sempre (la roba si porta su, docs/sotterraneo/regole.md "Svenire")
   rimettiInPiedi() {
     this.gemme = Math.floor(this.gemme / 2)
     this.vita = Math.max(6, Math.round(this.vitaMax / 2))
-    // nell'abisso si svuotano le sei tasche (quello addosso resta): punisce il margine, non il lavoro di dieci piani
-    if (this.senzaFondo && this.zaino.length) {
+    if (this.zaino.length) {
       const quante = this.zaino.length
       this.zaino = []
       this.dillo(`🎒 ${quante === 1 ? 'quello che avevi in tasca' : 'quello che avevi nelle tasche'} non c'è più`)
@@ -729,7 +608,9 @@ export class Corsa {
     }
     this.tesori++
     // il bottino cade davanti al baule, mai dentro (posaRoba); predilige la classe che l'ha aperto (PESO_ALTRUI)
-    const cosa = pescaCosa(NEI_FORZIERI, { rnd: () => this.rnd(), tua: k => this.posso(k) })
+    // e la profondità (la roba resta: la scalinata non regala lo spadone)
+    const cosa = pescaCosa(NEI_FORZIERI, { rnd: () => this.rnd(), tua: k => this.posso(k),
+                                           profondita: this.durezza() })
     this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, { x: f.x, y: f.y + 1 })
     this.posaRoba({ che: 'gemme', em: '💎', quante: 6 + this.piano * 3 }, { x: f.x + 1, y: f.y + 1 })
     this.dillo('🎁 si apre!')
@@ -767,103 +648,6 @@ export class Corsa {
   chiudi() {
     this.foglio = null
     this.chiesta = null
-  }
-
-  // ce l'ho già? Addosso o in tasca è lo stesso: una seconda spada uguale non serve. Pozioni fanno eccezione
-  possiedo(k) {
-    return this.mano === k || this.mancina === k || this.corpo === k ||
-           this.dito === k || this.zaino.includes(k)
-  }
-
-  quanteNeHo(k) {
-    // la torcia non sta in nessuna tasca: quella che brucia più quelle alla cintura
-    if (COSE[k] && COSE[k].usa === 'luce')
-      return (this.torciaAccesa ? 1 : 0) + this.torceInScorta
-    return this.zaino.filter(x => x === k).length +
-           (this.mano === k || this.corpo === k || this.dito === k ? 1 : 0)
-  }
-
-  mercante(m) {
-    if (!m.roba) {
-      // cinque e non tre (docs/sotterraneo/roba.md); non si offre quello che si ha già addosso, tranne quello che si consuma
-      const siAccumula = k => !!COSE[k].usa
-      const utile = k => siAccumula(k) || !this.possiedo(k)
-      // pescato pesando per prezzo/profondità (pescaMerce), non a caso uniforme; il peso della classe (tua) non è un filtro
-      m.roba = pescaMerce(this.durezza(), { quante: 5, rnd: () => this.rnd(),
-                                            ammessa: utile, tua: k => this.posso(k) })
-    }
-    this.foglio = { che: 'mercante', chi: m }
-  }
-
-  // le tre che curano (sempre lì) più i cinque pescati; `sempre` lo dice a chi disegna, o una riga che non si esaurisce sembra un guasto
-  mercanzia() {
-    const f = this.foglio
-    if (!f || f.che !== 'mercante') return []
-    return [
-      ...CURE.map(chiave => ({ chiave, sempre: true })),
-      ...(f.chi.roba || []).map(chiave => ({ chiave, sempre: false })),
-    ]
-  }
-
-  // a metà prezzo: comprare e rivendere è una perdita, non un modo di fare gemme girando in tondo (docs/sotterraneo/roba.md)
-  quantoVale(k) {
-    const c = COSE[k]
-    return c && c.prezzo ? Math.max(1, Math.floor(c.prezzo / 2)) : 0
-  }
-
-  vendi(i) {
-    const f = this.foglio
-    if (!f || f.che !== 'mercante') return null
-    const k = this.zaino[i]
-    if (!k) return null
-    const preso = this.quantoVale(k)
-    if (!preso) return null
-    this.zaino.splice(i, 1)
-    this.gemme += preso
-    this.dillo(`💎 +${preso}`)
-    return { che: 'venduto', cosa: k, gemme: preso }
-  }
-
-  compra(k) {
-    const f = this.foglio
-    if (!f || f.che !== 'mercante') return null
-    const c = COSE[k]
-    /* le cure si comprano anche se non stanno fra i cinque pescati:
-       sono sul banco per conto loro, e ci restano */
-    const scorta = f.chi.roba.includes(k)
-    if (!c || !(scorta || CURE.includes(k))) return null
-    // comprare quello che non si può impugnare sarebbe l'unico modo di perdere gemme senza guadagnare niente
-    if (c.dove && !this.posso(k)) { this.dillo(this.perchéNo(k)); return { che: 'niente' } }
-    if (this.gemme < c.prezzo) return { che: 'niente' }
-    // lo zaino pieno non ferma quello che si mette addosso: la casella è un altro posto
-    const vaAddosso = c.dove &&
-      (c.dove !== 'mancina' || this.mancinaLibera()) && (() => {
-      const conf = this.confronto(k)
-      return !conf.addosso || conf.delta > 0
-    })()
-    const siAccende = c.usa === 'luce'   // come quella trovata per terra: non chiede una tasca
-    const serveTasca = !siAccende && (!vaAddosso || !!this.casella(this.confronto(k).dove))
-    if (serveTasca && this.zaino.length >= TASCHE) {
-      this.dillo('🎒 lo zaino è pieno')
-      return { che: 'pieno' }
-    }
-    this.gemme -= c.prezzo
-    if (scorta) f.chi.roba.splice(f.chi.roba.indexOf(k), 1)   // il pescato è unico e se ne va; una cura no
-    if (siAccende) { this.accendi(k); return { che: 'comprato', cosa: k, addosso: true } }
-    // comprata e messa, come la roba per terra (trovata): chi spende gemme per una corazza migliore la sta comprando per metterla
-    if (vaAddosso) {
-      const conf = this.confronto(k)
-      const vecchio = this.casella(conf.dove)
-      this.metti(conf.dove, k)
-      if (vecchio) this.zaino.push(vecchio)
-      this.sistemaLeMani()
-      const segno = conf.campo === 'att' ? '⚔️' : conf.campo === 'dif' ? '🛡️' : ''
-      this.dilloDi(k, conf.delta > 0 && segno ? ` ${segno} +${conf.delta}` : '')
-      return { che: 'comprato', cosa: k, addosso: true }
-    }
-    this.zaino.push(k)
-    this.dilloDi(k)
-    return { che: 'comprato', cosa: k }
   }
 
   // una tasca toccata apre le sue azioni invece di eseguirne una: usa/butta/riponi. Il verbo lo sceglie chi

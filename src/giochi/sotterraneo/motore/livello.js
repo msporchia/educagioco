@@ -151,7 +151,7 @@ export class Livello {
     this.robe.push({ che: 'scala', x: uscita.cx, y: uscita.cy, em: '🕳️',
                      nome: 'La scala che scende' })
 
-    // il premio (mercante, fonte, forzieri) si pesca fra le foglie (un solo collegamento): una stanza di
+    // il premio (fonti, forzieri) si pesca fra le foglie (un solo collegamento): una stanza di
     // mezzo è un pezzo di strada, e sbarrarla metterebbe un pedaggio sulla via della scala (chiudiPorte)
     const foglia = s => s.vicine.length <= 1
     const libere = st.filter(s => !s.ruolo)
@@ -163,14 +163,10 @@ export class Livello {
       return scelta
     }
 
-    const mercante = pesca()
-    if (mercante) {
-      mercante.ruolo = 'mercante'
-      this.robe.push({ che: 'mercante', x: mercante.cx, y: mercante.cy, em: '🧙',
-                       nome: 'Il mercante', roba: null })
-    }
-    const fonte = pesca()
-    if (fonte) {
+    // due fonti: la prima stanza era del mercante, che adesso sta sopra (docs/sotterraneo/terra-di-sopra.md);
+    // stessa pesca e nessun tiro in più, così il piano di ieri nasce identico con un'acqua al posto del banco
+    for (let i = 0; i < 2; i++) {
+      const fonte = pesca(); if (!fonte) break
       fonte.ruolo = 'fonte'
       this.robe.push({ che: 'fonte', x: fonte.cx, y: fonte.cy, em: '⛲', nome: 'Una fonte' })
     }
@@ -299,11 +295,11 @@ export class Livello {
   // le ossa crescono col piano, l'attacco le segue più piano; la difesa non cresce mai (la manopola velenosa)
   mostro(tipo, x, y) {
     const m = MOSTRI[tipo]
-    const su = 1 + this.piano * this.crescita.ossa
+    const su = (1 + this.piano * this.crescita.ossa) * (this.crescita.forza || 1)
     const ossa = Math.round(m.ossa * su)
     return { che: 'mostro', tipo, x, y, em: m.em, nome: m.nome,
              ossa, ossaMax: ossa,
-             att: m.att + Math.floor(this.piano / this.crescita.attOgni), dif: m.dif,
+             att: m.att + Math.floor(this.piano / this.crescita.attOgni) + (this.crescita.spinta || 0), dif: m.dif,
              chiave: false, morto: false }
   }
 
@@ -316,7 +312,6 @@ export class Livello {
       if (!s.ruolo || s.ruolo === 'ingresso' || !s.porte.length) continue
       const segno = s.ruolo === 'tesoro'
         ? (this.robe.some(r => r.che === 'mostro' && this.dentroStanza(r, s)) ? 'guardia' : 'tesoro')
-        : s.ruolo === 'mercante' ? 'mercante'
         : s.ruolo === 'fonte' ? 'fonte' : null
       if (!segno) continue
       // non si sbarra mai la strada: se chiudendola alla scala non si arriva più, resta aperta e senza segno

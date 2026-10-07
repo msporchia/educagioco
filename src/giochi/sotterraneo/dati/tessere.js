@@ -22,16 +22,13 @@ export const SCENARI = {
              angolo: 'cantine-bordo-angolo' },
     // la pelle ripete col disegno il segno sopra la porta (SEGNI in dati/cose.js), e non mente mai
     porte: {
-      davanti: { guardia: 'cantine-porta-teschio', tesoro: 'cantine-porta-oro',
-                 mercante: 'cantine-porta-chiara', fonte: 'cantine-porta-ferro',
+      davanti: { guardia: 'cantine-porta-teschio', tesoro: 'cantine-porta-oro', fonte: 'cantine-porta-ferro',
                  vuoto: 'cantine-porta-semplice', aperta: 'cantine-porta-aperta' },
-      fianco: { guardia: 'cantine-fianco-teschio', tesoro: 'cantine-fianco-oro',
-                mercante: 'cantine-fianco-chiara', fonte: 'cantine-fianco-ferro',
+      fianco: { guardia: 'cantine-fianco-teschio', tesoro: 'cantine-fianco-oro', fonte: 'cantine-fianco-ferro',
                 vuoto: 'cantine-fianco-semplice', aperta: 'cantine-fianco-aperta' },
     },
     scala: { aperta: 'cantine-scala-aperta', chiusa: 'cantine-scala-chiusa' },
     fontana: { piena: 'cantine-fontana-piena', asciutta: 'cantine-fontana-asciutta' },   // bevuta resta lì, asciutta
-    mercante: ['cantine-mercante-0', 'cantine-mercante-1'],
     perTerra: ['cantine-terriccio', 'cantine-sassolini', 'cantine-radice'],
     ragnatele: { sx: 'cantine-ragnatela-sx', dx: 'cantine-ragnatela-dx' },
     arredo: {}, dice: {},   // vuoti: l'arredo è quello di tutti (botti, casse, ossa) e dice quello di ARREDO_DICE
@@ -50,16 +47,13 @@ export const SCENARI = {
     bordi: { n: 'cripta-bordo-n', o: 'cripta-bordo-o', e: 'cripta-bordo-e',
              angolo: 'cripta-bordo-angolo', luce: 3 },
     porte: {
-      davanti: { guardia: 'cripta-porta-teschio', tesoro: 'cripta-porta-oro',
-                 mercante: 'cripta-porta-chiara', fonte: 'cripta-porta-ferro',
+      davanti: { guardia: 'cripta-porta-teschio', tesoro: 'cripta-porta-oro', fonte: 'cripta-porta-ferro',
                  vuoto: 'cripta-porta-semplice', aperta: 'cripta-porta-aperta' },
-      fianco: { guardia: 'cripta-fianco-teschio', tesoro: 'cripta-fianco-oro',
-                mercante: 'cripta-fianco-chiara', fonte: 'cripta-fianco-ferro',
+      fianco: { guardia: 'cripta-fianco-teschio', tesoro: 'cripta-fianco-oro', fonte: 'cripta-fianco-ferro',
                 vuoto: 'cripta-fianco-semplice', aperta: 'cripta-fianco-aperta' },
     },
     scala: { aperta: 'cripta-scala-aperta', chiusa: 'cripta-scala-chiusa' },
     fontana: { piena: 'cripta-fontana-piena', asciutta: 'cripta-fontana-asciutta' },
-    mercante: ['cripta-mercante-0', 'cripta-mercante-1'],
     perTerra: ['cripta-foglie', 'cripta-schegge', 'cripta-lastra'],
     ragnatele: { sx: 'cripta-ragnatela-sx', dx: 'cripta-ragnatela-dx' },
     arredo: {}, dice: {},
@@ -76,16 +70,13 @@ export const SCENARI = {
     capi: { sx: 'fornace-capo-sx', dx: 'fornace-capo-dx' },
     bordi: { n: 'fornace-bordo-n', o: 'fornace-bordo-o', e: 'fornace-bordo-e', angolo: 'fornace-bordo-angolo' },
     porte: {
-      davanti: { guardia: 'fornace-porta-corna', tesoro: 'fornace-porta-oro',
-                 mercante: 'fornace-porta-chiara', fonte: 'fornace-porta-ferro',
+      davanti: { guardia: 'fornace-porta-corna', tesoro: 'fornace-porta-oro', fonte: 'fornace-porta-ferro',
                  vuoto: 'fornace-porta-semplice', aperta: 'fornace-porta-aperta' },
-      fianco: { guardia: 'fornace-fianco-corna', tesoro: 'fornace-fianco-oro',
-                mercante: 'fornace-fianco-chiara', fonte: 'fornace-fianco-ferro',
+      fianco: { guardia: 'fornace-fianco-corna', tesoro: 'fornace-fianco-oro', fonte: 'fornace-fianco-ferro',
                 vuoto: 'fornace-fianco-semplice', aperta: 'fornace-fianco-aperta' },
     },
     scala: { aperta: 'fornace-scala-aperta', chiusa: 'fornace-scala-chiusa' },
     fontana: { piena: 'fornace-fontana-piena', asciutta: 'fornace-fontana-asciutta' },
-    mercante: ['fornace-mercante-0', 'fornace-mercante-1'],
     perTerra: ['fornace-cenere', 'fornace-sassi', 'fornace-scoria'],
     ragnatele: { sx: 'fornace-ragnatela-sx', dx: 'fornace-ragnatela-dx' },
     // l'arredo generico (ARREDI in dati/mondo.js) cambia pelle e frase: restano le stesse regole di dove sta e di chi fa luce
@@ -127,7 +118,6 @@ export const PEZZO_DI = {
   gemme: (r, t) => pezzoDelleGemme(r.quante, t),
   curiosita: r => r.pezzo,
   fonte: (r, t, sc) => (r.morto ? sc.fontana.asciutta : sc.fontana.piena),
-  mercante: (r, t, sc) => sc.mercante[((t + r.x * 0.7 + r.y * 1.3) % 6) > 5 ? 1 : 0],   // saluta un secondo ogni sei
 }
 
 // tre o quattro fotogrammi per posa, guardano a destra: la sinistra è la stessa specchiata
@@ -161,7 +151,7 @@ export function guastiDelleTessere(nomi = null) {
     for (const q of Object.keys(sc.dice || {}))
       if (!(sc.arredo || {})[q]) g.push(`scenario ${k}: la frase dell'arredo "${q}" non ha il suo pezzo`)
     for (const verso of ['davanti', 'fianco'])
-      for (const pelle of ['guardia', 'tesoro', 'mercante', 'fonte', 'vuoto', 'aperta'])
+      for (const pelle of ['guardia', 'tesoro', 'fonte', 'vuoto', 'aperta'])
         if (!(sc.porte && sc.porte[verso] && sc.porte[verso][pelle]))
           g.push(`lo scenario ${k} non ha la porta ${pelle} vista ${verso}`)
   }

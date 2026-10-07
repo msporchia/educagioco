@@ -255,7 +255,8 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
    Punisce senza umiliare: se ne va il margine accumulato, non il lavoro
    di dieci piani — che in una discesa senza fine sarebbe una brutta sera
    che cancella una settimana. E l'ascia bella non si butta *mai*, che è
-   la richiesta da cui nasce tutto l'abisso. */
+   la richiesta da cui nasce tutto l'abisso (e che adesso vale per tutte
+   le discese: la roba resta). */
 {
   const c = new Corsa(L_ABISSO, { seme: 31, rnd: seminato(31), eroe: 'cavaliere' })
   c.mano = 'spadone'
@@ -286,15 +287,15 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   controlla('la riga lo dice', c.avvisi.some(a => /tasche/.test(String(a.testo || a))),
             JSON.stringify(c.avvisi))
 
-  /* nella campagna invece non cambia niente: quella regola è
-     dell'abisso, e portarla nelle sei tappe sposterebbe un equilibrio
-     già misurato */
+  /* la regola nata qui adesso vale anche nelle sei discese: da quando la
+     roba resta, le tasche piene di chi sviene di continuo erano il
+     margine che rendeva la discesa una passeggiata (unita/sotterraneo-roba) */
   const t = new Corsa(CAMPAGNA[2], { seme: 31, rnd: seminato(31) })
   t.zaino = ['pozione', 'pozione']
   t.vita = 0
   t.svieni()
   t.riprendi()
-  uguale('nella campagna le tasche restano piene', t.zaino.length, 2)
+  uguale('anche nella campagna le tasche si svuotano', t.zaino.length, 0)
 }
 
 /* ══════════ 7. la sosta: si riprende, e la versione non sale ══════════

@@ -155,13 +155,23 @@ export const prezzoAtteso = profondita =>
 // predilige la classe, non la garantisce (un terzo e non zero: vendere è un gesto del gioco come gli altri)
 export const PESO_ALTRUI = 1 / 3
 
-export function pescaCosa(elenco, { rnd = Math.random, tua = () => true } = {}) {
+// quanto pesa una cosa a quella profondità: piena al prezzo atteso, un decimo e non zero lontano da lì
+const pesoA = (k, profondita) => {
+  if (profondita == null) return 1
+  const scarto = (COSE[k].prezzo - prezzoAtteso(profondita)) / LARGHEZZA
+  return 1 / (1 + scarto * scarto)
+}
+
+// `profondita` (0..1, durezzaDi): da quando la roba resta fra una discesa e l'altra il forziere della
+// scalinata non può dare lo spadone come quello della miniera (docs/sotterraneo/regole.md)
+export function pescaCosa(elenco, { rnd = Math.random, tua = () => true, profondita = null } = {}) {
   if (!elenco || !elenco.length) return null
+  const peso = k => pesoA(k, profondita) * (tua(k) ? 1 : PESO_ALTRUI)
   let somma = 0
-  for (const k of elenco) somma += tua(k) ? 1 : PESO_ALTRUI
+  for (const k of elenco) somma += peso(k)
   let tiro = rnd() * somma
   for (const k of elenco) {
-    tiro -= tua(k) ? 1 : PESO_ALTRUI
+    tiro -= peso(k)
     if (tiro <= 0) return k
   }
   return elenco[elenco.length - 1]
@@ -169,12 +179,8 @@ export function pescaCosa(elenco, { rnd = Math.random, tua = () => true } = {}) 
 
 export function pescaMerce(profondita, { quante = 5, rnd = Math.random,
                                          ammessa = () => true, tua = () => true } = {}) {
-  const atteso = prezzoAtteso(profondita)
   const resto = A_SORTE.filter(ammessa)
-  const peso = k => {
-    const scarto = (COSE[k].prezzo - atteso) / LARGHEZZA
-    return (1 / (1 + scarto * scarto)) * (tua(k) ? 1 : PESO_ALTRUI)
-  }
+  const peso = k => pesoA(k, profondita) * (tua(k) ? 1 : PESO_ALTRUI)
   const presi = []
   while (presi.length < quante && resto.length) {
     let somma = 0
@@ -202,7 +208,6 @@ export const NEI_FORZIERI = [
 export const SEGNI = {
   guardia: { em: '💀', dice: 'C\'è qualcosa di grosso, là dentro.' },
   tesoro: { em: '💎', dice: 'Da qui si sente odore di roba buona.' },
-  mercante: { em: '🏪', dice: 'Qualcuno, là dentro, vende.' },
   fonte: { em: '⛲', dice: 'Si sente acqua.' },
   vuoto: { em: '·', dice: 'Non si sente niente.' },
 }
