@@ -64,6 +64,54 @@ for (const [nome, p] of Object.entries(POSTI)) {
               Math.abs(ax - dove.piede[0]) === 2 && ay === dove.piede[1], `${ax},${ay}`)
   }
 }
+/* la mappa è due pezzi accostati (docs/sotterraneo/terra-di-sopra.md): il villaggio sta nel pezzo di destra, e i
+   mercanti stanno ognuno davanti al suo banco. I banchi sono i riquadri in pixel della tela (i riquadri stanno
+   qui, non nel foglietto: non sono dati del gioco ma quello che l'occhio vede nell'immagine) */
+{
+  const A = MASCHERA.length, Lm = MASCHERA[0].length
+  uguale('la tela è due pezzi larghi uguali', LARGO, 2048)
+  uguale('e la maschera la copre tutta: 64 celle', Lm, 64)
+  const fermi = creaTerra(MASCHERA, { ostacoli: [MINATORE.piede, ...Object.values(MERCANTI).map(m => m.piede)] })
+  const dist = fermi.raggiungibili(casa)
+  const banchi = {              // dove sta il banco, in celle: [colonna, riga] del suo centro
+    armaiolo: [41, 40],         // l'incudine sotto la tettoia
+    erborista: [50, 41],        // il banco con le boccette e i mazzi d'erbe
+    rigattiere: [56, 43],       // il carretto di cianfrusaglie
+  }
+  for (const [chi, [bx, by]] of Object.entries(banchi)) {
+    const [px, py] = MERCANTI[chi].piede
+    controlla(`${chi}: sta nel villaggio, a destra della giunta`, px >= 32, `${px},${py}`)
+    controlla(`${chi}: davanti al suo banco (a non più di tre celle, sotto di lui)`,
+              Math.abs(px - bx) <= 2 && py > by && py - by <= 3, `${px},${py} contro ${bx},${by}`)
+  }
+  // dalla partenza si arriva a ogni cella dove si cammina, tranne dove chi sta fermo le chiude (il piede suo
+  // e il tratto stretto dietro al rigattiere) e le tre del vecchio angolo in alto a sinistra
+  const chiuse = []
+  MASCHERA.forEach((riga, y) => [...riga].forEach((c, x) => { if (x >= 32 && c === '.' && !dist.has(y * Lm + x)) chiuse.push(`${x},${y}`) }))
+  stessaLista('nel pezzo di destra ogni cella dove si cammina si raggiunge da casa (tranne i piedi dei mercanti)',
+              chiuse.sort(), Object.values(MERCANTI).map(m => m.piede.join(',')).sort())
+  // la giunta: il sentiero che esce dal pezzo di sinistra entra in quello di destra senza interrompersi
+  const uscita = MASCHERA.map((r, y) => [y, r[31], r[32]]).filter(([, a, b]) => a === '.' && b === '.')
+  controlla('il sentiero attraversa la giunta (almeno una riga con terreno su tutti e due i lati)', uscita.length >= 1,
+            JSON.stringify(uscita))
+  // il fiume si passa solo sul ponte: dalla riva di sinistra a quella di destra c'è strada, ma ogni strada passa dal ponte
+  const ponte = [45, 46, 47, 48, 49, 50].map(x => [x, 23])
+  controlla('il ponte si cammina', ponte.every(([x, y]) => fermi.passa(x, y)))
+  controlla('il fiume no, sopra e sotto il ponte', [[46, 21], [47, 22], [46, 26], [47, 28], [46, 30]].every(([x, y]) => !fermi.passa(x, y)))
+  const senzaPonte = creaTerra(MASCHERA.map((r, y) => y === 23 || y === 24
+    ? r.slice(0, 45) + '#'.repeat(6) + r.slice(51) : r), { ostacoli: [] })
+  controlla('dalla riva di sinistra a quella di destra, senza ponte, non si va',
+            senzaPonte.strada({ x: 44, y: 23 }, { x: 52, y: 23 }) === null)
+  controlla('col ponte sì', !!fermi.strada({ x: 44, y: 23 }, { x: 52, y: 23 }))
+  // la torre e l'altare sono solo disegno: non ci si entra e non ci si cammina sopra
+  controlla('la torre in rovina non si attraversa', [[42, 5], [43, 6], [42, 7], [43, 8]].every(([x, y]) => !fermi.passa(x, y)))
+  controlla('e nemmeno l\'altare di pietra', [[55, 6], [57, 7], [56, 8], [58, 5]].every(([x, y]) => !fermi.passa(x, y)))
+  controlla('ma ci si arriva davanti', fermi.passa(56, 9) && !!fermi.strada(casa, { x: 56, y: 9 }))
+  // le case e la piazza
+  controlla('le case del villaggio non si attraversano', [[58, 37], [60, 38], [56, 36], [38, 28], [55, 29]].every(([x, y]) => !fermi.passa(x, y)))
+  controlla('il pozzo della piazza (quello per bere) non si attraversa', !fermi.passa(47, 36) && !fermi.passa(47, 37))
+  controlla('la piazza di terra battuta sì', [[44, 36], [50, 38], [46, 40]].every(([x, y]) => fermi.passa(x, y)))
+}
 const [cx, cy] = CARTELLO.piede
 controlla('al cartello ci si arriva', !!terra.strada(casa, { x: cx, y: cy }))
 const [mx, my] = MINATORE.piede
@@ -133,6 +181,22 @@ const codice = nebbiaInCodice(n)
 uguale('in archivio è corta', codice.length, L * A / 4)
 stessaLista('e torna uguale', [...nebbiaDaCodice(codice, L, A)], [...n])
 uguale('un codice che non torna è nebbia nuova', nebbiaDaCodice('zz', L, A), null)
+{
+  // chi giocava quando la mappa era larga 32 celle (384 cifre) ritrova la nebbia dov'era, nel pezzo di sinistra
+  const vecchia = new Uint8Array(32 * A)
+  for (let y = 30; y < 44; y++) for (let x = 10; x < 24; x++) vecchia[y * 32 + x] = 1
+  const nuova = nebbiaDaCodice(nebbiaInCodice(vecchia), L, A)
+  controlla('la nebbia della mappa stretta si rimette nel pezzo di sinistra', !!nuova)
+  let uguali = true, destra = 0
+  for (let y = 0; y < A; y++) for (let x = 0; x < L; x++) {
+    if (x < 32 && nuova[y * L + x] !== vecchia[y * 32 + x]) uguali = false
+    if (x >= 32) destra += nuova[y * L + x]
+  }
+  controlla('cella per cella com\'era', uguali)
+  uguale('e il pezzo di destra è tutto nebbia', destra, 0)
+  uguale('un codice lungo come quello vecchio ma con cifre che non sono esadecimali è nebbia nuova',
+         nebbiaDaCodice('z'.repeat(384), L, A), null)
+}
 
 /* ── i sassi ── */
 const sassi = sassiLungo(via, 4)

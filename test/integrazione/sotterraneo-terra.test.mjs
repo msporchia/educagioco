@@ -107,12 +107,24 @@ await tocca(vista.x + vista.width - 40, vista.y + vista.height - 160)
 await attendi(page, 300)
 uguale('toccando fuori il fumetto si chiude', await page.locator('[data-fumetto]').count(), 0)
 uguale('e basta: quel tocco non fa camminare', await cella(), davanti)
+uguale('prima di andarci, nessun divieto', await page.locator('[data-divieto]').count(), 0)
 await toccaIl('[data-posto="pozzo-di-casa"]')
 await page.waitForSelector('[data-fumetto-di="pozzo-di-casa"]', { timeout: 8000 })
 const chiusa = await page.locator('[data-chiusa-perche]').innerText()
 controlla('la chiusa dice cosa la apre', chiusa.includes('la scalinata antica'), chiusa)
 uguale('e non ha il tasto per scendere', await page.locator('[data-fumetto] [data-azione="scendi"]').count(), 0)
-controlla('sopra c\'è il velo col lucchetto', await page.locator('[data-chiusa="pozzo-di-casa"] svg').count() === 1)
+// la discesa chiusa ha il disegno pulito (niente velo): il divieto compare quando l'eroe ci arriva, davanti all'ingresso
+uguale('arrivato, davanti alla discesa chiusa c\'è il cartello di divieto', await page.locator('[data-divieto="pozzo-di-casa"] svg').count(), 1)
+uguale('uno solo, e solo lì', await page.locator('[data-divieto]').count(), 1)
+{
+  const d = await page.locator('[data-divieto="pozzo-di-casa"]').boundingBox()
+  const i = POSTI['pozzo-di-casa'].ingresso
+  const [cx, cy] = await camera()
+  const bordoBasso = vista.y + ((i[1] + i[3]) - cy) * S
+  controlla('il paletto è piantato ai piedi dell\'ingresso', Math.abs(d.y + d.height - bordoBasso) < 30 && d.height > 30,
+            `${d.y + d.height} contro ${bordoBasso}`)
+}
+uguale('e non c\'è più nessun velo sulla discesa', await page.locator('[data-chiusa]').count(), 0)
 await attendi(page, 300)
 await scatto(page, 'terra-chiusa')
 await chiudiFumetto()
@@ -183,12 +195,15 @@ const terra = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.terra
 controlla('la terra si scrive nel profilo, nell\'avventura del cavaliere', !!terra && typeof terra.nebbia === 'string',
           JSON.stringify(terra)?.slice(0, 80))
 controlla('e il minatore ha già parlato', terra?.parlato === true)
+controlla('e il divieto della discesa chiusa', Array.isArray(terra?.divieti) && terra.divieti.includes('pozzo-di-casa'),
+          JSON.stringify(terra?.divieti))
 await scegli(page, 'sotterraneo')
 await page.waitForSelector('[data-terra]', { timeout: 5000 })
 await attendi(page, 500)
 uguale('rientrando si è dove ci si era fermati', await cella(), POSTI.arco.piede.join(','))
 uguale('la scalinata resta trovata', await page.locator('[data-discesa="0"]').getAttribute('data-trovato'), '1')
 uguale('e il minatore non ha più i puntini', await page.locator('[data-minatore] .sot-tre-punti').count(), 0)
+uguale('e il cartello di divieto è ancora piantato davanti alla discesa chiusa', await page.locator('[data-divieto="pozzo-di-casa"]').count(), 1)
 await scatto(page, 'terra-nebbia')
 
 /* ---------- 9. e si scende ---------- */
