@@ -55,6 +55,8 @@ export const NOVITA = [
     testo: '🎮 Ora puoi uscire da un gioco quando vuoi, anche dalla pausa: la partita ti aspetta. Quando torni, in cima alla mappa trovi «torno da dove ero» e riprendi proprio da lì.' },
   { id: 27, quando: '2026-10-06', gioco: null,
     testo: '🏠 La pagina dei giochi è nuova: le copertine si scorrono col dito, e in cima trovi il gioco dell\'ultima volta pronto a ripartire' },
+  { id: 28, quando: '2026-10-07', gioco: 'sotterraneo',
+    testo: '⛏️ Il sotterraneo è tutto nuovo! Ogni eroe ha la sua avventura: si parte dal villaggio, e ciò che trovi, armi e armature, te lo porti dietro. Dai mercanti compri e vendi con le gemme, col portale torni su a fare spese e poi giù dove eri, e in giro c\'è chi ti chiede una mano. Le avventure ricominciano da capo per tutti.' },
 ]
 
 export const PER_GIOCO = 4
