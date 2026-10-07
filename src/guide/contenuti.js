@@ -601,6 +601,7 @@ export const AIUTI = {
       ] },
       { titolo: 'La roba e i mercanti', righe: [
         'Quello che hai addosso, quello che hai in tasca e le gemme **te li porti dietro**: alla discesa dopo li ritrovi. Anche uscendo a metà.',
+        '**Ogni eroe ha la sua avventura**: la sua roba, le sue discese e la sua strada qui sopra. Con «cambio» passi a un altro, e lo ritrovi dove l\'avevi lasciato.',
         'Le gemme si spendono sopra, dai mercanti vicino alle case: l\'**armaiolo** (armi, scudi, armature), l\'**erborista** (pozioni e torce) e il **rigattiere** vicino al carro (anelli e amuleti, e compra quello che hai in tasca). Si tocca il mercante, l\'eroe ci va e si apre il banco.',
         'Più discese hai finito, più roba e più forte trovi sul banco; finita una discesa i banchi cambiano.',
         'Svenendo si perdono **le tasche e metà delle gemme**, mai quello che hai addosso.',

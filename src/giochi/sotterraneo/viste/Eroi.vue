@@ -1,14 +1,16 @@
 <script setup>
-// Chi scende: si sceglie una volta e resta (ricordato nel profilo). I due numeri (dati/eroi.js) si mostrano
-// anche come barrette, che un bambino confronta più facilmente delle cifre. La terza riga dice cosa impugna
-// e cosa veste, con le figure e non le parole (si vede prima di scoprirlo tre piani più giù, e si legge anche
-// senza saper leggere); quello senza famiglia (scudi, gioielli, pozioni, cuoio) non si scrive: non distingue.
+// Le quattro avventure, una per eroe (docs/sotterraneo/avventure.md): scegliere chi scende è scegliere quale
+// storia riprendere. Ogni scheda dice a che punto è (discese, stelle, la roba addosso, il record dell'abisso, la
+// discesa a metà), o «nuova avventura». I due numeri dell'eroe (dati/eroi.js) restano anche come barrette, che un
+// bambino confronta più facilmente delle cifre; la riga sotto dice cosa impugna e cosa veste, con le figure.
 import { figura } from './figura.js'
 import { pezzoAndante } from '../dati/tessere.js'
 import { FAMIGLIE } from '../dati/eroi.js'
+import Icona from './Icona.vue'
 
 const props = defineProps({
-  eroi: { type: Array, required: true },     // le schede di dati/eroi.js
+  // le schede di dati/eroi.js, ognuna col suo punto: { nuova, discese, quante, stelle, addosso, gemme, fondo, aMeta }
+  avventure: { type: Array, required: true },
   scelto: { type: String, default: '' },
   primo: { type: Boolean, default: false },  // la prima volta non si può annullare
 })
@@ -17,8 +19,8 @@ defineEmits(['scegli', 'chiudi'])
 const posa = e => figura(pezzoAndante(e.sprite, 'fermo', 0), { scala: 3 })   // fermo-0: la posa più leggibile
 
 // il fondo scala è l'eroe più forte in quella colonna, non un massimo inventato
-const piuVita = Math.max(...props.eroi.map(e => e.vita))
-const piuAtt = Math.max(...props.eroi.map(e => e.att))
+const piuVita = Math.max(...props.avventure.map(e => e.vita))
+const piuAtt = Math.max(...props.avventure.map(e => e.att))
 
 const porta = e => (e.porta || []).map(f => FAMIGLIE[f]).filter(Boolean)
 </script>
@@ -26,21 +28,33 @@ const porta = e => (e.porta || []).map(f => FAMIGLIE[f]).filter(Boolean)
 <template>
   <div class="sot-velo" @click.self="!primo && $emit('chiudi')">
     <div class="sot-modale">
-      <h2><span class="em">🕯️</span> {{ primo ? 'Chi scende?' : 'Cambio eroe' }}</h2>
+      <h2><span class="em">🕯️</span> {{ primo ? 'Chi scende?' : 'Le avventure' }}</h2>
       <p>
-        {{ primo ? 'Scegli con chi vuoi girare là sotto. Si può cambiare quando vuoi.'
-                 : 'Vale dalla prossima discesa. Quella lasciata a metà resta di chi l\'ha cominciata.' }}
+        {{ primo ? 'Ognuno ha la sua avventura, con la sua roba e le sue discese. Puoi provarli tutti.'
+                 : 'Ognuno ha la sua avventura: la ritrovi dove l\'hai lasciata, con la sua roba.' }}
       </p>
 
-      <button v-for="e in eroi" :key="e.chiave" class="sot-eroe"
+      <button v-for="e in avventure" :key="e.chiave" class="sot-eroe"
               :class="{ 'sot-scelto': e.chiave === scelto }"
-              :data-eroe="e.chiave" @click="$emit('scegli', e.chiave)">
+              :data-eroe="e.chiave" :data-nuova="e.nuova ? 1 : 0" @click="$emit('scegli', e.chiave)">
         <span class="sot-ritratto" :style="posa(e) ? posa(e).gabbia : null">
           <i v-if="posa(e)" :style="posa(e).pezzo"></i>
           <b v-else class="em">{{ e.em }}</b>
         </span>
         <span class="sot-testo">
           <b>{{ e.nome }}</b>
+          <!-- a che punto è la sua storia: prima di tutto il resto, perché è quello che si sceglie -->
+          <span v-if="e.nuova" class="sot-punto sot-nuova" data-punto>nuova avventura</span>
+          <span v-else class="sot-punto em" data-punto>
+            <span>🏁 {{ e.discese }} di {{ e.quante }}</span>
+            <span v-if="e.stelle">⭐ {{ e.stelle }}</span>
+            <span v-for="r in e.addosso" :key="r.chiave" class="sot-addosso" :data-addosso="r.chiave">
+              <Icona :sprite="r.sprite" :em="r.em" :emAlto="14" :scala="1" />
+            </span>
+            <span v-if="e.gemme">💎 {{ e.gemme }}</span>
+            <span v-if="e.fondo" data-fondo>🕳️ {{ e.fondo }}</span>
+          </span>
+          <span v-if="e.aMeta" class="sot-a-meta" data-a-meta>a metà: {{ e.aMeta.toLowerCase() }}</span>
           <i>{{ e.dice }}</i>
           <span class="sot-barre">
             <span class="sot-barra sot-cuore" :style="{ '--q': e.vita / piuVita }">

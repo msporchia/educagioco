@@ -434,6 +434,14 @@
 .sot-eroe .sot-testo { flex: 1; min-width: 0; display: grid; gap: 2px }
 .sot-eroe .sot-testo b { font-size: 15px }
 .sot-eroe .sot-testo > i { font-style: normal; font-size: 12px; color: var(--sot-tenue); line-height: 1.35 }
+/* a che punto è l'avventura (docs/sotterraneo/avventure.md): la riga d'oro sotto il nome, «nuova» più spenta */
+.sot-punto {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
+  font-size: 12.5px; font-weight: 700; color: var(--sot-oro);
+}
+.sot-punto > span { display: inline-flex; align-items: center; gap: 3px }
+.sot-punto.sot-nuova { color: var(--sot-tenue); font-weight: 600; font-style: italic }
+.sot-a-meta { font-size: 12px; color: #9fd3ff }
 /* davanti a «❤️ 24 · ⚔️ 3» un bambino non sa dire chi è più forte, davanti a due barre sì */
 .sot-barre { display: flex; align-items: center; gap: 8px; margin-top: 3px }
 .sot-barra {
