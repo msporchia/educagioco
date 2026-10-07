@@ -9,11 +9,11 @@ import { Livello } from './livello.js'
 import { misura, serveLaRegola } from './risolutore.js'
 import { misuraSvelta, vaBene } from './svelto.js'
 import { esegui, TANA } from './mondo.js'
-import { generaZaino, carteInMano, SAGOME, animaleDi } from './sagome.js'
+import { generaZaino, carteInMano, SAGOME, animaleDi, vaPerLaMano, PASSI_MIN } from './sagome.js'
 import { bozzaLabirinto, bozzaLago, bozzaFiume } from './prati.js'
 import { BOZZE_DEL_PASCOLO } from './pascoli.js'
 import { TEMI } from '../dati/campagna.js'
-import { programma, ripeti } from '../dati/carte.js'
+import { programma, ripeti, se } from '../dati/carte.js'
 
 /* un generatore di numeri a seme: sempre la stessa fila per lo stesso seme.
    Il seme si rimescola prima di cominciare: semi vicini (quelli di due
@@ -50,8 +50,14 @@ export const SENTIERI = {
   cane: { nome: 'Il sentiero del cane', famiglie: ['pascolo', 'ripeti', 'fino', 'se'] },
 }
 const ZAINO = ['ripeti', 'fino', 'se']
-/* una carta entra nel sentiero del cane solo se ha una sagoma col cane */
-const conSagoma = (strada, carta) => SAGOME.some(g => g.carta === carta && animaleDi(g) === strada)
+/* una famiglia entra in un sentiero solo se ha una sagoma col suo animale
+   che va per la mano del bambino. Chi ha il se trova solo sagome col se,
+   e ogni famiglia pesca fra tutte (`generaZaino`) */
+const conSagoma = (strada, carta, sbloccati) => {
+  const mano = carteInMano(sbloccati)
+  return SAGOME.some(g => (mano.includes('se') || g.carta === carta) && animaleDi(g) === strada &&
+    g.serve.every(r => sbloccati.includes(r)) && vaPerLaMano(g, mano))
+}
 
 /* `prima` è il ricordo del posto di prima, «famiglia:forma» (i profili
    di ieri scrivevano solo la famiglia) */
@@ -61,15 +67,30 @@ const leggiRicordo = prima => {
   return { famiglia: famiglia || null, forma: forma || null }
 }
 
+/* quanto pesa un prato (o un pascolo) per chi ha le carte, contro 1 di
+   ogni famiglia con lo zaino: uno su trenta con tutte le carte, uno su
+   undici col solo ciclo */
+export const SENZA_ZAINO = 0.1
+
 /* di che specie è il prossimo posto; quella appena giocata pesa meno */
 export function famigliaDi(rnd, sbloccati, prima = null, strada = 'coniglio') {
   const famiglie = SENTIERI[strada].famiglie
+  /* chi ha le carte trova di rado un posto senza zaino */
+  const carte = sbloccati.includes('ripeti')
   const pesi = Object.fromEntries(famiglie.map(f => [f,
-    f === 'prato' ? 1.5
-      : f === 'pascolo' ? (sbloccati.includes('cane') ? 2.5 : 0)
-      : sbloccati.includes(f) && conSagoma(strada, f) && (strada !== 'cane' || sbloccati.includes('cane')) ? 1 : 0]))
+    f === 'prato' ? (carte ? SENZA_ZAINO : 1.5)
+      : f === 'pascolo' ? (sbloccati.includes('cane') ? (carte ? SENZA_ZAINO : 2.5) : 0)
+      : sbloccati.includes(f) && conSagoma(strada, f, sbloccati) && (strada !== 'cane' || sbloccati.includes('cane')) ? 1 : 0]))
   const p = leggiRicordo(prima).famiglia
-  if (p && pesi[p]) pesi[p] *= 0.3
+  if (p && pesi[p]) pesi[p] *= 0.2
+  /* chi ha le carte: il prato pesa sempre per la stessa parte, qualunque
+     famiglia sia appena uscita (se no, con una famiglia sola, uscirebbe
+     un posto su tre) */
+  if (carte) {
+    const zaino = famiglie.filter(f => ZAINO.includes(f) && pesi[f])
+    const media = zaino.reduce((n, f) => n + pesi[f], 0) / Math.max(1, zaino.length)
+    for (const f of famiglie) if (!ZAINO.includes(f) && pesi[f]) pesi[f] = SENZA_ZAINO * media * (f === p ? 0.2 : 1)
+  }
   let t = rnd() * famiglie.reduce((n, f) => n + pesi[f], 0)
   for (const f of famiglie) if (pesi[f] && (t -= pesi[f]) <= 0) return f
   return famiglie[0]
@@ -141,11 +162,20 @@ export function generaSentiero(fatti, rnd, { sbloccati = DI_BASE, prima = null, 
     const t = generaZaino(f, sbloccati, rnd, { strada, prima: ricordo.forma })
     if (t) return { ...t, ...base, forma: t.sagoma, tema: t.tema || tema, cane: !!Livello.da(t).cane,
                     misure: { carte: t.zaino } }
-    /* niente zaino: il cane torna al pascolo, il coniglio ha il suo campo arato */
+    /* niente zaino: chi ha tutte le carte ha le sue riserve; se no il cane
+       torna al pascolo, il coniglio ha il suo campo arato */
+    const mano = carteInMano(sbloccati), finale = mano.includes('se')
+    if (strada === 'cane' && finale) return { ...RISERVA_NICCHIE, carte: mano, ...base, forma: 'riserva', nome: 'Le nicchie', cane: true, misure: null }
     if (strada === 'cane') return generaSentiero(fatti, rnd, { sbloccati, prima, strada, famiglia: 'pascolo' })
-    return { ...RISERVA_ZAINO, carte: carteInMano(sbloccati), ...base, forma: 'riserva', nome: 'Il campo arato', misure: null }
+    return { ...(finale ? RISERVA_FINALE : RISERVA_ZAINO), carte: mano, ...base, forma: 'riserva',
+             nome: finale ? 'Le colline alte' : 'Il campo arato', misure: null }
   }
+  /* chi ha le carte trova di rado un posto senza zaino, e mai sotto le
+     PASSI_MIN frecce: il lago (dieci scivolate) non c'è */
+  const carte = sbloccati.includes('ripeti')
   const forme = FORME[f].filter(x => x.serve.every(r => sbloccati.includes(r)))
+    .filter(x => !carte || x.forma !== 'lago')
+    .map(x => (carte && x.pavimento < PASSI_MIN ? { ...x, pavimento: PASSI_MIN } : x))
   for (const forma of ordine(rnd, forme, ricordo.forma)) {
     const t = f === 'pascolo' ? provaPascolo(forma, sbloccati, rnd) : provaPrato(forma, sbloccati, rnd)
     if (t) return { ...t, ...base, forma: forma.forma, tema: forma.tema || tema, nome: forma.nomi[a(rnd, forma.nomi.length)] }
@@ -245,6 +275,48 @@ export const RISERVA_ZAINO = {
   salti: false,
   zaino: 9,
   soluzioni: [programma(ripeti(3, ripeti(5, 'destra'), ripeti(2, 'giu'), ripeti(5, 'sinistra'), ripeti(2, 'giu')))],
+}
+
+/* le riserve di chi ha tutte le carte: due posti usciti dal generatore,
+   con l'asticella del finale (vedi docs/passo-passo/sentiero.md) */
+export const RISERVA_FINALE = {
+  mappa: [
+    'BBBBPBBBS',
+    'AB..r.~~~',
+    'BAcBBB~~~',
+    '~.g..~~~~',
+    'AA.Ag..~~',
+    'AB~ABA.AA',
+    'SBBA..r.~',
+    'BBSB.AAAA',
+    'BB~.g..AA',
+    'BBBB.S@AA',
+    'BBSB~BBAA',
+  ],
+  salti: false,
+  zaino: 8,
+  soluzioni: [programma(ripeti('casa', 'giu', se('rosso', 'sinistra', 'sinistra'), se('giallo', 'destra', 'destra')))],
+  fragili: [programma(ripeti('casa', 'giu', se('rosso', 'destra', 'destra'), se('giallo', 'sinistra', 'sinistra'))),
+            programma(ripeti('casa', 'giu', se('giallo', 'destra', 'destra')))],
+}
+export const RISERVA_NICCHIE = {
+  mappa: [
+    'A#A#AAAAA',
+    'A.A.AAAAB',
+    'ApApAAAAB',
+    'A.A.AAA~B',
+    'Pgrgrc.rB',
+    'A~.A.AA.A',
+    'AApApAApA',
+    'AA.A.AA.A',
+    'AA#A#AA#A',
+    'AAABBBBBS',
+  ],
+  salti: false,
+  zaino: 8,
+  soluzioni: [programma(ripeti('casa', 'destra', se('giallo', 'su', 'giu'), se('rosso', 'giu', 'su')))],
+  fragili: [programma(ripeti('casa', 'destra', se('giallo', 'giu', 'su'), se('rosso', 'su', 'giu'))),
+            programma(ripeti('casa', 'destra', se('giallo', 'su', 'giu')))],
 }
 
 /* il posto di riserva del cane: tre pecore, sopra il pavimento anche lui

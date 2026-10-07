@@ -1,10 +1,11 @@
 // Le sagome del cane: i posti con lo zaino del sentiero del cane, fatti
 // come quelle del coniglio (`sagome.js`): prima il programma, poi il posto
 // attorno. Le pecore stanno nei vicoli e nelle nicchie, una per stalla, e
-// il cane le manda dentro fermandosi sulla loro colonna. Vedi
+// il cane le manda dentro fermandosi sulla loro colonna. Le nicchie coi
+// colori stanno con le sagome miste (`sagome-miste.js`). Vedi
 // docs/passo-passo/sentiero.md.
-import { programma, ripeti, se, COLORI, CASA } from '../dati/carte.js'
-import { Scavo, storto, LETTERA, tra, scegli, mescola, ripetute } from './scavo.js'
+import { programma, ripeti, COLORI } from '../dati/carte.js'
+import { Scavo, storto, LETTERA, tra, scegli, ripetute } from './scavo.js'
 
 /* un vicolo che scende dalla strada del cane, alla colonna x: la pecora
    a due passi dalla strada, la stalla `profondo` passi più in là. Torna
@@ -106,45 +107,6 @@ export const SAGOME_CANE = [
         scavo: s, fondo: scegli(rnd, ['bosco', 'prato']),
         soluzione: programma(ripeti(k, ripeti(colore, 'destra'), ...giu, ...su)),
         fragili: [{ fila: programma(ripeti(k, ripeti(colore, 'destra'), ...giu)), obbligatoria: true }],
-      }
-    } },
-
-  // le nicchie: lungo la strada le lastre dicono da che parte c'è una
-  // stalla, sopra o sotto; un programma solo per tutta la strada, e chi
-  // scambia i colori mette la zampa nel fosso dall'altra parte
-  { chiave: 'nicchie', carta: 'se', animale: 'cane', serve: [],
-    nomi: ['Le nicchie', 'Il corridoio delle stalle', 'Le stalle di qua e di là'],
-    fai(rnd) {
-      const s = new Scavo()
-      const [cGiu, cSu] = mescola(rnd, COLORI)
-      const lungo = tra(rnd, 9, 11)
-      s.metti(0, 0, 'P')
-      const nicchie = []
-      for (let x = tra(rnd, 1, 2); x < lungo - 1; x += tra(rnd, 2, 3)) nicchie.push([x, scegli(rnd, [1, -1])])
-      if (nicchie.length < 3 || !nicchie.some(n => n[1] === 1) || !nicchie.some(n => n[1] === -1)) storto()
-      const fine = nicchie.at(-1)[0]
-      const posti = []
-      for (let x = 1; x <= fine + 1; x++) {
-        const n = nicchie.find(q => q[0] === x)
-        s.metti(x, 0, n ? LETTERA[n[1] === 1 ? cGiu : cSu] : '.')
-        if (!n && x <= fine) posti.push([x, 0])
-      }
-      for (const [x, v] of nicchie) {
-        vicolo(s, x, v, 1)
-        /* dall'altra parte, il fosso */
-        s.metti(x, -v, '~')
-      }
-      if (!posti.length) storto()
-      const [cx, cy] = scegli(rnd, posti)
-      s.forza(cx, cy, 'c')
-      const giri = rnd() < 0.5 ? [se(cGiu, 'giu', 'su'), se(cSu, 'su', 'giu')] : [se(cSu, 'su', 'giu'), se(cGiu, 'giu', 'su')]
-      return {
-        scavo: s, fondo: scegli(rnd, ['bosco', 'prato']),
-        soluzione: programma(ripeti(CASA, 'destra', ...giri)),
-        fragili: [
-          { fila: programma(ripeti(CASA, 'destra', se(cGiu, 'su', 'giu'), se(cSu, 'giu', 'su'))), obbligatoria: true },
-          { fila: programma(ripeti(CASA, 'destra', se(cGiu, 'giu', 'su'))), obbligatoria: true },
-        ],
       }
     } },
 ]

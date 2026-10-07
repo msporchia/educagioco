@@ -42,6 +42,8 @@ const FUORI = {
   prato:  [['B', 4], ['A', 3], ['~', 2]],
   stagno: [['~', 6], ['A', 2], ['B', 1]],
   acqua:  [['~', 9], ['A', 1]],
+  /* dove si salta: niente acqua, che si scavalcherebbe */
+  siepe:  [['A', 6], ['B', 3]],
 }
 
 /* dallo scavo alla mappa: la cornice (un giro di fuori qua e là, se ci
@@ -152,46 +154,3 @@ export function segui(s, da, mosse, { visti = null } = {}) {
 }
 export const ripetute = (n, motivo) => Array.from({ length: n }, () => motivo).flat()
 export const uguali = (p, q) => p[0] === q[0] && p[1] === q[1]
-
-// un cammino a caso che non passa mai accanto a sé stesso (se no il
-// risolutore taglierebbe la strada): serve al sentiero dei segni
-export function cammino(rnd, versi, pezzi, lungo, largo = 8, alto = 10) {
-  const occupate = new Set(['0,0'])
-  let [x0, x1, y0, y1] = [0, 0, 0, 0]
-  let p = [0, 0]
-  const fuori = []
-  const libera = (q, da) => !occupate.has(chiave(q)) &&
-    [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dy]) => {
-      const r = [q[0] + dx, q[1] + dy]
-      return uguali(r, da) || !occupate.has(chiave(r))
-    })
-  for (let i = 0; i < pezzi; i++) {
-    let prova = mescola(rnd, versi.filter(v => !fuori.length || v !== OPPOSTO[fuori.at(-1).verso]))
-    /* dritti di rado: sei segni uguali di fila non si leggono, si contano */
-    if (fuori.length && rnd() < 0.7) prova = [...prova.filter(v => v !== fuori.at(-1).verso), ...prova.filter(v => v === fuori.at(-1).verso)]
-    let fatto = null
-    for (const v of prova) {
-      const L = lungo()
-      const celle = []
-      let q = p, ok = true
-      for (let k = 0; k < L; k++) {
-        const n = passo(q, v)
-        if (!libera(n, q)) { ok = false; break }
-        celle.push(n)
-        q = n
-      }
-      if (!ok) continue
-      const nx0 = Math.min(x0, q[0]), nx1 = Math.max(x1, q[0]), ny0 = Math.min(y0, q[1]), ny1 = Math.max(y1, q[1])
-      if (nx1 - nx0 >= largo || ny1 - ny0 >= alto) continue
-      fatto = { verso: v, celle }
-      ;[x0, x1, y0, y1] = [nx0, nx1, ny0, ny1]
-      break
-    }
-    if (!fatto) storto()
-    for (const c of fatto.celle) occupate.add(chiave(c))
-    fuori.push(fatto)
-    p = fatto.celle.at(-1)
-  }
-  return fuori
-}
-export const OPPOSTO = { destra: 'sinistra', sinistra: 'destra', su: 'giu', giu: 'su' }

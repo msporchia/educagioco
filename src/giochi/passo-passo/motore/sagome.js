@@ -11,10 +11,12 @@ import { esegui, TANA } from './mondo.js'
 import { risolvi } from './risolutore.js'
 import { risolviSvelto, vaBene } from './svelto.js'
 import { guastiDellaMappa } from '../dati/mondo.js'
-import { programma, ripeti, se, carteDi, eRipeti, valoreDi, apri, VOLTE, COLORI, CASA } from '../dati/carte.js'
-import { Scavo, STORTO, storto, LETTERA, passo, chiave, componi, gira, a, tra, scegli, ruota, mescola, segui,
-         ripetute, uguali, cammino } from './scavo.js'
+import { programma, ripeti, carteDi, eRipeti, valoreDi, apri, VOLTE, COLORI } from '../dati/carte.js'
+import { Scavo, STORTO, storto, LETTERA, passo, chiave, componi, gira, tra, scegli, ruota, mescola, segui,
+         ripetute, uguali } from './scavo.js'
 import { SAGOME_CANE } from './sagome-cane.js'
+import { SAGOME_MISTE } from './sagome-miste.js'
+import { cercaProgramma } from './programmi.js'
 
 // ogni testa «fino a un colore» diventa un numero, e si provano tutte le
 // combinazioni: se una vince, il «fino a» non serve (vedi provaLoZaino)
@@ -36,10 +38,19 @@ function contandoSiVince(liv, fila) {
   return giro(0)
 }
 
-// la prova: il pavimento di un posto col zaino (vedi docs/passo-passo/sentiero.md)
+// la prova: il pavimento di un posto col zaino (vedi docs/passo-passo/sentiero.md
+// e, per chi ha tutte le carte, sentiero-finale.md)
 export const ZAINO_MIN = 5
 export const STRADA_MIN = 15
-export function provaLoZaino(t, { strada = STRADA_MIN, zaino = ZAINO_MIN } = {}) {
+// e quello del finale, per chi ha tutte le carte: il programma più corto
+// ha almeno CARTE_MIN carte ed esegue almeno PASSI_MIN mosse; dentro lo
+// zaino non si vince senza il se. Il generatore cerca fino a CERCA passi
+// della ricerca (`cercaProgramma`), poi si fida della sagoma; una sagoma
+// che dice `cerca: 0` (il cane: lì la ricerca costa secondi) si fida e basta
+export const CARTE_MIN = 8
+export const PASSI_MIN = 15
+export const CERCA = 100000
+export function provaLoZaino(t, { strada = STRADA_MIN, zaino = ZAINO_MIN, finale = false, cerca = CERCA } = {}) {
   if (guastiDellaMappa(t.mappa).length) return false
   if (carteDi(t.soluzioni[0]) < zaino) return false
   const liv = Livello.da(t)
@@ -53,7 +64,18 @@ export function provaLoZaino(t, { strada = STRADA_MIN, zaino = ZAINO_MIN } = {})
     if (e.esito === TANA && e.carota) return false
   }
   if (contandoSiVince(liv, sol)) return false
+  if (finale && !provaIlFinale(liv, r, cerca)) return false
   return true
+}
+
+/* il programma scritto è (quasi) il più corto — una carta in meno va
+   bene, due no — e senza il se dentro lo zaino non si vince */
+function provaIlFinale(liv, r, cerca) {
+  if (r.passi.length < PASSI_MIN || liv.zaino < CARTE_MIN) return false
+  if (!cerca) return true
+  const sotto = Math.max(CARTE_MIN, liv.zaino - 1) - 1
+  if (cercaProgramma(liv, { tetto: sotto, limite: cerca }).fila) return false
+  return !cercaProgramma(liv, { carte: liv.carte.filter(c => c !== 'se'), tetto: liv.zaino, limite: cerca }).fila
 }
 
 // le sagome: ognuna ha la carta del suo gradino, le regole del mondo che
@@ -354,70 +376,10 @@ const DEL_CONIGLIO = [
   { chiave: 'gallerie-storte', carta: 'fino', serve: ['buche'],
     nomi: ['Le gallerie storte', 'Le tane del bosco', 'I cunicoli'],
     fai(rnd) { return gallerie(rnd, true) } },
-
-  // le colline: sempre avanti, il colore dice su o giù; chi legge un
-  // colore al contrario trova un prato che sembra buono, e dietro l'acqua
-  { chiave: 'colline', carta: 'se', serve: [],
-    nomi: ['Le colline', 'Su e giù', 'I dossi'],
-    fai(rnd) {
-      const s = new Scavo()
-      const [giu, su] = mescola(rnd, COLORI)
-      const w = tra(rnd, 10, 11), alto = 8   // più largo di nove: il posto si gira per il lungo
-      let y = tra(rnd, 2, alto - 3)
-      s.metti(0, y, 'P')
-      const posti = []
-      let prima = null, svolte = 0
-      for (let x = 1; x < w; x++) {
-        if (x === w - 1) { s.metti(x, y, '@'); break }
-        let che = 'dritto'
-        const puo = [['dritto', 0.6]]
-        if (y + 1 <= alto - 2 && prima !== 'su') puo.push(['giu', 1.3])
-        if (y - 1 >= 1 && prima !== 'giu') puo.push(['su', 1.3])
-        let t = rnd() * puo.reduce((n, [, q]) => n + q, 0)
-        for (const [c, q] of puo) { if ((t -= q) <= 0) { che = c; break } }
-        if (che === 'dritto') { s.metti(x, y, '.'); posti.push([x, y]); prima = null; continue }
-        const v = che === 'giu' ? 1 : -1
-        s.metti(x, y, LETTERA[che === 'giu' ? giu : su])
-        s.metti(x, y + v, '.')
-        posti.push([x, y + v])
-        /* le false piste: il verso sbagliato (un pezzo di prato, e dietro
-           l'acqua) e il «se» dimenticato (dritti nell'acqua). Due discese
-           di fila: il verso sbagliato della seconda è già acqua */
-        if (s.get(x, y - v) !== '~') {
-          s.metti(x, y - v, '.')
-          s.metti(x + 1, y - v, '~')
-        }
-        s.metti(x + 1, y, '~')
-        y += v
-        prima = che
-        svolte++
-      }
-      if (svolte < 4) storto()
-      const [cx, cy] = scegli(rnd, posti)
-      s.forza(cx, cy, 'c')
-      const giri = rnd() < 0.5 ? [se(giu, 'giu'), se(su, 'su')] : [se(su, 'su'), se(giu, 'giu')]
-      return {
-        scavo: s, fondo: scegli(rnd, ['prato', 'bosco']),
-        soluzione: programma(ripeti(CASA, 'destra', ...giri)),
-        fragili: [
-          { fila: programma(ripeti(CASA, 'destra', se(giu, 'su'), se(su, 'giu'))), obbligatoria: true },
-          { fila: programma(ripeti(CASA, 'destra', se(giu, 'giu'))), obbligatoria: true },
-          { fila: programma(ripeti(CASA, 'destra', se(su, 'su'))), obbligatoria: true },
-        ],
-      }
-    } },
-
-  // il sentiero dei segni: tre versi, un colore per verso; chi scambia
-  // due colori finisce nello stagno (sul ghiaccio: si scivola fra un segno e l'altro)
-  { chiave: 'segni', carta: 'se', serve: [],
-    nomi: ['Il sentiero dei segni', 'I cartelli', 'La strada dipinta'],
-    fai(rnd) { return segni(rnd, false) } },
-  { chiave: 'segni-ghiaccio', carta: 'se', serve: ['ghiaccio'], strada: 12, tema: 'inverno',
-    nomi: ['Il bosco ghiacciato', 'I cartelli sul ghiaccio', 'Il lago dei segni'],
-    fai(rnd) { return segni(rnd, true) } },
 ]
-/* tutte, il coniglio e il cane: una sagoma del cane dice `animale: 'cane'` */
-export const SAGOME = [...DEL_CONIGLIO, ...SAGOME_CANE]
+/* tutte, il coniglio e il cane: una sagoma del cane dice `animale: 'cane'`.
+   Quelle miste (`sagome-miste.js`) sono per chi ha tutte le carte */
+export const SAGOME = [...DEL_CONIGLIO, ...SAGOME_CANE, ...SAGOME_MISTE]
 export const animaleDi = g => g.animale || 'coniglio'
 
 /* le gallerie, lunghe uguali o storte: le buche sono tre coppie al
@@ -503,58 +465,6 @@ function campoStorto(rnd, salti) {
   }
 }
 
-/* il sentiero dei segni, sul prato o sul ghiaccio */
-function segni(rnd, ghiaccio) {
-  const s = new Scavo()
-  const versi = ['destra', 'giu', 'sinistra', 'su']
-  versi.splice(a(rnd, 4), 1)
-  const colori = mescola(rnd, COLORI)
-  const coloreDi = Object.fromEntries(versi.map((v, i) => [v, colori[i]]))
-  /* sul prato ogni pezzo è un passo; sul ghiaccio da uno a tre, e il
-     primo pezzo — prima del primo segno — scivola sempre */
-  const pezzi = ghiaccio ? tra(rnd, 10, 13) : tra(rnd, 15, 20)
-  let primo = true
-  const tratti = cammino(rnd, versi, pezzi, () => {
-    if (!ghiaccio) return 1
-    const L = primo ? tra(rnd, 2, 3) : scegli(rnd, [1, 2, 2, 3])
-    primo = false
-    return L
-  })
-  s.metti(0, 0, 'P')
-  const ghiacci = []
-  const mosse = tratti.map(t => t.verso)
-  /* le celle di mezzo: prato o ghiaccio; l'ultima di ogni pezzo è il
-     segno del pezzo dopo (o la tana) */
-  tratti.forEach((t, i) => {
-    t.celle.slice(0, -1).forEach(c => { s.metti(c[0], c[1], ghiaccio ? '*' : '.'); ghiacci.push(c) })
-    const fine = t.celle.at(-1)
-    s.metti(fine[0], fine[1], i === tratti.length - 1 ? '@' : LETTERA[coloreDi[mosse[i + 1]]])
-  })
-  if (new Set(mosse.slice(ghiaccio ? 1 : 2)).size < 3) storto()
-  const ordine = mescola(rnd, versi)
-  const leggi = tab => ripeti(CASA, ...ordine.map(v => se(coloreDi[v], tab[v] || v)))
-  const scambi = [[0, 1], [0, 2], [1, 2]].map(([i, j]) => leggi({ [versi[i]]: versi[j], [versi[j]]: versi[i] }))
-  /* la carota: sul prato si prende al primo passo, prima dei segni
-     (sopra un segno non ci sta); sul ghiaccio su una lastra di mezzo */
-  let prima = [mosse[0]]
-  if (ghiaccio) {
-    if (!ghiacci.length) storto()
-    const [cx, cy] = scegli(rnd, ghiacci)
-    s.forza(cx, cy, 'C')
-  } else {
-    /* la prima cella dopo la partenza è la carota, e i segni vengono
-       dopo: si comincia con due frecce sciolte */
-    const primoSegno = tratti[0].celle.at(-1)
-    s.forza(primoSegno[0], primoSegno[1], 'c')
-    prima = [mosse[0], mosse[1]]
-  }
-  return {
-    scavo: s, fondo: scegli(rnd, ['stagno', 'prato']),
-    soluzione: programma(...prima, leggi({})),
-    fragili: scambi.map(f => ({ fila: programma(...prima, f), obbligatoria: true })),
-  }
-}
-
 // le carte in mano dal gradino che le ha messe in poi (come nella campagna)
 export function carteInMano(sbloccati) {
   const carte = ['ripeti']
@@ -563,11 +473,26 @@ export function carteInMano(sbloccati) {
   return carte
 }
 
+// le carte che una sagoma chiede: di serie quella del suo gradino
+export const carteDella = g => g.carte || [g.carta]
+// una sagoma va bene per una mano se chiede carte che ci sono; e chi ha il
+// se trova solo sagome col se (vedi docs/passo-passo/sentiero-finale.md)
+export function vaPerLaMano(g, mano) {
+  const chiede = carteDella(g)
+  if (!chiede.every(c => mano.includes(c))) return false
+  return !mano.includes('se') || chiede.includes('se')
+}
+
 // un posto con lo zaino: prova una sagoma della carta chiesta, e se
 // nessuna regge torna `null` (chi chiama ha la sua riserva)
 export function generaZaino(carta, sbloccati, rnd, { prove = 60, sagoma = null, strada = 'coniglio', prima = null } = {}) {
+  const mano = carteInMano(sbloccati)
+  /* chi ha tutte le carte: l'asticella del finale (vedi provaLoZaino), e
+     ogni famiglia pesca fra tutte le sagome col se */
+  const finale = mano.includes('se')
   const puo = SAGOME.filter(g => (sagoma ? g.chiave === sagoma
-    : g.carta === carta && animaleDi(g) === strada && g.serve.every(r => sbloccati.includes(r))))
+    : (finale || g.carta === carta) && animaleDi(g) === strada && g.serve.every(r => sbloccati.includes(r)) &&
+      vaPerLaMano(g, mano)))
   /* le sagome che mescolano una regola del mondo pesano di più: sono
      quelle che fanno sembrare il sentiero un posto sempre nuovo; quella
      del posto di prima pesa poco */
@@ -586,11 +511,11 @@ export function generaZaino(carta, sbloccati, rnd, { prove = 60, sagoma = null, 
       const girato = gira({ mappa, soluzione: fatto.soluzione, fragili: fatto.fragili }, rnd)
       const tappa = {
         mappa: girato.mappa, salti: !!fatto.salti,
-        carte: carteInMano(sbloccati), zaino: carteDi(girato.soluzione),
+        carte: mano, zaino: carteDi(girato.soluzione),
         soluzioni: [girato.soluzione],
         obbligatorie: girato.fragili.filter(f => f.obbligatoria).map(f => f.fila),
       }
-      if (!provaLoZaino(tappa, { strada: g.strada || STRADA_MIN })) continue
+      if (!provaLoZaino(tappa, { strada: g.strada || STRADA_MIN, finale, cerca: g.cerca ?? CERCA })) continue
       /* le mosse ingenue che restano sono quelle che perdono davvero */
       const liv = Livello.da(tappa)
       tappa.fragili = girato.fragili.map(f => f.fila).filter(f => {
