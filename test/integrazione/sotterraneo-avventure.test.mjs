@@ -113,6 +113,16 @@ controlla('e dice a che punto è: discese, stelle, gemme', schedaCav.includes('1
           && schedaCav.includes('💎 60'), schedaCav)
 controlla('la roba principale addosso', await page.locator('.sot-eroe[data-eroe="cavaliere"] [data-addosso="spada"]').count() === 1)
 controlla('e la discesa a metà', schedaCav.includes('a metà: il pozzo dal tetto rosso'), schedaCav)
+// la roba del seme: spada (braccio 2) e corazza (difesa 2) sopra i 18 · 3 · 1 di base del cavaliere
+// innerText mette un a capo fra l'icona e il numero: si confronta il testo compatto
+const compatto = t => t.replace(/\s+/g, ' ')
+controlla('i numeri sono quelli con la roba: ❤️ 18 · ⚔️ 5 · 🛡️ 3',
+          compatto(schedaCav).includes('❤️ 18 ⚔️ 5 🛡️ 3') && !compatto(schedaCav).includes('⚔️ 3 '), compatto(schedaCav))
+controlla('la spada è in mano al ritratto', await page.locator('.sot-eroe[data-eroe="cavaliere"] .sot-armato [data-in-mano="spada"]').count() === 1)
+controlla('la corazza è accanto, in iconcina', await page.locator('.sot-eroe[data-eroe="cavaliere"] [data-addosso="corazza"]').count() === 1)
+controlla('l\'elfa nuova ha i numeri di base e le mani vuote',
+          compatto(await page.locator('.sot-eroe[data-eroe="elfa"]').innerText()).includes('❤️ 15 ⚔️ 4 🛡️ 1')
+          && await page.locator('.sot-eroe[data-eroe="elfa"] [data-in-mano]').count() === 0)
 for (const e of ['elfa', 'mago', 'nano']) {
   uguale(`${e}: nuova avventura`, await page.locator(`.sot-eroe[data-eroe="${e}"]`).getAttribute('data-nuova'), '1')
 }
