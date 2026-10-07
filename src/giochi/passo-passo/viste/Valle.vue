@@ -1,17 +1,17 @@
 <script setup>
-/* La valle dei piccoli: il fondale dipinto, più grande dello schermo nei due
-   versi, con sopra le caselle, i cartelli, i blocchi dei ponti chiusi, le
-   tane, il segnalino e il fumetto. La vista non si trascina: segue il
-   segnalino, morbida, quando arriva vicino al bordo (come la terra di sopra
-   del sotterraneo); col fumetto aperto sta sul fumetto. Toccando una casella
-   il fumetto si apre subito e il segnalino ci va sulla strada più corta dei
-   ponti aperti; toccando altrove ci va e basta. La tana in cima alle buche
-   porta allo zaino (`passa`). Riceve lo stato già deciso di ogni tappa.
-   Vedi docs/passo-passo/mappa.md. */
+/* Una valle di Passo passo, quella dei piccoli o quella dello zaino: il fondale
+   dipinto, più grande dello schermo nei due versi, con sopra le caselle, i
+   cartelli, i blocchi dei ponti chiusi, le tane, il segnalino e il fumetto.
+   La vista non si trascina: segue il segnalino, morbida, quando arriva
+   vicino al bordo (come la terra di sopra del sotterraneo); col fumetto
+   aperto sta sul fumetto. Toccando una casella il fumetto si apre subito e
+   il segnalino ci va sulla strada più corta dei ponti aperti; toccando
+   altrove ci va e basta. Una tana porta all'altra valle (`passa`): quella in
+   cima alle buche allo zaino, quella sulla riva dello zaino alla valle.
+   Riceve lo stato già deciso di ogni tappa. Vedi docs/passo-passo/mappa.md. */
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { MAPPA } from '../dati/isole-mappa.js'
-import { quadroValle, chiusure, viaggio, vicinoA, entraNellaTana, esceDallaTana } from '../scena/valle.js'
-import { ANIMALE, SENTIERO_CANE } from '../scena/isole.js'
+import { quadroValle, chiusure, viaggio, vicinoA, entraNellaTana, esceDallaTana, DATI } from '../scena/valle.js'
+import { ANIMALE, SENTIERO_CANE } from '../scena/animale.js'
 import { SBARRA, MASSO, rettangoli } from '../scena/pixel.js'
 import { STRADE } from '../motore/strade.js'
 import { usaSegnalino } from './segnalino.js'
@@ -22,18 +22,24 @@ import Coniglio from './Coniglio.vue'
 import Cane from './Cane.vue'
 
 const props = defineProps({
+  mondo: { type: String, default: 'valle' },          // 'valle' o 'zaino'
   voci: { type: Array, required: true },
   sentieri: { type: Object, required: true },         // { coniglio, cane }, ognuno { aperto, record, serve }
-  zaino: { type: Object, required: true },            // la tana dello zaino: { aperto, serve }
+  passaggio: { type: Object, required: true },        // la tana per l'altro mondo: { aperto, serve }
   dove: { type: [Number, String], required: true },   // la tappa di adesso, o un sentiero
   partenza: { type: [Number, String], required: true },  // il nodo dove sta il segnalino
   meta: { type: [Number, String], default: null },    // dove va appena aperta la mappa (la tappa di adesso è cambiata)
-  entrata: { type: Boolean, default: false },         // torna dallo zaino: sbuca dalla tana
+  entrata: { type: Boolean, default: false },         // arriva dall'altra valle: sbuca dalla tana
   verso: { type: Number, default: 1 },
 })
 const emit = defineEmits(['gioca', 'senza-fine', 'passa', 'posato'])
 
-const quadro = quadroValle(STRADE)
+const quadro = quadroValle(STRADE, { mondo: props.mondo })
+const MAPPA = DATI[props.mondo].MAPPA
+// la tana che porta all'altro mondo: dalla valle si va allo zaino, dalla riva dello zaino si torna
+const TANA = props.mondo === 'valle'
+  ? { id: 'tana:zaino', verso: 'zaino', nome: 'Lo zaino', icona: '🎒', dove: 'alle isole delle carte' }
+  : { id: 'tana:valle', verso: 'valle', nome: 'La valle', icona: '🌱', dove: 'ai primi passi' }
 const per = new Map(quadro.nodi.map(n => [n.id, n]))
 const nodoDi = id => per.get(id) || null
 const DISEGNO_SBARRA = rettangoli(SBARRA), DISEGNO_MASSO = rettangoli(MASSO)
@@ -59,22 +65,24 @@ const vocePer = id => caselle.value.find(c => c.id === id)
 const stato = computed(() => chiusure(quadro, id => !!props.voci[id] && props.voci[id].stato !== 'chiusa'))
 const velata = k => !stato.value.aperte.has(k)
 
-// il cartello di ogni isola: lo scalino (il pascolo, il cane pastore)
+// il cartello di ogni isola: lo scalino (il pascolo, il cane pastore); un'isoletta
+// con `stemma` ha lo scudo solo
 const insegne = computed(() => Object.entries(quadro.isole).map(([chiave, d]) => {
   const s = STRADE.isole.find(x => x.chiave === chiave)
-  return { chiave, x: d.cartello[0], y: d.cartello[1], animale: s.animale, scalino: s.scalino,
+  return { chiave, x: d.cartello[0], y: d.cartello[1], animale: s.animale, scalino: s.scalino, stemma: !!d.stemma,
            dati: props.voci[s.tappe[0]].scalino, velata: velata(chiave) }
 }))
-// la tana fra le buche e il pascolo: chiusa, ha il masso davanti
-const tane = computed(() => quadro.nodi.filter(n => n.tipo === 'tana' && n.chiave.endsWith(':da')).map(n => {
+// le tane che portano a un'isola del cane (il pascolo, le isolette dello zaino): chiusa, la sua bocca
+// dipinta ha il masso davanti
+const tane = computed(() => quadro.nodi.filter(n => n.tipo === 'tana' && n.chiave.endsWith(':a')).map(n => {
   const nome = n.chiave.split(':')[1]
-  return { ...n, nome, aperta: !velata(n.isola) && !velata(nome) }
+  return { ...n, nome, aperta: !velata(nodoDi(`tana:${nome}:da`).isola) && !velata(n.isola) }
 }))
-const tanaZaino = nodoDi('tana:zaino')
+const tanaPassaggio = nodoDi(TANA.id)
 // i ponti verso le isole chiuse, col nome dello scalino di là
-const blocchi = computed(() => stato.value.blocchi.map(b => {
+const blocchi = computed(() => stato.value.blocchi.flatMap(b => {
   const s = STRADE.isole.find(x => x.chiave === b.isola)
-  return { ...b, verso: props.voci[s.tappe[0]].scalino.nome }
+  return s ? [{ ...b, verso: props.voci[s.tappe[0]].scalino.nome }] : []
 }))
 
 /* ---------- il segnalino ---------- */
@@ -182,8 +190,8 @@ const fumetto = ref(null)
 const cosaAperta = computed(() => {
   const a = aperto.value
   if (a === null) return null
-  if (a === 'zaino') return { id: 'zaino', tipo: 'zaino', x: tanaZaino.x, y: tanaZaino.y, alto: 40, nome: 'Lo zaino',
-                              racconto: 'Le isole delle carte: ripeti, fino a, se.', stato: 'chiusa', serve: props.zaino.serve }
+  if (a === 'zaino') return { id: 'zaino', tipo: 'zaino', x: tanaPassaggio.x, y: tanaPassaggio.y, alto: 40, nome: 'Lo zaino',
+                              racconto: 'Le isole delle carte: ripeti, fino a, se.', stato: 'chiusa', serve: props.passaggio.serve }
   if (typeof a === 'string' && a.startsWith('blocco:')) {
     const b = blocchi.value.find(x => `blocco:${x.ponte}` === a)
     if (!b) return null
@@ -240,16 +248,16 @@ function toccaBlocco(b) {
   aperto.value = aperto.value === id ? null : id
   if (aperto.value) mostraFumetto()
 }
-// la tana dello zaino: aperta ci si entra e si passa all'altra mappa, chiusa dice cosa manca
-function toccaZaino() {
+// la tana per l'altra valle: aperta ci si entra e si passa, chiusa (la tana dello zaino) dice cosa manca
+function toccaPassaggio() {
   if (strisciato()) return
-  if (!props.zaino.aperto) {
+  if (!props.passaggio.aperto) {
     aperto.value = aperto.value === 'zaino' ? null : 'zaino'
     if (aperto.value) mostraFumetto()
     return
   }
   aperto.value = null
-  seg.vai(tanaZaino.id, { coda: [entraNellaTana(tanaZaino)], dopo: () => emit('passa') })
+  seg.vai(tanaPassaggio.id, { coda: [entraNellaTana(tanaPassaggio)], dopo: () => emit('passa') })
 }
 // fuori da tutto: col fumetto aperto lo chiude, se no il segnalino va al posto più vicino
 function fuori(e) {
@@ -303,11 +311,11 @@ const dove = (x, y) => ({ left: x + 'px', top: y + 'px' })
 </script>
 
 <template>
-  <div ref="vista" class="pp-valle" data-isole data-mondo="valle" @pointerdown="giu" @pointermove="muove" @click="fuori">
+  <div ref="vista" class="pp-valle" data-isole :data-mondo="mondo" @pointerdown="giu" @pointermove="muove" @click="fuori">
     <div ref="mondo" class="pp-valle-mondo" :style="{ width: quadro.W + 'px', height: quadro.H + 'px' }">
       <img class="pp-fondale" :src="MAPPA" alt="" draggable="false" :width="quadro.W" :height="quadro.H">
 
-      <!-- la tana fra le buche e il pascolo: chiusa, col masso davanti -->
+      <!-- le tane che portano a un'isola del cane (il pascolo, un'isoletta): chiusa, col masso davanti -->
       <span v-for="t in tane" :key="t.id" class="pp-tana-valle" :data-tana="t.nome" :data-aperta="t.aperta ? '1' : '0'"
             :style="dove(t.x, t.y)">
         <svg v-if="!t.aperta" :width="DISEGNO_MASSO.w * 3" :height="DISEGNO_MASSO.h * 3"
@@ -316,25 +324,25 @@ const dove = (x, y) => ({ left: x + 'px', top: y + 'px' })
         </svg>
       </span>
 
-      <!-- la tana in cima alle buche porta allo zaino -->
-      <button type="button" class="pp-passaggio" data-passaggio="zaino" data-tana="zaino"
-              :data-aperta="zaino.aperto ? '1' : '0'" :style="dove(tanaZaino.x, tanaZaino.y)"
-              :aria-label="zaino.aperto ? 'La tana dello zaino: porta alle isole delle carte' : `La tana dello zaino (chiusa): ${zaino.serve}`"
-              @click.stop="toccaZaino">
-        <svg v-if="!zaino.aperto" class="pp-passaggio-masso" :width="DISEGNO_MASSO.w * 3" :height="DISEGNO_MASSO.h * 3"
+      <!-- la tana per l'altra valle: in cima alle buche porta allo zaino, sulla riva dello zaino torna indietro -->
+      <button type="button" class="pp-passaggio" :data-passaggio="TANA.verso" :data-tana="TANA.verso"
+              :data-aperta="passaggio.aperto ? '1' : '0'" :style="dove(tanaPassaggio.x, tanaPassaggio.y)"
+              :aria-label="passaggio.aperto ? `La tana per ${TANA.nome.toLowerCase()}: porta ${TANA.dove}` : `La tana dello zaino (chiusa): ${passaggio.serve}`"
+              @click.stop="toccaPassaggio">
+        <svg v-if="!passaggio.aperto" class="pp-passaggio-masso" :width="DISEGNO_MASSO.w * 3" :height="DISEGNO_MASSO.h * 3"
              :viewBox="`0 0 ${DISEGNO_MASSO.w} ${DISEGNO_MASSO.h}`" shape-rendering="crispEdges" aria-hidden="true">
           <rect v-for="(r, i) in DISEGNO_MASSO.rect" :key="i" :x="r.x" :y="r.y" :width="r.w" height="1" :fill="r.c" />
         </svg>
-        <span class="pp-passaggio-nome" :style="{ left: `calc(50% + ${tanaZaino.cartello[0] - tanaZaino.x}px)`,
-                                                  top: `calc(50% + ${tanaZaino.cartello[1] - tanaZaino.y}px)` }">
-          <span class="pp-em">🎒</span> Lo zaino</span>
+        <span class="pp-passaggio-nome" :style="{ left: `calc(50% + ${tanaPassaggio.cartello[0] - tanaPassaggio.x}px)`,
+                                                  top: `calc(50% + ${tanaPassaggio.cartello[1] - tanaPassaggio.y}px)` }">
+          <span class="pp-em">{{ TANA.icona }}</span> {{ TANA.nome }}</span>
       </button>
 
       <!-- i cartelli delle isole -->
       <div v-for="s in insegne" :key="s.chiave" class="pp-insegna pp-insegna-valle"
            :data-insegna="s.chiave" :data-isola="s.chiave" :data-scalino="s.scalino" :data-animale="s.animale"
            :data-velata="s.velata ? '1' : '0'" :style="dove(s.x, s.y)">
-        <Stendardo :nome="s.dati.nome" :icona="s.dati.icona" :animale="s.animale" :velato="s.velata" />
+        <Stendardo :nome="s.dati.nome" :icona="s.dati.icona" :animale="s.animale" :velato="s.velata" :solo-stemma="s.stemma" />
       </div>
 
       <!-- i blocchi: un ponte verso un'isola chiusa non si passa -->
@@ -358,7 +366,7 @@ const dove = (x, y) => ({ left: x + 'px', top: y + 'px' })
         </span>
       </template>
 
-      <!-- il segnalino: il coniglio sulle isole del coniglio, il cane sul pascolo -->
+      <!-- il segnalino: il coniglio sulle isole del coniglio, il cane su quelle del cane -->
       <div ref="ombra" class="pp-ombra" aria-hidden="true"></div>
       <div ref="segnalino" class="pp-segnalino" aria-hidden="true" data-segnalino
            :data-animale="animale" :data-al="posato" :data-in-viaggio="viaggiando ? '1' : '0'">

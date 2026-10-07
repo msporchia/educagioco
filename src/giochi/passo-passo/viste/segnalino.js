@@ -1,10 +1,10 @@
-/* Il segnalino delle due mappe (viste/Valle.vue e viste/MondoZaino.vue): l'animale
-   che salta di posto in posto, a fotogrammi, fermo a schermo nascosto. La
-   strada gliela dà chi lo usa (`viaggio(da, a)`, i passi di scena/valle.js o
-   scena/isole.js); `segui` riceve dove sta, per la vista; `arrivato` il nodo
-   dove si è posato. Vedi docs/passo-passo/mappa.md, «Il segnalino». */
+/* Il segnalino delle due valli (viste/Valle.vue): l'animale che salta di
+   posto in posto, a fotogrammi, fermo a schermo nascosto. La strada gliela
+   dà chi lo usa (`viaggio(da, a)`, i passi di scena/valle.js); `segui`
+   riceve dove sta, per la vista; `arrivato` il nodo dove si è posato.
+   Vedi docs/passo-passo/mappa.md, «Il segnalino». */
 import { ref, shallowRef } from 'vue'
-import { arco, ANIMALE } from '../scena/isole.js'
+import { arco, ANIMALE } from '../scena/animale.js'
 
 export function usaSegnalino({ nodoDi, viaggio, segui = () => {}, arrivato = () => {} }) {
   const el = ref(null), corpo = ref(null), ombra = ref(null)
@@ -45,6 +45,7 @@ export function usaSegnalino({ nodoDi, viaggio, segui = () => {}, arrivato = () 
      la tana che porta all'altra mappa. */
   function vai(a, { attesa = 0, passi: dati = null, coda = null, dopo = null } = {}) {
     if (viaggiando.value) { viaggiando.value.vai(a, { passi: dati, coda, dopo }); return }
+    sbuffo.value = null           // la nuvoletta di un viaggio di prima: questa volta se ne fa una nuova, anche nello stesso posto
     let passi = dati || [...viaggio(qui ?? posato.value, a), ...(coda || [])]
     if (!passi.length) {
       posato.value = a; posa(); arrivato(a)
