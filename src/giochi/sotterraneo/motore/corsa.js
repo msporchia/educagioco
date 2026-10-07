@@ -180,7 +180,7 @@ export class Corsa extends Corredo {
     if (r.che === 'porta') return !r.aperta
     if (r.che === 'forziere') return !r.aperto
     if (r.che === 'curiosita') return !r.visto   // una volta sola, poi è arredo
-    return ['mostro', 'fonte', 'scala', 'cosa', 'gemme'].includes(r.che)
+    return ['mostro', 'fonte', 'scala', 'cosa', 'gemme', 'portale'].includes(r.che)
   }
 
   // le gemme si prendono camminandoci sopra: restano toccabili senza rubare il tocco a un forziere accanto
@@ -402,6 +402,8 @@ export class Corsa extends Corredo {
     if (r.che === 'cosa') return this.trovata(r)
     if (r.che === 'gemme') return this.raccogli()
     if (r.che === 'curiosita') return r.visto ? undefined : this.apri('curiosita', r, RINCARO.curiosita)
+    // il portale non chiede niente: si sale al villaggio e si torna qui (docs/sotterraneo/regole.md)
+    if (r.che === 'portale') this.foglio = { che: 'portale', chi: r }
   }
 
   // mai sopra quello che l'ha lasciato (invisibile e irraggiungibile): si cerca la prima cella libera nel raggio

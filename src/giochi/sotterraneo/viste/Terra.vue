@@ -1,20 +1,21 @@
 <script setup>
 // La terra di sopra: la mappa intera, l'eroe che cammina da solo fino al punto toccato, la vista che lo segue
 // quando arriva ai bordi, le discese sui posti col loro fumetto, chi indica la strada, i mercanti e la nebbia.
-// Riceve le tappe già decise e dice solo «si scende qui» (`scendi`), «apro il banco di…» (`bottega`) e
-// «ricordati questo» (`terra`).
+// Riceve le tappe già decise e dice solo «si scende qui» (`scendi`), «apro il banco di…» (`bottega`), «torno
+// giù dal portale» (`riprendi`) e «ricordati questo» (`terra`).
 // Le regole: docs/sotterraneo/terra-di-sopra.md.
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO,
-         MERCANTI as DOVE_MERCANTI } from '../dati/terra-mappa.js'
+         MERCANTI as DOVE_MERCANTI, PORTALE as DOVE_PORTALE } from '../dati/terra-mappa.js'
 import { MERCANTI } from '../dati/mercanti.js'
 import { POSTO_DI, LUOGHI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, PASSO_TERRA, VISTA, LUCE,
          SASSI_OGNI, BORDO, MORBIDA } from '../dati/terra.js'
 import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice, sassiLungo } from '../motore/terra.js'
-import { pezzoAndante } from '../dati/tessere.js'
 import { figura, haFigura } from './figura.js'
 import { MINATORE, ARMAIOLO, ERBORISTA, RIGATTIERE, DIVIETO, SASSO, LUCCICHIO } from './pixel.js'
 import Pixel from './Pixel.vue'
+import Armato from './Armato.vue'
+import Portale from './Portale.vue'
 
 const props = defineProps({
   tappe: { type: Array, required: true },     // [{ indice, chiave, nome, icona, dritta, piani, aperta, adesso, stelle, perEta, fatta }]
@@ -22,8 +23,11 @@ const props = defineProps({
   eroe: { type: Object, required: true },
   terra: { type: Object, default: null },     // { nebbia, dove, parlato } dell'avventura, o null la prima volta
   giaScesa: { type: Number, default: null },  // la discesa lasciata a metà: ci si è già stati
+  // la discesa lasciata a metà è un portale aperto: il gemello sta nel villaggio. { nome, piano, piani, immagine }
+  portale: { type: Object, default: null },
+  roba: { type: Object, default: null },       // per l'arma in pugno: { mano, mancina }
 })
-const emit = defineEmits(['scendi', 'terra', 'bottega'])
+const emit = defineEmits(['scendi', 'terra', 'bottega', 'riprendi'])
 
 const SCARTO_DITO = 16   // sotto, il dito è fermo (docs/core/il-dito.md)
 const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
@@ -86,9 +90,11 @@ const centroDi = r => ({ x: Math.floor((r[0] + r[2] / 2) / CELLA), y: Math.floor
 const visto = c => nebbia[c.y * L + c.x] === 1
 const daTrovare = [...Object.entries(POSTI), ['cartello', CARTELLO]]
 // un mercante si trova quando si vede la cella dove sta: prima è prato come il resto
+const portalePiede = cella(DOVE_PORTALE.piede)
 const trovati = ref(new Set([
   ...daTrovare.filter(([, p]) => visto(centroDi(p.riquadro))).map(([n]) => n),
   ...mercanti.filter(m => visto(m.piede)).map(m => m.chiave),
+  ...(visto(portalePiede) ? ['portale'] : []),
 ]))
 
 /* ═══════════ l'eroe ═══════════ */
@@ -240,6 +246,7 @@ function guarda() {
     trovati.value = new Set([...trovati.value, m.chiave])
     dillo(`Hai trovato ${minuscolo(m.nome)}!`)
   }
+  if (!trovati.value.has('portale') && visto(portalePiede)) trovati.value = new Set([...trovati.value, 'portale'])
 }
 
 /* ═══════════ il passo ═══════════ */
@@ -311,6 +318,7 @@ function piazzaFumetto() {
   if (!f || !m) return
   const r = m.tipo === 'posto' ? m.p.riquadro
     : m.tipo === 'cartello' ? CARTELLO.riquadro
+    : m.tipo === 'portale' ? [portalePiede.x * CELLA - 16, portalePiede.y * CELLA - 64, CELLA + 32, 88]
     : [DOVE_MINATORE.piede[0] * CELLA, DOVE_MINATORE.piede[1] * CELLA - 40, CELLA, 72]
   const w = Math.min(LARGO_FUM, vL - 16), h = f.offsetHeight
   const ax = (r[0] + r[2] / 2) * S
@@ -373,6 +381,12 @@ const toccaMinatore = () => verso(cella(DOVE_MINATORE.accanto), { tipo: 'minator
 const toccaCartello = () => verso(cella(CARTELLO.piede), { tipo: 'cartello' })
 // ai mercanti come al minatore: ci si ferma accanto, e arrivati si apre il banco
 const toccaMercante = m => verso(m.accanto, { tipo: 'mercante', chi: m })
+// al portale gemello anche: accanto, ed è lì che si sbuca risalendo
+const toccaPortale = () => verso(cella(DOVE_PORTALE.accanto), { tipo: 'portale' })
+function giuDalPortale() {
+  salva()
+  emit('riprendi')
+}
 
 function scendi(p) {
   salva()
@@ -505,6 +519,14 @@ const chiusaPerche = p => {
         <Pixel v-else :figura="m.figura" :scala="SCALA_EROE" />
       </button>
 
+      <!-- il portale gemello: c'è finché c'è una discesa lasciata a metà, e riporta giù nel punto esatto -->
+      <button v-if="portale" class="sot-portale-sopra" :class="{ 'sot-buio': !trovati.has('portale') }" data-portale
+              aria-label="il portale" :tabindex="trovati.has('portale') ? 0 : -1"
+              :style="{ left: (portalePiede.x + 0.5) * CELLA * S + 'px', top: (portalePiede.y + 0.85) * CELLA * S + 'px' }"
+              @click.stop="toccaPortale">
+        <Portale :scala="SCALA_EROE" />
+      </button>
+
       <template v-for="p in posti" :key="'pallino-' + p.nome">
         <span v-if="p.aperto && trovati.has(p.nome)" class="sot-segno-posto" :class="{ 'sot-adesso': p.adesso }"
               :data-pallino="p.nome" :style="pallino(p)"></span>
@@ -556,6 +578,16 @@ const chiusaPerche = p => {
             </button>
           </template>
           <p v-else class="sot-fum-chiusa" data-chiusa-perche>{{ chiusaPerche(aperto.p) }}</p>
+        </template>
+        <template v-else-if="aperto.tipo === 'portale' && portale">
+          <b class="sot-fum-nome">Il portale</b>
+          <p class="sot-fum-portale">
+            <img v-if="portale.immagine" class="sot-ritaglio" :src="portale.immagine" alt="" data-ritaglio>
+            <span>Ti riporta giù: <b>{{ minuscolo(portale.nome) }}</b>, piano {{ portale.piano }}, dove eri.</span>
+          </p>
+          <button class="sot-grosso" data-azione="portale-giu" @click="giuDalPortale">
+            <span class="em">🌀</span> torno giù
+          </button>
         </template>
         <template v-else-if="aperto.tipo === 'minatore'">
           <b class="sot-fum-nome">Il vecchio minatore</b>

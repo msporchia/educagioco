@@ -100,8 +100,27 @@
 @keyframes sot-respira { 50% { transform: translateY(-3px) } }
 
 .sot-io-sopra { position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform }
-.sot-io-sopra > .sot-ritratto { position: absolute; left: 0; top: 0; transform: translate(-50%, -94%) }
-.sot-io-sopra.sot-specchio > .sot-ritratto { transform: translate(-50%, -94%) scaleX(-1) }
+.sot-io-sopra > .sot-armato { position: absolute; left: 0; top: 0; transform: translate(-50%, -94%) }
+.sot-io-sopra.sot-specchio > .sot-armato { transform: translate(-50%, -94%) scaleX(-1) }
+
+/* il portale gemello (viste/Portale.vue): i piedi dell'ovale nel punto dato, e un bagliore morbido che i
+   pixel non hanno, apposta: è magia, non disegno */
+.sot-portale-sopra {
+  position: absolute; padding: 0; margin: 0; border: 0; background: none; line-height: 0;
+  transform: translate(-50%, -100%);
+}
+.sot-portale-sopra.sot-buio { pointer-events: none }
+.sot-portale-luce { position: relative; display: block }
+.sot-portale-luce::before {
+  content: ''; position: absolute; inset: -40% -60%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, #9a7bffaa, #4fb4ff44 55%, transparent);
+  animation: sot-portale 1.8s ease-in-out infinite;
+}
+.sot-portale-luce > canvas { position: relative; display: block; image-rendering: pixelated }
+@keyframes sot-portale { 50% { opacity: .55; transform: scale(.92) } }
+
+/* il ritaglio della mappa al posto dell'emoji di una discesa: già tondo e sfumato, qui solo la misura */
+.sot-ritaglio { display: block; flex: none; object-fit: contain }
 
 .sot-segno {
   position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%;
@@ -145,6 +164,8 @@
 .sot-fum-freccia b { display: inline-block; width: 18px; font-size: 16px }
 .sot-fum-freccia i { font-style: normal; font-size: 12px; color: #6b6272; padding-left: 22px }
 .sot-fumetto .sot-grosso { margin-top: 10px; padding: 11px }
+.sot-fum-portale { display: flex; align-items: center; gap: 8px; margin: 6px 0 0 }
+.sot-fum-portale .sot-ritaglio { width: 52px; height: 52px }
 
 /* le carte che galleggiano: in cima la discesa a metà, in fondo chi scende */
 .sot-terra-sopra, .sot-terra-sotto {

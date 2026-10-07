@@ -10,7 +10,7 @@ import Terra from './Terra.vue'
 
 const props = defineProps({
   tappe: { type: Array, required: true },   // [{ indice, chiave, nome, icona, dritta, piani, aperta, adesso, stelle, perEta, fatta }]
-  ripresa: { type: Object, default: null }, // { tappa, nome, icona, piano, piani, vita, gemme, chi }
+  ripresa: { type: Object, default: null }, // { tappa, chiave, nome, icona, immagine, piano, piani, vita, gemme, chi }
   eroe: { type: Object, required: true },   // la scheda di chi scende, da dati/eroi.js
   abisso: { type: Object, default: null },   // { indice, nome, icona, dritta, fondo }; in fondo, la ripresa è più urgente
   terra: { type: Object, default: null },    // la terra dell'avventura: la nebbia, dove si era, se il minatore ha già parlato
@@ -38,13 +38,17 @@ function comincia() {
 
 <template>
   <div class="sot-tappe">
-    <Terra :tappe="tappe" :abisso="abisso" :eroe="eroe" :terra="terra"
-           :giaScesa="ripresa ? ripresa.tappa : null"
-           @scendi="tocca" @terra="v => $emit('terra', v)" @bottega="k => $emit('bottega', k)">
+    <!-- la discesa a metà è anche il portale gemello nel villaggio: tutti e due riprendono la stessa sosta -->
+    <Terra :tappe="tappe" :abisso="abisso" :eroe="eroe" :terra="terra" :roba="roba"
+           :giaScesa="ripresa ? ripresa.tappa : null" :portale="ripresa"
+           @scendi="tocca" @terra="v => $emit('terra', v)" @bottega="k => $emit('bottega', k)"
+           @riprendi="$emit('riprendi')">
       <template #sopra>
         <div v-if="ripresa" class="sot-ripresa" data-ripresa="1">
           <p class="sot-dove">
-            <span class="em">{{ ripresa.icona }}</span>
+            <!-- la discesa ritagliata dalla mappa: un'emoji non dice quale pozzo -->
+            <img v-if="ripresa.immagine" class="sot-ritaglio" :src="ripresa.immagine" alt="" data-ritaglio>
+            <span v-else class="em">{{ ripresa.icona }}</span>
             <b>{{ ripresa.nome }}</b>
             <!-- con chi si riprende: la sosta è dell'avventura, quindi di questo eroe -->
             <i>{{ ripresa.chi ? ripresa.chi + ' · ' : '' }}piano {{ ripresa.piano

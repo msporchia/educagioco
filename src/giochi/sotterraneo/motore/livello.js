@@ -151,7 +151,7 @@ export class Livello {
     this.robe.push({ che: 'scala', x: uscita.cx, y: uscita.cy, em: '🕳️',
                      nome: 'La scala che scende' })
 
-    // il premio (fonti, forzieri) si pesca fra le foglie (un solo collegamento): una stanza di
+    // il premio (portale, fonte, forzieri) si pesca fra le foglie (un solo collegamento): una stanza di
     // mezzo è un pezzo di strada, e sbarrarla metterebbe un pedaggio sulla via della scala (chiudiPorte)
     const foglia = s => s.vicine.length <= 1
     const libere = st.filter(s => !s.ruolo)
@@ -163,10 +163,16 @@ export class Livello {
       return scelta
     }
 
-    // due fonti: la prima stanza era del mercante, che adesso sta sopra (docs/sotterraneo/terra-di-sopra.md);
-    // stessa pesca e nessun tiro in più, così il piano di ieri nasce identico con un'acqua al posto del banco
-    for (let i = 0; i < 2; i++) {
-      const fonte = pesca(); if (!fonte) break
+    // il portale nella stanza che era del mercante (salito sopra): si torna al villaggio e si ritrova il piano
+    // com'era (docs/sotterraneo/regole.md). Stessa pesca e nessun tiro in più: il piano nasce identico. Senza
+    // porta: è la strada di casa, non un premio da pagare
+    const portale = pesca()
+    if (portale) {
+      portale.ruolo = 'portale'
+      this.robe.push({ che: 'portale', x: portale.cx, y: portale.cy, em: '🌀', nome: 'Un portale' })
+    }
+    const fonte = pesca()
+    if (fonte) {
       fonte.ruolo = 'fonte'
       this.robe.push({ che: 'fonte', x: fonte.cx, y: fonte.cy, em: '⛲', nome: 'Una fonte' })
     }

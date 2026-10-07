@@ -151,11 +151,23 @@ function scorda() {
   nellAvventura({ sosta: null }, { subito: true })
 }
 
-// riprendere non è ricominciare: il piano si rifà dal seme, e sopra ci si rimette quello che era successo
+// il portale: si sale al villaggio lasciando il piano com'è. La sosta è il portale aperto: sopra compare il
+// gemello (viste/Terra.vue), e l'eroe sbuca accanto a lui
+function salgoDalPortale() {
+  const c = corsa.value
+  if (!c || c.finita) return
+  c.chiudi()
+  salva({ subito: true })
+  nellAvventura({ terra: { ...(qui.value.terra || {}), dove: [...PORTALE.accanto] } }, { subito: true })
+  suono.nota(260, 880, 0.5, 'sine', 0.12)
+  allaMappa()
+}
+
+// riprendere non è ricominciare: il piano si rifà dal seme, e sopra ci si rimette quello che era successo. Dalla
+// carta in cima, da «riprendi da qui» e dal portale di sopra: è la stessa sosta
 function riprendiDiscesa() {
   const dato = qui.value.sosta
-  // un salvataggio vecchio non sa chi stava scendendo: vale l'eroe dell'avventura
-  const c = dato ? leggi(dato, tappaDi(dato.tappa), eroeQui(), roba.value) : null
+  const c = dato ? leggi(dato, tappaDi(dato.tappa), roba.value) : null
   if (!c) { scorda(); return }
   togli()   // il telefono posato sulla mappa lascia acceso il freno, o si ritroverebbe dietro un velo non chiesto
   tappaIdx.value = dato.tappa
@@ -849,6 +861,17 @@ function ridimensiona() { if (pittore) pittore.misura() }
               lascio perdere
             </button>
           </template>
+        </Foglio>
+
+        <!-- il portale: niente domanda, è la strada di casa; il piano resta com'è -->
+        <Foglio v-else-if="foglio && foglio.che === 'portale'" em="🌀" titolo="Un portale"
+                dice="Torni su al villaggio, e ritrovi il portale per tornare qui.">
+          <button class="sot-grosso" data-azione="portale" @click="salgoDalPortale">
+            salgo al villaggio
+          </button>
+          <button class="sot-grosso sot-chiaro" data-azione="dopo" @click="chiudiFoglio">
+            resto qui
+          </button>
         </Foglio>
 
         <Foglio v-else-if="foglio && foglio.che === 'chiusa'" em="🔒" titolo="La scala è chiusa"

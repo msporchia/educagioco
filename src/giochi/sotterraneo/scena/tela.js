@@ -13,6 +13,7 @@ import { MOSTRI } from '../dati/mostri.js'
 import { COSE, SEGNI } from '../dati/cose.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
 import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi } from './muri.js'
+import { dipingiPortale, PORTALE } from './portale.js'
 
 export class Tela {
   constructor(canvas) {
@@ -168,6 +169,7 @@ export class Tela {
     const d = this.canvas.dataset
     if (d.eroe !== cella) d.eroe = cella
     if (d.eroeSchermo !== schermo) d.eroeSchermo = schermo
+    if (d.scala !== String(this.scala)) d.scala = this.scala   // quanti pixel di schermo per pixel di sprite
   }
 
   // il fondo sul fondo della sua cella, sbordando in alto: così un mostro sta dietro al muro invece di galleggiarci sopra
@@ -314,6 +316,12 @@ export class Tela {
     // l'arredo sta un passo indietro (0.66 di alfa): non si spegne del tutto, o una stanza arredata sembra vuota
     const alfaLuce = luce === 2 ? 1 : 0.45
     const alfa = alfaLuce * (r.che === 'arredo' ? 0.66 : 1)
+
+    // il portale non ha pezzo nel foglio: si disegna da sé, coi piedi sul fondo della sua cella
+    if (r.che === 'portale') {
+      dipingiPortale(ctx, Math.round(px * T), Math.round((r.y + 1) * T - PORTALE.ry - 2), t, { alfa })
+      return
+    }
 
     if (r.che === 'mostro') {
       const scheda = MOSTRI[r.tipo]
@@ -496,6 +504,7 @@ export class Tela {
       const colore = r.che === 'mostro' && r.chiave ? '#ffd23f'
         : r.che === 'porta' && !r.aperta ? '#c9a227'
         : r.che === 'scala' ? '#6fc6ff'
+        : r.che === 'portale' ? '#b48cff'
         : r.che === 'cosa' ? '#7ee08a'
         : r.che === 'forziere' && !r.aperto ? '#ff9b3d' : null
       if (!colore) continue
