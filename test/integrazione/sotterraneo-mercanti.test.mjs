@@ -32,8 +32,8 @@ const roba = { v: 1, gemme: 60, zaino: ['ascia'], mano: null, mancina: null, cor
                torcia: 0, torce: 0 }
 await semina(page, {
   coins: 300, settings: { sperimentali: true },
-  campagne: { sotterraneo: { tappa: 0, libera: false, stelle: {},
-    cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: 0, libera: false, stelle: {}, missioni: {},
+  campagne: { sotterraneo: { tappa: 2, libera: false, stelle: { 0: 3, 1: 3 },
+    cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: 2, libera: false, stelle: { 0: 3, 1: 3 }, missioni: {},
       roba, terra: { nebbia: 'f'.repeat(768), dove: [17, 41], parlato: true } } } } } },
 })
 await scegli(page, 'sotterraneo')
@@ -158,6 +158,11 @@ await scatto(page, 'mercanti-mappa-rigattiere')
 await alBanco('armaiolo')
 uguale('l\'eroe si è fermato accanto all\'armaiolo', await cella(), MERCANTI.armaiolo.accanto.join(','))
 controlla('l\'armaiolo ha il suo banco', await page.locator('[data-merce]').count() >= 3)
+/* il banco porta la riga della storia con cui si entra nella prossima discesa (la torre): chi non ha niente ci
+   trova la spada corta, lo scudo di legno e il panciotto (dati/storia.js) */
+for (const k of ['spada-corta', 'scudo-legno', 'panciotto'])
+  uguale(`l'armaiolo ha ${COSE[k].nome.toLowerCase()}, del passo dopo`, await page.locator(`[data-merce="${k}"]`).count(), 1)
+uguale('e niente della riga dopo ancora (la spada)', await page.locator('[data-merce="spada"]').count(), 0)
 uguale('e non compra: dice chi lo fa', await page.locator('[data-chi-compra]').count(), 1)
 await chiudiBanco()
 await scatto(page, 'mercanti-mappa-armaiolo')

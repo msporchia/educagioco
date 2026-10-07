@@ -322,6 +322,43 @@ export async function statoSullIsola(page, quale) {
   return page.locator(sel).getAttribute('data-stato')
 }
 
+/* Porta l'eroe del sotterraneo fino a una cella della terra di sopra (`meta`, [x, y] della maschera) come un
+   bambino che sa la strada: la strada la calcola lo stesso motore del gioco (motore/terra.js), e si tocca il
+   punto più avanti di quella strada che sta sullo schermo, finché non ci si arriva. Toccare «verso» una cosa
+   lontana non basta: dal villaggio la strada per l'arco gira dietro al bosco. `tocca(x, y)`: il dito (CDP) o,
+   di difetto, il mouse. Torna la cella dove si è fermato */
+export async function camminaVerso(page, meta, { tocca = null, giri = 30 } = {}) {
+  const { MASCHERA, CELLA, MINATORE, MERCANTI, PERSONAGGI } = await import('../../src/giochi/sotterraneo/dati/terra-mappa.js')
+  const { creaTerra } = await import('../../src/giochi/sotterraneo/motore/terra.js')
+  const { SCALA_TERRA: S } = await import('../../src/giochi/sotterraneo/dati/terra.js')
+  const terra = creaTerra(MASCHERA, { ostacoli: [MINATORE.piede, ...Object.values(MERCANTI).map(m => m.piede),
+                                                 ...Object.values(PERSONAGGI || {}).map(m => m.piede)] })
+  const premi = tocca || ((x, y) => page.mouse.click(x, y))
+  const cella = async () => (await page.locator('[data-eroe-terra]').getAttribute('data-cella')).split(',').map(Number)
+  const fermo = async () => {
+    await page.waitForFunction(() => document.querySelector('[data-eroe-terra]')?.dataset.cammina === '0',
+                               null, { timeout: 15000 })
+    await attendi(page, 150)
+  }
+  for (let giro = 0; giro < giri; giro++) {
+    const [x, y] = await cella()
+    if (x === meta[0] && y === meta[1]) break
+    const via = terra.strada({ x, y }, { x: meta[0], y: meta[1] })
+    if (!via || !via.length) break
+    const v = await page.locator('[data-terra]').boundingBox()
+    const su = (await page.locator('.sot-terra-sopra').boundingBox())?.height || 0
+    const giu = (await page.locator('.sot-terra-sotto').boundingBox())?.height || 0
+    const [cx, cy] = (await page.locator('[data-terra]').getAttribute('data-camera')).split(',').map(Number)
+    const schermo = c => [v.x + ((c.x + 0.5) * CELLA - cx) * S, v.y + ((c.y + 0.5) * CELLA - cy) * S]
+    const dentro = ([sx, sy]) => sx > v.x + 24 && sx < v.x + v.width - 24 && sy > v.y + su + 30 && sy < v.y + v.height - giu - 30
+    const passo = [...via].reverse().find(c => dentro(schermo(c)))
+    if (!passo) break
+    await premi(...schermo(passo))
+    await fermo()
+  }
+  return cella()
+}
+
 /* Scende in una discesa del sotterraneo dalla terra di sopra
    (docs/sotterraneo/terra-di-sopra.md). L'eroe ci va a piedi, come farebbe
    un bambino che sa dove andare: si tocca il punto dello schermo più vicino
@@ -339,6 +376,14 @@ export async function scendiNelSotterraneo(page, quale, { scendi = true } = {}) 
     await attendi(page, 150)
   }
   const fumettoGiusto = () => page.locator(`[data-fumetto] [data-azione="scendi"]`).count()
+  // prima per strada fin sotto la discesa (la strada vera, non «verso»), poi la si tocca
+  {
+    const { POSTI } = await import('../../src/giochi/sotterraneo/dati/terra-mappa.js')
+    const { POSTO_DI } = await import('../../src/giochi/sotterraneo/dati/terra.js')
+    const { CAMPAGNA } = await import('../../src/giochi/sotterraneo/dati/campagna.js')
+    const chiave = quale === 'abisso' ? 'abisso' : CAMPAGNA[quale].chiave
+    await camminaVerso(page, POSTI[POSTO_DI[chiave]].piede)
+  }
   for (let giro = 0; giro < 16; giro++) {
     const v = await page.locator('[data-terra]').boundingBox()
     const su = (await page.locator('.sot-terra-sopra').boundingBox())?.height || 0

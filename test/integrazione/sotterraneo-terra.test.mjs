@@ -8,7 +8,8 @@
    strisciata non lo muova, che la vista scorra morbida quando lui arriva
    al bordo, che il fumetto si apra sulla discesa e che una chiusa non
    faccia scendere, che il minatore parli, e che la nebbia si ricordi
-   uscendo e rientrando.
+   uscendo e rientrando. Si parte nel villaggio (docs/sotterraneo/
+   la-grande-storia.md), e la prima discesa è la cripta dell'altare.
 
    I tocchi sono tocchi (`Input.dispatchTouchEvent` via CDP): il click che
    il dito si lascia dietro è proprio quello che apre il fumetto, e un
@@ -16,7 +17,7 @@
    `node test/esegui.mjs sotterraneo-terra`
    tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, camminaVerso }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CELLA, POSTI, MINATORE, MASCHERA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
@@ -54,10 +55,13 @@ const vista = await page.locator('[data-terra]').boundingBox()
 async function chiudiFumetto() {
   const f = await page.locator('[data-fumetto]').boundingBox()
   if (!f) return
-  const y = f.y > vista.y + vista.height / 2 ? f.y - 40 : f.y + f.height + 40
-  await tocca(vista.x + 30, y)          // sul bordo: in mezzo c'è il posto che l'ha aperto
+  // lontano dal fumetto e dal posto che l'ha aperto (sotto il fumetto c'è il posto stesso, che lo riaprirebbe)
+  const y = f.y > vista.y + vista.height / 2 ? vista.y + 120 : vista.y + vista.height - 220
+  await tocca(vista.x + vista.width - 30, y)
   await attendi(page, 250)
 }
+// per strada fino a una cella, toccando col dito il punto più avanti della strada che si vede (test/aiuto/browser.mjs)
+const vaiA = meta => camminaVerso(page, meta, { tocca })
 // dove sta sullo schermo il centro di una cella della maschera, con la vista di adesso
 async function schermoDi(x, y) {
   const [cx, cy] = await camera()
@@ -66,7 +70,7 @@ async function schermoDi(x, y) {
 
 /* ---------- 1. si parte da casa, con la vista sull'eroe ---------- */
 const casa = await cella()
-uguale('si parte fra le case', casa, '17,41')
+uguale('si parte fra le case del villaggio', casa, '52,36')
 const eroe = await page.locator('[data-eroe-terra] .sot-ritratto').boundingBox()
 controlla('e l\'eroe si vede, dentro lo schermo', eroe && eroe.y > vista.y && eroe.y + eroe.height < vista.y + vista.height,
           JSON.stringify(eroe))
@@ -75,7 +79,7 @@ uguale('la prima volta si dice cosa fare', await page.locator('.sot-terra-sotto'
 await scatto(page, 'terra-avvio')
 
 /* ---------- 2. una strisciata non cammina ---------- */
-const [sx, sy] = await schermoDi(17, 36)
+const [sx, sy] = await schermoDi(50, 34)
 await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: sx, y: sy }] })
 for (let i = 1; i <= 4; i++) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: sx + 18 * i, y: sy }] })
@@ -87,17 +91,18 @@ uguale('strisciando col dito l\'eroe resta dov\'è', await cella(), casa)
 
 /* ---------- 3. il minatore parla ---------- */
 uguale('il minatore ha qualcosa da dire', await page.locator('[data-minatore] .sot-tre-punti').count(), 1)
+await vaiA(MINATORE.accanto)
 await toccaIl('[data-minatore]')
 await page.waitForSelector('[data-fumetto-di="minatore"]', { timeout: 8000 })
 const detto = await page.locator('[data-detto]').innerText()
-controlla('il minatore dice dove sta la prossima discesa', detto.includes('La scalinata antica') && detto.includes('arco'), detto)
-controlla('e di seguire i sassi', detto.includes('sassi'))
+controlla('il minatore dice dove sta la prossima discesa', detto.includes('La cripta dell\'altare') && detto.includes('altare'), detto)
+controlla('e non parla più di sassi', !detto.includes('sassi'))
 {
   const [x, y] = (await cella()).split(',').map(Number)
   controlla('gli si parla da accanto, non addosso', Math.abs(x - MINATORE.piede[0]) >= 2 && Math.abs(y - MINATORE.piede[1]) <= 1,
             `${x},${y}`)
 }
-controlla('lungo la strada ci sono i sassi che luccicano', await page.locator('[data-sasso]').count() >= 3)
+uguale('i sassi che luccicano non ci sono più', await page.locator('[data-sasso]').count(), 0)
 await attendi(page, 300)
 await scatto(page, 'terra-minatore')
 
@@ -108,17 +113,18 @@ await attendi(page, 300)
 uguale('toccando fuori il fumetto si chiude', await page.locator('[data-fumetto]').count(), 0)
 uguale('e basta: quel tocco non fa camminare', await cella(), davanti)
 uguale('prima di andarci, nessun divieto', await page.locator('[data-divieto]').count(), 0)
-await toccaIl('[data-posto="pozzo-di-casa"]')
-await page.waitForSelector('[data-fumetto-di="pozzo-di-casa"]', { timeout: 8000 })
+await vaiA(POSTI.arco.piede)
+await toccaIl('[data-posto="arco"]')
+await page.waitForSelector('[data-fumetto-di="arco"]', { timeout: 15000 })
 const chiusa = await page.locator('[data-chiusa-perche]').innerText()
-controlla('la chiusa dice cosa la apre', chiusa.includes('la scalinata antica'), chiusa)
+controlla('la chiusa dice cosa la apre', chiusa.includes('la cripta dell\'altare'), chiusa)
 uguale('e non ha il tasto per scendere', await page.locator('[data-fumetto] [data-azione="scendi"]').count(), 0)
 // la discesa chiusa ha il disegno pulito (niente velo): il divieto compare quando l'eroe ci arriva, davanti all'ingresso
-uguale('arrivato, davanti alla discesa chiusa c\'è il cartello di divieto', await page.locator('[data-divieto="pozzo-di-casa"] svg').count(), 1)
+uguale('arrivato, davanti alla discesa chiusa c\'è il cartello di divieto', await page.locator('[data-divieto="arco"] svg').count(), 1)
 uguale('uno solo, e solo lì', await page.locator('[data-divieto]').count(), 1)
 {
-  const d = await page.locator('[data-divieto="pozzo-di-casa"]').boundingBox()
-  const i = POSTI['pozzo-di-casa'].ingresso
+  const d = await page.locator('[data-divieto="arco"]').boundingBox()
+  const i = POSTI.arco.ingresso
   const [cx, cy] = await camera()
   const bordoBasso = vista.y + ((i[1] + i[3]) - cy) * S
   controlla('il paletto è piantato ai piedi dell\'ingresso', Math.abs(d.y + d.height - bordoBasso) < 30 && d.height > 30,
@@ -131,7 +137,7 @@ await chiudiFumetto()
 await attendi(page, 200)
 
 /* ---------- 5. un tocco sul prato, e l'eroe ci va ---------- */
-const meta = [14, 35]
+const meta = [21, 30]
 controlla('la meta è prato', MASCHERA[meta[1]][meta[0]] === '.')
 const prima = await cella()
 await tocca(...await schermoDi(...meta))
@@ -160,21 +166,15 @@ controlla('a passi piccoli, non a scatti', Math.max(...salti) < 40 && new Set(pa
           `salto massimo ${Math.max(...salti)}, ${new Set(passi).size} posizioni`)
 await scatto(page, 'terra-scorre')
 
-/* ---------- 7. si arriva alla scalinata, e il fumetto la apre ---------- */
+/* ---------- 7. si torna alla cripta dell'altare, e il fumetto la apre ---------- */
 const cantine = page.locator('[data-discesa="0"]')
-for (let giro = 0; giro < 10; giro++) {
-  const b = await cantine.boundingBox()
-  const x = b.x + b.width / 2, y = b.y + b.height / 2
-  if (await cantine.getAttribute('data-trovato') === '1' && y > vista.y + su + 30 && y < vista.y + vista.height - 90) break
-  await tocca(Math.max(vista.x + 30, Math.min(vista.x + vista.width - 30, x)), vista.y + su + 40)
-  await fermo()
-}
-uguale('la scalinata si è trovata camminando', await cantine.getAttribute('data-trovato'), '1')
+await vaiA(POSTI.altare.piede)
+uguale('la cripta si è trovata camminando', await cantine.getAttribute('data-trovato'), '1')
 await toccaIl('[data-discesa="0"]')
-await page.waitForSelector('[data-fumetto-di="arco"] [data-azione="scendi"]', { timeout: 10000 })
-uguale('l\'eroe si ferma ai piedi della scala', await cella(), POSTI.arco.piede.join(','))
+await page.waitForSelector('[data-fumetto-di="altare"] [data-azione="scendi"]', { timeout: 15000 })
+uguale('l\'eroe si ferma ai piedi dell\'altare', await cella(), POSTI.altare.piede.join(','))
 const fum = await page.locator('[data-fumetto]').innerText()
-controlla('il fumetto dice nome, dritta e piani', fum.includes('La scalinata antica') && fum.includes('si impara la strada')
+controlla('il fumetto dice nome, dritta e piani', fum.includes('La cripta dell\'altare') && fum.includes('si impara la strada')
           && fum.includes('2 piani'), fum)
 // niente targhette con disegnini sopra le discese: un pallino per terra davanti a quelle trovate e aperte
 uguale('sopra le discese non ci sono icone', await page.locator('[data-posto] .em').count(), 0)
@@ -195,15 +195,15 @@ const terra = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.terra
 controlla('la terra si scrive nel profilo, nell\'avventura del cavaliere', !!terra && typeof terra.nebbia === 'string',
           JSON.stringify(terra)?.slice(0, 80))
 controlla('e il minatore ha già parlato', terra?.parlato === true)
-controlla('e il divieto della discesa chiusa', Array.isArray(terra?.divieti) && terra.divieti.includes('pozzo-di-casa'),
+controlla('e il divieto della discesa chiusa', Array.isArray(terra?.divieti) && terra.divieti.includes('arco'),
           JSON.stringify(terra?.divieti))
 await scegli(page, 'sotterraneo')
 await page.waitForSelector('[data-terra]', { timeout: 5000 })
 await attendi(page, 500)
-uguale('rientrando si è dove ci si era fermati', await cella(), POSTI.arco.piede.join(','))
-uguale('la scalinata resta trovata', await page.locator('[data-discesa="0"]').getAttribute('data-trovato'), '1')
+uguale('rientrando si è dove ci si era fermati', await cella(), POSTI.altare.piede.join(','))
+uguale('la cripta resta trovata', await page.locator('[data-discesa="0"]').getAttribute('data-trovato'), '1')
 uguale('e il minatore non ha più i puntini', await page.locator('[data-minatore] .sot-tre-punti').count(), 0)
-uguale('e il cartello di divieto è ancora piantato davanti alla discesa chiusa', await page.locator('[data-divieto="pozzo-di-casa"]').count(), 1)
+uguale('e il cartello di divieto è ancora piantato davanti alla discesa chiusa', await page.locator('[data-divieto="arco"]').count(), 1)
 await scatto(page, 'terra-nebbia')
 
 /* ---------- 9. e si scende ---------- */

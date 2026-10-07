@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL SOTTERRANEO, TOCCATO COL DITO
 
-   Il test unitario gioca le sei discese e conta le domande; questo dice
+   Il test unitario gioca le sette discese e conta le domande; questo dice
    che **il dito ci arriva**: che la carta compaia in home coi giochi in
    prova accesi, che il campo si disegni davvero (un canvas nero non dà
    nessun errore e sembra a posto in ogni altro controllo), che un tocco
@@ -33,7 +33,7 @@ await azzera(page)
 await semina(page, { coins: 300, settings: { sperimentali: true } })
 
 
-/* ---------- 1. la carta, e le sei discese ---------- */
+/* ---------- 1. la carta, e le sette discese ---------- */
 const carta = page.locator('.carta.gioco[data-gioco="sotterraneo"]')
 controlla('la carta è in home coi giochi in prova accesi', await carta.count() === 1)
 await scegli(page, 'sotterraneo')
@@ -53,7 +53,7 @@ controlla('e la mappa dice con chi si scende',
           (await page.locator('[data-azione="eroe"]').textContent()).includes('Cavaliere'))
 /* le discese stanno sulla terra di sopra (docs/sotterraneo/terra-di-sopra.md):
    si arriva a piedi, e lì la prova col dito vero è `integrazione/sotterraneo-terra` */
-uguale('ci sono sei discese sulla mappa', await page.locator('[data-discesa]').count(), 6)
+uguale('ci sono sette discese sulla mappa', await page.locator('[data-discesa]').count(), 7)
 controlla('solo la prima è aperta',
           await page.locator('[data-discesa][data-aperta="1"]').count() === 1)
 

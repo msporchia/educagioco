@@ -4,7 +4,7 @@
    La stanza che era del mercante ha un portale (docs/sotterraneo/
    regole.md): toccandolo si sale al villaggio, e nel villaggio compare il
    gemello che riporta giù esattamente dov'eri, col piano com'era. Qui il
-   giro intero: si scende nella scalinata, si apre una porta, si ferisce
+   giro intero: si scende nella prima discesa (la cripta dell'altare), si apre una porta, si ferisce
    un mostro e si scappa, si entra nel portale, si compra dall'erborista,
    si torna giù dal gemello e si ritrova tutto; poi si esce con la ✕ e si
    riprende da «riprendi da qui» in home, nello stesso punto.
@@ -30,7 +30,7 @@ import { percorso } from '../../src/motore/passi.js'
 const roba = { v: 1, gemme: 60, zaino: [], mano: 'spada', mancina: null, corpo: 'corazza', dito: null,
                torcia: 0, torce: 0 }
 
-/* ── il piano: la scalinata con un portale vicino, una porta e un mostro da ferire, senza mostri sulla strada ── */
+/* ── il piano: la prima discesa con un portale vicino, una porta e un mostro da ferire, senza mostri sulla strada ── */
 function scegliIlPiano() {
   let meglio = null
   for (let seme = 1; seme < 400; seme++) {
@@ -54,7 +54,7 @@ function scegliIlPiano() {
   return meglio
 }
 const piano = scegliIlPiano()
-controlla('c\'è un piano della scalinata col portale, una porta e un mostro', !!piano)
+controlla('c\'è un piano della prima discesa col portale, una porta e un mostro', !!piano)
 const L = piano.c.livello
 const indice = r => L.robe.indexOf(r)
 const aperte = new Set()   // i gruppi di porte aperti, per camminare nel modello come nel gioco
@@ -66,7 +66,7 @@ await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: 0, libera: false, stelle: {},
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: 0, libera: false, stelle: {}, missioni: {},
-      roba, terra: { nebbia: 'f'.repeat(768), dove: [17, 26], parlato: true } } } } } },
+      roba, terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } } } } } },
 })
 await scegli(page, 'sotterraneo')
 await page.waitForSelector('[data-terra]', { timeout: 5000 })
