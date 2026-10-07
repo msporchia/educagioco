@@ -124,7 +124,9 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
 - **Sulle isole del coniglio salta il coniglio, sul pascolo il cane.** Nella
   tana fra le buche e il pascolo il coniglio entra e il cane esce; sui ponti
   del pascolo (dal prato e dal salto) l'animale cambia in una nuvoletta sul
-  capo del pascolo: il ponte è del coniglio.
+  capo del pascolo: il ponte è del coniglio. Provate due tane disegnate in
+  capo a quei ponti: all'utente sembravano brutte, preferisce che l'animale
+  cambi «magicamente».
 - **Toccando una casella aperta ci va**, sulla strada più corta dei pezzi
   che si passano (`percorso`), a saltelli lungo la strada (`SALTO`, 72 px):
   atterra sulle caselle e nelle tane, passa sopra incroci e soste. Un
