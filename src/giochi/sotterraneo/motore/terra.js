@@ -127,7 +127,7 @@ export function scopri(nebbia, L, A, cx, cy, r) {
   return nuove
 }
 
-// in archivio un bit per cella, in esadecimale: 32×48 celle sono 384 caratteri
+// in archivio un bit per cella, in esadecimale: 64×48 celle sono 768 caratteri
 export function nebbiaInCodice(nebbia) {
   let s = ''
   for (let i = 0; i < nebbia.length; i += 4)
@@ -135,13 +135,22 @@ export function nebbiaInCodice(nebbia) {
   return s
 }
 
+// la mappa è stata più stretta (32 celle, prima di allargarsi a destra): quel codice si rimette nell'angolo
+// in alto a sinistra, e le celle nuove sono nebbia
+export const LARGHEZZE_VECCHIE = [32]
+
 // un codice che non torna (altra mappa, altra misura) è una nebbia nuova, non un errore
 export function nebbiaDaCodice(s, L, A) {
   const n = nebbiaNuova(L, A)
-  if (typeof s !== 'string' || s.length !== Math.ceil(L * A / 4) || /[^0-9a-f]/.test(s)) return null
+  if (typeof s !== 'string' || /[^0-9a-f]/.test(s)) return null
+  const larga = [L, ...LARGHEZZE_VECCHIE.filter(v => v < L)].find(v => s.length === Math.ceil(v * A / 4))
+  if (!larga) return null
   for (let i = 0; i < s.length; i++) {
     const v = parseInt(s[i], 16)
-    for (let b = 0; b < 4 && i * 4 + b < n.length; b++) n[i * 4 + b] = (v >> (3 - b)) & 1
+    for (let b = 0; b < 4 && i * 4 + b < larga * A; b++) {
+      const k = i * 4 + b
+      n[Math.floor(k / larga) * L + (k % larga)] = (v >> (3 - b)) & 1
+    }
   }
   return n
 }
