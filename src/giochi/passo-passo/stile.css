@@ -66,8 +66,6 @@
 .pp-ghiaccio .pp-terra { fill: #dcecfa }
 .pp-ghiaccio .pp-riva { fill: #f3f9ff; stroke: #f3f9ff }
 .pp-pascolo .pp-terra { fill: #d4e69c }
-.pp-sentiero .pp-terra { fill: #ffd977 }
-.pp-sentiero .pp-riva { fill: #fff0c2; stroke: #fff0c2 }
 .pp-solco { fill: #a7cc79 }
 .pp-crepa { fill: none; stroke: #f7fbff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round }
 .pp-steccato { fill: none; stroke: #b98552; stroke-width: 3 }
@@ -183,6 +181,44 @@
 .pp-triangolo { width: 13px; height: 15px; fill: currentColor }
 .pp-fumetto-gioca:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--pp-via-scuro) }
 @keyframes pp-compare { from { opacity: 0; margin-top: 6px } }
+
+/* ═══════════ la valle: il fondale dipinto ═══════════
+   La vista scorre ma non si trascina (la muove il segnalino); il fondale
+   a pixel netti, il mare del suo colore. Vedi docs/passo-passo/mappa.md. */
+.pp-mappa[data-mondo="valle"] { background: #1995df }
+.pp-valle { flex: 1; min-height: 0; position: relative; display: flex; overflow: hidden; touch-action: none;
+            background: #1995df; cursor: pointer; -webkit-user-select: none; user-select: none }
+/* su uno schermo più grande della mappa sta in mezzo; più piccolo, si scorre fino ai bordi */
+.pp-valle-mondo { position: relative; isolation: isolate; flex: none; margin: auto }
+.pp-fondale { position: absolute; left: 0; top: 0; display: block; image-rendering: pixelated;
+              pointer-events: none; -webkit-user-drag: none }
+.pp-insegna-valle { transform: translate(-50%, -50%) }
+.pp-tana-valle { position: absolute; transform: translate(-50%, -62%); pointer-events: none; line-height: 0 }
+/* la tana dello zaino: si tocca il buco, e accanto il suo nome */
+.pp-passaggio { position: absolute; width: 56px; height: 56px; margin: -34px 0 0 -28px; padding: 0; border: 0;
+                border-radius: 50%; background: none; display: flex; align-items: center; justify-content: center;
+                line-height: 0 }
+.pp-passaggio-nome { position: absolute; transform: translate(-50%, -50%); display: flex;
+                     align-items: center; gap: 5px; height: 28px; padding: 0 11px 0 8px; border-radius: 999px;
+                     background: var(--is-casella); color: var(--is-scuro); box-shadow: 0 3px 0 var(--is-spessore);
+                     font-size: 13px; font-weight: 800; line-height: 1; white-space: nowrap }
+.pp-passaggio[data-aperta="0"] .pp-passaggio-nome { opacity: .75 }
+/* la tana in cima allo zaino che torna alla valle: si tocca il buco */
+.pp-passaggio-zaino { margin: -28px 0 0 -28px }
+/* il blocco: la sbarra sul ponte verso un'isola chiusa */
+.pp-blocco { position: absolute; transform: translate(-50%, -72%); padding: 0; border: 0; background: none;
+             line-height: 0; z-index: 1 }
+.pp-sentiero-nome-valle { padding: 5px 11px; border-radius: 12px; background: rgba(255, 250, 243, .94);
+                          box-shadow: 0 3px 0 var(--is-spessore) }
+/* la nuvoletta dove il coniglio diventa cane, sul capo del ponte */
+.pp-sbuffo { position: absolute; width: 0; height: 0; pointer-events: none; z-index: 2 }
+.pp-sbuffo i { position: absolute; left: -11px; top: -30px; width: 22px; height: 22px; border-radius: 50%;
+               background: #fffaf0; opacity: 0;
+               animation: pp-sbuffo .55s ease-out forwards; animation-delay: calc(var(--k) * 25ms) }
+@keyframes pp-sbuffo {
+  0% { opacity: .95; transform: rotate(calc(var(--k) * 72deg)) translateY(0) scale(.6) }
+  100% { opacity: 0; transform: rotate(calc(var(--k) * 72deg)) translateY(-26px) scale(1.3) }
+}
 
 .pp-spenta { opacity: .22; filter: grayscale(1) }
 

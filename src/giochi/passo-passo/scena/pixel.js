@@ -320,6 +320,41 @@ export const PALO = [
   'zzzz',
 ]
 
+/* la sbarra che chiude un ponte della mappa delle isole: due paletti e
+   un'asse a strisce, vista di fronte (docs/passo-passo/mappa.md) */
+export const SBARRA = { tavolozza: { k: '#3a2214', R: '#d83a2a', r: '#a8261a', w: '#fbf4e4', W: '#d9ccb4',
+                                     S: '#c08850', s: '#8a5a30', z: '#5a381c' }, righe: [
+  '.zz............zz.',
+  'zSsz..........zSsz',
+  'zSskkkkkkkkkkkkSsz',
+  'zSkRRRwwwRRRwwwRkz',
+  'zSkRRRwwwRRRwwwRkz',
+  'zSkrrrWWWrrrWWWrkz',
+  'zSskkkkkkkkkkkkSsz',
+  'zSsz..........zSsz',
+  'zSsz..........zSsz',
+  'zzzz..........zzzz',
+] }
+
+/* Un disegno a pixel come rettangoli da posare in un <svg> (una riga di
+   pixel dello stesso colore è un rettangolo solo): per le figure posate
+   sopra un fondale, che non stanno in una tela. */
+export function rettangoli(disegno) {
+  const righe = Array.isArray(disegno) ? disegno : disegno.righe
+  const tav = Array.isArray(disegno) ? TAVOLOZZA : { ...TAVOLOZZA, ...disegno.tavolozza }
+  const rect = []
+  righe.forEach((r, y) => {
+    for (let x = 0; x < r.length;) {
+      const c = tav[r[x]]
+      let w = 1
+      while (x + w < r.length && r[x + w] === r[x]) w++
+      if (c) rect.push({ x, y, w, c })
+      x += w
+    }
+  })
+  return { w: Math.max(...righe.map(r => r.length)), h: righe.length, rect }
+}
+
 /* ── il disegno di un pezzo ──
    Una volta sola per pezzo: il canvas resta in memoria e da lì in poi si
    copia. `document` c'è solo nel browser, e questo file lo tocca solo
