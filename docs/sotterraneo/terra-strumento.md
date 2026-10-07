@@ -47,11 +47,18 @@ punti, a destra è bosco ovunque). Lo strumento la cuce nel foglietto
      viola il portale gemello);
   3. si corregge la riga nel foglietto, si rilancia lo strumento,
      `npm test` (`unita/sotterraneo-terra`).
-- **Lo strumento controlla** che `piede` e `accanto` di minatore, mercanti e
-  portale si possano camminare e che nessuno si fermi addosso a chi sta fermo.
+- **Lo strumento controlla** che `piede` e `accanto` di minatore, mercanti,
+  chi dà le missioni (`personaggi`) e portale si possano camminare, che due
+  non stiano nella stessa cella e che nessuno si fermi addosso a chi sta
+  fermo. Il provino segna chi dà le missioni in azzurro, col nome.
 
 ## Le icone
 
+- **Al posto dell'emoji** nella carta della discesa a metà, nella scelta delle
+  avventure, nel fumetto del gemello e in «riprendi da qui» in home: un tondo
+  sfumato 96×96 in WebP, sui 4 KB l'uno (`ICONE` in `dati/terra-icone.js`,
+  `iconaDi(chiave)` in `dati/terra.js`), uno per posto (otto). La copertina del
+  gioco nel carosello non cambia.
 - **Un quadrato attorno al `riquadro` del posto**, largo `margine` volte il
   lato più lungo (1,1), rimpicciolito a `lato` (96) e chiuso in un tondo
   pieno fino a `pieno` del raggio (0,72) e sfumato oltre; WebP a `qualita` 80

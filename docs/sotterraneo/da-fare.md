@@ -56,36 +56,34 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
 ## La terra di sopra
 
-- **Le missioni dei personaggi**: chi sta sulla mappa dà un incarico, per
-  esempio «vai nel pozzo e trova l'oggetto X al terzo piano». Non fatte: la
-  roba che resta e i mercanti sono il primo pezzo, ogni avventura ha già il
-  posto per le sue missioni (`missioni`, [avventure.md](avventure.md)), e
-  l'oggetto di una missione starà fra le `COSE`, che lo zaino e la sosta
-  portano già.
 - **Gli sprite dei mercanti**: armaiolo, erborista e rigattiere sono figure
   disegnate in codice (`viste/pixel.js`); `armaiolo-fermo-0` e gli altri
   nell'atlante prendono il loro posto da soli.
-- **Il mago andando dritto** arriva in fondo alle ultime discese 16–19 volte
-  su 20 a otto su dieci, contro le 18–20 di prima: regge meno, e le discese
-  che contano sulla roba lo sentono di più
-  ([la-roba-che-resta.md](la-roba-che-resta.md)). Da guardare col dito.
 - **Lo zaino sopra**: sulla mappa la roba si vede solo nella carta in fondo e
   dal rigattiere; uno scudo comprato al posto della seconda arma leggera si
   mette dallo zaino, scendendo.
-
-- **La torre in rovina e l'altare** (in alto nella metà di destra della
-  mappa, [terra-di-sopra.md](terra-di-sopra.md)): oggi solo disegno, ci si
-  arriva davanti e basta. Sono i posti dove le missioni manderanno a cercare
-  qualcosa; non hanno un `POSTI` né un fumetto.
-- **I personaggi del prompt 4** (minatore, ragazza del pozzo, boscaiolo, con
-  le pose che parla e che indica): oggi il minatore è disegnato in codice e
-  gli altri due non ci sono. La bussola del mock (il minatore che la dà, lei
-  che punta alla prossima discesa) non è fatta.
+- **Gli sprite di chi dà le missioni**: ragazza, mugnaio, eremita,
+  guardia, pescatore e boscaiolo sono figure disegnate in codice
+  (`viste/pixel.js`); `<nome>-fermo-0` nell'atlante prende il loro posto da
+  solo. I prompt sono nella scheda `PROMPT-terra-di-sopra.md`. La bussola del
+  mock (il minatore che la dà, lei che punta alla prossima discesa) non è fatta.
+- **Le missioni dopo la prima volta**: una per discesa o due, nove in tutto,
+  e consegnate non tornano. Se piacciono, ne servono altre per chi rigioca,
+  e una seconda forma oltre a «trova» e «sconfiggi» (accompagnare, portare
+  giù qualcosa). [missioni.md](missioni.md)
+- **La grande storia da guardare col dito**
+  ([la-grande-storia.md](la-grande-storia.md)): la grotta ha piani da quattro
+  stanze e quindi niente forzieri (il pezzo lo dà il guardiano dell'ultimo
+  piano, il resto il banco); la botola è la più dura per chi gira tutto (14
+  su 20 a otto, il cavaliere); lo scettro del mago e lo scudo del teschio del
+  cavaliere non si mettono da soli (non picchiano più di quello che c'è), e
+  vanno messi dallo zaino. Il nano e l'elfa restano più comodi del cavaliere
+  e del mago.
 - **Le porte che si aprono**: una discesa appena aperta non ha ancora un
   momento suo sulla mappa (le assi che cadono, la grata che si alza).
 - Da guardare col dito: la velocità del passo (`PASSO_TERRA`), quanto
   presto scorre la vista (`BORDO`, `MORBIDA`), quanto si vede attorno
-  (`VISTA`, `LUCE`), e se i sassi si notano.
+  (`VISTA`, `LUCE`), e se senza i sassi la strada si trova lo stesso.
 
 ## Da guardare col dito
 

@@ -14,11 +14,17 @@ si entra nelle stanze, si toccano le cose. Nessuna azione interessante si
 compie senza rispondere, e nessuna risposta resta senza qualcosa che si
 apre.
 
-Le discese stanno sotto una campagna da girare a piedi, nella nebbia: la
-botola, i pozzi, la miniera, la scala nello stagno. Si trovano esplorando,
-e un vecchio minatore dice dov'è la prossima; fra le case stanno tre
-mercanti — l'armaiolo, l'erborista, il rigattiere — dove si spendono le
-gemme trovate giù ([terra-di-sopra.md](terra-di-sopra.md)).
+Si parte da un villaggio, e le sette discese stanno in fila lungo la
+strada, sotto una campagna da girare a piedi nella nebbia: dietro l'altare,
+sotto l'arco, sotto la torre in rovina, nella grotta, nello stagno, sotto
+una botola, nella miniera. Un vecchio minatore dice dov'è la prossima; fra
+le case stanno tre mercanti — l'armaiolo, l'erborista, il rigattiere — dove
+si spendono le gemme trovate giù ([terra-di-sopra.md](terra-di-sopra.md)).
+E in giro c'è chi chiede un favore: la ragazza del pozzo ha perso la
+collana della nonna, il mugnaio ha un ratto che gli ruba la farina, il
+pescatore un granchio che gli taglia le reti ([missioni.md](missioni.md)):
+una cosa da trovare o un mostro col nome, a un piano preciso, e un premio
+in gemme.
 
 | cosa si tocca | cosa costa |
 |---|---|
@@ -61,11 +67,13 @@ dove l'aveva lasciato; le monete sono in comune, e i traguardi contano l'eroe
 arrivato più avanti.
 Sotto abitano quattordici creature, e più si scende più sono dure.
 **Quello che trovi te lo porti dietro**: l'arma, l'armatura, le tasche e le
-gemme risalgono con te, e alla discesa dopo le ritrovi; le discese dopo la
-prima contano su di loro. Svenendo si perdono le tasche e metà delle gemme,
-mai quello che si ha addosso.
+gemme risalgono con te, e alla discesa dopo le ritrovi. È **una storia
+sola, a passi**: ogni discesa dà la roba che serve alla dopo, e i mostri
+sono tarati su quella ([la-grande-storia.md](la-grande-storia.md)); chi
+arriva a una discesa sotto il livello lo sa prima di scendere. Svenendo si
+perdono le tasche e metà delle gemme, mai quello che si ha addosso.
 
-Finite le sei discese si apre **l'abisso**: una discesa sola che non
+Finite le sette discese si apre **l'abisso**: una discesa sola che non
 finisce.
 
 ## Cosa allena

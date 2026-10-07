@@ -7,7 +7,7 @@ sta il record e fin dove regge. La parte decisa e non ancora costruita
 
 ## Cos'è, e perché non è una settima tappa
 
-**Finite le sei discese si apre una discesa sola che comincia al piano 1 e
+**Finite le sette discese si apre una discesa sola che comincia al piano 1 e
 non finisce.** Nasce da una frase: *«ho trovato un'arma super figa e ora ho
 finito la tappa e la butta»*. Allora fra una discesa e l'altra si ripartiva
 nudi, e l'abisso era il posto dove quel momento non arrivava mai; dal 7
@@ -17,14 +17,14 @@ quella di sempre.
 
 - **Si apre su `libera`**, che `giochi/campagne.js` scrive quando `tappa >=
   quante`: niente cancello nuovo. Niente `portata` e niente età: il criterio
-  «hai finito le sei» è dimostrato invece che stimato.
+  «hai finito le sette» è dimostrato invece che stimato.
 - **Non è la tappa 7**, per tre ragioni: una tappa 7 finisce come la 6 e
   butta l'arma lo stesso; `stelle` è un oggetto con una chiave per tappa
   **dentro il profilo**, che `persist()` riscrive intero (la ragione per cui
   `store/sessioni.js` sta fuori); e la campagna è un dato che si mostra
   (`viste/Campagna.vue`, `TAPPE_DEL_GIOCO`, `arcoDelGioco`, `tappe` del
-  manifesto vogliono una lista finita). `CAMPAGNA` resta di sei,
-  `QUANTE_TAPPE` resta 6.
+  manifesto vogliono una lista finita). `CAMPAGNA` resta finita (sette
+  discese dal 7 ottobre 2026), e l'abisso non ne fa parte.
 - **La roba dell'abisso è quella di tutte le discese**: ci si scende con lo
   zaino della campagna, e quello che si trova là sotto sale come da ogni altra
   discesa. Il mercante che stava in ogni piano è salito sulla terra di sopra,
@@ -139,7 +139,7 @@ dice dove si è («la cripta · piano 7»).
   bestie del fuoco (pipistrello, goblin, melma, scheletro, vespone, orco,
   serpente). Il golem sta in tutti e tre
   finché la quinta fascia ha un mostro solo.
-- **La campagna incontra tutto il bestiario**: le sei discese sono dove i
+- **La campagna incontra tutto il bestiario**: le sette discese sono dove i
   mostri si imparano, e cambiarne il branco ritarerebbe tappe misurate.
 - **I guardiani restano quelli della scaletta**, che è misurata: lo scheletro
   a guardia delle cantine è un mostro della cripta.
@@ -155,7 +155,7 @@ dall'abisso.
 
 - **Resta addosso tutto** — arma, mano debole, corpo, dito — **e si svuotano
   le sei tasche**; le gemme si dimezzano (`rimettiInPiedi` in
-  `motore/corsa.js`). La regola è nata qui e adesso vale anche nelle sei
+  `motore/corsa.js`). La regola è nata qui e adesso vale anche nelle sette
   discese ([regole.md](regole.md#svenire-e-il-fondo-degli-svenimenti)). Punisce senza umiliare: se ne va il margine
   accumulato, non il lavoro di dieci piani. «Perdo tutto» cancellerebbe una
   settimana con una brutta sera; «non perdo niente» renderebbe l'abisso
@@ -185,10 +185,10 @@ dall'abisso.
 
 - **Il più giù dove si è arrivati sta nell'avventura** (`abisso: { fondo }`,
   [avventure.md](avventure.md)): sopravvive alla sosta buttata via, e non sta
-  fra le stelle. L'abisso si apre a chi ha finito le sei con quell'eroe; la
+  fra le stelle. L'abisso si apre a chi ha finito le sette con quell'eroe; la
   riga della home dice il fondo più giù fra tutte le avventure.
 - **La mappa** (`viste/Campagna.vue`): in cima la ripresa, «l'abisso · piano
-  23 — torno giù da dove ero»; **in fondo**, sotto le sei e solo se `libera`,
+  23 — torno giù da dove ero»; **in fondo**, sotto le sette e solo se `libera`,
   la carta dell'abisso col piano più profondo.
 - **`viste/Fine.vue`**: un terzo caso, né «vinta» né «a mani vuote» — «Sei
   risalito dal piano 23».
@@ -197,7 +197,7 @@ dall'abisso.
   buco» (`sot-abisso`, soglie 10 · 25 · 50); l'esperienza passa da
   `sotPiani` come sempre.
 - **Le guide**: `AIUTI` in `src/guide/contenuti.js` ha la sua voce.
-- **Le monete: 🪙1 per risposta giusta, pagato subito**, come nelle sei
+- **Le monete: 🪙1 per risposta giusta, pagato subito**, come nelle sette
   discese (mai per una sbagliata; a fine discesa si mostra solo il
   totale). È rimasto 🪙1 quando i premi di tutti i giochi sono passati al
   «si paga subito»: nel sotterraneo la domanda è la mossa, e il perché

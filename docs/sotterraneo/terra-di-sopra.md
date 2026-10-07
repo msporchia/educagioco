@@ -13,15 +13,14 @@ sopra la discesa a metà e chi scende, con la sua roba e le gemme.
 
 - **Due metà accostate**, 2048×1536 (32×24 celle da 64 px): a sinistra
   `generati/mappa_sotterraneo.png` (il prompt 1 della scheda
-  `PROMPT-terra-di-sopra.md`: le sei discese, il minatore, il cartello), a
+  `PROMPT-terra-di-sopra.md`: le discese di una volta, il cartello), a
   destra `mappa_sotterraneo_2.png` (il prompt 6: il villaggio in basso, il
   fiume col mulino e il ponte, i campi, e in cima una torre in rovina e un
-  altare di pietra, posti per le missioni di domani: per ora solo disegno,
-  non hanno discesa né chi ci parla). Le due immagini non si ritoccano: le
+  altare di pietra, che sono diventati discese). Le due immagini non si ritoccano: le
   accosta lo strumento (`compone`), e il codice di gioco vede una tela sola.
 - **Le strade ci sono già**: il codice non ricompone la mappa a tessere, ci
-  posa sopra solo quello che cambia (il divieto delle chiuse, chi indica,
-  sassi, nebbia, eroe).
+  posa sopra solo quello che cambia (il divieto delle chiuse, chi indica e
+  chi chiede, nebbia, eroe).
 - **Entra nel file unico in WebP** (qualità 75, ~860 KB): a 2× non si
   distingue dall'originale. La fa lo strumento dal foglietto
   ([terra-strumento.md](terra-strumento.md)): il modulo non si tocca.
@@ -73,8 +72,8 @@ sopra la discesa a metà e chi scende, con la sua roba e le gemme.
 - **Nella metà nuova**: il fiume si passa solo sul ponte (righe 23 e 24,
   colonne 45-50), le case, la torre e l'altare non si attraversano (ci si
   arriva davanti), la piazza di terra battuta sì, e il pozzo da cui si beve
-  no. Ogni cella dove si cammina si raggiunge da casa, tranne i piedi dei
-  mercanti (`unita/sotterraneo-terra` lo conta).
+  no. Ogni cella dove si cammina si raggiunge da casa, tranne i piedi di chi
+  sta fermo (`unita/sotterraneo-terra` lo conta).
 - **Chi sta fermo non chiude la strada a nessuno**: togliendolo si arriva
   solo dove sta lui (`unita/sotterraneo-terra`). Provato il rigattiere in
   fondo al passaggio largo una cella fra il carretto e i cespugli: lo
@@ -84,39 +83,40 @@ sopra la discesa a metà e chi scende, con la sua roba e le gemme.
 
 ## Le discese sui posti
 
-Le aperture sono sette per sei discese più l'abisso. Il criterio: **le prime
-vicino a casa, le ultime in cima, l'abisso nel pozzo che dicono non abbia
-fondo**; a parità, il nome che somiglia al posto (`POSTO_DI` in `dati/terra.js`).
+Le aperture sono otto: sette discese più l'abisso. Il criterio: **si parte
+dal villaggio e le discese stanno in fila per strada**, la prima la più
+vicina; l'abisso nel pozzo che dicono non abbia fondo, il posto più
+lontano (`POSTO_DI` in `dati/terra.js`). Quale discesa sta dove, la sua
+forma e perché: [la-grande-storia.md](la-grande-storia.md#le-discese).
 
-| discesa (la chiave resta) | posto | perché |
+| discesa | posto | passi da casa |
 |---|---|---|
-| La scalinata antica (`cantine`) | la scala sotto l'arco di pietra, al centro | la prima grossa cosa su per la strada da casa |
-| Il pozzo dal tetto rosso (`pozzo`) | il pozzo coi coppi, accanto a casa | il tetto rosso lo distingue dal pozzo d'ardesia; è la prima cosa chiusa che si vede, appena usciti (e ha il suo divieto) |
-| La grotta della scaletta (`gallerie`) | il buco nella roccia con la scaletta, a destra | a metà strada |
-| La scala sommersa (`cisterna`) | la scala dentro lo stagno, a sinistra | a metà strada; l'acqua |
-| La botola segreta (`labirinto`) | la botola nel prato, in cima | in cima, oltre il cartello |
-| La miniera abbandonata (`fondo`) | la miniera dentro il monte, in cima a destra | in fondo alla strada, la più lontana da casa |
-| l'abisso | il pozzo vecchio d'ardesia, in cima a sinistra | «dicono che non abbia fondo»; prima di finire le sei si vede ma non si scende |
+| La cripta dell'altare (`altare`) | la scala dietro l'altare fra le colonne, in cima a destra | 35 |
+| La scalinata antica (`cantine`) | la scala sotto l'arco di pietra, oltre il bosco | 40 |
+| La torre in rovina (`torre`) | la porta in basso della torre, in cima a destra | 44 |
+| La grotta della scaletta (`gallerie`) | il buco nella roccia con la scaletta | 45 |
+| La scala sommersa (`cisterna`) | la scala dentro lo stagno | 51 |
+| La botola segreta (`labirinto`) | la botola nel prato, in cima a sinistra | 54 |
+| La miniera abbandonata (`fondo`) | la miniera dentro il monte | 55 |
+| l'abisso | il pozzo vecchio d'ardesia, in cima a sinistra | 61 |
 
-- **Cambiano solo i nomi mostrati** (`nome` in `CAMPAGNA`): le chiavi, gli
-  indici, le stelle e i salvataggi sono quelli di sempre. Il nome dice cosa
-  c'è disegnato, in italiano semplice; «Si apre quando finisci …» lo
-  riscrive in minuscolo, quindi deve reggere anche in mezzo a una frase.
-- **Le scale in acqua si prendono da dove si vede l'apertura**: la scala
-  sommersa ha i gradini che scendono verso sud, e l'eroe ci arriva dalla
-  riva sud dello stagno (`piede` [7, 24]), mai dall'alto; la riva est
-  accanto ai gradini è chiusa nella maschera. `unita/sotterraneo-terra`
-  controlla che la strada non passi a nord del punto d'arrivo.
-
-- **Si parte fra le case**, sulla strada sotto il pozzo di casa
-  (`partenza`). Chi giocava prima della mappa si ritrova scoperto il posto
-  delle discese già fatte.
+- **Meno pozzi**: il pozzo dal tetto rosso è tornato disegno; i pozzi come
+  discesa sono poco intuitivi (l'utente).
+- **Il nome dice cosa c'è disegnato**, in italiano semplice; «Si apre
+  quando finisci …» lo riscrive in minuscolo, quindi deve reggere anche in
+  mezzo a una frase; `dove` lo mette in mezzo a quella del minatore («sotto
+  la torre non duri»).
+- **Le scale in acqua si prendono da dove si vede l'apertura**: alla scala
+  sommersa si arriva dalla riva sud (`piede` [7, 24]), mai dall'alto
+  (`unita/sotterraneo-terra`).
+- **Si parte nel villaggio**, sulla piazza fra le case della metà di destra
+  (`partenza` [52, 36]). Chi giocava prima della mappa si ritrova scoperto il
+  posto delle discese già fatte.
 - **Una discesa trovata e aperta ha un pallino per terra davanti
   all'ingresso** (al centro del bordo basso di `ingresso` nel foglietto,
   `.sot-segno-posto`): bianco, d'oro e pulsante per la prossima da fare.
-  Provato un anello attorno all'ingresso: copriva il disegno ed era brutto. Niente targhette con disegnini sopra le discese, e
-  niente emoji nei nomi del fumetto, dell'avviso e del cartello; la chiusa
-  tiene il 🔒 nel titolo del fumetto, e le stelle si leggono nel fumetto.
+  Provato un anello attorno all'ingresso: copriva il disegno. Niente
+  targhette né emoji sopra le discese; la chiusa tiene il 🔒 nel fumetto.
 - **Toccando una discesa trovata l'eroe ci va e si apre il fumetto** sopra
   (sotto, se sopra non c'è posto; la vista scorre se esce): nome, dritta,
   piani, stelle e «scendo»; dell'abisso il piano più giù toccato. Toccare il
@@ -139,15 +139,22 @@ fondo**; a parità, il nome che somiglia al posto (`POSTO_DI` in `dati/terra.js`
 
 ## Chi indica la strada
 
-- **Il vecchio minatore**, accanto a casa: toccato, dice dov'è la prossima
-  discesa aperta («La scalinata antica: su per la strada, sempre dritto, giù per la
-  scala sotto l'arco di pietra. Segui i sassi che luccicano.»); finite le
-  sei, dov'è l'abisso. Finché non ha parlato ha i puntini sopra la testa.
+- **Il vecchio minatore**, nel villaggio dove parte la strada per il bosco:
+  toccato, dice dov'è la prossima discesa aperta («La cripta dell'altare: su
+  per il sentiero dei campi, oltre il mulino, fino all'altare fra le due
+  colonne…»); finite le sette, dov'è l'abisso. Finché non ha parlato ha i
+  puntini sopra la testa. Se la roba è sotto quella attesa per la prossima,
+  lo dice ([la-grande-storia.md](la-grande-storia.md#chi-e-sotto-il-livello-lo-sa-prima-di-scendere)).
+- **Chi dà le missioni** sta fermo dove ha senso (la ragazza al pozzo del
+  villaggio, il mugnaio al mulino, l'eremita all'altare, la guardia alla
+  torre, il pescatore allo stagno, il boscaiolo al margine del bosco), col
+  segno sopra la testa: [missioni.md](missioni.md).
 - **Il cartello all'incrocio**: tre frecce, coi posti; accanto ai posti i
   nomi delle discese già trovate.
-- **I sassi che luccicano** segnano la strada da dove sei, entrando, fino
-  alla prossima discesa: uno ogni quattro passi, la scintilla che si accende
-  a turno. Stanno sotto la nebbia: si seguono, non si vedono da lontano.
+- **Niente sassi che luccicano**: c'erano, uno ogni quattro passi fino
+  alla prossima discesa; tolti il 7 ottobre 2026 perché sembravano cose da
+  raccogliere e distraevano (l'utente). La strada la dicono le persone e il
+  cartello.
 - **Le figure sono disegnate in codice** (`viste/pixel.js`, righe di pixel
   alla scala dell'eroe) finché non arriva il foglio dei personaggi (prompt 4
   della scheda): il minatore usa da solo lo sprite `minatore-fermo-0`
@@ -171,9 +178,8 @@ chi vende cosa e perché sta in [roba.md](roba.md#i-mercanti-di-sopra).
 - **Si trovano nella nebbia** come i posti: finché la loro cella non si è
   vista sono prato (non si toccano), e trovandoli la riga in fondo lo dice
   («Hai trovato l'erborista!»).
-- **Da casa sono lontani** (24 celle all'armaiolo, 39 al carretto, passando
-  per la giunta): la vista scorre verso destra. Sul telefono se ne vedono
-  due alla volta.
+- **Stanno a pochi passi da dove si parte**, intorno alla piazza: sul
+  telefono se ne vedono due alla volta.
 - **Figure provvisorie disegnate in codice** (`ARMAIOLO`, `ERBORISTA`,
   `RIGATTIERE` in `viste/pixel.js`) finché non arrivano gli sprite: il posto
   è pronto, `<sprite>-fermo-0` nell'atlante (`armaiolo-fermo-0`…) si usa da
@@ -184,8 +190,9 @@ chi vende cosa e perché sta in [roba.md](roba.md#i-mercanti-di-sopra).
 - **L'eroe che cammina tiene in mano l'arma che ha addosso**, e lo scudo
   dall'altra parte, come nella scelta delle avventure: è `viste/Armato.vue`
   con la posa e il fotogramma del passo.
-- **Il banco si pesca per avventura**: le righe dipendono dalle discese finite
-  da quell'eroe, e i banchi già pescati stanno nella sua avventura.
+- **Il banco si pesca per avventura**: porta il passo dopo della storia di
+  quell'eroe ([la-grande-storia.md](la-grande-storia.md)), e i banchi già
+  pescati stanno nella sua avventura.
 
 ## Il portale gemello
 
@@ -205,15 +212,10 @@ chi vende cosa e perché sta in [roba.md](roba.md#i-mercanti-di-sopra).
 
 ## Le icone delle discese
 
-- **Dove una discesa compare in piccolo, al posto dell'emoji c'è un pezzo
-  della mappa**: la carta della discesa a metà in cima, la riga «a metà» nella
-  scelta delle avventure, il fumetto del gemello, «riprendi da qui» in home
-  (al posto della copertina). Un'emoji 🕳️ non diceva quale pozzo.
-- **Un tondo sfumato ai bordi**, 96×96 in WebP, sui 4 KB l'una (`ICONE` in
-  `dati/terra-icone.js`, `iconaDi(chiave)` in `dati/terra.js`). Le ritaglia lo
-  strumento dal `riquadro` di ogni posto, e si rifanno rilanciandolo
-  ([terra-strumento.md](terra-strumento.md#le-icone)). La copertina del gioco
-  nel carosello e la sua icona non cambiano.
+Dove una discesa compare in piccolo (la carta della discesa a metà, la
+scelta delle avventure, il fumetto del gemello, «riprendi da qui» in home)
+c'è il suo posto ritagliato dalla mappa, non un'emoji: un 🕳️ non diceva
+quale pozzo. Come si fanno: [terra-strumento.md](terra-strumento.md#le-icone).
 
 ## La nebbia
 
@@ -226,21 +228,19 @@ chi vende cosa e perché sta in [roba.md](roba.md#i-mercanti-di-sopra).
   posto è trovato quando se ne vede il cuore: lo dice una riga in fondo
   («Hai trovato la scalinata antica!»). Un posto nel buio è prato come il resto.
 - **Si ricorda per avventura** ([avventure.md](avventure.md)), in
-  `cfg.avventure[<eroe>].terra`: `{ nebbia, dove, parlato, divieti }`; un eroe
-  nuovo parte da casa con la nebbia nuova e il minatore da sentire, la nebbia
-  un bit per cella in esadecimale (768 caratteri). **Un codice di 384
-  caratteri** (la mappa quando era larga la metà) si rimette nell'angolo in
-  alto a sinistra e il resto è nebbia: chi giocava prima ritrova il suo
-  (`LARGHEZZE_VECCHIE` in `motore/terra.js`). Un codice che non torna (altra
-  misura) è nebbia nuova.
+  `cfg.avventure[<eroe>].terra`: `{ nebbia, dove, parlato, divieti }`, la
+  nebbia un bit per cella in esadecimale (768 caratteri); un codice della
+  mappa larga la metà (384) si rimette a sinistra (`LARGHEZZE_VECCHIE`), uno
+  che non torna è nebbia nuova. Un eroe nuovo parte dal villaggio.
 
 Nei test: `[data-terra]` (la vista, con `data-camera`), `[data-eroe-terra]`
 (con `data-cella` e `data-cammina`), `[data-posto]` (con `data-discesa` o
 `data-abisso`, `data-aperta`, `data-trovato`), `[data-divieto="<posto>"]` (il
-cartello di divieto delle chiuse), `[data-minatore]`, `[data-cartello]`, `[data-sasso]`, `[data-fumetto]`
+cartello di divieto delle chiuse), `[data-minatore]`, `[data-cartello]`, `[data-fumetto]`
 (con `data-fumetto-di`), `[data-azione="scendi"]`, `[data-detto]`,
 `[data-chiusa-perche]`, `[data-avviso-terra]`, `[data-pallino="<posto>"]` (il
-pallino), `[data-mercante="<chi>"]`, `[data-roba-sopra]` (la carta di chi
+pallino), `[data-sotto-livello]` (nel fumetto di una discesa), `[data-mercante="<chi>"]`,
+`[data-personaggio="<chi>"]` (con `data-segno`, [missioni.md](missioni.md)), `[data-roba-sopra]` (la carta di chi
 scende, con le gemme), `[data-portale]` (il gemello) col suo fumetto
 `[data-fumetto-di="portale"]` e `[data-azione="portale-giu"]`, `[data-ritaglio]`
 (l'icona ritagliata, nella carta in cima, nel fumetto, nella scelta e in
@@ -250,5 +250,6 @@ home); nel banco `[data-chiudi]`, `[data-merce="<cosa>"]`,
 `unita/sotterraneo-terra` (anche: il portale gemello raggiungibile, chi sta
 fermo non chiude la strada), `unita/sotterraneo-avventure` (un'icona per
 discesa), `integrazione/sotterraneo-terra`, `integrazione/sotterraneo-mercanti`,
-`integrazione/sotterraneo-portale`, e `scendiNelSotterraneo` in
-`test/aiuto/browser.mjs` per chi deve solo scendere.
+`integrazione/sotterraneo-portale`, `integrazione/sotterraneo-missioni`, e
+`scendiNelSotterraneo` e `camminaVerso` (per la strada vera, toccando il punto
+più avanti che si vede) in `test/aiuto/browser.mjs`.

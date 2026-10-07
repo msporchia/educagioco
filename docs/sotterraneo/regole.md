@@ -5,7 +5,7 @@ sviene, cosa ci si porta dietro, il portale e come si lascia una discesa a metà
 (eroi, armi, torcia, i mercanti di sopra, curiosità) sta in [roba.md](roba.md);
 il fondo senza fine in [abisso.md](abisso.md).
 
-Il codice: `src/giochi/sotterraneo/` — `dati/campagna.js` (le sei tappe),
+Il codice: `src/giochi/sotterraneo/` — `dati/campagna.js` (le sette discese, [la-grande-storia.md](la-grande-storia.md)),
 `dati/mondo.js` (passi e tempi), `dati/mostri.js` (`BRANCO`),
 `motore/corsa.js` (la discesa), `motore/livello.js` (il piano),
 `motore/corredo.js` (la roba che resta), `motore/banco.js` (il giocatore
@@ -42,18 +42,20 @@ finto che scende davvero, e fa la spesa sopra).
 
 ## Quanto costa una discesa, in domande
 
-Misurato dal banco, una discesa per riga col seme del banco e la roba di chi
-ci arriva andando dritto (`robaPer`; il numero balla da un seme all'altro:
-serve a leggere la forbice, non a confrontare due tappe):
+Misurato dal banco, una discesa per riga col seme del banco e la roba con cui
+ci si entra secondo la storia (`robaAttesa`, il cavaliere: [la-grande-storia.md](la-grande-storia.md);
+il numero balla da un seme all'altro: serve a leggere la forbice, non a
+confrontare due tappe):
 
 | discesa | piani | solo il guardiano | tutto il piano |
 |---|---|---|---|
-| La scalinata antica | 2 | 14 | 26 |
-| Il pozzo dal tetto rosso | 3 | 37 | 66 |
-| La grotta della scaletta | 3 | 28 | 72 |
-| La scala sommersa | 4 | 30 | 86 |
-| La botola segreta | 3 | 31 | 118 |
-| La miniera abbandonata | 4 | 35 | 116 |
+| La cripta dell'altare | 2 | 14 | 26 |
+| La scalinata antica | 2 | 22 | 99 |
+| La torre in rovina | 3 | 35 | 82 |
+| La grotta della scaletta | 5 | 48 | 76 |
+| La scala sommersa | 3 | 43 | 89 |
+| La botola segreta | 3 | 58 | 172 |
+| La miniera abbandonata | 4 | 39 | 142 |
 
 - **La forbice è il punto**: se «tutto» costasse quanto «il minimo» non ci
   sarebbe niente da scegliere.
@@ -61,15 +63,16 @@ serve a leggere la forbice, non a confrontare due tappe):
   `unita/sotterraneo` diventa rosso (anche per ognuno dei quattro eroi).
 - **Il patto del banco**: rispondendo bene otto volte su dieci, con la roba
   che ci si porta dietro, si arriva in fondo quasi tutte le volte.
-- **Stanze per piano: da quattro a sedici** (la botola segreta ne ha sedici
-  invece di otto). La forma del piano (`misura`, `giri` 2..4) la controlla
+- **Stanze per piano: da quattro a sedici** (la scalinata e la botola ne
+  hanno sedici, la cripta e la grotta quattro). La forma del piano
+  (`misura`, o `largo` e `alto`; `giri` 2..4) la controlla
   `guastiDellaCampagna`, che pretende anche che ogni tappa chieda più della
   precedente.
 
 ## Le monete
 
 - **🪙1 a risposta giusta, pagato nel momento in cui si risponde**
-  (`PAGA.mossa` in `src/data/paghe.js`): nelle sei discese come
+  (`PAGA.mossa` in `src/data/paghe.js`): nelle sette discese come
   nell'abisso, anche in una discesa persa o rifatta. A fine discesa il
   cartello dice il totale (`[data-monete-prese]`) e quanto ha tolto il
   salvadanaio (`[data-nota-monete]`); una discesa ripresa conta solo le
@@ -170,12 +173,12 @@ possibilissimi.
 - **Svenendo ci si risveglia all'ingresso**, con mezza vita (almeno 6), i
   mostri tornati a casa loro (`rimettiInPiedi`), **metà delle gemme e le
   tasche vuote; quello che si ha addosso resta sempre.** È la regola nata
-  nell'abisso, portata nelle sei discese da quando la roba resta: senza, le
+  nell'abisso, portata nelle sette discese da quando la roba resta: senza, le
   tasche piene di pozioni rialzavano chi risponde male una volta di più.
   Il cartello lo dice prima di «riprovo».
 - **Le occasioni sono contate: due più una per piano**
-  (`SVENIMENTI_IN_REGALO` + `piani`, da quattro nella scalinata a sei nella
-  miniera; erano quattro in regalo quando si ripartiva nudi). All'ultima si
+  (`SVENIMENTI_IN_REGALO` + `piani`, da quattro nella cripta a sette nella
+  grotta; erano quattro in regalo quando si ripartiva nudi). All'ultima si
   risale con quello che si ha addosso, la tappa non è superata e si rigioca
   da capo. Il cartello dice sempre quante ne restano.
 - **Le stelle** (`stelleDella`): tre senza svenire, due con uno, una con di
@@ -237,11 +240,12 @@ discese che contano sulla roba e la misura dell'equilibrio:
   dice «piano 2 di 3 · ❤️ 14». Il cartello di un traguardo ferma la discesa.
   Davanti a una domanda il ⏸ non c'è.
 
-Nei test: `unita/sotterraneo` (le sei tappe col giocatore finto e la roba di
+Nei test: `unita/sotterraneo` (le sette discese col giocatore finto e la roba di
 chi ci arriva, i quattro eroi, le soglie qui sopra), `unita/sotterraneo-roba`
 (la roba fra due discese, lo svenimento, la sosta, il portale al posto del
-mercante, i banchi), `unita/sotterraneo-sosta` (la ripresa esatta cosa per
-cosa, il peso, il portale), `misure/sotterraneo` (la tabella qui sopra),
+mercante, i banchi del passo), `unita/sotterraneo-storia` (la tabella, chi la
+dà, le missioni: [la-grande-storia.md](la-grande-storia.md), [missioni.md](missioni.md)), `unita/sotterraneo-sosta` (la ripresa esatta cosa per
+cosa, il peso, il portale), `misure/sotterraneo` (la tabella della storia),
 `integrazione/sotterraneo` (ci si arriva con `scendiNelSotterraneo`: la mappa
 sta in [terra-di-sopra.md](terra-di-sopra.md)), `integrazione/sotterraneo-portale`
 (col dito: porta, mostro ferito, portale, erborista, ritorno nel punto esatto,

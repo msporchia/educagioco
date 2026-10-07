@@ -34,55 +34,50 @@ sopra), `motore/bottega.js` (i banchi),
   più nessuno che vende. Le monete non cambiano (🪙1 a risposta giusta) e la
   roba **non si vende mai in monete**, solo in gemme.
 - **Le discese dopo la prima contano sulla roba** (`forza` sulle ossa e
-  `spinta` sull'attacco dei mostri, in `dati/campagna.js`; `crescitaDi`):
-  pozzo 1,3/+1, grotta 1,6/+2, scala sommersa 1,3/+2, botola 1,8/+2, miniera
-  2,1/+2. La scalinata si comincia a mani nude e resta com'era
-  (`guastiDellaCampagna` lo pretende). A mani nude dalla grotta in giù non si
+  `spinta` sull'attacco dei mostri, in `dati/campagna.js`; `crescitaDi`),
+  tarate sulla roba con cui ci si entra secondo la storia
+  ([la-grande-storia.md](la-grande-storia.md)): scalinata 1,3/+2, torre
+  1,2/+2, grotta 1,15/+2, scala sommersa 1,5/+2, botola 2,2/+2, miniera
+  2,3/+2. La cripta si comincia a mani nude (`guastiDellaCampagna` lo
+  pretende). A mani nude dalla grotta in giù non si
   passa nemmeno rispondendo sempre giusto: la roba si fa discesa dopo
   discesa. Le gemme di bentornato a chi aveva già finito delle discese non
   ci sono più: i salvataggi di prima si sono azzerati
   ([avventure.md](avventure.md)).
-- **Chi porta la chiave lascia sempre qualcosa** (prima a caso, `droppa`):
-  è l'unico bottino che arriva anche a chi va dritto alla scala, e tiene
-  vicina la roba di chi va dritto e di chi gira tutto.
-- **Il forziere pesca per profondità** (`pescaCosa` con `profondita`, la
-  stessa pesatura del banco): la scalinata non regala lo spadone che poi
-  scende per sempre.
+- **Chi porta la chiave lascia sempre qualcosa**: quello dell'ultimo piano
+  il pezzo della riga dopo della storia, gli altri da bere. È l'unico
+  bottino che arriva anche a chi va dritto alla scala.
+- **Il forziere dà il pezzo della storia che manca**, poi da bere o da
+  accendere; i mostri di tutti i giorni solo da bere. La roba pescata a caso
+  per profondità (`pescaCosa` con `profondita`) è rimasta all'abisso
+  ([la-grande-storia.md](la-grande-storia.md#chi-da-la-riga-dopo)).
 - **La sosta tiene il piano, la roba sta accanto** nell'avventura e si
   scrivono insieme (`salva` in `Gioco.vue`): usciti a metà (con la ✕ o dal
   portale) si può andare dai mercanti, e riprendendo la discesa ritrova la
   roba com'è adesso (`leggi` con la roba). La sosta non ne tiene una copia.
-- **Le missioni dei personaggi** verranno ([da-fare.md](da-fare.md)): il posto
-  c'è già, `missioni` in ogni avventura accanto alla roba.
+- **Le missioni dei personaggi** stanno in ogni avventura accanto alla roba
+  (`missioni`): [missioni.md](missioni.md).
 
 ## L'equilibrio, misurato
 
-Venti file per eroe (`misure/sotterraneo`, `misuraConLaRoba`): la campagna
-giocata in fila a otto su dieci, con la spesa sopra fra una discesa e l'altra,
-e prima di ogni discesa una copia giocata a otto, sei e quattro su dieci con
-lo zaino di quel momento. Due file: chi gira tutto (lo zaino più pieno) e chi
-va dritto alla scala. Il cavaliere, discese vinte su venti:
+Fino alla grande storia l'equilibrio si misurava giocando la campagna in
+fila col banco di prova, che faceva la spesa sopra (`misuraConLaRoba`, venti
+file per eroe). Il cavaliere, discese vinte su venti, a 8 · 6 · 4 su dieci:
 
 | | scalinata | pozzo | grotta | scala sommersa | botola | miniera |
 |---|---|---|---|---|---|---|
-| prima, nudi, a 8/10 | 20 | 20 | 20 | 20 | 19 | 20 |
-| prima, nudi, a 6/10 | 20 | 16 | 9 | 7 | 14 | 11 |
-| prima, nudi, a 4/10 | 18 | 5 | 4 | 0 | 1 | 2 |
-| con la roba che resta e i numeri di prima, gira tutto, a 4/10 | 20 | 13 | 19 | 19 | 20 | 18 |
-| con la seconda fonte, gira tutto, a 8 · 6 · 4 | 20·20·20 | 20·16·4 | 20·13·3 | 20·14·1 | 19·12·0 | 19·8·0 |
-| adesso (una fonte e il portale), gira tutto, a 8 · 6 · 4 | 20·20·19 | 20·17·2 | 20·16·4 | 20·15·2 | 20·13·1 | 20·12·1 |
-| adesso, va dritto, a 8 · 6 · 4 | 20·20·19 | 19·13·0 | 18·13·2 | 20·13·1 | 19·12·0 | 19·10·0 |
+| prima, nudi | 20·20·18 | 20·16·5 | 20·9·4 | 20·7·0 | 19·14·1 | 20·11·2 |
+| con la roba pescata a caso, gira tutto | 20·20·19 | 20·17·2 | 20·16·4 | 20·15·2 | 20·13·1 | 20·12·1 |
+| con la roba pescata a caso, va dritto | 20·20·19 | 19·13·0 | 18·13·2 | 20·13·1 | 19·12·0 | 19·10·0 |
 
-A otto si arriva in fondo quasi sempre, a sei circa metà, a quattro quasi mai
-anche con lo zaino pieno — tranne la scalinata, che perdona. Togliere la
-seconda fonte per il portale non ha spostato niente oltre il rumore fra due
-giri. Il mago, che
-regge meno, a otto su dieci va dritto in fondo 16–19 volte su 20; elfa e nano
-sono più comodi, come prima.
+Adesso la roba con cui si entra in ogni discesa è scritta (`dati/storia.js`)
+e la misura la gioca riga per riga, con la roba attesa, quella di una
+discesa prima e quella di due avanti: i numeri stanno in
+[la-grande-storia.md](la-grande-storia.md#le-misure).
 
 Nei test: `unita/sotterraneo-roba` (la roba fra due discese, lo svenimento,
 la sosta, il portale al posto del mercante, un'avventura nuova che parte nuda,
-i banchi, e l'equilibrio su sei file),
-`misure/sotterraneo` (la tabella qui sopra, venti file per il cavaliere e il
-mago), `integrazione/sotterraneo-mercanti` (col dito: si compra, si vende, si
+i banchi del passo, e l'equilibrio con la roba attesa su sei semi),
+`misure/sotterraneo` (la tabella della storia, venti semi per i quattro
+eroi), `integrazione/sotterraneo-mercanti` (col dito: si compra, si vende, si
 scende con la roba e la si ritrova).

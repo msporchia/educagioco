@@ -134,11 +134,15 @@ più nessuno.
   rivendere perde metà, quindi non è un modo di fare gemme, ma libera le
   tasche. Tre botteghe che comprano farebbero di ogni banco un posto dove
   svuotare le tasche; chi non compra dice chi lo fa.
-- **Più discese finite, più roba e più forte** (`righe` per discese finite,
-  `profonditaDelBanco`, la metà della discesa che viene, pesata come prima
-  da `pescaMerce`). L'armaiolo ha in più un **tetto di prezzo** (`tetto`):
-  prima della grotta niente terzo gradino, o chi ha le gemme scende già col
-  meglio e la discesa diventa una passeggiata.
+- **L'armaiolo e il rigattiere portano il passo dopo della storia**
+  (`passo` in `dati/mercanti.js`, `bancoDelPasso` in `motore/storia.js`):
+  i pezzi della riga con cui si entra nella prossima discesa che mancano,
+  e un paio di cose (`altre`) che non costano più di quei pezzi. Mai la
+  riga dopo ancora: chi ha le gemme non scende col meglio della miniera
+  ([la-grande-storia.md](la-grande-storia.md#chi-da-la-riga-dopo)). Prima
+  della prima discesa, o a chi ha già tutto, il banco lo dice
+  (`[data-banco-vuoto]`). L'erborista pesca a righe (`righe` per discese
+  finite), come prima.
 - **Il banco si pesca una volta per giro** e si scrive in
   nell'avventura (`botteghe`); il giro cambia quando finisce una discesa (vinta, persa o
   finita la sera nell'abisso). Un banco che cambiasse a ogni apertura sarebbe

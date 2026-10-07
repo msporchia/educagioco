@@ -14,7 +14,7 @@ campagna), `Gioco.vue` (chi legge e scrive), `viste/Eroi.vue` (la scelta).
   voleva dire o non cambiarlo mai, o portarsi la spada del cavaliere in tasca
   al mago. Vietare il cambio toglieva la voglia di provarli tutti; quattro
   storie la lasciano.
-- **Un eroe nuovo comincia dalla scalinata**, a casa, con lo zaino vuoto, la
+- **Un eroe nuovo comincia dalla cripta dell'altare**, nel villaggio, con lo zaino vuoto, la
   nebbia nuova e il minatore che non ha ancora parlato. L'età apre lo stesso le
   discese già passate per lei (`aperta(…, fatte)` con le discese
   dell'avventura): il lucchetto guarda l'avventura, la portata il bambino.
@@ -43,7 +43,7 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
 {
   tappa, libera, stelle,          // il massimo fra le avventure: lo legge il resto dell'app
   cfg: {
-    mondo: 2,                     // i salvataggi di prima sono già stati azzerati (MONDO)
+    mondo: 3,                     // azzerati i salvataggi di prima (2), e riordinate le discese (3): MONDO
     eroe: 'mago',                 // l'avventura aperta adesso
     avventure: {
       cavaliere: { tappa, libera, stelle,   // le sue discese
@@ -52,7 +52,7 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
                    botteghe,                // i banchi pescati in questo giro
                    sosta,                   // la discesa lasciata a metà, che è anche il portale aperto (motore/sosta.js)
                    abisso,                  // { fondo }
-                   missioni },              // il posto per quelle dei personaggi, che verranno
+                   missioni },              // { [id]: 'presa' | 'fatta' | 'consegnata' } (missioni.md)
       mago: { … },
     },
   },
@@ -63,9 +63,10 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
   ([../core/ripresa.md](../core/ripresa.md)): ogni eroe ritrova la sua.
 - **Ci scrive solo `Gioco.vue`**, con `nellAvventura` → `ritocca()` di
   `giochi/campagne.js`; un campo a `null` si toglie.
-- **I mercanti pescano per avventura**: le righe sul banco dipendono dalle
-  discese finite di quell'eroe, e i banchi già pescati stanno nella sua
-  avventura.
+- **I mercanti pescano per avventura**: il banco porta il passo dopo della
+  storia di quell'eroe ([la-grande-storia.md](la-grande-storia.md)), e i
+  banchi già pescati stanno nella sua avventura. Anche le missioni sono
+  dell'avventura ([missioni.md](missioni.md)).
 
 ## Cosa è in comune
 
@@ -113,6 +114,10 @@ passarli: le avventure ripartono da zero per tutti. `azzeraIlVecchio`
   delle avventure.
 - Provato: passare tutto all'ultimo eroe usato, con le gemme di bentornato a
   chi aveva discese finite; l'utente ha preferito azzerare.
+- **Il mondo 3** (la grande storia, lo stesso giorno) ha riordinato le
+  discese: un'avventura del mondo 2 non si azzera ma si rilegge per chiave
+  nella fila nuova (`riordina`), e il record di fuori non si tocca
+  ([la-grande-storia.md](la-grande-storia.md#le-discese)).
 
 Nei test: `unita/sotterraneo-avventure` (le avventure separate, il massimo con
 lo store vero, l'azzeramento di un profilo di prima delle avventure e di uno
