@@ -9,6 +9,8 @@
 import { STRADE } from '../../src/giochi/passo-passo/motore/strade.js'
 import { disponiIsole, viaggio, percorso, decori, ANIMALE } from '../../src/giochi/passo-passo/scena/isole.js'
 import { nellaValle } from '../../src/giochi/passo-passo/scena/valle.js'
+import { stendardo, stemma, stimaNome } from '../../src/giochi/passo-passo/scena/stendardo.js'
+import { SCALINI } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const S = { ...STRADE, isole: STRADE.isole.filter(s => !nellaValle(s.chiave)) }
@@ -50,6 +52,34 @@ for (const W of [320, 360, 390, 430, 520]) {
   controlla(`${W} px: il cartello del bivio non copre una casella né la tana`, q.bivi.every(b =>
     caselle.every(n => Math.abs(n.x - b.x) > n.lato / 2 + 26 || Math.abs(n.y - b.y) > n.lato / 2 + 24) &&
     q.nodi.filter(n => n.tipo === 'tana').every(t => Math.hypot(t.x - b.x, t.y - b.y) > 40)))
+  // lo stendardo di ogni isola (e lo stemma di un'isoletta di una casella sola) sta nella sua isola,
+  // non copre una casella né una strada né una tana; nome più largo che un carattere di riserva può dare
+  const strade = q.strade.filter(e => e.tipo !== 'tunnel').map(e => e.punti)
+  const ingombri = []
+  for (const s of q.isole.filter(s => s.scalino)) {
+    const sc = SCALINI.find(x => x.chiave === s.scalino)
+    let r
+    if (s.cartello) {
+      const b = stendardo(stimaNome(sc.nome), s.animale, s.cartello.max)
+      if (b.testoW < 0.6 * stimaNome(sc.nome)) ingombri.push(`${s.chiave} nome troppo stretto`)
+      r = { x: s.cartello.lato > 0 ? s.x + s.w - 14 - b.w : s.x + 14, y: s.cartello.y, w: b.w, h: b.h }
+    } else if (s.isolotto) {
+      const t = q.nodi.find(n => n.isola === s.k && n.tipo === 'tana')
+      const e = stemma(s.animale)
+      r = { x: s.x + (t.x < s.x + s.w / 2 ? s.w - 36 : 10), y: s.y + 8, w: e.w, h: e.h }
+    } else continue
+    const dove = `${s.chiave}`
+    if (r.x < s.x || r.x + r.w > s.x + s.w || r.y < s.y || r.y + r.h > s.y + s.h) ingombri.push(`${dove} fuori dall'isola`)
+    for (const n of caselle) if (n.isola === s.k &&
+        r.x < n.x + n.lato / 2 + 4 && r.x + r.w > n.x - n.lato / 2 - 4 && r.y < n.y + n.lato / 2 + 4 && r.y + r.h > n.y - n.lato / 2) ingombri.push(`${dove}/${n.id}`)
+    for (const t of q.nodi.filter(n => n.tipo === 'tana' && n.isola === s.k))
+      if (Math.abs(t.x - (r.x + r.w / 2)) < r.w / 2 + 24 && Math.abs(t.y - (r.y + r.h / 2)) < r.h / 2 + 18) ingombri.push(`${dove}/${t.id}`)
+    for (const pts of strade) for (let i = 1; i < pts.length; i++) for (let u = 0; u <= 1; u += 0.02) {
+      const x = pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * u, y = pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * u
+      if (x > r.x - 12 && x < r.x + r.w + 12 && y > r.y - 12 && y < r.y + r.h + 12) ingombri.push(`${dove}/strada`)
+    }
+  }
+  uguale(`${W} px: lo stendardo (o lo stemma) sta nella sua isola e non copre niente`, [...new Set(ingombri)].join(' | '), '')
   controlla(`${W} px: le tane del cane una sopra l'altra`,
             q.archi.filter(e => e.tipo === 'tunnel').every(e => q.nodi.find(n => n.id === e.a).x === q.nodi.find(n => n.id === e.b).x))
   controlla(`${W} px: le cose sparse non stanno sotto una casella`, decori(q).every(c =>

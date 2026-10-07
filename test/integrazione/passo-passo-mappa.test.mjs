@@ -90,8 +90,12 @@ const animali = () => page.evaluate(() => window.__animali.join(' '))
 const vuoto = () => page.evaluate(() => {
   for (let y = 780; y > 150; y -= 23)
     for (let x = 12; x < 380; x += 17) {
-      const e = document.elementFromPoint(x, y)
-      if (e && e.closest('[data-isole]') && !e.closest('button, [data-fumetto], [data-insegna], .pp-sentiero-nome')) return [x, y]
+      const libero = (px, py) => {
+        const e = document.elementFromPoint(px, py)
+        return e && e.closest('[data-isole]') && !e.closest('button, [data-fumetto], [data-insegna], .pp-sentiero-nome')
+      }
+      // anche attorno: Chrome porta un tocco sul bottone che gli sta vicino
+      if (libero(x, y) && [[30, 0], [-30, 0], [0, 30], [0, -30]].every(([dx, dy]) => libero(x + dx, y + dy))) return [x, y]
     }
   return null
 })
@@ -204,6 +208,45 @@ controlla('i massi sono chiusi, e il loro ponte ha il blocco',
           await page.locator('[data-blocco="prato-massi"][data-chiude="massi"]').count() === 1 &&
           await statoSullIsola(page, MASSI) === 'chiusa')
 await scatto(page, 'passo-mappa-meta')
+
+/* il tondo col numero, come i led del robot: niente emoji sulla mappa, le stelle solo sulle fatte,
+   l'emoji del livello solo nel fumetto; lo stendardo col nome non copre una casella */
+{
+  const caselle = await page.locator('[data-mappa] [data-tappa]').evaluateAll(l => l
+    .filter(e => !isNaN(Number(e.dataset.tappa)))
+    .map(e => ({ i: Number(e.dataset.tappa), stato: e.dataset.stato, numero: e.querySelector('.pp-tondo b')?.textContent,
+                 testo: e.textContent.replace(/\s+/g, ''), stelle: e.querySelector('[data-stelle]') ? Number(e.querySelector('[data-stelle]').dataset.piene) : null })))
+  controlla('ci sono le caselle della valle', caselle.length > 20, String(caselle.length))
+  uguale('ogni casella dice il numero del suo livello', caselle.filter(c => c.numero !== String(c.i + 1)).map(c => c.i).join(' '), '')
+  uguale('e solo quello: niente emoji', caselle.filter(c => c.testo !== String(c.i + 1)).map(c => c.i).join(' '), '')
+  uguale('le stelle stanno solo sulle fatte', caselle.filter(c => (c.stato === 'fatta') !== (c.stelle !== null)).map(c => c.i).join(' '), '')
+  uguale('e sono quelle prese', caselle.filter(c => c.stato === 'fatta' && c.stelle !== 3).length, 0)
+  uguale('una sola è da fare adesso', caselle.filter(c => c.stato === 'ora').map(c => c.i).join(' '), String(GHIACCIO + 2))
+  uguale('le chiuse hanno il lucchetto piccolo',
+         await page.locator('[data-mappa] [data-stato="chiusa"] .pp-lucchetto-piccolo, [data-mappa] [data-stato="chiusa"] .pp-lucchetto').count(),
+         await page.locator('[data-mappa] [data-stato="chiusa"]').count())
+  // gli stendardi: il nome ci sta scritto sopra, e nessuno copre una casella
+  const stendardi = await page.locator('[data-mondo="valle"] [data-insegna]').evaluateAll(l => l.map(e => {
+    const r = e.querySelector('svg').getBoundingClientRect()
+    return { chiave: e.dataset.insegna, testo: e.textContent.trim(), r: [r.left, r.top, r.right, r.bottom] }
+  }))
+  uguale('uno stendardo per isola, col nome', stendardi.map(x => `${x.chiave}:${x.testo.replace(/^\P{L}+/u, '')}`).sort().join(' | '),
+         ['passi:Primi passi', 'salto:Il salto', 'ghiaccio:Il ghiaccio', 'massi:I massi', 'buche:Le buche', 'pecore-cane:Il cane pastore'].sort().join(' | '))
+  const coperte = await page.evaluate(sts => {
+    const out = []
+    for (const e of document.querySelectorAll('[data-mappa] [data-tappa]')) {
+      const b = e.getBoundingClientRect()
+      for (const x of sts) if (b.left < x.r[2] && b.right > x.r[0] && b.top < x.r[3] && b.bottom > x.r[1]) out.push(`${x.chiave}/${e.dataset.tappa}`)
+    }
+    return out
+  }, stendardi)
+  uguale('nessuno stendardo copre una casella', coperte.join(' '), '')
+  // il fumetto della tappa di adesso ha l'emoji del livello (il segnalino è già lì: non si muove)
+  await toccaSu(casella(GHIACCIO + 2))
+  uguale('l\'emoji del livello sta nel fumetto', await page.locator('[data-fumetto] [data-livello-icona]').textContent(), CAMPAGNA[GHIACCIO + 2].icona)
+  await toccaFuori()
+  uguale('il fumetto si chiude', await page.locator('[data-fumetto]').count(), 0)
+}
 
 /* il fumetto è subito sulla meta, e il segnalino ci va */
 await toccoVivo(casella(SALTO + 3))

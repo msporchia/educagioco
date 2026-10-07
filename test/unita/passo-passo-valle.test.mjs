@@ -9,12 +9,14 @@
    `node test/esegui.mjs passo-passo-valle --niente-build` */
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
-import { CAMPAGNA } from '../../src/giochi/passo-passo/dati/campagna.js'
+import { CAMPAGNA, SCALINI } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { STRADE, aperture } from '../../src/giochi/passo-passo/motore/strade.js'
 import { FIRMA, ISOLE, NODI, LATO, LARGO, ALTO } from '../../src/giochi/passo-passo/dati/isole-mappa.js'
 import { quadroValle, chiusure, percorso, viaggio, vicinoA, nellaValle, TEMPO_MAX }
   from '../../src/giochi/passo-passo/scena/valle.js'
 import { ANIMALE, SENTIERO_CANE } from '../../src/giochi/passo-passo/scena/isole.js'
+import { stendardo, stimaNome } from '../../src/giochi/passo-passo/scena/stendardo.js'
+import { STELLE, LARGO_STELLE } from '../../src/giochi/passo-passo/scena/tondo.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const S = STRADE
@@ -68,19 +70,35 @@ tonde.forEach((a, i) => tonde.slice(i + 1).forEach(b => {
 uguale('fra due caselle c\'è sempre posto per un dito', toccano.join(' '), '')
 controlla('le caselle stanno nel fondale', tonde.every(n => n.x - n.mezzo >= 0 && n.y - n.mezzo >= 0 &&
   n.x + n.mezzo <= LARGO && n.y + n.mezzo <= ALTO))
-// un cartello non copre una casella, né l'animale seduto sopra
-const NOMI = Object.fromEntries(valle.map(s => [s.chiave, s.animale === 'cane' ? 'Il cane pastore'
-  : ({ passi: 'Primi passi', salto: 'Il salto', ghiaccio: 'Il ghiaccio', massi: 'I massi', buche: 'Le buche' })[s.chiave] || 'xxxxxxxxxxxx']))
-const coperte = []
+// lo stendardo di un'isola non copre una casella (col suo tondo, le stelle a cavallo del bordo e l'animale
+// seduto sopra), né un sentiero, né un ponte: col nome più largo che un carattere di riserva può dare
+const distanzaRett = (p, r) => Math.hypot(Math.max(r.x - p[0], 0, p[0] - (r.x + r.w)), Math.max(r.y - p[1], 0, p[1] - (r.y + r.h)))
+const distanzaStrada = (r, punti) => {
+  let d = Infinity
+  for (let i = 1; i < punti.length; i++) for (let t = 0; t <= 1; t += 0.02)
+    d = Math.min(d, distanzaRett([punti[i - 1][0] + (punti[i][0] - punti[i - 1][0]) * t, punti[i - 1][1] + (punti[i][1] - punti[i - 1][1]) * t], r))
+  return d
+}
+const coperte = [], suStrada = [], fuoriFondale = []
 for (const [k, d] of Object.entries(ISOLE)) {
-  const w = 60 + 8.6 * NOMI[k].length, h = 32
-  const [cx, cy] = d.cartello
+  const s = S.isole.find(x => x.chiave === k)
+  const b = stendardo(stimaNome(SCALINI.find(x => x.chiave === s.scalino).nome), s.animale)
+  const r = { x: d.cartello[0] - b.w / 2, y: d.cartello[1] - b.h / 2, w: b.w, h: b.h }
+  if (r.x < 0 || r.y < 0 || r.x + r.w > LARGO || r.y + r.h > ALTO) fuoriFondale.push(k)
   for (const n of tonde) {
     const su = n.mezzo + ANIMALE.alto - ANIMALE.piede
-    if (Math.abs(n.x - cx) < w / 2 + n.mezzo && cy + h / 2 > n.y - su && cy - h / 2 < n.y + n.mezzo) coperte.push(`${k}/${n.chiave}`)
+    if (Math.abs(n.x - d.cartello[0]) < b.w / 2 + n.mezzo && Math.abs(n.y - d.cartello[1]) < b.h / 2 + n.mezzo + 2 ||
+        (n.y - su < r.y + r.h && n.y + n.mezzo > r.y && Math.abs(n.x - d.cartello[0]) < b.w / 2 + n.mezzo)) coperte.push(`${k}/${n.chiave}`)
   }
+  for (const st of [...fg.sentieri.filter(x => !x.erba), ...fg.ponti])
+    if (distanzaStrada(r, st.punti) < 14) suStrada.push(`${k}/${st.isola || st.nome}`)
 }
-uguale('i cartelli delle isole non coprono le caselle', coperte.join(' '), '')
+uguale('gli stendardi stanno nel fondale', fuoriFondale.join(' '), '')
+uguale('gli stendardi non coprono le caselle, né l\'animale seduto sopra', [...new Set(coperte)].join(' '), '')
+uguale('e non coprono un sentiero né un ponte', [...new Set(suStrada)].join(' '), '')
+// le stelline a cavallo del bordo non toccano una vicina: sporgono meno dello spazio fra due caselle, e stanno nel tondo
+controlla('le stelline stanno nel bottone e sporgono meno dello spazio fra due caselle',
+          LARGO_STELLE <= LATO && STELLE.fuori < 8)
 
 /* ══════════ a ogni punto della campagna ══════════ */
 const tutte = chiusure(q, () => true)
