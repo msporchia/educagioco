@@ -56,14 +56,16 @@ export function leggiFila(dato, tappa) {
 
 /* ── il sentiero senza fine ──
    `posto` è il sentiero in gioco, o `null` se quello di prima è vinto e il
-   prossimo non è ancora nato: rinasce uguale dal seme. Una serie che non
-   ha fatto niente non si scrive. */
+   prossimo non è ancora nato: rinasce uguale dal seme. `strada` dice quale
+   dei due sentieri (una sosta di prima, senza, era del coniglio). Una
+   serie che non ha fatto niente non si scrive. */
+export const STRADE_DEI_SENTIERI = ['coniglio', 'cane']
 export function scriviSerie({ seme, sentieri = 0, serie = 0, prima = null, chiusa = null,
-                              posto = null, fila = null } = {}) {
+                              posto = null, fila = null, strada = 'coniglio' } = {}) {
   const qui = posto ? scriviFila(fila || {}) : null
   if (!sentieri && !serie && !qui) return null
   const { chiave, ...senza } = posto || {}
-  return { seme, sentieri, serie, prima, chiusa: chiusa || null,
+  return { seme, sentieri, serie, prima, chiusa: chiusa || null, strada,
            posto: posto ? JSON.parse(JSON.stringify(senza)) : null, fila: qui }
 }
 
@@ -86,6 +88,7 @@ export function leggiSerie(dato) {
   return { seme: dato.seme, sentieri: dato.sentieri, serie: dato.serie,
            prima: typeof dato.prima === 'string' ? dato.prima : null,
            chiusa: typeof dato.chiusa === 'string' ? dato.chiusa : null,
+           strada: STRADE_DEI_SENTIERI.includes(dato.strada) ? dato.strada : 'coniglio',
            posto: dato.posto || null, fila }
 }
 
@@ -119,5 +122,7 @@ export function dice(dato) {
   const pezzi = [`sentiero ${s.sentieri + 1}`]
   if (s.posto && s.posto.nome) pezzi.push(s.posto.nome)
   if (s.serie) pezzi.push(`${s.serie} di fila`)
-  return { emoji: '♾️', nome: 'Il sentiero senza fine', dettaglio: pezzi.join(' · ') }
+  const cane = s.strada === 'cane'
+  return { emoji: cane ? '🐕' : '🐇', nome: cane ? 'Il sentiero del cane' : 'Il sentiero del coniglio',
+           strada: s.strada, dettaglio: pezzi.join(' · ') }
 }

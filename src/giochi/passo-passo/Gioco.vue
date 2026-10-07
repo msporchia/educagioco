@@ -6,7 +6,7 @@
 import { ref, shallowRef, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { state, addCoins, segna, segnaBest, tappaAperta, spendi } from '../../store/profile.js'
+import { state, addCoins, segna, segnaBest, tappaAperta, tuttoAperto, spendi } from '../../store/profile.js'
 import { progresso, stelleDi, completa, primatoDi, segnaPrimato, ricorda,
          sosta, salvaSosta, chiusaPerEta } from '../campagne.js'
 import { tappaApertaQui } from '../../data/portata-giochi.js'
@@ -24,7 +24,8 @@ import { mettiCarta, mettiScatola, togliPrima, scegliTesta } from './motore/fila
 import { suggerisci, minimoDi, carteUsate } from './motore/risolutore.js'
 import { scalaDi, pensieroDi, dove, pezzoDiStrada } from './motore/aiuti.js'
 import { mancano, chiedeConferma, SVELA } from '../aiuti.js'
-import { generaSentiero, caso, premioDi, INGREDIENTI } from './motore/generatore.js'
+import { generaSentiero, caso, premioDi, ricordoDi, INGREDIENTI, SENTIERI } from './motore/generatore.js'
+import { SENTIERO_CANE } from './scena/isole.js'
 import { Proiezione } from './scena/proiezione.js'
 import { Regia } from './scena/regia.js'
 import { guidaDelPrato, guidaDelRipeti } from './motore/guida.js'
@@ -88,12 +89,14 @@ let inTana = false
 /* il giro di prima: serve a far correre veloce la parte già vista */
 let ultimoGiro = null               // { passi: [{ i, mossa }], riusciti }
 
-/* il sentiero senza fine */
+/* i sentieri senza fine: quello del coniglio e quello del cane */
+const quale = ref('coniglio')      // quale dei due si sta giocando
 const sentieri = ref(0)             // quanti in questa seduta
 const serie = ref(0)                // di fila, senza aiuti
 let semeSeduta = 1
-let famigliaPrima = null            // di che specie era il sentiero di prima
+let famigliaPrima = null            // di che specie era il sentiero di prima («famiglia:forma»)
 let chiusaDallAiuto = null          // la frase di quando l'aiuto ha chiuso la serie
+let pronto = null                   // il prossimo posto, fatto mentre si guardava il cartello
 
 const avanza = progresso(CHIAVE)
 // riordino della fila di livelli: vedi docs/passo-passo/livelli.md
@@ -116,8 +119,10 @@ const daFuori = i => tappaApertaQui(CHIAVE, i, -1)
 const strade = aperture(STRADE, { fatta, daFuori, perEta, eredita: ereditaDi(avanza) })
 const aperta = i => strade.aperta(i)
 const prossimaDopo = i => prossima(STRADE, i, aperta)
-// in fondo a una strada (o davanti allo zaino chiuso) ▶ porta al sentiero, se è aperto
+// in fondo a una strada (o davanti allo zaino chiuso) ▶ porta al sentiero, se è aperto:
+// quello del cane dopo una tappa del cane, se c'è
 const sentieroDopo = i => { const s = seguente(STRADE, i); return s === null || s === TAPPE_PICCOLE }
+const stradaDopo = i => (STRADE.animale[i] === 'cane' && sentieroAperto('cane') ? 'cane' : 'coniglio')
 
 /* ═══════════ la partita lasciata a metà ═══════════
    La fila di ogni livello e il sentiero in corso: vedi docs/passo-passo/sosta.md */
@@ -127,8 +132,12 @@ if (JSON.stringify(scrivi(quaderno)) !== JSON.stringify(sosta(CHIAVE) || null))
   salvaSosta(CHIAVE, scrivi(quaderno))
 let vinta = false                   // il posto in gioco è vinto: la sua fila non si tiene
 const chiede = ref('')              // il sentiero nuovo che butterebbe quello a metà
+let chiedeStrada = 'coniglio'       // e quale dei due
 // sulla mappa solo se il sentiero è ancora aperto a quell'età
-const ripresa = computed(() => (sentieroAperto() ? dice(scrivi(quaderno)) : null))
+const ripresa = computed(() => {
+  const d = dice(scrivi(quaderno))
+  return d && sentieroAperto(d.strada) ? d : null
+})
 
 const sentiero = computed(() => tappaIdx.value < 0)
 /* quante carte tiene la fila: lo zaino, dove c'è, se no il tetto tecnico */
@@ -143,13 +152,19 @@ const colori = computed(() => {
     .map(ch => (LEGENDA[ch] || {}).lastra).filter(Boolean))
   return COLORI.filter(c => qui.has(c))
 })
-// si apre alla fine delle buche, non della campagna: vedi docs/passo-passo/sentiero.md
-const sentieroAperto = () => tappaAperta(TAPPE_PRIME, avanza.tappa)
+// l'ultima tappa di un gradino sulla strada del coniglio (per il cane: la fine del pascolo)
+const fineDi = scalino => CAMPAGNA.slice(0, FINE_STRADA).map(t => t.scalino).lastIndexOf(scalino)
 // ingredienti sbloccati: vedi docs/passo-passo/sentiero.md
 const sbloccati = () => SCALINI.filter(s => INGREDIENTI[s.chiave]).filter(s => {
-  const u = CAMPAGNA.slice(0, FINE_STRADA).map(t => t.scalino).lastIndexOf(s.chiave)
+  const u = fineDi(s.chiave)
   return fatta(u) || daFuori(u)
 }).map(s => INGREDIENTI[s.chiave])
+/* quello del coniglio si apre alla fine delle buche, non della campagna;
+   quello del cane a pascolo finito: vedi docs/passo-passo/sentiero.md */
+const sentieroAperto = (di = 'coniglio') => (di === 'cane'
+  ? tuttoAperto() || fatta(fineDi('pecore')) || daFuori(fineDi('pecore'))
+  : tappaAperta(TAPPE_PRIME, avanza.tappa))
+const idDelSentiero = di => (di === 'cane' ? SENTIERO_CANE : 'senza-fine')
 
 /* ═══════════ la mappa ═══════════
    Lo stato di ogni casella lo decide il gioco, la mappa lo disegna
@@ -172,16 +187,28 @@ const voci = computed(() => CAMPAGNA.map((t, i) => {
 // dove sta il segnalino: la tappa di adesso; non restando niente, il sentiero o l'ultima giocata
 const doveSegnalino = computed(() => {
   if (adessoQui.value !== null) return adessoQui.value
-  if (sentieroAperto()) return 'senza-fine'
+  // il sentiero lasciato a metà, se c'è; se no quello del coniglio, poi quello del cane
+  const r = ripresa.value
+  if (r) return idDelSentiero(r.strada)
+  if (sentieroAperto('coniglio')) return 'senza-fine'
+  if (sentieroAperto('cane')) return SENTIERO_CANE
   const u = avanza.cfg.ultima
   return Number.isInteger(u) && aperta(u) ? u : 0
 })
 
-const statoSentiero = computed(() => ({
-  aperto: sentieroAperto(),
-  record: primatoInParole(primatoDi(CHIAVE), SENZA_FINE.misura),
-  quante: TAPPE_PRIME,
-  fatte: Math.min(avanza.tappa, TAPPE_PRIME),
+/* i due sentieri sulla mappa: aperto, il record, cosa manca da chiuso */
+const PASCOLO = CAMPAGNA.map((t, i) => i).filter(i => i < FINE_STRADA && CAMPAGNA[i].scalino === 'pecore')
+const statoSentieri = computed(() => ({
+  coniglio: {
+    aperto: sentieroAperto('coniglio'),
+    record: primatoInParole(primatoDi(CHIAVE, 'coniglio'), SENZA_FINE.misura),
+    serve: `Si apre alla fine delle prime ${TAPPE_PRIME} tappe: ne hai fatte ${Math.min(avanza.tappa, TAPPE_PRIME)}.`,
+  },
+  cane: {
+    aperto: sentieroAperto('cane'),
+    record: primatoInParole(primatoDi(CHIAVE, 'cane'), SENZA_FINE.misura),
+    serve: `Si apre quando il cane finisce il pascolo: ne ha fatte ${PASCOLO.filter(fatta).length} su ${PASCOLO.length}.`,
+  },
 }))
 
 // la guida della prima volta (motore/guida.js, docs/passo-passo/regole.md)
@@ -199,7 +226,7 @@ usaGuida(radice, passoGuida)
 
 const titolo = computed(() => {
   if (vista.value !== 'campo' || !tappa.value) return 'Passo passo'
-  if (sentiero.value) return `♾️ ${sentieri.value + 1} · ${tappa.value.nome}`
+  if (sentiero.value) return `${quale.value === 'cane' ? '🐕' : '🐇'} ${sentieri.value + 1} · ${tappa.value.nome}`
   return `${tappaIdx.value + 1}. ${tappa.value.nome}`
 })
 
@@ -260,7 +287,7 @@ function fotografa() {
   if (sentiero.value)
     quaderno.sentiero = scriviSerie({ seme: semeSeduta, sentieri: sentieri.value, serie: serie.value,
                                       prima: famigliaPrima, chiusa: vinta ? null : chiusaDallAiuto,
-                                      posto: vinta ? null : tappa.value, fila: qui })
+                                      posto: vinta ? null : tappa.value, fila: qui, strada: quale.value })
   else if (qui) quaderno.livelli[tappa.value.chiave] = qui
   else delete quaderno.livelli[tappa.value.chiave]
 }
@@ -290,6 +317,7 @@ onBeforeUnmount(() => {
   regia.spegni()
   clearTimeout(sbarra)
   clearTimeout(timerArmato)
+  clearTimeout(timerPronto)
   vintaAMeta()
   salvaOra()
 })
@@ -717,13 +745,16 @@ function scriviVittoria(esito) {
     ...strada, zaino: !!liv.zaino,
     racconto: CAMPAGNA[i].racconto,
     // ▶ va avanti sulla strada che si sta facendo; in fondo può portare al sentiero senza fine
-    prossima: prossimaDopo(i) !== null || (sentieroDopo(i) && sentieroAperto()),
+    prossima: prossimaDopo(i) !== null || (sentieroDopo(i) && sentieroAperto(stradaDopo(i))),
   }
 }
 
-/* ═══════════ il sentiero senza fine ═══════════ */
-function avviaSentiero() {
+/* ═══════════ i sentieri senza fine ═══════════
+   Due, il coniglio e il cane, una sosta sola: cominciarne uno chiude la
+   serie dell'altro lasciato a metà (e la mappa lo chiede prima). */
+function avviaSentiero(di = quale.value) {
   if (quaderno.sentiero) scordaSentiero()
+  quale.value = di
   sentieri.value = 0
   serie.value = 0
   semeSeduta = (Date.now() % 100000) + 1
@@ -732,24 +763,42 @@ function avviaSentiero() {
 }
 
 /* il prossimo posto: fra le cose che sa, e di una specie diversa da
-   quello di prima, se il caso lo concede */
+   quello di prima, se il caso lo concede. Lo stesso seme fa lo stesso
+   posto: quello fatto mentre si guardava il cartello si usa e basta */
+const richiesta = () => ({ n: sentieri.value, seme: semeSeduta, prima: famigliaPrima, strada: quale.value })
+function faiSentiero(r) {
+  return generaSentiero(r.n, caso(r.seme * 1009 + r.n), { sbloccati: sbloccati(), prima: r.prima, strada: r.strada })
+}
 function prossimoSentiero() {
-  const t = generaSentiero(sentieri.value, caso(semeSeduta * 1009 + sentieri.value),
-                           { sbloccati: sbloccati(), prima: famigliaPrima })
-  famigliaPrima = t.famiglia
+  const r = richiesta()
+  const t = pronto && JSON.stringify(pronto.r) === JSON.stringify(r) ? pronto.t : faiSentiero(r)
+  pronto = null
+  famigliaPrima = ricordoDi(t)
   entra({ ...t, chiave: `sentiero-${sentieri.value}` }, -1)
+}
+/* un pascolo con quattro pecore si misura in qualche decina di
+   millisecondi, su un telefono qualcuno in più: lo si fa mentre il
+   bambino guarda il cartello della vittoria, non quando preme ▶ */
+let timerPronto = 0
+function preparaIlProssimo() {
+  clearTimeout(timerPronto)
+  timerPronto = setTimeout(() => {
+    if (!sentiero.value || !vinta) return
+    const r = richiesta()
+    pronto = { r, t: faiSentiero(r) }
+  }, 700)
 }
 
 /* la serie è un risultato solo quando si chiude, non a ogni sentiero vinto:
    con un aiuto pagato, con «lascio perdere» o con un sentiero nuovo, mai
    uscendo. La sosta la perde nello stesso salvataggio che scrive il
-   record, così non si scrive due volte */
+   record, così non si scrive due volte. Il record è del suo sentiero */
 function chiudiLaSerie() {
   const n = serie.value
   if (!n) return null
   serie.value = 0
   if (quaderno.sentiero) { quaderno.sentiero.serie = 0; salvaSosta(CHIAVE, scrivi(quaderno)) }
-  return segnaPrimato(CHIAVE, n)
+  return segnaPrimato(CHIAVE, n, Date.now(), null, quale.value)
 }
 
 /* «torno da dove ero»: il posto di allora con la sua fila, o il prossimo,
@@ -758,6 +807,7 @@ function riprendiSentiero() {
   const s = quaderno.sentiero
   chiede.value = ''
   if (!s) return avviaSentiero()
+  quale.value = s.strada
   sentieri.value = s.sentieri
   serie.value = s.serie
   semeSeduta = s.seme
@@ -768,19 +818,24 @@ function riprendiSentiero() {
   chiusaDallAiuto = s.chiusa
 }
 
-// «lascio perdere»: la serie finisce davvero, e il suo record si scrive
+// «lascio perdere»: la serie finisce davvero, e il suo record si scrive (nel suo sentiero)
 function scordaSentiero() {
   const s = quaderno.sentiero
   chiede.value = ''
-  if (s && s.serie) { serie.value = s.serie; chiudiLaSerie() }
+  if (s && s.serie) { quale.value = s.strada; serie.value = s.serie; chiudiLaSerie() }
   serie.value = 0
   quaderno.sentiero = null
   salvaSosta(CHIAVE, scrivi(quaderno), { subito: true })
 }
 
-function vuoleSentiero() {
-  if (ripresa.value) chiede.value = 'un sentiero nuovo'
-  else avviaSentiero()
+/* il tasto di un sentiero sulla mappa (o ▶ in fondo a una strada): con
+   una sosta dello stesso sentiero, chiede se cominciarne uno nuovo; con
+   una sosta dell'altro, se lasciarla */
+function vuoleSentiero(di = 'coniglio') {
+  chiedeStrada = di
+  const r = ripresa.value
+  if (!r) return avviaSentiero(di)
+  chiede.value = r.strada === di ? 'un sentiero nuovo' : SENTIERI[di].nome.replace(/^Il /, 'il ')
 }
 
 function vittoriaSentiero(esito, strada) {
@@ -792,13 +847,15 @@ function vittoriaSentiero(esito, strada) {
   let record = false
   if (!pagato.value) {
     serie.value++
+    // la medaglia conta il migliore dei due sentieri
     segnaBest('ppFila', serie.value)
-    const prima = primatoDi(CHIAVE).best
+    const prima = primatoDi(CHIAVE, quale.value).best
     record = serie.value > prima
     frase = record && prima ? `${serie.value} di fila · nuovo record (era ${prima})`
           : record ? `${serie.value} di fila · il tuo primo record`
           : `${serie.value} di fila · il record è ${prima}`
   }
+  preparaIlProssimo()
   return { che: 'sentiero', titolo: tappa.value.nome, frase, record, monete,
            ...strada, zaino: !!liv.zaino }
 }
@@ -809,8 +866,12 @@ function avanti() {
   const i = tappaIdx.value, p = prossimaDopo(i)
   if (p !== null) avviaTappa(p)
   // il sentiero lasciato a metà si riprende: cominciarne un altro ne chiuderebbe la serie
-  else if (sentieroDopo(i) && sentieroAperto()) riprendiSentiero()
-  else allaMappa()
+  else if (sentieroDopo(i) && sentieroAperto(stradaDopo(i))) {
+    const di = stradaDopo(i), r = ripresa.value
+    if (!r) avviaSentiero(di)
+    else if (r.strada === di) riprendiSentiero()
+    else { allaMappa(); vuoleSentiero(di) }
+  } else allaMappa()
 }
 
 function rigioca() {
@@ -852,12 +913,12 @@ function indietro() {
     <Barra :titolo="titolo" guida="passo" monete @indietro="indietro" />
 
     <div class="pp">
-      <Mappa v-if="vista === 'mappa'" :voci="voci" :senza-fine="statoSentiero"
+      <Mappa v-if="vista === 'mappa'" :voci="voci" :sentieri="statoSentieri"
              :dove="doveSegnalino" :chi="state.player || ''"
              @gioca="avviaTappa" @senza-fine="vuoleSentiero">
         <Ripresa :ripresa="ripresa" :chiede="chiede"
                  @riprendi="riprendiSentiero" @scorda="scordaSentiero"
-                 @comincia="avviaSentiero" @annulla="chiede = ''" />
+                 @comincia="avviaSentiero(chiedeStrada)" @annulla="chiede = ''" />
       </Mappa>
 
       <Campo v-else ref="campo"

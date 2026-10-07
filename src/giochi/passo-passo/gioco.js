@@ -2,16 +2,22 @@
    `docs/core/convenzione-giochi.md`: vedi `docs/passo-passo/README.md`. */
 import { CAMPAGNA, QUANTE_TAPPE, FINE_STRADA, TAPPE_PICCOLE, TAPPE_ZAINO, TAPPE_PRIME } from './dati/campagna.js'
 import { stradeDi } from './motore/strade.js'
-import { apriQuaderno, primatoInParole } from '../primati.js'
+import { recordPiuRecente, primatoInParole } from '../primati.js'
 
 export const CHIAVE = 'passo'
 
-/* vedi docs/passo-passo/sentiero.md */
+/* due sentieri, un record ciascuno; quello del coniglio si prende il
+   record di quando il sentiero era uno (vedi docs/passo-passo/sentiero.md).
+   Le chiavi sono chiavi di salvataggio: non si rinominano */
 export const SENZA_FINE = {
   nome: 'Il sentiero senza fine',
   icona: '♾️',
   misura: 'fila',
   che: 'quanti sentieri di fila, senza comprare aiuti',
+  sfide: [
+    { chiave: 'coniglio', nome: 'Il sentiero del coniglio', icona: '🐇', eredita: true },
+    { chiave: 'cane', nome: 'Il sentiero del cane', icona: '🐕' },
+  ],
 }
 
 export default {
@@ -31,10 +37,12 @@ export default {
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
     const coda = stelle ? ` · ⭐ ${stelle}` : ''
-    const record = primatoInParole(apriQuaderno(av), SENZA_FINE.misura)
+    // dei due sentieri, il record più recente (vedi docs/core/primati.md)
+    const r = recordPiuRecente(av, SENZA_FINE)
+    const record = r ? primatoInParole(r.quaderno, SENZA_FINE.misura) : ''
     // finita la strada del coniglio la campagna è finita: il cane conta per le stelle
     if ((av.tappa || 0) >= FINE_STRADA)
-      return record ? `sentiero senza fine · record ${record}${coda}` : `tutte le tane${coda}`
+      return record ? `${r.sfida.nome.replace(/^Il /, '')} · record ${record}${coda}` : `tutte le tane${coda}`
     // la tappa di adesso, su qualunque strada (docs/passo-passo/livelli.md, «Le due strade»)
     const adesso = stradeDi(av).adesso()
     const i = adesso ?? Math.min(av.tappa || 0, QUANTE_TAPPE - 1)
@@ -46,7 +54,8 @@ export default {
      buche): vedi TAPPE_PRIME in docs/passo-passo/livelli.md. I contatori
      li muove Gioco.vue con segna()/segnaBest():
        ppProve le file col ▶, ppTane le tane, ppCarote con la carota,
-       ppDaSolo senza aiuti, ppFila (primato) i sentieri di fila,
+       ppDaSolo senza aiuti, ppFila (primato) i sentieri di fila (il
+       migliore dei due sentieri: la medaglia li conta tutti e due),
        ppPecore le pecore nel recinto */
   albo: {
     area: { nome: 'Passo passo', emoji: '🐇' },
