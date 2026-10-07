@@ -46,7 +46,8 @@ TESTA = """/* GENERATO da strumenti/sprite/isole-passo-passo.py — non si scriv
    ISOLE   per isola (la chiave è quella di motore/strade.js): quante caselle, dove sta il cartello
    NODI    {{ id, tipo, isola, x, y }}: `casella` (con `k`, l'ordine sull'isola), `incrocio`, `capo`
            (un sentiero che finisce), `sosta` (a metà di un arco lungo: su un ponte
-           non è di un'isola), `tana`, `zaino` (la tana che porta allo zaino, con
+           non è di un'isola), `tana` (al capo di un ponte ha `ponte` e `animale`: `:da` è dove
+           il coniglio entra, `:a` dove sbuca il cane), `zaino` (la tana che porta allo zaino, con
            `cartello` [x, y], il centro del suo nome), `sentiero` (le caselle speciali, con
            `etichetta` [x, y], dove comincia il nome: a metà altezza, da lì verso destra)
    ARCHI   {{ a, b, tipo: terra | erba | ponte | tunnel, ponte?, punti }}: i pezzi di strada fra due nodi
@@ -234,6 +235,12 @@ class Grafo:
             capi = []
             for capo, isola in ((0, pn['isole'][0]), (-1, pn['isole'][1])):
                 q = pn['punti'][capo]
+                if pn.get('tana') and isola == fg['tane'][pn['tana']]['a']:
+                    # il capo è la tana, dove il coniglio entra: del coniglio, ma chiusa con l'isola di là
+                    t = fg['tane'][pn['tana']]
+                    capi.append(self.nodo(f"tana:{pn['tana']}:da", 'tana', isola, t['punto'], ponte=pn['tana'],
+                                          animale='coniglio'))
+                    continue
                 v = self.vicina(isola, q)
                 if not v or v[2] > AGGANCIO:
                     raise SystemExit(f'il ponte {pn["nome"]}: il capo {q} non tocca un sentiero di {isola}')
@@ -243,7 +250,18 @@ class Grafo:
         # 5. le tane
         self.tane = []
         for nome, t in fg.get('tane', {}).items():
-            if 'da' in t:          # un passaggio sotto terra: da un'isola all'altra, l'animale cambia
+            if 'ponte' in t:       # la tana al capo di un ponte: dal ponte del coniglio al pascolo del cane
+                tid = self.nodo(f'tana:{nome}:a', 'tana', t['a'], t['punto'], ponte=nome, animale='cane')
+                st, s, d = self.vicina(t['a'], t['punto'])
+                if d <= 2:         # il sentiero finisce nella tana: ne è un nodo
+                    id = self.taglia(st, s, lambda p, tid=tid: tid)
+                    if id != tid:
+                        raise SystemExit(f'la tana {nome}: troppo vicina a un altro nodo ({id})')
+                else:
+                    attacco = self.taglia(st, s, lambda p, isola=t['a']: self.nuovo('incrocio', isola, p))
+                    self.tane.append({'a': attacco, 'b': tid, 'tipo': 'terra'})
+                self.tane.append({'a': f'tana:{nome}:da', 'b': tid, 'tipo': 'tunnel'})
+            elif 'da' in t:          # un passaggio sotto terra: da un'isola all'altra, l'animale cambia
                 ids = []
                 for lato, isola in (('da', t['da']), ('a', t['a'])):
                     tid = self.nodo(f'tana:{nome}:{lato}', 'tana', isola, t['punto'])

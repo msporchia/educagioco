@@ -41,19 +41,21 @@
       "punti": [[600, 420], [575, 435], [545, 465], [535, 510], [548, 550], [585, 573], [650, 578], [715, 565], [765, 575],
                 [785, 610], [810, 645], [860, 660], [910, 642], [945, 600], [985, 575], [997, 540], [990, 505], [960, 485],
                 [935, 478]] },
-    { "isola": "pecore-cane", "punti": [[548, 552], [522, 578], [502, 596]] }
+    { "isola": "pecore-cane", "punti": [[548, 552], [522, 578], [516, 587]] }
   ],
   "ponti": [
     { "nome": "prato-salto", "isole": ["passi", "salto"], "punti": [[548, 808], [760, 815], [1000, 814]] },
     { "nome": "prato-massi", "isole": ["passi", "massi"], "punti": [[300, 585], [300, 505], [301, 426]] },
-    { "nome": "prato-pascolo", "isole": ["passi", "pecore-cane"], "punti": [[452, 622], [478, 610], [502, 596]] },
-    { "nome": "salto-pascolo", "isole": ["salto", "pecore-cane"], "punti": [[1150, 652], [1090, 612], [1030, 576], [1000, 566]], "blocco": [24, 62] },
+    { "nome": "prato-pascolo", "isole": ["passi", "pecore-cane"], "punti": [[452, 622], [478, 610], [502, 596], [516, 587]], "tana": "prato-pascolo" },
+    { "nome": "salto-pascolo", "isole": ["salto", "pecore-cane"], "punti": [[1150, 652], [1090, 612], [1044, 586]], "tana": "salto-pascolo" },
     { "nome": "salto-ghiaccio", "isole": ["salto", "ghiaccio"], "punti": [[1307, 585], [1306, 500], [1310, 413]], "blocco": [24, 50] },
     { "nome": "ghiaccio-buche", "isole": ["ghiaccio", "buche"], "punti": [[1120, 224], [1050, 202], [985, 188]] },
     { "nome": "buche-massi", "isole": ["buche", "massi"], "punti": [[575, 208], [530, 210], [484, 209]] }
   ],
   "tane": {
     "pecore-cane": { "da": "buche", "a": "pecore-cane", "punto": [775, 288] },
+    "prato-pascolo": { "da": "passi", "a": "pecore-cane", "punto": [516, 587], "ponte": "prato-pascolo" },
+    "salto-pascolo": { "da": "salto", "a": "pecore-cane", "punto": [1044, 586], "ponte": "salto-pascolo" },
     "zaino": { "isola": "buche", "punto": [823, 84], "cartello": [823, 30] }
   },
   "speciali": {
