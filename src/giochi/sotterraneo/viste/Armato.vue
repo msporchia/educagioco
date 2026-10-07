@@ -1,7 +1,7 @@
 <script setup>
 // L'eroe come lo si vede in discesa: fermo, con l'arma in pugno e lo scudo dall'altra parte, alla stessa scala
 // della figura (scena/tela.js `arma`: il pugno sta 0,42 caselle a lato e in basso, lo scudo è girato). Serve alle
-// carte fuori dalla discesa (la scelta delle avventure, la terra di sopra): un bambino riconosce lo spadone dal
+// carte fuori dalla discesa e all'eroe che cammina sulla terra di sopra (`posa`, `fotogramma`): un bambino riconosce lo spadone dal
 // ritratto prima di leggere i numeri. Diverso dal campo: l'arma a due mani sta lo stesso a lato e non in mezzo,
 // perché a questa scala, davanti al corpo, lo nasconde (uno spadone è alto quanto l'eroe).
 import { computed } from 'vue'
@@ -15,13 +15,15 @@ const props = defineProps({
   mano: { type: String, default: null },         // la chiave dell'arma in pugno (COSE)
   mancina: { type: String, default: null },      // lo scudo, o la seconda arma
   scala: { type: Number, default: 3 },           // intera: uno sprite a scala storta esce a pixel disuguali
+  posa: { type: String, default: 'fermo' },      // 'corsa' quando cammina: l'arma resta in pugno
+  fotogramma: { type: Number, default: 0 },
 })
 
 const T = 16       // la casella del campo, in pixel di sprite
 const ALTO = 28    // l'eroe fermo: 16 × 28
 const MARGINE = 4  // un po' d'aria ai lati, dove l'arma esce dal corpo
 
-const corpo = computed(() => figura(pezzoAndante(props.eroe.sprite, 'fermo', 0), { scala: props.scala }))
+const corpo = computed(() => figura(pezzoAndante(props.eroe.sprite, props.posa, props.fotogramma), { scala: props.scala }))
 const larga = computed(() => (T + 2 * MARGINE) * props.scala)
 
 const dueMani = computed(() => !!(props.mano && COSE[props.mano] && COSE[props.mano].mani === 2))

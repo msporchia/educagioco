@@ -108,8 +108,6 @@ let meta = null       // cosa aprire all'arrivo
 const cammina = ref(false)
 const specchio = ref(false)
 const fotogramma = ref(0)
-const ritratto = computed(() => figura(
-  pezzoAndante(props.eroe.sprite, cammina.value ? 'corsa' : 'fermo', fotogramma.value), { scala: SCALA_EROE }))
 const cellaDiMe = () => ({ x: Math.floor(io.x), y: Math.floor(io.y) })
 
 function vaiA(c, cosa = null) {
@@ -534,7 +532,9 @@ const chiusaPerche = p => {
 
       <div ref="eroeEl" class="sot-io-sopra" :class="{ 'sot-specchio': specchio }" data-eroe-terra
            :data-cammina="cammina ? 1 : 0">
-        <span v-if="ritratto" class="sot-ritratto" :style="ritratto.gabbia"><i :style="ritratto.pezzo"></i></span>
+        <!-- con l'arma che ha addosso, come nella scelta delle avventure -->
+        <Armato :eroe="eroe" :mano="roba ? roba.mano : null" :mancina="roba ? roba.mancina : null" :scala="SCALA_EROE"
+                :posa="cammina ? 'corsa' : 'fermo'" :fotogramma="fotogramma" />
       </div>
 
       <span v-if="segno" :key="'segno-' + segno.n" class="sot-segno"
