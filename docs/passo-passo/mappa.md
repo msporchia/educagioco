@@ -1,24 +1,25 @@
 # Passo passo — la mappa delle isole
 
-La schermata da cui si sceglie la tappa. Ha due mondi: **la valle dei
-piccoli**, un fondale dipinto (prato, salto, ghiaccio, massi, buche e il
-pascolo del cane), e **il mondo dello zaino** (ripeti, fino a, se, tutto il
-mondo e le isolette del cane), ancora disegnato in codice finché non arriva
-il suo fondale. Si passa dall'uno all'altro da una tana. Il modello è la
-terra di sopra del sotterraneo ([../sotterraneo/terra-di-sopra.md](../sotterraneo/terra-di-sopra.md)):
-il disegno si tiene com'è, il codice ci posa sopra caselle, segnalino,
-blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
+La schermata da cui si sceglie la tappa. Ha due mondi, tutti e due un
+fondale dipinto: **la valle dei piccoli** (prato, salto, ghiaccio, massi,
+buche e il pascolo del cane) e **il mondo dello zaino** (ripeti, fino a, se,
+tutto il mondo, e a ognuno la sua isoletta del cane). Si passa dall'uno
+all'altro da una tana. Il modello è la terra di sopra del sotterraneo
+([../sotterraneo/terra-di-sopra.md](../sotterraneo/terra-di-sopra.md)): il
+disegno si tiene com'è, il codice ci posa sopra caselle, segnalino, blocchi e
+fumetto, con la stessa vista per tutti e due. Chi apre cosa sta in
+[livelli.md](livelli.md#le-due-strade).
 
 ## Dove sta cosa
 
 | file | cosa tiene |
 |---|---|
-| `strumenti/sprite/sorgenti/passo-passo/isole.json` | il foglietto: sentieri, ponti, tane, caselle speciali, cartelli, in pixel del fondale `isole_1.png` |
-| `strumenti/sprite/isole-passo-passo.py` | lo strumento: distribuisce le caselle, cuce il grafo, scrive `dati/isole-mappa.js` (generato, non si tocca) |
-| `scena/valle.js` | la valle: le tappe sui nodi, cosa è chiuso, la strada più corta, i salti (puro) |
-| `scena/isole.js` | lo zaino: dove cade ogni isola, casella, tana, bivio e ponte, e i salti (puro) |
+| `strumenti/sprite/sorgenti/passo-passo/isole.json`, `zaino.json` | i due foglietti: sentieri, ponti, tane, caselle speciali, cartelli, in pixel del fondale (`isole_1.png` la valle, `isole_2.png` lo zaino) |
+| `strumenti/sprite/isole-passo-passo.py` | lo strumento: distribuisce le caselle, cuce il grafo, scrive `dati/isole-mappa.js` e `dati/zaino-mappa.js` (generati, non si toccano) |
+| `scena/valle.js` | i due mondi: le tappe sui nodi, cosa è chiuso, la strada più corta, i salti (puro) |
+| `scena/animale.js` | le misure dell'animale che salta e il suo saltello (puro) |
 | `viste/Mappa.vue` | in che mondo si apre, da dove parte il segnalino, il passaggio da un mondo all'altro |
-| `viste/Valle.vue`, `viste/MondoZaino.vue` | i due mondi: il disegno, la vista, il dito, il fumetto |
+| `viste/Valle.vue` | la vista di un mondo (`mondo="valle"` o `"zaino"`): il disegno, la vista, il dito, il fumetto |
 | `viste/segnalino.js` | l'animale che salta, per tutti e due i mondi |
 | `viste/Casella.vue`, `viste/Fumetto.vue` | la casella (un tondo col numero) e il fumetto, uguali nei due mondi |
 | `viste/Stendardo.vue`, `scena/stendardo.js`, `scena/tondo.js` | lo stendardo col nome di un'isola e lo stemma, disegnati in pixel (puro: la stoffa, l'asta, lo scudo); le misure del tondo che servono ai test |
@@ -31,10 +32,15 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
   `strumenti/sprite/sorgenti/passo-passo/PROMPT-mappa.md`).
 - **Entra nel file unico in WebP** (qualità 80, 257 KB; il file unico cresce
   di ~390 KB col base64 e il codice nuovo).
+- **`isole_2.png` è lo zaino**, stessa scala e stesso WebP (363 KB; il file
+  unico cresce di altri ~475 KB, tolta la mappa disegnata in codice che
+  c'era): quattro isole del coniglio in fila su ponti, a sinistra in basso la
+  riva da cui si arriva dalla valle. Vedi «Il mondo dello zaino».
 - **La scala è 1**: un pixel del fondale è un pixel dello schermo, a pixel
   netti (`image-rendering: pixelated`). A 390 px la valle è quattro schermi
-  per uno e mezzo; le caselle sono di 52 px (`lato` nel foglietto), che si
-  toccano bene e stanno su un sentiero dipinto largo ~40.
+  per uno e mezzo; le caselle sono di 52 px (`lato` nel foglietto; 48 nello
+  zaino, dove le isolette sono piccole), che si toccano bene e stanno su un
+  sentiero dipinto largo ~40.
 - **Dove sta ogni scalino**: in basso a sinistra il prato (la tana di casa,
   l'orto), in basso a destra il salto (il ruscello, i tronchi), a destra in
   alto il ghiaccio (il lago), in alto a sinistra i massi (il ponte di
@@ -66,8 +72,18 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
   più lungo di 150 px si spezza in soste: toccando a metà di un ponte il
   segnalino si ferma lì.
 - **Le tane**: quella del pascolo (`da`, `a`, `punto`) è un passaggio sotto
-  terra fra le buche e il pascolo, quella dello zaino (`isola`, `punto`,
-  `cartello`, il centro del suo nome) porta all'altro mondo.
+  terra fra le buche e il pascolo; con due punti (`punti: [[x, y], [x, y]]`,
+  quello di `da` e quello di `a`) le due bocche stanno in posti diversi, come
+  nello zaino, e `"nuvola": true` dice che da quella parte (`da`, il coniglio)
+  sul fondale non c'è un buco: l'animale sparisce e ricompare in una nuvoletta.
+  Quella per l'altro mondo (`isola`, `punto`, `cartello`, il centro del suo
+  nome) è un nodo `passaggio`.
+- **Le rive e gli id**: `"libere": ["riva"]` sono isole sempre aperte, senza
+  caselle (la riva da cui si arriva dalla valle); `"prefisso": "z-"` si mette
+  davanti agli id dei punti senza nome (`z-incrocio:3`), perché i due mondi non
+  ne abbiano uno uguale (la mappa sa in che mondo sta un posto dal suo id).
+  `"stemma": true` su un'isola le dà lo scudo e non lo stendardo (le isolette).
+  `blocco: [a, b]` di un ponte sposta la sbarra dai suoi capi (px dal capo).
 - **I due sentieri senza fine** ([sentiero.md](sentiero.md)) sono due caselle
   tonde e d'oro, col loro animale in un tondino sul bordo anche da chiuse e il
   record nel fumetto: `senza-fine`, il sentiero del coniglio, in cima alle
@@ -95,12 +111,14 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
   della chiusa: due paletti e un'asse a strisce, disegnata in codice
   (`SBARRA` in `scena/pixel.js`, scala 3), a 24 px dal capo (o quanto dice
   `blocco` del ponte, se lì sotto c'è una casella). Fra due isole chiuse non
-  serve: non ci si arriva.
+  serve: non ci si arriva. La riva dello zaino è aperta sempre (`libere`):
+  non ha mai la sbarra dalla sua parte.
 - **Toccata, la sbarra ha il suo fumetto**: «Il ponte è chiuso», lo scalino
   di là, e cosa manca alla sua prima tappa (`cosaManca`). Il segnalino non
   si muove.
-- **La tana del pascolo chiusa ha il masso davanti** (`MASSO`), e non si
-  passa; così la tana dello zaino.
+- **La bocca dipinta di un'isola del cane chiusa ha il masso davanti**
+  (`MASSO`: il pascolo, le isolette dello zaino), e non si passa; così la tana
+  dello zaino, in cima alle buche, finché nessuna tappa di là è aperta.
 
 ## La vista
 
@@ -127,7 +145,8 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
   del pascolo (dal prato e dal salto) l'animale cambia in una nuvoletta sul
   capo del pascolo: il ponte è del coniglio. Provate due tane disegnate in
   capo a quei ponti: all'utente sembravano brutte, preferisce che l'animale
-  cambi «magicamente».
+  cambi «magicamente». Anche nello zaino niente tane disegnate in codice: la
+  bocca c'è nel fondale, o c'è la nuvoletta.
 - **Toccando una casella aperta ci va**, sulla strada più corta dei pezzi
   che si passano (`percorso`), a saltelli lungo la strada (`SALTO`, 72 px):
   atterra sulle caselle e nelle tane, passa sopra incroci e soste. Un
@@ -154,25 +173,50 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
 
 ## Il mondo dello zaino
 
-- **La tana in cima alle buche porta lì** (il nome «🎒 Lo zaino» sopra):
-  toccandola il coniglio ci va, entra, e sbuca dalla tana in cima allo
-  zaino, su un'isoletta col nome «La valle»; quella lo riporta indietro.
-  Chiusa (nessuna tappa dello zaino aperta, per esempio a sei anni) ha il
-  masso, e il suo fumetto dice cosa manca alla prima tappa dello zaino.
-- **Il resto è la mappa di prima**: isole una sotto l'altra, una per
-  scalino, che scorrono in verticale; le caselle a serpente, quattro per riga
-  (tre sotto i 340 px); fra un'isola del coniglio e la dopo un ponte di
-  assi; le isolette del cane nello spazio dopo l'isola della loro tana, il
-  ponte del coniglio gira largo (`ponteX`). Ogni isola ha il suo vestito
-  (`VESTITI`), colori piatti, il mare color pesca della copertina, le cose
-  sparse dove non c'è niente, col caso fisso sulla posizione.
-- **Le tane e i bivi**: fra un'isola del coniglio e la sua isoletta del cane
-  una tana per parte, il tunnel a puntini; il ramo parte dalla casella più
-  vicina dell'ultima riga; il bivio è un paletto con due assi, 🐇 verso il
-  ponte e 🐕 verso la tana; una tana chiusa ha il sasso. Il segnalino ci
-  salta di casella in casella, oltre cinque un balzo solo.
-- **Diventerà dipinto** col secondo fondale (il prompt 2 della scheda):
-  allora sarà una seconda valle, col suo foglietto.
+Una seconda valle, col suo foglietto (`zaino.json`) e lo stesso strumento, la
+stessa vista (`Valle.vue`), le stesse caselle e lo stesso segnalino. Chi
+prima era disegnato in codice (isole una sotto l'altra, bivi, tane a puntini)
+non c'è più.
+
+- **Il passaggio fra le due valli**: la tana «🎒 Lo zaino» in cima alle buche
+  porta lì (il coniglio ci va, entra, e sbuca dalla tana d'arrivo); sulla
+  riva in basso a sinistra la tana «🌱 La valle» lo riporta indietro. Chiusa
+  (nessuna tappa dello zaino aperta, per esempio a sei anni) la prima ha il
+  masso, e il suo fumetto dice cosa manca alla prima tappa dello zaino; quella
+  della riva è sempre aperta. Il segnalino ricorda in che valle era
+  (`ultimo` in `Mappa.vue`).
+- **Le isole**: la riva con la tana d'arrivo, e il ponte che va al **ripeti**
+  (in basso a sinistra, la più grande, 8 tappe); da lì un ponte in alto al
+  **fino a** (rocce, neve, cascata: 4 tappe), un passaggio con una stalla
+  (un'isoletta dove si cammina e basta, del «fino a»: ha la sua tana, ma è
+  del fondale), poi il **se** (siepi, cartelli, lastre: 2 tappe). A destra del
+  ripeti, un ponte porta a **tutto il mondo** (ghiaccio, massi, ruscello e una
+  spirale attorno a un monte di cristallo: 4 tappe). Il giro è una catena,
+  non un cerchio: da tutto il mondo ai massi si torna dal ripeti, e i ponti
+  verso il fino a e verso tutto il mondo hanno la sbarra finché le due isole
+  sono chiuse.
+- **Le isolette del cane**: ogni scalino ha la sua, con tre tappe e il suo
+  stemma (uno scudo, la carta dello scalino, viola), perché il nome intero non
+  ci sta. Il ripeti ha quella a sinistra (le stalle in fila), il fino a quella
+  in basso in mezzo (col fienile: è la più vicina che non è già di un altro,
+  il fino a non ne ha una accanto), il se quella a destra in alto, tutto il
+  mondo quella col lago gelato. Ne resta una (a destra in basso, di sotto a
+  tutto il mondo): decoro, senza caselle.
+- **Si entra dalla bocca dipinta dell'isoletta** (`tana:<isoletta>:a`): il
+  coniglio entra in una tana (`:da`) sulla sua isola e il cane sbuca di là.
+  Da dove entra il coniglio: il buco dipinto del fondale se c'è (il fino a: la
+  tana dell'isolotto di passaggio; il se: quella in cima all'isola), se no
+  `nuvola`, un punto del sentiero dove l'animale sparisce in una nuvoletta (il
+  ripeti, al capo del ponte verso l'isoletta; tutto il mondo, sul lato dello
+  spirale più vicino). Un ponte dipinto verso un'isoletta è solo disegno:
+  non si cammina.
+- **Le tre caselle di un'isoletta stanno a zigzag** sull'erba, dove ci stanno
+  (le isolette sono larghe 180 px, tre caselle da 48 con otto di spazio
+  vogliono 120): la più vicina alla bocca è la prima tappa, e nessuna copre la
+  bocca (un test lo dice). Lo stemma sta dove non copre né caselle né animale
+  seduto.
+- **Da dove si parte**: dalla tappa di adesso, se è nello zaino; la vista
+  segue il coniglio e il cane nei due versi come nella valle.
 
 ## Il fumetto
 
@@ -200,25 +244,24 @@ stendardo: come sono fatti, lo stato a colpo d'occhio e perché stanno in
 La partita a metà del sentiero (`Ripresa.vue`) sta ferma in cima, sopra i
 due mondi.
 
-Nei test: `unita/passo-passo-valle` (il modulo è quello del foglietto, una
-casella per tappa, ogni casella su un sentiero e staccata dalle altre e dagli
-stendardi, che non coprono caselle, sentieri né ponti; a sedici punti della campagna ogni casella aperta si raggiunge,
-le isole chiuse no, i blocchi stanno sui ponti giusti e ci si ferma prima;
-gli animali e la durata dei viaggi), `unita/passo-passo-isole` (lo zaino a
-cinque larghezze: caselle nello schermo e nella loro isola, isole che non
-si toccano, il ponte che non passa sopra il cane, il bivio che non copre
-niente, la tana in cima da cui si arriva a tutto), `integrazione/passo-passo-mappa`
-(col dito vero). Bersagli: la mappa `[data-mappa]` con `[data-mondo="valle"|"zaino"]`,
-la vista `[data-isole]` (nella valle con `[data-camera]`); i cartelli
-`[data-insegna]` (lo stendardo, col nome come testo) con `[data-scalino]` (nella valle anche `[data-isola]`,
-`[data-animale]`, `[data-velata]`; nello zaino questi stanno sulle isole
-`[data-isola="<chiave>"]`); le caselle `[data-tappa="<indice>"|"senza-fine"|"senza-fine-cane"]`
+Nei test: `unita/passo-passo-valle` (per tutti e due i mondi: il modulo è
+quello del foglietto, una casella per tappa, ogni casella su un sentiero e
+staccata dalle altre, dagli stendardi, dagli stemmi e dalle tane, che non
+coprono caselle, sentieri, ponti né tane; a sedici punti della campagna ogni
+casella aperta si raggiunge, le isole chiuse no, i blocchi stanno sui ponti
+giusti e ci si ferma prima; gli animali e la durata dei viaggi; nello zaino la
+riva, le quattro isolette del cane e la loro tana dipinta o la nuvoletta),
+`integrazione/passo-passo-mappa` (col dito vero, nei due mondi). Bersagli: la
+mappa `[data-mappa]` con `[data-mondo="valle"|"zaino"]`, la vista `[data-isole]`
+(con `[data-camera]`); i cartelli `[data-insegna]` (lo stendardo, col nome
+come testo; lo stemma di un'isoletta ha solo l'icona) con `[data-scalino]`,
+`[data-isola]`, `[data-animale]`, `[data-velata]`; le caselle `[data-tappa="<indice>"|"senza-fine"|"senza-fine-cane"]`
 con `[data-stato]` e `[data-strada="coniglio"|"cane"]` (il numero sta in `.pp-tondo b`, le stelle di una fatta in `[data-stelle]` con `[data-piene]`), l'animale di un
 sentiero `[data-sentiero-di="coniglio"|"cane"]`, la matita
 `[data-a-meta]`; i blocchi `[data-blocco="<ponte>"]` con `[data-chiude]`;
-le tane `[data-tana]` con `[data-aperta]`; i passaggi `[data-passaggio="zaino"|"valle"]`;
-i bivi dello zaino `[data-bivio]` con `[data-ramo]` e le assi
-`[data-verso="coniglio"|"cane"]`; il segnalino `[data-segnalino]` con
+le tane `[data-tana="<isola del cane>"|"zaino"|"valle"]` con `[data-aperta]` (di
+un'isola del cane è la bocca dipinta, col masso se chiusa); i passaggi
+`[data-passaggio="zaino"|"valle"]`; il segnalino `[data-segnalino]` con
 `[data-animale]`, `[data-al]` e `[data-in-viaggio]`, la nuvoletta `.pp-sbuffo`;
 il fumetto `[data-fumetto]` con `[data-fumetto-per]` (un indice,
 un sentiero, `blocco:<ponte>`, `zaino`), `[data-azione="parti"]`,

@@ -79,9 +79,33 @@ Su ogni isola e isoletta un SENTIERO largo e libero (fra i ponti, o dalla tana i
   sull'erba, `"erba": true`). La tana delle buche in cima, che il prompt
   voleva per il bivio, porta allo zaino; il cartello a due frecce resta
   disegno.
-- **Dal secondo fondale serve**: un giro con un **ingresso** riconoscibile
-  (la tana o la barca da cui si arriva dalla valle, in un angolo) e i
-  capitoli in fila sui ponti (ripeti, fino a, se, tutto il mondo), ogni
-  isoletta del cane staccata ma con la sua tana di fronte; sentieri lunghi
-  abbastanza (ripeti ha 8 tappe, ogni isoletta 3) e liberi da staccionate e
-  case; e niente sentieri che spariscono dietro un edificio.
+- **`isole_2.png` (prompt 2)**: le quattro isole grandi ci sono e si
+  riconoscono (ripeti in basso a sinistra con le stalle e il viale, fino a in
+  alto a sinistra con rocce, neve e cascata, il se in alto in mezzo con siepi
+  e cartelli, tutto il mondo in basso a destra con la spirale attorno al monte
+  di cristallo), e c'è la riva con la tana d'arrivo in un angolo. Ma **non è
+  un giro, è una catena**: i ponti vanno tutto il mondo–ripeti–fino a–se, con
+  una stalla in mezzo fra il fino a e il se (un'isoletta dove il ponte
+  passa: è del fondale, non una tappa). Le isolette sono **sei**, non
+  quattro: una è il passaggio di cui sopra, quattro pendono da un'isola
+  grande e una (a destra in basso) resta senza tappe. Si è tenuto così, e il
+  giro è la catena: la sbarra sul ponte del ripeti–tutto il mondo e su quello
+  del fino a–se fa il resto.
+- **Come si è usato**: foglietto `zaino.json` (docs/passo-passo/mappa.md, «Il
+  mondo dello zaino»). Ripeti → l'isoletta con le stalle in fila, se → quella
+  di destra in alto, tutto il mondo → quella col lago gelato, fino a → quella
+  in basso in mezzo (non ne ha una accanto). Le isolette sono larghe 180 px:
+  tre caselle ci stanno solo a zigzag, e si è portato il lato a 48.
+- **Due difetti del disegno**, girati attorno nel foglietto. La tana «di
+  fronte» sull'isola grande c'è solo per due isolette (quella in cima
+  all'isola del se, e quella sull'isolotto di passaggio, che fa da tana al
+  fino a): per il ripeti e per tutto il mondo il coniglio sparisce in una
+  nuvoletta (`nuvola` nel foglietto), al capo del ponte e sul lato della
+  spirale. E le isolette non hanno un sentiero lungo, solo un pezzo di
+  sabbia: le tre caselle stanno sull'erba, a zigzag.
+- **Il resto di quello che serviva c'è**: un ingresso riconoscibile, i
+  capitoli in fila sui ponti, sentieri abbastanza lunghi sulle isole grandi
+  (il ripeti ha 8 tappe sul viale e attorno al fienile), nessun sentiero che
+  sparisce dietro un edificio. **Se si rigenera**, dire nel prompt che ogni
+  isoletta ha un sentiero lungo almeno 180 px e la tana di fronte sull'isola
+  grande.
