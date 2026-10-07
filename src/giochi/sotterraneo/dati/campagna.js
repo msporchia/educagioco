@@ -1,56 +1,71 @@
-// La campagna: sei discese, stesso motore con altri numeri. La roba resta fra una discesa e l'altra, e le
+// La campagna: sette discese in fila (docs/sotterraneo/la-grande-storia.md), stesso motore con altri numeri. La roba resta fra una discesa e l'altra, e le
 // discese dopo la prima contano su di lei: `forza` moltiplica le ossa di tutti, `spinta` aggiunge al loro
 // attacco, misurati col giocatore finto che si porta dietro lo zaino (docs/sotterraneo/regole.md). `dif` sono
 // i due estremi 0..1, si sale in linea retta (durezzaDi) più il rincaro per stanza (motore/corsa.js). `giri`
-// è il numero di tagli del BSP (2 → quattro stanze, 4 → sedici).
+// è il numero di tagli del BSP (2 → quattro stanze, 4 → sedici); `largo` e `alto`, se ci sono, danno la forma
+// al posto del quadrato `misura` (la torre alta e stretta, la scala sommersa lunga).
 // `portata`: niente `scuola` qui, quello che insegna questa campagna non lo dà nessuna scuola.
 import { BRANCO, BRANCHI } from './mostri.js'
 
 export const CAMPAGNA = [
-  { chiave: 'cantine', nome: 'La scalinata antica', icona: '🕯️',
-    scenario: 'cantine',
+  { chiave: 'altare', nome: 'La cripta dell\'altare', icona: '🕯️',
+    scenario: 'cripta',
     portata: 25,
     dritta: 'due piani corti: si impara la strada',
     piani: 2, misura: 30, giri: 2, dif: [0.05, 0.22],
     guardiano: 'scheletro', capo: 'scheletro' },
 
-  { chiave: 'pozzo', nome: 'Il pozzo dal tetto rosso', icona: '🪣',
+  { chiave: 'cantine', nome: 'La scalinata antica', icona: '🪜',
     scenario: 'cantine',
-    portata: 32,
-    dritta: 'più stanze, e qualcuno che vende',
-    piani: 3, misura: 34, giri: 3, dif: [0.12, 0.34], forza: 1.3, spinta: 1,
+    portata: 31,
+    dritta: 'larga, con tante stanze: si gira parecchio',
+    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 1.3, spinta: 2,
     guardiano: 'scheletro', capo: 'orco' },
 
+  // alta e stretta come la torre: le stanze una sopra l'altra
+  { chiave: 'torre', nome: 'La torre in rovina', icona: '🏰',
+    scenario: 'fornace',
+    portata: 37,
+    dritta: 'stretta e alta: si sale e si scende per le stanze',
+    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 1.2, spinta: 2,
+    guardiano: 'scheletro', capo: 'troll' },
+
+  // tutta in profondità: piani piccoli, tanti
   { chiave: 'gallerie', nome: 'La grotta della scaletta', icona: '🪨',
-    scenario: 'cripta',
-    portata: 40,
-    dritta: 'ci si picchia sul serio',
-    piani: 3, misura: 40, giri: 3, dif: [0.22, 0.5], forza: 1.6, spinta: 2,
+    scenario: 'cantine',
+    portata: 43,
+    dritta: 'piani piccoli, ma tanti: si scende sempre',
+    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 1.15, spinta: 2,
     guardiano: 'orco', capo: 'orco' },
 
+  // lunga e stretta: un canale sott'acqua
   { chiave: 'cisterna', nome: 'La scala sommersa', icona: '💧',
     scenario: 'cripta',
-    portata: 48,
-    dritta: 'larga, e in fondo c\'è qualcosa di grosso',
-    piani: 4, misura: 44, giri: 3, dif: [0.32, 0.62], forza: 1.3, spinta: 2,
+    portata: 50,
+    dritta: 'lunga e stretta, e in fondo c\'è qualcosa di grosso',
+    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 1.5, spinta: 2,
     // guardiano un granchio (non l'orco di sempre): stessa fascia (dati/mostri.js), ma nel posto giusto
     guardiano: 'granchio', capo: 'gigante' },
 
   { chiave: 'labirinto', nome: 'La botola segreta', icona: '🌀',
-    scenario: 'fornace',
-    portata: 56,
+    scenario: 'cantine',
+    portata: 57,
     dritta: 'un labirinto di sedici stanze: senza mappina ci si perde',
-    piani: 3, misura: 52, giri: 4, dif: [0.42, 0.76], forza: 1.8, spinta: 2,
-    guardiano: 'lupo', capo: 'troll' },   // troll e non gigante: le ultime tre finivano con la stessa faccia
+    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 2.2, spinta: 2,
+    guardiano: 'lupo', capo: 'troll' },
 
-  { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '🕳️',
+  { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '⛏️',
     scenario: 'fornace',
     portata: 64,
     dritta: 'stretta, profonda, e le domande non perdonano',
-    piani: 4, misura: 42, giri: 3, dif: [0.52, 0.92], forza: 2.1, spinta: 2,   // stretto: più largo supererebbe le risposte obbligate di una seduta
-    // il gigante solo in fondo (a ogni piano: 96 risposte obbligate, misurato dal banco); il serpente ai piani, non l'orco
+    piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 2.3, spinta: 2,
+    // il gigante solo in fondo; il serpente ai piani, non l'orco
     guardiano: 'serpente', capo: 'gigante' },
 ]
+
+// Le discese di prima, in fila (fino al 7 ottobre 2026): servono a rileggere un'avventura scritta allora
+// (azzeraIlVecchio in motore/avventure.js). Il pozzo dal tetto rosso non è più una discesa
+export const CAMPAGNA_DI_PRIMA = ['cantine', 'pozzo', 'gallerie', 'cisterna', 'labirinto', 'fondo']
 
 export const QUANTE_TAPPE = CAMPAGNA.length
 
@@ -126,8 +141,10 @@ export const tappaDi = indice => (indice === INDICE_ABISSO ? L_ABISSO : CAMPAGNA
 
 // nella campagna è quella dichiarata dalla tappa (non cambia mai); nell'abisso gira fra le tre
 export function formaDi(tappa, piano) {
-  if (!tappa.forme) return { misura: tappa.misura, giri: tappa.giri }
-  return tappa.forme[((piano % tappa.forme.length) + tappa.forme.length) % tappa.forme.length]
+  const f = tappa.forme
+    ? tappa.forme[((piano % tappa.forme.length) + tappa.forme.length) % tappa.forme.length]
+    : tappa
+  return { misura: f.misura, giri: f.giri, largo: f.largo || f.misura, alto: f.alto || f.misura }
 }
 
 // ossa è la leva principale (il bottino la compensa); l'attacco segue più piano o diventa una lotteria
@@ -175,7 +192,9 @@ export function guastiDellaCampagna() {
     viste.add(t.chiave)
     if (!t.nome || !t.icona || !t.dritta) g.push(`${t.chiave}: senza nome, icona o dritta`)
     if (t.piani < 1) g.push(`${t.chiave}: zero piani`)
-    if (t.misura < 24) g.push(`${t.chiave}: un piano ${t.misura}×${t.misura} non tiene le stanze`)
+    const f = formaDi(t, 0)
+    if (Math.min(f.largo, f.alto) < 22 || f.largo * f.alto < 24 * 24)
+      g.push(`${t.chiave}: un piano ${f.largo}×${f.alto} non tiene le stanze`)
     if (t.giri < 2 || t.giri > 4) g.push(`${t.chiave}: ${t.giri} giri di taglio, fuori da 2..4`)
     const [da, a] = t.dif
     if (da < 0 || a > 1 || da > a) g.push(`${t.chiave}: difficoltà ${da}..${a} storta`)

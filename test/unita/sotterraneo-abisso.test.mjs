@@ -33,7 +33,7 @@ import { gioca, costoDeiPiani, finoADove } from '../../src/giochi/sotterraneo/mo
 import { scrivi, leggi, dice, VERSIONE } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { TAPPE_DEL_GIOCO } from '../../src/data/portata-giochi.js'
 import manifesto from '../../src/giochi/sotterraneo/gioco.js'
-import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
+import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const guasti = guastiDellAbisso()
 controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
@@ -44,9 +44,9 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
    una fila che cresce sposta l'avanzamento di tutti. L'abisso non entra
    in fila: ha un indice suo, fuori dalla scala. */
 {
-  uguale('le discese restano sei', CAMPAGNA.length, 6)
-  uguale('e il manifesto ne dichiara sei', manifesto.tappe, QUANTE_TAPPE)
-  controlla('l\'abisso non è una delle sei', !CAMPAGNA.includes(L_ABISSO))
+  uguale('le discese sono sette (la grande storia)', CAMPAGNA.length, 7)
+  uguale('e il manifesto ne dichiara sette', manifesto.tappe, QUANTE_TAPPE)
+  controlla('l\'abisso non è una delle sette', !CAMPAGNA.includes(L_ABISSO))
   controlla('e non ha nessuna chiave in comune con loro',
             !CAMPAGNA.some(t => t.chiave === L_ABISSO.chiave))
   uguale('la fila che decide la portata è quella di sempre',
@@ -161,8 +161,10 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   nota(`i posti scendendo: ${posti.join(' · ')}`)
   const c = new Corsa(CAMPAGNA[0], { seme: 7, rnd: seminato(7) })
   uguale('una discesa indossa il suo scenario', c.scenario, CAMPAGNA[0].scenario)
-  uguale('e le sei ne mostrano tre, due a testa',
-         CAMPAGNA.map(t => t.scenario).join(), 'cantine,cantine,cripta,cripta,fornace,fornace')
+  stessaLista('e le sette li mostrano tutti e tre', [...new Set(CAMPAGNA.map(t => t.scenario))].sort(),
+              ['cantine', 'cripta', 'fornace'])
+  controlla('mai lo stesso scenario due volte di fila',
+            CAMPAGNA.every((t, i) => !i || t.scenario !== CAMPAGNA[i - 1].scenario))
   uguale('e non dice il posto', c.posto, null)
   controlla('e incontra tutto il bestiario', c.livello.branco === BRANCO)
 }

@@ -19,6 +19,12 @@ import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi, brancoDi, sc
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 import { Corredo } from './corredo.js'
+import { indiceDella, premioPer } from './storia.js'
+
+// nella storia i forzieri e i mostri di tutti i giorni danno solo quello che si consuma: la roba la dà la riga
+// della storia (dati/storia.js), o la discesa diventerebbe una lotteria e la tabella una bugia
+const SI_CONSUMA = k => !!(COSE[k] && COSE[k].usa)
+const NEI_FORZIERI_DELLA_STORIA = NEI_FORZIERI.filter(SI_CONSUMA)
 
 // quanto rincara la domanda, per ogni cosa: la porta meno del piano, il forziere molto di più
 const RINCARO = { porta: -0.05, forziere: 0.25, fonte: 0, mostro: 0.05, capo: 0.2,
@@ -30,6 +36,8 @@ export class Corsa extends Corredo {
   constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, roba = null } = {}) {
     super({ eroe, roba })
     this.tappa = tappa
+    // il posto nella storia (−1 l'abisso, che pesca come sempre): dice cosa deve dare questa discesa
+    this.indice = indiceDella(tappa)
     this.rnd = rnd
     this.seme = seme == null ? Math.floor(rnd() * 100000) : seme
     this.piano = 0
@@ -111,7 +119,7 @@ export class Corsa extends Corredo {
     const forma = formaDi(t, this.piano)
     this.livello = generaPiano({
       seme: this.seme + this.piano * 7919, piano: this.piano,
-      largo: forma.misura, alto: forma.misura, giri: forma.giri,
+      largo: forma.largo, alto: forma.alto, giri: forma.giri,
       guardiano: guardianoDi(t, this.piano),
       crescita: crescitaDi(t),
       branco: brancoDi(t, this.piano),
@@ -532,16 +540,27 @@ export class Corsa extends Corredo {
     const scheda = MOSTRI[m.tipo]
     this.livello.robe.push({ che: 'gemme', x: m.x, y: m.y, em: '💎',
                              quante: scheda.gemme + Math.floor(this.piano * 1.5) })
-    const possibili = scheda.lascia || []
+    const storia = this.indice >= 0
+    const lascia = scheda.lascia || []
+    const possibili = storia ? (lascia.filter(SI_CONSUMA).length ? lascia.filter(SI_CONSUMA) : ['pozione-piccola']) : lascia
     // chi porta la chiave lascia sempre qualcosa: è l'unico che non si aggira, quindi l'unico bottino che
-    // arriva anche a chi va dritto alla scala (la roba resta, e la distanza da chi gira tutto non si apre).
-    // Il tiro si fa comunque, o il caso di tutto il piano si sposterebbe
+    // arriva anche a chi va dritto alla scala. Nella storia quello dell'ultimo piano lascia il pezzo della riga
+    // dopo (premio), gli altri una cosa da bere. Il tiro si fa comunque, o il caso di tutto il piano si sposterebbe
     const tiro = this.rnd()
-    if (possibili.length && (m.chiave || tiro < (scheda.droppa != null ? scheda.droppa : 0.5))) {
+    const premio = m.chiave && storia && this.piano >= this.quantiPiani - 1 ? this.premio() : null
+    if (premio) this.posaRoba({ che: 'cosa', cosa: premio, em: COSE[premio].em }, { x: m.x + 1, y: m.y })
+    else if (possibili.length && (m.chiave || tiro < (scheda.droppa != null ? scheda.droppa : 0.5))) {
       const cosa = pescaCosa(possibili, { rnd: () => this.rnd(), tua: k => this.posso(k) })
       this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, { x: m.x + 1, y: m.y })
     }
     this.dillo(`${m.em} è caduto!`)
+  }
+
+  // il prossimo pezzo della riga dopo (motore/storia.js) che serve ancora e non è già per terra in questo piano
+  premio() {
+    return premioPer(this, this.indice, {
+      evita: k => this.livello.robe.some(r => r.che === 'cosa' && r.cosa === k && !r.presa),
+    })
   }
 
   ferisci(quanto) {
@@ -613,8 +632,10 @@ export class Corsa extends Corredo {
     this.tesori++
     // il bottino cade davanti al baule, mai dentro (posaRoba); predilige la classe che l'ha aperto (PESO_ALTRUI)
     // e la profondità (la roba resta: la scalinata non regala lo spadone)
-    const cosa = pescaCosa(NEI_FORZIERI, { rnd: () => this.rnd(), tua: k => this.posso(k),
-                                           profondita: this.durezza() })
+    // nella storia il forziere dà il pezzo della riga dopo che manca, se no una cosa da bere o da accendere
+    const cosa = (this.indice >= 0 && this.premio()) ||
+      pescaCosa(this.indice >= 0 ? NEI_FORZIERI_DELLA_STORIA : NEI_FORZIERI,
+                { rnd: () => this.rnd(), tua: k => this.posso(k), profondita: this.durezza() })
     this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, { x: f.x, y: f.y + 1 })
     this.posaRoba({ che: 'gemme', em: '💎', quante: 6 + this.piano * 3 }, { x: f.x + 1, y: f.y + 1 })
     this.dillo('🎁 si apre!')

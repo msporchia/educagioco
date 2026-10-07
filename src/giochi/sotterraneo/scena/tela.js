@@ -484,7 +484,7 @@ export class Tela {
   minimappa(corsa) {
     const liv = corsa.livello
     const ctx = this.ctx
-    const p = Math.max(1.6, Math.min(2.6, 120 / liv.largo))
+    const p = Math.max(1.4, Math.min(2.6, 120 / Math.max(liv.largo, liv.alto)))
     const larg = liv.largo * p, alt = liv.alto * p
     const x0 = this.L - larg - 10, y0 = 12
     ctx.save()
