@@ -30,6 +30,11 @@ export function usaSegnalino({ nodoDi, viaggio, segui = () => {}, arrivato = () 
       ombra.value.style.opacity = (alfa * Math.max(0.35, 1 - su / 160)).toFixed(2)
     }
   }
+  // la nuvoletta dove l'animale sparisce o ricompare senza un buco: una sola per posto in un viaggio
+  function nuvoletta(p) {
+    if (p.sbuffo && (!sbuffo.value || sbuffo.value.x !== p.dove.x || sbuffo.value.y !== p.dove.y))
+      sbuffo.value = { x: p.dove.x, y: p.dove.y, n: ++nSbuffo }
+  }
   function posa() {
     const n = nodoDi(posato.value)
     if (!n) return
@@ -94,13 +99,13 @@ export function usaSegnalino({ nodoDi, viaggio, segui = () => {}, arrivato = () 
           metti(s, { x: s.x, y: p.da.y + (p.a.y - p.da.y) * q }, { sx: s.sx, sy: s.sy })
           segui(s.x, s.y)
         } else if (p.che === 'entra') {
-          if (p.sbuffo && (!sbuffo.value || sbuffo.value.x !== p.dove.x || sbuffo.value.y !== p.dove.y))
-            sbuffo.value = { x: p.dove.x, y: p.dove.y, n: ++nSbuffo }
+          nuvoletta(p)
           // si rimpicciolisce nel buco (o nella nuvoletta)
           metti({ x: p.dove.x, y: p.dove.y + q * 10 }, p.dove, { sx: 1 - q * 0.7, sy: 1 - q * 0.8, alfa: 1 - q })
           segui(p.dove.x, p.dove.y)
         } else {
-          // sbuca: cresce dal buco, con un saltello
+          // sbuca: cresce dal buco (o dalla nuvoletta), con un saltello
+          nuvoletta(p)
           const su = Math.sin(Math.PI * q) * 10
           metti({ x: p.dove.x, y: p.dove.y + (1 - q) * 10 - su }, p.dove,
                 { sx: 0.3 + 0.7 * q, sy: 0.2 + 0.8 * q, alfa: Math.min(1, q * 1.6) })
