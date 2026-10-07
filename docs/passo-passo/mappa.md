@@ -98,7 +98,7 @@ fumetto, con la stessa vista per tutti e due. Chi apre cosa sta in
   `npm test`. Lo strumento si ferma se una casella esce dal fondale, se due
   si toccano, se un blocco copre una casella, se un'isola non ha tante
   caselle quante dice, o se un pezzo di strada resta staccato.
-- **Una tappa nuova nella valle** vuole una casella in più nel foglietto:
+- **Una tappa nuova in una valle** vuole una casella in più nel suo foglietto:
   `unita/passo-passo-valle` lo pretende ([livelli.md](livelli.md#le-tappe-in-coda)).
 
 ## I blocchi
@@ -173,50 +173,10 @@ fumetto, con la stessa vista per tutti e due. Chi apre cosa sta in
 
 ## Il mondo dello zaino
 
-Una seconda valle, col suo foglietto (`zaino.json`) e lo stesso strumento, la
-stessa vista (`Valle.vue`), le stesse caselle e lo stesso segnalino. Chi
-prima era disegnato in codice (isole una sotto l'altra, bivi, tane a puntini)
-non c'è più.
-
-- **Il passaggio fra le due valli**: la tana «🎒 Lo zaino» in cima alle buche
-  porta lì (il coniglio ci va, entra, e sbuca dalla tana d'arrivo); sulla
-  riva in basso a sinistra la tana «🌱 La valle» lo riporta indietro. Chiusa
-  (nessuna tappa dello zaino aperta, per esempio a sei anni) la prima ha il
-  masso, e il suo fumetto dice cosa manca alla prima tappa dello zaino; quella
-  della riva è sempre aperta. Il segnalino ricorda in che valle era
-  (`ultimo` in `Mappa.vue`).
-- **Le isole**: la riva con la tana d'arrivo, e il ponte che va al **ripeti**
-  (in basso a sinistra, la più grande, 8 tappe); da lì un ponte in alto al
-  **fino a** (rocce, neve, cascata: 4 tappe), un passaggio con una stalla
-  (un'isoletta dove si cammina e basta, del «fino a»: ha la sua tana, ma è
-  del fondale), poi il **se** (siepi, cartelli, lastre: 2 tappe). A destra del
-  ripeti, un ponte porta a **tutto il mondo** (ghiaccio, massi, ruscello e una
-  spirale attorno a un monte di cristallo: 4 tappe). Il giro è una catena,
-  non un cerchio: da tutto il mondo ai massi si torna dal ripeti, e i ponti
-  verso il fino a e verso tutto il mondo hanno la sbarra finché le due isole
-  sono chiuse.
-- **Le isolette del cane**: ogni scalino ha la sua, con tre tappe e il suo
-  stemma (uno scudo, la carta dello scalino, viola), perché il nome intero non
-  ci sta. Il ripeti ha quella a sinistra (le stalle in fila), il fino a quella
-  in basso in mezzo (col fienile: è la più vicina che non è già di un altro,
-  il fino a non ne ha una accanto), il se quella a destra in alto, tutto il
-  mondo quella col lago gelato. Ne resta una (a destra in basso, di sotto a
-  tutto il mondo): decoro, senza caselle.
-- **Si entra dalla bocca dipinta dell'isoletta** (`tana:<isoletta>:a`): il
-  coniglio entra in una tana (`:da`) sulla sua isola e il cane sbuca di là.
-  Da dove entra il coniglio: il buco dipinto del fondale se c'è (il fino a: la
-  tana dell'isolotto di passaggio; il se: quella in cima all'isola), se no
-  `nuvola`, un punto del sentiero dove l'animale sparisce in una nuvoletta (il
-  ripeti, al capo del ponte verso l'isoletta; tutto il mondo, sul lato dello
-  spirale più vicino). Un ponte dipinto verso un'isoletta è solo disegno:
-  non si cammina.
-- **Le tre caselle di un'isoletta stanno a zigzag** sull'erba, dove ci stanno
-  (le isolette sono larghe 180 px, tre caselle da 48 con otto di spazio
-  vogliono 120): la più vicina alla bocca è la prima tappa, e nessuna copre la
-  bocca (un test lo dice). Lo stemma sta dove non copre né caselle né animale
-  seduto.
-- **Da dove si parte**: dalla tappa di adesso, se è nello zaino; la vista
-  segue il coniglio e il cane nei due versi come nella valle.
+È una seconda valle, con la stessa vista, le stesse caselle e lo stesso
+segnalino: [mondo-zaino.md](mondo-zaino.md) dice com'è fatta (la riva e la
+tana per la valle, le quattro isole sui ponti, le isolette del cane e come ci
+si entra).
 
 ## Il fumetto
 
