@@ -66,13 +66,7 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
   segnalino si ferma lì.
 - **Le tane**: quella del pascolo (`da`, `a`, `punto`) è un passaggio sotto
   terra fra le buche e il pascolo, quella dello zaino (`isola`, `punto`,
-  `cartello`, il centro del suo nome) porta all'altro mondo. Le altre due
-  (`ponte`: il nome del ponte, e il ponte porta `tana`) stanno al capo dei ponti
-  prato–pascolo e salto–pascolo, dalla parte del pascolo: il ponte finisce nel
-  loro `:da` (del coniglio, ma della stessa isola chiusa del pascolo), il
-  tunnel porta al loro `:a` (del cane), e da lì un pezzo di terra (o nulla,
-  se il sentiero finisce lì) al pascolo. Il disegno è `TANA_PONTE` in
-  `scena/pixel.js`: un'altra tana delle dipinte non c'era vicino.
+  `cartello`, il centro del suo nome) porta all'altro mondo.
 - **I due sentieri senza fine** ([sentiero.md](sentiero.md)) sono due caselle
   tonde e d'oro, col loro animale in un tondino sul bordo anche da chiuse e il
   record nel fumetto: `senza-fine`, il sentiero del coniglio, in cima alle
@@ -105,9 +99,7 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
   di là, e cosa manca alla sua prima tappa (`cosaManca`). Il segnalino non
   si muove.
 - **La tana del pascolo chiusa ha il masso davanti** (`MASSO`), e non si
-  passa; così la tana dello zaino. Sui ponti che finiscono in una tana il
-  blocco verso il pascolo non è la sbarra ma il masso sulla tana: stesso
-  `[data-blocco]`, stesso fumetto «Il ponte è chiuso».
+  passa; così la tana dello zaino.
 
 ## La vista
 
@@ -129,11 +121,10 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
 
 ## Il segnalino
 
-- **Sulle isole del coniglio salta il coniglio, sul pascolo il cane.
-  L'animale cambia solo entrando in una tana**: il coniglio entra e il cane
-  esce (o il contrario), nella tana fra le buche e il pascolo e in quelle al
-  capo dei ponti dal prato e dal salto; i ponti sono del coniglio, e a metà
-  ponte l'animale non cambia mai.
+- **Sulle isole del coniglio salta il coniglio, sul pascolo il cane.** Nella
+  tana fra le buche e il pascolo il coniglio entra e il cane esce; sui ponti
+  del pascolo (dal prato e dal salto) l'animale cambia in una nuvoletta sul
+  capo del pascolo: il ponte è del coniglio.
 - **Toccando una casella aperta ci va**, sulla strada più corta dei pezzi
   che si passano (`percorso`), a saltelli lungo la strada (`SALTO`, 72 px):
   atterra sulle caselle e nelle tane, passa sopra incroci e soste. Un
@@ -215,7 +206,7 @@ Nei test: `unita/passo-passo-valle` (il modulo è quello del foglietto, una
 casella per tappa, ogni casella su un sentiero e staccata dalle altre e dai
 cartelli; a sedici punti della campagna ogni casella aperta si raggiunge,
 le isole chiuse no, i blocchi stanno sui ponti giusti e ci si ferma prima;
-gli animali, i cambi solo nelle tane dei ponti e la durata dei viaggi), `unita/passo-passo-isole` (lo zaino a
+gli animali e la durata dei viaggi), `unita/passo-passo-isole` (lo zaino a
 cinque larghezze: caselle nello schermo e nella loro isola, isole che non
 si toccano, il ponte che non passa sopra il cane, il bivio che non copre
 niente, la tana in cima da cui si arriva a tutto), `integrazione/passo-passo-mappa`
@@ -227,10 +218,10 @@ la vista `[data-isole]` (nella valle con `[data-camera]`); i cartelli
 con `[data-stato]` e `[data-strada="coniglio"|"cane"]`, l'animale di un
 sentiero `[data-sentiero-di="coniglio"|"cane"]`, la matita
 `[data-a-meta]`; i blocchi `[data-blocco="<ponte>"]` con `[data-chiude]`;
-le tane `[data-tana="pecore-cane"|"prato-pascolo"|"salto-pascolo"]` (la prima con `[data-aperta]`); i passaggi `[data-passaggio="zaino"|"valle"]`;
+le tane `[data-tana]` con `[data-aperta]`; i passaggi `[data-passaggio="zaino"|"valle"]`;
 i bivi dello zaino `[data-bivio]` con `[data-ramo]` e le assi
 `[data-verso="coniglio"|"cane"]`; il segnalino `[data-segnalino]` con
-`[data-animale]`, `[data-al]` e `[data-in-viaggio]`;
+`[data-animale]`, `[data-al]` e `[data-in-viaggio]`, la nuvoletta `.pp-sbuffo`;
 il fumetto `[data-fumetto]` con `[data-fumetto-per]` (un indice,
 un sentiero, `blocco:<ponte>`, `zaino`), `[data-azione="parti"]`,
 `[data-serve]` e, su un sentiero, `[data-record]`. `giocaSullIsola(page, indice)` in `test/aiuto/browser.mjs`

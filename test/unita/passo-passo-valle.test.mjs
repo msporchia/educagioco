@@ -3,9 +3,8 @@
    valle, ogni casella sta su un sentiero e non tocca le altre né i
    cartelli; a ogni punto della campagna ogni casella aperta si raggiunge, i
    ponti verso un'isola chiusa hanno il blocco e non si passano; il
-   coniglio resta coniglio sulle sue isole e sui ponti, e cambia animale
-   solo entrando in una tana (quella delle buche, o quella al capo di un
-   ponte del pascolo, mai a metà ponte); un viaggio lungo non dura di più.
+   coniglio resta coniglio sulle sue isole, diventa cane nella tana o sul
+   capo di un ponte del pascolo, e un viaggio lungo non dura di più.
    Vedi docs/passo-passo/mappa.md.
    `node test/esegui.mjs passo-passo-valle --niente-build` */
 import { readFileSync } from 'node:fs'
@@ -132,7 +131,7 @@ for (const fatte of [0, 5, 10, 16]) {
 }
 
 /* ══════════ il viaggio ══════════ */
-const animali = v => v.filter(p => p.che !== 'salto').map(p => `${p.che}:${p.animale}`).join(' ')
+const animali = v => v.filter(p => p.che !== 'salto').map(p => `${p.che}:${p.animale}${p.sbuffo ? '*' : ''}`).join(' ')
 const conigliValle = S.coniglio.filter(i => per.has(i))
 const cambiano = []
 for (let k = 1; k < conigliValle.length; k++) {
@@ -146,33 +145,10 @@ uguale('dall\'ultima delle buche al primo gregge: per la tana',
 uguale('dall\'ultimo gregge al sentiero del cane si salta e basta, da cane',
        viaggio(q, pascolo.tappe.at(-1), SENTIERO_CANE, tutte.bloccati).map(p => `${p.che}:${p.animale}`).filter((x, k, l) => x !== l[k - 1]).join(' '),
        'salto:cane')
-// l'animale cambia solo nella tana, e quella è al capo del ponte, dalla parte del pascolo
-const salto0 = S.isole.find(s => s.chiave === 'salto').tappe[0]
-for (const [ponte, da, gregge] of [['prato-pascolo', 0, pascolo.tappe[2]], ['salto-pascolo', salto0, pascolo.tappe[10]]]) {
-  const dentro = per.get(`tana:${ponte}:da`), fuori = per.get(`tana:${ponte}:a`)
-  controlla(`${ponte}: la tana ha l'entrata del coniglio e l'uscita del cane`,
-            dentro && fuori && dentro.animale === 'coniglio' && fuori.animale === 'cane' && fuori.isola === 'pecore-cane' &&
-            dentro.x === fuori.x && dentro.y === fuori.y)
-  const archi = q.archi.filter(e => e.ponte === ponte)
-  controlla(`${ponte}: il ponte finisce nella tana`,
-            archi.some(e => e.a === dentro.id || e.b === dentro.id) && !archi.some(e => e.a === fuori.id || e.b === fuori.id))
-  const v = viaggio(q, da, gregge, tutte.bloccati)
-  uguale(`${ponte}: dal coniglio al cane si cambia nella tana`, animali(v), 'entra:coniglio esce:cane')
-  uguale(`${ponte}: e prima della tana salta il coniglio, dopo il cane`,
-         v.map(p => `${p.che}:${p.animale}`).filter((x, k, l) => x !== l[k - 1]).join(' '), 'salto:coniglio entra:coniglio esce:cane salto:cane')
-  const entra = v.find(p => p.che === 'entra'), esce = v.find(p => p.che === 'esce')
-  controlla(`${ponte}: entra ed esce nel punto della tana`,
-            entra.dove.x === dentro.piede.x && entra.dove.y === dentro.piede.y && esce.dove.x === fuori.piede.x && esce.dove.y === fuori.piede.y)
-  const ritorno = viaggio(q, gregge, da, tutte.bloccati)
-  uguale(`${ponte}: e dal cane al coniglio, nella stessa tana`, animali(ritorno), 'entra:cane esce:coniglio')
-  uguale(`${ponte}: a metà ponte salta sempre il coniglio`,
-         [...v, ...ritorno].filter(p => p.che === 'salto' && p.al === null && p.qui.arco !== undefined && q.archi[p.qui.arco].ponte === ponte)
-           .filter(p => p.animale !== 'coniglio').length, 0)
-}
-uguale('dal prato al pascolo: sul ponte, e nella tana del ponte',
-       animali(viaggio(q, 0, pascolo.tappe[2], tutte.bloccati)), 'entra:coniglio esce:cane')
-uguale('e dal pascolo al prato il cane diventa coniglio nella tana del ponte, prima di salirci',
-       animali(viaggio(q, pascolo.tappe[2], 0, tutte.bloccati)), 'entra:cane esce:coniglio')
+uguale('dal prato al pascolo: sul ponte, e sul capo del pascolo una nuvoletta',
+       animali(viaggio(q, 0, pascolo.tappe[2], tutte.bloccati)), 'entra:coniglio* esce:cane*')
+uguale('e dal pascolo al prato il cane diventa coniglio prima di salire sul ponte',
+       animali(viaggio(q, pascolo.tappe[2], 0, tutte.bloccati)), 'entra:cane* esce:coniglio*')
 {
   const sbagli = [], lunghi = []
   for (const a of tonde) for (const b of tonde) {

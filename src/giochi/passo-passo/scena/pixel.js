@@ -159,28 +159,6 @@ export const MASSO = { tavolozza: TAVOLOZZA_MASSO, righe: [
   '..nnnnnnnnnn..',
 ] }
 
-/* la tana al capo di un ponte della valle: una collinetta d'erba con
-   l'arco di pietra e l'apertura scura, nei colori delle tane dipinte sul
-   fondale (docs/passo-passo/mappa.md). Vista di fronte, il fondo del buco
-   è dove il segnalino poggia i piedi. */
-export const TANA_PONTE = { tavolozza: { o: '#2a1c24', g: '#79bc25', G: '#5aa220', d: '#357f14',
-                                         s: '#fed47c', S: '#e9ac59', t: '#ac7139', k: '#181122', f: '#684030', b: '#936c47' }, righe: [
-  '.....oooooo.....',
-  '...ooggggggoo...',
-  '..oggggGggggGo..',
-  '.oggGggggggggGo.',
-  'ogggssssssssGGdo',
-  'ogsssssssssssGdo',
-  'oggsstkkkktssGdo',
-  'ogsstkkkkkktssdo',
-  'ogsstkkkkkktssdo',
-  'oGsstkkkkkktssdo',
-  'oosstkkkkkktsSoo',
-  'oosstffffffbsSoo',
-  '.obSSSSSSSSSSbo.',
-  '..oooooooooooo..',
-] }
-
 /* il fumetto del «e adesso?»: la fila è finita e la tana non c'è */
 export const FUMETTO = [
   '.xxxxxxxxx.',

@@ -12,8 +12,10 @@ export function usaSegnalino({ nodoDi, viaggio, segui = () => {}, arrivato = () 
   const animale = ref('coniglio')
   const viaggiando = shallowRef(null)
   const mira = ref(null)            // dove sta andando
+  const sbuffo = ref(null)          // { x, y, n }: la nuvoletta dove l'animale cambia su un ponte
   let verso = 1                     // guarda a destra (1) o a sinistra (-1)
   let qui = null                    // dove ripartire: un nodo, o un punto a metà strada
+  let nSbuffo = 0
 
   function metti(p, terra, { sx = 1, sy = 1, alfa = 1 } = {}) {
     if (el.value) {
@@ -91,7 +93,9 @@ export function usaSegnalino({ nodoDi, viaggio, segui = () => {}, arrivato = () 
           metti(s, { x: s.x, y: p.da.y + (p.a.y - p.da.y) * q }, { sx: s.sx, sy: s.sy })
           segui(s.x, s.y)
         } else if (p.che === 'entra') {
-          // si rimpicciolisce nel buco
+          if (p.sbuffo && (!sbuffo.value || sbuffo.value.x !== p.dove.x || sbuffo.value.y !== p.dove.y))
+            sbuffo.value = { x: p.dove.x, y: p.dove.y, n: ++nSbuffo }
+          // si rimpicciolisce nel buco (o nella nuvoletta)
           metti({ x: p.dove.x, y: p.dove.y + q * 10 }, p.dove, { sx: 1 - q * 0.7, sy: 1 - q * 0.8, alfa: 1 - q })
           segui(p.dove.x, p.dove.y)
         } else {
@@ -116,7 +120,7 @@ export function usaSegnalino({ nodoDi, viaggio, segui = () => {}, arrivato = () 
   }
 
   return {
-    el, corpo, ombra, posato, animale, viaggiando, mira, metti, posa, vai,
+    el, corpo, ombra, posato, animale, viaggiando, mira, sbuffo, metti, posa, vai,
     get verso() { return verso },
     set verso(v) { verso = v || 1 },
     get qui() { return qui },

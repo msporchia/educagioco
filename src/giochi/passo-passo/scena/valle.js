@@ -11,7 +11,7 @@ export const nellaValle = chiave => Object.prototype.hasOwnProperty.call(ISOLE, 
 export const SALTO = 72             // la lunghezza di un saltello, sulla strada
 export const SALTI_MAX = 16         // oltre, i salti si allungano: un viaggio lungo non dura di più
 export const TEMPO_MAX = 3.6        // secondi: un viaggio da un capo all'altro della valle
-const TANA_DENTRO = 0.34, TANA_FUORI = 0.36
+const TANA_DENTRO = 0.34, TANA_FUORI = 0.36, CAMBIO = 0.24
 
 const lunghezza = p => p.reduce((s, q, i) => (i ? s + Math.hypot(q[0] - p[i - 1][0], q[1] - p[i - 1][1]) : 0), 0)
 
@@ -34,7 +34,7 @@ export function quadroValle(S, { dati = { NODI, ARCHI, PONTI, ISOLE, LARGO, ALTO
     const lato = tipo === 'casella' ? dati.LATO : tipo === 'sentiero' ? Math.round(dati.LATO * SENTIERO) : 0
     nuovo.set(n.id, id)
     return {
-      ...n, id, tipo, chiave: n.id, animale: n.animale || (isola ? isola.animale : 'coniglio'), lato,
+      ...n, id, tipo, chiave: n.id, animale: isola ? isola.animale : 'coniglio', lato,
       // seduto su una casella poggia sul bordo di sopra; altrove sta in piedi sulla strada
       piede: lato ? { x: n.x, y: n.y - lato / 2 + ANIMALE.piede } : { x: n.x, y: n.y },
     }
@@ -158,14 +158,14 @@ export function vicinoA(q, x, y, da, bloccati) {
 
 /* I passi del viaggio, come quelli di scena/isole.js: { che: 'salto', da,
    a, dur, alto, verso, animale, al, qui } fra due punti, { che: 'entra' |
-   'esce', dove, dur, animale, al, qui } dove l'animale cambia. Il segnalino
-   salta lungo la strada a saltelli di SALTO px (più lunghi se la strada è
-   lunga); `al` è il nodo dove arriva (null a metà di un arco), `qui` dove si
-   trova dopo il passo, per ripartire da lì. L'animale cambia solo in una
-   tana (un arco `tunnel`): il coniglio entra e dall'altra parte esce il
-   cane, o il contrario; i ponti sono del coniglio, e quelli del pascolo
-   finiscono in una tana. Senza strada (il segnalino su un'isola chiusa) un
-   balzo solo. */
+   'esce', dove, dur, animale, al, qui, sbuffo? } dove l'animale cambia.
+   Il segnalino salta lungo la strada a saltelli di SALTO px (più lunghi se
+   la strada è lunga); `al` è il nodo dove arriva (null a metà di un arco),
+   `qui` dove si trova dopo il passo, per ripartire da lì. Nella tana il
+   coniglio entra e dall'altra parte esce il cane; su un ponte fra le isole
+   del coniglio e il pascolo cambia in una nuvoletta, sul capo del pascolo:
+   il ponte è del coniglio. Senza strada (il segnalino su un'isola chiusa)
+   un balzo solo. */
 export function viaggio(q, da, a, bloccati = new Set()) {
   const per = new Map(q.nodi.map(n => [n.id, n]))
   const meta = per.get(a)
@@ -195,9 +195,17 @@ export function viaggio(q, da, a, bloccati = new Set()) {
   }
   const strada = tratti.reduce((s, t) => s + (q.archi[t.arco].tipo === 'tunnel' ? 0 : Math.abs(t.a - t.da)), 0)
   const passo = Math.max(SALTO, strada / SALTI_MAX)
+  const cambia = (dove, prima, dopo, al) => {
+    passi.push({ che: 'entra', dove, dur: CAMBIO, animale: prima, al: null, qui: al, sbuffo: true })
+    passi.push({ che: 'esce', dove, dur: CAMBIO, animale: dopo, al, qui: al, sbuffo: true })
+  }
   /* I tratti si mettono in fila in pezzi da saltare: un pezzo finisce su una
-     casella, una tana e alla meta; dentro un pezzo i
+     casella, una tana, alla meta e dove l'animale cambia; dentro un pezzo i
      saltelli sono tutti uguali, e passano sopra gli incroci senza fermarsi. */
+  const chiDi = t => {
+    const e = q.archi[t.arco], A = per.get(e.a).animale, B = per.get(e.b).animale
+    return A === B ? A : 'coniglio'           // un ponte fra due animali è del coniglio
+  }
   const ferma = n => n.tipo === 'casella' || n.tipo === 'sentiero' || n.tipo === 'tana' || n.tipo === 'zaino'
   let pezzo = [], animalePezzo = null
   const salta = () => {
@@ -228,9 +236,23 @@ export function viaggio(q, da, a, bloccati = new Set()) {
       passi.push({ che: 'esce', dove: ora, dur: TANA_FUORI, animale: animaleOra, al: t.verso, qui: t.verso })
       return
     }
-    animalePezzo = animaleOra
+    const chi = chiDi(t)
+    // si cambia animale sul capo del ponte che sta sul pascolo: prima di salire, o appena scesi
+    if (chi !== animaleOra) {
+      salta()
+      const qui = k ? tratti[k - 1].verso : (typeof da === 'object' ? null : da)
+      cambia(ora, animaleOra, chi, qui)
+      animaleOra = chi
+    }
+    animalePezzo = chi
     pezzo.push(t)
-    if (ferma(verso) || !tratti[k + 1]) salta()
+    const prossimo = tratti[k + 1]
+    const cambiaDopo = verso.animale !== chi || (prossimo && q.archi[prossimo.arco].tipo !== 'tunnel' && chiDi(prossimo) !== chi)
+    if (ferma(verso) || !prossimo || cambiaDopo) salta()
+    if (verso.animale !== chi && (!prossimo || q.archi[prossimo.arco].tipo !== 'tunnel')) {
+      cambia(ora, chi, verso.animale, t.verso)
+      animaleOra = verso.animale
+    }
   })
   // un viaggio lungo non dura di più: i salti si fanno più svelti
   const tempo = passi.reduce((s, p) => s + (p.che === 'salto' ? p.dur : 0), 0)
