@@ -13,6 +13,8 @@
              all'ingresso (sta dentro la mappa, non copre il disegno)
    PARTENZA, MINATORE, CARTELLO  dove si comincia, dove sta il minatore (e
              `accanto`, dove ci si ferma per parlargli), il cartello
+   MERCANTI  chi vende sulla terra di sopra (dati/mercanti.js): `piede` dove
+             sta fermo, `accanto` dove ci si ferma per aprire il banco
    PEZZE     posto → il riquadro ritagliato dalla mappa con le discese
              chiuse (nessuna); vuoto finché quella mappa non c'è
 */
@@ -84,6 +86,7 @@ export const POSTI = {
 export const PARTENZA = {"piede":[17,41]}
 export const MINATORE = {"piede":[14,40],"accanto":[16,40]}
 export const CARTELLO = {"riquadro":[586,330,72,80],"piede":[19,13]}
+export const MERCANTI = {"armaiolo":{"piede":[4,34],"accanto":[6,34]},"erborista":{"piede":[25,42],"accanto":[27,42]},"rigattiere":{"piede":[27,28],"accanto":[25,28]}}
 
 export const PEZZE = {
 }

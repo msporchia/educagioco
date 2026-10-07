@@ -595,15 +595,21 @@ export const AIUTI = {
       { titolo: 'Le pozioni', righe: [
         'Si bevono dallo zaino, quando vuoi tu: la 🧪 boccetta ridà 6 punti, la pozione 10, la 🍷 ampolla 18. Non scadono e non si sprecano — bevute a vita piena, la parte che avanza è persa.',
         'Il mostro ti prende qualcosa **anche quando rispondi giusto** (un graffio, metà del colpo), e per questo le pozioni servono: senza, una discesa lunga finisce con uno svenimento.',
-        'Le tasche sono sei. Quando sono piene, quello che trovi resta per terra: dal mercante puoi vendere a metà prezzo quello che non usi.',
+        'Le tasche sono sei. Quando sono piene, quello che trovi resta per terra: sopra, il **rigattiere** compra a metà prezzo quello che non usi.',
         '🔥 **La torcia si accende da sé** appena la prendi, e non occupa una tasca. Dura **12 stanze**: quanta luce ti resta lo dice la fiamma in basso a sinistra.',
         'Se ne trovi un\'altra mentre una brucia, la prendi lo stesso: aspetta alla cintura e si accende da sé quando la prima si spegne.',
       ] },
+      { titolo: 'La roba e i mercanti', righe: [
+        'Quello che hai addosso, quello che hai in tasca e le gemme **te li porti dietro**: alla discesa dopo li ritrovi. Anche uscendo a metà.',
+        'Le gemme si spendono sopra, dai mercanti vicino alle case: l\'**armaiolo** (armi, scudi, armature), l\'**erborista** (pozioni e torce) e il **rigattiere** vicino al carro (anelli e amuleti, e compra quello che hai in tasca). Si tocca il mercante, l\'eroe ci va e si apre il banco.',
+        'Più discese hai finito, più roba e più forte trovi sul banco; finita una discesa i banchi cambiano.',
+        'Svenendo si perdono **le tasche e metà delle gemme**, mai quello che hai addosso.',
+      ] },
       { titolo: 'L\'abisso', righe: [
         'Finite tutte e sei le discese, in fondo alla mappa se ne apre una che **non finisce**: si scende finché si regge.',
-        'Serve a una cosa sola: l\'arma bella che si trova non si butta più a fine tappa. Là sotto non c\'è una fine da raggiungere, quindi non c\'è un momento in cui si riparte da zero.',
+        'Ci si scende con la roba di sempre, e quello che si trova là sotto viene su come da ogni altra discesa.',
         'Le domande smettono presto di diventare più difficili — dal quinto piano restano le più toste che il gioco chiede a quell\'età, e non si va oltre. Quello che cresce sono i mostri.',
-        'Svenendo si perde **quello che si ha nelle tasche**, mai quello che si ha addosso; dopo tre svenimenti sullo stesso piano si risale, e la volta dopo si riprende da lì.',
+        'Dopo tre svenimenti sullo stesso piano si risale, e la volta dopo si riprende da lì.',
       ] },
       { titolo: 'Consigli', righe: [
         'Non serve aprire tutto: alla scala si arriva anche saltando qualcosa.',

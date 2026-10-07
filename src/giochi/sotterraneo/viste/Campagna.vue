@@ -13,8 +13,9 @@ const props = defineProps({
   eroe: { type: Object, required: true },   // la scheda di chi scende, da dati/eroi.js
   abisso: { type: Object, default: null },   // { indice, nome, icona, dritta, fondo }; in fondo, la ripresa è più urgente
   terra: { type: Object, default: null },    // cfg.terra: la nebbia, dove si era, se il minatore ha già parlato
+  roba: { type: Object, default: null },     // quello che ci si porta dietro: { att, dif, gemme, tasche } già contati
 })
-const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe', 'terra'])
+const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe', 'terra', 'bottega'])
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 
 const ritratto = computed(() => figura(pezzoAndante(props.eroe.sprite, 'fermo', 0), { scala: 2 }))
@@ -37,7 +38,7 @@ function comincia() {
   <div class="sot-tappe">
     <Terra :tappe="tappe" :abisso="abisso" :eroe="eroe" :terra="terra"
            :giaScesa="ripresa ? ripresa.tappa : null"
-           @scendi="tocca" @terra="v => $emit('terra', v)">
+           @scendi="tocca" @terra="v => $emit('terra', v)" @bottega="k => $emit('bottega', k)">
       <template #sopra>
         <div v-if="ripresa" class="sot-ripresa" data-ripresa="1">
           <p class="sot-dove">
@@ -68,7 +69,10 @@ function comincia() {
           </span>
           <span class="sot-testo">
             <b>{{ eroe.nome }}</b>
-            <i class="em">❤️ {{ eroe.vita }} · ⚔️ {{ eroe.att }}<template v-if="eroe.dif"> · 🛡️ {{ eroe.dif }}</template></i>
+            <!-- con la roba addosso: è quella che scende, e le gemme sono quelle da spendere qui sopra -->
+            <i class="em" data-roba-sopra>❤️ {{ eroe.vita }} · ⚔️ {{ roba ? roba.att : eroe.att }}<template
+               v-if="roba ? roba.dif : eroe.dif"> · 🛡️ {{ roba ? roba.dif : eroe.dif }}</template><template
+               v-if="roba"> · 💎 {{ roba.gemme }}</template></i>
           </span>
           <span class="sot-cambia">cambio</span>
         </button>

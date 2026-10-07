@@ -1,17 +1,19 @@
 <script setup>
 // La terra di sopra: la mappa intera, l'eroe che cammina da solo fino al punto toccato, la vista che lo segue
-// quando arriva ai bordi, le discese sui posti col loro fumetto, chi indica la strada e la nebbia.
-// Riceve le tappe già decise e dice solo «si scende qui» (`scendi`) e «ricordati questo» (`terra`).
+// quando arriva ai bordi, le discese sui posti col loro fumetto, chi indica la strada, i mercanti e la nebbia.
+// Riceve le tappe già decise e dice solo «si scende qui» (`scendi`), «apro il banco di…» (`bottega`) e
+// «ricordati questo» (`terra`).
 // Le regole: docs/sotterraneo/terra-di-sopra.md.
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
-import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO, PEZZE }
-  from '../dati/terra-mappa.js'
+import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO, PEZZE,
+         MERCANTI as DOVE_MERCANTI } from '../dati/terra-mappa.js'
+import { MERCANTI } from '../dati/mercanti.js'
 import { POSTO_DI, LUOGHI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, PASSO_TERRA, VISTA, LUCE,
          SASSI_OGNI, BORDO, MORBIDA } from '../dati/terra.js'
 import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice, sassiLungo } from '../motore/terra.js'
 import { pezzoAndante } from '../dati/tessere.js'
 import { figura, haFigura } from './figura.js'
-import { MINATORE, LUCCHETTO, SASSO, LUCCICHIO } from './pixel.js'
+import { MINATORE, ARMAIOLO, ERBORISTA, RIGATTIERE, LUCCHETTO, SASSO, LUCCICHIO } from './pixel.js'
 import Pixel from './Pixel.vue'
 
 const props = defineProps({
@@ -21,12 +23,15 @@ const props = defineProps({
   terra: { type: Object, default: null },     // { nebbia, dove, parlato } da cfg.terra, o null la prima volta
   giaScesa: { type: Number, default: null },  // la discesa lasciata a metà: ci si è già stati
 })
-const emit = defineEmits(['scendi', 'terra'])
+const emit = defineEmits(['scendi', 'terra', 'bottega'])
 
 const SCARTO_DITO = 16   // sotto, il dito è fermo (docs/core/il-dito.md)
 const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
 const L = MASCHERA[0].length, A = MASCHERA.length
-const mondo = creaTerra(MASCHERA, { ostacoli: [DOVE_MINATORE.piede] })
+// chi sta fermo non si attraversa: il minatore e i mercanti
+const mondo = creaTerra(MASCHERA, {
+  ostacoli: [DOVE_MINATORE.piede, ...Object.values(DOVE_MERCANTI).map(m => m.piede)],
+})
 const cella = ([x, y]) => ({ x, y })
 
 /* ═══════════ i posti: chi ci sta e com'è ═══════════ */
@@ -43,6 +48,18 @@ const posti = computed(() => Object.entries(POSTI).map(([nome, p]) => {
     adesso: t ? t.adesso : false,
   }
 }))
+
+// i mercanti di sopra (dati/mercanti.js): il foglietto dice dove stanno, la figura viene da pixel.js finché
+// l'atlante non ha `<nome>-fermo-0` (come il minatore)
+const FIGURE = { armaiolo: ARMAIOLO, erborista: ERBORISTA, rigattiere: RIGATTIERE }
+const mercanti = MERCANTI.filter(m => DOVE_MERCANTI[m.chiave]).map(m => {
+  const vero = haFigura(`${m.sprite}-fermo-0`)
+  return {
+    ...m, piede: cella(DOVE_MERCANTI[m.chiave].piede), accanto: cella(DOVE_MERCANTI[m.chiave].accanto),
+    figura: FIGURE[m.chiave] || MINATORE,
+    ritratto: vero ? figura(`${m.sprite}-fermo-0`, { scala: SCALA_EROE }) : null,
+  }
+})
 
 const nebbia = (() => {
   const salvata = props.terra && nebbiaDaCodice(props.terra.nebbia, L, A)
@@ -65,7 +82,11 @@ const parlato = ref(!!(props.terra && props.terra.parlato))
 const centroDi = r => ({ x: Math.floor((r[0] + r[2] / 2) / CELLA), y: Math.floor((r[1] + r[3] / 2) / CELLA) })
 const visto = c => nebbia[c.y * L + c.x] === 1
 const daTrovare = [...Object.entries(POSTI), ['cartello', CARTELLO]]
-const trovati = ref(new Set(daTrovare.filter(([, p]) => visto(centroDi(p.riquadro))).map(([n]) => n)))
+// un mercante si trova quando si vede la cella dove sta: prima è prato come il resto
+const trovati = ref(new Set([
+  ...daTrovare.filter(([, p]) => visto(centroDi(p.riquadro))).map(([n]) => n),
+  ...mercanti.filter(m => visto(m.piede)).map(m => m.chiave),
+]))
 
 /* ═══════════ l'eroe ═══════════ */
 const partenza = (() => {
@@ -211,6 +232,11 @@ function guarda() {
   }
   if (!trovati.value.has('cartello') && visto(centroDi(CARTELLO.riquadro)))
     trovati.value = new Set([...trovati.value, 'cartello'])
+  for (const m of mercanti) {
+    if (trovati.value.has(m.chiave) || !visto(m.piede)) continue
+    trovati.value = new Set([...trovati.value, m.chiave])
+    dillo(`Hai trovato ${minuscolo(m.nome)}!`)
+  }
 }
 
 /* ═══════════ il passo ═══════════ */
@@ -262,6 +288,7 @@ const fumPos = ref(null)            // { left, top, sotto, coda } in pixel del m
 const LARGO_FUM = 244
 
 function apri(m) {
+  if (m.tipo === 'mercante') { chiudi(); emit('bottega', m.chi.chiave); return }
   aperto.value = m
   fumPos.value = null
   if (m.tipo === 'minatore' && !parlato.value) { parlato.value = true; salva() }
@@ -336,6 +363,8 @@ const toccaPosto = p => verso(p.piede, { tipo: 'posto', p })
 // al minatore ci si ferma accanto, non addosso: due figure nella stessa cella si mangiano a vicenda
 const toccaMinatore = () => verso(cella(DOVE_MINATORE.accanto), { tipo: 'minatore' })
 const toccaCartello = () => verso(cella(CARTELLO.piede), { tipo: 'cartello' })
+// ai mercanti come al minatore: ci si ferma accanto, e arrivati si apre il banco
+const toccaMercante = m => verso(m.accanto, { tipo: 'mercante', chi: m })
 
 function scendi(p) {
   salva()
@@ -453,6 +482,15 @@ const chiusaPerche = p => {
           <i :style="ritrattoMinatore.pezzo"></i></span>
         <Pixel v-else :figura="MINATORE" :scala="SCALA_EROE" />
         <b v-if="!parlato" class="sot-tre-punti">…</b>
+      </button>
+
+      <button v-for="m in mercanti" :key="'mercante-' + m.chiave" class="sot-minatore sot-mercante"
+              :class="{ 'sot-buio': !trovati.has(m.chiave) }" :data-mercante="m.chiave" :aria-label="m.nome"
+              :tabindex="trovati.has(m.chiave) ? 0 : -1"
+              :style="{ left: (m.piede.x + 0.5) * CELLA * S + 'px', top: (m.piede.y + 0.5) * CELLA * S + 'px' }"
+              @click.stop="toccaMercante(m)">
+        <span v-if="m.ritratto" class="sot-ritratto" :style="m.ritratto.gabbia"><i :style="m.ritratto.pezzo"></i></span>
+        <Pixel v-else :figura="m.figura" :scala="SCALA_EROE" />
       </button>
 
       <template v-for="p in posti" :key="'pallino-' + p.nome">

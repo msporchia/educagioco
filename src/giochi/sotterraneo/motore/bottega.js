@@ -1,0 +1,64 @@
+// I mercanti di sopra: la roba dell'avventuriero (Corredo) davanti a un banco. Ogni mercante pesca il suo
+// banco una volta per giro (fra una discesa finita e l'altra) e quello che si compra se ne va; le cose che non
+// finiscono (le cure, la torcia) stanno in cima. Gira in Node: il giocatore finto ci fa la spesa (banco.js).
+// Le regole: docs/sotterraneo/roba.md, "I mercanti di sopra".
+import { Corredo } from './corredo.js'
+import { COSE, pescaMerce } from '../dati/cose.js'
+import { mercanteDi, vendeLa, righeDi, tettoDi, profonditaDelBanco } from '../dati/mercanti.js'
+
+export class Bottega extends Corredo {
+  // `finite`: discese finite (avanza.tappa). `banchi`: quello che è già stato pescato in questo giro
+  // ({ armaiolo: ['spada', …] }, cfg.botteghe); senza, si pesca alla prima apertura
+  constructor({ eroe, roba = null, finite = 0, banchi = null, rnd = Math.random } = {}) {
+    super({ eroe, roba })
+    this.finite = finite
+    this.rnd = rnd
+    this.banchi = {}
+    for (const [k, v] of Object.entries(banchi || {}))
+      if (Array.isArray(v)) this.banchi[k] = [...v]
+  }
+
+  // pescato una volta e scritto (cfg.botteghe): un banco che cambiasse a ogni apertura sarebbe una slot machine.
+  // Quello che si ha già non si offre, come faceva il mercante delle discese, tranne quello che si consuma
+  banco(chiave) {
+    const m = mercanteDi(chiave)
+    if (!m) return null
+    if (!this.banchi[chiave]) {
+      this.banchi[chiave] = pescaMerce(profonditaDelBanco(this.finite), {
+        quante: righeDi(m, this.finite), rnd: this.rnd,
+        ammessa: k => vendeLa(m, k) && !m.sempre.includes(k) && !this.possiedo(k) &&
+          COSE[k].prezzo <= tettoDi(m, this.finite),
+        tua: k => this.posso(k),
+      })
+    }
+    return { roba: this.banchi[chiave], sempre: m.sempre }
+  }
+
+  // le righe sul banco: quelle che non finiscono prima (`sempre`), poi le pescate
+  mercanzia(chiave) {
+    const b = this.banco(chiave)
+    if (!b) return []
+    return [
+      ...b.sempre.map(k => ({ chiave: k, sempre: true })),
+      ...b.roba.map(k => ({ chiave: k, sempre: false })),
+    ]
+  }
+
+  compraDa(chiave, k) {
+    const b = this.banco(chiave)
+    return b ? this.compra(k, b) : null
+  }
+
+  // compra solo chi lo dice (il rigattiere): gli altri vendono e basta
+  vendiA(chiave, i) {
+    const m = mercanteDi(chiave)
+    return m && m.compra ? this.vendi(i) : null
+  }
+
+  // sopra non c'è buio: una torcia comprata aspetta alla cintura, e si accende scendendo (Corsa)
+  accendi(k) {
+    this.torceInScorta++
+    this.dilloDi(k, ` alla cintura · ne hai ${this.quanteNeHo(k)}`)
+    return true
+  }
+}

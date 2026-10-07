@@ -48,6 +48,8 @@ TESTA = """/* GENERATO da strumenti/sprite/terra-di-sopra.py — non si scrive a
              all'ingresso (sta dentro la mappa, non copre il disegno)
    PARTENZA, MINATORE, CARTELLO  dove si comincia, dove sta il minatore (e
              `accanto`, dove ci si ferma per parlargli), il cartello
+   MERCANTI  chi vende sulla terra di sopra (dati/mercanti.js): `piede` dove
+             sta fermo, `accanto` dove ci si ferma per aprire il banco
    PEZZE     posto → il riquadro ritagliato dalla mappa con le discese
              chiuse ({pezze}); vuoto finché quella mappa non c'è
 */
@@ -103,6 +105,15 @@ def controlla(fg, im):
             guasti.append(f'{nome}: il piede {fg[nome]["piede"]} non è camminabile')
     if not passa(*fg['minatore']['accanto']):
         guasti.append(f'minatore: dove si sta per parlargli {fg["minatore"]["accanto"]} non è camminabile')
+    fermi = [tuple(fg['minatore']['piede'])]
+    for nome, chi in fg.get('mercanti', {}).items():   # non `m`: è la maschera, e `passa` la legge
+        for campo in ('piede', 'accanto'):
+            if not passa(*chi[campo]):
+                guasti.append(f'{nome}: {campo} {chi[campo]} non è camminabile')
+        fermi.append(tuple(chi['piede']))
+    for nome, chi in fg.get('mercanti', {}).items():
+        if tuple(chi['accanto']) in fermi:
+            guasti.append(f'{nome}: ci si fermerebbe addosso a qualcuno che sta fermo ({chi["accanto"]})')
     if not passa(*fg['cartello']['piede']):
         guasti.append(f'il piede del cartello {fg["cartello"]["piede"]} non è camminabile')
     if guasti:
@@ -141,8 +152,8 @@ def genera():
     corpo += 'export const MASCHERA = [\n' + ''.join(f"  '{r}',\n" for r in fg['maschera']) + ']\n\n'
     corpo += 'export const POSTI = {\n' + ''.join(
         f"  {js(n)}: {js(p)},\n" for n, p in fg['posti'].items()) + '}\n\n'
-    for nome in ('partenza', 'minatore', 'cartello'):
-        corpo += f"export const {nome.upper()} = {js(fg[nome])}\n"
+    for nome in ('partenza', 'minatore', 'cartello', 'mercanti'):
+        corpo += f"export const {nome.upper()} = {js(fg.get(nome, {}))}\n"
     corpo += '\nexport const PEZZE = {\n' + ''.join(f"  {js(n)}: '{v}',\n" for n, v in pz.items()) + '}\n'
     corpo += f"\nexport const MAPPA = 'data:image/webp;base64,{b64}'\n"
     dest.write_text(corpo)
@@ -235,6 +246,9 @@ def provino():
     piede(fg['partenza']['piede'], (80, 255, 120, 255))
     piede(fg['minatore']['piede'], (255, 140, 255, 255))
     piede(fg['minatore']['accanto'], (255, 200, 255, 160))
+    for m in fg.get('mercanti', {}).values():
+        piede(m['piede'], (255, 140, 40, 255))
+        piede(m['accanto'], (255, 200, 120, 160))
     TMP.mkdir(parents=True, exist_ok=True)
     Image.alpha_composite(im, velo).save(TMP / 'provino.png')
     print('tmp/terra/provino.png')

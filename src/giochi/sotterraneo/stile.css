@@ -112,7 +112,7 @@
 @keyframes sot-segno { to { transform: scale(2.4); opacity: 0 } }
 
 .sot-posto { border-radius: 16px }
-.sot-posto.sot-buio { pointer-events: none }
+.sot-posto.sot-buio, .sot-mercante.sot-buio { pointer-events: none }
 .sot-posto:focus-visible { outline: 2px solid var(--sot-oro) }
 /* il pallino per terra davanti all'ingresso di una discesa trovata e aperta: dice dove si tocca senza
    coprire il disegno (un anello attorno all'ingresso era brutto); la prossima da fare è d'oro e respira */
@@ -515,6 +515,15 @@
   font-style: normal; font-size: 12px; font-weight: 700; color: var(--sot-tenue);
 }
 .sot-merce .sot-testo em.sot-meglio { color: #4fce7c }
+/* la ✕ del banco di sopra: appiccicata in cima, il margine negativo non sposta il titolo (come fattoria/viste/Chiudi.vue) */
+.sot-chiudi {
+  position: sticky; top: 0; z-index: 2; float: right; width: 34px; height: 34px; margin: -4px -4px 0 8px;
+  display: grid; place-items: center; padding: 0; font: inherit; font-size: 15px; line-height: 1;
+  color: #f3ece0; background: #141826e8; border: 2px solid #ffffff38; border-radius: 11px; cursor: pointer;
+}
+.sot-chiudi:active { transform: scale(.92) }
+.sot-detto-banco { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: 13px }
+.sot-banco.sot-vuote { margin-top: 0; font-weight: 400 }
 
 .sot-velo {
   position: absolute; inset: 0; z-index: 20; display: grid; place-items: center;

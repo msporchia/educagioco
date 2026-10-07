@@ -16,6 +16,11 @@
   },
   "partenza": { "piede": [17, 41] },
   "minatore": { "piede": [14, 40], "accanto": [16, 40] },
+  "mercanti": {
+    "armaiolo": { "piede": [4, 34], "accanto": [6, 34] },
+    "erborista": { "piede": [25, 42], "accanto": [27, 42] },
+    "rigattiere": { "piede": [27, 28], "accanto": [25, 28] }
+  },
   "cartello": { "riquadro": [586, 330, 72, 80], "piede": [19, 13] },
   "maschera": [
     "################################",

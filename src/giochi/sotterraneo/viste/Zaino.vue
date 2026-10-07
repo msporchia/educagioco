@@ -183,7 +183,7 @@ const cambio = computed(() => {
       <button v-for="(t, i) in tasche" :key="i" class="sot-tasca"
               :class="{ 'sot-vuota': !t, 'sot-scelto': sceltoQui('zaino', i),
                         'sot-altrui': t && t.nonPuoi }"
-              :disabled="!t" :data-tasca="i" @click="tocca('zaino', i)">
+              :disabled="!t" :data-tasca="i" :data-cosa="t ? t.chiave : null" @click="tocca('zaino', i)">
         <span class="sot-dentro">
           <Icona v-if="t" :sprite="t.sprite" :em="t.em" />
           <b v-else class="em">·</b>

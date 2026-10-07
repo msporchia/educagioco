@@ -10,8 +10,9 @@
    strumento). docs/sotterraneo/terra-di-sopra.md
    ═══════════════════════════════════════════════════════════════════ */
 import { readFileSync } from 'node:fs'
-import { MASCHERA, CELLA, POSTI, PARTENZA, MINATORE, CARTELLO, LARGO, ALTO }
+import { MASCHERA, CELLA, POSTI, PARTENZA, MINATORE, CARTELLO, LARGO, ALTO, MERCANTI }
   from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
+import { MERCANTI as CHI_VENDE } from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { POSTO_DI, LUOGHI } from '../../src/giochi/sotterraneo/dati/terra.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice, sassiLungo }
@@ -28,6 +29,7 @@ const fg = JSON.parse(readFileSync(new URL('../../strumenti/sprite/sorgenti/sott
 stessaLista('la maschera del gioco è quella del foglietto (rilancia strumenti/sprite/terra-di-sopra.py)',
             MASCHERA, fg.maschera)
 stessaLista('e anche i posti', POSTI, fg.posti)
+stessaLista('e i mercanti', MERCANTI, fg.mercanti)
 uguale('la maschera copre tutta la mappa, in larghezza', MASCHERA[0].length * CELLA, LARGO)
 uguale('e in altezza', MASCHERA.length * CELLA, ALTO)
 controlla('solo . e #', MASCHERA.every(r => /^[.#]+$/.test(r) && r.length === MASCHERA[0].length))
@@ -45,6 +47,22 @@ for (const [nome, p] of Object.entries(POSTI)) {
   const via = terra.strada(casa, { x, y })
   controlla(`${nome}: da casa ci si arriva`, Array.isArray(via), `${x},${y}`)
   controlla(`${nome}: il minatore sa spiegare dov'è`, !!LUOGHI[nome])
+}
+/* i mercanti: stanno fermi dove si cammina, ci si arriva da casa, e ci si
+   ferma accanto a loro come al minatore (Terra.vue li passa a `ostacoli`) */
+{
+  const fermi = creaTerra(MASCHERA, { ostacoli: [MINATORE.piede, ...Object.values(MERCANTI).map(m => m.piede)] })
+  for (const m of CHI_VENDE) {
+    const dove = MERCANTI[m.chiave]
+    controlla(`${m.chiave}: ha un posto sulla mappa`, !!dove)
+    if (!dove) continue
+    controlla(`${m.chiave}: sta su una cella dove si cammina`, terra.passa(...dove.piede))
+    controlla(`${m.chiave}: non gli si passa attraverso`, !fermi.passa(...dove.piede))
+    const [ax, ay] = dove.accanto
+    controlla(`${m.chiave}: da casa si arriva accanto a lui`, !!fermi.strada(casa, { x: ax, y: ay }), `${ax},${ay}`)
+    controlla(`${m.chiave}: accanto vuol dire a due celle, sulla stessa fila`,
+              Math.abs(ax - dove.piede[0]) === 2 && ay === dove.piede[1], `${ax},${ay}`)
+  }
 }
 const [cx, cy] = CARTELLO.piede
 controlla('al cartello ci si arriva', !!terra.strada(casa, { x: cx, y: cy }))

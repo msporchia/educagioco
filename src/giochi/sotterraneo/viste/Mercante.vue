@@ -1,24 +1,38 @@
 <script setup>
-// Il mercante: l'unico posto senza domande, dove si spende quello che le domande hanno fruttato. Ogni riga
-// dice cosa fa l'oggetto («Sbagliare fa meno male»), non solo il nome. Le tre che curano non finiscono mai
-// (docs/sotterraneo/roba.md); una riga che la classe non impugna dice il perché al posto del confronto; e
-// si vende dalle proprie tasche a metà prezzo — comprare e rivendere è una perdita, non un modo di fare gemme.
+// Il banco di un mercante di sopra: il posto senza domande, dove si spende quello che le domande hanno fruttato.
+// Ogni riga dice cosa fa l'oggetto («Sbagliare fa meno male»), non solo il nome; quello che non ci si può
+// permettere resta visibile e spento; una riga che la classe non impugna dice il perché al posto del confronto.
+// Le tasche si vendono solo a chi compra (il rigattiere), a metà prezzo (docs/sotterraneo/roba.md).
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Icona from './Icona.vue'
 
+// appena aperto il banco non ascolta: un secondo tocco sul mercante, dato mentre l'eroe ci arriva, cadrebbe
+// su una riga e la comprerebbe (gli stessi 320 ms ciechi della domanda, docs/core/interfaccia.md)
+const CIECO = 320
+const pronto = ref(false)
+let cieco = 0
+onMounted(() => { cieco = setTimeout(() => { pronto.value = true }, CIECO) })
+onBeforeUnmount(() => clearTimeout(cieco))
+
 defineProps({
-  roba: { type: Array, required: true },     // [{ …, posso, sempre, cambio, quante, mancano }]
-  tasche: { type: Array, default: () => [] }, // [{ chiave, em, nome, sprite, vale } | null]
-  gemme: { type: Number, required: true },
+  roba: { type: Array, required: true },       // [{ …, posso, sempre, cambio, quante, mancano }]
+  tasche: { type: Array, default: null },      // [{ chiave, em, nome, sprite, vale } | null]; null: questo non compra
+  detto: { type: Object, default: null },      // l'ultima riga: { testo, sprite?, em? } («Spada ⚔️ +2», «lo zaino è pieno»)
+  chiCompra: { type: String, default: '' },    // «il rigattiere, vicino al carro»: detto da chi non compra
 })
-defineEmits(['compra', 'vendi', 'chiudi'])
+defineEmits(['compra', 'vendi'])
 </script>
 
 <template>
   <div>
-    <!-- un banco vuoto non esiste: le tre che curano stanno sempre lì -->
+    <p v-if="detto" class="sot-cambio sot-meglio sot-detto-banco" data-detto-banco>
+      <Icona v-if="detto.sprite || detto.em" :sprite="detto.sprite" :em="detto.em" :emAlto="18" />
+      {{ detto.testo }}
+    </p>
+
     <button v-for="c in roba" :key="c.chiave" class="sot-merce"
             :class="{ 'sot-caro': !c.posso || c.nonPuoi }" :data-merce="c.chiave"
-            :disabled="!c.posso || !!c.nonPuoi" @click="$emit('compra', c.chiave)">
+            :disabled="!c.posso || !!c.nonPuoi" @click="pronto && $emit('compra', c.chiave)">
       <Icona :sprite="c.sprite" :em="c.em" :emAlto="26" />
       <span class="sot-testo">
         <b>{{ c.nome }}</b>
@@ -36,19 +50,17 @@ defineEmits(['compra', 'vendi', 'chiudi'])
       </span>
     </button>
 
-    <!-- solo se c'è qualcosa da vendere -->
-    <template v-if="tasche.some(Boolean)">
-      <p class="sot-banco">Ti compra quello che hai, a metà prezzo.</p>
+    <!-- chi compra mostra le tasche; gli altri dicono dove si vende -->
+    <template v-if="tasche">
+      <p class="sot-banco">Ti compro quello che hai in tasca, a metà prezzo.</p>
+      <p v-if="!tasche.some(Boolean)" class="sot-banco sot-vuote" data-tasche-vuote>Le tasche sono vuote.</p>
       <button v-for="(t, i) in tasche" v-show="t" :key="i" class="sot-merce sot-vendo"
-              :data-vendo="t ? t.chiave : ''" @click="$emit('vendi', i)">
+              :data-vendo="t ? t.chiave : ''" @click="pronto && $emit('vendi', i)">
         <Icona :sprite="t ? t.sprite : null" :em="t ? t.em : ''" :emAlto="26" />
         <span class="sot-testo"><b>{{ t ? t.nome : '' }}</b><i>lo vendo</i></span>
         <span class="sot-prezzo em">+ 💎 {{ t ? t.vale : 0 }}</span>
       </button>
     </template>
-
-    <button class="sot-grosso sot-chiaro" data-azione="chiudi" @click="$emit('chiudi')">
-      basta così
-    </button>
+    <p v-else-if="chiCompra" class="sot-banco" data-chi-compra>Quello che hai in tasca lo compra {{ chiCompra }}.</p>
   </div>
 </template>

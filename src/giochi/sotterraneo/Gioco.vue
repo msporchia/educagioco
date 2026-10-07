@@ -27,7 +27,10 @@ import { pezzoAndante } from './dati/tessere.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
-import { scrivi, leggi, dice } from './motore/sosta.js'
+import { Corredo } from './motore/corredo.js'
+import { Bottega } from './motore/bottega.js'
+import { scrivi, leggi, dice, robaDiCasa } from './motore/sosta.js'
+import { mercanteDi } from './dati/mercanti.js'
 import { Tela } from './scena/tela.js'
 
 import Campagna from './viste/Campagna.vue'
@@ -38,7 +41,7 @@ import { cambioDetto } from './viste/cambio.js'
 import { occhio } from './viste/occhio.js'
 import Scontro from './viste/Scontro.vue'
 import Zaino from './viste/Zaino.vue'
-import Mercante from './viste/Mercante.vue'
+import Mercante from './viste/Mercante.vue'   // il banco dei mercanti di sopra
 import Fine from './viste/Fine.vue'
 import './stile.css'
 
@@ -94,15 +97,27 @@ function scegli(k) {
   suono.ok()
 }
 
-// il ref serve solo a far comparire/sparire la carta "riprendi": la verità sta in archivio (motore/sosta.js)
-const conNome = d => (d ? { ...d, chi: d.eroe ? eroeDi(d.eroe).nome : '' } : null)
+// La roba dell'avventuriero (motore/corredo.js): una sola, qualunque eroe scenda, in cfg.roba — fra una discesa
+// e l'altra non si riparte più nudi (docs/sotterraneo/regole.md). La prima volta la scrive robaDiCasa
+const roba = ref((() => {
+  const { roba: r, nuova } = robaDiCasa({ salvata: scelta(CHIAVE, 'roba', null), sosta: sosta(CHIAVE),
+                                          finite: avanza.tappa || 0 })
+  return nuova ? ricorda(CHIAVE, 'roba', r) : r
+})())
+const tieniLaRoba = r => { roba.value = ricorda(CHIAVE, 'roba', r) }
+
+// il ref serve solo a far comparire/sparire la carta "riprendi": la verità sta in archivio (motore/sosta.js).
+// Le gemme sono quelle della roba: sopra si può essere passati da un mercante
+const conNome = d => (d ? { ...d, chi: d.eroe ? eroeDi(d.eroe).nome : '', gemme: roba.value.gemme } : null)
 const ripresa = ref(conNome(dice(sosta(CHIAVE), CAMPAGNA)))
 let ultimoSalvato = 0
 
+// la roba e la sosta nello stesso giro: un telefono spento fra le due perderebbe quello che si è raccolto
 function salva({ subito = false } = {}) {
   const c = corsa.value
   if (!c || c.finita || tappaIdx.value == null) return
   ultimoSalvato = orologio
+  tieniLaRoba(c.roba)
   salvaSosta(CHIAVE, scrivi(c, tappaIdx.value), { subito })
 }
 
@@ -115,7 +130,7 @@ function scorda() {
 function riprendiDiscesa() {
   const dato = sosta(CHIAVE)
   // un salvataggio vecchio non sa chi stava scendendo: vale la scelta di casa invece del cavaliere di sistema
-  const c = dato ? leggi(dato, tappaDi(dato.tappa), chiEro.value || DI_PARTENZA) : null
+  const c = dato ? leggi(dato, tappaDi(dato.tappa), chiEro.value || DI_PARTENZA, roba.value) : null
   if (!c) { scorda(); return }
   togli()   // il telefono posato sulla mappa lascia acceso il freno, o si ritroverebbe dietro un velo non chiesto
   tappaIdx.value = dato.tappa
@@ -138,6 +153,74 @@ const tappe = computed(() => CAMPAGNA.map((t, i) => ({
   perEta: chiusaPerEta(CHIAVE, i),
   fatta: i < (avanza.tappa || 0),
 })))
+
+// la carta di chi scende, sulla mappa: braccio e difesa con quello che ha addosso, e le gemme da spendere
+const robaSopra = computed(() => {
+  const c = new Corredo({ eroe: chiEro.value || DI_PARTENZA, roba: roba.value })
+  return { att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.zaino.length }
+})
+
+/* ═══════════ i mercanti di sopra (motore/bottega.js) ═══════════
+   Il banco si pesca una volta per giro e si scrive in cfg.botteghe: un banco che cambiasse a ogni apertura
+   sarebbe una slot machine. Il giro cambia quando una discesa finisce (chiudi) */
+const aperto = ref(null)          // la chiave del mercante col banco aperto
+const tocco = ref(0)              // batte a ogni compra/vendi: la bottega non è reattiva
+const dettoBanco = ref(null)
+let bottega = null
+
+function apriBottega(k) {
+  if (!mercanteDi(k)) return
+  bottega = new Bottega({ eroe: chiEro.value || DI_PARTENZA, roba: roba.value, finite: avanza.tappa || 0,
+                          banchi: (scelta(CHIAVE, 'botteghe', null) || {}).banchi })
+  bottega.banco(k)
+  ricorda(CHIAVE, 'botteghe', { banchi: bottega.banchi })
+  dettoBanco.value = null
+  aperto.value = k
+  tocco.value++
+  suono.ok()
+}
+function chiudiBottega() { aperto.value = null; bottega = null }
+
+const banco = computed(() => {
+  tocco.value
+  const k = aperto.value
+  if (!k || !bottega) return null
+  const b = bottega, m = mercanteDi(k)
+  return {
+    chi: m,
+    gemme: b.gemme,
+    roba: b.mercanzia(k).map(({ chiave: x, sempre }) => ({
+      chiave: x, sempre, ...COSE[x], posso: b.gemme >= COSE[x].prezzo,
+      nonPuoi: b.perchéNo(x),
+      cambio: cambioDetto(b.confronto(x), y => COSE[y].nome),
+      mancano: Math.max(0, COSE[x].prezzo - b.gemme),
+      quante: b.quanteNeHo(x),
+    })),
+    tasche: m.compra ? Array.from({ length: TASCHE }, (_, i) => {
+      const y = b.zaino[i]
+      return y ? { chiave: y, ...COSE[y], vale: b.quantoVale(y) } : null
+    }) : null,
+  }
+})
+
+function dopoIlBanco(e) {
+  const a = bottega.avvisi.pop()
+  bottega.avvisi = []
+  if (a) dettoBanco.value = typeof a === 'string' ? { testo: a } : { ...(COSE[a.cosa] || {}), testo: a.testo }
+  tieniLaRoba(bottega.roba)
+  ricorda(CHIAVE, 'botteghe', { banchi: bottega.banchi })
+  if (ripresa.value) ripresa.value = { ...ripresa.value, gemme: roba.value.gemme }
+  tocco.value++
+  return e
+}
+function compraSopra(x) {
+  const e = dopoIlBanco(bottega.compraDa(aperto.value, x))
+  if (e?.che === 'comprato') suono.compra(); else suono.no()
+}
+function vendiSopra(i) {
+  const e = dopoIlBanco(bottega.vendiA(aperto.value, i))
+  if (e) suoni.bottino()
+}
 
 // la terra di sopra si ricorda per bambino (cfg.terra): la nebbia, dove si era, se il minatore ha già parlato
 const ricordaTerra = v => ricorda(CHIAVE, 'terra', v)
@@ -215,21 +298,6 @@ const zaino = dallaCorsa(c => {
   }
 })
 
-// si rifà a ogni tic (comprare/vendere cambiano tutte e tre le colonne); mercanzia() dice quali righe ci sono
-const merce = dallaCorsa(c => c.mercanzia().map(({ chiave: k, sempre }) => ({
-  chiave: k, sempre, ...COSE[k], posso: c.gemme >= COSE[k].prezzo,
-  nonPuoi: c.perchéNo(k),
-  cambio: cambioDetto(c.confronto(k), x => COSE[x].nome),
-  mancano: Math.max(0, COSE[k].prezzo - c.gemme),   // senza, una riga che non puoi comprare si legge come una che puoi
-  quante: c.quanteNeHo(k),   // le pozioni restano in vendita anche quando ne hai già: serve sapere quante
-})), [])
-
-// le tasche, col mezzo prezzo già fatto dal motore; le caselle addosso non ci sono (si ripongono prima)
-const daVendere = dallaCorsa(c => Array.from({ length: TASCHE }, (_, i) => {
-  const k = c.zaino[i]
-  return k ? { chiave: k, ...COSE[k], vale: c.quantoVale(k) } : null
-}), [])
-
 const curiosita = dallaCorsa(c => {
   const f = c.foglio
   if (!f || f.che !== 'curiosita') return {}
@@ -291,7 +359,8 @@ function avvia(i) {
   fine.value = null
   domanda.value = null
   zainoAperto.value = false
-  corsa.value = new Corsa(tappaDi(i), { seme: semeDallIndirizzo(), eroe: chiEro.value || DI_PARTENZA })
+  corsa.value = new Corsa(tappaDi(i), { seme: semeDallIndirizzo(), eroe: chiEro.value || DI_PARTENZA,
+                                        roba: roba.value })
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
   pianoDaProva(corsa.value)
@@ -432,8 +501,6 @@ function riprendi() {
   tic.value++
   if (c.finita) chiudi()
 }
-function compra(k) { const e = corsa.value.compra(k); tic.value++; if (e?.che === 'comprato') suono.compra(); salva() }
-function vendi(i) { const e = corsa.value.vendi(i); tic.value++; if (e) suoni.bottino(); salva() }
 function usa(i) { corsa.value.usa(i); tic.value++; suono.ok(); salva() }
 function butta(i) { corsa.value.butta(i); tic.value++; suoni.passo(); salva() }
 function riponi(dove) { corsa.value.riponi(dove); tic.value++; suono.ok(); salva() }
@@ -451,6 +518,9 @@ function chiudi() {
   const c = corsa.value
   if (!c) return
   if (!c.finita) c.risali()
+  // la roba viene su (vinta, persa o finita la sera): quello che è rimasto per terra resta giù
+  tieniLaRoba(c.roba)
+  ricorda(CHIAVE, 'botteghe', null)   // un giro nuovo: i mercanti hanno roba nuova sul banco
   const e = c.esito
   const stelle = stelleDella(e)
   // l'abisso non si butta (finisce la sera, non la discesa): si scrive il punto da cui si rientra
@@ -626,10 +696,16 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
     <div class="sot">
       <template v-if="!corsa">
-        <Campagna :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
+        <Campagna :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso" :roba="robaSopra"
                   :terra="scelta(CHIAVE, 'terra', null)" @terra="ricordaTerra"
                   @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda"
-                  @eroe="scegliEroe = true" />
+                  @eroe="scegliEroe = true" @bottega="apriBottega" />
+        <!-- il banco di un mercante di sopra: al centro, la ✕ in alto a destra, niente domande -->
+        <Foglio v-if="banco" :em="banco.chi.em" :titolo="banco.chi.nome" centro con-chiudi
+                :dice="`Hai 💎 ${banco.gemme}. ${banco.chi.dice}`" @chiudi="chiudiBottega">
+          <Mercante :roba="banco.roba" :tasche="banco.tasche" :detto="dettoBanco"
+                    chi-compra="il rigattiere, vicino al carro" @compra="compraSopra" @vendi="vendiSopra" />
+        </Foglio>
         <Eroi v-if="scegliEroe" :eroi="EROI" :scelto="chiEro || ''" :primo="!chiEro"
               @scegli="scegli" @chiudi="scegliEroe = false" />
       </template>
@@ -726,13 +802,6 @@ function ridimensiona() { if (pittore) pittore.misura() }
           </button>
         </Foglio>
 
-        <!-- al centro come lo zaino: qui si sceglie, non si cammina -->
-        <Foglio v-else-if="foglio && foglio.che === 'mercante'" em="🧙" titolo="Il mercante" centro
-                :dice="`Hai 💎 ${eroe.gemme}. Quello che compri finisce nello zaino.`">
-          <Mercante :roba="merce" :tasche="daVendere" :gemme="eroe.gemme"
-                    @compra="compra" @vendi="vendi" @chiudi="chiudiFoglio" />
-        </Foglio>
-
         <!-- una curiosità: il foglio non si chiude da sé, la battuta è il premio vero -->
         <Foglio v-else-if="foglio && foglio.che === 'curiosita'"
                 :em="curiosita.em" :sprite="curiosita.pezzo"
@@ -769,7 +838,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
         <Foglio v-else-if="foglio && foglio.che === 'scala'" em="🕳️" titolo="La scala che scende"
                 :dice="foglio.ultimo
-                  ? 'Da qui si risale, e quello che hai trovato resta la tua storia.'
+                  ? 'Da qui si risale, e quello che hai addosso e in tasca viene su con te.'
                   : 'Sotto è più buio, i mostri hanno più ossa e le domande si fanno toste. Quello che hai addosso scende con te.'">
           <button class="sot-grosso" data-azione="scendi" @click="scendi">
             {{ foglio.ultimo ? 'esco dal sotterraneo' : `scendo al piano ${eroe.piano + 1}` }}
@@ -779,18 +848,16 @@ function ridimensiona() { if (pittore) pittore.misura() }
           </button>
         </Foglio>
 
-        <!-- svenuto: finché ci sono occasioni si dice quante ne restano; nell'abisso le frasi cambiano
-             perché là si perde lo zaino intero e la discesa non ricomincia da capo (docs/sotterraneo/regole.md) -->
+        <!-- svenuto: finché ci sono occasioni si dice quante ne restano; svenendo si perdono le tasche e metà
+             gemme, quello addosso mai, e nell'abisso la discesa non ricomincia da capo (docs/sotterraneo/regole.md) -->
         <Foglio v-else-if="foglio && foglio.che === 'svenuto'" em="💫"
                 :titolo="foglio.ultimo && !nellAbisso ? 'Non ti reggi più in piedi'
                          : foglio.ultimo ? 'Per stasera basta' : 'Ti sei svegliato all\'ingresso'"
-                :dice="nellAbisso
-                  ? (foglio.ultimo
-                      ? 'Ti hanno portato su. L\'abisso resta dov\'è: ci si rientra da questo piano, con quello che hai addosso.'
-                      : 'Qualcuno ti ha trascinato all\'ingresso. Quello che avevi nelle tasche non c\'è più, ma quello che avevi addosso sì.')
+                :dice="nellAbisso && foglio.ultimo
+                  ? 'Ti hanno portato su, con quello che hai addosso. L\'abisso resta dov\'è: ci si rientra da questo piano.'
                   : foglio.ultimo
-                    ? 'Ti hanno portato su. Il sotterraneo resta lì: questa discesa ricomincia da capo.'
-                    : 'Qualcuno ti ha trascinato fuori. Le gemme che avevi in tasca non ci sono più, ma quello che avevi addosso sì.'">
+                    ? 'Ti hanno portato su, con quello che hai addosso. Il sotterraneo resta lì: questa discesa ricomincia da capo.'
+                    : 'Qualcuno ti ha trascinato all\'ingresso. Le tasche si sono svuotate e metà delle gemme non c\'è più, ma quello che avevi addosso sì.'">
           <p v-if="!foglio.ultimo" class="sot-storia">
             Ancora <b>{{ foglio.restano }}</b>
             {{ foglio.restano === 1 ? 'volta' : 'volte' }}, poi si risale.
