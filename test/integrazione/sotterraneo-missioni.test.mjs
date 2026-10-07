@@ -3,7 +3,7 @@
 
    Chi sta sulla terra di sopra dà missioni legate a una discesa
    (docs/sotterraneo/missioni.md). Qui il giro intero: la ragazza del
-   pozzo ha il «!» sopra la testa, le si parla, si prende la missione (la
+   pozzo ha il «!» sopra la testa (e nessun altro: una missione per volta), le si parla, si prende la missione (la
    collana della nonna, al primo piano della scalinata antica), si scende,
    si trova il forziere d'oro con la collana sopra, si risponde e la si
    prende, si risale dal portale, si torna da lei (adesso ha il «?») e si
@@ -87,7 +87,8 @@ const missioneNelProfilo = async () =>
 
 /* ---------- 1. la ragazza del pozzo ha qualcosa da chiedere ---------- */
 uguale('sopra la ragazza c\'è il punto esclamativo', await page.locator('[data-personaggio="ragazza"]').getAttribute('data-segno'), '!')
-uguale('il minatore no: la sua missione è nella miniera, chiusa', await page.locator('[data-minatore] [data-segno]').count(), 0)
+uguale('e nessun altro: in tutto sulla mappa c\'è un solo segno, il minatore compreso (una missione per volta)',
+       await page.locator('[data-personaggio][data-segno], [data-minatore] [data-segno]').count(), 1)
 await scatto(page, 'missioni-villaggio')
 await toccaIl('[data-personaggio="ragazza"]')
 await page.waitForSelector('[data-fumetto-di="ragazza"] [data-fase="offre"]', { timeout: 8000 })
@@ -99,7 +100,8 @@ await scatto(page, 'missioni-fumetto')
 await toccaIl('[data-azione="prendi-missione"]')
 await attendi(page, 500)
 uguale('presa, il fumetto la ricorda', await page.locator('[data-fumetto-di="ragazza"] [data-fase="aspetta"]').count(), 1)
-uguale('e il punto esclamativo se ne va', await page.locator('[data-personaggio="ragazza"]').getAttribute('data-segno'), null)
+uguale('e da presa il segno è il punto di domanda, ancora uno solo', await page.locator('[data-personaggio][data-segno]').evaluateAll(
+  els => els.map(e => e.dataset.personaggio + e.dataset.segno).join(',')), 'ragazza?')
 uguale('la missione è nell\'avventura', (await missioneNelProfilo()).missioni?.collana, 'presa')
 
 /* ---------- 2. giù, al piano giusto, il forziere d'oro della collana ---------- */
@@ -189,7 +191,8 @@ await page.waitForSelector('[data-terra]', { timeout: 5000 })
 await attendi(page, 700)
 uguale('si sbuca accanto al portale gemello', await page.locator('[data-eroe-terra]').getAttribute('data-cella'),
        PORTALE.accanto.join(','))
-uguale('la ragazza adesso aspetta la collana: il punto di domanda', await page.locator('[data-personaggio="ragazza"]').getAttribute('data-segno'), '?')
+uguale('la ragazza adesso aspetta la collana: il punto di domanda, e solo lei', await page.locator('[data-personaggio][data-segno]').evaluateAll(
+  els => els.map(e => e.dataset.personaggio + e.dataset.segno).join(',')), 'ragazza?')
 await camminaVerso(page, ragazza.accanto, { tocca })
 await toccaIl('[data-personaggio="ragazza"]')
 await page.waitForSelector('[data-fumetto-di="ragazza"] [data-fase="consegna"]', { timeout: 8000 })
@@ -204,6 +207,9 @@ uguale('consegnata', a.missioni?.collana, 'consegnata')
 uguale('il premio sono gemme, nella roba', a.roba?.gemme, gemmePrima + MISSIONE.premio.gemme)
 uguale('e le monete non cambiano', (await leggiProfilo(page)).coins, monete)
 uguale('la ragazza non ha più segni', await page.locator('[data-personaggio="ragazza"]').getAttribute('data-segno'), null)
+uguale('consegnata, arriva la successiva (la cripta saltata): un solo punto esclamativo, sull\'eremita',
+       await page.locator('[data-personaggio][data-segno]').evaluateAll(els => els.map(e => e.dataset.personaggio + e.dataset.segno).join(',')),
+       'eremita!')
 controlla('e il fumetto la saluta', (await page.locator('[data-fumetto]').innerText()).includes('pozzo'))
 await scatto(page, 'missioni-fatta')
 
