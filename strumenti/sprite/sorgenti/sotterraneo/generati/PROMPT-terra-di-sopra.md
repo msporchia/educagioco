@@ -202,8 +202,56 @@ tolti il 7/10/2026.
 
 I personaggi dei prompt 4 e 5, quando arrivano, si ritagliano come gli
 altri fogli (`atlante.py`, un foglietto accanto): il minatore che si chiama
+## Prompt 7 — chi dà le missioni (il primo da fare)
+
+Sei personaggi fermi sulla terra di sopra, ognuno nel suo posto
+(docs/sotterraneo/missioni.md). Oggi sono figure disegnate in codice
+(`viste/pixel.js`). Nella stessa chat dei prompt 4 e 5, che tiene la mano;
+il minatore c'è già nel prompt 4.
+
+```text
+Sullo stesso fondo MAGENTA PIENO (#FF00FF), sei personaggi della stessa mano e della STESSA SCALA dei personaggi di prima (celle da 64×64 px): ognuno largo una cella e alto una cella e mezza, visto dall'alto a tre quarti, come gli eroi di un gioco di ruolo a 16 bit. Immagine 1024×1536 px verticale. Ogni posa sta da sola, staccata dalle altre da almeno mezza cella di magenta, senza ombra e senza prato sotto. NESSUNA PAROLA SCRITTA, NESSUN FUMETTO, NESSUN PUNTO ESCLAMATIVO.
+
+Una riga per personaggio, due pose ciascuno: FERMO, e CHE PARLA (bocca aperta, una mano alzata).
+1. La ragazza del pozzo: fazzoletto rosso in testa, due trecce castane, vestito azzurro col grembiule bianco, un secchio di metallo in mano.
+2. Il mugnaio: tutto infarinato, berretto e camicia bianchi, un sacco di farina in spalla, grassoccio e allegro.
+3. L'eremita dell'altare: saio grigio col cappuccio, barba bianca lunghissima, un bastone di legno alto più di lui.
+4. La guardia della torre: elmo di ferro col pennacchio rosso, cotta di maglia e tunica rossa, una lancia dritta accanto, annoiata.
+5. Il pescatore dello stagno: cappello di paglia a tesa larga, giacca blu, la canna da pesca sulla spalla col filo che pende.
+6. Il boscaiolo: berretto verde, barba castana, camicia a quadri rossi e neri, l'ascia appoggiata alla spalla.
+Sono amici: nessuna arma rivolta verso chi guarda.
+```
+
+Controllo: le due pose dello stesso personaggio hanno la stessa sagoma e
+gli stessi colori; si distinguono a colpo d'occhio anche piccoli (il
+secchio, il sacco bianco, il bastone, la lancia, la canna, l'ascia); sono
+alti come il minatore. Nel foglietto: `ragazza-fermo-0`, `ragazza-parla-0`,
+`mugnaio-fermo-0`… (`strumenti/sprite/FORMATO.md`).
+
+## Prompt 8 — le cose delle missioni (il secondo)
+
+Le cose da trovare galleggiano sopra un forziere d'oro, e oggi sono emoji
+(`dati/missioni.js`); il mostro col nome porta una corona, anche lei
+un'emoji. Nella chat degli oggetti (`bottino-e-arredo.png`), allegandolo,
+così la mano è quella delle cose per terra.
+
+```text
+Sullo stesso fondo MAGENTA PIENO (#FF00FF) e nella STESSA MANO del foglio di oggetti allegato, sei piccoli oggetti da 16×16 pixel di gioco ciascuno (disegnati a quadrati di 4×4 px: 64×64 px l'uno), staccati fra loro da almeno 32 px di magenta, in una riga. Immagine 1024×256 px. Senza ombra, senza contorno bianco, NESSUNA SCRITTA.
+1. Una collana di perle con un ciondolo rosso.
+2. Un mazzo di tre chiavi di ferro antiche su un anello.
+3. Un'ascia da boscaiolo vecchia, col manico consumato.
+4. Una canna da pesca d'oro, corta, col mulinello.
+5. Una lanterna da minatore di ottone, spenta.
+6. Una piccola corona d'oro con tre punte, da mettere sopra la testa di un mostro.
+```
+
+Controllo: si riconoscono a 16×16; l'ascia non sembra un'arma da
+impugnare (è vecchia, storta); la corona sta in mezza cella.
+
 `minatore-fermo-0` prende da solo il posto della figura disegnata in codice,
-e così `armaiolo-fermo-0`, `erborista-fermo-0`, `rigattiere-fermo-0`.
+e così `armaiolo-fermo-0`, `erborista-fermo-0`, `rigattiere-fermo-0`, e i
+sei del prompt 7 (`ragazza-fermo-0`…). Le cose del prompt 8 vanno in
+`dati/missioni.js` come `sprite` della cosa, e la corona in `scena/tela.js`.
 
 ## Com'è andata
 
