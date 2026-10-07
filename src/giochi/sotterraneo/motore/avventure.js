@@ -81,6 +81,18 @@ export function cominciata(a) {
 export const MONDO = 2
 const DI_PRIMA = ['avventure', 'roba', 'terra', 'abisso', 'botteghe']
 
+// Il record dell'abisso di prima dell'azzeramento: il primato `sotFondo` del bambino (e, se c'è ancora, quello
+// salvato nella campagna vecchia) resta in `cfg.fondoDiPrima`, che la riga della home legge insieme ai fondi
+// delle avventure. Gira a ogni apertura, prima di azzerare: non abbassa mai il numero.
+export function ricordaIlFondo(c, primato = 0) {
+  if (!oggetto(c.cfg)) c.cfg = {}
+  const vecchio = c.cfg.mondo === MONDO ? 0 : (oggetto(c.cfg.abisso) && c.cfg.abisso.fondo) || 0
+  const f = Math.max(primato || 0, vecchio)
+  if (!(f > (c.cfg.fondoDiPrima || 0))) return false
+  c.cfg.fondoDiPrima = f
+  return true
+}
+
 export function azzeraIlVecchio(c) {
   if (!oggetto(c.cfg)) c.cfg = {}
   if (c.cfg.mondo === MONDO) return false

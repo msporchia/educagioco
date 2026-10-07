@@ -106,8 +106,11 @@ passarli: le avventure ripartono da zero per tutti. `azzeraIlVecchio`
   monete, i contatori e il primato `sotFondo`. Fuori il profilo si vede uguale;
 - **resta l'eroe scelto** (`cfg.eroe`), se è uno dei quattro: si rientra
   nella sua avventura nuova senza ripassare dalla scelta;
-- **la riga della home** finché un eroe non riscende nell'abisso dice la
-  discesa, non il fondo: il fondo di prima stava in `cfg.abisso`.
+- **la riga della home** dice ancora il fondo di prima: prima di azzerare,
+  `ricordaIlFondo` lo copia in `cfg.fondoDiPrima`, prendendo il più alto fra
+  il vecchio `cfg.abisso` e il primato `sotFondo` (così lo ritrova anche chi
+  era già stato azzerato), e la riga legge il più giù fra quello e i fondi
+  delle avventure.
 - Provato: passare tutto all'ultimo eroe usato, con le gemme di bentornato a
   chi aveva discese finite; l'utente ha preferito azzerare.
 

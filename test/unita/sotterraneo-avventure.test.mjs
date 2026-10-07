@@ -17,7 +17,7 @@ import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { ROBA_VUOTA, schedaConLaRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { scrivi } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { Bottega } from '../../src/giochi/sotterraneo/motore/bottega.js'
-import { avventuraDi, scriviNellAvventura, vintaNellAvventura, ilMassimo, cominciata, azzeraIlVecchio, MONDO,
+import { avventuraDi, scriviNellAvventura, vintaNellAvventura, ilMassimo, cominciata, azzeraIlVecchio, ricordaIlFondo, MONDO,
          AVVENTURA_NUOVA } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import manifesto from '../../src/giochi/sotterraneo/gioco.js'
 import { misure } from '../../src/store/progressi.js'
@@ -256,6 +256,19 @@ function azzera(nome, sot) {
   stessaLista('la bipenne solare dice la luce', schedaConLaRoba('cavaliere', fatta('cavaliere', { mano: 'bipenne-solare' })).tratti,
               ['🔥 vedi più lontano'])
   stessaLista('senza tratti non dice niente', schedaConLaRoba('cavaliere', fatta('cavaliere', { mano: 'spada' })).tratti, [])
+}
+
+// il record dell'abisso di prima dell'azzeramento resta nella riga della home (cfg.fondoDiPrima)
+{
+  const vecchio = { tappa: 6, libera: true, stelle: {}, cfg: { abisso: { fondo: 23 } } }
+  uguale('il fondo vecchio si ricorda', ricordaIlFondo(vecchio, 0), true)
+  azzeraIlVecchio(vecchio)
+  controlla('dopo l\'azzeramento la riga dice ancora il fondo vecchio',
+            manifesto.riassunto(vecchio).includes('piano più profondo 23'), manifesto.riassunto(vecchio))
+  const giaAzzerato = { tappa: 6, libera: true, stelle: {}, cfg: { mondo: MONDO } }
+  uguale('chi era già azzerato lo ritrova dal primato', ricordaIlFondo(giaAzzerato, 17), true)
+  controlla('e la riga lo dice', manifesto.riassunto(giaAzzerato).includes('piano più profondo 17'), manifesto.riassunto(giaAzzerato))
+  uguale('un primato più basso non lo abbassa', ricordaIlFondo(giaAzzerato, 9), false)
 }
 
 nota(`${EROI.length} avventure, una per eroe`)

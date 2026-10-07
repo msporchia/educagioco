@@ -68,7 +68,7 @@ export default {
        Il record è di ogni avventura (docs/sotterraneo/avventure.md): qui il
        più giù fra tutte, come tappa e stelle, che fuori sono già il massimo. */
     const cfg = av.cfg || {}
-    const fondo = Math.max(0,
+    const fondo = Math.max(cfg.fondoDiPrima || 0,
       ...Object.values(cfg.avventure || {}).map(a => (a && a.abisso && a.abisso.fondo) || 0))
     if (av.libera && fondo) return `abisso · piano più profondo ${fondo}${coda}`
     const i = Math.min(av.tappa || 0, QUANTE_TAPPE - 1)

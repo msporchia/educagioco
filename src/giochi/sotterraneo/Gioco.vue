@@ -8,7 +8,7 @@
 import { ref, shallowRef, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { segna, segnaBest } from '../../store/profile.js'
+import { state, segna, segnaBest } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, chiusaPerEta, completa, scelta, ricorda, ritocca } from '../campagne.js'
@@ -29,7 +29,7 @@ import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba } from './motore/corredo.js'
 import { Bottega } from './motore/bottega.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
-import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, cominciata }
+import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata }
   from './motore/avventure.js'
 import { PORTALE } from './dati/terra-mappa.js'
 import { iconaDi } from './dati/terra.js'
@@ -78,6 +78,7 @@ let orologio = 0
 let ultimoAvviso = 0
 
 // i salvataggi di prima si azzerano, una volta: restano il record di fuori e l'eroe scelto (docs/sotterraneo/avventure.md)
+ritocca(CHIAVE, c => ricordaIlFondo(c, state.profile.best?.sotFondo), { subito: true })
 ritocca(CHIAVE, azzeraIlVecchio, { subito: true })
 
 // la pausa (giochi/pausa.js): il ⏸, il telefono posato, il foglio del `?`, e anche il cartello di un
