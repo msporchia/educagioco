@@ -44,7 +44,7 @@ import { PER_COLTURA, PER_RICETTA, MINUTO } from '../src/giochi/fattoria/dati/co
 import { sogliaDi } from '../src/giochi/fattoria/dati/livelli.js'
 import { FILA_ATTUALE } from '../src/giochi/costruttore/dati/campagna.js'
 // le discese del sotterraneo stanno sulla terra di sopra: ci si va a piedi, come nelle prove
-import { scendiNelSotterraneo } from '../test/aiuto/browser.mjs'
+import { scendiNelSotterraneo, giocaGiornata } from '../test/aiuto/browser.mjs'
 
 const LIVELLO_FOTO = 10
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -328,9 +328,13 @@ const RICETTE = [
   { file: 'pozioni-gioco', dove: 'pozioni', attesa: '.pz-mappa',
     passi: [['.pz-tappa:not(.pz-chiusa)', 1600]] },
 
-  { file: 'bancarella-mappa', dove: 'bancarella', attesa: '.giornata, .tappe, .mappa' },
-  { file: 'bancarella-gioco', dove: 'bancarella', attesa: '.giornata, .tappe, .mappa',
-    passi: [['.tappa:not(.chiusa), .giornata', 1800]] },
+  /* il giro del mondo: l'aereo dopo un attimo, posato alla prima città
+     (docs/bancarella/mappa.md); il gioco si raggiunge come lo raggiunge un
+     bambino, dal mondo alla città al banco */
+  { file: 'bancarella-mappa', dove: 'bancarella', attesa: '[data-mondo] [data-citta]',
+    passi: [page => page.waitForTimeout(600)] },
+  { file: 'bancarella-gioco', dove: 'bancarella', attesa: '[data-mondo] [data-citta]',
+    passi: [async page => { await giocaGiornata(page, 'banchetto'); await page.waitForTimeout(1800) }] },
 
   { file: 'survivors-mappa', dove: 'survivors', attesa: '.sv-mappa' },
   { file: 'survivors-gioco', dove: 'survivors', attesa: '.sv-mappa',

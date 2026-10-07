@@ -6,7 +6,8 @@
    sale una leva per volta. Qui si guarda il giro completo, che nessun
    conto può dire:
      · dalla home ci si arriva, e col tasto ‹ si torna indietro
-     · le giornate di mercato: la prima è aperta, le altre no
+     · il giro del mondo: le città, la prima è aperta, le altre no; ogni
+       città ha la sua piazza coi banchi, e un banco è una giornata
      · **niente da aprire**: la merce della tappa è tutta in vista nelle
        ceste, e quello che il cliente chiede è sempre lì davanti
      · la cassa arriva da sola quando la spesa è completa, ed è
@@ -21,18 +22,14 @@
        è un `setTimeout` e quindi scatterebbe anche col velo davanti
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi,
-         TELEFONO, scegli } from '../aiuto/browser.mjs'
+         TELEFONO, scegli, giocaGiornata } from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNE, premioCliente } from '../../src/data/bancarella.js'
 
-/* la giornata di prima, lasciata a metà dal `semina` che ricarica, resta in
-   sospeso: la mappa chiede prima di buttarla (integrazione/bancarella-sosta) */
-async function apriGiornata(id) {
-  await page.locator(`.giornata[data-camp="${id}"]`).click()
-  if (await page.locator('[data-chiede]').count())
-    await page.click('[data-chiede] [data-azione="comincia"]')
-  await page.waitForSelector('.banco', { timeout: 5000 })
-}
+/* si arriva alla giornata come un bambino: il mondo, la città, il banco. La
+   giornata di prima, lasciata a metà dal `semina` che ricarica, resta in
+   sospeso: la carta chiede prima di buttarla (integrazione/bancarella-sosta) */
+const apriGiornata = id => giocaGiornata(page, id)
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
@@ -46,22 +43,21 @@ uguale('c\'è un solo tasto per tornare indietro',
 await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('.carte', { timeout: 5000 })
 await scegli(page, 'bancarella')
-await page.waitForSelector('.giornate', { timeout: 5000 })
+await page.waitForSelector('[data-mondo]', { timeout: 5000 })
 
-/* ---------- 2. le giornate di mercato ---------- */
+/* ---------- 2. il giro del mondo: le città, e dentro i banchi ---------- */
 const mappa = await page.evaluate(() => ({
-  quante: document.querySelectorAll('.giornata').length,
-  chiuse: document.querySelectorAll('.giornata.chiusa').length,
-  libera: !!document.querySelector('.giornata.libera'),
-  nomi: [...document.querySelectorAll('.giornata b')].map(b => b.textContent),
+  quante: document.querySelectorAll('[data-citta]').length,
+  chiuse: document.querySelectorAll('[data-citta][data-stato="chiusa"]').length,
+  libera: document.querySelector('[data-citta="cairo"]')?.dataset.stato,
+  nomi: [...document.querySelectorAll('[data-citta]')].map(b => b.getAttribute('aria-label').split(':')[0]),
 }))
-controlla('le giornate sono più di una', mappa.quante >= 3, `${mappa.quante} giornate`)
+controlla('le città sono più di una', mappa.quante >= 4, `${mappa.quante} città`)
 uguale('a profilo vuoto solo la prima è aperta', mappa.chiuse, mappa.quante - 1)
-controlla('la giornata libera non c\'è ancora', !mappa.libera)
-nota('giornate: ' + mappa.nomi.join(' · '))
+uguale('la giornata libera sta in una città chiusa', mappa.libera, 'chiusa')
+nota('città: ' + mappa.nomi.join(' · '))
 
-await page.locator('.giornata').first().click()
-await page.waitForSelector('.banco', { timeout: 5000 })
+await apriGiornata('banchetto')
 
 /* il cartello di arrivo al banco: finché è su il tempo non scorre */
 const fermo = await page.evaluate(async () => {
@@ -280,14 +276,19 @@ nota('fasce incontrate: ' + chiavi.join(' · ') + ` · ${p.coins} monete guadagn
 
 /* la giornata dopo adesso è aperta */
 await page.locator('.bottone.chiaro').click()
-await page.waitForSelector('.giornate', { timeout: 3000 })
+await page.waitForSelector('[data-piazza]', { timeout: 3000 })
 const dopo = await page.evaluate(() => ({
-  chiuse: document.querySelectorAll('.giornata.chiusa').length,
-  fatte: document.querySelectorAll('.giornata.fatta').length,
-  quante: document.querySelectorAll('.giornata').length,
+  chiuse: document.querySelectorAll('[data-camp][data-stato="chiusa"]').length,
+  fatte: document.querySelectorAll('[data-camp][data-stato="fatta"]').length,
+  ora: document.querySelector('[data-camp][data-stato="ora"]')?.dataset.camp,
+  stelle: document.querySelectorAll('[data-stella-banco]').length,
+  quante: document.querySelectorAll('[data-camp]').length,
 }))
+uguale('finita una giornata si torna alla piazza della sua città', await page.locator('[data-piazza]').getAttribute('data-citta-di'), 'bologna')
 uguale('la giornata finita si vede come fatta', dopo.fatte, 1)
-uguale('e quella dopo si è aperta', dopo.chiuse, dopo.quante - 2)
+uguale('con la sua stella', dopo.stelle, 1)
+uguale('e quella dopo si è aperta', dopo.ora, 'paese')
+uguale('nessun\'altra è chiusa, in una città di due', dopo.chiuse, 0)
 
 /* ---------- 6b. il gradino nuovo: il totale lo batte lui ----------
    È la giornata che il difetto ha fatto nascere. La cassa non somma più:
@@ -296,7 +297,7 @@ uguale('e quella dopo si è aperta', dopo.chiuse, dopo.quante - 2)
    senza sapere quanto costa la spesa non vuol dire niente. */
 await semina(page, { mercato: { tappa: 2, libera: false, v: 2 } })
 await scegli(page, 'bancarella')
-await page.waitForSelector('.giornate', { timeout: 5000 })
+await page.waitForSelector('[data-mondo]', { timeout: 5000 })
 await apriGiornata('conto-dieci')
 await page.waitForFunction(() => !window.__shop.cambio.value, { timeout: 5000 })
 
@@ -359,7 +360,7 @@ nota(`totale battuto: ${conto.scritto} € su ${conto.totale}c`)
    cresce si vede solo più avanti, e va provato lì. */
 await semina(page, { mercato: { tappa: 14, libera: false, v: 2 } })
 await scegli(page, 'bancarella')
-await page.waitForSelector('.giornate', { timeout: 5000 })
+await page.waitForSelector('[data-mondo]', { timeout: 5000 })
 await apriGiornata('resto-copie')
 await page.waitForFunction(() => !window.__shop.cambio.value, { timeout: 5000 })
 
@@ -421,7 +422,7 @@ nota(`due cose uguali: pezzi per articolo [${fiera.quanti.join(',')}] · ` +
    la risposta la dà il bambino col tasto ✓. */
 await semina(page, { mercato: { tappa: 15, libera: false, v: 2 } })
 await scegli(page, 'bancarella')
-await page.waitForSelector('.giornate', { timeout: 5000 })
+await page.waitForSelector('[data-mondo]', { timeout: 5000 })
 await apriGiornata('mente')
 await page.waitForFunction(() => !window.__shop.cambio.value, { timeout: 5000 })
 

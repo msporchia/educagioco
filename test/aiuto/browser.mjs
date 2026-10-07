@@ -15,6 +15,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve, join } from 'node:path'
+import { CITTA } from '../../src/data/bancarella-mondo.js'
 
 export const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 /* Di regola si prova `dist/index.html`, che è quello che esce dal build.
@@ -284,6 +285,31 @@ export async function parti(page, quale) {
   const nodo = typeof quale === 'string' ? page.locator(quale).first() : quale
   await nodo.click()
   await page.click('[data-fumetto] [data-azione="parti"]')
+}
+
+/* Apre una giornata della bancarella dal giro del mondo
+   (docs/bancarella/mappa.md): il tocco su una città apre il fumetto e
+   «▶ entra» porta nella sua piazza; lì il tocco su un banco apre il suo e
+   «▶ gioca» comincia la giornata. Dalla piazza giusta si parte da lì, da
+   un'altra si passa dal cartello del mondo; con una giornata a metà la carta
+   chiede, e qui si risponde «comincio». `id` è l'id della giornata
+   (`banchetto`, `resto-copie`, `libera`…). */
+export async function giocaGiornata(page, id) {
+  const citta = CITTA.find(c => c.giornate.includes(id)).id
+  const piazza = `[data-piazza][data-citta-di="${citta}"]`
+  await page.waitForSelector('[data-mondo], [data-piazza]', { timeout: 8000 })
+  if (!(await page.locator(piazza).count())) {
+    if (!(await page.locator('[data-mondo]').count())) await page.click('[data-azione="al-mondo"]')
+    await page.waitForSelector('[data-mondo]', { timeout: 5000 })
+    await page.locator(`[data-citta="${citta}"]`).click()
+    await page.click(`[data-fumetto-per="${citta}"] [data-azione="entra"]`)
+    await page.waitForSelector(piazza, { timeout: 5000 })
+  }
+  await page.locator(`[data-camp="${id}"]`).click()
+  await page.click(`[data-fumetto-per="${id}"] [data-azione="gioca"]`)
+  if (await page.locator('[data-chiede]').count())
+    await page.click('[data-chiede] [data-azione="comincia"]')
+  await page.waitForSelector('.banco', { timeout: 5000 })
 }
 
 /* La mappa di Passo passo ha due mondi, la valle dipinta e lo zaino

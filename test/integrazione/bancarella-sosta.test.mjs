@@ -5,7 +5,7 @@
    pagina, e mai in silenzio: una giornata nuova chiede prima di buttarla.
    Vedi docs/bancarella/regole.md, «Lasciare a metà».
    `node test/esegui.mjs bancarella-sosta` */
-import { apriBrowser, apriGioco, azzera, attendi, scatto, scegli } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, attendi, scatto, scegli, giocaGiornata } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -14,12 +14,12 @@ await azzera(page)
 
 async function entra() {
   await scegli(page, 'bancarella')
-  await page.waitForSelector('.giornate')
+  await page.waitForSelector('[data-mondo]')
 }
 
 // la prima giornata: un cliente servito, il secondo a metà della spesa
 await entra()
-await page.locator('.giornata').first().click()
+await giocaGiornata(page, 'banchetto')
 await page.waitForFunction(() => window.__shop && !window.__shop.cambio.value, null, { timeout: 4000 })
 const chiesti = () => page.evaluate(() =>
   window.__shop.cliente.value.articoli.flatMap(a => Array(a.quanti).fill(a.emoji)))
@@ -93,8 +93,12 @@ await page.waitForSelector('.carte')
 await entra()
 uguale('anche dopo aver ricaricato la pagina', await page.locator('[data-ripresa]').count(), 1)
 
-/* toccare un'altra giornata non la butta in silenzio */
-await page.click('.giornata:not(.chiusa)')
+/* toccare un'altra giornata non la butta in silenzio: nemmeno dalla piazza */
+await page.locator('[data-citta="bologna"]').click()
+await page.click('[data-fumetto-per="bologna"] [data-azione="entra"]')
+uguale('anche nella piazza la carta resta in cima', await page.locator('[data-piazza]').count() && await page.locator('[data-ripresa]').count(), 1)
+await page.locator('[data-camp="banchetto"]').click()
+await page.click('[data-fumetto-per="banchetto"] [data-azione="gioca"]')
 uguale('una giornata nuova chiede prima', await page.locator('[data-chiede]').count(), 1)
 await page.click('[data-chiede] [data-azione="comincia"]')
 await attendi(page, 200)

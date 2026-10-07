@@ -2,8 +2,8 @@
    ceste quello che hanno chiesto, poi si posano le monete sul piatto una
    alla volta finché il resto non è quello giusto, e se ne vanno contenti.
 
-   Si entra nella prima giornata (`.giornata:not(.chiusa)`, sempre
-   aperta): è la più semplice della campagna, quella dove la cassa somma
+   Si entra nella prima giornata (`banchetto`, sempre aperta, dal mondo alla
+   città al banco: `giocaGiornata`): è la più semplice della campagna, quella dove la cassa somma
    ancora da sola — le giornate col totale da battere sulla tastiera o
    col resto a mente vengono dopo, e per questa clip servirebbero solo
    passi in più senza aggiungere niente da vedere. Arrivare al banco
@@ -40,9 +40,10 @@
    cliente isolato.
 
    Dipende da `window.__shop` (`cliente`, `momento`, `manca`, `scomponi`)
-   e dai selettori `.giornate`, `.giornata:not(.chiusa)`, `.cesta[data-em]`,
+   e dai selettori `[data-mondo]`, `[data-camp]`, `.cesta[data-em]`,
    `.scomparto[data-v]`: se uno cambia forma, è qui che va aggiornata la
    ricetta. */
+import { giocaGiornata } from '../../test/aiuto/browser.mjs'
 
 async function servi (page) {
   const emoji = await page.evaluate(() => {
@@ -72,11 +73,11 @@ async function servi (page) {
 }
 
 export default {
-  file: 'clip-bancarella', dove: 'bancarella', attesa: '.giornate',
+  file: 'clip-bancarella', dove: 'bancarella', attesa: '[data-mondo] [data-citta]',
   // 1500 ms di cartello + ~1150 di saluto prima che il cliente dica cosa
   // vuole (`apriTappa`/`alBanco` in `BancarellaGame.vue`): si aspettano
   // qui, fuori dalla registrazione.
-  passi: [['.giornata:not(.chiusa)', 2700]],
+  passi: [async page => { await giocaGiornata(page, 'banchetto'); await page.waitForTimeout(2700) }],
   clip: {
     secondi: 9,
     async durante (page) {
