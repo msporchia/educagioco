@@ -4,8 +4,10 @@ Il finale che non finisce, in due: **il sentiero del coniglio** e **il
 sentiero del cane**, ognuno in fondo alla sua strada sulla mappa
 ([mappa.md](mappa.md)). Posti fatti al momento da
 `src/giochi/passo-passo/motore/generatore.js`, con le bozze di
-`motore/prati.js`, `motore/pascoli.js`, `motore/sagome.js` e
-`motore/sagome-cane.js`, e controllati col risolutore.
+`motore/prati.js`, `motore/pascoli.js`, `motore/sagome.js`,
+`motore/sagome-cane.js` e `motore/sagome-miste.js`, e controllati col
+risolutore. **Il finale di chi ha tutte le carte**, misurato dal programma
+più corto e non dalle frecce, sta in [sentiero-finale.md](sentiero-finale.md).
 
 ## Le regole
 
@@ -25,10 +27,14 @@ sentiero del cane**, ognuno in fondo alla sua strada sulla mappa
 - **Mescola solo quello che si è finito** (`INGREDIENTI`): ogni gradino
   **finito** della campagna porta una cosa — una regola del mondo, il cane,
   una carta. Finito e non visto: il gradino in corso si sta imparando.
+- **Chi ha le carte trova quasi solo posti con lo zaino**, e il posto
+  chiede le carte che ha: col se, ogni posto ha il se
+  ([sentiero-finale.md](sentiero-finale.md)).
 - **La varietà la fanno le forme.** A ogni posto si tira la famiglia
   (`famigliaDi`), e dentro la famiglia la forma. Quella del posto di prima
   pesa poco (il ricordo è «famiglia:forma», `ricordoDi`): la famiglia un
-  terzo, la forma un quinto, una sagoma un settimo.
+  quinto, la forma un quinto, una sagoma un settimo. Il prato, per chi ha
+  le carte, pesa sempre per la stessa parte, qualunque famiglia sia uscita.
 - **Il fuori è fatto di macchie** (boschetto, stagno, siepe), mai di prato:
   un pezzo d'erba che dalla strada non si raggiunge sembra una strada.
 
@@ -46,14 +52,19 @@ Senza zaino (`FORME` in `motore/generatore.js`):
 | cane | **galleria** | una siepe taglia il prato: di là le pecore e il ghiaccio, si passa dalla buca | ghiaccio e buche |
 | cane | **corridoio** | il gregge sparso, da mettere in fila davanti a un corridoio stretto | — |
 
-Con lo zaino (`SAGOME`, programma prima e posto dopo): col 🔁 la collina,
-le terrazze, il campo arato, di sasso in sasso, la spirale di ghiaccio, le
-pozze, **le gallerie**; col «fino a» i gradini storti, il campo storto, il
-fiume dei sassi, scale e pianerottoli, **le gallerie storte**; col ❓ le
-colline, il sentiero dei segni, il bosco ghiacciato. Col cane: **il
-pettine** e **il pettine doppio** (🔁), **il pettine storto** (🚩), **le
-nicchie** (❓). Le gallerie sono corridoi chiusi dalla siepe, uno sotto
-l'altro, e la buca in fondo a ognuno sbuca all'inizio del dopo.
+Il lago lo trova solo chi non ha ancora le carte: per chi le ha i prati
+partono da 15 frecce (`PASSI_MIN`), e dieci scivolate sono quattro carte.
+
+Con lo zaino (`SAGOME`, programma prima e posto dopo), per chi ha il solo
+ciclo o anche il «fino a»: col 🔁 la collina, le terrazze, il campo arato,
+di sasso in sasso, la spirale di ghiaccio, le pozze, **le gallerie**; col
+«fino a» i gradini storti, il campo storto, il fiume dei sassi, scale e
+pianerottoli, **le gallerie storte**. Col cane: **il pettine** e **il
+pettine doppio** (🔁), **il pettine storto** (🚩). Le gallerie sono
+corridoi chiusi dalla siepe, uno sotto l'altro, e la buca in fondo a
+ognuno sbuca all'inizio del dopo. Col se, le sagome miste: le colline
+alte e ripide, il torrente gelato, le terrazze dei fossi, le nicchie del
+cane ([sentiero-finale.md](sentiero-finale.md)).
 
 - **Le pecore**: tre, quattro, a volte cinque (`PECORE`); con quattro o più
   le prime stanno in fila, il gregge già mezzo riunito. Il cancello ne ha
@@ -75,8 +86,9 @@ pavimento).
 |:--|:--|:--|:--|
 | prato | ≥ 10 (8 al secondo giro) | labirinto e fiumi ≥ 14, lago ≥ 10 scivolate | `FORME.prato` |
 | pascolo | ≥ 12 (9 al secondo giro), 2–3 pecore | ≥ 16, il cancello ≥ 20; 3–5 pecore | `FORME.pascolo` |
-| zaino | ≥ 12 mosse (8 o 10 con scivolate e salti) | ≥ 15 (10 la spirale, 12 coi salti e il bosco ghiacciato) | `STRADA_MIN` in `motore/sagome.js` |
+| zaino | ≥ 12 mosse (8 o 10 con scivolate e salti) | ≥ 15 (10 la spirale, 12 coi salti) | `STRADA_MIN` in `motore/sagome.js` |
 | zaino | lo zaino tiene ≥ 5 carte | uguale | `ZAINO_MIN` |
+| con tutte le carte | — | il programma più corto ≥ 8 carte e ≥ 15 mosse | `CARTE_MIN`, `PASSI_MIN` ([sentiero-finale.md](sentiero-finale.md)) |
 
 E un tetto: la strada con la carota sta nella fila (36 frecce nei prati,
 34 nei pascoli, 24 nel lago).
@@ -84,8 +96,10 @@ E un tetto: la strada con la carota sta nella fila (36 frecce nei prati,
 ## I numeri, misurati
 
 Da `node strumenti/passo-passo/sentiero.mjs` (mille posti per famiglia,
-tutto sbloccato; il tempo è su un portatile, un telefono va tre o quattro
-volte più piano). «Corta» è la strada più corta senza carota.
+tutto sbloccato, prima delle sagome miste: oggi con tutto sbloccato
+escono quelle, e i loro numeri stanno in [sentiero-finale.md](sentiero-finale.md);
+le righe qui valgono per la mano che le trova). «Corta» è la strada più
+corta senza carota.
 
 | famiglia | corta prima: min · mediana · max | corta dopo: min · 10% · mediana · 90% · max | forme prima → dopo |
 |:--|:--|:--|:--|
@@ -93,22 +107,21 @@ volte più piano). «Corta» è la strada più corta senza carota.
 | pascolo | 12 · 17 · 25 | 16 · 18 · 23 · 30 · 33 | 1 → 4 |
 | 🔁 coniglio | 8 · 12 · 48 | 10 · 10 · 16 · 25 · 48 | 6 → 7 |
 | 🚩 coniglio | 10 · 14 · 41 | 12 · 13 · 16 · 22 · 34 | 4 → 5 |
-| ❓ coniglio | 10 · 12 · 20 | 12 · 12 · 15 · 18 · 20 | 3 → 3 |
-| 🔁 🚩 ❓ cane | — | 15 · 15 · 15–17 · 16–22 · 18–23 | 0 → 4 |
+| 🔁 🚩 cane | — | 15 · 15 · 15–17 · 16–22 · 18–23 | 0 → 3 |
 
 - **Regole per posto**: un prato ne mette insieme 2,4 in media (prima 2,5,
   ma su prati da 10 frecce); un labirinto tre o quattro. Un pascolo ha il
   ghiaccio una volta su tre e la galleria una su quattro.
 - **Pecore**: nei pascoli 3 (54%), 4 (20%), 5 (1%), 2 nel cancello (25%);
   nello zaino col cane da 3 a 6 (il pettine doppio).
-- **In fila, come li gioca un bambino** (mille posti col ricordo): il
-  coniglio passa per 18 forme e ne ripete una di fila 8 volte su mille; il
-  cane per 8 forme, 17 volte su mille.
-- **Il tempo per nascere**: il coniglio 1,8 ms in media, 19 ms al 99%; il
-  cane 18 ms in media, 87 ms al 95%, 160 al 99%, 279 al massimo. Per questo
-  il prossimo posto si fa mentre il bambino guarda il cartello della
-  vittoria (`preparaIlProssimo` in `Gioco.vue`): lo stesso seme fa lo
-  stesso posto, quindi è solo un anticipo.
+- **In fila, come li gioca un bambino** (trecento posti col ricordo, col
+  «fino a» in mano): il coniglio passa per 14 forme, il cane per 6.
+- **Il tempo per nascere** (un portatile; un telefono va tre o quattro
+  volte più piano), senza carte in mano: un prato 6 ms in media, 31 al
+  99%; un pascolo 49 ms in media, 250 al 99%. Per questo il
+  prossimo posto si fa mentre il bambino guarda il cartello della vittoria
+  (`preparaIlProssimo` in `Gioco.vue`): lo stesso seme fa lo stesso posto,
+  quindi è solo un anticipo.
 
 ## I controlli
 
@@ -125,8 +138,11 @@ volte più piano). «Corta» è la strada più corta senza carota.
   posto attorno, girato e specchiato a caso. Il motore rigioca tutto e
   butta il posto se la scatola non serve, se una mossa ingenua vince, o se
   col «fino a» un numero qualunque al posto del colore vince lo stesso.
+  Per chi ha tutte le carte anche l'asticella del finale
+  ([sentiero-finale.md](sentiero-finale.md)).
 - Se niente regge c'è un posto di riserva (`RISERVA`, `RISERVA_CANE`,
-  `RISERVA_ZAINO`): su mille posti per famiglia non è mai uscito.
+  `RISERVA_ZAINO`, e per chi ha tutte le carte `RISERVA_FINALE` e
+  `RISERVA_NICCHIE`): su mille posti per famiglia non è mai uscito.
 
 ## Monete e record
 
@@ -159,8 +175,9 @@ Provato:
   costava mezzo secondo.
 
 Nei test: `unita/passo-passo-sentiero` (ogni sentiero solo con le sue
-famiglie; ogni posto si vince, sta sopra il pavimento della sua forma e usa
-le regole che dice; le forme non si ripetono di fila; il risolutore svelto
-uguale a quello del motore su centoventi pascoli; ogni sagoma; il record di
-ieri al coniglio), `integrazione/passo-passo` (le due caselle, i due
-record, il sentiero del cane col cane).
+famiglie, per tre mani: senza carte, col ciclo, con tutte; ogni posto si
+vince, sta sopra il pavimento della sua forma e usa le regole che dice; le
+forme non si ripetono di fila; il risolutore svelto uguale a quello del
+motore su centoventi pascoli; ogni sagoma con la sua mano; il finale; il
+record di ieri al coniglio), `integrazione/passo-passo` (le due caselle, i
+due record, il sentiero del cane col cane).

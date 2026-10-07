@@ -8,6 +8,7 @@ sette anni e mezzo le carte e lo zaino. Codice in `src/giochi/passo-passo/`.
 - [zaino.md](zaino.md) — carte, zaino, ripeti / fino a / se, le lastre, le soluzioni scritte
 - [stelle-e-aiuti.md](stelle-e-aiuti.md) — le quattro stelle, la strada più corta, monete, la scala del 💡
 - [sentiero.md](sentiero.md) — i due sentieri senza fine, del coniglio e del cane: le forme, il pavimento prima e dopo coi numeri misurati, i controlli, un record ciascuno
+- [sentiero-finale.md](sentiero-finale.md) — il finale di chi ha tutte le carte: la difficoltà si misura dal programma più corto, non dalle frecce; le sagome miste, l'asticella, i numeri prima e dopo
 - [mappa.md](mappa.md) — la mappa delle isole: la valle sul fondale dipinto (foglietto, strumento, blocchi, vista) e il mondo dello zaino, le due caselle dei sentieri, il segnalino che salta, il fumetto
 - [caselle-e-stendardi.md](caselle-e-stendardi.md) — il tondo col numero del livello (fatta, adesso, aperta, chiusa, le stelle accanto) e lo stendardo col nome dell'isola, e perché non c'è un disegno per livello
 - [sosta.md](sosta.md) — lasciare a metà: la fila di ogni livello resta, il sentiero si riprende dalla carta in cima

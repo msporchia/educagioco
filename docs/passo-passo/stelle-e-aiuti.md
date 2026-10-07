@@ -28,7 +28,9 @@ gratis, prezzi, secondo tocco) sta in [../core/aiuti.md](../core/aiuti.md).
   scritte, e siccome la stella chiede «al più» chi trova di meglio non perde
   niente. Che le soluzioni scritte siano davvero le più corte lo controlla
   `strumenti/passo-passo/minimi.mjs`, che cerca il programma più corto coi
-  cicli (scatole fino a sei carte).
+  cicli (scatole fino a sei carte). Nei sentieri lo cerca `cercaProgramma`
+  (`motore/programmi.js`), senza tetto alle scatole: vedi
+  [sentiero-finale.md](sentiero-finale.md).
 - **Il 💡 porta sempre alla strada più corta**: se la fila arriva già ma è
   lunga, il 🔎 dice dove accorciarla, e chi segue gli aiuti prende anche la
   quarta — se no il gioco ti aiuterebbe e poi ti rimprovererebbe.

@@ -66,7 +66,7 @@ scrivono niente: stanno in [sprite.md](sprite.md).
 | `npm run quiz:eta` | chi vede cosa: la calibrazione per età, e i buchi |
 | `node strumenti/generale/piani.mjs` | il simulatore dei piani del Generale |
 | `node strumenti/passo-passo/minimi.mjs` | le strade più corte di Passo passo, messe alla prova |
-| `node strumenti/passo-passo/sentiero.mjs` | i sentieri senza fine di Passo passo: mille posti per famiglia, la strada più corta, le regole, le pecore, le forme, il tempo |
+| `node strumenti/passo-passo/sentiero.mjs` | i sentieri senza fine di Passo passo: mille posti per famiglia, il programma più corto in carte con la mano del bambino (`--mano=`), le mosse, se serve il ciclo o il se, la strada più corta, le forme, il tempo (su più processi; il cane una ventina di minuti) |
 | `node strumenti/scatta-app.mjs <schermata>` | un PNG dell'app servita da Vite (`--porta`, `--tocca`, `--attesa`), in `tmp/` |
 
 **I banchi sono pagine e vogliono un server**: importano i moduli veri, e
