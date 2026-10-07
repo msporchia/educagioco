@@ -2,8 +2,11 @@
    Vedi docs/passo-passo/regole.md (regole del mondo, cane pastore),
    docs/passo-passo/zaino.md (carte, zaino) e docs/passo-passo/livelli.md
    (i campi di una tappa, le misure di oggi). */
-import { guastiDellaMappa, MOSSE } from './mondo.js'
+import { guastiDellaMappa, MOSSE, LEGENDA } from './mondo.js'
 import { CARTE, carteDi, guastiDellaFila, programma, ripeti, se } from './carte.js'
+
+/* una tappa con le pecore nella mappa è del cane (vedi motore/strade.js) */
+export const delCane = t => t.mappa.some(r => [...r].some(ch => !!(LEGENDA[ch] || {}).pecora))
 
 export const SCALINI = [
   { chiave: 'passi', nome: 'Primi passi', icona: '🐾', regola: null,
@@ -637,13 +640,15 @@ export const CAMPAGNA = [
               programma('destra', 'destra', ripeti('casa', ripeti('rosso', 'destra'), ripeti('blu', 'giu')))] },
   { chiave: 'nicchie', nome: 'Le nicchie', icona: '🧱', scalino: 'se',
     portata: 68, premio: 18, tema: 'autunno', carte: ['ripeti', 'fino', 'casa', 'se'], zaino: 8,
-    racconto: 'Nel corridoio le lastre dicono dove c\'è una pecora da spingere in fondo alla sua nicchia: il rosso sotto, il blu sopra. Passandole davanti lei fa un passo, ma la stalla è più in fondo: il cane ci entra, e torna. Un programma solo per tutto il corridoio; chi scambia i colori infila il muso nella siepe.',
+    racconto: 'Nel corridoio le lastre dicono dove c\'è una nicchia: il rosso sotto, il blu sopra. La pecora sta a metà e la stalla in fondo: passandole davanti lei fa un passo, ma poi il cane deve entrare, e tornare. Un programma solo per tutto il corridoio; chi scambia i colori mette la zampa nel fosso.',
     mappa: [
       'AAA#AAAA#',
       'AAA.AAAA.',
       'AAApAAAAp',
+      'AAA.A~A~.',
       'P.cu.r.ru',
-      'AAAAApAp.',
+      'AAA~A.A.~',
+      'AAAAApApA',
       'AAAAA.A.A',
       'AAAAA#A#A',
     ],
@@ -736,12 +741,151 @@ export const CAMPAGNA = [
                           ripeti('casa', se('rosso', 'giu'), se('blu', 'destra'), se('giallo', 'su')))],
     fragili: [programma('destra', ripeti('casa', se('rosso', 'su'), se('blu', 'destra'), se('giallo', 'giu'))),
               programma('destra', ripeti('casa', ripeti('giallo', 'destra'), ripeti('blu', 'su')))] },
+
+  /* ── in coda: le isolette del cane, aggiunte dopo. Stanno in fondo
+     perché le stelle stanno sotto l'indice: sulla mappa le mette nella
+     loro isola `motore/strade.js`, e il cursore non le conta (vedi «Le
+     tappe in coda» in docs/passo-passo/livelli.md) ── */
+  { chiave: 'cortile', nome: 'Il cortile', icona: '🏡', scalino: 'ripeti',
+    portata: 47, premio: 14, tema: 'autunno', carte: ['ripeti'], zaino: 4,
+    racconto: 'Le stalle fanno l\'angolo del cortile: una fila lungo il fosso, l\'altra giù per il muro. Una scatola per lato, e il numero della prima conta: chi gira presto mette la zampa nel fosso, chi gira tardi sbatte contro il cespuglio dell\'angolo.',
+    mappa: [
+      'A#A#A#A..',
+      'ApBpBpB..',
+      'Pc.....B.',
+      '~~~~~~.p#',
+      'AAAAAA.BB',
+      'AAAAAA.p#',
+      'AAAAAA.BB',
+      'AAAAAA.p#',
+      'AAAAAAAAA',
+    ],
+    soluzioni: [programma(ripeti(6, 'destra'), ripeti(5, 'giu'))],
+    fragili: [programma(ripeti(5, 'destra'), ripeti(5, 'giu')), programma(ripeti(7, 'destra'), ripeti(5, 'giu'))] },
+  { chiave: 'pettine', nome: 'Il pettine', icona: '🚪', scalino: 'ripeti',
+    portata: 50, premio: 16, tema: 'estate', carte: ['ripeti'], zaino: 5,
+    racconto: 'Dal sentiero scendono quattro vicoli stretti, con la stalla in fondo e la pecora a metà: dal sentiero la si sposta di un passo solo, poi il cane deve entrare e uscire. Fra un vicolo e l\'altro c\'è il fosso, e chi sbaglia l\'ordine nella scatola ci mette la zampa.',
+    mappa: [
+      'BBAABBAAB',
+      'P........',
+      'A.~.~c~.A',
+      'ApApApApA',
+      'A.A.A.A.A',
+      'A#A#A#A#A',
+    ],
+    soluzioni: [programma(ripeti(4, 'destra', 'giu', 'su', 'destra'))],
+    fragili: [programma(ripeti(4, 'destra', 'destra', 'giu', 'su')), programma(ripeti(4, 'destra', 'giu', 'destra'))] },
+  { chiave: 'pettine-storto', nome: 'Il pettine storto', icona: '🚩', scalino: 'fino',
+    portata: 63, premio: 16, tema: 'primavera', carte: ['ripeti', 'fino'], zaino: 5,
+    racconto: 'Il pettine, ma i vicoli non sono in fila: fra uno e l\'altro due passi, poi tre, poi due. Contarli non serve, la lastra rossa davanti a ogni vicolo dice dove entrare; chi conta mette la zampa nel fosso, o arriva in fondo con le pecore a metà.',
+    mappa: [
+      'AABAABBAA',
+      'Pr.r.cr.r',
+      'A.~.~~.~.',
+      'ApApAApAp',
+      'A.A.AA.A.',
+      'A#A#AA#A#',
+    ],
+    soluzioni: [programma(ripeti(4, ripeti('rosso', 'destra'), 'giu', 'su'))],
+    fragili: [programma(ripeti(4, ripeti(2, 'destra'), 'giu', 'su')), programma(ripeti(4, ripeti(3, 'destra'), 'giu', 'su'))] },
+  { chiave: 'vicoli', nome: 'I vicoli', icona: '🏘️', scalino: 'fino',
+    portata: 65, premio: 16, tema: 'autunno', carte: ['ripeti', 'fino'], zaino: 7,
+    racconto: 'Tre vicoli lunghi diversi, e ogni pecora va spinta fino in fondo. Il cane scende finché non arriva sulla lastra blu — lì la sua pecora è appena entrata — e risale fino alla rossa. Chi conta i passi lascia le pecore a metà, o sbatte contro la stalla.',
+    mappa: [
+      'AABAABAAB',
+      'Pr.cr..r.',
+      'Ap~~p~~p~',
+      'A.AA.AA.A',
+      'AuAA.AA.A',
+      'A.AA.AAuA',
+      'A#AAuAA.A',
+      'AAAA.AA#A',
+      'AAAA#AAAA',
+    ],
+    soluzioni: [programma(ripeti(3, ripeti('rosso', 'destra'), ripeti('blu', 'giu'), ripeti('rosso', 'su')))],
+    fragili: [programma(ripeti(3, ripeti(2, 'destra'), ripeti('blu', 'giu'), ripeti('rosso', 'su'))),
+              programma(ripeti(3, ripeti('rosso', 'destra'), ripeti(3, 'giu'), ripeti('rosso', 'su'))),
+              programma(ripeti(3, ripeti('rosso', 'destra'), ripeti(5, 'giu'), ripeti('rosso', 'su')))] },
+  { chiave: 'sentiero-gregge', nome: 'Il sentiero del gregge', icona: '🪧', scalino: 'se',
+    portata: 69, premio: 18, tema: 'primavera', carte: ['ripeti', 'fino', 'casa', 'se'], zaino: 9,
+    racconto: 'Le lastre dicono dove va il sentiero — il blu avanti, il rosso giù, il giallo su — e lungo il sentiero cinque pecore aspettano accanto alle loro stalle: basta passarci accanto. Chi legge i colori al contrario sale nel ruscello.',
+    mappa: [
+      'A#AAAA#AA',
+      'ApB~AApBA',
+      'PcurAuurA',
+      'AAprAgArA',
+      'AA#rAgArA',
+      'AA~uugArA',
+      'AAAAp#prA',
+      'AAAA#AAAA',
+    ],
+    soluzioni: [programma('destra', 'destra', ripeti('casa', se('blu', 'destra'), se('rosso', 'giu'), se('giallo', 'su')))],
+    fragili: [programma('destra', 'destra', ripeti('casa', se('blu', 'destra'), se('rosso', 'su'), se('giallo', 'giu'))),
+              programma('destra', 'destra', ripeti('casa', se('blu', 'destra'), se('rosso', 'giu')))] },
+  { chiave: 'nicchie-fonde', nome: 'Le nicchie fonde', icona: '⛏️', scalino: 'se',
+    portata: 70, premio: 18, tema: 'autunno', carte: ['ripeti', 'fino', 'casa', 'se'], zaino: 10,
+    racconto: 'Le nicchie di sotto sono più fonde: dove il corridoio è rosso il cane scende due passi e risale due, dove è blu ne basta uno. Chi tratta tutte le nicchie allo stesso modo lascia le pecore a metà, e chi scambia i colori finisce nel fosso.',
+    mappa: [
+      'AAAA#AAA#',
+      'AAAA.AAA.',
+      'AAAApAAAp',
+      'AA~A.A~A.',
+      'Pcr.u.r.u',
+      'AA.A~A.A~',
+      'AApAAApAA',
+      'AA.AAA.AA',
+      'AA.AAA.AA',
+      'AA#AAA#AA',
+    ],
+    soluzioni: [programma(ripeti('casa', 'destra', se('rosso', 'giu', 'giu', 'su', 'su'), se('blu', 'su', 'giu'))),
+                programma(ripeti('casa', 'destra', se('rosso', ripeti(2, 'giu'), ripeti(2, 'su')), se('blu', 'su', 'giu')))],
+    fragili: [programma(ripeti('casa', 'destra', se('rosso', 'giu', 'su'), se('blu', 'su', 'giu'))),
+              programma(ripeti('casa', 'destra', se('rosso', 'su', 'giu'), se('blu', 'giu', 'giu', 'su', 'su'))),
+              programma(ripeti('casa', 'destra', se('rosso', 'giu', 'giu', 'su', 'su')))] },
+  { chiave: 'gallerie', nome: 'Le gallerie', icona: '🕳️', scalino: 'mondo',
+    portata: 73, premio: 20, tema: 'inverno', carte: ['ripeti', 'fino'], zaino: 5,
+    racconto: 'Tre pecore chiuse dietro le siepi, e il cane ci arriva solo dalla galleria: sbuca alle loro spalle, e loro scappano nella stalla. Per tornare si ripassa dalla buca, poi giù per il guado gelato fino alla galleria dopo. Chi scende senza tornare indietro finisce nel ruscello.',
+    mappa: [
+      'P1BAA#p.1',
+      'C~~~~~~~~',
+      '.2BAA#p.2',
+      '*~~~~~~~~',
+      '.3BAA#p.3',
+    ],
+    soluzioni: [programma(ripeti(3, ripeti(2, 'destra', 'sinistra'), 'giu'))],
+    fragili: [programma(ripeti(3, 'destra', 'sinistra', 'giu')), programma(ripeti(3, ripeti(3, 'destra', 'sinistra'), 'giu')),
+              programma(ripeti(3, 'destra', 'sinistra', 'destra', 'giu'))] },
+  { chiave: 'steccati', nome: 'Gli steccati', icona: '🚧', scalino: 'mondo',
+    portata: 74, premio: 20, tema: 'estate', carte: ['ripeti', 'fino'], zaino: 4, salti: true,
+    racconto: 'Il pascolo è diviso dagli steccati, e ogni recinto è lungo diverso. Il cane scende finché non arriva sulla lastra rossa e salta lo steccato; le pecore accanto alla sua strada scappano nelle stalle. Chi conta i passi sbatte contro lo steccato.',
+    mappa: [
+      'AAAAPAAAA',
+      'A#p.rp#AA',
+      'AAAA-AAAA',
+      'AA#p.AAAA',
+      'AAAAc.p#A',
+      'AA#prAAAA',
+      'AAAA-AAAA',
+      'AAAA.p#AA',
+      'A#p.rAAAA',
+      'AAAA-AAAA',
+      'AA#p.p#AA',
+    ],
+    soluzioni: [programma(ripeti(3, ripeti('rosso', 'giu'), 'salto-giu'))],
+    fragili: [programma(ripeti(3, 'giu', 'salto-giu')), programma(ripeti(3, ripeti(2, 'giu'), 'salto-giu')),
+              programma(ripeti(3, ripeti('rosso', 'giu'), 'giu'))] },
 ]
 
 export const QUANTE_TAPPE = CAMPAGNA.length
 /* le tappe dei piccoli: tutte quelle senza zaino, che vengono per prime */
 export const TAPPE_PICCOLE = CAMPAGNA.findIndex(t => t.zaino)
-export const TAPPE_ZAINO = QUANTE_TAPPE - TAPPE_PICCOLE
+/* la fine della strada del coniglio: dopo vengono solo le tappe del cane
+   in coda. Il cursore `tappa` si ferma qui, e qui la campagna è finita */
+export const FINE_STRADA = CAMPAGNA.findLastIndex(t => !delCane(t)) + 1
+export const TAPPE_ZAINO = FINE_STRADA - TAPPE_PICCOLE
+/* dove una tappa vinta porta il cursore (`posto` di `completa`): le tappe
+   in coda non lo muovono */
+export const postoNelCursore = i => (i < FINE_STRADA ? i : -1)
 /* la fine delle buche: qui si apre il sentiero senza fine e qui si
    fermano i traguardi di prima (vedi docs/passo-passo/sentiero.md) */
 export const TAPPE_PRIME = CAMPAGNA.findIndex(t => t.scalino === 'pecore')
@@ -783,7 +927,9 @@ export function riordina(av, vecchia, nuova = CAMPAGNA.map(t => t.chiave)) {
   const qui = fatte < vecchia.length ? nuova.indexOf(vecchia[fatte])
     : nuova.indexOf(vecchia[vecchia.length - 1]) + 1
   const tappa = qui >= 0 ? qui : fatte
-  return { stelle, tappa, libera: tappa >= nuova.length }
+  // finita vuol dire finita la strada del coniglio: le tappe del cane in coda non contano
+  const delConiglio = c => { const t = CAMPAGNA.find(x => x.chiave === c); return !t || !delCane(t) }
+  return { stelle, tappa, libera: tappa >= nuova.findLastIndex(delConiglio) + 1 }
 }
 
 /* lo zaino, le carte e le soluzioni scritte, senza giocarle: se una
@@ -830,10 +976,15 @@ export function guastiDellaCampagna(campagna = CAMPAGNA) {
   }
 
   /* gli scalini arrivano in fila, nessuno resta vuoto, e la portata e il
-     premio non tornano indietro */
+     premio non tornano indietro: fino all'ultima tappa del coniglio, e
+     lungo la strada del cane (le sue tappe in coda vanno nella loro isola) */
   const ordine = SCALINI.map(s => s.chiave)
-  const fila = campagna.map(t => ordine.indexOf(t.scalino))
-  if (fila.some((n, i) => i > 0 && n < fila[i - 1]))
+  const posto = i => ordine.indexOf(campagna[i].scalino)
+  const fine = campagna.findLastIndex(t => !delCane(t)) + 1
+  const delCaneInFila = campagna.map((_, i) => i).filter(i => delCane(campagna[i]))
+    .sort((a, b) => posto(a) - posto(b) || a - b)
+  const file = [campagna.slice(0, fine).map((_, i) => i), delCaneInFila]
+  if (file[0].some((i, k) => k > 0 && posto(i) < posto(file[0][k - 1])))
     guasti.push('gli scalini non sono in fila: una tappa di un gradino viene dopo una del gradino dopo')
   for (const s of SCALINI)
     if (!campagna.some(t => t.scalino === s.chiave)) guasti.push(`lo scalino «${s.chiave}» non ha nemmeno una tappa`)
@@ -848,10 +999,11 @@ export function guastiDellaCampagna(campagna = CAMPAGNA) {
     if (s && s.carta && !(t.carte || []).includes(s.carta))
       guasti.push(`tappa ${i + 1}: è del gradino «${s.carta}», e non mette in mano la sua carta`)
   }
-  for (let i = 1; i < campagna.length; i++) {
-    if (campagna[i].portata < campagna[i - 1].portata)
-      guasti.push(`tappa ${i + 1}: la portata scende (${campagna[i - 1].portata} → ${campagna[i].portata})`)
-    if (campagna[i].premio < campagna[i - 1].premio)
+  for (const fila of file) for (let k = 1; k < fila.length; k++) {
+    const a = campagna[fila[k - 1]], b = campagna[fila[k]], i = fila[k]
+    if (b.portata < a.portata)
+      guasti.push(`tappa ${i + 1}: la portata scende (${a.portata} → ${b.portata})`)
+    if (b.premio < a.premio)
       guasti.push(`tappa ${i + 1}: il premio scende`)
   }
   return guasti
