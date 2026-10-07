@@ -20,7 +20,8 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
 | `viste/Mappa.vue` | in che mondo si apre, da dove parte il segnalino, il passaggio da un mondo all'altro |
 | `viste/Valle.vue`, `viste/MondoZaino.vue` | i due mondi: il disegno, la vista, il dito, il fumetto |
 | `viste/segnalino.js` | l'animale che salta, per tutti e due i mondi |
-| `viste/Casella.vue`, `viste/Fumetto.vue` | la casella e il fumetto, uguali nei due mondi |
+| `viste/Casella.vue`, `viste/Fumetto.vue` | la casella (un tondo col numero) e il fumetto, uguali nei due mondi |
+| `viste/Stendardo.vue`, `scena/stendardo.js`, `scena/tondo.js` | lo stendardo col nome di un'isola e lo stemma, disegnati in pixel (puro: la stoffa, l'asta, lo scudo); le misure del tondo che servono ai test |
 | `Gioco.vue` | lo stato di ogni casella (`voci`), cosa dice una chiusa, dove sta il segnalino |
 
 ## Il fondale
@@ -39,8 +40,8 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
   alto il ghiaccio (il lago), in alto a sinistra i massi (il ponte di
   sasso), in alto in mezzo le buche (le buche colorate, il cartello a due
   frecce, la tana dello zaino in cima e quella del pascolo sotto), in mezzo
-  il pascolo (il fienile, il recinto). Ogni isola ha un cartello con lo
-  scalino (`cartello` nel foglietto).
+  il pascolo (il fienile, il recinto). Ogni isola ha uno stendardo con lo
+  scalino (`cartello` nel foglietto: il suo centro; vedi «Gli stendardi»).
 - **Il giro non segue l'ordine dei capitoli**: i ponti vanno prato–salto,
   salto–ghiaccio, ghiaccio–buche, buche–massi, massi–prato, più prato–pascolo
   e salto–pascolo e la tana buche–pascolo. Dal ghiaccio ai massi si torna
@@ -177,7 +178,7 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
 
 - **Toccando una casella compare un fumetto sopra di lei** (e sopra
   l'animale, se ci è seduto), con la coda che la indica: lo scalino (e «col
-  cane»), il nome, il racconto, le quattro stelle e «gioca» (o «continua» se
+  cane»), il nome (con davanti l'emoji del livello), il racconto, le quattro stelle e «gioca» (o «continua» se
   c'è una fila a metà). Mai un foglio dal basso. In cima alla mappa, dove
   sopra non c'è posto, va sotto.
 - **Su una chiusa dice cosa manca, senza tasto** (`cosaManca`): «Prima tocca
@@ -190,23 +191,18 @@ blocchi e fumetto. Chi apre cosa sta in [livelli.md](livelli.md#le-due-strade).
   non apre niente ([../core/il-dito.md](../core/il-dito.md)). Toccando fuori
   si chiude.
 
-## Lo stato a colpo d'occhio
+## Le caselle e gli stendardi
 
-| stato | come si vede |
-|---|---|
-| `fatta` | la casella bianca con la sua icona e le stelle prese |
-| `ora` | un anello d'oro che respira, e il segnalino sopra |
-| `aperta` | la casella bianca, stelle spente |
-| `chiusa` | color pesca, col lucchetto |
+Una casella è un tondo col numero del livello, e il nome di un'isola è uno
+stendardo: come sono fatti, lo stato a colpo d'occhio e perché stanno in
+[caselle-e-stendardi.md](caselle-e-stendardi.md).
 
-Una casella con una fila a metà ha la ✏️ ([sosta.md](sosta.md)). Un'isola
-con tutte le caselle chiuse non è ancora raggiunta: le sue caselle e il suo
-cartello sono velati. La partita a metà del sentiero (`Ripresa.vue`) sta
-ferma in cima, sopra i due mondi.
+La partita a metà del sentiero (`Ripresa.vue`) sta ferma in cima, sopra i
+due mondi.
 
 Nei test: `unita/passo-passo-valle` (il modulo è quello del foglietto, una
-casella per tappa, ogni casella su un sentiero e staccata dalle altre e dai
-cartelli; a sedici punti della campagna ogni casella aperta si raggiunge,
+casella per tappa, ogni casella su un sentiero e staccata dalle altre e dagli
+stendardi, che non coprono caselle, sentieri né ponti; a sedici punti della campagna ogni casella aperta si raggiunge,
 le isole chiuse no, i blocchi stanno sui ponti giusti e ci si ferma prima;
 gli animali e la durata dei viaggi), `unita/passo-passo-isole` (lo zaino a
 cinque larghezze: caselle nello schermo e nella loro isola, isole che non
@@ -214,10 +210,10 @@ si toccano, il ponte che non passa sopra il cane, il bivio che non copre
 niente, la tana in cima da cui si arriva a tutto), `integrazione/passo-passo-mappa`
 (col dito vero). Bersagli: la mappa `[data-mappa]` con `[data-mondo="valle"|"zaino"]`,
 la vista `[data-isole]` (nella valle con `[data-camera]`); i cartelli
-`[data-insegna]` con `[data-scalino]` (nella valle anche `[data-isola]`,
+`[data-insegna]` (lo stendardo, col nome come testo) con `[data-scalino]` (nella valle anche `[data-isola]`,
 `[data-animale]`, `[data-velata]`; nello zaino questi stanno sulle isole
 `[data-isola="<chiave>"]`); le caselle `[data-tappa="<indice>"|"senza-fine"|"senza-fine-cane"]`
-con `[data-stato]` e `[data-strada="coniglio"|"cane"]`, l'animale di un
+con `[data-stato]` e `[data-strada="coniglio"|"cane"]` (il numero sta in `.pp-tondo b`, le stelle di una fatta in `[data-stelle]` con `[data-piene]`), l'animale di un
 sentiero `[data-sentiero-di="coniglio"|"cane"]`, la matita
 `[data-a-meta]`; i blocchi `[data-blocco="<ponte>"]` con `[data-chiude]`;
 le tane `[data-tana]` con `[data-aperta]`; i passaggi `[data-passaggio="zaino"|"valle"]`;
@@ -226,7 +222,7 @@ i bivi dello zaino `[data-bivio]` con `[data-ramo]` e le assi
 `[data-animale]`, `[data-al]` e `[data-in-viaggio]`, la nuvoletta `.pp-sbuffo`;
 il fumetto `[data-fumetto]` con `[data-fumetto-per]` (un indice,
 un sentiero, `blocco:<ponte>`, `zaino`), `[data-azione="parti"]`,
-`[data-serve]` e, su un sentiero, `[data-record]`. `giocaSullIsola(page, indice)` in `test/aiuto/browser.mjs`
+`[data-serve]` e, su un sentiero, `[data-record]`; nel fumetto l'emoji del livello `[data-livello-icona]`. `giocaSullIsola(page, indice)` in `test/aiuto/browser.mjs`
 passa di là dalla tana se la casella sta nell'altro mondo, aspetta il
 segnalino fermo e fa i due tocchi; `statoSullIsola` legge lo stato (di là
 da una tana chiusa è `chiusa`).
