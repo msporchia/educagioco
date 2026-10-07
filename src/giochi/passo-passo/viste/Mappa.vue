@@ -379,14 +379,14 @@ const etichetta = c => (c.tipo === 'sentiero'
           <path v-for="s in isole.filter(s => s.velata)" :key="'v' + s.k" class="pp-nebbia" :d="forma(s)" />
         </svg>
 
-        <!-- i cartelli delle isole: il nome dello scalino; gli isolotti del cane, la sua carta -->
+        <!-- i cartelli delle isole: la carta dello scalino (il pascolo, il cane pastore); gli isolotti del cane, la sua carta -->
         <template v-for="s in isole" :key="'n' + s.k">
           <div v-if="s.cartello && s.scalinoDati" class="pp-insegna" :class="{ 'pp-insegna-velata': s.velata }"
                :data-scalino="s.scalino" :data-insegna="s.chiave"
                :style="{ [s.cartello.lato > 0 ? 'right' : 'left']: (s.cartello.lato > 0 ? quadro.W - s.x - s.w + 14 : s.x + 14) + 'px',
                          top: s.cartello.y + 'px', maxWidth: (s.w - 28) + 'px' }">
-            <span class="pp-insegna-icona pp-em">{{ s.animale === 'cane' ? '🐑' : s.scalinoDati.icona }}</span>
-            <b>{{ s.animale === 'cane' ? 'Il cane pastore' : s.scalinoDati.nome }}</b>
+            <span class="pp-insegna-icona pp-em">{{ s.scalinoDati.icona }}</span>
+            <b>{{ s.scalinoDati.nome }}</b>
           </div>
           <div v-else-if="s.isolotto && s.scalinoDati" class="pp-distintivo pp-em" :class="{ 'pp-insegna-velata': s.velata }"
                :data-scalino="s.scalino" :data-insegna="s.chiave"
