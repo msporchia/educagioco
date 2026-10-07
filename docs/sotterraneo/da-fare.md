@@ -9,13 +9,13 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   oggi le letture `COSE[` fuori da `dati/cose.js` sono una sessantina, e
   nessun controllo le vieta. Niente cambia a schermo.
 - **Il bottino graduato** (punto 3): `G(p) = floor(p / 2)`, il guardiano che
-  lascia sempre, il mercante a `G(p)−1`, prezzi `× (1 + N × 0,5)`, il grado
+  lascia sempre, i mercanti di sopra a `G(f)−1`, prezzi `× (1 + N × 0,5)`, il grado
   sulla mano che comanda (`attaccoMancino` sulla scheda nuda), i nomi
   accordati col campo `genere: 'f'` e il suo controllo in `guastiDelleCose`.
   È il pezzo che manca per andare oltre la decina di piani.
 - **Le scorte che si diradano e la scorta del guardiano**: le due leve
-  proposte e **mai misurate**. Fonte e mercante da uno per piano a uno ogni
-  due, poi ogni tre; dove il capo è ormai il gigante, un secondo mostro nella
+  proposte e **mai misurate**. Le due fonti da due per piano a una, poi una
+  ogni due; dove il capo è ormai il gigante, un secondo mostro nella
   stanza della scala (indurisce il minimo senza allungare il giro). Vanno
   provate sul banco insieme al bottino graduato, non prima: oggi la discesa
   si ferma per l'arma che non cresce.
@@ -55,6 +55,22 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   spento il gioco deve restare intero.
 
 ## La terra di sopra
+
+- **Le missioni dei personaggi**: chi sta sulla mappa dà un incarico, per
+  esempio «vai nel pozzo e trova l'oggetto X al terzo piano». Non fatte: la
+  roba che resta (`cfg.roba`) e i mercanti sono il primo pezzo, e una missione
+  avrà la sua chiave accanto in `cfg` e il suo oggetto fra le `COSE`, che lo
+  zaino e la sosta portano già.
+- **Gli sprite dei mercanti**: armaiolo, erborista e rigattiere sono figure
+  disegnate in codice (`viste/pixel.js`); `armaiolo-fermo-0` e gli altri
+  nell'atlante prendono il loro posto da soli.
+- **Il mago andando dritto** arriva in fondo alle ultime discese 16–19 volte
+  su 20 a otto su dieci, contro le 18–20 di prima: regge meno, e le discese
+  che contano sulla roba lo sentono di più
+  ([la-roba-che-resta.md](la-roba-che-resta.md)). Da guardare col dito.
+- **Lo zaino sopra**: sulla mappa la roba si vede solo nella carta in fondo e
+  dal rigattiere; uno scudo comprato al posto della seconda arma leggera si
+  mette dallo zaino, scendendo.
 
 - **La mappa con le discese sbarrate** (`mappa_sotterraneo_chiusa.png`): il
   prompt e il giro stanno nella scheda `PROMPT-terra-di-sopra.md`; fino ad

@@ -1,14 +1,15 @@
 # Le regole della discesa
 
 Come si scende, quanto costa, chi ti viene addosso, come si combatte, come si
-sviene e come si lascia una discesa a metà. La roba (eroi, armi, torcia,
-mercante, curiosità) sta in [roba.md](roba.md); il fondo senza fine in
-[abisso.md](abisso.md).
+sviene, cosa ci si porta dietro e come si lascia una discesa a metà. La roba
+(eroi, armi, torcia, i mercanti di sopra, curiosità) sta in [roba.md](roba.md);
+il fondo senza fine in [abisso.md](abisso.md).
 
 Il codice: `src/giochi/sotterraneo/` — `dati/campagna.js` (le sei tappe),
 `dati/mondo.js` (passi e tempi), `dati/mostri.js` (`BRANCO`),
 `motore/corsa.js` (la discesa), `motore/livello.js` (il piano),
-`motore/banco.js` (il giocatore finto che scende davvero).
+`motore/corredo.js` (la roba che resta), `motore/banco.js` (il giocatore
+finto che scende davvero, e fa la spesa sopra).
 
 ## La scala e il guardiano
 
@@ -20,7 +21,7 @@ Il codice: `src/giochi/sotterraneo/` — `dati/campagna.js` (le sei tappe),
 - **Chi porta la chiave lo dichiara la tappa, non il caso** (`guardianoDi`):
   è l'unica cosa del sotterraneo che non si può aggirare.
 - **I segni sopra le porte non mentono mai** (`SEGNI` in `dati/cose.js`):
-  💀 guardia, 💎 roba buona, 🏪 mercante, ⛲ acqua. La pelle della porta
+  💀 guardia, 💎 roba buona, ⛲ acqua. La pelle della porta
   ripete il segno col disegno (`dati/tessere.js`). Un segno che promette a
   vuoto diventa decorazione, e tornare indietro diventa una penitenza invece
   di una scelta.
@@ -28,32 +29,37 @@ Il codice: `src/giochi/sotterraneo/` — `dati/campagna.js` (le sei tappe),
   di una stanza, e una risposta li apre tutti: il pedaggio resta uno. Provato
   a chiuderne uno solo: il 💀 si scavalcava dall'altra parte, e dove due
   corridoi si affiancano si passava accanto al battente.
-- **Le stanze premio (mercante, fonte, forzieri) si pescano fra le foglie**,
+- **Le stanze premio (due fonti, i forzieri) si pescano fra le foglie**,
   quelle con un collegamento solo, così non diventano un casello. Prima di
   sbarrarne una si cammina fino alla scala: se non ci si arriva, la stanza
   resta aperta e senza segno.
+- **La stanza del mercante è diventata una seconda fonte.** Il mercante sta
+  sopra ([terra-di-sopra.md](terra-di-sopra.md#i-mercanti)), e il suo posto
+  nel piano era soprattutto il posto dove curarsi: una fonte lo resta, con una
+  domanda. Stessa pesca e nessun tiro in più, così il piano nasce uguale a
+  prima con l'acqua al posto del banco. Vale anche nell'abisso.
 
 ## Quanto costa una discesa, in domande
 
-Misurato dal banco, una discesa per riga col seme del banco (il numero balla
-da un seme all'altro: serve a leggere la forbice, non a confrontare due
-tappe):
+Misurato dal banco, una discesa per riga col seme del banco e la roba di chi
+ci arriva andando dritto (`robaPer`; il numero balla da un seme all'altro:
+serve a leggere la forbice, non a confrontare due tappe):
 
 | discesa | piani | solo il guardiano | tutto il piano |
 |---|---|---|---|
-| La scalinata antica | 2 | 14 | 25 |
-| Il pozzo dal tetto rosso | 3 | 38 | 82 |
-| La grotta della scaletta | 3 | 40 | 70 |
-| La scala sommersa | 4 | 54 | 88 |
-| La botola segreta | 3 | 25 | 102 |
-| La miniera abbandonata | 4 | 28 | 97 |
+| La scalinata antica | 2 | 14 | 28 |
+| Il pozzo dal tetto rosso | 3 | 37 | 72 |
+| La grotta della scaletta | 3 | 28 | 76 |
+| La scala sommersa | 4 | 29 | 91 |
+| La botola segreta | 3 | 31 | 123 |
+| La miniera abbandonata | 4 | 35 | 122 |
 
 - **La forbice è il punto**: se «tutto» costasse quanto «il minimo» non ci
   sarebbe niente da scegliere.
 - **Il tetto è una seduta: 85 risposte obbligate.** Oltre è un compito, e
   `unita/sotterraneo` diventa rosso (anche per ognuno dei quattro eroi).
-- **Il patto del banco**: rispondendo bene otto volte su dieci si arriva in
-  fondo tutte le volte.
+- **Il patto del banco**: rispondendo bene otto volte su dieci, con la roba
+  che ci si porta dietro, si arriva in fondo quasi tutte le volte.
 - **Stanze per piano: da quattro a sedici** (la botola segreta ne ha sedici
   invece di otto). La forma del piano (`misura`, `giri` 2..4) la controlla
   `guastiDellaCampagna`, che pretende anche che ogni tappa chieda più della
@@ -142,7 +148,7 @@ possibilissimi.
 - **Un mostro picchia sempre.** Rispondendo bene si para e resta un graffio,
   metà del colpo: `(attacco del mostro − la tua difesa) / 2`; sbagliando
   arriva tutto. Senza il graffio le pozioni restavano in fondo allo zaino, e
-  con loro spariva il motivo di cercare una fonte o un mercante. Il conto vero
+  con loro spariva il motivo di cercare una fonte o l'erborista. Il conto vero
   diventa la **lunghezza della battaglia**: con l'arma buona il gigante cade
   in quattro risposte e otto graffi, a mani nude il doppio.
 - **Si dice prima**: «ti graffia 2 · se sbagli 4» sotto il mostro. **Si
@@ -160,30 +166,26 @@ possibilissimi.
 
 ## Svenire, e il fondo degli svenimenti
 
-- **Svenendo ci si risveglia all'ingresso**, con metà gemme, mezza vita
-  (almeno 6) e i mostri tornati a casa loro (`rimettiInPiedi`). Il cartello
-  dice che le gemme in tasca non ci sono più, ma quello che si ha addosso sì.
-- **Le occasioni sono contate: quattro più una per piano**
-  (`SVENIMENTI_IN_REGALO` + `piani`, da sei nella scalinata a otto nella miniera).
-  All'ultima si risale, la tappa non è superata e si rigioca da capo. Il
-  cartello dice sempre quante ne restano. Senza tetto la discesa si vinceva
-  anche rispondendo giusto quattro volte su dieci.
-- **Il numero è misurato**, venti discese per tappa: a otto su dieci si
-  arriva in fondo diciotto volte su venti o più; a sei su dieci circa metà;
-  a quattro su dieci quasi mai, salvo nella scalinata, che deve perdonare.
-  Con tre in regalo cadeva anche chi risponde bene. Le vite degli eroi sono
-  tarate con questo tetto (vedi [roba.md](roba.md)).
+- **Svenendo ci si risveglia all'ingresso**, con mezza vita (almeno 6), i
+  mostri tornati a casa loro (`rimettiInPiedi`), **metà delle gemme e le
+  tasche vuote; quello che si ha addosso resta sempre.** È la regola nata
+  nell'abisso, portata nelle sei discese da quando la roba resta: senza, le
+  tasche piene di pozioni rialzavano chi risponde male una volta di più.
+  Il cartello lo dice prima di «riprovo».
+- **Le occasioni sono contate: due più una per piano**
+  (`SVENIMENTI_IN_REGALO` + `piani`, da quattro nella scalinata a sei nella
+  miniera; erano quattro in regalo quando si ripartiva nudi). All'ultima si
+  risale con quello che si ha addosso, la tappa non è superata e si rigioca
+  da capo. Il cartello dice sempre quante ne restano.
 - **Le stelle** (`stelleDella`): tre senza svenire, due con uno, una con di
   più.
 
-## Fra una discesa e l'altra non resta niente
+## Fra una discesa e l'altra la roba resta
 
-Dentro una discesa l'equipaggiamento scende con te; fra una e l'altra si
-riparte nudi. Restano la campagna (discese superate, stelle) e le monete. Un
-equipaggiamento che persiste vuole un'economia — dove si ripara, cosa si
-rivende, come non rendere l'ultima discesa una passeggiata — e quella è un
-altro gioco; se un giorno la si vuole, si cambia in `dati/campagna.js`.
-L'abisso non rompe la regola: è una discesa sola che non finisce.
+Quello che si ha addosso, nelle tasche e le gemme scende e risale con
+l'avventuriero, e le gemme si spendono sopra, dai mercanti. Le regole, le
+discese che contano sulla roba e la misura dell'equilibrio:
+[la-roba-che-resta.md](la-roba-che-resta.md).
 
 ## Lasciare a metà, e fermarsi
 
@@ -205,6 +207,9 @@ L'abisso non rompe la regola: è una discesa sola che non finisce.
   dice «piano 2 di 3 · ❤️ 14». Il cartello di un traguardo ferma la discesa.
   Davanti a una domanda il ⏸ non c'è.
 
-Nei test: `unita/sotterraneo` (le sei tappe col giocatore finto, i quattro
-eroi, le soglie qui sopra), `unita/sotterraneo-sosta`,
-`integrazione/sotterraneo` (ci si arriva con `scendiNelSotterraneo`: la mappa sta in [terra-di-sopra.md](terra-di-sopra.md)).
+Nei test: `unita/sotterraneo` (le sei tappe col giocatore finto e la roba di
+chi ci arriva, i quattro eroi, le soglie qui sopra), `unita/sotterraneo-roba`
+(la roba fra due discese, lo svenimento, la sosta, il profilo di prima, i
+banchi), `unita/sotterraneo-sosta`, `misure/sotterraneo` (la tabella qui
+sopra), `integrazione/sotterraneo` (ci si arriva con `scendiNelSotterraneo`:
+la mappa sta in [terra-di-sopra.md](terra-di-sopra.md)).

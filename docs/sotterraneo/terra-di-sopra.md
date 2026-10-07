@@ -2,11 +2,12 @@
 
 Le discese non si scelgono da un elenco: si raggiungono a piedi su una mappa
 grande (la «terra di sopra»), nella nebbia, e chi le cerca ha qualcuno che
-gli indica la strada. Il codice: `viste/Terra.vue` (la mappa, la vista, il
-dito, il fumetto), `motore/terra.js` (strada e nebbia, gira in Node),
-`dati/terra.js` (quale discesa sta dove, cosa dicono minatore e cartello),
-`dati/terra-mappa.js` (generato). `viste/Campagna.vue` ci mette sopra la
-discesa a metà e chi scende.
+gli indica la strada; fra le case stanno i mercanti. Il codice:
+`viste/Terra.vue` (la mappa, la vista, il dito, il fumetto, i mercanti),
+`motore/terra.js` (strada e nebbia, gira in Node), `dati/terra.js` (quale
+discesa sta dove, cosa dicono minatore e cartello), `dati/mercanti.js` (chi
+vende cosa), `dati/terra-mappa.js` (generato). `viste/Campagna.vue` ci mette
+sopra la discesa a metà e chi scende, con la sua roba e le gemme.
 
 ## La mappa
 
@@ -64,9 +65,11 @@ discesa a metà e chi scende.
   lisciata dove si vede dritto, così non cammina a scaletta.
 - **Un tocco dove non si arriva** (l'acqua, il bosco, un posto chiuso fra le
   staccionate) porta alla cella raggiungibile più vicina in linea d'aria.
-- **Il minatore sta fermo** e non gli si passa attraverso (`ostacoli`); per
-  parlargli ci si ferma `accanto`, due celle più in là, o le due figure si
-  mangiano a vicenda.
+- **Il minatore e i mercanti stanno fermi** e non gli si passa attraverso
+  (`ostacoli`); per parlargli ci si ferma `accanto`, due celle più in là, o le
+  due figure si mangiano a vicenda. Lo strumento controlla che `piede` e
+  `accanto` si possano camminare e che nessuno si fermi addosso a chi sta
+  fermo.
 - **Una strisciata non cammina**: oltre i 16 px il tocco non conta, e si
   agisce sul `click`, non sul `pointerup` ([../core/il-dito.md](../core/il-dito.md)).
 
@@ -134,6 +137,34 @@ fondo**; a parità, il nome che somiglia al posto (`POSTO_DI` in `dati/terra.js`
   della scheda): il minatore usa da solo lo sprite `minatore-fermo-0`
   appena l'atlante lo ha.
 
+## I mercanti
+
+Tre personaggi fermi fra le case (`mercanti` nel foglietto, `MERCANTI` in
+`dati/terra-mappa.js`); chi vende cosa e perché sta in
+[roba.md](roba.md#i-mercanti-di-sopra).
+
+| chi | dove | piede · accanto |
+|---|---|---|
+| l'armaiolo | davanti alla casa di sinistra, accanto alle aiuole | [4, 34] · [6, 34] |
+| l'erborista | davanti alla casa di destra, fra i fiori e la porta | [25, 42] · [27, 42] |
+| il rigattiere | accanto al carro, in mezzo al prato | [27, 28] · [25, 28] |
+
+- **Si toccano come il minatore**: l'eroe ci va, si ferma `accanto`, e
+  arrivato si apre il banco (non un fumetto: la lista non ci sta). Il banco
+  sta al centro, si chiude con la ✕ in alto a destra.
+- **Si trovano nella nebbia** come i posti: finché la loro cella non si è
+  vista sono prato (non si toccano), e trovandoli la riga in fondo lo dice
+  («Hai trovato l'erborista!»).
+- **Tutti e tre insieme non si vedono**: l'armaiolo sta a più di venti celle
+  dagli altri due, e uno schermo da 390 px ne mostra sedici in larghezza.
+  Dal carro si vedono rigattiere ed erborista.
+- **Figure provvisorie disegnate in codice** (`ARMAIOLO`, `ERBORISTA`,
+  `RIGATTIERE` in `viste/pixel.js`) finché non arrivano gli sprite: il posto
+  è pronto, `<sprite>-fermo-0` nell'atlante (`armaiolo-fermo-0`…) si usa da
+  solo, come per il minatore.
+- **La carta di chi scende dice la roba**: braccio e difesa con quello che
+  ha addosso, e le gemme da spendere.
+
 ## La nebbia
 
 - **Nero dove non si è mai stati, scuro dove si è stati, pieno attorno a
@@ -153,6 +184,11 @@ Nei test: `[data-terra]` (la vista, con `data-camera`), `[data-eroe-terra]`
 `data-abisso`, `data-aperta`, `data-trovato`), `[data-chiusa]` (la pezza o il
 velo), `[data-minatore]`, `[data-cartello]`, `[data-sasso]`, `[data-fumetto]`
 (con `data-fumetto-di`), `[data-azione="scendi"]`, `[data-detto]`,
-`[data-chiusa-perche]`, `[data-avviso-terra]`, `[data-pallino="<posto>"]` (il pallino); `unita/sotterraneo-terra`,
-`integrazione/sotterraneo-terra`, e `scendiNelSotterraneo` in
+`[data-chiusa-perche]`, `[data-avviso-terra]`, `[data-pallino="<posto>"]` (il
+pallino), `[data-mercante="<chi>"]`, `[data-roba-sopra]` (la carta di chi
+scende, con le gemme); nel banco `[data-chiudi]`, `[data-merce="<cosa>"]`,
+`[data-vendo="<cosa>"]`, `[data-detto-banco]`, `[data-chi-compra]`,
+`[data-tasche-vuote]`, e nello zaino `[data-tasca][data-cosa="<cosa>"]`;
+`unita/sotterraneo-terra`, `integrazione/sotterraneo-terra`,
+`integrazione/sotterraneo-mercanti`, e `scendiNelSotterraneo` in
 `test/aiuto/browser.mjs` per chi deve solo scendere.

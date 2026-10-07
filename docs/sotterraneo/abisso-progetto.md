@@ -39,9 +39,9 @@ bambini). Il punto 2, l'abisso stesso, è fatto.
 
   Un controllo in `guastiDelleCose` pretende che fuori da `cose.js` non resti
   nessun `COSE[`: è la sostituzione con guardia.
-- **`possiedo(k)`, `quanteNeHo(k)` e `posso(k)` confrontano la base**: il
-  mercante non offre `spada#3` a chi ha `spada#7`, e il grado non diventa una
-  scappatoia al limite di classe.
+- **`possiedo(k)`, `quanteNeHo(k)` e `posso(k)` confrontano la base**: i
+  mercanti non offrono `spada#3` a chi ha `spada#7`, e il grado non diventa
+  una scappatoia al limite di classe.
 - **Lo sprite viene dalla base**: nessuna arte nuova. Se si vuole che si veda
   il grado, il posto è il filo di luce di `scena/tela.js`, più acceso.
 
@@ -74,7 +74,7 @@ eroe:    att ≈ 3 (base) + 3 (arma di gradino 3) + G(p)
 | il guardiano del piano | esattamente `G(p)`, **e lascia sempre** |
 | un forziere | `G(p)` una volta su tre, se no `G(p)−1` o `G(p)−2` |
 | un mostro qualunque | da `G(p)−4` a `G(p)−2` |
-| il mercante | `G(p)−1`, ai prezzi di quel grado |
+| i mercanti di sopra (dal 7 ottobre 2026 non stanno più nei piani) | `G(f)−1`, con `f` il piano più profondo toccato, ai prezzi di quel grado |
 
 - **Il guardiano lascia sempre**: oggi il bottino è a caso (`droppa: 0.6`
   l'orco, `0.85` il gigante), e in una discesa infinita tre guardiani a vuoto
@@ -129,7 +129,7 @@ eroe:    att ≈ 3 (base) + 3 (arma di gradino 3) + G(p)
 | i mostri | **sì**, con le ossa piene del loro piano |
 | le gemme dei mostri | sì; quelle per terra no |
 | i forzieri e le curiosità | **no**: se tornassero, risalire sarebbe la strada per il bottino |
-| il mercante | sì, e ripesca il banco |
+| le fonti | sì |
 | la roba lasciata per terra | **no**: il piano che si abbandona si rimette a posto |
 | la mappa già girata | sì |
 

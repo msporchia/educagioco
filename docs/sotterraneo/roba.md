@@ -1,8 +1,10 @@
-# La roba: eroi, armi, torcia, mercante, curiosità
+# La roba: eroi, armi, torcia, mercanti, curiosità
 
 Chi scende, cosa porta addosso e in tasca, cosa si trova per terra, cosa si
-compra e cosa si tocca per vedere che succede. Il codice: `dati/eroi.js`,
-`dati/cose.js`, `dati/curiosita.js` e `motore/corsa.js` in
+compra sopra e cosa si tocca per vedere che succede. Che la roba resti fra una
+discesa e l'altra: [la-roba-che-resta.md](la-roba-che-resta.md). Il codice:
+`dati/eroi.js`, `dati/cose.js`, `dati/mercanti.js`, `dati/curiosita.js`,
+`motore/corredo.js`, `motore/bottega.js` e `motore/corsa.js` in
 `src/giochi/sotterraneo/`.
 
 ## Quattro eroi, e cosa portano
@@ -34,7 +36,7 @@ compra e cosa si tocca per vedere che succede. Il codice: `dati/eroi.js`,
   essere una notizia.
 - **Si sceglie una volta e resta**, dalla mappa delle discese
   (`DI_PARTENZA`: il cavaliere). `unita/sotterraneo` gioca la campagna con
-  tutti e quattro.
+  tutti e quattro. La roba è una sola per tutti e quattro.
 
 ## Addosso e in tasca
 
@@ -107,25 +109,55 @@ compra e cosa si tocca per vedere che succede. Il codice: `dati/eroi.js`,
   suo lume, con le stanze che restano e le torce di scorta; agli sgoccioli,
   e solo senza scorta, guizza. Senza, il buio arriverebbe come un guasto.
 - Una sosta vecchia con `torcia: true` si riprende con una torcia piena.
+- **Comprata sopra aspetta alla cintura**, e scendendo se ne accende una:
+  sopra non c'è buio da rischiarare.
 
-## Il banco del mercante
+## I mercanti di sopra
 
-- **L'unica stanza senza domande**: qui si spende quello che le domande hanno
-  fruttato.
-- **Ogni riga dice cosa fa**, non solo il nome («Sbagliare fa meno male»).
-  Quello che non ci si può permettere resta visibile e spento: sapere cosa
+Tre botteghe sulla terra di sopra, vicino alle case e al carro
+(`MERCANTI` in `dati/mercanti.js`; dove stanno:
+[terra-di-sopra.md](terra-di-sopra.md#i-mercanti)). Nelle discese non vende
+più nessuno.
+
+| chi | vende | in cima, sempre |
+|---|---|---|
+| ⚒️ l'armaiolo, davanti alla casa di sinistra | armi, scudi, armature | — |
+| 🌿 l'erborista, davanti alla casa di destra | l'elisir del toro (dalla seconda discesa finita) | boccetta, pozione, ampolla, torcia |
+| 🧺 il rigattiere, accanto al carro | anelli, amuleti, chiavi | — e **compra** quello che hai in tasca |
+
+- **Il posto senza domande**: qui si spende quello che le domande hanno
+  fruttato. **Ogni riga dice cosa fa**, non solo il nome; quello che non ci
+  si può permettere resta visibile e spento, con quanto manca: sapere cosa
   c'era è il motivo per tornare.
-- **Sotto il banco le proprie tasche, a metà prezzo** (`quantoVale`):
-  comprare e rivendere perde metà, quindi non è un modo di fare gemme, ma
-  libera le tasche e smaltisce la spada di ieri.
-- **Cinque righe su una quarantina di voci** (`pescaMerce`), pesate sul
-  prezzo atteso a quella profondità (`prezzoAtteso`, dalla stessa `durezzaDi`
-  delle domande); una cosa lontana pesa un decimo e non zero. Con tre righe a
-  caso capitava spesso un banco senza niente di utile.
+- **Compra solo il rigattiere, a metà prezzo** (`quantoVale`): comprare e
+  rivendere perde metà, quindi non è un modo di fare gemme, ma libera le
+  tasche. Tre botteghe che comprano farebbero di ogni banco un posto dove
+  svuotare le tasche; chi non compra dice chi lo fa.
+- **Più discese finite, più roba e più forte** (`righe` per discese finite,
+  `profonditaDelBanco`, la metà della discesa che viene, pesata come prima
+  da `pescaMerce`). L'armaiolo ha in più un **tetto di prezzo** (`tetto`):
+  prima della grotta niente terzo gradino, o chi ha le gemme scende già col
+  meglio e la discesa diventa una passeggiata.
+- **Il banco si pesca una volta per giro** e si scrive in
+  `cfg.botteghe`; il giro cambia quando finisce una discesa (vinta, persa o
+  finita la sera nell'abisso). Un banco che cambiasse a ogni apertura sarebbe
+  una slot machine, e uscire a metà per ripescarlo un trucco.
+- **Quello che si ha già non si offre**, tranne quello che si consuma; il
+  pescato è pezzo unico e se ne va comprandolo, le cure e la torcia no.
+- **Comprato = messo**, come per terra: una cosa migliore va addosso da sé e
+  la riga in cima al banco dice il guadagno. **Lo zaino pieno ferma solo
+  quello che non trova posto**, provato prima su una copia (un'arma a due
+  mani sfratta anche la mano debole).
+- **Appena aperto il banco non ascolta per 320 ms**: un secondo tocco sul
+  mercante, dato mentre l'eroe ci arriva, comprava la riga che ci stava sotto.
 - **Quattro armi con un nome proprio** — la bipenne solare, la spada del
   ladro, il pugnale vampiro, la spada di ghiaccio — stanno fuori dalla scala:
   non picchiano di più, portano un tratto (luce, più gemme, tenere in piedi,
   parare). Nessuna batte lo spadone sul suo terreno.
+- **Le gemme non diventano monete, mai**: la roba si vende solo in gemme.
+- **Chi aveva già finito delle discese** prima che la roba restasse trova
+  in tasca le gemme di bentornato, una volta sola (`GEMME_DI_BENTORNATO`,
+  da 40 a 160): le discese dopo contano sulla roba.
 
 ## Le curiosità
 

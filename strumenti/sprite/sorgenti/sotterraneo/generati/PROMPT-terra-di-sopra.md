@@ -134,25 +134,25 @@ Controllo: le tre pose dello stesso personaggio hanno la stessa
 sagoma e gli stessi colori; il braccio che indica si legge; sono alti
 come un eroe del gioco, non giganti.
 
-## Prompt 5 — i mercanti del villaggio
+## Prompt 5 — i mercanti
 
-Dal 7/10/2026 la roba si porta su e il mercante sta fuori, sulla terra di
-sopra, come in Diablo. Si chiede nella chat della mappa, dopo il prompt 4,
-alla stessa scala.
+I tre che vendono sulla terra di sopra (docs/sotterraneo/terra-di-sopra.md,
+«I mercanti»). Oggi sono figure disegnate in codice; nella stessa chat del
+prompt 4, che tiene la mano.
 
 ```text
-Sullo stesso fondo MAGENTA PIENO (#FF00FF), tre mercanti del villaggio, della stessa mano e della STESSA SCALA della mappa (celle da 64×64 px, ogni pixel del disegno è un quadrato di 4×4 px): ognuno largo una cella e alto una cella e mezza, visto dall'alto a tre quarti come gli eroi di un gioco di ruolo a 16 bit, dietro un piccolo banco o accanto alla sua merce. Immagine 1024×1536 px verticale. Ogni posa sta da sola, staccata dalle altre da almeno mezza cella di magenta, senza ombra e senza prato sotto. NESSUNA PAROLA SCRITTA, NESSUN FUMETTO.
+Sullo stesso fondo MAGENTA PIENO (#FF00FF), tre mercanti della stessa mano e della STESSA SCALA dei personaggi di prima (celle da 64×64 px): ognuno largo una cella e alto una cella e mezza, visto dall'alto a tre quarti, come gli eroi di un gioco di ruolo a 16 bit. Immagine 1024×1536 px verticale. Ogni posa sta da sola, staccata dalle altre da almeno mezza cella di magenta, senza ombra, senza prato e senza bancone sotto. NESSUNA PAROLA SCRITTA, NESSUN FUMETTO, NESSUNA MONETA.
 
-Una riga per mercante, due pose ciascuno: FERMO, e CHE SALUTA (una mano alzata, sorridente).
-1. L'armaiolo: grembiule di cuoio, braccia forti, un'incudine e una spada appoggiata accanto.
-2. L'erborista: mantella verde, un cesto di boccette colorate e mazzi d'erbe, una torcia spenta appesa al banco.
-3. Il rigattiere: cappello a tesa larga, un carretto o un banco pieno di cianfrusaglie (un elmo ammaccato, un calice, un sacco), l'aria furba ma simpatica.
-Sono amici del villaggio: nessuno punta un'arma verso chi guarda.
+Una riga per mercante, tre pose ciascuno: FERMO, CHE SALUTA (una mano alzata), CHE MOSTRA (porge qualcosa con le due mani).
+1. L'armaiolo: robusto, testa rasata e barba nera, grembiule di cuoio sopra la camicia rossa, un martello da fabbro in mano.
+2. L'erborista: cappuccio verde, un grembiule chiaro, una boccetta in mano e un mazzetto d'erbe alla cintura.
+3. Il rigattiere: cappellaccio a tesa larga, giacca viola rattoppata, un grosso sacco in spalla pieno di roba.
+Sono amici: nessuna arma rivolta verso chi guarda.
 ```
 
-Controllo: le due pose dello stesso mercante hanno la stessa sagoma e gli
-stessi colori; si capisce a colpo d'occhio chi vende armi, chi pozioni e
-chi compra; sono alti come un eroe del gioco.
+Controllo: le tre pose dello stesso mercante hanno la stessa sagoma e
+gli stessi colori; si distinguono a colpo d'occhio anche piccoli (il
+martello, il verde, il sacco); sono alti come il minatore.
 
 ## Prompt 6 — la mappa si allarga a destra
 
@@ -228,9 +228,10 @@ il ritaglio non c'è, un velo scuro col lucchetto.
    (`node test/esegui.mjs sotterraneo-terra --scatti`, foto `terra-chiusa`):
    un riquadro che si vede è un ritocco che ha spostato qualcosa.
 
-I personaggi del prompt 4, quando arrivano, si ritagliano come gli altri
-fogli (`atlante.py`, un foglietto accanto): il minatore che si chiama
-`minatore-fermo-0` prende da solo il posto della figura disegnata in codice.
+I personaggi dei prompt 4 e 5, quando arrivano, si ritagliano come gli
+altri fogli (`atlante.py`, un foglietto accanto): il minatore che si chiama
+`minatore-fermo-0` prende da solo il posto della figura disegnata in codice,
+e così `armaiolo-fermo-0`, `erborista-fermo-0`, `rigattiere-fermo-0`.
 
 ## Com'è andata
 

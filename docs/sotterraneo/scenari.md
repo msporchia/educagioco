@@ -12,7 +12,7 @@ Il sotterraneo è **il calco da guardare** per un mondo a sprite:
 ## Lo scenario
 
 - **Il vestito intero di un piano è uno scenario**: pavimenti, tetto, facce,
-  bordi, porte, scala, fontana, mercante e le cose per terra stanno in una
+  bordi, porte, scala, fontana e le cose per terra stanno in una
   voce di `SCENARI` (`dati/tessere.js`), e **tutte le voci hanno le stesse
   chiavi**: si cambia vestito a una discesa senza toccare la tela. Aggiungere
   un pezzo è una riga lì, mai un `if` nel disegno. Oggi ce ne sono tre: **le cantine**
@@ -124,9 +124,11 @@ in Node) e si prova in `unita/muri-sotterraneo`.
   e la figura di ogni classe è fissa: è il patto del set. I sei scudi vengono
   da `scudi.png`, le vesti da `armature-e-vesti.png`. Un buco così (le
   armature restate emoji) va guardato *prima* di innamorarsi di un set.
-- **Di emoji in scena restano solo i segni sopra le porte.** La fontana e il
-  mercante vengono dallo scenario, e la fonte bevuta resta al suo posto,
-  asciutta.
+- **Di emoji in scena restano solo i segni sopra le porte.** La fontana
+  viene dallo scenario, e la fonte bevuta resta al suo posto, asciutta. Il
+  mercante disegnato nei fogli (`cantine-mercante-0`…) e la porta chiara col
+  suo segno non si usano più dal 7 ottobre 2026: il mercante è salito sulla
+  terra di sopra ([terra-di-sopra.md](terra-di-sopra.md#i-mercanti)).
 - **L'arredo cambia pelle e frase con lo scenario**: il piano decide *cosa*
   (`barile`, `ossa`, `braciere`... in `ARREDI`, `dati/mondo.js`) e dove sta e
   chi fa luce; `arredo` nella voce di `SCENARI` dice con quale sprite si

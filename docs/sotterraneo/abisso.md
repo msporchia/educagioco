@@ -9,9 +9,11 @@ sta il record e fin dove regge. La parte decisa e non ancora costruita
 
 **Finite le sei discese si apre una discesa sola che comincia al piano 1 e
 non finisce.** Nasce da una frase: *«ho trovato un'arma super figa e ora ho
-finito la tappa e la butta»*. Il problema non è il contenuto, è il confine
-fra una tappa e l'altra: in una discesa senza fondo quel momento non arriva
-mai, e la regola «fra una discesa e l'altra si riparte nudi» resta intatta.
+finito la tappa e la butta»*. Allora fra una discesa e l'altra si ripartiva
+nudi, e l'abisso era il posto dove quel momento non arrivava mai; dal 7
+ottobre 2026 la roba resta dappertutto
+([la-roba-che-resta.md](la-roba-che-resta.md)), e nell'abisso si scende con
+quella di sempre.
 
 - **Si apre su `libera`**, che `giochi/campagne.js` scrive quando `tappa >=
   quante`: niente cancello nuovo. Niente `portata` e niente età: il criterio
@@ -23,8 +25,10 @@ mai, e la regola «fra una discesa e l'altra si riparte nudi» resta intatta.
   (`viste/Campagna.vue`, `TAPPE_DEL_GIOCO`, `arcoDelGioco`, `tappe` del
   manifesto vogliono una lista finita). `CAMPAGNA` resta di sei,
   `QUANTE_TAPPE` resta 6.
-- **L'equipaggiamento dell'abisso non esce mai dall'abisso**: la campagna è
-  dove si impara, l'abisso dove si gioca con quello che si è imparato.
+- **La roba dell'abisso è quella di tutte le discese**: ci si scende con lo
+  zaino della campagna, e quello che si trova là sotto sale come da ogni altra
+  discesa. Il mercante che stava in ogni piano è salito sulla terra di sopra,
+  e al suo posto c'è una seconda fonte.
 
 ## Com'è fatto nel motore
 
@@ -97,8 +101,9 @@ raggiunge.
 **`guardiani: ['scheletro', 'scheletro', 'orco', 'granchio', 'orco', 'golem',
 'golem']`, poi il gigante per sempre** (`guardianoDi` ripiega su `capo`).
 
-- **I primi due piani li guarda lo scheletro**: si entra nudi, e con l'orco
-  si sveniva due volte sul primo piano prima di aver trovato un'arma.
+- **I primi due piani li guarda lo scheletro**: misurato quando si entrava
+  nudi, e con l'orco si sveniva due volte sul primo piano prima di aver
+  trovato un'arma.
 - Spostare **da quale piano compare il gigante** non cambia quasi niente
   (media 5,2 → 6,0 fra il piano 3 e il 9): a fermare la discesa è il non
   avere un'arma, non il capo.
@@ -145,8 +150,9 @@ dall'abisso.
 ## Svenire: si perdono le tasche, mai il corredo
 
 - **Resta addosso tutto** — arma, mano debole, corpo, dito — **e si svuotano
-  le sei tasche**; le gemme si dimezzano, come in campagna (`rimettiInPiedi`
-  in `motore/corsa.js`). Punisce senza umiliare: se ne va il margine
+  le sei tasche**; le gemme si dimezzano (`rimettiInPiedi` in
+  `motore/corsa.js`). La regola è nata qui e adesso vale anche nelle sei
+  discese ([regole.md](regole.md#svenire-e-il-fondo-degli-svenimenti)). Punisce senza umiliare: se ne va il margine
   accumulato, non il lavoro di dieci piani. «Perdo tutto» cancellerebbe una
   settimana con una brutta sera; «non perdo niente» renderebbe l'abisso
   impossibile da perdere.
@@ -200,6 +206,7 @@ Sei semi, bravura 0,8:
 | come si scende | fin dove si arriva |
 |---|---|
 | con l'equipaggiamento migliore (spadone, corazza, anello) | 8 · 9 · 9 · 11 · 12 · 13 — **media 10,3** (due o tre sere) |
+| con la roba di chi ha finito le sei andando dritto (`robaPer(6)`, ⚔️7 🛡️3) | 8 · 8 · 9 · 10 · 10 · 11 — media 9,3 |
 | nudi, dritti alla scala | dal 3 al 13, mediana **5** |
 | nudi, ripulendo ogni piano | 6 quasi sempre: un 52×52 profondo giocato tutto sono venti battaglie, ognuna un graffio |
 
