@@ -28,7 +28,9 @@ quella di sempre.
 - **La roba dell'abisso è quella di tutte le discese**: ci si scende con lo
   zaino della campagna, e quello che si trova là sotto sale come da ogni altra
   discesa. Il mercante che stava in ogni piano è salito sulla terra di sopra,
-  e al suo posto c'è una seconda fonte.
+  e al suo posto c'è il portale per il villaggio: lo stesso delle discese
+  ([regole.md](regole.md#il-portale)). Salendo dal portale si fa la spesa e
+  si torna giù al piano, nella stanza e nel punto dov'eri.
 
 ## Com'è fatto nel motore
 
@@ -40,7 +42,9 @@ quella di sempre.
   discesa senza numeri e nessun errore.
 - **Nella sosta l'abisso è `tappa: −1`**, e nient'altro: niente campo
   `abisso: true` accanto, perché due fonti per lo stesso fatto divergono. Il
-  campo cambia valore e non significato, quindi `VERSIONE` resta 3.
+  campo cambia valore e non significato: la sosta dell'abisso è quella di una
+  tappa, col piano salvato come cambiamenti dal seme (una sosta al piano 23
+  pesa circa 360 byte).
 - **Un piano è una funzione del numero**: `Corsa.nuovoPiano()` genera da
   `seme + piano * 7919`. La corsa lo sa con `senzaFondo`.
 - **`#abisso=12` nell'indirizzo** comincia l'abisso a quel piano, per

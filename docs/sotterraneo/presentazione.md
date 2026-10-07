@@ -27,6 +27,7 @@ gemme trovate giù ([terra-di-sopra.md](terra-di-sopra.md)).
 | 👹 un mostro | una domanda per colpo, finché non cade |
 | ⛲ una fonte | una domanda, e ti ridà vita |
 | 🏪 i mercanti, sopra | niente domande: qui si **spende** quello che le domande hanno fruttato |
+| 🌀 il portale | niente domande: porta su dai mercanti, e il suo gemello riporta giù dov'eri |
 
 Fino al 6 ottobre 2026 accanto c'era il Dungeon, un gioco a carte con un
 bivio alla volta: gli stessi esercizi, ma in un diagramma invece che in un
@@ -78,8 +79,8 @@ piano o correre alla scala.
 
 - Le domande rispettano l'età del bambino e quello che hai spento nel
   quadro dei grandi.
-- Una discesa dura venti minuti buoni: si può uscire e riprenderla da dove
-  si era, e il ⏸ la ferma senza uscire.
+- Una discesa dura venti minuti buoni: si può uscire e riprenderla
+  esattamente da dove si era, e il ⏸ la ferma senza uscire.
 - Si può perdere: dopo troppi svenimenti si risale e la discesa si rifà.
   Rispondendo bene otto volte su dieci si arriva in fondo quasi sempre;
   premendo a caso quasi mai.

@@ -1,7 +1,7 @@
 # Le regole della discesa
 
 Come si scende, quanto costa, chi ti viene addosso, come si combatte, come si
-sviene, cosa ci si porta dietro e come si lascia una discesa a metà. La roba
+sviene, cosa ci si porta dietro, il portale e come si lascia una discesa a metà. La roba
 (eroi, armi, torcia, i mercanti di sopra, curiosità) sta in [roba.md](roba.md);
 il fondo senza fine in [abisso.md](abisso.md).
 
@@ -29,15 +29,16 @@ finto che scende davvero, e fa la spesa sopra).
   di una stanza, e una risposta li apre tutti: il pedaggio resta uno. Provato
   a chiuderne uno solo: il 💀 si scavalcava dall'altra parte, e dove due
   corridoi si affiancano si passava accanto al battente.
-- **Le stanze premio (due fonti, i forzieri) si pescano fra le foglie**,
+- **Le stanze premio (il portale, la fonte, i forzieri) si pescano fra le foglie**,
   quelle con un collegamento solo, così non diventano un casello. Prima di
   sbarrarne una si cammina fino alla scala: se non ci si arriva, la stanza
   resta aperta e senza segno.
-- **La stanza del mercante è diventata una seconda fonte.** Il mercante sta
-  sopra ([terra-di-sopra.md](terra-di-sopra.md#i-mercanti)), e il suo posto
-  nel piano era soprattutto il posto dove curarsi: una fonte lo resta, con una
-  domanda. Stessa pesca e nessun tiro in più, così il piano nasce uguale a
-  prima con l'acqua al posto del banco. Vale anche nell'abisso.
+- **La stanza del mercante ha il portale** (più sotto, «Il portale»): il
+  mercante sta sopra ([terra-di-sopra.md](terra-di-sopra.md#i-mercanti)), e
+  il portale porta da lui. Stessa pesca e nessun tiro in più, così il piano
+  nasce uguale a prima; la stanza non ha porta, la strada di casa non si
+  paga. Vale anche nell'abisso. Provato: una seconda fonte al posto del
+  mercante; l'utente ha voluto il portale alla Diablo.
 
 ## Quanto costa una discesa, in domande
 
@@ -47,12 +48,12 @@ serve a leggere la forbice, non a confrontare due tappe):
 
 | discesa | piani | solo il guardiano | tutto il piano |
 |---|---|---|---|
-| La scalinata antica | 2 | 14 | 28 |
-| Il pozzo dal tetto rosso | 3 | 37 | 72 |
-| La grotta della scaletta | 3 | 28 | 76 |
-| La scala sommersa | 4 | 29 | 91 |
-| La botola segreta | 3 | 31 | 123 |
-| La miniera abbandonata | 4 | 35 | 122 |
+| La scalinata antica | 2 | 14 | 26 |
+| Il pozzo dal tetto rosso | 3 | 37 | 66 |
+| La grotta della scaletta | 3 | 28 | 72 |
+| La scala sommersa | 4 | 30 | 86 |
+| La botola segreta | 3 | 31 | 118 |
+| La miniera abbandonata | 4 | 35 | 116 |
 
 - **La forbice è il punto**: se «tutto» costasse quanto «il minimo» non ci
   sarebbe niente da scegliere.
@@ -188,21 +189,49 @@ discese che contano sulla roba e la misura dell'equilibrio:
 [la-roba-che-resta.md](la-roba-che-resta.md). Ogni eroe ha la sua avventura
 (roba, discese, sosta): [avventure.md](avventure.md).
 
+## Il portale
+
+- **Nella stanza che era del mercante c'è un portale**: un ovale di luce
+  azzurra e viola che gira, disegnato in codice (`scena/portale.js`) coi
+  colori di nessuno scenario, così stona un po' e si capisce che è magia.
+  Toccarlo non chiede niente: il foglio dice «Torni su al villaggio, e
+  ritrovi il portale per tornare qui» (`[data-azione="portale"]`).
+- **Salendo si lascia la discesa com'è**: è una sosta come uscire con la ✕,
+  e l'eroe sbuca sopra accanto al **portale gemello**, nel villaggio dei
+  mercanti ([terra-di-sopra.md](terra-di-sopra.md#il-portale-gemello)).
+  Toccando il gemello si torna giù nella stanza e nel punto di prima.
+- **Il portale aperto e la sosta sono la stessa cosa vista da due lati**: una
+  sosta per avventura, e finché c'è, sopra c'è il gemello; la carta in cima
+  alla mappa e «riprendi da qui» in home la riprendono uguale. Il gemello
+  se ne va con la sosta: quando la discesa finisce, o con «lascio perdere»;
+  nell'abisso, che non finisce, resta. Uscendo con la ✕ c'è anche lui.
+- Il portale nel piano resta: si sale e si torna quante volte si vuole.
+
 ## Lasciare a metà, e fermarsi
 
-- **Si esce e si riprende** (`motore/sosta.js`, un paio di chilobyte, una
-  sosta per avventura: [avventure.md](avventure.md)): la mappa offre in cima «piano 2 di 3 · ❤️ 14 · 💎 37 — torno giù da dove
-  ero». Il piano non si salva, **si rifà dal seme**; si salva ciò che è
-  *successo* — chi è caduto, cosa si è aperto, cosa sta per terra, la mappa
-  girata.
-- **Riprendendo, i mostri sono al loro posto**, come dopo uno svenimento:
-  riaprire con l'orco addosso fa pentire di aver ripreso.
+- **Si esce e si riprende esattamente dove si era** (`motore/sosta.js`, una
+  sosta per avventura: [avventure.md](avventure.md)): stessa stanza, stesso
+  punto anche a metà di un passo, porte aperte, forzieri aperti, roba per
+  terra, mostri feriti **dove erano** e non a casa. La mappa offre in cima
+  «piano 2 di 3 · ❤️ 14 · 💎 37 — torno giù da dove ero».
+- **Si salvano il seme e i cambiamenti, non il piano**: il piano si rifà dal
+  seme, e la sosta tiene per ogni cosa nata dal seme solo i campi cambiati
+  (`cambiDelPiano`, per indice) più le cose nuove (il bottino, la roba
+  buttata). Una sosta a metà della scalinata pesa sui 600 byte contro i
+  4 KB delle cose scritte intere, una dell'abisso al piano 23 sui 360. Se il
+  piano non nasce più con lo stesso numero di cose (un generatore cambiato)
+  la sosta non si legge e la discesa ricomincia.
+- **Riprendendo, i mostri hanno tre secondi di calma** (`CALMA`): sono dove
+  erano, ma riaprire con un colpo già partito fa pentire di aver ripreso.
+- **La roba non sta nella sosta** ma nell'avventura, accanto: usciti a metà si
+  passa dai mercanti, e la discesa ripresa ha la roba di adesso.
 - **Si salva sempre**, anche dopo due passi: quello che si perde in una
   discesa appena cominciata è la mappa girata al buio, che è metà del gioco.
 - **Formato cambiato, salvataggio non letto**: si ricomincia la discesa.
   `VERSIONE` sale quando un campo *cambia significato*, non per un campo in
-  più con un ripiego ovvio. Una partita persa è un dispiacere, una ripresa
-  con campi che non tornano è un gioco rotto.
+  più con un ripiego ovvio. È a 4 dal 7 ottobre 2026 (i cambiamenti invece
+  delle cose intere); le soste di prima si sono buttate con l'azzeramento
+  delle avventure.
 - **Il ⏸ ferma senza uscire** (la pausa comune:
   [../core/interfaccia.md](../core/interfaccia.md#la-pausa-una-sola)); il velo
   dice «piano 2 di 3 · ❤️ 14». Il cartello di un traguardo ferma la discesa.
@@ -210,7 +239,11 @@ discese che contano sulla roba e la misura dell'equilibrio:
 
 Nei test: `unita/sotterraneo` (le sei tappe col giocatore finto e la roba di
 chi ci arriva, i quattro eroi, le soglie qui sopra), `unita/sotterraneo-roba`
-(la roba fra due discese, lo svenimento, la sosta, il profilo di prima, i
-banchi), `unita/sotterraneo-sosta`, `misure/sotterraneo` (la tabella qui
-sopra), `integrazione/sotterraneo` (ci si arriva con `scendiNelSotterraneo`:
-la mappa sta in [terra-di-sopra.md](terra-di-sopra.md)).
+(la roba fra due discese, lo svenimento, la sosta, il portale al posto del
+mercante, i banchi), `unita/sotterraneo-sosta` (la ripresa esatta cosa per
+cosa, il peso, il portale), `misure/sotterraneo` (la tabella qui sopra),
+`integrazione/sotterraneo` (ci si arriva con `scendiNelSotterraneo`: la mappa
+sta in [terra-di-sopra.md](terra-di-sopra.md)), `integrazione/sotterraneo-portale`
+(col dito: porta, mostro ferito, portale, erborista, ritorno nel punto esatto,
+✕ e «riprendi da qui»). Il foglio del portale: `[data-azione="portale"]`; la
+tela dice `data-eroe`, `data-eroe-schermo` e `data-scala` per toccare una cella.

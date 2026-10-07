@@ -43,13 +43,14 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
 {
   tappa, libera, stelle,          // il massimo fra le avventure: lo legge il resto dell'app
   cfg: {
+    mondo: 2,                     // i salvataggi di prima sono già stati azzerati (MONDO)
     eroe: 'mago',                 // l'avventura aperta adesso
     avventure: {
       cavaliere: { tappa, libera, stelle,   // le sue discese
                    roba,                    // gemme, addosso, tasche, torce (motore/corredo.js)
                    terra,                   // { nebbia, dove, parlato }
                    botteghe,                // i banchi pescati in questo giro
-                   sosta,                   // la discesa lasciata a metà (motore/sosta.js)
+                   sosta,                   // la discesa lasciata a metà, che è anche il portale aperto (motore/sosta.js)
                    abisso,                  // { fondo }
                    missioni },              // il posto per quelle dei personaggi, che verranno
       mago: { … },
@@ -82,36 +83,44 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
   tutte le avventure; il primato `sotFondo` e i contatori (`sotPiani`,
   `sotMostri`…) sono del bambino e salgono con chiunque scenda.
 - **«Riprendi da qui»** in home apre l'avventura aperta per ultima
-  (`cfg.eroe`) e, se ha una discesa a metà, la riprende (`riprendiSeChiesta`).
-  La discesa a metà di un altro eroe la si ritrova scegliendolo.
+  (`cfg.eroe`) e, se ha una discesa a metà, la riprende (`riprendiSeChiesta`)
+  nel punto esatto; il riquadro dice quale discesa e mostra il suo posto
+  ritagliato dalla mappa (`ripresa` nel manifesto, `gioco.js`). La discesa a
+  metà di un altro eroe la si ritrova scegliendolo.
 
-## Il passaggio dei profili di prima
+## I salvataggi di prima si azzerano
 
-`passaAlleAvventure` gira all'apertura del gioco, una volta (dopo c'è
-`cfg.avventure` e non fa niente):
+Il 7 ottobre 2026, col portale e la ripresa esatta, il gioco è cambiato
+tanto che l'utente ha voluto buttare i salvataggi di prima invece di
+passarli: le avventure ripartono da zero per tutti. `azzeraIlVecchio`
+(`motore/avventure.js`) gira all'apertura del gioco, una volta per profilo
+(dopo c'è `cfg.mondo` uguale a `MONDO`):
 
-- **tutto va all'eroe usato per ultimo** (`cfg.eroe`, o il cavaliere se non
-  c'era): discese e stelle, roba, nebbia, banchi, sosta, record dell'abisso.
-  Gli altri tre partono da capo;
-- **le gemme di bentornato le prende solo lui** (`robaDiCasa`, per chi non
-  aveva ancora `cfg.roba`): ha le discese finite e lo zaino vuoto;
-- **la discesa a metà cominciata da un altro eroe** la riprende l'eroe
-  dell'avventura (`sosta.eroe` riscritto; nella versione 2, dove `eroe` era
-  la cella, ci pensa il ripiego di `leggi`);
-- **il record di fuori non si tocca**: era già il suo, quindi il massimo.
-  Nessun bambino perde stelle, medaglie, esperienza o monete;
-- `cfg.roba`, `cfg.terra`, `cfg.abisso`, `cfg.botteghe` e la sosta di fuori si
-  tolgono: due posti per la stessa roba divergerebbero. Una build di prima
-  aperta dopo il passaggio ritroverebbe lo zaino vuoto (e il bentornato).
+- **se ne vanno** le avventure, la roba, la nebbia, i banchi, l'abisso e la
+  sosta, anche quelli di fuori di prima delle avventure (`cfg.roba`,
+  `cfg.terra`, `cfg.abisso`, `cfg.botteghe`, la sosta di fuori). Niente gemme
+  di bentornato: chi riparte, riparte nudo dalla scalinata;
+- **resta** il record di fuori (`tappa`, `stelle`, `libera`), perché medaglie,
+  esperienza e livello lo leggono e togliere non abbassa il livello
+  ([../core/progressi.md](../core/progressi.md)); restano le medaglie, le
+  monete, i contatori e il primato `sotFondo`. Fuori il profilo si vede uguale;
+- **resta l'eroe scelto** (`cfg.eroe`), se è uno dei quattro: si rientra
+  nella sua avventura nuova senza ripassare dalla scelta;
+- **la riga della home** finché un eroe non riscende nell'abisso dice la
+  discesa, non il fondo: il fondo di prima stava in `cfg.abisso`.
+- Provato: passare tutto all'ultimo eroe usato, con le gemme di bentornato a
+  chi aveva discese finite; l'utente ha preferito azzerare.
 
 Nei test: `unita/sotterraneo-avventure` (le avventure separate, il massimo con
-lo store vero, il passaggio da profili finti a inizio, a metà, con la sosta
-aperta, con l'abisso, da prima della roba), `integrazione/sotterraneo-avventure`
-(col dito: un profilo di prima passa al cavaliere, il mago comincia da capo, si
-torna al cavaliere e si ritrova tutto, e «riprendi da qui»). Nella scelta
-`.sot-eroe[data-eroe="<eroe>"]` con `data-nuova` (1 se mai cominciata),
-`[data-punto]` (a che punto è), `[data-addosso="<cosa>"]` (l'arma in mano, l'armatura
-e il gioiello), `[data-in-mano]` / `[data-in-braccio]` sul ritratto, `[data-tratti]`,
-`[data-fondo]`,
-`[data-a-meta]`; `[data-azione="eroe"]` la apre dalla terra di sopra;
-`scegliAvventura` in `test/aiuto/browser.mjs` per chi deve solo scegliere.
+lo store vero, l'azzeramento di un profilo di prima delle avventure e di uno
+di ieri con lo stesso «da fuori», «riprendi da qui» con l'icona),
+`integrazione/sotterraneo-avventure` (col dito: un profilo di prima si azzera
+aprendo il gioco; poi col cavaliere si lascia a metà il pozzo, il mago
+comincia da capo, si torna al cavaliere e si ritrova tutto, e «riprendi da
+qui»). Nella scelta `.sot-eroe[data-eroe="<eroe>"]` con `data-nuova` (1 se mai
+cominciata), `[data-punto]` (a che punto è), `[data-addosso="<cosa>"]` (l'arma
+in mano, l'armatura e il gioiello), `[data-in-mano]` / `[data-in-braccio]` sul
+ritratto, `[data-tratti]`, `[data-fondo]`, `[data-a-meta]` (col suo
+`[data-ritaglio]`); `[data-azione="eroe"]` la apre dalla terra di sopra;
+`scegliAvventura` in `test/aiuto/browser.mjs` per chi deve solo scegliere. In
+home `[data-riprendi] [data-ritaglio]`.

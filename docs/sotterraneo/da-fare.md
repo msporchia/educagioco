@@ -14,8 +14,8 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   accordati col campo `genere: 'f'` e il suo controllo in `guastiDelleCose`.
   È il pezzo che manca per andare oltre la decina di piani.
 - **Le scorte che si diradano e la scorta del guardiano**: le due leve
-  proposte e **mai misurate**. Le due fonti da due per piano a una, poi una
-  ogni due; dove il capo è ormai il gigante, un secondo mostro nella
+  proposte e **mai misurate**. La fonte da una per piano (l'altra stanza è
+  del portale) a una ogni due; dove il capo è ormai il gigante, un secondo mostro nella
   stanza della scala (indurisce il minimo senza allungare il giro). Vanno
   provate sul banco insieme al bottino graduato, non prima: oggi la discesa
   si ferma per l'arma che non cresce.

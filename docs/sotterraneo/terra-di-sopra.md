@@ -22,45 +22,17 @@ sopra la discesa a metà e chi scende, con la sua roba e le gemme.
 - **Le strade ci sono già**: il codice non ricompone la mappa a tessere, ci
   posa sopra solo quello che cambia (il divieto delle chiuse, chi indica,
   sassi, nebbia, eroe).
-- **Entra nel file unico in WebP** (qualità 75, ~860 KB, il doppio della
-  prima metà sola): a 2× non si distingue dall'originale. La fa
-  `python3 strumenti/sprite/terra-di-sopra.py`, che scrive
-  `src/giochi/sotterraneo/dati/terra-mappa.js` copiandoci il foglietto
-  `strumenti/sprite/sorgenti/sotterraneo/terra-di-sopra.json`. Il modulo non
-  si tocca: si corregge il foglietto e si rilancia.
+- **Entra nel file unico in WebP** (qualità 75, ~860 KB): a 2× non si
+  distingue dall'originale. La fa lo strumento dal foglietto
+  ([terra-strumento.md](terra-strumento.md)): il modulo non si tocca.
 - **La scala: una cella della mappa è grande quanto l'eroe.** L'eroe è a
   scala 3 come nel sotterraneo (16 px × 3 = 48 px), quindi la mappa si
   mostra a 3/4 (`SCALA_TERRA`): un pixel del disegno (4 px della mappa)
   diventa 3 px dello schermo, come un pixel dell'eroe. Su un telefono da 390
   px si vedono otto celle in larghezza: la mappa è quattro schermi per uno e
   mezzo. `image-rendering: pixelated`.
-
-### La giunta
-
-Le due metà si toccano a x=1024, e lì il bosco è fitto da una parte e
-dall'altra ma non combacia (a sinistra il prato arriva al bordo in due
-punti, a destra è bosco ovunque). Lo strumento la cuce nel foglietto
-(`giunte`), senza disegnare niente:
-
-- **Una fascia di 128 px attorno alla giunta passa da un pezzo all'altro a
-  blocchi da 4 px** (un pixel del disegno), scelti da un rumore a macchie
-  larghe ~28 px e ripulito da un filtro mediano. Non per trasparenza: due
-  boschi sovrapposti a mezzo tono fanno fantasmi, a blocchi un ciuffo di
-  chioma passa all'altro come una macchia di foglie. Oltre il proprio bordo
-  ogni metà continua specchiata, così la scelta ha sempre un pixel da dare.
-- **Il sentiero che esce dal bordo destro** (a 1147 px dall'alto) si
-  collega a quello del villaggio **stendendo un pezzo di sentiero già
-  disegnato** (`sentiero.sorgente`, due punti sull'asse della terra battuta,
-  col suo bordo d'erba, preso dalla macchia di terra connessa al seme) lungo
-  una curva (`sentiero.curva`, quattro punti) fino alla piazza, tirandolo
-  di poco più del doppio per coprirla. L'originale si rimette sopra la fascia, che
-  se lo mangerebbe. Nessuna pennellata inventata.
-- **Si guarda con `--giunta`** (`tmp/terra/giunta-alta.png`, `-bassa`,
-  `-sentiero`): a sinistra le due metà a secco, a destra com'è. Difetti
-  noti: un sasso della prima metà, tagliato dal bordo, qui si ripete
-  specchiato e dà un masso doppio (riquadro [980, 940, 90, 140] sulla
-  tela); qualche blocco di chioma ha il bordo rettilineo; il sentiero
-  steso è un poco più liscio dell'originale.
+- **La giunta** fra le due metà la cuce lo strumento, senza disegnare
+  niente: [terra-strumento.md](terra-strumento.md#la-giunta).
 
 ## La vista, alla Monkey Island
 
@@ -86,16 +58,8 @@ punti, a destra è bosco ovunque). Lo strumento la cuce nel foglietto
   corregge a mano. Le prime 32 colonne sono la metà di sinistra com'era; le
   altre sono scritte a occhio sulla metà nuova (il colore da solo non basta:
   l'erba all'ombra e la terra scura finiscono fra i no).
-- **Nasce da una proposta letta dai colori** (sentiero e prato sì; chiome,
-  acqua, roccia, contorni scuri no) e poi si corregge: le case di paglia
-  hanno il colore del sentiero, i cespugli quello del prato, e solo l'occhio
-  li separa. Il giro:
-  1. `python3 strumenti/sprite/terra-di-sopra.py --proponi` scrive
-     `tmp/terra/proposta.txt` e dice quante celle differiscono dal foglietto;
-  2. `--provino` scrive `tmp/terra/provino.png`, la mappa con sopra la
-     maschera (rosso dove non si passa), i riquadri dei posti e i piedi;
-  3. si corregge la riga nel foglietto, si rilancia lo strumento,
-     `npm test` (`unita/sotterraneo-terra`).
+- **Nasce da una proposta letta dai colori** e poi si corregge a occhio: il
+  giro con lo strumento sta in [terra-strumento.md](terra-strumento.md#la-maschera).
 - **L'eroe trova la strada da solo**: A* a otto direzioni, in diagonale solo
   se le due celle di lato sono libere (non taglia l'angolo di una casa), poi
   lisciata dove si vede dritto, così non cammina a scaletta.
@@ -111,9 +75,10 @@ punti, a destra è bosco ovunque). Lo strumento la cuce nel foglietto
   arriva davanti), la piazza di terra battuta sì, e il pozzo da cui si beve
   no. Ogni cella dove si cammina si raggiunge da casa, tranne i piedi dei
   mercanti (`unita/sotterraneo-terra` lo conta).
-- **Un mercante chiude la strada dove sta**: il rigattiere sta in fondo a
-  un tratto di una cella fra il carro e i cespugli, e le due celle dietro di
-  lui non si raggiungono (sono tolte dalla maschera).
+- **Chi sta fermo non chiude la strada a nessuno**: togliendolo si arriva
+  solo dove sta lui (`unita/sotterraneo-terra`). Provato il rigattiere in
+  fondo al passaggio largo una cella fra il carretto e i cespugli: lo
+  chiudeva, e adesso sta accanto al carretto, sul lato della piazza.
 - **Una strisciata non cammina**: oltre i 16 px il tocco non conta, e si
   agisce sul `click`, non sul `pointerup` ([../core/il-dito.md](../core/il-dito.md)).
 
@@ -198,7 +163,7 @@ chi vende cosa e perché sta in [roba.md](roba.md#i-mercanti-di-sopra).
 |---|---|---|
 | l'armaiolo | davanti all'incudine sotto la tettoia, a sinistra della piazza | [41, 42] · [39, 42] |
 | l'erborista | davanti al banco con le boccette e i mazzi d'erbe, sotto la piazza | [50, 43] · [48, 43] |
-| il rigattiere | davanti al carretto di cianfrusaglie, in fondo a destra | [56, 45] · [54, 45] |
+| il rigattiere | accanto al carretto di cianfrusaglie, in fondo a destra | [54, 43] · [52, 43] |
 
 - **Si toccano come il minatore**: l'eroe ci va, si ferma `accanto`, e
   arrivato si apre il banco (non un fumetto: la lista non ci sta). Il banco
@@ -216,8 +181,39 @@ chi vende cosa e perché sta in [roba.md](roba.md#i-mercanti-di-sopra).
 - **La carta di chi scende dice la roba**: braccio e difesa con quello che
   ha addosso, e le gemme da spendere; il suo «cambio» riapre la scelta delle
   avventure ([avventure.md](avventure.md)).
+- **L'eroe che cammina tiene in mano l'arma che ha addosso**, e lo scudo
+  dall'altra parte, come nella scelta delle avventure: è `viste/Armato.vue`
+  con la posa e il fotogramma del passo.
 - **Il banco si pesca per avventura**: le righe dipendono dalle discese finite
   da quell'eroe, e i banchi già pescati stanno nella sua avventura.
+
+## Il portale gemello
+
+- **Con una discesa lasciata a metà, nel villaggio c'è un portale**
+  (`PORTALE` nel foglietto: `piede` [51, 38], sul piazzale accanto al pozzo
+  da cui si beve, fra l'armaiolo e l'erborista; `accanto` [49, 38]). È il
+  gemello di quello nel piano ([regole.md](regole.md#il-portale)), lo stesso
+  disegno (`viste/Portale.vue` su `scena/portale.js`), a pixel della scala
+  dell'eroe, con un bagliore morbido che i pixel non hanno.
+- **Salendo dal portale si sbuca `accanto` a lui**. Toccandolo ci si va, e il
+  fumetto dice dove riporta, col ritaglio della discesa: «Ti riporta giù: la
+  scalinata antica, piano 1, dove eri» e «torno giù», che riprende la sosta
+  esattamente dov'era.
+- **C'è finché c'è la sosta**, comunque ci si sia arrivati (portale, ✕,
+  abisso finito per la sera): sono la stessa cosa. Non è un ostacolo, e si
+  trova nella nebbia come i mercanti.
+
+## Le icone delle discese
+
+- **Dove una discesa compare in piccolo, al posto dell'emoji c'è un pezzo
+  della mappa**: la carta della discesa a metà in cima, la riga «a metà» nella
+  scelta delle avventure, il fumetto del gemello, «riprendi da qui» in home
+  (al posto della copertina). Un'emoji 🕳️ non diceva quale pozzo.
+- **Un tondo sfumato ai bordi**, 96×96 in WebP, sui 4 KB l'una (`ICONE` in
+  `dati/terra-icone.js`, `iconaDi(chiave)` in `dati/terra.js`). Le ritaglia lo
+  strumento dal `riquadro` di ogni posto, e si rifanno rilanciandolo
+  ([terra-strumento.md](terra-strumento.md#le-icone)). La copertina del gioco
+  nel carosello e la sua icona non cambiano.
 
 ## La nebbia
 
@@ -245,9 +241,14 @@ cartello di divieto delle chiuse), `[data-minatore]`, `[data-cartello]`, `[data-
 (con `data-fumetto-di`), `[data-azione="scendi"]`, `[data-detto]`,
 `[data-chiusa-perche]`, `[data-avviso-terra]`, `[data-pallino="<posto>"]` (il
 pallino), `[data-mercante="<chi>"]`, `[data-roba-sopra]` (la carta di chi
-scende, con le gemme); nel banco `[data-chiudi]`, `[data-merce="<cosa>"]`,
+scende, con le gemme), `[data-portale]` (il gemello) col suo fumetto
+`[data-fumetto-di="portale"]` e `[data-azione="portale-giu"]`, `[data-ritaglio]`
+(l'icona ritagliata, nella carta in cima, nel fumetto, nella scelta e in
+home); nel banco `[data-chiudi]`, `[data-merce="<cosa>"]`,
 `[data-vendo="<cosa>"]`, `[data-detto-banco]`, `[data-chi-compra]`,
 `[data-tasche-vuote]`, e nello zaino `[data-tasca][data-cosa="<cosa>"]`;
-`unita/sotterraneo-terra`, `integrazione/sotterraneo-terra`,
-`integrazione/sotterraneo-mercanti`, e `scendiNelSotterraneo` in
+`unita/sotterraneo-terra` (anche: il portale gemello raggiungibile, chi sta
+fermo non chiude la strada), `unita/sotterraneo-avventure` (un'icona per
+discesa), `integrazione/sotterraneo-terra`, `integrazione/sotterraneo-mercanti`,
+`integrazione/sotterraneo-portale`, e `scendiNelSotterraneo` in
 `test/aiuto/browser.mjs` per chi deve solo scendere.

@@ -47,6 +47,10 @@ lasciava un vuoto sopra il profilo.
   riquadro: senza partite la home parte dal carosello.
 - Dice il nome, dove si era arrivati (la stessa riga della copertina) e ha
   un ▶ grande. Su un fondo chiaro il testo diventa scuro.
+- **Un gioco con una partita a metà può dire quale** (`ripresa(av)` nel
+  manifesto): la riga diventa la sua e la copertina lascia il posto alla sua
+  immagine (il sotterraneo: la discesa ritagliata dalla mappa,
+  `[data-riprendi] [data-ritaglio]`). Vedi [ripresa.md](ripresa.md).
 
 ## Il carosello
 

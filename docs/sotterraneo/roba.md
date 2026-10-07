@@ -156,9 +156,6 @@ più nessuno.
   non picchiano di più, portano un tratto (luce, più gemme, tenere in piedi,
   parare). Nessuna batte lo spadone sul suo terreno.
 - **Le gemme non diventano monete, mai**: la roba si vende solo in gemme.
-- **Chi aveva già finito delle discese** prima che la roba restasse trova
-  in tasca le gemme di bentornato, una volta sola (`GEMME_DI_BENTORNATO`,
-  da 40 a 160): le discese dopo contano sulla roba.
 
 ## Le curiosità
 

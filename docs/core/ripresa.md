@@ -52,7 +52,10 @@ riprendere: la partita a metà riparte senza la carta in mezzo
 del gioco appena ha una ripresa preme da sola «torno da dove ero»
 (`riprendiSeChiesta`, in `Ripresa.vue` e nelle carte di sotterraneo e
 Survivors), e cambiando schermata la richiesta si scorda (`lasciaRipresa`
-in `App.vue`): tornati alla mappa, la carta resta ferma. Senza partita a
+in `App.vue`): tornati alla mappa, la carta resta ferma. Un gioco nuovo può
+dire da sé cosa c'è da riprendere (`ripresa(av)` nel manifesto, `{ dove,
+immagine }`): il riquadro scrive `dove` e mostra `immagine` al posto della
+copertina — il sotterraneo, la discesa a metà ritagliata dalla mappa. Senza partita a
 metà si apre la mappa come sempre. I giochi con un posto per livello
 (Robot, Generale, Passo passo) aprono la mappa, col livello segnato.
 Lo prova `integrazione/pozioni-sosta`.
@@ -61,7 +64,9 @@ Lo prova `integrazione/pozioni-sosta`.
 
 - **La sosta con la carta in cima alla mappa**:
   - sotterraneo ([../sotterraneo/regole.md](../sotterraneo/regole.md)), con una
-    sosta per avventura e non per gioco ([../sotterraneo/avventure.md](../sotterraneo/avventure.md));
+    sosta per avventura e non per gioco ([../sotterraneo/avventure.md](../sotterraneo/avventure.md)),
+    che riprende nel punto esatto coi mostri dove erano, ed è anche il portale
+    gemello sulla terra di sopra;
   - Survivors ([../survivors/regole.md](../survivors/regole.md));
   - castello ([../castello/sosta.md](../castello/sosta.md));
   - bancarella ([../bancarella/regole.md](../bancarella/regole.md));
