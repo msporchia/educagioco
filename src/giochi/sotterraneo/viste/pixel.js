@@ -123,19 +123,29 @@ export const RIGATTIERE = pixel([
   '....kkkk.kkkk.....',
 ], { k: '#221b16', H: '#5a4632', s: '#d79f78', e: '#221b16', n: '#8a6a52', S: '#b99a6a', C: '#6d5a8a', b: '#a8873f', p: '#4e4234', o: '#2b221c' })
 
-// il lucchetto sopra una discesa chiusa: sobrio, ferro e ottone
-export const LUCCHETTO = pixel([
-  '...kkkk...',
-  '..kmMMmk..',
-  '..km..mk..',
-  '..km..mk..',
-  '.kkkkkkkk.',
-  '.kGGGGGgk.',
-  '.kGgkkGgk.',
-  '.kGGkgGgk.',
-  '.kggggggk.',
-  '.kkkkkkkk.',
-], { k: '#1d1714', m: '#c3c9cf', M: '#8d959c', G: '#e8c547', g: '#b48a1f' })
+// il cartello di divieto piantato davanti a una discesa chiusa: un paletto di legno e un disco rosso con la barra
+// bianca, come i divieti veri
+export const DIVIETO = pixel([
+  '....kkkk....',
+  '..kkrRRRkk..',
+  '.krRRRRRRRk.',
+  '.kRRRRRRRRk.',
+  'krRRRRRRRRRk',
+  'kRwwwwwwwwRk',
+  'kRwwwwwwwwRk',
+  'kRRRRRRRRRRk',
+  '.kRRRRRRRRk.',
+  '.kRRRRRRRRk.',
+  '..kkRRRRkk..',
+  '....kkkk....',
+  '....kPpk....',
+  '....kPpk....',
+  '....kPpk....',
+  '....kPpk....',
+  '....kPpk....',
+  '...kkPpkk...',
+  '..kkkkkkkk..',
+], { k: '#241812', R: '#c8281e', r: '#ea5a45', w: '#f6efe0', P: '#b27a45', p: '#7d5230' })
 
 // un sasso del sentiero, con la vena chiara che luccica; il luccichio è a parte, perché si accende e si spegne
 export const SASSO = pixel([

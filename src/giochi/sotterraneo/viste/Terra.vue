@@ -5,7 +5,7 @@
 // «ricordati questo» (`terra`).
 // Le regole: docs/sotterraneo/terra-di-sopra.md.
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
-import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO, PEZZE,
+import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO,
          MERCANTI as DOVE_MERCANTI } from '../dati/terra-mappa.js'
 import { MERCANTI } from '../dati/mercanti.js'
 import { POSTO_DI, LUOGHI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, PASSO_TERRA, VISTA, LUCE,
@@ -13,7 +13,7 @@ import { POSTO_DI, LUOGHI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, 
 import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice, sassiLungo } from '../motore/terra.js'
 import { pezzoAndante } from '../dati/tessere.js'
 import { figura, haFigura } from './figura.js'
-import { MINATORE, ARMAIOLO, ERBORISTA, RIGATTIERE, LUCCHETTO, SASSO, LUCCICHIO } from './pixel.js'
+import { MINATORE, ARMAIOLO, ERBORISTA, RIGATTIERE, DIVIETO, SASSO, LUCCICHIO } from './pixel.js'
 import Pixel from './Pixel.vue'
 
 const props = defineProps({
@@ -76,6 +76,9 @@ const nebbia = (() => {
   return n
 })()
 const primaVolta = ref(!props.terra)
+// i cartelli di divieto piantati davanti alle discese chiuse in cui si è andati; una discesa che si apre lo perde
+const divieti = ref(new Set((props.terra && Array.isArray(props.terra.divieti) ? props.terra.divieti : [])
+  .filter(n => posti.value.some(p => p.nome === n && !p.aperto))))
 const parlato = ref(!!(props.terra && props.terra.parlato))
 
 // un posto si trova quando se ne vede il cuore
@@ -291,6 +294,11 @@ function apri(m) {
   if (m.tipo === 'mercante') { chiudi(); emit('bottega', m.chi.chiave); return }
   aperto.value = m
   fumPos.value = null
+  // una discesa chiusa non si apre, ma ci si è andati: davanti all'ingresso si pianta il divieto
+  if (m.tipo === 'posto' && !m.p.aperto && !divieti.value.has(m.p.nome)) {
+    divieti.value = new Set([...divieti.value, m.p.nome])
+    salva()
+  }
   if (m.tipo === 'minatore' && !parlato.value) { parlato.value = true; salva() }
   nextTick(piazzaFumetto)
 }
@@ -411,7 +419,7 @@ const ritrattoMinatore = minatoreVero ? figura('minatore-fermo-0', { scala: SCAL
 /* ═══════════ si ricorda ═══════════ */
 function salva() {
   const c = cellaDiMe()
-  emit('terra', { nebbia: nebbiaInCodice(nebbia), dove: [c.x, c.y], parlato: parlato.value })
+  emit('terra', { nebbia: nebbiaInCodice(nebbia), dove: [c.x, c.y], parlato: parlato.value, divieti: [...divieti.value] })
 }
 
 let osserva = null
@@ -443,6 +451,11 @@ const pallino = p => {
   const [x, y, w, h] = p.ingresso, r = p.riquadro
   return { left: (x + w / 2) * S + 'px', top: Math.min(y + h, r[1] + r[3]) * S - 14 + 'px' }
 }
+// il divieto sta ai piedi dell'ingresso, spostato verso l'angolo sinistro: l'eroe aspetta al centro e non lo copre
+const divieto = p => {
+  const [x, y, w, h] = p.ingresso, r = p.riquadro
+  return { left: (x + w * 0.05) * S + 'px', top: Math.min(y + h, r[1] + r[3]) * S + 'px' }
+}
 const nomeDi = p => p.cosa.nome
 // una chiusa dice cosa la apre; quella chiusa per l'età non promette niente («finisci quella di prima» sarebbe falso)
 const chiusaPerche = p => {
@@ -459,13 +472,12 @@ const chiusaPerche = p => {
     <div ref="mondoEl" class="sot-mondo" :style="{ width: LARGO * S + 'px', height: ALTO * S + 'px' }">
       <img class="sot-mappa" :src="MAPPA" alt="" draggable="false">
 
-      <!-- le discese chiuse: il ritaglio della mappa sbarrata se c'è, se no un velo col lucchetto -->
-      <template v-for="p in posti" :key="'chiusa-' + p.nome">
-        <div v-if="!p.aperto" class="sot-chiusa-pezza" :class="{ 'sot-velata': !PEZZE[p.nome] }"
-             :style="quadro(p.riquadro)" :data-chiusa="p.nome">
-          <img v-if="PEZZE[p.nome]" :src="PEZZE[p.nome]" alt="" draggable="false">
-          <Pixel v-else :figura="LUCCHETTO" :scala="3" />
-        </div>
+      <!-- le discese chiuse hanno il disegno pulito: un cartello di divieto, piantato davanti all'ingresso
+           da quando ci si è andati e finché non si aprono -->
+      <template v-for="p in posti" :key="'divieto-' + p.nome">
+        <span v-if="!p.aperto && divieti.has(p.nome)" class="sot-divieto" :data-divieto="p.nome" :style="divieto(p)">
+          <Pixel :figura="DIVIETO" :scala="2" />
+        </span>
       </template>
 
       <span v-for="s in sassi" :key="'sasso-' + s.i" class="sot-sasso" data-sasso
