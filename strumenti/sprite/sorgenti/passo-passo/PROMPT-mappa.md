@@ -16,7 +16,7 @@ una mano sola:
 1. `isole_1.png` — la valle dei piccoli: prato, salto, ghiaccio, massi, buche (24 tappe del coniglio) e accanto il pascolo del cane (11 tappe);
 2. `isole_2.png` — le terre dello zaino: ripeti, fino a, se, tutto il mondo (21 tappe del coniglio), ognuna con accanto la sua isoletta del cane (3–4 tappe ciascuna).
 
-Al primo prompt si allega la schermata di una partita (`test/scatti/passo-grande.png`):
+Al primo prompt si allega la schermata di una partita (`passo-stile.png`, qui accanto; la rifà `test/scatti/passo-grande.png`):
 è lo stile del gioco.
 
 ## Prompt 1 — la valle dei piccoli
