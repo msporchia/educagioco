@@ -340,6 +340,15 @@ await attendi(page, 300)
 }
 await scatto(page, 'passo-mappa-pascolo')
 await toccaFuori()
+controlla('in fondo al pascolo la casella del sentiero del cane, col suo cane',
+          await page.locator('[data-tappa="senza-fine-cane"] [data-sentiero-di="cane"]').count() === 1)
+controlla('e in cima alle buche quella del coniglio', await page.locator('[data-tappa="senza-fine"] [data-sentiero-di="coniglio"]').count() === 1)
+await page.locator('[data-tappa="senza-fine-cane"]').evaluate(e => e.scrollIntoView({ block: 'center', inline: 'center' }))
+await attendi(page, 200)
+await scatto(page, 'passo-mappa-sentiero-cane')
+await page.locator('[data-tappa="senza-fine"]').evaluate(e => e.scrollIntoView({ block: 'center', inline: 'center' }))
+await attendi(page, 200)
+await scatto(page, 'passo-mappa-buche')
 
 /* dal pascolo al prato sul ponte: sul capo del pascolo il cane torna coniglio, in una nuvoletta */
 await spia()

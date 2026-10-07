@@ -14,7 +14,7 @@ import { STRADE, aperture } from '../../src/giochi/passo-passo/motore/strade.js'
 import { FIRMA, ISOLE, NODI, LATO, LARGO, ALTO } from '../../src/giochi/passo-passo/dati/isole-mappa.js'
 import { quadroValle, chiusure, percorso, viaggio, vicinoA, nellaValle, TEMPO_MAX }
   from '../../src/giochi/passo-passo/scena/valle.js'
-import { ANIMALE } from '../../src/giochi/passo-passo/scena/isole.js'
+import { ANIMALE, SENTIERO_CANE } from '../../src/giochi/passo-passo/scena/isole.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const S = STRADE
@@ -36,9 +36,12 @@ const tappe = valle.flatMap(s => s.tappe)
 const caselle = q.nodi.filter(n => n.tipo === 'casella')
 uguale('una casella per ogni tappa della valle', caselle.map(n => n.id).sort((a, b) => a - b).join(','),
        [...tappe].sort((a, b) => a - b).join(','))
-uguale('e il sentiero senza fine', q.nodi.filter(n => n.tipo === 'sentiero').map(n => n.id).join(','), 'senza-fine')
-controlla('il posto pronto per il sentiero del cane sta sul pascolo',
-          q.nodi.some(n => n.id === 'sentiero-cane' && n.isola === 'pecore-cane'))
+uguale('e i due sentieri senza fine', q.nodi.filter(n => n.tipo === 'sentiero').map(n => n.id).sort().join(','),
+       ['senza-fine', SENTIERO_CANE].sort().join(','))
+controlla('quello del coniglio sta sulle buche, ed è del coniglio',
+          q.nodi.some(n => n.id === 'senza-fine' && n.isola === 'buche' && n.animale === 'coniglio'))
+controlla('quello del cane in fondo al pascolo, ed è del cane',
+          q.nodi.some(n => n.id === SENTIERO_CANE && n.isola === 'pecore-cane' && n.animale === 'cane'))
 controlla('le tappe dello zaino non stanno nella valle', S.isole.filter(s => !nellaValle(s.chiave))
   .every(s => s.tappe.every(i => !per.has(i))))
 
@@ -53,10 +56,10 @@ const distanza = (p, punti) => {
   }
   return d
 }
-const fuoriStrada = [...caselle, ...q.nodi.filter(n => n.tipo === 'sentiero' || n.tipo === 'riservato')]
+const fuoriStrada = [...caselle, ...q.nodi.filter(n => n.tipo === 'sentiero')]
   .filter(n => !fg.sentieri.some(s => s.isola === n.isola && !s.erba && distanza(n, s.punti) < 1.5))
 uguale('ogni casella sta su un sentiero della sua isola', fuoriStrada.map(n => n.chiave).join(' '), '')
-const tonde = q.nodi.filter(n => n.tipo === 'casella' || n.tipo === 'sentiero' || n.tipo === 'riservato')
+const tonde = q.nodi.filter(n => n.tipo === 'casella' || n.tipo === 'sentiero')
   .map(n => ({ ...n, mezzo: n.tipo === 'casella' ? LATO / 2 : Math.round(LATO * 1.35) / 2 }))
 const toccano = []
 tonde.forEach((a, i) => tonde.slice(i + 1).forEach(b => {
@@ -139,6 +142,9 @@ uguale('sulle isole del coniglio salta sempre il coniglio', cambiano.join(' '), 
 const pascolo = S.isole.find(s => s.chiave === 'pecore-cane')
 uguale('dall\'ultima delle buche al primo gregge: per la tana',
        animali(viaggio(q, pascolo.attacco, pascolo.tappe[0], tutte.bloccati)), 'entra:coniglio esce:cane')
+uguale('dall\'ultimo gregge al sentiero del cane si salta e basta, da cane',
+       viaggio(q, pascolo.tappe.at(-1), SENTIERO_CANE, tutte.bloccati).map(p => `${p.che}:${p.animale}`).filter((x, k, l) => x !== l[k - 1]).join(' '),
+       'salto:cane')
 uguale('dal prato al pascolo: sul ponte, e sul capo del pascolo una nuvoletta',
        animali(viaggio(q, 0, pascolo.tappe[2], tutte.bloccati)), 'entra:coniglio* esce:cane*')
 uguale('e dal pascolo al prato il cane diventa coniglio prima di salire sul ponte',
