@@ -45,6 +45,7 @@ await page.waitForSelector('.sot-tappe', { timeout: 5000 })
    che nessuno preme mai sarebbe una porta che non si apre. */
 uguale('al primo ingresso si sceglie chi scende',
        await page.locator('[data-eroe]').count(), 4)
+uguale('e sono quattro avventure nuove', await page.locator('.sot-eroe[data-nuova="1"]').count(), 4)
 await page.locator('[data-eroe="cavaliere"]').click()
 await attendi(page, 300)
 uguale('scelto, la scelta sparisce', await page.locator('[data-eroe]').count(), 0)
@@ -136,8 +137,8 @@ controlla('uscendo a metà la discesa resta in sospeso',
           await page.locator('[data-ripresa]').count() === 1)
 controlla('e la carta dice a che piano si era',
           (await page.locator('.sot-ripresa .sot-dove').textContent()).includes('piano 1'))
-/* e **con chi**: si può cambiare eroe dalla mappa mentre una discesa è
-   in sospeso, e chi è sceso è sceso */
+/* e **con chi**: la discesa a metà è dell'avventura del cavaliere
+   (docs/sotterraneo/avventure.md, lo prova integrazione/sotterraneo-avventure) */
 controlla('e con chi si torna giù',
           (await page.locator('.sot-ripresa .sot-dove').textContent()).includes('Cavaliere'))
 

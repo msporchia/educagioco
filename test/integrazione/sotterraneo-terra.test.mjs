@@ -179,8 +179,8 @@ await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('.carte', { timeout: 5000 })
 await attendi(page, 600)
 const p = await leggiProfilo(page)
-const terra = p?.campagne?.sotterraneo?.cfg?.terra
-controlla('la terra si scrive nel profilo, sotto la campagna', !!terra && typeof terra.nebbia === 'string',
+const terra = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.terra
+controlla('la terra si scrive nel profilo, nell\'avventura del cavaliere', !!terra && typeof terra.nebbia === 'string',
           JSON.stringify(terra)?.slice(0, 80))
 controlla('e il minatore ha già parlato', terra?.parlato === true)
 await scegli(page, 'sotterraneo')

@@ -128,8 +128,8 @@ await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('[data-terra]', { timeout: 5000 })
 await attendi(page, 400)
 const p = await leggiProfilo(page)
-const su = p?.campagne?.sotterraneo?.cfg?.roba
-controlla('la roba è nel profilo, sotto la campagna', !!su && su.zaino.includes('pozione'), JSON.stringify(su))
+const su = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.roba
+controlla('la roba è nel profilo, nell\'avventura del cavaliere', !!su && su.zaino.includes('pozione'), JSON.stringify(su))
 uguale('con le gemme di prima', su && su.gemme, dopo)
 await page.locator('[data-azione="scorda"]').click()
 await attendi(page, 300)

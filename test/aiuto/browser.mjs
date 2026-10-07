@@ -339,3 +339,15 @@ export async function scendiNelSotterraneo(page, quale, { scendi = true } = {}) 
   await page.waitForSelector('[data-fumetto] [data-azione="scendi"]', { timeout: 5000 })
   if (scendi) await page.click('[data-fumetto] [data-azione="scendi"]')
 }
+
+/* Apre l'avventura di un eroe del sotterraneo (docs/sotterraneo/avventure.md):
+   la prima volta la scelta c'è già, poi la si apre dal «cambio» della carta
+   in fondo alla terra di sopra. Aspetta la terra dell'eroe scelto. Col
+   mouse: il dito vero lo prova `integrazione/sotterraneo-avventure`. */
+export async function scegliAvventura(page, eroe) {
+  await page.waitForSelector('[data-terra], .sot-eroe[data-eroe]', { timeout: 5000 })
+  if (!(await page.locator('.sot-eroe[data-eroe]').count())) await page.click('[data-azione="eroe"]')
+  await page.click(`.sot-eroe[data-eroe="${eroe}"]`)
+  await page.waitForSelector('.sot-eroe[data-eroe]', { state: 'detached', timeout: 3000 })
+  await page.waitForSelector('[data-terra]', { timeout: 5000 })
+}

@@ -17,7 +17,7 @@
    tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli,
-         scendiNelSotterraneo } from '../aiuto/browser.mjs'
+         scendiNelSotterraneo, scegliAvventura } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -133,10 +133,7 @@ await scegli(page, 'sotterraneo')
 await page.waitForSelector('.sot-tappe', { timeout: 5000 })
 /* la prima volta si sceglie chi scende, e finché quella carta è aperta
    non si è ancora dentro niente */
-if (await page.locator('[data-eroe="cavaliere"]').count()) {
-  await page.locator('[data-eroe="cavaliere"]').click()
-  await attendi(page, 300)
-}
+await scegliAvventura(page, 'cavaliere')
 uguale('sotterraneo: sulla mappa non c\'è niente da fermare', await pausaInBarra(), 0)
 
 await scendiNelSotterraneo(page, 0)

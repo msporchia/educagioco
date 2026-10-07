@@ -33,7 +33,7 @@
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, leggiProfilo, scegli,
-         scendiNelSotterraneo } from '../aiuto/browser.mjs'
+         scendiNelSotterraneo, scegliAvventura } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -429,8 +429,7 @@ await page.waitForSelector('.sot-tappe', { timeout: 5000 })
    rosso senza che nessuno se ne accorgesse: la CI le prove col browser
    non le lancia. */
 await page.waitForSelector('.sot-velo .sot-eroe', { timeout: 5000 })
-await page.click('.sot-eroe[data-eroe="cavaliere"]')
-await page.waitForSelector('.sot-velo', { state: 'hidden', timeout: 5000 })
+await scegliAvventura(page, 'cavaliere')
 await page.evaluate(() => { location.hash = 'seme=96' })
 await scendiNelSotterraneo(page, 0)
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
