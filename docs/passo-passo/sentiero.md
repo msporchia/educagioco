@@ -90,7 +90,7 @@ volte più piano). «Corta» è la strada più corta senza carota.
 | famiglia | corta prima: min · mediana · max | corta dopo: min · 10% · mediana · 90% · max | forme prima → dopo |
 |:--|:--|:--|:--|
 | prato | 8 · 12 · 28 | 10 · 10 · 14 · 17 · 23 | 1 → 3 |
-| pascolo | 12 · 17 · 25 | 16 · 18 · 23 · 29 · 33 | 1 → 4 |
+| pascolo | 12 · 17 · 25 | 16 · 18 · 23 · 30 · 33 | 1 → 4 |
 | 🔁 coniglio | 8 · 12 · 48 | 10 · 10 · 16 · 25 · 48 | 6 → 7 |
 | 🚩 coniglio | 10 · 14 · 41 | 12 · 13 · 16 · 22 · 34 | 4 → 5 |
 | ❓ coniglio | 10 · 12 · 20 | 12 · 12 · 15 · 18 · 20 | 3 → 3 |
@@ -104,8 +104,8 @@ volte più piano). «Corta» è la strada più corta senza carota.
 - **In fila, come li gioca un bambino** (mille posti col ricordo): il
   coniglio passa per 18 forme e ne ripete una di fila 8 volte su mille; il
   cane per 8 forme, 17 volte su mille.
-- **Il tempo per nascere**: il coniglio 1,8 ms in media, 20 ms al 99%; il
-  cane 19 ms in media, 92 ms al 95%, 157 al 99%, 288 al massimo. Per questo
+- **Il tempo per nascere**: il coniglio 1,8 ms in media, 19 ms al 99%; il
+  cane 18 ms in media, 87 ms al 95%, 160 al 99%, 279 al massimo. Per questo
   il prossimo posto si fa mentre il bambino guarda il cartello della
   vittoria (`preparaIlProssimo` in `Gioco.vue`): lo stesso seme fa lo
   stesso posto, quindi è solo un anticipo.
