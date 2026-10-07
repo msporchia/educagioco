@@ -87,7 +87,7 @@ export const FORME = {
     { forma: 'lago', pavimento: 10, tetto: 24, dev: 1, prove: 4000, serve: ['ghiaccio', 'buche'], tema: 'inverno',
       nomi: ['Il lago', 'Lo stagno gelato', 'La pista di ghiaccio', 'Il lago dei sassi'] },
     { forma: 'fiumi', pavimento: 14, tetto: 36, dev: 1, prove: 1500, serve: ['salto'],
-      nomi: ['Il guado', 'Le rive', 'Il torrente', 'I tre fiumi', 'La palude'] },
+      nomi: ['Il guado', 'Le rive', 'Il torrente', 'I fiumi', 'La palude'] },
   ],
   pascolo: [
     { forma: 'aperto', pavimento: 16, tetto: 34, dev: 1, prove: 160, serve: [],

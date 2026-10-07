@@ -174,7 +174,9 @@ export function bozzaCorridoio(g, rnd) {
   const bocca = [cx, H - lungo - 1]
   m[bocca[1]][cx] = '.'
   const dentro = (x, y) => y < H - lungo - 1 && Math.abs(x - cx) + Math.abs(y - bocca[1]) >= 2
-  const out = popola(m, rnd, { pecore: g.pecore, dove: dentro, soglia: [bocca], inFila: g.inFila })
+  // il cane comincia nel prato, non dentro il corridoio
+  const out = popola(m, rnd, { pecore: g.pecore, dove: dentro, soglia: [bocca], inFila: g.inFila,
+                               doveCane: (x, y) => y < H - lungo })
   return out && gira(out, rnd)
 }
 
