@@ -90,7 +90,7 @@ const DI_PRIMA = ['avventure', 'roba', 'terra', 'abisso', 'botteghe']
 // delle avventure. Gira a ogni apertura, prima di azzerare: non abbassa mai il numero.
 export function ricordaIlFondo(c, primato = 0) {
   if (!oggetto(c.cfg)) c.cfg = {}
-  const vecchio = c.cfg.mondo === MONDO ? 0 : (oggetto(c.cfg.abisso) && c.cfg.abisso.fondo) || 0
+  const vecchio = c.cfg.mondo >= AZZERATO ? 0 : (oggetto(c.cfg.abisso) && c.cfg.abisso.fondo) || 0   // dal mondo 2 cfg.abisso non c'è più
   const f = Math.max(primato || 0, vecchio)
   if (!(f > (c.cfg.fondoDiPrima || 0))) return false
   c.cfg.fondoDiPrima = f
