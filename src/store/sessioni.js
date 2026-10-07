@@ -1,4 +1,5 @@
 // Quanto ha giocato e a cosa: vedi docs/core/sessioni.md.
+import { ref } from 'vue'
 import { load, save, flush, remove } from './storage.js'
 
 export const MINIMA = 5              // sotto, è un tocco di passaggio, non una partita
@@ -59,15 +60,25 @@ export function potate(voci, { oggi = Date.now(), giorni = GIORNI_TENUTI } = {})
 }
 
 // l'ultima copia letta o scritta, per chi deve contare subito (le monete, store/varieta.js)
+// `versione` sale a ogni cambio: la home la guarda, perché una Map non è reattiva
 const memoria = new Map()
+export const versione = ref(0)
 export const vociInMemoria = id => memoria.get(id) || null
+const metti = (id, voci) => { memoria.set(id, voci); versione.value++ }
+// il disco può essere indietro rispetto alla memoria (una sessione appena chiusa si sta ancora scrivendo):
+// rileggendolo non si butta quello che la memoria sa già
+export const unite = (disco, mem = []) => {
+  const c = v => `${v.g}@${v.t}`
+  const visti = new Set(disco.map(c))
+  return [...disco, ...mem.filter(v => !visti.has(c(v)))]
+}
 
 const dalDisco = async id => (await load(CHIAVE(id)))?.voci || []
 
 export async function leggiSessioni(id) {
   if (!id) return []
-  const voci = await dalDisco(id)
-  memoria.set(id, voci)
+  const voci = unite(await dalDisco(id), memoria.get(id))
+  metti(id, voci)
   return voci
 }
 
@@ -75,8 +86,8 @@ export async function scriviSessione(id, { gioco, quando, secondi }) {
   if (!id || !gioco) return false
   const s = Math.round(Math.min(MAX_SESSIONE, secondi))
   if (s < MINIMA) return false
-  const voci = potate([...(await dalDisco(id)), { g: gioco, t: quando, s }])
-  memoria.set(id, voci)
+  const voci = potate(unite([...(await dalDisco(id)), { g: gioco, t: quando, s }], memoria.get(id)))
+  metti(id, voci)
   save(CHIAVE(id), { voci })
   await flush()
   return true
@@ -108,7 +119,7 @@ export function esci() {
   // in memoria subito: la home che si apre adesso non deve aspettare il disco
   const m = memoria.get(s.id)
   const sec = Math.round(Math.min(MAX_SESSIONE, secondi))
-  if (m && sec >= MINIMA) memoria.set(s.id, [...m, { g: s.gioco, t: s.da, s: sec }])
+  if (m && sec >= MINIMA) metti(s.id, [...m, { g: s.gioco, t: s.da, s: sec }])
   scriviSessione(s.id, { gioco: s.gioco, quando: s.da, secondi }).catch(() => {})
   return { ...s, secondi }
 }

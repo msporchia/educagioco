@@ -9,7 +9,7 @@
 
    `node test/esegui.mjs sessioni --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
-import { chiaveGiorno, perGioco, perGiorno, oggiDi, potate,
+import { chiaveGiorno, perGioco, perGiorno, oggiDi, potate, unite,
          MINIMA, MAX_SESSIONE, GIORNI_TENUTI } from '../../src/store/sessioni.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -76,6 +76,17 @@ uguale('e ieri non conta', oggiDi(VOCI, 'conta', OGGI), 0)
   const dopo = potate([...VOCI, vecchia], { oggi: OGGI })
   uguale('quella di quattro mesi fa se ne va', dopo.length, VOCI.length)
   controlla('e le altre restano tutte', dopo.every(v => VOCI.includes(v)))
+}
+
+// la home rilegge il disco appena si torna da un gioco, mentre la sessione appena chiusa si sta ancora
+// scrivendo: la rilettura non deve buttarla (sennò «riprendi da qui» resta sul gioco di prima)
+{
+  const disco = VOCI.slice(0, 2)
+  const appena = { g: 'passo', t: alle(22, 17, 50), s: 6 * 60 }
+  const u = unite(disco, [...disco, appena])
+  uguale('la sessione appena chiusa resta', u.length, 3)
+  controlla('ed è proprio quella', u.some(v => v.g === 'passo' && v.t === appena.t))
+  uguale('niente doppioni quando il disco ce l\'ha già', unite([...disco, appena], [...disco, appena]).length, 3)
 }
 
 nota(`sotto ${MINIMA}s non è una partita; nessuna sessione oltre ` +

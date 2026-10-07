@@ -42,7 +42,10 @@ lasciava un vuoto sopra il profilo.
 - **È l'ultimo gioco giocato**, letto dal registro delle sessioni
   (`store/sessioni.js`): la voce con l'inizio più recente, con
   `chiaveDelGioco` per i giochi che hanno più chiavi. Una visita sotto i
-  cinque secondi non è una sessione, quindi non conta.
+  cinque secondi non è una sessione, quindi non conta. Si aggiorna appena si
+  torna da un gioco: la memoria del registro ha un contatore reattivo
+  (`versione`), e rileggere il disco non butta la sessione appena chiusa che
+  si sta ancora scrivendo (`unite`).
 - **Un gioco spento non si ripropone**, e un bambino nuovo non ha il
   riquadro: senza partite la home parte dal carosello.
 - Dice il nome, dove si era arrivati (la stessa riga della copertina) e ha

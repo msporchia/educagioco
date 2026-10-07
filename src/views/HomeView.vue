@@ -20,7 +20,7 @@ import Carosello from '../components/home/Carosello.vue'
 import Riprendi from '../components/home/Riprendi.vue'
 import Iniziale from '../components/home/Iniziale.vue'
 import { chiediRipresa } from '../giochi/ripresa.js'
-import { vociInMemoria } from '../store/sessioni.js'
+import { vociInMemoria, versione } from '../store/sessioni.js'
 import { giro, ricarica } from '../store/varieta.js'
 import { chiaveDelGioco } from '../data/varieta.js'
 import Aggiorna from '../guide/Aggiorna.vue'
@@ -121,7 +121,7 @@ const elenco = computed(() => gruppi.value.flatMap(a => a.giochi)
 onMounted(ricarica)
 watch(() => state.player, ricarica)
 const ultimo = computed(() => {
-  void giro.value
+  void giro.value, versione.value
   const voci = vociInMemoria(state.player) || []
   const v = voci.reduce((a, b) => (!a || b.t > a.t ? b : a), null)
   const k = v && chiaveDelGioco(v.g)
