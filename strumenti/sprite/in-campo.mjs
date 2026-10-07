@@ -21,7 +21,7 @@
 import { mkdirSync, rmSync, writeFileSync, statSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { join } from 'node:path'
-import { apriBrowser, apriGioco, azzera, semina, attendi } from '../../test/aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, scegli } from '../../test/aiuto/browser.mjs'
 import { TAPPE } from '../../src/data/castello.js'
 import { BESTIARIO, VOLANO } from '../../src/giochi/castello/scena/bestiario.js'
 import { VESTITO_DI } from '../../src/giochi/castello/scena/vestito.js'
@@ -55,7 +55,7 @@ const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
 await semina(page, { settings: { sperimentali: true } })
-await page.locator('.carta.gioco[data-gioco="torri"]').click()
+await scegli(page, 'torri')
 await page.waitForSelector('.tappe')
 console.log(`${TAPPE[scelta.i].nome} (${TAPPE[scelta.i].campagna}): ogni nemico è ${scelta.mostro}, cioè ${figura}`)
 await page.evaluate(i => window.__td.inizia(i), scelta.i)
