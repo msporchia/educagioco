@@ -26,7 +26,7 @@ import { pezzoAndante } from './dati/tessere.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
-import { Corredo, rileggiRoba, ROBA_VUOTA } from './motore/corredo.js'
+import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba } from './motore/corredo.js'
 import { Bottega } from './motore/bottega.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
 import { avventuraDi, scriviNellAvventura, vintaNellAvventura, passaAlleAvventure, cominciata }
@@ -106,16 +106,21 @@ function scegli(k) {
   suono.ok()
 }
 
-// le quattro schede della scelta: a che punto è ognuna, o «nuova avventura»
+// le quattro schede della scelta: a che punto è ognuna, o «nuova avventura». I numeri sono quelli con la roba
+// addosso (schedaConLaRoba, gli stessi della discesa); un'avventura nuova ha lo zaino vuoto e quindi quelli di base
 const avventure = computed(() => EROI.map(e => {
   const a = avventuraDi(progresso(CHIAVE), e.chiave)
   const r = rileggiRoba(a.roba) || ROBA_VUOTA()
+  const n = schedaConLaRoba(e.chiave, r)
   const meta = dice(a.sosta, CAMPAGNA)
   return {
     ...e, nuova: !cominciata(a),
+    vita: n.vita, att: n.att, dif: n.dif, tratti: n.tratti,
+    mano: n.mano, mancina: n.mancina,
     discese: Math.min(a.tappa, QUANTE_TAPPE), quante: QUANTE_TAPPE,
     stelle: Object.values(a.stelle).reduce((n, s) => n + (Number(s) || 0), 0),
-    addosso: [r.mano, r.corpo].filter(k => k && COSE[k]).map(k => ({ chiave: k, ...COSE[k] })),
+    // il resto della roba che si vede: l'arma e lo scudo sono già nelle mani del ritratto
+    addosso: [n.corpo, n.dito].filter(k => k && COSE[k]).map(k => ({ chiave: k, ...COSE[k] })),
     gemme: r.gemme,
     fondo: (a.abisso && a.abisso.fondo) || 0,
     aMeta: meta ? meta.nome : null,
@@ -175,11 +180,8 @@ const tappe = computed(() => {
   }))
 })
 
-// la carta di chi scende, sulla mappa: braccio e difesa con quello che ha addosso, e le gemme da spendere
-const robaSopra = computed(() => {
-  const c = new Corredo({ eroe: eroeQui(), roba: roba.value })
-  return { att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.zaino.length }
-})
+// la carta di chi scende, sulla mappa: vita, braccio e difesa con quello che ha addosso, e le gemme da spendere
+const robaSopra = computed(() => schedaConLaRoba(eroeQui(), roba.value))
 
 /* ═══════════ i mercanti di sopra (motore/bottega.js) ═══════════
    Il banco si pesca una volta per giro e si scrive nell'avventura (botteghe): un banco che cambiasse a ogni

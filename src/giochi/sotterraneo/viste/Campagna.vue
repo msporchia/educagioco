@@ -3,8 +3,9 @@
 // discesa lasciata a metà sta in cima; scenderne un'altra avverte invece di buttare la partita in silenzio.
 import { riprendiSeChiesta } from '../../ripresa.js'
 import { ref, computed } from 'vue'
-import { figura } from './figura.js'
-import { pezzoAndante } from '../dati/tessere.js'
+import Icona from './Icona.vue'
+import Armato from './Armato.vue'
+import { COSE } from '../dati/cose.js'
 import Terra from './Terra.vue'
 
 const props = defineProps({
@@ -13,12 +14,13 @@ const props = defineProps({
   eroe: { type: Object, required: true },   // la scheda di chi scende, da dati/eroi.js
   abisso: { type: Object, default: null },   // { indice, nome, icona, dritta, fondo }; in fondo, la ripresa è più urgente
   terra: { type: Object, default: null },    // la terra dell'avventura: la nebbia, dove si era, se il minatore ha già parlato
-  roba: { type: Object, default: null },     // quello che ci si porta dietro: { att, dif, gemme, tasche } già contati
+  roba: { type: Object, default: null },     // quello che ci si porta dietro, già contato (schedaConLaRoba): { vita, att, dif, gemme, mano, mancina, corpo, tratti… }
 })
 const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe', 'terra', 'bottega'])
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 
-const ritratto = computed(() => figura(pezzoAndante(props.eroe.sprite, 'fermo', 0), { scala: 2 }))
+// l'armatura non si vede sul ritratto (come in discesa): sta accanto ai numeri, con la sua figura
+const veste = computed(() => (props.roba && props.roba.corpo ? COSE[props.roba.corpo] || null : null))
 
 const chiede = ref(null)   // quale tappa si sta per cominciare avendo una discesa in sospeso
 
@@ -63,16 +65,17 @@ function comincia() {
       <template #sotto>
         <!-- chi scende: di qui si torna alle quattro avventure, senza perdere niente di questa -->
         <button class="sot-chi" data-azione="eroe" @click="$emit('eroe')">
-          <span class="sot-ritratto" :style="ritratto ? ritratto.gabbia : null">
-            <i v-if="ritratto" :style="ritratto.pezzo"></i>
-            <b v-else class="em">{{ eroe.em }}</b>
-          </span>
+          <Armato :eroe="eroe" :mano="roba ? roba.mano : null" :mancina="roba ? roba.mancina : null" :scala="2" />
           <span class="sot-testo">
             <b>{{ eroe.nome }}</b>
             <!-- con la roba addosso: è quella che scende, e le gemme sono quelle da spendere qui sopra -->
-            <i class="em" data-roba-sopra>❤️ {{ eroe.vita }} · ⚔️ {{ roba ? roba.att : eroe.att }}<template
+            <i class="em" data-roba-sopra>❤️ {{ roba ? roba.vita : eroe.vita }} · ⚔️ {{ roba ? roba.att : eroe.att }}<template
                v-if="roba ? roba.dif : eroe.dif"> · 🛡️ {{ roba ? roba.dif : eroe.dif }}</template><template
                v-if="roba"> · 💎 {{ roba.gemme }}</template></i>
+            <i v-if="veste || (roba && roba.tratti.length)" class="sot-veste" data-veste-sopra>
+              <Icona v-if="veste" :sprite="veste.sprite" :em="veste.em" :emAlto="14" :scala="1" />
+              <span v-for="t in (roba ? roba.tratti : [])" :key="t" class="em">{{ t }}</span>
+            </i>
           </span>
           <span class="sot-cambia">cambio</span>
         </button>

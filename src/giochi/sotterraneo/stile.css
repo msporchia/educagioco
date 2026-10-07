@@ -386,6 +386,18 @@
 /* lato opposto: uno scudo si porta davanti al fianco sinistro, come nel campo */
 .sot-imbracciata { position: absolute; left: 12%; bottom: 22%; overflow: hidden }
 
+/* l'eroe con la roba in mano (viste/Armato.vue): la scala è quella della figura, le armi escono dal riquadro
+   (una balestra è più larga del corpo) e prendono lo stesso filo chiaro delle altre cose */
+.sot-armato { position: relative; display: block; flex: none }
+.sot-armato > .sot-ritratto { position: absolute; top: 0 }
+.sot-armato > .sot-pezzo { position: absolute; display: block }
+.sot-armato > .sot-pezzo > i {
+  position: absolute; top: 0; left: 0; display: block;
+  filter:
+    drop-shadow(1px 0 0 #ffffff4d) drop-shadow(-1px 0 0 #ffffff4d)
+    drop-shadow(0 1px 0 #ffffff4d) drop-shadow(0 -1px 0 #ffffff4d);
+}
+
 .sot-tasche { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px }
 .sot-tasca {
   display: grid; justify-items: center; gap: 3px; padding: 9px 4px 7px;
@@ -420,6 +432,7 @@
 .sot-chi .sot-testo { flex: 1; min-width: 0; display: grid }
 .sot-chi .sot-testo b { font-size: 15px }
 .sot-chi .sot-testo i { font-style: normal; font-size: 12.5px; color: var(--sot-tenue) }
+.sot-chi .sot-testo i.sot-veste { display: flex; align-items: center; gap: 6px; margin-top: 2px; color: var(--sot-oro) }
 .sot-chi .sot-cambia {
   font-size: 12px; color: var(--sot-oro); border: 1px solid #ffd23f55;
   border-radius: 999px; padding: 4px 10px;
@@ -456,6 +469,12 @@
 .sot-cuore::before { background: linear-gradient(90deg, #e0644f66, #ff9b7a55) }
 .sot-braccio::before { background: linear-gradient(90deg, #ffd23f55, #ffe98a44) }
 .sot-scudo { font-size: 12px; color: var(--sot-tenue) }
+/* i tratti della roba addosso («💎 ×1,5»): pastiglie come quelle di cosa porta, ma d'oro, perché sono guadagnati */
+.sot-tratti { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px }
+.sot-tratti > span {
+  padding: 1px 7px 2px; font-size: 11.5px; color: var(--sot-oro);
+  background: #ffd23f14; border: 1px solid #ffd23f33; border-radius: 999px;
+}
 /* pastiglie con l'icona davanti: questa carta la guarda anche chi non legge ancora */
 .sot-porta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px }
 .sot-porta > span {
