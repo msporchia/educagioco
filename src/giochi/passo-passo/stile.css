@@ -208,17 +208,12 @@
 /* il blocco: la sbarra sul ponte verso un'isola chiusa */
 .pp-blocco { position: absolute; transform: translate(-50%, -72%); padding: 0; border: 0; background: none;
              line-height: 0; z-index: 1 }
+/* la tana al capo di un ponte del pascolo: il punto è il fondo del buco, dove il segnalino poggia i piedi (12 pixel del disegno, a scala 4);
+   chiusa ha il masso davanti, che è il suo blocco */
+.pp-tana-ponte { position: absolute; transform: translate(-50%, -48px); pointer-events: none; line-height: 0 }
+.pp-blocco-masso { transform: translate(-50%, -50%) }
 .pp-sentiero-nome-valle { padding: 5px 11px; border-radius: 12px; background: rgba(255, 250, 243, .94);
                           box-shadow: 0 3px 0 var(--is-spessore) }
-/* la nuvoletta dove il coniglio diventa cane, sul capo del ponte */
-.pp-sbuffo { position: absolute; width: 0; height: 0; pointer-events: none; z-index: 2 }
-.pp-sbuffo i { position: absolute; left: -11px; top: -30px; width: 22px; height: 22px; border-radius: 50%;
-               background: #fffaf0; opacity: 0;
-               animation: pp-sbuffo .55s ease-out forwards; animation-delay: calc(var(--k) * 25ms) }
-@keyframes pp-sbuffo {
-  0% { opacity: .95; transform: rotate(calc(var(--k) * 72deg)) translateY(0) scale(.6) }
-  100% { opacity: 0; transform: rotate(calc(var(--k) * 72deg)) translateY(-26px) scale(1.3) }
-}
 
 .pp-spenta { opacity: .22; filter: grayscale(1) }
 

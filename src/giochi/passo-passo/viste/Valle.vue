@@ -6,13 +6,14 @@
    del sotterraneo); col fumetto aperto sta sul fumetto. Toccando una casella
    il fumetto si apre subito e il segnalino ci va sulla strada più corta dei
    ponti aperti; toccando altrove ci va e basta. La tana in cima alle buche
-   porta allo zaino (`passa`). Riceve lo stato già deciso di ogni tappa.
+   porta allo zaino (`passa`); l'animale cambia solo nelle tane (le due al
+   capo dei ponti del pascolo, e quella fra le buche e il pascolo). Riceve lo stato già deciso di ogni tappa.
    Vedi docs/passo-passo/mappa.md. */
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { MAPPA } from '../dati/isole-mappa.js'
 import { quadroValle, chiusure, viaggio, vicinoA, entraNellaTana, esceDallaTana } from '../scena/valle.js'
 import { ANIMALE, SENTIERO_CANE } from '../scena/isole.js'
-import { SBARRA, MASSO, rettangoli } from '../scena/pixel.js'
+import { SBARRA, MASSO, TANA_PONTE, rettangoli } from '../scena/pixel.js'
 import { STRADE } from '../motore/strade.js'
 import { usaSegnalino } from './segnalino.js'
 import Casella from './Casella.vue'
@@ -35,7 +36,7 @@ const emit = defineEmits(['gioca', 'senza-fine', 'passa', 'posato'])
 const quadro = quadroValle(STRADE)
 const per = new Map(quadro.nodi.map(n => [n.id, n]))
 const nodoDi = id => per.get(id) || null
-const DISEGNO_SBARRA = rettangoli(SBARRA), DISEGNO_MASSO = rettangoli(MASSO)
+const DISEGNO_SBARRA = rettangoli(SBARRA), DISEGNO_MASSO = rettangoli(MASSO), DISEGNO_TANA = rettangoli(TANA_PONTE)
 
 /* ---------- le caselle e cosa è chiuso ---------- */
 // i due sentieri: quello del coniglio in cima alle buche, quello del cane in fondo al pascolo
@@ -65,15 +66,21 @@ const insegne = computed(() => Object.entries(quadro.isole).map(([chiave, d]) =>
            dati: props.voci[s.tappe[0]].scalino, velata: velata(chiave) }
 }))
 // la tana fra le buche e il pascolo: chiusa, ha il masso davanti
-const tane = computed(() => quadro.nodi.filter(n => n.tipo === 'tana' && n.chiave.endsWith(':da')).map(n => {
+const tane = computed(() => quadro.nodi.filter(n => n.tipo === 'tana' && !n.ponte && n.chiave.endsWith(':da')).map(n => {
   const nome = n.chiave.split(':')[1]
   return { ...n, nome, aperta: !velata(n.isola) && !velata(nome) }
 }))
 const tanaZaino = nodoDi('tana:zaino')
-// i ponti verso le isole chiuse, col nome dello scalino di là
+// le tane al capo dei ponti del pascolo: dal ponte del coniglio al pascolo del cane
+const tanePonte = quadro.nodi.filter(n => n.tipo === 'tana' && n.ponte && n.chiave.endsWith(':da'))
+  .map(n => ({ ...n, nome: n.ponte }))
+const ALTO_MASSO = 15               // il masso sta davanti al buco, a metà altezza
+// i ponti verso le isole chiuse, col nome dello scalino di là; se il ponte finisce in una tana verso l'isola chiusa, il blocco è il masso
 const blocchi = computed(() => stato.value.blocchi.map(b => {
   const s = STRADE.isole.find(x => x.chiave === b.isola)
-  return { ...b, verso: props.voci[s.tappe[0]].scalino.nome }
+  const t = tanePonte.find(x => x.ponte === b.ponte && x.isola === b.isola)
+  const base = { ...b, verso: props.voci[s.tappe[0]].scalino.nome }
+  return t ? { ...base, x: t.x, y: t.y - ALTO_MASSO, masso: true } : base
 }))
 
 /* ---------- il segnalino ---------- */
@@ -86,7 +93,7 @@ const seg = usaSegnalino({
     if (aperto.value !== null) mostraFumetto()
   },
 })
-const { el: segnalino, corpo, ombra, posato, animale, viaggiando, sbuffo } = seg
+const { el: segnalino, corpo, ombra, posato, animale, viaggiando } = seg
 
 /* ---------- la vista ----------
    La vista scorre (`scrollLeft`/`scrollTop` di un riquadro che non si
@@ -315,6 +322,14 @@ const dove = (x, y) => ({ left: x + 'px', top: y + 'px' })
         </svg>
       </span>
 
+      <!-- le tane al capo dei ponti del pascolo: il coniglio entra, il cane esce, e il contrario -->
+      <span v-for="t in tanePonte" :key="t.id" class="pp-tana-ponte" :data-tana="t.nome" :style="dove(t.x, t.y)">
+        <svg :width="DISEGNO_TANA.w * 4" :height="DISEGNO_TANA.h * 4"
+             :viewBox="`0 0 ${DISEGNO_TANA.w} ${DISEGNO_TANA.h}`" shape-rendering="crispEdges" aria-hidden="true">
+          <rect v-for="(r, i) in DISEGNO_TANA.rect" :key="i" :x="r.x" :y="r.y" :width="r.w" height="1" :fill="r.c" />
+        </svg>
+      </span>
+
       <!-- la tana in cima alle buche porta allo zaino -->
       <button type="button" class="pp-passaggio" data-passaggio="zaino" data-tana="zaino"
               :data-aperta="zaino.aperto ? '1' : '0'" :style="dove(tanaZaino.x, tanaZaino.y)"
@@ -338,10 +353,14 @@ const dove = (x, y) => ({ left: x + 'px', top: y + 'px' })
       </div>
 
       <!-- i blocchi: un ponte verso un'isola chiusa non si passa -->
-      <button v-for="b in blocchi" :key="b.ponte" type="button" class="pp-blocco" :data-blocco="b.ponte"
-              :data-chiude="b.isola" :style="dove(b.x, b.y)" :aria-label="`Il ponte per «${b.verso}» è chiuso`"
-              @click.stop="toccaBlocco(b)">
-        <svg :width="DISEGNO_SBARRA.w * 3" :height="DISEGNO_SBARRA.h * 3"
+      <button v-for="b in blocchi" :key="b.ponte" type="button" class="pp-blocco" :class="{ 'pp-blocco-masso': b.masso }"
+              :data-blocco="b.ponte" :data-chiude="b.isola" :style="dove(b.x, b.y)"
+              :aria-label="`Il ponte per «${b.verso}» è chiuso`" @click.stop="toccaBlocco(b)">
+        <svg v-if="b.masso" :width="DISEGNO_MASSO.w * 3" :height="DISEGNO_MASSO.h * 3"
+             :viewBox="`0 0 ${DISEGNO_MASSO.w} ${DISEGNO_MASSO.h}`" shape-rendering="crispEdges" aria-hidden="true">
+          <rect v-for="(r, i) in DISEGNO_MASSO.rect" :key="i" :x="r.x" :y="r.y" :width="r.w" height="1" :fill="r.c" />
+        </svg>
+        <svg v-else :width="DISEGNO_SBARRA.w * 3" :height="DISEGNO_SBARRA.h * 3"
              :viewBox="`0 0 ${DISEGNO_SBARRA.w} ${DISEGNO_SBARRA.h}`" shape-rendering="crispEdges" aria-hidden="true">
           <rect v-for="(r, i) in DISEGNO_SBARRA.rect" :key="i" :x="r.x" :y="r.y" :width="r.w" height="1" :fill="r.c" />
         </svg>
@@ -367,9 +386,6 @@ const dove = (x, y) => ({ left: x + 'px', top: y + 'px' })
           <Cane v-else />
         </div>
       </div>
-      <span v-if="sbuffo" :key="'sbuffo' + sbuffo.n" class="pp-sbuffo" aria-hidden="true" :style="dove(sbuffo.x, sbuffo.y)">
-        <i v-for="k in 5" :key="k" :style="{ '--k': k }"></i>
-      </span>
 
       <Fumetto v-if="cosaAperta && posto" ref="fumetto" :n="cosaAperta" :posto="posto" @gioca="gioca" />
     </div>
