@@ -1,143 +1,20 @@
-// Le sagome: i posti con lo zaino del sentiero senza fine, fatti al
+// Le sagome: i posti con lo zaino dei sentieri senza fine, fatti al
 // momento andando **al contrario** — prima si sceglie il programma, poi
 // si scava il posto attorno alla strada che fa, e lo zaino è largo
 // quanto lei (un risolutore non trova il programma più corto coi cicli).
 // Ogni sagoma tira a caso le sue misure e il posto finito si gira e si
-// specchia a caso. Vedi docs/passo-passo/sentiero.md (le sagome, il
-// pavimento, i controlli).
+// specchia a caso. Qui quelle del coniglio; quelle del cane stanno in
+// `sagome-cane.js`, il foglio in `scavo.js`. Vedi docs/passo-passo/sentiero.md
+// (le sagome, il pavimento, i controlli).
 import { Livello } from './livello.js'
 import { esegui, TANA } from './mondo.js'
 import { risolvi } from './risolutore.js'
-import { guastiDellaMappa, COLONNE_MAX, RIGHE_MAX, LATO_MIN } from '../dati/mondo.js'
+import { risolviSvelto, vaBene } from './svelto.js'
+import { guastiDellaMappa } from '../dati/mondo.js'
 import { programma, ripeti, se, carteDi, eRipeti, valoreDi, apri, VOLTE, COLORI, CASA } from '../dati/carte.js'
-
-/* una sagoma che non torna (un pezzo di strada sopra un altro, un posto
-   troppo largo) si butta e se ne tira un'altra */
-const STORTO = Symbol('storto')
-const storto = () => { throw STORTO }
-
-const DIR = { destra: [1, 0], sinistra: [-1, 0], giu: [0, 1], su: [0, -1] }
-const LETTERA = { rosso: 'r', blu: 'u', giallo: 'g' }
-
-// Lo scavo: un foglio senza bordi (coordinate anche sotto zero, la
-// cornice si decide in `componi`). `metti` rifiuta di sovrascrivere una
-// cella già scritta con un carattere diverso, così due pezzi di strada
-// che si pestano i piedi si scoprono subito.
-class Scavo {
-  constructor() { this.celle = new Map() }
-  get(x, y) { return this.celle.get(`${x},${y}`) }
-  metti(x, y, ch) {
-    const k = `${x},${y}`, c = this.celle.get(k)
-    if (c !== undefined && c !== ch) storto()
-    this.celle.set(k, ch)
-  }
-  /* un prato che non copre quello che c'è già (la carota, una lastra) */
-  prato(x, y) { if (this.get(x, y) === undefined) this.celle.set(`${x},${y}`, '.') }
-  forza(x, y, ch) { this.celle.set(`${x},${y}`, ch) }
-}
-
-const passo = ([x, y], m) => {
-  const salto = m.startsWith('salto-')
-  const [dx, dy] = DIR[salto ? m.slice(6) : m]
-  return salto ? [x + 2 * dx, y + 2 * dy] : [x + dx, y + dy]
-}
-const chiave = ([x, y]) => `${x},${y}`
-
-// il fuori: quattro vestiti, ognuno con le sue macchie e quanto pesano
-const FUORI = {
-  bosco:  [['A', 6], ['B', 2], ['~', 1]],
-  prato:  [['B', 4], ['A', 3], ['~', 2]],
-  stagno: [['~', 6], ['A', 2], ['B', 1]],
-  acqua:  [['~', 9], ['A', 1]],
-}
-
-/* dallo scavo alla mappa: la cornice (un giro di fuori qua e là, se ci
-   sta), e il fuori dove la sagoma non ha scritto niente */
-export function componi(scavo, rnd, fondo) {
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
-  for (const k of scavo.celle.keys()) {
-    const [x, y] = k.split(',').map(Number)
-    x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y)
-  }
-  /* un posto largo e basso va bene lo stesso: si girerà per il lungo
-     (`gira`), e le misure si guardano in quel verso */
-  const coricato = x1 - x0 + 1 > COLONNE_MAX
-  const [TX, TY] = coricato ? [RIGHE_MAX, COLONNE_MAX] : [COLONNE_MAX, RIGHE_MAX]
-  if (x1 - x0 + 1 > TX || y1 - y0 + 1 > TY) storto()
-  /* un giro di fuori in più da ogni lato, a caso, finché ci sta; e
-     comunque abbastanza da non fare un posto più stretto di tre */
-  for (const lato of ['x0', 'x1', 'y0', 'y1']) {
-    const orizz = lato[0] === 'x'
-    const largo = orizz ? x1 - x0 + 1 : y1 - y0 + 1
-    const tetto = orizz ? TX : TY
-    if (largo < tetto && (largo < LATO_MIN || rnd() < 0.45)) {
-      if (lato === 'x0') x0--; else if (lato === 'x1') x1++
-      else if (lato === 'y0') y0--; else y1++
-    }
-  }
-  while (x1 - x0 + 1 < LATO_MIN) x1++
-  while (y1 - y0 + 1 < LATO_MIN) y1++
-  /* le macchie: qualche seme sparso, e ogni cella prende il vestito del
-     seme più vicino; dentro una macchia di bosco, ogni tanto un cespuglio */
-  const f = FUORI[fondo] || FUORI.bosco
-  const totale = f.reduce((n, [, p]) => n + p, 0)
-  const pesca = () => {
-    let t = rnd() * totale
-    for (const [c, p] of f) if ((t -= p) <= 0) return c
-    return f[0][0]
-  }
-  const semi = Array.from({ length: 3 + Math.floor(rnd() * 3) }, () =>
-    ({ x: x0 + rnd() * (x1 - x0 + 1), y: y0 + rnd() * (y1 - y0 + 1), c: pesca() }))
-  const macchia = (x, y) => {
-    let meglio = semi[0], d = Infinity
-    for (const s of semi) {
-      const q = (s.x - x) ** 2 + (s.y - y) ** 2
-      if (q < d) { d = q; meglio = s }
-    }
-    if (meglio.c === 'A' && rnd() < 0.12) return 'B'
-    if (meglio.c === 'B' && rnd() < 0.1) return 'S'
-    return meglio.c
-  }
-  const righe = []
-  for (let y = y0; y <= y1; y++) {
-    let r = ''
-    for (let x = x0; x <= x1; x++) {
-      const c = scavo.get(x, y)
-      r += c !== undefined ? c : macchia(x, y)
-    }
-    righe.push(r)
-  }
-  return righe
-}
-
-// girare e specchiare: una sagoma si scrive in un verso solo (destra e
-// in giù), e il posto finito si gira, mappa e frecce insieme
-const GIRI = {
-  tr: { destra: 'giu', giu: 'destra', sinistra: 'su', su: 'sinistra' },
-  fx: { destra: 'sinistra', sinistra: 'destra' },
-  fy: { su: 'giu', giu: 'su' },
-}
-function giraMossa(t, tab) {
-  if (t.startsWith('salto-')) return 'salto-' + (tab[t.slice(6)] || t.slice(6))
-  return tab[t] || t
-}
-function giraMappa(m, che) {
-  if (che === 'fx') return m.map(r => [...r].reverse().join(''))
-  if (che === 'fy') return m.slice().reverse()
-  return [...m[0]].map((_, x) => m.map(r => r[x]).join(''))
-}
-export function gira(t, rnd) {
-  let { mappa, soluzione, fragili } = t
-  const coricato = mappa[0].length > COLONNE_MAX
-  for (const che of ['tr', 'fx', 'fy']) {
-    if (rnd() < 0.5 && !(che === 'tr' && coricato)) continue
-    if (che === 'tr' && !coricato && (mappa.length > COLONNE_MAX || mappa[0].length > RIGHE_MAX)) continue
-    mappa = giraMappa(mappa, che)
-    soluzione = soluzione.map(m => giraMossa(m, GIRI[che]))
-    fragili = fragili.map(f => ({ ...f, fila: f.fila.map(m => giraMossa(m, GIRI[che])) }))
-  }
-  return { ...t, mappa, soluzione, fragili }
-}
+import { Scavo, STORTO, storto, LETTERA, passo, chiave, componi, gira, a, tra, scegli, ruota, mescola, segui,
+         ripetute, uguali, cammino } from './scavo.js'
+import { SAGOME_CANE } from './sagome-cane.js'
 
 // ogni testa «fino a un colore» diventa un numero, e si provano tutte le
 // combinazioni: se una vince, il «fino a» non serve (vedi provaLoZaino)
@@ -161,7 +38,7 @@ function contandoSiVince(liv, fila) {
 
 // la prova: il pavimento di un posto col zaino (vedi docs/passo-passo/sentiero.md)
 export const ZAINO_MIN = 5
-export const STRADA_MIN = 12
+export const STRADA_MIN = 15
 export function provaLoZaino(t, { strada = STRADA_MIN, zaino = ZAINO_MIN } = {}) {
   if (guastiDellaMappa(t.mappa).length) return false
   if (carteDi(t.soluzioni[0]) < zaino) return false
@@ -169,7 +46,7 @@ export function provaLoZaino(t, { strada = STRADA_MIN, zaino = ZAINO_MIN } = {})
   const sol = t.soluzioni[0]
   const r = esegui(liv, sol, { eventi: false })
   if (r.esito !== TANA || !r.carota) return false
-  const sciolta = risolvi(liv, { carota: false })
+  const sciolta = vaBene(liv) ? risolviSvelto(liv, { carota: false, limite: 100000 }) : risolvi(liv, { carota: false })
   if (!sciolta || sciolta.length <= liv.zaino || sciolta.length < strada) return false
   for (const f of t.obbligatorie || []) {
     const e = esegui(liv, f, { eventi: false })
@@ -182,71 +59,8 @@ export function provaLoZaino(t, { strada = STRADA_MIN, zaino = ZAINO_MIN } = {})
 // le sagome: ognuna ha la carta del suo gradino, le regole del mondo che
 // le servono (`serve`), qualche nome, e `fai(rnd)` che torna lo scavo, la
 // soluzione e le mosse ingenue (`{ fila, obbligatoria }`)
-const a = (rnd, n) => Math.floor(rnd() * n)
-const tra = (rnd, da, fino) => da + a(rnd, fino - da + 1)
-const scegli = (rnd, l) => l[a(rnd, l.length)]
-const ruota = (l, k) => [...l.slice(k), ...l.slice(0, k)]
-const mescola = (rnd, l) => l.map(x => [rnd(), x]).sort((p, q) => p[0] - q[0]).map(p => p[1])
 
-// segue una fila di frecce scavando dove passa; con `visti` si rifiuta di ripassare
-function segui(s, da, mosse, { visti = null } = {}) {
-  let p = da
-  const celle = []
-  for (const m of mosse) {
-    p = passo(p, m)
-    if (visti) { if (visti.has(chiave(p))) storto(); visti.add(chiave(p)) }
-    s.prato(p[0], p[1])
-    celle.push(p)
-  }
-  return { fine: p, celle }
-}
-const ripetute = (n, motivo) => Array.from({ length: n }, () => motivo).flat()
-const uguali = (p, q) => p[0] === q[0] && p[1] === q[1]
-
-// un cammino a caso che non passa mai accanto a sé stesso (se no il
-// risolutore taglierebbe la strada): serve al sentiero dei segni
-function cammino(rnd, versi, pezzi, lungo, largo = 8, alto = 10) {
-  const occupate = new Set(['0,0'])
-  let [x0, x1, y0, y1] = [0, 0, 0, 0]
-  let p = [0, 0]
-  const fuori = []
-  const libera = (q, da) => !occupate.has(chiave(q)) &&
-    [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dy]) => {
-      const r = [q[0] + dx, q[1] + dy]
-      return uguali(r, da) || !occupate.has(chiave(r))
-    })
-  for (let i = 0; i < pezzi; i++) {
-    let prova = mescola(rnd, versi.filter(v => !fuori.length || v !== OPPOSTO[fuori.at(-1).verso]))
-    /* dritti di rado: sei segni uguali di fila non si leggono, si contano */
-    if (fuori.length && rnd() < 0.7) prova = [...prova.filter(v => v !== fuori.at(-1).verso), ...prova.filter(v => v === fuori.at(-1).verso)]
-    let fatto = null
-    for (const v of prova) {
-      const L = lungo()
-      const celle = []
-      let q = p, ok = true
-      for (let k = 0; k < L; k++) {
-        const n = passo(q, v)
-        if (!libera(n, q)) { ok = false; break }
-        celle.push(n)
-        q = n
-      }
-      if (!ok) continue
-      const nx0 = Math.min(x0, q[0]), nx1 = Math.max(x1, q[0]), ny0 = Math.min(y0, q[1]), ny1 = Math.max(y1, q[1])
-      if (nx1 - nx0 >= largo || ny1 - ny0 >= alto) continue
-      fatto = { verso: v, celle }
-      ;[x0, x1, y0, y1] = [nx0, nx1, ny0, ny1]
-      break
-    }
-    if (!fatto) storto()
-    for (const c of fatto.celle) occupate.add(chiave(c))
-    fuori.push(fatto)
-    p = fatto.celle.at(-1)
-  }
-  return fuori
-}
-const OPPOSTO = { destra: 'sinistra', sinistra: 'destra', su: 'giu', giu: 'su' }
-
-export const SAGOME = [
+const DEL_CONIGLIO = [
   // la collina: due scale in fila; la carota sta solo sul gradino vero,
   // non su quello del motivo girato (che arriva a casa lo stesso)
   { chiave: 'scala', carta: 'ripeti', serve: [],
@@ -263,7 +77,7 @@ export const SAGOME = [
         const v = k === 0 ? 'giu' : scegli(rnd, ['giu', 'su'])
         const motivo = scegli(rnd, [['destra', v], [v, 'destra'], ['destra', 'destra', v], [v, v, 'destra'], ['destra', v, v]])
         const girato = ruota(motivo, motivo.length === 2 ? 1 : tra(rnd, 1, 2))
-        const n = tra(rnd, 2, motivo.length === 2 ? 4 : 3)
+        const n = tra(rnd, 3, motivo.length === 2 ? 5 : 4)
         const vero = segui(s, p, ripetute(n, motivo), { visti })
         const falso = segui(s, p, ripetute(n, girato))
         const soloVero = vero.celle.filter(c => !falso.celle.some(f => uguali(f, c)))
@@ -298,8 +112,8 @@ export const SAGOME = [
     fai(rnd) {
       const s = new Scavo()
       s.metti(0, 0, 'P')
-      const k = tra(rnd, 2, 3), giu = tra(rnd, 2, 3), dx = tra(rnd, 2, 4)
-      if (k * dx > 8 || k * giu > 10) storto()
+      const k = tra(rnd, 2, 3), giu = tra(rnd, 2, 5), dx = tra(rnd, 2, 4)
+      if (k * dx > 8 || k * giu > 10 || k * (giu + dx) < STRADA_MIN) storto()
       const motivo = [...ripetute(giu, ['giu']), ...ripetute(dx, ['destra'])]
       const girato = [...ripetute(dx, ['destra']), ...ripetute(giu, ['giu'])]
       const vero = segui(s, [0, 0], ripetute(k, motivo), { visti: new Set(['0,0']) })
@@ -346,7 +160,7 @@ export const SAGOME = [
     } },
 
   // di sasso in sasso: tutto acqua, chi cammina invece di saltare fa splash
-  { chiave: 'sassi', carta: 'ripeti', serve: ['salto'], strada: 10,
+  { chiave: 'sassi', carta: 'ripeti', serve: ['salto'], strada: 12,
     nomi: ['Di sasso in sasso', 'Il guado', 'Il ruscello dei sassi'],
     fai(rnd) {
       const s = new Scavo()
@@ -358,7 +172,7 @@ export const SAGOME = [
         const v = k === 0 ? 'giu' : scegli(rnd, ['giu', 'su'])
         const motivo = scegli(rnd, [['salto-destra', v], [v, 'salto-destra'], ['salto-destra', 'salto-' + v],
                                     ['salto-destra', v, 'destra'], ['destra', 'salto-' + v]])
-        const n = tra(rnd, 2, 3)
+        const n = 3
         for (const m of ripetute(n, motivo)) {
           const q = passo(p, m)
           if (m.startsWith('salto-')) s.metti((p[0] + q[0]) / 2, (p[1] + q[1]) / 2, rnd() < 0.25 ? 't' : '~')
@@ -383,14 +197,14 @@ export const SAGOME = [
     } },
 
   // la spirale di ghiaccio: la stessa scatola gira quattro volte il lago
-  // con scivolate lunghe diverse; regge circa una prova su cento, da qui `prove: 600`
-  { chiave: 'spirale', carta: 'ripeti', serve: ['ghiaccio'], strada: 8, tema: 'inverno', prove: 600,
+  // con scivolate lunghe diverse; regge circa una prova su trecento, da qui `prove: 2000`
+  { chiave: 'spirale', carta: 'ripeti', serve: ['ghiaccio'], strada: 10, tema: 'inverno', prove: 2000,
     nomi: ['La spirale di ghiaccio', 'Il lago che gira', 'La pista gelata'],
     fai(rnd) {
       const s = new Scavo()
       s.metti(0, 0, 'P')
       const versi = ['destra', 'giu', 'sinistra', 'su']
-      const n = tra(rnd, 8, 11)
+      const n = tra(rnd, 10, 13)
       let p = [0, 0]
       const ghiacci = []
       for (let i = 0; i < n; i++) {
@@ -425,7 +239,7 @@ export const SAGOME = [
     fai(rnd) {
       const s = new Scavo()
       s.metti(0, 0, 'P')
-      const n = tra(rnd, 3, 4)
+      const n = 4
       let [x, y] = [0, 0]
       const avanti = []
       for (let i = 0; i < n; i++) {
@@ -489,7 +303,7 @@ export const SAGOME = [
   { chiave: 'campo', carta: 'fino', serve: [],
     nomi: ['Il campo storto', 'I fossi', 'Il campo di grano'],
     fai(rnd) { return campoStorto(rnd, false) } },
-  { chiave: 'fiume', carta: 'fino', serve: ['salto'], strada: 10,
+  { chiave: 'fiume', carta: 'fino', serve: ['salto'], strada: 12,
     nomi: ['Il fiume dei sassi', 'Il guado lungo', 'Le pietre del torrente'],
     fai(rnd) { return campoStorto(rnd, true) } },
 
@@ -531,6 +345,16 @@ export const SAGOME = [
       }
     } },
 
+  // le gallerie: corridoi uno sotto l'altro, chiusi dalla siepe; in fondo
+  // a ognuno una buca che sbuca all'inizio del corridoio dopo. Lunghi
+  // uguali si contano; storti, li dice la lastra davanti alla buca
+  { chiave: 'gallerie', carta: 'ripeti', serve: ['buche'],
+    nomi: ['Le gallerie', 'Le tane in fila', 'Sotto la siepe'],
+    fai(rnd) { return gallerie(rnd, false) } },
+  { chiave: 'gallerie-storte', carta: 'fino', serve: ['buche'],
+    nomi: ['Le gallerie storte', 'Le tane del bosco', 'I cunicoli'],
+    fai(rnd) { return gallerie(rnd, true) } },
+
   // le colline: sempre avanti, il colore dice su o giù; chi legge un
   // colore al contrario trova un prato che sembra buono, e dietro l'acqua
   { chiave: 'colline', carta: 'se', serve: [],
@@ -538,7 +362,7 @@ export const SAGOME = [
     fai(rnd) {
       const s = new Scavo()
       const [giu, su] = mescola(rnd, COLORI)
-      const w = 9, alto = 8
+      const w = tra(rnd, 10, 11), alto = 8   // più largo di nove: il posto si gira per il lungo
       let y = tra(rnd, 2, alto - 3)
       s.metti(0, y, 'P')
       const posti = []
@@ -588,10 +412,49 @@ export const SAGOME = [
   { chiave: 'segni', carta: 'se', serve: [],
     nomi: ['Il sentiero dei segni', 'I cartelli', 'La strada dipinta'],
     fai(rnd) { return segni(rnd, false) } },
-  { chiave: 'segni-ghiaccio', carta: 'se', serve: ['ghiaccio'], strada: 10, tema: 'inverno',
+  { chiave: 'segni-ghiaccio', carta: 'se', serve: ['ghiaccio'], strada: 12, tema: 'inverno',
     nomi: ['Il bosco ghiacciato', 'I cartelli sul ghiaccio', 'Il lago dei segni'],
     fai(rnd) { return segni(rnd, true) } },
 ]
+/* tutte, il coniglio e il cane: una sagoma del cane dice `animale: 'cane'` */
+export const SAGOME = [...DEL_CONIGLIO, ...SAGOME_CANE]
+export const animaleDi = g => g.animale || 'coniglio'
+
+/* le gallerie, lunghe uguali o storte: le buche sono tre coppie al
+   massimo, quindi quattro corridoi. Oltre la lastra il corridoio
+   continua, e chi conta scende contro la siepe */
+function gallerie(rnd, storte) {
+  const s = new Scavo()
+  const k = tra(rnd, 3, 4), n = tra(rnd, 3, 6)
+  const lunghi = Array.from({ length: k }, () => (storte ? tra(rnd, 2, 6) : n))
+  if (storte && new Set(lunghi).size < 3) storto()
+  const colore = scegli(rnd, COLORI), lastra = LETTERA[colore]
+  s.metti(0, -1, 'P')
+  s.metti(0, 0, '.')
+  const posti = []
+  for (let i = 0; i < k; i++) {
+    const y = 3 * i, L = lunghi[i]
+    for (let x = 1; x < L; x++) { s.metti(x, y, '.'); posti.push([x, y]) }
+    if (i === k - 1) { s.metti(L, y, '@'); break }
+    s.metti(L, y, storte ? lastra : '.')
+    if (storte) { const oltre = tra(rnd, 1, 2); for (let j = 1; j <= oltre; j++) s.metti(L + j, y, '.') }
+    const coppia = String(i + 1)
+    s.metti(L, y + 1, coppia)
+    s.metti(0, y + 3, coppia)
+  }
+  if (!posti.length) storto()
+  const [cx, cy] = scegli(rnd, posti)
+  s.forza(cx, cy, 'c')
+  const corpo = storte ? ripeti(colore, 'destra') : ripeti(n, 'destra')
+  return {
+    scavo: s, fondo: scegli(rnd, ['bosco', 'prato']),
+    soluzione: programma('giu', ripeti(k, corpo, 'giu')),
+    fragili: storte
+      ? [{ fila: programma('giu', ripeti(k, ripeti(colore, 'destra'))), obbligatoria: true }]
+      : [{ fila: programma('giu', ripeti(k, ripeti(n - 1, 'destra'), 'giu')) },
+         { fila: programma('giu', ripeti(k, ripeti(n + 1, 'destra'), 'giu')) }],
+  }
+}
 
 /* il campo storto, a piedi o a salti */
 function campoStorto(rnd, salti) {
@@ -702,12 +565,13 @@ export function carteInMano(sbloccati) {
 
 // un posto con lo zaino: prova una sagoma della carta chiesta, e se
 // nessuna regge torna `null` (chi chiama ha la sua riserva)
-export function generaZaino(carta, sbloccati, rnd, { prove = 60, sagoma = null } = {}) {
+export function generaZaino(carta, sbloccati, rnd, { prove = 60, sagoma = null, strada = 'coniglio', prima = null } = {}) {
   const puo = SAGOME.filter(g => (sagoma ? g.chiave === sagoma
-    : g.carta === carta && g.serve.every(r => sbloccati.includes(r))))
+    : g.carta === carta && animaleDi(g) === strada && g.serve.every(r => sbloccati.includes(r))))
   /* le sagome che mescolano una regola del mondo pesano di più: sono
-     quelle che fanno sembrare il sentiero un posto sempre nuovo */
-  const pesi = puo.map(g => (g.serve.length ? 1.6 : 1))
+     quelle che fanno sembrare il sentiero un posto sempre nuovo; quella
+     del posto di prima pesa poco */
+  const pesi = puo.map(g => (g.serve.length ? 1.6 : 1) * (g.chiave === prima ? 0.15 : 1))
   const rimaste = puo.slice()
   while (rimaste.length) {
     let t = rnd() * rimaste.reduce((n, g) => n + pesi[puo.indexOf(g)], 0)
