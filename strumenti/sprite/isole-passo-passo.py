@@ -449,7 +449,7 @@ def provino():
             d.rectangle([x - 14, y - 9, x + 14, y + 9], outline=(230, 30, 30, 255), width=3)
     for isola, dati in fg['isole'].items():
         x, y = dati['cartello']
-        d.rounded_rectangle([x - 70, y - 16, x + 70, y + 16], radius=16, fill=(255, 250, 240, 200),
+        d.rectangle([x - 90, y - 27, x + 90, y + 27], fill=(255, 250, 240, 200),
                             outline=(110, 50, 10, 255), width=2)
         d.text((x - 60, y - 6), isola, fill=(110, 50, 10, 255))
     TMP.mkdir(parents=True, exist_ok=True)

@@ -14,6 +14,7 @@ import { STRADE } from '../motore/strade.js'
 import { usaSegnalino } from './segnalino.js'
 import Casella from './Casella.vue'
 import Fumetto from './Fumetto.vue'
+import Stendardo from './Stendardo.vue'
 import Coniglio from './Coniglio.vue'
 import Cane from './Cane.vue'
 
@@ -290,17 +291,16 @@ function gioca(n) {
 
       <!-- i cartelli delle isole: la carta dello scalino; gli isolotti del cane, la sua carta -->
       <template v-for="s in isole" :key="'n' + s.k">
-        <div v-if="s.cartello && s.scalinoDati" class="pp-insegna" :class="{ 'pp-insegna-velata': s.velata }"
+        <div v-if="s.cartello && s.scalinoDati" class="pp-insegna"
              :data-scalino="s.scalino" :data-insegna="s.chiave"
              :style="{ [s.cartello.lato > 0 ? 'right' : 'left']: (s.cartello.lato > 0 ? quadro.W - s.x - s.w + 14 : s.x + 14) + 'px',
-                       top: s.cartello.y + 'px', maxWidth: (s.w - 28) + 'px' }">
-          <span class="pp-insegna-icona pp-em">{{ s.scalinoDati.icona }}</span>
-          <b>{{ s.scalinoDati.nome }}</b>
+                       top: s.cartello.y + 'px' }">
+          <Stendardo :nome="s.scalinoDati.nome" :icona="s.scalinoDati.icona" :animale="s.animale" :velato="s.velata" :max="s.cartello.max" />
         </div>
-        <div v-else-if="s.isolotto && s.scalinoDati" class="pp-distintivo pp-em" :class="{ 'pp-insegna-velata': s.velata }"
+        <div v-else-if="s.isolotto && s.scalinoDati" class="pp-insegna"
              :data-scalino="s.scalino" :data-insegna="s.chiave"
-             :style="{ left: (s.x + (quadro.nodi.find(n => n.isola === s.k && n.tipo === 'tana').x < s.x + s.w / 2 ? s.w - 34 : 8)) + 'px', top: (s.y + 8) + 'px' }">
-          {{ s.scalinoDati.icona }}
+             :style="{ left: (s.x + (quadro.nodi.find(n => n.isola === s.k && n.tipo === 'tana').x < s.x + s.w / 2 ? s.w - 36 : 10)) + 'px', top: (s.y + 8) + 'px' }">
+          <Stendardo solo-stemma :icona="s.scalinoDati.icona" :animale="s.animale" :velato="s.velata" />
         </div>
       </template>
 

@@ -17,6 +17,7 @@ import { STRADE } from '../motore/strade.js'
 import { usaSegnalino } from './segnalino.js'
 import Casella from './Casella.vue'
 import Fumetto from './Fumetto.vue'
+import Stendardo from './Stendardo.vue'
 import Coniglio from './Coniglio.vue'
 import Cane from './Cane.vue'
 
@@ -330,11 +331,10 @@ const dove = (x, y) => ({ left: x + 'px', top: y + 'px' })
       </button>
 
       <!-- i cartelli delle isole -->
-      <div v-for="s in insegne" :key="s.chiave" class="pp-insegna pp-insegna-valle" :class="{ 'pp-insegna-velata': s.velata }"
+      <div v-for="s in insegne" :key="s.chiave" class="pp-insegna pp-insegna-valle"
            :data-insegna="s.chiave" :data-isola="s.chiave" :data-scalino="s.scalino" :data-animale="s.animale"
            :data-velata="s.velata ? '1' : '0'" :style="dove(s.x, s.y)">
-        <span class="pp-insegna-icona pp-em">{{ s.dati.icona }}</span>
-        <b>{{ s.dati.nome }}</b>
+        <Stendardo :nome="s.dati.nome" :icona="s.dati.icona" :animale="s.animale" :velato="s.velata" />
       </div>
 
       <!-- i blocchi: un ponte verso un'isola chiusa non si passa -->

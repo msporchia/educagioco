@@ -92,17 +92,15 @@
 .pp-tana-sasso { fill: #b8b0a6 }
 .pp-tana[data-aperta="0"] .pp-tana-buco { fill: #7d5434 }
 
-/* il cartello di un'isola: un'assicella, piatta */
-.pp-insegna { position: absolute; display: flex; align-items: center; gap: 7px; height: 32px; padding: 0 13px 0 3px;
-              border-radius: 999px; background: var(--is-casella); color: var(--is-scuro);
-              box-shadow: 0 3px 0 var(--is-spessore); pointer-events: none; white-space: nowrap }
-.pp-insegna b { font-size: 14px; font-weight: 800; letter-spacing: .2px; overflow: hidden; text-overflow: ellipsis }
-.pp-insegna-icona { flex: none; width: 26px; height: 26px; border-radius: 50%; background: #fde3c8;
-                    display: flex; align-items: center; justify-content: center; font-size: 15px }
-.pp-distintivo { position: absolute; width: 26px; height: 26px; border-radius: 50%; background: var(--is-casella);
-                 box-shadow: 0 2px 0 var(--is-spessore); display: flex; align-items: center; justify-content: center;
-                 font-size: 14px; pointer-events: none }
-.pp-insegna-velata { opacity: .6 }
+/* lo stendardo di un'isola (e lo stemma di un'isoletta): disegnato in pixel
+   da scena/stendardo.js, il nome è testo vero sopra la stoffa; non si tocca */
+.pp-insegna { position: absolute; line-height: 0; pointer-events: none }
+.pp-stendardo { display: block; overflow: visible; filter: drop-shadow(0 3px 0 rgba(60, 25, 8, .28)) }
+.pp-stendardo-nome { font-family: Georgia, "Palatino Linotype", "Book Antiqua", Palatino, serif; font-weight: 700;
+                     letter-spacing: .4px; fill: #fff3d6; paint-order: stroke; stroke: #3a1410; stroke-width: 3.2px;
+                     stroke-linejoin: round }
+.pp-stemma-icona { font-size: 13px }
+.pp-stendardo-velato { opacity: .85; filter: saturate(.25) brightness(.9) drop-shadow(0 3px 0 rgba(60, 25, 8, .2)) }
 
 /* il bivio: un paletto con due assi, il coniglio da una parte e il cane dall'altra */
 .pp-bivio { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; gap: 3px;

@@ -6,10 +6,10 @@
   "isole": {
     "passi": { "caselle": 5, "cartello": [150, 640] },
     "salto": { "caselle": 5, "cartello": [1330, 955] },
-    "ghiaccio": { "caselle": 6, "cartello": [1440, 96] },
+    "ghiaccio": { "caselle": 6, "cartello": [1440, 84] },
     "massi": { "caselle": 4, "cartello": [190, 110] },
     "buche": { "caselle": 4, "cartello": [620, 70] },
-    "pecore-cane": { "caselle": 11, "cartello": [880, 700] }
+    "pecore-cane": { "caselle": 11, "cartello": [880, 724] }
   },
   "sentieri": [
     { "isola": "passi", "caselle": 5, "margini": [30, 34],

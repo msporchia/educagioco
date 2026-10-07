@@ -18,15 +18,15 @@
 
 export const LARGO = 1536, ALTO = 1024
 export const LATO = 52
-export const FIRMA = 'a1947421e544'
+export const FIRMA = '1f5e27b19008'
 
 export const ISOLE = {
   "passi": {"caselle":5,"cartello":[150,640]},
   "salto": {"caselle":5,"cartello":[1330,955]},
-  "ghiaccio": {"caselle":6,"cartello":[1440,96]},
+  "ghiaccio": {"caselle":6,"cartello":[1440,84]},
   "massi": {"caselle":4,"cartello":[190,110]},
   "buche": {"caselle":4,"cartello":[620,70]},
-  "pecore-cane": {"caselle":11,"cartello":[880,700]},
+  "pecore-cane": {"caselle":11,"cartello":[880,724]},
 }
 
 export const NODI = [

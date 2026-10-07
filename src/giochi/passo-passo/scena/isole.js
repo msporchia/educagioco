@@ -150,8 +150,8 @@ export function disponiIsole(W, S, { ingresso = false } = {}) {
     const prima = r.caselle[0]
     isole.push({ k: kIsola, chiave: isola.chiave, scalino: isola.scalino, animale: isola.animale,
                  vestito: vestitoDi(isola), x: M, y, w: W - 2 * M, h: fondo - y, tappe: isola.tappe,
-                 // il cartello dalla parte dove la prima riga non comincia
-                 cartello: { lato: -prima.verso, y: y + 10 } })
+                 // lo stendardo dalla parte dove la prima riga finisce: dall'altra entra il ponte
+                 cartello: { lato: prima.verso, y: y + 10, max: W - 2 * M - 28 } })
     for (const c of r.caselle) {
       const n = nodo({ id: c.id, tipo: 'tappa', x: c.x, y: c.y, lato, isola: kIsola, animale: isola.animale,
                        piede: piedeSu(c.x, c.y, lato), verso: c.verso })
@@ -185,7 +185,7 @@ export function disponiIsole(W, S, { ingresso = false } = {}) {
     isole.push({ k: kRamo, chiave: ramo.chiave, scalino: ramo.scalino, animale: 'cane', vestito: 'pascolo',
                  x: x0, y: yR, w: largo, h: fondoR - yR, tappe: ramo.tappe, isolotto: ramo.tappe.length === 1,
                  attacco: ramo.attacco, da: kIsola,
-                 cartello: ramo.tappe.length === 1 ? null : { lato: lato0, y: yR + 10 } })
+                 cartello: ramo.tappe.length === 1 ? null : { lato: lato0, y: yR + 10, max: largo - 28 } })
     for (const c of rr.caselle)
       nodo({ id: c.id, tipo: 'tappa', x: c.x, y: c.y, lato, isola: kRamo, animale: 'cane',
              piede: piedeSu(c.x, c.y, lato), verso: c.verso })
@@ -198,6 +198,11 @@ export function disponiIsole(W, S, { ingresso = false } = {}) {
     const primaR = rr.caselle[0]
     const xt = primaR.x
     const yT = fondo - 26
+    // lo stendardo del ramo non arriva alla sua tana
+    if (rr.caselle.length && isole[kRamo].cartello) {
+      const c = isole[kRamo].cartello
+      c.max = Math.min(c.max, c.lato > 0 ? x0 + largo - 14 - (xt + 30) : xt - 30 - (x0 + 14))
+    }
     const tanaC = nodo({ id: `tana:${ramo.chiave}:coniglio`, tipo: 'tana', x: xt, y: yT, isola: kIsola,
                          animale: 'coniglio', ramo: ramo.chiave, piede: { x: xt, y: yT + 4 } })
     const tanaD = nodo({ id: `tana:${ramo.chiave}:cane`, tipo: 'tana', x: xt, y: yR + 28, isola: kRamo,
