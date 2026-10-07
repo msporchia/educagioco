@@ -7,7 +7,8 @@ rende un cliente. I dati e la tabella della scaletta stanno in testa a
 ## Giornate, banchi, clienti
 
 - **Una giornata è una campagna, un banco è una tappa**, tre clienti per
-  banco (`CLIENTI_PER_TAPPA`). Si arriva al banco, cala il cartello col
+  banco (`CLIENTI_PER_TAPPA`); le giornate si scelgono nel giro del mondo
+  ([mappa.md](mappa.md)). Si arriva al banco, cala il cartello col
   nome e il tempo, e la fila si presenta. La giornata finita apre la dopo.
 - **Cinque banchi** (`BANCHI`): 🍎 il fruttivendolo, 🥬 l'orto, 🥖 il forno,
   🧀 il frigo, 🍬 i dolciumi. **Quello che si vende è tutto lì davanti**,

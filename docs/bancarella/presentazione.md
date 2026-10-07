@@ -12,6 +12,12 @@ cliente, prende la spesa, paga, e bisogna dargli il resto giusto.
 Una **giornata** è una campagna, una **tappa** è un banco — il fruttivendolo,
 l'orto, il forno, il frigo, i dolciumi — con tre clienti da servire.
 
+Le giornate si scelgono in **un giro del mondo**: si parte da Bologna e si
+vola in aereo a Roma, Parigi, New York, Rio e Tokyo, e ogni città è un gruppo
+di giornate. Dentro una città c'è la sua piazza, coi banchi: un banco, una
+giornata, con la stella accanto a quelle già fatte. A fine giro si apre la
+giornata libera, al Cairo. ([la mappa](mappa.md))
+
 La merce è tutta in vista nelle ceste: niente reparti da aprire, niente
 cassa da cercare. Presa la spesa, **il banco diventa il registratore**.
 
