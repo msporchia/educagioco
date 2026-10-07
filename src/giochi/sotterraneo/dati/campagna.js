@@ -1,7 +1,8 @@
-// La campagna: sei discese, stesso motore con altri numeri. Fra una discesa e l'altra non resta niente
-// (dentro sì): un equipaggiamento persistente vorrebbe un'economia, che è un altro gioco (docs/sotterraneo/
-// regole.md). `dif` sono i due estremi 0..1, si sale in linea retta (durezzaDi) più il rincaro per stanza
-// (motore/corsa.js). `giri` è il numero di tagli del BSP (2 → quattro stanze, 4 → sedici).
+// La campagna: sei discese, stesso motore con altri numeri. La roba resta fra una discesa e l'altra, e le
+// discese dopo la prima contano su di lei: `forza` moltiplica le ossa di tutti, `spinta` aggiunge al loro
+// attacco, misurati col giocatore finto che si porta dietro lo zaino (docs/sotterraneo/regole.md). `dif` sono
+// i due estremi 0..1, si sale in linea retta (durezzaDi) più il rincaro per stanza (motore/corsa.js). `giri`
+// è il numero di tagli del BSP (2 → quattro stanze, 4 → sedici).
 // `portata`: niente `scuola` qui, quello che insegna questa campagna non lo dà nessuna scuola.
 import { BRANCO, BRANCHI } from './mostri.js'
 
@@ -17,21 +18,21 @@ export const CAMPAGNA = [
     scenario: 'cantine',
     portata: 32,
     dritta: 'più stanze, e qualcuno che vende',
-    piani: 3, misura: 34, giri: 3, dif: [0.12, 0.34],
+    piani: 3, misura: 34, giri: 3, dif: [0.12, 0.34], forza: 1.3, spinta: 1,
     guardiano: 'scheletro', capo: 'orco' },
 
   { chiave: 'gallerie', nome: 'La grotta della scaletta', icona: '🪨',
     scenario: 'cripta',
     portata: 40,
     dritta: 'ci si picchia sul serio',
-    piani: 3, misura: 40, giri: 3, dif: [0.22, 0.5],
+    piani: 3, misura: 40, giri: 3, dif: [0.22, 0.5], forza: 1.6, spinta: 2,
     guardiano: 'orco', capo: 'orco' },
 
   { chiave: 'cisterna', nome: 'La scala sommersa', icona: '💧',
     scenario: 'cripta',
     portata: 48,
     dritta: 'larga, e in fondo c\'è qualcosa di grosso',
-    piani: 4, misura: 44, giri: 3, dif: [0.32, 0.62],
+    piani: 4, misura: 44, giri: 3, dif: [0.32, 0.62], forza: 1.3, spinta: 2,
     // guardiano un granchio (non l'orco di sempre): stessa fascia (dati/mostri.js), ma nel posto giusto
     guardiano: 'granchio', capo: 'gigante' },
 
@@ -39,14 +40,14 @@ export const CAMPAGNA = [
     scenario: 'fornace',
     portata: 56,
     dritta: 'un labirinto di sedici stanze: senza mappina ci si perde',
-    piani: 3, misura: 52, giri: 4, dif: [0.42, 0.76],
+    piani: 3, misura: 52, giri: 4, dif: [0.42, 0.76], forza: 1.8, spinta: 2,
     guardiano: 'lupo', capo: 'troll' },   // troll e non gigante: le ultime tre finivano con la stessa faccia
 
   { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '🕳️',
     scenario: 'fornace',
     portata: 64,
     dritta: 'stretta, profonda, e le domande non perdonano',
-    piani: 4, misura: 42, giri: 3, dif: [0.52, 0.92],   // stretto: più largo supererebbe le risposte obbligate di una seduta
+    piani: 4, misura: 42, giri: 3, dif: [0.52, 0.92], forza: 2.1, spinta: 2,   // stretto: più largo supererebbe le risposte obbligate di una seduta
     // il gigante solo in fondo (a ogni piano: 96 risposte obbligate, misurato dal banco); il serpente ai piani, non l'orco
     guardiano: 'serpente', capo: 'gigante' },
 ]
@@ -63,8 +64,8 @@ export const INDICE_ABISSO = -1
 export const DIF_ABISSO = 0.92, DIF_PER_PIANO = 0.02
 export const PIANO_DEL_TETTO = Math.ceil((1 - DIF_ABISSO) / DIF_PER_PIANO)  // 4, cioè il quinto
 
-// tre per piano, riparte scendendo (non 4 + piani, che non ha senso senza un numero di piani); il freno
-// vero sono le gemme: chi sviene di continuo arriva al mercante a mani vuote e si ferma da sé
+// tre per piano, riparte scendendo (non 2 + piani, che non ha senso senza un numero di piani); il freno
+// vero sono le tasche, che svenendo si svuotano: chi sviene di continuo resta senza pozioni e si ferma da sé
 export const SVENIMENTI_PER_PIANO = 3
 
 // cicla invece di crescere: quello che allunga un piano non lo indurisce, o un sotterraneo grande sembra
@@ -134,6 +135,8 @@ export const OSSA_PER_PIANO = 0.22
 export const crescitaDi = tappa => ({
   ossa: OSSA_PER_PIANO,
   attOgni: tappa && tappa.attOgni ? tappa.attOgni : 2,   // la campagna resta a 2: sono 4 piani al massimo, non le arriva addosso
+  forza: (tappa && tappa.forza) || 1,     // le ossa di tutti, per la roba che ci si porta giù (docs/sotterraneo/regole.md)
+  spinta: (tappa && tappa.spinta) || 0,   // e quanto picchiano in più
 })
 
 // un solo piano vuol dire un solo numero: il primo, non la media, perché è quello che il bambino vede appena entra
@@ -145,13 +148,13 @@ export function durezzaDi(tappa, piano) {
   return da + (a - da) * q
 }
 
-// quattro in regalo più uno per piano (da sei nella scalinata a otto nella miniera): misurato su venti discese per
-// tappa (docs/sotterraneo/regole.md, "svenire e il fondo degli svenimenti")
-export const SVENIMENTI_IN_REGALO = 4
+// due in regalo più uno per piano (da quattro nella scalinata a sei nella miniera): erano quattro, ma con la roba
+// che resta chi risponde male si rialzava troppe volte con lo zaino pieno. Misurato su venti file per tappa
+// (docs/sotterraneo/regole.md, "Svenire", e misure/sotterraneo)
+export const SVENIMENTI_IN_REGALO = 2
 // nell'abisso il conto si azzera scendendo: qui torna quante occasioni ha QUESTO piano (Corsa.svenimentiSpesi)
 export const svenimentiDi = tappa =>
   tappa.abisso ? SVENIMENTI_PER_PIANO : SVENIMENTI_IN_REGALO + tappa.piani
-
 // l'ultimo piano è il capo della tappa, gli altri il guardiano di tutti i giorni: l'unica cosa che non si può aggirare
 export const guardianoDi = (tappa, piano) =>
   tappa.guardiani ? (tappa.guardiani[piano] || tappa.capo)
@@ -176,7 +179,12 @@ export function guastiDellaCampagna() {
     if (t.giri < 2 || t.giri > 4) g.push(`${t.chiave}: ${t.giri} giri di taglio, fuori da 2..4`)
     const [da, a] = t.dif
     if (da < 0 || a > 1 || da > a) g.push(`${t.chiave}: difficoltà ${da}..${a} storta`)
+    if (t.forza != null && !(t.forza >= 1 && t.forza <= 3)) g.push(`${t.chiave}: forza ${t.forza} fuori da 1..3`)
+    if (t.spinta != null && !(t.spinta >= 0 && t.spinta <= 3)) g.push(`${t.chiave}: spinta ${t.spinta} fuori da 0..3`)
   }
+  // la prima si comincia a mani nude: non può contare su una roba che nessuno ha ancora
+  if ((CAMPAGNA[0].forza || 1) !== 1 || (CAMPAGNA[0].spinta || 0) !== 0)
+    g.push(`${CAMPAGNA[0].chiave}: si scende a mani nude, niente forza né spinta`)
   // la campagna deve salire: due tappe di fila alla stessa difficoltà sembrano una ripetizione
   for (let i = 1; i < CAMPAGNA.length; i++)
     if (CAMPAGNA[i].dif[1] <= CAMPAGNA[i - 1].dif[1])

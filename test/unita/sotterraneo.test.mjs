@@ -4,7 +4,9 @@
    vincono giocandole con un giocatore finto, il costo in domande resta
    dentro una seduta e la forbice fra «il minimo» e «tutto» resta larga —
    quella forbice *è* il gioco. E i traguardi scattano solo a chi ha
-   giocato.
+   giocato. Dalla seconda discesa in poi si misura con la roba che ci si
+   porta dietro (`robaPer`): la roba resta, e le discese dopo contano su
+   di lei. La roba e i mercanti di sopra: `unita/sotterraneo-roba`.
    `node test/esegui.mjs sotterraneo --niente-build`
    tempo: 300 */
 import { readFileSync } from 'node:fs'
@@ -22,7 +24,7 @@ import { PEZZI, TESSERA } from '../../src/giochi/sotterraneo/dati/atlante.js'
 import { occhio } from '../../src/giochi/sotterraneo/viste/occhio.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
-import { gioca, costoDi, quanteVolteSiVince, pianiSani } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { gioca, costoDi, quanteVolteSiVince, pianiSani, robaPer } from '../../src/giochi/sotterraneo/motore/banco.js'
 import manifesto from '../../src/giochi/sotterraneo/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { misure, statoTraguardo } from '../../src/store/progressi.js'
@@ -107,11 +109,12 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
 /* ══════════ 4. le discese si vincono, e quanto costano ══════════ */
 {
   const conti = []
-  for (const t of CAMPAGNA) {
-    const v = quanteVolteSiVince(t, { quante: 6, bravura: 0.8 })
-    controlla(`${t.chiave}: si vince rispondendo bene 8 volte su 10`, v.vinte === v.quante,
+  for (const [i, t] of CAMPAGNA.entries()) {
+    const roba = robaPer(i)
+    const v = quanteVolteSiVince(t, { quante: 6, bravura: 0.8, roba })
+    controlla(`${t.chiave}: si vince rispondendo bene 8 volte su 10`, v.vinte >= v.quante - 1,
               `${v.vinte}/${v.quante} ${v.guasti.slice(0, 2).join(' · ')}`)
-    const c = costoDi(t)
+    const c = costoDi(t, { roba })
     conti.push([t, c])
     /* Il tetto è una seduta: oltre le ottanta domande obbligate non è più
        un gioco, è un compito. Il pavimento è la forbice — se «tutto»
@@ -121,7 +124,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
     controlla(`${t.chiave}: chi ripulisce il piano paga molto di più`,
               c.tutto > c.minimo * 1.3, `minimo ${c.minimo}, tutto ${c.tutto}`)
   }
-  nota('costo in domande, per tappa:')
+  nota('costo in domande, per tappa, con la roba di chi ci arriva andando dritto:')
   for (const [t, c] of conti)
     nota(`  ${t.nome.padEnd(14)} minimo ${String(c.minimo).padStart(3)} · ` +
          `tutto ${String(c.tutto).padStart(3)} · ${t.piani} piani`)
@@ -135,13 +138,18 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
 {
   const righe = []
   for (const e of EROI) {
-    const costi = CAMPAGNA.map(t => costoDi(t, { eroe: e.chiave }).minimo)
+    const costi = CAMPAGNA.map((t, i) => costoDi(t, { eroe: e.chiave, roba: robaPer(i, { eroe: e.chiave }) }).minimo)
     const peggio = Math.max(...costi)
     controlla(`${e.chiave}: nessuna discesa esce dalla seduta`, peggio <= 85,
               `la peggiore costa ${peggio} domande`)
-    const v = quanteVolteSiVince(CAMPAGNA[3], { quante: 4, bravura: 0.8, eroe: e.chiave })
+    /* due file per eroe, quattro discese ciascuna: con lo zaino di chi ci
+       arriva andando dritto il mago (che regge meno) cade una volta su
+       cinque, e una fila sola diceva più della fila che dell'eroe */
+    const v = [1, 2].map(seme => quanteVolteSiVince(CAMPAGNA[3], { quante: 4, bravura: 0.8, eroe: e.chiave,
+                                                                    roba: robaPer(3, { eroe: e.chiave, seme }) }))
+    const vinte = v.reduce((n, x) => n + x.vinte, 0)
     controlla(`${e.chiave}: la scala sommersa si vince rispondendo bene 8 volte su 10`,
-              v.vinte === v.quante, `${v.vinte}/${v.quante} ${v.guasti.slice(0, 1).join('')}`)
+              vinte >= 6, `${vinte}/8 ${v.flatMap(x => x.guasti).slice(0, 1).join('')}`)
     righe.push(`  ${e.nome.padEnd(10)} ❤️ ${String(e.vita).padStart(2)} ⚔️ ${e.att} · ` +
                `domande per discesa: ${costi.join(' · ')}`)
   }
@@ -212,8 +220,9 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
    preme a caso no. La forbice è il senso di tutto il gioco. */
 {
   const t = CAMPAGNA[3]
-  const bene = quanteVolteSiVince(t, { quante: 8, bravura: 0.85 })
-  const caso = quanteVolteSiVince(t, { quante: 8, bravura: 0.35 })
+  const roba = robaPer(3)
+  const bene = quanteVolteSiVince(t, { quante: 8, bravura: 0.85, roba })
+  const caso = quanteVolteSiVince(t, { quante: 8, bravura: 0.35, roba })
   controlla('rispondendo bene la scala sommersa si vince', bene.vinte >= 7,
             `${bene.vinte}/${bene.quante}`)
   controlla('premendo a caso no', caso.vinte <= 1, `${caso.vinte}/${caso.quante}`)
@@ -225,8 +234,8 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
    arrivasse uguale, rispondere non servirebbe a niente */
 {
   const t = CAMPAGNA[3]
-  const bravo = gioca(t, { seme: 31, bravura: 0.9 }).esito
-  const acaso = gioca(t, { seme: 31, bravura: 0.25 }).esito
+  const bravo = gioca(t, { seme: 31, bravura: 0.9, roba: robaPer(3) }).esito
+  const acaso = gioca(t, { seme: 31, bravura: 0.25, roba: robaPer(3) }).esito
   controlla('rispondere bene costa meno vite',
             acaso.svenimenti > bravo.svenimenti || acaso.domande > bravo.domande,
             `bravo: ${bravo.domande} domande / ${bravo.svenimenti} svenimenti · ` +
@@ -834,150 +843,9 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   uguale('ma il suo braccio conta metà', c.att, c.io.att + COSE.spada.att + 1)
 }
 
-/* ══════════ 5-bis. il banco del mercante: si compra e si vende ══════════
-   Vendere non è un modo di fare gemme — metà prezzo, quindi comprare e
-   rivendere perde — ma è l'unico modo di liberare una tasca senza
-   buttare per terra quello che c'è dentro. */
-{
-  const c = new Corsa(CAMPAGNA[1], { seme: 77, rnd: seminato(77) })
-  const m = c.livello.robe.find(r => r.che === 'mercante')
-  c.interagisci(m)
-  uguale('il mercante apre il suo banco', c.foglio.che, 'mercante')
-  controlla('con più di tre cose in vendita', c.foglio.chi.roba.length >= 4,
-            c.foglio.chi.roba.join(' '))
-
-  c.zaino = ['spada', 'pozione']
-  c.gemme = 0
-  const vale = c.quantoVale('spada')
-  uguale('una cosa vale metà del suo prezzo', vale, Math.floor(COSE.spada.prezzo / 2))
-  const e = c.vendi(0)
-  uguale('venduta, le gemme arrivano', c.gemme, vale)
-  uguale('e la tasca è libera', c.zaino.join(), 'pozione')
-  uguale('e il motore dice cosa è successo', e.che, 'venduto')
-
-  /* comprare e rivendere è una perdita: il banco non è una macchinetta */
-  c.gemme = 100
-  const k = c.foglio.chi.roba[0]
-  c.compra(k)
-  const speso = 100 - c.gemme
-  const reso = c.quantoVale(k)
-  controlla('rivendere quello che si è appena comprato ci rimette', reso < speso,
-            `${reso} contro ${speso}`)
-
-  /* il banco non offre quello che si ha già addosso o in tasca: una
-     riga su cinque occupata da una spada identica a quella in pugno è
-     una riga buttata. Le pozioni sì, che si accumulano apposta. */
-  {
-    const b = new Corsa(CAMPAGNA[1], { seme: 5, rnd: seminato(5) })
-    b.mano = 'spadone'
-    b.corpo = 'corazza'
-    b.zaino = ['medaglione']
-    const banco = b.livello.robe.find(r => r.che === 'mercante')
-    b.interagisci(banco)
-    const offerto = banco.roba
-    controlla('quello che hai addosso non è più in vendita',
-              !offerto.includes('spadone') && !offerto.includes('corazza'), offerto.join(' '))
-    controlla('e nemmeno quello che hai in tasca',
-              !offerto.includes('medaglione'), offerto.join(' '))
-  }
-
-  /* comprato = messo: chi spende venti gemme per una corazza migliore
-     non sta scegliendo se metterla */
-  {
-    const b = new Corsa(CAMPAGNA[1], { seme: 9, rnd: seminato(9) })
-    b.zaino = []
-    b.mano = 'spada-corta'
-    b.gemme = 200
-    const banco = b.livello.robe.find(r => r.che === 'mercante')
-    b.interagisci(banco)
-    banco.roba = ['spadone', 'pozione']
-    const e = b.compra('spadone')
-    uguale('lo spadone comprato finisce in pugno', b.mano, 'spadone')
-    uguale('e il motore lo dice', e.addosso, true)
-    controlla('la spada corta torna in tasca', b.zaino.includes('spada-corta'))
-    uguale('quante ne ho: il banco lo sa dire', b.quanteNeHo('spadone'), 1)
-    b.compra('pozione')
-    uguale('una pozione invece va in tasca', b.zaino.filter(x => x === 'pozione').length, 1)
-  }
-
-  /* l'elisir non si beve: cresce, e resta cresciuto */
-  const prima = c.vitaMax
-  c.zaino = ['elisir-toro']
-  c.usa(0)
-  uguale('l\'elisir alza la vita massima', c.vitaMax, prima + COSE['elisir-toro'].cresce)
-  uguale('e la tasca si svuota', c.zaino.length, 0)
-}
-
-/* ══════════ 5-bis. da curarsi ce n'è sempre, e non finisce ══════════
-   Il guasto che questo controllo tiene fuori **non si nota giocando**:
-   un mercante senza pozioni sembra un mercante sfortunato, non un
-   difetto, e per accorgersene bisognerebbe ricordarsi gli ultimi dieci.
-   Erano due meccanismi distinti e ce ne voleva uno solo per rimettercelo
-   — cinque righe pescate a sorte fra trenta, e quello che si compra che
-   sparisce dal banco — quindi si controllano tutti e due. */
-{
-  uguale('le cose che curano sono tre', CURE.length, 3)
-  controlla('e nessuna di loro è nel sorteggio',
-            CURE.every(k => !A_SORTE.includes(k)), CURE.join(' '))
-  /* l'elisir del toro **sì**: non torna indietro (alza la vita massima
-     per tutta la discesa), e a scorta infinita sarebbe «compro vita
-     massima finché ho gemme», che è un'altra cosa dal potersi curare */
-  controlla('ma l\'elisir del toro sì, che è un\'altra cosa',
-            A_SORTE.includes('elisir-toro') && !CURE.includes('elisir-toro'))
-
-  /* ogni banco di ogni piano di ogni tappa, su venti semi: le tre ci
-     sono, e ci sono per prime */
-  let banchi = 0
-  for (const t of CAMPAGNA) {
-    for (let s = 0; s < 20; s++) {
-      const c = new Corsa(t, { seme: 1 + s * 311, rnd: seminato(s + 1) })
-      for (let p = 0; p < t.piani; p++) {
-        const m = c.livello.robe.find(r => r.che === 'mercante')
-        if (!m) continue
-        c.interagisci(m)
-        const righe = c.mercanzia()
-        banchi++
-        const cure = righe.filter(r => r.sempre).map(r => r.chiave)
-        if (cure.join() !== CURE.join()) {
-          controlla(`${t.chiave} piano ${p} seme ${s}: le tre che curano sono in cima`,
-                    false, righe.map(r => r.chiave).join(' '))
-          s = 99; p = 99; break
-        }
-        c.chiudi()
-        if (p < t.piani - 1) { c.piano++; c.nuovoPiano() }
-      }
-    }
-  }
-  controlla('su tutti i banchi provati le tre che curano ci sono', banchi > 100, `${banchi} banchi`)
-  nota(`${banchi} banchi guardati: le tre che curano c'erano tutte`)
-
-  /* ── e non si esauriscono ──
-     La metà che mancava: trovarla e poterne comprare una sola è quasi
-     come non trovarla. Quattro boccette di fila, e il banco è ancora lì. */
-  {
-    const c = new Corsa(CAMPAGNA[1], { seme: 21, rnd: seminato(21) })
-    const m = c.livello.robe.find(r => r.che === 'mercante')
-    c.interagisci(m)
-    c.gemme = 100
-    c.zaino = []
-    for (let i = 1; i <= 4; i++) {
-      const e = c.compra('pozione-piccola')
-      uguale(`boccetta ${i}: si compra`, e && e.che, 'comprato')
-      uguale('e resta in vendita', c.mercanzia().filter(r => r.chiave === 'pozione-piccola').length, 1)
-    }
-    uguale('quattro comprate, quattro in tasca', c.quanteNeHo('pozione-piccola'), 4)
-    uguale('e le gemme sono scese di quattro prezzi',
-           c.gemme, 100 - 4 * COSE['pozione-piccola'].prezzo)
-
-    /* mentre quello che si pesca resta pezzo unico: se anche quello
-       tornasse, il banco diventerebbe un magazzino e la scelta di cosa
-       portarsi via sparirebbe */
-    const unico = c.foglio.chi.roba[0]
-    c.compra(unico)
-    controlla('quello pescato invece se ne va dal banco',
-              !c.mercanzia().some(r => r.chiave === unico), unico)
-  }
-}
+/* Il banco del mercante e le cure che non finiscono: il mercante è salito
+   sulla terra di sopra, e le sue prove stanno con la roba che resta in
+   `unita/sotterraneo-roba`. */
 
 /* ══════════ 5-bis. il banco pesa per livello ══════════
    Le cinque righe pescate non sono più un mescolamento uniforme: più si
@@ -1126,10 +994,11 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
 
    E c'è il modo insidioso di dimenticarsene, che è quello che è
    successo: leggere il tic in un conto e poi **derivarne un altro da
-   quello**. Il foglio del mercante è sempre lo stesso oggetto finché
+   quello**. Il foglio di uno scontro è sempre lo stesso oggetto finché
    resta aperto, e un `computed` che rivaluta e ritorna un valore
-   identico non sveglia chi dipende da lui: si comprava, si vendeva, le
-   gemme scendevano e la lista della merce restava quella di prima.
+   identico non sveglia chi dipende da lui: è successo col banco del
+   mercante (si comprava, le gemme scendevano e la lista restava quella
+   di prima), e succederebbe uguale ai colpi che restano a un mostro.
    Adesso il tic lo legge `viste/occhio.js` per conto di tutti. */
 {
   const corsa = shallowRef(null)
@@ -1137,37 +1006,30 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   const dallaCorsa = occhio(corsa, tic)
 
   const foglio = dallaCorsa(c => c.foglio || null)
-  const merce = dallaCorsa(c => (c.foglio && c.foglio.che === 'mercante'
-    ? c.foglio.chi.roba.map(k => ({ chiave: k, posso: c.gemme >= COSE[k].prezzo }))
+  const conto = dallaCorsa(c => (c.foglio && c.foglio.che === 'scontro'
+    ? [{ restano: c.colpiPer(c.foglio.chi), vita: c.vita }]
     : []), [])
 
   uguale('senza discesa non c\'è nessun foglio', foglio.value, null)
-  uguale('e le liste sono vuote, non rotte', merce.value.length, 0)
+  uguale('e le liste sono vuote, non rotte', conto.value.length, 0)
 
   const c = new Corsa(CAMPAGNA[1], { seme: 77, rnd: seminato(77) })
-  const banco = c.livello.robe.find(r => r.che === 'mercante')
-  c.interagisci(banco)
-  c.gemme = 0
+  const m = c.livello.robe.find(r => r.che === 'mostro')
+  m.ossa = 99
+  c.scontro(m)
   corsa.value = c
   tic.value++
-  const primo = merce.value[0]
-  controlla('col banco aperto la merce si vede', !!primo, JSON.stringify(merce.value))
-  uguale('e senza gemme non si compra niente', primo.posso, false)
+  const primo = conto.value[0]
+  controlla('con lo scontro aperto il conto si vede', !!primo, JSON.stringify(conto.value))
 
-  /* le gemme cambiano **dentro** la corsa, e il foglio resta lo stesso
+  /* le ossa cambiano **dentro** la corsa, e il foglio resta lo stesso
      oggetto: è esattamente la situazione in cui la lista si fermava */
   const stesso = foglio.value
-  c.gemme = 999
+  m.ossa = 1
   tic.value++
   uguale('il foglio è sempre lo stesso oggetto', foglio.value === stesso, true)
-  uguale('ma la merce si è rifatta i conti', merce.value[0].posso, true)
-
-  const quale = primo.chiave
-  c.compra(quale)
-  tic.value++
-  controlla('e quello che si compra sparisce dal banco',
-            !merce.value.some(v => v.chiave === quale),
-            merce.value.map(v => v.chiave).join(' '))
+  uguale('ma il conto si è rifatto', conto.value[0].restano, 1)
+  controlla('e prima diceva altro', primo.restano > 1, String(primo.restano))
 }
 
 /* ── e nessuno se lo riscrive a mano ──

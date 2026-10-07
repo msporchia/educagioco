@@ -4,8 +4,11 @@
 // (docs/sotterraneo/regole.md). Il caso arriva da fuori (`rnd`), il seme è dichiarato: una discesa si deve
 // poter rifare identica.
 import { Corsa } from './corsa.js'
-import { COSE, CURE } from '../dati/cose.js'
+import { Bottega } from './bottega.js'
+import { ROBA_VUOTA } from './corredo.js'
+import { COSE } from '../dati/cose.js'
 import { TASCHE } from '../dati/mondo.js'
+import { CAMPAGNA } from '../dati/campagna.js'
 import { seminato } from './livello.js'
 import { viaVerso, percorso } from '../../../motore/passi.js'
 
@@ -16,7 +19,7 @@ const TETTO_GIRI = 12000        // azioni in una discesa, prima di dire che non 
    si sbaglia due volte di fila capita, e arrendersi lì vorrebbe dire
    dichiarare chiusa una strada che è aperta */
 const TETTO_PROVE = 6
-const COSTO_MINIMO = Math.min(...CURE.map(k => COSE[k].prezzo))   // la più economica: sotto, il giocatore finto non va dal mercante
+const SORSI_PROVATI = 3   // quante volte si torna alla stessa fonte dopo un'acqua torbida
 
 // va su una cella, un passo alla volta, e si ferma appena qualcosa si apre. Torna true se ci è arrivato
 function cammina(corsa, meta) {
@@ -35,7 +38,7 @@ function cammina(corsa, meta) {
 // cella è bloccata, quindi non è una meta) — ci si avvicina, e da lì lo si tocca
 function raggiungi(corsa, r) {
   const da = { x: Math.floor(corsa.eroe.x), y: Math.floor(corsa.eroe.y) }
-  const sopra = ['scala', 'mercante', 'fonte'].includes(r.che)
+  const sopra = ['scala', 'fonte'].includes(r.che)
   const via = viaVerso(corsa.buona(), r, da, { sopra })
   if (!via) return false
   if (!cammina(corsa, via.dove)) return false
@@ -65,6 +68,13 @@ function sblocca(corsa, meta, provati) {
   return false
 }
 
+// uno scudo al posto della seconda arma leggera: lo sceglie chi gioca, dallo zaino (vaAddosso non lo fa da sé)
+function scudoMeglio(chi, k) {
+  const c = COSE[k]
+  return c.dove === 'mancina' && chi.posso(k) && !chi.aDueMani(chi.mano) && !!chi.mancina &&
+    COSE[chi.mancina].dove === 'mano' && (c.dif || 0) * 2 > chi.attaccoMancino
+}
+
 // senza questa funzione il banco gioca tutta la campagna a mani nude, misurando il costo di giocare male
 function equipaggia(corsa) {
   const meglio = (k, addosso, campo) => {
@@ -84,6 +94,8 @@ function equipaggia(corsa) {
     if (c.dove === 'corpo' && meglio(k, corsa.corpo, 'dif')) { corsa.usa(i); continue }
     // stessa domanda del gioco (mancinaLibera): un'arma a due mani in pugno rifiuta lo scudo
     if (c.dove === 'mancina' && corsa.mancinaLibera()) { corsa.usa(i); continue }
+    // con un'arma leggera nella mano debole, lo scudo che para più di quanto quell'arma picchi (la difesa conta doppio)
+    if (c.dove === 'mancina' && scudoMeglio(corsa, k)) { corsa.usa(i); continue }
     // al dito la prima cosa che capita: i gioielli non si confrontano su un numero solo
     if (c.dove === 'dito' && !corsa.dito) { corsa.usa(i); continue }
     if (c.usa === 'cura' && corsa.vita < corsa.vitaMax * 0.45) corsa.usa(i)   // beve quando serve, non appena trova
@@ -133,27 +145,6 @@ function sbriga(corsa, bravura, sorte, conto) {
     case 'svenuto':
       corsa.riprendi()
       return false
-    // sul banco c'è sempre qualcosa che cura: passare oltre misurerebbe un gioco che nessuno gioca. Si
-    // prende la più piccola che basta (berne una grossa a mezza vita butta via metà dell'effetto)
-    case 'mercante': {
-      let comprate = 0
-      while (corsa.vita < corsa.vitaMax * 0.6) {
-        const manca = corsa.vitaMax - corsa.vita
-        const posso = CURE.filter(k => COSE[k].prezzo <= corsa.gemme)
-          .sort((a, b) => COSE[a].cura - COSE[b].cura)
-        const quale = posso.find(k => COSE[k].cura >= manca) || posso[posso.length - 1]
-        if (!quale) break
-        const preso = corsa.compra(quale)
-        if (!preso || preso.che !== 'comprato') break
-        const i = corsa.zaino.lastIndexOf(quale)
-        if (i < 0) break
-        corsa.usa(i)
-        comprate++
-      }
-      conto.cure += comprate
-      corsa.chiudi()
-      return false
-    }
     case 'chiusa':
       corsa.chiudi()
       return false
@@ -168,17 +159,18 @@ function sbriga(corsa, bravura, sorte, conto) {
 
 // `come`: 'minimo' (chiave e scala) o 'tutto' (ogni cosa che vale). `da`: una discesa già cominciata (per
 // provare che una partita ripresa a metà si finisce davvero). `fino`: il piano oltre cui si smette di
-// scendere, per misurare l'abisso (che non ha un ultimo piano). `perPiano`: quante domande è costato ognuno
+// scendere, per misurare l'abisso (che non ha un ultimo piano). `perPiano`: quante domande è costato ognuno.
+// `roba`: quella che si porta giù da sopra (motore/corredo.js); torna in `corsa.roba` a discesa finita
 export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = null, da = null,
-                              eroe = undefined, fino = null, tettoGiri = TETTO_GIRI } = {}) {
+                              eroe = undefined, fino = null, tettoGiri = TETTO_GIRI, roba = null } = {}) {
   const sorte = rnd || seminato(seme * 31 + 17)
-  const corsa = da || new Corsa(tappa, { seme, rnd: sorte, eroe })
+  const corsa = da || new Corsa(tappa, { seme, rnd: sorte, eroe, roba })
   if (da) da.rnd = sorte
   let giri = 0
   const persi = []
   const provati = new Map()
-  const conto = { cure: 0 }
-  const banchiVisti = new Set()
+  const conto = { fonti: 0 }
+  const sorsi = new Map()
   const perPiano = []
   let pianoOra = corsa.piano, domandeAllInizio = corsa.domande
   const chiudiIlPiano = () => {
@@ -194,10 +186,16 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     equipaggia(corsa)
     if (raccogliVicino(corsa, persi)) continue
 
-    // mezzo morto e con le gemme: si va dal mercante in tutti e due i modi di giocare, come chiave e scala
-    if (corsa.vita < corsa.vitaMax * 0.45 && corsa.gemme >= COSTO_MINIMO) {
-      const banco = corsa.livello.robe.find(r => r.che === 'mercante' && !banchiVisti.has(r))
-      if (banco) { banchiVisti.add(banco); raggiungi(corsa, banco); continue }
+    // mezzo morto e senza pozioni (equipaggia le beve prima): si va a una fonte in tutti e due i modi di
+    // giocare, come chiave e scala. Era il mercante, che adesso sta sopra
+    if (corsa.vita < corsa.vitaMax * 0.45) {
+      const fonte = robeInteressanti(corsa, ['fonte']).find(r => (sorsi.get(r) || 0) < SORSI_PROVATI)
+      if (fonte) {
+        sorsi.set(fonte, (sorsi.get(fonte) || 0) + 1)
+        conto.fonti++
+        if (!raggiungi(corsa, fonte)) sorsi.set(fonte, SORSI_PROVATI)
+        continue
+      }
     }
 
     if (come === 'tutto') {
@@ -228,7 +226,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
   return {
     corsa,
     esito: corsa.esito,
-    cure: conto.cure,   // non sta nell'esito: è il modo in cui il giocatore finto gioca, non il gioco
+    fonti: conto.fonti,   // non sta nell'esito: è il modo in cui il giocatore finto gioca, non il gioco
     perPiano,
     guasto: corsa.finita || (fino != null && corsa.piano >= fino)
       ? null : 'la discesa non finisce mai',
@@ -261,10 +259,11 @@ export function finoADove(tappa, { bravura = 0.8, semi = [7, 41, 99, 203],
            medio: fondi.reduce((a, b) => a + b, 0) / fondi.length }
 }
 
-// se il minimo cresce, scendere diventa un compito; se la forbice si stringe, non si sceglie più
-export function costoDi(tappa, { seme = 7, bravura = 1, eroe = undefined } = {}) {
-  const minimo = gioca(tappa, { seme, bravura, come: 'minimo', eroe })
-  const tutto = gioca(tappa, { seme, bravura, come: 'tutto', eroe })
+// se il minimo cresce, scendere diventa un compito; se la forbice si stringe, non si sceglie più.
+// `roba`: quella che ci si porta giù (robaPer), da quando le discese dopo la prima contano su di lei
+export function costoDi(tappa, { seme = 7, bravura = 1, eroe = undefined, roba = null } = {}) {
+  const minimo = gioca(tappa, { seme, bravura, come: 'minimo', eroe, roba })
+  const tutto = gioca(tappa, { seme, bravura, come: 'tutto', eroe, roba })
   return {
     minimo: minimo.esito.domande,
     tutto: tutto.esito.domande,
@@ -274,11 +273,11 @@ export function costoDi(tappa, { seme = 7, bravura = 1, eroe = undefined } = {})
 }
 
 // una tappa che si vince sei volte su dieci non è difficile: è una lotteria
-export function quanteVolteSiVince(tappa, { quante = 8, bravura = 0.8, eroe = undefined } = {}) {
+export function quanteVolteSiVince(tappa, { quante = 8, bravura = 0.8, eroe = undefined, roba = null } = {}) {
   let vinte = 0
   const guasti = []
   for (let i = 0; i < quante; i++) {
-    const g = gioca(tappa, { seme: 100 + i * 37, bravura, come: 'minimo', eroe })
+    const g = gioca(tappa, { seme: 100 + i * 37, bravura, come: 'minimo', eroe, roba })
     if (g.esito.vinta) vinte++
     if (g.guasto) guasti.push(`seme ${100 + i * 37}: ${g.guasto}`)
   }
@@ -299,3 +298,97 @@ export function pianiSani(tappa, quanti = 60) {
   return storti
 }
 
+// Il giocatore finto davanti ai mercanti di sopra: vende quello che ha in tasca e non mette, compra quello che
+// migliora (arma, armatura, scudo; al dito se è libero) e con quello che resta riempie le tasche di pozioni.
+// È il caso peggiore per l'equilibrio, chi scende con lo zaino pieno (docs/sotterraneo/regole.md)
+export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1 } = {}) {
+  const b = new Bottega({ eroe, roba, finite, rnd: seminato(seme * 53 + 11) })
+  const vendiIlSuperfluo = () => {
+    for (let i = b.zaino.length - 1; i >= 0; i--)
+      if (COSE[b.zaino[i]].dove && !scudoMeglio(b, b.zaino[i])) b.vendiA('rigattiere', i)
+  }
+  // al dito si mette la prima cosa che capita, come fa equipaggia: i gioielli non si confrontano su un numero
+  const meglio = k => COSE[k].prezzo <= b.gemme && !b.possiedo(k) &&
+    ((b.vaAddosso(k) && (COSE[k].dove === 'dito' || b.confronto(k).delta > 0)) || scudoMeglio(b, k))
+  vendiIlSuperfluo()
+  for (let giro = 0; giro < 8; giro++) {
+    // un punto di difesa vale due di braccio (si para a ogni scambio, docs/sotterraneo/abisso.md); a pari, il più caro
+    const vale = k => (COSE[k].dove === 'dito' ? 1 : scudoMeglio(b, k) && !b.vaAddosso(k)
+      ? COSE[k].dif * 2 - b.attaccoMancino
+      : b.confronto(k).delta * (b.confronto(k).campo === 'dif' ? 2 : 1))
+    const scelte = ['armaiolo', 'rigattiere']
+      .flatMap(chi => b.mercanzia(chi).filter(r => meglio(r.chiave)).map(r => ({ chi, k: r.chiave })))
+      .sort((x, y) => vale(y.k) - vale(x.k) || COSE[y.k].prezzo - COSE[x.k].prezzo)
+    if (!scelte.length) break
+    b.compraDa(scelte[0].chi, scelte[0].k)
+    vendiIlSuperfluo()
+  }
+  const POZIONI = ['pozione-grande', 'pozione', 'pozione-piccola']
+  while (b.zaino.length < TASCHE) {
+    const k = POZIONI.find(p => COSE[p].prezzo <= b.gemme)
+    const e = k && b.compraDa('erborista', k)
+    if (!e || e.che !== 'comprato') break
+  }
+  return b.roba
+}
+
+// La campagna con la roba che resta. Per ogni seme si gioca la fila delle sei discese ad `allenata` (otto su
+// dieci), rigiocando quella persa come farebbe un bambino e facendo la spesa fra una e l'altra; prima di ogni
+// discesa se ne gioca una copia a ognuna delle `prove`, con lo zaino che ha in quel momento chi la fila la sta
+// facendo bene. `fila`: 'tutto' è chi gira tutto e si porta giù più roba (il caso peggiore per l'equilibrio),
+// 'minimo' chi va dritto alla scala. Torna, per bravura e per tappa, quante volte si arriva in fondo, e com'è
+// lo zaino in media
+export function misuraConLaRoba({ semi = 20, prove = [0.8, 0.6, 0.4], allenata = 0.8, eroe = undefined,
+                                  tentativi = 4, spesa = true, fila = 'tutto' } = {}) {
+  const vinte = prove.map(() => CAMPAGNA.map(() => 0))
+  const zaini = CAMPAGNA.map(() => ({ gemme: 0, att: 0, dif: 0, pozioni: 0 }))
+  for (let s = 0; s < semi; s++) {
+    let roba = ROBA_VUOTA()
+    for (let k = 0; k < CAMPAGNA.length; k++) {
+      const t = CAMPAGNA[k]
+      if (spesa) roba = allaBottega(roba, { finite: k, eroe, seme: s * 101 + k })
+      const prima = new Bottega({ eroe, roba })
+      zaini[k].gemme += roba.gemme / semi
+      zaini[k].att += prima.att / semi
+      zaini[k].dif += prima.dif / semi
+      zaini[k].pozioni += roba.zaino.filter(x => COSE[x].usa === 'cura').length / semi
+      prove.forEach((bravura, j) => {
+        const g = gioca(t, { seme: 5000 + s * 97 + k * 13 + j * 7, bravura, roba, eroe })
+        if (g.esito.vinta) vinte[j][k]++
+      })
+      for (let n = 0; n < tentativi; n++) {
+        const g = gioca(t, { seme: 100 + s * 37 + k * 3 + n * 7919, bravura: allenata, roba, eroe, come: fila })
+        roba = g.corsa.roba
+        if (g.esito.vinta) break
+        if (spesa) roba = allaBottega(roba, { finite: k, eroe, seme: s * 101 + k + n * 17 })
+      }
+    }
+  }
+  return { vinte, semi, zaini, prove }
+}
+
+// La roba con cui si arriva alla discesa `indice` andando dritti alla scala e rispondendo bene otto volte su
+// dieci, con la spesa fra una discesa e l'altra: la fila di misuraConLaRoba con un seme solo. È lo zaino con
+// cui si misurano le discese dopo la prima (unita/sotterraneo), il più povero che un bambino abbia davvero
+const fileGiocate = new Map()
+export function robaPer(indice, { eroe = undefined, seme = 1, fila = 'minimo', tentativi = 4 } = {}) {
+  const chiave = `${eroe}|${seme}|${fila}`
+  let zaini = fileGiocate.get(chiave)
+  if (!zaini) {
+    zaini = []
+    let roba = ROBA_VUOTA()
+    for (let k = 0; k < CAMPAGNA.length; k++) {
+      roba = allaBottega(roba, { finite: k, eroe, seme: seme * 101 + k })
+      zaini.push(roba)
+      for (let n = 0; n < tentativi; n++) {
+        const g = gioca(CAMPAGNA[k], { seme: 100 + seme * 37 + k * 3 + n * 7919, bravura: 0.8, roba, eroe, come: fila })
+        roba = g.corsa.roba
+        if (g.esito.vinta) break
+        roba = allaBottega(roba, { finite: k, eroe, seme: seme * 101 + k + n * 17 })
+      }
+    }
+    zaini.push(allaBottega(roba, { finite: CAMPAGNA.length, eroe, seme: seme * 101 + CAMPAGNA.length }))
+    fileGiocate.set(chiave, zaini)
+  }
+  return zaini[Math.max(0, Math.min(indice, zaini.length - 1))]
+}
