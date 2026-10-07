@@ -154,6 +154,34 @@ Controllo: le due pose dello stesso mercante hanno la stessa sagoma e gli
 stessi colori; si capisce a colpo d'occhio chi vende armi, chi pozioni e
 chi compra; sono alti come un eroe del gioco.
 
+## Prompt 6 — la mappa si allarga a destra
+
+Con la roba che resta, i mercanti e (poi) le missioni la terra di sopra
+diventa stretta. Si allarga **accostando** un secondo pezzo a destra di
+`mappa_sotterraneo.png`, non ridisegnandola: quella resta identica. La
+giunta cade nel bosco, dove un piccolo scarto non si vede; il sentiero
+che esce dal bordo destro (a circa 1140 px dall'alto) continua nel pezzo
+nuovo. Si chiede nella chat della mappa, allegandola di nuovo; il pezzo
+si salva come `mappa_sotterraneo_est.png`.
+
+```text
+Allego la mappa che hai fatto. Disegna la parte di mondo che sta SUBITO A DESTRA di questa, come se la mappa continuasse: un'altra immagine da 1024×1536 px verticale, STESSA SCALA (ogni pixel del disegno è un quadrato di 4×4 px), stessa mano, stessa luce, stessi colori, stessa vista dall'alto a tre quarti.
+
+Il bordo SINISTRO della nuova immagine deve continuare esattamente il bordo DESTRO della mappa allegata: per una striscia larga 2 celle (128 px) a sinistra c'è lo stesso bosco fitto e la stessa roccia che chiudono la mappa a destra, alla stessa altezza; il monte in alto continua; il sentiero di terra battuta che esce dal bordo destro della mappa allegata (in basso, a circa 1140 px dall'alto) entra dal bordo sinistro alla stessa altezza e prosegue.
+
+Cosa c'è nella parte nuova, collegata da sentieri di terra battuta larghi e liberi:
+- in basso, IL VILLAGGIO: una piazzetta di terra battuta con un pozzo per l'acqua (senza buco nero: è chiaramente un pozzo da cui si beve, col secchio pieno), tre posti per tre mercanti (un'incudine sotto una tettoia, un banco con boccette e mazzi d'erbe, un carretto di cianfrusaglie) SENZA persone, qualche casa col tetto di paglia, un orto, panni stesi;
+- al centro, un fiume che scende dal monte con un ponte di legno, un mulino ad acqua, campi coltivati;
+- in alto, su una collina, una torre di guardia in rovina e, fra le rocce, un vecchio altare di pietra coperto di muschio: posti dove un giorno si andrà a cercare qualcosa;
+- nessun nuovo buco, scala o passaggio che scenda sotto terra.
+
+Niente personaggi, niente animali, niente scritte, niente numeri, nessuna cornice.
+```
+
+Controllo: affiancate le due immagini, bosco, roccia e sentiero
+continuano alla giunta; nessuna nuova discesa; il villaggio si legge come
+il posto dei mercanti.
+
 ## La mappa si tiene intera
 
 Il prompt 1 è uscito così bene (`mappa_sotterraneo.png`) che la mappa si
