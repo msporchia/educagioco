@@ -164,9 +164,9 @@ uguale('l\'eroe si ferma ai piedi della scala', await cella(), POSTI.arco.piede.
 const fum = await page.locator('[data-fumetto]').innerText()
 controlla('il fumetto dice nome, dritta e piani', fum.includes('La scalinata antica') && fum.includes('si impara la strada')
           && fum.includes('2 piani'), fum)
-// niente targhette con disegnini sopra le discese: un cerchietto attorno all'ingresso di quelle trovate e aperte
+// niente targhette con disegnini sopra le discese: un pallino per terra davanti a quelle trovate e aperte
 uguale('sopra le discese non ci sono icone', await page.locator('[data-posto] .em').count(), 0)
-uguale('la discesa trovata ha il suo cerchietto', await cantine.locator('.sot-anello').count(), 1)
+uguale('la discesa trovata ha il suo pallino', await page.locator(`[data-pallino="${await cantine.getAttribute('data-posto')}"]`).count(), 1)
 controlla('e il fumetto non ha l\'icona della discesa', !fum.includes('🕯'), fum)
 // il tocco che ha aperto il fumetto non lo preme anche: il click arriva una volta sola
 await toccaIl('[data-discesa="0"]')

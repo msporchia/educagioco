@@ -408,10 +408,11 @@ onBeforeUnmount(() => {
 })
 
 const quadro = r => ({ left: r[0] * S + 'px', top: r[1] * S + 'px', width: r[2] * S + 'px', height: r[3] * S + 'px' })
-// il cerchietto attorno all'ingresso, in pixel dentro il bottone del posto (`ingresso` è in pixel della mappa)
-const anello = p => {
+// il pallino per terra davanti all'ingresso: al centro del bordo basso di `ingresso` (pixel della mappa).
+// Sta sotto l'eroe, non nel bottone del posto: arrivato lì, l'eroe ci sta sopra
+const pallino = p => {
   const [x, y, w, h] = p.ingresso, r = p.riquadro
-  return { left: (x - r[0]) * S + 'px', top: (y - r[1]) * S + 'px', width: w * S + 'px', height: h * S + 'px' }
+  return { left: (x + w / 2) * S + 'px', top: Math.min(y + h, r[1] + r[3]) * S - 14 + 'px' }
 }
 const nomeDi = p => p.cosa.nome
 // una chiusa dice cosa la apre; quella chiusa per l'età non promette niente («finisci quella di prima» sarebbe falso)
@@ -454,6 +455,11 @@ const chiusaPerche = p => {
         <b v-if="!parlato" class="sot-tre-punti">…</b>
       </button>
 
+      <template v-for="p in posti" :key="'pallino-' + p.nome">
+        <span v-if="p.aperto && trovati.has(p.nome)" class="sot-segno-posto" :class="{ 'sot-adesso': p.adesso }"
+              :data-pallino="p.nome" :style="pallino(p)"></span>
+      </template>
+
       <div ref="eroeEl" class="sot-io-sopra" :class="{ 'sot-specchio': specchio }" data-eroe-terra
            :data-cammina="cammina ? 1 : 0">
         <span v-if="ritratto" class="sot-ritratto" :style="ritratto.gabbia"><i :style="ritratto.pezzo"></i></span>
@@ -474,7 +480,6 @@ const chiusaPerche = p => {
               :aria-label="trovati.has(p.nome) ? nomeDi(p) : null" :aria-hidden="trovati.has(p.nome) ? null : 'true'"
               :tabindex="trovati.has(p.nome) ? 0 : -1"
               @click.stop="toccaPosto(p)">
-        <span v-if="p.aperto && trovati.has(p.nome)" class="sot-anello" :style="anello(p)"></span>
       </button>
       <button class="sot-posto sot-cartello" :class="{ 'sot-buio': !trovati.has('cartello') }" data-cartello
               aria-label="il cartello" :style="quadro(CARTELLO.riquadro)" @click.stop="toccaCartello"></button>

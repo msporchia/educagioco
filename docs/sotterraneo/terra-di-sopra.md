@@ -99,10 +99,10 @@ fondo**; a parità, il nome che somiglia al posto (`POSTO_DI` in `dati/terra.js`
 - **Si parte fra le case**, sulla strada sotto il pozzo di casa
   (`partenza`). Chi giocava prima della mappa si ritrova scoperto il posto
   delle discese già fatte.
-- **Una discesa trovata e aperta ha un cerchietto attorno all'ingresso**
-  (`ingresso` nel foglietto, un'ellisse in pixel della mappa, `.sot-anello`):
-  un anello sobrio che non copre il disegno, d'oro e che respira per la
-  prossima da fare. Niente targhette con disegnini sopra le discese, e
+- **Una discesa trovata e aperta ha un pallino per terra davanti
+  all'ingresso** (al centro del bordo basso di `ingresso` nel foglietto,
+  `.sot-segno-posto`): bianco, d'oro e pulsante per la prossima da fare.
+  Provato un anello attorno all'ingresso: copriva il disegno ed era brutto. Niente targhette con disegnini sopra le discese, e
   niente emoji nei nomi del fumetto, dell'avviso e del cartello; la chiusa
   tiene il suo lucchetto, e le stelle si leggono nel fumetto.
 - **Toccando una discesa trovata l'eroe ci va e si apre il fumetto** sopra
@@ -153,6 +153,6 @@ Nei test: `[data-terra]` (la vista, con `data-camera`), `[data-eroe-terra]`
 `data-abisso`, `data-aperta`, `data-trovato`), `[data-chiusa]` (la pezza o il
 velo), `[data-minatore]`, `[data-cartello]`, `[data-sasso]`, `[data-fumetto]`
 (con `data-fumetto-di`), `[data-azione="scendi"]`, `[data-detto]`,
-`[data-chiusa-perche]`, `[data-avviso-terra]`, `.sot-anello` (il cerchietto); `unita/sotterraneo-terra`,
+`[data-chiusa-perche]`, `[data-avviso-terra]`, `[data-pallino="<posto>"]` (il pallino); `unita/sotterraneo-terra`,
 `integrazione/sotterraneo-terra`, e `scendiNelSotterraneo` in
 `test/aiuto/browser.mjs` per chi deve solo scendere.
