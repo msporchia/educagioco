@@ -136,11 +136,15 @@
 .pp-casella.pp-velata { opacity: .7 }
 .pp-lucchetto { width: 20px; height: 20px }
 
-/* il sentiero senza fine: la casella tonda e d'oro in fondo alla strada */
+/* i sentieri senza fine: la casella tonda e d'oro in fondo alla strada,
+   col suo animale in un tondino sul bordo */
 .pp-casella-sentiero { border-radius: 50%; background: #fff3c9; box-shadow: 0 4px 0 #d39a1c }
 .pp-casella-sentiero.pp-ora { box-shadow: 0 0 0 3px #fff4e6, 0 4px 0 #d39a1c }
 .pp-infinito { width: 44px; height: 22px; fill: none; stroke: var(--is-scuro); stroke-width: 4;
                stroke-linecap: round }
+.pp-sentiero-di { position: absolute; right: -6px; bottom: -6px; width: 28px; height: 28px; border-radius: 50%;
+                  display: flex; align-items: center; justify-content: center; font-size: 17px;
+                  background: #fff; box-shadow: 0 2px 0 #d39a1c }
 .pp-sentiero-nome { position: absolute; transform: translateY(-50%); display: flex; flex-direction: column;
                     gap: 2px; line-height: 1.2; pointer-events: none; color: var(--is-scuro) }
 .pp-sentiero-nome.pp-a-sinistra { align-items: flex-end; text-align: right }

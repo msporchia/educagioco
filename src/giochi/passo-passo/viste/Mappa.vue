@@ -1,6 +1,6 @@
 <script>
 // dove il segnalino si è posato l'ultima volta, per bambino: dura la sessione, non va nel profilo
-let ultimo = null      // { chi, al, dove, verso }: `al` e `dove` sono id (l'indice della tappa, 'senza-fine' o una tana)
+let ultimo = null      // { chi, al, dove, verso }: `al` e `dove` sono id (l'indice della tappa, 'senza-fine', 'senza-fine-cane' o una tana)
 </script>
 
 <script setup>
@@ -11,7 +11,7 @@ let ultimo = null      // { chi, al, dove, verso }: `al` e `dove` sono id (l'ind
    grande che legge. Riceve lo stato già deciso di ogni tappa.
    Vedi docs/passo-passo/mappa.md. */
 import { ref, shallowRef, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { disponiIsole, tratto, viaggio, arco, decori, LARGO_MAX, ANIMALE } from '../scena/isole.js'
+import { disponiIsole, tratto, viaggio, arco, decori, LARGO_MAX, ANIMALE, SENTIERO_CANE } from '../scena/isole.js'
 import { STRADE } from '../motore/strade.js'
 import Coniglio from './Coniglio.vue'
 import Cane from './Cane.vue'
@@ -19,8 +19,9 @@ import Cane from './Cane.vue'
 const props = defineProps({
   // per indice: { indice, nome, icona, racconto, stelle, stato: fatta|ora|aperta|chiusa, aMeta, serve, scalino: { icona, nome } }
   voci: { type: Array, required: true },
-  senzaFine: { type: Object, required: true },        // { aperto, record, quante, fatte }
-  dove: { type: [Number, String], required: true },   // la casella del segnalino: la tappa di adesso, o 'senza-fine'
+  // i due sentieri senza fine: { coniglio, cane }, ognuno { aperto, record, serve }
+  sentieri: { type: Object, required: true },
+  dove: { type: [Number, String], required: true },   // la casella del segnalino: la tappa di adesso, o un sentiero
   chi: { type: String, default: '' },
 })
 const emit = defineEmits(['gioca', 'senza-fine'])
@@ -45,18 +46,23 @@ const quadro = computed(() => (W.value ? disponiIsole(W.value, STRADE) : null))
 const cose = computed(() => (quadro.value ? decori(quadro.value) : []))
 const nodoDi = id => (quadro.value ? quadro.value.nodi.find(n => n.id === id) : null)
 
-const sentiero = computed(() => {
-  const f = props.senzaFine
+// i due sentieri: quello del coniglio in fondo alla strada maestra, quello del cane in fondo al pascolo
+const RACCONTO = {
+  coniglio: 'Prati, laghi, fiumi e posti con lo zaino: nuovi uno dopo l\'altro, fatti con quello che sai.',
+  cane: 'Pascoli con tre, quattro, cinque pecore, e le stalle con lo zaino: nuovi uno dopo l\'altro.',
+}
+const sentieroDi = id => {
+  const strada = id === SENTIERO_CANE ? 'cane' : 'coniglio'
+  const f = props.sentieri[strada] || {}
   return {
-    id: 'senza-fine', nome: 'Il sentiero senza fine',
-    stato: !f.aperto ? 'chiusa' : props.dove === 'senza-fine' ? 'ora' : 'aperta',
-    racconto: 'Sentieri nuovi, uno dopo l\'altro, fatti con quello che sai.',
-    serve: `Si apre alla fine delle prime ${f.quante} tappe: ne hai fatte ${f.fatte}.`,
+    strada, nome: strada === 'cane' ? 'Il sentiero del cane' : 'Il sentiero del coniglio',
+    stato: !f.aperto ? 'chiusa' : props.dove === id ? 'ora' : 'aperta',
+    racconto: RACCONTO[strada], serve: f.serve || '', record: f.record || '',
   }
-})
+}
 // le caselle, con quello che si sa di ognuna
 const caselle = computed(() => (quadro.value ? quadro.value.nodi.filter(n => n.tipo !== 'tana').map(n => ({
-  ...n, ...(n.tipo === 'sentiero' ? sentiero.value : props.voci[n.id]),
+  ...n, ...(n.tipo === 'sentiero' ? sentieroDi(n.id) : props.voci[n.id]),
 })) : []))
 const vocePer = id => caselle.value.find(c => c.id === id)
 
@@ -290,11 +296,11 @@ const posto = computed(() => {
   const sotto = sopra < 230
   return { x, largo, sotto, y: sotto ? n.y + n.lato / 2 + 12 : sopra, coda: n.x - x }
 })
-const intestazione = n => (n.tipo === 'sentiero' ? 'In fondo alla strada'
+const intestazione = n => (n.tipo === 'sentiero' ? `In fondo alla strada ${n.strada === 'cane' ? 'del cane' : 'del coniglio'}`
   : `${n.scalino.icona} ${n.scalino.nome}${n.animale === 'cane' ? ' · col cane' : ''}`)
 function gioca(n) {
   aperto.value = null
-  if (n.tipo === 'sentiero') emit('senza-fine')
+  if (n.tipo === 'sentiero') emit('senza-fine', n.strada)
   else emit('gioca', n.id)
 }
 const STELLA = 'M12 2.6l2.85 5.95 6.55.85-4.8 4.55 1.2 6.5L12 17.3l-5.8 3.15 1.2-6.5-4.8-4.55 6.55-.85z'
@@ -412,7 +418,7 @@ const etichetta = c => (c.tipo === 'sentiero'
           <button type="button" class="pp-casella" :class="['pp-' + c.stato, { 'pp-velata': velata(c.isola), 'pp-casella-sentiero': c.tipo === 'sentiero' }]"
                   :style="{ left: (c.x - c.lato / 2) + 'px', top: (c.y - c.lato / 2) + 'px',
                             width: c.lato + 'px', height: c.lato + 'px' }"
-                  :data-tappa="c.tipo === 'sentiero' ? 'senza-fine' : c.id" :data-stato="c.stato"
+                  :data-tappa="c.id" :data-stato="c.stato"
                   :data-strada="c.animale"
                   :aria-label="etichetta(c)"
                   @click.stop="tocca(c.id)">
@@ -430,13 +436,15 @@ const etichetta = c => (c.tipo === 'sentiero'
                 <svg v-for="s in 4" :key="s" viewBox="0 0 24 24" :class="{ 'pp-presa': s <= c.stelle }"><path :d="STELLA" /></svg>
               </span>
             </template>
+            <!-- di chi è il sentiero, anche da chiuso -->
+            <span v-if="c.tipo === 'sentiero'" class="pp-sentiero-di pp-em" :data-sentiero-di="c.strada">{{ c.strada === 'cane' ? '🐕' : '🐇' }}</span>
           </button>
-          <span v-if="c.tipo === 'sentiero'" class="pp-sentiero-nome" :class="[c.etichetta.lato > 0 ? 'pp-a-destra' : 'pp-a-sinistra', 'pp-' + c.stato]"
+          <span v-if="c.tipo === 'sentiero' && c.etichetta" class="pp-sentiero-nome" :class="[c.etichetta.lato > 0 ? 'pp-a-destra' : 'pp-a-sinistra', 'pp-' + c.stato]"
                 :style="{ [c.etichetta.lato > 0 ? 'left' : 'right']: (c.etichetta.lato > 0 ? c.etichetta.x : quadro.W - c.etichetta.x) + 'px',
                           top: c.y + 'px', maxWidth: c.etichetta.largo + 'px' }">
             <b>{{ c.nome }}</b>
-            <i v-if="c.stato === 'chiusa'">si apre dopo {{ senzaFine.quante }} tappe: ne hai fatte {{ senzaFine.fatte }}</i>
-            <i v-else-if="senzaFine.record" data-record>record: {{ senzaFine.record }}</i>
+            <i v-if="c.stato === 'chiusa'">{{ c.serve }}</i>
+            <i v-else-if="c.record" data-record>record: {{ c.record }}</i>
             <i v-else>sentieri nuovi, uno dopo l'altro</i>
           </span>
         </template>
@@ -452,7 +460,7 @@ const etichetta = c => (c.tipo === 'sentiero'
         </div>
 
         <div v-if="casellaAperta" ref="fumetto" class="pp-fumetto" :class="{ 'pp-sotto': posto.sotto }" data-fumetto
-             :data-fumetto-per="casellaAperta.tipo === 'sentiero' ? 'senza-fine' : casellaAperta.id"
+             :data-fumetto-per="casellaAperta.id"
              :style="{ left: posto.x + 'px', top: posto.y + 'px', width: posto.largo + 'px', '--coda': posto.coda + 'px' }"
              @click.stop>
           <small>{{ intestazione(casellaAperta) }}</small>
@@ -466,7 +474,7 @@ const etichetta = c => (c.tipo === 'sentiero'
                   :aria-label="`${casellaAperta.stelle} stelle su 4`">
               <svg v-for="s in 4" :key="s" viewBox="0 0 24 24" :class="{ 'pp-presa': s <= casellaAperta.stelle }"><path :d="STELLA" /></svg>
             </span>
-            <span v-else class="pp-fumetto-record">{{ senzaFine.record ? 'record: ' + senzaFine.record : 'Ancora nessun record' }}</span>
+            <span v-else class="pp-fumetto-record" data-record>{{ casellaAperta.record ? 'record: ' + casellaAperta.record : 'Ancora nessun record' }}</span>
             <button type="button" class="pp-fumetto-gioca" data-azione="parti" @click="gioca(casellaAperta)">
               <svg class="pp-triangolo" viewBox="0 0 10 12" aria-hidden="true"><path d="M1.5 1.2l7.5 4.8-7.5 4.8z" /></svg>
               {{ casellaAperta.aMeta ? 'continua' : 'gioca' }}

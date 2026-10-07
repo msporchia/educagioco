@@ -17,7 +17,8 @@ const STACCO_RAMO = 36              // sopra e sotto un'isola del cane
 const ISOLOTTO = 54                 // da una casella sola al bordo dell'isolotto, di lato
 const CIMA = 14, FINE = 60
 export const ANIMALE = { largo: 52, alto: 52, piede: 8 }   // il piede affonda un poco nel bordo della casella
-export const SENTIERO = 1.35        // la casella del sentiero senza fine, rispetto alle altre
+export const SENTIERO = 1.35        // la casella di un sentiero senza fine, rispetto alle altre
+export const SENTIERO_CANE = 'senza-fine-cane'   // l'id della casella del sentiero del cane
 
 // il vestito di un'isola: solo disegno, le regole restano le stesse
 export const VESTITI = {
@@ -106,8 +107,9 @@ function strada(punti, { dentro = x => x, testa = null, coda = null } = {}) {
 // dove poggia l'animale seduto su una casella: il bordo di sopra, nel mezzo
 const piedeSu = (x, y, lato) => ({ x, y: y - lato / 2 + ANIMALE.piede })
 
-/* `S` sono le strade (motore/strade.js); `sentiero` se in fondo c'è il
-   sentiero senza fine. */
+/* `S` sono le strade (motore/strade.js); `sentiero` se ci sono i sentieri
+   senza fine: quello del coniglio in fondo alla strada maestra, quello
+   del cane in fondo al pascolo. */
 export function disponiIsole(W, S, { sentiero = true } = {}) {
   const lato = latoDi(W)
   const isole = [], nodi = [], strade = [], archi = [], bivi = []
@@ -159,16 +161,22 @@ export function disponiIsole(W, S, { sentiero = true } = {}) {
       : (lato0 > 0 ? xMaxTutta + GOMITO - STRADA / 2 - 14 - M : W - M - (xMinTutta - GOMITO + STRADA / 2 + 14))
     const x0 = ramo.tappe.length === 1 ? (lato0 > 0 ? M + 8 : W - M - 8 - largo)
       : (lato0 > 0 ? M : W - M - largo)
-    // le caselle del cane cominciano dalla parte della tana, lontano dal ponte
-    const rr = righe(ramo.tappe, { x0, x1: x0 + largo, cima: yR, lato, verso: lato0 })
-    const fondoR = rr.fondo + FONDO
+    // le caselle del cane cominciano dalla parte della tana, lontano dal ponte;
+    // in fondo al pascolo (il ramo senza carta) il sentiero del cane
+    const conSentiero = sentiero && !ramo.carta
+    const grande = Math.round(lato * SENTIERO)
+    const rr = righe(conSentiero ? [...ramo.tappe, SENTIERO_CANE] : ramo.tappe,
+                     { x0, x1: x0 + largo, cima: yR, lato, verso: lato0 })
+    const fondoR = rr.fondo + FONDO + (conSentiero ? (grande - lato) / 2 : 0)
     isole.push({ k: kRamo, chiave: ramo.chiave, scalino: ramo.scalino, animale: 'cane', vestito: 'pascolo',
                  x: x0, y: yR, w: largo, h: fondoR - yR, tappe: ramo.tappe, isolotto: ramo.tappe.length === 1,
                  attacco: ramo.attacco, da: kIsola,
                  cartello: ramo.tappe.length === 1 ? null : { lato: lato0, y: yR + 10 } })
-    for (const c of rr.caselle)
-      nodo({ id: c.id, tipo: 'tappa', x: c.x, y: c.y, lato, isola: kRamo, animale: 'cane',
-             piede: piedeSu(c.x, c.y, lato), verso: c.verso })
+    for (const c of rr.caselle) {
+      const qui = c.id === SENTIERO_CANE ? grande : lato
+      nodo({ id: c.id, tipo: c.id === SENTIERO_CANE ? 'sentiero' : 'tappa', x: c.x, y: c.y, lato: qui, isola: kRamo,
+             animale: 'cane', piede: piedeSu(c.x, c.y, qui), verso: c.verso })
+    }
     for (let j = 1; j < rr.caselle.length; j++) archi.push({ a: rr.caselle[j - 1].id, b: rr.caselle[j].id, tipo: 'passo' })
 
     /* le due tane, una sopra l'altra: quella del coniglio in fondo a
