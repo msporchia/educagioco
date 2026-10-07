@@ -19,7 +19,6 @@ import Cane from './Cane.vue'
 
 const props = defineProps({
   voci: { type: Array, required: true },
-  senzaFine: { type: Object, required: true },
   partenza: { type: [Number, String], required: true },  // il nodo dove sta il segnalino
   meta: { type: [Number, String], default: null },    // dove va appena aperta la mappa
   entrata: { type: Boolean, default: false },         // arriva dalla valle: sbuca dalla tana in cima
@@ -341,7 +340,7 @@ function gioca(n) {
         </div>
       </div>
 
-      <Fumetto v-if="casellaAperta && posto" ref="fumetto" :n="casellaAperta" :posto="posto" :senza-fine="senzaFine" @gioca="gioca" />
+      <Fumetto v-if="casellaAperta && posto" ref="fumetto" :n="casellaAperta" :posto="posto" @gioca="gioca" />
     </div>
   </div>
 </template>

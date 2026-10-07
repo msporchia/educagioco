@@ -1,6 +1,6 @@
 <script>
 // dove il segnalino si è posato l'ultima volta, per bambino: dura la sessione, non va nel profilo
-let ultimo = null      // { chi, mondo, al, dove, verso }: `al` e `dove` sono id (l'indice della tappa, 'senza-fine', un posto della strada)
+let ultimo = null      // { chi, mondo, al, dove, verso }: `al` e `dove` sono id (l'indice della tappa, un sentiero, un posto della strada)
 </script>
 
 <script setup>
@@ -12,14 +12,16 @@ let ultimo = null      // { chi, mondo, al, dove, verso }: `al` e `dove` sono id
 import { ref, computed } from 'vue'
 import { STRADE } from '../motore/strade.js'
 import { quadroValle, nellaValle } from '../scena/valle.js'
+import { SENTIERO_CANE } from '../scena/isole.js'
 import Valle from './Valle.vue'
 import MondoZaino from './MondoZaino.vue'
 
 const props = defineProps({
   // per indice: { indice, nome, icona, racconto, stelle, stato: fatta|ora|aperta|chiusa, aMeta, serve, scalino: { icona, nome } }
   voci: { type: Array, required: true },
-  senzaFine: { type: Object, required: true },        // { aperto, record, quante, fatte }
-  dove: { type: [Number, String], required: true },   // la casella del segnalino: la tappa di adesso, o 'senza-fine'
+  // i due sentieri senza fine: { coniglio, cane }, ognuno { aperto, record, serve }
+  sentieri: { type: Object, required: true },
+  dove: { type: [Number, String], required: true },   // la casella del segnalino: la tappa di adesso, o un sentiero
   chi: { type: String, default: '' },
 })
 const emit = defineEmits(['gioca', 'senza-fine'])
@@ -39,7 +41,8 @@ const zaino = computed(() => {
 
 // si gioca lì: una casella aperta, o un posto della strada della valle
 const giocabile = id => {
-  if (id === 'senza-fine') return props.senzaFine.aperto
+  if (id === 'senza-fine') return !!props.sentieri.coniglio.aperto
+  if (id === SENTIERO_CANE) return !!props.sentieri.cane.aperto
   if (typeof id === 'number') return !!props.voci[id] && props.voci[id].stato !== 'chiusa'
   return mondoDi(id) === 'valle' && !String(id).startsWith('tana:')
 }
@@ -79,10 +82,10 @@ function passa() {
     <!-- in cima e ferma, la partita lasciata a metà (docs/passo-passo/sosta.md) -->
     <div class="pp-mappa-cima"><slot /></div>
 
-    <Valle v-if="stato.mondo === 'valle'" :key="'valle' + stato.n" :voci="voci" :senza-fine="senzaFine" :zaino="zaino"
+    <Valle v-if="stato.mondo === 'valle'" :key="'valle' + stato.n" :voci="voci" :sentieri="sentieri" :zaino="zaino"
            :dove="dove" :partenza="stato.partenza" :meta="stato.meta ?? null" :entrata="stato.entrata" :verso="stato.verso || 1"
-           @gioca="i => emit('gioca', i)" @senza-fine="emit('senza-fine')" @passa="passa" @posato="ricorda" />
-    <MondoZaino v-else :key="'zaino' + stato.n" :voci="voci" :senza-fine="senzaFine"
+           @gioca="i => emit('gioca', i)" @senza-fine="s => emit('senza-fine', s)" @passa="passa" @posato="ricorda" />
+    <MondoZaino v-else :key="'zaino' + stato.n" :voci="voci"
                 :partenza="stato.partenza" :meta="stato.meta ?? null" :entrata="stato.entrata" :verso="stato.verso || 1"
                 @gioca="i => emit('gioca', i)" @passa="passa" @posato="ricorda" />
   </div>

@@ -18,7 +18,7 @@
 
 export const LARGO = 1536, ALTO = 1024
 export const LATO = 52
-export const FIRMA = 'e1d38ec41bb7'
+export const FIRMA = 'a1947421e544'
 
 export const ISOLE = {
   "passi": {"caselle":5,"cartello":[150,640]},
@@ -66,7 +66,7 @@ export const NODI = [
   {"id":"pecore-cane:9","tipo":"casella","isola":"pecore-cane","x":932.3,"y":615.3,"k":9},
   {"id":"pecore-cane:10","tipo":"casella","isola":"pecore-cane","x":992.3,"y":553.7,"k":10},
   {"id":"senza-fine","tipo":"sentiero","isola":"buche","x":905.2,"y":129.3,"etichetta":[948,66]},
-  {"id":"sentiero-cane","tipo":"sentiero","isola":"pecore-cane","x":935.0,"y":478.0,"etichetta":[975,470]},
+  {"id":"senza-fine-cane","tipo":"sentiero","isola":"pecore-cane","x":935.0,"y":478.0,"etichetta":[975,470]},
   {"id":"incrocio:1","tipo":"incrocio","isola":"passi","x":470.0,"y":786.0},
   {"id":"incrocio:2","tipo":"incrocio","isola":"passi","x":430.0,"y":645.0},
   {"id":"incrocio:3","tipo":"incrocio","isola":"ghiaccio","x":1310.0,"y":413.0},
@@ -164,7 +164,7 @@ export const ARCHI = [
   {"a":"pecore-cane:7","b":"pecore-cane:8","tipo":"terra","punti":[[808.9,643.5],[810,645],[860,660],[870.8,656.1]]},
   {"a":"pecore-cane:8","b":"pecore-cane:9","tipo":"terra","punti":[[870.8,656.1],[910,642],[932.3,615.3]]},
   {"a":"pecore-cane:9","b":"pecore-cane:10","tipo":"terra","punti":[[932.3,615.3],[945,600],[985,575],[992.3,553.7]]},
-  {"a":"pecore-cane:10","b":"sentiero-cane","tipo":"terra","punti":[[992.3,553.7],[997,540],[990,505],[960,485],[935.0,478.0]]},
+  {"a":"pecore-cane:10","b":"senza-fine-cane","tipo":"terra","punti":[[992.3,553.7],[997,540],[990,505],[960,485],[935.0,478.0]]},
   {"a":"incrocio:9","b":"incrocio:15","tipo":"terra","punti":[[548.9,550.6],[522,578],[502.0,596.0]]},
   {"a":"incrocio:10","b":"sosta:5","tipo":"ponte","ponte":"prato-salto","punti":[[548.0,808.0],[661.0,811.7]]},
   {"a":"sosta:5","b":"sosta:6","tipo":"ponte","ponte":"prato-salto","punti":[[661.0,811.7],[760,815],[773.9,814.9]]},

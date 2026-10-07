@@ -1,7 +1,7 @@
 <script setup>
 /* Una casella della mappa: la tessera col suo stato (fatta, ora, aperta,
-   chiusa), le stelline, il lucchetto, la ✏️ di una fila a metà; quella del
-   sentiero senza fine è tonda. Il racconto sta nell'`aria-label`, per il
+   chiusa), le stelline, il lucchetto, la ✏️ di una fila a metà; quelle dei
+   sentieri senza fine sono tonde, col loro animale sul bordo. Il racconto sta nell'`aria-label`, per il
    grande che legge. La usano le due mappe. Vedi docs/passo-passo/mappa.md. */
 defineProps({
   c: { type: Object, required: true },     // il nodo con la sua voce: { id, tipo, x, y, lato, animale, stato, … }
@@ -36,5 +36,7 @@ const etichetta = c => (c.tipo === 'sentiero'
         <svg v-for="s in 4" :key="s" viewBox="0 0 24 24" :class="{ 'pp-presa': s <= c.stelle }"><path :d="STELLA" /></svg>
       </span>
     </template>
+    <!-- di chi è il sentiero, anche da chiuso -->
+    <span v-if="c.tipo === 'sentiero'" class="pp-sentiero-di pp-em" :data-sentiero-di="c.strada">{{ c.strada === 'cane' ? '🐕' : '🐇' }}</span>
   </button>
 </template>

@@ -7,8 +7,6 @@ import { ANIMALE, SENTIERO } from './isole.js'
 
 // le isole che stanno sul fondale; le altre (lo zaino) restano disegnate in codice (scena/isole.js)
 export const nellaValle = chiave => Object.prototype.hasOwnProperty.call(ISOLE, chiave)
-// le caselle speciali che oggi hanno una tappa: le altre sono posti tenuti pronti
-export const SPECIALI = ['senza-fine']
 
 export const SALTO = 72             // la lunghezza di un saltello, sulla strada
 export const SALTI_MAX = 16         // oltre, i salti si allungano: un viaggio lungo non dura di più
@@ -21,7 +19,7 @@ const lunghezza = p => p.reduce((s, q, i) => (i ? s + Math.hypot(q[0] - p[i - 1]
    di quello della casella (`passi:3` → la quarta tappa delle isole di passi,
    in motore/strade.js), l'animale della loro isola, il piede dove si siede
    il segnalino; e gli archi con la loro lunghezza. */
-export function quadroValle(S, { speciali = SPECIALI, dati = { NODI, ARCHI, PONTI, ISOLE, LARGO, ALTO, LATO } } = {}) {
+export function quadroValle(S, { dati = { NODI, ARCHI, PONTI, ISOLE, LARGO, ALTO, LATO } } = {}) {
   const isolaDi = new Map(S.isole.map(s => [s.chiave, s]))
   const nuovo = new Map()
   const nodi = dati.NODI.map(n => {
@@ -33,7 +31,6 @@ export function quadroValle(S, { speciali = SPECIALI, dati = { NODI, ARCHI, PONT
       if (t === undefined) tipo = 'incrocio'
       else id = t
     }
-    if (tipo === 'sentiero' && !speciali.includes(n.id)) tipo = 'riservato'
     const lato = tipo === 'casella' ? dati.LATO : tipo === 'sentiero' ? Math.round(dati.LATO * SENTIERO) : 0
     nuovo.set(n.id, id)
     return {

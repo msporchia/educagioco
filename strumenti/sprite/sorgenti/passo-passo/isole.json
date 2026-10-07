@@ -58,6 +58,6 @@
   },
   "speciali": {
     "senza-fine": { "isola": "buche", "punto": [905, 130], "etichetta": [948, 66] },
-    "sentiero-cane": { "isola": "pecore-cane", "punto": [935, 478], "etichetta": [975, 470] }
+    "senza-fine-cane": { "isola": "pecore-cane", "punto": [935, 478], "etichetta": [975, 470] }
   }
 }

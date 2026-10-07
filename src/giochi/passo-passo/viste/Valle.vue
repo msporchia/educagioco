@@ -11,7 +11,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { MAPPA } from '../dati/isole-mappa.js'
 import { quadroValle, chiusure, viaggio, vicinoA, entraNellaTana, esceDallaTana } from '../scena/valle.js'
-import { ANIMALE } from '../scena/isole.js'
+import { ANIMALE, SENTIERO_CANE } from '../scena/isole.js'
 import { SBARRA, MASSO, rettangoli } from '../scena/pixel.js'
 import { STRADE } from '../motore/strade.js'
 import { usaSegnalino } from './segnalino.js'
@@ -22,9 +22,9 @@ import Cane from './Cane.vue'
 
 const props = defineProps({
   voci: { type: Array, required: true },
-  senzaFine: { type: Object, required: true },        // { aperto, record, quante, fatte }
+  sentieri: { type: Object, required: true },         // { coniglio, cane }, ognuno { aperto, record, serve }
   zaino: { type: Object, required: true },            // la tana dello zaino: { aperto, serve }
-  dove: { type: [Number, String], required: true },   // la tappa di adesso, o 'senza-fine'
+  dove: { type: [Number, String], required: true },   // la tappa di adesso, o un sentiero
   partenza: { type: [Number, String], required: true },  // il nodo dove sta il segnalino
   meta: { type: [Number, String], default: null },    // dove va appena aperta la mappa (la tappa di adesso è cambiata)
   entrata: { type: Boolean, default: false },         // torna dallo zaino: sbuca dalla tana
@@ -38,17 +38,22 @@ const nodoDi = id => per.get(id) || null
 const DISEGNO_SBARRA = rettangoli(SBARRA), DISEGNO_MASSO = rettangoli(MASSO)
 
 /* ---------- le caselle e cosa è chiuso ---------- */
-const sentiero = computed(() => {
-  const f = props.senzaFine
+// i due sentieri: quello del coniglio in cima alle buche, quello del cane in fondo al pascolo
+const RACCONTO = {
+  coniglio: 'Prati, laghi, fiumi e posti con lo zaino: nuovi uno dopo l\'altro, fatti con quello che sai.',
+  cane: 'Pascoli con tre, quattro, cinque pecore, e le stalle con lo zaino: nuovi uno dopo l\'altro.',
+}
+const sentieroDi = id => {
+  const strada = id === SENTIERO_CANE ? 'cane' : 'coniglio'
+  const f = props.sentieri[strada] || {}
   return {
-    nome: 'Il sentiero senza fine',
-    stato: !f.aperto ? 'chiusa' : props.dove === 'senza-fine' ? 'ora' : 'aperta',
-    racconto: 'Sentieri nuovi, uno dopo l\'altro, fatti con quello che sai.',
-    serve: `Si apre alla fine delle prime ${f.quante} tappe: ne hai fatte ${f.fatte}.`,
+    strada, nome: strada === 'cane' ? 'Il sentiero del cane' : 'Il sentiero del coniglio',
+    stato: !f.aperto ? 'chiusa' : props.dove === id ? 'ora' : 'aperta',
+    racconto: RACCONTO[strada], serve: f.serve || '', record: f.record || '',
   }
-})
+}
 const caselle = computed(() => quadro.nodi.filter(n => n.tipo === 'casella' || n.tipo === 'sentiero')
-  .map(n => ({ ...n, ...(n.tipo === 'sentiero' ? sentiero.value : props.voci[n.id]) })))
+  .map(n => ({ ...n, ...(n.tipo === 'sentiero' ? sentieroDi(n.id) : props.voci[n.id]) })))
 const vocePer = id => caselle.value.find(c => c.id === id)
 const stato = computed(() => chiusure(quadro, id => !!props.voci[id] && props.voci[id].stato !== 'chiusa'))
 const velata = k => !stato.value.aperte.has(k)
@@ -257,7 +262,7 @@ function fuori(e) {
 }
 function gioca(n) {
   aperto.value = null
-  if (n.tipo === 'sentiero') emit('senza-fine')
+  if (n.tipo === 'sentiero') emit('senza-fine', n.strada)
   else emit('gioca', n.id)
 }
 
@@ -347,8 +352,8 @@ const dove = (x, y) => ({ left: x + 'px', top: y + 'px' })
         <span v-if="c.tipo === 'sentiero'" class="pp-sentiero-nome pp-sentiero-nome-valle pp-a-destra"
               :class="'pp-' + c.stato" :style="dove(c.etichetta[0], c.etichetta[1])">
           <b>{{ c.nome }}</b>
-          <i v-if="c.stato === 'chiusa'">si apre dopo {{ senzaFine.quante }} tappe: ne hai fatte {{ senzaFine.fatte }}</i>
-          <i v-else-if="senzaFine.record" data-record>record: {{ senzaFine.record }}</i>
+          <i v-if="c.stato === 'chiusa'">{{ c.serve }}</i>
+          <i v-else-if="c.record" data-record>record: {{ c.record }}</i>
           <i v-else>sentieri nuovi, uno dopo l'altro</i>
         </span>
       </template>
@@ -366,7 +371,7 @@ const dove = (x, y) => ({ left: x + 'px', top: y + 'px' })
         <i v-for="k in 5" :key="k" :style="{ '--k': k }"></i>
       </span>
 
-      <Fumetto v-if="cosaAperta && posto" ref="fumetto" :n="cosaAperta" :posto="posto" :senza-fine="senzaFine" @gioca="gioca" />
+      <Fumetto v-if="cosaAperta && posto" ref="fumetto" :n="cosaAperta" :posto="posto" @gioca="gioca" />
     </div>
   </div>
 </template>
