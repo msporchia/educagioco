@@ -13,7 +13,7 @@ import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { GEMME_DI_BENTORNATO } from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
-import { ROBA_VUOTA } from '../../src/giochi/sotterraneo/motore/corredo.js'
+import { ROBA_VUOTA, schedaConLaRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { scrivi, leggi, dice } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { Bottega } from '../../src/giochi/sotterraneo/motore/bottega.js'
 import { avventuraDi, scriviNellAvventura, vintaNellAvventura, ilMassimo, cominciata, passaAlleAvventure,
@@ -212,6 +212,50 @@ function passa(nome, sot, eroe) {
 /* un profilo senza eroe scelto ma con delle discese (prima degli eroi): al cavaliere */
 {
   passa('senza eroe', { tappa: 2, libera: false, stelle: { 0: 1, 1: 1 }, cfg: {} }, 'cavaliere')
+}
+
+/* la scheda dice i numeri veri: quelli che la discesa userà con la roba addosso, non quelli di base */
+{
+  const fatta = (eroe, roba) => ({ ...ROBA_VUOTA(), ...roba })
+  // quello che la Corsa (la discesa vera) conta appena si scende: lo stesso Corredo, lo stesso `sistemaIlCorredo`
+  const inDiscesa = (eroe, roba) => new Corsa(CAMPAGNA[1], { seme: 5, rnd: seminato(5), eroe, roba })
+  const casi = [
+    ['cavaliere con spadone, corazza e amuleto rosso', 'cavaliere',
+     { mano: 'spadone', corpo: 'corazza', dito: 'amuleto-rosso', gemme: 12 }],
+    ['cavaliere col pugnale vampiro, lo scudo del leone e il panciotto', 'cavaliere',
+     { mano: 'pugnale-vampiro', mancina: 'scudo-leone', corpo: 'panciotto' }],
+    ['nano con la bipenne e lo scudo di ferro (a due mani: lo scudo non si regge)', 'nano',
+     { mano: 'bipenne', mancina: 'scudo-ferro', corpo: 'corazza' }],
+    ['mago con una spada che non impugna', 'mago', { mano: 'spada', corpo: 'manto' }],
+  ]
+  for (const [nome, eroe, dato] of casi) {
+    const roba = fatta(eroe, dato)
+    const n = schedaConLaRoba(eroe, roba), c = inDiscesa(eroe, roba)
+    uguale(`${nome}: la vita è il massimo della discesa`, n.vita, c.vitaMax)
+    uguale(`${nome}: l'attacco è quello della discesa`, n.att, c.att)
+    uguale(`${nome}: la difesa è quella della discesa`, n.dif, c.dif)
+    uguale(`${nome}: la mano è quella che resta addosso`, n.mano, c.mano)
+    uguale(`${nome}: lo scudo anche`, n.mancina, c.mancina)
+  }
+  // i numeri a mano, perché «uguali alla discesa» non dice che siano più dei numeri di base
+  const cav = schedaConLaRoba('cavaliere', fatta('cavaliere', { mano: 'spadone', corpo: 'corazza', dito: 'amuleto-rosso' }))
+  stessaLista('cavaliere ben armato: 24 di vita, braccio 7, difesa 3',
+              [cav.vita, cav.att, cav.dif], [18 + 6, 3 + 4, 1 + 2])
+  const mago = schedaConLaRoba('mago', fatta('mago', { mano: 'spada', corpo: 'manto' }))
+  uguale('il mago non impugna la spada: resta addosso solo il manto', `${mago.mano}|${mago.corpo}`, 'null|manto')
+  uguale('e il braccio è quello di base', mago.att, EROI.find(e => e.chiave === 'mago').att)
+  // un'avventura nuova: lo zaino vuoto, i numeri di base
+  for (const e of EROI) {
+    const n = schedaConLaRoba(e.chiave, null)
+    stessaLista(`${e.chiave} nuovo: vita, braccio e difesa di base`, [n.vita, n.att, n.dif], [e.vita, e.att, e.dif])
+    uguale(`${e.chiave} nuovo: niente in mano`, `${n.mano}|${n.mancina}|${n.corpo}`, 'null|null|null')
+  }
+  // i tratti: la luce e le gemme, scritti come nello zaino
+  stessaLista('la spada del ladro dice le gemme', schedaConLaRoba('cavaliere', fatta('cavaliere', { mano: 'spada-del-ladro' })).tratti,
+              ['💎 ×1,5'])
+  stessaLista('la bipenne solare dice la luce', schedaConLaRoba('cavaliere', fatta('cavaliere', { mano: 'bipenne-solare' })).tratti,
+              ['🔥 vedi più lontano'])
+  stessaLista('senza tratti non dice niente', schedaConLaRoba('cavaliere', fatta('cavaliere', { mano: 'spada' })).tratti, [])
 }
 
 nota(`${EROI.length} avventure, una per eroe`)

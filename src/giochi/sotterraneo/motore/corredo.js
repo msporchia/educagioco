@@ -28,6 +28,23 @@ export function rileggiRoba(dato) {
   }
 }
 
+// I numeri di chi scende con la roba addosso, per le carte che lo mostrano fuori dalla discesa (la scelta delle
+// avventure, la carta sulla terra di sopra): sono quelli che userà la Corsa, calcolati dallo stesso Corredo, e
+// per una roba vuota restano quelli di base dell'eroe (docs/sotterraneo/avventure.md). `mano`, `mancina`,
+// `corpo` e `dito` sono le chiavi di quello che c'è addosso adesso, dopo aver messo da parte quello che la classe non porta
+export function schedaConLaRoba(eroe, roba = null) {
+  const c = new Corredo({ eroe, roba })
+  c.sistemaIlCorredo()
+  const gemme = c.addosso('gemme'), luce = c.addosso('luce')
+  const tratti = []
+  if (gemme) tratti.push(`💎 ×${(1 + gemme).toString().replace('.', ',')}`)
+  if (luce) tratti.push('🔥 vedi più lontano')
+  return {
+    vita: c.vitaConLaRoba, att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.zaino.length,
+    mano: c.mano, mancina: c.mancina, corpo: c.corpo, dito: c.dito, tratti,
+  }
+}
+
 export class Corredo {
   constructor({ eroe = DI_PARTENZA, roba = null } = {}) {
     // la scheda dice braccio e difesa di partenza; il resto non sa che esistano quattro eroi
@@ -72,6 +89,8 @@ export class Corredo {
 
   get att() { return this.io.att + this.addosso('att') }   // unico posto dove si sommano
   get dif() { return this.io.dif + this.addosso('dif') }
+  // il massimo di vita con questa roba, a inizio discesa: Corsa parte da qui e poi lo fa crescere (vitaBase)
+  get vitaConLaRoba() { return this.io.vita + this.addosso('vita') }
   get torciaAccesa() { return this.torciaResta > 0 }
 
   // metà arrotondata per eccesso: due armi non fanno il doppio, o le pesanti non si prenderebbe più nessuno
