@@ -7,9 +7,13 @@ import { state, answer, segna, segnaBest,
 import { generaCliente, esposizione, tappaDi, campagnaDi, scomponi, euro,
          centesimiScritti, scriviCifra, premioCliente,
          BANCHI, CAMPAGNE, CLIENTI_PER_TAPPA } from '../data/bancarella.js'
+import { CITTA, statoCitta, statoGiornata, cittaCorrente, fatteIn, indiceDi, giornataDi,
+         cittaDelleGiornata } from '../data/bancarella-mondo.js'
 import { suono } from '../audio.js'
 import { borsa } from '../store/varieta.js'
 import Barra from '../components/Barra.vue'
+import Mondo from '../components/bancarella/Mondo.vue'
+import Piazza from '../components/bancarella/Piazza.vue'
 import { usaPausa } from '../giochi/pausa.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
 import Ripresa from '../giochi/Ripresa.vue'
@@ -26,7 +30,8 @@ const guadagno = reactive({ monete: 0, nota: '' })
    cifre, la virgola e il cancelletto. Il ✓ sta a parte perché è l'unico
    che manda qualcosa — gli altri scrivono e basta. */
 const TASTI = ['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0', '⌫']
-const fase = ref('mappa')           // mappa | gioco | fine
+const fase = ref('mondo')           // mondo | piazza | gioco | fine
+const citta = ref(0)                // la piazza aperta: l'indice in CITTA
 const idx = ref(0)                  // quale giornata (-1 = giornata libera)
 const nTappa = ref(0)               // a che tappa del giro siamo
 const esposti = ref([])             // la merce sul banco di questa tappa
@@ -50,6 +55,41 @@ let dettoFretta = false, nVolo = 0
 
 const prog = computed(() => mercatoProgresso())
 const sbloccata = i => tappaAperta(i, prog.value.tappa)
+/* si può giocare: una giornata della fila se è aperta; la libera quando la fila è finita */
+const puoGiocare = i => (i >= 0 ? sbloccata(i) : tappaAperta(CAMPAGNE.length, prog.value.tappa))
+
+/* Il giro del mondo e la piazza (docs/bancarella/mappa.md): quello che si
+   vede si ricava da quante giornate sono finite e da cosa è aperto. */
+const aperta = i => tappaAperta(i, prog.value.tappa)
+const cittaCorr = computed(() => cittaCorrente(prog.value.tappa, aperta))
+const vociMondo = computed(() => CITTA.map((c, k) => ({
+  ...c, k, stato: statoCitta(c, prog.value.tappa, aperta), fatte: fatteIn(c, prog.value.tappa),
+  tot: c.libera ? 0 : c.giornate.length,
+  serve: c.libera ? 'Si apre quando hai finito tutte le giornate.'
+                  : `Prima finisci le giornate di «${CITTA[cittaCorr.value].nome}».`,
+})))
+const banchiPiazza = computed(() => CITTA[citta.value].giornate.map(id => ({
+  id, giornata: giornataDi(id), numero: id === 'libera' ? '∞' : indiceDi(id) + 1,
+  stato: statoGiornata(id, prog.value.tappa, aperta),
+  serve: prog.value.tappa < CAMPAGNE.length ? `Prima tocca a «${CAMPAGNE[prog.value.tappa].nome}».`
+                                            : 'Si apre quando hai finito tutte le giornate.',
+})))
+const stellePiazza = computed(() => {
+  const c = CITTA[citta.value]
+  return c.libera ? 'senza fine' : `${fatteIn(c, prog.value.tappa)} di ${c.giornate.length} giornate`
+})
+let cittaPrima = 0                  // la città da fare quando è cominciata la giornata
+function entraInCitta(k) { citta.value = k; fase.value = 'piazza' }
+function indietro() {
+  if (fase.value === 'piazza') fase.value = 'mondo'
+  else esci()
+}
+/* finita la giornata si torna alla piazza; se ha aperto una città nuova si torna
+   sul mondo, dove l'aereo ci vola */
+function tornaAlleGiornate() {
+  citta.value = Math.max(0, cittaDelleGiornata(camp.value.id))
+  fase.value = cittaCorr.value !== cittaPrima ? 'mondo' : 'piazza'
+}
 const camp = computed(() => campagnaDi(idx.value))
 const T = computed(() => tappaDi(camp.value, nTappa.value))
 const B = computed(() => BANCHI[T.value.banco])
@@ -116,8 +156,11 @@ const UFFA     = ['Me ne vado!', 'Troppo lento!', 'Uffa…']
 
 /* la giornata */
 function inizia(i = idx.value) {
-  if (i >= 0 && !sbloccata(i)) return
+  if (!puoGiocare(i)) return
   scorda()
+  cittaPrima = cittaCorr.value
+  const k = cittaDelleGiornata(campagnaDi(i).id)
+  if (k >= 0) citta.value = k
   // il freno della mappa non deve restare acceso sul mercato nuovo
   togliLaPausa()
   spegniOrologio()
@@ -407,7 +450,7 @@ onMounted(() => {
                     cliente, dato, manca, battuta, scomponi, momento, presi, aMente,
                     daPrendere, esposti, tappa: nTappa, camp, T, cambio, esito,
                     batti, confermaTotale, digitato, contoFatto, chiediTotale, TASTI,
-                    CAMPAGNE, BANCHI, prog, guadagno, inPausa }
+                    CAMPAGNE, BANCHI, prog, guadagno, inPausa, citta, CITTA, cittaCorr, chiudi }
 })
 onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
 
@@ -450,7 +493,7 @@ function scorda() {
 }
 
 function vuoleIniziare(i) {
-  if (i >= 0 && !sbloccata(i)) return
+  if (!puoGiocare(i)) return
   if (!ripresa.value) return inizia(i)
   chiede.value = { nome: campagnaDi(i).nome, i }
 }
@@ -464,6 +507,8 @@ function riprendiPartita() {
   // la giornata ripresa nasce ferma, dietro il velo: riparte al tocco
   mettiInPausa({ auto: true })
   idx.value = g.idx
+  cittaPrima = cittaCorr.value
+  citta.value = Math.max(0, cittaDelleGiornata(campagnaDi(g.idx).id))
   nTappa.value = g.nTappa
   Object.assign(hud, g.hud)
   borsellino = borsa(CHIAVE, g.monete)
@@ -521,9 +566,10 @@ onBeforeUnmount(() => {
   <div class="schermo negozio">
     <!-- niente salvadanaio in barra: qui si maneggiano euro, e lo spazio serve ai cuori -->
     <!-- il ⏸ c'è solo dove la fila si spazientisce -->
-    <Barra titolo="Bancarella" guida="bancarella" :monete="fase !== 'gioco'"
+    <Barra :titolo="fase === 'piazza' ? CITTA[citta].nome : 'Bancarella'" guida="bancarella"
+           :monete="fase !== 'gioco'"
            :pausa="fase === 'gioco' && !state.festa.length" @pausa="mettiInPausa()"
-           @aiuto="leggeLaGuida" @indietro="esci">
+           @aiuto="leggeLaGuida" @indietro="indietro">
       <template v-if="fase === 'gioco'">
         <div class="gettone">{{ '❤️'.repeat(Math.max(0, hud.cuori)) || '💔' }}</div>
         <div class="gettone">🧾 <b>{{ hud.serviti }}</b></div>
@@ -531,36 +577,17 @@ onBeforeUnmount(() => {
       </template>
     </Barra>
 
-    <!-- le giornate di mercato -->
-    <div v-if="fase === 'mappa'" class="centro mappa">
-      <h1>Al <span>mercato</span></h1>
-      <Ripresa :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
-               @riprendi="riprendiPartita" @scorda="scorda"
-               @comincia="comincia" @annulla="chiede = null" />
-      <p class="testo">Una giornata è un giro di banchi, tre clienti per banco:
-        prendi la roba dalle ceste, poi dai il resto giusto.</p>
-      <div class="giornate">
-        <button v-for="(g, i) in CAMPAGNE" :key="g.id" class="giornata"
-                :data-camp="g.id" :class="{ chiusa: !sbloccata(i), fatta: i < prog.tappa }"
-                @click="vuoleIniziare(i)">
-          <span class="bollo">{{ g.emoji }}</span>
-          <span class="che">
-            <b>{{ g.nome }}</b>
-            <span class="banchini"><i v-for="(b, j) in g.tappe" :key="j">{{ BANCHI[b].icona }}</i></span>
-          </span>
-          <span class="stato">{{ !sbloccata(i) ? '🔒' : i < prog.tappa ? '✅' : '▶' }}</span>
-          <!-- la scaletta, detta a voce alta -->
-          <span class="mini">{{ g.nuovo ? '＋ ' + g.nuovo
-                                        : g.tappe.length + ' banchi · ' + g.tempo[1] + 's a cliente' }}</span>
-        </button>
-        <button v-if="prog.libera" class="giornata libera" data-camp="libera" @click="vuoleIniziare(-1)">
-          <span class="bollo">♾️</span>
-          <span class="che"><b>Giornata libera</b>
-            <span class="banchini"><i>🍎</i><i>🥬</i><i>🥖</i><i>🧀</i><i>🍬</i></span></span>
-          <span class="stato">▶</span>
-          <span class="mini">non chiude mai · il tempo si stringe</span>
-        </button>
+    <!-- il giro del mondo e la piazza della città (docs/bancarella/mappa.md) -->
+    <div v-if="fase === 'mondo' || fase === 'piazza'" class="giro">
+      <div class="in-cima">
+        <Ripresa :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
+                 @riprendi="riprendiPartita" @scorda="scorda"
+                 @comincia="comincia" @annulla="chiede = null" />
       </div>
+      <Mondo v-if="fase === 'mondo'" :voci="vociMondo" :corrente="cittaCorr"
+             :chi="state.player || ''" @entra="entraInCitta" />
+      <Piazza v-else :key="citta" :citta="CITTA[citta]" :banchi="banchiPiazza" :stelle="stellePiazza"
+              :chi="state.player || ''" @gioca="id => vuoleIniziare(indiceDi(id))" @mondo="fase = 'mondo'" />
     </div>
 
     <template v-else-if="fase === 'gioco'">
@@ -744,7 +771,7 @@ onBeforeUnmount(() => {
           {{ dopo < 0 ? 'Giornata libera ▶' : 'Prossima giornata ▶' }}
         </button>
         <button v-else class="bottone" @click="inizia(idx)">Riprova ▶</button>
-        <button class="bottone chiaro" @click="fase = 'mappa'">Le giornate</button>
+        <button class="bottone chiaro" data-azione="le-giornate" @click="tornaAlleGiornate">Le giornate</button>
       </div>
     </div>
 
@@ -760,22 +787,10 @@ onBeforeUnmount(() => {
 <style scoped>
 .negozio { background:linear-gradient(180deg,#cfe8f5,#ffe9c7 32%,#f3e6d0) }
 
-/* ---------- le giornate di mercato ---------- */
-.mappa .testo { max-width:420px }
-.giornate { display:flex; flex-direction:column; gap:9px; width:100%; max-width:430px; margin-top:2px }
-.giornata { display:grid; grid-template-columns:auto 1fr auto; align-items:center;
-            gap:2px 11px; padding:9px 12px; border-radius:16px; text-align:left;
-            background:#fffdf7; box-shadow:0 4px 0 #0000002e }
-.giornata .bollo { grid-row:span 2; font-size:31px }
-.giornata .che { display:flex; flex-direction:column; gap:2px }
-.giornata b { font-size:16px; font-weight:900; color:#6a4a2a }
-.banchini { display:flex; gap:2px; font-size:15px }
-.banchini i { font-style:normal }
-.giornata .mini { grid-column:2; font-size:11.5px; font-weight:800; color:#a98860 }
-.giornata .stato { grid-row:span 2; font-size:20px }
-.giornata.chiusa { opacity:.5; filter:saturate(.4) }
-.giornata.fatta { box-shadow:0 4px 0 #0000002e, inset 0 0 0 2.5px #38c17288 }
-.giornata.libera { background:linear-gradient(120deg,#fff3d8,#ffe0f0) }
+/* ---------- il giro del mondo ---------- */
+.giro { flex:1; min-height:0; display:flex; flex-direction:column }
+.in-cima { flex:none; display:flex; justify-content:center; padding:0 12px }
+.in-cima:empty { display:none }
 
 /* ---------- il percorso della giornata ---------- */
 .percorso { display:flex; align-items:center; justify-content:center; gap:5px;
