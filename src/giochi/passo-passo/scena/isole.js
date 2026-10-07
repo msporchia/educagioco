@@ -76,7 +76,8 @@ function strada(punti, { dentro = x => x, testa = null, coda = null } = {}) {
     const prima = punti[k - 1]
     if (prima && Math.abs(prima.y - n.y) > 1) {
       const d = prima.verso
-      const fuori = dentro(d > 0 ? Math.max(prima.x, n.x) + GOMITO : Math.min(prima.x, n.x) - GOMITO)
+      // se accanto c'è l'isola di un ramo del cane, il ponte gira largo: l'isoletta sta fra la riga e lui
+      const fuori = dentro(prima.ponteX ?? (d > 0 ? Math.max(prima.x, n.x) + GOMITO : Math.min(prima.x, n.x) - GOMITO))
       if (n.y - prima.y > RIGA * 1.3) {
         guida.push([fuori, prima.y + RIGA * 0.42], [fuori, n.y - RIGA * 0.42]); quale.push(-1, -1)
       } else { guida.push([fuori, (prima.y + n.y) / 2]); quale.push(-1) }
@@ -134,6 +135,7 @@ export function disponiIsole(W, S, { sentiero = true } = {}) {
     for (const c of r.caselle) {
       const n = nodo({ id: c.id, tipo: 'tappa', x: c.x, y: c.y, lato, isola: kIsola, animale: isola.animale,
                        piede: piedeSu(c.x, c.y, lato), verso: c.verso })
+      if (ramo && c === r.caselle.at(-1)) n.ponteX = c.verso > 0 ? xMaxTutta + GOMITO : xMinTutta - GOMITO
       if (isola.animale === 'coniglio') maestra.push(n)
     }
     if (isola.animale === 'cane') {
@@ -198,7 +200,9 @@ export function disponiIsole(W, S, { sentiero = true } = {}) {
       Math.hypot(x - xt, y - yT) < 46 || x < M + 30 || x > W - M - 30 ||
       Math.abs(x - ponte[0]) < 44 || r.caselle.some(c => Math.abs(c.x - x) < lato / 2 + 30 && Math.abs(c.y - y) < lato / 2 + 22)
     const posti = [[daQui.x - lato0 * 52, yT - 36], [daQui.x - lato0 * 100, yT - 36], [xt + lato0 * 56, yT],
-                   [xt - lato0 * 56, yT], [xt + lato0 * 56, yT - 36], [xt - lato0 * 56, yT - 36]]
+                   [xt - lato0 * 56, yT], [xt + lato0 * 56, yT - 36], [xt - lato0 * 56, yT - 36],
+                   // se la tana sta contro il bordo, il ramo gli occupa il posto vicino: più in là, lungo il fondo
+                   [xt + lato0 * 110, yT], [xt + lato0 * 110, yT - 36], [xt + lato0 * 164, yT], [xt + lato0 * 164, yT - 36]]
     const [bx, by] = posti.find(([x, y]) => !occupato(x, y)) || posti[0]
     const gradi = (p, q) => Math.round(Math.atan2(q[1] - p[1], q[0] - p[0]) * 180 / Math.PI)
     bivi.push({ x: bx, y: by, isola: kIsola, ramo: ramo.chiave, tana: tanaC.id,
