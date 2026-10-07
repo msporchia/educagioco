@@ -8,7 +8,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO,
          MERCANTI as DOVE_MERCANTI, PORTALE as DOVE_PORTALE, PERSONAGGI as DOVE_PERSONAGGI } from '../dati/terra-mappa.js'
 import { PERSONAGGI } from '../dati/missioni.js'
-import { segnoDi } from '../motore/missioni.js'
+import { segnoDi, chiTiCerca } from '../motore/missioni.js'
 import { MERCANTI } from '../dati/mercanti.js'
 import { POSTO_DI, LUOGHI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, PASSO_TERRA, VISTA, LUCE,
          BORDO, MORBIDA } from '../dati/terra.js'
@@ -85,8 +85,7 @@ const personaggi = Object.entries(DOVE_PERSONAGGI).filter(([k]) => PERSONAGGI[k]
   }
 })
 // «!» ha qualcosa da chiederti, «?» aspetta quello che hai fatto (motore/missioni.js)
-const apertaLa = k => { const t = props.tappe.find(x => x.chiave === k); return !!(t && t.aperta) }
-const segnoSopra = chi => segnoDi(chi, props.missioni, apertaLa)
+const segnoSopra = chi => segnoDi(chi, props.missioni, props.tappe)
 
 const nebbia = (() => {
   const salvata = props.terra && nebbiaDaCodice(props.terra.nebbia, L, A)
@@ -433,6 +432,9 @@ function scendi(p) {
 // minatore lo dice con le cose che ha in mano (motore/storia.js). Solo per quelle ancora da finire
 const livelloDi = t => (t && !t.fatta && props.roba ? dettoDelLivello(props.eroe.chiave, props.roba, t, t.indice) : null)
 
+// e dice anche chi ha una missione per te, se la proposta non è la sua (motore/missioni.js)
+const tiCerca = computed(() => chiTiCerca(props.missioni, props.tappe))
+
 const detto = computed(() => {
   const t = props.tappe.find(t => t.adesso)
   const sotto = livelloDi(t)
@@ -624,6 +626,7 @@ const chiusaPerche = p => {
         <template v-else-if="aperto.tipo === 'minatore'">
           <b class="sot-fum-nome">Il vecchio minatore</b>
           <p class="sot-fum-detto" data-detto>{{ detto }}</p>
+          <p v-if="tiCerca" class="sot-fum-detto" data-ti-cerca>«{{ tiCerca }}»</p>
           <Missione chi="minatore" :stati="missioni" :tappe="tappe" @azione="faiMissione" />
         </template>
         <template v-else-if="aperto.tipo === 'personaggio'">

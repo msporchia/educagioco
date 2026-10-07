@@ -163,7 +163,7 @@ function fatteGiu(c) {
 const missioni = computed(() => qui.value.missioni || {})
 function azioneMissione(id, azione) {
   if (azione === 'prendi') {
-    const n = prendiMissione(missioni.value, id)
+    const n = prendiMissione(missioni.value, id, tappe.value)
     if (!n) return null
     nellAvventura({ missioni: n }, { subito: true })
     suono.ok()

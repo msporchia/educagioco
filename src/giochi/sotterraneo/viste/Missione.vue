@@ -15,7 +15,7 @@ const props = defineProps({
 const emit = defineEmits(['azione'])
 
 const tappaDi = chiave => props.tappe.find(t => t.chiave === chiave) || null
-const ora = computed(() => cosaDice(props.chi, props.stati, k => !!(tappaDi(k) && tappaDi(k).aperta)))
+const ora = computed(() => cosaDice(props.chi, props.stati, props.tappe))
 const m = computed(() => ora.value.missione)
 const dove = computed(() => {
   const t = m.value && tappaDi(m.value.discesa)
@@ -43,9 +43,6 @@ const em = computed(() => (m.value ? (m.value.tipo === 'trova' ? m.value.cosa.em
       <button class="sot-grosso" data-azione="consegna" @click="emit('azione', m.id, 'consegna')">
         <span class="em">{{ em }}</span> ecco qua · <b class="em">{{ premioDetto(m.premio) }}</b>
       </button>
-    </template>
-    <template v-else-if="ora.fase === 'chiusa'">
-      <p class="sot-fum-detto">«{{ saluto ? saluto + ' ' : '' }}Quando potrai scendere {{ tappaDi(m.discesa) ? tappaDi(m.discesa).dove : '' }}, avrei un favore da chiederti.»</p>
     </template>
     <p v-else-if="saluto" class="sot-fum-detto">«{{ saluto }}»</p>
   </div>

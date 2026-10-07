@@ -2,40 +2,74 @@
 // `cfg.avventure[eroe].missioni`: { [id]: 'presa' | 'fatta' | 'consegnata' }, una missione mai presa non c'è.
 // Qui: cosa dice un personaggio adesso, il segno sopra la sua testa, prendere e consegnare, il premio sulla roba,
 // e dove la discesa mette la cosa da trovare e il mostro col nome. Gira in Node.
-import { MISSIONI, missioniDi, missioneDi, PIU_DURO } from '../dati/missioni.js'
+import { MISSIONI, PERSONAGGI, missioneDi, PIU_DURO } from '../dati/missioni.js'
 import { MOSTRI } from '../dati/mostri.js'
-import { guardianoDi } from '../dati/campagna.js'
+import { CAMPAGNA, guardianoDi } from '../dati/campagna.js'
 import { seminato } from './livello.js'
 
 export const PRESA = 'presa', FATTA = 'fatta', CONSEGNATA = 'consegnata'
 
 const statoDi = (stati, id) => (stati && typeof stati === 'object' ? stati[id] || null : null)
 
-// Cosa ha da dire `chi` adesso, in quest'ordine: una missione da consegnare, una da fare, una nuova da dare, una
-// che si aprirà; se no saluta. `aperta(chiave)`: la discesa è aperta per quest'avventura
-export function cosaDice(chi, stati, aperta) {
-  const sue = missioniDi(chi)
-  const trova = st => sue.find(m => statoDi(stati, m.id) === st)
-  const pronta = trova(FATTA)
-  if (pronta) return { fase: 'consegna', missione: pronta }
-  const presa = trova(PRESA)
-  if (presa) return { fase: 'aspetta', missione: presa }
-  const nuova = sue.find(m => !statoDi(stati, m.id) && aperta(m.discesa))
-  if (nuova) return { fase: 'offre', missione: nuova }
-  const poi = sue.find(m => !statoDi(stati, m.id))
-  if (poi) return { fase: 'chiusa', missione: poi }
-  return { fase: 'saluto', missione: null }
+// L'ordine della storia: la discesa in fila (dati/campagna.js), poi il piano
+const indiceDi = chiave => { const i = CAMPAGNA.findIndex(t => t.chiave === chiave); return i < 0 ? 999 : i }
+const dellaStoria = (a, b) => indiceDi(a.discesa) - indiceDi(b.discesa) || a.piano - b.piano
+
+// La missione che il mondo propone adesso, una sola (docs/sotterraneo/missioni.md). `tappe` sono quelle
+// dell'avventura, [{ chiave, aperta, fatta }] (come le dà Gioco.vue). In quest'ordine:
+//  1. una già fatta, da consegnare (la prima della storia: da uno stato di prima ne possono restare più d'una);
+//  2. una presa e non ancora fatta: finché non è consegnata non se ne propone un'altra;
+//  3. se no una nuova: fra le non cominciate con la discesa aperta e non oltre il punto dove è arrivato l'eroe
+//     (la prima discesa non ancora finita), la più avanti, e in una stessa discesa il piano più in alto.
+//     Chi ne ha saltata una la ritrova solo quando di più adatte non ce ne sono.
+export function proposta(stati, tappe) {
+  const inStato = st => MISSIONI.filter(m => statoDi(stati, m.id) === st).sort(dellaStoria)
+  const pronta = inStato(FATTA)[0]
+  if (pronta) return pronta
+  const presa = inStato(PRESA)[0]
+  if (presa) return presa
+  const giu = tappe || []
+  const aperta = k => { const t = giu.find(x => x.chiave === k); return !!(t && t.aperta) }
+  const primaNonFinita = giu.find(t => !t.fatta)
+  const punto = primaNonFinita ? indiceDi(primaNonFinita.chiave) : CAMPAGNA.length - 1
+  const nuove = MISSIONI.filter(m => !statoDi(stati, m.id) && aperta(m.discesa) && indiceDi(m.discesa) <= punto)
+  nuove.sort((a, b) => indiceDi(b.discesa) - indiceDi(a.discesa) || a.piano - b.piano)
+  return nuove[0] || null
 }
 
-// il segno sopra la testa: «!» ha qualcosa da chiederti, «?» aspetta quello che hai trovato; niente altrimenti
-export function segnoDi(chi, stati, aperta) {
-  const { fase } = cosaDice(chi, stati, aperta)
-  return fase === 'offre' ? '!' : fase === 'consegna' ? '?' : null
+// Cosa ha da dire `chi` adesso: se la missione proposta è sua, consegnarla, ricordarla o darla; se no saluta e
+// basta. Le altre sue missioni non si nominano nemmeno: una per volta
+export function cosaDice(chi, stati, tappe) {
+  const m = proposta(stati, tappe)
+  if (!m || m.da !== chi) return { fase: 'saluto', missione: null }
+  const st = statoDi(stati, m.id)
+  return { fase: st === FATTA ? 'consegna' : st === PRESA ? 'aspetta' : 'offre', missione: m }
 }
 
-// le funzioni che cambiano lo stato tornano lo stato nuovo, o null se non c'era niente da fare
-export function prendi(stati, id) {
+// il segno sopra la testa: «!» ha una missione nuova per te, «?» una che hai preso (e fatta, ecco qua); niente
+// a tutti gli altri
+export function segnoDi(chi, stati, tappe) {
+  const { fase } = cosaDice(chi, stati, tappe)
+  return fase === 'offre' ? '!' : fase === 'aspetta' || fase === 'consegna' ? '?' : null
+}
+
+// la frase con cui il minatore, indicando la strada, dice chi ha una missione per te (null se è sua, o non ce n'è)
+export function chiTiCerca(stati, tappe) {
+  const m = proposta(stati, tappe)
+  const chi = m && PERSONAGGI[m.da]
+  if (!chi) return null
+  const Chi = chi.chi.charAt(0).toUpperCase() + chi.chi.slice(1)
+  const st = statoDi(stati, m.id)
+  if (st === FATTA) return `${Chi} ti aspetta: quello che ti ha chiesto l'hai fatto.`
+  if (st === PRESA) return `${Chi} aspetta ancora: ${(m.tipo === 'trova' ? m.cosa.nome : m.mostro.nome).replace(/^./, c => c.toLowerCase())}.`
+  return `${Chi} ha un favore da chiederti.`
+}
+
+// le funzioni che cambiano lo stato tornano lo stato nuovo, o null se non c'era niente da fare. Con `tappe` si
+// prende solo la missione proposta adesso: una per volta
+export function prendi(stati, id, tappe = null) {
   if (!missioneDi(id) || statoDi(stati, id)) return null
+  if (tappe) { const p = proposta(stati, tappe); if (!p || p.id !== id) return null }
   return { ...(stati || {}), [id]: PRESA }
 }
 
