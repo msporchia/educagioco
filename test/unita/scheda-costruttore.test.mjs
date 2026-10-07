@@ -99,6 +99,8 @@ for (const W of [300, 340, 390, 430, 480]) {
   dentro(`${W} px: un viaggio dura fra 0,9 e 2,8 s`, Math.min(...durate), 0.9, 2.8)
   dentro(`${W} px: anche il più lungo`, Math.max(...durate), 0.9, 2.8)
   uguale(`${W} px: lunghezza e tappe tornano`, Math.round(tutta.tappe.at(-1).s) <= Math.round(lunghezza(tutta.punti)), true)
+  controlla(`${W} px: ogni nodo si incontra dentro la pista della strada, che è dov'è acceso il rame`,
+            viaggi.every(v => v.tappe.every(t => t.s >= v.primo - 0.5 && t.s <= v.ultimo + 0.5) && v.ultimo <= v.L + 0.5))
   uguale(`${W} px: da un led a se stesso non si va`, stradaDelRobot(s, 3, 3), null)
 
   /* e indietro: la stessa strada al contrario, dal posto accanto al led alto a quello del basso */

@@ -3,9 +3,10 @@
    cantiere libero dice quando si apre; il livello lasciato a metà ha il suo
    segno; i livelli vinti hanno le loro stelline, i altri no. Toccato un led
    aperto il robot ci va (avanti o indietro) col fumetto già aperto, un altro
-   tocco cambia meta, un led spento non lo muove. Vinto un livello, la
-   corrente corre al led dopo e il robot la segue, anche attraverso un chip;
-   un tocco durante quel viaggio lo chiude senza aprire niente. Il dito passa
+   tocco cambia meta, un led spento non lo muove, e il rame non cambia.
+   Vinto un livello, il robot porta la corrente al led dopo: il rame si
+   accende dietro di lui, anche attraverso un chip; un tocco durante quel
+   viaggio lo chiude senza aprire niente. Il dito passa
    da CDP (docs/core/il-dito.md).
    Vedi docs/costruttore/scheda.md.
    `node test/esegui.mjs scheda-costruttore --niente-build` */
@@ -111,6 +112,8 @@ await scatto(page, 'scheda-costruttore-stelline')
 
 /* ══════════ 2b. toccato un led aperto il robot ci va, col fumetto già aperto ══════════ */
 uguale('prima del tocco il robot sta accanto al led 5', (await robot()).al, '4')
+const rame0 = await page.locator('[data-rame-acceso]').getAttribute('d')
+const chipAcceso0 = await page.locator('[data-capitolo][data-acceso]').count()
 await toccaSu('[data-livello="0"]')
 uguale('il fumetto è già aperto sul led toccato', await fumetto().getAttribute('data-fumetto-per'), '0')
 uguale('e il robot è in viaggio', (await robot()).inViaggio, '1')
@@ -124,6 +127,8 @@ controlla('il robot si muove', ro1 !== await page.locator('[data-robot]').getAtt
 controlla('e il fumetto sta fermo', Math.abs(fu1.x - fu2.x) < 1 && Math.abs(fu1.y - fu2.y) < 1, `${JSON.stringify(fu1)} ${JSON.stringify(fu2)}`)
 uguale('il rame resta com\'era: i led vinti restano accesi mentre il robot viaggia', await page.locator('[data-livello][data-stato="vinto"]').count(), 4)
 uguale('e il led da fare resta da fare', await statoDi(4), 'adesso')
+uguale('niente si accende lungo la strada: nessun rame in più', await page.locator('[data-scia]').count(), 0)
+uguale('e la pista accesa è sempre quella', await page.locator('[data-rame-acceso]').getAttribute('d'), rame0)
 await scatto(page, 'scheda-costruttore-meta-viaggio')
 
 // un tocco in viaggio cambia meta, anche tornando indietro: il robot riparte da dov'è
@@ -141,6 +146,9 @@ await tocco(6, 480)
 uguale('un tocco fuori durante il viaggio non chiude il fumetto', await fumetto().getAttribute('data-fumetto-per'), '2')
 await page.waitForSelector('[data-robot][data-in-viaggio="0"]', { timeout: 6000 })
 uguale('il robot arriva comunque', (await robot()).al, '2')
+uguale('toccando le tappe il rame non è cambiato', await page.locator('[data-rame-acceso]').getAttribute('d'), rame0)
+uguale('né i chip accesi', await page.locator('[data-capitolo][data-acceso]').count(), chipAcceso0)
+uguale('né i led da fare e vinti', `${await statoDi(4)}/${await page.locator('[data-livello][data-stato="vinto"]').count()}`, 'adesso/4')
 uguale('un vinto con la soluzione vista ha una stella su due', (await page.locator('[data-fumetto] [data-stelle]').innerText()).trim(), '⭐☆')
 await tocco(6, 480)
 uguale('fermo, il tocco fuori lo chiude', await fumetto().count(), 0)
@@ -190,9 +198,45 @@ async function vinciIl(i) {
 await vinciIl(4)
 uguale('tornati alla scheda il robot parte da dov\'era', (await robot()).al, '4')
 await page.waitForSelector('[data-robot][data-in-viaggio="1"]')
-const prima = await page.locator('[data-robot]').getAttribute('transform')
-await attendi(page, 1200)      // ferma un attimo, poi la scintilla, e il robot dietro
-controlla('e si muove lungo la pista', prima !== await page.locator('[data-robot]').getAttribute('transform'))
+uguale('il led dopo è ancora spento: la corrente non è arrivata', await statoDi(5), 'spento')
+// a ogni fotogramma: dov'è il robot, fin dove è acceso il rame, e quando si accende il led nuovo
+const giro = await page.evaluate(() => new Promise(fine => {
+  const campioni = []
+  let accesoA = null
+  const tick = () => {
+    const r = document.querySelector('[data-robot]')
+    const pos = (r.getAttribute('transform').match(/translate\(([-\d.e]+),\s*([-\d.e]+)\)/) || []).slice(1).map(Number)
+    const scia = document.querySelector('[data-scia]')
+    let punta = null, lungo = 0
+    if (scia) {
+      lungo = parseFloat(scia.getAttribute('stroke-dasharray'))
+      const da = -parseFloat(scia.getAttribute('stroke-dashoffset'))
+      const q = scia.getPointAtLength(Math.min(scia.getTotalLength(), da + lungo))
+      punta = [q.x, q.y]
+    }
+    const tasto = document.querySelector('[data-livello="5"]')
+    if (accesoA === null && tasto.dataset.stato !== 'spento') {
+      accesoA = { robot: pos, led: [parseFloat(tasto.style.left) + 24, parseFloat(tasto.style.top) + 24] }
+    }
+    campioni.push({ pos, punta, lungo })
+    if (r.dataset.inViaggio === '0') return fine({ campioni, accesoA })
+    requestAnimationFrame(tick)
+  }
+  tick()
+}))
+{
+  const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1])
+  const cs = giro.campioni.filter(c => c.punta)
+  controlla('il rame si accende durante il viaggio', cs.some(c => c.lungo > 20), `${cs.length} campioni`)
+  const lunghi = cs.map(c => c.lungo)
+  controlla('e non si spegne mai', lunghi.every((l, i) => !i || l >= lunghi[i - 1] - 0.01), lunghi.slice(-5).join())
+  const lontano = cs.filter(c => c.lungo > 20 && dist(c.punta, c.pos) > 45)
+  controlla('la punta del rame sta sotto il robot, mai davanti a lui', lontano.length === 0,
+            lontano.slice(0, 2).map(c => `${c.pos} ${c.punta}`).join(' · '))
+  controlla('prima che il robot parta il rame non è acceso', giro.campioni[0].lungo < 20 || !giro.campioni[0].punta)
+  controlla('il led nuovo si accende quando il robot è arrivato da lui',
+            giro.accesoA !== null && dist(giro.accesoA.robot, giro.accesoA.led) < 60, JSON.stringify(giro.accesoA))
+}
 await page.waitForSelector('[data-robot][data-in-viaggio="0"]', { timeout: 5000 })
 uguale('e arriva accanto al led dopo', (await robot()).al, '5')
 uguale('che è quello da fare', await statoDi(5), 'adesso')
@@ -204,6 +248,8 @@ await scatto(page, 'scheda-costruttore-arrivato')
 /* ══════════ 4. attraverso un chip, e un tocco chiude il viaggio ══════════ */
 await vinciIl(5)
 await page.waitForSelector('[data-robot][data-in-viaggio="1"]')
+await attendi(page, 1100)
+await scatto(page, 'scheda-costruttore-corrente')      // a metà strada, il rame acceso dietro il robot
 await tocco(200, 500)
 const chiuso = await robot()
 uguale('il tocco fa arrivare il robot subito, oltre il chip', `${chiuso.al}/${chiuso.inViaggio}/${chiuso.visibile}`, '6/0/1')

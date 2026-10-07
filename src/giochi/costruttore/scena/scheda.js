@@ -5,7 +5,7 @@
 export const COLORI = {
   scheda: '#0d3b2c', serigrafia: '#3a7d63',
   spento: '#7a5b3d', rame: '#e8a24f', lucido: '#ffd9a3',
-  led: '#ffc857', ledChiaro: '#fff0b3', ledNumero: '#4a3200',
+  led: '#ffc857', ledNumero: '#4a3200',
   ledSpento: '#17332a', ledSpentoBordo: '#3d6a58', ledSpentoNumero: '#7aa391',
   chip: '#121815',
 }

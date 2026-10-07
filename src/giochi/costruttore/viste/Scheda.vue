@@ -47,7 +47,6 @@ const posato = ref(null)                // il livello accanto a cui sta il robot
 const fino = ref(-1)                    // fin dove è arrivata la corrente: il nodo k
 const viaggio = shallowRef(null)
 const robot = ref({ x: 0, y: 0, visibile: true })
-const scintilla = ref(null)             // { x, y } mentre corre
 const scia = ref(null)                  // { d, da, a }: il rame che si accende
 const appena = ref(new Set())           // i nodi accesi in questo viaggio, per il guizzo
 
@@ -64,14 +63,13 @@ function scorriA(y) {
   if (scorre.value) scorre.value.scrollTop = Math.max(0, inCima() + y - scorre.value.clientHeight * 0.55)
 }
 
-// la corrente corre davanti, il robot la segue: vedi docs/costruttore/scheda.md.
-// `vittoria`: il viaggio dopo un livello vinto, che accende il rame e porta la scheda con sé;
+// il robot cammina; dopo una vittoria porta la corrente: vedi docs/costruttore/scheda.md.
+// `vittoria`: il viaggio dopo un livello vinto, che accende il rame dietro di lui e porta la scheda con sé;
 // altrimenti è il robot che va dove si è toccato, e il rame resta com'è.
-const RITARDO = 0.35
 function viaggia(inizio, a, { attesa = 0, vittoria = false } = {}) {
   const strada = stradaDaPunto(scheda.value, inizio, a)
   if (!strada) { posato.value = a; if (vittoria) fino.value = nodoDi(a).k; mettiRobot(); ricorda(); return }
-  const dur = durataViaggio(strada.L), ritardo = vittoria ? RITARDO : 0.15
+  const dur = durataViaggio(strada.L)
   const s0 = strada.primo, s1 = strada.ultimo
   const molle = q => { q = Math.max(0, Math.min(1, q)); return q < 0.5 ? 2 * q * q : 1 - (-2 * q + 2) ** 2 / 2 }
   let t = -attesa, prima = null, id = 0, finito = false, fatto = 0
@@ -92,7 +90,6 @@ function viaggia(inizio, a, { attesa = 0, vittoria = false } = {}) {
     posato.value = a
     if (vittoria) fino.value = nodoDi(a).k
     scia.value = null
-    scintilla.value = null
     viaggio.value = null
     mettiRobot(); ricorda()
   }
@@ -101,24 +98,20 @@ function viaggia(inizio, a, { attesa = 0, vittoria = false } = {}) {
     const nascosto = typeof document !== 'undefined' && document.hidden
     if (prima !== null && !nascosto) t += Math.min(0.05, Math.max(0, (ora - prima) / 1000))
     prima = ora
-    if (t >= dur + ritardo) return arriva()
+    if (t >= dur) return arriva()
     if (t >= 0) {
-      // la scintilla, da un punto all'altro della pista
-      const sc = s0 + (s1 - s0) * molle(t / dur)
-      const [sx, sy] = lungo(strada.punti, sc)
-      const sotto = strada.nascosti.some(([p, q]) => sc > p && sc < q)
-      scintilla.value = t < dur && !sotto ? { x: sx, y: sy } : null
-      if (vittoria) {
-        scia.value = { ...scia.value, a: sc }
-        let k = fino.value
-        for (const tp of strada.tappe) if (tp.s <= sc + 0.5 && tp.k > k) { k = tp.k; appena.value = new Set([...appena.value, k]) }
-        fino.value = k
-      }
       // il robot, dal suo posto al posto accanto all'altro
-      fatto = strada.L * molle((t - ritardo) / dur)
+      fatto = strada.L * molle(t / dur)
       const [rx, ry] = lungo(strada.punti, fatto)
       robot.value = { x: rx, y: ry, visibile: !strada.nascosti.some(([p, q]) => fatto > p && fatto < q) }
-      if (vittoria) segui(Math.min(sy, ry))
+      if (vittoria) {
+        // il rame si accende dietro di lui, e i chip e i led che ha passato con lui
+        scia.value = { ...scia.value, a: Math.max(s0, Math.min(s1, fatto)) }
+        let k = fino.value
+        for (const tp of strada.tappe) if (tp.s <= fatto + 0.5 && tp.k > k) { k = tp.k; appena.value = new Set([...appena.value, k]) }
+        fino.value = k
+        segui(ry)
+      }
     }
     id = requestAnimationFrame(fotogramma)
   }
@@ -273,10 +266,10 @@ function entra() { emit('update:aperto', null); emit('libero') }
           <path :d="piste.tutte" :stroke="COLORI.spento" stroke-width="5" />
           <path v-if="libero.aperto" :d="piste.attacco" :stroke="COLORI.rame" stroke-width="5" />
           <path v-if="libero.aperto" :d="piste.attacco" :stroke="COLORI.lucido" stroke-width="1.5" />
-          <path :d="piste.accese" :stroke="COLORI.rame" stroke-width="5" />
+          <path :d="piste.accese" :stroke="COLORI.rame" stroke-width="5" data-rame-acceso />
           <path :d="piste.accese" :stroke="COLORI.lucido" stroke-width="1.5" />
           <template v-if="scia">
-            <path :d="scia.d" :stroke="COLORI.rame" stroke-width="5" :stroke-dasharray="`${Math.max(0.01, scia.a - scia.da)} 99999`" :stroke-dashoffset="-scia.da" />
+            <path data-scia :d="scia.d" :stroke="COLORI.rame" stroke-width="5" :stroke-dasharray="`${Math.max(0.01, scia.a - scia.da)} 99999`" :stroke-dashoffset="-scia.da" />
             <path :d="scia.d" :stroke="COLORI.lucido" stroke-width="1.5" :stroke-dasharray="`${Math.max(0.01, scia.a - scia.da)} 99999`" :stroke-dashoffset="-scia.da" />
           </template>
         </g>
@@ -331,9 +324,6 @@ function entra() { emit('update:aperto', null); emit('libero') }
             <path d="M-3.5 3.5l1-3 4.2-4.2 2 2-4.2 4.2z" fill="#e8a24f" stroke="#1c2420" stroke-width="1" stroke-linejoin="round" />
           </g>
         </g>
-
-        <circle v-if="scintilla" :cx="scintilla.x" :cy="scintilla.y" r="9" :fill="COLORI.ledChiaro" opacity=".35" />
-        <circle v-if="scintilla" :cx="scintilla.x" :cy="scintilla.y" r="4.5" :fill="COLORI.ledChiaro" />
 
         <g data-robot :data-al="posato" :data-in-viaggio="viaggio ? '1' : '0'" :data-visibile="robot.visibile ? '1' : '0'"
            :transform="`translate(${robot.x},${robot.y})`" :opacity="robot.visibile ? 1 : 0">
