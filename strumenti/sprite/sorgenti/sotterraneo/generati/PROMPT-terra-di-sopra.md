@@ -162,7 +162,9 @@ diventa stretta. Si allarga **accostando** un secondo pezzo a destra di
 giunta cade nel bosco, dove un piccolo scarto non si vede; il sentiero
 che esce dal bordo destro (a circa 1140 px dall'alto) continua nel pezzo
 nuovo. Si chiede nella chat della mappa, allegandola di nuovo; il pezzo
-si salva come `mappa_sotterraneo_est.png`.
+si salva come `mappa_sotterraneo_2.png`; lo strumento
+`strumenti/sprite/terra-di-sopra.py` le accosta (vedi «La giunta» in
+`docs/sotterraneo/terra-di-sopra.md`).
 
 ```text
 Allego la mappa che hai fatto. Disegna la parte di mondo che sta SUBITO A DESTRA di questa, come se la mappa continuasse: un'altra immagine da 1024×1536 px verticale, STESSA SCALA (ogni pixel del disegno è un quadrato di 4×4 px), stessa mano, stessa luce, stessi colori, stessa vista dall'alto a tre quarti.
@@ -185,48 +187,18 @@ il posto dei mercanti.
 ## La mappa si tiene intera
 
 Il prompt 1 è uscito così bene (`mappa_sotterraneo.png`) che la mappa si
-tiene **com'è**, un'immagine sola: le strade ci sono già, e il codice ci
-mette sopra solo le cose che cambiano (le discese chiuse, chi ti indica
-la strada, i sassi che luccicano, la nebbia) e lo spazio dove si cammina.
-I prompt 2 e 3 non servono più; il 4 (i personaggi) sì, nella stessa chat.
+tiene **com'è**, un'immagine sola per metà: le strade ci sono già, e il
+codice ci mette sopra solo le cose che cambiano (il cartello di divieto
+delle discese chiuse, chi ti indica la strada, i sassi che luccicano, la
+nebbia) e lo spazio dove si cammina. I prompt 2 e 3 non servono più; il 4
+(i personaggi) sì, nella stessa chat.
 
-Le discese chiuse si chiedono **come la stessa mappa ritoccata**, sempre
-nella chat della mappa: il codice ritaglia dal ritocco solo il riquadro
-di ogni discesa e lo posa sopra l'originale, quindi conta che dentro quei
-riquadri le cose stiano esattamente dov'erano.
-
-```text
-Rifai ESATTAMENTE questa mappa, identica in ogni pixel — stessa inquadratura, stessa misura (1024×1536), stessi alberi, sentieri, case e sassi, nello stesso posto — con una sola differenza: tutti i passaggi che scendono sotto terra sono CHIUSI, sbarrati in modo che si capisca che per ora non si entra, e che un giorno si aprirà:
-- i due pozzi: un coperchio di assi inchiodate sulla bocca;
-- la botola di legno: due assi inchiodate di traverso e una catena col lucchetto;
-- l'ingresso della miniera: assi inchiodate a croce sull'armatura, il binario resta;
-- la scala nello stagno e la scala sotto l'arco di pietra: una grata di ferro col lucchetto sopra i gradini;
-- il buco con la scaletta: la scaletta tirata su e assi di traverso sulla bocca.
-Le chiusure stanno DENTRO la sagoma di ogni passaggio, non la allargano. Nient'altro cambia. NESSUNA PAROLA SCRITTA.
-```
-
-Controllo: affiancata all'originale, fuori dalle sette discese non deve
-cambiare niente (si guarda ai bordi dei riquadri).
-
-### Come entra nel gioco
-
-Il meccanismo c'è già: ogni posto ha il suo riquadro nel foglietto
-`../terra-di-sopra.json` (`posti.<nome>.riquadro`, in pixel della mappa), e
-sopra una discesa chiusa il gioco posa il ritaglio di quel riquadro; finché
-il ritaglio non c'è, un velo scuro col lucchetto.
-
-1. Si salva qui accanto come **`mappa_sotterraneo_chiusa.png`** (se torna a
-   un'altra misura, lo strumento la riporta a 1024×1536 prima di ritagliare).
-2. `python3 strumenti/sprite/terra-di-sopra.py --provino` e si guarda
-   `tmp/terra/provino.png`: ogni sbarramento deve stare dentro il suo
-   riquadro giallo. Se ne esce, si allarga il riquadro nel foglietto (non
-   l'immagine).
-3. `python3 strumenti/sprite/terra-di-sopra.py`: il modulo
-   `src/giochi/sotterraneo/dati/terra-mappa.js` ora ha le sette `PEZZE`, e
-   il gioco smette da solo di disegnare il velo.
-4. Si guarda col dito il confine di ogni pezza aprendo una discesa chiusa
-   (`node test/esegui.mjs sotterraneo-terra --scatti`, foto `terra-chiusa`):
-   un riquadro che si vede è un ritocco che ha spostato qualcosa.
+Le discese chiuse **non si chiedono più** come mappa sbarrata: sopra una
+chiusa il gioco non posa niente di disegnato dall'esterno, il disegno resta
+pulito e, quando l'eroe ci va, pianta un cartello di divieto disegnato in
+codice (`DIVIETO` in `viste/pixel.js`). Il prompt «rifai la mappa con i
+passaggi sbarrati» e il ritaglio delle pezze dallo strumento sono stati
+tolti il 7/10/2026.
 
 I personaggi dei prompt 4 e 5, quando arrivano, si ritagliano come gli
 altri fogli (`atlante.py`, un foglietto accanto): il minatore che si chiama
@@ -242,3 +214,15 @@ e così `armaiolo-fermo-0`, `erborista-fermo-0`, `rigattiere-fermo-0`.
   ([docs/sotterraneo/terra-di-sopra.md](../../../../../docs/sotterraneo/terra-di-sopra.md)).
   Non è pixel art vera: il pixel è morbido e non cade su una griglia di 4,
   quindi non si riduce a 256×384 (verrebbe impastata) ma si tiene intera.
+- `mappa_sotterraneo_2.png` — il prompt 6, al primo colpo, il 7/10/2026:
+  il villaggio con la piazzetta, il pozzo da cui si beve e i tre banchi
+  senza persone (incudine sotto la tettoia, banco di boccette e erbe,
+  carretto), il fiume col mulino e il ponte, i campi, la torre in rovina e
+  l'altare. Nessuna discesa nuova, nessuna scritta. Il bosco non combacia
+  del tutto con la prima mappa alla giunta (a sinistra il prato arriva al
+  bordo in due punti, a destra è bosco ovunque) e il sentiero che esce a
+  1147 px dall'alto non entra: ci pensa lo strumento (sfuma la giunta a
+  blocchi nel bosco e stende un pezzo di sentiero già disegnato). Il
+  risultato regge a occhio sul telefono; il difetto che resta è un sasso
+  tagliato dal bordo che si ripete specchiato (riquadro [980, 940, 90, 140]
+  sulla tela). Nel gioco dal 7/10/2026.

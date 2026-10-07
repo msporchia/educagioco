@@ -2,7 +2,7 @@
 
 Le discese non si scelgono da un elenco: si raggiungono a piedi su una mappa
 grande (la «terra di sopra»), nella nebbia, e chi le cerca ha qualcuno che
-gli indica la strada; fra le case stanno i mercanti. Il codice:
+gli indica la strada; nel villaggio stanno i mercanti. Il codice:
 `viste/Terra.vue` (la mappa, la vista, il dito, il fumetto, i mercanti),
 `motore/terra.js` (strada e nebbia, gira in Node), `dati/terra.js` (quale
 discesa sta dove, cosa dicono minatore e cartello), `dati/mercanti.js` (chi
@@ -11,22 +11,56 @@ sopra la discesa a metà e chi scende, con la sua roba e le gemme.
 
 ## La mappa
 
-- **Si tiene com'è**: `generati/mappa_sotterraneo.png`, un'immagine sola di
-  1024×1536 (16×24 celle da 64 px), uscita al primo colpo dal prompt 1 della
-  scheda `PROMPT-terra-di-sopra.md`. Le strade ci sono già: il codice non la
-  ricompone a tessere, ci posa sopra solo quello che cambia (discese chiuse,
-  chi indica, sassi, nebbia, eroe).
-- **Entra nel file unico in WebP** (qualità 75, ~390 KB): a 2× non si
-  distingue dall'originale. La fa `python3 strumenti/sprite/terra-di-sopra.py`,
-  che scrive `src/giochi/sotterraneo/dati/terra-mappa.js` copiandoci il
-  foglietto `strumenti/sprite/sorgenti/sotterraneo/terra-di-sopra.json`.
-  Il modulo non si tocca: si corregge il foglietto e si rilancia.
+- **Due metà accostate**, 2048×1536 (32×24 celle da 64 px): a sinistra
+  `generati/mappa_sotterraneo.png` (il prompt 1 della scheda
+  `PROMPT-terra-di-sopra.md`: le sei discese, il minatore, il cartello), a
+  destra `mappa_sotterraneo_2.png` (il prompt 6: il villaggio in basso, il
+  fiume col mulino e il ponte, i campi, e in cima una torre in rovina e un
+  altare di pietra, posti per le missioni di domani: per ora solo disegno,
+  non hanno discesa né chi ci parla). Le due immagini non si ritoccano: le
+  accosta lo strumento (`compone`), e il codice di gioco vede una tela sola.
+- **Le strade ci sono già**: il codice non ricompone la mappa a tessere, ci
+  posa sopra solo quello che cambia (il divieto delle chiuse, chi indica,
+  sassi, nebbia, eroe).
+- **Entra nel file unico in WebP** (qualità 75, ~860 KB, il doppio della
+  prima metà sola): a 2× non si distingue dall'originale. La fa
+  `python3 strumenti/sprite/terra-di-sopra.py`, che scrive
+  `src/giochi/sotterraneo/dati/terra-mappa.js` copiandoci il foglietto
+  `strumenti/sprite/sorgenti/sotterraneo/terra-di-sopra.json`. Il modulo non
+  si tocca: si corregge il foglietto e si rilancia.
 - **La scala: una cella della mappa è grande quanto l'eroe.** L'eroe è a
   scala 3 come nel sotterraneo (16 px × 3 = 48 px), quindi la mappa si
   mostra a 3/4 (`SCALA_TERRA`): un pixel del disegno (4 px della mappa)
   diventa 3 px dello schermo, come un pixel dell'eroe. Su un telefono da 390
-  px si vedono otto celle in larghezza, la mappa è due schermi per uno e
+  px si vedono otto celle in larghezza: la mappa è quattro schermi per uno e
   mezzo. `image-rendering: pixelated`.
+
+### La giunta
+
+Le due metà si toccano a x=1024, e lì il bosco è fitto da una parte e
+dall'altra ma non combacia (a sinistra il prato arriva al bordo in due
+punti, a destra è bosco ovunque). Lo strumento la cuce nel foglietto
+(`giunte`), senza disegnare niente:
+
+- **Una fascia di 128 px attorno alla giunta passa da un pezzo all'altro a
+  blocchi da 4 px** (un pixel del disegno), scelti da un rumore a macchie
+  larghe ~28 px e ripulito da un filtro mediano. Non per trasparenza: due
+  boschi sovrapposti a mezzo tono fanno fantasmi, a blocchi un ciuffo di
+  chioma passa all'altro come una macchia di foglie. Oltre il proprio bordo
+  ogni metà continua specchiata, così la scelta ha sempre un pixel da dare.
+- **Il sentiero che esce dal bordo destro** (a 1147 px dall'alto) si
+  collega a quello del villaggio **stendendo un pezzo di sentiero già
+  disegnato** (`sentiero.sorgente`, due punti sull'asse della terra battuta,
+  col suo bordo d'erba, preso dalla macchia di terra connessa al seme) lungo
+  una curva (`sentiero.curva`, quattro punti) fino alla piazza, tirandolo
+  di poco più del doppio per coprirla. L'originale si rimette sopra la fascia, che
+  se lo mangerebbe. Nessuna pennellata inventata.
+- **Si guarda con `--giunta`** (`tmp/terra/giunta-alta.png`, `-bassa`,
+  `-sentiero`): a sinistra le due metà a secco, a destra com'è. Difetti
+  noti: un sasso della prima metà, tagliato dal bordo, qui si ripete
+  specchiato e dà un masso doppio (riquadro [980, 940, 90, 140] sulla
+  tela); qualche blocco di chioma ha il bordo rettilineo; il sentiero
+  steso è un poco più liscio dell'originale.
 
 ## La vista, alla Monkey Island
 
@@ -47,9 +81,11 @@ sopra la discesa a metà e chi scende, con la sua roba e le gemme.
 
 ## Dove si cammina: la maschera
 
-- **Una griglia di celle da 32 px della mappa** (32×48), una riga di testo
+- **Una griglia di celle da 32 px della mappa** (64×48), una riga di testo
   per fila: `.` si cammina, `#` no. Sta nel foglietto, si legge e si
-  corregge a mano.
+  corregge a mano. Le prime 32 colonne sono la metà di sinistra com'era; le
+  altre sono scritte a occhio sulla metà nuova (il colore da solo non basta:
+  l'erba all'ombra e la terra scura finiscono fra i no).
 - **Nasce da una proposta letta dai colori** (sentiero e prato sì; chiome,
   acqua, roccia, contorni scuri no) e poi si corregge: le case di paglia
   hanno il colore del sentiero, i cespugli quello del prato, e solo l'occhio
@@ -70,6 +106,14 @@ sopra la discesa a metà e chi scende, con la sua roba e le gemme.
   due figure si mangiano a vicenda. Lo strumento controlla che `piede` e
   `accanto` si possano camminare e che nessuno si fermi addosso a chi sta
   fermo.
+- **Nella metà nuova**: il fiume si passa solo sul ponte (righe 23 e 24,
+  colonne 45-50), le case, la torre e l'altare non si attraversano (ci si
+  arriva davanti), la piazza di terra battuta sì, e il pozzo da cui si beve
+  no. Ogni cella dove si cammina si raggiunge da casa, tranne i piedi dei
+  mercanti (`unita/sotterraneo-terra` lo conta).
+- **Un mercante chiude la strada dove sta**: il rigattiere sta in fondo a
+  un tratto di una cella fra il carro e i cespugli, e le due celle dietro di
+  lui non si raggiungono (sono tolte dalla maschera).
 - **Una strisciata non cammina**: oltre i 16 px il tocco non conta, e si
   agisce sul `click`, non sul `pointerup` ([../core/il-dito.md](../core/il-dito.md)).
 
@@ -82,7 +126,7 @@ fondo**; a parità, il nome che somiglia al posto (`POSTO_DI` in `dati/terra.js`
 | discesa (la chiave resta) | posto | perché |
 |---|---|---|
 | La scalinata antica (`cantine`) | la scala sotto l'arco di pietra, al centro | la prima grossa cosa su per la strada da casa |
-| Il pozzo dal tetto rosso (`pozzo`) | il pozzo coi coppi, accanto a casa | il tetto rosso lo distingue dal pozzo d'ardesia; è la prima cosa chiusa che si vede, col lucchetto, appena usciti |
+| Il pozzo dal tetto rosso (`pozzo`) | il pozzo coi coppi, accanto a casa | il tetto rosso lo distingue dal pozzo d'ardesia; è la prima cosa chiusa che si vede, appena usciti (e ha il suo divieto) |
 | La grotta della scaletta (`gallerie`) | il buco nella roccia con la scaletta, a destra | a metà strada |
 | La scala sommersa (`cisterna`) | la scala dentro lo stagno, a sinistra | a metà strada; l'acqua |
 | La botola segreta (`labirinto`) | la botola nel prato, in cima | in cima, oltre il cartello |
@@ -107,17 +151,24 @@ fondo**; a parità, il nome che somiglia al posto (`POSTO_DI` in `dati/terra.js`
   `.sot-segno-posto`): bianco, d'oro e pulsante per la prossima da fare.
   Provato un anello attorno all'ingresso: copriva il disegno ed era brutto. Niente targhette con disegnini sopra le discese, e
   niente emoji nei nomi del fumetto, dell'avviso e del cartello; la chiusa
-  tiene il suo lucchetto, e le stelle si leggono nel fumetto.
+  tiene il 🔒 nel titolo del fumetto, e le stelle si leggono nel fumetto.
 - **Toccando una discesa trovata l'eroe ci va e si apre il fumetto** sopra
   (sotto, se sopra non c'è posto; la vista scorre se esce): nome, dritta,
   piani, stelle e «scendo»; dell'abisso il piano più giù toccato. Toccare il
   prato col fumetto aperto lo chiude e basta.
 - **Una chiusa dice cosa ci sarà e cosa la apre** («Si apre quando finisci
   la scalinata antica»), senza tasto; chiusa per l'età non promette niente.
-- **Sopra una chiusa si posa una pezza**: il riquadro della stessa mappa
-  ritoccata con le discese sbarrate (`PEZZE`), finché non c'è un velo scuro
-  sfumato col lucchetto disegnato in codice (`viste/pixel.js`). Come si
-  chiede la mappa sbarrata: la scheda `PROMPT-terra-di-sopra.md`.
+- **Una chiusa ha il disegno pulito**: niente velo né lucchetto. Quando
+  l'eroe ci va (tocco alla discesa chiusa, arrivato ai suoi piedi) **si
+  pianta un cartello di divieto** davanti all'ingresso: un paletto di legno
+  con un disco rosso e la barra bianca, disegnato in codice (`DIVIETO` in
+  `viste/pixel.js`, scala 2), all'angolo sinistro del bordo basso di
+  `ingresso` perché l'eroe, che aspetta al centro, non lo copra. Il fumetto
+  dice cosa la apre. **Il cartello resta piantato finché la discesa non si
+  apre**: sta in `cfg.avventure[<eroe>].terra.divieti`, e una discesa aperta
+  lo perde da sola. Provato il ritaglio di una mappa sbarrata chiesta a
+  ChatGPT (`mappa_sotterraneo_chiusa.png`): non è mai arrivata, e il
+  divieto in codice costa meno e non sposta niente del disegno.
 - **Con una discesa a metà**, scenderne un'altra avverte prima
   (`[data-chiede]`), come nell'elenco di prima.
 
@@ -139,15 +190,15 @@ fondo**; a parità, il nome che somiglia al posto (`POSTO_DI` in `dati/terra.js`
 
 ## I mercanti
 
-Tre personaggi fermi fra le case (`mercanti` nel foglietto, `MERCANTI` in
-`dati/terra-mappa.js`); chi vende cosa e perché sta in
-[roba.md](roba.md#i-mercanti-di-sopra).
+Tre personaggi fermi nel villaggio, nella metà di destra, ognuno davanti al
+suo banco (`mercanti` nel foglietto, `MERCANTI` in `dati/terra-mappa.js`);
+chi vende cosa e perché sta in [roba.md](roba.md#i-mercanti-di-sopra).
 
 | chi | dove | piede · accanto |
 |---|---|---|
-| l'armaiolo | davanti alla casa di sinistra, accanto alle aiuole | [4, 34] · [6, 34] |
-| l'erborista | davanti alla casa di destra, fra i fiori e la porta | [25, 42] · [27, 42] |
-| il rigattiere | accanto al carro, in mezzo al prato | [27, 28] · [25, 28] |
+| l'armaiolo | davanti all'incudine sotto la tettoia, a sinistra della piazza | [41, 42] · [39, 42] |
+| l'erborista | davanti al banco con le boccette e i mazzi d'erbe, sotto la piazza | [50, 43] · [48, 43] |
+| il rigattiere | davanti al carretto di cianfrusaglie, in fondo a destra | [56, 45] · [54, 45] |
 
 - **Si toccano come il minatore**: l'eroe ci va, si ferma `accanto`, e
   arrivato si apre il banco (non un fumetto: la lista non ci sta). Il banco
@@ -155,9 +206,9 @@ Tre personaggi fermi fra le case (`mercanti` nel foglietto, `MERCANTI` in
 - **Si trovano nella nebbia** come i posti: finché la loro cella non si è
   vista sono prato (non si toccano), e trovandoli la riga in fondo lo dice
   («Hai trovato l'erborista!»).
-- **Tutti e tre insieme non si vedono**: l'armaiolo sta a più di venti celle
-  dagli altri due, e uno schermo da 390 px ne mostra sedici in larghezza.
-  Dal carro si vedono rigattiere ed erborista.
+- **Da casa sono lontani** (24 celle all'armaiolo, 39 al carretto, passando
+  per la giunta): la vista scorre verso destra. Sul telefono se ne vedono
+  due alla volta.
 - **Figure provvisorie disegnate in codice** (`ARMAIOLO`, `ERBORISTA`,
   `RIGATTIERE` in `viste/pixel.js`) finché non arrivano gli sprite: il posto
   è pronto, `<sprite>-fermo-0` nell'atlante (`armaiolo-fermo-0`…) si usa da
@@ -179,14 +230,18 @@ Tre personaggi fermi fra le case (`mercanti` nel foglietto, `MERCANTI` in
   posto è trovato quando se ne vede il cuore: lo dice una riga in fondo
   («Hai trovato la scalinata antica!»). Un posto nel buio è prato come il resto.
 - **Si ricorda per avventura** ([avventure.md](avventure.md)), in
-  `cfg.avventure[<eroe>].terra`: `{ nebbia, dove, parlato }`; un eroe nuovo
-  parte da casa con la nebbia nuova e il minatore da sentire, la nebbia un bit per cella in esadecimale
-  (384 caratteri). Un codice che non torna (altra mappa) è nebbia nuova.
+  `cfg.avventure[<eroe>].terra`: `{ nebbia, dove, parlato, divieti }`; un eroe
+  nuovo parte da casa con la nebbia nuova e il minatore da sentire, la nebbia
+  un bit per cella in esadecimale (768 caratteri). **Un codice di 384
+  caratteri** (la mappa quando era larga la metà) si rimette nell'angolo in
+  alto a sinistra e il resto è nebbia: chi giocava prima ritrova il suo
+  (`LARGHEZZE_VECCHIE` in `motore/terra.js`). Un codice che non torna (altra
+  misura) è nebbia nuova.
 
 Nei test: `[data-terra]` (la vista, con `data-camera`), `[data-eroe-terra]`
 (con `data-cella` e `data-cammina`), `[data-posto]` (con `data-discesa` o
-`data-abisso`, `data-aperta`, `data-trovato`), `[data-chiusa]` (la pezza o il
-velo), `[data-minatore]`, `[data-cartello]`, `[data-sasso]`, `[data-fumetto]`
+`data-abisso`, `data-aperta`, `data-trovato`), `[data-divieto="<posto>"]` (il
+cartello di divieto delle chiuse), `[data-minatore]`, `[data-cartello]`, `[data-sasso]`, `[data-fumetto]`
 (con `data-fumetto-di`), `[data-azione="scendi"]`, `[data-detto]`,
 `[data-chiusa-perche]`, `[data-avviso-terra]`, `[data-pallino="<posto>"]` (il
 pallino), `[data-mercante="<chi>"]`, `[data-roba-sopra]` (la carta di chi

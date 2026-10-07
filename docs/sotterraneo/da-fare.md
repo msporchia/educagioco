@@ -73,9 +73,10 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   dal rigattiere; uno scudo comprato al posto della seconda arma leggera si
   mette dallo zaino, scendendo.
 
-- **La mappa con le discese sbarrate** (`mappa_sotterraneo_chiusa.png`): il
-  prompt e il giro stanno nella scheda `PROMPT-terra-di-sopra.md`; fino ad
-  allora le chiuse hanno il velo col lucchetto disegnato in codice.
+- **La torre in rovina e l'altare** (in alto nella metà di destra della
+  mappa, [terra-di-sopra.md](terra-di-sopra.md)): oggi solo disegno, ci si
+  arriva davanti e basta. Sono i posti dove le missioni manderanno a cercare
+  qualcosa; non hanno un `POSTI` né un fumetto.
 - **I personaggi del prompt 4** (minatore, ragazza del pozzo, boscaiolo, con
   le pose che parla e che indica): oggi il minatore è disegnato in codice e
   gli altri due non ci sono. La bussola del mock (il minatore che la dà, lei

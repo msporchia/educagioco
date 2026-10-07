@@ -41,7 +41,7 @@ pubblicato.** Per controllare solo che il build passi:
 | `python3 strumenti/sprite/vesti.py --atlante` | `src/giochi/castello/dati/vestiti.js` e `figure.js` | quando arriva un foglio del castello o cambia il bestiario |
 | `python3 strumenti/sprite/cammino.py <video> <creatura> --lato i:p --fronte i:p` | `strumenti/sprite/sorgenti/castello/cammino/<creatura>.png` e `.json` | quando arriva un video di Grok di una creatura che cammina (`--cerca` e `--provino` per trovare i giri, `--misura area` per chi salta); poi `vesti.py --atlante` |
 | `python3 strumenti/sprite/scenario.py`, `scacchiera.py` | gli schemi da allegare ai prompt | dopo aver toccato la pianta di un prompt |
-| `python3 strumenti/sprite/terra-di-sopra.py` (`--proponi`, `--provino` in `tmp/terra/`) | `src/giochi/sotterraneo/dati/terra-mappa.js` | dopo aver corretto la maschera o i posti nel foglietto, o quando arriva la mappa con le discese chiuse ([../sotterraneo/terra-di-sopra.md](../sotterraneo/terra-di-sopra.md)) |
+| `python3 strumenti/sprite/terra-di-sopra.py` (`--proponi`, `--provino`, `--giunta` in `tmp/terra/`) | `src/giochi/sotterraneo/dati/terra-mappa.js` | dopo aver corretto la maschera o i posti nel foglietto, o quando cambia uno dei due pezzi della mappa o la giunta ([../sotterraneo/terra-di-sopra.md](../sotterraneo/terra-di-sopra.md)) |
 | `node strumenti/sprite/in-campo.mjs <creatura>` | `tmp/in-campo/<creatura>/` (GIF del campo, di lato, di fronte) | per guardare una creatura camminare in partita, dopo `vesti.py --atlante` e `npm run build` |
 | `node strumenti/sprite/carte-castello.mjs` | `poc/scatti/castello-carte*.png`, `castello-battaglia*.png` | dopo aver toccato carte, schizzi o bestiario |
 
