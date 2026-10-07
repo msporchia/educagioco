@@ -7,7 +7,8 @@
    della home e le medaglie restano sensate.
    Vedi «Le due strade» in docs/passo-passo/livelli.md.
    `node test/esegui.mjs passo-passo-strade --niente-build` */
-import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PRIME, TAPPE_PICCOLE, riordina, FILE }
+import { CAMPAGNA, SCALINI, QUANTE_TAPPE, FINE_STRADA, TAPPE_PRIME, TAPPE_PICCOLE, riordina, FILE,
+         postoNelCursore }
   from '../../src/giochi/passo-passo/dati/campagna.js'
 import { STRADE, delCane, aperture, prossima, seguente, tappaDiAdesso, cosaManca, stradeDi, ereditaDi }
   from '../../src/giochi/passo-passo/motore/strade.js'
@@ -37,12 +38,24 @@ const nome = i => CAMPAGNA[i].chiave
   controlla('gli altri rami alla prima tappa dello scalino che insegna la loro carta',
             rami.slice(1).every(r => r.carta && r.attacco === S.coniglio.find(i => CAMPAGNA[i].scalino === r.scalino)),
             rami.slice(1).map(r => `${r.scalino}:${nome(r.attacco)}`).join(' '))
-  uguale('le tane del cane nelle carte sono quattro: stalle, stalle a gradini, nicchie, lago delle stalle',
-         rami.slice(1).map(r => r.tappe.map(nome).join('+')).join(' '), 'stalle stalle-gradini nicchie lago-stalle')
+  uguale('le tane del cane nelle carte sono quattro, e ogni isoletta comincia dalla tappa che c\'era',
+         rami.slice(1).map(r => nome(r.tappe[0])).join(' '), 'stalle stalle-gradini nicchie lago-stalle')
+  controlla('ogni isoletta del cane ha almeno tre tappe', rami.every(r => r.tappe.length >= 3),
+            rami.map(r => `${r.chiave}:${r.tappe.length}`).join(' '))
+  /* le tappe in coda: dopo l'ultima del coniglio, solo cane, ognuna nella
+     sua isola dopo quelle che c'erano */
+  controlla('dopo l\'ultima tappa del coniglio vengono solo tappe del cane',
+            S.coniglio.at(-1) === FINE_STRADA - 1 && CAMPAGNA.slice(FINE_STRADA).every(delCane))
+  uguale('le tappe in coda stanno nell\'isola del loro scalino, in fila dopo quella di prima',
+         rami.slice(1).map(r => r.tappe.map(nome).join('+')).join(' '),
+         'stalle+cortile+pettine stalle-gradini+pettine-storto+vicoli nicchie+sentiero-gregge+nicchie-fonde ' +
+         'lago-stalle+gallerie+steccati')
+  controlla('e la strada del cane va di isola in isola, non per indice',
+            S.cane.every((i, k) => k === 0 || S.isolaDi[i] >= S.isolaDi[S.cane[k - 1]]))
   controlla('ogni isola del coniglio ha al più un ramo',
             S.isole.filter(s => s.animale === 'coniglio').every(s => rami.filter(r => s.tappe.includes(r.attacco)).length <= 1))
-  controlla('l\'ultima tappa della campagna è del coniglio: finita la sua strada, è finita la campagna',
-            S.animale[QUANTE_TAPPE - 1] === 'coniglio')
+  controlla('la fine della strada del coniglio è la fine della campagna (dopo, il cane in coda)',
+            S.animale[FINE_STRADA - 1] === 'coniglio' && FINE_STRADA <= QUANTE_TAPPE)
   controlla('ogni tappa sta in un\'isola sola', CAMPAGNA.every((_, i) =>
     S.isole.filter(s => s.tappe.includes(i)).length === 1))
 }
@@ -129,7 +142,10 @@ for (const [chi, av] of Object.entries(casi)) {
    medaglie leggono il profilo. */
 {
   const av = { tappa: 0, stelle: {}, cfg: { eredita: 0 } }
-  const completa = i => { av.tappa = Math.max(av.tappa, i + 1); if (av.tappa >= QUANTE_TAPPE) av.libera = true; av.stelle[i] = 3 }
+  // come il gioco: il cursore lo muove `postoNelCursore`, e finita vuol dire finita la strada del coniglio
+  const completa = i => {
+    av.tappa = Math.max(av.tappa, postoNelCursore(i) + 1); if (av.tappa >= FINE_STRADA) av.libera = true; av.stelle[i] = 3
+  }
   const chiuse = []
   for (const i of S.coniglio) {
     if (!stradeDi(av).aperta(i)) chiuse.push(nome(i))
@@ -144,7 +160,8 @@ for (const [chi, av] of Object.entries(casi)) {
   // poi il cane: le sue tappe si aprono in fila, e quelle nelle carte ci sono già
   const chiuseCane = []
   for (const i of S.cane) { if (!stradeDi(av).aperta(i)) chiuseCane.push(nome(i)); completa(i) }
-  uguale('dopo, il cane si apre una tappa alla volta fino al lago delle stalle', chiuseCane.join(' '), '')
+  uguale('dopo, il cane si apre una tappa alla volta fino agli steccati', chiuseCane.join(' '), '')
+  uguale('e le tappe del cane in coda non muovono il cursore', av.tappa, FINE_STRADA)
 
   const m = misure({ totals: { ppTane: 50, ppProve: 60 }, best: {}, items: {},
                      campagne: { passo: { tappa: QUANTE_TAPPE, libera: true,
@@ -161,13 +178,14 @@ for (const [chi, av] of Object.entries(casi)) {
   // un profilo di ieri a metà ripeti: il gioco scrive `eredita` una volta e poi va avanti
   const av = { tappa: indice('sassi-fiume'), stelle: stelleFino(indice('sassi-fiume')), cfg: {} }
   av.cfg.eredita = ereditaDi(av)
-  for (const chiave of ['sassi-fiume', 'lago-gradini', 'collina', 'terrazze', 'campo-arato', 'gradini-storti']) {
+  for (const chiave of ['sassi-fiume', 'lago-gradini', 'collina', 'terrazze', 'campo-arato', 'gradini-storti',
+                        'cortile', 'pettine']) {
     const i = indice(chiave)
     av.tappa = Math.max(av.tappa, i + 1)
     av.stelle[i] = 2
   }
   const ora = stradeDi(av)
-  controlla('vinti i gradini storti si apre il ramo del «fino a»: le stalle erano fatte',
+  controlla('vinti i gradini storti si apre il ramo del «fino a»: le stalle erano fatte, e il pettine vinto',
             ora.aperta(indice('stalle-gradini')))
   controlla('e il cursore che corre avanti non apre il cane per conto suo',
             !stradeDi({ tappa: indice('spirale') + 1, stelle: { ...stelleFino(TAPPE_PRIME), ...Object.fromEntries(
@@ -179,6 +197,33 @@ for (const [chi, av] of Object.entries(casi)) {
          riordina({ tappa: 30 }, vecchia, CAMPAGNA.map(t => t.chiave)).tappa, riordina({ tappa: 30, stelle: {} }, vecchia).tappa)
 }
 
+/* ══════════ una tappa fatta resta aperta ══════════
+   Chi aveva vinto le stalle a gradini prima che nel ripeti arrivassero il
+   cortile e il pettine non se la ritrova chiusa: sono davanti a lei sulla
+   strada del cane, ma lei è fatta. */
+{
+  const vinte = [...Array(indice('spirale') + 1).keys()].filter(i => S.animale[i] === 'coniglio' || i < TAPPE_PICCOLE)
+  const av = { tappa: indice('spirale') + 1, cfg: { eredita: TAPPE_PRIME },
+               stelle: { ...Object.fromEntries(vinte.map(i => [i, 3])), [indice('stalle')]: 3, [indice('stalle-gradini')]: 2 } }
+  const r = stradeDi(av)
+  controlla('le stalle a gradini vinte restano aperte', r.aperta(indice('stalle-gradini')))
+  controlla('e anche le tappe dopo di lei', r.aperta(indice('pettine-storto')))
+  controlla('il cortile si apre dopo le stalle', r.aperta(indice('cortile')) && !r.aperta(indice('pettine')))
+  uguale('il fumetto del pettine dice che prima tocca al cortile', cosaManca(S, indice('pettine'), { fatta: r.fatta, aperta: r.aperta }),
+         'Prima tocca a «Il cortile».')
+}
+
+/* ══════════ chi aveva finito tutto ieri ══════════ */
+{
+  const r = riordina({ tappa: FILE[3].length, stelle: { 0: 3 } }, FILE[3])
+  controlla('chi aveva finito la fila di prima ha finito anche oggi, le tappe in coda gli restano da fare',
+            r.libera && r.tappa === FINE_STRADA, JSON.stringify({ tappa: r.tappa, libera: r.libera }))
+  controlla('e la riga della home dice «tutte le tane»', manifesto.riassunto({ tappa: FINE_STRADA, stelle: {} }).startsWith('tutte le tane'))
+  const pocoPrima = stradeDi({ tappa: FINE_STRADA, stelle: Object.fromEntries(
+    [...Array(FINE_STRADA).keys()].map(i => [i, 3])), cfg: { eredita: FINE_STRADA } })
+  uguale('e la tappa di adesso è la prima tappa nuova del cane', nome(pocoPrima.adesso()), 'cortile')
+}
+
 /* ══════════ il ▶ resta sulla strada che si sta facendo ══════════ */
 {
   const tutte = () => true
@@ -187,10 +232,12 @@ for (const [chi, av] of Object.entries(casi)) {
          prossima(S, indice('tutto'), i => i < TAPPE_PICCOLE), TAPPE_PRIME)
   uguale('in mezzo al pascolo, il gregge dopo', prossima(S, TAPPE_PRIME + 2, tutte), TAPPE_PRIME + 3)
   uguale('finito il pascolo si torna sulla strada maestra: il viale', prossima(S, indice('gregge'), tutte), TAPPE_PICCOLE)
-  uguale('finite le stalle, la tappa dopo il viale', nome(prossima(S, indice('stalle'), tutte)), 'stagno-grande')
-  uguale('finito il lago delle stalle, le pozze', nome(prossima(S, indice('lago-stalle'), tutte)), 'pozze')
+  uguale('finite le stalle, il cortile: si resta nell\'isoletta', nome(prossima(S, indice('stalle'), tutte)), 'cortile')
+  uguale('finita l\'isoletta, la tappa dopo il viale', nome(prossima(S, indice('pettine'), tutte)), 'stagno-grande')
+  uguale('finito il lago delle stalle, le gallerie', nome(prossima(S, indice('lago-stalle'), tutte)), 'gallerie')
+  uguale('finiti gli steccati, le pozze', nome(prossima(S, indice('steccati'), tutte)), 'pozze')
   uguale('dopo il viale il coniglio va avanti, non nelle stalle', nome(prossima(S, TAPPE_PICCOLE, tutte)), 'stagno-grande')
-  uguale('in fondo alla strada maestra non c\'è un dopo', seguente(S, QUANTE_TAPPE - 1), null)
+  uguale('in fondo alla strada maestra non c\'è un dopo', seguente(S, FINE_STRADA - 1), null)
   uguale('dal gregge, col viale chiuso, non c\'è un dopo (si va al sentiero)',
          prossima(S, indice('gregge'), i => i < TAPPE_PICCOLE), null)
   uguale('e la seguente è proprio lo zaino', seguente(S, indice('gregge')), TAPPE_PICCOLE)

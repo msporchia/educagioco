@@ -40,6 +40,7 @@ import { CAMPAGNA as CODICE } from '../../src/giochi/codice-segreto/dati/campagn
 import { CAMPAGNA as SURVIVORS } from '../../src/giochi/survivors/dati/campagna.js'
 import { CAMPAGNA as SOTTERRANEO } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { CAMPAGNA as PASSO_PASSO } from '../../src/giochi/passo-passo/dati/campagna.js'
+import { STRADE as STRADE_PASSO } from '../../src/giochi/passo-passo/motore/strade.js'
 import { CAMPAGNA as COSTRUTTORE } from '../../src/giochi/costruttore/dati/campagna.js'
 import { CAMPAGNA as INGLESE } from '../../src/data/campagna-inglese.js'
 import { TAPPE as INGLESE_MONDI } from '../../src/giochi/inglese/dati/mondi.js'
@@ -106,7 +107,8 @@ const CAMPAGNE = [
   ['conta gli animali', CONTA], ['prima e dopo', PRIMA_DOPO],
   ['codice segreto', CODICE], ['survivors', SURVIVORS],
   ['il sotterraneo', SOTTERRANEO],
-  ['passo passo', PASSO_PASSO], ['il costruttore', COSTRUTTORE],
+  // Passo passo in fila come sulla mappa: le tappe del cane in coda stanno nella loro isola
+  ['passo passo', STRADE_PASSO.isole.flatMap(s => s.tappe).map(i => PASSO_PASSO[i])], ['il costruttore', COSTRUTTORE],
   ['asteroidi', SCALETTA.map(v => v.T)], ['tabelline', TABELLINE], ['calcolo a mente', STAZIONI],
   ['inglese', INGLESE], ['inglese a mondi', INGLESE_MONDI], ['spagnolo', SPAGNOLO], ['castello', CASTELLO],
   ['pozioni', POZIONI], ['bancarella', BANCARELLA],
