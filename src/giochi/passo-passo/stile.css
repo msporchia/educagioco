@@ -112,30 +112,49 @@
 .pp-bivio-asse svg { width: 13px; height: 13px; fill: none; stroke: var(--is-scuro); stroke-width: 2;
                      stroke-linecap: round; stroke-linejoin: round }
 
-/* la casella: una tessera col suo spessore, come i tasti del gioco */
-.pp-casella { position: absolute; padding: 0; border: 0; border-radius: 15px;
-              display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-              background: var(--is-casella); color: var(--is-scuro); box-shadow: 0 4px 0 var(--is-spessore);
-              transition: transform .12s }
-.pp-casella:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--is-spessore) }
-.pp-casella-faccia { font-size: 22px; margin-top: 2px }
-.pp-casella-stelle { display: flex; gap: 1px }
-.pp-casella-stelle svg { width: 10px; height: 10px; fill: var(--is-stella-spenta) }
-.pp-casella-stelle svg.pp-presa, .pp-fumetto-stelle svg.pp-presa { fill: var(--is-stella) }
-.pp-casella .pp-a-meta { position: absolute; right: -7px; top: -7px; width: 21px; height: 21px; border-radius: 50%;
-                         background: #fff; box-shadow: 0 1px 0 var(--is-spessore);
-                         display: flex; align-items: center; justify-content: center; font-size: 11px }
-.pp-casella.pp-ora { box-shadow: 0 0 0 3px var(--is-oro), 0 4px 0 var(--is-spessore);
-                     animation: pp-respira 1.8s ease-in-out infinite }
-@keyframes pp-respira { 50% { box-shadow: 0 0 0 7px rgba(255,194,26,.5), 0 4px 0 var(--is-spessore) } }
-.pp-casella.pp-chiusa { background: #f7d2b0; box-shadow: 0 3px 0 #e9a877; color: #cf7a3c }
+/* la casella: un tondo col numero del livello, come i led della scheda del
+   robot. Il bottone è il posto da toccare (il lato intero), il tondo ci sta
+   dentro con un filo d'aria, così le stelle accanto non toccano le vicine */
+.pp-casella { --tondo-bordo: #5b2a10; position: absolute; padding: 0; border: 0; border-radius: 50%;
+              background: none; color: var(--is-scuro); transition: transform .12s }
+.pp-tondo { position: absolute; inset: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            background: var(--is-casella); box-shadow: 0 0 0 3px var(--tondo-bordo), 0 5px 0 3px var(--tondo-bordo) }
+.pp-tondo b { font-size: 19px; font-weight: 800; line-height: 1; color: var(--is-scuro) }
+.pp-casella:active .pp-tondo { transform: translateY(2px); box-shadow: 0 0 0 3px var(--tondo-bordo), 0 3px 0 3px var(--tondo-bordo) }
+/* fatta: d'oro, come il led acceso */
+.pp-casella.pp-fatta .pp-tondo { background: #ffc83d; box-shadow: 0 0 0 3px var(--tondo-bordo), 0 5px 0 3px var(--tondo-bordo), inset 0 3px 0 #ffe27a }
+.pp-casella.pp-fatta .pp-tondo b { color: #5a3200 }
+/* da fare adesso: il più grande e chiaro, con l'alone d'oro che respira */
+.pp-casella.pp-ora .pp-tondo { inset: 1px; background: #fffdf6;
+                               box-shadow: 0 0 0 3px var(--tondo-bordo), 0 0 0 7px var(--is-oro), 0 0 0 10px var(--tondo-bordo);
+                               animation: pp-respira 1.8s ease-in-out infinite }
+.pp-casella.pp-ora .pp-tondo b { font-size: 23px }
+@keyframes pp-respira { 50% { box-shadow: 0 0 0 3px var(--tondo-bordo), 0 0 0 7px var(--is-oro), 0 0 0 10px var(--tondo-bordo), 0 0 0 15px rgba(255,194,26,.45) } }
+/* chiusa: spenta, col lucchetto piccolo sul bordo */
+.pp-casella.pp-chiusa { --tondo-bordo: #7d5a44 }
+.pp-casella.pp-chiusa .pp-tondo { background: #d8bfa8; box-shadow: 0 0 0 3px var(--tondo-bordo), 0 4px 0 3px var(--tondo-bordo) }
+.pp-casella.pp-chiusa .pp-tondo b { color: #9b7a62 }
 .pp-casella.pp-velata { opacity: .7 }
+.pp-lucchetto-piccolo { position: absolute; right: -1px; bottom: -1px; box-sizing: content-box; width: 11px; height: 11px;
+                        padding: 3px; border-radius: 50%; background: #fff3e4; color: #7d5a44;
+                        box-shadow: 0 0 0 2px var(--tondo-bordo) }
+/* le stelle: a cavallo del bordo di sotto, scure attorno per vedersi su ogni terra */
+.pp-casella-stelle { position: absolute; left: 50%; top: calc(100% - 10px); transform: translateX(-50%); display: flex;
+                     pointer-events: none }
+.pp-casella-stelle svg { width: 12px; height: 12px; fill: var(--is-stella-spenta); stroke: var(--tondo-bordo);
+                         stroke-width: 2.4px; stroke-linejoin: round; paint-order: stroke }
+.pp-casella-stelle svg.pp-presa, .pp-fumetto-stelle svg.pp-presa { fill: var(--is-stella) }
+.pp-casella .pp-a-meta { position: absolute; right: -4px; top: -4px; width: 21px; height: 21px; border-radius: 50%;
+                         background: #fff; box-shadow: 0 0 0 2px var(--tondo-bordo);
+                         display: flex; align-items: center; justify-content: center; font-size: 11px }
 .pp-lucchetto { width: 20px; height: 20px }
 
 /* i sentieri senza fine: la casella tonda e d'oro in fondo alla strada,
    col suo animale in un tondino sul bordo */
-.pp-casella-sentiero { border-radius: 50%; background: #fff3c9; box-shadow: 0 4px 0 #d39a1c }
-.pp-casella-sentiero.pp-ora { box-shadow: 0 0 0 3px #fff4e6, 0 4px 0 #d39a1c }
+.pp-casella-sentiero { --tondo-bordo: #7a4a0c; display: flex; align-items: center; justify-content: center;
+                       background: #fff3c9; box-shadow: 0 0 0 3px var(--tondo-bordo), 0 5px 0 3px var(--tondo-bordo) }
+.pp-casella-sentiero.pp-ora { background: #fffdf6; box-shadow: 0 0 0 3px var(--tondo-bordo), 0 0 0 7px var(--is-oro), 0 0 0 10px var(--tondo-bordo) }
+.pp-casella-sentiero.pp-chiusa { background: #e6d6b4; --tondo-bordo: #7d5a44; color: #9b7a62 }
 .pp-infinito { width: 44px; height: 22px; fill: none; stroke: var(--is-scuro); stroke-width: 4;
                stroke-linecap: round }
 .pp-sentiero-di { position: absolute; right: -6px; bottom: -6px; width: 28px; height: 28px; border-radius: 50%;
@@ -168,6 +187,7 @@
                               border-left-color: transparent; border-right-color: transparent }
 .pp-fumetto small { font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #b0703f }
 .pp-fumetto > b { font-size: 18px; font-weight: 800; color: var(--is-scuro) }
+.pp-fumetto > b .pp-em { font-size: 21px; margin-right: 3px; vertical-align: -2px }
 .pp-fumetto-racconto { font-size: 13px; line-height: 1.28; color: #7c5638 }
 .pp-fumetto-stelle { display: flex; gap: 3px; margin-top: 3px }
 .pp-fumetto-stelle svg { width: 24px; height: 24px; fill: var(--is-stella-spenta) }
