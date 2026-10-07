@@ -3,6 +3,8 @@
    più corte (vedi docs/passo-passo/stelle-e-aiuti.md). Cerca per stati
    del mondo, coi pezzi in cima (una freccia o una scatola intera) fino a
    `--scatola` carte; quello che trova si rigioca col motore vero.
+   Nei gradini del «fino a» e del «se» cerca anche se il livello si vince
+   dentro lo zaino senza la carta del gradino (vedi docs/passo-passo/livelli.md).
 
      node strumenti/passo-passo/minimi.mjs              tutti i livelli con lo zaino
      node strumenti/passo-passo/minimi.mjs lago stalle  solo quelli col nome che contiene…
@@ -67,14 +69,14 @@ function corri(nodi, w, conto) {
 // i pezzi possibili per grandezza: `file(s)` tutte le file lunghe s
 // carte, `pezzi(s)` i pezzi in cima lunghi s. Generati man mano, mai
 // tenuti tutti insieme (sono milioni).
-function catalogo(liv) {
+function catalogo(liv, carte = liv.carte) {
   const frecce = liv.salti ? [...PASSI, ...SALTI] : PASSI.slice()
   const colori = [...new Set(liv.lastra.filter(Boolean))]
   const teste = []
-  if (liv.carte.includes('ripeti')) teste.push(...VOLTE.map(v => apri(v)))
-  if (liv.carte.includes('fino')) teste.push(...colori.map(c => apri(c)))
-  if (liv.carte.includes('casa')) teste.push(apri(CASA))
-  if (liv.carte.includes('se')) teste.push(...colori.map(c => apriSe(c)))
+  if (carte.includes('ripeti')) teste.push(...VOLTE.map(v => apri(v)))
+  if (carte.includes('fino')) teste.push(...colori.map(c => apri(c)))
+  if (carte.includes('casa')) teste.push(apri(CASA))
+  if (carte.includes('se')) teste.push(...colori.map(c => apriSe(c)))
 
   function* file(s) {
     if (s === 0) { yield []; return }
@@ -94,9 +96,10 @@ function catalogo(liv) {
 }
 
 // la ricerca in ampiezza per carte spese: il primo arrivo a casa con la
-// carota è il programma più corto (con scatole fino a `SCATOLA` carte)
-function cerca(liv, tetto, scadenza) {
-  const pezzi = catalogo(liv)
+// carota è il programma più corto (con scatole fino a `SCATOLA` carte);
+// `carte` toglie una carta di mano, `carota: false` si accontenta di arrivare
+function cerca(liv, tetto, scadenza, { carte = liv.carte, carota = true } = {}) {
+  const pezzi = catalogo(liv, carte)
   const inizio = new Mondo(liv, { eventi: false })
   const visti = new Map([[inizio.chiave(), 0]])
   const code = [[{ w: inizio, passi: 0, fila: [] }]]
@@ -113,10 +116,10 @@ function cerca(liv, tetto, scadenza) {
           const conto = { passi: nodo.passi }
           const e = corri(albero(p), w, conto)
           if (e === TANA) {
-            if (w.presa) {
+            if (w.presa || !carota) {
               const fila = [...nodo.fila, ...p]
               const r = esegui(liv, fila, { eventi: false })
-              if (r.esito === TANA && r.carota) { tetto = c - 1; migliore = fila }
+              if (r.esito === TANA && (r.carota || !carota)) { tetto = c - 1; migliore = fila }
             }
             continue
           }
@@ -152,4 +155,15 @@ for (const t of CAMPAGNA) {
   if (r.fila) console.log(`✂️  ${nome} scritta ${scritta}, ne bastano ${carteDi(r.fila)}:  ${inParole(r.fila)}   [${tempo}s]`)
   else if (r.scaduto) console.log(`⏱  ${nome} scritta ${scritta}: niente di più corto trovato in ${SECONDI}s (non finito)`)
   else console.log(`✅ ${nome} scritta ${scritta}: niente di più corto, con scatole fino a ${SCATOLA} carte   [${tempo}s]`)
+
+  /* la carta del gradino serve davvero: senza, nello zaino non si arriva
+     nemmeno lasciando l'osso (le altre carte restano in mano) */
+  const senza = { fino: 'fino', se: 'se' }[t.scalino]
+  if (!senza) continue
+  const s = cerca(liv, t.zaino, Date.now() + SECONDI * 1000, { carte: liv.carte.filter(c => c !== senza), carota: false })
+  if (!s.fila && s.migliore) s.fila = s.migliore
+  const carta = senza === 'se' ? '❓' : '🚩'
+  if (s.fila) console.log(`❌ ${nome} senza ${carta} si vince lo stesso: ${inParole(s.fila)}`)
+  else if (s.scaduto) console.log(`⏱  ${nome} senza ${carta}: niente trovato in ${SECONDI}s (non finito)`)
+  else console.log(`✅ ${nome} senza ${carta} nello zaino non si arriva`)
 }
