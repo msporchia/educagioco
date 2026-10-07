@@ -29,8 +29,10 @@ import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba } from './motore/corredo.js'
 import { Bottega } from './motore/bottega.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
-import { avventuraDi, scriviNellAvventura, vintaNellAvventura, passaAlleAvventure, cominciata }
+import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, cominciata }
   from './motore/avventure.js'
+import { PORTALE } from './dati/terra-mappa.js'
+import { iconaDi } from './dati/terra.js'
 import { mercanteDi } from './dati/mercanti.js'
 import { Tela } from './scena/tela.js'
 
@@ -75,8 +77,8 @@ let pittore = null
 let orologio = 0
 let ultimoAvviso = 0
 
-// i profili di prima (una roba sola per tutti): tutto passa all'avventura dell'eroe scelto per ultimo, una volta
-ritocca(CHIAVE, passaAlleAvventure, { subito: true })
+// i salvataggi di prima si azzerano, una volta: restano il record di fuori e l'eroe scelto (docs/sotterraneo/avventure.md)
+ritocca(CHIAVE, azzeraIlVecchio, { subito: true })
 
 // la pausa (giochi/pausa.js): il ⏸, il telefono posato, il foglio del `?`, e anche il cartello di un
 // traguardo (state.festa) — un mostro addosso mentre si guarda una medaglia è un colpo che nessuno vede.

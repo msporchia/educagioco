@@ -29,13 +29,6 @@ export const MERCANTI = [
 
 export const mercanteDi = chiave => MERCANTI.find(m => m.chiave === chiave) || null
 
-// Chi aveva già finito delle discese quando la roba ha cominciato a restare la ritrova come gemme da spendere
-// sopra (una volta sola, per discese finite 0..6): le discese dopo contano sulla roba, e a mani nude dalla grotta
-// in giù non si passa. Misurato col giocatore finto: oltre questi numeri il banco non ha di meglio da vendere
-export const GEMME_DI_BENTORNATO = [0, 40, 80, 120, 160, 160, 160]
-export const gemmeDiBentornato = finite =>
-  GEMME_DI_BENTORNATO[Math.max(0, Math.min(finite, GEMME_DI_BENTORNATO.length - 1))]
-
 export const vendeLa = (m, k) => !!COSE[k] && IN_VENDITA.includes(k) &&
   ((m.vende.dove || []).includes(COSE[k].dove) || (m.vende.chiavi || []).includes(k))
 

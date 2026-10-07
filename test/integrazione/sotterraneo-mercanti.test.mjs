@@ -14,6 +14,7 @@
    `node test/esegui.mjs sotterraneo-mercanti`
    tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
+import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -32,7 +33,8 @@ const roba = { v: 1, gemme: 60, zaino: ['ascia'], mano: null, mancina: null, cor
 await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: 0, libera: false, stelle: {},
-    cfg: { eroe: 'cavaliere', roba, terra: { nebbia: 'f'.repeat(768), dove: [17, 41], parlato: true } } } },
+    cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: 0, libera: false, stelle: {}, missioni: {},
+      roba, terra: { nebbia: 'f'.repeat(768), dove: [17, 41], parlato: true } } } } } },
 })
 await scegli(page, 'sotterraneo')
 await page.waitForSelector('[data-terra]', { timeout: 5000 })
@@ -54,10 +56,19 @@ async function alBanco(chi) {
   // i mercanti stanno lontani fra loro e fuori dallo schermo: si cammina verso la cella dove ci si ferma
   // accanto a lui (`vaiVerso`, qui sotto), poi lo si tocca. Lungo la strada un tocco può cadere su un altro
   // mercante e aprire il suo banco: `vaiVerso` lo richiude e prosegue
-  await vaiVerso(...MERCANTI[chi].accanto)
+  // se è già sullo schermo lo si tocca e basta, come un bambino: il rigattiere sta accanto all'erborista, e i
+  // tocchi di avvicinamento verso di lui cadrebbero sul banco di lei
+  if (!(await aVista(chi))) await vaiVerso(...MERCANTI[chi].accanto)
   if (!(await page.locator('[data-chiudi]').count())) await toccaIl(`[data-mercante="${chi}"]`)
   await page.waitForSelector('[data-chiudi]', { timeout: 10000 })
   await attendi(page, 500)    // il banco è cieco per un attimo, contro il click fantasma (Mercante.vue, CIECO)
+}
+
+async function aVista(chi) {
+  const m = page.locator(`[data-mercante="${chi}"]`)
+  if (await m.evaluate(el => el.classList.contains('sot-buio'))) return false
+  const b = await m.boundingBox(), v = await page.locator('[data-terra]').boundingBox()
+  return !!b && b.x > v.x + 10 && b.x + b.width < v.x + v.width - 10 && b.y > v.y + 150 && b.y + b.height < v.y + v.height - 130
 }
 
 async function chiudiBanco() {
@@ -79,9 +90,20 @@ async function vaiVerso(cx, cy) {
     if (x === cx && y === cy) return
     const v = await page.locator('[data-terra]').boundingBox()
     const [camx, camy] = await camera()
-    const sx = v.x + ((x + 0.5 + Math.max(-3, Math.min(3, cx - x))) * CELLA - camx) * S
-    const sy = v.y + ((y + 0.5 + Math.max(-3, Math.min(3, cy - y))) * CELLA - camy) * S
-    await tocca(Math.max(v.x + 30, Math.min(v.x + v.width - 30, sx)), Math.max(v.y + 150, Math.min(v.y + v.height - 130, sy)))
+    // un tocco sul prato, non su chi ci sta sopra: se il punto cade su un mercante, o così vicino che il
+    // telefono gli attribuisce il tocco (Chrome aggiusta il dito verso il bottone più vicino), si cambia fila
+    let punto = null
+    for (const dy of [0, 1, -1, 2, -2]) {
+      const sx = v.x + ((x + 0.5 + Math.max(-3, Math.min(3, cx - x))) * CELLA - camx) * S
+      const sy = v.y + ((y + 0.5 + dy + Math.max(-3, Math.min(3, cy - y))) * CELLA - camy) * S
+      punto = [Math.max(v.x + 30, Math.min(v.x + v.width - 30, sx)), Math.max(v.y + 150, Math.min(v.y + v.height - 130, sy))]
+      const sopra = await page.evaluate(([px, py]) => [...document.querySelectorAll('[data-mercante]')].some(m => {
+        const r = m.getBoundingClientRect()
+        return px > r.left - 24 && px < r.right + 24 && py > r.top - 24 && py < r.bottom + 24
+      }), punto)
+      if (!sopra) break
+    }
+    await tocca(...punto)
     await page.waitForFunction(() => document.querySelector('[data-eroe-terra]')?.dataset.cammina === '0',
                                null, { timeout: 15000 })
     await attendi(page, 150)

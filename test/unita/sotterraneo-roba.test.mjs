@@ -3,22 +3,22 @@
    addosso, in tasca e le gemme scendono e risalgono con l'avventuriero,
    e il mercante è uscito dalle discese: tre botteghe sulla terra di
    sopra (docs/sotterraneo/regole.md, docs/sotterraneo/roba.md).
-   Qui: la roba fra due discese, lo svenimento, la sosta, il profilo di
-   prima, il banco di ogni mercante per discese finite, e una misura
+   Qui: la roba fra due discese, lo svenimento, la sosta, un'avventura
+   nuova, il banco di ogni mercante per discese finite, e una misura
    leggera dell'equilibrio (quella intera: `misure/sotterraneo`).
    `node test/esegui.mjs sotterraneo-roba --niente-build`
    tempo: 100 */
 import { CAMPAGNA, L_ABISSO, svenimentiDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { COSE, CURE, SEGNI, IN_VENDITA, STANZE_TORCIA } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
-import { MERCANTI, mercanteDi, vendeLa, righeDi, tettoDi, profonditaDelBanco, guastiDeiMercanti,
-         GEMME_DI_BENTORNATO } from '../../src/giochi/sotterraneo/dati/mercanti.js'
+import { MERCANTI, mercanteDi, vendeLa, righeDi, tettoDi, profonditaDelBanco, guastiDeiMercanti }
+  from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { MERCANTI as DOVE_MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Corredo, ROBA_VUOTA, rileggiRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { Bottega } from '../../src/giochi/sotterraneo/motore/bottega.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
-import { scrivi, leggi, robaDi, robaDiCasa } from '../../src/giochi/sotterraneo/motore/sosta.js'
+import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { gioca, misuraConLaRoba } from '../../src/giochi/sotterraneo/motore/banco.js'
 import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -32,22 +32,29 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   controlla('nessun segno promette un mercante nelle discese', !SEGNI.mercante)
 }
 
-/* ══════════ 2. il mercante non è più giù, e al suo posto c'è acqua ══════════
-   La stanza del mercante era la prima pescata fra le foglie: adesso è una
-   seconda fonte, con la stessa pesca, così il piano nasce uguale a ieri. */
+/* ══════════ 2. il mercante non è più giù, e al suo posto c'è un portale ══════════
+   La stanza del mercante era la prima pescata fra le foglie: adesso ci
+   sta il portale per il villaggio, con la stessa pesca, così il piano
+   nasce uguale a ieri; la fonte resta una. Il portale non ha porta. */
 {
-  let piani = 0, fonti = 0, mercanti = 0
+  let piani = 0, fonti = 0, mercanti = 0, portali = 0, chiusi = 0
   for (const t of [...CAMPAGNA, L_ABISSO]) {
     for (let s = 0; s < 8; s++) {
       const l = new Livello({ seme: 31 + s * 977, piano: s % 3, largo: t.misura, alto: t.misura, giri: t.giri })
       piani++
       fonti += l.robe.filter(r => r.che === 'fonte').length
       mercanti += l.robe.filter(r => r.che === 'mercante').length
+      const p = l.robe.filter(r => r.che === 'portale')
+      portali += p.length
+      const sua = p[0] && l.stanze.find(st => st.ruolo === 'portale')
+      if (sua && l.robe.some(r => r.che === 'porta' && r.gruppo === sua.id)) chiusi++
     }
   }
   uguale('nessun mercante in nessun piano', mercanti, 0)
-  controlla('due fonti per piano, quasi sempre', fonti >= piani * 1.8, `${fonti} fonti in ${piani} piani`)
-  nota(`${fonti} fonti in ${piani} piani`)
+  controlla('un portale per piano, quasi sempre', portali >= piani * 0.9 && portali <= piani, `${portali} portali in ${piani} piani`)
+  controlla('e una fonte', fonti >= piani * 0.9 && fonti <= piani, `${fonti} fonti in ${piani} piani`)
+  uguale('il portale non sta dietro una porta', chiusi, 0)
+  nota(`${portali} portali e ${fonti} fonti in ${piani} piani`)
 }
 
 /* ══════════ 3. la roba resta fra due discese ══════════ */
@@ -133,44 +140,21 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   const sopra = new Bottega({ roba: c.roba, finite: 2, rnd: seminato(3) })
   sopra.vendiA('rigattiere', 0)
   sopra.compraDa('erborista', 'pozione')
-  const ripresa = leggi(dato, CAMPAGNA[1], 'cavaliere', sopra.roba)
+  const ripresa = leggi(dato, CAMPAGNA[1], sopra.roba)
   stessaLista('riprendendo si ha in tasca quello comprato sopra', ripresa.zaino, ['pozione'])
   uguale('e le gemme di dopo la spesa', ripresa.gemme, 30 + COSE.ascia.prezzo / 2 - COSE.pozione.prezzo)
   uguale('e il piano è quello di prima', ripresa.livello.celle.join(), c.livello.celle.join())
-  const senza = leggi(dato, CAMPAGNA[1])
-  stessaLista('senza la roba di sopra vale quella scritta nella sosta', senza.zaino, ['ascia'])
+  controlla('la sosta non tiene una copia della roba: sta nell\'avventura', !('zaino' in dato) && !('gemme' in dato))
 }
 
-/* ══════════ 6. il profilo di prima ══════════
-   Chi giocava prima parte con lo zaino vuoto e non perde niente: se aveva
-   una discesa a metà ritrova sopra la roba di quella, e chi aveva già
-   finito delle discese trova le gemme di bentornato, una volta sola. */
+/* ══════════ 6. un'avventura nuova parte nuda ══════════
+   I salvataggi di prima si sono azzerati (docs/sotterraneo/avventure.md):
+   niente gemme di bentornato, niente roba passata dalla sosta. */
 {
   uguale('un profilo senza roba non ha roba da rileggere', rileggiRoba(null), null)
   uguale('e un dato storto nemmeno', rileggiRoba({ v: 99, gemme: 5 }), null)
-  const nuovo = robaDiCasa({ finite: 0 })
-  stessaLista('chi comincia oggi parte nudo', nuovo.roba, ROBA_VUOTA())
-  uguale('e la roba va scritta', nuovo.nuova, true)
-  const tre = robaDiCasa({ finite: 3 })
-  uguale('chi aveva finito tre discese ha lo zaino vuoto', tre.roba.zaino.length, 0)
-  uguale('e le gemme di bentornato', tre.roba.gemme, GEMME_DI_BENTORNATO[3])
-  controlla('il bentornato cresce con le discese finite',
-            GEMME_DI_BENTORNATO.every((g, i) => !i || g >= GEMME_DI_BENTORNATO[i - 1]), GEMME_DI_BENTORNATO.join())
-  const scritta = robaDiCasa({ salvata: tre.roba, finite: 3 })
-  uguale('la seconda volta si legge quella scritta, senza regalo', scritta.roba.gemme, GEMME_DI_BENTORNATO[3])
-  uguale('e non va riscritta', scritta.nuova, false)
-
-  /* una sosta scritta prima: la sua roba sale, e la carta riprende lo stesso */
-  const c = new Corsa(CAMPAGNA[2], { seme: 4, rnd: seminato(4) })
-  c.mano = 'ascia'; c.zaino = ['pozione']; c.gemme = 17; c.torciaResta = 0
-  const vecchia = { ...scrivi(c, 2), torcia: true }
-  delete vecchia.torciaResta
-  delete vecchia.torce
-  const daGiu = robaDiCasa({ sosta: vecchia, finite: 2 })
-  uguale('la roba della discesa a metà sale', daGiu.roba.mano, 'ascia')
-  uguale('con le gemme di allora più il bentornato', daGiu.roba.gemme, 17 + GEMME_DI_BENTORNATO[2])
-  uguale('e una torcia di ieri è una torcia piena', daGiu.roba.torcia, STANZE_TORCIA)
-  uguale('robaDi legge solo le soste che si sanno leggere', robaDi({ v: 1, robe: [] }), null)
+  const c = new Corsa(CAMPAGNA[0], { seme: 4, rnd: seminato(4), roba: rileggiRoba(null) })
+  stessaLista('chi comincia scende nudo', c.roba, ROBA_VUOTA())
 }
 
 /* ══════════ 7. i banchi ══════════ */

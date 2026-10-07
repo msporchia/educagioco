@@ -3,12 +3,8 @@
 // Il record della campagna di fuori (tappa, stelle, libera) resta quello che legge il resto dell'app, e vale il
 // massimo fra le avventure: lo scrive completa() di giochi/campagne.js, che tiene sempre il più alto.
 // Funzioni pure sul record della campagna: girano in Node, e Gioco.vue le passa a ritocca().
-import { EROI, DI_PARTENZA } from '../dati/eroi.js'
+import { EROI } from '../dati/eroi.js'
 import { rileggiRoba } from './corredo.js'
-import { robaDiCasa } from './sosta.js'
-
-// quello che stava in cfg quando la roba era una sola per tutti, e adesso sta in ogni avventura
-const DI_PRIMA = ['roba', 'terra', 'abisso', 'botteghe']
 
 // `missioni`: il posto per quelle dei personaggi, che verranno (docs/sotterraneo/da-fare.md)
 export const AVVENTURA_NUOVA = () => ({ tappa: 0, libera: false, stelle: {}, missioni: {} })
@@ -78,33 +74,19 @@ export function cominciata(a) {
                  r.torcia > 0 || r.torce > 0)
 }
 
-// Il passaggio dei profili di prima, quando la roba era una sola per tutti: discese, stelle, roba, nebbia,
-// banchi, sosta e record vanno all'avventura dell'eroe scelto per ultimo (cfg.eroe), gli altri tre partono da
-// capo. Le gemme di bentornato (robaDiCasa) le prende solo lui, che ha le discese finite. Il record di fuori resta
-// com'è: era già il suo, e quindi il massimo. Torna false se non c'è niente da fare (già passato, o profilo nuovo)
-export function passaAlleAvventure(c) {
+// I salvataggi di prima si azzerano (docs/sotterraneo/avventure.md, «I salvataggi di prima»): il gioco è cambiato
+// tanto che passarli non aveva senso. Una volta per profilo, segnata da `cfg.mondo`: le avventure, la roba, la
+// nebbia, i banchi, l'abisso e la sosta se ne vanno; restano l'eroe scelto e il record di fuori (tappa, stelle,
+// libera), che medaglie, esperienza e livello leggono. Torna false se non c'è niente da fare
+export const MONDO = 2
+const DI_PRIMA = ['avventure', 'roba', 'terra', 'abisso', 'botteghe']
+
+export function azzeraIlVecchio(c) {
   if (!oggetto(c.cfg)) c.cfg = {}
-  const cfg = c.cfg
-  if (oggetto(cfg.avventure)) return false
-  const qualcosa = (c.tappa || 0) > 0 || c.libera || Object.keys(c.stelle || {}).length > 0 || !!c.sosta ||
-    DI_PRIMA.some(k => cfg[k] != null)
-  if (!qualcosa && !eroeVero(cfg.eroe)) return false
-  const eroe = eroeVero(cfg.eroe) ? cfg.eroe : DI_PARTENZA
-  const a = {
-    ...AVVENTURA_NUOVA(),
-    tappa: c.tappa || 0, libera: !!c.libera, stelle: { ...(c.stelle || {}) },
-    roba: robaDiCasa({ salvata: cfg.roba, sosta: c.sosta, finite: c.tappa || 0 }).roba,
-  }
-  for (const k of ['terra', 'abisso', 'botteghe']) if (cfg[k] != null) a[k] = cfg[k]
-  if (oggetto(c.sosta)) {
-    // la discesa a metà la riprende chi ha l'avventura, anche se l'aveva cominciata un altro eroe; nella
-    // versione 2 `eroe` era la cella dov'era, e lì non si tocca (leggi() ripiega sull'eroe dell'avventura)
-    a.sosta = { ...c.sosta }
-    if (typeof a.sosta.eroe === 'string') a.sosta.eroe = eroe
-  }
-  cfg.avventure = { [eroe]: a }
-  cfg.eroe = eroe
-  for (const k of DI_PRIMA) delete cfg[k]
+  if (c.cfg.mondo === MONDO) return false
+  for (const k of DI_PRIMA) delete c.cfg[k]
+  if (c.cfg.eroe != null && !eroeVero(c.cfg.eroe)) delete c.cfg.eroe
   delete c.sosta
+  c.cfg.mondo = MONDO
   return true
 }

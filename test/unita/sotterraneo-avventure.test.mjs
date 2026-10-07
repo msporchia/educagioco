@@ -3,20 +3,21 @@
    e stelle, la sua nebbia, la sua sosta e il suo abisso; le monete sono
    dell'app, e medaglie, esperienza e home contano il massimo fra gli eroi.
    Qui: le avventure separate, il massimo letto dal resto dell'app (con lo
-   store vero e giochi/campagne.js), e il passaggio dei profili di prima,
-   quando la roba era una sola per tutti, partendo da profili finti di
-   oggi: a inizio, a metà, con la sosta aperta, con l'abisso.
+   store vero e giochi/campagne.js), l'azzeramento dei salvataggi di
+   prima (da prima delle avventure, e di ieri), «riprendi da qui» in home
+   con l'icona ritagliata dalla mappa.
    `node test/esegui.mjs sotterraneo-avventure --niente-build`
    tempo: 30 */
 import { CAMPAGNA, QUANTE_TAPPE } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
-import { GEMME_DI_BENTORNATO } from '../../src/giochi/sotterraneo/dati/mercanti.js'
+import { POSTO_DI, iconaDi } from '../../src/giochi/sotterraneo/dati/terra.js'
+import { ICONE } from '../../src/giochi/sotterraneo/dati/terra-icone.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { ROBA_VUOTA, schedaConLaRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
-import { scrivi, leggi, dice } from '../../src/giochi/sotterraneo/motore/sosta.js'
+import { scrivi } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { Bottega } from '../../src/giochi/sotterraneo/motore/bottega.js'
-import { avventuraDi, scriviNellAvventura, vintaNellAvventura, ilMassimo, cominciata, passaAlleAvventure,
+import { avventuraDi, scriviNellAvventura, vintaNellAvventura, ilMassimo, cominciata, azzeraIlVecchio, MONDO,
          AVVENTURA_NUOVA } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import manifesto from '../../src/giochi/sotterraneo/gioco.js'
 import { misure } from '../../src/store/progressi.js'
@@ -116,102 +117,101 @@ await creaGiocatore('Prova', true, 8)   // a otto anni le sei discese sono tutte
             manifesto.riassunto(progresso(CHIAVE)).includes('piano più profondo 30'), manifesto.riassunto(progresso(CHIAVE)))
 }
 
-/* ══════════ 3. il passaggio dei profili di oggi ══════════
-   Tutto quello che c'era va all'avventura dell'eroe scelto per ultimo
-   (cfg.eroe), gli altri tre partono da capo. Nessuno perde stelle,
-   medaglie, esperienza o monete: fuori il profilo si vede uguale. */
-function passa(nome, sot, eroe) {
+/* ══════════ 3. i salvataggi di prima si azzerano ══════════
+   Il gioco è cambiato tanto (portale, ripresa esatta, avventure) che i
+   salvataggi di prima si buttano: le avventure ripartono da zero per
+   tutti. Restano il record di fuori, le medaglie, l'esperienza, le
+   monete e i contatori: togliere non abbassa il livello. Una volta sola,
+   segnata da `cfg.mondo`. */
+function azzera(nome, sot) {
   const p = profiloDi(sot)
   const prima = copia(p)
   const fuori = vistoDaFuori(p)
-  uguale(`${nome}: il passaggio cambia qualcosa`, passaAlleAvventure(p.campagne[CHIAVE]), true)
+  uguale(`${nome}: l'azzeramento cambia qualcosa`, azzeraIlVecchio(p.campagne[CHIAVE]), true)
+  const c = p.campagne[CHIAVE]
   stessaLista(`${nome}: da fuori si vede uguale (medaglie, esperienza, riga della home)`, vistoDaFuori(p), fuori)
   uguale(`${nome}: le monete restano`, p.coins, prima.coins)
-  const c = p.campagne[CHIAVE]
-  uguale(`${nome}: l'avventura aperta è dell'eroe di prima`, c.cfg.eroe, eroe)
-  stessaLista(`${nome}: c'è solo la sua`, Object.keys(c.cfg.avventure), [eroe])
-  const a = avventuraDi(c, eroe)
-  uguale(`${nome}: con le sue discese`, a.tappa, prima.campagne[CHIAVE].tappa)
-  stessaLista(`${nome}: e le sue stelle`, a.stelle, prima.campagne[CHIAVE].stelle)
-  for (const k of ['roba', 'terra', 'abisso', 'botteghe'])
-    uguale(`${nome}: cfg.${k} non sta più fuori`, k in c.cfg, false)
-  uguale(`${nome}: e nemmeno la sosta`, 'sosta' in c, false)
-  for (const e of EROI.filter(e => e.chiave !== eroe))
-    uguale(`${nome}: ${e.chiave} parte da capo`, cominciata(avventuraDi(c, e.chiave)), false)
-  uguale(`${nome}: una seconda volta non fa niente`, passaAlleAvventure(c), false)
-  return { c, a, prima }
+  stessaLista(`${nome}: e i contatori`, [p.totals, p.best], [prima.totals, prima.best])
+  stessaLista(`${nome}: il record di fuori non si tocca`, [c.tappa, c.libera, c.stelle],
+              [prima.campagne[CHIAVE].tappa, prima.campagne[CHIAVE].libera, prima.campagne[CHIAVE].stelle])
+  for (const k of ['avventure', 'roba', 'terra', 'abisso', 'botteghe'])
+    uguale(`${nome}: cfg.${k} se ne va`, k in c.cfg, false)
+  uguale(`${nome}: e la sosta di prima`, 'sosta' in c, false)
+  for (const e of EROI) {
+    const a = avventuraDi(c, e.chiave)
+    uguale(`${nome}: ${e.chiave} parte da capo`, cominciata(a), false)
+    uguale(`${nome}: ${e.chiave} senza nebbia, sosta né abisso`, !!(a.terra || a.sosta || a.abisso), false)
+  }
+  uguale(`${nome}: la home non ha niente da riprendere`, manifesto.ripresa(c), null)
+  uguale(`${nome}: una seconda volta non fa niente`, azzeraIlVecchio(c), false)
+  return { c, prima }
 }
 
-{
-  const vuoto = { tappa: 0, libera: false, stelle: {}, cfg: {} }
-  uguale('un bambino che non ha mai scelto non ha niente da passare', passaAlleAvventure(vuoto), false)
-  stessaLista('e il suo record non si tocca', vuoto, { tappa: 0, libera: false, stelle: {}, cfg: {} })
-}
-
-/* a inizio: scelto l'eroe, fatti due passi sopra */
-{
-  const { a } = passa('a inizio', { tappa: 0, libera: false, stelle: {},
-    cfg: { eroe: 'elfa', roba: ROBA_VUOTA(), terra: { nebbia: '0'.repeat(384), dove: [9, 40], parlato: true } } }, 'elfa')
-  stessaLista('a inizio: la nebbia passa all\'elfa', a.terra.dove, [9, 40])
-  stessaLista('a inizio: con lo zaino vuoto', a.roba, ROBA_VUOTA())
-}
-
-/* a metà: tre discese, la roba, i banchi già pescati */
-{
-  const roba = { ...ROBA_VUOTA(), gemme: 44, mano: 'spada', corpo: 'corazza', zaino: ['pozione', 'ascia'] }
-  const { a } = passa('a metà', { tappa: 3, libera: false, stelle: { 0: 3, 1: 2, 2: 1 },
-    cfg: { eroe: 'nano', roba, terra: { nebbia: 'f'.repeat(384), dove: [17, 41], parlato: true },
-           botteghe: { banchi: { armaiolo: ['ascia', 'scudo-ferro'] } } } }, 'nano')
-  stessaLista('a metà: la roba passa intera', a.roba, roba)
-  uguale('a metà: senza gemme di bentornato (la roba c\'era già)', a.roba.gemme, 44)
-  stessaLista('a metà: e i banchi già pescati', a.botteghe.banchi.armaiolo, ['ascia', 'scudo-ferro'])
-}
-
-/* con la sosta aperta, cominciata da un altro eroe: la riprende chi ha l'avventura */
+/* da prima delle avventure: la roba una sola per tutti, la nebbia, l'abisso e una sosta aperta */
 {
   const corsa = new Corsa(CAMPAGNA[1], { seme: 9, rnd: seminato(9), eroe: 'mago' })
-  corsa.gemme = 21
-  corsa.zaino = ['pozione']
+  const { c } = azzera('da prima delle avventure', { tappa: 6, libera: true, stelle: { 0: 3, 1: 2, 2: 2, 3: 1, 4: 1, 5: 1 },
+    sosta: { ...scrivi(corsa, 1), v: 3 },
+    cfg: { eroe: 'elfa', roba: { ...ROBA_VUOTA(), gemme: 160, mano: 'spada' }, abisso: { fondo: 23 },
+           terra: { nebbia: 'f'.repeat(384), dove: [9, 40], parlato: true }, botteghe: { banchi: {} } } })
+  uguale('da prima delle avventure: l\'eroe scelto resta', c.cfg.eroe, 'elfa')
+  uguale('da prima delle avventure: l\'abisso si riapre finendo le sei con un eroe', avventuraDi(c, 'elfa').libera, false)
+}
+
+/* di ieri: già passato alle avventure, col bentornato in tasca e una sosta della versione di prima */
+{
+  const { c } = azzera('di ieri', { tappa: 3, libera: false, stelle: { 0: 3, 1: 2, 2: 1 },
+    cfg: { eroe: 'nano', avventure: {
+      nano: { ...AVVENTURA_NUOVA(), tappa: 3, stelle: { 0: 3, 1: 2, 2: 1 }, roba: { ...ROBA_VUOTA(), gemme: 120 },
+              terra: { nebbia: 'f'.repeat(768), dove: [40, 40], parlato: true, divieti: ['botola'] },
+              sosta: { v: 3, tappa: 2, robe: [] }, abisso: { fondo: 4 } },
+      mago: { ...AVVENTURA_NUOVA(), tappa: 1, stelle: { 0: 1 } } } } })
+  uguale('di ieri: le gemme di bentornato non ci sono più', (avventuraDi(c, 'nano').roba || {}).gemme, undefined)
+  uguale('di ieri: il nano ricomincia dalla scalinata', avventuraDi(c, 'nano').tappa, 0)
+}
+
+/* un eroe che non c'è più non resta scelto: la scelta si ripresenta */
+{
+  const { c } = azzera('con un eroe sconosciuto', { tappa: 0, libera: false, stelle: {}, cfg: { eroe: 'ladro' } })
+  uguale('con un eroe sconosciuto: la scelta si ripresenta', 'eroe' in c.cfg, false)
+}
+
+/* un profilo nuovo: si segna e basta, e un'avventura cominciata dopo non si tocca più */
+{
+  const c = { tappa: 0, libera: false, stelle: {}, cfg: {} }
+  uguale('un profilo nuovo si segna', azzeraIlVecchio(c), true)
+  uguale('col mondo di adesso', c.cfg.mondo, MONDO)
+  scriviNellAvventura(c, 'mago', { roba: { ...ROBA_VUOTA(), gemme: 7 } })
+  uguale('e dopo non si azzera più', azzeraIlVecchio(c), false)
+  uguale('la roba del mago resta', avventuraDi(c, 'mago').roba.gemme, 7)
+}
+
+/* «riprendi da qui» in home: la discesa a metà dell'avventura aperta, col suo posto ritagliato dalla mappa */
+{
+  const c = { tappa: 2, libera: false, stelle: {}, cfg: {} }
+  azzeraIlVecchio(c)
+  c.cfg.eroe = 'cavaliere'
+  uguale('senza una discesa a metà la home usa la riga di sempre', manifesto.ripresa(c), null)
+  const corsa = new Corsa(CAMPAGNA[1], { seme: 9, rnd: seminato(9) })
   corsa.piano = 1
   corsa.nuovoPiano()
-  const sosta = scrivi(corsa, 1)
-  const roba = { ...ROBA_VUOTA(), gemme: 21, zaino: ['pozione'] }
-  const { a } = passa('con la sosta', { tappa: 1, libera: false, stelle: { 0: 2 }, sosta,
-    cfg: { eroe: 'cavaliere', roba } }, 'cavaliere')
-  uguale('con la sosta: la discesa a metà passa all\'avventura', a.sosta.tappa, 1)
-  uguale('con la sosta: e la riprende il cavaliere', a.sosta.eroe, 'cavaliere')
-  const ripresa = leggi(a.sosta, CAMPAGNA[1], 'cavaliere', a.roba)
-  controlla('con la sosta: si riprende', !!ripresa)
-  uguale('con la sosta: allo stesso piano', ripresa.piano, 1)
-  uguale('con la sosta: col cavaliere', ripresa.chiEro, 'cavaliere')
-  uguale('con la sosta: e con la roba', ripresa.gemme, 21)
-  uguale('con la sosta: la carta in cima la dice', dice(a.sosta, CAMPAGNA).piano, 2)
+  scriviNellAvventura(c, 'cavaliere', { sosta: scrivi(corsa, 1) })
+  const r = manifesto.ripresa(c)
+  uguale('con una discesa a metà la home dice quale', r && r.dove, `${CAMPAGNA[1].nome} · piano 2 di ${CAMPAGNA[1].piani}`)
+  controlla('e mostra il suo posto ritagliato dalla mappa', !!r && r.immagine === ICONE[POSTO_DI[CAMPAGNA[1].chiave]] &&
+            r.immagine.startsWith('data:image/webp'))
+  c.cfg.eroe = 'mago'
+  uguale('la discesa a metà di un altro eroe la si ritrova scegliendolo', manifesto.ripresa(c), null)
 }
 
-/* con l'abisso: le sei finite e un record */
+/* le icone delle discese: una per ogni discesa e per l'abisso, ritagliate dalla mappa, leggere */
 {
-  const stelle = Object.fromEntries(CAMPAGNA.map((_, i) => [i, 3]))
-  const { c, a } = passa('con l\'abisso', { tappa: QUANTE_TAPPE, libera: true, stelle,
-    cfg: { eroe: 'mago', roba: { ...ROBA_VUOTA(), mano: 'scettro', gemme: 90 }, abisso: { fondo: 23 } } }, 'mago')
-  uguale('con l\'abisso: il record passa al mago', a.abisso.fondo, 23)
-  uguale('con l\'abisso: e l\'abisso gli resta aperto', a.libera, true)
-  controlla('con l\'abisso: la riga della home lo dice ancora', manifesto.riassunto(c).includes('piano più profondo 23'),
-            manifesto.riassunto(c))
-  uguale('con l\'abisso: gli altri non ce l\'hanno', avventuraDi(c, 'elfa').libera, false)
-}
-
-/* da prima che la roba restasse: le gemme di bentornato, solo a chi ha le discese finite */
-{
-  const { c, a } = passa('da prima della roba', { tappa: 4, libera: false, stelle: { 0: 3, 1: 3, 2: 2, 3: 1 },
-    cfg: { eroe: 'elfa' } }, 'elfa')
-  uguale('da prima della roba: l\'elfa trova le gemme di bentornato', a.roba.gemme, GEMME_DI_BENTORNATO[4])
-  uguale('da prima della roba: gli altri no', somma(EROI.filter(e => e.chiave !== 'elfa')
-    .map(e => (avventuraDi(c, e.chiave).roba || {}).gemme || 0)), 0)
-}
-
-/* un profilo senza eroe scelto ma con delle discese (prima degli eroi): al cavaliere */
-{
-  passa('senza eroe', { tappa: 2, libera: false, stelle: { 0: 1, 1: 1 }, cfg: {} }, 'cavaliere')
+  for (const k of [...CAMPAGNA.map(t => t.chiave), 'abisso']) {
+    const i = iconaDi(k)
+    controlla(`${k}: ha la sua icona ritagliata`, typeof i === 'string' && i.startsWith('data:image/webp;base64,'), k)
+    controlla(`${k}: leggera (sotto i 10 KB)`, !!i && i.length * 3 / 4 < 10240, i && `${Math.round(i.length * 3 / 4)} byte`)
+  }
+  uguale('una icona per posto, non di più', Object.keys(ICONE).length, Object.keys(POSTO_DI).length)
 }
 
 /* la scheda dice i numeri veri: quelli che la discesa userà con la roba addosso, non quelli di base */
