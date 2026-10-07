@@ -2,7 +2,8 @@
 
 Fino al 7 ottobre 2026 fra una discesa e l'altra si ripartiva nudi. Adesso
 quello che si trova e si compra resta, e il mercante è salito sulla terra di
-sopra. Qui le regole della roba che resta e la misura che le tiene in
+sopra. La roba è di un'avventura, una per eroe ([avventure.md](avventure.md)).
+ Qui le regole della roba che resta e la misura che le tiene in
 equilibrio; i mercanti stanno in [roba.md](roba.md#i-mercanti-di-sopra) e
 [terra-di-sopra.md](terra-di-sopra.md#i-mercanti), lo svenimento in
 [regole.md](regole.md#svenire-e-il-fondo-degli-svenimenti).
@@ -17,15 +18,17 @@ sopra), `motore/bottega.js` (i banchi), `motore/sosta.js` (`robaDiCasa`),
 
 - **Quello che si ha addosso, nelle tasche e le gemme scende e risale con
   l'avventuriero** (`Corredo` in `motore/corredo.js`, in
-  `profile.campagne.sotterraneo.cfg.roba`): uscendo da una discesa vinta,
+  `profile.campagne.sotterraneo.cfg.avventure[<eroe>].roba`): uscendo da una discesa vinta,
   persa o lasciata a metà, la discesa dopo lo ritrova. Quello lasciato per
   terra resta giù. Provato: si ripartiva nudi; l'utente l'ha voluto cambiare
   perché portarsi dietro le cose diverte di più.
-- **La roba è una sola, qualunque eroe scenda**: è del bambino, non della
-  classe. Cambiando eroe, quello che il nuovo non porta va in tasca scendendo
-  (per terra all'ingresso se le tasche sono piene) e lo dice
-  (`sistemaIlCorredo`). Quattro zaini sarebbero quattro posti dove cercare
-  la spada.
+- **Ogni eroe ha la sua roba**, dentro la sua avventura
+  ([avventure.md](avventure.md)): un eroe nuovo comincia con lo zaino vuoto.
+  Provato: una roba sola per tutti e quattro, e cambiando eroe quello che il
+  nuovo non porta finiva in tasca; con la storia lunga cambiare eroe diventava
+  o impossibile o strano, e l'utente ha voluto un'avventura per eroe. Quello
+  che la classe non porta va ancora in tasca scendendo (`sistemaIlCorredo`):
+  serve alla roba passata dai profili di prima.
 - **Le gemme si spendono sopra**, dai mercanti
   ([terra-di-sopra.md](terra-di-sopra.md#i-mercanti)); nelle discese non c'è
   più nessuno che vende. Le monete non cambiano (🪙1 a risposta giusta) e la
@@ -43,13 +46,13 @@ sopra), `motore/bottega.js` (i banchi), `motore/sosta.js` (`robaDiCasa`),
 - **Il forziere pesca per profondità** (`pescaCosa` con `profondita`, la
   stessa pesatura del banco): la scalinata non regala lo spadone che poi
   scende per sempre.
-- **La sosta tiene il piano, la roba sta in `cfg.roba`** e si scrivono
-  insieme (`salva` in `Gioco.vue`): usciti a metà si può andare dai mercanti,
-  e riprendendo la discesa ritrova la roba com'è adesso (`leggi` con la
-  roba). La copia nella sosta serve solo alle soste scritte prima, la cui roba
-  la prima volta sale in `cfg.roba` (`robaDiCasa`).
-- **Le missioni dei personaggi** verranno ([da-fare.md](da-fare.md)): la roba
-  è un oggetto suo dentro `cfg`, e una missione avrà la sua chiave accanto.
+- **La sosta tiene il piano, la roba sta accanto** nell'avventura e si
+  scrivono insieme (`salva` in `Gioco.vue`): usciti a metà si può andare dai
+  mercanti, e riprendendo la discesa ritrova la roba com'è adesso (`leggi` con
+  la roba). La copia nella sosta serve solo alle soste scritte prima, la cui
+  roba sale al passaggio alle avventure (`robaDiCasa`).
+- **Le missioni dei personaggi** verranno ([da-fare.md](da-fare.md)): il posto
+  c'è già, `missioni` in ogni avventura accanto alla roba.
 
 ## L'equilibrio, misurato
 

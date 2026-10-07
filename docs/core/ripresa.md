@@ -60,7 +60,8 @@ Lo prova `integrazione/pozioni-sosta`.
 ## Chi ce l'ha
 
 - **La sosta con la carta in cima alla mappa**:
-  - sotterraneo ([../sotterraneo/regole.md](../sotterraneo/regole.md));
+  - sotterraneo ([../sotterraneo/regole.md](../sotterraneo/regole.md)), con una
+    sosta per avventura e non per gioco ([../sotterraneo/avventure.md](../sotterraneo/avventure.md));
   - Survivors ([../survivors/regole.md](../survivors/regole.md));
   - castello ([../castello/sosta.md](../castello/sosta.md));
   - bancarella ([../bancarella/regole.md](../bancarella/regole.md));

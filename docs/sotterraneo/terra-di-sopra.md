@@ -163,7 +163,10 @@ Tre personaggi fermi fra le case (`mercanti` nel foglietto, `MERCANTI` in
   è pronto, `<sprite>-fermo-0` nell'atlante (`armaiolo-fermo-0`…) si usa da
   solo, come per il minatore.
 - **La carta di chi scende dice la roba**: braccio e difesa con quello che
-  ha addosso, e le gemme da spendere.
+  ha addosso, e le gemme da spendere; il suo «cambio» riapre la scelta delle
+  avventure ([avventure.md](avventure.md)).
+- **Il banco si pesca per avventura**: le righe dipendono dalle discese finite
+  da quell'eroe, e i banchi già pescati stanno nella sua avventura.
 
 ## La nebbia
 
@@ -175,8 +178,9 @@ Tre personaggi fermi fra le case (`mercanti` nel foglietto, `MERCANTI` in
 - **Si scopre camminando** (`VISTA`, otto celle attorno all'eroe), e un
   posto è trovato quando se ne vede il cuore: lo dice una riga in fondo
   («Hai trovato la scalinata antica!»). Un posto nel buio è prato come il resto.
-- **Si ricorda per bambino** in `profile.campagne.sotterraneo.cfg.terra`:
-  `{ nebbia, dove, parlato }`, la nebbia un bit per cella in esadecimale
+- **Si ricorda per avventura** ([avventure.md](avventure.md)), in
+  `cfg.avventure[<eroe>].terra`: `{ nebbia, dove, parlato }`; un eroe nuovo
+  parte da casa con la nebbia nuova e il minatore da sentire, la nebbia un bit per cella in esadecimale
   (384 caratteri). Un codice che non torna (altra mappa) è nebbia nuova.
 
 Nei test: `[data-terra]` (la vista, con `data-camera`), `[data-eroe-terra]`

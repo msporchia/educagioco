@@ -179,9 +179,10 @@ dall'abisso.
 
 ## Il record, e dove si vede
 
-- **Il più giù dove si è arrivati sta in `cfg.abisso = { fondo }`**, via
-  `ricorda()`, accanto all'eroe scelto: sopravvive alla sosta buttata via, e
-  non sta fra le stelle.
+- **Il più giù dove si è arrivati sta nell'avventura** (`abisso: { fondo }`,
+  [avventure.md](avventure.md)): sopravvive alla sosta buttata via, e non sta
+  fra le stelle. L'abisso si apre a chi ha finito le sei con quell'eroe; la
+  riga della home dice il fondo più giù fra tutte le avventure.
 - **La mappa** (`viste/Campagna.vue`): in cima la ripresa, «l'abisso · piano
   23 — torno giù da dove ero»; **in fondo**, sotto le sei e solo se `libera`,
   la carta dell'abisso col piano più profondo.

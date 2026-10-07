@@ -36,7 +36,8 @@ discesa e l'altra: [la-roba-che-resta.md](la-roba-che-resta.md). Il codice:
   essere una notizia.
 - **Si sceglie una volta e resta**, dalla mappa delle discese
   (`DI_PARTENZA`: il cavaliere). `unita/sotterraneo` gioca la campagna con
-  tutti e quattro. La roba è una sola per tutti e quattro.
+  tutti e quattro. Ognuno ha la sua roba, nella sua avventura
+  ([avventure.md](avventure.md)).
 
 ## Addosso e in tasca
 
@@ -139,7 +140,7 @@ più nessuno.
   prima della grotta niente terzo gradino, o chi ha le gemme scende già col
   meglio e la discesa diventa una passeggiata.
 - **Il banco si pesca una volta per giro** e si scrive in
-  `cfg.botteghe`; il giro cambia quando finisce una discesa (vinta, persa o
+  nell'avventura (`botteghe`); il giro cambia quando finisce una discesa (vinta, persa o
   finita la sera nell'abisso). Un banco che cambiasse a ogni apertura sarebbe
   una slot machine, e uscire a metà per ripescarlo un trucco.
 - **Quello che si ha già non si offre**, tranne quello che si consuma; il

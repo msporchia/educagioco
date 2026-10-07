@@ -58,9 +58,10 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
 - **Le missioni dei personaggi**: chi sta sulla mappa dà un incarico, per
   esempio «vai nel pozzo e trova l'oggetto X al terzo piano». Non fatte: la
-  roba che resta (`cfg.roba`) e i mercanti sono il primo pezzo, e una missione
-  avrà la sua chiave accanto in `cfg` e il suo oggetto fra le `COSE`, che lo
-  zaino e la sosta portano già.
+  roba che resta e i mercanti sono il primo pezzo, ogni avventura ha già il
+  posto per le sue missioni (`missioni`, [avventure.md](avventure.md)), e
+  l'oggetto di una missione starà fra le `COSE`, che lo zaino e la sosta
+  portano già.
 - **Gli sprite dei mercanti**: armaiolo, erborista e rigattiere sono figure
   disegnate in codice (`viste/pixel.js`); `armaiolo-fermo-0` e gli altri
   nell'atlante prendono il loro posto da soli.

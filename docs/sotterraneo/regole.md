@@ -185,12 +185,13 @@ possibilissimi.
 Quello che si ha addosso, nelle tasche e le gemme scende e risale con
 l'avventuriero, e le gemme si spendono sopra, dai mercanti. Le regole, le
 discese che contano sulla roba e la misura dell'equilibrio:
-[la-roba-che-resta.md](la-roba-che-resta.md).
+[la-roba-che-resta.md](la-roba-che-resta.md). Ogni eroe ha la sua avventura
+(roba, discese, sosta): [avventure.md](avventure.md).
 
 ## Lasciare a metà, e fermarsi
 
-- **Si esce e si riprende** (`motore/sosta.js`, un paio di chilobyte): la
-  mappa offre in cima «piano 2 di 3 · ❤️ 14 · 💎 37 — torno giù da dove
+- **Si esce e si riprende** (`motore/sosta.js`, un paio di chilobyte, una
+  sosta per avventura: [avventure.md](avventure.md)): la mappa offre in cima «piano 2 di 3 · ❤️ 14 · 💎 37 — torno giù da dove
   ero». Il piano non si salva, **si rifà dal seme**; si salva ciò che è
   *successo* — chi è caduto, cosa si è aperto, cosa sta per terra, la mappa
   girata.

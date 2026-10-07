@@ -53,7 +53,11 @@ cosa obbligatoria di ogni piano.
 ## Chi scende, e chi ci abita
 
 Quattro eroi — cavaliere, elfa, mago, nano — che differiscono in quanto
-reggono, quanto picchiano e cosa possono impugnare; si sceglie una volta.
+reggono, quanto picchiano e cosa possono impugnare. **Ognuno ha la sua
+avventura**, come i personaggi di Diablo: la sua roba, le sue discese, la sua
+strada sulla terra di sopra. Si cambia quando si vuole e si ritrova ognuno
+dove l'aveva lasciato; le monete sono in comune, e i traguardi contano l'eroe
+arrivato più avanti.
 Sotto abitano quattordici creature, e più si scende più sono dure.
 **Quello che trovi te lo porti dietro**: l'arma, l'armatura, le tasche e le
 gemme risalgono con te, e alla discesa dopo le ritrovi; le discese dopo la
