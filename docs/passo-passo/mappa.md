@@ -29,9 +29,11 @@ cosa, il gioco le dice in che stato è ogni tappa. Chi apre cosa sta in
   dalla parte opposta al ponte: il pascolo dopo le buche (largo, undici
   caselle), un'isoletta di tre caselle dopo ripeti, fino a, se e tutto il
   mondo (le tappe in coda, [livelli.md](livelli.md#le-tappe-in-coda)). Il
-  ponte del coniglio ci passa accanto, mai sopra — tranne sotto i 340 px,
-  dove oggi un'isoletta di tre caselle è larga quanto la riga e il ponte
-  ci passa sopra (`unita/passo-passo-isole` lo dice a 320 px).
+  ponte del coniglio ci passa accanto, mai sopra: accanto a un ramo gira
+  sempre largo, fino al bordo dello schermo, anche se l'ultima riga del
+  coniglio è corta (`ponteX` del nodo, in `scena/isole.js`). Il cartello
+  di un'isola del cane porta la carta del suo scalino (🔁, 🚩, ❓, 🌍), il
+  pascolo «Il cane pastore».
 - **Ogni isola ha il suo vestito** (`VESTITI` in `scena/isole.js`, solo
   disegno): prato, orto coi solchi, stagno con la pozza, ghiaccio con le
   crepe; quelle del cane sono pascoli con lo steccato. Il nome dello scalino
@@ -53,7 +55,8 @@ cosa, il gioco le dice in che stato è ogni tappa. Chi apre cosa sta in
   buche: il bivio è proprio lì), se no dalla casella più vicina dell'ultima
   riga.
 - **Il bivio è un paletto con due assi**: 🐇 con la freccia verso il ponte,
-  🐕 con la freccia verso la tana. Sta dove non copre niente.
+  🐕 con la freccia verso la tana. Sta dove non copre niente: vicino al
+  ramo, e se la tana è contro il bordo più in là, lungo il fondo dell'isola.
 - **Una tana chiusa ha il sasso davanti**: è chiusa finché nessuna casella
   del suo ramo è aperta.
 
