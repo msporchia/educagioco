@@ -61,7 +61,7 @@ export class Corsa extends Corredo {
       this.torceInScorta--
       this.accendi('torcia')
     }
-    // un eroe cambiato sulla mappa può avere addosso quello che non porta: in tasca, o per terra all'ingresso
+    // la roba di prima delle avventure (una per tutti) può avere addosso quello che non porta: in tasca, o per terra
     this.sistemaIlCorredo()
     this.vita = this.vitaMax   // si scende in piedi: col dito o l'amuleto il massimo è già più alto
   }

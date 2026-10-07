@@ -11,8 +11,7 @@ import { suono } from '../../audio.js'
 import { segna, segnaBest } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { PAGA } from '../../data/paghe.js'
-import { progresso, aperta, adesso, chiusaPerEta, stelleDi, completa, sosta, salvaSosta, buttaSosta,
-         scelta, ricorda } from '../campagne.js'
+import { progresso, aperta, adesso, chiusaPerEta, completa, scelta, ricorda, ritocca } from '../campagne.js'
 import { usaPausa } from '../pausa.js'
 import VeloPausa from '../VeloPausa.vue'
 import { domandaPerGioco } from '../../quiz/scelta.js'
@@ -27,9 +26,11 @@ import { pezzoAndante } from './dati/tessere.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
-import { Corredo } from './motore/corredo.js'
+import { Corredo, rileggiRoba, ROBA_VUOTA } from './motore/corredo.js'
 import { Bottega } from './motore/bottega.js'
-import { scrivi, leggi, dice, robaDiCasa } from './motore/sosta.js'
+import { scrivi, leggi, dice } from './motore/sosta.js'
+import { avventuraDi, scriviNellAvventura, vintaNellAvventura, passaAlleAvventure, cominciata }
+  from './motore/avventure.js'
 import { mercanteDi } from './dati/mercanti.js'
 import { Tela } from './scena/tela.js'
 
@@ -74,7 +75,8 @@ let pittore = null
 let orologio = 0
 let ultimoAvviso = 0
 
-const avanza = progresso(CHIAVE)
+// i profili di prima (una roba sola per tutti): tutto passa all'avventura dell'eroe scelto per ultimo, una volta
+ritocca(CHIAVE, passaAlleAvventure, { subito: true })
 
 // la pausa (giochi/pausa.js): il ⏸, il telefono posato, il foglio del `?`, e anche il cartello di un
 // traguardo (state.festa) — un mostro addosso mentre si guarda una medaglia è un colpo che nessuno vede.
@@ -84,32 +86,50 @@ const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!fine.v
 // unico posto in cui ⏸ e velo hanno senso: dentro una discesa, senza una domanda (già un velo) e senza il cartello di fine
 const siGioca = computed(() => !!corsa.value && !domanda.value && !fine.value)
 
-// si sceglie una volta e resta (cfg.eroe); la prima volta la scelta si presenta da sé
+// Ogni eroe ha la sua avventura (motore/avventure.js, docs/sotterraneo/avventure.md): cfg.eroe dice quale è
+// aperta, e la prima volta la scelta si presenta da sé. Cambiare eroe è cambiare avventura, senza perdere niente
 const chiEro = ref(scelta(CHIAVE, 'eroe', null))
+const eroeQui = () => chiEro.value || DI_PARTENZA
 // chi sta scendendo (corsa.io) comanda durante una discesa; fuori comanda la scelta (chiEro), che decide chi scenderà
 const chiScende = dallaCorsa(c => c.io || null)
-const eroeScheda = computed(() => chiScende.value || eroeDi(chiEro.value || DI_PARTENZA))
+const eroeScheda = computed(() => chiScende.value || eroeDi(eroeQui()))
 const scegliEroe = ref(!chiEro.value)
 
+// l'avventura aperta, riletta dal profilo a ogni scrittura; ci si scrive solo da qui
+const qui = computed(() => avventuraDi(progresso(CHIAVE), eroeQui()))
+const nellAvventura = (campi, opz) => ritocca(CHIAVE, c => scriviNellAvventura(c, eroeQui(), campi), opz)
+
 function scegli(k) {
+  chiudiBottega()
   chiEro.value = ricorda(CHIAVE, 'eroe', k)
   scegliEroe.value = false
   suono.ok()
 }
 
-// La roba dell'avventuriero (motore/corredo.js): una sola, qualunque eroe scenda, in cfg.roba — fra una discesa
-// e l'altra non si riparte più nudi (docs/sotterraneo/regole.md). La prima volta la scrive robaDiCasa
-const roba = ref((() => {
-  const { roba: r, nuova } = robaDiCasa({ salvata: scelta(CHIAVE, 'roba', null), sosta: sosta(CHIAVE),
-                                          finite: avanza.tappa || 0 })
-  return nuova ? ricorda(CHIAVE, 'roba', r) : r
-})())
-const tieniLaRoba = r => { roba.value = ricorda(CHIAVE, 'roba', r) }
+// le quattro schede della scelta: a che punto è ognuna, o «nuova avventura»
+const avventure = computed(() => EROI.map(e => {
+  const a = avventuraDi(progresso(CHIAVE), e.chiave)
+  const r = rileggiRoba(a.roba) || ROBA_VUOTA()
+  const meta = dice(a.sosta, CAMPAGNA)
+  return {
+    ...e, nuova: !cominciata(a),
+    discese: Math.min(a.tappa, QUANTE_TAPPE), quante: QUANTE_TAPPE,
+    stelle: Object.values(a.stelle).reduce((n, s) => n + (Number(s) || 0), 0),
+    addosso: [r.mano, r.corpo].filter(k => k && COSE[k]).map(k => ({ chiave: k, ...COSE[k] })),
+    gemme: r.gemme,
+    fondo: (a.abisso && a.abisso.fondo) || 0,
+    aMeta: meta ? meta.nome : null,
+  }
+}))
 
-// il ref serve solo a far comparire/sparire la carta "riprendi": la verità sta in archivio (motore/sosta.js).
-// Le gemme sono quelle della roba: sopra si può essere passati da un mercante
+// La roba dell'avventuriero (motore/corredo.js), in cfg.avventure[eroe].roba: fra una discesa e l'altra non si
+// riparte più nudi (docs/sotterraneo/la-roba-che-resta.md). Un'avventura nuova comincia con lo zaino vuoto
+const roba = computed(() => rileggiRoba(qui.value.roba) || ROBA_VUOTA())
+
+// la carta "riprendi" dice la sosta dell'avventura aperta (motore/sosta.js). Le gemme sono quelle della roba:
+// sopra si può essere passati da un mercante
 const conNome = d => (d ? { ...d, chi: d.eroe ? eroeDi(d.eroe).nome : '', gemme: roba.value.gemme } : null)
-const ripresa = ref(conNome(dice(sosta(CHIAVE), CAMPAGNA)))
+const ripresa = computed(() => conNome(dice(qui.value.sosta, CAMPAGNA)))
 let ultimoSalvato = 0
 
 // la roba e la sosta nello stesso giro: un telefono spento fra le due perderebbe quello che si è raccolto
@@ -117,20 +137,18 @@ function salva({ subito = false } = {}) {
   const c = corsa.value
   if (!c || c.finita || tappaIdx.value == null) return
   ultimoSalvato = orologio
-  tieniLaRoba(c.roba)
-  salvaSosta(CHIAVE, scrivi(c, tappaIdx.value), { subito })
+  nellAvventura({ roba: c.roba, sosta: scrivi(c, tappaIdx.value) }, { subito })
 }
 
 function scorda() {
-  buttaSosta(CHIAVE)
-  ripresa.value = null
+  nellAvventura({ sosta: null }, { subito: true })
 }
 
 // riprendere non è ricominciare: il piano si rifà dal seme, e sopra ci si rimette quello che era successo
 function riprendiDiscesa() {
-  const dato = sosta(CHIAVE)
-  // un salvataggio vecchio non sa chi stava scendendo: vale la scelta di casa invece del cavaliere di sistema
-  const c = dato ? leggi(dato, tappaDi(dato.tappa), chiEro.value || DI_PARTENZA, roba.value) : null
+  const dato = qui.value.sosta
+  // un salvataggio vecchio non sa chi stava scendendo: vale l'eroe dell'avventura
+  const c = dato ? leggi(dato, tappaDi(dato.tappa), eroeQui(), roba.value) : null
   if (!c) { scorda(); return }
   togli()   // il telefono posato sulla mappa lascia acceso il freno, o si ritroverebbe dietro un velo non chiesto
   tappaIdx.value = dato.tappa
@@ -139,30 +157,34 @@ function riprendiDiscesa() {
   zainoAperto.value = false
   corsa.value = c
   borsellino = borsa(CHIAVE)
-  ripresa.value = null
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
   nextTick(() => accendi())
 }
 
 /* ═══════════ la mappa delle tappe ═══════════ */
-const tappe = computed(() => CAMPAGNA.map((t, i) => ({
-  ...t, indice: i,
-  aperta: aperta(CHIAVE, i),
-  adesso: adesso(CHIAVE, i),
-  stelle: stelleDi(CHIAVE, i),
-  perEta: chiusaPerEta(CHIAVE, i),
-  fatta: i < (avanza.tappa || 0),
-})))
+// quelle dell'avventura aperta: un eroe nuovo comincia dalla scalinata (l'età apre lo stesso quelle già passate)
+const tappe = computed(() => {
+  const a = qui.value
+  return CAMPAGNA.map((t, i) => ({
+    ...t, indice: i,
+    aperta: aperta(CHIAVE, i, a.tappa),
+    adesso: adesso(CHIAVE, i, a.tappa),
+    stelle: a.stelle[i] || 0,
+    perEta: chiusaPerEta(CHIAVE, i),
+    fatta: i < a.tappa,
+  }))
+})
 
 // la carta di chi scende, sulla mappa: braccio e difesa con quello che ha addosso, e le gemme da spendere
 const robaSopra = computed(() => {
-  const c = new Corredo({ eroe: chiEro.value || DI_PARTENZA, roba: roba.value })
+  const c = new Corredo({ eroe: eroeQui(), roba: roba.value })
   return { att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.zaino.length }
 })
 
 /* ═══════════ i mercanti di sopra (motore/bottega.js) ═══════════
-   Il banco si pesca una volta per giro e si scrive in cfg.botteghe: un banco che cambiasse a ogni apertura
-   sarebbe una slot machine. Il giro cambia quando una discesa finisce (chiudi) */
+   Il banco si pesca una volta per giro e si scrive nell'avventura (botteghe): un banco che cambiasse a ogni
+   apertura sarebbe una slot machine. Il giro cambia quando una discesa finisce (chiudi); quanta roba c'è lo
+   dicono le discese finite di quest'avventura */
 const aperto = ref(null)          // la chiave del mercante col banco aperto
 const tocco = ref(0)              // batte a ogni compra/vendi: la bottega non è reattiva
 const dettoBanco = ref(null)
@@ -170,10 +192,10 @@ let bottega = null
 
 function apriBottega(k) {
   if (!mercanteDi(k)) return
-  bottega = new Bottega({ eroe: chiEro.value || DI_PARTENZA, roba: roba.value, finite: avanza.tappa || 0,
-                          banchi: (scelta(CHIAVE, 'botteghe', null) || {}).banchi })
+  bottega = new Bottega({ eroe: eroeQui(), roba: roba.value, finite: qui.value.tappa,
+                          banchi: (qui.value.botteghe || {}).banchi })
   bottega.banco(k)
-  ricorda(CHIAVE, 'botteghe', { banchi: bottega.banchi })
+  nellAvventura({ botteghe: { banchi: bottega.banchi } })
   dettoBanco.value = null
   aperto.value = k
   tocco.value++
@@ -207,9 +229,7 @@ function dopoIlBanco(e) {
   const a = bottega.avvisi.pop()
   bottega.avvisi = []
   if (a) dettoBanco.value = typeof a === 'string' ? { testo: a } : { ...(COSE[a.cosa] || {}), testo: a.testo }
-  tieniLaRoba(bottega.roba)
-  ricorda(CHIAVE, 'botteghe', { banchi: bottega.banchi })
-  if (ripresa.value) ripresa.value = { ...ripresa.value, gemme: roba.value.gemme }
+  nellAvventura({ roba: bottega.roba, botteghe: { banchi: bottega.banchi } })
   tocco.value++
   return e
 }
@@ -222,16 +242,16 @@ function vendiSopra(i) {
   if (e) suoni.bottino()
 }
 
-// la terra di sopra si ricorda per bambino (cfg.terra): la nebbia, dove si era, se il minatore ha già parlato
-const ricordaTerra = v => ricorda(CHIAVE, 'terra', v)
+// la terra di sopra si ricorda per avventura: la nebbia, dove si era, se il minatore ha già parlato
+const ricordaTerra = v => nellAvventura({ terra: v })
 
 const titolo = computed(() =>
   corsa.value ? tappaDi(tappaIdx.value).nome : 'Il sotterraneo')
 
-// si apre su `libera` (già scritto da giochi/campagne.js); il record sta in `cfg` (sopravvive alla sosta
-// buttata) e non in `stelle`, che con una chiave per piano finirebbe in ogni persist() per sempre
-const fondoDellAbisso = ref((scelta(CHIAVE, 'abisso', null) || {}).fondo || 0)
-const abisso = computed(() => (avanza.libera
+// si apre su `libera` dell'avventura; il record sta nell'avventura (sopravvive alla sosta buttata) e non in
+// `stelle`, che con una chiave per piano finirebbe in ogni persist() per sempre
+const fondoDellAbisso = computed(() => (qui.value.abisso && qui.value.abisso.fondo) || 0)
+const abisso = computed(() => (qui.value.libera
   ? { indice: INDICE_ABISSO, nome: L_ABISSO.nome, icona: L_ABISSO.icona,
       dritta: L_ABISSO.dritta, fondo: fondoDellAbisso.value }
   : null))
@@ -239,8 +259,7 @@ const abisso = computed(() => (avanza.libera
 // si scrive scendendo e non solo alla fine: una discesa che dura tre sere non finisce quasi mai
 function segnaIlFondo(piano) {
   if (!piano || piano <= fondoDellAbisso.value) return
-  fondoDellAbisso.value = piano
-  ricorda(CHIAVE, 'abisso', { fondo: piano })
+  nellAvventura({ abisso: { fondo: piano } })
   segnaBest('sotFondo', piano)
 }
 
@@ -359,8 +378,7 @@ function avvia(i) {
   fine.value = null
   domanda.value = null
   zainoAperto.value = false
-  corsa.value = new Corsa(tappaDi(i), { seme: semeDallIndirizzo(), eroe: chiEro.value || DI_PARTENZA,
-                                        roba: roba.value })
+  corsa.value = new Corsa(tappaDi(i), { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value })
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
   pianoDaProva(corsa.value)
@@ -518,21 +536,25 @@ function chiudi() {
   const c = corsa.value
   if (!c) return
   if (!c.finita) c.risali()
-  // la roba viene su (vinta, persa o finita la sera): quello che è rimasto per terra resta giù
-  tieniLaRoba(c.roba)
-  ricorda(CHIAVE, 'botteghe', null)   // un giro nuovo: i mercanti hanno roba nuova sul banco
+  // la roba viene su (vinta, persa o finita la sera): quello che è rimasto per terra resta giù. Un giro nuovo: i
+  // mercanti hanno roba nuova sul banco
+  nellAvventura({ roba: c.roba, botteghe: null })
   const e = c.esito
   const stelle = stelleDella(e)
   // l'abisso non si butta (finisce la sera, non la discesa): si scrive il punto da cui si rientra
   const eraIlFondo = fondoDellAbisso.value   // il record DI PRIMA: segnaIlFondo lo sposta subito dopo
   if (nellAbisso.value) {
     segnaIlFondo(e.fondo)
-    salvaSosta(CHIAVE, scrivi(c, INDICE_ABISSO, { anchePerFinite: true }), { subito: true })
-    ripresa.value = conNome(dice(sosta(CHIAVE), CAMPAGNA))
+    nellAvventura({ sosta: scrivi(c, INDICE_ABISSO, { anchePerFinite: true }) }, { subito: true })
   } else scorda()
 
-  // prima l'avanzamento, poi i contatori: i traguardi in segna() devono vedere la tappa già segnata come fatta
-  if (e.vinta) completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle })
+  // prima l'avanzamento, poi i contatori: i traguardi in segna() devono vedere la tappa già segnata come fatta.
+  // Due conti: quello dell'avventura, e fuori il massimo fra le avventure (completa tiene il più alto), che è
+  // quello che leggono medaglie, esperienza e home: un altro eroe che rifà la scalinata non lo ridà
+  if (e.vinta) {
+    ritocca(CHIAVE, c => vintaNellAvventura(c, eroeQui(), tappaIdx.value, QUANTE_TAPPE, stelle))
+    completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle })
+  }
 
   segna('sotStanze', e.stanze)
   segna('sotPiani', e.piani)
@@ -571,10 +593,7 @@ function allaMappa() {
 function indietro() {
   if (!corsa.value && !fine.value) return emit('vai', 'home')
   const c = corsa.value
-  if (c && !c.finita && !fine.value) {
-    salva({ subito: true })
-    ripresa.value = conNome(dice(sosta(CHIAVE), CAMPAGNA))
-  }
+  if (c && !c.finita && !fine.value) salva({ subito: true })
   allaMappa()
 }
 
@@ -696,8 +715,9 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
     <div class="sot">
       <template v-if="!corsa">
-        <Campagna :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso" :roba="robaSopra"
-                  :terra="scelta(CHIAVE, 'terra', null)" @terra="ricordaTerra"
+        <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->
+        <Campagna :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
+                  :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
                   @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda"
                   @eroe="scegliEroe = true" @bottega="apriBottega" />
         <!-- il banco di un mercante di sopra: al centro, la ✕ in alto a destra, niente domande -->
@@ -706,7 +726,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
           <Mercante :roba="banco.roba" :tasche="banco.tasche" :detto="dettoBanco"
                     chi-compra="il rigattiere, vicino al carro" @compra="compraSopra" @vendi="vendiSopra" />
         </Foglio>
-        <Eroi v-if="scegliEroe" :eroi="EROI" :scelto="chiEro || ''" :primo="!chiEro"
+        <Eroi v-if="scegliEroe" :avventure="avventure" :scelto="chiEro || ''" :primo="!chiEro"
               @scegli="scegli" @chiudi="scegliEroe = false" />
       </template>
 

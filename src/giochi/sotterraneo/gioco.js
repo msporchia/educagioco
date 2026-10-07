@@ -62,8 +62,13 @@ export default {
     /* Finite le sei discese, «discesa 6 di 6» non racconta più niente:
        quello che si sta facendo è scendere nell'abisso, e il numero che
        conta è il più giù dove si è arrivati. Si dice solo da quando c'è
-       un record: prima la riga direbbe «piano più profondo 0». */
-    const fondo = (av.cfg && av.cfg.abisso && av.cfg.abisso.fondo) || 0
+       un record: prima la riga direbbe «piano più profondo 0».
+       Il record è di ogni avventura (docs/sotterraneo/avventure.md): qui il
+       più giù fra tutte, come tappa e stelle, che fuori sono già il massimo.
+       `cfg.abisso` è dove stava prima del passaggio alle avventure. */
+    const cfg = av.cfg || {}
+    const fondo = Math.max((cfg.abisso && cfg.abisso.fondo) || 0,
+      ...Object.values(cfg.avventure || {}).map(a => (a && a.abisso && a.abisso.fondo) || 0))
     if (av.libera && fondo) return `abisso · piano più profondo ${fondo}${coda}`
     const i = Math.min(av.tappa || 0, QUANTE_TAPPE - 1)
     return `discesa ${i + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[i].nome}${coda}`

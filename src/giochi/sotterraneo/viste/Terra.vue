@@ -20,7 +20,7 @@ const props = defineProps({
   tappe: { type: Array, required: true },     // [{ indice, chiave, nome, icona, dritta, piani, aperta, adesso, stelle, perEta, fatta }]
   abisso: { type: Object, default: null },    // { indice, nome, icona, dritta, fondo }, o null finché non si apre
   eroe: { type: Object, required: true },
-  terra: { type: Object, default: null },     // { nebbia, dove, parlato } da cfg.terra, o null la prima volta
+  terra: { type: Object, default: null },     // { nebbia, dove, parlato } dell'avventura, o null la prima volta
   giaScesa: { type: Number, default: null },  // la discesa lasciata a metà: ci si è già stati
 })
 const emit = defineEmits(['scendi', 'terra', 'bottega'])

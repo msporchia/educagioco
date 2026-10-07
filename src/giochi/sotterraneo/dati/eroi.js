@@ -1,4 +1,4 @@
-// Chi scende: quattro eroi, si sceglie una volta. Tre assi, tutti scritti (mai un tratto nascosto): vita,
+// Chi scende: quattro eroi, ognuno con la sua avventura (docs/sotterraneo/avventure.md). Tre assi, tutti scritti (mai un tratto nascosto): vita,
 // braccio, e `porta` (armi/armatura) — vedi docs/sotterraneo/roba.md. Il limite è sull'indossare e mai sul
 // prendere: quello che non si può usare si vende come tutto il resto. L'attacco è la manopola velenosa
 // (nessuno scende sotto braccio 3, o un mostro costa troppe risposte di fila); il banco di prova lo conferma.

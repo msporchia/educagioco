@@ -8,7 +8,7 @@ import { mercanteDi, vendeLa, righeDi, tettoDi, profonditaDelBanco } from '../da
 
 export class Bottega extends Corredo {
   // `finite`: discese finite (avanza.tappa). `banchi`: quello che è già stato pescato in questo giro
-  // ({ armaiolo: ['spada', …] }, cfg.botteghe); senza, si pesca alla prima apertura
+  // ({ armaiolo: ['spada', …] }, le botteghe dell'avventura); senza, si pesca alla prima apertura
   constructor({ eroe, roba = null, finite = 0, banchi = null, rnd = Math.random } = {}) {
     super({ eroe, roba })
     this.finite = finite
@@ -18,7 +18,7 @@ export class Bottega extends Corredo {
       if (Array.isArray(v)) this.banchi[k] = [...v]
   }
 
-  // pescato una volta e scritto (cfg.botteghe): un banco che cambiasse a ogni apertura sarebbe una slot machine.
+  // pescato una volta e scritto (nell'avventura): un banco che cambiasse a ogni apertura sarebbe una slot machine.
   // Quello che si ha già non si offre, come faceva il mercante delle discese, tranne quello che si consuma
   banco(chiave) {
     const m = mercanteDi(chiave)

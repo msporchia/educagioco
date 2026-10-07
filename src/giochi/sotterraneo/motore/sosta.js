@@ -91,7 +91,7 @@ function pulisci(r) {
 }
 
 // torna una Corsa pronta a giocare, o null se il salvataggio non si può leggere. `roba`: quella
-// dell'avventuriero (cfg.roba), che comanda su quella scritta qui — sopra si può essere passati dai mercanti.
+// dell'avventura (cfg.avventure[eroe].roba), che comanda su quella scritta qui — sopra si può essere passati dai mercanti.
 // La copia nella sosta serve solo ai salvataggi di prima che la roba restasse (docs/sotterraneo/regole.md)
 export function leggi(dato, tappa, ripiego = DI_PARTENZA, roba = null) {
   if (!dato || !LEGGIBILI.includes(dato.v) || !dato.robe) return null
@@ -147,7 +147,7 @@ export function leggi(dato, tappa, ripiego = DI_PARTENZA, roba = null) {
 }
 
 // la roba di una sosta scritta prima che la roba restasse: chi aveva lasciato una discesa a metà se la ritrova
-// sopra (Gioco.vue, la prima volta che legge cfg.roba). null se la sosta non si legge
+// sopra (al passaggio alle avventure, motore/avventure.js). null se la sosta non si legge
 export function robaDi(dato) {
   if (!dato || !LEGGIBILI.includes(dato.v)) return null
   return rileggiRoba({
@@ -158,7 +158,7 @@ export function robaDi(dato) {
   })
 }
 
-// La roba dell'avventuriero com'è nel profilo (cfg.roba), o — la prima volta — quella della discesa lasciata
+// La roba com'è nel profilo, o — la prima volta — quella della discesa lasciata
 // a metà prima che la roba restasse, più le gemme di bentornato a chi aveva già finito delle discese. Torna
 // anche se va scritta (`nuova`): chi legge la prima volta la deve salvare, o il regalo tornerebbe a ogni avvio
 export function robaDiCasa({ salvata = null, sosta = null, finite = 0 } = {}) {

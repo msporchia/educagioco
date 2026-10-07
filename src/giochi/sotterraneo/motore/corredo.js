@@ -1,12 +1,12 @@
-// La roba dell'avventuriero: gemme, quello che ha addosso, le sei tasche, le torce. Una sola, qualunque eroe
-// scenda, e resta fra una discesa e l'altra (docs/sotterraneo/regole.md, "Fra una discesa e l'altra"). Qui
+// La roba dell'avventuriero: gemme, quello che ha addosso, le sei tasche, le torce. Una per avventura (una per
+// eroe), e resta fra una discesa e l'altra (docs/sotterraneo/la-roba-che-resta.md). Qui
 // le regole che valgono sotto e sopra: cosa si porta, dove va un'arma, cosa vale, come si compra e si vende.
 // La discesa (motore/corsa.js) e i mercanti di sopra (motore/bottega.js) la estendono; gira in Node.
 import { TASCHE } from '../dati/mondo.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta } from '../dati/eroi.js'
 import { COSE, STANZE_TORCIA } from '../dati/cose.js'
 
-// la forma di `cfg.roba` nel profilo: sale se un campo cambia significato (docs/core/ripresa.md, la stessa regola)
+// la forma di `cfg.avventure[eroe].roba` nel profilo: sale se un campo cambia significato (docs/core/ripresa.md)
 export const VERSIONE_ROBA = 1
 
 export const ROBA_VUOTA = () => ({
@@ -136,7 +136,7 @@ export class Corredo {
     else this.nonCiSta(k)
   }
 
-  // un salvataggio vecchio, o un eroe cambiato sulla mappa, può avere addosso cose che la classe non porta
+  // un salvataggio vecchio, o la roba di prima delle avventure, può avere addosso cose che la classe non porta
   sistemaIlCorredo() {
     for (const dove of ['mano', 'mancina', 'corpo', 'dito']) {
       const k = this.casella(dove)

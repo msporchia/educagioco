@@ -12,7 +12,7 @@ const props = defineProps({
   ripresa: { type: Object, default: null }, // { tappa, nome, icona, piano, piani, vita, gemme, chi }
   eroe: { type: Object, required: true },   // la scheda di chi scende, da dati/eroi.js
   abisso: { type: Object, default: null },   // { indice, nome, icona, dritta, fondo }; in fondo, la ripresa è più urgente
-  terra: { type: Object, default: null },    // cfg.terra: la nebbia, dove si era, se il minatore ha già parlato
+  terra: { type: Object, default: null },    // la terra dell'avventura: la nebbia, dove si era, se il minatore ha già parlato
   roba: { type: Object, default: null },     // quello che ci si porta dietro: { att, dif, gemme, tasche } già contati
 })
 const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe', 'terra', 'bottega'])
@@ -44,7 +44,7 @@ function comincia() {
           <p class="sot-dove">
             <span class="em">{{ ripresa.icona }}</span>
             <b>{{ ripresa.nome }}</b>
-            <!-- con chi si riprende: chi è sceso è sceso, anche se nel frattempo si è cambiato eroe -->
+            <!-- con chi si riprende: la sosta è dell'avventura, quindi di questo eroe -->
             <i>{{ ripresa.chi ? ripresa.chi + ' · ' : '' }}piano {{ ripresa.piano
                }}<template v-if="ripresa.piani"> di {{ ripresa.piani }}</template> ·
                ❤️ {{ ripresa.vita }} · 💎 {{ ripresa.gemme }}</i>
@@ -61,7 +61,7 @@ function comincia() {
       </template>
 
       <template #sotto>
-        <!-- chi scende: si sceglie una volta e resta, di qui si cambia -->
+        <!-- chi scende: di qui si torna alle quattro avventure, senza perdere niente di questa -->
         <button class="sot-chi" data-azione="eroe" @click="$emit('eroe')">
           <span class="sot-ritratto" :style="ritratto ? ritratto.gabbia : null">
             <i v-if="ritratto" :style="ritratto.pezzo"></i>
