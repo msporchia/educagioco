@@ -10,7 +10,7 @@ import { TAPPE_DEL_GIOCO } from './portata-giochi.js'
 import { giocoDaOffrire, arcoDelGioco } from './portata.js'
 import { SAPERI, sapereDi } from './saperi.js'
 import { PARTENZE, eccezioniPerEta } from './partenze.js'
-import { FASCE_ETA, doveCadeCon } from '../quiz/nucleo/catalogo.js'
+import { FASCE_ETA, doveCadeCon, gruppoDi } from '../quiz/nucleo/catalogo.js'
 import { finestraDi, anniDelLivello } from '../quiz/nucleo/classi.js'
 import { PASSO } from '../quiz/nucleo/modulo.js'
 import { contoDi, consiglioDa } from '../quiz/consiglio.js'
@@ -188,12 +188,7 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false,
   })
   const gruppo = chiave => (gruppi.find(([k]) => k === chiave) || [, []])[1]
 
-  // ogni blocco raccoglie i gruppi (unità sola con «dà per scontato»): vedi quadro.md; il gruppo è il più specifico
-  const quanteHa = {}
-  for (const c of classi) for (const k of (c.sa || [])) quanteHa[k] = (quanteHa[k] || 0) + 1
-  const gruppoDi = sa => (sa || []).slice()
-    .sort((x, y) => (quanteHa[x] || 0) - (quanteHa[y] || 0))[0] || null
-
+  // ogni blocco raccoglie i gruppi (unità sola con «dà per scontato»): vedi quadro.md
   const perSapere = (righe, scegli = gruppoDi) => {
     const dentro = new Map()
     for (const r of righe) {

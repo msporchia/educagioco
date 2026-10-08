@@ -45,6 +45,9 @@ export function doveCadeCon (eta) {
           : livello > qui + SEGNO_SOPRA ? 'toste' : 'medie'
 }
 
+// il gruppo è il primo dei `sa`, non un conto: vedi docs/genitori/quadro.md («Il gruppo di una domanda»)
+export const gruppoDi = sa => (sa || [])[0] || null
+
 // una riga per (grado, tipologia); i moduli senza tipi hanno una riga per grado, col nome della scaletta
 export function classiDelModulo(modulo) {
   const fuori = []

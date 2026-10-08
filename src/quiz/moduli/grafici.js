@@ -320,7 +320,7 @@ const TIPI = [
     livello: { 4: 56, 5: 63 }, gradi: { 4: 0.4, 5: 0.13 } },
   { chiave: 'dati:moda', nome: 'La moda: quello che compare più volte', sa: 'dati',
     livello: 75, gradi: { 5: 0.3 } },
-  { chiave: 'dati:media', nome: 'La media', sa: ['dati', 'divisioni'],
+  { chiave: 'dati:media', nome: 'La media', sa: ['divisioni', 'dati'],
     livello: 81, gradi: { 5: 0.35 } },
 ]
 

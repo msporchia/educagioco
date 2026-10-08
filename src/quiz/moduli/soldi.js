@@ -679,7 +679,7 @@ const TIPI = [
   { chiave: 'sol:unitario', nome: 'Quanto costa una sola cosa', sa: ['denaro', 'divisioni'], gradi: { 7: 1 } },
   { chiave: 'sol:tanti', nome: 'Quanto costano tante cose', sa: ['denaro', 'divisioni'], gradi: { 8: 1 } },
   { chiave: 'sol:conviene', nome: 'Cosa conviene comprare', sa: ['denaro', 'divisioni'], gradi: { 9: 1 } },
-  { chiave: 'sol:conviene-grammi', nome: 'Cosa conviene, coi grammi', sa: ['denaro', 'divisioni', 'conversioni'], gradi: { 10: 1 } },
+  { chiave: 'sol:conviene-grammi', nome: 'Cosa conviene, coi grammi', sa: ['conversioni', 'denaro', 'divisioni'], gradi: { 10: 1 } },
   { chiave: 'sol:offerta', nome: 'Quale offerta conviene', sa: ['denaro', 'divisioni'], gradi: { 11: 1 } },
 ]
 

@@ -46,10 +46,14 @@ cinquantasette domande in venti pezzi: tutte insieme sarebbero un muro.
   Provato un blocco «dà per scontato che sappia» fatto di gruppi accanto a
   blocchi fatti di classi: due unità per la stessa roba, e nessuna diceva
   l'altra.
-- **Il gruppo di una domanda è il più specifico che dichiara** (la stessa
-  regola di `src/quiz/catalogo.js`): una conversione di pesi sta sotto
-  «Metri, litri e chili», non sotto «Le conversioni». Il grande ha in mente
-  quasi sempre il più stretto.
+- **Il gruppo di una domanda è il primo dei suoi `sa`** (`gruppoDi` in
+  `src/quiz/nucleo/catalogo.js`, lo stesso per il quadro e per «Come va»),
+  e chi scrive la tipologia mette primo il più stretto: una conversione di
+  pesi sta sotto «Le conversioni», la frazione di un numero sotto «Le
+  divisioni». Il grande ha in mente quasi sempre il più stretto.
+  Provato a sceglierlo contando (il pezzo citato da meno domande): non
+  regge, perché una domanda nuova in un altro modulo spostava righe che
+  non c'entravano, e un pareggio lo decideva l'ordine di dichiarazione.
 
 ## Il ▶ non pesca mai fuori
 
