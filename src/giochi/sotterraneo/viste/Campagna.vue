@@ -20,8 +20,9 @@ const props = defineProps({
   azioneMissione: { type: Function, default: null },  // (id, 'prendi' | 'consegna') → l'esito, da Gioco.vue
   segui: { type: String, default: null },    // la missione che le freccine seguono, scelta nel diario (avventura.segui)
   roba: { type: Object, default: null },     // quello che ci si porta dietro, già contato (schedaConLaRoba): { vita, att, dif, gemme, mano, mancina, corpo, tratti… }
+  annuncio: { type: Object, default: null }, // la zona potenziata che il minatore racconta (motore/zone.js): { chiave, nome, livello, detto, sentita }
 })
-const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe', 'terra', 'bottega', 'segui', 'pagina-eroe'])
+const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe', 'terra', 'bottega', 'segui', 'pagina-eroe', 'sentito'])
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 
 // l'armatura non si vede sul ritratto (come in discesa): sta accanto ai numeri, con la sua figura
@@ -70,6 +71,7 @@ function comincia() {
     <Terra ref="terraEl" :tappe="tappe" :abisso="abisso" :eroe="eroe" :terra="terra" :roba="roba"
            :missioni="missioni" :azione-missione="azioneMissione" :segui="segui"
            :giaScesa="ripresa ? ripresa.tappa : null" :portale="portale"
+           :annuncio="annuncio" @sentito="$emit('sentito')"
            @scendi="tocca" @terra="v => $emit('terra', v)" @bottega="(k, s) => $emit('bottega', k, s)"
            @riprendi="$emit('riprendi')">
       <template #sopra>

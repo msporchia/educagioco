@@ -126,6 +126,16 @@
   animation: sot-segno-posto 1.6s ease-in-out infinite;
 }
 @keyframes sot-segno-posto { 50% { transform: scale(1.25) } }
+/* il colore del pallino: quanto è forte la discesa per l'eroe, anche nel fumetto (docs/sotterraneo/zone.md) */
+.sot-pallino-grigio { --pallino: #a29dab }
+.sot-pallino-verde { --pallino: #62d26a }
+.sot-pallino-arancio { --pallino: #ff9f2e }
+.sot-pallino-rosso { --pallino: #e8433a }
+.sot-segno-posto[data-colore] { background: var(--pallino) }
+.sot-fum-livello { padding: 0 6px; border-radius: 8px; background: var(--pallino); font-weight: 700 }
+/* la guardia davanti a una discesa rossa: ferma, all'angolo dell'ingresso come il divieto */
+.sot-guardia-posto { position: absolute; transform: translate(-50%, -100%); pointer-events: none; line-height: 0 }
+.sot-guardia-posto > svg { display: block; filter: drop-shadow(0 2px 0 #0007) }
 
 .sot-fumetto {
   position: absolute; z-index: 3; box-sizing: border-box; padding: 11px 13px 12px; border-radius: 14px;

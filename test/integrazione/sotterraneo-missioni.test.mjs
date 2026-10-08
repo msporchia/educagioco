@@ -25,6 +25,9 @@ import { PERSONAGGI, MINATORE } from '../../src/giochi/sotterraneo/dati/terra-ma
 import { missioneDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
+// al livello atteso della torre: due gradini sotto la guardia non fa scendere (docs/sotterraneo/zone.md)
+const crescita = { esp: sogliaDi(3) }
 
 const DISCESA = CAMPAGNA.findIndex(t => t.chiave === 'torre')
 const roba = robaAttesa('cavaliere', DISCESA, { gemme: 5 })
@@ -39,7 +42,7 @@ await semina(page, {
   campagne: { sotterraneo: { tappa: DISCESA, libera: false, stelle: { 0: 3, 1: 3 },
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: DISCESA, libera: false, stelle: { 0: 3, 1: 3 },
       // la collana è consegnata, Rosicchione battuto e da riportare, la Dama Grigia mai presa
-      missioni: { collana: 'consegnata', rosicchione: 'fatta' }, roba,
+      missioni: { collana: 'consegnata', rosicchione: 'fatta' }, roba, crescita,
       terra: { nebbia: 'f'.repeat(768), dove: ragazza.accanto, parlato: true } } } } },
   },
 })
@@ -192,7 +195,9 @@ await toccaIl('[data-dialogo] [data-scelta="consegna"]')
 await attendi(page, 700)
 const a = await avventura()
 uguale('consegnata', a.missioni?.rosicchione, 'consegnata')
-controlla('il gioiello va addosso o in tasca', a.roba?.dito === 'amuleto-azzurro' || (a.roba?.zaino || []).includes('amuleto-azzurro'), JSON.stringify(a.roba))
+// a tono col livello dell'eroe (amuleto-azzurro@3): si guarda la base
+const base = k => (k || '').split('@')[0]
+controlla('il gioiello va addosso o in tasca', base(a.roba?.dito) === 'amuleto-azzurro' || (a.roba?.zaino || []).map(base).includes('amuleto-azzurro'), JSON.stringify(a.roba))
 uguale('le gemme non cambiano (il premio è il gioiello)', a.roba?.gemme, gemmePrima)
 uguale('le monete: il regalo, le domande in più', (await leggiProfilo(page)).coins, monete + ROSICCHIONE.premio.monete)
 for (let n = 0; n < 6 && !(await page.locator('[data-riga][data-premio]').count()); n++) {

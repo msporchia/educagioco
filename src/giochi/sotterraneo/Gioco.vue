@@ -18,8 +18,7 @@ import VeloPausa from '../VeloPausa.vue'
 import { domandaPerGioco } from '../../quiz/scelta.js'
 import Domanda from '../../quiz/Domanda.vue'
 
-import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO,
-         tappaDi } from './dati/campagna.js'
+import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './dati/campagna.js'
 import { COSE, SEGNI } from './dati/cose.js'
 import { MOSTRI } from './dati/mostri.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
@@ -28,7 +27,9 @@ import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo } from './motore/corredo.js'
-import { rileggiCrescita, puntiDaDare, dai as daiPunto } from './motore/crescita.js'
+import { rileggiCrescita, puntiDaDare, dai as daiPunto, livelloDella } from './motore/crescita.js'
+import { zonaDi } from './dati/zone.js'
+import { svegliaDi, potenzaDi, livelloDellaZona, coloreDi, vintaLaZona, annuncioDi, zoneDi } from './motore/zone.js'
 import { pescaLeggendario } from './motore/bottino.js'
 import { quotaDi } from './dati/livelli.js'
 import { LEGGENDARI } from './dati/pezzi.js'
@@ -239,7 +240,7 @@ function salgoDalPortale() {
 // della pausa e riparte al tocco (docs/core/ripresa.md), quando non c'è stato un tocco su «torno giù» a chiederlo
 function riprendiDiscesa({ ferma = false } = {}) {
   const dato = qui.value.sosta
-  const t = dato ? tappaDi(dato.tappa) : null
+  const t = dato ? zonaDi(dato.tappa, dato.potenza) : null
   const c = t ? leggi(dato, t, roba.value, presePer(missioni.value, t.chiave || ''), crescita.value) : null
   if (!c) { scorda(); return }
   togli()   // il telefono posato sulla mappa lascia acceso il freno, o si ritroverebbe dietro un velo non chiesto
@@ -266,18 +267,37 @@ function riprendiSeUscito() {
 }
 
 /* ═══════════ la mappa delle tappe ═══════════ */
-// quelle dell'avventura aperta: un eroe nuovo comincia dalla scalinata (l'età apre lo stesso quelle già passate)
+// quelle dell'avventura aperta: un eroe nuovo comincia dalla scalinata (l'età apre lo stesso quelle già passate).
+// Finita la storia una discesa può essere una zona potenziata (motore/zone.js, docs/sotterraneo/zone.md): ha il suo
+// nome e i suoi piani, e `livello` e `colore` dicono il pallino per l'eroe di adesso; `sveglia` è quella annunciata
+const livelloOra = computed(() => livelloDella(crescita.value))
+const sveglia = computed(() => svegliaDi(qui.value, livelloOra.value))
 const tappe = computed(() => {
   const a = qui.value
-  return CAMPAGNA.map((t, i) => ({
-    ...t, indice: i,
-    aperta: aperta(CHIAVE, i, a.tappa),
-    adesso: adesso(CHIAVE, i, a.tappa),
-    stelle: a.stelle[i] || 0,
-    perEta: chiusaPerEta(CHIAVE, i),
-    fatta: i < a.tappa,
-  }))
+  return CAMPAGNA.map((t, i) => {
+    const potenza = potenzaDi(a, i, livelloOra.value)
+    const livello = livelloDellaZona(a, i, livelloOra.value)
+    return {
+      ...zonaDi(i, potenza), indice: i,
+      aperta: aperta(CHIAVE, i, a.tappa),
+      adesso: adesso(CHIAVE, i, a.tappa),
+      stelle: a.stelle[i] || 0,
+      perEta: chiusaPerEta(CHIAVE, i),
+      fatta: i < a.tappa,
+      livello, colore: coloreDi(livello, livelloOra.value),
+      sveglia: !!sveglia.value && sveglia.value.indice === i,
+    }
+  })
 })
+// quello che racconta il minatore della zona sveglia; sentito, il segno sopra la sua testa si spegne
+const annuncio = computed(() => (sveglia.value
+  ? { chiave: sveglia.value.chiave, nome: sveglia.value.nome, livello: sveglia.value.livello,
+      detto: annuncioDi(sveglia.value), sentita: sveglia.value.sentita }
+  : null))
+function annuncioSentito() {
+  if (!sveglia.value || sveglia.value.sentita) return
+  nellAvventura({ zone: { ...zoneDi(qui.value), sentita: true } }, { subito: true })
+}
 
 // la carta di chi scende, sulla mappa: vita, braccio e difesa con quello che ha addosso, e le gemme da spendere
 const robaSopra = computed(() => schedaConLaRoba(eroeQui(), roba.value, crescita.value))
@@ -357,8 +377,9 @@ function vendiSopra(i) {
 // la terra di sopra si ricorda per avventura: la nebbia, dove si era, se il minatore ha già parlato
 const ricordaTerra = v => nellAvventura({ terra: v })
 
-const titolo = computed(() =>
-  corsa.value ? tappaDi(tappaIdx.value).nome : 'Il sotterraneo')
+// il nome della discesa (una zona potenziata ha il suo, docs/sotterraneo/zone.md)
+const nomeGiu = dallaCorsa(c => c.tappa.nome, '')
+const titolo = computed(() => nomeGiu.value || 'Il sotterraneo')
 
 // si apre su `libera` dell'avventura; il record sta nell'avventura (sopravvive alla sosta buttata) e non in
 // `stelle`, che con una chiave per piano finirebbe in ogni persist() per sempre
@@ -382,6 +403,7 @@ const eroe = dallaCorsa(c => {
     att: c.att, dif: c.dif, gemme: c.gemme,
     piano: c.piano + 1, piani: c.senzaFondo ? null : c.quantiPiani,   // null nell'abisso: "piano 3 di ∞" non è un conto
     posto: c.posto,                   // nell'abisso: dove si è arrivati
+    livelloPosto: c.tappa.potenza ? c.livelloQui : null,   // in una zona potenziata: il livello dei mostri (docs/sotterraneo/zone.md)
     chiave: c.chiaveDelPiano,
     // niente quando non se ne ha nessuna; `quota` (0..1) sta qui e non nella vista, che riceve solo il numero
     torcia: c.torciaAccesa
@@ -673,14 +695,19 @@ function leggendarioDaProva(c) {
 }
 
 function avvia(i) {
+  // una discesa rossa non si scende: la guardia sta davanti all'ingresso (viste/Terra.vue, docs/sotterraneo/zone.md)
+  const z = tappe.value[i]
+  if (z && z.colore === 'rosso') return
   togli()          // vedi `riprendiDiscesa`: si scende, non si scende in pausa
   scorda()
   tappaIdx.value = i
   fine.value = null
   domanda.value = null
   chiudiLaBarra()
-  corsa.value = new Corsa(tappaDi(i), { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value,
-                                        crescita: crescita.value, missioni: presePer(missioni.value, tappaDi(i).chiave) })
+  // la zona com'è adesso: potenziata (al livello dell'eroe, se è quella sveglia) o della storia
+  const t = i === INDICE_ABISSO ? L_ABISSO : zonaDi(i, potenzaDi(qui.value, i, livelloOra.value))
+  corsa.value = new Corsa(t, { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value,
+                               crescita: crescita.value, missioni: presePer(missioni.value, t.chiave) })
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
   pianoDaProva(corsa.value)
@@ -973,7 +1000,12 @@ function chiudi({ senzaCartello = false } = {}) {
   // prima l'avanzamento, poi i contatori: i traguardi in segna() devono vedere la tappa già segnata come fatta.
   // Due conti: quello dell'avventura, e fuori il massimo fra le avventure (completa tiene il più alto), che è
   // quello che leggono medaglie, esperienza e home: un altro eroe che rifà la scalinata non lo ridà
-  if (e.vinta) {
+  // Una zona potenziata vinta non tocca la storia (le stelle sono delle discese di allora): se era quella sveglia, se ne
+  // sveglia un'altra (motore/zone.js)
+  if (e.vinta && c.tappa.potenza) {
+    const z = vintaLaZona(qui.value, c.tappa.chiave, c.tappa.potenza)
+    if (z) nellAvventura({ zone: z }, { subito: true })
+  } else if (e.vinta) {
     ritocca(CHIAVE, c => vintaNellAvventura(c, eroeQui(), tappaIdx.value, QUANTE_TAPPE, stelle))
     completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle })
   }
@@ -988,7 +1020,7 @@ function chiudi({ senzaCartello = false } = {}) {
   if (e.vinta) { if (e.svenimenti === 0) segna('sotInteri'); suono.livello() } else if (!senzaCartello) suono.fine()
   if (senzaCartello) return allaMappa()
 
-  fine.value = { vinta: e.vinta, titolo: tappaDi(tappaIdx.value).nome, stelle, fatti: e,
+  fine.value = { vinta: e.vinta, titolo: c.tappa.nome, stelle, fatti: e,
                  monete: borsellino.dato, notaMonete: borsellino.nota(),
                  abisso: nellAbisso.value, record: e.fondo > eraIlFondo }
 }
@@ -1169,6 +1201,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->
         <Campagna ref="campagnaEl" :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
+                  :annuncio="annuncio" @sentito="annuncioSentito"
                   :missioni="missioni" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
                   @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda" @pagina-eroe="apriPaginaEroe"
                   @eroe="scegliEroe = true" @bottega="apriBottega" />
@@ -1214,8 +1247,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
             <i></i>
           </div>
 
-          <p class="sot-piede" :data-posto="eroe.posto || ''">
-            <template v-if="eroe.posto">{{ eroe.posto }} · </template>piano {{ eroe.piano }}<template v-if="eroe.piani"> di {{ eroe.piani }}</template> ·
+          <p class="sot-piede" :data-posto="eroe.posto || ''" :data-livello-posto="eroe.livelloPosto">
+            <template v-if="eroe.posto">{{ eroe.posto }} · </template><template v-if="eroe.livelloPosto">livello {{ eroe.livelloPosto }} · </template>piano {{ eroe.piano }}<template v-if="eroe.piani"> di {{ eroe.piani }}</template> ·
             <span v-if="eroe.chiave" class="em">🗝️ la scala è aperta</span>
             <span v-else>la chiave ce l'ha qualcuno, qua sotto</span>
           </p>

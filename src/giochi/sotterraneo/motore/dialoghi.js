@@ -2,8 +2,9 @@
 // si parla, a pagine, e quali domande gli si possono fare alla fine. Le pagine dipendono da dove si è nella storia
 // (le discese finite) e dalle sue missioni. Gira in Node; lo mostra viste/Dialogo.vue, lo usa viste/Terra.vue.
 // Una pagina è { testo, dato?, missione?, fase?, manca? }: `dato` dice ai test (e allo stile) che riga è.
-// `ctx` è { stati, tappe, abisso, eroe, roba }: lo stato delle missioni, le tappe dell'avventura, se l'abisso è aperto,
-// chi scende e la sua roba contata (schedaConLaRoba), per la frase di chi è sotto il livello.
+// `ctx` è { stati, tappe, abisso, eroe, roba, annuncio }: lo stato delle missioni, le tappe dell'avventura, se l'abisso è
+// aperto, chi scende e la sua roba contata (schedaConLaRoba), per la frase di chi è sotto il livello; e, finita la
+// storia, la zona che si è svegliata (motore/zone.js, docs/sotterraneo/zone.md).
 import { DIALOGHI, ARRIVEDERCI, DOVE_VADO, perOra } from '../dati/dialoghi.js'
 import { missioneDi, premioDetto } from '../dati/missioni.js'
 import { cosaDice, chiTiCerca, titoloDi, inFrase } from './missioni.js'
@@ -35,7 +36,12 @@ export function inPagine(testo, max = 120) {
 export function strada(ctx) {
   const t = (ctx.tappe || []).find(x => x.adesso)
   const pagine = []
-  if (t) {
+  const z = ctx.annuncio && (ctx.tappe || []).find(x => x.chiave === ctx.annuncio.chiave)
+  if (z) {
+    // finita la storia il minatore racconta la zona che si è svegliata, e dove sta
+    for (const testo of inPagine(ctx.annuncio.detto)) pagine.push({ testo, dato: 'annuncio' })
+    pagine.push({ testo: `${z.nome}: ${LUOGHI[POSTO_DI[z.chiave]]}.`, dato: 'detto' })
+  } else if (t) {
     pagine.push({ testo: `${t.nome}: ${LUOGHI[POSTO_DI[t.chiave]]}.`, dato: 'detto' })
     const s = !t.fatta && ctx.roba && ctx.eroe ? dettoDelLivello(ctx.eroe, ctx.roba, t, t.indice) : null
     if (s) pagine.push({ testo: s.detto, dato: 'sotto-livello', manca: s.manca })
@@ -50,7 +56,7 @@ export function strada(ctx) {
 
 // il mostro grosso che aspetta in fondo alla prossima discesa: chi gioca sa chi incontrerà prima di scendere
 function laggiuDalMinatore(ctx) {
-  const t = (ctx.tappe || []).find(x => x.adesso)
+  const t = (ctx.tappe || []).find(x => (ctx.annuncio ? x.chiave === ctx.annuncio.chiave : x.adesso))
   const g = t ? GROSSI[GROSSO_DELLA_DISCESA[t.chiave]] : null
   if (g) return [`In fondo, ${t.dove}, aspetta ${g.nome}.`, g.dice, 'Ha lui la chiave dell\'ultima scala: se cade, la discesa è tua.']
   if (ctx.abisso) return ['Il pozzo vecchio non ha fondo. Ogni cinque piani qualcuno di grosso fa la guardia.',

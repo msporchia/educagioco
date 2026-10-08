@@ -17,8 +17,9 @@ import { POSTO_DI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, PASSO_TE
 import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice } from '../motore/terra.js'
 import { figura, haFigura } from './figura.js'
 import { dettoDelLivello } from '../motore/storia.js'
+import { DETTI_DEL_COLORE, C_E_UNA_NOTIZIA } from '../dati/zone.js'
 import { MINATORE, ARMAIOLO, ERBORISTA, RIGATTIERE, DIVIETO, RAGAZZA, MUGNAIO, EREMITA, GUARDIA, PESCATORE,
-         BOSCAIOLO } from './pixel.js'
+         BOSCAIOLO, SENTINELLA } from './pixel.js'
 import Pixel from './Pixel.vue'
 import Armato from './Armato.vue'
 import Portale from './Portale.vue'
@@ -36,8 +37,10 @@ const props = defineProps({
   missioni: { type: Object, default: () => ({}) },   // { [id]: 'presa' | 'fatta' | 'consegnata' } (motore/missioni.js)
   azioneMissione: { type: Function, default: null },  // (id, 'prendi' | 'consegna') → l'esito
   segui: { type: String, default: null },     // la missione che la freccia azzurra segue, se scelta nel diario
+  // la zona potenziata che il minatore racconta (motore/zone.js): { chiave, nome, livello, detto, sentita }
+  annuncio: { type: Object, default: null },
 })
-const emit = defineEmits(['scendi', 'terra', 'bottega', 'riprendi'])
+const emit = defineEmits(['scendi', 'terra', 'bottega', 'riprendi', 'sentito'])
 
 const SCARTO_DITO = 16   // sotto, il dito è fermo (docs/core/il-dito.md)
 const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
@@ -527,12 +530,14 @@ function scendi(p) {
 const dialogo = ref(null)           // { chi, nome, pagine, giro, chieste }
 let giri = 0
 const ctx = () => ({ stati: props.missioni, tappe: props.tappe, abisso: !!props.abisso, eroe: props.eroe.chiave,
-                     roba: props.roba })
+                     roba: props.roba, annuncio: props.annuncio })
 const chiParla = chi => (personaDi(chi) || mercanteDi(chi) || { nome: '' }).nome
 function parla(chi) {
   chiudi()
   const primaVolta = chi === 'minatore' && !parlato.value
   if (primaVolta) { parlato.value = true; salva() }
+  // la zona sveglia la racconta lui (docs/sotterraneo/zone.md): sentita, il «!» si spegne
+  if (chi === 'minatore' && props.annuncio && !props.annuncio.sentita) emit('sentito')
   // il minatore apre dicendo la strada: «dove vado adesso?» torna dopo un'altra domanda
   dialogo.value = { chi, nome: chiParla(chi), pagine: apertura(chi, ctx(), { primaVolta }), giro: ++giri,
                     chieste: new Set(chi === 'minatore' ? ['strada'] : []) }
@@ -593,6 +598,7 @@ function salva() {
 
 let osserva = null
 onMounted(() => {
+  if (props.annuncio && !props.annuncio.sentita) dillo(C_E_UNA_NOTIZIA)
   misura()
   seguiEroe(true)
   preparaNebbia()
@@ -618,6 +624,14 @@ const quadro = r => ({ left: r[0] * S + 'px', top: r[1] * S + 'px', width: r[2] 
 const pallino = p => {
   const [x, y, w, h] = p.ingresso, r = p.riquadro
   return { left: (x + w / 2) * S + 'px', top: Math.min(y + h, r[1] + r[3]) * S - 14 + 'px' }
+}
+// il colore del pallino dice quanto è forte la discesa per l'eroe (motore/zone.js): l'abisso non ne ha, è la sfida del
+// primato; chi lo dice sta nel fumetto (DETTI_DEL_COLORE), e davanti a una rossa c'è la guardia
+const coloreDi = p => (p.tappa && p.tappa.colore) || null
+const dettoDelColore = p => {
+  const c = coloreDi(p)
+  if (c === 'arancio' && livelloDi(p.tappa)) return null   // il minatore l'ha già detto, con la roba in mano
+  return DETTI_DEL_COLORE[c] || null
 }
 // il divieto sta ai piedi dell'ingresso, spostato verso l'angolo sinistro: l'eroe aspetta al centro e non lo copre
 const divieto = p => {
@@ -656,6 +670,8 @@ const chiusaPerche = p => {
           <i :style="ritrattoMinatore.pezzo"></i></span>
         <Pixel v-else :figura="MINATORE" :scala="SCALA_EROE" />
         <b v-if="!parlato" class="sot-tre-punti">…</b>
+        <b v-else-if="annuncio && !annuncio.sentita" class="sot-tre-punti sot-segno-missione sot-segno-nuova"
+           data-segno data-segno-di="annuncio">!</b>
         <b v-else-if="segnoSopra('minatore')" class="sot-tre-punti sot-segno-missione" :class="'sot-segno-' + segnoSopra('minatore')"
            data-segno :data-segno-di="segnoSopra('minatore')">{{ glifoSopra('minatore') }}</b>
       </button>
@@ -689,8 +705,14 @@ const chiusaPerche = p => {
       </button>
 
       <template v-for="p in posti" :key="'pallino-' + p.nome">
-        <span v-if="p.aperto && trovati.has(p.nome)" class="sot-segno-posto" :class="{ 'sot-adesso': p.adesso }"
-              :data-pallino="p.nome" :style="pallino(p)"></span>
+        <span v-if="p.aperto && trovati.has(p.nome)" class="sot-segno-posto"
+              :class="[{ 'sot-adesso': p.adesso || (p.tappa && p.tappa.sveglia) }, coloreDi(p) && 'sot-pallino-' + coloreDi(p)]"
+              :data-pallino="p.nome" :data-colore="coloreDi(p)" :style="pallino(p)"></span>
+        <!-- davanti a una discesa rossa la guardia: non fa scendere (docs/sotterraneo/zone.md) -->
+        <span v-if="p.aperto && trovati.has(p.nome) && coloreDi(p) === 'rosso'" class="sot-guardia-posto"
+              :data-guardia="p.nome" :style="divieto(p)">
+          <Pixel :figura="SENTINELLA" :scala="SCALA_EROE" />
+        </span>
       </template>
 
       <div ref="eroeEl" class="sot-io-sopra" :class="{ 'sot-specchio': specchio }" data-eroe-terra
@@ -731,7 +753,9 @@ const chiusaPerche = p => {
           <i class="sot-fum-dritta">{{ aperto.p.cosa.dritta }}</i>
           <template v-if="aperto.p.aperto">
             <p v-if="aperto.p.tappa" class="sot-fum-conto em">
-              🪜 {{ aperto.p.tappa.piani }} piani<template v-if="aperto.p.tappa.stelle"> · {{ '⭐'.repeat(aperto.p.tappa.stelle) }}</template>
+              🪜 {{ aperto.p.tappa.piani }} piani<template v-if="aperto.p.tappa.stelle && !aperto.p.tappa.potenza"> · {{ '⭐'.repeat(aperto.p.tappa.stelle) }}</template>
+              · <span class="sot-fum-livello" :class="'sot-pallino-' + aperto.p.tappa.colore" data-livello-zona
+                      :data-livello="aperto.p.tappa.livello" :data-colore="aperto.p.tappa.colore">livello {{ aperto.p.tappa.livello }}</span>
             </p>
             <p v-else class="sot-fum-conto em" data-fondo>
               {{ aperto.p.cosa.fondo ? `il più giù: piano ${aperto.p.cosa.fondo}` : 'mai sceso' }}
@@ -741,12 +765,16 @@ const chiusaPerche = p => {
                 <span class="em">{{ m.tipo === 'trova' ? m.cosa.em : '👑' }}</span> {{ inFrase(m.tipo === 'trova' ? m.cosa.nome : m.mostro.nome) }}, piano {{ m.piano + 1 }}
               </span>
             </p>
-            <p v-if="livelloDi(aperto.p.tappa)" class="sot-fum-avviso" data-sotto-livello
+            <p v-if="livelloDi(aperto.p.tappa) && coloreDi(aperto.p) !== 'rosso'" class="sot-fum-avviso" data-sotto-livello
                :data-manca="livelloDi(aperto.p.tappa).manca">
               <b>Il minatore ti ha visto passare:</b> «{{ livelloDi(aperto.p.tappa).detto }}»
             </p>
-            <button class="sot-grosso" data-azione="scendi" @click="scendi(aperto.p)">
-              <span class="em">🪜</span> {{ aperto.p.tappa && aperto.p.tappa.stelle ? 'ci torno giù' : 'scendo' }}
+            <p v-if="dettoDelColore(aperto.p)" class="sot-fum-avviso" :data-detto-colore="coloreDi(aperto.p)"
+               :data-ferma="coloreDi(aperto.p) === 'rosso' ? 1 : null">
+              <b>{{ dettoDelColore(aperto.p).chi }}:</b> «{{ dettoDelColore(aperto.p).detto }}»
+            </p>
+            <button v-if="coloreDi(aperto.p) !== 'rosso'" class="sot-grosso" data-azione="scendi" @click="scendi(aperto.p)">
+              <span class="em">🪜</span> {{ aperto.p.tappa && aperto.p.tappa.stelle && !aperto.p.tappa.potenza ? 'ci torno giù' : 'scendo' }}
             </button>
           </template>
           <p v-else class="sot-fum-chiusa" data-chiusa-perche>{{ chiusaPerche(aperto.p) }}</p>

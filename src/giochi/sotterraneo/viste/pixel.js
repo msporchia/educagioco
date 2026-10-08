@@ -231,7 +231,7 @@ export const EREMITA = pixel([
 ], { k: '#22201f', G: '#8b8680', g: '#6a6560', s: '#d9a27e', e: '#22201f', w: '#eeeae2', o: '#3a2f27' })
 
 // la guardia della torre: elmo col pennacchio, la cotta di maglia, la lancia
-export const GUARDIA = pixel([
+const RIGHE_DELLA_GUARDIA = [
   '.....RR.......M.',
   '......R......MmM',
   '.....kkkk.....g.',
@@ -254,8 +254,13 @@ export const GUARDIA = pixel([
   '.....kpk.kpk..g.',
   '....kook.kook.g.',
   '....kkkk.kkkk...',
-], { k: '#1f1d22', R: '#a82a2a', M: '#b9c0c6', m: '#7f878e', s: '#dca47c', S: '#ba8460', e: '#1f1d22',
-     C: '#8d9399', b: '#6b4a2a', p: '#4b4038', o: '#2a221c', g: '#8a5a32' })
+]
+export const GUARDIA = pixel(RIGHE_DELLA_GUARDIA, { k: '#1f1d22', R: '#a82a2a', M: '#b9c0c6', m: '#7f878e', s: '#dca47c',
+  S: '#ba8460', e: '#1f1d22', C: '#8d9399', b: '#6b4a2a', p: '#4b4038', o: '#2a221c', g: '#8a5a32' })
+// la sentinella davanti a una discesa troppo forte (docs/sotterraneo/zone.md): la stessa guardia in ferro scuro e
+// mantello nero, perché non la si scambi con quella della torre che dà le missioni
+export const SENTINELLA = pixel(RIGHE_DELLA_GUARDIA, { k: '#141217', R: '#2b2a33', M: '#6f767d', m: '#4a5056', s: '#dca47c',
+  S: '#ba8460', e: '#141217', C: '#555b61', b: '#3a2a1a', p: '#2a2530', o: '#191418', g: '#5a3a22' })
 
 // il pescatore dello stagno: cappellaccio di paglia, la canna sulla spalla col filo che pende
 export const PESCATORE = pixel([

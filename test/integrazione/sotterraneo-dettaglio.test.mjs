@@ -26,6 +26,9 @@ import { missioneDi, personaDi } from '../../src/giochi/sotterraneo/dati/mission
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { daLui, titoloDi } from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
+// al livello atteso della torre: due gradini sotto la guardia non fa scendere (docs/sotterraneo/zone.md)
+const crescita = { esp: sogliaDi(3) }
 
 const TORRE = CAMPAGNA.findIndex(t => t.chiave === 'torre')
 const DISCESE = TORRE + 1
@@ -40,7 +43,7 @@ const profilo = (missioni, extra = {}, dove = PARTENZA.piede) => ({
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: DISCESE, libera: false, stelle: { 0: 3, 1: 3, 2: 3 },
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: DISCESE, libera: false,
-      stelle: { 0: 3, 1: 3, 2: 3 }, missioni, roba, ...extra,
+      stelle: { 0: 3, 1: 3, 2: 3 }, missioni, roba, crescita, ...extra,
       terra: { nebbia: 'f'.repeat(768), dove, parlato: true } } } } } },
 })
 const cdp = await page.context().newCDPSession(page)
