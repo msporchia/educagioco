@@ -186,6 +186,12 @@
   filter: drop-shadow(0 0 2px #2b2433) drop-shadow(0 0 1px #2b2433);
 }
 @keyframes sot-consegna-bordo { 50% { transform: scale(1.14) } }
+/* quando la cosa entra in vista il bordo cede alla freccina attorno all'eroe (.sot-rotta-terra, la stessa di giù):
+   l'una e l'altra compaiono sfumando */
+.sot-bussola { animation: sot-appare .3s backwards }
+.sot-rotta.sot-rotta-terra i { animation: sot-appare .3s backwards, sot-rotta 1s ease-in-out infinite }
+@keyframes sot-appare { from { opacity: 0 } }
+@media (prefers-reduced-motion: reduce) { .sot-rotta.sot-rotta-terra i, .sot-bussola { animation: none } }
 /* la discesa della missione presa: stessa forma dell'indicatore d'oro, azzurra, col ritaglio al posto del «?» */
 .sot-bussola-meta b {
   padding: 0; overflow: hidden; background: #7fd0ff; border-color: #14304a; animation: none;
