@@ -33,7 +33,7 @@ await azzera(page)
    si trovano camminando, e camminare la mappa lo prova `integrazione/
    sotterraneo-terra`. Nello zaino un'ascia da vendere, un medaglione da
    mettersi giù, e le gemme */
-const roba = { v: 1, gemme: 60, zaino: ['ascia', 'medaglione'], mano: null, mancina: null, corpo: null, dito: null,
+const roba = { v: 1, gemme: 60, zaino: ['ascia', 'medaglione', 'amuleto-rosso'], mano: null, mancina: null, corpo: null, dito: null,
                torcia: 0, torce: 0 }
 await semina(page, {
   coins: 300, settings: { sperimentali: true },
@@ -215,6 +215,24 @@ await toccaIl('[data-casella-pezzo="spada-corta"]')
 await attendi(page, 200)
 uguale('il confronto dice il braccio prima e dopo', (await page.locator('[data-confronto="att"]').innerText()).trim(), '⚔️ 3 → 4')
 uguale('in verde', await page.locator('[data-confronto="att"]').getAttribute('data-verso'), 'su')
+/* e affiancato: a sinistra niente (la mano è vuota), a destra la spada corta, una riga sola in verde */
+controlla('a sinistra «Addosso»: niente', (await page.locator('[data-affianca] [data-colonna="addosso"] [data-niente]').innerText()).includes('niente'))
+uguale('e non ha nessun pezzo', await page.locator('[data-affianca] [data-colonna="addosso"] [data-pezzo]').count(), 0)
+uguale('a destra «Questo»: la spada corta', await page.locator('[data-affianca] [data-colonna="questo"] [data-pezzo]').getAttribute('data-pezzo'), 'spada-corta')
+uguale('una riga sola, il braccio', await page.locator('[data-affianca] [data-abilita]').count(), 1)
+uguale('verde', await page.locator('[data-abilita="att"]').getAttribute('data-verso'), 'su')
+uguale('«—» a sinistra', (await page.locator('[data-valore="att-addosso"]').innerText()).trim(), '—')
+uguale('+1 a destra, con la freccia in su', (await page.locator('[data-valore="att-questo"]').innerText()).replace(/\s+/g, ''), '+1▲')
+uguale('la sintesi', (await page.locator('[data-sintesi]').innerText()).trim(), 'meglio in 1')
+/* sul telefono (390 px) le due colonne stanno dentro il pannello e lo schermo */
+{
+  const pannello = await page.locator('[data-pannello]').boundingBox()
+  const destra = await page.locator('[data-colonna="questo"]').boundingBox()
+  const larghezza = await page.evaluate(() => document.documentElement.clientWidth)
+  controlla('le due colonne stanno nel pannello e nello schermo',
+            destra.x + destra.width <= pannello.x + pannello.width + 1 && pannello.x + pannello.width <= larghezza + 1,
+            JSON.stringify({ pannello, destra, larghezza }))
+}
 uguale('e la casella della mano si accende', await page.locator('[data-casella="mano"].sot-accesa').count(), 1)
 await scatto(page, 'mercanti-banco-armaiolo')
 await toccaIl('[data-azione="compra"]')
@@ -268,6 +286,17 @@ uguale('il tasto dice «Indossa»', (await page.locator('[data-azione="usa"]').i
 await page.locator('[data-azione="usa"]').click()
 await attendi(page, 200)
 uguale('indossato, sta al dito', await page.locator('[data-zaino] [data-casella="dito"][data-cosa="medaglione"]').count(), 1)
+/* l'amuleto rosso contro il medaglione al dito: due abilità in riga, una meglio e una peggio */
+await page.locator('[data-tasca][data-cosa="amuleto-rosso"]').click()
+await attendi(page, 400)
+uguale('a sinistra il medaglione', await page.locator('[data-zaino] [data-colonna="addosso"] [data-pezzo]').getAttribute('data-pezzo'), 'medaglione')
+uguale('a destra l\'amuleto rosso', await page.locator('[data-zaino] [data-colonna="questo"] [data-pezzo]').getAttribute('data-pezzo'), 'amuleto-rosso')
+uguale('la difesa è peggio, in rosso', await page.locator('[data-zaino] [data-abilita="dif"]').getAttribute('data-verso'), 'giu')
+uguale('la vita è meglio, in verde', await page.locator('[data-zaino] [data-abilita="vita"]').getAttribute('data-verso'), 'su')
+uguale('i valori della vita: «—» e +6', `${(await page.locator('[data-valore="vita-addosso"]').innerText()).trim()} ${(await page.locator('[data-valore="vita-questo"]').innerText()).replace(/\s+/g, '')}`, '— +6▲')
+uguale('la sintesi dello zaino', (await page.locator('[data-zaino] [data-sintesi]').innerText()).trim(), 'meglio in 1, peggio in 1')
+uguale('e il totale che cambia sull\'eroe: la vita', await page.locator('[data-zaino] [data-confronto="vita"]').getAttribute('data-verso'), 'su')
+await scatto(page, 'mercanti-zaino-affiancato')
 /* e la pozione si beve */
 await page.locator('[data-tasca][data-cosa="pozione"]').click()
 await attendi(page, 200)

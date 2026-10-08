@@ -15,8 +15,9 @@ import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti, schedaDi }
   from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { MERCANTI as DOVE_MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
-import { Corredo, ROBA_VUOTA, rileggiRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
+import { Corredo, ROBA_VUOTA, rileggiRoba, ABILITA_CONFRONTATE } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { Bottega } from '../../src/giochi/sotterraneo/motore/bottega.js'
+import { ABILITA, affiancatoDi, sintesiDi } from '../../src/giochi/sotterraneo/viste/pezzo.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { gioca, misuraLaStoria } from '../../src/giochi/sotterraneo/motore/banco.js'
@@ -287,6 +288,82 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
     for (const r of new Bottega({ finite: 6, roba: { ...ROBA_VUOTA(), gemme: 99 } }).mercanzia(m.chiave))
       controlla(`${m.chiave}: ${r.chiave} ha la sua linguetta`, !!schedaDi(m, r.chiave))
   uguale('la linguetta «Vendi» è del rigattiere', MERCANTI.filter(m => m.schede.some(s => s.vendi)).map(m => m.chiave).join(), 'rigattiere')
+}
+
+/* ══════════ 7c. il confronto affiancato, riga per riga ══════════
+   «Addosso» a sinistra, «Questo» a destra, una riga per ogni abilità che
+   almeno uno dei due ha (docs/sotterraneo/roba.md, «La bottega e lo zaino»):
+   il motore dà i numeri di ogni lato (seLoMetto().cambio), pezzo.js li mette
+   in riga con il verso e la sintesi. */
+{
+  const riga = (a, campo) => a.righe.find(r => r.campo === campo)
+  const bott = roba => new Bottega({ roba: { ...ROBA_VUOTA(), gemme: 99, ...roba } })
+  const affianca = (b, k) => affiancatoDi(b.seLoMetto(k), { chiave: k, ...COSE[k] })
+
+  controlla('le abilità del motore e quelle in riga nella vista sono le stesse',
+            ABILITA.map(a => a.campo).join() === ABILITA_CONFRONTATE.join(), `${ABILITA.map(a => a.campo)} / ${ABILITA_CONFRONTATE}`)
+  controlla('ogni abilità ha parola, icona e modo di scriversi',
+            ABILITA.every(a => a.nome && a.em && a.scrivi(1)), JSON.stringify(ABILITA.map(a => a.campo)))
+
+  /* un pezzo con più abilità contro uno con altre: il pugnale vampiro (braccio e vita) al posto della spada di ghiaccio (braccio e difesa) */
+  const g = affianca(bott({ mano: 'spada-di-ghiaccio', mancina: 'scudo-legno' }), 'pugnale-vampiro')
+  uguale('a sinistra la spada di ghiaccio', g.toglie.join(), 'spada-di-ghiaccio')
+  stessaLista('tre righe: braccio, difesa, vita', g.righe.map(r => r.campo), ['att', 'dif', 'vita'])
+  uguale('il braccio è lo stesso: neutro', riga(g, 'att').verso, 'pari')
+  uguale('la difesa c\'era e non c\'è più: «—» a destra, in rosso', `${riga(g, 'dif').vecchio} → ${riga(g, 'dif').nuovo} ${riga(g, 'dif').verso}`, '+1 → — giu')
+  uguale('la vita c\'è solo a destra: «—» a sinistra, in verde', `${riga(g, 'vita').vecchio} → ${riga(g, 'vita').nuovo} ${riga(g, 'vita').verso}`, '— → +6 su')
+  uguale('la sintesi conta le righe', g.sintesi, 'meglio in 1, peggio in 1')
+
+  /* la mano debole libera: il pugnale ci va da sé, a sinistra niente, e il braccio vale metà (2 → 1) */
+  const deb = affianca(bott({ mano: 'spada-di-ghiaccio' }), 'pugnale-vampiro')
+  uguale('nella mano libera non toglie niente', deb.toglie.length, 0)
+  uguale('il posto è la mano debole', deb.dove, 'mancina')
+  uguale('il braccio dimezzato', riga(deb, 'att').nuovo, '+1')
+
+  /* il posto vuoto: a sinistra niente, tutto quello che il pezzo ha è meglio */
+  const v = affianca(bott({}), 'spada-corta')
+  uguale('posto vuoto: nessun pezzo a sinistra', v.toglie.length, 0)
+  stessaLista('una riga sola, il braccio', v.righe.map(r => r.campo), ['att'])
+  uguale('«—» contro +1, in verde', `${v.righe[0].vecchio} → ${v.righe[0].nuovo} ${v.righe[0].verso}`, '— → +1 su')
+  uguale('meglio in 1', v.sintesi, 'meglio in 1')
+  uguale('e non è un caso a due mani', v.dueMani, false)
+
+  /* lo spadone contro spada e scudo insieme: la sinistra ne ha due e lo dice */
+  const d = affianca(bott({ mano: 'spada', mancina: 'scudo-borchiato' }), 'spadone')
+  stessaLista('a sinistra arma e scudo', d.toglie, ['spada', 'scudo-borchiato'])
+  uguale('è un caso a due mani', d.dueMani, true)
+  uguale('il braccio: la spada (2) e lo scudo (0) contro i 4 dello spadone', `${riga(d, 'att').vecchio} → ${riga(d, 'att').nuovo}`, '+2 → +4')
+  uguale('la difesa dello scudo si perde', riga(d, 'dif').verso, 'giu')
+  uguale('e anche la sua vita', riga(d, 'vita').verso, 'giu')
+  uguale('meglio in 1, peggio in 2', d.sintesi, 'meglio in 1, peggio in 2')
+  const pd = bott({ mano: 'spada', mancina: 'scudo-borchiato' }).seLoMetto('spadone')
+  uguale('le righe sommano il totale che cambia: il braccio', pd.dopo.att - pd.prima.att, 4 - 2)
+  uguale('la difesa', pd.dopo.dif - pd.prima.dif, -1)
+  uguale('la vita', pd.dopo.vita - pd.prima.vita, -3)
+  uguale('un\'arma a due mani sola in mano non è «arma e scudo»', affianca(bott({ mano: 'spada' }), 'spadone').dueMani, false)
+
+  /* un anello si confronta col gioiello che hai, e le gemme si scrivono come moltiplicatore */
+  const a = affianca(bott({ dito: 'amuleto-rosso' }), 'anello-verde')
+  uguale('a sinistra l\'amuleto rosso', a.toglie.join(), 'amuleto-rosso')
+  uguale('la vita 6 si perde', `${riga(a, 'vita').vecchio} → ${riga(a, 'vita').nuovo} ${riga(a, 'vita').verso}`, '+6 → — giu')
+  uguale('le gemme ×1,5 arrivano', `${riga(a, 'gemme').vecchio} → ${riga(a, 'gemme').nuovo} ${riga(a, 'gemme').verso}`, '— → ×1,5 su')
+  uguale('la mano non c\'entra: niente riga del braccio', riga(a, 'att'), undefined)
+  uguale('uno meglio e uno peggio', a.sintesi, 'meglio in 1, peggio in 1')
+  const luce = affianca(bott({ dito: 'anello-ambra' }), 'anello-ambra')
+  uguale('lo stesso pezzo contro se stesso: tutto neutro', luce.sintesi, 'uguale')
+  controlla('e ha comunque la sua riga', luce.righe.length === 1 && luce.righe[0].verso === 'pari')
+
+  /* la mano debole vale metà: una seconda spada nella mano libera ha il braccio dimezzato */
+  const m = affianca(bott({ mano: 'spada', mancina: 'scudo-legno' }), 'spada')
+  uguale('con la mano debole occupata una spada contro una spada: il posto è la mano, +2 contro +2', m.sintesi, 'uguale')
+  const mancino = affianca(bott({ mano: 'spadone' }), 'scudo-ferro')
+  uguale('con lo spadone in mano lo scudo non c\'è, niente confronto', bott({ mano: 'spadone' }).seLoMetto('scudo-ferro').cambio, undefined)
+  uguale('e la vista non lo affianca', mancino, null)
+
+  /* quello che non si porta o non si indossa non ha confronto */
+  uguale('il mago non porta l\'ascia: niente da affiancare', affiancatoDi(new Bottega({ eroe: 'mago' }).seLoMetto('ascia'), COSE.ascia), null)
+  uguale('una pozione non si confronta', affiancatoDi(bott({}).seLoMetto('pozione'), COSE.pozione), null)
+  uguale('senza righe meglio né peggio la sintesi è «uguale»', sintesiDi(0, 0), 'uguale')
 }
 
 /* ══════════ 8. l'equilibrio, in piccolo ══════════
