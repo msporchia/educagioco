@@ -26,3 +26,5 @@ tmp/
 # il piano del travaso e delle tappe: roba di casa, resta sul disco
 PIANO.md
 __pycache__/
+# fontTools per `npm run emoji`: lo crea lo strumento da solo la prima volta
+.venv-emoji/
