@@ -11,8 +11,13 @@ export const EROE = { vita: 18, att: 3, dif: 1 }
 
 export const TASCHE = 6   // un limite vero: piene, quello per terra resta per terra
 
-// il raggio della torcia in mano; dentro una stanza si accende tutta, perché entrarci vuol dire averla vista
-export const RAGGIO = 3.2, RAGGIO_TORCIA = 6.2
+// quanto si vede attorno all'eroe, in celle: senza torcia due e poco più, anche dentro le stanze; con la torcia sei,
+// e una stanza si accende tutta; all'ultima stanza della torcia il raggio si stringe (docs/sotterraneo/regole.md, «La luce»)
+export const RAGGIO = 2.3, RAGGIO_TORCIA = 6.2, RAGGIO_SGOCCIOLI = 4.2
+// un mostro si sveglia quando ti avvicini a meno di SVEGLIA celle nella sua stanza, con la luce o senza: è quasi la
+// stanza di prima (la sveglia non dipende dalla luce, o la torcia cambierebbe l'equilibrio), ma da sveglio si vede sempre,
+// e al buio il raggio (2,3) è molto meno di sette: lo vedi arrivare, non lo vedi dormire (docs/sotterraneo/regole.md, «La luce»)
+export const SVEGLIA = 7
 
 // il mostro è più lento apposta: scappare deve funzionare sempre, o la stanza è una trappola
 export const PASSO_EROE = 5.4, PASSO_MOSTRO = 3.1, PASSO_RIENTRO = 2.2
@@ -55,6 +60,7 @@ export function guastiDelMondo() {
     g.push('i mostri corrono quanto o più dell\'eroe: scappare non funziona più')
   if (TASCHE < 3) g.push('meno di tre tasche: lo zaino non è una scelta, è un intoppo')
   if (RAGGIO_TORCIA <= RAGGIO) g.push('la torcia non fa vedere più lontano')
+  if (RAGGIO_SGOCCIOLI <= RAGGIO || RAGGIO_SGOCCIOLI >= RAGGIO_TORCIA) g.push('la torcia agli sgoccioli deve stare fra il buio e la torcia piena')
   for (const quali of Object.values(ARREDI))
     for (const k of quali)
       if (!ARREDO_DICE[k]) g.push(`l'arredo "${k}" non dice niente a chi lo tocca`)

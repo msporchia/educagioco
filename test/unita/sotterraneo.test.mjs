@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs'
 import { ref, shallowRef } from 'vue'
 import { CAMPAGNA, QUANTE_TAPPE, durezzaDi, guardianoDi, stelleDella,
          svenimentiDi, guastiDellaCampagna } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { guastiDelMondo, EROE, TASCHE, ARREDO_DICE } from '../../src/giochi/sotterraneo/dati/mondo.js'
+import { guastiDelMondo, EROE, TASCHE, ARREDO_DICE, SVEGLIA } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { guastiDeiMostri, MOSTRI, colpiPer } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { guastiDelleCose, COSE, ARMI_DI, CURE, A_SORTE, NEI_FORZIERI,
          pescaMerce, pescaCosa } from '../../src/giochi/sotterraneo/dati/cose.js'
@@ -781,6 +781,121 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   dentro('un piano della grotta costa una torcia', perPiano, 8, 18)
   nota(`la grotta: ${gallerie} stanze entrate in ${CAMPAGNA[2].piani} piani, ` +
        `${perPiano.toFixed(1)} per piano, e una torcia ne dura ${COSE.torcia.stanze}`)
+}
+
+/* ══════════ 5-quinquies-bis. la torcia conta: la luce ══════════
+   Senza torcia si vede solo attorno all'eroe, anche dentro una stanza (che
+   non si accende tutta); con la torcia la stanza si accende intera e il
+   raggio è lungo; all'ultima stanza della torcia il raggio si stringe. E un
+   mostro non si sveglia da un buio in cui non lo si poteva vedere
+   (docs/sotterraneo/regole.md, «La luce»). */
+{
+  const nuova = () => new Corsa(CAMPAGNA[2], { seme: 5, rnd: seminato(5) })
+  const prova = nuova()
+  const celleDi = m => {
+    const st = prova.livello.stanzaDi(m.x, m.y), v = []
+    for (let x = st.x; x < st.x + st.w; x++) for (let y = st.y; y < st.y + st.h; y++) v.push({ x, y })
+    return v
+  }
+  const dist = (a, m) => Math.hypot(a.x - m.x, a.y - m.y)
+  // il mostro con l'angolo più lontano nella sua stanza: da lì, più di SVEGLIA, dorme
+  const m0 = prova.livello.robe.filter(r => r.che === 'mostro' && !r.grosso)
+    .reduce((a, b) => Math.max(...celleDi(a).map(q => dist(q, a))) >= Math.max(...celleDi(b).map(q => dist(q, b))) ? a : b)
+  const stanza = prova.livello.stanzaDi(m0.x, m0.y)
+  const celle = celleDi(m0)
+  const lontana = celle.reduce((a, b) => dist(a, m0) >= dist(b, m0) ? a : b)
+  // a più del raggio del buio ma meno di SVEGLIA: lo si sveglia senza averlo visto dormire
+  const vicina = celle.find(q => dist(q, m0) > 3 && dist(q, m0) < 4.5)
+  controlla('c\'è una stanza con un mostro, un angolo oltre la sua sveglia e un punto a metà strada',
+            dist(lontana, m0) > SVEGLIA && !!vicina, `${dist(lontana, m0).toFixed(1)}`)
+
+  /* l'eroe in una cella della stanza del mostro; `torcia`: stanze che le restano (0 = al buio) */
+  const eroeA = (torcia, qui = lontana) => {
+    const c = nuova()
+    c.torciaResta = torcia; c.torceInScorta = 0
+    c.eroe = { x: qui.x + 0.5, y: qui.y + 0.5 }
+    c.aggiornaLuce()
+    return c
+  }
+  const accese = c => celle.filter(q => c.luce.has(q.y * c.livello.largo + q.x)).length
+  const buio = eroeA(0), piena = eroeA(8), sgoccioli = eroeA(1)
+  uguale('al buio la stanza non si accende tutta', accese(buio) < celle.length, true)
+  uguale('al buio non c\'è nessuna stanza accesa', buio.stanzaIntera, null)
+  controlla('e si vede poco: il raggio è di due celle e poco più', buio.raggioDellaLuce > 2 && buio.raggioDellaLuce < 3,
+            String(buio.raggioDellaLuce))
+  uguale('il mostro lontano resta al buio', buio.luceDi(m0.x, m0.y), 0)
+  uguale('con la torcia la stanza si accende tutta', accese(piena), celle.length)
+  uguale('e la stanza è quella dell\'eroe', piena.stanzaIntera, stanza.id)
+  uguale('il mostro si vede', piena.luceDi(m0.x, m0.y), 2)
+  controlla('agli sgoccioli il raggio è più corto di quello pieno ma più lungo del buio',
+            sgoccioli.raggioDellaLuce < piena.raggioDellaLuce && sgoccioli.raggioDellaLuce > buio.raggioDellaLuce,
+            `${buio.raggioDellaLuce} < ${sgoccioli.raggioDellaLuce} < ${piena.raggioDellaLuce}`)
+  uguale('e la stanza non si accende più tutta', sgoccioli.stanzaIntera, null)
+  controlla('si vede più di al buio e meno che con la torcia piena',
+            sgoccioli.luce.size > buio.luce.size && sgoccioli.luce.size < piena.luce.size,
+            `${buio.luce.size} < ${sgoccioli.luce.size} < ${piena.luce.size}`)
+  const conScorta = eroeA(1)
+  conScorta.torceInScorta = 1
+  uguale('con una torcia di scorta non si stringe: quella dopo si accende da sé', conScorta.raggioDellaLuce, piena.raggioDellaLuce)
+
+  /* entrare in una stanza si conta lo stesso, accesa o no */
+  uguale('entrare al buio conta come stanza vista', buio.stanzeViste, piena.stanzeViste)
+
+  /* il mostro: si sveglia quando ti avvicini nella sua stanza (SVEGLIA), con la luce o senza, quindi la torcia non
+     cambia l'equilibrio; sveglio si vede sempre. Con la torcia lo si vede dormire da lontano; al buio lo si vede
+     arrivare, non dormire */
+  const giri = (c, secondi) => { for (let i = 0; i < Math.round(secondi * 30); i++) c.muoviMostri(1 / 30) }
+  const posto = prova.livello.robe.indexOf(m0)
+  const mostro = c => c.livello.robe[posto]
+  {
+    const c = eroeA(0)
+    giri(c, 3)
+    uguale('al buio, nella sua stanza ma lontano, il mostro dorme', mostro(c).sveglio, false)
+    uguale('e non si vede', c.luceDi(m0.x, m0.y), 0)
+  }
+  {
+    const c = eroeA(8)
+    giri(c, 3)
+    uguale('con la torcia, lontano, dorme lo stesso', mostro(c).sveglio, false)
+    uguale('ma si vede dormire, e ci si può girare intorno', c.luceDi(m0.x, m0.y), 2)
+  }
+  for (const [torcia, come] of [[0, 'al buio'], [8, 'con la torcia']]) {
+    const c = eroeA(torcia, vicina)
+    giri(c, 1 / 30)
+    uguale(`${come}, avvicinandosi si sveglia`, mostro(c).sveglio, true)
+    uguale(`${come}, appena sveglio si vede`, c.luceDi(mostro(c).x, mostro(c).y), 2)
+    giri(c, 0.3)
+    controlla(`${come}, e ti viene incontro`, mostro(c).fx !== m0.x + 0.5 || mostro(c).fy !== m0.y + 0.5 || !!c.foglio)
+  }
+  {
+    const c = eroeA(0, vicina)
+    giri(c, 0.1)
+    c.eroe = { x: lontana.x + 0.5, y: lontana.y + 0.5 }; c.aggiornaLuce()
+    giri(c, 0.1)
+    uguale('e sveglio si vede anche da lontano al buio: non ti insegue senza farsi vedere', c.luceDi(mostro(c).x, mostro(c).y), 2)
+    controlla('e lo si può toccare', c.toccabile(mostro(c)))
+  }
+  {
+    const c = eroeA(0, vicina)
+    giri(c, 1)
+    const fuori = c.livello.stanze.find(s => s.id !== stanza.id)
+    c.eroe = { x: fuori.cx + 0.5, y: fuori.cy + 0.5 }; c.aggiornaLuce()
+    giri(c, 0.1)
+    uguale('uscendo dalla stanza il mostro si rimette a dormire', mostro(c).sveglio, false)
+  }
+
+  /* camminando, l'ultima stanza della torcia si stringe appena ci si entra, senza un passo di ritardo */
+  {
+    const c = nuova()
+    c.torciaResta = 2; c.torceInScorta = 0
+    const qui = c.livello.stanzaDi(Math.floor(c.eroe.x), Math.floor(c.eroe.y))
+    const altra = c.livello.stanze.find(s => s.id !== qui.id)
+    c.eroe = { x: altra.cx + 0.4, y: altra.cy + 0.5 }
+    c.strada = [{ x: altra.cx, y: altra.cy }]
+    c.passo(0.05)
+    uguale('entrando nella penultima stanza la torcia scende a una', c.torciaResta, 1)
+    uguale('e la luce è già quella degli sgoccioli', c.raggioDellaLuce, sgoccioli.raggioDellaLuce)
+  }
 }
 
 /* ══════════ 5-ter. due mani, e chi ne occupa due ══════════

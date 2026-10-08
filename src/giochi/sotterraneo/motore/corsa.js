@@ -5,7 +5,7 @@
 // a prendere la domanda vera da src/quiz/ e non nomina mai una materia qui.
 // `foglio` è un dato ({ che: 'scontro', chi }): finché è aperto il tempo è fermo.
 import {
-  TASCHE, RAGGIO, RAGGIO_TORCIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
+  TASCHE, RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, SVEGLIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
   CALMA, SORSO, RIPOSO_SCALA, VITA_PER_PIANO,
   ARREDO_DICE, ARREDO_LA_PRIMA_VOLTA,
 } from '../dati/mondo.js'
@@ -183,13 +183,23 @@ export class Corsa extends Corredo {
     // dal piano generato, non dalla tappa: da quando l'abisso cambia forma scendendo, potevano divergere
     this.visto = new Uint8Array(this.livello.largo * this.livello.alto)
     this.luce = new Set()
+    this.occhi = new Set()
+    this.stanzaIntera = null
     this.segnaLaStanza()
     this.chiaveDelPiano = false
     this.stanzeDentro = new Set()
     this.aggiornaLuce()
   }
 
-  // dentro una stanza si accende tutta; in corridoio solo un pezzo attorno (da cui la fretta del corridoio)
+  // con la torcia piena una stanza si accende tutta e il raggio è lungo; senza, o agli sgoccioli, si vede solo attorno
+  // all'eroe, anche dentro una stanza (docs/sotterraneo/regole.md, «La luce»)
+  get torciaAgliSgoccioli() { return this.torciaAccesa && this.torciaResta <= 1 && !this.torceInScorta }
+  get stanzaTuttaAccesa() { return this.torciaAccesa && !this.torciaAgliSgoccioli }
+  get raggioDellaLuce() {
+    const base = !this.torciaAccesa ? RAGGIO : this.torciaAgliSgoccioli ? RAGGIO_SGOCCIOLI : RAGGIO_TORCIA
+    return base + this.addosso('luce')
+  }
+
   aggiornaLuce() {
     const L = this.livello.largo, A = this.livello.alto
     const cx = Math.floor(this.eroe.x), cy = Math.floor(this.eroe.y)
@@ -199,22 +209,31 @@ export class Corsa extends Corredo {
       this.luce.add(y * L + x)
       this.visto[y * L + x] = 1
     }
-    const raggio = (this.torciaAccesa ? RAGGIO_TORCIA : RAGGIO) + this.addosso('luce')
+    const raggio = this.raggioDellaLuce
     const r = Math.ceil(raggio) + 1
     for (let x = cx - r; x <= cx + r; x++) for (let y = cy - r; y <= cy + r; y++)
       if (Math.hypot(x - cx, y - cy) <= raggio) accendi(x, y)
 
     const st = this.livello.stanzaDi(cx, cy)
+    this.stanzaIntera = null
     if (st && cx >= st.x - 1 && cy >= st.y - 1 && cx <= st.x + st.w && cy <= st.y + st.h) {
-      for (let x = st.x - 1; x <= st.x + st.w; x++)
-        for (let y = st.y - 1; y <= st.y + st.h; y++) accendi(x, y)
+      if (this.stanzaTuttaAccesa) {
+        this.stanzaIntera = st.id
+        for (let x = st.x - 1; x <= st.x + st.w; x++)
+          for (let y = st.y - 1; y <= st.y + st.h; y++) accendi(x, y)
+      }
+      // entrare in una stanza si conta anche al buio: è l'eroe a esserci, non la luce
       if (!this.stanzeDentro.has(st.id)) { this.stanzeDentro.add(st.id); this.stanzeViste++ }
     }
   }
 
+  // un mostro sveglio si vede sempre, anche fuori dal raggio: l'hai visto svegliarsi, e uno che ti insegue dal buio senza
+  // farsi vedere sarebbe un colpo preso senza poterlo evitare
+  inLuce(k) { return this.luce.has(k) || this.occhi.has(k) }
+
   luceDi(x, y) {
     const k = y * this.livello.largo + x
-    return this.luce.has(k) ? 2 : this.visto[k] ? 1 : 0
+    return this.inLuce(k) ? 2 : this.visto[k] ? 1 : 0
   }
 
   // un mostro che dorme è un ostacolo da aggirare (si sceglie chi pagare); uno sveglio no, perché si sta muovendo
@@ -232,7 +251,7 @@ export class Corsa extends Corredo {
   // per terra invece resta toccabile anche senza calpestarla
   toccabile(r) {
     if (r.presa || r.morto) return false
-    if (!this.luce.has(r.y * this.livello.largo + r.x)) return false
+    if (!this.inLuce(r.y * this.livello.largo + r.x)) return false
     if (r.che === 'porta') return !r.aperta
     if (r.che === 'forziere') return !r.aperto
     if (r.che === 'curiosita') return !r.visto   // una volta sola, poi è arredo
@@ -302,16 +321,21 @@ export class Corsa extends Corredo {
     this.muoviEroe(Math.min(0.05, dt))
   }
 
-  // un mostro dorme finché non entri nella sua stanza, e smette appena esci: è la regola che rende la stanza un confine
+  // un mostro dorme finché non ti avvicini nella sua stanza (SVEGLIA celle, con la luce o senza), e smette appena esci:
+  // è la regola che rende la stanza un confine. Appena sveglio si vede, anche da lontano e al buio (inLuce): non ti
+  // salta addosso da un buio in cui non potevi vederlo (docs/sotterraneo/regole.md, «La luce»)
   muoviMostri(dt) {
     const cella = { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) }
     const mia = this.livello.stanzaDi(cella.x, cella.y)
+    const L = this.livello.largo
+    this.occhi = new Set()
     for (const m of this.livello.robe) {
       if (m.che !== 'mostro' || m.morto) continue
       if (m.fx == null) { m.fx = m.x + 0.5; m.fy = m.y + 0.5; m.casa = { x: m.x, y: m.y }; m.calmo = 0 }
       if (m.calmo > 0) m.calmo -= dt
       const sua = this.livello.stanzaDi(m.casa.x, m.casa.y)
-      const sveglio = !!(mia && sua && mia === sua && m.calmo <= 0)
+      const vicino = Math.hypot(m.fx - this.eroe.x, m.fy - this.eroe.y) <= SVEGLIA
+      const sveglio = !!(mia && sua && mia === sua && m.calmo <= 0 && (m.sveglio || vicino))
       m.sveglio = sveglio
 
       const meta = sveglio ? this.eroe : { x: m.casa.x + 0.5, y: m.casa.y + 0.5 }
@@ -323,7 +347,7 @@ export class Corsa extends Corredo {
         this.scontro(m)
         return
       }
-      if (d < 0.05) continue
+      if (d < 0.05) { if (sveglio) this.occhi.add(m.y * L + m.x); continue }
       const v = (sveglio ? PASSO_MOSTRO : PASSO_RIENTRO) * dt
       let nx = m.fx + dx / d * Math.min(v, d), ny = m.fy + dy / d * Math.min(v, d)
       // non esce mai dalla sua stanza: il muro ferma l'asse che lo porterebbe fuori e lascia libero l'altro
@@ -335,6 +359,7 @@ export class Corsa extends Corredo {
       if (this.livello.calpestabile(Math.floor(nx), Math.floor(m.fy))) m.fx = nx
       if (this.livello.calpestabile(Math.floor(m.fx), Math.floor(ny))) m.fy = ny
       m.x = Math.floor(m.fx); m.y = Math.floor(m.fy)
+      if (sveglio) this.occhi.add(m.y * L + m.x)   // dove è arrivato, non dove era
     }
   }
 
@@ -351,8 +376,8 @@ export class Corsa extends Corredo {
     if (d <= v) {
       this.eroe.x = mx; this.eroe.y = my
       this.strada.shift()
-      this.aggiornaLuce()
       this.bruciaLaTorcia()
+      this.aggiornaLuce()   // dopo: l'ultima stanza della torcia si stringe appena ci si entra
       this.raccogli()
       if (!this.strada.length) {
         this.strada = null
