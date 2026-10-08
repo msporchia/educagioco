@@ -19,7 +19,8 @@
    `node test/esegui.mjs sotterraneo-portale`
    tempo: 120
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo,
+         compraNellaBottega }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -209,7 +210,7 @@ nota(`la sosta pesa ${JSON.stringify(sosta).length} byte`)
 await toccaIl('[data-mercante="erborista"]')
 await page.waitForSelector('[data-chiudi]', { timeout: 10000 })
 await attendi(page, 500)
-await toccaIl('[data-merce="pozione"]')
+await compraNellaBottega(page, 'pozione', { tocca })
 await attendi(page, 300)
 await toccaIl('[data-chiudi]')
 await page.waitForSelector('[data-chiudi]', { state: 'detached', timeout: 3000 })
@@ -227,7 +228,7 @@ await attendi(page, 700)
 uguale('si torna giù nel punto esatto', await cellaGiu(), dovEro)
 await scatto(page, 'portale-ritorno')
 await page.locator('[data-azione="zaino"]').click()
-await page.waitForSelector('.sot-centrale', { timeout: 3000 })
+await page.waitForSelector('[data-zaino]', { timeout: 3000 })
 uguale('con la pozione comprata sopra', await page.locator('[data-tasca][data-cosa="pozione"]').count(), 1)
 await page.locator('[data-azione="chiudi"]').click()
 await attendi(page, 300)

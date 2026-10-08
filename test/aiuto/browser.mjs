@@ -444,6 +444,44 @@ export async function lasciaLaDiscesa(page) {
   await page.waitForSelector('[data-terra]', { timeout: 5000 })
 }
 
+/* La bottega di un mercante del sotterraneo (docs/sotterraneo/roba.md, «La bottega e lo zaino»): un tocco
+   sceglie, il tasto compra o vende. `tocca(x, y)`: il dito (CDP) o, di difetto, il mouse. La bottega
+   appena aperta è cieca per 320 ms: chi chiama l'ha già aspettata. */
+async function toccaIlCentro(page, sel, tocca) {
+  const b = await page.locator(sel).first().boundingBox()
+  await (tocca || ((x, y) => page.mouse.click(x, y)))(b.x + b.width / 2, b.y + b.height / 2)
+}
+
+/* passa alla linguetta che tiene il pezzo `chiave`; false se non c'è sotto nessuna */
+export async function allaLinguettaDi(page, chiave, { tocca = null } = {}) {
+  const sel = `[data-bottega] [data-casella-pezzo="${chiave}"]`
+  if (await page.locator(sel).count()) return true
+  const linguette = page.locator('[data-bottega] [data-scheda]')
+  for (let i = 0; i < await linguette.count(); i++) {
+    await toccaIlCentro(page, `[data-bottega] [data-scheda] >> nth=${i}`, tocca)
+    await attendi(page, 120)
+    if (await page.locator(sel).count()) return true
+  }
+  return false
+}
+
+export async function compraNellaBottega(page, chiave, { tocca = null } = {}) {
+  if (!(await allaLinguettaDi(page, chiave, { tocca }))) throw new Error(`nella bottega non c'è ${chiave}`)
+  await toccaIlCentro(page, `[data-bottega] [data-casella-pezzo="${chiave}"]`, tocca)
+  await page.waitForSelector(`[data-pannello][data-cosa="${chiave}"]`, { timeout: 3000 })
+  await toccaIlCentro(page, '[data-bottega] [data-azione="compra"]', tocca)
+  await attendi(page, 250)
+}
+
+export async function vendiNellaBottega(page, chiave, { tocca = null } = {}) {
+  await toccaIlCentro(page, '[data-bottega] [data-scheda="vendi"]', tocca)
+  await attendi(page, 120)
+  await toccaIlCentro(page, `[data-bottega] [data-vendo="${chiave}"]`, tocca)
+  await page.waitForSelector(`[data-pannello][data-cosa="${chiave}"]`, { timeout: 3000 })
+  await toccaIlCentro(page, '[data-bottega] [data-azione="vendi"]', tocca)
+  await attendi(page, 250)
+}
+
 /* Apre l'avventura di un eroe del sotterraneo (docs/sotterraneo/avventure.md):
    la prima volta la scelta c'è già, poi la si apre dal «cambio» della carta
    in fondo alla terra di sopra. Aspetta la terra dell'eroe scelto. Col

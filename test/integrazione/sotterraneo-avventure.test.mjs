@@ -205,7 +205,7 @@ await attendi(page, 400)
 await toccaIl('[data-pausa] [data-azione="riprendi"]')
 await attendi(page, 300)
 await page.locator('[data-azione="zaino"]').click()
-await page.waitForSelector('.sot-centrale', { timeout: 3000 })
+await page.waitForSelector('[data-zaino]', { timeout: 3000 })
 controlla('con la sua pozione in tasca', await page.locator('[data-tasca][data-cosa="pozione"]').count() === 1)
 
 uguale('nessun errore in console', errori.join(' · '), '')

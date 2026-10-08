@@ -116,15 +116,15 @@ controlla('dopo un tocco l\'eroe si è mosso', mosso, `sempre in ${prima}`)
    pannello incollato al bordo di sotto non lo dice — si continua a
    toccare il campo senza capire perché non si va da nessuna parte. */
 await page.locator('[data-azione="zaino"]').click()
-await page.waitForSelector('.sot-centrale', { timeout: 3000 })
-uguale('lo zaino ha sei tasche', await page.locator('.sot-tasca').count(), 6)
+await page.waitForSelector('[data-zaino]', { timeout: 3000 })
+uguale('lo zaino ha sei tasche', await page.locator('[data-zaino] [data-tasca]').count(), 6)
 uguale('e quattro caselle addosso: le due mani, il corpo, il dito',
        await page.locator('[data-casella]').count(), 4)
 uguale('e non è il foglio che sale dal basso',
        await page.locator('.sot-foglio').count(), 0)
 await page.locator('[data-azione="chiudi"]').click()
 await attendi(page, 300)
-uguale('e si richiude', await page.locator('.sot-centrale').count(), 0)
+uguale('e si richiude', await page.locator('[data-zaino]').count(), 0)
 
 /* ---------- 5. si esce a metà, e la discesa resta lì ----------
    La cosa che rende giocabile una discesa da venti minuti: si chiude e
@@ -223,7 +223,7 @@ controlla('e la fiamma è alta quanto quello che resta',
             e => parseFloat(e.style.height) > 90))
 
 await page.locator('[data-azione="zaino"]').click()
-await page.waitForSelector('.sot-centrale', { timeout: 3000 })
+await page.waitForSelector('[data-zaino]', { timeout: 3000 })
 const riga = await page.locator('[data-torcia-zaino]').textContent()
 controlla('e lo zaino lo dice per esteso', /stanze/.test(riga) && /cintura/.test(riga), riga)
 await page.locator('[data-azione="chiudi"]').click()
