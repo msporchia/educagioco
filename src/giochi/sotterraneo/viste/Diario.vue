@@ -1,6 +1,6 @@
 <script setup>
 // Il diario delle missioni: il riassunto sempre a portata di mano sulla terra di sopra (docs/sotterraneo/missioni.md).
-// Quelle in mano (da fare, o fatte e da consegnare, con chi aspetta), quelle che aspettano di essere prese, quelle
+// Quelle in mano (le fatte da consegnare in cima, poi le da fare, con chi aspetta), quelle che aspettano di essere prese, quelle
 // già consegnate. Non scrive niente: si legge e si chiude con la ✕.
 import { computed } from 'vue'
 import Foglio from './Foglio.vue'
@@ -18,16 +18,31 @@ const d = computed(() => diario(props.stati, props.tappe))
 
 <template>
   <Foglio em="📖" titolo="Le tue missioni" centro con-chiudi data-diario @chiudi="$emit('chiudi')">
-    <section v-if="d.inMano.length" class="sot-diario-sezione" data-sezione="da-fare">
+    <!-- le fatte da riportare, in cima e in oro: è quello che qualcuno sta aspettando -->
+    <section v-if="d.pronte.length" class="sot-diario-sezione sot-diario-pronte" data-sezione="da-consegnare">
+      <h3>Da consegnare</h3>
+      <ul>
+        <li v-for="v in d.pronte" :key="v.id" :data-missione="v.id" :data-stato="v.stato">
+          <img v-if="iconaDi(v.discesa)" class="sot-ritaglio" :src="iconaDi(v.discesa)" alt="" data-ritaglio>
+          <span class="sot-testo">
+            <b><span class="em">{{ v.em }}</span> {{ v.titolo }}</b>
+            <i>{{ v.dove }}, piano {{ v.piano }}</i>
+            <em class="sot-fatta" data-esito>{{ v.torna }}</em>
+          </span>
+          <span class="sot-diario-premio em">{{ v.premio }}</span>
+        </li>
+      </ul>
+    </section>
+
+    <section v-if="d.daFare.length" class="sot-diario-sezione" data-sezione="da-fare">
       <h3>Da fare</h3>
       <ul>
-        <li v-for="v in d.inMano" :key="v.id" :data-missione="v.id" :data-stato="v.stato">
+        <li v-for="v in d.daFare" :key="v.id" :data-missione="v.id" :data-stato="v.stato">
           <img v-if="iconaDi(v.discesa)" class="sot-ritaglio" :src="iconaDi(v.discesa)" alt="" data-ritaglio>
           <span class="sot-testo">
             <b><span class="em">{{ v.em }}</span> {{ v.titolo }}</b>
             <i>{{ v.dove }}, piano {{ v.piano }} · {{ v.chi.toLowerCase() }}</i>
-            <em v-if="v.stato === 'fatta'" class="sot-fatta" data-esito>fatta: torna {{ v.tornaDa }}</em>
-            <em v-else data-esito>da fare</em>
+            <em data-esito>da fare</em>
           </span>
           <span class="sot-diario-premio em">{{ v.premio }}</span>
         </li>

@@ -8,7 +8,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO,
          MERCANTI as DOVE_MERCANTI, PORTALE as DOVE_PORTALE, PERSONAGGI as DOVE_PERSONAGGI } from '../dati/terra-mappa.js'
 import { PERSONAGGI } from '../dati/missioni.js'
-import { segnoDi, chiTiCerca, presePer, inFrase } from '../motore/missioni.js'
+import { segnoDi, GLIFO, chiAspetta, chiTiCerca, presePer, inFrase } from '../motore/missioni.js'
 import { MERCANTI } from '../dati/mercanti.js'
 import { POSTO_DI, LUOGHI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, PASSO_TERRA, VISTA, LUCE,
          BORDO, MORBIDA } from '../dati/terra.js'
@@ -84,8 +84,42 @@ const personaggi = Object.entries(DOVE_PERSONAGGI).filter(([k]) => PERSONAGGI[k]
     ritratto: vero ? figura(`${PERSONAGGI[k].sprite}-fermo-0`, { scala: SCALA_EROE }) : null,
   }
 })
-// «!» ha qualcosa da chiederti, «?» aspetta quello che hai fatto (motore/missioni.js)
+// il segno sopra la testa (motore/missioni.js): «!» d'oro ha qualcosa da chiederti, «?» grigio e fermo aspetta che tu
+// la faccia, «?» d'oro che pulsa l'hai fatta e va consegnata
 const segnoSopra = chi => segnoDi(chi, props.missioni, props.tappe)
+const glifoSopra = chi => GLIFO[segnoSopra(chi)] || null
+
+// chi aspetta una consegna: se è fuori dallo schermo, un indicatore sul bordo lo fa trovare (posa)
+const MARGINE_BUSSOLA = 30
+const consegne = computed(() => {
+  const chi = chiAspetta(props.missioni)
+  return [
+    ...(chi.includes('minatore') ? [{ chiave: 'minatore', nome: 'il vecchio minatore', piede: cella(DOVE_MINATORE.piede) }] : []),
+    ...personaggi.filter(m => chi.includes(m.chiave)).map(m => ({ chiave: m.chiave, nome: m.nome, piede: m.piede })),
+  ]
+})
+const fuori = ref([])    // [{ chiave, nome, x, y, gradi }] in pixel dello schermo, solo per chi non si vede
+let fuoriChiave = ''
+function aggiornaFuori() {
+  if (!vL) return
+  const lista = []
+  const cx = vL / 2, cy = (sopra + vA - sotto) / 2
+  const x0 = MARGINE_BUSSOLA, x1 = vL - MARGINE_BUSSOLA, y0 = sopra + MARGINE_BUSSOLA, y1 = vA - sotto - MARGINE_BUSSOLA
+  for (const c of consegne.value) {
+    const sx = (c.piede.x + 0.5) * CELLA * S - cam.x * S
+    const sy = (c.piede.y + 0.5) * CELLA * S - cam.y * S - 20
+    if (sx > 6 && sx < vL - 6 && sy > sopra + 4 && sy < vA - sotto - 4) continue
+    const dx = sx - cx, dy = sy - cy
+    // dal centro verso di lui, fermandosi dove il raggio tocca il rettangolo del bordo
+    const k = Math.min((dx > 0 ? x1 - cx : cx - x0) / Math.abs(dx || 1e-6), (dy > 0 ? y1 - cy : cy - y0) / Math.abs(dy || 1e-6))
+    lista.push({ chiave: c.chiave, nome: c.nome, x: Math.round(cx + dx * k), y: Math.round(cy + dy * k),
+                 gradi: Math.round(Math.atan2(dy, dx) * 180 / Math.PI) })
+  }
+  const ch = lista.map(l => `${l.chiave}:${l.x},${l.y},${l.gradi}`).join('|')
+  if (ch !== fuoriChiave) { fuoriChiave = ch; fuori.value = lista }
+}
+// toccandolo l'eroe ci va, come toccando lui (e il fumetto si apre all'arrivo)
+const vaDa = chiave => (chiave === 'minatore' ? toccaMinatore() : toccaPersonaggio(personaggi.find(m => m.chiave === chiave)))
 
 const nebbia = (() => {
   const salvata = props.terra && nebbiaDaCodice(props.terra.nebbia, L, A)
@@ -312,6 +346,7 @@ function posa() {
     if (k !== ultimaCella) { ultimaCella = k; eroeEl.value.dataset.cella = k }
   }
   if (vista.value) vista.value.dataset.camera = `${Math.round(cam.x)},${Math.round(cam.y)}`
+  aggiornaFuori()
 }
 
 /* ═══════════ il fumetto ═══════════ */
@@ -526,18 +561,19 @@ const chiusaPerche = p => {
           <i :style="ritrattoMinatore.pezzo"></i></span>
         <Pixel v-else :figura="MINATORE" :scala="SCALA_EROE" />
         <b v-if="!parlato" class="sot-tre-punti">…</b>
-        <b v-else-if="segnoSopra('minatore')" class="sot-tre-punti sot-segno-missione" data-segno>{{ segnoSopra('minatore') }}</b>
+        <b v-else-if="segnoSopra('minatore')" class="sot-tre-punti sot-segno-missione" :class="'sot-segno-' + segnoSopra('minatore')"
+           data-segno :data-segno-di="segnoSopra('minatore')">{{ glifoSopra('minatore') }}</b>
       </button>
 
       <!-- chi dà le missioni: il segno sopra la testa dice se ha qualcosa per te -->
       <button v-for="m in personaggi" :key="'personaggio-' + m.chiave" class="sot-minatore sot-personaggio"
               :class="{ 'sot-buio': !trovati.has(m.chiave) }" :data-personaggio="m.chiave" :aria-label="m.nome"
-              :data-segno="segnoSopra(m.chiave) || null" :tabindex="trovati.has(m.chiave) ? 0 : -1"
+              :data-segno="segnoSopra(m.chiave)" :tabindex="trovati.has(m.chiave) ? 0 : -1"
               :style="{ left: (m.piede.x + 0.5) * CELLA * S + 'px', top: (m.piede.y + 0.5) * CELLA * S + 'px' }"
               @click.stop="toccaPersonaggio(m)">
         <span v-if="m.ritratto" class="sot-ritratto" :style="m.ritratto.gabbia"><i :style="m.ritratto.pezzo"></i></span>
         <Pixel v-else :figura="m.figura" :scala="SCALA_EROE" />
-        <b v-if="segnoSopra(m.chiave)" class="sot-tre-punti sot-segno-missione">{{ segnoSopra(m.chiave) }}</b>
+        <b v-if="segnoSopra(m.chiave)" class="sot-tre-punti sot-segno-missione" :class="'sot-segno-' + segnoSopra(m.chiave)">{{ glifoSopra(m.chiave) }}</b>
       </button>
 
       <button v-for="m in mercanti" :key="'mercante-' + m.chiave" class="sot-minatore sot-mercante"
@@ -649,6 +685,14 @@ const chiusaPerche = p => {
         </template>
       </div>
     </div>
+
+    <!-- chi aspetta una consegna ed è fuori schermo: un «?» d'oro sul bordo, con la freccia verso di lui -->
+    <button v-for="f in fuori" :key="'fuori-' + f.chiave" class="sot-bussola" :data-consegna-fuori="f.chiave"
+            :aria-label="'Hai una consegna per ' + f.nome" :style="{ left: f.x + 'px', top: f.y + 'px' }"
+            @click.stop="vaDa(f.chiave)">
+      <i class="sot-bussola-freccia" :style="{ transform: `rotate(${f.gradi}deg) translateX(28px)` }"></i>
+      <b>?</b>
+    </button>
 
     <div ref="sopraEl" class="sot-terra-sopra"><slot name="sopra" /></div>
     <div ref="sottoEl" class="sot-terra-sotto">
