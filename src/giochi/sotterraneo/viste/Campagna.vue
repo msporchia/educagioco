@@ -7,6 +7,8 @@ import Icona from './Icona.vue'
 import Armato from './Armato.vue'
 import { COSE } from '../dati/cose.js'
 import Terra from './Terra.vue'
+import Diario from './Diario.vue'
+import { diario } from '../motore/missioni.js'
 
 const props = defineProps({
   tappe: { type: Array, required: true },   // [{ indice, chiave, nome, icona, dritta, piani, aperta, adesso, stelle, perEta, fatta }]
@@ -25,6 +27,11 @@ riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 const veste = computed(() => (props.roba && props.roba.corpo ? COSE[props.roba.corpo] || null : null))
 
 const chiede = ref(null)   // quale tappa si sta per cominciare avendo una discesa in sospeso
+
+// il diario delle missioni (viste/Diario.vue): un tasto accanto alla carta di chi scende, col numero di quelle aperte
+const diarioAperto = ref(false)
+const riassunto = computed(() => diario(props.missioni, props.tappe))
+const pronte = computed(() => riassunto.value.inMano.some(v => v.stato === 'fatta'))
 
 function tocca(t) {
   if (!props.ripresa) return emit('gioca', t.indice)
@@ -70,6 +77,7 @@ function comincia() {
       </template>
 
       <template #sotto>
+        <div class="sot-riga-sotto">
         <!-- chi scende: di qui si torna alle quattro avventure, senza perdere niente di questa -->
         <button class="sot-chi" data-azione="eroe" @click="$emit('eroe')">
           <Armato :eroe="eroe" :mano="roba ? roba.mano : null" :mancina="roba ? roba.mancina : null" :scala="2" />
@@ -86,8 +94,17 @@ function comincia() {
           </span>
           <span class="sot-cambia">cambio</span>
         </button>
+        <!-- il diario: sempre sottomano, col numero delle missioni aperte (in oro se ce n'è una da consegnare) -->
+        <button class="sot-diario-tasto" :class="{ 'sot-pronta': pronte }" data-azione="diario" aria-label="le missioni"
+                @click="diarioAperto = true">
+          <span class="em">📖</span>
+          <b v-if="riassunto.aperte" data-diario-n>{{ riassunto.aperte }}</b>
+        </button>
+        </div>
       </template>
     </Terra>
+
+    <Diario v-if="diarioAperto" :stati="missioni" :tappe="tappe" @chiudi="diarioAperto = false" />
 
     <!-- detto prima, mai dopo: quello che si perde non torna -->
     <div v-if="chiede" class="sot-velo" data-chiede @click.self="chiede = null">

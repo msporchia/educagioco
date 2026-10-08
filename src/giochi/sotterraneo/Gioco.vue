@@ -27,7 +27,7 @@ import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo } from './motore/corredo.js'
-import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer }
+import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer, promemoria }
   from './motore/missioni.js'
 import { Bottega } from './motore/bottega.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
@@ -158,8 +158,9 @@ function fatteGiu(c) {
 }
 
 /* ═══════════ le missioni dei personaggi (motore/missioni.js) ═══════════
-   Si prendono parlando con chi le dà, si fanno giù (Corsa.missioni), si consegnano sopra: il premio va sulla
-   roba dell'avventura, gemme o un gioiello, mai monete (docs/sotterraneo/missioni.md) */
+   Si prendono parlando con chi le dà (anche più insieme), si fanno giù (Corsa.missioni), si consegnano sopra: il
+   premio va sulla roba dell'avventura, gemme o un gioiello, e a volte monete, che passano dalla borsa del gioco
+   come ogni altra (docs/sotterraneo/missioni.md) */
 const missioni = computed(() => qui.value.missioni || {})
 function azioneMissione(id, azione) {
   if (azione === 'prendi') {
@@ -172,12 +173,18 @@ function azioneMissione(id, azione) {
   const b = new Corredo({ eroe: eroeQui(), roba: roba.value })
   const r = consegnaMissione(missioni.value, id, b)
   if (!r) return null
-  if (r.esito === 'consegnata') {
-    nellAvventura({ missioni: r.stati, roba: b.roba }, { subito: true })
-    suono.livello()
-  } else suono.no()
-  return r.esito
+  if (r.esito !== 'consegnata') { suono.no(); return { esito: r.esito, monete: 0 } }
+  nellAvventura({ missioni: r.stati, roba: b.roba }, { subito: true })
+  suono.livello()
+  // le monete del regalo: quelle che il salvadanaio della varietà lascia passare, non una di più
+  return { esito: 'consegnata', monete: r.monete ? borsa(CHIAVE).paga(r.monete) : 0 }
 }
+
+// la riga in cima a una discesa per ogni missione presa che la riguarda (motore/missioni.js, promemoria)
+const ricordo = dallaCorsa(c => {
+  const t = c.tappa
+  return t && !t.abisso ? promemoria(missioni.value, t.chiave, c.piano + 1) : []
+}, [])
 
 function scorda() {
   nellAvventura({ sosta: null }, { subito: true })
@@ -788,6 +795,13 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   @pointerdown="premi" @pointermove="muovi" @pointerup="lascia"
                   @pointercancel="lascia" @touchend="nienteClickDalCampo"
                   @wheel.prevent="rotella"></canvas>
+
+          <!-- le missioni prese che riguardano questa discesa: una riga ciascuna, in cima (motore/missioni.js) -->
+          <ul v-if="ricordo.length" class="sot-ricordo" data-promemoria>
+            <li v-for="r in ricordo" :key="r.id" :data-missione="r.id" :data-dove="r.dove">
+              <span class="em">{{ r.em }}</span> {{ r.testo }}
+            </li>
+          </ul>
 
           <p class="sot-piede" :data-posto="eroe.posto || ''">
             <template v-if="eroe.posto">{{ eroe.posto }} · </template>piano {{ eroe.piano }}<template v-if="eroe.piani"> di {{ eroe.piani }}</template> ·

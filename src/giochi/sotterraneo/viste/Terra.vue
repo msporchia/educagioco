@@ -8,7 +8,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO,
          MERCANTI as DOVE_MERCANTI, PORTALE as DOVE_PORTALE, PERSONAGGI as DOVE_PERSONAGGI } from '../dati/terra-mappa.js'
 import { PERSONAGGI } from '../dati/missioni.js'
-import { segnoDi, chiTiCerca } from '../motore/missioni.js'
+import { segnoDi, chiTiCerca, presePer, inFrase } from '../motore/missioni.js'
 import { MERCANTI } from '../dati/mercanti.js'
 import { POSTO_DI, LUOGHI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, PASSO_TERRA, VISTA, LUCE,
          BORDO, MORBIDA } from '../dati/terra.js'
@@ -408,8 +408,8 @@ const toccaPersonaggio = m => verso(m.accanto, { tipo: 'personaggio', chi: m })
 function faiMissione(id, azione) {
   const e = props.azioneMissione ? props.azioneMissione(id, azione) : null
   if (e === 'presa') dillo('Missione presa: la trovi scendendo.')
-  else if (e === 'consegnata') dillo('Missione compiuta!')
-  else if (e === 'pieno') dillo('Hai le tasche piene: libera un posto e torna.')
+  else if (e && e.esito === 'consegnata') dillo(e.monete ? `Missione compiuta! 🪙 ${e.monete}` : 'Missione compiuta!')
+  else if (e && e.esito === 'pieno') dillo('Hai le tasche piene: libera un posto e torna.')
   nextTick(piazzaFumetto)
 }
 const toccaCartello = () => verso(cella(CARTELLO.piede), { tipo: 'cartello' })
@@ -432,8 +432,10 @@ function scendi(p) {
 // minatore lo dice con le cose che ha in mano (motore/storia.js). Solo per quelle ancora da finire
 const livelloDi = t => (t && !t.fatta && props.roba ? dettoDelLivello(props.eroe.chiave, props.roba, t, t.indice) : null)
 
-// e dice anche chi ha una missione per te, se la proposta non è la sua (motore/missioni.js)
+// e dice anche chi ha qualcosa per te, una riga per chi (motore/missioni.js)
 const tiCerca = computed(() => chiTiCerca(props.missioni, props.tappe))
+// le missioni già prese che riguardano una discesa: il fumetto del posto le ricorda prima di scendere
+const quiPrese = p => (p && p.tappa ? presePer(props.missioni, p.tappa.chiave) : [])
 
 const detto = computed(() => {
   const t = props.tappe.find(t => t.adesso)
@@ -603,6 +605,11 @@ const chiusaPerche = p => {
             <p v-else class="sot-fum-conto em" data-fondo>
               {{ aperto.p.cosa.fondo ? `il più giù: piano ${aperto.p.cosa.fondo}` : 'mai sceso' }}
             </p>
+            <p v-if="quiPrese(aperto.p).length" class="sot-fum-missioni" data-missioni-qui>
+              <span v-for="m in quiPrese(aperto.p)" :key="m.id" :data-missione="m.id">
+                <span class="em">{{ m.tipo === 'trova' ? m.cosa.em : '👑' }}</span> {{ inFrase(m.tipo === 'trova' ? m.cosa.nome : m.mostro.nome) }}, piano {{ m.piano + 1 }}
+              </span>
+            </p>
             <p v-if="livelloDi(aperto.p.tappa)" class="sot-fum-avviso" data-sotto-livello
                :data-manca="livelloDi(aperto.p.tappa).manca">
               <b>Il minatore ti ha visto passare:</b> «{{ livelloDi(aperto.p.tappa).detto }}»
@@ -626,7 +633,7 @@ const chiusaPerche = p => {
         <template v-else-if="aperto.tipo === 'minatore'">
           <b class="sot-fum-nome">Il vecchio minatore</b>
           <p class="sot-fum-detto" data-detto>{{ detto }}</p>
-          <p v-if="tiCerca" class="sot-fum-detto" data-ti-cerca>«{{ tiCerca }}»</p>
+          <p v-for="(riga, i) in tiCerca" :key="i" class="sot-fum-detto" data-ti-cerca>«{{ riga }}»</p>
           <Missione chi="minatore" :stati="missioni" :tappe="tappe" @azione="faiMissione" />
         </template>
         <template v-else-if="aperto.tipo === 'personaggio'">
