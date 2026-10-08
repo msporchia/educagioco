@@ -41,6 +41,7 @@ import MappaTabelline from '../components/MappaTabelline.vue'
 import MappaConcetti from '../components/MappaConcetti.vue'
 import RottaAsteroidi from '../components/RottaAsteroidi.vue'
 import Barra from '../components/Barra.vue'
+import TastoSalta from '../components/TastoSalta.vue'
 
 const emit = defineEmits(['vai'])
 
@@ -564,6 +565,24 @@ function usaMirino() {
   spara(v, '#8cff9d'); rompi(v, '#8cff9d')
   suono.ok()
   salva()
+}
+
+/* Il tasto «salta» dei grandi (docs/core/comandi.md): il sasso giusto
+   esplode come se l'avessero preso, e la partita va avanti. Non è una risposta:
+   niente ripasso, niente monete, niente punti, filotto e gettoni fermi, e
+   `segna()` non si tocca. Conta solo per andare avanti (centri, livello, tappa). */
+function salta() {
+  if (fase.value !== 'gioco') return
+  const a = asteroidi.find(x => x.ok && !x.morto)
+  if (!a) return
+  spara(a, '#8cff9d'); rompi(a, '#8cff9d'); suono.ok()
+  hud.giuste++
+  if (eMirata(domanda.chiave)) hud.mirate++
+  const nuovo = hud.partenza + Math.floor(hud.giuste / CFG.salitaOgni)
+  if (nuovo > hud.livello) { hud.livello = nuovo; salitaLivello() }
+  sincronizzaNave()
+  if (centrato()) return tappaSuperata()
+  ondata()
 }
 
 function colpisci(a) {
@@ -1167,6 +1186,9 @@ onUnmounted(() => {
       <b :class="{ lunga: domanda.testo.length > 13 }">{{ domanda.testo }}</b>
     </div>
 
+    <!-- per provare i giochi: la leva di #admin, docs/core/comandi.md -->
+    <div v-if="fase === 'gioco'" class="salta-mate"><TastoSalta @salta="salta" /></div>
+
     <div v-if="cartello.testo" :key="cartello.n" class="cartello" :style="{ color: cartello.colore }">
       {{ cartello.testo }}
     </div>
@@ -1352,6 +1374,7 @@ canvas { position:absolute; inset:0; touch-action:manipulation }
              text-shadow:0 0 22px #4aa3ff88, 0 4px 0 #0008; padding:0 12px;
              text-align:center; line-height:1.05 }
 /* «in 149 quante volte c'è 7?» non ci sta nel corpo delle tabelline */
+.salta-mate { position:absolute; right:10px; bottom:calc(max(17vh, 96px) + 6px); z-index:5 }
 .domanda b.lunga { font-size:clamp(20px,5.6vw,36px); letter-spacing:0 }
 .domanda i { font-style:normal; color:#7fe3ff }
 

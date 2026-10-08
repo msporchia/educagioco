@@ -121,7 +121,7 @@ const sbagliata = id => !!(props.esito && props.esito.sbagliate && props.esito.s
 
     <!-- l'esito: la correzione, il metodo, la frase giusta — tre righe, tre mestieri -->
     <div v-if="esito" class="ing-esito" :data-esito="esito.giusta ? 'giusta' : 'sbagliata'">
-      <div v-if="esito.giusta" class="ing-bene">Giusto!</div>
+      <div v-if="esito.giusta" class="ing-bene">{{ esito.saltata ? '⏭ Saltata' : 'Giusto!' }}</div>
       <template v-else>
         <div class="ing-male">Non così.<span v-if="esito.perche" data-perche>{{ ' ' + esito.perche }}</span></div>
         <div v-if="esito.giustaEra" class="ing-era" data-giusta-era>Si dice: <b>{{ esito.giustaEra }}</b></div>

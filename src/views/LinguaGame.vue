@@ -17,6 +17,7 @@ import { pronuncia, haVoce, prepara, zittisci } from '../voce.js'
 import { sosta, salvaSosta, buttaSosta } from '../giochi/campagne.js'
 import { scrivi as scriviSosta, leggi as leggiSosta, dice as diceSosta, chiaveSosta } from '../motore/lingua/sosta.js'
 import Barra from '../components/Barra.vue'
+import TastoSalta from '../components/TastoSalta.vue'
 import Ripresa from '../giochi/Ripresa.vue'
 
 // `libero`: aperto dall'inglese a mondi, solo per il gioco libero di chi l'aveva (docs/lingue/mondi.md)
@@ -137,13 +138,16 @@ function nuovoTurno() {
 
 // dopo la risposta la parola non si ripete da sola: sentirsi parlare
 // addosso appena premuto confonde; per risentirla si tocca la carta
-function rispondi(o) {
+function rispondi(o, { saltata = false } = {}) {
   if (occupato || !o || !turno.value) return
   occupato = true
   const t = turno.value
   const giusto = !!o.giusta
-  answer(t.chiave, { correct: giusto })
-  picker.afterAnswer(t.chiave, giusto)
+  // il tasto «salta» dei grandi (docs/core/comandi.md): si avanza, ma nessuno ha risposto
+  if (!saltata) {
+    answer(t.chiave, { correct: giusto })
+    picker.afterAnswer(t.chiave, giusto)
+  }
   svelato.value = true
 
   const conta = L.contatori[t.voce.genere]
@@ -152,12 +156,14 @@ function rispondi(o) {
     esito.value = { [o.testo]: 'bene' }
     suono.ok()
     hud.giuste++
-    hud.serie++
+    if (!saltata) hud.serie++
     if (nuoveDiTappa.value.has(t.chiave)) hud.mirate++
-    segna(conta)
-    borsellino.paga(PAGA.parola)
-    prese.monete = borsellino.dato
-    if (hud.giuste % CARTELLO === 0 && borsellino.dato > mostrate) {
+    if (!saltata) {
+      segna(conta)
+      borsellino.paga(PAGA.parola)
+      prese.monete = borsellino.dato
+    }
+    if (!saltata && hud.giuste % CARTELLO === 0 && borsellino.dato > mostrate) {
       moneta.value = borsellino.dato - mostrate; mostrate = borsellino.dato
       setTimeout(() => (moneta.value = 0), 1100)
       suono.moneta()
@@ -452,6 +458,9 @@ onUnmounted(() => { clearTimeout(timerId); zittisci() })
           {{ o.testo }}
         </button>
       </div>
+
+      <TastoSalta v-if="turno && !svelato"
+                  @salta="rispondi(turno.opzioni.find(x => x.giusta), { saltata: true })" />
 
       <div v-if="trascina" class="carta volante"
            :style="{ left: trascina.x + 'px', top: trascina.y + 'px', width: trascina.w + 'px' }">

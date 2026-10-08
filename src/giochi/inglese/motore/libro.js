@@ -249,6 +249,13 @@ export function eGiusta(dom, risposta) {
   return !!(dom.opzioni && dom.opzioni[risposta] && dom.opzioni[risposta].giusta)
 }
 
+// la risposta giusta nella forma che `eGiusta` si aspetta: serve al tasto «salta» dei grandi
+export function rispostaGiusta(dom) {
+  if (dom.tipo === 'frase') return dom.giusta
+  if (dom.tipo === 'ordine') return dom.soluzione.map((_, i) => i)
+  return (dom.opzioni || []).findIndex(o => o.giusta)
+}
+
 // chi dice una frase nel mondo `v`: una chiave di CHI_PARLA, o null se è narrazione
 export const chiDi = (f, v) => (typeof f.chi === 'function' ? f.chi(v) : f.chi) || null
 

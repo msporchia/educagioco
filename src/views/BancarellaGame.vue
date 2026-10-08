@@ -12,6 +12,7 @@ import { CITTA, statoCitta, statoGiornata, cittaCorrente, fatteIn, indiceDi, gio
 import { suono } from '../audio.js'
 import { borsa } from '../store/varieta.js'
 import Barra from '../components/Barra.vue'
+import TastoSalta from '../components/TastoSalta.vue'
 import Mondo from '../components/bancarella/Mondo.vue'
 import Piazza from '../components/bancarella/Piazza.vue'
 import { usaPausa } from '../giochi/pausa.js'
@@ -333,6 +334,18 @@ function proponi() {
   battuta.value = dato.value > c.resto ? 'Sono troppi!' : 'Sono pochi…'
   suono.no()
   c.restaPazienza = Math.max(2, c.restaPazienza - 3)
+}
+
+/* Il tasto «salta» dei grandi (docs/core/comandi.md), alla cassa: il conto e il
+   resto sono dati per fatti. Il cliente se ne va contento, ma non è un cliente servito:
+   niente ripasso, niente monete, niente contatori (clienti, incasso, restiPerfetti). */
+function salta() {
+  const c = cliente.value
+  if (occupato || !c || momento.value !== 'cassa') return
+  occupato = true
+  battuta.value = pick(GRAZIE)
+  suono.moneta()
+  programma(prossimo, 600)
 }
 
 function consegna() {
@@ -708,6 +721,9 @@ onBeforeUnmount(() => {
               <div class="tastiera"><i v-for="n in 12" :key="n"></i></div>
             </div>
           </div>
+
+          <!-- per provare i giochi: la leva di #admin, docs/core/comandi.md -->
+          <TastoSalta @salta="salta" />
 
           <!-- la tastiera vera sta qui e non nel registratore: dodici tasti
                larghi due centimetri non ci stanno in 74 pixel -->

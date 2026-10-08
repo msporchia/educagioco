@@ -288,12 +288,13 @@ const rami = computed(() => {
   return f && f.che === 'torre' ? cassa.rami(f.torre) : []
 })
 
-function operazioneFinita({ errori, ms }) {
+function operazioneFinita({ errori, ms, saltata = false }) {
   const t = scelta.value, torre = bersaglio.value
-  answer(cassa.chiave(t), { correct: errori === 0, ms })
-  if (errori === 0) segna('perfette')
+  // il tasto «salta» dei grandi (docs/core/comandi.md): la torre sale, ma nessuno ha risposto
+  if (!saltata) answer(cassa.chiave(t), { correct: errori === 0, ms })
+  if (errori === 0 && !saltata) segna('perfette')
   // un conto senza errori è una risposta giusta, e si paga adesso (docs/apprendimento/calibrazione.md)
-  const presi = errori === 0 ? borsellino.paga(PAGA.operazione) : 0
+  const presi = errori === 0 && !saltata ? borsellino.paga(PAGA.operazione) : 0
   monete.prese = borsellino.dato
   // il conto: il prezzo pattuito più una penale per ogni errore. Si paga in
   // energia, non in vite: sbagliare rallenta la difesa, non la fa crollare.
