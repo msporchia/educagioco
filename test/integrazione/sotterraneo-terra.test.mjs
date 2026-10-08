@@ -51,7 +51,7 @@ async function fermo() {
   await attendi(page, 200)
 }
 const vista = await page.locator('[data-terra]').boundingBox()
-// un tocco sul prato lontano dal fumetto: lo chiude e basta
+// un tocco sul prato lontano dal fumetto: lo chiude, e l'eroe ci va (si aspetta che arrivi)
 async function chiudiFumetto() {
   const f = await page.locator('[data-fumetto]').boundingBox()
   if (!f) return
@@ -59,6 +59,7 @@ async function chiudiFumetto() {
   const y = f.y > vista.y + vista.height / 2 ? vista.y + 120 : vista.y + vista.height - 220
   await tocca(vista.x + vista.width - 30, y)
   await attendi(page, 250)
+  await fermo()
 }
 // per strada fino a una cella, toccando col dito il punto più avanti della strada che si vede (test/aiuto/browser.mjs)
 const vaiA = meta => camminaVerso(page, meta, { tocca })
@@ -111,7 +112,10 @@ const davanti = await cella()
 await tocca(vista.x + vista.width - 40, vista.y + vista.height - 160)
 await attendi(page, 300)
 uguale('toccando fuori il fumetto si chiude', await page.locator('[data-fumetto]').count(), 0)
-uguale('e basta: quel tocco non fa camminare', await cella(), davanti)
+// un tocco altrove chiude, e fa anche la sua cosa (docs/core/interfaccia.md): l'eroe parte verso dove si è toccato
+await attendi(page, 300)
+controlla('e quel tocco fa anche camminare', (await cella()) !== davanti, davanti)
+await fermo()
 uguale('prima di andarci, nessun divieto', await page.locator('[data-divieto]').count(), 0)
 await vaiA(POSTI.arco.piede)
 await toccaIl('[data-posto="arco"]')
