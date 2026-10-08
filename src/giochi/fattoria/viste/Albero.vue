@@ -5,6 +5,8 @@ import { computed } from 'vue'
 import { righeDi } from '../dati/albero.js'
 import { dentroA } from '../motore/consiglio.js'
 import Merce from './Merce.vue'
+import Provino from './Provino.vue'
+import { PER_ID } from '../dati/catalogo.js'
 import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
@@ -51,13 +53,8 @@ const altrove = via => {
   return `o ${dove.join(', o ')}`
 }
 
-// La frase del consiglio aggiunge qualcosa solo quando il passo non è la macchina di questa riga (già detto sotto).
-const perche = n => {
-  const v = n.via, a = v && v.azione
-  if (!a || !v.testo) return ''
-  const suaMacchina = v.macchina && (a.voce === v.macchina.id)
-  return suaMacchina ? '' : v.testo
-}
+// Il disegno della macchina, dal catalogo.
+const pezzoDi = id => (PER_ID[id] || {}).pezzo || null
 
 // Il tasto: cosa c'è scritto dipende da dove porta, come in Passo.vue.
 const etichetta = a => !a ? ''
@@ -75,8 +72,6 @@ const snodoSotto = n => n.rami.length ? 'apre' : 'chiude'
   <div class="fa-foglio fa-albero" data-albero :data-albero-di="radice.prodotto">
     <Chiudi @chiudi="$emit('chiudi')" />
     <h2>🌳 Come si fa</h2>
-    <p class="fa-piccolo">Dall'alto in basso: quello che vuoi, quello che gli
-       serve, e giù fino ai campi. Le righe gialle hanno un tasto.</p>
 
     <div class="fa-rami">
       <template v-for="n in righe" :key="n.prodotto + '@' + n.livello">
@@ -87,13 +82,10 @@ const snodoSotto = n => n.rami.length ? 'apre' : 'chiude'
             <i v-if="n.livello" :class="['fa-rot', snodo(n)]" />
           </span>
           <div :class="['fa-ramo', n.stato, { radice: n.livello === 0 }]">
-            <Merce :merce="n.prodotto" :lato="n.livello === 0 ? 40 : 30" />
+            <Merce :merce="n.prodotto" :lato="n.livello === 0 ? 56 : 44" />
             <span class="fa-ramo-testo">
               <b>{{ n.nome }}<em v-if="n.livello"> ×{{ n.servono }}</em></b>
               <span>{{ dice(n) }}</span>
-              <!-- la frase del consiglio, dove aggiunge qualcosa -->
-              <small v-if="perche(n)" class="fa-ramo-perche"
-                     data-albero-perche>{{ perche(n) }}</small>
             </span>
             <button v-if="n.via && n.via.azione" type="button" class="fa-bot piccolo"
                     :data-albero-azione="n.via.azione.che"
@@ -108,6 +100,9 @@ const snodoSotto = n => n.rami.length ? 'apre' : 'chiude'
             <i :class="['fa-rot', snodoSotto(n)]" />
           </span>
           <div :class="['fa-ramo', 'fa-macchina', macchina(n) ? macchina(n).stato : 'ok']">
+            <!-- la macchina si riconosce dal disegno, come nel baule -->
+            <Provino v-if="macchina(n) && pezzoDi(macchina(n).id)" :pezzo="pezzoDi(macchina(n).id)"
+                     :lato="40" />
             <span class="fa-ramo-testo">
               <b>{{ macchina(n) ? macchina(n).nome : n.via.nome
                  }}<em> · {{ n.via.minuti }} min</em></b>
