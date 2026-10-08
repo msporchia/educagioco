@@ -118,6 +118,10 @@ grano si corica), e i cartelli hanno parole dipinte sopra («Carote»,
   sembrava una schermata del gioco invece del contenuto di una cosa
   costruita. Dal silo **non esce niente con le dita**: si guarda e si
   ingrandisce.
+- **Una griglia di figure grandi col numero sopra** (`.fa-scomparto`), in
+  oro se lo scomparto è pieno. Il nome c'è per chi non vede (e per i test,
+  `.fa-nascosto`) ma non a schermo: la figura lo dice già. In fondo c'è
+  solo «Ingrandisci».
 - **Solo le merci ottenibili adesso** — una coltura già presa, una ricetta
   che si può davvero fare — più quelle di cui si ha ancora roba. Provato
   il contrario: al primo raccolto di grano il silo elencava latte, uova e

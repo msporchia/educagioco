@@ -2,6 +2,8 @@
 
 Da dove viene l'esperienza, come sono fatte le soglie, cosa arriva quando
 e come si prende. Il codice è `dati/livelli.js` e `viste/Livelli.vue`.
+Il foglio ha un titolo corto («⭐ Livello 7»), il nome del livello sotto e
+subito i premi: niente paragrafo in fondo.
 
 ## L'esperienza
 

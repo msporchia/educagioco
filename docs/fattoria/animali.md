@@ -63,6 +63,14 @@ cosa e stanno in [macchine.md](macchine.md). Il codice è `dati/animali.js`,
   i cibi di quella bestia**, e un cibo che non hai non è un tasto morto:
   premuto dice come si ottiene («3 🌾 nel mulino (5 min)») e **solo lì**
   offre di comprarne uno. Prima come te lo fai, poi come lo compri.
+- **A figure, come il baule**: il ritratto grande con l'ombra, e cibi,
+  coccole e cappelli sono carte senza cornice (figura, nome, prezzo in una
+  pastiglia). Alone **verde** per quello che le piace (o che porta), alone
+  **dorato** per il cappello della festa. Niente frasi di spiegazione.
+- **Si vede prima quello che serve**: quello che le piace e quello che puoi
+  dare adesso. Il resto sta dietro **«Mostra altro»** (`[data-mostra-altro]`),
+  una riga per bisogno; una volta aperto resta aperto finché la scheda non
+  si chiude.
 - La scheda riceve una **fotografia** dei bisogni (`foto`), non il record
   vivo del motore: un foglio con le prop identiche a prima non si
   ridisegna.

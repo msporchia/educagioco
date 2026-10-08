@@ -2,7 +2,12 @@
 
 Dove si compra e si posa. Il resto dei gesti sta in
 [come-si-tocca.md](come-si-tocca.md); il codice è `viste/Roba.vue`,
-`viste/Provino.vue` e, in `Gioco.vue`, `apriIlBaule`.
+`viste/Provino.vue` e, in `Gioco.vue`, `apriIlBaule`. La figura in scala
+la disegna `Provino`: l'ingrandimento intero si conta **in pixel del
+telefono** (dpr) e si arrotonda per difetto solo da 2× in su, così a dpr 2
+una cassa da 24 in 54 viene ×4 e non ×1. Provato l'intero in pixel CSS: le
+casse restavano a ×1, piccole; provato l'intero anche fra 1× e 2×: il
+mulino rimpiccioliva.
 
 ## Le metà e lo scaffale
 
@@ -18,10 +23,13 @@ Dove si compra e si posa. Il resto dei gesti sta in
   divisi in «Campi» e «Cortile» la fila non si vedeva. Provati anche nove
   finti campi da arredo: si posavano e non facevano niente, e sono stati
   tolti.
-- **Griglia a colonne uguali**, figure grandi **in scala fra loro** su un
-  ripiano: una casa si vede che è una casa. Quello che non ti puoi
-  permettere dice **di quanto** («manca 🪙12»), che è il numero che rimanda
-  a fare esercizi. Le cose che lavorano hanno un filo d'oro attorno.
+- **Griglia a colonne uguali**, figure grandi **in scala fra loro**: una
+  casa si vede che è una casa. Le carte **non hanno cornice**: la figura, il
+  prezzo in una pastiglia appoggiata sull'angolo della figura, il nome
+  attaccato sotto. Quello che non ti puoi permettere dice **di quanto**
+  («manca 🪙12»), che è il numero che rimanda a fare esercizi.
+- **La voce consigliata** (la strada del baule, sotto) ha un **alone
+  dorato** dietro la figura (`.fa-voce.indicata`), non un bordo.
 - **Lo scaffale si scorre col dito**: toccare una carta la prende (e resta
   appesa al dito), strisciare in su o in giù scorre e non prende niente,
   strisciare di lato la tira fuori e la posa dove il dito si alza. Col

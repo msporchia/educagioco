@@ -12,6 +12,22 @@ alla volta). Tutte **pagano esperienza e mai monete** (vedi
 [regole.md](regole.md)): il numero porta la ⭐ del gettone del livello, non
 la 🪙, così si vede dove va a finire.
 
+## Come si vedono
+
+Tutti e tre sono fogli a figure, in legno e carta come in Hay Day, con le
+stesse classi del resto dei fogli ([come-si-tocca.md](come-si-tocca.md)).
+
+- **Mercato e botteghe: una bacheca di legno** (`.fa-bacheca`) con **un
+  foglietto appuntato per ordine** (`.fa-foglietto`). Chi chiede è grande;
+  le merci sono figure grandi col «0/2» (rosso se manca, verde se c'è), poi
+  la ⭐, il 🗑 per rifiutare e il ✓ giallo per consegnare. **La merce che
+  manca si tocca e apre l'albero** ([pagina-albero.md](pagina-albero.md)).
+  Un posto che riposa è un foglietto vuoto col ⏳.
+- **La mongolfiera: una stiva di cassette di legno** (`.fa-stiva`) col
+  cartellino (la figura e quanti pezzi). Verdi quando sono piene, col «!»
+  quando si possono riempire adesso. Anche qui la figura della fila si
+  tocca e apre l'albero.
+
 ## Il premio: si paga il lavoro
 
 ```
@@ -154,6 +170,8 @@ merci che si possono dare sono neutre, quella con lo scomparto colmo è in
 oro come nel silo — provato il rosso del cibo rifiutato: un tasto che
 funziona si leggeva come «non hai i requisiti».
 
-Nei test: `unita/mercato`, `unita/botteghe-fattoria`,
+Nei test: `[data-ordine]`, `[data-cliente]`, `[data-azione]`,
+`[data-albero-apri]`, `[data-riposo]`, `[data-attesa]`, `[data-fama]`
+(rimasti gli stessi sotto il nuovo aspetto); `unita/mercato`, `unita/botteghe-fattoria`,
 `unita/mongolfiera-fattoria`; col dito `integrazione/fattoria-bottega` e
 `integrazione/fattoria-mongolfiera`.

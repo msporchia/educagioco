@@ -2,7 +2,9 @@
 
 «🌳 Come si fa»: il consiglio srotolato, cioè tutta la strada di una merce
 dal campo alla cosa finita, e a che punto si è. Il codice è
-`dati/albero.js` (puro, non sa niente di Vue) e `viste/Albero.vue`.
+`dati/albero.js` (puro, non sa niente di Vue) e `viste/Albero.vue`. La
+pagina è a figure: **niente frase iniziale e niente riga di consiglio** (un
+bambino guarda le figure e le macchine col loro disegno), figure più grandi.
 
 Con catene di quattro-sei fasi il prossimo passo da solo non basta più:
 chi vuole un maglione deve vedere tutta la strada.
@@ -132,5 +134,5 @@ nodo = {
 
 Nei test: `[data-albero]`, `[data-albero-di]`,
 `[data-albero-riga="<merce>"]`, `[data-albero-macchina="<id>"]`,
-`[data-albero-azione]`, `[data-albero-perche]`, `[data-albero-altrove]`, e
+`[data-albero-azione]`, `[data-albero-altrove]`, e
 negli ingressi `[data-albero-apri="<merce>"]`.

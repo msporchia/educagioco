@@ -204,6 +204,13 @@ meglio niente che un tasto che fa una cosa storta.
 
 ## I fogli
 
+- **Comandano le figure, non il testo, e l'aspetto è quello di Hay Day**:
+  cornice gialla con l'orlo arancio, interno crema, il titolo su un'asse di
+  legno, ✕ rossa e tonda, tasti gialli a pillola (`.fa-foglio`, `.fa-bot`
+  in `stile.css`). Anche i tasti sul prato (il gettone del livello, i tondi
+  del baule) e l'avviso hanno lo stesso stile. Provato il verde scuro di
+  prima: sembrava una pagina web, non un gioco. Dove una figura dice già la
+  cosa non si scrive una frase accanto.
 - **Ogni foglio ha la stessa ✕ in alto a destra**, appiccicata
   (`viste/Chiudi.vue`). I tasti in fondo restano **solo dove sono una
   scelta** («Lascia stare / Compra», «Chiudi / Ritira», «🎩 Vestilo / Va
