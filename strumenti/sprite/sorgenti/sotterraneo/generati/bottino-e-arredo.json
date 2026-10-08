@@ -6,32 +6,35 @@
   "colori": 0,
   "cella": [1, 1],
   "sprite": {
-    "spada-corta": { "da": [15, 15], "cella": [6, 19] },
-    "spada": { "da": [78, 45], "cella": [9, 19] },
-    "spadone": { "da": [60, 43], "cella": [11, 22] },
+    "spada-corta": { "da": [15, 15], "cella": [6, 20] },
+    "spada": { "da": [78, 45], "cella": [9, 20] },
+    "spadone": { "da": [60, 43], "cella": [12, 22] },
 
-    "accetta": { "da": [124, 16], "cella": [8, 18] },
-    "ascia": { "da": [93, 15], "cella": [8, 19] },
-    "bipenne": { "da": [81, 107], "cella": [10, 19] },
+    "accetta": { "da": [124, 16], "cella": [9, 19] },
+    "ascia": { "da": [110, 16], "cella": [9, 19] },
+    "bipenne": { "da": [80, 107], "cella": [11, 20] },
 
-    "arco-corto": { "da": [111, 75], "cella": [6, 19] },
-    "arco-lungo": { "da": [139, 76], "cella": [8, 18] },
-    "balestra": { "da": [116, 105], "cella": [15, 19] },
+    "arco-corto": { "da": [110, 75], "cella": [8, 20], "buchi": true },
+    "arco-lungo": { "da": [139, 76], "cella": [8, 18], "buchi": true },
+    "balestra": { "da": [116, 105], "cella": [15, 19], "specchia": true, "buchi": true },
 
-    "verga": { "da": [137, 17], "cella": [6, 20] },
-    "bastone-magico": { "da": [75, 15], "cella": [9, 19] },
-    "scettro": { "da": [170, 46], "cella": [7, 21] },
+    "verga": { "da": [137, 16], "cella": [6, 21] },
+    "bastone-magico": { "da": [152, 16], "cella": [8, 21] },
+    "scettro": { "da": [170, 45], "cella": [7, 22] },
+
+    "mazza": { "da": [93, 15], "cella": [8, 20] },
+    "martello": { "da": [100, 105], "cella": [9, 21] },
 
     "pozione-piccola": { "da": [15, 136], "cella": [9, 14] },
     "pozione": { "da": [227, 37], "cella": [10, 15] },
     "pozione-grande": { "da": [266, 37], "cella": [11, 15] },
 
-    "anello-ambra": { "da": [117, 135], "cella": [11, 17] },
-    "anello-verde": { "da": [158, 135], "cella": [11, 17] },
-    "amuleto-rosso": { "da": [205, 108], "cella": [12, 15] },
+    "anello-ambra": { "da": [117, 135], "cella": [11, 17], "buchi": true },
+    "anello-verde": { "da": [158, 135], "cella": [11, 17], "buchi": true },
+    "amuleto-rosso": { "da": [205, 107], "cella": [13, 16], "buchi": true },
     "medaglione": { "da": [208, 153], "cella": [10, 9] },
 
-    "chiave-oro": { "da": [284, 83], "cella": [9, 15] },
+    "chiave-oro": { "da": [284, 83], "cella": [9, 15], "buchi": true },
     "torcia": { "da": [209, 175], "cella": [9, 15] },
 
     "braciere": { "da": [303, 151], "cella": [12, 11] },
@@ -59,8 +62,8 @@
     "pozione-nera":  { "da": [325, 16], "cella": [11, 16] },
     "pozione-viola": { "da": [264, 15], "cella": [12, 17] },
 
-    "chiave-ferro": { "da": [303, 83], "cella": [10, 16] },
-    "chiave-verde": { "da": [246, 83], "cella": [10, 16] },
-    "chiave-blu":   { "da": [207, 83], "cella": [10, 16] }
+    "chiave-ferro": { "da": [303, 83], "cella": [10, 16], "buchi": true },
+    "chiave-verde": { "da": [246, 83], "cella": [10, 16], "buchi": true },
+    "chiave-blu":   { "da": [207, 83], "cella": [10, 16], "buchi": true }
   }
 }

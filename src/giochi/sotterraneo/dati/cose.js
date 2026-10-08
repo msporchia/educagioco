@@ -115,9 +115,9 @@ const BASI = {
                          dice: 'Ogni gemma che raccogli vale il doppio.' },
 
   // le armi dei mostri grossi (dati/pezzi.js, DEI_GROSSI): basi senza famiglia, che non si vendono e non si pescano
-  mazza: { em: '🔨', nome: 'Mazza', sprite: 'arma-1', dove: 'mano', mani: 1, att: 1, prezzo: 14, deiGrossi: true, genere: 'f',
+  mazza: { em: '🔨', nome: 'Mazza', sprite: 'mazza', dove: 'mano', mani: 1, att: 1, prezzo: 14, deiGrossi: true, genere: 'f',
            dice: 'Pesante e ammaccata: chi la prende in testa ci pensa due volte.' },
-  martello: { em: '🔨', nome: 'Martello', sprite: 'arma-1', dove: 'mano', mani: 1, att: 2, prezzo: 24, deiGrossi: true,
+  martello: { em: '🔨', nome: 'Martello', sprite: 'martello', dove: 'mano', mani: 1, att: 2, prezzo: 24, deiGrossi: true,
               dice: 'Batte come un fabbro, e scotta.' },
 
   'pozione-piccola': { em: '🧪', nome: 'Boccetta', sprite: 'pozione-piccola', usa: 'cura', cura: 6, genere: 'f',

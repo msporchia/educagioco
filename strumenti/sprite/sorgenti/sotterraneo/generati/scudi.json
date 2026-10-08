@@ -8,7 +8,7 @@
   "sprite": {
     "scudo-legno":      { "da": [16, 19],  "cella": [13, 13] },
     "scudo-borchiato":  { "da": [33, 18],  "cella": [13, 14] },
-    "scudo-ferro":      { "da": [210, 18], "cella": [13, 16] },
+    "scudo-ferro":      { "da": [210, 18], "cella": [13, 17] },
     "scudo-crociato":   { "da": [69, 18],  "cella": [13, 15] },
     "scudo-leone":      { "da": [105, 19], "cella": [13, 15] },
     "scudo-teschio":    { "da": [51, 52],  "cella": [13, 17] },

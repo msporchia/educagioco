@@ -70,6 +70,15 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   ombra e girata**: vuota direbbe che ci si può mettere qualcosa. In scena
   invece l'arma a due mani sta **in mezzo, davanti al corpo**; provata la
   copia sbiadita dall'altro lato: si vedevano due armi.
+- **Le figure delle armi guardano tutte nello stesso verso**: in mano
+  all'eroe la lama sta in su e l'impugnatura in basso, le armi da tiro con la
+  pancia (dell'arco, dell'arco della balestra) a destra, dove guarda l'eroe;
+  `arma` in `scena/tela.js` le specchia soltanto quando l'eroe guarda a
+  sinistra. Una figura girata male sul foglio si raddrizza **nel foglietto**
+  (`specchia` sul pezzo: la balestra), mai con una trasformazione nel codice; e
+  un vuoto chiuso (fra l'arco e la corda, l'occhio di una chiave, un anello)
+  si toglie col `buchi` del pezzo (`strumenti/sprite/FORMATO.md`). Mazza e
+  martello hanno la loro figura: erano il pugnale 0x72.
 - **Dove va un'arma raccolta lo decide `postoDellArma`**, provando le
   sistemazioni. Un'arma a due mani sfratta la sinistra, e quello che c'era
   torna in tasca, o per terra se le tasche sono piene.

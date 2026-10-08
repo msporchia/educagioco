@@ -13,7 +13,7 @@
 
     "spada-runica":    { "da": [221, 7],  "cella": [8, 24] },
 
-    "amuleto-teschio": { "da": [74, 90],  "cella": [13, 16] },
-    "amuleto-azzurro": { "da": [108, 90], "cella": [11, 16] }
+    "amuleto-teschio": { "da": [74, 90],  "cella": [13, 16], "buchi": { "max": 40, "tolleranza": 40 } },
+    "amuleto-azzurro": { "da": [108, 90], "cella": [11, 16], "buchi": { "max": 40, "tolleranza": 40 } }
   }
 }
