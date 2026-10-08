@@ -38,6 +38,58 @@
   font-size: 9px; line-height: 1; letter-spacing: -.4px; color: #f0d98a;
   pointer-events: none }
 
+/* la bolla appesa a un campo o a una macchina, coi gettoni da trascinare (viste/Bolla.vue) */
+.fa-bolla { position: absolute; z-index: 6; transform: translate(-50%, -100%);
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  max-width: calc(100% - 16px); padding: 6px 9px 8px;
+  background: #0d160fe6; border: 2px solid #6f9b6f; border-radius: 16px;
+  animation: fa-bolla-nasce .14s ease-out }
+.fa-bolla.sotto { transform: translate(-50%, 0) }
+/* mentre il dito porta un gettone la bolla si fa da parte, ma resta: il dito l'ha presa lì */
+.fa-bolla.trascina { opacity: .45 }
+@keyframes fa-bolla-nasce { from { opacity: 0 } to { opacity: 1 } }
+.fa-bolla-testa { display: flex; align-items: center; gap: 8px; min-height: 26px;
+  font-size: 13px; font-weight: 700 }
+.fa-bolla-fila { display: flex; gap: 3px }
+.fa-bolla-posto { width: 24px; height: 24px; border-radius: 7px; display: grid;
+  place-items: center; border: 2px solid #3d5c42; background: #1b2a1f }
+.fa-bolla-posto.vuoto { border-style: dashed }
+.fa-bolla-posto.pronto { border-color: #ffd98a }
+.fa-bolla-posto.lavora { border-color: #e0a33c }
+.fa-bolla-posto.aspetta .fa-merce { opacity: .5 }
+.fa-bolla-foglio { width: 34px; height: 30px; border-radius: 9px; cursor: pointer;
+  border: 2px solid #3d5c42; background: #24382a; color: #f4efe2; font-size: 15px }
+.fa-bolla-attesa { display: flex; align-items: center; gap: 8px; width: 170px }
+.fa-bolla-attesa .fa-livello { flex: 1 }
+.fa-bolla-attesa em { font-style: normal; font-size: 12px }
+.fa-gettoni { display: grid; grid-template-columns: repeat(var(--colonne), 56px); gap: 6px }
+/* touch-action: none — il gettone si trascina, il browser non deve scorrere niente */
+.fa-gettone { position: relative; width: 56px; height: 64px; padding: 0; cursor: grab;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border: 2px solid #3d5c42; border-radius: 14px; background: #24382a; color: #f4efe2;
+  touch-action: none }
+.fa-gettone em { font-size: 10px; font-style: normal; opacity: .85; line-height: 1 }
+.fa-gettone-icona { font-size: 30px; line-height: 1 }
+/* il numerino: quanto ne hai già (mi serve?); oro vuol dire pieno, come nel silo */
+.fa-gettone-hai { position: absolute; top: -7px; right: -7px; min-width: 20px; height: 20px;
+  padding: 0 4px; border-radius: 10px; display: grid; place-items: center;
+  background: #faf6ec; color: #2a1c12; border: 2px solid #2a1c12; font-size: 11px }
+.fa-gettone.colmo { border-color: #ffd98a }
+.fa-gettone.colmo .fa-gettone-hai { background: #ffd98a }
+/* spento ma premibile: toccato dice perché */
+.fa-gettone.spento { opacity: .45 }
+.fa-gettone.preso { border-color: #b4ffa0; background: #3d5c42 }
+.fa-bolla-ricetta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+  justify-content: center }
+.fa-bolla-ricetta .fa-casella { width: 28px; height: 28px }
+.fa-bolla-ricetta em { font-style: normal; font-size: 12px; margin-left: 4px }
+.fa-bolla-invito { margin: 0; font-size: 11px; opacity: .8 }
+/* il gettone in mano: un po' sopra il dito, che altrimenti lo coprirebbe tutto */
+.fa-mano { position: absolute; z-index: 8; pointer-events: none;
+  transform: translate(-50%, -110%) scale(1.15); transition: transform .08s;
+  filter: drop-shadow(0 3px 4px #000a); font-size: 38px; line-height: 1 }
+.fa-mano.sopra { transform: translate(-50%, -110%) scale(1.4) }
+
 /* i pannelli */
 .fa-velo { position: absolute; inset: 0; z-index: 9; display: grid;
   place-items: center; background: #05100799; padding: 18px }

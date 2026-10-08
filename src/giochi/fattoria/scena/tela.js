@@ -272,7 +272,8 @@ export class Tela {
   }
 
   // quadro: fattoria, attori, scelto (===), preso, anello {x,y,q}, orologio (l'unico che questa classe
-  // usa), pennello {celle,materia,ok}, stagione, stagionali [{testo,x,y,misura,ondeggia?}].
+  // usa), pennello {celle,materia,ok}, stagione, stagionali [{testo,x,y,misura,ondeggia?}],
+  // bersagli [{x,y,piede,vivo}].
   disegna(quadro) {
     if (!quadro || !this.misura()) return
     this.quadro = quadro
@@ -346,6 +347,7 @@ export class Tela {
 
     this.disegnaStagionali(quadro.stagionali, quadro.orologio)
     this.disegnaAtterraggio(quadro.preso)
+    this.disegnaBersagli(quadro.bersagli, quadro.orologio)
     this.disegnaPennello(quadro.pennello)
     this.disegnaNebbia(fattoria)
     this.cartelli(fattoria, quadro.orologio)
@@ -730,6 +732,28 @@ export class Tela {
     ctx.strokeRect(x + 1, y + 1, piede[0] * this.cellaPx - 2, piede[1] * this.cellaPx - 2)
     ctx.restore()
     if (preso.pezzo) this.posa(preso.pezzo, cx, cy, piede, ok ? .85 : .45, preso.verso)
+  }
+
+  // Dove il gettone in mano fa qualcosa (i campi vuoti per un seme, il mulino per una ricetta): un
+  // tratteggio d'oro che pulsa; vivo è quello sotto il dito. La lista arriva già decisa, come preso.
+  disegnaBersagli(lista, orologio) {
+    if (!lista || !lista.length) return
+    const ctx = this.ctx, px = this.cellaPx
+    const battito = .55 + .35 * (1 + Math.sin(orologio * 6)) / 2
+    ctx.save()
+    ctx.setLineDash([6, 4])
+    ctx.lineDashOffset = -orologio * 14
+    for (const b of lista) {
+      const x = b.x * px - this.vista.x, y = b.y * px - this.vista.y
+      const w = b.piede[0] * px, h = b.piede[1] * px
+      if (x > this.L || y > this.A || x + w < 0 || y + h < 0) continue
+      ctx.fillStyle = b.vivo ? 'rgba(180,255,160,.30)' : `rgba(255,217,138,${(.14 * battito).toFixed(3)})`
+      ctx.fillRect(x, y, w, h)
+      ctx.lineWidth = b.vivo ? 3 : 2
+      ctx.strokeStyle = b.vivo ? 'rgba(180,255,160,.95)' : `rgba(255,217,138,${battito.toFixed(3)})`
+      ctx.strokeRect(x + 1, y + 1, w - 2, h - 2)
+    }
+    ctx.restore()
   }
 
   // Come disegnaAtterraggio ma per il pennello: celle sparse, non un piede rettangolare, colorate
