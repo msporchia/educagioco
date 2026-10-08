@@ -182,7 +182,8 @@ p = await leggiProfilo(page)
 const av = p?.campagne?.sotterraneo?.cfg?.avventure || {}
 uguale('la terra del cavaliere è dov\'era rimasto', (av.cavaliere?.terra?.dove || []).join(','), doveCav)
 uguale('con la sua nebbia', av.cavaliere?.terra?.nebbia, nebbiaCav)
-uguale('e le sue gemme', av.cavaliere?.roba?.gemme, 60)
+// almeno le sue 60: ripresa la discesa, l'eroe può raccogliere una gemma prima che il profilo si legga
+controlla('e le sue gemme', av.cavaliere?.roba?.gemme >= 60, av.cavaliere?.roba?.gemme)
 uguale('nel profilo il mago ha la sua terra', (av.mago?.terra?.dove || []).join(','), doveMago)
 controlla('e non ha la roba del cavaliere', !av.mago?.roba?.mano && !(av.mago?.roba?.gemme > 0), JSON.stringify(av.mago?.roba))
 uguale('il cavaliere ha la sua sosta', av.cavaliere?.sosta?.tappa, 1)
