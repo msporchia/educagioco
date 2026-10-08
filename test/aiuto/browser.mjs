@@ -16,6 +16,8 @@ import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve, join } from 'node:path'
 import { CITTA } from '../../src/data/bancarella-mondo.js'
+import { STRADE } from '../../src/giochi/passo-passo/motore/strade.js'
+import { SENTIERO_CANE } from '../../src/giochi/passo-passo/scena/animale.js'
 
 export const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 /* Di regola si prova `dist/index.html`, che è quello che esce dal build.
@@ -312,12 +314,28 @@ export async function giocaGiornata(page, id) {
   await page.waitForSelector('.banco', { timeout: 5000 })
 }
 
-/* La mappa di Passo passo ha due valli dipinte, quella dei piccoli e lo
-   zaino (docs/passo-passo/mappa.md): una casella che non c'è sta nell'altra,
-   e ci si passa dalla tana come farebbe un bambino (ognuna ha la sua).
-   Torna false se la tana è chiusa: allora di là è chiuso tutto. */
+/* La mappa di Passo passo ha un protagonista per strada, il coniglio o il
+   cane, e due valli dipinte, quella dei piccoli e le isole delle carte
+   (docs/passo-passo/mappa.md): prima si sceglie chi gioca col selettore, poi
+   una casella che non c'è sta nell'altra valle, e ci si passa dalla tana come
+   farebbe un bambino (ognuna ha la sua). Torna false se il cane è chiuso o
+   se la tana è chiusa: allora di là è chiuso tutto. */
+const protagonistaDi = sel => {
+  const m = /data-tappa="([^"]+)"/.exec(sel)
+  if (!m) return null
+  if (m[1] === 'senza-fine') return 'coniglio'
+  if (m[1] === SENTIERO_CANE) return 'cane'
+  return STRADE.animale[Number(m[1])] ?? null
+}
 async function diLaSeServe(page, sel) {
   await page.waitForSelector('[data-mappa] [data-tappa]', { timeout: 8000 })
+  const chi = protagonistaDi(sel)
+  if (chi && (await page.locator('[data-mappa]').getAttribute('data-protagonista')) !== chi) {
+    const scegli = page.locator(`[data-scegli="${chi}"]`)
+    if (await scegli.evaluate(e => e.classList.contains('pp-chiuso'))) return false
+    await scegli.click()
+    await page.waitForSelector(`[data-mappa][data-protagonista="${chi}"] [data-tappa]`, { timeout: 8000 })
+  }
   if (await page.locator(sel).count()) return true
   const tana = page.locator('[data-mappa] [data-passaggio]')
   if ((await tana.getAttribute('data-aperta')) === '0') return false

@@ -25,6 +25,7 @@ import Cane from './Cane.vue'
 
 const props = defineProps({
   mondo: { type: String, default: 'valle' },          // 'valle' o 'zaino'
+  protagonista: { type: String, default: 'coniglio' }, // chi gioca: si vedono solo le sue caselle
   voci: { type: Array, required: true },
   sentieri: { type: Object, required: true },         // { coniglio, cane }, ognuno { aperto, record, serve }
   passaggio: { type: Object, required: true },        // la tana per l'altro mondo: { aperto, serve, sotto, chiama }
@@ -36,7 +37,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['gioca', 'senza-fine', 'passa', 'posato'])
 
-const quadro = quadroValle(STRADE, { mondo: props.mondo })
+const quadro = quadroValle(STRADE, { mondo: props.mondo, protagonista: props.protagonista })
 const MAPPA = DATI[props.mondo].MAPPA
 // la tana che porta all'altro mondo: dalla valle si va allo zaino, dalla riva dello zaino si torna
 const TANA = props.mondo === 'valle'
@@ -47,7 +48,7 @@ const nodoDi = id => per.get(id) || null
 const DISEGNO_SBARRA = rettangoli(SBARRA), DISEGNO_MASSO = rettangoli(MASSO)
 
 /* ---------- le caselle e cosa è chiuso ---------- */
-// i due sentieri: quello del coniglio in cima alle buche, quello del cane in fondo al pascolo
+// i due sentieri: ognuno in fondo alla strada del suo animale
 const RACCONTO = {
   coniglio: 'Prati, laghi, fiumi e posti con lo zaino: nuovi uno dopo l\'altro, fatti con quello che sai.',
   cane: 'Pascoli con tre, quattro, cinque pecore, e le stalle con lo zaino: nuovi uno dopo l\'altro.',
@@ -100,11 +101,13 @@ const seg = usaSegnalino({
   arrivato: id => {
     inseguendo = false
     punto = { ...nodoDi(id).piede }
-    emit('posato', { al: id, verso: seg.verso })
+    posa(id)
     if (aperto.value !== null) mostraFumetto()
   },
 })
 const { el: segnalino, corpo, ombra, posato, animale, viaggiando, sbuffo } = seg
+// dove si è fermato, e di chi è questa valle (chi la apre può aver già cambiato protagonista)
+const posa = al => emit('posato', { al, verso: seg.verso, protagonista: props.protagonista, mondo: props.mondo })
 
 /* ---------- la vista ----------
    La vista scorre (`scrollLeft`/`scrollTop` di un riquadro che non si
@@ -379,7 +382,7 @@ onMounted(() => {
     seg.vai(da, { passi: [esceDallaTana(nodoDi(da))] })
   } else if (props.meta !== null && nodoDi(props.meta) && props.meta !== da) {
     seg.vai(props.meta, { attesa: 0.45 })
-  } else emit('posato', { al: da, verso: seg.verso })
+  } else posa(da)
   if (typeof ResizeObserver !== 'undefined') {
     occhio = new ResizeObserver(misura)
     occhio.observe(vista.value)
@@ -394,7 +397,7 @@ onBeforeUnmount(() => {
   if (viaggiando.value) {
     const a = seg.mira.value
     viaggiando.value.ferma()
-    emit('posato', { al: a, verso: seg.verso })
+    posa(a)
   }
 })
 
@@ -459,7 +462,7 @@ const dove = (x, y) => ({ left: x + 'px', top: y + 'px' })
         </span>
       </template>
 
-      <!-- il segnalino: il coniglio sulle isole del coniglio, il cane su quelle del cane -->
+      <!-- il segnalino: il protagonista -->
       <div ref="ombra" class="pp-ombra" aria-hidden="true"></div>
       <div ref="segnalino" class="pp-segnalino" aria-hidden="true" data-segnalino
            :data-animale="animale" :data-al="posato" :data-in-viaggio="viaggiando ? '1' : '0'">

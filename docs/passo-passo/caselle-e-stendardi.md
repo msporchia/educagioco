@@ -9,7 +9,9 @@ nome dell'isola e l'insegna delle tane per l'altro mondo. Il codice è in
 
 ## Le caselle: un tondo col numero
 
-- **Una casella è un tondo col numero del livello**, come i led della scheda
+- **Una casella è un tondo col numero del livello sulla sua strada** (il
+  coniglio da 1 a 42, il cane da 1 a 23: [livelli.md](livelli.md#le-due-strade)),
+  come i led della scheda
   del robot ([../costruttore/scheda.md](../costruttore/scheda.md)): un
   disegno per ogni livello era solo clutter, non diceva niente che il
   fumetto non dica meglio. L'emoji del livello (`icona`) e il racconto
@@ -68,8 +70,9 @@ nome dell'isola e l'insegna delle tane per l'altro mondo. Il codice è in
   del coniglio né del cane). Al posto della V ha una **punta d'oro** che scende sulla bocca
   dipinta (`freccia` nel foglietto è dove la tocca).
 - **Ondeggia** (`pp-chiama`, 4 px in giù e su) se di là c'è una tappa aperta
-  e non fatta; ferma se di là è tutto fatto. Chiusa (lo zaino a sei anni) è
-  velata come uno stendardo, col masso sulla bocca.
+  e non fatta; ferma se di là è tutto fatto. Chiusa (di là il protagonista
+  non ha ancora una tappa aperta) è velata come uno stendardo, col masso
+  sulla bocca. I numeri sono quelli del protagonista: col cane «dal 12 in poi».
 - **Sta sopra la tana**, tutta nel fondale: nella valle fra l'asta e la bocca
   ci sono 70 px, e l'insegna è alta 69.
 

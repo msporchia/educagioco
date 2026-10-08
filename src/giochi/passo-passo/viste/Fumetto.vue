@@ -1,7 +1,8 @@
 <script setup>
 /* Il fumetto della mappa: sopra la cosa toccata (sotto, se sopra non c'è
    posto), con la coda che la indica. Una casella aperta dice scalino, nome,
-   racconto, stelle e «gioca» (o «continua»); una chiusa, un ponte col blocco
+   racconto, come funziona quello che vi incontra per la prima volta, stelle e
+   «gioca» (o «continua»); una chiusa, un ponte col blocco
    e la tana dello zaino chiusa dicono cosa manca, senza tasto. Il nome ha
    davanti l'emoji del livello, che sulla mappa non c'è. La usano le due
    mappe; chi lo usa ne misura il `$el` per farlo vedere tutto.
@@ -15,7 +16,7 @@ defineEmits(['gioca'])
 const STELLA = 'M12 2.6l2.85 5.95 6.55.85-4.8 4.55 1.2 6.5L12 17.3l-5.8 3.15 1.2-6.5-4.8-4.55 6.55-.85z'
 const intestazione = n => (n.tipo === 'sentiero' ? `In fondo alla strada ${n.strada === 'cane' ? 'del cane' : 'del coniglio'}`
   : n.tipo === 'blocco' ? 'Il ponte è chiuso'
-  : n.tipo === 'zaino' ? 'La tana dello zaino'
+  : n.tipo === 'zaino' ? 'La tana'
   : `${n.scalino.icona} ${n.scalino.nome}${n.animale === 'cane' ? ' · col cane' : ''}`)
 </script>
 
@@ -26,6 +27,9 @@ const intestazione = n => (n.tipo === 'sentiero' ? `In fondo alla strada ${n.str
     <small>{{ intestazione(n) }}</small>
     <b><span v-if="n.icona" class="pp-em" data-livello-icona>{{ n.icona }}</span>{{ n.nome }}</b>
     <span v-if="n.racconto" class="pp-fumetto-racconto">{{ n.racconto }}</span>
+    <!-- una cosa che il bambino incontra per la prima volta: come funziona -->
+    <span v-for="(d, k) in (n.stato !== 'chiusa' && n.nuovo) || []" :key="k" class="pp-fumetto-nuovo" data-nuovo>
+      <span class="pp-em">💡</span> {{ d }}</span>
     <template v-if="n.stato === 'chiusa'">
       <span class="pp-fumetto-serve" data-serve><span class="pp-em">🔒</span> {{ n.serve }}</span>
     </template>

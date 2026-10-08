@@ -9,10 +9,11 @@ Stesso strumento, stessa vista (`Valle.vue`, `mondo="zaino"`), stesse
 caselle e stesso segnalino della valle dei piccoli: cambiano i dati.
 
 - **Il passaggio fra le due valli**: la tana «I prossimi livelli» in cima alle buche
-  porta lì (il coniglio ci va, entra, e sbuca dalla tana d'arrivo); sulla
-  riva in basso a sinistra la tana «I primi livelli» lo riporta indietro. Chiusa
-  (nessuna tappa dello zaino aperta, per esempio a sei anni) la prima ha il
-  masso, e il suo fumetto dice cosa manca alla prima tappa dello zaino; quella
+  porta lì (il segnalino ci va, entra, e sbuca dalla tana d'arrivo); sulla
+  riva in basso a sinistra la tana «I primi livelli» lo riporta indietro. Ci
+  passano tutti e due i protagonisti, ognuno per le sue tappe. Chiusa
+  (nessuna sua tappa di là aperta) la prima ha il masso, e il suo fumetto dice
+  cosa manca alla sua prima tappa di là; quella
   della riva è sempre aperta. Tutte e due hanno l'insegna blu coi numeri di
   là, che ondeggia se c'è qualcosa da fare
   ([caselle-e-stendardi.md](caselle-e-stendardi.md#linsegna-delle-tane)). Il
@@ -33,10 +34,13 @@ caselle e stesso segnalino della valle dei piccoli: cambiano i dati.
   in basso in mezzo (col fienile: è la più vicina che non è già di un altro,
   il fino a non ne ha una accanto), il se quella a destra in alto, tutto il
   mondo quella col lago gelato. Ne resta una (a destra in basso, di sotto a
-  tutto il mondo): decoro, senza caselle.
+  tutto il mondo): decoro, senza caselle. Col coniglio le isolette sono tutte
+  paesaggio ([mappa.md](mappa.md#due-protagonisti)).
+- **Il sentiero senza fine sta in fondo alla spirale di «Tutto il mondo»**:
+  la fine di tutte e due le strade, ed è di chi gioca.
 - **Si entra dalla bocca dipinta dell'isoletta** (`tana:<isoletta>:a`): il
-  coniglio entra in una tana (`:da`) sulla sua isola e il cane sbuca di là.
-  Da dove entra il coniglio: il buco dipinto del fondale se c'è (il fino a: la
+  cane attraversa l'isola del coniglio accanto, entra in una tana (`:da`) e
+  sbuca di là. Da dove entra: il buco dipinto del fondale se c'è (il fino a: la
   tana dell'isolotto di passaggio; il se: quella in cima all'isola), se no
   `nuvola`, un punto del sentiero dove l'animale sparisce in una nuvoletta (il
   ripeti, al capo del ponte verso l'isoletta; tutto il mondo, sul lato dello
@@ -48,14 +52,14 @@ caselle e stesso segnalino della valle dei piccoli: cambiano i dati.
   bocca (un test lo dice). Lo stemma sta dove non copre né caselle né animale
   seduto.
 - **Da dove si parte**: dalla tappa di adesso, se è nello zaino; la vista
-  segue il coniglio e il cane nei due versi come nella valle.
+  segue il protagonista nei due versi come nella valle.
 - **Provato** caselle da 52 come nella valle: sulle isolette (larghe 180 px)
   tre non ci stanno e si toccano; con 48 sì, e la riga delle stelline (quattro
   da 12) ci sta ancora.
 
 Nei test: `unita/passo-passo-valle` (la sezione dello zaino: i quattro scalini
 con la loro isoletta, la riva libera e la tana per la valle, la bocca
-dipinta di ogni isoletta, il coniglio che diventa cane dalla tana o dalla
+dipinta di ogni isoletta, il cane che ci entra dalla tana o dalla
 nuvoletta, i ponti con la sbarra a ogni punto della campagna),
 `integrazione/passo-passo-mappa` (sezione 6, col dito). Bersagli in fondo a
 [mappa.md](mappa.md).

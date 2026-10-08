@@ -22,7 +22,7 @@
 
 export const LARGO = 1536, ALTO = 1024
 export const LATO = 48
-export const FIRMA = '43523e0c914e'
+export const FIRMA = 'b329973c5fe5'
 export const LIBERE = ["riva"]
 
 export const ISOLE = {
@@ -60,13 +60,14 @@ export const NODI = [
   {"id":"se-cane:0","tipo":"casella","isola":"se-cane","x":1461.9,"y":287.8,"k":0},
   {"id":"se-cane:1","tipo":"casella","isola":"se-cane","x":1426.5,"y":228.6,"k":1},
   {"id":"se-cane:2","tipo":"casella","isola":"se-cane","x":1367.2,"y":240.0,"k":2},
-  {"id":"mondo:0","tipo":"casella","isola":"mondo","x":913.8,"y":660.0,"k":0},
-  {"id":"mondo:1","tipo":"casella","isola":"mondo","x":995.0,"y":559.8,"k":1},
-  {"id":"mondo:2","tipo":"casella","isola":"mondo","x":1095.3,"y":577.9,"k":2},
-  {"id":"mondo:3","tipo":"casella","isola":"mondo","x":1089.9,"y":678.0,"k":3},
+  {"id":"mondo:0","tipo":"casella","isola":"mondo","x":914.0,"y":660.0,"k":0},
+  {"id":"mondo:1","tipo":"casella","isola":"mondo","x":991.0,"y":561.2,"k":1},
+  {"id":"mondo:2","tipo":"casella","isola":"mondo","x":1089.7,"y":576.7,"k":2},
+  {"id":"mondo:3","tipo":"casella","isola":"mondo","x":1106.9,"y":675.5,"k":3},
   {"id":"mondo-cane:0","tipo":"casella","isola":"mondo-cane","x":1466.1,"y":643.8,"k":0},
   {"id":"mondo-cane:1","tipo":"casella","isola":"mondo-cane","x":1490.0,"y":586.1,"k":1},
   {"id":"mondo-cane:2","tipo":"casella","isola":"mondo-cane","x":1432.2,"y":570.1,"k":2},
+  {"id":"senza-fine","tipo":"sentiero","isola":"mondo","x":1020.0,"y":664.0,"etichetta":[1150,712]},
   {"id":"z-incrocio:1","tipo":"incrocio","isola":"fino","x":721.8,"y":197.0},
   {"id":"z-incrocio:2","tipo":"incrocio","isola":"riva","x":335.0,"y":942.0},
   {"id":"z-incrocio:3","tipo":"incrocio","isola":"ripeti","x":414.0,"y":870.0},
@@ -96,7 +97,6 @@ export const NODI = [
   {"id":"tana:valle","tipo":"passaggio","isola":"riva","x":90,"y":925,"freccia":[92,907],"scosta":45},
   {"id":"z-incrocio:19","tipo":"incrocio","isola":"riva","x":92.0,"y":938.0},
   {"id":"z-capo:1","tipo":"capo","isola":"se","x":1265,"y":252},
-  {"id":"z-capo:2","tipo":"capo","isola":"mondo","x":1020,"y":664},
   {"id":"z-sosta:1","tipo":"sosta","isola":"riva","x":210.4,"y":963.7},
   {"id":"z-sosta:2","tipo":"sosta","isola":"ripeti","x":421.0,"y":672.0},
   {"id":"z-sosta:3","tipo":"sosta","isola":"ripeti","x":316.2,"y":675.3},
@@ -150,12 +150,12 @@ export const ARCHI = [
   {"a":"z-incrocio:16","b":"se-cane:0","tipo":"terra","punti":[[1463.0,328.0],[1462,288],[1461.9,287.8]]},
   {"a":"se-cane:0","b":"se-cane:1","tipo":"terra","punti":[[1461.9,287.8],[1426.5,228.6]]},
   {"a":"se-cane:1","b":"se-cane:2","tipo":"terra","punti":[[1426.5,228.6],[1425,226],[1367.2,240.0]]},
-  {"a":"z-incrocio:11","b":"mondo:0","tipo":"terra","punti":[[864.0,664.0],[900,660],[913.8,660.0]]},
-  {"a":"mondo:0","b":"mondo:1","tipo":"terra","punti":[[913.8,660.0],[935,660],[940,625],[950,590],[972,568],[995.0,559.8]]},
-  {"a":"mondo:1","b":"mondo:2","tipo":"terra","punti":[[995.0,559.8],[1000,558],[1050,572],[1092,577],[1095.3,577.9]]},
-  {"a":"mondo:2","b":"z-incrocio:17","tipo":"terra","punti":[[1095.3,577.9],[1130,587],[1160,610],[1170.9,637.2]]},
-  {"a":"z-incrocio:17","b":"mondo:3","tipo":"terra","punti":[[1170.9,637.2],[1172,640],[1165,655],[1130,672],[1090,678],[1089.9,678.0]]},
-  {"a":"mondo:3","b":"z-capo:2","tipo":"terra","punti":[[1089.9,678.0],[1050,678],[1020,664]]},
+  {"a":"z-incrocio:11","b":"mondo:0","tipo":"terra","punti":[[864.0,664.0],[900,660],[914.0,660.0]]},
+  {"a":"mondo:0","b":"mondo:1","tipo":"terra","punti":[[914.0,660.0],[935,660],[940,625],[950,590],[972,568],[991.0,561.2]]},
+  {"a":"mondo:1","b":"mondo:2","tipo":"terra","punti":[[991.0,561.2],[1000,558],[1050,572],[1089.7,576.7]]},
+  {"a":"mondo:2","b":"z-incrocio:17","tipo":"terra","punti":[[1089.7,576.7],[1092,577],[1130,587],[1160,610],[1170.9,637.2]]},
+  {"a":"z-incrocio:17","b":"mondo:3","tipo":"terra","punti":[[1170.9,637.2],[1172,640],[1165,655],[1130,672],[1106.9,675.5]]},
+  {"a":"mondo:3","b":"senza-fine","tipo":"terra","punti":[[1106.9,675.5],[1090,678],[1050,678],[1020.0,664.0]]},
   {"a":"z-incrocio:18","b":"mondo-cane:0","tipo":"terra","punti":[[1468.0,678.0],[1466,644],[1466.1,643.8]]},
   {"a":"mondo-cane:0","b":"mondo-cane:1","tipo":"terra","punti":[[1466.1,643.8],[1490.0,586.1]]},
   {"a":"mondo-cane:1","b":"mondo-cane:2","tipo":"terra","punti":[[1490.0,586.1],[1490,586],[1432.2,570.1]]},

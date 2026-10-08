@@ -29,7 +29,7 @@
 import { apriBrowser, apriGioco, azzera, scatto, semina, attendi, leggiProfilo, TELEFONO, scegli,
          giocaSullIsola, statoSullIsola } from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
-import { CAMPAGNA, TAPPE_PICCOLE } from '../../src/giochi/passo-passo/dati/campagna.js'
+import { CAMPAGNA, TAPPE_PICCOLE, TAPPE_PRIME, FILA_ATTUALE } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
 import { risolvi } from '../../src/giochi/passo-passo/motore/risolutore.js'
 
@@ -69,9 +69,9 @@ const carta = page.locator('.carta.gioco[data-gioco="passo"]')
 uguale('a sei anni la carta è in home', await carta.count(), 1)
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa', { timeout: 5000 })
-// la valle ha le tappe prima dello zaino; quelle dello zaino stanno di là dalla tana (docs/passo-passo/mappa.md)
-uguale('la valle ha tutte le tappe prima dello zaino',
-       await page.locator('[data-mappa] [data-tappa]:not([data-tappa^="senza-fine"])').count(), TAPPE_PICCOLE)
+// col coniglio la valle ha le sue tappe prima delle carte; quelle stanno di là dalla tana (docs/passo-passo/mappa.md)
+uguale('col coniglio la valle ha le sue tappe dei piccoli',
+       await page.locator('[data-mappa] [data-tappa]:not([data-tappa^="senza-fine"])').count(), TAPPE_PRIME)
 uguale('la prima tappa è quella di adesso', await statoSullIsola(page, 0), 'ora')
 uguale('la seconda no, finché non si fa la prima', await statoSullIsola(page, 1), 'chiusa')
 uguale('il sentiero senza fine è chiuso a campagna da fare', await statoSullIsola(page, 'senza-fine'), 'chiusa')
@@ -373,15 +373,12 @@ await allaMappa()
    Un profilo di prima, col record di quando il sentiero era uno: lo
    ritrova il sentiero del coniglio, e quello del cane non ne ha. */
 await semina(page, { settings: { eta: 8 },
-                     campagne: { passo: { tappa: CAMPAGNA.length, libera: true, stelle: {}, cfg: {},
+                     campagne: { passo: { tappa: CAMPAGNA.length, libera: true, cfg: { fila: FILA_ATTUALE },
+                                          // le due strade finite: ognuno si apre in fondo alla sua
+                                          stelle: Object.fromEntries(CAMPAGNA.map((_, i) => [i, 1])),
                                           primato: { best: 4, quando: 1, partite: 3, ultime: [] } } } })
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
-controlla('a campagna finita c\'è anche il sentiero del cane, aperto',
-          await statoSullIsola(page, 'senza-fine-cane') !== 'chiusa')
-uguale('ognuno col suo animale',
-       [await page.locator('[data-tappa="senza-fine"] [data-sentiero-di]').getAttribute('data-sentiero-di'),
-        await page.locator('[data-tappa="senza-fine-cane"] [data-sentiero-di]').getAttribute('data-sentiero-di')].join(), 'coniglio,cane')
 const fumettoDi = async quale => {
   await page.waitForSelector('[data-segnalino][data-in-viaggio="0"]', { timeout: 8000 })
   await page.locator(`[data-mappa] [data-tappa="${quale}"]`).click()
@@ -390,7 +387,12 @@ const fumettoDi = async quale => {
   await page.waitForSelector('[data-segnalino][data-in-viaggio="0"]', { timeout: 8000 })
   return testo
 }
+// ognuno sulla mappa del suo protagonista, in fondo alla sua strada
+controlla('a campagna finita il sentiero del coniglio è aperto', await statoSullIsola(page, 'senza-fine') !== 'chiusa')
+uguale('col coniglio è il suo', await page.locator('[data-tappa="senza-fine"] [data-sentiero-di]').getAttribute('data-sentiero-di'), 'coniglio')
 controlla('il record di prima è del sentiero del coniglio', /4 di fila/.test(await fumettoDi('senza-fine')))
+controlla('c\'è anche il sentiero del cane, aperto', await statoSullIsola(page, 'senza-fine-cane') !== 'chiusa')
+uguale('col cane è il suo', await page.locator('[data-tappa="senza-fine-cane"] [data-sentiero-di]').getAttribute('data-sentiero-di'), 'cane')
 uguale('quello del cane non ne ha ancora', await fumettoDi('senza-fine-cane'), 'Ancora nessun record')
 await scatto(page, 'passo-due-sentieri')
 await page.click('[data-fumetto] [data-azione="parti"]')
@@ -507,15 +509,15 @@ controlla('toccata, la scatola entra già col suo numero',
           await page.locator('[data-scelta-volte]').count() === 0)
 await scatto(page, 'passo-zaino-aiuto')
 
-/* ---------- 13. a sei anni lo zaino è chiuso, e il sentiero no ---------- */
+/* ---------- 13. a sei anni lo zaino è aperto a chi ci arriva, e il sentiero aspetta la fine ---------- */
 await allaMappa()
 await semina(page, { settings: { eta: 6 },
                      campagne: { passo: { tappa: TAPPE_PICCOLE, stelle: {}, cfg: {} } } })
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
-uguale('a sei anni la prima tappa dello zaino è chiusa', await statoSullIsola(page, TAPPE_PICCOLE), 'chiusa')
-controlla('e il sentiero senza fine, alla fine delle tappe dei piccoli, è aperto',
-          await statoSullIsola(page, 'senza-fine') !== 'chiusa')
+controlla('a sei anni la prima tappa dello zaino è aperta: l\'età non ferma chi ci arriva',
+          await statoSullIsola(page, TAPPE_PICCOLE) !== 'chiusa')
+uguale('e il sentiero senza fine aspetta la fine della strada', await statoSullIsola(page, 'senza-fine'), 'chiusa')
 await scatto(page, 'passo-zaino-chiuso')
 
 /* ---------- 14. il «fino a» e il «se», col dito ---------- */

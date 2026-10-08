@@ -5,7 +5,7 @@
 // disegno sta in viste/Valle.vue, le scelte in docs/passo-passo/mappa.md.
 import * as VALLE from '../dati/isole-mappa.js'
 import * as ZAINO from '../dati/zaino-mappa.js'
-import { ANIMALE, SENTIERO } from './animale.js'
+import { ANIMALE, SENTIERO, SENTIERO_CANE } from './animale.js'
 
 // i dati di ogni mondo: NODI, ARCHI, PONTI, ISOLE, LIBERE, LARGO, ALTO, LATO, MAPPA, FIRMA
 export const DATI = { valle: VALLE, zaino: ZAINO }
@@ -23,16 +23,36 @@ const TANA_DENTRO = 0.34, TANA_FUORI = 0.36, CAMBIO = 0.24
 
 const lunghezza = p => p.reduce((s, q, i) => (i ? s + Math.hypot(q[0] - p[i - 1][0], q[1] - p[i - 1][1]) : 0), 0)
 
-/* Il quadro di una valle: i nodi del foglietto con l'id della tappa al posto
-   di quello della casella (`passi:3` → la quarta tappa delle isole di passi,
-   in motore/strade.js), l'animale della loro isola, il piede dove si siede
-   il segnalino; e gli archi con la loro lunghezza. */
-export function quadroValle(S, { mondo = 'valle', dati = DATI[mondo] } = {}) {
+/* Il quadro di una valle per un protagonista: i nodi del foglietto con l'id
+   della tappa al posto di quello della casella (`passi:3` → la quarta tappa
+   delle isole di passi, in motore/strade.js), il piede dove si siede il
+   segnalino, e gli archi con la loro lunghezza. Le isole dell'altro animale
+   per il coniglio sono paesaggio (i loro nodi, le tane e i ponti che ci
+   portano non ci sono), per il cane sono terra da attraversare: sempre
+   aperte, senza caselle. L'animale è sempre il protagonista, e il sentiero
+   senza fine in fondo alla strada è il suo. Vedi
+   docs/passo-passo/mappa.md, «Due protagonisti». */
+const SENTIERO_DI = { coniglio: 'senza-fine', cane: SENTIERO_CANE }
+export function quadroValle(S, { mondo = 'valle', dati = DATI[mondo], protagonista = 'coniglio' } = {}) {
   const isolaDi = new Map(S.isole.map(s => [s.chiave, s]))
+  const altro = k => { const s = isolaDi.get(k); return !!s && s.animale !== protagonista }
+  const paesaggio = protagonista === 'coniglio'
+  const via = new Set()
+  if (paesaggio) for (const n of dati.NODI)
+    if (altro(n.isola) || (n.tipo === 'tana' && altro(n.id.split(':')[1]))) via.add(n.id)
+  const pontiVia = new Set(paesaggio ? Object.keys(dati.PONTI).filter(k => dati.PONTI[k].isole.some(altro)) : [])
+  let archi = dati.ARCHI.filter(e => !via.has(e.a) && !via.has(e.b) && !pontiVia.has(e.ponte))
+  // quello che resta staccato (le soste di un ponte tolto) se ne va con lui
+  const toccati = new Set(archi.flatMap(e => [e.a, e.b]))
+  const tenuti = dati.NODI.filter(n => !via.has(n.id) && (toccati.has(n.id) || !dati.ARCHI.length))
   const nuovo = new Map()
-  const nodi = dati.NODI.map(n => {
+  const nodi = tenuti.map(n => {
     const isola = isolaDi.get(n.isola)
     let id = n.id, tipo = n.tipo
+    // sull'isola dell'altro animale (per il cane) le caselle sono strada e basta
+    if (tipo === 'casella' && altro(n.isola)) tipo = 'incrocio'
+    // in fondo alla strada il sentiero senza fine è di chi gioca: un posto solo per tutti e due
+    if (tipo === 'sentiero') id = SENTIERO_DI[protagonista]
     if (tipo === 'casella') {
       const t = isola ? isola.tappe[n.k] : undefined
       // una casella in più delle tappe resta un punto della strada: unita/passo-passo-valle lo dice
@@ -42,14 +62,17 @@ export function quadroValle(S, { mondo = 'valle', dati = DATI[mondo] } = {}) {
     const lato = tipo === 'casella' ? dati.LATO : tipo === 'sentiero' ? Math.round(dati.LATO * SENTIERO) : 0
     nuovo.set(n.id, id)
     return {
-      ...n, id, tipo, chiave: n.id, animale: isola ? isola.animale : 'coniglio', lato,
+      ...n, id, tipo, chiave: n.id, animale: protagonista, lato,
       // seduto su una casella poggia sul bordo di sopra; altrove sta in piedi sulla strada
       piede: lato ? { x: n.x, y: n.y - lato / 2 + ANIMALE.piede } : { x: n.x, y: n.y },
     }
   })
-  const archi = dati.ARCHI.map(e => ({ ...e, a: nuovo.get(e.a), b: nuovo.get(e.b), lungo: lunghezza(e.punti) }))
-  return { W: dati.LARGO, H: dati.ALTO, lato: dati.LATO, nodi, archi, ponti: dati.PONTI, isole: dati.ISOLE,
-           libere: dati.LIBERE || [] }
+  archi = archi.map(e => ({ ...e, a: nuovo.get(e.a), b: nuovo.get(e.b), lungo: lunghezza(e.punti) }))
+  const sue = Object.fromEntries(Object.entries(dati.ISOLE).filter(([k]) => !altro(k)))
+  const ponti = Object.fromEntries(Object.entries(dati.PONTI).filter(([k]) => !pontiVia.has(k)))
+  // per il cane le isole del coniglio sono aperte sempre, come le rive
+  const libere = [...(dati.LIBERE || []), ...(paesaggio ? [] : Object.keys(dati.ISOLE).filter(altro))]
+  return { W: dati.LARGO, H: dati.ALTO, lato: dati.LATO, nodi, archi, ponti, isole: sue, libere, protagonista }
 }
 
 /* Cosa è chiuso: un'isola è aperta se ha almeno una casella aperta. Un arco

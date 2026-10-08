@@ -153,13 +153,13 @@ await apri(0)
   controlla('la vista si apre sul segnalino', b && b.x > 0 && b.x + b.width < 390 && b.y > 0 && b.y + b.height < 844, JSON.stringify(b))
   uguale('i ponti verso le isole chiuse hanno il blocco',
          (await page.locator('[data-blocco]').evaluateAll(l => l.map(e => `${e.dataset.blocco}>${e.dataset.chiude}`))).sort().join(' '),
-         'prato-massi>massi prato-pascolo>pecore-cane prato-salto>salto')
+         'prato-massi>massi prato-salto>salto')
   controlla('le isole chiuse hanno il cartello velato', await page.locator('[data-isola="salto"][data-velata="1"]').count() === 1 &&
             await page.locator('[data-isola="passi"][data-velata="0"]').count() === 1)
   uguale('la tana dello zaino è chiusa', await page.locator('[data-passaggio="zaino"]').getAttribute('data-aperta'), '0')
   uguale('e la sua insegna dice da che numero comincia, ferma',
          (await page.locator('[data-passaggio="zaino"] [data-sotto]').textContent()) + ' ' +
-         await page.locator('[data-passaggio="zaino"] [data-chiama]').getAttribute('data-chiama'), `dal ${TAPPE_PICCOLE + 1} in poi 0`)
+         await page.locator('[data-passaggio="zaino"] [data-chiama]').getAttribute('data-chiama'), `dal ${TAPPE_PRIME + 1} in poi 0`)
 }
 await scatto(page, 'passo-mappa-inizio')
 
@@ -318,7 +318,7 @@ await scatto(page, 'passo-mappa-meta')
     return { chiave: e.dataset.insegna, testo: e.textContent.trim(), r: [r.left, r.top, r.right, r.bottom] }
   }))
   uguale('uno stendardo per isola, col nome', stendardi.map(x => `${x.chiave}:${x.testo.replace(/^\P{L}+/u, '')}`).sort().join(' | '),
-         ['passi:Primi passi', 'salto:Il salto', 'ghiaccio:Il ghiaccio', 'massi:I massi', 'buche:Le buche', 'pecore-cane:Il cane pastore'].sort().join(' | '))
+         ['passi:Primi passi', 'salto:Il salto', 'ghiaccio:Il ghiaccio', 'massi:I massi', 'buche:Le buche'].sort().join(' | '))
   const coperte = await page.evaluate(sts => {
     const out = []
     for (const e of document.querySelectorAll('[data-mappa] [data-tappa]')) {
@@ -394,7 +394,9 @@ uguale('senza riaprire il fumetto', await page.locator('[data-fumetto]').count()
   }
   const dopo = await vista()
   controlla('la vista è andata a sinistra', dopo.x < prima.x - 150, `${JSON.stringify(prima)} → ${JSON.stringify(dopo)}`)
-  controlla('e in giù', dopo.y > prima.y + 60, `${JSON.stringify(prima)} → ${JSON.stringify(dopo)}`)
+  const fondo = (await margini()).maxY
+  controlla('e in giù (o fino al bordo della mappa)', dopo.y > prima.y + 60 || dopo.y >= fondo - 2,
+            `${JSON.stringify(prima)} → ${JSON.stringify(dopo)}, bordo ${fondo}`)
   const b = await page.locator('[data-segnalino]').boundingBox()
   controlla('col segnalino dentro lo schermo', b && b.x > 0 && b.x + b.width < 390 && b.y > 56 && b.y + b.height < 844, JSON.stringify(b))
   controlla('arrivato su un posto della valle', (await segnalino()).al !== '', (await segnalino()).al)
@@ -416,8 +418,9 @@ uguale('senza riaprire il fumetto', await page.locator('[data-fumetto]').count()
   }
   let mia = null, lontano = false
   for (let k = 0; k < 14 && !(lontano && mia); k++) {
-    const { dx, dy } = await versoLaMappa(k % 2 ? 140 : 220)
-    await trascina(195, 420, dx, dy, { passi: 8, pausa: 40 })
+    // solo di lato: in alto le isole sono chiuse, le tappe aperte stanno all'altezza del segnalino
+    const { dx } = await versoLaMappa(k % 2 ? 140 : 220)
+    await trascina(195, 420, dx, 0, { passi: 8, pausa: 40 })
     await attendi(page, 900)
     lontano = await fuoriSchermo()
     mia = lontano ? await altra() : null
@@ -475,7 +478,7 @@ await fermo()
   uguale('il profilo si ricorda l\'ultima tappa giocata', p.cfg && p.cfg.ultima, TAPPE_PICCOLE)
 }
 
-/* ══════════ 4. dallo zaino alla valle, e al pascolo col cane ══════════ */
+/* ══════════ 4. dalle carte alla valle, e il selettore: col cane la sua mappa ══════════ */
 controlla('in cima allo zaino la tana che torna alla valle', await page.locator('[data-passaggio="valle"]').count() === 1)
 await scatto(page, 'passo-mappa-zaino')
 await toccaSu('[data-passaggio="valle"]')
@@ -487,60 +490,36 @@ await fermo()
   uguale('che adesso è aperta', await page.locator('[data-passaggio="zaino"]').getAttribute('data-aperta'), '1')
   uguale('e la sua insegna ondeggia: di là c\'è il viale da fare',
          await page.locator('[data-passaggio="zaino"] [data-chiama]').getAttribute('data-chiama'), '1')
-  uguale('il primo gregge è aperto', await statoSullIsola(page, TAPPE_PRIME), 'aperta')
-  uguale('e la tana del pascolo pure', await page.locator('[data-tana="pecore-cane"]').getAttribute('data-aperta'), '1')
+  uguale('col coniglio il pascolo non ha caselle', await page.locator('[data-mappa] [data-strada="cane"]').count(), 0)
 }
-await spia()
-await toccaSu(casella(TAPPE_PRIME))
-// il coniglio che sparisce nella tana, poi il cane che sbuca
-await page.waitForFunction(() => {
-  const s = document.querySelector('[data-segnalino]')
-  return s.dataset.animale === 'coniglio' && Number(s.style.opacity || 1) < 0.7
-}, null, { timeout: 8000 })
-await page.waitForFunction(() => document.querySelector('[data-segnalino]').dataset.animale === 'cane', null, { timeout: 8000 })
+await toccaSu('[data-scegli="cane"]')
+await page.waitForSelector('[data-mappa][data-protagonista="cane"] [data-tappa]', { timeout: 8000 })
 await fermo()
-await attendi(page, 300)
 {
   const s = await segnalino()
-  uguale('sul pascolo il segnalino è il cane', `${s.al}/${s.animale}`, `${TAPPE_PRIME}/cane`)
-  uguale('passando dalla tana: prima coniglio, poi cane', await animali(), 'coniglio cane')
-  uguale('e c\'è il fumetto del primo gregge', await fumettoPer(), String(TAPPE_PRIME))
+  uguale('scelto il cane, il segnalino è il cane sul primo gregge', `${s.al}/${s.animale}`, `${TAPPE_PRIME}/cane`)
+  uguale('che è la tappa di adesso', await page.locator(casella(TAPPE_PRIME)).getAttribute('data-stato'), 'ora')
+  const numeri = await page.locator('[data-mappa] [data-tappa] .pp-tondo b').evaluateAll(l => l.map(e => Number(e.textContent)))
+  uguale('le sue caselle contano da 1', numeri.sort((x, y) => x - y).join(), [...Array(11)].map((_, k) => k + 1).join())
+  uguale('e del coniglio non ce n\'è', await page.locator('[data-mappa] [data-strada="coniglio"]').count(), 0)
+  uguale('la tana per le carte, col pascolo da fare, è chiusa', await page.locator('[data-passaggio="zaino"]').getAttribute('data-aperta'), '0')
+  uguale('e la sua insegna dice i numeri del cane', (await page.locator('[data-passaggio="zaino"] [data-sotto]').textContent()).trim(), 'dal 12 in poi')
+}
+await toccaSu(casella(TAPPE_PRIME))
+{
+  uguale('c\'è il fumetto del primo gregge', await fumettoPer(), String(TAPPE_PRIME))
+  controlla('«col cane»', /col cane/i.test(await page.locator('[data-fumetto]').innerText()))
+  controlla('e spiega le pecore, che vede per la prima volta', await page.locator('[data-fumetto] [data-nuovo]').count() >= 1)
   controlla('che si può giocare', await page.locator('[data-fumetto] [data-azione="parti"]').count() === 1)
 }
 await scatto(page, 'passo-mappa-pascolo')
 await toccaFuori()
-controlla('in fondo al pascolo la casella del sentiero del cane, col suo cane',
-          await page.locator('[data-tappa="senza-fine-cane"] [data-sentiero-di="cane"]').count() === 1)
-controlla('e in cima alle buche quella del coniglio', await page.locator('[data-tappa="senza-fine"] [data-sentiero-di="coniglio"]').count() === 1)
-await page.locator('[data-tappa="senza-fine-cane"]').evaluate(e => e.scrollIntoView({ block: 'center', inline: 'center' }))
-await attendi(page, 200)
-await scatto(page, 'passo-mappa-sentiero-cane')
-await page.locator('[data-tappa="senza-fine"]').evaluate(e => e.scrollIntoView({ block: 'center', inline: 'center' }))
-await attendi(page, 200)
-await scatto(page, 'passo-mappa-buche')
-
-/* dal pascolo al prato sul ponte: sul capo del pascolo il cane torna coniglio, in una nuvoletta */
-await spia()
-await toccaSu(casella(3))
+await toccaSu('[data-scegli="coniglio"]')
+await page.waitForSelector('[data-mappa][data-protagonista="coniglio"] [data-tappa]', { timeout: 8000 })
 await fermo()
-{
-  const s = await segnalino()
-  uguale('sul prato torna il coniglio', `${s.al}/${s.animale}`, '3/coniglio')
-  uguale('passando dal ponte del pascolo', await animali(), 'cane coniglio')
-  controlla('in una nuvoletta', await page.evaluate(() => window.__sbuffo))
-}
-await toccaFuori()
+uguale('tornati al coniglio, il segnalino è il coniglio', (await segnalino()).animale, 'coniglio')
 
-/* allo zaino dalla tana, e ritorno */
-await toccaSu('[data-passaggio="zaino"]')
-await page.waitForSelector('[data-mappa][data-mondo="zaino"] [data-tappa]', { timeout: 15000 })
-await fermo()
-uguale('dalla tana dello zaino si passa allo zaino', `${(await segnalino()).al}/${(await segnalino()).animale}`, 'tana:valle/coniglio')
-await toccaSu('[data-passaggio="valle"]')
-await page.waitForSelector('[data-mappa][data-mondo="valle"] [data-tappa]', { timeout: 15000 })
-uguale('e dalla sua tana si torna', await mondo(), 'valle')
-
-/* ══════════ 5. la strada del coniglio va avanti senza il cane ══════════ */
+/* ══════════ 5. le due strade vanno ognuna per conto suo ══════════ */
 await page.locator('button[aria-label="indietro"]').click()
 await semina(page, { settings: { eta: 8 }, campagne: { passo: {
   tappa: TAPPE_PICCOLE + 1, stelle: { ...stelleFino(TAPPE_PRIME), [TAPPE_PICCOLE]: 3 },
@@ -553,21 +532,15 @@ await fermo()
   const s = await segnalino()
   uguale('fatto il viale senza il cane, il coniglio è alla tappa dopo', `${s.al}/${s.animale}`, `${dopo}/coniglio`)
   uguale('che è quella di adesso', await statoSullIsola(page, dopo), 'ora')
-  uguale('le stalle restano chiuse', await statoSullIsola(page, STALLE), 'chiusa')
-  controlla('l\'isoletta del cane del ripeti ha la sua tana dipinta, col masso davanti finché è chiusa',
-            await page.locator('[data-tana="ripeti-cane"][data-aperta="0"]').count() === 1)
-  await toccaSu(casella(STALLE))
+  uguale('col cane, il primo gregge aspetta', await statoSullIsola(page, TAPPE_PRIME), 'ora')
+  await toccaSu('[data-passaggio="zaino"]')
   const serve = await page.locator('[data-fumetto] [data-serve]').innerText()
-  controlla('e dicono di finire prima il pascolo', /Prima tocca a «Il primo gregge»/.test(serve), serve)
-  controlla('le isole più avanti sono velate', await page.locator('[data-isola="fino"][data-velata="1"]').count() === 1)
+  controlla('e la tana per le carte del cane dice di finire prima il pascolo', /Prima tocca a «Il primo gregge»/.test(serve), serve)
   await toccaFuori()
-  uguale('il primo gregge aspetta, aperto', await statoSullIsola(page, TAPPE_PRIME), 'aperta')
-  controlla('l\'isola del pascolo non è velata',
-            await page.locator('[data-isola="pecore-cane"][data-velata="0"]').count() === 1)
 }
 
 /* ══════════ 6. il mondo dello zaino, sul suo fondale ══════════ */
-const DELLO_ZAINO = 30         // le tappe di ripeti, fino a, se e tutto il mondo, e delle loro isolette
+const DELLO_ZAINO = 18         // le tappe del coniglio di ripeti, fino a, se e tutto il mondo
 await apri(TAPPE_PICCOLE)
 {
   uguale('con la prima tappa dello zaino si apre lo zaino', await mondo(), 'zaino')
@@ -575,23 +548,23 @@ await apri(TAPPE_PICCOLE)
   uguale('il coniglio sta sulla tappa di adesso, il viale', `${s.al}/${s.animale}`, `${TAPPE_PICCOLE}/coniglio`)
   uguale('sulla riva la tana per la valle, con la sua insegna: il nome e i numeri di là',
          (await page.locator('[data-passaggio="valle"] [data-nome]').textContent()).trim() + ' · ' +
-         (await page.locator('[data-passaggio="valle"] [data-sotto]').textContent()).trim(), `I primi livelli · dall'1 al ${TAPPE_PICCOLE}`)
+         (await page.locator('[data-passaggio="valle"] [data-sotto]').textContent()).trim(), `I primi livelli · dall'1 al ${TAPPE_PRIME}`)
   uguale('i ponti verso le isole chiuse hanno il blocco',
          (await page.locator('[data-blocco]').evaluateAll(l => l.map(e => `${e.dataset.blocco}>${e.dataset.chiude}`))).sort().join(' '),
          'ripeti-fino>fino ripeti-mondo>mondo')
-  uguale('uno stendardo per isola, e uno stemma per isoletta',
+  uguale('col coniglio uno stendardo per isola, e le isolette del cane sono paesaggio',
          (await page.locator('[data-mondo="zaino"] [data-insegna]').evaluateAll(l => l.map(e => e.dataset.insegna))).sort().join(' '),
-         'fino fino-cane mondo mondo-cane ripeti ripeti-cane se se-cane')
+         'fino mondo ripeti se')
   uguale('quelli grandi hanno il nome',
          (await page.locator('[data-mondo="zaino"] [data-insegna]').evaluateAll(l => l.map(e => `${e.dataset.insegna}:${e.textContent.trim().replace(/^\P{L}+/u, '')}`)))
            .filter(x => !x.includes('-cane')).sort().join(' | '),
          'fino:Fino a | mondo:Tutto il mondo | ripeti:Il ripeti | se:Il se')
-  uguale('le quattro isolette, chiuse, hanno la bocca col masso',
-         await page.locator('[data-tana$="-cane"][data-aperta="0"]').count(), 4)
-  uguale('una casella per tappa dello zaino', await page.locator('[data-mappa] [data-tappa]').count(), DELLO_ZAINO)
+  uguale('e le loro tane non ci sono', await page.locator('[data-tana$="-cane"]').count(), 0)
+  uguale('una casella per tappa del coniglio nelle carte', await page.locator('[data-mappa] [data-tappa]:not([data-tappa^="senza-fine"])').count(), DELLO_ZAINO)
   const numeri = await page.locator('[data-mappa] [data-tappa] .pp-tondo b').evaluateAll(l => l.map(e => Number(e.textContent)))
-  uguale('ognuna dice il numero della sua tappa, e basta',
-         numeri.every(n => Number.isInteger(n) && n > TAPPE_PICCOLE && n <= CAMPAGNA.length), true)
+  uguale('ognuna dice il suo numero sulla strada del coniglio, dopo quelli della valle',
+         numeri.every(n => Number.isInteger(n) && n > TAPPE_PRIME && n <= TAPPE_PRIME + DELLO_ZAINO), true)
+  controlla('e in fondo a «Tutto il mondo» il sentiero del coniglio', await page.locator('[data-tappa="senza-fine"] [data-sentiero-di="coniglio"]').count() === 1)
   uguale('tutte diverse', new Set(numeri).size, DELLO_ZAINO)
   await scatto(page, 'passo-mappa-zaino-chiuso')
 }
@@ -629,48 +602,35 @@ await toccaFuori()
   uguale('ed è il coniglio', s.animale, 'coniglio')
 }
 
-/* le isolette del cane: dalla tana (o dalla nuvoletta, dove il coniglio non ha un buco) il segnalino diventa il
-   cane, sulla bocca dipinta dell'isoletta; e di nuovo coniglio tornando */
-await apri(62, { ultima: 61 }, 12)       // a otto anni le ultime tappe dello zaino non sono ancora aperte
-uguale('a campagna avanzata lo zaino è aperto', await mondo(), 'zaino')
-for (const [dopo, att, nuvola, isola] of [[36, 35, true, 'ripeti-cane'], [45, 44, false, 'fino-cane'],
-                                         [51, 49, false, 'se-cane'], [55, 52, true, 'mondo-cane']]) {
+/* le isolette del cane: col cane, dalla tana sull'isola del coniglio accanto (o dalla nuvoletta, dove
+   lì non c'è un buco) si sbuca sulla bocca dipinta dell'isoletta; il segnalino resta il cane */
+await apri(62, { ultima: 61 }, 12)
+uguale('giocato il cane per ultimo, la mappa si apre col cane', await page.locator('[data-mappa]').getAttribute('data-protagonista'), 'cane')
+uguale('nelle isole delle carte', await mondo(), 'zaino')
+for (const [prima, isola] of [[36, 'ripeti-cane'], [45, 'fino-cane'], [51, 'se-cane'], [55, 'mondo-cane']]) {
   uguale(`${isola}: aperta, senza masso`, await page.locator(`[data-tana="${isola}"]`).getAttribute('data-aperta'), '1')
-  await toccaSu(casella(att))
-  await fermo()
-  await toccaFuori()
-  uguale(`${isola}: il coniglio è sulla sua isola`, `${(await segnalino()).al}/${(await segnalino()).animale}`, `${att}/coniglio`)
   await spia()
-  await toccaSu(casella(dopo))
+  await toccaSu(casella(prima))
   await fermo()
   await attendi(page, 300)
-  uguale(`${isola}: nella tana il coniglio sparisce e sbuca il cane`, await animali(), 'coniglio cane')
-  uguale(`${isola}: ${nuvola ? 'in una nuvoletta, dove non c\'è il buco' : 'senza nuvoletta, il buco è dipinto'}`,
-         await page.evaluate(() => window.__sbuffo), nuvola)
-  {
-    const s = await segnalino()
-    uguale(`${isola}: il cane è sulla prima tappa dell'isoletta`, `${s.al}/${s.animale}`, `${dopo}/cane`)
-    controlla(`${isola}: col fumetto della tappa, «col cane»`, (await fumettoPer()) === String(dopo) &&
-              /col cane/i.test(await page.locator('[data-fumetto]').innerText()))
-  }
+  const s = await segnalino()
+  uguale(`${isola}: il cane arriva sulla prima tappa dell'isoletta`, `${s.al}/${s.animale}`, `${prima}/cane`)
+  uguale(`${isola}: e resta il cane per tutto il viaggio`, (await animali()).split(' ').filter(a => a !== 'cane').length, 0)
+  controlla(`${isola}: col fumetto della tappa, «col cane»`, (await fumettoPer()) === String(prima) &&
+            /col cane/i.test(await page.locator('[data-fumetto]').innerText()))
   if (isola === 'ripeti-cane') await scatto(page, 'passo-mappa-isoletta')
-  await toccaFuori()
-  await spia()
-  await toccaSu(casella(att))
-  await fermo()
-  uguale(`${isola}: tornando, di nuovo coniglio`, await animali(), 'cane coniglio')
-  uguale(`${isola}: ${nuvola ? 'in una nuvoletta' : 'dal buco dipinto'}`, await page.evaluate(() => window.__sbuffo), nuvola)
   await toccaFuori()
 }
 
-/* uscendo e rientrando, il segnalino è dov'era, nella stessa valle */
+/* uscendo e rientrando, il segnalino è dov'era, col suo protagonista, nella stessa valle */
 await toccaSu(casella(58))
 await fermo()
 await page.locator('button[aria-label="indietro"]').click()
 await scegli(page, 'passo')
 await page.waitForSelector('[data-mappa] [data-tappa]')
 await fermo()
-uguale('rientrando si è nella stessa valle', await mondo(), 'zaino')
+uguale('rientrando si è col cane', await page.locator('[data-mappa]').getAttribute('data-protagonista'), 'cane')
+uguale('nella stessa valle', await mondo(), 'zaino')
 uguale('e il segnalino sta dov\'era', (await segnalino()).al, '58')
 
 uguale('nessun errore in console', errori.join(' · '), '')

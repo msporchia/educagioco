@@ -1,5 +1,5 @@
 <script setup>
-/* Una casella della mappa: un tondo col numero del livello, come i led della
+/* Una casella della mappa: un tondo col numero del livello sulla sua strada, come i led della
    scheda del robot; lo stato lo dice il tondo (fatta d'oro, da fare adesso
    col suo alone che respira, aperta chiara, chiusa spenta col lucchetto
    piccolo), le stelle prese stanno accanto solo su una fatta, e la ✏️ di una
@@ -18,7 +18,7 @@ defineEmits(['tocca'])
 const STELLA = 'M12 2.6l2.85 5.95 6.55.85-4.8 4.55 1.2 6.5L12 17.3l-5.8 3.15 1.2-6.5-4.8-4.55 6.55-.85z'
 const etichetta = c => (c.tipo === 'sentiero'
   ? `${c.nome}: ${c.stato === 'chiusa' ? c.serve : c.racconto}`
-  : `${c.id + 1}. ${c.nome}${c.stato === 'chiusa' ? ' (chiusa)' : ''}: ${c.racconto}`)
+  : `${c.numero}. ${c.nome}${c.stato === 'chiusa' ? ' (chiusa)' : ''}: ${c.racconto}`)
 </script>
 
 <template>
@@ -40,7 +40,7 @@ const etichetta = c => (c.tipo === 'sentiero'
       <span class="pp-sentiero-di pp-em" :data-sentiero-di="c.strada">{{ c.strada === 'cane' ? '🐕' : '🐇' }}</span>
     </template>
     <template v-else>
-      <span class="pp-tondo"><b>{{ c.id + 1 }}</b></span>
+      <span class="pp-tondo"><b>{{ c.numero }}</b></span>
       <svg v-if="c.stato === 'chiusa'" class="pp-lucchetto-piccolo" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M7.5 10.5V8a4.5 4.5 0 0 1 9 0v2.5" fill="none" stroke="currentColor" stroke-width="3" />
         <rect x="4.5" y="10" width="15" height="11" rx="3" fill="currentColor" />

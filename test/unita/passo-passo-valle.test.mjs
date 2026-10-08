@@ -1,18 +1,19 @@
-/* Le due valli di Passo passo, senza browser: la valle dei piccoli e il mondo
-   dello zaino. Il modulo di ognuna è quello del suo foglietto (se no si
-   rilancia lo strumento), una casella per tappa delle sue isole, ogni
-   casella sta su un sentiero e non tocca le altre né i cartelli; a ogni
-   punto della campagna ogni casella aperta si raggiunge, i ponti verso
-   un'isola chiusa hanno il blocco e non si passano; il coniglio resta
-   coniglio sulle sue isole, diventa cane nella tana (o sul capo di un ponte
-   del pascolo) e un viaggio lungo non dura di più. Nello zaino ogni scalino
-   ha la sua isoletta del cane, con la tana dipinta (o la nuvoletta, dove il
-   coniglio non ha un buco).
+/* Le due valli di Passo passo, senza browser: la valle dei piccoli e le
+   isole delle carte, ognuna vista da tutti e due i protagonisti. Il modulo
+   di ognuna è quello del suo foglietto (se no si rilancia lo strumento), una
+   casella per tappa delle sue isole, ogni casella sta su un sentiero e non
+   tocca le altre né i cartelli; per ogni protagonista ci sono solo le sue
+   caselle, e a ogni punto della campagna ogni casella aperta si raggiunge, i
+   ponti verso un'isola chiusa hanno il blocco e non si passano, l'animale è
+   sempre lui e un viaggio lungo non dura di più. Il coniglio non va sulle
+   isole del cane; il cane attraversa quelle del coniglio, ed entra nelle
+   isolette dalla tana dipinta (o dalla nuvoletta). Il sentiero senza fine è
+   uno, in fondo a «Tutto il mondo», ed è di chi gioca.
    Vedi docs/passo-passo/mappa.md.
    `node test/esegui.mjs passo-passo-valle --niente-build` */
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
-import { CAMPAGNA, SCALINI } from '../../src/giochi/passo-passo/dati/campagna.js'
+import { CAMPAGNA, SCALINI, TAPPE_PICCOLE } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { STRADE, aperture } from '../../src/giochi/passo-passo/motore/strade.js'
 import { DATI, MONDI, quadroValle, chiusure, percorso, viaggio, vicinoA, mondoDellIsola, TEMPO_MAX }
   from '../../src/giochi/passo-passo/scena/valle.js'
@@ -25,9 +26,19 @@ const S = STRADE
 const FOGLIETTI = { valle: 'isole.json', zaino: 'zaino.json' }
 const foglietto = mondo => new URL(`../../strumenti/sprite/sorgenti/passo-passo/${FOGLIETTI[mondo]}`, import.meta.url)
 const fgDi = Object.fromEntries(MONDI.map(m => [m, JSON.parse(readFileSync(foglietto(m), 'utf8'))]))
-const qDi = Object.fromEntries(MONDI.map(m => [m, quadroValle(S, { mondo: m })]))
-const q = qDi.valle
+const PROTAGONISTI = ['coniglio', 'cane']
+const qDi = Object.fromEntries(MONDI.map(m => [m, Object.fromEntries(PROTAGONISTI.map(p => [p, quadroValle(S, { mondo: m, protagonista: p })]))]))
+const q = qDi.valle.coniglio
 const per = new Map(q.nodi.map(n => [n.id, n]))
+// tutti i posti di una valle, dai due protagonisti: dove uno ha una casella, l'altro ha strada
+const unione = mondo => {
+  const visti = new Map()
+  for (const p of PROTAGONISTI) for (const n of qDi[mondo][p].nodi) {
+    const v = visti.get(n.chiave)
+    if (!v || (v.tipo === 'incrocio' && n.tipo !== 'incrocio')) visti.set(n.chiave, n)
+  }
+  return { nodi: [...visti.values()] }
+}
 const SPAZIO = 8
 
 const distanza = (p, punti) => {
@@ -52,12 +63,12 @@ const distanzaStrada = (r, punti) => {
 controlla('ogni isola delle strade sta in un mondo', S.isole.every(s => mondoDellIsola(s.chiave) !== null),
           S.isole.filter(s => mondoDellIsola(s.chiave) === null).map(s => s.chiave).join(' '))
 {
-  const comuni = qDi.valle.nodi.filter(n => qDi.zaino.nodi.some(m => m.id === n.id)).map(n => n.id)
+  const comuni = unione('valle').nodi.filter(n => unione('zaino').nodi.some(m => m.id === n.id)).map(n => n.id)
   uguale('i posti dei due mondi hanno id diversi (la mappa li riconosce da lì)', comuni.join(' '), '')
 }
 
 for (const mondo of MONDI) {
-  const D = DATI[mondo], fg = fgDi[mondo], Q = qDi[mondo]
+  const D = DATI[mondo], fg = fgDi[mondo], Q = unione(mondo)
   const nome = m => `${mondo}: ${m}`
   const isole = S.isole.filter(s => mondoDellIsola(s.chiave) === mondo)
   const caselle = Q.nodi.filter(n => n.tipo === 'casella')
@@ -77,8 +88,11 @@ for (const mondo of MONDI) {
          [...tappe].sort((a, b) => a - b).join(','))
   controlla(nome('le tappe dell\'altro mondo non ci sono'),
             Q.nodi.every(n => typeof n.id !== 'number' || tappe.includes(n.id)))
-  controlla(nome('lo stato lo fa il quadro: l\'animale di una casella è quello della sua isola'),
-            caselle.every(n => n.animale === isole.find(s => s.chiave === n.isola).animale))
+  for (const p of PROTAGONISTI) {
+    const sue = qDi[mondo][p].nodi.filter(n => n.tipo === 'casella')
+    controlla(nome(`col ${p} ci sono solo le sue caselle, e l'animale è sempre lui`),
+              sue.every(n => S.animale[n.id] === p) && qDi[mondo][p].nodi.every(n => n.animale === p))
+  }
   uguale(nome('i punti senza nome del mondo hanno il suo prefisso, se ce l\'ha'),
          Q.nodi.filter(n => /^(z-)?(incrocio|sosta|capo):/.test(n.id)).filter(n => n.id.startsWith('z-') !== !!fg.prefisso).length, 0)
 
@@ -138,7 +152,12 @@ for (const mondo of MONDI) {
     if (Math.abs(t.x - n.x) < n.mezzo + 6 && Math.abs(t.y - n.y) < n.mezzo + 6) coperteTane.push(`${t.id}/${n.chiave}`)
   uguale(nome('nessuna casella copre una tana'), coperteTane.join(' '), '')
 
-  /* ── a ogni punto della campagna ── */
+  /* ── a ogni punto della campagna, per ogni protagonista ── */
+  for (const p of PROTAGONISTI) {
+  const Q = qDi[mondo][p]
+  const nome = m => `${mondo}, ${p}: ${m}`
+  const caselle = Q.nodi.filter(n => n.tipo === 'casella')
+  const tonde = Q.nodi.filter(n => n.tipo === 'casella' || n.tipo === 'sentiero')
   const tutte = chiusure(Q, () => true)
   uguale(nome('tutto aperto, nessun blocco'), tutte.blocchi.length, 0)
   uguale(nome('e nessun arco chiuso'), tutte.bloccati.size, 0)
@@ -188,28 +207,41 @@ for (const mondo of MONDI) {
   }
   uguale(nome('da ogni casella a ogni altra si arriva, con l\'animale di là'), sbagli.slice(0, 6).join(' '), '')
   uguale(nome('e nessun viaggio salta più a lungo di così'), lunghi.slice(0, 6).join(' '), '')
-  const conigli = S.coniglio.filter(i => caselle.some(n => n.id === i))
+  const sue = S[p].filter(i => caselle.some(n => n.id === i))
   const cambiano = []
-  for (let k = 1; k < conigli.length; k++) {
-    const v = viaggio(Q, conigli[k - 1], conigli[k], tutte.bloccati)
-    if (v.some(p => p.che !== 'salto' || p.animale !== 'coniglio')) cambiano.push(conigli[k])
+  for (let k = 1; k < sue.length; k++) {
+    const v = viaggio(Q, sue[k - 1], sue[k], tutte.bloccati)
+    if (v.some(x => x.animale !== p)) cambiano.push(sue[k])
   }
-  uguale(nome('sulle isole del coniglio salta sempre il coniglio'), cambiano.join(' '), '')
+  uguale(nome('da una tappa alla dopo l\'animale resta lui'), cambiano.join(' '), '')
+  }
 }
 
 const animali = v => v.filter(p => p.che !== 'salto').map(p => `${p.che}:${p.animale}${p.sbuffo ? '*' : ''}`).join(' ')
 
+// il posto di una tappa su un quadro: la sua casella, o (sull'isola dell'altro animale) il punto di strada dove sta
+const postoDi = (Q, i) => {
+  const isola = S.isole[S.isolaDi[i]]
+  return (Q.nodi.find(n => n.id === i) || Q.nodi.find(n => n.chiave === `${isola.chiave}:${isola.tappe.indexOf(i)}`)).id
+}
+
+/* ══════════ il sentiero senza fine: uno, in fondo, di chi gioca ══════════ */
+{
+  for (const p of PROTAGONISTI) {
+    const tutti = MONDI.flatMap(m => qDi[m][p].nodi.filter(n => n.tipo === 'sentiero').map(n => `${m}:${n.id}@${n.isola}`))
+    uguale(`col ${p} un sentiero solo, il suo, in fondo a «Tutto il mondo»`, tutti.join(' '),
+           `zaino:${p === 'cane' ? SENTIERO_CANE : 'senza-fine'}@mondo`)
+  }
+  const Qc = qDi.zaino.cane
+  const ultimo = postoDi(Qc, S.cane.at(-1))
+  controlla('il cane ci arriva dall\'ultima tappa della sua strada', !!percorso(Qc, ultimo, SENTIERO_CANE, chiusure(Qc, () => true).bloccati))
+}
+
 /* ══════════ la valle dei piccoli ══════════ */
 {
   const D = DATI.valle
-  const caselle = q.nodi.filter(n => n.tipo === 'casella')
   const tutte = chiusure(q, () => true)
-  uguale('e i due sentieri senza fine', q.nodi.filter(n => n.tipo === 'sentiero').map(n => n.id).sort().join(','),
-         ['senza-fine', SENTIERO_CANE].sort().join(','))
-  controlla('quello del coniglio sta sulle buche, ed è del coniglio',
-            q.nodi.some(n => n.id === 'senza-fine' && n.isola === 'buche' && n.animale === 'coniglio'))
-  controlla('quello del cane in fondo al pascolo, ed è del cane',
-            q.nodi.some(n => n.id === SENTIERO_CANE && n.isola === 'pecore-cane' && n.animale === 'cane'))
+  const pascolo = S.isole.find(s => s.chiave === 'pecore-cane')
   {
     // a metà del ghiaccio: i massi chiusi, e al prato si arriva solo dal ponte lungo
     const { aperta } = aperture(S, { fatta: i => i < 12 })
@@ -219,20 +251,24 @@ const animali = v => v.filter(p => p.che !== 'salto').map(p => `${p.che}:${p.ani
     const via = percorso(q, 12, 0, c.bloccati).map(t => q.archi[t.arco].ponte).filter((p, k, l) => p && p !== l[k - 1])
     uguale('dal ghiaccio al prato: giù dal salto e sul ponte lungo', via.join(' '), 'salto-ghiaccio prato-salto')
   }
-  const pascolo = S.isole.find(s => s.chiave === 'pecore-cane')
-  // l'ultima dei piccoli sta in fondo ai massi, accanto al ponte del prato
-  uguale('dall\'ultima dei massi al primo gregge: giù al prato e sul ponte, con la nuvoletta',
-         animali(viaggio(q, pascolo.attacco, pascolo.tappe[0], tutte.bloccati)), 'entra:coniglio* esce:cane*')
-  uguale('dalle buche al primo gregge: per la tana',
-         animali(viaggio(q, CAMPAGNA.findIndex(t => t.scalino === 'buche'), pascolo.tappe[0], tutte.bloccati)),
-         'entra:coniglio esce:cane')
-  uguale('dall\'ultimo gregge al sentiero del cane si salta e basta, da cane',
-         viaggio(q, pascolo.tappe.at(-1), SENTIERO_CANE, tutte.bloccati).map(p => `${p.che}:${p.animale}`).filter((x, k, l) => x !== l[k - 1]).join(' '),
-         'salto:cane')
-  uguale('dal prato al pascolo: sul ponte, e sul capo del pascolo una nuvoletta',
-         animali(viaggio(q, 0, pascolo.tappe[2], tutte.bloccati)), 'entra:coniglio* esce:cane*')
-  uguale('e dal pascolo al prato il cane diventa coniglio prima di salire sul ponte',
-         animali(viaggio(q, pascolo.tappe[2], 0, tutte.bloccati)), 'entra:cane* esce:coniglio*')
+  // il coniglio non va sul pascolo: è paesaggio, senza ponti né tana
+  controlla('col coniglio il pascolo non c\'è: né caselle, né i ponti, né la tana',
+            !q.nodi.some(n => n.isola === 'pecore-cane' || n.chiave.startsWith('tana:pecore-cane')) &&
+            !Object.keys(q.ponti).some(k => k.includes('pascolo')))
+  {
+    const Qc = qDi.valle.cane
+    const tutteC = chiusure(Qc, () => true)
+    uguale('col cane dalle buche al primo gregge: per la tana, sempre cane',
+           animali(viaggio(Qc, postoDi(Qc, CAMPAGNA.findIndex(t => t.scalino === 'buche')), pascolo.tappe[0], tutteC.bloccati)),
+           'entra:cane esce:cane')
+    uguale('e dal prato al pascolo sul ponte, senza nuvolette', animali(viaggio(Qc, postoDi(Qc, 0), pascolo.tappe[2], tutteC.bloccati)), '')
+    controlla('le isole del coniglio per il cane sono strada aperta, senza stendardi',
+              ['passi', 'salto', 'ghiaccio', 'buche', 'massi'].every(k => tutteC.aperte.has(k) && !Qc.isole[k]))
+    const zero = chiusure(Qc, () => false)
+    controlla('col pascolo chiuso, i suoi ponti hanno il blocco e la tana non si passa',
+              zero.blocchi.some(b => b.isola === 'pecore-cane') && !percorso(Qc, postoDi(Qc, 0), pascolo.tappe[0], zero.bloccati))
+    controlla('alla tana per le isole delle carte il cane arriva dal pascolo', !!percorso(Qc, pascolo.tappe[0], 'tana:zaino', tutteC.bloccati))
+  }
   {
     // atterrato a metà di un ponte, si riparte da lì: indietro, se la meta è dietro
     const i = q.archi.findIndex(e => e.ponte === 'prato-salto')
@@ -246,85 +282,82 @@ const animali = v => v.filter(p => p.che !== 'salto').map(p => `${p.che}:${p.ani
   controlla('e ha la sua insegna sul fondale', D.NODI.some(n => n.id === 'tana:zaino' && Array.isArray(n.freccia)))
   {
     // senza strada (il segnalino su un'isola chiusa) un balzo solo, e si arriva lo stesso
-    const v = viaggio(q, pascolo.tappe[0], 0, chiusure(q, i => i === 0).bloccati)
+    const v = viaggio(q, 20, 0, chiusure(q, i => i === 0).bloccati)
     uguale('senza strada un balzo solo', v.length, 1)
   }
-  uguale('la valle ha una sola tana per l\'altro mondo', q.nodi.filter(n => n.tipo === 'passaggio').map(n => n.id).join(' '), 'tana:zaino')
-  controlla('e le caselle del sentiero del cane e del coniglio non stanno in una isoletta', caselle.every(n => !n.isola.endsWith('-cane') || n.isola === 'pecore-cane'))
+  for (const p of PROTAGONISTI)
+    uguale(`col ${p} la valle ha una sola tana per l'altro mondo`,
+           qDi.valle[p].nodi.filter(n => n.tipo === 'passaggio').map(n => n.id).join(' '), 'tana:zaino')
 }
 
-/* ══════════ il mondo dello zaino ══════════ */
+/* ══════════ le isole delle carte ══════════ */
 {
-  const Q = qDi.zaino, D = DATI.zaino
-  const caselle = Q.nodi.filter(n => n.tipo === 'casella')
-  const tutte = chiusure(Q, () => true)
-  const perZ = new Map(Q.nodi.map(n => [n.id, n]))
+  const D = DATI.zaino
   const coniglioZ = S.isole.filter(s => mondoDellIsola(s.chiave) === 'zaino' && s.animale === 'coniglio')
   const caneZ = S.isole.filter(s => mondoDellIsola(s.chiave) === 'zaino' && s.animale === 'cane')
 
-  // le isole: ripeti, fino a, se, tutto il mondo, e a ognuna la sua isoletta del cane
+  // le isole: ripeti, fino a, se, tutto il mondo, e accanto a ognuna un'isoletta del cane
   uguale('quattro isole del coniglio, nell\'ordine degli scalini', coniglioZ.map(s => s.chiave).join(' '), 'ripeti fino se mondo')
   uguale('e un\'isoletta del cane per ognuna', caneZ.map(s => s.da).join(' '), 'ripeti fino se mondo')
   uguale('quante tappe: 8, 4, 2, 4 e tre per isoletta', [...coniglioZ, ...caneZ].map(s => s.tappe.length).join(' '),
          '8 4 2 4 3 3 3 3')
-  controlla('le isolette sono staccate: nel foglietto un\'isola del cane è solo sua (una stemma, tre caselle)',
-            caneZ.every(s => D.ISOLE[s.chiave].stemma === true && D.ISOLE[s.chiave].caselle === 3))
+  controlla('le isolette hanno lo stemma e tre caselle', caneZ.every(s => D.ISOLE[s.chiave].stemma === true && D.ISOLE[s.chiave].caselle === 3))
   controlla('le isole del coniglio hanno il nome per esteso', coniglioZ.every(s => !D.ISOLE[s.chiave].stemma))
-  // la riva da cui si arriva: libera, con la tana per la valle
-  controlla('la riva dell\'arrivo è sempre aperta', D.LIBERE.includes('riva') && tutte.aperte.has('riva'))
-  controlla('e ci sta la tana per la valle, con la sua insegna', Q.nodi.some(n => n.id === 'tana:valle' && n.tipo === 'passaggio' &&
-            n.isola === 'riva' && Array.isArray(n.freccia)))
-  uguale('è l\'unica', Q.nodi.filter(n => n.tipo === 'passaggio').length, 1)
-  controlla('dalla tana si arriva a ogni casella', caselle.every(n => !!percorso(Q, 'tana:valle', n.id, tutte.bloccati)))
-  uguale('e alla prima del coniglio si va saltando, da coniglio',
-         viaggio(Q, 'tana:valle', S.coniglio[35] ?? 35, tutte.bloccati).map(p => `${p.che}:${p.animale}`).filter((x, k, l) => x !== l[k - 1]).join(' '),
-         'salto:coniglio')
-  controlla('chiuso lo zaino (nessuna tappa aperta) la tana non è un guaio: i ponti non bloccano la riva',
-            chiusure(Q, () => false).bloccati.size >= 0)
+  for (const p of PROTAGONISTI) {
+    const Q = qDi.zaino[p]
+    const tutte = chiusure(Q, () => true)
+    // la riva da cui si arriva: libera, con la tana per la valle
+    controlla(`col ${p} la riva dell'arrivo è sempre aperta`, D.LIBERE.includes('riva') && chiusure(Q, () => false).aperte.has('riva'))
+    controlla(`col ${p} ci sta la tana per la valle, con la sua insegna`, Q.nodi.some(n => n.id === 'tana:valle' && n.tipo === 'passaggio' &&
+              n.isola === 'riva' && Array.isArray(n.freccia)))
+    controlla(`col ${p} dalla tana si arriva a ogni casella`,
+              Q.nodi.filter(n => n.tipo === 'casella').every(n => !!percorso(Q, 'tana:valle', n.id, tutte.bloccati)))
+  }
+  {
+    const Q = qDi.zaino.coniglio, tutte = chiusure(Q, () => true)
+    uguale('al viale il coniglio va saltando',
+           viaggio(Q, 'tana:valle', TAPPE_PICCOLE, tutte.bloccati).map(p => `${p.che}:${p.animale}`).filter((x, k, l) => x !== l[k - 1]).join(' '),
+           'salto:coniglio')
+    controlla('col coniglio le isolette sono paesaggio', !Q.nodi.some(n => caneZ.some(s => s.chiave === n.isola)))
+  }
 
-  // ogni isoletta del cane: la tana dipinta sulla sua isola, quella del coniglio sulla sua
+  // ogni isoletta del cane: ci si entra dalla tana sull'isola del coniglio accanto, dalla bocca dipinta
+  const Q = qDi.zaino.cane, perZ = new Map(Q.nodi.map(n => [n.id, n]))
+  const tutte = chiusure(Q, () => true)
   for (const s of caneZ) {
     const da = perZ.get(`tana:${s.chiave}:da`), a = perZ.get(`tana:${s.chiave}:a`)
-    controlla(`${s.chiave}: la bocca dipinta sta sull'isoletta, ed è del cane`, !!a && a.isola === s.chiave && a.animale === 'cane')
-    controlla(`${s.chiave}: la tana del coniglio sta sulla sua isola (${s.da}), ed è del coniglio`,
-              !!da && da.isola === s.da && da.animale === 'coniglio')
+    controlla(`${s.chiave}: la bocca dipinta sta sull'isoletta`, !!a && a.isola === s.chiave)
+    controlla(`${s.chiave}: l'altra bocca sta sull'isola del coniglio accanto (${s.da})`, !!da && da.isola === s.da)
     const nuvola = !!(da && da.nuvola)
-    uguale(`${s.chiave}: dall'isola del coniglio all'isoletta: nella tana, ${nuvola ? 'in una nuvoletta di qua' : 'dal buco dipinto'}`,
-           animali(viaggio(Q, s.attacco, s.tappe[0], tutte.bloccati)), `entra:coniglio${nuvola ? '*' : ''} esce:cane`)
-    uguale(`${s.chiave}: e ritorno`, animali(viaggio(Q, s.tappe[0], s.attacco, tutte.bloccati)),
-           `entra:cane esce:coniglio${nuvola ? '*' : ''}`)
+    const vicino = postoDi(Q, s.attacco)
+    uguale(`${s.chiave}: dall'isola accanto all'isoletta: nella tana, ${nuvola ? 'in una nuvoletta di qua' : 'dal buco dipinto'}`,
+           animali(viaggio(Q, vicino, s.tappe[0], tutte.bloccati)), `entra:cane${nuvola ? '*' : ''} esce:cane`)
+    uguale(`${s.chiave}: e ritorno`, animali(viaggio(Q, s.tappe[0], vicino, tutte.bloccati)), `entra:cane esce:cane${nuvola ? '*' : ''}`)
     uguale(`${s.chiave}: la tana è una sola, sotto terra (un tunnel)`,
            Q.archi.filter(e => e.tipo === 'tunnel' && ((e.a === da.id && e.b === a.id) || (e.a === a.id && e.b === da.id))).length, 1)
     // la prima tappa è la più vicina alla bocca dipinta
     const dist = i => Math.hypot(perZ.get(i).x - a.x, perZ.get(i).y - a.y)
     controlla(`${s.chiave}: le tappe vanno via via più lontane dalla tana`, dist(s.tappe[0]) < dist(s.tappe[1]) && dist(s.tappe[1]) < dist(s.tappe[2]))
-    // chiusa (il coniglio non ha finito la tappa da cui si apre) non ci si arriva, e la bocca ha il masso
-    const { aperta } = aperture(S, { fatta: i => i < s.attacco })
-    const c = chiusure(Q, aperta)
-    controlla(`${s.chiave}: chiusa non ci si arriva dalla tana`, !percorso(Q, s.attacco, s.tappe[0], c.bloccati))
-    // la strada del cane va di isoletta in isoletta: prima le tappe del cane delle isolette di prima
-    const prime = S.cane.slice(0, S.cane.indexOf(s.tappe[0]))
-    const { aperta: dopo } = aperture(S, { fatta: i => i <= s.attacco || prime.includes(i) })
-    controlla(`${s.chiave}: fatta la tappa della tana si apre, e ci si arriva`,
-              !!percorso(Q, s.attacco, s.tappe[0], chiusure(Q, dopo).bloccati))
+    // chiusa (il cane non ha fatto la tappa prima) non ci si arriva; fatta, sì
+    const primaDi = S.prima[s.tappe[0]]
+    const chiusa = chiusure(Q, aperture(S, { fatta: i => S.animale[i] === 'cane' && S.numero[i] < S.numero[primaDi] }).aperta)
+    controlla(`${s.chiave}: chiusa non ci si arriva dalla tana`, !percorso(Q, vicino, s.tappe[0], chiusa.bloccati))
+    const aperta = chiusure(Q, aperture(S, { fatta: i => S.animale[i] === 'cane' && S.numero[i] <= S.numero[primaDi] }).aperta)
+    controlla(`${s.chiave}: fatta la tappa prima del cane si apre, e ci si arriva`, !!percorso(Q, vicino, s.tappe[0], aperta.bloccati))
   }
+}
 
-  // gli scalini si aprono uno dopo l'altro: il ponte verso quello dopo ha il blocco finché è chiuso
-  {
-    const fatta = i => i < S.isole.find(s => s.chiave === 'fino').tappe[0]
-    const { aperta } = aperture(S, { fatta })
-    const c = chiusure(Q, aperta)
-    uguale('finito il ripeti, con "fino a" appena aperto: il ponte per il se ha il blocco',
-           c.blocchi.map(b => `${b.ponte}>${b.isola}`).sort().join(' '), 'fino-se>se ripeti-mondo>mondo')
-  }
-  {
-    const { aperta } = aperture(S, { fatta: i => i < 35 })
-    const c = chiusure(Q, aperta)
-    uguale('il ripeti aperto, il resto chiuso: due ponti con il blocco (verso il fino a e verso tutto il mondo)',
-           c.blocchi.map(b => `${b.ponte}>${b.isola}`).sort().join(' '), 'ripeti-fino>fino ripeti-mondo>mondo')
-  }
+{
+  // col coniglio gli scalini si aprono uno dopo l'altro: il ponte verso quello dopo ha il blocco finché è chiuso
+  const Q = qDi.zaino.coniglio
+  const fatta = i => i < S.isole.find(s => s.chiave === 'fino').tappe[0]
+  uguale('finito il ripeti, con "fino a" appena aperto: il ponte per il se ha il blocco',
+         chiusure(Q, aperture(S, { fatta }).aperta).blocchi.map(b => `${b.ponte}>${b.isola}`).sort().join(' '), 'fino-se>se ripeti-mondo>mondo')
+  uguale('il ripeti aperto, il resto chiuso: due ponti con il blocco (verso il fino a e verso tutto il mondo)',
+         chiusure(Q, aperture(S, { fatta: i => i < 35 }).aperta).blocchi.map(b => `${b.ponte}>${b.isola}`).sort().join(' '),
+         'ripeti-fino>fino ripeti-mondo>mondo')
   controlla('il ponte fra il fino a e la sua isoletta di passaggio non ha mai il blocco',
-            !Object.keys(chiusure(Q, () => false).blocchi.reduce((o, b) => ({ ...o, [b.ponte]: 1 }), {})).includes('fino-nel-passaggio'))
+            !chiusure(Q, () => false).blocchi.some(b => b.ponte === 'fino-nel-passaggio'))
 }
 
 riassunto('passo passo — le due valli')

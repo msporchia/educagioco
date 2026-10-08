@@ -42,8 +42,22 @@
 .pp-mappa { --is-spessore: #e07d3a;
             --is-casella: #fffaf3; --is-scuro: #6b310c; --is-oro: #ffc21a; --is-stella: #f6b100;
             --is-stella-spenta: #ecdcc8;
-            flex: 1; min-height: 0; display: flex; flex-direction: column; background: #1995df }
-.pp-mappa-cima { display: flex; justify-content: center; padding: 0 12px }
+            flex: 1; min-height: 0; display: flex; flex-direction: column; background: #1995df; position: relative }
+.pp-mappa-cima { display: flex; flex-direction: column; align-items: center; padding: 0 12px }
+/* chi gioca: in cima, fuori dalla valle, così non copre una casella; il cane chiuso col lucchetto */
+.pp-protagonisti { position: relative; z-index: 6; display: flex; gap: 4px; margin: 8px 0 6px; padding: 4px;
+                   border-radius: 999px; background: var(--is-casella); box-shadow: 0 3px 0 var(--is-spessore) }
+.pp-protagonista { position: relative; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 18px;
+                   border: 0; border-radius: 999px; background: none; color: var(--is-scuro);
+                   font: inherit; font-size: 16px; font-weight: 800; cursor: pointer }
+.pp-protagonista .pp-em { font-size: 24px; line-height: 1 }
+.pp-protagonista.pp-scelto { background: var(--is-oro); box-shadow: inset 0 -3px 0 rgba(107, 49, 12, .25) }
+.pp-protagonista.pp-chiuso { opacity: .55 }
+.pp-protagonista .pp-lucchetto-piccolo { position: static; width: 14px; height: 14px }
+.pp-protagonista-serve { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+                         width: min(300px, 86vw); margin: 0; padding: 10px 12px; border-radius: 14px;
+                         background: var(--is-casella); color: var(--is-scuro); font-size: 14px; font-weight: 700;
+                         box-shadow: 0 3px 0 var(--is-spessore) }
 .pp-mappa-cima > .ri-carta { margin: 8px 0 4px }
 
 /* lo stendardo di un'isola (e lo stemma di un'isoletta): disegnato in pixel
@@ -133,6 +147,8 @@
 .pp-fumetto > b { font-size: 18px; font-weight: 800; color: var(--is-scuro) }
 .pp-fumetto > b .pp-em { font-size: 21px; margin-right: 3px; vertical-align: -2px }
 .pp-fumetto-racconto { font-size: 13px; line-height: 1.28; color: #7c5638 }
+.pp-fumetto-nuovo { display: flex; gap: 5px; padding: 6px 8px; border-radius: 10px; background: #fff1c2;
+                    font-size: 13px; line-height: 1.28; font-weight: 700; color: #6b310c }
 .pp-fumetto-stelle { display: flex; gap: 3px; margin-top: 3px }
 .pp-fumetto-stelle svg { width: 24px; height: 24px; fill: var(--is-stella-spenta) }
 .pp-fumetto-record { margin-top: 2px; font-size: 13px; font-weight: 700; color: #8a4a1c }
