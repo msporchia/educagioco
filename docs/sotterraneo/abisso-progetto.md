@@ -108,7 +108,7 @@ eroe:    att ≈ 3 (base) + 3 (arma di gradino 3) + G(p)
   spada, spada corta, balestra, verga, corazza, torcia, chiave, boccetta,
   pozione, ampolla) e un controllo in `guastiDelleCose` che lo pretenda su
   tutto quello che ha un `dove` o un `usa`: **parte rosso** apposta, ed è il
-  modo in cui il lavoro si fa. `dellArticolo` in `viste/cambio.js` oggi
+  modo in cui il lavoro si fa. `quellaCosa` in `motore/storia.js` oggi
   indovina l'articolo dalla prima lettera: col campo potrebbe smettere.
 - **Da guardare** col bottino graduato: il cavaliere, che nell'abisso si
   ferma per primo (vedi [abisso.md](abisso.md)); se la corazza cresce come

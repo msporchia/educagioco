@@ -13,7 +13,7 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [missioni-freccina.md](missioni-freccina.md) — le due freccine che ricordano una missione presa: giù attorno all'eroe (la cosa o la scala), sopra azzurra sul bordo
 - [la-roba-che-resta.md](la-roba-che-resta.md) — la roba che scende e risale con l'avventuriero, le discese che contano su di lei, l'equilibrio di prima
 - [avventure.md](avventure.md) — un'avventura per eroe: cosa ha ognuno e dove sta nel salvataggio, cosa è in comune (monete, il massimo per medaglie ed esperienza), i salvataggi di prima, azzerati e poi riordinati
-- [roba.md](roba.md) — gli eroi e cosa portano, due mani, la torcia, per terra e nello zaino, i mercanti di sopra, curiosità e arredo
+- [roba.md](roba.md) — gli eroi e cosa portano, due mani, la torcia, per terra e nello zaino, i mercanti di sopra, la bottega e lo zaino da gioco di ruolo, curiosità e arredo
 - [scenari.md](scenari.md) — come è disegnato: lo scenario generato da un prompt, il muro alto una cella, i fogli e l'atlante
 - [abisso.md](abisso.md) — l'abisso com'è oggi: perché, formule della crescita, svenimenti, record, fin dove regge
 - [abisso-progetto.md](abisso-progetto.md) — la parte decisa e non ancora costruita: `cosa(k)`, bottino graduato, scala che risale, monete

@@ -84,8 +84,9 @@ discesa e l'altra: [la-roba-che-resta.md](la-roba-che-resta.md). Il codice:
   si toglie **non si perde mai**: torna in tasca o prende il posto per terra
   di quello raccolto. I gioielli restano fuori dall'automatismo quando il dito
   è occupato: fra due anelli c'è un modo di giocare, non un «più forte».
-- **Nello zaino una tasca toccata sceglie e basta**: sotto compaiono cosa fa
-  e due tasti larghi, «la bevo» e «la lascio per terra».
+- **Nello zaino una tasca toccata sceglie e basta**: sotto compare il
+  pannello col confronto e due tasti larghi, «Bevi» (o «Indossa») e «Butta»
+  ([La bottega e lo zaino](#la-bottega-e-lo-zaino)).
 - **Un forziere aperto è scenografia** e non si tocca più: si mangiava il
   tocco destinato alla roba, e a un forziere ci si ferma accanto, quindi la
   roba non deve nascere sotto di lui.
@@ -127,9 +128,9 @@ più nessuno.
 | 🧺 il rigattiere, accanto al carro | anelli, amuleti, chiavi | — e **compra** quello che hai in tasca |
 
 - **Il posto senza domande**: qui si spende quello che le domande hanno
-  fruttato. **Ogni riga dice cosa fa**, non solo il nome; quello che non ci
-  si può permettere resta visibile e spento, con quanto manca: sapere cosa
-  c'era è il motivo per tornare.
+  fruttato. Quello che non ci si può permettere resta visibile e spento, col
+  prezzo in rosso e quanto manca sul tasto: sapere cosa c'era è il motivo per
+  tornare.
 - **Compra solo il rigattiere, a metà prezzo** (`quantoVale`): comprare e
   rivendere perde metà, quindi non è un modo di fare gemme, ma libera le
   tasche. Tre botteghe che comprano farebbero di ogni banco un posto dove
@@ -139,10 +140,18 @@ più nessuno.
   i pezzi della riga con cui si entra nella prossima discesa che mancano,
   e un paio di cose (`altre`) che non costano più di quei pezzi. Mai la
   riga dopo ancora: chi ha le gemme non scende col meglio della miniera
-  ([la-grande-storia.md](la-grande-storia.md#chi-da-la-riga-dopo)). Prima
-  della prima discesa, o a chi ha già tutto, il banco lo dice
-  (`[data-banco-vuoto]`). L'erborista pesca a righe (`righe` per discese
-  finite), come prima.
+  ([la-grande-storia.md](la-grande-storia.md#chi-da-la-riga-dopo)).
+  L'erborista pesca a righe (`righe` per discese finite), come prima.
+- **Il banco non resta mai vuoto**: dietro ai pezzi del passo si vedono,
+  spenti col lucchetto e col prezzo, quelli delle righe dopo (al più due per
+  casella, `vetrinaDelPasso` in `motore/storia.js`), con la discesa da
+  finire perché arrivino. Non si comprano: la regola del passo resta, ma il
+  bambino sa cosa l'aspetta e spera. Un mercante non dice mai «non ho niente
+  per te»; solo a chi ha già tutto dice che il resto sta nell'abisso
+  (`[data-banco-vuoto]`).
+- **Quello che non alza niente non si mostra** (`sottoAddosso` in
+  `motore/bottega.js`): resta pescato ma non si vede. Una seconda arma
+  leggera con la mano libera alza il braccio, e quindi si vede.
 - **Il banco si pesca una volta per giro** e si scrive in
   nell'avventura (`botteghe`); il giro cambia quando finisce una discesa (vinta, persa o
   finita la sera nell'abisso). Un banco che cambiasse a ogni apertura sarebbe
@@ -150,16 +159,72 @@ più nessuno.
 - **Quello che si ha già non si offre**, tranne quello che si consuma; il
   pescato è pezzo unico e se ne va comprandolo, le cure e la torcia no.
 - **Comprato = messo**, come per terra: una cosa migliore va addosso da sé e
-  la riga in cima al banco dice il guadagno. **Lo zaino pieno ferma solo
+  la riga sopra il pannello dice il guadagno. **Lo zaino pieno ferma solo
   quello che non trova posto**, provato prima su una copia (un'arma a due
   mani sfratta anche la mano debole).
-- **Appena aperto il banco non ascolta per 320 ms**: un secondo tocco sul
+- **Appena aperta la bottega non ascolta per 320 ms**: un secondo tocco sul
   mercante, dato mentre l'eroe ci arriva, comprava la riga che ci stava sotto.
 - **Quattro armi con un nome proprio** — la bipenne solare, la spada del
   ladro, il pugnale vampiro, la spada di ghiaccio — stanno fuori dalla scala:
   non picchiano di più, portano un tratto (luce, più gemme, tenere in piedi,
   parare). Nessuna batte lo spadone sul suo terreno.
 - **Le gemme non diventano monete, mai**: la roba si vende solo in gemme.
+
+## La bottega e lo zaino
+
+`viste/Bottega.vue` e `viste/Zaino.vue`, coi pezzi comuni `Cornice.vue`,
+`Addosso.vue`, `Casella.vue`, `Pannello.vue` e `pezzo.js` (gradini, numeri).
+
+- **Una finestra da gioco di ruolo stretta in un telefono**: legno scuro e
+  bordo d'oro con quattro angoli, disegnati in CSS e SVG. Dall'alto il
+  mercante (ritratto e nome), l'eroe armato con le quattro caselle intorno e
+  i numeri accanto (vita, braccio, difesa e le gemme, sempre in vista), le
+  linguette, la griglia, il pannello. Scorre solo la griglia. Provato: un
+  elenco di voci col bordino, sembrava un modulo da compilare.
+- **Le linguette sono del mercante** (`schede` in `dati/mercanti.js`):
+  l'armaiolo «Armi» e «Scudi e armature», l'erborista «Pozioni» e «Torce»,
+  il rigattiere «Gioielli» e «Vendi». «Vendi» ce l'ha solo chi compra; gli
+  altri lo dicono con una battuta. `guastiDeiMercanti` pretende che ogni
+  cosa del banco stia sotto una linguetta.
+- **Caselle grandi, tre per riga**, col pezzo disegnato e il prezzo sotto. Il
+  bordo dice il gradino: grigio comune, azzurro buono, oro raro, arancio le
+  quattro armi col nome. Si legge dal prezzo (fino a 12, fino a 22, oltre),
+  che cade sui tre gradini delle armi.
+- **Un tocco sceglie, il secondo compra** (o il tasto «Compra 💎 N»): il dito
+  sbaglia, e un acquisto al primo tocco non si disfa. Un secondo tocco entro
+  400 ms (`RIPENSO`) è un dito che ha premuto due volte, e non compra.
+- **Il pannello dice numeri, non frasi**: «⚔️ +4 attacco», «❤️ +6 vita», e il
+  confronto con quello che si ha addosso, «⚔️ 3 → 5», più in verde e meno in
+  rosso. I numeri li dà il motore (`seLoMetto` in `motore/corredo.js`), che
+  prova su una copia il posto che sceglierebbe «Indossa»; la casella
+  dell'eroe dove andrebbe si accende. Sotto, solo le righe che servono:
+  «Finisce nello zaino» per quello che non va addosso da sé, il perché di chi
+  non lo porta, «Quando avrai finito…» per la vetrina.
+- **Niente di scelto: parla il mercante**, su una pergamena, con la sua
+  battuta (`dice`): voce sua, corta, parole da sette anni, non istruzioni.
+  Toccando una casella dell'eroe il pannello dice il pezzo che ha addosso.
+- **Lo zaino è la stessa finestra senza mercante**: l'eroe e le caselle, la
+  torcia, le sei tasche in griglia, il pannello col confronto e i tasti
+  «Indossa» (o «Impugna», «Imbraccia»), «Bevi», «Butta»; su una casella
+  addosso «Togli». Si chiude con la ✕. Le regole dello zaino sono quelle di
+  prima.
+
+Nei test: `[data-bottega]` (con `data-mercante-aperto`),
+`[data-scheda="<linguetta>"]` (con `aria-selected`),
+`[data-casella-pezzo="<cosa>"]` (con `data-posso`, `data-gradino` e
+`data-chiusa` nella vetrina), `[data-vendo="<cosa>"]`, `[data-pannello]` (con
+`data-cosa`), `[data-confronto="att|dif|vita|gemme|luce"]` (con
+`data-verso`), `[data-quando]`, `[data-non-puoi]`, `[data-azione="compra"]`,
+`[data-azione="vendi"]`, `[data-detto-banco]`, `[data-battuta]`,
+`[data-chi-compra]`, `[data-banco-vuoto]`, `[data-tasche-vuote]`,
+`[data-gemme-bottega]`; nello zaino `[data-zaino]`, `[data-tasca]` (con
+`data-cosa`), `[data-azione="usa|butta|riponi|chiudi"]`, `[data-torcia-zaino]`;
+in tutte e due `[data-casella="<dove>"]` (con `data-cosa`) e `[data-chiudi]`.
+`compraNellaBottega`, `vendiNellaBottega` e `allaLinguettaDi` in
+`test/aiuto/browser.mjs`; `unita/sotterraneo-roba` (il confronto, la
+vetrina, quello che non si mostra, le linguette),
+`integrazione/sotterraneo-mercanti` (col dito: si sceglie, si compra, si
+vende, i numeri del confronto, lo zaino che indossa e fa bere).
 
 ## Le curiosità
 

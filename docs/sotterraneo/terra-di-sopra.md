@@ -249,9 +249,8 @@ pallino), `[data-sotto-livello]` (nel fumetto di una discesa), `[data-mercante="
 scende, con le gemme), `[data-portale]` (il gemello) col suo fumetto
 `[data-fumetto-di="portale"]` e `[data-azione="portale-giu"]`, `[data-ritaglio]`
 (l'icona ritagliata, nella carta in cima, nel fumetto, nella scelta e in
-home); nel banco `[data-chiudi]`, `[data-merce="<cosa>"]`,
-`[data-vendo="<cosa>"]`, `[data-detto-banco]`, `[data-chi-compra]`,
-`[data-tasche-vuote]`, e nello zaino `[data-tasca][data-cosa="<cosa>"]`;
+home); nella bottega e nello zaino quelli di
+[roba.md](roba.md#la-bottega-e-lo-zaino);
 `unita/sotterraneo-terra` (anche: il portale gemello raggiungibile, chi sta
 fermo non chiude la strada), `unita/sotterraneo-avventure` (un'icona per
 discesa), `integrazione/sotterraneo-terra`, `integrazione/sotterraneo-mercanti`,

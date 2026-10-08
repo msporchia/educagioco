@@ -95,7 +95,9 @@ comprano dall'erborista).
   discesa che ancora mancano, e un paio di cose che non costano più di
   quei pezzi (e non sono della riga dopo ancora). Chi va dritto esce dalla
   discesa con le gemme che bastano al pezzo che il guardiano non dà (tabella
-  sotto); chi gira tutto ne ha il doppio, e le spende in pozioni.
+  sotto); chi gira tutto ne ha il doppio, e le spende in pozioni. I pezzi
+  delle righe dopo si vedono, spenti e non in vendita (la vetrina,
+  [roba.md](roba.md#i-mercanti-di-sopra)).
 - **Un pezzo serve se nella fila viene dopo quello che si ha** (`migliora`,
   il posto nella fila e non il numero): così lo scettro arriva dopo il
   bastone anche se picchia uguale, e chi è già oltre la tabella non riceve
@@ -158,5 +160,5 @@ l'esperienza), `unita/sotterraneo-roba` (il banco porta il passo dopo e
 mai la riga dopo, sei semi d'equilibrio), `unita/sotterraneo-terra` (la
 partenza nel villaggio, le discese in fila per strada),
 `misure/sotterraneo` (la tabella qui sopra). Nel fumetto di una discesa
-`[data-sotto-livello]` con `data-manca` (`arma` o `difesa`); nel banco vuoto
-`[data-banco-vuoto]`.
+`[data-sotto-livello]` con `data-manca` (`arma` o `difesa`); la vetrina nella
+bottega: [roba.md](roba.md#la-bottega-e-lo-zaino).
