@@ -590,10 +590,11 @@ export class Corsa extends Corredo {
       const cosa = pescaCosa(possibili, { rnd: () => this.rnd(), tua: k => this.posso(k) })
       this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, { x: m.x + 1, y: m.y })
     }
+    // un mostro qualsiasi che cade si vede: niente avviso. Quello di una missione sì, dice cosa fare dopo
     if (m.missione) {
       this.missioniFatte.add(m.missione)
       this.dillo(`👑 ${m.nome} è caduto! Torna su a dirlo`)
-    } else this.dillo(`${m.em} è caduto!`)
+    }
   }
 
   // il prossimo pezzo della riga dopo (motore/storia.js) che serve ancora e non è già per terra in questo piano

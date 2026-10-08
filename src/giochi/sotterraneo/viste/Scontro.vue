@@ -48,7 +48,6 @@ defineProps({
     <span v-if="scambio.preso" class="em">
       {{ scambio.dato ? 'ti ha graffiato' : 'ti ha colpito' }} <b>{{ scambio.preso }}</b>
     </span>
-    <span v-if="scambio.caduto" class="em"> · è caduto!</span>
   </p>
 
   <div class="sot-io-vita">
