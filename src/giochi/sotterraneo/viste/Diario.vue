@@ -4,7 +4,8 @@
 // già consegnate. Toccando una voce si apre il suo dettaglio, nella stessa finestra: chi te l'ha data, cosa ha detto,
 // dove, cosa, il premio, a che punto sei. Da lì si sceglie quale missione indicano le freccine («segui questa») e si va
 // da chi aspetta. Non scrive niente: dice `segui` e `vai` a chi lo usa (viste/Campagna.vue); si chiude con la ✕ o
-// toccando fuori.
+// toccando fuori (`fuori`, col tocco: chi lo usa lo passa alla mappa, docs/core/interfaccia.md). `giu`: aperto in
+// discesa, dove chi aspetta non c'è e «vai da …» non serve.
 import { computed, ref, watch } from 'vue'
 import Foglio from './Foglio.vue'
 import Icona from './Icona.vue'
@@ -16,8 +17,9 @@ const props = defineProps({
   stati: { type: Object, default: () => ({}) },
   tappe: { type: Array, required: true },
   segui: { type: String, default: null },   // la missione che le freccine seguono, se ne è stata scelta una
+  giu: { type: Boolean, default: false },
 })
-const emit = defineEmits(['chiudi', 'segui', 'vai'])
+const emit = defineEmits(['chiudi', 'segui', 'vai', 'fuori'])
 
 const d = computed(() => diario(props.stati, props.tappe, props.segui))
 
@@ -39,13 +41,13 @@ const stato = v => (v.stato === 'fatta' ? `Fatta: torna ${v.daChi}`
 const fatto = v => v.stato === 'fatta' || v.stato === 'consegnata'
 const nomeFigura = v => (v.cosa.sprite ? `${v.cosa.sprite}-fermo-0` : null)
 // «vai da …» c'è per chi aspetta qualcosa da te: un favore da chiederti, o la consegna di una missione fatta
-const puoiAndare = v => v.stato === 'offerta' || v.stato === 'fatta'
+const puoiAndare = v => !props.giu && (v.stato === 'offerta' || v.stato === 'fatta')
 const vaDa = v => emit('vai', v.da)
 </script>
 
 <template>
   <Foglio :em="voce ? '' : '📖'" :titolo="voce ? '' : 'Le tue missioni'" centro con-chiudi data-diario
-          @click.self="$emit('chiudi')" @chiudi="$emit('chiudi')">
+          @click.self="$emit('fuori', $event)" @chiudi="$emit('chiudi')">
 
     <!-- ═══ il dettaglio di una missione ═══ -->
     <div v-if="voce" class="sot-dettaglio" data-dettaglio :data-missione="voce.id" :data-stato="voce.stato">

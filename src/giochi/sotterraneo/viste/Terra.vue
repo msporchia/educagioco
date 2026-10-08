@@ -166,8 +166,21 @@ function aggiornaFuori() {
 }
 // toccandolo l'eroe ci va, come toccando lui (e il fumetto si apre all'arrivo)
 const vaDa = chiave => (chiave === 'minatore' ? toccaMinatore() : toccaPersonaggio(personaggi.find(m => m.chiave === chiave)))
+// il tocco che ha chiuso il diario o la bottega, dato qui: chiuso quello, si guarda cosa c'è sotto il dito. Chi sta
+// sulla mappa (un posto, un mercante) fa la sua cosa, il prato fa camminare; le carte in cima e in fondo no, o il tocco
+// che chiude premerebbe un tasto per sbaglio
+async function toccoDaFuori(x, y) {
+  await nextTick()
+  const el = document.elementFromPoint(x, y)
+  if (!el || !vista.value || !vista.value.contains(el)) return
+  if (el.closest('.sot-terra-sopra > *, .sot-terra-sotto > *, [data-fumetto]')) return
+  strisciato = false
+  const b = el.closest('button')
+  if (b && mondoEl.value && mondoEl.value.contains(b)) b.click()
+  else toccaPrato({ target: el, clientX: x, clientY: y })
+}
 // anche il diario manda l'eroe da chi aspetta (viste/Diario.vue, «vai da …»)
-defineExpose({ vaDa })
+defineExpose({ vaDa, toccoDaFuori })
 // e la freccia azzurra porta ai piedi della discesa, dove si apre il fumetto
 const vaAllaDiscesa = chiave => { const p = posti.value.find(p => p.nome === POSTO_DI[chiave]); if (p) toccaPosto(p) }
 
@@ -463,11 +476,13 @@ function muovi(e) {
 const segno = ref(null)
 let nSegno = 0
 
-// si agisce sul click, non sul pointerup: il click che il dito si lascia dietro è il tocco stesso
+// si agisce sul click, non sul pointerup: il click che il dito si lascia dietro è il tocco stesso. Col fumetto
+// aperto il tocco lo chiude e cammina lo stesso: un tocco altrove chiude, e fa la sua cosa (docs/core/interfaccia.md)
 function toccaPrato(e) {
   if (strisciato || !vista.value) return
   if (e.target.closest && e.target.closest('.sot-terra-sopra > *, .sot-terra-sotto > *, [data-fumetto]')) return
-  if (aperto.value) { chiudi(); return }
+  if (aperto.value) chiudi()
+  avviso.value = ''
   const r = vista.value.getBoundingClientRect()
   const wx = (e.clientX - r.left) / S + cam.x, wy = (e.clientY - r.top) / S + cam.y
   const c = { x: Math.floor(wx / CELLA), y: Math.floor(wy / CELLA) }

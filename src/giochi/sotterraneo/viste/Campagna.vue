@@ -46,6 +46,14 @@ function vaDa(chi) {
 }
 const pronte = computed(() => riassunto.value.inMano.some(v => v.stato === 'fatta'))
 
+// un tocco fuori dal diario (o dalla bottega, da Gioco.vue) lo chiude e passa alla terra: l'eroe va dove si è toccato
+function toccoDaFuori(x, y) { if (terraEl.value) terraEl.value.toccoDaFuori(x, y) }
+function fuoriDalDiario(e) {
+  diarioAperto.value = false
+  if (e) toccoDaFuori(e.clientX, e.clientY)
+}
+defineExpose({ toccoDaFuori })
+
 function tocca(t) {
   if (!props.ripresa) return emit('gioca', t.indice)
   chiede.value = t
@@ -118,14 +126,14 @@ function comincia() {
     </Terra>
 
     <Diario v-if="diarioAperto" :stati="missioni" :tappe="tappe" :segui="segui" @chiudi="diarioAperto = false"
-            @segui="id => $emit('segui', id)" @vai="vaDa" />
+            @segui="id => $emit('segui', id)" @vai="vaDa" @fuori="fuoriDalDiario" />
 
     <!-- detto prima: la roba resta, la discesa ricomincia da capo -->
     <LascioPerdere v-if="perdere && ripresa" :nome="ripresa.nome"
                    @si="perdere = false; $emit('scorda')" @no="perdere = false" />
 
-    <!-- detto prima, mai dopo: quello che si perde non torna -->
-    <div v-if="chiede" class="sot-velo" data-chiede @click.self="chiede = null">
+    <!-- detto prima, mai dopo: quello che si perde non torna. È una scelta, e non si chiude toccando fuori -->
+    <div v-if="chiede" class="sot-velo" data-chiede>
       <div class="sot-modale">
         <h2><span class="em">⚠️</span> Hai una discesa a metà</h2>
         <p>

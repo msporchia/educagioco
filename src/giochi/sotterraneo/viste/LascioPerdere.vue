@@ -10,7 +10,8 @@ defineEmits(['si', 'no'])
 </script>
 
 <template>
-  <div class="sot-velo" data-lascio-perdere @click.self="$emit('no')">
+  <!-- una scelta che costa: non si chiude toccando fuori, si risponde (docs/core/interfaccia.md) -->
+  <div class="sot-velo" data-lascio-perdere>
     <div class="sot-modale">
       <h2><span class="em">⚠️</span> Lasci perdere questa discesa?</h2>
       <p>

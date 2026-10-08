@@ -26,7 +26,7 @@ const props = defineProps({
   piano: { type: Number, required: true },
   piani: { type: Number, default: null },   // l'abisso non lo sa: "26/" col numero mancante sembrerebbe un guasto
 })
-const emit = defineEmits(['usa', 'butta', 'riponi', 'chiudi'])
+const emit = defineEmits(['usa', 'butta', 'riponi', 'chiudi', 'fuori'])
 
 // una tasca ({ dove: 'zaino', i }) o una casella addosso ({ dove: 'mano' }); null è lo stato normale
 const scelto = ref(null)
@@ -87,7 +87,7 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
 </script>
 
 <template>
-  <Cornice data-zaino @chiudi="$emit('chiudi')">
+  <Cornice data-zaino @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
     <header class="sot-targa">
       <span class="sot-targa-ritratto sot-targa-em em">🎒</span>
       <span class="sot-targa-nome">

@@ -31,7 +31,7 @@ const props = defineProps({
   detto: { type: Object, default: null },       // l'ultima riga: { testo, sprite?, em? }
   chiCompra: { type: String, default: '' },     // «al rigattiere, vicino al carro»: detto da chi non compra
 })
-const emit = defineEmits(['compra', 'vendi', 'chiudi'])
+const emit = defineEmits(['compra', 'vendi', 'chiudi', 'fuori'])
 
 const pronto = ref(false)
 let cieco = 0
@@ -132,7 +132,8 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
 </script>
 
 <template>
-  <Cornice alta data-bottega :data-mercante-aperto="chi.chiave" @chiudi="$emit('chiudi')">
+  <Cornice alta data-bottega :data-mercante-aperto="chi.chiave" @chiudi="$emit('chiudi')"
+           @fuori="e => pronto && $emit('fuori', e)">
     <header class="sot-targa">
       <span class="sot-targa-ritratto">
         <span v-if="ritratto" class="sot-ritratto" :style="ritratto.gabbia"><i :style="ritratto.pezzo"></i></span>

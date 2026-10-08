@@ -3,13 +3,14 @@
 // immagini, il file resta uno). La ✕ in alto a destra (docs/core/interfaccia.md); dentro una colonna, con le
 // parti ferme in cima e in fondo e quella in mezzo che scorre. `alta`: tutta l'altezza (la bottega)
 defineProps({ alta: { type: Boolean, default: false } })
-defineEmits(['chiudi'])
+defineEmits(['chiudi', 'fuori'])
 
 const ANGOLI = ['sot-alto-sx', 'sot-alto-dx', 'sot-basso-sx', 'sot-basso-dx']
 </script>
 
 <template>
-  <div class="sot-sipario">
+  <!-- toccando fuori dalla cornice si chiude, e chi la usa decide dove va quel tocco (docs/core/interfaccia.md) -->
+  <div class="sot-sipario" @click.self="$emit('fuori', $event)">
     <section class="sot-cornice" :class="{ 'sot-alta': alta }">
       <svg v-for="a in ANGOLI" :key="a" class="sot-angolo" :class="a" viewBox="0 0 30 30" aria-hidden="true">
         <path d="M3 28V10Q3 3 10 3H28" fill="none" stroke="#8a5a14" stroke-width="5" stroke-linecap="round" />
