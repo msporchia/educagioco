@@ -128,8 +128,12 @@ self.addEventListener('fetch', e => {
   // la pagina: prima la rete, e la cache resta la rete di sicurezza. Chi
   // chiede index.html, o la radice con qualcosa in coda, riceve la radice
   if (e.request.mode === 'navigate') {
+    // e se la cache non ce l'ha (una copia che non ci è stata: lo spazio del telefono) di nuovo la rete,
+    // senza tetto: una risposta vuota Safari la mostra come «un ServiceWorker ha … un errore imprevisto»
     e.respondWith(conRete(e.request)
-      .catch(() => caches.match(e.request).then(t => t || caches.match(PAGINA))))
+      .catch(() => caches.match(e.request).then(t => t || caches.match(PAGINA)))
+      .catch(() => null)
+      .then(t => t || fetch(e.request)))
     return
   }
   // chi chiede «no-store» vuole il sito, e la cache non gli risponde:
@@ -138,7 +142,7 @@ self.addEventListener('fetch', e => {
   // regola è per chi un giorno chiederà così una cosa che la cache ha
   if (e.request.cache === 'no-store') return
   // il resto: la cache, e se non ce l'ha la rete
-  e.respondWith(caches.match(e.request).then(t => t || fetch(e.request)))
+  e.respondWith(caches.match(e.request).catch(() => null).then(t => t || fetch(e.request)))
 })
 `,
       })

@@ -27,6 +27,12 @@ Come una versione nuova arriva su un telefono: il service worker
   fallisce e resta il service worker di prima con la sua copia intera —
   un'icona mancante non blocca l'installazione, la pagina sì.
 
+- **Una risposta c'è sempre.** Se la rete tarda e la cache non ha la
+  pagina (una copia da 20 MB che il telefono non ha tenuto), si torna alla
+  rete senza tetto: con `respondWith` di niente Safari mostra «Impossibile
+  caricare. Un ServiceWorker ha intercettato una richiesta e riscontrato un
+  errore imprevisto», ed era successo dopo un aggiornamento (8/10/2026).
+
 ## Il nastro
 
 La pagina già aperta resta quella di prima, e su un telefono installato
