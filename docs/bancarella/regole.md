@@ -33,7 +33,9 @@ rende un cliente. I dati e la tabella della scaletta stanno in testa a
   verde, cassetto con uno scomparto per taglio (`TAGLI`).
 - **La fila si vede**: chi aspetta è disegnato (faccia e vestito colorato,
   `FACCE`, `VESTITI`) con la sua barretta di pazienza, che scende a un
-  terzo di chi è al banco. Monete e banconote sono disegnate coi colori veri.
+  terzo di chi è al banco. Monete e banconote sono disegnate coi colori veri
+  (`components/Soldo.vue`, stile in `grafica/soldi.js`): lo stesso disegno
+  delle domande dei soldi nei quiz, quindi non si ritocca in `BancarellaGame.vue`.
 
 ## Chi fa i conti
 

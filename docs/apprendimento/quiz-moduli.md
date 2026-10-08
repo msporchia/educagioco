@@ -301,6 +301,29 @@ non si scambiano mai (niente due colori, che si confondono); e **il
 giallo non si usa** — pieno e vuoto si distinguono troppo poco, il
 pittore ripiega da solo sull'arancione.
 
+### I soldi in mano: i pezzi della bancarella
+
+La scena `{ che: 'monete', pezzi }` di `moduli/soldi.js` («Hai in mano questi
+soldi») **non è un canvas**: `Domanda.vue` (e `scheda.js`, con `mazzoDom`) la
+mostrano con gli stessi pezzi della bancarella, `components/Soldo.vue` e
+`MazzoSoldi.vue`, il cui stile e i cui fatti stanno in `grafica/soldi.js`
+([grafica.md](../core/grafica.md)). Il pittore `monete` in
+`pittori/soldi.js` è vuoto apposta: c'è solo perché `guastiDi` vuole un
+pittore per ogni scena, e la scena dei soldi non ha la lente (il disegno è già
+grande).
+
+- **In file, mai sovrapposti**: prima le banconote, poi le monete da euro, poi
+  i centesimi; in ogni fila dal valore più alto, i pezzi uguali attaccati e un
+  poco staccati dai diversi. Se sono tanti si va a capo (flex-wrap), a 320 px
+  come a 390. Provato: la griglia da tre colonne su un canvas da 148 px — i
+  pezzi diventavano cerchi da 25 px e non si capiva quale fosse quale.
+- **Il valore si legge sul pezzo** come alla bancarella (`2€` sulla moneta
+  bimetallica, `20c` sul centesimo, `5€` sulla banconota); le scene dei soldi
+  hanno `data-soldi`, i pezzi `data-cents`.
+
+Nei test: `unita/soldi-disegnati` (l'ordine, nessun pezzo perso, la somma),
+`integrazione/soldi` (nessuna sovrapposizione a 320 e 390 px).
+
 ## Provati e scartati
 
 - **Catene alimentari**: proposte, non convincono.

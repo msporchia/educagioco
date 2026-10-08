@@ -37,6 +37,12 @@ entrano energia e prezzi: solo fatti già decisi (`potenziabile: true`).
   dati* e si ritrova ombra, respiro, lampo bianco della botta e
   ribaltamento da ko senza chiederli. Le schede stanno in `personaggi/`
   (il Generale); il cassetto `bestiario/` se n'è andato col Dungeon.
+- **`soldi.js`** — **i soldi disegnati**, monete e banconote della bancarella:
+  non un canvas ma HTML coi colori in CSS (`components/Soldo.vue`,
+  `MazzoSoldi.vue`), e lo stile sta qui, in una stringa iniettata una volta
+  sola. Li usano la bancarella e le domande dei soldi
+  ([quiz-moduli.md](../apprendimento/quiz-moduli.md#i-soldi-in-mano-i-pezzi-della-bancarella)):
+  un disegno nuovo di moneta si cambia qui, mai in una copia.
 - **`coriandoli.js`** — la festa. Dentro Vue si usa da `giochi/Festa.vue`,
   non si monta a mano.
 
