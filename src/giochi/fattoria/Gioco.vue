@@ -1602,6 +1602,14 @@ function gancioDiProva() {
       return { pagina: pg.pagina, totale: pg.totale, indietro: su(pg.indietro), avanti: su(pg.avanti) }
     },
     dettaglio: () => !!(bolla && bolla.vista.dettaglio),
+    // dove sta a schermo la prima cosa con quell'id (il centro del piede), in pixel della pagina
+    dove: id => {
+      const c = mondo.cose.find(x => x.id === id)
+      if (!c || !scena) return null
+      const g = mondo.ingombro(c), r = riquadro()
+      return { x: Math.round(r.left + (g.x + g.w / 2) * scena.cellaPx - scena.vista.x),
+               y: Math.round(r.top + (g.y + g.h / 2) * scena.cellaPx - scena.vista.y) }
+    },
     // la festa: quante bestie col cappello da strega, e se il 🌸 del baule ha il segnalino delle zucche
     // la strada del baule: per ogni metà, la voce su cui si apre
     strada: () => Object.fromEntries(Object.entries(strada.value).map(([z, s]) => [z, s.voce])),

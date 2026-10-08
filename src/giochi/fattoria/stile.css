@@ -42,35 +42,46 @@
 
 /* i pannelli */
 .fa-velo { position: absolute; inset: 0; z-index: 9; display: grid;
-  place-items: center; background: #05100799; padding: 18px }
+  place-items: center; background: #3b240f66; padding: 18px }
 /* Ogni foglio è una colonna: titolo e tasti fermi, l'elenco in mezzo si stringe e scorre lui
    (flex: 0 1 auto; min-height: 0) — vedi CLAUDE.md. overscroll-behavior: contain evita che il dito
    si porti dietro la pagina sotto. Vale per .fa-scaffale, .fa-scomparti, .fa-semi, .fa-ricette. */
 .fa-foglio { position: relative; width: min(400px, 94vw);
   display: flex; flex-direction: column;
   max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
-  background: #16261a; border: 2px solid #3d5c42;
-  border-radius: 18px; padding: 16px 16px 14px; text-align: center;
-  box-shadow: 0 18px 40px #0008 }
+  /* come in Hay Day: crema dentro, cornice gialla con l'orlo arancio, e niente verde da pagina web */
+  background: #fdf3d7; border: 5px solid #f5bb3c; color: #4a2c12;
+  border-radius: 24px; padding: 14px 14px 14px; text-align: center;
+  box-shadow: 0 0 0 3px #c47f12, inset 0 0 0 2px #fff6dc, 0 18px 40px #0007 }
 
 /* La ✕ (viste/Chiudi.vue): sticky in cima, margin-bottom negativo per non spostare il titolo. */
-.fa-chiudi { position: sticky; top: 0; z-index: 4;
-  width: 34px; height: 34px; margin: -4px -4px -34px auto;
+.fa-chiudi { position: sticky; top: 0; z-index: 4; flex: none; align-self: flex-end;
+  width: 38px; height: 38px; margin: -4px -4px -38px auto;
   display: grid; place-items: center; cursor: pointer;
-  /* il bordo chiaro, non quello del foglio: si confonde con la cornice */
-  border: 2px solid #6f9b6f; border-radius: 11px; background: #0d160fcc;
-  color: #f4efe2; font-size: 15px; line-height: 1; padding: 0 }
+  /* la ✕ rossa e tonda col bordo bianco: si trova senza cercarla */
+  border: 3px solid #fff; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff7a62, #d93a2a 70%);
+  box-shadow: 0 3px 0 #8a1f14, 0 4px 8px #0004;
+  color: #fff; font-size: 17px; font-weight: 900; line-height: 1; padding: 0 }
 .fa-chiudi:active { transform: scale(.92) }
 /* il colore va detto: senza, il titolo eredita il blu dell'app. Il margine tiene il titolo lontano dalla ✕. */
-.fa-foglio h2 { margin: 0 0 6px; font-size: 19px; color: #f4efe2;
-  padding: 0 34px }
-.fa-foglio p { color: #d8e4d6 }
-.fa-foglio p { margin: 0 0 12px; font-size: 14px; line-height: 1.4; opacity: .85 }
+.fa-foglio h2 { align-self: center; max-width: calc(100% - 84px);
+  margin: 0 0 12px; padding: 6px 20px 7px; font-size: 18px; font-weight: 800;
+  /* l'asse di legno del titolo */
+  color: #fff; letter-spacing: .02em;
+  text-shadow: 0 2px 0 #6b3d16, 0 0 3px #6b3d16;
+  background: linear-gradient(#ecc48c, #c98a4b); border: 3px solid #7a4a22;
+  border-radius: 10px; box-shadow: inset 0 2px 0 #f7dcb0, 0 3px 0 #5a3418 }
+.fa-foglio p { color: #6b4a26; margin: 0 0 12px; font-size: 14px; line-height: 1.4 }
 .fa-fila { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap }
-.fa-bot { border: none; border-radius: 12px; padding: 10px 16px; font-size: 15px;
-  font-weight: 600; background: #3d5c42; color: #f4efe2; cursor: pointer }
-.fa-bot.forte { background: #c9a227; color: #1b2a1f }
-.fa-bot.piano { background: #2b4430 }
+.fa-bot { border: 3px solid #d3b47d; border-radius: 999px; padding: 9px 20px; font-size: 15px;
+  font-weight: 800; background: #fffaf0; color: #6b4a26; cursor: pointer;
+  box-shadow: 0 3px 0 #c9a46a }
+.fa-bot:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #c9a46a }
+/* il tasto che conta: giallo e grosso, come «Conferma» in Hay Day */
+.fa-bot.forte { background: linear-gradient(#ffe36e, #f5b324); color: #5a3410;
+  border-color: #c47f12; box-shadow: 0 3px 0 #a5650c }
+.fa-bot.piano { background: #fffaf0 }
 .fa-bot:disabled { opacity: .4; cursor: default }
 .fa-bot.piccolo { padding: 7px 12px; font-size: 13px }
 
@@ -78,9 +89,9 @@
 /* Il nome .fa-consiglio e non .fa-passo: quel nome è già preso dalla griglia dei livelli. */
 .fa-consiglio { display: flex; align-items: center; gap: 10px; text-align: left;
   margin: 8px 0 2px; padding: 8px 10px; border-radius: 12px;
-  background: #0d160fcc; border: 2px solid #3d5c42; border-left: 4px solid #c9a227 }
+  background: #fffaf0; border: 2px solid #e2c48f; border-left: 4px solid #e09a1c }
 .fa-consiglio p { margin: 0; flex: 1; font-size: 12.5px; line-height: 1.35;
-  color: #d8e4d6; opacity: 1 }
+  color: #5a3a1a; opacity: 1 }
 .fa-consiglio .fa-bot { flex: none; white-space: nowrap }
 
 /* il baule: una modale più larga delle altre (dentro c'è uno scaffale di duecento cose). */
@@ -92,17 +103,17 @@
 .fa-schede { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px }
 .fa-scheda { display: flex; align-items: center; justify-content: center; gap: 4px;
   padding: 6px 4px; border-radius: 11px; font-size: 11px; line-height: 1;
-  background: #0d160f; border: 1px solid #2b4430; color: #b9cfb7; cursor: pointer;
+  background: #f3e6c8; border: 1px solid #ecd6a8; color: #7a5a36; cursor: pointer;
   /* i nomi lunghi non allargano la cella né vanno a capo */
   overflow: hidden; white-space: nowrap; text-overflow: ellipsis }
 .fa-scheda b { font-size: 14px; line-height: 1 }
-.fa-scheda.viva { background: #3d5c42; border-color: #9fd3a8; color: #fff }
+.fa-scheda.viva { background: #e2c48f; border-color: #6cb33f; color: #fff }
 .fa-scheda:active { transform: scale(.95) }
 
 /* La riga che dice cosa c'è sotto; il selettore doppio batte la specificità di .fa-foglio p. */
 .fa-baule .fa-dice { margin: 7px 2px 8px; font-size: 12px; line-height: 1.3;
-  color: #a8bfa8; text-align: center; opacity: 1 }
-.fa-baule .fa-dice b { color: #d8e4d6 }
+  color: #8a6a48; text-align: center; opacity: 1 }
+.fa-baule .fa-dice b { color: #5a3a1a }
 
 .fa-scaffale { display: grid; gap: 8px; margin-bottom: 10px;
   grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
@@ -110,76 +121,78 @@
   touch-action: pan-y; padding: 2px }
 
 /* touch-action: pan-y anche sulla carta: in su/giù scorre il browser (annulla il puntatore), di lato si trascina. */
-.fa-voce { position: relative; border-radius: 12px; background: #0d160fcc;
-  border: 2px solid #2b4430; padding: 4px 3px 5px; text-align: center;
+.fa-voce { position: relative; border-radius: 12px; background: #fffaf0;
+  border: 2px solid #ecd6a8; padding: 4px 3px 5px; text-align: center;
   cursor: grab; touch-action: pan-y; display: flex; flex-direction: column;
   align-items: center; gap: 2px }
 .fa-voce:active { transform: scale(.95) }
 /* La roba in un silo si preme e dice chi la usa, non si posa: niente cursor:grab. */
 .fa-voce.guarda { cursor: pointer; font: inherit; color: inherit }
-.fa-voce.guarda.viva { border-color: #ffd98a; background: #26361f }
+.fa-voce.guarda.viva { border-color: #c46a0a; background: #fff1c9 }
 
 /* Chi usa quello premuto sta sotto lo scaffale, non dentro la riga (non farebbe ballare la griglia). */
-.fa-usi { border: 2px solid #3d5c42; border-radius: 12px; background: #0d160fcc;
+.fa-usi { border: 2px solid #e2c48f; border-radius: 12px; background: #fffaf0;
   padding: 8px 10px; margin: 8px 0 2px; text-align: left }
 .fa-usi b { display: flex; align-items: center; gap: 7px; font-size: 14px;
-  color: #ffd98a; margin-bottom: 3px }
-.fa-usi p { margin: 2px 0; font-size: 12.5px; color: #d8e4d6; line-height: 1.35 }
-.fa-voce.tua { border-color: #6f9b6f; background: #1b3220cc }
+  color: #c46a0a; margin-bottom: 3px }
+.fa-usi p { margin: 2px 0; font-size: 12.5px; color: #5a3a1a; line-height: 1.35 }
+.fa-voce.tua { border-color: #a8c98a; background: #eaf6d8 }
 /* La voce su cui il baule si è aperto per un consiglio: batte le altre due tinte apposta. */
-.fa-voce.indicata { border-color: #ffd98a; box-shadow: 0 0 0 2px #ffd98a55 }
+.fa-voce.indicata { border-color: #c46a0a; box-shadow: 0 0 0 2px #f2b33d55 }
 /* Non si spegne più del necessario: quello che costa troppo si deve poter guardare. */
 .fa-voce.cara { opacity: .62 }
-.fa-voce.presa { border-color: #6f9b6f; opacity: .55 }
+.fa-voce.presa { border-color: #a8c98a; opacity: .55 }
 /* Le cose che lavorano hanno un filo d'oro: le distingue da un mobile. */
-.fa-voce.lavora { border-color: #8a7333 }
-.fa-voce.lavora.tua { border-color: #c9a227 }
+.fa-voce.lavora { border-color: #d9a441 }
+.fa-voce.lavora.tua { border-color: #e09a1c }
 
 /* Il ripiano: il tondo sfumato in basso è l'ombra (un gradiente, non un'immagine). */
 .fa-ripiano { position: relative; display: grid; place-items: end center;
   width: 100%; height: 54px; border-radius: 9px;
-  background: radial-gradient(60% 34% at 50% 92%, #2e4a33 0%, #2e4a3300 70%),
-              linear-gradient(#12200f00, #12200f88) }
+  background: radial-gradient(60% 34% at 50% 92%, #d9c49a 0%, #d9c49a00 70%),
+              linear-gradient(#c8a46e00, #c8a46e55) }
 /* Un ripiano più alto per chi è alto e stretto (uno sprite 16×32 in 54 si ingrandisce solo ×1). */
 .fa-ripiano.alto { height: 68px }
 
-.fa-nome { font-size: 10px; line-height: 1.15; color: #d8e4d6;
+.fa-nome { font-size: 10px; line-height: 1.15; color: #5a3a1a;
   /* due righe sempre, anche quando il nome ne occupa una: i prezzi restano alla stessa altezza */
   min-height: 2.3em; display: flex; align-items: center }
-.fa-prezzo { font-size: 11px; font-weight: 700; color: #ffd98a }
-.fa-prezzo.tuo { color: #a7dba7 }
+.fa-prezzo { font-size: 11px; font-weight: 700; color: #c46a0a }
+.fa-prezzo.tuo { color: #4f9a2f }
 /* Quanto manca, non un tasto spento senza perché: il numero che rimanda a fare esercizi. */
-.fa-prezzo.manca { font-size: 9.5px; font-weight: 600; color: #c9a98a }
+.fa-prezzo.manca { font-size: 9.5px; font-weight: 600; color: #a8916f }
 
 /* La strisciolina del silo: una sola, larga, in cima (il tetto è per scomparto, non per prodotto). */
 .fa-quanto { display: block; width: 80%; height: 4px; border-radius: 3px;
-  background: #0d160f; border: 1px solid #2b4430; overflow: hidden }
-.fa-quanto i { display: block; height: 100%; background: #6f9b6f }
+  background: #f3e6c8; border: 1px solid #ecd6a8; overflow: hidden }
+.fa-quanto i { display: block; height: 100%; background: #a8c98a }
 .fa-quanto.largo { width: 100%; height: 8px; border-radius: 5px; margin: 2px 0 10px }
 /* Quanto ci sta di ogni cosa: grosso come una risposta. */
-.fa-posti { font-size: 15px; color: #d8e4d6; margin: 2px 0 8px }
-.fa-posti b { font-size: 19px; color: #ffd98a }
-.fa-posti span { color: #d59a9a; font-size: 13px }
+.fa-posti { font-size: 15px; color: #6b4a26; margin: 0 0 10px }
+.fa-posti b { font-size: 19px; color: #c46a0a }
+.fa-posti span { color: #c0392b; font-size: 13px }
 
-/* gli scomparti del silo: in riga e non in griglia, perché qui si legge quanto ce n'è, non si sceglie. */
-.fa-scomparti { display: grid; gap: 5px; margin-bottom: 8px;
-  flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain }
-.fa-scomparto { display: grid; align-items: center; gap: 8px;
-  grid-template-columns: 34px 1fr 88px 46px;
-  padding: 5px 8px; border-radius: 11px; cursor: pointer; text-align: left;
-  background: #0d160fcc; border: 2px solid #2b4430; color: #d8e4d6; font: inherit }
-.fa-scomparto .fa-frutto { font-size: 22px; line-height: 1 }
+/* gli scomparti del silo: una griglia di figure grandi col numero, come il silo di Hay Day. */
+.fa-scomparti { display: grid; gap: 8px; margin-bottom: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px }
+.fa-scomparto { position: relative; display: grid; place-items: center; height: 84px;
+  border-radius: 14px; cursor: pointer; padding: 4px 4px 14px;
+  background: #fffaf0; border: 2px solid #ecd6a8; color: #4a2c12; font: inherit }
 /* Vuoto non vuol dire spento: uno scomparto a zero è un invito, si smorza solo la figura. */
-.fa-scomparto.vuoto .fa-frutto { opacity: .45 }
-.fa-scomparto.colmo { border-color: #c9a227 }
-.fa-scomparto.viva { border-color: #9fd3a8; background: #1b3220cc }
-.fa-scomparto:active { transform: scale(.99) }
-.fa-etichetta { font-size: 12.5px; overflow: hidden; white-space: nowrap;
-  text-overflow: ellipsis }
-.fa-conto { font-size: 13px; text-align: right; color: #d8e4d6 }
-.fa-conto em { font-style: normal; font-size: 11px; color: #8fa691 }
-.fa-scomparto.colmo .fa-conto { color: #ffd98a }
-.fa-scomparto.colmo .fa-quanto i { background: #c9a227 }
+.fa-scomparto.vuoto .fa-merce { opacity: .4 }
+.fa-scomparto.colmo { border-color: #e09a1c; background: #fff1c9 }
+.fa-scomparto.viva { border-color: #6cb33f; background: #eaf6d8 }
+.fa-scomparto:active { transform: scale(.96) }
+/* il numero in basso a destra, grosso e col bordo, sopra la figura */
+.fa-scomparto .fa-conto { position: absolute; right: 7px; bottom: 3px; font-size: 18px; font-weight: 900;
+  color: #fff; text-shadow: 0 0 3px #4a2c12, 0 2px 0 #4a2c12 }
+.fa-scomparto .fa-conto em { font-style: normal; font-size: 11px; font-weight: 800 }
+.fa-scomparto.colmo .fa-conto { color: #ffe36e }
+/* Il nome per chi non vede, non a schermo (la figura lo dice già). */
+.fa-nascosto { position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap }
+.fa-piu { font-size: 13px; opacity: .8 }
 
 .fa-provino { display: block; margin: 0 auto; image-rendering: pixelated }
 
@@ -190,20 +203,20 @@
 .fa-semi { flex: 0 1 auto; min-height: 0;
   overflow-y: auto; overscroll-behavior: contain }
 .fa-nome-scelta { padding: 6px 12px; border-radius: 14px; font-size: 14px;
-  background: #0d160f; border: 2px solid #2b4430; color: #e8efe6; cursor: pointer }
-.fa-nome-scelta.viva { background: #3d5c42; border-color: #9fd3a8 }
+  background: #f3e6c8; border: 2px solid #ecd6a8; color: #4a2c12; cursor: pointer }
+.fa-nome-scelta.viva { background: #e2c48f; border-color: #6cb33f }
 .fa-scrivi { width: 100%; padding: 9px 12px; border-radius: 12px; font: inherit;
-  font-size: 15px; text-align: center; background: #0d160f; color: #f4efe2;
-  border: 2px solid #2b4430; margin-bottom: 12px }
-.fa-scrivi::placeholder { color: #7d947f }
+  font-size: 15px; text-align: center; background: #f3e6c8; color: #4a2c12;
+  border: 2px solid #ecd6a8; margin-bottom: 12px }
+.fa-scrivi::placeholder { color: #a8916f }
 
 /* Le due metà del baule: due tasti larghi (costruisco o abbellisco viene prima dello scaffale). */
 .fa-zone { display: flex; gap: 8px; margin: 0 0 8px }
 .fa-zona { flex: 1; padding: 7px 6px 6px; border-radius: 12px; cursor: pointer;
-  border: 2px solid #2b4430; background: #0d160fcc; color: #b9c9b6;
+  border: 2px solid #ecd6a8; background: #fffaf0; color: #7a5a36;
   font: inherit; font-size: 12.5px; font-weight: 700 }
 .fa-zona b { font-size: 15px; margin-right: 4px }
-.fa-zona.viva { border-color: #9fd3a8; background: #1b3220; color: #f4efe2 }
+.fa-zona.viva { border-color: #6cb33f; background: #eaf6d8; color: #4a2c12 }
 
 /* la pagina dei livelli: più larga delle altre (una griglia di cose da premere, non un elenco da leggere). */
 .fa-livelli { width: min(560px, 96vw) }
@@ -212,18 +225,18 @@
 .fa-premi { display: grid; gap: 8px; margin: 4px 0 10px;
   grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)) }
 .fa-premio { display: grid; gap: 2px; justify-items: center; padding: 6px 4px 5px;
-  border-radius: 12px; border: 2px solid #2b4430; background: #0d160fcc;
-  color: #e8efe6; font: inherit; text-align: center }
+  border-radius: 12px; border: 2px solid #ecd6a8; background: #fffaf0;
+  color: #4a2c12; font: inherit; text-align: center }
 .fa-premio canvas { image-rendering: pixelated; margin: 0 }
 .fa-premio .fa-nome { font-size: 11.5px; line-height: 1.15;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden }
-.fa-premio .fa-stato { font-size: 10px; color: #8fa691 }
+.fa-premio .fa-stato { font-size: 10px; color: #8a6a48 }
 
 /* Da prendere: acceso e si muove, l'unica cosa premibile del foglio. */
-.fa-premio.da { cursor: pointer; border-color: #ffd98a; background: #2c2412;
+.fa-premio.da { cursor: pointer; border-color: #c46a0a; background: #fff1c9;
   animation: fa-dono 1.6s ease-in-out infinite }
-.fa-premio.da .fa-stato.prendi { color: #ffd98a; font-weight: 700; font-size: 11px }
+.fa-premio.da .fa-stato.prendi { color: #c46a0a; font-weight: 700; font-size: 11px }
 .fa-premio.da:active { transform: scale(.95); animation: none }
 /* Preso: resta lì, spento, con scritto dov'è finito (non sparisce). */
 .fa-premio.preso { opacity: .8 }
@@ -231,12 +244,12 @@
 .fa-premio.chiuso { opacity: .5; filter: grayscale(1) }
 
 @keyframes fa-dono {
-  0%, 100% { box-shadow: 0 0 0 0 #ffd98a00 }
-  50% { box-shadow: 0 0 0 4px #ffd98a2e }
+  0%, 100% { box-shadow: 0 0 0 0 #f2b33d00 }
+  50% { box-shadow: 0 0 0 4px #f2b33d2e }
 }
 
 /* L'etichetta dei premi da prendere si accende come loro. */
-.fa-etichetta.dono { color: #ffd98a }
+.fa-etichetta.dono { color: #c46a0a }
 
 /* Il gettone del livello: piccolo apposta (la fattoria è il gioco, non la sua barra), ma sempre lì. */
 .fa-liv { display: flex; align-items: center; gap: 6px; padding: 5px 10px 4px;
@@ -259,16 +272,16 @@
 
 /* come sta una bestia: tre blocchi, uno per bisogno */
 /* Un blocco tiene insieme la barra e quello che la muove. */
-.fa-blocco { border: 2px solid #2b4430; border-radius: 14px; background: #0d160f66;
+.fa-blocco { border: 2px solid #ecd6a8; border-radius: 14px; background: #fff5df;
   padding: 8px 9px 9px; margin: 8px 0 }
 .fa-testa { display: grid; grid-template-columns: auto 1fr auto; gap: 8px;
   align-items: center; margin-bottom: 6px }
-.fa-testa b { font-size: 13.5px; color: #e8efe6; white-space: nowrap }
-.fa-testa em { font-style: normal; font-size: 11px; color: #8fa691; min-width: 42px;
+.fa-testa b { font-size: 13.5px; color: #4a2c12; white-space: nowrap }
+.fa-testa em { font-style: normal; font-size: 11px; color: #8a6a48; min-width: 42px;
   text-align: right }
 /* I gesti di un bisogno: due o tre di solito, sette nella pancia — vanno a capo invece di stringersi. */
 .fa-gesti { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center }
-.fa-cibo.viva { border-color: #ffd98a }
+.fa-cibo.viva { border-color: #c46a0a }
 /* L'offerta "oppure comprane uno adesso": una riga larga, non un quadratino in fila. */
 .fa-cibo.dentro { flex-direction: row; gap: 8px; width: 100%; margin-top: 6px;
   justify-content: flex-start }
@@ -280,36 +293,36 @@
 .fa-bisogno { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px;
   align-items: center; font-size: 13px }
 /* non si chiama .barra: quella è già la barra in cima, il livello dei bisogni andava a tutto schermo */
-.fa-livello { height: 9px; border-radius: 6px; background: #0d160f;
-  border: 1px solid #2b4430; overflow: hidden }
+.fa-livello { height: 9px; border-radius: 6px; background: #f3e6c8;
+  border: 1px solid #ecd6a8; overflow: hidden }
 .fa-livello i { display: block; height: 100%; border-radius: 6px;
   transition: width .35s ease }
 .fa-bisogno em { font-style: normal; opacity: .6; font-size: 11px;
   min-width: 34px; text-align: right }
 .fa-etichetta { display: block; font-size: 11px; text-transform: uppercase;
-  letter-spacing: .06em; color: #8fa691; margin-bottom: 4px }
+  letter-spacing: .06em; color: #8a6a48; margin-bottom: 4px }
 .fa-cibo { display: flex; flex-direction: column; align-items: center; gap: 1px;
   padding: 6px 10px; border-radius: 12px; cursor: pointer;
-  background: #0d160f; border: 2px solid #2b4430; color: #e8efe6 }
+  background: #f3e6c8; border: 2px solid #ecd6a8; color: #4a2c12 }
 .fa-cibo b { font-size: 18px; line-height: 1 }
 .fa-cibo span { font-size: 10px; opacity: .8 }
-.fa-cibo em { font-style: normal; font-size: 11px; font-weight: 700; color: #ffd98a }
+.fa-cibo em { font-style: normal; font-size: 11px; font-weight: 700; color: #c46a0a }
 .fa-cibo:disabled { opacity: .35; cursor: default }
 /* Il suo cibo si vede da lontano, quello che rifiuta si vede che è spento. */
-.fa-cibo.suo { border-color: #9fd3a8 }
-.fa-cibo.altrui em { color: #d59a9a }
+.fa-cibo.suo { border-color: #6cb33f }
+.fa-cibo.altrui em { color: #c0392b }
 
 /* i campi e il granaio: la riga che spiega, più piccola e più spenta della riga che dice. */
-.fa-piccolo { font-size: 12px; color: #8fa691; line-height: 1.4; margin: 6px 0 0 }
+.fa-piccolo { font-size: 12px; color: #8a6a48; line-height: 1.4; margin: 6px 0 0 }
 /* la figura vera in mezzo alla frase, allineata alle parole (una frase, non un elenco). */
 .fa-manca { display: flex; flex-wrap: wrap; align-items: center;
   justify-content: center; gap: 4px }
 .fa-manca b { display: inline-flex; align-items: center; gap: 3px;
-  color: #d8e4d6 }
+  color: #5a3a1a }
 /* L'ingrediente che manca è un tasto: apre l'albero di quella merce. */
 .fa-manca-tasto { display: inline-flex; align-items: center; gap: 4px;
   padding: 2px 8px 2px 4px; border-radius: 9px; cursor: pointer; font: inherit;
-  background: #0d160fcc; border: 1px dashed #c9a227; color: #ffd98a }
+  background: #fffaf0; border: 1px dashed #e09a1c; color: #c46a0a }
 /* La faccia di una merce: PRODOTTI in dati/coltivazioni.js, disegnata da viste/Merce.vue, emoji come ripiego. */
 
 /* .fa-frutto resta per chi scrive una merce dentro una frase (un canvas ci starebbe storto). */
@@ -326,34 +339,34 @@
   flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain }
 .fa-ricetta { display: grid; gap: 2px; justify-items: center;
   padding: 7px 10px 6px; border-radius: 13px; cursor: pointer;
-  background: #0d160f; border: 2px solid #2b4430; color: #e8efe6; font: inherit }
-.fa-ricetta.suo { border-color: #9fd3a8 }
+  background: #f3e6c8; border: 2px solid #ecd6a8; color: #4a2c12; font: inherit }
+.fa-ricetta.suo { border-color: #6cb33f }
 .fa-ricetta:disabled { opacity: .45; cursor: default }
 .fa-ricetta .fa-titolo { font-size: 14px; font-weight: 600 }
-.fa-ricetta em { font-style: normal; font-size: 12px; font-weight: 700; color: #ffd98a }
+.fa-ricetta em { font-style: normal; font-size: 12px; font-weight: 700; color: #c46a0a }
 /* Le caselle di una ricetta: una per pezzo, accesa se ce l'hai (non una formula "3 → 2"). Vuota non è spenta: tratteggiata con la figura in ombra. */
 .fa-caselle { display: flex; flex-wrap: wrap; align-items: center;
   justify-content: center; gap: 4px }
 .fa-casella { display: flex; align-items: center; justify-content: center;
   width: 34px; height: 34px; border-radius: 9px;
-  background: #16261a; border: 2px solid #9fd3a8 }
-.fa-casella:not(.piena) { border-style: dashed; border-color: #3d5c42;
-  background: #0b120d }
+  background: #fffaf0; border: 2px solid #6cb33f }
+.fa-casella:not(.piena) { border-style: dashed; border-color: #e2c48f;
+  background: #f3e6c8 }
 .fa-casella:not(.piena) .fa-merce { opacity: .28 }
 
 /* Quello che ne esce, più piccolo di quello che entra: la domanda è "ce la faccio?". */
 .fa-esce { display: flex; align-items: center; gap: 5px; margin-top: 2px }
-.fa-esce b { color: #8fa691; font-size: 15px }
+.fa-esce b { color: #8a6a48; font-size: 15px }
 
 .fa-catena { display: flex; align-items: flex-end; justify-content: center; gap: 6px }
 /* Il numero sta sotto la figura: sopra copriva i pixel che distinguono una cassa dall'altra. */
 .fa-pezzetto { display: flex; flex-direction: column; align-items: center }
 .fa-pezzetto i { font-style: normal; font-size: 12px; font-weight: 700;
-  color: #d8e4d6; line-height: 1 }
+  color: #5a3a1a; line-height: 1 }
 /* "ne hai 4": più piccolo e più spento del numero della ricetta (sono due cose diverse). */
 .fa-pezzetto u, .fa-cibo u { display: block; text-decoration: none;
-  font-size: 10px; color: #8fa691; line-height: 1.3; white-space: nowrap }
-.fa-freccia { font-size: 17px; color: #8fa691; padding-bottom: 12px }
+  font-size: 10px; color: #8a6a48; line-height: 1.3; white-space: nowrap }
+.fa-freccia { font-size: 17px; color: #8a6a48; padding-bottom: 12px }
 
 /* La fila di una macchina: una casella per posto, piena col bordo verde, pronta con l'oro, in attesa con la ✕. */
 .fa-fila-posti { display: flex; flex-wrap: wrap; justify-content: center;
@@ -361,54 +374,83 @@
 .fa-posto { position: relative; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 2px;
   width: 54px; min-height: 58px; padding: 4px 3px; border-radius: 11px;
-  background: #16261a; border: 2px solid #9fd3a8; color: #e8efe6; font: inherit }
+  background: #fffaf0; border: 2px solid #6cb33f; color: #4a2c12; font: inherit }
 .fa-posto em { font-style: normal; font-size: 10.5px; font-weight: 700;
-  color: #d8e4d6; line-height: 1.1; white-space: nowrap }
+  color: #5a3a1a; line-height: 1.1; white-space: nowrap }
 .fa-posto .fa-livello { width: 100%; height: 6px }
-.fa-posto.pronto { border-color: #ffd98a }
-.fa-posto.pronto em { color: #ffd98a; font-size: 14px }
-.fa-posto.vuoto { border-style: dashed; border-color: #3d5c42; background: #0b120d }
-.fa-posto.vuoto b { font-size: 20px; color: #3d5c42 }
-.fa-posto.vuoto.suo { cursor: pointer; border-color: #9fd3a8 }
-.fa-posto.vuoto.suo b { color: #9fd3a8; font-size: 16px }
+.fa-posto.pronto { border-color: #c46a0a }
+.fa-posto.pronto em { color: #c46a0a; font-size: 14px }
+.fa-posto.vuoto { border-style: dashed; border-color: #e2c48f; background: #f3e6c8 }
+.fa-posto.vuoto b { font-size: 20px; color: #e2c48f }
+.fa-posto.vuoto.suo { cursor: pointer; border-color: #6cb33f }
+.fa-posto.vuoto.suo b { color: #6cb33f; font-size: 16px }
 .fa-posto.vuoto.suo .fa-merce { opacity: .7 }
 .fa-posto.vuoto.suo:active, .fa-posto-piu:active { transform: scale(.94) }
 .fa-posto-via { position: absolute; top: -7px; right: -7px; width: 22px; height: 22px;
-  border-radius: 50%; border: 2px solid #0d160f; background: #7a3b2e; color: #fff;
+  border-radius: 50%; border: 2px solid #f3e6c8; background: #d93a2a; color: #fff;
   font-size: 11px; line-height: 1; padding: 0; cursor: pointer }
 .fa-posto-piu { width: 54px; min-height: 58px; border-radius: 11px; cursor: pointer;
-  border: 2px dashed #c9a227; background: transparent; color: #d8e4d6;
+  border: 2px dashed #e09a1c; background: transparent; color: #5a3a1a;
   font: inherit; font-size: 10.5px; line-height: 1.3 }
-.fa-posto-piu b { color: #ffd98a; font-size: 12px }
+.fa-posto-piu b { color: #c46a0a; font-size: 12px }
 
 /* "È pronto!": la riga più importante, l'unica in cui la merce si vede grande. */
 .fa-pronto { display: flex; align-items: center; gap: 10px; text-align: left }
-.fa-pronto b { color: #ffd98a }
+.fa-pronto b { color: #c46a0a }
 
 /* La carta di una coltura, col disegno invece dell'emoji: più larga. */
 .fa-cibo.grande { padding: 7px 12px 6px; min-width: 92px }
 /* Lo scomparto è colmo: oro, non rosso (il rosso qui è il colore di un rifiuto). */
-.fa-cibo.colma { border-color: #c9a227 }
-.fa-cibo.colma u { color: #ffd98a }
+.fa-cibo.colma { border-color: #e09a1c }
+.fa-cibo.colma u { color: #c46a0a }
 
 .fa-minuto { display: block; margin: 10px auto 0; padding: 4px 10px; border: none;
-  background: none; color: #8fa691; font: inherit; font-size: 12px;
+  background: none; color: #8a6a48; font: inherit; font-size: 12px;
   text-decoration: underline; cursor: pointer }
 
-/* il mercato: tre ordini, più largo delle altre modali e alto quanto lo schermo. */
+/* il mercato: la bacheca degli ordini, tre foglietti appuntati (viste/Mercato.vue). */
 .fa-mercato { width: min(460px, 95vw) }
+.fa-bacheca { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  padding: 12px 8px 10px; margin: 0 0 4px; border-radius: 14px;
+  background: linear-gradient(#c98a4b, #b5763c); border: 3px solid #7a4a22;
+  box-shadow: inset 0 2px 0 #e0a868 }
+/* Un ordine del mercato è un foglietto di carta, un filo storto, con la puntina in cima. */
+.fa-foglietto { position: relative; display: flex; flex-direction: column; align-items: center;
+  gap: 4px; padding: 14px 4px 8px; border-radius: 6px; background: #fffaf0;
+  box-shadow: 0 3px 0 #8a5a2a, 0 4px 8px #0003; transform: rotate(var(--piega, 0deg)) }
+.fa-foglietto.pronto { background: #f0fbe2; box-shadow: 0 0 0 3px #6cb33f, 0 3px 0 #8a5a2a }
+.fa-foglietto.vuoto { justify-content: center; opacity: .75 }
+.fa-puntina { position: absolute; top: -6px; left: 50%; width: 14px; height: 14px;
+  margin-left: -7px; border-radius: 50%; border: 2px solid #8a1f14;
+  background: radial-gradient(circle at 35% 30%, #ff8a72, #d93a2a 70%) }
+.fa-cliente { font-size: 34px; line-height: 1.1 }
+.fa-fra { font-size: 15px; font-weight: 800; color: #6b4a26 }
+/* Una merce chiesta: la figura grande e «0/2»; manca → si tocca e apre l'albero. */
+.fa-chiesta { display: flex; align-items: center; gap: 2px; padding: 0 4px; border: none;
+  background: none; font: inherit; color: #4a2c12; cursor: pointer; border-radius: 9px }
+.fa-chiesta span { font-size: 15px; font-weight: 800; min-width: 30px; text-align: left }
+.fa-chiesta:not(.piena) span b { color: #c0392b }
+.fa-chiesta.piena { cursor: default }
+.fa-chiesta.piena span b { color: #4f9a2f }
+.fa-chiesta:active:not(:disabled) { transform: scale(.94) }
+/* Il premio porta la ⭐ e non la moneta: il mercato non paga monete. */
+.fa-premio-xp { font-style: normal; font-size: 15px; font-weight: 800;
+  color: #c46a0a; white-space: nowrap }
+.fa-foglietto-tasti { display: flex; gap: 6px; align-items: center }
+.fa-butta { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #d3b47d;
+  background: #fffaf0; font-size: 15px; cursor: pointer; padding: 0 }
+.fa-foglietto .fa-bot.piccolo { padding: 5px 14px; font-size: 16px }
+
+/* Gli ordini di una bottega e le casse della mongolfiera: un riquadro per ordine. */
 .fa-ordini { display: grid; gap: 8px; margin: 6px 0 8px }
 /* Un ordine è un riquadro, non una riga: chi lo fa, cosa vuole, cosa si può fare, insieme. */
-.fa-ordine { border: 2px solid #2b4430; border-radius: 14px;
-  background: #0d160f66; padding: 8px 9px 9px }
-.fa-ordine.pronto { border-color: #9fd3a8; background: #1b3220cc }
+.fa-ordine { border: 2px solid #ecd6a8; border-radius: 14px;
+  background: #fff5df; padding: 8px 9px 9px }
+.fa-ordine.pronto { border-color: #6cb33f; background: #eaf6d8 }
 .fa-chi { display: grid; grid-template-columns: auto 1fr auto; gap: 8px;
   align-items: center; margin-bottom: 6px }
 .fa-chi b { font-size: 20px; line-height: 1 }
-.fa-chi span { font-size: 13.5px; color: #e8efe6 }
-/* Il premio porta la ⭐ e non la moneta: il mercato non paga monete. */
-.fa-premio-xp { font-style: normal; font-size: 13px; font-weight: 700;
-  color: #ffd98a; white-space: nowrap }
+.fa-chi span { font-size: 13.5px; color: #4a2c12 }
 .fa-chiede { display: flex; flex-wrap: wrap; gap: 10px;
   justify-content: center; margin-bottom: 8px }
 .fa-ordine .fa-fila { justify-content: flex-end }
@@ -433,35 +475,35 @@
 .fa-rot { width: 13px; position: relative }
 /* │ — la rotaia di un antenato che ha ancora fratelli sotto */
 .fa-rot.giu::before { content: ''; position: absolute; left: 6px; top: -5px; bottom: -5px;
-  border-left: 2px solid #4e7355 }
+  border-left: 2px solid #c9a874 }
 /* il braccio che entra nel riquadro, uguale per tutti e tre gli snodi */
 .fa-rot.mezzo::after, .fa-rot.chiude::after, .fa-rot.apre::after {
   content: ''; position: absolute; left: 6px; top: 50%; right: 0;
-  border-top: 2px solid #4e7355 }
+  border-top: 2px solid #c9a874 }
 /* ├ passa e continua · └ arriva e finisce · ┌ comincia qui e scende */
 .fa-rot.mezzo::before { content: ''; position: absolute; left: 6px; top: -5px; bottom: -5px;
-  border-left: 2px solid #4e7355 }
+  border-left: 2px solid #c9a874 }
 .fa-rot.chiude::before { content: ''; position: absolute; left: 6px; top: -5px; height: calc(50% + 5px);
-  border-left: 2px solid #4e7355 }
+  border-left: 2px solid #c9a874 }
 .fa-rot.apre::before { content: ''; position: absolute; left: 6px; top: 50%; bottom: -5px;
-  border-left: 2px solid #4e7355 }
+  border-left: 2px solid #c9a874 }
 .fa-ramo { display: flex; align-items: center; gap: 8px; padding: 5px 8px;
-  border-radius: 11px; background: #0d160fcc; border: 2px solid #2b4430;
-  color: #d8e4d6 }
-.fa-ramo.radice { border-color: #6f9b6f; background: #1b3220cc }
-.fa-ramo.ok { border-color: #6f9b6f }
-.fa-ramo.manca { border-color: #c9a227 }
+  border-radius: 11px; background: #fffaf0; border: 2px solid #ecd6a8;
+  color: #5a3a1a }
+.fa-ramo.radice { border-color: #a8c98a; background: #eaf6d8 }
+.fa-ramo.ok { border-color: #a8c98a }
+.fa-ramo.manca { border-color: #e09a1c }
 .fa-ramo.arriva { opacity: .6 }
-.fa-ramo.compra, .fa-ramo.premio { border-color: #c9a227 }
-.fa-ramo.lavora { border-color: #7fb4e0 }
+.fa-ramo.compra, .fa-ramo.premio { border-color: #e09a1c }
+.fa-ramo.lavora { border-color: #4a90c8 }
 .fa-ramo-testo { flex: 1; min-width: 0; display: flex; flex-direction: column }
-.fa-ramo-testo b { font-size: 13.5px; color: #f4efe2; overflow: hidden;
+.fa-ramo-testo b { font-size: 13.5px; color: #4a2c12; overflow: hidden;
   white-space: nowrap; text-overflow: ellipsis }
-.fa-ramo-testo b em { font-style: normal; font-weight: 400; color: #8fa691 }
-.fa-ramo-testo span { font-size: 12px; color: #d8e4d6; opacity: .85 }
+.fa-ramo-testo b em { font-style: normal; font-weight: 400; color: #8a6a48 }
+.fa-ramo-testo span { font-size: 12px; color: #5a3a1a; opacity: .85 }
 .fa-ramo.manca .fa-ramo-testo span, .fa-ramo.compra .fa-ramo-testo span,
-.fa-ramo.premio .fa-ramo-testo span { color: #ffd98a; opacity: 1 }
-.fa-ramo.ok .fa-ramo-testo span { color: #9fd3a8 }
+.fa-ramo.premio .fa-ramo-testo span { color: #c46a0a; opacity: 1 }
+.fa-ramo.ok .fa-ramo-testo span { color: #6cb33f }
 /* La macchina è il connettore: più piccola, senza figura, bordo tratteggiato. */
 .fa-ramo.fa-macchina { padding: 3px 8px; border-width: 1px; border-style: dashed;
   background: transparent }
@@ -470,23 +512,23 @@
 /* fa-ramo-perche e non fa-consiglio: quel nome è già preso (Passo.vue) e si porterebbe dietro il riquadro. */
 .fa-ramo-testo small { font-size: 11.5px; line-height: 1.3; white-space: normal;
   margin-top: 2px }
-.fa-ramo-testo .fa-ramo-perche { color: #ffd98a; opacity: .9 }
-.fa-ramo-testo .fa-ramo-altrove { color: #8fa691; font-style: italic }
+.fa-ramo-testo .fa-ramo-perche { color: #c46a0a; opacity: .9 }
+.fa-ramo-testo .fa-ramo-altrove { color: #8a6a48; font-style: italic }
 
 /* la mongolfiera: stesso riquadro del banco; scorre l'elenco delle file, non il foglio. */
 .fa-mongolfiera .fa-casse { flex: 0 1 auto; min-height: 0;
   overflow-y: auto; overscroll-behavior: contain }
-.fa-ordine.fatta { border-color: #3d5c42; opacity: .8 }
+.fa-ordine.fatta { border-color: #e2c48f; opacity: .8 }
 .fa-cassa { display: flex; flex-direction: column; align-items: center; gap: 4px;
   padding: 6px 6px 5px; border-radius: 12px; cursor: pointer; font: inherit;
-  background: #0b120d; border: 2px dashed #3d5c42; color: #e8efe6 }
-.fa-cassa.pronta { border: 2px solid #c9a227; background: #2a2a14 }
-.fa-cassa.piena { border: 2px solid #9fd3a8; background: #16261a; cursor: default }
+  background: #f3e6c8; border: 2px dashed #e2c48f; color: #4a2c12 }
+.fa-cassa.pronta { border: 2px solid #e09a1c; background: #2a2a14 }
+.fa-cassa.piena { border: 2px solid #6cb33f; background: #fffaf0; cursor: default }
 .fa-cassa:disabled:not(.piena) { cursor: default }
 .fa-cassa:not(:disabled):active { transform: scale(.95) }
-.fa-cassa u { text-decoration: none; font-size: 11.5px; font-weight: 700; color: #ffd98a }
-.fa-cassa.piena u { color: #9fd3a8 }
+.fa-cassa u { text-decoration: none; font-size: 11.5px; font-weight: 700; color: #c46a0a }
+.fa-cassa.piena u { color: #6cb33f }
 .fa-foglio p.fa-conto { margin: 0 0 6px; font-size: 13px; opacity: 1 }
-.fa-conferma-parti { border: 2px solid #c9a227; border-radius: 14px;
+.fa-conferma-parti { border: 2px solid #e09a1c; border-radius: 14px;
   padding: 8px 10px 10px; background: #2a2a1488; margin-top: 4px }
 .fa-foglio .fa-conferma-parti p { margin: 0 0 8px; font-size: 13.5px }

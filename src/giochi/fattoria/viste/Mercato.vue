@@ -1,25 +1,18 @@
 <script setup>
-/* Il mercato: tre ordini, caselle accese per quello che hai (non una formula), il premio è una ⭐
-   e non una 🪙 — vedi docs/fattoria/chi-chiede.md e regole.md. Riceve gli ordini già contati
-   (bancoDi), non sa niente del profilo. */
-import { computed } from 'vue'
-import { RIPOSO_MIN } from '../dati/mercato.js'
+/* Il mercato: la bacheca degli ordini, come in Hay Day — tre foglietti appuntati, chi chiede grande,
+   le merci grandi col «0/2», il premio in ⭐ (non 🪙: il mercato non paga monete). Pochissime parole:
+   quello che manca si tocca e apre il suo albero. Riceve gli ordini già contati (bancoDi), non sa
+   niente del profilo — vedi docs/fattoria/chi-chiede.md. */
 import Merce from './Merce.vue'
 import Chiudi from './Chiudi.vue'
 
-const props = defineProps({
+defineProps({
   // [{id, cliente, righe, xp, minuti, pronto}] — vedi bancoDi
   ordini: { type: Array, default: () => [] },
   // [{minuti}]: i posti che stanno riposando dopo un rifiuto
   riposi: { type: Array, default: () => [] },
 })
 const emit = defineEmits(['consegna', 'rifiuta', 'chiudi', 'albero'])
-
-const pronti = computed(() => props.ordini.filter(o => o.pronto).length)
-
-// Le caselle di una riga: una per pezzo, accesa se ce l'hai (disegno, non del motore).
-const caselle = riga => Array.from({ length: riga.serve },
-                                   (_, i) => ({ piena: i < riga.hai }))
 </script>
 
 <template>
@@ -27,66 +20,40 @@ const caselle = riga => Array.from({ length: riga.serve },
     <Chiudi @chiudi="$emit('chiudi')" />
     <h2>Il mercato</h2>
 
-    <!-- La prima riga cambia con lo stato: chi ha da consegnare va portato lì, chi no va spiegato. -->
-    <p v-if="pronti">Ce n'{{ pronti === 1 ? 'è uno' : 'è ' + pronti }} che puoi
-       consegnare adesso: la roba esce dal silo e la fattoria
-       <b>cresce di livello</b>.</p>
-    <p v-else-if="ordini.length">Chi passa di qui ordina quello che gli
-       serve. Portagli quello che chiede e la fattoria <b>cresce di
-       livello</b> — al mercato non si vendono cose, si fanno favori.</p>
-    <p v-else>Per adesso non è arrivato nessuno. Torna fra poco.</p>
+    <div class="fa-bacheca">
+      <div v-for="(o, n) in ordini" :key="o.id" class="fa-foglietto"
+           :class="{ pronto: o.pronto }" :style="{ '--piega': (n % 2 ? 1.2 : -1.2) + 'deg' }"
+           :data-ordine="o.id">
+        <i class="fa-puntina"></i>
+        <b class="fa-cliente" :title="o.cliente.nome">{{ o.cliente.emoji }}</b>
 
-    <div class="fa-ordini">
-      <div v-for="o in ordini" :key="o.id" class="fa-ordine"
-           :class="{ pronto: o.pronto }" :data-ordine="o.id">
-        <div class="fa-chi">
-          <b>{{ o.cliente.emoji }}</b>
-          <span>{{ o.cliente.nome }} vuole</span>
-          <em class="fa-premio-xp">⭐ {{ o.xp }}</em>
-        </div>
+        <!-- Una riga per merce: la figura grande e quanti, in grassetto. Quella che manca si tocca. -->
+        <button v-for="r in o.righe" :key="r.prodotto" type="button"
+                :class="['fa-chiesta', { piena: r.pieno }]"
+                :data-albero-apri="r.pieno ? null : r.prodotto"
+                :disabled="r.pieno" @click="emit('albero', r.prodotto)">
+          <Merce :merce="r.prodotto" :lato="50" />
+          <span><b>{{ r.hai }}</b>/{{ r.serve }}</span>
+        </button>
 
-        <div class="fa-chiede">
-          <span v-for="r in o.righe" :key="r.prodotto" class="fa-pezzetto">
-            <span class="fa-caselle">
-              <span v-for="(c, i) in caselle(r)" :key="i"
-                    :class="['fa-casella', { piena: c.piena }]">
-                <Merce :merce="r.prodotto" :lato="22" />
-              </span>
-            </span>
-            <u>{{ r.hai }} su {{ r.serve }} · {{ r.nome.toLowerCase() }}</u>
-          </span>
+        <em class="fa-premio-xp">⭐ {{ o.xp }}</em>
+        <div class="fa-foglietto-tasti">
+          <!-- Rifiutare costa tempo: il posto resta vuoto qualche minuto. -->
+          <button type="button" class="fa-butta" data-azione="rifiuta" aria-label="non mi va"
+                  @click="emit('rifiuta', o.id)">🗑</button>
+          <button type="button" class="fa-bot forte piccolo" data-azione="consegna"
+                  :disabled="!o.pronto" @click="emit('consegna', o.id)">✓</button>
         </div>
+      </div>
 
-        <div class="fa-fila">
-          <!-- Rifiutare costa tempo: il posto resta vuoto cinque minuti. -->
-          <button class="fa-bot piano piccolo" data-azione="rifiuta"
-                  :title="`ne arriva un altro fra ${RIPOSO_MIN} minuti`"
-                  @click="emit('rifiuta', o.id)">✕ non mi va</button>
-          <button class="fa-bot forte" data-azione="consegna"
-                  :disabled="!o.pronto" @click="emit('consegna', o.id)">
-            Consegna</button>
-        </div>
-        <!-- Quello che manca si preme: apre l'albero di quella merce. -->
-        <p v-if="!o.pronto" class="fa-piccolo fa-manca">
-          <span>Ti {{ o.righe.filter(r => !r.pieno).length > 1
-                      ? 'servono ancora' : 'serve ancora' }}</span>
-          <button v-for="r in o.righe.filter(r => !r.pieno)" :key="r.prodotto"
-                  type="button" class="fa-manca-tasto" :data-albero-apri="r.prodotto"
-                  @click="emit('albero', r.prodotto)">
-            <b>{{ r.serve - r.hai }}
-            <Merce :merce="r.prodotto" :lato="20" />
-            {{ r.nome.toLowerCase() }}</b> 🌳</button>
-        </p>
+      <!-- Un posto che riposa non è un buco: un foglietto vuoto che dice fra quanto torna. -->
+      <div v-for="(r, i) in riposi" :key="'r' + i" class="fa-foglietto vuoto" data-riposo>
+        <i class="fa-puntina"></i>
+        <b class="fa-cliente">⏳</b>
+        <span class="fa-fra">{{ r.minuti }} min</span>
       </div>
     </div>
 
-    <!-- Un posto che riposa non è un buco: dice fra quanto torna. -->
-    <p v-for="(r, i) in riposi" :key="i" class="fa-piccolo" data-riposo>
-      Un altro ordine arriva fra <b>{{ r.minuti }}</b>
-      {{ r.minuti === 1 ? 'minuto' : 'minuti' }}.</p>
-
-    <p class="fa-piccolo">Consegnare non dà monete: quelle si guadagnano
-       negli altri giochi. Dà <b>esperienza</b>, cioè livelli — e i
-       livelli aprono roba nuova nel baule.</p>
+    <p v-if="!ordini.length && !riposi.length">Per adesso non è arrivato nessuno.</p>
   </div>
 </template>

@@ -27,9 +27,6 @@ const silo = computed(() => SILI[props.famiglia] || SILI.terra)
 const roba = id => PRODOTTI[id] || { nome: id, emoji: '📦' }
 const manca = computed(() => Math.max(0, props.costo - props.monete))
 
-// Quanti scomparti sono colmi: si dice solo se ce n'è, se no un cartello ripetuto smette di essere letto.
-const pieni = computed(() => props.scomparti.filter(s => s.pieno))
-
 // Chi usa questa roba: una riga alla volta (ripremendo si chiude).
 const aperto = ref(null)
 const tocca = id => { aperto.value = aperto.value === id ? null : id }
@@ -59,59 +56,39 @@ const dice = u => {
     <h2>{{ silo.nome }}</h2>
 
     <!-- Cosa ci sta, in numero: "8 di ogni cosa" è la regola intera. -->
-    <p class="fa-posti">
-      <b>{{ posti }}</b> di ogni cosa
-      <span v-if="pieni.length">· {{ pieni.length === 1
-        ? `${roba(pieni[0].prodotto).nome.toLowerCase()} è al completo`
-        : `${pieni.length} scomparti sono al completo` }}</span>
-    </p>
+    <p class="fa-posti"><b>{{ posti }}</b> di ogni cosa</p>
 
     <!-- Un silo comprato prima di avere di che riempirlo (la stalla, prima delle bestie). -->
     <p v-if="!scomparti.length" class="fa-piccolo">Qui dentro non c'è
        ancora niente da mettere: ci arriverà {{ silo.vuoto }}.</p>
 
-    <!-- Uno per riga, barretta e numeri: si legge senza contare niente. -->
-
+    <!-- Come in Hay Day: la figura grande e il numero, niente righe da leggere. Il nome c'è per chi
+         non vede (e per i test), non a schermo: la figura lo dice già. Oro: lo scomparto è pieno. -->
     <div class="fa-scomparti">
       <button v-for="s in scomparti" :key="s.prodotto" type="button"
               :class="['fa-scomparto', { colmo: s.pieno, vuoto: !s.quanti,
                                          viva: aperto === s.prodotto }]"
               @click="tocca(s.prodotto)">
-        <Merce :merce="s.prodotto" :lato="32" />
-        <span class="fa-etichetta">{{ roba(s.prodotto).nome }}</span>
-        <span class="fa-quanto">
-          <i :style="{ width: Math.round(s.quanti / (s.posti || 1) * 100) + '%' }"></i>
-        </span>
+        <Merce :merce="s.prodotto" :lato="56" />
+        <span class="fa-nascosto">{{ roba(s.prodotto).nome }}</span>
         <span class="fa-conto">{{ s.quanti }}<em>/{{ s.posti }}</em></span>
       </button>
     </div>
 
-    <!-- Su uno scomparto colmo la stessa riga dice come si svuota. -->
+    <!-- Chi usa la roba toccata, e da lì la strada intera (viste/Albero.vue). -->
     <div v-if="aperto" class="fa-usi">
       <b><Merce :merce="aperto" :lato="26" /> {{ roba(aperto).nome }}</b>
       <p v-for="(u, i) in usiDi" :key="i">{{ dice(u) }}</p>
       <p v-if="!usiDi.length">Per adesso non serve a niente.</p>
-      <!-- Da qui si vede la strada intera (viste/Albero.vue). -->
       <button type="button" class="fa-bot piccolo" data-azione="albero"
               @click="$emit('albero', aperto)">🌳 Come si fa</button>
     </div>
-    <p v-else-if="pieni.length" class="fa-piccolo">Uno scomparto pieno non
-       ferma gli altri: si può raccogliere tutto il resto. Premi
-       <b>{{ roba(pieni[0].prodotto).nome.toLowerCase() }}</b> per vedere
-       come si svuota.</p>
-    <p v-else class="fa-piccolo">Premi una cosa per vedere chi la usa.</p>
 
-    <div class="fa-fila">
-      <button class="fa-bot" @click="$emit('chiudi')">Chiudi</button>
-      <button class="fa-bot forte" :disabled="manca > 0" @click="$emit('ingrandisci')">
-        Ingrandisci 🪙{{ costo }}</button>
-    </div>
     <!-- Il tasto spento dice di quanto manca, come in tutto il resto del gioco. -->
-    <p class="fa-piccolo">
-      <template v-if="manca">Ti {{ manca === 1 ? 'manca' : 'mancano' }}
-        🪙{{ manca }}: </template>
-      <template v-else>Ingrandirlo </template>
-      aggiunge <b>{{ SCOMPARTO_PIU }}</b> posti <b>a ogni</b> scomparto, e il
-      prossimo ingrandimento costerà un po' di più.</p>
+    <div class="fa-fila">
+      <button class="fa-bot forte" :disabled="manca > 0" @click="$emit('ingrandisci')">
+        Ingrandisci <span class="fa-piu">+{{ SCOMPARTO_PIU }}</span>
+        · {{ manca ? `manca 🪙${manca}` : `🪙${costo}` }}</button>
+    </div>
   </div>
 </template>
