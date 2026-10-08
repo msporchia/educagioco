@@ -174,7 +174,7 @@ const TIPI = [
     gradi: { 3: 0.3 } },
   { chiave: 'bio:intruso', nome: 'Chi non vive qui', sa: 'ambienti',
     gradi: { 3: 0.3, 4: 0.3 } },
-  { chiave: 'bio:adattamento', nome: 'Il corpo dice il posto', sa: ['ambienti', 'adattamento'],
+  { chiave: 'bio:adattamento', nome: 'Il corpo dice il posto', sa: ['adattamento', 'ambienti'],
     gradi: { 4: 0.5 } },
 ]
 
