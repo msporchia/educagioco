@@ -508,16 +508,11 @@
 .sot-ritratto .em { font-size: 40px }
 
 /* l'eroe con la roba in mano (viste/Armato.vue): la scala è quella della figura, le armi escono dal riquadro
-   (una balestra è più larga del corpo) e prendono lo stesso filo chiaro delle altre cose */
+   (una balestra è più larga del corpo). Provato il filo chiaro delle icone attorno alle armi: le sbiadiva, tolto */
 .sot-armato { position: relative; display: block; flex: none }
 .sot-armato > .sot-ritratto { position: absolute; top: 0 }
 .sot-armato > .sot-pezzo { position: absolute; display: block }
-.sot-armato > .sot-pezzo > i {
-  position: absolute; top: 0; left: 0; display: block;
-  filter:
-    drop-shadow(1px 0 0 #ffffff4d) drop-shadow(-1px 0 0 #ffffff4d)
-    drop-shadow(0 1px 0 #ffffff4d) drop-shadow(0 -1px 0 #ffffff4d);
-}
+.sot-armato > .sot-pezzo > i { position: absolute; top: 0; left: 0; display: block }
 
 .sot-chi {
   display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px;
