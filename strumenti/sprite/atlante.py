@@ -438,6 +438,64 @@ def alla_misura(pezzo, misura, nome):
     return pezzo.convert('RGBa').resize((w, h), Image.BOX).convert('RGBA')
 
 
+def ad_aiuola(pezzo, regola, nome):
+    """La terra di un campo portata al suo piede, perché due campi vicini combacino.
+
+    Il generatore disegna l'aiuola come una cosa sola, con gli angoli tondi
+    e un alone tutto intorno, larga 33 e alta 27 su un piede di 32×32:
+    affiancati, fra due file resta una striscia d'erba e agli angoli i
+    buchi. Qui la parte di terra (le ultime `terra` righe; quello che sta
+    sopra è la pianta che sborda) perde l'alone, gli angoli si riempiono
+    col colore della terra vicina e il tutto va al `piede` esatto; la
+    pianta sopra si allarga allo stesso modo. L'orlo si scurisce di un
+    filo: è il solco che fa contare i campi quando sono tutti attaccati.
+
+    Si dichiara nel foglietto per prefisso:
+    `"aiuola": {"prefisso": "campo_", "terra": 27, "piede": [32, 32]}`."""
+    if not regola or not nome.startswith(regola.get('prefisso', '')):
+        return pezzo
+    terra = regola['terra']
+    pw, ph = regola['piede']
+    w, h = pezzo.size
+    if h < terra:
+        print(f'  ! {nome}: alto {h}, meno della terra ({terra}): lasciato com\'è')
+        return pezzo
+    sopra = h - terra
+    suolo = pezzo.crop((0, sopra, w, h))
+    px = suolo.load()
+    # Gli angoli: il generatore ci dipinge dei ciuffi d'erba, che fra quattro campi attaccati sembrano buchi.
+    for y in range(terra):
+        for x in range(w):
+            if min(x, w - 1 - x) < 5 and min(y, terra - 1 - y) < 5 and px[x, y][1] > px[x, y][0]:
+                px[x, y] = (0, 0, 0, 0)
+    # Ogni pixel non pieno prende il colore del pieno più vicino, a macchia d'olio.
+    pieni = [(x, y) for y in range(terra) for x in range(w) if px[x, y][3] == 255]
+    visti = set(pieni)
+    while pieni:
+        nuovi = []
+        for x, y in pieni:
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                q = (x + dx, y + dy)
+                if 0 <= q[0] < w and 0 <= q[1] < terra and q not in visti:
+                    r, g, b, _ = px[x, y]
+                    px[q] = (r, g, b, 255)
+                    visti.add(q)
+                    nuovi.append(q)
+        pieni = nuovi
+    suolo = suolo.resize((pw, ph), Image.NEAREST)
+    sp = suolo.load()
+    for y in range(ph):
+        for x in range(pw):
+            if x in (0, pw - 1) or y in (0, ph - 1):
+                r, g, b, a = sp[x, y]
+                sp[x, y] = (r * 4 // 5, g * 4 // 5, b * 4 // 5, a)
+    fatto = Image.new('RGBA', (pw, sopra + ph), (0, 0, 0, 0))
+    if sopra:
+        fatto.paste(pezzo.crop((0, 0, w, sopra)).resize((pw, sopra), Image.NEAREST), (0, 0))
+    fatto.paste(suolo, (0, sopra))
+    return fatto
+
+
 def famiglia_di(nome, fg):
     """Di che famiglia è un pezzo — se il foglio lo dice.
 
@@ -520,6 +578,7 @@ def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima):
             pezzo = cancella_in(pezzo, d.get('cancella'), chi)
             pezzo = toppa_in(pezzo, d.get('toppa'), chi, im, fg)
             pezzo = alla_misura(pezzo, d.get('misura'), chi)
+            pezzo = ad_aiuola(pezzo, fg.get('aiuola'), chi)
             ritagli[chi] = pezzo
             provenienza[chi] = provenienza.get(chi) or Path(fg['_file']).name
             famiglie[chi] = d.get('famiglia') or famiglia_di(chi, fg)

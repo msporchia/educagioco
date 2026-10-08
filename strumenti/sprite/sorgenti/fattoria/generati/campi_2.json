@@ -1,6 +1,8 @@
 {
  "__": "Il secondo foglio dei campi, otto colture nuove: pomodori, patate, fragole, melanzane, peperoni, cavolfiori, cipolle e aglio. Stessa forma di `campi.png`: il cartello, l'aiuola nuda (che non entra, come di là), sette stadi dal seminato al maturo, e la cassetta del raccolto. Il PNG è RGB con la scacchiera dipinta: «fondo»: «auto» e «colori»: 0, per le stesse ragioni scritte in `campi.json`. «cella»: [1, 1] e coordinate in pixel, stampate da `misura.py --figure`.\n\n«misura» è la riga che conta anche qui. Il generatore disegna l'aiuola più larga negli ultimi due stadi (da ~124 a ~148 px) e le piante alte sbordano in su; ogni stadio è riportato a un letto di 32×27 — il piede 2×2 di un campo — misurando il **letto** e non il riquadro: uno script ha preso, riquadro per riquadro, il rettangolo dei pixel color terra, e la misura è il riquadro intero scalato di quanto serve a portare quel letto a 32×27. Cartelli e casse hanno lo stesso fattore di quelli di `campi.json`, così stanno in fila coi vecchi.",
  "fondo": "auto",
+ "__aiuola": "La terra di ogni campo portata al piede 2×2 (32×32): angoli pieni, niente alone, così due campi vicini combaciano. Vedi ad_aiuola in atlante.py.",
+ "aiuola": {"prefisso": "campo_", "terra": 27, "piede": [32, 32]},
  "colori": 0,
  "cella": [
   1,

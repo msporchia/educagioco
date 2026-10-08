@@ -7,6 +7,8 @@
     "testo": "Disegna un foglio di sprite in pixel art nello stesso stile di questa\nimmagine, riga per riga identico nella forma: a sinistra il\ncartello di legno con il disegno della pianta, poi otto aiuole in\nfila dalla terra appena arata ai semi, al germoglio, alla pianta\nche cresce, fino al raccolto maturo, e in fondo a destra la\ncassetta di legno piena del raccolto. Stessa misura delle aiuole,\nstessa terra, stesso bordo, stessa luce.\n\nIl foglio è 1536×1024 px. Tre righe, con la stessa spaziatura\ndelle righe allegate e il resto del foglio vuoto:\n1. barbabietola da zucchero: ciuffi di grandi foglie verde scuro\n   con le coste rosse, e alla fine le radici tonde viola-rossastre\n   che spuntano dalla terra; la cassetta piena di barbabietole con\n   le foglie\n2. lavanda: cespuglietti grigioverdi che crescono, poi le spighe\n   viola chiaro sempre più fitte; la cassetta coi mazzi di lavanda\n   legati con lo spago\n3. riso: l'aiuola allagata con un filo d'acqua che luccica, le\n   piantine verdi in file, poi le spighe che si piegano e diventano\n   dorate; la cassetta piena di pannocchie di riso dorate\n\nIl cartello porta il disegno della pianta e nient'altro: nessuna\nparola scritta sul cartello (quelle dell'immagine allegata non vanno\ncopiate).\n\nNessun alone o bagliore attorno ai pezzi: i bordi sono netti."
   },
   "fondo": "trasparente",
+  "__aiuola": "La terra di ogni campo portata al piede 2×2 (32×32): angoli pieni, niente alone, così due campi vicini combaciano. Vedi ad_aiuola in atlante.py.",
+  "aiuola": {"prefisso": "campo_", "terra": 27, "piede": [32, 32]},
   "alone": 128,
   "colori": 0,
   "cella": [
