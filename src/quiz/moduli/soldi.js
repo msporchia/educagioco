@@ -441,6 +441,15 @@ const A_PEZZO = [
   { nome: 'gli yogurt', pezzo: 'uno yogurt', confezioni: [4, 6, 8], fascia: [40, 90] },
 ]
 
+// prezzi da fare a mente: il totale in euro interi, al kg un euro tondo o mezzo, a pezzo quello che ne esce (12 uova a 3 € → 25 c). I centesimi sparsi mandavano in pappa il ragionamento, che è la cosa da imparare
+function tondi(item, q) {
+  const passo = item.pezzo ? 5 : 50
+  const out = []
+  for (let c = Math.ceil(item.fascia[0] / passo) * passo; c <= item.fascia[1]; c += passo)
+    if ((c * q) % 100 === 0) out.push(c)
+  return out
+}
+
 // il chilo non cambia forma al plurale, il litro sì
 function pesoLabel(item, n) {
   if (item.un === 'litro') return n === 1 ? '1 litro' : `${n} litri`
@@ -451,22 +460,12 @@ const pesoUnitLabel = item => item.un === 'litro' ? 'un litro' : 'un kg'
 // per metterlo dopo un numero («6 uova») o dopo «di» («di formaggio»)
 const senzaArticolo = nome => nome.replace(/^(le|gli|i|il|la)\s+/, '')
 
-// almeno il 5% diverso da base: sotto quella soglia nessun verdetto «questa conviene» è onesto; tetto ai tentativi
-function prezzoDiverso(sorte, base, lo, hi) {
-  for (let i = 0; i < 20; i++) {
-    const p = sorte.fra(lo, hi)
-    if (Math.abs(base - p) / Math.min(base, p) >= 0.05) return p
-  }
-  return Math.min(hi, base + Math.max(2, Math.round(base * 0.1)))
-}
-
 // grado 7: dato il totale di N pezzi/kg, il prezzo di uno solo (la divisione all'incontrario di costo())
 function unitario(sorte) {
   const usaPezzo = sorte.forse(0.5)
   const item = usaPezzo ? sorte.uno(A_PEZZO) : sorte.uno(AL_PESO)
-  const [lo, hi] = item.fascia
-  const prezzoUnitario = sorte.fra(lo, hi)
   const n = usaPezzo ? sorte.uno(item.confezioni) : sorte.uno([2, 3, 4, 5])
+  const prezzoUnitario = sorte.uno(tondi(item, n))
   const totale = prezzoUnitario * n
   const buonaStr = euro(prezzoUnitario)
   const nomeCosa = senzaArticolo(item.nome)
@@ -480,8 +479,8 @@ function unitario(sorte) {
     [euro(Math.round(totale / (n + 1))), `hai diviso per ${n + 1}, non per ${n}`],
   ]
   if (n > 2) candidati.push([euro(Math.round(totale / (n - 1))), `hai diviso per ${n - 1}, non per ${n}`])
-  candidati.push([euro(prezzoUnitario + (sorte.forse(0.5) ? 10 : -10)),
-    'hai sbagliato il conto dei centesimi nella divisione'])
+  const accanto = prezzoUnitario + (prezzoUnitario <= 50 || sorte.forse(0.5) ? 50 : -50)
+  candidati.push([euro(accanto), `prova: ${euro(accanto)} per ${n} fa ${euro(accanto * n)}, non ${euro(totale)}`])
 
   return domanda({
     testo: testoDomanda,
@@ -502,10 +501,9 @@ function unitario(sorte) {
 function tanti(sorte) {
   const usaPezzo = sorte.forse(0.5)
   const item = usaPezzo ? sorte.uno(A_PEZZO) : sorte.uno(AL_PESO)
-  const [lo, hi] = item.fascia
-  const prezzoUnitario = sorte.fra(lo, hi)
   const confPossibili = usaPezzo ? item.confezioni.filter(c => c <= 6) : [1, 2, 3]
   const m = sorte.uno(confPossibili)
+  const prezzoUnitario = sorte.uno(tondi(item, m))
   const k = usaPezzo ? sorte.uno([2, 3]) : sorte.uno([2, 3, 4])
   const n = m * k
   const totaleM = prezzoUnitario * m
@@ -522,7 +520,7 @@ function tanti(sorte) {
   ], buonaStr, 2)
 
   return domanda({
-    testo: `${capitalizza(descM)} costano ${euro(totaleM)}. Quanto costano ${descN}?`,
+    testo: `${capitalizza(descM)} ${m === 1 && !usaPezzo ? 'costa' : 'costano'} ${euro(totaleM)}. Quanto costano ${descN}?`,
     buona: testo(buonaStr),
     falsi,
     chiave: 'sol:tanti',
@@ -537,27 +535,52 @@ function tanti(sorte) {
    guarda il totale scritto prende quella che costa meno in tutto anche
    se costa più al kg, chi guarda la quantità prende quella più grande
    anche se costa più al kg. `grammi` sceglie i pesi in grammi invece
-   che in kg interi (grado 10, e dichiara anche `conversioni`). */
-function conviene(sorte, grammi = false) {
+   che in kg interi (grado 10, e dichiara anche `conversioni`). Al
+   grado 9 la domanda dice quale conto fare («quale costa meno al
+   kg?»), dal 10 (coi chili o coi grammi) lo si sceglie da sé. */
+function conviene(sorte, grammi = false, grado = 9) {
+  for (;;) {
+    const d = provaConviene(sorte, grammi, grado)
+    if (d) return d
+  }
+}
+
+// coi grammi il prezzo al kg è in euro interi e il totale si ferma ai 50 centesimi (250 g a 12 € al kg → 3 €)
+function tondiGrammi(item, g) {
+  const out = []
+  for (let c = Math.ceil(item.fascia[0] / 100) * 100; c <= item.fascia[1]; c += 100)
+    if ((c * g) % 50000 === 0) out.push(c)
+  return out
+}
+
+// null quando i prezzi tondi non bastano a fare la domanda (nessuno diverso abbastanza, o nessuno uguale): si ritira
+function provaConviene(sorte, grammi, grado) {
   const usaPezzo = !grammi && sorte.forse(0.5)
   const item = usaPezzo ? sorte.uno(A_PEZZO)
     : sorte.uno(grammi ? AL_PESO.filter(it => it.un === 'kg') : AL_PESO)
-  const [lo, hi] = item.fascia
   const quantitaPossibili = usaPezzo ? item.confezioni : grammi ? [250, 500, 750, 1000, 1500] : [1, 2, 3]
   const qA = sorte.uno(quantitaPossibili)
   const qB = sorte.uno(quantitaPossibili.filter(q => q !== qA))
-  const pA = sorte.fra(lo, hi)
+  const prezzi = q => (grammi ? tondiGrammi(item, q) : tondi(item, q))
   const uguale = sorte.forse(0.2)
-  const pB = uguale ? pA : prezzoDiverso(sorte, pA, lo, hi)
-  const arrotonda2 = c => Math.round(c)
-  const totA = arrotonda2(grammi ? pA * qA / 1000 : pA * qA)
-  const totB = arrotonda2(grammi ? pB * qB / 1000 : pB * qB)
+  const perA = uguale ? prezzi(qA).filter(c => prezzi(qB).includes(c)) : prezzi(qA)
+  if (!perA.length) return null
+  const pA = sorte.uno(perA)
+  // almeno il 5% diverso: sotto quella soglia nessun verdetto «questa conviene» è onesto
+  const perB = uguale ? [pA] : prezzi(qB).filter(c => Math.abs(c - pA) / Math.min(c, pA) >= 0.05)
+  if (!perB.length) return null
+  const pB = sorte.uno(perB)
+  const totA = grammi ? pA * qA / 1000 : pA * qA
+  const totB = grammi ? pB * qB / 1000 : pB * qB
   const nomeCosa = senzaArticolo(item.nome)
   const gramLabel = g => g % 1000 === 0 ? `${g / 1000} kg` : `${g} g`
   const descrivi = q => usaPezzo ? `${q} ${nomeCosa}` : grammi ? gramLabel(q) : pesoLabel(item, q)
   const descA = `${descrivi(qA)} a ${euro(totA)}`
   const descB = `${descrivi(qB)} a ${euro(totB)}`
   const unitaLbl = usaPezzo ? (item.pezzo || 'a pezzo') : `al ${item.un}`
+  const chiede = grado <= 9
+    ? (usaPezzo ? `Quale costa meno per ogni ${item.pezzo.replace(/^\S+\s/, '')}?` : `Quale costa meno ${unitaLbl}?`)
+    : 'Cosa conviene?'
 
   const esito = uguale ? 'uguale' : pA < pB ? 'A' : 'B'
   const opz = { A: descA, B: descB, uguale: 'Costano uguale' }
@@ -582,7 +605,7 @@ function conviene(sorte, grammi = false) {
   }
 
   return domanda({
-    testo: `${capitalizza(item.nome)}: ${descA} oppure ${descB}. Cosa conviene?`,
+    testo: `${capitalizza(item.nome)}: ${descA} oppure ${descB}. ${chiede}`,
     buona: testo(buonaStr),
     falsi,
     chiave: grammi ? 'sol:conviene-grammi' : 'sol:conviene',
@@ -678,7 +701,7 @@ const TIPI = [
   { chiave: 'sol:arrotonda', nome: "Arrotondare all'euro o al decimo", sa: 'decimali', gradi: { 6: 0.35 } },
   { chiave: 'sol:unitario', nome: 'Quanto costa una sola cosa', sa: ['denaro', 'divisioni'], gradi: { 7: 1 } },
   { chiave: 'sol:tanti', nome: 'Quanto costano tante cose', sa: ['denaro', 'divisioni'], gradi: { 8: 1 } },
-  { chiave: 'sol:conviene', nome: 'Cosa conviene comprare', sa: ['denaro', 'divisioni'], gradi: { 9: 1 } },
+  { chiave: 'sol:conviene', nome: 'Cosa conviene comprare', sa: ['denaro', 'divisioni'], gradi: { 9: 1, 10: 0.4 } },
   { chiave: 'sol:conviene-grammi', nome: 'Cosa conviene, coi grammi', sa: ['conversioni', 'denaro', 'divisioni'], gradi: { 10: 1 } },
   { chiave: 'sol:offerta', nome: 'Quale offerta conviene', sa: ['denaro', 'divisioni'], gradi: { 11: 1 } },
 ]
@@ -720,8 +743,8 @@ class Soldi extends Modulo {
       case 'sol:arrotonda': return arrotonda(sorte)
       case 'sol:unitario': return unitario(sorte)
       case 'sol:tanti': return tanti(sorte)
-      case 'sol:conviene': return conviene(sorte)
-      case 'sol:conviene-grammi': return conviene(sorte, true)
+      case 'sol:conviene': return conviene(sorte, false, grado)
+      case 'sol:conviene-grammi': return conviene(sorte, true, grado)
       case 'sol:offerta': return offerta(sorte)
       default: return conta(sorte, grado)
     }
