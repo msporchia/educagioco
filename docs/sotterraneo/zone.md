@@ -15,7 +15,8 @@ picchiano, le frasi dei colori), `motore/zone.js` (quale zona è sveglia, a
 che livello, i gradini e i colori, la roba attesa oltre la storia),
 `motore/banco.js` (`misuraLeZone`), `Gioco.vue` (le tappe col colore,
 l'annuncio, la zona vinta), `viste/Terra.vue` (il pallino, la sentinella, il
-fumetto, il «!» del minatore), `viste/pixel.js` (`SENTINELLA`).
+fumetto, il «!» del minatore), `motore/dialoghi.js` (l'annuncio nel dialogo
+del minatore), `viste/pixel.js` (`SENTINELLA`).
 
 ## Le zone
 
@@ -89,10 +90,13 @@ Lo stato sta nell'avventura (`zone: { n, livelli, sentita }`,
 ## L'annuncio
 
 Il vecchio minatore, che nella storia indica la prossima discesa, finita la
-storia racconta la zona sveglia (`annuncio` in `POTENZIATE`, con in coda
-«Adesso laggiù è tutto alla tua altezza.»). Finché non l'ha raccontata ha il
-«!» d'oro sopra la testa e la riga in fondo dice «Il minatore ha una
-notizia: vai a sentirla.»; toccato, l'avventura segna `sentita` e il «!» si
+storia la apre il suo dialogo ([dialoghi.md](dialoghi.md)) raccontando la
+zona sveglia (`annuncio` in `POTENZIATE`, con in coda «Adesso laggiù è tutto
+alla tua altezza.»), poi dice la strada; «cosa c'è laggiù» dice il suo
+mostro grosso (`strada` e `laggiuDalMinatore` in `motore/dialoghi.js`, con
+`annuncio` nel `ctx`). Finché non l'ha raccontata ha il «!» d'oro sopra la
+testa e la riga in fondo dice «Il minatore ha una notizia: vai a
+sentirla.»; appena gli si parla l'avventura segna `sentita` e il «!» si
 spegne. Il pallino della zona sveglia pulsa, come quello della prossima
 discesa nella storia.
 
@@ -196,5 +200,5 @@ giù a livello 14, la sosta con la potenza). Sul pallino
 `[data-pallino][data-colore]` (`grigio`, `verde`, `arancio`, `rosso`), la
 sentinella `[data-guardia="<posto>"]`; nel fumetto `[data-livello-zona]` con
 `data-livello` e `data-colore`, `[data-detto-colore]` e `[data-ferma]`; il
-«!» del minatore `[data-segno-di="annuncio"]`; sotto il campo
+«!» del minatore `[data-segno-di="annuncio"]`, nel suo dialogo `[data-annuncio]`; sotto il campo
 `.sot-piede[data-livello-posto]`.
