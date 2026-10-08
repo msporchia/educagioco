@@ -69,12 +69,17 @@ export function cosaDice(chi, stati, tappe) {
   return { fase: prima ? prima.fase : 'saluto', missione: prima ? prima.missione : null, voci }
 }
 
-// il segno sopra la testa: «!» ha una missione nuova per te, «?» una che hai preso (e fatta, ecco qua); niente
-// a tutti gli altri
+// il segno sopra la testa, come nei giochi di ruolo: 'nuova' («!» d'oro) ha una missione per te; 'attesa' («?»
+// grigio, fermo) l'hai presa e non è ancora fatta; 'consegna' («?» d'oro che pulsa) l'hai fatta, torna da lui.
+// Se ne ha più d'una vince la consegna, poi la nuova, poi l'attesa; niente a tutti gli altri
+const SEGNI = { consegna: 'consegna', offre: 'nuova', aspetta: 'attesa' }
+export const GLIFO = { nuova: '!', attesa: '?', consegna: '?' }
 export function segnoDi(chi, stati, tappe) {
-  const { fase } = cosaDice(chi, stati, tappe)
-  return fase === 'offre' ? '!' : fase === 'aspetta' || fase === 'consegna' ? '?' : null
+  return SEGNI[cosaDice(chi, stati, tappe).fase] || null
 }
+
+// chi aspetta una consegna adesso: le chiavi dei personaggi (e del minatore) con una missione fatta da riportare
+export const chiAspetta = stati => [...new Set(MISSIONI.filter(m => statoDi(stati, m.id) === FATTA).map(m => m.da))]
 
 const maiuscola = s => s.charAt(0).toUpperCase() + s.slice(1)
 const ARTICOLO = /^(la|il|lo|le|i|gli|l')\b\s*/i
@@ -157,7 +162,7 @@ function voceDiario(m, stato) {
     chi: p.nome, chiFrase: p.chi,
     discesa: m.discesa, dove: nomeDiscesa(m.discesa), piano: m.piano + 1,
     premio: premioDetto(m.premio),
-    ...(stato === FATTA ? { tornaDa: daLui(p.chi) } : {}),
+    ...(stato === FATTA ? { tornaDa: daLui(p.chi), torna: `Torna ${daLui(p.chi)}: ${m.tipo === 'trova' ? 'hai' : 'hai battuto'} ${inFrase(titoloDi(m))}` } : {}),
   }
 }
 
@@ -169,7 +174,8 @@ export function diario(stati, tappe) {
   const offerta = offerte(stati, tappe).map(m => voceDiario(m, 'offerta'))
   const finite = MISSIONI.filter(m => statoDi(stati, m.id) === CONSEGNATA).sort(dellaStoria).map(m => voceDiario(m, CONSEGNATA))
   return {
-    inMano: mano, offerte: offerta, consegnate: finite,
+    inMano: mano, pronte: mano.filter(v => v.stato === FATTA), daFare: mano.filter(v => v.stato !== FATTA),
+    offerte: offerta, consegnate: finite,
     aperte: mano.length + offerta.length,
     nascoste: Math.max(0, sbloccate(stati, tappe).length - offerta.length),
     tetto: TETTO,

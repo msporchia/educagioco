@@ -14,7 +14,7 @@ import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { avventuraDi } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { sbloccata, sbloccate, offerte, inMano, aperte, cosaDice, segnoDi, chiTiCerca, prendi, fatte, consegna,
-         presePer, diario, promemoria, inFrase, daLui, robaDellaMissione, PRESA, FATTA, CONSEGNATA }
+         presePer, diario, promemoria, inFrase, GLIFO, chiAspetta, daLui, robaDellaMissione, PRESA, FATTA, CONSEGNATA }
   from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -122,22 +122,22 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   const t2 = tappeAl(2)
   let stati = { badessa: CONSEGNATA, collana: CONSEGNATA }
   stessaLista('alla torre le tre sono offerte: il goblin, Rosicchione e le chiavi', ids(offerte(stati, t2)), ['goblin', 'rosicchione', 'chiavi'])
-  uguale('la ragazza ha il suo «!»', segnoDi('ragazza', stati, t2), '!')
-  uguale('il mugnaio anche', segnoDi('mugnaio', stati, t2), '!')
-  uguale('e la guardia', segnoDi('guardia', stati, t2), '!')
+  uguale('la ragazza ha il suo «!»', segnoDi('ragazza', stati, t2), 'nuova')
+  uguale('il mugnaio anche', segnoDi('mugnaio', stati, t2), 'nuova')
+  uguale('e la guardia', segnoDi('guardia', stati, t2), 'nuova')
   uguale('l\'eremita no: ha già avuto la sua', segnoDi('eremita', stati, t2), null)
 
   stati = prendi(stati, 'rosicchione', t2)
   controlla('se ne prende una', !!stati && stati.rosicchione === PRESA)
   stati = prendi(stati, 'chiavi', t2)
   controlla('e anche un\'altra: la prima non ferma più le altre', !!stati && stati.chiavi === PRESA && stati.rosicchione === PRESA)
-  uguale('il mugnaio ha il punto di domanda', segnoDi('mugnaio', stati, t2), '?')
-  uguale('la guardia anche', segnoDi('guardia', stati, t2), '?')
-  uguale('la ragazza ha ancora il «!»: il goblin si può prendere', segnoDi('ragazza', stati, t2), '!')
+  uguale('il mugnaio ha il punto di domanda', segnoDi('mugnaio', stati, t2), 'attesa')
+  uguale('la guardia anche', segnoDi('guardia', stati, t2), 'attesa')
+  uguale('la ragazza ha ancora il «!»: il goblin si può prendere', segnoDi('ragazza', stati, t2), 'nuova')
   stati = prendi(stati, 'goblin', t2)
   controlla('con tre in mano', !!stati && inMano(stati).length === 3)
   stessaLista('tre aperte, e la discesa le sa tutte e tre', presePer(stati, 'torre').map(m => m.id).sort(), ['chiavi', 'goblin', 'rosicchione'])
-  for (const chi of ['ragazza', 'mugnaio', 'guardia']) uguale(`${chi}: ha il punto di domanda`, segnoDi(chi, stati, t2), '?')
+  for (const chi of ['ragazza', 'mugnaio', 'guardia']) uguale(`${chi}: ha il punto di domanda`, segnoDi(chi, stati, t2), 'attesa')
   uguale('sulla torre non c\'è altro', prendi(stati, 'ascia', tappeAl(3)), null)
 
   // il tetto: con tre in mano alla gallerie non si offre altro, finché non se ne consegna una
@@ -162,12 +162,25 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   stessaLista('il pescatore ha due favori da chiedere', cosaDice('pescatore', p, t4).voci.map(v => v.missione.id + ':' + v.fase).sort(), ['canna:offre', 'chela:offre'])
   p = prendi(p, 'chela', t4)
   stessaLista('presa una, l\'altra resta da dare', cosaDice('pescatore', p, t4).voci.map(v => v.missione.id + ':' + v.fase).sort(), ['canna:offre', 'chela:aspetta'])
-  uguale('il segno è «!»: c\'è ancora qualcosa da prendere', segnoDi('pescatore', p, t4), '!')
+  uguale('il segno è «!»: c\'è ancora qualcosa da prendere', segnoDi('pescatore', p, t4), 'nuova')
   p = fatte(prendi(p, 'canna', t4), ['canna'])
   uguale('una fatta e una presa: prima la consegna', cosaDice('pescatore', p, t4).voci[0].fase, 'consegna')
-  uguale('il segno è «?»', segnoDi('pescatore', p, t4), '?')
+  uguale('il segno è quello della consegna', segnoDi('pescatore', p, t4), 'consegna')
   uguale('e la fase che conta è quella da consegnare', cosaDice('pescatore', p, t4).fase, 'consegna')
   uguale('chi non ha niente saluta', cosaDice('boscaiolo', p, tappeAl(1)).fase, 'saluto')
+
+  // i tre segni: «!» nuova, «?» grigio d'attesa, «?» d'oro da consegnare. Vince la consegna sulla nuova
+  const q = { badessa: CONSEGNATA, collana: CONSEGNATA, canna: FATTA }
+  uguale('canna fatta e Chela mai presa: la consegna vince sulla missione nuova', segnoDi('pescatore', q, t4), 'consegna')
+  uguale('…e la fase che conta è la stessa', cosaDice('pescatore', q, t4).fase, 'consegna')
+  uguale('senza la consegna, la nuova', segnoDi('pescatore', { badessa: CONSEGNATA, collana: CONSEGNATA }, t4), 'nuova')
+  uguale('solo presa: l\'attesa', segnoDi('pescatore', { badessa: CONSEGNATA, collana: CONSEGNATA, canna: PRESA, chela: PRESA }, t4), 'attesa')
+  uguale('chi non ha niente non ha segno', segnoDi('boscaiolo', q, t4), null)
+  uguale('il «!» è «!»', GLIFO.nuova, '!')
+  uguale('l\'attesa e la consegna sono «?», ma sono due segni', GLIFO.attesa + GLIFO.consegna + (GLIFO.attesa !== GLIFO.consegna ? 'x' : ''), '??')
+  stessaLista('chi aspetta una consegna: solo chi ha una missione fatta', chiAspetta(q), ['pescatore'])
+  stessaLista('nessuno, se niente è fatto', chiAspetta({ canna: PRESA, collana: CONSEGNATA }), [])
+  stessaLista('due missioni fatte di due persone: due', chiAspetta({ canna: FATTA, chiavi: FATTA, rosicchione: FATTA }).sort(), ['guardia', 'mugnaio', 'pescatore'])
 
   // giù, due missioni nella stessa discesa stanno ognuna nel suo piano
   const c = new Corsa(CAMPAGNA[2], { seme: 9, eroe: 'cavaliere', roba: robaAttesa('cavaliere', 2), rnd: seminato(9),
@@ -199,7 +212,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   const profilo = { cfg: { avventure: { cavaliere: { tappa: 2, stelle: {}, missioni: { badessa: 'consegnata', collana: 'presa' } } } } }
   const a = avventuraDi(profilo, 'cavaliere')
   stessaLista('si legge senza campi nuovi', a.missioni, { badessa: 'consegnata', collana: 'presa' })
-  uguale('e le sue missioni dicono la stessa cosa di prima', segnoDi('ragazza', a.missioni, tappeAl(2)), '?')
+  uguale('e le sue missioni dicono la stessa cosa di prima', segnoDi('ragazza', a.missioni, tappeAl(2)), 'attesa')
   // roba inventata nello stato: ignorata
   uguale('un id che non c\'è non fa danno', inMano({ fantasma: PRESA, collana: PRESA }).length, 1)
 }
@@ -258,6 +271,10 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   controlla('con la discesa e il piano', chiavi.dove === 'La torre in rovina' && chiavi.piano === 3 && chiavi.discesa === 'torre')
   controlla('e il premio', chiavi.premio === '💎 20')
   const goblin = d.inMano.find(v => v.id === 'goblin')
+  stessaLista('le fatte da consegnare sono a parte, in cima: le chiavi', d.pronte.map(v => v.id), ['chiavi'])
+  stessaLista('e le da fare sono le altre: il goblin', d.daFare.map(v => v.id), ['goblin'])
+  uguale('la riga dice a chi tornare e cosa si ha', chiavi.torna, 'Torna dalla guardia della torre: hai il mazzo di chiavi della torre')
+  uguale('per un mostro: hai battuto', diario({ rosicchione: FATTA }, t3).pronte[0].torna, 'Torna dal mugnaio: hai battuto Rosicchione')
   controlla('il goblin è da battere, con la sua corona e chi lo vuole', goblin.em === '👑' && goblin.chi === 'La ragazza del pozzo' && !goblin.tornaDa)
   stessaLista('ti aspetta il libro dei nomi (l\'ascia è nascosta dal tetto)', d.offerte.map(v => v.id), ['libro'])
   stessaLista('consegnate: la Badessa, la collana, Rosicchione', d.consegnate.map(v => v.id), ['badessa', 'collana', 'rosicchione'])

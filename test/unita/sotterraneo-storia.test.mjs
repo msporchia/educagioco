@@ -104,14 +104,14 @@ const tappeAl = n => CAMPAGNA.map((t, i) => ({ chiave: t.chiave, aperta: i <= n,
   // la scalinata è la discesa di adesso (la cripta è fatta): la ragazza ha la collana da chiedere, e l'eremita
   // la sua Badessa (non l'ha ancora presa); la guardia no, la torre è ancora chiusa. L'albero sta in sotterraneo-missioni
   const aperta = tappeAl(1)
-  uguale('la ragazza ha qualcosa da chiedere: è la missione della scalinata', segnoDi('ragazza', {}, aperta), '!')
-  uguale('anche l\'eremita, se non ha preso la Badessa', segnoDi('eremita', {}, aperta), '!')
+  uguale('la ragazza ha qualcosa da chiedere: è la missione della scalinata', segnoDi('ragazza', {}, aperta), 'nuova')
+  uguale('anche l\'eremita, se non ha preso la Badessa', segnoDi('eremita', {}, aperta), 'nuova')
   uguale('la guardia no: la torre è ancora chiusa', segnoDi('guardia', {}, aperta), null)
   uguale('chi non ha il segno saluta e basta', cosaDice('guardia', {}, aperta).fase, 'saluto')
   let stati = prendi({}, 'collana', aperta)
   uguale('presa', stati.collana, PRESA)
   uguale('prenderla due volte non fa niente', prendi(stati, 'collana', aperta), null)
-  uguale('la ragazza ha il punto di domanda già da presa', segnoDi('ragazza', stati, aperta), '?')
+  uguale('la ragazza ha il punto di domanda già da presa', segnoDi('ragazza', stati, aperta), 'attesa')
   uguale('il fumetto la ricorda', cosaDice('ragazza', stati, aperta).fase, 'aspetta')
   stessaLista('la scalinata sa che c\'è da cercare la collana', presePer(stati, 'cantine').map(m => m.id), ['collana'])
 
