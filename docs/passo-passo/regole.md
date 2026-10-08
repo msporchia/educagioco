@@ -116,9 +116,10 @@ la carta di quel gradino, tre tappe per gradino: col 🔁 le stalle, il
 cortile e il pettine; col «fino a» le stalle a gradini, il pettine storto e
 i vicoli; col ❓ le nicchie, il sentiero del gregge e le nicchie fonde; in
 «tutto il mondo» il lago delle stalle, le gallerie e gli steccati.
-`test/unita/passo-passo` lo pretende. Non insegna niente di nuovo, quindi è
-facoltativo: sulla mappa è un ramo che parte da una tana, e la strada del
-coniglio va avanti anche senza (vedi [livelli.md](livelli.md#le-due-strade)).
+`test/unita/passo-passo` lo pretende. Ha la sua strada, che si sceglie col
+selettore in cima alla mappa: comincia finita la valle del coniglio, e da lì
+va avanti per conto suo, come il coniglio senza di lui; le regole e le carte
+le spiega chi arriva prima (vedi [livelli.md](livelli.md#le-due-strade)).
 
 Provato: pecore che si comportano da massi, e una fila che non si spinge.
 Non va: il gregge si riunisce proprio mettendo le pecore in fila e

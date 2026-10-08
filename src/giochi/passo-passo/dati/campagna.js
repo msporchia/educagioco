@@ -8,6 +8,16 @@ import { CARTE, carteDi, guastiDellaFila, programma, ripeti, se } from './carte.
 /* una tappa con le pecore nella mappa è del cane (vedi motore/strade.js) */
 export const delCane = t => t.mappa.some(r => [...r].some(ch => !!(LEGENDA[ch] || {}).pecora))
 
+/* le cose che una tappa chiede di sapere, come chiavi di SCALINI (la loro
+   `dritta` le spiega): le regole del mondo che ci sono, le pecore e le carte.
+   Le due strade le insegnano tutte e due: le spiega chi arriva prima */
+export function concettiDi(t) {
+  const d = t.mappa.join('').split('').map(ch => LEGENDA[ch] || {})
+  return [t.salti && 'salto', d.some(x => x.terreno === 'ghiaccio') && 'ghiaccio', d.some(x => x.masso) && 'massi',
+          d.some(x => x.coppia) && 'buche', d.some(x => x.pecora) && 'pecore',
+          ...['ripeti', 'fino', 'se'].filter(c => (t.carte || []).includes(c))].filter(Boolean)
+}
+
 export const SCALINI = [
   { chiave: 'passi', nome: 'Primi passi', icona: '🐾', regola: null,
     dritta: 'Solo frecce: si cammina, si gira attorno, non si entra nell\'acqua.' },

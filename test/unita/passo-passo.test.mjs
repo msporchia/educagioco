@@ -812,7 +812,7 @@ for (const [i, t] of CAMPAGNA.entries()) {
   uguale('e lo zaino comincia da zero', statoTraguardo(traguardi.find(t => t.id === 'pp-zaino'), mIeri).grado, 0)
 
   /* la riga della home */
-  uguale('in home, all\'inizio', manifesto.riassunto({ tappa: 0, stelle: {} }), `tappa 1 di ${QUANTE_TAPPE} · Il prato`)
+  uguale('in home, all\'inizio', manifesto.riassunto({ tappa: 0, stelle: {} }), 'tappa 1 di 42 · Il prato')
   controlla('a campagna finita parla del sentiero',
             manifesto.riassunto({ tappa: QUANTE_TAPPE, stelle: { 0: 3 } }).startsWith('tutte le tane'))
   /* il record di quando il sentiero era uno è del sentiero del coniglio */

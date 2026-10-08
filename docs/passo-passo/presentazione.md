@@ -36,9 +36,9 @@ spingere (nell'acqua diventano un ponte).
 
 Poi arriva il **cane pastore**: le frecce sono le stesse, ma non è il cane a
 dover arrivare, sono le pecore. Una pecora si sposta solo scappando dal cane,
-quindi la fila si scrive pensando a dove andrà a finire lei. Il cane è una
-strada laterale: sulla mappa delle isole parte da una tana, e chi vuole
-può tirare dritto col coniglio.
+quindi la fila si scrive pensando a dove andrà a finire lei. Il cane ha la
+sua strada: in cima alla mappa si sceglie chi gioca, e ognuno va avanti per
+conto suo; chi vuole può tirare dritto col coniglio.
 
 Dai sette anni e mezzo cresce **la lingua**: una carta 🔁 che ripete quello
 che ha dentro, poi il «ripeti **fino a**» un colore e il «**se**» sono su
@@ -68,9 +68,9 @@ Con lo zaino, i **cicli** e le **condizioni**.
   ragionare e sono gratis, poi si pagano in monete, e la strada intera costa
   la stella «l'hai trovata tu».
 - **Da quattro anni in su, e poi i cicli**: le tappe dei piccoli (il cane
-  compreso) vanno dai quattro ai sette anni e mezzo — a sei anni sono aperte
-  tutte, a cinque le prime quattordici — e quelle dello zaino dai sette anni e
-  mezzo ai dieci. Dietro non c'è un pezzo di scuola, quindi a un bambino più
+  compreso) vanno dai quattro ai sette anni e mezzo, e quelle dello zaino
+  dai sette anni e mezzo ai dieci. L'età dice da dove si comincia; poi chi
+  finisce una tappa apre quella dopo, a qualunque età. Dietro non c'è un pezzo di scuola, quindi a un bambino più
   grande non si chiude niente: vedi [come l'età decide cosa si
   vede](../genitori/presentazione.md#quanti-anni-ha). Per lo stesso motivo il
   gioco non si spegne a otto anni come i giochi dei piccoli: comincia da lì,

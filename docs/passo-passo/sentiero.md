@@ -19,11 +19,14 @@ più corto e non dalle frecce, sta in [sentiero-finale.md](sentiero-finale.md).
   lo zaino; quello del cane pascoli e posti con lo zaino col cane (le
   carte finite, usate sulle pecore come nelle isolette del cane). Nessuno
   dei due mescola l'altro animale.
-- **Si aprono come prima**: quello del coniglio alla fine dei massi
-  (`TAPPE_PRIME` in `dati/campagna.js`), anche se sulla mappa sta in fondo;
-  quello del cane a pascolo finito. A sei anni lo zaino è chiuso per età e
-  i sentieri no: chi ha sei anni trova prati e pascoli, chi ha finito tutto
-  anche le scatole.
+- **Si aprono in fondo alla strada del loro animale**, dove stanno sulla
+  mappa (in fondo alla spirale di «Tutto il mondo»): quello del coniglio
+  finita la sua strada, quello del cane finita la sua. Deciso dall'utente:
+  a metà strada il sentiero era un posto dove fermarsi, e chi era lì poteva
+  andare avanti. **Chi l'aveva già giocato lo tiene** (un record, o una
+  partita lasciata a metà): un posto che c'era non sparisce. Chi ci arriva
+  ha tutte le carte, quindi i prati e i pascoli senza carte (`SENZA_ZAINO`)
+  restano di rado.
 - **Mescola solo quello che si è finito** (`INGREDIENTI`): ogni gradino
   **finito** della campagna porta una cosa — una regola del mondo, il cane,
   una carta. Finito e non visto: il gradino in corso si sta imparando.

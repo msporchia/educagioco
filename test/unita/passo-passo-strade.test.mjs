@@ -1,19 +1,19 @@
-/* Le due strade di Passo passo, senza browser: la strada maestra del
-   coniglio e i rami del cane si ricavano dai dati; una tappa del coniglio
-   non chiede mai il cane; chi aveva una tappa aperta col cursore di prima
-   la ritrova aperta (a inizio, a metà buche, a metà cane, dopo il cane, a
-   metà ripeti con e senza «Le stalle», in fondo); chi salta il cane arriva
-   in fondo lo stesso; il ▶ resta sulla strada che si sta facendo; la riga
-   della home e le medaglie restano sensate.
+/* Le due strade di Passo passo, senza browser: quella del coniglio e
+   quella del cane si ricavano dai dati e vanno ognuna da sola (il cane
+   comincia finiti i piccoli del coniglio, l'età non chiude niente); i numeri sulle
+   caselle contano da 1 su ogni strada; chi aveva una tappa aperta col
+   cursore di prima la ritrova aperta (a inizio, a metà buche, a metà cane,
+   dopo il cane, a metà ripeti con e senza «Le stalle», in fondo); chi salta
+   il cane arriva in fondo lo stesso; il ▶ resta sulla strada che si sta
+   facendo; la riga della home e le medaglie restano sensate.
    Vedi «Le due strade» in docs/passo-passo/livelli.md.
    `node test/esegui.mjs passo-passo-strade --niente-build` */
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, FINE_STRADA, TAPPE_PRIME, TAPPE_PICCOLE, riordina, FILE,
-         postoNelCursore }
+         postoNelCursore, concettiDi }
   from '../../src/giochi/passo-passo/dati/campagna.js'
 import { STRADE, delCane, aperture, prossima, seguente, tappaDiAdesso, cosaManca, stradeDi, ereditaDi }
   from '../../src/giochi/passo-passo/motore/strade.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
-import { LEGENDA } from '../../src/giochi/passo-passo/dati/mondo.js'
 import manifesto, { CHIAVE } from '../../src/giochi/passo-passo/gioco.js'
 import { misure, statoTraguardo } from '../../src/store/progressi.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
@@ -34,7 +34,7 @@ const nome = i => CAMPAGNA[i].chiave
   controlla('ogni ramo del cane parte da una tappa del coniglio che viene prima di lui',
             rami.every(r => S.animale[r.attacco] === 'coniglio' && r.attacco < r.tappe[0]),
             rami.map(r => `${r.chiave}@${r.attacco}`).join(' '))
-  uguale('il pascolo si apre alla fine dei massi', nome(rami[0].attacco), 'tutto')
+  uguale('la strada del cane comincia alla fine dei massi', nome(S.apreIlCane), 'tutto')
   controlla('gli altri rami alla prima tappa dello scalino che insegna la loro carta',
             rami.slice(1).every(r => r.carta && r.attacco === S.coniglio.find(i => CAMPAGNA[i].scalino === r.scalino)),
             rami.slice(1).map(r => `${r.scalino}:${nome(r.attacco)}`).join(' '))
@@ -58,38 +58,31 @@ const nome = i => CAMPAGNA[i].chiave
             S.animale[FINE_STRADA - 1] === 'coniglio' && FINE_STRADA <= QUANTE_TAPPE)
   controlla('ogni tappa sta in un\'isola sola', CAMPAGNA.every((_, i) =>
     S.isole.filter(s => s.tappe.includes(i)).length === 1))
+  // il numero sulla casella: il posto sulla sua strada, senza buchi
+  for (const strada of ['coniglio', 'cane'])
+    uguale(`i numeri del ${strada} vanno da 1 a ${S[strada].length}, in fila`,
+           S[strada].map(i => S.numero[i]).join(), S[strada].map((_, k) => k + 1).join())
+  uguale('il coniglio ha 42 tappe e il cane 23', `${S.coniglio.length} ${S.cane.length}`, '42 23')
 }
 
-/* ══════════ il coniglio non chiede mai il cane ══════════ */
+/* ══════════ ognuno va da solo ══════════ */
 {
   // con tutto il coniglio fatto fino a lì e niente cane, ogni tappa del coniglio è aperta
-  for (const i of S.coniglio) {
-    const fatta = j => S.animale[j] === 'coniglio' && j < i
-    const { aperta } = aperture(S, { fatta })
-    if (!aperta(i)) controlla(`«${nome(i)}» si apre senza il cane`, false)
-  }
   controlla('nessuna tappa del coniglio chiede una tappa del cane', S.coniglio.every(i =>
     aperture(S, { fatta: j => S.animale[j] === 'coniglio' && j < i }).aperta(i)))
-  /* nemmeno nei saperi: le carte che il cane usa nelle sue tappe le ha
-     già portate il coniglio, e il cane non porta carte nuove */
-  const carteViste = new Set()
-  let nuoveDelCane = []
-  CAMPAGNA.forEach((t, i) => {
-    for (const c of t.carte || []) {
-      if (!carteViste.has(c) && S.animale[i] === 'cane') nuoveDelCane.push(`${t.chiave}:${c}`)
-      carteViste.add(c)
-    }
-  })
-  uguale('il cane non insegna una carta che il coniglio non ha già', nuoveDelCane.join(' '), '')
-  // le cose del mondo: il cane rifà quelle che il coniglio ha già incontrato prima di lui, più le pecore
-  const cose = t => {
-    const d = t.mappa.join('').split('').map(ch => LEGENDA[ch] || {})
-    return [t.salti && 'salto', d.some(x => x.terreno === 'ghiaccio') && 'ghiaccio', d.some(x => x.masso) && 'massi',
-            d.some(x => x.coppia) && 'buche', d.some(x => x.lastra) && 'lastre'].filter(Boolean)
-  }
-  const nuove = S.cane.flatMap(i => cose(CAMPAGNA[i]).filter(c =>
-    !S.coniglio.some(j => j < i && cose(CAMPAGNA[j]).includes(c))).map(c => `${nome(i)}:${c}`))
-  uguale('le cose del mondo che il cane usa le ha già incontrate il coniglio', nuove.join(' '), '')
+  // e il cane, una volta cominciato, non chiede mai il coniglio
+  controlla('nessuna tappa del cane chiede una tappa del coniglio', S.cane.every(i =>
+    aperture(S, { fatta: j => j === S.apreIlCane || (S.animale[j] === 'cane' && S.numero[j] < S.numero[i]) }).aperta(i)))
+  const zero = aperture(S, { fatta: () => false })
+  controlla('all\'inizio il cane è chiuso', !zero.aperta(S.cane[0]) && !zero.caneAperto())
+  controlla('si apre finiti i piccoli del coniglio', aperture(S, { fatta: j => j <= S.apreIlCane }).aperta(S.cane[0]))
+  /* le cose del mondo e le carte le insegna chi arriva prima: ognuna ha la
+     sua frase, che il fumetto dice la prima volta */
+  const senza = [...new Set(CAMPAGNA.flatMap(concettiDi))].filter(c => !(SCALINI.find(x => x.chiave === c) || {}).dritta)
+  uguale('ogni cosa che una tappa chiede ha la frase che la spiega', senza.join(' '), '')
+  uguale('il cane incontra da solo tutto quello che incontra il coniglio, più le pecore',
+         [...new Set(S.cane.flatMap(i => concettiDi(CAMPAGNA[i])))].sort().join(' '),
+         [...new Set([...S.coniglio.flatMap(i => concettiDi(CAMPAGNA[i])), 'pecore'])].sort().join(' '))
 }
 
 /* ══════════ chi aveva una tappa aperta la ritrova aperta ══════════
@@ -131,9 +124,7 @@ for (const [chi, av] of Object.entries(casi)) {
   controlla('fatto il viale senza il cane, le stalle restano chiuse (il cane non ha finito il pascolo)',
             !conViale.aperta(indice('stalle')))
   const tuttoCane = stradeDi({ tappa: TAPPE_PICCOLE, stelle: stelleFino(TAPPE_PICCOLE), cfg: { eredita: 0 } })
-  controlla('finito il pascolo, le stalle aspettano il viale', !tuttoCane.aperta(indice('stalle')))
-  const eViale = stradeDi({ tappa: TAPPE_PICCOLE + 1, stelle: stelleFino(TAPPE_PICCOLE + 1), cfg: { eredita: 0 } })
-  controlla('e col viale si aprono', eViale.aperta(indice('stalle')))
+  controlla('finito il pascolo, le stalle sono aperte: il cane non aspetta il viale', tuttoCane.aperta(indice('stalle')))
 }
 
 /* ══════════ chi salta il cane arriva in fondo lo stesso ══════════
@@ -185,7 +176,7 @@ for (const [chi, av] of Object.entries(casi)) {
     av.stelle[i] = 2
   }
   const ora = stradeDi(av)
-  controlla('vinti i gradini storti si apre il ramo del «fino a»: le stalle erano fatte, e il pettine vinto',
+  controlla('vinto il pettine si aprono le stalle a gradini, la tappa dopo del cane',
             ora.aperta(indice('stalle-gradini')))
   controlla('e il cursore che corre avanti non apre il cane per conto suo',
             !stradeDi({ tappa: indice('spirale') + 1, stelle: { ...stelleFino(TAPPE_PRIME), ...Object.fromEntries(
@@ -228,19 +219,15 @@ for (const [chi, av] of Object.entries(casi)) {
 {
   const tutte = () => true
   uguale('dopo «Tutto insieme» il viale', prossima(S, indice('tutto'), tutte), TAPPE_PICCOLE)
-  uguale('ma col viale chiuso (sei anni) il primo gregge',
-         prossima(S, indice('tutto'), i => i < TAPPE_PICCOLE), TAPPE_PRIME)
+  uguale('col viale chiuso non c\'è un dopo: il cane è un\'altra strada', prossima(S, indice('tutto'), i => i < TAPPE_PICCOLE), null)
   uguale('in mezzo al pascolo, il gregge dopo', prossima(S, TAPPE_PRIME + 2, tutte), TAPPE_PRIME + 3)
-  uguale('finito il pascolo si torna sulla strada maestra: il viale', prossima(S, indice('gregge'), tutte), TAPPE_PICCOLE)
-  uguale('finite le stalle, il cortile: si resta nell\'isoletta', nome(prossima(S, indice('stalle'), tutte)), 'cortile')
-  uguale('finita l\'isoletta, la tappa dopo il viale', nome(prossima(S, indice('pettine'), tutte)), 'stagno-grande')
+  uguale('finito il pascolo, le stalle: il cane va avanti per conto suo', nome(prossima(S, indice('gregge'), tutte)), 'stalle')
+  uguale('finite le stalle, il cortile', nome(prossima(S, indice('stalle'), tutte)), 'cortile')
+  uguale('finito il pettine, le stalle a gradini', nome(prossima(S, indice('pettine'), tutte)), 'stalle-gradini')
   uguale('finito il lago delle stalle, le gallerie', nome(prossima(S, indice('lago-stalle'), tutte)), 'gallerie')
-  uguale('finiti gli steccati, le pozze', nome(prossima(S, indice('steccati'), tutte)), 'pozze')
   uguale('dopo il viale il coniglio va avanti, non nelle stalle', nome(prossima(S, TAPPE_PICCOLE, tutte)), 'stagno-grande')
-  uguale('in fondo alla strada maestra non c\'è un dopo', seguente(S, FINE_STRADA - 1), null)
-  uguale('dal gregge, col viale chiuso, non c\'è un dopo (si va al sentiero)',
-         prossima(S, indice('gregge'), i => i < TAPPE_PICCOLE), null)
-  uguale('e la seguente è proprio lo zaino', seguente(S, indice('gregge')), TAPPE_PICCOLE)
+  uguale('in fondo alla strada del coniglio non c\'è un dopo', seguente(S, FINE_STRADA - 1), null)
+  uguale('né in fondo a quella del cane', seguente(S, S.cane.at(-1)), null)
 }
 
 /* ══════════ la tappa di adesso ══════════ */
@@ -252,9 +239,11 @@ for (const [chi, av] of Object.entries(casi)) {
          tappaDiAdesso(S, { ultima: indice('tutto'), cursore: TAPPE_PRIME, aperta: r.aperta, fatta: r.fatta }), TAPPE_PICCOLE)
   uguale('lasciato a metà il primo gregge: lì',
          tappaDiAdesso(S, { ultima: TAPPE_PRIME, cursore: TAPPE_PRIME, aperta: r.aperta, fatta: r.fatta }), TAPPE_PRIME)
-  uguale('a sei anni, finiti i massi: il primo gregge',
-         tappaDiAdesso(S, { ultima: indice('tutto'), cursore: TAPPE_PRIME, aperta: i => r.aperta(i) && i < TAPPE_PICCOLE,
-                            fatta: r.fatta }), TAPPE_PRIME)
+  // ogni protagonista ha la sua
+  uguale('sulla mappa del cane, giocato il coniglio per ultimo: il primo gregge',
+         tappaDiAdesso(S, { ultima: indice('tutto'), cursore: TAPPE_PRIME, aperta: r.aperta, fatta: r.fatta, strada: 'cane' }), TAPPE_PRIME)
+  uguale('su quella del coniglio, giocato il cane per ultimo: il viale',
+         tappaDiAdesso(S, { ultima: TAPPE_PRIME, cursore: TAPPE_PRIME, aperta: r.aperta, fatta: r.fatta, strada: 'coniglio' }), TAPPE_PICCOLE)
 }
 
 /* ══════════ cosa dice il fumetto su una chiusa ══════════ */
@@ -263,10 +252,10 @@ for (const [chi, av] of Object.entries(casi)) {
   const r = stradeDi(av)
   const dice = i => cosaManca(S, i, { fatta: r.fatta, aperta: r.aperta })
   const stalle = dice(indice('stalle'))
-  controlla('le stalle aspettano il coniglio che impara 🔁', /il coniglio impara 🔁 \(«Il viale»\)/.test(stalle), stalle)
-  controlla('e il cane che finisce il pascolo', /Prima tocca a «La curva»/.test(stalle), stalle)
-  controlla('il lago delle stalle aspetta il coniglio che arriva a 🌍 (la carta c\'era già)',
-            /arriva a 🌍/.test(dice(indice('lago-stalle'))), dice(indice('lago-stalle')))
+  controlla('le stalle aspettano il cane che finisce il pascolo, non il coniglio', /^Prima tocca a «La curva», poi ad altre/.test(stalle), stalle)
+  const zero = stradeDi({ tappa: 0, stelle: {}, cfg: { eredita: 0 } })
+  uguale('il primo gregge chiuso dice quando comincia il cane',
+         cosaManca(S, TAPPE_PRIME, { fatta: zero.fatta, aperta: zero.aperta }), 'Il cane comincia quando il coniglio finisce «Tutto insieme».')
   uguale('una del coniglio dice chi tocca prima', dice(indice('sassi-fiume')), 'Prima tocca a «Il viale», poi ad altre 2 tappe.')
   controlla('chiusa per l\'età lo dice e basta',
             cosaManca(S, 40, { fatta: r.fatta, aperta: r.aperta, perEta: () => true }) === 'Questa tappa per ora è chiusa.')
@@ -276,12 +265,14 @@ for (const [chi, av] of Object.entries(casi)) {
 {
   uguale('a metà strada, la tappa dopo l\'ultima giocata',
          manifesto.riassunto({ tappa: TAPPE_PRIME, stelle: stelleFino(TAPPE_PRIME), cfg: { eredita: TAPPE_PRIME, ultima: indice('tutto') } }),
-         `tappa ${TAPPE_PICCOLE + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[TAPPE_PICCOLE].nome} · ⭐ ${TAPPE_PRIME * 3}`)
+         `tappa ${S.numero[TAPPE_PICCOLE]} di ${S.coniglio.length} · ${CAMPAGNA[TAPPE_PICCOLE].nome} · ⭐ ${TAPPE_PRIME * 3}`)
   uguale('dentro il pascolo, il gregge dopo',
          manifesto.riassunto({ tappa: TAPPE_PICCOLE + 2, stelle: { ...stelleFino(TAPPE_PRIME + 2), [TAPPE_PICCOLE]: 1, [TAPPE_PICCOLE + 1]: 1 },
                               cfg: { eredita: TAPPE_PRIME, ultima: TAPPE_PRIME + 1 } }).split(' · ')[1],
          CAMPAGNA[TAPPE_PRIME + 2].nome)
-  void SCALINI
+  controlla('col cane dice il suo numero, e che è del cane',
+            manifesto.riassunto({ tappa: TAPPE_PRIME + 2, stelle: stelleFino(TAPPE_PRIME + 2), cfg: { eredita: TAPPE_PRIME, ultima: TAPPE_PRIME + 1 } })
+              .startsWith(`tappa 3 di ${S.cane.length} col cane · `))
 }
 
 riassunto('passo passo — le due strade e i salvataggi')

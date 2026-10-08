@@ -6,15 +6,15 @@
 import { ref, shallowRef, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { state, addCoins, segna, segnaBest, tappaAperta, tuttoAperto, spendi } from '../../store/profile.js'
+import { state, addCoins, segna, segnaBest, tuttoAperto, spendi } from '../../store/profile.js'
 import { progresso, stelleDi, completa, primatoDi, segnaPrimato, ricorda,
          sosta, salvaSosta, chiusaPerEta } from '../campagne.js'
 import { tappaApertaQui } from '../../data/portata-giochi.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
 
 import { SENZA_FINE } from './gioco.js'
-import { CAMPAGNA, SCALINI, FINE_STRADA, postoNelCursore, TAPPE_PICCOLE, TAPPE_PRIME,
-         FILE, FILA_ATTUALE, riordina } from './dati/campagna.js'
+import { CAMPAGNA, SCALINI, FINE_STRADA, postoNelCursore,
+         FILE, FILA_ATTUALE, riordina, concettiDi } from './dati/campagna.js'
 import { STRADE, aperture, cosaManca, prossima, seguente, tappaDiAdesso, ereditaDi } from './motore/strade.js'
 import { MASSIMO_FILA, LEGENDA } from './dati/mondo.js'
 import { apri, apriSe, carteDi, conCicli, daScegliere, eApri, eSe, valoreDi, COLORI } from './dati/carte.js'
@@ -116,13 +116,13 @@ const fatta = i => stelleDi(CHIAVE, i) > 0 || i < ereditaDi(avanza)
 const perEta = i => chiusaPerEta(CHIAVE, i)
 // aperta dall'età o dai grandi anche senza averci giocato
 const daFuori = i => tappaApertaQui(CHIAVE, i, -1)
+// la strada del cane comincia finiti i piccoli del coniglio; l'età non ferma niente (perMerito)
 const strade = aperture(STRADE, { fatta, daFuori, perEta, eredita: ereditaDi(avanza) })
 const aperta = i => strade.aperta(i)
 const prossimaDopo = i => prossima(STRADE, i, aperta)
-// in fondo a una strada (o davanti allo zaino chiuso) ▶ porta al sentiero, se è aperto:
-// quello del cane dopo una tappa del cane, se c'è
-const sentieroDopo = i => { const s = seguente(STRADE, i); return s === null || s === TAPPE_PICCOLE }
-const stradaDopo = i => (STRADE.animale[i] === 'cane' && sentieroAperto('cane') ? 'cane' : 'coniglio')
+// in fondo a una strada ▶ porta al sentiero del suo animale, se è aperto
+const sentieroDopo = i => seguente(STRADE, i) === null
+const stradaDopo = i => STRADE.animale[i]
 
 /* ═══════════ la partita lasciata a metà ═══════════
    La fila di ogni livello e il sentiero in corso: vedi docs/passo-passo/sosta.md */
@@ -154,60 +154,72 @@ const colori = computed(() => {
 })
 // l'ultima tappa di un gradino sulla strada del coniglio (per il cane: la fine del pascolo)
 const fineDi = scalino => CAMPAGNA.slice(0, FINE_STRADA).map(t => t.scalino).lastIndexOf(scalino)
-// ingredienti sbloccati: vedi docs/passo-passo/sentiero.md
+// l'ultima tappa del cane che usa una cosa (una regola, le pecore, una carta)
+const fineColCane = c => STRADE.cane.filter(i => concettiDi(CAMPAGNA[i]).includes(c)).at(-1)
+/* ingredienti sbloccati: il gradino finito sulla strada del coniglio, o
+   l'ultima volta che il cane l'ha usato; vedi docs/passo-passo/sentiero.md */
 const sbloccati = () => SCALINI.filter(s => INGREDIENTI[s.chiave]).filter(s => {
-  const u = fineDi(s.chiave)
-  return fatta(u) || daFuori(u)
+  const u = fineDi(s.chiave), c = fineColCane(s.chiave)
+  return (u >= 0 && (fatta(u) || daFuori(u))) || (c !== undefined && fatta(c))
 }).map(s => INGREDIENTI[s.chiave])
-/* quello del coniglio si apre alla fine dei massi, non della campagna;
-   quello del cane a pascolo finito: vedi docs/passo-passo/sentiero.md */
-const sentieroAperto = (di = 'coniglio') => (di === 'cane'
-  ? tuttoAperto() || fatta(fineDi('pecore')) || daFuori(fineDi('pecore'))
-  : tappaAperta(TAPPE_PRIME, avanza.tappa))
+/* ognuno si apre in fondo alla strada del suo animale; chi l'ha già giocato
+   lo tiene (un posto che c'era non sparisce): vedi docs/passo-passo/sentiero.md */
+const giaGiocato = di => (primatoDi(CHIAVE, di).best || 0) > 0 || (dice(scrivi(quaderno)) || {}).strada === di
+const sentieroAperto = (di = 'coniglio') => tuttoAperto() || fatta(STRADE[di].at(-1)) || giaGiocato(di)
 const idDelSentiero = di => (di === 'cane' ? SENTIERO_CANE : 'senza-fine')
 
 /* ═══════════ la mappa ═══════════
    Lo stato di ogni casella lo decide il gioco, la mappa lo disegna
    (docs/passo-passo/mappa.md): chiusa vince su fatta. */
-const adessoQui = computed(() => tappaDiAdesso(STRADE, {
+// la tappa di adesso su una strada: una mappa per protagonista
+const adessoDi = strada => tappaDiAdesso(STRADE, {
   ultima: Number.isInteger(avanza.cfg.ultima) ? avanza.cfg.ultima : null,
-  cursore: avanza.tappa || 0, aperta, fatta,
-}))
+  cursore: avanza.tappa || 0, aperta, fatta, strada,
+})
+const adesso = computed(() => ({ coniglio: adessoDi('coniglio'), cane: adessoDi('cane') }))
+/* le cose che una tappa chiede e che il bambino non ha ancora visto su
+   nessuna delle due strade: il fumetto le spiega (docs/passo-passo/mappa.md) */
+const viste = computed(() => new Set(CAMPAGNA.flatMap((t, i) => (fatta(i) ? concettiDi(t) : []))))
 const voci = computed(() => CAMPAGNA.map((t, i) => {
   const s = SCALINI.find(x => x.chiave === t.scalino)
   const qui = aperta(i), stelle = stelleDi(CHIAVE, i)
   return {
-    indice: i, nome: t.nome, icona: t.icona, racconto: t.racconto, stelle,
-    stato: !qui ? 'chiusa' : i === adessoQui.value ? 'ora' : stelle > 0 ? 'fatta' : 'aperta',
+    indice: i, numero: STRADE.numero[i], nome: t.nome, icona: t.icona, racconto: t.racconto, stelle,
+    stato: !qui ? 'chiusa' : i === adesso.value[STRADE.animale[i]] ? 'ora' : stelle > 0 ? 'fatta' : 'aperta',
     aMeta: !!quaderno.livelli[t.chiave],
     serve: qui ? '' : cosaManca(STRADE, i, { fatta, aperta, perEta }),
     scalino: { icona: s.icona, nome: s.nome },
+    nuovo: fatta(i) ? [] : concettiDi(t).filter(c => !viste.value.has(c)).map(c => SCALINI.find(x => x.chiave === c).dritta),
   }
 }))
-// dove sta il segnalino: la tappa di adesso; non restando niente, il sentiero o l'ultima giocata
-const doveSegnalino = computed(() => {
-  if (adessoQui.value !== null) return adessoQui.value
-  // il sentiero lasciato a metà, se c'è; se no quello del coniglio, poi quello del cane
-  const r = ripresa.value
-  if (r) return idDelSentiero(r.strada)
-  if (sentieroAperto('coniglio')) return 'senza-fine'
-  if (sentieroAperto('cane')) return SENTIERO_CANE
+/* dove sta il segnalino di ogni protagonista: la tappa di adesso; non
+   restando niente, il suo sentiero, o l'ultima giocata, o la prima */
+const doveDi = strada => {
+  if (adesso.value[strada] !== null) return adesso.value[strada]
+  if (sentieroAperto(strada)) return idDelSentiero(strada)
   const u = avanza.cfg.ultima
-  return Number.isInteger(u) && aperta(u) ? u : 0
+  return Number.isInteger(u) && STRADE.animale[u] === strada && aperta(u) ? u : STRADE[strada][0]
+}
+const doveSegnalino = computed(() => ({ coniglio: doveDi('coniglio'), cane: doveDi('cane') }))
+/* con chi si apre la mappa: chi ha il sentiero lasciato a metà, se no chi
+   ha giocato l'ultima tappa; il cane solo se la sua strada è aperta */
+const primoProtagonista = computed(() => {
+  const r = ripresa.value, u = avanza.cfg.ultima
+  const chi = r ? r.strada : Number.isInteger(u) ? STRADE.animale[u] : 'coniglio'
+  return chi === 'cane' && !aperta(STRADE.cane[0]) ? 'coniglio' : chi
 })
 
 /* i due sentieri sulla mappa: aperto, il record, cosa manca da chiuso */
-const PASCOLO = CAMPAGNA.map((t, i) => i).filter(i => i < FINE_STRADA && CAMPAGNA[i].scalino === 'pecore')
 const statoSentieri = computed(() => ({
   coniglio: {
     aperto: sentieroAperto('coniglio'),
     record: primatoInParole(primatoDi(CHIAVE, 'coniglio'), SENZA_FINE.misura),
-    serve: `Si apre alla fine delle prime ${TAPPE_PRIME} tappe: ne hai fatte ${Math.min(avanza.tappa, TAPPE_PRIME)}.`,
+    serve: `Si apre in fondo alla strada del coniglio: ne hai fatte ${STRADE.coniglio.filter(fatta).length} su ${STRADE.coniglio.length}.`,
   },
   cane: {
     aperto: sentieroAperto('cane'),
     record: primatoInParole(primatoDi(CHIAVE, 'cane'), SENZA_FINE.misura),
-    serve: `Si apre quando il cane finisce il pascolo: ne ha fatte ${PASCOLO.filter(fatta).length} su ${PASCOLO.length}.`,
+    serve: `Si apre in fondo alla strada del cane: ne ha fatte ${STRADE.cane.filter(fatta).length} su ${STRADE.cane.length}.`,
   },
 }))
 
@@ -215,7 +227,9 @@ const statoSentieri = computed(() => ({
 const radice = ref(null)
 const passoGuida = computed(() => {
   const fermo = inCorsa.value || !!finale.value
-  if (tappaIdx.value === TAPPE_PICCOLE && stelleDi(CHIAVE, TAPPE_PICCOLE) === 0)
+  // la prima volta che una tappa mette in mano 🔁, col coniglio o col cane: nessuna vinta l'aveva
+  if (tappaIdx.value >= 0 && concettiDi(CAMPAGNA[tappaIdx.value]).includes('ripeti') &&
+      !CAMPAGNA.some((t, j) => stelleDi(CHIAVE, j) > 0 && concettiDi(t).includes('ripeti')))
     return guidaDelRipeti({ fermo, conScatola: conCicli(fila.value) || scelta.value != null })
   if (tappaIdx.value !== 0 || avanza.tappa > 0) return null
   return guidaDelPrato({ fila: fila.value, fermo, provato: provato.value !== null,
@@ -227,7 +241,7 @@ usaGuida(radice, passoGuida)
 const titolo = computed(() => {
   if (vista.value !== 'campo' || !tappa.value) return 'Passo passo'
   if (sentiero.value) return `${quale.value === 'cane' ? '🐕' : '🐇'} ${sentieri.value + 1} · ${tappa.value.nome}`
-  return `${tappaIdx.value + 1}. ${tappa.value.nome}`
+  return `${STRADE.numero[tappaIdx.value]}. ${tappa.value.nome}`
 })
 
 /* ═══════════ i suoni ═══════════ */
@@ -914,7 +928,7 @@ function indietro() {
 
     <div class="pp">
       <Mappa v-if="vista === 'mappa'" :voci="voci" :sentieri="statoSentieri"
-             :dove="doveSegnalino" :chi="state.player || ''"
+             :dove="doveSegnalino" :primo="primoProtagonista" :chi="state.player || ''"
              @gioca="avviaTappa" @senza-fine="vuoleSentiero">
         <Ripresa :ripresa="ripresa" :chiede="chiede"
                  @riprendi="riprendiSentiero" @scorda="scordaSentiero"

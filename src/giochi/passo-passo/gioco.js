@@ -1,7 +1,7 @@
 /* Passo passo — il manifesto. Dato puro, struttura di
    `docs/core/convenzione-giochi.md`: vedi `docs/passo-passo/README.md`. */
 import { CAMPAGNA, QUANTE_TAPPE, FINE_STRADA, TAPPE_PICCOLE, TAPPE_ZAINO, TAPPE_PRIME } from './dati/campagna.js'
-import { stradeDi } from './motore/strade.js'
+import { stradeDi, STRADE } from './motore/strade.js'
 import { recordPiuRecente, primatoInParole } from '../primati.js'
 
 export const CHIAVE = 'passo'
@@ -33,6 +33,7 @@ export default {
 
   piccoli: true,
   cresce: true,  // vedi docs/core/convenzione-giochi.md
+  perMerito: true,  // l'età non chiude le tappe: chi ci arriva va avanti (docs/passo-passo/livelli.md)
 
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
@@ -46,8 +47,10 @@ export default {
     // la tappa di adesso, su qualunque strada (docs/passo-passo/livelli.md, «Le due strade»)
     const adesso = stradeDi(av).adesso()
     const i = adesso ?? Math.min(av.tappa || 0, QUANTE_TAPPE - 1)
-    const sentiero = (av.tappa || 0) >= TAPPE_PRIME && record ? ` · sentiero ${record}` : ''  // vedi docs/passo-passo/sentiero.md
-    return `tappa ${i + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[i].nome}${sentiero}${coda}`
+    const sentiero = record ? ` · sentiero ${record}` : ''  // vedi docs/passo-passo/sentiero.md
+    // il numero sulla sua strada, come sulla mappa
+    const di = STRADE.animale[i]
+    return `tappa ${STRADE.numero[i]} di ${STRADE[di].length}${di === 'cane' ? ' col cane' : ''} · ${CAMPAGNA[i].nome}${sentiero}${coda}`
   },
 
   /* i traguardi «di prima» contano solo i primi cinque gradini (fino alle
