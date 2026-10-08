@@ -7,7 +7,7 @@
 import { Partita, Regole } from './partita.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { OGGETTI } from '../dati/oggetti.js'
-import { soglia } from '../dati/taratura.js'
+import { soglia, CFG } from '../dati/taratura.js'
 
 // 2: gli oggetti a terra e la cassa che apre un'offerta. Un salvataggio
 // di versione 1 si butta (riprendeva senza oggetti e con «livello»
@@ -48,7 +48,7 @@ export function scrivi(partita, tappa) {
     casse: p.casse,   // il tetto della cassa (cassaAmmessa): senza, uscire e rientrare lo azzererebbe
     eroe: { x: arrotonda(e.x), y: arrotonda(e.y), cuori: e.cuori,
             cuoriMax: e.cuoriMax, guarda: e.guarda, passi: arrotonda(e.passi),
-            rotta: Math.round(e.rotta * 100) / 100 },
+            rotta: Math.round(e.rotta * 100) / 100, bombe: e.bombe || 0 },
     potenziamenti: { ...p.potenziamenti },
     // le tre carte in attesa si salvano per chiave e si rivestono
     // riprendendo: rigenerarle farebbe uscire e rientrare finché non
@@ -96,6 +96,7 @@ export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = 
       guarda: e.guarda === -1 ? -1 : 1,
       rotta: Number.isFinite(e.rotta) ? e.rotta : 0,
       passi: e.passi || 0,
+      bombe: Math.max(0, Math.min(CFG.bomba.tasca, e.bombe || 0)),
       vx: 0, vy: 0, invuln: 0, mira: 0,
     })
     p.eroe.cuori = Math.max(1, Math.min(e.cuori || 1, p.eroe.cuoriMax))

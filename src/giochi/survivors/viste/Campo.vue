@@ -10,7 +10,7 @@ const props = defineProps({
   buio: { type: Boolean, default: false },
   dritta: { type: Boolean, default: true },     // «tieni premuto e trascina»
 })
-const emit = defineEmits(['tela', 'muovi'])
+const emit = defineEmits(['tela', 'muovi', 'bomba'])
 
 const tela = ref(null)
 const dito = ref(false)
@@ -55,7 +55,10 @@ function daTastiera() {
   for (const k of tasti) { dx += FRECCE[k][0]; dy += FRECCE[k][1] }
   emit('muovi', dx, dy)
 }
-const premuto = e => { if (FRECCE[e.key] && !dito.value) { tasti.add(e.key); daTastiera() } }
+const premuto = e => {
+  if (e.key === ' ' && !e.repeat) { e.preventDefault(); emit('bomba'); return }
+  if (FRECCE[e.key] && !dito.value) { tasti.add(e.key); daTastiera() }
+}
 const mollato = e => { if (tasti.delete(e.key)) daTastiera() }
 
 onMounted(() => {
@@ -90,6 +93,12 @@ onUnmounted(() => {
     </div>
 
     <div v-if="dritta" class="sv-dritta em">tieni premuto e trascina 👆</div>
+
+    <!-- la bomba: il tocco si ferma qui, non deve muovere l'eroe -->
+    <button v-if="cruscotto.bombe > 0" class="sv-bomba em" data-bomba
+            @pointerdown.stop.prevent="emit('bomba')">
+      💣<b v-if="cruscotto.bombe > 1">{{ cruscotto.bombe }}</b>
+    </button>
 
     <div class="sv-presi em">
       <span v-for="p in cruscotto.presi" :key="p.chiave">

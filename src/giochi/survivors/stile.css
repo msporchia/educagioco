@@ -105,6 +105,18 @@
             text-shadow: 0 2px 4px #000a; color: #fff }
 .sv-presi sub { font-size: 10px; font-weight: 900 }
 
+/* la bomba: tonda, in basso a destra, grande quanto un pollice */
+.sv-bomba { position: absolute; right: 14px; bottom: 34px; z-index: 3;
+            width: 66px; height: 66px; border-radius: 50%; border: 3px solid #ffe98a;
+            background: radial-gradient(circle at 35% 30%, #ff9f5a, #c2410c);
+            box-shadow: 0 4px 0 #7c2d12, 0 6px 14px #0008; font-size: 32px;
+            touch-action: none; animation: sv-bomba 1.4s ease-in-out infinite }
+.sv-bomba:active { box-shadow: 0 1px 0 #7c2d12 }
+.sv-bomba b { position: absolute; right: -4px; top: -6px; min-width: 22px; height: 22px;
+              border-radius: 11px; background: #fff; color: #7c2d12; font-size: 14px;
+              line-height: 22px; font-weight: 900 }
+@keyframes sv-bomba { 50% { transform: scale(1.06) } }
+
 .sv-brindisi { position: absolute; left: 12px; right: 12px; top: 84px; z-index: 6;
                pointer-events: none; background: #101a44e8; border: 3px solid #ffe98a;
                border-radius: 16px; padding: 9px 12px; color: #fff; font-size: 14px;

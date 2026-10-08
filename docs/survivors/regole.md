@@ -34,6 +34,15 @@ verso il grumo quando ha un'arma che guarda avanti.
     campagna era quasi un quarto delle offerte e le carte si aspettavano
     invece di raccogliere: il banco tiene le offerte in più di una tappa
     **sotto un terzo**.
+  - **💣 la bomba** va in tasca (tre al massimo) e si lancia col pulsante
+    in basso a destra, o con la barra al computer. Scoppia sull'eroe e toglie
+    di mezzo tutti quelli entro 220 punti, grossi compresi; più in là li
+    spinge via. È l'oggetto che serve sempre, per questo ha un orologio suo
+    (`CFG.bomba`): la prima dopo quindici secondi, poi una ogni mezzo
+    minuto, una alla volta, e mai a chi ha la tasca piena. Provato a
+    pescarla fra gli altri oggetti: rubava il posto alle casse, e con meno
+    carte le tappe diventavano più dure invece che più facili. Non si
+    lancia sotto le carte. Nei test: `[data-bomba]`.
 - **I muri**: dopo dodici secondi la prima volta, poi sempre più spesso con
   la marea, una fila di mostri deboli attraversa lo schermo dritta da un lato
   a caso, con **un varco**; l'eroe è più svelto di lei. Un muro prende chi non
@@ -45,6 +54,10 @@ verso il grumo quando ha un'arma che guarda avanti.
   se davanti c'è qualcuno; la **Lancia** (carta forte) parte dove si corre e
   trapassa. Mirare costa, quindi picchiano più dell'arco. Da fermi restano
   puntate dove si era andati, e una freccina ai piedi lo dice.
+
+- **Il terreno**: boschi, montagne e stagni non si attraversano, e
+  girando si trovano macchie di altri posti. Le frecce ci volano sopra.
+  Le regole e i varchi garantiti: [terreno.md](terreno.md).
 
 ## Il prezzo di una carta
 
