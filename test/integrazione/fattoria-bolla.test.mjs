@@ -87,12 +87,11 @@ async function striscia(da, punti, foto = '') {
   await su()
   await attendi(page, 300)
 }
-const titoloBolla = () => page.evaluate(
-  () => ((document.querySelector('[data-bolla-titolo]') || {}).innerText || '').trim())
-const centroDi = async sel => {
-  const b = await page.locator(sel).first().boundingBox()
-  return b && { x: Math.round(b.x + b.width / 2), y: Math.round(b.y + b.height / 2) }
-}
+/* I gettoni sono disegnati sulla tela: dove stanno e quale bolla è aperta lo dice il gancio
+   `window.__fattoria` (vedi docs/fattoria/come-si-tocca.md). */
+const laBolla = () => page.evaluate(() => (window.__fattoria && window.__fattoria.bolla()) || null)
+const gettone = k => page.evaluate(k => (window.__fattoria.gettoni().find(g => g.chiave === k) || null), k)
+
 const dalCentro = tela => {
   const cx = tela.x + tela.width / 2, cy = tela.y + tela.height / 2
   const punti = []
@@ -102,11 +101,11 @@ const dalCentro = tela => {
   return punti.sort((a, b) => a.d - b.d)
 }
 /* Si cerca col dito, come negli altri file: la vista dipende dallo schermo. */
-async function cerca(titolo) {
+async function cerca(vale) {
   const tela = await page.locator('.fa-tela').boundingBox()
   for (const p of dalCentro(tela)) {
     await dito(p.x, p.y)
-    if ((await titoloBolla()).startsWith(titolo)) return p
+    if (vale(await laBolla() || {})) return p
     if (await page.locator('.fa-velo').count()) {
       await page.locator('.fa-velo').click({ position: { x: 5, y: 5 } })
       await attendi(page, 200)
@@ -117,20 +116,19 @@ async function cerca(titolo) {
 const tela = await page.locator('.fa-tela').boundingBox()
 
 /* ---------- 1. toccare un campo vuoto apre la bolla dei semi ---------- */
-const campo = await cerca('Cosa semini?')
-controlla('toccando un campo vuoto si apre la bolla dei semi', !!campo)
-uguale('e non un foglio a tutto schermo', await page.locator('.fa-velo').count(), 0)
-controlla('nella bolla c\'è il grano da trascinare',
-          await page.locator('[data-gettone="grano"]').count() === 1)
+const campo = await cerca(b => b.tipo === 'semina')
+controlla('toccando un campo vuoto spuntano i semi', !!campo)
+uguale('e non un foglio', await page.locator('.fa-velo').count(), 0)
+controlla('fra i semi c\'è il grano da trascinare', !!(await gettone('grano')))
 await scatto(page, 'bolla-semi')
 
 /* ---------- 2. il seme strisciato sulla fila li semina tutti ---------- */
 if (campo) {
-  const seme = await centroDi('[data-gettone="grano"]')
+  const seme = await gettone('grano')
   await striscia(seme, [{ x: Math.round(tela.x + 4), y: campo.y },
                         { x: campo.x, y: campo.y },
                         { x: Math.round(tela.x + tela.width - 4), y: campo.y }], 'bolla-trascina')
-  uguale('lasciato il seme, la bolla si chiude', await page.locator('[data-bolla]').count(), 0)
+  uguale('lasciato il seme, i gettoni se ne vanno', await laBolla(), null)
   await esci()
   const s = await statoSalvato()
   uguale('i quattro campi sono seminati a grano',
@@ -141,9 +139,9 @@ if (campo) {
   const granoPrima = s.granaio.grano || 0
   await metti(s)
   await dito(campo.x, campo.y)
-  uguale('toccando un campo pronto si apre la bolla del cesto', await titoloBolla(), 'È pronto!')
+  uguale('toccando un campo pronto spunta il cesto', (await laBolla() || {}).tipo, 'raccogli')
   await scatto(page, 'bolla-cesto')
-  const cesto = await centroDi('[data-gettone="cesto"]')
+  const cesto = await gettone('cesto')
   await striscia(cesto, [{ x: Math.round(tela.x + 4), y: campo.y },
                          { x: Math.round(tela.x + tela.width - 4), y: campo.y }])
   await esci()
@@ -154,15 +152,14 @@ if (campo) {
 }
 
 /* ---------- 4. il mulino: la ricetta trascinata sopra ---------- */
-const mulino = await cerca('Mulino')
+const mulino = await cerca(b => b.nome === 'Mulino')
 controlla('toccando il mulino si apre la sua bolla', !!mulino)
 if (mulino) {
-  const g = '[data-gettone="mangime"]'
-  uguale('con la ricetta del mangime', await page.locator(g).count(), 1)
-  const r = await centroDi(g)
+  const r = await gettone('mangime')
+  controlla('con la ricetta del mangime', !!r)
   await giu(r.x, r.y)
   await attendi(page, 120)
-  controlla('premendola dice cosa prende', await page.locator('[data-bolla-ricetta]').count() === 1)
+  controlla('premendola dice cosa prende', await page.evaluate(() => window.__fattoria.dettaglio()))
   await scatto(page, 'bolla-ricetta')
   for (let i = 1; i <= 10; i++) {
     await va(Math.round(r.x + (mulino.x - r.x) * i / 10), Math.round(r.y + (mulino.y - r.y) * i / 10))
@@ -170,12 +167,12 @@ if (mulino) {
   }
   await su()
   await attendi(page, 300)
-  uguale('dopo, la bolla resta aperta per metterne un altro', await titoloBolla() !== '', true)
-  uguale('e la fila mostra il pezzo partito',
-         await page.locator('[data-bolla-fila] .fa-bolla-posto:not(.vuoto)').count(), 1)
+  uguale('dopo, le ricette restano per metterne un\'altra', (await laBolla() || {}).nome, 'Mulino')
+  uguale('e la fila mostra il pezzo partito', await page.evaluate(() => window.__fattoria.fila()), 1)
 
   /* ---------- 5. il 📋 apre il foglio di sempre ---------- */
-  await page.locator('[data-bolla-foglio]').click()
+  const foglio = await gettone('foglio')
+  await dito(foglio.x, foglio.y)
   await attendi(page, 300)
   uguale('il 📋 apre il foglio del mulino',
          (await page.evaluate(() => (document.querySelector('.fa-foglio h2') || {}).innerText || '')).trim(),
@@ -193,7 +190,7 @@ if (mulino) {
   const mangimePrima = s3.granaio.mangime || 0
   await metti(s3)
   await dito(mulino.x, mulino.y)
-  controlla('toccato, il mulino apre la bolla', (await titoloBolla()).startsWith('Mulino'))
+  uguale('toccato, il mulino mostra le sue ricette', (await laBolla() || {}).nome, 'Mulino')
   await esci()
   const s4 = await statoSalvato()
   uguale('e il mangime pronto è nel silo', s4.granaio.mangime, mangimePrima + 1)

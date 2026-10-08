@@ -24,6 +24,7 @@ import { Camminatore } from './motore/camminata.js'
 import { Tela, Attore } from './scena/tela.js'
 import { spintaAlBordo, conIlResto } from './scena/spinta.js'
 import { SCARTO_DITO, SCARTO_MOUSE } from './scena/dito.js'
+import { disponiGettoni, gettoneSotto, LATO_GETTONE } from './scena/bolla.js'
 import { CATALOGO, PER_ID, ZONE, ANIMALI_ZONA, piedeDi, pezzoDi, assettoDi,
          puoGirare, puoSpecchiare, eCampo, eSilo, eVicino, eMercato, siloDi,
          macchinaDi, statiDi } from './dati/catalogo.js'
@@ -52,8 +53,6 @@ import Albero from './viste/Albero.vue'
 import Chiudi from './viste/Chiudi.vue'
 import { alberoDi } from './dati/albero.js'
 import Provino from './viste/Provino.vue'
-import Bolla from './viste/Bolla.vue'
-import Merce from './viste/Merce.vue'
 import './stile.css'
 
 defineOptions({ name: 'LaFattoria' })
@@ -258,6 +257,7 @@ onMounted(() => {
   addEventListener('pointerup', fermaLaSpinta)
   addEventListener('pointercancel', fermaLaSpinta)
   addEventListener('blur', fermaLaSpinta)
+  gancioDiProva()
   setTimeout(() => avvisa('Tocca una cosa per le sue opzioni, o tienila premuta e trascinala ' +
                           'per spostarla. Sul prato, tieni premuto per il baule.'), 500)
 })
@@ -271,7 +271,7 @@ onBeforeUnmount(() => {
   removeEventListener('blur', fermaLaSpinta)
   document.removeEventListener('visibilitychange', seSparisce)
   removeEventListener('pagehide', seSparisce)
-  smettiLaMano()
+  delete window.__fattoria
   salvaOra({ subito: true })
 })
 
@@ -361,6 +361,7 @@ function passo(ora) {
   scorriDalBordo(dt)
   scena.mostra({
     fattoria: mondo, attori, scelto: scelto.value, preso, anello, bersagli,
+    bolla: vistaDellaBolla(), mano,
     orologio, pennello: anteprimaPennello(),
     stagione: stagione.value || null, stagionali,
   })
@@ -448,10 +449,10 @@ function anteprimaPennello() {
 }
 
 function premi(e) {
-  // Un tocco sul prato chiude la bolla; se tocca un'altra cosa, al rilascio si apre la sua.
-  chiudiBolla()
   dita.set(e.pointerId, dove(e))
   if (dita.size === 2) {
+    // Il secondo dito annulla il gettone in mano: è un pizzico, non un gesto a due.
+    if (inMano) annullaMano()
     if (lungo) { clearTimeout(lungo); lungo = null }
     giu = null; anello = null; aggancio = null; scorrendo = false
     // Due dita sono un pizzico: la cosa in mano resta in mano, la vista smette di correre da sola.
@@ -462,6 +463,12 @@ function premi(e) {
   if (dita.size > 2) return
 
   const p = dove(e)
+  // Un gettone sotto il dito: il gesto è suo. Un tocco altrove chiude i gettoni (e apre quelli della cosa toccata).
+  if (bolla && !inMano) {
+    const i = gettoneSotto(bolla.vista.punti || [], p.x, p.y)
+    if (i >= 0) { giu = null; return prendiGettone(i, e, p) }
+  }
+  chiudiBolla()
   giu = { ...p, x0: p.x, y0: p.y, mosso: false, mira: null }
   scorrendo = false
   if (pennello.value) return dipingi(p)
@@ -519,6 +526,7 @@ function muovi(e) {
     return
   }
   const p = dove(e)
+  if (inMano) return muoviMano(e, p)
   if (preso) {
     // Confronto con x0,y0 (dove l'ha presa) e non l'ultimo pointerdown: tirandola dal baule il
     // pointerdown è avvenuto sul foglio, già sparito.
@@ -581,6 +589,7 @@ function lascia(e) {
   if (lungo) { clearTimeout(lungo); lungo = null }
   anello = null
   const p = dove(e)
+  if (inMano) { giu = null; return lasciaMano(e, p) }
   // Presa dal baule con un tocco secco: resta appesa al dito, si posa al tocco dopo.
   if (preso && !preso.pronto) { preso.pronto = true; giu = null; return }
   if (preso) { posaPreso(); giu = null; return }
@@ -692,6 +701,7 @@ function attoreSotto(sx, sy, grazia = GRAZIA) {
 const nomeDi = chi => (animale(chi) || {}).nome || chi
 
 function annulla() {
+  if (inMano) annullaMano()
   if (lungo) { clearTimeout(lungo); lungo = null }
   dita.clear(); pizzico = null; anello = null; preso = null; giu = null; aggancio = null
   fermaLaSpinta()
@@ -1255,138 +1265,176 @@ function ritira() {
   salva()
 }
 
-/* ═══════════ la bolla: semi, cesto e ricette da trascinare ═══════════ */
-// Toccato un campo o una macchina, sopra compaiono i gettoni: si prendono e si portano sul prato —
-// un seme passato sopra tre campi vuoti li semina tutti e tre. Vedi docs/fattoria/come-si-tocca.md.
-const bolla = ref(null)       // { tipo: 'semina'|'raccogli'|'cresce'|'macchina', cosa, x, y, sotto, … }
-const mano = ref(null)        // il gettone che segue il dito, in pixel della tela: { merce, icona, x, y, sopra }
-let inMano = null             // { g, tipo, da, id, x0, y0, mosso, ultimo, fatti, fermo }
-let bersagli = []             // [{ x, y, piede, cosa, vivo }]: dove il gettone in mano fa qualcosa, per la tela
+/* ═══════════ i gettoni: semi, cesto e ricette da trascinare ═══════════ */
+// Toccato un campo o una macchina, attorno spuntano i gettoni, disegnati sul prato dalla tela (niente
+// foglio): si prendono e si portano dove servono. Vedi docs/fattoria/come-si-tocca.md («I gettoni»).
+let bolla = null              // { tipo, cosa, nome, gettoni, attesa, fila, vista }; vista è quello che va alla tela
+let mano = null               // il gettone che segue il dito, per la tela: { pezzo, testo, x, y, piega, sopra }
+let inMano = null             // { g, i, tipo, da, id, x0, y0, mosso, ultimo, fatti, fermo }
+let bersagli = []             // [{ x, y, piede, cosa, vivo }]: dove il gettone in mano fa qualcosa
+
+const facciaDi = k => ({ pezzo: (PRODOTTI[k] || {}).pezzo || null, testo: (PRODOTTI[k] || {}).emoji || '📦' })
 
 function chiudiBolla() {
   if (inMano) return          // il dito la sta usando: si chiude quando si alza
-  bolla.value = null
+  bolla = null
 }
 
-// Larghezza e altezza a stima, per non farla uscire dallo schermo: le misure sono quelle di .fa-gettone.
-function misuraBolla(b) {
-  const n = (b.gettoni || []).length
-  const colonne = Math.max(1, Math.min(5, n))
-  const righe = Math.ceil(n / 5)
-  return { w: Math.max(170, colonne * 62 + 22), h: 34 + righe * 70 + (b.attesa ? 40 : 0) + 30 }
-}
-
-// Sopra la cosa, dove la si vede disegnata (un mulino è più alto del suo piede); sotto se in cima non ci sta.
-function mostraBolla(cosa, dati) {
-  if (!scena) return
-  scelto.value = null
+// Dove sta la cosa a schermo: la cima di quello che si vede (un mulino è più alto del suo piede) e il fondo.
+function ancoraDi(cosa) {
   const g = mondo.ingombro(cosa)
   const a = assettoDi(cosa, PER_ID[cosa.id])
   const r = scena.riquadroPosa(a.pezzo, cosa.x, cosa.y, a.piede, a)
-  const cima = Math.min(r ? r.y : Infinity, g.y * scena.cellaPx - scena.vista.y)
-  const fondo = (g.y + g.h) * scena.cellaPx - scena.vista.y
-  const cx = (g.x + g.w / 2) * scena.cellaPx - scena.vista.x
-  const { w, h } = misuraBolla(dati)
-  const sotto = cima - 8 - h < 8
-  bolla.value = {
-    ...dati, cosa, scelta: '', sotto,
-    x: Math.round(Math.max(w / 2 + 8, Math.min(scena.L - w / 2 - 8, cx))),
-    y: Math.round(sotto ? Math.min(fondo + 8, scena.A - h - 8) : cima - 8),
+  return {
+    cx: (g.x + g.w / 2) * scena.cellaPx - scena.vista.x,
+    cima: Math.min(r ? r.y : Infinity, g.y * scena.cellaPx - scena.vista.y),
+    fondo: (g.y + g.h) * scena.cellaPx - scena.vista.y,
   }
 }
 
-function apriBolla(cosa) {
-  if (eCampo(cosa)) return bollaDelCampo(cosa)
-  if (macchinaDi(cosa)) return bollaDellaMacchina(cosa)
+// Lo stesso punto, in celle del mondo: dove nascono voli, sbuffi e nuvolette.
+function nelMondo(sx, sy) {
+  return { x: (sx + scena.vista.x) / scena.cellaPx, y: (sy + scena.vista.y) / scena.cellaPx }
+}
+function centroDi(cosa) {
+  const g = mondo.ingombro(cosa)
+  return { x: g.x + g.w / 2, y: g.y + g.h / 2 }
 }
 
-function bollaDelCampo(cosa) {
+// Il no detto sopra la cosa, in una nuvoletta: non in cima allo schermo, lontano da dove si guarda.
+function dici(cosa, testo) {
+  if (!scena || !cosa) return
+  const a = ancoraDi(cosa)
+  const p = nelMondo(a.cx, a.cima)
+  scena.nuvoletta(testo, p.x, p.y)
+}
+
+// Si rifà a ogni fotogramma: la vista può scorrere, e la tela riceve punti di schermo già decisi.
+function vistaDellaBolla() {
+  if (!bolla || !scena) return null
+  const cosa = bolla.cosa
+  if (!mondo.cose.includes(cosa)) { bolla = null; return null }
+  const a = ancoraDi(cosa)
+  const v = bolla.vista
+  const { punti, sotto } = disponiGettoni(bolla.gettoni.length,
+    { cx: a.cx, cima: a.cima, fondo: a.fondo, L: scena.L, A: scena.A })
+  const tenuto = inMano && inMano.i
+  v.lato = LATO_GETTONE
+  v.punti = punti
+  v.gettoni = bolla.gettoni.map((g, i) => ({
+    pezzo: g.pezzo, testo: g.testo, hai: g.hai, colmo: g.colmo, spento: g.spento,
+    piccolo: g.chiave === 'foglio', preso: !!(inMano && inMano.mosso && tenuto === i) }))
+  const g = inMano ? bolla.gettoni[tenuto] : null
+  v.dettaglio = g && g.caselle && punti[tenuto]
+    // sopra tutto l'arco (o sotto, se l'arco è sotto): la targhetta non deve coprire i gettoni vicini
+    ? { x: punti[tenuto].x, sotto, caselle: g.caselle,
+        y: sotto ? Math.max(...punti.map(q => q.y)) : Math.min(...punti.map(q => q.y)),
+        esce: facciaDi(g.ricetta.da), costo: g.ricetta.costo }
+    : null
+  v.attesa = bolla.attesa ? { ...bolla.attesa, x: a.cx, y: a.cima - 26 } : null
+  v.fila = bolla.fila ? { posti: bolla.fila, x: a.cx, y: a.fondo + 18 } : null
+  return v
+}
+
+function apriBolla(cosa, { rinfresca = false } = {}) {
+  if (!scena) return
+  scelto.value = null
+  const dati = eCampo(cosa) ? datiDelCampo(cosa) : datiDellaMacchina(cosa, { ritira: !rinfresca })
+  if (!dati) return
+  // Rinfrescata resta com'era: i gettoni spuntano una volta sola, non ogni cinque secondi.
+  const vista = rinfresca && bolla && bolla.cosa === cosa ? bolla.vista : { nascita: null }
+  bolla = { ...dati, cosa, vista }
+}
+
+function datiDelCampo(cosa) {
   const s = mondo.statoCampo(cosa)
-  if (!s) return
-  if (s.vuoto) return mostraBolla(cosa, {
-    tipo: 'semina', titolo: 'Cosa semini?', invito: 'Trascinalo sui campi vuoti',
+  if (!s) return null
+  if (s.vuoto) return {
+    tipo: 'semina', nome: 'Campo',
     // Solo quelle che il livello ha aperto; il numerino è quanto ne hai già (mi serve?), oro se è pieno.
     gettoni: COLTURE.filter(c => mondo.colturaAperta(c.id)).map(c => ({
-      chiave: c.id, merce: c.da, coltura: c, hai: mondo.quantoHo(c.da),
-      nota: `${c.minuti} min`, colmo: mondo.quantoCiSta(c.da) < c.resa,
-      spento: c.semina > monete.value })),
-  })
-  if (!s.pronto) return mostraBolla(cosa, {
-    tipo: 'cresce', titolo: s.coltura.nome, foglio: true,
-    attesa: { merce: s.coltura.da, quanto: s.quanto, manca: s.manca },
-  })
+      chiave: c.id, ...facciaDi(c.da), coltura: c, hai: mondo.quantoHo(c.da),
+      colmo: mondo.quantoCiSta(c.da) < c.resa, spento: c.semina > monete.value })),
+  }
+  if (!s.pronto) return {
+    tipo: 'cresce', nome: s.coltura.nome, gettoni: [],
+    attesa: { ...facciaDi(s.coltura.da), quanto: s.quanto,
+              testoMinuti: `${s.manca} min` },
+  }
   const c = s.coltura
   // Un cesto che non può raccogliere si vede spento; toccato apre il foglio, che dice perché e cosa fare.
-  const pieno = mondo.quantoCiSta(c.da) < c.resa
-  mostraBolla(cosa, {
-    tipo: 'raccogli', titolo: 'È pronto!', invito: 'Passa il cesto sui campi pronti',
-    gettoni: [{ chiave: 'cesto', icona: '🧺', nota: c.raccolta ? `🪙${c.raccolta}` : '',
-                spento: pieno || c.raccolta > monete.value }],
-  })
+  return {
+    tipo: 'raccogli', nome: c.nome,
+    gettoni: [{ chiave: 'cesto', pezzo: null, testo: '🧺',
+                spento: mondo.quantoCiSta(c.da) < c.resa || c.raccolta > monete.value }],
+  }
 }
 
-// Quello che è pronto si ritira al tocco, come in Hay Day; se non ci sta, il foglio dice dove fare posto.
-function bollaDellaMacchina(cosa, { ritira = true } = {}) {
+// Quello che è pronto si ritira al tocco, come in Hay Day: vola nel silo. Se non ci sta, si apre il foglio.
+function datiDellaMacchina(cosa, { ritira = true } = {}) {
   let stato = mondo.statoMacchina(cosa)
-  if (!stato) return
+  if (!stato) return null
   if (ritira && stato.pronto) {
     const r = mondo.ritira(cosa)
-    if (!r.ok) return apriMacchina(cosa)
+    if (!r.ok) { apriMacchina(cosa); return null }
     segna('fattoriaRitiri')
-    r.presi.forEach((p, i) =>
-      volaVia(cosa, `+${p.quanto} ${PRODOTTI[p.prodotto].emoji}`, i))
-    avvisa(`${r.presi.map(p => `${PRODOTTI[p.prodotto].emoji} +${p.quanto}`).join(' ')} nel silo!` +
-           (r.restano ? ` ${r.restano === 1 ? 'Uno resta' : `${r.restano} restano`} qui: non ci ${r.restano === 1 ? 'sta' : 'stanno'}.`
-                      : quantoNeResta(r)))
+    r.presi.forEach((p, i) => {
+      for (let k = 0; k < p.quanto; k++) voloAlSilo(cosa, p.prodotto, i * .12 + k * .08)
+    })
+    if (r.restano) dici(cosa, 'Nel silo non c\'è più posto')
+    vibra()
     salva()
     stato = mondo.statoMacchina(cosa)
   }
-  const nome = (PER_ID[cosa.id] || {}).nome || 'La macchina'
-  mostraBolla(cosa, {
-    tipo: 'macchina', titolo: nome, foglio: true,
-    invito: stato.liberi ? `Trascinalo su: ${nome.toLowerCase()}` : 'La fila è piena',
-    fila: [...stato.coda.map(p => ({ merce: p.ricetta.da,
+  return {
+    tipo: 'macchina', nome: (PER_ID[cosa.id] || {}).nome || 'La macchina',
+    fila: [...stato.coda.map(p => ({ ...facciaDi(p.ricetta.da), quanto: p.quanto,
                                      come: p.pronto ? 'pronto' : p.lavora ? 'lavora' : 'aspetta' })),
            ...Array.from({ length: stato.liberi }, () => null)],
-    gettoni: ricetteDi(stato.macchina, mondo.livello).map(ricetta => {
-      const m = mondo.cheMancaPer(ricetta.id)
-      return {
-        chiave: ricetta.id, merce: ricetta.da, ricetta, hai: mondo.quantoHo(ricetta.da),
-        nota: `${ricetta.minuti} min`, costo: ricetta.costo, manca: m.manca, monete: m.monete,
-        spento: !!m.manca.length || !!m.monete || !stato.liberi,
-        // Le caselle: una per pezzo, accese se ce l'hai — come nel foglio della macchina.
-        caselle: Object.entries(ricetta.prende).flatMap(([k, n]) =>
-          Array.from({ length: n }, (_, i) => ({ prodotto: k, piena: i < mondo.quantoHo(k) }))),
-      }
-    }),
-  })
+    liberi: stato.liberi,
+    gettoni: [
+      ...ricetteDi(stato.macchina, mondo.livello).map(ricetta => {
+        const m = mondo.cheMancaPer(ricetta.id)
+        return {
+          chiave: ricetta.id, ...facciaDi(ricetta.da), ricetta, hai: mondo.quantoHo(ricetta.da),
+          manca: m.manca, monete: m.monete, spento: !!m.manca.length || !!m.monete,
+          // Le caselle: una per pezzo, accese se ce l'hai — come nel foglio della macchina.
+          caselle: Object.entries(ricetta.prende).flatMap(([k, n]) =>
+            Array.from({ length: n }, (_, i) => ({ ...facciaDi(k), piena: i < mondo.quantoHo(k) }))),
+        }
+      }),
+      // Il foglio di sempre (la fila per intero, il posto in più, l'albero): un gettone che non si trascina.
+      { chiave: 'foglio', pezzo: null, testo: '📋' },
+    ],
+  }
 }
 
 // Dal battito: i minuti di un campo che cresce, la fila di una macchina. Mai mentre il dito la usa.
 function rinfrescaLaBolla() {
-  const b = bolla.value
-  if (!b || inMano) return
-  const cosa = toRaw(b.cosa)
-  if (!mondo.cose.includes(cosa)) return chiudiBolla()
-  if (eCampo(cosa)) bollaDelCampo(cosa)
-  else bollaDellaMacchina(cosa, { ritira: false })
+  if (!bolla || inMano) return
+  if (!mondo.cose.includes(bolla.cosa)) return chiudiBolla()
+  apriBolla(bolla.cosa, { rinfresca: true })
 }
 
 // Il 📋: il foglio di prima, con la fila per intero, l'albero di quello che manca, il silo pieno.
-function bollaAlFoglio() {
-  const b = bolla.value
-  if (!b) return
-  const cosa = toRaw(b.cosa)
-  bolla.value = null
+function bollaAlFoglio(cosa) {
+  bolla = null
   if (eCampo(cosa)) apriCampo(cosa)
   else apriMacchina(cosa)
 }
 
-// "+1 🌾" che sale dalla cosa: la stessa etichetta del premio di una bestia.
-function volaVia(cosa, testo, i = 0) {
+function siloPer(prodotto) {
+  const fam = (PRODOTTI[prodotto] || {}).silo
+  return mondo.cose.find(c => siloDi(c) === fam && mondo.cellaMia(c.x, c.y)) || null
+}
+
+// La merce vola dalla cosa al suo silo, che sobbalza quando la riceve; senza silo in vista vola in su.
+function voloAlSilo(da, prodotto, ritardo = 0) {
   if (!scena) return
-  const g = mondo.ingombro(cosa)
-  scena.etichetta(testo, g.x + g.w / 2, g.y - i * 0.7)
+  const silo = siloPer(prodotto)
+  const p = centroDi(da)
+  const a = silo ? centroDi(silo) : { x: p.x, y: p.y - 6 }
+  scena.vola({ ...facciaDi(prodotto), da: { x: p.x, y: p.y - .5 }, a, arriva: silo, ritardo })
 }
 
 // Un colpetto nel telefono a ogni campo fatto; dove non c'è (iOS, il computer) non succede niente.
@@ -1394,34 +1442,29 @@ function vibra() {
   try { if (navigator.vibrate) navigator.vibrate(12) } catch (e) { /* pazienza */ }
 }
 
-function prendiGettone(g, e) {
-  const b = bolla.value
-  if (!b || inMano || (e.pointerType === 'mouse' && e.button !== 0)) return
-  try { e.currentTarget.setPointerCapture(e.pointerId) } catch (er) { /* pazienza */ }
-  inMano = { g, tipo: b.tipo, da: toRaw(b.cosa), id: e.pointerId,
-             x0: e.clientX, y0: e.clientY, mosso: false, ultimo: null, fatti: [], fermo: null }
-  b.scelta = g.chiave
-  addEventListener('pointermove', muoviMano)
-  addEventListener('pointerup', lasciaMano)
-  addEventListener('pointercancel', annullaMano)
+// Il dito è sceso su un gettone (lo dice premi): da qui il gesto è suo finché non si alza.
+function prendiGettone(i, e, p) {
+  const g = bolla.gettoni[i]
+  inMano = { g, i, tipo: bolla.tipo, da: bolla.cosa, id: e.pointerId,
+             x0: p.x, y0: p.y, mosso: false, ultimo: null, fatti: [], fermo: null, piega: 0 }
+  vibra()
 }
 
-function smettiLaMano() {
-  removeEventListener('pointermove', muoviMano)
-  removeEventListener('pointerup', lasciaMano)
-  removeEventListener('pointercancel', annullaMano)
-}
-
-function muoviMano(e) {
-  if (!inMano || e.pointerId !== inMano.id) return
+function muoviMano(e, p) {
+  if (e.pointerId !== inMano.id) return
+  // Il 📋 non si trascina: è un tasto.
+  if (inMano.g.chiave === 'foglio') return
   const scarto = e.pointerType === 'mouse' ? SCARTO_MOUSE : SCARTO_DITO
   if (!inMano.mosso) {
-    if (Math.hypot(e.clientX - inMano.x0, e.clientY - inMano.y0) <= scarto) return
+    if (Math.hypot(p.x - inMano.x0, p.y - inMano.y0) <= scarto) return
     inMano.mosso = true
     bersagli = bersagliDi(inMano)
   }
-  const p = dove(e)
-  mano.value = { merce: inMano.g.merce, icona: inMano.g.icona, x: p.x, y: p.y, sopra: false }
+  // Pende dalla parte in cui va, e torna dritto quando ci si ferma.
+  const dx = mano ? p.x - mano.x : 0
+  inMano.piega = inMano.piega * .7 + Math.max(-.45, Math.min(.45, dx * .03)) * .3
+  mano = { pezzo: inMano.g.pezzo, testo: inMano.g.testo, x: p.x, y: p.y,
+           piega: inMano.piega, sopra: false }
   // Da qui la vista scorre da sola verso il bordo (scorriDalBordo), come trascinando una panchina.
   ultimoTocco = p
   passaSopra(p)
@@ -1433,19 +1476,23 @@ function passaSopra(p) {
   if (inMano.tipo === 'macchina') {
     const m = macchinaSotto(p, inMano.g.ricetta)
     for (const b of bersagli) b.vivo = b.cosa === m
-    if (mano.value) mano.value = { ...mano.value, sopra: !!m }
+    if (mano) mano.sopra = !!m
     return
   }
   const da = inMano.ultimo || p
   const passo = Math.max(4, scena.cellaPx / 3)
   const n = Math.max(1, Math.ceil(Math.hypot(p.x - da.x, p.y - da.y) / passo))
+  let sopra = false
   for (let i = 1; i <= n; i++) {
     const q = { x: da.x + (p.x - da.x) * i / n, y: da.y + (p.y - da.y) * i / n }
     const campo = campoSotto(q)
-    if (!campo || inMano.fatti.includes(campo)) continue
+    if (!campo) continue
+    if (i === n) sopra = bersagli.some(b => b.cosa === campo)
+    if (inMano.fatti.includes(campo)) continue
     if (inMano.tipo === 'semina') seminaPassando(campo)
     else if (inMano.tipo === 'raccogli') raccogliPassando(campo)
   }
+  if (mano) mano.sopra = sopra
   inMano.ultimo = p
 }
 
@@ -1477,11 +1524,12 @@ function bersagliDi(m) {
 function fatto(campo) {
   inMano.fatti.push(campo)
   bersagli = bersagli.filter(b => b.cosa !== campo)
+  scena.rimbalza(campo)
   vibra()
   salva()
 }
 
-// Il primo no si dice, gli altri campi dello stesso gesto tacciono: un avviso per campo si coprirebbe da solo.
+// Il primo no si dice, gli altri campi dello stesso gesto tacciono: una nuvoletta per campo si coprirebbe.
 function seminaPassando(campo) {
   const s = mondo.statoCampo(campo)
   if (!s || !s.vuoto) return
@@ -1489,12 +1537,12 @@ function seminaPassando(campo) {
   if (!r.ok) {
     if (!inMano.fermo) {
       inMano.fermo = r
-      avvisa(r.motivo === 'poche-monete'
-        ? `Ti ${r.costo - monete.value === 1 ? 'serve' : 'servono'} 🪙${r.costo - monete.value} in più.`
-        : 'Qui c\'è già qualcosa.')
+      dici(campo, r.motivo === 'poche-monete' ? `Ti servono 🪙${r.costo - monete.value}` : 'Qui c\'è già qualcosa')
     }
     return
   }
+  const c = centroDi(campo)
+  scena.sbuffo(c.x, c.y + .3)
   fatto(campo)
 }
 
@@ -1505,65 +1553,47 @@ function raccogliPassando(campo) {
   if (!r.ok) {
     if (!inMano.fermo) {
       inMano.fermo = r
-      avvisa(r.motivo === 'poche-monete'
-        ? `Ti servono 🪙${r.costo - monete.value} in più: il campo ti aspetta.`
-        : nonCiSta(r))
+      dici(campo, r.motivo === 'poche-monete' ? `Ti servono 🪙${r.costo - monete.value}`
+        : r.motivo === 'silo-manca' ? 'Ti serve il silo' : 'Il silo è pieno')
     }
     return
   }
   segna('fattoriaRaccolti')
-  volaVia(campo, `+${r.quanto} ${PRODOTTI[r.prodotto].emoji}`)
-  inMano.ultimoRaccolto = r
+  voloAlSilo(campo, r.prodotto)
+  const g = mondo.ingombro(campo)
+  scena.etichetta(`+${r.quanto}`, g.x + g.w / 2, g.y)
   fatto(campo)
 }
 
-function annullaMano(e) {
-  if (!inMano || e.pointerId !== inMano.id) return
-  smettiLaMano()
-  inMano = null; mano.value = null; bersagli = []
+function annullaMano() {
+  inMano = null; mano = null; bersagli = []
   fermaLaSpinta()
 }
 
-function lasciaMano(e) {
-  if (!inMano || e.pointerId !== inMano.id) return
-  smettiLaMano()
-  if (e.pointerType !== 'mouse') zittisciIlFantasma(e.clientX, e.clientY)
+function lasciaMano(e, p) {
+  if (e.pointerId !== inMano.id) return
   fermaLaSpinta()
   const m = inMano
-  inMano = null; mano.value = null; bersagli = []
-  if (!m.mosso) return toccaIlGettone(m)
+  inMano = null; mano = null; bersagli = []
+  if (m.g.chiave === 'foglio') return bollaAlFoglio(m.da)
+  if (!m.mosso) return toccaIlGettone(m, p)
   if (m.tipo === 'macchina') {
-    const dove2 = macchinaSotto(dove(e), m.g.ricetta)
-    if (dove2) return mettiInFila(dove2, m.g)
-    if (bolla.value) bolla.value.scelta = ''
+    const dove2 = macchinaSotto(p, m.g.ricetta)
+    if (dove2) mettiInFila(dove2, m.g, nelMondo(p.x, p.y))
     return
   }
-  finisciIlGiro(m)
-}
-
-// Il riassunto del gesto, una riga: quanti campi, e quanto manca.
-function finisciIlGiro(m) {
-  const n = m.fatti.length
-  if (!n) { if (bolla.value) bolla.value.scelta = ''; return }
-  bolla.value = null
-  if (m.tipo === 'semina') {
-    const c = m.g.coltura
-    return avvisa(`${c.emoji} ${n === 1 ? 'Seminato' : `${n} campi seminati`}. ` +
-                  `Torna fra ${c.minuti} minuti.`)
-  }
-  const r = m.ultimoRaccolto
-  avvisa(`${PRODOTTI[r.prodotto].emoji} ${n === 1 ? 'Raccolto' : `${n} campi raccolti`}: ` +
-         'è tutto nel silo!' + quantoNeResta(r))
+  // Fatto il giro, la bolla se ne va: i campi parlano da sé (il sobbalzo, il raccolto che vola).
+  if (m.fatti.length) bolla = null
 }
 
 // Toccare un gettone senza trascinarlo fa il gesto sulla cosa da cui si è partiti: seme, cesto o ricetta.
-function toccaIlGettone(m) {
+function toccaIlGettone(m, p) {
   const { g, da } = m
   if (m.tipo === 'macchina') {
-    if (!g.spento) return mettiInFila(da, g)
-    return avvisa(percheNoLaRicetta(g))
+    if (!g.spento) return mettiInFila(da, g, nelMondo(p.x, p.y))
+    return dici(da, percheNoLaRicetta(g))
   }
-  if (m.tipo === 'raccogli' && g.spento) { bolla.value = null; return apriCampo(da) }
+  if (m.tipo === 'raccogli' && g.spento) { bolla = null; return apriCampo(da) }
   inMano = m
   bersagli = bersagliDi(m)
   if (m.tipo === 'semina') seminaPassando(da)
@@ -1571,36 +1601,51 @@ function toccaIlGettone(m) {
   inMano = null
   const altri = bersagli.length
   bersagli = []
-  finisciIlGiro(m)
+  if (!m.fatti.length) return
+  bolla = null
   // Detto solo quando servirebbe: ci sono altri campi su cui il gesto lungo avrebbe lavorato.
-  if (m.fatti.length && altri) avvisa(avviso.value + ' Trascinando, ne fai tanti in un colpo.')
+  if (altri) dici(da, m.tipo === 'semina' ? 'Trascinalo sugli altri campi!' : 'Passa il cesto sugli altri!')
 }
 
 function percheNoLaRicetta(g) {
-  if (g.manca && g.manca.length) {
-    const cosa = g.manca.map(x => `${x.quanti} ${PRODOTTI[x.prodotto].nome.toLowerCase()}`).join(' e ')
-    return `Ti ${g.manca.length + (g.monete ? 1 : 0) > 1 || g.manca[0].quanti > 1 ? 'servono' : 'serve'} ancora ${cosa}.`
-  }
-  if (g.monete) return `Ti servono 🪙${g.monete} in più.`
-  return 'La fila è piena: ritira quello che è pronto, o allungala dal 📋.'
+  if (g.manca && g.manca.length)
+    return 'Ti manca ' + g.manca.map(x => `${x.quanti} ${PRODOTTI[x.prodotto].emoji}`).join(' ')
+  if (g.monete) return `Ti servono 🪙${g.monete}`
+  return 'La fila è piena'
 }
 
-// La bolla resta aperta: chi ne vuole tre di fila trascina tre volte.
-function mettiInFila(cosa, g) {
+// La bolla resta aperta: chi ne vuole tre di fila trascina tre volte. Gli ingredienti volano dentro.
+function mettiInFila(cosa, g, da) {
   const ricetta = g.ricetta
   const r = mondo.avvia(cosa, ricetta.id)
   if (!r.ok) {
-    if (bolla.value) bolla.value.scelta = ''
-    return avvisa(r.motivo === 'poche-monete' ? `Ti servono 🪙${r.costo - monete.value} in più.`
-      : r.motivo === 'fila-piena' ? 'La fila è piena: ritira quello che è pronto, o allungala dal 📋.'
+    return dici(cosa, r.motivo === 'poche-monete' ? `Ti servono 🪙${r.costo - monete.value}`
+      : r.motivo === 'fila-piena' ? 'La fila è piena'
       : percheNoLaRicetta({ ...g, manca: (mondo.cheMancaPer(ricetta.id) || {}).manca || [] }))
   }
+  const c = centroDi(cosa)
+  Object.entries(ricetta.prende).forEach(([k, n], i) => {
+    for (let j = 0; j < n; j++)
+      scena.vola({ ...facciaDi(k), da, a: c, arriva: cosa, ritardo: (i + j) * .07, durata: .4 })
+  })
   vibra()
-  const fra = r.subito ? ricetta.minuti : Math.max(1, Math.ceil((r.fine - Date.now()) / MINUTO))
-  avvisa(r.subito ? `${ricetta.emoji} ${ricetta.nome} fra ${fra} minuti.`
-                  : `${ricetta.emoji} ${ricetta.nome} in fila: pronto fra ${fra} minuti.`)
   salva()
-  bollaDellaMacchina(cosa, { ritira: false })
+  apriBolla(cosa, { rinfresca: true })
+}
+
+// Per i test col dito: dove stanno i gettoni a schermo, e quale bolla è aperta. Non cambia niente.
+function gancioDiProva() {
+  window.__fattoria = {
+    bolla: () => bolla && { tipo: bolla.tipo, nome: bolla.nome },
+    gettoni: () => {
+      if (!bolla || !bolla.vista.punti) return []
+      const r = riquadro()
+      return bolla.gettoni.map((g, i) => ({ chiave: g.chiave,
+        x: Math.round(r.left + bolla.vista.punti[i].x), y: Math.round(r.top + bolla.vista.punti[i].y) }))
+    },
+    fila: () => (bolla && bolla.fila) ? bolla.fila.filter(Boolean).length : 0,
+    dettaglio: () => !!(bolla && bolla.vista.dettaglio),
+  }
 }
 
 /* ═══════════ i pannelli ═══════════ */
@@ -1805,17 +1850,6 @@ function tiraVoce({ voce, x, y, trascina }) {
     </div>
 
     <p v-if="avviso" class="fa-avviso">{{ avviso }}</p>
-
-    <Bolla v-if="bolla" :x="bolla.x" :y="bolla.y" :sotto="bolla.sotto"
-           :titolo="bolla.titolo" :invito="bolla.invito" :gettoni="bolla.gettoni || []"
-           :scelta="bolla.scelta" :attesa="bolla.attesa || null" :fila="bolla.fila || null"
-           :foglio="!!bolla.foglio" :trascina="!!mano"
-           @prendi="prendiGettone" @foglio="bollaAlFoglio" />
-    <div v-if="mano" :class="['fa-mano', { sopra: mano.sopra }]"
-         :style="{ left: mano.x + 'px', top: mano.y + 'px' }">
-      <Merce v-if="mano.merce" :merce="mano.merce" :lato="44" />
-      <span v-else>{{ mano.icona }}</span>
-    </div>
 
     <Attrezzi v-if="doveAttrezzi" :x="doveAttrezzi.x" :y="doveAttrezzi.y"
               :gesti="gestiDiScelto" @fai="attrezzo" @fine="scelto = null" />

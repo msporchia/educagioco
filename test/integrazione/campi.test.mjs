@@ -85,17 +85,17 @@ const titolo = () => page.evaluate(
   () => ((document.querySelector('.fa-foglio h2') || {}).innerText || '').trim())
 const testoFoglio = () => page.evaluate(
   () => (document.querySelector('.fa-foglio') || {}).innerText || '')
-/* Campi e macchine aprono la bolla dei gettoni, non un foglio
-   (docs/fattoria/come-si-tocca.md): il titolo è la sua prima riga. */
-const titoloBolla = () => page.evaluate(
-  () => ((document.querySelector('[data-bolla-titolo]') || {}).innerText || '').trim())
+/* I gettoni sono disegnati sulla tela: dove stanno e quale bolla è aperta lo dice il gancio
+   `window.__fattoria` (vedi docs/fattoria/come-si-tocca.md). */
+const laBolla = () => page.evaluate(() => (window.__fattoria && window.__fattoria.bolla()) || null)
+const gettone = k => page.evaluate(k => (window.__fattoria.gettoni().find(g => g.chiave === k) || null), k)
 async function toccaGettone(chiave) {
-  const b = await page.locator(`[data-gettone="${chiave}"]`).first().boundingBox()
-  if (controlla(`nella bolla c'è il gettone «${chiave}»`, !!b))
-    await dito(Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2))
+  const g = await gettone(chiave)
+  if (controlla(`attorno c'è il gettone «${chiave}»`, !!g)) await dito(g.x, g.y)
 }
+/* il 📋 è un gettone come gli altri: si tocca, e apre il foglio di sempre */
 async function alFoglio() {
-  await page.locator('[data-bolla-foglio]').click()
+  await toccaGettone('foglio')
   await attendi(page, 300)
 }
 const monete = () => page.evaluate(
@@ -243,7 +243,7 @@ await chiudi()
    la strisciata su più campi ha il suo file (`integrazione/fattoria-bolla`). */
 await dito(dove.x, dove.y)
 await attendi(page, 400)
-uguale('toccando il campo si apre la sua bolla', await titoloBolla(), 'Cosa semini?')
+uguale('toccando il campo spuntano i semi', (await laBolla() || {}).tipo, 'semina')
 uguale('e non un foglio', await page.locator('.fa-velo').count(), 0)
 await scatto(page, 'campi-scheda-vuoto')
 
@@ -256,19 +256,15 @@ await scatto(page, 'campi-scheda-vuoto')
 const primaDiSeminare = await monete()
 await toccaGettone('grano')
 await attendi(page, 500)
-uguale('seminato, la bolla si chiude', await page.locator('[data-bolla]').count(), 0)
+uguale('seminato, i gettoni se ne vanno', await laBolla(), null)
 uguale('e seminare non costa niente', await monete(), primaDiSeminare)
 
 await dito(dove.x, dove.y)
 await attendi(page, 400)
-uguale('toccandolo di nuovo dice cos\'ha dentro', await titoloBolla(), 'Grano')
-uguale('e non c\'è un cesto: non si può raccogliere adesso',
-       await page.locator('[data-gettone="cesto"]').count(), 0)
-/* il 📋 apre il foglio di sempre, che dice che sta crescendo */
-await alFoglio()
-const cresce = await testoFoglio()
-uguale('il 📋 apre il foglio del campo', await titolo(), 'Grano')
-controlla('che dice che sta crescendo', /sta crescendo/i.test(cresce), cresce.slice(0, 90))
+const crescendo = await laBolla() || {}
+uguale('toccandolo di nuovo dice che sta crescendo', crescendo.tipo, 'cresce')
+uguale('e cosa', crescendo.nome, 'Grano')
+uguale('e non c\'è un cesto: non si può raccogliere adesso', await gettone('cesto'), null)
 await scatto(page, 'campi-cresce')
 await chiudi()
 await attendi(page, 400)
@@ -295,7 +291,7 @@ await entra()
 
 await dito(dove.x, dove.y)
 await attendi(page, 400)
-uguale('riaperto il gioco, il grano è pronto', await titoloBolla(), 'È pronto!')
+uguale('riaperto il gioco, il grano è pronto', (await laBolla() || {}).tipo, 'raccogli')
 await scatto(page, 'campi-pronto')
 /* Il campo da solo, senza il foglio davanti: è l'unico modo di guardare
    con un occhio umano com'è venuto il grano maturo e il cestino sopra —
@@ -311,7 +307,7 @@ await attendi(page, 400)
 /* ---------- 6. si raccoglie col cesto, e finisce in granaio ---------- */
 await toccaGettone('cesto')
 await attendi(page, 600)
-uguale('raccolto, la bolla si chiude', await page.locator('[data-bolla]').count(), 0)
+uguale('raccolto, il cesto se ne va', await laBolla(), null)
 
 /* ---------- 6b. il silo si guarda toccandolo, e si ingrandisce ----------
    Il gesto è quello di tutto il resto — tocca una cosa tua e vedi cosa
@@ -425,7 +421,7 @@ await scatto(page, 'campi-recinto')
 
 await dito(dovePen.x, dovePen.y)
 await attendi(page, 450)
-uguale('e toccandola si apre la sua bolla', await titoloBolla(), 'Conigliera')
+uguale('e toccandola spuntano le sue ricette', (await laBolla() || {}).nome, 'Conigliera')
 await alFoglio()
 uguale('e il 📋 apre il suo foglio, col suo nome', await titolo(), 'Conigliera')
 const foglioRecinto = await testoFoglio()

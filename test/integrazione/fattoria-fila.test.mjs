@@ -122,12 +122,16 @@ const dalCentro = tela => {
       punti.push({ x: Math.round(x), y: Math.round(y), d: (x - cx) ** 2 + (y - cy) ** 2 })
   return punti.sort((a, b) => a.d - b.d)
 }
-const titoloBolla = () => page.evaluate(
-  () => ((document.querySelector('[data-bolla-titolo]') || {}).innerText || '').trim())
-/* Il tocco apre la bolla; il foglio della fila sta dietro il suo 📋. */
+/* I gettoni sono disegnati sulla tela: dove stanno e quale bolla è aperta lo dice il gancio
+   `window.__fattoria` (vedi docs/fattoria/come-si-tocca.md). */
+const laBolla = () => page.evaluate(() => (window.__fattoria && window.__fattoria.bolla()) || null)
+const gettone = k => page.evaluate(k => (window.__fattoria.gettoni().find(g => g.chiave === k) || null), k)
+/* Il tocco fa spuntare i gettoni; il foglio della fila sta dietro il 📋. */
 async function apriIlFoglio() {
-  if (!(await titoloBolla()).startsWith('Mulino')) return false
-  await page.locator('[data-bolla-foglio]').click()
+  if ((await laBolla() || {}).nome !== 'Mulino') return false
+  const g = await gettone('foglio')
+  if (!g) return false
+  await dito(g.x, g.y)
   await attendi(page, 300)
   return true
 }
