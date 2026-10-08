@@ -366,7 +366,7 @@ export class Corredo {
     }
     this.torciaResta = quante
     this.luceCambiata()
-    this.dilloDi(k, ` accesa · si vede più lontano · ${quante} stanze`)
+    this.dilloDi(k, ` accesa · dura ${quante} stanze`)
     return true
   }
 
