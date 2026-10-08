@@ -111,7 +111,11 @@ await attendi(page, 300)
 uguale('si chiude con la ✕', await page.locator('[data-diario]').count(), 0)
 
 /* ---------- 4. giù, il promemoria ---------- */
-await scendiNelSotterraneo(page, DISCESA)
+await scendiNelSotterraneo(page, DISCESA, { scendi: false })
+const qui = await page.locator('[data-fumetto] [data-missioni-qui]').innerText()
+controlla('prima di scendere il fumetto della torre ricorda le due prese (non quella già fatta)',
+          qui.includes('Grattanaso') && qui.includes('piano 1') && qui.includes('chiavi') && qui.includes('piano 3') && !qui.includes('Rosicchione'), qui)
+await page.locator('[data-fumetto] [data-azione="scendi"]').click()
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
 await attendi(page, 900)
 const promemoria = await page.locator('[data-promemoria] li').evaluateAll(els => els.map(e => ({ id: e.dataset.missione, dove: e.dataset.dove, testo: e.innerText })))
