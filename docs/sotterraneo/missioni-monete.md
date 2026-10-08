@@ -16,7 +16,7 @@ le domande che la missione chiede in più**, non di più.
 
 | missione | colpi del mostro col nome | colpi di uno comune | in più | 🪙 |
 |---|---|---|---|---|
-| Badessa (fantasma) | 4 · 3 · 2 · 4 | 2 · 2 · 2 · 2 | 1,25 | 1 |
+| Dama Grigia (fantasma) | 4 · 3 · 2 · 4 | 2 · 2 · 2 · 2 | 1,25 | 1 |
 | Rosicchione (ratto) | 3 · 3 · 2 · 3 | 1 · 1 · 1 · 1 | 1,75 | 2 |
 | Grattanaso (goblin) | 3 · 2 · 2 · 3 | 1 · 1 · 1 · 1 | 1,5 | 2 |
 | Chela (granchio) | 7 · 5 · 5 · 7 | 6 · 4 · 4 · 6 | 1,0 | 1 |

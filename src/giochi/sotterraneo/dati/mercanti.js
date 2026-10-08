@@ -12,23 +12,24 @@ import { CAMPAGNA, QUANTE_TAPPE } from './campagna.js'
 // raccoglie; `vendi` è quella delle tasche, solo per chi compra (docs/sotterraneo/bottega.md, "La bottega e lo zaino")
 export const MERCANTI = [
   // la roba del passo dopo, non quella della miniera: chi ha le gemme non scende col meglio
-  { chiave: 'armaiolo', nome: 'L\'armaiolo', em: '⚒️', sprite: 'armaiolo',
-    dice: 'Lame affilate e scudi robusti: li ho battuti tutti con questo martello.',
+  // le chiavi restano quelle di prima (salvataggi, sprite); i nomi sono parole che un bambino conosce
+  { chiave: 'armaiolo', nome: 'Il fabbro', em: '⚒️', sprite: 'armaiolo',
+    dice: 'Lame e scudi, battuti uno per uno su questa incudine. Guarda pure.',
     schede: [{ chiave: 'armi', nome: 'Armi', em: '⚔️', dove: ['mano'] },
              { chiave: 'difese', nome: 'Scudi e armature', em: '🛡️', dove: ['mancina', 'corpo'] }],
     vende: { dove: ['mano', 'mancina', 'corpo'] }, sempre: [],
     passo: ['mano', 'mancina', 'corpo'], altre: 2 },
 
-  { chiave: 'erborista', nome: 'L\'erborista', em: '🌿', sprite: 'erborista',
-    dice: 'Le mie pozioni ti rimettono in piedi. E di torce ne ho sempre, non restare al buio.',
+  { chiave: 'erborista', nome: 'La guaritrice', em: '🌿', sprite: 'erborista',
+    dice: 'Pozioni per chi sanguina, torce per chi ha paura del buio. Laggiù servono tutte e due.',
     schede: [{ chiave: 'pozioni', nome: 'Pozioni', em: '🧪', usa: ['cura', 'cresci'] },
              { chiave: 'torce', nome: 'Torce', em: '🔥', usa: ['luce'] }],
     vende: { chiavi: ['elisir-toro'] }, sempre: [...CURE, 'torcia'],
     righe: [0, 0, 1, 1, 1, 1, 1, 1] },
 
   // l'unico che compra: tre botteghe che comprano farebbero di ogni banco un posto dove svuotare le tasche
-  { chiave: 'rigattiere', nome: 'Il rigattiere', em: '🧺', sprite: 'rigattiere',
-    dice: 'Roba vecchia, roba che luccica… E se hai qualcosa che non ti serve, te la prendo io.',
+  { chiave: 'rigattiere', nome: 'Il mercante', em: '🧺', sprite: 'rigattiere',
+    dice: 'Anelli, amuleti, roba che luccica. E quello che non ti serve, te lo compro io.',
     schede: [{ chiave: 'gioielli', nome: 'Gioielli', em: '💍', dove: ['dito'], usa: ['porta'] },
              { chiave: 'vendi', nome: 'Vendi', em: '💎', vendi: true }],
     vende: { dove: ['dito'], chiavi: ['chiave'] }, sempre: [], compra: true,

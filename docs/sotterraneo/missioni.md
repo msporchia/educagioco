@@ -51,20 +51,20 @@ conosce non si sblocca mai, e il guasto lo dice.
 
 | missione | chi | discesa · piano | tipo | requisiti | premio |
 |---|---|---|---|---|---|
-| La Badessa Grigia (un fantasma) | l'eremita | la cripta dell'altare · 2 | sconfiggi | — | 💎 12 · 🪙 1 |
+| La Dama Grigia (un fantasma; id `badessa`) | l'eremita | la cripta dell'altare · 2 | sconfiggi | — | 💎 12 · 🪙 1 |
 | La collana della nonna | la ragazza | la scalinata antica · 1 | trova | cripta finita | 💎 15 |
 | Rosicchione (un ratto) | il mugnaio | la torre · 2 | sconfiggi | scalinata finita | amuleto azzurro · 🪙 2 |
 | Il mazzo di chiavi della torre | la guardia | la torre · 3 | trova | scalinata finita | 💎 20 |
 | Grattanaso (un goblin) | la ragazza | la torre · 1 | sconfiggi | **collana consegnata** | 💎 10 · 🪙 2 |
 | L'ascia di suo padre | il boscaiolo | la grotta · 4 | trova | torre finita | 💎 25 |
-| Il libro dei nomi | l'eremita | la grotta · 3 | trova | **Badessa consegnata** | 💎 20 |
+| Il libro dei nomi | l'eremita | la grotta · 3 | trova | **Dama Grigia consegnata** | 💎 20 |
 | Chela, il granchio gigante | il pescatore | la scala sommersa · 2 | sconfiggi | grotta finita | anello d'ambra · 🪙 1 |
 | La canna d'oro | il pescatore | la scala sommersa · 3 | trova | grotta finita | 💎 25 |
 | Zannagrigia (un lupo) | la guardia | la botola · 2 | sconfiggi | scala sommersa finita | 💎 30 · 🪙 2 |
 | Il sacco di farina buona | il mugnaio | la botola · 1 | trova | **Rosicchione consegnato** | 💎 20 |
 | La lanterna del nonno | il minatore | la miniera · 3 | trova | botola finita | teschio del cercatore |
 
-I rami sono tre: **Badessa → libro dei nomi**, **collana → Grattanaso**,
+I rami sono tre: **Dama Grigia → libro dei nomi**, **collana → Grattanaso**,
 **Rosicchione → sacco di farina**; le altre sei (chiavi, ascia, Chela, canna,
 Zannagrigia, lanterna) sono radici senza seguito.
 

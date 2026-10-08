@@ -202,10 +202,10 @@ export function dettoDelLivello(eroe, scheda, tappa, k) {
     return { manca: 'livello', detto: `${tappa.dove.charAt(0).toUpperCase() + tappa.dove.slice(1)} i mostri sono più forti di te: fatti le ossa nelle discese di prima.` }
   if (manca.manca === 'arma') {
     const con = scheda.mano ? `Con ${quellaCosa(scheda.mano)}` : 'A mani nude'
-    return { manca: 'arma', detto: `${con} ${tappa.dove} non duri: passa dall'armaiolo.` }
+    return { manca: 'arma', detto: `${con} ${tappa.dove} non duri: passa dal fabbro.` }
   }
   const senza = !scheda.mancina && !(scheda.mano && COSE[scheda.mano].mani === 2) ? 'senza scudo'
     : !scheda.corpo ? 'senza niente addosso' : `con ${quellaCosa(scheda.corpo)}`
   const dove = tappa.dove.charAt(0).toUpperCase() + tappa.dove.slice(1)
-  return { manca: 'difesa', detto: `${dove} picchiano forte, e ${senza} non reggi: passa dall'armaiolo.` }
+  return { manca: 'difesa', detto: `${dove} picchiano forte, e ${senza} non reggi: passa dal fabbro.` }
 }

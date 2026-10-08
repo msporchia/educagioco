@@ -15,7 +15,8 @@ export const PERSONAGGI = {
              saluto: 'L\'acqua di questo pozzo è la più fresca del villaggio. Bevi, se vuoi: non costa niente.' },
   mugnaio: { nome: 'Il mugnaio', chi: 'il mugnaio', sprite: 'mugnaio',
              saluto: 'La ruota gira, la macina macina, e io ho la farina fin nelle orecchie.' },
-  eremita: { nome: 'L\'eremita', chi: 'l\'eremita dell\'altare', sprite: 'eremita',
+  // la chiave resta `eremita` (salvataggi, sprite): sullo schermo è il frate, una parola che un bambino conosce
+  eremita: { nome: 'Il frate', chi: 'il frate dell\'altare', sprite: 'eremita',
              saluto: 'Sotto queste pietre dormono in tanti. Non tutti dormono tranquilli.' },
   guardia: { nome: 'La guardia della torre', chi: 'la guardia della torre', sprite: 'guardia',
              saluto: 'Faccio la guardia a una torre che cade a pezzi. Qualcuno deve pur farla.' },
@@ -33,7 +34,8 @@ export const personaDi = da => PERSONAGGI[da] || (da === 'minatore' ? IL_MINATOR
 // ne propone un'altra finché non se ne consegna una (decisione dell'utente: «non proporgliele se sono troppe»)
 export const TETTO = 3
 
-// `piano` da 0, come nel motore; `dice` è la richiesta, `grazie` la consegna. La cosa da trovare ha la sua faccia
+// `piano` da 0, come nel motore; `dice` è la richiesta, `ritorno` quello che dice vedendoti tornare a cosa fatta,
+// `grazie` la consegna (docs/sotterraneo/dialoghi.md). La cosa da trovare ha la sua faccia
 // (`em`); il mostro col nome ha `tipo` (dal bestiario), e il motore lo fa più duro.
 // `richiede`: tutto questo insieme, e la sua discesa aperta, sblocca la missione da sola: `{ fatta: <discesa> }` la
 // discesa è finita, `{ consegnata: <id> }` quella missione è consegnata. Un requisito riguarda sempre una discesa
@@ -41,10 +43,11 @@ export const TETTO = 3
 // `premio.monete`: le domande in più che la missione chiede (docs/sotterraneo/missioni.md, il conto)
 export const MISSIONI = [
   { id: 'badessa', da: 'eremita', discesa: 'altare', piano: 1, tipo: 'sconfiggi',
-    mostro: { tipo: 'fantasma', nome: 'La Badessa Grigia' },
+    mostro: { tipo: 'fantasma', nome: 'La Dama Grigia' },
     richiede: [],
-    dice: 'Nella cripta, al secondo piano, si aggira la Badessa Grigia: un fantasma che non trova pace. Battila, e potrà riposare.',
+    dice: 'Nella cripta, al secondo piano, si aggira la Dama Grigia: un fantasma che non trova pace. Battila, e potrà riposare.',
     grazie: 'Stanotte la cripta dorme tranquilla. Tieni: le offerte dei pellegrini servono più a te che a me.',
+    ritorno: 'Stanotte, dalla cripta, nessun lamento. Sei stato tu?',
     premio: { gemme: 12, monete: 1 } },
 
   { id: 'collana', da: 'ragazza', discesa: 'cantine', piano: 0, tipo: 'trova',
@@ -52,6 +55,7 @@ export const MISSIONI = [
     richiede: [{ fatta: 'altare' }],
     dice: 'Un goblin mi ha rubato la collana della nonna ed è scappato giù per la scalinata antica. Non può essere andato lontano: è al primo piano!',
     grazie: 'La collana della nonna! Non so come ringraziarti. Ecco le gemme che avevo messo da parte.',
+    ritorno: 'Quella che ti luccica in mano… è la collana della nonna?',
     premio: { gemme: 15 } },
 
   { id: 'rosicchione', da: 'mugnaio', discesa: 'torre', piano: 1, tipo: 'sconfiggi',
@@ -59,6 +63,7 @@ export const MISSIONI = [
     richiede: [{ fatta: 'cantine' }],
     dice: 'Un ratto grosso come un cane mi ruba la farina e scappa sotto la torre in rovina. Si chiama Rosicchione, e sta al secondo piano.',
     grazie: 'Niente più farina rubata! Questo amuleto me l\'ha lasciato un viandante: a te servirà più che a me.',
+    ritorno: 'Stamattina nel mulino non manca un chicco. Che ne è stato di Rosicchione?',
     premio: { cosa: 'amuleto-azzurro', monete: 2 } },
 
   { id: 'chiavi', da: 'guardia', discesa: 'torre', piano: 2, tipo: 'trova',
@@ -66,6 +71,7 @@ export const MISSIONI = [
     richiede: [{ fatta: 'cantine' }],
     dice: 'Ho perso il mazzo di chiavi della torre. Mi è caduto giù per le scale, fino al terzo piano: io là sotto non ci scendo.',
     grazie: 'Le chiavi della torre! Adesso posso chiudere a chiave. Prendi, è la mia paga di una settimana.',
+    ritorno: 'Sento un tintinnio. Sono le chiavi della torre?',
     premio: { gemme: 20 } },
 
   // il seguito della collana: il goblin non si è fermato
@@ -74,6 +80,7 @@ export const MISSIONI = [
     richiede: [{ consegnata: 'collana' }],
     dice: 'Il goblin che mi ha rubato la collana non ha smesso: adesso fa il ladro sotto la torre in rovina, al primo piano. Lo chiamano Grattanaso. Fermalo, ti prego.',
     grazie: 'Grattanaso non ruberà più niente al villaggio! Prendi queste gemme: le tenevo da parte per la nonna.',
+    ritorno: 'Al villaggio non sparisce più niente. Grattanaso?',
     premio: { gemme: 10, monete: 2 } },
 
   { id: 'ascia', da: 'boscaiolo', discesa: 'gallerie', piano: 3, tipo: 'trova',
@@ -81,14 +88,16 @@ export const MISSIONI = [
     richiede: [{ fatta: 'torre' }],
     dice: 'Mio padre ha perso la sua ascia nella grotta della scaletta, al quarto piano. È vecchia, ma a lui è cara.',
     grazie: 'L\'ascia di mio padre! Gli verranno le lacrime agli occhi. Queste gemme le avevo trovate fra le radici.',
+    ritorno: 'Quel manico lo riconoscerei fra mille. È l\'ascia di mio padre!',
     premio: { gemme: 25 } },
 
-  // il seguito della Badessa: i pellegrini che la pregavano si sono perduti più in basso
+  // il seguito della Dama Grigia (id `badessa`, il nome di prima): i pellegrini che la pregavano si sono perduti più in basso
   { id: 'libro', da: 'eremita', discesa: 'gallerie', piano: 2, tipo: 'trova',
     cosa: { nome: 'Il libro dei nomi', em: '📖' },
     richiede: [{ consegnata: 'badessa' }],
     dice: 'I pellegrini che scesero nella grotta della scaletta portavano il libro dei nomi, per scriverci chi non è tornato. Lo persero al terzo piano. Riportamelo: ogni nome ha diritto di essere ricordato.',
     grazie: 'Il libro dei nomi! Adesso nessuno resterà senza nome. Tieni, sono le offerte di un anno.',
+    ritorno: 'Quel libro che porti… è il libro dei nomi?',
     premio: { gemme: 20 } },
 
   { id: 'chela', da: 'pescatore', discesa: 'cisterna', piano: 1, tipo: 'sconfiggi',
@@ -96,6 +105,7 @@ export const MISSIONI = [
     richiede: [{ fatta: 'gallerie' }],
     dice: 'Un granchio gigante mi taglia le reti, e poi si nasconde nella scala sommersa, al secondo piano. Lo chiamano Chela.',
     grazie: 'Le mie reti sono salve! Tieni quest\'anello: l\'ho pescato io, e al buio brilla.',
+    ritorno: 'Le mie reti sono intere da due notti. Chela?',
     premio: { cosa: 'anello-ambra', monete: 1 } },
 
   { id: 'canna', da: 'pescatore', discesa: 'cisterna', piano: 2, tipo: 'trova',
@@ -103,6 +113,7 @@ export const MISSIONI = [
     richiede: [{ fatta: 'gallerie' }],
     dice: 'La mia canna d\'oro è scivolata nell\'acqua ed è finita giù nella scala sommersa, al terzo piano. Con quella i pesci abboccavano sempre.',
     grazie: 'La canna d\'oro! Domani abboccano di sicuro. Ecco, questo è per te.',
+    ritorno: 'Cos\'è che brilla lì? La mia canna d\'oro!',
     premio: { gemme: 25 } },
 
   { id: 'zannagrigia', da: 'guardia', discesa: 'labirinto', piano: 1, tipo: 'sconfiggi',
@@ -110,6 +121,7 @@ export const MISSIONI = [
     richiede: [{ fatta: 'cisterna' }],
     dice: 'Sotto la botola segreta vive un lupo vecchio e furbo, Zannagrigia: al secondo piano. Di notte esce e ulula sotto la torre.',
     grazie: 'Stanotte niente ululati! Prendi queste gemme: le tenevo per una spada nuova, ma la spada la usi meglio tu.',
+    ritorno: 'Stanotte niente ululati sotto la torre. Zannagrigia?',
     premio: { gemme: 30, monete: 2 } },
 
   // il seguito di Rosicchione: la farina che il ratto non ha rosicchiato è finita più lontano
@@ -118,6 +130,7 @@ export const MISSIONI = [
     richiede: [{ consegnata: 'rosicchione' }],
     dice: 'Dopo Rosicchione, un sacco della mia farina migliore è caduto dal carro ed è rotolato dentro la botola segreta del prato. Dev\'essere al primo piano: aiutami a ritrovarlo.',
     grazie: 'Il mio sacco! Con questa farina il pane torna buono. Prendi, per il disturbo.',
+    ritorno: 'Sento odore di farina buona. Il mio sacco!',
     premio: { gemme: 20 } },
 
   { id: 'lanterna', da: 'minatore', discesa: 'fondo', piano: 2, tipo: 'trova',
@@ -125,6 +138,7 @@ export const MISSIONI = [
     richiede: [{ fatta: 'labirinto' }],
     dice: 'La lanterna di mio nonno è rimasta nella miniera, al terzo piano. Lui diceva che faceva luce anche sulle cose nascoste.',
     grazie: 'La lanterna del nonno! È come averlo qui. Questo teschio l\'ho trovato in miniera da ragazzo: le gemme gli piacciono.',
+    ritorno: 'Quella luce… è la lanterna del nonno. L\'hai trovata davvero.',
     premio: { cosa: 'teschio-cercatore' } },
 ]
 
@@ -162,7 +176,7 @@ export function guastiDelleMissioni(chiDaFuori = []) {
     if (m.tipo === 'trova' && !(m.cosa && m.cosa.nome && m.cosa.em)) g.push(`${m.id}: cosa trovare, senza nome o faccia`)
     if (m.tipo === 'sconfiggi' && !(m.mostro && MOSTRI[m.mostro.tipo] && m.mostro.nome)) g.push(`${m.id}: il mostro non c'è o non ha nome`)
     if (m.tipo === 'sconfiggi' && MOSTRI[m.mostro.tipo] && MOSTRI[m.mostro.tipo].capo) g.push(`${m.id}: un capo non si ruba alla tappa`)
-    if (!m.dice || !m.grazie) g.push(`${m.id}: senza richiesta o grazie`)
+    if (!m.dice || !m.grazie || !m.ritorno) g.push(`${m.id}: senza richiesta, ritorno o grazie`)
     const p = m.premio || {}
     if (!(p.gemme > 0) && !(p.cosa && COSE[p.cosa])) g.push(`${m.id}: senza premio, o con un premio che non esiste`)
     if (p.gemme > 40) g.push(`${m.id}: ${p.gemme} gemme, è un passo della storia e non un vantaggio`)

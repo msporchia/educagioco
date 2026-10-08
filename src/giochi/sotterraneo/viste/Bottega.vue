@@ -29,7 +29,7 @@ const props = defineProps({
   addosso: { type: Object, required: true },    // { mano, mancina, corpo, dito }: voci o null
   numeri: { type: Object, required: true },     // { vita, att, dif, gemme }
   detto: { type: Object, default: null },       // l'ultima riga: { testo, sprite?, em? }
-  chiCompra: { type: String, default: '' },     // «al rigattiere, vicino al carro»: detto da chi non compra
+  chiCompra: { type: String, default: '' },     // «al mercante, vicino al carro»: detto da chi non compra
 })
 const emit = defineEmits(['compra', 'vendi', 'chiudi', 'fuori'])
 

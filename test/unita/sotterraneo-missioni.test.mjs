@@ -48,7 +48,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   // dalla discesa finita
   controlla('la collana aspetta che la cripta sia finita', !sbloccata(missioneDi('collana'), nessuna, tappeAl(0)))
   controlla('e finita la cripta si sblocca da sola', sbloccata(missioneDi('collana'), nessuna, tappeAl(1)))
-  controlla('anche la Badessa, che non aspetta niente, c\'è dall\'inizio', sbloccata(missioneDi('badessa'), nessuna, tappeAl(0)))
+  controlla('anche la Dama Grigia, che non aspetta niente, c\'è dall\'inizio', sbloccata(missioneDi('badessa'), nessuna, tappeAl(0)))
   // una discesa chiusa dall'età non apre le sue missioni, anche se il resto c'è
   const chiusa = tappeAl(1).map(t => (t.chiave === 'cantine' ? { ...t, aperta: false } : t))
   controlla('con la discesa chiusa la collana non si sblocca', !sbloccata(missioneDi('collana'), nessuna, chiusa))
@@ -56,7 +56,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   controlla('il goblin aspetta la collana, anche con la torre aperta', !sbloccata(missioneDi('goblin'), { collana: FATTA }, tappeAl(2)))
   controlla('consegnata la collana il goblin si sblocca', sbloccata(missioneDi('goblin'), { collana: CONSEGNATA }, tappeAl(2)))
   controlla('ma non prima che la torre sia aperta', !sbloccata(missioneDi('goblin'), { collana: CONSEGNATA }, tappeAl(1)))
-  controlla('il libro aspetta la Badessa', !sbloccata(missioneDi('libro'), {}, tappeAl(3)) && sbloccata(missioneDi('libro'), { badessa: CONSEGNATA }, tappeAl(3)))
+  controlla('il libro aspetta la Dama Grigia', !sbloccata(missioneDi('libro'), {}, tappeAl(3)) && sbloccata(missioneDi('libro'), { badessa: CONSEGNATA }, tappeAl(3)))
   controlla('il sacco aspetta Rosicchione', !sbloccata(missioneDi('sacco'), {}, tappeAl(5)) && sbloccata(missioneDi('sacco'), { rosicchione: CONSEGNATA }, tappeAl(5)))
   controlla('Zannagrigia aspetta la scala sommersa finita', !sbloccata(missioneDi('zannagrigia'), {}, tappeAl(4)) && sbloccata(missioneDi('zannagrigia'), {}, tappeAl(5)))
 
@@ -64,7 +64,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   const t2 = tappeAl(2)
   // chi non ha preso niente alla torre: sbloccate quattro, ma se ne offrono tre, le più vicine alla discesa di adesso
   stessaLista('a stati vuoti, alla torre: quattro sbloccate (il goblin no)', ids(sbloccate({}, t2)).sort(), ['badessa', 'chiavi', 'collana', 'rosicchione'])
-  stessaLista('e se ne offrono tre, quelle della torre prima della Badessa', ids(offerte({}, t2)), ['collana', 'rosicchione', 'chiavi'])
+  stessaLista('e se ne offrono tre, quelle della torre prima della Dama Grigia', ids(offerte({}, t2)), ['collana', 'rosicchione', 'chiavi'])
   const dopo = { badessa: CONSEGNATA, collana: CONSEGNATA }
   stessaLista('consegnata la collana, alla torre arriva il goblin', ids(sbloccate(dopo, t2)).sort(), ['chiavi', 'goblin', 'rosicchione'])
 
@@ -278,11 +278,11 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   uguale('per un mostro: hai battuto', diario({ rosicchione: FATTA }, t3).pronte[0].torna, 'Torna dal mugnaio: hai battuto Rosicchione')
   controlla('il goblin è da battere, con la sua corona e chi lo vuole', goblin.em === '👑' && goblin.chi === 'La ragazza del pozzo' && !goblin.tornaDa)
   stessaLista('ti aspetta il libro dei nomi (l\'ascia è nascosta dal tetto)', d.offerte.map(v => v.id), ['libro'])
-  stessaLista('consegnate: la Badessa, la collana, Rosicchione', d.consegnate.map(v => v.id), ['badessa', 'collana', 'rosicchione'])
+  stessaLista('consegnate: la Dama Grigia, la collana, Rosicchione', d.consegnate.map(v => v.id), ['badessa', 'collana', 'rosicchione'])
   uguale('tre aperte, due in mano e due offerte: il tetto ne tiene tre', d.aperte, 3)
   uguale('una è nascosta dal tetto', d.nascoste, 1)
   uguale('il diario sa il tetto', d.tetto, TETTO)
-  uguale('un\'avventura nuova ha un diario quasi vuoto: la Badessa e basta',
+  uguale('un\'avventura nuova ha un diario quasi vuoto: la Dama Grigia e basta',
          JSON.stringify(diario({}, tappeAl(0)).offerte.map(v => v.id)), '["badessa"]')
 
   // il promemoria in discesa
@@ -314,7 +314,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
 /* ══════════ 7. il minatore dice chi ti cerca ══════════ */
 {
   stessaLista('alla scalinata: l\'eremita e la ragazza hanno un favore, nell\'ordine della storia', chiTiCerca({}, tappeAl(1)),
-              ['L\'eremita dell\'altare ha un favore da chiederti.', 'La ragazza del pozzo ha un favore da chiederti.'])
+              ['Il frate dell\'altare ha un favore da chiederti.', 'La ragazza del pozzo ha un favore da chiederti.'])
   const presa = chiTiCerca({ collana: PRESA, badessa: CONSEGNATA }, tappeAl(1))
   controlla('presa: dice cosa aspetta', presa.length === 1 && /aspetta ancora: la collana della nonna\./.test(presa[0]), presa.join('|'))
   controlla('fatta: dice che ti aspetta', /ti aspetta/.test(chiTiCerca({ collana: FATTA, badessa: CONSEGNATA }, tappeAl(1))[0]))
@@ -394,7 +394,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   const io = { x: 52, y: 36 }
   uguale('nessuna missione presa: nessuna freccia', discesaDaSeguire({}, io, posti), null)
   uguale('una offerta e non presa: neanche', discesaDaSeguire({ badessa: undefined }, io, posti), null)
-  uguale('la Badessa è presa: la freccia va alla cripta', discesaDaSeguire({ badessa: PRESA }, io, posti), 'altare')
+  uguale('la Dama Grigia è presa: la freccia va alla cripta', discesaDaSeguire({ badessa: PRESA }, io, posti), 'altare')
   uguale('con due prese, la discesa più vicina', discesaDaSeguire({ badessa: PRESA, rosicchione: PRESA }, io, posti), 'altare')
   uguale('e dall\'altra parte della mappa, l\'altra', discesaDaSeguire({ badessa: PRESA, rosicchione: PRESA }, { x: 40, y: 8 }, posti), 'torre')
   uguale('due missioni nella stessa discesa: una sola freccia', discesaDaSeguire({ rosicchione: PRESA, chiavi: PRESA }, io, posti), 'torre')
@@ -428,7 +428,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   const io = { x: 52, y: 36 }
   const prese = { badessa: PRESA, rosicchione: PRESA }
   uguale('senza scelta, la discesa più vicina', discesaDaSeguire(prese, { x: 40, y: 8 }, posti), 'torre')
-  uguale('scegliendo la Badessa, la freccia azzurra cambia discesa', discesaDaSeguire(prese, { x: 40, y: 8 }, posti, 'badessa'), 'altare')
+  uguale('scegliendo la Dama Grigia, la freccia azzurra cambia discesa', discesaDaSeguire(prese, { x: 40, y: 8 }, posti, 'badessa'), 'altare')
   uguale('scegliendo Rosicchione, dall\'altra parte', discesaDaSeguire(prese, io, posti, 'rosicchione'), 'torre')
   uguale('la consegna pronta ha ancora la precedenza', discesaDaSeguire({ ...prese, collana: FATTA }, io, posti, 'badessa'), null)
   uguale('una scelta non più presa decade: vale la più vicina', discesaDaSeguire({ badessa: CONSEGNATA, rosicchione: PRESA }, io, posti, 'badessa'), 'torre')

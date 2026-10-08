@@ -38,7 +38,7 @@ await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: DISCESA, libera: false, stelle: { 0: 3, 1: 3 },
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: DISCESA, libera: false, stelle: { 0: 3, 1: 3 },
-      // la collana è consegnata, Rosicchione battuto e da riportare, la Badessa mai presa
+      // la collana è consegnata, Rosicchione battuto e da riportare, la Dama Grigia mai presa
       missioni: { collana: 'consegnata', rosicchione: 'fatta' }, roba,
       terra: { nebbia: 'f'.repeat(768), dove: ragazza.accanto, parlato: true } } } } },
   },
@@ -64,7 +64,7 @@ const segni = () => page.locator('[data-personaggio][data-segno]').evaluateAll(
 
 /* ---------- 1. il villaggio: due «!» e un «?» ---------- */
 uguale('sul villaggio: la guardia e la ragazza hanno un favore, il mugnaio aspetta che gli porti Rosicchione', await segni(), 'guardia:nuova,mugnaio:consegna,ragazza:nuova')
-uguale('l\'eremita no: la sua Badessa aspetta che si liberi un posto (il tetto è tre)', await page.locator('[data-personaggio="eremita"]').getAttribute('data-segno'), null)
+uguale('l\'eremita no: la sua Dama Grigia aspetta che si liberi un posto (il tetto è tre)', await page.locator('[data-personaggio="eremita"]').getAttribute('data-segno'), null)
 uguale('il tasto del diario conta le aperte: una in mano e due offerte', await page.locator('[data-diario-n]').innerText(), '3')
 await scatto(page, 'missioni-villaggio')
 
@@ -188,7 +188,7 @@ controlla('il gioiello va addosso o in tasca', a.roba?.dito === 'amuleto-azzurro
 uguale('le gemme non cambiano (il premio è il gioiello)', a.roba?.gemme, gemmePrima)
 uguale('le monete: il regalo, le domande in più', (await leggiProfilo(page)).coins, monete + ROSICCHIONE.premio.monete)
 controlla('e il gioco lo dice', (await page.locator('[data-avviso-terra]').innerText()).includes(`🪙 ${ROSICCHIONE.premio.monete}`))
-uguale('consegnata una, si libera un posto: la Badessa ha il suo «!»', await segni(), 'eremita:nuova,guardia:attesa,ragazza:attesa')
+uguale('consegnata una, si libera un posto: la Dama Grigia ha il suo «!»', await segni(), 'eremita:nuova,guardia:attesa,ragazza:attesa')
 uguale('il diario conta di nuovo le aperte: due in mano e una offerta', await page.locator('[data-diario-n]').innerText(), '3')
 await scatto(page, 'missioni-fatta')
 

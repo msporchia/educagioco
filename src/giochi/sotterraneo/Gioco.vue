@@ -457,7 +457,7 @@ function daiUnPunto(k) {
 
 /* ═══════════ lo zaino di sopra ═══════════
    Lo stesso zaino della discesa, sulla roba dell'avventura: ci si veste e ci si spoglia, ma non si beve (sopra si
-   è sempre in piena forma) e non si butta (quello che non serve lo compra il rigattiere) */
+   è sempre in piena forma) e non si butta (quello che non serve lo compra il mercante, chiave `rigattiere`) */
 const zainoSopra = ref(false)
 const detto = ref(null)        // la riga sopra il campo, sulla terra di sopra (la terra ha la sua per quello che trova)
 let dettoFino = 0
@@ -1163,7 +1163,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <!-- la bottega di un mercante di sopra: quasi a tutto schermo, la ✕ in alto a destra, niente domande.
              La chiave è il mercante: le linguette e la scelta ripartono da capo cambiando bottega -->
         <LaBottega v-if="banco" :key="banco.chi.chiave" v-bind="banco" :eroe="eroeScheda" :detto="dettoBanco"
-                  chi-compra="al rigattiere, vicino al carro"
+                  chi-compra="al mercante, vicino al carro"
                   @compra="compraSopra" @vendi="vendiSopra" @chiudi="chiudiBottega" @fuori="fuoriDallaBottega" />
         <Eroi v-if="scegliEroe" :avventure="avventure" :scelto="chiEro || ''" :primo="!chiEro"
               @scegli="scegli" @chiudi="chiudiLaScelta" />

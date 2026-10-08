@@ -34,26 +34,26 @@ const BASI = {
 
   accetta: arma('asce', 1, 'Accetta', 'accetta', 'Piccola, ma taglia.', 1, 'f'),
   ascia: arma('asce', 2, 'Ascia', 'ascia', 'Due mani, e si sente.', 2, 'f'),
-  bipenne: arma('asce', 3, 'Bipenne', 'bipenne', 'Una lama per parte: non perdona. Due mani.', 2, 'f'),
+  bipenne: arma('asce', 3, 'Ascia doppia', 'bipenne', 'Una lama per parte: non perdona. Due mani.', 2, 'f'),
 
   'arco-corto': arma('archi', 1, 'Arco corto', 'arco-corto', 'Colpisce prima che ti arrivino addosso. Due mani.', 2),
   'arco-lungo': arma('archi', 2, 'Arco lungo', 'arco-lungo', 'Freccia lunga, colpo pesante. Due mani.', 2),
   balestra: arma('archi', 3, 'Balestra', 'balestra', 'Un colpo solo, e fa un buco. Due mani.', 2, 'f'),
 
   // lo scettro è a una mano (l'unica di terzo gradino così): apre al mago, con difesa 0, lo scudo in fondo
-  verga: arma('bacchette', 1, 'Verga', 'verga', 'Una scintilla a ogni risposta giusta.', 1, 'f'),
+  verga: arma('bacchette', 1, 'Bacchetta', 'verga', 'Una scintilla a ogni risposta giusta.', 1, 'f'),
   'bastone-magico': arma('bacchette', 2, 'Bastone magico', 'bastone-magico', 'La punta brucia. Due mani.', 2),
   scettro: arma('bacchette', 3, 'Scettro', 'scettro', 'Quello che tocca non si rialza.'),
 
   // il cuoio non ha famiglia (lo lascia lo scheletro del primo piano); ferro=chi para di suo, stoffa=chi non para
-  panciotto: { em: '🦺', nome: 'Panciotto', sprite: 'corpo-cuoio', dove: 'corpo', dif: 1, prezzo: 9,
+  panciotto: { em: '🦺', nome: 'Giubba di cuoio', sprite: 'corpo-cuoio', dove: 'corpo', dif: 1, prezzo: 9, genere: 'f',
                dice: 'Sbagliare fa un po\' meno male.' },
   corazza: { em: '🛡️', nome: 'Corazza', sprite: 'corpo-piastre', dove: 'corpo', famiglia: 'ferro', genere: 'f',
              dif: 2, prezzo: 18, dice: 'Sbagliare fa molto meno male.' },
-  manto: { em: '🧥', nome: 'Manto', sprite: 'corpo-manto', dove: 'corpo', famiglia: 'stoffa',
+  manto: { em: '🧥', nome: 'Mantello', sprite: 'corpo-manto', dove: 'corpo', famiglia: 'stoffa',
            dif: 3, prezzo: 28, dice: 'Sbagliare non fa quasi più male.' },
   // il saio rimette in gioco la casella del corpo senza un numero nuovo: para come il panciotto, tiene in piedi come un amuleto
-  saio: { em: '🥋', nome: 'Saio', sprite: 'corpo-saio', dove: 'corpo', famiglia: 'stoffa',
+  saio: { em: '🥋', nome: 'Tunica', sprite: 'corpo-saio', dove: 'corpo', famiglia: 'stoffa', genere: 'f',
           dif: 1, vita: 4, prezzo: 20,
           dice: 'Para poco, ma ti tiene in piedi quattro punti di vita più a lungo.' },
 
@@ -70,7 +70,7 @@ const BASI = {
 
   // le armi col nome proprio stanno un gradino sopra la scala, non dentro: portano un tratto, non più braccio
   'bipenne-solare': {
-    em: '🔥', nome: 'Bipenne solare', sprite: 'arma-3', dove: 'mano', famiglia: 'asce', mani: 2, genere: 'f',
+    em: '🔥', nome: 'Ascia doppia solare', sprite: 'arma-3', dove: 'mano', famiglia: 'asce', mani: 2, genere: 'f',
     att: 4, luce: 2, prezzo: 36,
     dice: 'Le lame brillano di loro: al buio vedi molto più lontano. Due mani.',
   },

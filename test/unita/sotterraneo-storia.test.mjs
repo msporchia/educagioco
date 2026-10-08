@@ -112,7 +112,7 @@ const tappeAl = n => CAMPAGNA.map((t, i) => ({ chiave: t.chiave, aperta: i <= n,
   uguale('con la roba e il livello attesi il minatore non dice niente', tutti, 0)
   const nudo = dettoDelLivello('cavaliere', scheda('cavaliere', null, 1), CAMPAGNA[1], 1)
   uguale('a mani nude giù per la scalinata, manca l\'arma', nudo && nudo.manca, 'arma')
-  controlla('e lo dice con le cose vere, e da chi andare', /mani nude/.test(nudo.detto) && /armaiolo/.test(nudo.detto), nudo.detto)
+  controlla('e lo dice con le cose vere, e da chi andare', /mani nude/.test(nudo.detto) && /fabbro/.test(nudo.detto), nudo.detto)
   const corta = dettoDelLivello('cavaliere', scheda('cavaliere', { ...robaAttesa('cavaliere', 4), mano: 'spada-corta' }, 4), CAMPAGNA[4], 4)
   controlla('con la spada corta nella scala sommersa: «con quella spada corta»', corta && corta.detto.startsWith('Con quella spada corta'),
             corta && corta.detto)
@@ -130,10 +130,10 @@ const tappeAl = n => CAMPAGNA.map((t, i) => ({ chiave: t.chiave, aperta: i <= n,
 /* ══════════ 4. le missioni: dal fumetto al premio ══════════ */
 {
   // la scalinata è la discesa di adesso (la cripta è fatta): la ragazza ha la collana da chiedere, e l'eremita
-  // la sua Badessa (non l'ha ancora presa); la guardia no, la torre è ancora chiusa. L'albero sta in sotterraneo-missioni
+  // la sua Dama Grigia (non l'ha ancora presa); la guardia no, la torre è ancora chiusa. L'albero sta in sotterraneo-missioni
   const aperta = tappeAl(1)
   uguale('la ragazza ha qualcosa da chiedere: è la missione della scalinata', segnoDi('ragazza', {}, aperta), 'nuova')
-  uguale('anche l\'eremita, se non ha preso la Badessa', segnoDi('eremita', {}, aperta), 'nuova')
+  uguale('anche l\'eremita, se non ha preso la Dama Grigia', segnoDi('eremita', {}, aperta), 'nuova')
   uguale('la guardia no: la torre è ancora chiusa', segnoDi('guardia', {}, aperta), null)
   uguale('chi non ha il segno saluta e basta', cosaDice('guardia', {}, aperta).fase, 'saluto')
   let stati = prendi({}, 'collana', aperta)
