@@ -146,13 +146,13 @@ maggior parte delle volte la vince**, e con la prima arma è comoda.
 
 | scalinata | prima | dopo |
 |---|---|---|
-| a mani nude, a 8/10 | 1·5·3·3 (15%) | 11·18·16·16 (76%) |
+| a mani nude, a 8/10 | 1·5·3·3 (15%) | 10·18·16·16 (75%) |
 | roba attesa, a 6/10 | 7·15·12·17 (64%) | 20·20·17·20 (96%) |
 | roba attesa, a 4/10 | 0·1·0·2 (4%) | 3·8·4·7 (28%) |
-| chi va dritto (storia giocata), 8 · 6 · 4/10 | 83 · 63 · 15% | 98 · 83 · 44% |
+| chi va dritto (storia giocata), 8 · 6 · 4/10 | 83 · 63 · 15% | 100 · 85 · 41% |
 | domande, solo il guardiano · tutto il piano (cavaliere, un seme) | 22 · 75 | 15 · 59 |
 
-- **Il cavaliere resta il più duro** anche nudo (11 su 20): braccio 4, difesa 1
+- **Il cavaliere resta il più duro** anche nudo (10 su 20): braccio 4, difesa 1
   e 21 di vita contro i 28 con la spada corta e lo scudo. Il test pretende il
   70% in media e almeno metà a testa.
 - **La forbice si allarga, non sparisce**: alla scalinata si sta larghi
@@ -188,10 +188,10 @@ su venti, cavaliere · elfa · mago · nano (8 ottobre 2026, coi livelli):
 | attesa, a 8/10 | 20·20·20·20 | 20·20·20·20 | 20·20·20·20 | 20·20·20·20 | 20·20·20·20 | 20·20·20·20 | 20·20·20·20 |
 | attesa, a 6/10 | 20·20·20·20 | 20·20·17·20 | 11·17·14·18 | 7·17·8·19 | 8·18·16·13 | 5·19·15·13 | 9·17·11·18 |
 | attesa, a 4/10 | 13·19·13·20 | 3·8·4·7 | 0·0·0·0 | 0·1·0·1 | 0·3·0·1 | 0·0·0·0 | 0·1·0·0 |
-| una prima, a 8/10 | — | 11·18·16·16 | 18·18·20·19 | 19·19·18·20 | 20·20·19·20 | 13·20·16·20 | 18·20·20·20 |
+| una prima, a 8/10 | — | 10·18·16·16 | 18·18·20·19 | 19·19·18·20 | 20·20·19·20 | 13·20·16·20 | 18·20·20·20 |
 | due avanti, a 4/10 | 20·20·20·20 | 20·20·18·20 | 6·16·5·7 | 3·8·6·3 | 3·6·5·10 | 7·5·0·13 | 1·6·1·11 |
 | due livelli sotto, a 8/10 | 20·20·20·20 | 20·20·20·20 | 20·20·20·19 | 13·19·17·19 | 17·19·19·19 | 8·19·17·15 | 18·20·19·19 |
-| tre livelli sopra, a 4/10 | 20·20·20·20 | 12·14·9·19 | 8·14·10·16 | 6·13·7·12 | 5·11·5·9 | 0·6·10·4 | 0·4·1·3 |
+| tre livelli sopra, a 4/10 | 20·20·20·20 | 12·13·9·18 | 8·14·10·16 | 6·13·7·12 | 5·11·5·9 | 0·6·10·4 | 0·4·1·3 |
 | attesa, gira tutto, a 8/10 (cav · mago) | 19·20 | 20·20 | 20·20 | 20·19 | 20·20 | 17·20 | 20·20 |
 
 - **A otto si arriva in fondo sempre, a sei un po' più di metà, a quattro
@@ -200,7 +200,7 @@ su venti, cavaliere · elfa · mago · nano (8 ottobre 2026, coi livelli):
   miniera (prima dei livelli 49 · 74 · 51 · 69 · 72 · 66%). Il cavaliere resta
   il più duro (25–55%), l'elfa e il nano i più comodi (65–95%), come prima.
 - **Una discesa prima**: a otto ci si arriva quasi sempre dalla torre in
-  giù; la scalinata a mani nude 11·18·16·16 su 20 (il primo avvio, sotto),
+  giù; la scalinata a mani nude 10·18·16·16 su 20 (il primo avvio, sotto),
   e il minatore dice di passare dall'armaiolo.
 - **Due livelli sotto** pesano come una discesa prima; **tre sopra** a
   quattro vincono da 0 a 16 volte su 20: il livello aiuta, non regala.
@@ -212,10 +212,10 @@ su venti, cavaliere · elfa · mago · nano (8 ottobre 2026, coi livelli):
 
 | chi | a 8/10 | a 6/10 | a 4/10 |
 |---|---|---|---|
-| va dritto | 100·98·98·100·96·95·99 | 99·83·78·56·70·59·69 | 94·44·26·6·18·19·21 |
-| gira tutto e spende | 100·99·100·100·100·100·100 | 99·91·95·99·95·93·95 | 94·56·69·39·46·49·46 |
+| va dritto | 100·100·98·100·95·95·99 | 99·85·80·60·70·56·68 | 94·41·25·6·16·19·23 |
+| gira tutto e spende | 100·99·100·100·100·100·100 | 99·93·95·99·98·91·96 | 94·61·73·44·54·45·54 |
 | prima, gira tutto | 100·95·100·100·100·98·91 | 99·61·85·84·83·54·40 | 93·10·29·15·11·8·5 |
-| con 250 gemme da parte | 100 dappertutto | 100·100·98·94·100·85·76 | 100·94·29·20·30·0·0 |
+| con 250 gemme da parte | 100 dappertutto | 100·100·98·95·100·86·76 | 100·91·29·19·33·0·0 |
 | prima, con 250 gemme | 100 dappertutto | 100·100·100·100·98·80·71 | 100·89·84·68·46·9·4 |
 
 (Le due righe «prima» sono dell'8 ottobre, quando la scalinata era più dura:
@@ -232,8 +232,8 @@ le altre colonne non sono cambiate di più di qualche punto, la scalinata sì.)
   ha la forza di tutti, il perché è qui sotto). La spinta più
   alta di prima tiene corti gli scontri: i mostri mordono di più invece di
   avere più ossa.
-- **Le gemme con cui si esce andando dritti** (cavaliere): 12 · 24 · 32 ·
-  53 · 45 · 49 · 54 (prima 10 · 12 · 20 · 23 · 23 · 33 · 27): le gemme
+- **Le gemme con cui si esce andando dritti** (cavaliere): 12 · 23 · 35 ·
+  53 · 42 · 47 · 54 (prima 10 · 12 · 20 · 23 · 23 · 33 · 27): le gemme
   valgono di più a livello alto, come i prezzi
   ([rarita.md](rarita.md)).
 - **Il minimo per scendere** (cavaliere, roba attesa, un seme): 15 · 18 ·
