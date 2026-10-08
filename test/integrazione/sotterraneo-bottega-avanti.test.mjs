@@ -11,7 +11,7 @@
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, allaLinguettaDi } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, allaLinguettaDi, nelDialogo } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
@@ -48,6 +48,7 @@ async function toccaIl(sel) {
 const gemmeBottega = async () => Number((await page.locator('[data-gemme-bottega]').innerText()).match(/\d+/)[0])
 
 await toccaIl('[data-mercante="armaiolo"]')
+await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })   // si parla, e «fammi vedere» apre il banco
 await page.waitForSelector('[data-bottega]', { timeout: 5000 })
 await attendi(page, 500)   // la bottega è cieca per un attimo (Bottega.vue, CIECO)
 
@@ -77,7 +78,7 @@ uguale('nessun «quando avrai finito»', await page.locator('[data-quando]').cou
 await toccaIl('[data-casella-pezzo="scettro"]')
 await page.waitForSelector('[data-pannello][data-cosa="scettro"]', { timeout: 3000 })
 await attendi(page, 200)
-uguale('dice che costa di più', await page.locator('[data-avanti-costa]').count(), 1)
+uguale('il prezzo alto lo dice il cartellino: niente riga che lo spiega', await page.locator('[data-avanti-costa]').count(), 0)
 uguale('il tasto compra', (await page.locator('[data-azione="compra"]').innerText()).replace(/\s+/g, ' ').trim(), `Compra 💎 ${prezzo}`)
 uguale('ed è acceso', await page.locator('[data-azione="compra"]').isDisabled(), false)
 await toccaIl('[data-azione="compra"]')

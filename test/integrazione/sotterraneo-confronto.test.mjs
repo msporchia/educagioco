@@ -13,7 +13,7 @@
    tempo: 40
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, allaLinguettaDi } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, allaLinguettaDi, nelDialogo } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 
@@ -48,6 +48,7 @@ async function toccaIl(sel) {
 const testo = async sel => (await page.locator(sel).innerText()).replace(/\s+/g, '')
 
 await toccaIl('[data-mercante="armaiolo"]')
+await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })   // si parla, e «fammi vedere» apre il banco
 await page.waitForSelector('[data-bottega]', { timeout: 5000 })
 await attendi(page, 500)   // la bottega è cieca per un attimo (Bottega.vue, CIECO)
 

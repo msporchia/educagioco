@@ -19,7 +19,7 @@
    tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo,
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo, nelDialogo,
          lasciaLaDiscesa, vendiNellaBottega, allaLinguettaDi } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
@@ -65,7 +65,11 @@ async function alBanco(chi) {
   // se è già sullo schermo lo si tocca e basta, come un bambino: il rigattiere sta accanto all'erborista, e i
   // tocchi di avvicinamento verso di lui cadrebbero sul banco di lei
   if (!(await aVista(chi))) await vaiVerso(...MERCANTI[chi].accanto)
-  if (!(await page.locator('[data-chiudi]').count())) await toccaIl(`[data-mercante="${chi}"]`)
+  // toccandolo si parla (docs/sotterraneo/dialoghi.md): la prima domanda apre la bottega
+  if (!(await page.locator('[data-bottega]').count())) {
+    if (!(await page.locator(`[data-dialogo="${chi}"]`).count())) await toccaIl(`[data-mercante="${chi}"]`)
+    await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
+  }
   await page.waitForSelector('[data-chiudi]', { timeout: 10000 })
   await attendi(page, 500)    // la bottega è cieca per un attimo, contro il click fantasma (Bottega.vue, CIECO)
 }
@@ -145,7 +149,7 @@ uguale('e la prima è quella delle pozioni', await page.locator('[data-scheda="p
 controlla('in griglia la pozione', await page.locator('[data-casella-pezzo="pozione"]').count() === 1)
 uguale('e le gemme dell\'eroe in vista', await gemmeBottega(), 60)
 controlla('niente di scelto: parla l\'erborista, e dice chi compra la roba',
-          (await page.locator('[data-chi-compra]').innerText()).includes('rigattiere'))
+          (await page.locator('[data-chi-compra]').innerText()).includes('al mercante'))
 /* un tocco sceglie e non compra: il dito sbaglia */
 await toccaIl('[data-casella-pezzo="pozione"]')
 await attendi(page, 200)

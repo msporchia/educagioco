@@ -94,7 +94,11 @@ uguale('strisciando col dito l\'eroe resta dov\'è', await cella(), casa)
 uguale('il minatore ha qualcosa da dire', await page.locator('[data-minatore] .sot-tre-punti').count(), 1)
 await vaiA(MINATORE.accanto)
 await toccaIl('[data-minatore]')
-await page.waitForSelector('[data-fumetto-di="minatore"]', { timeout: 8000 })
+await page.waitForSelector('[data-dialogo="minatore"]', { timeout: 8000 })
+// il dialogo (docs/sotterraneo/dialoghi.md): la prima volta si presenta, poi dice la strada, una pagina per tocco
+for (let n = 0; n < 4 && !(await page.locator('[data-dialogo] [data-detto]').count()); n++) {
+  await attendi(page, 360); await toccaIl('[data-dialogo-testo]')
+}
 const detto = await page.locator('[data-detto]').innerText()
 controlla('il minatore dice dove sta la prossima discesa', detto.includes('La cripta dell\'altare') && detto.includes('altare'), detto)
 controlla('e non parla più di sassi', !detto.includes('sassi'))
@@ -109,9 +113,9 @@ await scatto(page, 'terra-minatore')
 
 /* ---------- 4. una discesa chiusa non fa scendere ---------- */
 const davanti = await cella()
-await tocca(vista.x + vista.width - 40, vista.y + vista.height - 160)
+await tocca(vista.x + vista.width - 40, vista.y + vista.height * 0.3)   // sopra il dialogo, che sta in fondo
 await attendi(page, 300)
-uguale('toccando fuori il fumetto si chiude', await page.locator('[data-fumetto]').count(), 0)
+uguale('toccando fuori il dialogo si chiude', await page.locator('[data-dialogo]').count(), 0)
 // un tocco altrove chiude, e fa anche la sua cosa (docs/core/interfaccia.md): l'eroe parte verso dove si è toccato
 await attendi(page, 300)
 controlla('e quel tocco fa anche camminare', (await cella()) !== davanti, davanti)

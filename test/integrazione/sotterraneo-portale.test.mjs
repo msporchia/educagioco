@@ -20,7 +20,7 @@
    tempo: 120
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo,
-         compraNellaBottega }
+         compraNellaBottega, nelDialogo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -208,6 +208,7 @@ nota(`la sosta pesa ${JSON.stringify(sosta).length} byte`)
 
 /* ---------- 5. dall'erborista ---------- */
 await toccaIl('[data-mercante="erborista"]')
+await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
 await page.waitForSelector('[data-chiudi]', { timeout: 10000 })
 await attendi(page, 500)
 await compraNellaBottega(page, 'pozione', { tocca })

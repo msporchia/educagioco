@@ -272,7 +272,7 @@ await attendi(page, 400)
   await scatto(page, 'rotta-consegna-vicina')
 }
 await toccaIl('[data-personaggio="eremita"]')
-await page.waitForSelector('[data-fumetto-di="eremita"]', { timeout: 30000 })
+await page.waitForSelector('[data-dialogo="eremita"]', { timeout: 30000 })
 uguale('arrivato accanto all\'eremita la freccina sparisce', await page.locator('[data-rotta-terra]').count(), 0)
 
 

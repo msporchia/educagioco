@@ -18,7 +18,7 @@
    tempo: 200
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo,
-         lasciaLaDiscesa } from '../aiuto/browser.mjs'
+         lasciaLaDiscesa, nelDialogo } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { PARTENZA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
@@ -174,10 +174,12 @@ await scatto(page, 'missioni-dettaglio-fatta')
 await toccaIl('[data-azione="vai-da"]')
 await attendi(page, 300)
 uguale('«vai da» chiude il diario', await page.locator('[data-diario]').count(), 0)
-await page.waitForSelector('[data-fumetto-di="mugnaio"] [data-missione="rosicchione"][data-fase="consegna"]', { timeout: 30000 })
-uguale('e l\'eroe va dal mugnaio: il fumetto è aperto', await page.locator('[data-fumetto-di="mugnaio"]').count(), 1)
-await toccaIl('[data-fumetto-di="mugnaio"] [data-azione="consegna"]')
+await page.waitForSelector('[data-dialogo="mugnaio"] [data-missione="rosicchione"][data-fase="consegna"]', { timeout: 30000 })
+uguale('e l\'eroe va dal mugnaio: il dialogo è aperto', await page.locator('[data-dialogo="mugnaio"]').count(), 1)
+await nelDialogo(page, '[data-scelta="consegna"][data-missione="rosicchione"]', { tocca: toccaIl })
 await attendi(page, 700)
+await nelDialogo(page, '[data-scelta="ciao"]', { tocca: toccaIl })
+await attendi(page, 300)
 
 await apriIlDiario()
 const offerta = await page.locator('[data-sezione="ti-aspettano"] li').first().getAttribute('data-missione')

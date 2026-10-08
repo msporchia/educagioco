@@ -18,7 +18,7 @@
    tempo: 240
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo,
-         camminaVerso, lasciaLaDiscesa } from '../aiuto/browser.mjs'
+         camminaVerso, lasciaLaDiscesa, nelDialogo } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { PERSONAGGI, MINATORE } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
@@ -90,34 +90,42 @@ uguale('il mugnaio è lontano: un solo indicatore, e solo per lui (gli altri non
 }
 await scatto(page, 'missioni-bussola')
 await toccaIl('[data-consegna-fuori="mugnaio"]')
-await page.waitForSelector('[data-fumetto-di="mugnaio"] [data-missione="rosicchione"][data-fase="consegna"]', { timeout: 30000 })
-uguale('toccandolo l\'eroe va dal mugnaio e il fumetto è aperto', await page.locator('[data-fumetto-di="mugnaio"]').count(), 1)
+await page.waitForSelector('[data-dialogo="mugnaio"] [data-missione="rosicchione"][data-fase="consegna"]', { timeout: 30000 })
+uguale('toccandolo l\'eroe va dal mugnaio e si parla', await page.locator('[data-dialogo="mugnaio"]').count(), 1)
 uguale('arrivati, il mugnaio è in vista e l\'indicatore sparisce', await page.locator('[data-consegna-fuori]').count(), 0)
 {
   const v = await page.locator('[data-terra]').boundingBox()
-  await tocca(v.x + 12, v.y + v.height / 2)   // sul prato: il fumetto si chiude
+  await tocca(v.x + 12, v.y + v.height * 0.3)   // sul prato, sopra il dialogo: si chiude
   await attendi(page, 300)
 }
-uguale('un tocco sul prato chiude il fumetto', await page.locator('[data-fumetto]').count(), 0)
+uguale('un tocco sul prato chiude il dialogo', await page.locator('[data-dialogo]').count(), 0)
 await camminaVerso(page, ragazza.accanto, { tocca })
 
 /* ---------- 2. si prendono due missioni ---------- */
 await toccaIl('[data-personaggio="ragazza"]')
-await page.waitForSelector(`[data-fumetto-di="ragazza"] [data-missione="goblin"][data-fase="offre"]`, { timeout: 8000 })
-const chiede = await page.locator('[data-fumetto]').innerText()
-controlla('il fumetto dice cosa, dove, il premio e le monete', chiede.includes('Grattanaso') && chiede.includes(CAMPAGNA[DISCESA].nome) &&
-          chiede.includes('piano 1') && chiede.includes(`💎 ${GOBLIN.premio.gemme}`) && chiede.includes(`🪙 ${GOBLIN.premio.monete}`), chiede)
-await toccaIl('[data-fumetto-di="ragazza"] [data-azione="prendi-missione"]')
+await page.waitForSelector(`[data-dialogo="ragazza"] [data-missione="goblin"][data-fase="offre"]`, { timeout: 8000 })
+// la richiesta è a pagine: si legge tutta, e alla fine «ci penso io» dice il premio
+let chiede = ''
+for (let n = 0; n < 4; n++) {
+  chiede += ' ' + await page.locator('[data-dialogo] [data-riga]').innerText()
+  if (await page.locator('[data-dialogo][data-ultima]').count()) break
+  await attendi(page, 360); await toccaIl('[data-dialogo-testo]')
+}
+await nelDialogo(page, null, { tocca: toccaIl })
+chiede += ' ' + await page.locator('[data-scelta="prendi"]').innerText()
+controlla('il dialogo dice cosa, dove, il premio e le monete', chiede.includes('Grattanaso') && chiede.includes('torre in rovina') &&
+          chiede.includes('primo piano') && chiede.includes(`💎 ${GOBLIN.premio.gemme}`) && chiede.includes(`🪙 ${GOBLIN.premio.monete}`), chiede)
+await toccaIl('[data-dialogo] [data-scelta="prendi"]')
 await attendi(page, 500)
-uguale('presa, il fumetto la ricorda', await page.locator('[data-fumetto-di="ragazza"] [data-missione="goblin"][data-fase="aspetta"]').count(), 1)
+uguale('presa, lei ringrazia', await page.locator('[data-dialogo="ragazza"] [data-missione="goblin"][data-fase="presa"]').count(), 1)
 uguale('nell\'avventura il goblin è preso', (await avventura()).missioni?.goblin, 'presa')
 uguale('la ragazza adesso ha il punto di domanda grigio', await page.locator('[data-personaggio="ragazza"]').getAttribute('data-segno'), 'attesa')
 
 await camminaVerso(page, PERSONAGGI.guardia.accanto, { tocca })
 await scatto(page, 'missioni-villaggio-guardia')
 await toccaIl('[data-personaggio="guardia"]')
-await page.waitForSelector(`[data-fumetto-di="guardia"] [data-missione="chiavi"][data-fase="offre"]`, { timeout: 8000 })
-await toccaIl('[data-fumetto-di="guardia"] [data-azione="prendi-missione"]')
+await page.waitForSelector(`[data-dialogo="guardia"] [data-missione="chiavi"][data-fase="offre"]`, { timeout: 8000 })
+await nelDialogo(page, '[data-scelta="prendi"][data-missione="chiavi"]', { tocca: toccaIl })
 await attendi(page, 500)
 const dopoDue = (await avventura()).missioni
 uguale('e la guardia le sue chiavi: la prima non ha fermato la seconda', dopoDue?.chiavi, 'presa')
@@ -177,17 +185,20 @@ const monete = (await leggiProfilo(page)).coins
 const gemmePrima = (await avventura()).roba?.gemme
 await camminaVerso(page, PERSONAGGI.mugnaio.accanto, { tocca })
 await toccaIl('[data-personaggio="mugnaio"]')
-await page.waitForSelector('[data-fumetto-di="mugnaio"] [data-missione="rosicchione"][data-fase="consegna"]', { timeout: 8000 })
-await attendi(page, 300)
+await page.waitForSelector('[data-dialogo="mugnaio"] [data-missione="rosicchione"][data-fase="consegna"]', { timeout: 8000 })
+await nelDialogo(page, null, { tocca: toccaIl })
 await scatto(page, 'missioni-consegna')
-await toccaIl('[data-fumetto-di="mugnaio"] [data-azione="consegna"]')
+await toccaIl('[data-dialogo] [data-scelta="consegna"]')
 await attendi(page, 700)
 const a = await avventura()
 uguale('consegnata', a.missioni?.rosicchione, 'consegnata')
 controlla('il gioiello va addosso o in tasca', a.roba?.dito === 'amuleto-azzurro' || (a.roba?.zaino || []).includes('amuleto-azzurro'), JSON.stringify(a.roba))
 uguale('le gemme non cambiano (il premio è il gioiello)', a.roba?.gemme, gemmePrima)
 uguale('le monete: il regalo, le domande in più', (await leggiProfilo(page)).coins, monete + ROSICCHIONE.premio.monete)
-controlla('e il gioco lo dice', (await page.locator('[data-avviso-terra]').innerText()).includes(`🪙 ${ROSICCHIONE.premio.monete}`))
+for (let n = 0; n < 6 && !(await page.locator('[data-riga][data-premio]').count()); n++) {
+  await attendi(page, 360); await toccaIl('[data-dialogo-testo]')
+}
+controlla('e il mugnaio lo dice, monete comprese', (await page.locator('[data-riga][data-premio]').innerText()).includes(`🪙 ${ROSICCHIONE.premio.monete}`))
 uguale('consegnata una, si libera un posto: la Dama Grigia ha il suo «!»', await segni(), 'eremita:nuova,guardia:attesa,ragazza:attesa')
 uguale('il diario conta di nuovo le aperte: due in mano e una offerta', await page.locator('[data-diario-n]').innerText(), '3')
 await scatto(page, 'missioni-fatta')
