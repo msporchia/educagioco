@@ -22,7 +22,7 @@ const inLettere = anniInLettere
         · si sposta solo la mira delle domande, i giochi restano come li hai messi
       </template>
       <template v-else-if="perde">
-        · <span class="perde" data-perde>⚠ tornano di partenza: {{ perde }}</span>
+        · <span class="perde" data-perde>⚠️ tornano di partenza: {{ perde }}</span>
       </template>
       <template v-else>
         · cambia fascia: giochi e domande ripartono dai valori di quell'età

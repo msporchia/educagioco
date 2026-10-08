@@ -150,7 +150,7 @@ const valoriDi = p => (inCima.value && inCima.value.progetto === p.id ? inCima.v
             :disabled="!indietro" @click="emit('annulla')">↶</button>
     </div>
     <div v-if="inMano && !sola" class="cst-mano" data-mano :data-copia="mano.copia ? '' : null">
-      <span>{{ mano.copia ? '⧉ Copi' : '✂ Sposti' }} <b>{{ inMano.icona }} {{ inMano.frase }}</b>
+      <span>{{ mano.copia ? '⧉ Copi' : '✂️ Sposti' }} <b>{{ inMano.icona }} {{ inMano.frase }}</b>
         <template v-if="inMano.dentro"> con {{ inMano.dentro === 1 ? 'la riga' : `le ${inMano.dentro} righe` }} che ha dentro</template>:
         tocca 📥 dove va.</span>
       <button type="button" data-azione="lascia" @click="emit('mano', null)">lascia</button>

@@ -45,9 +45,9 @@ export const WORDS = [
   ['pink','rosa','','c'],['grey','grigio','','c'],['gold','oro','','c'],
   ['silver','argento','','c'],['colour','colore','','c'],
   // ---- numeri ----
-  ['one','uno','1️⃣','n'],['two','due','2️⃣','n'],['three','tre','3️⃣','n'],
-  ['four','quattro','4️⃣','n'],['five','cinque','5️⃣','n'],['six','sei','6️⃣','n'],
-  ['seven','sette','7️⃣','n'],['eight','otto','8️⃣','n'],['nine','nove','9️⃣','n'],
+  ['one','uno','1','n'],['two','due','2','n'],['three','tre','3','n'],
+  ['four','quattro','4','n'],['five','cinque','5','n'],['six','sei','6','n'],
+  ['seven','sette','7','n'],['eight','otto','8','n'],['nine','nove','9','n'],
   ['ten','dieci','🔟','n'],
   ['eleven','undici','','n'],['twelve','dodici','','n'],['thirteen','tredici','','n'],
   ['fourteen','quattordici','','n'],['fifteen','quindici','','n'],['sixteen','sedici','','n'],

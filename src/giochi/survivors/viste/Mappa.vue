@@ -38,8 +38,8 @@ function vai(quale) {
         <span class="sv-faccia em">{{ ripresa.icona }}</span>
         <b>{{ ripresa.nome }}</b>
         <i class="em">
-          <template v-if="ripresa.libera">⏱ {{ ripresa.tempo }}s resistiti</template>
-          <template v-else>⏱ mancano {{ ripresa.restano }}s</template>
+          <template v-if="ripresa.libera">⏱️ {{ ripresa.tempo }}s resistiti</template>
+          <template v-else>⏱️ mancano {{ ripresa.restano }}s</template>
           · ❤️ {{ ripresa.cuori }}/{{ ripresa.cuoriMax }} · livello {{ ripresa.livello }}
         </i>
       </p>

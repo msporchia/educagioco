@@ -342,7 +342,7 @@ export const TORRI = {
          stadi: ['🔮', '✨', '🧙'],
          raggio: 104, danno: 25, ricarica: 1.5,  area: 42, descr: 'onda magica che colpisce a zona',
          rami: {
-           veleno: { nome: 'Veleno', segno: '☠', colore: '#61b53a',
+           veleno: { nome: 'Veleno', segno: '☠️', colore: '#61b53a',
                      descr: 'colpisce piano ma il male continua da solo' },
            catena: { nome: 'Catena', segno: '⚡', colore: '#c48bff',
                      descr: 'il colpo rimbalza sui nemici vicini' },

@@ -81,7 +81,7 @@ onUnmounted(() => {
         </div>
         <div class="sv-spazio"></div>
         <div class="sv-gettone em" :class="{ 'sv-oltre': cruscotto.oltre }">
-          {{ cruscotto.oltre ? '🔥' : '⏱' }} <b>{{ orologio }}</b>
+          {{ cruscotto.oltre ? '🔥' : '⏱️' }} <b>{{ orologio }}</b>
         </div>
         <div class="sv-gettone em">💀 <b>{{ cruscotto.uccisi }}</b></div>
       </div>

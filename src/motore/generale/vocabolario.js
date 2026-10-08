@@ -190,7 +190,7 @@ export const VERBI = {
      una domanda dove una domanda non ci starebbe: dentro il ramo di un
      bivio non entra un altro bivio, ma ci entra un `esegui`, e la
      seconda domanda si fa di là. */
-  esegui:    { et: '▶️', cl: 'chiama', nome: 'esegui', grado: 3, accetta: ['routine'] },
+  esegui:    { et: '▶', cl: 'chiama', nome: 'esegui', grado: 3, accetta: ['routine'] },
 }
 
 export const GRADI = { 1: 'un posto alla volta', 2: 'un compito', 3: 'una strategia' }
@@ -233,7 +233,7 @@ export const BLOCCHI = {
      chiamata, non un lancio, e il personaggio resta uno solo.
      Il nome lo mette il gioco («azione 1», «azione 2»): a sei anni
      scrivere un nome è una tastiera in mezzo al pensiero. */
-  routine: { et: '▶️', cl: 'chiama', nome: 'azione',
+  routine: { et: '▶', cl: 'chiama', nome: 'azione',
              che: 'una fila di ordini con un nome. Non parte da sola: la chiami ' +
                   'con «esegui», e quando finisce si riprende da dov\'eri. Dentro ' +
                   'ci può stare una domanda — ed è così che si fa una seconda ' +

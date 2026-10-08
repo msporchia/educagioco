@@ -15,7 +15,7 @@ const props = defineProps({
 })
 defineEmits(['tocca'])
 
-const NUMERI = ['1️⃣', '2️⃣', '3️⃣', '4️⃣']
+const NUMERI = ['1', '2', '3', '4']
 
 // `--pd-riga` (vignette per riga) e `--pd-file` (righe in tutto) sono le
 // due misure che il foglio di stile usa per dimensionare una vignetta:
@@ -92,6 +92,6 @@ const inColonna = computed(() => {
       </div>
     </template>
 
-    <div v-if="fase === 'vinta'" class="pd-spunta em">✔️</div>
+    <div v-if="fase === 'vinta'" class="pd-spunta em">✅</div>
   </div>
 </template>

@@ -133,7 +133,7 @@ const A_MANO = [
       </section>
 
       <section class="gruppo">
-        <h2>⚙️ Interruttori di {{ chi }}</h2>
+        <h2>🔧 Interruttori di {{ chi }}</h2>
         <button :class="['leva', { acceso: prova }]" data-azione="sperimentali"
                 @click="accendiSperimentali(!prova)"><span>🧪 I giochi in prova in home</span><i></i></button>
         <button :class="['leva', { acceso: aperto }]" data-azione="tutto-aperto"

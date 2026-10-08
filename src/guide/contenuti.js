@@ -534,7 +534,7 @@ export const AIUTI = {
       'Il robot non è una persona: non indovina cosa volevi, e da solo non fa niente. Fa **alla lettera** quello che gli scrivi, una riga dopo l\'altra — anche quando è sbagliato.',
       { titolo: 'Come si scrive', righe: [
         'Si tocca «＋», si sceglie un blocco dalla cassetta, e si riempiono le caselle toccandole: tutto quello che ha il ▾ si cambia. Una **N** è un numero ancora da scegliere, un **?** una freccia o un colore.',
-        'Toccando una riga compaiono i suoi tasti: ✂ la **sposta** e ⧉ la **copia**, poi si tocca 📥 dove va — anche dentro un ripeti, o in un progetto.',
+        'Toccando una riga compaiono i suoi tasti: ✂️ la **sposta** e ⧉ la **copia**, poi si tocca 📥 dove va — anche dentro un ripeti, o in un progetto.',
         'Il robot cammina e cade: per salire si mette un mattone ↓ sotto i piedi e ci sale sopra. I mattoni si posano anche ↘ ↙ in basso, dove andrà il piede: è così che si fa un ponte.',
         'Un **progetto** è un pezzo di programma con un nome, che si scrive una volta e si chiama quante volte vuoi. Le sue **misure** sono i numeri che riceve.',
         'Gli **attrezzi** 🔒 sono progetti già scritti — la torre, il muro, l\'albero — che si chiamano come gli altri e non si cambiano. Sotto il nome dicono dove lasciano il robot.',

@@ -60,7 +60,7 @@ export const SEGNALI = {
      `elementi/porta.js`, e il perché in `domande/sentito.js`: la
      domanda che lo controlla oggi guarda solo SE un segnale è mai
      arrivato, non da dove). */
-  scatto: { nome: 'uno scatto',      em: '⚙️', col: '#6b7a99', voce: 5 },
+  scatto: { nome: 'uno scatto',      em: '🔧', col: '#6b7a99', voce: 5 },
   tramontana: { nome: 'libero a tramontana', em: '⬆️', col: '#4a86e8' },
   mezzogiorno: { nome: 'libero a mezzogiorno', em: '⬇️', col: '#e8a33f' },
 }
@@ -225,7 +225,7 @@ export class Mondo {
     this.routine = trovate
     for (const k of Object.keys(this.cose))
       if (this.cose[k] && this.cose[k].tipo === 'routine') delete this.cose[k]
-    for (const k in trovate) this.cose[k] = { id: k, tipo: 'routine', nome: k, em: '▶️' }
+    for (const k in trovate) this.cose[k] = { id: k, tipo: 'routine', nome: k, em: '▶' }
     return trovate
   }
 

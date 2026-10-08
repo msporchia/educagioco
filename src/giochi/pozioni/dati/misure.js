@@ -114,7 +114,7 @@ export const INGREDIENTI = [
 export const POZIONI = [
   { nome: 'Pozione del Coraggio',       emoji: '🦁', colore: '#e2603a' },
   { nome: 'Pozione dell\'Invisibilità', emoji: '👻', colore: '#9fb8d4' },
-  { nome: 'Elisir di Volo',             emoji: '🪽', colore: '#6ec6ff' },
+  { nome: 'Elisir di Volo',             emoji: '🪶', colore: '#6ec6ff' },
   { nome: 'Filtro della Risata',        emoji: '😂', colore: '#f2c33d' },
   { nome: 'Pozione della Forza',        emoji: '💪', colore: '#c0453f' },
   { nome: 'Sciroppo dei Sogni',         emoji: '🌜', colore: '#8b7ed8' },

@@ -6,7 +6,7 @@ export const FONDO = 0.15
 
 export const BISOGNI = {
   pancia: { nome: 'Pancia', icona: '🍖', ore: 14, colore: '#e0a33c' },
-  pelo:   { nome: 'Pelo',   icona: '🪮', ore: 30, colore: '#7fb4e0' },
+  pelo:   { nome: 'Pelo',   icona: '🖌️', ore: 30, colore: '#7fb4e0' },
   gioco:  { nome: 'Voglia di giocare', icona: '🎾', ore: 20, colore: '#8fcf6f' },
 }
 
@@ -54,7 +54,7 @@ export const cibiComprati = CIBI.filter(c => !c.da)
 
 // La copertina è la prima coccola pagata col granaio: dà un mestiere alla lana.
 export const COCCOLE = [
-  { id: 'spazzola', bisogno: 'pelo',  nome: 'Spazzolalo',   emoji: '🪮', quanto: 0.5,  prezzo: 1 },
+  { id: 'spazzola', bisogno: 'pelo',  nome: 'Spazzolalo',   emoji: '🖌️', quanto: 0.5,  prezzo: 1 },
   { id: 'gioca',    bisogno: 'gioco', nome: 'Gioca con lui', emoji: '🎾', quanto: 0.55, prezzo: 1 },
   { id: 'copertina', bisogno: 'pelo', nome: 'Copertina di lana', emoji: '🧶',
     quanto: 0.95, prezzo: 0, da: 'lana' },

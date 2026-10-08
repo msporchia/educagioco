@@ -47,7 +47,7 @@ const DIVISE = [
   ['figlio', ['fi', 'glio'], '👦'],
 
   ['gomma', ['gom', 'ma'], '🧽'], ['cappello', ['cap', 'pel', 'lo'], '🎩'],
-  ['sette', ['set', 'te'], '7️⃣'], ['babbo', ['bab', 'bo'], '👨'],
+  ['sette', ['set', 'te'], '7'], ['babbo', ['bab', 'bo'], '👨'],
   ['pizza', ['piz', 'za'], '🍕'], ['palla', ['pal', 'la'], '⚽'],
   ['nonna', ['non', 'na'], '👵'], ['carrello', ['car', 'rel', 'lo'], '🛒'],
   ['riccio', ['ric', 'cio'], '🦔'], ['freccia', ['frec', 'cia'], '🎯'],

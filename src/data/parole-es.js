@@ -46,9 +46,9 @@ export const PAROLE_ES = [
   ['rosado','rosa','','c'],['gris','grigio','','c'],['dorado','dorato','','c'],
   ['plateado','argento','','c'],['color','colore','','c'],
   // ---- numeri ----
-  ['uno','uno','1️⃣','n'],['dos','due','2️⃣','n'],['tres','tre','3️⃣','n'],
-  ['cuatro','quattro','4️⃣','n'],['cinco','cinque','5️⃣','n'],['seis','sei','6️⃣','n'],
-  ['siete','sette','7️⃣','n'],['ocho','otto','8️⃣','n'],['nueve','nove','9️⃣','n'],
+  ['uno','uno','1','n'],['dos','due','2','n'],['tres','tre','3','n'],
+  ['cuatro','quattro','4','n'],['cinco','cinque','5','n'],['seis','sei','6','n'],
+  ['siete','sette','7','n'],['ocho','otto','8','n'],['nueve','nove','9','n'],
   ['diez','dieci','🔟','n'],
   ['once','undici','','n'],['doce','dodici','','n'],['trece','tredici','','n'],
   ['catorce','quattordici','','n'],['quince','quindici','','n'],['dieciséis','sedici','','n'],

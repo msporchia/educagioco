@@ -81,8 +81,8 @@ const dovEravamo = computed(() => {
   const s = Math.max(0, Math.ceil(c.oltre ? c.extra : c.infinita ? c.tempo : c.restano))
   const mmss = `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
   return c.infinita || c.oltre
-    ? `⏱ ${mmss} in campo · livello ${c.livello}`
-    : `⏱ mancano ${mmss} · livello ${c.livello}`
+    ? `⏱️ ${mmss} in campo · livello ${c.livello}`
+    : `⏱️ mancano ${mmss} · livello ${c.livello}`
 })
 
 function vuoto() {
