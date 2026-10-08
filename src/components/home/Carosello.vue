@@ -7,6 +7,7 @@ let ricordato = null
 // Il carosello delle copertine e l'indice di tutti i giochi. Vedi docs/core/home.md.
 import { ref, computed, watch } from 'vue'
 import Copertina from './Copertina.vue'
+import { DIPINTE } from './copertine-dipinte.js'
 import Salvadanaio from '../varieta/Salvadanaio.vue'
 import { MODI } from '../../data/aree.js'
 
@@ -108,9 +109,9 @@ const modo = g => MODI[g.come] ? `${MODI[g.come].emoji} ${MODI[g.come].nome}` : 
       <button v-for="(g, i) in giochi" :key="g.chiave" type="button"
               class="carta gioco" :class="[g.classe, { davanti: i === qui }]" :data-gioco="g.chiave"
               :tabindex="i === qui ? 0 : -1" :aria-hidden="Math.abs(i - qui) > 2 ? 'true' : null"
-              :style="[{ width: L + 'px', height: A + 'px', marginLeft: -L / 2 + 'px' , background: g.copertina?.fondo || '#8593a8' }, stile(i)]"
+              :style="[{ width: L + 'px', height: A + 'px', marginLeft: -L / 2 + 'px' , background: DIPINTE[g.chiave]?.fondo || g.copertina?.fondo || '#8593a8' }, stile(i)]"
               @click="tocca(i)">
-        <Copertina class="arte" :style="{ height: ARTE + 'px' }" :copertina="g.copertina" :ico="g.ico" :grande="58" />
+        <Copertina class="arte" :style="{ height: ARTE + 'px' }" :chiave="g.chiave" :copertina="g.copertina" :ico="g.ico" :grande="58" />
         <span class="pan" :style="pannello(i)">
           <b>{{ g.nome }}</b>
           <i>{{ g.che }}</i>
@@ -126,7 +127,10 @@ const modo = g => MODI[g.come] ? `${MODI[g.come].emoji} ${MODI[g.come].nome}` : 
     <div class="indice">
       <button v-for="(g, i) in giochi" :key="g.chiave" type="button"
               :class="{ on: i === qui, ultimo: g.chiave === ultimo }"
-              :data-indice="g.chiave" :aria-label="g.nome" @click="vai(i)">{{ g.ico }}</button>
+              :data-indice="g.chiave" :aria-label="g.nome" @click="vai(i)">
+        <img v-if="DIPINTE[g.chiave]" :src="DIPINTE[g.chiave].icona" alt="" draggable="false">
+        <template v-else>{{ g.ico }}</template>
+      </button>
     </div>
   </div>
 </template>
@@ -155,10 +159,11 @@ const modo = g => MODI[g.come] ? `${MODI[g.come].emoji} ${MODI[g.come].nome}` : 
 .fr.sx { left:20px } .fr.dx { right:20px }
 .fr:disabled { opacity:0; pointer-events:none }
 
-.indice { display:grid; grid-template-columns:repeat(auto-fill, minmax(42px, 1fr)); gap:6px; margin-top:14px }
-.indice button { position:relative; height:48px; border-radius:12px; font-size:26px; line-height:1;
+.indice { display:grid; grid-template-columns:repeat(auto-fill, minmax(56px, 1fr)); gap:8px; margin-top:14px }
+.indice button { position:relative; aspect-ratio:1; border-radius:14px; font-size:32px; line-height:1;
                  background:#fff; box-shadow:0 1px 2px #1f243312 }
-.indice button.on { box-shadow:inset 0 0 0 2px #1f2433 }
+.indice img { position:absolute; inset:0; width:100%; height:100%; border-radius:inherit; pointer-events:none }
+.indice button.on { box-shadow:0 0 0 2px #f6f7f9, 0 0 0 4px #1f2433 }
 .indice button.ultimo::after { content:""; position:absolute; top:-3px; right:-3px; width:9px; height:9px;
                                border-radius:50%; background:#ffd54f; box-shadow:0 0 0 2px #f6f7f9 }
 </style>

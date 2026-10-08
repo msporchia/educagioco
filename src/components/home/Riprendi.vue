@@ -13,7 +13,7 @@ defineEmits(['apri'])
 <template>
   <button class="riprendi" :data-riprendi="gioco.chiave" @click="$emit('apri', gioco.chiave)">
     <img v-if="immagine" class="arte ritaglio" :src="immagine" alt="" data-ritaglio>
-    <Copertina v-else class="arte" :copertina="gioco.copertina" :ico="gioco.ico" :grande="36" />
+    <Copertina v-else class="arte" :chiave="gioco.chiave" quadrata :copertina="gioco.copertina" :ico="gioco.ico" :grande="36" />
     <span class="parole">
       <b>riprendi da qui</b>
       <strong>{{ gioco.nome }}</strong>
