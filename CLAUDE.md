@@ -138,6 +138,9 @@ Una riga ciascuna; il perché sta nel documento indicato.
   (`npm run tara`, un test confronta la firma), `docs/apprendimento/livelli-delle-domande.md`
   (`npm run quiz:livelli`), `src/data/voci*.js` (`npm run voci`, e se dice
   «non incise» si rilancia). → `docs/core/comandi.md`
+- **Un'emoji nuova vuole `npm run emoji`**: il gioco disegna le emoji col suo font
+  (Twemoji), tagliato a quelle usate; se ci si scorda, `unita/emoji` è rosso.
+  → `docs/core/emoji.md`
 - **Un `v-if` che non si spegne mai non rimonta**: un componente riusato si
   porta dietro lo stato; si azzera da sé con un `watch`. → `docs/core/interfaccia.md`
 - **Un `setTimeout` scatta anche a schermo spento** e `performance.now()`

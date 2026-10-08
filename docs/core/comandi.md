@@ -33,6 +33,7 @@ pubblicato.** Per controllare solo che il build passi:
 | comando | riscrive | quando |
 |---|---|---|
 | `npm run tara` | `src/data/taratura-castello.js` | dopo aver toccato prezzi, potenza delle torri o tappe del castello |
+| `npm run emoji` | `src/emoji/emoji.woff2`, `emoji.css`, `strumenti/emoji/elenco.json` | dopo aver scritto un'emoji nuova in `src/` ([emoji.md](emoji.md)); vuole Python con `fonttools` e `brotli` (si installano da soli in `.venv-emoji/`) |
 | `npm run voci` (`-- --lingua es`) | `src/data/voci.js`, `voci-es.js` | dopo aver aggiunto parole da pronunciare ([strumenti.md](strumenti.md)) |
 | `npm run scatti` (`clip`, `castello`…) | le immagini e le clip di `docs/img/` | quando una schermata cambia faccia ([strumenti.md](strumenti.md)) |
 | `npm run quiz:livelli` | `docs/apprendimento/livelli-delle-domande.md` | dopo aver toccato i `livelli:` di un modulo |
@@ -81,6 +82,7 @@ testa, e una modifica sparisce senza rumore alla prossima rigenerazione.
 |---|---|
 | `src/data/taratura-castello.js` | `npm run tara` — un test confronta una firma e diventa rosso se è stantio |
 | `src/data/voci.js`, `voci-es.js` | `npm run voci` |
+| `src/emoji/*`, `strumenti/emoji/elenco.json` | `npm run emoji` — `unita/emoji` diventa rosso se un'emoji di `src/` non c'è |
 | `src/giochi/fattoria/dati/atlante.js`, `src/giochi/sotterraneo/dati/atlante.js` | `atlante.py` |
 | `src/giochi/castello/dati/vestiti.js`, `figure.js` | `vesti.py --atlante` |
 | `src/giochi/sotterraneo/dati/terra-mappa.js` | `terra-di-sopra.py` — `unita/sotterraneo-terra` diventa rosso se la maschera o i posti non sono quelli del foglietto |
