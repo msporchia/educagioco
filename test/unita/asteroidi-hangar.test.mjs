@@ -4,10 +4,11 @@
 import { SCALETTA } from '../../src/data/asteroidi.js'
 import { TINTE, DISEGNI, STEMMI, DI_SERIE, FILA_REGALI, REGALI_VOLO, REGALI_PER_TAPPA,
          regaliDellaTappa, tipoDi, idDi } from '../../src/data/hangar.js'
-import { hangarDi, possiede, pacchiDi, vintaTappa, vintoVolo, bossNelVolo, scegli, livrea,
+import { hangarDi, possiede, pacchiDi, vintaTappa, vintoVolo, paccoNelVolo, prossimoDelVolo,
+         bossNelVolo, scegli, livrea,
          aspettoDi, visto } from '../../src/motore/asteroidi/hangar.js'
 import { chiaveDi } from '../../src/motore/asteroidi/sosta.js'
-import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
+import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 1. il catalogo ══════════ */
 {
@@ -16,10 +17,9 @@ import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
   uguale('nessun regalo è doppio', new Set(FILA_REGALI).size, FILA_REGALI.length)
   controlla('nessun regalo è di serie', FILA_REGALI.every(p => !DI_SERIE.includes(p)))
   const esiste = p => ({ t: TINTE.map(t => t.id), d: DISEGNI, s: STEMMI })[tipoDi(p)].includes(idDi(p))
-  const delVolo = REGALI_VOLO.map(r => r.p)
+  const delVolo = REGALI_VOLO
   controlla('ogni regalo esiste', [...FILA_REGALI, ...delVolo, ...DI_SERIE].every(esiste))
   controlla('i pezzi del volo non li dà nessuna tappa', delVolo.every(p => !FILA_REGALI.includes(p)))
-  controlla('e salgono di livello', REGALI_VOLO.every((r, i) => !i || r.da > REGALI_VOLO[i - 1].da))
   controlla('ogni tappa ne ha due diversi', SCALETTA.every(v => regaliDellaTappa(v.pos).length === 2))
 }
 
@@ -38,18 +38,22 @@ import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
   uguale('guardati, non sono più nuovi', h.nuovi.length, 0)
 }
 
-/* ══════════ 3. il volo: solo chi va più in alto ══════════ */
+/* ══════════ 3. il volo: più in alto, più spesso ══════════ */
 {
-  const h = hangarDi({})
   controlla('una nave madre ogni tre livelli', bossNelVolo(3) && bossNelVolo(9) && !bossNelVolo(4) && !bossNelVolo(0))
-  const pezzoDa = da => REGALI_VOLO.find(r => r.da === da).p
-  uguale('la nave madre del 9 regala il pezzo del 9, non quelli sotto', vintoVolo(h, 9), pezzoDa(9))
-  uguale('la stessa altezza non regala', vintoVolo(h, 9), null)
-  uguale('più in basso nemmeno', vintoVolo(h, 6), null)
-  uguale('più in alto sì, il suo', vintoVolo(h, 12), pezzoDa(12))
-  uguale('molto più in alto, il più alto che può dare', vintoVolo(h, 30), pezzoDa(21))
-  uguale('e poi quelli rimasti, dall\'alto', vintoVolo(h, 33), pezzoDa(18))
-  uguale('dal livello 3 si comincia dal basso', vintoVolo(hangarDi({}), 3), pezzoDa(3))
+  uguale('al 3 una volta su tre', paccoNelVolo(3), 1 / 3)
+  uguale('al 6 una su due', paccoNelVolo(6), 1 / 2)
+  uguale('al 9 due su tre', paccoNelVolo(9), 2 / 3)
+  stessaLista('dal 12 sempre', [12, 15, 30].map(paccoNelVolo), [1, 1, 1])
+  const h = hangarDi({})
+  uguale('al 3 col dado basso il pacco c\'è', vintoVolo(h, 3, 0.2), REGALI_VOLO[0])
+  uguale('col dado alto no', vintoVolo(h, 3, 0.5), null)
+  uguale('il 6 regala il pezzo dopo, non uno del suo livello', vintoVolo(h, 6, 0.4), REGALI_VOLO[1])
+  uguale('rifare un livello basso regala ancora', vintoVolo(h, 3, 0), REGALI_VOLO[2])
+  uguale('dal 12 anche col dado più alto', vintoVolo(h, 12, 0.999), REGALI_VOLO[3])
+  for (const _ of REGALI_VOLO) vintoVolo(h, 12, 0)
+  controlla('i pezzi del volo si prendono tutti', REGALI_VOLO.every(p => possiede(h, p)) && !prossimoDelVolo(h))
+  uguale('poi più niente', vintoVolo(h, 30, 0), null)
 }
 
 /* ══════════ 4. si sceglie solo quello che si ha ══════════ */

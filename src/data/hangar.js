@@ -38,7 +38,7 @@ export const REGALI_PER_TAPPA = 2
 export const BOSS_VOLO_OGNI = 3          // il volo ha un boss ogni tre livelli
 
 // Le tappe regalano tinte, disegni e stemmi a turno, nell'ordine della
-// fila; il volo regala i pezzi suoi, e i migliori solo dalle navi madri alte.
+// fila; il volo regala i pezzi suoi, uno dopo l'altro.
 const intreccia = (...file) => {
   const out = []
   for (let i = 0; file.some(f => i < f.length); i++)
@@ -52,11 +52,12 @@ export const FILA_REGALI = intreccia(
   DISEGNI.map(d => pezzo('d', d)),
   STEMMI.filter(s => s !== 'stella').map(s => pezzo('s', s)),
 )
-// `da`: il livello da cui una nave madre del volo può regalarlo
-export const REGALI_VOLO = [
-  { p: 's:stella', da: 3 }, { p: 't:argento', da: 6 }, { p: 't:bronzo', da: 9 },
-  { p: 't:smeraldo', da: 12 }, { p: 't:zaffiro', da: 15 }, { p: 't:rubino', da: 18 },
-  { p: 't:oro', da: 21 },
+// i pezzi del volo, nell'ordine in cui arrivano
+export const REGALI_VOLO = ['s:stella', 't:argento', 't:bronzo', 't:smeraldo',
+                            't:zaffiro', 't:rubino', 't:oro']
+// quanto spesso la nave madre del volo lascia il pacco, dal livello `da` in su
+export const PACCO_VOLO = [
+  { da: 0, volte: 1 / 3 }, { da: 6, volte: 1 / 2 }, { da: 9, volte: 2 / 3 }, { da: 12, volte: 1 },
 ]
 
 export const regaliDellaTappa = pos =>

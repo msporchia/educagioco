@@ -39,12 +39,15 @@ lascia un pacco per l'hangar ([hangar.md](hangar.md)).
 - **Arriva al livello 3, 6, 9…**, cioè ogni quindici centri; abbattuta dà una
   vita e un gettone, come prima il boss. Non arriva al livello da cui si parte:
   chi riparte dal 15 la incontra al 18.
-- **Regala solo più in alto di prima**: un pacco per ogni nave madre
-  abbattuta a un livello più alto di tutte quelle di prima (`voloMax`), e il
-  pezzo è il più alto che il suo livello può dare (`REGALI_VOLO`, ognuno col
-  suo `da`). Rifare i primi livelli finché sono facili non dà niente: i pezzi
-  migliori li danno solo le navi madri alte. L'hangar dice da che livello
-  arriva il prossimo, se no un volo senza pacchi sembra un guasto.
+- **Più è alta, più spesso regala** (`PACCO_VOLO` in `src/data/hangar.js`):
+  al 3 una volta su tre, al 6 una su due, al 9 due su tre, dal 12 sempre. Il
+  pezzo è il prossimo che manca (`REGALI_VOLO`, dalla stella all'oro), da
+  qualunque livello: nessun pezzo chiede di arrivare a un'altezza precisa.
+  L'hangar dice che il pacco arriva ogni tanto, se no un volo senza pacchi
+  sembra un guasto.
+- Provato «regala solo più in alto di tutte quelle di prima», col pezzo
+  deciso dal livello: non funziona perché chi si ferma attorno al suo record
+  non vede più pacchi, e l'oro dal 21 era irraggiungibile.
 - **Il pacco ferma il cielo** finché non si preme «Avanti» (`regaloVolo` è
   una delle condizioni della pausa).
 
@@ -55,7 +58,7 @@ Uscendo durante la nave madre si salva quanti colpi ha preso (`madre` in
 mancavano. Un salvataggio di prima non ha la nave madre, e si legge lo stesso.
 
 Nei test: `window.__mate.madre()` (`attiva`, `colpi`, `chiamata`),
-`regaloVolo`, `hangar()`; nell'hangar `[data-volo-oltre]`; il pacco `[data-regalo]` con `[data-pezzo]`, il
+`regaloVolo`, `hangar()`, `dado(f)` che fissa il dado del pacco del volo; nell'hangar `[data-volo-pacchi]`; il pacco `[data-regalo]` con `[data-pezzo]`, il
 velo del volo `[data-regalo-volo]` con `[data-azione="avanti"]`,
 `[data-madre-scappata]`, `[data-pacchi-finiti]`; sulla rotta
 `[data-pacchi]` con `[data-pacchi-di="<pos>"]` e `[data-quanti]` e nel fumetto `[data-pacchi-fumetto]`.

@@ -69,6 +69,7 @@ const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine | t
    sola — fuori dalla partita (mappa, veli, tavola di «Cosa so») — che
    copre tutti i veli in un colpo perché sono tutti letti da `fase`. */
 const regaloVolo = ref(null)        // il pacco della nave madre del volo: ferma il cielo finché si guarda
+let dado = Math.random              // se la nave madre del volo lascia il pacco; i test lo fissano
 const { inPausa, fermo, metti, togli, aiuto } = usaPausa({
   anche: () => fase.value !== 'gioco' || !!regaloVolo.value,
 })
@@ -602,7 +603,7 @@ function abbattiMadre() {
   }
   dammiVita('NAVE MADRE\nABBATTUTA!')
   prendiGettone(prossimoGettone())
-  regaloVolo.value = conHangar(h => vintoVolo(h, hud.livello))
+  regaloVolo.value = conHangar(h => vintoVolo(h, hud.livello, dado()))
   avanti()
 }
 
@@ -1167,6 +1168,7 @@ onMounted(() => {
                     fila, dopo, contatore, dove,
                     // la nave madre, il pacco del volo e l'hangar (docs/asteroidi/boss.md)
                     madre: () => ({ ...madre }), regaloVolo, hangar: hangarLetto,
+                    dado: f => { dado = f },
                     // i gettoni: quanti ce n'è e cosa fanno se li premi.
                     // `gelo` è una funzione perché i secondi che restano
                     // vivono fuori da Vue (cambiano a ogni fotogramma)

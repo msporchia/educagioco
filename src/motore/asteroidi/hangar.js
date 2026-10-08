@@ -1,7 +1,7 @@
 // L'hangar: chi regala cosa, e la nave scelta tradotta in colori per la tela.
 // Puro, gira in Node. Vedi docs/asteroidi/hangar.md.
 import { TINTE, DISEGNI, STEMMI, DI_SERIE, REGALI_PER_TAPPA, BOSS_VOLO_OGNI,
-         REGALI_VOLO, regaliDellaTappa, tipoDi, idDi } from '../../data/hangar.js'
+         REGALI_VOLO, PACCO_VOLO, regaliDellaTappa, tipoDi, idDi } from '../../data/hangar.js'
 
 const TINTA = Object.fromEntries(TINTE.map(t => [t.id, t]))
 const CAMPI = ['scafo', 'ali', 'fiamma', 'disegno', 'colDisegno', 'stemma', 'colStemma']
@@ -12,7 +12,6 @@ export function hangarDi(c) {
   if (!Array.isArray(h.presi)) h.presi = []
   if (!Array.isArray(h.nuovi)) h.nuovi = []
   if (!h.vinte || typeof h.vinte !== 'object') h.vinte = {}
-  if (!Number.isInteger(h.voloMax)) h.voloMax = 0
   if (!h.nave || typeof h.nave !== 'object') h.nave = {}
   return h
 }
@@ -42,18 +41,19 @@ export function vintaTappa(h, chiave, pos) {
 // il volo ha una nave madre ogni `BOSS_VOLO_OGNI` livelli
 export const bossNelVolo = livello => livello > 0 && livello % BOSS_VOLO_OGNI === 0
 
-/* Nel volo regala solo chi abbatte una nave madre più in alto di tutte
-   quelle di prima, e regala il pezzo più alto che il suo livello può dare:
-   rifare i livelli facili non dà niente, i pezzi migliori stanno in alto. */
-export function vintoVolo(h, livello) {
-  if (livello <= h.voloMax) return null
-  h.voloMax = livello
-  const alla = REGALI_VOLO.filter(r => r.da <= livello && !possiede(h, r.p))
-  return alla.length ? prendi(h, alla[alla.length - 1].p) : null
-}
+// quanto spesso lascia il pacco la nave madre del volo a questo livello
+export const paccoNelVolo = livello =>
+  PACCO_VOLO.filter(r => r.da <= livello).at(-1).volte
 
-// il prossimo pezzo del volo che si può ancora prendere, e da che livello
-export const prossimoDelVolo = h => REGALI_VOLO.find(r => !possiede(h, r.p)) || null
+// il prossimo pezzo del volo che si può ancora prendere
+export const prossimoDelVolo = h => REGALI_VOLO.find(p => !possiede(h, p)) || null
+
+/* Nel volo ogni nave madre abbattuta può lasciare il prossimo pezzo che
+   manca, più spesso quanto più è alta: nessun pezzo chiede un livello. */
+export function vintoVolo(h, livello, dado = Math.random()) {
+  if (dado >= paccoNelVolo(livello)) return null
+  return prendi(h, prossimoDelVolo(h))
+}
 
 export const visto = h => { h.nuovi = [] }
 

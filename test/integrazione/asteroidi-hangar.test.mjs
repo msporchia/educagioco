@@ -100,15 +100,16 @@ uguale('chiuso l\'hangar, niente più di nuovo', await page.locator('[data-azion
 /* ---------- 4. il volo: un posto per livello, e la nave madre al terzo ---------- */
 await parti(page, '[data-volo]')
 await page.waitForTimeout(300)
+await page.evaluate(() => window.__mate.dado(() => 0))   // la nave madre del 3 lascia il pacco una volta su tre
 const volo = await gioca('!!m.regaloVolo.value')
 uguale('al livello 3 la nave madre del volo lascia un pacco',
-       await page.locator('[data-regalo-volo] [data-regalo]').getAttribute('data-pezzo'), REGALI_VOLO[0].p)
+       await page.locator('[data-regalo-volo] [data-regalo]').getAttribute('data-pezzo'), REGALI_VOLO[0])
 controlla('il volo comincia dal primo posto della storia', volo.specie[0] === 'rottami', volo.specie.join(', '))
 await attendi(page, 900)
 await scatto(page, 'asteroidi-volo-regalo')
 await page.click('[data-regalo-volo] [data-azione="avanti"]')
 uguale('«Avanti» lo chiude', await page.locator('[data-regalo-volo]').count(), 0)
-uguale('e il pacco è nell\'hangar', (await hangar()).voloMax, 3)
+controlla('e il pacco è nell\'hangar', (await hangar()).presi.includes(REGALI_VOLO[0]))
 const dopo = await gioca('m.hud.livello >= 4 && m.asteroidi().some(a => !a.morto && a.specie === "ghiaccio")')
 controlla('al livello 4 si è al pianeta del 10, fra le comete', dopo.livello >= 4 && dopo.fase === 'gioco')
 await attendi(page, 1200)

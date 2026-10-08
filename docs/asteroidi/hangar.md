@@ -39,9 +39,8 @@ rotta, quando il volo infinito è aperto.
   disegni e stemmi a turno, nell'ordine della fila). Il primo alla prima
   nave madre abbattuta, il secondo alla seconda, poi niente: **le tappe facili
   non si coltivano**. Sono esattamente due per tappa: un test lo controlla.
-- **Il volo**: la stella e le sei tinte lucide, ognuna da un livello in su
-  (la stella dal 3, l'oro dal 21). Una nave madre abbattuta più in alto di
-  prima dà il pezzo più alto fra quelli che il suo livello può dare
+- **Il volo**: la stella e le sei tinte lucide, in fila fino all'oro. Ogni
+  nave madre abbattuta può dare il prossimo, più spesso quanto più è alta
   ([boss.md](boss.md)).
 - **Non si comprano**: le monete sono della fattoria, e un premio che si
   compra smette di dire «sei arrivato fin qui».
@@ -49,7 +48,7 @@ rotta, quando il volo infinito è aperto.
   della rotta c'è quanti sono.
 - **Gli id sono chiavi di salvataggio** (`t:rosso`, `d:pois`, `s:stella`):
   non si rinominano. Tutto sta in `campagne.mate.hangar`
-  (`presi`, `nuovi`, `vinte` per tappa, `voloMax`, `nave`).
+  (`presi`, `nuovi`, `vinte` per tappa, `nave`; `voloMax` dei salvataggi vecchi non si legge più).
 
 Nei test: `unita/asteroidi-hangar`; il foglio `[data-hangar]`, il tasto
 `[data-azione="hangar"]` con `[data-nuovi]`, le linguette

@@ -5,7 +5,7 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { state } from '../store/profile.js'
 import { ritocca } from '../giochi/campagne.js'
 import { TINTE, DISEGNI, STEMMI, pezzo } from '../data/hangar.js'
-import { hangarDi, possiede, scegli, visto, livrea, prossimoDelVolo, bossNelVolo } from '../motore/asteroidi/hangar.js'
+import { hangarDi, possiede, scegli, visto, livrea, prossimoDelVolo } from '../motore/asteroidi/hangar.js'
 import { disegnaNave } from '../grafica/spazio.js'
 import PezzoHangar from './PezzoHangar.vue'
 import Chiudi from '../giochi/fattoria/viste/Chiudi.vue'
@@ -51,13 +51,8 @@ const colori = computed(() => TINTE.map(t => {
 const diSerie = computed(() => ['scafo', 'ali', 'fiamma'].includes(linguetta.value.tinta))
 const scelto = campo => h.nave[campo] ?? null
 
-// nel volo regala solo una nave madre più in alto di tutte quelle di prima: va detto, se no sembra un guasto
-const voloOltre = computed(() => {
-  if (!prossimoDelVolo(h)) return 0
-  let l = h.voloMax + 1
-  while (!bossNelVolo(l)) l++
-  return l
-})
+// nel volo non ogni nave madre lascia il pacco: va detto, se no sembra un guasto
+const voloAncora = computed(() => !!prossimoDelVolo(h))
 
 // la nave grande, che gira i motori piano
 const tela = ref(null)
@@ -124,8 +119,8 @@ function chiudi() {
           </button>
         </div>
         <p class="nota">I pezzi col «?» li regalano le navi madri, in fondo alle tappe e nel volo.</p>
-        <p v-if="voloOltre" class="nota" data-volo-oltre>Nel volo infinito il prossimo pacco lo porta la nave
-          madre del livello {{ voloOltre }}, o una più in alto.</p>
+        <p v-if="voloAncora" class="nota" data-volo-pacchi>Nel volo infinito le navi madri lasciano un pacco
+          ogni tanto, e più sono in alto più spesso lo lasciano.</p>
       </div>
     </div>
   </div>
