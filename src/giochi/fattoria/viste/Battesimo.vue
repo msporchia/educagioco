@@ -24,7 +24,7 @@ function prendi(n) { scelto.value = n; scritto.value = n }
   <div class="fa-foglio">
     <Chiudi @chiudi="$emit('chiudi')" />
     <h2>{{ prezzo ? 'Come lo chiami?' : (nome || che) }}</h2>
-    <Provino :pezzo="chi + '_giu0'" :lato="64" />
+    <Provino class="fa-ritratto" :pezzo="chi + '_giu0'" :lato="104" />
     <p v-if="prezzo">È un {{ che.toLowerCase() }}. Tocca un nome, o scrivine uno tu.</p>
     <p v-else>Tocca un nome per cambiarglielo.</p>
 

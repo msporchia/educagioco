@@ -83,7 +83,7 @@ const invece = computed(() => {
   <div class="fa-foglio">
     <Chiudi @chiudi="$emit('chiudi')" />
     <h2>{{ nome || che }}</h2>
-    <Provino :pezzo="chi + '_giu0'" :lato="64" />
+    <Provino class="fa-ritratto" :pezzo="chi + '_giu0'" :lato="104" />
     <p>{{ comeSta(stato, nome || che) }}</p>
 
     <section v-for="k in CHIAVI" :key="k" class="fa-blocco">

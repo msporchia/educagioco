@@ -44,9 +44,7 @@ const puoi = a => addosso(a) || ce(a) || (!a.sospeso && manca(a) === 0)
   <div class="fa-foglio fa-vestiario" data-vestiario>
     <Chiudi @chiudi="$emit('chiudi')" />
     <h2>Vesti {{ nome || che }}</h2>
-    <Provino :pezzo="chi + '_giu0'" :lato="64" />
-    <p>Quello che gli metti si vede <b>in fattoria</b>, mentre cammina.
-       Toglierlo non lo perde: torna nel guardaroba.</p>
+    <Provino class="fa-ritratto" :pezzo="chi + '_giu0'" :lato="104" />
 
     <section v-for="g in gruppi" :key="g.dove" class="fa-blocco">
       <div class="fa-testa">
@@ -62,7 +60,7 @@ const puoi = a => addosso(a) || ce(a) || (!a.sospeso && manca(a) === 0)
                                       altrui: !puoi(a) }]"
                 :data-addobbo="a.id" :disabled="!puoi(a)"
                 @click="emit('metti', a.id)">
-          <Pixel v-if="a.disegno" :disegno="a.disegno" :lato="30" />
+          <Pixel v-if="a.disegno" :disegno="a.disegno" :lato="40" />
           <b v-else>{{ a.emoji }}</b>
           <span>{{ a.nome }}</span>
           <em v-if="addosso(a)">addosso</em>
@@ -77,7 +75,5 @@ const puoi = a => addosso(a) || ce(a) || (!a.sospeso && manca(a) === 0)
     <div class="fa-fila">
       <button class="fa-bot forte" @click="emit('chiudi')">Va bene</button>
     </div>
-    <p class="fa-piccolo">Quello che compri resta tuo: si può spostare da
-       una bestia all'altra quante volte vuoi.</p>
   </div>
 </template>
