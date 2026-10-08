@@ -48,7 +48,7 @@ from PIL import Image, ImageOps
 
 from catalogo import Catalogo, VERSI, breve, scrivi
 
-from attori import allaga, allaga_ombra, fondi_di, sfrangia
+from attori import allaga, allaga_ombra, e_fondo, fondi_di, sfrangia
 
 QUI = Path(__file__).parent
 REPO = Path(__file__).resolve().parents[2]
@@ -233,6 +233,7 @@ def pulisci(im, fg):
         return im
     px = im.load()
     fondi = fondi_di(im) if fondo == 'auto' else [tuple(fondo)]
+    fg['_fondi'] = fondi          # `buchi_in` ne ha bisogno, ritaglio per ritaglio
     largo, alto = im.size
     allaga(px, fondi, 26, largo, alto)
     allaga(px, fondi, 40, largo, alto)
@@ -338,6 +339,89 @@ def cancella_in(pezzo, rettangoli, nome):
         for a in range(max(0, x), min(fuori.width, x + w)):
             for b in range(max(0, y), min(fuori.height, y + h)):
                 px[a, b] = (0, 0, 0, 0)
+    return fuori
+
+
+def buchi_in(pezzo, regola, fondi, nome):
+    """Toglie il fondo anche **dentro** la figura: l'occhio di un'ascia, il
+    vuoto fra un arco e la sua corda, il foro di una chiave, l'interno di
+    un anello.
+
+    ── il difetto ──
+    `allaga` toglie il fondo camminando dal bordo del foglio, e dentro una
+    sagoma chiusa non entra mai: è giusto (un cane bianco sulla carta
+    bianca non si buca), ma lascia il nero, il bianco o il magenta del
+    foglio **dietro** a tutto quello che ha un vuoto in mezzo, e in gioco
+    l'arco ha una lente nera fra le braccia e la chiave un occhio nero.
+
+    ── come ──
+    Si guardano i pixel opachi **del colore del fondo** (come `allaga`:
+    canali entro `tolleranza`, 26 di ripiego) e si uniscono per vicinanza.
+    Una macchia che non tocca il bordo del ritaglio è chiusa dentro la
+    figura: via lei, e via la frangia attorno (pixel quasi color-fondo che
+    la toccano, due giri come `sfrangia`: il bordo del vuoto è una media di
+    figura e fondo, e senza resterebbe un anello scuro dentro l'anello).
+    Il resto della figura, anche scuro, non si tocca: **il colore da solo
+    non basta** (un grigio di lama, una pupilla, uno scudo di ferro quasi
+    nero) ed è il motivo per cui si dichiara pezzo per pezzo e non per
+    foglio.
+
+    Si chiede nel foglietto, **sul pezzo**:
+
+        "arco-corto": { …, "buchi": true }
+        "teschio":    { …, "buchi": 12 }            # solo vuoti fino a 12 pixel
+        "chiave":     { …, "buchi": {"max": 30, "tolleranza": 40} }
+
+    Con un numero (o `max`) restano **le macchie più grandi**: un occhio
+    da cinque pixel è un vuoto, una faccia da duecento è disegno. Vale
+    solo dove il foglietto dichiara un fondo a colore (`auto` o un colore):
+    su un foglio già trasparente il vuoto è già vuoto."""
+    if not regola:
+        return pezzo
+    if not fondi:
+        print(f'  ! {nome}: "buchi" ma il foglio non ha un fondo da togliere')
+        return pezzo
+    tol, massimo = 26, None
+    if isinstance(regola, dict):
+        tol, massimo = regola.get('tolleranza', 26), regola.get('max')
+    elif regola is not True:
+        massimo = regola
+    fuori = pezzo.copy()
+    px = fuori.load()
+    w, h = fuori.size
+    quasi = lambda x, y: px[x, y][3] and e_fondo(px[x, y], fondi, tol)
+    visti = set()
+    via = []
+    for y0 in range(h):
+        for x0 in range(w):
+            if (x0, y0) in visti or not quasi(x0, y0):
+                continue
+            macchia, coda, tocca = [], [(x0, y0)], False
+            visti.add((x0, y0))
+            while coda:
+                x, y = coda.pop()
+                macchia.append((x, y))
+                if x in (0, w - 1) or y in (0, h - 1):
+                    tocca = True
+                for a, b in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                    if 0 <= a < w and 0 <= b < h and (a, b) not in visti and quasi(a, b):
+                        visti.add((a, b))
+                        coda.append((a, b))
+            # una macchia sul bordo del ritaglio non si sa se è chiusa: si lascia
+            if tocca or (massimo is not None and len(macchia) > massimo):
+                continue
+            via += macchia
+    for x, y in via:
+        px[x, y] = (0, 0, 0, 0)
+    fronte = via
+    for _ in range(2):
+        nuovi = []
+        for x, y in fronte:
+            for a, b in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                if 0 <= a < w and 0 <= b < h and px[a, b][3] and e_fondo(px[a, b], fondi, 46):
+                    px[a, b] = (0, 0, 0, 0)
+                    nuovi.append((a, b))
+        fronte = nuovi
     return fuori
 
 
@@ -570,6 +654,7 @@ def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima):
             if d.get('specchia'):
                 pezzo = ImageOps.mirror(pezzo)
             pezzo = cancella_in(pezzo, d.get('cancella'), chi)
+            pezzo = buchi_in(pezzo, d.get('buchi'), fg.get('_fondi'), chi)
             pezzo = toppa_in(pezzo, d.get('toppa'), chi, im, fg)
             pezzo = alla_misura(pezzo, d.get('misura'), chi)
             pezzo = ad_aiuola(pezzo, fg.get('aiuola'), chi)

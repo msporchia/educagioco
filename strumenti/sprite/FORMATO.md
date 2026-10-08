@@ -337,6 +337,7 @@ migliore rimette in gioco una correzione che nessuno ricorda.
 | una cosa sola spezzata in più nomi (e il gioco te la vende due volte) | `cose` | una riga, e nessun pezzo si rinomina |
 | dentro il ritaglio giusto resta roba che non c'entra | `cancella` | un rettangolo |
 | …e quella roba copre qualcosa che serve (un fumetto dipinto sopra la staccionata) | `toppa` | un rettangolo, e da quale riquadro prenderlo |
+| dentro la figura c'è un vuoto (l'occhio di una chiave, fra un arco e la sua corda) e dietro ci è rimasto il colore del fondo | `buchi` | una parola sul pezzo |
 | la stessa cosa è disegnata a misure diverse (e a schermo cambia taglia da sé) | `misura` | due numeri |
 
 ```json
@@ -384,6 +385,30 @@ respira. Le due misure sono indipendenti, così una cosa allungata più che
 allargata si rimette in proporzione invece di uscire storta. Vale per
 tutti i fotogrammi dello sprite, e i numeri li stampa lo stesso attrezzo
 che misura i rettangoli.
+
+```json
+"chiave-oro": { "da": [284, 83], "cella": [9, 15], "buchi": true }
+"amuleto-teschio": { …, "buchi": { "max": 40, "tolleranza": 40 } }
+```
+
+`buchi` toglie il fondo anche **dentro** la figura. `allaga` lo toglie solo
+camminando dal bordo del foglio, e un vuoto chiuso (l'occhio di una chiave,
+l'interno di un anello, la lente fra le braccia di un arco) resta del colore
+del fondo: nero, bianco o magenta, dietro a tutto. Con `buchi` le macchie
+opache **del colore del fondo** (canali entro `tolleranza`, 26 di ripiego)
+che non toccano il bordo del ritaglio diventano trasparenti, e con loro la
+frangia attorno (due giri, come `sfrangia`: il bordo del vuoto è una media
+di figura e fondo). **Si dichiara sul pezzo e non sul foglio** perché il
+colore da solo non distingue un vuoto da un disegno scuro: lo scudo di ferro
+è quasi nero, la pupilla di un teschio e la banda scura di un barile sono
+disegno, e un `buchi` di foglio le bucherebbe. `max` (o un numero solo:
+`"buchi": 12`) lascia le macchie più grandi, per il pezzo che ha un vuoto da
+togliere e una zona scura da tenere. Lo legge solo `atlante.py`, e solo dove
+il foglietto dichiara un fondo a colore (`auto` o un colore). L'anteprima
+del banco non lo applica: il risultato si guarda nell'atlante, rilanciato.
+Un test
+(`unita/sprite-buchi`) controlla la figurina finta e i pezzi veri del
+sotterraneo.
 
 `scala` e `foglio` restano la strada normale — riducono tutto il foglio
 dello stesso fattore, che è quello che si vuole quando il foglio è una
