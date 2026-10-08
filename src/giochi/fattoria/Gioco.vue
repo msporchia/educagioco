@@ -274,8 +274,8 @@ onMounted(() => {
   addEventListener('pointercancel', fermaLaSpinta)
   addEventListener('blur', fermaLaSpinta)
   gancioDiProva()
-  setTimeout(() => avvisa('Tocca una cosa per le sue opzioni, o tienila premuta e trascinala ' +
-                          'per spostarla. Sul prato, tieni premuto per il baule.'), 500)
+  setTimeout(() => avvisa('Tocca un campo o una macchina e trascina quello che compare. ' +
+                          'Tieni premuto per spostare.'), 500)
 })
 
 onBeforeUnmount(() => {
