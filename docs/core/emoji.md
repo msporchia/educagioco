@@ -12,7 +12,7 @@ telefono. Il set è **Twemoji** (il disegno di Twitter/X), nel font a colori
 dispositivo, anche offline, dentro il file unico.
 
 Non entra tutto (1,4 MB): entrano le sole emoji che `src/` usa, tagliate da
-`npm run emoji`, circa 200 KB di woff2, ~270 KB in più nel `dist/index.html`.
+`npm run emoji`, circa 200 KB di woff2, ~280 KB in più nel `dist/index.html`.
 
 ## Come è fatto
 
