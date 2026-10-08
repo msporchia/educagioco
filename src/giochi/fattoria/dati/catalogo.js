@@ -166,7 +166,7 @@ export const CATEGORIE = [
     V('osteria',       'rosticceria',       'Osteria',          220,
       { liv: 29, unico: true, la: true, posto: {
         chiede: ['pane', 'formaggio', 'minestrone', 'polenta', 'tartufi', 'salsa',
-                 'conserva', 'pasta', 'pizza', 'lasagne', 'patatine', 'fritto',
+                 'conserva', 'parmigiana', 'pasta', 'pizza', 'lasagne', 'patatine', 'fritto',
                  'arancini', 'sushi', 'maki'],
         clienti: ['oste', 'cuoco', 'pizzaiolo', 'sushi'] } }),
     V('mensa',         'mensa',             'Mensa della scuola', 200,
@@ -281,14 +281,14 @@ export const CATEGORIE = [
     V('cartello_mais', 'cartello_mais',     'Cartello mais',      6),
     V('cartello_carote', 'cartello_carote', 'Cartello carote',    6),
     V('cartello_zucche', 'cartello_zucche', 'Cartello zucche',    6),
-    V('cartello_erba', 'cartello_erba',     'Cartello erba',      6),
+    V('cartello_erba', 'cartello_erba',     'Cartello erba medica',      6),
     // E gli otto dell'orto: un cartello non è il permesso di seminare, è legno.
     V('cartello_pomodori', 'cartello_pomodori', 'Cartello pomodori', 6),
     V('cartello_patate', 'cartello_patate',   'Cartello patate',    6),
     V('cartello_fragole', 'cartello_fragole', 'Cartello fragole',   6),
     V('cartello_melanzane', 'cartello_melanzane', 'Cartello melanzane', 6),
     V('cartello_peperoni', 'cartello_peperoni', 'Cartello peperoni', 6),
-    V('cartello_cavolfiori', 'cartello_cavolfiori', 'Cartello cavoli', 6),
+    V('cartello_cavolfiori', 'cartello_cavolfiori', 'Cartello cavolfiori', 6),
     V('cartello_cipolle', 'cartello_cipolle', 'Cartello cipolle',   6),
     V('cartello_aglio', 'cartello_aglio',     'Cartello aglio',     6),
     // Bandiera animata: quattro fotogrammi con lo stesso palo fermo (misurati sul foglio).
@@ -315,7 +315,7 @@ export const CATEGORIE = [
     V('chiosco_rosa',  'dehors_rosa',       'Chiosco rosa',      80),
     V('chiosco_azzurro', 'dehors_azzurro',  'Chiosco azzurro',   80),
     // Il mercato era qui: sta con la catena, qualche riga più su.
-    V('casotta',       'pollaio',           'Casotta',           60),
+    V('casotta',       'pollaio',           'Casetta delle galline',           60),
     V('serra',         'serra',             'Serra',             90),
     V('tettoia_fieno', 'tettoia_fieno',     'Tettoia',           45),
     V('capanno',       'stalla',            'Capanno',           95),
@@ -326,7 +326,7 @@ export const CATEGORIE = [
 
   { chiave: 'arredo', zona: 'bello', nome: 'Arredo', icona: '🪑', voci: [
     V('panchina',      'panchina',          'Panchina',          14),
-    V('panchina2',     'panchina2',         'Panchina 2',        14),
+    V('panchina2',     'panchina2',         'Panca',        14),
     V('panchina_legno', 'panchina_legno',   'Panchina di legno', 12),
     V('panchina_bianca', 'panchina_bianca', 'Panchina bianca',   16),
     V('panchina_cuore', 'panchina_cuore',   'Panchina a cuore',  18),
@@ -404,10 +404,10 @@ export const CATEGORIE = [
     V('raccolto_mais', 'raccolto_mais',     'Cassa di mais',      9),
     V('raccolto_carote', 'raccolto_carote', 'Cassa di carote',    9),
     V('raccolto_zucche', 'raccolto_zucche', 'Cassa di zucche',    9),
-    V('raccolto_erba', 'raccolto_erba',     'Cassa di erba',      9),
+    V('raccolto_erba', 'raccolto_erba',     'Cassa di erba medica',      9),
     // Le otto casse dell'orto: costano 9 come le altre, perché si compra la cassa e non il raccolto.
     V('raccolto_patate', 'raccolto_patate', 'Cassa di patate',    9),
-    V('raccolto_cavolfiori', 'raccolto_cavolfiori', 'Cassa di cavoli', 9),
+    V('raccolto_cavolfiori', 'raccolto_cavolfiori', 'Cassa di cavolfiori', 9),
     V('raccolto_pomodori', 'raccolto_pomodori', 'Cassa di pomodori', 9),
     V('raccolto_melanzane', 'raccolto_melanzane', 'Cassa di melanzane', 9),
     V('raccolto_peperoni', 'raccolto_peperoni', 'Cassa di peperoni', 9),

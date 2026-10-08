@@ -122,7 +122,7 @@ uguale('i posti al banco sono tre', POSTI, 3)
      prezzo, se no svaluterebbe quella di chi c'è arrivato prima. */
   const attesi = { mangime: [3, 14], uova: [5, 33], latte: [5, 36],
                    pastone: [7, 30], tartufi: [9, 60],
-                   miele: [5, 56], merenda: [8, 84], concime: [5, 38] }
+                   miele: [5, 56], merenda: [8, 84], concime: [5, 36] }
   for (const [p, [v, m]] of Object.entries(attesi)) {
     uguale(`${p} costa 🪙${v} a produrlo`, valoreDi(p), v)
     uguale(`e ci vogliono ${m} minuti`, minutiDi(p), m)

@@ -15,7 +15,7 @@ export const CLIENTI = [
   { id: 'nonna',       nome: 'La nonna',       emoji: '👵' },
   { id: 'cuoco',       nome: 'Il cuoco',       emoji: '👨‍🍳',
     vuole: ['tartufi', 'patate', 'melanzane', 'peperoni', 'cavolfiori', 'aglio',
-            'formaggio', 'burro', 'minestrone', 'conserva', 'salsa',
+            'formaggio', 'burro', 'minestrone', 'conserva', 'salsa', 'parmigiana',
             'pasta', 'lasagne', 'fritto', 'arancini'] },
   { id: 'maestra',     nome: 'La maestra',     emoji: '🍎',
     vuole: ['fragole', 'carote', 'latte', 'uova', 'merenda', 'pane', 'torta',

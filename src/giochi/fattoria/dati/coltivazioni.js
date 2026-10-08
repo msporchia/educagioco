@@ -29,13 +29,13 @@ export const PRODOTTI = {
   // mangime:true è il cibo delle bestie (recinto o ciotola): la mongolfiera non lo chiede.
   becchime: { nome: 'Becchime', emoji: '🌰', silo: 'stalla', mangime: true, pezzo: 'merce_becchime' },
   foraggio: { nome: 'Foraggio', emoji: '🥬', silo: 'stalla', mangime: true, pezzo: 'balla_fieno_tonda' },
-  zuppa:    { nome: 'Zuppa',    emoji: '🥘', silo: 'stalla', mangime: true, pezzo: 'merce_zuppa' },
-  beverone: { nome: 'Beverone', emoji: '🪣', silo: 'stalla', mangime: true, pezzo: 'cassetta_raccolto' },
-  pastura:  { nome: 'Pastura',  emoji: '🍃', silo: 'stalla', mangime: true, pezzo: 'cesta_verdure' },
+  zuppa:    { nome: 'Pastone',  emoji: '🥘', silo: 'stalla', mangime: true, pezzo: 'merce_zuppa' },
+  beverone: { nome: 'Verdure lesse', emoji: '🥔', silo: 'stalla', mangime: true, pezzo: 'cassetta_raccolto' },
+  pastura:  { nome: 'Verdura fresca', emoji: '🥬', silo: 'stalla', mangime: true, pezzo: 'cassetta1' },
   fiori:    { nome: 'Fiori',    emoji: '🌼', silo: 'stalla', mangime: true, pezzo: 'cesto_fiori_misti0' },
   // quello che mangiano il cane e il gatto di casa: esce dal mulino
   mangime: { nome: 'Mangime', emoji: '🥣', silo: 'stalla', mangime: true, pezzo: 'merce_mangime' },
-  pastone: { nome: 'Pastone', emoji: '🍲', silo: 'stalla', mangime: true, pezzo: 'merce_pastone' },
+  pastone: { nome: 'Pappa di mais', emoji: '🍲', silo: 'stalla', mangime: true, pezzo: 'merce_pastone' },
   merenda: { nome: 'Merenda', emoji: '🥧', silo: 'stalla', pezzo: 'cesta_picnic' },
   /* e quello che danno */
   uova:    { nome: 'Uova',    emoji: '🥚', silo: 'stalla', pezzo: 'merce_uova' },
@@ -61,6 +61,8 @@ export const PRODOTTI = {
   sapone:    { nome: 'Sapone',    emoji: '🧼', silo: 'bottega', pezzo: 'merce_sapone' },
 
   minestrone: { nome: 'Minestrone', emoji: '🍜', silo: 'bottega', pezzo: 'merce_minestrone' },
+  // La parmigiana non ha ancora il suo disegno: l'emoji è il ripiego dichiarato (docs/fattoria/sprite.md).
+  parmigiana: { nome: 'Parmigiana', emoji: '🍆', silo: 'bottega', aspetta: 'merce_parmigiana' },
   salsa:     { nome: 'Salsa',     emoji: '🥫', silo: 'bottega', pezzo: 'merce_salsa' },
   conserva:  { nome: 'Conserva d\'orto', emoji: '🥗', silo: 'bottega', pezzo: 'merce_conserva' },
   polenta:   { nome: 'Polenta',   emoji: '🍛', silo: 'bottega', pezzo: 'merce_polenta' },
@@ -82,7 +84,7 @@ export const PRODOTTI = {
                   pezzo: 'merce_sciarpa_lana' },
   berretto:   { nome: 'Berretto',   emoji: '🧢', silo: 'bottega', pezzo: 'merce_berretto' },
   patatine:   { nome: 'Patatine',   emoji: '🍟', silo: 'bottega', pezzo: 'merce_patatine' },
-  fritto:     { nome: 'Fritto',     emoji: '🍤', silo: 'bottega', pezzo: 'merce_fritto' },
+  fritto:     { nome: 'Pesce fritto', emoji: '🍤', silo: 'bottega', pezzo: 'merce_fritto' },
   arancini:   { nome: 'Arancini',   emoji: '🍙', silo: 'bottega', pezzo: 'merce_arancini' },
   sushi:      { nome: 'Sushi',      emoji: '🍣', silo: 'bottega', pezzo: 'merce_sushi' },
   maki:       { nome: 'Maki',       emoji: '🍥', silo: 'bottega', pezzo: 'merce_maki' },
@@ -195,7 +197,7 @@ export const RICETTE = [
   },
   // col mais, non col mulino: è la ricetta per cui esiste liv
   {
-    id: 'pastone', nome: 'Pastone', emoji: '🍲', dove: 'mulino', liv: 11,
+    id: 'pastone', nome: 'Pappa di mais', emoji: '🍲', dove: 'mulino', liv: 11,
     prende: { mais: 3 }, costo: 1, minuti: 6, da: 'pastone', resa: 1,
   },
 
@@ -214,7 +216,7 @@ export const RICETTE = [
     prende: { fieno: 2 }, costo: 0, minuti: 5, da: 'foraggio', resa: 1,
   },
   {
-    id: 'zuppa', nome: 'Zuppa di zucca', emoji: '🥘', dove: 'pentolone', liv: 27,
+    id: 'zuppa', nome: 'Pastone di zucca', emoji: '🥘', dove: 'pentolone', liv: 27,
     prende: { zucche: 2 }, costo: 0, minuti: 6, da: 'zuppa', resa: 1,
   },
 
@@ -245,21 +247,22 @@ export const RICETTE = [
 
   // il fienile dell'orto
   {
-    id: 'beverone', nome: 'Beverone', emoji: '🪣', dove: 'pentolone', liv: 23,
+    id: 'beverone', nome: 'Verdure lesse', emoji: '🥔', dove: 'pentolone', liv: 23,
     prende: { patate: 2, cavolfiori: 1 }, costo: 1, minuti: 4, da: 'beverone', resa: 1,
   },
-  // La seconda strada per la zuppa dei maiali.
+  // La seconda strada per il pastone dei maiali (il loro cibo vero: si chiama così).
   {
-    id: 'zuppa_orto', nome: 'Zuppa d\'orto', emoji: '🥘', dove: 'pentolone', liv: 33,
+    id: 'zuppa_orto', nome: 'Pastone d\'orto', emoji: '🥘', dove: 'pentolone', liv: 33,
     prende: { pomodori: 2 }, costo: 0, minuti: 4, da: 'zuppa', resa: 1,
   },
   {
-    id: 'pastura', nome: 'Pastura', emoji: '🍃', dove: 'pentolone', liv: 39,
-    prende: { melanzane: 2, peperoni: 1 }, costo: 0, minuti: 5, da: 'pastura', resa: 1,
+    // Carote e cavolfiori, non melanzane e peperoni: quelle piante alle capre fanno male.
+    id: 'pastura', nome: 'Verdura fresca', emoji: '🥬', dove: 'pentolone', liv: 39,
+    prende: { carote: 2, cavolfiori: 1 }, costo: 1, minuti: 5, da: 'pastura', resa: 1,
   },
   // Cipolle e aglio lasciati fiorire per le api, invece di raccoglierli.
   {
-    id: 'fiorume', nome: 'Fiorume', emoji: '🌼', dove: 'fienile', liv: 44,
+    id: 'fiorume', nome: 'Fiori di cipolla e aglio', emoji: '🌼', dove: 'fienile', liv: 44,
     prende: { cipolle: 1, aglio: 1 }, costo: 0, minuti: 4, da: 'fiori', resa: 1,
   },
   // L'unico anello che si chiude: il concime degli asini torna al prato — vedi catena.md.
@@ -279,7 +282,7 @@ export const RICETTE = [
     id: 'uova_anatra', nome: 'Uova d\'anatra', emoji: '🥚', dove: 'anatre',
     prende: { beverone: 1 }, costo: 1, minuti: 6, da: 'uova', resa: 1,
   },
-  // Le capre si accontentano di una pastura sola: più lente, ma meno spazio.
+  // Le capre si accontentano di una cassetta di verdura sola: più lente, ma meno spazio.
   {
     id: 'latte_capra', nome: 'Latte di capra', emoji: '🥛', dove: 'capre',
     prende: { pastura: 1 }, costo: 1, minuti: 12, da: 'latte', resa: 1,
@@ -294,8 +297,9 @@ export const RICETTE = [
     prende: { foraggio: 1 }, costo: 1, minuti: 5, da: 'lana', resa: 1,
   },
   {
+    // Gli asini mangiano foraggio, non i semi degli uccelli.
     id: 'concime', nome: 'Concime', emoji: '💩', dove: 'asini',
-    prende: { becchime: 2 }, costo: 1, minuti: 10, da: 'concime', resa: 1,
+    prende: { foraggio: 2 }, costo: 1, minuti: 10, da: 'concime', resa: 1,
   },
 
   // Le botteghe: l'albero a più fasi, in dispensa — vedi docs/fattoria/catena.md.
@@ -382,6 +386,12 @@ export const RICETTE = [
     prende: { pomodori: 2, cipolle: 1, aglio: 1 }, costo: 1, minuti: 6,
     da: 'salsa', resa: 1,
   },
+  // La seconda bocca delle melanzane: un piatto vero, dopo che la capra non le mangia più.
+  {
+    id: 'parmigiana', nome: 'Parmigiana di melanzane', emoji: '🍆', dove: 'cucina', liv: 45,
+    prende: { melanzane: 2, salsa: 1, formaggio: 1 }, costo: 1, minuti: 9,
+    da: 'parmigiana', resa: 1,
+  },
 
   {
     id: 'crostata', nome: 'Crostata di fragole', emoji: '🍰',
@@ -451,8 +461,9 @@ export const RICETTE = [
 
   // la peschiera: un settimo recinto del cortile, arrivato tardi
   {
+    // I pesci d'allevamento mangiano mangime, non il becchime degli uccelli.
     id: 'pesce', nome: 'Pesce', emoji: '🐟', dove: 'pesci',
-    prende: { becchime: 2 }, costo: 1, minuti: 15, da: 'pesce', resa: 1,
+    prende: { mangime: 2 }, costo: 1, minuti: 15, da: 'pesce', resa: 1,
   },
 
   // la friggitoria: al 58, col pesce appena pescato
@@ -461,7 +472,7 @@ export const RICETTE = [
     prende: { patate: 2 }, costo: 1, minuti: 5, da: 'patatine', resa: 1,
   },
   {
-    id: 'fritto', nome: 'Fritto', emoji: '🍤', dove: 'friggitoria',
+    id: 'fritto', nome: 'Pesce fritto', emoji: '🍤', dove: 'friggitoria',
     prende: { pesce: 1, farina: 1 }, costo: 1, minuti: 7, da: 'fritto', resa: 1,
   },
   {

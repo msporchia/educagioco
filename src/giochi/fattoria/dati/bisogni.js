@@ -25,26 +25,21 @@ export const CIBI = [
   // quelli che non si comprano: costano zero monete e un pezzo di granaio — vedi docs/fattoria/animali.md
   { id: 'mangime', nome: 'Mangime', emoji: '🥣', prezzo: 0, da: 'mangime',
     quanto: 0.30, per: ['cane', 'gatto', 'pappagallo', 'coniglio'] },
+  // Solo quello che a quella bestia fa bene davvero: il gioco insegna anche questo. Niente latte al
+  // gatto (da grande non lo digerisce), niente pane o formaggio al coniglio (è erbivoro), niente
+  // tartufo (il cane lo cerca, non lo mangia) — vedi docs/fattoria/animali.md.
   { id: 'uova', nome: 'Uovo', emoji: '🥚', prezzo: 0, da: 'uova',
     quanto: 0.45, per: ['cane', 'gatto', 'pappagallo'] },
-  { id: 'latte', nome: 'Ciotola di latte', emoji: '🥛', prezzo: 0, da: 'latte',
-    quanto: 0.55, per: ['cane', 'gatto'] },
-  { id: 'pastone', nome: 'Pastone', emoji: '🍲', prezzo: 0, da: 'pastone',
-    quanto: 0.70, per: ['cane', 'gatto', 'pappagallo', 'coniglio'] },
-  // La merenda è la sesta pappa e la più lunga da fare (fragole e miele): vale per tutti apposta.
-  { id: 'merenda', nome: 'Merenda', emoji: '🥧', prezzo: 0, da: 'merenda',
-    quanto: 0.75, per: ['cane', 'gatto', 'pappagallo', 'coniglio'] },
-  // Il pane esce dal panificio, la prima pappa che passa dalla dispensa.
-  { id: 'pane', nome: 'Pane', emoji: '🍞', prezzo: 0, da: 'pane',
-    quanto: 0.60, per: ['cane', 'gatto', 'pappagallo', 'coniglio'] },
-  // Il formaggio: cagliare non costa un gesto, la pappa più ricca che non chieda un porcile.
+  { id: 'pastone', nome: 'Pappa di mais', emoji: '🍲', prezzo: 0, da: 'pastone',
+    quanto: 0.70, per: ['cane', 'gatto', 'pappagallo'] },
+  // Il fieno è il cibo vero del coniglio, quello che mangia tutto il giorno.
+  { id: 'fieno', nome: 'Fieno', emoji: '🌿', prezzo: 0, da: 'fieno',
+    quanto: 0.60, per: ['coniglio'] },
+  // Il formaggio e il minestrone: solo al cane, e un po'.
   { id: 'formaggio', nome: 'Formaggio', emoji: '🧀', prezzo: 0, da: 'formaggio',
-    quanto: 0.85, per: ['cane', 'gatto', 'coniglio'] },
-  // Il minestrone: tre colture diverse (tre campi liberi insieme) è il prezzo vero.
+    quanto: 0.85, per: ['cane'] },
   { id: 'minestrone', nome: 'Minestrone', emoji: '🍜', prezzo: 0, da: 'minestrone',
-    quanto: 0.50, per: ['cane', 'gatto', 'pappagallo', 'coniglio'] },
-  { id: 'tartufi', nome: 'Tartufo', emoji: '🍄', prezzo: 0, da: 'tartufi',
-    quanto: 0.90, per: ['cane', 'gatto', 'pappagallo'] },
+    quanto: 0.50, per: ['cane'] },
 ]
 
 export const cibiPer = famiglia => CIBI.filter(c => c.per.includes(famiglia))
