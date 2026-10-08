@@ -20,7 +20,7 @@
    chi prova il gioco per un minuto.
    ═══════════════════════════════════════════════════════════════════ */
 import { nota, controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
-import { evidenziando, guastiDi, tempoDiLettura } from '../../src/quiz/nucleo/domanda.js'
+import { evidenziando, fraseDaLeggere, guastiDi, tempoDiLettura } from '../../src/quiz/nucleo/domanda.js'
 import { Sorte } from '../../src/quiz/nucleo/sorte.js'
 import grammatica from '../../src/quiz/moduli/grammatica.js'
 
@@ -143,5 +143,23 @@ controlla('la frase alza il tempo che ci vuole a leggere la domanda',
           `${tempoDiLettura(una).toFixed(2)} s contro ${senza.toFixed(2)}`)
 controlla('un soggetto disegnato invece no: guardare non è leggere',
           tempoDiLettura({ ...una, soggetto: { scena: { che: 'orologio' } } }) === senza)
+
+/* ══════════ 5. UNA FRASE DA LEGGERE NON SOMIGLIA A UNA RISPOSTA ══════════
+   Una frase da leggere stava in un riquadro quasi uguale ai tasti, e il
+   bambino non capiva cos'era da leggere e cos'era da toccare. Ora va su
+   un foglio suo (`[data-da-leggere]`, la-domanda.md); questa è la regola
+   che decide chi ci va: una frase o una parola in rilievo sì, una parola
+   sola o un disegno no. */
+controlla('una frase intera è da leggere',
+          fraseDaLeggere({ testo: 'Irene porta fuori la spazzatura dopo aver cenato.' }))
+controlla('anche corta, se ha tre parole',
+          fraseDaLeggere({ testo: 'Piove, ma esce.' }))
+controlla('e una con la parola in rilievo',
+          fraseDaLeggere({ testo: 'Metto lo zaino.', evidenzia: 'lo' }))
+controlla('una parola sola è da guardare', !fraseDaLeggere({ testo: 'giraffa' }))
+controlla('come una parola col buco (i trattini non sono parole)',
+          !fraseDaLeggere({ testo: 'pa __ ta' }))
+controlla('un disegno o un\'emoji non lo sono', !fraseDaLeggere({ scena: { che: 'fila' } })
+          && !fraseDaLeggere({ emoji: '🐶' }) && !fraseDaLeggere(undefined))
 
 riassunto('la parola dentro la frase')

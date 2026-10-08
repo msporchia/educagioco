@@ -388,6 +388,73 @@ await scatto(page, 'domanda-alleggerita')
 await page.click('.prova-x')
 await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
 
+/* ---------- 3f. LA FRASE DA LEGGERE NON SOMIGLIA A UNA RISPOSTA ----------
+   Riferito da chi ci giocava: «Qual è l'ultima cosa che fa Irene?» con
+   sotto «Irene porta fuori la spazzatura dopo aver…» in un riquadro
+   quasi uguale ai tasti: non si capiva cos'era da leggere e cos'era da
+   toccare. La frase sta ora su un foglio suo (`[data-da-leggere]`):
+   non è un bottone, non ha il bordo né l'ombra di un tasto, è più chiara
+   e sta fuori dalla fila delle risposte; le risposte restano bottoni.
+   Si va a prendere un «ordine» di `capire`, che è proprio quel caso. */
+const ORDINE = '[data-prova*=":capire:ordine"]'
+await page.click('[data-scheda="giochi"]')
+await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
+for (const k of ['facili', 'medie', 'toste', 'sotto']) {
+  if (await page.locator(ORDINE).count()) break
+  await apriQuadro(k)
+  const chiuse = page.locator(`[data-manopola] [data-apri="${k}"] .voce-riga.apribile:not(.aperta)`)
+  while (!(await page.locator(ORDINE).count()) && await chiuse.count()) {
+    await chiuse.first().click()
+    await page.waitForTimeout(60)
+  }
+}
+controlla('la classe «ordine» di capire si trova nel quadro', await page.locator(ORDINE).count() >= 1)
+await page.locator(ORDINE).first().click()
+await page.waitForSelector('.qz-tasto', { timeout: 5000 })
+{
+  const v = await page.evaluate(() => {
+    const f = document.querySelector('[data-da-leggere]')
+    if (!f) return null
+    const t = document.querySelector('.qz-tasto')
+    const cf = getComputedStyle(f)
+    const ct = getComputedStyle(t)
+    const lum = c => { const [r, g, b] = (c.match(/[\d.]+/g) || [0, 0, 0]).map(Number); return (r + g + b) / 3 }
+    return {
+      etichetta: f.tagName,
+      eUnTasto: !!f.closest('button') || f.getAttribute('role') === 'button',
+      dentroLeRisposte: !!f.closest('.qz-risposte'),
+      bordoIntorno: ['Top', 'Right', 'Bottom'].some(l => parseFloat(cf['border' + l + 'Width']) > 0),
+      ombra: cf.boxShadow !== 'none',
+      chiaro: lum(cf.backgroundColor), chiaroTasto: lum(ct.backgroundColor),
+      sfondoTasto: ct.backgroundColor, sfondo: cf.backgroundColor,
+      testoFoglio: parseFloat(getComputedStyle(f.querySelector('.qz-frase')).fontSize), testoTasto: parseFloat(ct.fontSize),
+      sopra: !!(f.compareDocumentPosition(document.querySelector('.qz-risposte')) & Node.DOCUMENT_POSITION_FOLLOWING),
+      parole: (f.textContent || '').trim().split(/\s+/).length,
+      dichiara: [...document.querySelectorAll('.qz-tasto')].every(b => b.tagName === 'BUTTON'),
+      scegli: !!document.querySelector('[data-scegli]'),
+      vecchio: !!document.querySelector('.qz-soggetto'),
+    }
+  })
+  controlla('la domanda con una frase ha il suo foglio [data-da-leggere]', !!v)
+  if (v) {
+    nota(`foglio ${v.sfondo} contro tasto ${v.sfondoTasto}; testo ${v.testoFoglio} contro ${v.testoTasto} px`)
+    controlla('la frase non è un bottone', !v.eUnTasto && v.etichetta !== 'BUTTON', v.etichetta)
+    controlla('e non sta nella fila delle risposte', !v.dentroLeRisposte)
+    controlla('non ha il bordo di un tasto, né l\'ombra', !v.bordoIntorno && !v.ombra)
+    // i tasti sono un velo trasparente sulla carta scura: il foglio è carta chiara vera
+    controlla('è carta chiara su una carta scura, non un\'altra tinta di tasto', v.chiaro > 220,
+              v.sfondo)
+    controlla('e il testo è più grande di quello di un tasto o quasi', v.testoFoglio >= v.testoTasto - 1,
+              `${v.testoFoglio} contro ${v.testoTasto}`)
+    controlla('sta sopra le risposte, con la sua riga «Scegli:»', v.sopra && v.scegli)
+    controlla('non è più il vecchio riquadro del soggetto', !v.vecchio)
+    controlla('le risposte restano bottoni', v.dichiara)
+  }
+}
+await scatto(page, 'domanda-frase')
+await page.click('.prova-x')
+await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
+
 /* ---------- 4. DUE DOMANDE DI FILA ----------
    Questa è la parte che conta, ed è il guasto vero: nel banco di prova
    ogni domanda è un montaggio nuovo, ma **in un gioco no**. Chi
