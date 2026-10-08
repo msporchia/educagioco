@@ -17,7 +17,7 @@ import { arco, tratto, lunghezza, lungo, giro, GIRA_PRIMA, durataVolo, versoFina
 import { disegnaMondo, nuvole, monumento, pista, AEREO, OMBRA_AEREO } from '../../grafica/bancarella-mondo.js'
 
 const props = defineProps({
-  // [{ ...città, k, stato: fatta|ora|aperta|chiusa, fatte, tot, serve }]
+  // [{ ...città, k, stato: fatta|ora|aperta|chiusa, fatte, tot, stelle, stelleMax, serve }]
   voci: { type: Array, required: true },
   corrente: { type: Number, required: true },    // la città da fare adesso
   chi: { type: String, default: '' },
@@ -190,7 +190,8 @@ const chiudi = () => {
 }
 const nodoAperto = computed(() => (aperto.value === null ? null : props.voci[aperto.value]))
 const STATI = { fatta: '★ Tutte fatte: si possono rifare', ora: 'Tocca a te!', aperta: 'Si può già visitare' }
-const sulle = n => (n.libera ? 'senza fine' : n.fatte + ' di ' + n.tot + ' giornate')
+const sulle = n => (n.libera ? 'senza fine' : n.fatte + ' di ' + n.tot + ' giornate' +
+                    (n.fatte ? ' · ★ ' + n.stelle + ' di ' + n.stelleMax : ''))
 function entra(n) {
   aperto.value = null
   emit('entra', n.k)
@@ -224,7 +225,7 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
             <path d="M6.5 9V7a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="#7b838c" stroke-width="1.6"/>
             <rect x="5.5" y="9" width="9" height="6.5" rx="1.6" fill="#7b838c"/>
           </svg>
-          <span v-else-if="n.fatte" class="stelle" data-stelle-citta aria-hidden="true">★<i>{{ n.fatte }}</i></span>
+          <span v-else-if="n.fatte" class="stelle" data-stelle-citta :data-stelle="n.stelle" aria-hidden="true">★<i>{{ n.stelle }}<u>/{{ n.stelleMax }}</u></i></span>
         </button>
         <span class="nome" :class="'n-' + n.stato" :style="{ left: n.x + 'px', top: n.y + 'px' }">{{ n.nome }}</span>
       </template>
@@ -278,6 +279,7 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
           padding:0 5px 0 4px; border-radius:10px; background:#fff; color:#f0a800; font-size:14px; line-height:19px;
           box-shadow:0 1px 3px #0003, inset 0 0 0 1.5px #f0c040 }
 .stelle i { font-style:normal; font-size:11px; font-weight:900; color:#7a5a00 }
+.stelle u { text-decoration:none; font-size:9.5px; color:#a98860 }
 .anello { position:absolute; width:70px; height:70px; margin:-35px 0 0 -35px; border-radius:50%;
           border:3px dashed #ff9f1c; pointer-events:none; animation:gira 14s linear infinite }
 @keyframes gira { to { transform:rotate(360deg) } }

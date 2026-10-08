@@ -14,6 +14,8 @@
        disegnata: scontrino, display col resto, cassetto a scomparti
      · sbagliare costa tempo, non un cuore
      · una giornata intera si finisce, e il profilo se ne accorge
+     · le stelle di una giornata: zero sbagli ne dà tre, si vedono sulla
+       mappa, e rigiocando peggio non scendono
      · **i tre gradini del conto**, che sono la cura del difetto
        segnalato da un genitore: la giornata in cui il totale lo batti
        tu sulla tastiera, quella in cui le copie e i centesimi si
@@ -274,6 +276,11 @@ controlla('ogni cliente servito ha pagato', p.coins >= giornata.serviti * premio
           `${p.coins} monete per ${giornata.serviti} clienti`)
 nota('fasce incontrate: ' + chiavi.join(' · ') + ` · ${p.coins} monete guadagnate`)
 
+/* le stelle: la prima giornata ha avuto (o no) il conto sbagliato della moneta troppo grossa */
+const stelleAttese = troppo.saltato ? 3 : 2
+uguale('il cartello dice le stelle prese', await page.locator('[data-voto]').getAttribute('data-stelle'), String(stelleAttese))
+uguale('e il profilo le tiene sotto l\'id della giornata', p.mercato.stelle[CAMPAGNE[0].id], stelleAttese)
+
 /* la giornata dopo adesso è aperta */
 await page.locator('.bottone.chiaro').click()
 await page.waitForSelector('[data-piazza]', { timeout: 3000 })
@@ -289,6 +296,74 @@ uguale('la giornata finita si vede come fatta', dopo.fatte, 1)
 uguale('con la sua stella', dopo.stelle, 1)
 uguale('e quella dopo si è aperta', dopo.ora, 'paese')
 uguale('nessun\'altra è chiusa, in una città di due', dopo.chiuse, 0)
+uguale('la stella sul banco dice quante ne ha prese',
+       await page.locator('[data-camp="banchetto"] [data-stella-banco]').getAttribute('data-stelle'), String(stelleAttese))
+
+/* ---------- 6a. le stelle: zero sbagli ne dà tre, e rigiocando peggio non scendono ----------
+   Una giornata si gioca tutta: `scadono` sono i clienti (per ordine di arrivo) che
+   si lasciano andare via — un intoppo ciascuno, ma mai i tre cuori insieme. */
+const giocaTutta = scadono => page.evaluate(async scadono => {
+  const S = window.__shop
+  const dormi = ms => new Promise(r => setTimeout(r, ms))
+  let n = 0
+  for (let giro = 0; giro < 900 && S.fase.value === 'gioco'; giro++) {
+    if (S.cambio.value) { await dormi(80); continue }
+    const c = S.cliente.value
+    if (!c) { await dormi(50); continue }
+    if (scadono.includes(n)) {
+      c.restaPazienza = 0.01
+      for (let k = 0; k < 60 && S.cliente.value === c && S.fase.value === 'gioco'; k++) await dormi(50)
+      n++
+      continue
+    }
+    if (S.momento.value === 'raccolta')
+      for (const a of [...S.daPrendere.value]) for (let k = 0; k < a.quanti; k++) S.prendi(a)
+    if (S.momento.value !== 'cassa') { await dormi(50); continue }
+    const prima = S.hud.serviti
+    for (const v of S.scomponi(c.resto - S.dato.value, c.monete)) S.metti(v)
+    for (let k = 0; k < 60; k++) {
+      if (S.hud.serviti > prima && (S.momento.value === 'raccolta' || S.fase.value !== 'gioco')) break
+      await dormi(50)
+    }
+    n++
+  }
+  return { fase: S.fase.value, esito: S.esito.value, intoppi: S.hud.intoppi, cuori: S.hud.cuori }
+}, scadono)
+const voto = async () => ({
+  stelle: await page.locator('[data-voto]').getAttribute('data-stelle'),
+  testo: await page.locator('[data-voto]').innerText(),
+  profilo: (await leggiProfilo(page)).mercato.stelle,
+})
+
+await giocaGiornata(page, 'banchetto')
+await page.waitForFunction(() => !window.__shop.cambio.value, { timeout: 5000 })
+const pulita = await giocaTutta([])
+uguale('una giornata senza un solo intoppo finisce vinta', pulita.esito + ':' + pulita.intoppi, 'vinta:0')
+const treStelle = await voto()
+uguale('zero sbagli: tre stelle', treStelle.stelle, '3')
+controlla('il cartello lo dice a parole', /3 stelle/.test(treStelle.testo) && /il massimo/i.test(treStelle.testo), treStelle.testo)
+await scatto(page, 'bancarella-stelle')
+await page.waitForTimeout(600)
+uguale('e il profilo se le tiene', (await leggiProfilo(page)).mercato.stelle[CAMPAGNE[0].id], 3)
+await page.locator('[data-azione="le-giornate"]').click()
+await page.waitForSelector('[data-piazza]', { timeout: 3000 })
+uguale('sulla mappa il banco ha tre stelline piene',
+       await page.locator('[data-camp="banchetto"] [data-stella-banco] i.piena').count(), 3)
+
+await giocaGiornata(page, 'banchetto')
+await page.waitForFunction(() => !window.__shop.cambio.value, { timeout: 5000 })
+const storta = await giocaTutta([0, 1, 3])
+uguale('tre clienti persi e la giornata si vince lo stesso', storta.esito + ':' + storta.intoppi, 'vinta:3')
+const unaStella = await voto()
+uguale('questa volta è una stella sola', unaStella.stelle, '1')
+controlla('il cartello dice cosa serve per la seconda', /per la seconda stella/i.test(unaStella.testo), unaStella.testo)
+controlla('e che resta la migliore', /resta la tua migliore: 3 stelle/i.test(unaStella.testo), unaStella.testo)
+await page.waitForTimeout(600)
+uguale('rigiocando peggio le stelle non scendono', unaStella.profilo[CAMPAGNE[0].id], 3)
+uguale('nemmeno nel profilo scritto', (await leggiProfilo(page)).mercato.stelle[CAMPAGNE[0].id], 3)
+await page.locator('[data-azione="le-giornate"]').click()
+await page.waitForSelector('[data-piazza]', { timeout: 3000 })
+uguale('e sulla mappa restano tre', await page.locator('[data-camp="banchetto"] [data-stella-banco]').getAttribute('data-stelle'), '3')
 
 /* ---------- 6b. il gradino nuovo: il totale lo batte lui ----------
    È la giornata che il difetto ha fatto nascere. La cassa non somma più:

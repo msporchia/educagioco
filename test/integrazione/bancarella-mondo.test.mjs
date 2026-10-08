@@ -55,7 +55,9 @@ const traccia = () => page.evaluate(() => window.__traccia)
 
 /* ══════════ 1. il mondo si apre sull'aereo, alla città da fare ══════════ */
 // tre città finite (Bologna, Roma, Parigi): tocca a New York
-await semina(page, { mercato: { tappa: 9, libera: false, v: 2 } })
+// con qualche voto già preso: le altre giornate fatte partono con una stella
+await semina(page, { mercato: { tappa: 9, libera: false, v: 2,
+  stelle: { banchetto: 3, paese: 2, 'conto-tre': 2, 'conto-venti': 3 } } })
 await scegli(page, 'bancarella')
 await page.waitForSelector('[data-mondo] [data-citta]')
 await attendi(page, 400)
@@ -67,8 +69,8 @@ uguale('una sola da fare adesso', await page.locator('[data-citta][data-stato="o
 uguale('le altre sono chiuse, ma si vedono',
        await page.locator('[data-citta][data-stato="chiusa"]').evaluateAll(l => l.map(e => e.dataset.citta).join()),
        'rio,tokyo,cairo')
-uguale('le stelle sono accanto alle città finite, una pillola per città con almeno una giornata',
-       await page.locator('[data-stelle-citta]').evaluateAll(l => l.map(e => e.textContent).join()), '★2,★4,★3')
+uguale('le stelle sono accanto alle città finite, una pillola per città con la somma e il massimo',
+       await page.locator('[data-stelle-citta]').evaluateAll(l => l.map(e => e.textContent).join()), '★5/6,★7/12,★3/9')
 const a0 = await aereo()
 uguale('l\'aereo è alla città da fare', a0.al, 'new-york')
 uguale('e sta fermo', a0.inViaggio, '0')
@@ -86,6 +88,7 @@ uguale('e intanto l\'aereo è partito', (await aereo()).inViaggio, '1')
 uguale('il click che il dito lascia dietro non fa entrare', await page.locator('[data-piazza]').count(), 0)
 const testo = await page.locator('[data-fumetto]').innerText()
 controlla('il fumetto dice città, racconto e stelle', /Bologna/.test(testo) && /cassa fa tutti i conti/.test(testo) && /Tutte fatte/.test(testo) && /entra/.test(testo), testo)
+controlla('e quante stelle ha preso la città, su quante', /★ 5 di 6/i.test(testo), testo)
 await page.waitForSelector('[data-aereo][data-in-viaggio="0"]', { timeout: 6000 })
 await attendi(page, 500)
 uguale('arrivato, l\'aereo è a Bologna', (await aereo()).al, 'bologna')
@@ -173,6 +176,11 @@ uguale('il click che il dito lascia dietro non comincia la giornata', await page
 const fum = await page.locator('[data-fumetto]').innerText()
 controlla('dice giornata, nome, cosa c\'è di nuovo e le stelle', /giornata 3/i.test(fum) && /Il conto lo fai tu/.test(fum) &&
           /totale della spesa/.test(fum) && /Superata/.test(fum) && /gioca/.test(fum), fum)
+controlla('e il voto: una stella, e cosa serve per la seconda', /1 stella/.test(fum) && /per la seconda/.test(fum), fum)
+uguale('le stelle sui banchi di Roma, una a una', await page.locator('[data-stella-banco]').evaluateAll(l => l.map(e => e.dataset.stelle).join()), '1,2,3,1')
+uguale('piene e vuote: tre stelline a banco, tante piene quanto il voto',
+       await page.locator('[data-camp="conto-venti"] [data-stella-banco] i.piena').count(), 3)
+uguale('e a una stella ce n\'è una piena sola', await page.locator('[data-camp="conto-dieci"] [data-stella-banco] i.piena').count(), 1)
 await attendi(page, 500)
 await scatto(page, 'bancarella-piazza-fumetto')
 await page.waitForSelector('[data-carretto][data-in-viaggio="0"]', { timeout: 8000 })

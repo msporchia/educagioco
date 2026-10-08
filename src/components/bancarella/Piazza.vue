@@ -11,13 +11,13 @@ let ultimo = null      // { chi, citta: l'id della città, banco: l'indice del b
 import { ref, shallowRef, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import Fumetto from '../Fumetto.vue'
 import { fondalePiazza } from '../../data/bancarella-fondali.js'
-import { BANCHI } from '../../data/bancarella.js'
+import { BANCHI, perLaProssima } from '../../data/bancarella.js'
 import { disponiPiazza, stradaCarretto, lungo, lunghezza, durataCarretto } from '../../motore/bancarella/mondo.js'
 import { disegnaPiazza, disegnaBanco, viale, CARRETTO, CARTELLO, COLORI_PIAZZA } from '../../grafica/bancarella-mondo.js'
 
 const props = defineProps({
   citta: { type: Object, required: true },        // la città: id, nome, monumento, accento…
-  // [{ id, numero, giornata, stato: fatta|ora|aperta|chiusa, serve }]
+  // [{ id, numero, giornata, stato: fatta|ora|aperta|chiusa, stelle: 0-3, serve }]
   banchi: { type: Array, required: true },
   stelle: { type: String, default: '' },          // «2 di 4 giornate»
   chi: { type: String, default: '' },
@@ -187,7 +187,8 @@ function tocca(k) {
 // il fumetto non si chiude mentre il carretto viaggia
 const chiudi = () => { if (!viaggio.value) aperto.value = null }
 const banco = computed(() => (aperto.value === null ? null : props.banchi[aperto.value]))
-const STATI = { fatta: '★ Superata: si può rifare', ora: 'Tocca a te!', aperta: 'Si può già fare' }
+const STATI = { fatta: 'Superata: si può rifare', ora: 'Tocca a te!', aperta: 'Si può già fare' }
+const serveStella = b => (b.stelle > 0 && b.stelle < 3 ? perLaProssima(b.stelle) : '')
 function gioca(b) {
   aperto.value = null
   emit('gioca', b.id)
@@ -219,7 +220,8 @@ const racconto = b => `${b.nome}: ${b.stato === 'chiusa' ? 'chiusa' : b.stato ==
             <path d="M6.5 9V7a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="#7b838c" stroke-width="1.6"/>
             <rect x="5.5" y="9" width="9" height="6.5" rx="1.6" fill="#7b838c"/>
           </svg>
-          <span v-else-if="b.stato === 'fatta'" class="stella" data-stella-banco aria-hidden="true">★</span>
+          <span v-else-if="b.stato === 'fatta'" class="stelline" data-stella-banco :data-stelle="b.stelle" aria-hidden="true"><i
+                v-for="n in 3" :key="n" :class="{ piena: n <= b.stelle }">★</i></span>
         </button>
       </div>
 
@@ -245,6 +247,13 @@ const racconto = b => `${b.nome}: ${b.stato === 'chiusa' ? 'chiusa' : b.stato ==
         <span v-if="banco.stato === 'chiusa'" class="serve" data-serve>🔒 {{ banco.serve }}</span>
         <template v-else>
           <span class="stato" :class="'stato-' + banco.stato">{{ STATI[banco.stato] }}</span>
+          <span v-if="banco.stato === 'fatta' && banco.stelle" class="voto" data-voto-banco :data-stelle="banco.stelle">
+            <span class="stelline-fumetto" aria-hidden="true"><i v-for="n in 3" :key="n"
+                  :class="{ piena: n <= banco.stelle }">★</i></span>
+            {{ banco.stelle }} {{ banco.stelle === 1 ? 'stella' : 'stelle' }}<template
+              v-if="serveStella(banco)"> · per la {{ banco.stelle === 1 ? 'seconda' : 'terza' }}: {{ serveStella(banco) }}</template><template
+              v-else> · il massimo!</template>
+          </span>
           <button type="button" class="vai" data-azione="gioca" @click="gioca(banco)">▶ gioca</button>
         </template>
       </Fumetto>
@@ -279,9 +288,11 @@ const racconto = b => `${b.nome}: ${b.stato === 'chiusa' ? 'chiusa' : b.stato ==
 .s-aperta .tondo { background:#fffdf7; border-color:#e8553f; color:#b03a28 }
 .s-chiusa .tondo { background:#d9dde2; border-color:#a9b0b8; color:#8b93a1 }
 .lucchetto { position:absolute; left:73px; top:0; width:20px; height:20px }
-.stella { position:absolute; right:-6px; top:-8px; width:28px; height:28px; border-radius:50%; background:#fff;
-          color:#f0a800; font-size:19px; line-height:28px; text-align:center;
-          box-shadow:0 1px 3px #0003, inset 0 0 0 2px #f0c040 }
+/* le stelle prese: tre stelline sotto il tondo, piene o vuote */
+.stelline { position:absolute; left:50%; top:41px; transform:translateX(-50%); display:flex; gap:0;
+            padding:1px 6px; border-radius:11px; background:#fffdf7; box-shadow:0 1px 3px #0003 }
+.stelline i { font-style:normal; font-size:15px; line-height:18px; color:#d7d1c3 }
+.stelline i.piena { color:#f0a800 }
 .alone { position:absolute; left:-5px; top:-5px; width:134px; height:118px; border-radius:16px; pointer-events:none;
          border:3px dashed #ff9f1c; animation:pulsa 1.8s ease-in-out infinite }
 @keyframes pulsa { 0%, 100% { opacity:.95 } 50% { opacity:.35 } }
@@ -307,6 +318,10 @@ const racconto = b => `${b.nome}: ${b.stato === 'chiusa' ? 'chiusa' : b.stato ==
 .fumetto-banco .stato { display:block; margin-top:5px; font-size:13px; font-weight:800; color:#5a4632 }
 .fumetto-banco .stato-ora { color:#b7791f }
 .fumetto-banco .stato-fatta { color:#2f8a3e }
+.fumetto-banco .voto { display:block; margin-top:3px; font-size:12.5px; font-weight:800; color:#5a4632 }
+.stelline-fumetto { display:block; font-size:20px; line-height:1.1; letter-spacing:2px }
+.stelline-fumetto i { font-style:normal; color:#d7d1c3 }
+.stelline-fumetto i.piena { color:#f0a800 }
 .fumetto-banco .serve { display:block; margin-top:6px; font-size:13px; font-weight:800; color:#5a4632 }
 .fumetto-banco .vai { display:block; width:100%; margin-top:8px; padding:9px 0; border-radius:999px; font-size:16px;
                       font-weight:900; color:#5a3200; background:linear-gradient(180deg,#ffd257,#ffa62b);

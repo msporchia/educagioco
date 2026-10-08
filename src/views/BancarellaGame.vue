@@ -5,10 +5,10 @@ import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, onUnmounted
 import { state, answer, segna, segnaBest,
          mercatoProgresso, mercatoCompleta, tappaAperta } from '../store/profile.js'
 import { generaCliente, esposizione, tappaDi, campagnaDi, scomponi, euro,
-         centesimiScritti, scriviCifra, premioCliente,
+         centesimiScritti, scriviCifra, premioCliente, stelleDiGiornata, perLaProssima,
          BANCHI, CAMPAGNE, CLIENTI_PER_TAPPA } from '../data/bancarella.js'
 import { CITTA, statoCitta, statoGiornata, cittaCorrente, fatteIn, indiceDi, giornataDi,
-         cittaDelleGiornata } from '../data/bancarella-mondo.js'
+         cittaDelleGiornata, stelleGiornata, stelleCitta, stelleMassime } from '../data/bancarella-mondo.js'
 import { suono } from '../audio.js'
 import { borsa } from '../store/varieta.js'
 import Barra from '../components/Barra.vue'
@@ -37,7 +37,7 @@ const nTappa = ref(0)               // a che tappa del giro siamo
 const esposti = ref([])             // la merce sul banco di questa tappa
 const coda = ref([])                // la fila davanti al banco
 const piatto = ref([])              // le monete già posate
-const hud = reactive({ cuori: CUORI, serviti: 0, perfetti: 0, incasso: 0 })
+const hud = reactive({ cuori: CUORI, serviti: 0, perfetti: 0, incasso: 0, intoppi: 0 })
 const momento = ref('raccolta')     // raccolta | cassa
 const presi = ref([])               // merce già passata al cliente
 const sbagliato = ref('')
@@ -49,6 +49,7 @@ const digitato = ref('')            // la cifra che sta battendo sulla cassa
 const contoFatto = ref(false)       // il totale l'ha già indovinato
 const cambio = ref(null)            // il cartello del cambio banco
 const esito = ref('')               // vinta | persa
+const voto = ref(null)              // a giornata vinta: { stelle, migliore } (le stelle di questa volta e le migliori)
 const volo = ref(null)              // la roba che vola dalla cesta al cliente
 let raf = 0, ultimo = 0, apertoIl = 0, occupato = false, rifiuti = 0
 let dettoFretta = false, nVolo = 0
@@ -65,18 +66,23 @@ const cittaCorr = computed(() => cittaCorrente(prog.value.tappa, aperta))
 const vociMondo = computed(() => CITTA.map((c, k) => ({
   ...c, k, stato: statoCitta(c, prog.value.tappa, aperta), fatte: fatteIn(c, prog.value.tappa),
   tot: c.libera ? 0 : c.giornate.length,
+  stelle: stelleCitta(c, prog.value.tappa, prog.value.stelle), stelleMax: stelleMassime(c),
   serve: c.libera ? 'Si apre quando hai finito tutte le giornate.'
                   : `Prima finisci le giornate di «${CITTA[cittaCorr.value].nome}».`,
 })))
 const banchiPiazza = computed(() => CITTA[citta.value].giornate.map(id => ({
   id, giornata: giornataDi(id), numero: id === 'libera' ? '∞' : indiceDi(id) + 1,
   stato: statoGiornata(id, prog.value.tappa, aperta),
+  stelle: stelleGiornata(id, prog.value.tappa, prog.value.stelle),
   serve: prog.value.tappa < CAMPAGNE.length ? `Prima tocca a «${CAMPAGNE[prog.value.tappa].nome}».`
                                             : 'Si apre quando hai finito tutte le giornate.',
 })))
 const stellePiazza = computed(() => {
   const c = CITTA[citta.value]
-  return c.libera ? 'senza fine' : `${fatteIn(c, prog.value.tappa)} di ${c.giornate.length} giornate`
+  if (c.libera) return 'senza fine'
+  const fatte = fatteIn(c, prog.value.tappa)
+  return `${fatte} di ${c.giornate.length} giornate` +
+         (fatte ? ` · ★ ${stelleCitta(c, prog.value.tappa, prog.value.stelle)} di ${stelleMassime(c)}` : '')
 })
 let cittaPrima = 0                  // la città da fare quando è cominciata la giornata
 function entraInCitta(k) { citta.value = k; fase.value = 'piazza' }
@@ -166,10 +172,10 @@ function inizia(i = idx.value) {
   spegniOrologio()
   idx.value = i
   nTappa.value = 0
-  hud.cuori = CUORI; hud.serviti = 0; hud.perfetti = 0; hud.incasso = 0
+  hud.cuori = CUORI; hud.serviti = 0; hud.perfetti = 0; hud.incasso = 0; hud.intoppi = 0
   borsellino = borsa('bancarella'); Object.assign(guadagno, { monete: 0, nota: '' })
   piatto.value = []; occupato = false; rifiuti = 0; bonus.value = false
-  esito.value = ''
+  esito.value = ''; voto.value = null
   fase.value = 'gioco'
   apriTappa()
   ultimo = 0
@@ -335,6 +341,7 @@ function consegna() {
   const perfetto = piatto.value.length === c.minimo
   answer(c.chiave, { correct: rifiuti === 0, ms: performance.now() - apertoIl })
   hud.serviti++; hud.incasso += c.totale
+  if (rifiuti > 0) hud.intoppi++      // un conto da rifare: costa una stella (stelleDiGiornata)
   segna('clienti'); segna('incasso', c.totale)
   if (perfetto) { hud.perfetti++; bonus.value = true; segna('restiPerfetti') }
   battuta.value = pick(perfetto ? PERFETTI : GRAZIE)
@@ -366,6 +373,7 @@ function scaduto() {
   battuta.value = pick(UFFA)
   answer(c.chiave, { correct: false, ms: performance.now() - apertoIl })
   suono.no()
+  hud.intoppi++                       // un cliente perso è un intoppo (le stelle)
   if (--hud.cuori <= 0) { coda.value.shift(); return chiudi('persa') }
   prossimo()
 }
@@ -379,7 +387,13 @@ function chiudi(come) {
   spegniOrologio()
   cambio.value = null
   segnaBest('clienti', hud.serviti)
-  if (come === 'vinta' && idx.value >= 0) mercatoCompleta(idx.value, CAMPAGNE.length)
+  voto.value = null
+  if (come === 'vinta' && idx.value >= 0) {
+    const stelle = stelleDiGiornata(hud.intoppi)
+    const prima = (prog.value.stelle || {})[camp.value.id] || 0
+    mercatoCompleta(idx.value, CAMPAGNE.length, stelle)
+    voto.value = { stelle, migliore: Math.max(prima, stelle) }
+  }
   suono.fine()
 }
 
@@ -450,7 +464,7 @@ onMounted(() => {
                     cliente, dato, manca, battuta, scomponi, momento, presi, aMente,
                     daPrendere, esposti, tappa: nTappa, camp, T, cambio, esito,
                     batti, confermaTotale, digitato, contoFatto, chiediTotale, TASTI,
-                    CAMPAGNE, BANCHI, prog, guadagno, inPausa, citta, CITTA, cittaCorr, chiudi }
+                    CAMPAGNE, BANCHI, prog, guadagno, inPausa, citta, CITTA, cittaCorr, chiudi, voto }
 })
 onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
 
@@ -766,6 +780,20 @@ onBeforeUnmount(() => {
           v-if="guadagno.monete"> · <b data-monete-prese>+{{ guadagno.monete }} 🪙</b></template></p>
       <p v-if="guadagno.nota" class="mini" data-nota-monete>{{ guadagno.nota }}</p>
       <p v-if="esito === 'vinta' && idx >= 0" class="mini">{{ camp.nome }} · giornata superata</p>
+      <div v-if="voto" class="voto" data-voto :data-stelle="voto.stelle">
+        <div class="stelline" aria-hidden="true">
+          <span v-for="n in 3" :key="n" :class="{ piena: n <= voto.stelle }">{{ n <= voto.stelle ? '★' : '☆' }}</span>
+        </div>
+        <p class="testo" data-voto-testo>
+          {{ voto.stelle }} {{ voto.stelle === 1 ? 'stella' : 'stelle' }}<template
+            v-if="hud.intoppi"> · {{ hud.intoppi }} {{ hud.intoppi === 1 ? 'intoppo' : 'intoppi' }} fra conti e clienti</template>
+        </p>
+        <p v-if="voto.stelle < 3" class="mini" data-voto-serve>
+          Per {{ voto.stelle === 1 ? 'la seconda' : 'la terza' }} stella: {{ perLaProssima(voto.stelle) }}.</p>
+        <p v-else class="mini" data-voto-serve>Nessun conto sbagliato: il massimo!</p>
+        <p v-if="voto.migliore > voto.stelle" class="mini" data-voto-meglio>
+          Resta la tua migliore: {{ voto.migliore }} {{ voto.migliore === 1 ? 'stella' : 'stelle' }}.</p>
+      </div>
       <div class="riga">
         <button v-if="esito === 'vinta' && dopo !== null" class="bottone" @click="inizia(dopo)">
           {{ dopo < 0 ? 'Giornata libera ▶' : 'Prossima giornata ▶' }}
@@ -786,6 +814,12 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .negozio { background:linear-gradient(180deg,#cfe8f5,#ffe9c7 32%,#f3e6d0) }
+
+/* ---------- il voto di fine giornata ---------- */
+.voto { display:flex; flex-direction:column; align-items:center; gap:2px; margin:2px 0 4px }
+.voto .testo, .voto .mini { margin:0 }
+.stelline { display:flex; gap:6px; font-size:40px; line-height:1; color:#c9b88f }
+.stelline .piena { color:#f0a800; text-shadow:0 2px 0 #c97b12 }
 
 /* ---------- il giro del mondo ---------- */
 .giro { flex:1; min-height:0; display:flex; flex-direction:column }
