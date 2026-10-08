@@ -17,6 +17,8 @@ const props = defineProps({
   stato: { type: Object, required: true },     // { pancia, pelo, gioco }
   monete: { type: Number, default: 0 },
   granaio: { type: Object, default: () => ({}) },  // per i cibi che si producono
+  // c'è un addobbo della festa che non si ha ancora: «Vestilo» porta il segnalino
+  festa: { type: Boolean, default: false },
 })
 const emit = defineEmits(['nutri', 'coccola', 'rinomina', 'vesti', 'chiudi'])
 
@@ -125,8 +127,9 @@ const invece = computed(() => {
 
     <div class="fa-fila">
       <!-- Vestilo sta fra i tasti in fondo: non riempie nessuna barra. -->
-      <button class="fa-bot piano" data-azione="vesti"
-              @click="emit('vesti')">🎩 Vestilo</button>
+      <!-- festa: c'è un cappello della festa che non ha ancora, e la bestia lo vorrebbe -->
+      <button class="fa-bot piano fa-con-bollo" data-azione="vesti"
+              @click="emit('vesti')">🎩 Vestilo<b v-if="festa" class="fa-bollo" data-festa>🎃</b></button>
       <button class="fa-bot forte" @click="emit('chiudi')">Va bene</button>
     </div>
     <!-- il nome si dà una volta e si cambia di rado -->

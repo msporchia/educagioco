@@ -648,9 +648,9 @@ export class Fattoria {
   comeEVestita(chi) { return addossoA(this.addobbiDi(chi)) }
 
   // In vendita più il sospeso che il bambino ha già (guardaroba o addosso).
-  vestiarioDi(chi) {
+  vestiarioDi(chi, stagione = '') {
     const tieni = Object.keys(this.guardaroba || {}).filter(id => this.quantiAddobbi(id) > 0)
-    return addobbiPer(chi, [...tieni, ...Object.values(this.addobbiDi(chi))])
+    return addobbiPer(chi, [...tieni, ...Object.values(this.addobbiDi(chi))], stagione)
   }
 
   compraAddobbo(id) {

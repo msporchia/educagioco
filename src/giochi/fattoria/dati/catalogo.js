@@ -362,6 +362,9 @@ export const CATEGORIE = [
 
   // Le feste: stagione: è una chiave di FINESTRE — vedi docs/fattoria/stagioni.md.
   { chiave: 'feste', zona: 'bello', nome: 'Feste', icona: '🎉', stagionale: true, voci: [
+    // Le zucche sono disegnate in pixel nel codice (scena/pixel-festa.js, poi strumenti/sprite/festa.mjs).
+    V('zucca_intagliata', 'zucca_intagliata', 'Zucca intagliata', 6, { stagione: 'halloween' }),
+    V('zucche_mucchio', 'zucche_mucchio',  'Due zucche',          10, { stagione: 'halloween' }),
     V('albero_natale', 'albero_verde',      'Albero con le lucine', 24,
       { stagione: 'natale', luci: true }),
   ] },

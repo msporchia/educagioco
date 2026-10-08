@@ -10,6 +10,10 @@ export const ADDOBBI = [
   { id: 'cappellino', nome: 'Cappellino',  emoji: '🧢', prezzo: 12, dove: 'testa', misura: 10 },
   { id: 'cilindro',   nome: 'Cilindro',    emoji: '🎩', prezzo: 18, dove: 'testa', misura: 11 },
   { id: 'corona',     nome: 'Coroncina',   emoji: '👑', prezzo: 24, dove: 'testa', misura: 10 },
+  // Della festa: in vendita solo a Halloween, ma chi l'ha comprato lo tiene. È disegnato in pixel
+  // (scena/pixel-festa.js), e misura è la sua larghezza in pixel dello sprite.
+  { id: 'cappello_strega', nome: 'Cappello da strega', disegno: 'cappello_strega', prezzo: 8,
+    dove: 'testa', misura: 10, stagione: 'halloween' },
   // sul muso: di spalle non si vedono (l'aggancio muso non esiste nel verso "su").
   { id: 'occhialini', nome: 'Occhialini',  emoji: '👓', prezzo: 10, dove: 'muso', misura: 9 },
   { id: 'occhiali',   nome: 'Occhiali da sole', emoji: '🕶️', prezzo: 16, dove: 'muso', misura: 9 },
@@ -44,19 +48,21 @@ export function staA(id, chi) {
   return portaDi(chi).includes(a.dove)
 }
 
-// Ordinati per aggancio poi prezzo; tieni mostra i sospesi già comprati (un fiocco pagato ieri resta un tasto).
-export const addobbiPer = (chi, tieni = []) =>
-  ADDOBBI.filter(a => staA(a.id, chi) && (!a.sospeso || tieni.includes(a.id)))
+// Ordinati per aggancio poi prezzo; tieni mostra i sospesi già comprati (un fiocco pagato ieri resta un
+// tasto), e così quelli di una festa finita. Quelli della festa di oggi vengono per primi.
+export const addobbiPer = (chi, tieni = [], stagione = '') =>
+  ADDOBBI.filter(a => staA(a.id, chi) && (!a.sospeso || tieni.includes(a.id)) &&
+                      (!a.stagione || a.stagione === stagione || tieni.includes(a.id)))
     .slice()
     .sort((x, y) => AGGANCI_TUTTI.indexOf(x.dove) - AGGANCI_TUTTI.indexOf(y.dove) ||
-                    x.prezzo - y.prezzo)
+                    !!y.stagione - !!x.stagione || x.prezzo - y.prezzo)
 
 // La figura e la taglia, non il nome dell'aggancio: dove cade il punto lo mette chi conosce l'animale.
 export function addossoA(portati = {}) {
   const fuori = []
   for (const dove of AGGANCI_TUTTI) {
     const a = PER_ID[portati[dove]]
-    if (a) fuori.push({ id: a.id, dove, testo: a.emoji, misura: a.misura })
+    if (a) fuori.push({ id: a.id, dove, testo: a.emoji, disegno: a.disegno, misura: a.misura })
   }
   return fuori
 }
@@ -68,7 +74,7 @@ export function guastiDegliAddobbi() {
     if (visti.has(a.id)) g.push(`id doppio fra gli addobbi: ${a.id}`)
     visti.add(a.id)
     if (!a.nome) g.push(`${a.id}: senza nome`)
-    if (!a.emoji && !a.pezzo) g.push(`${a.id}: non si sa come disegnarlo`)
+    if (!a.emoji && !a.pezzo && !a.disegno) g.push(`${a.id}: non si sa come disegnarlo`)
     if (!AGGANCI_TUTTI.includes(a.dove))
       g.push(`${a.id}: l'aggancio «${a.dove}» non esiste`)
     if (!(a.misura > 0)) g.push(`${a.id}: misura impossibile`)

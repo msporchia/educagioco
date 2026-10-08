@@ -447,8 +447,8 @@ def ad_aiuola(pezzo, regola, nome):
     buchi. Qui la parte di terra (le ultime `terra` righe; quello che sta
     sopra è la pianta che sborda) perde l'alone, gli angoli si riempiono
     col colore della terra vicina e il tutto va al `piede` esatto; la
-    pianta sopra si allarga allo stesso modo. L'orlo si scurisce di un
-    filo: è il solco che fa contare i campi quando sono tutti attaccati.
+    pianta sopra si allarga allo stesso modo. Provato un orlo più scuro,
+    per contare i campi attaccati: si leggeva come un bordo nero sbagliato.
 
     Si dichiara nel foglietto per prefisso:
     `"aiuola": {"prefisso": "campo_", "terra": 27, "piede": [32, 32]}`."""
@@ -483,12 +483,6 @@ def ad_aiuola(pezzo, regola, nome):
                     nuovi.append(q)
         pieni = nuovi
     suolo = suolo.resize((pw, ph), Image.NEAREST)
-    sp = suolo.load()
-    for y in range(ph):
-        for x in range(pw):
-            if x in (0, pw - 1) or y in (0, ph - 1):
-                r, g, b, a = sp[x, y]
-                sp[x, y] = (r * 4 // 5, g * 4 // 5, b * 4 // 5, a)
     fatto = Image.new('RGBA', (pw, sopra + ph), (0, 0, 0, 0))
     if sopra:
         fatto.paste(pezzo.crop((0, 0, w, sopra)).resize((pw, sopra), Image.NEAREST), (0, 0))

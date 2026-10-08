@@ -1,0 +1,32 @@
+{
+ "__": "GENERATO da strumenti/sprite/festa.mjs dai disegni di src/giochi/fattoria/scena/pixel-festa.js: non si scrive a mano.",
+ "fondo": "trasparente",
+ "colori": 0,
+ "cella": [
+  1,
+  1
+ ],
+ "famiglia": "oggetto",
+ "sprite": {
+  "zucca_intagliata": {
+   "da": [
+    0,
+    0
+   ],
+   "cella": [
+    11,
+    11
+   ]
+  },
+  "zucche_mucchio": {
+   "da": [
+    12,
+    2
+   ],
+   "cella": [
+    16,
+    9
+   ]
+  }
+ }
+}

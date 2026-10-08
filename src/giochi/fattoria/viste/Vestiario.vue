@@ -5,6 +5,7 @@
 import { computed } from 'vue'
 import { AGGANCI_TUTTI } from '../dati/animali.js'
 import Provino from './Provino.vue'
+import Pixel from './Pixel.vue'
 import Chiudi from './Chiudi.vue'
 
 const NOMI = {
@@ -57,11 +58,12 @@ const puoi = a => addosso(a) || ce(a) || (!a.sospeso && manca(a) === 0)
       </div>
       <div class="fa-gesti">
         <button v-for="a in g.voci" :key="a.id"
-                :class="['fa-cibo', { suo: addosso(a), viva: addosso(a),
+                :class="['fa-cibo', { suo: addosso(a), viva: addosso(a) || (a.stagione && !ce(a)),
                                       altrui: !puoi(a) }]"
                 :data-addobbo="a.id" :disabled="!puoi(a)"
                 @click="emit('metti', a.id)">
-          <b>{{ a.emoji }}</b>
+          <Pixel v-if="a.disegno" :disegno="a.disegno" :lato="30" />
+          <b v-else>{{ a.emoji }}</b>
           <span>{{ a.nome }}</span>
           <em v-if="addosso(a)">addosso</em>
           <em v-else-if="ce(a)">ce l'hai</em>
