@@ -1,5 +1,6 @@
 // il gemello imperativo di Domanda.vue: `await chiedi(modulo, { grado })`, per giochi fuori Vue (Survivors, sotterraneo, castello). Il CSS è iniettato come stringa una volta sola: il build resta un HTML unico.
 import { dipingi } from './riquadro.js'
+import { pezziDelMazzo, mazzoDom } from '../../grafica/soldi.js'
 import { sorteQualunque } from '../nucleo/sorte.js'
 import { evidenziando, fraseDaLeggere } from '../nucleo/domanda.js'
 
@@ -55,7 +56,7 @@ const STILE = `
   background: #f8efd6; color: #2a2417; text-align: left;
 }
 .quiz-foglio::before {
-  content: '\201D'; position: absolute; top: -4px; right: 10px;
+  content: '\\201D'; position: absolute; top: -4px; right: 10px;
   font: 700 44px/1 "Emoji Gioco", Georgia, "Times New Roman", serif; color: rgba(224, 162, 58, .55);
   pointer-events: none;
 }
@@ -118,6 +119,8 @@ function riempi(el, cosa, pittori) {
     el.appendChild(document.createTextNode(cosa.emoji))
   } else if (cosa.testo !== undefined) {
     el.appendChild(document.createTextNode(cosa.testo))
+  } else if (pezziDelMazzo(cosa.scena)) {
+    el.appendChild(mazzoDom(pezziDelMazzo(cosa.scena))) // i soldi della bancarella, non un canvas
   } else {
     const cv = document.createElement('canvas')
     el.appendChild(cv)

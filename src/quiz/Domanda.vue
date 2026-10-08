@@ -10,6 +10,8 @@
    tutta invece di tagliarla. */
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { dipingi } from './grafica/riquadro.js'
+import MazzoSoldi from '../components/MazzoSoldi.vue'
+import { pezziDelMazzo } from '../grafica/soldi.js'
 import Giudizio from '../components/Giudizio.vue'
 import TastoSalta from '../components/TastoSalta.vue'
 import { giudiziAccesi } from '../store/giudizi.js'
@@ -49,6 +51,9 @@ const diFretta = ref(false) // vedi docs/apprendimento/la-domanda.md#troppo-di-f
 // per le tipologie alleggerite, l'esempio svolto (o il solo metodo) prima di rispondere: deciso a inizio domanda
 const prima = ref(null)
 const svolto = computed(() => prima.value?.esempio || null)
+// i soldi non sono un canvas: gli stessi pezzi della bancarella, in file (grafica/soldi.js)
+const soldiInMano = computed(() => pezziDelMazzo(props.domanda.soggetto?.scena))
+const soldiSvolti = computed(() => pezziDelMazzo(svolto.value?.soggetto?.scena))
 const svoltaGiusta = computed(() => svolto.value?.risposte?.[svolto.value.giusta] || null)
 const teloSvolto = ref(null)
 const teloSvoltaGiusta = ref(null)
@@ -324,7 +329,8 @@ onUnmounted(() => {
         <div class="qz-svolto-titolo">Guarda come si fa</div>
         <div class="qz-svolto-consegna">{{ svolto.testo }}</div>
         <div v-if="svolto.soggetto" class="qz-svolto-soggetto">
-          <canvas v-if="svolto.soggetto.scena" ref="teloSvolto" class="qz-svolto-telo" />
+          <MazzoSoldi v-if="soldiSvolti" :pezzi="soldiSvolti" />
+          <canvas v-else-if="svolto.soggetto.scena" ref="teloSvolto" class="qz-svolto-telo" />
           <span v-else-if="svolto.soggetto.emoji">{{ svolto.soggetto.emoji }}</span>
           <!-- stesso foglio della domanda vera, solo più piccolo: l'esempio si legge come si leggerà lei -->
           <blockquote v-else-if="svoltaDaLeggere" class="qz-foglio svolto" data-esempio-frase>
@@ -360,7 +366,8 @@ onUnmounted(() => {
       </blockquote>
       <div v-else-if="domanda.soggetto" class="qz-soggetto" :class="{ nominato: domanda.soggetto.nome }">
         <!-- la lente in un angolo dice che il disegno si può ingrandire, perché un canvas non sembra un tasto -->
-        <button v-if="domanda.soggetto.scena" type="button" class="qz-guarda"
+        <MazzoSoldi v-if="soldiInMano" :pezzi="soldiInMano" />
+        <button v-else-if="domanda.soggetto.scena" type="button" class="qz-guarda"
                 aria-label="ingrandisci il disegno" @click="ingrandisci">
           <canvas ref="teloSoggetto" class="qz-telo-grande" />
           <span class="qz-lente" aria-hidden="true">🔍</span>

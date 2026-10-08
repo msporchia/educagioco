@@ -1,29 +1,10 @@
-// due scene sorde a euro/risposte: { che:'monete', pezzi:[{cents,testo}] } e { che:'linea-numeri', da, a, punti:[{lettera,pos}] }. `cents` decide solo la forma (colore serve solo a distinguere a vista); `pos` è la frazione 0..1, il pittore non sa che numero rappresenti.
+// due scene sorde a euro/risposte: { che:'monete', pezzi:[{cents,testo}] } e { che:'linea-numeri', da, a, punti:[{lettera,pos}] }. `pos` è la frazione 0..1, il pittore non sa che numero rappresenti.
 
-const COLORI_MONETA = { piccola: '#d7a24a', grande: '#e7c565', nota: '#bcd6a3' }
-
-function pezzo(p, cx, cy, mz) {
-  if (mz.cents >= 500) {                       // banconota: un rettangolo
-    p.rett(cx - 19, cy - 11, 38, 22, COLORI_MONETA.nota)
-    p.testo(mz.testo, cx, cy, '#22421f', 9, 800)
-    return
-  }
-  const grande = mz.cents >= 100
-  p.cerchio(cx, cy, grande ? 16 : 12.5, grande ? COLORI_MONETA.grande : COLORI_MONETA.piccola)
-  p.testo(mz.sulla ?? mz.testo, cx, cy, '#5a3d10', grande ? 8 : 7, 800)
-}
-
-export function monete(p, { pezzi = [] }) {
-  const n = pezzi.length || 1
-  const cols = n <= 2 ? n : 3
-  const rows = Math.ceil(n / cols)
-  const cellW = 100 / cols, cellH = 100 / rows
-  pezzi.forEach((mz, i) => {
-    const cx = cellW * (i % cols) + cellW / 2
-    const cy = cellH * Math.floor(i / cols) + cellH / 2
-    pezzo(p, cx, cy, mz)
-  })
-}
+/* Le monete non si dipingono qui: le mostrano i pezzi HTML della bancarella
+   (`grafica/soldi.js`), da `Domanda.vue` e da `scheda.js`. Resta una funzione
+   vuota solo perché `guastiDi` pretende un pittore per ogni scena. */
+export function monete() {}
+monete.altrove = true
 
 export function lineaNumeri(p, { da = 0, a = 1, punti = [] }) {
   const x0 = 12, x1 = 88, y = 52
