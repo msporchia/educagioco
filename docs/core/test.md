@@ -70,6 +70,10 @@ controlli: importa da `../aiuto/`.
   `SCATTI=1`). Mai `page.screenshot`: si passa da `scatto(page, nome)`, che
   a foto spente non fa niente e a foto accese scrive solo in
   `test/scatti/`, ignorata da git.
+- **Un tetto di tempo vale da solo.** Il lanciatore con più corsie mette
+  `IN_PARALLELO=1` nell'ambiente: una misura in millisecondi (la geografia
+  delle isole) lì raddoppia il tetto come sulla CI, perché otto test accanto
+  la rallentano tutta la corsa, non solo un attimo.
 - **Il roster va scritto prima del reload.** Un archivio vuoto manda
   all'onboarding: `apriGioco` semina da sé un giocatore di prova, e
   `giocatori: null` prova il primo avvio vero. Gli id di prova sono

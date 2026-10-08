@@ -136,7 +136,8 @@ if (pronta) {
   const itemDi = k => { if (!items.has(k)) items.set(k, newItem()); return items.get(k) }
   const s = new Sessione({ tappa: pronta, itemDi, rnd: sorte(2), partenza: 2 })
   let pagine = 0, tentate = 0
-  for (let i = 0; i < 60; i++) {
+  // 120 e non 60: l'ordine delle domande dipende anche dall'orologio dello SRS, e con 60 una volta su venti le trappole erano 4
+  for (let i = 0; i < 120; i++) {
     const q = s.prossima()
     const diParola = q.opzioni && q.opzioni.find(o => !o.giusta && o.trappola && o.trappola.pesa === 'parola')
     const e = s.rispondi(q, diParola || (q.opzioni ? q.opzioni.find(o => o.giusta) : ordineGiusto(q)))

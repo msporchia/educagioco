@@ -253,7 +253,8 @@ async function corsia() {
     if (dalVivo) console.log(testa)
     const inizio = Date.now()
     const suo = Math.max(TEMPO, t.suo)
-    const ambiente = conScatti ? { ...process.env, SCATTI: '1' } : process.env
+    // IN_PARALLELO: le misure di tempo sanno di avere accanto altri test (inglese-isole, spagnolo-isole)
+    const ambiente = { ...process.env, ...(conScatti ? { SCATTI: '1' } : {}), ...(corsie > 1 ? { IN_PARALLELO: '1' } : {}) }
     const raccogli = USCITE && resolve(USCITE, etichetta.replace(/\//g, '_') + '.txt')
     const { codice, uscita } = await esegui('node', [relative(RADICE, t.file)],
                                             { secondi: suo, env: ambiente, raccogli })
