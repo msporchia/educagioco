@@ -9,6 +9,11 @@ import { COSE, STANZE_TORCIA } from '../dati/cose.js'
 // la forma di `cfg.avventure[eroe].roba` nel profilo: sale se un campo cambia significato (docs/core/ripresa.md)
 export const VERSIONE_ROBA = 1
 
+// le abilità che il confronto di un pezzo mette in riga: un'abilità nuova si aggiunge qui, in `addosso()` e
+// in `ABILITA` di viste/pezzo.js (un test controlla che le due liste coincidano)
+export const ABILITA_CONFRONTATE = ['att', 'dif', 'vita', 'gemme', 'luce']
+const CASELLE = ['mano', 'mancina', 'corpo', 'dito']
+
 export const ROBA_VUOTA = () => ({
   v: VERSIONE_ROBA, gemme: 0, zaino: [], mano: null, mancina: null, corpo: null, dito: null,
   torcia: 0, torce: 0,
@@ -217,7 +222,10 @@ export class Corredo {
   }
 
   // I numeri prima e dopo essersi messi `k` addosso, nel posto che sceglierebbe `usa` (il pannello della bottega e
-  // dello zaino: «⚔️ 3 → 5»). Si prova su una copia; `bloccata` è l'arma a due mani che non lascia posto allo scudo
+  // dello zaino: «⚔️ 3 → 5»). Si prova su una copia; `bloccata` è l'arma a due mani che non lascia posto allo scudo.
+  // `cambio` è il confronto pezzo contro pezzo: `toglie` sono i pezzi che il nuovo manda via dalle caselle (uno,
+  // nessuno se il posto è vuoto, due se un'arma a due mani sfratta lo scudo), `vecchi` e `nuovi` quanto danno
+  // all'eroe, abilità per abilità, le caselle toccate prima e dopo (la mano debole vale metà braccio)
   seLoMetto(k) {
     const c = COSE[k]
     if (!c || !c.dove || !this.posso(k)) return null
@@ -229,11 +237,36 @@ export class Corredo {
     prova.sistemaLeMani()
     // la vita è il tetto: nella discesa cresce coi piani (vitaMax), sopra è quella con la roba
     const tetto = this.vitaMax ?? this.vitaConLaRoba
-    const numeri = (x, vita) => ({ att: x.att, dif: x.dif, vita, luce: x.addosso('luce'), gemme: x.addosso('gemme') })
+    // braccio e difesa sono quelli dell'eroe (con la roba), gli altri solo quello che dà la roba
+    const numeri = (x, vita) => {
+      const n = {}
+      for (const campo of ABILITA_CONFRONTATE)
+        n[campo] = campo === 'vita' ? vita : campo === 'att' ? x.att : campo === 'dif' ? x.dif : x.addosso(campo)
+      return n
+    }
     return {
       dove, fuori: fuori === k ? null : fuori,
       prima: numeri(this, tetto),
       dopo: numeri(prova, tetto + prova.addosso('vita') - this.addosso('vita')),
+      cambio: this.cambioCon(prova, dove),
+    }
+  }
+
+  // le caselle che cambiano da qui alla copia `prova` (più `dove`, anche se il pezzo è lo stesso): chi c'era e
+  // quanto dà, chi arriva e quanto dà. Le altre caselle fanno da base, così la somma delle righe è il totale che cambia
+  cambioCon(prova, dove) {
+    const posti = CASELLE.filter(d => d === dove || this.casella(d) !== prova.casella(d))
+    const base = this.copia()
+    for (const d of posti) base.metti(d, null)
+    const lato = x => {
+      const n = {}
+      for (const campo of ABILITA_CONFRONTATE) n[campo] = x.addosso(campo) - base.addosso(campo)
+      return n
+    }
+    return {
+      dove,
+      toglie: posti.map(d => this.casella(d)).filter(Boolean),
+      vecchi: lato(this), nuovi: lato(prova),
     }
   }
 

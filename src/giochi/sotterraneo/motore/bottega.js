@@ -3,7 +3,7 @@
 // finiscono (le cure, la torcia) stanno in cima. L'armaiolo e il rigattiere portano la riga della storia con cui
 // si entra nella prossima discesa (motore/storia.js). Gira in Node: il giocatore finto ci fa la spesa (banco.js).
 // Le regole: docs/sotterraneo/roba.md, "I mercanti di sopra".
-import { Corredo } from './corredo.js'
+import { Corredo, ABILITA_CONFRONTATE } from './corredo.js'
 import { COSE, pescaMerce } from '../dati/cose.js'
 import { mercanteDi, vendeLa, righeDi, profonditaDelBanco } from '../dati/mercanti.js'
 import { bancoDelPasso, vetrinaDelPasso } from './storia.js'
@@ -60,7 +60,7 @@ export class Bottega extends Corredo {
     if (!c || !c.dove || !this.posso(k) || !this.casella(c.dove)) return false
     const p = this.seLoMetto(k)
     if (!p || !p.prima) return false
-    return !['att', 'dif', 'vita', 'luce', 'gemme'].some(n => p.dopo[n] > p.prima[n])
+    return !ABILITA_CONFRONTATE.some(n => p.dopo[n] > p.prima[n])
   }
 
   compraDa(chiave, k) {
