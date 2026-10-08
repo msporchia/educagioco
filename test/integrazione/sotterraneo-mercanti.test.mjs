@@ -175,8 +175,8 @@ uguale('e la carta di sopra ha le gemme di adesso', await gemme(), 60 - spese)
 /* ---------- 3. il rigattiere: si vende ---------- */
 await alBanco('rigattiere')
 uguale('il rigattiere ha la linguetta «Vendi»', await page.locator('[data-scheda="vendi"]').count(), 1)
-controlla('e il banco non è mai vuoto: i gioielli più su si vedono, spenti',
-          await page.locator('[data-casella-pezzo][data-chiusa="1"]').count() > 0)
+controlla('e il banco non è mai vuoto: i gioielli più su si vedono, col prezzo alto',
+          await page.locator('[data-casella-pezzo][data-avanti]').count() > 0)
 uguale('niente «non ho niente per te»', await page.locator('[data-banco-vuoto]').count(), 0)
 await vendiNellaBottega(page, 'ascia', { tocca })
 uguale('venduta, l\'ascia non c\'è più', await page.locator('[data-vendo="ascia"]').count(), 0)
@@ -199,16 +199,28 @@ uguale('e non compra: dice chi lo fa', await page.locator('[data-chi-compra]').c
    trova la spada corta, lo scudo di legno e il panciotto (dati/storia.js) */
 for (const k of ['spada-corta', 'scudo-legno', 'panciotto']) {
   uguale(`l'armaiolo ha ${COSE[k].nome.toLowerCase()}, del passo dopo`, await allaLinguettaDi(page, k, { tocca }), true)
-  uguale('e si compra', await page.locator(`[data-casella-pezzo="${k}"]:not([data-chiusa])`).count(), 1)
+  uguale('e si compra', await page.locator(`[data-casella-pezzo="${k}"]:not([data-avanti])`).count(), 1)
 }
-/* la spada è della riga dopo ancora: si vede, spenta, e dice quando arriva */
+/* la spada è della riga dopo ancora: si vede, costa il doppio, e con le gemme si compra (niente lucchetto) */
 uguale('la spada si vede', await allaLinguettaDi(page, 'spada', { tocca }), true)
-uguale('ma è chiusa', await page.locator('[data-casella-pezzo="spada"][data-chiusa="1"]').count(), 1)
+uguale('una riga avanti', await page.locator('[data-casella-pezzo="spada"]').getAttribute('data-avanti'), '1')
 await toccaIl('[data-casella-pezzo="spada"]')
 await attendi(page, 200)
-controlla('e dice dopo quale discesa', (await page.locator('[data-quando]').innerText()).includes('torre in rovina'),
-          await page.locator('[data-pannello]').innerText())
-uguale('col tasto spento', await page.locator('[data-azione="compra"]').isDisabled(), true)
+controlla('e dice che costa di più', (await page.locator('[data-avanti-costa]').count()) === 1, await page.locator('[data-pannello]').innerText())
+uguale('senza «quando avrai finito»', await page.locator('[data-quando]').count(), 0)
+uguale('col tasto al doppio del prezzo', (await page.locator('[data-azione="compra"]').innerText()).replace(/\s+/g, ' ').trim(),
+       `Compra 💎 ${COSE.spada.prezzo * 2}`)
+uguale('e acceso, perché le gemme bastano', await page.locator('[data-azione="compra"]').isDisabled(), false)
+/* il cavaliere non vede le bacchette né i pezzi di stoffa */
+{
+  const tutti = []
+  for (const sc of await page.locator('[data-bottega] [data-scheda]').evaluateAll(els => els.map(e => e.dataset.scheda))) {
+    await toccaIl(`[data-bottega] [data-scheda="${sc}"]`)
+    await attendi(page, 150)
+    tutti.push(...await page.locator('[data-casella-pezzo]').evaluateAll(els => els.map(e => e.dataset.casellaPezzo)))
+  }
+  uguale('il cavaliere non vede la verga né i pezzi che non porta', tutti.filter(k => ['bacchette', 'archi', 'stoffa'].includes(COSE[k].famiglia)).join(), '')
+}
 /* il confronto: il cavaliere a mani nude ha braccio 3, con la spada corta 4 */
 await allaLinguettaDi(page, 'spada-corta', { tocca })
 await toccaIl('[data-casella-pezzo="spada-corta"]')
