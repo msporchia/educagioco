@@ -416,6 +416,8 @@
 }
 /* l'altezza la limita già la modale: un secondo tetto in dvh qui sotto stringerebbe le risposte due volte */
 .sot-modale .sot-domanda { max-height: none }
+/* lo scontro sta in mezzo al campo, non in mezzo allo schermo: sotto c'è la barra coi globi (64 px, barra.md) */
+.sot-velo.sot-velo-scontro { padding-bottom: calc(16px + 64px + env(safe-area-inset-bottom)) }
 @keyframes sot-appare { from { opacity: 0 } }
 @keyframes sot-cresce { from { transform: scale(.94); opacity: 0 } }
 /* stesso pannello messo in due posti: devono leggersi uguale */

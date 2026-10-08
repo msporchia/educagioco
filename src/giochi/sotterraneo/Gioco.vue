@@ -1013,7 +1013,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <!-- lo scontro sta al centro, non sale dal basso: un mostro addosso arriva mentre si cammina, e in
              fondo allo schermo chi guarda il proprio eroe non lo vedrebbe. Niente classe `sot-foglio`
              apposta: `misuraFoglio()` cerca quella, e non trovandola la telecamera non fa spazio a un pannello -->
-        <div v-if="foglio && foglio.che === 'scontro'" class="sot-velo">
+        <div v-if="foglio && foglio.che === 'scontro'" class="sot-velo sot-velo-scontro">
           <div class="sot-modale">
             <Scontro v-bind="nemico" :scosso="scosso" :scambio="scambio" />
             <div v-if="domanda" class="sot-domanda">
