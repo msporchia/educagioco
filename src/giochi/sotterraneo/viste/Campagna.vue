@@ -19,9 +19,10 @@ const props = defineProps({
   terra: { type: Object, default: null },    // la terra dell'avventura: la nebbia, dove si era, se il minatore ha già parlato
   missioni: { type: Object, default: () => ({}) },   // lo stato delle missioni dell'avventura (motore/missioni.js)
   azioneMissione: { type: Function, default: null },  // (id, 'prendi' | 'consegna') → l'esito, da Gioco.vue
+  segui: { type: String, default: null },    // la missione che le freccine seguono, scelta nel diario (avventura.segui)
   roba: { type: Object, default: null },     // quello che ci si porta dietro, già contato (schedaConLaRoba): { vita, att, dif, gemme, mano, mancina, corpo, tratti… }
 })
-const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe', 'terra', 'bottega'])
+const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe', 'terra', 'bottega', 'segui'])
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 
 // l'armatura non si vede sul ritratto (come in discesa): sta accanto ai numeri, con la sua figura
@@ -36,7 +37,13 @@ const portale = computed(() => (props.ripresa && props.ripresa.via === 'portale'
 
 // il diario delle missioni (viste/Diario.vue): un tasto accanto alla carta di chi scende, col numero di quelle aperte
 const diarioAperto = ref(false)
-const riassunto = computed(() => diario(props.missioni, props.tappe))
+const riassunto = computed(() => diario(props.missioni, props.tappe, props.segui))
+// «vai da …» nel dettaglio: il diario si chiude e l'eroe va da chi aspetta (viste/Terra.vue, vaDa)
+const terraEl = ref(null)
+function vaDa(chi) {
+  diarioAperto.value = false
+  if (terraEl.value) terraEl.value.vaDa(chi)
+}
 const pronte = computed(() => riassunto.value.inMano.some(v => v.stato === 'fatta'))
 
 function tocca(t) {
@@ -54,8 +61,8 @@ function comincia() {
 <template>
   <div class="sot-tappe">
     <!-- la discesa lasciata dal portale è anche il portale gemello nel villaggio: tutti e due riprendono la stessa sosta -->
-    <Terra :tappe="tappe" :abisso="abisso" :eroe="eroe" :terra="terra" :roba="roba"
-           :missioni="missioni" :azione-missione="azioneMissione"
+    <Terra ref="terraEl" :tappe="tappe" :abisso="abisso" :eroe="eroe" :terra="terra" :roba="roba"
+           :missioni="missioni" :azione-missione="azioneMissione" :segui="segui"
            :giaScesa="ripresa ? ripresa.tappa : null" :portale="portale"
            @scendi="tocca" @terra="v => $emit('terra', v)" @bottega="k => $emit('bottega', k)"
            @riprendi="$emit('riprendi')">
@@ -110,7 +117,8 @@ function comincia() {
       </template>
     </Terra>
 
-    <Diario v-if="diarioAperto" :stati="missioni" :tappe="tappe" @chiudi="diarioAperto = false" />
+    <Diario v-if="diarioAperto" :stati="missioni" :tappe="tappe" :segui="segui" @chiudi="diarioAperto = false"
+            @segui="id => $emit('segui', id)" @vai="vaDa" />
 
     <!-- detto prima: la roba resta, la discesa ricomincia da capo -->
     <LascioPerdere v-if="perdere && ripresa" :nome="ripresa.nome"

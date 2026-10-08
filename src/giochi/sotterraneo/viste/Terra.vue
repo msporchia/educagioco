@@ -33,6 +33,7 @@ const props = defineProps({
   roba: { type: Object, default: null },       // per l'arma in pugno: { mano, mancina }
   missioni: { type: Object, default: () => ({}) },   // { [id]: 'presa' | 'fatta' | 'consegnata' } (motore/missioni.js)
   azioneMissione: { type: Function, default: null },  // (id, 'prendi' | 'consegna') → l'esito
+  segui: { type: String, default: null },     // la missione che la freccia azzurra segue, se scelta nel diario
 })
 const emit = defineEmits(['scendi', 'terra', 'bottega', 'riprendi'])
 
@@ -142,7 +143,7 @@ function aggiornaFuori() {
     const sy = (c.piede.y + 0.5) * CELLA * S - cam.y * S - 20
     segna(sx, sy, { x: c.accanto.x + 0.5, y: c.accanto.y + 0.5 }, { chiave: c.chiave, nome: c.nome })
   }
-  const meta = discesaDaSeguire(props.missioni, io, PIEDI_DELLE_DISCESE)
+  const meta = discesaDaSeguire(props.missioni, io, PIEDI_DELLE_DISCESE, props.segui)
   if (meta) {
     const p = POSTI[POSTO_DI[meta]]
     const sx = (p.riquadro[0] + p.riquadro[2] / 2) * S - cam.x * S
@@ -165,6 +166,8 @@ function aggiornaFuori() {
 }
 // toccandolo l'eroe ci va, come toccando lui (e il fumetto si apre all'arrivo)
 const vaDa = chiave => (chiave === 'minatore' ? toccaMinatore() : toccaPersonaggio(personaggi.find(m => m.chiave === chiave)))
+// anche il diario manda l'eroe da chi aspetta (viste/Diario.vue, «vai da …»)
+defineExpose({ vaDa })
 // e la freccia azzurra porta ai piedi della discesa, dove si apre il fumetto
 const vaAllaDiscesa = chiave => { const p = posti.value.find(p => p.nome === POSTO_DI[chiave]); if (p) toccaPosto(p) }
 

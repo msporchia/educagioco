@@ -29,7 +29,7 @@ import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo } from './motore/corredo.js'
 import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer, promemoria,
-         rotta as rottaDi } from './motore/missioni.js'
+         rotta as rottaDi, seguita } from './motore/missioni.js'
 import { Bottega } from './motore/bottega.js'
 import { scrivi, leggi, dice, viaDi, PORTALE as VIA_PORTALE } from './motore/sosta.js'
 import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata }
@@ -164,6 +164,12 @@ function fatteGiu(c) {
    premio va sulla roba dell'avventura, gemme o un gioiello, e a volte monete, che passano dalla borsa del gioco
    come ogni altra (docs/sotterraneo/missioni.md) */
 const missioni = computed(() => qui.value.missioni || {})
+// la missione che le freccine seguono, se nel diario ne è stata scelta una e quella è ancora presa
+// (motore/missioni.js, seguita; docs/sotterraneo/missioni-freccina.md)
+const segui = computed(() => seguita(missioni.value, qui.value.segui))
+function seguiMissione(id) {
+  nellAvventura({ segui: id && seguita(missioni.value, id) ? id : null }, { subito: true })
+}
 function azioneMissione(id, azione) {
   if (azione === 'prendi') {
     const n = prendiMissione(missioni.value, id, tappe.value)
@@ -176,7 +182,8 @@ function azioneMissione(id, azione) {
   const r = consegnaMissione(missioni.value, id, b)
   if (!r) return null
   if (r.esito !== 'consegnata') { suono.no(); return { esito: r.esito, monete: 0 } }
-  nellAvventura({ missioni: r.stati, roba: b.roba }, { subito: true })
+  // la scelta di quale seguire cade con la missione consegnata
+  nellAvventura({ missioni: r.stati, roba: b.roba, ...(qui.value.segui === id ? { segui: null } : {}) }, { subito: true })
   suono.livello()
   // le monete del regalo: quelle che il salvadanaio della varietà lascia passare, non una di più
   return { esito: 'consegnata', monete: r.monete ? borsa(CHIAVE).paga(r.monete) : 0 }
@@ -521,7 +528,7 @@ const rotta = ref(null)
 const rottaEl = ref(null)
 let rottaChiave = ''
 function posaLaRotta(c) {
-  const r = rottaDi(c)
+  const r = rottaDi(c, segui.value)
   const chiave = r ? `${r.id}|${r.verso}` : ''
   if (chiave !== rottaChiave) { rottaChiave = chiave; rotta.value = r ? { id: r.id, verso: r.verso, nome: r.nome } : null }
   const el = rottaEl.value
@@ -858,7 +865,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->
         <Campagna :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
-                  :missioni="missioni" :azione-missione="azioneMissione"
+                  :missioni="missioni" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
                   @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda"
                   @eroe="scegliEroe = true" @bottega="apriBottega" />
         <!-- la bottega di un mercante di sopra: quasi a tutto schermo, la ✕ in alto a destra, niente domande.
