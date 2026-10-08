@@ -13,11 +13,15 @@
      passeggiata.
    E chi gira tutto (combatte ogni mostro) con la roba attesa, a otto su
    dieci, arriva in fondo lo stesso quasi sempre.
+   Poi chi spende: i pezzi delle righe dopo si comprano a un prezzo più alto
+   (sovrapprezzo), e le ultime due discese non devono diventare molto più
+   facili per chi compra avanti, né per chi gira tutto e spende tutto ad
+   ogni visita né per chi arriva con molte gemme da parte.
    `node test/esegui.mjs misure/sotterraneo --niente-build`
    tempo: 300 */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
-import { misuraLaStoria } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { misuraLaStoria, misuraConLaRoba, misuraDiChiHaMessoDaParte } from '../../src/giochi/sotterraneo/motore/banco.js'
 import { controlla, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const SEMI = 20
@@ -66,6 +70,32 @@ for (const eroe of ['cavaliere', 'mago']) {
   for (const [k, t] of CAMPAGNA.entries())
     controlla(`${eroe}, ${t.chiave}: girando tutto a 8/10 si arriva in fondo quasi sempre`, m.vinte[0][0][k] >= SEMI * 0.65,
               `${m.vinte[0][0][k]}/${SEMI}`)
+}
+
+/* chi compra il meglio che può, anche avanti. Le ultime due discese (botola, miniera) sono dove un pezzo comprato
+   avanti rompe di più la storia: lì i numeri restano vicini a quelli di chi non compra avanti (prima del
+   sovrapprezzo: a 6/10 il 38% e il 43%, a 4/10 il 3% e il 2%, chi gira tutto e spende tutto ad ogni visita) */
+const ultime = CAMPAGNA.length - 2
+const spende = EROI.map(e => misuraConLaRoba({ semi: SEMI, eroe: e.chiave, fila: 'tutto' }))
+const quanto = (misure, j, k) => misure.reduce((n, m) => n + m.vinte[j][k], 0) / (misure.length * SEMI)
+for (const [j, bravura] of [[0, 8], [1, 6], [2, 4]]) {
+  nota(`chi gira tutto e spende: a ${bravura}/10 ${CAMPAGNA.map((_, k) => `${Math.round(quanto(spende, j, k) * 100)}%`.padStart(5)).join('')}`)
+}
+for (const k of [ultime, ultime + 1]) {
+  const t = CAMPAGNA[k].chiave
+  controlla(`${t}: chi spende avanti, a 8/10 ci arriva quasi sempre`, quanto(spende, 0, k) >= 0.8, `${Math.round(quanto(spende, 0, k) * 100)}%`)
+  controlla(`${t}: chi spende avanti, a 6/10 non ci arriva molto più di metà`, quanto(spende, 1, k) <= 0.7, `${Math.round(quanto(spende, 1, k) * 100)}%`)
+  controlla(`${t}: chi spende avanti, a 4/10 quasi mai`, quanto(spende, 2, k) <= 0.15, `${Math.round(quanto(spende, 2, k) * 100)}%`)
+}
+for (const gemme of [100, 250]) {
+  const ricchi = EROI.map(e => misuraDiChiHaMessoDaParte({ eroe: e.chiave, semi: SEMI, gemme }))
+  for (const [j, bravura] of [[0, 8], [1, 6], [2, 4]])
+    nota(`con ${gemme} gemme da parte: a ${bravura}/10 ${CAMPAGNA.map((_, k) => `${Math.round(quanto(ricchi, j, k) * 100)}%`.padStart(5)).join('')}`)
+  for (const k of [ultime, ultime + 1]) {
+    const t = CAMPAGNA[k].chiave
+    controlla(`${t}: con ${gemme} gemme da parte, a 6/10 non è una passeggiata`, quanto(ricchi, 1, k) <= 0.85, `${Math.round(quanto(ricchi, 1, k) * 100)}%`)
+    controlla(`${t}: con ${gemme} gemme da parte, a 4/10 quasi mai`, quanto(ricchi, 2, k) <= 0.15, `${Math.round(quanto(ricchi, 2, k) * 100)}%`)
+  }
 }
 
 riassunto('la tabella della grande storia')

@@ -397,6 +397,22 @@ export function misuraLaStoria({ eroe = 'cavaliere', semi = 20, prove = [0.8, 0.
   return { vinte, gemme, semi, prove, scarti, discese }
 }
 
+// Chi ha messo da parte le gemme: arriva a ogni discesa con la roba attesa e `gemme` in tasca, compra il meglio che
+// può (anche i pezzi delle righe dopo, a prezzo più alto) e scende. Torna, per bravura e per discesa, quante volte
+// su `semi` si arriva in fondo: il sovrapprezzo deve tenere questi numeri vicini a quelli di chi non compra avanti
+// (docs/sotterraneo/roba.md, «I mercanti di sopra»)
+export function misuraDiChiHaMessoDaParte({ eroe = 'cavaliere', semi = 20, gemme = 100, prove = [0.8, 0.6, 0.4] } = {}) {
+  const vinte = prove.map(() => CAMPAGNA.map(() => 0))
+  for (let k = 0; k < CAMPAGNA.length; k++)
+    for (let s = 0; s < semi; s++) {
+      const roba = allaBottega(robaAttesa(eroe, k, { gemme }), { finite: k, eroe, seme: s * 101 + k })
+      prove.forEach((bravura, j) => {
+        if (gioca(CAMPAGNA[k], { seme: 7000 + s * 89 + k * 11 + j * 5, bravura, eroe, roba }).esito.vinta) vinte[j][k]++
+      })
+    }
+  return { vinte, semi, prove }
+}
+
 // La roba con cui si arriva alla discesa `indice` andando dritti alla scala e rispondendo bene otto volte su
 // dieci, con la spesa fra una discesa e l'altra: la fila di misuraConLaRoba con un seme solo. È lo zaino con
 // cui si misurano le discese dopo la prima (unita/sotterraneo), il più povero che un bambino abbia davvero
