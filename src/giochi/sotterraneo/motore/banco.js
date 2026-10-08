@@ -13,6 +13,9 @@ import { seminato } from './livello.js'
 import { robaAttesa, crescitaAttesa, livelloAtteso } from './storia.js'
 import { puntiDaDare, CRESCITA_NUOVA, crescitaA, prossimoPunto } from './crescita.js'
 import { eroeDi } from '../dati/eroi.js'
+import { zonaPotenziata } from '../dati/zone.js'
+import { robaAttesaA, crescitaAttesaA } from './zone.js'
+import { livelloDi } from '../dati/livelli.js'
 import { viaVerso, percorso } from '../../../motore/passi.js'
 
 const DT = 1 / 30
@@ -453,4 +456,33 @@ function filaGiocata({ eroe = undefined, seme = 1, fila = 'minimo', tentativi = 
     fileGiocate.set(chiave, zaini)
   }
   return zaini
+}
+
+// Le zone potenziate sotto il banco (docs/sotterraneo/zone.md): ogni discesa potenziata al livello `livello`, con la roba
+// e la crescita attese a quel livello (motore/zone.js) e le pozioni dell'abisso, dritti alla scala. Torna, per bravura e
+// per zona, quante volte su `semi` si arriva in fondo; e, con la prima bravura, le domande e i livelli presi in media.
+// `eroeA`: il livello dell'eroe, se non è quello della zona (con la roba attesa al suo livello): i colori del pallino
+export function misuraLeZone({ eroe = 'cavaliere', livello = 12, eroeA = livello, semi = 10, prove = [0.8, 0.6, 0.4],
+                               quali = null, come = 'minimo' } = {}) {
+  const discese = quali || CAMPAGNA.map((_, k) => k)
+  const vinte = prove.map(() => ({}))
+  const domande = {}, livelli = {}
+  const crescita = crescitaAttesaA(eroe, eroeA)
+  for (const k of discese) {
+    const t = zonaPotenziata(k, livello)
+    prove.forEach((bravura, j) => {
+      let n = 0
+      for (let s = 0; s < semi; s++) {
+        const g = gioca(t, { seme: 9000 + s * 83 + k * 17 + j * 3, bravura, eroe, come, crescita,
+                             roba: robaAttesaA(eroe, eroeA) })
+        if (g.esito.vinta) n++
+        if (j === 0) {
+          domande[k] = (domande[k] || 0) + g.esito.domande / semi
+          livelli[k] = (livelli[k] || 0) + (livelloDi(g.corsa.crescita.esp) - eroeA) / semi
+        }
+      }
+      vinte[j][k] = n
+    })
+  }
+  return { vinte, domande, livelli, semi, prove, discese }
 }

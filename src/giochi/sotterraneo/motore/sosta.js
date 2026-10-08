@@ -6,6 +6,7 @@
 import { Corsa } from './corsa.js'
 import { CALMA } from '../dati/mondo.js'
 import { INDICE_ABISSO, L_ABISSO } from '../dati/campagna.js'
+import { zonaPotenziata } from '../dati/zone.js'
 
 // la 6: la vita in più della discesa (`vitaPiu`) al posto di quella intera (`vitaBase`), da quando l'eroe ha i livelli.
 // La 5: ogni piano ha la scala che sale (una cosa in più nel piano: gli indici delle cose di una sosta di prima non
@@ -94,7 +95,8 @@ function pianiAlleSpalle(corsa) {
                         stanze: [...r.stanzeDentro], chiave: r.chiave }))
 }
 
-// `tappa` è l'indice nella campagna (l'abisso è −1, INDICE_ABISSO). Una discesa finita non si salva, tranne
+// `tappa` è l'indice nella campagna (l'abisso è −1, INDICE_ABISSO); `potenza` il livello di una zona potenziata
+// (dati/zone.js), che rientrando si rifà uguale. Una discesa finita non si salva, tranne
 // l'abisso: là non finisce mai, finisce solo la sera, e chi vuole scriverlo comunque lo chiede per nome
 // (`anchePerFinite`)
 export function scrivi(corsa, tappa, { anchePerFinite = false, via = USCITA } = {}) {
@@ -103,6 +105,7 @@ export function scrivi(corsa, tappa, { anchePerFinite = false, via = USCITA } = 
     v: VERSIONE,
     via: via === PORTALE ? PORTALE : USCITA,
     tappa,
+    ...(corsa.tappa && corsa.tappa.potenza ? { potenza: corsa.tappa.potenza } : {}),
     seme: corsa.seme,
     piano: corsa.piano,
     fondo: corsa.fondo,   // il più profondo toccato: scendere ancora è nuovo, rifare un piano no
@@ -195,7 +198,8 @@ export function leggi(dato, tappa, roba = null, missioni = [], crescita = null) 
 export function dice(dato, campagna) {
   if (!dato || dato.v !== VERSIONE) return null
   // l'abisso non sta nella campagna: senza questa riga la carta "riprendi" sparirebbe in silenzio
-  const t = dato.tappa === INDICE_ABISSO ? L_ABISSO : campagna[dato.tappa]
+  const t = dato.tappa === INDICE_ABISSO ? L_ABISSO
+    : dato.potenza && campagna[dato.tappa] ? zonaPotenziata(dato.tappa, dato.potenza) : campagna[dato.tappa]
   if (!t) return null
   return {
     tappa: dato.tappa,
@@ -207,5 +211,6 @@ export function dice(dato, campagna) {
     eroe: typeof dato.eroe === 'string' ? dato.eroe : null,
     vita: dato.vita,
     via: viaDi(dato),
+    potenza: t.potenza || null,
   }
 }

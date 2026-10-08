@@ -10,8 +10,9 @@ import { crescitaA } from './crescita.js'
 import { pescaAbilita, pezzoDelGrosso } from './bottino.js'
 import { GROSSI, GROSSO_DELLA_DISCESA } from '../dati/grossi.js'
 
-// l'indice di una tappa nella storia (−1 l'abisso, che non ne fa parte)
-export const indiceDella = tappa => (!tappa || tappa.abisso ? -1 : CAMPAGNA.findIndex(t => t.chiave === tappa.chiave))
+// l'indice di una tappa nella storia (−1 l'abisso, che non ne fa parte, e una zona potenziata, che la storia l'ha già
+// data: pesca il bottino come l'abisso, docs/sotterraneo/zone.md)
+export const indiceDella = tappa => (!tappa || tappa.abisso || tappa.potenza ? -1 : CAMPAGNA.findIndex(t => t.chiave === tappa.chiave))
 
 // Con che crescita si entra nella discesa `k` (docs/sotterraneo/livelli.md): il livello atteso (dati/storia.js,
 // LIVELLI_ATTESI), coi punti dati come li dà il banco

@@ -28,10 +28,11 @@
    passeggiata né per chi va dritto né per chi gira tutto e spende tutto,
    né per chi arriva con molte gemme da parte.
    `node test/esegui.mjs misure/sotterraneo --niente-build`
-   tempo: 400 */
+   Infine le zone che si potenziano, a ogni livello, e i colori del pallino.
+   tempo: 500 */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
-import { misuraLaStoria, misuraConLaRoba, misuraDiChiHaMessoDaParte } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { misuraLaStoria, misuraConLaRoba, misuraDiChiHaMessoDaParte, misuraLeZone } from '../../src/giochi/sotterraneo/motore/banco.js'
 import { numeriAttesi, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { ROBA_VUOTA } from '../../src/giochi/sotterraneo/motore/corredo.js'
@@ -144,6 +145,42 @@ for (const gemme of [100, 250]) {
     controlla(`${t}: con ${gemme} gemme da parte, a 6/10 non è una passeggiata`, quanto(ricchi, 1, k) <= (gemme > 100 ? 0.95 : 0.9), cento(quanto(ricchi, 1, k)))
     controlla(`${t}: con ${gemme} gemme da parte, a 4/10 di rado`, quanto(ricchi, 2, k) <= 0.4, cento(quanto(ricchi, 2, k)))
   }
+}
+
+/* Le zone che si potenziano (docs/sotterraneo/zone.md): finita la storia ogni discesa si sveglia al livello dell'eroe.
+   Chi ha il livello atteso (e la roba attesa a quel livello, motore/zone.js) a 8/10 arriva in fondo quasi sempre, a
+   6/10 più o meno due volte su tre ma non sempre, a 4/10 di rado: come una discesa della storia, a ogni livello. E i
+   colori del pallino si misurano qui: una zona del 16 con l'eroe due gradini sotto (rosso) non si passa rispondendo
+   sei su dieci, uno sotto (arancio) a otto si può tentare, due sopra (grigio) è una passeggiata */
+const SEMI_ZONE = 10
+const nelleZone = (livello, eroeA = livello) => {
+  const tutte = EROI.map(e => misuraLeZone({ eroe: e.chiave, livello, eroeA, semi: SEMI_ZONE }))
+  return { tutte, quota: (j, k) => tutte.reduce((n, m) => n + m.vinte[j][k], 0) / (tutte.length * SEMI_ZONE) }
+}
+for (const L of [12, 16, 20]) {
+  const { tutte, quota } = nelleZone(L)
+  for (const [j, b] of [[0, 8], [1, 6], [2, 4]])
+    nota(`zone al livello ${L}, a ${b}/10: ${CAMPAGNA.map((_, k) => cento(quota(j, k)).padStart(5)).join('')}`)
+  nota(`  domande (a 8/10): ${CAMPAGNA.map((_, k) => Math.round(tutte.reduce((n, m) => n + m.domande[k], 0) / tutte.length)).join(' · ')}` +
+       `, livelli presi: ${CAMPAGNA.map((_, k) => (tutte.reduce((n, m) => n + m.livelli[k], 0) / tutte.length).toFixed(1)).join(' · ')}`)
+  for (const [k, t] of CAMPAGNA.entries()) {
+    controlla(`zona ${t.chiave} al ${L}: a 8/10 si arriva in fondo quasi sempre`, quota(0, k) >= 0.85, cento(quota(0, k)))
+    controlla(`zona ${t.chiave} al ${L}: a 6/10 si vince, ma non sempre`, quota(1, k) >= 0.4 && quota(1, k) <= 0.92, cento(quota(1, k)))
+    controlla(`zona ${t.chiave} al ${L}: a 4/10 di rado`, quota(2, k) <= 0.4, cento(quota(2, k)))
+  }
+  const sei = CAMPAGNA.reduce((n, _, k) => n + quota(1, k), 0) / CAMPAGNA.length
+  controlla(`zone al ${L}: a 6/10 in media fra metà e quattro volte su cinque`, sei >= 0.5 && sei <= 0.8, cento(sei))
+}
+{
+  const media = (q, j) => CAMPAGNA.reduce((n, _, k) => n + q(j, k), 0) / CAMPAGNA.length
+  const rosso = nelleZone(16, 12).quota, arancio = nelleZone(16, 14).quota, grigio = nelleZone(16, 20).quota
+  nota(`una zona del 16: eroe del 12 (rosso) ${cento(media(rosso, 0))} · ${cento(media(rosso, 1))}, del 14 (arancio) ` +
+       `${cento(media(arancio, 0))} · ${cento(media(arancio, 1))}, del 20 (grigio) ${cento(media(grigio, 1))} · ${cento(media(grigio, 2))} (a 8 · 6, a 6 · 4)`)
+  controlla('rossa: a 6/10 non si passa', media(rosso, 1) <= 0.15, cento(media(rosso, 1)))
+  controlla('rossa: e a 8/10 nemmeno sempre', media(rosso, 0) <= 0.8, cento(media(rosso, 0)))
+  controlla('arancio: a 8/10 si può tentare', media(arancio, 0) >= 0.6, cento(media(arancio, 0)))
+  controlla('arancio: ma a 6/10 è dura', media(arancio, 1) <= 0.5, cento(media(arancio, 1)))
+  controlla('grigia: a 6/10 è una passeggiata', media(grigio, 1) >= 0.95, cento(media(grigio, 1)))
 }
 
 riassunto('la tabella della grande storia')
