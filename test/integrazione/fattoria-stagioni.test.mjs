@@ -26,7 +26,7 @@ const { page, errori } = await apriGioco(browser)
 await azzera(page)
 
 /* Una fattoria con delle case in mezzo, così c'è un tetto su cui
-   nevicare e una parete per le ragnatele: si costruisce col motore
+   nevicare e un fianco per la zucca: si costruisce col motore
    vero e si semina nel profilo, come fa `integrazione/fattoria` per il
    mercato. */
 const f = new Fattoria({ borsa: borsaInfinita() })
@@ -43,6 +43,10 @@ const posa = (id, dx, dy) => {
 }
 controlla('una casa si posa nella fattoria seminata', posa('casa', -6, -3))
 posa('fienile', 3, -2); posa('albero', -2, 4); posa('silo', 5, 4)
+/* e le bestie di casa, vicino al centro: a Halloween hanno il cappello da strega */
+for (const [chi, dx, dy] of [['gatto-nero', 0, 1], ['coniglio', 2, 2], ['cane-beagle', -2, 2]])
+  controlla(`${chi} arriva`, f.compraBestia(chi, 0, '',
+    { x: Math.round(centro + dx), y: Math.round(centro + dy) }).ok)
 
 const vecchio = await leggiProfilo(page)
 await semina(page, {
@@ -89,6 +93,11 @@ await esci()
 /* ---------- Halloween ---------- */
 await entra('halloween')
 await scatto(page, 'fattoria-halloween')
+/* le zucche sono disegni in pixel della tela: si contano dal gancio dei test */
+controlla('a Halloween ci sono le zucche sul prato',
+          await page.evaluate(() => window.__fattoria.zucche()) > 0)
+uguale('e ogni bestia di casa ha il cappello da strega',
+       await page.evaluate(() => window.__fattoria.cappelli()), 3)
 await page.locator('[data-baule="bello"]').click()
 await page.waitForSelector('.fa-voce', { timeout: 3000 })
 uguale('a Halloween il baule non ha la linguetta delle feste: la festa sta negli animali',

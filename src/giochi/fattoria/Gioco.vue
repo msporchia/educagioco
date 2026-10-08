@@ -289,9 +289,14 @@ function metti_in_scena_le_bestie() {
 // La scena riceve fatti già decisi (figura, punti) e non sa cosa sia un cappello — come il
 // fumetto sopra un recinto. Si rifà a ogni cambio, non a ogni fotogramma.
 function addobbiInScena(chi) {
-  return mondo.comeEVestita(chi)
+  const addosso = mondo.comeEVestita(chi)
     .map(a => ({ ...a, punti: puntiDi(chi, a.dove) }))
     .filter(a => a.punti)
+  // A Halloween chi ha la testa libera prende il cappello da strega: della festa, non si compra né si salva.
+  const testa = puntiDi(chi, 'testa')
+  if (stagione.value === 'halloween' && testa && !addosso.some(a => a.dove === 'testa'))
+    addosso.push({ id: 'strega', dove: 'testa', disegno: 'cappello_strega', misura: .8, punti: testa })
+  return addosso
 }
 
 function rivestiLaBestia(chi) {
@@ -367,7 +372,10 @@ function passo(ora) {
 
 // La scelta delle celle è di addobbiStagionali (puro); qui solo quello che le serve, letto dal mondo.
 function aggiornaLaStagione() {
+  const prima = stagione.value
   stagione.value = stagioneForzata || stagioneDi(new Date()) || ''
+  // la festa comincia o finisce: le bestie si mettono (o si tolgono) il cappello
+  if (stagione.value !== prima) for (const a of attori) if (a !== bambino) rivestiLaBestia(a.nome)
   if (!stagione.value) { stagionali = []; return }
   const libere = []
   for (const k of Object.keys(mondo.piazzole)) {
@@ -1546,6 +1554,9 @@ function gancioDiProva() {
     },
     fila: () => (bolla && bolla.fila) ? bolla.fila.filter(p => p.i != null).length : 0,
     dettaglio: () => !!(bolla && bolla.vista.dettaglio),
+    // la festa: quante zucche sul prato, quante bestie col cappello da strega
+    zucche: () => stagionali.filter(s => s.disegno === 'zucca').length,
+    cappelli: () => attori.filter(a => (a.addobbi || []).some(x => x.disegno === 'cappello_strega')).length,
   }
 }
 

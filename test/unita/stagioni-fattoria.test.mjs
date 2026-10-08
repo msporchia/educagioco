@@ -15,6 +15,7 @@ import {
   FINESTRE, stagioneDi, semeDelGiorno, addobbiStagionali, guastiDelleStagioni,
 } from '../../src/giochi/fattoria/dati/stagioni.js'
 import { CATALOGO, CATEGORIE, PER_ID } from '../../src/giochi/fattoria/dati/catalogo.js'
+import { esisteIlDisegno } from '../../src/giochi/fattoria/scena/pixel-festa.js'
 import { roba, ULTIMO, livelloDellaVoce } from '../../src/giochi/fattoria/dati/livelli.js'
 import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -56,8 +57,19 @@ controlla('il seme del giorno cambia a mezzanotte e non prima',
     { x: 3, y: 3, w: 4, h: 2, alto: 5 },     // una casa
     { x: 8, y: 8, w: 1, h: 1, alto: 1 },     // una panchina: nessun tetto
   ]
-  uguale('a Halloween niente emoji sul prato: la festa sta negli sprite degli animali',
-         addobbiStagionali('halloween', { libere, edifici, seme: 20261025 }).length, 0)
+  /* Halloween: zucche intagliate, disegnate in pixel e non emoji (un'emoji in mezzo alla pixel art
+     era stata tolta per questo). Sul prato e accanto alla casa, mai sopra una cella occupata. */
+  const zucche = addobbiStagionali('halloween', { libere, edifici, seme: 20261025 })
+  controlla('a Halloween ci sono le zucche sul prato', zucche.length >= 2, `${zucche.length}`)
+  controlla('e sono disegni in pixel, non emoji',
+            zucche.every(z => z.disegno === 'zucca' && !z.testo && esisteIlDisegno(z.disegno)))
+  const libereK = new Set(libere.map(([x, y]) => x + ',' + y))
+  controlla('e stanno tutte su celle libere',
+            zucche.every(z => libereK.has(Math.floor(z.x) + ',' + Math.floor(z.y))))
+  controlla('una sta accanto alla casa',
+            zucche.some(z => Math.floor(z.y) === 4 && (Math.floor(z.x) === 2 || Math.floor(z.x) === 7)))
+  uguale('mai due zucche nella stessa cella',
+         new Set(zucche.map(z => Math.floor(z.x) + ',' + Math.floor(z.y))).size, zucche.length)
   const natale0 = addobbiStagionali('natale', { libere, edifici, seme: 20261225 })
   const natale1 = addobbiStagionali('natale', { libere, edifici, seme: 20261225 })
   const natale2 = addobbiStagionali('natale', { libere, edifici, seme: 20261226 })

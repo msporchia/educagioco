@@ -8,6 +8,7 @@ import { ATLANTE, PEZZI, pezzoAttore } from '../dati/atlante.js'
 import { PER_ID, assettoDi } from '../dati/catalogo.js'
 import { OSTACOLI } from '../dati/ostacoli.js'
 import { tesseraDi } from './bordi.js'
+import { disegnaPixel } from './pixel-festa.js'
 
 // Quanto vive un'etichetta (nasce quasi sempre sotto un foglio che si riapre) e di quanto sale.
 export const ETICHETTA_DURATA = 2.5
@@ -132,6 +133,12 @@ export class Attore {
     for (const a of this.addobbi) {
       const punto = a.punti && a.punti[verso]
       if (!punto) continue
+      // il cappello della festa è un disegno in pixel: la tesa poggia sulla testa, un filo sotto il punto
+      if (a.disegno) {
+        disegnaPixel(ctx, a.disegno, punto[0] * w, (punto[1] + salto) * h + 2 * scala,
+                     scala * (a.misura || 1))
+        continue
+      }
       ctx.font = `${Math.max(6, Math.round(a.misura * scala))}px system-ui,sans-serif`
       ctx.fillText(a.testo, punto[0] * w, (punto[1] + salto) * h)
     }
@@ -441,6 +448,12 @@ export class Tela {
       let y = s.y * this.cellaPx - this.vista.y
       if (x < -40 || y < -40 || x > this.L + 40 || y > this.A + 40) continue
       if (s.ondeggia) y += Math.sin(orologio * 3 + s.x) * 2
+      // un disegno in pixel (la zucca) poggia col fondo sul punto; la candela dentro respira
+      if (s.disegno) {
+        const luce = .55 + .45 * Math.sin(orologio * 7 + s.x * 3) * Math.sin(orologio * 3.1 + s.y)
+        disegnaPixel(ctx, s.disegno, x, y, this.scala * (s.misura || 1), luce)
+        continue
+      }
       ctx.font = `${Math.max(8, Math.round(s.misura * this.scala))}px system-ui,sans-serif`
       ctx.fillText(s.testo, x, y)
     }

@@ -1,4 +1,4 @@
-# Le feste: gli animali in costume a Halloween, neve a Natale
+# Le feste: costumi e zucche a Halloween, neve a Natale
 
 La fattoria cambia faccia da sola in due periodi dell'anno. Il codice è
 `dati/stagioni.js` (puro) e la scena `scena/tela.js`.
@@ -40,9 +40,18 @@ senza che nessuno l'abbia comprata.
 - Il foglio 2 ha l'alfa vera ma mai piena (250-253): `alone` 128 la porta a 255, e le `toppa` che tolgono i fumetti dipinti sono quelle di `animali_2.json`.
 - Il foglio 1 è RGB su fondo nero: nel foglietto `fondo: auto` e `colori: 0`
   (coi 12 colori di ripiego i recinti viravano al rosso).
-- Provate e tolte: le 🎃 sul prato, le 🕸️ e 🦇 sulle case e le voci
-  «zucche» e «teschio» nel baule — emoji Apple in mezzo alla pixel art,
-  e non c'entravano con gli animali.
+- **Le bestie di casa col cappello da strega**: chi ha la testa libera se
+  lo mette da sé (`addobbiInScena` in `Gioco.vue`), e se lo toglie quando
+  la festa finisce. Non si compra, non si salva, e non scalza un cappello
+  comprato. I bambini lo chiedevano: tutto era vestito tranne i loro gatti.
+- **Le zucche intagliate sul prato**, qualcuna sparsa e una accanto a ogni
+  casa, con la candela che tremola. Cadono su celle libere, il seme è il
+  giorno, come gli addobbi di Natale (`addobbiStagionali`).
+- **Zucca e cappello sono disegnati in pixel, nel codice**
+  (`scena/pixel-festa.js`): un carattere è un pixel dell'atlante. Provate e
+  tolte le emoji 🎃 🕸️ 🦇 e le voci «zucche» e «teschio» nel baule: emoji
+  Apple in mezzo alla pixel art. Un disegno nuovo della festa si aggiunge
+  lì, non come emoji.
 
 ## Natale: gli addobbi che compaiono da soli
 
@@ -73,4 +82,5 @@ senza che nessuno l'abbia comprata.
 - **Non sono premi di livello** e non entrano nella fila del livello: si
   aprono con la finestra, non spendendo.
 
-Nei test: `unita/stagioni-fattoria`, `integrazione/fattoria-stagioni`.
+Nei test: `unita/stagioni-fattoria`, `integrazione/fattoria-stagioni`
+(`window.__fattoria.zucche()` e `.cappelli()`: si contano, non si guardano).

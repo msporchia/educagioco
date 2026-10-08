@@ -46,7 +46,24 @@ export function addobbiStagionali(stagione, { libere = [], edifici = [], seme = 
   // solo le cose alte almeno due celle hanno un tetto: una panchina addobbata è una panchina coperta
   const alti = edifici.filter(e => e.alto >= 2)
 
-  if (stagione === 'natale') {
+  if (stagione === 'halloween') {
+    // Le zucche intagliate: qualcuna sparsa sul prato, e una accanto a ogni casa. Disegnate in pixel
+    // (scena/pixel-festa.js), non emoji: «disegno» è il nome, «misura» quanti pixel dell'atlante per pixel.
+    const libereK = new Set(libere.map(([x, y]) => x + ',' + y))
+    const prese = new Set()
+    for (const c of ordinate.slice(0, quante)) {
+      prese.add(c.x + ',' + c.y)
+      fuori.push({ disegno: 'zucca', x: c.x + .5, y: c.y + .9, misura: 1 })
+    }
+    for (const e of alti) {
+      // il lato cambia col giorno, la zucca c'è sempre
+      const fianchi = caso(e.x, e.y, seme + 3) < .5
+        ? [[e.x - 1, e.y + e.h - 1], [e.x + e.w, e.y + e.h - 1]]
+        : [[e.x + e.w, e.y + e.h - 1], [e.x - 1, e.y + e.h - 1]]
+      const posto = fianchi.find(([x, y]) => libereK.has(x + ',' + y) && !prese.has(x + ',' + y))
+      if (posto) fuori.push({ disegno: 'zucca', x: posto[0] + .5, y: posto[1] + .9, misura: 1 })
+    }
+  } else if (stagione === 'natale') {
     const libereK = new Set(libere.map(([x, y]) => x + ',' + y))
     for (const e of alti) {
       const q = caso(e.x, e.y, seme + 2)
