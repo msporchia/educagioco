@@ -83,7 +83,8 @@ spento o col suo significato di sopra.
   `motore/corsa.js`); senza una cura da bere, l'elisir del toro, che vale
   uguale a ogni momento. In piena forma con sole cure non si beve e lo dice:
   un tocco per sbaglio non butta una boccetta. Come lo zaino, non si apre
-  durante uno scontro: il velo copre la barra.
+  durante uno scontro: il velo copre la barra (quando si rischia di cadere,
+  lo stop dello scontro offre lo stesso «bevi», [pericolo.md](pericolo.md)).
 - **L'elisir conta fra le pozioni.** Era il guasto della casella che «non
   saliva»: l'utente raccoglieva una boccetta rossa (l'elisir, che i forzieri
   della storia danno spesso) e la 🧪 non la contava, perché contava solo le

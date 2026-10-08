@@ -203,7 +203,9 @@ possibilissimi.
   scontro si esce rispondendo o scappando. Provato un foglio dal basso:
   compariva dove non si guardava, e la telecamera si spostava da sola.
 - **Con uno scontro aperto lo zaino non si apre**: si beve fra un mostro e
-  l'altro.
+  l'altro, o allo **stop del pericolo**: quando dopo un colpo l'eroe rischia
+  di cadere lo scontro si ferma e si sceglie bevi, scappo o continuo
+  ([pericolo.md](pericolo.md)).
 - Misurato: chi corre dritto alla scala sviene una o due volte per discesa,
   chi gira e raccoglie quasi mai.
 
@@ -248,7 +250,7 @@ mercante, i banchi del passo), `unita/sotterraneo-storia` (la tabella, chi la
 dà, le missioni: [la-grande-storia.md](la-grande-storia.md), [missioni.md](missioni.md)), `unita/sotterraneo-sosta` (la ripresa esatta cosa per
 cosa, il peso, il portale), `misure/sotterraneo` (la tabella della storia),
 `integrazione/sotterraneo` (ci si arriva con `scendiNelSotterraneo`: la mappa
-sta in [terra-di-sopra.md](terra-di-sopra.md)), `integrazione/sotterraneo-portale`
+sta in [terra-di-sopra.md](terra-di-sopra.md)), `unita/sotterraneo-pericolo` e `integrazione/sotterraneo-pericolo` (lo stop dello scontro: [pericolo.md](pericolo.md)), `integrazione/sotterraneo-portale`
 (col dito: porta, mostro ferito, portale, erborista, ritorno nel punto esatto,
 la ✕ che porta in home e «riprendi da qui» che riprende giù, senza gemello). Il foglio del
 portale: `[data-azione="portale"]`; la tela dice `data-eroe`, `data-eroe-schermo` e `data-scala` per toccare

@@ -50,6 +50,7 @@ import Foglio from './viste/Foglio.vue'
 import Icona from './viste/Icona.vue'
 import { occhio } from './viste/occhio.js'
 import Scontro from './viste/Scontro.vue'
+import Ringhio from './viste/Ringhio.vue'
 import Zaino from './viste/Zaino.vue'
 import Diario from './viste/Diario.vue'
 import BarraDiSotto from './viste/BarraDiSotto.vue'
@@ -583,6 +584,16 @@ const nemico = dallaCorsa(c => {
   }
 })
 
+// lo stop quando l'eroe rischia di cadere (docs/sotterraneo/pericolo.md): al posto della domanda, finché non si sceglie
+const ringhio = dallaCorsa(c => {
+  const f = c.foglio
+  if (!f || f.che !== 'scontro' || !f.pericolo) return null
+  const i = c.pozioneGiusta()
+  const k = i == null ? null : c.zaino[i]
+  return { perche: f.pericolo, em: f.chi.em, nome: f.chi.nome, vita: c.vita, male: c.danno(f.chi), graffio: c.graffio(f.chi),
+           puoiBere: i != null, cura: k && COSE[k].usa === 'cura' ? c.curaDi(k) : 0 }
+})
+
 const pieni = dallaCorsa(c => c.zaino.length, 0)   // sei su sei vuol dire che la prossima cosa resta per terra
 
 const zaino = dallaCorsa(c => {
@@ -806,6 +817,7 @@ function risolvi(giusto, saltata = false) {
     scambio.value = { dato: esito.dato || 0, preso: esito.preso || 0, caduto: esito.che === 'caduto' }
     scambioFinoA = orologio + 2.4
   }
+  if (esito.ringhia) setTimeout(() => suono.nota(110, 60, 0.45, 'sawtooth', 0.1), 420)   // il mostro ringhia
   switch (esito.che) {
     case 'colpo': suoni.colpo(); if (esito.male) setTimeout(() => suoni.graffio(), 200); break
     case 'caduto': suoni.colpo(); setTimeout(() => suoni.bottino(), 260); break
@@ -829,6 +841,15 @@ function scappa() {
   else { suoni.graffio(); setTimeout(() => suoni.passo(), 160) }
   salva()
 }
+// le altre due scelte dello stop (la terza, scappare, è `scappa`): bere la pozione della barra, o riprendere a rispondere
+function ringhioBevi() {
+  if (!corsa.value.beviNelPericolo()) return
+  togli()
+  tic.value++
+  suoni.tesoro()
+  salva()
+}
+function ringhioContinua() { corsa.value.continua(); togli(); tic.value++; salva() }
 function chiudiFoglio() { corsa.value.chiudi(); domanda.value = null; tic.value++ }
 // "riprovo" rimette in piedi all'ingresso, tranne all'ultima occasione dove riprendi() risale e la discesa è finita
 function riprendi() {
@@ -1241,13 +1262,15 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <div v-if="foglio && foglio.che === 'scontro'" class="sot-velo sot-velo-scontro">
           <div class="sot-modale">
             <Scontro v-bind="nemico" :scosso="scosso" :scambio="scambio" />
-            <div v-if="domanda" class="sot-domanda">
+            <!-- il pericolo ferma lo scontro fra una domanda e la successiva: al posto della domanda, tre scelte -->
+            <Ringhio v-if="ringhio" v-bind="ringhio" @bevi="ringhioBevi" @scappa="scappa" @continua="ringhioContinua" />
+            <div v-else-if="domanda" class="sot-domanda">
               <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
                        :origine="domanda" gioco="sotterraneo" :respiro="900"
                        @risposto="risposto" />
             </div>
             <!-- il costo sta sul tasto: si vede prima, non nell'avviso che arriva dopo -->
-            <button class="sot-grosso sot-chiaro" data-azione="scappa" @click="scappa">
+            <button v-if="!ringhio" class="sot-grosso sot-chiaro" data-azione="scappa" @click="scappa">
               <span class="em">🏃</span> scappo via
               <small v-if="nemico">ti graffia ❤️ −{{ nemico.graffio }}</small>
             </button>

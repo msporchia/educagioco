@@ -26,6 +26,7 @@ import { Corredo } from './corredo.js'
 import { dai as daiPunto } from './crescita.js'
 import { indiceDella, premioPer } from './storia.js'
 import { robaDellaMissione } from './missioni.js'
+import { pericoloDi } from './pericolo.js'
 
 // nella storia i forzieri e i mostri di tutti i giorni danno solo quello che si consuma: la roba la dà la riga
 // della storia (dati/storia.js), o la discesa diventerebbe una lotteria e la tabella una bugia
@@ -515,8 +516,41 @@ export class Corsa extends Corredo {
   rincaroDi(m) { return m.grosso || MOSTRI[m.tipo].capo ? RINCARO.capo : RINCARO.mostro }
 
   scontro(m) {
-    this.foglio = { che: 'scontro', chi: m }
+    this.foglio = { che: 'scontro', chi: m, fermate: 0, pericolo: null }
     this.chiedi('scontro', this.rincaroDi(m))
+  }
+
+  // Dopo un colpo del mostro: la domanda dopo, o uno stop se l'eroe rischia di cadere (motore/pericolo.js). Lo stop
+  // arriva fra una domanda e l'altra, mai sopra una già a schermo: `chiesta` resta vuota finché non si sceglie.
+  // Torna la ragione dello stop (o null). Docs: docs/sotterraneo/pericolo.md
+  chiediOFerma(m) {
+    const f = this.foglio
+    const perche = pericoloDi({ vita: this.vita, vitaMax: this.vitaMax, male: this.danno(m), fermate: f.fermate || 0 })
+    if (!perche) { this.chiedi('scontro', this.rincaroDi(m)); return null }
+    f.fermate = (f.fermate || 0) + 1
+    f.pericolo = perche
+    this.chiesta = null
+    return perche
+  }
+
+  // le scelte dello stop. «scappo» è `scappa()`, com'è sempre; qui le altre due: si riprende a domandare
+  continua() {
+    const f = this.foglio
+    if (!f || f.che !== 'scontro' || !f.pericolo) return { che: 'niente' }
+    f.pericolo = null
+    this.chiedi('scontro', this.rincaroDi(f.chi))
+    return { che: 'continua' }
+  }
+
+  // beve la pozione che berrebbe la 🧪 della barra (pozioneGiusta), poi si riprende. Senza pozioni non fa niente (null)
+  beviNelPericolo() {
+    const f = this.foglio
+    if (!f || f.che !== 'scontro' || !f.pericolo) return null
+    const i = this.pozioneGiusta()
+    if (i == null) return null
+    const e = this.usa(i)
+    this.continua()
+    return e
   }
 
   // unico ingresso dall'esterno quando un foglio chiede qualcosa; torna cosa è successo per il suono e la scossa giusti
@@ -530,7 +564,10 @@ export class Corsa extends Corredo {
       if (giusto) this.giuste++
     }
 
-    if (f.che === 'scontro') return this.rispostaScontro(f.chi, giusto)
+    if (f.che === 'scontro') {
+      f.pericolo = null   // chi risponde da fuori (il banco) ha scelto di continuare: lo stop è roba di chi guarda lo schermo
+      return this.rispostaScontro(f.chi, giusto)
+    }
     if (f.che === 'porta') return this.rispostaPorta(f.chi, giusto)
     if (f.che === 'forziere') return this.rispostaForziere(f.chi, giusto)
     if (f.che === 'fonte') return this.rispostaFonte(f.chi, giusto)
@@ -545,8 +582,7 @@ export class Corsa extends Corredo {
       const male = this.danno(m)
       this.ferisci(male)
       if (this.vita <= 0) { this.svieni(); return { che: 'svenuto', dato: 0, preso: male } }
-      this.chiedi('scontro', this.rincaroDi(m))
-      return { che: 'ferito', quanto: male, dato: 0, preso: male }
+      return { che: 'ferito', quanto: male, dato: 0, preso: male, ringhia: this.chiediOFerma(m) }
     }
     const dato = this.colpo(m)
     m.ossa -= dato
@@ -557,8 +593,7 @@ export class Corsa extends Corredo {
       if (schiva) this.dillo('🌀 schivato!')
       this.ferisci(male)
       if (this.vita <= 0) { this.svieni(); return { che: 'svenuto', dato, preso: male } }
-      this.chiedi('scontro', this.rincaroDi(m))
-      return { che: 'colpo', restano: this.colpiPer(m), male, dato, preso: male, schivato: schiva }
+      return { che: 'colpo', restano: this.colpiPer(m), male, dato, preso: male, schivato: schiva, ringhia: this.chiediOFerma(m) }
     }
     this.cade(m)
     this.chiudi()

@@ -1068,3 +1068,26 @@
 @keyframes sot-indietro { 50% { box-shadow: 0 0 20px #ffd23faa } }
 .sot-car-nome i.sot-car-prima { color: #ffe39a; font-weight: 700 }
 @media (prefers-reduced-motion: reduce) { .sot-eroe-car li.sot-car-indietro { animation: none } }
+
+/* ═══════════ lo stop dello scontro (viste/Ringhio.vue, docs/sotterraneo/pericolo.md) ═══════════ */
+.sot-ringhio {
+  margin-top: 6px; padding: 12px 12px 14px; text-align: center;
+  border: 2px solid #e0432f; border-radius: 18px;
+  background: radial-gradient(120% 90% at 50% 0%, #4a1610cc, #1a0b0acc);
+  box-shadow: 0 0 22px #e0432f55; animation: sot-ringhia .5s ease-out;
+}
+.sot-ringhio-titolo { display: block; font-size: 17px; color: #ffb09f; text-shadow: 0 1px 3px #000 }
+.sot-ringhio-detto { margin: 4px 0 2px; font-size: 15px; font-style: italic; color: var(--sot-inchiostro) }
+.sot-ringhio-conto { margin: 0 0 4px; font-size: 13px; color: var(--sot-tenue) }
+.sot-ringhio-conto b { color: var(--sot-inchiostro) }
+.sot-ringhio .sot-ringhio-bevi { background: linear-gradient(#a6f3c2, #3fae68); color: #0d2a17; box-shadow: 0 3px 0 #1f6b3c }
+/* i primi 320 ms il tocco non conta (il click lasciato dalla risposta): i tasti si vedono spenti e poi si accendono */
+.sot-ringhio .sot-grosso { transition: opacity .18s ease }
+.sot-ringhio:not([data-pronto]) .sot-grosso { opacity: .45 }
+@keyframes sot-ringhia {
+  0% { transform: scale(.96); box-shadow: 0 0 0 #e0432f00 }
+  35% { transform: translateX(-4px) }
+  55% { transform: translateX(4px) }
+  75% { transform: translateX(-2px) }
+}
+@media (prefers-reduced-motion: reduce) { .sot-ringhio { animation: none } }
