@@ -170,13 +170,6 @@ if (mulino) {
   uguale('dopo, le ricette restano per metterne un\'altra', (await laBolla() || {}).nome, 'Mulino')
   uguale('e la fila mostra il pezzo partito', await page.evaluate(() => window.__fattoria.fila()), 1)
 
-  /* ---------- 5. il 📋 apre il foglio di sempre ---------- */
-  const foglio = await gettone('foglio')
-  await dito(foglio.x, foglio.y)
-  await attendi(page, 300)
-  uguale('il 📋 apre il foglio del mulino',
-         (await page.evaluate(() => (document.querySelector('.fa-foglio h2') || {}).innerText || '')).trim(),
-         'Mulino')
   await esci()
   const s3 = await statoSalvato()
   uguale('nel mulino c\'è un mangime in fila',

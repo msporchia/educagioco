@@ -93,11 +93,7 @@ async function toccaGettone(chiave) {
   const g = await gettone(chiave)
   if (controlla(`attorno c'è il gettone «${chiave}»`, !!g)) await dito(g.x, g.y)
 }
-/* il 📋 è un gettone come gli altri: si tocca, e apre il foglio di sempre */
-async function alFoglio() {
-  await toccaGettone('foglio')
-  await attendi(page, 300)
-}
+
 const monete = () => page.evaluate(
   () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
 
@@ -422,14 +418,11 @@ await scatto(page, 'campi-recinto')
 await dito(dovePen.x, dovePen.y)
 await attendi(page, 450)
 uguale('e toccandola spuntano le sue ricette', (await laBolla() || {}).nome, 'Conigliera')
-await alFoglio()
-uguale('e il 📋 apre il suo foglio, col suo nome', await titolo(), 'Conigliera')
-const foglioRecinto = await testoFoglio()
-controlla('che dice cosa le manca, col numero',
-          /serve ancora\s*2/.test(foglioRecinto),
-          foglioRecinto.replace(/\n+/g, ' · ').slice(0, 160))
-controlla('e non parla di mulini', !/mulino/i.test(foglioRecinto))
-await chiudi()
+/* senza mangime la ricetta c'è ma è spenta: toccata dice cosa manca in
+   una nuvoletta, senza aprire niente */
+const ricette = await page.evaluate(() => window.__fattoria.gettoni())
+controlla('e la ricetta c\'è, spenta perché manca il mangime',
+          ricette.length > 0 && ricette.every(g => g.spento), JSON.stringify(ricette))
 
 await esci()
 const dopoTutto = await leggiProfilo(page)

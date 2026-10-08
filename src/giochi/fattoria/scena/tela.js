@@ -853,7 +853,7 @@ export class Tela {
       }
       ctx.restore()
       if (g.hai != null && !g.preso && s > .9)
-        this.numerino(g.hai, p.x + lato * .36, p.y + su - lato * .36, 18)
+        this.numerino(g.hai, p.x + lato * .36, p.y + su - lato * .36, 22)
     })
     if (b.dettaglio) this.dettaglio(b.dettaglio, lato)
   }
@@ -862,58 +862,91 @@ export class Tela {
   attesa(a, t) {
     const ctx = this.ctx
     const s = rimbalzello(Math.min(1, t / .26))
-    const w = 118, h = 34
+    const w = 140, h = 40
     ctx.save()
     ctx.translate(a.x, a.y)
     ctx.scale(s, s)
     this.targhetta(-w / 2, -h / 2, w, h)
-    this.faccia(a.pezzo, a.testo, -w / 2 + 19, 0, 24)
+    this.faccia(a.pezzo, a.testo, -w / 2 + 22, 0, 30)
     ctx.fillStyle = '#d9cfb8'
-    tondo(ctx, -w / 2 + 36, -4, 44, 8, 4); ctx.fill()
+    tondo(ctx, -w / 2 + 42, -5, 50, 10, 5); ctx.fill()
     ctx.fillStyle = '#7fbf5f'
-    tondo(ctx, -w / 2 + 36, -4, Math.max(8, 44 * a.quanto), 8, 4); ctx.fill()
+    tondo(ctx, -w / 2 + 42, -5, Math.max(10, 50 * a.quanto), 10, 5); ctx.fill()
     ctx.fillStyle = '#2a1c12'
-    ctx.font = '700 12px system-ui,sans-serif'
+    ctx.font = '700 15px system-ui,sans-serif'
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
-    ctx.fillText(a.testoMinuti, -w / 2 + 84, 1)
+    ctx.fillText(a.testoMinuti, -w / 2 + 98, 1)
     ctx.restore()
   }
 
-  // La fila di una macchina, in piccolo sotto di lei: pronti in oro, chi lavora con l'anello che si chiude.
+  // La fila di una macchina, sotto di lei: pronti in oro che saltellano, chi lavora con l'anello che si
+  // chiude, chi aspetta con la ✕ per toglierlo, i posti vuoti tratteggiati e il «+» col prezzo sotto.
   filetta(f, t, orologio) {
     const ctx = this.ctx
-    const d = 26, gap = 5
-    const tot = f.posti.length * d + (f.posti.length - 1) * gap
+    const d = f.lato
     f.posti.forEach((p, i) => {
       const s = rimbalzello(Math.max(0, Math.min(1, (t - .1 - i * .04) / .24)))
       if (s <= 0) return
-      const x = f.x - tot / 2 + d / 2 + i * (d + gap)
-      const y = f.y + (p && p.come === 'pronto' ? Math.sin(orologio * 6 + i) * 2 : 0)
+      const x = f.punti[i].x
+      const y = f.punti[i].y + (p.come === 'pronto' ? Math.sin(orologio * 6 + i) * 2.5 : 0)
       ctx.save()
       ctx.translate(x, y)
       ctx.scale(s, s)
       ctx.beginPath()
       ctx.arc(0, 0, d / 2, 0, Math.PI * 2)
-      if (!p) {
-        ctx.setLineDash([3, 3])
-        ctx.lineWidth = 2
-        ctx.strokeStyle = 'rgba(250,246,236,.85)'
-        ctx.fillStyle = 'rgba(13,22,15,.25)'
+      if (p.come === 'vuoto' || p.come === 'piu') {
+        ctx.setLineDash([4, 3])
+        ctx.lineWidth = 2.5
+        ctx.strokeStyle = 'rgba(250,246,236,.9)'
+        ctx.fillStyle = 'rgba(13,22,15,.3)'
         ctx.fill(); ctx.stroke()
+        if (p.come === 'piu') {
+          ctx.setLineDash([])
+          ctx.fillStyle = '#faf6ec'
+          ctx.font = '700 24px system-ui,sans-serif'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText('+', 0, 1)
+          ctx.font = '700 13px system-ui,sans-serif'
+          ctx.lineWidth = 3
+          ctx.strokeStyle = 'rgba(8,20,12,.85)'
+          ctx.strokeText('🪙' + p.prezzo, 0, d / 2 + 11)
+          ctx.fillStyle = '#ffe58a'
+          ctx.fillText('🪙' + p.prezzo, 0, d / 2 + 11)
+        }
       } else {
+        ctx.shadowColor = 'rgba(0,0,0,.3)'
+        ctx.shadowBlur = 4
+        ctx.shadowOffsetY = 2
         ctx.fillStyle = p.come === 'pronto' ? '#ffd98a' : '#faf6ec'
+        ctx.fill()
+        ctx.shadowColor = 'transparent'
         ctx.lineWidth = 2
         ctx.strokeStyle = '#2a1c12'
-        ctx.fill(); ctx.stroke()
+        ctx.stroke()
         if (p.come === 'lavora') {
-          ctx.lineWidth = 3
+          ctx.lineWidth = 3.5
           ctx.strokeStyle = '#e0a33c'
           ctx.beginPath()
           ctx.arc(0, 0, d / 2 - 1, -Math.PI / 2, -Math.PI / 2 + p.quanto * Math.PI * 2)
           ctx.stroke()
         }
         this.faccia(p.pezzo, p.testo, 0, 0, d * .68, p.come === 'aspetta' ? .5 : 1)
+        if (p.come === 'aspetta') {
+          ctx.beginPath()
+          ctx.arc(d * .36, -d * .36, 8, 0, Math.PI * 2)
+          ctx.fillStyle = '#b84a3a'
+          ctx.fill()
+          ctx.lineWidth = 1.5
+          ctx.strokeStyle = '#2a1c12'
+          ctx.stroke()
+          ctx.fillStyle = '#fff'
+          ctx.font = '700 11px system-ui,sans-serif'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText('✕', d * .36, -d * .36 + 1)
+        }
       }
       ctx.restore()
     })
@@ -922,10 +955,10 @@ export class Tela {
   // Cosa prende la ricetta tenuta dal dito: caselle accese o in ombra, una freccia, quello che esce.
   dettaglio(d, lato) {
     const ctx = this.ctx
-    const q = 26, gap = 4
+    const q = 34, gap = 5
     const n = d.caselle.length
-    const w = n * (q + gap) + 18 + q + (d.costo ? 34 : 0) + 16
-    const h = q + 14
+    const w = n * (q + gap) + 22 + q + (d.costo ? 42 : 0) + 18
+    const h = q + 16
     const x = Math.max(6, Math.min(this.L - w - 6, d.x - w / 2))
     const y = d.sotto ? d.y + lato * .62 : d.y - lato * .62 - h
     ctx.save()
@@ -944,14 +977,14 @@ export class Tela {
       cx += q + gap
     }
     ctx.fillStyle = '#2a1c12'
-    ctx.font = '700 15px system-ui,sans-serif'
+    ctx.font = '700 19px system-ui,sans-serif'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText('→', cx + 2, y + h / 2)
-    this.faccia(d.esce.pezzo, d.esce.testo, cx + 18 + q / 2 - 4, y + h / 2, q * .9)
+    ctx.fillText('→', cx + 4, y + h / 2)
+    this.faccia(d.esce.pezzo, d.esce.testo, cx + 22 + q / 2 - 4, y + h / 2, q * .9)
     if (d.costo) {
-      ctx.font = '700 12px system-ui,sans-serif'
-      ctx.fillText('🪙' + d.costo, cx + 18 + q + 14, y + h / 2)
+      ctx.font = '700 15px system-ui,sans-serif'
+      ctx.fillText('🪙' + d.costo, cx + 22 + q + 18, y + h / 2)
     }
     ctx.restore()
   }
@@ -982,14 +1015,14 @@ export class Tela {
     ctx.ellipse(m.x, m.y, m.sopra ? 20 : 15, m.sopra ? 9 : 7, 0, 0, Math.PI * 2)
     ctx.fillStyle = m.sopra ? 'rgba(180,255,160,.55)' : 'rgba(0,0,0,.28)'
     ctx.fill()
-    ctx.translate(m.x, m.y - 40)
+    ctx.translate(m.x, m.y - 48)
     ctx.rotate(m.piega || 0)
     const s = m.sopra ? 1.22 : 1.06 + Math.sin(orologio * 9) * .03
     ctx.scale(s, s)
     ctx.shadowColor = 'rgba(0,0,0,.45)'
     ctx.shadowBlur = 8
     ctx.shadowOffsetY = 6
-    this.faccia(m.pezzo, m.testo, 0, 0, 44)
+    this.faccia(m.pezzo, m.testo, 0, 0, 56)
     ctx.restore()
   }
 
@@ -1034,8 +1067,8 @@ export class Tela {
       if (t >= n.durata) continue
       vive.push(n)
       ctx.save()
-      ctx.font = '700 13px system-ui,sans-serif'
-      const w = Math.min(this.L - 16, ctx.measureText(n.testo).width + 22), h = 30
+      ctx.font = '700 16px system-ui,sans-serif'
+      const w = Math.min(this.L - 16, ctx.measureText(n.testo).width + 28), h = 38
       const cx = Math.max(8 + w / 2, Math.min(this.L - 8 - w / 2, n.x * px - this.vista.x))
       const y = Math.max(8, n.y * px - this.vista.y - h - 12)
       const s = rimbalzello(Math.min(1, t / .22))
