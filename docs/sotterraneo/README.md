@@ -14,6 +14,7 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [grossi.md](grossi.md) — i mostri grossi in fondo alle discese (e ogni cinque piani nell'abisso): chi sono, dove stanno, la figura disegnata in codice, la vita in cima, il bottino sicuro
 - [portale-e-sosta.md](portale-e-sosta.md) — come si lascia una discesa a metà: il portale (e il gemello sopra), la ✕ che non è un portale (si rientra già giù), «lascio perdere», cambiare eroe dal velo, la ripresa nel punto esatto
 - [la-grande-storia.md](la-grande-storia.md) — le sette discese in fila dal villaggio e la loro forma, la tabella della roba e del livello attesi per eroe, chi la dà, chi è sotto il livello, i numeri misurati
+- [dialoghi.md](dialoghi.md) — si parla con chi sta sulla terra di sopra: il riquadro col ritratto, il testo a pagine, le domande che portano alla missione o alla bottega, la storia che cambia andando avanti; **le scritte** (solo ciò che non si vede o che dice cosa fare) e i nomi cambiati
 - [missioni.md](missioni.md) — chi dà le missioni sulla terra di sopra, l'albero delle dodici missioni (requisiti, sblocco da sole, il tetto di tre aperte), il diario col dettaglio di ogni missione e il promemoria, i premi, lo stato
 - [missioni-monete.md](missioni-monete.md) — le monete come regalo di una missione: perché poche, e il conto delle domande in più
 - [missioni-bersaglio.md](missioni-bersaglio.md) — dove sta la cosa che una missione cerca (la stanza più lontana dall'arrivo) e come si vede: più grande, aura rosa che pulsa, il nome sopra la testa

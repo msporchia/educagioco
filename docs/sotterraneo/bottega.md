@@ -38,8 +38,8 @@ più nessuno.
   (`vetrinaDelPasso` in `motore/storia.js`, al più due per casella;
   `sovrapprezzo` in `dati/mercanti.js`): un pezzo `k` righe avanti al passo
   costa `1 + k` volte il prezzo pieno (il doppio, il triplo…), col
-  numero vero sotto la casella e «Costa di più: è roba per più giù» nel
-  pannello. Chi ha messo da parte le gemme può scendere con un pezzo
+  numero vero sotto la casella, e basta: il prezzo alto si legge
+  ([dialoghi.md](dialoghi.md#le-scritte)). Chi ha messo da parte le gemme può scendere con un pezzo
   avanti, e non c'è una discesa da finire perché il mercante glielo dia.
   **Perché non un blocco**: «se ho i soldi perché no». Provato: i pezzi
   avanti spenti col lucchetto e «Quando avrai finito…»; l'utente non
@@ -156,10 +156,16 @@ più nessuno.
     si scrive il valore stanno in `ABILITA` di `viste/pezzo.js`. **Per
     aggiungere un'abilità**: [rarita.md](rarita.md#le-abilità). A 390 px i due
     cartellini stanno, col testo piccolo ma leggibile.
-  La casella dell'eroe dove andrebbe si accende. Sotto, solo le righe che
-  servono: «Finisce nello zaino» per quello che non va addosso da sé, il
-  perché di chi non lo porta (solo nello zaino: la bottega non lo offre), «Costa di più…» per i
-  pezzi avanti.
+  La casella dell'eroe dove andrebbe si accende. Sotto, solo quello che non
+  si vede già: il perché di chi non lo porta (solo nello zaino: la bottega
+  non lo offre) e lo scudo che non si imbraccia con un'arma a due mani in
+  pugno. Niente «Finisce nello zaino», «Costa di più», «Ne hai 2»: lo dicono
+  il confronto, il cartellino e la casella ([dialoghi.md](dialoghi.md#le-scritte)).
+- **Si arriva al banco parlando**: toccando il mercante l'eroe ci va e si
+  apre il dialogo; la prima domanda («Fammi vedere le armi», «Mi servono pozioni», «Fammi vedere») apre il banco, «Ho roba da vendere» (solo
+  il mercante, chiave `rigattiere`) lo apre sulla linguetta delle tasche
+  ([dialoghi.md](dialoghi.md)). A banco vuoto il mercante non dice «niente
+  per te»: «Torna quando sarai sceso più giù».
 - **Niente di scelto: parla il mercante**, su una pergamena, con la sua
   battuta (`dice`): voce sua, corta, parole da sette anni, non istruzioni.
   Toccando una casella dell'eroe il pannello dice il pezzo che ha addosso.
@@ -178,7 +184,7 @@ Nei test: `[data-bottega]` (con `data-mercante-aperto`),
 `[data-colonna="addosso|questo"]` (i cartellini; dentro, `[data-pezzo="<cosa>"]` o
 `[data-niente]`, e i numeri `[data-valore="<campo>-addosso|<campo>-questo"]` col
 valore in `data-n`), `[data-due-mani]`, `[data-storia]`,
-`[data-avanti-costa]`, `[data-non-puoi]`, `[data-azione="compra"]`,
+`[data-non-puoi]`, `[data-azione="compra"]`,
 `[data-azione="vendi"]`, `[data-detto-banco]`, `[data-battuta]`,
 `[data-chi-compra]`, `[data-tasche-vuote]`,
 `[data-gemme-bottega]`; nello zaino `[data-zaino]`, `[data-tasca]` (con

@@ -3,7 +3,7 @@
 Le discese non si scelgono da un elenco: si raggiungono a piedi su una mappa
 grande (la «terra di sopra»), nella nebbia, e chi le cerca ha qualcuno che
 gli indica la strada; nel villaggio stanno i mercanti. Il codice:
-`viste/Terra.vue` (la mappa, la vista, il dito, il fumetto, i mercanti),
+`viste/Terra.vue` (la mappa, la vista, il dito, il fumetto, i mercanti, chi apre il dialogo),
 `motore/terra.js` (strada e nebbia, gira in Node), `dati/terra.js` (quale
 discesa sta dove, cosa dicono minatore e cartello), `dati/mercanti.js` (chi
 vende cosa), `dati/terra-mappa.js` (generato). `viste/Campagna.vue` ci mette
@@ -149,10 +149,11 @@ forma e perché: [la-grande-storia.md](la-grande-storia.md#le-discese).
 ## Chi indica la strada
 
 - **Il vecchio minatore**, nel villaggio dove parte la strada per il bosco:
-  toccato, dice dov'è la prossima discesa aperta («La cripta dell'altare: su
-  per il sentiero dei campi, oltre il mulino, fino all'altare fra le due
-  colonne…»); finite le sette, dov'è l'abisso. Finché non ha parlato ha i
-  puntini sopra la testa. Se la roba è sotto quella attesa per la prossima,
+  toccato, si parla ([dialoghi.md](dialoghi.md)) e dice dov'è la prossima
+  discesa aperta («La cripta dell'altare: su per il sentiero dei campi, oltre
+  il mulino, fino all'altare fra le due colonne…»); finite le sette, dov'è
+  l'abisso. Finché non ha parlato ha i puntini sopra la testa, e la prima
+  volta si presenta. Se la roba è sotto quella attesa per la prossima,
   lo dice ([la-grande-storia.md](la-grande-storia.md#chi-e-sotto-il-livello-lo-sa-prima-di-scendere)).
 - **Chi dà le missioni** sta fermo dove ha senso (la ragazza al pozzo del
   villaggio, il mugnaio al mulino, l'eremita all'altare, la guardia alla
@@ -185,12 +186,11 @@ chi vende cosa e perché sta in [bottega.md](bottega.md#i-mercanti-di-sopra).
 | il rigattiere | accanto al carretto di cianfrusaglie, in fondo a destra | [54, 43] · [52, 43] |
 
 - **Si toccano come il minatore**: l'eroe ci va, si ferma `accanto`, e
-  arrivato si apre il banco (non un fumetto: la lista non ci sta). Il banco
+  arrivato si parla; la prima domanda apre il banco ([dialoghi.md](dialoghi.md)). Il banco
   sta al centro, si chiude con la ✕ in alto a destra o toccando fuori, e quel
   tocco passa alla mappa (dopo i 320 ms ciechi dell'apertura).
 - **Si trovano nella nebbia** come i posti: finché la loro cella non si è
-  vista sono prato (non si toccano), e trovandoli la riga in fondo lo dice
-  («Hai trovato l'erborista!»).
+  vista sono prato (non si toccano). Trovati, si vedono: niente riga.
 - **Stanno a pochi passi da dove si parte**, intorno alla piazza: sul
   telefono se ne vedono due alla volta.
 - **Figure provvisorie disegnate in codice** (`ARMAIOLO`, `ERBORISTA`,
@@ -253,7 +253,8 @@ Nei test: `[data-terra]` (la vista, con `data-camera`), `[data-eroe-terra]`
 `data-abisso`, `data-aperta`, `data-trovato`), `[data-divieto="<posto>"]` (il
 cartello di divieto delle chiuse), `[data-minatore]`, `[data-cartello]`, `[data-fumetto]`
 (con `data-fumetto-di`), `[data-azione="scendi"]`, `[data-detto]`,
-`[data-chiusa-perche]`, `[data-avviso-terra]`, `[data-pallino="<posto>"]` (il
+`[data-chiusa-perche]`, `[data-avviso-terra]`, il dialogo di chi sta fermo in
+[dialoghi.md](dialoghi.md), `[data-pallino="<posto>"]` (il
 pallino), `[data-sotto-livello]` (nel fumetto di una discesa), `[data-mercante="<chi>"]`,
 `[data-personaggio="<chi>"]` (con `data-segno`, [missioni.md](missioni.md)), `[data-roba-sopra]` (la carta di chi
 scende, con le gemme), `[data-portale]` (il gemello) col suo fumetto

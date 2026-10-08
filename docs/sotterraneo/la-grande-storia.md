@@ -135,8 +135,8 @@ quello atteso il fumetto dice «… i mostri sono più forti di te: fatti le
 ossa nelle discese di prima»; se no, se braccio o difesa con la roba di
 adesso sono sotto quelli della roba attesa, il fumetto lo dice con la
 voce del minatore e le cose che si hanno in mano: «Con quella spada corta
-sotto la torre non duri: passa dall'armaiolo», «Nella grotta picchiano
-forte, e senza scudo non reggi: passa dall'armaiolo» (`dettoDelLivello`,
+sotto la torre non duri: passa dal fabbro», «Nella grotta picchiano
+forte, e senza scudo non reggi: passa dal fabbro» (`dettoDelLivello`,
 `dove` nella tappa per il posto in mezzo alla frase). Lo ripete il minatore
 quando indica la prossima. Non vieta niente: si scende lo stesso.
 

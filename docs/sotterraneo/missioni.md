@@ -10,8 +10,8 @@ pronti, e di averle sempre davanti: *«una specie di albero di missioni»*,
 *«un riassunto»*, *«le monete come regalo, volendo»*. Il codice:
 `dati/missioni.js` (chi, cosa, dove, i requisiti, il premio, `TETTO`),
 `motore/missioni.js` (l'albero, il segno, prendere e consegnare, il diario e il
-promemoria, dove sta la cosa nel piano), `viste/Missione.vue` (il pezzo di
-fumetto), `viste/Diario.vue` (col dettaglio) e `viste/Ritratto.vue`, `viste/Terra.vue` (chi sta fermo),
+promemoria, dove sta la cosa nel piano), `motore/dialoghi.js` e
+`viste/Dialogo.vue` (quello che dice chi le dà, [dialoghi.md](dialoghi.md)), `viste/Diario.vue` (col dettaglio) e `viste/Ritratto.vue`, `viste/Terra.vue` (chi sta fermo),
 `motore/corsa.js` (`posaLeMissioni`).
 
 ## Chi le dà, e dove sta
@@ -35,8 +35,11 @@ non chiudono la strada a nessuno (`unita/sotterraneo-terra`).
   arrivano gli sprite: `<sprite>-fermo-0` nell'atlante (`ragazza-fermo-0`…)
   si usa da solo, come per il minatore. I prompt sono nella scheda
   `PROMPT-terra-di-sopra.md`.
-- **Il minatore** indica sempre la strada; la sua missione sta sotto la
-  frase, nello stesso fumetto, e dice chi altro ti cerca (sotto).
+- **Si parla con loro** ([dialoghi.md](dialoghi.md)): chi dà una missione la
+  chiede a voce, a pagine, e «Ci penso io» la prende; tornando a cosa fatta
+  se ne accorge, e la prima domanda è consegnarla.
+- **Il minatore** indica sempre la strada; la sua missione viene dopo la
+  strada, nello stesso dialogo, e dice chi altro ti cerca (sotto).
 
 ## L'albero
 
@@ -90,8 +93,8 @@ Zannagrigia, lanterna) sono radici senza seguito.
 ## Più insieme, e il tetto
 
 - **Si prendono tutte quelle sbloccate** (`prendi`), una dopo l'altra, anche
-  dalla stessa persona (il pescatore ha due «ci penso io» nello stesso
-  fumetto). Non c'è più «una presa ferma le altre».
+  dalla stessa persona (il pescatore ha due «Ci penso io: …» nello stesso
+  dialogo). Non c'è più «una presa ferma le altre».
 - **Il tetto è tre** (`TETTO`): fra prese, fatte da consegnare e offerte col
   «!», mai più di tre. Con tre in mano non si propone altro (il «!» non
   compare e `prendi` rifiuta) finché non se ne consegna una: *«non
@@ -105,15 +108,14 @@ Zannagrigia, lanterna) sono radici senza seguito.
   stati: **«!» d'oro** (`nuova`) ha una missione per te; **«?» grigio e fermo**
   (`attesa`) l'hai presa e non è fatta; **«?» d'oro, più grande, che pulsa**
   (`consegna`) l'hai fatta e lui aspetta che gliela porti. Se un personaggio
-  ne ha più d'una vince la consegna, poi la nuova, poi l'attesa. Un fumetto
-  mostra tutte le sue missioni aperte, una sotto l'altra (`data-missione`,
-  `data-fase`). Con `prefers-reduced-motion` il «?» d'oro resta fermo ma
+  ne ha più d'una vince la consegna, poi la nuova, poi l'attesa. Il dialogo
+  dice tutte le sue missioni aperte, una dopo l'altra. Con `prefers-reduced-motion` il «?» d'oro resta fermo ma
   grande e col suo alone.
 - **Chi aspetta ed è fuori schermo si trova**: sul bordo della vista, nella
   sua direzione, un «?» d'oro con una freccia (`viste/Terra.vue`, `fuori`,
   ricalcolato a ogni fotogramma insieme alla telecamera; il minatore
   compreso). Toccarlo (`click`, soglia 16 px) è come toccare lui: l'eroe ci
-  va e il fumetto si apre all'arrivo. Quando lui è in vista il bordo cede alla
+  va e il dialogo si apre all'arrivo. Quando lui è in vista il bordo cede alla
   freccina attorno all'eroe, che lo punta finché non gli si è accanto
   (`[data-consegna-vicina]`, vedi [missioni-freccina.md](missioni-freccina.md)).
 - **Il minatore dice chi ti cerca**: indicando la strada aggiunge una riga
@@ -220,11 +222,8 @@ monete e il «!» che arriva sull'eremita). Sulla mappa `[data-personaggio="<chi
 `data-segno` (`nuova`, `attesa` o `consegna`; quello del minatore è
 `[data-minatore] [data-segno-di]`), l'indicatore sul bordo
 `[data-consegna-fuori="<chi>"]` (c'è solo se chi aspetta è fuori schermo), il
-fumetto `[data-fumetto-di="<chi>"]` con una
-`[data-missione="<id>"][data-fase]` per missione (`offre`, `aspetta`,
-`consegna`; `[data-fase="saluto"]` senza niente), la frase del minatore
-`[data-ti-cerca]` (una per riga), `[data-azione="prendi-missione"]`,
-`[data-azione="consegna"]`, il segno del minatore `[data-minatore]
+dialogo `[data-dialogo="<chi>"]` con le righe e le domande di
+[dialoghi.md](dialoghi.md) (`[data-scelta="prendi"|"consegna"][data-missione]`), il segno del minatore `[data-minatore]
 [data-segno]`, `[data-missioni-qui]` nel fumetto di una discesa. Il tasto
 `[data-azione="diario"]` con `[data-diario-n]` (il numero), il foglio
 `[data-diario]` con `[data-sezione="da-fare" | "ti-aspettano" | "consegnate"]`,

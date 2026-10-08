@@ -70,7 +70,8 @@ figura nello scontro e nella barra in cima).
   quando si sveglia (si entra nella sua stanza) e mentre lo si combatte, con
   la sua faccia, il nome e la barra rossa che cala a ogni colpo. Nello
   scontro c'è la sua figura al posto dello sprite.
-- **Quando cade**: «👑 Re Ossuto è caduto!», e per terra intorno a lui il suo
+- **Quando cade** non lo dice nessuna riga (la barra in cima sparisce, si
+  vede: [dialoghi.md](dialoghi.md#le-scritte)); per terra intorno a lui il suo
   pezzo col nome, un pezzo raro o leggendario e, nella storia, il pezzo
   della riga dopo.
 

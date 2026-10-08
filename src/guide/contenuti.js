@@ -578,7 +578,7 @@ export const AIUTI = {
     emoji: '🗝️', titolo: 'Il sotterraneo',
     blocchi: [
       'Si scende di stanza in stanza cercando la chiave e la scala. Quasi tutto quello che c\'è dentro chiede una domanda.',
-      'Le discese stanno sotto la campagna di sopra: tocca dove vuoi andare e l\'eroe ci cammina. Si trovano esplorando, e il **vecchio minatore** vicino a casa dice dov\'è la prossima; i sassi che luccicano segnano la strada.',
+      'Le discese stanno sotto la campagna di sopra: tocca dove vuoi andare e l\'eroe ci cammina. Si trovano esplorando, e il **vecchio minatore** vicino a casa dice dov\'è la prossima. Con chi sta fermo nel villaggio si parla: si tocca, l\'eroe ci va, un tocco gira la pagina e in fondo ci sono le domande da fargli.',
       { titolo: 'Cosa chiede cosa', righe: [
         '🚪 **una porta chiusa** — una domanda facile: se sbagli si riprova.',
         '🎁 **un forziere** — una domanda sola, tosta: se sbagli resta chiuso.',
@@ -596,7 +596,7 @@ export const AIUTI = {
       { titolo: 'Le pozioni', righe: [
         'Si bevono dallo zaino, quando vuoi tu: la 🧪 boccetta ridà 6 punti, la pozione 10, la 🍷 ampolla 18. Non scadono e non si sprecano — bevute a vita piena, la parte che avanza è persa.',
         'Il mostro ti prende qualcosa **anche quando rispondi giusto** (un graffio, metà del colpo), e per questo le pozioni servono: senza, una discesa lunga finisce con uno svenimento.',
-        'Le tasche sono sei. Quando sono piene, quello che trovi resta per terra: sopra, il **rigattiere** compra a metà prezzo quello che non usi.',
+        'Le tasche sono sei. Quando sono piene, quello che trovi resta per terra: sopra, il **mercante** compra a metà prezzo quello che non usi.',
         '🔥 **La torcia si accende da sé** appena la prendi, e non occupa una tasca. Dura **12 stanze**: quanta luce ti resta lo dice la fiamma in basso a sinistra.',
         'Se ne trovi un\'altra mentre una brucia, la prendi lo stesso: aspetta alla cintura e si accende da sé quando la prima si spegne.',
       ] },
@@ -604,7 +604,7 @@ export const AIUTI = {
         'Quello che hai addosso, quello che hai in tasca e le gemme **te li porti dietro**: alla discesa dopo li ritrovi. Anche uscendo a metà.',
         'Uscendo a metà, la discesa ti aspetta **esattamente dove l\'hai lasciata**: stessa stanza, stesso punto, i mostri dove erano, e rientrando sei già giù. Per salire al villaggio c\'è il portale; o ⏸ e «lascio perdere questa discesa»: la roba resta, la discesa ricomincia da capo.',
         '**Ogni eroe ha la sua avventura**: la sua roba, le sue discese e la sua strada qui sopra. Con «cambio» passi a un altro, e lo ritrovi dove l\'avevi lasciato.',
-        'Le gemme si spendono sopra, dai mercanti vicino alle case: l\'**armaiolo** (armi, scudi, armature), l\'**erborista** (pozioni e torce) e il **rigattiere** vicino al carro (anelli e amuleti, e compra quello che hai in tasca). Si tocca il mercante, l\'eroe ci va e si apre il banco.',
+        'Le gemme si spendono sopra, dalle botteghe vicino alle case: il **fabbro** (armi, scudi, armature), la **guaritrice** (pozioni e torce) e il **mercante** vicino al carro (anelli e amuleti, e compra quello che hai in tasca). Si tocca chi vende, l\'eroe ci va, ci si parla, e la prima domanda apre il banco.',
         'Più discese hai finito, più roba e più forte trovi sul banco; finita una discesa i banchi cambiano.',
         'Svenendo si perdono **le tasche e metà delle gemme**, mai quello che hai addosso.',
       ] },
