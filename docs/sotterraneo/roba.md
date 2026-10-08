@@ -107,9 +107,10 @@ discesa e l'altra: [la-roba-che-resta.md](la-roba-che-resta.md). Il codice:
 - **Costa 5 gemme**, appena sotto la boccetta: un piano di luce è una
   comodità, non la sopravvivenza. Il prezzo è l'unica scala su cui sta tutto
   il catalogo.
-- **Quanta ne resta si vede**: in basso a sinistra una fiamma che cala nel
-  suo lume, con le stanze che restano e le torce di scorta; agli sgoccioli,
-  e solo senza scorta, guizza. Senza, il buio arriverebbe come un guasto.
+- **Quanta ne resta si vede**: il globo d'oro a destra della barra in basso
+  cala con le stanze che restano, e la casella 🔥 accanto conta le torce di
+  scorta ([barra.md](barra.md)); agli sgoccioli, e solo senza scorta, guizza.
+  Senza, il buio arriverebbe come un guasto.
 - Una sosta vecchia con `torcia: true` si riprende con una torcia piena.
 - **Comprata sopra aspetta alla cintura**, e scendendo se ne accende una:
   sopra non c'è buio da rischiarare.
@@ -227,7 +228,7 @@ più nessuno.
 - **Lo zaino è la stessa finestra senza mercante**: l'eroe e le caselle, la
   torcia, le sei tasche in griglia, il pannello col confronto e i tasti
   «Indossa» (o «Impugna», «Imbraccia»), «Bevi», «Butta»; su una casella
-  addosso «Togli». Si chiude con la ✕. Le regole dello zaino sono quelle di
+  addosso «Togli». Si chiude con la ✕ o toccando il campo fuori dalla cornice (e l'eroe ci va). Le regole dello zaino sono quelle di
   prima.
 
 Nei test: `[data-bottega]` (con `data-mercante-aperto`),
@@ -260,7 +261,11 @@ scudo, le colonne a 390 px).
   una fila di esercizi con un tema sopra.
 - **Una domanda, poi una frase**: il lavoro sono le frasi, una quarantina per
   quando va bene e una quarantina per quando va male (`dati/curiosita.js`).
-  Il foglio non si chiude da sé: la battuta resta finché non si è letta.
+  Il foglio non si chiude da sé, ma la battuta non trattiene: un tocco sul
+  campo la chiude e porta l'eroe dove si è toccato, come «vado avanti»
+  ([../core/interfaccia.md](../core/interfaccia.md#un-tocco-altrove-chiude)).
+  Provato a tenerla finché non si premeva il tasto: chi voleva andarsene
+  doveva prima cercare «ok».
 - **Rispondendo giusto un premio** (gemme, vita, un punto di vita massima, la
   torcia). **Rispondendo storto, metà delle volte niente**; quando succede è
   mite (`MALUS`: 2 di vita o 2–6 gemme). Un malus vero farebbe evitare le

@@ -127,7 +127,9 @@ forma e perché: [la-grande-storia.md](la-grande-storia.md#le-discese).
 - **Toccando una discesa trovata l'eroe ci va e si apre il fumetto** sopra
   (sotto, se sopra non c'è posto; la vista scorre se esce): nome, dritta,
   piani, stelle e «scendo»; dell'abisso il piano più giù toccato. Toccare il
-  prato col fumetto aperto lo chiude e basta.
+  prato col fumetto aperto lo chiude, e l'eroe parte verso dove si è toccato
+  ([../core/interfaccia.md](../core/interfaccia.md#un-tocco-altrove-chiude)). Prima lo chiudeva e
+  basta: per andarsene servivano due tocchi.
 - **Una chiusa dice cosa ci sarà e cosa la apre** («Si apre quando finisci
   la scalinata antica»), senza tasto; chiusa per l'età non promette niente.
 - **Una chiusa ha il disegno pulito**: niente velo né lucchetto. Quando
@@ -184,7 +186,8 @@ chi vende cosa e perché sta in [roba.md](roba.md#i-mercanti-di-sopra).
 
 - **Si toccano come il minatore**: l'eroe ci va, si ferma `accanto`, e
   arrivato si apre il banco (non un fumetto: la lista non ci sta). Il banco
-  sta al centro, si chiude con la ✕ in alto a destra.
+  sta al centro, si chiude con la ✕ in alto a destra o toccando fuori, e quel
+  tocco passa alla mappa (dopo i 320 ms ciechi dell'apertura).
 - **Si trovano nella nebbia** come i posti: finché la loro cella non si è
   vista sono prato (non si toccano), e trovandoli la riga in fondo lo dice
   («Hai trovato l'erborista!»).

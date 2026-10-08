@@ -95,7 +95,7 @@ Nero = mai stato. Scuro e freddo = ricordato. Pieno e caldo = lo stai
 guardando. Un sotterraneo tutto illuminato è una piantina, e su una piantina
 non c'è niente da esplorare. La piantina c'è — la **mappina** in alto a
 destra — e mostra solo il visto più tre punti: dove sei, la scala, chi ha la
-chiave.
+chiave. La 🗺️ della barra in basso la apre grande ([barra.md](barra.md)).
 
 ## Chi ci abita: il branco a fasce
 

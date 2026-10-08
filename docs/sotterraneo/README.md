@@ -8,6 +8,7 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [terra-strumento.md](terra-strumento.md) — lo strumento che fa la terra di sopra dal foglietto: la giunta fra le due metà, la maschera, le icone delle discese
 - [regole.md](regole.md) — la discesa: scala e guardiano, quanto costa in domande, il branco a fasce, la stanza come confine, lo scontro, gli svenimenti
 - [scala-che-sale.md](scala-che-sale.md) — la scala che sale in ogni piano, dove si compare scendendo e risalendo, dal primo piano si esce col «lascio perdere», i piani lasciati restano com'erano, la sosta con i piani alle spalle
+- [barra.md](barra.md) — la barra in basso della discesa, come in Diablo: il globo della vita, quello della luce, le caselle (la pozione da bere, lo zaino, il diario, la mappa grande), la cornice da far dipingere
 - [portale-e-sosta.md](portale-e-sosta.md) — come si lascia una discesa a metà: il portale (e il gemello sopra), la ✕ che non è un portale (si rientra già giù), «lascio perdere», cambiare eroe dal velo, la ripresa nel punto esatto
 - [la-grande-storia.md](la-grande-storia.md) — le sette discese in fila dal villaggio e la loro forma, la tabella dell'equipaggiamento atteso per eroe, chi la dà, chi è sotto il livello, i numeri misurati
 - [missioni.md](missioni.md) — chi dà le missioni sulla terra di sopra, l'albero delle dodici missioni (requisiti, sblocco da sole, il tetto di tre aperte), il diario col dettaglio di ogni missione e il promemoria, i premi, lo stato
@@ -29,4 +30,5 @@ Vedi anche: [../core/grafica.md](../core/grafica.md) (tela, atlante, tessere),
 provare un'idea prima di metterla nel gioco),
 `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md` (la
 scheda di prompt degli scenari), `PROMPT-terra-di-sopra.md` accanto (la
-mappa di sopra, le discese chiuse, i personaggi).
+mappa di sopra, le discese chiuse, i personaggi), `PROMPT-barra.md` (la
+cornice della barra in basso, quando sarà approvata).

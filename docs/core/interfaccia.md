@@ -29,6 +29,40 @@ sua pagina: [il-dito.md](il-dito.md).
 Nei test: `button[aria-label="indietro"]` (mai il carattere),
 `[data-chiudi]`.
 
+## Un tocco altrove chiude
+
+Per ora nel sotterraneo, giù e sulla terra di sopra (l'utente, 8 ottobre: «un
+po' tutti i menu e i messaggi dovrebbero potersi chiudere con un tocco
+altrove»). Dover cercare «ok» per andarsene è un tocco in più che non decide
+niente.
+
+- **Quello che si legge e basta si chiude toccando altrove, e quel tocco fa
+  anche la sua cosa**: sul campo l'eroe parte verso dove si è toccato, su
+  qualcuno della mappa ci va. Giù: la battuta della curiosità, la scala, il
+  portale, la scala chiusa, l'avviso («💎 +9», «🔥 spenta»), la mappa grande,
+  lo zaino, il diario. Sopra: il fumetto, il diario, la bottega, l'avviso in
+  fondo. La ✕ resta dov'è.
+- **Resta fermo solo quello che chiede una scelta senza cui non si va
+  avanti**: una domanda in corso (porta, forziere, fonte, curiosità prima
+  della risposta, scontro), lo svenimento, il cartello di fine, e le
+  conferme che costano («lascio perdere questa discesa», «hai una discesa a
+  metà»). Toccando fuori non succede niente, nemmeno il passo.
+- **Il tocco che chiude non preme altro.** Sul campo della discesa il foglio
+  si chiude al `pointerdown`, e il click che il dito lascia lo ingoia
+  `zittisciIlFantasma` ([il-dito.md](il-dito.md)). Sopra una finestra il tocco
+  è il click sul velo stesso, e chi la usa decide dove va (`toccoFuori` in
+  `src/giochi/sotterraneo/Gioco.vue`, `toccoDaFuori` in `viste/Terra.vue`):
+  sul campo e sulla mappa sì, sulle carte in cima e in fondo no. La bottega
+  ascolta il velo solo dopo i suoi 320 ms ciechi.
+- **Andrebbe estesa al resto dell'app**, un gioco alla volta: altrove un velo
+  con `@click.self` chiude e basta (il `?`, i fogli del costruttore e della
+  fattoria), e il fumetto comune chiude senza muovere il segnalino. Cosa vuol
+  dire «toccare lì» lo sa solo il gioco.
+
+Nei test: `integrazione/sotterraneo-barra` (la battuta chiusa toccando il
+campo mentre l'eroe cammina, la domanda e «lascio perdere» che restano, lo
+zaino e la mappa grande), `integrazione/sotterraneo-terra` (il fumetto).
+
 ## Il fumetto
 
 Su una mappa, toccando una tappa compare **un fumetto sopra di lei**, non un
