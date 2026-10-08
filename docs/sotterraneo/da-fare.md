@@ -62,9 +62,7 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 - **Gli sprite dei mercanti**: armaiolo, erborista e rigattiere sono figure
   disegnate in codice (`viste/pixel.js`); `armaiolo-fermo-0` e gli altri
   nell'atlante prendono il loro posto da soli.
-- **Lo zaino sopra**: sulla mappa la roba si vede solo nella carta in fondo e
-  dal rigattiere; uno scudo comprato al posto della seconda arma leggera si
-  mette dallo zaino, scendendo.
+
 - **Gli sprite di chi dà le missioni**: ragazza, mugnaio, eremita,
   guardia, pescatore e boscaiolo sono figure disegnate in codice
   (`viste/pixel.js`); `<nome>-fermo-0` nell'atlante prende il loro posto da
@@ -80,12 +78,34 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   missioni siano finite (il diario lo dice, ma non da sola la mappa).
 - **La grande storia da guardare col dito**
   ([la-grande-storia.md](la-grande-storia.md)): la grotta ha piani da quattro
-  stanze e quindi niente forzieri (il pezzo lo dà il guardiano dell'ultimo
-  piano, il resto il banco); la botola è la più dura per chi gira tutto (14
-  su 20 a otto, il cavaliere); lo scettro del mago e lo scudo del teschio del
-  cavaliere non si mettono da soli (non picchiano più di quello che c'è), e
-  vanno messi dallo zaino. Il nano e l'elfa restano più comodi del cavaliere
-  e del mago.
+  stanze e quindi niente forzieri (il pezzo lo dà il mostro grosso
+  dell'ultimo piano, il resto il banco).
+
+## I livelli e la roba
+
+- **Le abilità attive delle classi** (un colpo speciale, una magia): fuori
+  dal lavoro dei livelli dell'8 ottobre, di proposito.
+- **L'abisso coi livelli**: non è stato ritarato. I mostri crescono col
+  piano come prima, l'eroe arriva al livello 12 o più con pezzi rari e i
+  pezzi dei grossi: i primi piani sono facili. Va rifatto insieme al bottino
+  graduato qui sopra.
+- **Le classi si somigliano in fondo**: lo Scudo di Fiammetta e il Ciondolo
+  di Re Ossuto non hanno famiglia e battono gli scudi e i gioielli della
+  fila, quindi nella roba attesa li portano tutti fino alla miniera, e il
+  nano tiene la Mazza di Grumo perché le sue asce sono a due mani
+  ([grossi.md](grossi.md)). Strade: un pezzo dei grossi per classe, o pezzi
+  della fila più forti in fondo.
+- **Il cavaliere resta il più duro** (a sei su dieci vince dal 25 al 55%
+  delle discese, l'elfa e il nano dal 65 al 95%), come prima dei livelli.
+- **Chi gira tutto arriva tre livelli sopra** e a quattro su dieci vince
+  metà delle discese ([la-grande-storia.md](la-grande-storia.md#le-misure)):
+  è il premio dell'esplorare, ma se a guardarlo è troppo la leva è
+  `ESP_PER_LIVELLO_DEL_POSTO` o la probabilità dei pezzi dai mostri.
+- **La scalinata a mani nude** (con la roba di una discesa prima) non si fa
+  più neanche a otto su dieci: il minatore lo dice, l'armaiolo ha la spada
+  corta.
+- **Dipingere i mostri grossi**, se piacciono disegnati in codice: la
+  scheda `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-grossi.md`.
 - **Le porte che si aprono**: una discesa appena aperta non ha ancora un
   momento suo sulla mappa (le assi che cadono, la grata che si alza).
 - Da guardare col dito: la velocità del passo (`PASSO_TERRA`), quanto

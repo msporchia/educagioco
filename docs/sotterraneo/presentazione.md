@@ -76,6 +76,12 @@ sono tarati su quella ([la-grande-storia.md](la-grande-storia.md)); chi
 arriva a una discesa sotto il livello lo sa prima di scendere. Svenendo si
 perdono le tasche e metà delle gemme, mai quello che si ha addosso.
 
+**L'eroe cresce**: ogni mostro battuto dà esperienza, a ogni livello un
+punto da dare a forza, tempra, scorza o fortuna ([livelli.md](livelli.md)).
+La roba ha un livello e una rarità, dal comune bianco al leggendario d'oro
+con la sua storia ([rarita.md](rarita.md)), e in fondo a ogni discesa
+aspetta un mostro grosso col suo nome ([grossi.md](grossi.md)).
+
 Finite le sette discese si apre **l'abisso**: una discesa sola che non
 finisce.
 

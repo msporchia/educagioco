@@ -24,7 +24,8 @@ import { PEZZI, TESSERA } from '../../src/giochi/sotterraneo/dati/atlante.js'
 import { occhio } from '../../src/giochi/sotterraneo/viste/occhio.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
-import { gioca, costoDi, quanteVolteSiVince, pianiSani, robaPer } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { gioca, costoDi, quanteVolteSiVince, pianiSani, robaPer, crescitaPer } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import manifesto from '../../src/giochi/sotterraneo/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { misure, statoTraguardo } from '../../src/store/progressi.js'
@@ -110,11 +111,11 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
 {
   const conti = []
   for (const [i, t] of CAMPAGNA.entries()) {
-    const roba = robaPer(i)
-    const v = quanteVolteSiVince(t, { quante: 6, bravura: 0.8, roba })
+    const roba = robaPer(i), crescita = crescitaPer(i)
+    const v = quanteVolteSiVince(t, { quante: 6, bravura: 0.8, roba, crescita })
     controlla(`${t.chiave}: si vince rispondendo bene 8 volte su 10`, v.vinte >= v.quante - 1,
               `${v.vinte}/${v.quante} ${v.guasti.slice(0, 2).join(' · ')}`)
-    const c = costoDi(t, { roba })
+    const c = costoDi(t, { roba, crescita })
     conti.push([t, c])
     /* Il tetto è una seduta: oltre le ottanta domande obbligate non è più
        un gioco, è un compito. Il pavimento è la forbice — se «tutto»
@@ -138,7 +139,8 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
 {
   const righe = []
   for (const e of EROI) {
-    const costi = CAMPAGNA.map((t, i) => costoDi(t, { eroe: e.chiave, roba: robaPer(i, { eroe: e.chiave }) }).minimo)
+    const costi = CAMPAGNA.map((t, i) => costoDi(t, { eroe: e.chiave, roba: robaPer(i, { eroe: e.chiave }),
+                                                     crescita: crescitaPer(i, { eroe: e.chiave }) }).minimo)
     const peggio = Math.max(...costi)
     controlla(`${e.chiave}: nessuna discesa esce dalla seduta`, peggio <= 85,
               `la peggiore costa ${peggio} domande`)
@@ -146,7 +148,8 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
        arriva andando dritto il mago (che regge meno) cade una volta su
        cinque, e una fila sola diceva più della fila che dell'eroe */
     const v = [1, 2].map(seme => quanteVolteSiVince(CAMPAGNA[3], { quante: 4, bravura: 0.8, eroe: e.chiave,
-                                                                    roba: robaPer(3, { eroe: e.chiave, seme }) }))
+                                                                    roba: robaPer(3, { eroe: e.chiave, seme }),
+                                                                    crescita: crescitaPer(3, { eroe: e.chiave, seme }) }))
     const vinte = v.reduce((n, x) => n + x.vinte, 0)
     controlla(`${e.chiave}: la scala sommersa si vince rispondendo bene 8 volte su 10`,
               vinte >= 6, `${vinte}/8 ${v.flatMap(x => x.guasti).slice(0, 1).join('')}`)
@@ -220,9 +223,9 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
    preme a caso no. La forbice è il senso di tutto il gioco. */
 {
   const t = CAMPAGNA[3]
-  const roba = robaPer(3)
-  const bene = quanteVolteSiVince(t, { quante: 8, bravura: 0.85, roba })
-  const caso = quanteVolteSiVince(t, { quante: 8, bravura: 0.35, roba })
+  const roba = robaPer(3), crescita = crescitaPer(3)
+  const bene = quanteVolteSiVince(t, { quante: 8, bravura: 0.85, roba, crescita })
+  const caso = quanteVolteSiVince(t, { quante: 8, bravura: 0.35, roba, crescita })
   controlla('rispondendo bene la scala sommersa si vince', bene.vinte >= 7,
             `${bene.vinte}/${bene.quante}`)
   controlla('premendo a caso no', caso.vinte <= 1, `${caso.vinte}/${caso.quante}`)
@@ -234,8 +237,8 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
    arrivasse uguale, rispondere non servirebbe a niente */
 {
   const t = CAMPAGNA[3]
-  const bravo = gioca(t, { seme: 31, bravura: 0.9, roba: robaPer(3) }).esito
-  const acaso = gioca(t, { seme: 31, bravura: 0.25, roba: robaPer(3) }).esito
+  const bravo = gioca(t, { seme: 31, bravura: 0.9, roba: robaPer(3), crescita: crescitaPer(3) }).esito
+  const acaso = gioca(t, { seme: 31, bravura: 0.25, roba: robaPer(3), crescita: crescitaPer(3) }).esito
   controlla('rispondere bene costa meno vite',
             acaso.svenimenti > bravo.svenimenti || acaso.domande > bravo.domande,
             `bravo: ${bravo.domande} domande / ${bravo.svenimenti} svenimenti · ` +
@@ -766,7 +769,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
    discesa vera col giocatore finto e si contano le entrate. */
 {
   const entrate = tappa => {
-    const c = new Corsa(tappa, { seme: 5, rnd: seminato(5) })
+    const c = new Corsa(tappa, { seme: 5, rnd: seminato(5), roba: robaAttesa('cavaliere', 2), crescita: crescitaAttesa('cavaliere', 2) })
     let quante = 0
     const suo = c.bruciaLaTorcia.bind(c)
     c.bruciaLaTorcia = () => { const p = c.stanzaOra; suo(); if (c.stanzaOra !== p) quante++ }
@@ -839,7 +842,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
      dell'oggetto, e la luce di una lama che brucia illumina uguale */
   c.mano = 'spada'
   c.mancina = 'pugnale-vampiro'
-  uguale('la vita del pugnale conta tutta', c.vitaMax, c.vitaBase + COSE['pugnale-vampiro'].vita)
+  uguale('la vita del pugnale conta tutta', c.vitaMax, c.io.vita + c.piu.vita + c.vitaPiu + COSE['pugnale-vampiro'].vita)
   uguale('ma il suo braccio conta metà', c.att, c.io.att + COSE.spada.att + 1)
 }
 

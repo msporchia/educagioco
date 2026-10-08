@@ -1,10 +1,11 @@
 # 🕳️ L'abisso: scendere senza fondo
 
 L'abisso com'è oggi: perché esiste, come cresce, cosa si perde svenendo, dove
-sta il record e fin dove regge. La parte decisa e non ancora costruita
-(bottino graduato, monete) sta in
-[abisso-progetto.md](abisso-progetto.md); la scala che risale, fatta, in
-[scala-che-sale.md](scala-che-sale.md).
+sta il record e fin dove regge. Il progetto (bottino graduato, monete):
+[abisso-progetto.md](abisso-progetto.md); la scala che risale:
+[scala-che-sale.md](scala-che-sale.md). Coi livelli dell'eroe (8/10) non è
+stato ritarato: ha un mostro grosso ogni cinque piani ([grossi.md](grossi.md))
+e il bottino a tono ([rarita.md](rarita.md)), il resto è com'era.
 
 ## Cos'è, e perché non è una settima tappa
 

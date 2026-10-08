@@ -5,7 +5,7 @@
 // trovare e il mostro col nome. Gira in Node.
 import { MISSIONI, PERSONAGGI, personaDi, missioneDi, premioDetto, PIU_DURO, TETTO, posto } from '../dati/missioni.js'
 import { MOSTRI } from '../dati/mostri.js'
-import { COSE } from '../dati/cose.js'
+import { COSE, aLivello } from '../dati/cose.js'
 import { CAMPAGNA, guardianoDi } from '../dati/campagna.js'
 import { seminato } from './livello.js'
 import { PASSI } from '../../../motore/passi.js'
@@ -137,8 +137,10 @@ export function consegna(stati, id, corredo) {
   if (!m || statoDi(stati, id) !== FATTA) return null
   const p = m.premio
   if (p.cosa) {
-    if (corredo.nonCiStarebbe(p.cosa)) return { stati, esito: 'pieno', monete: 0 }
-    corredo.prendi(p.cosa)
+    // il gioiello del premio è a tono col livello dell'eroe (docs/sotterraneo/rarita.md)
+    const k = aLivello(p.cosa, corredo.livelloEroe || 1)
+    if (corredo.nonCiStarebbe(k)) return { stati, esito: 'pieno', monete: 0 }
+    corredo.prendi(k)
   }
   if (p.gemme) corredo.gemme += p.gemme
   return { stati: { ...stati, [id]: CONSEGNATA }, esito: 'consegnata', monete: p.monete || 0 }

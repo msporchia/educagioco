@@ -28,6 +28,11 @@ import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo } from './motore/corredo.js'
+import { rileggiCrescita, puntiDaDare, dai as daiPunto } from './motore/crescita.js'
+import { pescaLeggendario } from './motore/bottino.js'
+import { quotaDi } from './dati/livelli.js'
+import { LEGGENDARI } from './dati/pezzi.js'
+import { GROSSI } from './dati/grossi.js'
 import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer, promemoria,
          rotta as rottaDi, seguita, diario } from './motore/missioni.js'
 import { Bottega } from './motore/bottega.js'
@@ -48,6 +53,9 @@ import Scontro from './viste/Scontro.vue'
 import Zaino from './viste/Zaino.vue'
 import Diario from './viste/Diario.vue'
 import BarraDiSotto from './viste/BarraDiSotto.vue'
+import PaginaEroe from './viste/PaginaEroe.vue'
+import Tesori from './viste/Tesori.vue'
+import Grosso from './viste/Grosso.vue'
 import LaBottega from './viste/Bottega.vue'   // la bottega dei mercanti di sopra
 import Fine from './viste/Fine.vue'
 import LascioPerdere from './viste/LascioPerdere.vue'   // la frase chiara prima di buttare una discesa
@@ -123,10 +131,10 @@ function scegli(k) {
 const avventure = computed(() => EROI.map(e => {
   const a = avventuraDi(progresso(CHIAVE), e.chiave)
   const r = rileggiRoba(a.roba) || ROBA_VUOTA()
-  const n = schedaConLaRoba(e.chiave, r)
+  const n = schedaConLaRoba(e.chiave, r, a.crescita)
   const meta = dice(a.sosta, CAMPAGNA)
   return {
-    ...e, nuova: !cominciata(a),
+    ...e, nuova: !cominciata(a), livello: n.livello,
     vita: n.vita, att: n.att, dif: n.dif, tratti: n.tratti,
     mano: n.mano, mancina: n.mancina,
     discese: Math.min(a.tappa, QUANTE_TAPPE), quante: QUANTE_TAPPE,
@@ -143,6 +151,13 @@ const avventure = computed(() => EROI.map(e => {
 // La roba dell'avventuriero (motore/corredo.js), in cfg.avventure[eroe].roba: fra una discesa e l'altra non si
 // riparte più nudi (docs/sotterraneo/la-roba-che-resta.md). Un'avventura nuova comincia con lo zaino vuoto
 const roba = computed(() => rileggiRoba(qui.value.roba) || ROBA_VUOTA())
+// l'esperienza e i punti dati (motore/crescita.js), anche loro dell'avventura; i leggendari trovati, per i Tesori
+const crescita = computed(() => rileggiCrescita(qui.value.crescita))
+const tesoriTrovati = computed(() => (Array.isArray(qui.value.tesori) ? qui.value.tesori.filter(id => LEGGENDARI[id]) : []))
+const conITrovati = c => {
+  const nuovi = [...c.trovati].filter(id => !tesoriTrovati.value.includes(id))
+  return nuovi.length ? { tesori: [...tesoriTrovati.value, ...nuovi] } : {}
+}
 
 // la carta "riprendi" dice la sosta dell'avventura aperta (motore/sosta.js). Le gemme sono quelle della roba:
 // sopra si può essere passati da un mercante
@@ -157,7 +172,8 @@ function salva({ subito = false, via } = {}) {
   const c = corsa.value
   if (!c || c.finita || tappaIdx.value == null) return
   ultimoSalvato = orologio
-  nellAvventura({ roba: c.roba, sosta: scrivi(c, tappaIdx.value, { via }), ...fatteGiu(c) }, { subito })
+  nellAvventura({ roba: c.roba, crescita: c.crescita, sosta: scrivi(c, tappaIdx.value, { via }), ...fatteGiu(c),
+                  ...conITrovati(c) }, { subito })
 }
 function fatteGiu(c) {
   const n = c.missioniFatte.size ? missioniFatte(qui.value.missioni, [...c.missioniFatte]) : null
@@ -183,7 +199,7 @@ function azioneMissione(id, azione) {
     suono.ok()
     return 'presa'
   }
-  const b = new Corredo({ eroe: eroeQui(), roba: roba.value })
+  const b = new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
   const r = consegnaMissione(missioni.value, id, b)
   if (!r) return null
   if (r.esito !== 'consegnata') { suono.no(); return { esito: r.esito, monete: 0 } }
@@ -223,7 +239,7 @@ function salgoDalPortale() {
 function riprendiDiscesa({ ferma = false } = {}) {
   const dato = qui.value.sosta
   const t = dato ? tappaDi(dato.tappa) : null
-  const c = t ? leggi(dato, t, roba.value, presePer(missioni.value, t.chiave || '')) : null
+  const c = t ? leggi(dato, t, roba.value, presePer(missioni.value, t.chiave || ''), crescita.value) : null
   if (!c) { scorda(); return }
   togli()   // il telefono posato sulla mappa lascia acceso il freno, o si ritroverebbe dietro un velo non chiesto
   tappaIdx.value = dato.tappa
@@ -263,7 +279,7 @@ const tappe = computed(() => {
 })
 
 // la carta di chi scende, sulla mappa: vita, braccio e difesa con quello che ha addosso, e le gemme da spendere
-const robaSopra = computed(() => schedaConLaRoba(eroeQui(), roba.value))
+const robaSopra = computed(() => schedaConLaRoba(eroeQui(), roba.value, crescita.value))
 
 /* ═══════════ i mercanti di sopra (motore/bottega.js) ═══════════
    Il banco si pesca una volta per giro e si scrive nell'avventura (botteghe): un banco che cambiasse a ogni
@@ -276,7 +292,7 @@ let bottega = null
 
 function apriBottega(k) {
   if (!mercanteDi(k)) return
-  bottega = new Bottega({ eroe: eroeQui(), roba: roba.value, finite: qui.value.tappa,
+  bottega = new Bottega({ eroe: eroeQui(), roba: roba.value, finite: qui.value.tappa, crescita: crescita.value,
                           banchi: (qui.value.botteghe || {}).banchi })
   bottega.banco(k)
   nellAvventura({ botteghe: { banchi: bottega.banchi } })
@@ -293,13 +309,14 @@ const banco = computed(() => {
   if (!k || !bottega) return null
   const b = bottega, m = mercanteDi(k)
   const voce = x => (x && COSE[x] ? { chiave: x, ...COSE[x] } : null)
-  // quello peggiore di quello addosso non si mostra; i pezzi delle righe dopo (`avanti`) si comprano, a un prezzo più
-  // alto (`costa`: il `prezzo` resta quello pieno, da cui si legge il gradino)
-  const vendibili = b.mercanzia(k).filter(({ chiave: x, avanti }) => avanti || !b.sottoAddosso(x))
+  // si mostra solo quello che migliora davvero qualcosa addosso, anche i pezzi delle righe dopo (`avanti`), che si
+  // comprano a un prezzo più alto (`costa`: il `prezzo` resta quello pieno). Regola dell'utente, 8 ottobre: lo
+  // scettro accanto al bastone magico (⚔️ 3 tutti e due) «non sembra molto interessante»
+  const vendibili = b.mercanzia(k).filter(({ chiave: x }) => b.siMostra(x))
     .map(({ chiave: x, sempre, avanti }) => {
       const costa = b.quantoCosta(x)
       return {
-        chiave: x, sempre, ...COSE[x], costa, avanti, posso: b.gemme >= costa,
+        chiave: x, sempre, ...COSE[x], ...(COSE[x].cura ? { cura: b.curaDi(x) } : {}), costa, avanti, posso: b.gemme >= costa,
         nonPuoi: b.perchéNo(x), prova: b.seLoMetto(x), va: b.vaAddosso(x),
         mancano: Math.max(0, costa - b.gemme),
         quante: b.quanteNeHo(x),
@@ -369,8 +386,162 @@ const eroe = dallaCorsa(c => {
           scorta: c.torceInScorta, agliSgoccioli: c.torciaResta <= 3 && !c.torceInScorta }
       : null,
     pozioni: c.pozioni,               // le cure in tasca, sulla casella 🧪 della barra
+    pieni: c.zaino.length,
+    esp: c.crescita.esp, crescita: c.crescita,
   }
 })
+
+/* ═══════════ la barra in basso, la stessa sopra e sotto (viste/BarraDiSotto.vue, docs/sotterraneo/barra.md) ═══════════
+   Giù i numeri sono quelli della discesa; sopra quelli della roba e della crescita dell'avventura, con la vita piena
+   (sopra non si combatte). Il globo di destra è l'esperienza, col livello e il «+» dei punti da dare */
+const barra = computed(() => {
+  const giu = eroe.value
+  const r = roba.value
+  const n = robaSopra.value
+  const esp = giu ? giu.esp : crescita.value.esp
+  const q = quotaDi(esp)
+  const cr = giu ? giu.crescita : crescita.value
+  return {
+    vita: giu ? giu.vita : n.vita, vitaMax: giu ? giu.vitaMax : n.vita,
+    livello: q.livello, esperienza: q.quota, punti: puntiDaDare(cr),
+    pozioni: giu ? giu.pozioni : r.zaino.filter(k => COSE[k] && (COSE[k].usa === 'cura' || COSE[k].usa === 'cresci')).length,
+    pieni: giu ? giu.pieni : r.zaino.length,
+    gemme: giu ? giu.gemme : r.gemme,
+  }
+})
+const missioniPronte = computed(() => diario(missioni.value, tappe.value, segui.value).inMano.some(v => v.stato === 'fatta'))
+
+/* ═══════════ la pagina dell'eroe e i Tesori (viste/PaginaEroe.vue, viste/Tesori.vue) ═══════════
+   Si apre dal globo dell'esperienza, sopra e sotto, e dal ritratto della carta di chi scende. Giù i punti si danno
+   alla corsa (la vita della tempra arriva subito), sopra all'avventura */
+const paginaEroe = ref(false)
+const tesoriAperti = ref(false)
+function apriPaginaEroe() {
+  zainoAperto.value = false
+  diarioGiu.value = false
+  zainoSopra.value = false
+  tesoriAperti.value = false
+  paginaEroe.value = true
+  suono.ok()
+}
+// il Corredo da guardare: la corsa giù, la roba dell'avventura sopra
+const chiGuardo = () => corsa.value || new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
+const pagina = computed(() => {
+  tic.value
+  if (!paginaEroe.value) return null
+  const c = chiGuardo()
+  const q = quotaDi(c.crescita.esp)
+  return {
+    eroe: c.io, mano: c.mano, mancina: c.mancina,
+    livello: q.livello, fatto: q.fatto, serve: q.serve, punti: puntiDaDare(c.crescita),
+    numeri: { vita: c.vita ?? c.vitaConLaRoba, vitaMax: c.vitaMax ?? c.vitaConLaRoba, att: c.att, dif: c.dif,
+              fortuna: c.fortuna, gemme: c.gemme },
+    caratteristiche: c.caratteristiche(),
+    tesori: { trovati: tesoriTrovati.value.length, tutti: Object.keys(LEGGENDARI).length },
+  }
+})
+function daiUnPunto(k) {
+  const c = corsa.value
+  if (c) {
+    if (!c.daiUnPunto(k)) return
+    tic.value++
+    salva({ subito: true })
+  } else {
+    const n = daiPunto(crescita.value, k)
+    if (!n) return
+    nellAvventura({ crescita: n }, { subito: true })
+    tic.value++
+  }
+  suono.nota(523, 784, 0.18, 'triangle', 0.12)
+}
+
+/* ═══════════ lo zaino di sopra ═══════════
+   Lo stesso zaino della discesa, sulla roba dell'avventura: ci si veste e ci si spoglia, ma non si beve (sopra si
+   è sempre in piena forma) e non si butta (quello che non serve lo compra il rigattiere) */
+const zainoSopra = ref(false)
+const detto = ref(null)        // la riga sopra il campo, sulla terra di sopra (la terra ha la sua per quello che trova)
+let dettoFino = 0
+function dilloSopra(testo) {
+  detto.value = testo
+  clearTimeout(dettoFino)
+  dettoFino = setTimeout(() => { detto.value = null }, 2200)
+}
+const zainoDiSopra = computed(() => {
+  tic.value
+  if (!zainoSopra.value) return null
+  const c = new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
+  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), prova: c.seLoMetto(k), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
+  return {
+    mano: voce(c.mano), mancina: voce(c.mancina), corpo: voce(c.corpo), dito: voce(c.dito),
+    tasche: Array.from({ length: TASCHE }, (_, i) => voce(c.zaino[i])),
+    att: c.att, dif: c.dif, gemme: c.gemme, vita: c.vitaConLaRoba, vitaMax: c.vitaConLaRoba,
+  }
+})
+function suLaRoba(fai) {
+  const c = new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
+  const e = fai(c)
+  const a = c.avvisi.pop()
+  if (a) dilloSopra(typeof a === 'string' ? a : a.testo)
+  nellAvventura({ roba: c.roba }, { subito: true })
+  tic.value++
+  return e
+}
+function usaSopra(i) {
+  const k = roba.value.zaino[i]
+  if (COSE[k] && !COSE[k].dove) { dilloSopra(COSE[k].usa === 'cura' ? '❤️ sei già in piena forma' : 'Serve laggiù, non qui'); return }
+  suLaRoba(c => c.indossaDallaTasca(i))
+  suono.ok()
+}
+function riponiSopra(dove) { suLaRoba(c => c.riponi(dove)); suono.ok() }
+
+/* ═══════════ il mostro grosso (dati/grossi.js) ═══════════
+   La sua vita in cima allo schermo da quando ci si entra nella stanza (si sveglia) o lo si combatte */
+const grosso = dallaCorsa(c => {
+  const f = c.foglio
+  const m = f && f.che === 'scontro' && f.chi.grosso ? f.chi
+    : c.livello.robe.find(r => r.che === 'mostro' && r.grosso && !r.morto && r.sveglio)
+  if (!m) return null
+  // la scheda del grosso prima: i suoi `ossa` e `att` sono moltiplicatori, non i numeri di questo mostro
+  const g = GROSSI[m.grosso]
+  return { disegno: g.disegno, colori: g.colori, chiave: m.grosso, nome: m.nome, ossa: Math.max(0, m.ossa),
+           ossaMax: m.ossaMax, att: m.att, dif: m.dif }
+})
+
+/* ═══════════ le feste: un livello salito, un leggendario caduto (Corsa.eventi) ═══════════
+   Il livello: la colonna di luce sull'eroe (scena/tela.js), il globo che si accende e un suono suo. Il leggendario: la
+   colonna di luce su di lui finché sta per terra, e in mezzo al campo il nome in oro con la sua riga di storia */
+const festa = ref(null)          // { che: 'livello', livello } | { che: 'leggendario', nome, storia, cosa }
+const sale = ref(false)
+let festaFino = 0
+const suoniDellaFesta = {
+  livello: () => {
+    [392, 523, 659, 784, 1047].forEach((f, i) => suono.nota(f, f, 0.22, 'triangle', 0.12, i * 90))
+    suono.nota(1568, 2093, 0.6, 'sine', 0.06, 480)
+  },
+  leggendario: () => {
+    [262, 330, 392, 523].forEach((f, i) => suono.nota(f, f, 1.1, 'sine', 0.09, i * 60))
+    ;[1568, 2093, 2637].forEach((f, i) => suono.nota(f, f * 1.01, 0.5, 'triangle', 0.07, 520 + i * 140))
+  },
+}
+function festeggia(e, c) {
+  if (e.che === 'esp') {
+    if (pittore) pittore.numerini.push({ testo: `+${e.esp} ✨`, x: e.x + 0.5, y: e.y, t: orologio })
+    return
+  }
+  if (e.che === 'livello') {
+    festa.value = { che: 'livello', livello: e.livello }
+    sale.value = true
+    setTimeout(() => { sale.value = false }, 1600)
+    if (pittore) pittore.colonne.push({ x: c.eroe.x, y: c.eroe.y, t: orologio, colore: '255,226,140', segui: true })
+  } else if (e.che === 'leggendario') {
+    const k = COSE[e.cosa]
+    if (!k) return
+    festa.value = { che: 'leggendario', nome: k.nome, storia: k.storia, cosa: e.cosa, sprite: k.sprite, em: k.em }
+  }
+  suoniDellaFesta[e.che]?.()
+  clearTimeout(festaFino)
+  festaFino = setTimeout(() => { festa.value = null }, e.che === 'leggendario' ? 4200 : 2600)
+}
 
 // il globo della vita sobbalza quando cala: un colpo preso si vede anche con gli occhi sul mostro
 let colpitoFino = 0
@@ -404,6 +575,7 @@ const nemico = dallaCorsa(c => {
   return {
     mostro: f.chi, colpo: c.colpo(f.chi), restano: c.colpiPer(f.chi),
     sprite: scheda.sprite ? pezzoAndante(scheda.sprite, 'fermo', 0) : null,   // la stessa faccia del campo
+    grosso: f.chi.grosso ? GROSSI[f.chi.grosso] : null,                        // il mostro grosso ha la sua, disegnata in codice
     graffio: c.graffio(f.chi), male: c.danno(f.chi),   // detti PRIMA di rispondere: con questi si decide restare o scappare
     vita: c.vita, vitaMax: c.vitaMax,
   }
@@ -413,7 +585,7 @@ const pieni = dallaCorsa(c => c.zaino.length, 0)   // sei su sei vuol dire che l
 
 const zaino = dallaCorsa(c => {
   // `nonPuoi` la scrive il motore (perchéNo), che sa chi sta scendendo
-  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), prova: c.seLoMetto(k) } : null)
+  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), prova: c.seLoMetto(k), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina),
     corpo: voce(c.corpo), dito: voce(c.dito),
@@ -466,13 +638,25 @@ function corredoDaProva(c) {
 }
 
 // `#abisso=12` comincia già a quel piano, per guardare una schermata senza aspettare due sere di discesa
+// `#piano=2` fa lo stesso in una discesa della storia (fino all'ultimo, dove aspetta il mostro grosso)
 function pianoDaProva(c) {
-  const n = Number(new URLSearchParams(location.hash.slice(1)).get('abisso'))
-  if (!c.senzaFondo || !Number.isFinite(n) || n < 2) return
-  c.piano = Math.floor(n) - 1
-  c.vitaBase += VITA_PER_PIANO * c.piano
-  c.vita = c.vitaBase
+  const h = new URLSearchParams(location.hash.slice(1))
+  const n = Number(c.senzaFondo ? h.get('abisso') : h.get('piano'))
+  if (!Number.isFinite(n) || n < 2) return
+  c.piano = Math.min(Math.floor(n), c.quantiPiani) - 1
+  c.fondo = c.piano
+  c.vitaPiu += VITA_PER_PIANO * c.piano
+  c.vita = c.vitaMax
   c.nuovoPiano()
+  c.posaLeMissioni()
+}
+
+// `#sotterraneo=leggendario` posa un leggendario accanto all'ingresso, come se fosse appena caduto: per guardare la
+// festa senza aspettare la fortuna di una sera intera
+function leggendarioDaProva(c) {
+  if (new URLSearchParams(location.hash.slice(1)).get('sotterraneo') !== 'leggendario') return
+  const k = pescaLeggendario({ livello: c.livelloDelBottino, rnd: Math.random, tua: x => c.posso(x) })
+  c.posaPezzo(k, { x: Math.floor(c.eroe.x) + 1, y: Math.floor(c.eroe.y) })
 }
 
 function avvia(i) {
@@ -483,10 +667,11 @@ function avvia(i) {
   domanda.value = null
   chiudiLaBarra()
   corsa.value = new Corsa(tappaDi(i), { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value,
-                                        missioni: presePer(missioni.value, tappaDi(i).chiave) })
+                                        crescita: crescita.value, missioni: presePer(missioni.value, tappaDi(i).chiave) })
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
   pianoDaProva(corsa.value)
+  leggendarioDaProva(corsa.value)
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
   nextTick(() => accendi())
 }
@@ -566,8 +751,11 @@ function guarda(c) {
             // tutte e quattro le caselle: uno scudo raccolto camminandoci sopra va nella mancina, un anello al dito
             `|${c.mano}|${c.mancina}|${c.corpo}|${c.dito}` +
             `|${c.torciaResta}|${c.torceInScorta}` +   // la torcia cala da sola, camminando
-            `|${c.foglio ? c.foglio.cosa || '' : ''}|${c.livello.robe.length}`   // due cose trovate di fila hanno lo stesso `che`
+            `|${c.foglio ? c.foglio.cosa || '' : ''}|${c.livello.robe.length}` +   // due cose trovate di fila hanno lo stesso `che`
+            `|${c.crescita.esp}|${c.crescita.forza}.${c.crescita.tempra}.${c.crescita.scorza}.${c.crescita.fortuna}` +
+            `|${c.livello.robe.reduce((n, r) => n + (r.che === 'mostro' && r.sveglio ? 1 : 0), 0)}`   // il mostro grosso che si sveglia
   if (f !== firma) { firma = f; tic.value++ }
+  while (c.eventi.length) festeggia(c.eventi.shift(), c)
   if (c.avvisi.length) {
     const a = c.avvisi.shift()
     avviso.value = typeof a === 'string' ? { testo: a } : { ...a, ...(COSE[a.cosa] || {}) }
@@ -669,10 +857,14 @@ function chiudiLaBarra() {
   zainoAperto.value = false
   diarioGiu.value = false
   mappaGrande.value = false
+  paginaEroe.value = false
+  tesoriAperti.value = false
+  zainoSopra.value = false
 }
 // lo zaino e il diario si aprono uno alla volta, e chiudono la mappa grande
 function apriDallaBarra(che) {
   mappaGrande.value = false
+  paginaEroe.value = false
   zainoAperto.value = che === 'zaino'
   diarioGiu.value = che === 'diario'
 }
@@ -703,6 +895,8 @@ function lasciaAndare() {
 function toccoFuori(e) {
   zainoAperto.value = false
   diarioGiu.value = false
+  paginaEroe.value = false
+  tesoriAperti.value = false
   const r = tela.value && tela.value.getBoundingClientRect()
   if (!r || !e || e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return
   if (!lasciaAndare()) return
@@ -742,7 +936,7 @@ function chiudi({ senzaCartello = false } = {}) {
   if (!c.finita) c.risali()
   // la roba viene su (vinta, persa o finita la sera): quello che è rimasto per terra resta giù. Un giro nuovo: i
   // mercanti hanno roba nuova sul banco
-  nellAvventura({ roba: c.roba, botteghe: null, ...fatteGiu(c) })
+  nellAvventura({ roba: c.roba, crescita: c.crescita, botteghe: null, ...fatteGiu(c), ...conITrovati(c) })
   const e = c.esito
   const stelle = stelleDella(e)
   // l'abisso non si butta (finisce la sera, non la discesa): si scrive il punto da cui si rientra
@@ -845,7 +1039,7 @@ function punto(e) {
 
 function premi(e) {
   dita.set(e.pointerId, e)
-  if (zainoAperto.value || diarioGiu.value || fine.value) return
+  if (zainoAperto.value || diarioGiu.value || paginaEroe.value || fine.value) return
   // un foglio da leggere, la mappa grande, un avviso: il tocco li chiude e intanto cammina
   if (!lasciaAndare()) return
   if (dita.size > 1) { premuto = false; return }
@@ -944,12 +1138,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
     <!-- il ⏸ solo dentro una discesa: sulla mappa non c'è niente da fermare -->
     <Barra :titolo="titolo" guida="sotterraneo" @aiuto="aiuto" :monete="!corsa" scura
            :pausa="siGioca" @pausa="metti()" @indietro="indietro">
-      <!-- vita, gemme e zaino stanno nella barra in basso; qui restano i due numeri che decidono uno scontro -->
-      <button v-if="corsa && eroe" class="sot-io" data-azione="zaino-barra"
-              aria-label="lo zaino" @click="apriDallaBarra('zaino')">
-        <span class="sot-n em">⚔️<b>{{ eroe.att }}</b></span>
-        <span class="sot-n em">🛡️<b>{{ eroe.dif }}</b></span>
-      </button>
+      <!-- vita, gemme e zaino stanno nella barra in basso; attacco e difesa nella pagina dell'eroe (docs/sotterraneo/barra.md) -->
     </Barra>
 
     <div class="sot">
@@ -958,8 +1147,19 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <Campagna ref="campagnaEl" :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
                   :missioni="missioni" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
-                  @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda"
+                  @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda" @pagina-eroe="apriPaginaEroe"
                   @eroe="scegliEroe = true" @bottega="apriBottega" />
+        <p v-if="detto" class="sot-avviso sot-avviso-sopra" data-detto-sopra>{{ detto }}</p>
+        <!-- la stessa barra di giù (docs/sotterraneo/barra.md): sopra la vita è piena e la mappa grande non c'è -->
+        <BarraDiSotto sopra :vita="barra.vita" :vita-max="barra.vitaMax" :livello="barra.livello"
+                      :esperienza="barra.esperienza" :punti="barra.punti" :pozioni="barra.pozioni" :pieni="barra.pieni"
+                      :tasche="TASCHE" :gemme="barra.gemme" :missioni="missioniAperte" :pronta="missioniPronte"
+                      @bevi="dilloSopra(barra.pozioni ? '❤️ sei già in piena forma' : '🧪 non hai pozioni')"
+                      @zaino="chiudiBottega(); paginaEroe = false; zainoSopra = true"
+                      @diario="campagnaEl && campagnaEl.apriDiario()" @eroe="apriPaginaEroe" />
+        <Zaino v-if="zainoDiSopra" v-bind="zainoDiSopra" :eroe="eroeScheda" :piano="0" sopra
+               @usa="usaSopra" @riponi="riponiSopra" @butta="() => {}"
+               @chiudi="zainoSopra = false" @fuori="e => { zainoSopra = false; fuoriDallaBottega(e) }" />
         <!-- la bottega di un mercante di sopra: quasi a tutto schermo, la ✕ in alto a destra, niente domande.
              La chiave è il mercante: le linguette e la scelta ripartono da capo cambiando bottega -->
         <LaBottega v-if="banco" :key="banco.chi.chiave" v-bind="banco" :eroe="eroeScheda" :detto="dettoBanco"
@@ -996,19 +1196,42 @@ function ridimensiona() { if (pittore) pittore.misura() }
             <span v-if="eroe.chiave" class="em">🗝️ la scala è aperta</span>
             <span v-else>la chiave ce l'ha qualcuno, qua sotto</span>
           </p>
-          <p v-if="avviso" class="sot-avviso">
+          <p v-if="avviso" class="sot-avviso" :class="avviso.rarita ? 'sot-r-' + avviso.rarita : null">
             <Icona v-if="avviso.cosa" :sprite="avviso.sprite" :em="avviso.em" :emAlto="20" />
             {{ avviso.testo }}
           </p>
+
+          <!-- il mostro grosso: la sua vita in cima, da quando ci si entra nella stanza (docs/sotterraneo/grossi.md) -->
+          <div v-if="grosso" class="sot-grosso-vita" data-grosso :data-chi="grosso.chiave" :data-ossa="grosso.ossa">
+            <span class="sot-grosso-faccia"><Grosso :disegno="grosso.disegno" :colori="grosso.colori" :scala="1" /></span>
+            <span class="sot-grosso-dati">
+              <b>{{ grosso.nome }}</b>
+              <span class="sot-grosso-barra"><i :style="{ width: (grosso.ossa / grosso.ossaMax) * 100 + '%' }"></i>
+                <small>❤️ {{ grosso.ossa }} / {{ grosso.ossaMax }}</small></span>
+            </span>
+          </div>
+
+          <!-- le feste: un livello salito, un leggendario caduto. Non si toccano: il campo sotto sì -->
+          <div v-if="festa && festa.che === 'livello'" class="sot-festa sot-festa-livello" data-livello-su :data-livello="festa.livello">
+            <b>✨ Livello {{ festa.livello }}!</b>
+            <small>Tocca il globo viola: hai un punto da dare</small>
+          </div>
+          <div v-else-if="festa && festa.che === 'leggendario'" class="sot-festa sot-festa-leggendario" data-leggendario
+               :data-cosa="festa.cosa">
+            <Icona :sprite="festa.sprite" :em="festa.em" :scala="3" :emAlto="34" />
+            <b>{{ festa.nome }}</b>
+            <i>{{ festa.storia }}</i>
+          </div>
         </div>
 
         <!-- la barra in basso, come in Diablo: la vita e la luce nei globi, le caselle in mezzo. I fogli le salgono
              sopra (docs/sotterraneo/barra.md) -->
-        <BarraDiSotto :vita="eroe.vita" :vita-max="eroe.vitaMax" :colpito="colpito" :torcia="eroe.torcia"
-                      :pozioni="eroe.pozioni" :pieni="pieni" :tasche="TASCHE" :gemme="eroe.gemme"
+        <BarraDiSotto :vita="barra.vita" :vita-max="barra.vitaMax" :colpito="colpito" :livello="barra.livello"
+                      :esperienza="barra.esperienza" :punti="barra.punti" :sale="sale"
+                      :pozioni="barra.pozioni" :pieni="barra.pieni" :tasche="TASCHE" :gemme="barra.gemme"
                       :missioni="missioniAperte" :mappa="mappaGrande"
                       @bevi="bevi" @zaino="apriDallaBarra('zaino')" @diario="apriDallaBarra('diario')"
-                      @mappa="mappaGrande = !mappaGrande" />
+                      @mappa="mappaGrande = !mappaGrande" @eroe="apriPaginaEroe" />
 
         <!-- lo scontro sta al centro, non sale dal basso: un mostro addosso arriva mentre si cammina, e in
              fondo allo schermo chi guarda il proprio eroe non lo vedrebbe. Niente classe `sot-foglio`
@@ -1172,6 +1395,14 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
         <Fine v-if="fine" v-bind="fine" @ancora="ancora" @esci="allaMappa" />
       </template>
+
+      <!-- la pagina dell'eroe e i Tesori, sopra e sotto: si chiudono con la ✕ o toccando fuori (e il tocco cammina) -->
+      <PaginaEroe v-if="pagina && !tesoriAperti && !(corsa && foglio && foglio.che === 'scontro')" v-bind="pagina"
+                  @dai="daiUnPunto" @tesori="tesoriAperti = true" @chiudi="paginaEroe = false"
+                  @fuori="e => { paginaEroe = false; corsa ? toccoFuori(e) : fuoriDallaBottega(e) }" />
+      <Tesori v-if="paginaEroe && tesoriAperti" :trovati="tesoriTrovati" @indietro="tesoriAperti = false"
+              @chiudi="paginaEroe = false; tesoriAperti = false"
+              @fuori="e => { paginaEroe = false; tesoriAperti = false; corsa ? toccoFuori(e) : fuoriDallaBottega(e) }" />
 
       <!-- sta in fondo e fuori da tutto: la domanda e il cartello di fine hanno già la loro pausa -->
       <VeloPausa v-if="inPausa && siGioca && !perdendo" :dove="dovEravamo" @riprendi="togli" @esci="indietro">

@@ -13,14 +13,14 @@ export const CAMPAGNA = [
     scenario: 'cripta',
     portata: 25,
     dritta: 'due piani corti: si impara la strada',
-    piani: 2, misura: 30, giri: 2, dif: [0.05, 0.22],
+    piani: 2, misura: 30, giri: 2, dif: [0.05, 0.22], livello: 1,
     guardiano: 'scheletro', capo: 'scheletro' },
 
   { chiave: 'cantine', nome: 'La scalinata antica', icona: '🪜', dove: 'giù per la scalinata',
     scenario: 'cantine',
     portata: 31,
     dritta: 'larga, con tante stanze: si gira parecchio',
-    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 1.3, spinta: 2,
+    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 1.55, spinta: 5, livello: 2,
     guardiano: 'scheletro', capo: 'orco' },
 
   // alta e stretta come la torre: le stanze una sopra l'altra
@@ -28,7 +28,7 @@ export const CAMPAGNA = [
     scenario: 'fornace',
     portata: 37,
     dritta: 'stretta e alta: si sale e si scende per le stanze',
-    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 1.2, spinta: 2,
+    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 1.35, spinta: 7, livello: 3,
     guardiano: 'scheletro', capo: 'troll' },
 
   // tutta in profondità: piani piccoli, tanti
@@ -36,7 +36,7 @@ export const CAMPAGNA = [
     scenario: 'cantine',
     portata: 43,
     dritta: 'piani piccoli, ma tanti: si scende sempre',
-    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 1.15, spinta: 2,
+    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 1.65, spinta: 9, livello: 5,
     guardiano: 'orco', capo: 'orco' },
 
   // lunga e stretta: un canale sott'acqua
@@ -44,7 +44,7 @@ export const CAMPAGNA = [
     scenario: 'cripta',
     portata: 50,
     dritta: 'lunga e stretta, e in fondo c\'è qualcosa di grosso',
-    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 1.5, spinta: 2,
+    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 2.9, spinta: 9, livello: 6,
     // guardiano un granchio (non l'orco di sempre): stessa fascia (dati/mostri.js), ma nel posto giusto
     guardiano: 'granchio', capo: 'gigante' },
 
@@ -52,21 +52,17 @@ export const CAMPAGNA = [
     scenario: 'cantine',
     portata: 57,
     dritta: 'un labirinto di sedici stanze: senza mappina ci si perde',
-    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 2.2, spinta: 2,
+    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 5.1, spinta: 9, livello: 8,
     guardiano: 'lupo', capo: 'troll' },
 
   { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '⛏️', dove: 'nella miniera',
     scenario: 'fornace',
     portata: 64,
     dritta: 'stretta, profonda, e le domande non perdonano',
-    piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 2.3, spinta: 2,
+    piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 4.85, spinta: 10, livello: 10,
     // il gigante solo in fondo; il serpente ai piani, non l'orco
     guardiano: 'serpente', capo: 'gigante' },
 ]
-
-// Le discese di prima, in fila (fino al 7 ottobre 2026): servono a rileggere un'avventura scritta allora
-// (azzeraIlVecchio in motore/avventure.js). Il pozzo dal tetto rosso non è più una discesa
-export const CAMPAGNA_DI_PRIMA = ['cantine', 'pozzo', 'gallerie', 'cisterna', 'labirinto', 'fondo']
 
 export const QUANTE_TAPPE = CAMPAGNA.length
 
@@ -137,6 +133,14 @@ export const brancoDi = (tappa, piano) => {
   return t ? BRANCHI[t.scenario] : BRANCO
 }
 
+// Il livello del posto (docs/sotterraneo/livelli.md): quello di partenza della discesa, uno in più ogni due piani;
+// l'abisso comincia da LIVELLO_ABISSO e sale di uno a piano, senza tetto. Dice il livello del bottino (col livello
+// dell'eroe, motore/bottino.js) e quanto valgono le gemme che si trovano
+export const LIVELLO_ABISSO = 12
+export const livelloDelPosto = (tappa, piano) => (!tappa ? 1
+  : tappa.abisso ? LIVELLO_ABISSO + Math.max(0, piano)
+    : (tappa.livello || 1) + Math.floor(Math.max(0, piano) / 2))
+
 // `CAMPAGNA[-1]` è undefined, e un undefined dentro una Corsa non dà errore: dà una discesa senza numeri
 export const tappaDi = indice => (indice === INDICE_ABISSO ? L_ABISSO : CAMPAGNA[indice])
 
@@ -199,13 +203,16 @@ export function guastiDellaCampagna() {
     if (t.giri < 2 || t.giri > 4) g.push(`${t.chiave}: ${t.giri} giri di taglio, fuori da 2..4`)
     const [da, a] = t.dif
     if (da < 0 || a > 1 || da > a) g.push(`${t.chiave}: difficoltà ${da}..${a} storta`)
-    if (t.forza != null && !(t.forza >= 1 && t.forza <= 3)) g.push(`${t.chiave}: forza ${t.forza} fuori da 1..3`)
-    if (t.spinta != null && !(t.spinta >= 0 && t.spinta <= 3)) g.push(`${t.chiave}: spinta ${t.spinta} fuori da 0..3`)
+    if (t.forza != null && !(t.forza >= 1 && t.forza <= 8)) g.push(`${t.chiave}: forza ${t.forza} fuori da 1..8`)
+    if (t.spinta != null && !(t.spinta >= 0 && t.spinta <= 12)) g.push(`${t.chiave}: spinta ${t.spinta} fuori da 0..12`)
+    if (!(t.livello >= 1)) g.push(`${t.chiave}: senza livello, e il bottino non sa a che livello cadere`)
   }
   // la prima si comincia a mani nude: non può contare su una roba che nessuno ha ancora
   if ((CAMPAGNA[0].forza || 1) !== 1 || (CAMPAGNA[0].spinta || 0) !== 0)
     g.push(`${CAMPAGNA[0].chiave}: si scende a mani nude, niente forza né spinta`)
   // la campagna deve salire: due tappe di fila alla stessa difficoltà sembrano una ripetizione
+  for (let i = 1; i < CAMPAGNA.length; i++) if (CAMPAGNA[i].livello <= CAMPAGNA[i - 1].livello)
+    g.push(`${CAMPAGNA[i].chiave}: livello ${CAMPAGNA[i].livello}, non sopra quello della discesa di prima`)
   for (let i = 1; i < CAMPAGNA.length; i++)
     if (CAMPAGNA[i].dif[1] <= CAMPAGNA[i - 1].dif[1])
       g.push(`${CAMPAGNA[i].chiave} non chiede più di ${CAMPAGNA[i - 1].chiave}`)

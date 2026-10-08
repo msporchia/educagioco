@@ -7,9 +7,10 @@ import { Corsa } from './corsa.js'
 import { CALMA } from '../dati/mondo.js'
 import { INDICE_ABISSO, L_ABISSO } from '../dati/campagna.js'
 
-// la 5: ogni piano ha la scala che sale (una cosa in più nel piano: gli indici delle cose di una sosta di prima non
+// la 6: la vita in più della discesa (`vitaPiu`) al posto di quella intera (`vitaBase`), da quando l'eroe ha i livelli.
+// La 5: ogni piano ha la scala che sale (una cosa in più nel piano: gli indici delle cose di una sosta di prima non
 // tornerebbero). Prima, la 4: i cambiamenti invece delle cose intere, e niente roba (sta nell'avventura)
-export const VERSIONE = 5
+export const VERSIONE = 6
 
 // quanti piani lasciati alle spalle si salvano (i più vicini a quello di adesso): le sette discese stanno tutte,
 // l'abisso al piano 30 no, e quelli più su si rifanno dal seme quando ci si torna (docs/sotterraneo/scala-che-sale.md)
@@ -107,7 +108,7 @@ export function scrivi(corsa, tappa, { anchePerFinite = false, via = USCITA } = 
     fondo: corsa.fondo,   // il più profondo toccato: scendere ancora è nuovo, rifare un piano no
     eroe: corsa.chiEro,
     vita: corsa.vita,
-    vitaBase: corsa.vitaBase,
+    vitaPiu: corsa.vitaPiu,
     chiave: corsa.chiaveDelPiano,
     // il punto esatto, anche a metà di un passo
     dove: { x: centesimi(corsa.eroe.x), y: centesimi(corsa.eroe.y) },
@@ -130,11 +131,11 @@ export function scrivi(corsa, tappa, { anchePerFinite = false, via = USCITA } = 
 // torna una Corsa pronta a giocare, o null se il salvataggio non si può leggere. `roba`: quella dell'avventura
 // (cfg.avventure[eroe].roba), che sopra può essere cambiata dai mercanti; `missioni`: quelle prese adesso per
 // questa discesa (una presa sopra, passando dal portale, compare nel suo piano)
-export function leggi(dato, tappa, roba = null, missioni = []) {
+export function leggi(dato, tappa, roba = null, missioni = [], crescita = null) {
   if (!dato || dato.v !== VERSIONE || !dato.robe || !dato.dove || typeof dato.eroe !== 'string') return null
   try {
     // la roba si indossa dopo, sul piano già rimesso: quello che la classe non porta può finire per terra
-    const corsa = new Corsa(tappa, { seme: dato.seme, eroe: dato.eroe, missioni })
+    const corsa = new Corsa(tappa, { seme: dato.seme, eroe: dato.eroe, missioni, crescita })
     corsa.piano = dato.piano || 0
     corsa.nuovoPiano()   // lo stesso piano di allora, dal seme
 
@@ -160,7 +161,7 @@ export function leggi(dato, tappa, roba = null, missioni = []) {
     }
 
     if (roba) corsa.indossa(roba)
-    corsa.vitaBase = dato.vitaBase
+    corsa.vitaPiu = Number.isFinite(dato.vitaPiu) ? dato.vitaPiu : 0
     corsa.vita = dato.vita
     corsa.chiaveDelPiano = !!dato.chiave
     corsa.eroe = { x: dato.dove.x, y: dato.dove.y }

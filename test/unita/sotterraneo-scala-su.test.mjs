@@ -85,8 +85,8 @@ function sali(c) {
   const dove = cella(c)
   uguale('si compare sulla scala che sale', `${su(c).x},${su(c).y}`, `${dove.x},${dove.y}`)
   uguale('il piano nuovo non ha la chiave', c.chiaveDelPiano, false)
-  const vitaBaseGiu = c.vitaBase, vitaGiu = c.vita, fatti = c.pianiFatti
-  controlla('scendendo il piano ha dato la sua vita', vitaBaseGiu > 18 && c.vita >= vitaPrima)
+  const vitaPiuGiu = c.vitaPiu, vitaGiu = c.vita, fatti = c.pianiFatti
+  controlla('scendendo il piano ha dato la sua vita', vitaPiuGiu > 0 && c.vita >= vitaPrima)
   // sul secondo piano: un piccolo cambiamento, che deve restare
   const sua = c.livello.robe.find(r => r.che === 'gemme')
   if (sua) sua.presa = true
@@ -113,13 +113,13 @@ function sali(c) {
   controlla('la porta è ancora aperta', stesse.find(r => r === porta).aperta)
   controlla('la gemma presa non è tornata', stesse.find(r => r === gemma).presa)
   controlla('la mappa già girata c\'è ancora', c.visto.reduce((n, v) => n + v, 0) >= visti)
-  uguale('niente vita regalata risalendo', c.vitaBase, vitaBaseGiu)
+  uguale('niente vita regalata risalendo', c.vitaPiu, vitaPiuGiu)
   uguale('né il riposo di una scala', c.vita, vitaGiu)
 
   // e giù di nuovo: niente vita del piano di nuovo, niente piano contato due volte, e il piano di sotto è com'era
   const ancora = scendi(c)
   uguale('si riscende al piano 2', ancora.piano, 1)
-  uguale('niente vita del piano una seconda volta', c.vitaBase, vitaBaseGiu)
+  uguale('niente vita del piano una seconda volta', c.vitaPiu, vitaPiuGiu)
   uguale('né il riposo della scala', c.vita, vitaGiu)
   uguale('e il piano non conta due volte', c.pianiFatti, fatti)
   const dopo = cella(c)
@@ -189,7 +189,7 @@ function sali(c) {
   uguale('il più profondo resta 2', risal.fondo, 1)
   uguale('e il piano di sotto è alle spalle', risal.dietro[0].p, 1)
   controlla('e rileggendola si scende di nuovo senza regalare vita',
-            (() => { const z = leggi(risal, CAMPAGNA[2], c.roba); const v = z.vitaBase; scendi(z); return z.vitaBase === v })())
+            (() => { const z = leggi(risal, CAMPAGNA[2], c.roba); const v = z.vitaPiu; scendi(z); return z.vitaPiu === v })())
 
   // una sosta di prima (versione 4) non si legge: il piano ha una cosa in più
   uguale('una sosta della versione di prima non si legge', leggi({ ...dato, v: VERSIONE - 1 }, CAMPAGNA[2], c.roba), null)

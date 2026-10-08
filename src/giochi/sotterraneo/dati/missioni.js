@@ -74,7 +74,7 @@ export const MISSIONI = [
     richiede: [{ consegnata: 'collana' }],
     dice: 'Il goblin che mi ha rubato la collana non ha smesso: adesso fa il ladro sotto la torre in rovina, al primo piano. Lo chiamano Grattanaso. Fermalo, ti prego.',
     grazie: 'Grattanaso non ruberà più niente al villaggio! Prendi queste gemme: le tenevo da parte per la nonna.',
-    premio: { gemme: 10, monete: 1 } },
+    premio: { gemme: 10, monete: 2 } },
 
   { id: 'ascia', da: 'boscaiolo', discesa: 'gallerie', piano: 3, tipo: 'trova',
     cosa: { nome: 'L\'ascia di mio padre', em: '🪓' },
@@ -96,7 +96,7 @@ export const MISSIONI = [
     richiede: [{ fatta: 'gallerie' }],
     dice: 'Un granchio gigante mi taglia le reti, e poi si nasconde nella scala sommersa, al secondo piano. Lo chiamano Chela.',
     grazie: 'Le mie reti sono salve! Tieni quest\'anello: l\'ho pescato io, e al buio brilla.',
-    premio: { cosa: 'anello-ambra', monete: 2 } },
+    premio: { cosa: 'anello-ambra', monete: 1 } },
 
   { id: 'canna', da: 'pescatore', discesa: 'cisterna', piano: 2, tipo: 'trova',
     cosa: { nome: 'La canna d\'oro', em: '🎣' },
@@ -110,7 +110,7 @@ export const MISSIONI = [
     richiede: [{ fatta: 'cisterna' }],
     dice: 'Sotto la botola segreta vive un lupo vecchio e furbo, Zannagrigia: al secondo piano. Di notte esce e ulula sotto la torre.',
     grazie: 'Stanotte niente ululati! Prendi queste gemme: le tenevo per una spada nuova, ma la spada la usi meglio tu.',
-    premio: { gemme: 30, monete: 4 } },
+    premio: { gemme: 30, monete: 2 } },
 
   // il seguito di Rosicchione: la farina che il ratto non ha rosicchiato è finita più lontano
   { id: 'sacco', da: 'mugnaio', discesa: 'labirinto', piano: 0, tipo: 'trova',
@@ -128,8 +128,10 @@ export const MISSIONI = [
     premio: { cosa: 'teschio-cercatore' } },
 ]
 
-// il mostro col nome è più duro di quelli del suo piano: più ossa e un colpo in più (il motore lo applica)
-export const PIU_DURO = { ossa: 1.6, att: 1 }
+// il mostro col nome è più duro di quelli del suo piano: più ossa e un colpo in più (il motore lo applica). Era una volta
+// e mezza: da quando i mostri delle discese di fondo hanno tante ossa (contano anche i livelli dell'eroe) chiedeva venti
+// risposte di fila, e un quarto in più basta a farlo notare
+export const PIU_DURO = { ossa: 1.25, att: 1 }
 
 export const missioneDi = id => MISSIONI.find(m => m.id === id) || null
 export const missioniDi = chi => MISSIONI.filter(m => m.da === chi)

@@ -46,19 +46,19 @@ finto che scende davvero, e fa la spesa sopra).
 ## Quanto costa una discesa, in domande
 
 Misurato dal banco, una discesa per riga col seme del banco e la roba con cui
-ci si entra secondo la storia (`robaAttesa`, il cavaliere: [la-grande-storia.md](la-grande-storia.md);
+ci si entra secondo la storia (`robaAttesa` e il livello atteso, il cavaliere: [la-grande-storia.md](la-grande-storia.md);
 il numero balla da un seme all'altro: serve a leggere la forbice, non a
 confrontare due tappe):
 
 | discesa | piani | solo il guardiano | tutto il piano |
 |---|---|---|---|
-| La cripta dell'altare | 2 | 14 | 26 |
-| La scalinata antica | 2 | 22 | 99 |
-| La torre in rovina | 3 | 35 | 82 |
-| La grotta della scaletta | 5 | 48 | 76 |
-| La scala sommersa | 3 | 43 | 89 |
-| La botola segreta | 3 | 58 | 172 |
-| La miniera abbandonata | 4 | 39 | 142 |
+| La cripta dell'altare | 2 | 15 | 26 |
+| La scalinata antica | 2 | 18 | 71 |
+| La torre in rovina | 3 | 21 | 64 |
+| La grotta della scaletta | 5 | 44 | 69 |
+| La scala sommersa | 3 | 36 | 78 |
+| La botola segreta | 3 | 62 | 201 |
+| La miniera abbandonata | 4 | 60 | 167 |
 
 - **La forbice è il punto**: se «tutto» costasse quanto «il minimo» non ci
   sarebbe niente da scegliere.

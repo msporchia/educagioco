@@ -55,12 +55,12 @@ conosce non si sblocca mai, e il guasto lo dice.
 | La collana della nonna | la ragazza | la scalinata antica · 1 | trova | cripta finita | 💎 15 |
 | Rosicchione (un ratto) | il mugnaio | la torre · 2 | sconfiggi | scalinata finita | amuleto azzurro · 🪙 2 |
 | Il mazzo di chiavi della torre | la guardia | la torre · 3 | trova | scalinata finita | 💎 20 |
-| Grattanaso (un goblin) | la ragazza | la torre · 1 | sconfiggi | **collana consegnata** | 💎 10 · 🪙 1 |
+| Grattanaso (un goblin) | la ragazza | la torre · 1 | sconfiggi | **collana consegnata** | 💎 10 · 🪙 2 |
 | L'ascia di suo padre | il boscaiolo | la grotta · 4 | trova | torre finita | 💎 25 |
 | Il libro dei nomi | l'eremita | la grotta · 3 | trova | **Badessa consegnata** | 💎 20 |
-| Chela, il granchio gigante | il pescatore | la scala sommersa · 2 | sconfiggi | grotta finita | anello d'ambra · 🪙 2 |
+| Chela, il granchio gigante | il pescatore | la scala sommersa · 2 | sconfiggi | grotta finita | anello d'ambra · 🪙 1 |
 | La canna d'oro | il pescatore | la scala sommersa · 3 | trova | grotta finita | 💎 25 |
-| Zannagrigia (un lupo) | la guardia | la botola · 2 | sconfiggi | scala sommersa finita | 💎 30 · 🪙 4 |
+| Zannagrigia (un lupo) | la guardia | la botola · 2 | sconfiggi | scala sommersa finita | 💎 30 · 🪙 2 |
 | Il sacco di farina buona | il mugnaio | la botola · 1 | trova | **Rosicchione consegnato** | 💎 20 |
 | La lanterna del nonno | il minatore | la miniera · 3 | trova | botola finita | teschio del cercatore |
 
@@ -180,7 +180,7 @@ il nome sopra la testa: [missioni-bersaglio.md](missioni-bersaglio.md).
   non si brucia). La cosa non entra nello zaino: è fatta.
 - **Sconfiggi**: nel piano giusto c'è un mostro del bestiario col nome e
   la corona, più duro di quelli del suo piano (le ossa del guardiano
-  del piano o una volta e mezza le sue, e un colpo in più: `PIU_DURO`). Battuto
+  del piano o un quarto in più delle sue, e un colpo in più: `PIU_DURO`). Battuto
   è fatta.
 - **Dove sta**: [missioni-bersaglio.md](missioni-bersaglio.md). Non nasce dal seme del piano: la sosta la tiene fra
   le cose nuove, e una missione presa sopra mentre la discesa è a metà

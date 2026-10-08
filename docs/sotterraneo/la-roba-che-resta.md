@@ -4,7 +4,7 @@ Fino al 7 ottobre 2026 fra una discesa e l'altra si ripartiva nudi. Adesso
 quello che si trova e si compra resta, e il mercante è salito sulla terra di
 sopra. La roba è di un'avventura, una per eroe ([avventure.md](avventure.md)).
  Qui le regole della roba che resta e la misura che le tiene in
-equilibrio; i mercanti stanno in [roba.md](roba.md#i-mercanti-di-sopra) e
+equilibrio; i mercanti stanno in [bottega.md](bottega.md#i-mercanti-di-sopra) e
 [terra-di-sopra.md](terra-di-sopra.md#i-mercanti), lo svenimento in
 [regole.md](regole.md#svenire-e-il-fondo-degli-svenimenti).
 
@@ -35,22 +35,23 @@ sopra), `motore/bottega.js` (i banchi),
   roba **non si vende mai in monete**, solo in gemme.
 - **Le discese dopo la prima contano sulla roba** (`forza` sulle ossa e
   `spinta` sull'attacco dei mostri, in `dati/campagna.js`; `crescitaDi`),
-  tarate sulla roba con cui ci si entra secondo la storia
-  ([la-grande-storia.md](la-grande-storia.md)): scalinata 1,3/+2, torre
-  1,2/+2, grotta 1,15/+2, scala sommersa 1,5/+2, botola 2,2/+2, miniera
-  2,3/+2. La cripta si comincia a mani nude (`guastiDellaCampagna` lo
+  tarate sulla roba e sul livello con cui ci si entra secondo la storia
+  ([la-grande-storia.md](la-grande-storia.md#le-misure)): forza 1,55 ·
+  1,35 · 1,65 · 2,9 · 5,1 · 4,85 e spinta 5 · 7 · 9 · 9 · 9 · 10 dalla
+  scalinata alla miniera. La cripta si comincia a mani nude (`guastiDellaCampagna` lo
   pretende). A mani nude dalla grotta in giù non si
   passa nemmeno rispondendo sempre giusto: la roba si fa discesa dopo
   discesa. Le gemme di bentornato a chi aveva già finito delle discese non
   ci sono più: i salvataggi di prima si sono azzerati
   ([avventure.md](avventure.md)).
-- **Chi porta la chiave lascia sempre qualcosa**: quello dell'ultimo piano
-  il pezzo della riga dopo della storia, gli altri da bere. È l'unico
+- **Chi porta la chiave lascia sempre qualcosa**: il mostro grosso
+  dell'ultimo piano il pezzo della riga dopo della storia, il suo pezzo
+  col nome e un raro ([grossi.md](grossi.md)), gli altri da bere. È il
   bottino che arriva anche a chi va dritto alla scala.
-- **Il forziere dà il pezzo della storia che manca**, poi da bere o da
-  accendere; i mostri di tutti i giorni solo da bere. La roba pescata a caso
-  per profondità (`pescaCosa` con `profondita`) è rimasta all'abisso
-  ([la-grande-storia.md](la-grande-storia.md#chi-da-la-riga-dopo)).
+- **Il forziere dà il pezzo della storia che manca**, poi un pezzo a tono o
+  da bere o da accendere; i mostri di tutti i giorni da bere e a volte un
+  pezzo, a tono col posto e con l'eroe ([rarita.md](rarita.md),
+  [la-grande-storia.md](la-grande-storia.md#chi-da-la-riga-dopo)).
 - **La sosta tiene il piano, la roba sta accanto** nell'avventura e si
   scrivono insieme (`salva` in `Gioco.vue`): salendo dal portale si può andare
   dai mercanti, e riprendendo la discesa ritrova la roba com'è adesso (`leggi`

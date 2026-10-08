@@ -29,19 +29,20 @@ export const PASSI = {
     P('spada-corta', 'scudo-legno', 'saio'),
     P('spada', 'scudo-legno', 'saio'),
     P('spada', 'scudo-legno', 'saio', 'amuleto-azzurro'),
-    P('spada', 'scudo-borchiato', 'saio', 'amuleto-azzurro'),
+    P('spada', 'scudo-borchiato', 'manto', 'amuleto-azzurro'),
     P('arco-lungo', null, 'manto', 'amuleto-azzurro'),
     P('spadone', null, 'manto', 'amuleto-osso'),
   ],
-  // il mago picchia già: gli serve pelle. Il bastone a due mani a metà, poi lo scettro a una mano e lo scudo
+  // il mago picchia già: gli serve pelle. Il bastone a due mani nella grotta, poi lo scettro a una mano e lo scudo (dalla
+  // scala sommersa: col bastone e senza scudo, coi mostri di adesso, a 8/10 tornava su una volta su due)
   mago: [
     P(),
     P('verga'),
     P('verga', 'scudo-legno', 'saio'),
     P('bastone-magico', null, 'saio'),
-    P('bastone-magico', null, 'saio', 'amuleto-azzurro'),
+    P('scettro', 'scudo-legno', 'saio', 'amuleto-azzurro'),
     P('scettro', 'scudo-legno', 'manto', 'amuleto-azzurro'),
-    P('scettro', 'scudo-legno', 'manto', 'amuleto-rosso'),
+    P('scettro', 'scudo-borchiato', 'manto', 'amuleto-rosso'),
     P('scettro', 'scudo-ferro', 'manto', 'amuleto-rosso'),
   ],
   // il nano para di suo: l'accetta e lo scudo, poi le asce a due mani
@@ -59,16 +60,23 @@ export const PASSI = {
 
 // le pozioni con cui si entra: quelle che le gemme della discesa di prima comprano dall'erborista, oltre ai pezzi
 // mancati (misurato dal banco: allaBottega)
+// (le gemme crescono col livello del posto, i prezzi col livello dell'eroe: dalla terza discesa si arriva con le tasche
+// quasi piene, misurato con la storia giocata dal banco, docs/sotterraneo/livelli.md)
 export const POZIONI_ATTESE = [
   [],
   ['pozione-piccola'],
-  ['pozione-piccola', 'pozione-piccola'],
-  ['pozione', 'pozione-piccola'],
-  ['pozione', 'pozione'],
-  ['pozione', 'pozione', 'pozione-piccola'],
-  ['pozione-grande', 'pozione', 'pozione'],
-  ['pozione-grande', 'pozione-grande', 'pozione'],
+  ['pozione', 'pozione-piccola', 'pozione-piccola'],
+  ['pozione', 'pozione', 'pozione-piccola', 'pozione-piccola'],
+  ['pozione', 'pozione', 'pozione', 'pozione-piccola', 'pozione-piccola'],
+  ['pozione-grande', 'pozione', 'pozione', 'pozione', 'pozione-piccola'],
+  ['pozione-grande', 'pozione-grande', 'pozione', 'pozione', 'pozione'],
+  ['pozione-grande', 'pozione-grande', 'pozione-grande', 'pozione', 'pozione', 'pozione'],
 ]
+
+// il livello con cui si entra nella discesa k (l'ultimo: nell'abisso), per chi va dritto alla scala rispondendo bene
+// otto volte su dieci e rifacendo quella persa (misurato col banco: docs/sotterraneo/livelli.md, «Le misure»). I
+// pezzi della riga sono di un livello sotto (motore/storia.js, livelloDeiPezzi)
+export const LIVELLI_ATTESI = [1, 2, 3, 5, 7, 8, 10, 12]
 
 export const CASELLE = ['mano', 'mancina', 'corpo', 'dito']
 
@@ -127,6 +135,10 @@ export function guastiDellaStoria() {
     })
   }
   if (POZIONI_ATTESE.length !== CAMPAGNA.length + 1) g.push('le pozioni attese non hanno una riga per discesa')
+  if (LIVELLI_ATTESI.length !== CAMPAGNA.length + 1) g.push('i livelli attesi non hanno una riga per discesa')
+  for (let i = 1; i < LIVELLI_ATTESI.length; i++)
+    if (LIVELLI_ATTESI[i] < LIVELLI_ATTESI[i - 1]) g.push(`il livello atteso cala alla discesa ${i}`)
+  if (LIVELLI_ATTESI[0] !== 1) g.push('la prima discesa si comincia al livello 1')
   for (const r of POZIONI_ATTESE) for (const k of r) if (!COSE[k] || COSE[k].usa !== 'cura') g.push(`"${k}" non è una pozione`)
   return g
 }

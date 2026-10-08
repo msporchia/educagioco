@@ -1,7 +1,7 @@
 // I mercanti della terra di sopra: chi vende cosa, e quanta roba ha sul banco secondo le discese finite. Dove
 // stanno sulla mappa lo dice il foglietto (dati/terra-mappa.js, MERCANTI); come si compra motore/bottega.js.
-// Il perché: docs/sotterraneo/roba.md, "I mercanti di sopra".
-import { COSE, CURE, IN_VENDITA } from './cose.js'
+// Il perché: docs/sotterraneo/bottega.md, "I mercanti di sopra".
+import { COSE, CURE, IN_VENDITA, baseDi } from './cose.js'
 import { CAMPAGNA, QUANTE_TAPPE } from './campagna.js'
 
 // `vende`: le caselle (dove) e le chiavi che vende; `sempre`: quello che non finisce mai (in cima al banco);
@@ -9,7 +9,7 @@ import { CAMPAGNA, QUANTE_TAPPE } from './campagna.js'
 // non costano più di quel pezzo (motore/storia.js, bancoDelPasso); `righe`: chi pesca e basta, quante ne pesca
 // per discese finite; `compra`: chi si prende la roba a metà prezzo. `dice` è la sua battuta, in voce sua.
 // `schede`: le linguette in cima alla bottega (viste/Bottega.vue), ognuna coi posti (`dove`) o gli usi (`usa`) che
-// raccoglie; `vendi` è quella delle tasche, solo per chi compra (docs/sotterraneo/roba.md, "La bottega")
+// raccoglie; `vendi` è quella delle tasche, solo per chi compra (docs/sotterraneo/bottega.md, "La bottega e lo zaino")
 export const MERCANTI = [
   // la roba del passo dopo, non quella della miniera: chi ha le gemme non scende col meglio
   { chiave: 'armaiolo', nome: 'L\'armaiolo', em: '⚒️', sprite: 'armaiolo',
@@ -37,8 +37,8 @@ export const MERCANTI = [
 
 export const mercanteDi = chiave => MERCANTI.find(m => m.chiave === chiave) || null
 
-export const vendeLa = (m, k) => !!COSE[k] && IN_VENDITA.includes(k) &&
-  ((m.vende.dove || []).includes(COSE[k].dove) || (m.vende.chiavi || []).includes(k))
+export const vendeLa = (m, k) => !!COSE[k] && IN_VENDITA.includes(baseDi(k)) &&
+  ((m.vende.dove || []).includes(COSE[k].dove) || (m.vende.chiavi || []).includes(baseDi(k)))
 
 // la linguetta di una cosa: la prima che ne raccoglie il posto o l'uso
 export const schedaDi = (m, k) => (COSE[k]
@@ -47,7 +47,7 @@ export const schedaDi = (m, k) => (COSE[k]
 
 // Un pezzo delle righe dopo della storia si compra lo stesso, se hai le gemme: ogni riga avanti al passo costa un
 // prezzo pieno in più (una riga avanti il doppio, due il triplo…). `righe` 0 è il pezzo con cui si entra nella
-// prossima discesa, a prezzo pieno. Misurato: docs/sotterraneo/roba.md, «I mercanti di sopra»
+// prossima discesa, a prezzo pieno. Misurato: docs/sotterraneo/bottega.md, «I mercanti di sopra»
 export const sovrapprezzo = righe => (righe > 0 ? 1 + righe : 1)
 export const prezzoAvanti = (prezzo, righe) => Math.round(prezzo * sovrapprezzo(righe))
 

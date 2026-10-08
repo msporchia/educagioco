@@ -34,7 +34,7 @@ campagna), `Gioco.vue` (chi legge e scrive), `viste/Eroi.vue` (la scelta).
 - **La scheda dice i numeri veri e mostra la roba in mano**: vita, braccio e
   difesa sono quelli che la discesa userà con la roba addosso
   (`schedaConLaRoba` in `motore/corredo.js`, lo stesso `Corredo` della Corsa),
-  con i tratti che contano (`💎 ×1,5`, `🔥 vedi più lontano`); un'avventura
+  con i tratti che contano (`💎 ×1,5`, `🔦 vedi più lontano`) e il livello dell'eroe («liv. 5»); un'avventura
   nuova ha lo zaino vuoto e quindi quelli di base. Il ritratto (`viste/Armato.vue`,
   alla scala della figura) impugna l'arma e imbraccia lo scudo; l'armatura e il
   gioiello restano due iconcine accanto. Vale anche per la carta di chi
@@ -49,7 +49,7 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
 {
   tappa, libera, stelle,          // il massimo fra le avventure: lo legge il resto dell'app
   cfg: {
-    mondo: 3,                     // azzerati i salvataggi di prima (2), e riordinate le discese (3): MONDO
+    mondo: 4,                     // azzerati i salvataggi di prima (2, e di nuovo 4 coi livelli): MONDO
     eroe: 'mago',                 // l'avventura aperta adesso
     avventure: {
       cavaliere: { tappa, libera, stelle,   // le sue discese
@@ -59,7 +59,9 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
                    sosta,                   // la discesa lasciata a metà (motore/sosta.js); `via: 'portale'` la rende anche il gemello di sopra, `'uscita'` (la ✕) si riprende giù
                    abisso,                  // { fondo }
                    missioni,                // { [id]: 'presa' | 'fatta' | 'consegnata' } (missioni.md)
-                   segui },                 // l'id della missione che le freccine seguono, scelta nel diario (missioni-freccina.md)
+                   segui,                   // l'id della missione che le freccine seguono, scelta nel diario (missioni-freccina.md)
+                   crescita,                // { esp, forza, tempra, scorza, fortuna }: il livello e i punti dati (livelli.md)
+                   tesori },                // gli id dei leggendari trovati, per la pagina dei Tesori (rarita.md)
       mago: { … },
     },
   },
@@ -122,10 +124,13 @@ passarli: le avventure ripartono da zero per tutti. `azzeraIlVecchio`
   delle avventure.
 - Provato: passare tutto all'ultimo eroe usato, con le gemme di bentornato a
   chi aveva discese finite; l'utente ha preferito azzerare.
-- **Il mondo 3** (la grande storia, lo stesso giorno) ha riordinato le
-  discese: un'avventura del mondo 2 non si azzera ma si rilegge per chiave
-  nella fila nuova (`riordina`), e il record di fuori non si tocca
-  ([la-grande-storia.md](la-grande-storia.md#le-discese)).
+- **Il mondo 4** (8 ottobre 2026: livelli dell'eroe, roba con livello e
+  rarità, mostri grossi) azzera di nuovo le avventure: la roba di prima non
+  ha livello né rarità, e un eroe a livello 1 con la roba della miniera
+  sarebbe la tabella sbagliata. Le regole sono quelle sopra; in più
+  `ricordaIlFondo` prende anche il fondo dell'abisso di ogni avventura che
+  sta per andarsene. Il riordino del mondo 3 (`riordina`) non serve più: chi
+  arriva dal 2 o dal 3 si azzera e basta.
 
 Nei test: `unita/sotterraneo-avventure` (le avventure separate, il massimo con
 lo store vero, l'azzeramento di un profilo di prima delle avventure e di uno
@@ -137,6 +142,6 @@ qui»). Nella scelta `.sot-eroe[data-eroe="<eroe>"]` con `data-nuova` (1 se mai
 cominciata), `[data-punto]` (a che punto è), `[data-addosso="<cosa>"]` (l'arma
 in mano, l'armatura e il gioiello), `[data-in-mano]` / `[data-in-braccio]` sul
 ritratto, `[data-tratti]`, `[data-fondo]`, `[data-a-meta]` (col suo
-`[data-ritaglio]`); `[data-azione="eroe"]` la apre dalla terra di sopra;
+`[data-ritaglio]`), `[data-livello-avventura]`; `[data-azione="eroe"]` la apre dalla terra di sopra;
 `scegliAvventura` in `test/aiuto/browser.mjs` per chi deve solo scegliere. In
 home `[data-riprendi] [data-ritaglio]`.

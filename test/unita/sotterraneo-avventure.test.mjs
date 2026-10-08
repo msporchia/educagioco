@@ -254,7 +254,7 @@ function azzera(nome, sot) {
   stessaLista('la spada del ladro dice le gemme', schedaConLaRoba('cavaliere', fatta('cavaliere', { mano: 'spada-del-ladro' })).tratti,
               ['💎 ×1,5'])
   stessaLista('la bipenne solare dice la luce', schedaConLaRoba('cavaliere', fatta('cavaliere', { mano: 'bipenne-solare' })).tratti,
-              ['🔥 vedi più lontano'])
+              ['🔦 vedi più lontano'])
   stessaLista('senza tratti non dice niente', schedaConLaRoba('cavaliere', fatta('cavaliere', { mano: 'spada' })).tratti, [])
 }
 

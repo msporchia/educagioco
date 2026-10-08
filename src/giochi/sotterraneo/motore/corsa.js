@@ -12,13 +12,18 @@ import {
 import { MOSTRI } from '../dati/mostri.js'
 import { SCENARI, SCENARIO } from '../dati/tessere.js'
 import { DI_PARTENZA } from '../dati/eroi.js'
-import { COSE, NEI_FORZIERI, STANZE_TORCIA, pescaCosa } from '../dati/cose.js'
+import { COSE, NEI_FORZIERI, pescaCosa, aLivello } from '../dati/cose.js'
 import { CURIOSITA_DI, MALUS } from '../dati/curiosita.js'
-import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi, brancoDi, scenarioDi, trattoDi }
+import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi, brancoDi, scenarioDi, trattoDi, livelloDelPosto }
   from '../dati/campagna.js'
+import { grossoDi, GROSSI } from '../dati/grossi.js'
+import { valoreDelLivello } from '../dati/pezzi.js'
+import { espDi } from '../dati/livelli.js'
+import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino } from './bottino.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 import { Corredo } from './corredo.js'
+import { dai as daiPunto } from './crescita.js'
 import { indiceDella, premioPer } from './storia.js'
 import { robaDellaMissione } from './missioni.js'
 
@@ -35,8 +40,9 @@ const RINCARO = { porta: -0.05, forziere: 0.25, fonte: 0, mostro: 0.05, capo: 0.
 // che si porta da sopra (motore/corredo.js); vita e piano sono della discesa, e restano giù
 export class Corsa extends Corredo {
   // `missioni`: quelle prese che riguardano questa discesa (motore/missioni.js, presePer)
-  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, roba = null, missioni = [] } = {}) {
-    super({ eroe, roba })
+  // `crescita`: l'esperienza e i punti dell'avventura (motore/crescita.js): l'eroe sale di livello anche giù
+  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, roba = null, missioni = [], crescita = null } = {}) {
+    super({ eroe, roba, crescita })
     this.tappa = tappa
     // il posto nella storia (−1 l'abisso, che pesca come sempre): dice cosa deve dare questa discesa
     this.indice = indiceDella(tappa)
@@ -48,7 +54,13 @@ export class Corsa extends Corredo {
     this.fondo = 0              // il piano più profondo toccato in questa discesa (da 0): scendere più in là è nuovo, rifare un piano no
     this.piani = new Map()      // i piani lasciati alle spalle, com'erano (lasciaIlPiano): si risale da dove si è comparsi
 
-    this.vitaBase = this.io.vita
+    // la vita in più presa in questa discesa (i piani, l'elisir, una curiosità): resta giù, come la vita
+    this.vitaPiu = 0
+    // l'esperienza presa in questa discesa, e quello che si vede succedere: un livello salito, un leggendario caduto
+    // (Gioco.vue li festeggia, uno alla volta). `trovati` i leggendari presi, per la pagina «Tesori»
+    this.espPresa = 0
+    this.eventi = []
+    this.trovati = new Set()
     this.stanzaOra = null   // unità in cui brucia la torcia (bruciaLaTorcia)
 
     this.foglio = null          // cosa è aperto adesso, o niente
@@ -92,8 +104,11 @@ export class Corsa extends Corredo {
     }
   }
 
-  // non è un campo: cresce coi piani (vitaBase) e con il dito, o si scorderebbe di alzarla/abbassarla
-  get vitaMax() { return this.vitaBase + this.addosso('vita') }
+  // non è un campo: cresce coi piani (vitaPiu), coi livelli (piu.vita) e con il dito, o si scorderebbe di alzarla/abbassarla
+  get vitaMax() { return this.io.vita + this.piu.vita + this.vitaPiu + this.addosso('vita') }
+  // il livello del posto (dati/campagna.js): dice il livello del bottino e quanto valgono le gemme
+  get livelloQui() { return livelloDelPosto(this.tappa, this.piano) }
+  get livelloDelBottino() { return livelloDelBottino(this.livelloQui, this.livelloEroe) }
   get quantiPiani() { return this.tappa.piani }
 
   // l'abisso non ha un ultimo piano: `piani: Infinity` lo rende già falso da sé, ma serve dirlo per nome a chi legge
@@ -120,7 +135,8 @@ export class Corsa extends Corredo {
     this.vita = Math.min(this.vita, this.vitaMax)
   }
 
-  colpo(m) { return Math.max(1, this.att - m.dif) }
+  // il fuoco dei pezzi brucia anche chi para: si somma dopo la difesa del mostro
+  colpo(m) { return Math.max(1, this.att - m.dif) + this.addosso('fuoco') }
   colpiPer(m) { return Math.max(1, Math.ceil(m.ossa / this.colpo(m))) }
   danno(m) { return Math.max(1, m.att - this.dif) }
 
@@ -140,6 +156,7 @@ export class Corsa extends Corredo {
       seme: this.seme + p * 7919, piano: p,
       largo: forma.largo, alto: forma.alto, giri: forma.giri,
       guardiano: guardianoDi(t, p),
+      grosso: grossoDi(t, p),
       crescita: crescitaDi(t),
       branco: brancoDi(t, p),
     })
@@ -354,7 +371,7 @@ export class Corsa extends Corredo {
     const cx = Math.floor(this.eroe.x), cy = Math.floor(this.eroe.y)
     for (const r of this.livello.robe) {
       if (r.presa || r.morto || r.che !== 'gemme' || r.x !== cx || r.y !== cy) continue
-      const quante = Math.round(r.quante * (1 + this.addosso('gemme')))
+      const quante = Math.round(r.quante * this.valoreGemme)
       this.gemme += quante
       r.presa = true
       this.dillo(`💎 +${quante}`)
@@ -374,13 +391,13 @@ export class Corsa extends Corredo {
       return
     }
     // quello che la classe non porta si raccoglie come tutto il resto (vale gemme al banco), ma non si veste da sé
-    if (c.dove && this.posso(r.cosa)) {
-      // uno scudo si imbraccia da sé solo a mano libera: con un'arma leggera già lì, la scelta la fa chi gioca, dallo zaino
-      const stretto = c.dove === 'mancina' && !this.mancinaLibera()
-      const conf = this.confronto(r.cosa)
-      if (!stretto && (!conf.addosso || conf.delta > 0)) return this.vesti(r, conf)
+    if (c.rarita === 'leggendario') this.trovati.add(c.unico)
+    // uno scudo si imbraccia da sé solo a mano libera: con un'arma leggera già lì, la scelta la fa chi gioca, dallo zaino
+    if (this.vaAddosso(r.cosa)) return this.vesti(r, this.confronto(r.cosa))
+    if (this.zaino.length >= TASCHE) {
+      if (c.rarita === 'leggendario') this.trovati.delete(c.unico)
+      this.dillo('🎒 lo zaino è pieno'); return
     }
-    if (this.zaino.length >= TASCHE) { this.dillo('🎒 lo zaino è pieno'); return }
     this.zaino.push(r.cosa)
     r.presa = true
     // detto qui, nel momento in cui si prende: senza una parola sembra che il gioco l'abbia ignorata
@@ -402,11 +419,13 @@ export class Corsa extends Corredo {
     this.stanzaOra = st.id
     if (!this.torciaAccesa) return
     this.torciaResta--
+    // la luce non sta più nella barra (docs/sotterraneo/barra.md): agli sgoccioli, senza scorta, lo si dice
+    if (this.torciaResta === 2 && !this.torceInScorta) this.dilloDi('torcia', ' sta per finire: ancora due stanze')
     if (this.torciaResta > 0) return
     // quella dopo si accende da sé: aprire lo zaino per "l'accendo" sarebbe la scelta che non è una scelta
     if (this.torceInScorta > 0) {
       this.torceInScorta--
-      this.torciaResta = STANZE_TORCIA
+      this.torciaResta = this.stanzeTorcia
       this.dilloDi('torcia', ` spenta, ne accendi un'altra`)
     } else {
       this.dilloDi('torcia', ' spenta')
@@ -467,9 +486,12 @@ export class Corsa extends Corredo {
     this.chiesta = { id: ++this.contaChieste, che, difficolta: this.durezza(rincaro) }
   }
 
+  // il capo della tappa e il mostro grosso chiedono domande più toste
+  rincaroDi(m) { return m.grosso || MOSTRI[m.tipo].capo ? RINCARO.capo : RINCARO.mostro }
+
   scontro(m) {
     this.foglio = { che: 'scontro', chi: m }
-    this.chiedi('scontro', MOSTRI[m.tipo].capo ? RINCARO.capo : RINCARO.mostro)
+    this.chiedi('scontro', this.rincaroDi(m))
   }
 
   // unico ingresso dall'esterno quando un foglio chiede qualcosa; torna cosa è successo per il suono e la scossa giusti
@@ -498,17 +520,20 @@ export class Corsa extends Corredo {
       const male = this.danno(m)
       this.ferisci(male)
       if (this.vita <= 0) { this.svieni(); return { che: 'svenuto', dato: 0, preso: male } }
-      this.chiedi('scontro', MOSTRI[m.tipo].capo ? RINCARO.capo : RINCARO.mostro)
+      this.chiedi('scontro', this.rincaroDi(m))
       return { che: 'ferito', quanto: male, dato: 0, preso: male }
     }
     const dato = this.colpo(m)
     m.ossa -= dato
     if (m.ossa > 0) {
-      const male = this.graffio(m)   // il mostro è ancora in piedi, quindi restituisce: chi è caduto no
+      // il mostro è ancora in piedi, quindi restituisce: chi è caduto no. La schivata (🌀) a volte lo evita
+      const schiva = this.schivata > 0 && this.rnd() * 100 < this.schivata
+      const male = schiva ? 0 : this.graffio(m)
+      if (schiva) this.dillo('🌀 schivato!')
       this.ferisci(male)
       if (this.vita <= 0) { this.svieni(); return { che: 'svenuto', dato, preso: male } }
-      this.chiedi('scontro', MOSTRI[m.tipo].capo ? RINCARO.capo : RINCARO.mostro)
-      return { che: 'colpo', restano: this.colpiPer(m), male, dato, preso: male }
+      this.chiedi('scontro', this.rincaroDi(m))
+      return { che: 'colpo', restano: this.colpiPer(m), male, dato, preso: male, schivato: schiva }
     }
     this.cade(m)
     this.chiudi()
@@ -527,7 +552,7 @@ export class Corsa extends Corredo {
       const p = b.premio || {}
       if (p.gemme) this.gemme += p.gemme
       if (p.cura) this.vita = Math.min(this.vitaMax, this.vita + p.cura)
-      if (p.vitaPiu) { this.vitaBase += p.vitaPiu; this.vita += p.vitaPiu }
+      if (p.vitaPiu) { this.vitaPiu += p.vitaPiu; this.vita += p.vitaPiu }
       if (p.torcia) this.accendi('torcia')   // dalla stessa porta di tutte le altre: aspetta alla cintura se una brucia già
       this.tesori++
       f.esito = { buono: true, dice: b.dice, conto: this.dettoIlPremio(p) }
@@ -574,33 +599,90 @@ export class Corsa extends Corredo {
       this.chiaveDelPiano = true
       this.dillo('🗝️ la chiave della scala!')
     }
+    // l'esperienza: tanta quanto è forte la sua specie e quanto è giù il posto (dati/livelli.js), il grosso molta di più
+    // e la dice un numerino «+N ✨» che sale dal campo (Gioco.vue)
+    const esp = espDi(MOSTRI[m.tipo], this.livelloQui, !!m.grosso)
+    this.eventi.push({ che: 'esp', esp, x: m.x, y: m.y })
+    this.guadagna(esp)
+    // 💚 rigenera: ogni mostro battuto rimette in piedi un poco
+    const rig = this.addosso('rigenera')
+    if (rig && this.vita < this.vitaMax) this.vita = Math.min(this.vitaMax, this.vita + rig)
     const scheda = MOSTRI[m.tipo]
     this.livello.robe.push({ che: 'gemme', x: m.x, y: m.y, em: '💎',
-                             quante: scheda.gemme + Math.floor(this.piano * 1.5) })
+                             quante: Math.round((scheda.gemme + Math.floor(this.piano * 1.5)) * valoreDelLivello(this.livelloQui)) })
     const storia = this.indice >= 0
     const lascia = scheda.lascia || []
-    const possibili = storia ? (lascia.filter(SI_CONSUMA).length ? lascia.filter(SI_CONSUMA) : ['pozione-piccola']) : lascia
+    const daBere = lascia.filter(SI_CONSUMA).length ? lascia.filter(SI_CONSUMA) : ['pozione-piccola']
     // chi porta la chiave lascia sempre qualcosa: è l'unico che non si aggira, quindi l'unico bottino che
     // arriva anche a chi va dritto alla scala. Nella storia quello dell'ultimo piano lascia il pezzo della riga
     // dopo (premio), gli altri una cosa da bere. Il tiro si fa comunque, o il caso di tutto il piano si sposterebbe
     const tiro = this.rnd()
     const premio = m.chiave && storia && this.piano >= this.quantiPiani - 1 ? this.premio() : null
-    if (premio) this.posaRoba({ che: 'cosa', cosa: premio, em: COSE[premio].em }, { x: m.x + 1, y: m.y })
-    else if (possibili.length && (m.chiave || tiro < (scheda.droppa != null ? scheda.droppa : 0.5))) {
-      const cosa = pescaCosa(possibili, { rnd: () => this.rnd(), tua: k => this.posso(k) })
-      this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, { x: m.x + 1, y: m.y })
+    const vicino = { x: m.x + 1, y: m.y }
+    if (premio) this.posaRoba({ che: 'cosa', cosa: premio, em: COSE[premio].em }, vicino)
+    else if (m.chiave || tiro < (scheda.droppa != null ? scheda.droppa : 0.5)) {
+      // da bere (anche nell'abisso: la roba da mettersi addosso la dà il tiro qui sotto, a tono)
+      const cosa = pescaCosa(daBere, { rnd: () => this.rnd(), tua: k => this.posso(k) })
+      this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, vicino)
     }
-    // un mostro qualsiasi che cade si vede: niente avviso. Quello di una missione sì, dice cosa fare dopo
+    // il mostro grosso: di sicuro un pezzo raro o meglio, e il suo pezzo col nome
+    if (m.grosso) {
+      this.posaPezzo(pezzoNuovo({ livello: this.livelloDelBottino, chi: 'grosso', fortuna: this.fortuna,
+                                  rnd: () => this.rnd(), tua: k => this.posso(k) }), { x: m.x - 1, y: m.y })
+      this.posaPezzo(pezzoDelGrosso(GROSSI[m.grosso].pezzo, this.livelloDelBottino), { x: m.x, y: m.y + 1 })
+    } else if (this.rnd() < pezzoDalMostro(scheda)) {
+      // a volte anche un mostro qualunque lascia un pezzo da mettersi addosso, a tono col posto e con l'eroe
+      this.posaPezzo(pezzoNuovo({ livello: this.livelloDelBottino, chi: 'mostro', fortuna: this.fortuna,
+                                  rnd: () => this.rnd(), tua: k => this.posso(k) }), { x: m.x, y: m.y + 1 })
+    }
+    // un mostro qualsiasi che cade si vede: niente avviso. Quello di una missione sì, dice cosa fare dopo; e il grosso
     if (m.missione) {
       this.missioniFatte.add(m.missione)
       this.dillo(`👑 ${m.nome} è caduto! Torna su a dirlo`)
+    } else if (m.grosso) this.dillo(`👑 ${m.nome} è caduto!`)
+  }
+
+  // un pezzo per terra; un leggendario lo festeggia la vista (la colonna di luce, il nome in oro: Gioco.vue)
+  posaPezzo(k, vicino) {
+    if (!k || !COSE[k]) return null
+    const dove = this.posaRoba({ che: 'cosa', cosa: k, em: COSE[k].em }, vicino)
+    if (COSE[k].rarita === 'leggendario') this.eventi.push({ che: 'leggendario', cosa: k, x: dove.x, y: dove.y })
+    return dove
+  }
+
+  // L'esperienza (docs/sotterraneo/livelli.md): sale di livello quando passa la soglia, e la vita che il livello porta
+  // arriva subito. Provato: tornare in piena forma, come in Diablo; a metà discesa era una pozione gratis, e chi
+  // sbagliava di più saliva di più (misurato). I punti da dare li dà chi gioca, dalla pagina dell'eroe
+  guadagna(esp) {
+    if (!(esp > 0)) return
+    const prima = this.livelloEroe
+    const tetto = this.vitaMax
+    this.crescita = { ...this.crescita, esp: this.crescita.esp + esp }
+    this.espPresa += esp
+    const ora = this.livelloEroe
+    if (ora > prima) {
+      this.vita = Math.min(this.vitaMax, this.vita + Math.max(0, this.vitaMax - tetto))
+      this.eventi.push({ che: 'livello', livello: ora })
+      this.dillo(`✨ livello ${ora}! ${ora - prima === 1 ? 'un punto' : `${ora - prima} punti`} da dare`)
     }
   }
 
-  // il prossimo pezzo della riga dopo (motore/storia.js) che serve ancora e non è già per terra in questo piano
+  // un punto dato dalla pagina dell'eroe, anche giù: la vita che la tempra aggiunge arriva subito
+  daiUnPunto(k) {
+    const n = daiPunto(this.crescita, k)
+    if (!n) return false
+    const prima = this.vitaMax
+    this.crescita = n
+    this.vita = Math.min(this.vitaMax, this.vita + Math.max(0, this.vitaMax - prima))
+    return true
+  }
+
+  // il prossimo pezzo della riga dopo (motore/storia.js) che serve ancora e non è già per terra in questo piano, al
+  // livello del bottino: la tabella dice quale pezzo, il livello lo dice dove si è
   premio() {
     return premioPer(this, this.indice, {
-      evita: k => this.livello.robe.some(r => r.che === 'cosa' && r.cosa === k && !r.presa),
+      livello: this.livelloDelBottino,
+      evita: k => this.livello.robe.some(r => r.che === 'cosa' && r.cosa && r.cosa.split('@')[0] === k && !r.presa),
     })
   }
 
@@ -682,13 +764,18 @@ export class Corsa extends Corredo {
     }
     this.tesori++
     // il bottino cade davanti al baule, mai dentro (posaRoba); predilige la classe che l'ha aperto (PESO_ALTRUI)
-    // e la profondità (la roba resta: la scalinata non regala lo spadone)
-    // nella storia il forziere dà il pezzo della riga dopo che manca, se no una cosa da bere o da accendere
-    const cosa = (this.indice >= 0 && this.premio()) ||
-      pescaCosa(this.indice >= 0 ? NEI_FORZIERI_DELLA_STORIA : NEI_FORZIERI,
-                { rnd: () => this.rnd(), tua: k => this.posso(k), profondita: this.durezza() })
-    this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, { x: f.x, y: f.y + 1 })
-    this.posaRoba({ che: 'gemme', em: '💎', quante: 6 + this.piano * 3 }, { x: f.x + 1, y: f.y + 1 })
+    // nella storia il forziere dà il pezzo della riga dopo che manca; se no un pezzo a tono (un forziere su tre,
+    // con le rarità del forziere) o una cosa da bere o da accendere
+    const premio = this.indice >= 0 ? this.premio() : null
+    const tiro = this.rnd()
+    let cosa = premio
+    if (!cosa && tiro < (this.indice >= 0 ? 0.34 : 0.6))
+      cosa = pezzoNuovo({ livello: this.livelloDelBottino, chi: 'forziere', fortuna: this.fortuna,
+                          rnd: () => this.rnd(), tua: k => this.posso(k) })
+    if (!cosa) cosa = pescaCosa(NEI_FORZIERI_DELLA_STORIA, { rnd: () => this.rnd(), tua: k => this.posso(k) })
+    this.posaPezzo(cosa, { x: f.x, y: f.y + 1 })
+    this.posaRoba({ che: 'gemme', em: '💎', quante: Math.round((6 + this.piano * 3) * valoreDelLivello(this.livelloQui)) },
+                  { x: f.x + 1, y: f.y + 1 })
     this.dillo('🎁 si apre!')
     this.chiudi()
     return { che: 'tesoro', cosa }
@@ -726,19 +813,23 @@ export class Corsa extends Corredo {
     this.chiesta = null
   }
 
-  // le pozioni in tasca, per la casella della barra (docs/sotterraneo/barra.md); l'elisir non è una cura
-  get pozioni() { return this.zaino.filter(k => COSE[k] && COSE[k].usa === 'cura').length }
+  // le pozioni in tasca, per la casella della barra (docs/sotterraneo/barra.md): le cure e l'elisir, che è una
+  // boccetta rossa e un bambino la conta fra le pozioni (contarla no era il guasto della casella che non saliva)
+  get pozioni() { return this.zaino.filter(k => COSE[k] && (COSE[k].usa === 'cura' || COSE[k].usa === 'cresci')).length }
 
-  // quale bere dalla barra: la più piccola che riempie la vita, o la più grande se nessuna basta. null senza
-  // pozioni, o in piena forma: un tocco per sbaglio non butta via una boccetta
+  // quale bere dalla barra: ferito, la più piccola cura che riempie la vita, o la più grande se nessuna basta;
+  // l'elisir quando non c'è una cura da bere (vale uguale a ogni momento). null senza pozioni, o in piena forma con
+  // sole cure: un tocco per sbaglio non butta via una boccetta
   pozioneGiusta() {
     const manca = this.vitaMax - this.vita
-    if (manca <= 0) return null
-    const cure = this.zaino.map((k, i) => ({ i, cura: COSE[k] && COSE[k].usa === 'cura' ? COSE[k].cura : 0 }))
+    const cure = this.zaino.map((k, i) => ({ i, cura: COSE[k] && COSE[k].usa === 'cura' ? this.curaDi(k) : 0 }))
       .filter(p => p.cura > 0)
-    if (!cure.length) return null
-    const basta = cure.filter(p => p.cura >= manca).sort((a, b) => a.cura - b.cura)[0]
-    return (basta || cure.sort((a, b) => b.cura - a.cura)[0]).i
+    if (manca > 0 && cure.length) {
+      const basta = cure.filter(p => p.cura >= manca).sort((a, b) => a.cura - b.cura)[0]
+      return (basta || cure.sort((a, b) => b.cura - a.cura)[0]).i
+    }
+    const elisir = this.zaino.findIndex(k => COSE[k] && COSE[k].usa === 'cresci')
+    return elisir >= 0 ? elisir : null
   }
 
   // una tasca toccata apre le sue azioni invece di eseguirne una: usa/butta/riponi. Il verbo lo sceglie chi
@@ -748,30 +839,19 @@ export class Corsa extends Corredo {
     if (!k) return null
     const c = COSE[k]
     if (c.dove) {
-      // rete sotto (chi disegna già sa `posso` e lo scrive sulla tasca): il tasto dice perché no, mai muto
-      if (!this.posso(k)) { this.dillo(this.perchéNo(k)); return { che: 'niente' } }
-      // quello che si aveva addosso torna nello zaino, non sparisce; per un'arma il posto lo sceglie `confronto`
-      if (c.dove === 'mancina' && this.aDueMani(this.mano)) {
-        this.dillo(`✋ ${COSE[this.mano].nome} vuole tutte e due le mani`)
-        return { che: 'niente' }
-      }
-      const dove = c.dove === 'mano' ? this.postoDellArma(k).dove : c.dove
-      const vecchio = this.casella(dove)
-      this.metti(dove, k)
-      this.zaino.splice(i, 1)
-      if (vecchio) this.zaino.push(vecchio)
-      this.sistemaLeMani()
-      this.dilloDi(k)
-      return { che: 'addosso', cosa: k }
+      const e = this.indossaDallaTasca(i)
+      this.vita = Math.min(this.vita, this.vitaMax)   // un amuleto tolto per un altro abbassa il tetto
+      return e
     }
     if (c.usa === 'cura') {
-      this.vita = Math.min(this.vitaMax, this.vita + c.cura)
+      const cura = this.curaDi(k)
+      this.vita = Math.min(this.vitaMax, this.vita + cura)
       this.zaino.splice(i, 1)
-      this.dillo(`❤️ +${c.cura}`)
+      this.dillo(`❤️ +${cura}`)
       return { che: 'curato' }
     }
     if (c.usa === 'cresci') {
-      this.vitaBase += c.cresce
+      this.vitaPiu += c.cresce
       this.vita += c.cresce
       this.zaino.splice(i, 1)
       this.dillo(`❤️ ${this.vita}/${this.vitaMax}`)
@@ -808,14 +888,9 @@ export class Corsa extends Corredo {
   }
 
   riponi(dove) {
-    const k = this.casella(dove)
-    if (!k) return null
-    if (this.zaino.length >= TASCHE) { this.dillo('🎒 lo zaino è pieno'); return { che: 'pieno' } }
-    this.metti(dove, null)
+    const e = super.riponi(dove)
     this.vita = Math.min(this.vita, this.vitaMax)   // togliendosi l'amuleto il tetto scende, e la vita lo segue
-    this.zaino.push(k)
-    this.dillo(`${COSE[k].em} nello zaino`)
-    return { che: 'riposta', cosa: k }
+    return e
   }
 
   // chiusa finché non si è battuto chi porta la chiave: l'unica cosa che non si può aggirare (docs/sotterraneo/regole.md)
@@ -845,7 +920,7 @@ export class Corsa extends Corredo {
     this.piano++
     if (nuovo) {
       this.svenimentiQui = 0   // le occasioni si rinnovano scendendo, e solo scendendo (svenimentiSpesi)
-      this.vitaBase += VITA_PER_PIANO
+      this.vitaPiu += VITA_PER_PIANO
       this.vita = Math.min(this.vitaMax, this.vita + RIPOSO_SCALA)
     }
     this.entraNelPiano({ dal: 'sopra' })
@@ -939,7 +1014,7 @@ export class Corsa extends Corredo {
       piani: this.pianiFatti,
       quantiPiani: this.senzaFondo ? null : this.quantiPiani,   // Infinity mostrerebbe "3 piani su ∞"
       fondo: this.piano + 1,   // contato come un bambino (il primo è 1): il record dell'abisso
-      mostri: this.mostriBattuti, tesori: this.tesori,
+      mostri: this.mostriBattuti, tesori: this.tesori, esp: this.espPresa,
       gemme: this.gemme, stanze: this.stanzeViste,
     }
   }

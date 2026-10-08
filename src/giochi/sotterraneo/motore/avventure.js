@@ -4,7 +4,6 @@
 // massimo fra le avventure: lo scrive completa() di giochi/campagne.js, che tiene sempre il più alto.
 // Funzioni pure sul record della campagna: girano in Node, e Gioco.vue le passa a ritocca().
 import { EROI } from '../dati/eroi.js'
-import { CAMPAGNA, CAMPAGNA_DI_PRIMA } from '../dati/campagna.js'
 import { rileggiRoba } from './corredo.js'
 
 // `missioni`: quelle dei personaggi, { [id]: stato } (motore/missioni.js, docs/sotterraneo/missioni.md)
@@ -70,6 +69,7 @@ export function cominciata(a) {
   if (!a) return false
   if (a.tappa > 0 || a.sosta || Object.values(a.stelle || {}).some(s => s > 0)) return true
   if (oggetto(a.abisso) && a.abisso.fondo > 0) return true
+  if (oggetto(a.crescita) && a.crescita.esp > 0) return true
   const r = rileggiRoba(a.roba)
   return !!r && (r.gemme > 0 || r.zaino.length > 0 || !!(r.mano || r.mancina || r.corpo || r.dito) ||
                  r.torcia > 0 || r.torce > 0)
@@ -80,8 +80,10 @@ export function cominciata(a) {
 // nebbia, i banchi, l'abisso e la sosta se ne vanno; restano l'eroe scelto e il record di fuori (tappa, stelle,
 // libera), che medaglie, esperienza e livello leggono. Torna false se non c'è niente da fare
 // Il mondo 3 (la grande storia, 7 ottobre 2026) ha riordinato le discese: un'avventura del mondo 2 si
-// rilegge per chiave (`riordina`), le altre si azzerano come prima.
-export const MONDO = 3
+// rileggeva per chiave. Il mondo 4 (8 ottobre 2026: l'eroe sale di livello, la roba ha livello e rarità)
+// ha azzerato di nuovo le avventure: con l'eroe al livello 1 le discese finite di prima sarebbero un muro
+// (docs/sotterraneo/avventure.md, «I salvataggi di prima si azzerano»)
+export const MONDO = 4
 const AZZERATO = 2
 const DI_PRIMA = ['avventure', 'roba', 'terra', 'abisso', 'botteghe']
 
@@ -91,7 +93,9 @@ const DI_PRIMA = ['avventure', 'roba', 'terra', 'abisso', 'botteghe']
 export function ricordaIlFondo(c, primato = 0) {
   if (!oggetto(c.cfg)) c.cfg = {}
   const vecchio = c.cfg.mondo >= AZZERATO ? 0 : (oggetto(c.cfg.abisso) && c.cfg.abisso.fondo) || 0   // dal mondo 2 cfg.abisso non c'è più
-  const f = Math.max(primato || 0, vecchio)
+  // e quello delle avventure che stanno per azzerarsi (il mondo 4): il fondo di ognuna
+  const avventure = c.cfg.mondo !== MONDO ? ilMassimo(c).fondo : 0
+  const f = Math.max(primato || 0, vecchio, avventure)
   if (!(f > (c.cfg.fondoDiPrima || 0))) return false
   c.cfg.fondoDiPrima = f
   return true
@@ -100,35 +104,9 @@ export function ricordaIlFondo(c, primato = 0) {
 export function azzeraIlVecchio(c) {
   if (!oggetto(c.cfg)) c.cfg = {}
   if (c.cfg.mondo === MONDO) return false
-  if (c.cfg.mondo === AZZERATO) {
-    for (const a of Object.values(oggetto(c.cfg.avventure) ? c.cfg.avventure : {})) if (oggetto(a)) riordina(a)
-  } else {
-    for (const k of DI_PRIMA) delete c.cfg[k]
-    delete c.sosta
-  }
+  for (const k of DI_PRIMA) delete c.cfg[k]
+  delete c.sosta
   if (c.cfg.eroe != null && !eroeVero(c.cfg.eroe)) delete c.cfg.eroe
   c.cfg.mondo = MONDO
   return true
-}
-
-// Un'avventura scritta con le sei discese di prima, nella fila di adesso: le stelle passano per chiave (il pozzo
-// dal tetto rosso non è più una discesa, e le sue si lasciano), il cursore conta le discese di fila già finite. La
-// sosta si butta (gli indici e i piani sono cambiati), e la terra torna al villaggio con la sua nebbia: il
-// minatore sta da un'altra parte, e ha di nuovo qualcosa da dire. Il record di fuori non si tocca: medaglie ed
-// esperienza lo leggono, e togliere non abbassa il livello (docs/sotterraneo/la-grande-storia.md)
-export function riordina(a) {
-  const fatte = new Set(CAMPAGNA_DI_PRIMA.slice(0, Number.isFinite(a.tappa) ? a.tappa : 0))
-  const stelle = {}
-  for (const [i, s] of Object.entries(oggetto(a.stelle) ? a.stelle : {})) {
-    const nuovo = CAMPAGNA.findIndex(t => t.chiave === CAMPAGNA_DI_PRIMA[i])
-    if (nuovo >= 0 && s > 0) stelle[nuovo] = s
-  }
-  let tappa = 0
-  while (tappa < CAMPAGNA.length && fatte.has(CAMPAGNA[tappa].chiave)) tappa++
-  a.tappa = tappa
-  a.libera = !!a.libera || tappa >= CAMPAGNA.length   // chi aveva aperto l'abisso non lo richiude
-  a.stelle = stelle
-  delete a.sosta
-  if (oggetto(a.terra)) { delete a.terra.dove; delete a.terra.parlato }
-  return a
 }

@@ -50,8 +50,8 @@ async function toccaIl(sel) {
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
 const cella = () => page.locator('[data-eroe-terra]').getAttribute('data-cella')
-const gemme = async () => Number(((await page.locator('[data-roba-sopra]').innerText()).match(/💎 (\d+)/) || [])[1])
-const chiScende = () => page.locator('[data-azione="eroe"]').innerText()
+const gemme = async () => Number(await page.locator('[data-gemme-barra]').getAttribute('data-n'))
+const chiScende = () => page.locator('[data-chi-sopra]').innerText()
 const trovati = () => page.locator('[data-posto][data-trovato="1"]').count()
 async function fermo() {
   await page.waitForFunction(() => document.querySelector('[data-eroe-terra]')?.dataset.cammina === '0',

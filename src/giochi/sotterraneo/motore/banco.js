@@ -10,7 +10,9 @@ import { COSE } from '../dati/cose.js'
 import { TASCHE } from '../dati/mondo.js'
 import { CAMPAGNA } from '../dati/campagna.js'
 import { seminato } from './livello.js'
-import { robaAttesa } from './storia.js'
+import { robaAttesa, crescitaAttesa, livelloAtteso } from './storia.js'
+import { puntiDaDare, CRESCITA_NUOVA, crescitaA, prossimoPunto } from './crescita.js'
+import { eroeDi } from '../dati/eroi.js'
 import { viaVerso, percorso } from '../../../motore/passi.js'
 
 const DT = 1 / 30
@@ -76,25 +78,23 @@ function scudoMeglio(chi, k) {
     COSE[chi.mancina].dove === 'mano' && (c.dif || 0) * 2 > chi.attaccoMancino
 }
 
+// i punti da dare, come li dà il banco (motore/crescita.js, COME_LI_DA): `come` per provare un altro modo
+function daiIPunti(corsa, come) {
+  while (puntiDaDare(corsa.crescita) > 0) corsa.daiUnPunto(prossimoPunto(corsa.crescita, corsa.chiEro, come))
+}
+
 // senza questa funzione il banco gioca tutta la campagna a mani nude, misurando il costo di giocare male
 function equipaggia(corsa) {
-  const meglio = (k, addosso, campo) => {
-    const mio = addosso ? (COSE[addosso][campo] || 0) : 0
-    return (COSE[k][campo] || 0) > mio
-  }
   for (let i = corsa.zaino.length - 1; i >= 0; i--) {
     const k = corsa.zaino[i]
     const c = COSE[k]
     // quello che questa classe non porta non si prova nemmeno, o il costo misurato è quello di un mago con un'ascia
     if (c.dove && !corsa.posso(k)) continue
-    // un'arma si giudica sul totale delle due mani (postoDellArma), o due leggere entrambe migliori si scambierebbero all'infinito
-    if (c.dove === 'mano') {
-      const posto = corsa.postoDellArma(k)
-      if (posto.delta > 0) { corsa.usa(i); continue }
+    // un pezzo si giudica su tutto quello che dà (confronto: `meglio`), un'arma sul totale delle due mani
+    if (c.dove && c.dove !== 'dito' && !(c.dove === 'mancina' && corsa.aDueMani(corsa.mano))) {
+      const conf = corsa.confronto(k)
+      if (!conf.addosso ? (c.dove !== 'mancina' || corsa.mancinaLibera()) : conf.meglio > 0) { corsa.usa(i); continue }
     }
-    if (c.dove === 'corpo' && meglio(k, corsa.corpo, 'dif')) { corsa.usa(i); continue }
-    // stessa domanda del gioco (mancinaLibera): un'arma a due mani in pugno rifiuta lo scudo
-    if (c.dove === 'mancina' && corsa.mancinaLibera()) { corsa.usa(i); continue }
     // con un'arma leggera nella mano debole, lo scudo che para più di quanto quell'arma picchi (la difesa conta doppio)
     if (c.dove === 'mancina' && scudoMeglio(corsa, k)) { corsa.usa(i); continue }
     // al dito la prima cosa che capita: i gioielli non si confrontano su un numero solo
@@ -163,9 +163,10 @@ function sbriga(corsa, bravura, sorte, conto) {
 // scendere, per misurare l'abisso (che non ha un ultimo piano). `perPiano`: quante domande è costato ognuno.
 // `roba`: quella che si porta giù da sopra (motore/corredo.js); torna in `corsa.roba` a discesa finita
 export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = null, da = null,
-                              eroe = undefined, fino = null, tettoGiri = TETTO_GIRI, roba = null } = {}) {
+                              eroe = undefined, fino = null, tettoGiri = TETTO_GIRI, roba = null,
+                              crescita = null, punti = null } = {}) {
   const sorte = rnd || seminato(seme * 31 + 17)
-  const corsa = da || new Corsa(tappa, { seme, rnd: sorte, eroe, roba })
+  const corsa = da || new Corsa(tappa, { seme, rnd: sorte, eroe, roba, crescita })
   if (da) da.rnd = sorte
   let giri = 0
   const persi = []
@@ -184,6 +185,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     if (corsa.piano !== pianoOra) chiudiIlPiano()
     if (fino != null && corsa.piano >= fino) break
     if (corsa.foglio) { sbriga(corsa, bravura, sorte, conto); continue }   // finché un foglio è aperto non si cammina
+    daiIPunti(corsa, punti)
     equipaggia(corsa)
     if (raccogliVicino(corsa, persi)) continue
 
@@ -237,10 +239,10 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
 // il metro dell'abisso: costoDeiPiani conta le domande piano per piano (se cresce, la discesa diventa lunga
 // invece che difficile); finoADove dice dove si ferma un giocatore finto, cioè dove il bottino non regge più
 export function costoDeiPiani(tappa, { fino = 12, seme = 7, bravura = 0.8,
-                                       eroe = undefined } = {}) {
+                                       eroe = undefined, roba = null, crescita = null } = {}) {
   const giri = 400 + fino * 900
-  const minimo = gioca(tappa, { seme, bravura, come: 'minimo', fino, tettoGiri: giri, eroe })
-  const tutto = gioca(tappa, { seme, bravura, come: 'tutto', fino, tettoGiri: giri, eroe })
+  const minimo = gioca(tappa, { seme, bravura, come: 'minimo', fino, tettoGiri: giri, eroe, roba, crescita })
+  const tutto = gioca(tappa, { seme, bravura, come: 'tutto', fino, tettoGiri: giri, eroe, roba, crescita })
   return {
     minimo: minimo.perPiano, tutto: tutto.perPiano,
     arrivato: [minimo.corsa.piano, tutto.corsa.piano],   // chi sviene troppe volte si ferma prima
@@ -249,11 +251,11 @@ export function costoDeiPiani(tappa, { fino = 12, seme = 7, bravura = 0.8,
 }
 
 export function finoADove(tappa, { bravura = 0.8, semi = [7, 41, 99, 203],
-                                   tetto = 40, eroe = undefined } = {}) {
+                                   tetto = 40, eroe = undefined, roba = null, crescita = null } = {}) {
   const fondi = []
   for (const seme of semi) {
     const g = gioca(tappa, { seme, bravura, come: 'minimo', fino: tetto,
-                             tettoGiri: 400 + tetto * 900, eroe })
+                             tettoGiri: 400 + tetto * 900, eroe, roba, crescita })
     fondi.push(g.corsa.piano + 1)
   }
   return { fondi, peggio: Math.min(...fondi), meglio: Math.max(...fondi),
@@ -262,9 +264,9 @@ export function finoADove(tappa, { bravura = 0.8, semi = [7, 41, 99, 203],
 
 // se il minimo cresce, scendere diventa un compito; se la forbice si stringe, non si sceglie più.
 // `roba`: quella che ci si porta giù (robaPer), da quando le discese dopo la prima contano su di lei
-export function costoDi(tappa, { seme = 7, bravura = 1, eroe = undefined, roba = null } = {}) {
-  const minimo = gioca(tappa, { seme, bravura, come: 'minimo', eroe, roba })
-  const tutto = gioca(tappa, { seme, bravura, come: 'tutto', eroe, roba })
+export function costoDi(tappa, { seme = 7, bravura = 1, eroe = undefined, roba = null, crescita = null } = {}) {
+  const minimo = gioca(tappa, { seme, bravura, come: 'minimo', eroe, roba, crescita })
+  const tutto = gioca(tappa, { seme, bravura, come: 'tutto', eroe, roba, crescita })
   return {
     minimo: minimo.esito.domande,
     tutto: tutto.esito.domande,
@@ -274,11 +276,11 @@ export function costoDi(tappa, { seme = 7, bravura = 1, eroe = undefined, roba =
 }
 
 // una tappa che si vince sei volte su dieci non è difficile: è una lotteria
-export function quanteVolteSiVince(tappa, { quante = 8, bravura = 0.8, eroe = undefined, roba = null } = {}) {
+export function quanteVolteSiVince(tappa, { quante = 8, bravura = 0.8, eroe = undefined, roba = null, crescita = null } = {}) {
   let vinte = 0
   const guasti = []
   for (let i = 0; i < quante; i++) {
-    const g = gioca(tappa, { seme: 100 + i * 37, bravura, come: 'minimo', eroe, roba })
+    const g = gioca(tappa, { seme: 100 + i * 37, bravura, come: 'minimo', eroe, roba, crescita })
     if (g.esito.vinta) vinte++
     if (g.guasto) guasti.push(`seme ${100 + i * 37}: ${g.guasto}`)
   }
@@ -302,21 +304,21 @@ export function pianiSani(tappa, quanti = 60) {
 // Il giocatore finto davanti ai mercanti di sopra: vende quello che ha in tasca e non mette, compra quello che
 // migliora (arma, armatura, scudo; al dito se è libero) e con quello che resta riempie le tasche di pozioni.
 // È il caso peggiore per l'equilibrio, chi scende con lo zaino pieno (docs/sotterraneo/regole.md)
-export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1 } = {}) {
-  const b = new Bottega({ eroe, roba, finite, rnd: seminato(seme * 53 + 11) })
+export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, crescita = null } = {}) {
+  const b = new Bottega({ eroe, roba, finite, crescita, rnd: seminato(seme * 53 + 11) })
   const vendiIlSuperfluo = () => {
     for (let i = b.zaino.length - 1; i >= 0; i--)
       if (COSE[b.zaino[i]].dove && !scudoMeglio(b, b.zaino[i])) b.vendiA('rigattiere', i)
   }
   // al dito si mette la prima cosa che capita, come fa equipaggia: i gioielli non si confrontano su un numero
   const meglio = k => b.quantoCosta(k) <= b.gemme && !b.possiedo(k) &&
-    ((b.vaAddosso(k) && (COSE[k].dove === 'dito' || b.confronto(k).delta > 0)) || scudoMeglio(b, k))
+    ((COSE[k].dove === 'dito' ? !b.dito : b.vaAddosso(k)) || scudoMeglio(b, k))
   vendiIlSuperfluo()
   for (let giro = 0; giro < 8; giro++) {
-    // un punto di difesa vale due di braccio (si para a ogni scambio, docs/sotterraneo/abisso.md); a pari, il più caro
+    // quanto migliora tutto (confronto: `meglio`, la difesa pesa il doppio); a pari, il più caro
     const vale = k => (COSE[k].dove === 'dito' ? 1 : scudoMeglio(b, k) && !b.vaAddosso(k)
-      ? COSE[k].dif * 2 - b.attaccoMancino
-      : b.confronto(k).delta * (b.confronto(k).campo === 'dif' ? 2 : 1))
+      ? (COSE[k].dif || 0) * 2 - b.attaccoMancino
+      : b.confronto(k).meglio)
     const scelte = ['armaiolo', 'rigattiere']
       .flatMap(chi => b.mercanzia(chi).filter(r => meglio(r.chiave)).map(r => ({ chi, k: r.chiave })))
       .sort((x, y) => vale(y.k) - vale(x.k) || b.quantoCosta(y.k) - b.quantoCosta(x.k))
@@ -340,28 +342,31 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1 } = {
 // 'minimo' chi va dritto alla scala. Torna, per bravura e per tappa, quante volte si arriva in fondo, e com'è
 // lo zaino in media
 export function misuraConLaRoba({ semi = 20, prove = [0.8, 0.6, 0.4], allenata = 0.8, eroe = undefined,
-                                  tentativi = 4, spesa = true, fila = 'tutto' } = {}) {
+                                  tentativi = 4, spesa = true, fila = 'tutto', fino = CAMPAGNA.length, solo = null } = {}) {
   const vinte = prove.map(() => CAMPAGNA.map(() => 0))
-  const zaini = CAMPAGNA.map(() => ({ gemme: 0, att: 0, dif: 0, pozioni: 0 }))
+  const zaini = CAMPAGNA.map(() => ({ gemme: 0, att: 0, dif: 0, pozioni: 0, livello: 0 }))
   for (let s = 0; s < semi; s++) {
     let roba = ROBA_VUOTA()
-    for (let k = 0; k < CAMPAGNA.length; k++) {
+    let crescita = CRESCITA_NUOVA()
+    for (let k = 0; k < fino; k++) {
       const t = CAMPAGNA[k]
-      if (spesa) roba = allaBottega(roba, { finite: k, eroe, seme: s * 101 + k })
-      const prima = new Bottega({ eroe, roba })
+      if (spesa) roba = allaBottega(roba, { finite: k, eroe, seme: s * 101 + k, crescita })
+      const prima = new Bottega({ eroe, roba, crescita })
       zaini[k].gemme += roba.gemme / semi
       zaini[k].att += prima.att / semi
       zaini[k].dif += prima.dif / semi
+      zaini[k].livello += prima.livelloEroe / semi
       zaini[k].pozioni += roba.zaino.filter(x => COSE[x].usa === 'cura').length / semi
-      prove.forEach((bravura, j) => {
-        const g = gioca(t, { seme: 5000 + s * 97 + k * 13 + j * 7, bravura, roba, eroe })
+      if (solo == null || solo === k) prove.forEach((bravura, j) => {
+        const g = gioca(t, { seme: 5000 + s * 97 + k * 13 + j * 7, bravura, roba, eroe, crescita })
         if (g.esito.vinta) vinte[j][k]++
       })
       for (let n = 0; n < tentativi; n++) {
-        const g = gioca(t, { seme: 100 + s * 37 + k * 3 + n * 7919, bravura: allenata, roba, eroe, come: fila })
+        const g = gioca(t, { seme: 100 + s * 37 + k * 3 + n * 7919, bravura: allenata, roba, eroe, come: fila, crescita })
         roba = g.corsa.roba
+        crescita = g.corsa.crescita
         if (g.esito.vinta) break
-        if (spesa) roba = allaBottega(roba, { finite: k, eroe, seme: s * 101 + k + n * 17 })
+        if (spesa) roba = allaBottega(roba, { finite: k, eroe, seme: s * 101 + k + n * 17, crescita })
       }
     }
   }
@@ -370,44 +375,49 @@ export function misuraConLaRoba({ semi = 20, prove = [0.8, 0.6, 0.4], allenata =
 
 // La tabella della storia sotto il banco (dati/storia.js, docs/sotterraneo/la-grande-storia.md): ogni discesa
 // giocata con la roba della riga sua spostata di `scarto` (0 la roba attesa, −1 quella di una discesa prima, 2
-// quella di due discese avanti), con le pozioni attese, a ognuna delle `prove`. Torna, per scarto, per bravura e
-// per discesa, quante volte si arriva in fondo; e le gemme con cui si esce con la roba attesa (`gemme[k]`, la
-// media), che sono quelle che il banco del passo dopo deve far tornare
+// quella di due discese avanti) e il livello atteso, con le pozioni attese, a ognuna delle `prove`. `livelli`:
+// gli scarti di livello da provare con la roba attesa (la chiave è 'L−2', 'L+3'…). Torna, per scarto, per
+// bravura e per discesa, quante volte si arriva in fondo; e le gemme con cui si esce con la roba attesa
+// (`gemme[k]`, la media), che sono quelle che il banco del passo dopo deve far tornare
 export function misuraLaStoria({ eroe = 'cavaliere', semi = 20, prove = [0.8, 0.6, 0.4], scarti = [0, -1, 2],
-                                 come = 'minimo', quali = null } = {}) {
+                                 livelli = [], come = 'minimo', quali = null, punti = null } = {}) {
   const discese = quali || CAMPAGNA.map((_, k) => k)
   const vinte = {}
   const gemme = {}
-  for (const scarto of scarti) {
-    vinte[scarto] = prove.map(() => ({}))
+  const prove2 = [...scarti.map(s => ({ chiave: s, scarto: s, piu: 0 })),
+                  ...livelli.map(l => ({ chiave: `L${l > 0 ? '+' : ''}${l}`, scarto: 0, piu: l }))]
+  for (const { chiave, scarto, piu } of prove2) {
+    vinte[chiave] = prove.map(() => ({}))
     for (const k of discese) {
       const riga = Math.max(0, Math.min(CAMPAGNA.length, k + scarto))
+      const crescita = piu ? crescitaA(eroeDi(eroe), Math.max(1, livelloAtteso(k) + piu), punti) : crescitaAttesa(eroe, k, punti)
       prove.forEach((bravura, j) => {
         let n = 0
         for (let s = 0; s < semi; s++) {
-          const g = gioca(CAMPAGNA[k], { seme: 7000 + s * 89 + k * 11 + j * 5, bravura, eroe, come,
-                                        roba: robaAttesa(eroe, riga) })
+          const g = gioca(CAMPAGNA[k], { seme: 7000 + s * 89 + k * 11 + j * 5, bravura, eroe, come, punti,
+                                        roba: robaAttesa(eroe, riga), crescita })
           if (g.esito.vinta) n++
-          if (scarto === 0 && j === 0) gemme[k] = (gemme[k] || 0) + g.esito.gemme / semi
+          if (chiave === 0 && j === 0) gemme[k] = (gemme[k] || 0) + g.esito.gemme / semi
         }
-        vinte[scarto][j][k] = n
+        vinte[chiave][j][k] = n
       })
     }
   }
-  return { vinte, gemme, semi, prove, scarti, discese }
+  return { vinte, gemme, semi, prove, scarti, livelli, discese }
 }
 
 // Chi ha messo da parte le gemme: arriva a ogni discesa con la roba attesa e `gemme` in tasca, compra il meglio che
 // può (anche i pezzi delle righe dopo, a prezzo più alto) e scende. Torna, per bravura e per discesa, quante volte
 // su `semi` si arriva in fondo: il sovrapprezzo deve tenere questi numeri vicini a quelli di chi non compra avanti
-// (docs/sotterraneo/roba.md, «I mercanti di sopra»)
+// (docs/sotterraneo/bottega.md, «I mercanti di sopra»)
 export function misuraDiChiHaMessoDaParte({ eroe = 'cavaliere', semi = 20, gemme = 100, prove = [0.8, 0.6, 0.4] } = {}) {
   const vinte = prove.map(() => CAMPAGNA.map(() => 0))
   for (let k = 0; k < CAMPAGNA.length; k++)
     for (let s = 0; s < semi; s++) {
-      const roba = allaBottega(robaAttesa(eroe, k, { gemme }), { finite: k, eroe, seme: s * 101 + k })
+      const crescita = crescitaAttesa(eroe, k)
+      const roba = allaBottega(robaAttesa(eroe, k, { gemme }), { finite: k, eroe, seme: s * 101 + k, crescita })
       prove.forEach((bravura, j) => {
-        if (gioca(CAMPAGNA[k], { seme: 7000 + s * 89 + k * 11 + j * 5, bravura, eroe, roba }).esito.vinta) vinte[j][k]++
+        if (gioca(CAMPAGNA[k], { seme: 7000 + s * 89 + k * 11 + j * 5, bravura, eroe, roba, crescita }).esito.vinta) vinte[j][k]++
       })
     }
   return { vinte, semi, prove }
@@ -417,24 +427,30 @@ export function misuraDiChiHaMessoDaParte({ eroe = 'cavaliere', semi = 20, gemme
 // dieci, con la spesa fra una discesa e l'altra: la fila di misuraConLaRoba con un seme solo. È lo zaino con
 // cui si misurano le discese dopo la prima (unita/sotterraneo), il più povero che un bambino abbia davvero
 const fileGiocate = new Map()
-export function robaPer(indice, { eroe = undefined, seme = 1, fila = 'minimo', tentativi = 4 } = {}) {
-  const chiave = `${eroe}|${seme}|${fila}`
+// `crescitaPer` (sotto) dice con che crescita ci si arriva: la stessa fila
+export function robaPer(indice, opz = {}) { return filaGiocata(opz)[Math.max(0, Math.min(indice, CAMPAGNA.length))].roba }
+export function crescitaPer(indice, opz = {}) { return filaGiocata(opz)[Math.max(0, Math.min(indice, CAMPAGNA.length))].crescita }
+
+function filaGiocata({ eroe = undefined, seme = 1, fila = 'minimo', tentativi = 4 } = {}) {
+  const chiave = `${eroe}|${seme}|${fila}|${tentativi}`
   let zaini = fileGiocate.get(chiave)
   if (!zaini) {
     zaini = []
     let roba = ROBA_VUOTA()
+    let crescita = CRESCITA_NUOVA()
     for (let k = 0; k < CAMPAGNA.length; k++) {
-      roba = allaBottega(roba, { finite: k, eroe, seme: seme * 101 + k })
-      zaini.push(roba)
+      roba = allaBottega(roba, { finite: k, eroe, seme: seme * 101 + k, crescita })
+      zaini.push({ roba, crescita })
       for (let n = 0; n < tentativi; n++) {
-        const g = gioca(CAMPAGNA[k], { seme: 100 + seme * 37 + k * 3 + n * 7919, bravura: 0.8, roba, eroe, come: fila })
+        const g = gioca(CAMPAGNA[k], { seme: 100 + seme * 37 + k * 3 + n * 7919, bravura: 0.8, roba, eroe, come: fila, crescita })
         roba = g.corsa.roba
+        crescita = g.corsa.crescita
         if (g.esito.vinta) break
-        roba = allaBottega(roba, { finite: k, eroe, seme: seme * 101 + k + n * 17 })
+        roba = allaBottega(roba, { finite: k, eroe, seme: seme * 101 + k + n * 17, crescita })
       }
     }
-    zaini.push(allaBottega(roba, { finite: CAMPAGNA.length, eroe, seme: seme * 101 + CAMPAGNA.length }))
+    zaini.push({ roba: allaBottega(roba, { finite: CAMPAGNA.length, eroe, seme: seme * 101 + CAMPAGNA.length, crescita }), crescita })
     fileGiocate.set(chiave, zaini)
   }
-  return zaini[Math.max(0, Math.min(indice, zaini.length - 1))]
+  return zaini
 }

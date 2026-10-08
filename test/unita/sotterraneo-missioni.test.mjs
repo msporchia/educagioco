@@ -11,7 +11,7 @@ import { PERSONAGGI as DOVE_PERSONAGGI } from '../../src/giochi/sotterraneo/dati
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Corredo } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
-import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { avventuraDi } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { sbloccata, sbloccate, offerte, inMano, aperte, cosaDice, segnoDi, chiTiCerca, prendi, fatte, consegna,
          presePer, diario, promemoria, inFrase, GLIFO, chiAspetta, daLui, robaDellaMissione, rotta, discesaDaSeguire,
@@ -94,7 +94,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
 
   // ogni missione si sblocca prima che si entri nella sua discesa, e con la roba attesa è fattibile
   const colpi = (eroe, k, m) => {
-    const c = new Corsa(CAMPAGNA[k], { seme: 5, eroe, roba: robaAttesa(eroe, k), rnd: seminato(5), missioni: [] })
+    const c = new Corsa(CAMPAGNA[k], { seme: 5, eroe, roba: robaAttesa(eroe, k), crescita: crescitaAttesa(eroe, k), rnd: seminato(5), missioni: [] })
     while (c.piano < m.piano) { c.piano++; c.nuovoPiano() }
     const r = robaDellaMissione(c.livello, m, CAMPAGNA[k])
     return { c, r, colpi: c.colpiPer(r), rispondendoBene: c.colpiPer(r) * c.graffio(r), vita: c.vitaMax }
@@ -228,7 +228,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
     const k = CAMPAGNA.findIndex(t => t.chiave === m.discesa)
     let somma = 0
     for (const e of EROI) {
-      const c = new Corsa(CAMPAGNA[k], { seme: 5, eroe: e.chiave, roba: robaAttesa(e.chiave, k), rnd: seminato(5), missioni: [] })
+      const c = new Corsa(CAMPAGNA[k], { seme: 5, eroe: e.chiave, roba: robaAttesa(e.chiave, k), crescita: crescitaAttesa(e.chiave, k), rnd: seminato(5), missioni: [] })
       while (c.piano < m.piano) { c.piano++; c.nuovoPiano() }
       somma += c.colpiPer(robaDellaMissione(c.livello, m, CAMPAGNA[k])) - c.colpiPer(c.livello.mostro(m.mostro.tipo, 0, 0))
     }
@@ -245,14 +245,14 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   const gemme = b.gemme
   const r = consegna({ zannagrigia: FATTA }, 'zannagrigia', b)
   uguale('Zannagrigia: consegnata', r.stati.zannagrigia, CONSEGNATA)
-  uguale('porta le sue monete', r.monete, 4)
+  uguale('porta le sue monete', r.monete, 2)
   uguale('e le gemme sulla roba', b.gemme, gemme + 30)
   controlla('le monete non finiscono nella roba', !('monete' in b))
   uguale('una missione senza regalo ne porta zero', consegna({ collana: FATTA }, 'collana', palestra('cavaliere', 1)).monete, 0)
   uguale('a tasche piene la consegna aspetta e le monete con lei', consegna({ rosicchione: FATTA }, 'rosicchione',
          new Corredo({ eroe: 'mago', roba: { ...robaAttesa('mago', 4), dito: 'amuleto-rosso', zaino: new Array(6).fill('pozione') } })).monete, 0)
-  uguale('il premio si dice con le monete', premioDetto(missioneDi('zannagrigia').premio), '💎 30 · 🪙 4')
-  uguale('o con la roba', premioDetto(missioneDi('chela').premio), 'Anello d\'ambra · 🪙 2')
+  uguale('il premio si dice con le monete', premioDetto(missioneDi('zannagrigia').premio), '💎 30 · 🪙 2')
+  uguale('o con la roba', premioDetto(missioneDi('chela').premio), 'Anello d\'ambra · 🪙 1')
   uguale('non si consegna due volte', consegna(r.stati, 'zannagrigia', b), null)
   // niente moneta per una risposta sbagliata: il forziere della missione resta chiuso e non fa niente
   const c = new Corsa(CAMPAGNA[1], { seme: 21, eroe: 'cavaliere', roba: robaAttesa('cavaliere', 1), rnd: seminato(21), missioni: [missioneDi('collana')] })

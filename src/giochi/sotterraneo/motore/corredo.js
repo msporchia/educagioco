@@ -5,13 +5,26 @@
 import { TASCHE } from '../dati/mondo.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta } from '../dati/eroi.js'
 import { COSE, STANZE_TORCIA } from '../dati/cose.js'
+import { GEMME_PER_FORTUNA } from '../dati/livelli.js'
+import { valoreDelLivello } from '../dati/pezzi.js'
+import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare } from './crescita.js'
+import { CARATTERISTICHE, SCORZA_PER_DIFESA } from '../dati/livelli.js'
 
 // la forma di `cfg.avventure[eroe].roba` nel profilo: sale se un campo cambia significato (docs/core/ripresa.md)
 export const VERSIONE_ROBA = 1
 
 // le abilità che il confronto di un pezzo mette in riga: un'abilità nuova si aggiunge qui, in `addosso()` e
 // in `ABILITA` di viste/pezzo.js (un test controlla che le due liste coincidano)
-export const ABILITA_CONFRONTATE = ['att', 'dif', 'vita', 'gemme', 'luce']
+export const ABILITA_CONFRONTATE = ['att', 'dif', 'vita', 'rigenera', 'fuoco', 'schivata', 'gemme', 'fortuna', 'pozioni',
+                                    'luce', 'torcia']
+
+// quanto vale un'abilità quando il gioco sceglie da sé cosa mettersi addosso (per terra, comprando, il banco di prova):
+// un punto di difesa vale due di attacco (si para a ogni scambio), la vita un quarto. Pesi da giocatore, non da
+// contabile: servono a dire «meglio» o «peggio» quando un pezzo dà più cose insieme
+const PESI = { att: 2, dif: 4, vita: 0.4, rigenera: 1, fuoco: 1.6, schivata: 0.12, gemme: 3, fortuna: 0.4, pozioni: 0.03,
+               luce: 0.6, torcia: 0.2 }
+// la schivata ha un tetto: oltre, i mostri non toccherebbero più
+export const SCHIVATA_MASSIMA = 60
 const CASELLE = ['mano', 'mancina', 'corpo', 'dito']
 
 export const ROBA_VUOTA = () => ({
@@ -37,24 +50,26 @@ export function rileggiRoba(dato) {
 // avventure, la carta sulla terra di sopra): sono quelli che userà la Corsa, calcolati dallo stesso Corredo, e
 // per una roba vuota restano quelli di base dell'eroe (docs/sotterraneo/avventure.md). `mano`, `mancina`,
 // `corpo` e `dito` sono le chiavi di quello che c'è addosso adesso, dopo aver messo da parte quello che la classe non porta
-export function schedaConLaRoba(eroe, roba = null) {
-  const c = new Corredo({ eroe, roba })
+export function schedaConLaRoba(eroe, roba = null, crescita = null) {
+  const c = new Corredo({ eroe, roba, crescita })
   c.sistemaIlCorredo()
   const gemme = c.addosso('gemme'), luce = c.addosso('luce')
   const tratti = []
-  if (gemme) tratti.push(`💎 ×${(1 + gemme).toString().replace('.', ',')}`)
-  if (luce) tratti.push('🔥 vedi più lontano')
+  if (gemme) tratti.push(`💎 ×${(Math.round((1 + gemme) * 100) / 100).toString().replace('.', ',')}`)
+  if (luce) tratti.push('🔦 vedi più lontano')
   return {
     vita: c.vitaConLaRoba, att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.zaino.length,
-    mano: c.mano, mancina: c.mancina, corpo: c.corpo, dito: c.dito, tratti,
+    mano: c.mano, mancina: c.mancina, corpo: c.corpo, dito: c.dito, tratti, livello: c.livelloEroe,
   }
 }
 
 export class Corredo {
-  constructor({ eroe = DI_PARTENZA, roba = null } = {}) {
+  constructor({ eroe = DI_PARTENZA, roba = null, crescita = null } = {}) {
     // la scheda dice braccio e difesa di partenza; il resto non sa che esistano quattro eroi
     this.chiEro = eroe
     this.io = eroeDi(eroe)
+    // l'esperienza e i punti dati (motore/crescita.js): stanno nell'avventura come la roba, e salgono con lei
+    this.crescita = rileggiCrescita(crescita)
     this.gemme = 0
     this.zaino = []
     this.mano = null
@@ -90,13 +105,70 @@ export class Corredo {
   }
 
   // una copia senza discesa intorno: serve a provare un acquisto prima di farlo (compra)
-  copia() { return new Corredo({ eroe: this.chiEro, roba: this.roba }) }
+  copia() { return new Corredo({ eroe: this.chiEro, roba: this.roba, crescita: this.crescita }) }
 
-  get att() { return this.io.att + this.addosso('att') }   // unico posto dove si sommano
-  get dif() { return this.io.dif + this.addosso('dif') }
-  // il massimo di vita con questa roba, a inizio discesa: Corsa parte da qui e poi lo fa crescere (vitaBase)
-  get vitaConLaRoba() { return this.io.vita + this.addosso('vita') }
+  // quello che la crescita aggiunge (docs/sotterraneo/livelli.md); ricalcolato quando cambia l'esperienza o un punto
+  get piu() {
+    const firma = `${this.crescita.esp}|${this.crescita.forza}|${this.crescita.tempra}|${this.crescita.scorza}|${this.crescita.fortuna}`
+    if (this._piu && this._piuFirma === firma) return this._piu
+    this._piuFirma = firma
+    this._piu = piuDellaCrescita(this.io, this.crescita)
+    return this._piu
+  }
+  get livelloEroe() { return this.piu.livello }
+
+  get att() { return this.io.att + this.piu.att + this.addosso('att') }   // unico posto dove si sommano
+  get dif() { return this.io.dif + this.piu.dif + this.addosso('dif') }
+  // il massimo di vita con questa roba e questo livello, a inizio discesa: Corsa parte da qui e poi lo fa crescere (vitaPiu)
+  get vitaConLaRoba() { return this.io.vita + this.piu.vita + this.addosso('vita') }
+  get fortuna() { return this.piu.fortuna + this.addosso('fortuna') }
+  // quanto vale una gemma raccolta: gli anelli, le abilità e la fortuna
+  get valoreGemme() { return 1 + this.addosso('gemme') + GEMME_PER_FORTUNA * this.fortuna }
+  get schivata() { return Math.min(SCHIVATA_MASSIMA, this.addosso('schivata')) }
   get torciaAccesa() { return this.torciaResta > 0 }
+  // una torcia nuova: le stanze di sempre, e quelle in più dei pezzi ⏳
+  get stanzeTorcia() { return STANZE_TORCIA + this.addosso('torcia') }
+
+  // quanto cura una pozione: cresce col livello dell'eroe (un decimo a livello), e coi pezzi 🧪
+  curaDi(k) {
+    const c = COSE[k]
+    if (!c || !c.cura) return 0
+    return Math.round(c.cura * (1 + 0.1 * (this.livelloEroe - 1)) * (1 + this.addosso('pozioni') / 100))
+  }
+
+  // La pagina dell'eroe: le quattro caratteristiche, quanto valgono e cosa cambierebbe dando un punto (prima → dopo).
+  // La scorza va a mezzi scudi (ne servono due punti per uno: «🛡️ 2 → 2½»), la fortuna si legge sulle gemme.
+  // `trattenuta`: il «+» è spento perché quella caratteristica (`dietro`) è rimasta troppo indietro (chiTrattiene);
+  // `indietro`: è lei, quella che trattiene un'altra, e chiede un punto prima
+  caratteristiche() {
+    const tetto = this.vitaMax ?? this.vitaConLaRoba
+    const mezzi = k => Math.floor(caratteristica(this.io, k, 'scorza') % SCORZA_PER_DIFESA)
+    const conMezzo = (dif, cr) => (mezzi(cr) ? `${dif}½` : String(dif))
+    const dare = puntiDaDare(this.crescita) > 0
+    const dietro = Object.fromEntries(CARATTERISTICHE.map(c => [c.chiave, dare ? chiTrattiene(this.crescita, c.chiave) : null]))
+    const fermate = new Set(Object.values(dietro).filter(Boolean))
+    const gemme = v => `×${(Math.round(v * 100) / 100).toString().replace('.', ',')}`
+    return CARATTERISTICHE.map(c => {
+      const prova = this.copia()
+      prova.crescita = { ...this.crescita, [c.chiave]: (this.crescita[c.chiave] || 0) + 1 }
+      const cambia = []
+      if (prova.att !== this.att) cambia.push({ em: '⚔️', prima: this.att, dopo: prova.att })
+      if (c.chiave === 'scorza')
+        cambia.push({ em: '🛡️', prima: conMezzo(this.dif, this.crescita), dopo: conMezzo(prova.dif, prova.crescita) })
+      const piu = prova.vitaConLaRoba - this.vitaConLaRoba
+      if (piu) cambia.push({ em: '❤️', prima: tetto, dopo: tetto + piu })
+      if (c.chiave === 'fortuna') cambia.push({ em: '💎', prima: gemme(this.valoreGemme), dopo: gemme(prova.valoreGemme) })
+      return { ...c, valore: caratteristica(this.io, this.crescita, c.chiave), dati: this.crescita[c.chiave] || 0, cambia,
+               trattenuta: !!dietro[c.chiave], dietro: dietro[c.chiave], indietro: fermate.has(c.chiave) }
+    })
+  }
+
+  // quanto vale tutto quello che si ha addosso, per scegliere da sé (PESI)
+  punteggio() {
+    let n = 0
+    for (const [campo, peso] of Object.entries(PESI)) n += peso * (campo === 'att' ? this.att : campo === 'dif' ? this.dif : this.addosso(campo))
+    return n
+  }
 
   // metà arrotondata per eccesso: due armi non fanno il doppio, o le pesanti non si prenderebbe più nessuno
   get attaccoMancino() {
@@ -206,19 +278,22 @@ export class Corredo {
   }
 
   // rispetto a quella che si ha già addosso: il motore lo sa, chi disegna non deve sommare niente
+  // `delta` è il numero principale (braccio per un'arma, difesa per scudi e armature), `meglio` quanto cambia tutto
+  // insieme (punteggio): un pezzo magico può parare uguale e dare vita in più
   confronto(k) {
     const c = COSE[k]
     if (!c || !c.dove) return null
     // le armi hanno due caselle: il confronto è col totale delle mani, non "uguale a quella che hai"
-    if (c.dove === 'mano') {
-      const posto = this.postoDellArma(k)
-      return { dove: posto.dove, campo: 'att', addosso: this.casella(posto.dove), delta: posto.delta }
+    const dove = c.dove === 'mano' ? this.postoDellArma(k).dove : c.dove
+    const campo = c.dove === 'mano' ? 'att' : c.dove === 'corpo' || c.dove === 'mancina' ? 'dif' : 'dono'
+    const prova = this.copia()
+    prova.metti(dove, k)
+    prova.sistemaLeMani()
+    return {
+      dove, campo, addosso: this.casella(dove),
+      delta: campo === 'dono' ? 0 : prova[campo] - this[campo],
+      meglio: Math.round((prova.punteggio() - this.punteggio()) * 100) / 100,
     }
-    const campo = c.dove === 'corpo' || c.dove === 'mancina' ? 'dif' : 'dono'
-    const addosso = this.casella(c.dove)
-    // `?.`: un salvataggio vecchio può avere una chiave che non esiste più, e non deve spegnersi su una schermata nera
-    const mio = addosso ? (COSE[addosso]?.[campo] || 0) : 0
-    return { dove: c.dove, campo, addosso, delta: (c[campo] || 0) - mio }
   }
 
   // I numeri prima e dopo essersi messi `k` addosso, nel posto che sceglierebbe `usa` (il pannello della bottega e
@@ -276,12 +351,14 @@ export class Corredo {
     if (!c || !c.dove || !this.posso(k)) return false
     if (c.dove === 'mancina' && !this.mancinaLibera()) return false
     const conf = this.confronto(k)
-    return !conf.addosso || conf.delta > 0
+    if (!conf.addosso) return true
+    // fra due gioielli non c'è un più forte: è una scelta, e la fa chi gioca
+    return c.dove !== 'dito' && conf.meglio > 0
   }
 
   // la torcia non va in tasca: la prima si accende, le altre aspettano alla cintura senza tetto (docs/sotterraneo/roba.md)
   accendi(k) {
-    const quante = (COSE[k] && COSE[k].stanze) || STANZE_TORCIA
+    const quante = this.stanzeTorcia
     if (this.torciaAccesa) {
       this.torceInScorta++
       this.dilloDi(k, ` alla cintura · ne hai ${this.torceInScorta} di scorta`)
@@ -312,7 +389,15 @@ export class Corredo {
   // a metà prezzo: comprare e rivendere è una perdita, non un modo di fare gemme girando in tondo (docs/sotterraneo/roba.md)
   quantoVale(k) {
     const c = COSE[k]
-    return c && c.prezzo ? Math.max(1, Math.floor(c.prezzo / 2)) : 0
+    return c && c.prezzo ? Math.max(1, Math.floor(this.prezzoDi(k) / 2)) : 0
+  }
+
+  // il prezzo pieno: un pezzo lo porta scritto (livello e rarità, dati/cose.js); una cura costa di più quanto più
+  // cura, cioè col livello dell'eroe
+  prezzoDi(k) {
+    const c = COSE[k]
+    if (!c || !c.prezzo) return 0
+    return c.usa === 'cura' ? Math.round(c.prezzo * valoreDelLivello(this.livelloEroe)) : c.prezzo
   }
 
   // una cosa entrata adesso (comprata): addosso se è meglio, se no in tasca; la torcia si accende o va alla cintura
@@ -322,6 +407,7 @@ export class Corredo {
     if (this.vaAddosso(k)) {
       const conf = this.confronto(k)
       const vecchio = this.casella(conf.dove)
+      // `postoDellArma` può aver scelto la mano debole: si mette lì
       this.metti(conf.dove, k)
       if (vecchio) this.inTasca(vecchio)
       this.sistemaLeMani()
@@ -351,12 +437,45 @@ export class Corredo {
   }
 
   // quanto si paga al banco: il prezzo della cosa (la Bottega ci aggiunge il sovrapprezzo dei pezzi più avanti)
-  quantoCosta(k) { return COSE[k].prezzo }
+  quantoCosta(k) { return this.prezzoDi(k) }
 
   nonCiStarebbe(k) {
     const prova = this.copia()
     prova.prendi(k)
     return prova.zaino.length > TASCHE
+  }
+
+  // dalla tasca addosso, nello zaino di sotto e in quello di sopra: quello che si aveva addosso torna in tasca, non
+  // sparisce; per un'arma il posto lo sceglie `postoDellArma`. Torna null se la tasca non tiene niente da mettersi
+  indossaDallaTasca(i) {
+    const k = this.zaino[i]
+    const c = COSE[k]
+    if (!c || !c.dove) return null
+    // rete sotto (chi disegna già sa `posso` e lo scrive sulla tasca): il tasto dice perché no, mai muto
+    if (!this.posso(k)) { this.dillo(this.perchéNo(k)); return { che: 'niente' } }
+    if (c.dove === 'mancina' && this.aDueMani(this.mano)) {
+      this.dillo(`✋ ${COSE[this.mano].nome} vuole tutte e due le mani`)
+      return { che: 'niente' }
+    }
+    const dove = c.dove === 'mano' ? this.postoDellArma(k).dove : c.dove
+    const vecchio = this.casella(dove)
+    this.metti(dove, k)
+    this.zaino.splice(i, 1)
+    if (vecchio) this.zaino.push(vecchio)
+    this.sistemaLeMani()
+    this.dilloDi(k)
+    return { che: 'addosso', cosa: k }
+  }
+
+  // da addosso in tasca, se c'è posto
+  riponi(dove) {
+    const k = this.casella(dove)
+    if (!k) return null
+    if (this.zaino.length >= TASCHE) { this.dillo('🎒 lo zaino è pieno'); return { che: 'pieno' } }
+    this.metti(dove, null)
+    this.zaino.push(k)
+    this.dillo(`${COSE[k].em} nello zaino`)
+    return { che: 'riposta', cosa: k }
   }
 
   vendi(i) {

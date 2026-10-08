@@ -69,7 +69,15 @@ uguale('il tasto del diario conta le aperte: una in mano e due offerte', await p
 await scatto(page, 'missioni-villaggio')
 
 /* ---------- 1b. chi aspetta ed è lontano: l'indicatore sul bordo ---------- */
-uguale('con il mugnaio in vista non serve nessun indicatore', await page.locator('[data-consegna-fuori]').count(), 0)
+{
+  // dalla ragazza il mugnaio si vede o no secondo quanto è alta la vista (la barra in basso ne prende un pezzo): se si
+  // vede, nessun indicatore; se no, il suo
+  const v = await page.locator('[data-terra]').boundingBox(), m = await page.locator('[data-personaggio="mugnaio"]').boundingBox()
+  const sotto = (await page.locator('.sot-terra-sotto').boundingBox())?.height || 0
+  const inVista = m.y > v.y && m.y + m.height < v.y + v.height - sotto
+  uguale(inVista ? 'con il mugnaio in vista non serve nessun indicatore' : 'il mugnaio fuori vista: il suo indicatore',
+         await page.locator('[data-consegna-fuori]').count(), inVista ? 0 : 1)
+}
 await camminaVerso(page, MINATORE.accanto, { tocca })
 await page.waitForSelector('[data-consegna-fuori="mugnaio"]', { timeout: 5000 })
 uguale('il mugnaio è lontano: un solo indicatore, e solo per lui (gli altri non hanno una consegna)',
