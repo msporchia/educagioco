@@ -70,7 +70,6 @@ export class Campo {
     ctx.translate(cx, cy)
     if (dipinto) disegnaFondo(ctx, s.terreno, s.scenario, x0, y0, x1, y1)
 
-    if (s.gelo) this.aloneGelo(s.eroe, s.gelo, s.tempo)
     // si disegna solo quello che sta nello schermo: il filtro sta qui e
     // non nel motore, le regole muovono tutti i mostri lo stesso
     const dentro = (o, m = 60) => o.x > x0 - m && o.x < x1 + m && o.y > y0 - m && o.y < y1 + m
@@ -190,20 +189,6 @@ export class Campo {
     ctx.globalCompositeOperation = 'source-over'
   }
 
-  aloneGelo(eroe, r, tempo) {
-    const ctx = this.ctx
-    const g = ctx.createRadialGradient(eroe.x, eroe.y, r * 0.2, eroe.x, eroe.y, r)
-    g.addColorStop(0, '#bff0ff10'); g.addColorStop(0.75, '#8fe0ff45'); g.addColorStop(1, '#6ecdff70')
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(eroe.x, eroe.y, r, 0, 6.29); ctx.fill()
-    ctx.strokeStyle = '#d8f6ffcc'; ctx.lineWidth = 2
-    ctx.beginPath(); ctx.arc(eroe.x, eroe.y, r, 0, 6.29); ctx.stroke()
-    ctx.font = '14px "Emoji Gioco", system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    for (let i = 0; i < 4; i++) {
-      const a = tempo * 0.7 + i * 1.57
-      ctx.fillText('❄️', eroe.x + Math.cos(a) * r * 0.86, eroe.y + Math.sin(a) * r * 0.86)
-    }
-  }
-
   eroe(e, tempo) {
     const ctx = this.ctx
     const x = e.x, y = e.y
@@ -216,17 +201,6 @@ export class Campo {
     ctx.save(); ctx.translate(x, y + dondolo); ctx.scale(s * e.guarda, s)
     ctx.globalAlpha = lampeggia ? 0.4 : 1
 
-    if (e.spine) {                                     // le spine si vedono
-      for (let i = 0; i < 9; i++) {
-        const a = i / 9 * 6.283 + tempo
-        ctx.fillStyle = '#ffd257'
-        ctx.beginPath()
-        ctx.moveTo(Math.cos(a) * 16, Math.sin(a) * 16 - 2)
-        ctx.lineTo(Math.cos(a + 0.28) * 11, Math.sin(a + 0.28) * 11 - 2)
-        ctx.lineTo(Math.cos(a - 0.28) * 11, Math.sin(a - 0.28) * 11 - 2)
-        ctx.closePath(); ctx.fill()
-      }
-    }
     if (!dipinto) {                                    // il bambino disegnato, finché l'atlante non c'è
       ctx.fillStyle = '#3a5fc8'                          // gambe
       ctx.fillRect(-6, 4, 4.5, 8); ctx.fillRect(1.5, 4, 4.5, 8)
@@ -369,25 +343,34 @@ export class Campo {
     this.bagliore(c.x + Math.cos(c.a) * L, c.y + Math.sin(c.a) * L, 14, '#ffffff', 0.5)
   }
 
-  // una cometa: un sasso infuocato con la coda, che fa vedere da che
-  // parte gira (la coda sta dietro, ad `a - 90°`: sottrarre la
-  // metterebbe davanti e la cometa sembrerebbe girare al contrario)
+  // una cometa: un fuocherello che gira, con la coda di braci. La coda
+  // sta dietro, ad `a - 90°`: sottrarre la metterebbe davanti e la cometa
+  // sembrerebbe girare al contrario
   palla(p, tempo) {
-    const r = p.r || 15
-    const coda = p.a - 1.5708
-    this.bagliore(p.x, p.y, r * 3.2, '#ff8a3c', 0.7)
-    for (let k = 1; k <= 7; k++) {
-      const d = k * r * 0.55
-      const q = 1 - k / 8
-      const tremo = Math.sin(tempo * 30 + k * 2.1) * r * 0.12
-      this.bagliore(p.x + Math.cos(coda) * d + tremo, p.y + Math.sin(coda) * d - tremo,
-                    r * q * 1.1, k > 3 ? '#ff6b1f' : '#ffd27a', 0.9)
-    }
-    this.cerchio(p.x, p.y, r * 0.92, '#ffe6b0')
-    this.cerchio(p.x - r * 0.22, p.y - r * 0.26, r * 0.42, '#fffdf2')
     const ctx = this.ctx
-    ctx.strokeStyle = '#ff6b1f'; ctx.lineWidth = 2
-    ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.92, 0, 6.29); ctx.stroke()
+    const r = (p.r || 15) * 0.8
+    const coda = p.a - 1.5708
+    this.bagliore(p.x, p.y, r * 2.2, '#ff4a1a', 0.35)
+    for (let k = 1; k <= 6; k++) {                    // le braci, rosse e piccole
+      const d = k * r * 0.6
+      const tremo = Math.sin(tempo * 25 + k * 2.1) * r * 0.2
+      ctx.globalAlpha = 0.75 * (1 - k / 7)
+      this.cerchio(p.x + Math.cos(coda) * d + tremo, p.y + Math.sin(coda) * d - tremo,
+                   r * 0.38 * (1 - k / 8), k % 2 ? '#ff6a2a' : '#c8281a')
+    }
+    ctx.globalAlpha = 1
+    /* la fiamma: tre lingue che tremano, dal rosso fuori al giallo dentro */
+    for (const [s, col] of [[1, '#c8281a'], [0.72, '#ff6a2a'], [0.42, '#ffc24a']]) {
+      const alta = r * s * (1.5 + 0.25 * Math.sin(tempo * 18 + s * 9))
+      const larga = r * s
+      ctx.fillStyle = col
+      ctx.beginPath()
+      ctx.moveTo(p.x - larga, p.y + larga * 0.3)
+      ctx.quadraticCurveTo(p.x - larga * 0.9, p.y - alta * 0.6, p.x + Math.sin(tempo * 13) * larga * 0.3, p.y - alta)
+      ctx.quadraticCurveTo(p.x + larga * 0.9, p.y - alta * 0.6, p.x + larga, p.y + larga * 0.3)
+      ctx.arc(p.x, p.y + larga * 0.3, larga, 0, Math.PI)
+      ctx.fill()
+    }
   }
 
   effetto(e, H, s) {
@@ -517,6 +500,30 @@ export class Campo {
       }
       ctx.globalAlpha = 1
       ctx.globalCompositeOperation = 'source-over'
+    } else if (e.che === 'gelata') {
+      /* l'ondata di gelo: un anello azzurro che corre fuori, e i
+         cristalli che restano un attimo dove è passato */
+      const p = 1 - q
+      const r = e.r * Math.min(1, p * 2.4)
+      ctx.globalAlpha = q * 0.35
+      const g = ctx.createRadialGradient(e.x, e.y, r * 0.6, e.x, e.y, Math.max(1, r))
+      g.addColorStop(0, 'rgba(160,230,255,0)'); g.addColorStop(1, '#bfefff')
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(e.x, e.y, Math.max(1, r), 0, 6.29); ctx.fill()
+      ctx.globalAlpha = q
+      ctx.strokeStyle = '#e8fbff'; ctx.lineWidth = 4 * q + 1
+      ctx.beginPath(); ctx.arc(e.x, e.y, Math.max(1, r), 0, 6.29); ctx.stroke()
+      ctx.strokeStyle = '#9fe4ff'; ctx.lineWidth = 2
+      for (let k = 0; k < 10; k++) {                    // i cristalli: tre stanghette a stella
+        const a = k * 0.628 + 0.3, d = r * (0.75 + seme(k, 3) * 0.2)
+        const cx = e.x + Math.cos(a) * d, cy = e.y + Math.sin(a) * d, l = 5 * q + 2
+        ctx.beginPath()
+        for (let m = 0; m < 3; m++) {
+          const b = m * 1.047
+          ctx.moveTo(cx - Math.cos(b) * l, cy - Math.sin(b) * l); ctx.lineTo(cx + Math.cos(b) * l, cy + Math.sin(b) * l)
+        }
+        ctx.stroke()
+      }
+      ctx.globalAlpha = 1
     } else if (e.che === 'luce') {
       /* salire di livello: una colonna di luce sull'eroe, e stelline che salgono */
       const p = 1 - q
