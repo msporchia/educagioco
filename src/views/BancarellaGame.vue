@@ -15,6 +15,7 @@ import Barra from '../components/Barra.vue'
 import TastoSalta from '../components/TastoSalta.vue'
 import Mondo from '../components/bancarella/Mondo.vue'
 import Piazza from '../components/bancarella/Piazza.vue'
+import Soldo from '../components/Soldo.vue'
 import { usaPausa } from '../giochi/pausa.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
 import Ripresa from '../giochi/Ripresa.vue'
@@ -467,10 +468,6 @@ const ancora = p => {
 }
 
 const barra = c => Math.max(0, Math.min(100, c.restaPazienza / c.pazienza * 100))
-const tipo = v => v >= 500 ? 'carta b' + v / 100 : v === 200 ? 'due' : v === 100 ? 'uno'
-                : v >= 10 ? 'oro' : 'rame'
-const faccia = v => (v >= 100 ? v / 100 : v)
-const unita = v => (v >= 100 ? '€' : 'c')
 
 onMounted(() => {
   window.__shop = { fase, coda, piatto, hud, inizia, metti, togli, prendi, proponi,
@@ -640,12 +637,7 @@ onBeforeUnmount(() => {
             <!-- il cliente porge quello che ha in mano: una banconota, o una
                  banconota e una moneta se paga una cifra tonda -->
             <div v-else class="porge">
-              <span v-for="(m, i) in cliente.pagaCon" :key="i" class="soldo mini" :class="tipo(m)">
-                <template v-if="m >= 500">
-                  <i class="finestra"></i><span class="cifra">{{ m / 100 }}</span><i class="banda"></i>
-                </template>
-                <template v-else>{{ faccia(m) }}<i class="u">{{ unita(m) }}</i></template>
-              </span>
+              <Soldo v-for="(m, i) in cliente.pagaCon" :key="i" :cents="m" mini />
               <b>{{ euro(cliente.paga) }}</b>
             </div>
           </div>
@@ -743,12 +735,7 @@ onBeforeUnmount(() => {
               <span v-else-if="bonus" class="ok">✨ col minimo di monete!</span>
             </div>
             <div class="dati">
-              <span v-for="(m, i) in piatto" :key="i" class="soldo mini" :class="tipo(m)">
-                <template v-if="m >= 500">
-                  <i class="finestra"></i><span class="cifra">{{ m / 100 }}</span><i class="banda"></i>
-                </template>
-                <template v-else>{{ faccia(m) }}<i class="u">{{ unita(m) }}</i></template>
-              </span>
+              <Soldo v-for="(m, i) in piatto" :key="i" :cents="m" mini />
               <button v-if="piatto.length" class="annulla" @click="togli">↶</button>
               <button v-if="aMente && piatto.length" class="eccolo" @click="proponi">
                 ✓ ecco il resto</button>
@@ -759,17 +746,13 @@ onBeforeUnmount(() => {
           <div v-if="!chiediTotale" class="cassetto">
             <div class="vaschette">
               <button v-for="v in monetine" :key="v" class="scomparto" :data-v="v" @click="metti(v)">
-                <span class="soldo" :class="[tipo(v), { rifiutata: rifiutata === v }]">
-                  {{ faccia(v) }}<i class="u">{{ unita(v) }}</i>
-                </span>
+                <Soldo :cents="v" :class="{ rifiutata: rifiutata === v }" />
               </button>
             </div>
             <div class="vaschette larghe" v-if="carte.length"
                  :style="{ gridTemplateColumns: 'repeat(' + carte.length + ',1fr)' }">
               <button v-for="v in carte" :key="v" class="scomparto" :data-v="v" @click="metti(v)">
-                <span class="soldo" :class="[tipo(v), { rifiutata: rifiutata === v }]">
-                  <i class="finestra"></i><span class="cifra">{{ v / 100 }}</span><i class="banda"></i>
-                </span>
+                <Soldo :cents="v" :class="{ rifiutata: rifiutata === v }" />
               </button>
             </div>
           </div>
@@ -1059,43 +1042,7 @@ onBeforeUnmount(() => {
                    to { transform:translate(-160%,-150px) scale(.5); opacity:0 } }
 
 /* ---------- monete e banconote ---------- */
-.soldo { position:relative; width:100%; height:auto; max-width:78px; max-height:100%;
-         aspect-ratio:1; border-radius:50%; display:flex; align-items:center;
-         justify-content:center; font-size:clamp(15px,5.2vw,27px); font-weight:900;
-         line-height:1; border:0; box-shadow:0 4px 0 #00000038, inset 0 2px 5px #ffffff66 }
-.soldo .u { font-style:normal; font-size:.5em; align-self:center; margin-top:.5em; margin-left:1px }
-.soldo.mini { width:34px; height:34px; max-width:none; aspect-ratio:auto; font-size:13px;
-              align-items:baseline; padding-top:11px; box-shadow:0 2px 0 #00000038 }
-.soldo.mini .u { font-size:8px; margin-top:0; align-self:auto }
-
-.soldo.rame { background:radial-gradient(circle at 35% 30%, #e8a882, #b8642f 70%); color:#4a220c }
-.soldo.oro  { background:radial-gradient(circle at 35% 30%, #ffe9a3, #d3a021 70%); color:#5a4008 }
-/* le bimetalliche vanno disegnate come anelli concentrici: 1 € e 2 € si
-   riconoscono proprio da lì */
-.soldo.uno { background:radial-gradient(circle at 50% 50%, #f7d377 0 57%, #dde1e4 57%); color:#5a4008 }
-.soldo.due { background:radial-gradient(circle at 50% 50%, #dde1e4 0 57%, #f7d377 57%); color:#3d4448 }
-.soldo.uno::after, .soldo.due::after { content:''; position:absolute; inset:3px; border-radius:50%;
-      background:radial-gradient(circle at 34% 26%, #ffffff55, #ffffff00 60%); pointer-events:none }
-
-.soldo.carta { width:100%; max-width:136px; aspect-ratio:1.7; height:auto; border-radius:6px;
-               padding:0; overflow:hidden; align-items:center;
-               box-shadow:0 4px 0 #00000038, inset 0 0 0 2px #ffffff55 }
-.soldo.carta .finestra { position:absolute; left:8%; top:14%; width:20%; height:62%;
-      border-radius:22% 22% 6% 6%; background:#ffffff5e; box-shadow:inset 0 0 0 1.5px #ffffff8c }
-.soldo.carta .banda { position:absolute; right:6%; top:9%; bottom:9%; width:14%; border-radius:3px;
-      background:linear-gradient(160deg,#fff8,#fff2,#fff8) }
-.soldo.carta .cifra { font-size:clamp(19px,5.4vw,30px); font-weight:900; line-height:1 }
-.soldo.carta .cifra::after { content:'€'; font-size:.55em; margin-left:1px }
-.soldo.b5  { background:linear-gradient(150deg,#e6e1d2,#b3ac99); color:#4a4433 }
-.soldo.b10 { background:linear-gradient(150deg,#f3b3ab,#d0655a); color:#5c1d16 }
-.soldo.b20 { background:linear-gradient(150deg,#b6d2ee,#5f92c8); color:#153a5e }
-.soldo.carta.mini { width:52px; height:31px; max-width:none; aspect-ratio:auto;
-                    border-radius:3px; padding:0 }
-.soldo.carta.mini .cifra { font-size:15px }
-.soldo.carta.mini .cifra::after { font-size:8px }
-.soldo.carta.mini .finestra { left:7%; top:14%; width:20%; height:64% }
-.soldo.carta.mini .banda { right:5%; top:9%; bottom:9%; width:14% }
-
+/* il disegno è di `components/Soldo.vue` (stile in `grafica/soldi.js`); qui solo lo scarto */
 .soldo.rifiutata { animation:scarto .42s }
 @keyframes scarto { 0%,100%{transform:none} 25%{transform:translateX(-8px) rotate(-9deg)}
                     60%{transform:translateX(8px) rotate(9deg)} }
