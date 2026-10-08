@@ -45,6 +45,28 @@ export const SCALETTA = CAPITOLI_ORDINE
 
 export const CAPITOLI = CAPITOLI_ORDINE.map(({ emoji, titolo, che }) => ({ emoji, titolo, che }))
 
+// Il cielo di ogni tappa: fondo e specie di sassi li sa grafica/cieli.js,
+// qui solo quale (docs/asteroidi/cieli.md). Per codice e non per posto: la fila si riordina.
+const CIELI = {
+  m0: 'rottami', m1: 'rottami', p0: 'cintura', p1: 'ghiaccio',
+  m2: 'cristalli', p2: 'ghiaccio', m3: 'rottami', p3: 'marte',
+  p4: 'alieni', m4: 'cristalli', p5: 'cintura', p6: 'alieni',
+  m5: 'rottami', p7: 'ghiaccio', p8: 'marte',
+  m6: 'cristalli', m7: 'rottami',
+  p9: 'sole', m8: 'alieni', m9: 'cristalli',
+  m10: 'ghiaccio', m11: 'nero',
+}
+export const cieloDi = voce =>
+  (voce && CIELI[(voce.tipo === 'mente' ? 'm' : 'p') + voce.i]) || 'cintura'
+
+/* Il volo rifà la storia: il livello n è il posto n della fila, e oltre
+   la fila c'è il buco nero (`null`). */
+export const voceDelVolo = livello => SCALETTA[Math.max(1, livello) - 1] || null
+export const cieloDelVolo = livello => {
+  const v = voceDelVolo(livello)
+  return v ? cieloDi(v) : 'nero'
+}
+
 // Il volo infinito dopo la fila (vedi docs/asteroidi/volo.md); chi pesca
 // cosa sta in store/volo.js. Nessuna `portata`: non è una tappa della fila,
 // e chi non ne dichiara una è sempre alla portata di tutti.
@@ -100,15 +122,4 @@ export function dopoDi(voce, fila, aperta = v => raggiunta(v, fila)) {
   const resto = SCALETTA.slice(da + 1)
   return resto.find(v => aperta(v) && !superata(v, fila)) ||
          resto.find(v => aperta(v)) || null
-}
-
-// La tappa che il boss può assaggiare: nessuna se non porta niente di nuovo
-// (Sole, «La prova», volo, o non c'è un dopo) — dettagli in
-// docs/asteroidi/scaletta.md. Fuori da questi casi il boss resta un boss ma
-// pesca di casa (chiaveDelBoss) e va segnato sul motore come tutte le altre.
-export function daAssaggiare(voce) {
-  if (!voce) return null                  // un volo infinito non ha nessun dopo
-  const dopo = (voce.tipo === 'mente' ? STAZIONI : CAMPAGNA)[voce.i + 1] || null
-  if (!dopo) return null
-  return (voce.tipo === 'mente' ? dopo.nuovi.length : dopo.nuova) ? dopo : null
 }

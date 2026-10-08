@@ -50,7 +50,7 @@ In cima restano solo le due cose che la nave non può dire: quanto manca
 al bersaglio della tappa e quanti centri sulla tabellina nuova.
 
 Due **gettoni** si guadagnano giocando — uno ogni cinque risposte giuste
-di fila e uno per ogni boss abbattuto, a turno — restano in tasca (mai più
+di fila, a turno — restano in tasca (mai più
 di tre) finché non li si preme, e finiscono con la partita. A dieci di
 fila arriva una vita al posto del gettone.
 
@@ -61,6 +61,24 @@ fila arriva una vita al posto del gettone.
 
 **Non si perdono sbagliando**, e nessuno dei due risponde al posto del
 bambino. Non si comprano con le monete: si pagano con le risposte giuste.
+
+## Ogni posto ha il suo cielo
+
+Ogni tappa ha i suoi sassi: rottami e pannelli solari attorno alle
+stazioni, comete di ghiaccio, cristalli, dischi volanti con l'alieno che
+portano il numero, lava sotto il Sole, e il buco nero in fondo. Le regole
+non cambiano: un numero per sasso, uno giusto.
+
+**In fondo a ogni tappa arriva la nave madre**: resta in alto e tira tre
+bombe col numero. Ogni bomba giusta torna indietro e le stacca un pezzo,
+alla terza salta e lascia un pacco. Ogni tappa ha due pacchi: dopo, la
+nave madre arriva lo stesso ma non regala più niente, così non conviene
+rifare le tappe facili.
+
+Nel pacco c'è un pezzo per l'**hangar**, che si apre sulla mappa col volo
+infinito: colori per lo scafo, le ali e le fiamme dei motori, disegni sulle
+ali e stemmi. Senza nomi: ognuno si fa la sua nave e se la immagina come
+vuole. Non si comprano con le monete.
 
 ## Quali domande escono, e perché proprio quelle
 
@@ -81,8 +99,7 @@ stata sbagliata. Il gioco tiene aperto solo **un gruppetto di fatti per
 volta**: all'inizio le domande sembrano poche e ripetitive, ed è voluto.
 
 Dentro un pianeta **otto domande su dieci sono la tabellina di quel
-pianeta**, mai due di fila che parlano d'altro; le altre sono ripasso. Il
-**boss**, ogni otto domande, arriva dal pianeta dopo: un assaggio.
+pianeta**, mai due di fila che parlano d'altro; le altre sono ripasso.
 
 Salendo di livello **il cielo si infittisce, e accelera fino a un
 pavimento**: più sassi sbagliati da scartare, e una caduta che nelle tappe

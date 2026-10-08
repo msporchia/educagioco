@@ -36,9 +36,9 @@ cose (`difficolta`, `ritmo`):
   della caduta finirebbe nell'SRS come esitazione sul calcolo. Per questo
   il sasso giusto (mai quello sbagliato) nasce sfalsato in modo da essere
   tutto in scena entro `rispostaEntro`; quando nemmeno partire attaccato
-  al bordo basta (boss grosso, schermo piccolo, ultima vita) nasce già
+  al bordo basta (schermo piccolo, ultima vita) nasce già
   affacciato invece che accelerare.
-- Il peso del calcolo, il boss (`bossLento` 1,45), la domanda difficile
+- Il peso del calcolo, le bombe della nave madre (`bossLento` 1,45), la domanda difficile
   (`difficileLento` 1,25) e l'ultima vita (`EMERGENZA`: ×1,25, cioè un
   quarto più lenti) allungano moltiplicando sopra.
 
@@ -65,7 +65,7 @@ cose (`difficolta`, `ritmo`):
 - **I due magazzini si alternano** a monetina, mai più di tre di fila
   dello stesso (`creaAlternanza`): un pool unico lo sceglierebbe il motore
   per bisogno, e il bisogno di 55 fatti non si confronta con quello di una
-  strategia. Il boss chiede dal magazzino dell'ultima domanda.
+  strategia. Anche la nave madre chiede dai due a turno.
 - **La marea si somma**: il picker pesca nel pool della mira con la
   lentezza di quel mestiere (`mareaTabelline`, `mareaCalcolo` in
   `src/store/marea.js`, vedi [../apprendimento/srs.md](../apprendimento/srs.md));
@@ -85,8 +85,7 @@ l'uno ci stanno **le tabelline grandi**.
   stella, né nella marea. `eCasella` è il filtro, e `misure/asteroidi` lo
   prova su ogni consumatore.
 - **Una grande su tre scende girata** (96 : 12 = ?, `giraLaGrande`) e si
-  segna sulla sua casella. Il boss del volo alto pesca fra le grandi
-  (`caselleDelBoss`, `SOGLIA_BOSS`).
+  segna sulla sua casella.
 - **Per il calcolo a mente l'oltre è la taglia**, che nel volo la dice il
   livello (`tagliaDelVolo`: 0 a livello 1, 1 al 12) e non la forza del
   concetto. Nelle tappe resta quella della forza: passa a
@@ -109,8 +108,8 @@ Quello che esce, per livello (misurato in `misure/asteroidi`):
 - **Chi ha un record riparte due livelli sotto** (`partenzaDalRecord`,
   dai dettagli del quaderno): dieci calcoli di scaldamento dentro la sua
   fascia. Due e non tre perché da 11 si riparte da 9, dove le grandi sono
-  metà del magazzino; da 8 sarebbero una su quattro, forse nessuna prima
-  del boss. Sassi e velocità leggono quel livello: la partita è quella di
+  metà del magazzino; da 8 sarebbero una su quattro, forse nessuna nei
+  primi dieci calcoli. Sassi e velocità leggono quel livello: la partita è quella di
   livello 9 in tutto. Senza record si parte da 1.
 - **Il record è in punti** (`senzaFine` di `mate` in `src/data/giochi.js`,
   misura `punti`), raccontato «livello 7 · 43 centri · serie 12».
@@ -150,7 +149,7 @@ Si guadagnano giocando, stanno in tasca in basso a destra (mai più di tre,
 
 | | come arriva | cosa fa |
 |---|---|---|
-| ❄️ gelo | 5, 15, 25… giuste di fila, o un boss abbattuto | congela **la domanda in corso e basta**: i sassi al 42% (`lento`), e dalla domanda dopo il cielo riparte |
+| ❄️ gelo | 5, 15, 25… giuste di fila | congela **la domanda in corso e basta**: i sassi al 42% (`lento`), e dalla domanda dopo il cielo riparte |
 | 🎯 mirino | idem, a turno col gelo | fa sparire **una** risposta sbagliata a caso; quel sasso non lascia niente in archivio |
 
 - **Un gettone non si perde mai sbagliando**: si spende o resta lì. Un

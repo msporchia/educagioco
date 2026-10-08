@@ -86,7 +86,7 @@ const partita = await page.evaluate(async () => {
   const viste = [], ondate = []
   for (let i = 0; i < 300 && m.fase.value === 'gioco'; i++) {
     viste.push({ testo: m.domanda.testo, ris: m.domanda.ris, chiave: m.domanda.chiave,
-                 anticipo: m.anticipo() })
+                 madre: m.madre().attiva })
     const vivi = m.asteroidi().filter(x => !x.morto)
     ondate.push({ quanti: vivi.length, giusti: vivi.filter(x => x.ok).length,
                   valori: vivi.map(x => x.v) })
@@ -97,8 +97,7 @@ const partita = await page.evaluate(async () => {
   }
   return { viste, ondate, fase: m.fase.value, giuste: m.hud.giuste, mirate: m.hud.mirate,
            bersaglio: m.tappa.value.bersaglio, fila: m.contatore.value,
-           mente: m.mente.value, dopo: m.prossima.value?.nuovi || [],
-           suoi: m.tappa.value.concetti }
+           mente: m.mente.value, suoi: m.tappa.value.concetti }
 })
 
 /* «a mente» non è un modo che qualcuno ha scelto lanciando la partita:
@@ -110,6 +109,7 @@ uguale('il bersaglio chiude la stazione', partita.fase, 'vinta')
 /* il contatore è uno e cammina di una voce: la prima della fila è a
    mente, quindi superandola la fila va a uno */
 uguale('e il contatore della fila avanza di uno', partita.fila, 1)
+// i tre in più sono la nave madre in fondo (docs/asteroidi/boss.md)
 dentro('senza chiedere molto più del bersaglio', partita.giuste,
        partita.bersaglio, partita.bersaglio + 4)
 
@@ -121,26 +121,13 @@ uguale('e nessun bersaglio ripetuto', doppioni.length, 0)
 const magre = partita.ondate.filter(o => o.quanti < 3)
 uguale('gli asteroidi non scendono mai sotto tre', magre.length, 0)
 
-/* ═══════════ L'ASSAGGIO DELLA STAZIONE DOPO ═══════════
-   Il boss è la sola domanda che può stare fuori da quello che la stazione
-   ha presentato, ed è quello che lo rende un boss. Arriva ogni otto
-   domande, quindi in una partita corta può non farsi vedere: quello che
-   qui si pretende è che, quando arriva, venga davvero dalla stazione dopo
-   e non sia roba che si stava già chiedendo. */
-const assaggi = partita.viste.filter(v => v.anticipo)
-/* «viene dalla stazione dopo» si chiede a `eNuovo`, non a
-   `concettoDiChiave`: i concetti a fatti si accavallano, e 4+5 è un
-   quasi-doppio **anche se** la prima cosa che se lo prende è la somma
-   entro il dieci. Il boss è onesto lo stesso, e il test deve saperlo. */
-controlla('l\'assaggio, quando arriva, viene dalla stazione dopo',
-          assaggi.every(v => eNuovo({ nuovi: partita.dopo }, v.chiave)),
-          assaggi.map(v => `${v.testo} (${concettoDiChiave(v.chiave)})`).join(', '))
-nota(assaggi.length ? `il boss ha portato: ${assaggi.map(v => v.testo).join(' · ')}`
-                    : 'la stazione dopo non è ancora aperta: nessun assaggio')
+/* la nave madre, in fondo, chiede roba della stazione: niente assaggi del dopo */
+uguale('la nave madre arriva a bersaglio fatto, per tre domande',
+       partita.viste.filter(v => v.madre).length, 3)
 
 /* le domande sono quelle della stazione: somme e sottrazioni entro il dieci,
    più gli amici del dieci. Niente moltiplicazioni, niente numeri grandi. */
-const fuori = partita.viste.filter(v => !v.anticipo && (v.ris > 20 || /[×:]/.test(v.testo)))
+const fuori = partita.viste.filter(v => v.ris > 20 || /[×:]/.test(v.testo))
 uguale('non esce niente che la stazione non abbia presentato', fuori.length, 0,)
 controlla('non esce niente che la stazione non abbia presentato', !fuori.length,
           fuori.length ? fuori[0].testo : '')
@@ -150,7 +137,9 @@ uguale('e tutte le domande sono del calcolo a mente', suoi, partita.viste.length
 /* varietà: i fatti entrano in lavorazione in ordine di fatica, non in
    quello in cui sono scritti. Senza, una partita intera esce "1+2, 1+3,
    1+4…" — cioè si passa la serata a sommare uno. */
-const distinte = [...new Map(partita.viste.map(v => [v.chiave, v.testo])).values()]
+// la varietà si misura sulla tappa: la nave madre in fondo ripesca dallo stesso gruppetto
+const dellaTappa = partita.viste.filter(v => !v.madre)
+const distinte = [...new Map(dellaTappa.map(v => [v.chiave, v.testo])).values()]
 const conteggio = {}
 for (const testo of distinte)
   for (const n of new Set(testo.match(/\d+/g) || [])) conteggio[n] = (conteggio[n] || 0) + 1
@@ -159,7 +148,7 @@ controlla('nessun numero entra in quasi tutti i calcoli',
           piuVisto[1] <= distinte.length * 0.65,
           `il ${piuVisto[0]} è in ${piuVisto[1]} calcoli diversi su ${distinte.length}`)
 dentro('e i calcoli diversi sono parecchi', distinte.length,
-       Math.round(partita.viste.length * 0.5), partita.viste.length)
+       Math.round(dellaTappa.length * 0.5), dellaTappa.length)
 dentro('le risposte mirate contano quasi tutte', partita.mirate,
        Math.round(partita.giuste * 0.8), partita.giuste)
 nota(`${partita.viste.length} domande, per esempio: ` +

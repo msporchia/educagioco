@@ -8,13 +8,14 @@
    qui si gioca una tappa intera con un finto giocatore e si CONTA cosa
    è uscito, invece di guardarla giocare e fidarsi.
 
-   Sono i tre guasti che questo test è nato per prendere, tutti visti
+   Sono i guasti che questo test è nato per prendere, tutti visti
    giocando e nessuno visibile leggendo il codice:
 
      1. sul pianeta del 10 uscivano sei domande di fila che non erano la
         tabellina del 10;
      2. la stessa identica domanda usciva due volte di fila;
-     3. un boss chiedeva 1×1.
+     (ce n'era un terzo, un boss che chiedeva 1×1: la nave madre di adesso fa
+     domande normali della tappa, scelte dal picker come tutte le altre).
 
    E poi il volo infinito, uno per tabelline e calcolo a mente insieme,
    che si complica col livello della partita (`store/volo.js`).
@@ -24,17 +25,17 @@ import { CAMPAGNA, calcoliTabellina, fattoriDi, chiaveCalcolo, GRANDI, eGrande, 
 import { STAZIONI, CONCETTI_PER_ID } from '../../src/data/calcolo.js'
 import { SCALETTA, CAPITOLI, VOLO, superata, raggiunta,
          dopoDi, posizioneOra, filaDi, filaDopo, campagneDaFila,
-         filaDaCampagne, daAssaggiare } from '../../src/data/asteroidi.js'
+         filaDaCampagne } from '../../src/data/asteroidi.js'
 /* serve a una cosa sola: controllare che una funzione NON ci sia più
    (`scaletta`, la fila filtrata dell'interruttore di una volta) */
 import * as ASTEROIDI from '../../src/data/asteroidi.js'
-import { poolTappa, chiaveDelBoss, dellaTabellina, insiemeDi,
-         chiaviDelle, eNulla, CUORE, TUTTE_LE_TABELLE, banale, stima, distrattoriTabellina }
+import { poolTappa, dellaTabellina, insiemeDi,
+         chiaviDelle, CUORE, TUTTE_LE_TABELLE, banale, stima, distrattoriTabellina }
   from '../../src/store/tabelline.js'
 import { miraDelLivello, LIVELLO_TETTO, LIVELLO_CATALOGO, MIRA_MIN, MIRA_OLTRE,
          altezzaTabellina, altezzaMente, altezzaGrande, tagliaDelVolo,
          poolVoloTabelline, poolVoloMente, creaAlternanza, MAX_DI_FILA, MAGAZZINI,
-         chiaviDelVolo, pescaPesati, caselleDelBoss, giraLaGrande, partenzaDalRecord,
+         chiaviDelVolo, pescaPesati, giraLaGrande, partenzaDalRecord,
          CASELLE_DEL_VOLO }
   from '../../src/store/volo.js'
 import { creaMiscela, QUOTA_TAPPA, poolDi, eNuovo, tabellineSalde, saldo,
@@ -56,48 +57,27 @@ import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mj
 
 const ORA = Date.now()
 const GIORNO = 86400000
-const BOSS_OGNI = 8               // com'è in `views/MathGame.vue`
-
-/* la voce della fila che porta questa tappa: serve a chiedere a
-   `daAssaggiare` cosa può portare il boss, invece di rifare il conto a
-   mano con un `CAMPAGNA[i + 1]` — che è esattamente il conto sbagliato
-   da cui è venuto il guasto del Sole */
-const voceDi = (tipo, i) => SCALETTA.find(v => v.tipo === tipo && v.i === i)
 
 /* ═══════════ IL FINTO GIOCATORE ═══════════
    Fa quello che fa il gioco, nello stesso ordine: chiede il pool, sceglie
-   la parte, lascia scegliere al motore, risponde, segna. Il boss ogni
-   otto domande sceglie la sua chiave a parte, e si segna o no a seconda
-   che sia un assaggio della tappa dopo — `prossima` è quella tappa lì,
-   cioè quello che risponde `daAssaggiare`, e al Sole è `null`. */
-function partita(tappa, { items = {}, turni = 40, bravura = 0.8, prossima = null } = {}) {
+   la parte, lascia scegliere al motore, risponde, segna. Nessun boss
+   durante la tappa: la nave madre arriva in fondo e fa domande normali. */
+function partita(tappa, { items = {}, turni = 40, bravura = 0.8 } = {}) {
   const picker = createPicker({ getItem: k => items[k] || newItem(), useTime: true, pausaDopo: 3 })
   const miscela = creaMiscela()
   const eSua = k => dellaTabellina(tappa.nuova, k)
   const uscite = [], pool = []
-  let chieste = 0, precedente = null
+  let precedente = null
 
   for (let g = 0; g < turni; g++) {
     const p = poolTappa(tappa, items, ORA, insiemeDi(tappa.tabelle) + picker.riposati)
     pool.push(p)
-    const boss = chieste > 0 && chieste % BOSS_OGNI === 0
-    chieste++
-    const k = boss ? chiaveDelBoss(tappa, prossima, items, ORA, Math.random, precedente)
-                   : picker.pick(miscela.parte(p, eSua, precedente))
-    // il boss non passa dal picker: la memoria corta va avvisata a mano
-    if (boss) picker.annota(k)
+    const k = picker.pick(miscela.parte(p, eSua, precedente))
     miscela.segna(eSua(k))
     const giusta = Math.random() < bravura
-    /* l'assaggio non si segna sul motore, come nel gioco — ma è un
-       assaggio solo se una tappa da assaggiare c'è davvero: dove non c'è
-       il boss chiede la casella più tosta di casa, ed è roba già
-       insegnata, quindi si segna come tutte le altre */
-    const assaggio = boss && !!prossima
-    if (!assaggio) {
-      items[k] = record(items[k] || newItem(), { correct: giusta, ms: 2200, now: ORA })
-      picker.afterAnswer(k, giusta)
-    }
-    uscite.push({ k, boss, assaggio, sua: eSua(k) })
+    items[k] = record(items[k] || newItem(), { correct: giusta, ms: 2200, now: ORA })
+    picker.afterAnswer(k, giusta)
+    uscite.push({ k, sua: eSua(k) })
     precedente = k
   }
   return { uscite, pool }
@@ -143,11 +123,10 @@ const PROFILI = T => ({
   let peggioFila = 0, peggioQuota = 1, quale = ''
   for (const idx of [0, 1, 4, 5, 8]) {
     const T = CAMPAGNA[idx]
-    const dopo = daAssaggiare(voceDi('pianeta', idx))
     for (const [chi, base] of Object.entries(PROFILI(T))) {
       let sue = 0, tot = 0, fila = 0
       for (let g = 0; g < 30; g++) {
-        const { uscite } = partita(T, { items: structuredClone(base), prossima: dopo })
+        const { uscite } = partita(T, { items: structuredClone(base) })
         sue += uscite.filter(u => u.sua).length
         tot += uscite.length
         fila = Math.max(fila, filaMassima(uscite, u => !u.sua))
@@ -163,7 +142,7 @@ const PROFILI = T => ({
          Math.round(peggioQuota * 100), 70, 100)
   nota(`la quota più bassa è ${(peggioQuota * 100).toFixed(0)}% (${quale}),`,
        `la fila più lunga fuori tabellina è ${peggioFila}`)
-  nota(`la quota dichiarata è ${QUOTA_TAPPA * 100}%, il boss ogni ${BOSS_OGNI} sta fuori per mestiere`)
+  nota(`la quota dichiarata è ${QUOTA_TAPPA * 100}%, la nave madre sta in fondo, fuori dalla misura`)
 }
 
 /* ═══════════ 2. LA STESSA DOMANDA MAI DUE VOLTE DI FILA ═══════════
@@ -180,8 +159,7 @@ const PROFILI = T => ({
     for (const base of Object.values(PROFILI(T)))
       for (let g = 0; g < 30; g++) {
         const { uscite } = partita(T, { items: structuredClone(base), turni: 40,
-                                        bravura: 0.95,
-                                        prossima: daAssaggiare(voceDi('pianeta', idx)) })
+                                        bravura: 0.95 })
         doppie += ripetute(uscite)
         domande += uscite.length
       }
@@ -196,8 +174,7 @@ const PROFILI = T => ({
     const T = CAMPAGNA[idx]
     let minimo = 99
     for (const base of Object.values(PROFILI(T))) {
-      const { pool } = partita(T, { items: structuredClone(base), bravura: 1,
-                                    prossima: daAssaggiare(voceDi('pianeta', idx)) })
+      const { pool } = partita(T, { items: structuredClone(base), bravura: 1 })
       for (const p of pool) minimo = Math.min(minimo, p.filter(k => dellaTabellina(T.nuova, k)).length)
     }
     controlla(`${T.emoji} ${T.nome}: il cuore della tappa resta largo`,
@@ -212,139 +189,6 @@ const PROFILI = T => ({
   const sue = p.filter(k => dellaTabellina(T.nuova, k)).length
   controlla('più di metà del pool è la tabellina del pianeta',
             sue * 2 > p.length, `${sue} chiavi su ${p.length}`)
-}
-
-/* ═══════════ 4. IL BOSS ═══════════
-   Un boss chiede qualcosa che il bambino non ha ancora incontrato. Se
-   chiede 1×1 non è un boss: è la casella che nessuna tappa si degna di
-   chiedere, ed è per questo che il vecchio ripiego («la domanda più in
-   bilico», cioè quella col peso più alto) la pescava con precisione. */
-{
-  const conti = []
-  for (let i = 0; i < CAMPAGNA.length; i++) {
-    const T = CAMPAGNA[i], dopo = daAssaggiare(voceDi('pianeta', i))
-    const items = saputo(chiaviDelle(T.tabelle))
-    const scelte = Array.from({ length: 200 }, () => chiaveDelBoss(T, dopo, items, ORA))
-    controlla(`${T.emoji} ${T.nome}: il boss esce sempre`, scelte.every(Boolean))
-    controlla(`${T.emoji} ${T.nome}: e non chiede mai un calcolo-nulla`,
-              scelte.every(k => k && !eNulla(k)),
-              [...new Set(scelte.filter(k => k && eNulla(k)))].join(', '))
-    if (dopo)
-      controlla(`${T.emoji} ${T.nome}: il boss arriva dal pianeta dopo (il ${dopo.nuova})`,
-                scelte.every(k => dellaTabellina(dopo.nuova, k)),
-                [...new Set(scelte)].join(', '))
-    conti.push(...scelte)
-  }
-  // il volo libero non ha nessun «dopo»: prima `-1 + 1` faceva zero e il
-  // boss anticipava il primo pianeta, cioè il più facile di tutti
-  const libero = Array.from({ length: 200 },
-    () => chiaveDelBoss(VOLO, null, saputo(chiaviDelle(TUTTE_LE_TABELLE)), ORA))
-  controlla('anche nel volo libero il boss non chiede calcoli-nulla',
-            libero.every(k => k && !eNulla(k)), [...new Set(libero)].join(', '))
-  controlla('e non ripiega sul primo pianeta',
-            !libero.every(k => dellaTabellina(2, k)))
-  nota(`${new Set(conti).size} calcoli diversi hanno fatto il boss nella campagna`)
-
-  uguale('1×1 è un calcolo-nulla', eNulla('math:1x1'), true)
-  uguale('e anche 2×3', eNulla('math:2x3'), true)
-  uguale('mentre 7×8 no', eNulla('math:7x8'), false)
-}
-
-/* ═══════════ 4b. IL BOSS DOVE NON C'È PIÙ UN DOPO ═══════════
-   Il guasto è arrivato da un telefono, ed è l'unico di questa lista che
-   si presentava a un bambino come un cartello in mezzo alla partita:
-   «`x.value.nuova is null` mentre fa livello il Sole».
-
-   Sotto c'erano DUE cose confuse in una, ed è la ragione per cui
-   `daAssaggiare` esiste: «il boss ha scelto una chiave» e «quella chiave
-   viene dalla tappa dopo» non sono la stessa domanda. `chiaveDelBoss`
-   una chiave la restituisce sempre — dove un dopo non c'è ripiega sulla
-   più tosta fra quelle che ancora non reggono, ed è quello che deve fare
-   — mentre `views/MathGame.vue` trattava qualunque chiave del boss come
-   un assaggio e andava a chiedere la tabellina nuova alla tappa dopo.
-   Al Sole quella tappa non c'è: `null.nuova`, e la partita finisce lì.
-
-   Il caso che non scoppiava era peggio, perché nessuno l'ha mai visto:
-   al pianeta del 9 il dopo **c'è** (è il Sole) ma non porta niente di
-   nuovo. Lì il grido diceva «BOSS DAL PIANETA DEL null», e soprattutto
-   una domanda su otto — roba di casa, già insegnata — non finiva in
-   archivio, perché risultava un assaggio da non segnare. */
-{
-  const sole = voceDi('pianeta', CAMPAGNA.length - 1)
-  const nono = voceDi('pianeta', CAMPAGNA.length - 2)
-  const prova = voceDi('mente', STAZIONI.length - 1)
-  const mille = voceDi('mente', STAZIONI.length - 2)
-
-  uguale('l\'ultimo pianeta è il Sole, e non porta nessuna tabellina nuova',
-         `${sole.T.nome} · ${sole.T.nuova}`, 'Il sole · null')
-  uguale('e l\'ultima stazione è un esame che non insegna niente',
-         [prova.T.nome, prova.T.nuovi.length].join(' · '), 'La prova · 0')
-
-  uguale('al Sole non c\'è niente da assaggiare', daAssaggiare(sole), null)
-  uguale('e nemmeno al pianeta prima, che il dopo ce l\'ha ma è il Sole',
-         daAssaggiare(nono), null)
-  uguale('lo stesso vale per l\'ultima stazione', daAssaggiare(prova), null)
-  uguale('e per quella prima della prova', daAssaggiare(mille), null)
-  uguale('un volo infinito non ha nessuna voce e quindi nessun dopo',
-         daAssaggiare(null), null)
-
-  /* e dappertutto altrove c'è, e porta davvero qualcosa di nuovo: senza
-     questo il controllo qui sopra sarebbe contento anche di una funzione
-     che risponde sempre `null`, cioè di un gioco senza più boss */
-  const conDopo = SCALETTA.filter(v => daAssaggiare(v))
-  uguale('in tutta la fila le tappe senza un assaggio sono quattro',
-         SCALETTA.length - conDopo.length, 4)
-  controlla('e quelle che ce l\'hanno portano roba nuova per davvero',
-            conDopo.every(v => v.tipo === 'mente'
-              ? daAssaggiare(v).nuovi.length : daAssaggiare(v).nuova),
-            conDopo.filter(v => !(v.tipo === 'mente' ? daAssaggiare(v).nuovi.length
-                                                     : daAssaggiare(v).nuova))
-              .map(v => v.T.nome).join(', '))
-  controlla('l\'assaggio è sempre la tappa successiva dello stesso mestiere',
-            conDopo.every(v => daAssaggiare(v).i === v.i + 1))
-
-  /* ── LA RIPRODUZIONE ──
-     I due passi che il gioco fa quando tocca al boss, nello stesso
-     ordine: si sceglie la chiave, e da lì si decide se è un assaggio.
-     È la combinazione «una chiave c'è, una tappa da assaggiare no» che
-     mandava a leggere dentro un `null`. */
-  for (const v of [nono, sole]) {
-    const t = daAssaggiare(v)
-    const items = saputo(chiaviDelle(v.T.tabelle))
-    const scelte = Array.from({ length: 50 },
-      () => chiaveDelBoss({ tabelle: v.T.tabelle, nuova: v.T.nuova }, t, items, ORA))
-    controlla(`${v.T.emoji} ${v.T.nome}: il boss chiede qualcosa lo stesso`,
-              scelte.every(k => k && !eNulla(k)))
-    // com'è scritto in `nuovaDomanda`: l'anticipo vuole tutte e due
-    const anticipo = scelte.map(k => !!k && !!t)
-    controlla(`${v.T.emoji} ${v.T.nome}: ma non è un assaggio`, !anticipo.some(Boolean))
-    uguale(`${v.T.emoji} ${v.T.nome}: e non c'è nessuna tabellina da mettere davanti`,
-           anticipo[0] ? t.nuova : null, null)
-  }
-
-  /* ── E QUINDI SI SEGNA ──
-     La metà del guasto che non si vedeva: al Sole il boss arriva quattro
-     o cinque volte in una tappa da 35 centri, e quelle risposte devono
-     finire nell'SRS come tutte le altre. L'assaggio si tiene fuori
-     perché misurare una cosa mai insegnata non dice niente di vero, e al
-     Sole di non insegnato non c'è più niente. */
-  const { uscite } = partita(sole.T, { items: saputo(chiaviDelle(sole.T.tabelle)),
-                                       turni: 40, prossima: daAssaggiare(sole) })
-  const bossate = uscite.filter(u => u.boss)
-  controlla('al Sole il boss arriva più di una volta', bossate.length >= 3,
-            `${bossate.length} volte in ${uscite.length} domande`)
-  uguale('e nessuna delle sue domande è un assaggio da non segnare',
-         bossate.filter(u => u.assaggio).length, 0)
-
-  // mentre dove un dopo c'è, l'assaggio resta quello di sempre
-  const quinto = voceDi('pianeta', 4)
-  const altra = partita(quinto.T, { items: saputo(chiaviDelle(quinto.T.tabelle)),
-                                    turni: 40, prossima: daAssaggiare(quinto) })
-  const suoi = altra.uscite.filter(u => u.boss)
-  controlla(`${quinto.T.emoji} ${quinto.T.nome}: lì il boss è ancora un assaggio`,
-            suoi.length > 0 && suoi.every(u => u.assaggio))
-  nota(`il boss del ${quinto.T.nome} porta la tabellina del ` +
-       `${daAssaggiare(quinto).nuova}, quello del Sole la casella più tosta di casa`)
 }
 
 /* ═══════════ 5. IL VOLO INFINITO SI COMPLICA COL LIVELLO ═══════════
@@ -461,13 +305,13 @@ const PROFILI = T => ({
             GRANDI.includes('math:12x12') && GRANDI.includes('math:4x13') &&
             !GRANDI.includes('math:7x13') && GRANDI.every(eGrande))
   controlla('nessuna grande è ×1 o ×10: quelle sono regole',
-            GRANDI.every(k => !banale(k)) && GRANDI.every(k => !eNulla(k)))
+            GRANDI.every(k => !banale(k)))
   controlla('e ogni grande sta sopra l\'uno, sotto la mira del tetto',
             GRANDI.every(k => altezzaGrande(k) > 1 && altezzaGrande(k) <= MIRA_OLTRE))
   controlla('11×2 sta sotto 12×5, che sta sotto 12×12',
             altezzaGrande('math:2x11') < altezzaGrande('math:5x12') &&
             altezzaGrande('math:5x12') < altezzaGrande('math:12x12'))
-  controlla('e per stima sono più toste di 9×9: sono il boss del volo alto',
+  controlla('e per stima sono più toste di 9×9',
             stima('math:8x11') > stima('math:9x9'))
 
   const quota = (lv, giri = 200) => {
@@ -522,16 +366,6 @@ const PROFILI = T => ({
   controlla('i falsi di 12×7 stanno attorno a 84, a un fattore di distanza', vicini(12, 7))
   controlla('e quelli di 11×8 e 12×5 pure', vicini(11, 8) && vicini(12, 5))
   uguale('e sono cinque, distinti', new Set(distrattoriTabellina(12, 7, 5)).size, 5)
-
-  /* ── il boss del volo alto chiede una grande, quello basso no ── */
-  const nessuno = {}
-  const bossA = Array.from({ length: 30 }, () =>
-    chiaveDelBoss(VOLO, null, nessuno, ORA, Math.random, null, caselleDelBoss(3)))
-  const bossB = Array.from({ length: 30 }, () =>
-    chiaveDelBoss(VOLO, null, nessuno, ORA, Math.random, null, caselleDelBoss(11)))
-  controlla('a livello 3 il boss del volo non chiede una grande', !bossA.some(eGrande))
-  controlla('a livello 11 sì', bossB.every(eGrande), bossB.slice(0, 3).join(', '))
-  controlla('e le caselle del boss sono sempre almeno le 55', caselleDelBoss(1).length === 55)
 
   /* ── le chiavi nuove non entrano da nessun'altra parte ── */
   const tutteLeGrandi = saputo(GRANDI)
@@ -1149,15 +983,6 @@ const PROFILI = T => ({
     controlla('e nel volo a metà scala 7-8-9 escono più di 2-3-4',
               alte > basse * 2, `${alte} contro ${basse}`)
     nota(`chi sa tutto, volo a livello 5: ${alte} caselle del 7-8-9 contro ${basse} del 2-3-4`)
-  }
-
-  /* ── e il boss non ne sa niente ── */
-  {
-    const items = saputo(finoA(8), ORA - 30 * GIORNO)
-    const scelte = Array.from({ length: 100 },
-      () => chiaveDelBoss(VOLO, null, items, ORA))
-    controlla('il boss chiede ancora la casella più tosta, non una arrugginita in fondo',
-              scelte.every(k => fattoriDi(k)[1] >= 7), [...new Set(scelte)].join(', '))
   }
 
   /* ── il calcolo a mente: una stima SUA ── */

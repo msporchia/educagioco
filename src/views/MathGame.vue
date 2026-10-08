@@ -16,15 +16,16 @@ import { STAZIONI, CONCETTI_PER_ID, concettoDiChiave, eFatto,
          distrattoriDi, appartiene } from '../data/calcolo.js'
 import { poolDi, esercizioDaChiave, eNuovo, stellaDi as stellaStazione,
          creaMiscela } from '../store/calcolo.js'
-import { poolTappa, chiaveDelBoss, dellaTabellina,
+import { poolTappa, dellaTabellina,
          insiemeDi, chiaviDelle, distrattoriTabellina } from '../store/tabelline.js'
 import { poolVoloTabelline, poolVoloMente, chiaviDelVolo, creaAlternanza,
-         tagliaDelVolo, caselleDelBoss, giraLaGrande, partenzaDalRecord }
+         tagliaDelVolo, giraLaGrande, partenzaDalRecord }
   from '../store/volo.js'
-import { CAPITOLI, SCALETTA, VOLO, superata, dopoDi, daAssaggiare,
-         posizioneOra, filaDi } from '../data/asteroidi.js'
+import { CAPITOLI, SCALETTA, VOLO, superata, dopoDi,
+         posizioneOra, filaDi, cieloDi, cieloDelVolo, voceDelVolo } from '../data/asteroidi.js'
 import { GIOCHI } from '../data/giochi.js'
-import { segnaPrimato, primatoDi, sosta, salvaSosta, buttaSosta } from '../giochi/campagne.js'
+import { segnaPrimato, primatoDi, sosta, salvaSosta, buttaSosta, ritocca } from '../giochi/campagne.js'
+import { hangarDi, vintaTappa, vintoVolo, bossNelVolo, livrea, pacchiDi } from '../motore/asteroidi/hangar.js'
 import { scrivi, leggi, dice, recordDi, chiaveDi } from '../motore/asteroidi/sosta.js'
 import Ripresa from '../giochi/Ripresa.vue'
 import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
@@ -32,6 +33,10 @@ import Festa from '../giochi/Festa.vue'
 import { suono } from '../audio.js'
 import { dipingiFondale, disegnaNave, disegnaAsteroide, statoScafo, puntoRotto,
          disegnaRaggio, disegnaFrammento } from '../grafica/spazio.js'
+import { specieDi, disegnaSfondoVivo, coloreFrammenti } from '../grafica/cieli.js'
+import { disegnaNaveMadre, disegnaPezzoMadre, cannoneDi, cupolaDi } from '../grafica/nave-madre.js'
+import RegaloHangar from '../components/RegaloHangar.vue'
+import HangarAsteroidi from '../components/HangarAsteroidi.vue'
 import { POTENZIAMENTI, TASCA_MAX, EMERGENZA, premioDaSerie,
          gettoneDopo } from '../data/potenziamenti.js'
 import { usaPausa } from '../giochi/pausa.js'
@@ -50,7 +55,7 @@ const CFG = {
   rispostaEntro: 3,                // in scena entro 3s (vedi `ondata`): oltre, è attesa non lentezza
   base: 3, maxAsteroidi: 6, ogniLivelli: 2, salitaOgni: 5,
   ritmoPasso: 0.05, ritmoTappa: 0.7, ritmoVolo: 0.5,   // vedi `difficolta`, e docs/asteroidi/volo.md
-  puntiOk: 10, puntiNo: -5, bossOgni: 8, bossLento: 1.45, difficileLento: 1.25,
+  puntiOk: 10, puntiNo: -5, bossLento: 1.45, difficileLento: 1.25, colpiMadre: 3,
   msNonRisposto: 9000,             // il sasso è caduto: non è lentezza, è un buco
   bossPunti: 40, serieVita: 10, cartelloMonete: 10,
 }
@@ -63,8 +68,9 @@ const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine | t
 /* La pausa: vedi docs/core/interfaccia.md. Qui `anche` è una condizione
    sola — fuori dalla partita (mappa, veli, tavola di «Cosa so») — che
    copre tutti i veli in un colpo perché sono tutti letti da `fase`. */
+const regaloVolo = ref(null)        // il pacco della nave madre del volo: ferma il cielo finché si guarda
 const { inPausa, fermo, metti, togli, aiuto } = usaPausa({
-  anche: () => fase.value !== 'gioco',
+  anche: () => fase.value !== 'gioco' || !!regaloVolo.value,
 })
 
 /* La fila unica di pianeti e stazioni: vedi docs/asteroidi/scaletta.md.
@@ -103,11 +109,6 @@ const dopo = computed(() => voce.value
 const intere = computed(() => new Set(tabellineIntere()))
 const stelleMente = computed(() =>
   STAZIONI.filter(S => stellaStazione(S, state.profile.items)).length)
-/* la tappa dopo dello STESSO mestiere, da cui viene il boss: è contenuto
-   e non fila, quindi legge `voce.i` (indice nella campagna) e non `pos`.
-   Torna `null` anche quando la tappa dopo c'è ma non insegna niente di
-   nuovo (il Sole, «La prova»): vedi `daAssaggiare` in `data/asteroidi.js`. */
-const prossima = computed(() => daAssaggiare(voce.value))
 
 /* la riga sotto il nome: cosa porta questa tappa */
 const cheChiede = v => (v.tipo === 'mente'
@@ -129,10 +130,14 @@ function serveDi(v) {
 const vociRotta = computed(() => fila.map(v => ({
   pos: v.pos, n: v.n, tipo: v.tipo, cap: v.cap, nome: v.T.nome,
   che: `${cheChiede(v)} · ${v.T.bersaglio} centri`,
-  stato: statoVoce(v), serve: serveDi(v),
+  stato: statoVoce(v), serve: serveDi(v), pacchi: pacchiDi(hangarMappa.value, chiaveDi(v)),
   disegno: v.tipo === 'mente' ? { tipo: 'mente', i: v.i, ultima: v.i === STAZIONI.length - 1 }
                               : { tipo: 'pianeta', nuova: v.T.nuova || 0 },
 })))
+// l'hangar com'è adesso, per la mappa: si rilegge quando si torna (`giroHangar`)
+const giroHangar = ref(0)
+const hangarMappa = computed(() => (giroHangar.value, hangarLetto()))
+const livreaMappa = computed(() => livrea(hangarMappa.value.nave))
 const voloRotta = computed(() => ({
   aperto: !!progresso.value.libera, nome: VOLO.nome, record: recordVolo.value,
   che: 'tabelline e conti a mente insieme, sempre più tosti',
@@ -150,7 +155,8 @@ const hud = reactive({ vite: 3, punti: 0, giuste: 0, mirate: 0, sbagliate: 0, li
                        partenza: 1, serie: 0, serieMax: 0 })
 const cartello = reactive({ testo: '', colore: '', n: 0 })
 const finale = reactive({ punti: 0, giuste: 0, mirate: 0, livello: 1, record: false, ripasso: [],
-                          primato: null })       // `primato`: null in una tappa, il record non c'è
+                          primato: null,         // `primato`: null in una tappa, il record non c'è
+                          regalo: null, scappata: false })   // la nave madre in fondo alla tappa
 const recordVolo = computed(() => recordInParole(primatoDi('mate'), SFIDA_VOLO))
 // le monete di questa partita: un asteroide le paga quando cade (docs/apprendimento/calibrazione.md)
 let borsellino = borsa('mate'), mostrate = 0
@@ -161,6 +167,7 @@ let ctx = null, W = 0, H = 0, S = 1, suolo = 0, altezzaDomanda = 0
 let asteroidi = [], particelle = [], anelli = [], stelle = [], frammenti = [], raggi = []
 let scossa = 0, lampo = 0, pulsa = 0, raf = 0, ultimo = 0
 let fondale = null, fumo = 0
+let cielo = 'cintura', salto = 0   // il posto (data/asteroidi.js `cieloDi`) e il balzo fra due posti del volo
 
 /* L'astronave dice a che punto è la partita senza numeri (vedi
    docs/asteroidi/volo.md). `danno` è tutto quello che il disegno sa
@@ -168,8 +175,25 @@ let fondale = null, fumo = 0
    stanno in `grafica/spazio.js`. */
 const nave = reactive({
   x: 0, y: 0, r: 34, lv: 1, danno: 0, mira: -Math.PI / 2, spinta: 0,
-  gelo: 0, botta: 0, riparata: 0, t: 0,
+  gelo: 0, botta: 0, riparata: 0, t: 0, livrea: null,
 })
+
+/* La nave madre (docs/asteroidi/boss.md): in fondo a ogni tappa e ogni
+   `BOSS_VOLO_OGNI` livelli del volo. Tira le bombe col numero; ogni bomba
+   giusta le stacca un pezzo, alla terza salta. `chiamata`: in questa
+   tappa è già arrivata (la tappa è superata, resta il pacco). */
+const madre = { attiva: false, chiamata: false, attesa: false, colpi: 0,
+                x: 0, y: 0, r: 60, sx: true, dx: true, cupola: true, paura: false,
+                entra: 0, guarda: [0, 1], inclina: 0 }
+let pezzi = []
+
+// l'hangar sta in `campagne.mate` (docs/asteroidi/hangar.md); leggere non scrive
+const hangarLetto = () => hangarDi(JSON.parse(JSON.stringify(((state.profile.campagne || {}).mate || {}).hangar || {})))
+function conHangar(fn) {
+  let esito = null
+  ritocca(CHIAVE, c => { c.hangar = hangarDi(c.hangar); esito = fn(c.hangar) }, { subito: true })
+  return esito
+}
 // `CFG.vite` è il riferimento: le vite di scorta guadagnate col filotto
 // si vedono come una nave sana, non come una nave super
 const stazzaDi = livello => (livello >= 6 ? 3 : livello >= 3 ? 2 : 1)
@@ -189,9 +213,6 @@ let domanda = reactive({ a: 7, b: 8, ris: 56, difficile: false, peso: 1,
 let esercizio = null               // l'istanza del calcolo a mente, per i falsi
 let chieste = 0, apertoIl = 0
 let prontaIl = 0   // quando il cronometro parte davvero: vedi docs/asteroidi/volo.md
-/* la domanda in corso è un assaggio della tappa che viene dopo: si gioca
-   come le altre, ma non si segna sul motore (vedi `chiaveDalDopo`) */
-let anticipo = false
 // la marea (`store/marea.js`): il picker deve pesare con la stessa
 // lentezza del pool, se no pesca comunque quello che il pool ha scartato
 let marea = () => 1
@@ -245,58 +266,20 @@ function difficolta(lv, peso = 1, volo = false) {
            quanti: Math.max(3, quanti - (peso - 1)) }
 }
 
-/* Il boss viene dal pianeta/stazione dopo, ed è un assaggio: vedi
-   docs/asteroidi/scaletta.md. Per questo l'anticipo non si segna sul
-   motore, né giusto né sbagliato (vedi `colpisci`): misurare roba non
-   ancora insegnata non direbbe niente di vero. Nel calcolo a mente
-   arriva anche se il grafo non ha ancora aperto la stazione dopo, perché
-   la taglia di un concetto mai visto è zero e scende nella sua versione
-   più piccola. */
-function chiaveDalDopo() {
-  const t = prossima.value
-  // `domanda.chiave` è quella appena chiesta: nemmeno il boss la ripete.
-  // Nel volo le caselle sono le sue: sopra il livello nove ci sono
-  // anche le grandi, che per stima sono le più toste e quindi il boss
-  if (!mente.value) return chiaveDelBoss(tabellineInGioco(), t, state.profile.items,
-                                         Date.now(), Math.random, domanda.chiave,
-                                         campagna.value ? null : caselleDelBoss(hud.livello))
-  if (t) {
-    // che `t` abbia dei concetti nuovi lo garantisce `prossima`: una tappa
-    // dopo che non insegna niente non è una tappa da assaggiare
-    // `poolDi` sceglie da sé da dove cominciare dentro la stazione; qui si
-    // tiene solo quello che la stazione dopo viene a insegnare
-    const p = poolDi(t, state.profile.items, Date.now(), 6).filter(k => eNuovo(t, k))
-    // e fra quelle, se si può, una che la stazione di adesso non toccava
-    // già: i concetti a fatti si accavallano — 4+5 è un quasi-doppio, ma è
-    // anche una somma entro il dieci, e da lì non si vede nessun futuro
-    const suoi = tappa.value.concetti
-    const fuori = p.filter(k => !suoi.some(id => appartiene(id, k)))
-    const scelta = fuori.length ? fuori : p
-    return scelta.length ? scelta[Math.floor(Math.random() * scelta.length)] : null
-  }
-  return null                      // ultima stazione o volo a mente
-}
-
 /* la tappa vista da `store/tabelline.js`: le tabelline in gioco e la
    nuova, che nel volo libero non c'è */
 const tabellineInGioco = () => ({ tabelle: tabelle.value,
                                   nuova: campagna.value ? tappa.value.nuova : null })
 
-function preparaTabellina(k, davanti = null) {
+function preparaTabellina(k) {
   let [lo, hi] = daChiave(k)
-  // sceglie un verso compatibile con le tabelline in gioco. `davanti` lo
-  // forza: il boss che anticipa il pianeta del 7 deve leggersi «7 × 8»,
-  // altrimenti l'assaggio non si vede nemmeno
+  // sceglie un verso compatibile con le tabelline in gioco
   const versi = []
-  if (davanti === hi && hi !== lo) versi.push([hi, lo])
-  else if (davanti === lo) versi.push([lo, hi])
-  else {
-    if (tabelle.value.includes(lo)) versi.push([lo, hi])
-    if (tabelle.value.includes(hi) && hi !== lo) versi.push([hi, lo])
-    // una grande si legge in tutti e due i versi: 8×11 e 11×8 sono la
-    // stessa casella, e «la tabellina dell'11» non è fra quelle in gioco
-    if (eGrande(k) && hi !== lo) versi.push([hi, lo])
-  }
+  if (tabelle.value.includes(lo)) versi.push([lo, hi])
+  if (tabelle.value.includes(hi) && hi !== lo) versi.push([hi, lo])
+  // una grande si legge in tutti e due i versi: 8×11 e 11×8 sono la
+  // stessa casella, e «la tabellina dell'11» non è fra quelle in gioco
+  if (eGrande(k) && hi !== lo) versi.push([hi, lo])
   const [a, b] = versi.length ? versi[Math.floor(Math.random() * versi.length)] : [lo, hi]
   esercizio = null
   domanda.chiave = k; domanda.a = a; domanda.b = b; domanda.ris = a * b
@@ -334,42 +317,23 @@ function scegli(p) {
     ? miscela.parte(p, eDellaTappa, domanda.chiave) : p)
 }
 
-// nel volo i due magazzini si alternano (docs/asteroidi/volo.md); il boss
-// non sceglie, chiede dal magazzino dell'ultima domanda
+// nel volo i due magazzini si alternano (docs/asteroidi/volo.md)
 const alternanza = creaAlternanza()
 
-function nuovaDomanda(boss) {
-  if (!campagna.value && !boss) {
+function nuovaDomanda() {
+  if (!campagna.value) {
     magazzino.value = alternanza.prossimo()
     alternanza.segna(magazzino.value)
   }
   const p = !campagna.value ? poolVolo() : mente.value ? poolMente() : poolAttivo()
-  const dalBoss = boss ? chiaveDalDopo() : null
-  const k = dalBoss || scegli(p)
-  // una chiave del boss non è sempre un assaggio: se `chiaveDelBoss` è
-  // ripiegata su una casella già insegnata (`prossima` nullo), va segnata
-  anticipo = !!dalBoss && !!prossima.value
-  // il boss non passa dal picker: la memoria corta va avvisata a mano, se
-  // no la domanda dopo può essere la stessa del boss
-  if (dalBoss) picker.annota(k)
-  // il boss arriva dalla tappa dopo: conta come una domanda fuori tappa,
-  // se no la quota promessa è più alta di quella che si misura
+  const k = scegli(p)
   miscela.segna(eDellaTappa(k))
   if (mente.value) preparaMente(k)
-  else preparaTabellina(k, anticipo ? prossima.value.nuova : null)
+  else preparaTabellina(k)
   apertoIl = performance.now()
   // il gelo vale solo per la domanda per cui si è comprato (vedi docs/asteroidi/volo.md)
   gelo = false; gelato.value = false; nave.gelo = 0
   return k
-}
-
-/* il grido del boss dice da dove arriva: «BOSS!» e basta lo faceva
-   sembrare un asteroide più grosso, non un pezzo del pianeta dopo */
-function gridoBoss() {
-  const t = prossima.value
-  if (!anticipo || !t) return '☄️ BOSS!'
-  return mente.value ? `☄️ BOSS: ${t.nome.toUpperCase()}!`
-                     : `☄️ BOSS DAL PIANETA DEL ${t.nuova}!`
 }
 
 /* `salvata`: la domanda aperta di una sosta (docs/asteroidi/sosta.md). Si
@@ -377,9 +341,9 @@ function gridoBoss() {
    salvano, ma chi esce e rientra non deve ritrovare tempo che non aveva. */
 function ondata(salvata = null) {
   asteroidi = []
-  const boss = salvata ? salvata.boss : chieste > 0 && chieste % CFG.bossOgni === 0
+  const boss = madre.attiva            // le bombe della nave madre al posto dei sassi
   if (salvata) rimettiDomanda(salvata)
-  else { nuovaDomanda(boss); chieste++ }
+  else { nuovaDomanda(); chieste++ }
 
   const { caduta, quanti } = difficolta(hud.livello, domanda.peso, !campagna.value)
   // `esercizio` c'è per un conto a mente e per una grande girata: i
@@ -396,33 +360,34 @@ function ondata(salvata = null) {
 
   valori.forEach((v, i) => {
     const ok = v === domanda.ris
-    const base = Math.min(W, H) * 0.095 * (boss ? 1.22 : 1) + (String(v).length - 1) * 6 * S
-    const r = Math.max(24, Math.min(base, colonna * 0.46, boss ? 84 : 68))
+    const base = Math.min(W, H) * 0.095 + (String(v).length - 1) * 6 * S
+    const r = Math.max(24, Math.min(base, colonna * 0.46, 68))
     // lo sfalsamento è per i sassi sbagliati (altrimenti nascono in fila);
     // il sasso giusto è vincolato a essere in scena entro `rispostaEntro`
     // secondi, e da lì parte il cronometro `prontaIl` (docs/asteroidi/volo.md)
     const inScena = 2 * r                   // da y = -r-off a centro in y = r
-    const sfalsa = Math.random() * H * (boss ? 0.18 : 0.30)
+    const sfalsa = Math.random() * H * 0.30
     const off = ok ? Math.min(sfalsa, Math.max(-r, vel * CFG.rispostaEntro - inScena))
                    : sfalsa
     if (ok) prontaIl = apertoIl + ((inScena + off) / vel) * 1000
-    const m = r * (boss ? 1.18 : 1.02)
+    const m = r * 1.02
     const x = colonna * i + colonna / 2 + (Math.random() - 0.5) * Math.max(0, colonna - 2 * r - 6)
     asteroidi.push({
-      x: Math.max(m, Math.min(W - m, x)), y: -r - off, r, v, ok, boss,
-      vy: vel, rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * (boss ? 0.3 : 0.5),
+      x: Math.max(m, Math.min(W - m, x)), y: -r - off, r, v, ok,
+      specie: boss ? 'bomba' : specieDi(cielo), rossa: cielo === 'marte',
+      seme: Math.floor(Math.random() * 1e9),
+      vy: vel, rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.5,
       ph: Math.random() * 6.28, morto: false,
-      forma: Array.from({ length: boss ? 11 : 9 }, () => 0.76 + Math.random() * 0.34),
+      forma: Array.from({ length: 9 }, () => 0.76 + Math.random() * 0.34),
       // i crateri si sorteggiano qui una volta sola: sorteggiarli a ogni
       // fotogramma farebbe ribollire il sasso invece di farlo ruotare
-      crateri: Array.from({ length: boss ? 5 : 3 }, () => {
+      crateri: Array.from({ length: 3 }, () => {
         const ang = Math.random() * 6.28, d = Math.random() * 0.5
         return [Math.cos(ang) * d, Math.sin(ang) * d, 0.10 + Math.random() * 0.13]
       }),
     })
   })
   if (salvata) rimettiCielo(salvata)
-  else if (boss) mostraCartello(gridoBoss(), '#ff6b6b')
   salva()
 }
 
@@ -431,7 +396,6 @@ function rimettiDomanda(d) {
   esercizio = d.esercizio
   Object.assign(domanda, { chiave: d.chiave, a: d.a, b: d.b, ris: d.ris, testo: d.testo,
                            peso: d.peso, difficile: d.difficile })
-  anticipo = d.anticipo
   apertoIl = performance.now()
   gelo = d.gelo; gelato.value = d.gelo; nave.gelo = d.gelo ? 1 : 0
 }
@@ -491,7 +455,7 @@ function spara(a, colore = '#7fe3ff') {
 /* il sasso si rompe in spicchi della sua stessa forma: sono i pezzi che
    restano quando esplode un sasso, e costano un poligono a testa */
 function rompi(a, colore) {
-  const n = a.boss ? 9 : 6
+  const n = 6
   for (let i = 0; i < n; i++) {
     const ang = (i / n) * 6.2832, ap = 6.2832 / n
     const punti = [[0, 0],
@@ -501,10 +465,10 @@ function rompi(a, colore) {
     frammenti.push({ x: a.x, y: a.y, punti, rot: 0,
                      vr: (Math.random() - 0.5) * 7,
                      vx: Math.cos(ang + ap / 2) * sp, vy: Math.sin(ang + ap / 2) * sp - 40 * S,
-                     vita: 1, c: a.boss ? '#8f2a22' : '#6d6153' })
+                     vita: 1, c: coloreFrammenti(a.specie) })
   }
-  esplodi(a.x, a.y, colore, a.boss ? 46 : 30)
-  anello(a.x, a.y, colore, a.r * (a.boss ? 7 : 3))
+  esplodi(a.x, a.y, colore, 30)
+  anello(a.x, a.y, colore, a.r * 3)
 }
 
 // i gettoni: si guadagnano col filotto e restano in tasca finché non si
@@ -578,11 +542,64 @@ function salta() {
   spara(a, '#8cff9d'); rompi(a, '#8cff9d'); suono.ok()
   hud.giuste++
   if (eMirata(domanda.chiave)) hud.mirate++
+  if (madre.attiva) return colpoAllaMadre(a)
+  avanti()
+}
+
+// dopo un centro: il livello, la nave, poi la nave madre o la domanda dopo
+function avanti() {
   const nuovo = hud.partenza + Math.floor(hud.giuste / CFG.salitaOgni)
   if (nuovo > hud.livello) { hud.livello = nuovo; salitaLivello() }
   sincronizzaNave()
-  if (centrato()) return tappaSuperata()
+  if (fase.value !== 'gioco') return
+  if (campagna.value && !madre.chiamata && centrato()) return chiamaMadre()
+  if (madre.attesa) return chiamaMadre()
   ondata()
+}
+
+/* ---------- la nave madre (docs/asteroidi/boss.md) ---------- */
+function chiamaMadre() {
+  Object.assign(madre, { attiva: true, attesa: false, colpi: 0, sx: true, dx: true,
+                         cupola: true, paura: false, entra: 0 })
+  // in una tappa arriva a bersaglio fatto: la stella si scrive adesso, il pacco dopo
+  if (campagna.value) { madre.chiamata = true; asteroidiCompleta(voce.value) }
+  mostraCartello('LA NAVE MADRE!', '#ff6b6b')
+  suono.boss(); scossa = 10
+  ondata()
+}
+
+// la bomba giusta torna indietro e le stacca un pezzo: il cannone sinistro, il destro, poi la cupola
+function colpoAllaMadre(a) {
+  madre.colpi++
+  const lato = madre.colpi === 1 ? -1 : 1
+  const dove = madre.colpi < CFG.colpiMadre ? cannoneDi(madre, lato) : cupolaDi(madre)
+  raggi.push({ x0: a.x, y0: a.y, x1: dove.x, y1: dove.y, vita: 1.6, c: '#ffd94a' })
+  esplodi(dove.x, dove.y, '#ffd94a', 24); scossa = 12; suono.boom()
+  if (madre.colpi < CFG.colpiMadre) {
+    if (lato < 0) madre.sx = false
+    else { madre.dx = false; madre.cupola = false; madre.paura = true }
+    pezzi.push({ x: dove.x, y: dove.y, rot: 0, vr: lato * (2 + Math.random() * 2),
+                 vx: lato * (50 + Math.random() * 60) * S, vy: -90 * S, r: madre.r, vita: 1 })
+    return avanti()
+  }
+  abbattiMadre()
+}
+
+function abbattiMadre() {
+  madre.attiva = false
+  asteroidi = []
+  for (let i = 0; i < 4; i++) esplodi(madre.x + (Math.random() - 0.5) * madre.r * 2,
+                                      madre.y + (Math.random() - 0.5) * madre.r, '#ffb347', 30)
+  anello(madre.x, madre.y, '#ffd94a', Math.max(W, H)); lampo = 0.6; scossa = 18
+  hud.punti += CFG.bossPunti; suono.boss()
+  if (campagna.value) {
+    const v = voce.value
+    finale.regalo = conHangar(h => vintaTappa(h, chiaveDi(v), v.pos))
+    return tappaSuperata()
+  }
+  dammiVita('NAVE MADRE\nABBATTUTA!')
+  regaloVolo.value = conHangar(h => vintoVolo(h, hud.livello))
+  avanti()
 }
 
 function colpisci(a) {
@@ -591,33 +608,19 @@ function colpisci(a) {
   // domanda; `TEMPO_MAX` è lo stesso tetto dei quiz, stessa media pesata
   const ms = Math.min(TEMPO_MAX, Math.max(0, performance.now() - prontaIl))
   const mirata = eMirata(k)
-  // l'assaggio del pianeta dopo non si segna: né la giusta, che sarebbe
-  // mezza fortuna su una cosa mai vista, né la sbagliata, che marchierebbe
-  // come debole un calcolo che nessuno ha ancora insegnato
-  const segnalo = !anticipo
   const nota = { correct: a.ok }   // col gelo acceso il tempo non si segna: misurerebbe il ghiaccio
   if (!gelo) nota.ms = ms
   if (a.ok) {
-    if (segnalo) { answer(k, nota); picker.afterAnswer(k, true) }
+    answer(k, nota); picker.afterAnswer(k, true)
     hud.giuste++; hud.serie++
     hud.serieMax = Math.max(hud.serieMax, hud.serie)
     if (mirata) hud.mirate++
     // il filotto si registra mentre cresce: chiudere la partita a metà non
     // deve buttare via il record
     segnaBest('serieMath', hud.serie)
-    if (a.boss) {
-      spara(a, '#ffd94a'); rompi(a, '#ffd94a')
-      esplodi(a.x, a.y, '#ff6b6b', 30); scossa = 14; lampo = 0.5
-      hud.punti += CFG.bossPunti; suono.boss()
-      dammiVita('☄️ BOSS ABBATTUTO!')
-      // il boss paga un gettone come il filotto, e prende lo stesso
-      // turno: dava sempre il gelo, e il mirino non si vedeva mai
-      prendiGettone(prossimoGettone())
-    } else {
-      spara(a); rompi(a, '#7fe3ff')
-      hud.punti += CFG.puntiOk; suono.ok()
-      premia(hud.serie)
-    }
+    spara(a); rompi(a, '#7fe3ff')
+    hud.punti += CFG.puntiOk; suono.ok()
+    premia(hud.serie)
     borsellino.paga(PAGA.asteroide)
     // la moneta è già arrivata: il cartello ogni dieci centri dice solo quante ne hai fatte
     if (hud.giuste % CFG.cartelloMonete === 0 && borsellino.dato > mostrate) {
@@ -625,13 +628,10 @@ function colpisci(a) {
       mostrate = borsellino.dato
     }
     segna(mente.value ? 'mente' : 'math')
-    const nuovo = hud.partenza + Math.floor(hud.giuste / CFG.salitaOgni)
-    if (nuovo > hud.livello) { hud.livello = nuovo; salitaLivello() }
-    sincronizzaNave()
-    if (centrato()) return tappaSuperata()
-    ondata()
+    if (madre.attiva) return colpoAllaMadre(a)
+    avanti()
   } else {
-    if (segnalo) { answer(k, nota); picker.afterAnswer(k, false) }
+    answer(k, nota); picker.afterAnswer(k, false)
     a.morto = true; hud.serie = 0; hud.sbagliate++
     spara(a, '#ff6b6b')
     esplodi(a.x, a.y, '#ff6b6b', 14); suono.no(); scossa = 10
@@ -672,13 +672,23 @@ function dammiVita(perche) {
 function perdiVita() {
   hud.serie = 0
   nave.botta = 1
-  if (--hud.vite <= 0) { sincronizzaNave(); return finePartita() }
+  if (--hud.vite <= 0) {
+    sincronizzaNave()
+    // la tappa era già superata: perdere con la nave madre costa solo il pacco
+    return campagna.value && madre.chiamata ? tappaSuperata({ scappata: true }) : finePartita()
+  }
   sincronizzaNave()
   salva()                          // una vita persa non si ridà uscendo
 }
 
 function salitaLivello() {
-  mostraCartello('LIVELLO ' + hud.livello, '#7fe3ff')
+  // nel volo ogni livello è un posto della storia (docs/asteroidi/cieli.md)
+  const posto = campagna.value ? null : cieloDelVolo(hud.livello)
+  const v = voceDelVolo(hud.livello)
+  mostraCartello('LIVELLO ' + hud.livello + (posto ? '\n' + (v ? v.T.nome : 'Il buco nero').toUpperCase() : ''),
+                 '#7fe3ff')
+  if (posto && posto !== cielo) { mettiCielo(posto); salto = 1 }
+  if (!campagna.value && bossNelVolo(hud.livello)) madre.attesa = true
   anello(W / 2, suolo * 0.55, '#7fe3ff', Math.max(W, H))
   anello(W / 2, suolo * 0.55, '#ffd94a', Math.max(W, H) * 0.7)
   lampo = 0.45; scossa = 8; suono.livello()
@@ -717,9 +727,15 @@ function ridimensiona() {
              r: (0.4 + Math.random() * 1.2) * z, s: (6 + Math.random() * 10) * z,
              a: 0.25 + Math.random() * 0.55 * z }
   })
-  fondale = dipingiFondale(W, H)
+  fondale = dipingiFondale(W, H, Math.random, cielo)
+  madre.r = Math.max(40, Math.min(80, Math.min(W, H) * 0.13))
   nave.r = Math.max(30, Math.min(54, Math.min(W, H) * 0.1))
   nave.x = W / 2; nave.y = suolo - nave.r * 0.8
+}
+
+function mettiCielo(c) {
+  cielo = c
+  if (W) fondale = dipingiFondale(W, H, Math.random, cielo)
 }
 
 // il cannone non sa dove sono gli asteroidi (spazza a tempo, punta solo
@@ -750,9 +766,7 @@ function aggiorna(dt) {
   }
   if (caduto) {
     const k = domanda.chiave
-    // l'assaggio del pianeta dopo non si segna nemmeno quando cade: vale
-    // qui la stessa ragione che vale in `colpisci`
-    if (!anticipo) { answer(k, { correct: false, ms: CFG.msNonRisposto }); picker.afterAnswer(k, false) }
+    answer(k, { correct: false, ms: CFG.msNonRisposto }); picker.afterAnswer(k, false)
     hud.sbagliate++
     // il sasso arriva in fondo, all'altezza della nave: la botta la
     // prende lei (`perdiVita`), e qui resta solo lo scoppio là dove ha
@@ -784,6 +798,21 @@ function effetti(dt) {
   raggi = raggi.filter(r => r.vita > 0)
   for (const g of anelli) { g.r += g.max * dt * 1.8; g.vita -= dt * 1.8 }
   anelli = anelli.filter(g => g.vita > 0)
+  // la nave madre scende al suo posto e ondeggia piano; guarda la nave
+  if (madre.attiva) {
+    madre.entra = Math.min(1, madre.entra + dt * 0.9)
+    const su = 64 + madre.r * 0.75
+    madre.x = W / 2 + Math.sin(pulsa * 0.5) * W * 0.12
+    madre.y = -madre.r * 2 + (su + madre.r * 2) * (1 - (1 - madre.entra) ** 3)
+    madre.guarda = [nave.x - madre.x, nave.y - madre.y]
+    madre.inclina = Math.sin(pulsa * 0.8) * 0.04 + (madre.paura ? Math.sin(pulsa * 9) * 0.03 : 0)
+  }
+  for (const p of pezzi) {
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt * S
+    p.rot += p.vr * dt; p.vita -= dt * 0.45
+  }
+  pezzi = pezzi.filter(p => p.vita > 0 && p.y < H + p.r)
+  if (salto > 0) salto -= dt * 0.8
   if (scossa > 0) scossa -= dt * 40
   if (lampo > 0) lampo -= dt * 1.6
   if (nave.botta > 0) nave.botta -= dt * 2.2
@@ -817,10 +846,14 @@ function disegna(dt) {
   if (scossa > 0) ctx.translate((Math.random() - 0.5) * scossa, (Math.random() - 0.5) * scossa)
 
   if (fondale) ctx.drawImage(fondale, 0, 0, W, H)
+  disegnaSfondoVivo(ctx, cielo, W, H, pulsa)
+  // il balzo fra due posti del volo: le stelle diventano scie
+  const scia = Math.max(0, salto) * 40
   for (const s of stelle) {
-    s.y += s.s * dt; if (s.y > H) { s.y = 0; s.x = Math.random() * W }
+    s.y += s.s * dt * (1 + scia); if (s.y > H) { s.y = 0; s.x = Math.random() * W }
     ctx.globalAlpha = s.a; ctx.fillStyle = s.z > 1 ? '#dff1ff' : '#fff'
-    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.29); ctx.fill()
+    if (scia > 1) ctx.fillRect(s.x - s.r / 2, s.y - s.s * scia * 0.05, s.r, s.s * scia * 0.05)
+    else { ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.29); ctx.fill() }
   }
   ctx.globalAlpha = 1
 
@@ -833,7 +866,10 @@ function disegna(dt) {
   if (fase.value === 'gioco') {
     const brina = gelo ? 1 : 0
     for (const a of asteroidi) if (!a.morto) { a.gelo = brina; disegnaAsteroide(ctx, a, S, pulsa) }
+    // dopo le bombe: escono da sotto di lei
+    if (madre.attiva) disegnaNaveMadre(ctx, madre, S, pulsa)
   }
+  for (const p of pezzi) disegnaPezzoMadre(ctx, p, S)
   for (const f of frammenti) disegnaFrammento(ctx, f)
 
   for (const gg of anelli) {
@@ -883,8 +919,11 @@ function inizia(i = posizione.value, dato = null) {
   hud.partenza = record && record.dettagli ? partenzaDalRecord(record.dettagli.livello) : 1
   hud.livello = hud.partenza; hud.serie = 0; hud.serieMax = 0
   finale.primato = null
-  particelle = []; anelli = []; frammenti = []; raggi = []
-  scossa = 0; lampo = 0; chieste = 0
+  particelle = []; anelli = []; frammenti = []; raggi = []; pezzi = []
+  scossa = 0; lampo = 0; chieste = 0; salto = 0
+  Object.assign(madre, { attiva: false, chiamata: false, attesa: false, colpi: 0 })
+  finale.regalo = null; finale.scappata = false; regaloVolo.value = null
+  nave.livrea = livrea(hangarLetto().nave)
   borsellino = borsa('mate'); mostrate = 0
   // la nave torna nuova a ogni partita, e la tasca si svuota: i gettoni
   // sono il premio di *questa* partita e non un salvataggio — il perché
@@ -900,6 +939,7 @@ function inizia(i = posizione.value, dato = null) {
   sbagli.clear(); dritta.value = ''
   if (dato) rimettiPartita(dato)
   else segna('partiteMath')
+  mettiCielo(campagna.value ? cieloDi(voce.value) : cieloDelVolo(hud.livello))
   fase.value = 'gioco'
   ondata(dato && dato.aperta)
 }
@@ -930,8 +970,8 @@ function domandaAperta() {
   const giusto = asteroidi.find(a => a.ok && !a.morto)
   if (!giusto || !suolo) return null
   return { chiave: domanda.chiave, a: domanda.a, b: domanda.b, ris: domanda.ris, testo: domanda.testo,
-           peso: domanda.peso, difficile: domanda.difficile, esercizio, boss: giusto.boss,
-           anticipo, gelo, tolti: asteroidi.filter(a => a.morto && !a.ok).length,
+           peso: domanda.peso, difficile: domanda.difficile, esercizio, boss: madre.attiva,
+           gelo, tolti: asteroidi.filter(a => a.morto && !a.ok).length,
            quota: giusto.y / suolo, ms: performance.now() - prontaIl }
 }
 
@@ -940,6 +980,7 @@ function salva({ subito = false } = {}) {
   salvaSosta(CHIAVE, scrivi({
     chiave: chiaveDi(voce.value), hud, tasca, ultimoGettone, chieste, magazzino: magazzino.value,
     monete: { chiesto: borsellino.chiesto, dato: borsellino.dato, mostrate },
+    madre: { attiva: madre.attiva, chiamata: madre.chiamata, attesa: madre.attesa, colpi: madre.colpi },
     aperta: domandaAperta(),
   }), { subito })
 }
@@ -978,6 +1019,11 @@ function rimettiPartita(d) {
   borsellino = borsa(CHIAVE, d.monete); mostrate = d.monete.mostrate
   Object.assign(tasca, d.tasca)
   ultimoGettone = d.ultimoGettone
+  // la nave madre torna coi pezzi che le mancavano
+  const m = d.madre
+  Object.assign(madre, { attiva: m.attiva, chiamata: m.chiamata, attesa: m.attesa, colpi: m.colpi,
+                         sx: m.colpi < 1, dx: m.colpi < 2, cupola: m.colpi < 2, paura: m.colpi >= 2,
+                         entra: 1 })
   nave.lv = stazzaDi(hud.livello)          // la nave di adesso, senza il cartello del livello
   sincronizzaNave()
 }
@@ -1025,8 +1071,10 @@ function riassunto() {
     .map(x => ({ che: etichettaDi(x.k), err: x.it.err }))
 }
 
-function tappaSuperata() {
+function tappaSuperata({ scappata = false } = {}) {
   asteroidi = []
+  madre.attiva = false
+  finale.scappata = scappata
   scorda({ registra: false })
   const v = voce.value
   const ultima = !!v && v.pos === fila.length - 1
@@ -1071,6 +1119,7 @@ function allaMappa() {
   asteroidi = []
   dritta.value = ''
   ripresa.value = laRipresa()
+  giroHangar.value++
   suFrontiera()
 }
 
@@ -1079,6 +1128,9 @@ const suFrontiera = () => { posizione.value = Math.min(fila.length - 1, dove.val
 // "Cosa so" si apre da due posti: il tasto della barra torna a quello da
 // cui si è arrivati (mappa o fine partita), non sempre alla mappa
 const tornaDa = ref('mappa')
+
+const hangarAperto = ref(false)
+function chiudiHangar() { hangarAperto.value = false; giroHangar.value++ }
 // la tavola ha due facce (tabellina/strategie) e si apre su quella del
 // mestiere da cui si arriva
 const tavolaSu = ref('tabelline')
@@ -1109,9 +1161,8 @@ onMounted(() => {
                     // la fila mescolata, il contatore unico (quante voci
                     // sono superate) e cosa viene dopo dentro la fila
                     fila, dopo, contatore, dove,
-                    // la tappa dopo: è da lì che arriva il boss, e un test
-                    // deve poterlo dire senza rifare i conti a mano
-                    prossima, anticipo: () => anticipo,
+                    // la nave madre, il pacco del volo e l'hangar (docs/asteroidi/boss.md)
+                    madre: () => ({ ...madre }), regaloVolo, hangar: hangarLetto,
                     // i gettoni: quanti ce n'è e cosa fanno se li premi.
                     // `gelo` è una funzione perché i secondi che restano
                     // vivono fuori da Vue (cambiano a ogni fotogramma)
@@ -1189,7 +1240,15 @@ onUnmounted(() => {
     <!-- per provare i giochi: la leva di #admin, docs/core/comandi.md -->
     <div v-if="fase === 'gioco'" class="salta-mate"><TastoSalta @salta="salta" /></div>
 
-    <div v-if="cartello.testo" :key="cartello.n" class="cartello" :style="{ color: cartello.colore }">
+    <!-- il pacco di una nave madre del volo: il cielo è fermo finché non si va avanti -->
+    <div v-if="fase === 'gioco' && regaloVolo" class="velo" data-regalo-volo>
+      <div class="dato">La nave madre è abbattuta!</div>
+      <RegaloHangar :pezzo="regaloVolo" />
+      <p class="dritta">Lo trovi nell'hangar, sulla mappa.</p>
+      <button class="bottone" data-azione="avanti" @click="regaloVolo = null">Avanti ▶</button>
+    </div>
+
+    <div v-if="cartello.testo && !regaloVolo" :key="cartello.n" class="cartello" :style="{ color: cartello.colore }">
       {{ cartello.testo }}
     </div>
 
@@ -1207,7 +1266,7 @@ onUnmounted(() => {
                  @comincia="comincia" @annulla="chiede = null" />
       </div>
       <RottaAsteroidi :voci="vociRotta" :capitoli="CAPITOLI" :volo="voloRotta" :arrivo="dove"
-                      :chi="state.player || ''" @parti="partiDa">
+                      :chi="state.player || ''" :livrea="livreaMappa" @parti="partiDa">
         <!-- l'astronave e i gettoni: si guadagnano giocando, quindi va
              detto una volta che esistono. Altrimenti il primo ❄️ che
              compare in basso è un'icona che nessuno ha capito. -->
@@ -1227,6 +1286,10 @@ onUnmounted(() => {
         </div>
       </RottaAsteroidi>
       <button class="cosa-so" data-azione="cosa-so" @click="apriTavola">📊 Cosa so</button>
+      <!-- l'hangar: si apre col volo infinito (docs/asteroidi/hangar.md) -->
+      <button v-if="progresso.libera" class="cosa-so al-hangar" data-azione="hangar" @click="hangarAperto = true">
+        Hangar<i v-if="hangarMappa.nuovi.length" class="nuovi" data-nuovi>{{ hangarMappa.nuovi.length }}</i></button>
+      <HangarAsteroidi v-if="hangarAperto" @chiudi="chiudiHangar" />
     </div>
 
     <!-- cosa so: una pagina di progressi, non un velo sopra la partita —
@@ -1253,6 +1316,11 @@ onUnmounted(() => {
       <h1 class="chiaro">{{ tappa.emoji }} Tappa<br><span>superata!</span></h1>
       <div class="dato"><b>{{ tappa.nome }}</b></div>
       <div class="dato">{{ voce ? voce.n : 0 }} di {{ fila.length }}</div>
+      <!-- il pacco della nave madre (docs/asteroidi/boss.md) -->
+      <RegaloHangar v-if="finale.regalo" :pezzo="finale.regalo" />
+      <p v-else-if="finale.scappata" class="dritta" data-madre-scappata>La nave madre è scappata:
+        il suo pacco ti aspetta qui, la prossima volta.</p>
+      <p v-else class="dritta" data-pacchi-finiti>Qui i regali sono finiti: i prossimi stanno più avanti.</p>
       <div class="dato">Centri: <span>{{ finale.giuste }}</span></div>
       <div class="dato" data-monete-prese>Monete: <span>+{{ monete.prese }} 🪙</span></div>
       <div v-if="monete.nota" class="dato nota" data-nota-monete>{{ monete.nota }}</div>
@@ -1389,7 +1457,7 @@ canvas { position:absolute; inset:0; touch-action:manipulation }
 @keyframes apparire-trucco { from { opacity:0; transform:translateY(8px) } }
 
 .cartello { position:absolute; left:0; right:0; top:38%; text-align:center; pointer-events:none;
-            font-size:clamp(26px,7.5vw,54px); font-weight:900;
+            font-size:clamp(26px,7.5vw,54px); font-weight:900; white-space:pre-line;
             text-shadow:0 0 24px currentColor, 0 4px 10px #000c;
             animation:apparire 1.5s cubic-bezier(.2,1.2,.3,1) forwards }
 @keyframes apparire { 0%{opacity:0;transform:scale(.4)} 18%{opacity:1;transform:scale(1.12)}
@@ -1421,6 +1489,9 @@ h1.chiaro span { color:#7fe3ff }
            padding:10px 16px; border-radius:999px; border:1px solid #ffffff2e;
            background:#1d2550; color:#e6ebff; font-size:15px; font-weight:600 }
 .cosa-so:active { transform:translateY(2px) }
+.al-hangar { right:auto; left:14px; position:absolute }
+.al-hangar .nuovi { font-style:normal; margin-left:6px; padding:0 6px; border-radius:999px;
+                    background:#ff6b6b; color:#fff; font-size:12px; font-weight:800 }
 
 /* l'hangar, in fondo alla rotta: non è un negozio, spiega cosa può capitare alla nave */
 .hangar { width:calc(100% - 32px); max-width:420px; margin:6px auto 0; display:flex;

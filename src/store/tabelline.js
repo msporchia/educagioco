@@ -1,9 +1,8 @@
 /* Il gestore delle tabelline: decide QUALE calcolo chiedere in una tappa
-   (`poolTappa`) e cosa chiede il boss (`chiaveDelBoss`). Come
-   `store/calcolo.js`, non importa il profilo (riceve `items`), quindi
-   gira anche in Node. Il volo infinito pesca da qui e da `store/calcolo.js`
-   insieme: vedi `store/volo.js` e docs/asteroidi/scaletta.md. */
-import { strength, overdue, weight, activeSet, isMastered, SRS } from './srs.js'
+   (`poolTappa`). Come `store/calcolo.js`, non importa il profilo
+   (riceve `items`), quindi gira anche in Node. Il volo infinito pesca da
+   qui e da `store/calcolo.js` insieme: vedi `store/volo.js` e docs/asteroidi/scaletta.md. */
+import { strength, overdue, weight, activeSet, SRS } from './srs.js'
 import { CAMPAGNA, chiaveCalcolo, fattoriDi, calcoliTabellina } from '../data/tabelline.js'
 import { mareaTabelline } from './marea.js'
 
@@ -138,52 +137,4 @@ export function poolTappa(tappa, items, now = Date.now(), quanti = null) {
                               ...scaduti([...A.due, ...B.due], spazio)])].slice(0, spazio)
 
   return [...new Set([...cuore, ...vecchi])]
-}
-
-// il boss viene dal pianeta dopo (vedi docs/asteroidi/scaletta.md); non
-// chiede mai un calcolo-nulla (×1, o conti che si contano a vista)
-export const eNulla = k => {
-  const [lo, hi] = fattoriDi(k)
-  return lo === 1 || (lo <= 3 && hi <= 3)     // ×1 e i conti che si contano
-}
-
-export function chiaveDelBoss(tappa, prossima, items, now = Date.now(),
-                              sorte = Math.random, vietata = null, chiavi = null) {
-  /* Fra i tre in cima, e a sorte: sempre lo stesso calcolo diventerebbe la
-     faccia del boss invece di un assaggio. Mai quella appena chiesta — il
-     divieto di ripetersi due volte di fila vale anche per il boss — e per
-     questo si passa una riserva: se togliendo quella non resta nessuno,
-     si allarga invece di ripetersi. */
-  const fraTre = (...liste) => {
-    for (const lista of liste) {
-      const l = lista.filter(k => k !== vietata)
-      if (l.length) return l.slice(0, 3)[Math.floor(sorte() * Math.min(3, l.length))]
-    }
-    return null
-  }
-  const dalPiuFacile = l => [...l].sort((x, y) => stima(x) - stima(y))
-  const dalPiuTosto = l => [...l].sort((x, y) => stima(y) - stima(x))
-
-  if (prossima && prossima.nuova) {
-    // quelli che le tabelline in gioco non coprono già: il boss del pianeta
-    // del 6 deve portare 7×7, non 7×2 che si fa da tre pianeti
-    const gia = new Set(chiaviDelle(tappa.tabelle))
-    const suoi = calcoliTabellina(prossima.nuova).filter(k => !eNulla(k))
-    const fuori = suoi.filter(k => !gia.has(k))
-    return fraTre(dalPiuFacile(fuori), dalPiuFacile(suoi))
-  }
-
-  /* Niente ×1, niente ×10 e niente conti che si contano: sono regole, non
-     fatti da sapere, e un boss che le chiede è un boss per finta. Poi la
-     più tosta fra quelle che ancora non reggono — e la stima dei banali
-     (`IN_FONDO`) qui non si guarda proprio, se no risulterebbero loro i
-     calcoli più difficili di tutti. `chiavi` è l'elenco da cui pescare
-     quando non è quello della tappa: il volo passa le sue
-     (`caselleDelBoss` in `store/volo.js`), che sopra il livello nove
-     hanno anche le grandi — e per stima sono loro le più toste. */
-  const tutte = (chiavi || chiaviDelle(tappa.tabelle)).filter(k => !eNulla(k))
-  const vere = tutte.filter(k => !banale(k))
-  const fatti = vere.length ? vere : tutte
-  const deboli = fatti.filter(k => !isMastered(leggi(items, k), now))
-  return fraTre(dalPiuTosto(deboli), dalPiuTosto(fatti))
 }

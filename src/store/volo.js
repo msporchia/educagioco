@@ -123,18 +123,6 @@ export const poolVoloTabelline = (livello, quanti = QUANTI, sorte = Math.random)
 export const poolVoloMente = (livello, quanti = QUANTI, sorte = Math.random) =>
   pescaPesati(CHIAVI_MENTE, k => pesoMente(k, miraDelLivello(livello)), quanti, sorte)
 
-/* ── LE CASELLE CHE IL BOSS PUÒ CHIEDERE ──
-   Il boss del volo pesca la più tosta fra quelle che non reggono
-   (`chiaveDelBoss` in `store/tabelline.js`), e le grandi sono le più
-   toste per stima: date tutte, il boss di livello 2 chiederebbe 12×12.
-   Entrano una per volta, quando la campana le raggiunge davvero — a
-   `SOGLIA_BOSS` di peso, cioè a una banda dalla mira. */
-export const SOGLIA_BOSS = 0.3
-export const caselleDelBoss = livello => {
-  const mira = miraDelLivello(livello)
-  return CASELLE_DEL_VOLO.filter(k => !eGrande(k) || pesoAltezza(altezzaGrande(k), mira) >= SOGLIA_BOSS)
-}
-
 /* ── LA TABELLINA GIRATA ──
    Le divisioni grandi — 132:11, 96:12 — non sono chiavi nuove: sono la
    stessa casella letta al contrario, come «la tabellina girata» fa con

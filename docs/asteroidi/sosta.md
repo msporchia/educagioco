@@ -12,10 +12,11 @@ offre in cima «torno da dove ero». La regola comune è in
 - **Il conto**: vite, livello (e la partenza da cui è salito), punti, serie e
   filotto più lungo, colpi giusti verso il bersaglio e «mirate», sbagliati.
 - **Quello che si è guadagnato**: i gettoni in tasca e quale è uscito per
-  ultimo (l'alternanza), le domande già fatte (il boss viene ogni otto) e le
+  ultimo (l'alternanza), le domande già fatte, la nave madre con i colpi presi
+  ([boss.md](boss.md)) e le
   monete già prese (`borsa('mate', …)` riparte da lì).
 - **La domanda aperta**, com'è: gli stessi numeri e lo stesso verso (anche un
-  conto a mente o una grande girata, con tutti i campi), il boss e l'assaggio,
+  conto a mente o una grande girata, con tutti i campi), se era una bomba,
   il gelo già speso e quanti falsi erano già tolti.
 
 ## Cosa si perde, e perché va bene

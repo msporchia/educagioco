@@ -128,17 +128,11 @@ La fila, oggi (22 voci):
   `src/store/calcolo.js`), le altre sono ripasso. Con meno la tappa era
   un'attesa, con tutto il pool le tabelline di prima si dimenticavano.
   **La quota ha memoria** (`creaMiscela`, `FINESTRA` 5): mai più di una
-  domanda fuori tappa ogni cinque, quindi mai due di fila; il boss conta
-  come fuori tappa. La stessa domanda non esce mai due volte di seguito.
-- **Il boss** (ogni otto domande) arriva dalla tappa dopo: è un assaggio,
-  e per questo non si segna sul motore (né giusto né sbagliato: misurare
-  roba non ancora insegnata non direbbe niente di vero). Dove una tappa
-  dopo non c'è (il Sole, il volo, il pianeta prima del Sole) `chiaveDelBoss`
-  ripiega sulla casella più tosta di casa, e quella **si segna sul
-  motore** — è roba già insegnata. Il ripiego prima pescava quella col
-  peso più alto, ed è uscito un boss che chiedeva 1×1: il peso premia chi
-  non si è mai visto, e le caselle mai viste sono proprio quelle che
-  nessuna tappa chiede.
+  domanda fuori tappa ogni cinque, quindi mai due di fila. La stessa
+  domanda non esce mai due volte di seguito.
+- **La nave madre** arriva a bersaglio fatto, con domande della tappa
+  ([boss.md](boss.md)). Non c'è più il boss ogni otto domande che assaggiava
+  la tappa dopo.
 - L'insieme in lavorazione **gira a turno fra le tabelline in gioco**, e
   `×1` e `×10` stanno in fondo alla scala di difficoltà: sono regole, non
   fatti da mandare a memoria.

@@ -13,3 +13,8 @@ ancora giudicato col dito: si guardano giocando, dopo una build.
   `src/store/calcolo.js` vale anche per le stazioni, che nessuno ha ancora
   giocato con quel numero: va guardato se otto domande su dieci sul
   concetto nuovo sono troppe quando il concetto pesa due o tre.
+- **I cieli, la nave madre e l'hangar** ([cieli.md](cieli.md), [boss.md](boss.md),
+  [hangar.md](hangar.md)). Da guardare col dito: se il Sole e il buco nero in
+  alto sono troppo grandi; se la nave madre, in alto, copre le bombe che
+  nascono sotto di lei; se le fiamme dipinte si leggono a nave piccola; se
+  tre bombe bastano a far sentire la nave madre un boss.

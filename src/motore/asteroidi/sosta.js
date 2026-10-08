@@ -39,7 +39,16 @@ function domandaDi(d) {
     return null
   return { chiave: d.chiave, a, b, ris, testo: d.testo, peso, difficile: !!d.difficile,
            esercizio: e ? JSON.parse(JSON.stringify(e)) : null,
-           boss: !!d.boss, anticipo: !!d.anticipo, gelo: !!d.gelo, tolti, quota, ms }
+           boss: !!d.boss, gelo: !!d.gelo, tolti, quota, ms }
+}
+
+// la nave madre: quanti pezzi le mancano, e se in questa tappa è già arrivata
+const MADRE_VUOTA = { attiva: false, chiamata: false, attesa: false, colpi: 0 }
+function madreDi(m) {
+  if (!m || typeof m !== 'object') return { ...MADRE_VUOTA }
+  const colpi = intero(m.colpi, 0, 2)
+  if (colpi === null) return { ...MADRE_VUOTA }
+  return { attiva: !!m.attiva, chiamata: !!m.chiamata, attesa: !!m.attesa, colpi }
 }
 
 /* Quello che la schermata sa. `p`: { chiave, finito, hud, tasca, ultimoGettone,
@@ -54,7 +63,7 @@ export function scrivi(p) {
     chiave: p.aperta.chiave, a: p.aperta.a, b: p.aperta.b, ris: p.aperta.ris,
     testo: p.aperta.testo, peso: p.aperta.peso, difficile: !!p.aperta.difficile,
     esercizio: p.aperta.esercizio ? JSON.parse(JSON.stringify(p.aperta.esercizio)) : null,
-    boss: !!p.aperta.boss, anticipo: !!p.aperta.anticipo, gelo: !!p.aperta.gelo,
+    boss: !!p.aperta.boss, gelo: !!p.aperta.gelo,
     tolti: p.aperta.tolti, quota: tondo(entro(p.aperta.quota, -2, 1)),
     ms: Math.round(entro(p.aperta.ms, -60000, 60000)),
   } : null
@@ -69,6 +78,7 @@ export function scrivi(p) {
     chieste: p.chieste,
     magazzino: p.magazzino,
     monete: { chiesto: p.monete.chiesto, dato: p.monete.dato, mostrate: p.monete.mostrate },
+    madre: madreDi(p.madre),
     aperta,
   }
 }
@@ -127,7 +137,7 @@ export function leggi(dato, contesto) {
   if (!MAGAZZINI.includes(dato.magazzino)) return null
   return { voce: v, volo: !!v.volo, posizione: v.volo ? -1 : v.pos, hud, tasca,
            ultimoGettone: dato.ultimoGettone, chieste, magazzino: dato.magazzino, monete,
-           aperta: domandaDi(dato.aperta) }
+           madre: madreDi(dato.madre), aperta: domandaDi(dato.aperta) }
 }
 
 /* Il record di un volo lasciato a metà, letto senza badare alla versione:

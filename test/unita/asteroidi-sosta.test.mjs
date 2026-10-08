@@ -11,7 +11,7 @@ const hud = (o = {}) => ({ vite: 2, punti: 130, giuste: 14, mirate: 6, sbagliate
                            partenza: 1, serie: 4, serieMax: 9, ...o })
 const aperta = (o = {}) => ({ chiave: 'math:7x8', a: 8, b: 7, ris: 56, testo: '8 × 7 = ?',
                               peso: 1, difficile: true, esercizio: null, boss: false,
-                              anticipo: false, gelo: true, tolti: 2, quota: 0.4137, ms: 1234.6, ...o })
+                              gelo: true, tolti: 2, quota: 0.4137, ms: 1234.6, ...o })
 const partita = (chiave, o = {}) => ({
   chiave, hud: hud(), tasca: { gelo: 1, mirino: 2 }, ultimoGettone: 'mirino', chieste: 17,
   magazzino: 'mente', monete: { chiesto: 3, dato: 2, mostrate: 2 }, aperta: aperta(), ...o })
@@ -112,6 +112,19 @@ const viaJSON = x => JSON.parse(JSON.stringify(x))
   controlla('un sasso caduto conta come risposta',
             !!scrivi(partita('p4', { hud: hud({ giuste: 0, sbagliate: 1, punti: 0 }) })))
   uguale('niente di niente', scrivi(null), null)
+}
+
+/* ══════════ 6. la nave madre torna coi pezzi che le mancavano ══════════ */
+{
+  const madre = { attiva: true, chiamata: true, attesa: false, colpi: 2 }
+  const l = leggi(viaJSON(scrivi(partita('p4', { madre }))), { aperta: () => true })
+  uguale('la nave madre a due colpi', JSON.stringify(l.madre), JSON.stringify(madre))
+  const vecchio = viaJSON(scrivi(partita('p4')))
+  delete vecchio.madre
+  uguale('un salvataggio di prima non ha nave madre',
+         leggi(vecchio, { aperta: () => true }).madre.attiva, false)
+  const troppi = viaJSON(scrivi(partita('p4', { madre: { ...madre, colpi: 7 } })))
+  uguale('tre colpi o più non si scrivono: era già abbattuta', troppi.madre.attiva, false)
 }
 
 riassunto('asteroidi — la partita lasciata a metà')

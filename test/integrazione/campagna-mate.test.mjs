@@ -17,6 +17,7 @@ import { CAMPAGNA as PIANETI } from '../../src/data/tabelline.js'
 import { statoDellaTappa, PASSATA } from '../../src/data/portata.js'
 import { ETA_DIFETTO } from '../../src/store/profile.js'
 import { SCALETTA } from '../../src/data/asteroidi.js'
+import { regaliDellaTappa } from '../../src/data/hangar.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -114,13 +115,13 @@ const partita = await page.evaluate(async () => {
       m.usaMirino()
       tolti = prima - m.asteroidi().filter(x => !x.morto).length
     }
-    viste.push([m.domanda.a, m.domanda.b, !!giusto.boss])
+    viste.push([m.domanda.a, m.domanda.b, giusto.specie === 'bomba'])
     /* fra quanto il sasso con la risposta giusta sarà in scena: nasce
        sopra il bordo (y negativa) e ci mette (r + quanto sta sopra) / vy.
        Si legge adesso perché la covata è appena nata. */
     ritardi.push((giusto.r - giusto.y) / giusto.vy)
     m.colpisci(giusto)
-    // i gettoni arrivano col filotto e dal boss, e restano in tasca: qui
+    // i gettoni arrivano col filotto, e restano in tasca: qui
     // non si spendono più, quindi il massimo osservato dice se sono
     // arrivati, e `tipi` **quali** — che è la cosa che si era rotta
     gettoni = Math.max(gettoni, m.tasca.gelo + m.tasca.mirino)
@@ -130,7 +131,9 @@ const partita = await page.evaluate(async () => {
   }
   return { viste, bersaglio, ritardi, fase: m.fase.value, giuste: m.hud.giuste, gettoni, tolti,
            tipi: [...tipi], mirate: m.hud.mirate, tappa: m.progresso.value.tappa,
-           prese: m.monete.prese, entrate: m.salvadanaio() - salvadanaio }
+           prese: m.monete.prese, entrate: m.salvadanaio() - salvadanaio,
+           regalo: document.querySelector('[data-regalo]')?.dataset.pezzo || null,
+           presi: m.hangar().presi }
 })
 
 /* LA RISPOSTA NON SI FA ASPETTARE. Gli asteroidi nascono sfalsati — se no
@@ -165,19 +168,17 @@ const quota = suoi / partita.viste.length
 dentro('la tabellina nuova è la maggior parte delle domande', Math.round(quota * 100), 65, 100)
 nota(`${suoi} domande su ${partita.viste.length} erano della tabellina del 2`)
 
-/* ═══════════ IL BOSS VIENE DAL PIANETA DOPO ═══════════
-   È la sola domanda che può stare fuori dalle tabelline aperte, ed è il
-   motivo per cui è un boss e non un asteroide più grosso: al pianeta del 2
-   porta un calcolo del 10, che è la tappa dopo. Un assaggio, non un muro. */
-const boss = partita.viste.filter(([, , b]) => b)
+/* ═══════════ LA NAVE MADRE IN FONDO ═══════════
+   Arriva a bersaglio fatto e tira tre bombe col numero, una per domanda;
+   abbattuta, lascia il primo pacco della tappa (docs/asteroidi/boss.md). */
+const bombe = partita.viste.map(([, , b]) => b)
+uguale('la nave madre tira tre bombe', bombe.filter(Boolean).length, 3)
+controlla('e solo in fondo, a bersaglio fatto', bombe.slice(-3).every(Boolean) && !bombe.slice(0, -3).some(Boolean))
 const fuori = partita.viste.filter(([a, b]) => ![1, 2].includes(a) && ![1, 2].includes(b))
-controlla('il boss arriva almeno una volta nella tappa', boss.length >= 1)
-controlla('e porta la tabellina del pianeta dopo',
-          boss.every(([a, b]) => a === 10 || b === 10),
-          boss.map(([a, b]) => `${a}×${b}`).join(', '))
-controlla('fuori dalle tabelline aperte non esce nient\'altro che il boss',
-          fuori.every(([, , b]) => b),
-          fuori.filter(([, , b]) => !b).map(([a, b]) => `${a}×${b}`).join(', '))
+uguale('e non esce niente fuori dalle tabelline aperte', fuori.length, 0)
+uguale('il pacco della nave madre è il primo regalo della tappa', partita.regalo,
+       regaliDellaTappa(SCALETTA.find(v => v.tipo === 'pianeta' && v.i === 0).pos)[0])
+controlla('ed è nell\'hangar', partita.presi.includes(partita.regalo), partita.presi.join(', '))
 
 await scatto(page, 'campagna-mate-vinta')
 
@@ -202,16 +203,12 @@ const profilo = await leggiProfilo(page)
 const risposte = Object.entries(profilo.items || {})
   .filter(([k]) => k.startsWith('math:'))
   .reduce((n, [, it]) => n + (it.ok || 0) + (it.err || 0), 0)
-/* Una risposta per colpo, meno gli assaggi del pianeta dopo: quelli si
-   giocano — vite e punti veri — ma non si segnano, perché misurare una
-   cosa che nessuno ha ancora insegnato non dice niente di vero, e un
-   errore lì marchierebbe come debole un calcolo mai visto. */
 uguale('e in archivio c\'è una risposta per colpo, non una per esplosione',
-       risposte, partita.viste.length - boss.length)
+       risposte, partita.viste.length)
 const chiuse = Object.keys(profilo.items || {})
   .filter(k => k.startsWith('math:'))
   .filter(k => k.slice(5).split('x').map(Number).every(n => ![1, 2].includes(n)))
-controlla('e il boss non lascia niente in archivio', chiuse.length === 0, chiuse.join(', '))
+controlla('e niente in archivio fuori dalle tabelline aperte', chiuse.length === 0, chiuse.join(', '))
 
 /* ---------- 3. il progresso resta dopo aver chiuso ---------- */
 await page.reload()

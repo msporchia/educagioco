@@ -37,7 +37,7 @@ cosa si tratta. Lo stato per elemento è `{ s, ok, err, last, seen, t }`
   asteroidi) manda l'elemento a riposo fino a fine partita e ne entra un
   altro (`riposati`). Il consolidamento resta ai ripassi dei giorni dopo.
 - **`annota(id)`** mette in memoria corta una domanda scelta fuori dal
-  picker (il boss degli asteroidi), se no può uscire due volte di fila.
+  picker, se no può uscire due volte di fila.
 
 ## L'insieme attivo (`activeSet`)
 
@@ -74,8 +74,7 @@ passano e hanno la curva di sempre.
 - **Cosa non fa.** Non tocca la frontiera né quello che sta sopra; non
   tocca lo **sbagliato di recente** (per `RIENTRO`, 30 giorni da `errAt`,
   torna alla curva normale); non rende niente eterno (tre settimane al
-  tetto fanno sette mesi). Il boss chiede la casella più tosta fra quelle
-  che non reggono, e ignora la marea.
+  tetto fanno sette mesi).
 - **La frontiera si legge dalla forza nominale**, non dall'efficace, se no
   si morderebbe la coda. La nominale scende con gli sbagli: chi torna dopo
   un anno e sbaglia 7×8 abbassa la frontiera, e tornano anche le sotto.
