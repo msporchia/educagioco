@@ -51,5 +51,9 @@ al commit (`922257a+`) vuol dire build fatto con modifiche non committate
 collegamento a `node_modules` dentro un worktree basta a farlo comparire:
 `.gitignore` dice `node_modules/`, che vale solo per le cartelle.
 
+La data e l'ora sono quelle di Roma ovunque si costruisca: il server di
+GitHub ha il fuso di Londra, e il sito vero diceva due ore in meno della
+copia di casa.
+
 Come la versione nuova arriva su un telefono già installato:
 [aggiornamento.md](aggiornamento.md).

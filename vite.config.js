@@ -11,10 +11,14 @@ const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
               'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre']
 
 function versione () {
-  const ora = new Date()
+  // l'ora di casa anche sul server di GitHub, che costruisce col fuso di Londra
+  const parti = Object.fromEntries(new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Rome', year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: 'numeric', minute: 'numeric', hourCycle: 'h23',
+  }).formatToParts(new Date()).map(p => [p.type, Number(p.value)]))
   const g = n => String(n).padStart(2, '0')
-  const id = `${ora.getFullYear()}.${g(ora.getMonth() + 1)}.${g(ora.getDate())}.${g(ora.getHours())}${g(ora.getMinutes())}`
-  const etichetta = `${ora.getDate()} ${MESI[ora.getMonth()]} alle ${g(ora.getHours())}:${g(ora.getMinutes())}`
+  const id = `${parti.year}.${g(parti.month)}.${g(parti.day)}.${g(parti.hour)}${g(parti.minute)}`
+  const etichetta = `${parti.day} ${MESI[parti.month - 1]} alle ${g(parti.hour)}:${g(parti.minute)}`
 
   let commit = ''
   let sporco = false
