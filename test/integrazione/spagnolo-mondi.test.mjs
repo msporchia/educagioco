@@ -116,15 +116,11 @@ await page.waitForSelector('.carte')
    tranne la bandiera sono vinte, così il libro del mondo è aperto; tre
    storie su quattro sono già lette, «Chi c’è sotto?» da più tempo. */
 const ora = Date.now()
-const FUORI_MONDO = ['rana', 'oveja']   // dati/capitoli/indovina-il-disegno.js
 const sa = s => ({ s, ok: 5, err: 0, last: ora, seen: 5, t: 0 })
 const t1 = tappaDi('prima-es-un')
 const paroleDelMondo = MONDI[0].tappe.flatMap(t => t.parole || [])
 const items = {}
 for (const p of paroleDelMondo) items['es:' + p] = sa(6)
-// la rana e la pecora non sono del primo mondo ma il libro di sotto le pesca: si sanno anche loro, così
-// la prima pagina ha sempre un animale saputo da toccare
-for (const p of FUORI_MONDO) items['es:' + p] = sa(6)
 for (const f of FRASI.filter(f => f.tappa === t1.id)) items['frase-es:' + f.id] = sa(4)
 items['forma-es:es-un'] = sa(4)
 const vinte = Object.fromEntries(MONDI[0].tappe.filter(t => !t.bandiera)
@@ -296,10 +292,22 @@ await page.waitForSelector('[data-traduzione]')
 controlla('una parola gratis non chiede niente', await page.locator('[data-svela]').count() === 0)
 // un animale (il disegno è di un animale a caso) è saputo: toccarlo costerebbe il guadagno di una
 // domanda, e prima lo si chiede
-const ANIMALI = [...MONDI[0].tappe.find(t => t.id === 'prima-animales').parole, ...FUORI_MONDO]
-const parolaAnimale = await page.locator('[data-libro-testo] [data-parola]').evaluateAll(
+const ANIMALI = MONDI[0].tappe.find(t => t.id === 'prima-animales').parole
+const animaleInPagina = () => page.locator('[data-libro-testo] [data-parola]').evaluateAll(
   (els, animali) => (els.map(e => e.dataset.parola).find(p => animali.includes(p)) || null), ANIMALI)
+// gli animali sono pescati a caso, e la rana e la pecora (fuori dal primo mondo, quindi gratis) possono
+// riempire la prima pagina da sole: allora si cerca nella seconda
+let parolaAnimale = await animaleInPagina()
+const allaSeconda = !parolaAnimale
+if (allaSeconda) {
+  await attendi(page, 350)
+  await page.locator('[data-azione="pagina-avanti"]').click()
+  await page.waitForSelector('[data-libro-testo][data-pagina="2"]')
+  await attendi(page, 300)   // la pagina che gira
+  parolaAnimale = await animaleInPagina()
+}
 controlla('nel testo c’è un animale da toccare', !!parolaAnimale)
+nota(`l'animale da toccare: ${parolaAnimale}`)
 const itAnimale = (PAROLE.find(w => w[0] === parolaAnimale) || [])[1]
 const gatto = page.locator(`[data-libro-testo] [data-parola="${parolaAnimale}"]`).first()
 await gatto.click()
@@ -322,9 +330,11 @@ controlla('e che quella domanda non paga', /non paga/.test(await page.locator('[
 uguale('l’indicatore lo dice prima di rispondere', await page.locator('[data-paga]').getAttribute('data-paga-si'), '0')
 await scatto(page, 'spagnolo-parola')
 const moneteLibro = (await leggiProfilo(page)).coins
-uguale('«Ho letto» c’è solo all’ultima pagina', await page.locator('[data-azione="ho-letto"]').count(), 0)
-await attendi(page, 350)
-await page.locator('[data-azione="pagina-avanti"]').click()
+if (!allaSeconda) {
+  uguale('«Ho letto» c’è solo all’ultima pagina', await page.locator('[data-azione="ho-letto"]').count(), 0)
+  await attendi(page, 350)
+  await page.locator('[data-azione="pagina-avanti"]').click()
+}
 await page.locator('[data-azione="ho-letto"]').click()
 await page.waitForSelector('[data-libro-domanda]')
 const domande = await page.evaluate(() => document.querySelector('[data-libro-domanda] .ing-etichetta').textContent)
