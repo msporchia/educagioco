@@ -1,22 +1,14 @@
-// Come si dice un pezzo nella bottega e nello zaino: il gradino (il colore del bordo), che cos'è, i numeri in
-// elenco e il confronto con quello che si ha addosso. Sta nelle viste perché sono parole e colori: i numeri li
-// dà il motore (seLoMetto in motore/corredo.js). Il perché: docs/sotterraneo/roba.md, "La bottega e lo zaino".
+// Come si dice un pezzo nella bottega, nello zaino e per terra: la rarità (il colore del bordo e dell'aura), che
+// cos'è, il livello, i numeri in elenco e il confronto con quello che si ha addosso. Sta nelle viste perché sono
+// parole e colori: i numeri li dà il motore (seLoMetto in motore/corredo.js). Il perché:
+// docs/sotterraneo/rarita.md e docs/sotterraneo/bottega.md.
+import { RARITA } from '../dati/pezzi.js'
 
-// il gradino si legge dal prezzo, l'unica scala su cui sta tutto il catalogo; le quattro armi col nome proprio
-// stanno fuori (non hanno `grado`). Le soglie cadono sui tre gradini delle armi (8, 16, 26)
-export const GRADINI = {
-  comune: { nome: 'comune', colore: '#c4ccda' },
-  buono: { nome: 'buono', colore: '#62b3ff' },
-  raro: { nome: 'raro', colore: '#ffd23f' },
-  unico: { nome: 'col suo nome', colore: '#ff8f3f' },
-}
+// i colori di Diablo: bianco il comune, blu il magico, giallo il raro, arancio-oro il leggendario. Una cosa che si
+// consuma (pozioni, torce) non ha rarità e sta nel bianco
+export const GRADINI = Object.fromEntries(Object.entries(RARITA).map(([k, r]) => [k, { nome: r.nome, colore: r.colore }]))
 
-export function gradinoDi(c) {
-  if (!c) return 'comune'
-  if (c.dove === 'mano' && !c.grado) return 'unico'
-  const p = c.prezzo || 0
-  return p <= 12 ? 'comune' : p <= 22 ? 'buono' : 'raro'
-}
+export const gradinoDi = c => (c && c.rarita && RARITA[c.rarita] ? c.rarita : 'comune')
 
 const FAMIGLIA = { spade: 'Spada', asce: 'Ascia', archi: 'Arco', bacchette: 'Bacchetta' }
 
@@ -34,19 +26,36 @@ export function tipoDi(c) {
   return ''
 }
 
+// «Spada · a una mano · livello 7 · magico»: la riga sotto il nome
+export const comeEDi = c => [tipoDi(c), c && c.dove ? `livello ${c.liv || 1}` : null, c && c.dove ? GRADINI[gradinoDi(c)].nome : null]
+  .filter(Boolean).join(' · ')
+
 const virgola = n => String(n).replace('.', ',')
 
+// Le abilità in riga nel confronto affiancato e nell'elenco del pannello: l'icona, la parola corta e come si scrive il
+// valore. Una nuova si aggiunge qui e in ABILITA_CONFRONTATE di motore/corredo.js: un test controlla che coincidano
+export const ABILITA = [
+  { campo: 'att', em: '⚔️', nome: 'Attacco', scrivi: v => `+${virgola(v)}`, dice: v => `+${virgola(v)} attacco` },
+  { campo: 'dif', em: '🛡️', nome: 'Difesa', scrivi: v => `+${virgola(v)}`, dice: v => `+${virgola(v)} difesa` },
+  { campo: 'vita', em: '❤️', nome: 'Vita', scrivi: v => `+${virgola(v)}`, dice: v => `+${virgola(v)} vita` },
+  { campo: 'rigenera', em: '💚', nome: 'Rigenera', scrivi: v => `+${virgola(v)}`, dice: v => `+${virgola(v)} vita a ogni mostro battuto` },
+  { campo: 'fuoco', em: '🔥', nome: 'Fuoco', scrivi: v => `+${virgola(v)}`, dice: v => `+${virgola(v)} a ogni colpo, anche a chi para` },
+  { campo: 'schivata', em: '🌀', nome: 'Schivata', scrivi: v => `${virgola(v)}%`, dice: v => `${virgola(v)} graffi su cento schivati` },
+  { campo: 'gemme', em: '💎', nome: 'Gemme', scrivi: v => `×${virgola(Math.round((1 + v) * 100) / 100)}`,
+    dice: v => `ogni gemma vale ×${virgola(Math.round((1 + v) * 100) / 100)}` },
+  { campo: 'fortuna', em: '🍀', nome: 'Fortuna', scrivi: v => `+${virgola(v)}`, dice: v => `+${virgola(v)} fortuna: roba migliore` },
+  { campo: 'pozioni', em: '🧪', nome: 'Pozioni', scrivi: v => `+${virgola(v)}%`, dice: v => `le pozioni curano il ${virgola(v)}% in più` },
+  { campo: 'luce', em: '🔦', nome: 'Luce', scrivi: v => `+${virgola(v)}`, dice: () => 'vedi più lontano' },
+  { campo: 'torcia', em: '⏳', nome: 'Torcia', scrivi: v => `+${virgola(v)}`, dice: v => `la torcia dura ${virgola(v)} stanze in più` },
+]
+
 // i numeri al posto delle frasi: «⚔️ +4 attacco», non «picchia di più»
-export function numeriDi(c) {
+export function numeriDi(c, { cura = null } = {}) {
   if (!c) return []
   const n = []
-  if (c.att) n.push({ em: '⚔️', testo: `+${c.att} attacco` })
-  if (c.dif) n.push({ em: '🛡️', testo: `+${c.dif} difesa` })
-  if (c.vita) n.push({ em: '❤️', testo: `+${c.vita} vita` })
-  if (c.cura) n.push({ em: '❤️', testo: `+${c.cura} vita, subito` })
+  for (const a of ABILITA) if (c[a.campo]) n.push({ em: a.em, testo: a.dice(c[a.campo]), campo: a.campo })
+  if (c.cura) n.push({ em: '❤️', testo: `+${cura ?? c.cura} vita, subito` })
   if (c.cresce) n.push({ em: '❤️', testo: `+${c.cresce} vita massima` })
-  if (c.luce) n.push({ em: '🔥', testo: 'vedi più lontano' })
-  if (c.gemme) n.push({ em: '💎', testo: `ogni gemma vale ×${virgola(1 + c.gemme)}` })
   if (c.stanze) n.push({ em: '🔥', testo: `${c.stanze} stanze di luce` })
   if (c.usa === 'porta') n.push({ em: '🗝️', testo: 'apre una porta' })
   return n
@@ -57,27 +66,22 @@ export function confrontoDi(prova) {
   if (!prova || !prova.prima) return []
   const { prima: a, dopo: b } = prova
   const righe = []
-  const riga = (campo, em, x, y, scrivi = v => String(v)) => {
-    if (x === y) return
-    righe.push({ campo, em, prima: scrivi(x), dopo: scrivi(y), su: y > x })
+  for (const x of ABILITA) {
+    const p = a[x.campo] || 0, d = b[x.campo] || 0
+    if (p === d) continue
+    const scrivi = ['att', 'dif', 'vita'].includes(x.campo) ? v => String(v) : v => (v ? x.scrivi(v) : '0')
+    righe.push({ campo: x.campo, em: x.em, prima: scrivi(p), dopo: scrivi(d), su: d > p })
   }
-  riga('att', '⚔️', a.att, b.att)
-  riga('dif', '🛡️', a.dif, b.dif)
-  riga('vita', '❤️', a.vita, b.vita)
-  riga('gemme', '💎', a.gemme, b.gemme, v => `×${virgola(1 + v)}`)
-  riga('luce', '🔥', a.luce, b.luce, v => (v ? `+${virgola(v)}` : '0'))
   return righe
 }
 
-// Le abilità in riga nel confronto affiancato: l'icona, la parola corta e come si scrive il valore. Una nuova (la
-// schivata…) si aggiunge qui e in ABILITA_CONFRONTATE di motore/corredo.js: un test controlla che coincidano.
-export const ABILITA = [
-  { campo: 'att', em: '⚔️', nome: 'Attacco', scrivi: v => `+${virgola(v)}` },
-  { campo: 'dif', em: '🛡️', nome: 'Difesa', scrivi: v => `+${virgola(v)}` },
-  { campo: 'vita', em: '❤️', nome: 'Vita', scrivi: v => `+${virgola(v)}` },
-  { campo: 'gemme', em: '💎', nome: 'Gemme', scrivi: v => `×${virgola(1 + v)}` },
-  { campo: 'luce', em: '🔥', nome: 'Luce', scrivi: v => `+${virgola(v)}` },
-]
+// «lo scudo borchiato», «la spada», «l'ascia», «il manto»: il nome con l'articolo, in mezzo a una frase
+export function conArticolo(c) {
+  const n = c.nome.toLowerCase()
+  if (/^[aeiou]/.test(n)) return `l'${n}`
+  if (c.genere === 'f') return `la ${n}`
+  return /^(s[^aeiou]|z|gn|ps)/.test(n) ? `lo ${n}` : `il ${n}`
+}
 
 // il posto che il pezzo prende, per dire «niente» con l'ombra giusta
 export const POSTO = {
