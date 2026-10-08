@@ -96,8 +96,11 @@ comprano dall'erborista).
   quei pezzi (e non sono della riga dopo ancora). Chi va dritto esce dalla
   discesa con le gemme che bastano al pezzo che il guardiano non dà (tabella
   sotto); chi gira tutto ne ha il doppio, e le spende in pozioni. I pezzi
-  delle righe dopo si vedono, spenti e non in vendita (la vetrina,
-  [roba.md](roba.md#i-mercanti-di-sopra)).
+  delle righe dopo si comprano, a un prezzo più alto quanto più sono avanti
+  (`1 + righe` volte il prezzo pieno, [roba.md](roba.md#i-mercanti-di-sopra)):
+  chi ha le gemme non è fermato dalla storia, la paga. Provato: pezzi
+  bloccati finché non si finisce la discesa; l'utente: «se ho i soldi perché
+  no».
 - **Un pezzo serve se nella fila viene dopo quello che si ha** (`migliora`,
   il posto nella fila e non il numero): così lo scettro arriva dopo il
   bastone anche se picchia uguale, e chi è già oltre la tabella non riceve
@@ -160,5 +163,5 @@ l'esperienza), `unita/sotterraneo-roba` (il banco porta il passo dopo e
 mai la riga dopo, sei semi d'equilibrio), `unita/sotterraneo-terra` (la
 partenza nel villaggio, le discese in fila per strada),
 `misure/sotterraneo` (la tabella qui sopra). Nel fumetto di una discesa
-`[data-sotto-livello]` con `data-manca` (`arma` o `difesa`); la vetrina nella
+`[data-sotto-livello]` con `data-manca` (`arma` o `difesa`); i pezzi avanti nella
 bottega: [roba.md](roba.md#la-bottega-e-lo-zaino).
