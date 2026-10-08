@@ -44,9 +44,11 @@ function scegliIlPiano(chiave, missione, voluto, [min, max]) {
   }
   return meglio
 }
-const forziere = scegliIlPiano('cantine', 'collana', 'qui', [4, 9])
+// il forziere sta nella stanza più lontana dall'arrivo (docs/sotterraneo/missioni.md, «Dove sta»): il più vicino fra i
+// semi provati è a una dozzina di celle, fuori dallo schermo, e la freccina serve proprio a questo
+const forziere = scegliIlPiano('cantine', 'collana', 'qui', [4, 20])
 const alla_scala = scegliIlPiano('torre', 'chiavi', 'scala', [4, 40])
-controlla('c\'è un piano della scalinata con la collana a pochi passi', !!forziere)
+controlla('c\'è un piano della scalinata con la collana non troppo lontana', !!forziere)
 controlla('e uno della torre con la scala a pochi passi', !!alla_scala)
 
 const browser = await apriBrowser()

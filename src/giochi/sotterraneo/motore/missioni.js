@@ -8,6 +8,7 @@ import { MOSTRI } from '../dati/mostri.js'
 import { COSE } from '../dati/cose.js'
 import { CAMPAGNA, guardianoDi } from '../dati/campagna.js'
 import { seminato } from './livello.js'
+import { PASSI } from '../../../motore/passi.js'
 
 export const PRESA = 'presa', FATTA = 'fatta', CONSEGNATA = 'consegnata'
 
@@ -205,7 +206,7 @@ export function diario(stati, tappe, segui = null) {
 }
 
 // La riga in cima a una discesa, per ogni missione che la riguarda e non è ancora consegnata: cosa, e a che piano.
-// Sul piano giusto dice cosa cercare (il forziere d'oro, il mostro con la corona), oltre quel piano che è sfuggita;
+// Sul piano giusto dice cosa cercare (il forziere d'oro, il mostro con la corona), oltre quel piano dice di risalire (la scala che sale);
 // una volta fatta ricorda a chi riportarla. `piano` è quello di adesso, da 1 (null fuori da una discesa)
 export function promemoria(stati, chiaveTappa, piano = null) {
   const queste = MISSIONI.filter(m => m.discesa === chiaveTappa && [PRESA, FATTA].includes(statoDi(stati, m.id))).sort(dellaStoria)
@@ -219,7 +220,7 @@ export function promemoria(stati, chiaveTappa, piano = null) {
     const testo = dove === 'qui'
       ? (m.tipo === 'trova' ? `${nome} è su questo piano: cerca il forziere d'oro` : `${nome} è su questo piano: cerca il mostro con la corona`)
       : dove === 'oltre'
-        ? `${nome} era ${alPiano(giusto)}: ti è sfuggita, la riprendi con un'altra discesa`
+        ? `${nome} era ${alPiano(giusto)}: risali con la scala che sale`
         // più in basso: la freccina punta alla scala (rotta), e la riga dice cosa fare
         : (m.tipo === 'trova' ? `${nome} è ${alPiano(giusto)}: scendi` : `${nome} sta ${alPiano(giusto)}: scendi`)
     return { id: m.id, dove, em, testo: `Missione: ${testo}` }
@@ -281,22 +282,56 @@ export function discesaDaSeguire(stati, da, posti, segui = null) {
 
 /* ═══════════ dove sta, giù ═══════════ */
 
-// Dove sta, in un piano già fatto, la cosa di una missione: in una stanza che non è l'ingresso, la scala o il
-// portale, su una cella libera lontana dalle porte. Un caso tutto suo (seme del piano e nome della missione): il
-// caso della discesa non si sposta, e rientrando la cosa è nello stesso posto
+// Dove sta, in un piano già fatto, la cosa di una missione: nella stanza più lontana dall'arrivo (in passi, da dove
+// si cammina davvero, porte comprese), mai in quella d'arrivo né in quella accanto, e se si può non quella della scala
+// né del portale; su una cella libera lontana dalle porte. Chi gioca deve attraversare il piano per trovarla, non
+// inciamparci all'ingresso (docs/sotterraneo/missioni.md, «Dove sta»). Un caso tutto suo (seme del piano e nome della
+// missione): il caso della discesa non si sposta, e rientrando la cosa è nello stesso posto
 export function postoPer(livello, m) {
   let h = 7
   for (const ch of m.id) h = (h * 31 + ch.charCodeAt(0)) >>> 0
   const rnd = seminato(livello.seme * 13 + livello.piano * 7919 + h)
-  const buone = livello.stanze.filter(s => !['ingresso', 'uscita', 'portale'].includes(s.ruolo))
-  const stanze = buone.length ? buone : livello.stanze.filter(s => s.ruolo !== 'ingresso')
-  for (let giro = 0; giro < 60; giro++) {
-    const s = stanze[Math.floor(rnd() * stanze.length)]
-    if (!s) return null
-    const x = s.x + 1 + Math.floor(rnd() * Math.max(1, s.w - 2)), y = s.y + 1 + Math.floor(rnd() * Math.max(1, s.h - 2))
-    if (livello.calpestabile(x, y) && !livello.robeSu(x, y).length && !livello.porteVicine(x, y)) return { x, y }
+  const ingresso = livello.stanze[0]
+  if (!ingresso) return null
+  const passi = passiDa(livello, { x: ingresso.cx, y: ingresso.cy })
+  const lontananza = s => (passi.has(s.cx + ',' + s.cy) ? passi.get(s.cx + ',' + s.cy) : -1)
+  const accanto = s => ingresso.vicine.includes(s.id)
+  // quattro gradi di scelta, dal migliore: non accanto e senza ruolo, non accanto, accanto ma senza ruolo, e in fondo
+  // qualunque stanza che si raggiunge (un piano di quattro stanze può averle tutte accanto all'arrivo)
+  const raggiungibili = livello.stanze.filter(s => s !== ingresso && lontananza(s) >= 0)
+  const senzaRuolo = s => !['uscita', 'portale'].includes(s.ruolo)
+  const gradi = [
+    raggiungibili.filter(s => !accanto(s) && senzaRuolo(s)),
+    raggiungibili.filter(s => !accanto(s)),
+    raggiungibili.filter(senzaRuolo),
+    raggiungibili,
+  ]
+  const ordinate = []
+  for (const g of gradi) for (const s of [...g].sort((a, b) => lontananza(b) - lontananza(a) || a.id - b.id))
+    if (!ordinate.includes(s)) ordinate.push(s)
+  for (const s of ordinate) {
+    for (let giro = 0; giro < 30; giro++) {
+      const x = s.x + 1 + Math.floor(rnd() * Math.max(1, s.w - 2)), y = s.y + 1 + Math.floor(rnd() * Math.max(1, s.h - 2))
+      if (livello.calpestabile(x, y) && !livello.robeSu(x, y).length && !livello.porteVicine(x, y)) return { x, y }
+    }
   }
   return null
+}
+
+// quanti passi ci vogliono da `da` a ogni cella dove si cammina ("x,y" → passi); le porte chiuse si aprono rispondendo, quindi si attraversano
+function passiDa(livello, da) {
+  const passi = new Map([[da.x + ',' + da.y, 0]])
+  const coda = [da]
+  for (let i = 0; i < coda.length; i++) {
+    const q = coda[i], n = passi.get(q.x + ',' + q.y)
+    for (const [dx, dy] of PASSI) {
+      const x = q.x + dx, y = q.y + dy, k = x + ',' + y
+      if (passi.has(k) || !livello.calpestabile(x, y)) continue
+      passi.set(k, n + 1)
+      coda.push({ x, y })
+    }
+  }
+  return passi
 }
 
 // la roba di una missione per un piano: il forziere che si riconosce, o il mostro col nome più duro dei suoi

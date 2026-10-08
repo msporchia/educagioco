@@ -41,6 +41,11 @@ export const ARREDO_LA_PRIMA_VOLTA =
 
 export const SORSO = 8, RIPOSO_SCALA = 4, VITA_PER_PIANO = 2
 
+// il bersaglio di una missione (il mostro col nome, il forziere della cosa) si distingue dai suoi simili: più grande,
+// con un'aura che pulsa piano di un colore solo suo (lo stesso del punto sulla mappina), e il nome sopra la testa
+// quando è in vista (scena/tela.js, docs/sotterraneo/missioni.md)
+export const BERSAGLIO = { scala: 1.4, colore: '#ff7ad9', luce: '255,122,217' }
+
 export function guastiDelMondo() {
   const g = []
   if (SCALA_MIN >= SCALA_MAX) g.push('lo zoom non ha spazio fra minimo e massimo')

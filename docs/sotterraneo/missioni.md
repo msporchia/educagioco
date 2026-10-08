@@ -150,18 +150,22 @@ Zannagrigia, lanterna) sono radici senza seguito.
   ogni missione presa o fatta che riguarda quella discesa, ricalcolata a ogni
   piano. «Missione: la collana della nonna è al terzo piano: scendi»; sul piano
   giusto, in oro, «… è su questo piano: cerca il forziere d'oro» (o «il mostro
-  con la corona»); superato il piano, in grigio, «ti è sfuggita, la riprendi con
-  un'altra discesa»; fatta, in verde, «Missione compiuta: …, torna dal
+  con la corona»); superato il piano, in grigio, «era al primo piano: risali con
+  la scala che sale» ([scala-che-sale.md](scala-che-sale.md): non è più sfuggita,
+  ma la freccina non la indica); fatta, in verde, «Missione compiuta: …, torna dal
   mugnaio». Il fumetto di una discesa sulla mappa ricorda le missioni prese
   per lei (`data-missioni-qui`).
-- **La cosa si nota** già prima del promemoria: il forziere è d'oro con la
-  faccia della cosa che galleggia, il mostro ha il nome e la corona
-  (`scena/tela.js`).
+- **La cosa si nota** già prima del promemoria: [missioni-bersaglio.md](missioni-bersaglio.md).
 
 ## La freccina
 
 Una freccina giù (verso la cosa o la scala) e una sopra (azzurra, verso la discesa)
 ricordano la missione presa a chi gioca poco spesso: [missioni-freccina.md](missioni-freccina.md).
+
+## Dove sta, e come si vede
+
+Lontano dall'arrivo, più grande dei suoi simili, con un'aura rosa che pulsa e
+il nome sopra la testa: [missioni-bersaglio.md](missioni-bersaglio.md).
 
 ## Le regole di fare e consegnare
 
@@ -176,13 +180,10 @@ ricordano la missione presa a chi gioca poco spesso: [missioni-freccina.md](miss
   la corona, più duro di quelli del suo piano (le ossa del guardiano
   del piano o una volta e mezza le sue, e un colpo in più: `PIU_DURO`). Battuto
   è fatta.
-- **Dove sta**: in una stanza che non è l'ingresso, la scala o il
-  portale, scelta da un caso suo (seme del piano e nome della missione): il
-  caso della discesa non si sposta e rientrando la cosa è nello stesso posto.
-  Non nasce dal seme del piano: la sosta la tiene fra le cose nuove, e una
-  missione presa sopra mentre la discesa è a metà (passando dal portale)
-  compare riprendendo. Due missioni della stessa discesa stanno ciascuna nel
-  suo piano.
+- **Dove sta**: [missioni-bersaglio.md](missioni-bersaglio.md). Non nasce dal seme del piano: la sosta la tiene fra
+  le cose nuove, e una missione presa sopra mentre la discesa è a metà
+  (passando dal portale) compare riprendendo. Due missioni della stessa discesa
+  stanno ciascuna nel suo piano.
 - **Il premio** è in gemme o in un gioiello, a volte con monete. Un premio da
   impugnare o da indossare salterebbe un passo della storia, e
   `guastiDelleMissioni` lo rifiuta, come più di 40 gemme. Il gioiello va

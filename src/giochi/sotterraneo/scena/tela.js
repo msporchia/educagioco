@@ -7,7 +7,7 @@
 // da lì in poi tutto è in pixel di sprite — altrimenti una riga prima o
 // poi la moltiplica due volte (il difetto trovato nel bestiario).
 import { ATLANTE, PEZZI, TESSERA } from '../dati/atlante.js'
-import { T, SCALA_MIN, SCALA_MAX, SCALA_INIZIALE, ROCCIA, PAVIMENTO, PORTA } from '../dati/mondo.js'
+import { T, SCALA_MIN, SCALA_MAX, SCALA_INIZIALE, ROCCIA, PAVIMENTO, PORTA, BERSAGLIO } from '../dati/mondo.js'
 import { SCENARI, SCENARIO, PEZZO_DI, pezzoAndante } from '../dati/tessere.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { COSE, SEGNI } from '../dati/cose.js'
@@ -149,6 +149,7 @@ export class Tela {
     for (let y = c0y; y < c1y; y++) for (let x = c0x; x < c1x; x++)
       if (corsa.luceDi(x, y) === 1) this.velo(x, y)
 
+    this.etichette = []
     for (const r of liv.robe) {
       if (r.presa || (r.morto && r.che !== 'fonte')) continue   // la fonte bevuta resta, il resto se ne va
       const luce = corsa.luceDi(r.x, r.y)
@@ -157,6 +158,8 @@ export class Tela {
       this.roba(r, luce, orologio, !!(corsa.toccabile && corsa.toccabile(r)), sc, corsa)
     }
     this.eroe(corsa, orologio)
+    // il nome del bersaglio di una missione sta sopra a tutto, eroe compreso: se no ci passa sotto
+    for (const e of this.etichette) this.etichetta(e.testo, e.px, e.py)
     if (corsa.bersaglio) this.bersaglio(corsa.bersaglio, orologio)
 
     // l'interfaccia torna in pixel schermo: la mappina non si ingrandisce con lo zoom
@@ -330,15 +333,15 @@ export class Tela {
       return
     }
 
-    if (r.che === 'mostro') {
-      const scheda = MOSTRI[r.tipo]
-      // `unaPosa`: i mostri del bestiario nuovo non hanno una corsa separata, e chiederla darebbe un mostro invisibile senza errore
     // la scala che sale non ha pezzo nel foglio: si disegna da sé, in tutta la cella
     if (r.che === 'scala-su') {
       dipingiScalaSu(ctx, r.x * T, r.y * T, t, { alfa })
       return
     }
 
+    if (r.che === 'mostro') {
+      const scheda = MOSTRI[r.tipo]
+      // `unaPosa`: i mostri del bestiario nuovo non hanno una corsa separata, e chiederla darebbe un mostro invisibile senza errore
       const posa = r.sveglio && !scheda.unaPosa ? 'corsa' : 'fermo'
       const fr = (t * (r.sveglio ? 8 : 4)) | 0
       const q = r.sveglio ? 0.3 + 0.14 * Math.sin(t * 7) : 0.14   // l'alone pulsa da sveglio: si vede prima di arrivargli addosso
@@ -348,14 +351,23 @@ export class Tela {
       ctx.fill()
 
       const suo = pezzoAndante(scheda.sprite, posa, fr)
+      // il bersaglio di una missione è più grande dei suoi simili e ha un'aura sua (dati/mondo.js, BERSAGLIO)
+      const grande = r.missione ? BERSAGLIO.scala : 1
+      if (r.missione) this.auraDelBersaglio(px, py, t, alfa)
+      if (grande !== 1) this.ingrandisci(px, py + 0.5, grande)
+      if (r.missione) this.contornoDelBersaglio(suo, px - 0.5, py - 0.5, t, alfa, { specchia: r.guarda === 'sx' })
       // un mostro ha già il suo alone rosso: il filo qui serve solo a dire "ci si arriva col dito da qui"
-      if (tocca) this.filo(suo, px - 0.5, py - 0.5, t, { specchia: r.guarda === 'sx' })
+      else if (tocca) this.filo(suo, px - 0.5, py - 0.5, t, { specchia: r.guarda === 'sx' })
       if (!this.posa(suo, px - 0.5, py - 0.5, { alfa, specchia: r.guarda === 'sx' }))
         this.emoji(r.em, px, py, alfa)
+      if (grande !== 1) ctx.restore()
       if (r.chiave) this.emoji('🗝️', px + 0.42, py - 0.55, alfa, 0.42)
-      // il mostro col nome di una missione porta la corona: si riconosce prima di entrare nella stanza
-      if (r.missione) this.emoji('👑', px - 0.05, py - 0.95 + Math.sin(t * 3) * 0.05, alfa, 0.5)
-      if (!r.sveglio) this.emoji('💤', px + 0.4, py - 0.4, alfa * 0.8, 0.32)
+      // il mostro col nome di una missione porta la corona e il nome sopra la testa, quando è in vista
+      if (r.missione) {
+        this.emoji('👑', px - 0.05, py - 1.3 + Math.sin(t * 3) * 0.05, alfa, 0.5)
+        if (luce === 2) this.etichette.push({ testo: r.nome, px, py: py - 1.75 })
+      }
+      if (!r.sveglio) this.emoji('💤', px + (r.missione ? 0.55 : 0.4), py - (r.missione ? 0.7 : 0.4), alfa * 0.8, 0.32)
       if (r.ossa < r.ossaMax) this.barretta(px, py, r.ossa / r.ossaMax, alfa)
       return
     }
@@ -387,16 +399,26 @@ export class Tela {
       : r.che === 'scala' && corsa ? { chiusa: !corsa.chiaveDelPiano } : {}
     const quale = PEZZO_DI[r.che]
     const nome = r.che === 'cosa' ? (COSE[r.cosa] || {}).sprite : quale ? quale(r, t, sc, info) : null
+    // il forziere di una missione, finché è chiuso, è più grande degli altri e ha la sua aura (come il mostro col nome)
+    const bersaglio = r.che === 'forziere' && r.missione && !r.aperto
+    if (bersaglio) {
+      this.auraDelBersaglio(px, py, t, alfa)
+      this.ingrandisci(px, py + 0.5, BERSAGLIO.scala)
+    }
     // il filo di luce dice "questo si tocca", la convenzione di tutti i giochi del genere; solo in piena luce
-    if (tocca && nome) this.filo(nome, px - 0.5, py - 0.5 + su, t)
+    if (bersaglio && nome) this.contornoDelBersaglio(nome, px - 0.5, py - 0.5 + su, t, alfa)
+    else if (tocca && nome) this.filo(nome, px - 0.5, py - 0.5 + su, t)
     // un'emoji non ha sagoma da contornare: un'aureola dietro fa lo stesso lavoro (ripiego per un pezzo mancante)
     if (tocca && !nome) this.aureola(px, py + su, t)
     if (!nome || !this.posa(nome, px - 0.5, py - 0.5 + su, { alfa }))
       this.emoji(r.em, px, py + su, alfa)
+    if (bersaglio) this.ctx.restore()
 
-    // la cosa da trovare per una missione galleggia sopra il suo forziere d'oro, finché non si apre
-    if (r.che === 'forziere' && r.missione && !r.aperto)
-      this.emoji(r.em, px, py - 1.1 + Math.sin(t * 2.4) * 0.08, alfa, 0.95)
+    // la cosa da trovare per una missione galleggia sopra il suo forziere d'oro, finché non si apre, col nome sopra
+    if (bersaglio) {
+      this.emoji(r.em, px, py - 1.5 + Math.sin(t * 2.4) * 0.08, alfa, 0.95)
+      if (luce === 2) this.etichette.push({ testo: r.nome, px, py: py - 2.1 })
+    }
 
     // il segno sopra una porta chiusa: l'unica cosa con cui si sceglie dove andare, si vede anche in un piano già girato
     if (r.che === 'porta' && !r.aperta && SEGNI[r.segno])
@@ -418,6 +440,55 @@ export class Tela {
     a.addColorStop(1, 'rgba(255,210,122,0)')
     ctx.fillStyle = a
     ctx.beginPath(); ctx.arc(px * T, py * T, T * 0.75, 0, 7); ctx.fill()
+  }
+
+  // la scala di un bersaglio: tutto quello che si disegna fino al `restore()` cresce attorno ai piedi (px, py: il centro della
+  // cella, py + 0.5 il suolo), come `posa` che appoggia il pezzo sul fondo della cella
+  ingrandisci(px, suolo, k) {
+    const ctx = this.ctx
+    ctx.save()
+    ctx.translate(px * T, suolo * T)
+    ctx.scale(k, k)
+    ctx.translate(-px * T, -suolo * T)
+  }
+
+  // l'aura del bersaglio di una missione: un chiarore del suo colore che respira piano, dietro la figura
+  auraDelBersaglio(px, py, t, alfa) {
+    const ctx = this.ctx
+    const q = 0.5 + 0.5 * Math.sin(t * 2.2)
+    const R = T * (1.05 + 0.12 * q)
+    const g = ctx.createRadialGradient(px * T, py * T + T * 0.1, T * 0.2, px * T, py * T + T * 0.1, R)
+    g.addColorStop(0, `rgba(${BERSAGLIO.luce},${(0.3 + 0.25 * q) * alfa})`)
+    g.addColorStop(1, `rgba(${BERSAGLIO.luce},0)`)
+    ctx.fillStyle = g
+    ctx.beginPath(); ctx.arc(px * T, py * T + T * 0.1, R, 0, 7); ctx.fill()
+  }
+
+  // il contorno del suo colore, che pulsa come l'aura: dice «è questo» anche a chi non ha letto il promemoria
+  contornoDelBersaglio(nome, cx, cy, t, alfa, opz = {}) {
+    const q = 0.5 + 0.5 * Math.sin(t * 2.2)
+    this.foglio.alone(this.ctx, nome, (cx + 0.5) * T, (cy + 1) * T,
+                      { ...opz, colore: BERSAGLIO.colore, alfa: (0.55 + 0.4 * q) * alfa, raggio: 1 })
+  }
+
+  // il nome del bersaglio, in una targhetta scura col filo del suo colore; `px`,`py` in celle, al centro della targhetta
+  etichetta(testo, px, py) {
+    if (!testo) return
+    const ctx = this.ctx
+    ctx.save()
+    ctx.font = `bold ${T * 0.32}px "Emoji Gioco", system-ui, "Segoe UI", sans-serif`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    const w = Math.ceil(ctx.measureText(testo).width) + 5, h = T * 0.5
+    const x = Math.round(px * T - w / 2), y = Math.round(py * T - h / 2)
+    ctx.fillStyle = 'rgba(12,8,22,.82)'
+    ctx.fillRect(x, y, w, h)
+    ctx.strokeStyle = BERSAGLIO.colore
+    ctx.lineWidth = 0.6
+    ctx.strokeRect(x + 0.3, y + 0.3, w - 0.6, h - 0.6)
+    ctx.fillStyle = '#ffe3f7'
+    ctx.fillText(testo, px * T, y + h / 2 + 0.3)
+    ctx.restore()
   }
 
   // le emoji le disegna il telefono: si usano solo per i segni sopra le porte e il ripiego di un pezzo mancante, mai per un mostro
