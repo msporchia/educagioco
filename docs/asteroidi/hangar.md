@@ -33,13 +33,16 @@ rotta, quando il volo infinito è aperto.
 
 ## I regali
 
-- **Di serie**: quattro colori (bianco, azzurro, rosso, giallo) e la stella.
+- **Di serie**: quattro colori (bianco, azzurro, rosso, giallo). Disegni e
+  stemmi si vincono tutti, e finché non se ne ha uno la sua linguetta non c'è.
 - **Le tappe**: due pezzi fissi ciascuna, in fila (`FILA_REGALI`: colori,
   disegni e stemmi a turno, nell'ordine della fila). Il primo alla prima
   nave madre abbattuta, il secondo alla seconda, poi niente: **le tappe facili
   non si coltivano**. Sono esattamente due per tappa: un test lo controlla.
-- **Il volo**: le sei tinte lucide (oro, argento…), una per ogni nave madre
-  abbattuta più in alto di prima.
+- **Il volo**: la stella e le sei tinte lucide, ognuna da un livello in su
+  (la stella dal 3, l'oro dal 21). Una nave madre abbattuta più in alto di
+  prima dà il pezzo più alto fra quelli che il suo livello può dare
+  ([boss.md](boss.md)).
 - **Non si comprano**: le monete sono della fattoria, e un premio che si
   compra smette di dire «sei arrivato fin qui».
 - **I pezzi nuovi hanno un pallino** finché l'hangar non si apre; sul tasto

@@ -37,10 +37,14 @@ lascia un pacco per l'hangar ([hangar.md](hangar.md)).
 ## Nel volo
 
 - **Arriva al livello 3, 6, 9…**, cioè ogni quindici centri; abbattuta dà una
-  vita come prima il boss.
+  vita e un gettone, come prima il boss. Non arriva al livello da cui si parte:
+  chi riparte dal 15 la incontra al 18.
 - **Regala solo più in alto di prima**: un pacco per ogni nave madre
-  abbattuta a un livello più alto di tutte quelle di prima (`voloMax`).
-  Andare avanti è l'unico modo, come col record.
+  abbattuta a un livello più alto di tutte quelle di prima (`voloMax`), e il
+  pezzo è il più alto che il suo livello può dare (`REGALI_VOLO`, ognuno col
+  suo `da`). Rifare i primi livelli finché sono facili non dà niente: i pezzi
+  migliori li danno solo le navi madri alte. L'hangar dice da che livello
+  arriva il prossimo, se no un volo senza pacchi sembra un guasto.
 - **Il pacco ferma il cielo** finché non si preme «Avanti» (`regaloVolo` è
   una delle condizioni della pausa).
 
@@ -51,7 +55,7 @@ Uscendo durante la nave madre si salva quanti colpi ha preso (`madre` in
 mancavano. Un salvataggio di prima non ha la nave madre, e si legge lo stesso.
 
 Nei test: `window.__mate.madre()` (`attiva`, `colpi`, `chiamata`),
-`regaloVolo`, `hangar()`; il pacco `[data-regalo]` con `[data-pezzo]`, il
+`regaloVolo`, `hangar()`; nell'hangar `[data-volo-oltre]`; il pacco `[data-regalo]` con `[data-pezzo]`, il
 velo del volo `[data-regalo-volo]` con `[data-azione="avanti"]`,
 `[data-madre-scappata]`, `[data-pacchi-finiti]`; sulla rotta
 `[data-pacchi]` con `[data-pacchi-di="<pos>"]` e `[data-quanti]` e nel fumetto `[data-pacchi-fumetto]`.

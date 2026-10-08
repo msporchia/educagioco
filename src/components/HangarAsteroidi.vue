@@ -5,7 +5,7 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { state } from '../store/profile.js'
 import { ritocca } from '../giochi/campagne.js'
 import { TINTE, DISEGNI, STEMMI, pezzo } from '../data/hangar.js'
-import { hangarDi, possiede, scegli, visto, livrea } from '../motore/asteroidi/hangar.js'
+import { hangarDi, possiede, scegli, visto, livrea, prossimoDelVolo, bossNelVolo } from '../motore/asteroidi/hangar.js'
 import { disegnaNave } from '../grafica/spazio.js'
 import PezzoHangar from './PezzoHangar.vue'
 import Chiudi from '../giochi/fattoria/viste/Chiudi.vue'
@@ -29,6 +29,9 @@ const LINGUETTE = [
   { id: 'disegno', forma: 'disegno', tinta: 'colDisegno' }, { id: 'stemma', forma: 'stemma', tinta: 'colStemma' },
 ]
 const su = ref('scafo')
+// una linguetta senza niente di suo non si mostra (disegni e stemmi si vincono tutti)
+const linguette = computed(() => LINGUETTE.filter(l => !l.forma ||
+  h.presi.some(p => p[0] === l.forma[0])))
 // il pallino anche sulla linguetta: un pezzo nuovo sta spesso in un'altra
 const nuovoIn = l => [...nuovi].some(p => p[0] === (l.forma ? l.forma[0] : 't'))
 const linguetta = computed(() => LINGUETTE.find(l => l.id === su.value))
@@ -47,6 +50,14 @@ const colori = computed(() => TINTE.map(t => {
 }))
 const diSerie = computed(() => ['scafo', 'ali', 'fiamma'].includes(linguetta.value.tinta))
 const scelto = campo => h.nave[campo] ?? null
+
+// nel volo regala solo una nave madre più in alto di tutte quelle di prima: va detto, se no sembra un guasto
+const voloOltre = computed(() => {
+  if (!prossimoDelVolo(h)) return 0
+  let l = h.voloMax + 1
+  while (!bossNelVolo(l)) l++
+  return l
+})
 
 // la nave grande, che gira i motori piano
 const tela = ref(null)
@@ -83,7 +94,7 @@ function chiudi() {
       </div>
       <canvas ref="tela" class="nave"></canvas>
       <div class="linguette">
-        <button v-for="l in LINGUETTE" :key="l.id" type="button" :class="{ su: su === l.id }"
+        <button v-for="l in linguette" :key="l.id" type="button" :class="{ su: su === l.id }"
                 :data-linguetta="l.id" @click="su = l.id">{{ l.id }}<i v-if="nuovoIn(l)" class="nuovo" data-nuovo></i></button>
       </div>
       <div class="scelte">
@@ -113,6 +124,8 @@ function chiudi() {
           </button>
         </div>
         <p class="nota">I pezzi col «?» li regalano le navi madri, in fondo alle tappe e nel volo.</p>
+        <p v-if="voloOltre" class="nota" data-volo-oltre>Nel volo infinito il prossimo pacco lo porta la nave
+          madre del livello {{ voloOltre }}, o una più in alto.</p>
       </div>
     </div>
   </div>

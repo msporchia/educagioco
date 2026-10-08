@@ -43,12 +43,17 @@ export function vintaTappa(h, chiave, pos) {
 export const bossNelVolo = livello => livello > 0 && livello % BOSS_VOLO_OGNI === 0
 
 /* Nel volo regala solo chi abbatte una nave madre più in alto di tutte
-   quelle di prima: come il record, andare avanti è l'unico modo. */
+   quelle di prima, e regala il pezzo più alto che il suo livello può dare:
+   rifare i livelli facili non dà niente, i pezzi migliori stanno in alto. */
 export function vintoVolo(h, livello) {
   if (livello <= h.voloMax) return null
   h.voloMax = livello
-  return prendi(h, REGALI_VOLO.find(p => !possiede(h, p)))
+  const alla = REGALI_VOLO.filter(r => r.da <= livello && !possiede(h, r.p))
+  return alla.length ? prendi(h, alla[alla.length - 1].p) : null
 }
+
+// il prossimo pezzo del volo che si può ancora prendere, e da che livello
+export const prossimoDelVolo = h => REGALI_VOLO.find(r => !possiede(h, r.p)) || null
 
 export const visto = h => { h.nuovi = [] }
 

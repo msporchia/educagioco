@@ -102,7 +102,7 @@ await parti(page, '[data-volo]')
 await page.waitForTimeout(300)
 const volo = await gioca('!!m.regaloVolo.value')
 uguale('al livello 3 la nave madre del volo lascia un pacco',
-       await page.locator('[data-regalo-volo] [data-regalo]').getAttribute('data-pezzo'), REGALI_VOLO[0])
+       await page.locator('[data-regalo-volo] [data-regalo]').getAttribute('data-pezzo'), REGALI_VOLO[0].p)
 controlla('il volo comincia dal primo posto della storia', volo.specie[0] === 'rottami', volo.specie.join(', '))
 await attendi(page, 900)
 await scatto(page, 'asteroidi-volo-regalo')

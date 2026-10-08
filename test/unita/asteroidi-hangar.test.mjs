@@ -16,8 +16,10 @@ import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
   uguale('nessun regalo è doppio', new Set(FILA_REGALI).size, FILA_REGALI.length)
   controlla('nessun regalo è di serie', FILA_REGALI.every(p => !DI_SERIE.includes(p)))
   const esiste = p => ({ t: TINTE.map(t => t.id), d: DISEGNI, s: STEMMI })[tipoDi(p)].includes(idDi(p))
-  controlla('ogni regalo esiste', [...FILA_REGALI, ...REGALI_VOLO, ...DI_SERIE].every(esiste))
-  controlla('il volo regala le tinte lucide', REGALI_VOLO.every(p => TINTE.find(t => t.id === idDi(p)).lucida))
+  const delVolo = REGALI_VOLO.map(r => r.p)
+  controlla('ogni regalo esiste', [...FILA_REGALI, ...delVolo, ...DI_SERIE].every(esiste))
+  controlla('i pezzi del volo non li dà nessuna tappa', delVolo.every(p => !FILA_REGALI.includes(p)))
+  controlla('e salgono di livello', REGALI_VOLO.every((r, i) => !i || r.da > REGALI_VOLO[i - 1].da))
   controlla('ogni tappa ne ha due diversi', SCALETTA.every(v => regaliDellaTappa(v.pos).length === 2))
 }
 
@@ -40,11 +42,14 @@ import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 {
   const h = hangarDi({})
   controlla('una nave madre ogni tre livelli', bossNelVolo(3) && bossNelVolo(9) && !bossNelVolo(4) && !bossNelVolo(0))
-  const a = vintoVolo(h, 9)
-  uguale('la prima nave madre del volo regala la prima lucida', a, REGALI_VOLO[0])
+  const pezzoDa = da => REGALI_VOLO.find(r => r.da === da).p
+  uguale('la nave madre del 9 regala il pezzo del 9, non quelli sotto', vintoVolo(h, 9), pezzoDa(9))
   uguale('la stessa altezza non regala', vintoVolo(h, 9), null)
   uguale('più in basso nemmeno', vintoVolo(h, 6), null)
-  uguale('più in alto sì', vintoVolo(h, 12), REGALI_VOLO[1])
+  uguale('più in alto sì, il suo', vintoVolo(h, 12), pezzoDa(12))
+  uguale('molto più in alto, il più alto che può dare', vintoVolo(h, 30), pezzoDa(21))
+  uguale('e poi quelli rimasti, dall\'alto', vintoVolo(h, 33), pezzoDa(18))
+  uguale('dal livello 3 si comincia dal basso', vintoVolo(hangarDi({}), 3), pezzoDa(3))
 }
 
 /* ══════════ 4. si sceglie solo quello che si ha ══════════ */
@@ -53,7 +58,9 @@ import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
   controlla('un colore di serie si sceglie', scegli(h, 'scafo', 'rosso'))
   controlla('uno non preso no', !scegli(h, 'ali', 'oro') && h.nave.ali === undefined)
   controlla('un campo che non c\'è no', !scegli(h, 'motore', 'rosso'))
-  controlla('lo stemma di serie sì', scegli(h, 'stemma', 'stella'))
+  controlla('uno stemma non preso no', !scegli(h, 'stemma', 'stella'))
+  h.presi.push('s:stella')
+  controlla('preso sì', scegli(h, 'stemma', 'stella'))
   controlla('un disegno non preso no', !scegli(h, 'disegno', 'fiamme'))
   controlla('«di serie» toglie la scelta', scegli(h, 'scafo', null) && h.nave.scafo === undefined)
   uguale('senza scelte la nave è quella di sempre', livrea({}), null)

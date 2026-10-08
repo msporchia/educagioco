@@ -32,13 +32,13 @@ export const tipoDi = p => p.slice(0, 1)
 export const idDi = p => p.slice(2)
 
 // quello che si ha senza aver vinto niente
-export const DI_SERIE = ['t:bianco', 't:azzurro', 't:rosso', 't:giallo', 's:stella']
+export const DI_SERIE = ['t:bianco', 't:azzurro', 't:rosso', 't:giallo']
 
 export const REGALI_PER_TAPPA = 2
 export const BOSS_VOLO_OGNI = 3          // il volo ha un boss ogni tre livelli
 
 // Le tappe regalano tinte, disegni e stemmi a turno, nell'ordine della
-// fila; il volo regala le tinte lucide, una per ogni boss più in alto di prima.
+// fila; il volo regala i pezzi suoi, e i migliori solo dalle navi madri alte.
 const intreccia = (...file) => {
   const out = []
   for (let i = 0; file.some(f => i < f.length); i++)
@@ -50,9 +50,14 @@ const ordinarie = TINTE.filter(t => !t.lucida).map(t => pezzo('t', t.id))
 export const FILA_REGALI = intreccia(
   ordinarie,
   DISEGNI.map(d => pezzo('d', d)),
-  STEMMI.map(s => pezzo('s', s)).filter(p => !DI_SERIE.includes(p)),
+  STEMMI.filter(s => s !== 'stella').map(s => pezzo('s', s)),
 )
-export const REGALI_VOLO = TINTE.filter(t => t.lucida).map(t => pezzo('t', t.id))
+// `da`: il livello da cui una nave madre del volo può regalarlo
+export const REGALI_VOLO = [
+  { p: 's:stella', da: 3 }, { p: 't:argento', da: 6 }, { p: 't:bronzo', da: 9 },
+  { p: 't:smeraldo', da: 12 }, { p: 't:zaffiro', da: 15 }, { p: 't:rubino', da: 18 },
+  { p: 't:oro', da: 21 },
+]
 
 export const regaliDellaTappa = pos =>
   FILA_REGALI.slice(pos * REGALI_PER_TAPPA, (pos + 1) * REGALI_PER_TAPPA)
