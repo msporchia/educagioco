@@ -9,11 +9,12 @@
 
    Il mulino ha **tre posti** — i due oltre quello con cui nasce si
    comprano col motore, come farebbe il dito (`dati/coda.js`) — e **tre
-   pezzi**: uno messo in fila dieci minuti fa (già pronto), uno messo
-   adesso (sta lavorando) e uno messo subito dopo (aspetta che finisca
-   chi lo precede) — `f.avvia(cosa, ricetta, ora)` con `ora` passata fa
-   esattamente questo, perché è da `ora` che il motore calcola quando
-   parte il pezzo.
+   pezzi**: uno messo adesso (sta lavorando) e due subito dopo (aspettano
+   che finisca chi li precede). Nessuno è pronto: toccare il mulino
+   ritira da sé quello che è pronto, prima di aprire la bolla, e la fila
+   cambierebbe sotto il test. Il ritiro al tocco si prova in
+   `integrazione/fattoria-bolla`. Toccato il mulino si apre la bolla, e
+   il foglio della fila sta dietro il suo 📋.
 
    ── PERCHÉ SI RITOCCA IL FOGLIO PRIMA DI OGNI GESTO ────────────────
    Il foglio di una macchina si rifà da solo ogni 5 secondi
@@ -39,8 +40,6 @@ import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattor
 import { sogliaDi } from '../../src/giochi/fattoria/dati/livelli.js'
 import { CELLE, PRIMA, ULTIMA } from '../../src/giochi/fattoria/dati/mondo.js'
 import { PREZZI_DELLA_FILA } from '../../src/giochi/fattoria/dati/coda.js'
-
-const MINUTO = 60000
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -74,11 +73,10 @@ for (let k = 0; k < 2; k++)
   controlla(`il posto ${k + 2} si compra`, f.ingrandisciLaFila(cosaMulino).ok)
 const comprati = cosaMulino.fila
 
-/* Tre avvii, a tre momenti diversi: il primo lontano nel passato è già
-   pronto quando si apre il foglio, il secondo parte adesso (lavora), il
-   terzo si mette in coda dietro al secondo (aspetta). */
+/* Tre avvii: il primo parte adesso (lavora), gli altri due si mettono
+   in coda dietro (aspettano). */
 const ora = Date.now()
-const r1 = f.avvia(cosaMulino, 'mangime', ora - 10 * MINUTO)
+const r1 = f.avvia(cosaMulino, 'mangime', ora)
 controlla('il primo pezzo parte', r1.ok, JSON.stringify(r1))
 const r2 = f.avvia(cosaMulino, 'mangime', ora)
 controlla('il secondo pezzo parte', r2.ok, JSON.stringify(r2))
@@ -124,11 +122,20 @@ const dalCentro = tela => {
       punti.push({ x: Math.round(x), y: Math.round(y), d: (x - cx) ** 2 + (y - cy) ** 2 })
   return punti.sort((a, b) => a.d - b.d)
 }
+const titoloBolla = () => page.evaluate(
+  () => ((document.querySelector('[data-bolla-titolo]') || {}).innerText || '').trim())
+/* Il tocco apre la bolla; il foglio della fila sta dietro il suo 📋. */
+async function apriIlFoglio() {
+  if (!(await titoloBolla()).startsWith('Mulino')) return false
+  await page.locator('[data-bolla-foglio]').click()
+  await attendi(page, 300)
+  return true
+}
 async function cercaIlMulino() {
   const tela = await page.locator('.fa-tela').boundingBox()
   for (const p of dalCentro(tela)) {
     await dito(p.x, p.y)
-    if ((await titolo()) === 'Mulino') return p
+    if (await apriIlFoglio() && (await titolo()) === 'Mulino') return p
     await chiudi()
   }
   return null
@@ -145,6 +152,7 @@ async function assicuraIlMulinoAperto() {
   if ((await titolo()) === 'Mulino') return true
   await chiudi()
   await dito(dovEra.x, dovEra.y)
+  await apriIlFoglio()
   return (await titolo()) === 'Mulino'
 }
 
@@ -158,21 +166,21 @@ if (trovato) {
   await scatto(page, 'fila-mulino-aperto')
   /* ---------- la fila si vede ---------- */
   uguale('tre caselle occupate', await page.locator('[data-fila-posto]').count(), 3)
-  uguale('la prima è pronta', await page.locator('[data-fila-posto="0"] em').first().innerText(), '✓')
-  controlla('la seconda lavora',
-            !!(await page.locator('[data-fila-posto="1"] .fa-livello').count()))
+  controlla('la prima lavora',
+            !!(await page.locator('[data-fila-posto="0"] .fa-livello').count()))
+  controlla('la seconda aspetta e ha la ✕',
+            await page.locator('[data-fila-togli="1"]').count() === 1)
   controlla('la terza aspetta e ha la ✕',
             await page.locator('[data-fila-togli="2"]').count() === 1)
-  /* la prima e la seconda non hanno la ✕: non sono in attesa */
+  /* la prima non ha la ✕: è già partita */
   uguale('la prima non si toglie', await page.locator('[data-fila-togli="0"]').count(), 0)
-  uguale('la seconda non si toglie', await page.locator('[data-fila-togli="1"]').count(), 0)
-  /* Tre posti e tre pezzi: la fila è piena, e uno è pronto. La riga
-     manda a ritirarlo, o a comprare un posto — non «ritira» e basta
-     quando di pronto non c'è niente (`viste/Macchina.vue`). */
+  /* Tre posti e tre pezzi, nessuno pronto: la riga dice di aspettare il
+     primo, o di comprare un posto — non «ritira» quando di pronto non
+     c'è niente (`viste/Macchina.vue`). */
   const piena = await page.locator('[data-fila-piena]').innerText()
-  controlla('la fila piena manda a ritirare quello che è pronto',
-            /ritira quello che è pronto/.test(piena), piena)
-  controlla('o ad aggiungere un posto', /aggiungi un posto/.test(piena), piena)
+  controlla('la fila piena dice di aspettare il primo',
+            /aspetta che finisca il primo/.test(piena), piena)
+  controlla('o di aggiungere un posto', /aggiungi un posto/.test(piena), piena)
 
   /* ---------- 1. togliere un pezzo in attesa rende la roba ---------- */
   const primaDiTogliere = await leggiProfilo(page)
@@ -205,20 +213,6 @@ if (trovato) {
          mulinoDopoIngrandire.fila, comprati + 1)
   uguale('costa 🪙 quanto dichiarato', dopoIngrandire.coins, moneteCoinsPrima - prezzo)
 
-  /* ---------- 3. ritirare mette il pronto nel silo ---------- */
-  const mangimePrima = statoDopoIngrandire.granaio.mangime || 0
-  controlla('il mulino è aperto', await assicuraIlMulinoAperto())
-  const ritira = page.locator('[data-ritira]')
-  uguale('il tasto ritira c\'è', await ritira.count(), 1)
-  controlla('e non è spento', await ritira.isDisabled() === false)
-  await ritira.click()
-  await attendi(page, 1800)               // il salvataggio è a ritardo
-  const dopoRitiro = await leggiProfilo(page)
-  const statoDopoRitiro = dopoRitiro.campagne.fattoria.cfg.stato
-  uguale('il mangime pronto è entrato nel silo', statoDopoRitiro.granaio.mangime, mangimePrima + 1)
-  const mulinoDopoRitiro = statoDopoRitiro.cose.find(c => c.id === 'mulino')
-  uguale('in fila resta solo quello che lavora ancora', (mulinoDopoRitiro.coda || []).length, 1)
-  await scatto(page, 'fila-dopo-ritiro')
 }
 
 nota(`errori in console: ${errori.length}`)

@@ -85,6 +85,19 @@ const titolo = () => page.evaluate(
   () => ((document.querySelector('.fa-foglio h2') || {}).innerText || '').trim())
 const testoFoglio = () => page.evaluate(
   () => (document.querySelector('.fa-foglio') || {}).innerText || '')
+/* Campi e macchine aprono la bolla dei gettoni, non un foglio
+   (docs/fattoria/come-si-tocca.md): il titolo è la sua prima riga. */
+const titoloBolla = () => page.evaluate(
+  () => ((document.querySelector('[data-bolla-titolo]') || {}).innerText || '').trim())
+async function toccaGettone(chiave) {
+  const b = await page.locator(`[data-gettone="${chiave}"]`).first().boundingBox()
+  if (controlla(`nella bolla c'è il gettone «${chiave}»`, !!b))
+    await dito(Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2))
+}
+async function alFoglio() {
+  await page.locator('[data-bolla-foglio]').click()
+  await attendi(page, 300)
+}
 const monete = () => page.evaluate(
   () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
 
@@ -224,17 +237,15 @@ await attendi(page, 500)
 controlla('il silo si compra posandolo', await monete() < dopoIlCampo)
 await chiudi()
 
-/* ---------- 2. toccarlo apre la sua scheda ----------
-   Lo stesso gesto con cui si tocca un cane: è la ragione per cui non c'è
-   niente di nuovo da imparare. */
+/* ---------- 2. toccarlo apre la sua bolla ----------
+   Sopra il campo, sul prato: i semi da trascinare. Toccare un gettone
+   senza trascinarlo semina quel campo, ed è il gesto che si prova qui;
+   la strisciata su più campi ha il suo file (`integrazione/fattoria-bolla`). */
 await dito(dove.x, dove.y)
 await attendi(page, 400)
-uguale('toccando il campo si apre la sua scheda', await titolo(), 'Un campo da seminare')
+uguale('toccando il campo si apre la sua bolla', await titoloBolla(), 'Cosa semini?')
+uguale('e non un foglio', await page.locator('.fa-velo').count(), 0)
 await scatto(page, 'campi-scheda-vuoto')
-controlla('e dentro ci sono le colture da scegliere',
-          await page.locator('.fa-cibo', { hasText: 'Grano' }).count() > 0)
-controlla('e dice che ci vuole del tempo vero',
-          /tempo vero/i.test(await testoFoglio()))
 
 /* ---------- 3. si semina ---------- */
 /* **Seminare è gratis, si paga raccogliendo.** Da quando un campo dà una
@@ -243,18 +254,21 @@ controlla('e dice che ci vuole del tempo vero',
    negativo apposta: è la riga che si farebbe rimettere per distrazione
    la prossima volta che si ritocca un prezzo. */
 const primaDiSeminare = await monete()
-await page.locator('.fa-cibo', { hasText: 'Grano' }).first().click()
+await toccaGettone('grano')
 await attendi(page, 500)
-uguale('seminato, il foglio si chiude', await page.locator('.fa-velo').count(), 0)
+uguale('seminato, la bolla si chiude', await page.locator('[data-bolla]').count(), 0)
 uguale('e seminare non costa niente', await monete(), primaDiSeminare)
 
 await dito(dove.x, dove.y)
 await attendi(page, 400)
+uguale('toccandolo di nuovo dice cos\'ha dentro', await titoloBolla(), 'Grano')
+uguale('e non c\'è un cesto: non si può raccogliere adesso',
+       await page.locator('[data-gettone="cesto"]').count(), 0)
+/* il 📋 apre il foglio di sempre, che dice che sta crescendo */
+await alFoglio()
 const cresce = await testoFoglio()
-uguale('toccandolo di nuovo dice cos\'ha dentro', await titolo(), 'Grano')
-controlla('e che sta crescendo', /sta crescendo/i.test(cresce), cresce.slice(0, 90))
-controlla('e non si può raccogliere adesso',
-          await page.locator('.fa-foglio button', { hasText: 'Raccogli' }).count() === 0)
+uguale('il 📋 apre il foglio del campo', await titolo(), 'Grano')
+controlla('che dice che sta crescendo', /sta crescendo/i.test(cresce), cresce.slice(0, 90))
 await scatto(page, 'campi-cresce')
 await chiudi()
 await attendi(page, 400)
@@ -281,8 +295,7 @@ await entra()
 
 await dito(dove.x, dove.y)
 await attendi(page, 400)
-const pronto = await testoFoglio()
-controlla('riaperto il gioco, il grano è pronto', /pronto/i.test(pronto), pronto.slice(0, 90))
+uguale('riaperto il gioco, il grano è pronto', await titoloBolla(), 'È pronto!')
 await scatto(page, 'campi-pronto')
 /* Il campo da solo, senza il foglio davanti: è l'unico modo di guardare
    con un occhio umano com'è venuto il grano maturo e il cestino sopra —
@@ -295,12 +308,10 @@ await scatto(page, 'campi-maturo-sul-campo')
 await dito(dove.x, dove.y)
 await attendi(page, 400)
 
-/* ---------- 6. si raccoglie, e finisce in granaio ---------- */
-const tasto = page.locator('.fa-foglio button', { hasText: 'Raccogli' })
-controlla('c\'è il tasto per raccogliere', await tasto.count() === 1)
-await tasto.click()
+/* ---------- 6. si raccoglie col cesto, e finisce in granaio ---------- */
+await toccaGettone('cesto')
 await attendi(page, 600)
-uguale('raccolto, il foglio si chiude', await page.locator('.fa-velo').count(), 0)
+uguale('raccolto, la bolla si chiude', await page.locator('[data-bolla]').count(), 0)
 
 /* ---------- 6b. il silo si guarda toccandolo, e si ingrandisce ----------
    Il gesto è quello di tutto il resto — tocca una cosa tua e vedi cosa
@@ -414,7 +425,9 @@ await scatto(page, 'campi-recinto')
 
 await dito(dovePen.x, dovePen.y)
 await attendi(page, 450)
-uguale('e toccandola si apre col suo nome', await titolo(), 'Conigliera')
+uguale('e toccandola si apre la sua bolla', await titoloBolla(), 'Conigliera')
+await alFoglio()
+uguale('e il 📋 apre il suo foglio, col suo nome', await titolo(), 'Conigliera')
 const foglioRecinto = await testoFoglio()
 controlla('che dice cosa le manca, col numero',
           /serve ancora\s*2/.test(foglioRecinto),
