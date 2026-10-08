@@ -52,13 +52,14 @@ export const POTENZIAMENTI = {
     spiega: 'Congela la domanda che hai adesso: i sassi rallentano e hai tutto il tempo di fare il conto. Dalla domanda dopo il cielo riparte.',
     lento: 0.42,
   },
-  /* Il mirino. Fa sparire **una risposta sbagliata**, scelta a caso fra
-     quelle in cielo: non indica la giusta e non fa il conto: toglie di
-     mezzo un sasso e lascia gli altri. */
+  /* Il mirino. Fa sparire **risposte sbagliate** scelte a caso, finché in
+     cielo ne restano tre (con tre, una sola): non indica la giusta, il conto
+     resta da fare fra tre. Una sola era troppo poco per servire. */
   mirino: {
     emoji: '🎯', nome: 'Mirino', colore: '#8cff9d',
     grido: '🎯 MIRINO!',
-    spiega: 'Fa sparire una risposta sbagliata. Non ti dice qual è quella giusta: il conto lo fai tu, ma con un sasso in meno.',
+    spiega: 'Fa sparire le risposte sbagliate finché ne restano tre. Non ti dice qual è quella giusta: il conto lo fai tu.',
+    restano: 3,
   },
 }
 

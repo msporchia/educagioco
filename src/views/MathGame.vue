@@ -523,10 +523,13 @@ function usaMirino() {
   // in cielo è rimasta solo la risposta giusta: non c'è niente da
   // togliere, e il gettone resta in tasca invece di bruciarsi
   if (!vittime.length) return mostraCartello('🎯 niente da togliere', '#8cff9d')
-  const v = vittime[Math.floor(Math.random() * vittime.length)]
+  // ne restano tre in cielo (la giusta e due), o una in meno se erano già tre
+  const via = Math.max(1, vittime.length + 1 - POTENZIAMENTI.mirino.restano)
   tasca.mirino--
-  v.morto = true
-  spara(v, '#8cff9d'); rompi(v, '#8cff9d')
+  for (const v of vittime.sort(() => Math.random() - 0.5).slice(0, via)) {
+    v.morto = true
+    spara(v, '#8cff9d'); rompi(v, '#8cff9d')
+  }
   suono.ok()
   salva()
 }
@@ -598,6 +601,7 @@ function abbattiMadre() {
     return tappaSuperata()
   }
   dammiVita('NAVE MADRE\nABBATTUTA!')
+  prendiGettone(prossimoGettone())
   regaloVolo.value = conHangar(h => vintoVolo(h, hud.livello))
   avanti()
 }
@@ -865,9 +869,9 @@ function disegna(dt) {
   // esista un gettone da premere
   if (fase.value === 'gioco') {
     const brina = gelo ? 1 : 0
-    for (const a of asteroidi) if (!a.morto) { a.gelo = brina; disegnaAsteroide(ctx, a, S, pulsa) }
-    // dopo le bombe: escono da sotto di lei
+    // la nave madre sotto le bombe: sopra, la bomba giusta restava nascosta dietro di lei
     if (madre.attiva) disegnaNaveMadre(ctx, madre, S, pulsa)
+    for (const a of asteroidi) if (!a.morto) { a.gelo = brina; disegnaAsteroide(ctx, a, S, pulsa) }
   }
   for (const p of pezzi) disegnaPezzoMadre(ctx, p, S)
   for (const f of frammenti) disegnaFrammento(ctx, f)

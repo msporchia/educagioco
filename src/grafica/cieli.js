@@ -216,9 +216,6 @@ function rottame(c, a, S, t, r) {
     c.fillStyle = '#00000055'; c.beginPath(); c.ellipse(R * 0.15, R * 0.05, R * 0.2, R * 0.28, 0.4, 0, TAU); c.fill()
   }
   c.restore()
-  if (Math.sin(t * 5 + a.ph) > 0.6) {   // una scintilla
-    c.fillStyle = '#ffd94a'; c.beginPath(); c.arc(a.x + R * 0.8, a.y - R * 0.5, Math.max(1.5, R * 0.07), 0, TAU); c.fill()
-  }
   numero(c, a, S, R * 0.85)
 }
 

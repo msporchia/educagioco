@@ -149,8 +149,8 @@ Si guadagnano giocando, stanno in tasca in basso a destra (mai più di tre,
 
 | | come arriva | cosa fa |
 |---|---|---|
-| ❄️ gelo | 5, 15, 25… giuste di fila | congela **la domanda in corso e basta**: i sassi al 42% (`lento`), e dalla domanda dopo il cielo riparte |
-| 🎯 mirino | idem, a turno col gelo | fa sparire **una** risposta sbagliata a caso; quel sasso non lascia niente in archivio |
+| ❄️ gelo | 5, 15, 25… giuste di fila, o una nave madre del volo abbattuta | congela **la domanda in corso e basta**: i sassi al 42% (`lento`), e dalla domanda dopo il cielo riparte |
+| 🎯 mirino | idem, a turno col gelo | fa sparire risposte sbagliate a caso finché in cielo ne **restano tre** (con tre, ne toglie una); i sassi tolti non lasciano niente in archivio |
 
 - **Un gettone non si perde mai sbagliando**: si spende o resta lì. Un
   premio che si accende da solo è un lampo giallo, e uno che si perde
@@ -165,8 +165,8 @@ Si guadagnano giocando, stanno in tasca in basso a destra (mai più di tre,
   domanda dopo, non regalato.
 - **Un gettone non risponde mai al posto del bambino**: nessuno accorcia
   un calcolo, ne salta uno o indica il sasso giusto. Il mirino regge
-  perché si paga con cinque centri di fila e, con quattro o sei sassi in
-  cielo, toglierne uno sbagliato a caso lascia il conto da fare. Possono
+  perché si paga con cinque centri di fila e lascia tre sassi: il conto si
+  fa lo stesso, fra tre. Toglierne uno solo, l'utente: «non serve a niente». Possono
   dare più tempo a chi è in difficoltà, non di più.
 - **Non si comprano**: le monete sono la valuta della fattoria, e un
   hangar che le succhia sposterebbe un gioco che non c'entra.

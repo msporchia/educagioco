@@ -96,7 +96,7 @@ const partita = await page.evaluate(async () => {
   const m = window.__mate
   const bersaglio = m.tappa.value.bersaglio
   const viste = [], ritardi = []
-  let gettoni = 0, tolti = 0
+  let gettoni = 0, tolti = 0, primaDelMirino = 0
   const tipi = new Set()
   const salvadanaio = m.salvadanaio()
   // si risponde sempre giusto: interessa dove porta il bersaglio, non la bravura
@@ -114,6 +114,7 @@ const partita = await page.evaluate(async () => {
       const prima = m.asteroidi().filter(x => !x.morto).length
       m.usaMirino()
       tolti = prima - m.asteroidi().filter(x => !x.morto).length
+      primaDelMirino = prima
     }
     viste.push([m.domanda.a, m.domanda.b, giusto.specie === 'bomba'])
     /* fra quanto il sasso con la risposta giusta sarà in scena: nasce
@@ -129,7 +130,7 @@ const partita = await page.evaluate(async () => {
     if (m.tasca.mirino) tipi.add('mirino')
     await new Promise(r => setTimeout(r, 15))
   }
-  return { viste, bersaglio, ritardi, fase: m.fase.value, giuste: m.hud.giuste, gettoni, tolti,
+  return { viste, bersaglio, ritardi, fase: m.fase.value, giuste: m.hud.giuste, gettoni, tolti, primaDelMirino,
            tipi: [...tipi], mirate: m.hud.mirate, tappa: m.progresso.value.tappa,
            prese: m.monete.prese, entrate: m.salvadanaio() - salvadanaio,
            regalo: document.querySelector('[data-regalo]')?.dataset.pezzo || null,
@@ -198,7 +199,8 @@ controlla('i gettoni arrivano già durante la tappa, non alla fine',
    la funzione pura, da sola, alternava benissimo. */
 uguale('e in una tappa si vedono tutti e due i poteri, non sempre lo stesso',
        partita.tipi.sort().join(' '), 'gelo mirino')
-uguale('e il mirino toglie un sasso sbagliato, uno solo', partita.tolti, 1)
+uguale('e il mirino lascia tre sassi in cielo (con tre, ne toglie uno)', partita.tolti,
+       Math.max(1, partita.primaDelMirino - 3))
 const profilo = await leggiProfilo(page)
 const risposte = Object.entries(profilo.items || {})
   .filter(([k]) => k.startsWith('math:'))

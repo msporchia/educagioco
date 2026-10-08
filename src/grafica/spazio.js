@@ -132,7 +132,7 @@ export function disegnaNave(ctx, n) {
     ctx.beginPath(); ctx.arc(0, 0, R * 2.1, 0, TAU); ctx.fill()
   }
 
-  const sp = 0.8 + (n.spinta || 0) * 1.1 + Math.sin(t * 22) * 0.14
+  const sp = Math.max(0, 0.8 + (n.spinta || 0) * 1.1 + Math.sin(t * 22) * 0.14)   // arc col raggio negativo lancia
   for (const [px, py, pr] of PROPULSORI[lv]) {
     const x = px * R, y = py * R, w = pr * R
     // il motore rotto va a singhiozzo: la fiamma sinistra sparisce e torna

@@ -50,14 +50,14 @@ In cima restano solo le due cose che la nave non può dire: quanto manca
 al bersaglio della tappa e quanti centri sulla tabellina nuova.
 
 Due **gettoni** si guadagnano giocando — uno ogni cinque risposte giuste
-di fila, a turno — restano in tasca (mai più
+di fila e uno per ogni nave madre del volo, a turno — restano in tasca (mai più
 di tre) finché non li si preme, e finiscono con la partita. A dieci di
 fila arriva una vita al posto del gettone.
 
 - ❄️ **gelo** — congela la domanda che si ha davanti: i sassi rallentano e
   c'è tutto il tempo di fare il conto. Dalla domanda dopo il cielo riparte.
-- 🎯 **mirino** — fa sparire una risposta sbagliata, scelta a caso. Non
-  dice qual è quella giusta: il conto si fa lo stesso, con un sasso in meno.
+- 🎯 **mirino** — fa sparire le risposte sbagliate finché ne restano tre.
+  Non dice qual è quella giusta: il conto si fa lo stesso, fra tre.
 
 **Non si perdono sbagliando**, e nessuno dei due risponde al posto del
 bambino. Non si comprano con le monete: si pagano con le risposte giuste.
