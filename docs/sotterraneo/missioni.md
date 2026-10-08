@@ -101,11 +101,19 @@ Zannagrigia, lanterna) sono radici senza seguito.
   3 missioni aperte: consegnane una e ne arrivano altre»). Chi non ne
   consegna mai una arriva a nove sbloccate insieme alla fine, e ne vede
   sempre al più tre.
-- **Il segno sopra la testa** (`segnoDi`): «!» ha una missione nuova per te,
-  «?» ne hai una presa (o fatta: da consegnare). Se un personaggio ne ha più
-  d'una vince la da consegnare, poi la nuova, poi l'attesa. Un fumetto
+- **Il segno sopra la testa** (`segnoDi`), come nei giochi di ruolo, tre
+  stati: **«!» d'oro** (`nuova`) ha una missione per te; **«?» grigio e fermo**
+  (`attesa`) l'hai presa e non è fatta; **«?» d'oro, più grande, che pulsa**
+  (`consegna`) l'hai fatta e lui aspetta che gliela porti. Se un personaggio
+  ne ha più d'una vince la consegna, poi la nuova, poi l'attesa. Un fumetto
   mostra tutte le sue missioni aperte, una sotto l'altra (`data-missione`,
-  `data-fase`).
+  `data-fase`). Con `prefers-reduced-motion` il «?» d'oro resta fermo ma
+  grande e col suo alone.
+- **Chi aspetta ed è fuori schermo si trova**: sul bordo della vista, nella
+  sua direzione, un «?» d'oro con una freccia (`viste/Terra.vue`, `fuori`,
+  ricalcolato a ogni fotogramma insieme alla telecamera; il minatore
+  compreso). Toccarlo (`click`, soglia 16 px) è come toccare lui: l'eroe ci
+  va e il fumetto si apre all'arrivo. Sparisce appena lui è in vista.
 - **Il minatore dice chi ti cerca**: indicando la strada aggiunge una riga
   per chi (`chiTiCerca`): «La ragazza del pozzo ti aspetta: quello che ti ha
   chiesto l'hai fatto», «… ha un favore / due favori da chiederti», «…
@@ -117,9 +125,10 @@ Zannagrigia, lanterna) sono radici senza seguito.
 - **Il diario** (`viste/Diario.vue`, `diario` in `motore/missioni.js`): un
   tasto 📖 sempre sulla terra di sopra, accanto alla carta di chi scende, col
   numero delle aperte (bordo d'oro se una è da consegnare). Si apre al centro,
-  si chiude con la ✕. Tre elenchi: **da fare** (le prese e le fatte: la cosa,
-  la discesa col suo ritaglio dalla mappa e il piano, chi la vuole, e lo stato
-  «da fare» o «fatta: torna dalla ragazza del pozzo», il premio), **ti
+  si chiude con la ✕. Quattro elenchi: **da consegnare** (le fatte, in cima e
+  in oro: «Torna dal mugnaio: hai il sacco di farina buona», «… hai battuto
+  Rosicchione»), **da fare** (le prese: la cosa, la discesa col suo ritaglio
+  dalla mappa e il piano, chi la vuole, «da fare», il premio), **ti
   aspettano** (le offerte: chi ha un favore da chiederti, e dove), **consegnate**
   (solo i nomi). Vuoto, dice che qualcuno al villaggio ti chiederà un favore
   a discesa finita.
@@ -208,7 +217,7 @@ fallisce se `premio.monete` non torna).
   scritta «Missione compiuta! 🪙 2».
 
 Nei test: `unita/sotterraneo-missioni` (i dati e i guasti che vede davvero, ogni
-requisito e lo sblocco da sola, l'albero punto per punto, mai più di tre
+requisito e lo sblocco da sola, l'albero punto per punto, i tre segni e la consegna che vince sulla nuova, mai più di tre
 aperte per chi non consegna mai, più missioni prese insieme, il tetto che si
 libera consegnando, il goblin nel suo piano, lo stato di prima, il conto delle
 monete, il diario, il promemoria, il minatore),
@@ -216,10 +225,14 @@ monete, il diario, il promemoria, il minatore),
 giusto, sbagliare e riprovare, la sosta, il mostro col nome più duro, la
 missione presa a discesa a metà, la consegna in gemme e in un gioiello, le
 tasche piene), `integrazione/sotterraneo-missioni` (col dito: due «!» e un «?»
-sul villaggio, due missioni prese da due persone, il diario con le tre righe
-e il tetto, giù il promemoria, su la consegna con le monete e il «!» che
-arriva sull'eremita). Sulla mappa `[data-personaggio="<chi>"]` con
-`data-segno` (`!` o `?`), il fumetto `[data-fumetto-di="<chi>"]` con una
+d'oro sul villaggio, il mugnaio lontano e il suo indicatore sul bordo che
+porta da lui, due missioni prese da due persone (i «?» diventano grigi), il
+diario con le tre righe e il tetto, giù il promemoria, su la consegna con le
+monete e il «!» che arriva sull'eremita). Sulla mappa `[data-personaggio="<chi>"]` con
+`data-segno` (`nuova`, `attesa` o `consegna`; quello del minatore è
+`[data-minatore] [data-segno-di]`), l'indicatore sul bordo
+`[data-consegna-fuori="<chi>"]` (c'è solo se chi aspetta è fuori schermo), il
+fumetto `[data-fumetto-di="<chi>"]` con una
 `[data-missione="<id>"][data-fase]` per missione (`offre`, `aspetta`,
 `consegna`; `[data-fase="saluto"]` senza niente), la frase del minatore
 `[data-ti-cerca]` (una per riga), `[data-azione="prendi-missione"]`,
@@ -227,8 +240,8 @@ arriva sull'eremita). Sulla mappa `[data-personaggio="<chi>"]` con
 [data-segno]`, `[data-missioni-qui]` nel fumetto di una discesa. Il tasto
 `[data-azione="diario"]` con `[data-diario-n]` (il numero), il foglio
 `[data-diario]` con `[data-sezione="da-fare" | "ti-aspettano" | "consegnate"]`,
-le righe `li[data-missione][data-stato]` (`presa`, `fatta`, `offerta`,
-`consegnata`) con `[data-esito]` e `[data-ritaglio]`, `[data-diario-tetto]`,
+`[data-sezione="da-consegnare"]` per le fatte, le righe
+`li[data-missione][data-stato]` (`presa`, `fatta`, `offerta`, `consegnata`) con `[data-esito]` e `[data-ritaglio]`, `[data-diario-tetto]`,
 `[data-diario-vuoto]`. Giù `[data-promemoria] li[data-missione][data-dove]`
 (`sopra`, `qui`, `oltre`, `fatta`); il foglio del forziere
 `[data-missione="<id>"]`.

@@ -21,7 +21,7 @@ import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiP
          camminaVerso } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { PERSONAGGI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
+import { PERSONAGGI, MINATORE } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { missioneDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
@@ -58,14 +58,40 @@ async function toccaIl(sel) {
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
 const avventura = async () => (await leggiProfilo(page))?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere || {}
+// chi ha un segno e quale: `nuova` («!» d'oro), `attesa` («?» grigio), `consegna` («?» d'oro che pulsa)
 const segni = () => page.locator('[data-personaggio][data-segno]').evaluateAll(
-  els => els.map(e => e.dataset.personaggio + e.dataset.segno).sort().join(','))
+  els => els.map(e => e.dataset.personaggio + ':' + e.dataset.segno).sort().join(','))
 
 /* ---------- 1. il villaggio: due «!» e un «?» ---------- */
-uguale('sul villaggio: la guardia e la ragazza hanno un favore, il mugnaio aspetta Rosicchione', await segni(), 'guardia!,mugnaio?,ragazza!')
+uguale('sul villaggio: la guardia e la ragazza hanno un favore, il mugnaio aspetta che gli porti Rosicchione', await segni(), 'guardia:nuova,mugnaio:consegna,ragazza:nuova')
 uguale('l\'eremita no: la sua Badessa aspetta che si liberi un posto (il tetto è tre)', await page.locator('[data-personaggio="eremita"]').getAttribute('data-segno'), null)
 uguale('il tasto del diario conta le aperte: una in mano e due offerte', await page.locator('[data-diario-n]').innerText(), '3')
 await scatto(page, 'missioni-villaggio')
+
+/* ---------- 1b. chi aspetta ed è lontano: l'indicatore sul bordo ---------- */
+uguale('con il mugnaio in vista non serve nessun indicatore', await page.locator('[data-consegna-fuori]').count(), 0)
+await camminaVerso(page, MINATORE.accanto, { tocca })
+await page.waitForSelector('[data-consegna-fuori="mugnaio"]', { timeout: 5000 })
+uguale('il mugnaio è lontano: un solo indicatore, e solo per lui (gli altri non hanno una consegna)',
+       await page.locator('[data-consegna-fuori]').count(), 1)
+{
+  const v = await page.locator('[data-terra]').boundingBox(), b = await page.locator('[data-consegna-fuori="mugnaio"]').boundingBox()
+  controlla('sta sul bordo della vista, tutto dentro', b.x >= v.x && b.y >= v.y && b.x + b.width <= v.x + v.width && b.y + b.height <= v.y + v.height, JSON.stringify([v, b]))
+  controlla('ed è abbastanza grande per un dito', b.width >= 40 && b.height >= 40, JSON.stringify(b))
+  controlla('verso nord-est, dov\'è il mugnaio: in alto a destra del centro', b.y + b.height / 2 < v.y + v.height / 2 && b.x + b.width / 2 > v.x + v.width / 2, JSON.stringify([v, b]))
+}
+await scatto(page, 'missioni-bussola')
+await toccaIl('[data-consegna-fuori="mugnaio"]')
+await page.waitForSelector('[data-fumetto-di="mugnaio"] [data-missione="rosicchione"][data-fase="consegna"]', { timeout: 30000 })
+uguale('toccandolo l\'eroe va dal mugnaio e il fumetto è aperto', await page.locator('[data-fumetto-di="mugnaio"]').count(), 1)
+uguale('arrivati, il mugnaio è in vista e l\'indicatore sparisce', await page.locator('[data-consegna-fuori]').count(), 0)
+{
+  const v = await page.locator('[data-terra]').boundingBox()
+  await tocca(v.x + 12, v.y + v.height / 2)   // sul prato: il fumetto si chiude
+  await attendi(page, 300)
+}
+uguale('un tocco sul prato chiude il fumetto', await page.locator('[data-fumetto]').count(), 0)
+await camminaVerso(page, ragazza.accanto, { tocca })
 
 /* ---------- 2. si prendono due missioni ---------- */
 await toccaIl('[data-personaggio="ragazza"]')
@@ -77,7 +103,7 @@ await toccaIl('[data-fumetto-di="ragazza"] [data-azione="prendi-missione"]')
 await attendi(page, 500)
 uguale('presa, il fumetto la ricorda', await page.locator('[data-fumetto-di="ragazza"] [data-missione="goblin"][data-fase="aspetta"]').count(), 1)
 uguale('nell\'avventura il goblin è preso', (await avventura()).missioni?.goblin, 'presa')
-uguale('la ragazza adesso ha il punto di domanda', await page.locator('[data-personaggio="ragazza"]').getAttribute('data-segno'), '?')
+uguale('la ragazza adesso ha il punto di domanda grigio', await page.locator('[data-personaggio="ragazza"]').getAttribute('data-segno'), 'attesa')
 
 await camminaVerso(page, PERSONAGGI.guardia.accanto, { tocca })
 await scatto(page, 'missioni-villaggio-guardia')
@@ -89,17 +115,19 @@ const dopoDue = (await avventura()).missioni
 uguale('e la guardia le sue chiavi: la prima non ha fermato la seconda', dopoDue?.chiavi, 'presa')
 uguale('tutte insieme: Rosicchione fatta, il goblin e le chiavi prese', JSON.stringify(Object.entries(dopoDue).sort()),
        JSON.stringify([['chiavi', 'presa'], ['collana', 'consegnata'], ['goblin', 'presa'], ['rosicchione', 'fatta']]))
-uguale('adesso tre punti di domanda e nessun «!»', await segni(), 'guardia?,mugnaio?,ragazza?')
+uguale('adesso tre punti di domanda e nessun «!»: solo il mugnaio ha quello d\'oro', await segni(), 'guardia:attesa,mugnaio:consegna,ragazza:attesa')
 
 /* ---------- 3. il diario ---------- */
 await toccaIl('[data-azione="diario"]')
 await page.waitForSelector('[data-diario]', { timeout: 5000 })
 await attendi(page, 300)
-const righe = await page.locator('[data-diario] [data-sezione="da-fare"] li').evaluateAll(
-  els => els.map(e => ({ id: e.dataset.missione, stato: e.dataset.stato, testo: e.innerText, ritaglio: !!e.querySelector('[data-ritaglio]') })))
-stessaLista('il diario le ha tutte e tre, nell\'ordine della storia', righe.map(r => r.id), ['goblin', 'rosicchione', 'chiavi'])
+const righe = await page.locator('[data-diario] [data-sezione="da-consegnare"] li, [data-diario] [data-sezione="da-fare"] li').evaluateAll(
+  els => els.map(e => ({ id: e.dataset.missione, stato: e.dataset.stato, sezione: e.closest('[data-sezione]').dataset.sezione,
+                         testo: e.innerText, ritaglio: !!e.querySelector('[data-ritaglio]') })))
+stessaLista('il diario le ha tutte e tre: la da consegnare in cima, poi le altre nell\'ordine della storia', righe.map(r => r.id), ['rosicchione', 'goblin', 'chiavi'])
+stessaLista('la consegna sta nel suo elenco, le altre due fra le da fare', righe.map(r => r.sezione), ['da-consegnare', 'da-fare', 'da-fare'])
 const ros = righe.find(r => r.id === 'rosicchione'), gob = righe.find(r => r.id === 'goblin')
-controlla('Rosicchione è fatta: torna dal mugnaio', ros.stato === 'fatta' && ros.testo.includes('fatta: torna dal mugnaio'), ros.testo)
+controlla('Rosicchione è fatta: torna dal mugnaio, hai battuto Rosicchione', ros.stato === 'fatta' && ros.testo.includes('Torna dal mugnaio: hai battuto Rosicchione'), ros.testo)
 controlla('il goblin è da fare, con la discesa, il piano e chi lo vuole', gob.stato === 'presa' && gob.testo.includes('da fare') &&
           gob.testo.includes('La torre in rovina, piano 1') && gob.testo.toLowerCase().includes('ragazza del pozzo'), gob.testo)
 controlla('ogni riga ha l\'icona ritagliata della discesa', righe.every(r => r.ritaglio))
@@ -145,7 +173,7 @@ controlla('il gioiello va addosso o in tasca', a.roba?.dito === 'amuleto-azzurro
 uguale('le gemme non cambiano (il premio è il gioiello)', a.roba?.gemme, gemmePrima)
 uguale('le monete: il regalo, le domande in più', (await leggiProfilo(page)).coins, monete + ROSICCHIONE.premio.monete)
 controlla('e il gioco lo dice', (await page.locator('[data-avviso-terra]').innerText()).includes(`🪙 ${ROSICCHIONE.premio.monete}`))
-uguale('consegnata una, si libera un posto: la Badessa ha il suo «!»', await segni(), 'eremita!,guardia?,ragazza?')
+uguale('consegnata una, si libera un posto: la Badessa ha il suo «!»', await segni(), 'eremita:nuova,guardia:attesa,ragazza:attesa')
 uguale('il diario conta di nuovo le aperte: due in mano e una offerta', await page.locator('[data-diario-n]').innerText(), '3')
 await scatto(page, 'missioni-fatta')
 
