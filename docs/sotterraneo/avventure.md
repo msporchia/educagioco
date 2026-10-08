@@ -61,7 +61,8 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
                    missioni,                // { [id]: 'presa' | 'fatta' | 'consegnata' } (missioni.md)
                    segui,                   // l'id della missione che le freccine seguono, scelta nel diario (missioni-freccina.md)
                    crescita,                // { esp, forza, tempra, scorza, fortuna }: il livello e i punti dati (livelli.md)
-                   tesori },                // gli id dei leggendari trovati, per la pagina dei Tesori (rarita.md)
+                   tesori,                  // gli id dei leggendari trovati, per la pagina dei Tesori (rarita.md)
+                   zone },                  // { n, livelli, sentita }: le zone che si potenziano dopo la storia (zone.md)
       mago: { … },
     },
   },

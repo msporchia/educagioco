@@ -5,7 +5,10 @@ sta il record e fin dove regge. Il progetto (bottino graduato, monete):
 [abisso-progetto.md](abisso-progetto.md); la scala che risale:
 [scala-che-sale.md](scala-che-sale.md). Coi livelli dell'eroe (8/10) non è
 stato ritarato: ha un mostro grosso ogni cinque piani ([grossi.md](grossi.md))
-e il bottino a tono ([rarita.md](rarita.md)), il resto è com'era.
+e il bottino a tono ([rarita.md](rarita.md)), il resto è com'era. Dall'8/10 non è
+più il posto dove farsi le ossa dopo la storia (riscendere trenta piani per
+trovare mostri all'altezza era noioso): lo fanno le zone che si potenziano
+([zone.md](zone.md)), e l'abisso resta la sfida del primato.
 
 ## Cos'è, e perché non è una settima tappa
 

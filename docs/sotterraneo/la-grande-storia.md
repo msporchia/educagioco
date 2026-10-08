@@ -174,7 +174,10 @@ voce del minatore e le cose che si hanno in mano: «Con quella spada corta
 sotto la torre non duri: passa dal fabbro», «Nella grotta picchiano
 forte, e senza scudo non reggi: passa dal fabbro» (`dettoDelLivello`,
 `dove` nella tappa per il posto in mezzo alla frase). Lo ripete il minatore
-quando indica la prossima. Non vieta niente: si scende lo stesso.
+quando indica la prossima. Non vieta niente: si scende lo stesso. Vieta
+solo il colore del pallino, quando la discesa è due gradini sopra l'eroe:
+davanti c'è la sentinella ([zone.md](zone.md#il-pallino-e-la-sentinella)).
+Finita la storia, le discese si potenziano una alla volta: [zone.md](zone.md).
 
 ## Le misure
 

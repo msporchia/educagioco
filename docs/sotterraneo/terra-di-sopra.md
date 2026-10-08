@@ -121,7 +121,10 @@ forma e perché: [la-grande-storia.md](la-grande-storia.md#le-discese).
   posto delle discese già fatte.
 - **Una discesa trovata e aperta ha un pallino per terra davanti
   all'ingresso** (al centro del bordo basso di `ingresso` nel foglietto,
-  `.sot-segno-posto`): bianco, d'oro e pulsante per la prossima da fare.
+  `.sot-segno-posto`), del colore che dice quanto è forte per l'eroe (grigio,
+  verde, arancio, rosso: [zone.md](zone.md#il-pallino-e-la-sentinella)), e
+  pulsante per la prossima da fare o per la zona sveglia. Davanti a una rossa
+  sta la sentinella, e non si scende.
   Provato un anello attorno all'ingresso: copriva il disegno. Niente
   targhette né emoji sopra le discese; la chiusa tiene il 🔒 nel fumetto.
 - **Toccando una discesa trovata l'eroe ci va e si apre il fumetto** sopra
@@ -151,8 +154,9 @@ forma e perché: [la-grande-storia.md](la-grande-storia.md#le-discese).
 - **Il vecchio minatore**, nel villaggio dove parte la strada per il bosco:
   toccato, si parla ([dialoghi.md](dialoghi.md)) e dice dov'è la prossima
   discesa aperta («La cripta dell'altare: su per il sentiero dei campi, oltre
-  il mulino, fino all'altare fra le due colonne…»); finite le sette, dov'è
-  l'abisso. Finché non ha parlato ha i puntini sopra la testa, e la prima
+  il mulino, fino all'altare fra le due colonne…»); finite le sette, racconta
+  la zona che si è svegliata, col «!» sopra la testa finché non l'ha detta
+  ([zone.md](zone.md)). Finché non ha parlato ha i puntini sopra la testa, e la prima
   volta si presenta. Se la roba è sotto quella attesa per la prossima,
   lo dice ([la-grande-storia.md](la-grande-storia.md#chi-e-sotto-il-livello-lo-sa-prima-di-scendere)).
 - **Chi dà le missioni** sta fermo dove ha senso (la ragazza al pozzo del
@@ -255,7 +259,7 @@ cartello di divieto delle chiuse), `[data-minatore]`, `[data-cartello]`, `[data-
 (con `data-fumetto-di`), `[data-azione="scendi"]`, `[data-detto]`,
 `[data-chiusa-perche]`, `[data-avviso-terra]`, il dialogo di chi sta fermo in
 [dialoghi.md](dialoghi.md), `[data-pallino="<posto>"]` (il
-pallino), `[data-sotto-livello]` (nel fumetto di una discesa), `[data-mercante="<chi>"]`,
+pallino, con `data-colore`; la sentinella e i colori in [zone.md](zone.md)), `[data-sotto-livello]` (nel fumetto di una discesa), `[data-mercante="<chi>"]`,
 `[data-personaggio="<chi>"]` (con `data-segno`, [missioni.md](missioni.md)), `[data-roba-sopra]` (la carta di chi
 scende, con le gemme), `[data-portale]` (il gemello) col suo fumetto
 `[data-fumetto-di="portale"]` e `[data-azione="portale-giu"]`, `[data-ritaglio]`
