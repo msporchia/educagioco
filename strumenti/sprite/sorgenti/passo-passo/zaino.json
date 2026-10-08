@@ -1,7 +1,6 @@
 {
   "immagine": "isole_2.png",
   "modulo": "src/giochi/passo-passo/dati/zaino-mappa.js",
-  "qualita": 80,
   "lato": 48,
   "prefisso": "z-",
   "libere": ["riva"],

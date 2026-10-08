@@ -20,13 +20,14 @@ Serve `pillow` (con WebP).
 """
 import base64
 import hashlib
-import io
 import json
 import math
 import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw
+
+import codifica
 
 QUI = Path(__file__).parent
 REPO = Path(__file__).resolve().parents[2]
@@ -46,7 +47,8 @@ TESTA = """/* GENERATO da strumenti/sprite/isole-passo-passo.py — non si scriv
    dal foglietto `strumenti/sprite/sorgenti/passo-passo/{foglietto}`: si
    corregge lì e si rilancia lo strumento. Vedi docs/passo-passo/mappa.md.
 
-   MAPPA   il fondale ({largo}×{alto}), WebP in base64 ({kb} KB)
+   MAPPA   il fondale ({largo}×{alto}), WebP in base64 ({kb} KB): senza perdita,
+           colori a passo 12 (strumenti/sprite/codifica.py)
    ISOLE   per isola (la chiave è quella di motore/strade.js): quante caselle, dove sta il cartello
    NODI    {{ id, tipo, isola, x, y }}: `casella` (con `k`, l'ordine sull'isola), `incrocio`, `capo`
            (un sentiero che finisce), `sosta` (a metà di un arco lungo: su un ponte
@@ -395,10 +397,9 @@ def genera(mondo):
     im = Image.open(SORGENTI / fg['immagine']).convert('RGB')
     g = Grafo(fg).costruisci()
     controlla(fg, g, im)
-    b = io.BytesIO()
-    im.save(b, 'WEBP', quality=fg['qualita'], method=6)
-    b64 = base64.b64encode(b.getvalue()).decode()
-    kb = len(b.getvalue()) // 1024
+    dati = codifica.webp(im, fg.get('passo', codifica.PASSO))
+    b64 = base64.b64encode(dati).decode()
+    kb = len(dati) // 1024
     corpo = TESTA.format(largo=im.size[0], alto=im.size[1], kb=kb, foglietto=FOGLIETTI[mondo])
     corpo += f"\nexport const LARGO = {im.size[0]}, ALTO = {im.size[1]}\n"
     corpo += f"export const LATO = {fg['lato']}\n"
@@ -411,7 +412,7 @@ def genera(mondo):
     corpo += f"\nexport const MAPPA = 'data:image/webp;base64,{b64}'\n"
     dest = REPO / fg['modulo']
     dest.write_text(corpo)
-    print(f'{dest.relative_to(REPO)}: fondale {im.size[0]}×{im.size[1]}, {kb} KB; '
+    print(f'{dest.relative_to(REPO)}: fondale {im.size[0]}×{im.size[1]}, {codifica.riga(im, dati)}; '
           f'{len(g.nodi)} nodi, {len(g.archi)} archi')
 
 

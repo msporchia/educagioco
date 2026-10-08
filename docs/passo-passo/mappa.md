@@ -30,11 +30,12 @@ fumetto, con la stessa vista per tutti e due. Chi apre cosa sta in
 - **`isole_1.png`, 1536×1024, tenuto com'è**: sei isole nel mare unite da
   ponti di legno in un giro chiuso, e il pascolo in mezzo (il prompt 1 di
   `strumenti/sprite/sorgenti/passo-passo/PROMPT-mappa.md`).
-- **Entra nel file unico in WebP** (qualità 80, 257 KB; il file unico cresce
-  di ~390 KB col base64 e il codice nuovo).
-- **`isole_2.png` è lo zaino**, stessa scala e stesso WebP (363 KB; il file
-  unico cresce di altri ~475 KB, tolta la mappa disegnata in codice che
-  c'era): quattro isole del coniglio in fila su ponti, a sinistra in basso la
+- **Entra nel file unico in WebP senza perdita** (colori a passo 12,
+  675 KB, 37 dB: nessun pixel si scosta di più di 6 su 255; era WebP
+  qualità 80, 257 KB, 32 dB, con i bordi impastati). Lo fa
+  `strumenti/sprite/codifica.py`: [../core/grafica.md](../core/grafica.md#fedeli-ai-sorgenti).
+- **`isole_2.png` è lo zaino**, stessa scala e stessa codifica (892 KB, 38 dB;
+  il file unico cresceva di ~475 KB già con la mappa disegnata in codice tolta): quattro isole del coniglio in fila su ponti, a sinistra in basso la
   riva da cui si arriva dalla valle. Vedi «Il mondo dello zaino».
 - **La scala è 1**: un pixel del fondale è un pixel dello schermo, a pixel
   netti (`image-rendering: pixelated`). A 390 px la valle è quattro schermi

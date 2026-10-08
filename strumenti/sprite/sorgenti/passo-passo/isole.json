@@ -1,7 +1,6 @@
 {
   "immagine": "isole_1.png",
   "modulo": "src/giochi/passo-passo/dati/isole-mappa.js",
-  "qualita": 80,
   "lato": 52,
   "isole": {
     "passi": { "caselle": 5, "cartello": [150, 640] },
