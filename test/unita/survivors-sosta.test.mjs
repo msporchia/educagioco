@@ -30,7 +30,12 @@ const distanza = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
 /* ══════════ 1. quello che si è fatto non si perde ══════════ */
 {
   const t = CAMPAGNA[5]
-  const p = fino(new Regole(t), t.durata / 2, caso(31))
+  /* la prima partita ancora in piedi a metà: con un seme fisso, ogni
+     ritocco al motore (gli ostacoli, una regola nuova) può farla perdere
+     prima, e allora non resta niente da salvare */
+  let p = null
+  for (let s = 31; s < 60 && !(p && !p.finita && p.livello > 1); s++)
+    p = fino(new Regole(t), t.durata / 2, caso(s))
   controlla('la prova parte da una partita giocata a metà',
             p.tempo > 10 && p.livello > 1, `${p.tempo.toFixed(1)}s, livello ${p.livello}`)
 
@@ -40,10 +45,13 @@ const distanza = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
 
   const firma = x => [Math.round(x.tempo), x.livello, x.xp, x.uccisi, x.ferite,
                       x.eroe.cuori, x.eroe.cuoriMax,
-                      Math.round(x.eroe.x), Math.round(x.eroe.y),
                       JSON.stringify(x.potenziamenti),
                       x.nemici.length, x.gemme.length, x.oggetti.length].join('|')
   uguale('e la partita è la stessa', firma(b), firma(p))
+  /* l'eroe si scrive al decimo: arrotondarlo all'intero lo farebbe
+     saltare di un punto quando sta a cavallo (1616,49 → 1616,5 → 1617) */
+  controlla("e l'eroe è dov'era", distanza(b.eroe, p.eroe) <= 0.1,
+            `spostato di ${distanza(b.eroe, p.eroe).toFixed(2)}`)
   /* i numeri dell'eroe non si salvano: si **rifanno** dalle carte prese,
      ed è il motivo per cui il salvataggio sta in poche righe */
   uguale('le carte prese valgono ancora quello che valevano',

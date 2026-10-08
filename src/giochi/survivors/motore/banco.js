@@ -9,6 +9,7 @@
 // `sapienza` è quanto risponde giusto alla domanda che paga una carta.
 // Il pilota non bara: legge solo quello che si vede a schermo.
 import { Partita } from './partita.js'
+import { CFG } from '../dati/taratura.js'
 
 const SGUARDO = 300          // fin dove il pilota guarda per decidere
 const PORTATA = 420          // fin dove conta una gemma o un oggetto
@@ -46,6 +47,7 @@ export class Pilota {
     this.domande = 0
     this.giuste = 0
     this.casse = 0             // offerte venute da una cassa e non da un livello
+    this.bombe = 0             // bombe lanciate
     this.occasioni = 0         // il conto della mira: occasioni con un'arma direzionale e un grumo a tiro
     this.mirate = 0
     this.ultimaFinta = null
@@ -63,6 +65,7 @@ export class Pilota {
     this.pensa -= dt
     if (this.pensa > 0) return
     this.pensa = this.riflesso
+    this.forseBomba(partita)
 
     if (this.rnd() > 0.55 + 0.45 * this.bravura) return
 
@@ -117,6 +120,8 @@ export class Pilota {
         richiamo += m.peso / (dx * dx + dy * dy + RACCOLTA_KERNEL)
       }
       const svolta = scarto(a, this.ultima)   // cambiare idea di colpo costa
+      // un passo che finisce in uno stagno non è un passo: si vede, e non si prova
+      if (!partita.terreno.libero(px, py, partita.f.raggio)) pericolo += 1
       prove.push({ a, pericolo, richiamo, svolta, costo: pericolo * (1 + 0.12 * svolta) })
       if (pericolo < minPericolo) minPericolo = pericolo
     }
@@ -156,9 +161,28 @@ export class Pilota {
     this.vai(partita, a)
   }
 
+  // un bambino vede il bosco e ci gira intorno: il pilota prende la
+  // stessa tangente dei mostri (Terreno.aggira)
+  // la bomba si lancia quando si è in mezzo alla folla, o quando uno è
+  // già addosso e resta un cuore solo: come farebbe un bambino che la tiene
+  forseBomba(partita) {
+    const e = partita.eroe
+    if (!(e.bombe > 0)) return
+    const R = CFG.bomba.raggio * 0.7
+    let folla = 0, addosso = 0
+    for (const n of partita.nemici) {
+      const d = Math.hypot(n.x - e.x, n.y - e.y)
+      if (d < R) folla++
+      if (d < n.r + 40) addosso++
+    }
+    if (folla >= 12 || (addosso && e.cuori <= 1)) { partita.lanciaBomba(); this.bombe++ }
+  }
+
   vai(partita, a) {
     this.ultima = a
-    partita.muovi(Math.cos(a), Math.sin(a))
+    const e = partita.eroe
+    const [ux, uy] = partita.terreno.aggira(e.x, e.y, partita.f.raggio, Math.cos(a), Math.sin(a))
+    partita.muovi(ux, uy)
   }
 
   mete(partita) {

@@ -15,6 +15,7 @@ import { OGGETTI, pescaOggetto } from '../dati/oggetti.js'
 import { MAZZO, prezzoDomanda, palliniDelPrezzo, scalinoDelPrezzo, PALLINI,
          resa, tettoDi }
   from '../dati/mazzo.js'
+import { Terreno, semeDi, ATTENZIONE } from './terreno.js'
 
 const CAMPO_MINIMO = { larghezza: 360, altezza: 620 }
 
@@ -85,12 +86,16 @@ export class Partita {
     this.mazzo = mazzo
     this.carte = new Map(mazzo.map(c => [c.chiave, c]))
     this.campo = { ...CAMPO_MINIMO, ...(campo || {}) }
+    // la carta dei boschi, delle rocce e degli stagni: dal nome della
+    // tappa, così riprendendo si ritrova la stessa
+    this.terreno = new Terreno(regole.scenario, semeDi(regole.chiave || regole.scenario))
 
     this.eroe = {
       x: 0, y: 0, vx: 0, vy: 0,
       cuori: regole.cuori, cuoriMax: regole.cuori,
       invuln: 0, guarda: 1, passi: 0, ricarica: 0.25, mira: 0,
       rotta: 0,   // dove si sta andando, in radianti: la mira delle armi direzionali
+      bombe: 0,   // quante bombe in tasca (CFG.bomba.tasca al massimo)
     }
     this.nemici = []
     this.colpi = []
@@ -101,6 +106,7 @@ export class Partita {
     this.risucchio = 0    // la calamita trovata a terra: finché dura, tutte le gemme volano
     this.tOggetto = CFG.oggetti.primo
     this.tMuro = CFG.muro.primo
+    this.tBomba = CFG.bomba.prima
     this.casse = 0        // quante casse sono comparse finora (il tetto, cassaAmmessa)
 
     this.tempo = 0
@@ -236,6 +242,7 @@ export class Partita {
     this.nascite(dt)
     this.muri(dt)
     this.compaiono(dt)
+    this.bombaATerra(dt)
     if (this.camminaNemici(dt)) return this.esito     // l'ultimo cuore
     this.tira(dt)
     this.muoviColpi(dt)
@@ -275,6 +282,7 @@ export class Partita {
       e.vy = this.dir.y * v
       e.x += e.vx * dt
       e.y += e.vy * dt
+      this.terreno.spingiFuori(e, this.f.raggio)
       if (this.dir.x > 0.5) e.guarda = 1
       else if (this.dir.x < -0.5) e.guarda = -1
       e.rotta = Math.atan2(this.dir.y, this.dir.x)
@@ -395,9 +403,12 @@ export class Partita {
       if (n.gelato <= 0) n.freno = 1
       if (rg && d < rg) this.gela(n, 0.5, freno)
       const p = n.passo * n.freno
-      const vx = n.rotta ? n.rotta.x : ddx / d, vy = n.rotta ? n.rotta.y : ddy / d
+      const [vx, vy] = this.terreno.aggira(n.x, n.y, n.r,
+        n.rotta ? n.rotta.x : ddx / d, n.rotta ? n.rotta.y : ddy / d, ATTENZIONE.muso)
+      n.vx = vx; n.vy = vy          // per chi disegna: da che parte guarda
       n.x += vx * p * dt + n.spx * dt
       n.y += vy * p * dt + n.spy * dt
+      this.terreno.spingiFuori(n, n.r * 0.8)
       n.spx *= smorza; n.spy *= smorza
       n.lampo = Math.max(0, n.lampo - dt * 4)
       n.attesa = Math.max(0, n.attesa - dt)
@@ -570,6 +581,9 @@ export class Partita {
       caduti = true
       this.uccisi++
       this.scoppio(n.x, n.y, MOSTRI[n.tipo].colore, 9)
+      // la figura che cade: la disegna il campo, qui c'è solo dove e chi
+      this.effetti.push({ che: 'morte', tipo: n.tipo, x: n.x, y: n.y, r: n.r,
+                          verso: n.vx || 0, vita: 0.4, tot: 0.4 })
       this.gemme.push({ x: n.x, y: n.y, vx: (this.rnd() - 0.5) * 60,
                         vy: (this.rnd() - 0.5) * 60,
                         val: this.f.valoreGemma, fase: this.rnd() * 6.3 })
@@ -616,12 +630,20 @@ export class Partita {
     this.lasciaOggetto()
   }
 
-  // senza coordinate lo posa a caso, né sotto i piedi né oltre il bordo
-  lasciaOggetto(x, y) {
+  // la bomba ha il suo orologio: una alla volta in campo, e mai a chi ha
+  // la tasca piena (l'orologio aspetta)
+  bombaATerra(dt) {
+    this.tBomba -= dt
+    if (this.tBomba > 0) return
+    if (this.eroe.bombe >= CFG.bomba.tasca || this.oggetti.some(o => o.tipo === 'bomba')) return
+    if (this.lasciaOggetto(undefined, undefined, 'bomba')) this.tBomba = CFG.bomba.ogni
+  }
+
+  // senza coordinate lo posa a caso, né sotto i piedi né oltre il bordo;
+  // senza `quale` lo pesca
+  lasciaOggetto(x, y, quale = null) {
     if (this.oggetti.length >= CFG.oggetti.massimo) return null
     const e = this.eroe
-    const tipo = pescaOggetto(this.rnd, { feribile: e.cuori < e.cuoriMax, cassa: this.cassaAmmessa() })
-    if (tipo === 'cassa') this.casse++
     if (x === undefined) {
       const { vicino, lontano } = CFG.oggetti
       const mx = this.campo.larghezza / 2 - 30, my = this.campo.altezza / 2 - 40
@@ -631,7 +653,17 @@ export class Partita {
       const scala = Math.min(1, mx / Math.max(1, Math.abs(dx)), my / Math.max(1, Math.abs(dy)))
       x = e.x + dx * scala
       y = e.y + dy * scala
+      // dentro uno stagno non lo prenderebbe nessuno: si cerca un posto
+      // girando intorno all'eroe, e se non c'è si rinuncia
+      for (let k = 1; k < 8 && !this.terreno.libero(x, y, 20); k++) {
+        const b = a + k * 0.785
+        x = e.x + Math.cos(b) * d * scala
+        y = e.y + Math.sin(b) * d * scala
+      }
+      if (!this.terreno.libero(x, y, 20)) return null
     }
+    const tipo = quale || pescaOggetto(this.rnd, { feribile: e.cuori < e.cuoriMax, cassa: this.cassaAmmessa() })
+    if (tipo === 'cassa') this.casse++
     const o = { tipo, x, y, resta: CFG.oggetti.durata, fase: this.rnd() * 6.3 }
     this.oggetti.push(o)
     this.segnala('oggetto')
@@ -673,6 +705,10 @@ export class Partita {
       this.risucchio = OGGETTI.calamita.secondi
       this.anello(e.x, e.y, 200, OGGETTI.calamita.colore)
       this.segnala('calamita')
+    } else if (o.tipo === 'bomba') {
+      e.bombe = Math.min(CFG.bomba.tasca, e.bombe + 1)
+      this.anello(e.x, e.y, 50, OGGETTI.bomba.colore)
+      this.segnala('presa')
     } else if (o.tipo === 'cassa') {
       // apre un'offerta come una salita di livello ma senza salire: si
       // paga con la domanda come sempre
@@ -685,6 +721,25 @@ export class Partita {
         this.offerta = offerta
       }
     }
+  }
+
+  // la bomba: scoppia sull'eroe e toglie di mezzo tutti quelli vicini,
+  // grossi compresi; più in là li spinge via. Torna quanti ne ha presi
+  // (null se non c'era niente da lanciare)
+  lanciaBomba() {
+    const e = this.eroe
+    if (!(e.bombe > 0) || this.finita || this.inPausa) return null
+    e.bombe--
+    const { raggio, onda } = CFG.bomba
+    let presi = 0
+    for (const n of this.nemici) {
+      const d = Math.hypot(n.x - e.x, n.y - e.y)
+      if (d < raggio + n.r) { n.vita = 0; presi++ }
+      else if (d < raggio * onda) this.spingi(n, 500)
+    }
+    this.effetti.push({ che: 'esplosione', x: e.x, y: e.y, r: raggio, vita: 0.7, tot: 0.7 })
+    this.segnala('bomba')
+    return presi
   }
 
   prendiGemma(g) {
@@ -757,6 +812,7 @@ export class Partita {
     this.prossima = soglia(this.livello)
     this.segnala('livello')
     this.anello(this.eroe.x, this.eroe.y, 120, '#ffe98a')
+    this.effetti.push({ che: 'luce', x: this.eroe.x, y: this.eroe.y, vita: 0.9, tot: 0.9 })
     this.fermati()
     // `null` (niente da offrire) capita solo in campagna, dove il
     // mazzo ha un tetto; nel gioco libero non finisce mai
@@ -841,6 +897,7 @@ export class Partita {
     const e = this.eroe
     return {
       scenario: this.regole.scenario,
+      terreno: this.terreno,
       tempo: this.tempo,
       eroe: {
         x: e.x, y: e.y, mira: e.mira, guarda: e.guarda, passi: e.passi,
@@ -873,6 +930,7 @@ export class Partita {
       extra: this.extra,
       uccisi: this.uccisi,
       cassa: this.motivoOfferta === 'cassa',
+      bombe: this.eroe.bombe,
       presi: this.mazzo
         .filter(c => this.livelloDi(c.chiave) > 0)
         .map(c => ({ chiave: c.chiave, icona: c.icona, quante: this.livelloDi(c.chiave) })),
