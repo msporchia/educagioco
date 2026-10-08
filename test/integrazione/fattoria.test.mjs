@@ -632,6 +632,9 @@ await chiudi()
       dove = await cercaLaBestia(60)
     }
 
+    /* Si vede prima quello che serve adesso; la roba che non hai sta dietro «Mostra altro». */
+    const altro = page.locator('[data-mostra-altro]').first()
+    if (await altro.count()) { await altro.click(); await attendi(page, 200) }
     const senza = page.locator('.fa-cibo', { hasText: 'Mangime' }).first()
     if (await senza.count()) {
       await senza.click()

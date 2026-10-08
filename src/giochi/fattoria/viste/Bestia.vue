@@ -37,6 +37,14 @@ const gesti = bisogno => gestiPer(bisogno, bisogno === 'pancia' ? famiglia.value
   .slice()
   .sort((a, b) => (ce(b) ? 1 : 0) - (ce(a) ? 1 : 0))
 
+// Si vede prima quello che serve adesso: quello che le piace e quello che puoi dare. Il resto (la roba
+// che non hai ancora) sta dietro «Mostra altro», una riga per bisogno.
+const tutti = ref(new Set())
+const visti = bisogno => tutti.value.has(bisogno) ? gesti(bisogno)
+  : gesti(bisogno).filter(g => ce(g) || suoi.value.some(c => c.id === g.id))
+const nascosti = bisogno => gesti(bisogno).length - visti(bisogno).length
+function mostraTutti(bisogno) { tutti.value = new Set([...tutti.value, bisogno]) }
+
 // Quello che non hai: come si fa. Uno aperto per volta (ripremendo si chiude).
 const spiega = ref(null)
 function premi(g, bisogno) {
@@ -99,7 +107,7 @@ const invece = computed(() => {
         {{ suoi.map(c => c.emoji + ' ' + c.nome.toLowerCase()).join(' e ') }}</p>
 
       <div class="fa-gesti">
-        <button v-for="g in gesti(k)" :key="g.id"
+        <button v-for="g in visti(k)" :key="g.id"
                 :class="['fa-cibo', { suo: puoi(g, k), altrui: !ce(g), viva: spiega === g.id }]"
                 :disabled="pieno(k) && ce(g)"
                 @click="premi(g, k)">
@@ -108,6 +116,8 @@ const invece = computed(() => {
           <em v-if="g.da">×{{ quantiNe(g.da) }}</em>
           <em v-else>🪙{{ g.prezzo }}</em>
         </button>
+        <button v-if="nascosti(k)" type="button" class="fa-cibo fa-altro" data-mostra-altro
+                @click="mostraTutti(k)"><b>＋</b><span>Mostra altro</span></button>
       </div>
 
       <!-- come si fa quello che manca, e solo dopo come si compra -->

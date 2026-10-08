@@ -323,6 +323,9 @@
   padding: 0 7px; border-radius: 999px; background: #fffaf0; border: 2px solid #e2c48f }
 .fa-cibo:disabled { opacity: .35; cursor: default }
 /* Il suo cibo si vede da lontano, quello che rifiuta si vede che è spento. */
+/* «Mostra altro»: un posto tratteggiato in fondo alla fila, come il posto da comprare di una macchina */
+.fa-cibo.fa-altro b { width: 38px; height: 38px; display: grid; place-items: center; font-size: 22px;
+  border: 2px dashed #c9a46a; border-radius: 50%; color: #a8916f }
 .fa-cibo.suo { background: radial-gradient(closest-side, #d8f0c0, #d8f0c000) }
 .fa-cibo.altrui em { color: #c0392b }
 
