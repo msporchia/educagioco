@@ -40,6 +40,15 @@ export function evidenziando(frase, parola) {
   return { prima: f.slice(0, punti[0]), parola: p, dopo: f.slice(punti[0] + p.length), volte: 1 }
 }
 
+// il soggetto è una frase da leggere (tre parole vere, o una parola in rilievo) e non una parola da guardare:
+// va su un foglio che non somiglia a un tasto (docs/apprendimento/la-domanda.md); la condivide grafica/scheda.js
+export const PAROLE_DA_FRASE = 3
+export function fraseDaLeggere(soggetto) {
+  if (!soggetto || typeof soggetto.testo !== 'string') return false
+  if (soggetto.evidenzia) return true
+  return soggetto.testo.split(/\s+/).filter(w => /\p{L}/u.test(w)).length >= PAROLE_DA_FRASE
+}
+
 // mescola risposta giusta e falsi con la sorte, e tiene il conto di dov'è finita la buona
 export function domanda({ testo: consegna, soggetto, buona, falsi, chiave, aiuto, dritta, sorte }) {
   const tutte = sorte.mescola([buona, ...falsi])

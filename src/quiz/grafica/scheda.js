@@ -1,7 +1,7 @@
 // il gemello imperativo di Domanda.vue: `await chiedi(modulo, { grado })`, per giochi fuori Vue (Survivors, sotterraneo, castello). Il CSS è iniettato come stringa una volta sola: il build resta un HTML unico.
 import { dipingi } from './riquadro.js'
 import { sorteQualunque } from '../nucleo/sorte.js'
-import { evidenziando } from '../nucleo/domanda.js'
+import { evidenziando, fraseDaLeggere } from '../nucleo/domanda.js'
 
 // misure identiche a Domanda.vue: --qz-h è l'unità di altezza utile, chi apre in un pannello più corto la stringe
 const STILE = `
@@ -46,12 +46,27 @@ const STILE = `
 .quiz-soggetto canvas {
   width: clamp(76px, calc(17 * var(--qz-h)), 148px); height: auto; aspect-ratio: 1;
 }
-/* la frase è da leggere, non da guardare: più piccola della parola sola
-   che il corpo qui sopra ha in mente, con la parola in rilievo grossa e
-   sottolineata — il colore da solo non si vede su ogni schermo */
-.quiz-soggetto.frase { font-size: clamp(16px, 4.6vw, 22px); font-weight: 600; line-height: 1.4; }
-.quiz-spicca { color: #ffd58a; font-weight: 800;
-  border-bottom: 2px solid #ffb43f; padding-bottom: 1px; }
+/* la frase da leggere è un foglio, non un riquadro: carta chiara, barra a sinistra,
+   niente bordo né ombra da tasto — deve restare identico a Domanda.vue (.qz-foglio) */
+.quiz-foglio {
+  position: relative; margin: 0 0 clamp(6px, calc(1.2 * var(--qz-h)), 12px);
+  padding: clamp(8px, calc(1.5 * var(--qz-h)), 14px) 14px clamp(9px, calc(1.6 * var(--qz-h)), 15px) 18px;
+  border: 0; border-left: 5px solid #e0a23a; border-radius: 3px 16px 16px 3px;
+  background: #f8efd6; color: #2a2417; text-align: left;
+}
+.quiz-foglio::before {
+  content: '\201D'; position: absolute; top: -4px; right: 10px;
+  font: 700 44px/1 "Emoji Gioco", Georgia, "Times New Roman", serif; color: rgba(224, 162, 58, .55);
+  pointer-events: none;
+}
+.quiz-leggi { display: block; margin-bottom: 3px; font-size: 11.5px; letter-spacing: .08em;
+  text-transform: uppercase; font-weight: 800; color: #8a5a12; }
+.quiz-frase { margin: 0; font-family: "Emoji Gioco", Georgia, "Times New Roman", serif;
+  font-size: clamp(17px, 4.9vw, 21px); font-weight: 500; line-height: 1.5; }
+.quiz-spicca { color: #5a3500; font-weight: 800; background: rgba(255, 180, 63, .45);
+  border-bottom: 2px solid #c9801a; border-radius: 3px; padding: 0 2px 1px; }
+.quiz-scegli { margin: 0 0 4px 2px; font-size: 11.5px; letter-spacing: .08em;
+  text-transform: uppercase; font-weight: 800; color: #ffd58a; }
 .quiz-risposte { display: grid; gap: clamp(6px, calc(1.1 * var(--qz-h)), 10px); }
 .quiz-risposte.due   { grid-template-columns: 1fr 1fr; }
 .quiz-risposte.tre   { grid-template-columns: 1fr 1fr 1fr; }
@@ -102,17 +117,7 @@ function riempi(el, cosa, pittori) {
     el.classList.add('emoji')
     el.appendChild(document.createTextNode(cosa.emoji))
   } else if (cosa.testo !== undefined) {
-    // tre nodi di testo e un <b> in mezzo, mai HTML: nel dato la parola è una parola
-    const { prima, parola, dopo } = evidenziando(cosa.testo, cosa.evidenzia)
-    if (parola) {
-      el.classList.add('frase')
-      const b = document.createElement('b')
-      b.className = 'quiz-spicca'
-      b.textContent = parola
-      el.append(prima, b, dopo)
-    } else {
-      el.appendChild(document.createTextNode(cosa.testo))
-    }
+    el.appendChild(document.createTextNode(cosa.testo))
   } else {
     const cv = document.createElement('canvas')
     el.appendChild(cv)
@@ -149,7 +154,33 @@ export function mostra(domanda, pittori = {}, { dove = document.body, titolo = '
     consegna.textContent = domanda.testo
     carta.appendChild(consegna)
 
-    if (domanda.soggetto) {
+    const leggere = fraseDaLeggere(domanda.soggetto)
+    if (leggere) {
+      // tre nodi di testo e un <b> in mezzo, mai HTML: nel dato la parola è una parola
+      const f = document.createElement('blockquote')
+      f.className = 'quiz-foglio'
+      f.dataset.daLeggere = ''
+      const l = document.createElement('span')
+      l.className = 'quiz-leggi'
+      l.textContent = 'Leggi:'
+      const p = document.createElement('p')
+      p.className = 'quiz-frase'
+      const { prima, parola, dopo } = evidenziando(domanda.soggetto.testo, domanda.soggetto.evidenzia)
+      if (parola) {
+        const b = document.createElement('b')
+        b.className = 'quiz-spicca'
+        b.textContent = parola
+        p.append(prima, b, dopo)
+      } else {
+        p.appendChild(document.createTextNode(domanda.soggetto.testo))
+      }
+      f.append(l, p)
+      carta.appendChild(f)
+      const sc = document.createElement('div')
+      sc.className = 'quiz-scegli'
+      sc.textContent = 'Scegli:'
+      carta.appendChild(sc)
+    } else if (domanda.soggetto) {
       const s = document.createElement('div')
       s.className = 'quiz-soggetto'
       riempi(s, domanda.soggetto, pittori)

@@ -19,7 +19,7 @@ import { esempioSvolto, generatoreDi, daLeggerePrima } from './nucleo/svolto.js'
 import { perId } from './nucleo/registro.js'
 import { sorteQualunque } from './nucleo/sorte.js'
 import { serveLaDritta, troppoDiFretta, spiegazioneDi, attesaDellEsito, evidenziando,
-         tempoDaAnnotare, rispostaSaltata, PONDERA }
+         fraseDaLeggere, tempoDaAnnotare, rispostaSaltata, PONDERA }
   from './nucleo/domanda.js'
 import { pesoDellaFretta } from './fretta.js'
 
@@ -68,11 +68,9 @@ const frase = computed(() =>
   evidenziando(props.domanda.soggetto?.testo, props.domanda.soggetto?.evidenzia))
 const fraseSvolta = computed(() =>
   evidenziando(svolto.value?.soggetto?.testo, svolto.value?.soggetto?.evidenzia))
-// oltre 6 parole vere il soggetto diventa un paragrafo a sinistra invece di un titolo centrato
-const PAROLE_DA_PARAGRAFO = 6
-const daLeggere = computed(() =>
-  (props.domanda.soggetto?.testo || '').split(/\s+/)
-    .filter(w => /\p{L}/u.test(w)).length >= PAROLE_DA_PARAGRAFO)
+// una frase da leggere sta su un foglio che non somiglia a un tasto; una parola sola resta un titolo da guardare
+const daLeggere = computed(() => fraseDaLeggere(props.domanda.soggetto))
+const svoltaDaLeggere = computed(() => fraseDaLeggere(svolto.value?.soggetto))
 // il layout delle risposte (colonne, larghezza minima): vedi docs/apprendimento/la-domanda.md
 const colonne = computed(() => (risposte.value.length === 3 ? 3 : 2))
 const minTasto = computed(() => {
@@ -328,8 +326,12 @@ onUnmounted(() => {
         <div v-if="svolto.soggetto" class="qz-svolto-soggetto">
           <canvas v-if="svolto.soggetto.scena" ref="teloSvolto" class="qz-svolto-telo" />
           <span v-else-if="svolto.soggetto.emoji">{{ svolto.soggetto.emoji }}</span>
-          <span v-else-if="fraseSvolta.parola"
-          >{{ fraseSvolta.prima }}<b class="qz-spicca">{{ fraseSvolta.parola }}</b>{{ fraseSvolta.dopo }}</span>
+          <!-- stesso foglio della domanda vera, solo più piccolo: l'esempio si legge come si leggerà lei -->
+          <blockquote v-else-if="svoltaDaLeggere" class="qz-foglio svolto" data-esempio-frase>
+            <span class="qz-leggi">Leggi:</span>
+            <p class="qz-frase"
+            >{{ fraseSvolta.prima }}<b v-if="fraseSvolta.parola" class="qz-spicca">{{ fraseSvolta.parola }}</b>{{ fraseSvolta.dopo }}</p>
+          </blockquote>
           <span v-else>{{ svolto.soggetto.testo }}</span>
           <span v-if="svolto.soggetto.nome" class="qz-nome">{{ svolto.soggetto.nome }}</span>
         </div>
@@ -349,7 +351,14 @@ onUnmounted(() => {
       </div>
       <div class="qz-consegna">{{ domanda.testo }}</div>
 
-      <div v-if="domanda.soggetto" class="qz-soggetto" :class="{ nominato: domanda.soggetto.nome }">
+      <!-- una frase da leggere è un foglio, non un riquadro: mai l'aspetto di un tasto (la-domanda.md) -->
+      <blockquote v-if="daLeggere" class="qz-foglio" data-da-leggere>
+        <span class="qz-leggi">Leggi:</span>
+        <!-- i tre pezzi attaccati apposta: uno spazio in più qui si vedrebbe in mezzo alla frase -->
+        <p class="qz-frase"
+        >{{ frase.prima }}<b v-if="frase.parola" class="qz-spicca">{{ frase.parola }}</b>{{ frase.dopo }}</p>
+      </blockquote>
+      <div v-else-if="domanda.soggetto" class="qz-soggetto" :class="{ nominato: domanda.soggetto.nome }">
         <!-- la lente in un angolo dice che il disegno si può ingrandire, perché un canvas non sembra un tasto -->
         <button v-if="domanda.soggetto.scena" type="button" class="qz-guarda"
                 aria-label="ingrandisci il disegno" @click="ingrandisci">
@@ -357,13 +366,11 @@ onUnmounted(() => {
           <span class="qz-lente" aria-hidden="true">🔍</span>
         </button>
         <span v-else-if="domanda.soggetto.emoji" class="qz-emoji">{{ domanda.soggetto.emoji }}</span>
-        <!-- i tre pezzi attaccati apposta: uno spazio in più qui si vedrebbe in mezzo alla frase -->
-        <span v-else-if="frase.parola" class="qz-frase"
-        >{{ frase.prima }}<b class="qz-spicca">{{ frase.parola }}</b>{{ frase.dopo }}</span>
-        <span v-else :class="{ 'qz-testo': daLeggere }">{{ domanda.soggetto.testo }}</span>
+        <span v-else>{{ domanda.soggetto.testo }}</span>
         <span v-if="domanda.soggetto.nome" class="qz-nome grande">{{ domanda.soggetto.nome }}</span>
       </div>
 
+      <div v-if="daLeggere" class="qz-scegli" data-scegli>Scegli:</div>
       <div class="qz-risposte"
            :style="{ '--qz-colonne': colonne, '--qz-min': minTasto }">
         <!-- data-giusta è per chi gioca da script (prove e clip del README): non si vede a schermo -->
@@ -478,17 +485,40 @@ onUnmounted(() => {
   font-size: clamp(22px, 6vw, 30px); font-weight: 750; text-align: center;
 }
 .qz-emoji { font-size: clamp(38px, 11vw, 56px); } /* la figura È la domanda: grande quanto concede il riquadro */
-/* più piccola e meno grassa della parola in rilievo, che deve saltare all'occhio; il colore non basta da solo */
+.qz-foglio { /* la frase da leggere: carta chiara, barra a sinistra, niente bordo né ombra da tasto */
+  position: relative; margin: 0 0 clamp(6px, calc(1.2 * var(--qz-h)), 12px);
+  padding: clamp(8px, calc(1.5 * var(--qz-h)), 14px) 14px clamp(9px, calc(1.6 * var(--qz-h)), 15px) 18px;
+  border: 0; border-left: 5px solid #e0a23a; border-radius: 3px 16px 16px 3px;
+  background: #f8efd6; color: #2a2417; text-align: left;
+}
+.qz-foglio::before { /* le virgolette dicono «questo è scritto», non «tocca qui» */
+  content: '\201D'; position: absolute; top: -4px; right: 10px;
+  font: 700 44px/1 "Emoji Gioco", Georgia, "Times New Roman", serif; color: rgba(224, 162, 58, .55);
+  pointer-events: none;
+}
+.qz-leggi {
+  display: block; margin-bottom: 3px;
+  font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase;
+  font-weight: 800; color: #8a5a12;
+}
 .qz-frase {
-  font-size: clamp(16px, 4.6vw, 22px); font-weight: 600; line-height: 1.4;
+  margin: 0; font-family: "Emoji Gioco", Georgia, "Times New Roman", serif;
+  font-size: clamp(17px, 4.9vw, 21px); font-weight: 500; line-height: 1.5;
 }
-.qz-testo { /* il raccontino da capire: a sinistra, riga per riga */
-  font-size: clamp(15px, 4.3vw, 19px); font-weight: 500; line-height: 1.5;
-  text-align: left;
+.qz-scegli { /* l'altra metà del confine: da qui in giù si tocca */
+  margin: 0 0 4px 2px; font-size: 11.5px; letter-spacing: .08em;
+  text-transform: uppercase; font-weight: 800; color: #ffd58a;
 }
+.qz-foglio.svolto { margin: 0; flex: 1 1 100%; padding: 6px 10px 7px 12px; }
+.qz-foglio.svolto::before { display: none; }
+.qz-foglio.svolto .qz-frase { font-size: clamp(14px, 4vw, 16.5px); }
 .qz-spicca {
   color: #ffd58a; font-weight: 800;
   border-bottom: 2px solid #ffb43f; padding-bottom: 1px;
+}
+.qz-foglio .qz-spicca { /* sulla carta chiara il giallo sparisce: evidenziatore ambra e testo scuro */
+  color: #5a3500; background: rgba(255, 180, 63, .45); border-bottom-color: #c9801a;
+  border-radius: 3px; padding: 0 2px 1px;
 }
 .qz-guarda {
   position: relative; display: block; padding: 0; border: 0; cursor: zoom-in;
