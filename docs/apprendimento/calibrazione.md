@@ -33,8 +33,11 @@ dose — e non a fine tappa. Quindi:
   `premio × stelle`, niente moneta di cortesia a una tappa rifatta,
   niente premio alla prima vittoria o alla 🏁, niente monete a tempo o a
   metri, niente moltiplicatore di livello. Una tappa rifatta paga come la
-  prima, perché l'esercizio è lo stesso; una tappa persa paga quello che
-  si è fatto;
+  prima, perché l'esercizio è lo stesso; una tappa persa paga quello
+  che si è fatto. **Un'eccezione voluta dal proprietario**: le missioni del
+  sotterraneo possono regalare monete alla consegna, tante quante le domande
+  che chiedono in più (🪙1–4, il conto in
+  [../sotterraneo/missioni.md](../sotterraneo/missioni.md#le-monete-come-regalo-e-il-conto));
 - **sempre monete intere**: il tasso di ogni cosa è un intero
   (`guastiDellePaghe`), e la metà del salvadanaio stanco si conta col
   resto ([../genitori/varieta.md](../genitori/varieta.md));

@@ -24,7 +24,10 @@ E in giro c'è chi chiede un favore: la ragazza del pozzo ha perso la
 collana della nonna, il mugnaio ha un ratto che gli ruba la farina, il
 pescatore un granchio che gli taglia le reti ([missioni.md](missioni.md)):
 una cosa da trovare o un mostro col nome, a un piano preciso, e un premio
-in gemme.
+in gemme (a volte anche qualche moneta). Le missioni si sbloccano da sole man
+mano che si avanza, se ne possono prendere più d'una (al più tre aperte
+insieme), un diario sulla mappa le riassume e in cima a ogni discesa una riga
+ricorda quelle prese.
 
 | cosa si tocca | cosa costa |
 |---|---|

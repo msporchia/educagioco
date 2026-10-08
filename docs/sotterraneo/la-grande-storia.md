@@ -99,8 +99,8 @@ comprano dall'erborista).
 - **Un pezzo serve se nella fila viene dopo quello che si ha** (`migliora`,
   il posto nella fila e non il numero): così lo scettro arriva dopo il
   bastone anche se picchia uguale, e chi è già oltre la tabella non riceve
-  una spada peggiore della sua. Le missioni danno solo gioielli o gemme
-  ([missioni.md](missioni.md)): un vantaggio, mai un passo.
+  una spada peggiore della sua. Le missioni danno solo gioielli o gemme (e a volte
+  qualche moneta, [missioni.md](missioni.md)): un vantaggio, mai un passo.
 
 ## Chi è sotto il livello lo sa prima di scendere
 
