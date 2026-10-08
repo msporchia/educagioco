@@ -280,7 +280,7 @@ function scegliCarta(chiave) {
 // il potenziamento si vince rispondendo, e la risposta giusta paga subito;
 // sbagliare non dà niente (niente monetina di consolazione — sarebbe il modo
 // più veloce di farne, vedi docs/apprendimento/calibrazione.md)
-function risposto({ giusto }) {
+function risposto({ giusto, saltata }) {
   const p = partita.value
   ultimoModulo = domanda.value?.modulo || null
   domanda.value = null
@@ -289,11 +289,14 @@ function risposto({ giusto }) {
   // dietro un velo comparso dal niente
   togli()
   if (giusto) {
-    borsellino.paga(PAGA.domanda)
+    // il tasto «salta» dei grandi dà la carta ma non paga e non conta (docs/core/comandi.md)
+    if (!saltata) borsellino.paga(PAGA.domanda)
     const presa = p.prendi(voluta.chiave)
     brinda(`${presa.icona} ${presa.nome} — ${presa.chiaro}`, true)
-    segna('survivorsCarte')
-    if (voluta.fascia === 'forte') segna('survivorsToste')
+    if (!saltata) {
+      segna('survivorsCarte')
+      if (voluta.fascia === 'forte') segna('survivorsToste')
+    }
   } else {
     p.rinuncia()
     brinda('niente carta — ci riprovi alla prossima', false)

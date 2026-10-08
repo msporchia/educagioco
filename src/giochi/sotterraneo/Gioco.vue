@@ -523,19 +523,20 @@ watch(() => { tic.value; return corsa.value?.chiesta?.id }, (id) => {
   }
 })
 
-function risposto({ giusto }) {
+function risposto({ giusto, saltata }) {
   domanda.value = null
   // rispondere È il tocco che riprende: il freno può essersi acceso durante la domanda
   togli()
   // una risposta giusta paga subito, nelle discese come nell'abisso: docs/sotterraneo/regole.md
-  if (giusto) borsellino.paga(PAGA.mossa)
-  risolvi(giusto)
+  // (il tasto «salta» dei grandi dà la giusta ma non paga: docs/core/comandi.md)
+  if (giusto && !saltata) borsellino.paga(PAGA.mossa)
+  risolvi(giusto, saltata)
 }
 
-function risolvi(giusto) {
+function risolvi(giusto, saltata = false) {
   const c = corsa.value
   if (!c) return
-  const esito = c.rispondi(giusto)
+  const esito = c.rispondi(giusto, { saltata })
   tic.value++
   salva()
   if (!esito) return

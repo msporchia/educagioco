@@ -117,6 +117,15 @@ export function troppoDiFretta(d, { giusto, tempo }) {
   return tempo < tempoDiLettura(d)
 }
 
+/* Il tasto «salta» (docs/core/comandi.md): l'evento di una domanda
+   data per giusta senza che nessuno abbia risposto. `saltata` è la bandiera
+   che chi ascolta deve guardare per NON pagare e NON contare niente; `tempo`
+   è 0 perché nessuno l'ha guardata, e `diFretta` è falso perché la fretta
+   punisce chi sbaglia leggendo male, e qui nessuno ha sbagliato. */
+export function rispostaSaltata(d) {
+  return { giusto: true, saltata: true, indice: d.giusta, chiave: d.chiave, tempo: 0, diFretta: false }
+}
+
 // il controllo di forma, usato dal banco su ogni domanda generata: descrizione eseguibile del contratto, non un commento
 export function guastiDi(d, { pittori = {} } = {}) {
   const g = []

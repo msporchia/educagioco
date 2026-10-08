@@ -8,6 +8,7 @@ import { state, selectPlayer, creaGiocatore, nomeCorrente, etaDelBambino,
          sperimentaliAccesi, accendiSperimentali, tuttoAperto, accendiTuttoAperto }
   from '../store/profile.js'
 import { azzeraPin } from '../store/pin.js'
+import { saltoAcceso, accendiSalto } from '../store/salto.js'
 import { ripara } from '../incidenti.js'
 import { GIOCHI } from '../data/giochi.js'
 import { LIVELLI_TIPO } from '../giochi/fattoria/motore/tipo.js'
@@ -138,6 +139,9 @@ const A_MANO = [
                 @click="accendiSperimentali(!prova)"><span>🧪 I giochi in prova in home</span><i></i></button>
         <button :class="['leva', { acceso: aperto }]" data-azione="tutto-aperto"
                 @click="accendiTuttoAperto(!aperto)"><span>🔓 Tutte le tappe aperte</span><i></i></button>
+        <!-- di questo telefono, non del bambino: vedi docs/core/comandi.md -->
+        <button :class="['leva', { acceso: saltoAcceso }]" data-azione="tasto-salta"
+                @click="accendiSalto(!saltoAcceso)"><span>⏭ Tasto «salta» sulle domande (telefono)</span><i></i></button>
       </section>
 
       <section class="gruppo">
