@@ -622,7 +622,7 @@ export class Corsa extends Corredo {
     // la chiave non cade per terra: la si ha e basta, o si può dimenticarla e rifare la strada per niente
     if (m.chiave) {
       this.chiaveDelPiano = true
-      this.dillo('🗝️ la chiave della scala!')
+      this.dillo('🗝️ La chiave! Ora la scala si apre')
     }
     // l'esperienza: tanta quanto è forte la sua specie e quanto è giù il posto (dati/livelli.js), il grosso molta di più
     // e la dice un numerino «+N ✨» che sale dal campo (Gioco.vue)
@@ -660,11 +660,11 @@ export class Corsa extends Corredo {
       this.posaPezzo(pezzoNuovo({ livello: this.livelloDelBottino, chi: 'mostro', fortuna: this.fortuna,
                                   rnd: () => this.rnd(), tua: k => this.posso(k) }), { x: m.x, y: m.y + 1 })
     }
-    // un mostro qualsiasi che cade si vede: niente avviso. Quello di una missione sì, dice cosa fare dopo; e il grosso
+    // un mostro che cade si vede, anche il grosso: niente avviso. Quello di una missione sì, dice cosa fare dopo
     if (m.missione) {
       this.missioniFatte.add(m.missione)
-      this.dillo(`👑 ${m.nome} è caduto! Torna su a dirlo`)
-    } else if (m.grosso) this.dillo(`👑 ${m.nome} è caduto!`)
+      this.dillo(`👑 ${m.nome} non si rialza più. Torna su a dirlo`)
+    }
   }
 
   // un pezzo per terra; un leggendario lo festeggia la vista (la colonna di luce, il nome in oro: Gioco.vue)
@@ -687,8 +687,8 @@ export class Corsa extends Corredo {
     const ora = this.livelloEroe
     if (ora > prima) {
       this.vita = Math.min(this.vitaMax, this.vita + Math.max(0, this.vitaMax - tetto))
+      // lo dice la festa (Gioco.vue), col punto da dare: un avviso sotto ripeterebbe la stessa cosa
       this.eventi.push({ che: 'livello', livello: ora })
-      this.dillo(`✨ livello ${ora}! ${ora - prima === 1 ? 'un punto' : `${ora - prima} punti`} da dare`)
     }
   }
 
@@ -759,11 +759,10 @@ export class Corsa extends Corredo {
       const insieme = this.livello.robe.filter(r => r.che === 'porta' && !r.aperta &&
         (p.gruppo != null ? r.gruppo === p.gruppo : r === p))
       for (const r of insieme) { r.aperta = true; r.presa = true }
-      this.dillo(insieme.length > 1 ? '🚪 la stanza si apre' : '🚪 la porta si apre')
       this.chiudi()
       return { che: 'aperta' }
     }
-    this.dillo('la serratura non si muove')
+    this.dillo('La serratura non cede: riprova quando vuoi')
     this.chiudi()
     return { che: 'chiusa' }
   }
@@ -772,18 +771,18 @@ export class Corsa extends Corredo {
   rispostaForziere(f, giusto) {
     // il forziere di una missione non si perde: sbagliando resta chiuso e si riprova, come una porta
     if (f.missione) {
-      if (!giusto) { this.dillo('la serratura non si muove: riprova'); this.chiudi(); return { che: 'chiusa' } }
+      if (!giusto) { this.dillo('Il lucchetto non cede: riprova'); this.chiudi(); return { che: 'chiusa' } }
       f.aperto = true
       this.tesori++
       this.missioniFatte.add(f.missione)
-      this.dillo(`${f.em} ${f.nome}! Torna su, da chi l'aspetta`)
+      this.dillo(`${f.em} ${f.nome}: torna su, da chi l'aspetta`)
       this.chiudi()
       return { che: 'missione', id: f.missione }
     }
     f.aperto = true
     if (!giusto) {
       f.vuoto = true
-      this.dillo('🎁 il forziere resta chiuso')
+      this.dillo('🎁 Il forziere non si aprirà più')
       this.chiudi()
       return { che: 'niente' }
     }
@@ -801,7 +800,6 @@ export class Corsa extends Corredo {
     this.posaPezzo(cosa, { x: f.x, y: f.y + 1 })
     this.posaRoba({ che: 'gemme', em: '💎', quante: Math.round((6 + this.piano * 3) * valoreDelLivello(this.livelloQui)) },
                   { x: f.x + 1, y: f.y + 1 })
-    this.dillo('🎁 si apre!')
     this.chiudi()
     return { che: 'tesoro', cosa }
   }
@@ -814,7 +812,7 @@ export class Corsa extends Corredo {
       this.chiudi()
       return { che: 'bevuto' }
     }
-    this.dillo('l\'acqua è torbida')
+    this.dillo('L\'acqua s\'intorbida: non si beve')
     this.chiudi()
     return { che: 'niente' }
   }
@@ -826,8 +824,7 @@ export class Corsa extends Corredo {
     if (!f || f.che !== 'scontro') { this.chiudi(); return { che: 'niente' } }
     f.chi.calmo = CALMA; f.chi.sveglio = false
     const preso = this.graffio(f.chi)
-    this.ferisci(preso)
-    this.dillo(`🏃 scappi — ${f.chi.em} ti graffia ❤️ −${preso}`)
+    this.ferisci(preso)   // quanto costa lo dice il tasto, prima; il globo sobbalza: niente avviso dopo
     if (this.vita <= 0) { this.svieni(); return { che: 'svenuto', preso } }
     this.chiudi()
     return { che: 'scappato', preso }
@@ -908,7 +905,6 @@ export class Corsa extends Corredo {
     this.zaino.splice(i, 1)
     this.posaRoba({ che: 'cosa', cosa: k, em: COSE[k].em },
                   { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) })
-    this.dillo(`${COSE[k].em} per terra`)
     return { che: 'buttata', cosa: k }
   }
 
@@ -950,7 +946,6 @@ export class Corsa extends Corredo {
     }
     this.entraNelPiano({ dal: 'sopra' })
     this.chiudi()
-    this.dillo(`piano ${this.piano + 1}`)
     return { che: 'sceso', piano: this.piano }
   }
 
@@ -967,7 +962,6 @@ export class Corsa extends Corredo {
     this.piano--
     this.entraNelPiano({ dal: 'sotto' })
     this.chiudi()
-    this.dillo(`piano ${this.piano + 1}`)
     return { che: 'salito', piano: this.piano }
   }
 

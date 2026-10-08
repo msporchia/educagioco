@@ -357,7 +357,7 @@ function guarda() {
     if (trovati.value.has(p.nome) || !visto(centroDi(p.riquadro))) continue
     trovati.value = new Set([...trovati.value, p.nome])
     const c = p.cosa
-    dillo(p.aperto ? `Hai trovato ${minuscolo(c.nome)}!` : `Hai trovato ${minuscolo(c.nome)}: per ora non si scende.`)
+    dillo(p.aperto ? `Hai trovato ${minuscolo(c.nome)}!` : `Hai trovato ${minuscolo(c.nome)}. Sbarrata, per ora.`)
   }
   if (!trovati.value.has('cartello') && visto(centroDi(CARTELLO.riquadro)))
     trovati.value = new Set([...trovati.value, 'cartello'])

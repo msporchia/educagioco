@@ -1269,8 +1269,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <!-- il forziere di una missione dice cosa c'è dentro, e non si perde: sbagliando si riprova -->
         <Foglio v-else-if="foglio && foglio.che === 'forziere'" :em="foglio.chi.missione ? foglio.chi.em : '🎁'"
                 :titolo="foglio.chi.missione ? foglio.chi.nome : 'Un forziere'" :data-missione="foglio.chi.missione || null"
-                :dice="foglio.chi.missione ? 'È quello che cercavi. Rispondi giusto e lo prendi; se sbagli, riprovi.'
-                                           : 'Una domanda sola. Se la sbagli, resta chiuso per sempre.'">
+                :dice="foglio.chi.missione ? 'Quello che cercavi. Sbagliando non si perde: si riprova.'
+                                           : 'Una domanda sola: sbagliata, resta chiuso per sempre.'">
           <div v-if="domanda" class="sot-domanda">
             <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
                      :origine="domanda" gioco="sotterraneo" :respiro="900"
@@ -1282,7 +1282,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         </Foglio>
 
         <Foglio v-else-if="foglio && foglio.che === 'fonte'" em="⛲" titolo="Una fonte"
-                dice="Acqua pulita. Rispondi e bevi.">
+                dice="Acqua limpida e fredda: rimette in forze.">
           <div v-if="domanda" class="sot-domanda">
             <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
                      :origine="domanda" gioco="sotterraneo" :respiro="900"
@@ -1321,7 +1321,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
         <!-- il portale: niente domanda, è la strada di casa; il piano resta com'è -->
         <Foglio v-else-if="foglio && foglio.che === 'portale'" em="🌀" titolo="Un portale"
-                dice="Torni su al villaggio, e ritrovi il portale per tornare qui.">
+                dice="Porta al villaggio. Lassù, il suo gemello ti riporta qui.">
           <button class="sot-grosso" data-azione="portale" @click="salgoDalPortale">
             salgo al villaggio
           </button>
@@ -1341,8 +1341,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
         <Foglio v-else-if="foglio && foglio.che === 'scala'" em="🕳️" titolo="La scala che scende"
                 :dice="foglio.ultimo
-                  ? 'Da qui si risale, e quello che hai addosso e in tasca viene su con te.'
-                  : 'Sotto è più buio, i mostri hanno più ossa e le domande si fanno toste. Quello che hai addosso scende con te.'">
+                  ? 'Di qui si torna alla luce, con tutto quello che hai trovato.'
+                  : 'Sotto è più buio, i mostri sono più duri e le domande più toste.'">
           <button class="sot-grosso" data-azione="scendi" @click="scendi">
             {{ foglio.ultimo ? 'esco dal sotterraneo' : `scendo al piano ${eroe.piano + 1}` }}
           </button>
@@ -1355,7 +1355,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <LascioPerdere v-else-if="foglio && foglio.che === 'scala-su' && foglio.fuori" :nome="titolo" giu
                        @si="lascioPerdere" @no="chiudiFoglio" />
         <Foglio v-else-if="foglio && foglio.che === 'scala-su'" em="🪜" titolo="La scala che sale"
-                dice="Torni al piano di sopra, accanto alla scala da cui eri sceso. Quello che hai lasciato là resta com'è.">
+                dice="Il piano di sopra ti aspetta com'era.">
           <button class="sot-grosso" data-azione="sali" @click="sali">
             {{ `risalgo al piano ${eroe.piano - 1}` }}
           </button>

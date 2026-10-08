@@ -163,7 +163,7 @@ const vaDa = v => emit('vai', v.da)
       </section>
 
       <p v-if="!d.inMano.length && !d.offerte.length" class="sot-diario-vuoto" data-diario-vuoto>
-        Per ora nessuno ti chiede niente. Quando una discesa sarà finita, qualcuno al villaggio avrà un favore da chiederti.
+        Per ora nessuno ti cerca. Finisci una discesa: al villaggio qualcuno avrà bisogno di te.
       </p>
       <p v-else-if="d.nascoste" class="sot-diario-tetto" data-diario-tetto>
         Hai già {{ d.aperte }} missioni aperte: consegnane una e ne arrivano altre.

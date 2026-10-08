@@ -107,21 +107,15 @@ function vendi(i) {
   emit('vendi', i)
 }
 
-// le righe sotto i numeri: perché no, dove va, quante ne hai
+// le righe sotto i numeri: solo quello che non si vede già (docs/sotterraneo/dialoghi.md, «Le scritte»). Il prezzo
+// alto dei pezzi avanti lo dice il cartellino, quante ne hai la casella (×2), dove va il confronto
 const note = computed(() => {
   const c = cosa.value, s = scelto.value
-  if (!c) return []
-  const n = []
-  if (s.che === 'addosso') n.push({ testo: 'Ce l\'hai addosso.', tono: 'tenue' })
-  if (s.che === 'tasca') n.push({ testo: `Te lo pago la metà di quanto costa.`, tono: 'tenue' })
-  if (s.che !== 'merce') return n
-  if (c.avanti) n.push({ em: '⬆️', testo: 'Costa di più: è roba per più giù.', tono: 'oro', dato: 'data-avanti-costa' })
-  if (c.nonPuoi) n.push({ em: '✋', testo: c.nonPuoi, tono: 'ambra', dato: 'data-non-puoi' })
-  else if (c.prova && c.prova.bloccata)
-    n.push({ em: '✋', testo: `${COSE[c.prova.bloccata].nome} vuole tutte e due le mani: finisce nello zaino.`, tono: 'ambra' })
-  else if (c.dove && !c.va) n.push({ em: '🎒', testo: 'Finisce nello zaino.', tono: 'tenue' })
-  if (c.quante) n.push({ testo: `Ne hai ${c.quante}.`, tono: 'tenue' })
-  return n
+  if (!c || s.che !== 'merce') return []
+  if (c.nonPuoi) return [{ em: '✋', testo: c.nonPuoi, tono: 'ambra', dato: 'data-non-puoi' }]
+  if (c.prova && c.prova.bloccata)
+    return [{ em: '✋', testo: `${COSE[c.prova.bloccata].nome} tiene tutte e due le mani: questo resta in tasca.`, tono: 'ambra' }]
+  return []
 })
 // il confronto solo per quello che si compra: addosso è già lì, e chi vende non si mette niente
 const prova = computed(() => (scelto.value && scelto.value.che === 'merce' && cosa.value && cosa.value.prova &&
@@ -172,8 +166,9 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
                    :data-casella-pezzo="r.chiave" :data-avanti="r.avanti || null"
                    :data-posso="puoiComprare(r) ? '1' : '0'" @click="toccaMerce(r)" />
         </div>
-        <!-- ogni linguetta che veste ha sempre i suoi pezzi (motore/bottega.js, rialzi): questa riga non serve a chi veste -->
-        <p v-if="!qui.length" class="sot-banco-voce">Qui, per oggi, niente di nuovo: guarda l'altro banco.</p>
+        <!-- ogni linguetta che veste ha sempre i suoi pezzi (motore/bottega.js, rialzi): questa riga non serve a chi veste.
+             Un mercante non dice mai «niente per te» (docs/sotterraneo/dialoghi.md) -->
+        <p v-if="!qui.length" class="sot-banco-voce">«Su questo banco, oggi, niente alla tua altezza. Guarda l'altro.»</p>
       </template>
       <template v-else>
         <div class="sot-griglia">
@@ -183,7 +178,7 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
                    @click="toccaTasca(i)" />
         </div>
         <p v-if="tascheVuote" class="sot-banco-voce" data-tasche-vuote>
-          Tasche vuote? Torna quando giù hai trovato qualcosa.
+          «Tasche vuote? Torna quando laggiù avrai trovato qualcosa.»
         </p>
       </template>
     </div>
@@ -209,7 +204,7 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
       </Pannello>
       <!-- niente di scelto: parla il mercante -->
       <div v-else class="sot-battuta" data-battuta>
-        <p>«{{ vende ? 'Fammi vedere cos\'hai in tasca: te lo pago la metà di quanto costa.' : chi.dice }}»</p>
+        <p>«{{ vende ? 'Fammi vedere cos\'hai in tasca: te lo pago la metà di quello che vale.' : chi.dice }}»</p>
         <p v-if="!tasche && chiCompra" class="sot-battuta-poi" data-chi-compra>
           «Roba da vendere? Portala {{ chiCompra }}.»
         </p>

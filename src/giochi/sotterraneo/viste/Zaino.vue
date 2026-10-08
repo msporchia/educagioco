@@ -79,7 +79,7 @@ const prova = computed(() => (nelloZaino.value && cosa.value && cosa.value.prova
 const note = computed(() => {
   const c = cosa.value
   if (!c) return []
-  if (!nelloZaino.value) return [{ testo: 'Ce l\'hai addosso.', tono: 'tenue' }]
+  if (!nelloZaino.value) return []
   if (c.nonPuoi) return [{ em: '✋', testo: c.nonPuoi + (c.prezzo ? ' Il mercante te lo compra.' : ''), tono: 'ambra', dato: 'data-non-puoi' }]
   if (c.prova && c.prova.bloccata) return [{ em: '✋', testo: `${props.mano.nome} vuole tutte e due le mani.`, tono: 'ambra' }]
   return []

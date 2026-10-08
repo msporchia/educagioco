@@ -12,14 +12,14 @@ export const CAMPAGNA = [
   { chiave: 'altare', nome: 'La cripta dell\'altare', icona: '🕯️', dove: 'nella cripta',
     scenario: 'cripta',
     portata: 25,
-    dritta: 'due piani corti: si impara la strada',
+    dritta: 'due piani di tombe, e qualcuno che non dorme',
     piani: 2, misura: 30, giri: 2, dif: [0.05, 0.22], livello: 1,
     guardiano: 'scheletro', capo: 'scheletro' },
 
   { chiave: 'cantine', nome: 'La scalinata antica', icona: '🪜', dove: 'giù per la scalinata',
     scenario: 'cantine',
     portata: 31,
-    dritta: 'larga, con tante stanze: si gira parecchio',
+    dritta: 'tante stanze, e tutte al buio',
     piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 1.55, spinta: 5, livello: 2,
     guardiano: 'scheletro', capo: 'orco' },
 
@@ -27,7 +27,7 @@ export const CAMPAGNA = [
   { chiave: 'torre', nome: 'La torre in rovina', icona: '🏰', dove: 'sotto la torre',
     scenario: 'fornace',
     portata: 37,
-    dritta: 'stretta e alta: si sale e si scende per le stanze',
+    dritta: 'stretta e alta: le scale non finiscono mai',
     piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 1.35, spinta: 7, livello: 3,
     guardiano: 'scheletro', capo: 'troll' },
 
@@ -35,7 +35,7 @@ export const CAMPAGNA = [
   { chiave: 'gallerie', nome: 'La grotta della scaletta', icona: '🪨', dove: 'nella grotta',
     scenario: 'cantine',
     portata: 43,
-    dritta: 'piani piccoli, ma tanti: si scende sempre',
+    dritta: 'piani piccoli, uno sotto l\'altro, sempre più giù',
     piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 1.65, spinta: 9, livello: 5,
     guardiano: 'orco', capo: 'orco' },
 
@@ -43,7 +43,7 @@ export const CAMPAGNA = [
   { chiave: 'cisterna', nome: 'La scala sommersa', icona: '💧', dove: 'nella scala sommersa',
     scenario: 'cripta',
     portata: 50,
-    dritta: 'lunga e stretta, e in fondo c\'è qualcosa di grosso',
+    dritta: 'lunga e stretta, e in fondo gorgoglia qualcosa',
     piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 2.9, spinta: 9, livello: 6,
     // guardiano un granchio (non l'orco di sempre): stessa fascia (dati/mostri.js), ma nel posto giusto
     guardiano: 'granchio', capo: 'gigante' },
@@ -51,14 +51,14 @@ export const CAMPAGNA = [
   { chiave: 'labirinto', nome: 'La botola segreta', icona: '🌀', dove: 'sotto la botola',
     scenario: 'cantine',
     portata: 57,
-    dritta: 'un labirinto di sedici stanze: senza mappina ci si perde',
+    dritta: 'un labirinto: senza mappina ci si perde',
     piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 5.1, spinta: 9, livello: 8,
     guardiano: 'lupo', capo: 'troll' },
 
   { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '⛏️', dove: 'nella miniera',
     scenario: 'fornace',
     portata: 64,
-    dritta: 'stretta, profonda, e le domande non perdonano',
+    dritta: 'stretta, profonda, e le pietre bruciano',
     piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 4.85, spinta: 10, livello: 10,
     // il gigante solo in fondo; il serpente ai piani, non l'orco
     guardiano: 'serpente', capo: 'gigante' },

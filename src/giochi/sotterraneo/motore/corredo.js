@@ -462,8 +462,7 @@ export class Corredo {
     this.metti(dove, k)
     this.zaino.splice(i, 1)
     if (vecchio) this.zaino.push(vecchio)
-    this.sistemaLeMani()
-    this.dilloDi(k)
+    this.sistemaLeMani()   // si vede addosso: niente avviso
     return { che: 'addosso', cosa: k }
   }
 
@@ -474,7 +473,6 @@ export class Corredo {
     if (this.zaino.length >= TASCHE) { this.dillo('🎒 lo zaino è pieno'); return { che: 'pieno' } }
     this.metti(dove, null)
     this.zaino.push(k)
-    this.dillo(`${COSE[k].em} nello zaino`)
     return { che: 'riposta', cosa: k }
   }
 
