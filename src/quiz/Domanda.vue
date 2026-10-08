@@ -66,6 +66,8 @@ const risposte = computed(() => props.domanda.risposte || [])
 // la frase col rilievo: il ritaglio sta in nucleo/domanda.js (lo condivide grafica/scheda.js)
 const frase = computed(() =>
   evidenziando(props.domanda.soggetto?.testo, props.domanda.soggetto?.evidenzia))
+const fraseSvolta = computed(() =>
+  evidenziando(svolto.value?.soggetto?.testo, svolto.value?.soggetto?.evidenzia))
 // oltre 6 parole vere il soggetto diventa un paragrafo a sinistra invece di un titolo centrato
 const PAROLE_DA_PARAGRAFO = 6
 const daLeggere = computed(() =>
@@ -326,6 +328,8 @@ onUnmounted(() => {
         <div v-if="svolto.soggetto" class="qz-svolto-soggetto">
           <canvas v-if="svolto.soggetto.scena" ref="teloSvolto" class="qz-svolto-telo" />
           <span v-else-if="svolto.soggetto.emoji">{{ svolto.soggetto.emoji }}</span>
+          <span v-else-if="fraseSvolta.parola"
+          >{{ fraseSvolta.prima }}<b class="qz-spicca">{{ fraseSvolta.parola }}</b>{{ fraseSvolta.dopo }}</span>
           <span v-else>{{ svolto.soggetto.testo }}</span>
           <span v-if="svolto.soggetto.nome" class="qz-nome">{{ svolto.soggetto.nome }}</span>
         </div>

@@ -316,9 +316,10 @@ const MENTRE_SENSO = [
   { frase: 'Da piccolo era timidissimo, mentre oggi non ha paura di nessuno.', senso: 'contrasto' },
   { frase: 'Il piatto sembrava piccolo, mentre in realtà saziava moltissimo.', senso: 'contrasto' },
 ]
+// le risposte sono le parole che potrebbero prendere il posto di «mentre»: si prova a rileggere la frase con ognuna
 const SENSO_MENTRE = {
-  tempo: 'che due cose succedono nello stesso momento',
-  contrasto: 'che due cose sono diverse, quasi il contrario',
+  tempo: 'nello stesso momento',
+  contrasto: 'invece',
 }
 
 // tre modi equivalenti: la ripetizione stanca anche quando il contenuto non è finito
@@ -328,9 +329,8 @@ const TESTO_CAPISCI = [
   'Cosa ci saremmo aspettati, senza leggere la fine della frase?',
 ]
 const TESTO_MENTRE_DOPPIO = [
-  'Cosa dice «mentre» in questa frase?',
-  'In questa frase, cosa vuol dire «mentre»?',
-  'Leggi bene: cosa comunica «mentre» qui?',
+  'In questa frase, «mentre» vuol dire…',
+  'Qui «mentre» vuol dire…',
 ]
 
 const SCALETTA = [
@@ -548,17 +548,20 @@ class Connettivi extends Modulo {
     const c = sorte.uno(MENTRE_SENSO)
     const altro = c.senso === 'tempo' ? 'contrasto' : 'tempo'
     const falsi = [
-      testo(SENSO_MENTRE[altro], "guarda bene: qui «mentre» non sta dicendo questo"),
-      testo('che una cosa è la causa dell\'altra', '«mentre» non spiega motivi'),
-      testo("che una cosa succede solo se l'altra è vera", "«mentre» non è un'ipotesi"),
+      testo(SENSO_MENTRE[altro], c.senso === 'tempo'
+        ? 'qui le due cose non sono una il contrario dell\'altra: succedono insieme'
+        : 'qui non conta quando succedono: le due cose sono diverse, una il contrario dell\'altra'),
+      c.senso === 'tempo'
+        ? testo('solo se', '«mentre» non mette mai una condizione')
+        : testo('perché', '«mentre» non dice il motivo: qui mette a confronto due cose diverse'),
     ]
     return domanda({
       testo: sorte.uno(TESTO_MENTRE_DOPPIO),
-      soggetto: { testo: c.frase },
+      soggetto: { testo: c.frase, evidenzia: 'mentre' },
       buona: testo(SENSO_MENTRE[c.senso]),
       falsi,
       chiave: 'conn:mentre-doppio',
-      aiuto: '«mentre» a volte vuol dire «nello stesso momento», a volte vuol dire «invece»: bisogna leggere tutta la frase',
+      aiuto: 'rileggi la frase con «invece» al posto di «mentre»: se il senso resta lo stesso, vuol dire «invece»; se no, le due cose succedono nello stesso momento',
       sorte,
     })
   }
