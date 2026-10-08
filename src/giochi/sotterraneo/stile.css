@@ -788,6 +788,50 @@
 .sot-confronto-riga.sot-su { color: #8ff0b0; background: #4fce7c1f; border: 1px solid #4fce7c66 }
 .sot-confronto-riga.sot-giu { color: #ff9b8a; background: #e0432f1f; border: 1px solid #e0432f66 }
 .sot-confronto-pari { font-size: 13px; color: var(--sot-tenue) }
+
+/* il confronto affiancato (Confronto.vue): sintesi, totali sull'eroe, poi la tabella «Addosso» / «Questo» con una
+   riga per abilità. A 390 px le tre colonne stanno: parola dell'abilità, valore di prima, valore di dopo */
+.sot-affianca { display: grid; gap: 6px }
+.sot-sintesi { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: .01em; color: #f3e6c8 }
+.sot-sintesi-su { color: #8ff0b0 }
+.sot-sintesi-giu { color: #ff9b8a }
+.sot-sintesi-pari { color: #f0b429 }
+.sot-sintesi-uguale { color: var(--sot-tenue) }
+.sot-affianca .sot-confronto { margin: 0; gap: 5px }
+.sot-affianca .sot-confronto-riga { padding: 2px 8px; font-size: 13px }
+.sot-due-mani { margin: 0; font-size: 12.5px; font-weight: 700; color: #f0b429; line-height: 1.3 }
+.sot-tabella {
+  display: grid; grid-template-columns: minmax(0, .72fr) minmax(0, 1.14fr) minmax(0, 1.14fr); gap: 3px 4px; align-items: stretch;
+}
+.sot-tab-testa { display: grid; align-content: start; gap: 3px; min-width: 0 }
+.sot-tab-testa small { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #b9a27a }
+.sot-tab-pezzo {
+  display: flex; align-items: center; gap: 5px; min-width: 0; padding: 3px 5px 3px 3px; border-radius: 8px;
+  background: #ffffff0d; border: 1px solid color-mix(in srgb, var(--sot-gradino) 55%, transparent);
+}
+.sot-tab-icona {
+  flex: none; width: 31px; height: 31px; display: grid; place-items: center; border-radius: 6px;
+  border: 1.5px solid var(--sot-gradino); background: radial-gradient(circle at 50% 40%, #2d3047, #0c0e17 76%);
+}
+.sot-tab-pezzo b {
+  min-width: 0; font-family: "Emoji Gioco", Georgia, "Times New Roman", serif; font-size: 12.5px; line-height: 1.12;
+  color: var(--sot-gradino); text-shadow: 0 1px 0 #000; overflow-wrap: break-word;
+}
+.sot-tab-niente { --sot-gradino: #7d725f; border-style: dashed }
+.sot-tab-niente b { font-style: italic; font-weight: 400 }
+.sot-tab-abilita, .sot-tab-valore {
+  display: flex; align-items: center; min-height: 26px; padding: 0 5px; font-size: 13px; font-weight: 800;
+  color: #f3e6c8; background: #ffffff08; border-radius: 6px;
+}
+.sot-tab-abilita { gap: 3px; font-size: 11.5px; color: #d9c79f }
+.sot-tab-valore { justify-content: space-between }
+.sot-tab-valore.sot-nulla { color: #7d725f; font-weight: 400 }
+.sot-tab-abilita.sot-v-su, .sot-tab-valore.sot-v-su { background: #4fce7c1f }
+.sot-tab-abilita.sot-v-giu, .sot-tab-valore.sot-v-giu { background: #e0432f1f }
+.sot-tab-nuovo.sot-v-su { color: #8ff0b0 }
+.sot-tab-nuovo.sot-v-giu { color: #ff9b8a }
+.sot-freccia { font-size: 11px; margin-left: 4px }
+.sot-tab-tipo { margin: 0; font-size: 11.5px; color: #b9a27a; text-align: right }
 .sot-pannello-nota { margin: 6px 0 0; font-size: 13px; color: var(--sot-tenue) }
 .sot-pannello-nota.sot-tono-ambra { color: #f0b429; font-weight: 700 }
 .sot-pannello-nota.sot-tono-oro { color: #ffe39a; font-weight: 700 }

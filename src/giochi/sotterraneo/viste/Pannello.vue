@@ -1,10 +1,12 @@
 <script setup>
 // Il pezzo scelto, nella bottega e nello zaino: il nome del colore del suo gradino, che cos'è, i numeri in elenco
-// e, se si indossa, il confronto con quello che si ha addosso («⚔️ 3 → 5», più in verde e meno in rosso). Sotto
-// le righe del momento (`note`) e i tasti, nello slot. I numeri li dà il motore (seLoMetto), le parole pezzo.js
+// e, se si indossa, il confronto affiancato con quello che si ha addosso (Confronto.vue: due colonne, una riga per
+// abilità). Sotto le righe del momento (`note`) e i tasti, nello slot. I numeri li dà il motore (seLoMetto), le
+// parole pezzo.js
 import { computed } from 'vue'
 import Icona from './Icona.vue'
-import { GRADINI, gradinoDi, tipoDi, numeriDi, confrontoDi } from './pezzo.js'
+import Confronto from './Confronto.vue'
+import { GRADINI, gradinoDi, tipoDi, numeriDi } from './pezzo.js'
 import { PEZZI } from '../dati/atlante.js'
 
 const props = defineProps({
@@ -20,30 +22,25 @@ const scala = computed(() => {
 })
 const gradino = computed(() => GRADINI[gradinoDi(props.cosa)])
 const numeri = computed(() => numeriDi(props.cosa))
-const confronto = computed(() => confrontoDi(props.prova))
-// il pezzo si indossa e non cambia niente: lo si dice, o il confronto sparirebbe come un guasto
-const uguale = computed(() => !!(props.prova && props.prova.prima && !confronto.value.length))
+// col confronto affiancato il pezzo ha già la sua colonna: testa e numeri in elenco direbbero le stesse cose
+const affianca = computed(() => !!(props.prova && props.prova.prima && props.prova.cambio))
 </script>
 
 <template>
   <div class="sot-pannello" data-pannello :data-cosa="cosa.chiave" :style="{ '--sot-gradino': gradino.colore }">
-    <div class="sot-pannello-testa">
-      <span class="sot-pannello-icona"><Icona :sprite="cosa.sprite" :em="cosa.em" :scala="scala" :emAlto="26" /></span>
-      <span class="sot-pannello-nome">
-        <b>{{ cosa.nome }}</b>
-        <i>{{ tipoDi(cosa) }} · {{ gradino.nome }}</i>
-      </span>
-    </div>
-    <ul v-if="numeri.length" class="sot-pannello-numeri">
-      <li v-for="(n, i) in numeri" :key="i"><span class="em">{{ n.em }}</span> {{ n.testo }}</li>
-    </ul>
-    <div v-if="confronto.length" class="sot-confronto" data-confronto-tutto>
-      <span v-for="r in confronto" :key="r.campo" class="sot-confronto-riga em" :class="r.su ? 'sot-su' : 'sot-giu'"
-            :data-confronto="r.campo" :data-verso="r.su ? 'su' : 'giu'">
-        {{ r.em }} {{ r.prima }} → {{ r.dopo }}
-      </span>
-    </div>
-    <p v-else-if="uguale" class="sot-confronto sot-confronto-pari" data-confronto-tutto>come quello che hai</p>
+    <Confronto v-if="affianca" :cosa="cosa" :prova="prova" />
+    <template v-else>
+      <div class="sot-pannello-testa">
+        <span class="sot-pannello-icona"><Icona :sprite="cosa.sprite" :em="cosa.em" :scala="scala" :emAlto="26" /></span>
+        <span class="sot-pannello-nome">
+          <b>{{ cosa.nome }}</b>
+          <i>{{ tipoDi(cosa) }} · {{ gradino.nome }}</i>
+        </span>
+      </div>
+      <ul v-if="numeri.length" class="sot-pannello-numeri">
+        <li v-for="(n, i) in numeri" :key="i"><span class="em">{{ n.em }}</span> {{ n.testo }}</li>
+      </ul>
+    </template>
     <p v-for="(n, i) in note" :key="'n' + i" class="sot-pannello-nota" :class="n.tono ? 'sot-tono-' + n.tono : null"
        v-bind="n.dato ? { [n.dato]: '' } : {}">
       <span v-if="n.em" class="em">{{ n.em }}</span> {{ n.testo }}
