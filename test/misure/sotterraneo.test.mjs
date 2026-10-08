@@ -8,7 +8,12 @@
 
    - con la roba e il livello attesi, a otto risposte giuste su dieci si
      arriva in fondo quasi sempre, a sei circa metà delle volte (in media
-     fra i quattro), a quattro quasi mai — tranne la prima, che perdona;
+     fra i quattro), a quattro quasi mai — tranne le prime due, che perdonano
+     (la cripta tutto, la scalinata molto: il primo avvio, vedi sotto);
+   - il primo avvio: la scalinata a mani nude (la roba di una discesa prima)
+     a otto su dieci si vince almeno sette volte su dieci, e con le gemme con
+     cui si esce dalla cripta c'è sempre un'arma da comprare (o l'ha già data
+     il guardiano);
    - con la roba di una discesa prima si fatica, ma dalla grotta in giù a
      otto su dieci ci si arriva ancora più di metà delle volte (le prime
      discese le fanno i primi pezzi: senza, si torna su);
@@ -27,7 +32,10 @@
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { misuraLaStoria, misuraConLaRoba, misuraDiChiHaMessoDaParte } from '../../src/giochi/sotterraneo/motore/banco.js'
-import { numeriAttesi } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { numeriAttesi, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { ROBA_VUOTA } from '../../src/giochi/sotterraneo/motore/corredo.js'
+import { Bottega } from '../../src/giochi/sotterraneo/motore/bottega.js'
 import { controlla, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const SEMI = 20
@@ -51,7 +59,7 @@ for (const e of EROI) {
     const pavimento = e.chiave === 'mago' ? 0.7 : 0.8   // il mago regge meno
     controlla(`${e.chiave}, ${t.chiave}: con la roba e il livello attesi a 8/10 si arriva in fondo quasi sempre`,
               otto >= SEMI * pavimento, `${otto}/${SEMI}`)
-    if (k) controlla(`${e.chiave}, ${t.chiave}: con la roba attesa a 4/10 quasi mai`, quattro <= SEMI * 0.3, `${quattro}/${SEMI}`)
+    if (k) controlla(`${e.chiave}, ${t.chiave}: con la roba attesa a 4/10 quasi mai`, quattro <= SEMI * (k === 1 ? 0.45 : 0.3), `${quattro}/${SEMI}`)
     else controlla(`${e.chiave}, la prima perdona: a 4/10 si arriva in fondo spesso`, quattro >= SEMI * 0.6, `${quattro}/${SEMI}`)
   }
 }
@@ -59,7 +67,8 @@ for (const e of EROI) {
 for (const [k, t] of CAMPAGNA.entries()) {
   if (!k) continue
   const sei = media(tutte, 0, 1, k)
-  controlla(`${t.chiave}: a 6/10 con la roba attesa circa metà, fra i quattro eroi`, sei >= 0.3 && sei <= 0.8, cento(sei))
+  controlla(`${t.chiave}: a 6/10 con la roba attesa circa metà, fra i quattro eroi${k === 1 ? ' (la scalinata, molto di più: il primo avvio)' : ''}`,
+            sei >= 0.3 && sei <= (k === 1 ? 1 : 0.8), cento(sei))
   const prima8 = media(tutte, -1, 0, k), prima6 = media(tutte, -1, 1, k)
   if (k >= 3) controlla(`${t.chiave}: con la roba di una discesa prima, a 8/10 ci si arriva ancora`, prima8 >= 0.5, cento(prima8))
   controlla(`${t.chiave}: e non va meglio che con la roba attesa (a 6/10, a meno del caso)`, prima6 <= sei + 0.15, `${cento(prima6)} contro ${cento(sei)}`)
@@ -70,6 +79,27 @@ for (const [k, t] of CAMPAGNA.entries()) {
   controlla(`${t.chiave}: ma si fatica`, sotto6 <= sei, `${cento(sotto6)} contro ${cento(sei)}`)
   const sopra4 = media(tutte, 'L+3', 2, k)
   controlla(`${t.chiave}: tre livelli sopra, a 4/10 non è una passeggiata`, sopra4 <= 0.7, cento(sopra4))
+}
+
+/* Il primo avvio (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»): chi entra nella scalinata senza aver
+   comprato niente (la roba di una discesa prima, cioè nulla) e risponde bene la maggior parte delle volte la vince;
+   e con le gemme con cui si esce dalla cripta c'è sempre una prima arma da comprare, se il guardiano non l'ha data */
+{
+  const nuda = EROI.map((e, i) => ({ eroe: e.chiave, vinte: tutte[i].vinte[-1][0][1] }))
+  const tutteNude = nuda.reduce((n, x) => n + x.vinte, 0) / (EROI.length * SEMI)
+  nota(`la scalinata a mani nude a 8/10: ${nuda.map(x => `${x.eroe} ${x.vinte}/${SEMI}`).join(' · ')}`)
+  controlla('scalinata a mani nude a 8/10: si vince almeno sette volte su dieci, fra i quattro eroi', tutteNude >= 0.7, cento(tutteNude))
+  for (const x of nuda)
+    controlla(`${x.eroe}: scalinata a mani nude a 8/10, almeno una volta su due`, x.vinte >= SEMI * 0.5, `${x.vinte}/${SEMI}`)
+  /* le gemme con cui si esce dalla cripta (in media, andando dritti) bastano alla prima arma dell'armaiolo che a questo
+     eroe serve. Il guardiano dell'ultima stanza la lascia anche per terra: qui si conta solo la spesa */
+  EROI.forEach((e, i) => {
+    const gemme = Math.floor(tutte[i].gemme[0])
+    const b = new Bottega({ eroe: e.chiave, roba: { ...ROBA_VUOTA(), gemme }, finite: 1, crescita: crescitaAttesa(e.chiave, 1) })
+    const armi = b.mercanzia('armaiolo').filter(r => r.avanti === 0 && ['mano', 'mancina'].includes(COSE[r.chiave].dove) && b.vaAddosso(r.chiave))
+    const prezzo = armi.length ? Math.min(...armi.map(r => b.quantoCosta(r.chiave))) : Infinity
+    controlla(`${e.chiave}: con le ${gemme} 💎 con cui si esce dalla cripta si compra la prima arma (${prezzo} 💎)`, prezzo <= gemme, `${prezzo} contro ${gemme}`)
+  })
 }
 
 /* chi gira tutto: più mostri con la stessa roba, ma anche più pozioni, più esperienza e i pezzi dei forzieri */

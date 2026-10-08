@@ -36,7 +36,7 @@ sopra), `motore/bottega.js` (i banchi),
 - **Le discese dopo la prima contano sulla roba** (`forza` sulle ossa e
   `spinta` sull'attacco dei mostri, in `dati/campagna.js`; `crescitaDi`),
   tarate sulla roba e sul livello con cui ci si entra secondo la storia
-  ([la-grande-storia.md](la-grande-storia.md#le-misure)): forza 1,55 ·
+  ([la-grande-storia.md](la-grande-storia.md#le-misure)): forza 1 ·
   1,35 · 1,65 · 2,9 · 5,1 · 4,85 e spinta 5 · 7 · 9 · 9 · 9 · 10 dalla
   scalinata alla miniera. La cripta si comincia a mani nude (`guastiDellaCampagna` lo
   pretende). A mani nude dalla grotta in giù non si

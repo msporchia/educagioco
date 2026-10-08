@@ -128,6 +128,42 @@ lo stesso giudizio della raccolta). Così la tabella vera, con livello,
   tabella non riceve una spada peggiore della sua. Le missioni danno solo gioielli o gemme (e a volte
   qualche moneta, [missioni.md](missioni.md)): un vantaggio, mai un passo.
 
+## Il primo avvio
+
+La gradazione è quello che rende il gioco interessante, ma si parte dal basso:
+l'utente, il 9 ottobre, dopo la ritaratura coi livelli: «possiamo rendere un
+attimo più facile il primo avvio del gioco». A mani nude (la roba di una
+discesa prima, cioè niente) la scalinata a 8/10 si vinceva 1–5 volte su 20.
+Adesso **un bambino che entra senza aver comprato niente e risponde bene la
+maggior parte delle volte la vince**, e con la prima arma è comoda.
+
+- **La leva è la forza della scalinata**: tolta (da 1,55 a 1, le ossa dei
+  mostri sono quelle del bestiario), la spinta resta 5. Provato: più spinta e
+  meno forza stringe meglio la forbice fra chi è nudo e chi ha l'arma (a
+  forza 1,2 e spinta 4 il nudo vinceva il 64% e chi ha l'arma il 26% a 4/10;
+  a forza 1 e spinta 5 il 76% e il 28%).
+- **Prima e dopo** (venti semi per eroe, cavaliere · elfa · mago · nano):
+
+| scalinata | prima | dopo |
+|---|---|---|
+| a mani nude, a 8/10 | 1·5·3·3 (15%) | 11·18·16·16 (76%) |
+| roba attesa, a 6/10 | 7·15·12·17 (64%) | 20·20·17·20 (96%) |
+| roba attesa, a 4/10 | 0·1·0·2 (4%) | 3·8·4·7 (28%) |
+| chi va dritto (storia giocata), 8 · 6 · 4/10 | 83 · 63 · 15% | 98 · 83 · 44% |
+| domande, solo il guardiano · tutto il piano (cavaliere, un seme) | 22 · 75 | 15 · 59 |
+
+- **Il cavaliere resta il più duro** anche nudo (11 su 20): braccio 4, difesa 1
+  e 21 di vita contro i 28 con la spada corta e lo scudo. Il test pretende il
+  70% in media e almeno metà a testa.
+- **La forbice si allarga, non sparisce**: alla scalinata si sta larghi
+  (6/10 fino al 100% in media, 4/10 fino al 45% a testa, dove le altre
+  discese stanno a 80% e 30%), dalla torre in poi tutto com'era. Le discese
+  dopo non sono state toccate: le loro righe nella tabella sono le stesse.
+- **C'è sempre un'arma da comprare**: l'armaiolo ha la prima arma della
+  riga (la spada corta, la verga, l'accetta) a 9 💎, e si esce dalla cripta con
+  12–15 💎 in media (il guardiano dell'ultima stanza la lascia anche per
+  terra). `misure/sotterraneo` lo controlla per ognuno dei quattro eroi.
+
 ## Chi è sotto il livello lo sa prima di scendere
 
 Toccando una discesa ancora da finire, se l'eroe è due livelli sotto
@@ -149,23 +185,23 @@ su venti, cavaliere · elfa · mago · nano (8 ottobre 2026, coi livelli):
 
 | | cripta | scalinata | torre | grotta | sommersa | botola | miniera |
 |---|---|---|---|---|---|---|---|
-| attesa, a 8/10 | 20·20·20·20 | 19·20·20·20 | 20·20·20·20 | 20·20·20·20 | 20·20·20·20 | 20·20·20·20 | 20·20·20·20 |
-| attesa, a 6/10 | 20·20·20·20 | 7·15·12·17 | 11·17·14·18 | 7·17·8·19 | 8·18·16·13 | 5·19·15·13 | 9·17·11·18 |
-| attesa, a 4/10 | 13·19·13·20 | 0·1·0·2 | 0·0·0·0 | 0·1·0·1 | 0·3·0·1 | 0·0·0·0 | 0·1·0·0 |
-| una prima, a 8/10 | — | 1·5·3·3 | 18·18·20·19 | 19·19·18·20 | 20·20·19·20 | 13·20·16·20 | 18·20·20·20 |
-| due avanti, a 4/10 | 20·20·20·20 | 16·18·16·19 | 6·16·5·7 | 3·8·6·3 | 3·6·5·10 | 7·5·0·13 | 1·6·1·11 |
-| due livelli sotto, a 8/10 | 20·20·20·20 | 16·18·16·19 | 20·20·20·19 | 13·19·17·19 | 17·19·19·19 | 8·19·17·15 | 18·20·19·19 |
-| tre livelli sopra, a 4/10 | 20·20·20·20 | 4·6·4·13 | 8·14·10·16 | 6·13·7·12 | 5·11·5·9 | 0·6·10·4 | 0·4·1·3 |
-| attesa, gira tutto, a 8/10 (cav · mago) | 19·20 | 20·18 | 20·20 | 20·19 | 20·20 | 17·20 | 20·20 |
+| attesa, a 8/10 | 20·20·20·20 | 20·20·20·20 | 20·20·20·20 | 20·20·20·20 | 20·20·20·20 | 20·20·20·20 | 20·20·20·20 |
+| attesa, a 6/10 | 20·20·20·20 | 20·20·17·20 | 11·17·14·18 | 7·17·8·19 | 8·18·16·13 | 5·19·15·13 | 9·17·11·18 |
+| attesa, a 4/10 | 13·19·13·20 | 3·8·4·7 | 0·0·0·0 | 0·1·0·1 | 0·3·0·1 | 0·0·0·0 | 0·1·0·0 |
+| una prima, a 8/10 | — | 11·18·16·16 | 18·18·20·19 | 19·19·18·20 | 20·20·19·20 | 13·20·16·20 | 18·20·20·20 |
+| due avanti, a 4/10 | 20·20·20·20 | 20·20·18·20 | 6·16·5·7 | 3·8·6·3 | 3·6·5·10 | 7·5·0·13 | 1·6·1·11 |
+| due livelli sotto, a 8/10 | 20·20·20·20 | 20·20·20·20 | 20·20·20·19 | 13·19·17·19 | 17·19·19·19 | 8·19·17·15 | 18·20·19·19 |
+| tre livelli sopra, a 4/10 | 20·20·20·20 | 12·14·9·19 | 8·14·10·16 | 6·13·7·12 | 5·11·5·9 | 0·6·10·4 | 0·4·1·3 |
+| attesa, gira tutto, a 8/10 (cav · mago) | 19·20 | 20·20 | 20·20 | 20·19 | 20·20 | 17·20 | 20·20 |
 
 - **A otto si arriva in fondo sempre, a sei un po' più di metà, a quattro
-  quasi mai**: a sei, in media fra i quattro, 64 · 75 · 64 · 69 · 65 · 69%
-  dalla scalinata alla miniera (prima dei livelli 49 · 74 · 51 · 69 · 72 ·
-  66%). Il cavaliere resta il più duro (25–55%), l'elfa e il nano i più
-  comodi (65–95%), come prima.
+  quasi mai** (la scalinata fa eccezione, [sotto](#il-primo-avvio)): a sei,
+  in media fra i quattro, 96 · 75 · 64 · 69 · 65 · 69% dalla scalinata alla
+  miniera (prima dei livelli 49 · 74 · 51 · 69 · 72 · 66%). Il cavaliere resta
+  il più duro (25–55%), l'elfa e il nano i più comodi (65–95%), come prima.
 - **Una discesa prima**: a otto ci si arriva quasi sempre dalla torre in
-  giù; la scalinata a mani nude no (1–5 su 20, prima 10–19), e il minatore
-  lo dice.
+  giù; la scalinata a mani nude 11·18·16·16 su 20 (il primo avvio, sotto),
+  e il minatore dice di passare dall'armaiolo.
 - **Due livelli sotto** pesano come una discesa prima; **tre sopra** a
   quattro vincono da 0 a 16 volte su 20: il livello aiuta, non regala.
 - **Chi gira tutto** combatte tre volte tanto con la stessa roba: a otto
@@ -176,11 +212,14 @@ su venti, cavaliere · elfa · mago · nano (8 ottobre 2026, coi livelli):
 
 | chi | a 8/10 | a 6/10 | a 4/10 |
 |---|---|---|---|
-| va dritto | 100·83·99·99·98·99·96 | 99·63·73·60·75·60·75 | 94·15·26·9·15·11·18 |
-| gira tutto e spende | 100·96·100·100·100·100·100 | 99·61·96·99·98·94·94 | 94·28·74·45·55·50·48 |
+| va dritto | 100·98·98·100·96·95·99 | 99·83·78·56·70·59·69 | 94·44·26·6·18·19·21 |
+| gira tutto e spende | 100·99·100·100·100·100·100 | 99·91·95·99·95·93·95 | 94·56·69·39·46·49·46 |
 | prima, gira tutto | 100·95·100·100·100·98·91 | 99·61·85·84·83·54·40 | 93·10·29·15·11·8·5 |
-| con 250 gemme da parte | 100 dappertutto | 100·100·98·94·100·85·76 | 100·80·29·20·30·0·0 |
+| con 250 gemme da parte | 100 dappertutto | 100·100·98·94·100·85·76 | 100·94·29·20·30·0·0 |
 | prima, con 250 gemme | 100 dappertutto | 100·100·100·100·98·80·71 | 100·89·84·68·46·9·4 |
+
+(Le due righe «prima» sono dell'8 ottobre, quando la scalinata era più dura:
+le altre colonne non sono cambiate di più di qualche punto, la scalinata sì.)
 
 - **Chi gira tutto adesso guadagna molto di più** che prima: arriva tre
   livelli sopra chi va dritto, coi pezzi dei grossi e il bottino a tono, e
@@ -188,11 +227,12 @@ su venti, cavaliere · elfa · mago · nano (8 ottobre 2026, coi livelli):
   tetto in `misure/sotterraneo` è 0,8 a quattro.
 - **La taratura** sono `forza` (le ossa) e `spinta` (l'attacco) di ogni
   discesa in `dati/campagna.js`, sulla roba e sul livello attesi:
-  forza 1,55 · 1,35 · 1,65 · 2,9 · 5,1 · 4,85, spinta 5 · 7 · 9 · 9 · 9 ·
-  10 dalla scalinata alla miniera (la cripta resta com'era). La spinta più
+  forza 1 · 1,35 · 1,65 · 2,9 · 5,1 · 4,85, spinta 5 · 7 · 9 · 9 · 9 ·
+  10 dalla scalinata alla miniera (la cripta resta com'era; la scalinata
+  ha la forza di tutti, il perché è qui sotto). La spinta più
   alta di prima tiene corti gli scontri: i mostri mordono di più invece di
   avere più ossa.
-- **Le gemme con cui si esce andando dritti** (cavaliere): 12 · 18 · 32 ·
+- **Le gemme con cui si esce andando dritti** (cavaliere): 12 · 24 · 32 ·
   53 · 45 · 49 · 54 (prima 10 · 12 · 20 · 23 · 23 · 33 · 27): le gemme
   valgono di più a livello alto, come i prezzi
   ([rarita.md](rarita.md)).

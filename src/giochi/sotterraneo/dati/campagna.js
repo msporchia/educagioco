@@ -20,7 +20,7 @@ export const CAMPAGNA = [
     scenario: 'cantine',
     portata: 31,
     dritta: 'tante stanze, e tutte al buio',
-    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 1.55, spinta: 5, livello: 2,
+    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], spinta: 5, livello: 2,   // senza forza: il primo avvio si vince anche a mani nude (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
     guardiano: 'scheletro', capo: 'orco' },
 
   // alta e stretta come la torre: le stanze una sopra l'altra

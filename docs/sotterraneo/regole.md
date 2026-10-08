@@ -53,7 +53,7 @@ confrontare due tappe):
 | discesa | piani | solo il guardiano | tutto il piano |
 |---|---|---|---|
 | La cripta dell'altare | 2 | 15 | 26 |
-| La scalinata antica | 2 | 18 | 71 |
+| La scalinata antica | 2 | 15 | 59 |
 | La torre in rovina | 3 | 21 | 60 |
 | La grotta della scaletta | 5 | 44 | 69 |
 | La scala sommersa | 3 | 36 | 78 |
