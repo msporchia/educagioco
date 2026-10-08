@@ -61,6 +61,8 @@ export const NOVITA = [
     testo: '🌾 Fattoria nuova! Tocca un campo e trascina i semi su tutti i campi vuoti, passa il cesto sui pronti, porta il cibo agli animali. E a Halloween zucche e cappello da strega per i tuoi animali!' },
   { id: 30, quando: '2026-10-08', gioco: 'mate',
     testo: '🛸 In fondo a ogni tappa degli asteroidi arriva la nave madre! Abbattila e ti regala un pacco per l\'hangar, dove dipingi la tua astronave.' },
+  { id: 31, quando: '2026-10-08', gioco: 'sotterraneo',
+    testo: '⚔️ Nel sotterraneo il tuo eroe sale di livello battendo i mostri: tocca il globo viola per dare i punti! In fondo a ogni discesa ti aspetta un mostro grosso col suo nome, e la roba può essere magica, rara o leggendaria. Le avventure ricominciano da capo.' },
 ]
 
 export const PER_GIOCO = 4
