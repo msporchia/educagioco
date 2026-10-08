@@ -50,7 +50,7 @@ await page.locator('[data-eroe="cavaliere"]').click()
 await attendi(page, 300)
 uguale('scelto, la scelta sparisce', await page.locator('[data-eroe]').count(), 0)
 controlla('e la mappa dice con chi si scende',
-          (await page.locator('[data-azione="eroe"]').textContent()).includes('Cavaliere'))
+          (await page.locator('[data-chi-sopra]').textContent()).includes('Cavaliere'))
 /* le discese stanno sulla terra di sopra (docs/sotterraneo/terra-di-sopra.md):
    si arriva a piedi, e lì la prova col dito vero è `integrazione/sotterraneo-terra` */
 uguale('ci sono sette discese sulla mappa', await page.locator('[data-discesa]').count(), 7)
@@ -199,28 +199,24 @@ await page.waitForSelector('.sot-tela', { timeout: 5000 })
 controlla('e si ricomincia senza che nessuno chieda niente',
           await page.locator('.sot-velo').count() === 0)
 
-/* ---------- 8. la luce che resta si vede, in due posti ----------
+/* ---------- 8. la luce che resta si vede ----------
    La torcia si consuma, quindi il buio che torna deve vedersi arrivare:
-   il globo d'oro della barra in basso che cala mentre si cammina, e la
-   riga per esteso nello zaino, che è dove si va a guardare *quante ne
-   ho*. Nessuna delle due si può misurare senza una torcia in mano, e
-   guadagnarsela giocando vorrebbe dire un test che qualche volta la
-   trova e qualche volta no: si passa dal cheat di casa
-   (`#sotterraneo=roba`), che scende con una accesa e una alla cintura. */
+   nella scena (il buio che si stringe), con una riga agli sgoccioli, e
+   per esteso nello zaino, che è dove si va a guardare *quante ne ho*. La
+   barra in basso non ha più il globo della luce né la casella delle
+   torce (l'utente, 8 ottobre: «la fiamma che indica le torce la
+   toglierei»): il globo di destra è l'esperienza. Si passa dal cheat di
+   casa (`#sotterraneo=roba`), che scende con una accesa e una alla
+   cintura. */
 await lasciaLaDiscesa(page)
 await page.evaluate(() => { location.hash = 'sotterraneo=roba' })
 await scendiNelSotterraneo(page, 0)
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
 await attendi(page, 400)
 
-// nella barra in basso: il globo d'oro della luce e la casella delle torce alla cintura (docs/sotterraneo/barra.md)
-const lume = page.locator('[data-globo="luce"]')
-uguale('la barra in basso porta il globo della luce', await lume.count(), 1)
-const detto = await lume.textContent()
-controlla('con le stanze che restano', /12/.test(detto), detto)
-uguale('e la torcia di scorta sulla sua casella', await page.locator('[data-casella-barra="torcia"]').getAttribute('data-n'), '1')
-controlla('e il globo è pieno quanto quello che resta', Number(await lume.getAttribute('data-quota')) > 0.9,
-          await lume.getAttribute('data-quota'))
+uguale('la barra in basso non ha il globo della luce', await page.locator('[data-globo="luce"]').count(), 0)
+uguale('né la casella delle torce', await page.locator('[data-casella-barra="torcia"]').count(), 0)
+uguale('il globo di destra è l\'esperienza', await page.locator('[data-globo="esperienza"]').count(), 1)
 
 await page.locator('[data-azione="zaino"]').click()
 await page.waitForSelector('[data-zaino]', { timeout: 3000 })

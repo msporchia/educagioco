@@ -1,6 +1,6 @@
 <script setup>
 // Lo zaino, nello stesso stile della bottega: l'eroe con le quattro caselle intorno, le sei tasche in griglia e
-// il pannello del pezzo scelto col confronto e i tasti (docs/sotterraneo/roba.md, "La bottega e lo zaino").
+// il pannello del pezzo scelto col confronto e i tasti (docs/sotterraneo/bottega.md, "La bottega e lo zaino").
 // Una tasca si sceglie, poi si decide: con sei piene, l'unico modo di liberarne una era usare quello che c'era
 // dentro. Una cosa che questa classe non impugna si vede spenta prima di toccarla, e dice il perché.
 import { ref, computed, watch, nextTick } from 'vue'
@@ -25,6 +25,7 @@ const props = defineProps({
   torcia: { type: Object, default: null },   // non è in una tasca (accenderla non è una scelta), ma si consuma e si vede qui
   piano: { type: Number, required: true },
   piani: { type: Number, default: null },   // l'abisso non lo sa: "26/" col numero mancante sembrerebbe un guasto
+  sopra: { type: Boolean, default: false },  // lo zaino della terra di sopra: ci si veste, ma non si butta niente
 })
 const emit = defineEmits(['usa', 'butta', 'riponi', 'chiudi', 'fuori'])
 
@@ -92,7 +93,8 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
       <span class="sot-targa-ritratto sot-targa-em em">🎒</span>
       <span class="sot-targa-nome">
         <b>Lo zaino</b>
-        <i class="em">🪜 piano {{ piano }}<template v-if="piani">/{{ piani }}</template></i>
+        <i v-if="sopra" class="em">🏘️ al villaggio</i>
+        <i v-else class="em">🪜 piano {{ piano }}<template v-if="piani">/{{ piani }}</template></i>
       </span>
     </header>
 
@@ -131,7 +133,7 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
         <div v-if="nelloZaino" class="sot-due-tasti">
           <button v-if="!cosa.nonPuoi" type="button" class="sot-grosso" data-azione="usa"
                   :disabled="!!(cosa.prova && cosa.prova.bloccata)" @click="fai('usa', scelto.i)">{{ verbo }}</button>
-          <button type="button" class="sot-grosso sot-chiaro" data-azione="butta" @click="fai('butta', scelto.i)">
+          <button v-if="!sopra" type="button" class="sot-grosso sot-chiaro" data-azione="butta" @click="fai('butta', scelto.i)">
             <span class="em">🫳</span> Butta
           </button>
         </div>

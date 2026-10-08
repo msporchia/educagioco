@@ -1,28 +1,32 @@
 <script setup>
-// La barra in basso della discesa, come quella di Diablo: a sinistra il globo della vita, a destra quello della
-// luce, in mezzo le caselle (bevi, torce, zaino, diario, mappina, gemme) in una cornice di pietra. Tutto in CSS e
-// SVG finché la cornice dipinta non è approvata (docs/sotterraneo/barra.md). Le regole non le sa: dice solo cosa
-// è stato toccato.
+// La barra in basso, come quella di Diablo, la stessa sopra e sotto: a sinistra il globo della vita, a destra quello
+// dell'esperienza col numero del livello, in mezzo le caselle (bevi, zaino, diario, mappa, gemme) in una cornice di
+// pietra. Tutto in CSS e SVG finché la cornice dipinta non è approvata (docs/sotterraneo/barra.md). Le regole non le
+// sa: dice solo cosa è stato toccato. `sopra`: sulla terra di sopra la mappa grande non c'è (la terra è già la mappa)
 import Globo from './Globo.vue'
 
 defineProps({
   vita: { type: Number, required: true },
   vitaMax: { type: Number, required: true },
   colpito: { type: Boolean, default: false },
-  torcia: { type: Object, default: null },     // { quota, resta, scorta, agliSgoccioli }, o null al buio
+  livello: { type: Number, default: 1 },
+  esperienza: { type: Number, default: 0 },     // 0..1 verso il livello dopo
+  punti: { type: Number, default: 0 },          // i punti da dare: un «+» sul globo, finché non si danno
+  sale: { type: Boolean, default: false },      // un livello appena salito: il globo si accende
   pozioni: { type: Number, default: 0 },
   pieni: { type: Number, default: 0 },          // le tasche occupate
   tasche: { type: Number, default: 6 },
   gemme: { type: Number, default: 0 },
   missioni: { type: Number, default: 0 },       // quelle aperte, sul diario
+  pronta: { type: Boolean, default: false },    // una missione fatta da consegnare: il diario in oro
   mappa: { type: Boolean, default: false },     // la mappina è aperta grande
-  esperienza: { type: Number, default: null },  // 0..1; null finché l'eroe non ha livelli: la scanalatura resta vuota
+  sopra: { type: Boolean, default: false },
 })
-defineEmits(['bevi', 'zaino', 'diario', 'mappa'])
+defineEmits(['bevi', 'zaino', 'diario', 'mappa', 'eroe'])
 </script>
 
 <template>
-  <nav class="sot-plancia" data-barra-giu aria-label="la barra dell'eroe">
+  <nav class="sot-plancia" data-barra-giu :data-barra="sopra ? 'sopra' : 'giu'" aria-label="la barra dell'eroe">
     <div class="sot-plancia-lato sot-plancia-sx">
       <Globo tipo="vita" :quota="vita / Math.max(1, vitaMax)" :numero="vita" :colpito="colpito"
              :etichetta="`vita ${vita} su ${vitaMax}`" />
@@ -30,42 +34,41 @@ defineEmits(['bevi', 'zaino', 'diario', 'mappa'])
     </div>
 
     <div class="sot-plancia-mezzo">
-      <!-- il posto per l'esperienza dell'eroe: arriverà coi livelli, per ora la scanalatura è vuota -->
-      <span class="sot-esperienza" data-esperienza :data-quota="esperienza == null ? null : esperienza.toFixed(2)"
-            aria-hidden="true"><i :style="{ width: (esperienza || 0) * 100 + '%' }"></i></span>
       <div class="sot-caselle">
         <button type="button" class="sot-cella" :class="{ 'sot-vuota': !pozioni }" data-casella-barra="pozione"
                 data-azione="bevi" :data-n="pozioni" :aria-label="pozioni ? 'bevi una pozione' : 'nessuna pozione'"
                 @click="$emit('bevi')">
           <span class="em">🧪</span><b>{{ pozioni }}</b>
         </button>
-        <span class="sot-cella sot-conta" :class="{ 'sot-vuota': !torcia || !torcia.scorta }" data-casella-barra="torcia"
-              :data-n="torcia ? torcia.scorta : 0" :aria-label="`torce alla cintura: ${torcia ? torcia.scorta : 0}`">
-          <span class="em">🔥</span><b>{{ torcia ? torcia.scorta : 0 }}</b>
-        </span>
-        <button type="button" class="sot-cella" data-casella-barra="zaino" data-azione="zaino" aria-label="zaino"
-                @click="$emit('zaino')">
+        <button type="button" class="sot-cella" data-casella-barra="zaino" data-azione="zaino" :data-n="pieni"
+                aria-label="zaino" @click="$emit('zaino')">
           <span class="em">🎒</span><b>{{ pieni }}/{{ tasche }}</b>
         </button>
-        <button type="button" class="sot-cella" data-casella-barra="diario" data-azione="diario-giu" aria-label="le missioni"
-                @click="$emit('diario')">
-          <span class="em">📖</span><b v-if="missioni">{{ missioni }}</b>
+        <button type="button" class="sot-cella" :class="{ 'sot-pronta': pronta }" data-casella-barra="diario"
+                :data-azione="sopra ? 'diario' : 'diario-giu'" aria-label="le missioni" @click="$emit('diario')">
+          <span class="em">📖</span><b v-if="missioni" data-diario-n>{{ missioni }}</b>
         </button>
-        <button type="button" class="sot-cella" data-casella-barra="mappa" data-azione="mappina" aria-label="la mappa"
+        <button type="button" class="sot-cella" :class="{ 'sot-vuota': sopra }" data-casella-barra="mappa"
+                data-azione="mappina" :disabled="sopra" :aria-label="sopra ? 'la mappa: sei già sopra' : 'la mappa'"
                 :aria-pressed="mappa ? 'true' : 'false'" @click="$emit('mappa')">
           <span class="em">🗺️</span>
         </button>
-        <span class="sot-cella sot-conta" data-casella-barra="gemme" data-gemme-barra :data-n="gemme"
-              :aria-label="`gemme: ${gemme}`">
+        <button type="button" class="sot-cella" data-casella-barra="gemme" data-gemme-barra :data-n="gemme"
+                :aria-label="`gemme: ${gemme}`" @click="$emit('zaino')">
           <span class="em">💎</span><b>{{ gemme }}</b>
-        </span>
+        </button>
       </div>
     </div>
 
     <div class="sot-plancia-lato sot-plancia-dx">
-      <Globo tipo="luce" :quota="torcia ? torcia.quota : 0" :numero="torcia ? torcia.resta : ''"
-             :guizza="!!(torcia && torcia.agliSgoccioli)"
-             :etichetta="torcia ? `luce: ancora ${torcia.resta} stanze` : 'nessuna torcia accesa'" />
+      <!-- l'esperienza: un tocco apre la pagina dell'eroe; il «+» dice che ci sono punti da dare -->
+      <button type="button" class="sot-globo-tasto" data-azione="eroe-pagina" :data-punti="punti || null"
+              :aria-label="`livello ${livello}${punti ? `: ${punti} ${punti === 1 ? 'punto' : 'punti'} da dare` : ''}`"
+              @click="$emit('eroe')">
+        <Globo tipo="esperienza" :quota="esperienza" :numero="livello" :acceso="sale"
+               :etichetta="`livello ${livello}, esperienza ${Math.round(esperienza * 100)} su cento`" />
+        <b v-if="punti" class="sot-punti" aria-hidden="true">+</b>
+      </button>
       <svg class="sot-reggi" viewBox="0 0 100 44" aria-hidden="true"><use href="#sot-reggi" /></svg>
     </div>
 

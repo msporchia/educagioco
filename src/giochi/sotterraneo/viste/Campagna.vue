@@ -9,7 +9,6 @@ import { COSE } from '../dati/cose.js'
 import Terra from './Terra.vue'
 import Diario from './Diario.vue'
 import LascioPerdere from './LascioPerdere.vue'
-import { diario } from '../motore/missioni.js'
 
 const props = defineProps({
   tappe: { type: Array, required: true },   // [{ indice, chiave, nome, icona, dritta, piani, aperta, adesso, stelle, perEta, fatta }]
@@ -22,7 +21,7 @@ const props = defineProps({
   segui: { type: String, default: null },    // la missione che le freccine seguono, scelta nel diario (avventura.segui)
   roba: { type: Object, default: null },     // quello che ci si porta dietro, già contato (schedaConLaRoba): { vita, att, dif, gemme, mano, mancina, corpo, tratti… }
 })
-const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe', 'terra', 'bottega', 'segui'])
+const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe', 'terra', 'bottega', 'segui', 'pagina-eroe'])
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 
 // l'armatura non si vede sul ritratto (come in discesa): sta accanto ai numeri, con la sua figura
@@ -35,16 +34,14 @@ const perdere = ref(false)   // «lascio perdere questa discesa»: il foglio che
 // regala una strada per tornare giù (docs/sotterraneo/portale-e-sosta.md)
 const portale = computed(() => (props.ripresa && props.ripresa.via === 'portale' ? props.ripresa : null))
 
-// il diario delle missioni (viste/Diario.vue): un tasto accanto alla carta di chi scende, col numero di quelle aperte
+// il diario delle missioni (viste/Diario.vue): si apre dalla casella 📖 della barra in basso (Gioco.vue, apriDiario)
 const diarioAperto = ref(false)
-const riassunto = computed(() => diario(props.missioni, props.tappe, props.segui))
 // «vai da …» nel dettaglio: il diario si chiude e l'eroe va da chi aspetta (viste/Terra.vue, vaDa)
 const terraEl = ref(null)
 function vaDa(chi) {
   diarioAperto.value = false
   if (terraEl.value) terraEl.value.vaDa(chi)
 }
-const pronte = computed(() => riassunto.value.inMano.some(v => v.stato === 'fatta'))
 
 // un tocco fuori dal diario (o dalla bottega, da Gioco.vue) lo chiude e passa alla terra: l'eroe va dove si è toccato
 function toccoDaFuori(x, y) { if (terraEl.value) terraEl.value.toccoDaFuori(x, y) }
@@ -52,7 +49,8 @@ function fuoriDalDiario(e) {
   diarioAperto.value = false
   if (e) toccoDaFuori(e.clientX, e.clientY)
 }
-defineExpose({ toccoDaFuori })
+const apriDiario = () => { diarioAperto.value = !diarioAperto.value }
+defineExpose({ toccoDaFuori, apriDiario })
 
 function tocca(t) {
   if (!props.ripresa) return emit('gioca', t.indice)
@@ -98,29 +96,22 @@ function comincia() {
       </template>
 
       <template #sotto>
-        <div class="sot-riga-sotto">
-        <!-- chi scende: di qui si torna alle quattro avventure, senza perdere niente di questa -->
-        <button class="sot-chi" data-azione="eroe" @click="$emit('eroe')">
-          <Armato :eroe="eroe" :mano="roba ? roba.mano : null" :mancina="roba ? roba.mancina : null" :scala="2" />
-          <span class="sot-testo">
-            <b>{{ eroe.nome }}</b>
-            <!-- con la roba addosso: è quella che scende, e le gemme sono quelle da spendere qui sopra -->
-            <i class="em" data-roba-sopra>❤️ {{ roba ? roba.vita : eroe.vita }} · ⚔️ {{ roba ? roba.att : eroe.att }}<template
-               v-if="roba ? roba.dif : eroe.dif"> · 🛡️ {{ roba ? roba.dif : eroe.dif }}</template><template
-               v-if="roba"> · 💎 {{ roba.gemme }}</template></i>
-            <i v-if="veste || (roba && roba.tratti.length)" class="sot-veste" data-veste-sopra>
-              <Icona v-if="veste" :sprite="veste.sprite" :em="veste.em" :emAlto="14" :scala="1" />
-              <span v-for="t in (roba ? roba.tratti : [])" :key="t" class="em">{{ t }}</span>
-            </i>
-          </span>
-          <span class="sot-cambia">cambio</span>
-        </button>
-        <!-- il diario: sempre sottomano, col numero delle missioni aperte (in oro se ce n'è una da consegnare) -->
-        <button class="sot-diario-tasto" :class="{ 'sot-pronta': pronte }" data-azione="diario" aria-label="le missioni"
-                @click="diarioAperto = true">
-          <span class="em">📖</span>
-          <b v-if="riassunto.aperte" data-diario-n>{{ riassunto.aperte }}</b>
-        </button>
+        <!-- chi scende: il ritratto apre la pagina dell'eroe (i numeri stanno lì e nella barra in basso), «cambio»
+             torna alle quattro avventure, senza perdere niente di questa. Il diario sta nella barra in basso -->
+        <div class="sot-chi" data-chi-sopra>
+          <button type="button" class="sot-chi-ritratto" data-azione="ritratto" :aria-label="`${eroe.nome}: la pagina dell'eroe`"
+                  @click="$emit('pagina-eroe')">
+            <Armato :eroe="eroe" :mano="roba ? roba.mano : null" :mancina="roba ? roba.mancina : null" :scala="2" />
+            <span class="sot-testo">
+              <b>{{ eroe.nome }}</b>
+              <i class="em" data-roba-sopra :data-livello="roba ? roba.livello : 1">livello {{ roba ? roba.livello : 1 }}</i>
+              <i v-if="veste || (roba && roba.tratti.length)" class="sot-veste" data-veste-sopra>
+                <Icona v-if="veste" :sprite="veste.sprite" :em="veste.em" :emAlto="14" :scala="1" />
+                <span v-for="t in (roba ? roba.tratti : [])" :key="t" class="em">{{ t }}</span>
+              </i>
+            </span>
+          </button>
+          <button type="button" class="sot-cambia" data-azione="eroe" @click="$emit('eroe')">cambio</button>
         </div>
       </template>
     </Terra>

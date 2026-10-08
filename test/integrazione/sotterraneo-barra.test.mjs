@@ -1,20 +1,22 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA BARRA IN BASSO E IL TOCCO ALTROVE, COL DITO VERO
 
-   La barra della discesa è quella di Diablo (docs/sotterraneo/barra.md):
-   il globo rosso della vita, il globo d'oro della luce, in mezzo le
-   caselle. E quello che si legge e basta si chiude toccando il campo, con
+   La barra è quella di Diablo, la stessa sopra e sotto
+   (docs/sotterraneo/barra.md): il globo rosso della vita, il globo viola
+   dell'esperienza col livello, in mezzo le caselle tutte della stessa
+   forma. E quello che si legge e basta si chiude toccando il campo, con
    l'eroe che intanto cammina; quello che chiede una scelta no
    (docs/core/interfaccia.md, «Un tocco altrove chiude»).
 
-   Qui, nella prima discesa scelta dal seme (`#seme=`, come
-   `sotterraneo-portale`): la luce cala entrando nelle stanze e guizza
-   agli sgoccioli; una curiosità, con la domanda che non si chiude
+   Qui: sopra, la barra c'è con la stessa forma di giù (la mappa grande
+   spenta); poi, nella prima discesa scelta dal seme (`#seme=`, come
+   `sotterraneo-portale`), una curiosità, con la domanda che non si chiude
    toccando fuori e la battuta che invece sì, mentre l'eroe parte; un
    mostro che colpisce e il globo della vita che scende; la pozione bevuta
-   dalla casella; lo zaino e la mappa grande chiusi da un tocco sul campo;
-   «lascio perdere» che resta. Poi le foto: la vita a metà con la luce che
-   guizza (da una sosta), e la barra a 320 px.
+   dalla casella, e una pozione buttata e raccolta col dito che fa
+   risalire la casella (il guasto della casella che non saliva); lo zaino
+   e la mappa grande chiusi da un tocco sul campo; «lascio perdere» che
+   resta. Poi le foto: la vita a metà, e la barra a 320 px.
    Si tocca come un bambino (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-barra`
    tempo: 150
@@ -87,7 +89,19 @@ async function toccaIl(sel) {
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
 
-/* ---------- 0. sopra: il diario si chiude toccando il prato, e l'eroe ci va ---------- */
+/* ---------- 0. sopra: la stessa barra di giù ---------- */
+const forma = () => page.locator('[data-barra-giu] [data-casella-barra]').evaluateAll(es => es.map(e => e.dataset.casellaBarra).join())
+const globi = () => page.locator('[data-barra-giu] [data-globo]').evaluateAll(es => es.map(e => e.dataset.globo).join())
+uguale('sopra c\'è la barra in basso', await page.locator('[data-barra="sopra"]').count(), 1)
+const formaSopra = await forma(), globiSopra = await globi()
+uguale('coi due globi: la vita e l\'esperienza', globiSopra, 'vita,esperienza')
+uguale('sopra la vita è piena', Number(await page.locator('[data-globo="vita"]').getAttribute('data-quota')), 1)
+uguale('sopra la mappa grande è spenta (la terra è già la mappa)', await page.locator('[data-casella-barra="mappa"]').isDisabled(), true)
+uguale('il globo dice il livello', (await page.locator('[data-globo="esperienza"] .sot-globo-numero').textContent()).trim(), '1')
+uguale('le gemme sono una casella come le altre', await page.locator('[data-casella-barra="gemme"]').evaluate(e => e.tagName), 'BUTTON')
+await scatto(page, 'barra-sopra')
+
+/* ---------- 0b. sopra: il diario si chiude toccando il prato, e l'eroe ci va ---------- */
 await toccaIl('[data-azione="diario"]')
 await page.waitForSelector('[data-diario]', { timeout: 3000 })
 await attendi(page, 300)
@@ -186,22 +200,21 @@ const quota = async tipo => Number(await globo(tipo))
 const numeroDel = async tipo => Number((await page.locator(`[data-globo="${tipo}"] .sot-globo-numero`).textContent()) || 0)
 const pozioni = async () => Number(await page.locator('[data-casella-barra="pozione"]').getAttribute('data-n'))
 
-/* ---------- 1. la barra: due globi pieni, le caselle ---------- */
-uguale('la barra in basso c\'è', await page.locator('[data-barra-giu]').count(), 1)
+/* ---------- 1. la barra: la stessa di sopra ---------- */
+uguale('la barra in basso c\'è', await page.locator('[data-barra="giu"]').count(), 1)
+uguale('con le stesse caselle di sopra', await forma(), formaSopra)
+uguale('e gli stessi globi', await globi(), globiSopra)
 uguale('il globo della vita è pieno', await quota('vita'), 1)
-const luce0 = await quota('luce')
-controlla('il globo della luce dice la torcia (4 stanze su 12)', Math.abs(luce0 - 4 / 12) < 0.01, String(luce0))
 uguale('le due pozioni sulla casella', await pozioni(), 2)
-uguale('le carte di prima non ci sono più', await page.locator('[data-torcia], .sot-zaino-tasto').count(), 0)
-uguale('il posto per l\'esperienza c\'è, vuoto', await page.locator('[data-esperienza]').count(), 1)
+uguale('niente globo della luce né casella delle torce: la luce si vede nella scena',
+       await page.locator('[data-globo="luce"], [data-casella-barra="torcia"]').count(), 0)
+uguale('niente scanalatura dell\'esperienza: è il globo', await page.locator('[data-barra-giu] [data-esperienza]').count(), 0)
+uguale('attacco e difesa non stanno più in cima: si leggono sull\'eroe', await page.locator('[data-azione="zaino-barra"]').count(), 0)
 await scatto(page, 'barra-piena')
 
 /* ---------- 2. la curiosità: la domanda resta, la battuta si chiude toccando il campo ---------- */
 await vaiGiu(piano.curiosita)
 await page.waitForSelector('.sot-domanda', { timeout: 8000 })
-const luce1 = await quota('luce')
-controlla('entrando in un\'altra stanza il globo della luce scende', luce1 < luce0, `${luce0} → ${luce1}`)
-uguale('agli sgoccioli e senza scorta guizza', await globo('luce', 'data-guizza'), '1')
 {
   const prima = await cellaGiu()
   const altrove = await unaCellaLibera()
@@ -251,6 +264,44 @@ await scatto(page, 'barra-colpito')
   uguale('un tocco sulla 🧪 beve, e il numero cala', await pozioni(), n0 - 1)
   controlla('e la vita risale', (await numeroDel('vita')) > v0, `${v0} → ${await numeroDel('vita')}`)
   uguale('senza aprire lo zaino', await page.locator('[data-zaino]').count(), 0)
+}
+
+/* ---------- 4b. una pozione raccolta col dito fa salire la casella ----------
+   Il guasto dell'utente: «ho raccolto una pozione e la casella non l'ha segnata». Si butta l'ultima pozione (la casella
+   si spegne) e la si raccoglie toccandola per terra: la casella si riaccende e il numero sale */
+{
+  const n0 = await pozioni()
+  const [ex, ey] = (await cellaGiu()).split(',').map(Number)
+  await toccaIl('[data-azione="zaino"]')
+  await page.waitForSelector('[data-zaino]', { timeout: 3000 })
+  await attendi(page, 300)
+  for (let i = 0; i < n0; i++) {
+    const tasca = page.locator('[data-tasca][data-cosa^="pozione"]').first()
+    await toccaIl(`[data-tasca="${await tasca.getAttribute('data-tasca')}"]`)
+    await attendi(page, 200)
+    await toccaIl('[data-azione="butta"]')
+    await attendi(page, 300)
+  }
+  await toccaIl('[data-zaino] [data-chiudi]')
+  await attendi(page, 300)
+  uguale('buttate le pozioni, la casella è vuota', await pozioni(), 0)
+  uguale('e spenta', await page.locator('[data-casella-barra="pozione"].sot-vuota').count(), 1)
+  // per terra, accanto a dov'era l'eroe: si tocca una cella alla volta finché la casella non si riaccende
+  for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+    const s = await schermoDi({ x: ex + dx, y: ey + dy })
+    await tocca(s.x, s.y)
+    await attendi(page, 900)
+    await fermoGiu()
+    if (await pozioni() > 0) break
+  }
+  uguale('raccolta col dito, la casella risale', await pozioni(), 1)
+  uguale('e si riaccende', await page.locator('[data-casella-barra="pozione"].sot-vuota').count(), 0)
+  // girando per terra può essersi svegliato un mostro: si scappa, il resto della prova vuole il campo libero
+  if (await page.locator('[data-azione="scappa"]').count()) {
+    await page.locator('[data-azione="scappa"]').click()
+    await attendi(page, 500)
+    await fermoGiu()
+  }
 }
 
 /* ---------- 5. lo zaino si chiude toccando il campo fuori dalla cornice ---------- */
@@ -309,8 +360,8 @@ await attendi(page, 300)
 uguale('nessun errore in console', errori.join(' · '), '')
 await page.close()
 
-/* ---------- 8. le foto: la vita a metà con la luce che guizza, e a 320 px ----------
-   La vita a metà viene da una sosta scritta qui (si riprende giù, dietro il velo della pausa); la luce dalla roba */
+/* ---------- 8. le foto: la vita a metà, e a 320 px ----------
+   La vita a metà viene da una sosta scritta qui (si riprende giù, dietro il velo della pausa) */
 async function aMeta(viewport, nome) {
   const c = new Corsa(CAMPAGNA[0], { seme: piano.seme, eroe: 'cavaliere', roba: { ...roba, torcia: 2 } })
   c.vita = Math.ceil(c.vitaMax / 2)
@@ -330,14 +381,15 @@ async function aMeta(viewport, nome) {
   await attendi(p, 700)
   const q = Number(await p.locator('[data-globo="vita"]').getAttribute('data-quota'))
   controlla(`${viewport.width} px: la vita a metà`, Math.abs(q - 0.5) < 0.06, String(q))
-  uguale(`${viewport.width} px: la luce guizza`, await p.locator('[data-globo="luce"]').getAttribute('data-guizza'), '1')
   // tutto dentro lo schermo: le caselle fra i due globi, niente che sbordi di lato
   const sx = await p.locator('[data-globo="vita"]').boundingBox()
-  const dx = await p.locator('[data-globo="luce"]').boundingBox()
+  const dx = await p.locator('[data-globo="esperienza"]').boundingBox()
   const celle = await p.locator('.sot-cella').evaluateAll(es => es.map(e => e.getBoundingClientRect()).map(r => [r.left, r.right, r.width]))
   controlla(`${viewport.width} px: le caselle stanno fra i globi`,
             celle.every(([l, r]) => l >= sx.x + sx.width && r <= dx.x), JSON.stringify(celle))
   controlla(`${viewport.width} px: nessuna casella più stretta di 22 px`, celle.every(([, , w]) => w >= 22), JSON.stringify(celle))
+  controlla(`${viewport.width} px: tutte le caselle della stessa larghezza`, new Set(celle.map(([, , w]) => Math.round(w))).size === 1,
+            JSON.stringify(celle))
   const barra = await p.locator('[data-barra-giu]').boundingBox()
   controlla(`${viewport.width} px: la barra è bassa (al più 70 px)`, barra.height <= 70, String(barra.height))
   const largo = await p.evaluate(() => document.documentElement.scrollWidth)
@@ -346,7 +398,7 @@ async function aMeta(viewport, nome) {
   uguale(`${viewport.width} px: nessun errore in console`, e.join(' · '), '')
   await p.close()
 }
-await aMeta({ width: 390, height: 844 }, 'barra-meta-guizza')
+await aMeta({ width: 390, height: 844 }, 'barra-meta')
 await aMeta({ width: 320, height: 640 }, 'barra-320')
 
 await browser.close()

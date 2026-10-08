@@ -22,11 +22,6 @@
 .sot .em { font-family: "Emoji Gioco", system-ui, "Noto Color Emoji", "Apple Color Emoji",
                         "Segoe UI Emoji", "Twemoji Mozilla", sans-serif; line-height: 1 }
 
-.sot-io {
-  display: flex; flex: none; align-items: center; gap: 4px;   /* attacco e difesa: la vita sta nella barra in basso */
-  padding: 4px 5px; border: 0; border-radius: 12px;
-  background: #ffffff12; color: #e8edf7; font: inherit;
-}
 .sot-polso {
   /* flex: none: senza, il titolo di una discesa lunga schiaccia la barra fino a mangiarsi il numero */
   position: relative; display: inline-block; flex: none; width: 62px; height: 15px;
@@ -39,9 +34,6 @@
   font-size: 11px; font-weight: 800; color: #fff;
   text-shadow: 0 1px 2px #000c, 0 0 3px #000a;
 }
-.sot-n { display: inline-flex; align-items: center; gap: 1px; font-size: 13px }
-.sot-n b { font-size: 13px }
-
 
 /* in cima e col bordo d'oro: una discesa lasciata a metà vale venti minuti già spesi */
 .sot-ripresa {
@@ -309,15 +301,10 @@
   margin: 0 calc(var(--globo) + 12px); min-width: 0;
   display: flex; flex-direction: column; gap: 4px;
 }
-/* la scanalatura dell'esperienza: vuota finché l'eroe non ha livelli */
-.sot-esperienza {
-  display: block; height: 5px; margin: 0 2px; border-radius: 3px; overflow: hidden;
-  background: #0b0a0e; box-shadow: inset 0 1px 2px #000, 0 1px 0 #ffffff14;
-}
-.sot-esperienza i { display: block; height: 100%; background: linear-gradient(90deg, #7a5cff, #c9b4ff) }
+/* le caselle hanno tutte la stessa forma: un contatore diverso dagli altri era una cosa in più da capire */
 .sot-caselle { display: flex; gap: 3px }
 .sot-cella {
-  flex: 1.15 1 0; min-width: 0; height: 42px; position: relative;
+  flex: 1 1 0; min-width: 0; height: 47px; position: relative;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
   padding: 0; font: inherit; color: #f3ece0; cursor: pointer;
   background: radial-gradient(circle at 50% 38%, #2c2935, #121117 72%);
@@ -331,11 +318,25 @@
 }
 .sot-cella:active { transform: translateY(1px) }
 .sot-cella[aria-pressed="true"] { box-shadow: inset 0 0 0 1.5px var(--sot-oro), inset 0 3px 6px #000c, 0 0 8px #ffd23f66 }
-/* un contatore, non un tasto: più stretto e senza il bordo chiaro che dice «premimi» */
-.sot-conta { flex: .85 1 0; cursor: default; background: #121117; box-shadow: inset 0 2px 5px #000c, 0 1px 0 #ffffff10 }
-.sot-conta:active { transform: none }
+.sot-cella:disabled { cursor: default }
+.sot-cella:disabled:active { transform: none }
+/* una missione da consegnare: il diario in oro, come il tasto di sopra di prima */
+.sot-cella.sot-pronta { box-shadow: inset 0 0 0 1.5px var(--sot-oro), inset 0 3px 6px #000c, 0 0 10px #ffd23f88 }
 .sot-vuota .em { opacity: .35; filter: grayscale(1) }
 .sot-vuota b { color: #8b8796 }
+/* il globo dell'esperienza è un tasto: apre la pagina dell'eroe; il «+» d'oro dice che ci sono punti da dare */
+.sot-globo-tasto {
+  position: relative; display: block; width: var(--globo); height: var(--globo); padding: 0; margin: 0;
+  border: 0; border-radius: 50%; background: none; font: inherit; color: inherit; cursor: pointer;
+}
+.sot-globo-tasto:active { transform: scale(.96) }
+.sot-punti {
+  position: absolute; right: -4px; top: -6px; z-index: 3; width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 19px; font-weight: 900; line-height: 1; color: #2a1a00;
+  background: radial-gradient(circle at 40% 35%, #fff2b0, #ffd23f 55%, #c98a10);
+  box-shadow: 0 0 0 1.5px #3a2400, 0 0 10px #ffd23fcc; animation: sot-punti 1.4s ease-in-out infinite;
+}
+@keyframes sot-punti { 50% { transform: scale(1.15); box-shadow: 0 0 0 1.5px #3a2400, 0 0 18px #ffe58a } }
 
 /* il globo: l'anello di pietra, il vetro, il liquido con l'onda, il riflesso */
 .sot-globo {
@@ -344,7 +345,11 @@
   background: linear-gradient(160deg, #77717f, #34313b 50%, #18161d);
   box-shadow: 0 0 0 1.5px #0b0a0e, inset 0 0 0 1px #d8a84588, 0 6px 16px #000c;
 }
-.sot-globo-luce { --liq-1: #fff0b0; --liq-2: #f2a91c; --liq-3: #6e4204; --fondo-1: #2a2008; --fondo-2: #0b0802 }
+.sot-globo-esperienza { --liq-1: #d9c6ff; --liq-2: #7a4dff; --liq-3: #2a0d6e; --fondo-1: #150b2a; --fondo-2: #05030b }
+/* un livello appena salito: il vetro si accende d'oro e il globo pulsa */
+.sot-globo.sot-acceso { animation: sot-acceso 1.6s ease-out }
+.sot-globo.sot-acceso .sot-globo-vetro { box-shadow: inset 0 0 0 1px #000, inset 0 0 18px #ffe58a }
+@keyframes sot-acceso { 0% { transform: scale(1) } 20% { transform: scale(1.18) } 100% { transform: scale(1) } }
 .sot-globo-vetro {
   position: absolute; inset: 4px; border-radius: 50%; overflow: hidden;
   background: radial-gradient(circle at 50% 62%, var(--fondo-1), var(--fondo-2) 76%);
@@ -381,7 +386,7 @@
 .sot-globo.sot-colpito .sot-globo-vetro { box-shadow: inset 0 0 0 1px #000, inset 0 0 14px #ff3b2a }
 @keyframes sot-sobbalza { 30% { transform: translateY(2px) rotate(-3deg) } 70% { transform: translateY(-1px) rotate(2deg) } }
 @media (prefers-reduced-motion: reduce) {
-  .sot-onda, .sot-globo.sot-colpito { animation: none }
+  .sot-onda, .sot-globo.sot-colpito, .sot-globo.sot-acceso, .sot-punti { animation: none }
   .sot-guizza .sot-globo-liquido { animation: none; filter: brightness(.6) }
 }
 
@@ -524,25 +529,15 @@
 .sot-chi .sot-testo i { font-style: normal; font-size: 12.5px; color: var(--sot-tenue) }
 .sot-chi .sot-testo i.sot-veste { display: flex; align-items: center; gap: 6px; margin-top: 2px; color: var(--sot-oro) }
 .sot-chi .sot-cambia {
-  font-size: 12px; color: var(--sot-oro); border: 1px solid #ffd23f55;
-  border-radius: 999px; padding: 4px 10px;
+  font: inherit; font-size: 12px; color: var(--sot-oro); border: 1px solid #ffd23f55; background: none;
+  border-radius: 999px; padding: 6px 10px;
 }
-
-/* la carta di chi scende e, accanto, il diario delle missioni */
-.sot-riga-sotto { display: flex; align-items: stretch; gap: 8px }
-.sot-diario-tasto {
-  position: relative; display: grid; place-items: center; min-width: 54px; padding: 6px 10px;
-  color: inherit; font: inherit; background: #141826e8; border: 1px solid var(--sot-bordo);
-  border-radius: 16px; box-shadow: 0 6px 20px #0008;
+/* la carta di chi scende, sopra: il ritratto apre la pagina dell'eroe, «cambio» le quattro avventure */
+.sot-chi-ritratto {
+  display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; padding: 0; margin: 0;
+  color: inherit; font: inherit; text-align: left; background: none; border: 0; cursor: pointer;
 }
-.sot-diario-tasto .em { font-size: 26px }
-.sot-diario-tasto b {
-  position: absolute; top: -7px; right: -5px; min-width: 21px; height: 21px; padding: 0 5px;
-  display: grid; place-items: center; border-radius: 999px;
-  font-size: 12.5px; color: #101422; background: var(--sot-oro);
-}
-.sot-diario-tasto.sot-pronta { border-color: var(--sot-oro); box-shadow: 0 0 0 2px #ffd23f44, 0 6px 20px #0008 }
-.sot-diario-tasto:active { transform: scale(.95) }
+.sot-chi-ritratto:active { transform: scale(.97) }
 
 /* il diario (viste/Diario.vue) */
 .sot-diario-sezione h3 {
@@ -708,7 +703,7 @@
 
 /* ═══════════ la bottega e lo zaino (viste/Cornice.vue, Bottega.vue, Zaino.vue) ═══════════
    Una finestra da gioco di ruolo stretta in un telefono: legno scuro e oro, l'eroe con le caselle intorno, la
-   griglia dei pezzi col bordo del loro gradino, il pannello col confronto (docs/sotterraneo/roba.md) */
+   griglia dei pezzi col bordo della loro rarità, il pannello col confronto (docs/sotterraneo/bottega.md) */
 .sot-sipario {
   position: absolute; inset: 0; z-index: 14; display: flex; align-items: center; justify-content: center;
   padding: 10px 8px; background: #05060ad6; animation: sot-appare .14s ease-out;
@@ -873,38 +868,32 @@
 .sot-affianca .sot-confronto { margin: 0; gap: 5px }
 .sot-affianca .sot-confronto-riga { padding: 2px 8px; font-size: 13px }
 .sot-due-mani { margin: 0; font-size: 12.5px; font-weight: 700; color: #f0b429; line-height: 1.3 }
-.sot-tabella {
-  display: grid; grid-template-columns: minmax(0, .72fr) minmax(0, 1.14fr) minmax(0, 1.14fr); gap: 3px 4px; align-items: stretch;
+/* i due cartellini affiancati, come in Diablo: uno per pezzo, ognuno coi suoi numeri */
+.sot-netto-detto { align-self: center; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #b9a27a }
+.sot-cartellini { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; align-items: stretch }
+.sot-cartellino {
+  display: grid; align-content: start; gap: 4px; min-width: 0; padding: 5px 6px 6px; border-radius: 9px;
+  background: #ffffff08; border: 1px solid #ffffff1a;
 }
-.sot-tab-testa { display: grid; align-content: start; gap: 3px; min-width: 0 }
-.sot-tab-testa small { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #b9a27a }
-.sot-tab-pezzo {
-  display: flex; align-items: center; gap: 5px; min-width: 0; padding: 3px 5px 3px 3px; border-radius: 8px;
-  background: #ffffff0d; border: 1px solid color-mix(in srgb, var(--sot-gradino) 55%, transparent);
+.sot-cartellino.sot-cart-questo { border-color: color-mix(in srgb, var(--sot-gradino) 70%, transparent);
+  box-shadow: inset 0 0 14px color-mix(in srgb, var(--sot-gradino) 18%, transparent) }
+.sot-cartellino > small { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #b9a27a }
+.sot-cart-pezzo { display: flex; align-items: center; gap: 5px; min-width: 0 }
+.sot-cart-pezzo > span { display: grid; min-width: 0 }
+.sot-cart-pezzo b {
+  min-width: 0; font-family: "Emoji Gioco", Georgia, "Times New Roman", serif; font-size: 12.5px; line-height: 1.12;
+  color: var(--sot-gradino); text-shadow: 0 1px 0 #000; overflow-wrap: break-word;
 }
+.sot-cart-pezzo em { font-style: normal; font-size: 10.5px; color: #b9a27a; line-height: 1.2 }
 .sot-tab-icona {
   flex: none; width: 31px; height: 31px; display: grid; place-items: center; border-radius: 6px;
   border: 1.5px solid var(--sot-gradino); background: radial-gradient(circle at 50% 40%, #2d3047, #0c0e17 76%);
 }
-.sot-tab-pezzo b {
-  min-width: 0; font-family: "Emoji Gioco", Georgia, "Times New Roman", serif; font-size: 12.5px; line-height: 1.12;
-  color: var(--sot-gradino); text-shadow: 0 1px 0 #000; overflow-wrap: break-word;
-}
-.sot-tab-niente { --sot-gradino: #7d725f; border-style: dashed }
+.sot-tab-niente { --sot-gradino: #7d725f }
 .sot-tab-niente b { font-style: italic; font-weight: 400 }
-.sot-tab-abilita, .sot-tab-valore {
-  display: flex; align-items: center; min-height: 26px; padding: 0 5px; font-size: 13px; font-weight: 800;
-  color: #f3e6c8; background: #ffffff08; border-radius: 6px;
-}
-.sot-tab-abilita { gap: 3px; font-size: 11.5px; color: #d9c79f }
-.sot-tab-valore { justify-content: space-between }
-.sot-tab-valore.sot-nulla { color: #7d725f; font-weight: 400 }
-.sot-tab-abilita.sot-v-su, .sot-tab-valore.sot-v-su { background: #4fce7c1f }
-.sot-tab-abilita.sot-v-giu, .sot-tab-valore.sot-v-giu { background: #e0432f1f }
-.sot-tab-nuovo.sot-v-su { color: #8ff0b0 }
-.sot-tab-nuovo.sot-v-giu { color: #ff9b8a }
-.sot-freccia { font-size: 11px; margin-left: 4px }
-.sot-tab-tipo { margin: 0; font-size: 11.5px; color: #b9a27a; text-align: right }
+.sot-cart-numeri { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 2px }
+.sot-cart-numeri li { font-size: 13.5px; font-weight: 800; color: #f3e6c8 }
+.sot-cart-numeri small { font-size: 10.5px; font-weight: 600; color: #b9a27a }
 .sot-pannello-nota { margin: 6px 0 0; font-size: 13px; color: var(--sot-tenue) }
 .sot-pannello-nota.sot-tono-ambra { color: #f0b429; font-weight: 700 }
 .sot-pannello-nota.sot-tono-oro { color: #ffe39a; font-weight: 700 }
@@ -912,3 +901,114 @@
 .sot-grosso.sot-compra { color: #2a1a06; background: linear-gradient(#ffe39a, #e0a93a); box-shadow: 0 3px 0 #8a5a14 }
 .sot-grosso.sot-vendi-tasto { color: #0d2a17; background: linear-gradient(#a6f3c2, #3fae68); box-shadow: 0 3px 0 #1f6b3c }
 .sot-due-tasti { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+
+/* ═══════════ la rarità (docs/sotterraneo/rarita.md): i colori di Diablo, sul bordo, nell'aura e nel nome ═══════════ */
+.sot-casella.sot-r-magico, .sot-casella.sot-r-raro, .sot-casella.sot-r-leggendario {
+  box-shadow: inset 0 2px 8px #000c, inset 0 0 18px color-mix(in srgb, var(--sot-gradino) 40%, transparent),
+              0 0 10px color-mix(in srgb, var(--sot-gradino) 45%, transparent);
+}
+.sot-casella.sot-r-leggendario { animation: sot-leggenda 2.2s ease-in-out infinite }
+@keyframes sot-leggenda { 50% { box-shadow: inset 0 2px 8px #000c, inset 0 0 22px #ff9a2e88, 0 0 18px #ff9a2e } }
+.sot-pannello-nome b, .sot-tab-pezzo b { color: var(--sot-gradino, #f3ece0) }
+.sot-pannello[data-rarita="comune"] .sot-pannello-nome b { color: #f3ece0 }
+.sot-pannello-storia { margin: 6px 0 0; font-size: 13px; font-style: italic; color: #ffcf8a }
+.sot-avviso.sot-r-magico { color: #9fb4ff }
+.sot-avviso.sot-r-raro { color: #ffe27a }
+.sot-avviso.sot-r-leggendario { color: #ffb55a }
+.sot-avviso-sopra { top: auto; bottom: 150px; z-index: 6 }
+@media (prefers-reduced-motion: reduce) { .sot-casella.sot-r-leggendario { animation: none } }
+
+/* ═══════════ il mostro grosso (docs/sotterraneo/grossi.md): la sua vita in cima al campo ═══════════ */
+.sot-grosso-vita {
+  position: absolute; left: 50%; top: 8px; z-index: 6; transform: translateX(-50%);
+  width: min(78%, 330px); display: flex; align-items: center; gap: 8px; padding: 5px 10px 6px 6px;
+  border-radius: 12px; pointer-events: none;
+  background: linear-gradient(#2a1414f0, #160a0af0); border: 1.5px solid #7a2a1e; box-shadow: 0 6px 18px #000b;
+}
+.sot-grosso-faccia { flex: none; display: grid; place-items: center; width: 34px; height: 34px }
+.sot-grosso-dati { flex: 1; min-width: 0; display: grid; gap: 3px }
+.sot-grosso-dati b { font-size: 14px; color: #ffcf8a; text-shadow: 0 1px 2px #000 }
+.sot-grosso-barra {
+  position: relative; display: block; height: 14px; border-radius: 7px; overflow: hidden;
+  background: #0b0606; box-shadow: inset 0 1px 3px #000;
+}
+.sot-grosso-barra i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(#ff6b57, #a3150c); transition: width .4s ease-out }
+.sot-grosso-barra small {
+  position: absolute; inset: 0; display: grid; place-items: center; font-size: 10.5px; font-weight: 800; color: #fff;
+  text-shadow: 0 1px 2px #000;
+}
+.sot-faccia [data-figura-grosso] { display: block }
+
+/* ═══════════ le feste: un livello salito, un leggendario caduto ═══════════ */
+.sot-festa {
+  position: absolute; left: 50%; top: 12%; z-index: 6; transform: translateX(-50%); width: min(86%, 340px);
+  display: grid; justify-items: center; gap: 4px; padding: 12px 14px; text-align: center; pointer-events: none;
+  border-radius: 16px; animation: sot-festa .45s ease-out;
+}
+@keyframes sot-festa { from { transform: translateX(-50%) scale(.6); opacity: 0 } }
+.sot-festa-livello { background: radial-gradient(#3b2a6ef0, #150b2ae6); border: 2px solid #c9b4ff; box-shadow: 0 0 30px #7a4dffaa }
+.sot-festa-livello b { font-size: 24px; color: #ffe58a; text-shadow: 0 2px 6px #000 }
+.sot-festa-livello small { font-size: 13px; color: #e2d8ff }
+.sot-festa-leggendario { background: radial-gradient(#4a2a08f0, #1a0d02e8); border: 2px solid #ff9a2e; box-shadow: 0 0 36px #ff9a2ecc }
+.sot-festa-leggendario b { font-size: 20px; color: #ffb55a; text-shadow: 0 0 10px #ff9a2e, 0 2px 4px #000 }
+.sot-festa-leggendario i { font-size: 13.5px; color: #ffe2b8 }
+@media (prefers-reduced-motion: reduce) { .sot-festa { animation: none } }
+
+/* ═══════════ la pagina dell'eroe (viste/PaginaEroe.vue) ═══════════ */
+.sot-eroe-testa { display: flex; align-items: center; gap: 12px; padding-right: 44px; flex: none }
+.sot-eroe-ritratto { flex: none; display: grid; place-items: end center; padding: 4px; border-radius: 12px;
+  background: radial-gradient(circle at 50% 70%, #3a2f52, #0c0e17 75%); border: 1.5px solid #8a5a14 }
+.sot-eroe-nome { flex: 1; min-width: 0; display: grid; gap: 3px }
+.sot-eroe-nome b { font-size: 19px; color: #ffe39a }
+.sot-eroe-nome i { font-style: normal; font-size: 14px; font-weight: 800; color: #c9b4ff }
+.sot-eroe-esp {
+  position: relative; display: block; height: 16px; border-radius: 8px; overflow: hidden;
+  background: #0b0612; box-shadow: inset 0 1px 3px #000, 0 0 0 1px #4a3a6a;
+}
+.sot-eroe-esp u { position: absolute; inset: 0 auto 0 0; display: block; background: linear-gradient(90deg, #4a22c8, #a98bff) }
+.sot-eroe-esp small { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11px; font-weight: 800;
+  color: #fff; text-shadow: 0 1px 2px #000 }
+.sot-eroe-numeri { display: flex; justify-content: space-around; gap: 6px; margin: 10px 0 4px; font-size: 15px; flex: none }
+.sot-eroe-numeri b { font-size: 18px }
+.sot-eroe-punti { margin: 6px 0; padding: 7px 10px; border-radius: 10px; text-align: center; font-weight: 800; flex: none;
+  color: #2a1a00; background: linear-gradient(#ffe58a, #e0a93a) }
+.sot-eroe-punti.sot-tenue { color: var(--sot-tenue); background: none; font-weight: 600; font-size: 13px }
+.sot-eroe-car { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; overflow-y: auto; min-height: 0 }
+.sot-eroe-car li {
+  display: grid; grid-template-columns: 34px 1fr auto 52px; align-items: center; gap: 8px;
+  padding: 6px 6px 6px 8px; border-radius: 12px; background: #ffffff0a; border: 1px solid #ffffff14;
+}
+.sot-car-em { font-size: 26px; text-align: center }
+.sot-car-nome { display: grid; min-width: 0 }
+.sot-car-nome b { font-size: 15.5px }
+.sot-car-nome b em { font-style: normal; color: #ffe39a; margin-left: 4px }
+.sot-car-nome i { font-style: normal; font-size: 12px; color: var(--sot-tenue) }
+.sot-car-cambia { display: grid; justify-items: end; font-size: 12.5px; color: #8fe3a8; white-space: nowrap }
+.sot-car-piu {
+  width: 52px; height: 52px; border-radius: 14px; font: inherit; font-size: 32px; font-weight: 900; line-height: 1;
+  color: #2a1a00; background: radial-gradient(circle at 40% 35%, #fff2b0, #ffd23f 55%, #c98a10);
+  border: 2px solid #3a2400; box-shadow: 0 3px 0 #7a4f12, 0 0 12px #ffd23f88; cursor: pointer;
+}
+.sot-car-piu:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #7a4f12 }
+.sot-car-piu:disabled { color: #6b6272; background: #24202b; border-color: #3a3442; box-shadow: none; cursor: default }
+.sot-eroe-tesori { margin-top: 10px; flex: none }
+.sot-eroe-tesori small { margin-left: 6px; opacity: .8 }
+
+/* ═══════════ i Tesori (viste/Tesori.vue) ═══════════ */
+.sot-tesori { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 7px; overflow-y: auto; min-height: 0 }
+.sot-tesoro { display: flex; align-items: center; gap: 10px; padding: 7px 9px; border-radius: 12px;
+  background: #ffffff08; border: 1px dashed #ffffff22 }
+.sot-tesoro-icona { flex: none; width: 46px; height: 46px; display: grid; place-items: center; border-radius: 10px; background: #0c0e17 }
+.sot-tesoro:not(.sot-trovato) .sot-tesoro-icona .sot-icona { filter: brightness(0) opacity(.55) }
+.sot-tesoro-testo { display: grid; gap: 2px; min-width: 0 }
+.sot-tesoro-testo b { font-size: 14.5px; color: #8b8796; letter-spacing: .5px }
+.sot-tesoro-testo i { font-size: 12.5px; color: var(--sot-tenue) }
+.sot-tesoro.sot-trovato { border: 1.5px solid #ff9a2e; background: radial-gradient(circle at 10% 50%, #4a2a0899, #1a0d0288);
+  box-shadow: 0 0 12px #ff9a2e55 }
+.sot-tesoro.sot-trovato .sot-tesoro-testo b { color: #ffb55a; letter-spacing: 0 }
+.sot-tesoro.sot-trovato .sot-tesoro-testo i { color: #ffe2b8; font-style: italic }
+/* la caratteristica rimasta indietro chiede un punto prima delle altre (la regola del bilanciamento, motore/crescita.js) */
+.sot-eroe-car li.sot-car-indietro { border-color: #ffd23f; box-shadow: 0 0 12px #ffd23f66; animation: sot-indietro 1.4s ease-in-out infinite }
+@keyframes sot-indietro { 50% { box-shadow: 0 0 20px #ffd23faa } }
+.sot-car-nome i.sot-car-prima { color: #ffe39a; font-weight: 700 }
+@media (prefers-reduced-motion: reduce) { .sot-eroe-car li.sot-car-indietro { animation: none } }

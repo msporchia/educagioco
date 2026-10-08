@@ -1,22 +1,23 @@
 <script setup>
 // Un globo della barra in basso, come in Diablo: una sfera di vetro col liquido che cala dall'alto, l'onda che si
-// muove alla superficie e il riflesso del vetro. Rosso la vita, d'oro la luce della torcia
-// (docs/sotterraneo/barra.md). Non è un tasto: si guarda.
+// muove alla superficie e il riflesso del vetro. Rosso la vita, viola l'esperienza (docs/sotterraneo/barra.md).
+// Non è un tasto: si guarda (quello dell'esperienza sta dentro un tasto, in BarraDiSotto.vue).
 import { computed } from 'vue'
 
 const props = defineProps({
-  tipo: { type: String, required: true },      // 'vita' | 'luce'
+  tipo: { type: String, required: true },      // 'vita' | 'esperienza'
   quota: { type: Number, default: 0 },         // 0..1, quanto è pieno
   numero: { type: [String, Number], default: '' },
-  guizza: { type: Boolean, default: false },   // la luce agli sgoccioli, senza torce di scorta
+  guizza: { type: Boolean, default: false },   // agli sgoccioli: il liquido trema
   colpito: { type: Boolean, default: false },  // un colpo appena preso: il vetro sobbalza
+  acceso: { type: Boolean, default: false },   // un livello appena salito: il vetro si accende
   etichetta: { type: String, default: '' },
 })
 const pieno = computed(() => Math.max(0, Math.min(1, props.quota)))
 </script>
 
 <template>
-  <div class="sot-globo" :class="['sot-globo-' + tipo, { 'sot-guizza': guizza, 'sot-colpito': colpito }]"
+  <div class="sot-globo" :class="['sot-globo-' + tipo, { 'sot-guizza': guizza, 'sot-colpito': colpito, 'sot-acceso': acceso }]"
        :data-globo="tipo" :data-quota="pieno.toFixed(2)" :data-guizza="guizza ? 1 : null"
        role="img" :aria-label="etichetta">
     <span class="sot-globo-vetro">

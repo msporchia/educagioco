@@ -1,7 +1,7 @@
 # Scheda di prompt — la barra in basso della discesa
 
 La barra della discesa (docs/sotterraneo/barra.md) è fatta in codice, CSS e
-SVG: due globi di vetro ai lati, sei caselle in mezzo, una cornice di
+SVG: due globi di vetro ai lati (la vita e l'esperienza), cinque caselle in mezzo, una cornice di
 pietra. **Questa scheda si usa solo quando l'utente l'ha approvata così**:
 allora la pietra, le coppe che reggono i globi e il vetro si fanno
 dipingere, e il codice ci appoggia sopra quello che si muove (il liquido
@@ -57,7 +57,7 @@ B. Sotto a sinistra, 320×320 px: l'ANELLO di un globo, un cerchio di pietra col
 C. Accanto, 192×192 px: l'INCAVO di una casella, un riquadro scavato nella pietra con gli angoli appena smussati e il fondo scuro, vuoto.
 D. Accanto, su un quadrato NERO PIENO (#000000) di 320×320 px: il RIFLESSO del vetro di una sfera di 272 px, disegnato solo in bianco e grigi chiari sul nero: un riflesso grande in alto a sinistra a forma di finestra curva, un filo di luce lungo il bordo, un riflesso piccolo in basso a destra. Niente sfera, niente colore: solo le luci.
 E. In basso a sinistra, 400×176 px: la COPPA che regge il globo della vita, una mezzaluna di pietra aperta in alto, che abbraccia il fondo di una sfera larga 330 px, con due riccioli alle punte e una piccola pietra rossa incastonata sotto, al centro.
-F. Accanto, 400×176 px: la COPPA del globo della luce, uguale ma con la pietra d'oro.
+F. Accanto, 400×176 px: la COPPA del globo dell'esperienza, uguale ma con la pietra viola.
 ```
 
 Controllo: fondo magenta vero e foro dell'anello magenta; il riflesso è
