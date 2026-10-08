@@ -47,27 +47,39 @@ export function premioPer(corredo, k, { evita = () => false } = {}) {
   return null
 }
 
+// Quante righe avanti al passo sta un pezzo nella fila di un eroe: 0 se è il pezzo con cui si entra nella prossima
+// discesa (o non è della fila), 1 se è della riga dopo, e così via. Dice quanto costa in più al banco (sovrapprezzo)
+export function righeAvanti(eroe, finite, k) {
+  const fila = PASSI[eroe] || PASSI.cavaliere
+  for (let r = Math.max(0, finite); r < fila.length; r++)
+    if (CASELLE.some(c => fila[r][c] === k)) return r - Math.max(0, finite)
+  return 0
+}
+
 // Il banco di un mercante del villaggio (dati/mercanti.js, `passo`): i pezzi della riga con cui si entra nella
 // prossima discesa che mancano, e qualche cosa che costa non più di quel pezzo (`altre`), pescate come prima.
-// Così il banco porta al passo dopo e non oltre: chi ha le gemme non scende col meglio della miniera
+// Pezzi che l'eroe non porta non ci sono mai, e quelli delle righe dopo non arrivano per questa via: stanno nella
+// vetrina, a un prezzo più alto (vetrinaDelPasso)
 export function bancoDelPasso(m, corredo, finite, { rnd = Math.random, ammessa = () => true } = {}) {
   const riga = passoDi(corredo.chiEro, finite)
   const caselle = m.passo || []
   const delPasso = caselle.map(c => riga[c]).filter(x => x && migliora(corredo, x) && ammessa(x))
   const tetto = Math.max(0, ...caselle.map(c => (riga[c] ? COSE[riga[c]].prezzo : 0)))
-  const dopo = new Set(CASELLE.map(c => passoDi(corredo.chiEro, finite + 1)[c]))
+  const avanti = new Set()
+  for (let r = finite + 1; r <= QUANTE_TAPPE; r++) for (const c of CASELLE) avanti.add(passoDi(corredo.chiEro, r)[c])
   const altre = m.altre ? pescaMerce(null, {
     quante: m.altre, rnd,
-    ammessa: k => A_SORTE.includes(k) && ammessa(k) && !delPasso.includes(k) && !corredo.possiedo(k) &&
-      COSE[k].prezzo <= tetto && !dopo.has(k),
+    ammessa: k => A_SORTE.includes(k) && ammessa(k) && corredo.posso(k) && !delPasso.includes(k) && !corredo.possiedo(k) &&
+      COSE[k].prezzo <= tetto && !avanti.has(k),
     tua: k => corredo.posso(k),
   }) : []
   return [...delPasso, ...altre]
 }
 
 // La vetrina: i pezzi delle righe dopo che il banco non porta ancora, al più `quanti` per casella, ognuno con la
-// discesa da finire perché arrivi sul banco (`finita`, indice di CAMPAGNA). Si vedono spenti e non si comprano:
-// il banco non resta mai vuoto, e chi guarda sa cosa l'aspetta (docs/sotterraneo/roba.md, "La bottega")
+// discesa da finire perché arrivi sul banco (`finita`, indice di CAMPAGNA) e le righe di distanza (`avanti`, da
+// cui il sovrapprezzo). Si comprano lo stesso, se hai le gemme: il banco non resta mai vuoto, e chi guarda sa
+// cosa l'aspetta (docs/sotterraneo/roba.md, "I mercanti di sopra")
 export function vetrinaDelPasso(m, corredo, finite, { quanti = 2, banco = [] } = {}) {
   const fuori = []
   const visti = new Set(banco)
@@ -77,7 +89,7 @@ export function vetrinaDelPasso(m, corredo, finite, { quanti = 2, banco = [] } =
       const x = passoDi(corredo.chiEro, r)[c]
       if (!x || visti.has(x) || !migliora(corredo, x)) continue
       visti.add(x)
-      fuori.push({ chiave: x, finita: r - 1 })
+      fuori.push({ chiave: x, finita: r - 1, avanti: r - finite })
       n++
     }
   }

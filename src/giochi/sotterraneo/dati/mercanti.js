@@ -45,6 +45,12 @@ export const schedaDi = (m, k) => (COSE[k]
   ? m.schede.find(s => !s.vendi && ((s.dove || []).includes(COSE[k].dove) || (s.usa || []).includes(COSE[k].usa))) || null
   : null)
 
+// Un pezzo delle righe dopo della storia si compra lo stesso, se hai le gemme: ogni riga avanti al passo costa un
+// prezzo pieno in più (una riga avanti il doppio, due il triplo…). `righe` 0 è il pezzo con cui si entra nella
+// prossima discesa, a prezzo pieno. Misurato: docs/sotterraneo/roba.md, «I mercanti di sopra»
+export const sovrapprezzo = righe => (righe > 0 ? 1 + righe : 1)
+export const prezzoAvanti = (prezzo, righe) => Math.round(prezzo * sovrapprezzo(righe))
+
 export const righeDi = (m, finite) => (m.righe ? m.righe[Math.max(0, Math.min(finite, m.righe.length - 1))] : 0)
 
 // quanto è "giù" il banco: la metà della discesa che viene (quello che il mercante dentro le discese pescava a

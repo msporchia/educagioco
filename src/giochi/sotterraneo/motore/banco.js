@@ -309,7 +309,7 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1 } = {
       if (COSE[b.zaino[i]].dove && !scudoMeglio(b, b.zaino[i])) b.vendiA('rigattiere', i)
   }
   // al dito si mette la prima cosa che capita, come fa equipaggia: i gioielli non si confrontano su un numero
-  const meglio = k => COSE[k].prezzo <= b.gemme && !b.possiedo(k) &&
+  const meglio = k => b.quantoCosta(k) <= b.gemme && !b.possiedo(k) &&
     ((b.vaAddosso(k) && (COSE[k].dove === 'dito' || b.confronto(k).delta > 0)) || scudoMeglio(b, k))
   vendiIlSuperfluo()
   for (let giro = 0; giro < 8; giro++) {
@@ -319,7 +319,7 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1 } = {
       : b.confronto(k).delta * (b.confronto(k).campo === 'dif' ? 2 : 1))
     const scelte = ['armaiolo', 'rigattiere']
       .flatMap(chi => b.mercanzia(chi).filter(r => meglio(r.chiave)).map(r => ({ chi, k: r.chiave })))
-      .sort((x, y) => vale(y.k) - vale(x.k) || COSE[y.k].prezzo - COSE[x.k].prezzo)
+      .sort((x, y) => vale(y.k) - vale(x.k) || b.quantoCosta(y.k) - b.quantoCosta(x.k))
     if (!scelte.length) break
     b.compraDa(scelte[0].chi, scelte[0].k)
     vendiIlSuperfluo()

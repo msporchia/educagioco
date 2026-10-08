@@ -342,12 +342,16 @@ export class Corredo {
     if (!c || !(scorta || (banco && (banco.sempre || []).includes(k)))) return null
     // comprare quello che non si può impugnare sarebbe l'unico modo di perdere gemme senza guadagnare niente
     if (c.dove && !this.posso(k)) { this.dillo(this.perchéNo(k)); return { che: 'niente' } }
-    if (this.gemme < c.prezzo) return { che: 'niente' }
+    const costa = this.quantoCosta(k)
+    if (this.gemme < costa) return { che: 'niente' }
     if (this.nonCiStarebbe(k)) { this.dillo('🎒 lo zaino è pieno'); return { che: 'pieno' } }
-    this.gemme -= c.prezzo
+    this.gemme -= costa
     if (scorta) banco.roba.splice(banco.roba.indexOf(k), 1)   // il pescato è unico e se ne va; una cura no
     return this.prendi(k)
   }
+
+  // quanto si paga al banco: il prezzo della cosa (la Bottega ci aggiunge il sovrapprezzo dei pezzi più avanti)
+  quantoCosta(k) { return COSE[k].prezzo }
 
   nonCiStarebbe(k) {
     const prova = this.copia()

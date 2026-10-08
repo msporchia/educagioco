@@ -4,9 +4,9 @@
 // si entra nella prossima discesa (motore/storia.js). Gira in Node: il giocatore finto ci fa la spesa (banco.js).
 // Le regole: docs/sotterraneo/roba.md, "I mercanti di sopra".
 import { Corredo, ABILITA_CONFRONTATE } from './corredo.js'
-import { COSE, pescaMerce } from '../dati/cose.js'
-import { mercanteDi, vendeLa, righeDi, profonditaDelBanco } from '../dati/mercanti.js'
-import { bancoDelPasso, vetrinaDelPasso } from './storia.js'
+import { COSE, A_SORTE, pescaMerce } from '../dati/cose.js'
+import { mercanteDi, vendeLa, righeDi, profonditaDelBanco, prezzoAvanti } from '../dati/mercanti.js'
+import { bancoDelPasso, vetrinaDelPasso, righeAvanti } from './storia.js'
 
 export class Bottega extends Corredo {
   // `finite`: discese finite (avanza.tappa). `banchi`: quello che è già stato pescato in questo giro
@@ -17,7 +17,27 @@ export class Bottega extends Corredo {
     this.rnd = rnd
     this.banchi = {}
     for (const [k, v] of Object.entries(banchi || {}))
-      if (Array.isArray(v)) this.banchi[k] = [...v]
+      if (Array.isArray(v)) this.banchi[k] = this.soloRobaMia(k, v)
+  }
+
+  // Un banco pescato prima che si badasse alla famiglia può avere pezzi che l'eroe non porta: non si mostrano.
+  // Al loro posto, se c'è, un pezzo della sua famiglia dello stesso gradino (stesso posto, stesso grado d'arma o
+  // stessa fascia di prezzo); se no si salta (docs/sotterraneo/roba.md, «I mercanti di sopra»)
+  soloRobaMia(chiave, elenco) {
+    const m = mercanteDi(chiave)
+    const fascia = c => (c.grado ? `g${c.grado}` : c.prezzo <= 12 ? 'comune' : c.prezzo <= 22 ? 'buono' : 'raro')
+    const fuori = elenco.filter(k => COSE[k] && COSE[k].dove && !this.posso(k))
+    const resto = elenco.filter(k => !fuori.includes(k))
+    for (const k of fuori) {
+      const c = COSE[k]
+      const sostituto = !m ? null : A_SORTE
+        .filter(x => vendeLa(m, x) && !m.sempre.includes(x) && COSE[x].dove === c.dove && this.posso(x) &&
+                     fascia(COSE[x]) === fascia(c) && !resto.includes(x) && !this.possiedo(x) &&
+                     righeAvanti(this.chiEro, this.finite, x) === 0)
+        .sort((a, b) => Math.abs(COSE[a].prezzo - c.prezzo) - Math.abs(COSE[b].prezzo - c.prezzo) || (a < b ? -1 : 1))[0]
+      if (sostituto) resto.push(sostituto)
+    }
+    return resto
   }
 
   // pescato una volta e scritto (nell'avventura): un banco che cambiasse a ogni apertura sarebbe una slot machine.
@@ -26,7 +46,7 @@ export class Bottega extends Corredo {
     const m = mercanteDi(chiave)
     if (!m) return null
     if (!this.banchi[chiave]) {
-      const ammessa = k => vendeLa(m, k) && !m.sempre.includes(k) && !this.possiedo(k)
+      const ammessa = k => vendeLa(m, k) && !m.sempre.includes(k) && !this.possiedo(k) && this.posso(k)
       this.banchi[chiave] = m.passo
         ? bancoDelPasso(m, this, this.finite, { rnd: this.rnd, ammessa })
         : pescaMerce(profonditaDelBanco(this.finite), {
@@ -36,17 +56,24 @@ export class Bottega extends Corredo {
     return { roba: this.banchi[chiave], sempre: m.sempre }
   }
 
-  // le righe sul banco: quelle che non finiscono prima (`sempre`), poi le pescate
+  // le righe sul banco: quelle che non finiscono prima (`sempre`), poi le pescate, poi i pezzi delle righe dopo
+  // (`avanti`: quante righe, e quindi di quanto costano di più)
   mercanzia(chiave) {
     const b = this.banco(chiave)
     if (!b) return []
     return [
-      ...b.sempre.map(k => ({ chiave: k, sempre: true })),
-      ...b.roba.map(k => ({ chiave: k, sempre: false })),
+      ...b.sempre.map(k => ({ chiave: k, sempre: true, avanti: 0 })),
+      ...b.roba.map(k => ({ chiave: k, sempre: false, avanti: 0 })),
+      ...this.vetrina(chiave).map(v => ({ chiave: v.chiave, sempre: false, avanti: v.avanti })),
     ]
   }
 
-  // i pezzi più su che il banco non porta ancora: si vedono spenti, con la discesa che li fa arrivare
+  // quanto costa qui: il prezzo pieno, e di più se il pezzo nella storia viene dopo il passo (sovrapprezzo)
+  quantoCosta(k) {
+    return prezzoAvanti(COSE[k].prezzo, righeAvanti(this.chiEro, this.finite, k))
+  }
+
+  // i pezzi delle righe dopo che il banco non porta: si comprano lo stesso, a un prezzo più alto
   vetrina(chiave) {
     const m = mercanteDi(chiave)
     const b = this.banco(chiave)
@@ -65,7 +92,10 @@ export class Bottega extends Corredo {
 
   compraDa(chiave, k) {
     const b = this.banco(chiave)
-    return b ? this.compra(k, b) : null
+    if (!b) return null
+    // un pezzo più avanti non sta nel banco pescato: si compra a parte, e non c'è più perché ora lo si ha
+    if (this.vetrina(chiave).some(v => v.chiave === k)) return this.compra(k, { roba: [], sempre: [k] })
+    return this.compra(k, b)
   }
 
   // compra solo chi lo dice (il rigattiere): gli altri vendono e basta

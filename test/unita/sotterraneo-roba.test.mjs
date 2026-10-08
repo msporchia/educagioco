@@ -11,7 +11,7 @@
 import { CAMPAGNA, L_ABISSO, svenimentiDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { COSE, CURE, SEGNI, IN_VENDITA, STANZE_TORCIA } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
-import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti, schedaDi }
+import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti, schedaDi, sovrapprezzo, prezzoAvanti }
   from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { MERCANTI as DOVE_MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
@@ -21,7 +21,7 @@ import { ABILITA, affiancatoDi, sintesiDi } from '../../src/giochi/sotterraneo/v
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { gioca, misuraLaStoria } from '../../src/giochi/sotterraneo/motore/banco.js'
-import { robaAttesa, migliora } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { robaAttesa, migliora, righeAvanti } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { passoDi, premiDella } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -186,7 +186,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
           const r = pari.mercanzia(m.chiave)
           controlla(`${m.chiave}, ${finite} finite: in cima quello che non finisce`,
                     r.filter(x => x.sempre).map(x => x.chiave).join() === m.sempre.join())
-          const pescati = r.filter(x => !x.sempre).map(x => x.chiave)
+          const pescati = r.filter(x => !x.sempre && !x.avanti).map(x => x.chiave)
           fuori += pescati.filter(k => !vendeLa(m, k)).length
           avanti += pescati.filter(k => dopo.has(k)).length
           if (m.passo) troppoCare += pescati.filter(k => COSE[k].prezzo > tetto(m.passo)).length
@@ -275,11 +275,61 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   const vetrina = nudo.vetrina('armaiolo')
   controlla('ma la vetrina mostra i pezzi più su', vetrina.length >= 3, JSON.stringify(vetrina))
   uguale('la spada corta arriva finita la cripta', vetrina.find(v => v.chiave === 'spada-corta')?.finita, 0)
-  controlla('e niente della vetrina si compra', vetrina.every(v => nudo.compraDa('armaiolo', v.chiave) === null))
+  uguale('ed è una riga avanti', vetrina.find(v => v.chiave === 'spada-corta')?.avanti, 1)
   uguale('l\'erborista non ha vetrina: il suo banco non è mai vuoto', nudo.vetrina('erborista').length, 0)
   const forte = new Bottega({ finite: 3, roba: { ...ROBA_VUOTA(), mano: 'spadone' } })
   uguale('chi ha lo spadone non vede la spada corta', forte.sottoAddosso('spada-corta'), true)
   uguale('né la spada in vetrina', forte.vetrina('armaiolo').some(v => v.chiave === 'spada'), false)
+  /* i pezzi delle righe dopo si comprano, e costano di più quanto più sono avanti (nessun blocco di storia) */
+  uguale('una riga avanti costa il doppio', sovrapprezzo(1), 2)
+  uguale('due righe avanti il triplo', sovrapprezzo(2), 3)
+  controlla('il sovrapprezzo cresce a ogni riga', [1, 2, 3, 4, 5, 6].every(n => sovrapprezzo(n) > sovrapprezzo(n - 1)))
+  uguale('al passo il prezzo è pieno', prezzoAvanti(20, 0), 20)
+  const ricco = new Bottega({ finite: 1, roba: { ...ROBA_VUOTA(), gemme: 200 }, rnd: seminato(5) })
+  const lontano = ricco.vetrina('armaiolo')
+  controlla('con una discesa finita la vetrina ha pezzi da comprare', lontano.length >= 2, JSON.stringify(lontano))
+  for (const v of lontano) {
+    uguale(`${v.chiave}: costa il prezzo pieno per il sovrapprezzo delle sue righe`, ricco.quantoCosta(v.chiave),
+           prezzoAvanti(COSE[v.chiave].prezzo, v.avanti))
+    controlla(`${v.chiave}: più avanti, più caro del prezzo pieno`, ricco.quantoCosta(v.chiave) > COSE[v.chiave].prezzo)
+    uguale(`${v.chiave}: le righe avanti sono quelle della storia`, righeAvanti('cavaliere', 1, v.chiave), v.avanti)
+  }
+  const pezzo = lontano[lontano.length - 1].chiave
+  const costa = ricco.quantoCosta(pezzo)
+  uguale('con le gemme un pezzo avanti si compra', ricco.compraDa('armaiolo', pezzo)?.che, 'comprato')
+  uguale('e si paga il sovrapprezzo', ricco.gemme, 200 - costa)
+  controlla('e ce l\'hai addosso o in tasca', ricco.possiedo(pezzo))
+  controlla('comprato, non è più in vetrina', !ricco.vetrina('armaiolo').some(v => v.chiave === pezzo))
+  const povero = new Bottega({ finite: 1, roba: { ...ROBA_VUOTA(), gemme: 3 }, rnd: seminato(5) })
+  uguale('senza gemme no', povero.compraDa('armaiolo', pezzo)?.che, 'niente')
+  uguale('e le gemme restano', povero.gemme, 3)
+  controlla('ma si vede, col prezzo vero', povero.mercanzia('armaiolo').some(r => r.chiave === pezzo && r.avanti > 0))
+  controlla('un pezzo fuori dalla vetrina non si compra', ricco.compraDa('armaiolo', 'bipenne-solare') === null)
+
+  /* solo roba per me: nessun pezzo di una famiglia che l'eroe non porta, né in vendita né in vetrina, a ogni giro */
+  let altrui = 0, vuoti = 0
+  for (const eroe of EROI.map(e => e.chiave))
+    for (let finite = 0; finite <= CAMPAGNA.length; finite++)
+      for (let s = 0; s < 5; s++) {
+        const b = new Bottega({ eroe, finite, roba: { ...robaAttesa(eroe, finite), gemme: 99 }, rnd: seminato(40 + s * 13 + finite) })
+        for (const m of MERCANTI) {
+          for (const r of b.mercanzia(m.chiave)) if (COSE[r.chiave].dove && !b.posso(r.chiave)) altrui++
+        }
+        // il banco non resta mai vuoto: finché c'è qualcosa di più forte da avere, l'armaiolo lo mostra
+        const mostrati = b.mercanzia('armaiolo').filter(r => r.avanti || !b.sottoAddosso(r.chiave))
+        const ultima = passoDi(eroe, CAMPAGNA.length)
+        const resta = ['mano', 'mancina', 'corpo'].some(c => ultima[c] && migliora(b, ultima[c]))
+        if (resta && !mostrati.length) vuoti++
+      }
+  uguale('nessun pezzo di una famiglia che l\'eroe non porta', altrui, 0)
+  uguale('l\'armaiolo non ha mai il banco vuoto prima della fine', vuoti, 0)
+  /* un banco vecchio, pescato prima che si badasse alla famiglia: gli altrui spariscono, sostituiti dove si può */
+  const maga = new Bottega({ eroe: 'mago', finite: 3, roba: ROBA_VUOTA(), banchi: { armaiolo: ['ascia', 'spada-corta', 'scudo-legno', 'corazza'] } })
+  const vecchio = maga.banco('armaiolo').roba
+  controlla('il mago non ritrova l\'ascia né la spada corta né la corazza nel banco di prima',
+            !vecchio.some(k => ['ascia', 'spada-corta', 'corazza'].includes(k)), vecchio.join())
+  controlla('e lo scudo, che porta chiunque, resta', vecchio.includes('scudo-legno'))
+  controlla('ma ogni altra cosa è sua', vecchio.every(k => !COSE[k].dove || maga.posso(k)))
   const leggera = new Bottega({ roba: { ...ROBA_VUOTA(), mano: 'spada' } })
   uguale('una seconda arma leggera, con la mano libera, alza il braccio: si vede', leggera.sottoAddosso('spada-corta'), false)
 
