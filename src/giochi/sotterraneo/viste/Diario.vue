@@ -60,7 +60,7 @@ const d = computed(() => diario(props.stati, props.tappe))
       <h3>Consegnate ({{ d.consegnate.length }})</h3>
       <ul>
         <li v-for="v in d.consegnate" :key="v.id" :data-missione="v.id" data-stato="consegnata">
-          <span class="em">✔️</span> {{ v.titolo }}
+          <span class="em">✅</span> {{ v.titolo }}
         </li>
       </ul>
     </section>
