@@ -1,6 +1,9 @@
 // Il cielo degli asteroidi: solo fatti già decisi, mai vite/punti/tabelline
 // (vedi docs/asteroidi/volo.md). Contesto 2D nudo, non passa da tela.js.
 
+import { CIELI, disegnaSasso } from './cieli.js'
+import { traccia, dipingiAla, disegnaStemma } from './livrea.js'
+
 const TAU = Math.PI * 2
 
 // ricopiate da comune.js (che tira dentro mezzo cassetto del castello)
@@ -14,24 +17,19 @@ function mescola(a, b, q) {
 
 // Il fondale: nebulose e polvere ferme, dipinte una volta su una tela di
 // scorta e copiate da lì (lo sfondo in cache di tela.js, per un cielo).
-const NEBULOSE = [
-  { x: 0.18, y: 0.22, r: 0.55, c: '#6a2fd0' },
-  { x: 0.82, y: 0.38, r: 0.48, c: '#2f6bd0' },
-  { x: 0.45, y: 0.72, r: 0.60, c: '#1c4a8a' },
-  { x: 0.70, y: 0.08, r: 0.35, c: '#d02f8a' },
-]
-
-export function dipingiFondale(W, H, sorte = Math.random) {
+// La tavolozza di ogni cielo sta in cieli.js; `cintura` è quello di sempre.
+export function dipingiFondale(W, H, sorte = Math.random, cielo = 'cintura') {
+  const pal = CIELI[cielo] || CIELI.cintura
   const cv = document.createElement('canvas')
   cv.width = Math.max(1, Math.floor(W)); cv.height = Math.max(1, Math.floor(H))
   const c = cv.getContext('2d')
 
   const g = c.createLinearGradient(0, 0, 0, H)
-  g.addColorStop(0, '#05081a'); g.addColorStop(0.55, '#0a0f2e'); g.addColorStop(1, '#0e1338')
+  g.addColorStop(0, pal.alto); g.addColorStop(0.55, pal.medio); g.addColorStop(1, pal.basso)
   c.fillStyle = g; c.fillRect(0, 0, W, H)
 
   const D = Math.max(W, H)
-  for (const n of NEBULOSE) {
+  for (const n of pal.neb) {
     const r = D * n.r
     const rg = c.createRadialGradient(W * n.x, H * n.y, 0, W * n.x, H * n.y, r)
     rg.addColorStop(0, n.c + '3a'); rg.addColorStop(0.5, n.c + '16'); rg.addColorStop(1, n.c + '00')
@@ -41,7 +39,7 @@ export function dipingiFondale(W, H, sorte = Math.random) {
   for (let i = 0; i < 260; i++) {
     const x = sorte() * W, y = sorte() * H, r = sorte() * 1.1 + 0.25
     c.globalAlpha = 0.18 + sorte() * 0.5
-    c.fillStyle = sorte() < 0.22 ? '#9fd4ff' : '#fff'
+    c.fillStyle = sorte() < 0.22 ? pal.stella : '#fff'
     c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill()
   }
   c.globalAlpha = 1
@@ -54,12 +52,6 @@ export const statoScafo = d => (d < 0.34 ? 0 : d < 0.67 ? 1 : 2)
 
 const SCAFO = [[0, -1.18], [0.30, -0.42], [0.36, 0.34], [0.24, 0.74],
                [-0.24, 0.74], [-0.36, 0.34], [-0.30, -0.42]]
-
-function traccia(ctx, punti, R) {
-  ctx.beginPath()
-  punti.forEach(([x, y], i) => i ? ctx.lineTo(x * R, y * R) : ctx.moveTo(x * R, y * R))
-  ctx.closePath()
-}
 
 function ali(lv) {
   if (lv <= 1) return [[[0.30, -0.10], [0.92, 0.46], [0.86, 0.72], [0.34, 0.60]]]
@@ -99,14 +91,34 @@ export const puntoRotto = (lv = 1) => {
   return { x: -alto[0], y: alto[1] }
 }
 
+// Il metallo: un gradiente più contrastato (chiaro, ombra, chiaro, ombra) e una striscia
+// chiara in diagonale che scivola piano. Lavorano sul tracciato già pronto e non lo consumano.
+function metallo(g, chiaro, scuro) {
+  g.addColorStop(0.15, mescola(chiaro, '#ffffff', 0.5)); g.addColorStop(0.38, chiaro)
+  g.addColorStop(0.55, mescola(scuro, '#000000', 0.15)); g.addColorStop(0.72, mescola(chiaro, '#ffffff', 0.3))
+  g.addColorStop(1, mescola(scuro, '#000000', 0.3))
+}
+function riflesso(ctx, R, t) {
+  const q = Math.sin(t * 1.1) * R * 0.45
+  ctx.save(); ctx.clip(); ctx.rotate(-0.7)
+  ctx.fillStyle = 'rgba(255,255,255,0.34)'; ctx.fillRect(-R * 2, q - R * 0.12, R * 4, R * 0.16)
+  ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fillRect(-R * 2, q + R * 0.08, R * 4, R * 0.06)
+  ctx.restore()
+}
+
 export function disegnaNave(ctx, n) {
   const R = n.r, lv = Math.max(1, Math.min(3, n.lv || 1))
   const st = statoScafo(Math.max(0, Math.min(1, n.danno || 0)))
   const d = st / 2                       // 0, 0.5, 1: i gradini, non la sfumatura
   const t = n.t || 0
-  const chiaro = mescola('#e8eefc', '#5a4a44', d * 0.75)
-  const scuro = mescola('#7d8aa6', '#2a1f1c', d * 0.8)
-  const accento = mescola('#2f7bff', '#7a3a20', d * 0.7)
+  // la livrea parte dai suoi colori, il danno li imbrunisce sopra: senza livrea è la nave di serie
+  const L = n.livrea || null
+  const chiaro = mescola(L?.scafo ? mescola(L.scafo, '#ffffff', 0.55) : '#e8eefc', '#5a4a44', d * 0.75)
+  const scuro = mescola(L?.scafo ? mescola(L.scafo, '#000000', 0.35) : '#7d8aa6', '#2a1f1c', d * 0.8)
+  const accento = mescola(L?.scafo ? mescola(L.scafo, '#000000', 0.2) : '#2f7bff', '#7a3a20', d * 0.7)
+  const chiaroAli = L?.ali ? mescola(mescola(L.ali, '#ffffff', 0.3), '#5a4a44', d * 0.75) : chiaro
+  const scuroAli = L?.ali ? mescola(mescola(L.ali, '#000000', 0.45), '#2a1f1c', d * 0.8) : scuro
+  const fiamma = L?.fiamma || null
 
   ctx.save()
   ctx.translate(n.x, n.y)
@@ -126,12 +138,12 @@ export function disegnaNave(ctx, n) {
     // il motore rotto va a singhiozzo: la fiamma sinistra sparisce e torna
     const lung = w * (3.4 * sp) * (st === 2 && ((px < 0) === (Math.sin(t * 9) > 0)) ? 0.35 : 1)
     const alone = ctx.createRadialGradient(x, y + lung * 0.3, 0, x, y + lung * 0.3, lung * 1.1)
-    alone.addColorStop(0, '#7fe3ff55'); alone.addColorStop(1, '#7fe3ff00')
+    alone.addColorStop(0, (fiamma || '#7fe3ff') + '55'); alone.addColorStop(1, (fiamma || '#7fe3ff') + '00')
     ctx.fillStyle = alone
     ctx.beginPath(); ctx.arc(x, y + lung * 0.3, lung * 1.1, 0, TAU); ctx.fill()
     const g = ctx.createLinearGradient(x, y, x, y + lung)
-    g.addColorStop(0, '#ffffff'); g.addColorStop(0.3, '#bff2ff')
-    g.addColorStop(0.62, '#4aa3ff'); g.addColorStop(1, '#2f7bff00')
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.3, fiamma ? mescola(fiamma, '#ffffff', 0.6) : '#bff2ff')
+    g.addColorStop(0.62, fiamma || '#4aa3ff'); g.addColorStop(1, (fiamma || '#2f7bff') + '00')
     ctx.fillStyle = g
     ctx.beginPath()
     ctx.moveTo(x - w * 0.75, y); ctx.quadraticCurveTo(x, y + lung * 1.15, x + w * 0.75, y)
@@ -147,8 +159,20 @@ export function disegnaNave(ctx, n) {
       const p = rotta ? strappa(a, resta) : a
       traccia(ctx, p.map(([x, y]) => [x * verso, y]), R)
       const g = ctx.createLinearGradient(0, -R * 0.4, 0, R * 0.8)
-      g.addColorStop(0, chiaro); g.addColorStop(1, scuro)
+      if (L?.aliLucida) metallo(g, chiaroAli, scuroAli)
+      else { g.addColorStop(0, chiaroAli); g.addColorStop(1, scuroAli) }
       ctx.fillStyle = g; ctx.fill()
+      if (L) {   // vernice: il riflesso, il disegno e lo stemma stanno DENTRO l'ala com'è (anche strappata)
+        if (L.aliLucida) riflesso(ctx, R, t)
+        dipingiAla(ctx, p.map(([x, y]) => [x * verso, y]), R, verso, L)
+        if (L.stemma && i === 0 && !rotta) {
+          const a0 = ali(lv)[0], cx = a0.reduce((q, [x]) => q + x, 0) / a0.length, cy = a0.reduce((q, [, y]) => q + y, 0) / a0.length
+          ctx.save(); traccia(ctx, p.map(([x, y]) => [x * verso, y]), R); ctx.clip()
+          disegnaStemma(ctx, L.stemma, verso * cx * R * 1.05, cy * R, R * 0.17, L.colStemma)
+          ctx.restore()
+        }
+        traccia(ctx, p.map(([x, y]) => [x * verso, y]), R)
+      }
       ctx.lineWidth = Math.max(1, R * 0.05); ctx.strokeStyle = accento; ctx.stroke()
       if (rotta) {   // il bordo bruciato dello strappo
         ctx.strokeStyle = '#1a0f0c'; ctx.lineWidth = Math.max(2.5, R * 0.10); ctx.stroke()
@@ -188,8 +212,10 @@ export function disegnaNave(ctx, n) {
 
   traccia(ctx, SCAFO, R)
   const g = ctx.createLinearGradient(-R * 0.4, -R, R * 0.5, R)
-  g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, chiaro); g.addColorStop(1, scuro)
+  if (L?.scafoLucida) { g.addColorStop(0, '#ffffff'); metallo(g, chiaro, scuro) }
+  else { g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, chiaro); g.addColorStop(1, scuro) }
   ctx.fillStyle = g; ctx.fill()
+  if (L?.scafoLucida) riflesso(ctx, R, t)
   ctx.lineWidth = Math.max(1.5, R * 0.06); ctx.strokeStyle = accento; ctx.stroke()
 
   if (st >= 1) {   // ammaccature: macchie ferme, così la nave non «brulica» a ogni fotogramma
@@ -284,6 +310,7 @@ export function disegnaNave(ctx, n) {
 // Gli asteroidi: un poligono (forma decisa dal gioco) con crateri, bordo
 // caldo di chi entra in atmosfera, e ombra portata.
 export function disegnaAsteroide(ctx, a, S, t) {
+  if (a.specie && a.specie !== 'roccia') { disegnaSasso(ctx, a, S, t); return }
   const R = a.r
   ctx.save(); ctx.translate(a.x, a.y)
 
@@ -319,6 +346,7 @@ export function disegnaAsteroide(ctx, a, S, t) {
   ctx.closePath()
   const rg = ctx.createRadialGradient(-R * 0.34, -R * 0.34, R * 0.12, 0, 0, R * 1.05)
   if (a.boss) { rg.addColorStop(0, '#e07068'); rg.addColorStop(0.6, '#8f2a22'); rg.addColorStop(1, '#3a0f0c') }
+  else if (a.rossa) { rg.addColorStop(0, '#c9876a'); rg.addColorStop(0.6, '#8a4a38'); rg.addColorStop(1, '#3a1f18') }   // marte
   else { rg.addColorStop(0, '#b3a591'); rg.addColorStop(0.6, '#6d6153'); rg.addColorStop(1, '#3a332b') }
   ctx.fillStyle = rg; ctx.fill()
   ctx.save(); ctx.clip()

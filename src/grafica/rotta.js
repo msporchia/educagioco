@@ -308,7 +308,7 @@ function lucchetto(ctx, x, y, s) {
 export const LATO_RAZZO = 64     // la sua tela, in px CSS
 
 // è la nave della partita, girata verso dove va; `spinta` accende i motori
-export function dipingiRazzo(canvas, { angolo = -Math.PI / 2, spinta = 0, t = 0 } = {}) {
+export function dipingiRazzo(canvas, { angolo = -Math.PI / 2, spinta = 0, t = 0, livrea = null } = {}) {
   const dpr = Math.min(2, (typeof window !== 'undefined' && window.devicePixelRatio) || 1)
   const px = Math.floor(LATO_RAZZO * dpr)
   if (canvas.width !== px) { canvas.width = px; canvas.height = px }
@@ -317,5 +317,5 @@ export function dipingiRazzo(canvas, { angolo = -Math.PI / 2, spinta = 0, t = 0 
   ctx.clearRect(0, 0, LATO_RAZZO, LATO_RAZZO)
   ctx.translate(LATO_RAZZO / 2, LATO_RAZZO / 2)
   ctx.rotate(angolo + Math.PI / 2)
-  disegnaNave(ctx, { x: 0, y: 0, r: 15, lv: 1, danno: 0, t, spinta: spinta - 0.7, mira: -Math.PI / 2 })
+  disegnaNave(ctx, { x: 0, y: 0, r: 15, lv: 1, danno: 0, t, spinta: spinta - 0.7, mira: -Math.PI / 2, livrea })
 }
