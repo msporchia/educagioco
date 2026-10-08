@@ -59,6 +59,8 @@ export const NOVITA = [
     testo: '⛏️ Il sotterraneo è tutto nuovo! Ogni eroe ha la sua avventura: si parte dal villaggio, e ciò che trovi, armi e armature, te lo porti dietro. Dai mercanti compri e vendi con le gemme, col portale torni su a fare spese e poi giù dove eri, e in giro c\'è chi ti chiede una mano. Le avventure ricominciano da capo per tutti.' },
   { id: 29, quando: '2026-10-08', gioco: 'fattoria',
     testo: '🌾 Fattoria nuova! Tocca un campo e trascina i semi su tutti i campi vuoti, passa il cesto sui pronti, porta il cibo agli animali. E a Halloween zucche e cappello da strega per i tuoi animali!' },
+  { id: 30, quando: '2026-10-08', gioco: 'mate',
+    testo: '🛸 In fondo a ogni tappa degli asteroidi arriva la nave madre! Abbattila e ti regala un pacco per l\'hangar, dove dipingi la tua astronave.' },
 ]
 
 export const PER_GIOCO = 4
