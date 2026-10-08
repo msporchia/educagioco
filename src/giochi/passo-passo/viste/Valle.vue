@@ -19,6 +19,7 @@ import { usaSegnalino } from './segnalino.js'
 import Casella from './Casella.vue'
 import Fumetto from './Fumetto.vue'
 import Stendardo from './Stendardo.vue'
+import InsegnaTana from './InsegnaTana.vue'
 import Coniglio from './Coniglio.vue'
 import Cane from './Cane.vue'
 
@@ -26,7 +27,7 @@ const props = defineProps({
   mondo: { type: String, default: 'valle' },          // 'valle' o 'zaino'
   voci: { type: Array, required: true },
   sentieri: { type: Object, required: true },         // { coniglio, cane }, ognuno { aperto, record, serve }
-  passaggio: { type: Object, required: true },        // la tana per l'altro mondo: { aperto, serve }
+  passaggio: { type: Object, required: true },        // la tana per l'altro mondo: { aperto, serve, sotto, chiama }
   dove: { type: [Number, String], required: true },   // la tappa di adesso, o un sentiero
   partenza: { type: [Number, String], required: true },  // il nodo dove sta il segnalino
   meta: { type: [Number, String], default: null },    // dove va appena aperta la mappa (la tappa di adesso è cambiata)
@@ -39,8 +40,8 @@ const quadro = quadroValle(STRADE, { mondo: props.mondo })
 const MAPPA = DATI[props.mondo].MAPPA
 // la tana che porta all'altro mondo: dalla valle si va allo zaino, dalla riva dello zaino si torna
 const TANA = props.mondo === 'valle'
-  ? { id: 'tana:zaino', verso: 'zaino', nome: 'Lo zaino', icona: '🎒', dove: 'alle isole delle carte' }
-  : { id: 'tana:valle', verso: 'valle', nome: 'La valle', icona: '🌱', dove: 'ai primi passi' }
+  ? { id: 'tana:zaino', verso: 'zaino', nome: 'I prossimi livelli', dove: 'alle isole delle carte' }
+  : { id: 'tana:valle', verso: 'valle', nome: 'I primi livelli', dove: 'ai primi passi' }
 const per = new Map(quadro.nodi.map(n => [n.id, n]))
 const nodoDi = id => per.get(id) || null
 const DISEGNO_SBARRA = rettangoli(SBARRA), DISEGNO_MASSO = rettangoli(MASSO)
@@ -276,8 +277,8 @@ const fumetto = ref(null)
 const cosaAperta = computed(() => {
   const a = aperto.value
   if (a === null) return null
-  if (a === 'zaino') return { id: 'zaino', tipo: 'zaino', x: tanaPassaggio.x, y: tanaPassaggio.y, alto: 40, nome: 'Lo zaino',
-                              racconto: 'Le isole delle carte: ripeti, fino a, se.', stato: 'chiusa', serve: props.passaggio.serve }
+  if (a === 'zaino') return { id: 'zaino', tipo: 'zaino', x: tanaPassaggio.x, y: tanaPassaggio.y, alto: 40, nome: 'I prossimi livelli',
+                              racconto: 'Di là la strada va avanti, coi livelli che vengono dopo.', stato: 'chiusa', serve: props.passaggio.serve }
   if (typeof a === 'string' && a.startsWith('blocco:')) {
     const b = blocchi.value.find(x => `blocco:${x.ponte}` === a)
     if (!b) return null
@@ -417,15 +418,17 @@ const dove = (x, y) => ({ left: x + 'px', top: y + 'px' })
       <!-- la tana per l'altra valle: in cima alle buche porta allo zaino, sulla riva dello zaino torna indietro -->
       <button type="button" class="pp-passaggio" :data-passaggio="TANA.verso" :data-tana="TANA.verso"
               :data-aperta="passaggio.aperto ? '1' : '0'" :style="dove(tanaPassaggio.x, tanaPassaggio.y)"
-              :aria-label="passaggio.aperto ? `La tana per ${TANA.nome.toLowerCase()}: porta ${TANA.dove}` : `La tana dello zaino (chiusa): ${passaggio.serve}`"
+              :aria-label="passaggio.aperto ? `La tana per ${TANA.nome.toLowerCase()}: porta ${TANA.dove}` : `La tana dei prossimi livelli (chiusa): ${passaggio.serve}`"
               @click.stop="toccaPassaggio">
         <svg v-if="!passaggio.aperto" class="pp-passaggio-masso" :width="DISEGNO_MASSO.w * 3" :height="DISEGNO_MASSO.h * 3"
              :viewBox="`0 0 ${DISEGNO_MASSO.w} ${DISEGNO_MASSO.h}`" shape-rendering="crispEdges" aria-hidden="true">
           <rect v-for="(r, i) in DISEGNO_MASSO.rect" :key="i" :x="r.x" :y="r.y" :width="r.w" height="1" :fill="r.c" />
         </svg>
-        <span class="pp-passaggio-nome" :style="{ left: `calc(50% + ${tanaPassaggio.cartello[0] - tanaPassaggio.x}px)`,
-                                                  top: `calc(50% + ${tanaPassaggio.cartello[1] - tanaPassaggio.y}px)` }">
-          <span class="pp-em">{{ TANA.icona }}</span> {{ TANA.nome }}</span>
+        <span class="pp-passaggio-insegna" :class="{ 'pp-passaggio-chiama': passaggio.chiama }" :data-chiama="passaggio.chiama ? '1' : '0'"
+              :style="{ left: `calc(50% + ${tanaPassaggio.freccia[0] - tanaPassaggio.x}px)`,
+                        top: `calc(50% + ${tanaPassaggio.freccia[1] - tanaPassaggio.y}px)` }">
+          <InsegnaTana :nome="TANA.nome" :scosta="tanaPassaggio.scosta || 0" :sotto="passaggio.sotto" :velato="!passaggio.aperto" />
+        </span>
       </button>
 
       <!-- i cartelli delle isole -->

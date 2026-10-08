@@ -103,3 +103,54 @@ export function stendardo(larghezzaTesto, animale = 'coniglio', max = Infinity) 
     testo: { x: (sx + SCUDO_W + 2 + tc / 2) * P, y: (ASTA_H + 1 + (CORPO_H - 1) / 2) * P },
   }
 }
+
+/* L'insegna della tana per l'altro mondo: la stessa stoffa appesa all'asta,
+   in blu, con due righe (il nome e quali tappe ci sono) e sotto, al posto
+   della V, una punta d'oro che scende sulla bocca della tana. `larghezzaTesto`
+   è la più larga delle due righe, in px; `scosta` sposta la stoffa a destra
+   (o a sinistra, se negativo) della punta, in px, dove sopra la tana non c'è
+   posto. Torna anche `punta`, il pixel più basso della freccia: chi la posa
+   mette lì la bocca. Vedi
+   docs/passo-passo/caselle-e-stendardi.md, «L'insegna delle tane». */
+export const CORPO_SOTTO = 11             // la seconda riga, in px
+const INSEGNA_H = 14                      // la stoffa dritta: bordo, filo, due righe, filo
+const FRECCIA = [6, 5, 4, 3, 2, 1]        // quanto è larga la punta in ogni riga, per parte
+const BLU = { R: '#2c5aa8', r: '#1f4180', L: '#4c7ccc' }
+export function insegnaTana(larghezzaTesto, scosta = 0) {
+  const tc = Math.max(TESTO_MIN / P, Math.ceil(larghezzaTesto / P))
+  const Wc = tc + 8                                  // bordo, filo, aria, le righe, aria, filo, bordo
+  const W = Wc + 2 * SPORGE
+  const H = ASTA_H + INSEGNA_H + FRECCIA.length - 1
+  const c = SPORGE + Wc / 2
+  // la punta resta sotto la stoffa, a due celle dal bordo
+  const lim = Wc / 2 - FRECCIA[0] - 2
+  const cp = c - Math.max(-lim, Math.min(lim, Math.round(scosta / P)))
+  const G = Array.from({ length: H }, () => Array(W).fill('.'))
+  const dentro = (x, y) => {
+    if (y < ASTA_H - 1 || y >= H) return false
+    const r = y - (ASTA_H - 1 + INSEGNA_H)           // le righe della punta: 0..FRECCIA.length-1
+    if (r < 0) return x >= SPORGE && x < SPORGE + Wc
+    return Math.abs(x + 0.5 - cp) < FRECCIA[r]
+  }
+  const VICINI = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+  const bordo = (x, y) => dentro(x, y) && VICINI.some(([dx, dy]) => !dentro(x + dx, y + dy))
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (!dentro(x, y)) continue
+    const punta = y >= ASTA_H - 1 + INSEGNA_H - 1
+    if (bordo(x, y)) G[y][x] = 'k'
+    else if (punta || VICINI.some(([dx, dy]) => bordo(x + dx, y + dy))) G[y][x] = 'y'
+    else G[y][x] = x === SPORGE + Wc - 3 ? 'r' : y === ASTA_H + 1 ? 'L' : 'R'
+  }
+  for (let x = 0; x < W; x++) { G[0][x] = 'k'; G[1][x] = 'S'; G[2][x] = 's'; G[ASTA_H - 1][x] = 'k' }
+  for (let y = 0; y < ASTA_H; y++) { G[y][0] = '.'; G[y][W - 1] = '.' }
+  const pomello = x0 => POMELLO.forEach((riga, y) => [...riga].forEach((ch, i) => { if (ch !== '.') G[y][x0 + i] = ch }))
+  pomello(0); pomello(W - POMELLO[0].length)
+  const d = rettangoli({ righe: G.map(r => r.join('')), tavolozza: { ...COMUNI, ...BLU } })
+  const sopra = ASTA_H + 1                           // la prima riga dentro il filo
+  return {
+    w: W * P, h: H * P, rect: d.rect, scala: P, testoW: tc * P,
+    nome: { x: c * P, y: (sopra + 2.7) * P },
+    sotto: { x: c * P, y: (sopra + 7.9) * P },
+    punta: { x: cp * P, y: H * P },
+  }
+}

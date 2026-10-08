@@ -59,7 +59,7 @@
     "fino-cane": { "da": "fino", "a": "fino-cane", "punti": [[719, 212], [823, 930]] },
     "se-cane": { "da": "se", "a": "se-cane", "punti": [[1014, 94], [1463, 328]] },
     "mondo-cane": { "da": "mondo", "a": "mondo-cane", "punti": [[1174, 636], [1468, 678]], "nuvola": true },
-    "valle": { "isola": "riva", "punto": [90, 925], "cartello": [170, 995] }
+    "valle": { "isola": "riva", "punto": [90, 925], "freccia": [92, 907], "scosta": 45 }
   },
   "speciali": {}
 }

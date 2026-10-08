@@ -22,7 +22,7 @@ fumetto, con la stessa vista per tutti e due. Chi apre cosa sta in
 | `viste/Valle.vue` | la vista di un mondo (`mondo="valle"` o `"zaino"`): il disegno, la vista, il dito, il fumetto |
 | `viste/segnalino.js` | l'animale che salta, per tutti e due i mondi |
 | `viste/Casella.vue`, `viste/Fumetto.vue` | la casella (un tondo col numero) e il fumetto, uguali nei due mondi |
-| `viste/Stendardo.vue`, `scena/stendardo.js`, `scena/tondo.js` | lo stendardo col nome di un'isola e lo stemma, disegnati in pixel (puro: la stoffa, l'asta, lo scudo); le misure del tondo che servono ai test |
+| `viste/Stendardo.vue`, `viste/InsegnaTana.vue`, `scena/stendardo.js`, `scena/tondo.js` | lo stendardo col nome di un'isola, lo stemma e l'insegna delle tane per l'altro mondo, disegnati in pixel (puro: la stoffa, l'asta, lo scudo, la punta); le misure del tondo che servono ai test |
 | `Gioco.vue` | lo stato di ogni casella (`voci`), cosa dice una chiusa, dove sta il segnalino |
 
 ## Il fondale
@@ -78,8 +78,10 @@ fumetto, con la stessa vista per tutti e due. Chi apre cosa sta in
   quello di `da` e quello di `a`) le due bocche stanno in posti diversi, come
   nello zaino, e `"nuvola": true` dice che da quella parte (`da`, il coniglio)
   sul fondale non c'è un buco: l'animale sparisce e ricompare in una nuvoletta.
-  Quella per l'altro mondo (`isola`, `punto`, `cartello`, il centro del suo
-  nome) è un nodo `passaggio`.
+  Quella per l'altro mondo (`isola`, `punto`, `freccia`, dove la punta
+  dell'insegna tocca la bocca, da sopra, e `scosta`, di quanti px la stoffa
+  sta a destra della punta dove sopra la bocca non c'è posto) è un nodo
+  `passaggio`.
 - **Le rive e gli id**: `"libere": ["riva"]` sono isole sempre aperte, senza
   caselle (la riva da cui si arriva dalla valle); `"prefisso": "z-"` si mette
   davanti agli id dei punti senza nome (`z-incrocio:3`), perché i due mondi non
@@ -234,7 +236,8 @@ sentiero `[data-sentiero-di="coniglio"|"cane"]`, la matita
 `[data-a-meta]`; i blocchi `[data-blocco="<ponte>"]` con `[data-chiude]`;
 le tane `[data-tana="<isola del cane>"|"zaino"|"valle"]` con `[data-aperta]` (di
 un'isola del cane è la bocca dipinta, col masso se chiusa); i passaggi
-`[data-passaggio="zaino"|"valle"]`; il segnalino `[data-segnalino]` con
+`[data-passaggio="zaino"|"valle"]`, con l'insegna `[data-chiama]` (il nome in `[data-nome]`, i
+numeri in `[data-sotto]`); il segnalino `[data-segnalino]` con
 `[data-animale]`, `[data-al]` e `[data-in-viaggio]`, la nuvoletta `.pp-sbuffo`;
 il fumetto `[data-fumetto]` con `[data-fumetto-per]` (un indice,
 un sentiero, `blocco:<ponte>`, `zaino`), `[data-azione="parti"]`,

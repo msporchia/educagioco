@@ -8,13 +8,15 @@ foglietto `zaino.json`, il modulo generato `dati/zaino-mappa.js`.
 Stesso strumento, stessa vista (`Valle.vue`, `mondo="zaino"`), stesse
 caselle e stesso segnalino della valle dei piccoli: cambiano i dati.
 
-- **Il passaggio fra le due valli**: la tana «🎒 Lo zaino» in cima alle buche
+- **Il passaggio fra le due valli**: la tana «I prossimi livelli» in cima alle buche
   porta lì (il coniglio ci va, entra, e sbuca dalla tana d'arrivo); sulla
-  riva in basso a sinistra la tana «🌱 La valle» lo riporta indietro. Chiusa
+  riva in basso a sinistra la tana «I primi livelli» lo riporta indietro. Chiusa
   (nessuna tappa dello zaino aperta, per esempio a sei anni) la prima ha il
   masso, e il suo fumetto dice cosa manca alla prima tappa dello zaino; quella
-  della riva è sempre aperta. Il segnalino ricorda in che valle era
-  (`ultimo` in `Mappa.vue`).
+  della riva è sempre aperta. Tutte e due hanno l'insegna blu coi numeri di
+  là, che ondeggia se c'è qualcosa da fare
+  ([caselle-e-stendardi.md](caselle-e-stendardi.md#linsegna-delle-tane)). Il
+  segnalino ricorda in che valle era (`ultimo` in `Mappa.vue`).
 - **Le isole**: la riva con la tana d'arrivo, e il ponte che va al **ripeti**
   (in basso a sinistra, la più grande, 8 tappe); da lì un ponte in alto al
   **fino a** (rocce, neve, cascata: 4 tappe), un passaggio con una stalla

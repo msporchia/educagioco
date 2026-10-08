@@ -53,7 +53,7 @@
   ],
   "tane": {
     "pecore-cane": { "da": "buche", "a": "pecore-cane", "punto": [775, 288] },
-    "zaino": { "isola": "buche", "punto": [823, 84], "cartello": [823, 30] }
+    "zaino": { "isola": "buche", "punto": [823, 84], "freccia": [823, 70] }
   },
   "speciali": {
     "senza-fine": { "isola": "buche", "punto": [905, 130], "etichetta": [948, 66] },

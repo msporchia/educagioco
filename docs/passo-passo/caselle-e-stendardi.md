@@ -1,9 +1,10 @@
 # Passo passo — le caselle e gli stendardi
 
-I due pezzi di grafica che la mappa delle isole posa sul fondale
-([mappa.md](mappa.md)): il tondo col numero del livello e lo stendardo col
-nome dell'isola. Il codice è in `viste/Casella.vue` (stato e stelle),
-`viste/Stendardo.vue` e `scena/stendardo.js` (il disegno, puro),
+I pezzi di grafica che la mappa delle isole posa sul fondale
+([mappa.md](mappa.md)): il tondo col numero del livello, lo stendardo col
+nome dell'isola e l'insegna delle tane per l'altro mondo. Il codice è in
+`viste/Casella.vue` (stato e stelle), `viste/Stendardo.vue`,
+`viste/InsegnaTana.vue` e `scena/stendardo.js` (il disegno, puro),
 `scena/tondo.js` (le misure che servono ai test), gli stili in `stile.css`.
 
 ## Le caselle: un tondo col numero
@@ -56,4 +57,20 @@ nome dell'isola. Il codice è in `viste/Casella.vue` (stato e stelle),
   casella). I test controllano caselle, animale seduto
   sopra, sentieri, ponti e tane, in tutti e due i mondi.
 
-Nei test: `unita/passo-passo-valle` (gli stendardi e gli stemmi non coprono caselle, sentieri, ponti né tane, nei due mondi), `integrazione/passo-passo-mappa` (ogni tondo dice il suo numero e basta, le stelle solo sulle fatte, l'emoji nel fumetto, nessuno stendardo sopra una casella). Bersagli, in fondo a [mappa.md](mappa.md): `.pp-tondo b`, `[data-stelle]` con `[data-piene]`, `[data-livello-icona]`, `[data-insegna]`.
+## L'insegna delle tane
+
+- **La tana per l'altro mondo ha un'insegna**, non un'etichetta: «Lo zaino»
+  come pillola chiara accanto alla tana si perdeva fra i fumetti, e il nome
+  non diceva niente a un bambino. L'insegna dice che di là **si va avanti**:
+  «I prossimi livelli · dal 36 in poi» nella valle, «I primi livelli · dall'1
+  al 35» sulla riva dello zaino (i numeri li calcola `Mappa.vue` dalla
+  campagna). È la stoffa dello stendardo appesa all'asta, **blu** (né un'isola
+  del coniglio né del cane). Al posto della V ha una **punta d'oro** che scende sulla bocca
+  dipinta (`freccia` nel foglietto è dove la tocca).
+- **Ondeggia** (`pp-chiama`, 4 px in giù e su) se di là c'è una tappa aperta
+  e non fatta; ferma se di là è tutto fatto. Chiusa (lo zaino a sei anni) è
+  velata come uno stendardo, col masso sulla bocca.
+- **Sta sopra la tana**, tutta nel fondale: nella valle fra l'asta e la bocca
+  ci sono 70 px, e l'insegna è alta 69.
+
+Nei test: `unita/passo-passo-valle` (l'insegna sta nel fondale, punta sulla bocca da sopra e non copre caselle né sentieri; gli stendardi e gli stemmi non coprono caselle, sentieri, ponti né tane, nei due mondi), `integrazione/passo-passo-mappa` (ogni tondo dice il suo numero e basta, le stelle solo sulle fatte, l'emoji nel fumetto, nessuno stendardo sopra una casella; l'insegna dello zaino coi numeri, ferma da chiusa e che ondeggia col viale da fare). Bersagli, in fondo a [mappa.md](mappa.md): `.pp-tondo b`, `[data-stelle]` con `[data-piene]`, `[data-livello-icona]`, `[data-insegna]`.

@@ -11,7 +11,8 @@
            (un sentiero che finisce), `sosta` (a metà di un arco lungo: su un ponte
            non è di un'isola), `tana` (con `nuvola` se sul fondale non c'è il buco: l'animale
            cambia in una nuvoletta), `passaggio` (la tana che porta all'altro mondo, con
-           `cartello` [x, y], il centro del suo nome), `sentiero` (le caselle speciali, con
+           `freccia` [x, y], dove la punta dell'insegna tocca la bocca, e `scosta`, di quanto la
+           stoffa sta a destra della punta), `sentiero` (le caselle speciali, con
            `etichetta` [x, y], dove comincia il nome: a metà altezza, da lì verso destra)
    ARCHI   { a, b, tipo: terra | erba | ponte | tunnel, ponte?, punti }: i pezzi di strada fra due nodi
    PONTI   per ponte: le due isole e il blocco di ciascun capo [x, y, gradi]
@@ -21,7 +22,7 @@
 
 export const LARGO = 1536, ALTO = 1024
 export const LATO = 48
-export const FIRMA = '90e3b78078e5'
+export const FIRMA = '43523e0c914e'
 export const LIBERE = ["riva"]
 
 export const ISOLE = {
@@ -92,7 +93,7 @@ export const NODI = [
   {"id":"z-incrocio:17","tipo":"incrocio","isola":"mondo","x":1170.9,"y":637.2},
   {"id":"tana:mondo-cane:a","tipo":"tana","isola":"mondo-cane","x":1468,"y":678},
   {"id":"z-incrocio:18","tipo":"incrocio","isola":"mondo-cane","x":1468.0,"y":678.0},
-  {"id":"tana:valle","tipo":"passaggio","isola":"riva","x":90,"y":925,"cartello":[170,995]},
+  {"id":"tana:valle","tipo":"passaggio","isola":"riva","x":90,"y":925,"freccia":[92,907],"scosta":45},
   {"id":"z-incrocio:19","tipo":"incrocio","isola":"riva","x":92.0,"y":938.0},
   {"id":"z-capo:1","tipo":"capo","isola":"se","x":1265,"y":252},
   {"id":"z-capo:2","tipo":"capo","isola":"mondo","x":1020,"y":664},

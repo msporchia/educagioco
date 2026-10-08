@@ -54,7 +54,8 @@ TESTA = """/* GENERATO da strumenti/sprite/isole-passo-passo.py — non si scriv
            (un sentiero che finisce), `sosta` (a metà di un arco lungo: su un ponte
            non è di un'isola), `tana` (con `nuvola` se sul fondale non c'è il buco: l'animale
            cambia in una nuvoletta), `passaggio` (la tana che porta all'altro mondo, con
-           `cartello` [x, y], il centro del suo nome), `sentiero` (le caselle speciali, con
+           `freccia` [x, y], dove la punta dell'insegna tocca la bocca, e `scosta`, di quanto la
+           stoffa sta a destra della punta), `sentiero` (le caselle speciali, con
            `etichetta` [x, y], dove comincia il nome: a metà altezza, da lì verso destra)
    ARCHI   {{ a, b, tipo: terra | erba | ponte | tunnel, ponte?, punti }}: i pezzi di strada fra due nodi
    PONTI   per ponte: le due isole e il blocco di ciascun capo [x, y, gradi]
@@ -271,7 +272,7 @@ class Grafo:
                     ids.append(tid)
                 self.tane.append({'a': ids[0], 'b': ids[1], 'tipo': 'tunnel'})
             else:                  # la tana che porta all'altro mondo
-                tid = self.nodo(f'tana:{nome}', 'passaggio', t['isola'], t['punto'], cartello=t['cartello'])
+                tid = self.nodo(f'tana:{nome}', 'passaggio', t['isola'], t['punto'], freccia=t['freccia'], **({'scosta': t['scosta']} if 'scosta' in t else {}))
                 st, s, _ = self.vicina(t['isola'], t['punto'])
                 attacco = self.taglia(st, s, lambda p, isola=t['isola']: self.nuovo('incrocio', isola, p))
                 self.tane.append({'a': attacco, 'b': tid, 'tipo': 'terra'})
@@ -455,9 +456,11 @@ def provino(mondo):
             d.ellipse([x - 12, y - 12, x + 12, y + 12], outline=(255, 120, 255, 255) if n.get('nuvola') else (200, 80, 255, 255),
                       width=4)
             d.text((x + 14, y - 6), n['id'].replace('tana:', ''), fill=(255, 255, 255, 255))
-            if 'cartello' in n:
-                cx, cy = n['cartello']
-                d.rounded_rectangle([cx - 52, cy - 14, cx + 52, cy + 14], radius=14, outline=(200, 80, 255, 255), width=2)
+            if 'freccia' in n:      # l'insegna: la stoffa sopra, la punta giù sulla bocca (misure di scena/stendardo.js)
+                fx, fy = n['freccia']
+                sx = fx + n.get('scosta', 0)
+                d.rectangle([sx - 90, fy - 69, sx + 90, fy - 18], outline=(200, 80, 255, 255), width=2)
+                d.polygon([(fx - 18, fy - 18), (fx + 18, fy - 18), (fx, fy)], outline=(200, 80, 255, 255))
         elif n['tipo'] == 'incrocio':
             d.ellipse([x - 5, y - 5, x + 5, y + 5], fill=(40, 200, 255, 255))
         elif n['tipo'] == 'sosta':

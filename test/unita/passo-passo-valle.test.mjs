@@ -17,7 +17,7 @@ import { STRADE, aperture } from '../../src/giochi/passo-passo/motore/strade.js'
 import { DATI, MONDI, quadroValle, chiusure, percorso, viaggio, vicinoA, mondoDellIsola, TEMPO_MAX }
   from '../../src/giochi/passo-passo/scena/valle.js'
 import { ANIMALE, SENTIERO_CANE } from '../../src/giochi/passo-passo/scena/animale.js'
-import { stendardo, stemma, stimaNome } from '../../src/giochi/passo-passo/scena/stendardo.js'
+import { stendardo, stemma, stimaNome, insegnaTana } from '../../src/giochi/passo-passo/scena/stendardo.js'
 import { STELLE, LARGO_STELLE } from '../../src/giochi/passo-passo/scena/tondo.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
@@ -119,11 +119,15 @@ for (const mondo of MONDI) {
   uguale(nome('gli stendardi non coprono le caselle, né l\'animale seduto sopra'), [...new Set(coperte)].join(' '), '')
   uguale(nome('e non coprono un sentiero né un ponte'), [...new Set(suStrada)].join(' '), '')
   uguale(nome('né una tana'), [...new Set(suTana)].join(' '), '')
-  // il nome della tana per l'altro mondo ci sta accanto, nel fondale e senza coprire una casella
+  // l'insegna della tana per l'altro mondo: sopra la bocca, con la punta giù, nel fondale e senza coprire
+  // una casella; col nome e i numeri più larghi che possano capitare
   for (const t of Q.nodi.filter(n => n.tipo === 'passaggio')) {
-    const r = { x: t.cartello[0] - 56, y: t.cartello[1] - 14, w: 112, h: 28 }
-    controlla(nome(`il nome della tana ${t.id} sta nel fondale`),
+    const insegna = insegnaTana(Math.max(stimaNome('I prossimi livelli'), stimaNome('dall\'99 al 99')), t.scosta || 0)
+    const [fx, fy] = t.freccia
+    const r = { x: fx - insegna.punta.x, y: fy - insegna.h, w: insegna.w, h: insegna.h }
+    controlla(nome(`l'insegna della tana ${t.id} sta nel fondale`),
               r.x >= 0 && r.y >= 0 && r.x + r.w <= D.LARGO && r.y + r.h <= D.ALTO)
+    controlla(nome(`e punta sulla bocca, da sopra`), Math.abs(fx - t.x) < 10 && fy < t.y && t.y - fy < 30, t.id)
     controlla(nome(`e non copre una casella né un sentiero`),
               tonde.every(n => distanzaRett([n.x, n.y], r) > n.mezzo) && strade.every(st => distanzaStrada(r, st.punti) > 6),
               t.id)
@@ -239,7 +243,7 @@ const animali = v => v.filter(p => p.che !== 'salto').map(p => `${p.che}:${p.ani
   }
   uguale('un tocco vicino a una casella porta a lei', vicinoA(q, per.get(7).x + 10, per.get(7).y + 20, 0, tutte.bloccati), 7)
   controlla('alla tana dello zaino si arriva dal prato', !!percorso(q, 0, 'tana:zaino', tutte.bloccati))
-  controlla('e il suo nome sta sul fondale', D.NODI.some(n => n.id === 'tana:zaino' && Array.isArray(n.cartello)))
+  controlla('e ha la sua insegna sul fondale', D.NODI.some(n => n.id === 'tana:zaino' && Array.isArray(n.freccia)))
   {
     // senza strada (il segnalino su un'isola chiusa) un balzo solo, e si arriva lo stesso
     const v = viaggio(q, pascolo.tappe[0], 0, chiusure(q, i => i === 0).bloccati)
@@ -268,8 +272,8 @@ const animali = v => v.filter(p => p.che !== 'salto').map(p => `${p.che}:${p.ani
   controlla('le isole del coniglio hanno il nome per esteso', coniglioZ.every(s => !D.ISOLE[s.chiave].stemma))
   // la riva da cui si arriva: libera, con la tana per la valle
   controlla('la riva dell\'arrivo è sempre aperta', D.LIBERE.includes('riva') && tutte.aperte.has('riva'))
-  controlla('e ci sta la tana per la valle, col suo nome', Q.nodi.some(n => n.id === 'tana:valle' && n.tipo === 'passaggio' &&
-            n.isola === 'riva' && Array.isArray(n.cartello)))
+  controlla('e ci sta la tana per la valle, con la sua insegna', Q.nodi.some(n => n.id === 'tana:valle' && n.tipo === 'passaggio' &&
+            n.isola === 'riva' && Array.isArray(n.freccia)))
   uguale('è l\'unica', Q.nodi.filter(n => n.tipo === 'passaggio').length, 1)
   controlla('dalla tana si arriva a ogni casella', caselle.every(n => !!percorso(Q, 'tana:valle', n.id, tutte.bloccati)))
   uguale('e alla prima del coniglio si va saltando, da coniglio',

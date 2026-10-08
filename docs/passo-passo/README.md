@@ -11,7 +11,7 @@ sette anni e mezzo le carte e lo zaino. Codice in `src/giochi/passo-passo/`.
 - [sentiero-finale.md](sentiero-finale.md) — il finale di chi ha tutte le carte: la difficoltà si misura dal programma più corto, non dalle frecce; le sagome miste, l'asticella, i numeri prima e dopo
 - [mappa.md](mappa.md) — la mappa delle isole: le due valli sui fondali dipinti, quella dei piccoli e lo zaino (foglietto, strumento, blocchi, vista, isolette del cane), le due caselle dei sentieri, il segnalino che salta, il fumetto
 - [mondo-zaino.md](mondo-zaino.md) — la seconda valle: la riva e la tana per la valle, le quattro isole sui ponti, le isolette del cane (tana dipinta o nuvoletta), com'è stato assegnato ogni pezzo del fondale
-- [caselle-e-stendardi.md](caselle-e-stendardi.md) — il tondo col numero del livello (fatta, adesso, aperta, chiusa, le stelle accanto) e lo stendardo col nome dell'isola, e perché non c'è un disegno per livello
+- [caselle-e-stendardi.md](caselle-e-stendardi.md) — il tondo col numero del livello (fatta, adesso, aperta, chiusa, le stelle accanto) lo stendardo col nome dell'isola e l'insegna delle tane per l'altro mondo, e perché non c'è un disegno per livello
 - [sosta.md](sosta.md) — lasciare a metà: la fila di ogni livello resta, il sentiero si riprende dalla carta in cima
 - [livelli.md](livelli.md) — come si scrive un livello, cosa pretende il banco, riordinare la fila, le due strade (chi apre cosa), le tappe di oggi
 

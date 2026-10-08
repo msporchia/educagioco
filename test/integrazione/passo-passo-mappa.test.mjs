@@ -157,6 +157,9 @@ await apri(0)
   controlla('le isole chiuse hanno il cartello velato', await page.locator('[data-isola="salto"][data-velata="1"]').count() === 1 &&
             await page.locator('[data-isola="passi"][data-velata="0"]').count() === 1)
   uguale('la tana dello zaino è chiusa', await page.locator('[data-passaggio="zaino"]').getAttribute('data-aperta'), '0')
+  uguale('e la sua insegna dice da che numero comincia, ferma',
+         (await page.locator('[data-passaggio="zaino"] [data-sotto]').textContent()) + ' ' +
+         await page.locator('[data-passaggio="zaino"] [data-chiama]').getAttribute('data-chiama'), `dal ${TAPPE_PICCOLE + 1} in poi 0`)
 }
 await scatto(page, 'passo-mappa-inizio')
 
@@ -482,6 +485,8 @@ await fermo()
   const s = await segnalino()
   uguale('dalla tana si torna alla valle, e il coniglio sbuca da quella dello zaino', `${s.al}/${s.animale}`, 'tana:zaino/coniglio')
   uguale('che adesso è aperta', await page.locator('[data-passaggio="zaino"]').getAttribute('data-aperta'), '1')
+  uguale('e la sua insegna ondeggia: di là c\'è il viale da fare',
+         await page.locator('[data-passaggio="zaino"] [data-chiama]').getAttribute('data-chiama'), '1')
   uguale('il primo gregge è aperto', await statoSullIsola(page, TAPPE_PRIME), 'aperta')
   uguale('e la tana del pascolo pure', await page.locator('[data-tana="pecore-cane"]').getAttribute('data-aperta'), '1')
 }
@@ -568,8 +573,9 @@ await apri(TAPPE_PICCOLE)
   uguale('con la prima tappa dello zaino si apre lo zaino', await mondo(), 'zaino')
   const s = await segnalino()
   uguale('il coniglio sta sulla tappa di adesso, il viale', `${s.al}/${s.animale}`, `${TAPPE_PICCOLE}/coniglio`)
-  uguale('sulla riva la tana per la valle, col suo nome',
-         (await page.locator('[data-passaggio="valle"]').innerText()).trim().replace(/^\P{L}+/u, ''), 'La valle')
+  uguale('sulla riva la tana per la valle, con la sua insegna: il nome e i numeri di là',
+         (await page.locator('[data-passaggio="valle"] [data-nome]').textContent()).trim() + ' · ' +
+         (await page.locator('[data-passaggio="valle"] [data-sotto]').textContent()).trim(), `I primi livelli · dall'1 al ${TAPPE_PICCOLE}`)
   uguale('i ponti verso le isole chiuse hanno il blocco',
          (await page.locator('[data-blocco]').evaluateAll(l => l.map(e => `${e.dataset.blocco}>${e.dataset.chiude}`))).sort().join(' '),
          'ripeti-fino>fino ripeti-mondo>mondo')

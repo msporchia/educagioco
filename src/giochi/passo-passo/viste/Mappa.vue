@@ -31,14 +31,24 @@ const mondoDi = id => MONDO_DI.get(id) ?? 'valle'
 const isoleZaino = STRADE.isole.filter(s => mondoDellIsola(s.chiave) === 'zaino')
 const tappeZaino = isoleZaino.flatMap(s => s.tappe)
 
+const tappeValle = STRADE.isole.flatMap(s => s.tappe).filter(i => !tappeZaino.includes(i))
+// sull'insegna, quali numeri ci sono di là: lo zaino dal primo in poi, la valle dal primo all'ultimo
+const ultima = STRADE.quante
+const numeri = l => {
+  const da = Math.min(...l) + 1, a = Math.max(...l) + 1
+  return a === ultima ? `dal ${da} in poi` : `${da === 1 ? 'dall\'1' : `dal ${da}`} al ${a}`
+}
+// l'insegna ondeggia se di là c'è una tappa aperta e non ancora fatta
+const daFare = l => l.some(i => props.voci[i] && ['ora', 'aperta'].includes(props.voci[i].stato))
+
 // la tana dello zaino è aperta se lì c'è almeno una tappa aperta; chiusa dice cosa manca alla prima
 const zaino = computed(() => {
   const prima = isoleZaino.length ? props.voci[isoleZaino[0].tappe[0]] : null
   return { aperto: tappeZaino.some(i => props.voci[i] && props.voci[i].stato !== 'chiusa'),
-           serve: prima ? prima.serve || '' : '' }
+           serve: prima ? prima.serve || '' : '', sotto: numeri(tappeZaino), chiama: daFare(tappeZaino) }
 })
 // quella che torna alla valle è sempre aperta
-const TORNA = { aperto: true, serve: '' }
+const torna = computed(() => ({ aperto: true, serve: '', sotto: numeri(tappeValle), chiama: daFare(tappeValle) }))
 
 // si gioca lì: una casella aperta, o un posto della strada (non una tana)
 const giocabile = id => {
@@ -84,7 +94,7 @@ function passa() {
     <div class="pp-mappa-cima"><slot /></div>
 
     <Valle :key="stato.mondo + stato.n" :mondo="stato.mondo" :voci="voci" :sentieri="sentieri"
-           :passaggio="stato.mondo === 'valle' ? zaino : TORNA"
+           :passaggio="stato.mondo === 'valle' ? zaino : torna"
            :dove="dove" :partenza="stato.partenza" :meta="stato.meta ?? null" :entrata="stato.entrata" :verso="stato.verso || 1"
            @gioca="i => emit('gioca', i)" @senza-fine="s => emit('senza-fine', s)" @passa="passa" @posato="ricorda" />
   </div>

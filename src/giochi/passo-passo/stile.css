@@ -159,11 +159,13 @@
 .pp-passaggio { position: absolute; width: 56px; height: 56px; margin: -34px 0 0 -28px; padding: 0; border: 0;
                 border-radius: 50%; background: none; display: flex; align-items: center; justify-content: center;
                 line-height: 0 }
-.pp-passaggio-nome { position: absolute; transform: translate(-50%, -50%); display: flex;
-                     align-items: center; gap: 5px; height: 28px; padding: 0 11px 0 8px; border-radius: 999px;
-                     background: var(--is-casella); color: var(--is-scuro); box-shadow: 0 3px 0 var(--is-spessore);
-                     font-size: 13px; font-weight: 800; line-height: 1; white-space: nowrap }
-.pp-passaggio[data-aperta="0"] .pp-passaggio-nome { opacity: .75 }
+/* l'insegna: la punta della freccia sta sulla bocca; ondeggia se di là c'è qualcosa da fare */
+.pp-passaggio-insegna { position: absolute; transform: translateY(-100%); line-height: 0 }
+.pp-passaggio-chiama .pp-insegna-tana { animation: pp-chiama 1.4s ease-in-out infinite }
+@keyframes pp-chiama { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(4px) } }
+@media (prefers-reduced-motion: reduce) { .pp-passaggio-chiama .pp-insegna-tana { animation: none } }
+.pp-insegna-tana .pp-stendardo-nome { stroke: #10224a }
+.pp-insegna-tana .pp-insegna-sotto { fill: #ffe08a; stroke-width: 2.8px; letter-spacing: .3px }
 /* il blocco: la sbarra sul ponte verso un'isola chiusa */
 .pp-blocco { position: absolute; transform: translate(-50%, -72%); padding: 0; border: 0; background: none;
              line-height: 0; z-index: 1 }
