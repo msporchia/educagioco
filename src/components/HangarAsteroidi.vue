@@ -4,7 +4,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { state } from '../store/profile.js'
 import { ritocca } from '../giochi/campagne.js'
-import { TINTE, DISEGNI, STEMMI, pezzo } from '../data/hangar.js'
+import { TINTE, DISEGNI, STEMMI, pezzo, tipoDi } from '../data/hangar.js'
 import { hangarDi, possiede, scegli, visto, livrea, prossimoDelVolo } from '../motore/asteroidi/hangar.js'
 import { disegnaNave } from '../grafica/spazio.js'
 import PezzoHangar from './PezzoHangar.vue'
@@ -29,11 +29,13 @@ const LINGUETTE = [
   { id: 'disegno', forma: 'disegno', tinta: 'colDisegno' }, { id: 'stemma', forma: 'stemma', tinta: 'colStemma' },
 ]
 const su = ref('scafo')
+// di che linguetta è un pezzo: la forma o il colore che ci si sceglie
+const diLinguetta = (l, p) => [l.forma && l.forma[0], l.tinta].includes(tipoDi(p))
 // una linguetta senza niente di suo non si mostra (disegni e stemmi si vincono tutti)
 const linguette = computed(() => LINGUETTE.filter(l => !l.forma ||
-  h.presi.some(p => p[0] === l.forma[0])))
+  h.presi.some(p => tipoDi(p) === l.forma[0])))
 // il pallino anche sulla linguetta: un pezzo nuovo sta spesso in un'altra
-const nuovoIn = l => [...nuovi].some(p => p[0] === (l.forma ? l.forma[0] : 't'))
+const nuovoIn = l => [...nuovi].some(p => diLinguetta(l, p))
 const linguetta = computed(() => LINGUETTE.find(l => l.id === su.value))
 
 // le forme della linguetta: prese o col lucchetto, «niente» per primo
@@ -45,7 +47,7 @@ const forme = computed(() => {
 })
 // i colori: per scafo, ali e fiamma c'è anche «di serie»
 const colori = computed(() => TINTE.map(t => {
-  const p = pezzo('t', t.id)
+  const p = pezzo(linguetta.value.tinta, t.id)
   return { p, id: t.id, preso: possiede(h, p), nuovo: nuovi.has(p) }
 }))
 const diSerie = computed(() => ['scafo', 'ali', 'fiamma'].includes(linguetta.value.tinta))

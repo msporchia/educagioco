@@ -72,13 +72,12 @@ uguale('vinta tre volte, la tappa non ha più pacchi',
        await page.locator(`[data-pacchi-di="${POS}"]`).count(), 0)
 const h1 = await hangar()
 uguale('due pezzi presi, e non di più', (h1.presi || []).length, 2)
-uguale('e le vittorie della tappa sono contate', h1.vinte?.[tappa.tipo === 'mente' ? 'm' + tappa.i : 'p' + tappa.i], 2)
 
 /* ---------- 3. l'hangar ---------- */
 await page.click('[data-azione="hangar"]')
 await page.waitForSelector('[data-hangar]')
 const primo = regaliDellaTappa(POS)[0]
-const linguetta = { t: 'scafo', d: 'disegno', s: 'stemma' }[tipoDi(primo)]
+const linguetta = { scafo: 'scafo', d: 'disegno', s: 'stemma' }[tipoDi(primo)]
 controlla('la linguetta del pezzo nuovo ha il pallino',
           await page.locator(`[data-linguetta="${linguetta}"] [data-nuovo]`).count() === 1)
 await page.click(`[data-linguetta="${linguetta}"]`)
@@ -87,8 +86,8 @@ uguale('il pezzo vinto si può scegliere',
 uguale('e il pezzo pure', await page.locator(`[data-scelta="${primo}"] [data-nuovo]`).count(), 1)
 await page.click(`[data-scelta="${primo}"]`)
 await page.click('[data-linguetta="scafo"]')
-controlla('un colore non preso ha il lucchetto', await page.locator('[data-scelta="t:oro"]').isDisabled())
-await page.click('[data-scelta="t:rosso"]')
+controlla('un colore non preso ha il lucchetto', await page.locator('[data-scelta="scafo:oro"]').isDisabled())
+await page.click('[data-scelta="scafo:rosso"]')
 await attendi(page, 500)
 await scatto(page, 'asteroidi-hangar')
 const nave = (await hangar()).nave || {}

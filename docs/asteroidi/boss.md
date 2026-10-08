@@ -29,9 +29,9 @@ lascia un pacco per l'hangar ([hangar.md](hangar.md)).
 - **Perdere con la nave madre costa solo il pacco**: finite le vite, la tappa
   resta superata e il cartello dice che la nave madre è scappata e il pacco
   aspetta lì.
-- **Ogni tappa ha due pacchi** ([hangar.md](hangar.md)): alla terza vittoria la
-  nave madre arriva lo stesso, ma il cartello dice che qui i regali sono
-  finiti. Sulla rotta, sotto il nome della tappa, si vedono i pacchi che
+- **Ogni tappa ha due pacchi** ([hangar.md](hangar.md)), cioè i suoi due
+  pezzi che ancora mancano: presi quelli (anche dal volo), la nave madre
+  arriva lo stesso, ma il cartello dice che qui i regali sono finiti. Sulla rotta, sotto il nome della tappa, si vedono i pacchi che
   restano (quanti, non cosa), e il fumetto lo dice.
 
 ## Nel volo
@@ -41,13 +41,16 @@ lascia un pacco per l'hangar ([hangar.md](hangar.md)).
   chi riparte dal 15 la incontra al 18.
 - **Più è alta, più spesso regala** (`PACCO_VOLO` in `src/data/hangar.js`):
   al 3 una volta su tre, al 6 una su due, al 9 due su tre, dal 12 sempre. Il
-  pezzo è il prossimo che manca (`REGALI_VOLO`, dalla stella all'oro), da
-  qualunque livello: nessun pezzo chiede di arrivare a un'altezza precisa.
+  pezzo è il prossimo che manca: prima i sette del volo (`REGALI_VOLO`, dalla
+  stella all'oro), poi quelli delle tappe (`FILA_REGALI`), da qualunque
+  livello. Nessun pezzo chiede un'altezza precisa, e chi ha finito le tappe
+  prima che ci fosse l'hangar trova nel volo i pezzi che non ha preso.
   L'hangar dice che il pacco arriva ogni tanto, se no un volo senza pacchi
   sembra un guasto.
 - Provato «regala solo più in alto di tutte quelle di prima», col pezzo
   deciso dal livello: non funziona perché chi si ferma attorno al suo record
-  non vede più pacchi, e l'oro dal 21 era irraggiungibile.
+  non vede più pacchi, e l'oro dal 21 era irraggiungibile. Provato anche il
+  volo con i soli sette pezzi suoi: finiti quelli, l'hangar restava pieno di «?».
 - **Il pacco ferma il cielo** finché non si preme «Avanti» (`regaloVolo` è
   una delle condizioni della pausa).
 

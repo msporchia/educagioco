@@ -131,7 +131,7 @@ function serveDi(v) {
 const vociRotta = computed(() => fila.map(v => ({
   pos: v.pos, n: v.n, tipo: v.tipo, cap: v.cap, nome: v.T.nome,
   che: `${cheChiede(v)} · ${v.T.bersaglio} centri`,
-  stato: statoVoce(v), serve: serveDi(v), pacchi: pacchiDi(hangarMappa.value, chiaveDi(v)),
+  stato: statoVoce(v), serve: serveDi(v), pacchi: pacchiDi(hangarMappa.value, v.pos),
   disegno: v.tipo === 'mente' ? { tipo: 'mente', i: v.i, ultima: v.i === STAZIONI.length - 1 }
                               : { tipo: 'pianeta', nuova: v.T.nuova || 0 },
 })))
@@ -598,7 +598,7 @@ function abbattiMadre() {
   hud.punti += CFG.bossPunti; suono.boss()
   if (campagna.value) {
     const v = voce.value
-    finale.regalo = conHangar(h => vintaTappa(h, chiaveDi(v), v.pos))
+    finale.regalo = conHangar(h => vintaTappa(h, v.pos))
     return tappaSuperata()
   }
   dammiVita('NAVE MADRE\nABBATTUTA!')
