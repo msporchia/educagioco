@@ -18,7 +18,7 @@
    tempo: 240
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo,
-         camminaVerso } from '../aiuto/browser.mjs'
+         camminaVerso, lasciaLaDiscesa } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { PERSONAGGI, MINATORE } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
@@ -152,11 +152,18 @@ controlla('il goblin è su questo piano, e dice cosa cercare', promemoria[0].dov
 controlla('Rosicchione è fatto: si ricorda a chi riportarlo', promemoria[1].dove === 'fatta' && /torna dal mugnaio/.test(promemoria[1].testo), promemoria[1].testo)
 controlla('le chiavi sono più giù, al terzo piano', promemoria[2].dove === 'sopra' && /il mazzo di chiavi della torre è al terzo piano/.test(promemoria[2].testo), promemoria[2].testo)
 controlla('e la discesa è al primo piano', (await page.locator('.sot-piede').textContent()).includes('piano 1'))
+// la più vicina fra il goblin (su questo piano) e le chiavi (due piani sotto, la scala): dipende dal piano nato a caso
+const segue = await page.locator('[data-rotta]').getAttribute('data-missione-rotta')
+controlla('la freccina segue una delle due prese', ['goblin', 'chiavi'].includes(segue), segue)
+uguale('«qui» se è il goblin, «scala» se sono le chiavi', await page.locator('[data-rotta]').getAttribute('data-verso'),
+       segue === 'goblin' ? 'qui' : 'scala')
+uguale('e la sua riga è segnata', await page.locator('[data-promemoria] li[data-segui]').getAttribute('data-missione'), segue)
 await scatto(page, 'missioni-promemoria')
 
-/* ---------- 5. su, e si consegna: le monete ---------- */
-await page.locator('button[aria-label="indietro"]').click()
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+/* ---------- 5. su, e si consegna: le monete ----------
+   Uscire con la ✕ non porta di sopra (docs/sotterraneo/portale-e-sosta.md): si risale lasciando perdere la discesa, con la
+   roba e le missioni fatte che passano nell'avventura. */
+await lasciaLaDiscesa(page)
 await attendi(page, 700)
 const monete = (await leggiProfilo(page)).coins
 const gemmePrima = (await avventura()).roba?.gemme

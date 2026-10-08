@@ -8,10 +8,10 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO,
          MERCANTI as DOVE_MERCANTI, PORTALE as DOVE_PORTALE, PERSONAGGI as DOVE_PERSONAGGI } from '../dati/terra-mappa.js'
 import { PERSONAGGI } from '../dati/missioni.js'
-import { segnoDi, GLIFO, chiAspetta, chiTiCerca, presePer, inFrase } from '../motore/missioni.js'
+import { segnoDi, GLIFO, chiAspetta, chiTiCerca, presePer, inFrase, discesaDaSeguire } from '../motore/missioni.js'
 import { MERCANTI } from '../dati/mercanti.js'
 import { POSTO_DI, LUOGHI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, PASSO_TERRA, VISTA, LUCE,
-         BORDO, MORBIDA } from '../dati/terra.js'
+         BORDO, MORBIDA, iconaDi } from '../dati/terra.js'
 import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice } from '../motore/terra.js'
 import { figura, haFigura } from './figura.js'
 import { dettoDelLivello } from '../motore/storia.js'
@@ -89,7 +89,10 @@ const personaggi = Object.entries(DOVE_PERSONAGGI).filter(([k]) => PERSONAGGI[k]
 const segnoSopra = chi => segnoDi(chi, props.missioni, props.tappe)
 const glifoSopra = chi => GLIFO[segnoSopra(chi)] || null
 
-// chi aspetta una consegna: se è fuori dallo schermo, un indicatore sul bordo lo fa trovare (posa)
+// chi aspetta una consegna: se è fuori dallo schermo, un indicatore sul bordo lo fa trovare (posa). E, quando non
+// c'è nessuna consegna da fare, un altro dello stesso stampo, azzurro e col ritaglio della discesa, porta alla
+// discesa della missione presa e non ancora fatta: chi gioca poco spesso non si ricorda cosa aveva preso tre giorni
+// fa (motore/missioni.js, discesaDaSeguire; le consegne hanno la precedenza)
 const MARGINE_BUSSOLA = 30
 const consegne = computed(() => {
   const chi = chiAspetta(props.missioni)
@@ -98,28 +101,45 @@ const consegne = computed(() => {
     ...personaggi.filter(m => chi.includes(m.chiave)).map(m => ({ chiave: m.chiave, nome: m.nome, piede: m.piede })),
   ]
 })
-const fuori = ref([])    // [{ chiave, nome, x, y, gradi }] in pixel dello schermo, solo per chi non si vede
+// dove sta ogni discesa, in celle (il piede del posto): serve a scegliere la più vicina
+const PIEDI_DELLE_DISCESE = Object.fromEntries(Object.entries(POSTO_DI).filter(([, nome]) => POSTI[nome])
+  .map(([chiave, nome]) => [chiave, { x: POSTI[nome].piede[0] + 0.5, y: POSTI[nome].piede[1] + 0.5 }]))
+const fuori = ref([])    // [{ chiave, nome, x, y, gradi, meta?, immagine? }] in pixel dello schermo, solo per chi non si vede
 let fuoriChiave = ''
 function aggiornaFuori() {
   if (!vL) return
   const lista = []
   const cx = vL / 2, cy = (sopra + vA - sotto) / 2
   const x0 = MARGINE_BUSSOLA, x1 = vL - MARGINE_BUSSOLA, y0 = sopra + MARGINE_BUSSOLA, y1 = vA - sotto - MARGINE_BUSSOLA
+  // dal centro verso (sx, sy), fermandosi dove il raggio tocca il rettangolo del bordo
+  const alBordo = (sx, sy, resto) => {
+    const dx = sx - cx, dy = sy - cy
+    const k = Math.min((dx > 0 ? x1 - cx : cx - x0) / Math.abs(dx || 1e-6), (dy > 0 ? y1 - cy : cy - y0) / Math.abs(dy || 1e-6))
+    lista.push({ ...resto, x: Math.round(cx + dx * k), y: Math.round(cy + dy * k), gradi: Math.round(Math.atan2(dy, dx) * 180 / Math.PI) })
+  }
+  const inVista = (sx, sy) => sx > 6 && sx < vL - 6 && sy > sopra + 4 && sy < vA - sotto - 4
   for (const c of consegne.value) {
     const sx = (c.piede.x + 0.5) * CELLA * S - cam.x * S
     const sy = (c.piede.y + 0.5) * CELLA * S - cam.y * S - 20
-    if (sx > 6 && sx < vL - 6 && sy > sopra + 4 && sy < vA - sotto - 4) continue
-    const dx = sx - cx, dy = sy - cy
-    // dal centro verso di lui, fermandosi dove il raggio tocca il rettangolo del bordo
-    const k = Math.min((dx > 0 ? x1 - cx : cx - x0) / Math.abs(dx || 1e-6), (dy > 0 ? y1 - cy : cy - y0) / Math.abs(dy || 1e-6))
-    lista.push({ chiave: c.chiave, nome: c.nome, x: Math.round(cx + dx * k), y: Math.round(cy + dy * k),
-                 gradi: Math.round(Math.atan2(dy, dx) * 180 / Math.PI) })
+    if (!inVista(sx, sy)) alBordo(sx, sy, { chiave: c.chiave, nome: c.nome })
+  }
+  const meta = discesaDaSeguire(props.missioni, io, PIEDI_DELLE_DISCESE)
+  if (meta) {
+    const p = POSTI[POSTO_DI[meta]]
+    const sx = (p.riquadro[0] + p.riquadro[2] / 2) * S - cam.x * S
+    const sy = (p.riquadro[1] + p.riquadro[3] / 2) * S - cam.y * S
+    if (!inVista(sx, sy)) {
+      const t = props.tappe.find(t => t.chiave === meta)
+      alBordo(sx, sy, { chiave: meta, meta: true, nome: t ? t.nome : 'la discesa', immagine: iconaDi(meta) })
+    }
   }
   const ch = lista.map(l => `${l.chiave}:${l.x},${l.y},${l.gradi}`).join('|')
   if (ch !== fuoriChiave) { fuoriChiave = ch; fuori.value = lista }
 }
 // toccandolo l'eroe ci va, come toccando lui (e il fumetto si apre all'arrivo)
 const vaDa = chiave => (chiave === 'minatore' ? toccaMinatore() : toccaPersonaggio(personaggi.find(m => m.chiave === chiave)))
+// e la freccia azzurra porta ai piedi della discesa, dove si apre il fumetto
+const vaAllaDiscesa = chiave => { const p = posti.value.find(p => p.nome === POSTO_DI[chiave]); if (p) toccaPosto(p) }
 
 const nebbia = (() => {
   const salvata = props.terra && nebbiaDaCodice(props.terra.nebbia, L, A)
@@ -686,12 +706,16 @@ const chiusaPerche = p => {
       </div>
     </div>
 
-    <!-- chi aspetta una consegna ed è fuori schermo: un «?» d'oro sul bordo, con la freccia verso di lui -->
-    <button v-for="f in fuori" :key="'fuori-' + f.chiave" class="sot-bussola" :data-consegna-fuori="f.chiave"
-            :aria-label="'Hai una consegna per ' + f.nome" :style="{ left: f.x + 'px', top: f.y + 'px' }"
-            @click.stop="vaDa(f.chiave)">
+    <!-- chi aspetta una consegna ed è fuori schermo: un «?» d'oro sul bordo, con la freccia verso di lui. Senza
+         consegne, la discesa della missione presa: stessa forma, azzurra, col ritaglio della discesa -->
+    <button v-for="f in fuori" :key="'fuori-' + f.chiave" class="sot-bussola" :class="{ 'sot-bussola-meta': f.meta }"
+            :data-consegna-fuori="f.meta ? null : f.chiave" :data-meta-fuori="f.meta ? f.chiave : null"
+            :aria-label="f.meta ? 'La discesa della tua missione: ' + f.nome : 'Hai una consegna per ' + f.nome"
+            :style="{ left: f.x + 'px', top: f.y + 'px' }"
+            @click.stop="f.meta ? vaAllaDiscesa(f.chiave) : vaDa(f.chiave)">
       <i class="sot-bussola-freccia" :style="{ transform: `rotate(${f.gradi}deg) translateX(28px)` }"></i>
-      <b>?</b>
+      <b v-if="!f.meta">?</b>
+      <b v-else><img v-if="f.immagine" class="sot-ritaglio" :src="f.immagine" alt="" data-ritaglio></b>
     </button>
 
     <div ref="sopraEl" class="sot-terra-sopra"><slot name="sopra" /></div>

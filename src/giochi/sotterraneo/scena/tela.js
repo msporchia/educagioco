@@ -79,6 +79,12 @@ export class Tela {
       : Math.max(0, Math.min(mira, M.y - a))
   }
 
+  // dove cade, sullo schermo, un punto del piano in celle (il centro di una cella è x + 0.5): serve a chi posa
+  // sopra la tela qualcosa che segue l'eroe (la freccina verso la missione, Gioco.vue)
+  schermoDi(x, y) {
+    return { x: (x * T - this.vista.x) * this.scala, y: (y * T - this.vista.y) * this.scala }
+  }
+
   cellaDa(sx, sy) {
     return {
       x: Math.floor((sx / this.scala + this.vista.x) / T),

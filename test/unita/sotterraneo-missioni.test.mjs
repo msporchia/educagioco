@@ -14,7 +14,8 @@ import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { avventuraDi } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { sbloccata, sbloccate, offerte, inMano, aperte, cosaDice, segnoDi, chiTiCerca, prendi, fatte, consegna,
-         presePer, diario, promemoria, inFrase, GLIFO, chiAspetta, daLui, robaDellaMissione, PRESA, FATTA, CONSEGNATA }
+         presePer, diario, promemoria, inFrase, GLIFO, chiAspetta, daLui, robaDellaMissione, rotta, discesaDaSeguire,
+         PRESA, FATTA, CONSEGNATA }
   from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -287,12 +288,12 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   // il promemoria in discesa
   const pm = (st, tappa, piano) => promemoria(st, tappa, piano)
   const ros = { rosicchione: PRESA }
-  uguale('al primo piano della torre: Rosicchione sta più giù', pm(ros, 'torre', 1)[0].testo, 'Missione: Rosicchione sta al secondo piano')
+  uguale('al primo piano della torre: Rosicchione sta più giù', pm(ros, 'torre', 1)[0].testo, 'Missione: Rosicchione sta al secondo piano: scendi')
   uguale('e il segno è «sopra»', pm(ros, 'torre', 1)[0].dove, 'sopra')
   uguale('sul piano giusto lo dice', pm(ros, 'torre', 2)[0].testo, 'Missione: Rosicchione è su questo piano: cerca il mostro con la corona')
   uguale('oltre quel piano è sfuggito', pm(ros, 'torre', 3)[0].dove, 'oltre')
   uguale('il forziere: la collana è al primo piano', pm({ collana: PRESA }, 'cantine', 1)[0].testo, 'Missione: la collana della nonna è su questo piano: cerca il forziere d\'oro')
-  uguale('un piano prima', pm({ chiavi: PRESA }, 'torre', 1)[0].testo, 'Missione: il mazzo di chiavi della torre è al terzo piano')
+  uguale('un piano prima', pm({ chiavi: PRESA }, 'torre', 1)[0].testo, 'Missione: il mazzo di chiavi della torre è al terzo piano: scendi')
   uguale('fatta, ricorda a chi riportarla', pm({ chiavi: FATTA }, 'torre', 3)[0].testo, 'Missione compiuta: il mazzo di chiavi della torre, torna dalla guardia della torre')
   uguale('consegnata, niente', pm({ chiavi: CONSEGNATA }, 'torre', 3).length, 0)
   uguale('di un\'altra discesa, niente', pm(ros, 'cantine', 1).length, 0)
@@ -323,6 +324,83 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   uguale('senza niente da dire, niente', chiTiCerca({ badessa: CONSEGNATA }, tappeAl(0)).length, 0)
   const due = chiTiCerca({ badessa: CONSEGNATA, collana: CONSEGNATA }, tappeAl(4))
   controlla('il pescatore ha due favori: lo dice una volta sola', due.some(r => /ha due favori da chiederti/.test(r)), due.join('|'))
+}
+
+/* ══════════ 8. la freccina in discesa: da che parte è la missione ══════════
+   Il forziere d'oro o il mostro con la corona se sono su questo piano, la scala se sono più giù; la più vicina se
+   sono più d'una; niente senza missioni, o se la cosa è già fatta o il piano è passato. Non guarda la nebbia. */
+{
+  const corsaDi = (chiave, prese, seme = 7) => {
+    const c = new Corsa(CAMPAGNA.find(t => t.chiave === chiave), { seme, rnd: seminato(seme), eroe: 'cavaliere',
+      roba: robaAttesa('cavaliere', CAMPAGNA.findIndex(t => t.chiave === chiave), { pozioni: false }),
+      missioni: presePer(Object.fromEntries(prese.map(id => [id, PRESA])), chiave) })
+    return c
+  }
+  const robaDi = (c, id) => c.livello.robe.find(r => r.missione === id)
+  const verso = (c, r) => Math.round(Math.atan2((r.fy != null ? r.fy : r.y + 0.5) - c.eroe.y, (r.fx != null ? r.fx : r.x + 0.5) - c.eroe.x) * 180 / Math.PI)
+
+  // senza missioni, niente freccia; con una presa di un'altra discesa, nemmeno
+  uguale('nessuna missione: nessuna freccia', rotta(corsaDi('torre', [])), null)
+  uguale('una missione di un\'altra discesa non c\'è nella corsa', rotta(corsaDi('cantine', ['rosicchione'])), null)
+
+  // sul piano giusto: punta alla cosa (il goblin della torre sta al primo piano, il mostro con la corona)
+  const g = corsaDi('torre', ['goblin'])
+  const r = rotta(g)
+  controlla('il mostro col nome è su questo piano: la freccia è «qui»', r && r.verso === 'qui' && r.id === 'goblin', JSON.stringify(r))
+  uguale('e guarda proprio lui', r.gradi, verso(g, robaDi(g, 'goblin')))
+  uguale('il nome è quello della missione', r.nome, 'Grattanaso, il goblin ladro')
+  controlla('la distanza è una distanza', r.distanza > 0)
+
+  // più in basso: punta alla scala che scende, anche se è nel buio
+  const ro = corsaDi('torre', ['rosicchione'])   // il ratto sta al secondo piano
+  const rs = rotta(ro)
+  const scala = ro.livello.robe.find(x => x.che === 'scala')
+  controlla('più giù: la freccia è «scala»', rs && rs.verso === 'scala', JSON.stringify(rs))
+  uguale('e guarda la scala', rs.gradi, Math.round(Math.atan2(scala.y + 0.5 - ro.eroe.y, scala.x + 0.5 - ro.eroe.x) * 180 / Math.PI))
+  uguale('la scala non è stata vista, e la freccia c\'è lo stesso (la nebbia non conta)', ro.visto[scala.y * ro.livello.largo + scala.x], 0)
+
+  // due missioni nella stessa discesa: vince la più vicina
+  const due = corsaDi('torre', ['goblin', 'rosicchione', 'chiavi'])
+  const d = rotta(due)
+  const vicina = ['goblin'].map(id => robaDi(due, id))[0]
+  const lontana = due.livello.robe.find(x => x.che === 'scala')
+  const dist = o => Math.hypot((o.fx != null ? o.fx : o.x + 0.5) - due.eroe.x, (o.fy != null ? o.fy : o.y + 0.5) - due.eroe.y)
+  controlla('con più missioni, la più vicina: ' + d.id, d.id === (dist(vicina) <= dist(lontana) ? 'goblin' : 'rosicchione'), JSON.stringify(d))
+  // sposto l'eroe vicino alla scala: adesso la più vicina è quella che punta alla scala
+  due.eroe = { x: lontana.x + 0.5, y: lontana.y + 1.5 }
+  const d2 = rotta(due)
+  controlla('spostando l\'eroe accanto alla scala, vince quella che punta alla scala', d2.verso === 'scala', JSON.stringify(d2))
+
+  // fatta: non c'è più; piano passato: neanche
+  g.missioniFatte.add('goblin')
+  uguale('la missione fatta non ha freccia', rotta(g), null)
+  const sf = corsaDi('torre', ['goblin'])
+  sf.piano = 1; sf.nuovoPiano()
+  uguale('il piano è passato: sfuggita, nessuna freccia', rotta(sf), null)
+
+  // un forziere d'oro aperto non si indica più
+  const col = corsaDi('cantine', ['collana'])
+  controlla('il forziere della collana è su questo piano: «qui»', rotta(col) && rotta(col).verso === 'qui', JSON.stringify(rotta(col)))
+  robaDi(col, 'collana').aperto = true
+  uguale('aperto, la freccia sparisce', rotta(col), null)
+
+  // il testo della riga in cima, per la missione più giù: «scendi»
+  uguale('più giù la riga in cima dice «scendi»', promemoria({ rosicchione: PRESA }, 'torre', 1)[0].testo, 'Missione: Rosicchione sta al secondo piano: scendi')
+}
+
+/* ══════════ 9. la freccina sulla terra di sopra: verso la discesa ══════════ */
+{
+  const posti = { altare: { x: 58, y: 9 }, cantine: { x: 10, y: 20 }, torre: { x: 45, y: 9 }, fondo: { x: 60, y: 40 } }
+  const io = { x: 52, y: 36 }
+  uguale('nessuna missione presa: nessuna freccia', discesaDaSeguire({}, io, posti), null)
+  uguale('una offerta e non presa: neanche', discesaDaSeguire({ badessa: undefined }, io, posti), null)
+  uguale('la Badessa è presa: la freccia va alla cripta', discesaDaSeguire({ badessa: PRESA }, io, posti), 'altare')
+  uguale('con due prese, la discesa più vicina', discesaDaSeguire({ badessa: PRESA, rosicchione: PRESA }, io, posti), 'altare')
+  uguale('e dall\'altra parte della mappa, l\'altra', discesaDaSeguire({ badessa: PRESA, rosicchione: PRESA }, { x: 40, y: 8 }, posti), 'torre')
+  uguale('due missioni nella stessa discesa: una sola freccia', discesaDaSeguire({ rosicchione: PRESA, chiavi: PRESA }, io, posti), 'torre')
+  uguale('una consegna da fare ha la precedenza: niente freccia azzurra', discesaDaSeguire({ badessa: PRESA, collana: FATTA }, io, posti), null)
+  uguale('consegnata, una missione non punta più', discesaDaSeguire({ badessa: CONSEGNATA }, io, posti), null)
+  uguale('una discesa senza posto sulla mappa non si indica', discesaDaSeguire({ badessa: PRESA }, io, { torre: posti.torre }), null)
 }
 
 riassunto('l\'albero delle missioni')

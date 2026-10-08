@@ -198,9 +198,59 @@ export function promemoria(stati, chiaveTappa, piano = null) {
       ? (m.tipo === 'trova' ? `${nome} è su questo piano: cerca il forziere d'oro` : `${nome} è su questo piano: cerca il mostro con la corona`)
       : dove === 'oltre'
         ? `${nome} era ${alPiano(giusto)}: ti è sfuggita, la riprendi con un'altra discesa`
-        : (m.tipo === 'trova' ? `${nome} è ${alPiano(giusto)}` : `${nome} sta ${alPiano(giusto)}`)
+        // più in basso: la freccina punta alla scala (rotta), e la riga dice cosa fare
+        : (m.tipo === 'trova' ? `${nome} è ${alPiano(giusto)}: scendi` : `${nome} sta ${alPiano(giusto)}: scendi`)
     return { id: m.id, dove, em, testo: `Missione: ${testo}` }
   })
+}
+
+/* ═══════════ la freccina: da che parte andare ═══════════ */
+
+const verso = (da, a) => Math.round(Math.atan2(a.y - da.y, a.x - da.x) * 180 / Math.PI)   // 0 a destra, in senso orario
+const distanza = (da, a) => Math.hypot(a.x - da.x, a.y - da.y)
+
+// In discesa: da che parte sta la missione presa e non ancora fatta più vicina (docs/sotterraneo/missioni.md, «La
+// freccina»). Sul piano giusto punta alla cosa (il forziere d'oro, il mostro con la corona), più in basso alla scala
+// che scende; una già sfuggita (piano passato) o fatta non c'è. È una direzione e non una strada, e non guarda
+// la nebbia: indica anche verso il buio, che è il motivo per andarci. `c` è la Corsa (o quel che le somiglia:
+// `missioni`, `missioniFatte`, `piano`, `eroe`, `livello.robe`). Senza niente da seguire torna null
+export function rotta(c) {
+  const robe = c.livello.robe
+  const scala = robe.find(r => r.che === 'scala')
+  let meglio = null
+  for (const m of c.missioni || []) {
+    if (c.missioniFatte.has(m.id) || m.piano < c.piano) continue
+    let dove, quale
+    if (m.piano === c.piano) {
+      const r = robe.find(x => x.missione === m.id && !x.morto && !x.aperto)
+      if (!r) continue
+      dove = { x: r.fx != null ? r.fx : r.x + 0.5, y: r.fy != null ? r.fy : r.y + 0.5 }
+      quale = 'qui'
+    } else {
+      if (!scala) continue
+      dove = { x: scala.x + 0.5, y: scala.y + 0.5 }
+      quale = 'scala'
+    }
+    const d = distanza(c.eroe, dove)
+    if (!meglio || d < meglio.distanza) meglio = { id: m.id, verso: quale, x: dove.x, y: dove.y, distanza: d }
+  }
+  if (!meglio) return null
+  const m = missioneDi(meglio.id)
+  return { ...meglio, gradi: verso(c.eroe, meglio), em: m.tipo === 'trova' ? m.cosa.em : '👑', nome: inFrase(titoloDi(m)) }
+}
+
+// Sulla terra di sopra: la discesa verso cui puntare. Quella con una missione presa e non fatta, la più vicina a
+// `da`; `posti` dice dove sta ogni discesa ({ [chiave]: { x, y } }). Se qualcuno aspetta una consegna la freccia
+// d'oro ha la precedenza (chiAspetta) e questa non c'è: una cosa alla volta da ricordare
+export function discesaDaSeguire(stati, da, posti) {
+  if (chiAspetta(stati).length) return null
+  let meglio = null
+  for (const m of MISSIONI) {
+    if (statoDi(stati, m.id) !== PRESA || !posti[m.discesa]) continue
+    const d = distanza(da, posti[m.discesa])
+    if (!meglio || d < meglio.distanza) meglio = { discesa: m.discesa, distanza: d }
+  }
+  return meglio ? meglio.discesa : null
 }
 
 /* ═══════════ dove sta, giù ═══════════ */

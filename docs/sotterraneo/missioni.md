@@ -134,7 +134,7 @@ Zannagrigia, lanterna) sono radici senza seguito.
   a discesa finita.
 - **Il promemoria in discesa** (`promemoria`): in cima al campo una riga per
   ogni missione presa o fatta che riguarda quella discesa, ricalcolata a ogni
-  piano. «Missione: la collana della nonna è al primo piano»; sul piano
+  piano. «Missione: la collana della nonna è al terzo piano: scendi»; sul piano
   giusto, in oro, «… è su questo piano: cerca il forziere d'oro» (o «il mostro
   con la corona»); superato il piano, in grigio, «ti è sfuggita, la riprendi con
   un'altra discesa»; fatta, in verde, «Missione compiuta: …, torna dal
@@ -143,6 +143,11 @@ Zannagrigia, lanterna) sono radici senza seguito.
 - **La cosa si nota** già prima del promemoria: il forziere è d'oro con la
   faccia della cosa che galleggia, il mostro ha il nome e la corona
   (`scena/tela.js`).
+
+## La freccina
+
+Una freccina giù (verso la cosa o la scala) e una sopra (azzurra, verso la discesa)
+ricordano la missione presa a chi gioca poco spesso: [missioni-freccina.md](missioni-freccina.md).
 
 ## Le regole di fare e consegnare
 
@@ -243,5 +248,5 @@ fumetto `[data-fumetto-di="<chi>"]` con una
 `[data-sezione="da-consegnare"]` per le fatte, le righe
 `li[data-missione][data-stato]` (`presa`, `fatta`, `offerta`, `consegnata`) con `[data-esito]` e `[data-ritaglio]`, `[data-diario-tetto]`,
 `[data-diario-vuoto]`. Giù `[data-promemoria] li[data-missione][data-dove]`
-(`sopra`, `qui`, `oltre`, `fatta`); il foglio del forziere
-`[data-missione="<id>"]`.
+(`sopra`, `qui`, `oltre`, `fatta`; la seguita ha `data-segui`); il foglio del forziere
+`[data-missione="<id>"]`; la freccina è in [missioni-freccina.md](missioni-freccina.md).
