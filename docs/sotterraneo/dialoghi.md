@@ -69,9 +69,9 @@ Node), `viste/Dialogo.vue` (il riquadro), `viste/Terra.vue` (`parla`,
 - **I mercanti** salutano con la loro battuta (la stessa del banco) e la
   prima domanda apre la bottega; il mercante ha anche «Ho roba da vendere»,
   che la apre sulla linguetta delle tasche. **Non dicono mai «non ho niente
-  per te»**: a banco vuoto «Torna quando sarai sceso più giù: avrò roba degna
-  di te», a linguetta vuota «… niente alla tua altezza. Guarda l'altro».
-  Tengono il bambino sperando.
+  per te»**: il banco di chi veste ha sempre qualcosa che migliora
+  ([bottega.md](bottega.md)), e una linguetta vuota dice «… niente alla tua
+  altezza. Guarda l'altro». Tengono il bambino sperando.
 - **Il tono è quello di Diablo, non di una favola buffa**: frasi brevi,
   serie, che mostrano invece di spiegare («Il lucchetto non cede: riprova»,
   non «Per aprire devi rispondere giusto»). Chi parla dice cose del suo

@@ -164,8 +164,7 @@ più nessuno.
 - **Si arriva al banco parlando**: toccando il mercante l'eroe ci va e si
   apre il dialogo; la prima domanda («Fammi vedere le armi», «Mi servono pozioni», «Fammi vedere») apre il banco, «Ho roba da vendere» (solo
   il mercante, chiave `rigattiere`) lo apre sulla linguetta delle tasche
-  ([dialoghi.md](dialoghi.md)). A banco vuoto il mercante non dice «niente
-  per te»: «Torna quando sarai sceso più giù».
+  ([dialoghi.md](dialoghi.md)).
 - **Niente di scelto: parla il mercante**, su una pergamena, con la sua
   battuta (`dice`): voce sua, corta, parole da sette anni, non istruzioni.
   Toccando una casella dell'eroe il pannello dice il pezzo che ha addosso.
