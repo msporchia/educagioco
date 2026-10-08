@@ -17,11 +17,14 @@ dove si sta correndo. Chi non muove il dito non vince nessuna tappa.
 
 Il campo è pieno di boschi, montagne e stagni che non si attraversano, e
 girando si trovano pezzi di altri posti: la neve in mezzo al prato, la lava
-nel deserto. Ogni tanto a terra c'è una **bomba**: si tiene in tasca e si
-lancia col pulsante quando si è circondati.
+nel deserto. La **bomba** si guadagna salendo di livello, e di rado si
+trova a terra: si tiene in tasca e si lancia col pulsante quando si è
+circondati.
 
-Salendo di livello il gioco si ferma e offre **tre carte**: un'arma nuova, più
-velocità, più vita, un colpo che rimbalza.
+Salendo di livello il gioco **non** si ferma: compare il pulsante
+**potenzia**, col numero dei potenziamenti messi da parte, e quando lo si
+tocca il gioco offre **tre carte**: un'arma nuova, più velocità, più vita,
+un colpo che rimbalza. Il momento lo sceglie chi gioca.
 
 ## La regola che rende il gioco un gioco
 

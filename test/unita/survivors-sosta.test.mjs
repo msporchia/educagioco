@@ -121,6 +121,12 @@ const distanza = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
   const p = new Partita(new Regole(t), { rnd: caso(12) })
   p.xp = p.prossima
   p.avanza(1 / 30)
+  p.xp = p.prossima
+  p.avanza(1 / 30)
+  uguale('due potenziamenti messi da parte', p.daSpendere, 2)
+  /* chi esce coi potenziamenti da parte li ritrova */
+  uguale('si salvano anche quelli', leggi(scrivi(p, 2), t, { rnd: caso(5) }).daSpendere, 2)
+  p.apriOfferta()
   controlla('la partita si è fermata a chiedere una carta', p.inPausa && !!p.offerta)
 
   const b = leggi(scrivi(p, 2), t, { rnd: caso(555) })
@@ -159,7 +165,7 @@ const distanza = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
   controlla('la cassa ha aperto un\'offerta', c.inPausa && c.motivoOfferta === 'cassa')
   const d = leggi(scrivi(c, 3), t, { rnd: caso(24) })
   uguale('riprendendo l\'offerta è ancora di una cassa', d.motivoOfferta, 'cassa')
-  c.rinuncia(); c.xp = c.prossima; c.avanza(1 / 30)
+  c.rinuncia(); c.xp = c.prossima; c.avanza(1 / 30); c.apriOfferta()
   uguale('e quella di un livello è di un livello',
          leggi(scrivi(c, 3), t, { rnd: caso(25) }).motivoOfferta, 'livello')
 }

@@ -128,7 +128,8 @@ export class Partita {
     this.aNascere = 0
     this.orbita = 0
     this.tFuoco = 0
-    this.tFulmine = 0
+    this.tGelo = 0
+    this.daSpendere = 0   // i potenziamenti guadagnati e non ancora scelti: li apre chi gioca    this.tFulmine = 0
     this.tLancia = 0
     this.tFendente = 0
 
@@ -194,13 +195,16 @@ export class Partita {
       raggioColpo: 5 + 1.6 * lv('grandi'),
       // zero senza la carta Calamita: le gemme si prendono a contatto
       calamita: lv('magnete') > 0 ? CFG.calamita.prima + CFG.calamita.inPiu * (lv('magnete') - 1) : 0,
-      gelo: lv('gelo') ? 66 + 20 * lv('gelo') : 0,
-      freno: Math.max(0.30, 1 - 0.20 * lv('gelo')),
+      // lo scudo di ghiaccio e l'anello di fuoco vanno a impulsi: radi
+      // alla prima copia, sempre più fitti potenziandoli
+      gelo: lv('gelo') ? 90 + 22 * lv('gelo') : 0,
+      freno: Math.max(0.30, 0.75 - 0.12 * lv('gelo')),
+      cadenzaGelo: Math.max(2.4, 5.5 - 1.0 * (lv('gelo') - 1)),
+      cadenzaFuoco: Math.max(2.2, 5.5 - 1.1 * (lv('fuoco') - 1)),
       // il dardo gelato: quante frecce su cento congelano, e quanto
       // pesa il gelo lasciato — separato dall'aura dello scudo
       dardo: 0.15 * lv('dardo'),
       frenoDardo: lv('dardo') ? Math.max(0.35, 0.60 - 0.05 * lv('dardo')) : 1,
-      spine: lv('spine') ? 2 + 3 * lv('spine') : 0,
       valoreGemma: 1 + lv('gemme'),
       fortuna: 0.14 * lv('stella'),
       perfora: quanti('occhi'),
@@ -236,7 +240,7 @@ export class Partita {
       return this.finisci('vinta')
     }
 
-    if (this.xp >= this.prossima) { this.salgo(); return this.esito }
+    if (this.xp >= this.prossima) this.salgo()
 
     this.muoviEroe(dt)
     this.nascite(dt)
@@ -248,6 +252,7 @@ export class Partita {
     this.muoviColpi(dt)
     this.pallaGirante(dt)
     this.anelloDiFuoco(dt)
+    this.ondataDiGelo(dt)
     this.saetta(dt)
     this.lanciaDritta(dt)
     this.fendenteDavanti(dt)
@@ -390,7 +395,7 @@ export class Partita {
   // torna true se qui è finita: l'unico punto in cui si perde
   camminaNemici(dt) {
     const e = this.eroe
-    const rg = this.f.gelo, freno = this.f.freno, raggio = this.f.raggio
+    const raggio = this.f.raggio
     const limite = Math.hypot(this.campo.larghezza, this.campo.altezza) * CFG.troppoLontano
     const oltreIlMuro = Math.max(this.campo.larghezza, this.campo.altezza) / 2 + 80
     const smorza = Math.pow(0.02, dt)
@@ -401,7 +406,6 @@ export class Partita {
       if (n.rotta && -(ddx * n.rotta.x + ddy * n.rotta.y) > oltreIlMuro) { n.sparito = true; continue }
       n.gelato = Math.max(0, n.gelato - dt)
       if (n.gelato <= 0) n.freno = 1
-      if (rg && d < rg) this.gela(n, 0.5, freno)
       const p = n.passo * n.freno
       const [vx, vy] = this.terreno.aggira(n.x, n.y, n.r,
         n.rotta ? n.rotta.x : ddx / d, n.rotta ? n.rotta.y : ddy / d, ATTENZIONE.muso)
@@ -415,7 +419,6 @@ export class Partita {
       n.fase += dt * 6
 
       if (d < n.r + raggio) {
-        if (this.f.spine && n.attesa <= 0) { n.attesa = 0.5; this.ferisci(n, this.f.spine, '#ffd257') }
         if (e.invuln <= 0) {
           e.cuori--
           this.ferite++
@@ -506,7 +509,7 @@ export class Partita {
     if (!this.f.fuoco) return
     this.tFuoco -= dt
     if (this.tFuoco > 0) return
-    this.tFuoco = Math.max(1.5, 3.4 - 0.45 * this.f.fuoco)
+    this.tFuoco = this.f.cadenzaFuoco
     const R = 78 + 20 * this.f.fuoco, danno = 2 + 2.6 * this.f.fuoco
     this.anello(this.eroe.x, this.eroe.y, R, '#ff9f1c')
     this.segnala('fuoco')
@@ -515,6 +518,21 @@ export class Partita {
       if (dx * dx + dy * dy < R * R) { this.ferisci(n, danno, '#ffb347'); this.spingi(n, 220) }
     }
   }
+  // lo scudo di ghiaccio: un'ondata ogni tanto che congela chi è vicino
+  ondataDiGelo(dt) {
+    if (!this.f.gelo) return
+    this.tGelo -= dt
+    if (this.tGelo > 0) return
+    this.tGelo = this.f.cadenzaGelo
+    const e = this.eroe, R = this.f.gelo
+    let presi = 0
+    for (const n of this.nemici) {
+      if ((n.x - e.x) ** 2 + (n.y - e.y) ** 2 < R * R) { this.gela(n, 2.2, this.f.freno); presi++ }
+    }
+    this.effetti.push({ che: 'gelata', x: e.x, y: e.y, r: R, vita: 0.6, tot: 0.6 })
+    if (presi) this.segnala('gelo')
+  }
+
 
   // le armi che guardano dove corri (lancia, fendente): tirano nella
   // direzione di marcia, non al più vicino — chi sta fermo le tiene
@@ -813,11 +831,28 @@ export class Partita {
     this.segnala('livello')
     this.anello(this.eroe.x, this.eroe.y, 120, '#ffe98a')
     this.effetti.push({ che: 'luce', x: this.eroe.x, y: this.eroe.y, vita: 0.9, tot: 0.9 })
+    // la partita non si ferma: il potenziamento si mette da parte e lo
+    // apre chi gioca quando vuole (apriOfferta). Se il mazzo è finito (solo
+    // in campagna, dove ha un tetto) non c'è niente da mettere da parte
+    if (this.mazzo.some(c => this.livelloDi(c.chiave) < this.tettoDi(c))) this.daSpendere++
+    // e ogni tanto l'esperienza porta una bomba
+    if (this.livello % CFG.bomba.ogniLivelli === 0 && this.eroe.bombe < CFG.bomba.tasca) {
+      this.eroe.bombe++
+      this.segnala('presa')
+    }
+  }
+
+  // chi gioca apre un potenziamento messo da parte: tre carte, pagate con
+  // la domanda come sempre. Torna l'offerta, o null se non ce n'era
+  apriOfferta() {
+    if (!(this.daSpendere > 0) || this.inPausa || this.finita) return null
+    const offerta = this.offri()
+    if (!offerta) { this.daSpendere = 0; return null }
+    this.daSpendere--
     this.fermati()
-    // `null` (niente da offrire) capita solo in campagna, dove il
-    // mazzo ha un tetto; nel gioco libero non finisce mai
-    this.offerta = this.offri()
-    this.motivoOfferta = this.offerta ? 'livello' : null
+    this.offerta = offerta
+    this.motivoOfferta = 'livello'
+    return offerta
   }
 
   // tre carte, una per fascia: se capitassero tre dello stesso prezzo
@@ -903,9 +938,8 @@ export class Partita {
         x: e.x, y: e.y, mira: e.mira, guarda: e.guarda, passi: e.passi,
         rotta: this.f.lancia || this.f.fendente ? e.rotta : null,
         fermo: !e.vx && !e.vy, raggio: this.f.raggio,
-        lampeggia: e.invuln > 0, spine: this.f.spine > 0,
+        lampeggia: e.invuln > 0,
       },
-      gelo: this.f.gelo,
       nemici: this.nemici,
       colpi: this.colpi,
       gemme: this.gemme,
@@ -931,6 +965,7 @@ export class Partita {
       uccisi: this.uccisi,
       cassa: this.motivoOfferta === 'cassa',
       bombe: this.eroe.bombe,
+      daSpendere: this.daSpendere,
       presi: this.mazzo
         .filter(c => this.livelloDi(c.chiave) > 0)
         .map(c => ({ chiave: c.chiave, icona: c.icona, quante: this.livelloDi(c.chiave) })),

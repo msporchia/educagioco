@@ -216,8 +216,14 @@ controlla('il riassunto conta le stelle',
   /* si sale di livello a mano, senza dover giocare mezza partita */
   p.xp = p.prossima
   p.avanza(1 / 30)
+  /* salire non ferma più il campo: il potenziamento si mette da parte, e
+     lo apre chi gioca quando vuole (il pulsante «potenzia») */
+  controlla('salendo di livello la partita non si ferma', !p.inPausa)
+  uguale('e mette da parte un potenziamento', p.daSpendere, 1)
+  p.apriOfferta()
+  uguale('aprirlo lo spende', p.daSpendere, 0)
   const o = p.offerta
-  controlla('salendo di livello la partita si ferma', p.inPausa)
+  controlla('aperto, la partita si ferma', p.inPausa)
   uguale('e propone tre carte', o.length, 3)
   stessaLista('una per fascia, dalla più a buon mercato',
               o.map(c => c.fascia), ['debole', 'media', 'forte'])
@@ -244,6 +250,7 @@ controlla('il riassunto conta le stelle',
   const p = new Partita(new Regole(CAMPAGNA[4]), { rnd: caso(34), campo })
   p.xp = p.prossima
   p.avanza(1 / 30)
+  p.apriOfferta()
   const o = p.offerta
   controlla('c\'è un\'offerta aperta', o?.length === 3)
   const primaDi = o.map(c => p.livelloDi(c.chiave))
@@ -530,6 +537,7 @@ controlla('il riassunto conta le stelle',
   /* la salita di livello dice «livello», non «cassa» */
   p.xp = p.prossima
   p.avanza(1 / 30)
+  p.apriOfferta()
   uguale('una salita di livello si dichiara livello', p.motivoOfferta, 'livello')
   uguale('e il cruscotto non dice cassa', p.cruscotto.cassa, false)
   p.prendi(p.offerta[0].chiave)
@@ -1152,9 +1160,10 @@ for (const [i, t] of CAMPAGNA.entries()) {
       if (p.inPausa) { pilota.rispondi(p); continue }
       const prima = p.livello
       pilota.guida(p, dt)
+      const daParte = p.daSpendere
       p.avanza(dt)
       if (p.eventi.length) p.svuotaEventi()
-      if (p.livello > prima && !p.offerta) vuote++
+      if (p.livello > prima && !(p.daSpendere > daParte)) vuote++
     }
     partite.push({ partita: p, pilota, vuote })
   }

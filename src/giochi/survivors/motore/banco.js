@@ -62,6 +62,9 @@ export class Pilota {
   // un'arma che colpisce dove corre prende — fra le direzioni quasi
   // sicure — quella che guarda il grumo
   guida(partita, dt) {
+    // un potenziamento messo da parte si apre subito: sotto le carte il
+    // campo è fermo, aspettare non salva niente
+    if (partita.daSpendere > 0) partita.apriOfferta()
     this.pensa -= dt
     if (this.pensa > 0) return
     this.pensa = this.riflesso

@@ -117,6 +117,18 @@
               line-height: 22px; font-weight: 900 }
 @keyframes sv-bomba { 50% { transform: scale(1.06) } }
 
+/* il potenziamento da scegliere: dorato, in basso a sinistra (la bomba sta a destra) */
+.sv-potenzia { position: absolute; left: 14px; bottom: 40px; z-index: 3;
+               display: flex; align-items: center; gap: 6px; padding: 10px 14px 10px 12px;
+               border-radius: 30px; border: 3px solid #fff3c4;
+               background: linear-gradient(#ffd257, #e0a020); color: #5a3a00;
+               box-shadow: 0 4px 0 #8a5a00, 0 6px 14px #0008; font-size: 22px; font-weight: 900;
+               touch-action: none; animation: sv-bomba 1.1s ease-in-out infinite }
+.sv-potenzia span { font-size: 16px; text-transform: uppercase; letter-spacing: .5px }
+.sv-potenzia b { min-width: 24px; height: 24px; border-radius: 12px; background: #fff;
+                 color: #8a5a00; font-size: 15px; line-height: 24px; text-align: center }
+.sv-potenzia:active { box-shadow: 0 1px 0 #8a5a00 }
+
 .sv-brindisi { position: absolute; left: 12px; right: 12px; top: 84px; z-index: 6;
                pointer-events: none; background: #101a44e8; border: 3px solid #ffe98a;
                border-radius: 16px; padding: 9px 12px; color: #fff; font-size: 14px;

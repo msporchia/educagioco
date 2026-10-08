@@ -34,15 +34,16 @@ verso il grumo quando ha un'arma che guarda avanti.
     campagna era quasi un quarto delle offerte e le carte si aspettavano
     invece di raccogliere: il banco tiene le offerte in più di una tappa
     **sotto un terzo**.
-  - **💣 la bomba** va in tasca (tre al massimo) e si lancia col pulsante
-    in basso a destra, o con la barra al computer. Scoppia sull'eroe e toglie
-    di mezzo tutti quelli entro 220 punti, grossi compresi; più in là li
-    spinge via. È l'oggetto che serve sempre, per questo ha un orologio suo
-    (`CFG.bomba`): la prima dopo quindici secondi, poi una ogni mezzo
-    minuto, una alla volta, e mai a chi ha la tasca piena. Provato a
-    pescarla fra gli altri oggetti: rubava il posto alle casse, e con meno
-    carte le tappe diventavano più dure invece che più facili. Non si
-    lancia sotto le carte. Nei test: `[data-bomba]`.
+  - **💣 la bomba** si consuma: va in tasca (tre al massimo) e si lancia
+    col pulsante in basso a destra, o con la barra al computer. Scoppia
+    sull'eroe e toglie di mezzo tutti quelli entro 220 punti, grossi
+    compresi; più in là li spinge via. **Si guadagna con l'esperienza**,
+    una ogni tre livelli, e di rado si trova a terra con un orologio suo
+    (`CFG.bomba`): la prima dopo mezzo minuto, poi una al minuto, una alla
+    volta, mai a chi ha la tasca piena. Provato a pescarla fra gli altri
+    oggetti: rubava il posto alle casse, e con meno carte le tappe
+    diventavano più dure invece che più facili. Non si lancia sotto le
+    carte. Nei test: `[data-bomba]`.
 - **I muri**: dopo dodici secondi la prima volta, poi sempre più spesso con
   la marea, una fila di mostri deboli attraversa lo schermo dritta da un lato
   a caso, con **un varco**; l'eroe è più svelto di lei. Un muro prende chi non
@@ -58,6 +59,27 @@ verso il grumo quando ha un'arma che guarda avanti.
 - **Il terreno**: boschi, montagne e stagni non si attraversano, e
   girando si trovano macchie di altri posti. Le frecce ci volano sopra.
   Le regole e i varchi garantiti: [terreno.md](terreno.md).
+
+## Il potenziamento si sceglie quando si vuole
+
+Salire di livello **non ferma il campo**: il potenziamento si mette da parte
+(`daSpendere`), e il pulsante dorato «potenzia» in basso a sinistra (o Invio
+al computer) apre le tre carte quando lo decide chi gioca. Prima le carte si
+aprivano a ogni livello e il gioco si interrompeva di continuo. I
+potenziamenti da parte si salvano uscendo; quelli non spesi a fine tappa si
+perdono. Il pilota del banco li apre subito, perché sotto le carte il campo è
+fermo e aspettare non salva niente: così le misure restano confrontabili con
+quelle di prima. La cassa invece apre le carte subito, perché ci si è
+andati sopra apposta. Nei test: `[data-potenzia]`.
+
+**Tolta l'armatura a spine** (8/10/2026): pungeva solo chi era già addosso,
+cioè quando era tardi, e non si vedeva bene. Un salvataggio che la aveva la
+perde riprendendo (`motore/sosta.js` butta le carte che non sono nel mazzo).
+
+**Scudo di ghiaccio e anello di fuoco vanno a impulsi**: alla prima copia
+uno ogni 5,5 secondi, e ogni copia accorcia l'attesa di un secondo. Lo
+scudo era un disco sempre acceso intorno all'eroe; adesso è un'ondata che
+congela per due secondi chi è vicino.
 
 ## Il prezzo di una carta
 
@@ -109,7 +131,7 @@ imparato che di là si esce non deve scoprire che qui no.
   ultime cinque partite) è di tutti i giochi senza fine:
   [../core/primati.md](../core/primati.md).
 - **Nella Sopravvivenza, e solo lì, una carta non ha tetto.** Il mazzo ha
-  venti carte per ottantatré copie, e una partita libera dura un pomeriggio:
+  diciannove carte per ottantuno copie, e una partita libera dura un pomeriggio:
   finito il mazzo, la salita di livello non offriva più niente (misurato:
   ventidue livelli buttati, nessuna domanda). Dichiarare vittoria metterebbe
   un tetto sopra il record, quindi le copie oltre l'ultimo livello rendono

@@ -37,11 +37,12 @@ export const CFG = {
     cassa: { primaDi: 10, ogni: 45 },
   },
 
-  // la bomba: compare a terra per conto suo (la prima dopo `prima`
-  // secondi, poi ogni `ogni`), se ne tengono al massimo `tasca`, e
-  // lanciata toglie di mezzo tutti i mostri entro `raggio` (i grossi
-  // compresi); fino a `onda` volte il raggio li spinge via e basta
-  bomba: { raggio: 220, tasca: 3, onda: 1.7, prima: 15, ogni: 30 },
+  // la bomba: si guadagna ogni `ogniLivelli` livelli, e di rado compare
+  // a terra per conto suo (la prima dopo `prima` secondi, poi ogni
+  // `ogni`); se ne tengono al massimo `tasca`, e lanciata toglie di mezzo
+  // tutti i mostri entro `raggio` (i grossi compresi); fino a `onda`
+  // volte il raggio li spinge via e basta
+  bomba: { raggio: 220, tasca: 3, onda: 1.7, prima: 30, ogni: 60, ogniLivelli: 3 },
 
   // i muri: una fila di mostri deboli attraversa lo schermo da un lato a
   // caso, con un varco; con la marea arrivano più spesso, mai a raffica

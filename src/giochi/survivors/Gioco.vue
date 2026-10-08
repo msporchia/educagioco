@@ -180,6 +180,7 @@ const VERSI = {
   calamita: () => suono.nota(380, 1500, 0.35, 'sine', 0.07),
   cassa: () => suono.compra(),
   presa: () => suono.nota(600, 1200, 0.12, 'triangle', 0.06),
+  gelo: () => suono.nota(1800, 700, 0.3, 'sine', 0.05),
   bomba: () => { suono.rumore(0.7, 0.16, 300, 60); suono.nota(160, 40, 0.5, 'sawtooth', 0.12) },
   muro: () => suono.rumore(0.5, 0.09, 500, 120),   // un brontolio, senza dire da che parte
   livello: () => suono.livello(),
@@ -262,6 +263,12 @@ function ridimensiona() {
   if (!pittore) return
   pittore.misura()
   partita.value?.misuraCampo(pittore.larghezza, pittore.altezza)
+}
+
+function potenzia() {
+  const p = partita.value
+  if (!p || fermo.value || p.apriOfferta() === null) return
+  cruscotto.value = p.cruscotto
 }
 
 function bomba() {
@@ -463,7 +470,7 @@ onUnmounted(() => {
 
       <CampoVista v-else :cruscotto="cruscotto" :buio="veste.buio"
                   :dritta="!toccato && cruscotto.tempo < 9 && !finale"
-                  @tela="prendiTela" @muovi="muovi" @bomba="bomba" />
+                  @tela="prendiTela" @muovi="muovi" @bomba="bomba" @potenzia="potenzia" />
 
       <div v-if="brindisi" class="sv-brindisi em">{{ brindisi }}</div>
 

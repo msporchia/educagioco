@@ -10,7 +10,7 @@ const props = defineProps({
   buio: { type: Boolean, default: false },
   dritta: { type: Boolean, default: true },     // «tieni premuto e trascina»
 })
-const emit = defineEmits(['tela', 'muovi', 'bomba'])
+const emit = defineEmits(['tela', 'muovi', 'bomba', 'potenzia'])
 
 const tela = ref(null)
 const dito = ref(false)
@@ -57,6 +57,7 @@ function daTastiera() {
 }
 const premuto = e => {
   if (e.key === ' ' && !e.repeat) { e.preventDefault(); emit('bomba'); return }
+  if (e.key === 'Enter' && !e.repeat) { e.preventDefault(); emit('potenzia'); return }
   if (FRECCE[e.key] && !dito.value) { tasti.add(e.key); daTastiera() }
 }
 const mollato = e => { if (tasti.delete(e.key)) daTastiera() }
@@ -93,6 +94,13 @@ onUnmounted(() => {
     </div>
 
     <div v-if="dritta" class="sv-dritta em">tieni premuto e trascina 👆</div>
+
+    <!-- i potenziamenti messi da parte salendo di livello: le carte si
+         aprono quando lo decide chi gioca, non a ogni livello -->
+    <button v-if="cruscotto.daSpendere > 0" class="sv-potenzia em" data-potenzia
+            @pointerdown.stop.prevent="emit('potenzia')">
+      ⬆️ <span>potenzia</span><b>{{ cruscotto.daSpendere }}</b>
+    </button>
 
     <!-- la bomba: il tocco si ferma qui, non deve muovere l'eroe -->
     <button v-if="cruscotto.bombe > 0" class="sv-bomba em" data-bomba

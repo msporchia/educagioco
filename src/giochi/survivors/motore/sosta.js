@@ -46,6 +46,7 @@ export function scrivi(partita, tappa) {
     uccisi: p.uccisi,
     ferite: p.ferite,
     casse: p.casse,   // il tetto della cassa (cassaAmmessa): senza, uscire e rientrare lo azzererebbe
+    daSpendere: p.daSpendere || 0,   // i potenziamenti guadagnati e non ancora scelti
     eroe: { x: arrotonda(e.x), y: arrotonda(e.y), cuori: e.cuori,
             cuoriMax: e.cuoriMax, guarda: e.guarda, passi: arrotonda(e.passi),
             rotta: Math.round(e.rotta * 100) / 100, bombe: e.bombe || 0 },
@@ -77,8 +78,10 @@ export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = 
     if (mazzo) opzioni.mazzo = mazzo
     const p = new Partita(new Regole(tappa), opzioni)
 
-    // prima i potenziamenti, poi i numeri che ne dipendono
-    p.potenziamenti = { ...(dato.potenziamenti || {}) }
+    // prima i potenziamenti, poi i numeri che ne dipendono; una carta
+    // tolta dal mazzo (le spine) si butta
+    p.potenziamenti = Object.fromEntries(Object.entries(dato.potenziamenti || {})
+      .filter(([k]) => p.mazzo.some(c => c.chiave === k)))
     p.ricalcola()
 
     p.tempo = dato.tempo || 0
@@ -88,6 +91,7 @@ export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = 
     p.uccisi = dato.uccisi || 0
     p.ferite = dato.ferite || 0
     p.casse = dato.casse || 0
+    p.daSpendere = Math.max(0, dato.daSpendere || 0)
 
     const e = dato.eroe
     Object.assign(p.eroe, {

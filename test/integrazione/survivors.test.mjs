@@ -58,7 +58,15 @@ async function gioca(ms) {
    aggiungerne altre sulla giusta, mai sulla sbagliata. */
 const inBarra = async () => Number(await page.locator('.barra-app .gettone b').first().innerText())
 const pagate = { giuste: [], sbagliate: [] }
+/* salire di livello non apre più le carte: mette da parte un
+   potenziamento, e il pulsante «potenzia» le apre quando lo si tocca */
+let potenziati = 0
 async function sbrigaLeCarte() {
+  if (await page.locator('[data-potenzia]').count()) {
+    await page.locator('[data-potenzia]').click()
+    potenziati++
+    await page.waitForSelector('.sv-carte', { timeout: 3000 }).catch(() => {})
+  }
   if (!(await page.locator('.sv-carte').count())) return
   await page.locator('.sv-carta').first().click()
   await page.waitForSelector('.qz-tasto', { timeout: 5000 })
@@ -209,6 +217,8 @@ await scatto(page, 'survivors-muro')
 uguale('nessun errore in console', errori.join(' · '), '')
 await browser.close()
 nota('carte giuste:', pagate.giuste.join(' ') || '—', '· sbagliate:', pagate.sbagliate.join(' ') || '—')
+controlla('il pulsante «potenzia» apre le carte', potenziati > 0 && pagate.giuste.length + pagate.sbagliate.length > 0,
+          `${potenziati} tocchi`)
 controlla('una carta vinta paga subito tre monete', pagate.giuste.every(d => d >= 3), pagate.giuste.join())
 controlla('una carta persa non paga niente', pagate.sbagliate.every(d => d === 0), pagate.sbagliate.join())
 riassunto('survivors — la partita lasciata a metà, col dito')
