@@ -16,7 +16,7 @@ function giornata(idx, nTappa, banco = {}) {
     const c = generaCliente(t, esposti)
     return { ...c, restaPazienza: c.pazienza - 3.25 * (k + 1) }
   })
-  return { idx, nTappa, hud: { cuori: 2, serviti: 4, perfetti: 1, incasso: 2350 },
+  return { idx, nTappa, hud: { cuori: 2, serviti: 4, perfetti: 1, incasso: 2350, intoppi: 1 },
            esposti, coda, momento: 'raccolta', presi: [], piatto: [], digitato: '',
            contoFatto: false, rifiuti: 0, cartello: false, trascorso: 4200,
            monete: { chiesto: 9, dato: 9 }, ...banco }
@@ -43,7 +43,7 @@ const firma = c => JSON.stringify([c.articoli.map(a => [a.emoji, a.quanti, a.pre
   const r = leggi(dato)
   controlla('si rilegge', !!r)
   stessi('la stessa giornata e lo stesso banco', [r.idx, r.nTappa], [1, 1])
-  stessi('cuori, serviti, perfetti e incasso', r.hud, g.hud)
+  stessi('cuori, serviti, perfetti, incasso e intoppi', r.hud, g.hud)
   stessi('le ceste nello stesso ordine', r.esposti.map(p => p.emoji), g.esposti.map(p => p.emoji))
   stessi('la stessa fila, cliente per cliente', r.coda.map(firma), g.coda.map(firma))
   stessi('con la pazienza che avevano', r.coda.map(c => c.restaPazienza),

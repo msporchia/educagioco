@@ -2,7 +2,8 @@
 // Si scrive quello che è successo: a che banco si è, cuori e conti, le ceste
 // sul banco (in ordine), chi è in fila e con quanta pazienza, e il cliente a
 // metà com'è (cosa ha già preso, le monete posate, la cifra battuta, gli
-// errori). Prezzi, resti e tempi si rifanno dal listino e dalla giornata.
+// errori; gli intoppi già fatti, che decidono le stelle). Prezzi, resti e
+// tempi si rifanno dal listino e dalla giornata.
 import { CAMPAGNE, LIBERA, BANCHI, TAGLI, campagnaDi, tappaDi, merceDi, scomponi,
          chiaveResto } from '../../data/bancarella.js'
 
@@ -28,6 +29,7 @@ export function scrivi(g) {
   const dato = {
     v: VERSIONE, giornata: camp.id, tappa: g.nTappa,
     cuori: g.hud.cuori, serviti: g.hud.serviti, perfetti: g.hud.perfetti, incasso: g.hud.incasso,
+    intoppi: g.hud.intoppi || 0,
     esposti: g.esposti.map(p => p.emoji),
     fila: g.coda.map(c => ({ articoli: c.articoli.map(a => [a.emoji, a.quanti]), paga: c.paga,
                              faccia: c.faccia, vestito: c.vestito, resta: tondo(c.restaPazienza) })),
@@ -115,7 +117,7 @@ export function leggi(dato) {
   const m = dato.monete || {}
   return { idx, camp, nTappa: dato.tappa, t, esposti, coda, banco, cartello: !!dato.cartello,
            hud: { cuori: dato.cuori, serviti: dato.serviti, perfetti: dato.perfetti,
-                  incasso: dato.incasso },
+                  incasso: dato.incasso, intoppi: intero(dato.intoppi) ? dato.intoppi : 0 },
            monete: { chiesto: intero(m.chiesto) ? m.chiesto : 0, dato: intero(m.dato) ? m.dato : 0 } }
 }
 
