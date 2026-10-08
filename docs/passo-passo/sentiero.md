@@ -19,7 +19,7 @@ più corto e non dalle frecce, sta in [sentiero-finale.md](sentiero-finale.md).
   lo zaino; quello del cane pascoli e posti con lo zaino col cane (le
   carte finite, usate sulle pecore come nelle isolette del cane). Nessuno
   dei due mescola l'altro animale.
-- **Si aprono come prima**: quello del coniglio alla fine delle buche
+- **Si aprono come prima**: quello del coniglio alla fine dei massi
   (`TAPPE_PRIME` in `dati/campagna.js`), anche se sulla mappa sta in fondo;
   quello del cane a pascolo finito. A sei anni lo zaino è chiuso per età e
   i sentieri no: chi ha sei anni trova prati e pascoli, chi ha finito tutto

@@ -11,7 +11,7 @@ export { delCane }
    e subito dopo il ramo del cane che parte da lei. Il ramo ha il suo
    `attacco`, la tappa del coniglio da cui si apre la tana: la prima dello
    stesso scalino (quella che insegna la carta), o se lo scalino è tutto
-   del cane l'ultima del coniglio prima di lui (la fine delle buche). */
+   del cane l'ultima del coniglio prima di lui (la fine dei massi). */
 export function disegnaStrade(campagna = CAMPAGNA, scalini = SCALINI) {
   const animale = campagna.map(t => (delCane(t) ? 'cane' : 'coniglio'))
   const coniglio = animale.map((a, i) => i).filter(i => animale[i] === 'coniglio')

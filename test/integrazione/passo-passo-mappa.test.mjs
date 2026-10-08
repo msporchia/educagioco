@@ -7,7 +7,7 @@
    il segnalino salta fino alla casella toccata mentre il fumetto è già lì,
    un altro tocco cambia fumetto e meta, e «gioca» parte anche a viaggio in
    corso; toccando altrove il segnalino ci va e la vista gli va dietro nei
-   due versi; un ponte bloccato non si passa. Vinta l'ultima delle buche, ▶
+   due versi; un ponte bloccato non si passa. Vinta l'ultima dei massi, ▶
    resta sulla strada del coniglio e la mappa si apre nel mondo dello zaino;
    dalla tana si torna alla valle, si va al pascolo e il segnalino diventa il
    cane (nella tana, e su un ponte del pascolo in una nuvoletta); la strada
@@ -458,7 +458,7 @@ await attendi(page, 450)
   await page.locator('[data-azione="avanti"]').click()
   await page.waitForSelector('.pp-campo')
   const titolo = await page.locator('.barra-app .dove').innerText()
-  controlla('finite le buche, ▶ va avanti sulla strada del coniglio: il viale', titolo.includes(CAMPAGNA[TAPPE_PICCOLE].nome), titolo)
+  controlla('finiti i massi, ▶ va avanti sulla strada del coniglio: il viale', titolo.includes(CAMPAGNA[TAPPE_PICCOLE].nome), titolo)
 }
 await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('[data-mappa] [data-tappa]')

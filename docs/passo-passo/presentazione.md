@@ -31,8 +31,8 @@ riprovare.
 
 Le regole del mondo arrivano una alla volta e da lì in poi valgono sempre:
 il **salto** (si scavalca una cella), il **ghiaccio** (si scivola finché
-qualcosa non ferma), i **massi** da spingere (nell'acqua diventano un
-ponte), le **buche** collegate a coppie.
+qualcosa non ferma), le **buche** collegate a coppie, i **massi** da
+spingere (nell'acqua diventano un ponte).
 
 Poi arriva il **cane pastore**: le frecce sono le stesse, ma non è il cane a
 dover arrivare, sono le pecore. Una pecora si sposta solo scappando dal cane,

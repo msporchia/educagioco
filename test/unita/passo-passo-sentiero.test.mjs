@@ -51,7 +51,7 @@ const sciolta = liv => (vaBene(liv) ? risolviSvelto(liv, { carota: false, limite
     for (let i = 0; i < n; i++) { const f = famigliaDi(r, sbl, prima, strada); c[f] = (c[f] || 0) + 1 }
     return c
   }
-  uguale('coniglio, finite le buche: solo prati', Object.keys(famiglie(DI_BASE, 'coniglio')).join(), 'prato')
+  uguale('coniglio, finiti i massi: solo prati', Object.keys(famiglie(DI_BASE, 'coniglio')).join(), 'prato')
   uguale('coniglio, finito il cane: ancora solo prati', Object.keys(famiglie(PICCOLI, 'coniglio')).join(), 'prato')
   uguale('coniglio, finita la campagna: prati e le tre carte, niente pascoli',
          Object.keys(famiglie(TUTTI, 'coniglio')).sort().join(), 'fino,prato,ripeti,se')
@@ -66,7 +66,7 @@ const sciolta = liv => (vaBene(liv) ? risolviSvelto(liv, { carota: false, limite
 
 /* ══════════ 2. un giro lungo per sentiero ══════════
    Posti in fila col ricordo del posto di prima, per tre mani: senza carte
-   (i piccoli, che arrivano alla fine delle buche), col solo ciclo, con
+   (i piccoli, che arrivano alla fine dei massi), col solo ciclo, con
    tutte. Ogni posto è una mappa scritta bene, si vince, sta sopra il
    pavimento della sua forma, usa le regole che dice, e sta nel suo
    sentiero. */

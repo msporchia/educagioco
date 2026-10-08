@@ -20,7 +20,7 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const CHIAVI_SAPERI = SAPERI.map(s => s.chiave)
 const PICCOLI = GIOCHI.filter(g => g.piccoli).map(g => g.chiave)
-/* chi comincia dai piccoli e cresce (Passo passo, che dopo le buche ha i
+/* chi comincia dai piccoli e cresce (Passo passo, che dopo i massi ha i
    cicli) si accende coi piccoli ma non si spegne coi grandi */
 const CRESCONO = GIOCHI.filter(g => g.piccoli && g.cresce).map(g => g.chiave)
 const SOLO_PICCOLI = PICCOLI.filter(k => !CRESCONO.includes(k))

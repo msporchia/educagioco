@@ -159,7 +159,7 @@ const sbloccati = () => SCALINI.filter(s => INGREDIENTI[s.chiave]).filter(s => {
   const u = fineDi(s.chiave)
   return fatta(u) || daFuori(u)
 }).map(s => INGREDIENTI[s.chiave])
-/* quello del coniglio si apre alla fine delle buche, non della campagna;
+/* quello del coniglio si apre alla fine dei massi, non della campagna;
    quello del cane a pascolo finito: vedi docs/passo-passo/sentiero.md */
 const sentieroAperto = (di = 'coniglio') => (di === 'cane'
   ? tuttoAperto() || fatta(fineDi('pecore')) || daFuori(fineDi('pecore'))

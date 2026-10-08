@@ -75,7 +75,7 @@ Casi decisi apposta:
 
 ## Il cane pastore
 
-Undici tappe fra le buche e lo zaino, ancora dei piccoli (portata 44): il
+Undici tappe fra i massi e lo zaino, ancora dei piccoli (portata 44): il
 bobtail al posto del coniglio, il recinto (`#`) al posto della tana, le
 pecore (`p`). L'osso è la sua carota.
 

@@ -89,7 +89,7 @@ lo lancia: una ricerca così vuole minuti.
   zaino, e un gradino nuovo gli si apre alle spalle. È il contrario del
   costruttore (vedi [../costruttore/campagna.md](../costruttore/campagna.md)): un livello che ieri c'era
   e oggi è chiuso è la cosa che non deve succedere.
-- **`TAPPE_PRIME`** è la fine delle buche (l'indice della prima tappa del
+- **`TAPPE_PRIME`** è la fine dei massi (l'indice della prima tappa del
   cane): lì si apre il sentiero del coniglio e lì si fermano i traguardi di
   prima — una soglia che si allunga con la campagna farebbe tornare
   d'argento l'oro di chi le aveva finite tutte.
@@ -100,7 +100,7 @@ lo lancia: una ricerca così vuole minuti.
 
 Le tappe nuove del cane si aggiungono **in fondo a `CAMPAGNA`**, dopo
 l'ultima del coniglio: gli indici di prima non cambiano, quindi non serve
-una fila nuova in `FILE` né un travaso (`FILE[4]` si allunga e basta).
+una fila nuova in `FILE` né un travaso (l'ultima fila, `CAMPAGNA` stessa, si allunga e basta; quelle prima sono scritte per esteso).
 Messe in mezzo, finivano sotto `cfg.eredita` di chi era già più avanti, e
 si sarebbero aperte già fatte.
 
@@ -131,7 +131,7 @@ dai dati, senza elenchi scritti a mano:
   parte da una tana sulla strada del coniglio (l'`attacco`): la prima tappa
   del coniglio dello stesso scalino, quella che insegna la carta (il viale,
   i gradini storti, le colline, la spirale di ghiaccio); se lo scalino è
-  tutto del cane, l'ultima del coniglio prima di lui (la fine delle buche).
+  tutto del cane, l'ultima del coniglio prima di lui (la fine dei massi).
 
 Chi apre cosa:
 
@@ -189,15 +189,15 @@ risolutore; per i livelli con lo zaino è quante carte tiene lo zaino.
 | 14. Il fiume gelato | la carota solo scendendo nel punto giusto | 5 |
 | 15. Il labirinto di ghiaccio | ogni scivolata finisce contro un sasso | 7 |
 | 16. La crepa | ci si ferma accanto alla crepa, poi la si salta | 6 |
-| **🪨 I massi** | *sul ghiaccio scivola, nell'acqua fa un ponte* | |
-| 17. Il masso | spinto, apre la strada | 7 |
-| 18. Il ponte di sasso | il masso nell'acqua diventa un ponte | 8 |
-| 19. Il masso sul ghiaccio | scivola e diventa il sasso che ti ferma | 5 |
-| 20. Due massi | prima quello davanti, poi l'altro nell'acqua | 10 |
 | **🕳️ Le buche** | *si entra in una buca e si esce dalla gemella* | |
-| 21. Le buche | sotto la siepe c'è una galleria | 6 |
-| 22. La buca nel ghiaccio | la buca porta all'isola della tana | 5 |
-| 23. Le buche colorate | la rosa alla carota, la viola alla tana | 7 |
+| 17. Le buche | sotto la siepe c'è una galleria | 6 |
+| 18. La buca nel ghiaccio | la buca porta all'isola della tana | 5 |
+| 19. Le buche colorate | la rosa alla carota, la viola alla tana | 7 |
+| **🪨 I massi** | *sul ghiaccio scivola, nell'acqua fa un ponte* | |
+| 20. Il masso | spinto, apre la strada | 7 |
+| 21. Il ponte di sasso | il masso nell'acqua diventa un ponte | 8 |
+| 22. Il masso sul ghiaccio | scivola e diventa il sasso che ti ferma | 5 |
+| 23. Due massi | prima quello davanti, poi l'altro nell'acqua | 10 |
 | 24. Tutto insieme | staccionata, masso nel fiume, lago, buca | 12 |
 | **🐑 Il cane pastore** | *portale tutte nel recinto* | |
 | 25. Il primo gregge | la pecora si scansa prima che arrivi | 7 |

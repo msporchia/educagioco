@@ -64,9 +64,9 @@ const dove = (r) => r.mondo.pos
   controlla('e dopo, i gradini delle carte: ognuno porta una carta che esiste',
             CARTA.length >= 1 && CARTA.every(s => CARTE[s.carta] && !s.regola) &&
             SCALINI.findIndex(s => s.carta) === REGOLA.length)
-  dentro('circa ventiquattro livelli fino alle buche', TAPPE_PRIME, 22, 26)
-  dentro('e fra le buche e lo zaino, il cane pastore', TAPPE_PICCOLE - TAPPE_PRIME, 4, 12)
-  controlla('le tappe del cane stanno tutte fra le buche e lo zaino',
+  dentro('circa ventiquattro livelli fino ai massi', TAPPE_PRIME, 22, 26)
+  dentro('e fra i massi e lo zaino, il cane pastore', TAPPE_PICCOLE - TAPPE_PRIME, 4, 12)
+  controlla('le tappe del cane stanno tutte fra i massi e lo zaino',
             CAMPAGNA.every((t, i) => (t.scalino === 'pecore') === (i >= TAPPE_PRIME && i < TAPPE_PICCOLE)))
   dentro('e almeno sei con lo zaino', TAPPE_ZAINO, 6, 30)
   uguale('il manifesto conta le tappe giuste', manifesto.tappe, QUANTE_TAPPE)

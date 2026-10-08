@@ -34,7 +34,7 @@ la ricerca del programma più corto in `motore/programmi.js`, la prova in
   a», anche quelle del «fino a». Il se arriva solo con la sua carta, e da
   lì in poi **ogni posto con lo zaino ha il se** (`vaPerLaMano`).
 - **I prati e i pascoli senza carte** restano per chi ha lo zaino chiuso
-  (i più piccoli, che arrivano al sentiero alla fine delle buche). Chi ha
+  (i più piccoli, che arrivano al sentiero alla fine dei massi). Chi ha
   le carte li trova di rado (`SENZA_ZAINO`, uno su trenta con tutte le
   carte, uno su undici col solo ciclo), sempre sopra le 15 frecce, e il
   lago non c'è.

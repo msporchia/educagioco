@@ -38,7 +38,7 @@ gratis, prezzi, secondo tocco) sta in [../core/aiuti.md](../core/aiuti.md).
 ## Le monete
 
 - **Una tappa paga una volta sola**, alla prima vittoria: 🪙4 nei primi passi,
-  🪙12 alle buche, da 🪙14 a 🪙20 con lo zaino. Il livello è fisso: rigiocarlo
+  🪙12 ai massi, da 🪙14 a 🪙20 con lo zaino. Il livello è fisso: rigiocarlo
   è ricordarlo, non esercitarsi.
 - **Il sentiero senza fine paga 🪙3 per sentiero, 🪙6 con lo zaino**, perché lì
   ogni sentiero è nuovo (vedi [sentiero.md](sentiero.md)).

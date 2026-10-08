@@ -34,7 +34,7 @@ const nome = i => CAMPAGNA[i].chiave
   controlla('ogni ramo del cane parte da una tappa del coniglio che viene prima di lui',
             rami.every(r => S.animale[r.attacco] === 'coniglio' && r.attacco < r.tappe[0]),
             rami.map(r => `${r.chiave}@${r.attacco}`).join(' '))
-  uguale('il pascolo si apre alla fine delle buche', nome(rami[0].attacco), 'tutto')
+  uguale('il pascolo si apre alla fine dei massi', nome(rami[0].attacco), 'tutto')
   controlla('gli altri rami alla prima tappa dello scalino che insegna la loro carta',
             rami.slice(1).every(r => r.carta && r.attacco === S.coniglio.find(i => CAMPAGNA[i].scalino === r.scalino)),
             rami.slice(1).map(r => `${r.scalino}:${nome(r.attacco)}`).join(' '))
@@ -123,7 +123,7 @@ for (const [chi, av] of Object.entries(casi)) {
 }
 {
   const dopoBuche = stradeDi({ tappa: TAPPE_PRIME, stelle: stelleFino(TAPPE_PRIME), cfg: { eredita: TAPPE_PRIME } })
-  controlla('finite le buche si aprono tutte e due le strade: il viale e il primo gregge',
+  controlla('finiti i massi si aprono tutte e due le strade: il viale e il primo gregge',
             dopoBuche.aperta(TAPPE_PICCOLE) && dopoBuche.aperta(TAPPE_PRIME))
   controlla('ma non il secondo gregge, né le stalle', !dopoBuche.aperta(TAPPE_PRIME + 1) && !dopoBuche.aperta(indice('stalle')))
   const conViale = stradeDi({ tappa: TAPPE_PICCOLE + 1, stelle: { ...stelleFino(TAPPE_PRIME), [TAPPE_PICCOLE]: 2 },
@@ -247,12 +247,12 @@ for (const [chi, av] of Object.entries(casi)) {
 {
   const av = { tappa: TAPPE_PRIME, stelle: stelleFino(TAPPE_PRIME), cfg: { eredita: TAPPE_PRIME } }
   const r = stradeDi(av)
-  uguale('un profilo di ieri, finite le buche: il cursore di allora (il primo gregge)', r.adesso(), TAPPE_PRIME)
+  uguale('un profilo di ieri, finiti i massi: il cursore di allora (il primo gregge)', r.adesso(), TAPPE_PRIME)
   uguale('vinta «Tutto insieme» in questa sessione: il viale',
          tappaDiAdesso(S, { ultima: indice('tutto'), cursore: TAPPE_PRIME, aperta: r.aperta, fatta: r.fatta }), TAPPE_PICCOLE)
   uguale('lasciato a metà il primo gregge: lì',
          tappaDiAdesso(S, { ultima: TAPPE_PRIME, cursore: TAPPE_PRIME, aperta: r.aperta, fatta: r.fatta }), TAPPE_PRIME)
-  uguale('a sei anni, finite le buche: il primo gregge',
+  uguale('a sei anni, finiti i massi: il primo gregge',
          tappaDiAdesso(S, { ultima: indice('tutto'), cursore: TAPPE_PRIME, aperta: i => r.aperta(i) && i < TAPPE_PICCOLE,
                             fatta: r.fatta }), TAPPE_PRIME)
 }

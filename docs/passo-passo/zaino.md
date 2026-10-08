@@ -1,7 +1,7 @@
 # Passo passo — lo zaino e le carte
 
-I gradini dei grandi (da sette anni e mezzo, portata dal 46 al 74): dopo le
-buche cresce **la lingua**, non il mondo. Le carte sono in
+I gradini dei grandi (da sette anni e mezzo, portata dal 46 al 74): dopo i
+massi cresce **la lingua**, non il mondo. Le carte sono in
 `src/giochi/passo-passo/dati/carte.js`, le modifiche alla fila in
 `motore/fila.js`.
 

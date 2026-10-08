@@ -15,10 +15,10 @@ export const SCALINI = [
     dritta: 'Il salto scavalca una cella: l\'acqua e i tronchi sì, i sassi no.' },
   { chiave: 'ghiaccio', nome: 'Il ghiaccio', icona: '❄️', regola: 'ghiaccio',
     dritta: 'Sul ghiaccio si scivola finché qualcosa non ferma.' },
-  { chiave: 'massi', nome: 'I massi', icona: '🪨', regola: 'spinta',
-    dritta: 'Un masso si spinge: sul ghiaccio scivola, nell\'acqua fa un ponte.' },
   { chiave: 'buche', nome: 'Le buche', icona: '🕳️', regola: 'buche',
     dritta: 'Si entra in una buca e si esce dalla sua gemella, dello stesso colore.' },
+  { chiave: 'massi', nome: 'I massi', icona: '🪨', regola: 'spinta',
+    dritta: 'Un masso si spinge: sul ghiaccio scivola, nell\'acqua fa un ponte.' },
   { chiave: 'pecore', nome: 'Il cane pastore', icona: '🐑', regola: 'pecore',
     dritta: 'Le pecore scappano dal cane: quando si ferma sulla loro riga o colonna, a due passi, si scansano dall\'altra parte, e una spinge l\'altra. Portale tutte nel recinto.' },
   /* da qui la lingua, e non il mondo: il gradino porta una carta */
@@ -199,49 +199,9 @@ export const CAMPAGNA = [
       'A...~AA',
     ] },
 
-  /* ── gradino 4: i massi ── */
-  { chiave: 'masso', nome: 'Il masso', icona: '🪨', scalino: 'massi',
-    portata: 36, premio: 10, tema: 'autunno',
-    racconto: 'Un masso tappa il passaggio fra gli alberi: camminandoci contro si spinge, e la strada si apre.',
-    mappa: [
-      '..A.c.',
-      'P.m...',
-      '..A.@.',
-    ] },
-  { chiave: 'ponte', nome: 'Il ponte di sasso', icona: '🌉', scalino: 'massi',
-    portata: 37, premio: 10, tema: 'autunno',
-    racconto: 'Un ruscello e niente salti: spinto nell\'acqua, il masso affonda e diventa un ponte.',
-    mappa: [
-      'AAA~AAA',
-      '...~...',
-      'P.m~...',
-      '...~.c.',
-      'AAA~..@',
-    ] },
-  { chiave: 'masso-ghiaccio', nome: 'Il masso sul ghiaccio', icona: '🥌', scalino: 'massi',
-    portata: 38, premio: 10, tema: 'inverno',
-    racconto: 'Spinto sul ghiaccio, il masso scivola fino in fondo: e lì diventa il sasso che ti ferma.',
-    mappa: [
-      'AAAAAA',
-      'Pm***.',
-      'A****A',
-      'AC***.',
-      'AAAA@A',
-    ] },
-  { chiave: 'due-massi', nome: 'Due massi', icona: '⛰️', scalino: 'massi',
-    portata: 39, premio: 10, tema: 'autunno',
-    racconto: 'Due massi in fila non si spingono: prima si sposta quello davanti, poi l\'altro va nell\'acqua.',
-    mappa: [
-      'AA.AAAA',
-      '...A...',
-      'P.mm~.@',
-      '...A.c.',
-      'AA.AAAA',
-    ] },
-
-  /* ── gradino 5: le buche ── */
+  /* ── gradino 4: le buche ── */
   { chiave: 'buche', nome: 'Le buche', icona: '🕳️', scalino: 'buche',
-    portata: 40, premio: 12, tema: 'estate',
+    portata: 36, premio: 10, tema: 'estate',
     racconto: 'La siepe non si passa, ma sotto c\'è una galleria: si entra da una buca e si esce dall\'altra.',
     mappa: [
       '...A...',
@@ -250,7 +210,7 @@ export const CAMPAGNA = [
       '...A..@',
     ] },
   { chiave: 'buca-ghiaccio', nome: 'La buca nel ghiaccio', icona: '🏝️', scalino: 'buche',
-    portata: 41, premio: 12, tema: 'inverno',
+    portata: 37, premio: 10, tema: 'inverno',
     racconto: 'La tana è su un\'isola: ci porta la buca in mezzo al lago, che ferma anche chi ci scivola dentro.',
     mappa: [
       'A.....A',
@@ -262,7 +222,7 @@ export const CAMPAGNA = [
       '~1.@~~~',
     ] },
   { chiave: 'colori', nome: 'Le buche colorate', icona: '🎨', scalino: 'buche',
-    portata: 42, premio: 12, tema: 'primavera',
+    portata: 38, premio: 10, tema: 'primavera',
     racconto: 'La buca rosa porta alla carota e la viola alla tana. Per tornare indietro si ripassa dalla rosa.',
     mappa: [
       '...A...',
@@ -271,7 +231,47 @@ export const CAMPAGNA = [
       '...A...',
       '...A2.@',
     ] },
-  { chiave: 'tutto', nome: 'Tutto insieme', icona: '🏆', scalino: 'buche',
+  /* ── gradino 5: i massi (e «Tutto insieme» in fondo) ── */
+  { chiave: 'masso', nome: 'Il masso', icona: '🪨', scalino: 'massi',
+    portata: 39, premio: 12, tema: 'autunno',
+    racconto: 'Un masso tappa il passaggio fra gli alberi: camminandoci contro si spinge, e la strada si apre.',
+    mappa: [
+      '..A.c.',
+      'P.m...',
+      '..A.@.',
+    ] },
+  { chiave: 'ponte', nome: 'Il ponte di sasso', icona: '🌉', scalino: 'massi',
+    portata: 40, premio: 12, tema: 'autunno',
+    racconto: 'Un ruscello e niente salti: spinto nell\'acqua, il masso affonda e diventa un ponte.',
+    mappa: [
+      'AAA~AAA',
+      '...~...',
+      'P.m~...',
+      '...~.c.',
+      'AAA~..@',
+    ] },
+  { chiave: 'masso-ghiaccio', nome: 'Il masso sul ghiaccio', icona: '🥌', scalino: 'massi',
+    portata: 41, premio: 12, tema: 'inverno',
+    racconto: 'Spinto sul ghiaccio, il masso scivola fino in fondo: e lì diventa il sasso che ti ferma.',
+    mappa: [
+      'AAAAAA',
+      'Pm***.',
+      'A****A',
+      'AC***.',
+      'AAAA@A',
+    ] },
+  { chiave: 'due-massi', nome: 'Due massi', icona: '⛰️', scalino: 'massi',
+    portata: 42, premio: 12, tema: 'autunno',
+    racconto: 'Due massi in fila non si spingono: prima si sposta quello davanti, poi l\'altro va nell\'acqua.',
+    mappa: [
+      'AA.AAAA',
+      '...A...',
+      'P.mm~.@',
+      '...A.c.',
+      'AA.AAAA',
+    ] },
+
+  { chiave: 'tutto', nome: 'Tutto insieme', icona: '🏆', scalino: 'massi',
     portata: 44, premio: 12, tema: 'inverno', salti: true,
     racconto: 'La strada di casa: la staccionata, il masso nel fiume, il lago col sasso, la buca. E la carota sul ghiaccio, da prendere dal lato giusto.',
     mappa: [
@@ -886,8 +886,8 @@ export const TAPPE_ZAINO = FINE_STRADA - TAPPE_PICCOLE
 /* dove una tappa vinta porta il cursore (`posto` di `completa`): le tappe
    in coda non lo muovono */
 export const postoNelCursore = i => (i < FINE_STRADA ? i : -1)
-/* la fine delle buche: qui si apre il sentiero senza fine e qui si
-   fermano i traguardi di prima (vedi docs/passo-passo/sentiero.md) */
+/* la fine dei piccoli (l'ultima dei massi): qui si apre il sentiero
+   senza fine e qui si fermano i traguardi di prima (vedi docs/passo-passo/sentiero.md) */
 export const TAPPE_PRIME = CAMPAGNA.findIndex(t => t.scalino === 'pecore')
 
 /* le stelle stanno sotto l'indice della tappa: inserire una tappa in
@@ -912,8 +912,17 @@ FILE[3] = [...FILE[1].slice(0, 24),
   'lago-gelato', 'ponte-pecore', 'gregge',
   'viale', 'stalle', ...FILE[1].slice(25, 33), 'stalle-gradini', ...FILE[1].slice(33, 38),
   'nicchie', ...FILE[1].slice(38, 41), 'lago-stalle', FILE[1][41]]
-FILE[4] = CAMPAGNA.map(t => t.chiave)
-export const FILA_ATTUALE = 4
+// la 5 mette le buche prima dei massi: sulla mappa il ponte del ghiaccio porta alle buche
+FILE[4] = [...FILE[1].slice(0, 24),
+  'primo-gregge', 'altra-parte', 'una-spinge', 'curva', 'pecora-ghiaccio', 'galleria', 'guado', 'lago-gelato',
+  'riunire', 'ponte-pecore', 'gregge',
+  'viale', 'stalle', 'stagno-grande', 'scala', 'sassi-fiume', 'lago-gradini', 'collina', 'terrazze', 'campo-arato',
+  'gradini-storti', 'stalle-gradini', 'pianerottoli', 'campo-storto', 'spirale',
+  'colline', 'segni', 'nicchie',
+  'spirale-ghiaccio', 'pozze', 'fiume-sassi', 'lago-stalle', 'bosco-ghiacciato',
+  'cortile', 'pettine', 'pettine-storto', 'vicoli', 'sentiero-gregge', 'nicchie-fonde', 'gallerie', 'steccati']
+FILE[5] = CAMPAGNA.map(t => t.chiave)
+export const FILA_ATTUALE = 5
 
 export function riordina(av, vecchia, nuova = CAMPAGNA.map(t => t.chiave)) {
   const stelle = {}

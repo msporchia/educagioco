@@ -39,7 +39,7 @@ export const INGREDIENTI = {
 }
 /* le regole del mondo, col nome che il risolutore usa per spegnerle */
 const REGOLE = { salto: 'salto', ghiaccio: 'ghiaccio', massi: 'spinta', buche: 'buche' }
-/* i sentieri si aprono alla fine delle buche: chi ci arriva ha già tutte
+/* i sentieri si aprono alla fine dei massi: chi ci arriva ha già tutte
    e quattro le regole del prato */
 export const DI_BASE = ['salto', 'ghiaccio', 'massi', 'buche']
 
