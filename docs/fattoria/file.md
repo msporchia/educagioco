@@ -38,9 +38,8 @@ regole, `viste/`, `Gioco.vue` che coordina.
 | `motore/tipo.js` | la fattoria già giocata di `#fattoria-tipo=` |
 | `scena/tela.js` | il disegno, che non sa cosa sia il grano |
 | `scena/spinta.js` `dito.js` | lo scorrimento contro il bordo, le soglie del dito |
+| `scena/bolla.js` | dove stanno i gettoni (il semicerchio, le pagine) e la fila sotto una macchina: puro, lo leggono la tela e il dito |
 | `scena/bordi.js` | l'auto-bordo fra due materie dipinte (l'acqua e il prato) |
-| `viste/Bolla.vue` | la bolla sopra un campo o una macchina: i gettoni da trascinare; il dito lo guida `Gioco.vue` |
-| `viste/Campo.vue` `Macchina.vue` | i fogli dietro il 📋 della bolla; il secondo vale per ogni macchina e recinto, fila compresa |
 | `viste/Granaio.vue` | un silo: scomparti, chi usa cosa, ingrandire |
 | `viste/Roba.vue` `Provino.vue` | il baule e la figura in scala |
 | `viste/Merce.vue` | la faccia di una merce: il disegno, o l'emoji |
@@ -70,5 +69,7 @@ I fogli degli sprite (`campi*.json`, `animali*.json`, `merci*.json`,
 | `unita/addobbi` | si compra, si mette, si toglie, cosa non gli sta |
 | `unita/stagioni-fattoria` `spinta-fattoria` `fattoria-tipo` | le finestre, lo scorrimento, la fattoria di prova |
 | `integrazione/campi` | col dito: semina, chiude, torna, raccoglie; lo scaffale che scorre |
-| `integrazione/fattoria-bolla` | il seme strisciato su quattro campi, il cesto, la ricetta portata sul mulino, il 📋 |
+| `unita/bolla-fattoria` | i gettoni non si coprono e stanno nello schermo, da uno a una pagina piena |
+| `integrazione/fattoria-bolla` | il seme strisciato su quattro campi, il cesto, la ricetta portata sul mulino, il ritiro al tocco |
+| `integrazione/fattoria-fila` | la fila sul prato: togliere chi aspetta, comprare il posto in più |
 | `integrazione/fattoria` `albero` `fattoria-fila` `fattoria-bottega` `fattoria-mongolfiera` `fattoria-stagioni` `fattoria-tipo` | le schermate col dito |

@@ -876,7 +876,7 @@ function attrezzo(chiave) {
 
 // Chi non lavora (una panchina, una casa) non apre niente e resta solo selezionato — vedi docs/fattoria/regole.md.
 function apriLavoro(cosa, con = '') {
-  // Campi e macchine aprono la bolla da trascinare; il foglio intero sta dietro il suo 📋.
+  // Campi e macchine fanno spuntare i gettoni da trascinare, sul prato: niente foglio.
   if (eCampo(cosa) || macchinaDi(cosa)) return apriBolla(cosa)
   // Il silo non lavora ma contiene: toccarlo è il modo di guardarci dentro.
   if (eSilo(cosa)) return apriGranaio(siloDi(cosa))
@@ -1262,7 +1262,7 @@ function datiDellaMacchina(cosa, { ritira = true } = {}) {
         return {
           chiave: ricetta.id, ...facciaDi(ricetta.da), ricetta, hai: mondo.quantoHo(ricetta.da),
           manca: m.manca, monete: m.monete, spento: !!m.manca.length || !!m.monete,
-          // Le caselle: una per pezzo, accese se ce l'hai — come nel foglio della macchina.
+          // Le caselle: una per pezzo, accese se ce l'hai (non una formula «2 → 1»).
           caselle: Object.entries(ricetta.prende).flatMap(([k, n]) =>
             Array.from({ length: n }, (_, i) => ({ ...facciaDi(k), piena: i < mondo.quantoHo(k) }))),
         }

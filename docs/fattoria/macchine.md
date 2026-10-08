@@ -7,9 +7,9 @@ tabella e il codice non vanno d'accordo, vince il codice.
 
 ## Macchine e recinti sono la stessa cosa
 
-Dai da mangiare, aspetti, ritiri: stessi verbi, stesso foglio
-(`viste/Macchina.vue`). Un recinto non è una meccanica nuova, quindi non
-c'è niente di nuovo da imparare né per chi gioca né per chi legge il
+Dai da mangiare, aspetti, ritiri: stessi verbi, stessi gettoni e stessa
+fila sul prato ([come-si-tocca.md](come-si-tocca.md)). Un recinto non è
+una meccanica nuova, quindi non c'è niente di nuovo da imparare né per chi gioca né per chi legge il
 codice. Tutti rincarano a ogni copia (`cresce: RINCARO`), nella fascia
 «una struttura» (🪙95–360, mai sopra le due ore di esercizi).
 
@@ -136,6 +136,8 @@ Vale per tutte, recinti compresi. Numeri e ragioni in `dati/coda.js`.
   ingrandimenti comprati, e valgono un posto a testa sopra quello di
   partenza; una fila più lunga dei posti di oggi lavora fino in fondo e
   poi si torna ai posti pagati (`unita/coda-fattoria`).
-- A schermo: caselle (quella che lavora con la barra, le altre in attesa,
-  le vuote col ＋), il fumetto con la faccia di quello che sta facendo e un
+- A schermo: toccata la macchina, la fila compare sul prato sotto di lei
+  (chi lavora con l'anello, chi aspetta con la ✕, i vuoti tratteggiati, il
+  posto da comprare col «+» e il prezzo — [come-si-tocca.md](come-si-tocca.md));
+  da lontano il fumetto con la faccia di quello che sta facendo e un
   numerino per i pronti; l'albero dice «⏳ ne fa 2, pronto fra 4 min».
