@@ -69,6 +69,7 @@ export const state = reactive({
   regalo: { n: 0, k: 0 },   // monete arrivate dall'indirizzo: quante, e un
                             // contatore per rifare l'animazione ogni volta
   festa: [],                // traguardi appena presi, in attesa di essere mostrati
+  festaTrattenuta: 0,       // > 0: un gesto è in corso, il cartello aspetta che finisca
 })
 
 // Passa da qui e non da audio.js: è una preferenza del profilo, va salvata.
@@ -862,6 +863,11 @@ export function controllaTraguardi(now = Date.now()) {
 }
 
 export function festaVista() { state.festa = [] }
+
+// Un gesto in corso (un seme strisciato su cinque campi) non si spezza: il traguardo che scatta a
+// metà aspetta che il dito si alzi. Ogni trattieni vuole il suo libera — vedi docs/core/progressi.md.
+export function trattieniFesta() { state.festaTrattenuta++ }
+export function liberaFesta() { state.festaTrattenuta = Math.max(0, state.festaTrattenuta - 1) }
 
 export const traguardi = (now = Date.now()) => statoTraguardi(state.profile, now)
 export const livelloOra = (now = Date.now()) => livelloTotale(state.profile, now)

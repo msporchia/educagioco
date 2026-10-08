@@ -27,7 +27,10 @@ function prossimo() {
   }, DURATA)
 }
 
-watch(() => state.festa.length, n => { if (n && !corrente.value) prossimo() }, { immediate: true })
+// Un gesto in corso trattiene la festa (trattieniFesta): il cartello arriva quando è finito.
+watch(() => [state.festa.length, state.festaTrattenuta],
+      ([n, trattenuta]) => { if (n && !trattenuta && !corrente.value) prossimo() },
+      { immediate: true })
 onUnmounted(() => clearTimeout(timer))
 
 function chiudi() {

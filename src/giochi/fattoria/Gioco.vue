@@ -3,7 +3,8 @@
    in dati/. Salva in profile.campagne.fattoria.cfg.stato, a ritardo. Vedi docs/fattoria/regole.md. */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import Barra from '../../components/Barra.vue'
-import { state, addCoins, segna, segnaBest, aspettoDi, cestinaOra, flushNow } from '../../store/profile.js'
+import { state, addCoins, segna, segnaBest, aspettoDi, cestinaOra, flushNow, trattieniFesta,
+         liberaFesta } from '../../store/profile.js'
 import { scelta, ricorda } from '../campagne.js'
 
 import { Fattoria } from './motore/fattoria.js'
@@ -279,6 +280,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  // Uscendo a metà gesto il traguardo trattenuto si lascia andare, se no non arriverebbe più.
+  if (inMano) liberaFesta()
   cancelAnimationFrame(giro)
   if (scena) scena.ferma()
   removeEventListener('resize', vaiACasa)
@@ -489,6 +492,8 @@ function anteprimaPennello() {
 }
 
 function premi(e) {
+  // Un gesto rimasto a metà (il suo dito alzato fuori dalla tela, sotto un velo): un dito nuovo lo chiude.
+  if (inMano && !dita.size && e.pointerId !== inMano.id) annullaMano()
   dita.set(e.pointerId, dove(e))
   if (dita.size === 2) {
     // Il secondo dito annulla il gettone in mano: è un pizzico, non un gesto a due.
@@ -1389,6 +1394,8 @@ function prendiGettone(i, e, p) {
   const g = bolla.vista.visti[i]
   inMano = { g, i, tipo: bolla.tipo, da: bolla.cosa, id: e.pointerId,
              x0: p.x, y0: p.y, mosso: false, ultimo: null, fatti: [], fermo: null, piega: 0 }
+  // Un traguardo che scatta a metà strisciata aspetta il dito alzato: il cartello spezzerebbe il gesto.
+  trattieniFesta()
   vibra()
 }
 
@@ -1519,14 +1526,19 @@ function raccogliPassando(campo) {
 function annullaMano() {
   inMano = null; mano = null; bersagli = []
   fermaLaSpinta()
+  lasciaLaFesta()
 }
+
+// Il cartello del traguardo arriva quando il gesto è finito, e dopo che il raccolto è volato via.
+const DOPO_IL_GESTO = 700
+function lasciaLaFesta() { setTimeout(liberaFesta, DOPO_IL_GESTO) }
 
 function lasciaMano(e, p) {
   if (e.pointerId !== inMano.id) return
   fermaLaSpinta()
   const m = inMano
   inMano = null; mano = null; bersagli = []
-
+  lasciaLaFesta()
   if (!m.mosso) return toccaIlGettone(m)
   if (m.tipo === 'macchina') {
     const dove2 = macchinaSotto(p, m.g.ricetta)
