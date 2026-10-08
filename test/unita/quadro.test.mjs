@@ -592,6 +592,20 @@ for (const eta of [6, 8, 10]) {
   uguale('a 8 anni la riga è quella dei blocchi, e il gioco non la ripete',
          q8.giochi.filter(g => g.chiedeQui.some(s => s.chiave === 'divisioni')).length, 0)
 
+  /* Il guasto da cui è nata la regola del primo `sa`: qualche domanda
+     di soldi in più che cita le divisioni spostava la frazione di un
+     numero sotto «Le frazioni», e a otto anni la riga qui sopra tornava
+     al castello. Il gruppo di una classe non dipende dalle altre. */
+  const finte = classi.filter(c => c.tipo === 'sol:conviene').slice(0, 1)
+    .flatMap(c => [1, 2, 3].map(n => ({ ...c, chiave: `${c.chiave}:finta${n}`, sa: ['denaro', 'divisioni'] })))
+  const gruppiDi = q => q.gruppi.flatMap(g => g.saperi.flatMap(s => s.classi.map(c => `${c.chiave}>${s.chiave}`)))
+    .filter(x => !x.includes(':finta')).sort().join(' ')
+  const conFinte = quadroDi({ eta: 8, sa: {}, giochi: {} }, { classi: [...classi, ...finte] })
+  controlla('tre domande in più sulle divisioni non spostano nessun gruppo',
+            finte.length === 3 && gruppiDi(conFinte) === gruppiDi(q8), `${finte.length} finte`)
+  uguale('e a 8 anni il gioco non ripete le divisioni nemmeno così',
+         conFinte.giochi.filter(g => g.chiedeQui.some(s => s.chiave === 'divisioni')).length, 0)
+
   /* Ma la **dichiarazione** resta intera, ed è l'altra metà del guasto:
      a otto anni la partenza spegne le divisioni, e la riga di contesto
      del castello lo deve dire lì dov'è — «senza le divisioni» — anche se
