@@ -42,6 +42,7 @@ const porta = e => (e.porta || []).map(f => FAMIGLIE[f]).filter(Boolean)
           <!-- a che punto è la sua storia: prima di tutto il resto, perché è quello che si sceglie -->
           <span v-if="e.nuova" class="sot-punto sot-nuova" data-punto>nuova avventura</span>
           <span v-else class="sot-punto em" data-punto>
+            <span data-livello-avventura :data-livello="e.livello"><b>liv. {{ e.livello }}</b></span>
             <span>🏁 {{ e.discese }} di {{ e.quante }}</span>
             <span v-if="e.stelle">⭐ {{ e.stelle }}</span>
             <span v-for="r in e.addosso" :key="r.chiave" class="sot-addosso" :data-addosso="r.chiave">

@@ -18,12 +18,15 @@ export const EROI = [
   { chiave: 'cavaliere', nome: 'Cavaliere', em: '🛡️', sprite: 'cavaliere',
     chi: 'il cavaliere',
     vita: 18, att: 3, dif: 1,
+    // le caratteristiche di partenza (dati/livelli.js): sono già dentro vita, attacco e difesa qui sopra
+    parte: { forza: 3, tempra: 4, scorza: 2, fortuna: 1 }, vitaPerLivello: 3, dote: 'tempra',
     porta: ['spade', 'asce', 'ferro'],
     dice: 'Tiene botta. Se non sai chi scegliere, è questo.' },
 
   { chiave: 'elfa', nome: 'Elfa', em: '🧝', sprite: 'elfa',
     chi: 'l\'elfa',
     vita: 15, att: 4, dif: 1,
+    parte: { forza: 4, tempra: 3, scorza: 2, fortuna: 2 }, vitaPerLivello: 3, dote: 'forza',
     porta: ['spade', 'archi', 'stoffa'],
     dice: 'Colpisce più forte, e regge un po\' meno.' },
 
@@ -32,12 +35,14 @@ export const EROI = [
   { chiave: 'mago', nome: 'Mago', em: '🧙', sprite: 'mago',
     chi: 'il mago',
     vita: 12, att: 5, dif: 0,
+    parte: { forza: 5, tempra: 2, scorza: 0, fortuna: 3 }, vitaPerLivello: 2, dote: 'scorza',
     porta: ['bacchette', 'stoffa'],
     dice: 'I mostri cadono in metà risposte. Ma ogni sbaglio fa malissimo.' },
 
   { chiave: 'nano', nome: 'Nano', em: '🧔', sprite: 'nano',
     chi: 'il nano',
     vita: 20, att: 3, dif: 2,
+    parte: { forza: 3, tempra: 5, scorza: 4, fortuna: 1 }, vitaPerLivello: 3, dote: 'forza',
     porta: ['asce', 'archi', 'ferro'],
     dice: 'Sbagliare gli fa quasi il solletico. Non cade quasi mai.' },
 ]
@@ -77,6 +82,12 @@ export function guastiDegliEroi() {
     if (e.att < 3) g.push(`${e.chiave}: braccio ${e.att}, i mostri diventano lunghi invece che duri`)
     if (e.vita < 11) g.push(`${e.chiave}: ${e.vita} di vita, si sviene al terzo sbaglio`)
     if (e.dif < 0) g.push(`${e.chiave}: difesa sotto zero`)
+    // la pagina dell'eroe mostra le caratteristiche: devono raccontare i numeri di partenza, non contraddirli
+    const p = e.parte || {}
+    if (p.forza !== e.att) g.push(`${e.chiave}: forza ${p.forza} e attacco ${e.att}, la pagina direbbe due cose`)
+    if (Math.floor((p.scorza || 0) / 2) !== e.dif) g.push(`${e.chiave}: scorza ${p.scorza} e difesa ${e.dif} non tornano`)
+    if (!(e.vitaPerLivello >= 1)) g.push(`${e.chiave}: salendo di livello non prende vita`)
+    if (!['forza', 'tempra', 'scorza', 'fortuna'].includes(e.dote)) g.push(`${e.chiave}: la dote "${e.dote}" non è una caratteristica`)
   }
   if (!EROI.some(e => e.chiave === DI_PARTENZA))
     g.push(`chi si parte (${DI_PARTENZA}) non è fra gli eroi`)

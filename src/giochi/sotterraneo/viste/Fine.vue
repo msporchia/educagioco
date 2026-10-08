@@ -46,6 +46,8 @@ defineEmits(['ancora', 'esci'])
         <div><b>{{ fatti.tesori }}</b><span>tesori</span></div>
       </div>
 
+      <!-- l'esperienza resta all'eroe anche perdendo: i mostri battuti sono battuti -->
+      <p v-if="fatti.esp" class="sot-coda" data-esp-presa>✨ +{{ fatti.esp }} esperienza</p>
       <p v-if="monete" class="sot-coda sot-oro" data-monete-prese>+{{ monete }} 🪙 nel salvadanaio</p>
       <p v-if="notaMonete" class="sot-coda" data-nota-monete>{{ notaMonete }}</p>
 
