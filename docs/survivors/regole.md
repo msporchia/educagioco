@@ -26,7 +26,9 @@ verso il grumo quando ha un'arma che guarda avanti.
   grossi; restano nove secondi, lampeggiano negli ultimi due:
   - **❤️ il cuore** ne ridà uno senza alzare il tetto, ed esce solo a chi ne
     ha perso uno;
-  - **🧲 la calamita** tira per quattro secondi tutte le gemme in campo;
+  - **🧲 la calamita** tira per quattro secondi le gemme entro un
+    raggio di 420 punti, cioè quelle dello schermo: quelle lasciate lontano
+    sulla mappa restano dove sono;
   - **📦 la cassa** apre un'offerta di tre carte **pagata con la domanda come
     sempre** — sopra c'è scritto «una cassa», non «livello». È rara con un
     tetto dichiarato (`CFG.oggetti.cassa`): mai nei primi dieci secondi, mai
@@ -44,6 +46,14 @@ verso il grumo quando ha un'arma che guarda avanti.
     oggetti: rubava il posto alle casse, e con meno carte le tappe
     diventavano più dure invece che più facili. Non si lancia sotto le
     carte. Nei test: `[data-bomba]`.
+- **I capi**: dopo il 40% della tappa arriva un capo, poi uno ogni 45
+  secondi (`CFG.capo`). È uno dei mostri più duri fra quelli ammessi,
+  quasi il doppio della stazza, con dieci volte la vita, un po' più lento,
+  e le botte lo spostano poco. Si riconosce dall'alone rosso, dalla corona
+  e dalla sua barra della vita sempre accesa. Abbattuto lascia sei gemme e
+  un oggetto. La bomba non lo abbatte d'un colpo: gli toglie metà della
+  vita. Misurato su 72 partite per tappa: con i capi le vittorie restano
+  quelle di prima.
 - **I muri**: dopo dodici secondi la prima volta, poi sempre più spesso con
   la marea, una fila di mostri deboli attraversa lo schermo dritta da un lato
   a caso, con **un varco**; l'eroe è più svelto di lei. Un muro prende chi non

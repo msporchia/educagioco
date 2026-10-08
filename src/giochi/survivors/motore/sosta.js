@@ -61,7 +61,9 @@ export function scrivi(partita, tappa) {
       vita: arrotonda(n.vita), max: arrotonda(n.vitaMax),
       passo: arrotonda(n.passo), massa: arrotonda(n.massa),
       ...(n.rotta ? { rx: n.rotta.x, ry: n.rotta.y } : {}),
+      ...(n.capo ? { capo: 1 } : {}),
     })),
+    tCapo: p.tCapo,
     gemme: vicini(p.gemme, e, MAX_GEMME)
       .map(g => ({ x: arrotonda(g.x), y: arrotonda(g.y), val: g.val })),
     oggetti: vicini(p.oggetti, e, MAX_OGGETTI)
@@ -92,6 +94,7 @@ export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = 
     p.ferite = dato.ferite || 0
     p.casse = dato.casse || 0
     p.daSpendere = Math.max(0, dato.daSpendere || 0)
+    if (Number.isFinite(dato.tCapo)) p.tCapo = dato.tCapo
 
     const e = dato.eroe
     Object.assign(p.eroe, {
@@ -110,7 +113,8 @@ export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = 
       .filter(n => n && MOSTRI[n.t])
       .map(n => ({
         tipo: n.t, x: n.x, y: n.y,
-        r: MOSTRI[n.t].r,
+        r: MOSTRI[n.t].r * (n.capo ? CFG.capo.taglia : 1),
+        ...(n.capo ? { capo: true } : {}),
         vita: n.vita, vitaMax: n.max || n.vita,
         passo: n.passo || MOSTRI[n.t].passo, massa: n.massa || 1,
         spx: 0, spy: 0, lampo: 0, gelato: 0, freno: 1, attesa: 0,

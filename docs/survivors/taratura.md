@@ -13,11 +13,11 @@ dito — a far male sono le carte, non l'arco di base.
 
 Una gemma si prende solo a contatto (raggio dell'eroe + 12 pixel): non
 c'è più una calamita di base. La carta *Calamita* è l'unico modo di
-averne una: la prima copia tira da 55 pixel (poco più del contatto, si
-sente ma non cambia come si gioca), ogni copia in più allarga di 35
-pixel, fino a 195 a cinque copie — più del vecchio raggio di base (115)
-ma meno di dove arrivava la vecchia carta al tetto (307). Prenderla
-costa un posto che sarebbe andato a un'arma, e vale la pena solo
+averne una. Le copie si alternano (sua richiesta, 8/10/2026): le dispari
+allargano il raggio (70, 125, 180 pixel), le pari tirano più forte (×1,5,
+poi ×2). Anche piena resta più piccola della calamita trovata a terra
+(420, lo schermo intero), che però dura quattro secondi. Prenderla costa
+un posto che sarebbe andato a un'arma, e vale la pena solo
 potenziandola.
 
 ## Gli oggetti a terra e i muri

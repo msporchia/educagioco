@@ -17,8 +17,18 @@ export const CFG = {
   apertura: 0.16,           // quanto si aprono a ventaglio le frecce in più
 
   // una gemma si prende a contatto (raggioEroe + 12, in muoviGemme); la
-  // calamita c'è solo con la carta omonima (`magnete` in mazzo.js)
-  calamita: { prima: 55, inPiu: 35 },
+  // calamita c'è solo con la carta omonima (`magnete` in mazzo.js). Le
+  // copie si alternano: le dispari allargano il raggio (`prima`, poi
+  // `inPiu` alla volta), le pari tirano più forte (`forza` in più alla
+  // volta). Resta sempre più piccola di quella trovata a terra
+  calamita: { prima: 70, inPiu: 55, forza: 0.5 },
+
+  // i capi: ogni tanto un mostro molto più grosso e duro, col suo alone e
+  // la corona. Il primo a `da` della tappa, poi uno ogni `ogni` secondi;
+  // `taglia` moltiplica il raggio, `vita` la vita, `passo` la velocità,
+  // `massa` quanto poco lo spostano le botte; morendo lascia `gemme`
+  // gemme e un oggetto
+  capo: { da: 0.4, ogni: 45, taglia: 1.9, vita: 10, passo: 0.8, massa: 4, gemme: 6 },
 
   // gli oggetti a terra (dati/oggetti.js): compaiono a tempo, sempre
   // dentro lo schermo ma mai sotto i piedi (vicino..lontano, in pixel),

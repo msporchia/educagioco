@@ -21,7 +21,7 @@ export const MAZZO = [
   // questa carta è l'unico modo di averne una, il raggio si allarga copia
   // dopo copia
   { chiave: 'magnete',  nome: 'Calamita',        icona: '🧲', fascia: 'debole', max: 5,
-    chiaro: 'le gemme vicine volano da te: più copie, più lontano' },
+    chiaro: 'le gemme vicine volano da te: le copie, a turno, allargano il raggio e tirano più forte' },
   { chiave: 'stella',   nome: 'Stella fortunata',icona: '⭐', fascia: 'debole', max: 4,
     chiaro: 'ogni tanto una freccia fa il doppio del male' },
   { chiave: 'dardo',    nome: 'Dardo di ghiaccio', icona: '🧊', fascia: 'debole', max: 4,
@@ -39,7 +39,8 @@ export const MAZZO = [
     chiaro: 'ogni gemma vale di più: sali di livello prima' },
   { chiave: 'palla',    nome: 'Cometa in orbita', icona: '☄️', fascia: 'media', max: 4, intera: true,
     chiaro: 'una cometa ti gira intorno e travolge chi tocca' },
-  { chiave: 'occhi',    nome: 'Occhi acuti',     icona: '👀', fascia: 'media', max: 3, intera: true,
+  // la chiave resta `occhi` (è nei salvataggi), il nome dice cosa fa
+  { chiave: 'occhi',    nome: 'Frecce perforanti', icona: '📌', fascia: 'media', max: 3, intera: true,
     chiaro: 'le frecce passano attraverso i mostri' },
   // le armi che guardano dove corri, non al più vicino: mirare costa, e
   // picchiano più delle altre apposta
@@ -52,7 +53,7 @@ export const MAZZO = [
     chiaro: 'spari molto più spesso' },
   { chiave: 'grandi',   nome: 'Frecce grosse',   icona: '💥', fascia: 'forte', max: 4,
     chiaro: 'le frecce fanno molto più male' },
-  { chiave: 'cuore',    nome: 'Cuore grande',    icona: '❤️', fascia: 'forte', max: 3, intera: true,
+  { chiave: 'cuore',    nome: 'Vita aggiuntiva', icona: '❤️', fascia: 'forte', max: 3, intera: true,
     chiaro: 'un cuore in più, e te lo riempie' },
   { chiave: 'fuoco',    nome: 'Anello di fuoco', icona: '🔥', fascia: 'forte', max: 4,
     chiaro: 'ogni tanto esplodi tutto intorno a te' },

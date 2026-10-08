@@ -181,6 +181,7 @@ const VERSI = {
   cassa: () => suono.compra(),
   presa: () => suono.nota(600, 1200, 0.12, 'triangle', 0.06),
   gelo: () => suono.nota(1800, 700, 0.3, 'sine', 0.05),
+  capo: () => { suono.nota(110, 70, 0.6, 'sawtooth', 0.1); suono.rumore(0.5, 0.07, 200, 60) },
   bomba: () => { suono.rumore(0.7, 0.16, 300, 60); suono.nota(160, 40, 0.5, 'sawtooth', 0.12) },
   muro: () => suono.rumore(0.5, 0.09, 500, 120),   // un brontolio, senza dire da che parte
   livello: () => suono.livello(),

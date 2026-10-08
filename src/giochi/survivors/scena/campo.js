@@ -263,6 +263,15 @@ export class Campo {
       ctx.globalAlpha = 1
     }
     const vx = n.vx ?? (s.eroe.x - n.x), vy = n.vy ?? (s.eroe.y - n.y)
+    /* il capo: un alone rosso che pulsa sotto i piedi, si vede da lontano */
+    if (n.capo) {
+      const battito = 0.5 + 0.5 * Math.sin(s.tempo * 5)
+      this.bagliore(n.x, n.y + n.r * 0.6, n.r * (1.5 + 0.2 * battito), '#ff3b3b', 0.45 + 0.25 * battito)
+      ctx.globalAlpha = 0.5
+      ctx.strokeStyle = '#ff5a5a'; ctx.lineWidth = 3
+      ctx.beginPath(); ctx.ellipse(n.x, n.y + n.r * 0.85, n.r * 1.1, n.r * 0.38, 0, 0, 6.29); ctx.stroke()
+      ctx.globalAlpha = 1
+    }
     const fatto = figurePronte() && disegnaFigura(ctx, figuraDi(s.scenario, n.tipo), {
       x: n.x, y: n.y, r: n.r, vx, vy, t: n.fase / 6,
       bianco: n.lampo > 0.3 ? n.lampo : 0, gelo: n.gelato > 0 ? 1 : 0,
@@ -277,6 +286,7 @@ export class Campo {
         this.cerchio(n.x + lato * n.r * 0.32, n.y - n.r * 0.1, n.r * 0.13, '#1a1d26')
       }
     }
+    if (n.capo) return this.corona(n, testa, s.tempo)
     // la barra della vita solo per chi ne ha tanta
     if (n.vitaMax >= 4 && n.vita < n.vitaMax) {
       const w = n.r * 1.7, q = Math.max(0, n.vita / n.vitaMax)
@@ -284,6 +294,31 @@ export class Campo {
       ctx.fillStyle = q > 0.5 ? '#7bf07b' : q > 0.25 ? '#ffc93c' : '#ff5c7a'
       ctx.fillRect(n.x - w / 2, testa - 6, w * q, 4)
     }
+  }
+
+  /* la corona e la barra della vita del capo: sempre accesa, larga, col
+     bordo scuro, perché si capisca quanto manca ad abbatterlo */
+  corona(n, testa, tempo) {
+    const ctx = this.ctx
+    const w = Math.max(46, n.r * 2.2), q = Math.max(0, n.vita / n.vitaMax)
+    const y = testa - 12
+    ctx.fillStyle = '#1b1f2a'; ctx.fillRect(n.x - w / 2 - 2, y - 2, w + 4, 9)
+    ctx.fillStyle = '#5a1a1a'; ctx.fillRect(n.x - w / 2, y, w, 5)
+    ctx.fillStyle = q > 0.5 ? '#ff5a3c' : q > 0.25 ? '#ffb347' : '#ffe14a'
+    ctx.fillRect(n.x - w / 2, y, w * q, 5)
+    const c = Math.max(10, n.r * 0.5)                            // la corona, grande col capo
+    const cy = y - 6 + Math.sin(tempo * 3) * 1.5
+    ctx.fillStyle = '#7a4a00'
+    ctx.beginPath()
+    ctx.moveTo(n.x - c - 1.5, cy + 1.5); ctx.lineTo(n.x - c - 1.5, cy - c * 0.9); ctx.lineTo(n.x - c * 0.45, cy - c * 0.35)
+    ctx.lineTo(n.x, cy - c * 1.15); ctx.lineTo(n.x + c * 0.45, cy - c * 0.35); ctx.lineTo(n.x + c + 1.5, cy - c * 0.9)
+    ctx.lineTo(n.x + c + 1.5, cy + 1.5); ctx.closePath(); ctx.fill()
+    ctx.fillStyle = '#ffd257'
+    ctx.beginPath()
+    ctx.moveTo(n.x - c, cy); ctx.lineTo(n.x - c, cy - c * 0.7); ctx.lineTo(n.x - c * 0.45, cy - c * 0.2)
+    ctx.lineTo(n.x, cy - c * 0.95); ctx.lineTo(n.x + c * 0.45, cy - c * 0.2); ctx.lineTo(n.x + c, cy - c * 0.7)
+    ctx.lineTo(n.x + c, cy); ctx.closePath(); ctx.fill()
+    this.cerchio(n.x, cy - 2.5, 1.8, '#ff3b5c')
   }
 
   // tre frecce che si distinguono a colpo d'occhio: bianca la normale,
@@ -317,31 +352,41 @@ export class Campo {
     if (c.oro || c.gelida) this.bagliore(c.x, c.y, c.r * 3, col, 0.6)
   }
 
-  // più lunga e grossa di una freccia: si deve vedere che è un'altra arma
+  // più lunga, grossa e luminosa di una freccia: si deve vedere che è
+  // un'altra arma, e che passa da parte a parte
   lancia(c) {
     const ctx = this.ctx
     ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.a)
-    const L = 30
-    const g = ctx.createLinearGradient(-L * 2.6, 0, -L * 0.5, 0)
-    g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(255,240,200,0.8)')
+    const L = 44
+    /* la scia: lunga, si somma alla luce */
+    const g = ctx.createLinearGradient(-L * 4, 0, 0, 0)
+    g.addColorStop(0, 'rgba(255,220,140,0)'); g.addColorStop(1, 'rgba(255,240,190,0.9)')
     ctx.globalCompositeOperation = 'lighter'
-    ctx.strokeStyle = g; ctx.lineWidth = 10; ctx.lineCap = 'round'
-    ctx.beginPath(); ctx.moveTo(-L * 2.6, 0); ctx.lineTo(-L * 0.5, 0); ctx.stroke()
+    ctx.strokeStyle = g; ctx.lineWidth = 14; ctx.lineCap = 'round'
+    ctx.beginPath(); ctx.moveTo(-L * 4, 0); ctx.lineTo(-L * 0.3, 0); ctx.stroke()
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 4
+    ctx.beginPath(); ctx.moveTo(-L * 2.5, 0); ctx.lineTo(-L * 0.3, 0); ctx.stroke()
     ctx.globalCompositeOperation = 'source-over'
-    ctx.strokeStyle = '#8b5a2b'; ctx.lineWidth = 4
-    ctx.beginPath(); ctx.moveTo(-L, 0); ctx.lineTo(L * 0.55, 0); ctx.stroke()
-    ctx.strokeStyle = '#d9c1a0'; ctx.lineWidth = 1.5
-    ctx.beginPath(); ctx.moveTo(-L, -1); ctx.lineTo(L * 0.55, -1); ctx.stroke()
-    ctx.fillStyle = '#e8eef5'
-    ctx.beginPath(); ctx.moveTo(L, 0); ctx.lineTo(L * 0.45, -6); ctx.lineTo(L * 0.55, 0)
-    ctx.lineTo(L * 0.45, 6); ctx.closePath(); ctx.fill()
-    ctx.fillStyle = '#ff5470'
+    /* l'asta, col bordo scuro perché si legga su ogni fondo */
+    ctx.strokeStyle = '#3b2412'; ctx.lineWidth = 7
+    ctx.beginPath(); ctx.moveTo(-L, 0); ctx.lineTo(L * 0.5, 0); ctx.stroke()
+    ctx.strokeStyle = '#a8703a'; ctx.lineWidth = 4
+    ctx.beginPath(); ctx.moveTo(-L, 0); ctx.lineTo(L * 0.5, 0); ctx.stroke()
+    /* la punta d'acciaio, grande */
+    ctx.fillStyle = '#3b2412'
+    ctx.beginPath(); ctx.moveTo(L + 3, 0); ctx.lineTo(L * 0.38, -10); ctx.lineTo(L * 0.5, 0)
+    ctx.lineTo(L * 0.38, 10); ctx.closePath(); ctx.fill()
+    ctx.fillStyle = '#eef4fb'
+    ctx.beginPath(); ctx.moveTo(L, 0); ctx.lineTo(L * 0.42, -7.5); ctx.lineTo(L * 0.52, 0)
+    ctx.lineTo(L * 0.42, 7.5); ctx.closePath(); ctx.fill()
+    ctx.fillStyle = '#ff5470'                          // il nastro rosso dietro la punta
     for (const s of [-1, 1]) {
-      ctx.beginPath(); ctx.moveTo(-L, 0); ctx.lineTo(-L - 7, s * 5); ctx.lineTo(-L - 9, 0); ctx.closePath(); ctx.fill()
+      ctx.beginPath(); ctx.moveTo(L * 0.4, 0); ctx.lineTo(L * 0.2, s * 9); ctx.lineTo(L * 0.28, 0); ctx.closePath(); ctx.fill()
     }
     ctx.restore()
-    this.bagliore(c.x + Math.cos(c.a) * L, c.y + Math.sin(c.a) * L, 14, '#ffffff', 0.5)
+    this.bagliore(c.x + Math.cos(c.a) * L * 0.8, c.y + Math.sin(c.a) * L * 0.8, 22, '#fff2c0', 0.7)
   }
+
 
   // una cometa: un fuocherello che gira, con la coda di braci. La coda
   // sta dietro, ad `a - 90°`: sottrarre la metterebbe davanti e la cometa
@@ -500,6 +545,28 @@ export class Campo {
       }
       ctx.globalAlpha = 1
       ctx.globalCompositeOperation = 'source-over'
+    } else if (e.che === 'trafitto') {
+      /* la lancia è passata: un taglio di luce attraverso il mostro, nella
+         direzione del colpo, e schegge che continuano la corsa */
+      const p = 1 - q
+      const L = e.r * 2.6
+      const cx = Math.cos(e.a), cy = Math.sin(e.a)
+      ctx.globalCompositeOperation = 'lighter'
+      ctx.lineCap = 'round'
+      ctx.globalAlpha = q
+      ctx.strokeStyle = '#fff2c0'; ctx.lineWidth = 10 * q + 2
+      ctx.beginPath(); ctx.moveTo(e.x - cx * L, e.y - cy * L); ctx.lineTo(e.x + cx * L, e.y + cy * L); ctx.stroke()
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3
+      ctx.beginPath(); ctx.moveTo(e.x - cx * L * 0.8, e.y - cy * L * 0.8); ctx.lineTo(e.x + cx * L * 0.8, e.y + cy * L * 0.8); ctx.stroke()
+      ctx.strokeStyle = '#ffd257'; ctx.lineWidth = 2.5
+      for (let k = -2; k <= 2; k++) {
+        const a = e.a + k * 0.32, d = e.r * (1 + p * 2.2)
+        ctx.beginPath(); ctx.moveTo(e.x + Math.cos(a) * d * 0.6, e.y + Math.sin(a) * d * 0.6)
+        ctx.lineTo(e.x + Math.cos(a) * d, e.y + Math.sin(a) * d); ctx.stroke()
+      }
+      ctx.globalAlpha = 1
+      ctx.globalCompositeOperation = 'source-over'
+      this.bagliore(e.x, e.y, e.r * 2, '#fff2c0', q * 0.8)
     } else if (e.che === 'gelata') {
       /* l'ondata di gelo: un anello azzurro che corre fuori, e i
          cristalli che restano un attimo dove è passato */
@@ -638,7 +705,7 @@ export class Campo {
     const q = (tempo * 1.4) % 1
     ctx.globalAlpha = 0.35 * (1 - q)
     ctx.strokeStyle = OGGETTI.calamita.colore; ctx.lineWidth = 3
-    ctx.beginPath(); ctx.arc(eroe.x, eroe.y, 40 + 160 * (1 - q), 0, 6.29); ctx.stroke()
+    ctx.beginPath(); ctx.arc(eroe.x, eroe.y, 40 + (OGGETTI.calamita.raggio - 40) * (1 - q), 0, 6.29); ctx.stroke()
     ctx.globalAlpha = 1
   }
 

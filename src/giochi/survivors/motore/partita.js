@@ -103,10 +103,11 @@ export class Partita {
     this.oggetti = []
     this.effetti = []
     this.palle = []
-    this.risucchio = 0    // la calamita trovata a terra: finché dura, tutte le gemme volano
+    this.risucchio = 0    // la calamita trovata a terra: finché dura, le gemme entro il suo raggio volano
     this.tOggetto = CFG.oggetti.primo
     this.tMuro = CFG.muro.primo
     this.tBomba = CFG.bomba.prima
+    this.tCapo = null     // quando arriva il prossimo capo (si fissa al primo battito)
     this.casse = 0        // quante casse sono comparse finora (il tetto, cassaAmmessa)
 
     this.tempo = 0
@@ -194,7 +195,9 @@ export class Partita {
       velColpo: CFG.velocitaFreccia * (1 + 0.16 * lv('lunghe')),
       raggioColpo: 5 + 1.6 * lv('grandi'),
       // zero senza la carta Calamita: le gemme si prendono a contatto
-      calamita: lv('magnete') > 0 ? CFG.calamita.prima + CFG.calamita.inPiu * (lv('magnete') - 1) : 0,
+      calamita: lv('magnete') > 0
+        ? CFG.calamita.prima + CFG.calamita.inPiu * (Math.floor((lv('magnete') + 1) / 2) - 1) : 0,
+      forzaCalamita: 1 + CFG.calamita.forza * Math.floor(lv('magnete') / 2),
       // lo scudo di ghiaccio e l'anello di fuoco vanno a impulsi: radi
       // alla prima copia, sempre più fitti potenziandoli
       gelo: lv('gelo') ? 90 + 22 * lv('gelo') : 0,
@@ -245,6 +248,7 @@ export class Partita {
     this.muoviEroe(dt)
     this.nascite(dt)
     this.muri(dt)
+    this.capi(dt)
     this.compaiono(dt)
     this.bombaATerra(dt)
     if (this.camminaNemici(dt)) return this.esito     // l'ultimo cuore
@@ -322,6 +326,36 @@ export class Partita {
     if (corre && this.rnd() < CFG.nasconoAvanti)
       return Math.atan2(e.vy, e.vx) + (this.rnd() * 2 - 1) * CFG.aperturaNascita
     return this.rnd() * 6.283
+  }
+
+  // i capi: il primo a una quota della tappa, poi a tempo. Nel gioco
+  // libero, che non ha durata, il primo arriva dopo un minuto
+  capi(dt) {
+    const { da, ogni } = CFG.capo
+    if (this.tCapo === null)
+      this.tCapo = Number.isFinite(this.regole.durata) ? this.regole.durata * da : 60
+    if (this.tempo < this.tCapo) return
+    this.tCapo = this.tempo + ogni
+    this.nasceCapo()
+  }
+
+  nasceCapo() {
+    const buoni = this.regole.squadraOra(this.tempo)
+    // fra quelli ammessi adesso, uno dei più duri
+    const duri = buoni.slice().sort((a, b) => MOSTRI[b].vita - MOSTRI[a].vita).slice(0, 2)
+    const t = duri[Math.floor(this.rnd() * duri.length)]
+    const a = this.angoloDiNascita()
+    const d = Math.hypot(this.campo.larghezza, this.campo.altezza) / 2 + 40
+    const n = this.mostroNuovo(t, this.eroe.x + Math.cos(a) * d, this.eroe.y + Math.sin(a) * d)
+    const { taglia, vita, passo, massa } = CFG.capo
+    n.capo = true
+    n.r *= taglia
+    n.vita = n.vitaMax = n.vita * vita
+    n.passo *= passo
+    n.massa *= massa
+    this.nemici.push(n)
+    this.segnala('capo')
+    return n
   }
 
   nasceNemico() {
@@ -473,6 +507,8 @@ export class Partita {
         if (dx * dx + dy * dy < s * s) {
           this.ferisci(n, c.danno, c.gelida ? '#9fe4ff' : c.oro ? '#ffd257' : '#fff')
           if (c.gelida) this.gela(n, GELO_DARDO, this.f.frenoDardo)
+          // la lancia lascia il segno su chi trapassa (lo disegna il campo)
+          if (c.lancia) this.effetti.push({ che: 'trafitto', x: n.x, y: n.y, a: c.a, r: n.r, vita: 0.3, tot: 0.3 })
           const rinculo = 0.18 / (n.massa || 1)
           n.spx += c.vx * rinculo; n.spy += c.vy * rinculo
           c.presi.push(n)
@@ -602,10 +638,14 @@ export class Partita {
       // la figura che cade: la disegna il campo, qui c'è solo dove e chi
       this.effetti.push({ che: 'morte', tipo: n.tipo, x: n.x, y: n.y, r: n.r,
                           verso: n.vx || 0, vita: 0.4, tot: 0.4 })
-      this.gemme.push({ x: n.x, y: n.y, vx: (this.rnd() - 0.5) * 60,
-                        vy: (this.rnd() - 0.5) * 60,
-                        val: this.f.valoreGemma, fase: this.rnd() * 6.3 })
-      if (MOSTRI[n.tipo].vita >= CFG.oggetti.grosso && this.rnd() < CFG.oggetti.daiGrossi)
+      // un capo lascia una pioggia di gemme e sempre un oggetto
+      const quante = n.capo ? CFG.capo.gemme : 1, spinta = n.capo ? 260 : 60
+      for (let k = 0; k < quante; k++)
+        this.gemme.push({ x: n.x, y: n.y, vx: (this.rnd() - 0.5) * spinta,
+                          vy: (this.rnd() - 0.5) * spinta,
+                          val: this.f.valoreGemma, fase: this.rnd() * 6.3 })
+      if (n.capo) { this.lasciaOggetto(n.x, n.y); this.anello(n.x, n.y, n.r * 4, '#ffd257') }
+      else if (MOSTRI[n.tipo].vita >= CFG.oggetti.grosso && this.rnd() < CFG.oggetti.daiGrossi)
         this.lasciaOggetto(n.x, n.y)
       this.segnala('morto')
     }
@@ -627,10 +667,10 @@ export class Partita {
       const gdx = e.x - g.x, gdy = e.y - g.y
       const gd = Math.sqrt(gdx * gdx + gdy * gdy) || 1
       if (gd > limite) { g.presa = true; prese = true; continue }
-      if (risucchio) {
+      if (risucchio && gd < OGGETTI.calamita.raggio) {
         g.vx += gdx / gd * 1100 * dt; g.vy += gdy / gd * 1100 * dt
       } else if (cal > 0 && gd < cal) {
-        const tira = 260 + (cal - gd) * 5.5
+        const tira = (260 + (cal - gd) * 5.5) * this.f.forzaCalamita
         g.vx += gdx / gd * tira * dt; g.vy += gdy / gd * tira * dt
       }
       g.vx *= attrito; g.vy *= attrito
@@ -752,7 +792,9 @@ export class Partita {
     let presi = 0
     for (const n of this.nemici) {
       const d = Math.hypot(n.x - e.x, n.y - e.y)
-      if (d < raggio + n.r) { n.vita = 0; presi++ }
+      // un capo non cade d'un colpo: la bomba gli toglie metà della vita
+      if (d < raggio + n.r && n.capo) { this.ferisci(n, n.vitaMax / 2, '#ffd257'); presi++ }
+      else if (d < raggio + n.r) { n.vita = 0; presi++ }
       else if (d < raggio * onda) this.spingi(n, 500)
     }
     this.effetti.push({ che: 'esplosione', x: e.x, y: e.y, r: raggio, vita: 0.7, tot: 0.7 })

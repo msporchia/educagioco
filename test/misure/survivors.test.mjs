@@ -504,15 +504,20 @@ controlla('il riassunto conta le stelle',
   controlla('a chi ne ha perso uno sì', feriti > 5, `${feriti} su 60`)
 }
 {
-  /* ── la calamita trovata tira tutto, anche da lontano ── */
+  /* ── la calamita trovata tira quello che c'è sullo schermo, non tutta
+     la mappa: le gemme lasciate lontano restano dove sono ── */
   const p = new Partita(new Regole(CAMPAGNA[0]), { rnd: caso(45), campo })
-  p.gemme.push({ x: 420, y: 0, vx: 0, vy: 0, val: 1, fase: 0 })
-  p.gemme.push({ x: 0, y: -380, vx: 0, vy: 0, val: 1, fase: 0 })
+  const R = OGGETTI.calamita.raggio
+  p.gemme.push({ x: R - 60, y: 0, vx: 0, vy: 0, val: 1, fase: 0 })
+  p.gemme.push({ x: 0, y: -(R - 80), vx: 0, vy: 0, val: 1, fase: 0 })
+  const lontana = { x: -R * 2, y: 0, vx: 0, vy: 0, val: 1, fase: 0 }
+  p.gemme.push(lontana)
   p.oggetti.push({ tipo: 'calamita', x: p.eroe.x, y: p.eroe.y, resta: 5, fase: 0 })
   p.avanza(1 / 30)
   controlla('la calamita trovata accende il risucchio', p.risucchio > 0 && p.scena().risucchio)
   for (let i = 0; i < 60; i++) { if (p.inPausa) p.rinuncia(); p.avanza(1 / 30) }
-  uguale('e in due secondi le gemme lontane sono arrivate', p.gemme.length, 0)
+  uguale('in due secondi quelle dentro il raggio sono arrivate', p.gemme.length, 1)
+  controlla('quella lasciata lontano è ancora là', p.gemme[0] === lontana && lontana.x === -R * 2)
   controlla('con la loro esperienza', p.xp >= 2 || p.livello > 1, `xp ${p.xp}, livello ${p.livello}`)
   for (let i = 0; i < OGGETTI.calamita.secondi * 30 + 5; i++) { if (p.inPausa) p.rinuncia(); p.avanza(1 / 30) }
   uguale('poi il risucchio si spegne', p.risucchio, 0)

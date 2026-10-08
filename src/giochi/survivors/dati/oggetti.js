@@ -8,7 +8,9 @@
 
 export const OGGETTI = {
   cuore:    { nome: 'cuore',    peso: 2,   colore: '#ff5470' },
-  calamita: { nome: 'calamita', peso: 2.5, colore: '#ff8a3c', secondi: 4 },
+  // tira per `secondi` le gemme entro `raggio`: tutto lo schermo, non
+  // tutta la mappa (quelle lasciate lontano restano dove sono)
+  calamita: { nome: 'calamita', peso: 2.5, colore: '#ff8a3c', secondi: 4, raggio: 420 },
   cassa:    { nome: 'cassa',    peso: 1.5, colore: '#d9a45c' },
   // la bomba ha un orologio suo (CFG.bomba): non ruba il posto agli altri
   bomba:    { nome: 'bomba',    aTempo: true, colore: '#ff6b3c' },
