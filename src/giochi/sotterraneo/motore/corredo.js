@@ -216,6 +216,27 @@ export class Corredo {
     return { dove: c.dove, campo, addosso, delta: (c[campo] || 0) - mio }
   }
 
+  // I numeri prima e dopo essersi messi `k` addosso, nel posto che sceglierebbe `usa` (il pannello della bottega e
+  // dello zaino: «⚔️ 3 → 5»). Si prova su una copia; `bloccata` è l'arma a due mani che non lascia posto allo scudo
+  seLoMetto(k) {
+    const c = COSE[k]
+    if (!c || !c.dove || !this.posso(k)) return null
+    if (c.dove === 'mancina' && this.aDueMani(this.mano)) return { dove: 'mancina', bloccata: this.mano }
+    const prova = this.copia()
+    const dove = c.dove === 'mano' ? prova.postoDellArma(k).dove : c.dove
+    const fuori = prova.casella(dove)
+    prova.metti(dove, k)
+    prova.sistemaLeMani()
+    // la vita è il tetto: nella discesa cresce coi piani (vitaMax), sopra è quella con la roba
+    const tetto = this.vitaMax ?? this.vitaConLaRoba
+    const numeri = (x, vita) => ({ att: x.att, dif: x.dif, vita, luce: x.addosso('luce'), gemme: x.addosso('gemme') })
+    return {
+      dove, fuori: fuori === k ? null : fuori,
+      prima: numeri(this, tetto),
+      dopo: numeri(prova, tetto + prova.addosso('vita') - this.addosso('vita')),
+    }
+  }
+
   // una cosa migliore di quella addosso si mette da sé (vale per terra e al banco); uno scudo solo a mano libera
   vaAddosso(k) {
     const c = COSE[k]

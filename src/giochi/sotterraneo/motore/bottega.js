@@ -6,7 +6,7 @@
 import { Corredo } from './corredo.js'
 import { COSE, pescaMerce } from '../dati/cose.js'
 import { mercanteDi, vendeLa, righeDi, profonditaDelBanco } from '../dati/mercanti.js'
-import { bancoDelPasso } from './storia.js'
+import { bancoDelPasso, vetrinaDelPasso } from './storia.js'
 
 export class Bottega extends Corredo {
   // `finite`: discese finite (avanza.tappa). `banchi`: quello che è già stato pescato in questo giro
@@ -44,6 +44,23 @@ export class Bottega extends Corredo {
       ...b.sempre.map(k => ({ chiave: k, sempre: true })),
       ...b.roba.map(k => ({ chiave: k, sempre: false })),
     ]
+  }
+
+  // i pezzi più su che il banco non porta ancora: si vedono spenti, con la discesa che li fa arrivare
+  vetrina(chiave) {
+    const m = mercanteDi(chiave)
+    const b = this.banco(chiave)
+    return m && m.passo ? vetrinaDelPasso(m, this, this.finite, { banco: b.roba }) : []
+  }
+
+  // roba che non alza nessun numero di quello che si ha addosso non si mostra (resta pescata: il banco non
+  // cambia, cambia cosa si vede). Una seconda arma leggera nella mano libera alza il braccio, quindi si vede
+  sottoAddosso(k) {
+    const c = COSE[k]
+    if (!c || !c.dove || !this.posso(k) || !this.casella(c.dove)) return false
+    const p = this.seLoMetto(k)
+    if (!p || !p.prima) return false
+    return !['att', 'dif', 'vita', 'luce', 'gemme'].some(n => p.dopo[n] > p.prima[n])
   }
 
   compraDa(chiave, k) {

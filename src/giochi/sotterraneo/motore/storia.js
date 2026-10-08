@@ -2,7 +2,7 @@
 // discesa e un banco devono dare per arrivarci, e chi è sotto. I numeri stanno in dati/storia.js; qui le regole,
 // che girano in Node (il banco di prova ci misura sopra). Vedi docs/sotterraneo/la-grande-storia.md.
 import { COSE, A_SORTE, pescaMerce } from '../dati/cose.js'
-import { CAMPAGNA } from '../dati/campagna.js'
+import { CAMPAGNA, QUANTE_TAPPE } from '../dati/campagna.js'
 import { PASSI, CASELLE, passoDi, POZIONI_ATTESE, numeriDel } from '../dati/storia.js'
 import { VERSIONE_ROBA } from './corredo.js'
 
@@ -63,6 +63,25 @@ export function bancoDelPasso(m, corredo, finite, { rnd = Math.random, ammessa =
     tua: k => corredo.posso(k),
   }) : []
   return [...delPasso, ...altre]
+}
+
+// La vetrina: i pezzi delle righe dopo che il banco non porta ancora, al più `quanti` per casella, ognuno con la
+// discesa da finire perché arrivi sul banco (`finita`, indice di CAMPAGNA). Si vedono spenti e non si comprano:
+// il banco non resta mai vuoto, e chi guarda sa cosa l'aspetta (docs/sotterraneo/roba.md, "La bottega")
+export function vetrinaDelPasso(m, corredo, finite, { quanti = 2, banco = [] } = {}) {
+  const fuori = []
+  const visti = new Set(banco)
+  for (const c of m.passo || []) {
+    let n = 0
+    for (let r = finite + 1; r <= QUANTE_TAPPE && n < quanti; r++) {
+      const x = passoDi(corredo.chiEro, r)[c]
+      if (!x || visti.has(x) || !migliora(corredo, x)) continue
+      visti.add(x)
+      fuori.push({ chiave: x, finita: r - 1 })
+      n++
+    }
+  }
+  return fuori
 }
 
 // Sotto il livello atteso per entrare nella discesa `k`: braccio o difesa sotto quelli della riga. Torna cosa
