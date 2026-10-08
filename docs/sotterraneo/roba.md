@@ -193,13 +193,34 @@ più nessuno.
 - **Un tocco sceglie, il secondo compra** (o il tasto «Compra 💎 N»): il dito
   sbaglia, e un acquisto al primo tocco non si disfa. Un secondo tocco entro
   400 ms (`RIPENSO`) è un dito che ha premuto due volte, e non compra.
-- **Il pannello dice numeri, non frasi**: «⚔️ +4 attacco», «❤️ +6 vita», e il
-  confronto con quello che si ha addosso, «⚔️ 3 → 5», più in verde e meno in
-  rosso. I numeri li dà il motore (`seLoMetto` in `motore/corredo.js`), che
-  prova su una copia il posto che sceglierebbe «Indossa»; la casella
-  dell'eroe dove andrebbe si accende. Sotto, solo le righe che servono:
-  «Finisce nello zaino» per quello che non va addosso da sé, il perché di chi
-  non lo porta, «Quando avrai finito…» per la vetrina.
+- **Il pannello dice numeri, non frasi**: «⚔️ +4 attacco», «❤️ +6 vita». Un
+  pezzo che si indossa non ha più la riga sola «⚔️ 3 → 5», che bastava finché
+  un pezzo era solo attacco e non regge con più abilità: ha **il confronto
+  affiancato**, come in Diablo (`viste/Confronto.vue`).
+  - **Due colonne**: «Addosso» (il pezzo che occupa lo stesso posto, col
+    disegno piccolo e il nome del colore del suo gradino; «niente» se il posto
+    è vuoto, «mano libera» se un'arma va nella mano debole) e «Questo» (il pezzo
+    guardato). **Una riga per ogni abilità che almeno uno dei due ha**, coi
+    due valori allineati e «—» dove manca: verde con ▲ dove il nuovo è
+    meglio, rossa con ▼ dove è peggio, neutra se uguale. In cima la sintesi
+    («meglio in 2, peggio in 1», o «uguale»), poi il totale che cambia
+    sull'eroe (vita, attacco, difesa prima → dopo).
+  - **Il posto giusto**: un anello si confronta col gioiello che hai; un pezzo a
+    due mani con arma **e** scudo insieme, e la riga sopra lo dice; un'arma
+    nella mano debole vale metà braccio, e lo dice il numero. Un pezzo che
+    l'eroe non porta, o che lo scudo non può affiancare a un'arma a due mani,
+    non ha confronto: il pannello dice il perché.
+  - **I numeri li dà il motore** (`seLoMetto().cambio` in `motore/corredo.js`):
+    `toglie` sono i pezzi mandati via, `vecchi` e `nuovi` quanto danno le
+    caselle toccate, con le altre a fare da base, così la somma delle righe è
+    il totale che cambia. Le parole, le icone e come si scrive il valore stanno
+    in `ABILITA` di `viste/pezzo.js`. **Per aggiungere un'abilità** (la
+    schivata…) si scrive in `addosso()`, in `ABILITA_CONFRONTATE` e in `ABILITA`:
+    un test controlla che le due liste coincidano. A 390 px le tre colonne
+    (abilità, prima, dopo) stanno, col testo piccolo ma leggibile.
+  La casella dell'eroe dove andrebbe si accende. Sotto, solo le righe che
+  servono: «Finisce nello zaino» per quello che non va addosso da sé, il
+  perché di chi non lo porta, «Quando avrai finito…» per la vetrina.
 - **Niente di scelto: parla il mercante**, su una pergamena, con la sua
   battuta (`dice`): voce sua, corta, parole da sette anni, non istruzioni.
   Toccando una casella dell'eroe il pannello dice il pezzo che ha addosso.
@@ -214,17 +235,23 @@ Nei test: `[data-bottega]` (con `data-mercante-aperto`),
 `[data-casella-pezzo="<cosa>"]` (con `data-posso`, `data-gradino` e
 `data-chiusa` nella vetrina), `[data-vendo="<cosa>"]`, `[data-pannello]` (con
 `data-cosa`), `[data-confronto="att|dif|vita|gemme|luce"]` (con
-`data-verso`), `[data-quando]`, `[data-non-puoi]`, `[data-azione="compra"]`,
+`data-verso`: il totale sull'eroe), `[data-affianca]` col `[data-sintesi]`,
+`[data-colonna="addosso|questo"]` (dentro, `[data-pezzo="<cosa>"]` o
+`[data-niente]`), `[data-abilita="<campo>"]` (con `data-verso="su|giu|pari"`),
+`[data-valore="<campo>-addosso|<campo>-questo"]`, `[data-due-mani]`,
+`[data-quando]`, `[data-non-puoi]`, `[data-azione="compra"]`,
 `[data-azione="vendi"]`, `[data-detto-banco]`, `[data-battuta]`,
 `[data-chi-compra]`, `[data-banco-vuoto]`, `[data-tasche-vuote]`,
 `[data-gemme-bottega]`; nello zaino `[data-zaino]`, `[data-tasca]` (con
 `data-cosa`), `[data-azione="usa|butta|riponi|chiudi"]`, `[data-torcia-zaino]`;
 in tutte e due `[data-casella="<dove>"]` (con `data-cosa`) e `[data-chiudi]`.
 `compraNellaBottega`, `vendiNellaBottega` e `allaLinguettaDi` in
-`test/aiuto/browser.mjs`; `unita/sotterraneo-roba` (il confronto, la
+`test/aiuto/browser.mjs`; `unita/sotterraneo-roba` (il confronto riga per riga, la
 vetrina, quello che non si mostra, le linguette),
 `integrazione/sotterraneo-mercanti` (col dito: si sceglie, si compra, si
-vende, i numeri del confronto, lo zaino che indossa e fa bere).
+vende, il confronto affiancato, lo zaino che indossa e fa bere),
+`integrazione/sotterraneo-confronto` (più abilità: lo spadone contro spada e
+scudo, le colonne a 390 px).
 
 ## Le curiosità
 
