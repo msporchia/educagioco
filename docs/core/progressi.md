@@ -50,6 +50,12 @@ il livello resta dov'era, un secondo passaggio non cambia i conti.
 - Una grandezza nuova è un contatore in `totals`, incrementato con
   `segna('chiave')` o `segnaBest('chiave', valore)` per i primati; la
   festa la fanno scattare loro.
+- **Il cartello non spezza un gesto**: un traguardo che scatta a metà di
+  una strisciata (il quinto campo raccolto col cesto) aspetta che il dito
+  si alzi. Il gioco chiama `trattieniFesta()` quando il gesto comincia e
+  `liberaFesta()` quando finisce (uno per uno); `Traguardo.vue` mostra la
+  festa solo a contatore zero. Prima il velo compariva sotto il dito, si
+  prendeva il resto del gesto, e la fattoria restava col gettone in mano.
 
 ## La pagina «I miei progressi»
 

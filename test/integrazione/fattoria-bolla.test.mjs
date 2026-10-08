@@ -70,7 +70,7 @@ async function dito(x, y) {
 /* Una strisciata a passi da dieci pixel: un dito vero manda un
    pointermove ogni pochi pixel, e un salto lungo proverebbe solo la
    rete che riempie i buchi. */
-async function striscia(da, punti, foto = '') {
+async function striscia(da, punti, foto = '', primaDiAlzare = null) {
   await giu(da.x, da.y)
   let ora = da
   for (const [k, p] of punti.entries()) {
@@ -84,9 +84,12 @@ async function striscia(da, punti, foto = '') {
     ora = p
   }
   await attendi(page, 80)
+  if (primaDiAlzare) await primaDiAlzare()
   await su()
   await attendi(page, 300)
 }
+/* il cartello di un traguardo (components/Traguardo.vue) */
+const cartello = () => page.locator('.cartello', { hasText: 'Traguardo' }).count()
 /* I gettoni sono disegnati sulla tela: dove stanno e quale bolla è aperta lo dice il gancio
    `window.__fattoria` (vedi docs/fattoria/come-si-tocca.md). */
 const laBolla = () => page.evaluate(() => (window.__fattoria && window.__fattoria.bolla()) || null)
@@ -142,8 +145,18 @@ if (campo) {
   uguale('toccando un campo pronto spunta il cesto', (await laBolla() || {}).tipo, 'raccogli')
   await scatto(page, 'bolla-cesto')
   const cesto = await gettone('cesto')
+  /* Il terzo raccolto è un traguardo («Buon raccolto»), e scatta a metà
+     strisciata: il cartello deve aspettare il dito alzato, se no il suo
+     velo si prende il resto del gesto e la fattoria resta col cesto in mano. */
   await striscia(cesto, [{ x: Math.round(tela.x + 4), y: campo.y },
-                         { x: Math.round(tela.x + tela.width - 4), y: campo.y }])
+                         { x: Math.round(tela.x + tela.width - 4), y: campo.y }], '',
+                 async () => uguale('col dito ancora giù, nessun cartello del traguardo',
+                                    await cartello(), 0))
+  await attendi(page, 900)
+  uguale('alzato il dito, il cartello arriva', await cartello(), 1)
+  await scatto(page, 'bolla-traguardo')
+  await page.locator('.cartello').click()
+  await attendi(page, 300)
   await esci()
   const s2 = await statoSalvato()
   uguale('i quattro campi sono tornati vuoti', s2.cose.filter(c => c.coltura).length, 0)
