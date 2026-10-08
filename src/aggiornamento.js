@@ -136,6 +136,7 @@ export async function aggiornaOra ({
   prendi = rete,
   cassetti = typeof caches !== 'undefined' ? caches : null,
   riparti = () => location.reload(),
+  prepara = swNuovoAttivo,
   base = qui(),
   mia = QUESTA.id,
   pazienza = CHIEDERE,
@@ -186,10 +187,27 @@ export async function aggiornaOra ({
   catch (e) { /* pazienza */ }
   if (!vivo()) return
 
-  /* 5. si riparte */
+  /* 5. si riparte, ma col service worker nuovo già al suo posto: se si installa durante la ricarica, Firefox
+     interrompe la richiesta che il vecchio sta servendo e lascia la pagina bianca (docs/core/aggiornamento.md) */
   segna({ fase: 'pronta', sito })
-  await aspetta(respiro)
+  await Promise.all([aspetta(respiro), prepara().catch(() => {})])
   if (vivo()) riparti()
+}
+
+// Chiede subito il service worker nuovo e aspetta che sia attivo (al più `pazienza` ms). Nessuno nuovo: si va.
+export async function swNuovoAttivo ({ pazienza = 8000 } = {}) {
+  const sw = typeof navigator !== 'undefined' ? navigator.serviceWorker : null
+  const reg = sw && await sw.getRegistration()
+  if (!reg) return
+  await reg.update().catch(() => {})
+  const nuovo = reg.installing || reg.waiting
+  if (!nuovo) return
+  await new Promise(ok => {
+    const fatto = () => { if (nuovo.state === 'activated' || nuovo.state === 'redundant') { clearTimeout(t); ok() } }
+    const t = setTimeout(ok, pazienza)
+    nuovo.addEventListener('statechange', fatto)
+    fatto()
+  })
 }
 
 // Un indirizzo che nessuna cache ha: il service worker vecchio non lo

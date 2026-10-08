@@ -31,7 +31,8 @@ Come una versione nuova arriva su un telefono: il service worker
   pagina (una copia da 20 MB che il telefono non ha tenuto), si torna alla
   rete senza tetto: con `respondWith` di niente Safari mostra «Impossibile
   caricare. Un ServiceWorker ha intercettato una richiesta e riscontrato un
-  errore imprevisto», ed era successo dopo un aggiornamento (8/10/2026).
+  errore imprevisto» (lo stesso messaggio del guasto in «cerca
+  aggiornamenti», che però aveva un'altra causa: vedi sotto).
 
 ## Il nastro
 
@@ -77,6 +78,13 @@ il gioco resta com'era.
 - **La cache nuova si chiama come la chiama il service worker**
   (`CASSETTO` + id; `unita/aggiornamento` controlla che i due nomi
   combacino): così 7,5 MB si scaricano una volta sola.
+- **Si riparte col service worker nuovo già attivo** (`swNuovoAttivo`:
+  `update()` e si aspetta `activated`, al più 8 s). Se si installava
+  durante la ricarica, Firefox interrompeva la richiesta che il vecchio
+  stava servendo: «Impossibile caricare “”. Un ServiceWorker ha
+  intercettato una richiesta e riscontrato un errore imprevisto», pagina
+  bianca, e con F5 tutto a posto. Succedeva sul server di casa e non sul
+  sito finto dei test (8/10/2026).
 - **Niente si butta prima di avere in mano il nuovo.** È la differenza con
   «Riscarica il gioco» (`ripara()`, vedi [guasti.md](guasti.md)): giusto
   per una copia rotta, sbagliato per una vecchia.
