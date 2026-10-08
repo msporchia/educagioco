@@ -15,7 +15,7 @@ import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { avventuraDi } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { sbloccata, sbloccate, offerte, inMano, aperte, cosaDice, segnoDi, chiTiCerca, prendi, fatte, consegna,
          presePer, diario, promemoria, inFrase, GLIFO, chiAspetta, daLui, robaDellaMissione, rotta, discesaDaSeguire,
-         PRESA, FATTA, CONSEGNATA }
+         seguita, PRESA, FATTA, CONSEGNATA }
   from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -401,6 +401,70 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   uguale('una consegna da fare ha la precedenza: niente freccia azzurra', discesaDaSeguire({ badessa: PRESA, collana: FATTA }, io, posti), null)
   uguale('consegnata, una missione non punta più', discesaDaSeguire({ badessa: CONSEGNATA }, io, posti), null)
   uguale('una discesa senza posto sulla mappa non si indica', discesaDaSeguire({ badessa: PRESA }, io, { torre: posti.torre }), null)
+}
+
+/* ══════════ 10. la missione che le freccine seguono, scelta nel diario ══════════
+   Di difetto la più vicina; con «segui questa» la scelta vince, finché quella missione è presa. Il diario dà a ogni
+   voce il dettaglio che si apre toccandola. */
+{
+  const corsaDi = (chiave, prese, seme = 7) => new Corsa(CAMPAGNA.find(t => t.chiave === chiave), { seme, rnd: seminato(seme),
+    eroe: 'cavaliere', roba: robaAttesa('cavaliere', CAMPAGNA.findIndex(t => t.chiave === chiave), { pozioni: false }),
+    missioni: presePer(Object.fromEntries(prese.map(id => [id, PRESA])), chiave) })
+
+  // giù: la scelta batte la più vicina, e dove non c'è si torna alla regola di prima
+  const due = corsaDi('torre', ['goblin', 'rosicchione'])
+  const scala = due.livello.robe.find(x => x.che === 'scala')
+  due.eroe = { x: scala.x + 0.5, y: scala.y + 1.5 }   // accanto alla scala: la più vicina è Rosicchione (che punta alla scala)
+  uguale('senza scelta, accanto alla scala vince quella che punta alla scala', rotta(due).id, 'rosicchione')
+  uguale('scegliendo il goblin, la freccina cambia obiettivo', rotta(due, 'goblin').id, 'goblin')
+  uguale('e punta alla cosa, non alla scala', rotta(due, 'goblin').verso, 'qui')
+  uguale('scegliendo l\'altra, resta l\'altra', rotta(due, 'rosicchione').id, 'rosicchione')
+  uguale('una scelta che non è di questa discesa non conta: vale la più vicina', rotta(due, 'collana').id, 'rosicchione')
+  due.missioniFatte.add('goblin')
+  uguale('la scelta fatta in questa discesa non punta più: si torna alla più vicina', rotta(due, 'goblin').id, 'rosicchione')
+
+  // sopra: la discesa della scelta, anche se non è la più vicina
+  const posti = { altare: { x: 58, y: 9 }, cantine: { x: 10, y: 20 }, torre: { x: 45, y: 9 }, fondo: { x: 60, y: 40 } }
+  const io = { x: 52, y: 36 }
+  const prese = { badessa: PRESA, rosicchione: PRESA }
+  uguale('senza scelta, la discesa più vicina', discesaDaSeguire(prese, { x: 40, y: 8 }, posti), 'torre')
+  uguale('scegliendo la Badessa, la freccia azzurra cambia discesa', discesaDaSeguire(prese, { x: 40, y: 8 }, posti, 'badessa'), 'altare')
+  uguale('scegliendo Rosicchione, dall\'altra parte', discesaDaSeguire(prese, io, posti, 'rosicchione'), 'torre')
+  uguale('la consegna pronta ha ancora la precedenza', discesaDaSeguire({ ...prese, collana: FATTA }, io, posti, 'badessa'), null)
+  uguale('una scelta non più presa decade: vale la più vicina', discesaDaSeguire({ badessa: CONSEGNATA, rosicchione: PRESA }, io, posti, 'badessa'), 'torre')
+  uguale('una scelta senza posto sulla mappa decade', discesaDaSeguire(prese, io, { torre: posti.torre }, 'badessa'), 'torre')
+
+  // la scelta si ricorda finché la missione è presa, e si azzera quando è fatta o consegnata
+  uguale('la scelta di una missione presa vale', seguita({ badessa: PRESA }, 'badessa'), 'badessa')
+  uguale('nessuna scelta: niente', seguita({ badessa: PRESA }, null), null)
+  uguale('una missione mai presa non si segue', seguita({}, 'badessa'), null)
+  uguale('fatta, la scelta decade', seguita({ badessa: FATTA }, 'badessa'), null)
+  uguale('e consegnata anche', seguita({ badessa: CONSEGNATA }, 'badessa'), null)
+  const ps = consegna({ badessa: FATTA }, 'badessa', palestra('cavaliere', 1))
+  uguale('dopo la consegna la scelta è già decaduta', seguita(ps.stati, 'badessa'), null)
+
+  // il diario: ogni voce porta il suo dettaglio
+  const t4 = tappeAl(4)
+  const stati = { badessa: CONSEGNATA, collana: FATTA, rosicchione: PRESA, chiavi: PRESA }
+  const d = diario(stati, t4, 'chiavi')
+  uguale('il diario dice quale si segue', d.segui, 'chiavi')
+  uguale('e la voce è marcata', d.inMano.filter(v => v.segui).map(v => v.id).join(','), 'chiavi')
+  uguale('una scelta non più presa il diario non la segna', diario(stati, t4, 'badessa').segui, null)
+  const col = d.inMano.find(v => v.id === 'collana')
+  controlla('la fatta non si segue: si porta', !col.seguibile && !col.segui)
+  const ros = d.inMano.find(v => v.id === 'rosicchione')
+  controlla('Rosicchione: il mostro col nome, la sua faccia e la richiesta del mugnaio',
+            ros.cosa.tipo === 'sconfiggi' && ros.cosa.nome === 'Rosicchione' && ros.cosa.sprite === 'ratto' && ros.cosa.em === '🐀'
+            && ros.da === 'mugnaio' && /Rosicchione/.test(ros.dice) && ros.seguibile, JSON.stringify(ros.cosa))
+  controlla('il premio a pezzi: il gioiello col suo nome e le monete', ros.gemme === 0 && ros.monete === 2
+            && ros.regalo && ros.regalo.nome === 'Amuleto azzurro' && ros.regalo.sprite === 'amuleto-azzurro')
+  const ch = d.inMano.find(v => v.id === 'chiavi')
+  controlla('Le chiavi: una cosa da trovare, in gemme', ch.cosa.tipo === 'trova' && ch.cosa.sprite === null && ch.cosa.em === '🔑'
+            && ch.gemme === 20 && ch.regalo === null && ch.monete === 0)
+  controlla('la voce dice da chi andare', ch.daChi === 'dalla guardia della torre' && ros.daChi === 'dal mugnaio')
+  const fin = d.consegnate.find(v => v.id === 'badessa')
+  controlla('la consegnata ha anche il grazie', fin.stato === 'consegnata' && /riposa|dorme/.test(fin.grazie) && fin.dice.length > 20)
+  controlla('le offerte hanno il dettaglio ma non si seguono', d.offerte.every(v => v.dice && !v.seguibile && !v.segui))
 }
 
 riassunto('l\'albero delle missioni')

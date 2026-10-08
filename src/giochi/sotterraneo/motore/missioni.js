@@ -5,6 +5,7 @@
 // trovare e il mostro col nome. Gira in Node.
 import { MISSIONI, PERSONAGGI, personaDi, missioneDi, premioDetto, PIU_DURO, TETTO, posto } from '../dati/missioni.js'
 import { MOSTRI } from '../dati/mostri.js'
+import { COSE } from '../dati/cose.js'
 import { CAMPAGNA, guardianoDi } from '../dati/campagna.js'
 import { seminato } from './livello.js'
 
@@ -146,6 +147,13 @@ export function consegna(stati, id, corredo) {
 export const presePer = (stati, chiaveTappa) =>
   MISSIONI.filter(m => m.discesa === chiaveTappa && statoDi(stati, m.id) === PRESA)
 
+/* ═══════════ la missione che le freccine seguono ═══════════ */
+
+// Con più missioni prese le freccine ne indicano una sola: di difetto la più vicina (rotta, discesaDaSeguire); chi
+// ha toccato «segui questa» nel diario ne sceglie una. La scelta è `avventura.segui`, un id, e vale finché quella
+// missione è presa: fatta o consegnata la scelta decade da sé (docs/sotterraneo/missioni-freccina.md)
+export const seguita = (stati, segui) => (segui && statoDi(stati, segui) === PRESA ? segui : null)
+
 /* ═══════════ il diario e il promemoria ═══════════ */
 
 const PIANI = ['', 'primo', 'secondo', 'terzo', 'quarto', 'quinto']
@@ -154,14 +162,26 @@ const nomeDiscesa = chiave => (CAMPAGNA.find(t => t.chiave === chiave) || {}).no
 // «da la ragazza» non si dice: dalla ragazza, dal mugnaio, dall'eremita
 export const daLui = chi => chi.replace(/^la /, 'dalla ').replace(/^il /, 'dal ').replace(/^l'/, 'dall\'')
 
-function voceDiario(m, stato) {
+// la faccia di una cosa o di un mostro nel dettaglio: l'emoji e il nome del pezzo (la vista cerca `<sprite>-fermo-0`
+// per un mostro, e se l'atlante non ce l'ha ripiega sull'emoji)
+const cosaDi = m => (m.tipo === 'trova'
+  ? { tipo: 'trova', nome: m.cosa.nome, em: m.cosa.em, sprite: null }
+  : { tipo: 'sconfiggi', nome: m.mostro.nome, em: MOSTRI[m.mostro.tipo].em, sprite: MOSTRI[m.mostro.tipo].sprite })
+
+function voceDiario(m, stato, segui = null) {
   const p = personaDi(m.da)
+  const r = COSE[m.premio.cosa] || null
   return {
     id: m.id, stato, tipo: m.tipo, da: m.da,
     titolo: titoloDi(m), em: m.tipo === 'trova' ? m.cosa.em : '👑',
-    chi: p.nome, chiFrase: p.chi,
+    chi: p.nome, chiFrase: p.chi, daChi: daLui(p.chi),
     discesa: m.discesa, dove: nomeDiscesa(m.discesa), piano: m.piano + 1,
     premio: premioDetto(m.premio),
+    // il dettaglio: cosa dice lui (la richiesta, e alla consegna il grazie), la cosa o il mostro, il premio per pezzi
+    dice: m.dice, grazie: m.grazie, cosa: cosaDi(m),
+    gemme: m.premio.gemme || 0, monete: m.premio.monete || 0,
+    regalo: r ? { nome: r.nome, em: r.em, sprite: r.sprite || null } : null,
+    seguibile: stato === PRESA, segui: stato === PRESA && segui === m.id,
     ...(stato === FATTA ? { tornaDa: daLui(p.chi), torna: `Torna ${daLui(p.chi)}: ${m.tipo === 'trova' ? 'hai' : 'hai battuto'} ${inFrase(titoloDi(m))}` } : {}),
   }
 }
@@ -169,11 +189,13 @@ function voceDiario(m, stato) {
 // Il riassunto delle missioni di un'avventura, per la terra di sopra: quelle in mano (da fare, o fatte e da
 // consegnare), quelle che aspettano di essere prese, quelle già consegnate. `nascoste` sono sbloccate ma non
 // offerte per il tetto: il diario lo dice, o chi ne ha tre in mano non capirebbe perché non ne arrivano
-export function diario(stati, tappe) {
-  const mano = inMano(stati).map(m => voceDiario(m, statoDi(stati, m.id)))
+export function diario(stati, tappe, segui = null) {
+  const sg = seguita(stati, segui)
+  const mano = inMano(stati).map(m => voceDiario(m, statoDi(stati, m.id), sg))
   const offerta = offerte(stati, tappe).map(m => voceDiario(m, 'offerta'))
   const finite = MISSIONI.filter(m => statoDi(stati, m.id) === CONSEGNATA).sort(dellaStoria).map(m => voceDiario(m, CONSEGNATA))
   return {
+    segui: sg,
     inMano: mano, pronte: mano.filter(v => v.stato === FATTA), daFare: mano.filter(v => v.stato !== FATTA),
     offerte: offerta, consegnate: finite,
     aperte: mano.length + offerta.length,
@@ -214,7 +236,7 @@ const distanza = (da, a) => Math.hypot(a.x - da.x, a.y - da.y)
 // che scende; una già sfuggita (piano passato) o fatta non c'è. È una direzione e non una strada, e non guarda
 // la nebbia: indica anche verso il buio, che è il motivo per andarci. `c` è la Corsa (o quel che le somiglia:
 // `missioni`, `missioniFatte`, `piano`, `eroe`, `livello.robe`). Senza niente da seguire torna null
-export function rotta(c) {
+export function rotta(c, segui = null) {
   const robe = c.livello.robe
   const scala = robe.find(r => r.che === 'scala')
   let meglio = null
@@ -232,7 +254,9 @@ export function rotta(c) {
       quale = 'scala'
     }
     const d = distanza(c.eroe, dove)
-    if (!meglio || d < meglio.distanza) meglio = { id: m.id, verso: quale, x: dove.x, y: dove.y, distanza: d }
+    const questa = { id: m.id, verso: quale, x: dove.x, y: dove.y, distanza: d }
+    if (m.id === segui) { meglio = questa; break }   // quella scelta nel diario vince sulla più vicina
+    if (!meglio || d < meglio.distanza) meglio = questa
   }
   if (!meglio) return null
   const m = missioneDi(meglio.id)
@@ -242,8 +266,10 @@ export function rotta(c) {
 // Sulla terra di sopra: la discesa verso cui puntare. Quella con una missione presa e non fatta, la più vicina a
 // `da`; `posti` dice dove sta ogni discesa ({ [chiave]: { x, y } }). Se qualcuno aspetta una consegna la freccia
 // d'oro ha la precedenza (chiAspetta) e questa non c'è: una cosa alla volta da ricordare
-export function discesaDaSeguire(stati, da, posti) {
+export function discesaDaSeguire(stati, da, posti, segui = null) {
   if (chiAspetta(stati).length) return null
+  const scelta = seguita(stati, segui)
+  if (scelta && posti[missioneDi(scelta).discesa]) return missioneDi(scelta).discesa
   let meglio = null
   for (const m of MISSIONI) {
     if (statoDi(stati, m.id) !== PRESA || !posti[m.discesa]) continue
