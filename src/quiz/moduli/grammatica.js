@@ -9,7 +9,7 @@ const IRREGOLARI = [
   { s: 'dito', p: 'dita', errori: ['diti', 'dito'], em: '👆' },
   { s: 'mano', p: 'mani', errori: ['mano', 'mane'], em: '✋' },
   { s: 'uomo', p: 'uomini', errori: ['uomi', 'uomo'], em: '🧑' },
-  { s: 'ala', p: 'ali', errori: ['ale', 'ala'], em: '🪽' },
+  { s: 'ala', p: 'ali', errori: ['ale', 'ala'], em: '🦅' },
   { s: 'bue', p: 'buoi', errori: ['bui', 'bue'], em: '🐂' },
   { s: 'ginocchio', p: 'ginocchia', errori: ['ginocchi', 'ginocchio'] },
   { s: 'orecchio', p: 'orecchie', errori: ['orecchi', 'orecchio'], em: '👂' },

@@ -27,7 +27,7 @@
   color: var(--pd-inchiostro);
   position: relative;
 }
-.pd .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
+.pd .em { font-family: "Emoji Gioco", system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
                        "Twemoji Mozilla", sans-serif; line-height: 1 }
 
 /* la misura di una vignetta sta qui e non su `.pd`: `--pd-riga` (scritta

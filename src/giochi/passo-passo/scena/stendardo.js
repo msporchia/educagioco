@@ -9,7 +9,7 @@ import { rettangoli } from './pixel.js'
 
 export const P = 3                       // un pixel del disegno è tre pixel dello schermo
 export const CORPO = 15                  // il carattere del nome, in px
-export const CARATTERE = 'Georgia, "Palatino Linotype", "Book Antiqua", Palatino, serif'
+export const CARATTERE = '"Emoji Gioco", Georgia, "Palatino Linotype", "Book Antiqua", Palatino, serif'
 export const SPAZIATURA = 0.4            // fra una lettera e l'altra, in px
 // quanto è largo un nome senza poterlo misurare (i test): un po' per eccesso
 export const stimaNome = nome => Math.ceil(nome.length * (CORPO * 0.6 + SPAZIATURA))

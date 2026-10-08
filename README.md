@@ -152,4 +152,10 @@ l'ultimo errore, oppure si
 [apre una segnalazione](https://github.com/msporchia/educagioco/issues/new/choose).
 Per il resto sto su [LinkedIn](https://www.linkedin.com/in/marcosporchia).
 
+**Crediti.** Le emoji che si vedono nel gioco sono [Twemoji](https://github.com/twitter/twemoji)
+(© Twitter, Inc. e collaboratori, [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/)),
+nel font [Twemoji Mozilla](https://github.com/mozilla/twemoji-colr), tagliato
+a quelle usate e ritoccato per il file unico (dettagli in
+[`docs/core/emoji.md`](docs/core/emoji.md)).
+
 MIT — vedi [LICENSE](LICENSE). Se serve a un altro bambino, tanto meglio.

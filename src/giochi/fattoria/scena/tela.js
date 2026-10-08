@@ -170,7 +170,7 @@ export class Attore {
                      scala * a.misura / larghezzaDi(a.disegno))
         continue
       }
-      ctx.font = `${Math.max(6, Math.round(a.misura * scala))}px system-ui,sans-serif`
+      ctx.font = `${Math.max(6, Math.round(a.misura * scala))}px "Emoji Gioco", system-ui,sans-serif`
       ctx.fillText(a.testo, punto[0] * w, (punto[1] + salto) * h)
     }
     ctx.restore()
@@ -200,7 +200,7 @@ export class Attore {
   fumetto(ctx, x, y, orologio, scala) {
     const s = 2 + Math.sin(orologio * 4) * 1.2
     ctx.save()
-    ctx.font = `${Math.round(11 + scala * 2)}px system-ui,sans-serif`
+    ctx.font = `${Math.round(11 + scala * 2)}px "Emoji Gioco", system-ui,sans-serif`
     ctx.textAlign = 'center'
     ctx.fillText('💭', x, y - s)
     ctx.restore()
@@ -479,7 +479,7 @@ export class Tela {
       let y = s.y * this.cellaPx - this.vista.y
       if (x < -40 || y < -40 || x > this.L + 40 || y > this.A + 40) continue
       if (s.ondeggia) y += Math.sin(orologio * 3 + s.x) * 2
-      ctx.font = `${Math.max(8, Math.round(s.misura * this.scala))}px system-ui,sans-serif`
+      ctx.font = `${Math.max(8, Math.round(s.misura * this.scala))}px "Emoji Gioco", system-ui,sans-serif`
       ctx.fillText(s.testo, x, y)
     }
     ctx.restore()
@@ -502,7 +502,7 @@ export class Tela {
       const alfa = q < .5 ? 1 : 1 - (q - .5) * 2
       ctx.save()
       ctx.globalAlpha = Math.max(0, Math.min(1, alfa))
-      ctx.font = `bold ${Math.round(15 + this.scala * 3)}px system-ui,sans-serif`
+      ctx.font = `bold ${Math.round(15 + this.scala * 3)}px "Emoji Gioco", system-ui,sans-serif`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'bottom'
       ctx.lineJoin = 'round'
@@ -525,7 +525,7 @@ export class Tela {
     if (x < -40 || y < -40 || x > this.L + 40 || y > this.A + 40) return
     ctx.save()
     ctx.textAlign = 'center'
-    ctx.font = `${Math.round(13 + this.scala * 3)}px system-ui,sans-serif`
+    ctx.font = `${Math.round(13 + this.scala * 3)}px "Emoji Gioco", system-ui,sans-serif`
     ctx.shadowColor = 'rgba(0,0,0,.55)'
     ctx.shadowBlur = 4
     ctx.fillText(f.testo, x, y)
@@ -549,7 +549,7 @@ export class Tela {
     ctx.fillStyle = '#2a1c12'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.font = `700 ${Math.round(r * 1.25)}px system-ui,sans-serif`
+    ctx.font = `700 ${Math.round(r * 1.25)}px "Emoji Gioco", system-ui,sans-serif`
     ctx.fillText(String(n), cx, cy + 1)
     ctx.restore()
   }
@@ -597,7 +597,7 @@ export class Tela {
     } else {
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.font = `${dentro}px system-ui,sans-serif`
+      ctx.font = `${dentro}px "Emoji Gioco", system-ui,sans-serif`
       ctx.fillText(f.vuole.testo, cx, y + lato / 2 + 1)
       ctx.textAlign = 'left'
       ctx.textBaseline = 'alphabetic'
@@ -607,7 +607,7 @@ export class Tela {
       ctx.save()
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.font = `${Math.round(lato * .38)}px system-ui,sans-serif`
+      ctx.font = `${Math.round(lato * .38)}px "Emoji Gioco", system-ui,sans-serif`
       ctx.fillText('⏳', x + lato - lato * .16, y + lato * .16)
       ctx.restore()
     }
@@ -751,9 +751,9 @@ export class Tela {
         const pc = PEZZI.cartello
         this.pezzo('cartello', cx - pc[2] * this.scala / 2, cy - pc[3] * this.scala + 14)
         // La monetina sopra e il numero sotto: un numero nudo nel bosco non dice cosa costa.
-        ctx.font = `${8 + this.scala * 2}px system-ui,sans-serif`
+        ctx.font = `${8 + this.scala * 2}px "Emoji Gioco", system-ui,sans-serif`
         ctx.fillText('🪙', cx, cy - 3 - this.scala)
-        ctx.font = `700 ${9 + this.scala * 3}px system-ui,sans-serif`
+        ctx.font = `700 ${9 + this.scala * 3}px "Emoji Gioco", system-ui,sans-serif`
         ctx.fillStyle = posso ? '#3a2a12' : '#7a2a2a'
         ctx.fillText(String(prezzo), cx, cy + 9 + this.scala * 2)
       }
@@ -856,7 +856,7 @@ export class Tela {
     } else if (testo) {
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.font = `${Math.round(lato * .86)}px system-ui,sans-serif`
+      ctx.font = `${Math.round(lato * .86)}px "Emoji Gioco", system-ui,sans-serif`
       ctx.fillText(testo, cx, cy + 1)
     }
     ctx.restore()
@@ -920,7 +920,7 @@ export class Tela {
     ctx.fillStyle = '#7fbf5f'
     tondo(ctx, -w / 2 + 42, -5, Math.max(10, 50 * a.quanto), 10, 5); ctx.fill()
     ctx.fillStyle = '#2a1c12'
-    ctx.font = '700 15px system-ui,sans-serif'
+    ctx.font = '700 15px "Emoji Gioco", system-ui,sans-serif'
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
     ctx.fillText(a.testoMinuti, -w / 2 + 98, 1)
@@ -996,11 +996,11 @@ export class Tela {
         if (p.come === 'piu') {
           ctx.setLineDash([])
           ctx.fillStyle = '#faf6ec'
-          ctx.font = '700 24px system-ui,sans-serif'
+          ctx.font = '700 24px "Emoji Gioco", system-ui,sans-serif'
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
           ctx.fillText('+', 0, 1)
-          ctx.font = '700 13px system-ui,sans-serif'
+          ctx.font = '700 13px "Emoji Gioco", system-ui,sans-serif'
           ctx.lineWidth = 3
           ctx.strokeStyle = 'rgba(8,20,12,.85)'
           ctx.strokeText('🪙' + p.prezzo, 0, d / 2 + 11)
@@ -1036,7 +1036,7 @@ export class Tela {
     const ctx = this.ctx
     const q = 34, gap = 5
     ctx.save()
-    ctx.font = '700 15px system-ui,sans-serif'
+    ctx.font = '700 15px "Emoji Gioco", system-ui,sans-serif'
     const pezzi = [
       ...d.caselle.map(c => ({ casella: c, w: q })),
       ...(d.caselle.length ? [{ testo: '→', w: 22, grande: true }] : []),
@@ -1068,7 +1068,7 @@ export class Tela {
       } else {
         ctx.fillStyle = '#2a1c12'
         ctx.textAlign = 'center'
-        ctx.font = p.grande ? '700 19px system-ui,sans-serif' : '700 15px system-ui,sans-serif'
+        ctx.font = p.grande ? '700 19px "Emoji Gioco", system-ui,sans-serif' : '700 15px "Emoji Gioco", system-ui,sans-serif'
         ctx.fillText(p.testo, mezzo, y + h / 2 + 1)
       }
       cx += p.w + gap
@@ -1148,7 +1148,7 @@ export class Tela {
         ctx.save()
         ctx.globalAlpha = Math.max(0, alfa)
         this.faccia(e.pezzo, e.testo, x - 10, y, 34)
-        ctx.font = '800 20px system-ui,sans-serif'
+        ctx.font = '800 20px "Emoji Gioco", system-ui,sans-serif'
         ctx.textAlign = 'left'
         ctx.textBaseline = 'middle'
         ctx.lineJoin = 'round'
@@ -1173,7 +1173,7 @@ export class Tela {
       if (t >= n.durata) continue
       vive.push(n)
       ctx.save()
-      ctx.font = '700 16px system-ui,sans-serif'
+      ctx.font = '700 16px "Emoji Gioco", system-ui,sans-serif'
       const FACCIA = 26
       const pezzi = n.merci.map(m => ({ ...m, numero: String(m.quanti), largo: ctx.measureText(String(m.quanti)).width }))
       const coda = pezzi.reduce((t, m) => t + 8 + m.largo + 3 + FACCIA, 0)

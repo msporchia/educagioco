@@ -456,11 +456,15 @@ export class Corsa extends Corredo {
   }
 
   // unico ingresso dall'esterno quando un foglio chiede qualcosa; torna cosa è successo per il suono e la scossa giusti
-  rispondi(giusto) {
+  rispondi(giusto, { saltata = false } = {}) {
     const f = this.foglio
     if (!f) return null
-    this.domande++
-    if (giusto) this.giuste++
+    // una domanda saltata (il tasto dei grandi, docs/core/comandi.md) fa il suo effetto nel
+    // mondo ma non è una risposta data: non entra in `domande` né in `giuste`, che pagano l'abisso
+    if (!saltata) {
+      this.domande++
+      if (giusto) this.giuste++
+    }
 
     if (f.che === 'scontro') return this.rispostaScontro(f.chi, giusto)
     if (f.che === 'porta') return this.rispostaPorta(f.chi, giusto)

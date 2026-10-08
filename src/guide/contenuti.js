@@ -534,7 +534,7 @@ export const AIUTI = {
       'Il robot non è una persona: non indovina cosa volevi, e da solo non fa niente. Fa **alla lettera** quello che gli scrivi, una riga dopo l\'altra — anche quando è sbagliato.',
       { titolo: 'Come si scrive', righe: [
         'Si tocca «＋», si sceglie un blocco dalla cassetta, e si riempiono le caselle toccandole: tutto quello che ha il ▾ si cambia. Una **N** è un numero ancora da scegliere, un **?** una freccia o un colore.',
-        'Toccando una riga compaiono i suoi tasti: ✂ la **sposta** e ⧉ la **copia**, poi si tocca 📥 dove va — anche dentro un ripeti, o in un progetto.',
+        'Toccando una riga compaiono i suoi tasti: ✂️ la **sposta** e ⧉ la **copia**, poi si tocca 📥 dove va — anche dentro un ripeti, o in un progetto.',
         'Il robot cammina e cade: per salire si mette un mattone ↓ sotto i piedi e ci sale sopra. I mattoni si posano anche ↘ ↙ in basso, dove andrà il piede: è così che si fa un ponte.',
         'Un **progetto** è un pezzo di programma con un nome, che si scrive una volta e si chiama quante volte vuoi. Le sue **misure** sono i numeri che riceve.',
         'Gli **attrezzi** 🔒 sono progetti già scritti — la torre, il muro, l\'albero — che si chiamano come gli altri e non si cambiano. Sotto il nome dicono dove lasciano il robot.',
@@ -602,7 +602,7 @@ export const AIUTI = {
       ] },
       { titolo: 'La roba e i mercanti', righe: [
         'Quello che hai addosso, quello che hai in tasca e le gemme **te li porti dietro**: alla discesa dopo li ritrovi. Anche uscendo a metà.',
-        'Uscendo a metà, la discesa ti aspetta **esattamente dove l\'hai lasciata**: stessa stanza, stesso punto, i mostri dove erano.',
+        'Uscendo a metà, la discesa ti aspetta **esattamente dove l\'hai lasciata**: stessa stanza, stesso punto, i mostri dove erano, e rientrando sei già giù. Per salire al villaggio c\'è il portale; o ⏸ e «lascio perdere questa discesa»: la roba resta, la discesa ricomincia da capo.',
         '**Ogni eroe ha la sua avventura**: la sua roba, le sue discese e la sua strada qui sopra. Con «cambio» passi a un altro, e lo ritrovi dove l\'avevi lasciato.',
         'Le gemme si spendono sopra, dai mercanti vicino alle case: l\'**armaiolo** (armi, scudi, armature), l\'**erborista** (pozioni e torce) e il **rigattiere** vicino al carro (anelli e amuleti, e compra quello che hai in tasca). Si tocca il mercante, l\'eroe ci va e si apre il banco.',
         'Più discese hai finito, più roba e più forte trovi sul banco; finita una discesa i banchi cambiano.',

@@ -1,4 +1,4 @@
-// { che:'bilance', bilance: [{ sx:[{e,n}|{peso}], dx:[…] }] }, sempre in pari (il pittore non fa i conti). Vedi docs/apprendimento/quiz-moduli.md.
+// { che:'bilance', bilance: [{ sx:[{e,n}|{peso}], dx:[…] }], unita?: 'kg' }, sempre in pari (il pittore non fa i conti). Vedi docs/apprendimento/quiz-moduli.md.
 const PIATTO = '#dbe4fb'
 const ASTA = '#93a7d6'
 const PIEDE = '#7d8cb4'
@@ -16,7 +16,7 @@ const PEZZO = 13               // il lato di una cosa sul piatto
 const GRANDE = 15.5            // …e quando c'è posto per farla più grossa
 const STRABORDA = 47           // fin dove una fila può uscire dal piatto
 
-function bilancia(p, { sx = [], dx = [] }, lato = PEZZO) {
+function bilancia(p, { sx = [], dx = [] }, lato = PEZZO, unita = '') {
   p.figura([[37, 60], [63, 60], [57, 55.5], [43, 55.5]], PIEDE) // piede e colonna
   p.rett(48.6, 46, 2.8, 10, ASTA)
   p.rett(17, 45, 66, 3, ASTA) // la trave, dritta: è tutta la domanda
@@ -28,8 +28,8 @@ function bilancia(p, { sx = [], dx = [] }, lato = PEZZO) {
   p.linea([{ x: 50, y: 45 }, { x: 50, y: 33 }], AGO, 1.6)
   p.cerchio(50, 32.5, 1.6, AGO)
 
-  piatto(p, CX[0], sx, lato)
-  piatto(p, CX[1], dx, lato)
+  piatto(p, CX[0], sx, lato, unita)
+  piatto(p, CX[1], dx, lato, unita)
 }
 
 // mucchietti: pesi insieme, cose della stessa specie insieme; il più grosso viene prima (va in fondo)
@@ -56,13 +56,13 @@ function fileDi(lato) {
 
 const larghezza = (fila, lato) => fila.reduce((s, x) => s + largoDi(x, lato), 0) + (fila.length - 1) * 0.8
 
-function piatto(p, cx, lato, pezzo) {
+function piatto(p, cx, lato, pezzo, unita) {
   fileDi(lato).forEach((fila, i) => {
     const y = PIANO - pezzo / 2 - 0.4 - i * pezzo
     let x = cx - larghezza(fila, pezzo) / 2
     for (const uno of fila) {
       const w = largoDi(uno, pezzo)
-      if (uno.peso !== undefined) peso(p, x + w / 2, y, w, uno.peso, pezzo)
+      if (uno.peso !== undefined) peso(p, x + w / 2, y, w, uno.peso, pezzo, unita)
       else p.testo(uno.e, x + w / 2, y + 0.6, '#ffffff', pezzo * 0.88, 400)
       x += w + 0.8
     }
@@ -75,7 +75,8 @@ function pezzoPer(b) {
   return file.every(f => larghezza(f, GRANDE) <= STRABORDA) ? GRANDE : PEZZO
 }
 
-function peso(p, x, y, w, quanto, lato) { // trapezio con la maniglia, il numero sopra
+// l'unità sotto il numero, piccola: senza, «6» non dice di cosa (6 cosa? 6 fragole?)
+function peso(p, x, y, w, quanto, lato, unita) { // trapezio con la maniglia, il numero sopra
   const h = lato - 2
   p.ctx.lineWidth = 1.4
   p.ctx.strokeStyle = PESO_OMBRA
@@ -85,25 +86,39 @@ function peso(p, x, y, w, quanto, lato) { // trapezio con la maniglia, il numero
   p.figura([[x - w / 2, y + h / 2], [x + w / 2, y + h / 2],
             [x + w / 2 - 2, y - h / 2], [x - w / 2 + 2, y - h / 2]], PESO)
   p.rett(x - w / 2, y + h / 2 - 1.4, w, 1.4, PESO_OMBRA)
-  p.testo(String(quanto), x, y + 0.4, CIFRA, 7.5 * lato / PEZZO, 800)
+  const s = lato / PEZZO
+  if (!unita) return p.testo(String(quanto), x, y + 0.4, CIFRA, 7.5 * s, 800)
+  p.testo(String(quanto), x, y - 1.5 * s, CIFRA, 6.6 * s, 800)
+  p.testo(unita, x, y + 2.5 * s, CIFRA, 3.4 * s, 700)
 }
 
 // una sola sta grande in mezzo; due stanno una sopra l'altra, rimpicciolite (0.92: la bilancia ha aria da tagliare sopra)
 const DUE = 0.92
+// tre in fila: un terzo d'altezza ciascuna, tagliata da sopra il carico (una fila sola: lo scambio a tre ha piatti da tre cose al massimo) al piede
+const TRE = 0.85
+const CARICO = PIANO - PEZZO - 2.5 // la cima di una fila sola, maniglia del peso compresa
 
-export function bilance(p, { bilance: tutte = [] }) {
+export function bilance(p, { bilance: tutte = [], unita = '' }) {
   if (tutte.length <= 1) {
     // da sola: la cima è quella della fila più alta, il fondo è il piede a 60
     const b = tutte[0] || {}
     const pezzo = pezzoPer(b)
     const file = Math.max(fileDi(b.sx || []).length, fileDi(b.dx || []).length, 1)
     const cima = Math.min(PIANO - file * pezzo, 30)
-    p.in(0, 50 - (cima + 60) / 2, q => bilancia(q, b, pezzo))
+    p.in(0, 50 - (cima + 60) / 2, q => bilancia(q, b, pezzo, unita))
+    return
+  }
+  if (tutte.length >= 3) {
+    for (const y of [33.3, 66.6]) p.rett(6, y - 0.4, 88, 0.8, RIGA)
+    tutte.slice(0, 3).forEach((b, i) => {
+      p.in((100 - 100 * TRE) / 2, i * 33.33 + 1.2 - CARICO * TRE,
+        q => { q.ctx.scale(TRE, TRE); bilancia(q, b, PEZZO, unita) })
+    })
     return
   }
   p.rett(6, 49.6, 88, 0.8, RIGA)
   tutte.slice(0, 2).forEach((b, i) => {
-    p.in((100 - 100 * DUE) / 2, i * 50 + 48 - 60 * DUE, q => { q.ctx.scale(DUE, DUE); bilancia(q, b) })
+    p.in((100 - 100 * DUE) / 2, i * 50 + 48 - 60 * DUE, q => { q.ctx.scale(DUE, DUE); bilancia(q, b, PEZZO, unita) })
   })
 }
 

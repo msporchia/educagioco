@@ -124,7 +124,7 @@ const apertaQui = i => ed.aperta.value && ed.aperta.value.id === i.id
       <div v-if="ed.sel.value === i.id && !ferma() && !mano()" class="cst-tasti-riga">
         <button type="button" data-azione="sopra" aria-label="sposta su" @click="ed.azione('su', i.id)">↑</button>
         <button type="button" data-azione="sotto" aria-label="sposta giù" @click="ed.azione('giu', i.id)">↓</button>
-        <button type="button" data-azione="sposta" aria-label="prendi e sposta" @click="ed.prendi(i.id, false)">✂ sposta</button>
+        <button type="button" data-azione="sposta" aria-label="prendi e sposta" @click="ed.prendi(i.id, false)">✂️ sposta</button>
         <button type="button" data-azione="copia" aria-label="copia" @click="ed.prendi(i.id, true)">⧉ copia</button>
         <button v-if="i.tipo === 'se'" type="button" data-azione="altrimenti" @click="ed.azione('altrimenti', i.id)">
           {{ i.altrimenti ? '− altrimenti' : '＋ altrimenti' }}</button>

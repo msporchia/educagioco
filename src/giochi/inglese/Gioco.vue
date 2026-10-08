@@ -5,6 +5,7 @@
 // col motore: docs/lingue/mondi.md.
 import { ref, shallowRef, computed, reactive, watch, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
+import TastoSalta from '../../components/TastoSalta.vue'
 import { suono } from '../../audio.js'
 import { state, item, answer, segna, persist, flushNow, engProgresso, tuttoAperto, etaDelBambino }
   from '../../store/profile.js'
@@ -26,7 +27,7 @@ import { Sessione } from './motore/sessione.js'
 import { Tocchi, domandeCheLPagano, domandaDelTocco } from './motore/tocchi.js'
 import { cassettoDi, mondoDellaTappa } from './motore/grafo.js'
 import { gradoTappa } from './motore/grado.js'
-import { capitoliDi, racconta, eGiusta } from './motore/libro.js'
+import { capitoliDi, racconta, eGiusta, rispostaGiusta } from './motore/libro.js'
 import { storieAperte, prossimaStoria, unAltraStoria, segnaLetta, cosaServeAlLibro, tiraLaStoria, segnaPuntata,
          puntataDopo } from './motore/storie.js'
 import { traduci } from './motore/lessico.js'
@@ -261,16 +262,17 @@ function togli(id) {
 const CONTATORE = { 'en:': 'en', 'verbo:': 'verbi', 'frase:': 'frasi' }
 const contatoreDi = k => CONTATORE[Object.keys(CONTATORE).find(p => k.startsWith(p))] || null
 
-function rispondi(risposta, scelta) {
+function rispondi(risposta, scelta, { saltata = false } = {}) {
   if (esito.value || !orologio.pronta.value || !sessione) return
   const q = d.value
   const tempo = orologio.guardata()
-  const e = sessione.rispondi(q, risposta, { tocchi })
+  // il tasto «salta» dei grandi (docs/core/comandi.md): la tappa avanza, il ripasso non sente
+  const e = saltata ? sessione.salta(q) : sessione.rispondi(q, risposta, { tocchi })
   for (const r of e.registra) answer(r.chiave, { correct: r.correct, ms: r.chiave === q.chiave ? tempo * 1000 : 0 })
   if (e.giusta) {
     conti.giuste++
     const k = contatoreDi(q.chiave)
-    if (k) segna(k)
+    if (k && !saltata) segna(k)
     suono.ok()
   } else {
     conti.errori++
@@ -284,11 +286,11 @@ function rispondi(risposta, scelta) {
   // la fretta si misura su quello che c'era da leggere: la consegna e le risposte (o le tessere)
   const daLeggere = { testo: q.domanda.testo || '',
                       risposte: (q.opzioni || q.tessere || []).map(o => ({ testo: o.testo })) }
-  const diFretta = troppoDiFretta(daLeggere, { giusto: e.giusta, tempo })
-  const penale = pesoDellaFretta(diFretta, e.giusta)
+  const diFretta = !saltata && troppoDiFretta(daLeggere, { giusto: e.giusta, tempo })
+  const penale = saltata ? { attesa: 0 } : pesoDellaFretta(diFretta, e.giusta)
   const giustaEra = !e.giusta && q.tessere ? e.giustaEra : null
   esito.value = {
-    giusta: e.giusta, scelta, diFretta, giustaEra,
+    giusta: e.giusta, saltata, scelta, diFretta, giustaEra,
     perche: e.perche || '', siFa: e.giusta ? '' : (e.siFa || ''),
     sbagliate: !e.giusta && q.tessere ? F.sbagliate(q, fila.value) : [],
   }
@@ -369,6 +371,7 @@ const libroFase = ref('leggi')
 const libroK = ref(0)
 const libroRisposta = ref(null)      // quello che si è risposto alla domanda di adesso, null se ancora niente
 const libroGiusta = ref(false)
+const libroSaltata = ref(false)      // la risposta di adesso è un «salta» dei grandi: docs/core/comandi.md
 const libroPersi = ref(0)            // tocchi a pagamento nel capitolo: ognuno toglie una domanda
 let libroGiuste = 0
 let libroPagate = 0                  // le domande del capitolo già pagate, una per volta
@@ -406,15 +409,18 @@ function hoLetto() {
 }
 
 // La risposta: un'opzione, la riga toccata («frase») o la fila dei fatti («ordine»)
-function rispondiLibro(risposta) {
+function rispondiLibro(risposta, { saltata = false } = {}) {
   if (libroRisposta.value !== null || !orologio.pronta.value) return
   const dom = libro.value.domande[libroK.value]
   const giusta = eGiusta(dom, risposta)
   libroRisposta.value = risposta
   libroGiusta.value = giusta
-  if (giusta) { libroGiuste++; conti.giuste++; suono.ok() } else { conti.errori++; suono.no() }
+  libroSaltata.value = saltata
+  // saltata (docs/core/comandi.md): giusta per andare avanti, ma non conta e non paga
+  if (giusta && saltata) suono.ok()
+  else if (giusta) { libroGiuste++; conti.giuste++; suono.ok() } else { conti.errori++; suono.no() }
   // la domanda giusta paga adesso, se un tocco a pagamento non se l'è già mangiata
-  if (giusta && domandeCheLPagano(libroGiuste, tocchiLibro.aPagamento) > libroPagate) {
+  if (giusta && !saltata && domandeCheLPagano(libroGiuste, tocchiLibro.aPagamento) > libroPagate) {
     libroPagate++
     const p = incassa(pagaDelCapitolo(libro.value.pagine.length))
     conti.monete += p.dato
@@ -583,11 +589,14 @@ onUnmounted(() => { clearTimeout(bollaTimer); zittisci() })
                :attesa="attesa" :giro="giro" :parla="parla"
                @opzione="i => rispondi(d.opzioni[i], i)" @metti="metti" @togli="togli"
                @consegna="rispondi(F.risposta(fila), null)" @tocca="tocca" @ascolta="ascolta" />
+      <!-- per provare i giochi: la leva di #admin, docs/core/comandi.md -->
+      <TastoSalta v-if="!pagina && !esito" @salta="rispondi(null, null, { saltata: true })" />
     </div>
 
     <Libro v-else-if="vista === 'libro' && libro" :cap="libro" :fase="libroFase" :k="libroK"
-           :risposta="libroRisposta" :giusta="libroGiusta" :attesa="attesa" :giro="giro"
-           @ho-letto="hoLetto" @rispondi="rispondiLibro" @tocca="tocca" />
+           :risposta="libroRisposta" :giusta="libroGiusta" :saltata="libroSaltata" :attesa="attesa" :giro="giro"
+           @ho-letto="hoLetto" @rispondi="rispondiLibro" @tocca="tocca"
+           @salta="rispondiLibro(rispostaGiusta(libro.domande[libroK]), { saltata: true })" />
 
     <Fine v-if="fine" v-bind="fine" @mappa="allaMappa" @avanti="avantiDaFine" @ancora="ancoraDaFine"
           @altro="altroDaFine" />

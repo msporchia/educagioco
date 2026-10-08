@@ -24,7 +24,8 @@
     "quiz:banco": "node strumenti/quiz/banco.mjs",
     "quiz:livelli": "node strumenti/quiz/livelli.mjs",
     "quiz:eta": "node strumenti/quiz/eta.mjs",
-    "scatti": "node strumenti/scatti.mjs"
+    "scatti": "node strumenti/scatti.mjs",
+    "emoji": "node strumenti/emoji.mjs"
   },
   "dependencies": {
     "vue": "^3.5.13"

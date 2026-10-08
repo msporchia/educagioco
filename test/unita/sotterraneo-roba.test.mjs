@@ -11,7 +11,7 @@
 import { CAMPAGNA, L_ABISSO, svenimentiDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { COSE, CURE, SEGNI, IN_VENDITA, STANZE_TORCIA } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
-import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti }
+import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti, schedaDi }
   from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { MERCANTI as DOVE_MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
@@ -246,6 +246,47 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   uguale('il rigattiere sì, a metà prezzo', venduta && venduta.gemme, COSE.spada.prezzo / 2)
   uguale('e la tasca si libera', v.zaino.length, 0)
   controlla('rivendere quello comprato ci rimette sempre', IN_VENDITA.every(x => new Corredo().quantoVale(x) < COSE[x].prezzo))
+}
+
+/* ══════════ 7b. la bottega: confronto, vetrina, linguette ══════════
+   Il pannello dice «⚔️ 3 → 5» coi numeri del motore (seLoMetto), il banco
+   non resta mai vuoto (la vetrina dei pezzi più su, spenti) e quello che
+   non alza niente di quello addosso non si mostra (docs/sotterraneo/roba.md,
+   «La bottega e lo zaino»). */
+{
+  const nudo = new Bottega({ roba: { ...ROBA_VUOTA(), gemme: 50 } })
+  const p = nudo.seLoMetto('spada-corta')
+  uguale('a mani nude la spada corta porta il braccio da 3 a 4', `${p.prima.att} → ${p.dopo.att}`, '3 → 4')
+  uguale('in mano', p.dove, 'mano')
+  const vestito = new Bottega({ roba: { ...ROBA_VUOTA(), mano: 'spadone', corpo: 'panciotto', dito: 'amuleto-rosso' } })
+  uguale('lo scudo con lo spadone in mano non va: lo dice', vestito.seLoMetto('scudo-legno')?.bloccata, 'spadone')
+  const anello = vestito.seLoMetto('anello-verde')
+  uguale('cambiare l\'amuleto rosso con l\'anello verde toglie sei di vita', anello.prima.vita - anello.dopo.vita, 6)
+  controlla('e dà le gemme', anello.dopo.gemme > anello.prima.gemme)
+  uguale('il mago non si mette l\'ascia: niente confronto', new Bottega({ eroe: 'mago' }).seLoMetto('ascia'), null)
+  /* in discesa la vita è il tetto della corsa, che cresce coi piani */
+  const giu = new Corsa(CAMPAGNA[2], { seme: 3, rnd: seminato(3), roba: { ...ROBA_VUOTA(), zaino: ['amuleto-azzurro'] } })
+  const pg = giu.seLoMetto('amuleto-azzurro')
+  uguale('nello zaino il confronto parte dalla vita massima della discesa', pg.prima.vita, giu.vitaMax)
+  uguale('e ci aggiunge i tre dell\'amuleto', pg.dopo.vita, giu.vitaMax + 3)
+
+  uguale('prima della prima discesa l\'armaiolo non ha niente da vendere', nudo.banco('armaiolo').roba.length, 0)
+  const vetrina = nudo.vetrina('armaiolo')
+  controlla('ma la vetrina mostra i pezzi più su', vetrina.length >= 3, JSON.stringify(vetrina))
+  uguale('la spada corta arriva finita la cripta', vetrina.find(v => v.chiave === 'spada-corta')?.finita, 0)
+  controlla('e niente della vetrina si compra', vetrina.every(v => nudo.compraDa('armaiolo', v.chiave) === null))
+  uguale('l\'erborista non ha vetrina: il suo banco non è mai vuoto', nudo.vetrina('erborista').length, 0)
+  const forte = new Bottega({ finite: 3, roba: { ...ROBA_VUOTA(), mano: 'spadone' } })
+  uguale('chi ha lo spadone non vede la spada corta', forte.sottoAddosso('spada-corta'), true)
+  uguale('né la spada in vetrina', forte.vetrina('armaiolo').some(v => v.chiave === 'spada'), false)
+  const leggera = new Bottega({ roba: { ...ROBA_VUOTA(), mano: 'spada' } })
+  uguale('una seconda arma leggera, con la mano libera, alza il braccio: si vede', leggera.sottoAddosso('spada-corta'), false)
+
+  /* ogni cosa del banco sta sotto una linguetta, e «Vendi» ce l'ha solo chi compra */
+  for (const m of MERCANTI)
+    for (const r of new Bottega({ finite: 6, roba: { ...ROBA_VUOTA(), gemme: 99 } }).mercanzia(m.chiave))
+      controlla(`${m.chiave}: ${r.chiave} ha la sua linguetta`, !!schedaDi(m, r.chiave))
+  uguale('la linguetta «Vendi» è del rigattiere', MERCANTI.filter(m => m.schede.some(s => s.vendi)).map(m => m.chiave).join(), 'rigattiere')
 }
 
 /* ══════════ 8. l'equilibrio, in piccolo ══════════

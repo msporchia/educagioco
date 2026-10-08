@@ -168,8 +168,8 @@ const maleDi = g => {
     conta: righe.length === 1 ? '1 va male' : `${righe.length} vanno male`,
     // «in Le analogie» non si può scrivere: la strada si dice un pezzo dopo l'altro, non con l'articolo giusto
     frase: righe.length === 1
-      ? `⚠ ${uno.dentro ? `${uno.dentro} › ` : ''}«${uno.nome}» · ${uno.detto}`
-      : `⚠ ${righe.slice(0, 2).map(r => `«${r.nome}»`).join(' · ')}` +
+      ? `⚠️ ${uno.dentro ? `${uno.dentro} › ` : ''}«${uno.nome}» · ${uno.detto}`
+      : `⚠️ ${righe.slice(0, 2).map(r => `«${r.nome}»`).join(' · ')}` +
         (righe.length > 2 ? ` · e altre ${righe.length - 2}` : ''),
   }
 }

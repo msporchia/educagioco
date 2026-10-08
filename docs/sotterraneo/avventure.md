@@ -21,6 +21,12 @@ campagna), `Gioco.vue` (chi legge e scrive), `viste/Eroi.vue` (la scelta).
 - **Dalla terra di sopra si torna alla scelta** col «cambio» della carta di chi
   scende (`[data-azione="eroe"]`), senza perdere niente: la terra rinasce con
   la nebbia e il posto dell'eroe scelto (`:key` sull'eroe in `Gioco.vue`).
+  **Da dentro una discesa** si cambia dal velo della pausa («scelgo un altro
+  eroe»: la discesa si salva com'è): uscendo con la ✕ non si passa dalla terra di
+  sopra ([regole.md](portale-e-sosta.md#il-portale-e-luscita)), quindi senza questo chi ha
+  una discesa a metà non potrebbe giocare con un altro eroe senza buttarla.
+  Scegliere un eroe con una discesa lasciata con la ✕ la riprende giù; con una
+  lasciata dal portale si arriva sulla terra, col gemello.
 - **La scheda dice a che punto è**: discese finite e stelle, la roba principale
   addosso (arma e armatura), le gemme, il record dell'abisso, la discesa a
   metà; una mai cominciata dice «nuova avventura» (`cominciata`: una discesa
@@ -50,7 +56,7 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
                    roba,                    // gemme, addosso, tasche, torce (motore/corredo.js)
                    terra,                   // { nebbia, dove, parlato }
                    botteghe,                // i banchi pescati in questo giro
-                   sosta,                   // la discesa lasciata a metà, che è anche il portale aperto (motore/sosta.js)
+                   sosta,                   // la discesa lasciata a metà (motore/sosta.js); `via: 'portale'` la rende anche il gemello di sopra, `'uscita'` (la ✕) si riprende giù
                    abisso,                  // { fondo }
                    missioni },              // { [id]: 'presa' | 'fatta' | 'consegnata' } (missioni.md)
       mago: { … },
@@ -84,8 +90,9 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
   tutte le avventure; il primato `sotFondo` e i contatori (`sotPiani`,
   `sotMostri`…) sono del bambino e salgono con chiunque scenda.
 - **«Riprendi da qui»** in home apre l'avventura aperta per ultima
-  (`cfg.eroe`) e, se ha una discesa a metà, la riprende (`riprendiSeChiesta`)
-  nel punto esatto; il riquadro dice quale discesa e mostra il suo posto
+  (`cfg.eroe`) e, se ha una discesa a metà, la riprende nel punto esatto
+  (giù direttamente se lasciata con la ✕, `riprendiSeUscito`; dalla carta della
+  terra di sopra se lasciata dal portale, `riprendiSeChiesta`); il riquadro dice quale discesa e mostra il suo posto
   ritagliato dalla mappa (`ripresa` nel manifesto, `gioco.js`). La discesa a
   metà di un altro eroe la si ritrova scegliendolo.
 

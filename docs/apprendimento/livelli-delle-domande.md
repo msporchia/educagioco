@@ -381,9 +381,11 @@ diverso da quello del suo grado.
 
 - ⚑ 🔎 **Indizi** g5 — Due tabelle collegate
 - ⚑ ⚖️ **Le bilance** g5 — Due cose da pesare, con due bilance
+- ⚑ ⚖️ **Le bilance** g5 — Lo scambio lungo, con tre bilance
 
 ## 90  ·  circa 11.2 anni
 
+- 💶 **Soldi e decimali** g10 — Cosa conviene comprare
 - 💶 **Soldi e decimali** g10 — Cosa conviene, coi grammi
 
 ## 94  ·  circa 11.5 anni
@@ -406,4 +408,4 @@ diverso da quello del suo grado.
 
 ---
 
-Totale: 265 classi su 24 moduli.
+Totale: 267 classi su 24 moduli.

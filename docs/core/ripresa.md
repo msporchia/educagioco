@@ -65,8 +65,10 @@ Lo prova `integrazione/pozioni-sosta`.
 - **La sosta con la carta in cima alla mappa**:
   - sotterraneo ([../sotterraneo/regole.md](../sotterraneo/regole.md)), con una
     sosta per avventura e non per gioco ([../sotterraneo/avventure.md](../sotterraneo/avventure.md)),
-    che riprende nel punto esatto coi mostri dove erano, ed è anche il portale
-    gemello sulla terra di sopra;
+    che riprende nel punto esatto coi mostri dove erano. Ricorda **come** si è
+    lasciata (`via`): dal portale è anche il gemello sulla terra di sopra e la
+    carta in cima; uscendo con la ✕ si va in home e rientrando si è già giù,
+    senza carta, dietro il velo della pausa ([../sotterraneo/regole.md](../sotterraneo/portale-e-sosta.md#il-portale-e-luscita));
   - Survivors ([../survivors/regole.md](../survivors/regole.md));
   - castello ([../castello/sosta.md](../castello/sosta.md));
   - bancarella ([../bancarella/regole.md](../bancarella/regole.md));

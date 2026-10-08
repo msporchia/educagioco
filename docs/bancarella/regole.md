@@ -137,6 +137,59 @@ mestieri per un bambino di otto anni (`generaCliente`, `comePuoPagare`).
   cartello di un traguardo no, perché passa da sé e la pazienza è già
   ferma. (`usaPausa`, vedi [../core/interfaccia.md](../core/interfaccia.md))
 
+## Le stelle
+
+Una giornata vinta vale **da 1 a 3 stelle**, come negli altri giochi
+(`stelleDiGiornata` in `src/data/bancarella.js`). In una riga, quella che
+legge il bambino sul cartello: *tre se i conti vanno tutti giusti al primo
+colpo, due se un conto o un cliente va storto una o due volte, una se di
+più*.
+
+- **Gli intoppi**: un cliente conta una volta sola se ha avuto un conto
+  sbagliato (un totale, un resto, una moneta di troppo: sono quelli che
+  fanno `answer(…, correct: false)`) **o** se se n'è andato (`hud.intoppi`).
+  Nessuno = 3, uno o due (`INTOPPI_PER_DUE`) = 2, di più = 1. Una giornata
+  vinta vale sempre almeno una stella: perderla è l'unico modo di non
+  averne, e quella non si segna. È la regola di Conta (0 → 3, fino a 2 → 2).
+- **Perché i conti e non il tempo né le monete**: il tempo c'è già, e lo
+  paga il cuore del cliente che se ne va (che qui è un intoppo, non un
+  secondo conto); le monete sono un altro discorso e non c'entrano con
+  «quanto è filata liscia». La merce sbagliata (un tocco su una cesta che il
+  cliente non ha chiesto) non conta: è un dito, non un conto.
+- **Il cartello** dice le stelle prese, quanti intoppi sono stati e cosa
+  serve per la successiva («per la terza stella: nessun conto sbagliato e
+  nessun cliente perso»); se la migliore era più alta, «resta la tua
+  migliore». Il fumetto del banco dice le stesse cose a giornata fatta
+  (`perLaProssima`).
+- **Nessuna stella si perde rigiocando**: `mercatoCompleta` tiene la
+  migliore (`Math.max`), come `completa()` degli altri giochi. Rigiocare per
+  prenderne di più è il motivo per tornare; rigiocare per divertirsi non
+  costa niente. La giornata libera non ha stelle (non finisce).
+- **Dove stanno**: `profile.mercato.stelle`, `{ <id giornata>: 1-3 }`, accanto
+  a `tappa`; gli id non si rinominano, e riordinare la fila non sposta un
+  voto. Non è un campo nuovo del profilo: è la forma di `gen.stelle` del
+  Generale. `migraMercato` le rimette a posto a **ogni** caricamento (voti
+  fuori scala a 1-3, id sconosciuti lasciati stare) e **le giornate già
+  fatte da chi giocava prima partono con 1 stella**: niente si perde, e c'è
+  qualcosa da migliorare.
+- **A metà**: gli intoppi già fatti stanno nella sosta (`hud.intoppi`),
+  senza cambiare `VERSIONE`: uscire e rientrare non rimette a zero i
+  conti. Una sosta scritta prima delle stelle si legge con zero.
+- **Esperienza, medaglie, home**: le stelle **non entrano** in `XP_AREA`:
+  la bancarella conta già i clienti e i resti precisi, e le stelle sono un
+  voto sulle stesse azioni, contarle ancora sarebbe contarle due volte; in
+  più le una-stella delle giornate già fatte farebbero salire il livello a
+  tutti di colpo. Nessuna medaglia nuova (il traguardo «Giro di mercato»
+  conta le giornate finite, come prima). La riga della bancarella in home
+  aggiunge solo `⭐ N`, la somma dei voti migliori: una cosa in più, niente
+  tolto.
+
+Nei test: `unita/bancarella-stelle` (la regola, la migliore che resta, un
+profilo di oggi e uno di ieri, le righe della sosta),
+`integrazione/bancarella` (zero sbagli = 3 stelle sul cartello, nel profilo
+e sulla mappa; rigiocando con tre clienti persi restano 3); `[data-voto]`
+(`data-stelle`), `[data-voto-serve]`, `[data-voto-meglio]`.
+
 ## Lasciare a metà
 
 La regola comune è [../core/ripresa.md](../core/ripresa.md): la giornata

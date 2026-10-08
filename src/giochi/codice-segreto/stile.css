@@ -40,7 +40,7 @@
 /* system-ui davanti apposta: Noto Color Emoji ha dentro anche le cifre
    (gli servono per le keycap 0️⃣), e su un elemento con testo misto le
    farebbe uscire larghe il doppio del resto. */
-.cs .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
+.cs .em { font-family: "Emoji Gioco", system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
                        "Twemoji Mozilla", sans-serif; line-height: 1 }
 
 /* ═══════════ la mappa della campagna ═══════════ */

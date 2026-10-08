@@ -933,7 +933,7 @@ defineExpose({ misura, disegna, inquadraSu, mostraTutto, azzera, animaPasso, fer
 .lente { position:absolute; right:6px; top:6px; display:flex; flex-direction:column; gap:4px; z-index:4 }
 .lente button {
   width:30px; height:30px; padding:0; border-radius:8px; border:1px solid #ffffff26;
-  background:#0e1626cc; color:#dbe9ff; font:700 17px/1 system-ui; cursor:pointer;
+  background:#0e1626cc; color:#dbe9ff; font:700 17px/1 "Emoji Gioco", system-ui; cursor:pointer;
 }
 .lente button:disabled { opacity:.32; cursor:default }
 .fuori { position:absolute; transform:translate(-50%,-50%); display:flex; align-items:center;

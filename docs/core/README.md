@@ -13,6 +13,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [tempi-dei-test.md](tempi-dei-test.md) — quanto costano le prove, e le regole che ne vengono
 - [comandi.md](comandi.md) — tutti i comandi, cosa riscrivono, i banchi di prova, la roba generata, i cheat
 - [pubblicare.md](pubblicare.md) — GitHub Pages, il server di casa, il numero di versione
+- [emoji.md](emoji.md) — il font Twemoji dentro il file, `npm run emoji`, la licenza, le trappole
 - [grafica.md](grafica.md) — `src/grafica/`: tela, telecamera, pittori, scheletri, sprite e tessere
 - [passi.md](passi.md) — `src/motore/passi.js`: celle raggiungibili, percorso, la cella da cui toccare una cosa
 - [sprite.md](sprite.md) — gli strumenti degli sprite e il banco `npm run mondo`

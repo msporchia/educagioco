@@ -9,8 +9,9 @@ valgono per tutto il codice.
   offline, senza server. Lo produce `npm run build` (Vite +
   `vite-plugin-singlefile`).
 - **Niente dipendenze a runtime oltre a Vue.** Suoni sintetizzati
-  (`src/audio.js`), icone emoji, nessun file esterno: se no il build non
-  resta un file solo.
+  (`src/audio.js`), icone emoji o disegnate, nessun file esterno: se no il build
+  non resta un file solo. Le emoji non le disegna il telefono: sono un font
+  nostro dentro il file ([emoji.md](emoji.md)).
 - **`index.html` in radice è il template di Vite**, non un file giocabile.
   La copia da doppio click (`giochi.html`) è ignorata da git.
 - **Il numero di versione lo scrive il build** (`vite.config.js`,

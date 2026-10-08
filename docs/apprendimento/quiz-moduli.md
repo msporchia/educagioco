@@ -27,6 +27,25 @@ ricordare, solo un indizio del corpo da leggere. Dove il passo non c'è —
 l'accento tonico, le nomenclature «tronca/piana/sdrucciola» — la
 tipologia si toglie (vedi "Provati e scartati").
 
+Lo stesso vale **dentro la consegna**: perché il passo ci sia, la domanda
+deve dire tutto quello che serve per farlo.
+
+- **Una parola tecnica si spiega nella consegna.** «In media» o la sai o
+  tiri a caso, e a caso si finisce lontano: la domanda dice cosa vuol dire
+  («metti tutto insieme e dividilo in parti uguali»), il conto resta da fare.
+- **Un numero porta la sua unità, e l'unità vuole numeri veri.** Un peso
+  con scritto «6» non dice 6 di cosa; ma «2 pannocchie pesano 1 kg»
+  insegna il falso. Sulle bilance ogni cosa pesata ha il suo peso reale
+  (una 🍎 da 150 a 250 g, un 🐶 da 5 a 20 kg) e la domanda chiede «quanti
+  g» o «quanti kg»; le cose senza un peso credibile stanno solo negli
+  scambi («quante 🥕 pesano come un 🐰»), che non hanno unità.
+- **I conti stanno al servizio del ragionamento.** Nella spesa furba i
+  prezzi sono tondi (3 kg a 6 €), e al primo gradino la domanda nomina il
+  conto da fare («quale costa meno al kg?»): i centesimi sparsi facevano
+  sbagliare la divisione a chi aveva capito cosa confrontare.
+- **La parola su cui si chiede va in rilievo** (`evidenzia`, sotto), non
+  fra virgolette in una frase nel riquadro: scritta lì sembrava una risposta.
+
 ## La forma
 
 - `nucleo/domanda.js` — la forma di una domanda: consegna, soggetto
@@ -263,7 +282,9 @@ a figura piccola. I piatti **poggiano** sulla trave invece di essere
 appesi: appesi, un filo e il gambo di una pera sarebbero la stessa riga a
 questa risoluzione. Le cose uguali stanno raggruppate vicine (i pesi
 insieme, le specie insieme), perché un mucchio si legge a colpo d'occhio
-solo così; due bilance stanno una sopra l'altra, rimpicciolite.
+solo così; due o tre bilance stanno una sopra l'altra, rimpicciolite (a
+tre, un piatto porta una fila sola). Con `unita` (`'g'`, `'kg'`) ogni peso
+porta l'unità scritta piccola sotto il numero.
 
 ### Il pittore delle frazioni: i pezzi storti
 

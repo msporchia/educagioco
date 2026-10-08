@@ -151,6 +151,9 @@ forma e perché: [la-grande-storia.md](la-grande-storia.md#le-discese).
   segno sopra la testa: [missioni.md](missioni.md).
 - **Il cartello all'incrocio**: tre frecce, coi posti; accanto ai posti i
   nomi delle discese già trovate.
+- **Una missione presa si ricorda dal bordo**: una freccia azzurra col ritaglio
+  della discesa, dello stesso stampo di quella d'oro delle consegne, che le cede la
+  precedenza ([missioni-freccina.md](missioni-freccina.md)).
 - **Niente sassi che luccicano**: c'erano, uno ogni quattro passi fino
   alla prossima discesa; tolti il 7 ottobre 2026 perché sembravano cose da
   raccogliere e distraevano (l'utente). La strada la dicono le persone e il
@@ -196,19 +199,21 @@ chi vende cosa e perché sta in [roba.md](roba.md#i-mercanti-di-sopra).
 
 ## Il portale gemello
 
-- **Con una discesa lasciata a metà, nel villaggio c'è un portale**
+- **Con una discesa lasciata dal portale, nel villaggio c'è un portale**
   (`PORTALE` nel foglietto: `piede` [51, 38], sul piazzale accanto al pozzo
   da cui si beve, fra l'armaiolo e l'erborista; `accanto` [49, 38]). È il
-  gemello di quello nel piano ([regole.md](regole.md#il-portale)), lo stesso
+  gemello di quello nel piano ([regole.md](portale-e-sosta.md#il-portale-e-luscita)), lo stesso
   disegno (`viste/Portale.vue` su `scena/portale.js`), a pixel della scala
   dell'eroe, con un bagliore morbido che i pixel non hanno.
 - **Salendo dal portale si sbuca `accanto` a lui**. Toccandolo ci si va, e il
   fumetto dice dove riporta, col ritaglio della discesa: «Ti riporta giù: la
   scalinata antica, piano 1, dove eri» e «torno giù», che riprende la sosta
   esattamente dov'era.
-- **C'è finché c'è la sosta**, comunque ci si sia arrivati (portale, ✕,
-  abisso finito per la sera): sono la stessa cosa. Non è un ostacolo, e si
-  trova nella nebbia come i mercanti.
+- **C'è finché c'è la sosta, e solo se si è salita dal portale** (`via:
+  'portale'`, o l'abisso risalito per la sera): uscire con la ✕ non lascia un
+  gemello, e rientrando si è già giù ([regole.md](portale-e-sosta.md#il-portale-e-luscita)).
+  Non è un ostacolo, e si trova nella nebbia come i mercanti. La carta in cima
+  («torno giù da dove ero», «lascio perdere») segue la stessa sosta.
 
 ## Le icone delle discese
 
@@ -244,9 +249,8 @@ pallino), `[data-sotto-livello]` (nel fumetto di una discesa), `[data-mercante="
 scende, con le gemme), `[data-portale]` (il gemello) col suo fumetto
 `[data-fumetto-di="portale"]` e `[data-azione="portale-giu"]`, `[data-ritaglio]`
 (l'icona ritagliata, nella carta in cima, nel fumetto, nella scelta e in
-home); nel banco `[data-chiudi]`, `[data-merce="<cosa>"]`,
-`[data-vendo="<cosa>"]`, `[data-detto-banco]`, `[data-chi-compra]`,
-`[data-tasche-vuote]`, e nello zaino `[data-tasca][data-cosa="<cosa>"]`;
+home); nella bottega e nello zaino quelli di
+[roba.md](roba.md#la-bottega-e-lo-zaino);
 `unita/sotterraneo-terra` (anche: il portale gemello raggiungibile, chi sta
 fermo non chiude la strada), `unita/sotterraneo-avventure` (un'icona per
 discesa), `integrazione/sotterraneo-terra`, `integrazione/sotterraneo-mercanti`,

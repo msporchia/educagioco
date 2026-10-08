@@ -40,8 +40,9 @@ entrano energia e prezzi: solo fatti già decisi (`potenziabile: true`).
 - **`coriandoli.js`** — la festa. Dentro Vue si usa da `giochi/Festa.vue`,
   non si monta a mano.
 
-**Un mostro non è un'emoji.** Le emoji le disegna il telefono:
-hanno lo stile di Apple in mezzo a uno schermo disegnato a mano, non si
+**Un mostro non è un'emoji.** Le emoji sono Twemoji, uguali su ogni telefono
+([emoji.md](emoji.md)), ma restano un altro stile in mezzo a uno schermo
+disegnato a mano, non si
 tingono dell'ambiente e non tremano quando le colpisci.
 
 **Un'icona si mette solo se aderisce perfettamente, se no si mette il

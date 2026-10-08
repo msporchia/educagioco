@@ -91,3 +91,18 @@ export const fatteIn = (c, fatto) => c.giornate.filter(id => indiceDi(id) >= 0 &
    di un dipinto non si indovinano, si rileggono (docs/bancarella/mappa.md). */
 export const POSTEGGIO = { dx: 54, dy: -8 }
 export const posteggio = c => ({ x: c.x + POSTEGGIO.dx, y: c.y + POSTEGGIO.dy })
+
+/* Le stelle di una giornata, da `profile.mercato.stelle` (per id): una giornata
+   finita ne ha almeno una anche se il voto non è ancora scritto, una non
+   finita nessuna. La libera non ne ha. */
+export function stelleGiornata(id, fatto, stelle) {
+  const i = indiceDi(id)
+  if (i < 0) return 0
+  const n = Math.min(3, Math.max(0, Math.round((stelle && stelle[id]) || 0)))
+  return i < fatto ? Math.max(1, n) : 0
+}
+
+/* la somma delle stelle di una città e il massimo che ne può dare */
+export const stelleCitta = (c, fatto, stelle) =>
+  c.giornate.reduce((n, id) => n + stelleGiornata(id, fatto, stelle), 0)
+export const stelleMassime = c => (c.libera ? 0 : c.giornate.length * 3)

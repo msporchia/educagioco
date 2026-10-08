@@ -195,7 +195,7 @@ const MODA_FIGURE = [
 const MEDIA_STORIE = [
   { da: 3, a: 12, dice: (l, n, chi) => `${chi} ha letto ${l} pagine in ${PAROLE[n]} sere. Quante pagine ha letto in media ogni sera?` },
   { da: 0, a: 5, dice: (l, n) => `In ${PAROLE[n]} partite la squadra ha segnato ${l} gol. Quanti gol ha segnato in media a partita?` },
-  { da: 8, a: 20, dice: (l, n) => `In ${PAROLE[n]} mattine il termometro ha segnato ${l} gradi. Qual è stata la temperatura media?` },
+  { da: 8, a: 20, dice: (l, n) => `In ${PAROLE[n]} mattine il termometro ha segnato ${l} gradi. Quanti gradi ha segnato in media?` },
   { da: 2, a: 15, dice: (l, n, chi) => `${chi} ha fatto ${l} punti in ${PAROLE[n]} giochi. Quanti punti ha fatto in media a gioco?` },
   { da: 4, a: 14, dice: (l, n) => `${PAROLE[n][0].toUpperCase() + PAROLE[n].slice(1)} piantine di fagioli sono alte ${l} centimetri. Quanto sono alte in media?` },
   { da: 1, a: 9, dice: (l, n, chi) => `${chi} ha trovato ${l} conchiglie in ${PAROLE[n]} giorni al mare. Quante conchiglie ha trovato in media al giorno?` },
@@ -320,7 +320,7 @@ const TIPI = [
     livello: { 4: 56, 5: 63 }, gradi: { 4: 0.4, 5: 0.13 } },
   { chiave: 'dati:moda', nome: 'La moda: quello che compare più volte', sa: 'dati',
     livello: 75, gradi: { 5: 0.3 } },
-  { chiave: 'dati:media', nome: 'La media', sa: ['dati', 'divisioni'],
+  { chiave: 'dati:media', nome: 'La media', sa: ['divisioni', 'dati'],
     livello: 81, gradi: { 5: 0.35 } },
 ]
 
@@ -736,6 +736,8 @@ class Grafici extends Modulo {
       valori = this.tiroIntero(sorte, n, st.da, st.a)
       consegna = st.dice(elenco(valori), n, sorte.uno(NOMI).nome)
     }
+    // la parola da sola non si indovina: o la sai o tiri a caso, e il caso porta lontano. Si dice cosa vuol dire, il conto resta da fare
+    consegna += '\n«In media» vuol dire: metti tutto insieme e dividilo in parti uguali.'
     const tot = somma(valori), m = tot / n
     const candidati = [
       [tot, `${tot} è la somma: la media è la somma divisa per quanti sono, ${tot} : ${n}`],

@@ -138,7 +138,7 @@ function caselle (o) {
         </div>
       </div>
 
-      <div v-if="E.perche(via(perc, i))" class="perche">⚠ {{ E.perche(via(perc, i)) }}</div>
+      <div v-if="E.perche(via(perc, i))" class="perche">⚠️ {{ E.perche(via(perc, i)) }}</div>
 
       <!-- ═════ I DUE RAMI ═════
            Non sono due ordini gemelli e non sono due blocchi annidati:

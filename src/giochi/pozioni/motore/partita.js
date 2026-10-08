@@ -23,6 +23,7 @@ export class Partita {
     this.sbagli = 0               // in tutta la tappa
     this.sbagliRicetta = 0        // su questa pozione: zero vuol dire perfetta
     this.sbagliQui = 0            // su questa dose
+    this.saltateRicetta = 0       // dosi date per fatte dal tasto dei grandi: la pozione non conta come preparata
     this.dosi = []                // quello che ogni dose ha detto al motore di apprendimento
     this.pozioni = 0
     this.perfette = 0
@@ -46,7 +47,7 @@ export class Partita {
     this.ricetta = generaRicetta(this.tappa, this.rnd, { evita: this.ultime })
     this.ultime = this.ricetta.ingredienti.map(i => i.dose)
     this.corrente = -1; this.inMano = false; this.strumento = null; this.messi = []
-    this.sbagliQui = 0; this.sbagliRicetta = 0; this.esito = null
+    this.sbagliQui = 0; this.sbagliRicetta = 0; this.saltateRicetta = 0; this.esito = null
   }
 
   // l'attrezzo che questa dose vorrebbe: quello che conta nella sua
@@ -134,6 +135,24 @@ export class Partita {
     return this.esito
   }
 
+  /* Il tasto «salta» dei grandi (docs/core/comandi.md): la dose è fatta come
+     se fosse giusta, senza gesti. La riga di `dosi` ha `giusta: false` e `chiave: null`:
+     non paga (`monete`), non annota (`annota: null`) e non sposta le stelle (`sbagli`). */
+  salta() {
+    if (this.occupato) return null
+    const i = this.corrente >= 0 ? this.corrente : this.ricetta.ingredienti.findIndex(x => !x.fatto)
+    if (i < 0) return null
+    this.corrente = i
+    const ing = this.ingrediente
+    const str = this.strumento || this.consigliato(ing.dose) || this.strumenti[0]
+    this.dosi.push({ chiave: null, giusta: false, chiesta: false })
+    this.saltateRicetta++
+    ing.fatto = true
+    this.esito = { tipo: 'giusto', ingrediente: ing, strumento: str, annota: null, saltata: true,
+                   pozioneFinita: this.daFare.length === 0 }
+    return this.esito
+  }
+
   // uno sbaglio si annota una volta sola per dose, al primo
   sbaglio(tipo, testo, strumento = null) {
     this.sbagli++; this.sbagliQui++; this.sbagliRicetta++
@@ -164,12 +183,13 @@ export class Partita {
     this.strumento = null; this.messi = []; this.corrente = -1; this.inMano = false; this.sbagliQui = 0
     if (!e.pozioneFinita) return { che: 'prossimoIngrediente' }
     this.pozioni++
-    const perfetta = this.sbagliRicetta === 0
+    const saltata = this.saltateRicetta > 0
+    const perfetta = this.sbagliRicetta === 0 && !saltata
     if (perfetta) this.perfette++
     this.n++
-    if (this.n >= this.tappa.clienti) { this.finita = true; return { che: 'tappaFinita', perfetta } }
+    if (this.n >= this.tappa.clienti) { this.finita = true; return { che: 'tappaFinita', perfetta, saltata } }
     this.nuovaRicetta()
-    return { che: 'nuovoCliente', perfetta }
+    return { che: 'nuovoCliente', perfetta, saltata }
   }
 
   get dosiGiuste() { return this.dosi.filter(d => d.giusta).length }

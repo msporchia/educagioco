@@ -1110,7 +1110,7 @@ h3.materia { margin:10px 0 -2px; font-size:13px; font-weight:900; letter-spacing
                    background:#fff0e6; border-radius:11px }
 .lista-guasti b { font-size:12px; color:#b4603f }
 .lista-guasti span { font-size:11.5px; line-height:1.35; word-break:break-word;
-                     font-family:ui-monospace,monospace; color:var(--viola-scuro) }
+                     font-family:"Emoji Gioco", ui-monospace,monospace; color:var(--viola-scuro) }
 .lista-guasti small { font-size:10.5px; color:var(--tenue); opacity:.8 }
 .carta.guasti .riga { grid-column:1/3; justify-content:flex-start; margin-top:9px }
 .carta.guasti .bottone { font-size:14px; padding:9px 15px; box-shadow:0 4px 0 #d4dce6 }

@@ -5,7 +5,7 @@ import { colore } from '../dati/colori.js'
 
 export const ICONE = {
   vai: '🚶', metti: '🧱', ripeti: '🔁', finche: '🔁', se: '❓', assegna: '📝',
-  prendi: '✋', posa: '📥', aspetta: '⏳', sempre: '♾️', pausa: '⏸️',
+  prendi: '✋', posa: '📥', aspetta: '⏳', sempre: '♾️', pausa: '⏸',
 }
 
 export const VERSI_IN_PAROLE = { destra: '→ a destra', sinistra: '← a sinistra', su: '↑ su', giu: '↓ giù' }

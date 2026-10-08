@@ -16,7 +16,7 @@ import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Corredo, schedaConLaRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { robaAttesa, premioPer, dettoDelLivello } from '../../src/giochi/sotterraneo/motore/storia.js'
-import { cosaDice, segnoDi, chiTiCerca, proposta, prendi, fatte, consegna, presePer, PRESA, FATTA, CONSEGNATA }
+import { cosaDice, segnoDi, prendi, fatte, consegna, presePer, PRESA, FATTA, CONSEGNATA }
   from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { azzeraIlVecchio, riordina, MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
@@ -25,8 +25,6 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
 
 // le tappe di un'avventura col cursore a `n` (n discese finite, la n-esima è quella di adesso)
 const tappeAl = n => CAMPAGNA.map((t, i) => ({ chiave: t.chiave, aperta: i <= n, fatta: i < n }))
-const statoDiFatta = st => (st === PRESA ? FATTA : CONSEGNATA)
-const PERSONE = ['eremita', 'ragazza', 'mugnaio', 'guardia', 'pescatore', 'boscaiolo', 'minatore']
 
 /* ══════════ 1. i dati stanno in piedi ══════════ */
 {
@@ -103,16 +101,17 @@ const PERSONE = ['eremita', 'ragazza', 'mugnaio', 'guardia', 'pescatore', 'bosca
 
 /* ══════════ 4. le missioni: dal fumetto al premio ══════════ */
 {
-  // la scalinata è la discesa di adesso (la cripta è fatta): la sola missione proposta è quella della scalinata
+  // la scalinata è la discesa di adesso (la cripta è fatta): la ragazza ha la collana da chiedere, e l'eremita
+  // la sua Badessa (non l'ha ancora presa); la guardia no, la torre è ancora chiusa. L'albero sta in sotterraneo-missioni
   const aperta = tappeAl(1)
-  uguale('la ragazza ha qualcosa da chiedere: è la missione della scalinata', segnoDi('ragazza', {}, aperta), '!')
-  uguale('l\'eremita no: la sua cripta è già fatta, e di più adatte ce n\'è', segnoDi('eremita', {}, aperta), null)
-  uguale('né la guardia: la torre è ancora chiusa', segnoDi('guardia', {}, aperta), null)
+  uguale('la ragazza ha qualcosa da chiedere: è la missione della scalinata', segnoDi('ragazza', {}, aperta), 'nuova')
+  uguale('anche l\'eremita, se non ha preso la Badessa', segnoDi('eremita', {}, aperta), 'nuova')
+  uguale('la guardia no: la torre è ancora chiusa', segnoDi('guardia', {}, aperta), null)
   uguale('chi non ha il segno saluta e basta', cosaDice('guardia', {}, aperta).fase, 'saluto')
-  let stati = prendi({}, 'collana')
+  let stati = prendi({}, 'collana', aperta)
   uguale('presa', stati.collana, PRESA)
-  uguale('prenderla due volte non fa niente', prendi(stati, 'collana'), null)
-  uguale('la ragazza ha il punto di domanda già da presa', segnoDi('ragazza', stati, aperta), '?')
+  uguale('prenderla due volte non fa niente', prendi(stati, 'collana', aperta), null)
+  uguale('la ragazza ha il punto di domanda già da presa', segnoDi('ragazza', stati, aperta), 'attesa')
   uguale('il fumetto la ricorda', cosaDice('ragazza', stati, aperta).fase, 'aspetta')
   stessaLista('la scalinata sa che c\'è da cercare la collana', presePer(stati, 'cantine').map(m => m.id), ['collana'])
 
@@ -149,7 +148,6 @@ const PERSONE = ['eremita', 'ragazza', 'mugnaio', 'guardia', 'pescatore', 'bosca
   uguale('consegnata', r.stati.collana, CONSEGNATA)
   uguale('il premio sono gemme, sulla roba', b.gemme, 3 + m.premio.gemme)
   uguale('consegnarla di nuovo non dà niente', consegna(r.stati, 'collana', b), null)
-  controlla('nessuna missione paga in monete', MISSIONI.every(x => !x.premio.monete))
 
   // un premio in roba: va addosso o in tasca; a tasche piene la consegna aspetta
   const pieno = new Corredo({ eroe: 'mago', roba: { ...robaAttesa('mago', 4), dito: 'amuleto-rosso', zaino: new Array(6).fill('pozione') } })
@@ -184,80 +182,6 @@ const PERSONE = ['eremita', 'ragazza', 'mugnaio', 'guardia', 'pescatore', 'bosca
   // ogni personaggio sta sulla mappa e chiede qualcosa; ogni discesa ha almeno una missione
   for (const k of Object.keys(PERSONAGGI)) controlla(`${k}: ha un posto sulla mappa`, !!DOVE_PERSONAGGI[k])
   nota('missioni: ' + MISSIONI.map(m => `${m.id} (${m.da}, ${m.discesa} ${m.piano + 1})`).join(' · '))
-}
-
-/* ══════════ 4b. le missioni, una per volta ══════════
-   Per ogni avventura una sola missione è proposta, quella adatta a dove è arrivato l'eroe (docs/sotterraneo/missioni.md) */
-{
-  const segniIn = (stati, tappe) => PERSONE.map(c => [c, segnoDi(c, stati, tappe)]).filter(([, s]) => s)
-  // a ogni punto della storia, a stati vuoti: un solo segno, ed è la prima missione della discesa di adesso
-  const giuste = ['badessa', 'collana', 'rosicchione', 'ascia', 'chela', 'zannagrigia', 'lanterna', 'lanterna']
-  for (let n = 0; n <= QUANTE_TAPPE; n++) {
-    const segni = segniIn({}, tappeAl(n))
-    uguale(`al punto ${n} c'è un solo segno`, segni.length, 1)
-    uguale(`al punto ${n} è «!»`, segni[0][1], '!')
-    uguale(`al punto ${n} la missione proposta è la più adatta`, proposta({}, tappeAl(n)).id, giuste[n])
-  }
-  uguale('sull\'avventura nuova nessuna missione di una discesa lontana', proposta({}, tappeAl(0)).discesa, 'altare')
-
-  // chi le fa tutte, in fila: una per volta, nell'ordine della storia
-  const seguite = []
-  let stati = {}
-  for (let n = 0; n <= QUANTE_TAPPE - 1; n++) {
-    for (let g = 0; g < 5; g++) {
-      const p = proposta(stati, tappeAl(n))
-      if (!p) break
-      if (p.discesa !== CAMPAGNA[n].chiave) break   // quelle indietro: solo se chi le ha saltate le vuole
-      seguite.push(p.id)
-      stati = prendi(stati, p.id, tappeAl(n))
-      uguale(`${p.id}: presa, una sola proposta`, segniIn(stati, tappeAl(n)).length, 1)
-      stati = fatte(stati, [p.id])
-      uguale(`${p.id}: fatta, una sola proposta, col punto di domanda`, segniIn(stati, tappeAl(n)).map(x => x[1]).join(''), '?')
-      stati = consegna(stati, p.id, new Corredo({ eroe: 'mago', roba: robaAttesa('mago', n, { pozioni: false }) })).stati
-    }
-  }
-  stessaLista('chi le fa tutte le trova una per volta, nell\'ordine della storia', seguite,
-              ['badessa', 'collana', 'rosicchione', 'chiavi', 'ascia', 'chela', 'canna', 'zannagrigia', 'lanterna'])
-
-  // una presa e non consegnata ferma le altre, anche cambiando discesa; chi ne ha saltata una la ritrova dopo
-  stati = prendi({}, 'rosicchione', tappeAl(2))
-  controlla('con la discesa di adesso la torre, si può prendere Rosicchione', !!stati)
-  uguale('Rosicchione presa: ne resta una sola, e non è un\'altra', proposta(stati, tappeAl(3)).id, 'rosicchione')
-  uguale('e non si prende un\'altra missione al volo', prendi(stati, 'ascia', tappeAl(3)), null)
-  uguale('chi tocca la ragazza non ha il segno', segnoDi('ragazza', stati, tappeAl(3)), null)
-  stati = { ...stati, rosicchione: CONSEGNATA }
-  uguale('consegnata Rosicchione, arriva la successiva della discesa di adesso', proposta(stati, tappeAl(3)).id, 'ascia')
-  stati = { ...stati, ascia: CONSEGNATA }
-  uguale('finite quelle di adesso, la più vicina saltata (le chiavi, sulla torre)', proposta(stati, tappeAl(3)).id, 'chiavi')
-  stati = { ...stati, chiavi: CONSEGNATA }
-  uguale('poi la collana', proposta(stati, tappeAl(3)).id, 'collana')
-  stati = { ...stati, collana: CONSEGNATA }
-  uguale('poi la badessa', proposta(stati, tappeAl(3)).id, 'badessa')
-  stati = { ...stati, badessa: CONSEGNATA }
-  uguale('e poi niente, anche se le discese più avanti hanno le loro', proposta(stati, tappeAl(3)), null)
-  uguale('nessun segno: tutti salutano', segniIn(stati, tappeAl(3)).length, 0)
-
-  // uno stato di prima (più missioni prese insieme) non si rompe: una per volta, e le fatte prima
-  const vecchio = { badessa: PRESA, collana: PRESA, rosicchione: PRESA, chiavi: FATTA, zannagrigia: PRESA }
-  const ordine = []
-  let v = vecchio
-  for (let giro = 0; giro < 8; giro++) {
-    const segni = segniIn(v, tappeAl(2))
-    controlla(`vecchio stato, giro ${giro}: al più un segno`, segni.length <= 1, JSON.stringify(segni))
-    const p = proposta(v, tappeAl(2))
-    if (!p) break
-    ordine.push(p.id)
-    v = { ...v, [p.id]: statoDiFatta(v[p.id]) }
-  }
-  stessaLista('una fatta si consegna per prima, poi le prese nell\'ordine della storia', ordine,
-              ['chiavi', 'badessa', 'badessa', 'collana', 'collana', 'rosicchione', 'rosicchione', 'zannagrigia'])
-
-  // il minatore, indicando la strada, dice chi ha una missione per te
-  uguale('la ragazza ha un favore: il minatore lo dice', chiTiCerca({}, tappeAl(1)), 'La ragazza del pozzo ha un favore da chiederti.')
-  controlla('presa: dice cosa aspetta', /aspetta ancora: la collana della nonna\./.test(chiTiCerca({ collana: PRESA }, tappeAl(1))))
-  controlla('fatta: dice che ti aspetta', /ti aspetta/.test(chiTiCerca({ collana: FATTA }, tappeAl(1))))
-  uguale('se la missione è sua, il minatore non la ripete', chiTiCerca({}, tappeAl(6)), null)
-  uguale('e senza missioni non dice niente', chiTiCerca({ badessa: CONSEGNATA }, tappeAl(0)), null)
 }
 
 /* ══════════ 5. le avventure di prima, nella fila nuova ══════════

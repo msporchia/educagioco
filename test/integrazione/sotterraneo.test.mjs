@@ -22,7 +22,7 @@
    `node test/esegui.mjs sotterraneo`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo, lasciaLaDiscesa, leggiProfilo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -116,41 +116,52 @@ controlla('dopo un tocco l\'eroe si è mosso', mosso, `sempre in ${prima}`)
    pannello incollato al bordo di sotto non lo dice — si continua a
    toccare il campo senza capire perché non si va da nessuna parte. */
 await page.locator('[data-azione="zaino"]').click()
-await page.waitForSelector('.sot-centrale', { timeout: 3000 })
-uguale('lo zaino ha sei tasche', await page.locator('.sot-tasca').count(), 6)
+await page.waitForSelector('[data-zaino]', { timeout: 3000 })
+uguale('lo zaino ha sei tasche', await page.locator('[data-zaino] [data-tasca]').count(), 6)
 uguale('e quattro caselle addosso: le due mani, il corpo, il dito',
        await page.locator('[data-casella]').count(), 4)
 uguale('e non è il foglio che sale dal basso',
        await page.locator('.sot-foglio').count(), 0)
 await page.locator('[data-azione="chiudi"]').click()
 await attendi(page, 300)
-uguale('e si richiude', await page.locator('.sot-centrale').count(), 0)
+uguale('e si richiude', await page.locator('[data-zaino]').count(), 0)
 
 /* ---------- 5. si esce a metà, e la discesa resta lì ----------
    La cosa che rende giocabile una discesa da venti minuti: si chiude e
    si riprende. Il giro si prova **dall'archivio vero** — si esce, si
-   torna alla mappa, si riprende — perché il salvataggio passa dal
-   profilo e il test unitario quel pezzo non lo tocca. */
+   rientra, si riprende — perché il salvataggio passa dal profilo e il test
+   unitario quel pezzo non lo tocca. Uscire con la ✕ non è un portale
+   (docs/sotterraneo/portale-e-sosta.md): si va in home, e rientrando si è già giù
+   nel punto esatto, senza la terra di sopra, i mercanti o un gemello. */
+const dovEro = await cellaEroe()
 await page.locator('button[aria-label="indietro"]').click()
-await page.waitForSelector('.sot-tappe', { timeout: 5000 })
-controlla('uscendo a metà la discesa resta in sospeso',
-          await page.locator('[data-ripresa]').count() === 1)
-controlla('e la carta dice a che piano si era',
-          (await page.locator('.sot-ripresa .sot-dove').textContent()).includes('piano 1'))
-/* e **con chi**: la discesa a metà è dell'avventura del cavaliere
-   (docs/sotterraneo/avventure.md, lo prova integrazione/sotterraneo-avventure) */
-controlla('e con chi si torna giù',
-          (await page.locator('.sot-ripresa .sot-dove').textContent()).includes('Cavaliere'))
+await page.waitForSelector('.carte', { timeout: 5000 })
+uguale('la ✕ dalla discesa porta in home, non sulla terra di sopra', await page.locator('[data-terra]').count(), 0)
+await attendi(page, 300)
+let p = await leggiProfilo(page)
+let sosta = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta
+uguale('la discesa è nella sosta, lasciata con un\'uscita', sosta?.via, 'uscita')
+uguale('al piano 1', sosta?.piano, 0)
+uguale('e dov\'era l\'eroe', `${Math.floor(sosta?.dove?.x)},${Math.floor(sosta?.dove?.y)}`, dovEro)
 
-/* ---------- 6. la seconda discesa si vede come la prima ----------
-   Tornando alle discese il `v-if` smonta il campo, quindi la discesa
-   dopo trova **un altro canvas**: un pittore rimasto agganciato al primo
-   continuava a dipingere su una tela staccata dal DOM. Niente errori,
-   niente di rotto in nessun altro controllo — solo lo schermo nero, e
-   solo dalla seconda in poi. Per questo il conto dei pixel si rifà
-   invece di darlo per buono al primo giro. */
-await page.locator('[data-azione="riprendi"]').click()
+/* ---------- 6. rientrando si è già giù ----------
+   Tornando dalla terra di sopra il `v-if` smonta il campo, quindi la
+   discesa dopo trova **un altro canvas**: un pittore rimasto agganciato al
+   primo continuava a dipingere su una tela staccata dal DOM. Niente
+   errori, niente di rotto in nessun altro controllo — solo lo schermo
+   nero, e solo dalla seconda in poi. Per questo il conto dei pixel si
+   rifà invece di darlo per buono al primo giro. */
+await scegli(page, 'sotterraneo')
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
+uguale('rientrando nel sotterraneo si è giù, senza passare dalla terra di sopra', await page.locator('[data-terra]').count(), 0)
+uguale('non c\'è nessuna carta da toccare', await page.locator('[data-ripresa]').count(), 0)
+uguale('e non c\'è nessun gemello', await page.locator('[data-portale]').count(), 0)
+await page.waitForSelector('[data-pausa]', { timeout: 3000 })
+controlla('si nasce fermi, dietro il velo della pausa (docs/core/ripresa.md)', await page.locator('[data-pausa]').count() === 1)
+controlla('che dice a che piano si è', (await page.locator('[data-pausa]').textContent()).includes('piano 1'))
+uguale('nel punto esatto', await cellaEroe(), dovEro)
+await attendi(page, 400)
+await page.locator('[data-pausa] [data-azione="riprendi"]').click()
 await attendi(page, 600)
 const ancora = await page.evaluate(() => {
   const c = document.querySelector('.sot-tela')
@@ -161,12 +172,28 @@ const ancora = await page.evaluate(() => {
 })
 controlla('anche la discesa ripresa si vede', ancora > 200, `${ancora} campioni accesi`)
 
-/* ---------- 7. e si può anche lasciar perdere ---------- */
-await page.locator('button[aria-label="indietro"]').click()
-await page.waitForSelector('.sot-tappe', { timeout: 5000 })
-await page.locator('[data-azione="scorda"]').click()
+/* ---------- 7. e si può anche lasciar perdere ----------
+   Dal velo della pausa, con un foglio che dice prima cosa resta (la roba)
+   e cosa no (la discesa ricomincia da capo). Si risale sulla terra di sopra. */
+await page.click('button[aria-label="pausa"]')
+await page.waitForSelector('[data-pausa] [data-azione="lascia-discesa"]', { timeout: 3000 })
+await attendi(page, 400)
+await page.click('[data-azione="lascia-discesa"]')
+await page.waitForSelector('[data-lascio-perdere]', { timeout: 3000 })
+const frase = await page.locator('[data-lascio-perdere]').textContent()
+controlla('il foglio dice che la roba resta', /resta tutto tuo/.test(frase), frase)
+controlla('e che la discesa ricomincia da capo', /ricomincia da capo/.test(frase), frase)
+await page.click('[data-lascio-perdere] [data-azione="scorda-no"]')
+await attendi(page, 200)
+uguale('«no, tengo la discesa»: si resta in pausa, giù', await page.locator('[data-pausa]').count(), 1)
+await page.click('[data-azione="lascia-discesa"]')
+await page.click('[data-lascio-perdere] [data-azione="scorda-si"]')
+await page.waitForSelector('[data-terra]', { timeout: 5000 })
 await attendi(page, 300)
-uguale('lasciata perdere, la carta sparisce', await page.locator('[data-ripresa]').count(), 0)
+uguale('lasciata perdere, sulla terra di sopra non c\'è la carta', await page.locator('[data-ripresa]').count(), 0)
+uguale('né il gemello', await page.locator('[data-portale]').count(), 0)
+p = await leggiProfilo(page)
+uguale('e la sosta non c\'è più', p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta, undefined)
 await scendiNelSotterraneo(page, 0)
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
 controlla('e si ricomincia senza che nessuno chieda niente',
@@ -180,10 +207,7 @@ controlla('e si ricomincia senza che nessuno chieda niente',
    guadagnarsela giocando vorrebbe dire un test che qualche volta la
    trova e qualche volta no: si passa dal cheat di casa
    (`#sotterraneo=roba`), che scende con una accesa e una alla cintura. */
-await page.locator('button[aria-label="indietro"]').click()
-await page.waitForSelector('.sot-tappe', { timeout: 5000 })
-await page.locator('[data-azione="scorda"]').click()
-await attendi(page, 300)
+await lasciaLaDiscesa(page)
 await page.evaluate(() => { location.hash = 'sotterraneo=roba' })
 await scendiNelSotterraneo(page, 0)
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
@@ -199,7 +223,7 @@ controlla('e la fiamma è alta quanto quello che resta',
             e => parseFloat(e.style.height) > 90))
 
 await page.locator('[data-azione="zaino"]').click()
-await page.waitForSelector('.sot-centrale', { timeout: 3000 })
+await page.waitForSelector('[data-zaino]', { timeout: 3000 })
 const riga = await page.locator('[data-torcia-zaino]').textContent()
 controlla('e lo zaino lo dice per esteso', /stanze/.test(riga) && /cintura/.test(riga), riga)
 await page.locator('[data-azione="chiudi"]').click()

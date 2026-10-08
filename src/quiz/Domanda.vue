@@ -11,13 +11,15 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { dipingi } from './grafica/riquadro.js'
 import Giudizio from '../components/Giudizio.vue'
+import TastoSalta from '../components/TastoSalta.vue'
 import { giudiziAccesi } from '../store/giudizi.js'
+import { saltoAcceso } from '../store/salto.js'
 import { annota, alleggerita, alleggerisciSeServe } from './memoria.js'
 import { esempioSvolto, generatoreDi, daLeggerePrima } from './nucleo/svolto.js'
 import { perId } from './nucleo/registro.js'
 import { sorteQualunque } from './nucleo/sorte.js'
 import { serveLaDritta, troppoDiFretta, spiegazioneDi, attesaDellEsito, evidenziando,
-         tempoDaAnnotare, PONDERA }
+         tempoDaAnnotare, rispostaSaltata, PONDERA }
   from './nucleo/domanda.js'
 import { pesoDellaFretta } from './fretta.js'
 
@@ -35,6 +37,7 @@ const emit = defineEmits(['risposto'])
 let cieca = 0
 
 const scelto = ref(-1)
+const saltata = ref(false) // il tasto «salta» dei grandi: giusta per il gioco, invisibile al ripasso (docs/core/comandi.md)
 // il tempo si ferma a schermo nascosto (setTimeout/performance.now non se ne accorgono da sé):
 // vedi docs/core/interfaccia.md#i-tempi e docs/apprendimento/la-domanda.md
 let partenza = 0        // quando è ricominciato il conto (0 = fermo)
@@ -63,6 +66,8 @@ const risposte = computed(() => props.domanda.risposte || [])
 // la frase col rilievo: il ritaglio sta in nucleo/domanda.js (lo condivide grafica/scheda.js)
 const frase = computed(() =>
   evidenziando(props.domanda.soggetto?.testo, props.domanda.soggetto?.evidenzia))
+const fraseSvolta = computed(() =>
+  evidenziando(svolto.value?.soggetto?.testo, svolto.value?.soggetto?.evidenzia))
 // oltre 6 parole vere il soggetto diventa un paragrafo a sinistra invece di un titolo centrato
 const PAROLE_DA_PARAGRAFO = 6
 const daLeggere = computed(() =>
@@ -173,6 +178,19 @@ function scegli(i) {
   programma(quanto)
 }
 
+/* «salta» (solo se chi sviluppa l'ha acceso): la domanda va al gioco per giusta, ma
+   non passa da `scegli` — niente ripasso, niente alleggerimento, niente fretta —
+   e `saltata` nell'evento dice a chi ascolta di non pagare né contare. Una
+   pausa breve per vedere la giusta accendersi, non l'attesa di un esito vero. */
+const PAUSA_SALTO = 450
+function saltaQuesta() {
+  if (scelto.value >= 0 || !pronta.value) return
+  saltata.value = true
+  scelto.value = props.domanda.giusta
+  vaiAvanti = () => emit('risposto', rispostaSaltata(props.domanda))
+  programma(PAUSA_SALTO)
+}
+
 /* Il timer dell'esito, in un posto solo: lo arma chi risponde e lo
    riarma chi torna a guardare lo schermo, e tutti e due devono
    ricordarsi di segnare **quando scade** — se no il pezzo che resta,
@@ -222,7 +240,7 @@ const daGiudicare = () => ({
   materia: props.origine?.materia || '',
   chiave: props.domanda.chiave || '',
   testo: props.domanda.testo || '',
-  esito: scelto.value < 0 ? 'aperta'
+  esito: scelto.value < 0 ? 'aperta' : saltata.value ? 'saltata'
     : scelto.value === props.domanda.giusta ? 'giusta' : 'sbagliata',
   tempo: guardata(),
 })
@@ -231,6 +249,7 @@ const daGiudicare = () => ({
 async function inizia() {
   clearTimeout(cieca)
   scelto.value = -1
+  saltata.value = false
   quantoCiHaMesso.value = 0
   attesa.value = 0
   diFretta.value = false
@@ -309,6 +328,8 @@ onUnmounted(() => {
         <div v-if="svolto.soggetto" class="qz-svolto-soggetto">
           <canvas v-if="svolto.soggetto.scena" ref="teloSvolto" class="qz-svolto-telo" />
           <span v-else-if="svolto.soggetto.emoji">{{ svolto.soggetto.emoji }}</span>
+          <span v-else-if="fraseSvolta.parola"
+          >{{ fraseSvolta.prima }}<b class="qz-spicca">{{ fraseSvolta.parola }}</b>{{ fraseSvolta.dopo }}</span>
           <span v-else>{{ svolto.soggetto.testo }}</span>
           <span v-if="svolto.soggetto.nome" class="qz-nome">{{ svolto.soggetto.nome }}</span>
         </div>
@@ -357,6 +378,9 @@ onUnmounted(() => {
         </button>
       </div>
 
+      <!-- per provare i giochi: la leva di #admin, docs/core/comandi.md -->
+      <div v-if="saltoAcceso && scelto < 0" class="qz-salta"><TastoSalta @salta="saltaQuesta" /></div>
+
       <!-- l'attesa che si vede, senza la quale sembra un gioco fermo -->
       <div v-if="attesa" class="qz-avanti" :class="{ saltabile }"
            @click="saltaAttesa">
@@ -365,7 +389,8 @@ onUnmounted(() => {
 
       <div class="qz-esito">
         <template v-if="scelto >= 0">
-          <span v-if="scelto === domanda.giusta" class="bene">Giusto!</span>
+          <span v-if="saltata" class="bene" data-saltata>⏭️ Saltata</span>
+          <span v-else-if="scelto === domanda.giusta" class="bene">Giusto!</span>
           <!-- tre righe, tre mestieri: la correzione, il metodo (comeSiFa, l'unico utile anche domani), la dritta -->
           <template v-else><span class="male">Era questa.</span> {{ spiegazione.perche }}</template>
           <div v-if="spiegazione.comeSiFa" class="qz-come">
@@ -407,6 +432,7 @@ onUnmounted(() => {
   animation: qz-entra .18s ease;
 }
 @keyframes qz-entra { from { opacity: 0 } to { opacity: 1 } }
+.qz-salta { text-align: center }
 .qz-carta {
   margin: auto;
   width: 100%; max-width: 430px;

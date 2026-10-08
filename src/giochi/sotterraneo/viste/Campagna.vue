@@ -7,10 +7,13 @@ import Icona from './Icona.vue'
 import Armato from './Armato.vue'
 import { COSE } from '../dati/cose.js'
 import Terra from './Terra.vue'
+import Diario from './Diario.vue'
+import LascioPerdere from './LascioPerdere.vue'
+import { diario } from '../motore/missioni.js'
 
 const props = defineProps({
   tappe: { type: Array, required: true },   // [{ indice, chiave, nome, icona, dritta, piani, aperta, adesso, stelle, perEta, fatta }]
-  ripresa: { type: Object, default: null }, // { tappa, chiave, nome, icona, immagine, piano, piani, vita, gemme, chi }
+  ripresa: { type: Object, default: null }, // { tappa, chiave, nome, icona, immagine, piano, piani, vita, gemme, chi, via }
   eroe: { type: Object, required: true },   // la scheda di chi scende, da dati/eroi.js
   abisso: { type: Object, default: null },   // { indice, nome, icona, dritta, fondo }; in fondo, la ripresa è più urgente
   terra: { type: Object, default: null },    // la terra dell'avventura: la nebbia, dove si era, se il minatore ha già parlato
@@ -25,6 +28,16 @@ riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 const veste = computed(() => (props.roba && props.roba.corpo ? COSE[props.roba.corpo] || null : null))
 
 const chiede = ref(null)   // quale tappa si sta per cominciare avendo una discesa in sospeso
+const perdere = ref(false)   // «lascio perdere questa discesa»: il foglio che dice cosa resta e cosa no
+
+// il gemello nel villaggio c'è solo se si è salita la discesa dal portale vero (`via: 'portale'`): uscire con la ✕ non
+// regala una strada per tornare giù (docs/sotterraneo/portale-e-sosta.md)
+const portale = computed(() => (props.ripresa && props.ripresa.via === 'portale' ? props.ripresa : null))
+
+// il diario delle missioni (viste/Diario.vue): un tasto accanto alla carta di chi scende, col numero di quelle aperte
+const diarioAperto = ref(false)
+const riassunto = computed(() => diario(props.missioni, props.tappe))
+const pronte = computed(() => riassunto.value.inMano.some(v => v.stato === 'fatta'))
 
 function tocca(t) {
   if (!props.ripresa) return emit('gioca', t.indice)
@@ -40,10 +53,10 @@ function comincia() {
 
 <template>
   <div class="sot-tappe">
-    <!-- la discesa a metà è anche il portale gemello nel villaggio: tutti e due riprendono la stessa sosta -->
+    <!-- la discesa lasciata dal portale è anche il portale gemello nel villaggio: tutti e due riprendono la stessa sosta -->
     <Terra :tappe="tappe" :abisso="abisso" :eroe="eroe" :terra="terra" :roba="roba"
            :missioni="missioni" :azione-missione="azioneMissione"
-           :giaScesa="ripresa ? ripresa.tappa : null" :portale="ripresa"
+           :giaScesa="ripresa ? ripresa.tappa : null" :portale="portale"
            @scendi="tocca" @terra="v => $emit('terra', v)" @bottega="k => $emit('bottega', k)"
            @riprendi="$emit('riprendi')">
       <template #sopra>
@@ -62,7 +75,7 @@ function comincia() {
             <button class="sot-grosso" data-azione="riprendi" @click="$emit('riprendi')">
               <span class="em">🕳️</span> torno giù da dove ero
             </button>
-            <button class="sot-grosso sot-chiaro" data-azione="scorda" @click="$emit('scorda')">
+            <button class="sot-grosso sot-chiaro" data-azione="scorda" @click="perdere = true">
               lascio perdere
             </button>
           </div>
@@ -70,6 +83,7 @@ function comincia() {
       </template>
 
       <template #sotto>
+        <div class="sot-riga-sotto">
         <!-- chi scende: di qui si torna alle quattro avventure, senza perdere niente di questa -->
         <button class="sot-chi" data-azione="eroe" @click="$emit('eroe')">
           <Armato :eroe="eroe" :mano="roba ? roba.mano : null" :mancina="roba ? roba.mancina : null" :scala="2" />
@@ -86,16 +100,29 @@ function comincia() {
           </span>
           <span class="sot-cambia">cambio</span>
         </button>
+        <!-- il diario: sempre sottomano, col numero delle missioni aperte (in oro se ce n'è una da consegnare) -->
+        <button class="sot-diario-tasto" :class="{ 'sot-pronta': pronte }" data-azione="diario" aria-label="le missioni"
+                @click="diarioAperto = true">
+          <span class="em">📖</span>
+          <b v-if="riassunto.aperte" data-diario-n>{{ riassunto.aperte }}</b>
+        </button>
+        </div>
       </template>
     </Terra>
+
+    <Diario v-if="diarioAperto" :stati="missioni" :tappe="tappe" @chiudi="diarioAperto = false" />
+
+    <!-- detto prima: la roba resta, la discesa ricomincia da capo -->
+    <LascioPerdere v-if="perdere && ripresa" :nome="ripresa.nome"
+                   @si="perdere = false; $emit('scorda')" @no="perdere = false" />
 
     <!-- detto prima, mai dopo: quello che si perde non torna -->
     <div v-if="chiede" class="sot-velo" data-chiede @click.self="chiede = null">
       <div class="sot-modale">
         <h2><span class="em">⚠️</span> Hai una discesa a metà</h2>
         <p>
-          Se cominci <b>{{ chiede.nome }}</b> perdi quella che avevi lasciato
-          in sospeso, con tutto quello che avevi trovato.
+          Se cominci <b>{{ chiede.nome }}</b> lasci perdere quella che avevi in sospeso:
+          quello che hai addosso e nello zaino resta tuo, ma quella discesa ricomincia da capo.
         </p>
         <button class="sot-grosso" data-azione="riprendi-invece"
                 @click="chiede = null; $emit('riprendi')">

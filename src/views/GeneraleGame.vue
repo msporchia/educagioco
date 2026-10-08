@@ -682,7 +682,7 @@ const dritta = computed(() => {
   tic.value
   /* l'avviso se ne va da solo appena il pezzo mancante c'è: non si
      chiede a nessuno di chiudere un cartello per liberare la strada */
-  if (avvisoOra.value) return '⚠ ' + avvisoOra.value
+  if (avvisoOra.value) return '⚠️ ' + avvisoOra.value
   if (!mondo) return ''
   if (mondo.finita && !mondo.vinto) return '💥 ' + mondo.motivo
   if (mondo.finita && mondo.vinto) return '✔ Battaglia ' + (serieI.value + 1) + ' vinta.'
@@ -921,7 +921,7 @@ async function ridimensiona () {
           📜<span v-if="rosse" class="pallo">{{ rosse }}</span></button>
         <button class="tasto q alza" :class="{ qui: soloPiano }" :aria-pressed="soloPiano"
                 :aria-label="soloPiano ? 'rimetti il campo' : 'più spazio al piano'"
-                data-azione="solo-programma" @click="soloPiano = !soloPiano">{{ soloPiano ? '⬇' : '⬆' }}</button>
+                data-azione="solo-programma" @click="soloPiano = !soloPiano">{{ soloPiano ? '▼' : '▲' }}</button>
       </div>
 
       <!-- chi comanda: una pastiglia per unità -->

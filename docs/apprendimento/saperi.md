@@ -13,6 +13,8 @@ prova, e perché non c'è un quarto) stanno in
   tipologia (`sa:` dentro `tipi`, o `saperi:` per grado nei moduli senza
   tipi); `saperi.js` ha solo i nomi grossi, con le parole per un genitore
   (`che`, `esempio`, `spegne`). Nessun elenco da tenere allineato a mano.
+  **Il primo dei `sa` è il gruppo** sotto cui la domanda compare nel quadro:
+  il più stretto ([../genitori/quadro.md](../genitori/quadro.md)).
 - **Anche un gioco può dichiarare**, con `chiede:` nel manifesto
   (`data/giochi.js`): il castello chiede moltiplicazioni e divisioni senza
   passare da `src/quiz/`. Senza quella riga l'impostazione esisteva e non

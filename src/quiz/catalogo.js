@@ -2,7 +2,7 @@
 
 import { MODULI } from './nucleo/registro.js'
 import { catalogoDi, giroDellaFascia, FASCE, fasciaDi, quantoEsce,
-         FASCE_ETA, doveCadeCon } from './nucleo/catalogo.js'
+         FASCE_ETA, doveCadeCon, gruppoDi } from './nucleo/catalogo.js'
 import { classiAmmesse } from './scelta.js'
 import { pescaClasse, finestraDi } from './nucleo/classi.js'
 import { esempioDa } from './nucleo/esempi.js'
@@ -28,12 +28,7 @@ export { FASCE_ETA }
 export function fasceDelBambino({ eta = etaDelBambino(), giudizi = [] } = {}) {
   const dove = doveCadeCon(eta)
 
-  // il gruppo più specifico fra quelli dichiarati (quello con meno domande, vedi docs/genitori/quadro.md)
-  const quanteHa = {}
   const tutte = catalogoDi(MODULI, { spenti: saperiSpenti(), giudizi }).flatMap(m => m.classi)
-  for (const c of tutte) for (const k of (c.sa || [])) quanteHa[k] = (quanteHa[k] || 0) + 1
-  const gruppoDi = sa => (sa || []).slice()
-    .sort((x, y) => (quanteHa[x] || 0) - (quanteHa[y] || 0))[0] || null
 
   const righe = tutte
     .map(c => {
@@ -49,7 +44,6 @@ export function fasceDelBambino({ eta = etaDelBambino(), giudizi = [] } = {}) {
            saperi: «Le divisioni», non «divisioni» */
         gruppo,
         gruppoNome: gruppo ? (sapereDi(gruppo)?.nome || gruppo) : '',
-        gruppoQuante: gruppo ? quanteHa[gruppo] : 0,
         consiglio: consiglioDa(contoDi([c.tipo], state.profile.items || {}), ritocco),
       }
     })

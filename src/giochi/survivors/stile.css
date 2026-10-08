@@ -22,7 +22,7 @@
    precedenza un «0:38» esce con le cifre larghe il doppio del resto. Il
    ripiego sulle emoji funziona lo stesso: system-ui quei glifi non ce
    li ha, e il browser scende al font dopo. */
-.sv .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji",
+.sv .em { font-family: "Emoji Gioco", system-ui, "Noto Color Emoji", "Apple Color Emoji",
                       "Segoe UI Emoji", "Twemoji Mozilla", sans-serif; line-height: 1 }
 
 /* la mappa della campagna */

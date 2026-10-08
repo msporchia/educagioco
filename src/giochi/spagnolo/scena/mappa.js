@@ -361,7 +361,7 @@ function rosa(ctx, x, y, r) {
     ctx.fillStyle = i === 0 ? '#b0412a' : i % 2 ? 'rgba(74,50,34,.35)' : 'rgba(74,50,34,.7)'
     ctx.fill(); ctx.stroke()
   }
-  ctx.fillStyle = INCHIOSTRO; ctx.font = `700 ${Math.round(r * 0.5)}px Georgia, serif`
+  ctx.fillStyle = INCHIOSTRO; ctx.font = `700 ${Math.round(r * 0.5)}px "Emoji Gioco", Georgia, serif`
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('N', 0, -r - 8)
   ctx.restore()
 }

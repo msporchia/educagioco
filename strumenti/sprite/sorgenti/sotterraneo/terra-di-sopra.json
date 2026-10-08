@@ -27,7 +27,7 @@
   "personaggi": {
     "ragazza": { "piede": [49, 36], "accanto": [51, 36] },
     "mugnaio": { "piede": [54, 22], "accanto": [56, 22] },
-    "eremita": { "piede": [58, 9], "accanto": [60, 9] },
+    "eremita": { "piede": [60, 9], "accanto": [58, 9] },
     "guardia": { "piede": [45, 9], "accanto": [47, 9] },
     "pescatore": { "piede": [10, 23], "accanto": [12, 23] },
     "boscaiolo": { "piede": [21, 26], "accanto": [19, 26] }

@@ -294,7 +294,7 @@ export class Tela {
       ctx.arc(cx + c * 0.36, py + c * 0.08, c * 0.16, 0, Math.PI * 2)
       ctx.fill()
       ctx.fillStyle = '#fff'
-      ctx.font = `bold ${Math.round(c * 0.26)}px system-ui, sans-serif`
+      ctx.font = `bold ${Math.round(c * 0.26)}px "Emoji Gioco", system-ui, sans-serif`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       ctx.fillText('!', cx + c * 0.36, py + c * 0.09)

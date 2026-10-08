@@ -71,6 +71,14 @@ export class QuesitoOrdina {
     if (this.piena) this.esito = this.posate.every((v, i) => v === i) ? 'giusta' : 'sbagliata'
     return 'posata'
   }
+
+  // il tasto «salta» dei grandi (docs/core/comandi.md): la fila giusta, senza che nessuno l'abbia fatta
+  risolvi() {
+    if (this.finita) return false
+    this.posate = this.sequenza.map((_, i) => i)
+    this.esito = 'giusta'
+    return true
+  }
 }
 
 export class QuesitoScelta {
@@ -112,6 +120,14 @@ export class QuesitoScelta {
     this.esito = opzione?.giusta ? 'giusta' : 'sbagliata'
     return this.esito
   }
+
+  // il tasto «salta» dei grandi: vedi QuesitoOrdina.risolvi
+  risolvi() {
+    if (this.finita) return false
+    this.scelta = this.corretta
+    this.esito = 'giusta'
+    return true
+  }
 }
 
 export class QuesitoIntruso {
@@ -137,6 +153,14 @@ export class QuesitoIntruso {
     const vignetta = this.vignette.find(v => v.id === id)
     this.esito = vignetta?.intruso ? 'giusta' : 'sbagliata'
     return this.esito
+  }
+
+  // il tasto «salta» dei grandi: vedi QuesitoOrdina.risolvi
+  risolvi() {
+    if (this.finita) return false
+    this.scelta = this.vignette.find(v => v.intruso).id
+    this.esito = 'giusta'
+    return true
   }
 }
 

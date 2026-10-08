@@ -133,7 +133,7 @@ export class Campo {
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(eroe.x, eroe.y, r, 0, 6.29); ctx.fill()
     ctx.strokeStyle = '#d8f6ffcc'; ctx.lineWidth = 2
     ctx.beginPath(); ctx.arc(eroe.x, eroe.y, r, 0, 6.29); ctx.stroke()
-    ctx.font = '14px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.font = '14px "Emoji Gioco", system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
     for (let i = 0; i < 4; i++) {
       const a = tempo * 0.7 + i * 1.57
       ctx.fillText('❄️', eroe.x + Math.cos(a) * r * 0.86, eroe.y + Math.sin(a) * r * 0.86)

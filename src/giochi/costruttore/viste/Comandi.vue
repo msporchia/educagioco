@@ -30,7 +30,7 @@ const VELOCITA = [['lenta', '🐢'], ['normale', '🐇'], ['veloce', '🚀']]
       <span v-if="turno !== null" class="cst-turno" data-turno>🕘 {{ turno }}</span>
       <button type="button" class="cst-lampadina cst-alza" data-azione="solo-programma" :aria-pressed="soloProgramma"
               :aria-label="soloProgramma ? 'rimetti il campo' : 'più spazio al programma'" @click="emit('solo-programma')">
-        {{ soloProgramma ? '⬇' : '⬆' }}
+        {{ soloProgramma ? '▼' : '▲' }}
       </button>
       <!-- `suggerimento` e non `aiuto`: quello è il ? della barra, che c'è in tutti i giochi -->
       <button type="button" class="cst-lampadina" data-azione="suggerimento" aria-label="suggerimento" @click="emit('aiuto')">

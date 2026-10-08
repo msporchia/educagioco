@@ -13,6 +13,7 @@ import { borsa } from '../../store/varieta.js'
 import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, chiusaPerEta, completa, scelta, ricorda, ritocca } from '../campagne.js'
 import { usaPausa } from '../pausa.js'
+import { prendiRipresa } from '../ripresa.js'
 import VeloPausa from '../VeloPausa.vue'
 import { domandaPerGioco } from '../../quiz/scelta.js'
 import Domanda from '../../quiz/Domanda.vue'
@@ -27,10 +28,10 @@ import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo } from './motore/corredo.js'
-import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer }
-  from './motore/missioni.js'
+import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer, promemoria,
+         rotta as rottaDi } from './motore/missioni.js'
 import { Bottega } from './motore/bottega.js'
-import { scrivi, leggi, dice } from './motore/sosta.js'
+import { scrivi, leggi, dice, viaDi, PORTALE as VIA_PORTALE } from './motore/sosta.js'
 import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata }
   from './motore/avventure.js'
 import { PORTALE } from './dati/terra-mappa.js'
@@ -42,12 +43,12 @@ import Campagna from './viste/Campagna.vue'
 import Eroi from './viste/Eroi.vue'
 import Foglio from './viste/Foglio.vue'
 import Icona from './viste/Icona.vue'
-import { cambioDetto } from './viste/cambio.js'
 import { occhio } from './viste/occhio.js'
 import Scontro from './viste/Scontro.vue'
 import Zaino from './viste/Zaino.vue'
-import Mercante from './viste/Mercante.vue'   // il banco dei mercanti di sopra
+import LaBottega from './viste/Bottega.vue'   // la bottega dei mercanti di sopra
 import Fine from './viste/Fine.vue'
+import LascioPerdere from './viste/LascioPerdere.vue'   // la frase chiara prima di buttare una discesa
 import './stile.css'
 
 defineOptions({ name: 'IlSotterraneo' })
@@ -109,6 +110,7 @@ function scegli(k) {
   chiEro.value = ricorda(CHIAVE, 'eroe', k)
   scegliEroe.value = false
   suono.ok()
+  nextTick(riprendiSeUscito)   // l'avventura scelta ha la discesa lasciata con la ✕? si riprende giù
 }
 
 // le quattro schede della scelta: a che punto è ognuna, o «nuova avventura». I numeri sono quelli con la roba
@@ -146,11 +148,11 @@ let ultimoSalvato = 0
 
 // la roba e la sosta nello stesso giro: un telefono spento fra le due perderebbe quello che si è raccolto. Le
 // missioni fatte giù (la cosa trovata, il mostro col nome) passano subito nell'avventura: sopra si consegnano
-function salva({ subito = false } = {}) {
+function salva({ subito = false, via } = {}) {
   const c = corsa.value
   if (!c || c.finita || tappaIdx.value == null) return
   ultimoSalvato = orologio
-  nellAvventura({ roba: c.roba, sosta: scrivi(c, tappaIdx.value), ...fatteGiu(c) }, { subito })
+  nellAvventura({ roba: c.roba, sosta: scrivi(c, tappaIdx.value, { via }), ...fatteGiu(c) }, { subito })
 }
 function fatteGiu(c) {
   const n = c.missioniFatte.size ? missioniFatte(qui.value.missioni, [...c.missioniFatte]) : null
@@ -158,8 +160,9 @@ function fatteGiu(c) {
 }
 
 /* ═══════════ le missioni dei personaggi (motore/missioni.js) ═══════════
-   Si prendono parlando con chi le dà, si fanno giù (Corsa.missioni), si consegnano sopra: il premio va sulla
-   roba dell'avventura, gemme o un gioiello, mai monete (docs/sotterraneo/missioni.md) */
+   Si prendono parlando con chi le dà (anche più insieme), si fanno giù (Corsa.missioni), si consegnano sopra: il
+   premio va sulla roba dell'avventura, gemme o un gioiello, e a volte monete, che passano dalla borsa del gioco
+   come ogni altra (docs/sotterraneo/missioni.md) */
 const missioni = computed(() => qui.value.missioni || {})
 function azioneMissione(id, azione) {
   if (azione === 'prendi') {
@@ -172,32 +175,40 @@ function azioneMissione(id, azione) {
   const b = new Corredo({ eroe: eroeQui(), roba: roba.value })
   const r = consegnaMissione(missioni.value, id, b)
   if (!r) return null
-  if (r.esito === 'consegnata') {
-    nellAvventura({ missioni: r.stati, roba: b.roba }, { subito: true })
-    suono.livello()
-  } else suono.no()
-  return r.esito
+  if (r.esito !== 'consegnata') { suono.no(); return { esito: r.esito, monete: 0 } }
+  nellAvventura({ missioni: r.stati, roba: b.roba }, { subito: true })
+  suono.livello()
+  // le monete del regalo: quelle che il salvadanaio della varietà lascia passare, non una di più
+  return { esito: 'consegnata', monete: r.monete ? borsa(CHIAVE).paga(r.monete) : 0 }
 }
+
+// la riga in cima a una discesa per ogni missione presa che la riguarda (motore/missioni.js, promemoria)
+const ricordo = dallaCorsa(c => {
+  const t = c.tappa
+  return t && !t.abisso ? promemoria(missioni.value, t.chiave, c.piano + 1) : []
+}, [])
 
 function scorda() {
   nellAvventura({ sosta: null }, { subito: true })
 }
 
-// il portale: si sale al villaggio lasciando il piano com'è. La sosta è il portale aperto: sopra compare il
-// gemello (viste/Terra.vue), e l'eroe sbuca accanto a lui
+// il portale: si sale al villaggio lasciando il piano com'è. La sosta è il portale aperto (`via: 'portale'`): sopra
+// compare il gemello (viste/Terra.vue), e l'eroe sbuca accanto a lui. Uscire con la ✕ non è questo: lì la sosta è
+// una 'uscita', senza gemello, e rientrando si riprende giù (docs/sotterraneo/portale-e-sosta.md, «Il portale e l'uscita»)
 function salgoDalPortale() {
   const c = corsa.value
   if (!c || c.finita) return
   c.chiudi()
-  salva({ subito: true })
+  salva({ subito: true, via: VIA_PORTALE })
   nellAvventura({ terra: { ...(qui.value.terra || {}), dove: [...PORTALE.accanto] } }, { subito: true })
   suono.nota(260, 880, 0.5, 'sine', 0.12)
   allaMappa()
 }
 
 // riprendere non è ricominciare: il piano si rifà dal seme, e sopra ci si rimette quello che era successo. Dalla
-// carta in cima, da «riprendi da qui» e dal portale di sopra: è la stessa sosta
-function riprendiDiscesa() {
+// carta in cima, da «riprendi da qui» e dal portale di sopra: è la stessa sosta. `ferma`: nasce dietro il velo
+// della pausa e riparte al tocco (docs/core/ripresa.md), quando non c'è stato un tocco su «torno giù» a chiederlo
+function riprendiDiscesa({ ferma = false } = {}) {
   const dato = qui.value.sosta
   const t = dato ? tappaDi(dato.tappa) : null
   const c = t ? leggi(dato, t, roba.value, presePer(missioni.value, t.chiave || '')) : null
@@ -211,6 +222,18 @@ function riprendiDiscesa() {
   borsellino = borsa(CHIAVE)
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
   nextTick(() => accendi())
+  if (ferma) metti()
+}
+
+// Uscire non è un portale: la discesa lasciata con la ✕ (o quella di prima, senza `via`) non passa dalla terra di
+// sopra, e rientrando nel sotterraneo, da «riprendi da qui» come da un'altra porta, si è già giù, nel punto esatto.
+// Il gemello e le spese sono del portale vero. La richiesta di «riprendi da qui» si consuma qui: se restasse in
+// piedi, la prima volta che si risale dal portale la carta in cima ripartirebbe da sola
+function riprendiSeUscito() {
+  const s = qui.value.sosta
+  if (!s || corsa.value || viaDi(s) === VIA_PORTALE) return
+  prendiRipresa()
+  riprendiDiscesa({ ferma: true })
 }
 
 /* ═══════════ la mappa delle tappe ═══════════ */
@@ -257,16 +280,23 @@ const banco = computed(() => {
   const k = aperto.value
   if (!k || !bottega) return null
   const b = bottega, m = mercanteDi(k)
+  const voce = x => (x && COSE[x] ? { chiave: x, ...COSE[x] } : null)
+  // quello peggiore di quello addosso non si mostra; i pezzi più su si vedono spenti, con la discesa che li porta
+  const vendibili = b.mercanzia(k).filter(({ chiave: x }) => !b.sottoAddosso(x)).map(({ chiave: x, sempre }) => ({
+    chiave: x, sempre, ...COSE[x], posso: b.gemme >= COSE[x].prezzo,
+    nonPuoi: b.perchéNo(x), prova: b.seLoMetto(x), va: b.vaAddosso(x),
+    mancano: Math.max(0, COSE[x].prezzo - b.gemme),
+    quante: b.quanteNeHo(x),
+  }))
+  const vetrina = b.vetrina(k).map(({ chiave: x, finita }) => ({
+    chiave: x, ...COSE[x], chiusa: true, posso: false, prova: b.seLoMetto(x), nonPuoi: b.perchéNo(x),
+    quando: CAMPAGNA[finita].nome.charAt(0).toLowerCase() + CAMPAGNA[finita].nome.slice(1),
+  }))
   return {
     chi: m,
-    gemme: b.gemme,
-    roba: b.mercanzia(k).map(({ chiave: x, sempre }) => ({
-      chiave: x, sempre, ...COSE[x], posso: b.gemme >= COSE[x].prezzo,
-      nonPuoi: b.perchéNo(x),
-      cambio: cambioDetto(b.confronto(x), y => COSE[y].nome),
-      mancano: Math.max(0, COSE[x].prezzo - b.gemme),
-      quante: b.quanteNeHo(x),
-    })),
+    roba: [...vendibili, ...vetrina],
+    addosso: { mano: voce(b.mano), mancina: voce(b.mancina), corpo: voce(b.corpo), dito: voce(b.dito) },
+    numeri: { vita: b.vitaConLaRoba, att: b.att, dif: b.dif, gemme: b.gemme },
     tasche: m.compra ? Array.from({ length: TASCHE }, (_, i) => {
       const y = b.zaino[i]
       return y ? { chiave: y, ...COSE[y], vale: b.quantoVale(y) } : null
@@ -358,7 +388,7 @@ const pieni = dallaCorsa(c => c.zaino.length, 0)   // sei su sei vuol dire che l
 
 const zaino = dallaCorsa(c => {
   // `nonPuoi` la scrive il motore (perchéNo), che sa chi sta scendendo
-  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k) } : null)
+  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), prova: c.seLoMetto(k) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina),
     corpo: voce(c.corpo), dito: voce(c.dito),
@@ -443,6 +473,7 @@ function accendi() {
   else pittore.attacca(tela.value)
   pittore.misura()
   pittore.segui(corsa.value.livello, corsa.value.eroe.x, corsa.value.eroe.y)
+  pittore.mostra({ corsa: corsa.value, orologio })   // il primo quadro c'è subito: rientrando si nasce dietro il velo della pausa, e il giro non disegna finché si è fermi
   pittore.avvia()
   giro()
 }
@@ -476,9 +507,28 @@ function giro() {
     if (orologio - ultimoSalvato > 8) salva()
     pittore.segui(c.livello, c.eroe.x, c.eroe.y, altoFoglio)
     pittore.mostra({ corsa: c, orologio })
+    posaLaRotta(c)
     guarda(c)
   }
   raf = requestAnimationFrame(passo)
+}
+
+/* ═══════════ la freccina verso la missione (motore/missioni.js, rotta) ═══════════
+   Attorno all'eroe, nella direzione della missione presa più vicina: la cosa se è su questo piano, la scala se è
+   più giù. Direzione e non strada, e non guarda la nebbia. Cosa cambia di rado (quale missione, 'qui' o 'scala')
+   è reattivo; l'angolo e il posto si scrivono nel DOM a ogni fotogramma, come la terra di sopra */
+const rotta = ref(null)
+const rottaEl = ref(null)
+let rottaChiave = ''
+function posaLaRotta(c) {
+  const r = rottaDi(c)
+  const chiave = r ? `${r.id}|${r.verso}` : ''
+  if (chiave !== rottaChiave) { rottaChiave = chiave; rotta.value = r ? { id: r.id, verso: r.verso, nome: r.nome } : null }
+  const el = rottaEl.value
+  if (!r || !el) return
+  const p = pittore.schermoDi(c.eroe.x, c.eroe.y - 0.25)
+  el.style.transform = `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px) rotate(${r.gradi}deg)`
+  if (el.dataset.gradi !== String(r.gradi)) el.dataset.gradi = r.gradi
 }
 
 // un `tic` a ogni fotogramma ricalcolerebbe mezza schermata sessanta volte al secondo: si confronta una firma corta
@@ -516,19 +566,20 @@ watch(() => { tic.value; return corsa.value?.chiesta?.id }, (id) => {
   }
 })
 
-function risposto({ giusto }) {
+function risposto({ giusto, saltata }) {
   domanda.value = null
   // rispondere È il tocco che riprende: il freno può essersi acceso durante la domanda
   togli()
   // una risposta giusta paga subito, nelle discese come nell'abisso: docs/sotterraneo/regole.md
-  if (giusto) borsellino.paga(PAGA.mossa)
-  risolvi(giusto)
+  // (il tasto «salta» dei grandi dà la giusta ma non paga: docs/core/comandi.md)
+  if (giusto && !saltata) borsellino.paga(PAGA.mossa)
+  risolvi(giusto, saltata)
 }
 
-function risolvi(giusto) {
+function risolvi(giusto, saltata = false) {
   const c = corsa.value
   if (!c) return
-  const esito = c.rispondi(giusto)
+  const esito = c.rispondi(giusto, { saltata })
   tic.value++
   salva()
   if (!esito) return
@@ -582,7 +633,9 @@ function scendi() {
   salva()          // un piano nuovo è il momento in cui si perde di più
 }
 
-function chiudi() {
+// `senzaCartello`: si lascia perdere la discesa dal velo della pausa — si risale con la roba (la regola) e si
+// dice una volta sola, nel foglio di prima, quello che si perde: niente cartello di fine
+function chiudi({ senzaCartello = false } = {}) {
   const c = corsa.value
   if (!c) return
   if (!c.finita) c.risali()
@@ -595,7 +648,8 @@ function chiudi() {
   const eraIlFondo = fondoDellAbisso.value   // il record DI PRIMA: segnaIlFondo lo sposta subito dopo
   if (nellAbisso.value) {
     segnaIlFondo(e.fondo)
-    nellAvventura({ sosta: scrivi(c, INDICE_ABISSO, { anchePerFinite: true }) }, { subito: true })
+    // risalito per stasera: è sopra, con la strada per tornare giù (il gemello), come dopo un portale
+    nellAvventura({ sosta: scrivi(c, INDICE_ABISSO, { anchePerFinite: true, via: VIA_PORTALE }) }, { subito: true })
   } else scorda()
 
   // prima l'avanzamento, poi i contatori: i traguardi in segna() devono vedere la tappa già segnata come fatta.
@@ -613,7 +667,8 @@ function chiudi() {
   segnaBest('sotGemme', e.gemme)
 
   // niente premio di fine discesa: ogni risposta giusta si è già pagata (risposto), qui si dice il totale
-  if (e.vinta) { if (e.svenimenti === 0) segna('sotInteri'); suono.livello() } else suono.fine()
+  if (e.vinta) { if (e.svenimenti === 0) segna('sotInteri'); suono.livello() } else if (!senzaCartello) suono.fine()
+  if (senzaCartello) return allaMappa()
 
   fine.value = { vinta: e.vinta, titolo: tappaDi(tappaIdx.value).nome, stelle, fatti: e,
                  monete: borsellino.dato, notaMonete: borsellino.nota(),
@@ -638,13 +693,43 @@ function allaMappa() {
   corsa.value = null
 }
 
-// uscire a metà non chiude più la discesa: si scrive dove si era. Si salva SEMPRE, anche dopo due passi:
-// quello che si perde non sono le gemme, è la mappa già girata (docs/sotterraneo/regole.md)
+// uscire a metà non chiude la discesa: si scrive dove si era. Si salva SEMPRE, anche dopo due passi: quello che si
+// perde non sono le gemme, è la mappa già girata (docs/sotterraneo/portale-e-sosta.md). E si esce DAVVERO, in home: la ✕ non
+// è un portale, e la terra di sopra con i suoi mercanti non è dietro l'angolo per chi finge di uscire. Rientrando si
+// è già giù (riprendiSeUscito). Finita la discesa (il cartello di fine) la ✕ porta alla mappa, com'è giusto
 function indietro() {
   if (!corsa.value && !fine.value) return emit('vai', 'home')
   const c = corsa.value
-  if (c && !c.finita && !fine.value) salva({ subito: true })
+  if (c && !c.finita && !fine.value) {
+    salva({ subito: true })
+    return emit('vai', 'home')
+  }
   allaMappa()
+}
+
+// «lascio perdere questa discesa» dal velo della pausa: si risale sulla terra di sopra con la roba che si ha
+// addosso e nello zaino, ma la discesa ricomincia da capo. Il foglio lo dice prima (viste/LascioPerdere.vue).
+// Nell'abisso no: là la strada su è il portale, e il piano raggiunto è il record
+const perdendo = ref(false)
+function lascioPerdere() {
+  perdendo.value = false
+  if (!corsa.value || corsa.value.finita || nellAbisso.value) return
+  chiudi({ senzaCartello: true })
+}
+
+// Cambiare eroe da dentro una discesa: dalla terra di sopra non si può più (uscire non porta di sopra), e senza
+// questo chi ha lasciato la discesa di un eroe non potrebbe giocare con un altro senza buttarla. La discesa si salva
+// com'è e si apre la scelta; chiuderla senza scegliere riporta giù (chiudiLaScelta)
+function cambioEroeDaGiu() {
+  const c = corsa.value
+  if (!c || c.finita) return
+  salva({ subito: true })
+  allaMappa()
+  scegliEroe.value = true
+}
+function chiudiLaScelta() {
+  scegliEroe.value = false
+  nextTick(riprendiSeUscito)
 }
 
 /* ═══════════ il dito ═══════════ */
@@ -728,7 +813,12 @@ function seSparisce(e) {
   if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true })
 }
 
+// rientrando con la discesa lasciata con la ✕ si nasce già giù: decisa qui, prima del primo disegno, perché la carta
+// della terra di sopra (che alla richiesta di «riprendi da qui» parte da sola) non faccia in tempo a nascere
+if (!scegliEroe.value) riprendiSeUscito()
+
 onMounted(() => {
+  if (corsa.value) nextTick(accendi)   // la tela esiste solo adesso
   addEventListener('resize', ridimensiona)
   // `visibilitychange` si ascolta sul document (dove viene lanciato); `pagehide` è della finestra
   document.addEventListener('visibilitychange', seSparisce)
@@ -771,14 +861,13 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   :missioni="missioni" :azione-missione="azioneMissione"
                   @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda"
                   @eroe="scegliEroe = true" @bottega="apriBottega" />
-        <!-- il banco di un mercante di sopra: al centro, la ✕ in alto a destra, niente domande -->
-        <Foglio v-if="banco" :em="banco.chi.em" :titolo="banco.chi.nome" centro con-chiudi
-                :dice="`Hai 💎 ${banco.gemme}. ${banco.chi.dice}`" @chiudi="chiudiBottega">
-          <Mercante :roba="banco.roba" :tasche="banco.tasche" :detto="dettoBanco"
-                    chi-compra="il rigattiere, vicino al carro" @compra="compraSopra" @vendi="vendiSopra" />
-        </Foglio>
+        <!-- la bottega di un mercante di sopra: quasi a tutto schermo, la ✕ in alto a destra, niente domande.
+             La chiave è il mercante: le linguette e la scelta ripartono da capo cambiando bottega -->
+        <LaBottega v-if="banco" :key="banco.chi.chiave" v-bind="banco" :eroe="eroeScheda" :detto="dettoBanco"
+                  chi-compra="al rigattiere, vicino al carro"
+                  @compra="compraSopra" @vendi="vendiSopra" @chiudi="chiudiBottega" />
         <Eroi v-if="scegliEroe" :avventure="avventure" :scelto="chiEro || ''" :primo="!chiEro"
-              @scegli="scegli" @chiudi="scegliEroe = false" />
+              @scegli="scegli" @chiudi="chiudiLaScelta" />
       </template>
 
       <template v-else>
@@ -788,6 +877,20 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   @pointerdown="premi" @pointermove="muovi" @pointerup="lascia"
                   @pointercancel="lascia" @touchend="nienteClickDalCampo"
                   @wheel.prevent="rotella"></canvas>
+
+          <!-- le missioni prese che riguardano questa discesa: una riga ciascuna, in cima (motore/missioni.js) -->
+          <ul v-if="ricordo.length" class="sot-ricordo" data-promemoria>
+            <li v-for="r in ricordo" :key="r.id" :data-missione="r.id" :data-dove="r.dove"
+                :data-segui="rotta && rotta.id === r.id ? 1 : null">
+              <span class="em">{{ r.em }}</span> {{ r.testo }}
+            </li>
+          </ul>
+
+          <!-- la freccina verso la missione: attorno all'eroe, non si tocca (il campo sotto sì) -->
+          <div v-if="rotta && !foglio && !zainoAperto" ref="rottaEl" class="sot-rotta" data-rotta
+               :data-verso="rotta.verso" :data-missione-rotta="rotta.id" :aria-label="'Verso ' + rotta.nome">
+            <i></i>
+          </div>
 
           <p class="sot-piede" :data-posto="eroe.posto || ''">
             <template v-if="eroe.posto">{{ eroe.posto }} · </template>piano {{ eroe.piano }}<template v-if="eroe.piani"> di {{ eroe.piani }}</template> ·
@@ -952,21 +1055,28 @@ function ridimensiona() { if (pittore) pittore.misura() }
           </button>
         </Foglio>
 
-        <!-- lo zaino al centro, come lo scontro: dal basso sembrava un'appendice del campo -->
-        <Foglio v-else-if="zainoAperto" em="🎒" titolo="Lo zaino" centro>
-          <Zaino v-bind="zaino" :eroe="eroeScheda" :torcia="eroe.torcia"
-                 :att="eroe.att" :dif="eroe.dif" :gemme="eroe.gemme"
-                 :vita="eroe.vita" :vitaMax="eroe.vitaMax"
-                 :piano="eroe.piano" :piani="eroe.piani"
-                 @usa="usa" @butta="butta" @riponi="riponi"
-                 @chiudi="zainoAperto = false" />
-        </Foglio>
+        <!-- lo zaino al centro, nella cornice della bottega: dal basso sembrava un'appendice del campo -->
+        <Zaino v-else-if="zainoAperto" v-bind="zaino" :eroe="eroeScheda" :torcia="eroe.torcia"
+               :att="eroe.att" :dif="eroe.dif" :gemme="eroe.gemme"
+               :vita="eroe.vita" :vitaMax="eroe.vitaMax"
+               :piano="eroe.piano" :piani="eroe.piani"
+               @usa="usa" @butta="butta" @riponi="riponi"
+               @chiudi="zainoAperto = false" />
 
         <Fine v-if="fine" v-bind="fine" @ancora="ancora" @esci="allaMappa" />
       </template>
 
       <!-- sta in fondo e fuori da tutto: la domanda e il cartello di fine hanno già la loro pausa -->
-      <VeloPausa v-if="inPausa && siGioca" :dove="dovEravamo" @riprendi="togli" @esci="indietro" />
+      <VeloPausa v-if="inPausa && siGioca && !perdendo" :dove="dovEravamo" @riprendi="togli" @esci="indietro">
+        <!-- da qui si può anche cambiare eroe, o lasciar perdere la discesa e risalire; nell'abisso la strada su è il portale -->
+        <button type="button" class="sot-lascia" data-azione="eroe-giu" @click.stop="cambioEroeDaGiu">
+          scelgo un altro eroe
+        </button>
+        <button v-if="!nellAbisso" type="button" class="sot-lascia" data-azione="lascia-discesa" @click.stop="perdendo = true">
+          lascio perdere questa discesa
+        </button>
+      </VeloPausa>
+      <LascioPerdere v-if="perdendo && siGioca" :nome="titolo" giu @si="lascioPerdere" @no="perdendo = false" />
     </div>
   </div>
 </template>

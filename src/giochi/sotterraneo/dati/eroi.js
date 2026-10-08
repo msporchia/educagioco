@@ -50,7 +50,7 @@ export const eroeDi = chiave => EROI.find(e => e.chiave === chiave) || EROI[0]
 export const portaLa = (eroe, cosa) =>
   !cosa || !cosa.famiglia || (eroe.porta || []).includes(cosa.famiglia)
 
-// «Il mago non impugna le asce», torna '' quando non c'è niente da dire (come cambioDetto in viste/cambio.js)
+// «Il mago non impugna le asce», torna '' quando non c'è niente da dire
 export function nonLaPorta(eroe, cosa) {
   if (!eroe || portaLa(eroe, cosa)) return ''
   const f = FAMIGLIE[cosa.famiglia]

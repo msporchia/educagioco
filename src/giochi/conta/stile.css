@@ -18,7 +18,7 @@
   color: var(--ct-inchiostro);
   position: relative;
 }
-.ct .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
+.ct .em { font-family: "Emoji Gioco", system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
                        "Twemoji Mozilla", sans-serif; line-height: 1 }
 
 .ct-mappa { flex: 1; min-height: 0; overflow-y: auto; display: flex;

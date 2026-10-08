@@ -24,7 +24,10 @@ E in giro c'è chi chiede un favore: la ragazza del pozzo ha perso la
 collana della nonna, il mugnaio ha un ratto che gli ruba la farina, il
 pescatore un granchio che gli taglia le reti ([missioni.md](missioni.md)):
 una cosa da trovare o un mostro col nome, a un piano preciso, e un premio
-in gemme.
+in gemme (a volte anche qualche moneta). Le missioni si sbloccano da sole man
+mano che si avanza, se ne possono prendere più d'una (al più tre aperte
+insieme), un diario sulla mappa le riassume e in cima a ogni discesa una riga
+ricorda quelle prese.
 
 | cosa si tocca | cosa costa |
 |---|---|
@@ -88,7 +91,8 @@ piano o correre alla scala.
 - Le domande rispettano l'età del bambino e quello che hai spento nel
   quadro dei grandi.
 - Una discesa dura venti minuti buoni: si può uscire e riprenderla
-  esattamente da dove si era, e il ⏸ la ferma senza uscire.
+  esattamente da dove si era (rientrando si è già giù: per salire al villaggio c'è il portale,
+  oppure «lascio perdere questa discesa»), e il ⏸ la ferma senza uscire.
 - Si può perdere: dopo troppi svenimenti si risale e la discesa si rifà.
   Rispondendo bene otto volte su dieci si arriva in fondo quasi sempre;
   premendo a caso quasi mai.

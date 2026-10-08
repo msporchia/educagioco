@@ -131,7 +131,7 @@ const TIPI = [
   { chiave: 'fraz:intero', nome: 'Quanto manca per fare un intero', sa: 'frazioni',
     livello: { 3: 60, 4: 64, 5: 68 },
     gradi: { 3: 0.15, 4: 0.2, 5: 0.25 } },
-  { chiave: 'fraz:di-numero', nome: 'La frazione di un numero (1/4 di 20)', sa: ['frazioni', 'divisioni'],
+  { chiave: 'fraz:di-numero', nome: 'La frazione di un numero (1/4 di 20)', sa: ['divisioni', 'frazioni'],
     livello: { 4: 64, 5: 70 },
     gradi: { 4: 0.35, 5: 0.35 } },
   { chiave: 'fraz:equivalenti', nome: 'Le frazioni equivalenti (2/4 = 1/2)', sa: 'frazioni',

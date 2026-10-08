@@ -503,11 +503,11 @@ const SCALETTA = [
 const TIPI = [
   { chiave: 'mis:unita', nome: 'Con che cosa si misura', sa: 'misure', gradi: { 1: 1 } },
   { chiave: 'mis:stima', nome: 'Quanto è grande davvero', sa: 'misure', gradi: { 2: 1 } },
-  { chiave: 'mis:conversione-lunghezza', nome: 'Convertire le lunghezze (km, m, cm)', sa: ['misure', 'conversioni'], gradi: { 3: 0.34 } },
-  { chiave: 'mis:conversione-capacita', nome: 'Convertire le capacità (l, cl, ml)', sa: ['misure', 'conversioni'], gradi: { 3: 0.33 } },
-  { chiave: 'mis:conversione-peso', nome: 'Convertire i pesi (kg, g)', sa: ['misure', 'conversioni'], gradi: { 3: 0.33 } },
-  { chiave: 'mis:confronto', nome: 'Quale misura è più grande', sa: ['misure', 'conversioni'], gradi: { 4: 1 } },
-  { chiave: 'mis:problema', nome: 'I problemi con le misure', sa: ['misure', 'conversioni'], gradi: { 5: 1 } },
+  { chiave: 'mis:conversione-lunghezza', nome: 'Convertire le lunghezze (km, m, cm)', sa: ['conversioni', 'misure'], gradi: { 3: 0.34 } },
+  { chiave: 'mis:conversione-capacita', nome: 'Convertire le capacità (l, cl, ml)', sa: ['conversioni', 'misure'], gradi: { 3: 0.33 } },
+  { chiave: 'mis:conversione-peso', nome: 'Convertire i pesi (kg, g)', sa: ['conversioni', 'misure'], gradi: { 3: 0.33 } },
+  { chiave: 'mis:confronto', nome: 'Quale misura è più grande', sa: ['conversioni', 'misure'], gradi: { 4: 1 } },
+  { chiave: 'mis:problema', nome: 'I problemi con le misure', sa: ['conversioni', 'misure'], gradi: { 5: 1 } },
 ]
 
 class Misure extends Modulo {

@@ -24,7 +24,7 @@
 }
 .cst button { font: inherit; color: inherit; cursor: pointer }
 .cst-piccolo { font-size: 13px; color: var(--cst-tenue); margin: 2px 0 8px }
-.cst-ico { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; line-height: 1 }
+.cst-ico { font-family: "Emoji Gioco", system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; line-height: 1 }
 
 /* la mappa è la scheda del robot (viste/Scheda.vue): qui solo la riga della guida sopra */
 .cst-guida-scheda { flex: none; padding: 6px 10px; background: #0d3b2c }
@@ -87,7 +87,7 @@
 .cst-lavagnette { display: flex; gap: 6px; flex-wrap: wrap }
 .cst-lavagnetta {
   font-size: 13px; padding: 3px 10px; border-radius: 8px;
-  background: #2f4a3a; color: #eef6ee; border: none; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  background: #2f4a3a; color: #eef6ee; border: none; font-family: "Emoji Gioco", ui-monospace, "SF Mono", Menlo, monospace;
 }
 .cst-lavagnetta b { font-size: 15px; margin-left: 4px; color: #ffe89a }
 .cst-lavagnetta.cst-bloccata { background: #5b5347 }
@@ -109,13 +109,13 @@
 }
 .cst-pila { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 12px; color: var(--cst-tenue); margin: 4px 0 6px }
 .cst-carta-pila { background: var(--cst-giallo-chiaro); color: var(--cst-inchiostro); padding: 2px 8px; border-radius: 8px }
-.cst-carta-pila i { font-style: normal; margin-left: 4px; font-family: ui-monospace, Menlo, monospace }
+.cst-carta-pila i { font-style: normal; margin-left: 4px; font-family: "Emoji Gioco", ui-monospace, Menlo, monospace }
 .cst-sep { opacity: .6 }
 
 .cst-testa-editor { position: sticky; top: -6px; z-index: 2; background: var(--cst-carta); padding-top: 2px }
 .cst-schede { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 8px }
 .cst-valore-misura { font-style: normal; font-size: 12px; margin-left: 4px; padding: 0 6px; border-radius: 6px;
-                     border: 1.5px dashed #6b7fb8; background: #fff; font-family: ui-monospace, Menlo, monospace }
+                     border: 1.5px dashed #6b7fb8; background: #fff; font-family: "Emoji Gioco", ui-monospace, Menlo, monospace }
 .cst-scheda {
   flex: 0 0 auto; padding: 6px 12px; border-radius: 10px; border: 1.5px solid var(--cst-bordo);
   background: var(--cst-fondo); font-size: 14px; white-space: nowrap;
@@ -144,7 +144,7 @@
 
 .cst-testa-progetto { display: flex; align-items: center; gap: 8px; padding: 6px 4px; font-size: 15px }
 .cst-misure { font-size: 13px; color: var(--cst-tenue) }
-.cst-misure i { font-style: normal; border: 1.5px dashed var(--cst-casella-bordo); border-radius: 6px; padding: 0 6px; margin-left: 4px; font-family: ui-monospace, Menlo, monospace }
+.cst-misure i { font-style: normal; border: 1.5px dashed var(--cst-casella-bordo); border-radius: 6px; padding: 0 6px; margin-left: 4px; font-family: "Emoji Gioco", ui-monospace, Menlo, monospace }
 .cst-matita { margin-left: auto; border: 1.5px solid var(--cst-bordo); background: var(--cst-fondo); border-radius: 8px; min-width: 36px; min-height: 32px }
 .cst-vuoto { color: var(--cst-tenue); font-size: 14px; margin: 6px 4px }
 
@@ -196,7 +196,7 @@
 .cst-casella.cst-manca { border-style: dashed; border-color: #e08a00; background: #fff4dc; color: #8a4b00;
                          animation: cst-manca 1.6s ease-in-out infinite }
 @keyframes cst-manca { 50% { box-shadow: 0 0 0 3px #ffe2a8 } }
-.cst-casella.cst-lav { background: #2f4a3a; color: #eef6ee; border-color: #2f4a3a; font-family: ui-monospace, Menlo, monospace }
+.cst-casella.cst-lav { background: #2f4a3a; color: #eef6ee; border-color: #2f4a3a; font-family: "Emoji Gioco", ui-monospace, Menlo, monospace }
 .cst-quadretto { display: inline-block; width: 14px; height: 14px; border-radius: 3px; background: var(--cst-tinta, #999); box-shadow: inset -2px -2px 0 rgba(0,0,0,.2) }
 
 .cst-tasti-riga { display: flex; gap: 6px; flex-wrap: wrap; padding: 6px 2px 2px }
@@ -242,7 +242,7 @@
 }
 .cst-chip.cst-su { background: #5b8def; border-color: #5b8def; color: #fff }
 .cst-chip.cst-grosso { min-height: 44px; font-size: 16px; flex: 1 }
-.cst-chip.cst-nome { font-family: ui-monospace, Menlo, monospace; background: #2f4a3a; color: #eef6ee; border-color: #2f4a3a }
+.cst-chip.cst-nome { font-family: "Emoji Gioco", ui-monospace, Menlo, monospace; background: #2f4a3a; color: #eef6ee; border-color: #2f4a3a }
 .cst-chip.cst-nome.cst-su { background: #5b8def; border-color: #5b8def }
 .cst-chip.cst-misura-chip { background: #fff; color: var(--cst-inchiostro); border-style: dashed; border-color: #6b7fb8 }
 .cst-chip.cst-ordine-chip { background: #5b5347; border-color: #5b5347 }
@@ -253,7 +253,7 @@
 .cst-cifre .cst-chip { min-width: 34px; padding: 4px 6px }
 .cst-passo { display: inline-flex; gap: 6px; margin-left: 4px }
 .cst-conto { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 20px }
-.cst-pezzo { min-width: 48px; min-height: 40px; padding: 2px 12px; border-radius: 10px; border: 1.5px solid #b9c8ec; background: #fff; text-align: center; font-weight: 700; font-family: ui-monospace, Menlo, monospace }
+.cst-pezzo { min-width: 48px; min-height: 40px; padding: 2px 12px; border-radius: 10px; border: 1.5px solid #b9c8ec; background: #fff; text-align: center; font-weight: 700; font-family: "Emoji Gioco", ui-monospace, Menlo, monospace }
 .cst-pezzo.cst-su { border-color: #5b8def; box-shadow: 0 0 0 2px #dbe6fd }
 .cst-frase-domanda { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px }
 .cst-pezzo-domanda { font-family: inherit; font-size: 15px; display: inline-flex; align-items: center; gap: 6px }
@@ -307,7 +307,7 @@
 .cst-campo-testo span { color: var(--cst-tenue); font-size: 14px }
 .cst-campo-testo input, .cst-misura-riga input {
   flex: 1; min-height: 40px; border-radius: 10px; border: 1.5px solid var(--cst-bordo); padding: 4px 10px; font-size: 16px;
-  font-family: ui-monospace, Menlo, monospace; background: #fff; color: var(--cst-inchiostro);
+  font-family: "Emoji Gioco", ui-monospace, Menlo, monospace; background: #fff; color: var(--cst-inchiostro);
 }
 .cst-misura-riga { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap }
 .cst-misura-riga input { flex: 0 1 110px; min-width: 80px }
@@ -321,7 +321,7 @@
 .cst-secondario { background: #efe7da }
 .cst-pericolo { background: var(--cst-rosso); color: #fff }
 .cst-importa { background: #fff7df }
-.cst-foglio code { font-family: ui-monospace, Menlo, monospace; background: #efe7da; padding: 0 4px; border-radius: 4px }
+.cst-foglio code { font-family: "Emoji Gioco", ui-monospace, Menlo, monospace; background: #efe7da; padding: 0 4px; border-radius: 4px }
 .cst-piede-editor { gap: 14px }
 .cst-aiuti { padding-left: 20px; margin: 6px 0; display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.4 }
 

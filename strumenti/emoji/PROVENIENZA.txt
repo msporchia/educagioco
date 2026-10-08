@@ -1,0 +1,29 @@
+Twemoji.Mozilla.ttf — il font delle emoji del gioco (docs/core/emoji.md)
+
+Cos'è     Twemoji Mozilla: le emoji di Twemoji (Twitter/X) impacchettate da
+          Mozilla in un font a colori COLR/CPAL, con le legature per le
+          famiglie, le bandiere e i toni della pelle. Segue Emoji 14.0.
+Versione  v0.7.0 (28 ottobre 2022)
+Da dove   https://github.com/mozilla/twemoji-colr/releases/download/v0.7.0/Twemoji.Mozilla.ttf
+          (progetto: https://github.com/mozilla/twemoji-colr)
+Scaricato 8 ottobre 2026, 1.474.284 byte
+SHA-256   6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e
+
+Licenza   Le immagini (la grafica delle emoji) sono di Twemoji, Copyright
+          Twitter, Inc. e collaboratori, e si usano e ridistribuiscono
+          sotto Creative Commons Attribution 4.0 (CC-BY 4.0):
+          https://creativecommons.org/licenses/by/4.0/
+          Il codice che costruisce il font è di Mozilla, Apache 2.0.
+          Testo completo: https://github.com/mozilla/twemoji-colr/blob/master/LICENSE.md
+
+Obbligo   Citare Twemoji (Twitter/X e collaboratori, CC-BY 4.0) e dire che
+          il font è tagliato e ritoccato: sta nel README, sezione «Crediti».
+          Dentro il gioco non c'è una schermata dei crediti.
+
+Cosa ne facciamo
+          Non si usa intero (1,4 MB): `npm run emoji` ne taglia un
+          sottoinsieme con le sole emoji che src/ usa, e ci aggiunge la
+          tabella cmap 14 e le legature gemelle senza FE0F (vedi
+          strumenti/emoji/taglia.py). Il risultato è src/emoji/emoji.woff2.
+          Aggiornare il font = sostituire questo file, aggiornare questa
+          nota e rilanciare `npm run emoji`.

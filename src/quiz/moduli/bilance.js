@@ -4,27 +4,34 @@ import { domanda, testo, scena } from '../nucleo/domanda.js'
 import { PITTORI_BILANCE } from '../grafica/pittori/bilance.js'
 
 // tre famiglie per la varietà; `f` è il genere (serve agli articoli); `taglia` serve solo allo SCAMBIO (si prende dalla più grossa alla più piccola: «una fragola pesa come tre angurie» fa solo ridere)
+// `peso` è quello vero, in `u`, da `da` a `a` passi di `passo` (una 🍎 da 150 a 250 g): una domanda che scrive l'unità deve dare numeri credibili, o «2 pannocchie pesano 1 kg» insegna il falso. Senza `peso` la cosa entra solo negli scambi, che non hanno unità
+const grammi = (passo, da, a) => ({ u: 'g', passo, da, a })
+const chili = (passo, da, a) => ({ u: 'kg', passo, da, a })
 const FAMIGLIE = [
   [
-    { e: '🍉', f: true, taglia: 9 }, { e: '🍍', f: false, taglia: 7 },
-    { e: '🥥', f: false, taglia: 6 }, { e: '🍎', f: true, taglia: 4 },
-    { e: '🍐', f: true, taglia: 4 }, { e: '🍊', f: true, taglia: 4 },
-    { e: '🍋', f: false, taglia: 3 }, { e: '🍑', f: true, taglia: 3 },
-    { e: '🥝', f: false, taglia: 2 }, { e: '🍓', f: true, taglia: 1 },
+    { e: '🍉', f: true, taglia: 9, peso: chili(1, 3, 8) }, { e: '🍍', f: false, taglia: 7 },
+    { e: '🥥', f: false, taglia: 6, peso: grammi(100, 4, 7) }, { e: '🍎', f: true, taglia: 4, peso: grammi(50, 3, 5) },
+    { e: '🍐', f: true, taglia: 4, peso: grammi(50, 3, 5) }, { e: '🍊', f: true, taglia: 4, peso: grammi(50, 3, 5) },
+    { e: '🍋', f: false, taglia: 3, peso: grammi(50, 2, 3) }, { e: '🍑', f: true, taglia: 3, peso: grammi(50, 3, 4) },
+    { e: '🥝', f: false, taglia: 2, peso: grammi(10, 7, 10) }, { e: '🍓', f: true, taglia: 1, peso: grammi(5, 3, 6) },
   ],
   [
-    { e: '🐷', f: false, taglia: 9 }, { e: '🐶', f: false, taglia: 7 },
-    { e: '🐱', f: false, taglia: 5 }, { e: '🐰', f: false, taglia: 4 },
-    { e: '🐔', f: true, taglia: 3 }, { e: '🐹', f: false, taglia: 2 },
-    { e: '🐥', f: false, taglia: 1 },
+    { e: '🐷', f: false, taglia: 9, peso: chili(10, 6, 12) }, { e: '🐶', f: false, taglia: 7, peso: chili(1, 5, 20) },
+    { e: '🐱', f: false, taglia: 5, peso: chili(1, 3, 6) }, { e: '🐰', f: false, taglia: 4, peso: chili(1, 2, 4) },
+    { e: '🐔', f: true, taglia: 3, peso: chili(1, 2, 3) }, { e: '🐹', f: false, taglia: 2, peso: grammi(10, 10, 20) },
+    { e: '🐥', f: false, taglia: 1, peso: grammi(10, 3, 6) },
   ],
   [
-    { e: '🍆', f: true, taglia: 6 }, { e: '🌽', f: true, taglia: 5 },
-    { e: '🥦', f: false, taglia: 4 }, { e: '🥔', f: true, taglia: 3 },
-    { e: '🧅', f: true, taglia: 3 }, { e: '🥕', f: true, taglia: 2 },
+    { e: '🍆', f: true, taglia: 6, peso: grammi(50, 5, 8) }, { e: '🌽', f: true, taglia: 5, peso: grammi(50, 4, 7) },
+    { e: '🥦', f: false, taglia: 4, peso: grammi(100, 3, 6) }, { e: '🥔', f: true, taglia: 3, peso: grammi(50, 3, 5) },
+    { e: '🧅', f: true, taglia: 3, peso: grammi(50, 2, 4) }, { e: '🥕', f: true, taglia: 2, peso: grammi(10, 8, 15) },
   ],
 ]
 const TUTTE = FAMIGLIE.flat()
+const PESATE = TUTTE.filter(c => c.peso)
+const pesoDi = (sorte, c) => c.peso.passo * sorte.fra(c.peso.da, c.peso.a)
+const credibile = (c, p) => !!c.peso && p % c.peso.passo === 0 &&
+  p >= c.peso.passo * c.peso.da && p <= c.peso.passo * c.peso.a
 
 const un = c => (c.f ? 'una' : 'un')
 const Un = c => (c.f ? 'Una' : 'Un')
@@ -32,50 +39,80 @@ const quanti = c => (c.f ? 'Quante' : 'Quanti')
 const solo = c => (c.f ? 'sola' : 'solo')
 const suoi = c => (c.f ? 'le sue' : 'i suoi')
 
-function dueCose(sorte) {
-  const [x, y] = sorte.alcuni(TUTTE, 2)
-  return [x, y]
-}
-
 // piccola prima: se la bilancia dice che una pesa più dell'altra, deve essere quella più grossa (o fa ridere guardandola)
-function piccolaEGrossa(sorte) {
+function piccolaEGrossa(sorte, fra = TUTTE) {
   for (;;) {
-    const [x, y] = sorte.alcuni(TUTTE, 2)
+    const [x, y] = sorte.alcuni(fra, 2)
     if (x.taglia !== y.taglia) return x.taglia < y.taglia ? [x, y] : [y, x]
   }
 }
 
-// tre cose della stessa famiglia, dalla più grossa alla più piccola, tutte di taglia diversa: la catena dello scambio
-function catena(sorte) {
+// `quante` cose della stessa famiglia, dalla più grossa alla più piccola, tutte di taglia diversa: la catena dello scambio
+function catena(sorte, quante = 3) {
   for (;;) {
     const fam = sorte.uno(FAMIGLIE)
-    const tre = sorte.alcuni(fam, 3).sort((a, b) => b.taglia - a.taglia)
-    if (tre[0].taglia > tre[1].taglia && tre[1].taglia > tre[2].taglia) return tre
+    const fila = sorte.alcuni(fam, quante).sort((a, b) => b.taglia - a.taglia)
+    if (fila.every((c, i) => i === 0 || fila[i - 1].taglia > c.taglia)) return fila
   }
+}
+
+// una fila di cose pesate nella stessa unità, dalla più grossa, ognuna `volte` la successiva, tutte col loro peso vero: si tira finché torna
+function filaPesata(sorte, quante, piuVolte = 4) {
+  for (let t = 0; t < 5000; t++) {
+    const fam = sorte.uno(FAMIGLIE).filter(c => c.peso)
+    const fila = sorte.alcuni(fam, quante).sort((a, b) => b.taglia - a.taglia)
+    if (!fila.every((c, i) => i === 0 || (fila[i - 1].taglia > c.taglia && c.peso.u === fila[0].peso.u))) continue
+    const w = pesoDi(sorte, fila[quante - 1])
+    const volte = []
+    let p = w
+    for (let i = quante - 2; i >= 0 && p; i--) {
+      const r = sorte.fra(2, piuVolte)
+      p = credibile(fila[i], p * r) ? p * r : 0
+      volte.unshift(r)
+    }
+    if (p) return { fila, volte, w }
+  }
+  throw new Error(`nessuna fila di ${quante} cose pesate che torni`)
+}
+
+// due cose pesate nella stessa unità, la piccola prima: la grande pesa `r` volte la piccola, o semplicemente di più
+function coppiaPesata(sorte, perVolte) {
+  for (let t = 0; t < 5000; t++) {
+    const [X, Y] = piccolaEGrossa(sorte, PESATE)
+    if (X.peso.u !== Y.peso.u) continue
+    const x = pesoDi(sorte, X)
+    const r = sorte.fra(2, 3)
+    const y = perVolte ? r * x : pesoDi(sorte, Y)
+    if (perVolte ? credibile(Y, y) : y > x) return { X, Y, x, y, r }
+  }
+  throw new Error('nessuna coppia pesata che torni')
 }
 
 const cose = (c, n) => ({ e: c.e, n })
 const pesi = (...quanti) => quanti.map(q => ({ peso: q }))
 
-// un peso in uno-tre pezzi, nessuno più piccolo di 2: con due pesi si deve anche sommare, un gradino in più
-function spezza(totale, quanti, sorte) {
-  if (quanti <= 1 || totale < 2 * quanti + 2) return [totale]
+// un peso in uno-tre pezzi a passi di `passo`, nessuno più piccolo di due passi: con due pesi si deve anche sommare, un gradino in più. Più cifre, meno pezzi: tre pesi da tre cifre non stanno su un piatto
+function spezza(totale, quanti, sorte, passo = 1) {
+  const cifre = String(totale).length
+  quanti = Math.min(quanti, cifre >= 4 ? 1 : cifre === 3 ? 2 : 3)
+  const t = totale / passo
+  if (quanti <= 1 || t < 2 * quanti + 2) return [totale]
   const parti = []
-  let resto = totale
+  let resto = t
   for (let i = quanti; i > 1; i--) {
     const q = sorte.fra(2, resto - 2 * (i - 1))
     parti.push(q)
     resto -= q
   }
   parti.push(resto)
-  return parti.sort((a, b) => b - a)
+  return parti.sort((a, b) => b - a).map(q => q * passo)
 }
 
 // il piatto con le cose e quello coi pesi non stanno sempre dalla stessa parte: chi ha imparato «a sinistra» deve rileggere
 const giraSe = (gira, b) => (gira ? { sx: b.dx, dx: b.sx } : b)
 
 // { v, perche }: si tengono quelli diversi dalla buona e fra loro, interi e positivi, nell'ordine di importanza fino a `quanti`
-function falsi(buona, candidati, quanti = 3) {
+function falsi(buona, candidati, quanti = 3, passo = 1) {
   const visti = new Set([String(buona)])
   const out = []
   for (const c of candidati) {
@@ -83,7 +120,7 @@ function falsi(buona, candidati, quanti = 3) {
     const ok = typeof c.v === 'string' || (Number.isInteger(c.v) && c.v > 0)
     if (!ok || visti.has(String(c.v))) continue
     // mai due vicini di uno per parte, o la buona starebbe in mezzo — anche se il secondo arriva da un errore vero
-    if (typeof c.v === 'number' && Math.abs(c.v - buona) === 1 && visti.has(String(2 * buona - c.v))) continue
+    if (typeof c.v === 'number' && Math.abs(c.v - buona) === passo && visti.has(String(2 * buona - c.v))) continue
     visti.add(String(c.v))
     out.push(testo(c.v, c.perche))
     if (out.length >= quanti) break
@@ -91,9 +128,9 @@ function falsi(buona, candidati, quanti = 3) {
   return out
 }
 
-// il vicino di uno, da una parte sola: `prova` dice perché quel numero non torna, rifacendo il conto con lui
-const vicino = (v, sorte, prova) => {
-  const w = v <= 2 || sorte.forse(0.5) ? v + 1 : v - 1
+// il vicino di un passo, da una parte sola: `prova` dice perché quel numero non torna, rifacendo il conto con lui
+const vicino = (v, sorte, prova, passo = 1) => {
+  const w = v <= 2 * passo || sorte.forse(0.5) ? v + passo : v - passo
   return { v: w, perche: prova(w) }
 }
 
@@ -138,13 +175,15 @@ const TIPI = [
   { chiave: 'bil:nascosto', nome: 'Il numero nascosto nei più e nei meno (□ + 7 = 15)',
     sa: 'bilance', livello: { 1: 44, 2: 50 }, gradi: { 1: 1, 2: 0.5 } },
   { chiave: 'bil:nascosto-per', nome: 'Il numero nascosto nelle tabelline (□ × 6 = 42)',
-    sa: ['bilance', 'moltiplicazioni', 'divisioni'], livello: { 2: 56, 3: 63 }, gradi: { 2: 0.5, 3: 0.25 } },
+    sa: ['moltiplicazioni', 'bilance', 'divisioni'], livello: { 2: 56, 3: 63 }, gradi: { 2: 0.5, 3: 0.25 } },
   { chiave: 'bil:uno', nome: 'Quanto pesa uno, sulla bilancia in pari',
     sa: ['bilance', 'divisioni'], livello: { 3: 63, 4: 69 }, gradi: { 3: 0.45, 4: 0.25 } },
   { chiave: 'bil:togli', nome: 'Togliere la stessa cosa dai due piatti',
     sa: ['bilance', 'divisioni'], livello: { 3: 69, 4: 75 }, gradi: { 3: 0.3, 4: 0.4 } },
   { chiave: 'bil:scambia', nome: 'Una cosa pesa come tante altre: lo scambio',
-    sa: ['bilance', 'moltiplicazioni'], livello: { 4: 75, 5: 81 }, gradi: { 4: 0.35, 5: 0.45 } },
+    sa: ['moltiplicazioni', 'bilance'], livello: { 4: 75, 5: 81 }, gradi: { 4: 0.35, 5: 0.45 } },
+  { chiave: 'bil:catena', nome: 'Lo scambio lungo, con tre bilance',
+    sa: ['moltiplicazioni', 'bilance'], livello: 88, gradi: { 5: 0.3 } },
   { chiave: 'bil:due', nome: 'Due cose da pesare, con due bilance',
     sa: ['bilance', 'divisioni'], livello: 88, gradi: { 5: 0.55 } },
 ]
@@ -173,6 +212,7 @@ class Bilance extends Modulo {
       case 'bil:uno': return this.uno(grado, sorte)
       case 'bil:togli': return this.togli(grado, sorte)
       case 'bil:scambia': return this.scambia(grado, sorte)
+      case 'bil:catena': return this.catena(sorte)
       case 'bil:due': return this.due(sorte)
       default: return this.nascosto(grado, sorte)
     }
@@ -295,24 +335,27 @@ class Bilance extends Modulo {
 
   // un piatto con cose uguali, l'altro con pesi: «in pari» vuol dire uguale, il resto è dividere in parti uguali
   uno(grado, sorte) {
-    const c = sorte.uno(TUTTE)
+    const c = sorte.uno(PESATE)
+    const { u, passo } = c.peso
     const k = sorte.fra(2, grado <= 3 ? 4 : 5)
-    const v = sorte.fra(grado <= 3 ? 2 : 3, grado <= 3 ? 9 : 12)
+    const v = pesoDi(sorte, c)
     const N = k * v
     if (sorte.forse(0.3)) return this.qualePeso(grado, c, k, v, sorte)
     const quantiPesi = grado <= 3 ? sorte.fra(1, 2) : sorte.fra(2, 3)
-    const ps = spezza(N, quantiPesi, sorte)
+    const ps = spezza(N, quantiPesi, sorte, passo)
     controllata([{ x: k, k: N }], [v])
     const somma = ps.length > 1 ? `I pesi fanno ${ps.join(' + ')} = ${N}. ` : ''
     return domanda({
-      testo: `${sorte.uno(IN_PARI)} Quanto pesa ${un(c)} ${c.e}?`,
-      soggetto: scena({ che: 'bilance', bilance: [giraSe(sorte.forse(0.4), { sx: [cose(c, k)], dx: pesi(...ps) })] }),
+      testo: `${sorte.uno(IN_PARI)} Quanti ${u} pesa ${un(c)} ${c.e}?`,
+      soggetto: scena({ che: 'bilance', unita: u, bilance: [giraSe(sorte.forse(0.4), { sx: [cose(c, k)], dx: pesi(...ps) })] }),
       buona: testo(v),
       falsi: falsi(v, [
-        { v: N - k, perche: `hai fatto ${N} − ${k}: ma ${k} dice quante cose ci sono sul piatto, non quanto pesano` },
+        // togliere il numero delle cose è l'errore di chi lavora coi numeri piccoli: coi grammi (600 − 3) non lo fa nessuno
+        passo === 1 ? { v: N - k, perche: `hai fatto ${N} − ${k}: ma ${k} dice quante cose ci sono sul piatto, non quanto pesano` } : null,
         { v: N, perche: `${N} è il peso di ${k} ${c.e} insieme, non di ${un(c)} ${c.e} ${solo(c)}` },
-        vicino(v, sorte, w => `prova: ${k} ${c.e} da ${w} pesano ${k * w}, non ${N}`),
-      ]),
+        vicino(v, sorte, w => `prova: ${k} ${c.e} da ${w} pesano ${k * w}, non ${N}`, passo),
+        { v: intero(N, k + 1), perche: `hai diviso in ${k + 1} parti, ma ${c.e} sono ${k}` },
+      ], 3, passo),
       chiave: 'bil:uno',
       aiuto: `${somma}In pari vuol dire che ${k} ${c.e} insieme pesano ${N}: dividi in ${k} parti uguali, ${N} : ${k} = ${v}`,
       sorte,
@@ -321,23 +364,24 @@ class Bilance extends Modulo {
 
   // la stessa bilancia girata: quanto pesa una cosa si sa, manca il peso che la mette in pari («?»); serve a non far diventare «quanto pesa uno» un riflesso invece di un ragionamento
   qualePeso(grado, c, k, v, sorte) {
+    const { u, passo } = c.peso
     const N = k * v
-    const a = grado >= 4 && sorte.forse(0.5) ? sorte.fra(2, Math.min(9, N - 2)) : 0
+    const a = grado >= 4 && sorte.forse(0.5) ? passo * sorte.fra(2, Math.min(9, N / passo - 2)) : 0
     const giusto = N - a
     controllata([{ x: 1, k: N - a }], [giusto])
     const dove = a ? [{ peso: '?' }, ...pesi(a)] : [{ peso: '?' }]
     return domanda({
-      testo: `Ogni ${c.e} pesa ${v}. Che numero va sul peso col «?» perché la bilancia sia in pari?`,
-      soggetto: scena({ che: 'bilance', bilance: [giraSe(sorte.forse(0.4), { sx: [cose(c, k)], dx: dove })] }),
+      testo: `Ogni ${c.e} pesa ${v} ${u}. Quanti ${u} ci vogliono sul peso col «?» perché la bilancia sia in pari?`,
+      soggetto: scena({ che: 'bilance', unita: u, bilance: [giraSe(sorte.forse(0.4), { sx: [cose(c, k)], dx: dove })] }),
       buona: testo(giusto),
       falsi: falsi(giusto, [
-        a ? null : { v: k + v, perche: `hai sommato ${k} e ${v}: ma sono ${k} ${c.e} da ${v} ${c.f ? 'l\'una' : 'l\'uno'}, cioè ${k} volte ${v}` },
+        a || passo > 1 ? null : { v: k + v, perche: `hai sommato ${k} e ${v}: ma sono ${k} ${c.e} da ${v} ${c.f ? 'l\'una' : 'l\'uno'}, cioè ${k} volte ${v}` },
         a ? { v: N, perche: `${N} è il peso di ${k} ${c.e} insieme: ma dalla parte del «?» c'è già ${a}` } : null,
         a ? { v: N + a, perche: `hai aggiunto ${a}: ma ${a} c'è già, e il «?» deve solo arrivare a ${N}` } : null,
         { v: v, perche: `${v} è il peso di ${un(c)} ${c.e} ${solo(c)}: sul piatto ce ne sono ${k}` },
         { v: giusto + (sorte.forse(0.5) ? v : -v), perche: `conta bene: sul piatto ${c.e} sono ${k}` },
-        vicino(giusto, sorte, u => `prova: ${k} volte ${v} non fa ${u + a}`),
-      ]),
+        vicino(giusto, sorte, w => `prova: ${k} volte ${v} non fa ${w + a}`, passo),
+      ], 3, passo),
       chiave: 'bil:uno',
       aiuto: `${k} ${c.e} da ${v} pesano ${k} × ${v} = ${N}, e dall'altra parte ci vuole lo stesso peso`
         + (a ? `: c'è già ${a}, quindi il «?» vale ${N} − ${a} = ${giusto}` : ''),
@@ -353,17 +397,20 @@ class Bilance extends Modulo {
     const IN = sorte.uno(IN_PARI)
 
     if (come === 'ignota') {
-      const [x, c] = dueCose(sorte)
+      // quella che si toglie può essere qualunque: il suo peso non si scrive e non si chiede
+      const c = sorte.uno(PESATE)
+      const x = sorte.uno(TUTTE.filter(o => o !== c))
+      const { u, passo } = c.peso
       const k = sorte.fra(1, 4)
-      const v = sorte.fra(2, 9)
+      const v = pesoDi(sorte, c)
       const N = k * v
-      const ps = spezza(N, grado <= 3 ? 1 : sorte.fra(1, 2), sorte)
+      const ps = spezza(N, grado <= 3 ? 1 : sorte.fra(1, 2), sorte, passo)
       // la pera sparisce: resta k·A = N, soluzione unica per A (la pera può pesare qualunque cosa, non si chiede)
       controllata([{ x: k, k: N }], [v])
       const quanto = ps.length > 1 ? `${ps.join(' + ')} = ${N}` : `${N}`
       return domanda({
-        testo: `${IN} Quanto pesa ${un(c)} ${c.e}?`,
-        soggetto: scena({ che: 'bilance', bilance: [giraSe(gira,
+        testo: `${IN} Quanti ${u} pesa ${un(c)} ${c.e}?`,
+        soggetto: scena({ che: 'bilance', unita: u, bilance: [giraSe(gira,
           { sx: [cose(x, 1), cose(c, k)], dx: [cose(x, 1), ...pesi(...ps)] })] }),
         buona: testo(v),
         falsi: falsi(v, [
@@ -371,8 +418,8 @@ class Bilance extends Modulo {
           k > 1 ? { v: N, perche: `${N} è il peso di ${k} ${c.e} insieme, non di ${un(c)} ${c.e} ${solo(c)}` } : null,
           vicino(v, sorte, w => k > 1
             ? `prova: ${k} ${c.e} da ${w} pesano ${k * w}, non ${N}`
-            : `prova: ${x.e} + ${w} contro ${x.e} + ${N} non pesano uguale`),
-        ]),
+            : `prova: ${x.e} + ${w} contro ${x.e} + ${N} non pesano uguale`, passo),
+        ], 3, passo),
         chiave: 'bil:togli',
         aiuto: `Togli ${un(x)} ${x.e} da tutti e due i piatti: la bilancia resta in pari, `
           + (k > 1 ? `e ${k} ${c.e} pesano ${quanto}. ${N} : ${k} = ${v}`
@@ -382,15 +429,16 @@ class Bilance extends Modulo {
     }
 
     if (come === 'peso') {
-      const c = sorte.uno(TUTTE)
+      const c = sorte.uno(PESATE)
+      const { u, passo } = c.peso
       const k = sorte.fra(1, 4)
-      const v = sorte.fra(2, 9)
-      const a = sorte.fra(2, 9)
+      const v = pesoDi(sorte, c)
+      const a = passo * sorte.fra(2, 9)
       const b = k * v + a
       controllata([{ x: k, k: b - a }], [v])
       return domanda({
-        testo: `${IN} Quanto pesa ${un(c)} ${c.e}?`,
-        soggetto: scena({ che: 'bilance', bilance: [giraSe(gira,
+        testo: `${IN} Quanti ${u} pesa ${un(c)} ${c.e}?`,
+        soggetto: scena({ che: 'bilance', unita: u, bilance: [giraSe(gira,
           { sx: [cose(c, k), ...pesi(a)], dx: pesi(b) })] }),
         buona: testo(v),
         falsi: falsi(v, [
@@ -399,8 +447,8 @@ class Bilance extends Modulo {
           k > 1 ? { v: b - a, perche: `${b - a} è il peso di ${k} ${c.e} insieme, non di ${un(c)} ${c.e} ${solo(c)}` } : null,
           vicino(v, sorte, w => k > 1
             ? `prova: ${k} ${c.e} da ${w} pesano ${k * w}, più ${a} fa ${k * w + a}, non ${b}`
-            : `prova: ${w} + ${a} fa ${w + a}, non ${b}`),
-        ]),
+            : `prova: ${w} + ${a} fa ${w + a}, non ${b}`, passo),
+        ], 3, passo),
         chiave: 'bil:togli',
         aiuto: `Togli ${a} da tutti e due i piatti: restano ${k} ${c.e} contro ${b} − ${a} = ${b - a}`
           + (k > 1 ? `, e ${b - a} : ${k} = ${v}` : ''),
@@ -409,29 +457,30 @@ class Bilance extends Modulo {
     }
 
     // le cose su tutti e due i piatti
-    const c = sorte.uno(TUTTE)
+    const c = sorte.uno(PESATE)
+    const { u, passo } = c.peso
     const k2 = sorte.fra(1, 2)
     const d = sorte.fra(1, 3)
     const k1 = Math.min(4, k2 + d)
     const dd = k1 - k2
-    const v = sorte.fra(2, 9)
-    const a = sorte.forse(0.35) ? 0 : sorte.fra(2, 9)
+    const v = pesoDi(sorte, c)
+    const a = sorte.forse(0.35) ? 0 : passo * sorte.fra(2, 9)
     const b = dd * v + a
     // k1·A + a = k2·A + b → (k1 − k2)·A = b − a
     controllata([{ x: dd, k: b - a }], [v])
     const sinistra = a ? [cose(c, k1), ...pesi(a)] : [cose(c, k1)]
     const togliPeso = a ? `, poi togli ${a} da tutti e due` : ''
     return domanda({
-      testo: `${IN} Quanto pesa ${un(c)} ${c.e}?`,
-      soggetto: scena({ che: 'bilance', bilance: [giraSe(gira, { sx: sinistra, dx: [cose(c, k2), ...pesi(b)] })] }),
+      testo: `${IN} Quanti ${u} pesa ${un(c)} ${c.e}?`,
+      soggetto: scena({ che: 'bilance', unita: u, bilance: [giraSe(gira, { sx: sinistra, dx: [cose(c, k2), ...pesi(b)] })] }),
       buona: testo(v),
       falsi: falsi(v, [
         { v: intero(b - a, k1 + k2), perche: `hai sommato ${k1} e ${k2}: ma ${c.e} dell'altro piatto si tolgono, non si aggiungono` },
         { v: intero(b - a, k1), perche: `hai tolto il peso ma non ${c.e}: ${k2} si tolgono anche dall'altro piatto` },
         dd > 1 ? { v: b - a, perche: `${b - a} è il peso di ${dd} ${c.e} insieme, non di ${un(c)} ${c.e} ${solo(c)}` } : null,
         { v: NON_SI_SA, perche: `${c.e} è su tutti e due i piatti, ma da una parte ce n'è di più: ${k2 > 1 ? `se ne tolgono ${k2}` : 'se ne toglie una'} da tutti e due, e il conto torna` },
-        vicino(v, sorte, w => `prova: con ${c.e} da ${w} un piatto pesa ${k1 * w + a} e l'altro ${k2 * w + b}`),
-      ]),
+        vicino(v, sorte, w => `prova: con ${c.e} da ${w} un piatto pesa ${k1 * w + a} e l'altro ${k2 * w + b}`, passo),
+      ], 3, passo),
       chiave: 'bil:togli',
       aiuto: `Togli ${k2} ${c.e} da tutti e due i piatti${togliPeso}: restano ${dd} ${c.e} contro `
         + (a ? `${b} − ${a} = ${b - a}` : `${b}`)
@@ -453,20 +502,23 @@ class Bilance extends Modulo {
     const sistema = quantoY => controllata([{ x: 1, y: -a, k: 0 }, { x: 0, y: 1, k: quantoY }], [a * quantoY, quantoY])
 
     if (come === 'peso') {
-      const w = sorte.fra(2, 9)
+      // qui i pesi sono veri, quindi anche quanti Y vale un X: la coppia si tira col suo peso, non dalla catena
+      const { fila: [X, Y], volte: [a], w } = filaPesata(sorte, 2)
+      const { u, passo } = X.peso
+      const sopra = { sx: [cose(X, 1)], dx: [cose(Y, a)] }
       const giusto = a * w
-      sistema(w)
+      controllata([{ x: 1, y: -a, k: 0 }, { x: 0, y: 1, k: w }], [giusto, w])
       return domanda({
-        testo: `Guarda le due bilance. Quanto pesa ${un(X)} ${X.e}?`,
-        soggetto: scena({ che: 'bilance', bilance: [sopra, { sx: [cose(Y, 1)], dx: pesi(w) }] }),
+        testo: `Guarda le due bilance. Quanti ${u} pesa ${un(X)} ${X.e}?`,
+        soggetto: scena({ che: 'bilance', unita: u, bilance: [sopra, { sx: [cose(Y, 1)], dx: pesi(w) }] }),
         buona: testo(giusto),
         falsi: falsi(giusto, [
-          { v: a + w, perche: `hai sommato ${a} e ${w}: ma ogni ${Y.e} pesa ${w}, e di ${Y.e} ce ne sono ${a}` },
+          Y.peso.passo > 1 ? null : { v: a + w, perche: `hai sommato ${a} e ${w}: ma ogni ${Y.e} pesa ${w}, e di ${Y.e} ce ne sono ${a}` },
           { v: w, perche: `${w} è il peso di ${un(Y)} ${Y.e} ${solo(Y)}: ${X.e} pesa come ${a} di loro` },
           { v: giusto + (sorte.forse(0.5) ? w : -w), perche: `conta bene: nella bilancia di sopra ${Y.e} sono ${a}` },
           { v: a, perche: `${a} dice quante cose ci sono sul piatto, non quanto pesano` },
-          vicino(giusto, sorte, u => `prova: ${a} volte ${w} non fa ${u}`),
-        ]),
+          vicino(giusto, sorte, p => `prova: ${a} volte ${w} non fa ${p}`, passo),
+        ], 3, passo),
         chiave: 'bil:scambia',
         aiuto: `Nella bilancia di sopra metti al posto di ogni ${Y.e} il suo peso, ${w}: sono ${a} volte ${w}, cioè ${a} × ${w} = ${giusto}`,
         sorte,
@@ -536,17 +588,67 @@ class Bilance extends Modulo {
     })
   }
 
+  // lo scambio con un anello in più: tre bilance in fila, e ogni anello si moltiplica. Sotto ci sono cose (quante 🥕 vale un 🐷) o un peso (quanti kg). Una catena a scalino ha una soluzione sola per costruzione, `unaSola` non serve
+  // piatti da tre cose al massimo: tre bilance non hanno posto per una seconda fila
+  catena(sorte) {
+    if (sorte.forse(0.5)) {
+      const { fila: [X, Y, Z], volte: [a, b], w } = filaPesata(sorte, 3, 3)
+      const { u, passo } = X.peso
+      const giusto = a * b * w
+      return domanda({
+        testo: `Guarda le tre bilance. Quanti ${u} pesa ${un(X)} ${X.e}?`,
+        soggetto: scena({ che: 'bilance', unita: u, bilance: [
+          { sx: [cose(X, 1)], dx: [cose(Y, a)] }, { sx: [cose(Y, 1)], dx: [cose(Z, b)] }, { sx: [cose(Z, 1)], dx: pesi(w) }] }),
+        buona: testo(giusto),
+        falsi: falsi(giusto, [
+          { v: a * w, perche: `hai saltato la bilancia di mezzo: ${Y.e} non pesa ${w}, pesa come ${b} ${Z.e}` },
+          { v: b * w, perche: `${b * w} è il peso di ${un(Y)} ${Y.e}: ${X.e} pesa come ${a} di loro` },
+          Z.peso.passo > 1 ? null : { v: a + b + w, perche: 'hai sommato tutti i numeri: in uno scambio si moltiplica' },
+          vicino(giusto, sorte, p => `prova: ${a} × ${b} × ${w} non fa ${p}`, passo),
+        ], 3, passo),
+        chiave: 'bil:catena',
+        aiuto: `Parti dal basso: ${un(Z)} ${Z.e} pesa ${w} ${u}, ${un(Y)} ${Y.e} pesa come ${b} ${Z.e}, cioè ${b} × ${w} = ${b * w} ${u}, `
+          + `e ${un(X)} ${X.e} pesa come ${a} ${Y.e}, cioè ${a} × ${b * w} = ${giusto} ${u}`,
+        sorte,
+      })
+    }
+
+    const [X, Y, Z, W] = catena(sorte, 4)
+    // due numeri diversi almeno, o i falsi «fermarsi prima» e «saltare un anello» coinciderebbero
+    let a, b, c
+    do { [a, b, c] = [sorte.fra(2, 3), sorte.fra(2, 3), sorte.fra(2, 3)] } while (a === b && b === c)
+    const sopra = { sx: [cose(X, 1)], dx: [cose(Y, a)] }
+    const mezzo = { sx: [cose(Y, 1)], dx: [cose(Z, b)] }
+    const giusto = a * b * c
+    return domanda({
+      testo: `Guarda le tre bilance. ${quanti(W)} ${W.e} pesano come ${un(X)} ${X.e}?`,
+      soggetto: scena({ che: 'bilance', bilance: [sopra, mezzo, { sx: [cose(Z, 1)], dx: [cose(W, c)] }] }),
+      buona: testo(giusto),
+      falsi: falsi(giusto, [
+        { v: a * b, perche: `hai usato solo le prime due bilance: ${a * b} è quante ${Z.e}, non quante ${W.e}` },
+        { v: b * c, perche: `hai saltato la bilancia di sopra: ${b * c} ${W.e} pesano come ${un(Y)} ${Y.e}, non come ${X.e}` },
+        { v: a + b + c, perche: 'hai sommato tutti i numeri: in uno scambio si moltiplica' },
+        { v: a * c, perche: `hai saltato la bilancia di mezzo: ogni ${Y.e} vale ${b} ${Z.e}` },
+        vicino(giusto, sorte, u => `prova: ${a} × ${b} × ${c} non fa ${u}`),
+      ]),
+      chiave: 'bil:catena',
+      aiuto: `Scambia un anello alla volta: ${un(X)} ${X.e} pesa come ${a} ${Y.e}, cioè ${a} × ${b} = ${a * b} ${Z.e}, `
+        + `cioè ${a * b} × ${c} = ${giusto} ${W.e}`,
+      sorte,
+    })
+  }
+
   // sopra le due cose insieme contro un peso, sotto cosa le lega (una pesa l'altra più qualcosa, o volte); la mossa è scambio + togliere/dividere
   due(sorte) {
-    const [X, Y] = piccolaEGrossa(sorte)
     const chiedeY = sorte.forse(0.4)
     const IN = 'Le due bilance sono in pari.'
+    const perVolte = sorte.forse(0.5)
+    const { X, Y, x, y, r } = coppiaPesata(sorte, perVolte)
+    const { u, passo } = (chiedeY ? Y : X).peso
 
-    if (sorte.forse(0.5)) {
+    if (!perVolte) {
       // Y = X + D, X + Y = S
-      const x = sorte.fra(2, 9)
-      const D = sorte.fra(1, 6)
-      const y = x + D
+      const D = y - x
       const S = x + y
       controllata([{ x: 1, y: 1, k: S }, { x: -1, y: 1, k: D }], [x, y])
       const sotto = sorte.forse(0.5)
@@ -557,8 +659,8 @@ class Bilance extends Modulo {
         + `${X.e} + ${X.e} + ${D} pesano ${S}. Togli ${D}: 2 ${X.e} pesano ${S - D}, e ${un(X)} ${X.e} pesa ${x}`
         + (chiedeY ? `. ${Y.e} pesa ${x} + ${D} = ${y}` : '')
       return domanda({
-        testo: `${IN} Quanto pesa ${un(c)} ${c.e}?`,
-        soggetto: scena({ che: 'bilance', bilance: [{ sx: [cose(X, 1), cose(Y, 1)], dx: pesi(S) }, sotto] }),
+        testo: `${IN} Quanti ${u} pesa ${un(c)} ${c.e}?`,
+        soggetto: scena({ che: 'bilance', unita: u, bilance: [{ sx: [cose(X, 1), cose(Y, 1)], dx: pesi(S) }, sotto] }),
         buona: testo(giusto),
         falsi: falsi(giusto, [
           { v: intero(S, 2), perche: `hai diviso ${S} a metà: ma ${Y.e} pesa ${D} più di ${X.e}, lo dice la bilancia di sotto` },
@@ -569,8 +671,8 @@ class Bilance extends Modulo {
           chiedeY ? { v: S, perche: `${S} è il peso di ${X.e} e ${Y.e} insieme` } : null,
           vicino(giusto, sorte, w => chiedeY
             ? `prova: se ${Y.e} pesa ${w}, ${X.e} pesa ${w - D} e insieme fanno ${2 * w - D}, non ${S}`
-            : `prova: se ${X.e} pesa ${w}, ${Y.e} pesa ${w + D} e insieme fanno ${2 * w + D}, non ${S}`),
-        ]),
+            : `prova: se ${X.e} pesa ${w}, ${Y.e} pesa ${w + D} e insieme fanno ${2 * w + D}, non ${S}`, passo),
+        ], 3, passo),
         chiave: 'bil:due',
         aiuto: passi,
         sorte,
@@ -578,16 +680,13 @@ class Bilance extends Modulo {
     }
 
     // Y = r·X, X + Y = S
-    const r = sorte.fra(2, 3)
-    const x = sorte.fra(2, 8)
-    const y = r * x
     const S = x + y
     controllata([{ x: 1, y: 1, k: S }, { x: -r, y: 1, k: 0 }], [x, y])
     const sotto = sorte.forse(0.5) ? { sx: [cose(Y, 1)], dx: [cose(X, r)] } : { sx: [cose(X, r)], dx: [cose(Y, 1)] }
     const [c, giusto] = chiedeY ? [Y, y] : [X, x]
     return domanda({
-      testo: `${IN} Quanto pesa ${un(c)} ${c.e}?`,
-      soggetto: scena({ che: 'bilance', bilance: [{ sx: [cose(X, 1), cose(Y, 1)], dx: pesi(S) }, sotto] }),
+      testo: `${IN} Quanti ${u} pesa ${un(c)} ${c.e}?`,
+      soggetto: scena({ che: 'bilance', unita: u, bilance: [{ sx: [cose(X, 1), cose(Y, 1)], dx: pesi(S) }, sotto] }),
       buona: testo(giusto),
       falsi: falsi(giusto, [
         { v: intero(S, 2), perche: `hai diviso ${S} a metà: ma ${Y.e} pesa come ${r} ${X.e}, lo dice la bilancia di sotto` },
@@ -600,8 +699,8 @@ class Bilance extends Modulo {
           ? `prova: se ${X.e} pesa ${w}, ${Y.e} pesa ${r * w} e insieme fanno ${(r + 1) * w}, non ${S}`
           : w % r === 0
             ? `prova: se ${Y.e} pesa ${w}, ${X.e} pesa ${w / r} e insieme fanno ${w + w / r}, non ${S}`
-            : `prova: ${Y.e} pesa come ${r} ${X.e}, e ${w} non si divide in ${r} parti uguali`),
-      ]),
+            : `prova: ${Y.e} pesa come ${r} ${X.e}, e ${w} non si divide in ${r} parti uguali`, passo),
+      ], 3, passo),
       chiave: 'bil:due',
       aiuto: `Nella bilancia di sopra metti al posto di ${Y.e} ${suoi(X)} ${r} ${X.e}: `
         + `sono ${r + 1} ${X.e} contro ${S}, e ${un(X)} ${X.e} pesa ${S} : ${r + 1} = ${x}`

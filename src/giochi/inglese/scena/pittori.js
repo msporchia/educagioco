@@ -30,7 +30,7 @@ const punto = (p, c, x, y, r = 2.4) => { p.ctx.beginPath(); p.ctx.arc(x, y, r, 0
 function scritta(p, c, t, x, y, dim, colore = null) {
   const k = p.ctx
   k.fillStyle = colore ? c.t(colore) : c.inchiostro
-  k.font = `700 ${dim}px Georgia, 'Times New Roman', serif`
+  k.font = `700 ${dim}px "Emoji Gioco", Georgia, 'Times New Roman', serif`
   k.textAlign = 'center'; k.textBaseline = 'middle'
   k.fillText(t, x, y)
 }

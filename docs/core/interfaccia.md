@@ -95,6 +95,9 @@ e nel battito `if (!fermo.value) p.avanza(dt)`.
 
 - **Non si riprende mai da soli**: tornare allo schermo mette in pausa, si
   riparte al tocco (in Survivors ha preso il posto di `inAttesa`).
+- **Il velo ha uno `<slot />` in fondo**, per quello che un gioco vuole offrire a chi
+  è già fermo (il sotterraneo: «scelgo un altro eroe» e «lascio perdere questa
+  discesa»). Senza niente nello slot, il velo è quello di sempre.
 - **`fermo` non è `inPausa`**: `fermo` è tutto quello che tiene ferma la
   partita (pausa, cartello di un traguardo, foglio del `?`, quello che il
   gioco aggiunge con `anche:`), `inPausa` solo quello che merita il velo.

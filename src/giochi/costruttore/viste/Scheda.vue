@@ -374,7 +374,7 @@ function entra() { emit('update:aperto', null); emit('libero') }
 .cst-tavola { position:relative; margin:0 auto }
 .cst-svg { position:absolute; left:0; top:0; display:block }
 .cst-serigrafia { font-size:11px; fill:#3a7d63; text-anchor:middle }
-.cst-chip-icona { font-size:26px; text-anchor:middle; font-family:system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif }
+.cst-chip-icona { font-size:26px; text-anchor:middle; font-family:"Emoji Gioco", system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif }
 .cst-chip-nome { font-size:13px; font-weight:600 }
 .cst-chip-conto { font-size:11px }
 .cst-connettore-nome { font-size:12px; font-weight:600; text-anchor:middle }

@@ -307,6 +307,21 @@ function conPortata (scaletta) {
 
 export const CAMPAGNE = conPortata(SCALETTA)
 
+/* Le stelle di una giornata: da 1 a 3, dagli intoppi nei conti. Un intoppo è
+   un cliente che ha avuto un conto sbagliato (totale, resto, una moneta di
+   troppo) o che se n'è andato; un cliente con tre sbagli è un intoppo solo.
+   Nessuno = 3, uno o due = 2, di più = 1: come negli altri giochi. Una
+   giornata vinta vale comunque almeno una stella (docs/bancarella/regole.md). */
+export const INTOPPI_PER_DUE = 2
+export const stelleDiGiornata = intoppi => (intoppi <= 0 ? 3 : intoppi <= INTOPPI_PER_DUE ? 2 : 1)
+
+/* cosa serve per la stella dopo, in una riga per il cartello; vuoto a tre */
+export function perLaProssima(stelle) {
+  if (stelle >= 3) return ''
+  return stelle === 2 ? 'nessun conto sbagliato e nessun cliente perso'
+                      : `al massimo ${INTOPPI_PER_DUE} conti sbagliati o clienti persi`
+}
+
 /* La giornata libera: vedi docs/bancarella/regole.md. */
 export const LIBERA = {
   id: 'libera', nome: 'Giornata libera', emoji: '♾️', conto: 'tutto',

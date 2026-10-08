@@ -46,6 +46,9 @@ const clienti = computed(() => state.profile.totals.clienti || 0)
 const restiPerfetti = computed(() => state.profile.totals.restiPerfetti || 0)
 const mercato = computed(() => mercatoProgresso())
 const QUANTE_GIORNATE = GIORNATE.length
+// le stelle della bancarella: la somma dei voti migliori, una riga in più e niente tolto a nessuno
+const stelleBanco = computed(() => Object.values(mercato.value.stelle || {}).reduce((n, s) => n + s, 0))
+const codaBanco = computed(() => (stelleBanco.value ? ` · ⭐ ${stelleBanco.value}` : ''))
 
 const generale = computed(() => genProgresso())
 const stelleGen = computed(() =>
@@ -96,9 +99,9 @@ const dove = computed(() => {
     spagnolo: `${giocoNuovo('spagnolo').riassunto(progressoDi('spagnolo'))} · 🎯 ${imparateEs.value} sicure`,
     torri: recordTorri.value ? `♾️ ${recordTorri.value}` : '',
     bancarella: mercato.value.libera
-      ? `♾️ mercato libero · ✨ ${restiPerfetti.value} resti precisi`
+      ? `♾️ mercato libero · ✨ ${restiPerfetti.value} resti precisi${codaBanco.value}`
       : clienti.value
-        ? `🧺 giornata ${mercato.value.tappa + 1} di ${QUANTE_GIORNATE} · ✨ ${restiPerfetti.value} resti precisi`
+        ? `🧺 giornata ${mercato.value.tappa + 1} di ${QUANTE_GIORNATE} · ✨ ${restiPerfetti.value} resti precisi${codaBanco.value}`
         : '',
     generale: generale.value.tappa
       ? `🎖️ livello ${Math.min(proveFatte + 1, proveQuante)} · ⭐ ${stelleGen.value} stelle`

@@ -4,6 +4,7 @@
 import { ref, computed, watch } from 'vue'
 import { cifre, spiegaColonnaAdd } from '../data/ops.js'
 import { suono } from '../audio.js'
+import TastoSalta from './TastoSalta.vue'
 
 const props = defineProps({ op: { type: Object, required: true } })
 const emit = defineEmits(['fatto'])
@@ -91,6 +92,15 @@ function scrivi(d) {
   }
 }
 
+/* il tasto «salta» dei grandi (docs/core/comandi.md): il conto è dato per
+   fatto senza errori; `saltata` dice a chi ascolta di non annotare né pagare */
+function salta() {
+  if (passo.value >= props.op.passi.length) return
+  passo.value = props.op.passi.length
+  suono.ok()
+  emit('fatto', { errori: 0, ms: 0, saltata: true })
+}
+
 const suggerimento = computed(() => {
   const p = corrente.value
   if (!p) return ''
@@ -160,6 +170,7 @@ const suggerimento = computed(() => {
     <div class="tastiera">
       <button v-for="d in [1,2,3,4,5,6,7,8,9,0]" :key="d" @click="scrivi(d)">{{ d }}</button>
     </div>
+    <TastoSalta @salta="salta" />
   </div>
 </template>
 

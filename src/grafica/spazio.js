@@ -341,7 +341,7 @@ export function disegnaAsteroide(ctx, a, S, t) {
 
   // il numero si disegna per ultimo, dritto, e non ruota col sasso
   ctx.fillStyle = '#fff'
-  ctx.font = `900 ${R * 0.85}px system-ui, sans-serif`
+  ctx.font = `900 ${R * 0.85}px "Emoji Gioco", system-ui, sans-serif`
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
   ctx.lineWidth = 5 * S; ctx.strokeStyle = '#000000aa'
   ctx.strokeText(a.v, a.x, a.y); ctx.fillText(a.v, a.x, a.y)

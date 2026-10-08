@@ -8,6 +8,7 @@
 // storie e i verbi in `dati/`, le schermate in `viste/`.
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
+import TastoSalta from '../../components/TastoSalta.vue'
 import { suono } from '../../audio.js'
 import { segna, segnaBest } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
@@ -191,12 +192,23 @@ function tocca(id) {
   salva()
 }
 
-function vinta() {
+/* Il tasto «salta» dei grandi (docs/core/comandi.md): la storia è rimessa a
+   posto da sola e la tappa avanza, ma nessuno l'ha fatto: niente monete, niente
+   contatori, la serie resta com'è. */
+function salta() {
+  if (fase.value !== 'gioca' || cieco.value || !quesito.value || !quesito.value.risolvi()) return
+  vinta(true)
+  salva()
+}
+
+function vinta(saltata = false) {
   corsa.value.registraSuccesso()
-  segna('storie')
-  serie.value++
-  segnaBest('serieStorie', serie.value)
-  borsellino.paga(PAGA.storia)   // subito, e a fine tappa niente di più: docs/prima-dopo/presentazione.md
+  if (!saltata) {
+    segna('storie')
+    serie.value++
+    segnaBest('serieStorie', serie.value)
+    borsellino.paga(PAGA.storia)   // subito, e a fine tappa niente di più: docs/prima-dopo/presentazione.md
+  }
   suono.ok()
   fase.value = 'vinta'
   attesa = setTimeout(prossimo, RESPIRO)
@@ -268,6 +280,7 @@ function indietro() {
       <Storia v-else-if="quesito" :quesito="quesito" :verbo="verboAttuale" :fase="fase"
               @tocca="tocca" />
 
+      <TastoSalta v-if="vista === 'tavolo' && fase === 'gioca' && quesito" @salta="salta" />
       <Spiegazione v-if="spiega" :spiega="spiega" @avanti="fineSpiegazione" />
       <Finale v-if="finale" v-bind="finale" @avanti="allaMappa" />
     </div>

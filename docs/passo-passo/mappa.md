@@ -122,21 +122,32 @@ fumetto, con la stessa vista per tutti e due. Chi apre cosa sta in
 
 ## La vista
 
-- **Non si trascina**: segue il segnalino. Lui sta libero nel mezzo, e
-  quando arriva a `BORDO` dal bordo (30% di lato, 36% in cima, 24% in fondo)
-  la vista si sposta quel tanto che basta, morbida (`MORBIDA`). All'apertura
-  è sul segnalino; su uno schermo più grande della mappa la mappa sta in
-  mezzo.
+- **Il dito trascina la vista, nei due versi**, con lo slancio che si spegne
+  morbido (`DECADE`) e i bordi della mappa per limite. Sotto i 16 px è un
+  tocco (apre la casella, manda il segnalino: al `click`), sopra è un
+  trascinamento e non apre niente; un tocco che ferma la vista che scivola
+  serve solo a fermarla. Nel sotterraneo la vista segue per forza il
+  protagonista, qui no: la valle è una mappa da guardare.
+- **La vista segue il segnalino solo mentre viaggia.** Lui sta libero nel
+  mezzo, e quando arriva a `BORDO` dal bordo (30% di lato, 36% in cima, 24% in
+  fondo) la vista si sposta quel tanto che basta, morbida (`MORBIDA`). Fermo,
+  la vista resta dove il bambino l'ha lasciata; se parte e la vista l'aveva
+  lasciato fuori schermo, prima torna su di lui e poi lo segue (anche col
+  fumetto aperto). All'apertura, e dopo una vittoria, è sul segnalino; su uno
+  schermo più grande della mappa la mappa sta in mezzo. Provato: vista che
+  segue sempre il segnalino, e il bambino non poteva guardare un pezzo lontano
+  senza mandarci il coniglio: scomodo fuori dal sotterraneo.
 - **Col fumetto aperto la vista sta sul fumetto**: scorre quanto basta per
-  vederlo tutto, e il segnalino ci arriva da dov'è.
+  vederlo tutto, e il segnalino ci arriva da dov'è. Il fumetto sta nella
+  mappa e si sposta con lei, sopra la sua casella: trascinare non lo chiude.
 - **Toccando un punto che non è una casella il segnalino ci va**: al posto
   raggiungibile più vicino (una casella, un incrocio, una sosta), senza
   fumetto. È il modo di esplorare, come nella terra di sopra; col fumetto
   aperto un tocco fuori lo chiude e basta.
-- **Scorre col `scrollLeft`/`scrollTop` di un riquadro che non si
-  trascina** (`overflow: hidden`, `touch-action: none`): una prova che porta
-  una casella sullo schermo la sposta, e la vista la prende com'è anche a
-  metà corsa.
+- **Scorre col `scrollLeft`/`scrollTop` di un riquadro `overflow: hidden`**
+  mosso dal codice (`touch-action: none`: la pagina non scorre sotto): una
+  prova che porta una casella sullo schermo la sposta, e la vista la prende
+  com'è anche a metà corsa.
 
 ## Il segnalino
 

@@ -9,6 +9,7 @@
    fila di fatti, come le tessere). Vedi docs/lingue/libro-vista.md. */
 import { ref, computed, watch, nextTick } from 'vue'
 import Testo from './Testo.vue'
+import TastoSalta from '../../../components/TastoSalta.vue'
 import { tenere } from './tenere.js'
 import * as F from '../motore/fila.js'
 
@@ -18,10 +19,11 @@ const props = defineProps({
   k: { type: Number, default: 0 },              // la domanda di adesso
   risposta: { default: null },                  // quello che si è risposto: un'opzione, una riga, una fila
   giusta: { type: Boolean, default: false },
+  saltata: { type: Boolean, default: false },   // il tasto «salta» dei grandi: giusta, ma nessuno ha risposto
   attesa: { type: Number, default: 0 },
   giro: { type: Number, default: 0 },
 })
-const emit = defineEmits(['ho-letto', 'rispondi', 'tocca'])
+const emit = defineEmits(['ho-letto', 'rispondi', 'salta', 'tocca'])
 
 const pagina = ref(0)
 const foglio = ref(null)
@@ -156,9 +158,12 @@ function togli(id) { if (!risposto.value) fila.value = F.togli(dom.value, fila.v
                 @click="!risposto && $emit('rispondi', i)">{{ o.testo }}</button>
       </div>
 
+      <!-- per provare i giochi: la leva di #admin, docs/core/comandi.md -->
+      <TastoSalta v-if="!risposto" @salta="$emit('salta')" />
+
       <!-- dopo uno sbaglio: rileggere; per la frase e l'ordine si vede anche la soluzione -->
       <div v-if="risposto" class="ing-esito" :data-esito="giusta ? 'giusta' : 'sbagliata'">
-        <div v-if="giusta" class="ing-bene">Giusto!</div>
+        <div v-if="giusta" class="ing-bene">{{ saltata ? '⏭️ Saltata' : 'Giusto!' }}</div>
         <div v-else-if="dom.tipo === 'frase'" class="ing-male" data-si-fa>Non così: la frase che lo dice è quella
           in verde, qui sopra.</div>
         <template v-else-if="dom.tipo === 'ordine'">

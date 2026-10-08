@@ -67,10 +67,14 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   (`viste/pixel.js`); `<nome>-fermo-0` nell'atlante prende il loro posto da
   solo. I prompt sono nella scheda `PROMPT-terra-di-sopra.md`. La bussola del
   mock (il minatore che la dà, lei che punta alla prossima discesa) non è fatta.
-- **Le missioni dopo la prima volta**: una per discesa o due, nove in tutto,
+- **Le missioni dopo la prima volta**: dodici in tutto (un albero, tre rami),
   e consegnate non tornano. Se piacciono, ne servono altre per chi rigioca,
-  e una seconda forma oltre a «trova» e «sconfiggi» (accompagnare, portare
-  giù qualcosa). [missioni.md](missioni.md)
+  altri rami più lunghi (oggi i seguiti sono di un solo passo), e una seconda
+  forma oltre a «trova» e «sconfiggi» (accompagnare, portare giù qualcosa).
+  I requisiti «il piano N toccato» e «un pezzo di roba» non ci sono: vedi
+  il perché in [missioni.md](missioni.md). Da guardare col dito: se il tetto
+  di tre basta, o se un bambino con tre in mano e nessun «!» pensa che le
+  missioni siano finite (il diario lo dice, ma non da sola la mappa).
 - **La grande storia da guardare col dito**
   ([la-grande-storia.md](la-grande-storia.md)): la grotta ha piani da quattro
   stanze e quindi niente forzieri (il pezzo lo dà il guardiano dell'ultimo

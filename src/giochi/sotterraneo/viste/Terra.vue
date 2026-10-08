@@ -8,10 +8,10 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO,
          MERCANTI as DOVE_MERCANTI, PORTALE as DOVE_PORTALE, PERSONAGGI as DOVE_PERSONAGGI } from '../dati/terra-mappa.js'
 import { PERSONAGGI } from '../dati/missioni.js'
-import { segnoDi, chiTiCerca } from '../motore/missioni.js'
+import { segnoDi, GLIFO, chiAspetta, chiTiCerca, presePer, inFrase, discesaDaSeguire } from '../motore/missioni.js'
 import { MERCANTI } from '../dati/mercanti.js'
 import { POSTO_DI, LUOGHI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, PASSO_TERRA, VISTA, LUCE,
-         BORDO, MORBIDA } from '../dati/terra.js'
+         BORDO, MORBIDA, iconaDi } from '../dati/terra.js'
 import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice } from '../motore/terra.js'
 import { figura, haFigura } from './figura.js'
 import { dettoDelLivello } from '../motore/storia.js'
@@ -84,8 +84,62 @@ const personaggi = Object.entries(DOVE_PERSONAGGI).filter(([k]) => PERSONAGGI[k]
     ritratto: vero ? figura(`${PERSONAGGI[k].sprite}-fermo-0`, { scala: SCALA_EROE }) : null,
   }
 })
-// «!» ha qualcosa da chiederti, «?» aspetta quello che hai fatto (motore/missioni.js)
+// il segno sopra la testa (motore/missioni.js): «!» d'oro ha qualcosa da chiederti, «?» grigio e fermo aspetta che tu
+// la faccia, «?» d'oro che pulsa l'hai fatta e va consegnata
 const segnoSopra = chi => segnoDi(chi, props.missioni, props.tappe)
+const glifoSopra = chi => GLIFO[segnoSopra(chi)] || null
+
+// chi aspetta una consegna: se è fuori dallo schermo, un indicatore sul bordo lo fa trovare (posa). E, quando non
+// c'è nessuna consegna da fare, un altro dello stesso stampo, azzurro e col ritaglio della discesa, porta alla
+// discesa della missione presa e non ancora fatta: chi gioca poco spesso non si ricorda cosa aveva preso tre giorni
+// fa (motore/missioni.js, discesaDaSeguire; le consegne hanno la precedenza)
+const MARGINE_BUSSOLA = 30
+const consegne = computed(() => {
+  const chi = chiAspetta(props.missioni)
+  return [
+    ...(chi.includes('minatore') ? [{ chiave: 'minatore', nome: 'il vecchio minatore', piede: cella(DOVE_MINATORE.piede) }] : []),
+    ...personaggi.filter(m => chi.includes(m.chiave)).map(m => ({ chiave: m.chiave, nome: m.nome, piede: m.piede })),
+  ]
+})
+// dove sta ogni discesa, in celle (il piede del posto): serve a scegliere la più vicina
+const PIEDI_DELLE_DISCESE = Object.fromEntries(Object.entries(POSTO_DI).filter(([, nome]) => POSTI[nome])
+  .map(([chiave, nome]) => [chiave, { x: POSTI[nome].piede[0] + 0.5, y: POSTI[nome].piede[1] + 0.5 }]))
+const fuori = ref([])    // [{ chiave, nome, x, y, gradi, meta?, immagine? }] in pixel dello schermo, solo per chi non si vede
+let fuoriChiave = ''
+function aggiornaFuori() {
+  if (!vL) return
+  const lista = []
+  const cx = vL / 2, cy = (sopra + vA - sotto) / 2
+  const x0 = MARGINE_BUSSOLA, x1 = vL - MARGINE_BUSSOLA, y0 = sopra + MARGINE_BUSSOLA, y1 = vA - sotto - MARGINE_BUSSOLA
+  // dal centro verso (sx, sy), fermandosi dove il raggio tocca il rettangolo del bordo
+  const alBordo = (sx, sy, resto) => {
+    const dx = sx - cx, dy = sy - cy
+    const k = Math.min((dx > 0 ? x1 - cx : cx - x0) / Math.abs(dx || 1e-6), (dy > 0 ? y1 - cy : cy - y0) / Math.abs(dy || 1e-6))
+    lista.push({ ...resto, x: Math.round(cx + dx * k), y: Math.round(cy + dy * k), gradi: Math.round(Math.atan2(dy, dx) * 180 / Math.PI) })
+  }
+  const inVista = (sx, sy) => sx > 6 && sx < vL - 6 && sy > sopra + 4 && sy < vA - sotto - 4
+  for (const c of consegne.value) {
+    const sx = (c.piede.x + 0.5) * CELLA * S - cam.x * S
+    const sy = (c.piede.y + 0.5) * CELLA * S - cam.y * S - 20
+    if (!inVista(sx, sy)) alBordo(sx, sy, { chiave: c.chiave, nome: c.nome })
+  }
+  const meta = discesaDaSeguire(props.missioni, io, PIEDI_DELLE_DISCESE)
+  if (meta) {
+    const p = POSTI[POSTO_DI[meta]]
+    const sx = (p.riquadro[0] + p.riquadro[2] / 2) * S - cam.x * S
+    const sy = (p.riquadro[1] + p.riquadro[3] / 2) * S - cam.y * S
+    if (!inVista(sx, sy)) {
+      const t = props.tappe.find(t => t.chiave === meta)
+      alBordo(sx, sy, { chiave: meta, meta: true, nome: t ? t.nome : 'la discesa', immagine: iconaDi(meta) })
+    }
+  }
+  const ch = lista.map(l => `${l.chiave}:${l.x},${l.y},${l.gradi}`).join('|')
+  if (ch !== fuoriChiave) { fuoriChiave = ch; fuori.value = lista }
+}
+// toccandolo l'eroe ci va, come toccando lui (e il fumetto si apre all'arrivo)
+const vaDa = chiave => (chiave === 'minatore' ? toccaMinatore() : toccaPersonaggio(personaggi.find(m => m.chiave === chiave)))
+// e la freccia azzurra porta ai piedi della discesa, dove si apre il fumetto
+const vaAllaDiscesa = chiave => { const p = posti.value.find(p => p.nome === POSTO_DI[chiave]); if (p) toccaPosto(p) }
 
 const nebbia = (() => {
   const salvata = props.terra && nebbiaDaCodice(props.terra.nebbia, L, A)
@@ -312,6 +366,7 @@ function posa() {
     if (k !== ultimaCella) { ultimaCella = k; eroeEl.value.dataset.cella = k }
   }
   if (vista.value) vista.value.dataset.camera = `${Math.round(cam.x)},${Math.round(cam.y)}`
+  aggiornaFuori()
 }
 
 /* ═══════════ il fumetto ═══════════ */
@@ -408,8 +463,8 @@ const toccaPersonaggio = m => verso(m.accanto, { tipo: 'personaggio', chi: m })
 function faiMissione(id, azione) {
   const e = props.azioneMissione ? props.azioneMissione(id, azione) : null
   if (e === 'presa') dillo('Missione presa: la trovi scendendo.')
-  else if (e === 'consegnata') dillo('Missione compiuta!')
-  else if (e === 'pieno') dillo('Hai le tasche piene: libera un posto e torna.')
+  else if (e && e.esito === 'consegnata') dillo(e.monete ? `Missione compiuta! 🪙 ${e.monete}` : 'Missione compiuta!')
+  else if (e && e.esito === 'pieno') dillo('Hai le tasche piene: libera un posto e torna.')
   nextTick(piazzaFumetto)
 }
 const toccaCartello = () => verso(cella(CARTELLO.piede), { tipo: 'cartello' })
@@ -432,8 +487,10 @@ function scendi(p) {
 // minatore lo dice con le cose che ha in mano (motore/storia.js). Solo per quelle ancora da finire
 const livelloDi = t => (t && !t.fatta && props.roba ? dettoDelLivello(props.eroe.chiave, props.roba, t, t.indice) : null)
 
-// e dice anche chi ha una missione per te, se la proposta non è la sua (motore/missioni.js)
+// e dice anche chi ha qualcosa per te, una riga per chi (motore/missioni.js)
 const tiCerca = computed(() => chiTiCerca(props.missioni, props.tappe))
+// le missioni già prese che riguardano una discesa: il fumetto del posto le ricorda prima di scendere
+const quiPrese = p => (p && p.tappa ? presePer(props.missioni, p.tappa.chiave) : [])
 
 const detto = computed(() => {
   const t = props.tappe.find(t => t.adesso)
@@ -524,18 +581,19 @@ const chiusaPerche = p => {
           <i :style="ritrattoMinatore.pezzo"></i></span>
         <Pixel v-else :figura="MINATORE" :scala="SCALA_EROE" />
         <b v-if="!parlato" class="sot-tre-punti">…</b>
-        <b v-else-if="segnoSopra('minatore')" class="sot-tre-punti sot-segno-missione" data-segno>{{ segnoSopra('minatore') }}</b>
+        <b v-else-if="segnoSopra('minatore')" class="sot-tre-punti sot-segno-missione" :class="'sot-segno-' + segnoSopra('minatore')"
+           data-segno :data-segno-di="segnoSopra('minatore')">{{ glifoSopra('minatore') }}</b>
       </button>
 
       <!-- chi dà le missioni: il segno sopra la testa dice se ha qualcosa per te -->
       <button v-for="m in personaggi" :key="'personaggio-' + m.chiave" class="sot-minatore sot-personaggio"
               :class="{ 'sot-buio': !trovati.has(m.chiave) }" :data-personaggio="m.chiave" :aria-label="m.nome"
-              :data-segno="segnoSopra(m.chiave) || null" :tabindex="trovati.has(m.chiave) ? 0 : -1"
+              :data-segno="segnoSopra(m.chiave)" :tabindex="trovati.has(m.chiave) ? 0 : -1"
               :style="{ left: (m.piede.x + 0.5) * CELLA * S + 'px', top: (m.piede.y + 0.5) * CELLA * S + 'px' }"
               @click.stop="toccaPersonaggio(m)">
         <span v-if="m.ritratto" class="sot-ritratto" :style="m.ritratto.gabbia"><i :style="m.ritratto.pezzo"></i></span>
         <Pixel v-else :figura="m.figura" :scala="SCALA_EROE" />
-        <b v-if="segnoSopra(m.chiave)" class="sot-tre-punti sot-segno-missione">{{ segnoSopra(m.chiave) }}</b>
+        <b v-if="segnoSopra(m.chiave)" class="sot-tre-punti sot-segno-missione" :class="'sot-segno-' + segnoSopra(m.chiave)">{{ glifoSopra(m.chiave) }}</b>
       </button>
 
       <button v-for="m in mercanti" :key="'mercante-' + m.chiave" class="sot-minatore sot-mercante"
@@ -603,6 +661,11 @@ const chiusaPerche = p => {
             <p v-else class="sot-fum-conto em" data-fondo>
               {{ aperto.p.cosa.fondo ? `il più giù: piano ${aperto.p.cosa.fondo}` : 'mai sceso' }}
             </p>
+            <p v-if="quiPrese(aperto.p).length" class="sot-fum-missioni" data-missioni-qui>
+              <span v-for="m in quiPrese(aperto.p)" :key="m.id" :data-missione="m.id">
+                <span class="em">{{ m.tipo === 'trova' ? m.cosa.em : '👑' }}</span> {{ inFrase(m.tipo === 'trova' ? m.cosa.nome : m.mostro.nome) }}, piano {{ m.piano + 1 }}
+              </span>
+            </p>
             <p v-if="livelloDi(aperto.p.tappa)" class="sot-fum-avviso" data-sotto-livello
                :data-manca="livelloDi(aperto.p.tappa).manca">
               <b>Il minatore ti ha visto passare:</b> «{{ livelloDi(aperto.p.tappa).detto }}»
@@ -626,7 +689,7 @@ const chiusaPerche = p => {
         <template v-else-if="aperto.tipo === 'minatore'">
           <b class="sot-fum-nome">Il vecchio minatore</b>
           <p class="sot-fum-detto" data-detto>{{ detto }}</p>
-          <p v-if="tiCerca" class="sot-fum-detto" data-ti-cerca>«{{ tiCerca }}»</p>
+          <p v-for="(riga, i) in tiCerca" :key="i" class="sot-fum-detto" data-ti-cerca>«{{ riga }}»</p>
           <Missione chi="minatore" :stati="missioni" :tappe="tappe" @azione="faiMissione" />
         </template>
         <template v-else-if="aperto.tipo === 'personaggio'">
@@ -642,6 +705,18 @@ const chiusaPerche = p => {
         </template>
       </div>
     </div>
+
+    <!-- chi aspetta una consegna ed è fuori schermo: un «?» d'oro sul bordo, con la freccia verso di lui. Senza
+         consegne, la discesa della missione presa: stessa forma, azzurra, col ritaglio della discesa -->
+    <button v-for="f in fuori" :key="'fuori-' + f.chiave" class="sot-bussola" :class="{ 'sot-bussola-meta': f.meta }"
+            :data-consegna-fuori="f.meta ? null : f.chiave" :data-meta-fuori="f.meta ? f.chiave : null"
+            :aria-label="f.meta ? 'La discesa della tua missione: ' + f.nome : 'Hai una consegna per ' + f.nome"
+            :style="{ left: f.x + 'px', top: f.y + 'px' }"
+            @click.stop="f.meta ? vaAllaDiscesa(f.chiave) : vaDa(f.chiave)">
+      <i class="sot-bussola-freccia" :style="{ transform: `rotate(${f.gradi}deg) translateX(28px)` }"></i>
+      <b v-if="!f.meta">?</b>
+      <b v-else><img v-if="f.immagine" class="sot-ritaglio" :src="f.immagine" alt="" data-ritaglio></b>
+    </button>
 
     <div ref="sopraEl" class="sot-terra-sopra"><slot name="sopra" /></div>
     <div ref="sottoEl" class="sot-terra-sotto">

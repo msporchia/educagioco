@@ -187,6 +187,17 @@ export class Sessione {
     return esito
   }
 
+  /* Il tasto «salta» dei grandi (docs/core/comandi.md): la domanda va avanti come
+     giusta — la tappa si avvicina, la presentazione procede — ma nessuno ha risposto.
+     `registra` è vuoto (il ripasso non sente niente) e `paga` è falso. */
+  salta(d) {
+    if (d.genere !== 'frase' && d.chiave) this.indovinate.add(d.chiave)
+    this.giuste++
+    const esito = { giusta: true, saltata: true, paga: false, registra: [], perche: null, siFa: null }
+    if (d.genere === 'frase') this.seguiIlConcetto(d, esito)
+    return esito
+  }
+
   // la presentazione va avanti a giuste sul concetto di turno; uno sbaglio di
   // grammatica (pesa sulla forma) conta sul concetto della frase
   seguiIlConcetto(d, esito) {
