@@ -40,7 +40,7 @@ function esci() {
         <span class="em">▶</span> tocca per continuare
       </button>
       <button type="button" class="pa-esci" data-azione="esci" @click.stop="esci">
-        ← esco, la partita mi aspetta
+        ← torno ai giochi <small>la partita resta qui</small>
       </button>
       <!-- un gioco può aggiungere altro a chi è già fermo (il sotterraneo: lasciar perdere la discesa) -->
       <slot />
@@ -68,5 +68,6 @@ function esci() {
 .pa-esci { margin-top:14px; padding:10px 18px; border-radius:999px; border:2px solid #b9c6e680;
            background:transparent; color:#dfe6f6; font-size:15px; font-weight:800; opacity:.45 }
 .pa-velo.pronto .pa-esci { opacity:1 }
+.pa-esci small { display:block; font-size:11px; font-weight:600; opacity:.75 }
 .pa-foglio .em { font-style:normal }
 </style>

@@ -25,7 +25,7 @@ gioco che ha una partita più lunga di un paio di minuti.
 - **Si riprende fermi**: la partita ripresa nasce dietro il velo della pausa
   ([interfaccia.md](interfaccia.md#la-pausa-una-sola)) e riparte al tocco.
 - **Dalla pausa si esce senza ripartire**: il velo copre anche il ←, e ha il
-  suo «← esco, la partita mi aspetta» (`[data-azione="esci"]`), che fa quello
+  suo «← torno ai giochi» (con sotto, piccolo, «la partita resta qui») (`[data-azione="esci"]`), che fa quello
   che fa il ← del gioco. Chi è chiamato a tavola spesso ha già premuto ⏸.
 - **Le monete già prese restano nel conto della partita**: `borsa(k, da)` in
   `src/store/varieta.js` riparte da quello che la sosta aveva incassato, così
