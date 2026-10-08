@@ -22,7 +22,7 @@ calibrano gli addobbi. Gli strumenti stanno in `strumenti/sprite/`
   cinquecento pezzi e il catalogo ne cita duecento. Nove delle prime
   quattordici merci avevano già la faccia nell'atlante (le casse del
   raccolto, la balla di fieno, la bottiglia del latte).
-- Oggi **nessuna merce usa un ripiego**.
+- Oggi **una merce sola usa il ripiego**: la parmigiana (🍆), che aspetta `merce_parmigiana`.
 
 ## Una voce che aspetta il suo disegno
 

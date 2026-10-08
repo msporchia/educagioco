@@ -77,7 +77,7 @@ Le cose che lavorano, livello per livello (rifatta dal codice con `roba` e
 ```
   1  ⭐0      campo, silo del raccolto, grano      30  ⭐19382   barbabietola
   2  ⭐260    mercato                              31  ⭐20222   zuccherificio
-  3  ⭐580    bobtail                              33  ⭐22192   pomodori (zuppa d'orto)
+  3  ⭐580    bobtail                              33  ⭐22192   pomodori (pastone d'orto)
   4  ⭐970    mulino, silo della stalla            34  ⭐23092   gelateria
   5  ⭐1560   carote                               35  ⭐24252   gatto rosso
   6  ⭐1900   fienile                              36  ⭐25267   mensa

@@ -17,12 +17,12 @@ codice. Tutti rincarano a ogni copia (`cresce: RINCARO`), nella fascia
 
 | macchina | 🪙 | liv | ricette (livello, se dopo la macchina) |
 |:--|--:|--:|:--|
-| 🌾 mulino | 150 | 4 | mangime · pastone (11) · farina (17) |
-| 🏚 fienile | 150 | 6 | foraggio di carote · becchime (9) · foraggio (13) · fiorume (44) · fiorume col concime (52) |
+| 🌾 mulino | 150 | 4 | mangime · pappa di mais (11) · farina (17) |
+| 🏚 fienile | 150 | 6 | foraggio di carote · becchime (9) · foraggio (13) · fiori di cipolla e aglio (44) · prato fiorito (52) |
 | 🧵 telaio | 170 | 16 | stoffa |
 | 🍞 panificio | 180 | 17 | pane · torta (20) · merenda, crostata (50) |
 | 🧀 caseificio | 200 | 20 | burro · formaggio |
-| 🍲 pentolone | 150 | 23 | beverone · zuppa (27) · zuppa d'orto (33) · pastura (39) |
+| 🍲 pentolone | 150 | 23 | verdure lesse · pastone di zucca (27) · pastone d'orto (33) · verdura fresca (39) |
 | 🍳 cucina | 210 | 25 | minestrone · polenta · conserva (39) · salsa (44) |
 | 🏭 zuccherificio | 230 | 31 | zucchero · caramelle (46) · marmellata (51) |
 | 🍦 gelateria | 240 | 34 | succo · gelato · frullato (53) |
@@ -55,13 +55,13 @@ codice. Tutti rincarano a ogni copia (`cresce: RINCARO`), nella fascia
 | 🐔 pollaio | 130 | 9 | 2 🌰 becchime → 🥚 uova | 8 |
 | 🐑 ovile | 190 | 14 | 1 🥬 foraggio → 🧶 lana | 8 |
 | 🐄 stalla | 220 | 18 | 2 🥬 foraggio → 🥛 latte | 10 |
-| 🦆 stagno delle anatre | 240 | 24 | 1 🪣 beverone → 🥚 uova | 6 |
-| 🐖 porcile | 260 | 28 | 2 🥘 zuppa → 🍄 tartufi | 20 |
-| 🐐 capre | 280 | 40 | 1 🍃 pastura → 🥛 latte | 12 |
+| 🦆 stagno delle anatre | 240 | 24 | 1 🥔 verdure lesse → 🥚 uova | 6 |
+| 🐖 porcile | 260 | 28 | 2 🥘 pastone → 🍄 tartufi | 20 |
+| 🐐 capre | 280 | 40 | 1 🥬 verdura fresca → 🥛 latte | 12 |
 | 🐝 arnie | 300 | 45 | 2 🌼 fiori → 🍯 miele | 12 |
 | 🦙 alpaca | 330 | 47 | 1 🥬 foraggio → 🧶 lana | 5 |
-| 🫏 asini | 355 | 52 | 2 🌰 becchime → 💩 concime | 10 |
-| 🐟 peschiera | 360 | 57 | 2 🌰 becchime → 🐟 pesce | 15 |
+| 🫏 asini | 355 | 52 | 2 🥬 foraggio → 💩 concime | 10 |
+| 🐟 peschiera | 360 | 57 | 2 🥣 mangime → 🐟 pesce | 15 |
 
 `peschiera` e non `laghetto`, che è già una decorazione. Il pesce va nel
 silo della stalla con le uova.

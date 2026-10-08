@@ -51,11 +51,17 @@ cosa e stanno in [macchine.md](macchine.md). Il codice è `dati/animali.js`,
   🪙14 riempie 0,70) e quello sbagliato viene **rifiutato**, non pagato meno
   — un no si vede, mezza barretta in meno no. Il cibo buono rende un po'
   meno al pezzo: spendere tanto in una volta è una comodità.
-- **Le pappe coltivate vanno bene per (quasi) tutti**: tre catene parallele
-  per la stessa mossa sarebbero un lavoro d'ufficio. Un cibo dichiara *o*
-  `prezzo` *o* `da` (il prodotto del granaio), mai tutti e due. La merenda
-  vale per tutti apposta: una pappa da 3/4 di pancia che mangiasse solo il
-  pappagallo sarebbe una catena chiusa dietro una bestia da 🪙120.
+- **Ogni bestia mangia solo quello che le fa bene davvero**: il gioco
+  insegna anche questo, e un cibo sbagliato dato per gioco resta in testa.
+  Niente latte al gatto e al cane (da grandi non lo digeriscono), niente
+  pane, formaggio o minestrone al coniglio (è erbivoro: mangia fieno,
+  carote, insalata), niente tartufo a nessuno (il cane lo *cerca*), niente
+  pane o miele al pappagallo. Formaggio e minestrone solo al cane. Un cibo
+  dichiara *o* `prezzo` *o* `da` (il prodotto del granaio), mai tutti e due.
+- **Anche le ricette dei recinti dicono il vero**: il maiale mangia il
+  *pastone* (si chiama davvero così), la capra verdura fresca e non
+  melanzane e peperoni (le fanno male), l'asino foraggio, il pesce
+  mangime; il becchime è solo per gli uccelli.
 - **Le coccole**: spazzola e pallina (🪙1), copertina (lana), festa (torta,
   riempie tutto il gioco), bagnetto (sapone, riempie tutto il pelo).
 - **La scheda è a blocchi** (`viste/Bestia.vue`): ogni bisogno è la sua

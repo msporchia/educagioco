@@ -29,11 +29,11 @@ catalogo è inutile.
 
 - **Un edificio è un mestiere che si riconosce a colpo d'occhio, con al
   massimo quattro ricette.** Quattro tasti in un foglio si leggono, nove
-  sono un elenco. **Il mulino macina** (mangime, pastone, farina), **il
-  fienile fa il secco** (foraggi, becchime, fiorumi), **il pentolone fa il
-  cotto** (beverone, zuppe, pastura), **la cucina è dove le colture si
-  incontrano**. Il fienile ha cinque ricette da quando c'è il fiorume col
-  concime: è l'eccezione nota, e spostarla sarebbe un'altra migrazione.
+  sono un elenco. **Il mulino macina** (mangime, pappa di mais, farina),
+  **il fienile fa il secco** (foraggi, becchime, fiori), **il pentolone fa
+  il cotto** (verdure lesse, pastoni, verdura fresca), **la cucina è dove
+  le colture si incontrano**. Il fienile ha cinque ricette da quando c'è il
+  prato fiorito: è l'eccezione nota, e spostarla sarebbe un'altra migrazione.
 - **Tre mangimi, tre bocche.** Con un mangime unico si coltiverebbe la
   coltura più conveniente e basta; con tre, il grano resta la cosa delle
   galline e le zucche quella dei maiali. È la cosa che il gioco insegna:
@@ -60,9 +60,9 @@ catalogo è inutile.
 
   Le capre peggiorano due colonne e ne migliorano due: è la scelta fra
   tempo e spazio, e da lì in poi manca quasi sempre lo spazio.
-- **Il concime è l'unico anello che si chiude**: 🌰 becchime → 🫏 asini → 💩
+- **Il concime è l'unico anello che si chiude**: 🥬 foraggio → 🫏 asini → 💩
   concime → 🌼 fiori (col fieno) → 🐝 api. Non è la strada più economica
-  per i fiori (🪙6 e 47 min contro 🪙2 e 22 del fiorume di cipolle e aglio):
+  per i fiori (contro 🪙2 e 22 min dei fiori di cipolla e aglio):
   è quella che **non chiede l'orto**. Gli asini non danno da mangiare a
   nessuno, e senza un mestiere onesto sarebbe stato meglio non metterli.
   Cipolle e aglio lasciati fiorire per le api è una cosa che si fa davvero.
@@ -122,7 +122,7 @@ intera) e la vuole **fra il 35% e l'80%**, risalendo la catena da solo.
 | 🥛 latte | 🪙5 · 36 min | 🪙9 | 55% |
 | 🍜 minestrone | 🪙4 · 28 min | 🪙8,3 | 50% |
 | 🍞 pane | 🪙7 · 36 min | 🪙10 | 60% |
-| 🍲 pastone | 🪙7 · 30 min | 🪙12 | 70% |
+| 🍲 pappa di mais | 🪙7 · 30 min | 🪙12 | 70% |
 | 🥧 merenda | 🪙8 · 84 min | — | 75% |
 | 🧀 formaggio | 🪙10 · 82 min | 🪙14,2 | 85% |
 | 🍄 tartufo | 🪙9 · 60 min | 🪙15 | 90% |

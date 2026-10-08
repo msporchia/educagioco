@@ -16,6 +16,10 @@ Il gioco è intero anche senza: chi aspetta usa un ripiego e lo dichiara in
       vestito da uno stato all'altro (vampiro, poi strega); l'alpaca è
       diventata grigia come un asino; le api non sono vestite. I prompt
       usati sono nei foglietti.
+- [ ] **`merce_parmigiana` — la parmigiana di melanzane**, una teglia vista
+      un po' dall'alto, nello stile delle altre merci (`PROMPT-merce.md`).
+      Arrivato il pezzo, `parmigiana` in `dati/coltivazioni.js` perde
+      `aspetta` e prende `pezzo`; intanto usa l'emoji 🍆.
 - [ ] **`animali_3.png` — i ritratti della peschiera** (calmo, mangia,
       pronto…). È un recinto, e si chiede accanto ai recinti, col prato che
       hanno tutti. Arrivato il foglio, `peschiera` in `dati/catalogo.js`
