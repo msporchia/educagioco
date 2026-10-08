@@ -8,7 +8,7 @@ import { ATLANTE, PEZZI, pezzoAttore } from '../dati/atlante.js'
 import { PER_ID, assettoDi } from '../dati/catalogo.js'
 import { OSTACOLI } from '../dati/ostacoli.js'
 import { tesseraDi } from './bordi.js'
-import { disegnaPixel } from './pixel-festa.js'
+import { disegnaPixel, larghezzaDi } from './pixel-festa.js'
 
 // Quanto vive un'etichetta (nasce quasi sempre sotto un foglio che si riapre) e di quanto sale.
 export const ETICHETTA_DURATA = 2.5
@@ -70,6 +70,8 @@ export class Attore {
     // Quello che ha addosso, già risolto da fuori: [{testo, misura, punti}], punti per verso.
     // bob è di quanto si abbassa il disegno a ogni fotogramma della camminata (dati/animali.js).
     this.addobbi = opz.addobbi || []
+    // Quello che vorrebbe, in un fumetto sopra la testa ({ disegno }): lo decide chi gioca, non questa classe.
+    this.desidera = opz.desidera || null
     this.bob = opz.bob || null
   }
 
@@ -118,7 +120,36 @@ export class Attore {
       this.statistiche(ctx, x + w / 2, y + h * .38, w)
     } else if (this.bisogni && this.bisogni.some(b => b.valore < .35)) {
       this.fumetto(ctx, x + w / 2, y - 4, orologio, scala)
+    } else if (this.desidera) {
+      this.desiderio(ctx, x + w / 2, y - 2, orologio, scala)
     }
+  }
+
+  // «Lo vorrei»: un fumetto crema col disegno dentro, come quello di un recinto che ha fame.
+  desiderio(ctx, cx, punta, orologio, scala) {
+    const su = Math.sin(orologio * 2.4 + cx * .05) * 2
+    const lato = Math.round(18 + scala * 7)
+    const x = Math.round(cx - lato / 2), y = Math.round(punta - lato - lato * .3 + su)
+    ctx.save()
+    ctx.lineJoin = 'round'
+    ctx.lineWidth = 2
+    ctx.strokeStyle = '#2a1c12'
+    ctx.fillStyle = '#faf6ec'
+    ctx.shadowColor = 'rgba(0,0,0,.4)'
+    ctx.shadowBlur = 5
+    ctx.shadowOffsetY = 2
+    for (const [dy, r] of [[lato * .3, Math.max(2.5, lato * .09)], [lato * .1, Math.max(1.5, lato * .05)]]) {
+      ctx.beginPath(); ctx.arc(cx - lato * .16, punta - dy + su, r, 0, 7); ctx.fill(); ctx.stroke()
+    }
+    const r = lato * .3
+    ctx.beginPath()
+    ctx.moveTo(x + r, y); ctx.arcTo(x + lato, y, x + lato, y + lato, r)
+    ctx.arcTo(x + lato, y + lato, x, y + lato, r); ctx.arcTo(x, y + lato, x, y, r)
+    ctx.arcTo(x, y, x + lato, y, r); ctx.closePath()
+    ctx.fill(); ctx.stroke()
+    ctx.restore()
+    const largo = larghezzaDi(this.desidera.disegno)
+    disegnaPixel(ctx, this.desidera.disegno, cx, y + lato * .86, Math.max(1, Math.floor(lato * .78 / largo)))
   }
 
   // Sopra lo sprite, dentro la stessa trasformazione (origine già all'angolo del riquadro).
@@ -136,7 +167,7 @@ export class Attore {
       // il cappello della festa è un disegno in pixel: la tesa poggia sulla testa, un filo sotto il punto
       if (a.disegno) {
         disegnaPixel(ctx, a.disegno, punto[0] * w, (punto[1] + salto) * h + 2 * scala,
-                     scala * (a.misura || 1))
+                     scala * a.misura / larghezzaDi(a.disegno))
         continue
       }
       ctx.font = `${Math.max(6, Math.round(a.misura * scala))}px system-ui,sans-serif`
@@ -292,7 +323,7 @@ export class Tela {
 
   // quadro: fattoria, attori, scelto (===), preso, anello {x,y,q}, orologio (l'unico che questa classe
   // usa), pennello {celle,materia,ok}, stagione, stagionali [{testo,x,y,misura,ondeggia?}],
-  // bersagli [{x,y,piede,vivo}], bolla {punti,gettoni,lato,…} e mano {x,y,pezzo,testo,sopra,piega}
+  // bolla {punti,gettoni,lato,…} e mano {x,y,pezzo,testo,sopra,piega}
   // in pixel di schermo, già disposte da scena/bolla.js.
   disegna(quadro) {
     if (!quadro || !this.misura()) return
@@ -376,17 +407,17 @@ export class Tela {
 
     this.disegnaStagionali(quadro.stagionali, quadro.orologio)
     this.disegnaAtterraggio(quadro.preso)
-    this.disegnaBersagli(quadro.bersagli, quadro.orologio)
     this.disegnaPennello(quadro.pennello)
     this.disegnaNebbia(fattoria)
     this.cartelli(fattoria, quadro.orologio)
     for (const f of fumetti)
       if (f.vuole) this.chiede(f, quadro.orologio)
       else this.fumetto(f, quadro.orologio)
-    this.disegnaEffetti(quadro.orologio)
     this.disegnaEtichette(quadro.orologio)
     if (natale) this.disegnaNeve(quadro.orologio)
     this.disegnaBolla(quadro.bolla, quadro.orologio)
+    // sopra i gettoni: il «-2» nasce proprio dove stanno
+    this.disegnaEffetti(quadro.orologio)
     this.disegnaNuvolette(quadro.orologio)
     this.disegnaAnello(quadro.anello)
     this.disegnaMano(quadro.mano, quadro.orologio)
@@ -448,12 +479,6 @@ export class Tela {
       let y = s.y * this.cellaPx - this.vista.y
       if (x < -40 || y < -40 || x > this.L + 40 || y > this.A + 40) continue
       if (s.ondeggia) y += Math.sin(orologio * 3 + s.x) * 2
-      // un disegno in pixel (la zucca) poggia col fondo sul punto; la candela dentro respira
-      if (s.disegno) {
-        const luce = .55 + .45 * Math.sin(orologio * 7 + s.x * 3) * Math.sin(orologio * 3.1 + s.y)
-        disegnaPixel(ctx, s.disegno, x, y, this.scala * (s.misura || 1), luce)
-        continue
-      }
       ctx.font = `${Math.max(8, Math.round(s.misura * this.scala))}px system-ui,sans-serif`
       ctx.fillText(s.testo, x, y)
     }
@@ -788,15 +813,23 @@ export class Tela {
   }
 
   // Una merce che vola da un punto a un altro del mondo (dal campo al silo); arrivata, fa sobbalzare arriva.
-  vola({ pezzo = null, testo = '', da, a, arriva = null, ritardo = 0, durata = .75 }) {
-    this.effetti.push({ tipo: 'vola', pezzo, testo, da, a, arriva, ritardo, durata, nascita: null })
+  // aSchermo invece di a: la meta è un punto dello schermo (l'angolo dove va quello che si raccoglie).
+  vola({ pezzo = null, testo = '', da, a = null, aSchermo = null, arriva = null, ritardo = 0, durata = .75 }) {
+    this.effetti.push({ tipo: 'vola', pezzo, testo, da, a, aSchermo, arriva, ritardo, durata, nascita: null })
+  }
+
+  // Quello che si è usato: la figura col suo «-2» sopra la macchina, che sale e svanisce piano.
+  consuma({ pezzo = null, testo = '', numero, x, y, ritardo = 0 }) {
+    this.effetti.push({ tipo: 'consuma', pezzo, testo, numero, x, y, ritardo, durata: 1.4, nascita: null })
   }
 
   // Una nuvoletta che parla sopra una cosa: il no detto dove è successo, non in cima allo schermo.
-  nuvoletta(testo, x, y, durata = 2.6) {
+  // merci: [{ quanti, pezzo, testo }] dopo la frase, col loro disegno — mai l'emoji dove c'è una figura
+  // (il becchime è un sacchetto, la sua emoji una castagna).
+  nuvoletta(testo, x, y, { durata = 2.6, merci = [] } = {}) {
     // una sola per volta nello stesso punto: la seconda prende il posto della prima
     this.nuvolette = this.nuvolette.filter(n => Math.hypot(n.x - x, n.y - y) > 1)
-    this.nuvolette.push({ testo: String(testo), x, y, nascita: null, durata })
+    this.nuvolette.push({ testo: String(testo), merci, x, y, nascita: null, durata })
   }
 
   // Il sobbalzo di questa cosa adesso, o null: squash e stretch che si spengono in quattro decimi.
@@ -862,12 +895,13 @@ export class Tela {
         ctx.strokeStyle = 'rgba(42,28,18,.5)'
         ctx.beginPath(); ctx.arc(0, 0, lato / 2 - 6, 0, Math.PI * 2); ctx.stroke()
       } else {
-        this.faccia(g.pezzo, g.testo, 0, 0, lato * (g.piccolo ? .5 : .72), g.spento ? .45 : 1)
+        this.faccia(g.pezzo, g.testo, 0, 0, lato * .72, g.spento ? .45 : 1)
       }
       ctx.restore()
       if (g.hai != null && !g.preso && s > .9)
         this.numerino(g.hai, p.x + lato * .36, p.y + su - lato * .36, 22)
     })
+    if (b.pagine) this.pagine(b.pagine, rimbalzello(Math.max(0, Math.min(1, t / .3))))
     if (b.dettaglio) this.dettaglio(b.dettaglio, lato)
   }
 
@@ -893,8 +927,53 @@ export class Tela {
     ctx.restore()
   }
 
+  // Le pagine dei gettoni: due tasti gialli con le punte doppie ai lati, i pallini in mezzo.
+  pagine(pg, s) {
+    if (s <= 0) return
+    const ctx = this.ctx
+    for (const [punto, verso] of [[pg.indietro, -1], [pg.avanti, 1]]) {
+      ctx.save()
+      ctx.translate(punto.x, punto.y)
+      ctx.scale(s, s)
+      ctx.shadowColor = 'rgba(0,0,0,.35)'
+      ctx.shadowBlur = 5
+      ctx.shadowOffsetY = 3
+      ctx.beginPath()
+      ctx.arc(0, 0, pg.lato / 2, 0, Math.PI * 2)
+      ctx.fillStyle = '#f2c230'
+      ctx.fill()
+      ctx.shadowColor = 'transparent'
+      ctx.lineWidth = 2.5
+      ctx.strokeStyle = '#8a5a12'
+      ctx.stroke()
+      ctx.lineWidth = 4
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      ctx.strokeStyle = '#fffbe8'
+      for (const dx of [-5, 4]) {
+        ctx.beginPath()
+        ctx.moveTo((dx - 3) * verso, -7)
+        ctx.lineTo((dx + 3) * verso, 0)
+        ctx.lineTo((dx - 3) * verso, 7)
+        ctx.stroke()
+      }
+      ctx.restore()
+    }
+    const passo = 14
+    for (let i = 0; i < pg.totale; i++) {
+      const x = pg.cx + (i - (pg.totale - 1) / 2) * passo
+      ctx.beginPath()
+      ctx.arc(x, pg.y, i === pg.pagina ? 5 : 4, 0, Math.PI * 2)
+      ctx.fillStyle = i === pg.pagina ? '#faf6ec' : 'rgba(250,246,236,.35)'
+      ctx.fill()
+      ctx.lineWidth = 1.5
+      ctx.strokeStyle = 'rgba(42,28,18,.8)'
+      ctx.stroke()
+    }
+  }
+
   // La fila di una macchina, sotto di lei: pronti in oro che saltellano, chi lavora con l'anello che si
-  // chiude, chi aspetta con la ✕ per toglierlo, i posti vuoti tratteggiati e il «+» col prezzo sotto.
+  // chiude, chi aspetta sbiadito, i posti vuoti tratteggiati e il «+» col prezzo sotto.
   filetta(f, t, orologio) {
     const ctx = this.ctx
     const d = f.lato
@@ -946,58 +1025,53 @@ export class Tela {
           ctx.stroke()
         }
         this.faccia(p.pezzo, p.testo, 0, 0, d * .68, p.come === 'aspetta' ? .5 : 1)
-        if (p.come === 'aspetta') {
-          ctx.beginPath()
-          ctx.arc(d * .36, -d * .36, 8, 0, Math.PI * 2)
-          ctx.fillStyle = '#b84a3a'
-          ctx.fill()
-          ctx.lineWidth = 1.5
-          ctx.strokeStyle = '#2a1c12'
-          ctx.stroke()
-          ctx.fillStyle = '#fff'
-          ctx.font = '700 11px system-ui,sans-serif'
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          ctx.fillText('✕', d * .36, -d * .36 + 1)
-        }
       }
       ctx.restore()
     })
   }
 
-  // Cosa prende la ricetta tenuta dal dito: caselle accese o in ombra, una freccia, quello che esce.
+  // Il gettone tenuto o toccato, per esteso: cosa prende (caselle accese o in ombra), cosa esce, e in
+  // parole quanto ne hai, quanto ci mette e quanto costa — i numeri nudi sopra i gettoni non si capivano.
   dettaglio(d, lato) {
     const ctx = this.ctx
     const q = 34, gap = 5
-    const n = d.caselle.length
-    const w = n * (q + gap) + 22 + q + (d.costo ? 42 : 0) + 18
+    ctx.save()
+    ctx.font = '700 15px system-ui,sans-serif'
+    const pezzi = [
+      ...d.caselle.map(c => ({ casella: c, w: q })),
+      ...(d.caselle.length ? [{ testo: '→', w: 22, grande: true }] : []),
+      { faccia: d.esce, w: q },
+      ...d.parole.map(t => ({ testo: t, w: ctx.measureText(t).width + 6 })),
+    ]
+    const w = pezzi.reduce((t, p) => t + p.w + gap, 0) + 14
     const h = q + 16
     const x = Math.max(6, Math.min(this.L - w - 6, d.x - w / 2))
     const y = d.sotto ? d.y + lato * .62 : d.y - lato * .62 - h
-    ctx.save()
     this.targhetta(x, y, w, h)
-    let cx = x + 8 + q / 2
-    for (const c of d.caselle) {
-      ctx.beginPath()
-      ctx.arc(cx, y + h / 2, q / 2, 0, Math.PI * 2)
-      ctx.fillStyle = c.piena ? '#e6f3d8' : '#e9e2d2'
-      ctx.fill()
-      if (!c.piena) {
-        ctx.setLineDash([3, 3]); ctx.lineWidth = 1.5; ctx.strokeStyle = '#a89c84'; ctx.stroke()
-        ctx.setLineDash([])
-      }
-      this.faccia(c.pezzo, c.testo, cx, y + h / 2, q * .78, c.piena ? 1 : .3)
-      cx += q + gap
-    }
-    ctx.fillStyle = '#2a1c12'
-    ctx.font = '700 19px system-ui,sans-serif'
-    ctx.textAlign = 'center'
+    let cx = x + 9
     ctx.textBaseline = 'middle'
-    ctx.fillText('→', cx + 4, y + h / 2)
-    this.faccia(d.esce.pezzo, d.esce.testo, cx + 22 + q / 2 - 4, y + h / 2, q * .9)
-    if (d.costo) {
-      ctx.font = '700 15px system-ui,sans-serif'
-      ctx.fillText('🪙' + d.costo, cx + 22 + q + 18, y + h / 2)
+    for (const p of pezzi) {
+      const mezzo = cx + p.w / 2
+      if (p.casella) {
+        const c = p.casella
+        ctx.beginPath()
+        ctx.arc(mezzo, y + h / 2, q / 2, 0, Math.PI * 2)
+        ctx.fillStyle = c.piena ? '#e6f3d8' : '#e9e2d2'
+        ctx.fill()
+        if (!c.piena) {
+          ctx.setLineDash([3, 3]); ctx.lineWidth = 1.5; ctx.strokeStyle = '#a89c84'; ctx.stroke()
+          ctx.setLineDash([])
+        }
+        this.faccia(c.pezzo, c.testo, mezzo, y + h / 2, q * .78, c.piena ? 1 : .3)
+      } else if (p.faccia) {
+        this.faccia(p.faccia.pezzo, p.faccia.testo, mezzo, y + h / 2, q * .9)
+      } else {
+        ctx.fillStyle = '#2a1c12'
+        ctx.textAlign = 'center'
+        ctx.font = p.grande ? '700 19px system-ui,sans-serif' : '700 15px system-ui,sans-serif'
+        ctx.fillText(p.testo, mezzo, y + h / 2 + 1)
+      }
+      cx += p.w + gap
     }
     ctx.restore()
   }
@@ -1061,10 +1135,29 @@ export class Tela {
         ctx.restore()
       } else if (e.tipo === 'vola') {
         const k = q < .5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2
-        const x = (e.da.x + (e.a.x - e.da.x) * k) * px - this.vista.x
-        const y = (e.da.y + (e.a.y - e.da.y) * k) * px - this.vista.y - Math.sin(Math.PI * q) * 70
+        const x0 = e.da.x * px - this.vista.x, y0 = e.da.y * px - this.vista.y
+        const meta = e.aSchermo || { x: e.a.x * px - this.vista.x, y: e.a.y * px - this.vista.y }
+        const x = x0 + (meta.x - x0) * k
+        const y = y0 + (meta.y - y0) * k - Math.sin(Math.PI * q) * 70
         const lato = 30 * (1 + Math.sin(Math.PI * q) * .35) * (q > .85 ? (1 - q) / .15 * .6 + .4 : 1)
         this.faccia(e.pezzo, e.testo, x, y, lato)
+      } else if (e.tipo === 'consuma') {
+        const x = e.x * px - this.vista.x
+        const y = e.y * px - this.vista.y - 8 - q * 46
+        const alfa = q < .15 ? q / .15 : q > .55 ? 1 - (q - .55) / .45 : 1
+        ctx.save()
+        ctx.globalAlpha = Math.max(0, alfa)
+        this.faccia(e.pezzo, e.testo, x - 10, y, 34)
+        ctx.font = '800 20px system-ui,sans-serif'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'middle'
+        ctx.lineJoin = 'round'
+        ctx.lineWidth = 4
+        ctx.strokeStyle = 'rgba(8,20,12,.85)'
+        ctx.strokeText('-' + e.numero, x + 10, y + 2)
+        ctx.fillStyle = '#fff'
+        ctx.fillText('-' + e.numero, x + 10, y + 2)
+        ctx.restore()
       }
     }
     this.effetti = vivi
@@ -1081,7 +1174,11 @@ export class Tela {
       vive.push(n)
       ctx.save()
       ctx.font = '700 16px system-ui,sans-serif'
-      const w = Math.min(this.L - 16, ctx.measureText(n.testo).width + 28), h = 38
+      const FACCIA = 26
+      const pezzi = n.merci.map(m => ({ ...m, numero: String(m.quanti), largo: ctx.measureText(String(m.quanti)).width }))
+      const coda = pezzi.reduce((t, m) => t + 8 + m.largo + 3 + FACCIA, 0)
+      const frase = ctx.measureText(n.testo).width
+      const w = Math.min(this.L - 16, frase + coda + 28), h = 38
       const cx = Math.max(8 + w / 2, Math.min(this.L - 8 - w / 2, n.x * px - this.vista.x))
       const y = Math.max(8, n.y * px - this.vista.y - h - 12)
       const s = rimbalzello(Math.min(1, t / .22))
@@ -1097,34 +1194,21 @@ export class Tela {
       ctx.fill(); ctx.stroke()
       ctx.fillRect(-6, -4, 12, 4)
       ctx.fillStyle = '#2a1c12'
-      ctx.textAlign = 'center'
+      ctx.textAlign = 'left'
       ctx.textBaseline = 'middle'
-      ctx.fillText(n.testo, 0, -h / 2 + 1, w - 14)
+      let penna = -(frase + coda) / 2
+      ctx.fillText(n.testo, penna, -h / 2 + 1, w - 14)
+      penna += frase
+      for (const m of pezzi) {
+        penna += 8
+        ctx.fillText(m.numero, penna, -h / 2 + 1)
+        penna += m.largo + 3
+        this.faccia(m.pezzo, m.testo, penna + FACCIA / 2, -h / 2, FACCIA)
+        penna += FACCIA
+      }
       ctx.restore()
     }
     this.nuvolette = vive
-  }
-
-  // Dove il gettone in mano fa qualcosa (i campi vuoti per un seme, il mulino per una ricetta): un
-  // tratteggio d'oro che pulsa; vivo è quello sotto il dito. La lista arriva già decisa, come preso.
-  disegnaBersagli(lista, orologio) {
-    if (!lista || !lista.length) return
-    const ctx = this.ctx, px = this.cellaPx
-    const battito = .55 + .35 * (1 + Math.sin(orologio * 6)) / 2
-    ctx.save()
-    ctx.setLineDash([6, 4])
-    ctx.lineDashOffset = -orologio * 14
-    for (const b of lista) {
-      const x = b.x * px - this.vista.x, y = b.y * px - this.vista.y
-      const w = b.piede[0] * px, h = b.piede[1] * px
-      if (x > this.L || y > this.A || x + w < 0 || y + h < 0) continue
-      ctx.fillStyle = b.vivo ? 'rgba(180,255,160,.30)' : `rgba(255,217,138,${(.14 * battito).toFixed(3)})`
-      ctx.fillRect(x, y, w, h)
-      ctx.lineWidth = b.vivo ? 3 : 2
-      ctx.strokeStyle = b.vivo ? 'rgba(180,255,160,.95)' : `rgba(255,217,138,${battito.toFixed(3)})`
-      ctx.strokeRect(x + 1, y + 1, w - 2, h - 2)
-    }
-    ctx.restore()
   }
 
   // Come disegnaAtterraggio ma per il pennello: celle sparse, non un piede rettangolare, colorate

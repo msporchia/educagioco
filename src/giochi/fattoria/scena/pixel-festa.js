@@ -1,10 +1,11 @@
-/* I disegni della festa fatti in codice, pixel per pixel: la zucca intagliata e il cappello da strega.
+/* I disegni della festa fatti in codice, pixel per pixel: le zucche intagliate e il cappello da strega.
    Un'emoji in mezzo alla pixel art si vedeva disegnata dal telefono (ed era stata tolta per questo):
-   qui ogni carattere è un pixel dello sprite, e a schermo diventa grande quanto un pixel dell'atlante.
-   Vedi docs/fattoria/stagioni.md. */
+   qui ogni carattere è un pixel dello sprite. Il cappello la tela lo disegna da qui, sopra le bestie;
+   le zucche diventano pezzi dell'atlante (`node strumenti/sprite/festa.mjs`, poi atlante.py), perché
+   si comprano e si posano come ogni decorazione. Vedi docs/fattoria/stagioni.md. */
 
 // '.' è vuoto; le altre lettere sono colori della tavolozza. 'L' è la luce dentro la zucca, che tremola.
-const DISEGNI = {
+export const DISEGNI = {
   zucca: {
     righe: [
       '.....gg....',
@@ -18,6 +19,21 @@ const DISEGNI = {
       'oOOLLLLLOOo',
       '.oOOoOoOOo.',
       '..ooooooo..',
+    ],
+    colori: { g: '#3f6b2a', o: '#b5531a', O: '#e07a24', L: '#ffd34d' },
+  },
+  // Due zucche, una intagliata e una no: la decorazione più grande.
+  zucche_mucchio: {
+    righe: [
+      '...g........g...',
+      '...g........g...',
+      '.ooOoo....ooOoo.',
+      'oOOoOOo..oOOoOOo',
+      'oLLoLLo..oOOoOOo',
+      'oOOoOOo..oOOoOOo',
+      'oOLLLOo..oOOoOOo',
+      'oOOOOOo..oOOoOOo',
+      '.ooooo....ooooo.',
     ],
     colori: { g: '#3f6b2a', o: '#b5531a', O: '#e07a24', L: '#ffd34d' },
   },
@@ -65,4 +81,5 @@ function candela(q) {
 }
 
 export const esisteIlDisegno = nome => !!DISEGNI[nome]
+export const larghezzaDi = nome => DISEGNI[nome] ? Math.max(...DISEGNI[nome].righe.map(r => r.length)) : 1
 export const NOMI_DEI_DISEGNI = Object.keys(DISEGNI)

@@ -29,7 +29,7 @@ import { CATALOGO, PER_ID, ZONE, ANIMALI_ZONA, piedeDi, pezzoDi, assettoDi,
          puoGirare, puoSpecchiare, eCampo, eSilo, eVicino, eMercato, siloDi,
          macchinaDi } from './dati/catalogo.js'
 import { animale, siDisegna, IN_VENDITA, BOB, puntiDi } from './dati/animali.js'
-import { addobbo } from './dati/addobbi.js'
+import { addobbo, ADDOBBI } from './dati/addobbi.js'
 import { BISOGNI, CHIAVI, foto } from './dati/bisogni.js'
 import { PRODOTTI, SILI, COLTURE, ricetteDi } from './dati/coltivazioni.js'
 import { RIPOSO_MIN } from './dati/mercato.js'
@@ -84,9 +84,24 @@ const presi = ref([])
 // Un foglio aperto toglie di mezzo la bolla: sotto il velo resterebbe a galleggiare sul niente.
 watch(pannello, v => { if (v) chiudiBolla() })
 
+// Le voci della festa di oggi: stanno nel baule anche a chi non ha ancora aperto le decorazioni.
+const vociDellaFesta = computed(() => CATALOGO.filter(v => v.stagione && v.stagione === stagione.value))
+// La bimba non ne ha ancora nessuna: il 🌸 del baule porta il segnalino e si apre su di loro.
+const festaDaScoprire = ref(false)
+// La strada del baule: una metà per tasto, la voce su cui si apre e il segnalino. Nella fattoria è la
+// prima cosa che lavora, già aperta e mai costruita; fra le decorazioni solo la festa — vedi
+// docs/fattoria/come-si-tocca.md («La strada del baule»).
+const strada = ref({})
+const cappelloDaScoprire = ref(false)
+// Il cappello della festa di oggi, se c'è; e se lo si ha, nel guardaroba o in testa a qualcuno.
+const cappelloDellaFesta = () => ADDOBBI.find(a => a.stagione && a.stagione === stagione.value) || null
+const hoLAddobbo = id => mondo.quantiAddobbi(id) > 0 ||
+  mondo.bestie.some(b => Object.values(mondo.addobbiDi(b.chi)).includes(id))
+
 const zoneDelBaule = computed(() => {
   const p = new Set(presi.value)
-  return ZONE.filter(z => z.chiave === ANIMALI_ZONA
+  return ZONE.filter(z => (z.chiave === 'bello' && vociDellaFesta.value.length) ||
+    z.chiave === ANIMALI_ZONA
     ? IN_VENDITA.some(a => p.has(chiaveDi('bestia', a.chi)))
     : CATALOGO.some(v => zonaDi(v.id) === z.chiave && p.has(chiaveDi('cosa', v.id))))
 })
@@ -95,6 +110,7 @@ const zoneDelBaule = computed(() => {
 function annotaIPremi() {
   daPrendere.value = mondo.daReclamare()
   presi.value = Object.keys(mondo.reclamati)
+  guardaLaFesta()
 }
 
 let mondo = null                    // la Fattoria (motore)
@@ -120,6 +136,7 @@ const dovePasso = (x, y) => mondo.calpestabile(x, y)
 function salva() {
   salvaFra = 1.2
   guardaIlLivello()
+  guardaLaFesta()
 }
 
 // Il livello sale spendendo: si controlla da qui (chiamato da salva()) invece che in quindici
@@ -194,6 +211,7 @@ function chiudi() {
 // Aperto dal tasto in alto: nessuna cella da ricordare — vedi docs/fattoria/come-si-tocca.md.
 function apriIlBaule(zona = 'lavoro') {
   dovePosare = null
+  if (strada.value[zona]) punta.value = strada.value[zona].voce
   pannello.value = { tipo: 'roba', zona }
 }
 
@@ -289,14 +307,9 @@ function metti_in_scena_le_bestie() {
 // La scena riceve fatti già decisi (figura, punti) e non sa cosa sia un cappello — come il
 // fumetto sopra un recinto. Si rifà a ogni cambio, non a ogni fotogramma.
 function addobbiInScena(chi) {
-  const addosso = mondo.comeEVestita(chi)
+  return mondo.comeEVestita(chi)
     .map(a => ({ ...a, punti: puntiDi(chi, a.dove) }))
     .filter(a => a.punti)
-  // A Halloween chi ha la testa libera prende il cappello da strega: della festa, non si compra né si salva.
-  const testa = puntiDi(chi, 'testa')
-  if (stagione.value === 'halloween' && testa && !addosso.some(a => a.dove === 'testa'))
-    addosso.push({ id: 'strega', dove: 'testa', disegno: 'cappello_strega', misura: .8, punti: testa })
-  return addosso
 }
 
 function rivestiLaBestia(chi) {
@@ -363,7 +376,7 @@ function passo(ora) {
   }
   scorriDalBordo(dt)
   scena.mostra({
-    fattoria: mondo, attori, scelto: scelto.value, preso, anello, bersagli,
+    fattoria: mondo, attori, scelto: scelto.value, preso, anello,
     bolla: vistaDellaBolla(), mano,
     orologio, pennello: anteprimaPennello(),
     stagione: stagione.value || null, stagionali,
@@ -374,8 +387,29 @@ function passo(ora) {
 function aggiornaLaStagione() {
   const prima = stagione.value
   stagione.value = stagioneForzata || stagioneDi(new Date()) || ''
-  // la festa comincia o finisce: le bestie si mettono (o si tolgono) il cappello
-  if (stagione.value !== prima) for (const a of attori) if (a !== bambino) rivestiLaBestia(a.nome)
+  guardaLaFesta()
+}
+
+// Si riguarda a ogni salvataggio: posata la prima zucca, il segnalino se ne va subito.
+// Lo stesso per il cappello: finché non ne ha comprato uno, le bestie di casa lo vorrebbero (un fumetto).
+function guardaLaFesta() {
+  if (!mondo) return
+  festaDaScoprire.value = vociDellaFesta.value.length > 0 &&
+    !vociDellaFesta.value.some(v => mondo.quanteNeHo(v.id) > 0)
+  const aperte = new Set(Object.keys(mondo.reclamati))
+  const daFare = CATALOGO
+    .filter(v => zonaDi(v.id) === 'lavoro' && aperte.has(chiaveDi('cosa', v.id)) &&
+                 mondo.quanteNeHo(v.id) === 0)
+    .sort((a, b) => (a.liv || 0) - (b.liv || 0))[0]
+  strada.value = {
+    ...(daFare ? { lavoro: { voce: daFare.id, segno: '!' } } : {}),
+    ...(festaDaScoprire.value
+      ? { bello: { voce: vociDellaFesta.value[0].id, segno: FINESTRE[stagione.value].icona } } : {}),
+  }
+  const cappello = cappelloDellaFesta()
+  cappelloDaScoprire.value = !!cappello && !hoLAddobbo(cappello.id)
+  for (const a of attori)
+    if (a !== bambino) a.desidera = cappelloDaScoprire.value ? { disegno: cappello.disegno } : null
   if (!stagione.value) { stagionali = []; return }
   const libere = []
   for (const k of Object.keys(mondo.piazzole)) {
@@ -475,6 +509,9 @@ function premi(e) {
     if (i >= 0) { giu = null; return prendiGettone(i, e, p) }
     const f = bolla.vista.fila ? gettoneSotto(bolla.vista.fila.punti, p.x, p.y, LATO_POSTO) : -1
     if (f >= 0) { giu = null; return toccaIlPosto(f) }
+    const pg = bolla.vista.pagine
+    const freccia = pg ? gettoneSotto([pg.indietro, pg.avanti], p.x, p.y, LATO_POSTO * 1.3) : -1
+    if (freccia >= 0) { giu = null; return giraPagina(freccia ? 1 : -1) }
   }
   chiudiBolla()
   giu = { ...p, x0: p.x, y0: p.y, mosso: false, mira: null }
@@ -1115,7 +1152,8 @@ function ingrandisciIlSilo(famiglia) {
 let bolla = null              // { tipo, cosa, nome, gettoni, attesa, fila, vista }; vista è quello che va alla tela
 let mano = null               // il gettone che segue il dito, per la tela: { pezzo, testo, x, y, piega, sopra }
 let inMano = null             // { g, i, tipo, da, id, x0, y0, mosso, ultimo, fatti, fermo }
-let bersagli = []             // [{ x, y, piede, cosa, vivo }]: dove il gettone in mano fa qualcosa
+// Dove il gettone in mano fa qualcosa: non si disegna (si capisce da sé), serve a non rifare un campo.
+let bersagli = []             // [{ x, y, piede, cosa, vivo }]
 
 const facciaDi = k => ({ pezzo: (PRODOTTI[k] || {}).pezzo || null, testo: (PRODOTTI[k] || {}).emoji || '📦' })
 
@@ -1147,11 +1185,13 @@ function centroDi(cosa) {
 }
 
 // Il no detto sopra la cosa, in una nuvoletta: non in cima allo schermo, lontano da dove si guarda.
-function dici(cosa, testo) {
+// merci: [{ prodotto, quanti }], disegnate dopo la frase (non l'emoji: il becchime sembrava una castagna).
+function dici(cosa, testo, merci = []) {
   if (!scena || !cosa) return
   const a = ancoraDi(cosa)
   const p = nelMondo(a.cx, a.cima)
-  scena.nuvoletta(testo, p.x, p.y)
+  scena.nuvoletta(testo, p.x, p.y,
+    { merci: merci.map(m => ({ quanti: m.quanti, ...facciaDi(m.prodotto) })) })
 }
 
 // Si rifà a ogni fotogramma: la vista può scorrere, e la tela riceve punti di schermo già decisi.
@@ -1164,20 +1204,25 @@ function vistaDellaBolla() {
   const visti = gettoniVisti(a)
   const { punti, sotto } = disponiGettoni(visti.length,
     { cx: a.cx, cy: a.cy, raggio: a.raggio, L: scena.L, A: scena.A })
-  const tenuto = inMano ? inMano.i : -1
+  // la ricetta tenuta dal dito, o l'ultima toccata: la sua targhetta resta finché non si tocca altro
+  const tenuto = inMano ? inMano.i : (bolla.scelta ?? -1)
   v.lato = LATO_GETTONE
   v.punti = punti
   v.visti = visti
   v.gettoni = visti.map((g, i) => ({
-    pezzo: g.pezzo, testo: g.testo, hai: g.hai, colmo: g.colmo, spento: g.spento,
+    pezzo: g.pezzo, testo: g.testo, colmo: g.colmo, spento: g.spento,
     preso: !!(inMano && inMano.mosso && tenuto === i) }))
-  const g = inMano ? visti[tenuto] : null
-  v.dettaglio = g && g.caselle && punti[tenuto]
+  const g = visti[tenuto] || null
+  const cosaFa = g && (g.ricetta || g.coltura)
+  v.dettaglio = cosaFa && punti[tenuto]
     // sopra tutto l'arco (o sotto, se l'arco è sotto): la targhetta non deve coprire i gettoni vicini
-    ? { x: punti[tenuto].x, sotto, caselle: g.caselle,
+    ? { x: punti[tenuto].x, sotto, caselle: g.caselle || [],
         y: sotto ? Math.max(...punti.map(q => q.y)) : Math.min(...punti.map(q => q.y)),
-        esce: facciaDi(g.ricetta.da), costo: g.ricetta.costo }
+        esce: facciaDi(cosaFa.da),
+        parole: [`ne hai ${mondo.quantoHo(cosaFa.da)}`, `${cosaFa.minuti} min`,
+                 ...(g.ricetta && g.ricetta.costo ? [`🪙${g.ricetta.costo}`] : [])] }
     : null
+  v.pagine = frecceDelle(punti, sotto)
   v.attesa = bolla.attesa ? { ...bolla.attesa, x: a.cx, y: a.cima - 30 } : null
   // La fila sotto la macchina, il posto da comprare in fondo: si toccano lì, senza fogli.
   v.fila = bolla.fila
@@ -1187,16 +1232,25 @@ function vistaDellaBolla() {
   return v
 }
 
-// I gettoni di questa pagina: se non ci stanno tutti sull'arco, l'ultimo posto è la freccia che gira pagina.
+// I gettoni di questa pagina: quelli che non ci stanno sull'arco vanno alla pagina dopo, e si gira con
+// le due frecce sotto l'arco, come in Hay Day (provata una freccia dentro l'arco: rubava un posto).
 function gettoniVisti(a) {
   const tutti = bolla.gettoni
   const stanno = quantiNeStanno({ raggio: a.raggio, L: scena.L })
-  if (tutti.length <= stanno) return tutti
-  const perPagina = stanno - 1
-  const pagine = Math.ceil(tutti.length / perPagina)
-  const p = (bolla.pagina || 0) % pagine
-  return [...tutti.slice(p * perPagina, (p + 1) * perPagina),
-          { chiave: 'pagina', pezzo: null, testo: '▶️', hai: `${p + 1}/${pagine}` }]
+  bolla.pagine = Math.max(1, Math.ceil(tutti.length / stanno))
+  const p = ((bolla.pagina || 0) % bolla.pagine + bolla.pagine) % bolla.pagine
+  return tutti.slice(p * stanno, (p + 1) * stanno)
+}
+
+// Le due frecce e i pallini delle pagine, sotto l'arco (sopra, se l'arco è sotto la cosa).
+function frecceDelle(punti, sotto) {
+  if (!bolla.pagine || bolla.pagine < 2) return null
+  const xs = punti.map(q => q.x), ys = punti.map(q => q.y)
+  const y = sotto ? Math.min(...ys) - LATO_GETTONE * .95 : Math.max(...ys) + LATO_GETTONE * .95
+  const x0 = Math.min(...xs), x1 = Math.max(...xs)
+  return { y, indietro: { x: x0, y }, avanti: { x: x1, y }, cx: (x0 + x1) / 2,
+           pagina: ((bolla.pagina || 0) % bolla.pagine + bolla.pagine) % bolla.pagine,
+           totale: bolla.pagine, lato: LATO_POSTO }
 }
 
 function apriBolla(cosa, { rinfresca = false } = {}) {
@@ -1286,22 +1340,23 @@ function rinfrescaLaBolla() {
   apriBolla(bolla.cosa, { rinfresca: true })
 }
 
-// Un posto della fila toccato: il pronto si ritira, quello che aspetta si toglie (torna tutto), il «+» si compra.
+// La pagina nuova spunta come la prima; la ricetta scelta era dell'altra pagina.
+function giraPagina(verso) {
+  bolla.pagina = (bolla.pagina || 0) + verso
+  bolla.scelta = -1
+  bolla.vista.nascita = null
+  vibra()
+}
+
+// Un posto della fila toccato: il pronto si ritira, gli altri dicono quanto manca, il «+» si compra.
+// Quello che è in fila ci resta: come in Hay Day, messo dentro non si toglie.
 function toccaIlPosto(i) {
   const cosa = bolla.cosa
   const p = bolla.fila[i]
   if (!p) return
   if (p.come === 'pronto') ritiraDa(cosa)
-  else if (p.come === 'lavora') return dici(cosa, `Pronto fra ${p.manca} min`)
-  else if (p.come === 'aspetta') {
-    const r = mondo.togliDallaFila(cosa, p.i)
-    if (!r.ok) return dici(cosa, r.motivo === 'silo-pieno' || r.motivo === 'silo-manca'
-      ? 'Nel silo non torna: è pieno' : 'È già partito')
-    Object.entries(r.reso).forEach(([k, n], j) => {
-      for (let q = 0; q < n; q++) voloAlSilo(cosa, k, (j + q) * .07)
-    })
-    salva()
-  } else if (p.come === 'piu') {
+  else if (p.come === 'lavora' || p.come === 'aspetta') return dici(cosa, `Pronto fra ${p.manca} min`)
+  else if (p.come === 'piu') {
     const r = mondo.ingrandisciLaFila(cosa)
     if (!r.ok) return dici(cosa, r.motivo === 'poche-monete'
       ? `Ti servono 🪙${r.costo - monete.value}` : 'La fila è già lunga così')
@@ -1313,18 +1368,12 @@ function toccaIlPosto(i) {
   apriBolla(cosa, { rinfresca: true })
 }
 
-function siloPer(prodotto) {
-  const fam = (PRODOTTI[prodotto] || {}).silo
-  return mondo.cose.find(c => siloDi(c) === fam && mondo.cellaMia(c.x, c.y)) || null
-}
-
-// La merce vola dalla cosa al suo silo, che sobbalza quando la riceve; senza silo in vista vola in su.
+// Raccolto: la merce vola via dalla cosa fino all'angolo in alto, come in Hay Day («è tua, è nel silo»).
 function voloAlSilo(da, prodotto, ritardo = 0) {
   if (!scena) return
-  const silo = siloPer(prodotto)
   const p = centroDi(da)
-  const a = silo ? centroDi(silo) : { x: p.x, y: p.y - 6 }
-  scena.vola({ ...facciaDi(prodotto), da: { x: p.x, y: p.y - .5 }, a, arriva: silo, ritardo })
+  scena.vola({ ...facciaDi(prodotto), da: { x: p.x, y: p.y - .5 },
+               aSchermo: { x: scena.L - 34, y: 30 }, ritardo, durata: .9 })
 }
 
 // Un colpetto nel telefono a ogni campo fatto; dove non c'è (iOS, il computer) non succede niente.
@@ -1342,8 +1391,6 @@ function prendiGettone(i, e, p) {
 
 function muoviMano(e, p) {
   if (e.pointerId !== inMano.id) return
-  // La freccia delle pagine non si trascina: è un tasto.
-  if (inMano.g.chiave === 'pagina') return
   const scarto = e.pointerType === 'mouse' ? SCARTO_MOUSE : SCARTO_DITO
   if (!inMano.mosso) {
     if (Math.hypot(p.x - inMano.x0, p.y - inMano.y0) <= scarto) return
@@ -1393,12 +1440,23 @@ function campoSotto(p) {
   return cosa && eCampo(cosa) ? cosa : null
 }
 
-// La cella sotto il dito, o il disegno (un mulino si vede più alto del suo piede): basta che sia del tipo giusto.
+// La cella sotto il dito, o il disegno (un mulino si vede più alto del suo piede), o la sua fila là
+// sotto: i posti vuoti sembrano il buco dove lasciarla, e lo sono. Basta che sia del tipo giusto.
 function macchinaSotto(p, ricetta) {
   const c = scena.cellaDa(p.x, p.y)
   const giusta = cosa => cosa && macchinaDi(cosa) === ricetta.dove ? cosa : null
   return (mondo.cellaMia(c.x, c.y) && giusta(mondo.cosaSotto(c.x, c.y))) ||
-         giusta(cosaDisegnataSotto(p.x, p.y))
+         giusta(cosaDisegnataSotto(p.x, p.y)) || giusta(sullaFila(p))
+}
+
+// La macchina della bolla, se il dito è sulla sua fila (con un po' di margine attorno ai dischetti).
+function sullaFila(p) {
+  const f = bolla && bolla.vista.fila
+  if (!f || !f.punti.length) return null
+  const x0 = Math.min(...f.punti.map(q => q.x)) - LATO_POSTO
+  const x1 = Math.max(...f.punti.map(q => q.x)) + LATO_POSTO
+  const y = f.punti[0].y
+  return p.x >= x0 && p.x <= x1 && Math.abs(p.y - y) <= LATO_POSTO ? bolla.cosa : null
 }
 
 function bersagliDi(m) {
@@ -1465,70 +1523,52 @@ function lasciaMano(e, p) {
   fermaLaSpinta()
   const m = inMano
   inMano = null; mano = null; bersagli = []
-  if (m.g.chiave === 'pagina') {
-    bolla.pagina = (bolla.pagina || 0) + 1
-    bolla.vista.nascita = null          // la pagina nuova spunta come la prima
-    return
-  }
-  if (!m.mosso) return toccaIlGettone(m, p)
+
+  if (!m.mosso) return toccaIlGettone(m)
   if (m.tipo === 'macchina') {
     const dove2 = macchinaSotto(p, m.g.ricetta)
-    if (dove2) mettiInFila(dove2, m.g, nelMondo(p.x, p.y))
+    if (dove2) mettiInFila(dove2, m.g)
     return
   }
   // Fatto il giro, la bolla se ne va: i campi parlano da sé (il sobbalzo, il raccolto che vola).
   if (m.fatti.length) bolla = null
 }
 
-// Toccare un gettone senza trascinarlo fa il gesto sulla cosa da cui si è partiti: seme, cesto o ricetta.
-function toccaIlGettone(m, p) {
+// Toccare un gettone non fa niente: si guarda. Il gesto è trascinare, e il tocco mostra quello che serve
+// per farlo — la ricetta tiene la targhetta coi requisiti, seme e cesto dicono dove portarli.
+function toccaIlGettone(m) {
   const { g, da } = m
   if (m.tipo === 'macchina') {
-    if (!g.spento) return mettiInFila(da, g, nelMondo(p.x, p.y))
-    return dici(da, percheNoLaRicetta(g))
+    bolla.scelta = m.i
+    if (g.spento) diciPercheNo(da, g)
+    return
   }
   if (m.tipo === 'raccogli' && g.spento) return dici(da, percheNoIlCesto(da))
-  inMano = m
-  bersagli = bersagliDi(m)
-  if (m.tipo === 'semina') seminaPassando(da)
-  else raccogliPassando(da)
-  inMano = null
-  const altri = bersagli.length
-  bersagli = []
-  if (!m.fatti.length) return
-  bolla = null
-  // Detto solo quando servirebbe: ci sono altri campi su cui il gesto lungo avrebbe lavorato.
-  if (altri) dici(da, m.tipo === 'semina' ? 'Trascinalo sugli altri campi!' : 'Passa il cesto sugli altri!')
+  dici(da, m.tipo === 'semina' ? 'Trascinalo sui campi vuoti!' : 'Passalo sui campi pronti!')
 }
 
-function percheNoIlCesto(campo) {
-  const c = mondo.statoCampo(campo).coltura
-  if (!mondo.eCostruito(PRODOTTI[c.da].silo)) return 'Ti serve il silo'
-  if (mondo.quantoCiSta(c.da) < c.resa) return 'Il silo è pieno'
-  return `Ti servono 🪙${c.raccolta - monete.value}`
-}
-
-function percheNoLaRicetta(g) {
-  if (g.manca && g.manca.length)
-    return 'Ti manca ' + g.manca.map(x => `${x.quanti} ${PRODOTTI[x.prodotto].emoji}`).join(' ')
-  if (g.monete) return `Ti servono 🪙${g.monete}`
-  return 'La fila è piena'
+function diciPercheNo(cosa, g) {
+  if (g.manca && g.manca.length) return dici(cosa, 'Ti manca', g.manca)
+  dici(cosa, g.monete ? `Ti servono 🪙${g.monete}` : 'La fila è piena')
 }
 
 // La bolla resta aperta: chi ne vuole tre di fila trascina tre volte. Gli ingredienti volano dentro.
-function mettiInFila(cosa, g, da) {
+function mettiInFila(cosa, g) {
   const ricetta = g.ricetta
   const r = mondo.avvia(cosa, ricetta.id)
   if (!r.ok) {
+    if (r.motivo === 'manca-roba')
+      return diciPercheNo(cosa, { ...g, manca: (mondo.cheMancaPer(ricetta.id) || {}).manca || [] })
     return dici(cosa, r.motivo === 'poche-monete' ? `Ti servono 🪙${r.costo - monete.value}`
-      : r.motivo === 'fila-piena' ? 'La fila è piena'
-      : percheNoLaRicetta({ ...g, manca: (mondo.cheMancaPer(ricetta.id) || {}).manca || [] }))
+      : 'La fila è piena')
   }
-  const c = centroDi(cosa)
-  Object.entries(ricetta.prende).forEach(([k, n], i) => {
-    for (let j = 0; j < n; j++)
-      scena.vola({ ...facciaDi(k), da, a: c, arriva: cosa, ritardo: (i + j) * .07, durata: .4 })
-  })
+  // Quello che è stato usato compare sopra la macchina col suo «-2», sale e svanisce.
+  const a = ancoraDi(cosa)
+  const sopra = nelMondo(a.cx, a.cima)
+  const usati = Object.entries(ricetta.prende)
+  usati.forEach(([k, n], i) => scena.consuma({ ...facciaDi(k), numero: n,
+    x: sopra.x + (i - (usati.length - 1) / 2) * 1.6, y: sopra.y, ritardo: i * .12 }))
+  scena.rimbalza(cosa)
   vibra()
   salva()
   apriBolla(cosa, { rinfresca: true })
@@ -1553,10 +1593,20 @@ function gancioDiProva() {
         y: Math.round(r.top + bolla.vista.fila.punti[i].y) }))
     },
     fila: () => (bolla && bolla.fila) ? bolla.fila.filter(p => p.i != null).length : 0,
+    // le frecce delle pagine, se ci sono: { indietro, avanti } in pixel della pagina
+    pagine: () => {
+      const pg = bolla && bolla.vista.pagine
+      if (!pg) return null
+      const r = riquadro()
+      const su = q => ({ x: Math.round(r.left + q.x), y: Math.round(r.top + q.y) })
+      return { pagina: pg.pagina, totale: pg.totale, indietro: su(pg.indietro), avanti: su(pg.avanti) }
+    },
     dettaglio: () => !!(bolla && bolla.vista.dettaglio),
-    // la festa: quante zucche sul prato, quante bestie col cappello da strega
-    zucche: () => stagionali.filter(s => s.disegno === 'zucca').length,
+    // la festa: quante bestie col cappello da strega, e se il 🌸 del baule ha il segnalino delle zucche
+    // la strada del baule: per ogni metà, la voce su cui si apre
+    strada: () => Object.fromEntries(Object.entries(strada.value).map(([z, s]) => [z, s.voce])),
     cappelli: () => attori.filter(a => (a.addobbi || []).some(x => x.disegno === 'cappello_strega')).length,
+    desideri: () => attori.filter(a => a.desidera).length,
   }
 }
 
@@ -1608,7 +1658,7 @@ function apriVestiario(chi) {
   pannello.value = {
     tipo: 'vestiario', chi, che: nomeDi(chi), nome: b.nome || '',
     // In vendita più quello sospeso che ha già: comprato prima della sospensione resta un tasto.
-    addobbi: mondo.vestiarioDi(chi),
+    addobbi: mondo.vestiarioDi(chi, stagione.value),
     portati: { ...mondo.addobbiDi(chi) },
     guardaroba: { ...mondo.guardaroba },
   }
@@ -1758,7 +1808,8 @@ function tiraVoce({ voce, x, y, trascina }) {
       <!-- Le tre metà del baule, una per tasto: solo quelle con qualcosa dentro. -->
       <button v-for="z in zoneDelBaule" :key="z.chiave" class="fa-tondo"
               :data-baule="z.chiave" :title="z.nome"
-              @click="apriIlBaule(z.chiave)">{{ z.icona }}</button>
+              @click="apriIlBaule(z.chiave)">{{ z.icona }}<b
+        v-if="strada[z.chiave]" class="fa-bollo" data-strada>{{ strada[z.chiave].segno }}</b></button>
     </div>
 
     <p v-if="avviso" class="fa-avviso">{{ avviso }}</p>
@@ -1777,6 +1828,7 @@ function tiraVoce({ voce, x, y, trascina }) {
       <Bestia v-else-if="pannello.tipo === 'bestia'"
               :chi="pannello.chi" :che="pannello.che" :nome="pannello.nome"
               :stato="pannello.stato" :monete="monete" :granaio="mondo.granaio"
+              :festa="cappelloDaScoprire"
               @nutri="nutri" @coccola="coccola"
               @vesti="apriVestiario(pannello.chi)"
               @rinomina="pannello = { tipo: 'battesimo', chi: pannello.chi,

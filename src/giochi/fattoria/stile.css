@@ -13,6 +13,8 @@
 .fa-tondo { width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
   border: 2px solid #3d5c42; background: #0d160fcc; color: #f4efe2;
   font-size: 19px; display: grid; place-items: center }
+.fa-tondo, .fa-con-bollo { position: relative }
+.fa-pixel { image-rendering: pixelated }
 .fa-tondo:active { transform: scale(.92) }
 /* il pennello acceso si vede: se no si dipinge senza sapere di dipingere */
 .fa-tondo.acceso { background: #3d5c42; border-color: #9fd3a8 }
