@@ -182,7 +182,7 @@ await toccaIl('[data-discesa="0"]')
 await page.waitForSelector('[data-fumetto-di="altare"] [data-azione="scendi"]', { timeout: 15000 })
 uguale('l\'eroe si ferma ai piedi dell\'altare', await cella(), POSTI.altare.piede.join(','))
 const fum = await page.locator('[data-fumetto]').innerText()
-controlla('il fumetto dice nome, dritta e piani', fum.includes('La cripta dell\'altare') && fum.includes('si impara la strada')
+controlla('il fumetto dice nome, dritta e piani', fum.includes('La cripta dell\'altare') && fum.includes('qualcuno che non dorme')
           && fum.includes('2 piani'), fum)
 // niente targhette con disegnini sopra le discese: un pallino per terra davanti a quelle trovate e aperte
 uguale('sopra le discese non ci sono icone', await page.locator('[data-posto] .em').count(), 0)

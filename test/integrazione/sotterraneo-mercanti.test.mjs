@@ -210,7 +210,7 @@ uguale('la spada si vede', await allaLinguettaDi(page, 'spada', { tocca }), true
 uguale('una riga avanti', await page.locator('[data-casella-pezzo="spada"]').getAttribute('data-avanti'), '1')
 await toccaIl('[data-casella-pezzo="spada"]')
 await attendi(page, 200)
-controlla('e dice che costa di più', (await page.locator('[data-avanti-costa]').count()) === 1, await page.locator('[data-pannello]').innerText())
+controlla('e il prezzo alto lo dice il cartellino, senza una riga che lo spieghi', (await page.locator('[data-avanti-costa]').count()) === 0, await page.locator('[data-pannello]').innerText())
 uguale('senza «quando avrai finito»', await page.locator('[data-quando]').count(), 0)
 uguale('col tasto al doppio del prezzo', (await page.locator('[data-azione="compra"]').innerText()).replace(/\s+/g, ' ').trim(),
        `Compra 💎 ${COSE.spada.prezzo * 2}`)
