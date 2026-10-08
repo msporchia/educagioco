@@ -53,15 +53,17 @@ mondo le raggruppa e basta, e le tre stazioni sono mondo → città → banco.
 
   | stato | come si vede |
   |---|---|
-  | `fatta` | tondo verde; la stella accanto, con quante giornate ha finito (`★ 4`) |
+  | `fatta` | tondo verde; la pillola accanto, con le stelle prese su quelle che si possono (`★ 4/12`) |
   | `ora` | tondo giallo con l'anello tratteggiato che gira: la città da fare adesso |
   | `aperta` | tondo chiaro col bordo rosso (aperta da fuori, `tuttoAperto`) |
   | `chiusa` | tondo grigio col lucchetto, e il suo monumento sbiadito |
 
-- **Una stella per giornata finita**, non di più: il gioco non ha «quanto
-  bene», e il profilo non ha stelle da aggiungere (`profile.mercato.tappa`
-  resta l'unico avanzamento). Le stelle sono accanto alla città con almeno una
-  giornata finita; il racconto e il disegno stanno solo nel fumetto.
+- **Le stelle sono quelle prese**, da 1 a 3 per giornata (la regola e il
+  salvataggio sono in [regole.md](regole.md#le-stelle)): la pillola della città
+  è la somma dei voti migliori sul massimo (3 a giornata, `stelleCitta`,
+  `stelleMassime`), e compare solo con almeno una giornata finita. La libera
+  non ne ha. Il racconto e il disegno stanno solo nel fumetto, che dice anche
+  «★ 5 di 6».
 - **Il tratto di ogni città** è un monumento disegnato accanto al tondo
   (le due torri, il Colosseo, la torre di ferro, la statua, il Cristo, il
   torii, le piramidi) — lo stesso, grande, nel cielo della sua piazza.
@@ -116,8 +118,8 @@ e il ← porta al mondo.
   primo in basso, vicino al cartello da cui si arriva, gli altri su verso il
   monumento (`disponiPiazza`). In cima la fontana chiude il viale.
 - **I banchi sono tappe col numero**: il numero della giornata nella scaletta
-  (3, 4, 5, 6 per Roma), in un tondo sulla tenda; `fatta` ha la stella
-  accanto e il tondo verde, `ora` il bordo tratteggiato che pulsa, `chiusa`
+  (3, 4, 5, 6 per Roma), in un tondo sulla tenda; `fatta` ha il tondo verde e
+  sotto tre stelline, tante piene quante ne ha prese, `ora` il bordo tratteggiato che pulsa, `chiusa`
   il banco grigio con la serranda giù e il lucchetto. La merce sul banco ha i
   colori dei banchi della giornata, nessun disegno: il racconto è nel
   fumetto.
@@ -130,7 +132,8 @@ e il ← porta al mondo.
   Una chiusa non lo muove.
 - **Il fumetto del banco** sta sopra il tetto del banco (sotto, se sopra non
   c'è posto): «Giornata 3 · Roma», il nome con la sua emoji, la cosa nuova
-  della giornata, i banchi che gira, lo stato, e «▶ gioca». Una chiusa dice
+  della giornata, i banchi che gira, lo stato, le stelle prese e cosa serve per
+  la prossima, e «▶ gioca». Una chiusa dice
   «Prima tocca a «X».» senza tasto.
 - **Il cartello in scena riporta al mondo**: un palo con un'asse, un aereo e
   una freccia, in basso accanto a dove si arriva; fa quello che fa il ←.
@@ -191,13 +194,14 @@ piazza, la città nuova dopo l'ultima giornata. `integrazione/bancarella` e
 `test/aiuto/browser.mjs`.
 
 Bersagli: il mondo `[data-mondo]`; le città `[data-citta="<id>"]` con
-`[data-stato="fatta"|"ora"|"aperta"|"chiusa"]` e `[data-fatte]`, la stella
-`[data-stelle-citta]`; l'aereo `[data-aereo]` con `[data-al]` (la città),
+`[data-stato="fatta"|"ora"|"aperta"|"chiusa"]` e `[data-fatte]`, la pillola
+`[data-stelle-citta]` (`data-stelle`); l'aereo `[data-aereo]` con `[data-al]` (la città),
 `[data-in-viaggio="1"|"0"]` e `[data-verso]` (gradi); il fumetto
 `[data-fumetto]` con `[data-fumetto-per="<id città o giornata>"]`,
 `[data-azione="entra"]`, `[data-azione="gioca"]` e `[data-serve]`; la piazza
 `[data-piazza]` con `[data-citta-di]`; i banchi `[data-camp="<id giornata>"]`
-con `[data-stato]` e la stella `[data-stella-banco]`; il carretto
+con `[data-stato]` e le stelline `[data-stella-banco]` (`data-stelle`, e
+`i.piena` per ogni stella presa); `[data-voto-banco]` nel fumetto; il carretto
 `[data-carretto]` con `[data-al]` (l'indice del banco, -1 l'ingresso) e
 `[data-in-viaggio]`; il cartello `[data-azione="al-mondo"]`; da una giornata
 finita `[data-azione="le-giornate"]`. `giocaGiornata(page, id)` in
