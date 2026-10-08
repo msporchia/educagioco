@@ -115,20 +115,20 @@
   color: #8a6a48; text-align: center; opacity: 1 }
 .fa-baule .fa-dice b { color: #5a3a1a }
 
-.fa-scaffale { display: grid; gap: 8px; margin-bottom: 10px;
-  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+.fa-scaffale { display: grid; gap: 10px 6px; margin-bottom: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
   flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
   touch-action: pan-y; padding: 2px }
 
-/* touch-action: pan-y anche sulla carta: in su/giù scorre il browser (annulla il puntatore), di lato si trascina. */
-.fa-voce { position: relative; border-radius: 12px; background: #fffaf0;
-  border: 2px solid #ecd6a8; padding: 4px 3px 5px; text-align: center;
+/* Come nel negozio di Hay Day: niente cornice attorno alla carta. La figura grande, il prezzo
+   appoggiato sulla figura, il nome attaccato sotto: stanno insieme perché sono vicini.
+   touch-action: pan-y anche sulla carta: in su/giù scorre il browser, di lato si trascina. */
+.fa-voce { position: relative; text-align: center; padding: 0 0 2px;
   cursor: grab; touch-action: pan-y; display: flex; flex-direction: column;
-  align-items: center; gap: 2px }
+  align-items: center; gap: 0 }
 .fa-voce:active { transform: scale(.95) }
 /* La roba in un silo si preme e dice chi la usa, non si posa: niente cursor:grab. */
 .fa-voce.guarda { cursor: pointer; font: inherit; color: inherit }
-.fa-voce.guarda.viva { border-color: #c46a0a; background: #fff1c9 }
 
 /* Chi usa quello premuto sta sotto lo scaffale, non dentro la riga (non farebbe ballare la griglia). */
 .fa-usi { border: 2px solid #e2c48f; border-radius: 12px; background: #fffaf0;
@@ -136,31 +136,31 @@
 .fa-usi b { display: flex; align-items: center; gap: 7px; font-size: 14px;
   color: #c46a0a; margin-bottom: 3px }
 .fa-usi p { margin: 2px 0; font-size: 12.5px; color: #5a3a1a; line-height: 1.35 }
-.fa-voce.tua { border-color: #a8c98a; background: #eaf6d8 }
-/* La voce su cui il baule si è aperto per un consiglio: batte le altre due tinte apposta. */
-.fa-voce.indicata { border-color: #c46a0a; box-shadow: 0 0 0 2px #f2b33d55 }
+/* La voce su cui il baule si è aperto per un consiglio: un alone dorato sotto la figura, che pulsa. */
+.fa-voce.indicata .fa-ripiano { background: radial-gradient(closest-side, #ffe36ecc, #ffe36e00);
+  animation: fa-bollo 1.8s ease-in-out infinite }
 /* Non si spegne più del necessario: quello che costa troppo si deve poter guardare. */
 .fa-voce.cara { opacity: .62 }
-.fa-voce.presa { border-color: #a8c98a; opacity: .55 }
-/* Le cose che lavorano hanno un filo d'oro: le distingue da un mobile. */
-.fa-voce.lavora { border-color: #d9a441 }
-.fa-voce.lavora.tua { border-color: #e09a1c }
+.fa-voce.presa { opacity: .55 }
 
-/* Il ripiano: il tondo sfumato in basso è l'ombra (un gradiente, non un'immagine). */
+/* Il ripiano: solo l'ombra tonda sotto la figura (un gradiente, non un'immagine). */
 .fa-ripiano { position: relative; display: grid; place-items: end center;
-  width: 100%; height: 54px; border-radius: 9px;
-  background: radial-gradient(60% 34% at 50% 92%, #d9c49a 0%, #d9c49a00 70%),
-              linear-gradient(#c8a46e00, #c8a46e55) }
-/* Un ripiano più alto per chi è alto e stretto (uno sprite 16×32 in 54 si ingrandisce solo ×1). */
-.fa-ripiano.alto { height: 68px }
+  width: 100%; height: 72px;
+  background: radial-gradient(50% 18% at 50% 94%, #c8a46e88 0%, #c8a46e00 100%) }
+/* Un ripiano più alto per chi è alto e stretto (uno sprite 16×32). */
+.fa-ripiano.alto { height: 88px }
 
-.fa-nome { font-size: 10px; line-height: 1.15; color: #5a3a1a;
-  /* due righe sempre, anche quando il nome ne occupa una: i prezzi restano alla stessa altezza */
-  min-height: 2.3em; display: flex; align-items: center }
-.fa-prezzo { font-size: 11px; font-weight: 700; color: #c46a0a }
-.fa-prezzo.tuo { color: #4f9a2f }
+.fa-nome { font-size: 11.5px; font-weight: 700; line-height: 1.15; color: #4a2c12;
+  /* due righe sempre, anche quando il nome ne occupa una: le carte restano allineate */
+  min-height: 2.3em; display: flex; align-items: center; margin-top: 4px }
+/* Il prezzo: una pastiglia appoggiata sull'angolo della figura, mezza dentro e mezza fuori. */
+.fa-prezzo { position: absolute; right: -2px; bottom: -6px; z-index: 1;
+  padding: 1px 7px; border-radius: 999px; background: #fffaf0; border: 2px solid #e2c48f;
+  font-size: 12.5px; font-weight: 900; color: #c46a0a; white-space: nowrap;
+  box-shadow: 0 2px 0 #c9a46a }
+.fa-prezzo.tuo { color: #fff; background: #6cb33f; border-color: #4f8a2a; box-shadow: 0 2px 0 #3d6b1f }
 /* Quanto manca, non un tasto spento senza perché: il numero che rimanda a fare esercizi. */
-.fa-prezzo.manca { font-size: 9.5px; font-weight: 600; color: #a8916f }
+.fa-prezzo.manca { font-size: 10.5px; color: #a8916f }
 
 /* La strisciolina del silo: una sola, larga, in cima (il tetto è per scomparto, non per prodotto). */
 .fa-quanto { display: block; width: 80%; height: 4px; border-radius: 3px;
@@ -217,6 +217,9 @@
   font: inherit; font-size: 12.5px; font-weight: 700 }
 .fa-zona b { font-size: 15px; margin-right: 4px }
 .fa-zona.viva { border-color: #6cb33f; background: #eaf6d8; color: #4a2c12 }
+
+/* il nome del livello sotto l'asse del titolo */
+.fa-foglio .fa-sotto-titolo { margin: -6px 0 8px; font-size: 15px; font-weight: 800; color: #c46a0a }
 
 /* la pagina dei livelli: più larga delle altre (una griglia di cose da premere, non un elenco da leggere). */
 .fa-livelli { width: min(560px, 96vw) }
@@ -455,6 +458,32 @@
   justify-content: center; margin-bottom: 8px }
 .fa-ordine .fa-fila { justify-content: flex-end }
 .fa-ordine .fa-manca { text-align: center; margin-top: 6px }
+/* La mongolfiera: le casse da riempire, come «Carica» in Hay Day — cassette di legno col cartellino. */
+.fa-stiva { display: grid; gap: 10px; margin: 0 0 10px; padding: 10px 6px;
+  border-radius: 14px; background: #f5e2b8; border: 2px solid #e2c48f }
+.fa-fila-casse { display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  justify-content: center }
+.fa-merce-fila { flex-direction: column; gap: 0 }
+.fa-merce-fila span { text-align: center }
+.fa-cassa { position: relative; width: 64px; height: 58px; padding: 0; cursor: pointer;
+  border-radius: 6px; border: 3px solid #8a4f1c; font: inherit;
+  background: repeating-linear-gradient(90deg, #d9853b 0 14px, #c97532 14px 16px);
+  box-shadow: inset 0 6px 0 #b2652a, 0 3px 0 #6b3a14 }
+.fa-cassa.piena { border-color: #4f8a2a;
+  background: repeating-linear-gradient(90deg, #8cc95a 0 14px, #79b84a 14px 16px);
+  box-shadow: inset 0 6px 0 #5f9a3a, 0 3px 0 #3d6b1f; cursor: default }
+.fa-cassa:disabled:not(.piena) { cursor: default; filter: saturate(.7) }
+.fa-cassa.pronta:not(.piena) { animation: fa-dono 1.6s ease-in-out infinite }
+.fa-cartellino { position: absolute; left: 6px; right: 6px; bottom: 5px; top: 10px;
+  display: flex; align-items: center; justify-content: center; gap: 2px;
+  background: #fffaf0; border-radius: 3px; box-shadow: 0 1px 0 #0003 }
+.fa-cartellino b { font-size: 14px; font-weight: 900; color: #4a2c12 }
+.fa-avviso-cassa { position: absolute; top: -12px; left: 50%; margin-left: -10px; z-index: 1;
+  width: 20px; height: 22px; border-radius: 4px; background: #fffaf0; border: 2px solid #c47f12;
+  font-style: normal; font-weight: 900; color: #c46a0a; line-height: 18px; font-size: 15px }
+.fa-bonus-fila { font-size: 13px }
+.fa-cielo { font-size: 26px }
+
 /* La fama di una bottega: i cuori in fila sotto il nome. */
 .fa-fama { display: flex; flex-wrap: wrap; align-items: center;
   justify-content: center; gap: 4px 10px; margin: -2px 0 6px }
@@ -515,20 +544,11 @@
 .fa-ramo-testo .fa-ramo-perche { color: #c46a0a; opacity: .9 }
 .fa-ramo-testo .fa-ramo-altrove { color: #8a6a48; font-style: italic }
 
-/* la mongolfiera: stesso riquadro del banco; scorre l'elenco delle file, non il foglio. */
-.fa-mongolfiera .fa-casse { flex: 0 1 auto; min-height: 0;
+/* la mongolfiera: scorre la stiva, non il foglio. */
+.fa-mongolfiera .fa-stiva { flex: 0 1 auto; min-height: 0;
   overflow-y: auto; overscroll-behavior: contain }
-.fa-ordine.fatta { border-color: #e2c48f; opacity: .8 }
-.fa-cassa { display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 6px 6px 5px; border-radius: 12px; cursor: pointer; font: inherit;
-  background: #f3e6c8; border: 2px dashed #e2c48f; color: #4a2c12 }
-.fa-cassa.pronta { border: 2px solid #e09a1c; background: #2a2a14 }
-.fa-cassa.piena { border: 2px solid #6cb33f; background: #fffaf0; cursor: default }
-.fa-cassa:disabled:not(.piena) { cursor: default }
 .fa-cassa:not(:disabled):active { transform: scale(.95) }
-.fa-cassa u { text-decoration: none; font-size: 11.5px; font-weight: 700; color: #c46a0a }
-.fa-cassa.piena u { color: #6cb33f }
-.fa-foglio p.fa-conto { margin: 0 0 6px; font-size: 13px; opacity: 1 }
+.fa-foglio p.fa-conto { margin: 0 0 8px; font-size: 18px; font-weight: 800 }
 .fa-conferma-parti { border: 2px solid #e09a1c; border-radius: 14px;
-  padding: 8px 10px 10px; background: #2a2a1488; margin-top: 4px }
+  padding: 8px 10px 10px; background: #fff1c9; margin-top: 4px }
 .fa-foglio .fa-conferma-parti p { margin: 0 0 8px; font-size: 13.5px }

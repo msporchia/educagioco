@@ -180,12 +180,13 @@ function giuBestia(e, a) {
                                  cara: !eMia(a.chi) && a.prezzo > monete }]"
            @pointerdown="giuBestia($event, a)">
         <!-- il ripiano delle bestie è più alto: un cane è uno sprite 16×32. -->
-        <span class="fa-ripiano alto"><Provino :pezzo="a.chi + '_giu0'" :lato="68" /></span>
+        <!-- Il prezzo sta appoggiato sulla figura, il nome attaccato sotto: niente cornice attorno. -->
+        <span class="fa-ripiano alto"><Provino :pezzo="a.chi + '_giu0'" :lato="88" />
+          <span v-if="eMia(a.chi)" class="fa-prezzo tuo">è tua</span>
+          <span v-else-if="a.prezzo > monete" class="fa-prezzo manca">
+            manca 🪙{{ a.prezzo - monete }}</span>
+          <span v-else class="fa-prezzo">🪙{{ a.prezzo }}</span></span>
         <span class="fa-nome">{{ a.nome }}</span>
-        <span v-if="eMia(a.chi)" class="fa-prezzo tuo">è tua</span>
-        <span v-else-if="a.prezzo > monete" class="fa-prezzo manca">
-          manca 🪙{{ a.prezzo - monete }}</span>
-        <span v-else class="fa-prezzo">🪙{{ a.prezzo }}</span>
       </div>
     </div>
 
@@ -196,11 +197,11 @@ function giuBestia(e, a) {
                                  indicata: v.id === punta,
                                  lavora: v.campo || v.macchina || v.silo }]"
            @pointerdown="giu($event, v)">
-        <span class="fa-ripiano"><Provino :pezzo="v.pezzo" :lato="54" /></span>
+        <span class="fa-ripiano"><Provino :pezzo="v.pezzo" :lato="72" />
+          <span v-if="quantiNe(v.id)" class="fa-prezzo tuo">×{{ quantiNe(v.id) }}</span>
+          <span v-else-if="manca(v)" class="fa-prezzo manca">manca 🪙{{ manca(v) }}</span>
+          <span v-else class="fa-prezzo">🪙{{ costa(v) }}</span></span>
         <span class="fa-nome">{{ v.nome }}</span>
-        <span v-if="quantiNe(v.id)" class="fa-prezzo tuo">×{{ quantiNe(v.id) }}</span>
-        <span v-else-if="manca(v)" class="fa-prezzo manca">manca 🪙{{ manca(v) }}</span>
-        <span v-else class="fa-prezzo">🪙{{ costa(v) }}</span>
       </div>
     </div>
 

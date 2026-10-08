@@ -2,7 +2,7 @@
 /* La pagina dei livelli: cosa è arrivato (a quadratini, si prendono premendo) e cosa arriva al
    prossimo — vedi docs/fattoria/livelli.md. Riceve l'avanzamento già fatto, non sa niente del profilo. */
 import { computed } from 'vue'
-import { ULTIMO, premiDi } from '../dati/livelli.js'
+import { premiDi } from '../dati/livelli.js'
 import Provino from './Provino.vue'
 import Chiudi from './Chiudi.vue'
 
@@ -29,14 +29,13 @@ const adesso = computed(() => {
 })
 const daPrendere = computed(() => adesso.value.filter(p => !preso(p)))
 const prossimi = computed(() => premiDi(dopo.value))
-// Quanti gradini restano con qualcosa di nuovo; oltre si continua a salire ma non arriva più niente.
-const restano = computed(() => Math.max(0, ULTIMO - props.stato.livello))
 </script>
 
 <template>
   <div class="fa-foglio fa-livelli">
     <Chiudi @chiudi="$emit('chiudi')" />
-    <h2>⭐ Livello {{ stato.livello }} · {{ stato.nome }}</h2>
+    <h2>⭐ Livello {{ stato.livello }}</h2>
+    <p class="fa-sotto-titolo">{{ stato.nome }}</p>
 
     <!-- Il titolo cambia mestiere: con premi da prendere è un invito, senza è un riepilogo. -->
     <span class="fa-etichetta" :class="{ dono: daPrendere.length }">
@@ -60,9 +59,6 @@ const restano = computed(() => Math.max(0, ULTIMO - props.stato.livello))
     </div>
     <p v-else class="fa-piccolo">A questo livello è arrivata altra terra da riempire.</p>
 
-    <p v-if="daPrendere.length" class="fa-piccolo">Premi un premio per
-       aprirlo: da quel momento lo trovi nel baule, e lo compri quando
-       hai le monete.</p>
 
     <!-- Spento e in grigio: non è un negozio, è una vetrina. -->
     <span class="fa-etichetta">al livello {{ dopo }} arriva</span>
@@ -81,12 +77,6 @@ const restano = computed(() => Math.max(0, ULTIMO - props.stato.livello))
     </div>
     <p v-else class="fa-piccolo">Al livello {{ dopo }} arriva altra terra da riempire.</p>
 
-    <p class="fa-piccolo">Il livello sale spendendo monete <b>qui</b>: ogni
-       campo, ogni seme, ogni carota data a un coniglio. Non scende mai.
-       <template v-if="restano > 0">Di gradini con qualcosa di nuovo
-         ne restano <b>{{ restano }}</b>.</template>
-       <template v-else>Da qui in poi si continua a salire, ma il baule
-         è già tutto aperto.</template></p>
 
   </div>
 </template>
