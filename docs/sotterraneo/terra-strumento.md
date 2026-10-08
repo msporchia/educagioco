@@ -5,7 +5,10 @@ terra di sopra dal foglietto `strumenti/sprite/sorgenti/sotterraneo/terra-di-sop
 `dati/terra-mappa.js` (la mappa, la maschera, i posti, chi sta fermo, il
 portale gemello) e `dati/terra-icone.js` (le icone delle discese). I moduli
 non si toccano: si corregge il foglietto e si rilancia. Come si gioca la
-mappa: [terra-di-sopra.md](terra-di-sopra.md). Serve `pillow` con WebP.
+mappa: [terra-di-sopra.md](terra-di-sopra.md). Serve `pillow` con WebP. Le immagini le
+codifica `strumenti/sprite/codifica.py` (WebP senza perdita, colori a passo 12: il perché
+in [../core/grafica.md](../core/grafica.md#fedeli-ai-sorgenti)); a ogni giro il comando
+stampa il peso e i dB contro il sorgente.
 
 ## La giunta
 
@@ -56,14 +59,15 @@ punti, a destra è bosco ovunque). Lo strumento la cuce nel foglietto
 
 - **Al posto dell'emoji** nella carta della discesa a metà, nella scelta delle
   avventure, nel fumetto del gemello e in «riprendi da qui» in home: un tondo
-  sfumato 96×96 in WebP, sui 4 KB l'uno (`ICONE` in `dati/terra-icone.js`,
+  sfumato 96×96 in WebP, sui 8 KB l'uno (`ICONE` in `dati/terra-icone.js`,
   `iconaDi(chiave)` in `dati/terra.js`), uno per posto (otto). La copertina del
   gioco nel carosello non cambia.
 - **Un quadrato attorno al `riquadro` del posto**, largo `margine` volte il
   lato più lungo (1,1), rimpicciolito a `lato` (96) e chiuso in un tondo
-  pieno fino a `pieno` del raggio (0,72) e sfumato oltre; WebP a `qualita` 80
-  (`icone` nel foglietto). Sette icone, sui 29 KB in tutto: un modulo a parte,
-  così la home le usa senza tirarsi dietro la mappa da 860 KB.
+  pieno fino a `pieno` del raggio (0,72) e sfumato oltre; WebP senza perdita a
+  `passo` 16 (`icone` nel foglietto: più largo del 12 delle mappe, perché un test
+  tiene ogni icona sotto i 10 KB). Otto icone, 66 KB in tutto: un modulo a parte,
+  così la home le usa senza tirarsi dietro la mappa da 2,2 MB.
 - **Un ritaglio che non si legge si corregge nel `riquadro`** del posto, che
   è anche il bottone che si tocca: se servisse un ritaglio diverso dal
   bottone, il posto avrà un campo suo.

@@ -10,7 +10,6 @@
                     "curva": [[1016, 1147], [1064, 1172], [1114, 1232], [1198, 1284]], "mezza": 34, "bordo": 8 } }
   ],
   "modulo": "src/giochi/sotterraneo/dati/terra-mappa.js",
-  "qualita": 75,
   "cella": 32,
   "posti": {
     "altare": { "riquadro": [1700, 120, 196, 170], "piede": [56, 9], "ingresso": [1742, 196, 104, 92] },
@@ -38,7 +37,7 @@
     "rigattiere": { "piede": [54, 43], "accanto": [52, 43] }
   },
   "portale": { "piede": [51, 38], "accanto": [49, 38] },
-  "icone": { "modulo": "src/giochi/sotterraneo/dati/terra-icone.js", "lato": 96, "margine": 1.1, "pieno": 0.72, "qualita": 80 },
+  "icone": { "modulo": "src/giochi/sotterraneo/dati/terra-icone.js", "lato": 96, "margine": 1.1, "pieno": 0.72, "passo": 16 },
   "cartello": { "riquadro": [586, 330, 72, 80], "piede": [19, 13] },
   "maschera": [
     "################################################################",

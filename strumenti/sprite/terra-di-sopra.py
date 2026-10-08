@@ -21,13 +21,14 @@ Serve `pillow` (con WebP).
 """
 import base64
 import colorsys
-import io
 import json
 import math
 import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter
+
+import codifica
 
 QUI = Path(__file__).parent
 REPO = Path(__file__).resolve().parents[2]
@@ -40,7 +41,8 @@ TESTA = """/* GENERATO da strumenti/sprite/terra-di-sopra.py — non si scrive a
    foglietto `strumenti/sprite/sorgenti/sotterraneo/terra-di-sopra.json`: si
    corregge lì e si rilancia lo strumento. Vedi docs/sotterraneo/terra-di-sopra.md.
 
-   MAPPA     la tela intera ({largo}×{alto}, i due pezzi accostati), WebP in base64 ({kb} KB)
+   MAPPA     la tela intera ({largo}×{alto}, i due pezzi accostati), WebP in base64 ({kb} KB):
+             senza perdita, colori a passo 12 (strumenti/sprite/codifica.py)
    CELLA     il lato di una cella della maschera, in pixel della mappa
    MASCHERA  una riga per fila di celle: `.` si cammina, `#` no
    POSTI     le aperture (le discese e l'abisso): `riquadro` [x, y, largo, alto] in pixel della
@@ -62,7 +64,7 @@ TESTA_ICONE = """/* GENERATO da strumenti/sprite/terra-di-sopra.py — non si sc
 
    Le icone delle discese: un tondo ritagliato dalla mappa della terra di
    sopra attorno al `riquadro` di ogni posto, sfumato ai bordi, {lato}×{lato}
-   in WebP ({kb} KB in tutto). Si mostrano dove una discesa compare in piccolo
+   in WebP senza perdita ({kb} KB in tutto). Si mostrano dove una discesa compare in piccolo
    (la discesa a metà, «riprendi da qui», il portale). Il posto di una discesa:
    POSTO_DI in dati/terra.js. Vedi docs/sotterraneo/terra-di-sopra.md.
 */
@@ -272,12 +274,6 @@ def stendi_sentiero(tela, a, ax, sg):
 
 
 
-def in_base64(im, formato, **opz):
-    b = io.BytesIO()
-    im.save(b, formato, **opz)
-    return base64.b64encode(b.getvalue()).decode()
-
-
 def js(v):
     return json.dumps(v, ensure_ascii=False, separators=(',', ':'))
 
@@ -337,8 +333,9 @@ def genera():
     fg = leggi()
     im = mappa(fg)
     controlla(fg, im)
-    b64 = in_base64(im, 'WEBP', quality=fg['qualita'], method=6)
-    kb = len(b64) * 3 // 4 // 1024
+    dati = codifica.webp(im, fg.get('passo', codifica.PASSO))
+    b64 = base64.b64encode(dati).decode()
+    kb = len(dati) // 1024
     dest = REPO / fg['modulo']
     corpo = TESTA.format(largo=im.size[0], alto=im.size[1], kb=kb)
     corpo += f"\nexport const LARGO = {im.size[0]}, ALTO = {im.size[1]}\n"
@@ -350,7 +347,7 @@ def genera():
         corpo += f"export const {nome.upper()} = {js(fg.get(nome, {}))}\n"
     corpo += f"\nexport const MAPPA = 'data:image/webp;base64,{b64}'\n"
     dest.write_text(corpo)
-    print(f'{dest.relative_to(REPO)}: mappa {im.size[0]}×{im.size[1]}, {kb} KB')
+    print(f'{dest.relative_to(REPO)}: mappa {im.size[0]}×{im.size[1]}, {codifica.riga(im, dati)}')
     icone(fg, im)
 
 
@@ -380,7 +377,7 @@ def icona(im, riquadro, ic):
 
 def icone(fg, im):
     ic = fg['icone']
-    dati = {n: in_base64(icona(im, p['riquadro'], ic), 'WEBP', quality=ic.get('qualita', 80), method=6)
+    dati = {n: base64.b64encode(codifica.webp(icona(im, p['riquadro'], ic), ic.get('passo', codifica.PASSO))).decode()
             for n, p in fg['posti'].items()}
     kb = sum(len(b) for b in dati.values()) * 3 // 4 // 1024
     dest = REPO / ic['modulo']
