@@ -366,6 +366,27 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   uguale('senza righe meglio né peggio la sintesi è «uguale»', sintesiDi(0, 0), 'uguale')
 }
 
+/* ══════════ 7b. la pozione della barra ══════════
+   Un tocco sulla 🧪 della barra in basso beve senza aprire lo zaino
+   (docs/sotterraneo/barra.md): la più piccola che riempie, o la più
+   grande se nessuna basta; in piena forma niente, l'elisir non conta. */
+{
+  const c = new Corsa(CAMPAGNA[0], { seme: 3, eroe: 'cavaliere',
+    roba: { v: 1, gemme: 0, zaino: ['pozione-grande', 'elisir-toro', 'pozione-piccola', 'pozione'], mano: null,
+            mancina: null, corpo: null, dito: null, torcia: 0, torce: 0 } })
+  uguale('tre pozioni: l\'elisir non è una cura', c.pozioni, 3)
+  uguale('in piena forma non si beve', c.pozioneGiusta(), null)
+  c.vita = c.vitaMax - 5
+  uguale('mancano 5: la boccetta basta', c.zaino[c.pozioneGiusta()], 'pozione-piccola')
+  c.vita = c.vitaMax - 8
+  uguale('mancano 8: la pozione, non l\'ampolla', c.zaino[c.pozioneGiusta()], 'pozione')
+  c.vita = 1
+  c.vitaBase += 30
+  uguale('ne mancano più di quante ne curi la più grande: l\'ampolla', c.zaino[c.pozioneGiusta()], 'pozione-grande')
+  c.zaino = ['elisir-toro']
+  uguale('senza cure niente', c.pozioneGiusta(), null)
+}
+
 /* ══════════ 8. l'equilibrio, in piccolo ══════════
    La misura intera (venti semi, otto/sei/quattro su dieci, la roba di una
    discesa prima e di due avanti) sta in `misure/sotterraneo`; qui sei semi

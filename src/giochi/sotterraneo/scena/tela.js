@@ -27,6 +27,7 @@ export class Tela {
     this.foglio = creaFoglio({ pezzi: PEZZI, immagine: ATLANTE, tessera: TESSERA })
     this.foglio.carica().catch(() => {})
     this.quadro = null
+    this.mappaGrande = false   // la mappina aperta grande dalla barra in basso
     this._raf = 0
   }
 
@@ -571,13 +572,22 @@ export class Tela {
   }
 
   // mostra solo quello che si è visto, e i tre punti che servono: dove sei, dov'è la scala, chi ha la chiave
+  // `mappaGrande` (la 🗺️ della barra): la stessa, al centro e grande quanto lo schermo lascia; il campo sotto si scurisce
   minimappa(corsa) {
     const liv = corsa.livello
     const ctx = this.ctx
-    const p = Math.max(1.4, Math.min(2.6, 120 / Math.max(liv.largo, liv.alto)))
+    const grande = !!this.mappaGrande
+    const p = grande
+      ? Math.max(2, Math.min((this.L - 36) / liv.largo, (this.A - 96) / liv.alto))
+      : Math.max(1.4, Math.min(2.6, 120 / Math.max(liv.largo, liv.alto)))
     const larg = liv.largo * p, alt = liv.alto * p
-    const x0 = this.L - larg - 10, y0 = 12
+    const x0 = grande ? Math.round((this.L - larg) / 2) : this.L - larg - 10
+    const y0 = grande ? Math.round((this.A - alt) / 2) : 12
     ctx.save()
+    if (grande) {
+      ctx.fillStyle = 'rgba(4,5,10,.6)'
+      ctx.fillRect(0, 0, this.L, this.A)
+    }
     ctx.fillStyle = 'rgba(6,8,14,.78)'
     ctx.fillRect(x0 - 4, y0 - 4, larg + 8, alt + 8)
     ctx.strokeStyle = 'rgba(255,255,255,.14)'

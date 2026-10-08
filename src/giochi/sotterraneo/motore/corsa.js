@@ -725,6 +725,21 @@ export class Corsa extends Corredo {
     this.chiesta = null
   }
 
+  // le pozioni in tasca, per la casella della barra (docs/sotterraneo/barra.md); l'elisir non è una cura
+  get pozioni() { return this.zaino.filter(k => COSE[k] && COSE[k].usa === 'cura').length }
+
+  // quale bere dalla barra: la più piccola che riempie la vita, o la più grande se nessuna basta. null senza
+  // pozioni, o in piena forma: un tocco per sbaglio non butta via una boccetta
+  pozioneGiusta() {
+    const manca = this.vitaMax - this.vita
+    if (manca <= 0) return null
+    const cure = this.zaino.map((k, i) => ({ i, cura: COSE[k] && COSE[k].usa === 'cura' ? COSE[k].cura : 0 }))
+      .filter(p => p.cura > 0)
+    if (!cure.length) return null
+    const basta = cure.filter(p => p.cura >= manca).sort((a, b) => a.cura - b.cura)[0]
+    return (basta || cure.sort((a, b) => b.cura - a.cura)[0]).i
+  }
+
   // una tasca toccata apre le sue azioni invece di eseguirne una: usa/butta/riponi. Il verbo lo sceglie chi
   // disegna dai dati (dove, usa): il motore non scrive "bevo" da nessuna parte
   usa(i) {
