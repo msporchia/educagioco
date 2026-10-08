@@ -38,14 +38,14 @@ niente.
 
 - **Quello che si legge e basta si chiude toccando altrove, e quel tocco fa
   anche la sua cosa**: sul campo l'eroe parte verso dove si è toccato, su
-  qualcuno della mappa ci va. Giù: la battuta della curiosità, la scala, il
+  qualcuno della mappa ci va. Giù: la battuta della curiosità, le scale che scendono e salgono, il
   portale, la scala chiusa, l'avviso («💎 +9», «🔥 spenta»), la mappa grande,
   lo zaino, il diario. Sopra: il fumetto, il diario, la bottega, l'avviso in
   fondo. La ✕ resta dov'è.
 - **Resta fermo solo quello che chiede una scelta senza cui non si va
   avanti**: una domanda in corso (porta, forziere, fonte, curiosità prima
   della risposta, scontro), lo svenimento, il cartello di fine, e le
-  conferme che costano («lascio perdere questa discesa», «hai una discesa a
+  conferme che costano («lascio perdere questa discesa», anche dalla scala che sale del primo piano, «hai una discesa a
   metà»). Toccando fuori non succede niente, nemmeno il passo.
 - **Il tocco che chiude non preme altro.** Sul campo della discesa il foglio
   si chiude al `pointerdown`, e il click che il dito lascia lo ingoia

@@ -684,7 +684,8 @@ watch(foglio, f => { if (f) mappaGrande.value = false })
    fermo solo quello che chiede una scelta senza cui non si va avanti: una domanda in corso, lo scontro, lo
    svenimento, il cartello di fine, «lascio perdere» */
 const LEGGERI = new Set(['portale', 'chiusa', 'scala'])
-const leggero = f => LEGGERI.has(f.che) || (f.che === 'curiosita' && !!f.esito)
+// la scala che sale si chiude come quella che scende; dal primo piano è «lascio perdere», una scelta che costa
+const leggero = f => LEGGERI.has(f.che) || (f.che === 'scala-su' && !f.fuori) || (f.che === 'curiosita' && !!f.esito)
 // false se c'è un foglio che chiede una scelta: allora il campo non si tocca
 function lasciaAndare() {
   const c = corsa.value
