@@ -115,8 +115,40 @@ dell'indirizzo): si usano dal browser.
 
 **`#admin`** non ha codice né carta in home: un tasto per cheat, uno per
 aprire qualunque gioco anche se in home non c'è, il bambino di prova
-(`data-azione="bambino-prova"`), i due interruttori dei grandi (giochi in
-prova, tutte le tappe aperte) e il codice rimesso a `0000`. **I tasti
+(`data-azione="bambino-prova"`), gli interruttori (giochi in prova, tutte le
+tappe aperte, il [tasto salta](#il-tasto-salta)) e il codice rimesso a `0000`. **I tasti
 scrivono l'indirizzo e portano dove il cheat si legge**, non rifanno niente:
 un cheat nuovo si aggiunge lì con una riga (`A_MANO`), se no torna a essere
 una cosa da ricordare a memoria. Nei test: `[data-admin]`.
+
+### Il tasto salta
+
+Una leva di `#admin` per chi sviluppa (`data-azione="tasto-salta"`, spenta di
+partenza, **del telefono** e non di un bambino: `store/salto.js`, chiave
+`tasto-salta`). Accesa, ogni domanda dei giochi ha un piccolo «⏭ salta»
+(`components/TastoSalta.vue`, `data-azione="salta"`) che la dà per giusta,
+per passare i giochi senza pensare alle risposte. Non c'è segno in home né
+testo per i genitori: se ci si dimentica acceso, basta spegnerlo da `#admin`.
+
+- **Un salto non lascia traccia**: niente ripasso (`answer`/`annota`, né
+  giusta né sbagliata), niente monete, niente `segna()` né record, la
+  fretta e il filotto non si muovono. Nell'evento di `Domanda.vue` c'è
+  `saltata: true` (`rispostaSaltata` in `quiz/nucleo/domanda.js`); chi
+  ascolta lo guarda prima di pagare o contare.
+- **Conta solo come avanzamento**: per andare avanti il gioco lo tratta da
+  giusta (la tappa si avvicina, la porta si apre, la carta si prende) e per
+  le stelle «senza errori» come una risposta pulita: saltando tutto si vince
+  con le stelle piene. Quello che sale è solo ciò che il mondo ha davvero
+  (una torre saltata esiste, `totals.torri` sale; una tappa finita si
+  registra). Per questo si usa con un bambino di prova.
+- **Dove c'è**: la Domanda comune (sotterraneo, Survivors, banco di prova),
+  asteroidi, castello (il conto in colonna), bancarella (alla cassa: totale
+  e resto), pozioni (la dose), conta gli animali, prima e dopo, codice
+  segreto, English ed Español (la domanda di tappa e quelle del libro) e il
+  gioco di prima delle lingue. **Dove non c'è**: i giochi dove non c'è una
+  risposta da dare ma un piano da costruire (il Generale, Passo passo, Il
+  Robot, la fattoria), e la raccolta della bancarella (prendere la merce non
+  si sbaglia, si perde solo pazienza).
+- Nei test: `[data-azione="tasto-salta"]` in `#admin`, `[data-azione="salta"]`
+  nelle domande; `unita/salto`, `integrazione/salto`, `salto-giochi`,
+  `salto-sotterraneo`.
