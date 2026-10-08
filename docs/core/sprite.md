@@ -33,6 +33,10 @@ strumenti/sprite/sorgenti/<gioco>/generati/<foglio>.png + .json   ← «i ritagl
   Grok Imagine solo i passi di una creatura (sei di lato, sei di fronte):
   il video non si conserva, e i passi si portano alla misura della
   creatura in `vesti.py`. Tutti i comandi in [comandi.md](comandi.md).
+- **Le immagini dipinte entrano in WebP senza perdita a colori a passo 12**
+  (`strumenti/sprite/codifica.py`, per tutti: castello, terra di sopra, mappe
+  di Passo passo); gli atlanti di `atlante.py` sono PNG senza perdita. Il perché
+  e i numeri: [grafica.md](grafica.md#fedeli-ai-sorgenti).
 - **Il PNG non si tocca mai.** La sorgente è la verità: un PNG ritoccato a
   mano non dice più cosa gli è stato fatto, e la correzione si perde il
   giorno che arriva un foglio migliore. Le correzioni sono **dato nel

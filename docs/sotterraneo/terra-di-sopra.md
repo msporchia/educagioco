@@ -21,15 +21,22 @@ sopra la discesa a metà e chi scende, con la sua roba e le gemme.
 - **Le strade ci sono già**: il codice non ricompone la mappa a tessere, ci
   posa sopra solo quello che cambia (il divieto delle chiuse, chi indica e
   chi chiede, nebbia, eroe).
-- **Entra nel file unico in WebP** (qualità 75, ~860 KB): a 2× non si
-  distingue dall'originale. La fa lo strumento dal foglietto
-  ([terra-strumento.md](terra-strumento.md)): il modulo non si tocca.
+- **Entra nel file unico in WebP senza perdita** (colori a passo 12, ~2,2 MB,
+  37 dB): nessun pixel si scosta di più di 6 su 255 dal sorgente. La fa lo
+  strumento dal foglietto ([terra-strumento.md](terra-strumento.md)): il
+  modulo non si tocca. Il perché: [../core/grafica.md](../core/grafica.md#fedeli-ai-sorgenti).
 - **La scala: una cella della mappa è grande quanto l'eroe.** L'eroe è a
   scala 3 come nel sotterraneo (16 px × 3 = 48 px), quindi la mappa si
   mostra a 3/4 (`SCALA_TERRA`): un pixel del disegno (4 px della mappa)
   diventa 3 px dello schermo, come un pixel dell'eroe. Su un telefono da 390
   px si vedono otto celle in larghezza: la mappa è quattro schermi per uno e
-  mezzo. `image-rendering: pixelated`.
+  mezzo. `image-rendering: pixelated`. I pixel del disegno non stanno su una
+  griglia esatta, e a 3/4 il vicino più prossimo li rende di larghezza un po'
+  diversa; il filtro morbido, provato, sfoca (misure in
+  [../core/grafica.md](../core/grafica.md#fedeli-ai-sorgenti)). La scala 1 con
+  l'eroe a scala 4 darebbe pixel regolari, ma restringe il campo di un quarto
+  e le prove del dito (`sotterraneo-terra`, `-missioni`, `-avventure`)
+  contano sulla vista di adesso.
 - **La giunta** fra le due metà la cuce lo strumento, senza disegnare
   niente: [terra-strumento.md](terra-strumento.md#la-giunta).
 

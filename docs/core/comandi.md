@@ -47,6 +47,11 @@ pubblicato.** Per controllare solo che il build passi:
 | `node strumenti/sprite/in-campo.mjs <creatura>` | `tmp/in-campo/<creatura>/` (GIF del campo, di lato, di fronte) | per guardare una creatura camminare in partita, dopo `vesti.py --atlante` e `npm run build` |
 | `node strumenti/sprite/carte-castello.mjs` | `poc/scatti/castello-carte*.png`, `castello-battaglia*.png` | dopo aver toccato carte, schizzi o bestiario |
 
+`terra-di-sopra.py`, `isole-passo-passo.py` e `vesti.py` codificano le loro
+immagini con `strumenti/sprite/codifica.py` (WebP senza perdita, colori a passo
+12) e stampano il peso e i dB contro il sorgente: un passo più largo si vede
+subito. Il perché: [grafica.md](grafica.md#fedeli-ai-sorgenti).
+
 Gli altri strumenti degli sprite (`righe.py`, i provini di `vesti.py`) non
 scrivono niente: stanno in [sprite.md](sprite.md).
 

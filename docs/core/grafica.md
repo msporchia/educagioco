@@ -107,6 +107,70 @@ Per disegnare con fogli di figure invece che coi poligoni:
   non è il bordo di una zona, è una cella intera che si vede da una parte
   sola (la regola sta in [`../sotterraneo/`](../sotterraneo/README.md)).
 
+## Fedeli ai sorgenti
+
+**Un'immagine dipinta entra nel file unico com'è, non più brutta.** Il WebP
+con perdita (qualità 75–85) dava 28–32 dB contro il sorgente: bordi
+impastati, colori che sbavano sul vicino. Ora ogni mappa, fondale e atlante
+dipinto passa da `strumenti/sprite/codifica.py`: **WebP senza perdita su
+colori a passo 12** (`PASSO`, uno solo per tutti; un foglietto lo cambia con
+`passo`). Ogni canale cade sul multiplo di 12 più vicino e poi si codifica
+senza perdita, alfa intatta: nessun pixel si scosta di più di 6 su 255, 37
+dB, e i comandi stampano `KB, dB` a ogni giro.
+
+| immagine | strumento | prima: formato, peso, dB | ora | come si mostra |
+|---|---|---|---|---|
+| terra di sopra 2048×1536 | `terra-di-sopra.py` | q75, 856 KB, 29,8 | 2241 KB, 37,3 | 3/4, `pixelated` (invariato) |
+| icone delle discese, 8 × 96² | idem (`icone.passo` 16) | q80, 34 KB, 28,9 | 66 KB, 34,8 | piccole; ognuna sotto i 10 KB (un test) |
+| valle di Passo passo 1536×1024 | `isole-passo-passo.py` | q80, 257 KB, 31,8 | 675 KB, 37,2 | scala 1, `pixelated` |
+| zaino di Passo passo | idem | q80, 363 KB, 30,2 | 892 KB, 37,9 | idem |
+| castello: 4 vestiti, ~1024×880 | `vesti.py --atlante` | q85, 238–284 KB, 28,8–32,5 | 366–429 KB, 37,2–37,9 | tela, `smoothing high` |
+| castello: torri e mostri 1024×2004 | idem | q80, 759 KB, 28,3 | 1190 KB, 37,4 | idem |
+| atlanti fattoria e sotterraneo | `atlante.py` | PNG, 1961 e 237 KB | invariati | scala intera, a pixel netti |
+
+Gli atlanti della fattoria e del sotterraneo erano già PNG senza perdita
+(il foglio ridotto alla sua griglia vera: `docs/core/sprite.md`): niente da
+rifare. Il file unico passa da 14,4 a 19,0 MB, quasi tutto qui.
+
+- **Perché senza perdita e non «WebP a qualità alta».** Sotto qualunque
+  qualità il WebP con perdita sottocampiona il colore (4:2:0): a q98 si ferma
+  a 33–34 dB, a q80 sporca il verde accanto a un contorno nero. `Pillow` non
+  espone `sharp_yuv` né `near_lossless`, quindi si toglie la precisione al
+  colore a monte e si lascia la codifica senza perdita: a parità di peso è
+  quanto un JPEG 4:4:4 a q90 (674 contro 676 KB sul fondale della valle, 37,2
+  dB), ma i bordi restano esatti e non c'è né macchia né blocco. Il passo 8
+  (40,8 dB) pesa un quinto in più; il 16 (34,9 dB) un ottavo in meno e fa
+  bande sui verdi scuri; il 24 si vede a bande dappertutto.
+- **Il disegno non sta su una griglia, e a 3/4 si vede.** Ridotto a blocchi
+  di p×p (p da 3 a 10, ogni fase) e rigonfiato dà 20–23 dB: i «pixel» hanno i
+  bordi sfumati dal generatore. A scala intera (valle, zaino, atlanti)
+  `pixelated` ripete il pixel e basta. A 3/4 (la terra di sopra) il vicino
+  più prossimo fa gradini di larghezza diversa: è il sorgente, ingrandito.
+  Il filtro morbido li toglie ma sfoca: contro la stessa immagine ridotta con
+  Lanczos al pixel del telefono, sul pezzo del cartello `auto` dà 36,1 dB e
+  `pixelated` 29,9, ma nel gioco a DPR 2 e 3 `auto` sembra fuori fuoco accanto
+  all'eroe, che è netto. Si tiene `pixelated`: il guadagno è la codifica.
+- **Provato: WebP qualità 75–80 a scala 3/4 con `pixelated`: bordi impastati
+  (la codifica, ora a posto) e pixel irregolari (il sorgente).** Provato:
+  `image-rendering: auto` a 3/4: sfocato nel gioco. Provato: tavolozza a 256 colori (libimagequant) più
+  WebP senza perdita: 33 dB a 2,3 MB sulla terra, peggio del passo 12; non
+  basta, perché sono immagini con grana. Provato: predire il pixel dal vicino
+  e appiattire il rumore: più pesante del passo 12 a pari dB. Provato: un
+  passo diverso per luce e colore (alla JPEG): nessun guadagno. Provato:
+  la terra a 1536×1152 con Lanczos nello strumento: più molle di quella a
+  2048 sui telefoni a 3×, e il browser deve comunque ingrandirla.
+- **Scala 1 con l'eroe a scala 4 per la terra di sopra** (`SCALA_TERRA` e
+  `SCALA_EROE` in `dati/terra.js`, due costanti) dà pixel regolari e netti
+  come nella valle: è la resa migliore che si è vista. Il campo però si
+  restringe di un quarto (sei celle in larghezza su 390 px) e tre prove del
+  dito, scritte sulla vista di adesso, falliscono (`sotterraneo-terra`:
+  `camminaVerso` si ferma a metà strada; `-missioni` e `-avventure`: tocchi
+  e indicatori contati sullo schermo). È una scelta di gioco, non di codifica.
+- **I canvas del sotterraneo e della fattoria contano al più due pixel per
+  pixel CSS** (`Math.min(2, devicePixelRatio)`): su un telefono a 3× il
+  browser li ingrandisce di 1,5 con la sfocatura, e un pixel netto sbava. Non
+  è stato toccato.
+
 ## I muri (`grafica/muri.js`)
 
 Il pezzo di fondale più lungo, condiviso da tutti gli ambienti a stanze:
