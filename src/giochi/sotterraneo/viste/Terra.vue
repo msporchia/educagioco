@@ -97,18 +97,24 @@ const MARGINE_BUSSOLA = 30
 const consegne = computed(() => {
   const chi = chiAspetta(props.missioni)
   return [
-    ...(chi.includes('minatore') ? [{ chiave: 'minatore', nome: 'il vecchio minatore', piede: cella(DOVE_MINATORE.piede) }] : []),
-    ...personaggi.filter(m => chi.includes(m.chiave)).map(m => ({ chiave: m.chiave, nome: m.nome, piede: m.piede })),
+    ...(chi.includes('minatore') ? [{ chiave: 'minatore', nome: 'il vecchio minatore', piede: cella(DOVE_MINATORE.piede),
+                                                     accanto: cella(DOVE_MINATORE.accanto) }] : []),
+    ...personaggi.filter(m => chi.includes(m.chiave)).map(m => ({ chiave: m.chiave, nome: m.nome, piede: m.piede, accanto: m.accanto })),
   ]
 })
 // dove sta ogni discesa, in celle (il piede del posto): serve a scegliere la più vicina
 const PIEDI_DELLE_DISCESE = Object.fromEntries(Object.entries(POSTO_DI).filter(([, nome]) => POSTI[nome])
   .map(([chiave, nome]) => [chiave, { x: POSTI[nome].piede[0] + 0.5, y: POSTI[nome].piede[1] + 0.5 }]))
 const fuori = ref([])    // [{ chiave, nome, x, y, gradi, meta?, immagine? }] in pixel dello schermo, solo per chi non si vede
-let fuoriChiave = ''
+const vicine = ref([])   // [{ chiave, meta, nome }]: chi si vede ma non ci si è ancora arrivati: la freccina attorno all'eroe
+let fuoriChiave = '', vicineChiave = ''
+const vicineEl = new Map()   // chiave → elemento della freccina; l'angolo si scrive nel DOM a ogni fotogramma
+const AGGANCIO = 30          // la freccina attorno all'eroe subentra quando la cosa è entrata di tanto: l'isteresi
+const ARRIVATO = 1.6         // celle: più vicino di così l'eroe è arrivato, e la freccina ha fatto il suo
+let inScena = new Set()      // chi era in vista al fotogramma scorso: per lui il bordo scatta solo quando esce davvero
 function aggiornaFuori() {
   if (!vL) return
-  const lista = []
+  const lista = [], vic = [], ora = new Set()
   const cx = vL / 2, cy = (sopra + vA - sotto) / 2
   const x0 = MARGINE_BUSSOLA, x1 = vL - MARGINE_BUSSOLA, y0 = sopra + MARGINE_BUSSOLA, y1 = vA - sotto - MARGINE_BUSSOLA
   // dal centro verso (sx, sy), fermandosi dove il raggio tocca il rettangolo del bordo
@@ -117,24 +123,45 @@ function aggiornaFuori() {
     const k = Math.min((dx > 0 ? x1 - cx : cx - x0) / Math.abs(dx || 1e-6), (dy > 0 ? y1 - cy : cy - y0) / Math.abs(dy || 1e-6))
     lista.push({ ...resto, x: Math.round(cx + dx * k), y: Math.round(cy + dy * k), gradi: Math.round(Math.atan2(dy, dx) * 180 / Math.PI) })
   }
-  const inVista = (sx, sy) => sx > 6 && sx < vL - 6 && sy > sopra + 4 && sy < vA - sotto - 4
+  const inVista = (sx, sy, m = 0) => sx > 6 + m && sx < vL - 6 - m && sy > sopra + 4 + m && sy < vA - sotto - 4 - m
+  // l'eroe, in pixel dello schermo: la freccina gli sta attorno, all'altezza del petto
+  const ex = io.x * CELLA * S - cam.x * S, ey = (io.y - 0.5) * CELLA * S - cam.y * S
+  // dove sta la cosa (sx, sy) e dove ci si ferma (arrivo, in celle): in vista c'è la freccina attorno all'eroe finché
+  // non si è arrivati, fuori vista l'indicatore sul bordo. Il passaggio ha un po' di isteresi: niente sfarfallio
+  const segna = (sx, sy, arrivo, resto) => {
+    if (inVista(sx, sy, inScena.has(resto.chiave) ? 0 : AGGANCIO)) {
+      ora.add(resto.chiave)
+      if (Math.hypot(io.x - arrivo.x, io.y - arrivo.y) >= ARRIVATO)
+        vic.push({ ...resto, gradi: Math.atan2(sy - ey, sx - ex) * 180 / Math.PI })
+      return
+    }
+    alBordo(sx, sy, resto)
+  }
   for (const c of consegne.value) {
     const sx = (c.piede.x + 0.5) * CELLA * S - cam.x * S
     const sy = (c.piede.y + 0.5) * CELLA * S - cam.y * S - 20
-    if (!inVista(sx, sy)) alBordo(sx, sy, { chiave: c.chiave, nome: c.nome })
+    segna(sx, sy, { x: c.accanto.x + 0.5, y: c.accanto.y + 0.5 }, { chiave: c.chiave, nome: c.nome })
   }
   const meta = discesaDaSeguire(props.missioni, io, PIEDI_DELLE_DISCESE)
   if (meta) {
     const p = POSTI[POSTO_DI[meta]]
     const sx = (p.riquadro[0] + p.riquadro[2] / 2) * S - cam.x * S
     const sy = (p.riquadro[1] + p.riquadro[3] / 2) * S - cam.y * S
-    if (!inVista(sx, sy)) {
-      const t = props.tappe.find(t => t.chiave === meta)
-      alBordo(sx, sy, { chiave: meta, meta: true, nome: t ? t.nome : 'la discesa', immagine: iconaDi(meta) })
-    }
+    const t = props.tappe.find(t => t.chiave === meta)
+    segna(sx, sy, PIEDI_DELLE_DISCESE[meta], { chiave: meta, meta: true, nome: t ? t.nome : 'la discesa', immagine: iconaDi(meta) })
   }
+  inScena = ora
   const ch = lista.map(l => `${l.chiave}:${l.x},${l.y},${l.gradi}`).join('|')
   if (ch !== fuoriChiave) { fuoriChiave = ch; fuori.value = lista }
+  const chv = vic.map(v => v.chiave + (v.meta ? '*' : '')).join('|')
+  if (chv !== vicineChiave) { vicineChiave = chv; vicine.value = vic.map(({ chiave, meta, nome }) => ({ chiave, meta: !!meta, nome })) }
+  for (const v of vic) {
+    const el = vicineEl.get(v.chiave)
+    if (!el) continue
+    const g = Math.round(v.gradi)
+    el.style.transform = `translate(${Math.round(ex)}px, ${Math.round(ey)}px) rotate(${g}deg)`
+    if (el.dataset.gradi !== String(g)) el.dataset.gradi = g
+  }
 }
 // toccandolo l'eroe ci va, come toccando lui (e il fumetto si apre all'arrivo)
 const vaDa = chiave => (chiave === 'minatore' ? toccaMinatore() : toccaPersonaggio(personaggi.find(m => m.chiave === chiave)))
@@ -717,6 +744,13 @@ const chiusaPerche = p => {
       <b v-if="!f.meta">?</b>
       <b v-else><img v-if="f.immagine" class="sot-ritaglio" :src="f.immagine" alt="" data-ritaglio></b>
     </button>
+
+    <!-- la cosa è in vista e non ci si è ancora arrivati: la freccina attorno all'eroe, come giù. Azzurra verso la
+         discesa, d'oro verso chi aspetta la consegna; non prende i tocchi -->
+    <div v-for="v in vicine" :key="'vicina-' + v.chiave" :ref="el => (el ? vicineEl.set(v.chiave, el) : vicineEl.delete(v.chiave))"
+         class="sot-rotta sot-rotta-terra" data-rotta-terra :data-verso="v.meta ? 'scala' : 'qui'"
+         :data-meta-vicina="v.meta ? v.chiave : null" :data-consegna-vicina="v.meta ? null : v.chiave"
+         :aria-label="(v.meta ? 'Verso la discesa della tua missione: ' : 'Verso ') + v.nome"><i></i></div>
 
     <div ref="sopraEl" class="sot-terra-sopra"><slot name="sopra" /></div>
     <div ref="sottoEl" class="sot-terra-sotto">

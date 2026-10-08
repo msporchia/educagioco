@@ -4,7 +4,7 @@ Una missione presa e non ancora fatta si ricorda da sola, giù e sopra. Le missi
 in sé (l'albero, il diario, i premi) sono in [missioni.md](missioni.md); la terra di
 sopra in [terra-di-sopra.md](terra-di-sopra.md). Il codice: `rotta` e
 `discesaDaSeguire` in `motore/missioni.js` (pure, girano in Node), `posaLaRotta` in
-`Gioco.vue`, `viste/Terra.vue` (`fuori`, `vaAllaDiscesa`), `scena/tela.js` (`schermoDi`).
+`Gioco.vue`, `viste/Terra.vue` (`fuori`, `vicine`, `vaAllaDiscesa`), `scena/tela.js` (`schermoDi`).
 
 Chi gioca poco spesso non si ricorda una missione presa tre giorni fa (l'utente,
 8 ottobre): due freccine la ricordano, una giù e una sopra. **È una direzione e
@@ -30,8 +30,17 @@ non una strada**: niente percorso disegnato, e una freccina sola per volta.
   discese diverse; una sola per discesa). Toccandolo l'eroe ci va e si apre il
   fumetto della discesa, come toccandola. **Le consegne pronte hanno la
   precedenza**: finché qualcuno aspetta di riceverne una c'è il suo «?» d'oro
-  e la freccia azzurra no (una cosa alla volta da ricordare). Sparisce appena
-  la discesa è in vista.
+  e la freccia azzurra no (una cosa alla volta da ricordare).
+- **Sopra, in vista** (l'utente, 8 ottobre: «scompaiono troppo presto»): una
+  direzione che sparisce appena la cosa entra nello schermo lascia il bambino
+  a cercarla. Finché l'obiettivo (la discesa, o chi aspetta la consegna) è in
+  vista e l'eroe **non gli è ancora arrivato** (a meno di 1,6 celle dal piede
+  della discesa o dal punto accanto al personaggio, `ARRIVATO`), al posto
+  dell'indicatore sul bordo c'è la freccina attorno all'eroe, la stessa
+  forma di quella giù (`.sot-rotta`): azzurra verso la discesa, d'oro verso
+  chi aspetta. Il passaggio ha isteresi (`AGGANCIO`, 30 px: subentra a cosa
+  entrata di tanto, cede quando esce davvero) e le due non si vedono mai
+  insieme.
 
 Nei test: `[data-rotta]` con `data-verso` (`qui` o `scala`), `data-missione-rotta` e `data-gradi`;
 nel promemoria `li[data-segui]`; sopra la freccia azzurra `[data-meta-fuori="<discesa>"]`
@@ -40,4 +49,7 @@ nel promemoria `li[data-segui]`; sopra la freccia azzurra `[data-meta-fuori="<di
 piano passato; la discesa da seguire sopra e la precedenza della consegna);
 `integrazione/sotterraneo-rotta` misura sullo schermo che la punta cada sulla retta dall'eroe
 alla cosa (forziere e scala), e sopra che la freccia azzurra porti alla discesa, ceda alla
-consegna e sparisca senza missioni.
+consegna e sparisca senza missioni; con la cosa in vista misura la freccina attorno all'eroe
+(`[data-rotta-terra]` con `[data-meta-vicina="<discesa>"]` o `[data-consegna-vicina="<chi>"]`,
+`data-gradi`): punta giusta, nessuna sul bordo insieme, camminando il passaggio è solo
+bordo → freccina → niente, e arrivati sparisce.

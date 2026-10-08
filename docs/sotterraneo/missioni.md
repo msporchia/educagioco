@@ -113,7 +113,9 @@ Zannagrigia, lanterna) sono radici senza seguito.
   sua direzione, un «?» d'oro con una freccia (`viste/Terra.vue`, `fuori`,
   ricalcolato a ogni fotogramma insieme alla telecamera; il minatore
   compreso). Toccarlo (`click`, soglia 16 px) è come toccare lui: l'eroe ci
-  va e il fumetto si apre all'arrivo. Sparisce appena lui è in vista.
+  va e il fumetto si apre all'arrivo. Quando lui è in vista il bordo cede alla
+  freccina attorno all'eroe, che lo punta finché non gli si è accanto
+  (`[data-consegna-vicina]`, vedi [missioni-freccina.md](missioni-freccina.md)).
 - **Il minatore dice chi ti cerca**: indicando la strada aggiunge una riga
   per chi (`chiTiCerca`): «La ragazza del pozzo ti aspetta: quello che ti ha
   chiesto l'hai fatto», «… ha un favore / due favori da chiederti», «…
