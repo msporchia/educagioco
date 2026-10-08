@@ -293,20 +293,21 @@ const banco = computed(() => {
   if (!k || !bottega) return null
   const b = bottega, m = mercanteDi(k)
   const voce = x => (x && COSE[x] ? { chiave: x, ...COSE[x] } : null)
-  // quello peggiore di quello addosso non si mostra; i pezzi più su si vedono spenti, con la discesa che li porta
-  const vendibili = b.mercanzia(k).filter(({ chiave: x }) => !b.sottoAddosso(x)).map(({ chiave: x, sempre }) => ({
-    chiave: x, sempre, ...COSE[x], posso: b.gemme >= COSE[x].prezzo,
-    nonPuoi: b.perchéNo(x), prova: b.seLoMetto(x), va: b.vaAddosso(x),
-    mancano: Math.max(0, COSE[x].prezzo - b.gemme),
-    quante: b.quanteNeHo(x),
-  }))
-  const vetrina = b.vetrina(k).map(({ chiave: x, finita }) => ({
-    chiave: x, ...COSE[x], chiusa: true, posso: false, prova: b.seLoMetto(x), nonPuoi: b.perchéNo(x),
-    quando: CAMPAGNA[finita].nome.charAt(0).toLowerCase() + CAMPAGNA[finita].nome.slice(1),
-  }))
+  // quello peggiore di quello addosso non si mostra; i pezzi delle righe dopo (`avanti`) si comprano, a un prezzo più
+  // alto (`costa`: il `prezzo` resta quello pieno, da cui si legge il gradino)
+  const vendibili = b.mercanzia(k).filter(({ chiave: x, avanti }) => avanti || !b.sottoAddosso(x))
+    .map(({ chiave: x, sempre, avanti }) => {
+      const costa = b.quantoCosta(x)
+      return {
+        chiave: x, sempre, ...COSE[x], costa, avanti, posso: b.gemme >= costa,
+        nonPuoi: b.perchéNo(x), prova: b.seLoMetto(x), va: b.vaAddosso(x),
+        mancano: Math.max(0, costa - b.gemme),
+        quante: b.quanteNeHo(x),
+      }
+    })
   return {
     chi: m,
-    roba: [...vendibili, ...vetrina],
+    roba: vendibili,
     addosso: { mano: voce(b.mano), mancina: voce(b.mancina), corpo: voce(b.corpo), dito: voce(b.dito) },
     numeri: { vita: b.vitaConLaRoba, att: b.att, dif: b.dif, gemme: b.gemme },
     tasche: m.compra ? Array.from({ length: TASCHE }, (_, i) => {

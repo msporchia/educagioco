@@ -23,7 +23,7 @@ const RIPENSO = 400
 
 const props = defineProps({
   chi: { type: Object, required: true },        // il mercante (dati/mercanti.js)
-  roba: { type: Array, required: true },        // [{ chiave, …COSE, posso, nonPuoi, mancano, quante, prova, va, chiusa?, quando? }]
+  roba: { type: Array, required: true },        // [{ chiave, …COSE, costa, avanti, posso, nonPuoi, mancano, quante, prova, va }]
   tasche: { type: Array, default: null },       // [{ chiave, …COSE, vale } | null]; null: non compra
   eroe: { type: Object, required: true },       // la scheda (Armato)
   addosso: { type: Object, required: true },    // { mano, mancina, corpo, dito }: voci o null
@@ -78,7 +78,7 @@ function cambiaScheda(k) {
   dettoVivo.value = false
 }
 
-const puoiComprare = r => !!r && !r.chiusa && r.posso && !r.nonPuoi
+const puoiComprare = r => !!r && r.posso && !r.nonPuoi
 function toccaMerce(r) {
   if (!pronto.value) return
   if (sceltoQui('merce', r.chiave)) {
@@ -114,11 +114,11 @@ const note = computed(() => {
   if (s.che === 'addosso') n.push({ testo: 'Ce l\'hai addosso.', tono: 'tenue' })
   if (s.che === 'tasca') n.push({ testo: `Te lo pago la metà di quanto costa.`, tono: 'tenue' })
   if (s.che !== 'merce') return n
-  if (c.chiusa) n.push({ em: '🔒', testo: `Quando avrai finito ${c.quando}.`, tono: 'oro', dato: 'data-quando' })
+  if (c.avanti) n.push({ em: '⬆️', testo: 'Costa di più: è roba per più giù.', tono: 'oro', dato: 'data-avanti-costa' })
   if (c.nonPuoi) n.push({ em: '✋', testo: c.nonPuoi, tono: 'ambra', dato: 'data-non-puoi' })
   else if (c.prova && c.prova.bloccata)
     n.push({ em: '✋', testo: `${COSE[c.prova.bloccata].nome} vuole tutte e due le mani: finisce nello zaino.`, tono: 'ambra' })
-  else if (!c.chiusa && c.dove && !c.va) n.push({ em: '🎒', testo: 'Finisce nello zaino.', tono: 'tenue' })
+  else if (c.dove && !c.va) n.push({ em: '🎒', testo: 'Finisce nello zaino.', tono: 'tenue' })
   if (c.quante) n.push({ testo: `Ne hai ${c.quante}.`, tono: 'tenue' })
   return n
 })
@@ -127,7 +127,7 @@ const prova = computed(() => (scelto.value && scelto.value.che === 'merce' && co
   cosa.value.prova.prima ? cosa.value.prova : null))
 const va = computed(() => (prova.value ? prova.value.dove : null))
 
-const sottoMerce = r => `${r.chiusa ? '🔒 ' : ''}💎 ${r.prezzo}`
+const sottoMerce = r => `💎 ${r.costa ?? r.prezzo}`
 const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean))
 </script>
 
@@ -165,10 +165,10 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
       <template v-if="!vende">
         <div class="sot-griglia">
           <Casella v-for="r in qui" :key="r.chiave" :cosa="r" :sotto="sottoMerce(r)"
-                   :spenta="!puoiComprare(r)" :rosso="!r.chiusa && !r.posso"
+                   :spenta="!puoiComprare(r)" :rosso="!r.posso"
                    :segno="r.nonPuoi ? '✋' : r.quante ? `×${r.quante}` : ''"
                    :scelta="sceltoQui('merce', r.chiave)"
-                   :data-casella-pezzo="r.chiave" :data-chiusa="r.chiusa ? '1' : null"
+                   :data-casella-pezzo="r.chiave" :data-avanti="r.avanti || null"
                    :data-posso="puoiComprare(r) ? '1' : '0'" @click="toccaMerce(r)" />
         </div>
         <!-- succede solo a chi ha già tutto quello che il mercante sa fare: la vetrina è finita -->
@@ -199,10 +199,9 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
         <template v-if="scelto.che === 'merce'">
           <button type="button" class="sot-grosso sot-compra" data-azione="compra" :disabled="!puoiComprare(cosa)"
                   @click="compra">
-            <template v-if="cosa.chiusa">🔒 non ancora</template>
-            <template v-else-if="cosa.nonPuoi">non fa per te</template>
+            <template v-if="cosa.nonPuoi">non fa per te</template>
             <template v-else-if="!cosa.posso">ti mancano <span class="em">💎</span> {{ cosa.mancano }}</template>
-            <template v-else>Compra <span class="em">💎</span> {{ cosa.prezzo }}</template>
+            <template v-else>Compra <span class="em">💎</span> {{ cosa.costa ?? cosa.prezzo }}</template>
           </button>
         </template>
         <button v-else-if="scelto.che === 'tasca'" type="button" class="sot-grosso sot-vendi-tasto" data-azione="vendi"
