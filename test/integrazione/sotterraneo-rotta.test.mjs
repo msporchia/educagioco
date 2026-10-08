@@ -150,7 +150,7 @@ await scatto(page, 'rotta-scala')
 
 // una cosa aperta (lo zaino) nasconde la freccina: è dentro il campo, non sopra un foglio
 await page.click('[data-azione="zaino"]')
-await page.waitForSelector('.sot-centrale', { timeout: 3000 })
+await page.waitForSelector('[data-zaino]', { timeout: 3000 })
 uguale('con lo zaino aperto la freccina non c\'è', await page.locator('[data-rotta]').count(), 0)
 await page.click('[data-azione="chiudi"]')
 await attendi(page, 300)
