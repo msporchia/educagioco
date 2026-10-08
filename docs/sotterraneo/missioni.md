@@ -11,7 +11,7 @@ pronti, e di averle sempre davanti: *«una specie di albero di missioni»*,
 `dati/missioni.js` (chi, cosa, dove, i requisiti, il premio, `TETTO`),
 `motore/missioni.js` (l'albero, il segno, prendere e consegnare, il diario e il
 promemoria, dove sta la cosa nel piano), `viste/Missione.vue` (il pezzo di
-fumetto), `viste/Diario.vue`, `viste/Terra.vue` (chi sta fermo),
+fumetto), `viste/Diario.vue` (col dettaglio) e `viste/Ritratto.vue`, `viste/Terra.vue` (chi sta fermo),
 `motore/corsa.js` (`posaLeMissioni`).
 
 ## Chi le dà, e dove sta
@@ -134,6 +134,18 @@ Zannagrigia, lanterna) sono radici senza seguito.
   aspettano** (le offerte: chi ha un favore da chiederti, e dove), **consegnate**
   (solo i nomi). Vuoto, dice che qualcuno al villaggio ti chiederà un favore
   a discesa finita.
+- **Il dettaglio**: toccando una voce (di qualunque elenco) il diario cambia
+  pagina nella stessa finestra, con «‹ indietro» verso l'elenco; la ✕ e il tocco
+  fuori chiudono tutto. Dice chi te l'ha data (il suo ritratto, `viste/Ritratto.vue`,
+  e il nome), la sua battuta (la richiesta; alla consegna anche il grazie), **dove**
+  (ritaglio, discesa, piano), **cosa** (la faccia della cosa, o del mostro col nome) e
+  il **premio** pezzo per pezzo (gemme, roba col suo nome, monete), e lo stato: «Da
+  fare», «Fatta: torna dal mugnaio», «Consegnata». Due tasti: **«segui questa»**
+  (le prese: sceglie quale indicano le freccine,
+  [missioni-freccina.md](missioni-freccina.md)) e **«vai da …»** (le fatte e quelle
+  che ti aspettano: chiude il diario e l'eroe va dal personaggio, `vaDa` di
+  `Terra.vue`). Richiesta dell'utente, 8 ottobre: *«quando rivedo le missioni
+  dovrei poter premere su una missione e farmi dare i dettagli»*.
 - **Il promemoria in discesa** (`promemoria`): in cima al campo una riga per
   ogni missione presa o fatta che riguarda quella discesa, ricalcolata a ogni
   piano. «Missione: la collana della nonna è al terzo piano: scendi»; sul piano
@@ -184,44 +196,10 @@ ricordano la missione presa a chi gioca poco spesso: [missioni-freccina.md](miss
   (`missioniFatte`, anche nella sosta) e passa nell'avventura a ogni
   salvataggio. Ogni eroe ha le sue.
 
-## Le monete come regalo, e il conto
+## Le monete come regalo
 
-Decise dall'utente l'8 ottobre: *«come regalo di una missione possono anche
-esserci le monete, volendo»*. Alla [calibrazione](../apprendimento/calibrazione.md)
-(🪙1 = dieci secondi di esercizio, una domanda del sotterraneo vale 🪙1) un
-premio aggiuntivo è un'eccezione, quindi piccolo e misurabile: **il regalo vale
-le domande che la missione chiede in più**, non di più.
-
-- Per un mostro col nome: i colpi in più, cioè le risposte giuste in più
-  (`colpiPer`) rispetto a un mostro comune di quel tipo allo stesso piano,
-  con la roba attesa (`dati/storia.js`), media dei quattro eroi, arrotondata.
-  Il mostro della missione è più duro per costruzione (`PIU_DURO`).
-
-| missione | colpi del mostro col nome | colpi di uno comune | in più | 🪙 |
-|---|---|---|---|---|
-| Badessa (fantasma) | 4 · 3 · 2 · 4 | 2 · 2 · 2 · 2 | 1,25 | 1 |
-| Rosicchione (ratto) | 3 · 3 · 2 · 3 | 1 · 1 · 1 · 1 | 1,75 | 2 |
-| Grattanaso (goblin) | 3 · 2 · 2 · 3 | 2 · 1 · 1 · 2 | 1,0 | 1 |
-| Chela (granchio) | 9 · 7 · 5 · 7 | 6 · 5 · 4 · 5 | 2,0 | 2 |
-| Zannagrigia (lupo) | 12 · 10 · 7 · 10 | 7 · 6 · 5 · 6 | 3,75 | 4 |
-
-(cavaliere · elfa · mago · nano; `unita/sotterraneo-missioni` rifà il conto e
-fallisce se `premio.monete` non torna).
-
-- **Chi cerca non ha monete**: un forziere è una sola domanda, già pagata, e
-  il giro per arrivarci non si misura. Quindi 5 missioni su 12 danno monete,
-  da 🪙1 a 🪙4: dieci monete in tutto, meno di due minuti di esercizio, per chi
-  le fa tutte.
-- **Niente premio per una risposta sbagliata**: il regalo arriva alla
-  consegna, dopo che la cosa è stata trovata o il mostro battuto, e un
-  forziere sbagliato non fa niente (si riprova).
-- **Le domande in più sono già pagate una per una** (🪙1 a risposta giusta,
-  `PAGA.mossa`): il regalo ne raddoppia il valore. È voluto, e per questo
-  resta di una a quattro monete.
-- Le monete non toccano la roba: `consegna` le torna in `monete` e le paga
-  `Gioco.vue` dalla borsa del gioco (`borsa(CHIAVE).paga`), quindi passano
-  dal salvadanaio della varietà come ogni altra; quel che resta si legge nella
-  scritta «Missione compiuta! 🪙 2».
+Il regalo vale le domande che la missione chiede in più, non di più: da 🪙1 a 🪙4 in 5 missioni su 12, il conto in
+[missioni-monete.md](missioni-monete.md).
 
 Nei test: `unita/sotterraneo-missioni` (i dati e i guasti che vede davvero, ogni
 requisito e lo sblocco da sola, l'albero punto per punto, i tre segni e la consegna che vince sulla nuova, mai più di tre
@@ -249,6 +227,9 @@ fumetto `[data-fumetto-di="<chi>"]` con una
 `[data-diario]` con `[data-sezione="da-fare" | "ti-aspettano" | "consegnate"]`,
 `[data-sezione="da-consegnare"]` per le fatte, le righe
 `li[data-missione][data-stato]` (`presa`, `fatta`, `offerta`, `consegnata`) con `[data-esito]` e `[data-ritaglio]`, `[data-diario-tetto]`,
-`[data-diario-vuoto]`. Giù `[data-promemoria] li[data-missione][data-dove]`
+`[data-diario-vuoto]`. Il dettaglio `[data-dettaglio][data-missione][data-stato]` con `[data-dettaglio-chi][data-chi]`,
+`[data-racconto]`, `[data-grazie]`, `[data-dettaglio-dove]`, `[data-dettaglio-cosa][data-tipo]`, `[data-dettaglio-premio]`,
+`[data-azione="segui"][data-segui-attivo]`, `[data-azione="vai-da"]`, `[data-azione="indietro-diario"]`
+(`integrazione/sotterraneo-dettaglio`). Giù `[data-promemoria] li[data-missione][data-dove]`
 (`sopra`, `qui`, `oltre`, `fatta`; la seguita ha `data-segui`); il foglio del forziere
 `[data-missione="<id>"]`; la freccina è in [missioni-freccina.md](missioni-freccina.md).

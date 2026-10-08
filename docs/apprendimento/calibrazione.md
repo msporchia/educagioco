@@ -37,7 +37,7 @@ dose — e non a fine tappa. Quindi:
   che si è fatto. **Un'eccezione voluta dal proprietario**: le missioni del
   sotterraneo possono regalare monete alla consegna, tante quante le domande
   che chiedono in più (🪙1–4, il conto in
-  [../sotterraneo/missioni.md](../sotterraneo/missioni.md#le-monete-come-regalo-e-il-conto));
+  [../sotterraneo/missioni-monete.md](../sotterraneo/missioni-monete.md));
 - **sempre monete intere**: il tasso di ogni cosa è un intero
   (`guastiDellePaghe`), e la metà del salvadanaio stanco si conta col
   resto ([../genitori/varieta.md](../genitori/varieta.md));

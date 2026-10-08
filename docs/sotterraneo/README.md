@@ -9,8 +9,9 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [regole.md](regole.md) — la discesa: scala e guardiano, quanto costa in domande, il branco a fasce, la stanza come confine, lo scontro, gli svenimenti
 - [portale-e-sosta.md](portale-e-sosta.md) — come si lascia una discesa a metà: il portale (e il gemello sopra), la ✕ che non è un portale (si rientra già giù), «lascio perdere», cambiare eroe dal velo, la ripresa nel punto esatto
 - [la-grande-storia.md](la-grande-storia.md) — le sette discese in fila dal villaggio e la loro forma, la tabella dell'equipaggiamento atteso per eroe, chi la dà, chi è sotto il livello, i numeri misurati
-- [missioni.md](missioni.md) — chi dà le missioni sulla terra di sopra, l'albero delle dodici missioni (requisiti, sblocco da sole, il tetto di tre aperte), il diario e il promemoria, i premi (anche in monete, col conto), lo stato
-- [missioni-freccina.md](missioni-freccina.md) — le due freccine che ricordano una missione presa: giù attorno all'eroe (la cosa o la scala), sopra azzurra sul bordo
+- [missioni.md](missioni.md) — chi dà le missioni sulla terra di sopra, l'albero delle dodici missioni (requisiti, sblocco da sole, il tetto di tre aperte), il diario col dettaglio di ogni missione e il promemoria, i premi, lo stato
+- [missioni-monete.md](missioni-monete.md) — le monete come regalo di una missione: perché poche, e il conto delle domande in più
+- [missioni-freccina.md](missioni-freccina.md) — le due freccine che ricordano una missione presa: giù attorno all'eroe (la cosa o la scala), sopra azzurra sul bordo, e «segui questa» per sceglierne una
 - [la-roba-che-resta.md](la-roba-che-resta.md) — la roba che scende e risale con l'avventuriero, le discese che contano su di lei, l'equilibrio di prima
 - [avventure.md](avventure.md) — un'avventura per eroe: cosa ha ognuno e dove sta nel salvataggio, cosa è in comune (monete, il massimo per medaglie ed esperienza), i salvataggi di prima, azzerati e poi riordinati
 - [roba.md](roba.md) — gli eroi e cosa portano, due mani, la torcia, per terra e nello zaino, i mercanti di sopra, la bottega e lo zaino da gioco di ruolo, curiosità e arredo

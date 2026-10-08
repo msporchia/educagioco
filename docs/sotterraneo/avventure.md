@@ -58,7 +58,8 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
                    botteghe,                // i banchi pescati in questo giro
                    sosta,                   // la discesa lasciata a metà (motore/sosta.js); `via: 'portale'` la rende anche il gemello di sopra, `'uscita'` (la ✕) si riprende giù
                    abisso,                  // { fondo }
-                   missioni },              // { [id]: 'presa' | 'fatta' | 'consegnata' } (missioni.md)
+                   missioni,                // { [id]: 'presa' | 'fatta' | 'consegnata' } (missioni.md)
+                   segui },                 // l'id della missione che le freccine seguono, scelta nel diario (missioni-freccina.md)
       mago: { … },
     },
   },

@@ -42,6 +42,24 @@ non una strada**: niente percorso disegnato, e una freccina sola per volta.
   entrata di tanto, cede quando esce davvero) e le due non si vedono mai
   insieme.
 
+## Quale seguire
+
+Con più missioni prese le freccine ne indicano una. Di difetto resta la regola di
+sopra (la più vicina, la consegna pronta prima); **nel dettaglio di una missione presa
+nel diario il tasto «segui questa»** ne sceglie una (l'utente, 8 ottobre: *«quale
+missione indicano le freccine quando ce n'è più d'una»*), e «smetti» ridà la regola di
+prima. La scelta è `avventura.segui` (un id, di quell'eroe) e **vale finché quella
+missione è presa**: fatta o consegnata decade da sé (`seguita` in `motore/missioni.js`;
+`Gioco.vue` la toglie anche dal salvataggio alla consegna).
+
+- **Giù** (`rotta(c, segui)`): se la scelta è di questa discesa e ancora da fare vince
+  sulla più vicina; se è di un'altra discesa non conta e vale la regola di prima.
+- **Sopra** (`discesaDaSeguire(…, segui)`): la discesa della scelta, anche se è più
+  lontana di un'altra. La consegna pronta ha ancora la precedenza (la freccia azzurra
+  non c'è).
+- La riga seguita ha il suo ▸ nel promemoria, e nel diario la voce ha il bordo azzurro
+  e «la segui» (`li[data-segui]`).
+
 Nei test: `[data-rotta]` con `data-verso` (`qui` o `scala`), `data-missione-rotta` e `data-gradi`;
 nel promemoria `li[data-segui]`; sopra la freccia azzurra `[data-meta-fuori="<discesa>"]`
 (`.sot-bussola-meta`, col suo `[data-ritaglio]`; l'indicatore d'oro è `[data-consegna-fuori]`).
@@ -52,4 +70,7 @@ alla cosa (forziere e scala), e sopra che la freccia azzurra porti alla discesa,
 consegna e sparisca senza missioni; con la cosa in vista misura la freccina attorno all'eroe
 (`[data-rotta-terra]` con `[data-meta-vicina="<discesa>"]` o `[data-consegna-vicina="<chi>"]`,
 `data-gradi`): punta giusta, nessuna sul bordo insieme, camminando il passaggio è solo
-bordo → freccina → niente, e arrivati sparisce.
+bordo → freccina → niente, e arrivati sparisce. La scelta nel diario (`seguita`, `rotta` e `discesaDaSeguire`
+con la scelta, il dettaglio di ogni voce) è in `unita/sotterraneo-missioni`; col dito, la freccia
+che cambia obiettivo sopra e giù, e la scelta nell'avventura, in `integrazione/sotterraneo-dettaglio`
+(`[data-azione="segui"]`, `[data-segui-attivo]`).
