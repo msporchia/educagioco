@@ -19,9 +19,17 @@ const aMappa = async () => {
   await page.goto(page.url().replace(/#.*$/, '') + '#codice')
   await page.waitForSelector('.cs-mappa', { timeout: 5000 })
 }
-const sostaScritta = async () => {
-  await attendi(page, 500)                 // l'archivio scrive con un po' di ritardo
-  return (await leggiProfilo(page))?.campagne?.codice?.sosta || null
+// l'archivio scrive con un po' di ritardo, e coi test in parallelo anche di più: si aspetta finché
+// la sosta è quella attesa (al più cinque secondi), poi si torna quella che c'è
+const sostaScritta = async (attesa = s => !!s) => {
+  let sosta = null
+  await attendi(page, 250)
+  for (let t = 0; t < 20; t++) {
+    await attendi(page, 250)
+    sosta = (await leggiProfilo(page))?.campagne?.codice?.sosta || null
+    if (attesa(sosta)) break
+  }
+  return sosta
 }
 const indietro = () => page.click('button[aria-label="indietro"]')
 const tavolo = () => page.evaluate(() => ({
@@ -53,7 +61,7 @@ if (!await page.locator('.cs-riga.cs-fatta').count() || await page.locator('.cs-
 await posaCodice(pool.slice(0, 2))                    // e una riga a metà
 
 const lasciato = await tavolo()
-const sostaPrima = await sostaScritta()
+const sostaPrima = await sostaScritta(s => s?.partita?.prove?.length === 1)
 controlla('mentre si gioca la sosta è già scritta (non solo uscendo)',
           !!sostaPrima && sostaPrima.partita?.prove?.length === 1, JSON.stringify(sostaPrima))
 const codicePrima = sostaPrima.partita.codice.join('')
@@ -81,7 +89,7 @@ uguale('uscire e rientrare non dà né toglie monete',
 await page.locator('.cs-riga.cs-attiva .cs-casella.cs-piena').first().click()   // toglie una
 await indietro()
 await page.waitForSelector('[data-ripresa]')
-const dopoDueUscite = await sostaScritta()
+const dopoDueUscite = await sostaScritta(s => s?.partita?.corrente?.filter(x => x).length === 1)
 uguale('il codice segreto non è cambiato', dopoDueUscite.partita.codice.join(''), codicePrima)
 uguale('e la riga tolta resta tolta',
        dopoDueUscite.partita.corrente.filter(s => s).length, 1)
@@ -147,7 +155,7 @@ await indietro()
 await page.waitForSelector('[data-ripresa]')
 await page.click('[data-ripresa] [data-azione="scorda"]')
 uguale('«lascio perdere» toglie la carta', await page.locator('[data-ripresa]').count(), 0)
-uguale('e la sosta dal profilo', await sostaScritta(), null)
+uguale('e la sosta dal profilo', await sostaScritta(s => s === null), null)
 
 /* ── il gioco libero: la serie sopravvive all'uscita ── */
 await page.goto(page.url().replace(/#.*$/, ''))        // semina ricarica, e vuole la home
@@ -204,7 +212,7 @@ await semina(page, { campagne: { codice: { tappa: 0, stelle: {}, cfg: { spiegata
                                            sosta: aMetaDellaTerza } } })
 await aMappa()
 uguale('una tappa chiusa non offre la ripresa', await page.locator('[data-ripresa]').count(), 0)
-controlla('ma la sosta resta', !!(await sostaScritta()))
+controlla('ma la sosta resta', !!(await sostaScritta(s => !!s)))
 await aCasa()
 await semina(page, { campagne: { codice: { tappa: 2, stelle: {}, cfg: { spiegata: true },
                                            sosta: aMetaDellaTerza } } })
