@@ -216,8 +216,12 @@ const animali = v => v.filter(p => p.che !== 'salto').map(p => `${p.che}:${p.ani
     uguale('dal ghiaccio al prato: giù dal salto e sul ponte lungo', via.join(' '), 'salto-ghiaccio prato-salto')
   }
   const pascolo = S.isole.find(s => s.chiave === 'pecore-cane')
-  uguale('dall\'ultima delle buche al primo gregge: per la tana',
-         animali(viaggio(q, pascolo.attacco, pascolo.tappe[0], tutte.bloccati)), 'entra:coniglio esce:cane')
+  // l'ultima dei piccoli sta in fondo ai massi, accanto al ponte del prato
+  uguale('dall\'ultima dei massi al primo gregge: giù al prato e sul ponte, con la nuvoletta',
+         animali(viaggio(q, pascolo.attacco, pascolo.tappe[0], tutte.bloccati)), 'entra:coniglio* esce:cane*')
+  uguale('dalle buche al primo gregge: per la tana',
+         animali(viaggio(q, CAMPAGNA.findIndex(t => t.scalino === 'buche'), pascolo.tappe[0], tutte.bloccati)),
+         'entra:coniglio esce:cane')
   uguale('dall\'ultimo gregge al sentiero del cane si salta e basta, da cane',
          viaggio(q, pascolo.tappe.at(-1), SENTIERO_CANE, tutte.bloccati).map(p => `${p.che}:${p.animale}`).filter((x, k, l) => x !== l[k - 1]).join(' '),
          'salto:cane')

@@ -1,8 +1,8 @@
 # Passo passo — la mappa delle isole
 
 La schermata da cui si sceglie la tappa. Ha due mondi, tutti e due un
-fondale dipinto: **la valle dei piccoli** (prato, salto, ghiaccio, massi,
-buche e il pascolo del cane) e **il mondo dello zaino** (ripeti, fino a, se,
+fondale dipinto: **la valle dei piccoli** (prato, salto, ghiaccio, buche,
+massi e il pascolo del cane) e **il mondo dello zaino** (ripeti, fino a, se,
 tutto il mondo, e a ognuno la sua isoletta del cane). Si passa dall'uno
 all'altro da una tana. Il modello è la terra di sopra del sotterraneo
 ([../sotterraneo/terra-di-sopra.md](../sotterraneo/terra-di-sopra.md)): il
@@ -49,11 +49,12 @@ fumetto, con la stessa vista per tutti e due. Chi apre cosa sta in
   frecce, la tana dello zaino in cima e quella del pascolo sotto), in mezzo
   il pascolo (il fienile, il recinto). Ogni isola ha uno stendardo con lo
   scalino (`cartello` nel foglietto: il suo centro; vedi «Gli stendardi»).
-- **Il giro non segue l'ordine dei capitoli**: i ponti vanno prato–salto,
+- **Il giro segue l'ordine dei capitoli**: i ponti vanno prato–salto,
   salto–ghiaccio, ghiaccio–buche, buche–massi, massi–prato, più prato–pascolo
-  e salto–pascolo e la tana buche–pascolo. Dal ghiaccio ai massi si torna
-  giù dal salto e dal prato, perché il ponte delle buche ha il blocco finché
-  le buche sono chiuse. Si tiene così: basta il blocco sulla strada.
+  e salto–pascolo e la tana buche–pascolo; per questo le buche vengono prima
+  dei massi, e «Tutto insieme» chiude i massi accanto al ponte del prato.
+  Le caselle di un'isola si contano dal ponte da cui si arriva. Provato con i
+  massi prima: dal 16 il ponte portava al 24, e il 17 stava dall'altra parte.
 
 ## Il foglietto e lo strumento
 
@@ -199,7 +200,7 @@ si entra).
   sopra non c'è posto, va sotto.
 - **Su una chiusa dice cosa manca, senza tasto** (`cosaManca`): «Prima tocca
   a «X», poi ad altre N tappe», e per il cane «si apre quando il coniglio
-  impara 🔁 («Il viale»)» o «finisce «Le buche»»; chiusa dall'età, «Questa
+  impara 🔁 («Il viale»)» o «finisce «I massi»»; chiusa dall'età, «Questa
   tappa per ora è chiusa». Così anche la sbarra e la tana dello zaino.
 - **Resta fermo e sopra il segnalino** (`z-index` più alto) mentre quello
   viaggia; sta sopra la meta come se l'animale ci fosse già seduto.
