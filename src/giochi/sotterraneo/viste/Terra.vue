@@ -537,7 +537,7 @@ function parla(chi) {
   const primaVolta = chi === 'minatore' && !parlato.value
   if (primaVolta) { parlato.value = true; salva() }
   // la zona sveglia la racconta lui (docs/sotterraneo/zone.md): sentita, il «!» si spegne
-  if (chi === 'minatore' && props.annuncio && !props.annuncio.sentita) emit('sentito')
+  if (chi === 'minatore' && props.annuncio && !props.annuncio.sentita) { avviso.value = ''; emit('sentito') }
   // il minatore apre dicendo la strada: «dove vado adesso?» torna dopo un'altra domanda
   dialogo.value = { chi, nome: chiParla(chi), pagine: apertura(chi, ctx(), { primaVolta }), giro: ++giri,
                     chieste: new Set(chi === 'minatore' ? ['strada'] : []) }

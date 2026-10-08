@@ -17,6 +17,7 @@ import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Corredo } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { scrivi, leggi, dice } from '../../src/giochi/sotterraneo/motore/sosta.js'
+import { strada } from '../../src/giochi/sotterraneo/motore/dialoghi.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const indiceDi = k => CAMPAGNA.findIndex(t => t.chiave === k)
@@ -48,6 +49,14 @@ uguale('il giro passa da ogni discesa una volta', [...ORDINE_DELLE_ZONE].sort().
   uguale('potenzaDi la dice uguale', potenzaDi(finita, indiceDi('cantine'), 15), 15)
   uguale('le altre restano come nella storia', potenzaDi(finita, indiceDi('torre'), 15), null)
   controlla('l\'annuncio è la sua storia', annuncioDi(s).startsWith(POTENZIATE.cantine.annuncio), annuncioDi(s))
+  {
+    // il minatore la racconta per prima cosa, poi dice la strada (motore/dialoghi.js)
+    const tappe = CAMPAGNA.map((t, i) => ({ ...(i === s.indice ? zonaPotenziata(i, 13) : t), indice: i, fatta: true }))
+    const pagine = strada({ tappe, stati: {}, abisso: true, annuncio: { chiave: s.chiave, detto: annuncioDi(s) } })
+    uguale('nel dialogo del minatore la prima pagina è l\'annuncio', pagine[0].dato, 'annuncio')
+    controlla('e poi la strada per la zona', pagine.some(p => p.dato === 'detto' && p.testo.startsWith(POTENZIATE.cantine.nome)),
+              pagine.map(p => p.testo).join(' | '))
+  }
 
   // scesi dentro: la sosta tiene il livello di quando si è scesi
   const giu = { ...finita, sosta: { tappa: indiceDi('cantine'), potenza: 13 } }
