@@ -74,8 +74,6 @@ simulati.
 - [ ] **Altri modi di spendere monete grosse**: un campo che matura più in
       fretta, un annaffiatoio. Il money pit vive sull'attrezzatura (silos e
       fila ci sono già; gli addobbi sono la spesa piccola).
-- [ ] **Raccogliere i campi uno per uno** oggi è la stessa scheda dei cani,
-      e va bene; con molti campi diventerà noioso prima che comodo.
 - [ ] **Il bosco è salvato cella per cella** (`ostacoli` nel salvataggio,
       ~400 voci dopo sei acquisti di terra). Regge; se un giorno si
       comprano decine di piazzole conviene generarlo al volo dalle

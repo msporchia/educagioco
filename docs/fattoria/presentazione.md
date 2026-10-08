@@ -30,7 +30,10 @@ cappellini e occhiali che si vedono mentre passeggiano per il prato.
 ## Come si tocca
 
 Un solo gesto per tutto: **si tocca una cosa propria e si vede cosa ci si
-può fare.** Toccare un cane apre la sua scheda, toccare un campo la sua.
+può fare.** Toccare un cane apre la sua scheda. Toccare un campo o una
+macchina fa comparire sopra i suoi gettoni — i semi, il cesto, le ricette —
+che si trascinano col dito: un seme passato su tre campi vuoti li semina
+tutti e tre, una ricetta portata sul mulino va in fila.
 Tenere premuto e trascinare sposta, e contro il bordo dello schermo il
 prato scorre da solo. Tenere premuto sul prato apre il baule lì dove si
 vuole mettere qualcosa.

@@ -1,6 +1,7 @@
 # Come si tocca la fattoria
 
-I gesti sul prato, il baule, girare e rovesciare, e le regole dei fogli.
+I gesti sul prato, la bolla dei campi e delle macchine, il baule, girare e
+rovesciare, e le regole dei fogli.
 Le regole del dito che valgono per tutti i giochi stanno in
 [`../core/il-dito.md`](../core/il-dito.md), quelle dei fogli in
 [`../core/interfaccia.md`](../core/interfaccia.md).
@@ -8,9 +9,9 @@ Le regole del dito che valgono per tutti i giochi stanno in
 ## Sul prato
 
 - **Un gesto solo per tutto: si tocca una cosa propria e si vede cosa ci
-  si può fare.** Toccare un cane apre la sua scheda, toccare un campo la
-  sua. Tenere premuto e trascinare sposta; tenere premuto sul prato apre
-  il baule lì.
+  si può fare.** Toccare un cane apre la sua scheda; toccare un campo o
+  una macchina apre la sua bolla, sul prato (sotto). Tenere premuto e
+  trascinare sposta; tenere premuto sul prato apre il baule lì.
 - **Trascinando contro il bordo il mondo scorre da solo**: il dito fermo
   in una fascia lungo un bordo fa scorrere verso quel lato, piano se la si
   sfiora e svelto se ci si appoggia, e la cosa resta sotto il dito. Si
@@ -31,6 +32,55 @@ Le regole del dito che valgono per tutti i giochi stanno in
   della tela riceve subito dopo un `click` sul velo appena comparso
   (`zittisciIlFantasma` in `Gioco.vue`). La prova è un tocco vero via CDP
   (`integrazione/fattoria`).
+
+## La bolla: semi, cesto e ricette da trascinare
+
+Campi e macchine non aprono un foglio: sopra la cosa compare una bolla
+coi **gettoni**, e un gettone si prende e si porta sul prato, come in
+Hay Day. I bambini si lamentavano di un gioco «fermo», tutto tocca-foglio-
+tocca; adesso il gesto è uno solo e lavora su più cose.
+
+- **Campo vuoto → i semi** che il livello ha aperto. Un seme strisciato
+  sopra dei campi vuoti li semina tutti, uno per campo attraversato.
+- **Campo pronto → il cesto 🧺**: passato sopra i campi pronti li
+  raccoglie, e da ognuno sale «+1». Un cesto che non può raccogliere
+  (silo pieno, monete) è spento; toccato apre il foglio del campo, che
+  dice perché e porta il tasto per rimediare.
+- **Campo che cresce → la barra** e i minuti, senza gettoni.
+- **Macchina o recinto → le ricette**; una si trascina sopra una
+  macchina dello stesso tipo e va in fila. La bolla resta aperta, per
+  metterne un'altra. Premendo un gettone compaiono le **caselle** di cosa
+  prende (le stesse del foglio). Quello che è **pronto si ritira al
+  tocco**, prima di aprire la bolla; se non ci sta, si apre il foglio.
+- **Toccare un gettone senza trascinarlo** fa il gesto sulla cosa da cui
+  si è partiti (semina quel campo, mette in fila in quella macchina): chi
+  non ha ancora capito il trascinamento non resta fermo. Se c'erano altri
+  campi su cui il gesto lungo avrebbe lavorato, l'avviso lo dice.
+- **Il numerino** sul gettone è quanto se ne ha già (*mi serve?*), oro
+  se lo scomparto è pieno. **Spento non vuol dire muto**: toccato dice
+  cosa manca.
+- **Dove il gettone fa qualcosa lo dice la tela**: mentre lo si porta, i
+  campi o le macchine buone hanno un tratteggio d'oro; quella sotto il
+  dito si accende di verde. La lista la decide `Gioco.vue` (`bersagli`),
+  la tela la disegna e basta.
+- **Il 📋 nella bolla** apre il foglio di sempre (la fila per intero, il
+  posto in più, l'albero di quello che manca): la bolla è il gesto, il
+  foglio il dettaglio.
+- **Un tocco sul prato chiude la bolla**, e se tocca un'altra cosa apre
+  la sua; anche pizzicare, la rotella e un foglio che si apre la chiudono.
+- **Il gettone si tiene con la cattura del puntatore**: la bolla resta a
+  schermo (sbiadita) mentre lo si porta, perché togliendo l'elemento sotto
+  il dito la cattura si perde e il resto del gesto finirebbe alla tela.
+  Il gettone ingoia il proprio click fantasma (`touchend` annullato) e
+  non ascolta mai `click`.
+- **Il dito che corre salta delle celle**: fra due `pointermove` il
+  percorso si ricampiona a un terzo di cella, se no una strisciata svelta
+  semina un campo sì e uno no.
+- **Contro il bordo il prato scorre** anche col gettone in mano, come
+  con una panchina (`scorriDalBordo`).
+
+Nei test: `[data-bolla]`, `[data-gettone="<coltura|ricetta|cesto>"]`,
+`[data-bolla-titolo]`, `[data-bolla-foglio]`, `[data-bolla-fila]`, `[data-bolla-ricetta]`.
 
 ## Il bersaglio, l'aggancio, e i numeri che li tarano
 
