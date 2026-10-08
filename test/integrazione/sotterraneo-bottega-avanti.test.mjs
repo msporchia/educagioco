@@ -2,10 +2,10 @@
    LA BOTTEGA SENZA BLOCCHI DI STORIA, COL DITO VERO
 
    Un pezzo delle righe dopo della storia si compra se hai le gemme, a un
-   prezzo più alto quanto più è avanti (docs/sotterraneo/roba.md, «I
+   prezzo più alto quanto più è avanti (docs/sotterraneo/bottega.md, «I
    mercanti di sopra»). E la bottega non mostra mai roba che l'eroe non
    porta: il mago non vede la spada corta, l'ascia né la corazza.
-   Il mago, quattro discese finite, il bastone magico in mano: lo scettro
+   Il mago, tre discese finite, la verga in mano: lo scettro
    è nella riga dopo, quindi una riga avanti e costa il doppio.
    `node test/esegui.mjs sotterraneo-bottega-avanti`
    tempo: 60
@@ -22,13 +22,13 @@ const mago = EROI.find(e => e.chiave === 'mago')
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
-const roba = { v: 1, gemme: 99, zaino: [], mano: 'bastone-magico', mancina: null, corpo: 'saio', dito: 'amuleto-azzurro',
+const roba = { v: 1, gemme: 99, zaino: [], mano: 'verga', mancina: null, corpo: 'saio', dito: 'amuleto-azzurro',
                torcia: 0, torce: 0 }
-const stelle = { 0: 3, 1: 3, 2: 3, 3: 3 }
+const stelle = { 0: 3, 1: 3, 2: 3 }
 await semina(page, {
   coins: 300, settings: { sperimentali: true },
-  campagne: { sotterraneo: { tappa: 4, libera: false, stelle,
-    cfg: { mondo: MONDO, eroe: 'mago', avventure: { mago: { tappa: 4, libera: false, stelle, missioni: {},
+  campagne: { sotterraneo: { tappa: 3, libera: false, stelle,
+    cfg: { mondo: MONDO, eroe: 'mago', avventure: { mago: { tappa: 3, libera: false, stelle, missioni: {},
       roba, terra: { nebbia: 'f'.repeat(768), dove: MERCANTI.armaiolo.accanto, parlato: true } } } } } },
 })
 await scegli(page, 'sotterraneo')

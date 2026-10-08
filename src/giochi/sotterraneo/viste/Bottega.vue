@@ -2,7 +2,7 @@
 // La bottega di un mercante di sopra, come quella di un gioco di ruolo stretta in un telefono: in cima il
 // mercante, sotto l'eroe con le sue caselle e le gemme, le linguette del banco, la griglia dei pezzi e il
 // pannello di quello scelto col confronto. Un tocco sceglie, il secondo (o il tasto) compra: il dito sbaglia.
-// Le regole sono quelle del banco di prima (motore/bottega.js); il perché: docs/sotterraneo/roba.md, "La bottega"
+// Le regole sono quelle del banco di prima (motore/bottega.js); il perché: docs/sotterraneo/bottega.md, "La bottega e lo zaino"
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import Cornice from './Cornice.vue'
 import Addosso from './Addosso.vue'

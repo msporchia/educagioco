@@ -2,17 +2,17 @@
 // banco una volta per giro (fra una discesa finita e l'altra) e quello che si compra se ne va; le cose che non
 // finiscono (le cure, la torcia) stanno in cima. L'armaiolo e il rigattiere portano la riga della storia con cui
 // si entra nella prossima discesa (motore/storia.js). Gira in Node: il giocatore finto ci fa la spesa (banco.js).
-// Le regole: docs/sotterraneo/roba.md, "I mercanti di sopra".
+// Le regole: docs/sotterraneo/bottega.md, "I mercanti di sopra".
 import { Corredo, ABILITA_CONFRONTATE } from './corredo.js'
-import { COSE, A_SORTE, pescaMerce } from '../dati/cose.js'
+import { COSE, A_SORTE, pescaMerce, aLivello } from '../dati/cose.js'
 import { mercanteDi, vendeLa, righeDi, profonditaDelBanco, prezzoAvanti } from '../dati/mercanti.js'
 import { bancoDelPasso, vetrinaDelPasso, righeAvanti } from './storia.js'
 
 export class Bottega extends Corredo {
   // `finite`: discese finite (avanza.tappa). `banchi`: quello che è già stato pescato in questo giro
   // ({ armaiolo: ['spada', …] }, le botteghe dell'avventura); senza, si pesca alla prima apertura
-  constructor({ eroe, roba = null, finite = 0, banchi = null, rnd = Math.random } = {}) {
-    super({ eroe, roba })
+  constructor({ eroe, roba = null, finite = 0, banchi = null, rnd = Math.random, crescita = null } = {}) {
+    super({ eroe, roba, crescita })
     this.finite = finite
     this.rnd = rnd
     this.banchi = {}
@@ -22,7 +22,7 @@ export class Bottega extends Corredo {
 
   // Un banco pescato prima che si badasse alla famiglia può avere pezzi che l'eroe non porta: non si mostrano.
   // Al loro posto, se c'è, un pezzo della sua famiglia dello stesso gradino (stesso posto, stesso grado d'arma o
-  // stessa fascia di prezzo); se no si salta (docs/sotterraneo/roba.md, «I mercanti di sopra»)
+  // stessa fascia di prezzo); se no si salta (docs/sotterraneo/bottega.md, «I mercanti di sopra»)
   soloRobaMia(chiave, elenco) {
     const m = mercanteDi(chiave)
     const fascia = c => (c.grado ? `g${c.grado}` : c.prezzo <= 12 ? 'comune' : c.prezzo <= 22 ? 'buono' : 'raro')
@@ -35,7 +35,7 @@ export class Bottega extends Corredo {
                      fascia(COSE[x]) === fascia(c) && !resto.includes(x) && !this.possiedo(x) &&
                      righeAvanti(this.chiEro, this.finite, x) === 0)
         .sort((a, b) => Math.abs(COSE[a].prezzo - c.prezzo) - Math.abs(COSE[b].prezzo - c.prezzo) || (a < b ? -1 : 1))[0]
-      if (sostituto) resto.push(sostituto)
+      if (sostituto) resto.push(aLivello(sostituto, this.livelloEroe))
     }
     return resto
   }
@@ -70,7 +70,7 @@ export class Bottega extends Corredo {
 
   // quanto costa qui: il prezzo pieno, e di più se il pezzo nella storia viene dopo il passo (sovrapprezzo)
   quantoCosta(k) {
-    return prezzoAvanti(COSE[k].prezzo, righeAvanti(this.chiEro, this.finite, k))
+    return prezzoAvanti(this.prezzoDi(k), righeAvanti(this.chiEro, this.finite, k))
   }
 
   // i pezzi delle righe dopo che il banco non porta: si comprano lo stesso, a un prezzo più alto
@@ -89,6 +89,10 @@ export class Bottega extends Corredo {
     if (!p || !p.prima) return false
     return !ABILITA_CONFRONTATE.some(n => p.dopo[n] > p.prima[n])
   }
+
+  // Quello che la bottega mostra: tutto, tranne il pezzo che non alzerebbe niente di quello che si ha addosso (anche
+  // fra i pezzi avanti, che costano di più: un pezzo caro e uguale è una trappola)
+  siMostra(k) { return !this.sottoAddosso(k) }
 
   compraDa(chiave, k) {
     const b = this.banco(chiave)

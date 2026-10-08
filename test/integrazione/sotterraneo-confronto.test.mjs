@@ -3,7 +3,7 @@
 
    Il pannello di un pezzo che si può indossare mette «Addosso» a sinistra
    e «Questo» a destra, una riga per ogni abilità che almeno uno dei due
-   ha (docs/sotterraneo/roba.md, «La bottega e lo zaino»). Il caso con una
+   ha (docs/sotterraneo/bottega.md, «La bottega e lo zaino»). Il caso con una
    riga sola lo copre `sotterraneo-mercanti`; qui un eroe vestito (spada e
    scudo, un amuleto al dito) davanti al banco dell'armaiolo: lo spadone
    prende il posto di arma e scudo insieme, e uno scudo con più abilità
@@ -59,12 +59,14 @@ await attendi(page, 200)
 const pezziAddosso = await page.locator('[data-colonna="addosso"] [data-pezzo]').evaluateAll(els => els.map(e => e.dataset.pezzo))
 uguale('a sinistra due pezzi: la spada e lo scudo', pezziAddosso.join(), 'spada,scudo-borchiato')
 uguale('a destra lo spadone', await page.locator('[data-colonna="questo"] [data-pezzo]').getAttribute('data-pezzo'), 'spadone')
-uguale('e lo dice: due mani', await page.locator('[data-due-mani]').count(), 1)
-uguale('il braccio è meglio: +2 contro +4', `${await testo('[data-valore="att-addosso"]')} ${await testo('[data-valore="att-questo"]')}`, '+2 +4▲')
-uguale('la difesa dello scudo si perde: rossa', await page.locator('[data-abilita="dif"]').getAttribute('data-verso'), 'giu')
-uguale('anche la sua vita', await page.locator('[data-abilita="vita"]').getAttribute('data-verso'), 'giu')
-uguale('la sintesi', (await page.locator('[data-sintesi]').innerText()).trim(), 'meglio in 1, peggio in 2')
-uguale('il totale sull\'eroe: il braccio sale', await page.locator('[data-confronto="att"]').getAttribute('data-verso'), 'su')
+controlla('e lo dice chiaro: a due mani lo scudo torna nello zaino', /due mani.*scudo borchiato torna nello zaino/i.test(await page.locator('[data-due-mani]').innerText()),
+          await testo('[data-due-mani]'))
+const n = async sel => page.locator(sel).getAttribute('data-n')
+uguale('due cartellini: a sinistra il braccio delle due mani, +2', await n('[data-valore="att-addosso"]'), '+2')
+uguale('a destra lo spadone, +4', await n('[data-valore="att-questo"]'), '+4')
+uguale('la difesa e la vita dello scudo stanno solo a sinistra', await page.locator('[data-valore="dif-questo"], [data-valore="vita-questo"]').count(), 0)
+uguale('ogni cartellino dice livello e rarità', (await page.locator('[data-colonna="questo"]').innerText()).includes('liv. 1 · comune'), true)
+uguale('il netto sull\'eroe: il braccio sale', await page.locator('[data-confronto="att"]').getAttribute('data-verso'), 'su')
 uguale('e la difesa scende', await page.locator('[data-confronto="dif"]').getAttribute('data-verso'), 'giu')
 uguale('e la vita scende', await page.locator('[data-confronto="vita"]').getAttribute('data-verso'), 'giu')
 {
@@ -86,9 +88,10 @@ await toccaIl('[data-casella-pezzo="scudo-teschio"]')
 await page.waitForSelector('[data-pannello][data-cosa="scudo-teschio"] [data-affianca]', { timeout: 3000 })
 await attendi(page, 200)
 uguale('a sinistra lo scudo borchiato', await page.locator('[data-colonna="addosso"] [data-pezzo]').getAttribute('data-pezzo'), 'scudo-borchiato')
-uguale('la difesa è meglio: +1 contro +3', `${await testo('[data-valore="dif-addosso"]')} ${await testo('[data-valore="dif-questo"]')}`, '+1 +3▲')
-uguale('la vita dello scudo borchiato si perde: «—» a destra', `${await testo('[data-valore="vita-addosso"]')} ${await testo('[data-valore="vita-questo"]')}`, '+3 —▼')
-uguale('meglio in 1, peggio in 1', (await page.locator('[data-sintesi]').innerText()).trim(), 'meglio in 1, peggio in 1')
+uguale('la difesa: +1 a sinistra, +3 a destra', `${await n('[data-valore="dif-addosso"]')} ${await n('[data-valore="dif-questo"]')}`, '+1 +3')
+uguale('la vita dello scudo borchiato sta solo a sinistra', `${await n('[data-valore="vita-addosso"]')} ${await page.locator('[data-valore="vita-questo"]').count()}`, '+3 0')
+uguale('le mani non cambiano: niente da dire', await page.locator('[data-due-mani]').count(), 0)
+uguale('il netto: la difesa sale, la vita scende', `${await page.locator('[data-confronto="dif"]').getAttribute('data-verso')} ${await page.locator('[data-confronto="vita"]').getAttribute('data-verso')}`, 'su giu')
 await scatto(page, 'confronto-scudo')
 
 controlla('nessun errore nella pagina', errori.length === 0, errori.join(' | '))

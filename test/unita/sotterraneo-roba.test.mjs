@@ -9,7 +9,7 @@
    `node test/esegui.mjs sotterraneo-roba --niente-build`
    tempo: 100 */
 import { CAMPAGNA, L_ABISSO, svenimentiDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { COSE, CURE, SEGNI, IN_VENDITA, STANZE_TORCIA } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { COSE, CURE, SEGNI, IN_VENDITA, STANZE_TORCIA, baseDi, aLivello } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti, schedaDi, sovrapprezzo, prezzoAvanti }
   from '../../src/giochi/sotterraneo/dati/mercanti.js'
@@ -21,7 +21,7 @@ import { ABILITA, affiancatoDi, sintesiDi } from '../../src/giochi/sotterraneo/v
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { gioca, misuraLaStoria } from '../../src/giochi/sotterraneo/motore/banco.js'
-import { robaAttesa, migliora, righeAvanti } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { robaAttesa, migliora, righeAvanti, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { passoDi, premiDella } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -178,7 +178,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
         const indietro = new Bottega({ eroe, roba: robaAttesa(eroe, finite - 1), finite, rnd: seminato(100 + s * 7 + finite) })
         const dovuti = premiDella(eroe, finite - 1).filter(k => migliora(indietro, k))
         const offerti = [...indietro.banco('armaiolo').roba, ...indietro.banco('rigattiere').roba]
-        mancati += dovuti.filter(k => !offerti.includes(k)).length
+        mancati += dovuti.filter(k => !offerti.map(baseDi).includes(k)).length
         // chi ha già la riga: niente della riga dopo, e niente sopra il prezzo del passo
         const pari = new Bottega({ eroe, roba: robaAttesa(eroe, finite), finite, rnd: seminato(200 + s * 7 + finite) })
         const dopo = new Set(premiDella(eroe, finite))
@@ -188,8 +188,8 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
                     r.filter(x => x.sempre).map(x => x.chiave).join() === m.sempre.join())
           const pescati = r.filter(x => !x.sempre && !x.avanti).map(x => x.chiave)
           fuori += pescati.filter(k => !vendeLa(m, k)).length
-          avanti += pescati.filter(k => dopo.has(k)).length
-          if (m.passo) troppoCare += pescati.filter(k => COSE[k].prezzo > tetto(m.passo)).length
+          avanti += pescati.filter(k => dopo.has(baseDi(k))).length
+          if (m.passo) troppoCare += pescati.filter(k => COSE[baseDi(k)].prezzo > tetto(m.passo)).length
           else uguale(`${m.chiave}, ${finite} finite: tante righe quante dichiara`, pescati.length, righeDi(m, finite))
         }
       }
@@ -252,7 +252,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
 /* ══════════ 7b. la bottega: confronto, vetrina, linguette ══════════
    Il pannello dice «⚔️ 3 → 5» coi numeri del motore (seLoMetto), il banco
    non resta mai vuoto (la vetrina dei pezzi più su, spenti) e quello che
-   non alza niente di quello addosso non si mostra (docs/sotterraneo/roba.md,
+   non alza niente di quello addosso non si mostra (docs/sotterraneo/bottega.md,
    «La bottega e lo zaino»). */
 {
   const nudo = new Bottega({ roba: { ...ROBA_VUOTA(), gemme: 50 } })
@@ -307,22 +307,39 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   controlla('un pezzo fuori dalla vetrina non si compra', ricco.compraDa('armaiolo', 'bipenne-solare') === null)
 
   /* solo roba per me: nessun pezzo di una famiglia che l'eroe non porta, né in vendita né in vetrina, a ogni giro */
-  let altrui = 0, vuoti = 0
+  let altrui = 0, vuoti = 0, inutili = 0
   for (const eroe of EROI.map(e => e.chiave))
     for (let finite = 0; finite <= CAMPAGNA.length; finite++)
       for (let s = 0; s < 5; s++) {
-        const b = new Bottega({ eroe, finite, roba: { ...robaAttesa(eroe, finite), gemme: 99 }, rnd: seminato(40 + s * 13 + finite) })
+        const b = new Bottega({ eroe, finite, roba: { ...robaAttesa(eroe, finite), gemme: 99 }, crescita: crescitaAttesa(eroe, finite), rnd: seminato(40 + s * 13 + finite) })
         for (const m of MERCANTI) {
           for (const r of b.mercanzia(m.chiave)) if (COSE[r.chiave].dove && !b.posso(r.chiave)) altrui++
         }
         // il banco non resta mai vuoto: finché c'è qualcosa di più forte da avere, l'armaiolo lo mostra
-        const mostrati = b.mercanzia('armaiolo').filter(r => r.avanti || !b.sottoAddosso(r.chiave))
+        const mostrati = b.mercanzia('armaiolo').filter(r => b.siMostra(r.chiave))
         const ultima = passoDi(eroe, CAMPAGNA.length)
-        const resta = ['mano', 'mancina', 'corpo'].some(c => ultima[c] && migliora(b, ultima[c]))
+        // resta qualcosa che alza davvero un numero: allora il banco non è vuoto
+        const resta = ['mano', 'mancina', 'corpo'].some(c => ultima[c] && migliora(b, aLivello(ultima[c], b.livelloEroe)) &&
+                                                            b.siMostra(aLivello(ultima[c], b.livelloEroe)))
         if (resta && !mostrati.length) vuoti++
+        // e quello che si mostra alza davvero qualcosa, anche i pezzi avanti
+        for (const r of mostrati) {
+          const p = b.seLoMetto(r.chiave)
+          if (p && p.prima && !ABILITA_CONFRONTATE.some(n => p.dopo[n] > p.prima[n]) && b.casella(COSE[r.chiave].dove)) inutili++
+        }
       }
   uguale('nessun pezzo di una famiglia che l\'eroe non porta', altrui, 0)
   uguale('l\'armaiolo non ha mai il banco vuoto prima della fine', vuoti, 0)
+  uguale('e non mostra mai un pezzo che non migliora niente, nemmeno fra quelli avanti', inutili, 0)
+
+  // il caso dell'utente: il bastone magico in mano (⚔️ 3), lo scettro una riga avanti (⚔️ 3 anche lui) non si mostra
+  const conBastone = new Bottega({ eroe: 'mago', finite: 3, roba: { ...ROBA_VUOTA(), mano: 'bastone-magico', gemme: 99 },
+                                   rnd: seminato(3) })
+  const offerti = conBastone.mercanzia('armaiolo').map(r => r.chiave)
+  controlla('lo scettro c\'è fra quello che il mago potrebbe avere', offerti.includes('scettro'), offerti.join(', '))
+  uguale('ma accanto al bastone magico non si mostra: non alza niente', conBastone.siMostra('scettro'), false)
+  const conVerga = new Bottega({ eroe: 'mago', finite: 3, roba: { ...ROBA_VUOTA(), mano: 'verga', gemme: 99 }, rnd: seminato(3) })
+  uguale('con la verga in mano invece sì', conVerga.siMostra('scettro'), true)
   /* un banco vecchio, pescato prima che si badasse alla famiglia: gli altrui spariscono, sostituiti dove si può */
   const maga = new Bottega({ eroe: 'mago', finite: 3, roba: ROBA_VUOTA(), banchi: { armaiolo: ['ascia', 'spada-corta', 'scudo-legno', 'corazza'] } })
   const vecchio = maga.banco('armaiolo').roba
@@ -342,7 +359,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
 
 /* ══════════ 7c. il confronto affiancato, riga per riga ══════════
    «Addosso» a sinistra, «Questo» a destra, una riga per ogni abilità che
-   almeno uno dei due ha (docs/sotterraneo/roba.md, «La bottega e lo zaino»):
+   almeno uno dei due ha (docs/sotterraneo/bottega.md, «La bottega e lo zaino»):
    il motore dà i numeri di ogni lato (seLoMetto().cambio), pezzo.js li mette
    in riga con il verso e la sintesi. */
 {
@@ -419,22 +436,29 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
 /* ══════════ 7b. la pozione della barra ══════════
    Un tocco sulla 🧪 della barra in basso beve senza aprire lo zaino
    (docs/sotterraneo/barra.md): la più piccola che riempie, o la più
-   grande se nessuna basta; in piena forma niente, l'elisir non conta. */
+   grande se nessuna basta. L'elisir conta fra le pozioni (è una boccetta
+   rossa: non contarlo era il guasto della casella che «non saliva»), e si
+   beve quando non c'è una cura da bere; in piena forma con sole cure niente. */
 {
   const c = new Corsa(CAMPAGNA[0], { seme: 3, eroe: 'cavaliere',
     roba: { v: 1, gemme: 0, zaino: ['pozione-grande', 'elisir-toro', 'pozione-piccola', 'pozione'], mano: null,
             mancina: null, corpo: null, dito: null, torcia: 0, torce: 0 } })
-  uguale('tre pozioni: l\'elisir non è una cura', c.pozioni, 3)
-  uguale('in piena forma non si beve', c.pozioneGiusta(), null)
+  uguale('quattro pozioni: anche l\'elisir', c.pozioni, 4)
+  uguale('in piena forma, l\'elisir (vale uguale a ogni momento)', c.zaino[c.pozioneGiusta()], 'elisir-toro')
   c.vita = c.vitaMax - 5
   uguale('mancano 5: la boccetta basta', c.zaino[c.pozioneGiusta()], 'pozione-piccola')
   c.vita = c.vitaMax - 8
   uguale('mancano 8: la pozione, non l\'ampolla', c.zaino[c.pozioneGiusta()], 'pozione')
   c.vita = 1
-  c.vitaBase += 30
+  c.vitaPiu += 30
   uguale('ne mancano più di quante ne curi la più grande: l\'ampolla', c.zaino[c.pozioneGiusta()], 'pozione-grande')
   c.zaino = ['elisir-toro']
-  uguale('senza cure niente', c.pozioneGiusta(), null)
+  uguale('ferito e senza cure: l\'elisir', c.zaino[c.pozioneGiusta()], 'elisir-toro')
+  c.zaino = ['pozione']
+  c.vita = c.vitaMax
+  uguale('in piena forma con sole cure non si beve', c.pozioneGiusta(), null)
+  c.zaino = []
+  uguale('senza pozioni niente', c.pozioneGiusta(), null)
 }
 
 /* ══════════ 8. l'equilibrio, in piccolo ══════════

@@ -462,7 +462,7 @@ export async function lasciaLaDiscesa(page) {
   await page.waitForSelector('[data-terra]', { timeout: 5000 })
 }
 
-/* La bottega di un mercante del sotterraneo (docs/sotterraneo/roba.md, «La bottega e lo zaino»): un tocco
+/* La bottega di un mercante del sotterraneo (docs/sotterraneo/bottega.md, «La bottega e lo zaino»): un tocco
    sceglie, il tasto compra o vende. `tocca(x, y)`: il dito (CDP) o, di difetto, il mouse. La bottega
    appena aperta è cieca per 320 ms: chi chiama l'ha già aspettata. */
 async function toccaIlCentro(page, sel, tocca) {
