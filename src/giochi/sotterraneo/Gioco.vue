@@ -312,7 +312,7 @@ const banco = computed(() => {
   // si mostra solo quello che migliora davvero qualcosa addosso, anche i pezzi delle righe dopo (`avanti`), che si
   // comprano a un prezzo più alto (`costa`: il `prezzo` resta quello pieno). Regola dell'utente, 8 ottobre: lo
   // scettro accanto al bastone magico (⚔️ 3 tutti e due) «non sembra molto interessante»
-  const vendibili = b.mercanzia(k).filter(({ chiave: x }) => b.siMostra(x))
+  const vendibili = b.mercanziaVista(k)
     .map(({ chiave: x, sempre, avanti }) => {
       const costa = b.quantoCosta(x)
       return {

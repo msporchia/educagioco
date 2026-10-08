@@ -9,7 +9,7 @@
    `node test/esegui.mjs sotterraneo-roba --niente-build`
    tempo: 100 */
 import { CAMPAGNA, L_ABISSO, svenimentiDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { COSE, CURE, SEGNI, IN_VENDITA, STANZE_TORCIA, baseDi, aLivello } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { COSE, CURE, SEGNI, IN_VENDITA, STANZE_TORCIA, baseDi, aLivello, chiaveDelPezzo } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti, schedaDi, sovrapprezzo, prezzoAvanti }
   from '../../src/giochi/sotterraneo/dati/mercanti.js'
@@ -23,7 +23,8 @@ import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { gioca, misuraLaStoria } from '../../src/giochi/sotterraneo/motore/banco.js'
 import { robaAttesa, migliora, righeAvanti, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { passoDi, premiDella } from '../../src/giochi/sotterraneo/dati/storia.js'
-import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
+import { EROI, eroeDi, portaLa } from '../../src/giochi/sotterraneo/dati/eroi.js'
+import { crescitaA } from '../../src/giochi/sotterraneo/motore/crescita.js'
 import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 1. i dati ══════════ */
@@ -331,6 +332,70 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   uguale('nessun pezzo di una famiglia che l\'eroe non porta', altrui, 0)
   uguale('l\'armaiolo non ha mai il banco vuoto prima della fine', vuoti, 0)
   uguale('e non mostra mai un pezzo che non migliora niente, nemmeno fra quelli avanti', inutili, 0)
+
+  /* ogni linguetta che veste ha sempre almeno tre pezzi, tutti migliori e portabili: se non bastano quelli del suo
+     livello il mercante ne propone di più alti (docs/sotterraneo/bottega.md, «Mai una linguetta vuota») */
+  {
+    // null: il livello atteso della storia; `rara`: l'eroe ha addosso roba rara di quel livello
+    const prove = [{ lv: null, rara: false }, { lv: null, rara: true }, { lv: 15, rara: false }, { lv: 40, rara: true }, { lv: 90, rara: false }]
+    const raro = (b, L, ...ab) => chiaveDelPezzo(b, L, 'raro', ab)
+    const addossoRaro = (eroe, L) => {
+      const porta = (dove, ...basi) => basi.find(x => COSE[x].dove === dove && portaLa(eroeDi(eroe), COSE[x]))
+      const mano = porta('mano', 'scettro', 'balestra', 'bipenne', 'spadone')
+      return { ...ROBA_VUOTA(), mano: raro(mano, L, 'att', 'fuoco'),
+               mancina: COSE[mano].mani === 2 ? null : raro('scudo-teschio', L, 'dif', 'vita'),
+               corpo: raro(porta('corpo', 'manto', 'corazza'), L, 'dif', 'vita'), dito: raro('amuleto-osso', L, 'dif', 'vita') }
+    }
+    let giri = 0, pochi = 0, nonMigliora = 0, nonPortabile = 0, rialzi = 0, storti = 0
+    const esempi = []
+    for (const eroe of EROI.map(e => e.chiave))
+      for (const { lv, rara } of prove)
+          for (let finite = 0; finite <= CAMPAGNA.length; finite++) {
+            const crescita = lv == null ? crescitaAttesa(eroe, finite) : crescitaA(eroeDi(eroe), lv)
+            const roba = { ...(rara ? addossoRaro(eroe, lv || 6) : robaAttesa(eroe, finite)), gemme: 7 }
+            const b = new Bottega({ eroe, finite, roba, crescita, rnd: seminato(9 + finite) })
+            for (const m of MERCANTI) {
+              const vista = b.mercanziaVista(m.chiave)
+              uguale(`${m.chiave}: due volte la stessa vetrina`, b.mercanziaVista(m.chiave).map(r => r.chiave).join(), vista.map(r => r.chiave).join())
+              for (const s of m.schede.filter(x => x.dove)) {
+                giri++
+                const qui = vista.filter(r => COSE[r.chiave].dove && schedaDi(m, r.chiave) === s)
+                if (qui.length < 3) { pochi++; esempi.push(`${eroe} lv${lv} f${finite} ${m.chiave}/${s.chiave}: ${qui.length}`) }
+                for (const r of qui) {
+                  const p = b.seLoMetto(r.chiave)
+                  if (!b.posso(r.chiave) || !p) { nonPortabile++; continue }
+                  if (p.bloccata || (p.prima && !ABILITA_CONFRONTATE.some(n => p.dopo[n] > p.prima[n]))) nonMigliora++
+                  if (r.rialzo) {
+                    rialzi++
+                    const conf = b.confronto(r.chiave)
+                    if (conf.addosso && !(conf.meglio > 0)) storti++
+                    if (!(b.quantoCosta(r.chiave) > 0)) storti++
+                  }
+                }
+              }
+            }
+          }
+    controlla(`in ${giri} linguette (4 eroi, vari livelli, roba rara addosso) nessuna ha meno di tre pezzi`, pochi === 0,
+              esempi.slice(0, 6).join(' | '))
+    uguale('tutti portabili dall\'eroe', nonPortabile, 0)
+    uguale('e tutti migliorano qualcosa di quello che ha addosso', nonMigliora, 0)
+    controlla('i pezzi in più servono davvero (con roba rara quasi sempre)', rialzi > giri / 4, `${rialzi}/${giri}`)
+    uguale('quelli in più alzano il punteggio e hanno un prezzo vero', storti, 0)
+    // il pezzo in più si compra al prezzo che dice, anche se dopo non si ha più niente
+    const ricco = new Bottega({ eroe: 'mago', finite: 3, roba: { ...addossoRaro('mago', 20), gemme: 5000 }, crescita: crescitaA(eroeDi('mago'), 20), rnd: seminato(2) })
+    const piu = ricco.rialzi('armaiolo')[0]
+    controlla('con roba rara addosso l\'armaiolo ha pezzi in più', !!piu)
+    const costo = ricco.quantoCosta(piu.chiave)
+    uguale('un pezzo in più si compra', ricco.compraDa('armaiolo', piu.chiave)?.che, 'comprato')
+    uguale('al prezzo che dice', ricco.gemme, 5000 - costo)
+    // senza gemme resta lì, spento, col prezzo vero: non sparisce
+    const povero = new Bottega({ eroe: 'mago', finite: 3, roba: { ...addossoRaro('mago', 20), gemme: 1 }, crescita: crescitaA(eroeDi('mago'), 20), rnd: seminato(2) })
+    controlla('senza gemme il pezzo in più c\'è lo stesso', povero.mercanziaVista('armaiolo').some(r => r.rialzo))
+    uguale('ma non si compra', povero.compraDa('armaiolo', piu.chiave)?.che, 'niente')
+    // uno scudo con un'arma a due mani in pugno non migliora niente: non si mostra
+    const duemani = new Bottega({ eroe: 'nano', finite: 6, roba: { ...ROBA_VUOTA(), mano: 'bipenne' } })
+    controlla('con una bipenne in pugno lo scudo non si mostra', duemani.mercanziaVista('armaiolo').every(r => COSE[r.chiave].dove !== 'mancina'))
+  }
 
   // il caso dell'utente: il bastone magico in mano (⚔️ 3), lo scettro una riga avanti (⚔️ 3 anche lui) non si mostra
   const conBastone = new Bottega({ eroe: 'mago', finite: 3, roba: { ...ROBA_VUOTA(), mano: 'bastone-magico', gemme: 99 },

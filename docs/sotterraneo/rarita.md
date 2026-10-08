@@ -132,7 +132,7 @@ L'armaiolo e il rigattiere portano la riga della storia (com'era,
 [bottega.md](bottega.md)) **al livello dell'eroe**, e anche i pezzi della
 vetrina avanti; le cose in più (`altre`) sono a tono e una su tre magica
 (`MAGICI_SUL_BANCO`). Il resto della bottega non cambia: pezzi avanti a
-sovrapprezzo, solo roba che l'eroe porta, banco mai vuoto. Il rigattiere
+sovrapprezzo, solo roba che l'eroe porta, ogni linguetta con almeno tre pezzi ([bottega.md](bottega.md)). Il rigattiere
 compra a metà del prezzo vero (livello e rarità compresi). Un pezzo
 magico, raro o col nome si giudica sui numeri, non sul posto della sua base
 nella riga (`migliora`).

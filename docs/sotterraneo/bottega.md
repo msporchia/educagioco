@@ -53,10 +53,24 @@ più nessuno.
   dal 3–12% all'11–29%): è il premio per averle messe da parte. Curve provate
   sul giocatore che gira tutto: ×1,5 per la prima riga e +0,5 a ogni altra
   regalavano la grotta (a 4/10 il 41% contro il 3%), troppo.
-- **Il banco non resta mai vuoto**: dietro ai pezzi del passo ci sono quelli
-  delle righe dopo, che il bambino vede e può sperare di potersi permettere.
-  Un mercante non dice mai «non ho niente per te»; solo a chi ha già tutto
-  dice che il resto sta nell'abisso (`[data-banco-vuoto]`).
+- **Mai una linguetta vuota** (`rialzi` in `motore/bottega.js`): ogni
+  linguetta che veste (armi, scudi e armature, gioielli) ha sempre almeno
+  tre pezzi (`PEZZI_PER_LINGUETTA`), tutti che migliorano quello che l'eroe
+  ha addosso in quel posto. Se fra quelli del suo livello (il passo e la
+  vetrina) non bastano, il mercante ne propone di livello o rarità più alti
+  dello stesso tipo — comune al livello dopo, magico e raro con le abilità
+  che nascono in quella casella — dal meno caro, uno per base diversa, e solo
+  quelli che alzano il punteggio. Costano più delle gemme che l'eroe ha? Restano
+  lì, spenti, col prezzo vero (e il sovrapprezzo, se la base è delle righe
+  dopo). Nessun caso: stessa roba addosso, stessi pezzi. Il livello è senza
+  tetto e numeri e punteggio crescono con lui, quindi un pezzo che migliora
+  c'è sempre: «Hai già il meglio che ho» non serve più ed è stato tolto.
+  **Provato: solo i migliorativi lasciava il banco vuoto** — con boss e
+  rari addosso (o a fine storia) l'armaiolo non aveva niente da mostrare, e
+  l'utente: «l'armaiolo dovrebbe sempre avere armi, in caso costano troppo».
+  I pezzi in più non entrano nel banco pescato (`mercanzia`): li vede solo
+  chi apre la bottega (`mercanziaVista`), così il giocatore finto delle
+  misure non li compra e l'equilibrio non cambia.
 - **Solo roba per l'eroe** (`posso` in `Bottega.banco`, `bancoDelPasso`): né
   in vendita né in vetrina ci sono pezzi di famiglie che l'eroe non porta (la
   verga al cavaliere, l'ascia al mago). Un banco già pescato con roba altrui
@@ -64,7 +78,7 @@ più nessuno.
   (stesso grado d'arma o stessa fascia di prezzo), o senza (`soloRobaMia`).
 - **Quello che non alza niente non si mostra** (`siMostra` e `sottoAddosso`
   in `motore/bottega.js`), **nemmeno fra i pezzi avanti**: resta pescato ma
-  non si vede. Una seconda arma leggera con la mano libera alza il braccio, e
+  non si vede. Né uno scudo con un'arma a due mani in pugno: non si può portare. Una seconda arma leggera con la mano libera alza il braccio, e
   quindi si vede. Regola dell'utente, 8 ottobre: lo scettro accanto al
   bastone magico (⚔️ 3 tutti e due, e più caro perché avanti) «non sembra
   molto interessante»; contano livello, rarità e abilità.
@@ -166,14 +180,14 @@ Nei test: `[data-bottega]` (con `data-mercante-aperto`),
 valore in `data-n`), `[data-due-mani]`, `[data-storia]`,
 `[data-avanti-costa]`, `[data-non-puoi]`, `[data-azione="compra"]`,
 `[data-azione="vendi"]`, `[data-detto-banco]`, `[data-battuta]`,
-`[data-chi-compra]`, `[data-banco-vuoto]`, `[data-tasche-vuote]`,
+`[data-chi-compra]`, `[data-tasche-vuote]`,
 `[data-gemme-bottega]`; nello zaino `[data-zaino]`, `[data-tasca]` (con
 `data-cosa`), `[data-azione="usa|butta|riponi|chiudi"]`, `[data-torcia-zaino]`;
 in tutte e due `[data-casella="<dove>"]` (con `data-cosa`) e `[data-chiudi]`.
 `compraNellaBottega`, `vendiNellaBottega` e `allaLinguettaDi` in
 `test/aiuto/browser.mjs`; `unita/sotterraneo-roba` (i numeri del confronto abilità per abilità, la
-sovrapprezzo dei pezzi avanti, nessun pezzo di famiglie non portate, il banco mai vuoto, quello che non si
-mostra, le linguette),
+sovrapprezzo dei pezzi avanti, nessun pezzo di famiglie non portate, ogni linguetta con almeno tre pezzi che migliorano, per i quattro eroi, a ogni discesa e a vari livelli, anche con roba rara addosso;
+quello che non si mostra, le linguette),
 `integrazione/sotterraneo-mercanti` (col dito: si sceglie, si compra, si
 vende, il confronto affiancato, lo zaino che indossa e fa bere),
 `integrazione/sotterraneo-confronto` (più abilità: lo spadone contro spada e

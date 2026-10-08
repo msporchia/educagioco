@@ -171,11 +171,8 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
                    :data-casella-pezzo="r.chiave" :data-avanti="r.avanti || null"
                    :data-posso="puoiComprare(r) ? '1' : '0'" @click="toccaMerce(r)" />
         </div>
-        <!-- succede solo a chi ha già tutto quello che il mercante sa fare: la vetrina è finita -->
-        <p v-if="!roba.length" class="sot-banco-voce" data-banco-vuoto>
-          Hai già il meglio che ho. Quello che c'è più giù, nell'abisso, io non lo so fare.
-        </p>
-        <p v-else-if="!qui.length" class="sot-banco-voce">Qui, per oggi, niente di nuovo: guarda l'altro banco.</p>
+        <!-- ogni linguetta che veste ha sempre i suoi pezzi (motore/bottega.js, rialzi): questa riga non serve a chi veste -->
+        <p v-if="!qui.length" class="sot-banco-voce">Qui, per oggi, niente di nuovo: guarda l'altro banco.</p>
       </template>
       <template v-else>
         <div class="sot-griglia">

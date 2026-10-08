@@ -56,8 +56,11 @@ const mostrati = []
 for (const s of await page.locator('[data-bottega] [data-scheda]').evaluateAll(els => els.map(e => e.dataset.scheda))) {
   await toccaIl(`[data-bottega] [data-scheda="${s}"]`)
   await attendi(page, 150)
-  mostrati.push(...await page.locator('[data-casella-pezzo]').evaluateAll(els => els.map(e => e.dataset.casellaPezzo)))
+  const qui = await page.locator('[data-casella-pezzo]').evaluateAll(els => els.map(e => e.dataset.casellaPezzo))
+  controlla(`la linguetta «${s}» non resta mai con meno di tre pezzi`, qui.length >= 3, qui.join())
+  mostrati.push(...qui)
 }
+uguale('e niente «Hai già il meglio che ho»', await page.locator('[data-banco-vuoto]').count(), 0)
 const altrui = mostrati.filter(k => COSE[k].famiglia && !mago.porta.includes(COSE[k].famiglia))
 uguale('il mago non vede armi o armature che non porta', altrui.join(), '')
 uguale('né la ✋ di quello che non fa per lui', await page.locator('[data-non-puoi]').count(), 0)

@@ -4,9 +4,15 @@
 // si entra nella prossima discesa (motore/storia.js). Gira in Node: il giocatore finto ci fa la spesa (banco.js).
 // Le regole: docs/sotterraneo/bottega.md, "I mercanti di sopra".
 import { Corredo, ABILITA_CONFRONTATE } from './corredo.js'
-import { COSE, A_SORTE, pescaMerce, aLivello } from '../dati/cose.js'
-import { mercanteDi, vendeLa, righeDi, profonditaDelBanco, prezzoAvanti } from '../dati/mercanti.js'
+import { COSE, A_SORTE, pescaMerce, aLivello, chiaveDelPezzo, baseDi } from '../dati/cose.js'
+import { ABILITA_DEI_PEZZI, CHIAVI_ABILITA } from '../dati/pezzi.js'
+import { mercanteDi, vendeLa, righeDi, profonditaDelBanco, prezzoAvanti, schedaDi } from '../dati/mercanti.js'
 import { bancoDelPasso, vetrinaDelPasso, righeAvanti } from './storia.js'
+
+// quanti pezzi, almeno, ha ogni linguetta di un mercante che veste (docs/sotterraneo/bottega.md, «Mai una linguetta
+// vuota»), e fin dove si spinge il livello dei pezzi in più per trovarli
+export const PEZZI_PER_LINGUETTA = 3
+const RIALZO_MASSIMO = 80
 
 export class Bottega extends Corredo {
   // `finite`: discese finite (avanza.tappa). `banchi`: quello che è già stato pescato in questo giro
@@ -84,7 +90,10 @@ export class Bottega extends Corredo {
   // cambia, cambia cosa si vede). Una seconda arma leggera nella mano libera alza il braccio, quindi si vede
   sottoAddosso(k) {
     const c = COSE[k]
-    if (!c || !c.dove || !this.posso(k) || !this.casella(c.dove)) return false
+    if (!c || !c.dove || !this.posso(k)) return false
+    // uno scudo con un'arma a due mani in pugno non si può portare: non migliora niente
+    if (c.dove === 'mancina' && this.aDueMani(this.mano)) return true
+    if (!this.casella(c.dove)) return false
     const p = this.seLoMetto(k)
     if (!p || !p.prima) return false
     return !ABILITA_CONFRONTATE.some(n => p.dopo[n] > p.prima[n])
@@ -94,11 +103,76 @@ export class Bottega extends Corredo {
   // fra i pezzi avanti, che costano di più: un pezzo caro e uguale è una trappola)
   siMostra(k) { return !this.sottoAddosso(k) }
 
+  // Quello che la bottega mette in mostra: il banco e la vetrina di quello che migliora, e per ogni linguetta che
+  // veste i pezzi in più perché non resti mai sotto PEZZI_PER_LINGUETTA (`rialzi`)
+  mercanziaVista(chiave) {
+    const m = mercanteDi(chiave)
+    if (!m) return []
+    const vista = this.mercanzia(chiave).filter(r => this.siMostra(r.chiave))
+    return [...vista, ...this.rialzi(chiave, vista)]
+  }
+
+  // I pezzi in più: per ogni linguetta che veste (`dove`) con meno di PEZZI_PER_LINGUETTA pezzi, quelli dello stesso
+  // mercante, che l'eroe porta, di livello o rarità più alti di quelli di prima, finché migliorano davvero quello che
+  // ha addosso in quel posto (punteggio più alto). Dal meno caro: costano di più delle gemme che ha, e restano
+  // spenti col prezzo vero. Non c'è caso: stessa roba addosso, stessi pezzi
+  rialzi(chiave, vista = null) {
+    const m = mercanteDi(chiave)
+    if (!m) return []
+    vista = vista || this.mercanzia(chiave).filter(r => this.siMostra(r.chiave))
+    const fuori = []
+    for (const s of m.schede) {
+      if (s.vendi || !s.dove) continue
+      const qui = vista.filter(r => COSE[r.chiave].dove && schedaDi(m, r.chiave) === s)
+      const manca = PEZZI_PER_LINGUETTA - qui.length
+      if (manca > 0) fuori.push(...this.rialziDi(m, s, manca, new Set(vista.map(r => r.chiave))))
+    }
+    return fuori
+  }
+
+  rialziDi(m, scheda, quanti, visti) {
+    const basi = A_SORTE.filter(b => COSE[b].dove && scheda.dove.includes(COSE[b].dove) && vendeLa(m, b) &&
+                                     !m.sempre.includes(b) && this.posso(b))
+    const L = this.livelloEroe
+    const buoni = []
+    const prova = k => {
+      if (visti.has(k) || this.possiedo(k) || !COSE[k] || !this.siMostra(k)) return
+      const conf = this.confronto(k)
+      if (!conf || (conf.addosso && !(conf.meglio > 0))) return
+      visti.add(k)
+      buoni.push({ chiave: k, sempre: false, avanti: righeAvanti(this.chiEro, this.finite, k), rialzo: true,
+                   costa: this.quantoCosta(k) })
+    }
+    // livello dopo livello: il pezzo comune più alto, poi il magico e il raro con le abilità che nascono lì
+    for (let su = 0; su <= RIALZO_MASSIMO && buoni.length < quanti + 2; su++)
+      for (const b of basi) {
+        prova(chiaveDelPezzo(b, L + su))
+        for (const rarita of ['magico', 'raro']) {
+          const possibili = CHIAVI_ABILITA.filter(a => ABILITA_DEI_PEZZI[a].dove.includes(COSE[b].dove))
+          const n = rarita === 'magico' ? 1 : 2
+          if (possibili.length < n + 1) continue
+          const seme = [...b].reduce((x, ch) => x + ch.charCodeAt(0), 0) + su
+          const abilita = Array.from({ length: n }, (_, i) => possibili[(seme + i * 3) % possibili.length])
+          if (new Set(abilita).size === n) prova(chiaveDelPezzo(b, L + su, rarita, abilita))
+        }
+      }
+    // dal meno caro, e prima uno per ogni base diversa
+    buoni.sort((a, b) => a.costa - b.costa || (a.chiave < b.chiave ? -1 : 1))
+    const presi = [], basiPrese = new Set()
+    for (const r of buoni) if (presi.length < quanti && !basiPrese.has(baseDi(r.chiave))) {
+      presi.push(r)
+      basiPrese.add(baseDi(r.chiave))
+    }
+    for (const r of buoni) if (presi.length < quanti && !presi.includes(r)) presi.push(r)
+    return presi.map(({ costa, ...r }) => r)
+  }
+
   compraDa(chiave, k) {
     const b = this.banco(chiave)
     if (!b) return null
     // un pezzo più avanti non sta nel banco pescato: si compra a parte, e non c'è più perché ora lo si ha
-    if (this.vetrina(chiave).some(v => v.chiave === k)) return this.compra(k, { roba: [], sempre: [k] })
+    if (this.vetrina(chiave).some(v => v.chiave === k) || this.rialzi(chiave).some(v => v.chiave === k))
+      return this.compra(k, { roba: [], sempre: [k] })
     return this.compra(k, b)
   }
 
