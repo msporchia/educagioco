@@ -3,7 +3,7 @@
 
    Serve a chi sviluppa, per passare le domande senza pensare alle
    risposte. La leva sta in `#admin` (spenta di partenza, del telefono e
-   non di un bambino); accesa, ogni domanda ha un «⏭ salta» che la dà
+   non di un bambino); accesa, ogni domanda ha un «⏭️ salta» che la dà
    per giusta. Qui la leva, e la Domanda comune (`quiz/Domanda.vue`)
    raggiunta dal banco di prova dei grandi: spenta il tasto non c'è,
    accesa c'è e fa passare alla domanda dopo. Che non lasci traccia

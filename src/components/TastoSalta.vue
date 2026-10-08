@@ -13,7 +13,7 @@ defineEmits(['salta'])
 <template>
   <button v-if="saltoAcceso" type="button" class="tasto-salta" data-azione="salta"
           aria-label="salta questa domanda (solo per provare)" @click="$emit('salta')">
-    ⏭ salta
+    ⏭️ salta
   </button>
 </template>
 

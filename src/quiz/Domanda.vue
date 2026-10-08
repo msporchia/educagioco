@@ -385,7 +385,7 @@ onUnmounted(() => {
 
       <div class="qz-esito">
         <template v-if="scelto >= 0">
-          <span v-if="saltata" class="bene" data-saltata>⏭ Saltata</span>
+          <span v-if="saltata" class="bene" data-saltata>⏭️ Saltata</span>
           <span v-else-if="scelto === domanda.giusta" class="bene">Giusto!</span>
           <!-- tre righe, tre mestieri: la correzione, il metodo (comeSiFa, l'unico utile anche domani), la dritta -->
           <template v-else><span class="male">Era questa.</span> {{ spiegazione.perche }}</template>

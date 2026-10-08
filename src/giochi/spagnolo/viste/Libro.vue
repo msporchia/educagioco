@@ -163,7 +163,7 @@ function togli(id) { if (!risposto.value) fila.value = F.togli(dom.value, fila.v
 
       <!-- dopo uno sbaglio: rileggere; per la frase e l'ordine si vede anche la soluzione -->
       <div v-if="risposto" class="ing-esito" :data-esito="giusta ? 'giusta' : 'sbagliata'">
-        <div v-if="giusta" class="ing-bene">{{ saltata ? '⏭ Saltata' : 'Giusto!' }}</div>
+        <div v-if="giusta" class="ing-bene">{{ saltata ? '⏭️ Saltata' : 'Giusto!' }}</div>
         <div v-else-if="dom.tipo === 'frase'" class="ing-male" data-si-fa>Non così: la frase che lo dice è quella
           in verde, qui sopra.</div>
         <template v-else-if="dom.tipo === 'ordine'">

@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL TASTO «SALTA» DENTRO I GIOCHI: NON SPORCA NIENTE
 
-   Ogni gioco che fa domande ha il suo «⏭ salta», e in ognuno vale la
+   Ogni gioco che fa domande ha il suo «⏭️ salta», e in ognuno vale la
    stessa regola: la partita va avanti come se avesse risposto bene, ma
    **il profilo non cambia** — né il ripasso (`items`), né le monete, né i
    contatori e i record (`totals`, `best`). Si prova guardando il profilo

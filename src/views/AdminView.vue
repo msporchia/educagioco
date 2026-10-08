@@ -141,7 +141,7 @@ const A_MANO = [
                 @click="accendiTuttoAperto(!aperto)"><span>🔓 Tutte le tappe aperte</span><i></i></button>
         <!-- di questo telefono, non del bambino: vedi docs/core/comandi.md -->
         <button :class="['leva', { acceso: saltoAcceso }]" data-azione="tasto-salta"
-                @click="accendiSalto(!saltoAcceso)"><span>⏭ Tasto «salta» sulle domande (telefono)</span><i></i></button>
+                @click="accendiSalto(!saltoAcceso)"><span>⏭️ Tasto «salta» sulle domande (telefono)</span><i></i></button>
       </section>
 
       <section class="gruppo">
