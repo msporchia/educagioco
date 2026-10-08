@@ -6,6 +6,7 @@
 import { ROCCIA, PAVIMENTO, PORTA, ARREDI } from '../dati/mondo.js'
 import { CURIOSITA } from '../dati/curiosita.js'
 import { MOSTRI, BRANCO, PASSO_DEL_BRANCO } from '../dati/mostri.js'
+import { GROSSI } from '../dati/grossi.js'
 import { raggiungibili } from '../../../motore/passi.js'
 
 export function seminato(seme) {
@@ -21,13 +22,15 @@ export function seminato(seme) {
 export class Livello {
   // `guardiano`: chi porta la chiave della scala, dichiarato dalla tappa (l'unica cosa che non si può aggirare)
   constructor({ seme = 1, piano = 0, largo = 52, alto = 52, giri = 4,
-                guardiano = 'scheletro', crescita = null, branco = BRANCO } = {}) {
+                guardiano = 'scheletro', crescita = null, branco = BRANCO, grosso = null } = {}) {
     this.seme = seme
     this.piano = piano
     this.largo = largo
     this.alto = alto
     this.giri = giri
     this.chiGuarda = guardiano
+    // il mostro grosso (dati/grossi.js) al posto del guardiano, nella stanza della scala: non tocca il caso del piano
+    this.grosso = grosso && GROSSI[grosso] ? grosso : null
     this.branco = branco              // chi si incontra per strada, fascia per fascia
     // dichiarato da chi genera il piano (dipende da quanto può scendere la discesa, vedi crescitaDi in dati/campagna.js)
     this.crescita = crescita || { ossa: 0.22, attOgni: 2 }
@@ -208,18 +211,26 @@ export class Livello {
 
     // la scala è chiusa e la chiave ce l'ha qualcuno: senza, i mostri si aggirano tutti e il gioco diventa
     // una passeggiata al buio. Il guardiano sta accanto alla scala.
-    const guardiano = this.mostro(this.chiGuarda, uscita.cx, uscita.cy - 1)
+    const guardiano = this.grosso ? this.mostroGrosso(this.grosso, uscita.cx, uscita.cy - 1)
+      : this.mostro(this.chiGuarda, uscita.cx, uscita.cy - 1)
     if (!this.calpestabile(guardiano.x, guardiano.y)) {
       guardiano.x = uscita.cx; guardiano.y = uscita.cy + 1
+    }
+    // il mostro grosso prova anche ai lati: deve stare nella sua stanza, accanto alla scala
+    if (this.grosso) for (const [dx, dy] of [[-1, 0], [1, 0]]) {
+      if (this.calpestabile(guardiano.x, guardiano.y) && !this.robeSu(guardiano.x, guardiano.y).length) break
+      guardiano.x = uscita.cx + dx; guardiano.y = uscita.cy + dy
     }
     if (this.calpestabile(guardiano.x, guardiano.y) && !this.robeSu(guardiano.x, guardiano.y).length) {
       guardiano.chiave = true
       this.robe.push(guardiano)
     } else {
-      // nessun posto buono accanto alla scala: la chiave la porta il mostro più lontano dall'ingresso
+      // nessun posto buono accanto alla scala: la chiave la porta il mostro più lontano dall'ingresso (e, se il piano
+      // ha un mostro grosso, diventa lui: dove stava quello)
       const lontano = this.robe.filter(r => r.che === 'mostro')
         .sort((a, b) => Math.hypot(b.x - ingresso.cx, b.y - ingresso.cy) -
                         Math.hypot(a.x - ingresso.cx, a.y - ingresso.cy))[0]
+      if (lontano && this.grosso) Object.assign(lontano, this.mostroGrosso(this.grosso, lontano.x, lontano.y))
       if (lontano) lontano.chiave = true
     }
 
@@ -307,6 +318,17 @@ export class Livello {
              ossa, ossaMax: ossa,
              att: m.att + Math.floor(this.piano / this.crescita.attOgni) + (this.crescita.spinta || 0), dif: m.dif,
              chiave: false, morto: false }
+  }
+
+  // il mostro grosso: il mostro del bestiario su cui si regge, con più ossa e un colpo in più, il suo nome e la sua figura
+  mostroGrosso(id, x, y) {
+    const G = GROSSI[id]
+    const m = this.mostro(G.tipo, x, y)
+    m.ossa = m.ossaMax = Math.round(m.ossa * G.ossa)
+    m.att += G.att
+    m.grosso = id
+    m.nome = G.nome
+    return m
   }
 
   // solo le porte che danno su qualcosa che vale: una porta chiusa su una stanza vuota è una bugia. Si

@@ -3,10 +3,12 @@
 // spada una spada (senza, trovarne una migliore è solo un'emoji che cambia). Non calcola niente: riceve i
 // numeri già fatti dal motore.
 import Icona from './Icona.vue'
+import Grosso from './Grosso.vue'
 
 defineProps({
   mostro: { type: Object, required: true },   // { em, nome, ossa, ossaMax, att, dif, chiave }
   sprite: { type: String, default: null },    // il suo pezzo, quello che si vede sul campo
+  grosso: { type: Object, default: null },    // il mostro grosso (dati/grossi.js): la sua figura disegnata in codice
   colpo: { type: Number, required: true },
   restano: { type: Number, required: true },
   graffio: { type: Number, required: true },  // quello che passa anche rispondendo bene
@@ -23,7 +25,8 @@ defineProps({
   <div class="sot-scontro">
   <div class="sot-nemico" :key="scosso">
     <div class="sot-faccia" :class="{ 'sot-colpito': scosso }">
-      <Icona :sprite="sprite" :em="mostro.em" :scala="3" :emAlto="42" />
+      <Grosso v-if="grosso" :disegno="grosso.disegno" :colori="grosso.colori" :scala="2" />
+      <Icona v-else :sprite="sprite" :em="mostro.em" :scala="3" :emAlto="42" />
     </div>
     <div class="sot-dati">
       <b>{{ mostro.nome }}<span v-if="mostro.chiave" class="em"> 🗝️</span></b>

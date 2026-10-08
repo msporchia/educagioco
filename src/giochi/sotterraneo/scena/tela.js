@@ -15,6 +15,11 @@ import { creaFoglio, netto } from '../../../grafica/atlante.js'
 import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi } from './muri.js'
 import { dipingiPortale, PORTALE } from './portale.js'
 import { dipingiScalaSu } from './scala-su.js'
+import { GROSSI } from '../dati/grossi.js'
+import { telaDelGrosso, LATO } from './grossi.js'
+
+// l'aura di un pezzo per terra, del colore della sua rarità (docs/sotterraneo/rarita.md): il comune non ne ha
+const AURA = { magico: '111,141,255', raro: '255,210,63', leggendario: '255,154,46' }
 
 export class Tela {
   constructor(canvas) {
@@ -28,6 +33,8 @@ export class Tela {
     this.foglio.carica().catch(() => {})
     this.quadro = null
     this.mappaGrande = false   // la mappina aperta grande dalla barra in basso
+    this.colonne = []          // le colonne di luce di un livello salito: { x, y, t, colore, segui }
+    this.numerini = []         // l'esperienza di un mostro battuto, che sale dal campo e sparisce: { testo, x, y, t }
     this._raf = 0
   }
 
@@ -159,6 +166,8 @@ export class Tela {
       this.roba(r, luce, orologio, !!(corsa.toccabile && corsa.toccabile(r)), sc, corsa)
     }
     this.eroe(corsa, orologio)
+    this.colonneDiLuce(corsa, orologio)
+    this.numeriniCheSalgono(orologio)
     // il nome del bersaglio di una missione sta sopra a tutto, eroe compreso: se no ci passa sotto
     for (const e of this.etichette) this.etichetta(e.testo, e.px, e.py)
     if (corsa.bersaglio) this.bersaglio(corsa.bersaglio, orologio)
@@ -340,6 +349,8 @@ export class Tela {
       return
     }
 
+    if (r.che === 'mostro' && r.grosso) return this.grosso(r, px, py, t, alfa, luce)
+
     if (r.che === 'mostro') {
       const scheda = MOSTRI[r.tipo]
       // `unaPosa`: i mostri del bestiario nuovo non hanno una corsa separata, e chiederla darebbe un mostro invisibile senza errore
@@ -385,6 +396,8 @@ export class Tela {
 
     let su = 0
     if (r.che === 'cosa') {
+      const c = COSE[r.cosa]
+      if (c && AURA[c.rarita]) this.aura(px, py, t, alfa, AURA[c.rarita], c.rarita === 'leggendario')
       su = Math.sin(t * 2.6 + (r.x + r.y)) * 0.08
       const q = 0.16 + 0.06 * Math.sin(t * 2.6 + (r.x + r.y))
       ctx.fillStyle = `rgba(255,210,120,${q * alfa})`
@@ -424,6 +437,96 @@ export class Tela {
     // il segno sopra una porta chiusa: l'unica cosa con cui si sceglie dove andare, si vede anche in un piano già girato
     if (r.che === 'porta' && !r.aperta && SEGNI[r.segno])
       this.emoji(SEGNI[r.segno].em, px, py - 1.25, alfa, 0.5)
+  }
+
+  // Il mostro grosso (dati/grossi.js), disegnato in codice (scena/grossi.js): due caselle per due, coi piedi sul fondo della
+  // sua cella, che respira; l'alone rosso più largo, la chiave, il sonno e la barretta come gli altri
+  grosso(r, px, py, t, alfa, luce) {
+    const ctx = this.ctx
+    const G = GROSSI[r.grosso]
+    const q = r.sveglio ? 0.32 + 0.16 * Math.sin(t * 6) : 0.16
+    ctx.fillStyle = `rgba(224,100,79,${q * alfa})`
+    ctx.beginPath(); ctx.ellipse(px * T, py * T + T * 0.35, T * 1.05, T * 0.42, 0, 0, 7); ctx.fill()
+    const fig = G && telaDelGrosso(G.disegno, G.colori)
+    const respiro = 1 + 0.035 * Math.sin(t * (r.sveglio ? 5 : 2.2))
+    const w = LATO, h = LATO * respiro
+    if (fig) {
+      ctx.save()
+      ctx.globalAlpha = alfa
+      if (r.guarda === 'sx') {
+        ctx.translate(px * T, 0); ctx.scale(-1, 1); ctx.translate(-px * T, 0)
+      }
+      ctx.drawImage(fig, px * T - w / 2, (r.y + 1) * T - h, w, h)
+      ctx.restore()
+    } else this.emoji(r.em, px, py - 0.5, alfa, 1.4)
+    if (r.chiave) this.emoji('🗝️', px + 0.9, py - 1.4, alfa, 0.42)
+    if (!r.sveglio) this.emoji('💤', px + 0.9, py - 1.1, alfa * 0.8, 0.32)
+    if (luce === 2) this.etichette.push({ testo: r.nome, px, py: py - 2.3 })
+    if (r.ossa < r.ossaMax) this.barretta(px, py + 0.1, r.ossa / r.ossaMax, alfa)
+  }
+
+  // l'aura di un pezzo non comune per terra; il leggendario ha anche la sua colonna di luce, finché nessuno lo prende
+  aura(px, py, t, alfa, rgb, colonna) {
+    const ctx = this.ctx
+    const q = 0.35 + 0.15 * Math.sin(t * 3 + px)
+    const g = ctx.createRadialGradient(px * T, py * T + T * 0.2, T * 0.1, px * T, py * T + T * 0.2, T * 0.75)
+    g.addColorStop(0, `rgba(${rgb},${q * alfa})`)
+    g.addColorStop(1, `rgba(${rgb},0)`)
+    ctx.fillStyle = g
+    ctx.beginPath(); ctx.arc(px * T, py * T + T * 0.2, T * 0.75, 0, 7); ctx.fill()
+    if (colonna) this.colonna(px, py + 0.4, t, rgb, alfa * (0.55 + 0.2 * Math.sin(t * 2.5)), 0.42)
+  }
+
+  // una colonna di luce che sale da terra: il leggendario per terra, l'eroe che sale di livello
+  colonna(px, suolo, t, rgb, alfa, largo = 0.5, alto = 5) {
+    const ctx = this.ctx
+    const x0 = px * T - largo * T, w = 2 * largo * T, y1 = suolo * T, y0 = y1 - alto * T
+    const g = ctx.createLinearGradient(0, y0, 0, y1)
+    g.addColorStop(0, `rgba(${rgb},0)`)
+    g.addColorStop(0.7, `rgba(${rgb},${0.45 * alfa})`)
+    g.addColorStop(1, `rgba(${rgb},${0.8 * alfa})`)
+    ctx.save()
+    ctx.fillStyle = g
+    ctx.fillRect(x0, y0, w, y1 - y0)
+    const h = ctx.createLinearGradient(x0, 0, x0 + w, 0)
+    h.addColorStop(0, `rgba(255,255,255,0)`)
+    h.addColorStop(0.5, `rgba(255,255,255,${0.5 * alfa})`)
+    h.addColorStop(1, `rgba(255,255,255,0)`)
+    ctx.globalCompositeOperation = 'lighter'
+    ctx.fillStyle = h
+    ctx.fillRect(x0 + w * 0.3, y0 + (y1 - y0) * 0.25, w * 0.4, (y1 - y0) * 0.75)
+    ctx.restore()
+  }
+
+  // «+12 ✨»: sale di una casella in un secondo e sparisce; niente avviso a parole per un mostro qualunque
+  numeriniCheSalgono(t) {
+    this.numerini = this.numerini.filter(n => t - n.t < 1.1)
+    const ctx = this.ctx
+    for (const n of this.numerini) {
+      const k = (t - n.t) / 1.1
+      ctx.save()
+      ctx.globalAlpha = 1 - k * k
+      ctx.font = `bold ${T * 0.42}px "Emoji Gioco", system-ui, sans-serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.lineWidth = 1.2
+      ctx.strokeStyle = 'rgba(20,8,40,.9)'
+      ctx.fillStyle = '#d9c6ff'
+      const y = (n.y - 0.2 - k) * T
+      ctx.strokeText(n.testo, n.x * T, y)
+      ctx.fillText(n.testo, n.x * T, y)
+      ctx.restore()
+    }
+  }
+
+  // il livello salito: una colonna d'oro sull'eroe per un secondo e mezzo (Gioco.vue la chiede, `colonna`)
+  colonneDiLuce(corsa, t) {
+    this.colonne = this.colonne.filter(c => t - c.t < 1.6)
+    for (const c of this.colonne) {
+      const k = (t - c.t) / 1.6
+      const x = c.segui ? corsa.eroe.x : c.x, y = c.segui ? corsa.eroe.y : c.y
+      this.colonna(x, y + 0.45, t, c.colore, Math.sin(Math.PI * Math.min(1, k * 1.4)), 0.55 + 0.25 * k, 6)
+    }
   }
 
   // respira piano: abbastanza da notarsi girando lo sguardo, non tanto da sembrare un allarme. Oro = "questo riguarda te"
