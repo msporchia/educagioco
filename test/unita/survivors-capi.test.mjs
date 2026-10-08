@@ -36,7 +36,7 @@ const nuova = () => {
   controlla('alla sua quota arriva', !!capo)
   controlla('e si annuncia', p.svuotaEventi().includes('capo'))
   const base = MOSTRI[capo.tipo]
-  controlla('è molto più grosso del suo mostro', capo.r >= base.r * 1.8, `${capo.r} contro ${base.r}`)
+  controlla('è molto più grosso del suo mostro', capo.r >= base.r * 2.2, `${capo.r} contro ${base.r}`)
   controlla('e molto più duro', capo.vitaMax >= base.vita * CFG.capo.vita, `${capo.vitaMax}`)
   const prossimo = p.tCapo
   uguale('il prossimo fra il suo intervallo', Math.round(prossimo - p.tempo), CFG.capo.ogni)

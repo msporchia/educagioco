@@ -48,7 +48,7 @@ verso il grumo quando ha un'arma che guarda avanti.
     carte. Nei test: `[data-bomba]`.
 - **I capi**: dopo il 40% della tappa arriva un capo, poi uno ogni 45
   secondi (`CFG.capo`). È uno dei mostri più duri fra quelli ammessi,
-  quasi il doppio della stazza, con dieci volte la vita, un po' più lento,
+  due volte e mezzo la stazza, con dieci volte la vita, un po' più lento,
   e le botte lo spostano poco. Si riconosce dall'alone rosso, dalla corona
   e dalla sua barra della vita sempre accesa. Abbattuto lascia sei gemme e
   un oggetto. La bomba non lo abbatte d'un colpo: gli toglie metà della

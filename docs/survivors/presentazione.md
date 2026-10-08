@@ -20,7 +20,7 @@ girando si trovano pezzi di altri posti: la neve in mezzo al prato, la lava
 nel deserto. La **bomba** si guadagna salendo di livello, e di rado si
 trova a terra: si tiene in tasca e si lancia col pulsante quando si è
 circondati. E ogni tanto arriva un **capo**: un mostro
-grande il doppio, con la corona, che ci vuole un po' ad abbattere.
+grande più del doppio, con la corona, che ci vuole un po' ad abbattere.
 
 Salendo di livello il gioco **non** si ferma: compare il pulsante
 **potenzia**, col numero dei potenziamenti messi da parte, e quando lo si
