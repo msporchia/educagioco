@@ -133,7 +133,7 @@ non lo mette nessuno.
 
 ### Solo cappelli e occhiali, per ora
 
-Gli addobbi sono **emoji**, e il ragionamento dei mostri (le emoji le
+Gli addobbi sono per lo più **emoji**, e il ragionamento dei mostri (le emoji le
 disegna il telefono, stile Apple in mezzo alla pixel art) qui pesa meno: un
 cappello si ridimensiona, si specchia e segue il passo con lo sprite.
 Regge in testa e sul muso, **non al collo e sulla schiena**: un'emoji di
@@ -147,6 +147,10 @@ bestia a quattro zampe non si aggancia.
   li toglie (`vestiarioDi` nel motore mostra i sospesi solo a chi li ha).
 - Gli agganci `collo` e `schiena` restano nei foglietti e in `atlante.py`:
   serviranno quando quegli addobbi arriveranno come sprite.
+- Un addobbo può essere **un disegno in pixel** (`disegno`, e `misura` è la
+  larghezza in pixel dello sprite) invece di un'emoji, e può avere una
+  **`stagione`**: in vendita solo allora, e comprato resta (il cappello da
+  strega, [stagioni.md](stagioni.md)).
 - Una riga può già dichiarare `pezzo` invece di `emoji`, come le merci; il
   pezzo che manca è la scena: oggi `addosso()` in `scena/tela.js` sa
   posare solo un'emoji (vedi [da-fare.md](da-fare.md)).

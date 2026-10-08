@@ -39,6 +39,7 @@ regole, `viste/`, `Gioco.vue` che coordina.
 | `scena/tela.js` | il disegno, che non sa cosa sia il grano |
 | `scena/spinta.js` `dito.js` | lo scorrimento contro il bordo, le soglie del dito |
 | `scena/bolla.js` | dove stanno i gettoni (il semicerchio, le pagine) e la fila sotto una macchina: puro, lo leggono la tela e il dito |
+| `scena/pixel-festa.js` | i disegni in pixel della festa (zucche, cappello da strega): un carattere è un pixel |
 | `scena/bordi.js` | l'auto-bordo fra due materie dipinte (l'acqua e il prato) |
 | `viste/Granaio.vue` | un silo: scomparti, chi usa cosa, ingrandire |
 | `viste/Roba.vue` `Provino.vue` | il baule e la figura in scala |
@@ -49,9 +50,11 @@ regole, `viste/`, `Gioco.vue` che coordina.
 | `viste/Bestia.vue` `Vestiario.vue` `Battesimo.vue` | la scheda di una bestia, «Vestilo», il nome |
 | `viste/Passo.vue` | il prossimo passo a schermo: la riga del consiglio e il suo tasto |
 | `viste/Attrezzi.vue` | ↻ ⇄ 📦 appesi alla cosa tenuta premuta |
+| `viste/Pixel.vue` | un disegno di `pixel-festa.js` dentro un foglio (il cappello nel guardaroba) |
 | `viste/Chiudi.vue` | la ✕ di tutti i fogli |
 
-I fogli degli sprite (`campi*.json`, `animali*.json`, `merci*.json`,
+`strumenti/sprite/festa.mjs` fa dai disegni di `pixel-festa.js` il foglio delle
+zucche (poi `atlante.py fattoria`). I fogli degli sprite (`campi*.json`, `animali*.json`, `merci*.json`,
 `edifici*.json`, con il perché di ogni ritaglio) stanno in
 `strumenti/sprite/sorgenti/fattoria/generati/`.
 

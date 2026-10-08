@@ -123,8 +123,9 @@ Vale per tutte, recinti compresi. Numeri e ragioni in `dati/coda.js`.
   svelto compra un'altra macchina: due macchine vanno il doppio, una fila
   lunga lascia solo caricare di più.
 - **La roba e le monete si prendono mettendo in fila**: una fila è una
-  scorta, non una promessa. Un pezzo in fila e non ancora partito **si
-  toglie** e rende tutto.
+  scorta, non una promessa. A schermo quello che è
+  in fila ci resta, come in Hay Day: toccarlo dice quanto manca, non si
+  toglie più (il motore sa ancora `togliDallaFila`, e rende tutto).
 - **Il pronto aspetta sulla macchina** e occupa il suo posto, come il
   vassoio di Hay Day; la fila continua a lavorare. Si ritira tutto insieme,
   quello che ci sta nel silo: un silo pieno ferma il ritiro, mai quello che
@@ -137,7 +138,7 @@ Vale per tutte, recinti compresi. Numeri e ragioni in `dati/coda.js`.
   partenza; una fila più lunga dei posti di oggi lavora fino in fondo e
   poi si torna ai posti pagati (`unita/coda-fattoria`).
 - A schermo: toccata la macchina, la fila compare sul prato sotto di lei
-  (chi lavora con l'anello, chi aspetta con la ✕, i vuoti tratteggiati, il
+  (chi lavora con l'anello, chi aspetta più chiaro, i vuoti tratteggiati, il
   posto da comprare col «+» e il prezzo — [come-si-tocca.md](come-si-tocca.md));
   da lontano il fumetto con la faccia di quello che sta facendo e un
   numerino per i pronti; l'albero dice «⏳ ne fa 2, pronto fra 4 min».

@@ -11,7 +11,8 @@ chi chiede quello che si produce. Il codice è in `src/giochi/fattoria/`.
 - [chi-chiede.md](chi-chiede.md) — il premio a gesti, la bancarella, le botteghe del paese, la mongolfiera, il carretto
 - [livelli.md](livelli.md) — l'esperienza, le soglie, cosa arriva quando, i premi da prendere, `#fattoria=` e `#fattoria-tipo=`
 - [animali.md](animali.md) — le bestie di casa, i bisogni, il premio per averle rimesse a posto, vestirle
-- [come-si-tocca.md](come-si-tocca.md) — i gesti sul prato, girare e rovesciare, il baule, i fogli
+- [come-si-tocca.md](come-si-tocca.md) — i gesti sul prato, i gettoni da trascinare, girare e rovesciare, i fogli
+- [baule.md](baule.md) — le tre metà, lo scaffale, la strada del baule
 - [pagina-albero.md](pagina-albero.md) — «🌳 Come si fa»: dove si apre, cosa mostra, `alberoDi`, le prove
 - [stagioni.md](stagioni.md) — Halloween e Natale, `#stagione=`
 - [sprite.md](sprite.md) — le facce delle merci, `aspetta`, come si chiede un foglio, gli agganci

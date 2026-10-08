@@ -1,12 +1,12 @@
 # Le feste: costumi e zucche a Halloween, neve a Natale
 
-La fattoria cambia faccia da sola in due periodi dell'anno. Il codice è
+La fattoria cambia faccia in due periodi dell'anno. Il codice è
 `dati/stagioni.js` (puro) e la scena `scena/tela.js`.
 
 La fattoria è il posto dove si torna tutti i giorni, e tutti i giorni è
 uguale a ieri: aprire il gioco a dicembre e trovare la neve, o a ottobre
-e trovare le mucche con il cappello da strega, è **una cosa che succede**
-senza che nessuno l'abbia comprata.
+e trovare i recinti in costume, è **una cosa che succede** senza che nessuno
+l'abbia comprata. Le cose da mettere (zucche, cappello) invece si comprano.
 
 ## Le finestre
 
@@ -40,18 +40,28 @@ senza che nessuno l'abbia comprata.
 - Il foglio 2 ha l'alfa vera ma mai piena (250-253): `alone` 128 la porta a 255, e le `toppa` che tolgono i fumetti dipinti sono quelle di `animali_2.json`.
 - Il foglio 1 è RGB su fondo nero: nel foglietto `fondo: auto` e `colori: 0`
   (coi 12 colori di ripiego i recinti viravano al rosso).
-- **Le bestie di casa col cappello da strega**: chi ha la testa libera se
-  lo mette da sé (`addobbiInScena` in `Gioco.vue`), e se lo toglie quando
-  la festa finisce. Non si compra, non si salva, e non scalza un cappello
-  comprato. I bambini lo chiedevano: tutto era vestito tranne i loro gatti.
-- **Le zucche intagliate sul prato**, qualcuna sparsa e una accanto a ogni
-  casa, con la candela che tremola. Cadono su celle libere, il seme è il
-  giorno, come gli addobbi di Natale (`addobbiStagionali`).
-- **Zucca e cappello sono disegnati in pixel, nel codice**
-  (`scena/pixel-festa.js`): un carattere è un pixel dell'atlante. Provate e
-  tolte le emoji 🎃 🕸️ 🦇 e le voci «zucche» e «teschio» nel baule: emoji
-  Apple in mezzo alla pixel art. Un disegno nuovo della festa si aggiunge
-  lì, non come emoji.
+- **Niente spunta da solo, lo decide la bimba.** Le zucche e il cappello da
+  strega si comprano e si posano o si mettono; finita la festa quello che si
+  è comprato resta (la regola «niente si perde»).
+- **Le zucche** sono due voci della linguetta **Feste** del baule, solo a
+  Halloween: Zucca intagliata (🪙6) e Due zucche (🪙10), con la candela che
+  tremola.
+- **Il cappello da strega** è un addobbo (`dati/addobbi.js`, `stagione:
+  'halloween'`, 🪙8): in vendita solo a Halloween, e comprato resta. Nel
+  guardaroba è in evidenza e primo (`addobbiPer`).
+- **Zucche e cappello sono disegnati in pixel, nel codice**
+  (`scena/pixel-festa.js`): un carattere è un pixel. Le zucche diventano un
+  foglio dell'atlante con `node strumenti/sprite/festa.mjs` e poi
+  `python3 strumenti/sprite/atlante.py fattoria`; il cappello lo disegna la
+  scena (`viste/Pixel.vue` nel guardaroba). Provate e tolte le emoji 🎃 🕸️
+  🦇: emoji Apple in mezzo alla pixel art. Un disegno nuovo della festa si
+  aggiunge lì, non come emoji.
+- **Farle sapere che esistono**, senza metterle da sé: finché non ha nessun
+  cappello le bestie di casa hanno un fumetto «lo vorrei» col cappello
+  disegnato (`Attore.desidera`); «Vestilo» ha il segnalino 🎃, e il 🌸 del
+  baule ha il segnalino della festa finché non ha posato nessuna voce
+  della festa ([baule.md](baule.md)). I bambini chiedevano il cappello ai
+  loro gatti: così lo trovano da soli.
 
 ## Natale: gli addobbi che compaiono da soli
 
@@ -74,8 +84,8 @@ senza che nessuno l'abbia comprata.
 
 ## Le voci della festa nel baule
 
-- Solo a Natale compare la linguetta **Feste**, con l'albero con le lucine
-  (🪙24, `unita/stagioni-fattoria`).
+- La linguetta **Feste** compare solo in una festa: a Natale l'albero con
+  le lucine (🪙24), a Halloween le zucche (`unita/stagioni-fattoria`).
 - **Quello che si è comprato resta**, posato tutto l'anno o nel baule:
   un albero pagato a dicembre che si dissolve a marzo romperebbe la
   regola «niente si perde».
@@ -83,4 +93,5 @@ senza che nessuno l'abbia comprata.
   aprono con la finestra, non spendendo.
 
 Nei test: `unita/stagioni-fattoria`, `integrazione/fattoria-stagioni`
-(`window.__fattoria.zucche()` e `.cappelli()`: si contano, non si guardano).
+(`window.__fattoria.desideri()` e `.cappelli()`: si contano, non si
+guardano; `[data-strada]` e `[data-festa]` per i segnalini).

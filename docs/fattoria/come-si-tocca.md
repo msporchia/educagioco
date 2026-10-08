@@ -1,7 +1,7 @@
 # Come si tocca la fattoria
 
-I gesti sul prato, i gettoni dei campi e delle macchine, il baule, girare e
-rovesciare, e le regole dei fogli.
+I gesti sul prato, i gettoni dei campi e delle macchine, girare e rovesciare,
+e le regole dei fogli. Il baule sta in [baule.md](baule.md).
 Le regole del dito che valgono per tutti i giochi stanno in
 [`../core/il-dito.md`](../core/il-dito.md), quelle dei fogli in
 [`../core/interfaccia.md`](../core/interfaccia.md).
@@ -45,44 +45,58 @@ prende e si porta dove serve, come in Hay Day. Un foglio, anche piccolo,
   sopra dei campi vuoti li semina tutti, uno per campo attraversato: il
   campo sobbalza e fa uno sbuffo di terra.
 - **Campo pronto → il cesto 🧺**: passato sopra i campi pronti li
-  raccoglie; da ognuno sale «+1» e il raccolto vola nel suo silo, che
-  sobbalza quando lo riceve.
+  raccoglie; da ognuno sale «+1» e il raccolto vola verso l'angolo in alto
+  dello schermo (`vola` con `aSchermo`), e il silo sobbalza.
 - **Campo che cresce → una targhetta** con la barra e i minuti.
 - **Macchina o recinto → le ricette**; una si trascina sopra una
-  macchina dello stesso tipo e va in fila (gli ingredienti ci volano
-  dentro). I gettoni restano, per metterne un'altra. Premendo una ricetta
-  compare sopra l'arco una targhetta con le **caselle** di cosa prende,
-  accese o in ombra. Quello che è **pronto si ritira al tocco** della
-  macchina, prima che spuntino le ricette, e vola nel silo.
+  macchina dello stesso tipo e va in fila. I gettoni restano, per metterne
+  un'altra. Quello che è **pronto si ritira al tocco** della macchina,
+  prima che spuntino le ricette, e la merce vola in alto come il raccolto
+  dei campi.
+- **Toccare un gettone non fa il gesto: si guarda.** L'azione è
+  trascinare, e il tocco mostra quello che serve per farlo. Una ricetta
+  toccata tiene la **targhetta dei requisiti** (le caselle di cosa prende,
+  cosa esce, «ne hai N», i minuti, il costo) finché non si tocca altro;
+  seme e cesto dicono in una nuvoletta dove portarli («Trascinalo sui
+  campi vuoti!»). Se la ricetta non si può fare, la nuvoletta dice cosa
+  manca. Prima il tocco faceva il gesto da sé: chi non capiva il
+  trascinamento non restava fermo, ma nemmeno lo imparava.
+- **Niente numerini sopra i gettoni**: «9 e 7» non si capivano. Il «ne hai
+  N» sta nella targhetta, per esteso (*mi serve?* si risponde a parole).
+- **Mettere in fila**: gli ingredienti usati compaiono sopra la macchina
+  col loro «-N», salgono e svaniscono (`scena.consuma`), disegnati sopra i
+  gettoni. Si può lasciare la ricetta anche sulla fila sotto la macchina
+  (`macchinaSotto`/`sullaFila`): i posti vuoti sembravano il buco dove
+  lasciarla.
 - **La fila sta sul prato, sotto la macchina**: dischetti in riga. Il
   pronto (oro, saltella) si ritira toccandolo, chi lavora ha l'anello che
-  si chiude, chi aspetta ha la ✕ e toccato si toglie (la roba torna nel
-  silo), i posti vuoti sono tratteggiati. In fondo il **posto da
-  comprare**: tratteggiato, col «+» e il prezzo sotto.
-- **Toccare un gettone senza trascinarlo** fa il gesto sulla cosa da cui
-  si è partiti (semina quel campo, mette in fila in quella macchina): chi
-  non ha ancora capito il trascinamento non resta fermo. Se c'erano altri
-  campi su cui il gesto lungo avrebbe lavorato, una nuvoletta lo dice.
+  si chiude, chi aspetta è un dischetto più chiaro, i posti vuoti sono
+  tratteggiati. Toccare chi lavora o aspetta dice quanto manca. **Quello
+  che è in fila ci resta**, come in Hay Day: non c'è la ✕. Il motore sa
+  ancora `togliDallaFila`, nessuno lo chiama a schermo. In fondo il
+  **posto da comprare**: tratteggiato, col «+» e il prezzo sotto.
 - **Un no lo dice una nuvoletta sulla cosa** («Il silo è pieno», «Ti manca
-  2 🌾»), non un avviso in cima allo schermo e mai un foglio: si guarda
-  dove si è toccato. Un gettone spento (oro se lo scomparto è pieno) si
-  può toccare lo stesso, ed è così che si sa perché.
-- **Il numerino** sul gettone è quanto se ne ha già (*mi serve?*).
+  1» e il sacchetto), non un avviso in cima allo schermo e mai un foglio:
+  si guarda dove si è toccato. Le merci la nuvoletta le disegna col loro
+  pezzo dopo la frase, mai l'emoji: il becchime è un sacchetto e la sua
+  emoji 🌰 sembrava una castagna. Un gettone spento (oro se lo scomparto
+  è pieno) si può toccare lo stesso, ed è così che si sa perché.
 - **Il semicerchio**: i gettoni stanno su mezzo cerchio sopra la cosa,
   sotto se in cima non c'è posto, spostati tutti insieme dentro lo
   schermo. Pochi stanno stretti in cima; tanti aprono l'arco fino a mezzo
-  cerchio, poi lo allargano fino alla larghezza dello schermo. **Oltre, si
-  va a pagina**: l'ultimo posto dell'arco è la freccia ▶️ col numero della
-  pagina. Provate le file a griglia: con sedici colture erano un muro di
+  cerchio, poi lo allargano fino alla larghezza dello schermo.
+- **Le pagine**: quando i gettoni non ci stanno si girano con due tasti
+  gialli con le punte doppie (« e ») sotto l'arco e i pallini della pagina
+  in mezzo, come in Hay Day (`giraPagina`). Provata una freccia dentro l'arco, un ▶️ in
+  un gettone: rubava un posto e si vedeva un quadrato dentro un cerchio.
+  Provate anche le file a griglia: con sedici colture erano un muro di
   gettoni. Il conto è puro, in `scena/bolla.js`, e lo usano sia la tela
   sia il dito (`unita/bolla-fattoria`: mai due gettoni che si coprono).
 - **Grandi** (60 px): compaiono solo dopo un tocco, e lo spazio c'è.
-- **Dove il gettone fa qualcosa lo dice la tela**: mentre lo si porta, i
-  campi o le macchine buone hanno un tratteggio d'oro (largo quanto il
-  **piede**, non quanto il disegno: le pannocchie non contano); quella
-  sotto il dito si accende di verde. Il gettone in mano sta sopra il
-  dito, pende dalla parte in cui va, e per terra lascia un'ombra dove
-  lavora.
+- **Dove lasciare il gettone si capisce da sé**: niente tratteggio sulle
+  zone buone. Il gettone in mano sta sopra il dito, pende dalla parte in
+  cui va, e per terra lascia un'ombra dove lavora (largo quanto il
+  **piede** della cosa, non quanto il disegno: le pannocchie non contano).
 - **Un tocco sul prato chiude i gettoni**, e se tocca un'altra cosa apre
   i suoi; anche pizzicare, la rotella e un foglio che si apre li chiudono.
 - **Il dito che corre salta delle celle**: fra due `pointermove` il
@@ -91,14 +105,17 @@ prende e si porta dove serve, come in Hay Day. Un foglio, anche piccolo,
 - **Contro il bordo il prato scorre** anche col gettone in mano, come
   con una panchina (`scorriDalBordo`).
 - **Voli, sbuffi, sobbalzi e nuvolette vivono nella tela** (`vola`,
-  `sbuffo`, `rimbalza`, `nuvoletta`): chi gioca dice cosa è successo e
-  dove, la tela li anima e li butta quando hanno finito.
+  `sbuffo`, `rimbalza`, `nuvoletta`, `consuma`): chi gioca dice cosa è
+  successo e dove, la tela li anima e li butta quando hanno finito.
 
 Nei test i gettoni non sono elementi della pagina: li dice il gancio
 `window.__fattoria` — `bolla()` (`{ tipo, nome }`, `tipo` fra `semina`,
 `cresce`, `raccogli`, `macchina`), `gettoni()` (`{ chiave, spento, x, y }`
 in pixel della pagina), `posti()` (la fila: `{ come, prezzo, x, y }`),
-`fila()`, `dettaglio()`. Non cambia niente: si legge e basta.
+`fila()` (quanti pezzi), `dettaglio()` (la targhetta è aperta?),
+`pagine()` (`{ pagina, totale, indietro, avanti }` o `null`), poi `strada()`,
+`cappelli()` e `desideri()` ([baule.md](baule.md), [stagioni.md](stagioni.md)).
+Non cambia niente: si legge e basta.
 
 ## Il bersaglio, l'aggancio, e i numeri che li tarano
 
@@ -184,34 +201,6 @@ meglio niente che un tasto che fa una cosa storta.
   volte non somiglia alla figura. L'emoji resta dove niente la
   contraddice.
 - **L'oro vuol dire pieno** (silo, carretto), mai il rosso di un rifiuto.
-
-## Il baule
-
-- **Tre metà, scelte prima di entrare**: 🌾 *La fattoria* (quello che fa
-  qualcosa), 🌸 *Decorazioni* (quello che sta lì), 🐕 *Animali*. Sono tre
-  tasti tondi fuori dal baule, accanto al gettone del livello, che lo
-  aprono già dalla parte giusta; dentro restano come linguette. Compaiono
-  solo le metà che hanno qualcosa: al primo livello c'è solo 🌾. Provato
-  un 📦 solo con la scelta dentro: due gesti, e un pacco chiuso non fa
-  venire in mente né una panchina né un cane.
-- **Sotto «la fattoria» la linguetta è una sola, e non si mostra**: campo,
-  mulino, silos, macchine e recinti sono i passi della stessa catena, e
-  divisi in «Campi» e «Cortile» la fila non si vedeva. Provati anche nove
-  finti campi da arredo: si posavano e non facevano niente, e sono stati
-  tolti.
-- **Griglia a colonne uguali**, figure grandi **in scala fra loro** su un
-  ripiano: una casa si vede che è una casa. Quello che non ti puoi
-  permettere dice **di quanto** («manca 🪙12»), che è il numero che rimanda
-  a fare esercizi. Le cose che lavorano hanno un filo d'oro attorno.
-- **Lo scaffale si scorre col dito**: toccare una carta la prende (e resta
-  appesa al dito), strisciare in su o in giù scorre e non prende niente,
-  strisciare di lato la tira fuori e la posa dove il dito si alza. Col
-  mouse si scorre con la rotella. Su e giù è del browser (`touch-action:
-  pan-y`), e un `pointercancel` vuol dire «non è successo niente».
-  Provato «si prende al primo contatto» (`pointerdown`):
-  una strisciata si portava via la carta, e la *comprava*. Soglie in
-  `scena/dito.js`, vista `viste/Roba.vue` e `viste/Provino.vue`; lo vede
-  solo un test che scorre col dito (`integrazione/campi`).
 
 ## I fogli
 
