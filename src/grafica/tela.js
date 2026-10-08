@@ -24,7 +24,7 @@ export function pennello(ctx, misure) {
       ctx.stroke()
     },
     testo(t, x, y, col, dim, peso = 900) {
-      ctx.fillStyle = col; ctx.font = `${peso} ${dim}px system-ui`
+      ctx.fillStyle = col; ctx.font = `${peso} ${dim}px "Emoji Gioco", system-ui`
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
       ctx.fillText(t, x, y)
     },

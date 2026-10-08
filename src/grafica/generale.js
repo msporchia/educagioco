@@ -86,7 +86,7 @@ PITTORI.targhetta = (p, cosa) => {
      minimo è quanto basta perché le lettere restino nette. */
   const h = Math.max(10, L * 0.30)
   c.save()
-  c.font = `800 ${Math.round(h * 0.60)}px system-ui, sans-serif`
+  c.font = `800 ${Math.round(h * 0.60)}px "Emoji Gioco", system-ui, sans-serif`
   const largo = c.measureText(testo).width + h * (cosa.em ? 1.2 : 0.6)
   /* resta dentro il campo: un nome tagliato dal bordo non si legge */
   const W = p.W || 0                    // il pennello porta le misure addosso

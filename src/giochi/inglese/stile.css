@@ -24,7 +24,7 @@
 .ing-tavola { position: relative; margin: 0 auto }
 .ing-tela { position: absolute; left: 0; top: 0; pointer-events: none }
 .ing-mondo-nome { position: absolute; transform: translate(-50%, -50%); text-align: center;
-                  font: italic 700 clamp(15px, 4.4vw, 18px)/1.1 Georgia, 'Times New Roman', serif;
+                  font: italic 700 clamp(15px, 4.4vw, 18px)/1.1 "Emoji Gioco", Georgia, 'Times New Roman', serif;
                   color: var(--ing-seppia); pointer-events: none;
                   text-shadow: 0 0 4px #f3e6c4, 0 0 2px #f3e6c4 }
 .ing-mondo-nome.ing-lontano { font-size: 13.5px; opacity: .72 }
@@ -34,7 +34,7 @@
 .ing-nodo:not([data-chiuso]):active { transform: scale(.94) }
 .ing-nodo[data-chiuso] { cursor: default }
 .ing-nodo-nome { position: absolute; transform: translateX(-50%); text-align: center; pointer-events: none;
-                 font: 700 12.5px/1.15 Georgia, 'Times New Roman', serif; color: var(--ing-inchiostro);
+                 font: 700 12.5px/1.15 "Emoji Gioco", Georgia, 'Times New Roman', serif; color: var(--ing-inchiostro);
                  text-shadow: 0 0 3px #f3e6c4, 0 0 2px #f3e6c4 }
 .ing-nodo-nome.ing-spento { opacity: .55 }
 /* la nave: la sua tela la sposta scena/nave.js, a fotogrammi */
@@ -48,7 +48,7 @@
 .ing-serve { position: absolute; transform: translate(-50%, -100%); max-width: 220px; width: max-content;
              padding: 6px 11px; border-radius: 10px; background: var(--ing-carta);
              border: 1.5px solid var(--ing-seppia); box-shadow: 0 3px 0 var(--ing-ombra);
-             font: 700 13.5px/1.2 Georgia, 'Times New Roman', serif; color: var(--ing-inchiostro);
+             font: 700 13.5px/1.2 "Emoji Gioco", Georgia, 'Times New Roman', serif; color: var(--ing-inchiostro);
              text-align: center; pointer-events: none; z-index: 2; animation: ing-appare .18s ease-out }
 @keyframes ing-appare { from { opacity: 0; margin-top: 6px } to { opacity: 1; margin-top: 0 } }
 .ing-viaggio { position: absolute; inset: 0; z-index: 3 }
@@ -185,7 +185,7 @@
              padding: 14px 14px calc(16px + env(safe-area-inset-bottom)) }
 .ing-pagina { background: #fdf8ec; color: #2e2218; border-radius: 6px 18px 18px 6px; padding: 22px 22px 12px;
               box-shadow: inset 14px 0 16px -12px #b99a6a, 0 6px 18px #6b4a2233;
-              font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+              font-family: "Emoji Gioco", Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
               font-size: clamp(19px, 5.2vw, 22px); line-height: 1.65 }
 .ing-pagina.ing-pagina-corta { max-height: 42vh; overflow-y: auto; font-size: clamp(17px, 4.6vw, 20px) }
 .ing-capitolo { text-align: center; font-variant: small-caps; letter-spacing: .05em; color: #6b3b1c;
@@ -196,7 +196,7 @@
 .ing-riga + .ing-riga, .ing-battuta + .ing-riga { margin-top: .5em }
 /* una battuta va a capo, col nome di chi parla sopra: il colore aiuta, il nome dice */
 .ing-battuta { margin: .45em 0 0; padding-left: 11px; border-left: 3px solid var(--chi, #b99a6a) }
-.ing-chi { display: block; font: 700 .66em/1.35 system-ui, sans-serif; letter-spacing: .05em;
+.ing-chi { display: block; font: 700 .66em/1.35 "Emoji Gioco", system-ui, sans-serif; letter-spacing: .05em;
            text-transform: uppercase; color: var(--chi, #7a6450) }
 .ing-libro [data-chi="Laura"] { --chi: #b0412a }
 .ing-libro [data-chi="Leo"] { --chi: #2f6fb0 }
@@ -214,7 +214,7 @@
                       font-size: 26px; font-weight: 900; box-shadow: 0 4px 0 var(--ing-bordo) }
 .ing-freccia-pagina:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 var(--ing-bordo) }
 .ing-freccia-pagina:disabled { opacity: .35; box-shadow: none }
-.ing-numero-pagina { font: italic 700 16px Georgia, serif; color: #7a6450 }
+.ing-numero-pagina { font: italic 700 16px "Emoji Gioco", Georgia, serif; color: #7a6450 }
 .ing-libro-domanda { display: flex; flex-direction: column; gap: 10px }
 .ing-libro [data-chi="maestra"] { --chi: #7b5ea7 }
 .ing-libro [data-chi="dottore"] { --chi: #2a7f8a }
@@ -225,7 +225,7 @@
 .ing-pagina .ing-parola.ing-della-storia, .ing-citazione .ing-parola.ing-della-storia {
   border-bottom: 2px solid #d9a441 }
 /* le storie a puntate: il numero sopra il titolo, e «Nella puntata prima…» in corsivo */
-.ing-puntata { text-align: center; font: 700 .62em/1 system-ui, sans-serif; letter-spacing: .12em;
+.ing-puntata { text-align: center; font: 700 .62em/1 "Emoji Gioco", system-ui, sans-serif; letter-spacing: .12em;
                text-transform: uppercase; color: #9a7b55; margin-bottom: 4px }
 .ing-riassunto { margin: 0 0 .6em; font-style: italic; color: #5c4633; padding: 4px 0 8px;
                  border-bottom: 1px solid #e6d6b4 }
@@ -239,7 +239,7 @@
 .ing-frase-scelta.ing-spenta { opacity: .55 }
 /* «chi l'ha detto?»: la battuta fra virgolette, in inglese */
 .ing-citazione { margin: 0; padding: 10px 14px; border-left: 4px solid #b99a6a; background: #fdf8ec;
-                 border-radius: 6px; font: italic clamp(18px, 5vw, 21px)/1.45 Georgia, 'Times New Roman', serif;
+                 border-radius: 6px; font: italic clamp(18px, 5vw, 21px)/1.45 "Emoji Gioco", Georgia, 'Times New Roman', serif;
                  color: #2e2218 }
 /* «metti in ordine»: i fatti sono tessere lunghe, in italiano */
 .ing-tessera.ing-fatto { font-size: 15.5px; font-weight: 700; text-align: left; line-height: 1.3; max-width: 100% }
@@ -254,7 +254,7 @@
                 background: var(--ing-carta); border: 3px solid var(--ing-seppia); border-radius: 20px;
                 padding: 24px 18px 18px; display: flex; flex-direction: column; gap: 10px;
                 box-shadow: 0 18px 50px #2a1a0c66 }
-.ing-cartello h2 { font: italic 700 24px Georgia, serif; margin: 0; color: var(--ing-inchiostro) }
+.ing-cartello h2 { font: italic 700 24px "Emoji Gioco", Georgia, serif; margin: 0; color: var(--ing-inchiostro) }
 .ing-chiudi { position: sticky; top: 0; align-self: flex-end; margin: -14px -8px -26px 0; width: 38px; height: 38px;
               border-radius: 50%; background: #fff; color: var(--ing-inchiostro); font-size: 17px; font-weight: 900;
               box-shadow: 0 2px 0 var(--ing-bordo); z-index: 1 }

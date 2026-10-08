@@ -13,7 +13,7 @@
   background: radial-gradient(120% 90% at 50% 0%, #3b2a55, var(--pz-fondo) 70%);
   color: #f0e9ff;
 }
-.pz .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
+.pz .em { font-family: "Emoji Gioco", system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
                        "Twemoji Mozilla", sans-serif; line-height: 1 }
 
 /* la mappa */

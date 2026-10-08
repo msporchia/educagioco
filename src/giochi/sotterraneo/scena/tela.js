@@ -414,7 +414,7 @@ export class Tela {
     ctx.globalAlpha = alfa
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.font = `${Math.round(T * quanto)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`
+    ctx.font = `${Math.round(T * quanto)}px "Emoji Gioco","Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`
     ctx.fillText(em, px * T, py * T)
     ctx.restore()
   }

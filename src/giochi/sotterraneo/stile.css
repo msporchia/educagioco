@@ -19,7 +19,7 @@
 }
 
 /* il font di testo va prima delle emoji: Noto Color Emoji ha le cifre, senza precedenza «💎 18» esce doppio */
-.sot .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji",
+.sot .em { font-family: "Emoji Gioco", system-ui, "Noto Color Emoji", "Apple Color Emoji",
                         "Segoe UI Emoji", "Twemoji Mozilla", sans-serif; line-height: 1 }
 
 .sot-io {

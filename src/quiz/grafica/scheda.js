@@ -13,7 +13,7 @@ const STILE = `
   overflow-y: auto; overscroll-behavior: contain;
   background: rgba(6, 9, 18, .82); backdrop-filter: blur(3px);
   animation: quiz-entra .18s ease;
-  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 16px/1.45 "Emoji Gioco", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 @keyframes quiz-entra { from { opacity: 0 } to { opacity: 1 } }

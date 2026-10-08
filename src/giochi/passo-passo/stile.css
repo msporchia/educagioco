@@ -33,7 +33,7 @@
   position: relative;
   color: var(--pp-inchiostro);
 }
-.pp .pp-em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
+.pp .pp-em { font-family: "Emoji Gioco", system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
                           "Twemoji Mozilla", sans-serif; line-height: 1 }
 
 /* ═══════════ la mappa della campagna: le caselle e il fumetto ═══════════
@@ -50,7 +50,7 @@
    da scena/stendardo.js, il nome è testo vero sopra la stoffa; non si tocca */
 .pp-insegna { position: absolute; line-height: 0; pointer-events: none }
 .pp-stendardo { display: block; overflow: visible; filter: drop-shadow(0 3px 0 rgba(60, 25, 8, .28)) }
-.pp-stendardo-nome { font-family: Georgia, "Palatino Linotype", "Book Antiqua", Palatino, serif; font-weight: 700;
+.pp-stendardo-nome { font-family: "Emoji Gioco", Georgia, "Palatino Linotype", "Book Antiqua", Palatino, serif; font-weight: 700;
                      letter-spacing: .4px; fill: #fff3d6; paint-order: stroke; stroke: #3a1410; stroke-width: 3.2px;
                      stroke-linejoin: round }
 .pp-stemma-icona { font-size: 13px }

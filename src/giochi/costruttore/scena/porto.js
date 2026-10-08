@@ -1321,7 +1321,7 @@ export class TelaPorto {
     ctx.fill()
     ctx.stroke()
     ctx.fillStyle = INCHIOSTRO
-    ctx.font = `900 ${Math.round(lato * 0.8)}px system-ui, sans-serif`
+    ctx.font = `900 ${Math.round(lato * 0.8)}px "Emoji Gioco", system-ui, sans-serif`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(String(numero), cx, cy + lato * 0.05)
@@ -1495,7 +1495,7 @@ export class TelaPorto {
     ctx.fill()
     ctx.stroke()
     ctx.fillStyle = INCHIOSTRO
-    ctx.font = `800 ${Math.max(7, Math.round(h * 0.82))}px system-ui, sans-serif`
+    ctx.font = `800 ${Math.max(7, Math.round(h * 0.82))}px "Emoji Gioco", system-ui, sans-serif`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(String(numero), 0, h * 0.06)
@@ -1893,7 +1893,7 @@ export class TelaPorto {
       ctx.arc(cx + c * 0.36, cy - c * 0.44, c * 0.16, 0, Math.PI * 2)
       ctx.fill()
       ctx.fillStyle = '#fff'
-      ctx.font = `bold ${Math.round(c * 0.26)}px system-ui, sans-serif`
+      ctx.font = `bold ${Math.round(c * 0.26)}px "Emoji Gioco", system-ui, sans-serif`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       ctx.fillText('!', cx + c * 0.36, cy - c * 0.43)
@@ -2211,7 +2211,7 @@ export class TelaPorto {
   scritta(cx, cy, righe, corpo) {
     const { ctx } = this
     ctx.fillStyle = INCHIOSTRO
-    ctx.font = `800 ${Math.max(8, Math.round(corpo))}px system-ui, sans-serif`
+    ctx.font = `800 ${Math.max(8, Math.round(corpo))}px "Emoji Gioco", system-ui, sans-serif`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     righe.forEach((r, i) => ctx.fillText(r, cx, cy + (i - (righe.length - 1) / 2) * corpo * 1.1))
@@ -2297,7 +2297,7 @@ export class TelaPorto {
     if (typeof v === 'string' && colore(v)) this.cassa(bx, by, c * 0.5, v, false)
     else {
       ctx.fillStyle = INCHIOSTRO
-      ctx.font = `800 ${Math.round(c * 0.46)}px system-ui, sans-serif`
+      ctx.font = `800 ${Math.round(c * 0.46)}px "Emoji Gioco", system-ui, sans-serif`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       ctx.fillText(String(v), bx, by + c * 0.02)
@@ -2364,7 +2364,7 @@ export class TelaPorto {
   // testo corto ed eventuale quadretto di colore; con `pazienza` la barretta verde-rosso dei clienti
   pastiglia(cx, cy, testo, corpo, { col = null, largo = Infinity, alto = Infinity, pazienza = null, t = 0 } = {}) {
     const { ctx } = this
-    ctx.font = `800 ${Math.round(corpo)}px system-ui, sans-serif`
+    ctx.font = `800 ${Math.round(corpo)}px "Emoji Gioco", system-ui, sans-serif`
     const tw = ctx.measureText(testo).width
     const alta = corpo * 1.35, q = col ? corpo * 0.8 : 0, gap = col ? corpo * 0.3 : 0
     const barra = pazienza != null ? corpo * 0.5 : 0

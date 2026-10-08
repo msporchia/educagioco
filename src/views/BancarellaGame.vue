@@ -969,7 +969,7 @@ onBeforeUnmount(() => {
          background:linear-gradient(180deg,#e4e9ee,#9fabb4);
          box-shadow:0 4px 0 #00000038, inset 0 2px 4px #ffffff99 }
 .display { background:#1d2a1c; border-radius:5px; padding:3px 10px 4px; text-align:center;
-           box-shadow:inset 0 2px 6px #000a; font-family:ui-monospace,monospace }
+           box-shadow:inset 0 2px 6px #000a; font-family:"Emoji Gioco", ui-monospace,monospace }
 .display span { display:block; font-size:9px; font-weight:800; color:#6fbf80; letter-spacing:.5px }
 .display b { display:block; font-size:clamp(17px,5vw,23px); font-weight:900; color:#9dfcb0;
              font-variant-numeric:tabular-nums }
