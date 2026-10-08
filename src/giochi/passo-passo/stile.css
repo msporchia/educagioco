@@ -145,8 +145,8 @@
 @keyframes pp-compare { from { opacity: 0; margin-top: 6px } }
 
 /* ═══════════ le due valli: il fondale dipinto ═══════════
-   La vista scorre ma non si trascina (la muove il segnalino); il fondale
-   a pixel netti, il mare del suo colore. Vedi docs/passo-passo/mappa.md. */
+   La vista scorre col dito e col segnalino che viaggia (`touch-action: none`:
+   la pagina non scorre sotto); il fondale a pixel netti, il mare del suo colore. Vedi docs/passo-passo/mappa.md. */
 .pp-valle { flex: 1; min-height: 0; position: relative; display: flex; overflow: hidden; touch-action: none;
             background: #1995df; cursor: pointer; -webkit-user-select: none; user-select: none }
 /* su uno schermo più grande della mappa sta in mezzo; più piccolo, si scorre fino ai bordi */
