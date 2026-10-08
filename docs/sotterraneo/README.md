@@ -6,7 +6,7 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [presentazione.md](presentazione.md) — per chi arriva da fuori: cos'è, cosa allena, note per i genitori
 - [terra-di-sopra.md](terra-di-sopra.md) — la mappa da cui si scende: la vista che segue l'eroe, la maschera di dove si cammina e come si corregge, le discese sui posti, chi indica la strada, i mercanti, la nebbia, il portale gemello, le icone delle discese, la partenza nel villaggio
 - [terra-strumento.md](terra-strumento.md) — lo strumento che fa la terra di sopra dal foglietto: la giunta fra le due metà, la maschera, le icone delle discese
-- [regole.md](regole.md) — la discesa: scala e guardiano, quanto costa in domande, il branco a fasce, la stanza come confine, lo scontro, gli svenimenti
+- [regole.md](regole.md) — la discesa: scala e guardiano, quanto costa in domande, la luce e la torcia (senza si vede un cerchio), il branco a fasce, la stanza come confine, lo scontro, gli svenimenti
 - [scala-che-sale.md](scala-che-sale.md) — la scala che sale in ogni piano, dove si compare scendendo e risalendo, dal primo piano si esce col «lascio perdere», i piani lasciati restano com'erano, la sosta con i piani alle spalle
 - [barra.md](barra.md) — la barra in basso come in Diablo, la stessa sopra e sotto: il globo della vita, quello dell'esperienza col livello e il «+» dei punti, le caselle tutte uguali (la pozione da bere, lo zaino, il diario, la mappa grande, le gemme), l'elisir che la 🧪 non contava, la cornice da far dipingere
 - [livelli.md](livelli.md) — l'eroe sale di livello: l'esperienza solo dai mostri, le soglie, le quattro caratteristiche e la regola del bilanciamento, le classi che crescono diverse, la pagina dell'eroe, i livelli attesi

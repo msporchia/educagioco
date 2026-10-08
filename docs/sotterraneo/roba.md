@@ -108,6 +108,9 @@ la roba con livello e rarità: [rarita.md](rarita.md).
 - **Costa 5 gemme**, appena sotto la boccetta: un piano di luce è una
   comodità, non la sopravvivenza. Il prezzo è l'unica scala su cui sta tutto
   il catalogo.
+- **Cosa fa vedere la torcia**: con lei la stanza si accende tutta e il
+  raggio è lungo, senza si vede un cerchio di due celle; all'ultima stanza si
+  stringe e trema ([regole.md](regole.md#la-luce-la-torcia-e-la-mappina)).
 - **Quanta ne resta si vede** nella scena (il buio che si stringe), nello
   zaino per esteso («ancora 7 stanze, e 1 alla cintura»), e agli sgoccioli,
   solo senza scorta, una riga in mezzo al campo («Torcia sta per finire:
