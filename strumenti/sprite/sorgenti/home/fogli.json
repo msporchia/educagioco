@@ -1,0 +1,6 @@
+{
+  "_": "I fogli da quattro copertine (ChatGPT, prompt 3 di PROMPT-copertine.md): il file e le quattro chiavi, alto a sinistra, alto a destra, basso a sinistra, basso a destra. Lo legge strumenti/sprite/copertine.py.",
+  "foglio_1.png": ["generale", "prima", "fattoria", "survivors"],
+  "foglio_2.png": ["mate", "bancarella", "pozioni", "conta"],
+  "foglio_3.png": ["inglese", "spagnolo", "codice", "costruttore"]
+}

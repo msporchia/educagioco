@@ -1,0 +1,18 @@
+{
+  "_": "Il quadrato dell'icona dell'indice in ogni copertina: [x, y, lato] in pixel della tela da 1536×1024 (TELA in strumenti/sprite/copertine.py). Senza voce, il quadrato centrale alto quanto la tela.",
+  "torri": [729, 0, 711],
+  "sotterraneo": [533, 267, 640],
+  "passo": [551, 267, 444],
+  "generale": [480, 200, 620],
+  "prima": [560, 120, 880],
+  "fattoria": [780, 0, 700],
+  "survivors": [440, 220, 600],
+  "mate": [300, 150, 800],
+  "bancarella": [480, 0, 900],
+  "pozioni": [560, 220, 640],
+  "conta": [440, 120, 560],
+  "inglese": [40, 60, 560],
+  "spagnolo": [1000, 60, 480],
+  "codice": [440, 120, 640],
+  "costruttore": [300, 180, 520]
+}
