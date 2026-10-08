@@ -20,6 +20,7 @@ const props = defineProps({
   volo: { type: Object, required: true },       // { aperto, nome, che, record }
   arrivo: { type: Number, required: true },     // il nodo del razzo: voci.length è il volo
   chi: { type: String, default: '' },
+  livrea: { type: Object, default: null },      // la nave scelta nell'hangar (motore/asteroidi/hangar.js)
 })
 const emit = defineEmits(['parti'])
 
@@ -73,7 +74,7 @@ function posa() {
   const n = quadro.value && quadro.value.nodi[posato.value]
   if (!n || !telaRazzo.value) return
   sposta(n.razzo.x, n.razzo.y)
-  dipingiRazzo(telaRazzo.value, { angolo })
+  dipingiRazzo(telaRazzo.value, { livrea: props.livrea, angolo })
   razzo.value.dataset.verso = Math.round(angolo * 180 / Math.PI)     // per i test: com'è girato
 }
 const ricorda = () => { ultimo = { chi: props.chi, arrivo: posato.value, angolo, gioco: arrivoVero.value } }
@@ -125,14 +126,14 @@ function vola(inizio, a, { attesa = 0, vittoria = false } = {}) {
     if (t < primaGira) {
       angolo = a0 + svolta * molle(t / primaGira)
       sposta(punti[0][0], punti[0][1])
-      dipingiRazzo(telaRazzo.value, { angolo, spinta: 0.2, t })
+      dipingiRazzo(telaRazzo.value, { livrea: props.livrea, angolo, spinta: 0.2, t })
     } else {
       const q = (t - primaGira) / dur
       const p = lungo(punti, molle(q))
       angolo += giro(angolo, p.angolo) * 0.3
       sposta(p.x, p.y)
       if (vittoria) segui(p.y)
-      dipingiRazzo(telaRazzo.value, { angolo, spinta: 0.4 + Math.sin(Math.PI * q) * 0.6, t })
+      dipingiRazzo(telaRazzo.value, { livrea: props.livrea, angolo, spinta: 0.4 + Math.sin(Math.PI * q) * 0.6, t })
     }
     id = requestAnimationFrame(fotogramma)
   }
@@ -190,6 +191,7 @@ watch(quadro, async () => {
   dipingi(); posa()
 })
 watch(firma, () => nextTick(dipingi))
+watch(() => props.livrea, () => { if (!viaggio.value) posa() })
 watch(arrivoVero, (a, prima) => {
   if (!pronto || a === prima) return
   if (viaggio.value) viaggio.value.chiudi()
@@ -286,6 +288,14 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
                         width: n.etichetta.largo + 'px' }">
           <b>{{ n.nome }}</b>
           <i v-if="n.tipo === 'volo' && volo.aperto && volo.record" data-record>record {{ volo.record }}</i>
+          <!-- i pacchi che la nave madre di questa tappa ha ancora: quanti, non cosa (docs/asteroidi/boss.md) -->
+          <span v-if="n.pacchi && n.stato !== 'chiusa'" class="pacchi" data-pacchi :data-pacchi-di="n.pos" :data-quanti="n.pacchi">
+            <svg v-for="j in n.pacchi" :key="j" viewBox="-10 -10 20 20" aria-hidden="true">
+              <rect x="-8" y="-3" width="16" height="11" rx="2" fill="#3a86ff" stroke="#0b1029" stroke-width="1.6" />
+              <rect x="-9" y="-7" width="18" height="5" rx="1.5" fill="#5b9bff" stroke="#0b1029" stroke-width="1.6" />
+              <rect x="-1.6" y="-7" width="3.2" height="15" fill="#ffd94a" />
+            </svg>
+          </span>
         </span>
       </template>
 
@@ -309,6 +319,8 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
         <small>{{ intestazione(nodoAperto) }}</small>
         <b>{{ nodoAperto.nome }}</b>
         <span class="che">{{ nodoAperto.che }}</span>
+        <span v-if="nodoAperto.pacchi && nodoAperto.stato !== 'chiusa'" class="che" data-pacchi-fumetto>
+          In fondo c'è la nave madre: {{ nodoAperto.pacchi === 1 ? 'le resta un pacco' : 'ha ' + nodoAperto.pacchi + ' pacchi' }}.</span>
         <template v-if="nodoAperto.stato === 'chiusa'">
           <span class="serve" data-serve>🔒 {{ nodoAperto.serve }}</span>
         </template>
@@ -358,6 +370,8 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
 .nome b { font-size:13.5px; font-weight:600; color:#e6ebff; max-width:150px }
 .nome i { font-style:normal; font-size:12px; color:#ffd94a }
 .nome-ora b { color:#ffd94a }
+.pacchi { display:flex; gap:3px; margin-top:2px }
+.pacchi svg { width:15px; height:15px }
 .nome-chiusa b { color:#6f789c }
 
 .stelle-tappa { position:absolute; width:24px; height:24px; pointer-events:none; overflow:visible }
