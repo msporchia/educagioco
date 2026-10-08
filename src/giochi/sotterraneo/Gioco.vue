@@ -43,11 +43,10 @@ import Campagna from './viste/Campagna.vue'
 import Eroi from './viste/Eroi.vue'
 import Foglio from './viste/Foglio.vue'
 import Icona from './viste/Icona.vue'
-import { cambioDetto } from './viste/cambio.js'
 import { occhio } from './viste/occhio.js'
 import Scontro from './viste/Scontro.vue'
 import Zaino from './viste/Zaino.vue'
-import Mercante from './viste/Mercante.vue'   // il banco dei mercanti di sopra
+import LaBottega from './viste/Bottega.vue'   // la bottega dei mercanti di sopra
 import Fine from './viste/Fine.vue'
 import LascioPerdere from './viste/LascioPerdere.vue'   // la frase chiara prima di buttare una discesa
 import './stile.css'
@@ -281,16 +280,23 @@ const banco = computed(() => {
   const k = aperto.value
   if (!k || !bottega) return null
   const b = bottega, m = mercanteDi(k)
+  const voce = x => (x && COSE[x] ? { chiave: x, ...COSE[x] } : null)
+  // quello peggiore di quello addosso non si mostra; i pezzi più su si vedono spenti, con la discesa che li porta
+  const vendibili = b.mercanzia(k).filter(({ chiave: x }) => !b.sottoAddosso(x)).map(({ chiave: x, sempre }) => ({
+    chiave: x, sempre, ...COSE[x], posso: b.gemme >= COSE[x].prezzo,
+    nonPuoi: b.perchéNo(x), prova: b.seLoMetto(x), va: b.vaAddosso(x),
+    mancano: Math.max(0, COSE[x].prezzo - b.gemme),
+    quante: b.quanteNeHo(x),
+  }))
+  const vetrina = b.vetrina(k).map(({ chiave: x, finita }) => ({
+    chiave: x, ...COSE[x], chiusa: true, posso: false, prova: b.seLoMetto(x), nonPuoi: b.perchéNo(x),
+    quando: CAMPAGNA[finita].nome.charAt(0).toLowerCase() + CAMPAGNA[finita].nome.slice(1),
+  }))
   return {
     chi: m,
-    gemme: b.gemme,
-    roba: b.mercanzia(k).map(({ chiave: x, sempre }) => ({
-      chiave: x, sempre, ...COSE[x], posso: b.gemme >= COSE[x].prezzo,
-      nonPuoi: b.perchéNo(x),
-      cambio: cambioDetto(b.confronto(x), y => COSE[y].nome),
-      mancano: Math.max(0, COSE[x].prezzo - b.gemme),
-      quante: b.quanteNeHo(x),
-    })),
+    roba: [...vendibili, ...vetrina],
+    addosso: { mano: voce(b.mano), mancina: voce(b.mancina), corpo: voce(b.corpo), dito: voce(b.dito) },
+    numeri: { vita: b.vitaConLaRoba, att: b.att, dif: b.dif, gemme: b.gemme },
     tasche: m.compra ? Array.from({ length: TASCHE }, (_, i) => {
       const y = b.zaino[i]
       return y ? { chiave: y, ...COSE[y], vale: b.quantoVale(y) } : null
@@ -382,7 +388,7 @@ const pieni = dallaCorsa(c => c.zaino.length, 0)   // sei su sei vuol dire che l
 
 const zaino = dallaCorsa(c => {
   // `nonPuoi` la scrive il motore (perchéNo), che sa chi sta scendendo
-  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k) } : null)
+  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), prova: c.seLoMetto(k) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina),
     corpo: voce(c.corpo), dito: voce(c.dito),
@@ -855,12 +861,11 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   :missioni="missioni" :azione-missione="azioneMissione"
                   @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda"
                   @eroe="scegliEroe = true" @bottega="apriBottega" />
-        <!-- il banco di un mercante di sopra: al centro, la ✕ in alto a destra, niente domande -->
-        <Foglio v-if="banco" :em="banco.chi.em" :titolo="banco.chi.nome" centro con-chiudi
-                :dice="`Hai 💎 ${banco.gemme}. ${banco.chi.dice}`" @chiudi="chiudiBottega">
-          <Mercante :roba="banco.roba" :tasche="banco.tasche" :detto="dettoBanco"
-                    chi-compra="il rigattiere, vicino al carro" @compra="compraSopra" @vendi="vendiSopra" />
-        </Foglio>
+        <!-- la bottega di un mercante di sopra: quasi a tutto schermo, la ✕ in alto a destra, niente domande.
+             La chiave è il mercante: le linguette e la scelta ripartono da capo cambiando bottega -->
+        <LaBottega v-if="banco" :key="banco.chi.chiave" v-bind="banco" :eroe="eroeScheda" :detto="dettoBanco"
+                  chi-compra="al rigattiere, vicino al carro"
+                  @compra="compraSopra" @vendi="vendiSopra" @chiudi="chiudiBottega" />
         <Eroi v-if="scegliEroe" :avventure="avventure" :scelto="chiEro || ''" :primo="!chiEro"
               @scegli="scegli" @chiudi="chiudiLaScelta" />
       </template>
@@ -1050,15 +1055,13 @@ function ridimensiona() { if (pittore) pittore.misura() }
           </button>
         </Foglio>
 
-        <!-- lo zaino al centro, come lo scontro: dal basso sembrava un'appendice del campo -->
-        <Foglio v-else-if="zainoAperto" em="🎒" titolo="Lo zaino" centro>
-          <Zaino v-bind="zaino" :eroe="eroeScheda" :torcia="eroe.torcia"
-                 :att="eroe.att" :dif="eroe.dif" :gemme="eroe.gemme"
-                 :vita="eroe.vita" :vitaMax="eroe.vitaMax"
-                 :piano="eroe.piano" :piani="eroe.piani"
-                 @usa="usa" @butta="butta" @riponi="riponi"
-                 @chiudi="zainoAperto = false" />
-        </Foglio>
+        <!-- lo zaino al centro, nella cornice della bottega: dal basso sembrava un'appendice del campo -->
+        <Zaino v-else-if="zainoAperto" v-bind="zaino" :eroe="eroeScheda" :torcia="eroe.torcia"
+               :att="eroe.att" :dif="eroe.dif" :gemme="eroe.gemme"
+               :vita="eroe.vita" :vitaMax="eroe.vitaMax"
+               :piano="eroe.piano" :piani="eroe.piani"
+               @usa="usa" @butta="butta" @riponi="riponi"
+               @chiudi="zainoAperto = false" />
 
         <Fine v-if="fine" v-bind="fine" @ancora="ancora" @esci="allaMappa" />
       </template>

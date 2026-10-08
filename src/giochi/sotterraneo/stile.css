@@ -390,14 +390,6 @@
 
 .sot h2, .sot h3 { color: var(--sot-inchiostro) }
 
-/* le caselle stanno intorno alla figura, non in fila: guardandola si vede come si è messi senza leggere */
-.sot-riepilogo {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  margin: 0 0 12px; font-size: 13.5px; color: var(--sot-inchiostro);
-}
-/* più larga che nella fascia in cima: qui il numero è "11/16", non "11" */
-.sot-riepilogo .sot-polso { width: 84px; height: 16px }
-
 .sot-torcia-riga {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   margin: -6px 0 12px; font-size: 13px; color: var(--sot-tenue);
@@ -406,36 +398,6 @@
 .sot-torcia-riga b { color: #ffd9a0; font-weight: 650 }
 .sot-torcia-riga em { font-style: normal }
 
-.sot-corredo {
-  display: grid; gap: 8px; margin-bottom: 14px; align-items: center;
-  grid-template-columns: 1fr minmax(96px, 1.2fr) 1fr;
-  /* le mani in alto, una per lato (debole a sinistra, pugno a destra): sotto quella buona sembrava una seconda casella */
-  grid-template-areas:
-    "mancina chi mano"
-    "corpo   chi dito";
-  padding: 12px 8px 10px;
-  border-radius: 20px;
-  background: radial-gradient(90% 70% at 50% 0%, #1d2236, var(--sot-carta) 75%);
-  border: 1px solid var(--sot-bordo);
-}
-.sot-slot-mano { grid-area: mano }
-.sot-slot-corpo { grid-area: corpo }
-.sot-slot-dito { grid-area: dito }
-.sot-slot-mancina { grid-area: mancina }
-/* l'altro capo di un'arma a due mani: la stessa figura, spenta e girata */
-.sot-slot.sot-ombra { opacity: .5 }
-.sot-slot.sot-ombra .sot-dentro { transform: scaleX(-1); filter: grayscale(.6) brightness(.7) }
-.sot-figura { grid-area: chi; position: relative; display: grid; place-items: center; min-height: 118px }
-
-/* una casella incisa nel fondo, non un bottone appoggiato sopra */
-.sot-slot {
-  display: grid; justify-items: center; gap: 4px; padding: 8px 6px 6px;
-  color: inherit; font: inherit; border-radius: 14px;
-  background: #05070c99; border: 1px solid #ffffff22;
-  box-shadow: inset 0 2px 8px #0009;
-}
-.sot-slot i { font-style: normal; font-size: 10.5px; color: var(--sot-tenue); line-height: 1.15 }
-.sot-slot.sot-vuota i { opacity: .75 }
 /* il pezzo parte dall'angolo in alto a sinistra (viste/figura.js), non dal centro: centrandolo, un'accetta
    piccola in una gabbia grande scalata ×2 usciva in basso a destra e overflow le tagliava il manico.
    Il centraggio resta solo per l'emoji di ripiego, che una gabbia non ce l'ha. */
@@ -443,35 +405,23 @@
   position: relative; display: inline-grid; place-items: center;
   overflow: hidden; vertical-align: middle;
 }
-.sot-icona > i, .sot-dentro > i, .sot-ritratto > i,
-.sot-impugnata > i, .sot-imbracciata > i { position: absolute; top: 0; left: 0 }
-.sot-dentro, .sot-ritratto, .sot-impugnata, .sot-imbracciata { position: relative }
+.sot-icona > i, .sot-ritratto > i { position: absolute; top: 0; left: 0 }
+.sot-ritratto { position: relative }
 /* niente canvas in un pannello: quattro drop-shadow, una per lato, seguono l'alfa e restano nette come la
    pixel art (uno scudo di ferro è quasi nero e sparirebbe su un fondo scuro). Non sul ritratto: lì il
    filtro si applica prima del transform ×4 e l'eroe sembrerebbe ritagliato con le forbici. */
-.sot-icona > i, .sot-dentro > i, .sot-impugnata > i, .sot-imbracciata > i {
+.sot-icona > i {
   display: block;
   filter:
     drop-shadow(1px 0 0 #ffffff4d) drop-shadow(-1px 0 0 #ffffff4d)
     drop-shadow(0 1px 0 #ffffff4d) drop-shadow(0 -1px 0 #ffffff4d);
 }
 
-/* il riquadro non taglia mai: alla scala di casa (×2) la spada fiammeggiante (24px) viene 48, e un
-   riquadro di 48 la tagliava quel poco che basta a sembrare storta. overflow resta solo come rete di sicurezza. */
-.sot-dentro { display: grid; place-items: center; width: 100%; height: 54px; overflow: hidden }
-/* tutte le caselle della stessa altezza: la misura la dà il riquadro, non lo sprite */
-.sot-tasca, .sot-slot { min-height: 92px; align-content: center }
-.sot-dentro .em { font-size: 24px }
-.sot-slot.sot-vuota .sot-dentro { opacity: .35 }
-
 /* display:block sul figlio non è cosmetica: transform non si applica a un elemento inline, e senza
    questa riga la figura misurava giusto ma non si vedeva (le caselle si salvano perché il grid la blockifica) */
 .sot-ritratto { display: block; overflow: hidden; image-rendering: pixelated }
-.sot-ritratto > i, .sot-dentro > i, .sot-impugnata > i { display: block }
+.sot-ritratto > i { display: block }
 .sot-ritratto .em { font-size: 40px }
-.sot-impugnata { position: absolute; right: 12%; bottom: 24%; overflow: hidden }
-/* lato opposto: uno scudo si porta davanti al fianco sinistro, come nel campo */
-.sot-imbracciata { position: absolute; left: 12%; bottom: 22%; overflow: hidden }
 
 /* l'eroe con la roba in mano (viste/Armato.vue): la scala è quella della figura, le armi escono dal riquadro
    (una balestra è più larga del corpo) e prendono lo stesso filo chiaro delle altre cose */
@@ -484,32 +434,6 @@
     drop-shadow(1px 0 0 #ffffff4d) drop-shadow(-1px 0 0 #ffffff4d)
     drop-shadow(0 1px 0 #ffffff4d) drop-shadow(0 -1px 0 #ffffff4d);
 }
-
-.sot-tasche { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px }
-.sot-tasca {
-  display: grid; justify-items: center; gap: 3px; padding: 9px 4px 7px;
-  border-radius: 14px; color: inherit; font: inherit;
-  background: #05070c88; border: 1px solid #ffffff18;
-  box-shadow: inset 0 2px 8px #0007;
-}
-.sot-tasca em { font-style: normal; font-size: 10.5px; line-height: 1.1; text-align: center }
-.sot-tasca.sot-vuota { opacity: .4 }
-.sot-tasca.sot-vuota .sot-dentro .em { opacity: .5 }
-/* spenta a metà, non nascosta: si è raccolta apposta, vale gemme al banco */
-.sot-tasca.sot-altrui .sot-dentro > i { opacity: .38; filter: grayscale(.7) }
-.sot-tasca.sot-altrui em { opacity: .5 }
-.sot-vietata {
-  position: absolute; right: 2px; top: -2px; font-size: 15px;
-  filter: drop-shadow(0 1px 2px #000a);
-}
-.sot-tasca .sot-dentro { position: relative }
-.sot-nonpuoi {
-  margin: 7px 0 0; padding: 7px 9px; border-radius: 10px;
-  font-size: 13px; font-weight: 700; color: #f0b429;
-  background: #f0b4291a; border: 1px solid #f0b42933;
-}
-.sot-nonpuoi .em { font-size: 14px }
-.sot-nonpuoi i { display: block; font-style: normal; font-weight: 400; color: var(--sot-tenue); margin-top: 2px }
 
 .sot-chi {
   display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px;
@@ -611,10 +535,6 @@
 }
 .sot-porta .em { font-size: 12px; font-style: normal }
 
-/* la cornice d'oro dice "sto parlando di questa qui": senza, con sei tasche uguali non si distingue la scelta */
-.sot-tasca.sot-scelto, .sot-casella.sot-scelto {
-  border: 2px solid var(--sot-oro); background: #ffd23f1c; opacity: 1;
-}
 .sot-scambio {
   margin: 6px 0 0; padding: 5px 8px; border-radius: 10px;
   font-size: 13.5px; font-weight: 700; text-align: center;
@@ -624,51 +544,12 @@
 .sot-scambio.sot-male { background: #e0432f24; color: #ff9b8a }
 .sot-scambio b { font-size: 15px }
 
-/* si appiccicano al fondo: in coda a una griglia alta quanto lo schermo finivano oltre il bordo */
-.sot-azioni {
-  position: sticky; bottom: -14px; z-index: 1;
-  margin-top: 10px; padding: 10px 10px 12px;
-  border-radius: 16px; background: #0b0f1af2;
-  box-shadow: 0 -8px 24px #000a;
-}
-.sot-dice {
-  margin: 0; font-size: 15px; display: flex; align-items: center; gap: 8px;
-  min-height: 54px;
-}
 .sot-storia { margin: 4px 0 2px; font-size: 15px; line-height: 1.45 }   /* la battuta è il premio vero */
 
-.sot-numeri { margin: 4px 0 0; font-size: 13.5px; font-weight: 700; color: var(--sot-oro) }
-.sot-detto { margin: 3px 0 0; font-size: 12.5px; color: var(--sot-tenue) }
-.sot-dice .em { font-size: 20px; vertical-align: -3px }
 .sot-cambio { margin: 6px 0 0; font-size: 14px; font-weight: 700; color: var(--sot-tenue) }
 .sot-cambio.sot-meglio { color: #4fce7c }
 .sot-grosso[disabled] { opacity: .4 }
 
-.sot-merce {
-  display: flex; align-items: center; gap: 11px; width: 100%; margin-bottom: 8px;
-  padding: 10px 12px; text-align: left; color: inherit; font: inherit;
-  background: #ffffff10; border: 1px solid #ffffff14; border-radius: 14px;
-}
-.sot-merce .em { font-size: 24px }
-.sot-merce .sot-testo { flex: 1; min-width: 0; display: grid }
-.sot-merce .sot-testo b { font-size: 14px }
-.sot-merce .sot-testo i { font-style: normal; font-size: 11.5px; color: var(--sot-tenue) }
-.sot-merce.sot-caro { opacity: .45 }
-.sot-merce .sot-altrui { color: #f0b429; font-weight: 700 }   /* ambra come nello zaino: stesso avviso */
-.sot-merce.sot-vendo { background: #4fce7c12; border-color: #4fce7c2e }
-.sot-merce.sot-vendo .sot-prezzo { color: #4fce7c }
-.sot-banco {
-  margin: 14px 0 8px; font-size: 13px; font-weight: 700; color: var(--sot-tenue);
-}
-.sot-prezzo { color: var(--sot-oro); font-size: 13px; white-space: nowrap; display: grid; gap: 2px; justify-items: end }
-.sot-quante { font-size: 11px; font-weight: 700; color: var(--sot-tenue) }   /* per non comprare la quarta pozione senza accorgersene */
-/* spento, e con scritto quanto manca: il verde del "conviene" sparirebbe come un invito a un tasto morto */
-.sot-prezzo.sot-manca { color: var(--sot-tenue) }
-.sot-prezzo.sot-manca .sot-quante { color: #e0644f }
-.sot-merce .sot-testo em {
-  font-style: normal; font-size: 12px; font-weight: 700; color: var(--sot-tenue);
-}
-.sot-merce .sot-testo em.sot-meglio { color: #4fce7c }
 /* la ✕ del banco di sopra: appiccicata in cima, il margine negativo non sposta il titolo (come fattoria/viste/Chiudi.vue) */
 .sot-chiudi {
   position: sticky; top: 0; z-index: 2; float: right; width: 34px; height: 34px; margin: -4px -4px 0 8px;
@@ -676,8 +557,6 @@
   color: #f3ece0; background: #141826e8; border: 2px solid #ffffff38; border-radius: 11px; cursor: pointer;
 }
 .sot-chiudi:active { transform: scale(.92) }
-.sot-detto-banco { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: 13px }
-.sot-banco.sot-vuote { margin-top: 0; font-weight: 400 }
 
 .sot-velo {
   position: absolute; inset: 0; z-index: 20; display: grid; place-items: center;
@@ -700,3 +579,166 @@
 .sot-fatti small { font-size: 12px; color: var(--sot-tenue) }
 .sot-fatti span { font-size: 11px; color: var(--sot-tenue) }
 .sot-coda { margin: 8px 0 0; font-size: 13px }
+
+/* ═══════════ la bottega e lo zaino (viste/Cornice.vue, Bottega.vue, Zaino.vue) ═══════════
+   Una finestra da gioco di ruolo stretta in un telefono: legno scuro e oro, l'eroe con le caselle intorno, la
+   griglia dei pezzi col bordo del loro gradino, il pannello col confronto (docs/sotterraneo/roba.md) */
+.sot-sipario {
+  position: absolute; inset: 0; z-index: 14; display: flex; align-items: center; justify-content: center;
+  padding: 10px 8px; background: #05060ad6; animation: sot-appare .14s ease-out;
+}
+.sot-cornice {
+  position: relative; width: 100%; max-width: 460px; max-height: 100%;
+  display: flex; flex-direction: column; gap: 8px; padding: 14px 12px 12px;
+  border: 3px solid transparent; border-radius: 16px;
+  background:
+    repeating-linear-gradient(93deg, #ffffff07 0 2px, transparent 2px 13px) padding-box,
+    linear-gradient(180deg, #2c1c10, #1b120b 45%, #140d08) padding-box,
+    linear-gradient(135deg, #f6d77a, #9a6b1f 28%, #ffe9a3 50%, #8a5a14 74%, #e8bf5a) border-box;
+  box-shadow: inset 0 0 0 2px #3a2614, inset 0 0 0 3px #c9963a44, inset 0 0 34px #000b, 0 20px 60px #000d;
+  animation: sot-cresce .16s ease-out;
+}
+.sot-cornice.sot-alta { height: 100% }
+.sot-angolo { position: absolute; width: 30px; height: 30px; z-index: 3; pointer-events: none }
+.sot-alto-sx { top: -6px; left: -6px }
+.sot-alto-dx { top: -6px; right: -6px; transform: scaleX(-1) }
+.sot-basso-sx { bottom: -6px; left: -6px; transform: scaleY(-1) }
+.sot-basso-dx { bottom: -6px; right: -6px; transform: scale(-1, -1) }
+.sot-chiudi.sot-chiudi-cornice {
+  position: absolute; top: 12px; right: 12px; float: none; margin: 0; z-index: 4;
+  color: #ffe39a; background: #1a110bee; border-color: #c9963a99;
+}
+
+/* in cima chi ti sta davanti: il ritratto in un tondo d'oro e il nome inciso */
+.sot-targa { display: flex; align-items: center; gap: 10px; padding-right: 44px; flex: none }
+.sot-targa-ritratto {
+  flex: none; width: 58px; height: 58px; border-radius: 50%; overflow: hidden;
+  display: grid; place-items: start center; padding-top: 3px;
+  background: radial-gradient(circle at 50% 38%, #5a4026, #1a110b 72%);
+  border: 2px solid #d9a640; box-shadow: 0 0 0 2px #3a2614, 0 0 14px #ffd23f2e;
+}
+.sot-targa-ritratto.sot-targa-em { place-items: center; padding: 0; font-size: 30px }
+.sot-targa-nome { display: grid; gap: 1px; min-width: 0 }
+.sot-targa-nome b {
+  font-family: "Emoji Gioco", Georgia, "Times New Roman", serif; font-size: 21px; color: #ffe39a;
+  letter-spacing: .02em; text-shadow: 0 2px 0 #000, 0 0 12px #ffd23f40;
+}
+.sot-targa-nome i {
+  font-style: normal; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #c9a46a;
+}
+
+/* l'eroe in mezzo e le quattro caselle intorno, i numeri accanto */
+.sot-intorno {
+  flex: none; display: grid; grid-template-columns: auto auto auto 1fr; align-items: center; gap: 6px;
+  padding: 8px; border-radius: 12px; border: 1px solid #c9963a55;
+  background: radial-gradient(70% 100% at 32% 50%, #3d2c1b, #120c08 78%);
+  box-shadow: inset 0 2px 12px #000b;
+}
+.sot-intorno-lato { display: grid; gap: 6px }
+.sot-intorno-eroe {
+  width: 76px; height: 106px; display: grid; place-items: end center; padding-bottom: 6px;
+  background: radial-gradient(48% 14% at 50% 90%, #ffd23f30, transparent);
+}
+.sot-intorno-numeri {
+  display: grid; gap: 5px; justify-items: start; padding-left: 6px;
+  font-size: 14.5px; font-weight: 800; color: #f3e6c8; white-space: nowrap;
+}
+.sot-intorno-numeri b { font-weight: 400 }
+.sot-intorno-numeri .sot-polso { width: 74px; height: 16px }
+.sot-gemme-tue { color: var(--sot-oro); font-size: 16px }
+.sot-cornice .sot-torcia-riga { margin: 0; flex: none }
+
+/* una casella: il pezzo, il bordo del colore del gradino, sotto il prezzo */
+.sot-casella {
+  position: relative; display: grid; grid-template-rows: 1fr auto; justify-items: center; align-items: center;
+  min-height: 100px; padding: 4px 2px 5px; color: inherit; font: inherit;
+  border-radius: 10px; border: 2px solid var(--sot-gradino, #ffffff1f);
+  background: radial-gradient(circle at 50% 40%, #2d3047, #0c0e17 76%);
+  box-shadow: inset 0 2px 8px #000c, inset 0 0 16px color-mix(in srgb, var(--sot-gradino, #000) 22%, transparent);
+  transition: transform .08s;
+}
+.sot-casella-dentro { position: relative; display: grid; place-items: center; width: 100%; min-height: 66px }
+.sot-casella-sotto { font-size: 13px; font-weight: 800; color: var(--sot-oro); white-space: nowrap; line-height: 1.1 }
+.sot-casella-sotto.sot-rosso { color: #ff8f80 }
+.sot-da-vendere .sot-casella-sotto { color: #7fe3a0 }
+.sot-casella-segno {
+  position: absolute; top: -1px; right: 4px; font-size: 15px; font-weight: 800; color: #fff;
+  text-shadow: 0 1px 2px #000, 0 0 4px #000;
+}
+.sot-casella-ombra { font-size: 20px; opacity: .2; filter: grayscale(1) }
+.sot-casella.sot-vuota { border-color: #ffffff14 }
+.sot-casella.sot-spenta .sot-icona { opacity: .38; filter: grayscale(.65) }
+.sot-casella.sot-ombra .sot-icona { transform: scaleX(-1); filter: grayscale(.6) brightness(.7); opacity: .5 }
+.sot-casella.sot-scelto {
+  border-color: #fff3c4; transform: translateY(-1px);
+  box-shadow: 0 0 0 2px var(--sot-oro), 0 0 16px #ffd23f99, inset 0 2px 8px #000c;
+}
+.sot-casella.sot-accesa { box-shadow: 0 0 0 2px #4fce7c, 0 0 14px #4fce7c88, inset 0 2px 8px #000c }
+.sot-casella:active:not(:disabled) { transform: scale(.95) }
+.sot-casella.sot-piccola { width: 50px; height: 50px; min-height: 0; padding: 2px; grid-template-rows: 1fr }
+.sot-casella.sot-piccola .sot-casella-dentro { min-height: 0; height: 100% }
+
+/* le linguette del banco, come le schede di un registro */
+.sot-linguette { flex: none; display: flex; gap: 4px; padding: 0 2px; border-bottom: 2px solid #c9963a99 }
+.sot-linguetta {
+  flex: 1 1 auto; padding: 8px 8px 7px; font: inherit; font-size: 13.5px; font-weight: 800; white-space: nowrap;
+  color: #c9a46a; background: linear-gradient(#2c1d11, #1a110b); border: 1px solid #c9963a55; border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+}
+.sot-linguetta.sot-su { color: #2a1a06; background: linear-gradient(#ffe39a, #d9a640); border-color: #ffe39a }
+.sot-linguetta.sot-vendi:not(.sot-su) { color: #7fe3a0 }
+
+/* in mezzo l'unica parte che scorre: sopra e sotto restano fermi (docs/core/interfaccia.md) */
+.sot-banco-griglia { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px 2px; touch-action: pan-y }
+.sot-griglia { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px }
+.sot-banco-voce {
+  margin: 14px 8px; text-align: center; font-size: 14px; font-style: italic; color: #e9d6ae; line-height: 1.45;
+}
+
+.sot-banco-piede { flex: none; display: grid; gap: 6px }
+.sot-alta .sot-banco-piede { min-height: 176px; align-content: end }
+.sot-detto-banco {
+  display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0;
+  font-size: 14px; font-weight: 800; color: #7fe3a0; animation: sot-appare .2s ease-out;
+}
+/* niente di scelto: parla il mercante, su un foglio di pergamena */
+.sot-battuta {
+  padding: 12px 14px; border-radius: 12px; color: #3a2614;
+  font-family: "Emoji Gioco", Georgia, "Times New Roman", serif; font-size: 15.5px; font-style: italic; line-height: 1.4;
+  background: linear-gradient(175deg, #f6ead0, #e3cc98); box-shadow: inset 0 0 22px #a07a3a77, 0 4px 14px #000a;
+}
+.sot-battuta p { margin: 0 }
+.sot-battuta .sot-battuta-poi { margin-top: 8px; font-size: 13.5px; color: #6b4a22 }
+
+.sot-pannello {
+  padding: 10px 12px 12px; border-radius: 12px;
+  background: linear-gradient(180deg, #211912, #120d09); border: 1px solid #c9963a66;
+  border-top: 3px solid var(--sot-gradino, #c9963a); animation: sot-appare .12s ease-out;
+}
+.sot-pannello-testa { display: flex; align-items: center; gap: 10px }
+.sot-pannello-icona {
+  flex: none; width: 54px; height: 54px; display: grid; place-items: center; border-radius: 10px;
+  border: 2px solid var(--sot-gradino); background: radial-gradient(circle at 50% 40%, #2d3047, #0c0e17 76%);
+}
+.sot-pannello-nome { display: grid; gap: 1px; min-width: 0 }
+.sot-pannello-nome b {
+  font-family: "Emoji Gioco", Georgia, "Times New Roman", serif; font-size: 19px; color: var(--sot-gradino);
+  text-shadow: 0 1px 0 #000;
+}
+.sot-pannello-nome i { font-style: normal; font-size: 12px; color: #b9a27a }
+.sot-pannello-numeri {
+  list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 3px 14px;
+  font-size: 14.5px; font-weight: 800; color: #f3e6c8;
+}
+.sot-confronto { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0 }
+.sot-confronto-riga { padding: 3px 10px; border-radius: 999px; font-size: 14.5px; font-weight: 800 }
+.sot-confronto-riga.sot-su { color: #8ff0b0; background: #4fce7c1f; border: 1px solid #4fce7c66 }
+.sot-confronto-riga.sot-giu { color: #ff9b8a; background: #e0432f1f; border: 1px solid #e0432f66 }
+.sot-confronto-pari { font-size: 13px; color: var(--sot-tenue) }
+.sot-pannello-nota { margin: 6px 0 0; font-size: 13px; color: var(--sot-tenue) }
+.sot-pannello-nota.sot-tono-ambra { color: #f0b429; font-weight: 700 }
+.sot-pannello-nota.sot-tono-oro { color: #ffe39a; font-weight: 700 }
+.sot-pannello-tasti .sot-grosso { margin-top: 10px; padding: 12px }
+.sot-grosso.sot-compra { color: #2a1a06; background: linear-gradient(#ffe39a, #e0a93a); box-shadow: 0 3px 0 #8a5a14 }
+.sot-grosso.sot-vendi-tasto { color: #0d2a17; background: linear-gradient(#a6f3c2, #3fae68); box-shadow: 0 3px 0 #1f6b3c }
+.sot-due-tasti { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }

@@ -895,7 +895,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   }
   /* e la roba buona **si vede anche in cima**, spenta: sapere cosa c'era
      è il motivo per tornare, e un banco che offre solo il comprabile
-     quel motivo non lo dà mai (`viste/Mercante.vue`) */
+     quel motivo non lo dà mai (`viste/Bottega.vue`) */
   const sognoInCima = quota(durezzaDi(CAMPAGNA[0], 0), x => x >= PREGIATO)
   dentro('nella scalinata la roba da 30 gemme si intravede, e resta rara',
          Math.round(sognoInCima * 100), 5, 40)
