@@ -116,11 +116,15 @@ await page.waitForSelector('.carte')
    tranne la bandiera sono vinte, così il libro del mondo è aperto; tre
    storie su quattro sono già lette, «Chi c’è sotto?» da più tempo. */
 const ora = Date.now()
+const FUORI_MONDO = ['rana', 'oveja']   // dati/capitoli/indovina-il-disegno.js
 const sa = s => ({ s, ok: 5, err: 0, last: ora, seen: 5, t: 0 })
 const t1 = tappaDi('prima-es-un')
 const paroleDelMondo = MONDI[0].tappe.flatMap(t => t.parole || [])
 const items = {}
 for (const p of paroleDelMondo) items['es:' + p] = sa(6)
+// la rana e la pecora non sono del primo mondo ma il libro di sotto le pesca: si sanno anche loro, così
+// la prima pagina ha sempre un animale saputo da toccare
+for (const p of FUORI_MONDO) items['es:' + p] = sa(6)
 for (const f of FRASI.filter(f => f.tappa === t1.id)) items['frase-es:' + f.id] = sa(4)
 items['forma-es:es-un'] = sa(4)
 const vinte = Object.fromEntries(MONDI[0].tappe.filter(t => !t.bandiera)
@@ -292,7 +296,7 @@ await page.waitForSelector('[data-traduzione]')
 controlla('una parola gratis non chiede niente', await page.locator('[data-svela]').count() === 0)
 // un animale (il disegno è di un animale a caso) è saputo: toccarlo costerebbe il guadagno di una
 // domanda, e prima lo si chiede
-const ANIMALI = MONDI[0].tappe.find(t => t.id === 'prima-animales').parole
+const ANIMALI = [...MONDI[0].tappe.find(t => t.id === 'prima-animales').parole, ...FUORI_MONDO]
 const parolaAnimale = await page.locator('[data-libro-testo] [data-parola]').evaluateAll(
   (els, animali) => (els.map(e => e.dataset.parola).find(p => animali.includes(p)) || null), ANIMALI)
 controlla('nel testo c’è un animale da toccare', !!parolaAnimale)

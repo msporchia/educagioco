@@ -605,7 +605,7 @@ await scatto(page, 'domanda-incatenata')
    un test del sotterraneo. */
 // l'archivio scrive a lotti (store/storage.js, flush in coda): si aspetta che la scrittura arrivi
 let segnate = await chiaviDiQuiz()
-for (let i = 0; i < 20 && !segnate.length; i++) { await attendi(page, 150); segnate = await chiaviDiQuiz() }
+for (let i = 0; i < 40 && !segnate.length; i++) { await attendi(page, 250); segnate = await chiaviDiQuiz() }   // fino a 10 s: coi test in parallelo il lotto tarda
 controlla('rispondere in partita scrive il ripasso', segnate.length > 0,
           `nessuna chiave di quiz in items dopo ${risposteDate} risposte`)
 nota(`il ripasso si è segnato: ${segnate.join(', ') || 'niente'}`)
