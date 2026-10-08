@@ -587,7 +587,7 @@ const attesaCliente = () => page.evaluate(() => {
 })
 
 await page.evaluate(() => window.__shop.inizia(0))
-await page.waitForSelector('button[aria-label="pausa"]', { timeout: 3000 })
+await page.waitForSelector('button[aria-label="pausa"]', { timeout: 10000 })   // coi test in parallelo 3 s non bastano
 const cartelloSu = await page.evaluate(() => !!window.__shop.cambio.value)
 await page.locator('button[aria-label="pausa"]').click()
 uguale('si arriva al banco e il cartello è su', cartelloSu, true)
