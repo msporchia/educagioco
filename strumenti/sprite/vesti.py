@@ -57,7 +57,6 @@ Tre cose imparate col primo giro, che incollava ritagli quadrati:
 Chi lo usa per disegnare le carte è `scacchiera.py --carte … --vesti`.
 """
 import base64
-import io
 import json
 import sys
 from functools import lru_cache
@@ -65,6 +64,7 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).parent))
+import codifica  # noqa: E402
 import righe  # noqa: E402
 
 C = 64
@@ -926,9 +926,10 @@ def provino(p, uscita):
 #               del sotterraneo). Alla misura del foglio: una cella da
 #               64 px è 16 pixel del disegno anche lì.
 #
-# WebP con l'alfa e non PNG: sono pezzi di scene dipinte, non pixel art
-# a blocchi, e il PNG li pagava tre volte tanto. Quanto pesano lo scrive
-# il modulo in testa, e lo stampa il comando.
+# WebP con l'alfa e non PNG: il PNG pesava tre volte tanto. Senza perdita,
+# a colori a passo 12 (`codifica.py`, perché: docs/core/grafica.md,
+# «Fedeli ai sorgenti»): il WebP con perdita sporcava i contorni. Quanto
+# pesano lo scrive il modulo in testa, e lo stampa il comando.
 
 REPO = Path(__file__).resolve().parents[2]
 DATI = REPO / 'src' / 'giochi' / 'castello' / 'dati'
@@ -937,11 +938,6 @@ DATI = REPO / 'src' / 'giochi' / 'castello' / 'dati'
 # valgono: la palude si veste solo dal suo foglio, e la scena resta per
 # lo stile e per il provino.
 SCENE = {'bosco': 'td_1.png', 'neve': 'td_2.png', 'lava': 'td_3.png', 'palude': 'td_4.png'}
-QUALITA = 85
-# Le figure si pagano di più: quaranta creature da quattro fotogrammi
-# sono quasi tutto il peso del castello. A 80 non si distingue da 85 alla
-# misura del campo, e il file scende di un settimo.
-QUALITA_FIGURE = 80
 
 
 def impacchetta(misure, largo=1024, spazio=2):
@@ -959,12 +955,6 @@ def impacchetta(misure, largo=1024, spazio=2):
         x += w + spazio
         riga = max(riga, h)
     return posti, y + riga
-
-
-def webp(im, qualita=QUALITA):
-    buf = io.BytesIO()
-    im.save(buf, 'WEBP', quality=qualita, method=6)
-    return buf.getvalue()
 
 
 def pezzi_da_atlante(vestito):
@@ -1414,16 +1404,17 @@ def atlante():
     # Una tabella per vestito: finché vengono tutti dalle scene sono la
     # stessa (la geometria è una, rivestita), ma il giorno che uno ha il
     # suo foglio i suoi pezzi hanno altre misure e altri numeri.
-    immagini, pesi, tabelle, quanti, fonti, dal_foglio = {}, {}, {}, {}, {}, {}
+    immagini, pesi, tabelle, quanti, fonti, dal_foglio, fedelta = {}, {}, {}, {}, {}, {}, {}
     for nome in SCENE:
         pz, q, dal_foglio[nome] = pezzi_da_atlante(nome)
         posti, alto = impacchetta({k: im.size for k, im in pz.items()})
         foglio = Image.new('RGBA', (1024, alto), (0, 0, 0, 0))
         for k, im in pz.items():
             foglio.paste(im, posti[k][:2])
-        dati = webp(foglio)
+        dati = codifica.webp(foglio)
         immagini[nome] = base64.b64encode(dati).decode()
         pesi[nome] = round(len(dati) / 1024)
+        fedelta[nome] = codifica.riga(foglio, dati)
         tabelle[nome], quanti[nome] = posti, q
         fonti[nome] = f'terreno-{nome}.png' if foglio_del_terreno(nome) else SCENE[nome]
     tot = sum(pesi.values())
@@ -1453,7 +1444,7 @@ def atlante():
    QUANTI   vestito → quante varianti ha ogni famiglia
    DAL_FOGLIO vestito → true se i pezzi vengono dal foglio: la bocca è
             una figura intera da posare, non un ritaglio di tre celle
-   SCENE    vestito → immagine WebP in base64. Pesano {' · '.join(f'{k} {v} KB' for k, v in pesi.items())},
+   SCENE    vestito → immagine WebP in base64, senza perdita a colori a passo 12. Pesano {' · '.join(f'{k} {v} KB' for k, v in pesi.items())},
             {tot} KB in tutto (in base64 un terzo di più).
 */
 """
@@ -1470,7 +1461,7 @@ def atlante():
              ''.join(f"  {k}: 'data:image/webp;base64,{v}',\n" for k, v in immagini.items()) +
              '}\n')
     (DATI / 'vestiti.js').write_text(corpo)
-    print(f'vestiti.js: {" · ".join(f"{k} {v} KB da {fonti[k]}" for k, v in pesi.items())} di WebP')
+    print('vestiti.js: ' + ' · '.join(f'{k} {fedelta[k]} da {fonti[k]}' for k in pesi))
 
     # ── le figure ──
     pz, creature, fonte = figure_da_atlante()
@@ -1478,8 +1469,9 @@ def atlante():
     foglio = Image.new('RGBA', (1024, alto), (0, 0, 0, 0))
     for k, im in pz.items():
         foglio.paste(im, posti[k][:2])
-    dati = webp(foglio, QUALITA_FIGURE)
+    dati = codifica.webp(foglio)
     kb = round(len(dati) / 1024)
+    fed = codifica.riga(foglio, dati)
     testa = f"""/* GENERATO da strumenti/sprite/vesti.py --atlante — non si scrive a mano.
 
    Le torri e i mostri del castello (una cella da {C} px). I
@@ -1505,7 +1497,7 @@ def atlante():
              f'export const PEZZI = {js_tabella(posti)}\n'
              f"export const IMMAGINE = 'data:image/webp;base64,{base64.b64encode(dati).decode()}'\n")
     (DATI / 'figure.js').write_text(corpo)
-    print(f'figure.js: {len(pz)} figure ({len(creature)} creature), {kb} KB di WebP; torri da {fonte["torri"]}')
+    print(f'figure.js: {len(pz)} figure ({len(creature)} creature), {fed}; torri da {fonte["torri"]}')
 
 
 if __name__ == '__main__':

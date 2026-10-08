@@ -89,7 +89,8 @@ di 4×4 px».
   **Il peso**: le quaranta creature col respiro sono 626 KB di WebP in
   `dati/figure.js` (864 KB col base64, 605 KB più di prima). È il
   motivo per cui il bagliore dietro le creature si toglie al ritaglio
-  (alfa sotto 64) e le figure si comprimono a qualità 80.
+  (alfa sotto 64). Poi, l'8 ottobre, le figure sono passate a WebP senza perdita
+  a colori a passo 12 (`codifica.py`): 1190 KB invece di 759 con la perdita.
 
 - **I colpi, le barre della vita, il raggio delle torri**: li disegna il
   gioco, com'era deciso ad agosto.
