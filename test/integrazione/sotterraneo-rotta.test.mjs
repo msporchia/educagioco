@@ -166,6 +166,7 @@ await page.waitForSelector('[data-terra]', { timeout: 5000 })
 await attendi(page, 600)
 uguale('niente consegne da fare: la freccia d\'oro non c\'è', await page.locator('[data-consegna-fuori]').count(), 0)
 uguale('la freccia azzurra c\'è, e va alla torre', await page.locator('[data-meta-fuori]').getAttribute('data-meta-fuori'), 'torre')
+uguale('la torre è lontana: la freccina attorno all\'eroe non c\'è', await page.locator('[data-rotta-terra]').count(), 0)
 controlla('stesso stampo dell\'altra, e col ritaglio della discesa',
           await page.locator('.sot-bussola.sot-bussola-meta [data-ritaglio]').count() === 1)
 controlla('il colore è azzurro e non d\'oro',
@@ -182,10 +183,63 @@ const prima = await page.locator('[data-eroe-terra]').getAttribute('data-cella')
 await toccaIl('[data-meta-fuori]')
 await page.waitForFunction(p => document.querySelector('[data-eroe-terra]')?.dataset.cella !== p, prima, { timeout: 5000 })
 uguale('toccandola l\'eroe ci va', await page.locator('[data-eroe-terra]').getAttribute('data-cammina'), '1')
+/* Durante la camminata si guarda ogni fotogramma: B = solo il bordo, V = la freccina attorno all'eroe, N = niente.
+   Il passaggio è uno solo, in avanti (B poi V poi N): se tornasse indietro sarebbe lo sfarfallio al confine */
+await page.evaluate(() => {
+  window.__stati = ''
+  const giro = () => {
+    const b = document.querySelectorAll('[data-meta-fuori]').length, v = document.querySelectorAll('[data-rotta-terra]').length
+    const s = b && v ? 'X' : b ? 'B' : v ? 'V' : 'N'
+    if (window.__stati.slice(-1) !== s) window.__stati += s
+    window.__giro = requestAnimationFrame(giro)
+  }
+  giro()
+})
 await page.waitForSelector('[data-fumetto-di="torre"]', { timeout: 30000 })
+{
+  const stati = await page.evaluate(() => { cancelAnimationFrame(window.__giro); return window.__stati })
+  controlla('camminando il bordo e la freccina attorno all\'eroe non si vedono mai insieme, e non sfarfallano',
+            /^B(V)?N*$/.test(stati), stati)
+  nota(`dal bordo all'arrivo: ${stati}`)
+}
 controlla('e arrivato si apre il fumetto della discesa, con «scendo»',
           await page.locator('[data-fumetto-di="torre"] [data-azione="scendi"]').count() === 1)
-uguale('vicino alla torre la freccia non serve più', await page.locator('[data-meta-fuori]').count(), 0)
+uguale('vicino alla torre il bordo non serve più', await page.locator('[data-meta-fuori]').count(), 0)
+uguale('e la freccina attorno all\'eroe ha fatto il suo: sparisce', await page.locator('[data-rotta-terra]').count(), 0)
+
+/* ---------- 3b. sopra, la torre è in vista: la freccina attorno all'eroe continua a puntarla ---------- */
+const misuraSopra = (selFreccina, selMeta) => page.evaluate(([f, m]) => {
+  const fr = document.querySelector(f), mt = document.querySelector(m)
+  if (!fr || !mt) return null
+  const a = fr.getBoundingClientRect(), p = fr.querySelector('i').getBoundingClientRect(), q = mt.getBoundingClientRect()
+  return { anello: { x: a.x, y: a.y }, punta: { x: p.x + p.width / 2, y: p.y + p.height / 2 },
+           meta: { x: q.x + q.width / 2, y: q.y + q.height / 2 }, gradi: Number(fr.dataset.gradi),
+           colore: getComputedStyle(fr.querySelector('i')).borderLeftColor,
+           eventi: getComputedStyle(fr).pointerEvents,
+           bordo: document.querySelectorAll('[data-meta-fuori]').length }
+}, [selFreccina, selMeta])
+await semina(page, profilo({ rosicchione: 'presa' }, [47, 9]))
+await scegli(page, 'sotterraneo')
+await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await page.waitForSelector('[data-rotta-terra][data-meta-vicina="torre"]', { state: 'attached', timeout: 5000 })
+await attendi(page, 400)
+{
+  const m = await misuraSopra('[data-rotta-terra][data-meta-vicina="torre"]', '[data-posto="torre"]')
+  controlla('la torre è in vista, l\'eroe non c\'è ancora: la freccina c\'è', !!m)
+  if (m) {
+    const voluto = gradi(m.anello, m.meta)
+    dentro('guarda la torre (scarto in gradi)', scarto(m.gradi, voluto), 0, 3)
+    dentro('e la sua punta sta sulla retta dall\'eroe alla torre', scarto(gradi(m.anello, m.punta), voluto), 0, 4)
+    uguale('azzurra, come l\'indicatore sul bordo', m.colore, 'rgb(127, 208, 255)')
+    uguale('non prende i tocchi', m.eventi, 'none')
+    uguale('e sul bordo non c\'è più niente: una cosa sola per volta', m.bordo, 0)
+    nota(`torre a ${Math.round(voluto)}°, la punta a ${Math.round(gradi(m.anello, m.punta))}°`)
+  }
+  await scatto(page, 'rotta-sopra-vicina')
+}
+await toccaIl('[data-posto="torre"]')
+await page.waitForSelector('[data-fumetto-di="torre"]', { timeout: 30000 })
+uguale('arrivato al piede della discesa la freccina sparisce', await page.locator('[data-rotta-terra]').count(), 0)
 
 /* ---------- 4. una consegna da fare ha la precedenza ---------- */
 await semina(page, profilo({ badessa: 'fatta', rosicchione: 'presa' }))
@@ -194,6 +248,31 @@ await page.waitForSelector('[data-terra]', { timeout: 5000 })
 await attendi(page, 600)
 uguale('chi aspetta la consegna è lontano: il «?» d\'oro sul bordo', await page.locator('[data-consegna-fuori="eremita"]').count(), 1)
 uguale('e la freccia azzurra non c\'è', await page.locator('[data-meta-fuori]').count(), 0)
+// con l'eremita in vista il «?» sul bordo cede alla freccina d'oro attorno all'eroe, che lo punta finché non gli si
+// è accanto; la precedenza resta (la azzurra non compare mai)
+await semina(page, profilo({ badessa: 'fatta', rosicchione: 'presa' }, [55, 9]))
+await scegli(page, 'sotterraneo')
+await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await page.waitForSelector('[data-rotta-terra][data-consegna-vicina="eremita"]', { state: 'attached', timeout: 5000 })
+await attendi(page, 400)
+{
+  const m = await misuraSopra('[data-rotta-terra][data-consegna-vicina="eremita"]', '[data-personaggio="eremita"]')
+  controlla('l\'eremita è in vista e la freccina d\'oro c\'è', !!m)
+  if (m) {
+    const voluto = gradi(m.anello, m.meta)
+    // la cosa è il piede del personaggio, la scatola è alta: un po' più di tolleranza
+    dentro('guarda l\'eremita (scarto in gradi)', scarto(m.gradi, voluto), 0, 8)
+    dentro('e la sua punta sta sulla stessa retta', scarto(gradi(m.anello, m.punta), m.gradi), 0, 4)
+    uguale('d\'oro e non azzurra', m.colore, 'rgb(255, 210, 63)')
+    uguale('sul bordo non c\'è più il «?»', await page.locator('[data-consegna-fuori]').count(), 0)
+    uguale('e la freccia azzurra non è comparsa', m.bordo + await page.locator('[data-rotta-terra][data-meta-vicina]').count(), 0)
+  }
+  await scatto(page, 'rotta-consegna-vicina')
+}
+await toccaIl('[data-personaggio="eremita"]')
+await page.waitForSelector('[data-fumetto-di="eremita"]', { timeout: 30000 })
+uguale('arrivato accanto all\'eremita la freccina sparisce', await page.locator('[data-rotta-terra]').count(), 0)
+
 
 /* ---------- 5. niente missioni prese: niente freccia ---------- */
 await semina(page, profilo({ badessa: 'consegnata' }))
