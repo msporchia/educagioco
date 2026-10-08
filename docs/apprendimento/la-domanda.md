@@ -172,6 +172,19 @@ Nei test: `unita/svolto`, `integrazione/domanda` (`[data-esempio-svolto]`,
 `[data-esempio-risposta]`, `[data-tocca-a-te]`, `[data-metodo-prima]`;
 tutti e due i blocchi portano anche `[data-come-prima]`).
 
+## La frase da leggere non somiglia a una risposta
+
+Una frase da leggere (il soggetto di testo con almeno tre parole, o con una
+parola in rilievo: `fraseDaLeggere`) sta su un **foglio** chiaro con la barra
+a sinistra, le virgolette e la riga «Leggi:», e sopra i tasti c'è «Scegli:»;
+le risposte restano riquadri scuri con bordo. Provato: la frase nello stesso
+riquadro dei tasti. Non funziona perché il bambino non distingue cosa leggere
+e cosa toccare («Qual è l'ultima cosa che fa Irene?» con la frase sotto in un
+box uguale ai bottoni). Vale anche per l'esempio svolto (`[data-esempio-frase]`)
+e per `grafica/scheda.js`; una parola sola o col buco («pa __ ta») resta un
+titolo da guardare. Nei test: `integrazione/domanda` (`[data-da-leggere]`,
+`[data-scegli]`), `unita/parola-in-frase`.
+
 ## Il layout delle risposte
 
 Le risposte di `Domanda.vue` vanno a capo da sole invece di stare su una
