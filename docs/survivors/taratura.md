@@ -20,6 +20,20 @@ poi ×2). Anche piena resta più piccola della calamita trovata a terra
 un posto che sarebbe andato a un'arma, e vale la pena solo
 potenziandola.
 
+## Il riscaldamento
+
+Nei primi trenta secondi di ogni partita (`CFG.avvio`) nascono metà dei
+mostri e tutti camminano a due terzi del passo, e si torna pieni in linea
+retta. All'inizio non si ha nessuna carta e un colpo è un cuore su tre:
+misurato su chi schiva a sprazzi, senza riscaldamento perdeva un cuore nei
+primi trenta secondi quasi una partita su due, con il riscaldamento una su
+cinque, e arriva lo stesso al livello 4. Il freno vale al passo e non alla
+nascita: provato a fissarlo alla nascita, i mostri nati presto restavano
+lenti per tutta la tappa e cambiavano il gioco anche dopo. Provato anche un
+quarto delle nascite: si toglievano gemme, e nelle tappe lunghe chi è bravo
+arrivava alla piena con un livello in meno. Il ghiacciaio ha perso un po' di
+vigore (1.82 → 1.76) per restare dov'era.
+
 ## Gli oggetti a terra e i muri
 
 Gli oggetti compaiono a tempo (più spesso con la marea) e i mostri

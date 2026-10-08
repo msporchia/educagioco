@@ -84,6 +84,10 @@ export const CFG = {
   // il ritmo: `q` è la quota di tappa passata (0..1). Dentro la tappa
   // sale in linea retta; oltre il traguardo si moltiplica — vedi
   // docs/survivors/taratura.md
+  // il riscaldamento: nei primi `secondi` di ogni partita nascono meno
+  // mostri (da `nascite` a 1) e più lenti (da `fretta` a 1), perché
+  // senza carte un colpo preso costa un cuore su tre — vedi docs/survivors/taratura.md
+  avvio: { secondi: 30, nascite: 0.5, fretta: 0.65 },
   natePerSecondo: q => q <= 1 ? 1.2 + 2.8 * Math.max(0, q) : 4 * Math.pow(1.62, q - 1),
   vitaNemico: q => q <= 1 ? 1 + 1.35 * Math.max(0, q) : 2.35 * Math.pow(1.95, q - 1),
   frettaNemico: q => 1 + 0.35 * Math.min(q, 1) + 0.09 * Math.max(0, q - 1),
@@ -141,6 +145,12 @@ export function guastiDellaTaratura(cfg = CFG) {
     guasti.push('i mostri non diventano più fitti col passare del tempo')
   if (!(cfg.vitaNemico(1) > cfg.vitaNemico(0)))
     guasti.push('i mostri non diventano più duri col passare del tempo')
+
+  const av = cfg.avvio || {}
+  if (!(av.secondi >= 10 && av.secondi <= 45))
+    guasti.push(`il riscaldamento dura ${av.secondi} secondi: o non si sente o è la prima tappa intera`)
+  if (!(av.nascite > 0 && av.nascite <= 1 && av.fretta >= 0.5 && av.fretta <= 1))
+    guasti.push(`il riscaldamento parte da ${av.nascite} nascite e ${av.fretta} di fretta`)
 
   if (!(cfg.maxNemici(0) >= 40)) guasti.push(`il campo comincia con ${cfg.maxNemici(0)} posti`)
   if (!(cfg.maxNemici(2) > cfg.maxNemici(0.5)))

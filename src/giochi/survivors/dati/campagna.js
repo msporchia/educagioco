@@ -59,7 +59,9 @@ export const CAMPAGNA = [
 
   { chiave: 'ghiacciaio', nome: 'Il ghiacciaio', scenario: 'neve', scalino: 'lontano',
     portata: 55,
-    durata: 145, ritmo: 0.97, vigore: 1.82, fretta: 1.02, rincaro: 0.10,
+    // il vigore era 1.82: col riscaldamento (CFG.avvio) il ghiacciaio
+    // perdeva una manciata di vittorie al banco, le altre tappe no
+    durata: 145, ritmo: 0.97, vigore: 1.76, fretta: 1.02, rincaro: 0.10,
     squadra: TUTTI, cuori: 4,
     racconto: 'Le rocce camminano piano ma non muoiono quasi mai.' },
   { chiave: 'fonda', nome: 'La palude fonda', scenario: 'palude', scalino: 'lontano',

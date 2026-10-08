@@ -779,9 +779,9 @@ controlla('il riassunto conta le stelle',
      mostri più fitto a tiro; `quotaMira` è quante occasioni su cento.
      Deve seguire la manopola `mira`, e non costare la partita. */
   const r = new Regole(CAMPAGNA[6])
-  const mirato = misura(r, { volte: 8, bravura: 1, esattezza: 1, mira: 0.65, campo, rnd: caso(70) })
-  const distratto = misura(r, { volte: 8, bravura: 1, esattezza: 1, mira: 0.3, campo, rnd: caso(70) })
-  const mai = misura(r, { volte: 8, bravura: 1, esattezza: 1, mira: 0, campo, rnd: caso(70) })
+  const mirato = misura(r, { volte: 8, bravura: 1, esattezza: 1, mira: 0.65, campo, rnd: caso(71) })
+  const distratto = misura(r, { volte: 8, bravura: 1, esattezza: 1, mira: 0.3, campo, rnd: caso(71) })
+  const mai = misura(r, { volte: 8, bravura: 1, esattezza: 1, mira: 0, campo, rnd: caso(71) })
   nota(`la mira del pilota: a 0.65 guarda il grumo il ${(mirato.quotaMira * 100).toFixed(0)}% delle volte, ` +
        `a 0.3 il ${(distratto.quotaMira * 100).toFixed(0)}%, a 0 il ${(mai.quotaMira * 100).toFixed(0)}%`)
   controlla('il pilota ha occasioni di mirare', mirato.occasioniMedie > 50)
@@ -908,6 +908,39 @@ for (const [i, t] of CAMPAGNA.entries()) {
   dentro('chi raccoglie fa più o meno i livelli di sempre', Number(chiRaccoglie.toFixed(1)), 8, 13)
   controlla('e chi sta al centro molti di meno', chiSta < chiRaccoglie - 3,
             `${chiSta.toFixed(1)} contro ${chiRaccoglie.toFixed(1)}`)
+}
+
+/* ══════════ 5-quater. IL RISCALDAMENTO ══════════
+   All'inizio non si ha nessuna carta e un colpo è un cuore su tre: senza
+   riscaldamento chi schiva a sprazzi ne perdeva uno nei primi trenta
+   secondi quasi una partita su due. Il riscaldamento (`CFG.avvio`) toglie
+   mostri e fretta all'inizio, non l'esperienza: i livelli restano quelli. */
+{
+  let ferite = 0, pulite = 0, livelli = 0, partite = 0
+  for (const [i, t] of [...CAMPAGNA, LIBERO].entries()) {
+    const r = new Regole(t), rnd = caso(700 + i)
+    for (let v = 0; v < 24; v++, partite++) {
+      const p = new Partita(r, { rnd, campo })
+      const pilota = new Pilota({ rnd, bravura: 0.55, esattezza: 0.7, mira: 0.3 })
+      while (p.tempo < CFG.avvio.secondi && !p.finita) {
+        if (p.inPausa) { pilota.rispondi(p); continue }
+        pilota.guida(p, 1 / 30)
+        p.avanza(1 / 30)
+        p.svuotaEventi()
+      }
+      ferite += p.ferite; livelli += p.livello
+      if (!p.ferite) pulite++
+    }
+  }
+  nota(`nei primi ${CFG.avvio.secondi}s chi schiva a sprazzi prende ${(ferite / partite).toFixed(2)} ` +
+       `ferite, e ${(pulite / partite * 100).toFixed(0)}% delle partenze sono pulite (livello ${(livelli / partite).toFixed(1)})`)
+  /* senza riscaldamento: 0.67 ferite e partenze pulite al 55% */
+  controlla('nel riscaldamento chi schiva a sprazzi non perde quasi mai un cuore',
+            ferite / partite <= 0.4, `${(ferite / partite).toFixed(2)} ferite a partita`)
+  controlla('e almeno due partenze su tre sono pulite', pulite / partite >= 0.65,
+            `${(pulite / partite * 100).toFixed(0)}%`)
+  controlla('le carte arrivano lo stesso', livelli / partite >= 2.5,
+            `livello ${(livelli / partite).toFixed(1)} alla fine del riscaldamento`)
 }
 
 /* ══════════ 5-ter. SBAGLIARE LE DOMANDE SI PAGA ══════════

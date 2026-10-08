@@ -99,13 +99,13 @@ const distanza = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
 {
   const t = CAMPAGNA[4]
   const regole = new Regole(t)
-  const p = fino(regole, t.durata * 0.6, caso(77), 0.85, 1)
+  const p = fino(regole, t.durata * 0.6, caso(75), 0.85, 1)
   controlla('si interrompe una partita viva', !p.finita && p.eroe.cuori > 0)
 
   /* chi riprende risponde a tutto: qui si prova la ripresa, non la
      taratura della grotta — quella sta in `misure/survivors` */
-  const ripresa = leggi(scrivi(p, 4), t, { rnd: caso(78) })
-  const { partita } = gioca(regole, { rnd: caso(78), bravura: 1, esattezza: 1, da: ripresa })
+  const ripresa = leggi(scrivi(p, 4), t, { rnd: caso(76) })
+  const { partita } = gioca(regole, { rnd: caso(76), bravura: 1, esattezza: 1, da: ripresa })
   controlla('una partita ripresa arriva al traguardo', partita.vinta,
             `finita a ${partita.tempo.toFixed(1)}s con ${partita.eroe.cuori} cuori`)
   controlla('e i mostri uccisi prima contano ancora', partita.uccisi >= p.uccisi,

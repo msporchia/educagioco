@@ -64,10 +64,22 @@ export class Regole {
     return this[nome] + (CFG.oltre[nome] - this[nome]) * k
   }
 
-  nascite(tempo) { return CFG.natePerSecondo(this.marea(tempo)) * this.leva('ritmo', tempo) }
+  // il riscaldamento (CFG.avvio): da `quanto` a 1 nei primi secondi
+  avvio(tempo, quanto) {
+    const k = Math.min(1, Math.max(0, tempo) / CFG.avvio.secondi)
+    return quanto + (1 - quanto) * k
+  }
+
+  nascite(tempo) {
+    return CFG.natePerSecondo(this.marea(tempo)) * this.leva('ritmo', tempo) *
+           this.avvio(tempo, CFG.avvio.nascite)
+  }
   tetto(tempo) { return CFG.maxNemici(this.marea(tempo)) }
   vitaNemico(tempo) { return CFG.vitaNemico(this.marea(tempo)) * this.leva('vigore', tempo) }
   frettaNemico(tempo) { return CFG.frettaNemico(this.marea(tempo)) * this.leva('fretta', tempo) }
+  // la fretta del riscaldamento frena tutti al passo, non alla nascita:
+  // chi nasce presto non resta lento per tutta la tappa
+  frenoAvvio(tempo) { return this.avvio(tempo, CFG.avvio.fretta) }
   // chi può comparire adesso: la quota apre le bestie una per volta;
   // oltre il traguardo entrano tutte (anche quelle non previste dalla
   // tappa), o chi resta in campo dopo aver vinto schiverebbe melme per sempre
@@ -433,6 +445,7 @@ export class Partita {
     const limite = Math.hypot(this.campo.larghezza, this.campo.altezza) * CFG.troppoLontano
     const oltreIlMuro = Math.max(this.campo.larghezza, this.campo.altezza) / 2 + 80
     const smorza = Math.pow(0.02, dt)
+    const avvio = this.regole.frenoAvvio(this.tempo)
     for (const n of this.nemici) {
       const ddx = e.x - n.x, ddy = e.y - n.y
       const d = Math.sqrt(ddx * ddx + ddy * ddy) || 1
@@ -440,7 +453,7 @@ export class Partita {
       if (n.rotta && -(ddx * n.rotta.x + ddy * n.rotta.y) > oltreIlMuro) { n.sparito = true; continue }
       n.gelato = Math.max(0, n.gelato - dt)
       if (n.gelato <= 0) n.freno = 1
-      const p = n.passo * n.freno
+      const p = n.passo * n.freno * avvio
       const [vx, vy] = this.terreno.aggira(n.x, n.y, n.r,
         n.rotta ? n.rotta.x : ddx / d, n.rotta ? n.rotta.y : ddy / d, ATTENZIONE.muso)
       n.vx = vx; n.vy = vy          // per chi disegna: da che parte guarda
