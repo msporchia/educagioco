@@ -1,5 +1,5 @@
-// La discesa lasciata a metà, che è anche il portale lasciato aperto (docs/sotterraneo/regole.md, "Lasciare a
-// metà"). Il piano non si salva, si rifà dal seme; si salva quello che è cambiato, cosa per cosa, rispetto al
+// La discesa lasciata a metà, e come: dal portale (sopra c'è il gemello) o con la ✕ (si riprende giù) — vedi
+// docs/sotterraneo/portale-e-sosta.md. Il piano non si salva, si rifà dal seme; si salva quello che è cambiato, cosa per cosa, rispetto al
 // piano appena nato, più le cose nuove (bottino, roba buttata). Si riprende nel punto esatto, coi mostri dove
 // erano. La roba dell'avventuriero sta nell'avventura, non qui. Se la forma cambia (VERSIONE sale) un
 // salvataggio vecchio non si legge più: si ricomincia — un campo che non torna è un gioco rotto.
@@ -9,6 +9,14 @@ import { INDICE_ABISSO, L_ABISSO } from '../dati/campagna.js'
 
 // la 4: i cambiamenti invece delle cose intere, e niente roba (sta nell'avventura). Le soste di prima si buttano
 export const VERSIONE = 4
+
+// Come si è lasciata la discesa (docs/sotterraneo/portale-e-sosta.md, «Il portale e l'uscita»): 'portale' vuol dire salita
+// dal portale vero (o risalita per stasera dall'abisso): sopra c'è il gemello, si fanno le spese e si torna giù da
+// lui. 'uscita' è la ✕ o il telefono posato: nessun gemello, e rientrando nel sotterraneo si riprende giù, nel punto
+// esatto, senza passare dalla terra di sopra. Una sosta senza `via` (quelle di prima) vale come uscita; un campo che
+// non si conosce pure, perché è il caso che non regala una strada per tornare su
+export const PORTALE = 'portale', USCITA = 'uscita'
+export const viaDi = dato => (dato && dato.via === PORTALE ? PORTALE : USCITA)
 
 // `visto`: si contano le lunghezze dei tratti (cominciando dagli spenti), non i 2600 zero/uno per cella:
 // "120.30.8" vuol dire 120 celle mai viste, 30 viste, 8 no
@@ -61,10 +69,11 @@ const centesimi = v => Math.round(v * 100) / 100
 // `tappa` è l'indice nella campagna (l'abisso è −1, INDICE_ABISSO). Una discesa finita non si salva, tranne
 // l'abisso: là non finisce mai, finisce solo la sera, e chi vuole scriverlo comunque lo chiede per nome
 // (`anchePerFinite`)
-export function scrivi(corsa, tappa, { anchePerFinite = false } = {}) {
+export function scrivi(corsa, tappa, { anchePerFinite = false, via = USCITA } = {}) {
   if (!corsa || (corsa.finita && !anchePerFinite)) return null
   return {
     v: VERSIONE,
+    via: via === PORTALE ? PORTALE : USCITA,
     tappa,
     seme: corsa.seme,
     piano: corsa.piano,
@@ -147,7 +156,7 @@ export function leggi(dato, tappa, roba = null, missioni = []) {
   }
 }
 
-// due righe per la carta "riprendi" e per il portale di sopra: cosa si sta lasciando in sospeso
+// due righe per la carta "riprendi" e per il portale di sopra: cosa si sta lasciando in sospeso, e come (`via`)
 export function dice(dato, campagna) {
   if (!dato || dato.v !== VERSIONE) return null
   // l'abisso non sta nella campagna: senza questa riga la carta "riprendi" sparirebbe in silenzio
@@ -162,5 +171,6 @@ export function dice(dato, campagna) {
     piani: t.abisso ? null : t.piani,   // l'abisso non lo sa: "piano 23" invece di "piano 23 di …"
     eroe: typeof dato.eroe === 'string' ? dato.eroe : null,
     vita: dato.vita,
+    via: viaDi(dato),
   }
 }

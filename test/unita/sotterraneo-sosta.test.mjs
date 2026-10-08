@@ -3,16 +3,16 @@
    conta davvero — non che il salvataggio «esista», ma che una partita
    ripresa sia la stessa partita, nel punto esatto, coi mostri dove
    erano, e arrivi in fondo. E che pesi poco: si salvano il seme e i
-   cambiamenti, non il piano (docs/sotterraneo/regole.md).
+   cambiamenti, non il piano (docs/sotterraneo/regole.md, docs/sotterraneo/portale-e-sosta.md); e come si è usciti (`via`: portale o uscita).
    `node test/esegui.mjs sosta --niente-build` */
-import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
+import { CAMPAGNA, L_ABISSO, INDICE_ABISSO } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { CALMA, TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { ROBA_VUOTA } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { gioca, robaPer } from '../../src/giochi/sotterraneo/motore/banco.js'
-import { scrivi, leggi, dice, stringaDi, vistoDa, VERSIONE }
+import { scrivi, leggi, dice, stringaDi, vistoDa, VERSIONE, viaDi, PORTALE, USCITA }
   from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -233,6 +233,37 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
   controlla('e l\'ascia è per terra, non persa',
             d.livello.robe.some(r => r.che === 'cosa' && r.cosa === 'ascia' && !r.presa))
   uguale('e si sa ancora com\'è fatta', COSE.ascia.att, 3)
+}
+
+/* ══════════ 8. come si è lasciata: il portale e l'uscita ══════════
+   Uscire con la ✕ non è un portale (docs/sotterraneo/portale-e-sosta.md, «Il portale e l'uscita»): la sosta ricorda come si è
+   lasciata la discesa, e solo col portale vero sopra c'è il gemello. Una sosta di prima, senza `via`, è un'uscita. */
+{
+  const c = new Corsa(CAMPAGNA[1], { seme: 21, rnd: seminato(21) })
+  for (let i = 0; i < 20; i++) c.passo(1 / 30)
+  uguale('di difetto è un\'uscita', scrivi(c, 1).via, USCITA)
+  uguale('dal portale vero', scrivi(c, 1, { via: PORTALE }).via, PORTALE)
+  uguale('un valore che non si conosce è un\'uscita (nessuna strada regalata)', scrivi(c, 1, { via: 'pippo' }).via, USCITA)
+  uguale('la carta lo dice: portale', dice(scrivi(c, 1, { via: PORTALE }), CAMPAGNA).via, PORTALE)
+  uguale('la carta lo dice: uscita', dice(scrivi(c, 1), CAMPAGNA).via, USCITA)
+
+  // le soste di prima non hanno `via`: valgono come uscita, e si leggono lo stesso
+  const vecchia = scrivi(c, 1)
+  delete vecchia.via
+  uguale('una sosta di prima vale come uscita', viaDi(vecchia), USCITA)
+  uguale('e la carta pure', dice(vecchia, CAMPAGNA).via, USCITA)
+  controlla('e si riprende', !!leggi(vecchia, CAMPAGNA[1], c.roba))
+  uguale('niente sosta, niente via: uscita', viaDi(null), USCITA)
+
+  // la via non cambia la ripresa: stesso punto, stessi cambiamenti
+  const a = leggi(scrivi(c, 1), CAMPAGNA[1], c.roba), b = leggi(scrivi(c, 1, { via: PORTALE }), CAMPAGNA[1], c.roba)
+  uguale('il punto è lo stesso', `${a.eroe.x},${a.eroe.y}`, `${b.eroe.x},${b.eroe.y}`)
+  uguale('e la via non pesa che qualche byte', JSON.stringify(scrivi(c, 1, { via: PORTALE })).length - JSON.stringify({ ...scrivi(c, 1), via: undefined }).length < 24, true)
+
+  // l'abisso risalito per stasera (Gioco.vue lo scrive col portale): una sosta finita si scrive solo chiedendolo
+  const ab = new Corsa(L_ABISSO, { seme: 9, rnd: seminato(9) })
+  ab.risali()
+  uguale('l\'abisso risalito si scrive col portale', scrivi(ab, INDICE_ABISSO, { anchePerFinite: true, via: PORTALE }).via, PORTALE)
 }
 
 riassunto('la discesa lasciata a metà, e il portale')
