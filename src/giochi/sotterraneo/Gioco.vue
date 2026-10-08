@@ -29,7 +29,7 @@ import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo } from './motore/corredo.js'
 import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer, promemoria,
-         rotta as rottaDi, seguita } from './motore/missioni.js'
+         rotta as rottaDi, seguita, diario } from './motore/missioni.js'
 import { Bottega } from './motore/bottega.js'
 import { scrivi, leggi, dice, viaDi, PORTALE as VIA_PORTALE } from './motore/sosta.js'
 import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata }
@@ -46,6 +46,8 @@ import Icona from './viste/Icona.vue'
 import { occhio } from './viste/occhio.js'
 import Scontro from './viste/Scontro.vue'
 import Zaino from './viste/Zaino.vue'
+import Diario from './viste/Diario.vue'
+import BarraDiSotto from './viste/BarraDiSotto.vue'
 import LaBottega from './viste/Bottega.vue'   // la bottega dei mercanti di sopra
 import Fine from './viste/Fine.vue'
 import LascioPerdere from './viste/LascioPerdere.vue'   // la frase chiara prima di buttare una discesa
@@ -70,6 +72,9 @@ const fine = ref(null)
 // un avviso è una riga sola; `dilloDi` porta anche la cosa, per mostrare la sua faccia vera invece di un'emoji
 const avviso = ref(null)
 const zainoAperto = ref(false)
+const diarioGiu = ref(false)       // il diario delle missioni aperto dalla barra in basso
+const mappaGrande = ref(false)     // la mappina aperta grande dalla barra (scena/tela.js, minimappa)
+const colpito = ref(false)         // il globo della vita sobbalza a un colpo
 const scosso = ref(0)
 const tic = ref(0)                 // batte quando cambia qualcosa che si vede
 // la corsa è uno shallowRef: niente computed a mano su quello che sta dentro (vedi viste/occhio.js)
@@ -224,7 +229,7 @@ function riprendiDiscesa({ ferma = false } = {}) {
   tappaIdx.value = dato.tappa
   fine.value = null
   domanda.value = null
-  zainoAperto.value = false
+  chiudiLaBarra()
   corsa.value = c
   borsellino = borsa(CHIAVE)
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
@@ -362,9 +367,21 @@ const eroe = dallaCorsa(c => {
       ? { resta: c.torciaResta, quota: c.torciaResta / (COSE.torcia.stanze || 1),
           scorta: c.torceInScorta, agliSgoccioli: c.torciaResta <= 3 && !c.torceInScorta }
       : null,
-    polso: q > 0.6 ? '#4fce7c' : q > 0.3 ? '#f0b429' : '#e0432f',
+    pozioni: c.pozioni,               // le cure in tasca, sulla casella 🧪 della barra
   }
 })
+
+// il globo della vita sobbalza quando cala: un colpo preso si vede anche con gli occhi sul mostro
+let colpitoFino = 0
+watch(() => eroe.value && eroe.value.vita, (ora, prima) => {
+  if (ora == null || prima == null || ora >= prima) return
+  colpito.value = true
+  clearTimeout(colpitoFino)
+  colpitoFino = setTimeout(() => { colpito.value = false }, 380)
+})
+
+// sul diario della barra, quante missioni sono in mano (come il tasto 📖 di sopra)
+const missioniAperte = computed(() => diario(missioni.value, tappe.value, segui.value).aperte)
 
 // chi riapre il telefono dopo mezz'ora non sta guardando il gioco: "piano 2 di 3 · ❤️ 24" fa tornare in mente dov'era
 const dovEravamo = dallaCorsa(c => `🕳️ piano ${c.piano + 1}`
@@ -463,7 +480,7 @@ function avvia(i) {
   tappaIdx.value = i
   fine.value = null
   domanda.value = null
-  zainoAperto.value = false
+  chiudiLaBarra()
   corsa.value = new Corsa(tappaDi(i), { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value,
                                         missioni: presePer(missioni.value, tappaDi(i).chiave) })
   borsellino = borsa(CHIAVE)
@@ -491,7 +508,9 @@ function accendi() {
 let altoFoglio = 0, contaGiri = 0
 function misuraFoglio() {
   const f = document.querySelector('.sot-foglio')
-  altoFoglio = f ? f.getBoundingClientRect().height : 0
+  // il foglio sale dal fondo e copre prima la barra in basso, che sta già fuori dal campo
+  const b = f && document.querySelector('[data-barra-giu]')
+  altoFoglio = f ? Math.max(0, f.getBoundingClientRect().height - (b ? b.getBoundingClientRect().height : 0)) : 0
 }
 
 let raf = 0, prima = 0
@@ -631,6 +650,69 @@ function usa(i) { corsa.value.usa(i); tic.value++; suono.ok(); salva() }
 function butta(i) { corsa.value.butta(i); tic.value++; suoni.passo(); salva() }
 function riponi(dove) { corsa.value.riponi(dove); tic.value++; suono.ok(); salva() }
 
+/* ═══════════ la barra in basso (viste/BarraDiSotto.vue, docs/sotterraneo/barra.md) ═══════════ */
+// 🧪: un tocco beve, senza aprire lo zaino. Quale lo sceglie il motore (pozioneGiusta); in piena forma non si beve
+function bevi() {
+  const c = corsa.value
+  if (!c || c.foglio || c.finita) return
+  const i = c.pozioneGiusta()
+  if (i == null) {
+    c.dillo(c.pozioni ? '❤️ sei già in piena forma' : '🧪 non hai pozioni')
+    tic.value++
+    return
+  }
+  usa(i)
+}
+// una discesa nuova o ripresa nasce senza niente aperto sopra il campo
+function chiudiLaBarra() {
+  zainoAperto.value = false
+  diarioGiu.value = false
+  mappaGrande.value = false
+}
+// lo zaino e il diario si aprono uno alla volta, e chiudono la mappa grande
+function apriDallaBarra(che) {
+  mappaGrande.value = false
+  zainoAperto.value = che === 'zaino'
+  diarioGiu.value = che === 'diario'
+}
+watch(mappaGrande, g => { if (pittore) pittore.mappaGrande = g })
+// un foglio che si apre (un mostro, una porta) chiude la mappa grande: si guarda quello
+watch(foglio, f => { if (f) mappaGrande.value = false })
+
+/* ═══════════ un tocco altrove chiude (docs/core/interfaccia.md) ═══════════
+   Quello che si legge e basta si chiude toccando il campo, e quel tocco porta anche l'eroe dove si è toccato. Resta
+   fermo solo quello che chiede una scelta senza cui non si va avanti: una domanda in corso, lo scontro, lo
+   svenimento, il cartello di fine, «lascio perdere» */
+const LEGGERI = new Set(['portale', 'chiusa', 'scala'])
+const leggero = f => LEGGERI.has(f.che) || (f.che === 'curiosita' && !!f.esito)
+// false se c'è un foglio che chiede una scelta: allora il campo non si tocca
+function lasciaAndare() {
+  const c = corsa.value
+  if (c && c.foglio) {
+    if (!leggero(c.foglio)) return false
+    chiudiFoglio()
+  }
+  mappaGrande.value = false
+  avviso.value = null
+  return true
+}
+// lo zaino e il diario: il tocco sul velo li chiude, e se cade sul campo l'eroe ci va. Il click è quello del dito
+// stesso, che finisce sul velo: dietro non arriva nessun fantasma
+function toccoFuori(e) {
+  zainoAperto.value = false
+  diarioGiu.value = false
+  const r = tela.value && tela.value.getBoundingClientRect()
+  if (!r || !e || e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return
+  if (!lasciaAndare()) return
+  vai({ x: e.clientX - r.left, y: e.clientY - r.top }, true)
+}
+// la bottega di sopra: chiusa dal tocco fuori, il tocco passa alla terra (viste/Terra.vue, toccoDaFuori)
+const campagnaEl = ref(null)
+function fuoriDallaBottega(e) {
+  chiudiBottega()
+  if (campagnaEl.value && e) campagnaEl.value.toccoDaFuori(e.clientX, e.clientY)
+}
+
 function scendi() {
   const e = corsa.value.scendi()
   tic.value++
@@ -708,6 +790,7 @@ function allaMappa() {
   fine.value = null
   domanda.value = null
   corsa.value = null
+  chiudiLaBarra()
 }
 
 // uscire a metà non chiude la discesa: si scrive dove si era. Si salva SEMPRE, anche dopo due passi: quello che si
@@ -760,7 +843,9 @@ function punto(e) {
 
 function premi(e) {
   dita.set(e.pointerId, e)
-  if (corsa.value?.foglio || zainoAperto.value || fine.value) return
+  if (zainoAperto.value || diarioGiu.value || fine.value) return
+  // un foglio da leggere, la mappa grande, un avviso: il tocco li chiude e intanto cammina
+  if (!lasciaAndare()) return
   if (dita.size > 1) { premuto = false; return }
   premuto = true
   giu = { x: e.clientX, y: e.clientY }
@@ -857,23 +942,18 @@ function ridimensiona() { if (pittore) pittore.misura() }
     <!-- il ⏸ solo dentro una discesa: sulla mappa non c'è niente da fermare -->
     <Barra :titolo="titolo" guida="sotterraneo" @aiuto="aiuto" :monete="!corsa" scura
            :pausa="siGioca" @pausa="metti()" @indietro="indietro">
+      <!-- vita, gemme e zaino stanno nella barra in basso; qui restano i due numeri che decidono uno scontro -->
       <button v-if="corsa && eroe" class="sot-io" data-azione="zaino-barra"
-              aria-label="lo zaino" @click="zainoAperto = true">
-        <span class="sot-polso" :style="{ '--sot-polso': eroe.polso }">
-          <i :style="{ width: eroe.quota * 100 + '%' }"></i>
-          <b>{{ eroe.vita }}</b>
-        </span>
+              aria-label="lo zaino" @click="apriDallaBarra('zaino')">
         <span class="sot-n em">⚔️<b>{{ eroe.att }}</b></span>
         <span class="sot-n em">🛡️<b>{{ eroe.dif }}</b></span>
-        <span class="sot-n em">💎<b>{{ eroe.gemme }}</b></span>
-        <span class="sot-n em">🎒</span>
       </button>
     </Barra>
 
     <div class="sot">
       <template v-if="!corsa">
         <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->
-        <Campagna :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
+        <Campagna ref="campagnaEl" :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
                   :missioni="missioni" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
                   @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda"
@@ -882,7 +962,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
              La chiave è il mercante: le linguette e la scelta ripartono da capo cambiando bottega -->
         <LaBottega v-if="banco" :key="banco.chi.chiave" v-bind="banco" :eroe="eroeScheda" :detto="dettoBanco"
                   chi-compra="al rigattiere, vicino al carro"
-                  @compra="compraSopra" @vendi="vendiSopra" @chiudi="chiudiBottega" />
+                  @compra="compraSopra" @vendi="vendiSopra" @chiudi="chiudiBottega" @fuori="fuoriDallaBottega" />
         <Eroi v-if="scegliEroe" :avventure="avventure" :scelto="chiEro || ''" :primo="!chiEro"
               @scegli="scegli" @chiudi="chiudiLaScelta" />
       </template>
@@ -914,29 +994,19 @@ function ridimensiona() { if (pittore) pittore.misura() }
             <span v-if="eroe.chiave" class="em">🗝️ la scala è aperta</span>
             <span v-else>la chiave ce l'ha qualcuno, qua sotto</span>
           </p>
-          <!-- lo zaino: un tasto tondo in basso a destra (dove il pollice arriva), non la fascia in cima -->
-          <button class="sot-zaino-tasto" data-azione="zaino" aria-label="zaino"
-                  @click="zainoAperto = true">
-            <span class="em">🎒</span>
-            <b>{{ pieni }}/{{ TASCHE }}</b>
-          </button>
-
-          <!-- quanta luce resta: la fiamma cala nel suo lume, così il buio si vede arrivare. In basso a
-               sinistra e non nella fascia in cima, che è già piena (`.sot-io` non ha posto per un'altra colonnina) -->
-          <p v-if="eroe.torcia" class="sot-torcia" data-torcia
-             :class="{ 'sot-sgoccioli': eroe.torcia.agliSgoccioli }">
-            <!-- la torcia dice di cosa è la colonnina: da sola è solo una barretta arancione -->
-            <Icona sprite="torcia" em="🔥" :emAlto="16" />
-            <i class="sot-lume"><u :style="{ height: eroe.torcia.quota * 100 + '%' }"></u></i>
-            <b>{{ eroe.torcia.resta }}</b>
-            <em v-if="eroe.torcia.scorta">+{{ eroe.torcia.scorta }}</em>
-          </p>
-
           <p v-if="avviso" class="sot-avviso">
             <Icona v-if="avviso.cosa" :sprite="avviso.sprite" :em="avviso.em" :emAlto="20" />
             {{ avviso.testo }}
           </p>
         </div>
+
+        <!-- la barra in basso, come in Diablo: la vita e la luce nei globi, le caselle in mezzo. I fogli le salgono
+             sopra (docs/sotterraneo/barra.md) -->
+        <BarraDiSotto :vita="eroe.vita" :vita-max="eroe.vitaMax" :colpito="colpito" :torcia="eroe.torcia"
+                      :pozioni="eroe.pozioni" :pieni="pieni" :tasche="TASCHE" :gemme="eroe.gemme"
+                      :missioni="missioniAperte" :mappa="mappaGrande"
+                      @bevi="bevi" @zaino="apriDallaBarra('zaino')" @diario="apriDallaBarra('diario')"
+                      @mappa="mappaGrande = !mappaGrande" />
 
         <!-- lo scontro sta al centro, non sale dal basso: un mostro addosso arriva mentre si cammina, e in
              fondo allo schermo chi guarda il proprio eroe non lo vedrebbe. Niente classe `sot-foglio`
@@ -996,7 +1066,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
           </button>
         </Foglio>
 
-        <!-- una curiosità: il foglio non si chiude da sé, la battuta è il premio vero -->
+        <!-- una curiosità: prima la domanda (si risponde o si lascia perdere), poi la battuta, che un tocco sul campo
+             chiude mentre l'eroe cammina (`leggero`) -->
         <Foglio v-else-if="foglio && foglio.che === 'curiosita'"
                 :em="curiosita.em" :sprite="curiosita.pezzo"
                 :titolo="curiosita.nome"
@@ -1091,7 +1162,11 @@ function ridimensiona() { if (pittore) pittore.misura() }
                :vita="eroe.vita" :vitaMax="eroe.vitaMax"
                :piano="eroe.piano" :piani="eroe.piani"
                @usa="usa" @butta="butta" @riponi="riponi"
-               @chiudi="zainoAperto = false" />
+               @chiudi="zainoAperto = false" @fuori="toccoFuori" />
+
+        <!-- il diario delle missioni, giù: lo stesso di sopra, senza «vai da» (chi aspetta sta sopra) -->
+        <Diario v-else-if="diarioGiu" giu :stati="missioni" :tappe="tappe" :segui="segui"
+                @chiudi="diarioGiu = false" @segui="seguiMissione" @fuori="toccoFuori" />
 
         <Fine v-if="fine" v-bind="fine" @ancora="ancora" @esci="allaMappa" />
       </template>
