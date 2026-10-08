@@ -27,7 +27,7 @@ import { disponiGettoni, disponiFila, gettoneSotto, quantiNeStanno, LATO_GETTONE
   from './scena/bolla.js'
 import { CATALOGO, PER_ID, ZONE, ANIMALI_ZONA, piedeDi, pezzoDi, assettoDi,
          puoGirare, puoSpecchiare, eCampo, eSilo, eVicino, eMercato, siloDi,
-         macchinaDi } from './dati/catalogo.js'
+         macchinaDi, statiDi } from './dati/catalogo.js'
 import { animale, siDisegna, IN_VENDITA, BOB, puntiDi } from './dati/animali.js'
 import { addobbo, ADDOBBI } from './dati/addobbi.js'
 import { BISOGNI, CHIAVI, foto } from './dati/bisogni.js'
@@ -1321,8 +1321,11 @@ function datiDellaMacchina(cosa, { ritira = true } = {}) {
     gettoni: [
       ...ricetteDi(stato.macchina, mondo.livello).map(ricetta => {
         const m = mondo.cheMancaPer(ricetta.id)
+        // A una macchina si porta quello che si vuole (la farina sul mulino); a un recinto il suo cibo
+        // (il becchime sulle galline), e le uova vengono da sé: il gettone di un recinto è il cibo.
+        const faccia = statiDi(cosa) ? Object.keys(ricetta.prende)[0] : ricetta.da
         return {
-          chiave: ricetta.id, ...facciaDi(ricetta.da), ricetta, hai: mondo.quantoHo(ricetta.da),
+          chiave: ricetta.id, ...facciaDi(faccia), ricetta, hai: mondo.quantoHo(ricetta.da),
           manca: m.manca, monete: m.monete, spento: !!m.manca.length || !!m.monete,
           // Le caselle: una per pezzo, accese se ce l'hai (non una formula «2 → 1»).
           caselle: Object.entries(ricetta.prende).flatMap(([k, n]) =>
