@@ -4,6 +4,7 @@
 // schermate in `viste/`.
 import { ref, computed, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
+import TastoSalta from '../../components/TastoSalta.vue'
 import { suono } from '../../audio.js'
 import { addCoins, segna, segnaBest } from '../../store/profile.js'
 import { progresso, aperta, adesso, stelleDi, completa, scelta, ricorda,
@@ -159,9 +160,9 @@ function togli(i) {
   }
 }
 
-function conferma() {
+function conferma(saltata = false) {
   const p = partita.value
-  const prova = p.conferma()
+  const prova = saltata ? p.salta() : p.conferma()
   if (!prova) return
   posata.value = -1
   suono.ok()
@@ -169,7 +170,9 @@ function conferma() {
 
   const tappaFinita = corsa.value.registra()
   esitoFila = null
-  if (p.vinta) {
+  if (p.saltata) {
+    // il tasto «salta» dei grandi (docs/core/comandi.md): avanti, ma niente monete, contatori o serie
+  } else if (p.vinta) {
     addCoins(p.monete)
     segna('codici')
     serie.value++
@@ -363,7 +366,8 @@ function chiudiSpiegazione() {
               @difficolta="scegliDifficolta" @tema="scegliTema" @gioca="avviaLibero" />
 
       <Tavolo v-else-if="partita" :partita="partita" :posata="posata" :rifiuti="rifiuti"
-              @posa="posa" @togli="togli" @conferma="conferma" />
+              @posa="posa" @togli="togli" @conferma="conferma()" />
+      <TastoSalta v-if="partita && !finale && vista === 'tavolo'" @salta="conferma(true)" />
 
       <canvas ref="tela" class="cs-coriandoli" hidden></canvas>
 

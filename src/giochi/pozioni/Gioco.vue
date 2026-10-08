@@ -6,6 +6,7 @@
 // docs/pozioni/sosta.md.
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
+import TastoSalta from '../../components/TastoSalta.vue'
 import { suono } from '../../audio.js'
 import { segna, answer } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
@@ -198,15 +199,16 @@ function togli() { if (libero() && p().togli() != null) { suono.nota(420, 300, 0
 function svuota() { if (libero()) { p().svuota(); salva() } }
 function riponi() { if (libero()) { p().riponi(); salva() } }
 
-function conferma() {
+function conferma(saltata = false) {
   if (!libero()) return
-  const e = p().conferma()
+  // il tasto «salta» dei grandi (docs/core/comandi.md): dose fatta, ma nessuno ha misurato
+  const e = saltata ? p().salta() : p().conferma()
   if (!e) return
   if (e.tipo === 'sbaglio') return sbagliato(e)
   /* giusto: il gesto è stato fatto davvero, e la conversione — se
      c'era e non era scritta — va al motore di apprendimento */
   suono.ok()
-  segna('misure')
+  if (!e.saltata) segna('misure')
   if (p().dosi.at(-1)?.giusta) borsellino.paga(MONETE_A_DOSE)   // al primo colpo, come prima
   annota(e.annota)
   nelCalderone.value = [...nelCalderone.value, { emoji: e.ingrediente.emoji, colore: e.ingrediente.colore }]
@@ -248,7 +250,7 @@ function avanti() {
   accieca()
   if (!r) return
   if (r.che === 'nuovoCliente' || r.che === 'tappaFinita') {
-    segna('pozioni')
+    if (!r.saltata) segna('pozioni')
     if (r.perfetta) segna('pozioniPerfette')
     suono.moneta()
     nelCalderone.value = []
@@ -297,7 +299,8 @@ if (typeof window !== 'undefined')
     <Banco v-else-if="partita" :partita="partita" :bloccato="cieco" :attesa="attesa"
            :calderone="calderone" :strumenti-tutti="strumentiTutti"
            @prendi="prendi" @posa="posa" @metti="metti" @togli="togli"
-           @svuota="svuota" @riponi="riponi" @conferma="conferma" />
+           @svuota="svuota" @riponi="riponi" @conferma="conferma()" />
+    <TastoSalta v-if="partita && vista === 'banco' && !finale" @salta="conferma(true)" />
 
     <Fine v-if="finale" v-bind="finale" @avanti="prossima" @mappa="allaMappa" />
   </div>

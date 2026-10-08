@@ -4,6 +4,7 @@
 // `viste/`.
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
+import TastoSalta from '../../components/TastoSalta.vue'
 import { suono } from '../../audio.js'
 import { segna, segnaBest } from '../../store/profile.js'
 import { incassa, premioDetto } from '../../store/varieta.js'   // pagano e dicono se il salvadanaio è stanco
@@ -109,15 +110,18 @@ function avviaTappa(i) {
   vista.value = 'gioco'
 }
 
-function rispondi(valore) {
+function rispondi(valore, { saltata = false } = {}) {
   const giusta = corsa.value.rispondi(valore)
   if (giusta) {
-    const pagato = incassa(tappaCorrente.value.premio)
-    monete.value += pagato.dato
-    chieste += pagato.chiesto
-    segna('contate')
-    serie.value++
-    segnaBest('serieConta', serie.value)
+    // il tasto «salta» dei grandi (docs/core/comandi.md): la tappa avanza, ma non paga né conta
+    if (!saltata) {
+      const pagato = incassa(tappaCorrente.value.premio)
+      monete.value += pagato.dato
+      chieste += pagato.chiesto
+      segna('contate')
+      serie.value++
+      segnaBest('serieConta', serie.value)
+    }
     suono.ok()
     if (corsa.value.finita) mostraFinale()
   } else {
@@ -178,6 +182,8 @@ onBeforeUnmount(() => {
 
       <Prato v-else-if="corsa" :domanda="corsa.domanda" :errore-segnale="erroreSegnale"
              @rispondi="rispondi" />
+      <TastoSalta v-if="vista === 'gioco' && corsa && !finale"
+                  @salta="rispondi(corsa.domanda.rispostaGiusta, { saltata: true })" />
 
       <Finale v-if="finale" v-bind="finale" @avanti="allaMappa" />
     </div>

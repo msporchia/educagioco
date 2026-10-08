@@ -75,6 +75,7 @@ export class Partita {
     this.prove = []
     this.corrente = Array(regole.caselle).fill(null)
     this.esito = null
+    this.saltata = false      // data per vinta dal tasto dei grandi: non vale monete
   }
 
   get finita() { return this.esito !== null }
@@ -120,12 +121,25 @@ export class Partita {
     return prova
   }
 
+  /* Il tasto «salta» dei grandi (docs/core/comandi.md): il codice è dato per
+     indovinato alla prima riga. Conta come una vittoria per andare avanti, ma
+     `monete` è zero e Gioco.vue non segna nessun contatore. */
+  salta() {
+    if (this.finita) return null
+    const prova = new Prova(this.codice.slice(), this.codice.length, 0)
+    this.prove.push(prova)
+    this.corrente = Array(this.regole.caselle).fill(null)
+    this.esito = 'vinta'
+    this.saltata = true
+    return prova
+  }
+
   get stelle() {
     if (!this.vinta) return 0
     return stellePer(this.regole, this.usate)
   }
 
-  get monete() { return this.vinta ? this.regole.premio * this.stelle : 0 }
+  get monete() { return this.vinta && !this.saltata ? this.regole.premio * this.stelle : 0 }
 
   // Sempre `regole.prove` righe: quelle non ancora giocate vuote, una
   // sola attiva. Il conto si fa qui e non dentro un template.
