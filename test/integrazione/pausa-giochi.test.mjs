@@ -174,8 +174,8 @@ uguale('riaprendolo la discesa NON riparte da sola', await veli(), 1)
 await page.locator('[data-azione="riprendi"]').click()
 uguale('si riparte solo toccando', await veli(), 0)
 
-await aCasa()                        // alla mappa
-await aCasa()                        // in home
+await aCasa()                        // in home: la ✕ dalla discesa non passa dalla terra di sopra
+uguale('uscendo dal sotterraneo si è in casa', await page.locator('.carte').count() > 0, true)
 
 uguale('nessun errore in console', errori.join(' · '), '')
 await browser.close()

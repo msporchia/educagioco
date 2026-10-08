@@ -91,7 +91,8 @@ piano o correre alla scala.
 - Le domande rispettano l'età del bambino e quello che hai spento nel
   quadro dei grandi.
 - Una discesa dura venti minuti buoni: si può uscire e riprenderla
-  esattamente da dove si era, e il ⏸ la ferma senza uscire.
+  esattamente da dove si era (rientrando si è già giù: per salire al villaggio c'è il portale,
+  oppure «lascio perdere questa discesa»), e il ⏸ la ferma senza uscire.
 - Si può perdere: dopo troppi svenimenti si risale e la discesa si rifà.
   Rispondendo bene otto volte su dieci si arriva in fondo quasi sempre;
   premendo a caso quasi mai.

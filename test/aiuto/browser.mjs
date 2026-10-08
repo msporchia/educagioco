@@ -431,6 +431,19 @@ export async function scendiNelSotterraneo(page, quale, { scendi = true } = {}) 
   if (scendi) await page.click('[data-fumetto] [data-azione="scendi"]')
 }
 
+/* Lascia perdere la discesa in corso e risale sulla terra di sopra: il ⏸, «lascio perdere questa discesa» sul velo
+   e «sì, risalgo» nel foglio che dice cosa resta (docs/sotterraneo/portale-e-sosta.md, «Il portale e l'uscita»). La ✕ non
+   basta più: porta in home, e rientrando si è già giù. Col mouse */
+export async function lasciaLaDiscesa(page) {
+  await page.click('button[aria-label="pausa"]')
+  await page.waitForSelector('[data-pausa] [data-azione="lascia-discesa"]', { timeout: 3000 })
+  await attendi(page, 400)   // il velo è cieco per un attimo (CIECA)
+  await page.click('[data-azione="lascia-discesa"]')
+  await page.waitForSelector('[data-lascio-perdere]', { timeout: 3000 })
+  await page.click('[data-lascio-perdere] [data-azione="scorda-si"]')
+  await page.waitForSelector('[data-terra]', { timeout: 5000 })
+}
+
 /* Apre l'avventura di un eroe del sotterraneo (docs/sotterraneo/avventure.md):
    la prima volta la scelta c'è già, poi la si apre dal «cambio» della carta
    in fondo alla terra di sopra. Aspetta la terra dell'eroe scelto. Col

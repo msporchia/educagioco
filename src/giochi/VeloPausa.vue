@@ -42,6 +42,8 @@ function esci() {
       <button type="button" class="pa-esci" data-azione="esci" @click.stop="esci">
         ← esco, la partita mi aspetta
       </button>
+      <!-- un gioco può aggiungere altro a chi è già fermo (il sotterraneo: lasciar perdere la discesa) -->
+      <slot />
     </div>
   </div>
 </template>

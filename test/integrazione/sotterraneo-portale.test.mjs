@@ -2,12 +2,14 @@
    IL PORTALE E LA RIPRESA ESATTA, COL DITO VERO
 
    La stanza che era del mercante ha un portale (docs/sotterraneo/
-   regole.md): toccandolo si sale al villaggio, e nel villaggio compare il
+   portale-e-sosta.md): toccandolo si sale al villaggio, e nel villaggio compare il
    gemello che riporta giù esattamente dov'eri, col piano com'era. Qui il
    giro intero: si scende nella prima discesa (la cripta dell'altare), si apre una porta, si ferisce
    un mostro e si scappa, si entra nel portale, si compra dall'erborista,
    si torna giù dal gemello e si ritrova tutto; poi si esce con la ✕ e si
-   riprende da «riprendi da qui» in home, nello stesso punto.
+   riprende da «riprendi da qui» in home, nello stesso punto. Uscire con la
+   ✕ non è un portale: lì la sosta è un'«uscita», sopra non c'è il gemello e
+   rientrando si è già giù, dietro il velo della pausa.
 
    Il piano si sceglie dal seme (`#seme=` nell'indirizzo, come
    `domanda.test.mjs`): lo stesso generatore gira qui in Node, e dice dove
@@ -193,6 +195,7 @@ uguale('e la carta in cima dice la discesa a metà', await page.locator('[data-r
 await scatto(page, 'portale-villaggio')
 let p = await leggiProfilo(page)
 const sosta = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta
+uguale('la sosta ricorda che si è salita dal portale', sosta?.via, 'portale')
 controlla('la discesa è nella sosta, coi cambiamenti e non il piano', !!sosta?.robe?.cambi && !Array.isArray(sosta?.robe),
           JSON.stringify(sosta?.robe)?.slice(0, 120))
 const cambio = i => (sosta?.robe?.cambi || {})[i] || {}
@@ -229,21 +232,22 @@ uguale('con la pozione comprata sopra', await page.locator('[data-tasca][data-co
 await page.locator('[data-azione="chiudi"]').click()
 await attendi(page, 300)
 
-/* ---------- 7. si esce con la ✕, e si ritrova lo stesso piano ---------- */
+/* ---------- 7. si esce con la ✕: non è un portale ----------
+   Dalla discesa la ✕ porta in home, non sulla terra di sopra: la sosta è
+   un'uscita, senza gemello, e lo stesso piano si ritrova com'era. */
 await toccaIl('button[aria-label="indietro"]')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await page.waitForSelector('.carte', { timeout: 5000 })
+uguale('la ✕ dalla discesa porta in home', await page.locator('[data-terra]').count(), 0)
 await attendi(page, 400)
 p = await leggiProfilo(page)
 const dopo = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta
+uguale('la sosta ora è un\'uscita, non un portale', dopo?.via, 'uscita')
 uguale('la porta è ancora aperta', ((dopo?.robe?.cambi || {})[indice(piano.porta)] || {}).aperta, true)
 uguale('e il mostro ha le ossa di prima', ((dopo?.robe?.cambi || {})[indice(piano.mostro)] || {}).ossa,
        cambio(indice(piano.mostro)).ossa)
 uguale('e l\'eroe è dove era', `${Math.floor(dopo?.dove?.x)},${Math.floor(dopo?.dove?.y)}`, dovEro)
 
-/* ---------- 8. «riprendi da qui» in home, nello stesso punto ---------- */
-await toccaIl('button[aria-label="indietro"]')
-await page.waitForSelector('.carte', { timeout: 5000 })
-await attendi(page, 400)
+/* ---------- 8. «riprendi da qui» in home, nello stesso punto, senza passare di sopra ---------- */
 uguale('in home si riprende il sotterraneo', await page.locator('[data-riprendi]').getAttribute('data-riprendi'), 'sotterraneo')
 controlla('e dice dove', (await page.locator('[data-riprendi]').innerText()).includes(`${CAMPAGNA[0].nome} · piano 1 di`),
           await page.locator('[data-riprendi]').innerText())
@@ -252,7 +256,32 @@ await scatto(page, 'portale-riprendi-home')
 await toccaIl('[data-riprendi]')
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
 await attendi(page, 700)
+uguale('si è già giù, senza la terra di sopra', await page.locator('[data-terra]').count(), 0)
+uguale('senza carta in cima e senza gemello', await page.locator('[data-ripresa], [data-portale]').count(), 0)
 uguale('e si riprende nel punto esatto', await cellaGiu(), dovEro)
+await page.waitForSelector('[data-pausa]', { timeout: 3000 })
+await scatto(page, 'portale-riprende-fermo')
+await attendi(page, 400)
+await toccaIl('[data-pausa] [data-azione="riprendi"]')
+await attendi(page, 300)
+uguale('toccato il velo, la discesa riparte', await page.locator('[data-pausa]').count(), 0)
+
+/* ---------- 9. col portale vero, invece, il gemello c'è anche se si esce dal villaggio ---------- */
+await vaiGiu(piano.portale, { toccala: false })
+{
+  const q = await schermoDi(piano.portale)
+  await tocca(q.x, q.y)
+}
+await page.waitForSelector('[data-azione="portale"]', { timeout: 8000 })
+await page.locator('[data-azione="portale"]').click()
+await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await attendi(page, 500)
+await toccaIl('button[aria-label="indietro"]')
+await page.waitForSelector('.carte', { timeout: 5000 })
+await scegli(page, 'sotterraneo')
+await page.waitForSelector('[data-terra]', { timeout: 5000 })
+uguale('uscendo dal villaggio e rientrando, il gemello c\'è ancora', await page.locator('[data-portale]').count(), 1)
+uguale('con la carta della discesa a metà', await page.locator('[data-ripresa]').count(), 1)
 
 uguale('nessun errore in console', errori.join(' · '), '')
 nota(`seme ${piano.seme}: porta ${indice(piano.porta)}, mostro ${indice(piano.mostro)} (${piano.mostro.tipo}), ` +

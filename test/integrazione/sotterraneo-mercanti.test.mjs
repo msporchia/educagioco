@@ -15,8 +15,8 @@
    tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo }
-  from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo,
+         lasciaLaDiscesa } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { MERCANTI, CELLA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
@@ -178,16 +178,15 @@ await page.locator('[data-azione="chiudi"]').click()
 await attendi(page, 200)
 
 /* ---------- 6. si risale, e la roba è ancora lì ---------- */
-await page.locator('button[aria-label="indietro"]').click()
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+// la ✕ non porta di sopra (docs/sotterraneo/portale-e-sosta.md): si risale lasciando perdere la discesa, e la roba resta
+await lasciaLaDiscesa(page)
 await attendi(page, 400)
 const p = await leggiProfilo(page)
 const su = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.roba
 controlla('la roba è nel profilo, nell\'avventura del cavaliere', !!su && su.zaino.includes('pozione'), JSON.stringify(su))
 uguale('con le gemme di prima', su && su.gemme, dopo)
-await page.locator('[data-azione="scorda"]').click()
-await attendi(page, 300)
 uguale('lasciata perdere la discesa, la roba resta', await gemme(), dopo)
+uguale('e la discesa no: ricomincia da capo, nessuna carta', await page.locator('[data-ripresa]').count(), 0)
 
 /* ---------- 7. e alla discesa dopo si ritrova ---------- */
 await scendiNelSotterraneo(page, 0)

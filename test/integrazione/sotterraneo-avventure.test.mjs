@@ -6,10 +6,11 @@
    discesa a metà sue. Qui il giro col dito: un profilo di prima si
    azzera aprendo il gioco (le avventure ripartono da zero, il record di
    fuori e le monete restano); poi, con un cavaliere che ha già la sua
-   roba, si cammina e si lascia a metà il pozzo; si passa al mago, che
+   roba, si cammina e si lascia a metà il pozzo; dal velo della pausa si
+   passa al mago (da sopra non si può: uscire non porta di sopra), che
    comincia dalla scalinata con lo zaino vuoto e la nebbia nuova; si torna
-   al cavaliere e si ritrova tutto, e «riprendi da qui» in home riprende
-   la sua discesa, con l'icona ritagliata dalla mappa.
+   al cavaliere e si riprende giù dov'era, e «riprendi da qui» in home
+   riprende la sua discesa, con l'icona ritagliata dalla mappa.
 
    I tocchi sono tocchi (`Input.dispatchTouchEvent` via CDP): il click che
    il dito si lascia dietro cadrebbe sulla scheda appena aperta, e un
@@ -116,14 +117,21 @@ await attendi(page, 600)
 const campo = await page.locator('.sot-tela').boundingBox()
 await tocca(campo.x + campo.width * 0.6, campo.y + campo.height * 0.5)
 await attendi(page, 800)
-await toccaIl('button[aria-label="indietro"]')
-await page.waitForSelector('[data-ripresa]', { timeout: 5000 })
+// da dentro la discesa: ⏸, «scelgo un altro eroe» (la discesa si salva com'è, come un'uscita)
+await page.click('button[aria-label="pausa"]')
+await page.waitForSelector('[data-pausa] [data-azione="eroe-giu"]', { timeout: 3000 })
+await attendi(page, 400)
+await page.click('[data-azione="eroe-giu"]')
+await page.waitForSelector('.sot-eroe[data-eroe]', { timeout: 3000 })
 await attendi(page, 300)
 const doveCav = await cella()
-controlla('il pozzo resta a metà, col cavaliere', (await page.locator('.sot-ripresa .sot-dove').innerText()).includes('Cavaliere'))
+p = await leggiProfilo(page)
+uguale('il pozzo resta a metà, col cavaliere, lasciato con un\'uscita',
+       p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta?.via, 'uscita')
+controlla('e la carta, dietro la scelta, dice con chi', (await page.locator('.sot-ripresa .sot-dove').innerText()).includes('Cavaliere'))
+const nebbiaCav = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.terra?.nebbia
 
 /* ---------- 3. le quattro avventure ---------- */
-await apriLaScelta()
 uguale('quattro schede', await page.locator('.sot-eroe[data-eroe]').count(), 4)
 const schedaCav = await page.locator('.sot-eroe[data-eroe="cavaliere"]').innerText()
 uguale('quella del cavaliere è cominciata',
@@ -161,17 +169,20 @@ await scatto(page, 'avventure-mago-terra')
 await unPasso()
 const doveMago = await cella()
 
-/* ---------- 5. si torna al cavaliere, e c'è tutto ---------- */
+/* ---------- 5. si torna al cavaliere, e si riprende giù ---------- */
 await apriLaScelta()
 controlla('la scelta segna il mago', await page.locator('.sot-eroe.sot-scelto[data-eroe="mago"]').count() === 1)
-await scegliCol('cavaliere')
-controlla('la carta di chi scende è del cavaliere', (await chiScende()).includes('Cavaliere'))
-uguale('dov\'era rimasto', await cella(), doveCav)
-uguale('con le sue gemme', await gemme(), 60)
-uguale('con la sua discesa a metà', await page.locator('[data-ripresa]').count(), 1)
-uguale('e la sua nebbia', await trovati(), trovatiCav)
+await toccaIl('.sot-eroe[data-eroe="cavaliere"]')
+await page.waitForSelector('.sot-tela', { timeout: 5000 })
+uguale('scegliere il cavaliere riprende la sua discesa, senza la terra di sopra', await page.locator('[data-terra]').count(), 0)
+controlla('nel pozzo, a metà', (await page.locator('.sot-piede').innerText()).includes('piano 1'))
+await page.waitForSelector('[data-pausa]', { timeout: 3000 })
+await attendi(page, 800)   // il profilo si scrive un attimo dopo
 p = await leggiProfilo(page)
 const av = p?.campagne?.sotterraneo?.cfg?.avventure || {}
+uguale('la terra del cavaliere è dov\'era rimasto', (av.cavaliere?.terra?.dove || []).join(','), doveCav)
+uguale('con la sua nebbia', av.cavaliere?.terra?.nebbia, nebbiaCav)
+uguale('e le sue gemme', av.cavaliere?.roba?.gemme, 60)
 uguale('nel profilo il mago ha la sua terra', (av.mago?.terra?.dove || []).join(','), doveMago)
 controlla('e non ha la roba del cavaliere', !av.mago?.roba?.mano && !(av.mago?.roba?.gemme > 0), JSON.stringify(av.mago?.roba))
 uguale('il cavaliere ha la sua sosta', av.cavaliere?.sosta?.tappa, 1)
@@ -179,7 +190,7 @@ uguale('l\'avventura aperta è del cavaliere', p?.campagne?.sotterraneo?.cfg?.er
 
 /* ---------- 6. «riprendi da qui» riprende la discesa del cavaliere ---------- */
 await attendi(page, 5200)   // sotto i cinque secondi non è una partita (store/sessioni.js)
-await toccaIl('button[aria-label="indietro"]')
+await toccaIl('[data-pausa] [data-azione="esci"]')   // il velo copre anche la ✕: da lì si esce senza ripartire
 await page.waitForSelector('.carte', { timeout: 5000 })
 uguale('in home si riprende il sotterraneo', await page.locator('[data-riprendi]').getAttribute('data-riprendi'), 'sotterraneo')
 controlla('e dice la discesa a metà', (await page.locator('[data-riprendi]').innerText()).includes('scalinata antica'),
@@ -190,6 +201,9 @@ await scatto(page, 'avventure-riprendi-home')
 await toccaIl('[data-riprendi]')
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
 controlla('e si torna giù nel pozzo, col cavaliere', (await page.locator('.sot-piede').innerText()).includes('piano 1'))
+await attendi(page, 400)
+await toccaIl('[data-pausa] [data-azione="riprendi"]')
+await attendi(page, 300)
 await page.locator('[data-azione="zaino"]').click()
 await page.waitForSelector('.sot-centrale', { timeout: 3000 })
 controlla('con la sua pozione in tasca', await page.locator('[data-tasca][data-cosa="pozione"]').count() === 1)

@@ -52,9 +52,10 @@ sopra), `motore/bottega.js` (i banchi),
   per profondità (`pescaCosa` con `profondita`) è rimasta all'abisso
   ([la-grande-storia.md](la-grande-storia.md#chi-da-la-riga-dopo)).
 - **La sosta tiene il piano, la roba sta accanto** nell'avventura e si
-  scrivono insieme (`salva` in `Gioco.vue`): usciti a metà (con la ✕ o dal
-  portale) si può andare dai mercanti, e riprendendo la discesa ritrova la
-  roba com'è adesso (`leggi` con la roba). La sosta non ne tiene una copia.
+  scrivono insieme (`salva` in `Gioco.vue`): salendo dal portale si può andare
+  dai mercanti, e riprendendo la discesa ritrova la roba com'è adesso (`leggi`
+  con la roba); uscendo con la ✕ si riprende giù ([regole.md](portale-e-sosta.md#il-portale-e-luscita)).
+  La sosta non ne tiene una copia.
 - **Le missioni dei personaggi** stanno in ogni avventura accanto alla roba
   (`missioni`): [missioni.md](missioni.md).
 
