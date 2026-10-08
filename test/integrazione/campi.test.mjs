@@ -89,9 +89,19 @@ const testoFoglio = () => page.evaluate(
    `window.__fattoria` (vedi docs/fattoria/come-si-tocca.md). */
 const laBolla = () => page.evaluate(() => (window.__fattoria && window.__fattoria.bolla()) || null)
 const gettone = k => page.evaluate(k => (window.__fattoria.gettoni().find(g => g.chiave === k) || null), k)
-async function toccaGettone(chiave) {
+/* Il gesto è trascinare: il gettone si prende e si porta sul campo. Toccarlo e basta non fa niente
+   (dice dove portarlo), ed è la prima cosa che si controlla. */
+async function portaGettone(chiave, dove) {
   const g = await gettone(chiave)
-  if (controlla(`attorno c'è il gettone «${chiave}»`, !!g)) await dito(g.x, g.y)
+  if (!controlla(`attorno c'è il gettone «${chiave}»`, !!g)) return
+  await giu(g.x, g.y)
+  for (let i = 1; i <= 12; i++) {
+    await trascina(Math.round(g.x + (dove.x - g.x) * i / 12), Math.round(g.y + (dove.y - g.y) * i / 12))
+    await attendi(page, 16)
+  }
+  await attendi(page, 60)
+  await su()
+  await attendi(page, 300)
 }
 
 const monete = () => page.evaluate(
@@ -250,7 +260,13 @@ await scatto(page, 'campi-scheda-vuoto')
    negativo apposta: è la riga che si farebbe rimettere per distrazione
    la prossima volta che si ritocca un prezzo. */
 const primaDiSeminare = await monete()
-await toccaGettone('grano')
+{
+  const g = await gettone('grano')
+  await dito(g.x, g.y)
+  await attendi(page, 300)
+  uguale('toccare il seme non semina: si guarda', (await laBolla() || {}).tipo, 'semina')
+}
+await portaGettone('grano', dove)
 await attendi(page, 500)
 uguale('seminato, i gettoni se ne vanno', await laBolla(), null)
 uguale('e seminare non costa niente', await monete(), primaDiSeminare)
@@ -301,7 +317,7 @@ await dito(dove.x, dove.y)
 await attendi(page, 400)
 
 /* ---------- 6. si raccoglie col cesto, e finisce in granaio ---------- */
-await toccaGettone('cesto')
+await portaGettone('cesto', dove)
 await attendi(page, 600)
 uguale('raccolto, il cesto se ne va', await laBolla(), null)
 

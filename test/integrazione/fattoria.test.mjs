@@ -30,6 +30,7 @@ import { Fattoria, borsaInfinita }
 import { PRODOTTI } from '../../src/giochi/fattoria/dati/coltivazioni.js'
 import { sogliaDi } from '../../src/giochi/fattoria/dati/livelli.js'
 import { CELLE, PRIMA, ULTIMA } from '../../src/giochi/fattoria/dati/mondo.js'
+import { stagioneDi } from '../../src/giochi/fattoria/dati/stagioni.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -106,9 +107,13 @@ async function chiudi() {
   controlla('ma la catena c\'è',
             await page.locator('.fa-voce', { hasText: 'Campo' }).count() > 0)
   /* La metà delle decorazioni non c'è proprio finché non arriva la
-     prima: una linguetta che si apre su niente è un tasto rotto. */
-  uguale('e la metà del bello non c\'è ancora',
-         await page.locator('.fa-zona').count(), 0)
+     prima: una linguetta che si apre su niente è un tasto rotto. In
+     festa invece c'è da subito, con le voci della festa (se il test
+     gira a Halloween o a Natale). */
+  const inFesta = !!stagioneDi(new Date())
+  uguale(inFesta ? 'in festa la metà del bello c\'è già, per le voci della festa'
+                 : 'e la metà del bello non c\'è ancora',
+         await page.locator('.fa-zona').count(), inFesta ? 2 : 0)
   const quante = await page.locator('.fa-voce').count()
   controlla(`al primo livello lo scaffale ha poche cose (${quante})`, quante <= 4)
   await chiudi()
@@ -130,7 +135,7 @@ async function chiudi() {
   controlla('quelli del livello dopo si vedono, spenti',
             await page.locator('.fa-premio.chiuso').count() > 0)
   uguale('e il gettone non ha nessun pallino da reclamare',
-         await page.locator('.fa-bollo').count(), 0)
+         await page.locator('[data-livelli] .fa-bollo').count(), 0)
   await scatto(page, 'fattoria-livelli')
   await chiudi()
 }
@@ -157,7 +162,8 @@ controlla('col cheat la fattoria è cresciuta',
    Il cheat lascia da prendere i premi del livello a cui porta, che è
    esattamente la situazione di chi ci è appena arrivato spendendo. */
 {
-  const bollo = page.locator('.fa-bollo')
+  /* il pallino del gettone del livello: non quelli della strada del baule */
+  const bollo = page.locator('[data-livelli] .fa-bollo')
   controlla('arrivati al livello nuovo, il gettone porta il pallino',
             await bollo.count() === 1)
   const quanti = Number(await bollo.innerText())

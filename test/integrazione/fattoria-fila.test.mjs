@@ -159,14 +159,13 @@ if (trovato) {
   const piu = (await posti()).find(p => p.come === 'piu')
   uguale('in fondo c\'è il posto da comprare, col prezzo giusto', piu && piu.prezzo, prezzo)
 
-  /* ---------- 1. togliere un pezzo in attesa rende la roba ---------- */
-  const granoPrima = (await statoSalvato()).granaio.grano || 0
+  /* ---------- 1. quello che è in fila ci resta ----------
+     Come in Hay Day: messo dentro, non si toglie. Toccare chi aspetta
+     dice quanto manca, e la fila non cambia. */
   controlla('il mulino è aperto', await assicuraIlMulinoAperto())
   await tocca('aspetta')
-  const dopoTogliere = await statoSalvato()
-  uguale('il grano torna nel granaio', dopoTogliere.granaio.grano, granoPrima + 2)
-  uguale('in fila restano due pezzi',
-         (dopoTogliere.cose.find(c => c.id === 'mulino').coda || []).length, 2)
+  uguale('toccare chi aspetta non lo toglie',
+         ((await statoSalvato()).cose.find(c => c.id === 'mulino').coda || []).length, 3)
 
   /* ---------- 2. il «+» costa e aggiunge un posto ---------- */
   const moneteCoinsPrima = (await leggiProfilo(page)).coins

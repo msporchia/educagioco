@@ -166,7 +166,8 @@ if (mulino) {
     await attendi(page, 16)
   }
   await su()
-  await attendi(page, 300)
+  await attendi(page, 350)
+  await scatto(page, 'bolla-consuma')       // il grano usato che sale col suo «-2»
   uguale('dopo, le ricette restano per metterne un\'altra', (await laBolla() || {}).nome, 'Mulino')
   uguale('e la fila mostra il pezzo partito', await page.evaluate(() => window.__fattoria.fila()), 1)
 

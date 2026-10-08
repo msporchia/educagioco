@@ -20,6 +20,7 @@ import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
 import { sogliaDi, ULTIMO } from '../../src/giochi/fattoria/dati/livelli.js'
 import { CELLE, PRIMA, ULTIMA } from '../../src/giochi/fattoria/dati/mondo.js'
+import { stagioneDi } from '../../src/giochi/fattoria/dati/stagioni.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -93,15 +94,23 @@ await esci()
 /* ---------- Halloween ---------- */
 await entra('halloween')
 await scatto(page, 'fattoria-halloween')
-/* le zucche sono disegni in pixel della tela: si contano dal gancio dei test */
-controlla('a Halloween ci sono le zucche sul prato',
-          await page.evaluate(() => window.__fattoria.zucche()) > 0)
-uguale('e ogni bestia di casa ha il cappello da strega',
-       await page.evaluate(() => window.__fattoria.cappelli()), 3)
+/* Il cappello e le zucche li sceglie la bimba: niente spunta da solo,
+   ma tutto le dice che ci sono. Le bestie di casa vorrebbero il cappello
+   (un fumetto disegnato sulla tela: si conta dal gancio dei test), e il
+   🌸 del baule porta il segnalino delle zucche. */
+uguale('a Halloween nessuna bestia ha il cappello da sola',
+       await page.evaluate(() => window.__fattoria.cappelli()), 0)
+uguale('ma tutte e tre lo vorrebbero',
+       await page.evaluate(() => window.__fattoria.desideri()), 3)
+uguale('e il 🌸 del baule ha il segnalino delle zucche',
+       await page.locator('[data-baule="bello"] [data-strada]').count(), 1)
 await page.locator('[data-baule="bello"]').click()
 await page.waitForSelector('.fa-voce', { timeout: 3000 })
-uguale('a Halloween il baule non ha la linguetta delle feste: la festa sta negli animali',
-       await linguettaFeste().count(), 0)
+uguale('a Halloween il baule ha la linguetta delle feste', await linguettaFeste().count(), 1)
+const zucche = await voci()
+controlla('e il baule si apre sulle zucche da comprare',
+          zucche.some(t => /zucca intagliata/i.test(t)), zucche.join(' · '))
+await scatto(page, 'fattoria-halloween-baule')
 await esci()
 
 /* ---------- un giorno qualunque ----------
@@ -112,8 +121,7 @@ await page.waitForSelector('.fa-tela', { timeout: 5000 })
 await attendi(page, 800)
 await page.locator('[data-baule="bello"]').click()
 await page.waitForSelector('.fa-voce', { timeout: 3000 })
-const oggi = new Date(), m = oggi.getMonth() + 1, d = oggi.getDate()
-const festa = m >= 11 || (m === 1 && d <= 6)      // la linguetta è di Natale
+const festa = !!stagioneDi(new Date())      // a Halloween e a Natale la linguetta c'è
 uguale(festa ? 'oggi è festa e la linguetta c\'è' : 'un giorno qualunque non ha la linguetta',
        await linguettaFeste().count(), festa ? 1 : 0)
 

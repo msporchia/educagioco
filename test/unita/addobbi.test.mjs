@@ -338,8 +338,15 @@ function conLaBestia(chi, borsa = borsaInfinita()) {
   controlla('e nemmeno nessun altro sospeso',
             f.vestiarioDi('cane-bobtail').every(a => !a.sospeso))
   controlla('mentre i cappelli e gli occhiali ci sono tutti',
-            IN_VENDITA.filter(a => staA(a.id, 'cane-bobtail'))
+            IN_VENDITA.filter(a => staA(a.id, 'cane-bobtail') && !a.stagione)
                       .every(a => f.vestiarioDi('cane-bobtail').some(x => x.id === a.id)))
+
+  /* Il cappello da strega è della festa: si vende solo a Halloween, ed è il primo che si vede. */
+  const strega = id => f.vestiarioDi('cane-bobtail', id).some(a => a.id === 'cappello_strega')
+  uguale('fuori stagione il cappello da strega non si vende', strega(''), false)
+  uguale('a Natale nemmeno', strega('natale'), false)
+  uguale('a Halloween sì', strega('halloween'), true)
+  uguale('ed è il primo dei cappelli', f.vestiarioDi('cane-bobtail', 'halloween')[0].id, 'cappello_strega')
 
   /* Chi l'aveva comprato ieri se lo tiene. */
   f.guardaroba.fiocco = 1
@@ -353,6 +360,14 @@ function conLaBestia(chi, borsa = borsaInfinita()) {
          f.comeEVestita('cane-bobtail').map(a => a.id).join(' '), 'fiocco')
   controlla('e si toglie', f.spogliaBestia('cane-bobtail', 'collo').ok)
   uguale('tornando nel guardaroba', f.quantiAddobbi('fiocco'), 1)
+
+  /* E il cappello della festa, comprato a ottobre, resta suo anche a marzo. */
+  controlla('il cappello da strega si compra', f.compraAddobbo('cappello_strega').ok)
+  controlla('a festa finita resta nel vestiario',
+            f.vestiarioDi('cane-bobtail').some(a => a.id === 'cappello_strega'))
+  controlla('e si mette', f.vestiBestia('cane-bobtail', 'cappello_strega').ok)
+  uguale('chi disegna riceve il disegno, non un\'emoji',
+         f.comeEVestita('cane-bobtail').find(a => a.id === 'cappello_strega').disegno, 'cappello_strega')
 
   /* Il salvataggio se lo porta dietro: gli id restano. */
   f.vestiBestia('cane-bobtail', 'fiocco')
