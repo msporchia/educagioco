@@ -23,7 +23,7 @@ senza che nessuno l'abbia comprata.
 - **`#stagione=natale`** (o `halloween`) nell'indirizzo le accende fuori
   stagione, per guardarle a settembre.
 
-## Halloween: i recinti si travestono
+## Halloween: i recinti in costume, i cappelli e le zucche
 
 - **Solo sprite, niente emoji**: i recinti hanno un foglio vestito per ogni
   foglio normale (`animali_halloween_1.png` per i primi cinque,
