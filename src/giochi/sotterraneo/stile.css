@@ -144,11 +144,6 @@
 .sot-fum-conto { margin: 6px 0 0; font-size: 13px }
 .sot-fum-chiusa { margin: 8px 0 0; padding: 6px 9px; border-radius: 9px; background: #d2cabd; font-weight: 600 }
 .sot-fum-detto { margin: 6px 0 0 }
-/* le missioni: dove e cosa dà, sotto la richiesta */
-.sot-fum-premio { margin: 6px 0 4px; font-size: 13px; color: #5d4b2c }
-.sot-missione .sot-grosso { margin-top: 6px }
-/* più missioni dello stesso personaggio: una sotto l'altra, separate da un filo */
-.sot-missione + .sot-missione { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #b9ad9a }
 /* le missioni già prese per una discesa, nel fumetto del suo posto */
 .sot-fum-missioni { display: grid; gap: 2px; margin: 6px 0 0; font-size: 13px; color: #5d4b2c }
 /* il segno sopra chi ha una missione per te: «!» da prendere, «?» da consegnare, d'oro come le cose da toccare */
@@ -200,6 +195,67 @@
 .sot-fumetto .sot-grosso { margin-top: 10px; padding: 11px }
 .sot-fum-portale { display: flex; align-items: center; gap: 8px; margin: 6px 0 0 }
 .sot-fum-portale .sot-ritaglio { width: 52px; height: 52px }
+
+/* ═══════════ il dialogo (viste/Dialogo.vue, docs/sotterraneo/dialoghi.md) ═══════════
+   In fondo alla mappa, dove sta la carta di chi scende: legno scuro e oro come la bottega, il ritratto nel tondo
+   d'oro, il testo a pagine che non scorre (alto sempre uguale, o le pagine ballerebbero), le domande sotto */
+.sot-terra-sotto .sot-dialogo { justify-self: stretch }
+.sot-dialogo {
+  display: grid; grid-template-columns: 66px 1fr; grid-template-areas: "ritratto nome" "ritratto testo" "scelte scelte";
+  gap: 2px 11px; padding: 11px 12px 10px; border: 2px solid transparent; border-radius: 14px;
+  background:
+    repeating-linear-gradient(93deg, #ffffff06 0 2px, transparent 2px 13px) padding-box,
+    linear-gradient(180deg, #2c1c10f5, #160e09f5) padding-box,
+    linear-gradient(135deg, #f6d77a, #9a6b1f 30%, #ffe9a3 50%, #8a5a14 75%, #e8bf5a) border-box;
+  box-shadow: inset 0 0 0 1px #3a2614, inset 0 0 26px #000a, 0 12px 34px #000c;
+  animation: sot-cresce .16s ease-out;
+}
+.sot-dialogo-ritratto {
+  grid-area: ritratto; align-self: start; width: 66px; height: 66px; border-radius: 50%; overflow: hidden;
+  display: grid; place-items: start center; padding-top: 4px;
+  background: radial-gradient(circle at 50% 38%, #5a4026, #1a110b 72%);
+  border: 2px solid #d9a640; box-shadow: 0 0 0 2px #3a2614, 0 0 14px #ffd23f2e;
+}
+.sot-dialogo-nome {
+  grid-area: nome; font-family: "Emoji Gioco", Georgia, "Times New Roman", serif; font-size: 17px; color: #ffe39a;
+  letter-spacing: .02em; text-shadow: 0 2px 0 #000, 0 0 10px #ffd23f40;
+}
+.sot-dialogo-testo {
+  grid-area: testo; position: relative; display: block; width: 100%; min-height: 66px; margin: 0; padding: 2px 18px 4px 0;
+  font: inherit; text-align: left; color: #f3e6c8; background: none; border: 0; cursor: pointer;
+}
+.sot-dialogo-riga { display: block; font-size: 15px; line-height: 1.4; animation: sot-appare .18s ease-out }
+.sot-riga-sotto-livello { color: #ffc98a }
+.sot-riga-premio { font-size: 19px; font-weight: 800; color: #ffd23f; line-height: 1.3 }
+.sot-riga-premio::before {
+  content: 'ricevi'; display: block; margin-bottom: 3px; font-family: system-ui, sans-serif; font-size: 11px;
+  font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #c9a46a;
+}
+/* c'è un'altra pagina: il triangolo d'oro che va su e giù, in basso a destra */
+.sot-dialogo-avanti {
+  position: absolute; right: 2px; bottom: 4px; width: 0; height: 0;
+  border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #ffd23f;
+  filter: drop-shadow(0 1px 0 #000); animation: sot-dondola .9s ease-in-out infinite alternate;
+}
+@keyframes sot-dondola { to { transform: translateY(3px) } }
+.sot-dialogo-scelte { grid-area: scelte; display: grid; gap: 5px; margin-top: 6px; animation: sot-appare .3s ease-out }
+.sot-dialogo-scelta {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 11px; text-align: left;
+  font: inherit; font-size: 15px; font-weight: 700; color: #ffe9b0;
+  background: #00000055; border: 1px solid #c9963a66; border-radius: 10px;
+}
+.sot-dialogo-scelta::before {
+  content: ''; flex: none; width: 7px; height: 7px; transform: rotate(45deg);
+  background: #ffd23f; box-shadow: 0 0 6px #ffd23f88;
+}
+.sot-dialogo-scelta span { flex: 1 }
+.sot-dialogo-scelta small { flex: none; font-size: 12.5px; font-weight: 600; color: #ffd23f }
+/* la cosa da fare (prendere, consegnare, il banco) d'oro; arrivederci sommesso */
+.sot-scelta-prendi, .sot-scelta-consegna, .sot-scelta-bottega { background: #ffd23f1f; border-color: #ffd23faa }
+.sot-scelta-ciao { color: #c9b48a; font-weight: 600 }
+.sot-scelta-ciao::before { background: #8a7656; box-shadow: none }
+.sot-dialogo-scelte.sot-ciechi .sot-dialogo-scelta { pointer-events: none }
+@media (prefers-reduced-motion: reduce) { .sot-dialogo-avanti, .sot-dialogo, .sot-dialogo-riga { animation: none } }
 
 /* le carte che galleggiano: in cima la discesa a metà, in fondo chi scende */
 .sot-terra-sopra, .sot-terra-sotto {

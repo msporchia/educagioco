@@ -1,16 +1,18 @@
 <script setup>
 // La terra di sopra: la mappa intera, l'eroe che cammina da solo fino al punto toccato, la vista che lo segue
 // quando arriva ai bordi, le discese sui posti col loro fumetto, chi indica la strada, i mercanti e la nebbia.
+// Chi sta fermo sulla mappa (il minatore, chi dà le missioni, i mercanti) si parla: il dialogo (viste/Dialogo.vue).
 // Riceve le tappe già decise e dice solo «si scende qui» (`scendi`), «apro il banco di…» (`bottega`), «torno
 // giù dal portale» (`riprendi`) e «ricordati questo» (`terra`).
 // Le regole: docs/sotterraneo/terra-di-sopra.md.
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO,
          MERCANTI as DOVE_MERCANTI, PORTALE as DOVE_PORTALE, PERSONAGGI as DOVE_PERSONAGGI } from '../dati/terra-mappa.js'
-import { PERSONAGGI } from '../dati/missioni.js'
-import { segnoDi, GLIFO, chiAspetta, chiTiCerca, presePer, inFrase, discesaDaSeguire } from '../motore/missioni.js'
-import { MERCANTI } from '../dati/mercanti.js'
-import { POSTO_DI, LUOGHI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, PASSO_TERRA, VISTA, LUCE,
+import { PERSONAGGI, personaDi } from '../dati/missioni.js'
+import { segnoDi, GLIFO, chiAspetta, presePer, inFrase, discesaDaSeguire } from '../motore/missioni.js'
+import { MERCANTI, mercanteDi } from '../dati/mercanti.js'
+import { apertura, scelte as scelteDi, risposta, dopoLaPresa, dopoLaConsegna } from '../motore/dialoghi.js'
+import { POSTO_DI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, PASSO_TERRA, VISTA, LUCE,
          BORDO, MORBIDA, iconaDi } from '../dati/terra.js'
 import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice } from '../motore/terra.js'
 import { figura, haFigura } from './figura.js'
@@ -20,7 +22,7 @@ import { MINATORE, ARMAIOLO, ERBORISTA, RIGATTIERE, DIVIETO, RAGAZZA, MUGNAIO, E
 import Pixel from './Pixel.vue'
 import Armato from './Armato.vue'
 import Portale from './Portale.vue'
-import Missione from './Missione.vue'
+import Dialogo from './Dialogo.vue'
 
 const props = defineProps({
   tappe: { type: Array, required: true },     // [{ indice, chiave, nome, icona, dritta, piani, aperta, adesso, stelle, perEta, fatta }]
@@ -359,11 +361,8 @@ function guarda() {
   }
   if (!trovati.value.has('cartello') && visto(centroDi(CARTELLO.riquadro)))
     trovati.value = new Set([...trovati.value, 'cartello'])
-  for (const m of mercanti) {
-    if (trovati.value.has(m.chiave) || !visto(m.piede)) continue
-    trovati.value = new Set([...trovati.value, m.chiave])
-    dillo(`Hai trovato ${minuscolo(m.nome)}!`)
-  }
+  for (const m of mercanti)
+    if (!trovati.value.has(m.chiave) && visto(m.piede)) trovati.value = new Set([...trovati.value, m.chiave])
   for (const m of personaggi)
     if (!trovati.value.has(m.chiave) && visto(m.piede)) trovati.value = new Set([...trovati.value, m.chiave])
   if (!trovati.value.has('portale') && visto(portalePiede)) trovati.value = new Set([...trovati.value, 'portale'])
@@ -419,7 +418,10 @@ const fumPos = ref(null)            // { left, top, sotto, coda } in pixel del m
 const LARGO_FUM = 244
 
 function apri(m) {
-  if (m.tipo === 'mercante') { chiudi(); emit('bottega', m.chi.chiave); return }
+  if (m.tipo === 'mercante') return parla(m.chi.chiave)
+  if (m.tipo === 'personaggio') return parla(m.chi.chiave)
+  if (m.tipo === 'minatore') return parla('minatore')
+  chiudiDialogo()
   aperto.value = m
   fumPos.value = null
   // una discesa chiusa non si apre, ma ci si è andati: davanti all'ingresso si pianta il divieto
@@ -427,7 +429,6 @@ function apri(m) {
     divieti.value = new Set([...divieti.value, m.p.nome])
     salva()
   }
-  if (m.tipo === 'minatore' && !parlato.value) { parlato.value = true; salva() }
   nextTick(piazzaFumetto)
 }
 function chiudi() { aperto.value = null; fumPos.value = null }
@@ -439,9 +440,7 @@ function piazzaFumetto() {
   if (!f || !m) return
   const r = m.tipo === 'posto' ? m.p.riquadro
     : m.tipo === 'cartello' ? CARTELLO.riquadro
-    : m.tipo === 'portale' ? [portalePiede.x * CELLA - 16, portalePiede.y * CELLA - 64, CELLA + 32, 88]
-    : m.tipo === 'personaggio' ? [m.chi.piede.x * CELLA, m.chi.piede.y * CELLA - 40, CELLA, 72]
-    : [DOVE_MINATORE.piede[0] * CELLA, DOVE_MINATORE.piede[1] * CELLA - 40, CELLA, 72]
+    : [portalePiede.x * CELLA - 16, portalePiede.y * CELLA - 64, CELLA + 32, 88]
   const w = Math.min(LARGO_FUM, vL - 16), h = f.offsetHeight
   const ax = (r[0] + r[2] / 2) * S
   const su = r[1] * S, giu = (r[1] + r[3]) * S
@@ -482,6 +481,7 @@ function toccaPrato(e) {
   if (strisciato || !vista.value) return
   if (e.target.closest && e.target.closest('.sot-terra-sopra > *, .sot-terra-sotto > *, [data-fumetto]')) return
   if (aperto.value) chiudi()
+  chiudiDialogo()
   avviso.value = ''
   const r = vista.value.getBoundingClientRect()
   const wx = (e.clientX - r.left) / S + cam.x, wy = (e.clientY - r.top) / S + cam.y
@@ -496,6 +496,7 @@ function toccaPrato(e) {
 const vicino = (c, r = 1.5) => Math.hypot(io.x - (c.x + 0.5), io.y - (c.y + 0.5)) <= r
 function verso(c, m) {
   if (strisciato) return
+  chiudiDialogo()
   if (!via.length && vicino(c)) return apri(m)
   vaiA(c, m)
 }
@@ -504,14 +505,6 @@ const toccaPosto = p => verso(p.piede, { tipo: 'posto', p })
 const toccaMinatore = () => verso(cella(DOVE_MINATORE.accanto), { tipo: 'minatore' })
 // a chi dà le missioni come al minatore: accanto, e il fumetto dice cosa chiede
 const toccaPersonaggio = m => verso(m.accanto, { tipo: 'personaggio', chi: m })
-// prendere e consegnare li fa Gioco.vue (lo stato è dell'avventura): qui si dice com'è andata
-function faiMissione(id, azione) {
-  const e = props.azioneMissione ? props.azioneMissione(id, azione) : null
-  if (e === 'presa') dillo('Missione presa: la trovi scendendo.')
-  else if (e && e.esito === 'consegnata') dillo(e.monete ? `Missione compiuta! 🪙 ${e.monete}` : 'Missione compiuta!')
-  else if (e && e.esito === 'pieno') dillo('Hai le tasche piene: libera un posto e torna.')
-  nextTick(piazzaFumetto)
-}
 const toccaCartello = () => verso(cella(CARTELLO.piede), { tipo: 'cartello' })
 // ai mercanti come al minatore: ci si ferma accanto, e arrivati si apre il banco
 const toccaMercante = m => verso(m.accanto, { tipo: 'mercante', chi: m })
@@ -527,24 +520,61 @@ function scendi(p) {
   emit('scendi', p.tappa || props.abisso)
 }
 
+/* ═══════════ il dialogo (motore/dialoghi.js, docs/sotterraneo/dialoghi.md) ═══════════
+   Toccando chi sta fermo l'eroe ci va, e arrivato si parla: il testo a pagine, e alla fine le domande. La sua cosa
+   (prendere e consegnare una missione, il banco) passa da qui: prendere e consegnare li fa Gioco.vue, che ha lo
+   stato, e il dialogo dice com'è andata con la voce di chi parla */
+const dialogo = ref(null)           // { chi, nome, pagine, giro, chieste }
+let giri = 0
+const ctx = () => ({ stati: props.missioni, tappe: props.tappe, abisso: !!props.abisso, eroe: props.eroe.chiave,
+                     roba: props.roba })
+const chiParla = chi => (personaDi(chi) || mercanteDi(chi) || { nome: '' }).nome
+function parla(chi) {
+  chiudi()
+  const primaVolta = chi === 'minatore' && !parlato.value
+  if (primaVolta) { parlato.value = true; salva() }
+  // il minatore apre dicendo la strada: «dove vado adesso?» torna dopo un'altra domanda
+  dialogo.value = { chi, nome: chiParla(chi), pagine: apertura(chi, ctx(), { primaVolta }), giro: ++giri,
+                    chieste: new Set(chi === 'minatore' ? ['strada'] : []) }
+}
+function chiudiDialogo() { dialogo.value = null }
+const scelteDelDialogo = computed(() => (dialogo.value ? scelteDi(dialogo.value.chi, ctx(), dialogo.value.chieste) : []))
+// le pagine nuove di una risposta: si riparte dalla prima
+function rispondi(pagine, chieste) {
+  const d = dialogo.value
+  if (!d || !pagine.length) return
+  dialogo.value = { ...d, pagine, giro: ++giri, chieste }
+}
+async function scegli(s) {
+  const d = dialogo.value
+  if (!d) return
+  const chieste = new Set(d.chieste)
+  if (s.che !== 'strada') chieste.delete('strada')
+  if (s.che === 'ciao') return chiudiDialogo()
+  if (s.che === 'bottega' || s.che === 'vendi') {
+    chiudiDialogo()
+    emit('bottega', d.chi, s.che === 'vendi' ? 'vendi' : null)
+    return
+  }
+  if (s.che === 'strada' || s.che === 'racconta') {
+    chieste.add(s.che)
+    return rispondi(risposta(d.chi, s.che, ctx()), chieste)
+  }
+  const e = props.azioneMissione ? props.azioneMissione(s.missione, s.che === 'prendi' ? 'prendi' : 'consegna') : null
+  if (s.che === 'prendi' && e === 'presa') return rispondi(dopoLaPresa(d.chi, s.missione), chieste)
+  if (s.che === 'consegna' && e) {
+    await nextTick()   // lo stato nuovo arriva da Gioco.vue: il seguito di una missione si offre subito
+    rispondi(dopoLaConsegna(d.chi, s.missione, e, ctx()), chieste)
+  }
+}
+
 /* ═══════════ chi indica la strada ═══════════ */
 // chi tocca una discesa con la roba sotto la riga d'entrata (dati/storia.js) lo sa prima di scendere: il
 // minatore lo dice con le cose che ha in mano (motore/storia.js). Solo per quelle ancora da finire
 const livelloDi = t => (t && !t.fatta && props.roba ? dettoDelLivello(props.eroe.chiave, props.roba, t, t.indice) : null)
 
-// e dice anche chi ha qualcosa per te, una riga per chi (motore/missioni.js)
-const tiCerca = computed(() => chiTiCerca(props.missioni, props.tappe))
 // le missioni già prese che riguardano una discesa: il fumetto del posto le ricorda prima di scendere
 const quiPrese = p => (p && p.tappa ? presePer(props.missioni, p.tappa.chiave) : [])
-
-const detto = computed(() => {
-  const t = props.tappe.find(t => t.adesso)
-  const sotto = livelloDi(t)
-  if (t) return `«${t.nome}: ${LUOGHI[POSTO_DI[t.chiave]]}.${sotto ? ' ' + sotto.detto : ''}»`
-  if (props.abisso)
-    return `«Le discese le hai fatte tutte. Resta l'abisso: ${LUOGHI[POSTO_DI.abisso]}.»`
-  return '«Per ora le discese aperte le hai fatte tutte. Tornaci quando vuoi: là sotto cambia sempre.»'
-})
 
 const frecce = computed(() => FRECCE.map(f => {
   const nomi = f.posti.filter(n => trovati.value.has(n))
@@ -691,7 +721,7 @@ const chiusaPerche = p => {
 
       <div v-if="aperto" ref="fumetto" class="sot-fumetto" data-fumetto
            :class="{ 'sot-sotto': fumPos && fumPos.sotto, 'sot-tenue': aperto.tipo === 'posto' && !aperto.p.aperto }"
-           :data-fumetto-di="aperto.tipo === 'posto' ? aperto.p.nome : aperto.tipo === 'personaggio' ? aperto.chi.chiave : aperto.tipo"
+           :data-fumetto-di="aperto.tipo === 'posto' ? aperto.p.nome : aperto.tipo"
            :style="fumPos ? { left: fumPos.left + 'px', top: fumPos.top + 'px', width: fumPos.w + 'px', '--coda': fumPos.coda + 'px' }
                           : { visibility: 'hidden', left: '0px', top: '0px', width: LARGO_FUM + 'px' }"
            @click.stop>
@@ -731,17 +761,6 @@ const chiusaPerche = p => {
             <span class="em">🌀</span> torno giù
           </button>
         </template>
-        <template v-else-if="aperto.tipo === 'minatore'">
-          <b class="sot-fum-nome">Il vecchio minatore</b>
-          <p class="sot-fum-detto" data-detto>{{ detto }}</p>
-          <p v-for="(riga, i) in tiCerca" :key="i" class="sot-fum-detto" data-ti-cerca>«{{ riga }}»</p>
-          <Missione chi="minatore" :stati="missioni" :tappe="tappe" @azione="faiMissione" />
-        </template>
-        <template v-else-if="aperto.tipo === 'personaggio'">
-          <b class="sot-fum-nome">{{ aperto.chi.nome }}</b>
-          <Missione :chi="aperto.chi.chiave" :stati="missioni" :tappe="tappe" :saluto="aperto.chi.saluto"
-                    @azione="faiMissione" />
-        </template>
         <template v-else>
           <b class="sot-fum-nome">Il cartello</b>
           <p v-for="f in frecce" :key="f.verso" class="sot-fum-freccia">
@@ -774,7 +793,10 @@ const chiusaPerche = p => {
     <div ref="sottoEl" class="sot-terra-sotto">
       <p v-if="avviso" class="sot-trovato" data-avviso-terra>{{ avviso }}</p>
       <p v-else-if="primaVolta" class="sot-trovato sot-piano">Tocca dove vuoi andare.</p>
-      <slot name="sotto" />
+      <!-- il dialogo sta in fondo, al posto della carta di chi scende: la vista lo misura e tiene l'eroe sopra -->
+      <Dialogo v-if="dialogo" :chi="dialogo.chi" :nome="dialogo.nome" :pagine="dialogo.pagine" :giro="dialogo.giro"
+               :scelte="scelteDelDialogo" @scegli="scegli" />
+      <slot v-else name="sotto" />
     </div>
   </div>
 </template>

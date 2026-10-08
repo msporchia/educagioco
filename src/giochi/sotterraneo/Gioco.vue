@@ -288,15 +288,17 @@ const robaSopra = computed(() => schedaConLaRoba(eroeQui(), roba.value, crescita
 const aperto = ref(null)          // la chiave del mercante col banco aperto
 const tocco = ref(0)              // batte a ogni compra/vendi: la bottega non è reattiva
 const dettoBanco = ref(null)
+const schedaBanco = ref(null)     // la linguetta da cui si apre: «ho roba da vendere» apre quella delle tasche
 let bottega = null
 
-function apriBottega(k) {
+function apriBottega(k, scheda = null) {
   if (!mercanteDi(k)) return
   bottega = new Bottega({ eroe: eroeQui(), roba: roba.value, finite: qui.value.tappa, crescita: crescita.value,
                           banchi: (qui.value.botteghe || {}).banchi })
   bottega.banco(k)
   nellAvventura({ botteghe: { banchi: bottega.banchi } })
   dettoBanco.value = null
+  schedaBanco.value = scheda
   aperto.value = k
   tocco.value++
   suono.ok()
@@ -1162,7 +1164,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                @chiudi="zainoSopra = false" @fuori="e => { zainoSopra = false; fuoriDallaBottega(e) }" />
         <!-- la bottega di un mercante di sopra: quasi a tutto schermo, la ✕ in alto a destra, niente domande.
              La chiave è il mercante: le linguette e la scelta ripartono da capo cambiando bottega -->
-        <LaBottega v-if="banco" :key="banco.chi.chiave" v-bind="banco" :eroe="eroeScheda" :detto="dettoBanco"
+        <LaBottega v-if="banco" :key="banco.chi.chiave" v-bind="banco" :eroe="eroeScheda" :detto="dettoBanco" :scheda="schedaBanco"
                   chi-compra="al mercante, vicino al carro"
                   @compra="compraSopra" @vendi="vendiSopra" @chiudi="chiudiBottega" @fuori="fuoriDallaBottega" />
         <Eroi v-if="scegliEroe" :avventure="avventure" :scelto="chiEro || ''" :primo="!chiEro"

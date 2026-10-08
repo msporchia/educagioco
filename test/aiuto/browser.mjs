@@ -449,6 +449,21 @@ export async function scendiNelSotterraneo(page, quale, { scendi = true } = {}) 
   if (scendi) await page.click('[data-fumetto] [data-azione="scendi"]')
 }
 
+/* Nel dialogo aperto sulla terra di sopra (docs/sotterraneo/dialoghi.md): le pagine avanti con un tocco sul testo,
+   fino alle domande, poi la scelta `sel` (es. '[data-scelta="bottega"]'). Aspetta i 320 ms ciechi. `tocca(sel)`: un
+   tocco vero; senza, il mouse */
+export async function nelDialogo(page, sel = null, { tocca = null } = {}) {
+  await page.waitForSelector('[data-dialogo]', { timeout: 15000 })
+  const premi = tocca || (s => page.click(s))
+  for (let n = 0; n < 12 && !(await page.locator('[data-dialogo][data-ultima]').count()); n++) {
+    await attendi(page, 360)
+    await premi('[data-dialogo-testo]')
+  }
+  await page.waitForSelector('[data-dialogo][data-ultima]', { timeout: 3000 })
+  await attendi(page, 400)
+  if (sel) await premi(`[data-dialogo] ${sel}`)
+}
+
 /* Lascia perdere la discesa in corso e risale sulla terra di sopra: il ⏸, «lascio perdere questa discesa» sul velo
    e «sì, risalgo» nel foglio che dice cosa resta (docs/sotterraneo/portale-e-sosta.md, «Il portale e l'uscita»). La ✕ non
    basta più: porta in home, e rientrando si è già giù. Col mouse */

@@ -9,21 +9,15 @@ import { COSE } from './cose.js'
 import { MOSTRI } from './mostri.js'
 import { CAMPAGNA } from './campagna.js'
 
-// `chi` in mezzo a una frase («portala alla ragazza del pozzo»); `saluto` quando non ha niente da chiedere
+// `chi` in mezzo a una frase («portala alla ragazza del pozzo»); quello che dicono sta in dati/dialoghi.js
 export const PERSONAGGI = {
-  ragazza: { nome: 'La ragazza del pozzo', chi: 'la ragazza del pozzo', sprite: 'ragazza',
-             saluto: 'L\'acqua di questo pozzo è la più fresca del villaggio. Bevi, se vuoi: non costa niente.' },
-  mugnaio: { nome: 'Il mugnaio', chi: 'il mugnaio', sprite: 'mugnaio',
-             saluto: 'La ruota gira, la macina macina, e io ho la farina fin nelle orecchie.' },
+  ragazza: { nome: 'La ragazza del pozzo', chi: 'la ragazza del pozzo', sprite: 'ragazza' },
+  mugnaio: { nome: 'Il mugnaio', chi: 'il mugnaio', sprite: 'mugnaio' },
   // la chiave resta `eremita` (salvataggi, sprite): sullo schermo è il frate, una parola che un bambino conosce
-  eremita: { nome: 'Il frate', chi: 'il frate dell\'altare', sprite: 'eremita',
-             saluto: 'Sotto queste pietre dormono in tanti. Non tutti dormono tranquilli.' },
-  guardia: { nome: 'La guardia della torre', chi: 'la guardia della torre', sprite: 'guardia',
-             saluto: 'Faccio la guardia a una torre che cade a pezzi. Qualcuno deve pur farla.' },
-  pescatore: { nome: 'Il pescatore', chi: 'il pescatore dello stagno', sprite: 'pescatore',
-               saluto: 'Oggi non abbocca niente. Ieri nemmeno. Domani chissà.' },
-  boscaiolo: { nome: 'Il boscaiolo', chi: 'il boscaiolo', sprite: 'boscaiolo',
-               saluto: 'Il bosco è grande, ma le strade sono poche: chi le conosce non si perde.' },
+  eremita: { nome: 'Il frate', chi: 'il frate dell\'altare', sprite: 'eremita' },
+  guardia: { nome: 'La guardia della torre', chi: 'la guardia della torre', sprite: 'guardia' },
+  pescatore: { nome: 'Il pescatore', chi: 'il pescatore dello stagno', sprite: 'pescatore' },
+  boscaiolo: { nome: 'Il boscaiolo', chi: 'il boscaiolo', sprite: 'boscaiolo' },
 }
 // il vecchio minatore sta sulla mappa per conto suo (viste/Terra.vue), non fra i personaggi: dà la sua missione
 // come gli altri, e il diario deve poterlo nominare

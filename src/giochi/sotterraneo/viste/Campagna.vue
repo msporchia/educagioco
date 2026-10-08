@@ -70,7 +70,7 @@ function comincia() {
     <Terra ref="terraEl" :tappe="tappe" :abisso="abisso" :eroe="eroe" :terra="terra" :roba="roba"
            :missioni="missioni" :azione-missione="azioneMissione" :segui="segui"
            :giaScesa="ripresa ? ripresa.tappa : null" :portale="portale"
-           @scendi="tocca" @terra="v => $emit('terra', v)" @bottega="k => $emit('bottega', k)"
+           @scendi="tocca" @terra="v => $emit('terra', v)" @bottega="(k, s) => $emit('bottega', k, s)"
            @riprendi="$emit('riprendi')">
       <template #sopra>
         <div v-if="ripresa" class="sot-ripresa" data-ripresa="1">

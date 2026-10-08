@@ -30,6 +30,7 @@ const props = defineProps({
   numeri: { type: Object, required: true },     // { vita, att, dif, gemme }
   detto: { type: Object, default: null },       // l'ultima riga: { testo, sprite?, em? }
   chiCompra: { type: String, default: '' },     // «al mercante, vicino al carro»: detto da chi non compra
+  scheda: { type: String, default: null },      // la linguetta da cui aprire (dal dialogo: «ho roba da vendere»)
 })
 const emit = defineEmits(['compra', 'vendi', 'chiudi', 'fuori'])
 
@@ -42,7 +43,7 @@ const FIGURE = { armaiolo: ARMAIOLO, erborista: ERBORISTA, rigattiere: RIGATTIER
 const ritratto = computed(() => (haFigura(`${props.chi.sprite}-fermo-0`)
   ? figura(`${props.chi.sprite}-fermo-0`, { scala: 3 }) : null))
 
-const scheda = ref(props.chi.schede[0].chiave)
+const scheda = ref(props.chi.schede.some(s => s.chiave === props.scheda) ? props.scheda : props.chi.schede[0].chiave)
 const laScheda = computed(() => props.chi.schede.find(s => s.chiave === scheda.value))
 const vende = computed(() => !!(laScheda.value && laScheda.value.vendi))
 const qui = computed(() => props.roba.filter(r => (schedaDi(props.chi, r.chiave) || {}).chiave === scheda.value))
