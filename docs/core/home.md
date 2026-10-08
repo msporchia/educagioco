@@ -75,21 +75,33 @@ lasciava un vuoto sopra il profilo.
 
 ## L'indice
 
-Un'icona per gioco su un tassello bianco, quella in mezzo bordata,
+Un'icona per gioco su un tassello quadrato, quella in mezzo cerchiata,
 l'ultimo giocato col pallino giallo. Serve a trovare un
 gioco senza scorrere: la copertina fa riconoscere, l'indice fa arrivare.
-Quindici giochi stanno su due righe a 375 px, e su tre a 320.
+L'icona è il soggetto ritagliato dalla copertina dipinta, o l'emoji per chi
+non ce l'ha; il cerchio sta fuori dal tassello perché l'icona lo riempie.
+Cinque per riga a 375 px (~61 px l'uno): quindici giochi sono tre righe.
 
 ## Le copertine
 
-Un gioco porta `copertina: { fondo, disegno, scena }` nel suo manifesto (i
-giochi vecchi nella loro riga di `data/giochi.js`). `scena` è uno dei
-disegni piatti di `components/home/scene.js`, sopra ci va l'icona grande.
-Ogni gioco ha un fondo e una scena sua, da riconoscere a colpo d'occhio
-(il castello è cielo e mura, non un prato come la fattoria), e niente di
-giallo in un angolo: il sole sembrava il pallino di una notifica. Senza
-`copertina` il gioco uscirebbe grigio: `unita/aree` è rosso. Sono provvisorie: la copertina vera è un
-disegno del gioco, ancora da fare.
+**La copertina vera è dipinta**: una scena 3:2 del mondo del gioco col
+soggetto dentro, niente emoji sopra. Si chiede a Grok in modalità agente
+o a ChatGPT quattro per foglio
+(`strumenti/sprite/sorgenti/home/PROMPT-copertine.md`), si salva accanto alla
+scheda come `copertina-<chiave>` o come foglio elencato in `fogli.json`, e `strumenti/sprite/copertine.py`
+la mette in `components/home/copertine-dipinte.js`: la copertina a 528×352
+(tre volte la carta), l'icona quadrata ritagliata dal foglietto `icone.json`,
+e il `fondo` della carta, che è il colore medio del dipinto. «Riprendi da
+qui» mostra l'icona, non il taglio in mezzo della copertina, che a 64 px
+perdeva il soggetto.
+
+Finché un gioco non ha la sua, vale quella disegnata in codice: il gioco
+porta `copertina: { fondo, disegno, scena }` nel suo manifesto (i giochi
+vecchi nella loro riga di `data/giochi.js`); `scena` è uno dei disegni piatti
+di `components/home/scene.js`, sopra ci va l'icona grande. Ogni gioco ha un
+fondo e una scena sua, da riconoscere a colpo d'occhio, e niente di giallo in
+un angolo, né disegnato né dipinto: il sole sembrava il pallino di una
+notifica. Senza `copertina` il gioco uscirebbe grigio: `unita/aree` è rosso.
 
 ## Nei test
 
@@ -101,6 +113,7 @@ disegno del gioco, ancora da fare.
 - `.carta.gioco[data-gioco="…"]`: la copertina di un gioco, con `.davanti`
   quella in mezzo; dentro, `b` è il nome e `i` cosa insegna.
 - `[data-indice="…"]`: l'icona dell'indice, `.ultimo` sull'ultimo giocato.
+- `[data-dipinta]`: l'immagine di una copertina dipinta.
 - `[data-riprendi="…"]`: il riquadro «riprendi da qui».
 - **Per aprire un gioco dalla home si usa `scegli(page, chiave)`**
   (`test/aiuto/browser.mjs`): indice, poi la copertina in mezzo. Un
