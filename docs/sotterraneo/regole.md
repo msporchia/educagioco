@@ -33,6 +33,9 @@ finto che scende davvero, e fa la spesa sopra).
   quelle con un collegamento solo, così non diventano un casello. Prima di
   sbarrarne una si cammina fino alla scala: se non ci si arriva, la stanza
   resta aperta e senza segno.
+- **In ogni piano, dove si compare, c'è la scala che sale**: si risale
+  dove si era scesi e il piano di sopra è com'era
+  ([scala-che-sale.md](scala-che-sale.md)).
 - **La stanza del mercante ha il portale** (più sotto, «Il portale»): il
   mercante sta sopra ([terra-di-sopra.md](terra-di-sopra.md#i-mercanti)), e
   il portale porta da lui. Stessa pesca e nessun tiro in più, così il piano
@@ -199,7 +202,8 @@ nel punto esatto e cosa si salva: [portale-e-sosta.md](portale-e-sosta.md).
 In due righe: **il portale porta su al villaggio e il gemello riporta giù; la
 ✕ non è un portale** — porta in home, e rientrando si è già giù.
 
-Nei test: `unita/sotterraneo` (le sette discese col giocatore finto e la roba di
+Nei test: `unita/sotterraneo-scala-su` (la scala che sale e il bersaglio lontano: [scala-che-sale.md](scala-che-sale.md)),
+`unita/sotterraneo` (le sette discese col giocatore finto e la roba di
 chi ci arriva, i quattro eroi, le soglie qui sopra), `unita/sotterraneo-roba`
 (la roba fra due discese, lo svenimento, la sosta, il portale al posto del
 mercante, i banchi del passo), `unita/sotterraneo-storia` (la tabella, chi la

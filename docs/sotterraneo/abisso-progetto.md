@@ -2,15 +2,13 @@
 
 Le parti dell'abisso già decise e non ancora scritte, coi numeri misurati sul
 banco e i punti di rottura: la lettura unica delle cose, il bottino
-graduato, la scala che risale e le monete. Com'è l'abisso oggi:
+graduato e le monete (la scala che risale è fatta: [scala-che-sale.md](scala-che-sale.md)). Com'è l'abisso oggi:
 [abisso.md](abisso.md). Le voci in fila: [da-fare.md](da-fare.md).
 
 Si costruisce **in quest'ordine**, e ogni pezzo si guarda col telefono prima
 del successivo: 1 la lettura unica (mezza giornata, niente cambia a
 schermo) · 3 il bottino graduato (una giornata) · 5 il banco e le monete
-(mezza) · 4 la risalita (una giornata, per ultima: è l'unica che tocca il
-salvataggio, e conviene farla sapendo quanti piani risalgono davvero i
-bambini). Il punto 2, l'abisso stesso, è fatto.
+(mezza). Il punto 2, l'abisso stesso, e il 4, la risalita, sono fatti.
 
 ## 1. `cosa(k)`: una lettura sola delle cose
 
@@ -114,59 +112,25 @@ eroe:    att ≈ 3 (base) + 3 (arma di gradino 3) + G(p)
   ferma per primo (vedi [abisso.md](abisso.md)); se la corazza cresce come
   l'arma il divario si allarga.
 
-## 4. La scala che risale, e il salvataggio dei piani lasciati
+## 4. La scala che risale: fatta, e diversa dal progetto
 
-- **Nella stanza d'ingresso di ogni piano c'è una seconda scala, che sale.**
-  Rigenera il piano di sopra dal suo seme, stesso disegno, **coi mostri di
-  nuovo al loro posto**, e porta la profondità a `p−1`. Si risale di quanti
-  piani si vuole, **camminando, senza menù**: un elenco di quaranta piani non
-  si legge, e un salto istantaneo renderebbe il farming gratis. La mappa del
-  piano resta accesa, i mostri si aggirano, e la chiave del guardiano serve a
-  scendere, non a salire.
+**Fatta l'8 ottobre 2026**, per tutte le discese e per l'abisso insieme:
+[scala-che-sale.md](scala-che-sale.md). Dal progetto restano il nome dei campi
+della sosta (`dietro`, `fondo`) e la scala nella stanza d'ingresso; cambiano
+due decisioni, perché l'utente ha chiesto che **il piano di sopra resti com'era**
+(mostri battuti, cose prese, porte aperte) e non che si rifaccia:
 
-| tornando su un piano | torna? |
-|---|---|
-| i mostri | **sì**, con le ossa piene del loro piano |
-| le gemme dei mostri | sì; quelle per terra no |
-| i forzieri e le curiosità | **no**: se tornassero, risalire sarebbe la strada per il bottino |
-| le fonti | sì |
-| la roba lasciata per terra | **no**: il piano che si abbandona si rimette a posto |
-| la mappa già girata | sì |
-
-**Il salvataggio.** La sosta sta dentro il profilo
-(`profile.campagne['sotterraneo'].sosta`, via `salvaSosta` in
-`giochi/campagne.js`), e `persist()` lo clona e riscrive intero; il
-sotterraneo lo chiama dopo ogni risposta e ogni otto secondi. Un piano pesa,
-misurato: cantine 1 910 byte di `robe` (22 pezzi), il fondo 4 774 (54), il
-labirinto 7 836 (87) — circa 88 byte a pezzo, e un quinto è arredo. Quaranta
-piani salvati così sono ~188 KB: non è la CPU, è il timeout di 2,5 s di
-`openDb()` in `store/storage.js` e il ripiego su `localStorage`, cinque
-megabyte per tutta la casa.
-
-- **Il piano su cui si sta si salva intero; quelli lasciati come
-  differenza.** `generaPiano` è deterministico, quindi di un piano lasciato
-  basta `{ p: 12, v: "…" /* visto a tratti */, c: ["30,12", "8,41"] }`, con
-  in `c` le **celle** delle cose che non tornano (forzieri, curiosità, porte
-  aperte, cose raccolte). Misurato: 154 · 378 · 514 byte invece di 1 910 ·
-  4 774 · 7 836, quasi tutto `visto`; quaranta piani ~15 KB.
-- **Celle e non indici**: l'indice nella lista `robe` sarebbe più corto (26
-  byte contro 68) ma è legato all'ordine di `arreda()`, e spostare la
-  generazione delle curiosità marcherebbe aperto il forziere sbagliato. Con
-  la cella un disallineamento non corrisponde a niente e il piano si rilegge
-  intatto.
-- **Si tengono i venti piani più recenti**: dimenticarne uno richiude i suoi
-  forzieri, ma il bottino è della profondità del piano, quindi non paga.
-  Se i bambini risalgono davvero di venti, si alza (340 byte a piano).
-- **La versione resta 3**: `robe` non cambia significato, e i campi sono
-  aggiunti — `dietro` (le differenze, al massimo venti, ~7 KB al tetto) e
-  `fondo` (il piano più profondo di questa discesa). Una sosta senza
-  `dietro` si legge come «nessun piano alle spalle».
-- **Se un giorno la sosta andasse fuori dai profili** (non serve: sotto i
-  10 KB): una chiave propria `sosta:sotterraneo:<id>`, come
-  `store/sessioni.js`, insegnata a `azzeraCampagna`, `resetPlayer` e
-  `store/cestino.js`, più un gemello di `scordaSessioni`.
-- La leva di riserva, se 15 KB dessero fastidio: ricordare solo le `stanze`
-  (~90 byte a piano) e rinunciare alla traccia dei corridoi.
+- **Niente mostri di nuovo al loro posto, niente differenza forzieri/mostri**:
+  risalire non è una strada per il bottino perché il piano è com'era lasciato, e
+  quello che si è preso non torna. Il bottino della profondità (punto 3) è
+  quello di quel piano, non di quello che si è risaliti a rifare.
+- **I piani alle spalle sono otto, non venti** (`PIANI_ALLE_SPALLE`), e salvati
+  per indice come tutta la sosta (`cambiDelPiano`), non per cella: le soste di
+  prima non si leggono più (`VERSIONE` 5), quindi il problema dell'ordine di
+  `arreda()` che la cella evitava non si pone. Misurato: l'abisso al piano 21
+  pesa 4 KB; i piani più su si rifanno dal seme, intatti.
+- Le soglie del banco (punto 5, «si risale e si ridiscende senza perdere
+  niente») sono provate in `unita/sotterraneo-scala-su`.
 
 ## 5. Il banco dell'abisso e le monete
 
@@ -184,7 +148,9 @@ megabyte per tutta la casa.
   2. la forbice fra «minimo» e «tutto» **oltre 2×**;
   3. il guardiano non oltre **8 risposte di fila** a chi ha l'arma del suo
      piano (il tetto di `guastiDeiMostri`);
-  4. **quaranta piani sotto i 10 KB** di salvataggio;
-  5. **si risale e si ridiscende senza perdere niente**: un piano condensato
-     e rigenerato tiene i forzieri aperti e rimette i mostri (come
-     `gioca(…, { da })` in `unita/sotterraneo-sosta`).
+  4. **la sosta sotto i 10 KB** anche a quaranta piani: con otto piani alle
+     spalle (`PIANI_ALLE_SPALLE`) è fatto a venti (4 KB,
+     `unita/sotterraneo-scala-su`);
+  5. **si risale e si ridiscende senza perdere niente**: fatto, lo prova
+     `unita/sotterraneo-scala-su` (mostri battuti, porte, cose prese, mappa,
+     e niente vita regalata salendo e scendendo).

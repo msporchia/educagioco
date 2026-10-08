@@ -14,6 +14,7 @@ import { COSE, SEGNI } from '../dati/cose.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
 import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi } from './muri.js'
 import { dipingiPortale, PORTALE } from './portale.js'
+import { dipingiScalaSu } from './scala-su.js'
 
 export class Tela {
   constructor(canvas) {
@@ -332,6 +333,12 @@ export class Tela {
     if (r.che === 'mostro') {
       const scheda = MOSTRI[r.tipo]
       // `unaPosa`: i mostri del bestiario nuovo non hanno una corsa separata, e chiederla darebbe un mostro invisibile senza errore
+    // la scala che sale non ha pezzo nel foglio: si disegna da sé, in tutta la cella
+    if (r.che === 'scala-su') {
+      dipingiScalaSu(ctx, r.x * T, r.y * T, t, { alfa })
+      return
+    }
+
       const posa = r.sveglio && !scheda.unaPosa ? 'corsa' : 'fermo'
       const fr = (t * (r.sveglio ? 8 : 4)) | 0
       const q = r.sveglio ? 0.3 + 0.14 * Math.sin(t * 7) : 0.14   // l'alone pulsa da sveglio: si vede prima di arrivargli addosso

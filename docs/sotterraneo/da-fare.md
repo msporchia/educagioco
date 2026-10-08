@@ -21,10 +21,13 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   si ferma per l'arma che non cresce.
 - **Le soglie mancanti del banco** in `unita/sotterraneo-abisso`: costo per
   piano 10–25 fino al 30, forbice oltre 2×, guardiano ≤ 8 risposte con l'arma
-  del piano, salvataggio di quaranta piani sotto i 10 KB, risalita senza
-  perdite.
-- **La scala che risale** e i piani lasciati salvati come differenza
-  (punto 4): `dietro` e `fondo` nella sosta, tetto a venti piani. Per ultima.
+  del piano (la sosta sotto i 10 KB e la risalita senza perdite sono fatte:
+  [scala-che-sale.md](scala-che-sale.md)).
+- **La freccina della missione e la scala che sale**: una missione di un piano
+  di sopra non è più sfuggita (si risale, [scala-che-sale.md](scala-che-sale.md)),
+  ma la freccina giù non la indica: `rotta` salta le missioni di un piano già
+  passato. Da fare: puntare alla scala che sale (un `verso: 'su'`, con la riga del
+  promemoria che già dice «risali»).
 
 ## Il gioco
 

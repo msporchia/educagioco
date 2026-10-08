@@ -640,6 +640,16 @@ function scendi() {
   salva()          // un piano nuovo è il momento in cui si perde di più
 }
 
+// la scala che sale: si torna al piano di sopra, accanto alla scala da cui si era scesi (docs/sotterraneo/scala-che-sale.md).
+// Dal primo piano non si sale da qui: il foglio è quello di «lascio perdere», l'unica strada su senza portale
+function sali() {
+  const e = corsa.value.sali()
+  tic.value++
+  if (!e) return
+  suono.livello()
+  salva()
+}
+
 // `senzaCartello`: si lascia perdere la discesa dal velo della pausa — si risale con la roba (la regola) e si
 // dice una volta sola, nel foglio di prima, quello che si perde: niente cartello di fine
 function chiudi({ senzaCartello = false } = {}) {
@@ -1040,6 +1050,19 @@ function ridimensiona() { if (pittore) pittore.misura() }
           </button>
           <button class="sot-grosso sot-chiaro" data-azione="dopo" @click="chiudiFoglio">
             prima giro ancora
+          </button>
+        </Foglio>
+
+        <!-- la scala che sale: dal primo piano è la strada del «lascio perdere» (stesso foglio, stesse parole) -->
+        <LascioPerdere v-else-if="foglio && foglio.che === 'scala-su' && foglio.fuori" :nome="titolo" giu
+                       @si="lascioPerdere" @no="chiudiFoglio" />
+        <Foglio v-else-if="foglio && foglio.che === 'scala-su'" em="🪜" titolo="La scala che sale"
+                dice="Torni al piano di sopra, accanto alla scala da cui eri sceso. Quello che hai lasciato là resta com'è.">
+          <button class="sot-grosso" data-azione="sali" @click="sali">
+            {{ `risalgo al piano ${eroe.piano - 1}` }}
+          </button>
+          <button class="sot-grosso sot-chiaro" data-azione="dopo" @click="chiudiFoglio">
+            resto qui
           </button>
         </Foglio>
 

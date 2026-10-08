@@ -2,8 +2,9 @@
 
 L'abisso com'è oggi: perché esiste, come cresce, cosa si perde svenendo, dove
 sta il record e fin dove regge. La parte decisa e non ancora costruita
-(bottino graduato, scala che risale, monete) sta in
-[abisso-progetto.md](abisso-progetto.md).
+(bottino graduato, monete) sta in
+[abisso-progetto.md](abisso-progetto.md); la scala che risale, fatta, in
+[scala-che-sale.md](scala-che-sale.md).
 
 ## Cos'è, e perché non è una settima tappa
 

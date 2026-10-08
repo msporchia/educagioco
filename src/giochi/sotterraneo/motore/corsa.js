@@ -45,6 +45,8 @@ export class Corsa extends Corredo {
     this.rnd = rnd
     this.seme = seme == null ? Math.floor(rnd() * 100000) : seme
     this.piano = 0
+    this.fondo = 0              // il piano più profondo toccato in questa discesa (da 0): scendere più in là è nuovo, rifare un piano no
+    this.piani = new Map()      // i piani lasciati alle spalle, com'erano (lasciaIlPiano): si risale da dove si è comparsi
 
     this.vitaBase = this.io.vita
     this.stanzaOra = null   // unità in cui brucia la torcia (bruciaLaTorcia)
@@ -129,17 +131,30 @@ export class Corsa extends Corredo {
     return Math.max(0, Math.min(1, durezzaDi(this.tappa, this.piano) + rincaro))
   }
 
-  nuovoPiano() {
+  // il piano `p` dal seme, con la scala che sale nel punto esatto dove si arriva (docs/sotterraneo/scala-che-sale.md)
+  faiIlPiano(p) {
     const t = this.tappa
     // la forma la chiede alla tappa per QUESTO piano (nell'abisso gira fra tre); il piano è funzione del seme, rientrando torna identico
-    const forma = formaDi(t, this.piano)
-    this.livello = generaPiano({
-      seme: this.seme + this.piano * 7919, piano: this.piano,
+    const forma = formaDi(t, p)
+    const livello = generaPiano({
+      seme: this.seme + p * 7919, piano: p,
       largo: forma.largo, alto: forma.alto, giri: forma.giri,
-      guardiano: guardianoDi(t, this.piano),
+      guardiano: guardianoDi(t, p),
       crescita: crescitaDi(t),
-      branco: brancoDi(t, this.piano),
+      branco: brancoDi(t, p),
     })
+    // nell'abisso il primo piano non ha da dove risalire: là la strada su è il portale
+    if (p > 0 || !t.abisso) {
+      const dentro = livello.stanze[0]
+      livello.robe = livello.robe.filter(r => !(r.che === 'gemme' && r.x === dentro.cx && r.y === dentro.cy))
+      livello.robe.push({ che: 'scala-su', x: dentro.cx, y: dentro.cy, em: '🪜', nome: 'La scala che sale' })
+    }
+    return livello
+  }
+
+  nuovoPiano() {
+    this.livello = this.faiIlPiano(this.piano)
+    this.fondo = Math.max(this.fondo, this.piano)
     // com'è nato: la sosta salva solo quello che cambia rispetto a qui (motore/sosta.js)
     this.robeDelSeme = this.livello.robe.map(r => ({ ...r }))
     const dentro = this.livello.stanze[0]
@@ -204,7 +219,7 @@ export class Corsa extends Corredo {
     if (r.che === 'porta') return !r.aperta
     if (r.che === 'forziere') return !r.aperto
     if (r.che === 'curiosita') return !r.visto   // una volta sola, poi è arredo
-    return ['mostro', 'fonte', 'scala', 'cosa', 'gemme', 'portale'].includes(r.che)
+    return ['mostro', 'fonte', 'scala', 'scala-su', 'cosa', 'gemme', 'portale'].includes(r.che)
   }
 
   // le gemme si prendono camminandoci sopra: restano toccabili senza rubare il tocco a un forziere accanto
@@ -213,7 +228,8 @@ export class Corsa extends Corredo {
     if (dritto) return dritto
     let vicina = null, quanto = 9
     for (const r of this.livello.robe) {
-      if (r.che === 'gemme' || !this.toccabile(r)) continue
+      // la scala che sale si tocca solo sulla sua cella: l'eroe ci nasce sopra, e un tocco vicino non deve aprirla
+      if (r.che === 'gemme' || r.che === 'scala-su' || !this.toccabile(r)) continue
       const d = Math.hypot(r.x - c.x, r.y - c.y)
       if (d <= largo && d < quanto) { quanto = d; vicina = r }
     }
@@ -233,7 +249,7 @@ export class Corsa extends Corredo {
     this.dillo(sua[a.pezzo] || ARREDO_DICE[a.pezzo] || 'Non c\'è niente da fare, qui.')
   }
 
-  sopra(che) { return ['scala', 'fonte', 'cosa', 'gemme'].includes(che) }
+  sopra(che) { return ['scala', 'scala-su', 'fonte', 'cosa', 'gemme'].includes(che) }
 
   // `preciso` distingue il tocco dal trascinamento: trascinando l'eroe insegue senza aprire pannelli
   vaiVerso(c, preciso = true) {
@@ -423,6 +439,7 @@ export class Corsa extends Corredo {
     if (r.che === 'forziere') return r.aperto ? undefined : this.apri('forziere', r, RINCARO.forziere)
     if (r.che === 'fonte') return this.apri('fonte', r, RINCARO.fonte)
     if (r.che === 'scala') return this.allaScala()
+    if (r.che === 'scala-su') return this.allaScalaSu()
     if (r.che === 'cosa') return this.trovata(r)
     if (r.che === 'gemme') return this.raccogli()
     if (r.che === 'curiosita') return r.visto ? undefined : this.apri('curiosita', r, RINCARO.curiosita)
@@ -798,7 +815,9 @@ export class Corsa extends Corredo {
 
   scendi() {
     if (!this.foglio || this.foglio.che !== 'scala') return null
-    this.pianiFatti++
+    // un piano già toccato (si era risaliti) non dà di nuovo la vita del piano né il riposo, e non conta due volte
+    const nuovo = this.piano + 1 > this.fondo
+    if (nuovo || this.piano >= this.quantiPiani - 1) this.pianiFatti++
     if (this.piano >= this.quantiPiani - 1) {
       this.finita = true
       this.vinta = true
@@ -806,15 +825,87 @@ export class Corsa extends Corredo {
       this.chiesta = null
       return { che: 'finita' }
     }
+    this.lasciaIlPiano()
     this.piano++
-    this.svenimentiQui = 0   // le occasioni si rinnovano scendendo, e solo scendendo (svenimentiSpesi)
-    this.vitaBase += VITA_PER_PIANO
-    this.vita = Math.min(this.vitaMax, this.vita + RIPOSO_SCALA)
-    this.nuovoPiano()
-    this.posaLeMissioni()
+    if (nuovo) {
+      this.svenimentiQui = 0   // le occasioni si rinnovano scendendo, e solo scendendo (svenimentiSpesi)
+      this.vitaBase += VITA_PER_PIANO
+      this.vita = Math.min(this.vitaMax, this.vita + RIPOSO_SCALA)
+    }
+    this.entraNelPiano({ dal: 'sopra' })
     this.chiudi()
     this.dillo(`piano ${this.piano + 1}`)
     return { che: 'sceso', piano: this.piano }
+  }
+
+  // la scala che sale sta dove si compare arrivando dall'alto: sopra il primo piano non c'è un piano, c'è la terra, e lì si
+  // esce come con «lascio perdere» (Gioco.vue, `fuori`): mai un modo gratis di saltare il portale
+  allaScalaSu() {
+    this.foglio = { che: 'scala-su', fuori: this.piano === 0 }
+  }
+
+  // sale al piano di sopra, e si compare accanto alla scala che scende da cui si era venuti. Dal primo piano non si sale: si esce
+  sali() {
+    if (!this.foglio || this.foglio.che !== 'scala-su' || this.piano === 0) return null
+    this.lasciaIlPiano()
+    this.piano--
+    this.entraNelPiano({ dal: 'sotto' })
+    this.chiudi()
+    this.dillo(`piano ${this.piano + 1}`)
+    return { che: 'salito', piano: this.piano }
+  }
+
+  // il piano su cui si sta resta com'è (mostri battuti, cose prese, porte aperte, mappa girata): rientrando lo si ritrova
+  lasciaIlPiano() {
+    this.piani.set(this.piano, {
+      livello: this.livello, robeDelSeme: this.robeDelSeme, visto: this.visto,
+      stanzeDentro: this.stanzeDentro, chiave: this.chiaveDelPiano,
+    })
+  }
+
+  // `dal`: 'sopra' si arriva scendendo (si compare sulla scala che sale), 'sotto' risalendo (accanto alla scala che scende).
+  // Un piano non ricordato (l'abisso tiene a mente pochi piani, motore/sosta.js) si rifà dal seme
+  entraNelPiano({ dal }) {
+    const ricordo = this.piani.get(this.piano)
+    if (!ricordo) {
+      this.nuovoPiano()
+      this.posaLeMissioni()
+      if (dal === 'sotto') { this.chiaveDelPiano = true; this.compariAccantoAllaScala() }   // la scala l'aveva già aperta chi è sceso
+      return
+    }
+    this.piani.delete(this.piano)
+    this.livello = ricordo.livello
+    this.robeDelSeme = ricordo.robeDelSeme
+    this.visto = ricordo.visto
+    this.stanzeDentro = ricordo.stanzeDentro
+    this.chiaveDelPiano = ricordo.chiave
+    this.posaLeMissioni()   // una missione presa sopra, nel frattempo, trova il suo posto anche qui
+    // i mostri tornano a casa con qualche secondo di calma, come dopo uno svenimento: nessuno ti aspetta alla scala
+    for (const m of this.livello.robe) if (m.che === 'mostro' && !m.morto) { m.sveglio = false; m.calmo = CALMA }
+    if (dal === 'sotto') this.compariAccantoAllaScala()
+    else {
+      const dentro = this.livello.stanze[0]
+      this.eroe = { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }
+    }
+    this.guarda = 'dx'
+    this.strada = null; this.mira = null; this.bersaglio = null
+    this.segnaLaStanza()
+    this.aggiornaLuce()
+  }
+
+  // risalendo si sbuca accanto alla scala che scende (la prima cella libera attorno), non all'inizio del piano
+  compariAccantoAllaScala() {
+    const scala = this.livello.robe.find(r => r.che === 'scala')
+    const buona = (x, y) => this.libera(x, y) && !this.bloccata(x, y)
+    // prima sotto la scala, poi di lato, poi sopra (dove stava il guardiano): la cella più vicina che sia libera
+    const accanto = scala && [[0, 1], [1, 0], [-1, 0], [0, -1]].map(([dx, dy]) => ({ x: scala.x + dx, y: scala.y + dy }))
+      .find(c => buona(c.x, c.y))
+    const dove = scala && (accanto || primaLibera(buona, { x: scala.x, y: scala.y }, 3))
+    const dentro = this.livello.stanze[0]
+    this.eroe = dove ? { x: dove.x + 0.5, y: dove.y + 0.5 } : { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }
+    this.strada = null; this.mira = null; this.bersaglio = null
+    this.segnaLaStanza()
+    this.aggiornaLuce()
   }
 
   // si può smettere e risalire: non è vinta ma non è una sconfitta, non deve costare tutto

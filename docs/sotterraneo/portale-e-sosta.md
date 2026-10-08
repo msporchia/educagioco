@@ -42,9 +42,10 @@ una strada per salire e tornare giù, la ✕ è andare via.
   portati su) conta come portale: è sopra, con la strada per tornare giù.
 - **«Lascio perdere questa discesa»** è l'unico modo di salire al villaggio senza
   portale: dal ⏸ in discesa (il velo ha, accanto a «esco», «lascio perdere
-  questa discesa» e «scelgo un altro eroe») e dalla carta in cima alla terra
-  di sopra. Un foglio (`viste/LascioPerdere.vue`, `[data-lascio-perdere]`) dice
-  prima la frase, la stessa nei due posti: la roba che hai addosso e nello
+  questa discesa» e «scelgo un altro eroe»), dalla scala che sale del primo
+  piano (stesso foglio: [scala-che-sale.md](scala-che-sale.md)) e dalla carta
+  in cima alla terra di sopra. Un foglio (`viste/LascioPerdere.vue`,
+  `[data-lascio-perdere]`) dice prima la frase, la stessa nei tre posti: la roba che hai addosso e nello
   zaino resta tua, ma la discesa ricomincia da capo, la prossima volta. In
   discesa si risale subito sulla terra di sopra (la roba e le missioni fatte
   passano nell'avventura, come a ogni uscita; niente cartello di fine). Nell'abisso
@@ -71,7 +72,9 @@ una strada per salire e tornare giù, la ✕ è andare via.
   buttata). Una sosta a metà della scalinata pesa sui 600 byte contro i
   4 KB delle cose scritte intere, una dell'abisso al piano 23 sui 360. Se il
   piano non nasce più con lo stesso numero di cose (un generatore cambiato)
-  la sosta non si legge e la discesa ricomincia.
+  la sosta non si legge e la discesa ricomincia. I piani già lasciati (si può
+  risalire: [scala-che-sale.md](scala-che-sale.md)) stanno in `dietro`, ognuno
+  come differenza dal suo seme, al più otto, più `fondo` (il piano più giù toccato).
 - **Riprendendo, i mostri hanno tre secondi di calma** (`CALMA`): sono dove
   erano, ma riaprire con un colpo già partito fa pentire di aver ripreso.
 - **La roba non sta nella sosta** ma nell'avventura, accanto: salendo dal
@@ -80,9 +83,9 @@ una strada per salire e tornare giù, la ✕ è andare via.
   discesa appena cominciata è la mappa girata al buio, che è metà del gioco.
 - **Formato cambiato, salvataggio non letto**: si ricomincia la discesa.
   `VERSIONE` sale quando un campo *cambia significato*, non per un campo in
-  più con un ripiego ovvio. È a 4 dal 7 ottobre 2026 (i cambiamenti invece
-  delle cose intere); le soste di prima si sono buttate con l'azzeramento
-  delle avventure.
+  più con un ripiego ovvio. È a 5 dall'8 ottobre 2026 (ogni piano ha la scala
+  che sale: una cosa in più); era a 4 dal 7 ottobre (i cambiamenti invece delle
+  cose intere). Le soste di prima non si leggono: la discesa ricomincia.
 - **Il ⏸ ferma senza uscire** (la pausa comune:
   [../core/interfaccia.md](../core/interfaccia.md#la-pausa-una-sola)); il velo
   dice «piano 2 di 3 · ❤️ 14». Il cartello di un traguardo ferma la discesa.

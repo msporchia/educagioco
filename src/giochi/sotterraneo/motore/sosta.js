@@ -7,8 +7,13 @@ import { Corsa } from './corsa.js'
 import { CALMA } from '../dati/mondo.js'
 import { INDICE_ABISSO, L_ABISSO } from '../dati/campagna.js'
 
-// la 4: i cambiamenti invece delle cose intere, e niente roba (sta nell'avventura). Le soste di prima si buttano
-export const VERSIONE = 4
+// la 5: ogni piano ha la scala che sale (una cosa in più nel piano: gli indici delle cose di una sosta di prima non
+// tornerebbero). Prima, la 4: i cambiamenti invece delle cose intere, e niente roba (sta nell'avventura)
+export const VERSIONE = 5
+
+// quanti piani lasciati alle spalle si salvano (i più vicini a quello di adesso): le sette discese stanno tutte,
+// l'abisso al piano 30 no, e quelli più su si rifanno dal seme quando ci si torna (docs/sotterraneo/scala-che-sale.md)
+export const PIANI_ALLE_SPALLE = 8
 
 // Come si è lasciata la discesa (docs/sotterraneo/portale-e-sosta.md, «Il portale e l'uscita»): 'portale' vuol dire salita
 // dal portale vero (o risalita per stasera dall'abisso): sopra c'è il gemello, si fanno le spese e si torna giù da
@@ -66,6 +71,28 @@ export function cambiDelPiano(robe, nate) {
 
 const centesimi = v => Math.round(v * 100) / 100
 
+// i mostri ripartono dalla cella dove stavano, con la casa di sempre e qualche secondo di calma: riaprire
+// con l'orco addosso e un colpo già partito fa pentire di aver ripreso
+function rimettiIMostri(robe, nate) {
+  robe.forEach((m, i) => {
+    if (m.che !== 'mostro' || m.morto) return
+    const nato = nate[i] || m
+    m.casa = { x: nato.x, y: nato.y }
+    m.fx = m.x + 0.5; m.fy = m.y + 0.5
+    m.calmo = CALMA
+  })
+}
+
+// i piani lasciati (Corsa.piani) come differenza dal seme, ognuno col suo piano, la mappa girata e se la scala era aperta
+function pianiAlleSpalle(corsa) {
+  return [...corsa.piani.entries()]
+    .sort((a, b) => Math.abs(a[0] - corsa.piano) - Math.abs(b[0] - corsa.piano))
+    .slice(0, PIANI_ALLE_SPALLE)
+    .sort((a, b) => a[0] - b[0])
+    .map(([p, r]) => ({ p, robe: cambiDelPiano(r.livello.robe, r.robeDelSeme), visto: stringaDi(r.visto),
+                        stanze: [...r.stanzeDentro], chiave: r.chiave }))
+}
+
 // `tappa` è l'indice nella campagna (l'abisso è −1, INDICE_ABISSO). Una discesa finita non si salva, tranne
 // l'abisso: là non finisce mai, finisce solo la sera, e chi vuole scriverlo comunque lo chiede per nome
 // (`anchePerFinite`)
@@ -77,6 +104,7 @@ export function scrivi(corsa, tappa, { anchePerFinite = false, via = USCITA } = 
     tappa,
     seme: corsa.seme,
     piano: corsa.piano,
+    fondo: corsa.fondo,   // il più profondo toccato: scendere ancora è nuovo, rifare un piano no
     eroe: corsa.chiEro,
     vita: corsa.vita,
     vitaBase: corsa.vitaBase,
@@ -93,6 +121,8 @@ export function scrivi(corsa, tappa, { anchePerFinite = false, via = USCITA } = 
       qui: corsa.svenimentiQui,   // spese su QUESTO piano (solo l'abisso)
     },
     robe: cambiDelPiano(corsa.livello.robe, corsa.robeDelSeme),
+    // quelli di prima, che si può risalire a ritrovare: tolti se la discesa non ne ha lasciato nessuno
+    ...(corsa.piani.size ? { dietro: pianiAlleSpalle(corsa) } : {}),
     missioni: [...corsa.missioniFatte],   // quelle fatte giù e non ancora portate su
   }
 }
@@ -115,15 +145,19 @@ export function leggi(dato, tappa, roba = null, missioni = []) {
       Object.assign(robe[i], d)
     }
     for (const r of dato.robe.nuove || []) robe.push({ ...r })
-    // i mostri ripartono dalla cella dove stavano, con la casa di sempre e qualche secondo di calma: riaprire
-    // con l'orco addosso e un colpo già partito fa pentire di aver ripreso
-    robe.forEach((m, i) => {
-      if (m.che !== 'mostro' || m.morto) return
-      const nato = corsa.robeDelSeme[i] || m
-      m.casa = { x: nato.x, y: nato.y }
-      m.fx = m.x + 0.5; m.fy = m.y + 0.5
-      m.calmo = CALMA
-    })
+    rimettiIMostri(robe, corsa.robeDelSeme)
+    corsa.fondo = Math.max(corsa.piano, Number.isFinite(dato.fondo) ? dato.fondo : 0)
+    // i piani alle spalle: un piano che non nasce più uguale non si ricorda, si rifà dal seme quando ci si torna
+    for (const d of Array.isArray(dato.dietro) ? dato.dietro : []) {
+      const livello = corsa.faiIlPiano(d.p)
+      if (!d.robe || livello.robe.length !== d.robe.n) continue
+      const nate = livello.robe.map(r => ({ ...r }))
+      for (const [i, c] of Object.entries(d.robe.cambi || {})) if (livello.robe[i]) Object.assign(livello.robe[i], c)
+      for (const r of d.robe.nuove || []) livello.robe.push({ ...r })
+      rimettiIMostri(livello.robe, nate)
+      corsa.piani.set(d.p, { livello, robeDelSeme: nate, visto: vistoDa(d.visto, livello.largo * livello.alto),
+                             stanzeDentro: new Set(d.stanze || []), chiave: !!d.chiave })
+    }
 
     if (roba) corsa.indossa(roba)
     corsa.vitaBase = dato.vitaBase
