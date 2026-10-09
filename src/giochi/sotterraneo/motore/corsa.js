@@ -28,7 +28,7 @@ import { dai as daiPunto } from './crescita.js'
 import { indiceDella, premioPer } from './storia.js'
 import { robaDellaMissione } from './missioni.js'
 import { pericoloDi } from './pericolo.js'
-import { NODI, ENERGIA_PER_RISPOSTA, aGrado, inVita, colpisce } from '../dati/abilita.js'
+import { NODI, RISPOSTE_PER_ENERGIA, aGrado, inVita, colpisce } from '../dati/abilita.js'
 
 // nella storia i forzieri e i mostri di tutti i giorni danno solo quello che si consuma: la roba la dà la riga
 // della storia (dati/storia.js), o la discesa diventerebbe una lotteria e la tabella una bugia
@@ -67,6 +67,7 @@ export class Corsa extends Corredo {
     this.stanzaOra = null   // unità in cui brucia la torcia (bruciaLaTorcia)
 
     this.foglio = null          // cosa è aperto adesso, o niente
+    this.energiaResto = 0       // le risposte giuste che non hanno ancora fatto un punto di energia (RISPOSTE_PER_ENERGIA)
     this.pronta = null          // l'abilità preparata per la prossima risposta giusta (docs/sotterraneo/abilita.md)
     this.fiatoUsato = false     // «Ultimo fiato»: una volta per discesa
     this.chiesta = null         // la domanda che serve: { id, che, difficolta }
@@ -606,7 +607,10 @@ export class Corsa extends Corredo {
     const esito = this.rispostaA(f, giusto)
     // l'energia viene dalle risposte giuste, dovunque (porte, forzieri, mostri): dopo, così un'abilità si paga con
     // l'energia che c'era quando la si è preparata. Sbagliare non la toglie
-    if (giusto) this.energia = Math.min(this.energiaMax, this.energia + ENERGIA_PER_RISPOSTA)
+    if (giusto && ++this.energiaResto >= RISPOSTE_PER_ENERGIA) {
+      this.energiaResto = 0
+      this.energia = Math.min(this.energiaMax, this.energia + 1)
+    }
     return esito
   }
 

@@ -78,7 +78,9 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   c.rispondi(false)
   uguale('sbagliare non la toglie e non la dà', c.energia, 4)
   c.rispondi(true)
-  uguale('una risposta giusta, un punto', c.energia, 5)
+  uguale('una risposta giusta sola non basta a fare un punto', c.energia, 4)
+  c.rispondi(true)
+  uguale('ogni due risposte giuste, un punto', c.energia, 5)
   m.ossa = -1; c.chiudi()
   const fonte = { che: 'fonte', x: 1, y: 1 }
   c.energia = 0; c.vita = 1
@@ -89,7 +91,7 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   c.energia = 0
   c.zaino = ['pozione-blu']
   c.usa(0)
-  controlla('la pozione blu ne dà sei', c.energia === 6 && !c.zaino.length)
+  controlla('la pozione blu ne dà otto', c.energia === 8 && !c.zaino.length)
 }
 
 /* ══════════ 4. lo scontro ══════════ */
@@ -103,7 +105,7 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   const ossa = m.ossa
   const e = c.rispondi(true)
   controlla('rispondendo giusto parte: il doppio', e.usata && e.usata.id === 'fendente' && ossa - m.ossa === solito * 2, `${ossa - m.ossa} contro ${solito}`)
-  uguale('e costa la sua energia (più la risposta giusta)', c.energia, c.energiaMax - NODI.fendente.costo + 1)
+  uguale('e costa la sua energia', c.energia, c.energiaMax - NODI.fendente.costo)
   controlla('dopo, torna il colpo solito', c.pronta === null)
   c.energia = 1
   controlla('senza energia non si prepara', !c.prepara('fendente') && /energia/.test(c.perchéNonUsi('fendente')))

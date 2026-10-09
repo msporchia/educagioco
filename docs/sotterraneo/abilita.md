@@ -73,16 +73,22 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
 
 ## L'energia
 
-- **Cinque più l'intelligenza** (`ENERGIA`, `energiaMax`): il mago parte da
-  dieci, l'elfa da sette, il cavaliere e il nano da sei, e alzare
+- **Otto più l'intelligenza** (`ENERGIA`, `energiaMax`): il mago parte da
+  tredici, l'elfa da dieci, il cavaliere e il nano da nove, e alzare
   l'intelligenza alza il globo ([livelli.md](livelli.md#le-quattro-caratteristiche)).
-  Nessuna abilità costa più di sei. Si scende con l'energia piena, come con
-  la vita.
-- **Si riempie solo rispondendo giusto**: un punto per risposta giusta,
-  dovunque (porte, forzieri, fonti, mostri), dopo aver pagato l'abilità.
-  Sbagliare non la toglie. In più la fonte la riempie tutta, la pozione blu
-  (`pozione-blu`, dalla guaritrice e nei forzieri) ne dà sei, e il Respiro
-  del bosco la ridà battendo i mostri.
+  Un'abilità costa **per il gradino del suo posto nel ramo** (`COSTO_DEL_GRADINO`:
+  5, 6, 7, 9): nessuna più di nove, l'energia di chi ne ha meno. Si scende con
+  l'energia piena, come con la vita.
+- **Si riempie piano, solo rispondendo giusto**: un punto ogni **due** risposte
+  giuste (`RISPOSTE_PER_ENERGIA`), dovunque (porte, forzieri, fonti, mostri),
+  dopo aver pagato l'abilità. Sbagliare non la toglie. L'utente, 9 ottobre:
+  *un'abilità non si usa a ogni scontro, e non ne avanza*. Misurato a mano: il mago
+  vince un mostro in 1–2 risposte nelle prime discese e in 5–6 in fondo, quindi
+  una da 5 si ripaga in due-cinque scontri, e le prime due sono già pagate
+  dall'energia di partenza. In più la fonte la riempie tutta, la pozione blu
+  (`pozione-blu`, dall'erborista e nei forzieri) ne dà otto, e il Respiro
+  del bosco la ridà battendo i mostri. **Da fare:** misurarlo col banco, una strada
+  per classe.
 - **Mai col tempo**: sotto una domanda l'orologio è fermo, e una ricarica a
   tempo premierebbe chi legge piano o posa il telefono. È la ragione per cui
   la torcia si conta a stanze ([roba.md](roba.md)).
