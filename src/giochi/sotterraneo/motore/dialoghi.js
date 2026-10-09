@@ -4,7 +4,7 @@
 // Una pagina è { testo, dato?, missione?, fase?, manca? }: `dato` dice ai test (e allo stile) che riga è.
 // `ctx` è { stati, tappe, abisso, eroe, roba, annuncio }: lo stato delle missioni, le tappe dell'avventura, se l'abisso è
 // aperto, chi scende e la sua roba contata (schedaConLaRoba), per la frase di chi è sotto il livello; e, finita la
-// storia, la zona che si è svegliata (motore/zone.js, docs/sotterraneo/zone.md).
+// storia, la zona appena nata (motore/zone.js, docs/sotterraneo/zone.md).
 import { DIALOGHI, ARRIVEDERCI, DOVE_VADO, perOra } from '../dati/dialoghi.js'
 import { missioneDi, premioDetto } from '../dati/missioni.js'
 import { cosaDice, chiTiCerca, titoloDi, inFrase } from './missioni.js'
@@ -37,10 +37,15 @@ export function strada(ctx) {
   const t = (ctx.tappe || []).find(x => x.adesso)
   const pagine = []
   const z = ctx.annuncio && (ctx.tappe || []).find(x => x.chiave === ctx.annuncio.chiave)
-  if (z) {
-    // finita la storia il minatore racconta la zona che si è svegliata, e dove sta
+  const verdi = (ctx.tappe || []).filter(x => x.potenza && x.colore === 'verde')
+  if (z && !ctx.annuncio.sentita) {
+    // finita la storia il minatore racconta la zona appena nata, e dove sta
     for (const testo of inPagine(ctx.annuncio.detto)) pagine.push({ testo, dato: 'annuncio' })
     pagine.push({ testo: `${z.nome}: ${LUOGHI[POSTO_DI[z.chiave]]}.`, dato: 'detto' })
+  }
+  if (z) {
+    // e dove farsi le ossa: le zone col pallino verde
+    for (const v of verdi) pagine.push({ testo: `Alla tua altezza c'è ${inFrase(v.nome)}: ${LUOGHI[POSTO_DI[v.chiave]]}.`, dato: 'verde' })
   } else if (t) {
     pagine.push({ testo: `${t.nome}: ${LUOGHI[POSTO_DI[t.chiave]]}.`, dato: 'detto' })
     const s = !t.fatta && ctx.roba && ctx.eroe ? dettoDelLivello(ctx.eroe, ctx.roba, t, t.indice) : null

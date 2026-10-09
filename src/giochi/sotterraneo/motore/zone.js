@@ -1,8 +1,9 @@
-// Le zone che si potenziano, in movimento (docs/sotterraneo/zone.md): quale zona è sveglia adesso e a che livello, a
-// che livello sta ognuna, di che colore è il suo pallino per l'eroe, chi lo dice, e la roba attesa oltre la storia.
+// Le zone, in movimento (docs/sotterraneo/zone.md): che fascia ha ogni zona per l'eroe di adesso, di che colore è il
+// suo pallino, qual è la zona appena nata che il minatore racconta, e la roba attesa oltre la storia.
 // Funzioni pure sull'avventura (motore/avventure.js): girano in Node, e Gioco.vue le passa a ritocca().
 import { CAMPAGNA } from '../dati/campagna.js'
-import { ORDINE_DELLE_ZONE, POTENZIATE, ANNUNCIO_IN_CODA } from '../dati/zone.js'
+import { ORDINE_DELLE_ZONE, NASCITA, LARGA, MARGINE, GIRO, voltaDi, voltoDi, ANNUNCIO_IN_CODA, PRIMA_NOTIZIA }
+  from '../dati/zone.js'
 import { LIVELLI_ATTESI, POZIONI_ATTESE } from '../dati/storia.js'
 import { COSE, chiaveDelPezzo } from '../dati/cose.js'
 import { eroeDi } from '../dati/eroi.js'
@@ -12,60 +13,57 @@ import { robaAttesa } from './storia.js'
 const oggetto = v => !!v && typeof v === 'object' && !Array.isArray(v)
 const indiceDi = chiave => CAMPAGNA.findIndex(t => t.chiave === chiave)
 
-// Lo stato nell'avventura: `zone: { n, livelli, sentita }`. `n` è il numero del potenziamento di adesso (dal primo,
-// che parte da sé a storia finita); `livelli` il livello a cui ogni zona è stata vinta l'ultima volta; `sentita` se
-// il minatore ha già raccontato quella di adesso. Un campo storto vale come mancante
+/* ═══════════ la fascia di una zona ═══════════
+   Nasce a NASCITA[chiave] e ci resta; quando l'eroe la supera di più di MARGINE livelli (sopra la fine della fascia)
+   rinasce GIRO livelli più su, sopra la più alta. Non serve scriverlo: dipende solo dal livello dell'eroe, che non
+   scende mai, quindi è la più bassa delle sue fasce (NASCITA + GIRO·n) che non è ancora sparita */
+export function fasciaDi(chiave, livelloEroe) {
+  const minimo = (livelloEroe || 1) - (LARGA - 1) - MARGINE
+  const da = NASCITA[chiave] + GIRO * Math.ceil((minimo - NASCITA[chiave]) / GIRO)
+  return { chiave, da, a: da + LARGA - 1, volta: voltaDi(chiave, da) }
+}
+
+// Il colore di una fascia per l'eroe: dentro verde; sotto di poco (fino a MARGINE) arancio, oltre rosso; sopra grigio.
+// Il grigio finisce dove la zona rinasce (fasciaDi): una fascia viva non è mai più di MARGINE sotto l'eroe
+export const COLORI = ['grigio', 'verde', 'arancio', 'rosso']
+export function coloreDellaFascia(da, livelloEroe) {
+  if (livelloEroe < da - MARGINE) return 'rosso'
+  if (livelloEroe < da) return 'arancio'
+  if (livelloEroe <= da + LARGA - 1) return 'verde'
+  return 'grigio'
+}
+
+// tutte le zone per l'eroe al livello `livelloEroe`, dalla più bassa: { chiave, da, a, volta, colore, nome }
+export const disposizioneDi = livelloEroe => ORDINE_DELLE_ZONE
+  .map(k => { const f = fasciaDi(k, livelloEroe); return { ...f, colore: coloreDellaFascia(f.da, livelloEroe), nome: voltoDi(k, f.volta).nome } })
+  .sort((x, y) => x.da - y.da)
+
+// Lo stato nell'avventura: `zone: { sentita }`, la zona appena nata che il minatore ha già raccontato
+// («cantine:20», la chiave e dove comincia la fascia). Un campo storto, o quello di prima ({ n, livelli, sentita: true },
+// le zone che si svegliavano), vale come mai sentita
 export function zoneDi(a) {
   const z = a && oggetto(a.zone) ? a.zone : {}
-  const livelli = {}
-  if (oggetto(z.livelli)) for (const [k, v] of Object.entries(z.livelli))
-    if (indiceDi(k) >= 0 && Number.isFinite(v) && v >= 1) livelli[k] = Math.round(v)
-  return { n: Number.isInteger(z.n) && z.n >= 1 ? z.n : 1, livelli, sentita: !!z.sentita }
+  return { sentita: typeof z.sentita === 'string' ? z.sentita : null }
 }
 
-// La zona sveglia adesso, o null finché la storia non è finita (`libera`). Il livello è quello dell'eroe, finché non ci
-// si scende: da lì è quello scritto nella sosta (una zona lasciata a metà non cresce mentre si fa la spesa)
-export function svegliaDi(a, livelloEroe) {
-  if (!a || !a.libera) return null
-  const z = zoneDi(a)
-  const chiave = ORDINE_DELLE_ZONE[(z.n - 1) % ORDINE_DELLE_ZONE.length]
-  const indice = indiceDi(chiave)
-  const s = a.sosta
-  const giu = s && s.tappa === indice && Number.isFinite(s.potenza) ? s.potenza : null
-  return { n: z.n, chiave, indice, livello: giu || Math.max(1, livelloEroe || 1), sentita: z.sentita,
-           nome: POTENZIATE[chiave].nome }
-}
-
-// Con che potenza si scende nella discesa `k`: quella sveglia al suo livello, una vinta prima al livello di allora, una
-// mai potenziata come nella storia (null)
+// Con che potenza si scende nella discesa `k`: finita la storia l'inizio della sua fascia (almeno 1), o se si è scesi e
+// la si è lasciata a metà quella scritta nella sosta (una zona lasciata a metà non cambia mentre si fa la spesa).
+// Nella storia null: la discesa è quella di sempre
 export function potenzaDi(a, k, livelloEroe) {
   const t = CAMPAGNA[k]
   if (!t || !a || !a.libera) return null
-  const s = svegliaDi(a, livelloEroe)
-  if (s && s.indice === k) return s.livello
-  return zoneDi(a).livelli[t.chiave] || null
+  const s = a.sosta
+  if (s && s.tappa === k && Number.isFinite(s.potenza)) return s.potenza
+  return Math.max(1, fasciaDi(t.chiave, livelloEroe).da)
 }
 
-// il livello della discesa `k` per il colore del pallino: la potenza, o quello atteso dalla storia (dati/storia.js)
+// il livello della discesa `k`: la potenza, o quello atteso dalla storia (dati/storia.js)
 export const livelloDellaZona = (a, k, livelloEroe) => potenzaDi(a, k, livelloEroe) || LIVELLI_ATTESI[k] || 1
 
-// Vinta una zona potenziata: se era quella sveglia, si segna il suo livello e se ne sveglia un'altra (la dopo nel
-// giro, da raccontare). Torna lo stato nuovo, o null se non cambia niente (una zona vinta prima, rifatta)
-export function vintaLaZona(a, chiave, potenza) {
-  const s = svegliaDi(a, potenza)
-  if (!s || s.chiave !== chiave) return null
-  const z = zoneDi(a)
-  return { n: z.n + 1, livelli: { ...z.livelli, [chiave]: Math.round(potenza) }, sentita: false }
-}
-
-// Quello che racconta il minatore della zona sveglia (`[data-annuncio]`)
-export const annuncioDi = sveglia => (sveglia ? `${POTENZIATE[sveglia.chiave].annuncio} ${ANNUNCIO_IN_CODA}` : null)
-
-/* ═══════════ i gradini e i colori del pallino ═══════════
+/* ═══════════ nella storia: i gradini ═══════════
    Un gradino è il passo fra due discese di fila della storia: i livelli attesi 1 · 2 · 3 · 5 · 7 · 8 · 10 · 12 (dati/
    storia.js) sono i primi otto, e oltre il 12 uno ogni PASSO_OLTRE livelli. Il colore dice quanti gradini stanno fra
-   la zona e l'eroe: due sopra rosso (la guardia non fa scendere), uno sopra arancio, due sotto grigio (qualcuno lo
-   dice), il resto verde */
+   la discesa e l'eroe: due sopra rosso (la guardia non fa scendere), uno sopra arancio, due sotto grigio, il resto verde */
 export const PASSO_OLTRE = 2
 export function gradinoDi(L) {
   const ultimo = LIVELLI_ATTESI.length - 1
@@ -74,10 +72,28 @@ export function gradinoDi(L) {
   while (g < ultimo && LIVELLI_ATTESI[g + 1] <= L) g++
   return g
 }
-export const COLORI = ['grigio', 'verde', 'arancio', 'rosso']
-export function coloreDi(livelloZona, livelloEroe) {
-  const d = gradinoDi(livelloZona) - gradinoDi(livelloEroe)
+export function coloreNellaStoria(livelloDiscesa, livelloEroe) {
+  const d = gradinoDi(livelloDiscesa) - gradinoDi(livelloEroe)
   return d >= 2 ? 'rosso' : d === 1 ? 'arancio' : d <= -2 ? 'grigio' : 'verde'
+}
+
+// il colore del pallino della discesa `k`: dopo la storia dalla fascia, nella storia dai gradini
+export function coloreDi(a, k, livelloEroe) {
+  const p = potenzaDi(a, k, livelloEroe)
+  return p ? coloreDellaFascia(p, livelloEroe) : coloreNellaStoria(LIVELLI_ATTESI[k] || 1, livelloEroe)
+}
+
+// La notizia: la zona nata per ultima (la fascia più alta, sempre rossa), che il minatore racconta finché non l'ha
+// detta. null finché la storia non è finita. `prima`: la prima notizia dopo la storia, che dice anche cosa è cambiato
+export function notiziaDi(a, livelloEroe) {
+  if (!a || !a.libera) return null
+  const f = disposizioneDi(livelloEroe).at(-1)
+  const id = `${f.chiave}:${f.da}`
+  const z = zoneDi(a)
+  const volto = voltoDi(f.chiave, f.volta)
+  return { id, chiave: f.chiave, indice: indiceDi(f.chiave), da: f.da, a: f.a, nome: volto.nome,
+           sentita: z.sentita === id, prima: !z.sentita,
+           detto: `${!z.sentita ? PRIMA_NOTIZIA + ' ' : ''}${volto.annuncio} ${ANNUNCIO_IN_CODA}` }
 }
 
 /* ═══════════ oltre la storia: con che roba e che livello si arriva ═══════════

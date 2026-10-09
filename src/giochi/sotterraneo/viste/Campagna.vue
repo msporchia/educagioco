@@ -17,7 +17,7 @@ const props = defineProps({
   azioneMissione: { type: Function, default: null },  // (id, 'prendi' | 'consegna') → l'esito, da Gioco.vue
   segui: { type: String, default: null },    // la missione che le freccine seguono, scelta nel diario (avventura.segui)
   roba: { type: Object, default: null },     // quello che ci si porta dietro, già contato (schedaConLaRoba): { vita, att, dif, gemme, mano, mancina, corpo, tratti… }
-  annuncio: { type: Object, default: null }, // la zona potenziata che il minatore racconta (motore/zone.js): { chiave, nome, livello, detto, sentita }
+  annuncio: { type: Object, default: null }, // la zona appena nata che il minatore racconta (motore/zone.js): { chiave, nome, livello, detto, sentita }
 })
 const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'terra', 'bottega', 'segui', 'sentito'])
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))

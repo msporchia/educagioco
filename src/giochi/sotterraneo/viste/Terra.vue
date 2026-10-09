@@ -37,7 +37,7 @@ const props = defineProps({
   missioni: { type: Object, default: () => ({}) },   // { [id]: 'presa' | 'fatta' | 'consegnata' } (motore/missioni.js)
   azioneMissione: { type: Function, default: null },  // (id, 'prendi' | 'consegna') → l'esito
   segui: { type: String, default: null },     // la missione che la freccia azzurra segue, se scelta nel diario
-  // la zona potenziata che il minatore racconta (motore/zone.js): { chiave, nome, livello, detto, sentita }
+  // la zona appena nata che il minatore racconta (motore/zone.js): { chiave, nome, livello, detto, sentita }
   annuncio: { type: Object, default: null },
 })
 const emit = defineEmits(['scendi', 'terra', 'bottega', 'riprendi', 'sentito'])
@@ -536,7 +536,7 @@ function parla(chi) {
   chiudi()
   const primaVolta = chi === 'minatore' && !parlato.value
   if (primaVolta) { parlato.value = true; salva() }
-  // la zona sveglia la racconta lui (docs/sotterraneo/zone.md): sentita, il «!» si spegne
+  // la zona appena nata la racconta lui (docs/sotterraneo/zone.md): sentita, il «!» si spegne
   if (chi === 'minatore' && props.annuncio && !props.annuncio.sentita) { avviso.value = ''; emit('sentito') }
   // il minatore apre dicendo la strada: «dove vado adesso?» torna dopo un'altra domanda
   dialogo.value = { chi, nome: chiParla(chi), pagine: apertura(chi, ctx(), { primaVolta }), giro: ++giri,
@@ -706,7 +706,7 @@ const chiusaPerche = p => {
 
       <template v-for="p in posti" :key="'pallino-' + p.nome">
         <span v-if="p.aperto && trovati.has(p.nome)" class="sot-segno-posto"
-              :class="[{ 'sot-adesso': p.adesso || (p.tappa && p.tappa.sveglia) }, coloreDi(p) && 'sot-pallino-' + coloreDi(p)]"
+              :class="[{ 'sot-adesso': p.adesso || (p.tappa && p.tappa.nuova) }, coloreDi(p) && 'sot-pallino-' + coloreDi(p)]"
               :data-pallino="p.nome" :data-colore="coloreDi(p)" :style="pallino(p)"></span>
         <!-- davanti a una discesa rossa la guardia: non fa scendere (docs/sotterraneo/zone.md) -->
         <span v-if="p.aperto && trovati.has(p.nome) && coloreDi(p) === 'rosso'" class="sot-guardia-posto"
@@ -755,7 +755,9 @@ const chiusaPerche = p => {
             <p v-if="aperto.p.tappa" class="sot-fum-conto em">
               🪜 {{ aperto.p.tappa.piani }} piani<template v-if="aperto.p.tappa.stelle && !aperto.p.tappa.potenza"> · {{ '⭐'.repeat(aperto.p.tappa.stelle) }}</template>
               · <span class="sot-fum-livello" :class="'sot-pallino-' + aperto.p.tappa.colore" data-livello-zona
-                      :data-livello="aperto.p.tappa.livello" :data-colore="aperto.p.tappa.colore">livello {{ aperto.p.tappa.livello }}</span>
+                      :data-livello="aperto.p.tappa.livello" :data-colore="aperto.p.tappa.colore"
+                      :data-fascia="aperto.p.tappa.fascia && aperto.p.tappa.fascia.join('-')">livello {{ aperto.p.tappa.fascia
+                        ? aperto.p.tappa.fascia.join('–') : aperto.p.tappa.livello }}</span>
             </p>
             <p v-else class="sot-fum-conto em" data-fondo>
               {{ aperto.p.cosa.fondo ? `il più giù: piano ${aperto.p.cosa.fondo}` : 'mai sceso' }}

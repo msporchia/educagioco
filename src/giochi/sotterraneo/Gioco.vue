@@ -29,7 +29,7 @@ import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo } from './motore/corredo.js'
 import { rileggiCrescita, puntiDaDare, dai as daiPunto, livelloDella } from './motore/crescita.js'
 import { zonaDi } from './dati/zone.js'
-import { svegliaDi, potenzaDi, livelloDellaZona, coloreDi, vintaLaZona, annuncioDi, zoneDi } from './motore/zone.js'
+import { notiziaDi, potenzaDi, livelloDellaZona, coloreDi } from './motore/zone.js'
 import { pescaLeggendario } from './motore/bottino.js'
 import { quotaDi } from './dati/livelli.js'
 import { LEGGENDARI } from './dati/pezzi.js'
@@ -268,10 +268,11 @@ function riprendiSeUscito() {
 
 /* ═══════════ la mappa delle tappe ═══════════ */
 // quelle dell'avventura aperta: un eroe nuovo comincia dalla scalinata (l'età apre lo stesso quelle già passate).
-// Finita la storia una discesa può essere una zona potenziata (motore/zone.js, docs/sotterraneo/zone.md): ha il suo
-// nome e i suoi piani, e `livello` e `colore` dicono il pallino per l'eroe di adesso; `sveglia` è quella annunciata
+// Finita la storia ogni discesa è una zona con la sua fascia (motore/zone.js, docs/sotterraneo/zone.md): ha il suo
+// nome e i suoi piani, e `livello` e `colore` dicono il pallino per l'eroe di adesso; `nuova` è la zona appena nata,
+// finché il minatore non l'ha raccontata
 const livelloOra = computed(() => livelloDella(crescita.value))
-const sveglia = computed(() => svegliaDi(qui.value, livelloOra.value))
+const notizia = computed(() => notiziaDi(qui.value, livelloOra.value))
 const tappe = computed(() => {
   const a = qui.value
   return CAMPAGNA.map((t, i) => {
@@ -284,19 +285,19 @@ const tappe = computed(() => {
       stelle: a.stelle[i] || 0,
       perEta: chiusaPerEta(CHIAVE, i),
       fatta: i < a.tappa,
-      livello, colore: coloreDi(livello, livelloOra.value),
-      sveglia: !!sveglia.value && sveglia.value.indice === i,
+      livello, colore: coloreDi(a, i, livelloOra.value),
+      nuova: !!notizia.value && !notizia.value.sentita && notizia.value.indice === i,
     }
   })
 })
-// quello che racconta il minatore della zona sveglia; sentito, il segno sopra la sua testa si spegne
-const annuncio = computed(() => (sveglia.value
-  ? { chiave: sveglia.value.chiave, nome: sveglia.value.nome, livello: sveglia.value.livello,
-      detto: annuncioDi(sveglia.value), sentita: sveglia.value.sentita }
+// quello che racconta il minatore della zona appena nata; sentito, il segno sopra la sua testa si spegne
+const annuncio = computed(() => (notizia.value
+  ? { chiave: notizia.value.chiave, nome: notizia.value.nome, livello: notizia.value.da,
+      detto: notizia.value.detto, sentita: notizia.value.sentita }
   : null))
 function annuncioSentito() {
-  if (!sveglia.value || sveglia.value.sentita) return
-  nellAvventura({ zone: { ...zoneDi(qui.value), sentita: true } }, { subito: true })
+  if (!notizia.value || notizia.value.sentita) return
+  nellAvventura({ zone: { sentita: notizia.value.id } }, { subito: true })
 }
 
 // chi scende con la roba addosso (vita, braccio, difesa, tratti, gemme): la barra in basso e la pagina dell'eroe, sulla mappa
@@ -711,7 +712,7 @@ function avvia(i) {
   fine.value = null
   domanda.value = null
   chiudiLaBarra()
-  // la zona com'è adesso: potenziata (al livello dell'eroe, se è quella sveglia) o della storia
+  // la discesa com'è adesso: finita la storia la zona con la sua fascia, prima quella della storia
   const t = i === INDICE_ABISSO ? L_ABISSO : zonaDi(i, potenzaDi(qui.value, i, livelloOra.value))
   corsa.value = new Corsa(t, { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value,
                                crescita: crescita.value, missioni: presePer(missioni.value, t.chiave) })
@@ -1007,12 +1008,9 @@ function chiudi({ senzaCartello = false } = {}) {
   // prima l'avanzamento, poi i contatori: i traguardi in segna() devono vedere la tappa già segnata come fatta.
   // Due conti: quello dell'avventura, e fuori il massimo fra le avventure (completa tiene il più alto), che è
   // quello che leggono medaglie, esperienza e home: un altro eroe che rifà la scalinata non lo ridà
-  // Una zona potenziata vinta non tocca la storia (le stelle sono delle discese di allora): se era quella sveglia, se ne
-  // sveglia un'altra (motore/zone.js)
-  if (e.vinta && c.tappa.potenza) {
-    const z = vintaLaZona(qui.value, c.tappa.chiave, c.tappa.potenza)
-    if (z) nellAvventura({ zone: z }, { subito: true })
-  } else if (e.vinta) {
+  // Una zona vinta non tocca la storia (le stelle sono delle discese di allora), e non scrive niente: le zone le muove
+  // il livello dell'eroe (motore/zone.js)
+  if (e.vinta && !c.tappa.potenza) {
     ritocca(CHIAVE, c => vintaNellAvventura(c, eroeQui(), tappaIdx.value, QUANTE_TAPPE, stelle))
     completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle })
   }
