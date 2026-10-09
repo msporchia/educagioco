@@ -26,7 +26,7 @@
 
 export const LARGO = 1536, ALTO = 1024
 export const LATO = 52
-export const FIRMA = '27dc03b65a3a'
+export const FIRMA = '605abbf09639'
 export const LIBERE = []
 
 export const ISOLE = {
@@ -34,7 +34,7 @@ export const ISOLE = {
   "salto": {"caselle":5,"cartello":[1330,955]},
   "ghiaccio": {"caselle":6,"cartello":[1440,84],"cane":{"isola":"ripeti-cane","caselle":6}},
   "massi": {"caselle":5,"cartello":[190,110],"cane":{"isola":"se-cane","caselle":6}},
-  "buche": {"caselle":3,"cartello":[620,70],"cane":{"isola":"fino-cane","caselle":6,"cartello":[900,292]}},
+  "buche": {"caselle":3,"cartello":[620,70],"cane":{"isola":"fino-cane","caselle":6,"cartello":[548,40]}},
   "pascolo": {"cartello":[880,724],"cane":{"isola":"pecore-cane","caselle":11}},
 }
 
