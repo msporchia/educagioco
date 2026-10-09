@@ -65,6 +65,15 @@ verso il grumo quando ha un'arma che guarda avanti.
   addosso), chi si sposta non lo prende mai. **Nessun avviso**:
   provato un bordo rosso un secondo prima, e capire da che parte scansarsi è
   il gioco. Resta un brontolio basso, che non dice da dove.
+- **Gli sciami**: al posto del muro, quattro volte su dieci, arriva uno
+  sciame (`CFG.sciame`, `CFG.anello`), come in Vampire Survivors. Due forme:
+  un **grumo** di mostri deboli che entra da un lato e poi insegue (sedici
+  al primo, fino a trentaquattro con la marea), oppure un **anello** che
+  nasce tutto intorno all'eroe, fuori schermo, con un'apertura di 150
+  punti, e si stringe. Il grumo non si scansa restando fermi né si semina
+  correndo dritti; l'anello si esce dall'apertura o si spazza. Stesso
+  brontolio del muro, nessun avviso. Sono mostri normali: contano nel tetto
+  della folla e la sosta li salva come gli altri.
 - **Due armi guardano dove corri.** L'arco tira al più vicino; il
   **Fendente** (carta media) è un colpo largo nella direzione di marcia, solo
   se davanti c'è qualcuno; la **Lancia** (carta forte) parte dove si corre e
@@ -84,7 +93,9 @@ aprivano a ogni livello e il gioco si interrompeva di continuo. I
 potenziamenti da parte si salvano uscendo; quelli non spesi a fine tappa si
 perdono. Il pilota del banco li apre subito, perché sotto le carte il campo è
 fermo e aspettare non salva niente: così le misure restano confrontabili con
-quelle di prima. La cassa invece apre le carte subito, perché ci si è
+quelle di prima. **Cominciato, si finisce**: dopo una risposta (giusta o no) la prossima
+offerta si apre da sé finché ce n'è da spendere, senza ripremere il
+pulsante. La cassa invece apre le carte subito, perché ci si è
 andati sopra apposta. Nei test: `[data-potenzia]`.
 
 **Tolta l'armatura a spine** (8/10/2026): pungeva solo chi era già addosso,
