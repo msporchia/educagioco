@@ -24,19 +24,8 @@
    (resta montato, perché la partita lo rimisura entrando) */
 .arena.mappa > .campo { position:absolute; visibility:hidden; pointer-events:none }
 
-/* Il preavviso sta in cima al campo e il tasto dell'ondata in fondo,
-   tutti e due in sovrimpressione: il campo è tutto lo schermo, e
-   quello che gli sta attorno gli galleggia sopra invece di rubargli
-   altezza. Compaiono solo fra un'ondata e l'altra, che è l'unico
-   momento in cui servono — durante la battaglia lassù c'è la scheda
-   del mostro. */
-.preavviso-alto { position:absolute; left:0; right:0; top:0; z-index:2;
-                  padding:6px 8px; display:flex; justify-content:center;
-                  pointer-events:none }
-/* in sovrimpressione il cartellino «in arrivo» sparisce: le pastiglie
-   dicono già 🌊1 ×7, e la scritta di taglio non ci sta in altezza */
-.preavviso-alto :deep(.titolo) { display:none }
-
+/* Il tasto dell'ondata sta in fondo, in sovrimpressione: il campo è tutto lo
+   schermo, e chi arriva sta sullo stendardo a destra (Stendardo.vue). */
 .onda { position:absolute; left:50%; transform:translateX(-50%); z-index:3;
         bottom:calc(16px + env(safe-area-inset-bottom));
         white-space:nowrap; font-size:14.5px; padding:11px 22px }

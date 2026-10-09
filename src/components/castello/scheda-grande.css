@@ -1,0 +1,29 @@
+/* la pergamena del mostro (docs/castello/mostri.md) */
+.velo { position:absolute; inset:0; z-index:6; display:flex; align-items:center; justify-content:center;
+        padding:16px; background:#141a2e88; animation:compare .16s ease-out }
+.pergamena { position:relative; width:100%; max-width:380px; max-height:100%; overflow-y:auto;
+             background:#f6ecd2; border-radius:18px; padding:16px 18px 18px;
+             box-shadow:0 0 0 4px #96623a, 0 10px 30px #0008 }
+.pergamena.capo { background:#fbe8c4; box-shadow:0 0 0 4px #c0392b, 0 10px 30px #0008 }
+.chiudi { position:absolute; top:10px; right:10px; width:34px; height:34px; border-radius:50%; border:0;
+          background:#fff; color:#5a4f46; font-size:17px; box-shadow:0 0 0 1.5px #d2c6b0 }
+.nome { display:block; font-size:22px; color:#3b2a6b; padding-right:40px; line-height:1.15 }
+.sotto { display:block; font-size:12.5px; font-weight:700; color:#8a7c6c; margin-top:2px }
+.palchi { display:flex; gap:6px; margin:6px 0 4px }
+.palco { flex:1; height:200px; border-radius:14px;
+         background:linear-gradient(180deg, #efe3c4, #e4d4ae) }
+.mista .palco { height:160px }
+.palco canvas { display:block; width:100%; height:100% }
+.righe { display:flex; flex-direction:column; gap:6px; margin-top:6px }
+.righe + .righe { margin-top:12px; padding-top:10px; border-top:1.5px dashed #d6c7a6 }
+.di { font-size:14px; color:#3b2a6b }
+/* `.riga` c'è anche nel foglio globale (una fila di bottoni centrata): qui si rimette a sinistra */
+.riga { display:flex; align-items:center; justify-content:flex-start; gap:5px; flex-wrap:wrap; margin:0;
+        font-size:15px; font-weight:800; color:#3c3530; text-align:left }
+.riga.si { color:#1f7a45 }
+.torre { font-size:18px; line-height:1 }
+.no { position:relative; font-size:17px; line-height:1; filter:grayscale(1); opacity:.85 }
+.no::after { content:''; position:absolute; inset:-2px; background:linear-gradient(to bottom left, transparent calc(50% - 1.5px),
+             #d0405a calc(50% - 1.5px), #d0405a calc(50% + 1.5px), transparent calc(50% + 1.5px)) }
+@keyframes compare { from { opacity:0 } }
+@media (prefers-reduced-motion: reduce) { .velo { animation:none } }

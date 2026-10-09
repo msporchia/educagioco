@@ -12,7 +12,6 @@ import { leggi } from '../../motore/castello/sosta.js'
 import { scenaDi } from '../../views/castello/scena.js'
 import { Trascino } from '../../views/castello/trascino.js'
 import { costoNuovaTorre, MONDO, CFG } from '../../data/castello.js'
-import SchedaMostro from '../SchedaMostro.vue'
 
 const props = defineProps({
   hud: { type: Object, required: true },      // il tabellone: lo riempie il motore
@@ -117,7 +116,7 @@ function aggiornaVista(forza = false) {
   v.regaliPresi = motore.regaliPresi
   if (forza || props.hud.onda !== firmaOnda) {
     firmaOnda = props.hud.onda
-    v.prossime = motore.prossime().map(conNome)
+    v.prossime = motore.prossime(6).map(conNome)   // tre sullo stendardo, le altre dietro la linguetta
   }
 }
 
@@ -224,8 +223,6 @@ defineExpose({ apparecchia, avvia, riprendi, ridimensiona, motore: () => motore,
   <div class="campo">
     <canvas ref="tela" @pointerdown="giuIlDito" @pointermove="muoviIlDito"
             @pointerup="suIlDito" @pointercancel="suIlDito" @dblclick="rimetti"></canvas>
-    <SchedaMostro v-if="attivo && vista.bestia && !vista.inAttesa" :bestia="vista.bestia"
-                  :vita="vista.vitaOnda" :quanti="vista.inCampo" />
     <div v-if="messaggio.testo" :key="messaggio.n" class="annuncio">{{ messaggio.testo }}</div>
   </div>
 </template>

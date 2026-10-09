@@ -41,7 +41,8 @@ import ColumnOp from '../components/ColumnOp.vue'
 import Barra from '../components/Barra.vue'
 import GettoniCampo from '../components/castello/GettoniCampo.vue'
 import CampoDiBattaglia from '../components/castello/CampoDiBattaglia.vue'
-import NastroOndate from '../components/castello/NastroOndate.vue'
+import Stendardo from '../components/castello/Stendardo.vue'
+import SchedaGrande from '../components/castello/SchedaGrande.vue'
 import Foglio from '../components/castello/Foglio.vue'
 import SceltaTorre from '../components/castello/SceltaTorre.vue'
 import SchedaTorre from '../components/castello/SchedaTorre.vue'
@@ -62,8 +63,10 @@ const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine
 // conto. `calcolando` non ci entra apposta: il campo non si ferma mentre si
 // calcola. `anche` porta anche il regalo, che tiene fermo il campo come un
 // traguardo senza mostrare il velo della pausa.
+// la scheda di un mostro aperta dallo stendardo: il campo aspetta che la si chiuda
+const mostroAperto = ref(null)
 const { inPausa, fermo, metti, togli, aiuto } = usaPausa({
-  anche: () => fase.value !== 'gioco' || regaloAperto.value,
+  anche: () => fase.value !== 'gioco' || regaloAperto.value || !!mostroAperto.value,
 })
 
 const hud = reactive({ cuori: CFG.cuori, onda: 0, uccisi: 0, torri: 0, energia: 0 })
@@ -195,6 +198,9 @@ const mira = computed(() => {
 
 // le torri a cui chi sta per arrivare è immune, letto dal preavviso
 const immune = computed(() => immuniDellOnda(vista.prossime[0]))
+// l'ondata in corso, per il primo medaglione dello stendardo
+const inCampo = computed(() => (vista.bestia && !vista.inAttesa && hud.onda > 0 && vista.inCampo > 0
+  ? { ...vista.bestia, quanti: vista.inCampo, vita: vista.vitaOnda } : null))
 
 // Il blocchetto: una fotografia presa quando si apre (le torri del motore
 // non sono reattive), rifatta a ogni apertura.
@@ -612,6 +618,12 @@ onMounted(() => {
                         :mira="mira"
                         @esito="finita" @potenzia="apriTorre" @piazzola="apriPiazzola" />
 
+      <!-- chi arriva, appeso a destra; toccato, si apre la sua scheda -->
+      <Stendardo v-if="fase === 'gioco'" :prossime="vista.prossime" :in-campo="inCampo"
+                 @scegli="v => mostroAperto = v" />
+      <SchedaGrande v-if="fase === 'gioco' && mostroAperto" :voce="mostroAperto" :torri="tappa.torri"
+                    @chiudi="mostroAperto = null" />
+
       <!-- la prima partita in assoluto: non blocca niente, se ne va da sé -->
       <Guida class="primi-passi" :passo="passoGuida" />
 
@@ -624,7 +636,6 @@ onMounted(() => {
               @click="sposto = null">Tocca dove spostarla · annulla</button>
 
       <template v-else-if="fase === 'gioco' && vista.inAttesa">
-        <div class="preavviso-alto"><NastroOndate :prossime="vista.prossime" /></div>
         <button class="bottone stretto onda" :class="{ svelto: vista.pronti }"
                 data-azione="chiama-onda" @click="chiamaOnda">
           {{ hud.onda ? 'Manda l\'ondata' : 'Comincia la battaglia' }} ▶<template

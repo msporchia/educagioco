@@ -160,6 +160,39 @@ function ritratto(p, cosa) {
   p.ctx.drawImage(img, sx, sy, w, h, p.W / 2 - w * s / 2, p.H / 2 + H * s / 2 - h * s, w * s, h * s)
 }
 
+// Il palco della scheda del mostro: grande, che cammina sul posto e si gira
+// — di lato verso destra, di fronte, di lato verso sinistra, di fronte —
+// spostandosi un poco nel verso in cui guarda. Chi non ha i passi respira
+// e saltella. La misura la dà il fotogramma più grande di tutte le pose.
+const GIRO_PALCO = [1, 0, -1, 0]      // il verso di ogni tratto: destra, fronte, sinistra, fronte
+const TRATTO = 2.2                    // secondi per tratto
+function palco(p, cosa) {
+  if (!img) return
+  const chi = creaturaDi(cosa.bestia)
+  const pp = pose[chi]
+  const tutte = [...pp.respiro, ...pp.lato, ...pp.fronte]
+  const W = Math.max(...tutte.map(k => PEZZI[k][2])), H = Math.max(...tutte.map(k => PEZZI[k][3]))
+  const s = Math.min(p.W * 0.7 / W, p.H * 0.8 / H)
+  const t = p.tempo || 0
+  const k = Math.floor(t / TRATTO) % GIRO_PALCO.length, q = (t % TRATTO) / TRATTO
+  const verso = GIRO_PALCO[k]
+  const { serie, passi } = serieDi(chi, verso)
+  const [sx, sy, w, h] = PEZZI[serie[Math.floor(t * (passi ? 8 : 5)) % serie.length]]
+  // avanti e indietro: a destra si va da sinistra a destra, a sinistra al contrario
+  const corsa = p.W * 0.12
+  const x = p.W / 2 + (verso ? verso * corsa * (q * 2 - 1) : 0)
+  const salto = passi ? Math.abs(Math.sin(t * Math.PI * 1.6)) * p.H * 0.015 : Math.abs(Math.sin(t * Math.PI * 1.4)) * p.H * 0.06
+  const piede = p.H * 0.9
+  p.ellisse(x, piede, W * s * 0.42 * (1 - salto / p.H), W * s * 0.1, '#00000026')
+  const c = p.ctx
+  c.imageSmoothingQuality = 'high'
+  c.save()
+  c.translate(x, piede - salto)
+  if (verso < 0) c.scale(-1, 1)
+  c.drawImage(img, sx, sy, w, h, -w * s / 2, -h * s, w * s, h * s)
+  c.restore()
+}
+
 // La scala è una per tutte le torri (quella che fa stare la figura più
 // grande), non una per figura: se no crescere non si vedrebbe.
 let piuGrande = null
@@ -177,5 +210,5 @@ function ritrattoTorre(p, cosa) {
 
 // `pronte` non è un pittore: è la promessa che chi dipinge una volta sola
 // (i ritratti) aspetta per ridipingersi a foglio pronto
-export const PITTORI = { ...SEGNI_E_COLPI, torre, mostro, ritratto, ritrattoTorre,
+export const PITTORI = { ...SEGNI_E_COLPI, torre, mostro, ritratto, palco, ritrattoTorre,
                          pronte: () => caricaFigure() }
