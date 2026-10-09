@@ -108,8 +108,8 @@ export const RAMI = {
         fa: g => `protezione che dimezza i danni per ${turni(n([4, 6, 8], g))}, anche se sbagli` },
     ] },
     { chiave: 'giuramento', nome: 'Giuramento', glifo: 'cuore', tinta: '#c0393b', nodi: [
-      { id: 'preghiera', nome: 'Preghiera', glifo: 'preghiera', costo: COSTO_DEL_GRADINO[0], cura: [1, 1.4, 1.8], difende: true,
-        fa: (g, vm) => cura(n([1, 1.4, 1.8], g), vm) },
+      { id: 'preghiera', nome: 'Preghiera', glifo: 'preghiera', costo: COSTO_DEL_GRADINO[0], cura: [2, 2.8, 3.6], difende: true,
+        fa: (g, vm) => cura(n([2, 2.8, 3.6], g), vm) },
       { id: 'cuore-saldo', nome: 'Cuore saldo', glifo: 'cuore', sempre: true, vitaPiu: [5, 10, 15],
         fa: g => `+${n([5, 10, 15], g)} di vita` },
       { id: 'grido', nome: 'Grido di guerra', glifo: 'corno', costo: COSTO_DEL_GRADINO[2], stanza: true, debole: [3, 4, 5], per: [1, 1, 1],
@@ -143,8 +143,8 @@ export const RAMI = {
     { chiave: 'bosco', nome: 'Bosco', glifo: 'foglia', tinta: '#6d8f2e', nodi: [
       { id: 'rovi', nome: 'Rovi', glifo: 'rovi', costo: COSTO_DEL_GRADINO[0], debole: [3, 4, 5], difende: true,
         fa: g => `il mostro fa metà del danno per ${turni(n([3, 4, 5], g))}` },
-      { id: 'linfa', nome: 'Linfa', glifo: 'germoglio', costo: COSTO_DEL_GRADINO[1], linfa: [4, 5, 6], cura: [0.4, 0.6, 0.8],
-        fa: (g, vm) => `${cura(n([0.4, 0.6, 0.8], g), vm)}, poi ${vm ? `${Math.max(1, Math.round(vm / 10))} punti` : 'un po\''} a ogni turno per ${turni(n([4, 5, 6], g))}` },
+      { id: 'linfa', nome: 'Linfa', glifo: 'germoglio', costo: COSTO_DEL_GRADINO[1], linfa: [4, 5, 6], cura: [0.8, 1.2, 1.6],
+        fa: (g, vm) => `${cura(n([0.8, 1.2, 1.6], g), vm)}, poi ${vm ? `${Math.max(1, Math.round(vm / 10))} punti` : 'un po\''} a ogni turno per ${turni(n([4, 5, 6], g))}` },
       { id: 'respiro', nome: 'Respiro del bosco', glifo: 'foglia', sempre: true, energiaPerMostro: [1, 2, 3],
         fa: g => `+${n([1, 2, 3], g)} di energia a ogni mostro battuto` },
       { id: 'radici', nome: 'Radici', glifo: 'radici', costo: COSTO_DEL_GRADINO[3], fermo: [3, 3, 4], esposto: [50, 60, 70], per: [1, 1, 1], capi: [3, 3.5, 4],
@@ -177,8 +177,8 @@ export const RAMI = {
     { chiave: 'arcano', nome: 'Arcano', glifo: 'sfera', tinta: '#9b4fd0', nodi: [
       { id: 'scudo-arcano', nome: 'Scudo arcano', glifo: 'sfera', costo: COSTO_DEL_GRADINO[0], scudo: [2, 2.6, 3.2], difende: true,
         fa: (g, vm) => scudo(n([2, 2.6, 3.2], g), vm) },
-      { id: 'fonte-arcana', nome: 'Fonte arcana', glifo: 'calice', costo: COSTO_DEL_GRADINO[1], cura: [1, 1.4, 1.8],
-        fa: (g, vm) => cura(n([1, 1.4, 1.8], g), vm) },
+      { id: 'fonte-arcana', nome: 'Fonte arcana', glifo: 'calice', costo: COSTO_DEL_GRADINO[1], cura: [2, 2.8, 3.6],
+        fa: (g, vm) => cura(n([2, 2.8, 3.6], g), vm) },
       { id: 'fulmine', nome: 'Fulmine', glifo: 'fulmine', costo: COSTO_DEL_GRADINO[2], passa: true, per: [2.5, 3, 3.5],
         fa: g => `ignora la difesa e ${faDanno(n([2.5, 3, 3.5], g))}` },
       { id: 'specchio', nome: 'Specchio', glifo: 'specchio', costo: COSTO_DEL_GRADINO[3], specchio: [1, 1.5, 2],
@@ -210,8 +210,8 @@ export const RAMI = {
     { chiave: 'pietra', nome: 'Pietra', glifo: 'montagna', tinta: '#8a7f6a', nodi: [
       { id: 'pelle-di-pietra', nome: 'Pelle di pietra', glifo: 'pietra', costo: COSTO_DEL_GRADINO[0], scudo: [2, 2.6, 3.2], difende: true,
         fa: (g, vm) => scudo(n([2, 2.6, 3.2], g), vm) },
-      { id: 'rune', nome: 'Rune di guarigione', glifo: 'runa', costo: COSTO_DEL_GRADINO[1], cura: [1.2, 1.6, 2],
-        fa: (g, vm) => cura(n([1.2, 1.6, 2], g), vm) },
+      { id: 'rune', nome: 'Rune di guarigione', glifo: 'runa', costo: COSTO_DEL_GRADINO[1], cura: [2.4, 3.2, 4],
+        fa: (g, vm) => cura(n([2.4, 3.2, 4], g), vm) },
       { id: 'testa-dura', nome: 'Testa dura', glifo: 'elmo', sempre: true, testaDura: [1, 2, 3],
         fa: g => `${g === 1 ? 'il primo colpo' : `i primi ${n([1, 2, 3], g)} colpi`} che subisci sbagliando fa${g === 1 ? '' : 'nno'} metà del danno, in ogni scontro` },
       { id: 'montagna', nome: 'Montagna', glifo: 'montagna', costo: COSTO_DEL_GRADINO[3], intoccabile: [2, 3, 4],
