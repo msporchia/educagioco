@@ -43,6 +43,7 @@ import { PRIMA, CELLE } from '../src/giochi/fattoria/dati/mondo.js'
 import { PER_COLTURA, PER_RICETTA, MINUTO } from '../src/giochi/fattoria/dati/coltivazioni.js'
 import { sogliaDi } from '../src/giochi/fattoria/dati/livelli.js'
 import { SOSTA } from './clip/survivors.mjs'
+import ricettaFattoria, { FATTORIA as FATTORIA_CLIP, puntoSchermo } from './clip/fattoria.mjs'
 import { FILA_ATTUALE } from '../src/giochi/costruttore/dati/campagna.js'
 // le discese del sotterraneo stanno sulla terra di sopra: ci si va a piedi, come nelle prove
 import { scendiNelSotterraneo, giocaGiornata } from '../test/aiuto/browser.mjs'
@@ -394,7 +395,15 @@ const RICETTE = [
      campo di grano pronto col cestino sopra, uno che cresce, il mulino al
      lavoro. Appena aperta è un prato vuoto, e lo è per scelta. */
   { file: 'fattoria-gioco', dove: 'fattoria', attesa: '.fa-tela',
-    passi: [['.fa-tela', 1500]] },
+    /* l'orto grande della clip, e un campo pronto toccato: spunta il cesto */
+    profilo: ricettaFattoria.profilo,
+    passi: [async page => {
+      const box = await page.locator('.fa-tela').boundingBox()
+      const { x, y } = puntoSchermo(box, FATTORIA_CLIP.pronti[0].x, FATTORIA_CLIP.pronti[0].y)
+      await page.waitForTimeout(6500)          // il fumetto d'avvio se ne va da sé
+      await page.mouse.click(x, y)
+      await page.waitForTimeout(900)
+    }] },
 
   /* tre domande di tre materie, per il README: una col disegno del tempo,
      una di matematica disegnata, una di ragionamento a parole. Si ritaglia

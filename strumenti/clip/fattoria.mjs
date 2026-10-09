@@ -108,11 +108,11 @@ function costruisci () {
   return { stato: f.serializza(), pronti: campi.filter(c => c.pronto) }
 }
 
-const FATTORIA = costruisci()
+export const FATTORIA = costruisci()
 
 /* lo stesso conto di `Tela.puntoDellaCella` con la telecamera di
    `vaiACasa`: centro delle terre di partenza al centro della tela */
-function puntoSchermo (box, cx, cy) {
+export function puntoSchermo (box, cx, cy) {
   const cellaPx = T * SCALA_INIZIALE
   const centro = (PRIMA + ULTIMA + 1) / 2 * CELLE
   return {
@@ -137,21 +137,31 @@ export default {
   },
   passi: [['.fa-tela', 900]],
   clip: {
-    secondi: 8,
+    secondi: 9,
+    coda: 800,
     async durante (page) {
       if (GUASTI.length) throw new Error('la fattoria della clip: ' + GUASTI.join(', '))
       const box = await page.locator('.fa-tela').boundingBox()
       if (!box) throw new Error('la tela della fattoria non c\'è')
-      await page.waitForTimeout(700)                    // l'orto si vede, si guarda
-      for (const campo of FATTORIA.pronti) {
-        const { x, y } = puntoSchermo(box, campo.x, campo.y)
-        await page.mouse.click(x, y)
-        await page.waitForSelector('.fa-foglio', { timeout: 2000 }).catch(() => {})
-        await page.waitForTimeout(650)                  // si legge «È pronto!»
-        await page.locator('.fa-bot.forte', { hasText: 'Raccogli' })
-          .click({ timeout: 2000 }).catch(() => {})
-        await page.waitForTimeout(900)                  // il campo si svuota, «+1 nel silo!»
+      const punti = FATTORIA.pronti.map(c => puntoSchermo(box, c.x, c.y))
+      await page.waitForTimeout(900)                    // l'orto si vede, si guarda
+      /* si tocca un campo pronto: spunta il cesto, che si trascina sopra
+         i campi pronti (docs/fattoria/come-si-tocca.md). Il punto del
+         cesto lo dice il gancio di prova, mai un pixel scritto a mano. */
+      await page.mouse.click(punti[0].x, punti[0].y)
+      const cesto = await page.waitForFunction(() =>
+        window.__fattoria?.gettoni().find(g => g.chiave === 'cesto') || null, null, { timeout: 3000 })
+        .then(h => h.jsonValue())
+      await page.waitForTimeout(900)                    // si vede il cesto, e «raccogli»
+      await page.mouse.move(cesto.x, cesto.y)
+      await page.mouse.down()
+      await page.waitForTimeout(150)
+      for (const p of punti) {
+        await page.mouse.move(p.x, p.y, { steps: 14 })
+        await page.waitForTimeout(250)
       }
+      await page.mouse.up()
+      await page.waitForTimeout(1600)                   // il raccolto vola al silo
     },
   },
 }
