@@ -63,6 +63,18 @@ export const CFG = {
     varco: 130,                                 // il buco, in pixel
   },
 
+  // gli sciami: ogni tanto, al posto del muro, un grumo di mostri deboli
+  // entra da un lato e insegue; niente varco da cercare, ci si sposta
+  // e li si spazza. `quota` è la probabilità che l'imprevisto sia uno
+  // sciame, `base` quanti sono al primo e `perMarea` quanti in più
+  // per ogni punto di marea; `raggio` quanto è largo il grumo
+  sciame: { quota: 0.4, base: 16, perMarea: 6, massimo: 34, raggio: 70 },
+
+  // l'anello (come in Vampire Survivors): fra gli sciami, uno ogni tanto
+  // nasce tutto intorno all'eroe, fuori dallo schermo, con un'apertura
+  // larga `varco` pixel, e si stringe: si esce dall'apertura o si spazza
+  anello: { quota: 0.35, passo: 56, varco: 150 },
+
   // il tetto della folla sale col tempo: con un tetto fisso la partita
   // si decide appena l'arco supera le nascite — vedi docs/survivors/taratura.md
   maxNemici: m => Math.min(380, 60 + 150 * Math.max(0, m)),
@@ -209,6 +221,16 @@ export function guastiDellaTaratura(cfg = CFG) {
     guasti.push(`la fila del muro ha un passo di ${mu.passo} pixel`)
   if (!(mu.primo >= 8 && mu.ogni?.(0) > 0 && mu.ogni(3) < mu.ogni(0) && mu.ogni(50) >= 5))
     guasti.push('i muri non arrivano più spesso con la marea, o arrivano a raffica')
+
+  const sc = cfg.sciame || {}
+  if (!(sc.quota >= 0 && sc.quota <= 0.6)) guasti.push(`gli sciami sono ${sc.quota} dei muri`)
+  if (!(sc.base >= 8 && sc.massimo >= sc.base && sc.massimo <= 50))
+    guasti.push(`lo sciame va da ${sc.base} a ${sc.massimo} mostri`)
+  const an = cfg.anello || {}
+  if (!(an.quota >= 0 && an.quota <= 0.6)) guasti.push(`gli anelli sono ${an.quota} degli sciami`)
+  if (!(an.varco >= cfg.raggioEroe * 4 && an.varco <= 200 && an.passo >= 40 && an.passo < an.varco))
+    guasti.push(`l'anello ha un'apertura di ${an.varco} pixel e un passo di ${an.passo}`)
+  if (!(sc.raggio >= 40 && sc.raggio <= 120)) guasti.push(`lo sciame è largo ${sc.raggio} pixel`)
 
   for (let l = 1; l < 20; l++)
     if (!(soglia(l + 1) > soglia(l))) { guasti.push(`la soglia del livello ${l + 1} non sale`); break }

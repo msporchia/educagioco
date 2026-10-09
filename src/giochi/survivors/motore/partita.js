@@ -400,7 +400,57 @@ export class Partita {
     this.tMuro -= dt
     if (this.tMuro > 0) return
     this.tMuro = CFG.muro.ogni(this.regole.marea(this.tempo))
-    this.nasceMuro()
+    if (this.rnd() < CFG.sciame.quota) {
+      if (this.rnd() < CFG.anello.quota) this.nasceAnello()
+      else this.nasceSciame()
+    }
+    else this.nasceMuro()
+  }
+
+  // l'anello: tutto intorno all'eroe, appena fuori dallo schermo, con
+  // un'apertura; chiude da sé perché ogni mostro va verso l'eroe
+  nasceAnello() {
+    const e = this.eroe
+    const { passo, varco } = CFG.anello
+    const R = Math.hypot(this.campo.larghezza, this.campo.altezza) / 2 + 50
+    const vuoto = this.rnd() * Math.PI * 2, mezzo = varco / R / 2
+    const t = this.tipoDelMuro()
+    const tetto = this.regole.tetto(this.tempo)
+    const quanti = Math.floor(2 * Math.PI * R / passo)
+    let nati = 0
+    for (let i = 0; i < quanti && this.nemici.length < tetto; i++) {
+      const a = (i / quanti) * Math.PI * 2
+      const da = Math.abs(Math.atan2(Math.sin(a - vuoto), Math.cos(a - vuoto)))
+      if (da < mezzo) continue
+      this.nemici.push(this.mostroNuovo(t, e.x + Math.cos(a) * R, e.y + Math.sin(a) * R))
+      nati++
+    }
+    if (nati) this.segnala('muro')
+  }
+
+  // lo sciame: un grumo largo `raggio` entra da un lato a caso e poi
+  // insegue come ogni mostro; senza varco, quindi non si scansa
+  // restando fermi ma nemmeno basta scappare in linea retta
+  nasceSciame() {
+    const e = this.eroe
+    const { base, perMarea, massimo, raggio } = CFG.sciame
+    const quanti = Math.min(massimo, Math.round(base + perMarea * Math.max(0, this.regole.marea(this.tempo))))
+    const lato = Math.floor(this.rnd() * 4)
+    const dir = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }][lato]
+    const dist = Math.max(this.campo.larghezza, this.campo.altezza) / 2 + 60
+    const lungo = (dir.x === 0 ? this.campo.larghezza : this.campo.altezza) / 2
+    const lateral = (this.rnd() * 1.2 - 0.6) * lungo
+    const cx = e.x - dir.x * dist + (dir.x === 0 ? lateral : 0)
+    const cy = e.y - dir.y * dist + (dir.y === 0 ? lateral : 0)
+    const t = this.tipoDelMuro()
+    const tetto = this.regole.tetto(this.tempo)
+    let nati = 0
+    for (let i = 0; i < quanti && this.nemici.length < tetto; i++) {
+      const a = this.rnd() * Math.PI * 2, d = Math.sqrt(this.rnd()) * raggio
+      this.nemici.push(this.mostroNuovo(t, cx + Math.cos(a) * d, cy + Math.sin(a) * d))
+      nati++
+    }
+    if (nati) this.segnala('muro')
   }
 
   tipoDelMuro() {
