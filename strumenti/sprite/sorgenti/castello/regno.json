@@ -1,5 +1,5 @@
 {
-  "__": "La mappa del regno del castello: cosa ne sa il gioco. Lo legge strumenti/sprite/regno-castello.py, che rifa' src/giochi/castello/dati/regno.js. Coordinate in pixel della mappa generata (1024x1536). 'ponte' e' il ponte vero da copiare (i due capi dell'impalcato); 'ponti' quelli che la generazione ha perso, posati copiando quello; 'terra' il riquadro di terra battuta con cui si stendono i 'sentieri' che li collegano alle radure. 'posti' sono le venti tappe nell'ordine di TAPPE (bosco, sotterraneo sulla lava, mura sulla neve, palude), cinque per isola, l'ultima di ogni isola e' il capo; 'libere' i quattro torrioni del castello in mezzo, uno per terra.",
+  "__": "La mappa del regno del castello: cosa ne sa il gioco. Lo legge strumenti/sprite/regno-castello.py, che rifa' src/giochi/castello/dati/regno.js. Coordinate in pixel della mappa generata (1024x1536). 'ponte' e' il ponte vero da copiare (i due capi dell'impalcato); 'ponti' quelli che la generazione ha perso, posati copiando quello; 'terra' il riquadro di terra battuta con cui si stendono i 'sentieri' che li collegano alle radure. 'posti' sono le venti tappe nell'ordine di TAPPE (bosco, sotterraneo sulla lava, mura sulla neve, palude), cinque per isola, l'ultima di ogni isola e' il capo; 'libere' i quattro torrioni del castello in mezzo, uno per terra; 'centro' la strada del cavaliere verso ognuno: da quale tappa della sua isola parte e per dove passa sul ponte.",
   "sorgente": "generati/regno-2.png",
   "ponte": { "da": [254, 984], "a": [338, 1059] },
   "ponti": [
@@ -18,6 +18,12 @@
     [375, 300], [430, 212], [525, 132], [648, 258], [700, 298],
     [862, 578], [925, 655], [860, 735], [940, 855], [830, 975]
   ],
+  "centro": {
+    "libera-bosco": { "da": 3, "via": [[470, 1090], [497, 1040], [512, 1000], [512, 870]] },
+    "libera-sotterraneo": { "da": 7, "via": [[250, 726], [372, 722]] },
+    "libera-mura": { "da": 14, "via": [[655, 350], [600, 395], [540, 435], [525, 450]] },
+    "libera-palude": { "da": 17, "via": [[800, 726], [652, 722]] }
+  },
   "libere": {
     "libera-bosco": [510, 775],
     "libera-sotterraneo": [395, 675],

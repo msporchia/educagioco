@@ -15,7 +15,7 @@ import Fumetto from '../Fumetto.vue'
 import { TORRI } from '../../data/ops.js'
 import { CAMPAGNE } from '../../data/campagne-castello.js'
 import { apertaQui } from '../../data/portata-giochi.js'
-import { MAPPA, LARGO, POSTI, LIBERE_POSTI } from '../../giochi/castello/dati/regno.js'
+import { MAPPA, LARGO, POSTI, LIBERE_POSTI, VERSO_IL_CENTRO } from '../../giochi/castello/dati/regno.js'
 // il cavaliere è quello del sotterraneo: stesso atlante, già nel file unico
 import { figura } from '../../giochi/sotterraneo/viste/figura.js'
 
@@ -64,21 +64,43 @@ const prima = s => (s.i > 0 ? props.tappe[s.i - 1].nome : '')
 /* ── il cavaliere ──
    Sta sulla tappa da fare; toccata un'altra tappa aperta ci va a piedi,
    passando da tutte quelle in mezzo (gli scudi stanno sul sentiero e ai capi
-   dei ponti, quindi da scudo a scudo si resta sulla strada). Dopo una tappa
-   vinta parte da dove si era fermato e va alla prossima. */
+   dei ponti, quindi da scudo a scudo si resta sulla strada). Un torrione del
+   centro si raggiunge dalla tappa della sua isola, per il suo ponte
+   (VERSO_IL_CENTRO); per uscirne rifà il ponte all'indietro. `eroe.i` è
+   l'indice di una tappa o la chiave di una libera. Dopo una tappa vinta
+   parte da dove si era fermato e va alla prossima. */
 const VELOCE = 230                  // pixel della mappa al secondo
 const eroe = reactive({ x: 0, y: 0, i: null, cammina: false, fr: 0, specchio: false })
 let viaggio = null                  // le tappe che restano da raggiungere, [[x, y, i]]
 
+const postoDi = i => (typeof i === 'string' ? LIBERE_POSTI[i] : POSTI[i])
 function mettiA(i) {
-  eroe.x = POSTI[i][0]; eroe.y = POSTI[i][1]; eroe.i = i; ultimo = i
+  [eroe.x, eroe.y] = postoDi(i); eroe.i = i; ultimo = i
+}
+// le tappe da `da` ad `a`, in fila e senza la prima
+function lungoLeTappe(da, a) {
+  const punti = [], passo = a > da ? 1 : -1
+  if (a !== da) for (let j = da + passo; passo > 0 ? j <= a : j >= a; j += passo) punti.push([...POSTI[j], j])
+  return punti
 }
 function vai(a) {
   if (eroe.i === null) return mettiA(a)
-  const da = eroe.i, passo = a > da ? 1 : -1
+  let qui_ = eroe.i
   const punti = []
-  for (let j = da + passo; passo > 0 ? j <= a : j >= a; j += passo) punti.push([POSTI[j][0], POSTI[j][1], j])
-  if (!punti.length && (eroe.x !== POSTI[a][0] || eroe.y !== POSTI[a][1])) punti.push([POSTI[a][0], POSTI[a][1], a])
+  // da un torrione si torna alla sua isola per il ponte
+  if (typeof qui_ === 'string') {
+    if (qui_ === a) return
+    const c = VERSO_IL_CENTRO[qui_]
+    punti.push(...[...c.via].reverse().map(p => [...p, null]), [...POSTI[c.da], c.da])
+    qui_ = c.da
+  }
+  if (typeof a === 'string') {
+    const c = VERSO_IL_CENTRO[a]
+    punti.push(...lungoLeTappe(qui_, c.da), ...c.via.map(p => [...p, null]), [...LIBERE_POSTI[a], a])
+  } else {
+    punti.push(...lungoLeTappe(qui_, a))
+  }
+  if (!punti.length && (eroe.x !== postoDi(a)[0] || eroe.y !== postoDi(a)[1])) punti.push([...postoDi(a), a])
   viaggio = punti.length ? punti : null
 }
 const corpo = computed(() => figura(`cavaliere-${eroe.cammina ? 'corsa' : 'fermo'}-${eroe.fr}`, { scala: 2 }))
@@ -106,7 +128,8 @@ function giro(ora) {
     const dx = tx - eroe.x, dy = ty - eroe.y, d = Math.hypot(dx, dy)
     if (Math.abs(dx) > 0.5) eroe.specchio = dx < 0
     if (d <= resta) {
-      eroe.x = tx; eroe.y = ty; eroe.i = ti; ultimo = ti; resta -= d
+      eroe.x = tx; eroe.y = ty; resta -= d
+      if (ti !== null) { eroe.i = ti; ultimo = ti }
       viaggio.shift()
       if (!viaggio.length) viaggio = null
     } else {
@@ -125,6 +148,7 @@ function tocca(a) {
   const stesso = s && s.tipo === a.tipo && s.i === a.i && s.chiave === a.chiave
   aperto.value = stesso ? null : a
   if (!stesso && a.tipo === 'tappa' && statoDi(a.i) !== 'chiusa') vai(a.i)
+  if (!stesso && a.tipo === 'libera' && props.libera) vai(a.chiave)
   if (!stesso) nextTick(dentroDiLato)
 }
 // il fumetto scorre la mappa in verticale da sé; di lato ci pensa questa
@@ -146,7 +170,8 @@ onMounted(async () => {
   // il cavaliere riparte da dove si era fermato; la prima volta sta già sulla tappa da fare
   // (a campagna finita, sull'ultima)
   const meta = qui.value ? qui.value.i : props.fatte > 0 ? Math.min(props.fatte, props.tappe.length) - 1 : null
-  const da = ultimo !== null && ultimo < props.tappe.length ? ultimo : meta ?? 0
+  const valido = typeof ultimo === 'string' ? props.libera && !!LIBERE_POSTI[ultimo] : ultimo !== null && ultimo < props.tappe.length
+  const da = valido ? ultimo : meta ?? 0
   mettiA(da)
   id = requestAnimationFrame(giro)
   // si apre su di lui
@@ -156,7 +181,8 @@ onMounted(async () => {
     s.scrollTop = Math.max(0, radice.value.offsetTop + eroe.y * k.value - s.clientHeight * 0.5)
     s.scrollLeft = Math.max(0, radice.value.offsetLeft + eroe.x * k.value - s.clientWidth * 0.5)
   }
-  if (meta !== null && meta !== da) parte = setTimeout(() => vai(meta), 500)
+  // c'è una tappa da fare e non è lì: ci va (da un torrione a campagna finita resta dov'è)
+  if (qui.value && meta !== da) parte = setTimeout(() => vai(meta), 500)
 })
 onUnmounted(() => {
   cancelAnimationFrame(id)

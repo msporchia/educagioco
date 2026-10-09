@@ -100,6 +100,9 @@ def provino(tela, fg):
         r = 22 if i % 5 == 4 else 16
         d.ellipse((x - r, y - r, x + r, y + r), outline=(255, 230, 0), width=4)
         d.text((x - 3, y - 6), str(i % 5 + 1), fill=(255, 255, 255))
+    for k, v in fg['centro'].items():
+        d.line([tuple(fg['posti'][v['da']])] + [tuple(p) for p in v['via']] + [tuple(fg['libere'][k])],
+               fill=(0, 255, 255), width=3)
     for x, y in fg['libere'].values():
         d.ellipse((x - 18, y - 18, x + 18, y + 18), outline=(255, 0, 255), width=4)
     p.save(TMP / 'provino.png')
@@ -116,6 +119,9 @@ def scrivi(tela, fg):
     corpo += '\n// le quattro partite libere, sui torrioni del castello in mezzo\n'
     corpo += 'export const LIBERE_POSTI = {\n' + ''.join(
         f"  '{k}': [{x}, {y}],\n" for k, (x, y) in fg['libere'].items()) + '}\n'
+    corpo += '\n// la strada del cavaliere verso ogni torrione: la tappa della sua isola da cui parte, e il ponte\n'
+    corpo += 'export const VERSO_IL_CENTRO = {\n' + ''.join(
+        f"  '{k}': {{ da: {v['da']}, via: {json.dumps(v['via'])} }},\n" for k, v in fg['centro'].items()) + '}\n'
     corpo += f"\nexport const MAPPA = 'data:image/webp;base64,{b64}'\n"
     DEST.write_text(corpo, encoding='utf-8', newline='\n')
     print(f'{DEST.relative_to(REPO)}: mappa {tela.width}×{tela.height}, {codifica.riga(tela, dati)}')
