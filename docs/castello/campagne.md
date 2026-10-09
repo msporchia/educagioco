@@ -140,7 +140,7 @@ ingressi: due strade, un castello solo, e una difesa da dividere.
   terza arriva da tutte e due insieme — ma non prima di `insiemeDa` (un
   terzo della tappa, mai prima della quinta). Sta nei dati perché la deve
   sapere anche il giocatore modello; il motore la chiede a lui
-  (`Ondate.viaDi`). Il nastro lo dice tre ondate prima.
+  (`Ondate.viaDi`). Lo stendardo lo dice prima, con la freccia della bocca.
 
 `unita/ingressi-castello` tiene le regole delle tappe a più bocche.
 

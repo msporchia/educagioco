@@ -71,8 +71,9 @@ altri **comuni** li ferisce tutto. Alcuni invece sono **immuni** a una o due
 torri, che non li toccano affatto: chi vola passa sopra le bombe, chi è
 corazzato si fa rimbalzare addosso frecce e magia, le frecce passano
 attraverso il fantasma, la magia non scalfisce il drago. La figura del
-mostro lo dice già — pietra e piastre, ossa, ali — e il nastro in cima lo
-annuncia tre ondate prima, con le torri sbarrate. In campo una torre non
+mostro lo dice già — pietra e piastre, ossa, ali — e lo stendardo appeso a
+destra lo annuncia prima, con le torri sbarrate; toccato un mostro, la sua
+scheda lo mostra grande che cammina e dice cosa usare. In campo una torre non
 spreca colpi su chi le è immune.
 
 Le tappe si aprono coi comuni, e gli immuni arrivano dopo: nessuna torre, da
@@ -97,7 +98,7 @@ obbligo. Il tasto ⏩ manda il campo a velocità doppia o tripla.
 
 Alcune tappe, tutta la palude e le partite libere hanno **due ingressi**: le
 ondate si alternano fra le due bocche, e più avanti arrivano da tutte e due
-insieme. Il nastro dice da dove, così si fa in tempo a spostare una torre.
+insieme. Lo stendardo dice da dove, così si fa in tempo a spostare una torre.
 
 Il gettone ⬆️ sul campo apre il blocchetto dei potenziamenti: per ogni tipo
 di torre quanti gradini ha salito e quanto fa in più di una appena costruita.

@@ -54,8 +54,9 @@ mostri stanno in `src/data/mostri.js`, le file delle tappe in
   | ossa (💀) | 🔮 ❄️ |
   | un groviglio (🌿) | 💣 🏹 |
   | tutti gli altri (🐾) | nessuna: sono i comuni |
-- **Il preavviso lo dice tre ondate prima** (`components/castello/NastroOndate.vue`,
-  con le torri sbarrate), la scheda del mostro in campo dice «immune a», e
+- **Lo stendardo lo dice prima** (`components/castello/Stendardo.vue`, vedi
+  sotto «Lo stendardo e la scheda»), con le torri sbarrate; la scheda del
+  mostro dice «non lo toccano» e quali usare, e
   nella scelta della torre la carta sbagliata si attenua, senza scritte.
   Come si comporta una torre davanti a un immune sta in
   [torri.md](torri.md). **Le emoji sbarrate sono grigie, non del colore
@@ -121,7 +122,7 @@ di un pipistrello, e non è un errore.
 - **Metà e metà**, alternati, con la `folla` di ciascuno; energia e numero
   come un'ondata normale, una vita sola per tutti e due.
 - **Il secondo tipo sta in `con`** (`bestiaDi` in `motore/castello/ondate.js`),
-  e preavviso e scheda disegnano due ritratti con **due righe di immunità**:
+  e stendardo e scheda disegnano due ritratti con **due righe di immunità**:
   fuse direbbero «tutte sbarrate».
 - La taratura le spiana **per ondata**, come il capo (`chiDi` → `'mista'`);
   il giocatore modello le tratta come bisogni (vedi
@@ -159,9 +160,9 @@ di un pipistrello, e non è un errore.
   tutte le altre. Oltre la tabella delle libere (dalla 21ª) la vita riparte
   da chi si divideva una volta sola, e `caricoDi` la corregge perché
   l'ondata porti la stessa vita di prima e non la metà (arriva in meno).
-- **Il segno è suo**: ✂️✂️ «si divide due volte» sul preavviso
-  (`[data-abilita="dividi"][data-divisioni="2"]`) e sulla scheda del mostro
-  in campo (`[data-scheda-abilita][data-divisioni="2"]`).
+- **Lo dice la scheda, a parole**: «quando cade si divide in due, e i pezzi
+  si dividono ancora» (`[data-scheda-abilita][data-divisioni="2"]`); sul
+  medaglione resta solo il dato (`[data-abilita="dividi"][data-divisioni="2"]`).
 - **Il capo** (`CAPO`): un mostro solo, grande due volte e mezzo, lento, con
   la vita dell'ondata e un decimo; ogni dieci ondate nelle libere, in fondo
   all'ultima tappa di ogni campagna (`capo: true`). Paga come l'ondata, e se
@@ -189,12 +190,41 @@ di un pipistrello, e non è un errore.
   i giochi (`giochi/pausa.js`).
 - **Da che bocca**: sta in [campagne.md](campagne.md).
 
-Nei test: sul preavviso `[data-immune]`, `[data-abilita]`, `[data-divisioni]`,
-`[data-capo]`, `[data-mista]`, `[data-immune-con]`; sulla scheda
-`[data-scheda-mista]`, `[data-scheda-abilita]` (con `[data-divisioni]`);
-`[data-azione="chiama-prossima"]`. La riga dell'abilità della scheda si
-chiama `sm-abilita` e non `fa`: `.fa` è la radice della fattoria
-(`giochi/fattoria/stile.css`, fondo verde quasi nero), un foglio globale che
-nel file unico raggiunge anche le classi scoped degli altri — e la riga
-usciva su una fascia scura. `integrazione/torri-figure` guarda che il suo
-fondo resti trasparente.
+## Lo stendardo e la scheda
+
+- **Lo stendardo** è rosso, appeso al bordo destro del campo, dove ci sono
+  solo alberi: non ruba posto alle piazzole ed è **sempre in vista**, anche
+  in battaglia (prima c'era una striscia bianca in cima, bocciata: «è
+  brutto»). Un medaglione d'oro per ondata, col mostro, quanti (×28, la
+  freccia della bocca dove sono due) e le torri a cui è immune, sbarrate.
+  In battaglia il primo è chi è in campo («in campo», bordo rosso); fra
+  un'ondata e l'altra chi parte col tasto (bordo d'oro). Il capo ha il
+  medaglione d'oro pieno e il cartiglio «il capo». Ne mostra tre; la
+  linguetta «+N ▾» apre le altre (il campo ne chiede sei, `prossime(6)`).
+- **Niente icone da indovinare** sul medaglione e nella scheda: né la
+  forbice di chi si divide, né una tartaruga per chi è lento. Restano solo
+  le torri, che sono quelle del gioco; il resto è scritto.
+- **La scheda** (`SchedaGrande.vue`) si apre toccando un medaglione e
+  ferma il campo (`usaPausa`, come il regalo). Il mostro sta grande su un
+  palco e cammina girandosi — di lato verso destra, di fronte, verso
+  sinistra — col pittore `palco` (`giochi/castello/scena/pittori.js`): chi
+  ha i passi di `cammino.py` cammina, gli altri respirano e saltellano.
+  Sotto: l'ondata e quanti ne arrivano (o ne restano), la vita, se vola,
+  «non lo toccano» con le torri sbarrate e «usa» con quelle che lo
+  feriscono fra le torri della tappa, e cosa fa quando cade (`che` di
+  `ABILITA`). Nelle miste i due mostri affiancati, ognuno con le sue righe.
+- `.riga` esiste anche nel foglio globale (una fila di bottoni centrata):
+  la scheda la rimette a sinistra. Provato prima con una classe che si
+  chiamava `fa`: è la radice della fattoria, e la riga usciva su una fascia
+  verde scura.
+
+Nei test: sullo stendardo `[data-stendardo]`, sul medaglione
+`[data-onda-preavviso]` (o `[data-in-campo]` per chi è in campo),
+`[data-immune]`, `[data-abilita]`, `[data-divisioni]`, `[data-capo]`,
+`[data-mista]`, `[data-immune-con]`, la linguetta
+`[data-azione="altre-ondate"]`; sulla scheda `[data-scheda-grande]`,
+`[data-scheda-mista]`, `[data-scheda-immune]`, `[data-scheda-abilita]` (con
+`[data-divisioni]`), `[data-azione="chiudi-scheda"]`;
+`[data-azione="chiama-prossima"]`. `integrazione/torri-figure` apre la
+scheda di chi è in campo e guarda che la riga dell'abilità non abbia un
+fondo suo.

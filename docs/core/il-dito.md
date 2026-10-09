@@ -35,8 +35,8 @@ come si provano.
     eccezioni non arriverebbero ai paragrafi.
   - Dove si copia a dito: `class="copiabile"` (`input`, `textarea`,
     `[contenteditable]` ci sono già). Mai appendere l'eccezione a una classe
-    esistente: `.avviso` se la riprenderebbe anche il nastro delle ondate
-    del castello, a partita in corso.
+    esistente: `.avviso` se la riprenderebbe qualunque riquadro
+    con quel nome, a partita in corso.
   - `touch-action: manipulation` su `#app` toglie solo lo zoom del doppio
     tocco; chi trascina da sé dichiara `touch-action: none`, più stretto.
 

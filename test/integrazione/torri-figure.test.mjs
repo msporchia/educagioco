@@ -48,6 +48,7 @@ import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli } from 
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { TAPPE, LIBERE, MONDO } from '../../src/data/castello.js'
 import { sullaCarta } from '../../src/motore/castello/carta.js'
+import { segnoDi } from '../../src/data/mostri.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -374,12 +375,17 @@ await scatto(page, 'castello-radura')
     return { onda: T.hud.onda, tipi: [...new Set(T.nemici().map(n => n.bestia))].sort() }
   }, o)
   uguale('in campo scendono i due tipi, mescolati', campo.tipi.join(), [attesa.id, attesa.con.id].sort().join())
-  const nomi = await page.locator('[data-scheda-mista] .dati b').first().textContent().catch(() => '')
+  /* lo stendardo: il primo medaglione è chi è in campo, e toccato apre la sua scheda */
+  await page.click('[data-stendardo] [data-in-campo]')
+  await page.waitForSelector('[data-scheda-grande]')
+  const nomi = await page.locator('[data-scheda-mista] .nome').first().textContent().catch(() => '')
   const figura = id => NOMI[figuraDi(vestitoDi(t), id)]
   uguale('la scheda li chiama coi nomi delle figure', nomi,
          `${figura(attesa.id)} e ${figura(attesa.con.id)}`)
   uguale('con una riga di immunità per ciascuno',
          await page.locator('[data-scheda-mista] [data-scheda-immune]').count(), 2)
+  await scatto(page, 'castello-scheda-mista')
+  await page.click('[data-azione="chiudi-scheda"]')
   await togliCartelli()
   await attendi(page, 300)
   await scatto(page, 'castello-mista')
@@ -394,9 +400,9 @@ await scatto(page, 'castello-radura')
 {
   const { Ondate } = await import('../../src/motore/castello/ondate.js')
   const casi = [
-    ['palude', t => t.nome === 'Il guado', b => b.abilita === 'dividi' && b.divisioni === 1, 'si divide'],
-    ['mura', t => t.divisioni === 2, b => b.abilita === 'dividi' && b.divisioni === 2, 'si divide due volte'],
-    ['sotterraneo', t => t.nome === 'La gola', b => b.abilita === 'risorge', 'si rialza'],
+    ['palude', t => t.nome === 'Il guado', b => b.abilita === 'dividi' && b.divisioni === 1, segnoDi('dividi', 1).che],
+    ['mura', t => t.divisioni === 2, b => b.abilita === 'dividi' && b.divisioni === 2, segnoDi('dividi', 2).che],
+    ['sotterraneo', t => t.nome === 'La gola', b => b.abilita === 'risorge', segnoDi('risorge').che],
   ]
   for (const [campagna, quale, chi, frase] of casi) {
     const i = TAPPE.findIndex(t => t.campagna === campagna && quale(t))
@@ -415,28 +421,32 @@ await scatto(page, 'castello-radura')
       m.tabellone.stato.onda = o - 1
       T.chiamaOnda()
       const fine = Date.now() + 8000
-      let e = null
+      let e = null, m = null
+      // si apre la scheda di chi è in campo, toccando il suo medaglione sullo stendardo
+      while (!(m = document.querySelector('[data-stendardo] [data-in-campo]')) && Date.now() < fine) await attesa(100)
+      if (m) m.click()
       while (!(e = document.querySelector('[data-scheda-abilita]')) && Date.now() < fine) await attesa(100)
       if (!e) return null
       const fondo = n => getComputedStyle(n).backgroundColor
       /* il fondo che si vede: il primo non trasparente risalendo fino alla scheda */
       let n = e, visto = 'rgba(0, 0, 0, 0)'
-      while (n && !n.classList.contains('scheda')) {
+      while (n && !n.classList.contains('pergamena')) {
         if (!/rgba\(0, 0, 0, 0\)|transparent/.test(fondo(n))) { visto = fondo(n); break }
         n = n.parentElement
       }
       return { testo: e.textContent.trim(), fondo: fondo(e), visto,
                divisioni: e.dataset.divisioni || null }
     }, o)
-    controlla(`${t.nome}: la scheda dice «${frase}»`, !!riga && riga.testo.endsWith(frase), JSON.stringify(riga))
+    controlla(`${t.nome}: la scheda dice «${frase}»`, !!riga && riga.testo === frase, JSON.stringify(riga))
     uguale(`${t.nome}: la riga dell'abilità non ha un fondo suo`, riga?.fondo, 'rgba(0, 0, 0, 0)')
     const chiaro = c => { const v = (c.match(/\d+/g) || []).map(Number); return v[3] === 0 || v.slice(0, 3).reduce((s, x) => s + x, 0) > 600 }
     controlla(`${t.nome}: e sotto c'è un fondo chiaro`, !!riga && chiaro(riga.visto), riga?.visto)
-    if (frase === 'si divide due volte') {
+    if (frase === segnoDi('dividi', 2).che) {
       uguale('e il segno lo dice: data-divisioni', riga?.divisioni, '2')
       await attendi(page, 600)
       await scatto(page, 'castello-scheda-abilita')
     }
+    await page.click('[data-azione="chiudi-scheda"]').catch(() => {})
   }
 }
 
