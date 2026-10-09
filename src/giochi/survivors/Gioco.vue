@@ -317,6 +317,9 @@ function risposto({ giusto, saltata }) {
     p.rinuncia()
     brinda('niente carta — ci riprovi alla prossima', false)
   }
+  // chi ha iniziato a potenziare non deve ripremere il pulsante: finché
+  // ce n'è da spendere, la prossima offerta si apre da sé (la vede il passo)
+  p.apriOfferta()
   cruscotto.value = p.cruscotto
   salva()   // una carta è il momento in cui si perde di più se non si salva
 }
