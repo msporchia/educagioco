@@ -131,6 +131,7 @@ controlla('e il cartello festeggia il record', /record/i.test(cartelloBosco), ca
 await page.click('.banco .bottone.chiaro')
 await page.waitForSelector('[data-tappa="libera-bosco"]')
 await page.locator('[data-tappa="libera-bosco"]').click()
+await attendi(page, 300)                      // il fumetto compare in dissolvenza
 await scatto(page, 'torri-libere-mappa')      // il torrione del bosco col suo record
 const subito = await page.locator('[data-fumetto]').textContent()
 const nuovo = `${cadutaBosco.onda - 1} ondate`
