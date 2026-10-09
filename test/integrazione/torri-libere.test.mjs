@@ -51,10 +51,13 @@ controlla('i regali si vedono, una volta per tutte e quattro',
 
 /* si entra nel bastione, e si perde in fretta: nessuna torre, ondata
    chiamata subito, campo a tutta velocità */
-await difendi(page, '[data-tappa="libera-mura"]')
+/* toccato il torrione delle mura, il cavaliere ci va a piedi per il ponte;
+   poi «Gioca ▶» nel fumetto */
+await page.click('[data-tappa="libera-mura"]')
 await page.waitForSelector('[data-eroe][data-dove="libera-mura"][data-in-viaggio="0"]', { timeout: 15000 }).catch(() => {})
-uguale('il cavaliere è andato a piedi fino al torrione delle mura', await page.evaluate(() =>
-  document.querySelector('[data-eroe]') && document.querySelector('[data-eroe]').dataset.dove), 'libera-mura')
+uguale('il cavaliere è andato a piedi fino al torrione delle mura',
+       await page.locator('[data-eroe]').getAttribute('data-dove'), 'libera-mura')
+await page.click('[data-fumetto] [data-azione="gioca"]')
 const dentro = await page.evaluate(() => {
   const T = window.__td
   return { fase: T.fase.value, idx: T.tappaIdx.value, quale: T.liberaScelta.value,
