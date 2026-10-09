@@ -406,7 +406,7 @@ const barra = computed(() => {
   const cr = giu ? giu.crescita : crescita.value
   return {
     vita: giu ? giu.vita : n.vita, vitaMax: giu ? giu.vitaMax : n.vita,
-    livello: q.livello, esperienza: q.quota, punti: puntiDaDare(cr),
+    livello: q.livello, esperienza: q.quota, espFatta: q.fatto, espServe: q.serve, punti: puntiDaDare(cr),
     pozioni: giu ? giu.pozioni : r.zaino.filter(k => COSE[k] && (COSE[k].usa === 'cura' || COSE[k].usa === 'cresci')).length,
     pieni: giu ? giu.pieni : r.zaino.length,
     gemme: giu ? giu.gemme : r.gemme,
@@ -1175,7 +1175,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <p v-if="detto" class="sot-avviso sot-avviso-sopra" data-detto-sopra>{{ detto }}</p>
         <!-- la stessa barra di giù (docs/sotterraneo/barra.md): sopra la vita è piena e la mappa grande non c'è -->
         <BarraDiSotto sopra :vita="barra.vita" :vita-max="barra.vitaMax" :livello="barra.livello"
-                      :esperienza="barra.esperienza" :punti="barra.punti" :pozioni="barra.pozioni" :pieni="barra.pieni"
+                      :esperienza="barra.esperienza" :esp-fatta="barra.espFatta" :esp-serve="barra.espServe" :punti="barra.punti" :pozioni="barra.pozioni" :pieni="barra.pieni"
                       :tasche="TASCHE" :gemme="barra.gemme" :missioni="missioniAperte" :pronta="missioniPronte"
                       @bevi="dilloSopra(barra.pozioni ? '❤️ sei già in piena forma' : '🧪 non hai pozioni')"
                       @zaino="chiudiBottega(); paginaEroe = false; zainoSopra = true"
@@ -1250,7 +1250,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <!-- la barra in basso, come in Diablo: la vita e la luce nei globi, le caselle in mezzo. I fogli le salgono
              sopra (docs/sotterraneo/barra.md) -->
         <BarraDiSotto :vita="barra.vita" :vita-max="barra.vitaMax" :colpito="colpito" :livello="barra.livello"
-                      :esperienza="barra.esperienza" :punti="barra.punti" :sale="sale"
+                      :esperienza="barra.esperienza" :esp-fatta="barra.espFatta" :esp-serve="barra.espServe" :punti="barra.punti" :sale="sale"
                       :pozioni="barra.pozioni" :pieni="barra.pieni" :tasche="TASCHE" :gemme="barra.gemme"
                       :missioni="missioniAperte" :mappa="mappaGrande"
                       @bevi="bevi" @zaino="apriDallaBarra('zaino')" @diario="apriDallaBarra('diario')"

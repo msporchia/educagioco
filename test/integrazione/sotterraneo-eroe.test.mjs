@@ -85,7 +85,8 @@ async function toccaIl(sel) {
 const riga = k => page.locator(`[data-caratteristica="${k}"]`)
 
 /* ---------- 1. sopra: i punti da dare si vedono sulla barra ---------- */
-uguale('il globo dice il livello', (await page.locator('[data-globo="esperienza"] .sot-globo-numero').textContent()).trim(), '12')
+uguale('il tasto del globo sa il livello', await page.locator('[data-azione="eroe-pagina"]').getAttribute('data-livello'), '12')
+controlla('il globo dice fatta/serve', /^\d+\/\d+$/.test((await page.locator('[data-globo="esperienza"] .sot-globo-numero').textContent()).trim()))
 uguale('e il «+» d\'oro dice che ci sono punti da dare', await page.locator('[data-azione="eroe-pagina"]').getAttribute('data-punti'), '2')
 uguale('la carta di chi scende dice il livello', await page.locator('[data-roba-sopra]').getAttribute('data-livello'), '12')
 
@@ -219,7 +220,7 @@ uguale('battuto, la sua vita in cima se ne va', await page.locator('[data-grosso
 await page.waitForSelector('[data-livello-su]', { timeout: 4000 })
 uguale('la festa del livello', await page.locator('[data-livello-su]').getAttribute('data-livello'), '2')
 await scatto(page, 'eroe-livello')
-uguale('il globo dice il livello nuovo', (await page.locator('[data-globo="esperienza"] .sot-globo-numero').textContent()).trim(), '2')
+uguale('il tasto del globo sa il livello nuovo', await page.locator('[data-azione="eroe-pagina"]').getAttribute('data-livello'), '2')
 uguale('e il «+» d\'oro: un punto da dare', await page.locator('[data-azione="eroe-pagina"]').getAttribute('data-punti'), '1')
 await toccaIl('[data-azione="eroe-pagina"]')
 await page.waitForSelector('[data-pagina-eroe]', { timeout: 3000 })

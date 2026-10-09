@@ -1,8 +1,8 @@
 # La barra in basso
 
 La barra è quella di Diablo III, **la stessa sopra e sotto**: il globo rosso
-della vita a sinistra, il globo viola dell'esperienza a destra col numero del
-livello, in mezzo le caselle, tutto in una cornice di pietra. L'utente, 8
+della vita a sinistra, il globo viola dell'esperienza a destra con
+«fatta/serve» del livello, in mezzo le caselle, tutto in una cornice di pietra. L'utente, 8
 ottobre: «è tutt'altra cosa e penso si possa migliorare molto»; poi, lo
 stesso giorno, il globo di destra all'esperienza, la barra anche sulla terra
 di sopra, via attacco e difesa dalla barra in cima, via la casella delle
@@ -33,7 +33,10 @@ restano in codice anche dopo: si muovono.
   sobbalza: il colpo si vede anche con gli occhi sul mostro. Sopra è piena
   (sopra non si combatte), col tetto della roba e del livello.
 - **L'esperienza** ([livelli.md](livelli.md)) si riempie verso il livello
-  dopo, col numero del livello al centro. È un tasto: apre la pagina
+  dopo, e al centro dice l'esperienza fatta in questo livello su quella che
+  serve («35/120»). Col numero del livello sembrava un contatore, non un
+  globo che si riempie (l'utente, 9 ottobre): il livello sta sulla pagina
+  dell'eroe e sulla carta di chi scende (`data-livello` sul tasto). È un tasto: apre la pagina
   dell'eroe. Quando ci sono punti da dare porta un «+» d'oro che pulsa
   (`[data-punti]`), finché non si danno; salendo di livello il vetro si
   accende d'oro e il globo si gonfia un attimo.
@@ -101,8 +104,8 @@ spento o col suo significato di sopra.
 
 Nei test: `[data-barra-giu]` con `data-barra="giu|sopra"`;
 `[data-globo="vita|esperienza"]` con `data-quota` (0..1), il numero in
-`.sot-globo-numero`; il tasto del globo `[data-azione="eroe-pagina"]` con
-`data-punti`; `[data-casella-barra="pozione|zaino|diario|mappa|gemme"]` con
+`.sot-globo-numero` (la vita, o «fatta/serve» dell'esperienza); il tasto del
+globo `[data-azione="eroe-pagina"]` con `data-livello` e `data-punti`; `[data-casella-barra="pozione|zaino|diario|mappa|gemme"]` con
 `data-n`; `[data-azione="bevi"]`, `[data-azione="zaino"]`,
 `[data-azione="diario-giu"]` (giù) e `[data-azione="diario"]` con
 `[data-diario-n]` (sopra), `[data-azione="mappina"]` (con `aria-pressed`),

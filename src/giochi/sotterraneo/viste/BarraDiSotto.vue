@@ -11,6 +11,8 @@ defineProps({
   colpito: { type: Boolean, default: false },
   livello: { type: Number, default: 1 },
   esperienza: { type: Number, default: 0 },     // 0..1 verso il livello dopo
+  espFatta: { type: Number, default: 0 },       // e in numeri, dentro questo livello: il globo dice «fatta/serve»
+  espServe: { type: Number, default: 0 },
   punti: { type: Number, default: 0 },          // i punti da dare: un «+» sul globo, finché non si danno
   sale: { type: Boolean, default: false },      // un livello appena salito: il globo si accende
   pozioni: { type: Number, default: 0 },
@@ -62,11 +64,13 @@ defineEmits(['bevi', 'zaino', 'diario', 'mappa', 'eroe'])
 
     <div class="sot-plancia-lato sot-plancia-dx">
       <!-- l'esperienza: un tocco apre la pagina dell'eroe; il «+» dice che ci sono punti da dare -->
-      <button type="button" class="sot-globo-tasto" data-azione="eroe-pagina" :data-punti="punti || null"
+      <button type="button" class="sot-globo-tasto" data-azione="eroe-pagina" :data-livello="livello" :data-punti="punti || null"
               :aria-label="`livello ${livello}${punti ? `: ${punti} ${punti === 1 ? 'punto' : 'punti'} da dare` : ''}`"
               @click="$emit('eroe')">
-        <Globo tipo="esperienza" :quota="esperienza" :numero="livello" :acceso="sale"
-               :etichetta="`livello ${livello}, esperienza ${Math.round(esperienza * 100)} su cento`" />
+        <!-- un globo dice quanto è pieno, come quello della vita: l'esperienza di questo livello su quella che serve.
+             Il livello sta nella pagina dell'eroe e sulla carta di chi scende -->
+        <Globo tipo="esperienza" :quota="esperienza" :numero="espServe ? `${espFatta}/${espServe}` : ''" :acceso="sale"
+               :etichetta="`livello ${livello}, esperienza ${espFatta} su ${espServe}`" />
         <b v-if="punti" class="sot-punti" aria-hidden="true">+</b>
       </button>
       <svg class="sot-reggi" viewBox="0 0 100 44" aria-hidden="true"><use href="#sot-reggi" /></svg>
