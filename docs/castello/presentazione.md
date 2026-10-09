@@ -158,5 +158,5 @@ perché il gioco aspetta.
   arriva nessun premio in più. I regali non comprano monete e non aprono
   tappe.
 - Il record di ogni partita libera — ondate rette, mostri fermati, torri — è
-  scritto sul suo tasto nella mappa e nella tabella dei record di *I miei
+  scritto sul suo torrione nel castello della mappa e nella tabella dei record di *I miei
   progressi*; batterlo fa coriandoli e dice di quanto.

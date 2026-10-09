@@ -123,6 +123,7 @@ dB, e i comandi stampano `KB, dB` a ogni giro.
 | terra di sopra 2048×1536 | `terra-di-sopra.py` | q75, 856 KB, 29,8 | 2241 KB, 37,3 | 3/4, `pixelated` (invariato) |
 | icone delle discese, 8 × 96² | idem (`icone.passo` 16) | q80, 34 KB, 28,9 | 66 KB, 34,8 | piccole; ognuna sotto i 10 KB (un test) |
 | valle di Passo passo 1536×1024 | `isole-passo-passo.py` | q80, 257 KB, 31,8 | 675 KB, 37,2 | scala 1, `pixelated` |
+| regno del castello 1024×1536 | `regno-castello.py` | — | 1127 KB, 37,9 | almeno 640 px di larghezza, si naviga |
 | zaino di Passo passo | idem | q80, 363 KB, 30,2 | 892 KB, 37,9 | idem |
 | castello: 4 vestiti, ~1024×880 | `vesti.py --atlante` | q85, 238–284 KB, 28,8–32,5 | 366–429 KB, 37,2–37,9 | tela, `smoothing high` |
 | castello: torri e mostri 1024×2004 | idem | q80, 759 KB, 28,3 | 1190 KB, 37,4 | idem |

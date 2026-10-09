@@ -11,6 +11,7 @@ pagina per chi arriva da fuori e i documenti per chi ci lavora.
 - [effetti.md](effetti.md) — il disegno di ogni colpo e di ogni ramo, in volo e all'impatto: dove stanno e come si aggiungono
 - [operazioni.md](operazioni.md) — la scaletta dei dieci gradini, come si scrive un conto, i ripieghi quando un'operazione è spenta
 - [mostri.md](mostri.md) — immuni e comuni, le regole di una fila, le ondate miste, abilità, capo e ritmo delle ondate
+- [regno.md](regno.md) — la mappa a isole delle tappe, il castello delle libere in mezzo, il foglietto e `regno-castello.py`
 - [campagne.md](campagne.md) — le venti tappe, perché i percorsi sono quelli, le tappe a più bocche, i terreni, i salvataggi
 - [libere.md](libere.md) — le quattro partite libere, come si tarano, i regali e quanto valgono
 - [sosta.md](sosta.md) — la battaglia lasciata a metà: cosa si salva, cosa no, e quando

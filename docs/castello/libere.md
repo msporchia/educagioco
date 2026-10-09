@@ -31,7 +31,7 @@ in `LIBERE_RACCONTO` di `src/data/campagne-castello.js`.
   (un mostro passava due volte dall'incrocio): tolto il 7 ottobre 2026,
   perché nel tratto in salita il mostro camminava all'indietro
   ([campagne.md](campagne.md), «Le regole della carta»).
-- **I record**: uno per terreno, sul tasto della libera nella mappa e nella
+- **I record**: uno per terreno, nel fumetto del suo torrione sul regno e nella
   tabella dei record; in home `recordPiuRecente` racconta quello fatto più
   di recente. Il record della vecchia libera unica lo eredita il bosco
   (`eredita: true`, vedi `giochi/primati.js`).
@@ -149,7 +149,7 @@ le carte a giro).
   muro il metro è a corto di soldi, non di potenza: bastava +2,5% per saltare
   tre ondate).
 
-Nei test: `[data-tappa="libera-bosco"]` e le altre tre chiavi sulla mappa;
+Nei test: `[data-tappa="libera-bosco"]` e le altre tre chiavi sul regno, il record nel loro fumetto ([regno.md](regno.md));
 `integrazione/torri-libere` (quattro tasti, ognuno apre la sua libera e
 scrive il record nel suo quaderno; il conto dell'arciere paga 🪙3 anche in
 una partita persa, e il cartello di fine lo dice in `[data-monete-prese]`,
