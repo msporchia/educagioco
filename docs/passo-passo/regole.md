@@ -77,7 +77,8 @@ Casi decisi apposta:
 
 Undici tappe fra i massi e lo zaino, ancora dei piccoli (portata 44): il
 bobtail al posto del coniglio, il recinto (`#`) al posto della tana, le
-pecore (`p`). L'osso è la sua carota.
+pecore (`p`). L'osso è la sua carota. Poi sei tappe per ognuna delle
+quattro carte, tutte sulla valle ([mappa.md](mappa.md#il-fondale)).
 
 - **La pecora si scansa prima.** Quando il cane **si ferma** sulla riga o
   sulla colonna di una pecora, a una o due caselle (`VISTA = 2` in

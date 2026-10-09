@@ -31,29 +31,21 @@ const nome = i => CAMPAGNA[i].chiave
   controlla('e nessuna tappa del coniglio sta nello scalino del cane',
             S.coniglio.every(i => CAMPAGNA[i].scalino !== 'pecore'))
   const rami = S.isole.filter(s => s.animale === 'cane')
-  controlla('ogni ramo del cane parte da una tappa del coniglio che viene prima di lui',
-            rami.every(r => S.animale[r.attacco] === 'coniglio' && r.attacco < r.tappe[0]),
-            rami.map(r => `${r.chiave}@${r.attacco}`).join(' '))
   uguale('la strada del cane comincia alla fine dei massi', nome(S.apreIlCane), 'tutto')
-  controlla('gli altri rami alla prima tappa dello scalino che insegna la loro carta',
-            rami.slice(1).every(r => r.carta && r.attacco === S.coniglio.find(i => CAMPAGNA[i].scalino === r.scalino)),
-            rami.slice(1).map(r => `${r.scalino}:${nome(r.attacco)}`).join(' '))
-  uguale('le tane del cane nelle carte sono quattro, e ogni isoletta comincia dalla tappa che c\'era',
-         rami.slice(1).map(r => nome(r.tappe[0])).join(' '), 'stalle stalle-gradini nicchie lago-stalle')
-  controlla('ogni isoletta del cane ha almeno tre tappe', rami.every(r => r.tappe.length >= 3),
+  uguale('il cane ha un\'isola per scalino, in fila: il pascolo e poi le quattro carte',
+         rami.map(r => r.scalino).join(' '), 'pecore ripeti fino se mondo')
+  controlla('ogni isola del cane con le carte ha sei tappe', rami.slice(1).every(r => r.tappe.length === 6),
             rami.map(r => `${r.chiave}:${r.tappe.length}`).join(' '))
   /* le tappe in coda: dopo l'ultima del coniglio, solo cane, ognuna nella
      sua isola dopo quelle che c'erano */
   controlla('dopo l\'ultima tappa del coniglio vengono solo tappe del cane',
             S.coniglio.at(-1) === FINE_STRADA - 1 && CAMPAGNA.slice(FINE_STRADA).every(delCane))
-  uguale('le tappe in coda stanno nell\'isola del loro scalino, in fila dopo quella di prima',
-         rami.slice(1).map(r => r.tappe.map(nome).join('+')).join(' '),
+  uguale('le tappe in coda stanno nell\'isola del loro scalino, dopo quelle che c\'erano',
+         rami.slice(1).map(r => r.tappe.slice(0, 3).map(nome).join('+')).join(' '),
          'stalle+cortile+pettine stalle-gradini+pettine-storto+vicoli nicchie+sentiero-gregge+nicchie-fonde ' +
          'lago-stalle+gallerie+steccati')
   controlla('e la strada del cane va di isola in isola, non per indice',
             S.cane.every((i, k) => k === 0 || S.isolaDi[i] >= S.isolaDi[S.cane[k - 1]]))
-  controlla('ogni isola del coniglio ha al più un ramo',
-            S.isole.filter(s => s.animale === 'coniglio').every(s => rami.filter(r => s.tappe.includes(r.attacco)).length <= 1))
   controlla('la fine della strada del coniglio è la fine della campagna (dopo, il cane in coda)',
             S.animale[FINE_STRADA - 1] === 'coniglio' && FINE_STRADA <= QUANTE_TAPPE)
   controlla('ogni tappa sta in un\'isola sola', CAMPAGNA.every((_, i) =>
@@ -62,7 +54,7 @@ const nome = i => CAMPAGNA[i].chiave
   for (const strada of ['coniglio', 'cane'])
     uguale(`i numeri del ${strada} vanno da 1 a ${S[strada].length}, in fila`,
            S[strada].map(i => S.numero[i]).join(), S[strada].map((_, k) => k + 1).join())
-  uguale('il coniglio ha 42 tappe e il cane 23', `${S.coniglio.length} ${S.cane.length}`, '42 23')
+  uguale('il coniglio ha 42 tappe e il cane 35', `${S.coniglio.length} ${S.cane.length}`, '42 35')
 }
 
 /* ══════════ ognuno va da solo ══════════ */
@@ -176,8 +168,8 @@ for (const [chi, av] of Object.entries(casi)) {
     av.stelle[i] = 2
   }
   const ora = stradeDi(av)
-  controlla('vinto il pettine si aprono le stalle a gradini, la tappa dopo del cane',
-            ora.aperta(indice('stalle-gradini')))
+  controlla('vinto il pettine si apre la riva a gradini, la tappa dopo del cane',
+            ora.aperta(indice('riva-gradini')))
   controlla('e il cursore che corre avanti non apre il cane per conto suo',
             !stradeDi({ tappa: indice('spirale') + 1, stelle: { ...stelleFino(TAPPE_PRIME), ...Object.fromEntries(
               S.coniglio.filter(i => i >= TAPPE_PICCOLE && i <= indice('spirale')).map(i => [i, 3])) }, cfg: { eredita: TAPPE_PRIME } })
@@ -223,7 +215,8 @@ for (const [chi, av] of Object.entries(casi)) {
   uguale('in mezzo al pascolo, il gregge dopo', prossima(S, TAPPE_PRIME + 2, tutte), TAPPE_PRIME + 3)
   uguale('finito il pascolo, le stalle: il cane va avanti per conto suo', nome(prossima(S, indice('gregge'), tutte)), 'stalle')
   uguale('finite le stalle, il cortile', nome(prossima(S, indice('stalle'), tutte)), 'cortile')
-  uguale('finito il pettine, le stalle a gradini', nome(prossima(S, indice('pettine'), tutte)), 'stalle-gradini')
+  uguale('finito il pettine, la riva a gradini', nome(prossima(S, indice('pettine'), tutte)), 'riva-gradini')
+  uguale('finito il ghiaccio del cane, le stalle a gradini', nome(prossima(S, indice('recinto-in-mezzo'), tutte)), 'stalle-gradini')
   uguale('finito il lago delle stalle, le gallerie', nome(prossima(S, indice('lago-stalle'), tutte)), 'gallerie')
   uguale('dopo il viale il coniglio va avanti, non nelle stalle', nome(prossima(S, TAPPE_PICCOLE, tutte)), 'stagno-grande')
   uguale('in fondo alla strada del coniglio non c\'è un dopo', seguente(S, FINE_STRADA - 1), null)
