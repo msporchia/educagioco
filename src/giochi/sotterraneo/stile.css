@@ -739,28 +739,29 @@
 .sot-scambio p { margin: 0 }
 .sot-scambio p + p { margin-top: 2px; font-weight: 600; font-size: 12.5px }
 
-/* le abilità nello scontro (viste/CaselleAbilita.vue, docs/sotterraneo/abilita.md): tre caselle; l'energia la dice il globo */
-.sot-abilita { display: flex; gap: 5px; margin: 8px 0 0; align-items: stretch }
-.sot-abilita-tasto {
-  flex: 1 1 0; min-width: 0; min-height: 54px; padding: 4px 3px; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
-  font: inherit; color: var(--sot-inchiostro); text-align: center;
-  background: radial-gradient(circle at 50% 30%, #23304f, #121726 75%);
+/* la scelta del colpo nello scontro (viste/CaselleAbilita.vue, docs/sotterraneo/abilita.md): «Attacco» e le abilità, una per riga */
+.sot-abilita { display: flex; flex-direction: column; gap: 4px; margin: 8px 0 0 }
+.sot-scelta {
+  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 8px; cursor: pointer; width: 100%;
+  font: inherit; color: var(--sot-inchiostro); text-align: left;
+  background: radial-gradient(circle at 20% 30%, #23304f, #121726 75%);
   border: 1.5px solid #0a090d; border-radius: 10px; box-shadow: inset 0 0 0 1px #4a6aa8;
 }
-.sot-abilita-tasto b { font-size: 11px; line-height: 1.05; max-width: 100%; overflow-wrap: anywhere }   /* «Dardo avvelenato» va a capo, non si taglia */
-.sot-abilita-tasto small { display: inline-flex; align-items: center; gap: 2px; font-size: 11px; font-weight: 700; line-height: 1; color: #a8c8ff; white-space: nowrap }
-.sot-abilita-tasto small .sot-glifo { color: #5fb8ff }
-.sot-abilita-tasto small.sot-poca { color: #ff9b8a }
-.sot-abilita-tasto:active { transform: translateY(1px) }
-.sot-abilita-tasto.sot-pronta {
-  background: radial-gradient(circle at 50% 30%, #5a4a14, #2a2008 75%);
+.sot-scelta-icona { flex: none; width: 28px; display: flex; justify-content: center }
+.sot-scelta-testo { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px }
+.sot-scelta-testo b { font-size: 13px; line-height: 1.1 }
+.sot-scelta-testo small { font-size: 11.5px; font-weight: 600; line-height: 1.15; color: #a8c8ff }   /* la riga dice cosa fa: va a capo, non si taglia */
+.sot-scelta-costo { flex: none; display: inline-flex; align-items: center; gap: 2px; font-size: 12px; font-weight: 800; color: #a8c8ff; white-space: nowrap }
+.sot-scelta-costo .sot-glifo { color: #5fb8ff }
+.sot-scelta-costo.sot-poca { color: #ff9b8a }
+.sot-scelta:active { transform: translateY(1px) }
+.sot-scelta.sot-pronta {
+  background: radial-gradient(circle at 20% 30%, #5a4a14, #2a2008 75%);
   box-shadow: inset 0 0 0 1.5px var(--sot-oro), 0 0 12px #ffd23f88;
 }
-.sot-abilita-tasto small.sot-abilita-pronta { color: var(--sot-oro); font-weight: 800 }
-.sot-abilita-tasto.sot-spenta { cursor: default; opacity: .65 }
-.sot-abilita-tasto.sot-spenta:active { transform: none }
-.sot-abilita-vuota { cursor: default; background: none; border-style: dashed; border-color: #ffffff22; box-shadow: none }
+.sot-scelta.sot-pronta .sot-scelta-testo small, .sot-scelta.sot-pronta .sot-scelta-costo { color: var(--sot-oro) }
+.sot-scelta.sot-spenta { cursor: default; opacity: .65 }
+.sot-scelta.sot-spenta:active { transform: none }
 /* sotto la vita del mostro: cosa gli sta succedendo (avvelenato, gelato, stordito, senza difesa) e cosa protegge te */
 .sot-stati { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px }
 .sot-stati span {

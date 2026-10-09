@@ -90,11 +90,10 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
 
 ## Nello scontro
 
-- **Le tre caselle stanno sopra la domanda** (`CASELLE_ABILITA`). L'energia
-  non si ripete qui: la dice il globo blu, che sotto il velo si vede (l'utente).
-  Un tocco prepara un'abilità (si accende d'oro,
-  «pronta»), un altro la toglie. Non si apre niente: chi non tocca niente
-  attacca come sempre.
+- **La scelta del colpo sta sopra la domanda** (`CaselleAbilita.vue`): una riga per «Attacco» (sempre la prima, già scelto, «fai 6 di
+  danno») e una per ognuna delle tre abilità (`CASELLE_ABILITA`), con il costo e la riga di cosa fa (`nodo.fa`). L'energia non si
+  ripete qui: la dice il globo blu (l'utente). Un tocco sceglie, il tocco sulla stessa o su «Attacco» torna al colpo solito; dopo
+  l'uso si torna su «Attacco». Un'abilità senza energia o senz'arma resta grigia e dice cosa manca. Non si apre niente.
 - **Rispondendo giusto parte**, e si paga. **Sbagliando resta pronta e non
   costa**: un'abilità non è un modo di perdere di più quando si sbaglia.
   Non passa da uno scontro all'altro.

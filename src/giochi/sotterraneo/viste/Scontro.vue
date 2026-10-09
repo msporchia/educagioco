@@ -46,7 +46,7 @@ defineProps({
         <span v-for="x in stati" :key="x.chiave" :data-stato="x.chiave" :title="x.dice"><Glifo :nome="x.glifo" :misura="14" /> {{ x.n }}</span>
       </div>
       <div class="sot-costo">
-        gli togli {{ colpo }} a colpo — ancora
+        fai {{ colpo }} di danno a colpo — ancora
         <b>{{ restano }}</b> {{ restano === 1 ? 'risposta' : 'risposte' }}
       </div>
     </div>

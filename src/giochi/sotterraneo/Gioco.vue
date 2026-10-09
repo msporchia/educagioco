@@ -701,10 +701,10 @@ const abilitaScontro = dallaCorsa(c => {
     if (!nodo) return null
     const ramo = RAMI[c.io.chiave].find(r => r.chiave === nodo.ramo)
     return { id, glifo: nodo.glifo, tinta: ramo && ramo.tinta, nome: nodo.nome, costo: nodo.costo, pronta: c.pronta === id,
-             perche: c.perchéNonUsi(id) }
+             dice: nodo.fa(c.grado(id) || 1, c.vitaMax), perche: c.perchéNonUsi(id) }
   })
   if (!caselle.some(Boolean)) return null
-  return { caselle, energia: c.energia, energiaMax: c.energiaMax }
+  return { caselle, colpo: c.colpo(f.chi), energia: c.energia, energiaMax: c.energiaMax }
 })
 function prepara(id) {
   const c = corsa.value
