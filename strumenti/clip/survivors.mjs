@@ -132,7 +132,7 @@ function precomputaLaSosta() {
   return scrivi(partita, INDICE_TAPPA)
 }
 
-const SOSTA = precomputaLaSosta()
+export const SOSTA = precomputaLaSosta()
 
 /* Se in questo momento c'è un'offerta di carte, la si prende e si paga
    con la domanda giusta. */
@@ -200,7 +200,8 @@ export default {
     ['button[data-azione="riprendi"]', 500],   // il velo della pausa, che ogni ripresa apre da sé
   ],
   clip: {
-    secondi: 8,
+    dallaMappa: true,   // la mappa con «torno in campo», il tocco, poi la partita
+    secondi: 10,
     coda: 500,     // chiude poco dopo che `durante` finisce, bene o male
     async durante (page) {
       await schiva(page, 7000)

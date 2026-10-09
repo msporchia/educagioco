@@ -42,6 +42,7 @@ import { Fattoria } from '../src/giochi/fattoria/motore/fattoria.js'
 import { PRIMA, CELLE } from '../src/giochi/fattoria/dati/mondo.js'
 import { PER_COLTURA, PER_RICETTA, MINUTO } from '../src/giochi/fattoria/dati/coltivazioni.js'
 import { sogliaDi } from '../src/giochi/fattoria/dati/livelli.js'
+import { SOSTA } from './clip/survivors.mjs'
 import { FILA_ATTUALE } from '../src/giochi/costruttore/dati/campagna.js'
 // le discese del sotterraneo stanno sulla terra di sopra: ci si va a piedi, come nelle prove
 import { scendiNelSotterraneo, giocaGiornata } from '../test/aiuto/browser.mjs'
@@ -346,7 +347,10 @@ const RICETTE = [
 
   { file: 'survivors-mappa', dove: 'survivors', attesa: '.sv-mappa' },
   { file: 'survivors-gioco', dove: 'survivors', attesa: '.sv-mappa',
-    passi: [['.sv-tappa.sv-adesso, .sv-tappa', 2200]] },
+    /* una partita già avanti (la sosta della clip): al primo livello il prato è vuoto e
+       non dice niente, al ghiacciaio ci sono mostri, gemme e frecce */
+    profilo: p => { p.campagne.survivors.sosta = SOSTA; return p },
+    passi: [['button[data-azione="riprendi"]', 700], ['button[data-azione="riprendi"]', 1400]] },
 
   { file: 'sotterraneo-mappa', dove: 'sotterraneo', attesa: '[data-terra]' },
   /* il campo dopo un paio di secondi: appena entrati la luce è ancora
@@ -470,6 +474,10 @@ async function mostraITocchi (page) {
   })
 }
 
+/* quanti passi iniziali si fanno prima di registrare: `dallaMappa: n` ne lascia fuori n
+   (una semina che ricarica la pagina non è da filmare), `true` nessuno */
+const fuoriCampo = r => typeof r.clip?.dallaMappa === 'number' ? r.clip.dallaMappa : 0
+
 /* un passo di ricetta: [selettore, attesa dopo] o una funzione */
 async function faiIlPasso (page, passo) {
   if (typeof passo === 'function') return passo(page)
@@ -498,7 +506,7 @@ async function registra (page, r) {
   /* `dallaMappa: true`: i passi si fanno **registrando**, così il filmato
      comincia dalla schermata di scelta e si vede il tocco che apre il
      livello (`secondi` conta da lì, passi compresi) */
-  const davanti = r.clip.dallaMappa ? (r.passi || []) : []
+  const davanti = r.clip.dallaMappa ? (r.passi || []).slice(fuoriCampo(r)) : []
   const partita = r.clip.durante || davanti.length
     ? (async () => {
         if (davanti.length) await page.waitForTimeout(900)     // la mappa si legge
@@ -584,7 +592,7 @@ for (const r of scelte) {
   try {
     await page.goto(GIOCO + (r.dove ? '#' + r.dove : ''))
     await page.waitForSelector(r.attesa, { timeout: 12000 })
-    for (const passo of r.clip?.dallaMappa ? [] : r.passi || []) {
+    for (const passo of (r.passi || []).slice(0, r.clip?.dallaMappa ? fuoriCampo(r) : undefined)) {
       try { await faiIlPasso(page, passo) } catch (e) {
         nota = '(un passo non è riuscito: ' + String(e.message).split('\n')[0].slice(0, 70) + ')'
         storte++
