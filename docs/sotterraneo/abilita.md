@@ -108,7 +108,7 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
   intoccabile, specchio, linfa. Si vedono come pastiglie sotto la vita del
   mostro e sotto quella dell'eroe.
 - **La stanza intera** (Turbine, Pioggia di frecce, Palla di fuoco…): lo
-  stesso colpo e gli stessi effetti a tutti i mostri svegli della stanza; chi
+  stesso colpo e gli stessi effetti a tutti i mostri della stanza; chi
   cade dà esperienza e bottino come sempre.
 - **«ti graffia 2 · se sbagli 4»** dice quello che arriva davvero, con gli
   effetti (`botta`). Lo stop del pericolo conta lo stesso numero.

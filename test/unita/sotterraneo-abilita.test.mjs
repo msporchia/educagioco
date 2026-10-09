@@ -128,6 +128,7 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   c.prepara('raggio-di-gelo')
   c.rispondi(true)
   uguale('gelato: sbagliando arriva la metà', c.botta(m, false), Math.floor(pieno / 2))
+  controlla('la riga della scelta dice il danno vero', c.descrizione(NODI['raggio-di-gelo'], m).startsWith(`fai ${c.colpo(m, NODI['raggio-di-gelo'])} di danno`) && /metà danno per 2 turni/.test(c.descrizione(NODI['raggio-di-gelo'], m)), c.descrizione(NODI['raggio-di-gelo'], m))
   // lo scambio dice da dove viene il danno e cosa se lo è portato via (la riga dello scontro, viste/Scontro.vue)
   const eg = c.rispondi(false)
   controlla('col gelo lo scambio lo dice', eg.gelato === true && eg.preso === Math.floor(pieno / 2), JSON.stringify(eg))

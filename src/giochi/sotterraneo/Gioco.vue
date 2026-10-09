@@ -661,12 +661,11 @@ const nemico = dallaCorsa(c => {
   if (!f || f.che !== 'scontro') return null
   const scheda = MOSTRI[f.chi.tipo] || {}
   return {
-    mostro: f.chi, colpo: c.colpo(f.chi), restano: c.colpiPer(f.chi),
+    mostro: f.chi, restano: c.colpiPer(f.chi),
     sprite: scheda.sprite ? pezzoAndante(scheda.sprite, 'fermo', 0) : null,   // la stessa faccia del campo
     grosso: f.chi.grosso ? GROSSI[f.chi.grosso] : null,                        // il mostro grosso ha la sua, disegnata in codice
     // detti PRIMA di rispondere: con questi si decide restare o scappare. Con gli effetti delle abilità (Corsa.botta)
-    graffio: c.botta(f.chi, true), male: c.botta(f.chi, false),
-    vita: c.vita, vitaMax: c.vitaMax, puoiScappare: c.puoScappare(f.chi),
+    puoiScappare: c.puoScappare(f.chi),
     stati: statiDel(f.chi), mie: statiMiei(f.io || {}),
   }
 })
@@ -701,7 +700,7 @@ const abilitaScontro = dallaCorsa(c => {
     if (!nodo) return null
     const ramo = RAMI[c.io.chiave].find(r => r.chiave === nodo.ramo)
     return { id, glifo: nodo.glifo, tinta: ramo && ramo.tinta, nome: nodo.nome, costo: nodo.costo, pronta: c.pronta === id,
-             dice: nodo.fa(c.grado(id) || 1, c.vitaMax), perche: c.perchéNonUsi(id) }
+             dice: c.descrizione(nodo, f.chi), perche: c.perchéNonUsi(id) }
   })
   if (!caselle.some(Boolean)) return null
   return { caselle, colpo: c.colpo(f.chi), energia: c.energia, energiaMax: c.energiaMax }

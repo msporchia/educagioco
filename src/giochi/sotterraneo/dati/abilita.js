@@ -18,7 +18,7 @@
 //     colpoPiu (con l'arma del ramo), graffioMeno (con lo scudo in mano), vitaPiu, schivata, energiaPiu,
 //     energiaPerMostro, primoTiro (con l'arco: la prima risposta di uno scontro colpisce da lontano), testaDura
 //     (i primi colpi pieni di uno scontro fanno metà), fiato (una volta per discesa non si sviene), rami
-//     (`passa` e `piu` per le attive dello stesso ramo), geloPiu (i mostri deboli prendono di più)
+//     (`passa` e `piu` per le attive dello stesso ramo), geloPiu (percentuale: i mostri gelati prendono di più)
 
 import { EROI } from './eroi.js'
 
@@ -64,11 +64,11 @@ export function n(v, g) {
 // (l'utente, 9 ottobre). Il nome dell'abilità sta già sopra la riga: la riga dice solo l'effetto
 const volte = v => (v === 2 ? 'il doppio' : v === 3 ? 'il triplo' : `×${String(v).replace('.', ',')}`)
 const turni = v => `${v} ${v === 1 ? 'turno' : 'turni'}`
-const FRASI_DANNO = { 1: 'il danno di sempre', 1.5: 'danno e mezzo', 2: 'il doppio del danno', 2.5: 'due volte e mezza il danno',
-  3: 'il triplo del danno', 3.5: 'tre volte e mezza il danno', 4: 'il quadruplo del danno' }
+// «danno e mezzo» non si legge: sotto il doppio si dice il moltiplicatore («×1,5 il danno»), e «svegli» sta per «della stanza»
+const FRASI_DANNO = { 1: 'il danno di sempre', 2: 'il doppio del danno', 3: 'il triplo del danno', 4: 'il quadruplo del danno' }
 const danno = v => FRASI_DANNO[v] || `×${String(v).replace('.', ',')} il danno`
 const faDanno = v => (v === 1 ? 'fa il danno di sempre' : `fa ${danno(v)}`)
-const aTutti = v => (v === 1 ? 'colpisce tutti i mostri svegli' : `fa ${danno(v)} a tutti i mostri svegli`)
+const aTutti = v => (v === 1 ? 'colpisce tutti i mostri della stanza' : `fa ${danno(v)} a tutti i mostri della stanza`)
 // le cure e gli scudi si contano in quarti della vita massima (motore/corsa.js, usaAbilita): con la vita dell'eroe
 // (`vm`, la pagina la passa) la riga dice il numero vero, «ti guarisce di 12 punti di vita»; senza, la parte della vita
 export const inVita = (v, vm) => Math.max(1, Math.round(Math.round(vm / 4) * v))
@@ -105,7 +105,7 @@ export const RAMI = {
       { id: 'cuore-saldo', nome: 'Cuore saldo', glifo: 'cuore', sempre: true, vitaPiu: [5, 10, 15],
         fa: g => `+${n([5, 10, 15], g)} di vita` },
       { id: 'grido', nome: 'Grido di guerra', glifo: 'corno', costo: 4, stanza: true, debole: [3, 4, 5], per: [1, 1, 1],
-        fa: g => `tutti i mostri svegli fanno metà del danno per ${turni(n([3, 4, 5], g))}` },
+        fa: g => `tutti i mostri della stanza fanno metà del danno per ${turni(n([3, 4, 5], g))}` },
       { id: 'ultimo-fiato', nome: 'Ultimo fiato', glifo: 'ala', sempre: true, fiato: [1, 1, 1], vitaPiu: [0, 5, 10],
         fa: g => `una volta per discesa, invece di svenire resti in piedi${g > 1 ? ` · +${n([0, 5, 10], g)} di vita` : ''}` },
     ] },
@@ -140,7 +140,7 @@ export const RAMI = {
       { id: 'respiro', nome: 'Respiro del bosco', glifo: 'foglia', sempre: true, energiaPerMostro: [1, 2, 3],
         fa: g => `+${n([1, 2, 3], g)} di energia a ogni mostro battuto` },
       { id: 'radici', nome: 'Radici', glifo: 'radici', costo: 6, stanza: true, fermo: [2, 2, 3], per: [1, 1.5, 1.5],
-        fa: g => `tutti i mostri svegli restano fermi per ${turni(n([2, 2, 3], g))}: non possono attaccare` },
+        fa: g => `tutti i mostri della stanza restano fermi per ${turni(n([2, 2, 3], g))}: non possono attaccare` },
     ] },
   ],
 
@@ -159,12 +159,12 @@ export const RAMI = {
     { chiave: 'gelo', nome: 'Gelo', glifo: 'fiocco', tinta: '#4aa3d8', arma: BACCHETTA, nodi: [
       { id: 'raggio-di-gelo', nome: 'Raggio di gelo', glifo: 'fiocco', costo: 3, debole: [2, 3, 4],
         fa: g => `il mostro gela: fa metà del danno per ${turni(n([2, 3, 4], g))}` },
-      { id: 'gelo-profondo', nome: 'Gelo profondo', glifo: 'cristallo', sempre: true, geloPiu: [1, 2, 3],
-        fa: g => `chi è gelato subisce +${n([1, 2, 3], g)} di danno a ogni colpo` },
+      { id: 'gelo-profondo', nome: 'Gelo profondo', glifo: 'cristallo', sempre: true, geloPiu: [20, 35, 50],
+        fa: g => `chi è gelato subisce il ${n([20, 35, 50], g)}% di danno in più a ogni colpo` },
       { id: 'lancia-di-ghiaccio', nome: 'Lancia di ghiaccio', glifo: 'lancia', costo: 4, seStordito: true, per: [3, 3.5, 4], altrimenti: 1.5,
         fa: g => `fa ${danno(n([3, 3.5, 4], g))} su un mostro gelato, in fiamme o stordito, se no ${danno(1.5)}` },
       { id: 'tempesta', nome: 'Tempesta di neve', glifo: 'tempesta', costo: 6, stanza: true, debole: [3, 4, 5], per: [1, 1, 1.5],
-        fa: g => `fa danno a tutti i mostri svegli e li gela per ${turni(n([3, 4, 5], g))}` },
+        fa: g => `fa danno a tutti i mostri della stanza e li gela per ${turni(n([3, 4, 5], g))}` },
     ] },
     { chiave: 'arcano', nome: 'Arcano', glifo: 'sfera', tinta: '#9b4fd0', nodi: [
       { id: 'scudo-arcano', nome: 'Scudo arcano', glifo: 'sfera', costo: 3, scudo: [1, 1.4, 1.8], difende: true,

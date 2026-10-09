@@ -147,8 +147,9 @@ export class Corsa extends Corredo {
     const g = nodo ? this.grado(nodo.id) : 0
     const st = m.stati || {}
     const passa = st.rotto || (nodo && (nodo.passa || this.delRamo(nodo, 'passa')))
-    const base = Math.max(1, this.att + this.sempre('colpoPiu') + this.delRamo(nodo, 'piu') + (st.debole > 0 ? this.sempre('geloPiu') : 0)
-      - (passa ? 0 : m.dif))
+    // Gelo profondo è una percentuale: un +1 fisso non terrebbe il passo con l'attacco che cresce
+    const gelo = st.debole > 0 ? 1 + this.sempre('geloPiu') / 100 : 1
+    const base = Math.max(1, Math.round((this.att + this.sempre('colpoPiu') + this.delRamo(nodo, 'piu') - (passa ? 0 : m.dif)) * gelo))
     let per = nodo ? (aGrado(nodo, 'per', g) || 1) : 1
     if (nodo && nodo.seStordito && !(st.veleno || st.debole > 0 || st.fermo > 0)) per = nodo.altrimenti || 1
     return Math.round(base * per) + this.addosso('fuoco')
@@ -630,6 +631,26 @@ export class Corsa extends Corredo {
     if (this.perchéNonUsi(id)) return false
     this.pronta = id
     return true
+  }
+
+  // Cosa farebbe l'abilità adesso, contro questo mostro, coi numeri veri (la riga della scelta nello scontro): «fai 12 di
+  // danno · poi 3 a turno per 3 turni». Le difese e le cure non attaccano di più: dicono la riga dell'albero (`fa`)
+  descrizione(nodo, m) {
+    const g = this.grado(nodo.id) || 1
+    const vale = c => aGrado(nodo, c, g)
+    const turni = n => `${n} ${n === 1 ? 'turno' : 'turni'}`
+    const attacca = (nodo.per && vale('per') > 1) || nodo.stanza || nodo.veleno || nodo.debole || nodo.fermo || nodo.rompe ||
+      nodo.quieto || nodo.passa || nodo.seStordito
+    if (!attacca) return nodo.fa(g, this.vitaMax)
+    const parti = [`fai ${this.colpo(m, nodo)} di danno${nodo.stanza ? ' a tutti i mostri della stanza' : ''}`]
+    if (nodo.seStordito) parti.push('di più su chi è gelato, avvelenato o stordito')
+    if (nodo.rompe) parti.push('spezza la sua difesa')
+    else if (nodo.passa) parti.push('ignora la sua difesa')
+    if (nodo.veleno) parti.push(`poi ${Math.max(1, Math.ceil(this.colpo(m) / 2))} a turno per ${turni(vale('veleno'))}`)
+    if (nodo.debole) parti.push(`fa metà danno per ${turni(vale('debole'))}`)
+    if (nodo.fermo) parti.push(`stordito per ${turni(vale('fermo'))}`)
+    if (nodo.quieto) parti.push('non risponde')
+    return parti.join(' · ')
   }
 
   // perché un'abilità delle caselle non si può usare adesso ('' se si può): la riga sul tasto spento

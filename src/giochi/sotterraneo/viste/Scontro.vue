@@ -10,12 +10,7 @@ defineProps({
   mostro: { type: Object, required: true },   // { em, nome, ossa, ossaMax, att, dif, chiave }
   sprite: { type: String, default: null },    // il suo pezzo, quello che si vede sul campo
   grosso: { type: Object, default: null },    // il mostro grosso (dati/grossi.js): la sua figura disegnata in codice
-  colpo: { type: Number, required: true },
   restano: { type: Number, required: true },
-  graffio: { type: Number, required: true },  // quello che passa anche rispondendo bene
-  male: { type: Number, required: true },     // e quello che arriva sbagliando
-  vita: { type: Number, required: true },
-  vitaMax: { type: Number, required: true },
   puoiScappare: { type: Boolean, default: true },   // lo usa il tasto sotto (Gioco.vue): qui solo per non finire sul div
   scosso: { type: Number, default: 0 },
   scambio: { type: Object, default: null },   // com'è andato l'ultimo scambio: { dato, preso, caduto, usata, veleno, colpiti, rimandato }
@@ -46,8 +41,7 @@ defineProps({
         <span v-for="x in stati" :key="x.chiave" :data-stato="x.chiave" :title="x.dice"><Glifo :nome="x.glifo" :misura="14" /> {{ x.n }}</span>
       </div>
       <div class="sot-costo">
-        fai {{ colpo }} di danno a colpo — ancora
-        <b>{{ restano }}</b> {{ restano === 1 ? 'risposta' : 'risposte' }}
+        ancora <b>{{ restano }}</b> {{ restano === 1 ? 'turno' : 'turni' }}
       </div>
     </div>
   </div>
@@ -72,16 +66,6 @@ defineProps({
     </p>
   </div>
 
-  <div class="sot-io-vita">
-    <span class="sot-polso" :style="{ '--sot-polso': vita / vitaMax > 0.6 ? '#4fce7c'
-                                      : vita / vitaMax > 0.3 ? '#f0b429' : '#e0432f' }">
-      <i :style="{ width: Math.max(0, vita / vitaMax) * 100 + '%' }"></i>
-      <b>{{ vita }}</b>
-    </span>
-    <span class="sot-botte em">
-      ti graffia <b>{{ graffio }}</b> · se sbagli <b>{{ male }}</b>
-    </span>
-  </div>
   <div v-if="mie.length" class="sot-stati sot-stati-mie em" data-stati-eroe>
     <span v-for="x in mie" :key="x.chiave" :data-stato="x.chiave"><Glifo :nome="x.glifo" :misura="14" /> {{ x.dice }}</span>
   </div>
