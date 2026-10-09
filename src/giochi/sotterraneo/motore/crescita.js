@@ -3,15 +3,18 @@
 // sopra), la Corsa (l'esperienza dei mostri battuti) e la pagina dell'eroe. Gira in Node.
 import { CHIAVI_CARATTERISTICHE, PUNTI_PER_LIVELLO, DOTE_OGNI, FORZA_PER_PUNTO, VITA_PER_TEMPRA,
          SCORZA_PER_DIFESA, livelloDi, sogliaDi } from '../dati/livelli.js'
+import { rileggiAlbero } from './abilita.js'
 
 // in `cfg.avventure[eroe].crescita`: l'esperienza e i punti dati, caratteristica per caratteristica (quelli di
-// partenza della classe e la sua dote non ci stanno: si contano dal livello)
-export const CRESCITA_NUOVA = () => ({ esp: 0, forza: 0, tempra: 0, scorza: 0, fortuna: 0 })
+// partenza della classe e la sua dote non ci stanno: si contano dal livello). `albero` e `caselle`: le abilità
+// imparate e quelle portate nello scontro (motore/abilita.js)
+export const CRESCITA_NUOVA = () => ({ esp: 0, forza: 0, tempra: 0, scorza: 0, fortuna: 0, albero: {}, caselle: [null, null, null] })
 
 const intero = n => (Number.isFinite(n) && n > 0 ? Math.floor(n) : 0)
 
-// un dato storto è un eroe nuovo; più punti dati di quelli che il livello concede si tolgono dalla fine
-export function rileggiCrescita(dato) {
+// un dato storto è un eroe nuovo; più punti dati di quelli che il livello concede si tolgono dalla fine.
+// `classe`: i nodi dell'albero di un'altra classe si buttano
+export function rileggiCrescita(dato, classe = null) {
   const c = CRESCITA_NUOVA()
   if (!dato || typeof dato !== 'object') return c
   c.esp = intero(dato.esp)
@@ -20,7 +23,7 @@ export function rileggiCrescita(dato) {
     c[k] = Math.min(intero(dato[k]), resta)
     resta -= c[k]
   }
-  return c
+  return { ...c, ...rileggiAlbero(dato, c.esp, classe) }
 }
 
 export const livelloDella = cr => livelloDi(cr ? cr.esp : 0)

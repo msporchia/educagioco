@@ -126,6 +126,9 @@ const BASI = {
              dice: 'Dieci punti di vita, subito.' },
   'pozione-grande': { em: '🍷', nome: 'Ampolla', sprite: 'pozione-grande', usa: 'cura', cura: 18, genere: 'f',
                       prezzo: 16, dice: 'Diciotto punti di vita: ti rimette in piedi.' },
+  // l'energia delle abilità (docs/sotterraneo/abilita.md): si beve dallo zaino, fra uno scontro e l'altro
+  'pozione-blu': { em: '🧪', nome: 'Pozione blu', sprite: 'pozione-blu', usa: 'energia', energia: 6, prezzo: 8, genere: 'f',
+                   dice: 'Sei punti di energia, per le abilità.' },
   // l'unica che non torna indietro: alza la vita massima per il resto della discesa
   'elisir-toro': { em: '🐂', nome: 'Elisir del toro', sprite: 'pozione-rossa',
                    usa: 'cresci', cresce: 3, prezzo: 22,
@@ -307,7 +310,7 @@ export const NEI_FORZIERI = [
   'amuleto-osso', 'teschio-cercatore',
   'scudo-ferro', 'scudo-crociato', 'scudo-leone', 'scudo-teschio',
   'bipenne-solare', 'spada-del-ladro', 'pugnale-vampiro', 'spada-di-ghiaccio',
-  'pozione-grande', 'elisir-toro', 'torcia',
+  'pozione-grande', 'elisir-toro', 'torcia', 'pozione-blu',
 ]
 
 // non mente mai: dietro un teschio c'è davvero una guardia

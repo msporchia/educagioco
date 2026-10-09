@@ -9,6 +9,8 @@ import { GEMME_PER_FORTUNA } from '../dati/livelli.js'
 import { valoreDelLivello } from '../dati/pezzi.js'
 import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare } from './crescita.js'
 import { CARATTERISTICHE, SCORZA_PER_DIFESA } from '../dati/livelli.js'
+import { NODI, ENERGIA, aGrado } from '../dati/abilita.js'
+import { gradoDi, impara, metti } from './abilita.js'
 
 // la forma di `cfg.avventure[eroe].roba` nel profilo: sale se un campo cambia significato (docs/core/ripresa.md)
 export const VERSIONE_ROBA = 1
@@ -59,7 +61,7 @@ export function schedaConLaRoba(eroe, roba = null, crescita = null) {
   if (luce) tratti.push('🔦 vedi più lontano')
   return {
     vita: c.vitaConLaRoba, att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.zaino.length,
-    mano: c.mano, mancina: c.mancina, corpo: c.corpo, dito: c.dito, tratti, livello: c.livelloEroe,
+    mano: c.mano, mancina: c.mancina, corpo: c.corpo, dito: c.dito, tratti, livello: c.livelloEroe, energiaMax: c.energiaMax,
   }
 }
 
@@ -69,7 +71,7 @@ export class Corredo {
     this.chiEro = eroe
     this.io = eroeDi(eroe)
     // l'esperienza e i punti dati (motore/crescita.js): stanno nell'avventura come la roba, e salgono con lei
-    this.crescita = rileggiCrescita(crescita)
+    this.crescita = rileggiCrescita(crescita, this.io.chiave)
     this.gemme = 0
     this.zaino = []
     this.mano = null
@@ -120,11 +122,56 @@ export class Corredo {
   get att() { return this.io.att + this.piu.att + this.addosso('att') }   // unico posto dove si sommano
   get dif() { return this.io.dif + this.piu.dif + this.addosso('dif') }
   // il massimo di vita con questa roba e questo livello, a inizio discesa: Corsa parte da qui e poi lo fa crescere (vitaPiu)
-  get vitaConLaRoba() { return this.io.vita + this.piu.vita + this.addosso('vita') }
+  get vitaConLaRoba() { return this.io.vita + this.piu.vita + this.addosso('vita') + this.sempre('vitaPiu') }
   get fortuna() { return this.piu.fortuna + this.addosso('fortuna') }
   // quanto vale una gemma raccolta: gli anelli, le abilità e la fortuna
   get valoreGemme() { return 1 + this.addosso('gemme') + GEMME_PER_FORTUNA * this.fortuna }
-  get schivata() { return Math.min(SCHIVATA_MASSIMA, this.addosso('schivata')) }
+  get schivata() { return Math.min(SCHIVATA_MASSIMA, this.addosso('schivata') + this.sempre('schivata')) }
+  // l'energia delle abilità (docs/sotterraneo/abilita.md): dieci, più quella dei nodi 🔷
+  get energiaMax() { return ENERGIA + this.sempre('energiaPiu') }
+
+  // L'albero delle abilità: il grado di un nodo, e quanto danno insieme i nodi «sempre» imparati per un campo
+  // (colpoPiu, vitaPiu, schivata…). Un nodo che vuole un'arma vale solo con quell'arma in mano: «Filo affilato»
+  // senza spada non affila niente. `ha(campo)` dice se c'è almeno un nodo, anche quando vale zero (il primo tiro)
+  grado(id) { return gradoDi(this.crescita, id) }
+  nodiSempre() {
+    const firma = `${JSON.stringify(this.crescita.albero)}|${this.mano}|${this.mancina}`
+    if (this._sempre && this._sempreFirma === firma) return this._sempre
+    this._sempreFirma = firma
+    this._sempre = Object.entries(this.crescita.albero || {})
+      .map(([id, g]) => ({ nodo: NODI[id], g }))
+      .filter(x => x.nodo && x.nodo.sempre && this.haLArma(x.nodo.arma))
+    return this._sempre
+  }
+  sempre(campo) { return this.nodiSempre().reduce((n, x) => n + (Number(aGrado(x.nodo, campo, x.g)) || 0), 0) }
+  ha(campo) { return this.nodiSempre().some(x => x.nodo[campo] != null) }
+  // `arma` di un ramo (dati/abilita.js): le famiglie che vuole in mano, o uno scudo nella mancina; null = niente
+  haLArma(arma) {
+    if (!arma) return true
+    if (arma.scudo) return !!(this.mancina && COSE[this.mancina] && COSE[this.mancina].dove === 'mancina')
+    return [this.mano, this.mancina].some(k => k && COSE[k] && arma.famiglie.includes(COSE[k].famiglia))
+  }
+  // i nodi «sempre» dello stesso ramo di un'abilità che la rinforzano (Fiamma viva: il fuoco passa la difesa)
+  delRamo(nodo, campo) {
+    if (!nodo) return 0
+    let v = 0
+    for (const x of this.nodiSempre())
+      if (x.nodo.ramo === nodo.ramo && x.nodo.rami) v += campo === 'passa' ? (x.nodo.rami.passa ? 1 : 0) : (aGrado(x.nodo.rami, 'piu', x.g) || 0)
+    return v
+  }
+  // un punto all'albero, e un'abilità messa in una delle caselle dello scontro (motore/abilita.js)
+  impara(id) {
+    const n = impara(this.crescita, this.io.chiave, id)
+    if (!n) return false
+    this.crescita = n
+    return true
+  }
+  mettiInCasella(i, id) {
+    const n = metti(this.crescita, i, id)
+    if (!n) return false
+    this.crescita = n
+    return true
+  }
   get torciaAccesa() { return this.torciaResta > 0 }
   // una torcia nuova: le stanze di sempre, e quelle in più dei pezzi ⏳
   get stanzeTorcia() { return STANZE_TORCIA + this.addosso('torcia') }

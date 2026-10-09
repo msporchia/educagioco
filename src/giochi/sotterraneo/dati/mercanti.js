@@ -22,9 +22,9 @@ export const MERCANTI = [
 
   { chiave: 'erborista', nome: 'La guaritrice', em: '🌿', sprite: 'erborista',
     dice: 'Pozioni per chi sanguina, torce per chi ha paura del buio. Laggiù servono tutte e due.',
-    schede: [{ chiave: 'pozioni', nome: 'Pozioni', em: '🧪', usa: ['cura', 'cresci'] },
+    schede: [{ chiave: 'pozioni', nome: 'Pozioni', em: '🧪', usa: ['cura', 'cresci', 'energia'] },
              { chiave: 'torce', nome: 'Torce', em: '🔥', usa: ['luce'] }],
-    vende: { chiavi: ['elisir-toro'] }, sempre: [...CURE, 'torcia'],
+    vende: { chiavi: ['elisir-toro'] }, sempre: [...CURE, 'pozione-blu', 'torcia'],
     righe: [0, 0, 1, 1, 1, 1, 1, 1] },
 
   // l'unico che compra: tre botteghe che comprano farebbero di ogni banco un posto dove svuotare le tasche

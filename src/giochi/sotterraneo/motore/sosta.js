@@ -112,6 +112,8 @@ export function scrivi(corsa, tappa, { anchePerFinite = false, via = USCITA } = 
     eroe: corsa.chiEro,
     vita: corsa.vita,
     vitaPiu: corsa.vitaPiu,
+    energia: corsa.energia,   // l'energia delle abilità (docs/sotterraneo/abilita.md); senza, si riprende piena
+    ...(corsa.fiatoUsato ? { fiato: true } : {}),
     chiave: corsa.chiaveDelPiano,
     // il punto esatto, anche a metà di un passo
     dove: { x: centesimi(corsa.eroe.x), y: centesimi(corsa.eroe.y) },
@@ -166,6 +168,8 @@ export function leggi(dato, tappa, roba = null, missioni = [], crescita = null) 
     if (roba) corsa.indossa(roba)
     corsa.vitaPiu = Number.isFinite(dato.vitaPiu) ? dato.vitaPiu : 0
     corsa.vita = dato.vita
+    corsa.energia = Number.isFinite(dato.energia) ? Math.max(0, Math.min(corsa.energiaMax, dato.energia)) : corsa.energiaMax
+    corsa.fiatoUsato = !!dato.fiato
     corsa.chiaveDelPiano = !!dato.chiave
     corsa.eroe = { x: dato.dove.x, y: dato.dove.y }
     corsa.guarda = dato.guarda || 'dx'
