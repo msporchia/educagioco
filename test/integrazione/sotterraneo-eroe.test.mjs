@@ -17,7 +17,7 @@
    `node test/esegui.mjs sotterraneo-eroe`
    tempo: 150
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, scendiNelSotterraneo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -229,6 +229,7 @@ await scatto(page, 'eroe-grosso')
 const ossa0 = Number(await page.locator('[data-grosso]').getAttribute('data-ossa'))
 let calata = false
 for (let n = 0; n < 12 && (await page.locator('.sot-velo-scontro').count()); n++) {
+  await scegliAttacco(page)
   await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 5000 }).catch(() => {})
   await attendi(page, 400)
   const t = page.locator('.sot-domanda .qz-tasto[data-giusta]')

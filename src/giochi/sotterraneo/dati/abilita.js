@@ -157,7 +157,7 @@ export const RAMI = {
         fa: g => `${aTutti(n([1.5, 2, 2.5], g))}` },
     ] },
     { chiave: 'gelo', nome: 'Gelo', glifo: 'fiocco', tinta: '#4aa3d8', arma: BACCHETTA, nodi: [
-      { id: 'raggio-di-gelo', nome: 'Raggio di gelo', glifo: 'fiocco', costo: 3, debole: [2, 3, 4],
+      { id: 'raggio-di-gelo', nome: 'Raggio di gelo', glifo: 'fiocco', costo: 3, debole: [2, 3, 4], per: [1, 1, 1],
         fa: g => `il mostro gela: fa metà del danno per ${turni(n([2, 3, 4], g))}` },
       { id: 'gelo-profondo', nome: 'Gelo profondo', glifo: 'cristallo', sempre: true, geloPiu: [20, 35, 50],
         fa: g => `chi è gelato subisce il ${n([20, 35, 50], g)}% di danno in più a ogni colpo` },
@@ -224,6 +224,10 @@ export function aGrado(nodo, campo, g) {
   const v = nodo[campo]
   return Array.isArray(v) ? n(v, g) : v
 }
+
+// Un'abilità prende il posto dell'attacco (l'utente, 9 ottobre): colpisce solo se è fatta per colpire. Scudi, cure,
+// parate, il gelo e le difese in genere non fanno danno, e il mostro non muore per uno scudo
+export const colpisce = nodo => !!(nodo && (nodo.per || nodo.veleno || nodo.rompe || nodo.passa || nodo.quieto || nodo.seStordito))
 
 export function guastiDelleAbilita() {
   const g = []

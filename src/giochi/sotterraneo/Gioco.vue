@@ -22,7 +22,7 @@ import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './
 import { COSE, SEGNI } from './dati/cose.js'
 import { MOSTRI } from './dati/mostri.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
-import { pezzoAndante } from './dati/tessere.js'
+import { pezzoAndante, SCENARI, SCENARIO } from './dati/tessere.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
@@ -53,13 +53,13 @@ import Foglio from './viste/Foglio.vue'
 import Icona from './viste/Icona.vue'
 import { occhio } from './viste/occhio.js'
 import Scontro from './viste/Scontro.vue'
-import Ringhio from './viste/Ringhio.vue'
 import Zaino from './viste/Zaino.vue'
 import Diario from './viste/Diario.vue'
 import BarraDiSotto from './viste/BarraDiSotto.vue'
 import PaginaEroe from './viste/PaginaEroe.vue'
 import PaginaAbilita from './viste/PaginaAbilita.vue'
 import CaselleAbilita from './viste/CaselleAbilita.vue'
+import Medaglione from './viste/Medaglione.vue'
 import Tesori from './viste/Tesori.vue'
 import Grosso from './viste/Grosso.vue'
 import LaBottega from './viste/Bottega.vue'   // la bottega dei mercanti di sopra
@@ -661,21 +661,34 @@ const nemico = dallaCorsa(c => {
   if (!f || f.che !== 'scontro') return null
   const scheda = MOSTRI[f.chi.tipo] || {}
   return {
-    mostro: f.chi, restano: c.colpiPer(f.chi),
+    mostro: f.chi,
     sprite: scheda.sprite ? pezzoAndante(scheda.sprite, 'fermo', 0) : null,   // la stessa faccia del campo
+    palco: palcoDi(c),
+    eroe: { sprite: c.io.sprite ? pezzoAndante(c.io.sprite, 'fermo', 0) : null, em: c.io.em, vita: c.vita, vitaMax: c.vitaMax },
     grosso: f.chi.grosso ? GROSSI[f.chi.grosso] : null,                        // il mostro grosso ha la sua, disegnata in codice
     // detti PRIMA di rispondere: con questi si decide restare o scappare. Con gli effetti delle abilità (Corsa.botta)
     puoiScappare: c.puoScappare(f.chi),
     stati: statiDel(f.chi), mie: statiMiei(f.io || {}),
   }
 })
+// il fondale del duello: la parete e il pavimento dello scenario in cui si combatte (viste/Palco.vue)
+function palcoDi(c) {
+  const sc = SCENARI[c.scenario] || SCENARI[SCENARIO]
+  return { pavimento: sc.pavimento.stanza, faccia: sc.faccia, roccia: sc.colori && sc.colori.roccia }
+}
+// il colore del ramo di un'abilità: il dardo che vola verso il mostro è di quel colore (viste/Scontro.vue)
+function tintaDi(id) {
+  const nodo = NODI[id], c = corsa.value
+  const ramo = nodo && c && (RAMI[c.io.chiave] || []).find(r => r.chiave === nodo.ramo)
+  return ramo ? ramo.tinta : '#ffd23f'
+}
 // «2 turni»: una risposta è un turno (le righe dell'albero parlano così, dati/abilita.js)
 const turniDi = n => `${n} ${n === 1 ? 'turno' : 'turni'}`
 // cosa sta succedendo al mostro e all'eroe in questo scontro (docs/sotterraneo/abilita.md): le pastiglie sotto la vita
 function statiDel(m) {
   const st = m.stati || {}
   return [
-    st.veleno && st.veleno.scambi > 0 ? { chiave: 'veleno', glifo: 'veleno', n: `${st.veleno.quanto} di danno · ${turniDi(st.veleno.scambi)}`, dice: `subisce ${st.veleno.quanto} di danno a ogni turno` } : null,
+    st.veleno && st.veleno.scambi > 0 ? { chiave: 'veleno', fuoco: !!st.veleno.fuoco, glifo: st.veleno.fuoco ? 'fiamma' : 'veleno', n: `${st.veleno.quanto} di danno · ${turniDi(st.veleno.scambi)}`, dice: `subisce ${st.veleno.quanto} di danno a ogni turno` } : null,
     st.debole > 0 ? { chiave: 'debole', glifo: 'fiocco', n: `fa metà danno · ${turniDi(st.debole)}`, dice: 'i suoi colpi fanno la metà del danno' } : null,
     st.fermo > 0 ? { chiave: 'fermo', glifo: 'stelle', n: `stordito · ${turniDi(st.fermo)}`, dice: 'stordito: non può attaccare' } : null,
     st.rotto && m.dif ? { chiave: 'rotto', glifo: 'scudo-rotto', n: 'difesa spezzata', dice: 'senza difesa fino a fine scontro' } : null,
@@ -691,37 +704,60 @@ function statiMiei(io) {
   ].filter(Boolean)
 }
 
-// le tre caselle delle abilità sopra la domanda: cosa c'è, se è pronta, e se no perché (Corsa.perchéNonUsi)
+// La scelta dello scontro in due fasi (viste/CaselleAbilita.vue, docs/sotterraneo/abilita.md): prima cosa fare, poi la
+// domanda per quel colpo. `colpoPer` è la domanda per cui si è già scelto: a ogni domanda nuova si torna alla scelta
+const colpoPer = ref(0)
+const sceltaFatta = dallaCorsa(c => !!c.chiesta && colpoPer.value === c.chiesta.id)
 const abilitaScontro = dallaCorsa(c => {
   const f = c.foglio
   if (!f || f.che !== 'scontro') return null
-  const caselle = caselleDella(c.crescita).map(id => {
+  const m = f.chi
+  const voce = id => {
     const nodo = id && NODI[id]
     if (!nodo) return null
     const ramo = RAMI[c.io.chiave].find(r => r.chiave === nodo.ramo)
-    return { id, glifo: nodo.glifo, tinta: ramo && ramo.tinta, nome: nodo.nome, costo: nodo.costo, pronta: c.pronta === id,
-             dice: c.descrizione(nodo, f.chi), perche: c.perchéNonUsi(id) }
-  })
-  if (!caselle.some(Boolean)) return null
-  return { caselle, colpo: c.colpo(f.chi), energia: c.energia, energiaMax: c.energiaMax }
+    return { id, glifo: nodo.glifo, tinta: ramo && ramo.tinta, nome: nodo.nome, costo: nodo.costo,
+             dice: c.descrizione(nodo, m), perche: c.perchéNonUsi(id) }
+  }
+  const caselle = caselleDella(c.crescita).map(voce).filter(Boolean)
+  const i = c.pozioneGiusta()
+  const k = i == null ? null : c.zaino[i]
+  return {
+    caselle, attacco: `fai ${c.colpo(m)} di danno`, energia: c.energia, energiaMax: c.energiaMax,
+    bevi: i == null ? null : { cura: k && COSE[k].usa === 'cura' ? c.curaDi(k) : 0, n: c.pozioni },
+    scappa: c.puoScappare(m) ? { graffio: c.graffio(m) } : null,
+    pericolo: f.pericolo ? { perche: f.pericolo, vita: c.vita, male: c.danno(m) } : null,
+    // com'è la scelta fatta, per la riga sopra la domanda
+    scelta: c.pronta ? voce(c.pronta) : null,
+  }
 })
-function prepara(id) {
+// il tocco sulla riga: sceglie il colpo (null: l'attacco solito) e fa partire la domanda. Se il mostro aveva ringhiato,
+// scegliere vuol dire riprendere: lo stop della corsa si chiude da sé (docs/sotterraneo/pericolo.md)
+function scegliColpo(id) {
   const c = corsa.value
-  if (!c || !c.prepara(id)) return
+  const f = c && c.foglio
+  if (!f || f.che !== 'scontro') return
+  if (f.pericolo) c.continua()
+  c.pronta = null
+  if (id && !c.prepara(id)) return
+  colpoPer.value = c.chiesta ? c.chiesta.id : 0
   tic.value++
   if (c.pronta) suono.nota(659, 988, 0.14, 'triangle', 0.1)
   else suoni.passo()
+  salva()
 }
-
-// lo stop quando l'eroe rischia di cadere (docs/sotterraneo/pericolo.md): al posto della domanda, finché non si sceglie
-const ringhio = dallaCorsa(c => {
-  const f = c.foglio
-  if (!f || f.che !== 'scontro' || !f.pericolo) return null
+// bere dal menu: dentro uno stop riprende da sé (beviNelPericolo), fuori beve e lascia la scelta lì
+function beviNelloScontro() {
+  const c = corsa.value
+  if (!c || !c.foglio || c.foglio.che !== 'scontro') return
+  if (c.foglio.pericolo) return ringhioBevi()
   const i = c.pozioneGiusta()
-  const k = i == null ? null : c.zaino[i]
-  return { perche: f.pericolo, em: f.chi.em, nome: f.chi.nome, vita: c.vita, male: c.danno(f.chi), graffio: c.graffio(f.chi),
-           puoiBere: i != null, cura: k && COSE[k].usa === 'cura' ? c.curaDi(k) : 0, puoiScappare: c.puoScappare(f.chi) }
-})
+  if (i == null) return
+  c.usa(i)
+  tic.value++
+  suoni.tesoro()
+  salva()
+}
 
 const pieni = dallaCorsa(c => c.zaino.length, 0)   // sei su sei vuol dire che la prossima cosa resta per terra
 
@@ -950,7 +986,7 @@ function risolvi(giusto, saltata = false) {
   // resta a schermo un paio di secondi: il tempo di leggerlo mentre la domanda dopo si sta già montando
   if (esito.dato != null || esito.preso != null) {
     scambio.value = { dato: esito.dato || 0, preso: esito.preso || 0, caduto: esito.che === 'caduto',
-                      usata: esito.usata || null, veleno: esito.veleno || 0, colpiti: esito.colpiti || 0,
+                      usata: esito.usata ? { ...esito.usata, tinta: tintaDi(esito.usata.id) } : null, veleno: esito.veleno || 0, colpiti: esito.colpiti || 0,
                       rimandato: esito.rimandato || 0, base: esito.base || 0, volte: esito.volte || 1, primoTiro: !!esito.primoTiro,
                       salvo: esito.salvo || null, gelato: !!esito.gelato, assorbito: esito.assorbito || 0,
                       schivato: !!esito.schivato }
@@ -988,7 +1024,6 @@ function ringhioBevi() {
   suoni.tesoro()
   salva()
 }
-function ringhioContinua() { corsa.value.continua(); togli(); tic.value++; salva() }
 function chiudiFoglio() { corsa.value.chiudi(); domanda.value = null; tic.value++ }
 // "riprovo" rimette in piedi all'ingresso, tranne all'ultima occasione dove riprendi() risale e la discesa è finita
 function riprendi() {
@@ -1421,20 +1456,21 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <div v-if="foglio && foglio.che === 'scontro'" class="sot-velo sot-velo-scontro">
           <div class="sot-modale">
             <Scontro v-bind="nemico" :scosso="scosso" :scambio="scambio" />
-            <!-- le abilità sopra la domanda: un tocco la prepara, la risposta giusta la lancia (docs/sotterraneo/abilita.md) -->
-            <CaselleAbilita v-if="abilitaScontro && !ringhio" v-bind="abilitaScontro" @prepara="prepara" />
-            <!-- il pericolo ferma lo scontro fra una domanda e la successiva: al posto della domanda, tre scelte -->
-            <Ringhio v-if="ringhio" v-bind="ringhio" @bevi="ringhioBevi" @scappa="scappa" @continua="ringhioContinua" />
-            <div v-else-if="domanda" class="sot-domanda">
-              <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
-                       :origine="domanda" gioco="sotterraneo" :respiro="900"
-                       @risposto="risposto" />
-            </div>
-            <!-- il costo sta sul tasto: si vede prima, non nell'avviso che arriva dopo. Se il graffio fa cadere, niente tasto -->
-            <button v-if="!ringhio && nemico && nemico.puoiScappare" class="sot-grosso sot-chiaro" data-azione="scappa" @click="scappa">
-              <span class="em">🏃</span> scappo via
-              <small v-if="nemico">ti graffia ❤️ −{{ nemico.graffio }}</small>
-            </button>
+            <!-- prima si sceglie cosa fare (attacco, abilità, bere, scappare), poi compare la domanda per quel colpo
+                 (docs/sotterraneo/abilita.md). Il pericolo non ha più un menu suo: è una riga sopra la stessa scelta -->
+            <CaselleAbilita v-if="abilitaScontro && !sceltaFatta" :key="foglio.chiesta ? 0 : 'stop'" v-bind="abilitaScontro"
+                            @scegli="scegliColpo" @bevi="beviNelloScontro" @scappa="scappa" />
+            <template v-else-if="domanda">
+              <div v-if="abilitaScontro && abilitaScontro.scelta" class="sot-scelta sot-pronta sot-scelta-fatta" data-scelta-fatta>
+                <Medaglione :glifo="abilitaScontro.scelta.glifo" :tinta="abilitaScontro.scelta.tinta" stato="preso" :misura="28" />
+                <span class="sot-scelta-testo"><b>{{ abilitaScontro.scelta.nome }}</b><small>{{ abilitaScontro.scelta.dice }}</small></span>
+              </div>
+              <div class="sot-domanda">
+                <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
+                         :origine="domanda" gioco="sotterraneo" :respiro="900"
+                         @risposto="risposto" />
+              </div>
+            </template>
           </div>
         </div>
 

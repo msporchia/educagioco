@@ -20,7 +20,7 @@
    `node test/esegui.mjs sotterraneo-pericolo`
    tempo: 150
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, scendiNelSotterraneo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -113,7 +113,7 @@ const vuota = (x, y) => L.calpestabile(x, y) && !L.robe.some(r => r.x === x && r
 async function vaiAlMostro() {
   const a = piano.mostro
   for (let giro = 0; giro < 30; giro++) {
-    if (await page.locator('.sot-domanda, [data-ringhio]').count()) return
+    if (await page.locator('.sot-domanda, [data-ringhio], [data-caselle-abilita]').count()) return
     const [ex, ey] = (await cellaGiu()).split(',').map(Number)
     const via = percorso(vuota, { x: ex, y: ey }, a, { arrivoLibero: false }) || []
     if (via.length <= 1) {
@@ -131,6 +131,7 @@ async function vaiAlMostro() {
   }
 }
 async function rispondi(giusto) {
+  await scegliAttacco(page)
   await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 8000 })
   await attendi(page, 400)
   const tasto = page.locator(giusto ? '.sot-domanda .qz-tasto[data-giusta]' : '.sot-domanda .qz-tasto:not([data-giusta])')
@@ -156,7 +157,7 @@ async function entra() {
   await page.waitForSelector('.sot-tela', { timeout: 5000 })
   await attendi(page, 700)
   await vaiAlMostro()
-  await page.waitForSelector('.sot-velo-scontro .sot-domanda', { timeout: 10000 })
+  await page.waitForSelector('.sot-velo-scontro [data-caselle-abilita]', { timeout: 10000 })
 }
 // sbaglia e aspetta che il mostro picchi e lo scontro si fermi
 async function sbagliaEFermati() {
@@ -175,9 +176,9 @@ await sbagliaEFermati()
   // il tocco cieco per primo: le prove qui sotto fanno passare i 320 ms. Controllo e click nello stesso giro della
   // pagina: letti in due passi, sotto carico la finestra si chiudeva in mezzo e il click beveva davvero
   const cieco = await page.evaluate(() => {
-    const r = document.querySelector('[data-ringhio]')
+    const r = document.querySelector('[data-caselle-abilita]')
     if (!r || r.dataset.pronto) return false
-    r.querySelector('[data-azione="ringhio-bevi"]').click()
+    document.querySelector('[data-caselle-abilita]:not([data-pronto]) [data-azione="bevi-scontro"]')?.click()
     return true
   })
   if (cieco) {
@@ -187,21 +188,20 @@ await sbagliaEFermati()
   } else nota('(la pagina è lenta: la finestra cieca era già passata)')
   uguale('lo stop compare con la ragione «duro»', await stop().getAttribute('data-perche'), 'duro')
   uguale('al posto della domanda', await page.locator('.sot-domanda').count(), 0)
-  uguale('e del tasto «scappo via» di sempre', await page.locator('[data-azione="scappa"]').count(), 0)
-  uguale('con le tre scelte', await page.locator('[data-ringhio] [data-azione^="ringhio-"]').evaluateAll(es => es.map(e => e.dataset.azione).join()),
-         'ringhio-bevi,ringhio-scappa,ringhio-continua')
-  controlla('il mostro ringhia col suo nome', /ringhia/.test(await stop().locator('.sot-ringhio-titolo').innerText()))
+  uguale('nella stessa scelta di sempre, con bere e scappare', await page.locator('[data-caselle-abilita] [data-azione="attacco"], [data-caselle-abilita] [data-azione="bevi-scontro"], [data-caselle-abilita] [data-azione="scappa"]').evaluateAll(es => es.map(e => e.dataset.azione).join()),
+         'attacco,bevi-scontro,scappa')
+  controlla('l\'avviso è generico, senza nome di mostro', /Attenzione/.test(await stop().innerText()))
   controlla('lo scontro è ancora lì, modale', await page.locator('.sot-velo-scontro').count() === 1)
   controlla('la vita è scesa', (await numeroDel('vita')) < vita0, `${vita0} → ${await numeroDel('vita')}`)
   await scatto(page, 'pericolo')
 }
-await page.waitForSelector('[data-ringhio][data-pronto]', { timeout: 3000 })
+await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 3000 })
 await scatto(page, 'pericolo-pronto')
 
 // continuo: si torna a domandare
 {
   const vita1 = await numeroDel('vita')
-  await toccaIl('[data-azione="ringhio-continua"]')
+  await toccaIl('[data-caselle-abilita] [data-azione="attacco"]')
   await page.waitForSelector('.sot-velo-scontro .sot-domanda', { timeout: 5000 })
   uguale('«continuo» toglie lo stop', await stop().count(), 0)
   uguale('e non costa vita', await numeroDel('vita'), vita1)
@@ -211,33 +211,33 @@ await scatto(page, 'pericolo-pronto')
     await page.waitForSelector('[data-ringhio]', { timeout: 20000 })
     uguale('un colpo pieno e cade: secondo stop «ultimo»', await stop().getAttribute('data-perche'), piano.secondo)
   } else {
-    await page.waitForSelector('.sot-velo-scontro .sot-domanda, [data-ringhio]', { timeout: 20000 })
+    await page.waitForSelector('.sot-velo-scontro [data-caselle-abilita]', { timeout: 20000 })
     nota('rispondendo giusto non scatta il secondo stop con questo seme')
   }
 }
 
 // bevi (da qualunque stop sia aperto): la vita sale, una pozione in meno, si riprende
 if (!(await stop().count())) await sbagliaEFermati()
-await page.waitForSelector('[data-ringhio][data-pronto]', { timeout: 3000 })
+await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 3000 })
 {
   const v = await numeroDel('vita'), n = await pozioni()
-  await toccaIl('[data-azione="ringhio-bevi"]')
-  await page.waitForSelector('.sot-velo-scontro .sot-domanda', { timeout: 5000 })
+  await toccaIl('[data-azione="bevi-scontro"]')
+  await page.waitForSelector('[data-caselle-abilita]:not(:has([data-ringhio]))', { timeout: 5000 })
   await attendi(page, 300)
   uguale('«bevi» consuma una pozione', await pozioni(), n - 1)
   controlla('e alza la vita', (await numeroDel('vita')) > v, `${v} → ${await numeroDel('vita')}`)
   uguale('lo stop è passato', await stop().count(), 0)
-  uguale('e la battaglia riprende: lo scontro è aperto con la sua domanda', await page.locator('.sot-velo-scontro .sot-domanda').count(), 1)
+  uguale('e la battaglia riprende: lo scontro è aperto con la sua scelta', await page.locator('.sot-velo-scontro [data-caselle-abilita]').count(), 1)
   await scatto(page, 'pericolo-bevuto')
 }
 
 /* ---------- 2. «scappo via» dallo stop ---------- */
 await entra()
 await sbagliaEFermati()
-await page.waitForSelector('[data-ringhio][data-pronto]', { timeout: 3000 })
+await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 3000 })
 {
   const v = await numeroDel('vita')
-  await toccaIl('[data-azione="ringhio-scappa"]')
+  await toccaIl('[data-azione="scappa"]')
   await page.waitForSelector('.sot-velo-scontro', { state: 'detached', timeout: 5000 })
   uguale('scappando lo scontro si chiude', await page.locator('[data-ringhio], .sot-velo-scontro').count(), 0)
   controlla('col graffio di sempre (o svenuto, se non regge)', (await numeroDel('vita')) <= v, `${v} → ${await numeroDel('vita')}`)

@@ -90,10 +90,19 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
 
 ## Nello scontro
 
-- **La scelta del colpo sta sopra la domanda** (`CaselleAbilita.vue`): una riga per «Attacco» (sempre la prima, già scelto, «fai 6 di
-  danno») e una per ognuna delle tre abilità (`CASELLE_ABILITA`), con il costo e la riga di cosa fa (`nodo.fa`). L'energia non si
-  ripete qui: la dice il globo blu (l'utente). Un tocco sceglie, il tocco sulla stessa o su «Attacco» torna al colpo solito; dopo
-  l'uso si torna su «Attacco». Un'abilità senza energia o senz'arma resta grigia e dice cosa manca. Non si apre niente.
+- **Lo scontro è in due fasi** (l'utente, 9 ottobre): prima si sceglie cosa fare, poi compare la domanda per quel colpo, a
+  ogni scambio. La scelta (`CaselleAbilita.vue`) è un elenco con bordi d'oro: «Attacco» in cima («fai 6 di danno»), le tre
+  abilità col costo e quello che fanno **contro questo mostro, coi numeri veri** (`Corsa.descrizione`: «fai 6 di danno · poi 3 a turno
+  per 3 turni»), poi **«Bevi una pozione»** e **«Scappa via»** col loro prezzo. Un tocco sceglie e va avanti; per i primi 320 ms il
+  tocco non conta (il click lasciato dalla risposta). Un'abilità senza energia o senz'arma resta grigia e dice cosa manca. Sopra la
+  domanda resta la riga della scelta fatta. Chi non ha abilità vede comunque Attacco, bere e scappare. L'energia non si ripete:
+  la dice il globo blu.
+- **Il duello** (`Scontro.vue`, `Palco.vue`), alla Monkey Island: l'eroe a sinistra e il mostro a destra, grandi, sul fondale
+  vero dello scenario (la parete e il pavimento delle stanze, dallo stesso foglio del campo). Del mostro si vede solo la barra della
+  vita in alto a destra, **senza numeri** (il brivido di non sapere quanto resiste); la vita dell'eroe sta nel globo. A ogni
+  scambio chi colpisce scatta in avanti, chi è colpito trema, salgono i numeri del danno; un'abilità fa volare il suo glifo dall'eroe
+  al mostro, del colore del suo ramo; gli effetti che durano stanno addosso al mostro (fiamma, brina, stelle, goccia) e ne
+  cambiano il colore, e lo scudo dà un alone all'eroe. **Da fare:** la cornice come quella delle finestre dell'eroe e del fabbro.
 - **Rispondendo giusto parte**, e si paga. **Sbagliando resta pronta e non
   costa**: un'abilità non è un modo di perdere di più quando si sbaglia.
   Non passa da uno scontro all'altro.

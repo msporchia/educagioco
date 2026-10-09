@@ -7,7 +7,8 @@ pozione non deve berla il gioco da solo («perché farlo a mano allora?»), ma
 quando l'eroe rischia di morire a breve lo scontro deve **fermarsi un
 attimo** e lasciare scegliere. Il codice: `motore/pericolo.js` (la soglia),
 `Corsa.chiediOFerma` / `continua` / `beviNelPericolo` in `motore/corsa.js`,
-`viste/Ringhio.vue` (il riquadro), `ringhio` in `Gioco.vue`.
+`viste/CaselleAbilita.vue` (la riga rossa «Attenzione!» sopra la scelta), `scegliColpo` e `beviNelloScontro` in `Gioco.vue`.
+**Dal 9 ottobre non c'è più un menu a parte**: bere e scappare stanno sempre nella scelta dello scontro ([abilita.md](abilita.md)); lo stop resta una riga rossa generica («Attenzione!», mai il nome del mostro) sopra la stessa scelta, e scegliere un colpo vale «continuo».
 
 ## Quando scatta
 

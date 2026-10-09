@@ -132,6 +132,14 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   // lo scambio dice da dove viene il danno e cosa se lo è portato via (la riga dello scontro, viste/Scontro.vue)
   const eg = c.rispondi(false)
   controlla('col gelo lo scambio lo dice', eg.gelato === true && eg.preso === Math.floor(pieno / 2), JSON.stringify(eg))
+  // un'abilità difensiva prende il posto dell'attacco: lo scudo arcano non fa danno, e non uccide
+  {
+  const { c: cs, m: ms } = scontro('mago', conAlbero(2, { 'scudo-arcano': 1 }), 'verga', null, { ossa: 3, ossaMax: 3, att: 1 })
+  cs.prepara('scudo-arcano')
+  const eScudo = cs.rispondi(true)
+  controlla('lo scudo non colpisce: il mostro è ancora in piedi', ms.ossa === 3 && eScudo.dato === 0 && eScudo.che !== 'caduto', JSON.stringify(eScudo))
+  controlla('ma lo scudo c\'è', (cs.foglio ? cs.foglio.io.scudo : 0) > 0)
+}
   ;({ c, m } = scontro('nano', conAlbero(9, { spaccaroccia: 1, 'mani-pesanti': 1, stordisce: 1 }), 'ascia'))
   c.prepara('stordisce')
   c.rispondi(true)

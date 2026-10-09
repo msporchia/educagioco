@@ -28,7 +28,7 @@ import { dai as daiPunto } from './crescita.js'
 import { indiceDella, premioPer } from './storia.js'
 import { robaDellaMissione } from './missioni.js'
 import { pericoloDi } from './pericolo.js'
-import { NODI, ENERGIA_PER_RISPOSTA, aGrado, inVita } from '../dati/abilita.js'
+import { NODI, ENERGIA_PER_RISPOSTA, aGrado, inVita, colpisce } from '../dati/abilita.js'
 
 // nella storia i forzieri e i mostri di tutti i giorni danno solo quello che si consuma: la roba la dà la riga
 // della storia (dati/storia.js), o la discesa diventerebbe una lotteria e la tabella una bugia
@@ -639,9 +639,7 @@ export class Corsa extends Corredo {
     const g = this.grado(nodo.id) || 1
     const vale = c => aGrado(nodo, c, g)
     const turni = n => `${n} ${n === 1 ? 'turno' : 'turni'}`
-    const attacca = (nodo.per && vale('per') > 1) || nodo.stanza || nodo.veleno || nodo.debole || nodo.fermo || nodo.rompe ||
-      nodo.quieto || nodo.passa || nodo.seStordito
-    if (!attacca) return nodo.fa(g, this.vitaMax)
+    if (!colpisce(nodo)) return nodo.fa(g, this.vitaMax)
     const parti = [`fai ${this.colpo(m, nodo)} di danno${nodo.stanza ? ' a tutti i mostri della stanza' : ''}`]
     if (nodo.seStordito) parti.push('di più su chi è gelato, avvelenato o stordito')
     if (nodo.rompe) parti.push('spezza la sua difesa')
@@ -670,7 +668,7 @@ export class Corsa extends Corredo {
     const sulMostro = (x, base) => {
       x.stati = { ...(x.stati || {}) }
       if (nodo.rompe) x.stati.rotto = true
-      if (nodo.veleno) x.stati.veleno = { quanto: Math.max(1, Math.ceil(base / 2)), scambi: vale('veleno') }
+      if (nodo.veleno) x.stati.veleno = { quanto: Math.max(1, Math.ceil(base / 2)), scambi: vale('veleno'), fuoco: nodo.ramo === 'fuoco' || nodo.id === 'chiodi-roventi' }
       if (nodo.debole) x.stati.debole = Math.max(x.stati.debole || 0, vale('debole'))
       // stordito non risponde al colpo che lo stordisce, e poi salta i suoi N scambi
       if (nodo.fermo) x.stati.fermo = Math.max(x.stati.fermo || 0, vale('fermo') + 1)
@@ -735,9 +733,10 @@ export class Corsa extends Corredo {
         quieto = !!nodo.quieto
         colpiti = this.usaAbilita(nodo, m)
       }
-      dato = this.colpo(m, nodo)
+      // un'abilità difensiva (scudo, cura, parata…) prende il posto dell'attacco: niente colpo
+      dato = !nodo || colpisce(nodo) ? this.colpo(m, nodo) : 0
       // il primo tiro dell'arco: la prima risposta giusta di uno scontro arriva da lontano, e il mostro non risponde
-      if (!f.tirato && this.ha('primoTiro')) { f.tirato = true; quieto = true; primo = true; dato += this.sempre('primoTiro') }
+      if (!f.tirato && this.ha('primoTiro') && (!nodo || colpisce(nodo))) { f.tirato = true; quieto = true; primo = true; dato += this.sempre('primoTiro') }
       m.ossa -= dato
     }
     // come si è arrivati al danno, da mostrare a ogni scambio: il colpo di base, quante volte (l'abilità), il primo tiro

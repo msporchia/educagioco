@@ -535,13 +535,75 @@
   font-size: 11.5px; font-weight: 600; opacity: .72;
 }
 
-.sot-nemico { display: flex; align-items: center; gap: 12px; margin-bottom: 6px }
-/* posto fisso: un mostro alto e uno basso non devono far ballare la riga */
-.sot-nemico .sot-faccia { display: grid; place-items: center; min-width: 52px; min-height: 56px }
-.sot-nemico .sot-faccia.sot-colpito { animation: sot-scossa .22s }
+/* il duello (viste/Scontro.vue): i due uno di fronte all'altro su un palco scuro, grandi; chi colpisce scatta in avanti */
+.sot-duello {
+  position: relative; display: flex; justify-content: space-between; align-items: flex-end; gap: 8px;
+  min-height: 190px; padding: 14px 10px 8px; margin: -4px -4px 6px; overflow: hidden;
+  background: #0e0b16;
+  border-radius: 14px; box-shadow: inset 0 0 0 1px #c9a24a55, inset 0 -30px 40px -20px #000;
+  animation: sot-entra .35s ease-out;
+}
+.sot-palco { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; z-index: 0 }
+.sot-duello::after {   /* la penombra ai bordi: il palco è la scena vera, ma non deve rubare l'occhio ai due */
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 70%, transparent 35%, #000000b0 100%);
+}
+.sot-lato { position: relative; z-index: 1; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px }
+.sot-lato-eroe { align-items: flex-start; padding-left: 4px }
+.sot-lato-mostro { align-items: flex-end; padding-right: 4px }
+/* nome e vita del mostro in alto a destra: sotto i due stanno alla stessa altezza, e la nostra vita è nel globo della barra */
+.sot-info-mostro { position: absolute; z-index: 2; top: 10px; right: 12px; width: 46%; max-width: 190px; text-align: right }
+.sot-info-mostro .sot-vita { margin: 4px 0 0 }
+.sot-figura { display: grid; place-items: end center; min-height: 100px; filter: drop-shadow(0 6px 4px #000a) }
+.sot-mostro-fig { transform: scaleX(-1) }   /* guarda l'eroe */
+.sot-respira { animation: sot-respira 2.2s ease-in-out infinite }
+.sot-scatta-dx { animation: sot-scatta-dx .42s ease-out }
+.sot-scatta-sx { animation: sot-scatta-sx .42s ease-out }
+.sot-figura.sot-colpito { animation: sot-scossa .3s .12s }
+.sot-mostro-fig.sot-colpito { animation: sot-scossa-mostro .3s .12s; filter: drop-shadow(0 0 8px #ff5a3c) brightness(1.5) }
+.sot-nome-mostro { font-size: 13px; letter-spacing: .04em; text-shadow: 0 1px 2px #000 }
+.sot-numero {
+  position: absolute; top: 14px; z-index: 2; font-size: 26px; font-weight: 900; text-shadow: 0 2px 0 #000, 0 0 10px currentColor;
+  animation: sot-sale 1.1s ease-out forwards; pointer-events: none;
+}
+.sot-numero-dato { right: 22%; color: #ffd23f }
+.sot-numero-preso { left: 22%; color: #ff6a55 }
+.sot-dardo {
+  position: absolute; z-index: 3; left: 24%; bottom: 82px; color: var(--tinta, #ffd23f); pointer-events: none;
+  filter: drop-shadow(0 0 8px var(--tinta, #ffd23f)) drop-shadow(0 0 3px #fff); animation: sot-vola .38s ease-in forwards;
+}
+.sot-dardo::after { content: ""; position: absolute; right: 60%; top: 50%; width: 46px; height: 4px; margin-top: -2px;
+  background: linear-gradient(90deg, transparent, var(--tinta, #ffd23f)); border-radius: 4px; opacity: .8 }
+@keyframes sot-vola { 0% { transform: translateX(0) scale(.7); opacity: 0 } 15% { opacity: 1 } 100% { transform: translateX(min(54vw, 250px)) scale(1.2); opacity: 0 } }
+/* gli effetti che durano, addosso al mostro: cambiano il colore della figura e mettono il loro segno sopra la testa */
+.sot-addosso-fuoco { filter: drop-shadow(0 0 7px #ff7a2a) sepia(.35) saturate(2) brightness(1.1) }
+.sot-addosso-debole { filter: drop-shadow(0 0 7px #7cc8ff) hue-rotate(150deg) saturate(1.2) brightness(1.2) }
+.sot-addosso-veleno { filter: drop-shadow(0 0 7px #7ae04a) hue-rotate(60deg) saturate(1.5) }
+.sot-addosso-fermo { filter: drop-shadow(0 0 5px #ffd23f) grayscale(.4) }
+.sot-effetti { position: absolute; right: 8%; top: 18px; z-index: 2; display: flex; gap: 4px; pointer-events: none }
+.sot-effetto { animation: sot-fluttua 1.2s ease-in-out infinite }
+.sot-effetto-fuoco { color: #ff8a3c; filter: drop-shadow(0 0 5px #ff5a1c) }
+.sot-effetto-debole { color: #bfe6ff; filter: drop-shadow(0 0 5px #5ab4ff) }
+.sot-effetto-veleno { color: #8be060; filter: drop-shadow(0 0 5px #4fbf2a) }
+.sot-effetto-fermo { color: #ffd23f; animation: sot-gira 1.4s linear infinite }
+@keyframes sot-fluttua { 50% { transform: translateY(-4px) } }
+@keyframes sot-gira { to { transform: rotate(360deg) } }
+.sot-eroe-fig.sot-protetto { filter: drop-shadow(0 0 8px #7cc8ff) drop-shadow(0 0 3px #fff) }
+.sot-eroe-fig.sot-guarisce { filter: drop-shadow(0 0 8px #6fe08a) }
+@keyframes sot-entra { from { opacity: 0; transform: scale(.94) } }
+@keyframes sot-respira { 50% { transform: scaleX(-1) translateY(-3px) } }
+@keyframes sot-scatta-dx { 30% { transform: translateX(40px) } 100% { transform: none } }
+@keyframes sot-scatta-sx { 30% { transform: scaleX(-1) translateX(40px) } 100% { transform: scaleX(-1) } }
+@keyframes sot-scossa-mostro {
+  25% { transform: scaleX(-1) translateX(5px) rotate(4deg) } 75% { transform: scaleX(-1) translateX(-5px) rotate(-4deg) }
+}
 @keyframes sot-scossa {
-  25% { transform: translateX(-4px) rotate(-4deg) }
-  75% { transform: translateX(4px) rotate(4deg) }
+  25% { transform: translateX(-5px) rotate(-4deg) }
+  75% { transform: translateX(5px) rotate(4deg) }
+}
+@keyframes sot-sale { 0% { opacity: 0; transform: translateY(10px) scale(.7) } 20% { opacity: 1; transform: translateY(0) scale(1.15) } 100% { opacity: 0; transform: translateY(-34px) } }
+@media (prefers-reduced-motion: reduce) {
+  .sot-dardo, .sot-effetto, .sot-duello, .sot-respira, .sot-scatta-dx, .sot-scatta-sx, .sot-numero, .sot-figura.sot-colpito { animation: none }
 }
 .sot-dati { flex: 1; min-width: 0 }
 /* mentre si combatte gli occhi stanno qui, non sul numero in cima allo schermo */
@@ -742,11 +804,17 @@
 /* la scelta del colpo nello scontro (viste/CaselleAbilita.vue, docs/sotterraneo/abilita.md): «Attacco» e le abilità, una per riga */
 .sot-abilita { display: flex; flex-direction: column; gap: 4px; margin: 8px 0 0 }
 .sot-scelta {
-  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 8px; cursor: pointer; width: 100%;
+  position: relative; display: flex; align-items: center; gap: 8px; min-height: 46px; padding: 5px 10px; cursor: pointer; width: 100%;
   font: inherit; color: var(--sot-inchiostro); text-align: left;
-  background: radial-gradient(circle at 20% 30%, #23304f, #121726 75%);
-  border: 1.5px solid #0a090d; border-radius: 10px; box-shadow: inset 0 0 0 1px #4a6aa8;
+  background: linear-gradient(180deg, #2a2540, #17142a);
+  border: 2px solid #6b5420; border-radius: 6px;
+  box-shadow: inset 0 0 0 1px #e2c26d55, inset 0 0 14px #000a, 0 2px 0 #000;
 }
+.sot-scelta::before, .sot-scelta::after {   /* gli angoli d'oro */
+  content: ""; position: absolute; width: 7px; height: 7px; background: #e2c26d; transform: rotate(45deg);
+  top: -5px; left: -5px; box-shadow: 0 0 4px #ffd23f88;
+}
+.sot-scelta::after { top: auto; left: auto; bottom: -5px; right: -5px }
 .sot-scelta-icona { flex: none; width: 28px; display: flex; justify-content: center }
 .sot-scelta-testo { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px }
 .sot-scelta-testo b { font-size: 13px; line-height: 1.1 }
@@ -756,9 +824,24 @@
 .sot-scelta-costo.sot-poca { color: #ff9b8a }
 .sot-scelta:active { transform: translateY(1px) }
 .sot-scelta.sot-pronta {
-  background: radial-gradient(circle at 20% 30%, #5a4a14, #2a2008 75%);
-  box-shadow: inset 0 0 0 1.5px var(--sot-oro), 0 0 12px #ffd23f88;
+  background: linear-gradient(180deg, #5a4614, #2a2008);
+  border-color: #e2c26d; box-shadow: inset 0 0 0 1px #ffe9a0aa, inset 0 0 14px #000a, 0 0 14px #ffd23f66, 0 2px 0 #000;
 }
+.sot-scelta:not(.sot-spenta):not(.sot-scelta-fatta):hover { border-color: #e2c26d }
+.sot-scelta-sep { height: 2px; margin: 4px 14px; background: linear-gradient(90deg, transparent, #c9a24a, transparent) }
+.sot-scelta-bevi { border-color: #2f6f52 }
+.sot-scelta-scappa { border-color: #7a3030 }
+.sot-scelta-fatta { margin-top: 8px; cursor: default }
+/* i primi 320 ms il tocco non conta (il click lasciato dalla risposta): le righe si vedono spente e poi si accendono */
+.sot-scelta { transition: opacity .18s ease }
+.sot-abilita:not([data-pronto]) .sot-scelta { opacity: .55 }
+/* il mostro ringhia: una riga rossa sopra la stessa scelta, non un menu a parte (docs/sotterraneo/pericolo.md) */
+.sot-abilita > .sot-ringhio-detto {
+  margin: 0 0 4px; padding: 8px 10px; text-align: center; font-size: 13.5px; font-style: normal;
+  border: 2px solid #e0432f; border-radius: 8px; background: #4a1610cc; box-shadow: 0 0 16px #e0432f55;
+  animation: sot-ringhia .5s ease-out;
+}
+.sot-abilita > .sot-ringhio-detto > b { display: block; font-size: 15px; color: #ffb09f }
 .sot-scelta.sot-pronta .sot-scelta-testo small, .sot-scelta.sot-pronta .sot-scelta-costo { color: var(--sot-oro) }
 .sot-scelta.sot-spenta { cursor: default; opacity: .65 }
 .sot-scelta.sot-spenta:active { transform: none }
