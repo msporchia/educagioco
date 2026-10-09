@@ -3,10 +3,12 @@
    e i numeri che ne nascono, i nomi accordati, le probabilità delle
    rarità, i pezzi che cadono al livello del posto o dell'eroe, il mostro
    grosso in fondo a ogni discesa e il suo bottino sicuro, il leggendario
-   che si festeggia e finisce fra i Tesori, i mercanti a tono.
+   che si festeggia e finisce fra i Tesori, i mercanti a tono, l'aspetto
+   di un pezzo trovato (docs/sotterraneo/figure.md).
    `node test/esegui.mjs sotterraneo-rarita --niente-build` */
 import { COSE, chiaveDelPezzo, aLivello, baseDi, livelloDelPezzo, raritaDi, nomeDelPezzo, guastiDelleCose } from '../../src/giochi/sotterraneo/dati/cose.js'
-import { RARITA, ABILITA_DEI_PEZZI, LEGGENDARI, DEI_GROSSI, UNICI } from '../../src/giochi/sotterraneo/dati/pezzi.js'
+import { RARITA, ABILITA_DEI_PEZZI, LEGGENDARI, DEI_GROSSI, UNICI, TINTE_DELLE_ABILITA } from '../../src/giochi/sotterraneo/dati/pezzi.js'
+import { ASPETTI } from '../../src/giochi/sotterraneo/dati/aspetti.js'
 import { GROSSI, GROSSO_DELLA_DISCESA, GROSSO_OGNI, grossoDi, guastiDeiGrossi } from '../../src/giochi/sotterraneo/dati/grossi.js'
 import { CAMPAGNA, L_ABISSO } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { pezzoNuovo, pescaRarita, pescaAbilita, pezzoDelGrosso, guastiDelBottino, livelloDelBottino }
@@ -19,6 +21,7 @@ import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { ABILITA_CONFRONTATE } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { ABILITA } from '../../src/giochi/sotterraneo/viste/pezzo.js'
 import { righeDelGrosso, LATO, TAVOLOZZE } from '../../src/giochi/sotterraneo/scena/grossi.js'
+import { readFileSync } from 'node:fs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 1. i dati stanno in piedi ══════════ */
@@ -184,6 +187,27 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   const p = new Bottega({ eroe: 'cavaliere', crescita: { esp: sogliaDi(10) } })
   controlla('le pozioni costano di più ai grandi, e curano di più', p.quantoCosta('pozione') > COSE.pozione.prezzo && p.curaDi('pozione') > COSE.pozione.cura)
   uguale('il rigattiere compra a metà del prezzo vero', new Corredo().quantoVale('spada@7.m.fuoco'), Math.floor(COSE['spada@7.m.fuoco'].prezzo / 2))
+}
+
+/* ══════════ l'aspetto di un pezzo trovato ══════════ */
+{
+  const tinta = s => Object.values(ASPETTI).flat().find(f => f.sprite === s)
+  stessaLista('ogni abilità richiama qualche figura', Object.keys(TINTE_DELLE_ABILITA), Object.keys(ABILITA_DEI_PEZZI))
+  uguale('il pezzo di base tiene la sua figura di sempre', COSE.spada.sprite, 'spada')
+  uguale('lo stesso pezzo ha sempre la stessa figura', COSE['spada@9.m.fuoco'].sprite, COSE['spada@9.m.fuoco'].sprite)
+  const fuoco = [3, 5, 8, 11, 14].map(L => COSE[`spada@${L}.m.fuoco`].sprite)
+  controlla('una spada fiammeggiante è una spada del fuoco', fuoco.every(s => tinta(s).tinta === 'fuoco'), fuoco.join(', '))
+  const comuni = [2, 3, 4, 5, 6, 7, 8, 9].map(L => COSE[`manto@${L}`].sprite)
+  controlla('un mantello comune ha l\'aria da bottega', comuni.every(s => tinta(s).pregio <= 2), comuni.join(', '))
+  controlla('e non sono tutti uguali', new Set(comuni).size > 2, comuni.join(', '))
+  const rari = [4, 8, 12, 16].map(L => COSE[`corazza@${L}.r.vita.dif`].sprite)
+  controlla('una corazza rara ha l\'aria preziosa', rari.every(s => tinta(s).pregio >= 3), rari.join(', '))
+  uguale('il leggendario tiene la sua', COSE['spada@9.u.zanna-del-drago'].sprite, 'zanna-del-drago')
+  const catalogo = JSON.parse(readFileSync(new URL('../../strumenti/sprite/sorgenti/sotterraneo/generati/roba.json', import.meta.url)))
+  const conti = {}
+  for (const f of catalogo.figure) if (f.pezzo) conti[f.pezzo] = (conti[f.pezzo] || 0) + 1
+  const stantio = Object.keys({ ...conti, ...ASPETTI }).filter(b => conti[b] !== (ASPETTI[b] || []).length)
+  controlla('dati/aspetti.js è quello del catalogo (se no: roba.py --gioco)', !stantio.length, stantio.join(', '))
 }
 
 riassunto('la roba con livello e rarità, e i mostri grossi')

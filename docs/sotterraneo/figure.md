@@ -4,8 +4,8 @@ I tre fogli dipinti del sotterraneo (`bottino-e-arredo.png`, `scudi.png`,
 `armature-e-vesti.png` in `strumenti/sprite/sorgenti/sotterraneo/generati/`)
 contengono **244 figure da indossare**: 36 spade e pugnali, 12 asce e aste,
 11 archi e balestre, 57 bacchette, bastoni e scettri, 39 armature e vesti,
-53 scudi, 36 amuleti e anelli. Il gioco ne ritaglia una cinquantina. Le
-altre aspettano un pezzo che le chiami. Prima di chiederne di nuove a un
+53 scudi, 36 amuleti e anelli. **Ne sono in gioco 227**: le basi, i pezzi
+col nome e gli aspetti dei pezzi trovati. Prima di chiederne di nuove a un
 generatore si guarda qui.
 
 ## Il catalogo
@@ -20,6 +20,9 @@ sono:
   arcano, sangue, oro, morte o nessuno;
 - `materia`, `stile` (guerriero, esploratore, mago, chiunque), `mani`,
   `pregio` (da 1 a 4) e un `nome` proposto;
+- `pezzo`: la base che veste (vedi sotto);
+- `buchi`, solo dove il vuoto da togliere è più grande del solito (la
+  cordicella larga di un ciondolo: `strumenti/sprite/FORMATO.md`);
 - `dubbi`, quando la figura è storta o non si capisce.
 
 **La descrizione esiste perché la figura da sola non basta.** Un bastone
@@ -32,20 +35,63 @@ cosa del pezzo**. L'elemento richiama l'abilità, la `materia` richiama la
 famiglia (`ferro` per il cavaliere e il nano, `stoffa` per l'elfa e il mago,
 cuoio per tutti: [roba.md](roba.md)).
 
-Le descrizioni sono un dato scritto a mano (da agenti, il 9/10/2026): non si
-rigenerano, si correggono. **Quali figure sono in gioco non sta nel
-catalogo**: lo dicono i foglietti, e `roba.py` lo ricava ogni volta. Una
-copia scritta a mano diventerebbe vecchia senza che nessuno se ne accorga.
+Le descrizioni e i `pezzo` sono dati scritti a mano (le descrizioni da
+agenti, il 9/10/2026): non si rigenerano, si correggono. **Quali figure sono
+già ritagliate non sta nel catalogo**: lo dicono i foglietti, e `roba.py`
+lo ricava ogni volta. Una copia scritta a mano diventerebbe vecchia senza
+che nessuno se ne accorga.
 
 ```bash
 python3 strumenti/sprite/roba.py                          # tutte, in tmp/roba/catalogo.png
 python3 strumenti/sprite/roba.py veste --stile mago       # una categoria, filtrata
 python3 strumenti/sprite/roba.py bastone --elemento fuoco --libere
 python3 strumenti/sprite/roba.py --foglietto bastone-08   # la riga da incollare nel foglietto
+python3 strumenti/sprite/roba.py --gioco                  # dopo aver toccato un `pezzo`; poi atlante.py
 ```
 
-Nel provino le figure in gioco hanno il bordo verde e il nome dello sprite;
-le altre mostrano elemento e stile.
+Nel provino le figure già ritagliate hanno il bordo verde e il nome dello
+sprite. Le altre mostrano il loro `pezzo`, oppure «fuori».
+
+## Gli aspetti dei pezzi trovati
+
+**Un pezzo trovato ha la figura di uno dei suoi aspetti**, cioè una delle
+figure col suo `pezzo`. Vale per i pezzi con un livello o con una rarità,
+come `spada@7` o `spada@7.m.fuoco`. Il pezzo di base, quello con la chiave
+di sempre, tiene la sua figura. `roba.py --gioco` scrive gli aspetti in un
+blocco di ogni foglietto (fra `__aspetti` e `__aspetti-fine`, non si tocca a
+mano) e la tabella `ASPETTI` in `dati/aspetti.js`. La scelta la fa
+`aspettoDi` in `dati/cose.js`:
+
+1. **il pregio della rarità** (`pregio` in `RARITA`): comune 1–2, magico
+   2–3, raro 3–4. Un pezzo comune ha l'aria da bottega, uno raro quella
+   preziosa;
+2. **la prima abilità che richiama una figura** (`TINTE_DELLE_ABILITA` in
+   `dati/pezzi.js`). La Spada fiammeggiante è una spada del fuoco, quella
+   «della gazza» è d'oro;
+3. **una sola, scelta dalla chiave**: lo stesso pezzo ha sempre la stessa
+   figura, nello zaino, per terra e dopo un ricaricamento. Nel salvataggio
+   non c'è niente di nuovo.
+
+**Il `pezzo` segue il nome, non il colore.** Una figura veste solo una base
+che si chiama come quello che si vede: le scimitarre sono «Spada», i
+pugnali «Spada corta», le vesti col cappuccio «Mantello» e quelle senza
+«Tunica», le piastre «Corazza», gli scudi con la croce «Scudo crociato».
+Un ciondolo azzurro è un «Amuleto azzurro», uno rosso un «Amuleto rosso»;
+gli altri sono «Medaglione», l'unico nome che non dice un colore. Le armi
+in asta (falcioni, tridente) sono «Ascia», la cosa più vicina che c'è. Le
+regole stanno nei dati: per spostare una figura si cambia il suo `pezzo` e
+si rilancia `--gioco`.
+
+**Restano fuori 17 figure, e ognuna ha il suo motivo** nel campo `dubbi`:
+
+- le 13 disegnate in diagonale: dieci bastoni e tre balestre (la balestra
+  di base resta). In mano le armi stanno dritte ([roba.md](roba.md)), e un
+  giro di 45° su una figura così piccola la rovina. Sono quelle da far
+  rifare;
+- 4 di forma che nessun pezzo ha: la frusta, il maglio, la mazza (la porta
+  solo Grumo) e l'arco con la lama.
+
+Pesano nell'atlante: con gli aspetti passa da 244 a 316 KB di PNG.
 
 ## I pezzi col nome hanno la loro figura
 
@@ -66,5 +112,7 @@ Due scelte da rifare quando ci saranno figure migliori:
 - **Il Pugnale dell'ombra è una spada** (`spada-07`, la lama dal dorso
   viola). Nei fogli non c'è un pugnale scuro.
 
-Nei test: `unita/sotterraneo` («le cose»: ogni sprite nominato è
-nell'atlante, ogni pezzo col nome ha la sua figura).
+Nei test: `unita/sotterraneo` («le cose»: ogni sprite, ogni aspetto e ogni
+pezzo col nome è nell'atlante) e `unita/sotterraneo-rarita` (l'aspetto: la
+base tiene la sua figura, la spada fiammeggiante è del fuoco, il comune da
+bottega, il raro prezioso, la stessa chiave dà la stessa figura).

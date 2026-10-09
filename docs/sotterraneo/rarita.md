@@ -21,9 +21,12 @@ grossi), `dati/cose.js` (la chiave composta: `leggiPezzo`, `chiaveDelPezzo`,
 | raro | giallo | 2 o 3 | ×2,6 | ×1,4 |
 | leggendario | arancio-oro | le sue 3 | ×4 | ×1,8 |
 
-- **Stessa icona del pezzo di oggi, più un'aura del colore della rarità**:
-  sul bordo e dentro la casella (`.sot-r-<rarità>` in `stile.css`), per terra
-  un alone che respira (`aura` in `scena/tela.js`), nel nome del pannello e
+- **Una figura sua fra quelle della base, più un'aura del colore della
+  rarità**. La figura è un aspetto della base, scelto per pregio e per
+  abilità dalla chiave stessa ([figure.md](figure.md)): la Spada
+  fiammeggiante è una spada del fuoco. L'aura sta sul bordo e dentro la
+  casella (`.sot-r-<rarità>` in `stile.css`), per terra è un alone che
+  respira (`aura` in `scena/tela.js`), e torna nel nome del pannello e
   nell'avviso quando si raccoglie. Il comune non ha aura.
 - **Il livello alza anche un pezzo comune**, sul suo numero principale:
   l'attacco di un'arma +1 ogni 5 livelli, la difesa di scudi e armature +1

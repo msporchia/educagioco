@@ -2,12 +2,13 @@
 // di Diablo. I pezzi magici e rari hanno abilità prese da una decina, e il nome nasce da loro. Dato puro: chi legge
 // una chiave composta («spada@7.m.fuoco.att») sta in dati/cose.js, chi pesca il bottino in motore/bottino.js.
 
-// le quattro rarità: `molt` moltiplica il prezzo, `forza` le abilità, `quante` quante abilità si pescano
+// le quattro rarità: `molt` moltiplica il prezzo, `forza` le abilità, `quante` quante abilità si pescano, `pregio`
+// fra quali figure sceglie il suo aspetto (dati/aspetti.js): un pezzo comune ha l'aria da bottega
 export const RARITA = {
-  comune: { lettera: 'c', nome: 'comune', colore: '#e9e6df', molt: 1, forza: 0, quante: [0, 0] },
-  magico: { lettera: 'm', nome: 'magico', colore: '#6f8dff', molt: 1.6, forza: 1, quante: [1, 2] },
-  raro: { lettera: 'r', nome: 'raro', colore: '#ffd23f', molt: 2.6, forza: 1.4, quante: [2, 3] },
-  leggendario: { lettera: 'l', nome: 'leggendario', colore: '#ff9a2e', molt: 4, forza: 1.8, quante: [3, 3] },
+  comune: { lettera: 'c', nome: 'comune', colore: '#e9e6df', molt: 1, forza: 0, quante: [0, 0], pregio: [1, 2] },
+  magico: { lettera: 'm', nome: 'magico', colore: '#6f8dff', molt: 1.6, forza: 1, quante: [1, 2], pregio: [2, 3] },
+  raro: { lettera: 'r', nome: 'raro', colore: '#ffd23f', molt: 2.6, forza: 1.4, quante: [2, 3], pregio: [3, 4] },
+  leggendario: { lettera: 'l', nome: 'leggendario', colore: '#ff9a2e', molt: 4, forza: 1.8, quante: [3, 3], pregio: [4, 4] },
 }
 export const ORDINE_RARITA = ['comune', 'magico', 'raro', 'leggendario']
 export const rangoDellaRarita = r => Math.max(0, ORDINE_RARITA.indexOf(r))
@@ -40,6 +41,14 @@ export const ABILITA_DEI_PEZZI = {
             valore: (L, f) => Math.max(1, Math.round((2 + L / 6) * f)) },
 }
 export const CHIAVI_ABILITA = Object.keys(ABILITA_DEI_PEZZI)
+
+// l'aspetto di un pezzo trovato richiama la sua prima abilità: gli elementi delle figure (dati/aspetti.js) che le
+// stanno bene, nell'ordine. La spada fiammeggiante è una spada del fuoco, l'anello della gazza è d'oro
+export const TINTE_DELLE_ABILITA = {
+  att: ['fulmine', 'sangue'], dif: ['ghiaccio', 'morte'], vita: ['sangue', 'natura'], rigenera: ['natura', 'acqua'],
+  fuoco: ['fuoco'], schivata: ['ombra', 'arcano'], gemme: ['oro', 'luce'], fortuna: ['oro', 'natura'],
+  pozioni: ['arcano', 'acqua', 'veleno'], torcia: ['luce', 'fuoco'],
+}
 
 // Il livello rende più forte anche un pezzo comune, sul suo numero principale: le armi picchiano, gli scudi e le
 // armature parano, i gioielli che danno vita ne danno di più. Lento apposta: nella storia (livelli 1–12) un'arma

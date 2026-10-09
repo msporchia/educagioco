@@ -3,7 +3,8 @@
 // Il perché di tutto sta in docs/sotterraneo/roba.md.
 import { EROI, FAMIGLIE, portaLa } from './eroi.js'
 import { RARITA, RARITA_DA_LETTERA, ABILITA_DEI_PEZZI, UNICI, EPICI, ATT_OGNI_LIVELLI, DIF_OGNI_LIVELLI,
-         VITA_OGNI_LIVELLI, valoreDelLivello } from './pezzi.js'
+         VITA_OGNI_LIVELLI, valoreDelLivello, TINTE_DELLE_ABILITA } from './pezzi.js'
+import { ASPETTI } from './aspetti.js'
 
 // i tre gradini, uguali per tutte le famiglie: `att` è a una mano
 const GRADINI = [
@@ -184,7 +185,8 @@ function componi(k) {
     if (abilita.some(a => !ABILITA_DEI_PEZZI[a]) || new Set(abilita).size !== abilita.length) return undefined
   }
   const c = { ...b, chiave: k, base, liv, rarita, unico, storia, abilita: {} }
-  if (unico) c.sprite = unico   // il pezzo col nome ha la sua figura, chiamata come lui
+  // il pezzo col nome ha la sua figura, chiamata come lui; uno trovato ne prende una fra quelle della sua base
+  c.sprite = unico || aspettoDi(k, base, rarita, abilita) || b.sprite
   // il livello sul numero principale, anche per un pezzo comune
   if (b.dove === 'mano') c.att = (c.att || 0) + Math.floor((liv - 1) / ATT_OGNI_LIVELLI)
   else if (b.dove === 'mancina' || b.dove === 'corpo') c.dif = (c.dif || 0) + Math.floor((liv - 1) / DIF_OGNI_LIVELLI)
@@ -198,6 +200,26 @@ function componi(k) {
   c.prezzo = Math.max(1, Math.round((b.prezzo || 1) * valoreDelLivello(liv) * RARITA[rarita].molt))
   c.nome = nome || nomeDelPezzo(b, rarita, abilita, liv)
   return c
+}
+
+// L'aspetto di un pezzo trovato (docs/sotterraneo/figure.md): fra le figure della sua base quelle del pregio della
+// rarità, poi quelle che richiamano la prima abilità che ne ha, poi una sola, scelta dalla chiave: lo stesso pezzo
+// ha sempre la stessa figura, anche ricaricato
+export function aspettoDi(k, base, rarita, abilita = []) {
+  const tutte = ASPETTI[base]
+  if (!tutte || !tutte.length) return null
+  const [da, a] = RARITA[rarita].pregio
+  let scelte = tutte.filter(f => f.pregio >= da && f.pregio <= a)
+  if (!scelte.length) scelte = tutte
+  for (const x of abilita) {
+    const giuste = scelte.filter(f => (TINTE_DELLE_ABILITA[x] || []).includes(f.tinta))
+    if (giuste.length) { scelte = giuste; break }
+  }
+  let h = 2166136261
+  for (let i = 0; i < k.length; i++) h = Math.imul(h ^ k.charCodeAt(i), 16777619)
+  h = Math.imul(h ^ (h >>> 16), 0x45d9f3b)   // chiavi quasi uguali («manto@2», «manto@3») non si alternano su due
+  h = (h ^ (h >>> 16)) >>> 0
+  return scelte[h % scelte.length].sprite
 }
 
 // il nome nasce dalle abilità: «Spada fiammeggiante», «Spada fiammeggiante della volpe», «Scudo runico del drago»
@@ -330,6 +352,10 @@ export function guastiDelleCose(nomi = null) {
       g.push(`${k}: nell'atlante non c'è lo sprite "${c.sprite}"`)
   if (nomi) for (const k of Object.keys(UNICI))
     if (!nomi.includes(k)) g.push(`${k}: ha il nome proprio, ma nell'atlante non c'è la sua figura`)
+  for (const [base, figure] of Object.entries(ASPETTI)) {
+    if (!BASI[base] || !BASI[base].dove) g.push(`aspetti di "${base}": non è un pezzo che si indossa`)
+    if (nomi) for (const f of figure) if (!nomi.includes(f.sprite)) g.push(`${base}: nell'atlante non c'è l'aspetto "${f.sprite}"`)
+  }
   for (const [k, c] of Object.entries(COSE)) {
     if (!c.em || !c.nome) g.push(`${k}: senza emoji o senza nome`)
     if (!c.dice) g.push(`${k}: non dice cosa fa, e il mercante lo mostra`)
