@@ -3,8 +3,9 @@
    solo alberi, sempre in vista. Un medaglione per ondata: il mostro, quanti
    e le torri a cui è immune, sbarrate. In battaglia il primo è chi è in
    campo; fra un'ondata e l'altra è chi parte col tasto. Le prossime tre si
-   vedono sempre (più chi è in campo); la linguetta apre le altre. Toccato un medaglione si apre la scheda del
-   mostro (SchedaGrande). Vedi docs/castello/mostri.md. */
+   vedono sempre (più chi è in campo); la linguetta apre le altre. Toccato un
+   medaglione si apre la scheda del mostro (SchedaGrande). Vedi
+   docs/castello/mostri.md. */
 import { ref, computed } from 'vue'
 import { TORRI } from '../../data/ops.js'
 import RitrattoMostro from './RitrattoMostro.vue'
