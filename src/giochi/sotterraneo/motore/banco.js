@@ -15,7 +15,7 @@ import { puntiDaDare, CRESCITA_NUOVA, crescitaA, prossimoPunto } from './crescit
 import { eroeDi } from '../dati/eroi.js'
 import { zonaPotenziata } from '../dati/zone.js'
 import { robaAttesaA, crescitaAttesaA } from './zone.js'
-import { livelloDi } from '../dati/livelli.js'
+import { quotaDi } from '../dati/livelli.js'
 import { viaVerso, percorso } from '../../../motore/passi.js'
 
 const DT = 1 / 30
@@ -458,10 +458,11 @@ function filaGiocata({ eroe = undefined, seme = 1, fila = 'minimo', tentativi = 
   return zaini
 }
 
-// Le zone potenziate sotto il banco (docs/sotterraneo/zone.md): ogni discesa potenziata al livello `livello`, con la roba
-// e la crescita attese a quel livello (motore/zone.js) e le pozioni dell'abisso, dritti alla scala. Torna, per bravura e
-// per zona, quante volte su `semi` si arriva in fondo; e, con la prima bravura, le domande e i livelli presi in media.
-// `eroeA`: il livello dell'eroe, se non è quello della zona (con la roba attesa al suo livello): i colori del pallino
+// Le zone sotto il banco (docs/sotterraneo/zone.md): ogni discesa fatta zona con la fascia che comincia a `livello`, con
+// la roba e la crescita attese a quel livello (motore/zone.js) e le pozioni dell'abisso, dritti alla scala. Torna, per
+// bravura e per zona, quante volte su `semi` si arriva in fondo; e, con la prima bravura, le domande e i livelli presi in
+// media (col pezzo di livello fatto: 1,3 è un livello e un terzo). `eroeA`: il livello dell'eroe, se non è quello
+// della zona (con la roba attesa al suo livello): i colori del pallino
 export function misuraLeZone({ eroe = 'cavaliere', livello = 12, eroeA = livello, semi = 10, prove = [0.8, 0.6, 0.4],
                                quali = null, come = 'minimo' } = {}) {
   const discese = quali || CAMPAGNA.map((_, k) => k)
@@ -478,7 +479,8 @@ export function misuraLeZone({ eroe = 'cavaliere', livello = 12, eroeA = livello
         if (g.esito.vinta) n++
         if (j === 0) {
           domande[k] = (domande[k] || 0) + g.esito.domande / semi
-          livelli[k] = (livelli[k] || 0) + (livelloDi(g.corsa.crescita.esp) - eroeA) / semi
+          const q = quotaDi(g.corsa.crescita.esp)
+          livelli[k] = (livelli[k] || 0) + (q.livello + q.quota - eroeA) / semi
         }
       }
       vinte[j][k] = n

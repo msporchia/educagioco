@@ -19,6 +19,7 @@ import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi, brancoDi, sc
 import { grossoDi, GROSSI } from '../dati/grossi.js'
 import { valoreDelLivello } from '../dati/pezzi.js'
 import { espDi } from '../dati/livelli.js'
+import { espNellaZona } from '../dati/zone.js'
 import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino } from './bottino.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
@@ -664,8 +665,8 @@ export class Corsa extends Corredo {
       this.dillo('🗝️ La chiave! Ora la scala si apre')
     }
     // l'esperienza: tanta quanto è forte la sua specie e quanto è giù il posto (dati/livelli.js), il grosso molta di più
-    // e la dice un numerino «+N ✨» che sale dal campo (Gioco.vue)
-    const esp = espDi(MOSTRI[m.tipo], this.livelloQui, !!m.grosso)
+    // e la dice un numerino «+N ✨» che sale dal campo (Gioco.vue). In una zona grigia un quarto, nell'abisso un terzo (dati/zone.js)
+    const esp = Math.max(1, Math.round(espDi(MOSTRI[m.tipo], this.livelloQui, !!m.grosso) * espNellaZona(this.tappa, this.livelloEroe)))
     this.eventi.push({ che: 'esp', esp, x: m.x, y: m.y })
     this.guadagna(esp)
     // 💚 rigenera: ogni mostro battuto rimette in piedi un poco

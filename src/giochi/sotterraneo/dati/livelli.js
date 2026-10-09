@@ -29,11 +29,16 @@ export const DOTE_OGNI = 3
 // e l'esperienza di un mostro cresce in linea retta con la profondità. Tarata col banco: chi va dritto
 // arriva all'abisso verso il livello 11 (docs/sotterraneo/livelli.md, «Le misure»)
 export const ESP_A = 14, ESP_B = 16
-// oltre la storia (l'abisso: mostri sempre più grossi, e quindi sempre più esperienza) ogni livello costa anche il cubo
-// di quanto si è sopra il livello 12: senza, l'eroe dell'abisso cresceva più in fretta dei mostri (misurato)
-export const ESP_OLTRE = 12, ESP_C = 20
-export const sogliaDi = n => (n <= 1 ? 0
-  : ESP_A * (n - 1) * n / 2 + ESP_B * (n - 1) + ESP_C * Math.max(0, n - ESP_OLTRE) ** 3)
+// Oltre la storia (dal livello 12) ogni livello costa in più ESP_R + ESP_Q · (2m + 1), con m quanti livelli si è sopra
+// il 12: cresce in linea retta come l'esperienza di una zona, così una zona verde vinta vale più o meno un livello a
+// ogni altezza (docs/sotterraneo/zone.md, «L'esperienza»). Provato: il cubo di m, messo per l'abisso; dal 18 una zona
+// valeva 0,2 livelli e le zone non giravano mai
+export const ESP_OLTRE = 12, ESP_Q = 10, ESP_R = 120
+export const sogliaDi = n => {
+  if (n <= 1) return 0
+  const m = Math.max(0, n - ESP_OLTRE)
+  return ESP_A * (n - 1) * n / 2 + ESP_B * (n - 1) + ESP_Q * m * m + ESP_R * m
+}
 
 // il livello di chi ha `esp` di esperienza; nessun tetto
 export function livelloDi(esp) {

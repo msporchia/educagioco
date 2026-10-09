@@ -100,6 +100,9 @@ export const L_ABISSO = {
   // svenire due volte prima di trovare un'arma. Dopo la scaletta c'è un capo per sempre (guardianoDi)
   guardiani: ['scheletro', 'scheletro', 'orco', 'granchio', 'orco', 'golem', 'golem'],
   capo: 'gigante',
+  // l'esperienza dei mostri un terzo: i suoi mostri sono molto più deboli di quelli di una zona dello stesso livello, e
+  // per domanda rendeva tre volte una zona verde (docs/sotterraneo/zone.md, «L'esperienza»): ci si fanno le ossa nelle zone
+  esp: 1 / 3,
   // la difesa dell'eroe ha un tetto (l'attacco dei mostri no): lasciando crescere il piano e basta ci si
   // ferma sempre fra il settimo e l'undicesimo, perché i mostri fanno troppo male (misurato dal banco)
   attOgni: 3,
