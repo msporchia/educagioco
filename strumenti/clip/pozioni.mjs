@@ -41,7 +41,8 @@ export default {
   },
   passi: [[`.pz-tappa[data-tappa="${INDICE}"]`, 500]],
   clip: {
-    secondi: 8,
+    dallaMappa: true,                // dalla mappa delle tappe: il tocco, poi il laboratorio
+    secondi: 10,
     async durante (page) {
       if (INDICE < 0) return           // la tappa è sparita: niente da giocare
       const attesa = ms => page.waitForTimeout(ms)

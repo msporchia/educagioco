@@ -138,6 +138,14 @@ function fattoriaGiocata() {
 
 PROFILO.campagne = {
   survivors: { tappa: 6, libera: true, stelle: {}, cfg: {} },
+  /* la nave dipinta: scafo, ali e fiamme di tinte vinte, un disegno sulle ali e uno stemma
+     (docs/asteroidi/hangar.md) — quella di serie è bianca e non dice che c'è un hangar */
+  mate: { tappa: 5, libera: true, stelle: {}, cfg: {},
+          hangar: { presi: ['scafo:nero', 'ali:rubino', 'fiamma:arancio', 'd:fiamme', 'colDisegno:oro',
+                            'colStemma:oro', 's:corona'],
+                    nuovi: [],
+                    nave: { scafo: 'nero', ali: 'rubino', fiamma: 'arancio', disegno: 'fiamme',
+                            colDisegno: 'oro', stemma: 'corona', colStemma: 'oro' } } },
   codice: { tappa: 5, libera: true, stelle: {}, cfg: {} },
   fattoria: { tappa: 0, libera: false, stelle: {}, cfg: { stato: fattoriaGiocata() } },
   // tre tappe del primo mondo vinte: la mappa ha un sentiero battuto e la nave a metà
@@ -344,6 +352,7 @@ const RICETTE = [
   /* il campo dopo un paio di secondi: appena entrati la luce è ancora
      tutta addosso all'eroe, e lo scatto racconterebbe una stanza sola */
   { file: 'sotterraneo-gioco', dove: 'sotterraneo', attesa: '[data-terra]',
+    profilo: p => { p.campagne.sotterraneo = { tappa: 3, libera: false, stelle: {}, cfg: { eroe: 'cavaliere' } }; return p },
     passi: [async page => { await scendiNelSotterraneo(page, 0); await page.waitForTimeout(2200) }] },
 
   /* ── i due dei piccoli ──
@@ -461,6 +470,14 @@ async function mostraITocchi (page) {
   })
 }
 
+/* un passo di ricetta: [selettore, attesa dopo] o una funzione */
+async function faiIlPasso (page, passo) {
+  if (typeof passo === 'function') return passo(page)
+  const [sel, attesa] = passo
+  await page.click(sel, { timeout: 6000 })
+  await page.waitForTimeout(attesa)
+}
+
 async function registra (page, r) {
   if (r.clip.tocchi !== false) await mostraITocchi(page)
   const cdp = await page.context().newCDPSession(page)
@@ -478,7 +495,16 @@ async function registra (page, r) {
   })
   await cdp.send('Page.startScreencast',
     { format: 'jpeg', quality: 90, maxWidth: 780, maxHeight: 1688, everyNthFrame: 1 })
-  const partita = r.clip.durante ? r.clip.durante(page).catch(e => e) : null
+  /* `dallaMappa: true`: i passi si fanno **registrando**, così il filmato
+     comincia dalla schermata di scelta e si vede il tocco che apre il
+     livello (`secondi` conta da lì, passi compresi) */
+  const davanti = r.clip.dallaMappa ? (r.passi || []) : []
+  const partita = r.clip.durante || davanti.length
+    ? (async () => {
+        if (davanti.length) await page.waitForTimeout(900)     // la mappa si legge
+        for (const passo of davanti) await faiIlPasso(page, passo)
+        if (r.clip.durante) await r.clip.durante(page)
+      })().catch(e => e) : null
   /* `secondi` è il tetto; con `coda` la registrazione si chiude anche
      prima, quel tanto dopo che la partita è finita — un cartello di
      vittoria fermo per metà filmato non racconta niente */
@@ -558,15 +584,8 @@ for (const r of scelte) {
   try {
     await page.goto(GIOCO + (r.dove ? '#' + r.dove : ''))
     await page.waitForSelector(r.attesa, { timeout: 12000 })
-    for (const passo of r.passi || []) {
-      try {
-        if (typeof passo === 'function') await passo(page)
-        else {
-          const [sel, attesa] = passo
-          await page.click(sel, { timeout: 6000 })
-          await page.waitForTimeout(attesa)
-        }
-      } catch (e) {
+    for (const passo of r.clip?.dallaMappa ? [] : r.passi || []) {
+      try { await faiIlPasso(page, passo) } catch (e) {
         nota = '(un passo non è riuscito: ' + String(e.message).split('\n')[0].slice(0, 70) + ')'
         storte++
       }
