@@ -94,6 +94,18 @@ restano in codice anche dopo: si muovono.
 La barra non cambia forma: quello che sopra non ha senso resta al suo posto,
 spento o col suo significato di sopra.
 
+## La finestra dell'eroe
+
+Lo zaino, le caratteristiche e l'albero delle abilità sono **tre schede della
+stessa finestra** (`viste/SchedeEroe.vue`, l'utente: «tre tab della stessa
+cosa, aprendo l'eroe dovrei poterli vedere tutti»): Zaino, Eroe, Abilità, in
+cima alla cornice, quella aperta d'oro e un «+N» d'oro dove ci sono punti da
+dare. La bisaccia apre lo Zaino, il livello l'Eroe, il globo blu le Abilità;
+da lì si passa all'altra scheda senza chiudere (`apriScheda` in `Gioco.vue`).
+Le tre cornici sono alte uguali, così cambiando scheda non saltano; il nome
+lo dice la scheda, e dentro non si ripete (lo zaino tiene solo «al
+villaggio» o «piano 2/3»). Durante uno scontro non si apre, come prima.
+
 ## Le caselle che fanno qualcosa
 
 - **🧪 beve senza aprire lo zaino**: ferito, la più piccola pozione che
@@ -126,7 +138,7 @@ dell'energia `[data-azione="abilita"]` con `data-punti-abilita`; `[data-casella-
 `data-n`; `[data-azione="bevi"]`, `[data-azione="zaino"]`,
 `[data-azione="diario-giu"]` (giù) e `[data-azione="diario"]` con
 `[data-diario-n]` (sopra), `[data-azione="mappina"]` (con `aria-pressed`),
-`[data-gemme-barra]`. `integrazione/sotterraneo-barra` (col dito: la stessa
+`[data-gemme-barra]`; le schede `[data-scheda="zaino|eroe|abilita"]`. `integrazione/sotterraneo-barra` (col dito: la stessa
 barra sopra e sotto, i globi, il mostro che colpisce, la pozione dalla
 casella, una pozione buttata e raccolta che fa risalire la casella, il tocco
 altrove, le misure a 390 e a 320 px con le caselle tutte uguali),

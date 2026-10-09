@@ -134,6 +134,16 @@ await scatto(page, 'eroe-pagina')
   uguale('e il «+» sul globo lo dice', await page.locator('[data-azione="eroe-pagina"]').getAttribute('data-punti'), '1')
 }
 
+/* ---------- 2b. le tre schede della finestra dell'eroe ---------- */
+uguale('la finestra dell\'eroe ha tre schede', (await page.locator('[data-scheda]').evaluateAll(es => es.map(e => e.dataset.scheda))).join(),
+       'zaino,eroe,abilita')
+await toccaIl('[data-scheda="abilita"]')
+uguale('«Abilità» apre l\'albero senza chiudere', await page.locator('[data-pagina-abilita]').count(), 1)
+await toccaIl('[data-scheda="zaino"]')
+uguale('«Zaino» apre lo zaino', await page.locator('[data-zaino]').count(), 1)
+await toccaIl('[data-scheda="eroe"]')
+uguale('e «Eroe» torna qui', await page.locator('[data-pagina-eroe]').count(), 1)
+
 /* ---------- 3. i Tesori ---------- */
 await toccaIl('[data-azione="tesori"]')
 await page.waitForSelector('[data-tesori]', { timeout: 3000 })

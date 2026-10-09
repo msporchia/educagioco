@@ -126,8 +126,9 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
 La barra cambia così ([barra.md](barra.md)): l'esperienza diventa una riga
 sopra le caselle col livello a sinistra (il tasto della pagina dell'eroe), e
 il globo di destra è l'energia, blu. Il globo è un tasto: apre l'albero, e
-porta il «+» d'oro quando ci sono punti da imparare. La pagina dell'eroe ha
-il tasto «🔷 Abilità» accanto ai Tesori; l'albero torna all'eroe con «‹ Elfa».
+porta il «+» d'oro quando ci sono punti da imparare. L'albero è una delle
+tre schede della finestra dell'eroe, con lo Zaino e l'Eroe
+([barra.md](barra.md#la-finestra-delleroe)).
 
 Nella pagina dell'albero, che è epica e non una tabella (l'utente): in cima
 «Nello scontro» con le tre caselle. **Una casella si tocca e si sceglie cosa
@@ -139,7 +140,10 @@ riquadro del nodo: poco epico. Sotto i tre rami ognuno col suo
 quattro medaglioni legati da una **catena** che si accende d'oro quando il
 nodo sopra è preso; i gradi sono tre gemme sotto il nome, e un nodo che
 aspetta il livello lo dice («livello 8»). In fondo il medaglione toccato con
-cosa fa adesso e al grado dopo, e «Impara»/«Migliora». Un
+cosa fa adesso e al grado dopo (senza «Fa:»: si è già nella pagina che lo dice),
+e «Impara»/«Migliora». Le cure e gli scudi dicono il numero vero con la vita
+dell'eroe: «cura 12 di vita», «uno scudo che para 10 danni, finché dura lo
+scontro» (`inVita`, lo stesso conto del motore). Un
 nodo imparato va da sé in una casella vuota: chi lo impara a metà discesa
 se lo ritrova nello scontro.
 
@@ -176,4 +180,4 @@ nodi `[data-azione="nodo"][data-nodo][data-grado][data-stato="preso|pronto|chius
 `[data-nodo-dettaglio]`, `[data-azione="impara"]`, `[data-azione="dimentica"][data-costo]`, le caselle `[data-azione="zoccolo"][data-zoccolo="0..2"]`
 e la scelta `[data-scelta-abilita] [data-azione="metti"][data-metti="<id>"]`,
 `[data-caselle-albero] [data-casella]`, `[data-punti-abilita][data-n]`, i glifi `[data-glifo]`,
-`[data-azione="eroe-faccia"]`; nella pagina dell'eroe `[data-azione="abilita-pagina"]`.
+le schede `[data-scheda]` ([barra.md](barra.md#la-finestra-delleroe)).

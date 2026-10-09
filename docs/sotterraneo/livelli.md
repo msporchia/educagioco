@@ -175,9 +175,9 @@ se la più bassa è almeno la metà della più alta: 18 e 12 sì, 18 e 7 no, 50 
 
 ## La pagina dell'eroe
 
-`viste/PaginaEroe.vue`, nella cornice dello zaino. Si apre dal livello
-nella barra in basso (sopra e sotto, [barra.md](barra.md)), e porta
-all'albero delle abilità col tasto «🔷 Abilità» ([abilita.md](abilita.md)).
+`viste/PaginaEroe.vue`, la scheda «Eroe» della finestra dell'eroe (con lo
+Zaino e le Abilità, [barra.md](barra.md#la-finestra-delleroe)). Si apre dal
+livello nella barra in basso, sopra e sotto.
 Dall'alto: il
 ritratto armato, il nome, il livello e la barra dell'esperienza («✨ 5 /
 72»); i numeri che decidono uno scontro (❤️ ⚔️ 🛡️ 💎: attacco e difesa non
