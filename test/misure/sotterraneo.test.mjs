@@ -1,5 +1,7 @@
 /* La tabella della grande storia sotto il banco (docs/sotterraneo/
-   la-grande-storia.md e livelli.md). Ogni eroe ha una riga di roba
+   la-grande-storia.md e livelli.md).
+   tempo: 500
+   Ogni eroe ha una riga di roba
    attesa per ogni discesa (dati/storia.js, con i pezzi dei mostri grossi
    delle discese prima) e un livello atteso (LIVELLI_ATTESI, coi punti
    dati come li dà il banco), e i mostri di ogni discesa sono tarati su
@@ -28,8 +30,7 @@
    passeggiata né per chi va dritto né per chi gira tutto e spende tutto,
    né per chi arriva con molte gemme da parte.
    `node test/esegui.mjs misure/sotterraneo --niente-build`
-   Infine le zone che si potenziano, a ogni livello, e i colori del pallino.
-   tempo: 500 */
+   Infine le zone, a ogni livello, l'esperienza che danno, e i colori del pallino. */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { misuraLaStoria, misuraConLaRoba, misuraDiChiHaMessoDaParte, misuraLeZone } from '../../src/giochi/sotterraneo/motore/banco.js'
@@ -147,40 +148,62 @@ for (const gemme of [100, 250]) {
   }
 }
 
-/* Le zone che si potenziano (docs/sotterraneo/zone.md): finita la storia ogni discesa si sveglia al livello dell'eroe.
-   Chi ha il livello atteso (e la roba attesa a quel livello, motore/zone.js) a 8/10 arriva in fondo quasi sempre, a
-   6/10 più o meno due volte su tre ma non sempre, a 4/10 di rado: come una discesa della storia, a ogni livello. E i
-   colori del pallino si misurano qui: una zona del 16 con l'eroe due gradini sotto (rosso) non si passa rispondendo
-   sei su dieci, uno sotto (arancio) a otto si può tentare, due sopra (grigio) è una passeggiata */
+/* Le zone (docs/sotterraneo/zone.md): finita la storia ogni discesa ha una fascia di quattro livelli. Chi sta in fondo
+   alla fascia (il livello dove comincia: la verde più dura) con la roba attesa a quel livello (motore/zone.js) a 8/10
+   arriva in fondo quasi sempre, a 6/10 più o meno due volte su tre ma non sempre, a 4/10 di rado: come una discesa della
+   storia, a ogni livello. Vinta, vale più o meno un livello. E i colori del pallino si misurano qui, su una fascia
+   16–19: l'eroe del 11 (rosso) non passa rispondendo sei su dieci, del 12 (l'arancio più duro) a otto si può tentare,
+   del 15 (l'arancio più facile) a otto quasi sempre; dal 20 (grigio) è una passeggiata, e rende un quarto */
 const SEMI_ZONE = 10
 const nelleZone = (livello, eroeA = livello) => {
   const tutte = EROI.map(e => misuraLeZone({ eroe: e.chiave, livello, eroeA, semi: SEMI_ZONE }))
-  return { tutte, quota: (j, k) => tutte.reduce((n, m) => n + m.vinte[j][k], 0) / (tutte.length * SEMI_ZONE) }
+  return { tutte, quota: (j, k) => tutte.reduce((n, m) => n + m.vinte[j][k], 0) / (tutte.length * SEMI_ZONE),
+           livelli: k => tutte.reduce((n, m) => n + m.livelli[k], 0) / tutte.length }
 }
-for (const L of [12, 16, 20]) {
-  const { tutte, quota } = nelleZone(L)
+const mediaZone = f => CAMPAGNA.reduce((n, _, k) => n + f(k), 0) / CAMPAGNA.length
+for (const L of [12, 16, 20, 30]) {
+  const { tutte, quota, livelli } = nelleZone(L)
   for (const [j, b] of [[0, 8], [1, 6], [2, 4]])
     nota(`zone al livello ${L}, a ${b}/10: ${CAMPAGNA.map((_, k) => cento(quota(j, k)).padStart(5)).join('')}`)
   nota(`  domande (a 8/10): ${CAMPAGNA.map((_, k) => Math.round(tutte.reduce((n, m) => n + m.domande[k], 0) / tutte.length)).join(' · ')}` +
-       `, livelli presi: ${CAMPAGNA.map((_, k) => (tutte.reduce((n, m) => n + m.livelli[k], 0) / tutte.length).toFixed(1)).join(' · ')}`)
+       `, livelli presi: ${CAMPAGNA.map((_, k) => livelli(k).toFixed(1)).join(' · ')}`)
   for (const [k, t] of CAMPAGNA.entries()) {
     controlla(`zona ${t.chiave} al ${L}: a 8/10 si arriva in fondo quasi sempre`, quota(0, k) >= 0.85, cento(quota(0, k)))
     controlla(`zona ${t.chiave} al ${L}: a 6/10 si vince, ma non sempre`, quota(1, k) >= 0.4 && quota(1, k) <= 0.92, cento(quota(1, k)))
     controlla(`zona ${t.chiave} al ${L}: a 4/10 di rado`, quota(2, k) <= 0.4, cento(quota(2, k)))
   }
-  const sei = CAMPAGNA.reduce((n, _, k) => n + quota(1, k), 0) / CAMPAGNA.length
+  const sei = mediaZone(k => quota(1, k))
   controlla(`zone al ${L}: a 6/10 in media fra metà e quattro volte su cinque`, sei >= 0.5 && sei <= 0.8, cento(sei))
+  // l'esperienza tiene il passo: una zona verde vinta vale più o meno un livello, a ogni altezza
+  const presi = mediaZone(livelli)
+  controlla(`zone al ${L}: una verde vinta vale più o meno un livello`, presi >= 0.8 && presi <= 2, presi.toFixed(2))
+}
+// fra il 24 e il 28 la roba attesa resta indietro (la difesa sale a scalini, al 30): a 6/10 si scende verso il 40%,
+// ma si vince ancora (docs/sotterraneo/zone.md, «Le misure»)
+for (const L of [24, 27]) {
+  const { quota, livelli } = nelleZone(L)
+  const sei = mediaZone(k => quota(1, k)), otto = mediaZone(k => quota(0, k))
+  nota(`zone al livello ${L}: a 8/10 ${cento(otto)}, a 6/10 ${cento(sei)}, livelli presi ${mediaZone(livelli).toFixed(2)}`)
+  controlla(`zone al ${L}: a 8/10 quasi sempre`, otto >= 0.9, cento(otto))
+  controlla(`zone al ${L}: a 6/10 almeno una volta su tre`, sei >= 0.33, cento(sei))
 }
 {
-  const media = (q, j) => CAMPAGNA.reduce((n, _, k) => n + q(j, k), 0) / CAMPAGNA.length
-  const rosso = nelleZone(16, 12).quota, arancio = nelleZone(16, 14).quota, grigio = nelleZone(16, 20).quota
-  nota(`una zona del 16: eroe del 12 (rosso) ${cento(media(rosso, 0))} · ${cento(media(rosso, 1))}, del 14 (arancio) ` +
-       `${cento(media(arancio, 0))} · ${cento(media(arancio, 1))}, del 20 (grigio) ${cento(media(grigio, 1))} · ${cento(media(grigio, 2))} (a 8 · 6, a 6 · 4)`)
+  const media = (q, j) => mediaZone(k => q(j, k))
+  const rosso = nelleZone(16, 11).quota, duro = nelleZone(16, 12).quota, arancio = nelleZone(16, 15).quota
+  const grigia = nelleZone(16, 20)
+  const grigio = grigia.quota
+  nota(`una zona 16–19: eroe del 11 (rosso) ${cento(media(rosso, 0))} · ${cento(media(rosso, 1))}, del 12 (arancio) ` +
+       `${cento(media(duro, 0))} · ${cento(media(duro, 1))}, del 15 (arancio) ${cento(media(arancio, 0))} · ${cento(media(arancio, 1))}, ` +
+       `del 20 (grigio) ${cento(media(grigio, 1))} · ${cento(media(grigio, 2))} (a 8 · 6, a 6 · 4)`)
   controlla('rossa: a 6/10 non si passa', media(rosso, 1) <= 0.15, cento(media(rosso, 1)))
   controlla('rossa: e a 8/10 nemmeno sempre', media(rosso, 0) <= 0.8, cento(media(rosso, 0)))
-  controlla('arancio: a 8/10 si può tentare', media(arancio, 0) >= 0.6, cento(media(arancio, 0)))
-  controlla('arancio: ma a 6/10 è dura', media(arancio, 1) <= 0.5, cento(media(arancio, 1)))
+  controlla('l\'arancio più duro: a 8/10 si può tentare', media(duro, 0) >= 0.45, cento(media(duro, 0)))
+  controlla('ma a 6/10 è dura', media(duro, 1) <= 0.5, cento(media(duro, 1)))
+  controlla('l\'arancio più facile: a 8/10 quasi sempre', media(arancio, 0) >= 0.85, cento(media(arancio, 0)))
   controlla('grigia: a 6/10 è una passeggiata', media(grigio, 1) >= 0.95, cento(media(grigio, 1)))
+  const poco = mediaZone(grigia.livelli)
+  nota(`  la grigia (eroe del 20) rende ${poco.toFixed(2)} livelli`)
+  controlla('grigia: e rende poco', poco <= 0.5, poco.toFixed(2))
 }
 
 riassunto('la tabella della grande storia')
