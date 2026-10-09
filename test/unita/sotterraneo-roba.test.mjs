@@ -346,7 +346,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
                mancina: COSE[mano].mani === 2 ? null : raro('scudo-teschio', L, 'dif', 'vita'),
                corpo: raro(porta('corpo', 'manto', 'corazza'), L, 'dif', 'vita'), dito: raro('amuleto-osso', L, 'dif', 'vita') }
     }
-    let giri = 0, pochi = 0, nonMigliora = 0, nonPortabile = 0, rialzi = 0, storti = 0
+    let giri = 0, pochi = 0, nonMigliora = 0, nonPortabile = 0, rialzi = 0, storti = 0, meritare = 0, meritareStorti = 0
     const esempi = []
     for (const eroe of EROI.map(e => e.chiave))
       for (const { lv, rara } of prove)
@@ -362,6 +362,8 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
                 const qui = vista.filter(r => COSE[r.chiave].dove && schedaDi(m, r.chiave) === s)
                 if (qui.length < 3) { pochi++; esempi.push(`${eroe} lv${lv} f${finite} ${m.chiave}/${s.chiave}: ${qui.length}`) }
                 for (const r of qui) {
+                  // i pezzi «da meritare» sono la sola eccezione: la classe li porta ma chiedono più caratteristica, e si vedono spenti
+                  if (r.meritare) { meritare++; if (b.posso(r.chiave) || !b.porta(r.chiave) || !(b.quantoCosta(r.chiave) > 0)) meritareStorti++; continue }
                   const p = b.seLoMetto(r.chiave)
                   if (!b.posso(r.chiave) || !p) { nonPortabile++; continue }
                   if (p.bloccata || (p.prima && !ABILITA_CONFRONTATE.some(n => p.dopo[n] > p.prima[n]))) nonMigliora++
@@ -377,7 +379,9 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
           }
     controlla(`in ${giri} linguette (4 eroi, vari livelli, roba rara addosso) nessuna ha meno di tre pezzi`, pochi === 0,
               esempi.slice(0, 6).join(' | '))
-    uguale('tutti portabili dall\'eroe', nonPortabile, 0)
+    uguale('tutti portabili dall\'eroe (tranne quelli da meritare)', nonPortabile, 0)
+    uguale('quelli da meritare la classe li porta ma non li regge ancora, e hanno un prezzo', meritareStorti, 0)
+    controlla('e ce n\'è davvero, da guardare', meritare > giri / 10, `${meritare}/${giri}`)
     uguale('e tutti migliorano qualcosa di quello che ha addosso', nonMigliora, 0)
     controlla('i pezzi in più servono davvero (con roba rara quasi sempre)', rialzi > giri / 4, `${rialzi}/${giri}`)
     uguale('quelli in più alzano il punteggio e hanno un prezzo vero', storti, 0)

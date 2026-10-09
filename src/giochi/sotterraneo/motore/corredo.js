@@ -2,7 +2,7 @@
 // eroe), e resta fra una discesa e l'altra (docs/sotterraneo/la-roba-che-resta.md). Qui
 // le regole che valgono sotto e sopra: cosa si porta, dove va un'arma, cosa vale, come si compra e si vende.
 // La discesa (motore/corsa.js) e i mercanti di sopra (motore/bottega.js) la estendono; gira in Node.
-import { TASCHE, TASCHE_EXTRA_MAX, prezzoTasca } from '../dati/mondo.js'
+import { TASCHE, TASCHE_EXTRA_MAX, prezzoTasca, FORZA_PER_TASCA } from '../dati/mondo.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta, FAMIGLIE, requisitoDi } from '../dati/eroi.js'
 import { COSE, STANZE_TORCIA, aLivello } from '../dati/cose.js'
 import { GEMME_PER_FORTUNA, ATT_PER_PUNTO, SCHIVATA_PER_DESTREZZA, ENERGIA_PER_INTELLIGENZA } from '../dati/livelli.js'
@@ -77,7 +77,7 @@ export function schedaConLaRoba(eroe, roba = null, crescita = null) {
   if (gemme) tratti.push(`💎 ×${(Math.round((1 + gemme) * 100) / 100).toString().replace('.', ',')}`)
   if (luce) tratti.push('🔦 vedi più lontano')
   return {
-    vita: c.vitaConLaRoba, att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.postiUsati(),
+    vita: c.vitaConLaRoba, att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.postiUsati(), capienza: c.capienza,
     mano: c.mano, mancina: c.mancina, corpo: c.corpo, dito: c.dito, tratti, livello: c.livelloEroe, energiaMax: c.energiaMax,
   }
 }
@@ -255,6 +255,7 @@ export class Corredo {
       if (piu) cambia.push({ em: '❤️', prima: tetto, dopo: tetto + piu })
       if (prova.schivata !== this.schivata) cambia.push({ em: '🌀', prima: `${this.schivata}%`, dopo: `${prova.schivata}%` })
       if (prova.energiaMax !== this.energiaMax) cambia.push({ glifo: 'energia', prima: this.energiaMax, dopo: prova.energiaMax })
+      if (prova.capienza !== this.capienza) cambia.push({ em: '🎒', prima: this.capienza, dopo: prova.capienza })
       return { ...c, valore: caratteristica(this.io, this.crescita, c.chiave), dati: this.crescita[c.chiave] || 0, cambia,
                trattenuta: !!dietro[c.chiave], dietro: dietro[c.chiave], indietro: fermate.has(c.chiave) }
     })
@@ -348,7 +349,9 @@ export class Corredo {
   nonCiSta(k) { this.zaino.push(k) }
 
   // quante tasche ci sono: sei, e quelle comprate con le gemme (crescita.tasche, fino a TASCHE_EXTRA_MAX)
-  get capienza() { return TASCHE + Math.min(TASCHE_EXTRA_MAX, (this.crescita && this.crescita.tasche) || 0) }
+  get capienza() { return TASCHE + Math.min(TASCHE_EXTRA_MAX, (this.crescita && this.crescita.tasche) || 0) + this.tascheDallaForza }
+  // la forza porta un posto in più ogni FORZA_PER_TASCA punti oltre il primo: serve a tutti, anche a chi non picchia con spade e asce
+  get tascheDallaForza() { return Math.floor(Math.max(0, this.car('forza') - 1) / FORZA_PER_TASCA) }
   // quante sono occupate (le pozioni uguali fanno un posto solo), e la lista per tasca: [{ k, n, i }]
   postiUsati(zaino = this.zaino) { return postiDello(zaino) }
   tasche() { return tascheDello(this.zaino) }

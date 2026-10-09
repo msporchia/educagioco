@@ -22,6 +22,9 @@ const props = defineProps({
   mie: { type: Array, default: () => [] },     // e cosa protegge l'eroe in questo scontro (scudo, parato…)
 })
 // cosa ha addosso il mostro, per il colore della figura: fuoco, gelo, veleno, stordito
+// da vicino l'eroe si fa sotto e colpisce; uno scudo o una cura (abilità che non colpiscono) non si fanno sotto: proteggono
+const mischia = computed(() => !!(props.scambio && props.scambio.dato && !props.scambio.lontano))
+const protegge = computed(() => !!(props.scambio && props.scambio.usata && !props.scambio.colpisce))
 const addosso = computed(() => props.stati.map(x => 'sot-addosso-' + (x.fuoco ? 'fuoco' : x.chiave)))
 </script>
 
@@ -31,23 +34,36 @@ const addosso = computed(() => props.stati.map(x => 'sot-addosso-' + (x.fuoco ? 
   <div class="sot-duello" data-duello>
     <Palco v-bind="palco" />
     <div class="sot-lato sot-lato-eroe">
-      <div :key="'e' + scosso" class="sot-figura sot-eroe-fig" :class="{ 'sot-scatta-dx': scambio && scambio.dato, 'sot-colpito': scambio && scambio.preso, 'sot-protetto': mie.some(x => ['parato', 'scudo', 'intoccabile', 'specchio'].includes(x.chiave)), 'sot-guarisce': mie.some(x => x.chiave === 'linfa') }">
-        <Icona :sprite="eroe.sprite" :em="eroe.em" :scala="4" :emAlto="64" />
+      <!-- tre strati, perché ognuno ha la sua animazione: chi si fa sotto (fuori), chi trema (in mezzo), chi respira (dentro) -->
+      <div :key="'e' + scosso" class="sot-figura sot-eroe-fig" :class="{ 'sot-scatta-dx': mischia, 'sot-protegge': protegge }"
+           :style="scambio && scambio.usata ? { '--tinta': scambio.usata.tinta } : null">
+        <div class="sot-corpo" :class="{ 'sot-colpito': scambio && scambio.preso }">
+          <div class="sot-respira" :class="{ 'sot-protetto': mie.some(x => ['parato', 'scudo', 'intoccabile', 'specchio'].includes(x.chiave)), 'sot-guarisce': mie.some(x => x.chiave === 'linfa') }">
+            <Icona :sprite="eroe.sprite" :em="eroe.em" :scala="4" :emAlto="64" />
+          </div>
+        </div>
+        <i v-if="scambio && scambio.preso" class="sot-graffio" aria-hidden="true"></i>
       </div>
       <span v-if="scambio && scambio.preso" :key="'p' + scosso" class="sot-numero sot-numero-preso">−{{ scambio.preso }}</span>
     </div>
-    <!-- il dardo: l'abilità usata vola dall'eroe al mostro, del colore del suo ramo -->
-    <span v-if="scambio && scambio.usata" :key="'v' + scosso" class="sot-dardo" data-dardo :style="{ '--tinta': scambio.usata.tinta }">
-      <Glifo :nome="scambio.usata.glifo" :misura="34" />
+    <!-- da lontano (arco, bacchetta) vola il colpo: l'abilità col suo simbolo e il suo colore, l'attacco solito una freccia o una
+         scintilla. Da vicino l'eroe si fa sotto e sul mostro lampeggia il fendente. Uno scudo o una cura non colpiscono: niente -->
+    <span v-if="scambio && scambio.volo" :key="'v' + scosso" class="sot-dardo" data-dardo :style="{ '--tinta': scambio.volo.tinta }">
+      <Glifo :nome="scambio.volo.glifo" :misura="34" />
     </span>
     <div class="sot-info-mostro">
       <b class="sot-nome-mostro">{{ mostro.nome }}<span v-if="mostro.chiave" class="em"> 🗝️</span></b>
       <div class="sot-vita"><i :style="{ width: Math.max(0, mostro.ossa / mostro.ossaMax * 100) + '%' }"></i></div>
     </div>
     <div class="sot-lato sot-lato-mostro">
-      <div :key="'m' + scosso" class="sot-figura sot-mostro-fig sot-respira" :class="[{ 'sot-scatta-sx': scambio && scambio.preso, 'sot-colpito': scambio && scambio.dato }, ...addosso]">
-        <Grosso v-if="grosso" :disegno="grosso.disegno" :colori="grosso.colori" :scala="3" />
-        <Icona v-else :sprite="sprite" :em="mostro.em" :scala="5" :emAlto="76" />
+      <div :key="'m' + scosso" class="sot-figura sot-mostro-fig" :class="{ 'sot-scatta-sx': scambio && (scambio.preso || scambio.assorbito) }">
+        <div class="sot-corpo" :class="{ 'sot-colpito': scambio && scambio.dato }">
+          <div class="sot-respira" :class="addosso">
+            <Grosso v-if="grosso" :disegno="grosso.disegno" :colori="grosso.colori" :scala="3" />
+            <Icona v-else :sprite="sprite" :em="mostro.em" :scala="5" :emAlto="76" />
+          </div>
+        </div>
+        <i v-if="mischia" class="sot-fendente" aria-hidden="true" :style="scambio.usata ? { '--tinta': scambio.usata.tinta } : null"></i>
       </div>
       <!-- gli effetti che durano stanno addosso al mostro, non solo nelle pastiglie: brucia, gela, è stordito -->
       <div class="sot-effetti" data-effetti>

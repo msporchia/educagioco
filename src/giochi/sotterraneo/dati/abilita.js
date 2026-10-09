@@ -12,6 +12,7 @@
 //     intoccabile scambi: nessun danno, neanche sbagliando    specchio  il prossimo colpo preso torna al mostro, per tanto
 //     cura       quarti della vita massima                    linfa     scambi: cura un decimo della vita a scambio
 //     stanza     colpisce anche gli altri mostri svegli della stanza, e porta loro gli stessi effetti
+//     esposto    scambi: il mostro bloccato subisce tanta percentuale di danno in più (Radici)
 //     capi       contro un capo o un mostro grosso il colpo vale `capi` volte invece di `per` (l'ultimo gradino dei rami)
 //     difende    non fa niente da sé: segna l'abilità di difesa del livello 2 (la regola di guastiDelleAbilita)
 //     seStordito il colpo vale `per` solo su un mostro avvelenato, gelato o fermo, se no `altrimenti`
@@ -146,8 +147,8 @@ export const RAMI = {
         fa: (g, vm) => `${cura(n([0.4, 0.6, 0.8], g), vm)}, poi ${vm ? `${Math.max(1, Math.round(vm / 10))} punti` : 'un po\''} a ogni turno per ${turni(n([4, 5, 6], g))}` },
       { id: 'respiro', nome: 'Respiro del bosco', glifo: 'foglia', sempre: true, energiaPerMostro: [1, 2, 3],
         fa: g => `+${n([1, 2, 3], g)} di energia a ogni mostro battuto` },
-      { id: 'radici', nome: 'Radici', glifo: 'radici', costo: COSTO_DEL_GRADINO[3], fermo: [2, 2, 3], per: [1, 1.5, 1.5], capi: [3, 3.5, 4],
-        fa: g => `il mostro resta fermo per ${turni(n([2, 2, 3], g))}: non può attaccare · ${controCapi(n([3, 3.5, 4], g))}` },
+      { id: 'radici', nome: 'Radici', glifo: 'radici', costo: COSTO_DEL_GRADINO[3], fermo: [3, 3, 4], esposto: [50, 60, 70], per: [1, 1, 1], capi: [3, 3.5, 4],
+        fa: g => `il mostro è bloccato per ${turni(n([3, 3, 4], g))}: non può attaccare e subisce il ${n([50, 60, 70], g)}% di danno in più · ${controCapi(n([3, 3.5, 4], g))}` },
     ] },
   ],
 

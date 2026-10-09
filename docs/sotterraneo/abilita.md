@@ -108,7 +108,11 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
   vita in alto a destra, **senza numeri** (il brivido di non sapere quanto resiste); la vita dell'eroe sta nel globo. A ogni
   scambio chi colpisce scatta in avanti, chi è colpito trema, salgono i numeri del danno; un'abilità fa volare il suo glifo dall'eroe
   al mostro, del colore del suo ramo; gli effetti che durano stanno addosso al mostro (fiamma, brina, stelle, goccia) e ne
-  cambiano il colore, e lo scudo dà un alone all'eroe. **Da fare:** la cornice come quella delle finestre dell'eroe e del fabbro.
+  cambiano il colore, e lo scudo dà un alone all'eroe. Lo scambio ha un ordine, per leggerlo (`Scontro.vue`, i ritardi in
+  `stile.css`): l'eroe colpisce (0 s: da lontano vola l'abilità o una freccia/scintilla, da vicino si fa sotto e lampeggia il
+  fendente), il mostro incassa e il numero sale (0,3), il mostro risponde facendosi sotto (0,65), l'eroe incassa col graffio
+  rosso (0,95). **Scudo e cura non colpiscono**: niente scatto, solo un alone del colore dell'abilità sull'eroe. La cornice è
+  quella delle finestre dell'eroe e del fabbro (`Cornice.vue`, senza ✕).
 - **Rispondendo giusto parte**, e si paga. **Sbagliando resta pronta e non
   costa**: un'abilità non è un modo di perdere di più quando si sbaglia.
   Non passa da uno scontro all'altro.

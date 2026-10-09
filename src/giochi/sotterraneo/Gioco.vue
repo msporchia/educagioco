@@ -29,7 +29,7 @@ import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo, tascheDello, postiDello } from './motore/corredo.js'
 import { rileggiCrescita, puntiDaDare, dai as daiPunto, livelloDella } from './motore/crescita.js'
 import { puntiAbilita, caselleDella } from './motore/abilita.js'
-import { NODI, RAMI } from './dati/abilita.js'
+import { NODI, RAMI, colpisce } from './dati/abilita.js'
 import { zonaDi } from './dati/zone.js'
 import { notiziaDi, potenzaDi, livelloDellaZona, coloreDi } from './motore/zone.js'
 import { pescaLeggendario } from './motore/bottino.js'
@@ -440,7 +440,7 @@ const barra = computed(() => {
     energia: giu ? giu.energia : robaSopra.value.energiaMax,
     energiaMax: giu ? giu.energiaMax : robaSopra.value.energiaMax, puntiAbilita: puntiAbilita(cr),
     pozioni: giu ? giu.pozioni : r.zaino.filter(k => COSE[k] && (COSE[k].usa === 'cura' || COSE[k].usa === 'cresci')).length,
-    pieni: giu ? giu.pieni : postiDello(r.zaino), tasche: giu ? giu.tasche : TASCHE + (crescita.value.tasche || 0),
+    pieni: giu ? giu.pieni : postiDello(r.zaino), tasche: giu ? giu.tasche : robaSopra.value.capienza,
     gemme: giu ? giu.gemme : r.gemme,
   }
 })
@@ -685,6 +685,18 @@ function palcoDi(c) {
   const sc = SCENARI[c.scenario] || SCENARI[SCENARIO]
   return { pavimento: sc.pavimento.stanza, faccia: sc.faccia, roccia: sc.colori && sc.colori.roccia }
 }
+// come colpisce l'eroe in questo scambio, per la grafica del duello (viste/Scontro.vue): da lontano (arco, bacchetta) vola il
+// colpo, da vicino l'eroe si fa sotto; un'abilità che non colpisce (scudo, cura) non fa né l'uno né l'altro
+function comeColpisce(esito) {
+  const c = corsa.value
+  const nodo = esito.usata ? NODI[esito.usata.id] : null
+  const fa = !nodo || colpisce(nodo)
+  const famiglia = c && c.mano && COSE[c.mano] ? COSE[c.mano].famiglia : null
+  const lontano = famiglia === 'archi' || famiglia === 'bacchette' || !!(nodo && nodo.arma && nodo.arma.famiglie && nodo.arma.famiglie.some(f => f === 'archi' || f === 'bacchette'))
+  let volo = null
+  if (fa && lontano) volo = nodo ? { glifo: nodo.glifo, tinta: tintaDi(nodo.id) } : { glifo: famiglia === 'archi' ? 'freccia' : 'fulmine', tinta: '#ffe39a' }
+  return { colpisce: fa, lontano, volo }
+}
 // il colore del ramo di un'abilità: il dardo che vola verso il mostro è di quel colore (viste/Scontro.vue)
 function tintaDi(id) {
   const nodo = NODI[id], c = corsa.value
@@ -699,6 +711,7 @@ function statiDel(m) {
   return [
     st.veleno && st.veleno.scambi > 0 ? { chiave: 'veleno', fuoco: !!st.veleno.fuoco, glifo: st.veleno.fuoco ? 'fiamma' : 'veleno', n: `${st.veleno.quanto} di danno · ${turniDi(st.veleno.scambi)}`, dice: `subisce ${st.veleno.quanto} di danno a ogni turno` } : null,
     st.debole > 0 ? { chiave: 'debole', glifo: 'fiocco', n: `fa metà danno · ${turniDi(st.debole)}`, dice: 'i suoi colpi fanno la metà del danno' } : null,
+    st.esposto && st.esposto.scambi > 0 ? { chiave: 'esposto', glifo: 'radici', n: `+${st.esposto.piu}% danno · ${turniDi(st.esposto.scambi)}`, dice: 'bloccato: subisce più danno' } : null,
     st.fermo > 0 ? { chiave: 'fermo', glifo: 'stelle', n: `stordito · ${turniDi(st.fermo)}`, dice: 'stordito: non può attaccare' } : null,
     st.rotto && m.dif ? { chiave: 'rotto', glifo: 'scudo-rotto', n: 'difesa spezzata', dice: 'senza difesa fino a fine scontro' } : null,
   ].filter(Boolean)
@@ -998,7 +1011,7 @@ function risolvi(giusto, saltata = false) {
                       usata: esito.usata ? { ...esito.usata, tinta: tintaDi(esito.usata.id) } : null, veleno: esito.veleno || 0, colpiti: esito.colpiti || 0,
                       rimandato: esito.rimandato || 0, base: esito.base || 0, volte: esito.volte || 1, primoTiro: !!esito.primoTiro,
                       salvo: esito.salvo || null, gelato: !!esito.gelato, assorbito: esito.assorbito || 0,
-                      schivato: !!esito.schivato }
+                      schivato: !!esito.schivato, ...comeColpisce(esito) }
     scambioFinoA = orologio + 2.4
   }
   if (esito.ringhia) setTimeout(() => suono.nota(110, 60, 0.45, 'sawtooth', 0.1), 420)   // il mostro ringhia

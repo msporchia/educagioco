@@ -7,7 +7,7 @@
 // l'attacco alle armi della loro famiglia (`armi`, dati/eroi.js) e ne sono il requisito; a tutti danno anche
 // qualcos'altro (`fa`). `glifo` e `tinta`: il medaglione sulla pagina dell'eroe (viste/glifi.js)
 export const CARATTERISTICHE = [
-  { chiave: 'forza', nome: 'Forza', glifo: 'martello', tinta: '#c0583a', fa: 'colpi più forti con spade e asce' },
+  { chiave: 'forza', nome: 'Forza', glifo: 'martello', tinta: '#c0583a', fa: 'colpi più forti con spade e asce, e più posto nello zaino' },
   { chiave: 'destrezza', nome: 'Destrezza', glifo: 'mira', tinta: '#4f9a5a', fa: 'archi, e schivi i graffi' },
   { chiave: 'intelligenza', nome: 'Intelligenza', glifo: 'sfera', tinta: '#6a62d8', fa: 'bacchette e bastoni, e più energia' },
   { chiave: 'tempra', nome: 'Tempra', glifo: 'cuore', tinta: '#c0393b', fa: 'più vita, e un po\' di difesa' },

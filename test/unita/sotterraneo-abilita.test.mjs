@@ -176,6 +176,16 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   const e4 = c.rispondi(true)
   controlla('il primo tiro con l\'arco: il mostro non risponde', e4.preso === 0)
 
+  // Radici: il mostro bloccato non attacca e subisce di più finché resta fermo
+  ;({ c, m } = scontro('elfa', conAlbero(12, { 'dardo-avvelenato': 1, radici: 1 }), 'arco-corto', null, { ossa: 500, ossaMax: 500, att: 9 }))
+  const colpoPrima = c.colpo(m)
+  c.prepara('radici')
+  const eR = c.rispondi(true)
+  controlla('Radici: il mostro è bloccato e esposto', m.stati.esposto && m.stati.esposto.piu === 50 && eR.preso === 0, JSON.stringify(m.stati))
+  controlla('e subisce di più mentre dura', c.colpo(m) > colpoPrima, `${colpoPrima} → ${c.colpo(m)}`)
+  for (let i = 0; i < 5; i++) c.rispondi(true)
+  controlla('poi le radici cedono', !(m.stati.esposto && m.stati.esposto.scambi > 0))
+
   // l'ultimo gradino: molto di più contro un capo, normale contro uno qualunque
   ;({ c, m } = scontro('mago', conAlbero(12, { 'dardo-di-fuoco': 1, 'palla-di-fuoco': 1 }), 'verga'))
   const normale = c.colpo(m, NODI['palla-di-fuoco'])

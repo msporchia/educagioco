@@ -150,7 +150,8 @@ export class Corsa extends Corredo {
     const passa = st.rotto || (nodo && (nodo.passa || this.delRamo(nodo, 'passa')))
     // I bonus del colpo sono percentuali (l'utente, 9 ottobre: un +1 fisso non tiene il passo con l'attacco che cresce):
     // Filo affilato e simili, la punta del ramo e Gelo profondo sul gelato si sommano fra loro, poi si moltiplica
-    const piu = this.sempre('colpoPiu') + this.delRamo(nodo, 'piu') + (st.debole > 0 ? this.sempre('geloPiu') : 0)
+    const esposto = st.esposto && st.esposto.scambi > 0 ? st.esposto.piu : 0
+    const piu = this.sempre('colpoPiu') + this.delRamo(nodo, 'piu') + (st.debole > 0 ? this.sempre('geloPiu') : 0) + esposto
     const base = Math.max(1, Math.round((this.att - (passa ? 0 : m.dif)) * (1 + piu / 100)))
     let per = nodo ? (aGrado(nodo, 'per', g) || 1) : 1
     // l'ultimo gradino dei rami: contro un capo o un mostro grosso vale molto di più
@@ -655,6 +656,7 @@ export class Corsa extends Corredo {
     if (nodo.veleno) parti.push(`poi ${Math.max(1, Math.ceil(this.colpo(m) / 2))} a turno per ${turni(vale('veleno'))}`)
     if (nodo.debole) parti.push(`fa metà danno per ${turni(vale('debole'))}`)
     if (nodo.fermo) parti.push(`stordito per ${turni(vale('fermo'))}`)
+    if (nodo.esposto) parti.push(`subisce il ${vale('esposto')}% in più`)
     if (nodo.quieto) parti.push('non risponde')
     if (nodo.capi && !this.èCapo(m)) parti.push('molto di più contro i capi')
     return parti.join(' · ')
@@ -681,6 +683,8 @@ export class Corsa extends Corredo {
       if (nodo.debole) x.stati.debole = Math.max(x.stati.debole || 0, vale('debole'))
       // stordito non risponde al colpo che lo stordisce, e poi salta i suoi N scambi
       if (nodo.fermo) x.stati.fermo = Math.max(x.stati.fermo || 0, vale('fermo') + 1)
+      // Radici: bloccato, il mostro è un bersaglio facile per tutto il tempo che resta fermo
+      if (nodo.esposto) x.stati.esposto = { scambi: vale('fermo') + 1, piu: vale('esposto') }
     }
     if (nodo.cura) {
       const c = inVita(vale('cura'), this.vitaMax)   // lo stesso conto della riga dell'albero
@@ -787,6 +791,8 @@ export class Corsa extends Corredo {
     const ora = m.stati || {}
     if (ora.debole > 0 || ora.fermo > 0)
       m.stati = { ...ora, debole: Math.max(0, (ora.debole || 0) - 1), fermo: Math.max(0, (ora.fermo || 0) - 1) }
+    if (ora.esposto && ora.esposto.scambi > 0)
+      m.stati = { ...(m.stati || ora), esposto: ora.esposto.scambi > 1 ? { ...ora.esposto, scambi: ora.esposto.scambi - 1 } : null }
     if (io.parato > 0) io.parato--
     if (io.intoccabile > 0) io.intoccabile--
     if (rimandato && m.ossa <= 0) {

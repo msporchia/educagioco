@@ -4,7 +4,7 @@
    `node test/esegui.mjs sotterraneo-zaino --niente-build` */
 import { Corredo, ROBA_VUOTA, tascheDello, postiDello, impilabile } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { rileggiCrescita, CRESCITA_NUOVA } from '../../src/giochi/sotterraneo/motore/crescita.js'
-import { TASCHE, TASCHE_EXTRA_MAX, prezzoTasca } from '../../src/giochi/sotterraneo/dati/mondo.js'
+import { TASCHE, TASCHE_EXTRA_MAX, prezzoTasca, FORZA_PER_TASCA } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const corredo = (zaino, extra = 0, gemme = 0) =>
@@ -49,6 +49,17 @@ const corredo = (zaino, extra = 0, gemme = 0) =>
   controlla('al tetto non se ne compra altre', alTetto.costoTasca === null && !alTetto.compraTasca() && alTetto.capienza === TASCHE + TASCHE_EXTRA_MAX)
   uguale('un salvataggio con troppe tasche si ferma al tetto', rileggiCrescita({ ...CRESCITA_NUOVA(), tasche: 99 }).tasche, TASCHE_EXTRA_MAX)
   uguale('e uno storto è senza tasche in più', rileggiCrescita({ tasche: -4 }).tasche, 0)
+}
+
+/* ══════════ 4. la forza dà posto anche a chi non picchia con spade e asce ══════════ */
+{
+  const con = (eroe, forza) => new Corredo({ eroe, roba: ROBA_VUOTA(), crescita: { ...CRESCITA_NUOVA(), esp: 99999, forza } })
+  const base = con('mago', 0)
+  uguale('il mago a forza 1 non ha tasche in più', base.tascheDallaForza, 0)
+  controlla('con la forza alzata ne ha', con('mago', 6).tascheDallaForza > 0 && con('mago', 6).capienza > base.capienza)
+  uguale('una ogni FORZA_PER_TASCA punti oltre il primo', con('mago', 7).tascheDallaForza, Math.floor(6 / FORZA_PER_TASCA))
+  const ch = con('mago', 2).caratteristiche().find(c => c.chiave === 'forza')
+  controlla('il «+» della forza lo dice quando la tasca arriva', ch.cambia.some(x => x.em === '🎒'), JSON.stringify(ch.cambia))
 }
 
 riassunto('le tasche dello zaino')
