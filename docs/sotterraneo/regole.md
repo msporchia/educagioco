@@ -100,15 +100,15 @@ chiave. La 🗺️ della barra in basso la apre grande ([barra.md](barra.md)).
 - **Senza torcia si vede un cerchio attorno all'eroe, anche dentro una
   stanza** (`RAGGIO` 2,3 celle, `aggiornaLuce` in `motore/corsa.js`): la stanza
   non si accende tutta, porte, forzieri, roba e arredo compaiono quando ci si è
-  vicini, il resto resta nella penombra del visto, e la scena è visibilmente
-  più buia (`Tela.buio`: il cerchio si spegne piano ai bordi). **Con la torcia
+  vicini, il resto resta nella penombra del visto: la luce sono le caselle
+  accese, come sempre. Provato un cerchio sfumato disegnato sopra (`Tela.buio`):
+  «terribile», tolto. **Con la torcia
   la stanza si accende intera e in corridoio si vede lontano** (`RAGGIO_TORCIA`
   6,2), nessun velo. Il perché: con la stanza che si accende da sé la torcia
   serviva solo nei corridoi, cioè non contava.
 - **L'ultima stanza della torcia** (`torciaResta` ≤ 1 e niente alla cintura):
   il raggio scende a 4,2 (`RAGGIO_SGOCCIOLI`), la stanza non si accende più
-  tutta e il cerchio trema (solo disegno: il motore resta deterministico, il
-  banco non lo sente). Si nota senza un avviso in più. Con una torcia alla
+  tutta: si nota dalle caselle che si spengono, senza un avviso in più. Con una torcia alla
   cintura non si stringe: la prossima si accende da sé.
 - **La sveglia dei mostri non dipende dalla luce, ma da sveglio un mostro si
   vede sempre** (`occhi` e `inLuce` in `Corsa`, anche fuori dal raggio e al

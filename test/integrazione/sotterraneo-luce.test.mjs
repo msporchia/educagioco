@@ -3,7 +3,7 @@
 
    (docs/sotterraneo/regole.md, «La luce»). Lo stesso piano, lo stesso
    punto: con la torcia la stanza dell'ingresso è accesa tutta e il
-   raggio è lungo; senza si vede solo un cerchio attorno all'eroe, e la
+   raggio è lungo; senza si vedono solo le caselle attorno all'eroe, e la
    scena è visibilmente più buia. Si contano i pixel accesi della tela
    (un canvas buio non dà nessun errore) e si lasciano i due scatti
    (`--scatti`: `sotterraneo-luce-senza`, `-con`, `-sgoccioli`).

@@ -165,7 +165,6 @@ export class Tela {
       // `toccabile` è un fatto già deciso dal motore, come `potenziabile` nel castello: qui si guarda, non si ricalcola
       this.roba(r, luce, orologio, !!(corsa.toccabile && corsa.toccabile(r)), sc, corsa)
     }
-    this.buio(corsa, orologio)
     this.eroe(corsa, orologio)
     this.colonneDiLuce(corsa, orologio)
     this.numeriniCheSalgono(orologio)
@@ -196,25 +195,6 @@ export class Tela {
   // il fondo sul fondo della sua cella, sbordando in alto: così un mostro sta dietro al muro invece di galleggiarci sopra
   posa(nome, cx, cy, opz = {}) {
     return this.foglio.posa(this.ctx, nome, (cx + 0.5) * T, (cy + 1) * T, opz)
-  }
-
-  // senza torcia, o all'ultima stanza della sua, la luce è un cerchio attorno all'eroe: ai bordi si spegne piano, e agli
-  // sgoccioli trema. Con la torcia piena e la stanza accesa non si vela niente. Sta sopra le cose e sotto l'eroe
-  // (docs/sotterraneo/regole.md, «La luce»)
-  buio(corsa, t) {
-    if (corsa.stanzaTuttaAccesa || !corsa.raggioDellaLuce) return
-    const ctx = this.ctx
-    const sgoccioli = corsa.torciaAgliSgoccioli
-    const tremolio = sgoccioli ? Math.sin(t * 17) * 0.16 + Math.sin(t * 7.3 + 1) * 0.14 : 0
-    const raggio = corsa.raggioDellaLuce
-    const R = (raggio + 1.2 + tremolio) * T   // le celle accese sbordano di mezza cella e più sulla diagonale
-    const sx = corsa.eroe.x * T, sy = corsa.eroe.y * T
-    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, R)
-    g.addColorStop(0.2, 'rgba(5,6,10,0)')
-    g.addColorStop(Math.min(0.9, (raggio - 0.4) / (raggio + 1.2)), 'rgba(5,6,10,0.45)')
-    g.addColorStop(1, `rgba(5,6,10,${sgoccioli ? 0.88 : 0.85})`)
-    ctx.fillStyle = g
-    ctx.beginPath(); ctx.arc(sx, sy, R, 0, 7); ctx.fill()
   }
 
   // il ricordo si spegne E si raffredda (velo blu): spegnere e basta non basta, due tessere scure sono la stessa cosa
