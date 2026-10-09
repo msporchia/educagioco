@@ -7,12 +7,11 @@ import { CAMPAGNA, SCALINI, delCane } from '../dati/campagna.js'
 
 export { delCane }
 
-/* Le isole nell'ordine dei fondali: per ogni scalino quella del coniglio,
-   e subito dopo quella del cane dello stesso scalino (`da`: le stanno
-   accanto sul fondale). `attacco` è la tappa del coniglio accanto a cui
-   sta: la prima dello stesso scalino, o se lo scalino è tutto del cane
-   l'ultima del coniglio prima di lui (la fine dei massi). Le aperture non
-   la guardano, tranne quella del primo ramo: `apreIlCane`. */
+/* Le isole delle due strade: per ogni scalino quella del coniglio (la
+   chiave è lo scalino) e quella del cane (`<scalino>-cane`). Dove stanno
+   sul fondale lo dice il foglietto della valle (scena/valle.js), non qui:
+   le due strade possono passare sulla stessa isola dipinta, ognuna con le
+   sue caselle. */
 export function disegnaStrade(campagna = CAMPAGNA, scalini = SCALINI) {
   const animale = campagna.map(t => (delCane(t) ? 'cane' : 'coniglio'))
   const coniglio = animale.map((a, i) => i).filter(i => animale[i] === 'coniglio')
@@ -23,22 +22,12 @@ export function disegnaStrade(campagna = CAMPAGNA, scalini = SCALINI) {
   for (const s of scalini) {
     const { coniglio: c, cane: d } = perScalino.get(s.chiave)
     if (c.length) conigli.push({ chiave: s.chiave, scalino: s.chiave, animale: 'coniglio', tappe: c })
-    if (d.length) {
-      const attacco = c.length ? c[0] : (coniglio.filter(i => i < d[0]).at(-1) ?? null)
-      rami.push({ chiave: `${s.chiave}-cane`, scalino: s.chiave, animale: 'cane', tappe: d, attacco,
-                  carta: c.length && attacco !== null })
-    }
+    if (d.length) rami.push({ chiave: `${s.chiave}-cane`, scalino: s.chiave, animale: 'cane', tappe: d })
   }
-  /* la strada del cane va di isola in isola: una tappa aggiunta in coda
-     alla campagna viene dopo quelle della sua isola, non dopo tutte */
+  /* la strada del cane va di isola in isola, nell'ordine degli scalini: una
+     tappa aggiunta in coda alla campagna viene dopo quelle della sua isola */
   const cane = rami.flatMap(r => r.tappe)
-  // un ramo sta subito dopo l'isola della sua tana; senza tana, in cima
-  const isole = []
-  for (const r of rami.filter(r => r.attacco === null)) isole.push(r)
-  for (const isola of conigli) {
-    isole.push(isola)
-    for (const r of rami) if (r.attacco !== null && isola.tappe.includes(r.attacco)) isole.push({ ...r, da: isola.chiave })
-  }
+  const isole = [...conigli, ...rami]
 
   const isolaDi = []
   isole.forEach((s, k) => s.tappe.forEach(i => { isolaDi[i] = k }))
@@ -50,7 +39,7 @@ export function disegnaStrade(campagna = CAMPAGNA, scalini = SCALINI) {
   const numero = []
   for (const strada of [coniglio, cane]) strada.forEach((i, k) => { numero[i] = k + 1 })
   // la strada del cane comincia quando il coniglio arriva qui (la fine dei piccoli)
-  const apreIlCane = rami.length ? rami[0].attacco : null
+  const apreIlCane = cane.length ? (coniglio.filter(i => i < cane[0]).at(-1) ?? null) : null
   return { animale, coniglio, cane, isole, isolaDi, prima, dopo, numero, apreIlCane, quante: campagna.length }
 }
 

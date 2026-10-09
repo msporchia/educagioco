@@ -107,8 +107,9 @@ const CAMPAGNE = [
   ['conta gli animali', CONTA], ['prima e dopo', PRIMA_DOPO],
   ['codice segreto', CODICE], ['survivors', SURVIVORS],
   ['il sotterraneo', SOTTERRANEO],
-  // Passo passo in fila come sulla mappa: le tappe del cane in coda stanno nella loro isola
-  ['passo passo', STRADE_PASSO.isole.flatMap(s => s.tappe).map(i => PASSO_PASSO[i])], ['il costruttore', COSTRUTTORE],
+  // Passo passo in fila come sulla mappa: una strada per animale, le tappe del cane in coda nella loro isola
+  ['passo passo, il coniglio', STRADE_PASSO.coniglio.map(i => PASSO_PASSO[i])],
+  ['passo passo, il cane', STRADE_PASSO.cane.map(i => PASSO_PASSO[i])], ['il costruttore', COSTRUTTORE],
   ['asteroidi', SCALETTA.map(v => v.T)], ['tabelline', TABELLINE], ['calcolo a mente', STAZIONI],
   ['inglese', INGLESE], ['inglese a mondi', INGLESE_MONDI], ['spagnolo', SPAGNOLO], ['castello', CASTELLO],
   ['pozioni', POZIONI], ['bancarella', BANCARELLA],

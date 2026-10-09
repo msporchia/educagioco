@@ -4,7 +4,7 @@
 
 export const ANIMALE = { largo: 52, alto: 52, piede: 8 }   // il piede affonda un poco nel bordo della casella
 export const SENTIERO = 1.35        // la casella di un sentiero senza fine, rispetto alle altre
-export const SENTIERO_CANE = 'senza-fine-cane'   // l'id della casella del sentiero del cane, sul pascolo della valle
+export const SENTIERO_CANE = 'senza-fine-cane'   // l'id della casella del sentiero del cane, in fondo alla sua strada, sul prato della valle
 
 // l'animale a una frazione q di un salto: dove sta e come si schiaccia
 export function arco(p, q0, q, alto) {

@@ -2,18 +2,22 @@
 
    Il fondale della mappa delle isole e il grafo che ci sta sopra, ricavati
    dal foglietto `strumenti/sprite/sorgenti/passo-passo/zaino.json`: si
-   corregge lì e si rilancia lo strumento. Vedi docs/passo-passo/mappa.md.
+   corregge lì e si rilancia lo strumento. Vedi docs/passo-passo/foglietto.md.
 
    MAPPA   il fondale (1536×1024), WebP in base64 (892 KB): senza perdita,
            colori a passo 12 (strumenti/sprite/codifica.py)
-   ISOLE   per isola (la chiave è quella di motore/strade.js): quante caselle, dove sta il cartello
-   NODI    { id, tipo, isola, x, y }: `casella` (con `k`, l'ordine sull'isola), `incrocio`, `capo`
+   ISOLE   per isola del fondale: quante caselle del coniglio (la chiave è la sua isola in
+           motore/strade.js), dove sta il cartello, e `cane` (l'isola del cane che ci sta sopra,
+           quante caselle, il suo cartello)
+   NODI    { id, tipo, isola, x, y }: `casella` (con `k`, l'ordine sull'isola; quelle del cane
+           con `di`, la sua isola in motore/strade.js, e `cane`), `incrocio`, `capo`
            (un sentiero che finisce), `sosta` (a metà di un arco lungo: su un ponte
            non è di un'isola), `tana` (con `nuvola` se sul fondale non c'è il buco: l'animale
            cambia in una nuvoletta), `passaggio` (la tana che porta all'altro mondo, con
            `freccia` [x, y], dove la punta dell'insegna tocca la bocca, e `scosta`, di quanto la
            stoffa sta a destra della punta), `sentiero` (le caselle speciali, con
-           `etichetta` [x, y], dove comincia il nome: a metà altezza, da lì verso destra)
+           `etichetta` [x, y], dove comincia il nome: a metà altezza, da lì verso destra; quella
+           del cane con `cane`)
    ARCHI   { a, b, tipo: terra | erba | ponte | tunnel, ponte?, punti }: i pezzi di strada fra due nodi
    PONTI   per ponte: le due isole e il blocco di ciascun capo [x, y, gradi]
    LIBERE  le isole sempre aperte (la riva da cui si arriva): non hanno caselle
@@ -22,18 +26,14 @@
 
 export const LARGO = 1536, ALTO = 1024
 export const LATO = 48
-export const FIRMA = 'b329973c5fe5'
-export const LIBERE = ["riva"]
+export const FIRMA = '2eaf03cdfee5'
+export const LIBERE = ["riva","casetta"]
 
 export const ISOLE = {
   "ripeti": {"caselle":8,"cartello":[335,492]},
-  "ripeti-cane": {"caselle":3,"cartello":[120,448],"stemma":true},
   "fino": {"caselle":4,"cartello":[250,82]},
-  "fino-cane": {"caselle":3,"cartello":[772,860],"stemma":true},
   "se": {"caselle":2,"cartello":[880,100]},
-  "se-cane": {"caselle":3,"cartello":[1488,190],"stemma":true},
   "mondo": {"caselle":4,"cartello":[990,755]},
-  "mondo-cane": {"caselle":3,"cartello":[1355,560],"stemma":true},
 }
 
 export const NODI = [
@@ -45,28 +45,16 @@ export const NODI = [
   {"id":"ripeti:5","tipo":"casella","isola":"ripeti","x":526.7,"y":543.9,"k":5},
   {"id":"ripeti:6","tipo":"casella","isola":"ripeti","x":465.2,"y":530.0,"k":6},
   {"id":"ripeti:7","tipo":"casella","isola":"ripeti","x":455.0,"y":468.5,"k":7},
-  {"id":"ripeti-cane:0","tipo":"casella","isola":"ripeti-cane","x":77.7,"y":526.4,"k":0},
-  {"id":"ripeti-cane:1","tipo":"casella","isola":"ripeti-cane","x":135.7,"y":535.9,"k":1},
-  {"id":"ripeti-cane:2","tipo":"casella","isola":"ripeti-cane","x":194.0,"y":552.0,"k":2},
   {"id":"fino:0","tipo":"casella","isola":"fino","x":490.1,"y":333.1,"k":0},
   {"id":"fino:1","tipo":"casella","isola":"fino","x":386.9,"y":250.0,"k":1},
   {"id":"fino:2","tipo":"casella","isola":"fino","x":378.7,"y":147.2,"k":2},
   {"id":"fino:3","tipo":"casella","isola":"fino","x":481.9,"y":151.6,"k":3},
-  {"id":"fino-cane:0","tipo":"casella","isola":"fino-cane","x":826.2,"y":898.0,"k":0},
-  {"id":"fino-cane:1","tipo":"casella","isola":"fino-cane","x":884.1,"y":900.0,"k":1},
-  {"id":"fino-cane:2","tipo":"casella","isola":"fino-cane","x":941.8,"y":890.0,"k":2},
   {"id":"se:0","tipo":"casella","isola":"se","x":875.0,"y":211.4,"k":0},
   {"id":"se:1","tipo":"casella","isola":"se","x":1220.3,"y":218.5,"k":1},
-  {"id":"se-cane:0","tipo":"casella","isola":"se-cane","x":1461.9,"y":287.8,"k":0},
-  {"id":"se-cane:1","tipo":"casella","isola":"se-cane","x":1426.5,"y":228.6,"k":1},
-  {"id":"se-cane:2","tipo":"casella","isola":"se-cane","x":1367.2,"y":240.0,"k":2},
   {"id":"mondo:0","tipo":"casella","isola":"mondo","x":914.0,"y":660.0,"k":0},
   {"id":"mondo:1","tipo":"casella","isola":"mondo","x":991.0,"y":561.2,"k":1},
   {"id":"mondo:2","tipo":"casella","isola":"mondo","x":1089.7,"y":576.7,"k":2},
   {"id":"mondo:3","tipo":"casella","isola":"mondo","x":1106.9,"y":675.5,"k":3},
-  {"id":"mondo-cane:0","tipo":"casella","isola":"mondo-cane","x":1466.1,"y":643.8,"k":0},
-  {"id":"mondo-cane:1","tipo":"casella","isola":"mondo-cane","x":1490.0,"y":586.1,"k":1},
-  {"id":"mondo-cane:2","tipo":"casella","isola":"mondo-cane","x":1432.2,"y":570.1,"k":2},
   {"id":"senza-fine","tipo":"sentiero","isola":"mondo","x":1020.0,"y":664.0,"etichetta":[1150,712]},
   {"id":"z-incrocio:1","tipo":"incrocio","isola":"fino","x":721.8,"y":197.0},
   {"id":"z-incrocio:2","tipo":"incrocio","isola":"riva","x":335.0,"y":942.0},
@@ -77,39 +65,31 @@ export const NODI = [
   {"id":"z-incrocio:7","tipo":"incrocio","isola":"fino","x":588.0,"y":142.0},
   {"id":"z-incrocio:8","tipo":"incrocio","isola":"fino","x":770.0,"y":216.0},
   {"id":"z-incrocio:9","tipo":"incrocio","isola":"se","x":815.0,"y":216.0},
-  {"id":"z-incrocio:10","tipo":"incrocio","isola":"ripeti","x":782.0,"y":660.0},
-  {"id":"z-incrocio:11","tipo":"incrocio","isola":"mondo","x":864.0,"y":664.0},
-  {"id":"tana:ripeti-cane:da","tipo":"tana","isola":"ripeti","x":265,"y":598,"nuvola":true},
-  {"id":"z-incrocio:12","tipo":"incrocio","isola":"ripeti","x":264.7,"y":599.0},
-  {"id":"tana:ripeti-cane:a","tipo":"tana","isola":"ripeti-cane","x":60,"y":562},
-  {"id":"z-incrocio:13","tipo":"incrocio","isola":"ripeti-cane","x":60.0,"y":562.0},
-  {"id":"tana:fino-cane:da","tipo":"tana","isola":"fino","x":719,"y":212},
-  {"id":"tana:fino-cane:a","tipo":"tana","isola":"fino-cane","x":823,"y":930},
-  {"id":"z-incrocio:14","tipo":"incrocio","isola":"fino-cane","x":824.0,"y":928.0},
-  {"id":"tana:se-cane:da","tipo":"tana","isola":"se","x":1014,"y":94},
-  {"id":"z-incrocio:15","tipo":"incrocio","isola":"se","x":1014.6,"y":124.7},
-  {"id":"tana:se-cane:a","tipo":"tana","isola":"se-cane","x":1463,"y":328},
-  {"id":"z-incrocio:16","tipo":"incrocio","isola":"se-cane","x":1463.0,"y":328.0},
-  {"id":"tana:mondo-cane:da","tipo":"tana","isola":"mondo","x":1174,"y":636,"nuvola":true},
-  {"id":"z-incrocio:17","tipo":"incrocio","isola":"mondo","x":1170.9,"y":637.2},
-  {"id":"tana:mondo-cane:a","tipo":"tana","isola":"mondo-cane","x":1468,"y":678},
-  {"id":"z-incrocio:18","tipo":"incrocio","isola":"mondo-cane","x":1468.0,"y":678.0},
+  {"id":"z-incrocio:10","tipo":"incrocio","isola":"se","x":1265.0,"y":252.0},
+  {"id":"z-incrocio:11","tipo":"incrocio","isola":"casetta","x":1335.0,"y":248.0},
+  {"id":"z-incrocio:12","tipo":"incrocio","isola":"ripeti","x":782.0,"y":660.0},
+  {"id":"z-incrocio:13","tipo":"incrocio","isola":"mondo","x":864.0,"y":664.0},
+  {"id":"tana:casetta:da","tipo":"tana","isola":"mondo","x":864,"y":664,"nuvola":true},
+  {"id":"tana:casetta:a","tipo":"tana","isola":"casetta","x":1463,"y":328},
+  {"id":"z-incrocio:14","tipo":"incrocio","isola":"casetta","x":1463.0,"y":318.0},
   {"id":"tana:valle","tipo":"passaggio","isola":"riva","x":90,"y":925,"freccia":[92,907],"scosta":45},
-  {"id":"z-incrocio:19","tipo":"incrocio","isola":"riva","x":92.0,"y":938.0},
-  {"id":"z-capo:1","tipo":"capo","isola":"se","x":1265,"y":252},
+  {"id":"z-incrocio:15","tipo":"incrocio","isola":"riva","x":92.0,"y":938.0},
+  {"id":"z-capo:1","tipo":"capo","isola":"ripeti","x":262,"y":598},
   {"id":"z-sosta:1","tipo":"sosta","isola":"riva","x":210.4,"y":963.7},
-  {"id":"z-sosta:2","tipo":"sosta","isola":"ripeti","x":421.0,"y":672.0},
-  {"id":"z-sosta:3","tipo":"sosta","isola":"ripeti","x":316.2,"y":675.3},
+  {"id":"z-sosta:2","tipo":"sosta","isola":"ripeti","x":420.1,"y":672.0},
+  {"id":"z-sosta:3","tipo":"sosta","isola":"ripeti","x":314.7,"y":674.2},
   {"id":"z-sosta:4","tipo":"sosta","isola":"ripeti","x":654.9,"y":671.7},
   {"id":"z-sosta:5","tipo":"sosta","isola":"fino","x":460.1,"y":266.1},
   {"id":"z-sosta:6","tipo":"sosta","isola":"fino","x":286.3,"y":208.7},
   {"id":"z-sosta:7","tipo":"sosta","isola":"fino","x":664.6,"y":142.9},
-  {"id":"z-sosta:8","tipo":"sosta","isola":"se","x":941.0,"y":168.8},
-  {"id":"z-sosta:9","tipo":"sosta","isola":"se","x":1127.7,"y":150.2},
+  {"id":"z-sosta:8","tipo":"sosta","isola":"se","x":975.1,"y":135.7},
+  {"id":"z-sosta:9","tipo":"sosta","isola":"se","x":1108.6,"y":141.8},
+  {"id":"z-sosta:10","tipo":"sosta","isola":"casetta","x":1427.5,"y":230.1},
+  {"id":"z-sosta:11","tipo":"sosta","isola":"mondo","x":1165.9,"y":624.7},
 ]
 
 export const ARCHI = [
-  {"a":"z-incrocio:19","b":"z-sosta:1","tipo":"terra","punti":[[92.0,938.0],[100,952],[140,960],[200,964],[210.4,963.7]]},
+  {"a":"z-incrocio:15","b":"z-sosta:1","tipo":"terra","punti":[[92.0,938.0],[100,952],[140,960],[200,964],[210.4,963.7]]},
   {"a":"z-sosta:1","b":"z-incrocio:2","tipo":"terra","punti":[[210.4,963.7],[260,962],[310,952],[335.0,942.0]]},
   {"a":"z-incrocio:3","b":"ripeti:0","tipo":"terra","punti":[[414.0,870.0],[440,854],[445.2,840.5]]},
   {"a":"ripeti:0","b":"ripeti:1","tipo":"terra","punti":[[445.2,840.5],[455,815],[462,792],[465.3,778.8]]},
@@ -120,14 +100,11 @@ export const ARCHI = [
   {"a":"ripeti:5","b":"ripeti:6","tipo":"terra","punti":[[526.7,543.9],[500,531],[465.2,530.0]]},
   {"a":"ripeti:6","b":"ripeti:7","tipo":"terra","punti":[[465.2,530.0],[465,530],[452,500],[455.0,468.5]]},
   {"a":"ripeti:7","b":"z-incrocio:4","tipo":"terra","punti":[[455.0,468.5],[455,468],[485,466],[513.0,455.0]]},
-  {"a":"ripeti:3","b":"z-sosta:2","tipo":"terra","punti":[[527.0,666.7],[480,672],[421.0,672.0]]},
-  {"a":"z-sosta:2","b":"z-sosta:3","tipo":"terra","punti":[[421.0,672.0],[420,672],[360,680],[320,678],[316.2,675.3]]},
-  {"a":"z-sosta:3","b":"z-incrocio:12","tipo":"terra","punti":[[316.2,675.3],[295,660],[287,630],[290,608],[264.7,599.0]]},
+  {"a":"ripeti:3","b":"z-sosta:2","tipo":"terra","punti":[[527.0,666.7],[480,672],[420.1,672.0]]},
+  {"a":"z-sosta:2","b":"z-sosta:3","tipo":"terra","punti":[[420.1,672.0],[420,672],[360,680],[320,678],[314.7,674.2]]},
+  {"a":"z-sosta:3","b":"z-capo:1","tipo":"terra","punti":[[314.7,674.2],[295,660],[287,630],[290,608],[262,598]]},
   {"a":"ripeti:3","b":"z-sosta:4","tipo":"terra","punti":[[527.0,666.7],[600,668],[654.9,671.7]]},
-  {"a":"z-sosta:4","b":"z-incrocio:10","tipo":"terra","punti":[[654.9,671.7],[660,672],[720,670],[782.0,660.0]]},
-  {"a":"z-incrocio:13","b":"ripeti-cane:0","tipo":"terra","punti":[[60.0,562.0],[66,545],[77.7,526.4]]},
-  {"a":"ripeti-cane:0","b":"ripeti-cane:1","tipo":"terra","punti":[[77.7,526.4],[78,526],[135.7,535.9]]},
-  {"a":"ripeti-cane:1","b":"ripeti-cane:2","tipo":"terra","punti":[[135.7,535.9],[136,536],[194.0,552.0]]},
+  {"a":"z-sosta:4","b":"z-incrocio:12","tipo":"terra","punti":[[654.9,671.7],[660,672],[720,670],[782.0,660.0]]},
   {"a":"z-incrocio:5","b":"fino:0","tipo":"terra","punti":[[500.0,372.0],[492,345],[490.1,333.1]]},
   {"a":"fino:0","b":"z-sosta:5","tipo":"terra","punti":[[490.1,333.1],[485,300],[470,272],[460.1,266.1]]},
   {"a":"z-sosta:5","b":"fino:1","tipo":"terra","punti":[[460.1,266.1],[440,254],[400,250],[386.9,250.0]]},
@@ -138,45 +115,29 @@ export const ARCHI = [
   {"a":"z-incrocio:7","b":"z-sosta:7","tipo":"terra","punti":[[588.0,142.0],[630,132],[664.6,142.9]]},
   {"a":"z-sosta:7","b":"z-incrocio:1","tipo":"terra","punti":[[664.6,142.9],[665,143],[695,165],[715,190],[721.8,197.0]]},
   {"a":"z-incrocio:1","b":"z-incrocio:8","tipo":"erba","punti":[[721.8,197.0],[745,203],[770.0,216.0]]},
-  {"a":"z-incrocio:14","b":"fino-cane:0","tipo":"terra","punti":[[824.0,928.0],[826,898],[826.2,898.0]]},
-  {"a":"fino-cane:0","b":"fino-cane:1","tipo":"terra","punti":[[826.2,898.0],[884,900],[884.1,900.0]]},
-  {"a":"fino-cane:1","b":"fino-cane:2","tipo":"terra","punti":[[884.1,900.0],[941.8,890.0]]},
   {"a":"z-incrocio:9","b":"se:0","tipo":"terra","punti":[[815.0,216.0],[870,212],[875.0,211.4]]},
-  {"a":"se:0","b":"z-sosta:8","tipo":"terra","punti":[[875.0,211.4],[925,205],[940,170],[941.0,168.8]]},
-  {"a":"z-sosta:8","b":"z-incrocio:15","tipo":"terra","punti":[[941.0,168.8],[965,140],[1000,125],[1014.6,124.7]]},
-  {"a":"z-incrocio:15","b":"z-sosta:9","tipo":"terra","punti":[[1014.6,124.7],[1050,124],[1100,138],[1127.7,150.2]]},
-  {"a":"z-sosta:9","b":"se:1","tipo":"terra","punti":[[1127.7,150.2],[1150,160],[1200,190],[1220.3,218.5]]},
-  {"a":"se:1","b":"z-capo:1","tipo":"terra","punti":[[1220.3,218.5],[1225,225],[1245,250],[1265,252]]},
-  {"a":"z-incrocio:16","b":"se-cane:0","tipo":"terra","punti":[[1463.0,328.0],[1462,288],[1461.9,287.8]]},
-  {"a":"se-cane:0","b":"se-cane:1","tipo":"terra","punti":[[1461.9,287.8],[1426.5,228.6]]},
-  {"a":"se-cane:1","b":"se-cane:2","tipo":"terra","punti":[[1426.5,228.6],[1425,226],[1367.2,240.0]]},
-  {"a":"z-incrocio:11","b":"mondo:0","tipo":"terra","punti":[[864.0,664.0],[900,660],[914.0,660.0]]},
+  {"a":"se:0","b":"z-sosta:8","tipo":"terra","punti":[[875.0,211.4],[925,205],[940,170],[965,140],[975.1,135.7]]},
+  {"a":"z-sosta:8","b":"z-sosta:9","tipo":"terra","punti":[[975.1,135.7],[1000,125],[1050,124],[1100,138],[1108.6,141.8]]},
+  {"a":"z-sosta:9","b":"se:1","tipo":"terra","punti":[[1108.6,141.8],[1150,160],[1200,190],[1220.3,218.5]]},
+  {"a":"se:1","b":"z-incrocio:10","tipo":"terra","punti":[[1220.3,218.5],[1225,225],[1245,250],[1265.0,252.0]]},
+  {"a":"z-incrocio:11","b":"z-sosta:10","tipo":"terra","punti":[[1335.0,248.0],[1367,240],[1425,226],[1427.5,230.1]]},
+  {"a":"z-sosta:10","b":"z-incrocio:14","tipo":"terra","punti":[[1427.5,230.1],[1462,288],[1463.0,318.0]]},
+  {"a":"z-incrocio:13","b":"mondo:0","tipo":"terra","punti":[[864.0,664.0],[900,660],[914.0,660.0]]},
   {"a":"mondo:0","b":"mondo:1","tipo":"terra","punti":[[914.0,660.0],[935,660],[940,625],[950,590],[972,568],[991.0,561.2]]},
   {"a":"mondo:1","b":"mondo:2","tipo":"terra","punti":[[991.0,561.2],[1000,558],[1050,572],[1089.7,576.7]]},
-  {"a":"mondo:2","b":"z-incrocio:17","tipo":"terra","punti":[[1089.7,576.7],[1092,577],[1130,587],[1160,610],[1170.9,637.2]]},
-  {"a":"z-incrocio:17","b":"mondo:3","tipo":"terra","punti":[[1170.9,637.2],[1172,640],[1165,655],[1130,672],[1106.9,675.5]]},
+  {"a":"mondo:2","b":"z-sosta:11","tipo":"terra","punti":[[1089.7,576.7],[1092,577],[1130,587],[1160,610],[1165.9,624.7]]},
+  {"a":"z-sosta:11","b":"mondo:3","tipo":"terra","punti":[[1165.9,624.7],[1172,640],[1165,655],[1130,672],[1106.9,675.5]]},
   {"a":"mondo:3","b":"senza-fine","tipo":"terra","punti":[[1106.9,675.5],[1090,678],[1050,678],[1020.0,664.0]]},
-  {"a":"z-incrocio:18","b":"mondo-cane:0","tipo":"terra","punti":[[1468.0,678.0],[1466,644],[1466.1,643.8]]},
-  {"a":"mondo-cane:0","b":"mondo-cane:1","tipo":"terra","punti":[[1466.1,643.8],[1490.0,586.1]]},
-  {"a":"mondo-cane:1","b":"mondo-cane:2","tipo":"terra","punti":[[1490.0,586.1],[1490,586],[1432.2,570.1]]},
   {"a":"z-incrocio:2","b":"z-incrocio:3","tipo":"ponte","ponte":"riva-ripeti","punti":[[335.0,942.0],[372,908],[414.0,870.0]]},
   {"a":"z-incrocio:4","b":"z-incrocio:5","tipo":"ponte","ponte":"ripeti-fino","punti":[[513.0,455.0],[507,412],[500.0,372.0]]},
   {"a":"z-incrocio:6","b":"z-incrocio:7","tipo":"ponte","ponte":"fino-nel-passaggio","punti":[[522.0,150.0],[555,152],[588.0,142.0]]},
   {"a":"z-incrocio:8","b":"z-incrocio:9","tipo":"ponte","ponte":"fino-se","punti":[[770.0,216.0],[792,216],[815.0,216.0]]},
-  {"a":"z-incrocio:10","b":"z-incrocio:11","tipo":"ponte","ponte":"ripeti-mondo","punti":[[782.0,660.0],[822,662],[864.0,664.0]]},
-  {"a":"z-incrocio:12","b":"tana:ripeti-cane:da","tipo":"terra","punti":[[264.7,599.0],[265,598]]},
-  {"a":"z-incrocio:13","b":"tana:ripeti-cane:a","tipo":"terra","punti":[[60.0,562.0],[60,562]]},
-  {"a":"tana:ripeti-cane:da","b":"tana:ripeti-cane:a","tipo":"tunnel","punti":[[265,598],[60,562]]},
-  {"a":"z-incrocio:1","b":"tana:fino-cane:da","tipo":"terra","punti":[[721.8,197.0],[719,212]]},
-  {"a":"z-incrocio:14","b":"tana:fino-cane:a","tipo":"terra","punti":[[824.0,928.0],[823,930]]},
-  {"a":"tana:fino-cane:da","b":"tana:fino-cane:a","tipo":"tunnel","punti":[[719,212],[823,930]]},
-  {"a":"z-incrocio:15","b":"tana:se-cane:da","tipo":"terra","punti":[[1014.6,124.7],[1014,94]]},
-  {"a":"z-incrocio:16","b":"tana:se-cane:a","tipo":"terra","punti":[[1463.0,328.0],[1463,328]]},
-  {"a":"tana:se-cane:da","b":"tana:se-cane:a","tipo":"tunnel","punti":[[1014,94],[1463,328]]},
-  {"a":"z-incrocio:17","b":"tana:mondo-cane:da","tipo":"terra","punti":[[1170.9,637.2],[1174,636]]},
-  {"a":"z-incrocio:18","b":"tana:mondo-cane:a","tipo":"terra","punti":[[1468.0,678.0],[1468,678]]},
-  {"a":"tana:mondo-cane:da","b":"tana:mondo-cane:a","tipo":"tunnel","punti":[[1174,636],[1468,678]]},
-  {"a":"z-incrocio:19","b":"tana:valle","tipo":"terra","punti":[[92.0,938.0],[90,925]]},
+  {"a":"z-incrocio:10","b":"z-incrocio:11","tipo":"ponte","ponte":"se-casetta","punti":[[1265.0,252.0],[1300,251],[1335.0,248.0]]},
+  {"a":"z-incrocio:12","b":"z-incrocio:13","tipo":"ponte","ponte":"ripeti-mondo","punti":[[782.0,660.0],[822,662],[864.0,664.0]]},
+  {"a":"z-incrocio:13","b":"tana:casetta:da","tipo":"terra","punti":[[864.0,664.0],[864,664]]},
+  {"a":"z-incrocio:14","b":"tana:casetta:a","tipo":"terra","punti":[[1463.0,318.0],[1463,328]]},
+  {"a":"tana:casetta:da","b":"tana:casetta:a","tipo":"tunnel","punti":[[864,664],[1463,328]]},
+  {"a":"z-incrocio:15","b":"tana:valle","tipo":"terra","punti":[[92.0,938.0],[90,925]]},
 ]
 
 export const PONTI = {
@@ -184,6 +145,7 @@ export const PONTI = {
   "ripeti-fino": {"isole":["ripeti","fino"],"blocchi":{"ripeti":[509.7,431.2,-98],"fino":[504.1,395.6,80]}},
   "fino-nel-passaggio": {"isole":["fino","fino"],"blocchi":{"fino":[565.0,149.0,163]}},
   "fino-se": {"isole":["fino","se"],"blocchi":{"fino":[786.0,216.0,0],"se":[799.0,216.0,180]}},
+  "se-casetta": {"isole":["se","casetta"],"blocchi":{"se":[1289.0,251.3,-2],"casetta":[1311.1,250.0,175]}},
   "ripeti-mondo": {"isole":["ripeti","mondo"],"blocchi":{"ripeti":[806.0,661.2,3],"mondo":[840.0,662.9,-177]}},
 }
 

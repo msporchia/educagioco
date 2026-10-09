@@ -91,21 +91,14 @@ Su ogni isola e isoletta un SENTIERO largo e libero (fra i ponti, o dalla tana i
   grande e una (a destra in basso) resta senza tappe. Si è tenuto così, e il
   giro è la catena: la sbarra sul ponte del ripeti–tutto il mondo e su quello
   del fino a–se fa il resto.
-- **Come si è usato**: foglietto `zaino.json` (docs/passo-passo/mappa.md, «Il
-  mondo dello zaino»). Ripeti → l'isoletta con le stalle in fila, se → quella
-  di destra in alto, tutto il mondo → quella col lago gelato, fino a → quella
-  in basso in mezzo (non ne ha una accanto). Le isolette sono larghe 180 px:
-  tre caselle ci stanno solo a zigzag, e si è portato il lato a 48.
-- **Due difetti del disegno**, girati attorno nel foglietto. La tana «di
-  fronte» sull'isola grande c'è solo per due isolette (quella in cima
-  all'isola del se, e quella sull'isolotto di passaggio, che fa da tana al
-  fino a): per il ripeti e per tutto il mondo il coniglio sparisce in una
-  nuvoletta (`nuvola` nel foglietto), al capo del ponte e sul lato della
-  spirale. E le isolette non hanno un sentiero lungo, solo un pezzo di
-  sabbia: le tre caselle stanno sull'erba, a zigzag.
+- **Come si è usato**: foglietto `zaino.json` ([docs/passo-passo/mondo-zaino.md](../../../../docs/passo-passo/mondo-zaino.md)).
+  Le isolette sono decoro, tranne quella della casetta in alto a destra: il
+  ponte del se ci porta, e la sua tana scende fino all'ingresso di tutto il
+  mondo, così dal se non si torna indietro per la catena. Sull'altro lato
+  la tana non è dipinta: il coniglio sbuca in una nuvoletta (`nuvola`).
 - **Il resto di quello che serviva c'è**: un ingresso riconoscibile, i
   capitoli in fila sui ponti, sentieri abbastanza lunghi sulle isole grandi
   (il ripeti ha 8 tappe sul viale e attorno al fienile), nessun sentiero che
-  sparisce dietro un edificio. **Se si rigenera**, dire nel prompt che ogni
-  isoletta ha un sentiero lungo almeno 180 px e la tana di fronte sull'isola
-  grande.
+  sparisce dietro un edificio. **Se si rigenera**, dire nel prompt che le
+  isole vanno in giro e non in catena: l'ultima di un capitolo accanto alla
+  prima del capitolo dopo.

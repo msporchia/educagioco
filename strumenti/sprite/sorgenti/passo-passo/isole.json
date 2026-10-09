@@ -3,57 +3,57 @@
   "modulo": "src/giochi/passo-passo/dati/isole-mappa.js",
   "lato": 52,
   "isole": {
-    "passi": { "caselle": 5, "cartello": [150, 640] },
+    "passi": { "caselle": 5, "cartello": [150, 640], "cane": { "isola": "mondo-cane", "caselle": 6 } },
     "salto": { "caselle": 5, "cartello": [1330, 955] },
-    "ghiaccio": { "caselle": 6, "cartello": [1440, 84] },
-    "massi": { "caselle": 5, "cartello": [190, 110] },
-    "buche": { "caselle": 3, "cartello": [620, 70] },
-    "pecore-cane": { "caselle": 11, "cartello": [880, 724] }
+    "ghiaccio": { "caselle": 6, "cartello": [1440, 84], "cane": { "isola": "ripeti-cane", "caselle": 6 } },
+    "massi": { "caselle": 5, "cartello": [190, 110], "cane": { "isola": "se-cane", "caselle": 6 } },
+    "buche": { "caselle": 3, "cartello": [620, 70], "cane": { "isola": "fino-cane", "caselle": 6, "cartello": [900, 292] } },
+    "pascolo": { "cartello": [880, 724], "cane": { "isola": "pecore-cane", "caselle": 11 } }
   },
   "sentieri": [
-    { "isola": "passi", "caselle": 5, "margini": [30, 34],
+    { "isola": "passi", "cane": 3, "margini-cane": [36, 30], "punti": [[300, 585], [295, 620], [320, 650], [380, 660], [430, 645], [452, 622]] },
+    { "isola": "passi", "caselle": 5, "margini": [30, 34], "cane": 3, "margini-cane": [100, 85], "rovescio-cane": true,
       "punti": [[228, 852], [262, 862], [330, 860], [390, 840], [420, 803], [470, 786], [528, 800], [548, 808]] },
-    { "isola": "passi", "punti": [[300, 585], [295, 620], [320, 650], [380, 660], [430, 645], [452, 622]] },
     { "isola": "passi", "erba": true, "punti": [[470, 786], [462, 720], [440, 655]] },
 
     { "isola": "salto", "caselle": 5, "margini": [40, 40],
       "punti": [[1000, 814], [1040, 806], [1057, 781], [1090, 760], [1140, 739], [1161, 718], [1161, 693], [1173, 660],
                 [1207, 639], [1257, 627], [1298, 608], [1307, 585]] },
 
-    { "isola": "ghiaccio", "caselle": 6, "margini": [40, 40],
+    { "isola": "ghiaccio", "caselle": 6, "margini": [40, 40], "cane": 6, "margini-cane": [40, 40],
       "punti": [[1310, 413], [1360, 401], [1404, 379], [1432, 346], [1427, 307], [1416, 279], [1432, 240], [1421, 212],
                 [1382, 196], [1316, 179], [1260, 173], [1204, 184], [1160, 201], [1120, 224]] },
     { "isola": "ghiaccio", "punti": [[1120, 224], [1127, 257], [1149, 323], [1193, 368], [1260, 401], [1310, 413]] },
 
-    { "isola": "massi", "caselle": 5, "margini": [40, 40],
+    { "isola": "massi", "caselle": 5, "margini": [40, 40], "cane": 6, "margini-cane": [40, 40],
       "punti": [[484, 209], [462, 231], [407, 237], [362, 231], [300, 232], [262, 226], [184, 237], [140, 259], [123, 298],
                 [140, 325], [184, 337], [229, 348], [262, 370], [290, 398], [301, 426]] },
 
-    { "isola": "buche", "caselle": 3, "margini": [45, 45],
-      "punti": [[985, 188], [970, 203], [910, 232], [840, 248], [775, 253], [710, 252], [660, 245], [610, 228], [575, 208]] },
-    { "isola": "buche", "punti": [[575, 208], [610, 170], [660, 140], [760, 120], [860, 118], [940, 138], [985, 188]] },
+    { "isola": "buche", "caselle": 3, "margini": [50, 50], "cane": 6, "margini-cane": [62, 62],
+      "punti": [[985, 188], [940, 138], [860, 118], [760, 120], [660, 140], [610, 170], [575, 208]] },
 
-    { "isola": "pecore-cane", "caselle": 1, "margini": [36, 20],
+    { "isola": "pascolo", "cane": 1, "margini-cane": [36, 20],
       "punti": [[775, 330], [760, 358], [735, 380], [700, 395]] },
-    { "isola": "pecore-cane", "punti": [[700, 395], [650, 405], [600, 420]] },
-    { "isola": "pecore-cane", "caselle": 10, "margini": [50, 112],
+    { "isola": "pascolo", "punti": [[700, 395], [650, 405], [600, 420]] },
+    { "isola": "pascolo", "cane": 10, "margini-cane": [50, 112],
       "punti": [[600, 420], [575, 435], [545, 465], [535, 510], [548, 550], [585, 573], [650, 578], [715, 565], [765, 575],
                 [785, 610], [810, 645], [860, 660], [910, 642], [945, 600], [985, 575], [997, 540], [990, 505], [960, 485],
                 [935, 478]] },
-    { "isola": "pecore-cane", "punti": [[548, 552], [522, 578], [502, 596]] }
+    { "isola": "pascolo", "punti": [[548, 552], [522, 578], [502, 596]] }
   ],
   "ponti": [
     { "nome": "prato-salto", "isole": ["passi", "salto"], "punti": [[548, 808], [760, 815], [1000, 814]] },
     { "nome": "prato-massi", "isole": ["passi", "massi"], "punti": [[300, 585], [300, 505], [301, 426]] },
-    { "nome": "prato-pascolo", "isole": ["passi", "pecore-cane"], "punti": [[452, 622], [478, 610], [502, 596]] },
-    { "nome": "salto-pascolo", "isole": ["salto", "pecore-cane"], "punti": [[1150, 652], [1090, 612], [1030, 576], [1000, 566]], "blocco": [24, 62] },
+    { "nome": "prato-pascolo", "isole": ["passi", "pascolo"], "punti": [[452, 622], [478, 610], [502, 596]], "blocco": [44, 24] },
+    { "nome": "salto-pascolo", "isole": ["salto", "pascolo"], "punti": [[1150, 652], [1090, 612], [1030, 576], [1000, 566]], "blocco": [24, 62] },
     { "nome": "salto-ghiaccio", "isole": ["salto", "ghiaccio"], "punti": [[1307, 585], [1306, 500], [1310, 413]], "blocco": [24, 50] },
     { "nome": "ghiaccio-buche", "isole": ["ghiaccio", "buche"], "punti": [[1120, 224], [1050, 202], [985, 188]] },
     { "nome": "buche-massi", "isole": ["buche", "massi"], "punti": [[575, 208], [530, 210], [484, 209]] }
   ],
   "tane": {
-    "pecore-cane": { "da": "buche", "a": "pecore-cane", "punto": [775, 288] },
-    "zaino": { "isola": "buche", "punto": [823, 84], "freccia": [823, 70] }
+    "zaino": { "isola": "pascolo", "punto": [775, 290], "freccia": [775, 272] }
   },
-  "speciali": {}
+  "speciali": {
+    "senza-fine-cane": { "isola": "passi", "punto": [236, 855], "etichetta": [60, 930], "cane": true }
+  }
 }

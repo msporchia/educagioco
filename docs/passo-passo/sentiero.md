@@ -17,7 +17,7 @@ più corto e non dalle frecce, sta in [sentiero-finale.md](sentiero-finale.md).
   posti del finale.
 - **Due sentieri, da scegliere.** Quello del coniglio fa prati e posti con
   lo zaino; quello del cane pascoli e posti con lo zaino col cane (le
-  carte finite, usate sulle pecore come nelle isolette del cane). Nessuno
+  carte finite, usate sulle pecore come nelle sue tappe con le carte). Nessuno
   dei due mescola l'altro animale.
 - **Si aprono in fondo alla strada del loro animale**, dove stanno sulla
   mappa (in fondo alla spirale di «Tutto il mondo»): quello del coniglio

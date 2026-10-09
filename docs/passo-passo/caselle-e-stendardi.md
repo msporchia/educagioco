@@ -51,8 +51,8 @@ nome dell'isola e l'insegna delle tane per l'altro mondo. Il codice è in
   `stimaNome` lo stima per i test, per eccesso).
 - **Rosso per le isole del coniglio, viola per quelle del cane**; velato
   (isola non ancora raggiunta) è slavato, non trasparente, per leggersi.
-  Un'isoletta del cane dello zaino ha solo lo scudo (`solo-stemma`, `stemma`
-  nel foglietto): è piccola, e con tre caselle un nome non ci sta.
+  Un'isola piccola, dove un nome non ci sta, può avere solo lo scudo
+  (`solo-stemma`, `stemma` nel foglietto); oggi nessuna lo usa.
 - **Non copre niente.** Il centro è `cartello` del foglietto, in pixel del
   fondale (lo stendardo è alto 54 px e largo fino a 200: alcuni stanno sul
   mare accanto all'isola, dove sulla terra non c'è posto senza coprire una

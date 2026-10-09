@@ -12,7 +12,7 @@ export function usaSegnalino({ nodoDi, viaggio, segui = () => {}, arrivato = () 
   const animale = ref('coniglio')
   const viaggiando = shallowRef(null)
   const mira = ref(null)            // dove sta andando
-  const sbuffo = ref(null)          // { x, y, n }: la nuvoletta dove l'animale cambia su un ponte
+  const sbuffo = ref(null)          // { x, y, n }: la nuvoletta di una tana senza buco dipinto
   let verso = 1                     // guarda a destra (1) o a sinistra (-1)
   let qui = null                    // dove ripartire: un nodo, o un punto a metà strada
   let nSbuffo = 0

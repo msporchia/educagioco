@@ -318,8 +318,8 @@ export async function giocaGiornata(page, id) {
    cane, e due valli dipinte, quella dei piccoli e le isole delle carte
    (docs/passo-passo/mappa.md): prima si sceglie chi gioca col selettore, poi
    una casella che non c'è sta nell'altra valle, e ci si passa dalla tana come
-   farebbe un bambino (ognuna ha la sua). Torna false se il cane è chiuso o
-   se la tana è chiusa: allora di là è chiuso tutto. */
+   farebbe un bambino (ognuna ha la sua; il cane sta tutto nella valle). Torna
+   false se il cane è chiuso o se la tana è chiusa: allora di là è chiuso tutto. */
 const protagonistaDi = sel => {
   const m = /data-tappa="([^"]+)"/.exec(sel)
   if (!m) return null
@@ -338,7 +338,7 @@ async function diLaSeServe(page, sel) {
   }
   if (await page.locator(sel).count()) return true
   const tana = page.locator('[data-mappa] [data-passaggio]')
-  if ((await tana.getAttribute('data-aperta')) === '0') return false
+  if (!(await tana.count()) || (await tana.getAttribute('data-aperta')) === '0') return false
   await page.waitForSelector('[data-segnalino][data-in-viaggio="0"]', { timeout: 8000 })
   await tana.click()
   await page.waitForSelector(sel, { timeout: 15000 })

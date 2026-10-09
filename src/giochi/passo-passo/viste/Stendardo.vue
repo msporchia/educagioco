@@ -1,7 +1,7 @@
 <script setup>
 /* Il nome di un'isola: uno stendardo appeso a un'asta, con lo stemma
    dell'icona del capitolo; o, senza nome (`solo-stemma`), lo scudo solo, per
-   le isolette. Il disegno è di scena/stendardo.js, il nome è testo vero e
+   un'isola piccola. Il disegno è di scena/stendardo.js, il nome è testo vero e
    la stoffa si allarga quanto serve. Chi lo usa lo posa (un `style`).
    Vedi docs/passo-passo/mappa.md, «Gli stendardi». */
 import { computed } from 'vue'

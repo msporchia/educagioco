@@ -60,7 +60,7 @@
                          box-shadow: 0 3px 0 var(--is-spessore) }
 .pp-mappa-cima > .ri-carta { margin: 8px 0 4px }
 
-/* lo stendardo di un'isola (e lo stemma di un'isoletta): disegnato in pixel
+/* lo stendardo di un'isola (o lo stemma solo, per un'isola piccola): disegnato in pixel
    da scena/stendardo.js, il nome è testo vero sopra la stoffa; non si tocca */
 .pp-insegna { position: absolute; line-height: 0; pointer-events: none }
 .pp-stendardo { display: block; overflow: visible; filter: drop-shadow(0 3px 0 rgba(60, 25, 8, .28)) }
@@ -187,7 +187,7 @@
              line-height: 0; z-index: 1 }
 .pp-sentiero-nome-valle { padding: 5px 11px; border-radius: 12px; background: rgba(255, 250, 243, .94);
                           box-shadow: 0 3px 0 var(--is-spessore) }
-/* la nuvoletta dove il coniglio diventa cane, sul capo del ponte */
+/* la nuvoletta dove l'animale sparisce o sbuca, da una tana senza buco dipinto */
 .pp-sbuffo { position: absolute; width: 0; height: 0; pointer-events: none; z-index: 2 }
 .pp-sbuffo i { position: absolute; left: -11px; top: -30px; width: 22px; height: 22px; border-radius: 50%;
                background: #fffaf0; opacity: 0;
