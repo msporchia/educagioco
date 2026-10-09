@@ -62,25 +62,80 @@ dà un terzo dell'esperienza, e cresce come prima.
 
 ## Le quattro caratteristiche
 
-| | rende, per punto dato | si legge sulla pagina |
-|---|---|---|
-| ⚔️ Forza | ⚔️ +1 attacco | «⚔️ 12 → 13» |
-| ❤️ Tempra | ❤️ +3 vita | «❤️ 66 → 69» |
-| 🛡️ Scorza | 🛡️ +1 difesa ogni due punti | «🛡️ 3 → 3½» |
-| 🍀 Fortuna | 💎 +5% gemme e roba non comune un dodicesimo più spesso | «💎 ×1,05 → ×1,1» |
+Dal 9 ottobre 2026 sono Forza, Destrezza, Intelligenza e Tempra: scorza e
+fortuna sono uscite (l'utente), perché alzare la forza conveniva a tutti e
+le classi si somigliavano. La fortuna resta solo sulla roba.
 
-- **La scorza va a mezzo ritmo** perché la difesa entra in una sottrazione e
-  vale il doppio dell'attacco ([abisso.md](abisso.md)): con un punto a punto,
-  tutto nella scorza voleva dire non farsi più male. Il mezzo scudo si vede
-  («3½»): ogni punto cambia qualcosa sulla pagina.
+| | dà l'attacco a | a tutti, per punto | è il requisito di |
+|---|---|---|---|
+| Forza | spade e asce | — | spade e asce |
+| Destrezza | archi | 1% di schivata dei graffi | archi |
+| Intelligenza | bacchette e bastoni | un punto di energia massima | bacchette e bastoni |
+| Tempra | — | tre di vita, e una difesa ogni tre punti | — |
+
+- **L'attacco viene dalla caratteristica dell'arma in mano** (`carDellArma`
+  in `motore/corredo.js`, `car` delle famiglie in `dati/eroi.js`): l'elfa con
+  la spada cresce di forza, con l'arco di destrezza. **A mani nude e con
+  un'arma senza famiglia** (la mazza, i pezzi dei grossi) **conta la più
+  alta** delle tre. Provato con la forza: il mago con la Mazza di Grumo, e a
+  mani nude nella scalinata, non picchiava più. Un arco può picchiare meno
+  dei pugni a chi ha alzato la forza: il mercante non lo propone
+  (`sottoAddosso` in `motore/bottega.js`).
+- **La difesa che era della scorza sta nella tempra, a un terzo di ritmo**:
+  la difesa entra in una sottrazione e vale il doppio dell'attacco
+  ([abisso.md](abisso.md)). Provata sulla forza: chi alzava la forza per
+  l'attacco prendeva anche la difesa, e il nano e l'elfa (la loro dote è la
+  forza) a quattro su dieci vincevano quasi tutto; il mago, che la forza non
+  la alza, restava senza difesa e non arrivava in fondo.
+- **L'intelligenza è il mana**: l'energia massima è 5 più l'intelligenza
+  ([abilita.md](abilita.md)), quindi il mago parte da dieci, il cavaliere e
+  il nano da sei.
 - **Le caratteristiche di partenza raccontano i numeri della classe**
-  (`parte` in `dati/eroi.js`): la forza è il braccio, la scorza è il doppio
-  della difesa (`guastiDegliEroi` lo pretende). La crescita aggiunge sopra
-  (`piuDellaCrescita`).
-- **La roba può dare le stesse cose**: le abilità ⚔️ 🛡️ ❤️ 🍀 dei pezzi
+  (`parte` in `dati/eroi.js`): la caratteristica di ogni arma che la classe
+  porta vale il suo braccio, più o meno uno (`guastiDegliEroi` lo
+  pretende). La crescita aggiunge quello che sale oltre (`piuDellaCrescita`),
+  e al livello 1 i numeri sono quelli di sempre.
+- **La pagina le mostra in medaglioni** come l'albero (`glifo` e `tinta` in
+  `CARATTERISTICHE`), e sotto il «+» dice cosa cambierebbe: l'attacco se è
+  la caratteristica dell'arma in mano, la difesa quando la tempra arriva al
+  punto che la alza, la vita, la schivata, l'energia.
+- **La roba può dare le stesse cose**: le abilità dei pezzi
   ([rarita.md](rarita.md)) si sommano ai punti. Si sommano tutte (arma,
   scudo, livello, punti): il banco misura la somma, non le parti
   ([Le misure](#le-misure)).
+- **Un salvataggio di prima** (con scorza e fortuna, `v` diverso da 2 in
+  `crescita`) tiene esperienza e albero, e i punti tornano tutti da dare.
+
+## I requisiti delle armi
+
+Regola dell'utente: **rigidi, sotto il requisito l'arma non si indossa**.
+Il requisito è la caratteristica della famiglia, tanta quanto il gradino
+(`REQUISITO_DEL_GRADINO`: 0, 1, 3) più un punto ogni quattro livelli del
+pezzo (`requisitoDi` in `dati/eroi.js`): uno spadone di livello 13 vuole
+forza 6. Mite apposta: chi alza la caratteristica della sua arma non lo
+sente, chi la lascia indietro sì.
+
+- **Si raccoglie lo stesso**, e si vende: il limite è sull'indossare
+  (`posso`), il bottino predilige la classe come prima (`porta`), così il
+  caso dei forzieri non è cambiato.
+- **Si dice perché**: «Serve Forza 7 (hai 5)» sulla tasca e al banco
+  (`perchéNo`), e il requisito sta sulla riga sotto il nome di ogni arma
+  («Spada · a una mano · livello 7 · comune · Forza 2»).
+- **Il mercante e la storia propongono il pezzo al livello più alto che si
+  impugna** (`livelloPortabile`): un'arma da guardare e basta non serve.
+- **La roba della storia si indossa con i punti dati come il banco**:
+  `unita/sotterraneo-livelli` lo controlla discesa per discesa.
+- Riassegnando i punti, quello che non si regge più torna in tasca
+  (`sistemaIlCorredo`).
+
+## Riassegnare
+
+Niente scelte per sempre (l'utente): i punti delle caratteristiche e quelli
+dell'albero si possono riassegnare, a **5 gemme a punto da rimettere**
+(`GEMME_PER_RIASSEGNARE`). Abbastanza per non farlo a ogni discesa, poco per
+rimediare a un errore. «Rifai 💎 40» sta accanto ai punti da dare, nella
+pagina dell'eroe e nell'albero; il primo tocco chiede «Sicuro?», il secondo
+fa. Sopra e sotto.
 
 ## La regola del bilanciamento
 
@@ -103,19 +158,20 @@ se la più bassa è almeno la metà della più alta: 18 e 12 sì, 18 e 7 no, 50 
 
 ## Le classi partono diverse e crescono diverse
 
-| | parte (forza · tempra · scorza · fortuna) | vita a livello | dote, ogni tre livelli |
+| | parte (forza · destrezza · intelligenza · tempra) | vita a livello | dote, ogni tre livelli |
 |---|---|---|---|
-| 🛡️ Cavaliere | 3 · 4 · 2 · 1 | 3 | tempra |
-| 🧝 Elfa | 4 · 3 · 2 · 2 | 3 | forza |
-| 🧙 Mago | 5 · 2 · 0 · 3 | 2 | scorza |
-| 🧔 Nano | 3 · 5 · 4 · 1 | 3 | forza |
+| 🛡️ Cavaliere | 3 · 2 · 1 · 4 | 3 | tempra |
+| 🧝 Elfa | 4 · 4 · 2 · 3 | 3 | forza |
+| 🧙 Mago | 1 · 2 · 5 · 2 | 2 | tempra |
+| 🧔 Nano | 3 · 2 · 1 · 5 | 3 | forza |
 
 - **La dote** è un punto che la classe prende da sé ogni `DOTE_OGNI` (3)
   livelli nella sua caratteristica: si vede come un numero che sale senza
   averlo dato. Non conta nella regola del bilanciamento (non è un punto dato).
 - Provato: la dote del nano nella scorza (la sua forza vera) lo rendeva
   quasi invincibile nelle ultime discese mentre il mago non arrivava in
-  fondo; la scorza al mago, che ogni sbaglio fa malissimo, li avvicina.
+  fondo. Al mago, che ogni sbaglio fa malissimo, la tempra (era la scorza,
+  che non c'è più).
 
 ## La pagina dell'eroe
 
@@ -158,7 +214,9 @@ la somma di roba e livelli) stanno in
 
 Nei test: `unita/sotterraneo-livelli` (le soglie, l'esperienza solo dai
 mostri e tanta quanto sono forti, il livello salito giù con la sua vita e la
-festa, quanto rende ogni caratteristica, le doti, la regola coi tre esempi
+festa, quanto rende ogni caratteristica e con quale arma, la crescita di
+prima che torna da dare, le doti, i requisiti delle armi e la roba della
+storia che si indossa, riassegnare a gemme, la regola coi tre esempi
 dell'utente e il «+» acceso sempre, la pagina coi «+» spenti e la
 caratteristica indietro), `misure/sotterraneo` (due livelli sotto e tre
 sopra), `integrazione/sotterraneo-eroe` (col dito: il «+» d'oro sul livello,
@@ -169,7 +227,7 @@ barra `[data-azione="eroe-pagina"]` con `data-livello` e `data-punti`, la riga
 c'è più la carta (`[data-chi-sopra]`, `[data-roba-sopra]` e `[data-azione="ritratto"]`
 non esistono); la pagina `[data-pagina-eroe]` con `[data-livello-eroe][data-livello]`,
 `[data-esperienza]` (`data-fatto`, `data-serve`), `[data-numero="vita|att|dif|gemme"]`,
-`[data-punti-da-dare][data-n]`, le righe `[data-caratteristica="<chiave>"]` con
+`[data-azione="riassegna"][data-costo]`, `[data-punti-da-dare][data-n]`, le righe `[data-caratteristica="<chiave>"]` con
 `data-valore`, `data-dati`, `data-trattenuta`, `data-indietro`, dentro
 `[data-cambia]` e il «+» `[data-azione="dai"][data-dai="<chiave>"]`,
 `[data-azione="tesori"]`, `[data-tratti-eroe]` (sopra), `[data-azione="eroe"]` («Cambia eroe», solo sopra); giù la festa `[data-livello-su][data-livello]`,

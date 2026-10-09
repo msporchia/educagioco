@@ -32,6 +32,10 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   `nonLaPorta`), e non impedisce mai di **raccogliere e vendere**.
 - **Quello che non ha famiglia lo porta chiunque**: scudi, gioielli,
   pozioni, il panciotto di cuoio, il pugnale.
+- **Un'arma vuole la sua caratteristica** (forza per spade e asce, destrezza
+  per gli archi, intelligenza per le bacchette): sotto il requisito non si
+  indossa, e l'attacco cresce con quella caratteristica
+  ([livelli.md](livelli.md#i-requisiti-delle-armi)).
 - **Il bottino predilige la classe, non la garantisce** (`PESO_ALTRUI` = un
   terzo, in `pescaCosa`/`pescaMerce`): a zero un forziere smetterebbe di
   essere una notizia.

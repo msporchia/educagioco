@@ -225,7 +225,10 @@ Sei semi, bravura 0,8:
 
 **Il costo di un piano non cresce** — domande obbligate dal 1° all'11°: 10 ·
 6 · 19 · 13 · 18 · 25 · 15 · 15 · 10 · 17 · 16 — e la forbice fra «il minimo»
-e «tutto» resta oltre il doppio. Il 6 è un piano fortunato (guardiano a due
+e «tutto» resta oltre il doppio (misurata col cavaliere al livello 12, quello
+con cui all'abisso si arriva: dai requisiti delle armi un eroe di livello 1 non
+impugna il bottino dell'abisso, [livelli.md](livelli.md#i-requisiti-delle-armi)).
+Il 6 è un piano fortunato (guardiano a due
 stanze dall'ingresso): il generatore non promette dove mette la scala, e la
 soglia del test è larga in basso apposta.
 

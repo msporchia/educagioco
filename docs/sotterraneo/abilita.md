@@ -23,9 +23,13 @@ Il codice: `dati/abilita.js` (i rami, i nodi, l'energia), `motore/abilita.js`
   punti delle caratteristiche. Al 12, dove finisce la storia, undici punti
   per dodici nodi: non si prende tutto, e le zone dopo la storia hanno
   ancora qualcosa da comprare.
-- **Tre gradi per nodo**: il secondo vuole due livelli sopra il gradino, il
-  terzo quattro (`LIVELLI_PER_GRADO`). Un grado alza i numeri, non cambia
-  cosa fa.
+- **I gradi non hanno tetto** (l'utente: al livello 50 c'è ancora qualcosa
+  da fare con le abilità). Ogni grado vuole due livelli sopra il gradino del
+  nodo (`LIVELLI_PER_GRADO`) e alza i numeri, non cambia cosa fa. I primi tre
+  sono scritti nel nodo; oltre si cresce a metà del passo fra il secondo e il
+  terzo (`n` in `dati/abilita.js`), e gli scambi restano interi. Da
+  analizzare perché non diventino troppo forti; sotto il nome, tre gemme e il
+  numero quando si va oltre.
 - **Due tipi di nodi.** Le abilità (quadrate) costano energia e vanno nelle
   caselle dello scontro; quelle che «valgono sempre» (tonde) non occupano
   caselle. Il primo gradino di ogni ramo è un'abilità: al livello 2 c'è
@@ -69,8 +73,11 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
 
 ## L'energia
 
-- **Dieci, più i nodi 🔷** (`ENERGIA`, `energiaMax`). Si scende con
-  l'energia piena, come con la vita.
+- **Cinque più l'intelligenza** (`ENERGIA`, `energiaMax`): il mago parte da
+  dieci, l'elfa da sette, il cavaliere e il nano da sei, e alzare
+  l'intelligenza alza il globo ([livelli.md](livelli.md#le-quattro-caratteristiche)).
+  Nessuna abilità costa più di sei. Si scende con l'energia piena, come con
+  la vita.
 - **Si riempie solo rispondendo giusto**: un punto per risposta giusta,
   dovunque (porte, forzieri, fonti, mostri), dopo aver pagato l'abilità.
   Sbagliare non la toglie. In più la fonte la riempie tutta, la pozione blu
@@ -145,10 +152,14 @@ se lo ritrova nello scontro.
   bersagli di sempre (il tetto di 85 risposte, la forbice, il cavaliere da
   avvicinare a elfa e nano). Il veleno sembra forte: metà colpo per tre
   scambi su mostri che cadono in due.
-- **Le caratteristiche nuove** (Forza, Destrezza, Magia, Tempra, coi rami
-  che crescono con la loro): proposte, non fatte. Oggi tutte le abilità
-  crescono con l'attacco.
-- **Rifare l'albero** (dal frate, per gemme): proposto, non deciso.
+- **I pezzi che rinforzano un ramo** («Bastone del fulmine: +1 alle abilità
+  arcane», alla Diablo): l'idea dell'utente perché il mago cerchi i
+  bastoni. Non fatti. Oggi le abilità crescono con l'attacco, che viene
+  dalla caratteristica dell'arma.
+
+**Rifare l'albero** si paga in gemme, come riassegnare i punti
+([livelli.md](livelli.md#riassegnare)): «Rifai» accanto ai punti da
+imparare, e le caselle si svuotano.
 
 Nei test: `unita/sotterraneo-abilita` (i rami in piedi, difesa e cura per
 ogni classe, ogni icona disegnata e nessuna emoji, i punti e le loro
@@ -162,7 +173,7 @@ Sulla barra `[data-azione="abilita"]` con `data-punti-abilita` e il globo
 `[data-stati-mostro] [data-stato]` e `[data-stati-eroe] [data-stato]`, lo
 scambio `.sot-scambio[data-usata]`; la pagina `[data-pagina-abilita]` coi
 nodi `[data-azione="nodo"][data-nodo][data-grado][data-stato="preso|pronto|chiuso"]`,
-`[data-nodo-dettaglio]`, `[data-azione="impara"]`, le caselle `[data-azione="zoccolo"][data-zoccolo="0..2"]`
+`[data-nodo-dettaglio]`, `[data-azione="impara"]`, `[data-azione="dimentica"][data-costo]`, le caselle `[data-azione="zoccolo"][data-zoccolo="0..2"]`
 e la scelta `[data-scelta-abilita] [data-azione="metti"][data-metti="<id>"]`,
 `[data-caselle-albero] [data-casella]`, `[data-punti-abilita][data-n]`, i glifi `[data-glifo]`,
 `[data-azione="eroe-faccia"]`; nella pagina dell'eroe `[data-azione="abilita-pagina"]`.
