@@ -148,9 +148,9 @@ const cammino = await page.evaluate(async () => {
   return { onda: T.hud.onda, prima, dopo, uccisi: T.hud.uccisi }
 })
 nota('in campo:', JSON.stringify(cammino))
-/* il nome sulla scheda del mostro in campo è quello della figura */
-const nome = await page.locator('.scheda .dati b').first().textContent().catch(() => '')
-uguale('la scheda dice il nome della figura, non quello del gioco', nome, 'Melma')
+/* il nome sullo stendardo, per chi è in campo, è quello della figura */
+const nome = await page.locator('[data-stendardo] [data-in-campo]').getAttribute('aria-label').catch(() => '')
+uguale('lo stendardo dice il nome della figura, non quello del gioco', nome, 'Melma')
 const nelBosco = await colori()
 controlla('il campo è vestito, non una tinta sola', nelBosco > 60, `${nelBosco} colori`)
 await togliCartelli()
@@ -315,10 +315,13 @@ await scatto(page, 'castello-radura')
              onda: T.hud.onda }
   })
   controlla('il capo è in campo, grande', capo.capo && capo.taglia > 2, JSON.stringify(capo))
-  const scheda = await page.locator('.scheda .dati b').first().textContent().catch(() => '')
+  /* il medaglione del capo, aperto: la scheda lo chiama col nome della figura, gigante */
+  await page.click('[data-stendardo] [data-in-campo][data-capo]')
+  const scheda = await page.locator('[data-scheda-grande] .nome').textContent().catch(() => '')
   const { NOMI, figuraDi } = await import('../../src/giochi/castello/scena/bestiario.js')
   uguale('la scheda lo chiama col nome della figura, gigante', scheda,
-         `👑 ${NOMI[figuraDi('lava', capo.bestia)]} gigante`)
+         `${NOMI[figuraDi('lava', capo.bestia)]} gigante`)
+  await page.click('[data-azione="chiudi-scheda"]')
   await togliCartelli()
   await attendi(page, 300)
   await scatto(page, 'castello-capo')
