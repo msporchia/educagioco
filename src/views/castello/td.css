@@ -20,6 +20,9 @@
 .arena > .campo { position:relative; flex:none; width:100%;
                   height:min(34vh, 280px); max-width:520px }
 .arena.gioca > .campo { position:absolute; inset:0; height:auto; max-width:none }
+/* sulla mappa il campo non si vede: il regno è già il ritratto di dove si andrà
+   (resta montato, perché la partita lo rimisura entrando) */
+.arena.mappa > .campo { position:absolute; visibility:hidden; pointer-events:none }
 
 /* Il preavviso sta in cima al campo e il tasto dell'ondata in fondo,
    tutti e due in sovrimpressione: il campo è tutto lo schermo, e
@@ -64,6 +67,14 @@
 .banco { flex:1; min-height:0; width:100%; display:flex; flex-direction:column;
          align-items:center; justify-content:safe center; gap:8px;
          padding:10px 12px calc(12px + env(safe-area-inset-bottom)); overflow-y:auto }
+/* la mappa del regno va da bordo a bordo, e la carta della ripresa le sta sopra */
+.banco.sul-regno { justify-content:flex-start; align-items:flex-start; gap:0; overflow:auto;
+               padding:0 0 env(safe-area-inset-bottom); background:#1d4f93 }
+/* la carta della ripresa galleggia in cima senza prendere posto: la mappa si
+   apre su dove sei, e lei deve vedersi lo stesso */
+.sopra-regno { position:sticky; top:10px; left:12px; z-index:4; flex:none; height:0;
+               width:calc(100% - 24px); max-width:420px }
+.sopra-regno > * { box-shadow:0 6px 18px #0006 }
 
 /* l'attesa fra un'ondata e l'altra si può saltare; il bottone resta al suo
    posto anche quando non serve, così sotto il campo non balla niente */

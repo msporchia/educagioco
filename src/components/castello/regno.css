@@ -1,0 +1,44 @@
+/* il regno: la mappa a tutta larghezza, i segnalini sopra (docs/castello/regno.md) */
+/* più larga del telefono: si naviga trascinando, e si apre su dove sei */
+.regno { position:relative; width:clamp(640px, 100%, 760px); margin:0 auto; flex:none; line-height:0;
+         -webkit-user-select:none; user-select:none }
+.fondo { display:block; width:100%; height:auto; image-rendering:auto; pointer-events:none }
+.tappe { position:absolute; inset:0; line-height:normal }
+
+/* un segnalino: tondo, col numero dentro l'isola; grande quello del capo */
+.tap { position:absolute; transform:translate(-50%,-50%); width:36px; height:36px; padding:0;
+       border-radius:50%; border:3px solid #fff; display:grid; place-items:center;
+       font-size:15px; font-weight:900; color:#fff; background:#8b93a6;
+       box-shadow:0 3px 0 #0006, 0 0 0 2px #0003; touch-action:manipulation }
+.tap.capo { width:44px; height:44px; font-size:17px }
+.tap .corona { position:absolute; top:-15px; font-size:15px; line-height:1 }
+.tap.fatta { background:#38c172 }
+.tap.ora { background:linear-gradient(180deg,#ffd76a,#ffa91f); color:#5a3500;
+           animation:pulsa 1.4s ease-in-out infinite }
+.tap.aperta { background:#fff; color:#5b3fa8 }
+.tap.chiusa { background:#8b93a6cc; color:#ffffffcc }
+.tap.libera { background:linear-gradient(180deg,#b78cff,#7d4fd8); font-size:20px }
+.tap.libera.chiusa { background:#8b93a6cc }
+.tap.scelta { box-shadow:0 3px 0 #0006, 0 0 0 4px #ffe066 }
+.tap:active { transform:translate(-50%,-50%) scale(.94) }
+@keyframes pulsa { 50% { box-shadow:0 3px 0 #0006, 0 0 0 7px #ffd76a66 } }
+
+/* la bandierina di dove sei, sopra la tappa da fare */
+.qui { position:absolute; width:0; height:0; pointer-events:none;
+       border-left:9px solid transparent; border-right:9px solid transparent; border-top:14px solid #e8463c;
+       transform:translate(-50%,-44px); filter:drop-shadow(0 2px 0 #fff) drop-shadow(0 1px 1px #0008);
+       animation:salta 1.4s ease-in-out infinite }
+@keyframes salta { 50% { transform:translate(-50%,-50px) } }
+
+/* i potenziamenti delle libere: uno per tutto il castello, sotto la rocca */
+.dote { position:absolute; transform:translate(-50%,-50%); white-space:nowrap; line-height:normal;
+        font-size:11.5px; font-weight:900; color:#8a4a00; background:#fff1d6;
+        border-radius:999px; padding:3px 10px; box-shadow:0 2px 0 #0004; pointer-events:none }
+
+.titolo { display:block; font-size:14px; color:var(--viola-scuro, #3b2a6b); margin-bottom:2px }
+.riga { display:block; font-size:12px; color:#4a5560 }
+.riga.record { color:var(--arancio, #d1481f); font-weight:800 }
+.riga.perche { margin-top:4px; font-weight:700 }
+.bottone.stretto { margin-top:8px; width:100%; font-size:14px; padding:9px 14px; min-height:0 }
+
+@media (prefers-reduced-motion: reduce) { .tap.ora, .qui { animation:none } }

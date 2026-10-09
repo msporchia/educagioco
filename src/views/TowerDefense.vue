@@ -46,7 +46,7 @@ import Foglio from '../components/castello/Foglio.vue'
 import SceltaTorre from '../components/castello/SceltaTorre.vue'
 import SchedaTorre from '../components/castello/SchedaTorre.vue'
 import RitrattoTorre from '../components/castello/RitrattoTorre.vue'
-import MappaTappe from '../components/castello/MappaTappe.vue'
+import Regno from '../components/castello/Regno.vue'
 import FineTappa from '../components/castello/FineTappa.vue'
 import Regalo from '../components/castello/Regalo.vue'
 import Potenziamenti from '../components/castello/Potenziamenti.vue'
@@ -605,7 +605,7 @@ onMounted(() => {
     </Barra>
 
     <!-- L'arena: il campo cammina quando non è `fermo` (giochi/pausa.js) -->
-    <div class="arena" :class="{ gioca: fase === 'gioco' }">
+    <div class="arena" :class="{ gioca: fase === 'gioco', mappa: fase === 'mappa' }">
       <CampoDiBattaglia ref="campo" :hud="hud" :vista="vista" :eventi="eventi"
                         :attivo="!fermo" :calcolando="!!scelta"
                         :velocita="velocita" :messaggio="messaggio"
@@ -638,15 +638,16 @@ onMounted(() => {
         Manda la prossima ▶<template v-if="vista.premio"> · +{{ vista.premio }} ⚡</template>
       </button>
 
-      <div v-else class="banco">
+      <div v-else class="banco" :class="{ 'sul-regno': fase === 'mappa' }">
         <template v-if="fase === 'mappa'">
-          <Ripresa :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
-                   @riprendi="riprendiPartita" @scorda="scorda"
-                   @comincia="comincia" @annulla="chiede = null" />
-          <MappaTappe :tappe="TAPPE" :fatte="progresso.tappa"
-                      :libera="libera" :libere="libere" :regali="doteLibera"
-                      @gioca="i => vuoleIniziare(i)" @libera="quale => vuoleIniziare(-1, quale)"
-                      @indietro="$emit('vai','home')" />
+          <div class="sopra-regno">
+            <Ripresa :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
+                     @riprendi="riprendiPartita" @scorda="scorda"
+                     @comincia="comincia" @annulla="chiede = null" />
+          </div>
+          <Regno :tappe="TAPPE" :fatte="progresso.tappa"
+                 :libera="libera" :libere="libere" :regali="doteLibera"
+                 @gioca="i => vuoleIniziare(i)" @libera="quale => vuoleIniziare(-1, quale)" />
         </template>
         <FineTappa v-else :fase="fase" :tappa="tappa" :prossima="prossima" :hud="hud"
                    :monete="monete.prese" :nota-monete="monete.nota" :quante="TAPPE.length" :campagna="campagna"
