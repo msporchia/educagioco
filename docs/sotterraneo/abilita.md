@@ -113,6 +113,12 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
   cade dà esperienza e bottino come sempre.
 - **«ti graffia 2 · se sbagli 4»** dice quello che arriva davvero, con gli
   effetti (`botta`). Lo stop del pericolo conta lo stesso numero.
+- **Le parole** (l'utente, 9 ottobre): si parla di danno e di turni, mai di «scambi» o «mezzo colpo»: «fa il doppio del danno»,
+  «il mostro arde: metà del tuo danno a ogni turno, per 3 turni», «protezione dai danni per 2 turni». Il nome dell'abilità sta già
+  sopra la riga, quindi la riga dice solo l'effetto. Nello scontro i numeri sono quelli veri.
+- **La riga dell'attacco ha una voce per fonte** (`Scontro.vue`, `data-scambio`): «fai 10 di danno (il tuo colpo di 5 ×2)», «altri 3 di
+  danno a ogni turno», «subisci 1 di danno (il gelo gli dimezza il colpo)», o perché non subisci niente (stordito, invulnerabile,
+  la barriera). I dati li porta l'esito di `rispostaScontro` (`base`, `volte`, `salvo`, `gelato`, `assorbito`).
 - **Il primo tiro** (elfa, con l'arco): la prima risposta giusta di ogni
   scontro arriva da lontano, e il mostro non risponde.
 - **L'ultimo fiato** (cavaliere): una volta per discesa, invece di svenire si
