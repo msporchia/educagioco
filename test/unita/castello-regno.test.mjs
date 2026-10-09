@@ -20,12 +20,12 @@ controlla('la mappa c\'è', MAPPA.startsWith('data:image/webp;base64,') && MAPPA
 const tutti = [...POSTI, ...Object.values(LIBERE_POSTI)]
 controlla('ogni posto sta sulla mappa', tutti.every(([x, y]) => x > 20 && x < LARGO - 20 && y > 20 && y < ALTO - 20),
           tutti.filter(([x, y]) => !(x > 20 && x < LARGO - 20 && y > 20 && y < ALTO - 20)))
-// alla misura più stretta (640 px di mappa) un segnalino è largo 36: i centri stanno ad almeno 40
-const SCALA = 640 / LARGO
+// alla misura più stretta (760 px di mappa) uno scudo è largo 32: i centri stanno ad almeno 36
+const SCALA = 760 / LARGO
 const vicini = []
 for (let i = 0; i < tutti.length; i++) {
   for (let j = i + 1; j < tutti.length; j++) {
-    if (Math.hypot(tutti[i][0] - tutti[j][0], tutti[i][1] - tutti[j][1]) * SCALA < 40) vicini.push([i, j])
+    if (Math.hypot(tutti[i][0] - tutti[j][0], tutti[i][1] - tutti[j][1]) * SCALA < 36) vicini.push([i, j])
   }
 }
 uguale('due segnalini non si coprono', JSON.stringify(vicini), '[]')
