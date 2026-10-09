@@ -159,17 +159,29 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   c.rispondi(true); c.rispondi(true)
   uguale('Scudo alzato: due scambi senza graffio', c.vita, v2)
 
-  // la stanza intera: gli altri mostri svegli prendono lo stesso colpo
-  ;({ c, m } = scontro('elfa', conAlbero(12, { 'dardo-avvelenato': 1, 'primo-tiro': 1, 'freccia-mirata': 1, pioggia: 1 }), 'arco-corto'))
+  // la stanza intera: gli altri mostri svegli prendono lo stesso colpo (il Grido di guerra, l'unica area rimasta)
+  ;({ c, m } = scontro('cavaliere', conAlbero(12, { preghiera: 1, 'cuore-saldo': 1, grido: 1 }), 'spada'))
   const stanza = c.livello.stanzaDi(Math.floor(c.eroe.x), Math.floor(c.eroe.y))
   const altro = { che: 'mostro', tipo: m.tipo, nome: 'altro', em: m.em, x: stanza.cx, y: stanza.cy, casa: { x: stanza.cx, y: stanza.cy },
                   ossa: 100, ossaMax: 100, att: 3, dif: 0, sveglio: true }
   m.casa = { x: stanza.cx, y: stanza.cy }
   c.livello.robe.push(altro)
-  c.prepara('pioggia')
+  c.prepara('grido')
   const e3 = c.rispondi(true)
-  controlla('Pioggia di frecce: colpito anche l\'altro', altro.ossa < 100 && e3.colpiti === 1, `${altro.ossa}`)
-  controlla('il primo tiro con l\'arco: il mostro non risponde', e3.preso === 0)
+  controlla('Grido di guerra: colpito anche l\'altro', altro.ossa < 100 && e3.colpiti === 1, `${altro.ossa}`)
+  controlla('e anche l\'altro colpisce a metà', altro.stati && altro.stati.debole > 0)
+
+  // il primo tiro con l'arco: la prima risposta giusta non fa rispondere il mostro
+  ;({ c, m } = scontro('elfa', conAlbero(12, { 'dardo-avvelenato': 1, 'primo-tiro': 1 }), 'arco-corto'))
+  const e4 = c.rispondi(true)
+  controlla('il primo tiro con l\'arco: il mostro non risponde', e4.preso === 0)
+
+  // l'ultimo gradino: molto di più contro un capo, normale contro uno qualunque
+  ;({ c, m } = scontro('mago', conAlbero(12, { 'dardo-di-fuoco': 1, 'palla-di-fuoco': 1 }), 'verga'))
+  const normale = c.colpo(m, NODI['palla-di-fuoco'])
+  const capo = { ...m, grosso: 'ossuto' }
+  controlla('Meteora: contro un grosso vale più del doppio di un mostro comune', c.èCapo(capo) && c.colpo(capo, NODI['palla-di-fuoco']) >= normale * 1.7, `${normale} contro ${c.colpo(capo, NODI['palla-di-fuoco'])}`)
+  controlla('e non è più un\'area', !NODI['palla-di-fuoco'].stanza)
 
   // l'ultimo fiato: una volta per discesa
   ;({ c, m } = scontro('cavaliere', conAlbero(12, { preghiera: 1, 'cuore-saldo': 1, grido: 1, 'ultimo-fiato': 1 }), 'spada'))

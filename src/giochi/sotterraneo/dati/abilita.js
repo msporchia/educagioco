@@ -12,6 +12,7 @@
 //     intoccabile scambi: nessun danno, neanche sbagliando    specchio  il prossimo colpo preso torna al mostro, per tanto
 //     cura       quarti della vita massima                    linfa     scambi: cura un decimo della vita a scambio
 //     stanza     colpisce anche gli altri mostri svegli della stanza, e porta loro gli stessi effetti
+//     capi       contro un capo o un mostro grosso il colpo vale `capi` volte invece di `per` (l'ultimo gradino dei rami)
 //     difende    non fa niente da sé: segna l'abilità di difesa del livello 2 (la regola di guastiDelleAbilita)
 //     seStordito il colpo vale `per` solo su un mostro avvelenato, gelato o fermo, se no `altrimenti`
 //   sempre (nodi senza costo, valgono da soli):
@@ -73,6 +74,8 @@ const FRASI_DANNO = { 1: 'il danno di sempre', 2: 'il doppio del danno', 3: 'il 
 const danno = v => FRASI_DANNO[v] || `×${String(v).replace('.', ',')} il danno`
 const faDanno = v => (v === 1 ? 'fa il danno di sempre' : `fa ${danno(v)}`)
 const aTutti = v => (v === 1 ? 'colpisce tutti i mostri della stanza' : `fa ${danno(v)} a tutti i mostri della stanza`)
+// i colpi forti dell'ultimo gradino valgono molto di più contro i capi e i mostri grossi (`capi`: il moltiplicatore)
+const controCapi = v => `${(FRASI_DANNO[v] || '×' + String(v).replace('.', ',') + ' il danno').replace(' del danno', '').replace(' il danno', '')} contro capi e boss`
 // le cure e gli scudi si contano in quarti della vita massima (motore/corsa.js, usaAbilita): con la vita dell'eroe
 // (`vm`, la pagina la passa) la riga dice il numero vero, «ti guarisce di 12 punti di vita»; senza, la parte della vita
 export const inVita = (v, vm) => Math.max(1, Math.round(Math.round(vm / 4) * v))
@@ -86,12 +89,12 @@ export const RAMI = {
     { chiave: 'lama', nome: 'Lama', glifo: 'spada', tinta: '#8fa6c8', arma: LAMA, nodi: [
       { id: 'fendente', nome: 'Fendente', glifo: 'fendente', costo: COSTO_DEL_GRADINO[0], per: [2, 2.5, 3],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}` },
-      { id: 'filo', nome: 'Filo affilato', glifo: 'filo', sempre: true, colpoPiu: [1, 2, 3],
-        fa: g => `+${n([1, 2, 3], g)} di danno a ogni colpo` },
+      { id: 'filo', nome: 'Filo affilato', glifo: 'filo', sempre: true, colpoPiu: [20, 35, 50],
+        fa: g => `+${n([20, 35, 50], g)}% di danno a ogni colpo` },
       { id: 'affondo', nome: 'Affondo', glifo: 'affondo', costo: COSTO_DEL_GRADINO[2], rompe: true, per: [1.5, 2, 2.5],
         fa: g => `spezza la difesa del mostro per tutto lo scontro e ${faDanno(n([1.5, 2, 2.5], g))}` },
-      { id: 'turbine', nome: 'Turbine', glifo: 'turbine', costo: COSTO_DEL_GRADINO[3], stanza: true, per: [1, 1.5, 2],
-        fa: g => `${aTutti(n([1, 1.5, 2], g))}` },
+      { id: 'turbine', nome: 'Colpo del campione', glifo: 'turbine', costo: COSTO_DEL_GRADINO[3], per: [2, 2.5, 3], capi: [4, 5, 6],
+        fa: g => `${faDanno(n([2, 2.5, 3], g))}, ${controCapi(n([4, 5, 6], g))}` },
     ] },
     { chiave: 'scudo', nome: 'Scudo', glifo: 'scudo', tinta: '#c99a3a', arma: SCUDO, nodi: [
       { id: 'scudo-alzato', nome: 'Scudo alzato', glifo: 'scudo', costo: COSTO_DEL_GRADINO[0], parato: [2, 3, 4], difende: true,
@@ -119,12 +122,12 @@ export const RAMI = {
     { chiave: 'arco', nome: 'Arco', glifo: 'arco', tinta: '#4f9a5a', arma: ARCO, nodi: [
       { id: 'dardo-avvelenato', nome: 'Dardo avvelenato', glifo: 'freccia-veleno', costo: COSTO_DEL_GRADINO[0], veleno: [3, 4, 5],
         fa: g => `il veleno fa metà del tuo danno a ogni turno, per ${turni(n([3, 4, 5], g))}` },
-      { id: 'primo-tiro', nome: 'Primo tiro', glifo: 'mira', sempre: true, primoTiro: [0, 2, 4],
-        fa: g => `la prima risposta giusta di uno scontro colpisce da lontano: il mostro non risponde${g > 1 ? ` · +${n([0, 2, 4], g)} di danno` : ''}` },
+      { id: 'primo-tiro', nome: 'Primo tiro', glifo: 'mira', sempre: true, primoTiro: [0, 25, 50],
+        fa: g => `la prima risposta giusta di uno scontro colpisce da lontano: il mostro non risponde${g > 1 ? ` · +${n([0, 25, 50], g)}% di danno` : ''}` },
       { id: 'freccia-mirata', nome: 'Freccia mirata', glifo: 'freccia', costo: COSTO_DEL_GRADINO[2], per: [2, 2.5, 3], quieto: true,
         fa: g => `${faDanno(n([2, 2.5, 3], g))}, e il mostro non risponde` },
-      { id: 'pioggia', nome: 'Pioggia di frecce', glifo: 'pioggia', costo: COSTO_DEL_GRADINO[3], stanza: true, per: [1, 1.5, 2],
-        fa: g => `${aTutti(n([1, 1.5, 2], g))}` },
+      { id: 'pioggia', nome: 'Freccia del cacciatore', glifo: 'pioggia', costo: COSTO_DEL_GRADINO[3], per: [2, 2.5, 3], capi: [4, 5, 6],
+        fa: g => `${faDanno(n([2, 2.5, 3], g))}, ${controCapi(n([4, 5, 6], g))}` },
     ] },
     { chiave: 'lame', nome: 'Lame', glifo: 'pugnale', tinta: '#8a78c8', arma: SPADA, nodi: [
       { id: 'stoccata', nome: 'Stoccata', glifo: 'pugnale', costo: COSTO_DEL_GRADINO[0], passa: true, per: [1.5, 2, 2.5],
@@ -143,8 +146,8 @@ export const RAMI = {
         fa: (g, vm) => `${cura(n([0.4, 0.6, 0.8], g), vm)}, poi ${vm ? `${Math.max(1, Math.round(vm / 10))} punti` : 'un po\''} a ogni turno per ${turni(n([4, 5, 6], g))}` },
       { id: 'respiro', nome: 'Respiro del bosco', glifo: 'foglia', sempre: true, energiaPerMostro: [1, 2, 3],
         fa: g => `+${n([1, 2, 3], g)} di energia a ogni mostro battuto` },
-      { id: 'radici', nome: 'Radici', glifo: 'radici', costo: COSTO_DEL_GRADINO[3], stanza: true, fermo: [2, 2, 3], per: [1, 1.5, 1.5],
-        fa: g => `tutti i mostri della stanza restano fermi per ${turni(n([2, 2, 3], g))}: non possono attaccare` },
+      { id: 'radici', nome: 'Radici', glifo: 'radici', costo: COSTO_DEL_GRADINO[3], fermo: [2, 2, 3], per: [1, 1.5, 1.5], capi: [3, 3.5, 4],
+        fa: g => `il mostro resta fermo per ${turni(n([2, 2, 3], g))}: non può attaccare · ${controCapi(n([3, 3.5, 4], g))}` },
     ] },
   ],
 
@@ -153,12 +156,12 @@ export const RAMI = {
     { chiave: 'fuoco', nome: 'Fuoco', glifo: 'fiamma', tinta: '#d9632a', arma: BACCHETTA, nodi: [
       { id: 'dardo-di-fuoco', nome: 'Dardo di fuoco', glifo: 'fiamma', costo: COSTO_DEL_GRADINO[0], per: [2, 2.5, 3],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}` },
-      { id: 'fiamma-viva', nome: 'Fiamma viva', glifo: 'candela', sempre: true, rami: { passa: true, piu: [0, 1, 2] },
-        fa: g => `il fuoco ignora la difesa${g > 1 ? ` · +${n([0, 1, 2], g)} di danno` : ''}` },
+      { id: 'fiamma-viva', nome: 'Fiamma viva', glifo: 'candela', sempre: true, rami: { passa: true, piu: [0, 15, 30] },
+        fa: g => `il fuoco ignora la difesa${g > 1 ? ` · +${n([0, 15, 30], g)}% di danno` : ''}` },
       { id: 'brucia', nome: 'Brucia', glifo: 'brace', costo: COSTO_DEL_GRADINO[2], veleno: [3, 4, 5],
         fa: g => `il mostro arde: metà del tuo danno a ogni turno, per ${turni(n([3, 4, 5], g))}` },
-      { id: 'palla-di-fuoco', nome: 'Palla di fuoco', glifo: 'meteora', costo: COSTO_DEL_GRADINO[3], stanza: true, per: [1.5, 2, 2.5],
-        fa: g => `${aTutti(n([1.5, 2, 2.5], g))}` },
+      { id: 'palla-di-fuoco', nome: 'Meteora', glifo: 'meteora', costo: COSTO_DEL_GRADINO[3], per: [2, 2.5, 3], capi: [4, 5, 6],
+        fa: g => `${faDanno(n([2, 2.5, 3], g))}, ${controCapi(n([4, 5, 6], g))}` },
     ] },
     { chiave: 'gelo', nome: 'Gelo', glifo: 'fiocco', tinta: '#4aa3d8', arma: BACCHETTA, nodi: [
       { id: 'raggio-di-gelo', nome: 'Raggio di gelo', glifo: 'fiocco', costo: COSTO_DEL_GRADINO[0], debole: [2, 3, 4], per: [1, 1, 1],
@@ -167,8 +170,8 @@ export const RAMI = {
         fa: g => `chi è gelato subisce il ${n([20, 35, 50], g)}% di danno in più a ogni colpo` },
       { id: 'lancia-di-ghiaccio', nome: 'Lancia di ghiaccio', glifo: 'lancia', costo: COSTO_DEL_GRADINO[2], seStordito: true, per: [3, 3.5, 4], altrimenti: 1.5,
         fa: g => `fa ${danno(n([3, 3.5, 4], g))} su un mostro gelato, in fiamme o stordito, se no ${danno(1.5)}` },
-      { id: 'tempesta', nome: 'Tempesta di neve', glifo: 'tempesta', costo: COSTO_DEL_GRADINO[3], stanza: true, debole: [3, 4, 5], per: [1, 1, 1.5],
-        fa: g => `fa danno a tutti i mostri della stanza e li gela per ${turni(n([3, 4, 5], g))}` },
+      { id: 'tempesta', nome: 'Gelo eterno', glifo: 'tempesta', costo: COSTO_DEL_GRADINO[3], debole: [3, 4, 5], per: [1.5, 1.5, 2], capi: [3, 3.5, 4],
+        fa: g => `${faDanno(n([1.5, 1.5, 2], g))} e gela il mostro per ${turni(n([3, 4, 5], g))} · ${controCapi(n([3, 3.5, 4], g))}` },
     ] },
     { chiave: 'arcano', nome: 'Arcano', glifo: 'sfera', tinta: '#9b4fd0', nodi: [
       { id: 'scudo-arcano', nome: 'Scudo arcano', glifo: 'sfera', costo: COSTO_DEL_GRADINO[0], scudo: [1, 1.4, 1.8], difende: true,
@@ -186,22 +189,22 @@ export const RAMI = {
     { chiave: 'ascia', nome: 'Ascia', glifo: 'ascia', tinta: '#b8743a', arma: ASCIA, nodi: [
       { id: 'spaccaroccia', nome: 'Spaccaroccia', glifo: 'roccia', costo: COSTO_DEL_GRADINO[0], rompe: true, per: [1.5, 2, 2.5],
         fa: g => `spezza la difesa del mostro per tutto lo scontro e ${faDanno(n([1.5, 2, 2.5], g))}` },
-      { id: 'mani-pesanti', nome: 'Mani pesanti', glifo: 'martello', sempre: true, colpoPiu: [1, 2, 3],
-        fa: g => `+${n([1, 2, 3], g)} di danno a ogni colpo` },
+      { id: 'mani-pesanti', nome: 'Mani pesanti', glifo: 'martello', sempre: true, colpoPiu: [20, 35, 50],
+        fa: g => `+${n([20, 35, 50], g)}% di danno a ogni colpo` },
       { id: 'stordisce', nome: 'Martellata', glifo: 'stelle', costo: COSTO_DEL_GRADINO[2], fermo: [1, 2, 2], per: [1.5, 1.5, 2],
         fa: g => `${faDanno(n([1.5, 1.5, 2], g))} e stordisce il mostro per ${turni(n([1, 2, 2], g))}: non può attaccare` },
-      { id: 'terremoto', nome: 'Terremoto', glifo: 'terremoto', costo: COSTO_DEL_GRADINO[3], stanza: true, fermo: [1, 1, 2], per: [1, 1.5, 1.5],
-        fa: g => `${aTutti(n([1, 1.5, 1.5], g))} e li stordisce per ${turni(n([1, 1, 2], g))}` },
+      { id: 'terremoto', nome: 'Colpo del titano', glifo: 'terremoto', costo: COSTO_DEL_GRADINO[3], fermo: [1, 1, 2], per: [1.5, 1.5, 2], capi: [3, 3.5, 4],
+        fa: g => `${faDanno(n([1.5, 1.5, 2], g))} e stordisce il mostro per ${turni(n([1, 1, 2], g))} · ${controCapi(n([3, 3.5, 4], g))}` },
     ] },
     { chiave: 'balestra', nome: 'Balestra', glifo: 'quadrello', tinta: '#7d8a96', arma: ARCO, nodi: [
       { id: 'quadrello', nome: 'Quadrello', glifo: 'quadrello', costo: COSTO_DEL_GRADINO[0], per: [2, 2.5, 3],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}` },
-      { id: 'perforante', nome: 'Punta d\'acciaio', glifo: 'punta', sempre: true, rami: { passa: true, piu: [0, 1, 2] },
-        fa: g => `i quadrelli ignorano la difesa${g > 1 ? ` · +${n([0, 1, 2], g)} di danno` : ''}` },
+      { id: 'perforante', nome: 'Punta d\'acciaio', glifo: 'punta', sempre: true, rami: { passa: true, piu: [0, 15, 30] },
+        fa: g => `i quadrelli ignorano la difesa${g > 1 ? ` · +${n([0, 15, 30], g)}% di danno` : ''}` },
       { id: 'chiodi-roventi', nome: 'Chiodi roventi', glifo: 'chiodi', costo: COSTO_DEL_GRADINO[2], veleno: [3, 4, 5],
         fa: g => `il mostro arde: metà del tuo danno a ogni turno, per ${turni(n([3, 4, 5], g))}` },
-      { id: 'polvere-da-mina', nome: 'Polvere da mina', glifo: 'bomba', costo: COSTO_DEL_GRADINO[3], stanza: true, per: [1.5, 2, 2.5],
-        fa: g => `${aTutti(n([1.5, 2, 2.5], g))}` },
+      { id: 'polvere-da-mina', nome: 'Carica di polvere', glifo: 'bomba', costo: COSTO_DEL_GRADINO[3], per: [2, 2.5, 3], capi: [4, 5, 6],
+        fa: g => `${faDanno(n([2, 2.5, 3], g))}, ${controCapi(n([4, 5, 6], g))}` },
     ] },
     { chiave: 'pietra', nome: 'Pietra', glifo: 'montagna', tinta: '#8a7f6a', nodi: [
       { id: 'pelle-di-pietra', nome: 'Pelle di pietra', glifo: 'pietra', costo: COSTO_DEL_GRADINO[0], scudo: [1, 1.4, 1.8], difende: true,

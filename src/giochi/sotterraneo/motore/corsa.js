@@ -148,10 +148,13 @@ export class Corsa extends Corredo {
     const g = nodo ? this.grado(nodo.id) : 0
     const st = m.stati || {}
     const passa = st.rotto || (nodo && (nodo.passa || this.delRamo(nodo, 'passa')))
-    // Gelo profondo è una percentuale: un +1 fisso non terrebbe il passo con l'attacco che cresce
-    const gelo = st.debole > 0 ? 1 + this.sempre('geloPiu') / 100 : 1
-    const base = Math.max(1, Math.round((this.att + this.sempre('colpoPiu') + this.delRamo(nodo, 'piu') - (passa ? 0 : m.dif)) * gelo))
+    // I bonus del colpo sono percentuali (l'utente, 9 ottobre: un +1 fisso non tiene il passo con l'attacco che cresce):
+    // Filo affilato e simili, la punta del ramo e Gelo profondo sul gelato si sommano fra loro, poi si moltiplica
+    const piu = this.sempre('colpoPiu') + this.delRamo(nodo, 'piu') + (st.debole > 0 ? this.sempre('geloPiu') : 0)
+    const base = Math.max(1, Math.round((this.att - (passa ? 0 : m.dif)) * (1 + piu / 100)))
     let per = nodo ? (aGrado(nodo, 'per', g) || 1) : 1
+    // l'ultimo gradino dei rami: contro un capo o un mostro grosso vale molto di più
+    if (nodo && nodo.capi && this.èCapo(m)) per = aGrado(nodo, 'capi', g)
     if (nodo && nodo.seStordito && !(st.veleno || st.debole > 0 || st.fermo > 0)) per = nodo.altrimenti || 1
     return Math.round(base * per) + this.addosso('fuoco')
   }
@@ -548,8 +551,9 @@ export class Corsa extends Corredo {
     this.chiesta = { id: ++this.contaChieste, che, difficolta: this.durezza(rincaro) }
   }
 
-  // il capo della tappa e il mostro grosso chiedono domande più toste
-  rincaroDi(m) { return m.grosso || MOSTRI[m.tipo].capo ? RINCARO.capo : RINCARO.mostro }
+  // il capo della tappa e il mostro grosso: chiedono domande più toste, e subiscono di più dai colpi forti (`capi`)
+  èCapo(m) { return !!(m.grosso || (MOSTRI[m.tipo] && MOSTRI[m.tipo].capo)) }
+  rincaroDi(m) { return this.èCapo(m) ? RINCARO.capo : RINCARO.mostro }
 
   // `io`: gli effetti sull'eroe che durano lo scontro (parato, scudo, intoccabile, specchio, linfa); `pieni` i colpi pieni
   // presi (Testa dura), `tirato` se il primo tiro è già partito. L'abilità preparata non passa da uno scontro all'altro
@@ -652,6 +656,7 @@ export class Corsa extends Corredo {
     if (nodo.debole) parti.push(`fa metà danno per ${turni(vale('debole'))}`)
     if (nodo.fermo) parti.push(`stordito per ${turni(vale('fermo'))}`)
     if (nodo.quieto) parti.push('non risponde')
+    if (nodo.capi && !this.èCapo(m)) parti.push('molto di più contro i capi')
     return parti.join(' · ')
   }
 
@@ -740,7 +745,7 @@ export class Corsa extends Corredo {
       // un'abilità difensiva (scudo, cura, parata…) prende il posto dell'attacco: niente colpo
       dato = !nodo || colpisce(nodo) ? this.colpo(m, nodo) : 0
       // il primo tiro dell'arco: la prima risposta giusta di uno scontro arriva da lontano, e il mostro non risponde
-      if (!f.tirato && this.ha('primoTiro') && (!nodo || colpisce(nodo))) { f.tirato = true; quieto = true; primo = true; dato += this.sempre('primoTiro') }
+      if (!f.tirato && this.ha('primoTiro') && (!nodo || colpisce(nodo))) { f.tirato = true; quieto = true; primo = true; dato = Math.round(dato * (1 + this.sempre('primoTiro') / 100)) }
       m.ossa -= dato
     }
     // come si è arrivati al danno, da mostrare a ogni scambio: il colpo di base, quante volte (l'abilità), il primo tiro

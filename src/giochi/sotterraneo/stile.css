@@ -1383,3 +1383,8 @@
   75% { transform: translateX(-2px) }
 }
 @media (prefers-reduced-motion: reduce) { .sot-ringhio { animation: none } }
+
+/* la legenda sopra l'albero (viste/PaginaAbilita.vue): gemma = abilità da usare, tondo = passiva */
+.sot-legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 4px 0 6px; font-size: 12px; color: var(--sot-tenue) }
+.sot-legenda span { display: inline-flex; align-items: center; gap: 5px }
+.sot-legenda b { color: #ffe39a; font-weight: 700 }
