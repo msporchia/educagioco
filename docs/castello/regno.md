@@ -30,7 +30,8 @@ introduttiva è quella brutta»).
 - **Il cavaliere** (quello del sotterraneo, stesso atlante) sta sulla tappa
   da fare. Toccata una tappa aperta ci va a piedi, scudo dopo scudo — gli
   scudi stanno sul sentiero e ai capi dei ponti, quindi così resta sulla
-  strada — e la vista lo segue; dopo una tappa vinta parte da dov'era e va
+  strada — e la vista lo segue. A un torrione ci va dalla tappa della sua
+  isola per il suo ponte (`centro` nel foglietto). Dopo una tappa vinta parte da dov'era e va
   alla prossima. Dove si è fermato dura la sessione, non va nel profilo.
 - **Si naviga**: la mappa è larga almeno 760 px, il doppio del telefono,
   perché si senta enorme; si trascina in tutte e due le direzioni e si apre
@@ -64,7 +65,7 @@ copia in `src/giochi/castello/dati/regno.js` insieme all'immagine
 Nei test: `.tappe` (la mappa è pronta), `.tap[data-tappa="<indice>"]` con
 `data-stato` (`fatta`, `ora`, `aperta`, `chiusa`) e le classi omonime,
 `[data-tappa="libera-bosco"]` e le altre tre chiavi, `[data-eroe]` il
-cavaliere (`data-dove` la tappa, `data-in-viaggio` 1 mentre cammina),
+cavaliere (`data-dove` la tappa o la chiave della libera, `data-in-viaggio` 1 mentre cammina),
 `[data-regali]` i potenziamenti sotto il castello,
 `[data-fumetto] [data-azione="gioca"]`; l'aiuto `difendi()` in
 `test/aiuto/browser.mjs` tocca e gioca, `fumettoDel()` legge un fumetto.

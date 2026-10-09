@@ -5,7 +5,7 @@
    `node test/esegui.mjs castello-regno --niente-build` */
 import { readFileSync } from 'node:fs'
 import { TAPPE, LIBERE } from '../../src/data/castello.js'
-import { LARGO, ALTO, POSTI, LIBERE_POSTI, MAPPA } from '../../src/giochi/castello/dati/regno.js'
+import { LARGO, ALTO, POSTI, LIBERE_POSTI, VERSO_IL_CENTRO, MAPPA } from '../../src/giochi/castello/dati/regno.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const fg = JSON.parse(readFileSync(new URL('../../strumenti/sprite/sorgenti/castello/regno.json', import.meta.url), 'utf8'))
@@ -15,6 +15,9 @@ uguale('i posti sono quelli del foglietto (se no: python3 strumenti/sprite/regno
 uguale('e le libere anche', JSON.stringify(LIBERE_POSTI), JSON.stringify(fg.libere))
 uguale('un posto per tappa', POSTI.length, TAPPE.length)
 uguale('un torrione per partita libera', Object.keys(LIBERE_POSTI).sort().join(), LIBERE.map(l => l.chiave).sort().join())
+uguale('una strada verso ogni torrione', Object.keys(VERSO_IL_CENTRO).sort().join(), Object.keys(LIBERE_POSTI).sort().join())
+controlla('e parte da una tappa della sua isola', Object.entries(VERSO_IL_CENTRO).every(([k, c]) =>
+  TAPPE[c.da] && TAPPE[c.da].campagna === k.replace('libera-', '')), VERSO_IL_CENTRO)
 controlla('la mappa c\'è', MAPPA.startsWith('data:image/webp;base64,') && MAPPA.length > 100000)
 
 const tutti = [...POSTI, ...Object.values(LIBERE_POSTI)]

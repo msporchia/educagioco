@@ -52,7 +52,9 @@ controlla('i regali si vedono, una volta per tutte e quattro',
 /* si entra nel bastione, e si perde in fretta: nessuna torre, ondata
    chiamata subito, campo a tutta velocità */
 await difendi(page, '[data-tappa="libera-mura"]')
-await attendi(page, 300)
+await page.waitForSelector('[data-eroe][data-dove="libera-mura"][data-in-viaggio="0"]', { timeout: 15000 }).catch(() => {})
+uguale('il cavaliere è andato a piedi fino al torrione delle mura', await page.evaluate(() =>
+  document.querySelector('[data-eroe]') && document.querySelector('[data-eroe]').dataset.dove), 'libera-mura')
 const dentro = await page.evaluate(() => {
   const T = window.__td
   return { fase: T.fase.value, idx: T.tappaIdx.value, quale: T.liberaScelta.value,
