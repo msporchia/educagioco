@@ -199,8 +199,9 @@ di un pipistrello, e non è un errore.
   freccia della bocca dove sono due) e le torri a cui è immune, sbarrate.
   In battaglia il primo è chi è in campo («in campo», bordo rosso); fra
   un'ondata e l'altra chi parte col tasto (bordo d'oro). Il capo ha il
-  medaglione d'oro pieno e il cartiglio «il capo». Ne mostra tre; la
-  linguetta «+N ▾» apre le altre (il campo ne chiede sei, `prossime(6)`).
+  medaglione d'oro pieno e il cartiglio «il capo». Le prossime tre si
+  vedono sempre, più chi è in campo; la linguetta «+N ▾» apre le altre (il
+  campo ne chiede sei, `prossime(6)`).
 - **Niente icone da indovinare** sul medaglione e nella scheda: né la
   forbice di chi si divide, né una tartaruga per chi è lento. Restano solo
   le torri, che sono quelle del gioco; il resto è scritto.

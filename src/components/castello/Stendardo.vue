@@ -2,8 +2,8 @@
 /* Lo stendardo: chi arriva, appeso al bordo destro del campo dove ci sono
    solo alberi, sempre in vista. Un medaglione per ondata: il mostro, quanti
    e le torri a cui è immune, sbarrate. In battaglia il primo è chi è in
-   campo; fra un'ondata e l'altra è chi parte col tasto. Ne mostra tre, la
-   linguetta apre le altre. Toccato un medaglione si apre la scheda del
+   campo; fra un'ondata e l'altra è chi parte col tasto. Le prossime tre si
+   vedono sempre (più chi è in campo); la linguetta apre le altre. Toccato un medaglione si apre la scheda del
    mostro (SchedaGrande). Vedi docs/castello/mostri.md. */
 import { ref, computed } from 'vue'
 import { TORRI } from '../../data/ops.js'
@@ -16,11 +16,12 @@ const props = defineProps({
 })
 const emit = defineEmits(['scegli'])
 
-const VISIBILI = 3
+const PROSSIME = 3        // sempre in vista, oltre a chi è in campo
 const aperto = ref(false)
 const voci = computed(() => (props.inCampo ? [{ ...props.inCampo, ora: true }, ...props.prossime] : props.prossime))
-const mostrate = computed(() => (aperto.value ? voci.value : voci.value.slice(0, VISIBILI)))
-const altre = computed(() => Math.max(0, voci.value.length - VISIBILI))
+const visibili = computed(() => PROSSIME + (props.inCampo ? 1 : 0))
+const mostrate = computed(() => (aperto.value ? voci.value : voci.value.slice(0, visibili.value)))
+const altre = computed(() => Math.max(0, voci.value.length - visibili.value))
 const facce = p => (p.con ? [p, p.con] : [p])
 const FRECCE = { sinistra: '↙', destra: '↘', ambo: '↙↘' }
 </script>
