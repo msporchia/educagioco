@@ -3,22 +3,31 @@
 // L'esperienza viene solo dai mostri battuti, tanta quanto sono forti (il capo molta di più): niente per i piani
 // nuovi né per le missioni (decisione dell'utente, 8 ottobre 2026).
 
-// le quattro caratteristiche, coi nomi che un bambino capisce; `fa` è la riga corta sulla pagina dell'eroe
+// Le quattro caratteristiche (9 ottobre 2026: via scorza e fortuna, la fortuna resta sulla roba). Le prime tre danno
+// l'attacco alle armi della loro famiglia (`armi`, dati/eroi.js) e ne sono il requisito; a tutti danno anche
+// qualcos'altro (`fa`). `glifo` e `tinta`: il medaglione sulla pagina dell'eroe (viste/glifi.js)
 export const CARATTERISTICHE = [
-  { chiave: 'forza', nome: 'Forza', em: '⚔️', fa: 'colpi più forti' },
-  { chiave: 'tempra', nome: 'Tempra', em: '❤️', fa: 'più vita' },
-  { chiave: 'scorza', nome: 'Scorza', em: '🛡️', fa: 'meno danni' },
-  { chiave: 'fortuna', nome: 'Fortuna', em: '🍀', fa: 'più gemme e roba migliore' },
+  { chiave: 'forza', nome: 'Forza', glifo: 'martello', tinta: '#c0583a', fa: 'colpi più forti con spade e asce' },
+  { chiave: 'destrezza', nome: 'Destrezza', glifo: 'mira', tinta: '#4f9a5a', fa: 'archi, e schivi i graffi' },
+  { chiave: 'intelligenza', nome: 'Intelligenza', glifo: 'sfera', tinta: '#6a62d8', fa: 'bacchette e bastoni, e più energia' },
+  { chiave: 'tempra', nome: 'Tempra', glifo: 'cuore', tinta: '#c0393b', fa: 'più vita, e un po\' di difesa' },
 ]
 export const CHIAVI_CARATTERISTICHE = CARATTERISTICHE.map(c => c.chiave)
 
-// quanto vale un punto: la scorza ne vuole due per un punto di difesa (la difesa entra in una sottrazione e
-// vale il doppio dell'attacco: con un punto a punto, tutto in scorza voleva dire non farsi più male)
-export const FORZA_PER_PUNTO = 1          // ⚔️ attacco
+// quanto vale un punto. L'attacco: un punto della caratteristica dell'arma in mano (a mani nude, la forza). La difesa
+// entra in una sottrazione e vale il doppio dell'attacco: la tempra ne dà una ogni tre punti. Provata sulla forza: chi
+// alza la forza per l'attacco prendeva anche la difesa, e il nano e l'elfa (dote: forza) vincevano tutto a 4/10
+export const ATT_PER_PUNTO = 1            // ⚔️ con l'arma della sua famiglia
 export const VITA_PER_TEMPRA = 3          // ❤️ vita
-export const SCORZA_PER_DIFESA = 2        // punti di scorza per un 🛡️
-export const GEMME_PER_FORTUNA = 0.05     // ogni punto: ogni gemma vale un ventesimo in più
-export const RARITA_PER_FORTUNA = 0.08    // ogni punto: la roba non comune un dodicesimo più spesso
+export const TEMPRA_PER_DIFESA = 3        // punti di tempra per un 🛡️
+export const SCHIVATA_PER_DESTREZZA = 1   // 🌀 per cento a punto (a 2 le zone a 6/10 si vincevano troppo)
+export const ENERGIA_PER_INTELLIGENZA = 1 // energia massima a punto
+export const GEMME_PER_FORTUNA = 0.05     // la fortuna dei pezzi: ogni gemma vale un ventesimo in più a punto
+export const RARITA_PER_FORTUNA = 0.08    // e la roba non comune un dodicesimo più spesso
+
+// Riassegnare i punti (delle caratteristiche e dell'albero) si paga in gemme, tante quante i punti da rimettere: si
+// può sempre rimediare a una scelta, ma non la si rifà a ogni discesa (l'utente, 9 ottobre)
+export const GEMME_PER_RIASSEGNARE = 5
 
 export const PUNTI_PER_LIVELLO = 1
 // ogni tre livelli la classe cresce da sé nella sua caratteristica (la `dote` di dati/eroi.js)
@@ -71,7 +80,7 @@ export function guastiDeiLivelli() {
     if (sogliaDi(n) <= sogliaDi(n - 1)) g.push(`il livello ${n} non costa più del ${n - 1}`)
     if (livelloDi(sogliaDi(n)) !== n) g.push(`livelloDi non torna sulla soglia del ${n}`)
   }
-  if (new Set(CARATTERISTICHE.map(c => c.em)).size !== CARATTERISTICHE.length) g.push('due caratteristiche con la stessa icona')
+  if (new Set(CARATTERISTICHE.map(c => c.glifo)).size !== CARATTERISTICHE.length) g.push('due caratteristiche con la stessa icona')
   if (PUNTI_PER_LIVELLO < 1) g.push('un livello che non porta punti')
   return g
 }

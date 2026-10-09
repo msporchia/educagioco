@@ -41,7 +41,7 @@ export class Bottega extends Corredo {
                      fascia(COSE[x]) === fascia(c) && !resto.includes(x) && !this.possiedo(x) &&
                      righeAvanti(this.chiEro, this.finite, x) === 0)
         .sort((a, b) => Math.abs(COSE[a].prezzo - c.prezzo) - Math.abs(COSE[b].prezzo - c.prezzo) || (a < b ? -1 : 1))[0]
-      if (sostituto) resto.push(aLivello(sostituto, this.livelloEroe))
+      if (sostituto) resto.push(aLivello(sostituto, this.livelloPortabile(sostituto, this.livelloEroe)))
     }
     return resto
   }
@@ -93,7 +93,8 @@ export class Bottega extends Corredo {
     if (!c || !c.dove || !this.posso(k)) return false
     // uno scudo con un'arma a due mani in pugno non si può portare: non migliora niente
     if (c.dove === 'mancina' && this.aDueMani(this.mano)) return true
-    if (!this.casella(c.dove)) return false
+    // una casella vuota prende tutto, tranne un'arma che picchia meno dei pugni (un arco a chi ha alzato la forza)
+    if (!this.casella(c.dove) && c.dove !== 'mano') return false
     const p = this.seLoMetto(k)
     if (!p || !p.prima) return false
     return !ABILITA_CONFRONTATE.some(n => p.dopo[n] > p.prima[n])
@@ -136,7 +137,7 @@ export class Bottega extends Corredo {
     const L = this.livelloEroe
     const buoni = []
     const prova = k => {
-      if (visti.has(k) || this.possiedo(k) || !COSE[k] || !this.siMostra(k)) return
+      if (visti.has(k) || this.possiedo(k) || !COSE[k] || !this.posso(k) || !this.siMostra(k)) return
       const conf = this.confronto(k)
       if (!conf || (conf.addosso && !(conf.meglio > 0))) return
       visti.add(k)

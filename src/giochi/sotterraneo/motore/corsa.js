@@ -857,18 +857,18 @@ export class Corsa extends Corredo {
     if (premio) this.posaRoba({ che: 'cosa', cosa: premio, em: COSE[premio].em }, vicino)
     else if (m.chiave || tiro < (scheda.droppa != null ? scheda.droppa : 0.5)) {
       // da bere (anche nell'abisso: la roba da mettersi addosso la dà il tiro qui sotto, a tono)
-      const cosa = pescaCosa(daBere, { rnd: () => this.rnd(), tua: k => this.posso(k) })
+      const cosa = pescaCosa(daBere, { rnd: () => this.rnd(), tua: k => this.porta(k) })
       this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, vicino)
     }
     // il mostro grosso: di sicuro un pezzo raro o meglio, e il suo pezzo col nome
     if (m.grosso) {
       this.posaPezzo(pezzoNuovo({ livello: this.livelloDelBottino, chi: 'grosso', fortuna: this.fortuna,
-                                  rnd: () => this.rnd(), tua: k => this.posso(k) }), { x: m.x - 1, y: m.y })
+                                  rnd: () => this.rnd(), tua: k => this.porta(k) }), { x: m.x - 1, y: m.y })
       this.posaPezzo(pezzoDelGrosso(GROSSI[m.grosso].pezzo, this.livelloDelBottino), { x: m.x, y: m.y + 1 })
     } else if (this.rnd() < pezzoDalMostro(scheda)) {
       // a volte anche un mostro qualunque lascia un pezzo da mettersi addosso, a tono col posto e con l'eroe
       this.posaPezzo(pezzoNuovo({ livello: this.livelloDelBottino, chi: 'mostro', fortuna: this.fortuna,
-                                  rnd: () => this.rnd(), tua: k => this.posso(k) }), { x: m.x, y: m.y + 1 })
+                                  rnd: () => this.rnd(), tua: k => this.porta(k) }), { x: m.x, y: m.y + 1 })
     }
     // un mostro che cade si vede, anche il grosso: niente avviso. Quello di una missione sì, dice cosa fare dopo
     if (m.missione) {
@@ -906,9 +906,10 @@ export class Corsa extends Corredo {
   daiUnPunto(k) {
     const n = daiPunto(this.crescita, k)
     if (!n) return false
-    const prima = this.vitaMax
+    const prima = this.vitaMax, energiaPrima = this.energiaMax
     this.crescita = n
     this.vita = Math.min(this.vitaMax, this.vita + Math.max(0, this.vitaMax - prima))
+    this.energia = Math.min(this.energiaMax, this.energia + Math.max(0, this.energiaMax - energiaPrima))   // l'intelligenza
     return true
   }
 
@@ -1005,8 +1006,8 @@ export class Corsa extends Corredo {
     let cosa = premio
     if (!cosa && tiro < (this.indice >= 0 ? 0.34 : 0.6))
       cosa = pezzoNuovo({ livello: this.livelloDelBottino, chi: 'forziere', fortuna: this.fortuna,
-                          rnd: () => this.rnd(), tua: k => this.posso(k) })
-    if (!cosa) cosa = pescaCosa(NEI_FORZIERI_DELLA_STORIA, { rnd: () => this.rnd(), tua: k => this.posso(k) })
+                          rnd: () => this.rnd(), tua: k => this.porta(k) })
+    if (!cosa) cosa = pescaCosa(NEI_FORZIERI_DELLA_STORIA, { rnd: () => this.rnd(), tua: k => this.porta(k) })
     this.posaPezzo(cosa, { x: f.x, y: f.y + 1 })
     this.posaRoba({ che: 'gemme', em: '💎', quante: Math.round((6 + this.piano * 3) * valoreDelLivello(this.livelloQui)) },
                   { x: f.x + 1, y: f.y + 1 })

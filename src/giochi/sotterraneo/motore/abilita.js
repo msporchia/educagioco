@@ -1,8 +1,8 @@
 // L'albero delle abilità, i punti e le caselle (docs/sotterraneo/abilita.md). Funzioni pure sulla crescita
 // dell'avventura (motore/crescita.js), come i punti delle caratteristiche: `albero` dice il grado di ogni nodo
 // imparato, `caselle` le abilità che si portano nello scontro. Cosa fanno nello scontro lo sa motore/corsa.js.
-import { RAMI, NODI, GRADI, LIVELLI_PER_GRADO, CASELLE_ABILITA, PUNTI_ABILITA_PER_LIVELLO } from '../dati/abilita.js'
-import { livelloDi } from '../dati/livelli.js'
+import { RAMI, NODI, LIVELLI_PER_GRADO, CASELLE_ABILITA, PUNTI_ABILITA_PER_LIVELLO } from '../dati/abilita.js'
+import { livelloDi, GEMME_PER_RIASSEGNARE } from '../dati/livelli.js'
 
 const livelloDella = cr => livelloDi(cr ? cr.esp : 0)
 export const gradoDi = (cr, id) => (cr && cr.albero && cr.albero[id]) || 0
@@ -18,7 +18,6 @@ export function perchéNonImpari(cr, classe, id) {
   const nodo = NODI[id]
   if (!nodo || nodo.classe !== classe) return 'non è un\'abilità di questo eroe'
   const g = gradoDi(cr, id)
-  if (g >= GRADI) return 'è già al massimo'
   const serve = livelloPer(nodo, g + 1)
   if (livelloDella(cr) < serve) return `dal livello ${serve}`
   const ramo = RAMI[classe].find(r => r.chiave === nodo.ramo)
@@ -71,11 +70,19 @@ export function rileggiAlbero(dato, esp, classe = null) {
   for (const [id, g] of Object.entries(a)) {
     const nodo = NODI[id]
     if (!nodo || (classe && nodo.classe !== classe)) continue
-    const v = Math.min(GRADI, Number.isFinite(g) && g > 0 ? Math.floor(g) : 0, resta)
+    const v = Math.min(Number.isFinite(g) && g > 0 ? Math.floor(g) : 0, resta)
     if (v > 0) { albero[id] = v; resta -= v }
   }
   const caselle = caselleDella(dato).map(id => (id && albero[id] && !NODI[id].sempre ? id : null))
   return { albero, caselle: caselle.map((id, i) => (caselle.indexOf(id) === i ? id : null)) }
+}
+
+// dimenticare l'albero (l'utente, 9 ottobre): i punti tornano da dare e le caselle si svuotano, e si paga in gemme
+// a punto (GEMME_PER_RIASSEGNARE). null se non c'è niente da dimenticare
+export const costoDelDimenticare = cr => spesiDella(cr) * GEMME_PER_RIASSEGNARE
+export function dimentica(cr) {
+  if (!spesiDella(cr)) return null
+  return { ...cr, albero: {}, caselle: caselleDella(null) }
 }
 
 // il giocatore finto e le misure: dove andrebbe il prossimo punto seguendo un ramo, poi il resto in fila.

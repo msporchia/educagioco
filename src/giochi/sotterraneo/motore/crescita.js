@@ -1,23 +1,31 @@
 // Come cresce l'eroe (docs/sotterraneo/livelli.md): l'esperienza dell'avventura, il livello che ne viene, i punti
 // dati alle quattro caratteristiche e quanto rendono. Funzioni pure: le usano il Corredo (i numeri dell'eroe, sotto e
 // sopra), la Corsa (l'esperienza dei mostri battuti) e la pagina dell'eroe. Gira in Node.
-import { CHIAVI_CARATTERISTICHE, PUNTI_PER_LIVELLO, DOTE_OGNI, FORZA_PER_PUNTO, VITA_PER_TEMPRA,
-         SCORZA_PER_DIFESA, livelloDi, sogliaDi } from '../dati/livelli.js'
+import { CHIAVI_CARATTERISTICHE, PUNTI_PER_LIVELLO, DOTE_OGNI, VITA_PER_TEMPRA, TEMPRA_PER_DIFESA,
+         GEMME_PER_RIASSEGNARE, livelloDi, sogliaDi } from '../dati/livelli.js'
 import { rileggiAlbero } from './abilita.js'
 
 // in `cfg.avventure[eroe].crescita`: l'esperienza e i punti dati, caratteristica per caratteristica (quelli di
 // partenza della classe e la sua dote non ci stanno: si contano dal livello). `albero` e `caselle`: le abilità
 // imparate e quelle portate nello scontro (motore/abilita.js)
-export const CRESCITA_NUOVA = () => ({ esp: 0, forza: 0, tempra: 0, scorza: 0, fortuna: 0, albero: {}, caselle: [null, null, null] })
+// imparate e quelle portate nello scontro (motore/abilita.js). `v`: 2 da quando le caratteristiche sono forza, destrezza,
+// intelligenza e tempra (9 ottobre 2026); prima erano forza, tempra, scorza e fortuna
+export const VERSIONE_CRESCITA = 2
+export const CRESCITA_NUOVA = () => ({ v: VERSIONE_CRESCITA, esp: 0, forza: 0, destrezza: 0, intelligenza: 0, tempra: 0,
+  albero: {}, caselle: [null, null, null] })
 
 const intero = n => (Number.isFinite(n) && n > 0 ? Math.floor(n) : 0)
 
 // un dato storto è un eroe nuovo; più punti dati di quelli che il livello concede si tolgono dalla fine.
-// `classe`: i nodi dell'albero di un'altra classe si buttano
+// `classe`: i nodi dell'albero di un'altra classe si buttano. Una crescita di prima delle caratteristiche nuove
+// tiene esperienza e albero, e i punti tornano tutti da dare: la scorza e la fortuna non ci sono più
 export function rileggiCrescita(dato, classe = null) {
   const c = CRESCITA_NUOVA()
   if (!dato || typeof dato !== 'object') return c
   c.esp = intero(dato.esp)
+  // di prima: la versione vecchia, o senza versione ma con la scorza o la fortuna (si scrivevano sempre tutte e quattro)
+  const diPrima = dato.v != null ? dato.v !== VERSIONE_CRESCITA : ('scorza' in dato || 'fortuna' in dato)
+  if (diPrima) return { ...c, ...rileggiAlbero(dato, c.esp, classe) }
   let resta = (livelloDi(c.esp) - 1) * PUNTI_PER_LIVELLO
   for (const k of CHIAVI_CARATTERISTICHE) {
     c[k] = Math.min(intero(dato[k]), resta)
@@ -40,19 +48,25 @@ export function caratteristica(eroe, cr, k) {
 }
 
 // Quello che la crescita aggiunge ai numeri di partenza della classe (vita, att, dif di dati/eroi.js, che già
-// contano le caratteristiche di partenza): la vita dei livelli, la tempra, la forza, la scorza a mezzo ritmo
+// contano le caratteristiche di partenza): la vita dei livelli e della tempra, la difesa della tempra, e quanto è salita
+// ogni caratteristica (`sopra`). L'attacco no: dipende dall'arma in mano, lo conta il Corredo
 export function piuDellaCrescita(eroe, cr) {
   const liv = livelloDella(cr)
   const parte = eroe.parte || {}
-  const sopra = k => caratteristica(eroe, cr, k) - (parte[k] || 0)
-  const scorza = caratteristica(eroe, cr, 'scorza')
+  const sopra = Object.fromEntries(CHIAVI_CARATTERISTICHE.map(k => [k, caratteristica(eroe, cr, k) - (parte[k] || 0)]))
   return {
-    livello: liv,
-    vita: (liv - 1) * (eroe.vitaPerLivello || 2) + sopra('tempra') * VITA_PER_TEMPRA,
-    att: sopra('forza') * FORZA_PER_PUNTO,
-    dif: Math.floor(scorza / SCORZA_PER_DIFESA) - Math.floor((parte.scorza || 0) / SCORZA_PER_DIFESA),
-    fortuna: caratteristica(eroe, cr, 'fortuna'),
+    livello: liv, sopra,
+    vita: (liv - 1) * (eroe.vitaPerLivello || 2) + sopra.tempra * VITA_PER_TEMPRA,
+    dif: Math.floor(sopra.tempra / TEMPRA_PER_DIFESA),
   }
+}
+
+// Riassegnare (l'utente, 9 ottobre): i punti dati tornano da dare, e costa GEMME_PER_RIASSEGNARE a punto. Torna la
+// crescita nuova, o null se non c'è niente da rimettere
+export const costoDelRiassegnare = cr => datiDella(cr) * GEMME_PER_RIASSEGNARE
+export function riassegna(cr) {
+  if (!datiDella(cr)) return null
+  return { ...cr, ...Object.fromEntries(CHIAVI_CARATTERISTICHE.map(k => [k, 0])) }
 }
 
 // Il bilanciamento (regola dell'utente, 8 ottobre 2026): il bambino sceglie, ma non può alzare troppo una caratteristica
@@ -88,12 +102,14 @@ export function dai(cr, k) {
 
 // Il giocatore finto (motore/banco.js) e la misura della storia danno i punti così, classe per classe: dove la
 // classe è debole prima, poi un po' di tutto. Un bambino li dà come vuole, e la misura dice anche cosa succede
-// a chi li mette tutti nella fortuna (docs/sotterraneo/livelli.md)
+// a chi li mette tutti in una caratteristica sola (docs/sotterraneo/livelli.md)
+// (dal 9 ottobre: metà nella caratteristica dell'arma della storia, che dà l'attacco e tiene i requisiti; la tempra
+// dà la vita e la difesa che era della scorza)
 export const COME_LI_DA = {
-  cavaliere: ['forza', 'scorza', 'forza', 'tempra'],
-  elfa: ['scorza', 'tempra', 'scorza', 'forza'],
-  mago: ['scorza', 'tempra', 'scorza', 'tempra'],
-  nano: ['forza', 'tempra', 'forza', 'scorza'],
+  cavaliere: ['forza', 'destrezza', 'forza', 'tempra'],
+  elfa: ['forza', 'destrezza', 'forza', 'tempra'],
+  mago: ['intelligenza', 'tempra', 'intelligenza', 'tempra'],
+  nano: ['forza', 'destrezza', 'forza', 'tempra'],
 }
 export function daiTutti(cr, eroe, come = null) {
   let c = { ...CRESCITA_NUOVA(), ...cr }
@@ -103,7 +119,8 @@ export function daiTutti(cr, eroe, come = null) {
 
 // dove va il prossimo punto, per il banco: quello del giro, o se la regola non lo lascia la caratteristica più indietro
 export function prossimoPunto(cr, eroe, come = null) {
-  const giro = come || COME_LI_DA[eroe] || COME_LI_DA.cavaliere
+  // l'eroe arriva come chiave (il banco) o come scheda (crescitaA): prima la scheda cadeva sul giro del cavaliere
+  const giro = come || COME_LI_DA[(eroe && eroe.chiave) || eroe] || COME_LI_DA.cavaliere
   const k = giro[datiDella(cr) % giro.length]
   if (puoiDare(cr, k)) return k
   return CHIAVI_CARATTERISTICHE.reduce((a, b) => (((cr && cr[b]) || 0) < ((cr && cr[a]) || 0) ? b : a))

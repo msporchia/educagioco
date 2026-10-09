@@ -3,14 +3,15 @@
 // le regole che valgono sotto e sopra: cosa si porta, dove va un'arma, cosa vale, come si compra e si vende.
 // La discesa (motore/corsa.js) e i mercanti di sopra (motore/bottega.js) la estendono; gira in Node.
 import { TASCHE } from '../dati/mondo.js'
-import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta } from '../dati/eroi.js'
-import { COSE, STANZE_TORCIA } from '../dati/cose.js'
-import { GEMME_PER_FORTUNA } from '../dati/livelli.js'
+import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta, FAMIGLIE, requisitoDi } from '../dati/eroi.js'
+import { COSE, STANZE_TORCIA, aLivello } from '../dati/cose.js'
+import { GEMME_PER_FORTUNA, ATT_PER_PUNTO, SCHIVATA_PER_DESTREZZA, ENERGIA_PER_INTELLIGENZA } from '../dati/livelli.js'
 import { valoreDelLivello } from '../dati/pezzi.js'
-import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare } from './crescita.js'
-import { CARATTERISTICHE, SCORZA_PER_DIFESA } from '../dati/livelli.js'
+import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare, riassegna, costoDelRiassegnare }
+  from './crescita.js'
+import { CARATTERISTICHE } from '../dati/livelli.js'
 import { NODI, ENERGIA, aGrado } from '../dati/abilita.js'
-import { gradoDi, impara, metti } from './abilita.js'
+import { gradoDi, impara, metti, dimentica, costoDelDimenticare } from './abilita.js'
 
 // la forma di `cfg.avventure[eroe].roba` nel profilo: sale se un campo cambia significato (docs/core/ripresa.md)
 export const VERSIONE_ROBA = 1
@@ -111,7 +112,8 @@ export class Corredo {
 
   // quello che la crescita aggiunge (docs/sotterraneo/livelli.md); ricalcolato quando cambia l'esperienza o un punto
   get piu() {
-    const firma = `${this.crescita.esp}|${this.crescita.forza}|${this.crescita.tempra}|${this.crescita.scorza}|${this.crescita.fortuna}`
+    const cr = this.crescita
+    const firma = `${cr.esp}|${cr.forza}|${cr.destrezza}|${cr.intelligenza}|${cr.tempra}`
     if (this._piu && this._piuFirma === firma) return this._piu
     this._piuFirma = firma
     this._piu = piuDellaCrescita(this.io, this.crescita)
@@ -119,16 +121,30 @@ export class Corredo {
   }
   get livelloEroe() { return this.piu.livello }
 
-  get att() { return this.io.att + this.piu.att + this.addosso('att') }   // unico posto dove si sommano
+  // l'attacco: il braccio della classe, quanto è salita la caratteristica dell'arma in mano, la roba. Unico posto dove
+  // si sommano. A mani nude e con un'arma senza famiglia (i pezzi dei grossi, la mazza) conta la caratteristica più
+  // alta: provato con la forza, il mago con la Mazza di Grumo (e a mani nude nella scalinata) non picchiava più
+  get carDellArma() {
+    const c = COSE[this.mano] || COSE[this.mancina]
+    const f = c && c.dove === 'mano' && FAMIGLIE[c.famiglia]
+    if (f && f.car) return f.car
+    return ['forza', 'destrezza', 'intelligenza'].reduce((a, k) => (this.piu.sopra[k] > this.piu.sopra[a] ? k : a))
+  }
+  get att() { return this.io.att + this.piu.sopra[this.carDellArma] * ATT_PER_PUNTO + this.addosso('att') }
   get dif() { return this.io.dif + this.piu.dif + this.addosso('dif') }
+  // il valore di una caratteristica adesso (partenza, punti, dote): i requisiti delle armi e la pagina dell'eroe
+  car(k) { return caratteristica(this.io, this.crescita, k) }
   // il massimo di vita con questa roba e questo livello, a inizio discesa: Corsa parte da qui e poi lo fa crescere (vitaPiu)
   get vitaConLaRoba() { return this.io.vita + this.piu.vita + this.addosso('vita') + this.sempre('vitaPiu') }
-  get fortuna() { return this.piu.fortuna + this.addosso('fortuna') }
+  get fortuna() { return this.addosso('fortuna') }   // solo dai pezzi: non è più una caratteristica
   // quanto vale una gemma raccolta: gli anelli, le abilità e la fortuna
   get valoreGemme() { return 1 + this.addosso('gemme') + GEMME_PER_FORTUNA * this.fortuna }
-  get schivata() { return Math.min(SCHIVATA_MASSIMA, this.addosso('schivata') + this.sempre('schivata')) }
-  // l'energia delle abilità (docs/sotterraneo/abilita.md): dieci, più quella dei nodi 🔷
-  get energiaMax() { return ENERGIA + this.sempre('energiaPiu') }
+  get schivata() {
+    return Math.min(SCHIVATA_MASSIMA, this.addosso('schivata') + this.sempre('schivata') + this.piu.sopra.destrezza * SCHIVATA_PER_DESTREZZA)
+  }
+  // l'energia delle abilità (docs/sotterraneo/abilita.md): la base, l'intelligenza (il mago parte da dieci, il
+  // cavaliere da sei) e i nodi che la alzano
+  get energiaMax() { return ENERGIA + this.car('intelligenza') * ENERGIA_PER_INTELLIGENZA + this.sempre('energiaPiu') }
 
   // L'albero delle abilità: il grado di un nodo, e quanto danno insieme i nodi «sempre» imparati per un campo
   // (colpoPiu, vitaPiu, schivata…). Un nodo che vuole un'arma vale solo con quell'arma in mano: «Filo affilato»
@@ -159,6 +175,26 @@ export class Corredo {
       if (x.nodo.ramo === nodo.ramo && x.nodo.rami) v += campo === 'passa' ? (x.nodo.rami.passa ? 1 : 0) : (aGrado(x.nodo.rami, 'piu', x.g) || 0)
     return v
   }
+  // Riassegnare i punti delle caratteristiche o dell'albero: tornano da dare, e si paga in gemme (GEMME_PER_RIASSEGNARE
+  // a punto). Quello che non si può più indossare torna in tasca (sistemaIlCorredo). Torna false senza gemme o senza punti
+  get costoRiassegnare() { return costoDelRiassegnare(this.crescita) }
+  get costoDimenticare() { return costoDelDimenticare(this.crescita) }
+  riassegnaPunti() {
+    const n = riassegna(this.crescita)
+    if (!n || this.gemme < this.costoRiassegnare) return false
+    this.gemme -= this.costoRiassegnare
+    this.crescita = n
+    this.sistemaIlCorredo()
+    return true
+  }
+  dimenticaAlbero() {
+    const n = dimentica(this.crescita)
+    if (!n || this.gemme < this.costoDimenticare) return false
+    this.gemme -= this.costoDimenticare
+    this.crescita = n
+    return true
+  }
+
   // un punto all'albero, e un'abilità messa in una delle caselle dello scontro (motore/abilita.js)
   impara(id) {
     const n = impara(this.crescita, this.io.chiave, id)
@@ -183,28 +219,26 @@ export class Corredo {
     return Math.round(c.cura * (1 + 0.1 * (this.livelloEroe - 1)) * (1 + this.addosso('pozioni') / 100))
   }
 
-  // La pagina dell'eroe: le quattro caratteristiche, quanto valgono e cosa cambierebbe dando un punto (prima → dopo).
-  // La scorza va a mezzi scudi (ne servono due punti per uno: «🛡️ 2 → 2½»), la fortuna si legge sulle gemme.
+  // La pagina dell'eroe: le quattro caratteristiche, quanto valgono e cosa cambierebbe dando un punto (prima → dopo):
+  // l'attacco se è la caratteristica dell'arma in mano, la difesa quando la tempra arriva al punto che la alza, la vita,
+  // la schivata, l'energia.
   // `trattenuta`: il «+» è spento perché quella caratteristica (`dietro`) è rimasta troppo indietro (chiTrattiene);
   // `indietro`: è lei, quella che trattiene un'altra, e chiede un punto prima
   caratteristiche() {
     const tetto = this.vitaMax ?? this.vitaConLaRoba
-    const mezzi = k => Math.floor(caratteristica(this.io, k, 'scorza') % SCORZA_PER_DIFESA)
-    const conMezzo = (dif, cr) => (mezzi(cr) ? `${dif}½` : String(dif))
     const dare = puntiDaDare(this.crescita) > 0
     const dietro = Object.fromEntries(CARATTERISTICHE.map(c => [c.chiave, dare ? chiTrattiene(this.crescita, c.chiave) : null]))
     const fermate = new Set(Object.values(dietro).filter(Boolean))
-    const gemme = v => `×${(Math.round(v * 100) / 100).toString().replace('.', ',')}`
     return CARATTERISTICHE.map(c => {
       const prova = this.copia()
       prova.crescita = { ...this.crescita, [c.chiave]: (this.crescita[c.chiave] || 0) + 1 }
       const cambia = []
       if (prova.att !== this.att) cambia.push({ em: '⚔️', prima: this.att, dopo: prova.att })
-      if (c.chiave === 'scorza')
-        cambia.push({ em: '🛡️', prima: conMezzo(this.dif, this.crescita), dopo: conMezzo(prova.dif, prova.crescita) })
+      if (prova.dif !== this.dif) cambia.push({ em: '🛡️', prima: this.dif, dopo: prova.dif })
       const piu = prova.vitaConLaRoba - this.vitaConLaRoba
       if (piu) cambia.push({ em: '❤️', prima: tetto, dopo: tetto + piu })
-      if (c.chiave === 'fortuna') cambia.push({ em: '💎', prima: gemme(this.valoreGemme), dopo: gemme(prova.valoreGemme) })
+      if (prova.schivata !== this.schivata) cambia.push({ em: '🌀', prima: `${this.schivata}%`, dopo: `${prova.schivata}%` })
+      if (prova.energiaMax !== this.energiaMax) cambia.push({ glifo: 'energia', prima: this.energiaMax, dopo: prova.energiaMax })
       return { ...c, valore: caratteristica(this.io, this.crescita, c.chiave), dati: this.crescita[c.chiave] || 0, cambia,
                trattenuta: !!dietro[c.chiave], dietro: dietro[c.chiave], indietro: fermate.has(c.chiave) }
     })
@@ -243,8 +277,32 @@ export class Corredo {
   }
 
   // il limite è sull'indossare, mai sul prendere: `posso` non blocca la raccolta, solo il vestirsi da sé
-  posso(k) { return portaLa(this.io, COSE[k]) }
-  perchéNo(k) { return nonLaPorta(this.io, COSE[k]) }
+  // `porta`: la classe lo porta (il bottino lo predilige). `posso`: anche il requisito della caratteristica è raggiunto,
+  // quindi si indossa (l'utente, 9 ottobre: rigido). `requisito`: { car, serve, ha } o null
+  porta(k) { return portaLa(this.io, COSE[k]) }
+  requisito(k) {
+    const r = requisitoDi(COSE[k])
+    return r ? { ...r, ha: this.car(r.car) } : null
+  }
+  posso(k) {
+    if (!this.porta(k)) return false
+    const r = this.requisito(k)
+    return !r || r.ha >= r.serve
+  }
+  // il livello più alto, fino a L, a cui l'eroe impugna il pezzo `k`: il mercante e la storia propongono quello, non
+  // un'arma da guardare e basta (il requisito sale col livello del pezzo)
+  livelloPortabile(k, L) {
+    for (let l = Math.max(1, L); l > 1; l--) if (this.posso(aLivello(k, l))) return l
+    return 1
+  }
+  perchéNo(k) {
+    const classe = nonLaPorta(this.io, COSE[k])
+    if (classe) return classe
+    const r = this.requisito(k)
+    if (!r || r.ha >= r.serve) return ''
+    const nome = (CARATTERISTICHE.find(c => c.chiave === r.car) || { nome: r.car }).nome
+    return `Serve ${nome} ${r.serve} (hai ${r.ha})`
+  }
 
   dillo(testo) { this.avvisi.push(testo) }
 

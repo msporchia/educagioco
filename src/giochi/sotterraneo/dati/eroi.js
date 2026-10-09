@@ -4,11 +4,12 @@
 // (nessuno scende sotto braccio 3, o un mostro costa troppe risposte di fila); il banco di prova lo conferma.
 
 // il vocabolario condiviso fra cose (famiglia) e classi (porta): il motore chiede al dato, mai un `if` col nome di un eroe
+// `car`: la caratteristica che dà l'attacco a quell'arma e ne fa il requisito (docs/sotterraneo/livelli.md)
 export const FAMIGLIE = {
-  spade: { em: '⚔️', corto: 'spade', nome: 'le spade', verbo: 'impugna' },
-  asce: { em: '🪓', corto: 'asce', nome: 'le asce', verbo: 'impugna' },
-  archi: { em: '🏹', corto: 'archi', nome: 'gli archi', verbo: 'impugna' },
-  bacchette: { em: '🪄', corto: 'bacchette', nome: 'le bacchette', verbo: 'impugna' },
+  spade: { em: '⚔️', corto: 'spade', nome: 'le spade', verbo: 'impugna', car: 'forza' },
+  asce: { em: '🪓', corto: 'asce', nome: 'le asce', verbo: 'impugna', car: 'forza' },
+  archi: { em: '🏹', corto: 'archi', nome: 'gli archi', verbo: 'impugna', car: 'destrezza' },
+  bacchette: { em: '🪄', corto: 'bacchette', nome: 'le bacchette', verbo: 'impugna', car: 'intelligenza' },
   // il ferro para di suo, la stoffa deve parare per intero: il manto (stoffa, 3) para più della corazza (ferro, 2)
   ferro: { em: '🛡️', corto: 'ferro', nome: 'il ferro', verbo: 'veste' },
   stoffa: { em: '🧥', corto: 'stoffa', nome: 'la stoffa', verbo: 'veste' },
@@ -18,15 +19,16 @@ export const EROI = [
   { chiave: 'cavaliere', nome: 'Cavaliere', em: '🛡️', sprite: 'cavaliere',
     chi: 'il cavaliere',
     vita: 18, att: 3, dif: 1,
-    // le caratteristiche di partenza (dati/livelli.js): sono già dentro vita, attacco e difesa qui sopra
-    parte: { forza: 3, tempra: 4, scorza: 2, fortuna: 1 }, vitaPerLivello: 3, dote: 'tempra',
+    // le caratteristiche di partenza (dati/livelli.js): vita, attacco e difesa qui sopra le contano già, la crescita
+    // aggiunge quello che sale oltre. La caratteristica della sua arma vale il suo braccio (guastiDegliEroi)
+    parte: { forza: 3, destrezza: 2, intelligenza: 1, tempra: 4 }, vitaPerLivello: 3, dote: 'tempra',
     porta: ['spade', 'asce', 'ferro'],
     dice: 'Tiene botta. Se non sai chi scegliere, è questo.' },
 
   { chiave: 'elfa', nome: 'Elfa', em: '🧝', sprite: 'elfa',
     chi: 'l\'elfa',
     vita: 15, att: 4, dif: 1,
-    parte: { forza: 4, tempra: 3, scorza: 2, fortuna: 2 }, vitaPerLivello: 3, dote: 'forza',
+    parte: { forza: 4, destrezza: 4, intelligenza: 2, tempra: 3 }, vitaPerLivello: 3, dote: 'forza',
     porta: ['spade', 'archi', 'stoffa'],
     dice: 'Colpisce più forte, e regge un po\' meno.' },
 
@@ -35,14 +37,14 @@ export const EROI = [
   { chiave: 'mago', nome: 'Mago', em: '🧙', sprite: 'mago',
     chi: 'il mago',
     vita: 12, att: 5, dif: 0,
-    parte: { forza: 5, tempra: 2, scorza: 0, fortuna: 3 }, vitaPerLivello: 2, dote: 'scorza',
+    parte: { forza: 1, destrezza: 2, intelligenza: 5, tempra: 2 }, vitaPerLivello: 2, dote: 'tempra',
     porta: ['bacchette', 'stoffa'],
     dice: 'I mostri cadono in metà risposte. Ma ogni sbaglio fa malissimo.' },
 
   { chiave: 'nano', nome: 'Nano', em: '🧔', sprite: 'nano',
     chi: 'il nano',
     vita: 20, att: 3, dif: 2,
-    parte: { forza: 3, tempra: 5, scorza: 4, fortuna: 1 }, vitaPerLivello: 3, dote: 'forza',
+    parte: { forza: 3, destrezza: 2, intelligenza: 1, tempra: 5 }, vitaPerLivello: 3, dote: 'forza',
     porta: ['asce', 'archi', 'ferro'],
     dice: 'Sbagliare gli fa quasi il solletico. Non cade quasi mai.' },
 ]
@@ -54,6 +56,18 @@ export const eroeDi = chiave => EROI.find(e => e.chiave === chiave) || EROI[0]
 // prende la scheda della cosa, non la sua chiave: senza famiglia se la mette chiunque
 export const portaLa = (eroe, cosa) =>
   !cosa || !cosa.famiglia || (eroe.porta || []).includes(cosa.famiglia)
+
+// Il requisito di un'arma (l'utente, 9 ottobre: rigido, sotto non si indossa): la caratteristica della sua famiglia,
+// tanta quanto il gradino e il livello del pezzo. Mite apposta: chi alza la caratteristica della sua arma non lo
+// sente, chi la lascia indietro sì. null per quello che non ha famiglia (scudi, armature, gioielli, i pezzi dei grossi)
+export const REQUISITO_DEL_GRADINO = [0, 1, 3]
+export const LIVELLI_PER_REQUISITO = 4
+export function requisitoDi(cosa) {
+  const f = cosa && cosa.dove === 'mano' && FAMIGLIE[cosa.famiglia]
+  if (!f || !f.car) return null
+  const serve = (REQUISITO_DEL_GRADINO[(cosa.grado || 1) - 1] || 0) + Math.floor(((cosa.liv || 1) - 1) / LIVELLI_PER_REQUISITO)
+  return serve > 0 ? { car: f.car, serve } : null
+}
 
 // «Il mago non impugna le asce», torna '' quando non c'è niente da dire
 export function nonLaPorta(eroe, cosa) {
@@ -82,12 +96,17 @@ export function guastiDegliEroi() {
     if (e.att < 3) g.push(`${e.chiave}: braccio ${e.att}, i mostri diventano lunghi invece che duri`)
     if (e.vita < 11) g.push(`${e.chiave}: ${e.vita} di vita, si sviene al terzo sbaglio`)
     if (e.dif < 0) g.push(`${e.chiave}: difesa sotto zero`)
-    // la pagina dell'eroe mostra le caratteristiche: devono raccontare i numeri di partenza, non contraddirli
+    // la pagina dell'eroe mostra le caratteristiche: devono raccontare i numeri di partenza, non contraddirli. La
+    // caratteristica di ogni arma che la classe porta vale almeno il suo braccio meno uno (l'elfa: spade e archi)
     const p = e.parte || {}
-    if (p.forza !== e.att) g.push(`${e.chiave}: forza ${p.forza} e attacco ${e.att}, la pagina direbbe due cose`)
-    if (Math.floor((p.scorza || 0) / 2) !== e.dif) g.push(`${e.chiave}: scorza ${p.scorza} e difesa ${e.dif} non tornano`)
+    const CAR = ['forza', 'destrezza', 'intelligenza', 'tempra']
+    for (const k of CAR) if (!Number.isInteger(p[k]) || p[k] < 1) g.push(`${e.chiave}: ${k} di partenza ${p[k]}, serve un intero da 1`)
+    for (const f of e.porta || []) {
+      const car = FAMIGLIE[f] && FAMIGLIE[f].car
+      if (car && Math.abs(p[car] - e.att) > 1) g.push(`${e.chiave}: ${car} ${p[car]} e braccio ${e.att} con ${f}, la pagina direbbe due cose`)
+    }
     if (!(e.vitaPerLivello >= 1)) g.push(`${e.chiave}: salendo di livello non prende vita`)
-    if (!['forza', 'tempra', 'scorza', 'fortuna'].includes(e.dote)) g.push(`${e.chiave}: la dote "${e.dote}" non è una caratteristica`)
+    if (!CAR.includes(e.dote)) g.push(`${e.chiave}: la dote "${e.dote}" non è una caratteristica`)
   }
   if (!EROI.some(e => e.chiave === DI_PARTENZA))
     g.push(`chi si parte (${DI_PARTENZA}) non è fra gli eroi`)

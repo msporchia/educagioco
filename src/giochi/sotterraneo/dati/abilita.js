@@ -20,15 +20,21 @@
 //     (i primi colpi pieni di uno scontro fanno metà), fiato (una volta per discesa non si sviene), rami
 //     (`passa` e `piu` per le attive dello stesso ramo), geloPiu (i mostri deboli prendono di più)
 
+import { EROI } from './eroi.js'
+
 // l'energia: si riempie rispondendo giusto (porte, forzieri, fonti, mostri), alla fonte e con la pozione blu; mai col
-// tempo, perché sotto una domanda l'orologio è fermo (come la torcia, che si conta a stanze: docs/sotterraneo/roba.md)
-export const ENERGIA = 10
+// tempo, perché sotto una domanda l'orologio è fermo (come la torcia, che si conta a stanze: docs/sotterraneo/roba.md).
+// Il massimo è ENERGIA più l'intelligenza (motore/corredo.js): il mago parte da dieci, il cavaliere e il nano da sei
+export const ENERGIA = 5
+export const ENERGIA_DI_PARTENZA_MINIMA = 6
 export const ENERGIA_PER_RISPOSTA = 1
 // quante abilità si portano nello scontro: tre stanno sopra le risposte anche a 320 px
 export const CASELLE_ABILITA = 3
 // un punto abilità per livello dal 2: al 12, dove finisce la storia, undici punti per una dozzina di nodi
 export const PUNTI_ABILITA_PER_LIVELLO = 1
-// i gradini del ramo si aprono a questi livelli; il secondo e il terzo grado di un nodo vogliono due e quattro livelli in più
+// i gradini del ramo si aprono a questi livelli; ogni grado in più di un nodo vuole due livelli sopra il suo gradino.
+// I gradi non hanno tetto (l'utente, 9 ottobre: al livello 50 c'è ancora qualcosa da fare con le abilità): i primi
+// GRADI sono scritti nel nodo, oltre si cresce a metà del passo dell'ultimo (`n` qui sotto)
 export const GRADINI = [2, 4, 8, 12]
 export const LIVELLI_PER_GRADO = 2
 export const GRADI = 3
@@ -44,7 +50,15 @@ const SCUDO = { scudo: true, glifo: 'scudo', nome: 'uno scudo', corto: 'serve lo
 
 // `fa(g)` è la riga corta della pagina, al grado g (1..3): dice il numero, non la storia. Niente emoji: le icone
 // sono disegnate in codice (`glifo`, viste/glifi.js), e `tinta` è il colore del ramo
-const n = (v, g) => v[Math.max(0, Math.min(GRADI, g) - 1)]
+// il valore al grado g: scritto fino al terzo, poi metà del passo fra il secondo e il terzo a ogni grado (interi se
+// erano interi: gli scambi e i punti non si spezzano)
+export function n(v, g) {
+  const i = Math.max(1, g) - 1
+  if (i < v.length) return v[i]
+  const ultimo = v[v.length - 1], passo = (ultimo - (v[v.length - 2] ?? ultimo)) / 2
+  const x = ultimo + passo * (i - v.length + 1)
+  return v.every(Number.isInteger) ? Math.round(x) : Math.round(x * 100) / 100
+}
 const volte = v => (v === 2 ? 'il doppio' : v === 3 ? 'il triplo' : `×${String(v).replace('.', ',')}`)
 const scambi = v => `${v} ${v === 1 ? 'scambio' : 'scambi'}`
 const quarti = v => `${Math.round(v * 25)}% della vita`
@@ -201,6 +215,8 @@ export function aGrado(nodo, campo, g) {
 
 export function guastiDelleAbilita() {
   const g = []
+  const minima = Math.min(...EROI.map(e => ENERGIA + (e.parte.intelligenza || 0)))
+  if (minima !== ENERGIA_DI_PARTENZA_MINIMA) g.push(`l'energia di partenza più bassa è ${minima}, non ${ENERGIA_DI_PARTENZA_MINIMA}`)
   const visti = new Set()
   for (const [classe, rami] of Object.entries(RAMI)) {
     if (rami.length !== 3) g.push(`${classe}: ${rami.length} rami invece di tre`)
@@ -215,7 +231,7 @@ export function guastiDelleAbilita() {
         visti.add(x.id)
         if (!x.nome || !x.glifo || typeof x.fa !== 'function') g.push(`${x.id}: senza nome, icona o riga`)
         if (!x.sempre && !(x.costo > 0)) g.push(`${x.id}: un'abilità senza costo`)
-        if (!x.sempre && x.costo > ENERGIA) g.push(`${x.id}: costa più dell'energia di partenza`)
+        if (!x.sempre && x.costo > ENERGIA_DI_PARTENZA_MINIMA) g.push(`${x.id}: costa più dell'energia di chi ne ha meno`)
         for (let gr = 1; gr <= GRADI; gr++) if (!x.fa(gr)) g.push(`${x.id}: al grado ${gr} non dice cosa fa`)
       }
     }

@@ -109,7 +109,8 @@ export function premioPer(corredo, k, { evita = () => false, livello = 1 } = {})
   const gia = new Set([...CASELLE.map(c => corredo.casella(c)), ...corredo.zaino].filter(Boolean).map(baseDi))
   for (const c of CASELLE) {
     const x = dopo[c]
-    if (x && !gia.has(x) && migliora(corredo, aLivello(x, livello)) && !evita(x)) return aLivello(x, livello)
+    const l = corredo.livelloPortabile(x || '', livello)
+    if (x && !gia.has(x) && migliora(corredo, aLivello(x, l)) && !evita(x)) return aLivello(x, l)
   }
   return null
 }
@@ -140,7 +141,8 @@ export function bancoDelPasso(m, corredo, finite, { rnd = Math.random, ammessa =
   const L = corredo.livelloEroe
   const riga = passoDi(corredo.chiEro, finite)
   const caselle = m.passo || []
-  const delPasso = caselle.map(c => riga[c]).filter(x => x && ammessa(x) && migliora(corredo, aLivello(x, L)))
+  const aL = x => aLivello(x, corredo.livelloPortabile(x, L))   // a tono, ma un'arma che si impugna
+  const delPasso = caselle.map(c => riga[c]).filter(x => x && ammessa(x) && migliora(corredo, aL(x)))
   const tetto = Math.max(0, ...caselle.map(c => (riga[c] ? COSE[riga[c]].prezzo : 0)))
   const avanti = new Set()
   for (let r = finite + 1; r <= QUANTE_TAPPE; r++) for (const c of CASELLE) avanti.add(passoDi(corredo.chiEro, r)[c])
@@ -148,9 +150,9 @@ export function bancoDelPasso(m, corredo, finite, { rnd = Math.random, ammessa =
     quante: m.altre, rnd,
     ammessa: k => A_SORTE.includes(k) && ammessa(k) && corredo.posso(k) && !delPasso.includes(k) && !corredo.possiedo(k) &&
       COSE[k].prezzo <= tetto && !avanti.has(k),
-    tua: k => corredo.posso(k),
+    tua: k => corredo.porta(k),
   }) : []
-  return [...delPasso.map(x => aLivello(x, L)), ...altre.map(x => aTono(x, L, rnd))]
+  return [...delPasso.map(aL), ...altre.map(x => aTono(x, corredo.livelloPortabile(x, L), rnd))]
 }
 
 // La vetrina: i pezzi delle righe dopo che il banco non porta ancora, al più `quanti` per casella, ognuno con la
@@ -165,9 +167,10 @@ export function vetrinaDelPasso(m, corredo, finite, { quanti = 2, banco = [] } =
     let n = 0
     for (let r = finite + 1; r <= QUANTE_TAPPE && n < quanti; r++) {
       const x = passoDi(corredo.chiEro, r)[c]
-      if (!x || visti.has(x) || !migliora(corredo, aLivello(x, L))) continue
+      const k = x && aLivello(x, corredo.livelloPortabile(x, L))
+      if (!x || visti.has(x) || !migliora(corredo, k)) continue
       visti.add(x)
-      fuori.push({ chiave: aLivello(x, L), finita: r - 1, avanti: r - finite })
+      fuori.push({ chiave: k, finita: r - 1, avanti: r - finite })
       n++
     }
   }
