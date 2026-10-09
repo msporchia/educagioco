@@ -86,7 +86,7 @@ const riga = k => page.locator(`[data-caratteristica="${k}"]`)
 
 /* ---------- 1. sopra: i punti da dare si vedono sulla barra ---------- */
 uguale('il tasto del globo sa il livello', await page.locator('[data-azione="eroe-pagina"]').getAttribute('data-livello'), '12')
-controlla('il globo dice fatta/serve', /^\d+\/\d+$/.test((await page.locator('[data-globo="esperienza"] .sot-globo-numero').textContent()).trim()))
+controlla('il globo dice fatta/serve', /^\d+\/\d+$/.test((await page.locator('[data-esperienza-barra] .sot-esp-numero').textContent()).trim()))
 uguale('e il «+» d\'oro dice che ci sono punti da dare', await page.locator('[data-azione="eroe-pagina"]').getAttribute('data-punti'), '2')
 uguale('sopra non c\'è la carta di chi scende: il livello sta sul globo e nella pagina',
        await page.locator('[data-chi-sopra], [data-roba-sopra], [data-azione="ritratto"], [data-azione="eroe"]').count(), 0)

@@ -94,11 +94,11 @@ const forma = () => page.locator('[data-barra-giu] [data-casella-barra]').evalua
 const globi = () => page.locator('[data-barra-giu] [data-globo]').evaluateAll(es => es.map(e => e.dataset.globo).join())
 uguale('sopra c\'è la barra in basso', await page.locator('[data-barra="sopra"]').count(), 1)
 const formaSopra = await forma(), globiSopra = await globi()
-uguale('coi due globi: la vita e l\'esperienza', globiSopra, 'vita,esperienza')
+uguale('coi due globi: la vita e l\'energia', globiSopra, 'vita,energia')
 uguale('sopra la vita è piena', Number(await page.locator('[data-globo="vita"]').getAttribute('data-quota')), 1)
 uguale('sopra la mappa grande è spenta (la terra è già la mappa)', await page.locator('[data-casella-barra="mappa"]').isDisabled(), true)
 uguale('il tasto del globo sa il livello', await page.locator('[data-azione="eroe-pagina"]').getAttribute('data-livello'), '1')
-controlla('il globo dice fatta/serve, da zero', /^0\/\d+$/.test((await page.locator('[data-globo="esperienza"] .sot-globo-numero').textContent()).trim()))
+controlla('il globo dice fatta/serve, da zero', /^0\/\d+$/.test((await page.locator('[data-esperienza-barra] .sot-esp-numero').textContent()).trim()))
 uguale('le gemme sono una casella come le altre', await page.locator('[data-casella-barra="gemme"]').evaluate(e => e.tagName), 'BUTTON')
 await scatto(page, 'barra-sopra')
 
@@ -384,7 +384,7 @@ async function aMeta(viewport, nome) {
   controlla(`${viewport.width} px: la vita a metà`, Math.abs(q - 0.5) < 0.06, String(q))
   // tutto dentro lo schermo: le caselle fra i due globi, niente che sbordi di lato
   const sx = await p.locator('[data-globo="vita"]').boundingBox()
-  const dx = await p.locator('[data-globo="esperienza"]').boundingBox()
+  const dx = await p.locator('[data-globo="energia"]').boundingBox()
   const celle = await p.locator('.sot-cella').evaluateAll(es => es.map(e => e.getBoundingClientRect()).map(r => [r.left, r.right, r.width]))
   controlla(`${viewport.width} px: le caselle stanno fra i globi`,
             celle.every(([l, r]) => l >= sx.x + sx.width && r <= dx.x), JSON.stringify(celle))

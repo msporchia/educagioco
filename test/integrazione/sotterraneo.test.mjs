@@ -220,7 +220,7 @@ await attendi(page, 400)
 
 uguale('la barra in basso non ha il globo della luce', await page.locator('[data-globo="luce"]').count(), 0)
 uguale('né la casella delle torce', await page.locator('[data-casella-barra="torcia"]').count(), 0)
-uguale('il globo di destra è l\'esperienza', await page.locator('[data-globo="esperienza"]').count(), 1)
+uguale('il globo di destra è l\'energia', await page.locator('[data-globo="energia"]').count(), 1)
 
 await page.locator('[data-azione="zaino"]').click()
 await page.waitForSelector('[data-zaino]', { timeout: 3000 })
