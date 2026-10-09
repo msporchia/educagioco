@@ -175,8 +175,8 @@ export const RAMI = {
         fa: g => `${faDanno(n([1.5, 1.5, 2], g))} e gela il mostro per ${turni(n([3, 4, 5], g))} · ${controCapi(n([3, 3.5, 4], g))}` },
     ] },
     { chiave: 'arcano', nome: 'Arcano', glifo: 'sfera', tinta: '#9b4fd0', nodi: [
-      { id: 'scudo-arcano', nome: 'Scudo arcano', glifo: 'sfera', costo: COSTO_DEL_GRADINO[0], scudo: [1, 1.4, 1.8], difende: true,
-        fa: (g, vm) => scudo(n([1, 1.4, 1.8], g), vm) },
+      { id: 'scudo-arcano', nome: 'Scudo arcano', glifo: 'sfera', costo: COSTO_DEL_GRADINO[0], scudo: [2, 2.6, 3.2], difende: true,
+        fa: (g, vm) => scudo(n([2, 2.6, 3.2], g), vm) },
       { id: 'fonte-arcana', nome: 'Fonte arcana', glifo: 'calice', costo: COSTO_DEL_GRADINO[1], cura: [1, 1.4, 1.8],
         fa: (g, vm) => cura(n([1, 1.4, 1.8], g), vm) },
       { id: 'fulmine', nome: 'Fulmine', glifo: 'fulmine', costo: COSTO_DEL_GRADINO[2], passa: true, per: [2.5, 3, 3.5],
@@ -208,8 +208,8 @@ export const RAMI = {
         fa: g => `${faDanno(n([2, 2.5, 3], g))}, ${controCapi(n([4, 5, 6], g))}` },
     ] },
     { chiave: 'pietra', nome: 'Pietra', glifo: 'montagna', tinta: '#8a7f6a', nodi: [
-      { id: 'pelle-di-pietra', nome: 'Pelle di pietra', glifo: 'pietra', costo: COSTO_DEL_GRADINO[0], scudo: [1, 1.4, 1.8], difende: true,
-        fa: (g, vm) => scudo(n([1, 1.4, 1.8], g), vm) },
+      { id: 'pelle-di-pietra', nome: 'Pelle di pietra', glifo: 'pietra', costo: COSTO_DEL_GRADINO[0], scudo: [2, 2.6, 3.2], difende: true,
+        fa: (g, vm) => scudo(n([2, 2.6, 3.2], g), vm) },
       { id: 'rune', nome: 'Rune di guarigione', glifo: 'runa', costo: COSTO_DEL_GRADINO[1], cura: [1.2, 1.6, 2],
         fa: (g, vm) => cura(n([1.2, 1.6, 2], g), vm) },
       { id: 'testa-dura', nome: 'Testa dura', glifo: 'elmo', sempre: true, testaDura: [1, 2, 3],

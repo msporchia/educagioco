@@ -113,6 +113,10 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
   fendente), il mostro incassa e il numero sale (0,3), il mostro risponde facendosi sotto (0,65), l'eroe incassa col graffio
   rosso (0,95). **Scudo e cura non colpiscono**: niente scatto, solo un alone del colore dell'abilità sull'eroe. La cornice è
   quella delle finestre dell'eroe e del fabbro (`Cornice.vue`, senza ✕).
+- **Una difesa prende il posto dell'attacco, e nel turno il mostro colpisce comunque**: per questo lo Scudo arcano e la Pelle
+  di pietra parano la metà della vita massima al primo grado (due quarti, poi 2,6 e 3,2: `scudo` in `dati/abilita.js`), e non
+  più un quarto (l'utente, 9 ottobre). La pozione blu si beve anche dal menu dello scontro («Bevi una pozione blu», senza
+  perdere il turno) e il suo pannello dice «+8 energia», non vita.
 - **Rispondendo giusto parte**, e si paga. **Sbagliando resta pronta e non
   costa**: un'abilità non è un modo di perdere di più quando si sbaglia.
   Non passa da uno scontro all'altro.

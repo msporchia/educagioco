@@ -5,6 +5,8 @@
 import { Corredo, ROBA_VUOTA, tascheDello, postiDello, impilabile } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { rileggiCrescita, CRESCITA_NUOVA } from '../../src/giochi/sotterraneo/motore/crescita.js'
 import { TASCHE, TASCHE_EXTRA_MAX, prezzoTasca, FORZA_PER_TASCA } from '../../src/giochi/sotterraneo/dati/mondo.js'
+import { numeriDi } from '../../src/giochi/sotterraneo/viste/pezzo.js'
+import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const corredo = (zaino, extra = 0, gemme = 0) =>
@@ -60,6 +62,14 @@ const corredo = (zaino, extra = 0, gemme = 0) =>
   uguale('una ogni FORZA_PER_TASCA punti oltre il primo', con('mago', 7).tascheDallaForza, Math.floor(6 / FORZA_PER_TASCA))
   const ch = con('mago', 2).caratteristiche().find(c => c.chiave === 'forza')
   controlla('il «+» della forza lo dice quando la tasca arriva', ch.cambia.some(x => x.em === '🎒'), JSON.stringify(ch.cambia))
+}
+
+/* ══════════ 5. la pozione blu dice energia, non vita ══════════ */
+{
+  const blu = numeriDi(COSE['pozione-blu'])
+  controlla('la pozione blu dice quanta energia dà', blu.length === 1 && /energia/.test(blu[0].testo) && !/vita/.test(blu[0].testo), JSON.stringify(blu))
+  controlla('anche l\'ampolla delle stelle', numeriDi(COSE['ampolla-blu']).some(n => /16 energia/.test(n.testo)))
+  controlla('la rossa continua a dire vita', numeriDi(COSE.pozione, { cura: 10 }).some(n => /vita/.test(n.testo)))
 }
 
 riassunto('le tasche dello zaino')

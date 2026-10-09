@@ -17,10 +17,11 @@ defineProps({
   energia: { type: Number, required: true },
   energiaMax: { type: Number, required: true },
   bevi: { type: Object, default: null },      // { cura, n }: la pozione che si berrebbe, e quante ne restano
+  beviEnergia: { type: Object, default: null },   // { quanto, n }: la pozione blu, se ne hai e l'energia non è piena
   scappa: { type: Object, default: null },    // { graffio }: il costo della fuga; null se il graffio farebbe cadere
   pericolo: { type: Object, default: null },  // { perche, nome, em, vita, male }: il mostro ringhia, si sta per cadere
 })
-const emit = defineEmits(['scegli', 'bevi', 'scappa'])
+const emit = defineEmits(['scegli', 'bevi', 'bevi-energia', 'scappa'])
 
 const pronto = ref(false)
 let cieca = 0
@@ -50,10 +51,14 @@ const vai = (che, ...a) => { if (pronto.value) emit(che, ...a) }
         <span class="sot-scelta-costo" :class="{ 'sot-poca': a.perche === 'poca energia' }"><Glifo nome="energia" :misura="11" /> {{ a.costo }}</span>
       </button>
     </template>
-    <div v-if="bevi || scappa" class="sot-scelta-sep"></div>
+    <div v-if="bevi || beviEnergia || scappa" class="sot-scelta-sep"></div>
     <button v-if="bevi" type="button" class="sot-scelta sot-scelta-bevi" data-azione="bevi-scontro" @click="vai('bevi')">
       <span class="sot-scelta-icona em">🧪</span>
       <span class="sot-scelta-testo"><b>Bevi una pozione</b><small>{{ bevi.cura ? `ti guarisce di ${bevi.cura} punti di vita` : 'ti rimette in forze' }} · ne hai {{ bevi.n }}</small></span>
+    </button>
+    <button v-if="beviEnergia" type="button" class="sot-scelta sot-scelta-energia" data-azione="bevi-energia" @click="vai('bevi-energia')">
+      <span class="sot-scelta-icona"><Glifo nome="energia" :misura="22" /></span>
+      <span class="sot-scelta-testo"><b>Bevi una pozione blu</b><small>ti ridà {{ beviEnergia.quanto }} di energia · ne hai {{ beviEnergia.n }}</small></span>
     </button>
     <button v-if="scappa" type="button" class="sot-scelta sot-scelta-scappa" data-azione="scappa" @click="vai('scappa')">
       <span class="sot-scelta-icona em">🏃</span>

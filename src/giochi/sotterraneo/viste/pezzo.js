@@ -61,6 +61,8 @@ export function numeriDi(c, { cura = null } = {}) {
   for (const a of ABILITA) if (c[a.campo]) n.push({ em: a.em, testo: a.dice(c[a.campo]), campo: a.campo })
   if (c.cura) n.push({ em: '❤️', testo: `+${cura ?? c.cura} vita, subito` })
   if (c.cresce) n.push({ em: '❤️', testo: `+${c.cresce} vita massima` })
+  // la pozione blu ridà l'energia delle abilità, non la vita (l'utente, 9 ottobre: non era classificata)
+  if (c.usa === 'energia') n.push({ em: '🔷', testo: `+${c.energia} energia, subito` })
   if (c.stanze) n.push({ em: '🔥', testo: `${c.stanze} stanze di luce` })
   if (c.usa === 'porta') n.push({ em: '🗝️', testo: 'apre una porta' })
   return n

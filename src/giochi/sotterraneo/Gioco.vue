@@ -747,6 +747,9 @@ const abilitaScontro = dallaCorsa(c => {
   return {
     caselle, attacco: `fai ${c.colpo(m)} di danno`, energia: c.energia, energiaMax: c.energiaMax,
     bevi: i == null ? null : { cura: k && COSE[k].usa === 'cura' ? c.curaDi(k) : 0, n: c.pozioni },
+    // la pozione blu: energia per le abilità, se ne hai e il globo non è pieno
+    beviEnergia: c.energia < c.energiaMax && c.zaino.some(x => COSE[x] && COSE[x].usa === 'energia')
+      ? { quanto: COSE[c.zaino.find(x => COSE[x].usa === 'energia')].energia, n: c.zaino.filter(x => COSE[x] && COSE[x].usa === 'energia').length } : null,
     scappa: c.puoScappare(m) ? { graffio: c.graffio(m) } : null,
     pericolo: f.pericolo ? { perche: f.pericolo, vita: c.vita, male: c.danno(m) } : null,
     // com'è la scelta fatta, per la riga sopra la domanda
@@ -766,6 +769,17 @@ function scegliColpo(id) {
   tic.value++
   if (c.pronta) suono.nota(659, 988, 0.14, 'triangle', 0.1)
   else suoni.passo()
+  salva()
+}
+// la pozione blu dal menu dello scontro: l'energia sale, e si sceglie ancora (non costa il turno)
+function beviEnergiaNelloScontro() {
+  const c = corsa.value
+  if (!c || !c.foglio || c.foglio.che !== 'scontro') return
+  const i = c.zaino.findIndex(x => COSE[x] && COSE[x].usa === 'energia')
+  if (i < 0) return
+  c.usa(i)
+  tic.value++
+  suoni.tesoro()
   salva()
 }
 // bere dal menu: dentro uno stop riprende da sé (beviNelPericolo), fuori beve e lascia la scelta lì
@@ -1481,7 +1495,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
             <!-- prima si sceglie cosa fare (attacco, abilità, bere, scappare), poi compare la domanda per quel colpo
                  (docs/sotterraneo/abilita.md). Il pericolo non ha più un menu suo: è una riga sopra la stessa scelta -->
             <CaselleAbilita v-if="abilitaScontro && !sceltaFatta" :key="foglio.chiesta ? 0 : 'stop'" v-bind="abilitaScontro"
-                            @scegli="scegliColpo" @bevi="beviNelloScontro" @scappa="scappa" />
+                            @scegli="scegliColpo" @bevi="beviNelloScontro" @bevi-energia="beviEnergiaNelloScontro" @scappa="scappa" />
             <template v-else-if="domanda">
               <div v-if="abilitaScontro && abilitaScontro.scelta" class="sot-scelta sot-pronta sot-scelta-fatta" data-scelta-fatta>
                 <Medaglione :glifo="abilitaScontro.scelta.glifo" :tinta="abilitaScontro.scelta.tinta" stato="preso" :misura="28" />
