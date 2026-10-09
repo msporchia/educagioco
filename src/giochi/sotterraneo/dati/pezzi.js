@@ -58,7 +58,8 @@ export const EPICI = [
 ]
 
 // I leggendari: rari davvero, ognuno col suo nome, la sua riga di storia e le sue abilità (forza 2). Uno nuovo si
-// aggiunge qui; la pagina «Tesori» li mostra tutti, i trovati e il posto vuoto per gli altri
+// aggiunge qui; la pagina «Tesori» li mostra tutti, i trovati e il posto vuoto per gli altri. Ognuno ha la sua figura,
+// chiamata come lui nell'atlante (docs/sotterraneo/figure.md); così anche i pezzi dei grossi
 export const LEGGENDARI = {
   'zanna-del-drago': { base: 'spada', nome: 'Zanna del drago', abilita: ['fuoco', 'att', 'vita'],
                        storia: 'Forgiata col dente di un drago che dormiva da mille anni.' },

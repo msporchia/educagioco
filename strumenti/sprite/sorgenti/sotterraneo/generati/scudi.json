@@ -16,6 +16,8 @@
     "libro":            { "da": [16, 73],  "cella": [13, 14] },
     "sfera-cristallo":  { "da": [16, 93],  "cella": [12, 14] },
     "clessidra":        { "da": [16, 114], "cella": [11, 15] },
-    "calice":           { "da": [103, 116],"cella": [9, 13] }
+    "calice":           { "da": [103, 116],"cella": [9, 13] },
+    "__pezzi-col-nome": "le figure dei leggendari e dei pezzi dei grossi (dati/pezzi.js), scelte dal catalogo roba.json",
+    "scudo-di-fiammetta": { "da": [140, 18], "cella": [14, 16] }
   }
 }

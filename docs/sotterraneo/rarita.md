@@ -139,8 +139,8 @@ nella riga (`migliora`).
 
 ## I leggendari e i Tesori
 
-Undici (`LEGGENDARI` in `dati/pezzi.js`), ognuno col suo nome, le sue tre
-abilità e una riga di storia («Forgiata col dente di un drago che dormiva da
+Undici (`LEGGENDARI` in `dati/pezzi.js`), ognuno col suo nome, la sua figura
+([figure.md](figure.md)), le sue tre abilità e una riga di storia («Forgiata col dente di un drago che dormiva da
 mille anni»); ogni classe ne può portare almeno quattro.
 
 - **Rari davvero**: uno su 250 mostri, uno su 80 forzieri, uno su sedici

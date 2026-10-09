@@ -184,6 +184,7 @@ function componi(k) {
     if (abilita.some(a => !ABILITA_DEI_PEZZI[a]) || new Set(abilita).size !== abilita.length) return undefined
   }
   const c = { ...b, chiave: k, base, liv, rarita, unico, storia, abilita: {} }
+  if (unico) c.sprite = unico   // il pezzo col nome ha la sua figura, chiamata come lui
   // il livello sul numero principale, anche per un pezzo comune
   if (b.dove === 'mano') c.att = (c.att || 0) + Math.floor((liv - 1) / ATT_OGNI_LIVELLI)
   else if (b.dove === 'mancina' || b.dove === 'corpo') c.dif = (c.dif || 0) + Math.floor((liv - 1) / DIF_OGNI_LIVELLI)
@@ -327,6 +328,8 @@ export function guastiDelleCose(nomi = null) {
   if (nomi) for (const [k, c] of Object.entries(COSE))
     if (c.sprite && !nomi.includes(c.sprite))
       g.push(`${k}: nell'atlante non c'è lo sprite "${c.sprite}"`)
+  if (nomi) for (const k of Object.keys(UNICI))
+    if (!nomi.includes(k)) g.push(`${k}: ha il nome proprio, ma nell'atlante non c'è la sua figura`)
   for (const [k, c] of Object.entries(COSE)) {
     if (!c.em || !c.nome) g.push(`${k}: senza emoji o senza nome`)
     if (!c.dice) g.push(`${k}: non dice cosa fa, e il mercante lo mostra`)

@@ -14,7 +14,7 @@ defineEmits(['indietro', 'chiudi', 'fuori'])
 
 const tutti = computed(() => Object.entries(LEGGENDARI).map(([id, l]) => {
   const b = COSE[l.base] || {}
-  return { id, nome: l.nome, storia: l.storia, sprite: b.sprite, em: b.em, trovato: props.trovati.includes(id) }
+  return { id, nome: l.nome, storia: l.storia, sprite: id, em: b.em, trovato: props.trovati.includes(id) }
 }))
 const quanti = computed(() => tutti.value.filter(t => t.trovato).length)
 </script>

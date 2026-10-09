@@ -63,6 +63,14 @@
 
     "chiave-ferro": { "da": [303, 83], "cella": [10, 16], "buchi": true },
     "chiave-verde": { "da": [246, 83], "cella": [10, 16], "buchi": true },
-    "chiave-blu":   { "da": [207, 83], "cella": [10, 16], "buchi": true }
+    "chiave-blu":   { "da": [207, 83], "cella": [10, 16], "buchi": true },
+    "__pezzi-col-nome": "le figure dei leggendari e dei pezzi dei grossi (dati/pezzi.js), scelte dal catalogo roba.json",
+    "zanna-del-drago": { "da": [125, 42], "cella": [9, 24] },
+    "ascia-del-re-nano": { "da": [74, 14], "cella": [12, 22] },
+    "arco-della-luna": { "da": [186, 74], "cella": [9, 21], "buchi": true },
+    "anello-del-tesoriere": { "da": [176, 134], "cella": [13, 19], "buchi": true },
+    "mazza-di-grumo": { "da": [61, 105], "cella": [13, 23] },
+    "anello-di-zannaverde": { "da": [137, 133], "cella": [13, 20], "buchi": true },
+    "martello-di-carbonchio": { "da": [138, 159], "cella": [11, 22] }
   }
 }
