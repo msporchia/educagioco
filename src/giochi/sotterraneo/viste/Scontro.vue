@@ -52,17 +52,25 @@ defineProps({
     </div>
   </div>
   <!-- il mostro picchia anche rispondendo bene: senza questi due numeri sembra "hai sbagliato" -->
-  <p v-if="scambio" class="sot-scambio" :class="{ 'sot-male': !scambio.dato && !scambio.veleno }" :data-usata="scambio.usata ? scambio.usata.id : null">
-    <span v-if="scambio.usata" class="sot-scambio-abilita"><Glifo :nome="scambio.usata.glifo" :misura="16" /> {{ scambio.usata.nome }}: </span>
-    <span v-if="scambio.dato" class="em">⚔️ gli hai tolto <b>{{ scambio.dato }}</b></span>
-    <span v-if="scambio.veleno" class="sot-scambio-abilita"> · <Glifo nome="veleno" :misura="14" /> −{{ scambio.veleno }}</span>
-    <span v-if="scambio.colpiti" class="em"> · e altri {{ scambio.colpiti }}</span>
-    <span v-if="scambio.rimandato"> · gli torna {{ scambio.rimandato }}</span>
-    <span v-if="scambio.dato && scambio.preso"> · </span>
-    <span v-if="scambio.preso" class="em">
-      {{ scambio.dato ? 'ti ha graffiato' : 'ti ha colpito' }} <b>{{ scambio.preso }}</b>
-    </span>
-  </p>
+  <!-- una riga per fonte: da dove viene il danno (colpo, abilità, veleno) e cosa si è portato via quello che arriva -->
+  <div v-if="scambio" class="sot-scambio" :class="{ 'sot-male': !scambio.dato && !scambio.veleno }" :data-usata="scambio.usata ? scambio.usata.id : null">
+    <p v-if="scambio.dato" class="em" data-scambio="danno">
+      <span v-if="scambio.usata" class="sot-scambio-abilita"><Glifo :nome="scambio.usata.glifo" :misura="16" /> {{ scambio.usata.nome }}: </span>
+      fai <b>{{ scambio.dato }}</b> di danno<span v-if="scambio.usata && scambio.volte > 1 && scambio.base"> (il tuo colpo di {{ scambio.base }} ×{{ String(scambio.volte).replace('.', ',') }})</span><span v-else-if="scambio.primoTiro"> (da lontano: il mostro non risponde)</span>
+    </p>
+    <p v-else-if="scambio.usata" class="sot-scambio-abilita" data-scambio="abilita"><Glifo :nome="scambio.usata.glifo" :misura="16" /> {{ scambio.usata.nome }}</p>
+    <p v-if="scambio.veleno" class="sot-scambio-abilita" data-scambio="veleno"><Glifo nome="veleno" :misura="14" /> altri <b>{{ scambio.veleno }}</b> di danno a ogni turno</p>
+    <p v-if="scambio.colpiti" class="em" data-scambio="stanza">e colpisci altri {{ scambio.colpiti }} {{ scambio.colpiti === 1 ? 'mostro' : 'mostri' }} della stanza</p>
+    <p v-if="scambio.rimandato" class="em" data-scambio="specchio">il suo colpo si ritorce contro di lui: <b>{{ scambio.rimandato }}</b> di danno</p>
+    <p v-if="scambio.preso" class="em" data-scambio="preso">
+      subisci <b>{{ scambio.preso }}</b> di danno<span v-if="scambio.gelato"> (il gelo gli dimezza il colpo)</span><span v-if="scambio.assorbito"> · la barriera ne para {{ scambio.assorbito }}</span>
+    </p>
+    <p v-else-if="scambio.assorbito" class="em" data-scambio="preso">la barriera para tutto: <b>{{ scambio.assorbito }}</b> di danno</p>
+    <p v-else-if="scambio.schivato" class="em" data-scambio="preso">schivi il colpo</p>
+    <p v-else-if="scambio.salvo" class="em" data-scambio="preso">
+      {{ { fermo: 'è stordito: non ti attacca', intoccabile: 'sei invulnerabile: non subisci danni', parato: 'sei protetto: non subisci danni', quieto: 'non fa in tempo a risponderti' }[scambio.salvo] }}
+    </p>
+  </div>
 
   <div class="sot-io-vita">
     <span class="sot-polso" :style="{ '--sot-polso': vita / vitaMax > 0.6 ? '#4fce7c'

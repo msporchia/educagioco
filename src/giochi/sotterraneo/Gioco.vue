@@ -670,23 +670,25 @@ const nemico = dallaCorsa(c => {
     stati: statiDel(f.chi), mie: statiMiei(f.io || {}),
   }
 })
+// «2 turni»: una risposta è un turno (le righe dell'albero parlano così, dati/abilita.js)
+const turniDi = n => `${n} ${n === 1 ? 'turno' : 'turni'}`
 // cosa sta succedendo al mostro e all'eroe in questo scontro (docs/sotterraneo/abilita.md): le pastiglie sotto la vita
 function statiDel(m) {
   const st = m.stati || {}
   return [
-    st.veleno && st.veleno.scambi > 0 ? { chiave: 'veleno', glifo: 'veleno', n: `−${st.veleno.quanto} ×${st.veleno.scambi}`, dice: 'avvelenato' } : null,
-    st.debole > 0 ? { chiave: 'debole', glifo: 'fiocco', n: `a metà ×${st.debole}`, dice: 'colpisce a metà' } : null,
-    st.fermo > 0 ? { chiave: 'fermo', glifo: 'stelle', n: `fermo ×${st.fermo}`, dice: 'stordito: non colpisce' } : null,
-    st.rotto && m.dif ? { chiave: 'rotto', glifo: 'scudo-rotto', n: 'senza difesa', dice: 'senza difesa' } : null,
+    st.veleno && st.veleno.scambi > 0 ? { chiave: 'veleno', glifo: 'veleno', n: `${st.veleno.quanto} di danno · ${turniDi(st.veleno.scambi)}`, dice: `subisce ${st.veleno.quanto} di danno a ogni turno` } : null,
+    st.debole > 0 ? { chiave: 'debole', glifo: 'fiocco', n: `fa metà danno · ${turniDi(st.debole)}`, dice: 'i suoi colpi fanno la metà del danno' } : null,
+    st.fermo > 0 ? { chiave: 'fermo', glifo: 'stelle', n: `stordito · ${turniDi(st.fermo)}`, dice: 'stordito: non può attaccare' } : null,
+    st.rotto && m.dif ? { chiave: 'rotto', glifo: 'scudo-rotto', n: 'difesa spezzata', dice: 'senza difesa fino a fine scontro' } : null,
   ].filter(Boolean)
 }
 function statiMiei(io) {
   return [
-    io.parato > 0 ? { chiave: 'parato', glifo: 'scudo', dice: `niente graffi ×${io.parato}` } : null,
-    io.scudo > 0 ? { chiave: 'scudo', glifo: 'sfera', dice: `scudo ${io.scudo}` } : null,
-    io.intoccabile > 0 ? { chiave: 'intoccabile', glifo: 'montagna', dice: `nessun danno ×${io.intoccabile}` } : null,
-    io.specchio ? { chiave: 'specchio', glifo: 'specchio', dice: 'il prossimo colpo torna indietro' } : null,
-    io.linfa && io.linfa.scambi > 0 ? { chiave: 'linfa', glifo: 'germoglio', dice: `+${io.linfa.quanto} ×${io.linfa.scambi}` } : null,
+    io.parato > 0 ? { chiave: 'parato', glifo: 'scudo', dice: `protetto dai danni · ${turniDi(io.parato)}` } : null,
+    io.scudo > 0 ? { chiave: 'scudo', glifo: 'sfera', dice: `barriera: para ${io.scudo} danni` } : null,
+    io.intoccabile > 0 ? { chiave: 'intoccabile', glifo: 'montagna', dice: `invulnerabile · ${turniDi(io.intoccabile)}` } : null,
+    io.specchio ? { chiave: 'specchio', glifo: 'specchio', dice: 'il prossimo colpo torna al mostro' } : null,
+    io.linfa && io.linfa.scambi > 0 ? { chiave: 'linfa', glifo: 'germoglio', dice: `guarisci di ${io.linfa.quanto} · ${turniDi(io.linfa.scambi)}` } : null,
   ].filter(Boolean)
 }
 
@@ -950,7 +952,9 @@ function risolvi(giusto, saltata = false) {
   if (esito.dato != null || esito.preso != null) {
     scambio.value = { dato: esito.dato || 0, preso: esito.preso || 0, caduto: esito.che === 'caduto',
                       usata: esito.usata || null, veleno: esito.veleno || 0, colpiti: esito.colpiti || 0,
-                      rimandato: esito.rimandato || 0 }
+                      rimandato: esito.rimandato || 0, base: esito.base || 0, volte: esito.volte || 1, primoTiro: !!esito.primoTiro,
+                      salvo: esito.salvo || null, gelato: !!esito.gelato, assorbito: esito.assorbito || 0,
+                      schivato: !!esito.schivato }
     scambioFinoA = orologio + 2.4
   }
   if (esito.ringhia) setTimeout(() => suono.nota(110, 60, 0.45, 'sawtooth', 0.1), 420)   // il mostro ringhia

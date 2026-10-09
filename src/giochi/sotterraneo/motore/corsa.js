@@ -702,8 +702,9 @@ export class Corsa extends Corredo {
       io.linfa = io.linfa.scambi > 1 ? { ...io.linfa, scambi: io.linfa.scambi - 1 } : null
     }
 
-    let dato = 0, usata = null, quieto = false, colpiti = []
+    let dato = 0, usata = null, quieto = false, colpiti = [], base = 0, primo = false
     if (giusto) {
+      base = this.colpo(m)   // il colpo senza l'abilità, per dire da dove viene il danno
       const nodo = this.pronta && !this.perchéNonUsi(this.pronta) ? NODI[this.pronta] : null
       // prima gli effetti, poi il colpo: «Spaccaroccia» toglie la difesa al colpo stesso che la toglie
       if (nodo) {
@@ -715,10 +716,13 @@ export class Corsa extends Corredo {
       }
       dato = this.colpo(m, nodo)
       // il primo tiro dell'arco: la prima risposta giusta di uno scontro arriva da lontano, e il mostro non risponde
-      if (!f.tirato && this.ha('primoTiro')) { f.tirato = true; quieto = true; dato += this.sempre('primoTiro') }
+      if (!f.tirato && this.ha('primoTiro')) { f.tirato = true; quieto = true; primo = true; dato += this.sempre('primoTiro') }
       m.ossa -= dato
     }
-    const detto = { dato, veleno, usata: usata ? { id: usata.id, nome: usata.nome, glifo: usata.glifo } : null, colpiti: colpiti.length }
+    // come si è arrivati al danno, da mostrare a ogni scambio: il colpo di base, quante volte (l'abilità), il primo tiro
+    const volteDi = usata ? (aGrado(usata, 'per', this.grado(usata.id)) || 1) : 1
+    const detto = { dato, veleno, usata: usata ? { id: usata.id, nome: usata.nome, glifo: usata.glifo } : null, colpiti: colpiti.length,
+                    base, volte: volteDi, primoTiro: primo }
     if (m.ossa <= 0) {
       this.cade(m)
       this.chiudi()
@@ -727,15 +731,22 @@ export class Corsa extends Corredo {
 
     // il mostro è ancora in piedi, quindi risponde: con gli effetti (botta), lo scudo che assorbe, lo specchio che rimanda.
     // La schivata (🌀) a volte evita il graffio
+    // cosa si porta via il danno, da dire a chi guarda: stordito, invulnerabile, parato, il mostro che non fa in tempo, il gelo
+    const gelato = (m.stati || {}).debole > 0
+    const salvo = (m.stati || {}).fermo > 0 ? 'fermo' : io.intoccabile > 0 ? 'intoccabile' : giusto && io.parato > 0 ? 'parato' : giusto && quieto ? 'quieto' : null
     let male = this.botta(m, giusto, { quieto })
+    const pieno = male
     if (!giusto) f.pieni = (f.pieni || 0) + 1
     const schiva = giusto && male > 0 && this.schivata > 0 && this.rnd() * 100 < this.schivata
     if (schiva) { male = 0; this.dillo('🌀 schivato!') }
+    let assorbito = 0
     if (male > 0 && io.scudo > 0) {
       const preso = Math.min(io.scudo, male)
       io.scudo -= preso
       male -= preso
+      assorbito = preso
     }
+    Object.assign(detto, { salvo: male > 0 ? null : salvo, gelato: gelato && pieno > 0 ? true : false, assorbito })
     let rimandato = 0
     if (male > 0 && io.specchio) {
       rimandato = Math.round(male * io.specchio)

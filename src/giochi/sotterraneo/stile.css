@@ -736,6 +736,8 @@
 }
 .sot-scambio.sot-male { background: #e0432f24; color: #ff9b8a }
 .sot-scambio b { font-size: 15px }
+.sot-scambio p { margin: 0 }
+.sot-scambio p + p { margin-top: 2px; font-weight: 600; font-size: 12.5px }
 
 /* le abilità nello scontro (viste/CaselleAbilita.vue, docs/sotterraneo/abilita.md): tre caselle; l'energia la dice il globo */
 .sot-abilita { display: flex; gap: 5px; margin: 8px 0 0; align-items: stretch }
