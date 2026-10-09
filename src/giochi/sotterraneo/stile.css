@@ -1388,3 +1388,4 @@
 .sot-legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 4px 0 6px; font-size: 12px; color: var(--sot-tenue) }
 .sot-legenda span { display: inline-flex; align-items: center; gap: 5px }
 .sot-legenda b { color: #ffe39a; font-weight: 700 }
+.sot-piu-posto { margin-top: 8px; padding: 10px; font-size: 14px }

@@ -10,6 +10,10 @@ export const ROCCIA = 0, PAVIMENTO = 1, PORTA = 2
 export const EROE = { vita: 18, att: 3, dif: 1 }
 
 export const TASCHE = 6   // un limite vero: piene, quello per terra resta per terra
+// le tasche in più si comprano con le gemme, una alla volta (l'utente, 9 ottobre: sei sono poche con tutto quello che cade):
+// il prezzo cresce in linea retta, mai esponenziale, e c'è un tetto. Stanno nella crescita dell'eroe (`crescita.tasche`)
+export const TASCHE_EXTRA_MAX = 8
+export const prezzoTasca = extra => 30 * (extra + 1)
 
 // quanto si vede attorno all'eroe, in celle: senza torcia due e poco più, anche dentro le stanze; con la torcia sei,
 // e una stanza si accende tutta; all'ultima stanza della torcia il raggio si stringe (docs/sotterraneo/regole.md, «La luce»)

@@ -459,7 +459,7 @@ export class Corsa extends Corredo {
     if (c.rarita === 'leggendario') this.trovati.add(c.unico)
     // uno scudo si imbraccia da sé solo a mano libera: con un'arma leggera già lì, la scelta la fa chi gioca, dallo zaino
     if (this.vaAddosso(r.cosa)) return this.vesti(r, this.confronto(r.cosa))
-    if (this.zaino.length >= TASCHE) {
+    if (!this.cista(r.cosa)) {
       if (c.rarita === 'leggendario') this.trovati.delete(c.unico)
       this.dillo('⚠️ lo zaino è pieno'); return
     }
@@ -505,7 +505,7 @@ export class Corsa extends Corredo {
     this.metti(dove, r.cosa)
     r.presa = true
     if (vecchio) {
-      if (this.zaino.length < TASCHE) this.zaino.push(vecchio)
+      if (this.cista(vecchio)) this.zaino.push(vecchio)
       else this.livello.robe.push({ che: 'cosa', cosa: vecchio, x: r.x, y: r.y,
                                     em: COSE[vecchio].em })
     }

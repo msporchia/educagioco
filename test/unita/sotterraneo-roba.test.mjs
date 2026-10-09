@@ -237,7 +237,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   uguale('senza gemme non si compra', new Bottega({ finite: 0, rnd: seminato(1) }).compraDa('erborista', 'pozione')?.che, 'niente')
 
   /* lo zaino pieno ferma quello che non trova posto */
-  const pieno = new Bottega({ roba: { ...ROBA_VUOTA(), gemme: 100, zaino: new Array(TASCHE).fill('pozione') }, rnd: seminato(2) })
+  const pieno = new Bottega({ roba: { ...ROBA_VUOTA(), gemme: 100, zaino: ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'chiave', 'corazza'] }, rnd: seminato(2) })
   uguale('a zaino pieno una pozione non entra', pieno.compraDa('erborista', 'pozione')?.che, 'pieno')
   uguale('e le gemme restano', pieno.gemme, 100)
 

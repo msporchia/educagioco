@@ -26,7 +26,7 @@ import { pezzoAndante, SCENARI, SCENARIO } from './dati/tessere.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
-import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo } from './motore/corredo.js'
+import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo, tascheDello, postiDello } from './motore/corredo.js'
 import { rileggiCrescita, puntiDaDare, dai as daiPunto, livelloDella } from './motore/crescita.js'
 import { puntiAbilita, caselleDella } from './motore/abilita.js'
 import { NODI, RAMI } from './dati/abilita.js'
@@ -356,9 +356,9 @@ const banco = computed(() => {
     roba: vendibili,
     addosso: { mano: voce(b.mano), mancina: voce(b.mancina), corpo: voce(b.corpo), dito: voce(b.dito) },
     numeri: { vita: b.vitaConLaRoba, att: b.att, dif: b.dif, gemme: b.gemme },
-    tasche: m.compra ? Array.from({ length: TASCHE }, (_, i) => {
-      const y = b.zaino[i]
-      return y ? { chiave: y, ...COSE[y], vale: b.quantoVale(y) } : null
+    tasche: m.compra ? Array.from({ length: b.capienza }, (_, i) => {
+      const t = b.tasche()[i]
+      return t ? { chiave: t.k, ...COSE[t.k], vale: b.quantoVale(t.k), n: t.n } : null
     }) : null,
   }
 })
@@ -375,8 +375,8 @@ function compraSopra(x) {
   const e = dopoIlBanco(bottega.compraDa(aperto.value, x))
   if (e?.che === 'comprato') suono.compra(); else suono.no()
 }
-function vendiSopra(i) {
-  const e = dopoIlBanco(bottega.vendiA(aperto.value, i))
+function vendiSopra(t) {
+  const e = dopoIlBanco(bottega.vendiA(aperto.value, bottega.indiceDellaTasca(t)))
   if (e) suoni.bottino()
 }
 
@@ -417,7 +417,7 @@ const eroe = dallaCorsa(c => {
           scorta: c.torceInScorta, agliSgoccioli: c.torciaResta <= 3 && !c.torceInScorta }
       : null,
     pozioni: c.pozioni,               // le cure in tasca, sulla casella 🧪 della barra
-    pieni: c.zaino.length,
+    pieni: c.postiUsati(), tasche: c.capienza,
     esp: c.crescita.esp, crescita: c.crescita,
     energia: c.energia, energiaMax: c.energiaMax,   // il globo blu della barra (docs/sotterraneo/abilita.md)
   }
@@ -440,7 +440,7 @@ const barra = computed(() => {
     energia: giu ? giu.energia : robaSopra.value.energiaMax,
     energiaMax: giu ? giu.energiaMax : robaSopra.value.energiaMax, puntiAbilita: puntiAbilita(cr),
     pozioni: giu ? giu.pozioni : r.zaino.filter(k => COSE[k] && (COSE[k].usa === 'cura' || COSE[k].usa === 'cresci')).length,
-    pieni: giu ? giu.pieni : r.zaino.length,
+    pieni: giu ? giu.pieni : postiDello(r.zaino), tasche: giu ? giu.tasche : TASCHE + (crescita.value.tasche || 0),
     gemme: giu ? giu.gemme : r.gemme,
   }
 })
@@ -514,6 +514,13 @@ function sullAlbero(fai) {
   tic.value++
   return true
 }
+// le tasche dello zaino, una voce per tasca: le pozioni uguali stanno insieme (`n`), il resto una per pezzo, poi i buchi
+function tascheVoci(c, voce) {
+  const t = c.tasche()
+  return Array.from({ length: c.capienza }, (_, i) => (t[i] ? { ...voce(t[i].k), n: t[i].n } : null))
+}
+// comprare una tasca in più con le gemme (viste/Zaino.vue): sopra e giù, e resta all'eroe per sempre
+function compraTasca() { if (sullAlbero(c => c.compraTasca())) suono.compra() }
 // riassegnare i punti o dimenticare l'albero: si paga in gemme (docs/sotterraneo/livelli.md, «Riassegnare»)
 function riassegnaPunti() { if (sullAlbero(c => c.riassegnaPunti())) suono.nota(659, 330, 0.3, 'triangle', 0.1) }
 function dimenticaAlbero() { if (sullAlbero(c => c.dimenticaAlbero())) suono.nota(659, 330, 0.3, 'triangle', 0.1) }
@@ -562,7 +569,7 @@ const zainoDiSopra = computed(() => {
   const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), prova: c.seLoMetto(k), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina), corpo: voce(c.corpo), dito: voce(c.dito),
-    tasche: Array.from({ length: TASCHE }, (_, i) => voce(c.zaino[i])),
+    tasche: tascheVoci(c, voce), costoTasca: c.costoTasca,
     att: c.att, dif: c.dif, gemme: c.gemme, vita: c.vitaConLaRoba, vitaMax: c.vitaConLaRoba,
   }
 })
@@ -575,7 +582,8 @@ function suLaRoba(fai) {
   tic.value++
   return e
 }
-function usaSopra(i) {
+function usaSopra(t) {
+  const i = tascheDello(roba.value.zaino)[t].i   // la tasca → il posto nella lista (le pozioni uguali ne fanno una sola)
   const k = roba.value.zaino[i]
   if (COSE[k] && !COSE[k].dove) { dilloSopra(COSE[k].usa === 'cura' ? '❤️ sei già in piena forma' : 'Serve laggiù, non qui'); return }
   suLaRoba(c => c.indossaDallaTasca(i))
@@ -760,7 +768,7 @@ function beviNelloScontro() {
   salva()
 }
 
-const pieni = dallaCorsa(c => c.zaino.length, 0)   // sei su sei vuol dire che la prossima cosa resta per terra
+const pieni = dallaCorsa(c => c.postiUsati(), 0)   // sei su sei vuol dire che la prossima cosa resta per terra
 
 const zaino = dallaCorsa(c => {
   // `nonPuoi` la scrive il motore (perchéNo), che sa chi sta scendendo
@@ -768,7 +776,7 @@ const zaino = dallaCorsa(c => {
   return {
     mano: voce(c.mano), mancina: voce(c.mancina),
     corpo: voce(c.corpo), dito: voce(c.dito),
-    tasche: Array.from({ length: TASCHE }, (_, i) => voce(c.zaino[i])),
+    tasche: tascheVoci(c, voce), costoTasca: c.costoTasca,
   }
 })
 
@@ -1369,13 +1377,13 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <BarraDiSotto sopra :vita="barra.vita" :vita-max="barra.vitaMax" :livello="barra.livello"
                       :esperienza="barra.esperienza" :esp-fatta="barra.espFatta" :esp-serve="barra.espServe" :punti="barra.punti" :pozioni="barra.pozioni" :pieni="barra.pieni"
                       :energia="barra.energia" :energia-max="barra.energiaMax" :punti-abilita="barra.puntiAbilita"
-                      :tasche="TASCHE" :gemme="barra.gemme" :missioni="missioniAperte" :pronta="missioniPronte"
+                      :tasche="barra.tasche" :gemme="barra.gemme" :missioni="missioniAperte" :pronta="missioniPronte"
                       @bevi="dilloSopra(barra.pozioni ? '❤️ sei già in piena forma' : '🧪 non hai pozioni')"
                       @zaino="apriScheda('zaino')"
                       @diario="campagnaEl && campagnaEl.apriDiario()" @eroe="apriPaginaEroe()" @abilita="apriPaginaEroe('abilita')" />
         <Zaino v-if="zainoDiSopra" v-bind="zainoDiSopra" :eroe="eroeScheda" :piano="0" sopra
                :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
-               @usa="usaSopra" @riponi="riponiSopra" @butta="() => {}"
+               @usa="usaSopra" @riponi="riponiSopra" @butta="() => {}" @tasca="compraTasca"
                @chiudi="zainoSopra = false" @fuori="e => { zainoSopra = false; fuoriDallaBottega(e) }" />
         <!-- la bottega di un mercante di sopra: quasi a tutto schermo, la ✕ in alto a destra, niente domande.
              La chiave è il mercante: le linguette e la scelta ripartono da capo cambiando bottega -->
@@ -1446,7 +1454,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <BarraDiSotto :vita="barra.vita" :vita-max="barra.vitaMax" :colpito="colpito" :livello="barra.livello"
                       :esperienza="barra.esperienza" :esp-fatta="barra.espFatta" :esp-serve="barra.espServe" :punti="barra.punti" :sale="sale"
                       :energia="barra.energia" :energia-max="barra.energiaMax" :punti-abilita="barra.puntiAbilita"
-                      :pozioni="barra.pozioni" :pieni="barra.pieni" :tasche="TASCHE" :gemme="barra.gemme"
+                      :pozioni="barra.pozioni" :pieni="barra.pieni" :tasche="barra.tasche" :gemme="barra.gemme"
                       :missioni="missioniAperte" :mappa="mappaGrande"
                       @bevi="bevi" @zaino="apriDallaBarra('zaino')" @diario="apriDallaBarra('diario')"
                       @mappa="mappaGrande = !mappaGrande" @eroe="apriPaginaEroe()" @abilita="apriPaginaEroe('abilita')" />
@@ -1610,7 +1618,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                :vita="eroe.vita" :vitaMax="eroe.vitaMax"
                :piano="eroe.piano" :piani="eroe.piani"
                :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
-               @usa="usa" @butta="butta" @riponi="riponi"
+               @usa="t => usa(corsa.indiceDellaTasca(t))" @butta="t => butta(corsa.indiceDellaTasca(t))" @riponi="riponi" @tasca="compraTasca"
                @chiudi="zainoAperto = false" @fuori="toccoFuori" />
 
         <!-- il diario delle missioni, giù: lo stesso di sopra, senza «vai da» (chi aspetta sta sopra) -->

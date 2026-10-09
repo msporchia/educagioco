@@ -31,8 +31,9 @@ const props = defineProps({
   sopra: { type: Boolean, default: false },  // lo zaino della terra di sopra: ci si veste, ma non si butta niente
   punti: { type: Number, default: 0 },        // le schede della finestra dell'eroe: i «+» delle altre due
   puntiAbilita: { type: Number, default: 0 },
+  costoTasca: { type: Number, default: null },   // quanto costa una tasca in più; null: più di così non si compra
 })
-const emit = defineEmits(['usa', 'butta', 'riponi', 'chiudi', 'fuori', 'scheda'])
+const emit = defineEmits(['usa', 'butta', 'riponi', 'chiudi', 'fuori', 'scheda', 'tasca'])
 
 // una tasca ({ dove: 'zaino', i }) o una casella addosso ({ dove: 'mano' }); null è lo stato normale
 const scelto = ref(null)
@@ -128,10 +129,15 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
 
     <div class="sot-banco-griglia">
       <div class="sot-griglia sot-tasche">
-        <Casella v-for="(t, i) in tasche" :key="i" :cosa="t" vuota="·" :segno="t && t.nonPuoi ? '✋' : ''"
+        <Casella v-for="(t, i) in tasche" :key="i" :cosa="t" vuota="·" :segno="t && t.n > 1 ? `×${t.n}` : t && t.nonPuoi ? '✋' : ''"
                  :spenta="!!(t && t.nonPuoi)" :scelta="sceltoQui('zaino', i)" :disabled="!t"
                  :data-tasca="i" :data-cosa="t ? t.chiave : null" @click="tocca('zaino', i)" />
       </div>
+      <!-- più posto, con le gemme: una tasca alla volta, il prezzo cresce in linea retta (dati/mondo.js) -->
+      <button v-if="costoTasca != null" type="button" class="sot-grosso sot-chiaro sot-piu-posto" data-azione="piu-posto"
+              :disabled="gemme < costoTasca" @click="emit('tasca')">
+        ＋ Una tasca in più <small :class="{ 'sot-rosso': gemme < costoTasca }">💎 {{ costoTasca }}</small>
+      </button>
     </div>
 
     <div v-if="cosa" ref="pannello" class="sot-banco-piede">

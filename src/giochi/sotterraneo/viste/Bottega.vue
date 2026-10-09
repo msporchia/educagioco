@@ -172,7 +172,7 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
       </template>
       <template v-else>
         <div class="sot-griglia">
-          <Casella v-for="(t, i) in tasche" :key="i" :cosa="t" vuota="·" :sotto="t ? `+💎 ${t.vale}` : ''"
+          <Casella v-for="(t, i) in tasche" :key="i" :cosa="t" vuota="·" :sotto="t ? `+💎 ${t.vale}` : ''" :segno="t && t.n > 1 ? `×${t.n}` : ''"
                    :scelta="sceltoQui('tasca', i)" :disabled="!t" class="sot-da-vendere"
                    :data-casella-pezzo="t ? t.chiave : null" :data-vendo="t ? t.chiave : null" :data-tasca-banco="i"
                    @click="toccaTasca(i)" />
