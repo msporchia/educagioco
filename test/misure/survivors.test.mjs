@@ -45,8 +45,8 @@ const PIATTO = { libero: () => true, spingiFuori: () => false, aggira: (x, y, r,
    semi: `SEMI=1000 node test/esegui.mjs survivors`, vedi docs/core/test.md).
    Vicino a 0 o a 1 la varianza si allarga un po', o una partita persa su
    ventiquattro farebbe cadere il 98% */
-const regge = (quota, attesa, volte) =>
-  quota >= attesa - 3.5 * Math.sqrt(Math.max(attesa * (1 - attesa), 0.05) / volte)
+const regge = (quota, attesa, volte, quante = 3.5) =>
+  quota >= attesa - quante * Math.sqrt(Math.max(attesa * (1 - attesa), 0.05) / volte)
 
 /* Fa girare una partita fino alla fine senza nessuno che la guardi: le
    offerte si sbrigano rinunciando. Una partita lasciata in pausa non
@@ -658,7 +658,12 @@ controlla('il riassunto conta le stelle',
   controlla('fuori dallo schermo, dal lato da cui entra',
             Math.abs(lungo(fila[0]) - (orizzontale ? p.eroe.x : p.eroe.y)) > (orizzontale ? campo.larghezza : campo.altezza) / 2)
   /* il varco: fra due vicini in fila c'è un buco più largo del passo */
-  const posti = fila.map(trasv).sort((a, b) => a - b)
+  /* il varco può cadere in fondo alla fila: ai due capi si mette il posto
+     della griglia appena fuori, così anche quel buco si misura */
+  const lunga = (orizzontale ? campo.altezza : campo.larghezza) / 2 + 30
+  const ultimo = -lunga + Math.floor(2 * lunga / CFG.muro.passo) * CFG.muro.passo
+  const dentroFila = fila.map(n => trasv(n) - trasv(p.eroe)).sort((a, b) => a - b)
+  const posti = [-lunga - CFG.muro.passo, ...dentroFila, ultimo + CFG.muro.passo]
   const buchi = posti.slice(1).map((v, i) => v - posti[i])
   /* la fila sta su una griglia a `passo`, quindi il varco è largo
      quello dichiarato più al massimo due passi */
@@ -874,13 +879,13 @@ for (const [i, t] of CAMPAGNA.entries()) {
      salita che chiede di aver risposto bene: si scende. Chi perde non
      perde niente e riprova, e intanto ha fatto i suoi conti.
 
-     Le attese sono misurate (16 semi × 24 partite, il 9/10/2026): chi
-     risponde bene 98·96·89·81·61·61·60·46·44%, chi schiva a sprazzi
-     95·82·60·45·30·25·24·11·17%. Ventiquattro partite oscillano di dieci
+     Le attese sono misurate (12 semi × 24 partite, il 9/10/2026, coi
+     capi più duri): chi risponde bene 99·98·84·78·66·58·60·41·40%, chi
+     schiva a sprazzi 94·86·60·43·30·22·22·12·19%. Ventiquattro partite oscillano di dieci
      punti, quindi una casella da sola regge solo un crollo (`regge`);
      lo scalino intero, tre tappe insieme, tiene una soglia più stretta. */
-  const attesaSa = [0.98, 0.96, 0.89, 0.81, 0.61, 0.61, 0.60, 0.46, 0.44]
-  const attesaBimbo = [0.95, 0.82, 0.60, 0.45, 0.30, 0.25, 0.24, 0.11, 0.17]
+  const attesaSa = [0.99, 0.98, 0.84, 0.78, 0.66, 0.58, 0.60, 0.41, 0.40]
+  const attesaBimbo = [0.94, 0.86, 0.60, 0.43, 0.30, 0.22, 0.22, 0.12, 0.19]
   controlla(`tappa ${i + 1} (${t.nome}): chi risponde bene la porta a casa`,
             regge(sa.quota, attesaSa[i], VOLTE), `ce la fa il ${(sa.quota * 100).toFixed(0)}%`)
   controlla(`tappa ${i + 1} (${t.nome}): chi schiva a sprazzi non resta fuori`,
@@ -904,14 +909,17 @@ for (const [i, t] of CAMPAGNA.entries()) {
          Number(sa.domandeMedie.toFixed(1)), 3, 20)
 }
 {
-  /* lo scalino intero: tre tappe, settantadue partite per profilo */
+  /* lo scalino intero: tre tappe, settantadue partite per profilo; a
+     quattro deviazioni, perché tre tappe molto diverse (99, 98 e 84%)
+     oscillano più di quanto dice il conto, e resta più stretta lo stesso
+     della casella sola */
   const media = v => v.reduce((a, b) => a + b, 0) / v.length
   for (const [chiave, sc] of Object.entries(scalini)) {
     const n = VOLTE * sc.sa.length
     controlla(`scalino «${chiave}»: chi risponde bene ci arriva come atteso`,
-              regge(media(sc.sa), media(sc.attesaSa), n), `${(media(sc.sa) * 100).toFixed(0)}%`)
+              regge(media(sc.sa), media(sc.attesaSa), n, 4), `${(media(sc.sa) * 100).toFixed(0)}%`)
     controlla(`scalino «${chiave}»: chi schiva a sprazzi ci arriva come atteso`,
-              regge(media(sc.bimbo), media(sc.attesaBimbo), n), `${(media(sc.bimbo) * 100).toFixed(0)}%`)
+              regge(media(sc.bimbo), media(sc.attesaBimbo), n, 4), `${(media(sc.bimbo) * 100).toFixed(0)}%`)
   }
   /* mirare non costa la tappa: chi mira due volte su tre contro chi mira
      una su tre, sulle nove tappe insieme (misurato: 71% contro 73%) */
@@ -1066,7 +1074,9 @@ for (const [i, t] of CAMPAGNA.entries()) {
      Quindi il giocatore di riferimento di questa prova è il più forte che
      esista: schiva sempre, indovina sempre, e resta in campo venti
      minuti. Deve morire anche lui, e non al primo inciampo — il quarto
-     d'ora è il punto in cui un bambino ha già messo giù il telefono. */
+     d'ora è il punto in cui un bambino ha già messo giù il telefono.
+     Con la marea del 9/10 resiste in media sei minuti; quattro partite
+     oscillano fra due e otto. */
   const forti = []
   for (let i = 0; i < 4; i++)
     forti.push(gioca(r, { rnd: caso(880 + i), campo, bravura: 1, esattezza: 1, oltre: 1200 }).partita)
@@ -1075,7 +1085,7 @@ for (const [i, t] of CAMPAGNA.entries()) {
   controlla('nemmeno chi risponde a tutto resiste per sempre',
             forti.every(p => p.esito === 'persa'),
             `${forti.filter(p => p.esito === 'persa').length} su 4`)
-  dentro('e non lo prendono nemmeno subito', Math.round(extraMedio), 180, 1100)
+  dentro('e non lo prendono nemmeno subito', Math.round(extraMedio), 100, 1100)
 }
 
 /* ══════════ 7. il gioco libero non finisce da solo ══════════ */
@@ -1253,10 +1263,11 @@ for (const [i, t] of CAMPAGNA.entries()) {
        `con ${chieste.toFixed(0)} domande e ${oltre.toFixed(0)} copie oltre il tetto`)
   controlla('il secondo giro consegna delle carte, non dei livelli a vuoto', oltre >= 10,
             `solo ${oltre.toFixed(0)} copie in più`)
-  /* «ancora un po'», non «il doppio»: col vecchio mazzo si resisteva in
-     media 859 secondi in questa stessa situazione, con ventidue salite
-     di livello buttate */
-  dentro('e si resiste ancora un po\', non il doppio', Math.round(medio), 700, 1600)
+  /* «ancora un po'», non «il doppio»: con la marea di adesso si
+     resiste in media 620 secondi in questa situazione (col vecchio mazzo
+     e la marea più lenta erano 859, con ventidue salite di livello
+     buttate) */
+  dentro('e si resiste ancora un po\', non il doppio', Math.round(medio), 450, 1250)
 }
 
 /* ══════════ 8. i traguardi scattano ══════════

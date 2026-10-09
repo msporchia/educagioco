@@ -88,9 +88,9 @@ export const CFG = {
   // mostri (da `nascite` a 1) e più lenti (da `fretta` a 1), perché
   // senza carte un colpo preso costa un cuore su tre — vedi docs/survivors/taratura.md
   avvio: { secondi: 30, nascite: 0.5, fretta: 0.65 },
-  natePerSecondo: q => q <= 1 ? 1.2 + 2.8 * Math.max(0, q) : 4 * Math.pow(1.62, q - 1),
-  vitaNemico: q => q <= 1 ? 1 + 1.35 * Math.max(0, q) : 2.35 * Math.pow(1.95, q - 1),
-  frettaNemico: q => 1 + 0.35 * Math.min(q, 1) + 0.09 * Math.max(0, q - 1),
+  natePerSecondo: q => q <= 1 ? 1.2 + 2.8 * Math.max(0, q) : 4 * Math.pow(2.3, q - 1),
+  vitaNemico: q => q <= 1 ? 1 + 1.35 * Math.max(0, q) : 2.35 * Math.pow(2.9, q - 1),
+  frettaNemico: q => 1 + 0.35 * Math.min(q, 1) + 0.2 * Math.max(0, q - 1),
 
   // quanto dura una tappa «tipo»: l'orologio del gioco libero, e di chi
   // resta in campo dopo aver vinto
@@ -166,12 +166,12 @@ export function guastiDellaTaratura(cfg = CFG) {
       guasti.push(`${k} ha un tetto: a q=10 vale come a q=3`)
   }
   // la vita deve essere la leva più ripida (cento mostri molli si
-  // spazzano con una magia, dieci mostri duri no) ma non raddoppiare
-  // più in fretta di una tappa tipo, o si passa dal star bene al
-  // morire senza aver visto arrivare niente
+  // spazzano con una magia, dieci mostri duri no) ma non triplicare
+  // in una tappa tipo, o si passa dal star bene al morire senza aver
+  // visto arrivare niente
   for (const q of [1.5, 3, 6]) {
     const raddoppio = cfg.vitaNemico(q + 1) / cfg.vitaNemico(q)
-    if (!(raddoppio <= 2.05))
+    if (!(raddoppio <= 3))
       guasti.push(`la vita si moltiplica per ${raddoppio.toFixed(2)} in una tappa tipo (a q=${q}): ` +
                   'travolge invece di far perdere terreno')
   }

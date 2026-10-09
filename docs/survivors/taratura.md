@@ -67,9 +67,18 @@ può starle dietro — misurato: un giocatore che risponde bene passa da 2 a
 1300 danni al secondo (seicento volte) in un quarto d'ora; con le vecchie
 curve lineari la marea saliva solo sei volte, e dopo il traguardo non si
 poteva più perdere (misurato: quindici minuti con 380 mostri intorno e
-cinque cuori intatti). La vita cresce più della folla (×1.95 contro
-×1.62 per tappa-tipo): è la leva vera, perché cento mostri molli si
-spazzano con una magia ad area ma dieci mostri duri no.
+cinque cuori intatti). La vita cresce più della folla (×2.9 contro
+×2.3 per tappa-tipo, la fretta +0.2): è la leva vera, perché cento
+mostri molli si spazzano con una magia ad area ma dieci mostri duri no.
+
+Chi gioca bene abbatte i mostri appena nascono, e muore poco dopo aver
+finito il mazzo (verso il livello 75): è lì che la marea raggiunge la sua
+potenza massima. Quindi quanto dura la parte infinita lo decide quanto in
+fretta la marea arriva a quel punto, e servono folla e vita insieme; una
+leva da sola sposta poco (provato: la vita fino a ×2.8, o la fretta fino
+a +0.4, toglievano due o tre minuti su dodici). Con ×1.95 e ×1.62 chi
+risponde a tutto restava in campo dopo il traguardo una dozzina di
+minuti; adesso otto.
 
 La "stazza" (`CFG.stazza`) misura quanto la marea ha impastato i
 mostri — non la mole del singolo, ma quanto in là è andata la partita —
