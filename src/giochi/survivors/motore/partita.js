@@ -841,7 +841,8 @@ export class Partita {
   // diventava un muro che nessuno attraversa
   gela(n, quanto, freno) {
     n.gelato = Math.max(n.gelato, quanto)
-    const suo = 1 - (1 - freno) / Math.sqrt(n.massa || 1)
+    const duro = Math.sqrt(n.massa || 1) * (n.capo ? CFG.capo.gelo : 1)   // un capo il freddo lo sente appena
+    const suo = 1 - (1 - freno) / duro
     n.freno = Math.min(n.freno, suo)
   }
 

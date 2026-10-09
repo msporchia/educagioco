@@ -26,9 +26,9 @@ export const CFG = {
   // i capi: ogni tanto un mostro molto più grosso e duro, col suo alone e
   // la corona. Il primo a `da` della tappa, poi uno ogni `ogni` secondi;
   // `taglia` moltiplica il raggio, `vita` la vita, `passo` la velocità,
-  // `massa` quanto poco lo spostano le botte; morendo lascia `gemme`
-  // gemme e un oggetto
-  capo: { da: 0.4, ogni: 45, taglia: 2.4, vita: 10, passo: 0.8, massa: 4, gemme: 6 },
+  // `massa` quanto poco lo spostano le botte, `gelo` quanto meno del suo
+  // peso lo rallenta il freddo; morendo lascia `gemme` gemme e un oggetto
+  capo: { da: 0.4, ogni: 45, taglia: 2.4, vita: 14, passo: 0.8, massa: 12, gelo: 2, gemme: 6 },
 
   // gli oggetti a terra (dati/oggetti.js): compaiono a tempo, sempre
   // dentro lo schermo ma mai sotto i piedi (vicino..lontano, in pixel),

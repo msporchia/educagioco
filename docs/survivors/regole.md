@@ -48,12 +48,16 @@ verso il grumo quando ha un'arma che guarda avanti.
     carte. Nei test: `[data-bomba]`.
 - **I capi**: dopo il 40% della tappa arriva un capo, poi uno ogni 45
   secondi (`CFG.capo`). È uno dei mostri più duri fra quelli ammessi,
-  due volte e mezzo la stazza, con dieci volte la vita, un po' più lento,
-  e le botte lo spostano poco. Si riconosce dall'alone rosso, dalla corona
+  due volte e mezzo la stazza, con quattordici volte la vita, un po' più
+  lento. Le botte lo spostano di un dodicesimo e il freddo gli toglie meno
+  di un decimo del passo: con dieci volte la vita e le spinte a un quarto,
+  comete e ghiaccio lo tenevano lontano finché moriva. Resta la spinta
+  dopo un colpo preso, che è un respiro per chi gioca. Si riconosce dall'alone rosso, dalla corona
   e dalla sua barra della vita sempre accesa. Abbattuto lascia sei gemme e
   un oggetto. La bomba non lo abbatte d'un colpo: gli toglie metà della
-  vita. Misurato su 72 partite per tappa: con i capi le vittorie restano
-  quelle di prima.
+  vita. Misurato su 144 partite per tappa: con i capi, e coi capi più
+  duri, le vittorie restano quelle di prima; col giocatore finto un capo
+  vive una decina di secondi.
 - **I muri**: dopo dodici secondi la prima volta, poi sempre più spesso con
   la marea, una fila di mostri deboli attraversa lo schermo dritta da un lato
   a caso, con **un varco**; l'eroe è più svelto di lei. Un muro prende chi non

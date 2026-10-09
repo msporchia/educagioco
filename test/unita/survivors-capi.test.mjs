@@ -43,6 +43,19 @@ const nuova = () => {
   const prossimo = p.tCapo
   uguale('il prossimo fra il suo intervallo', Math.round(prossimo - p.tempo), CFG.capo.ogni)
 
+  /* le botte e il freddo lo smuovono appena: una cometa che butta via
+     una melma lo sposta di un dodicesimo, il dardo di ghiaccio gli toglie
+     meno di un decimo del passo */
+  const melma = p.mostroNuovo('melma', p.eroe.x + 60, p.eroe.y)
+  p.spingi(melma, 220); p.spingi(capo, 220)
+  controlla('le spinte lo spostano poco', Math.hypot(capo.spx, capo.spy) * 10 <= Math.hypot(melma.spx, melma.spy),
+            `${Math.hypot(capo.spx, capo.spy).toFixed(0)} contro ${Math.hypot(melma.spx, melma.spy).toFixed(0)}`)
+  capo.spx = capo.spy = 0
+  p.gela(melma, 2, 0.6); p.gela(capo, 2, 0.6)
+  controlla('il freddo lo rallenta appena', capo.freno >= 0.9 && melma.freno <= 0.6,
+            `freno ${capo.freno.toFixed(2)} contro ${melma.freno.toFixed(2)}`)
+  capo.freno = 1; capo.gelato = 0
+
   /* la bomba gli toglie metà della vita, non tutta */
   p.eroe.bombe = 1
   capo.x = p.eroe.x + 50; capo.y = p.eroe.y
