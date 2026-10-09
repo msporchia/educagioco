@@ -1076,7 +1076,7 @@
 .sot-eroe-punti.sot-tenue { color: var(--sot-tenue); background: none; font-weight: 600; font-size: 13px }
 .sot-eroe-car { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; overflow-y: auto; min-height: 0 }
 .sot-eroe-car li {
-  display: grid; grid-template-columns: 34px 1fr auto 52px; align-items: center; gap: 8px;
+  display: grid; grid-template-columns: 38px 1fr auto 52px; align-items: center; gap: 8px;
   padding: 6px 6px 6px 8px; border-radius: 12px; background: #ffffff0a; border: 1px solid #ffffff14;
 }
 .sot-car-em { font-size: 26px; text-align: center }
@@ -1107,6 +1107,16 @@
 .sot-eroe-porte { display: flex; gap: 8px; flex: none }
 .sot-eroe-porte .sot-grosso { flex: 1; padding: 11px 8px }
 .sot-eroe-nuovi { color: var(--sot-oro); font-weight: 900; opacity: 1 !important }
+/* i punti da dare e, accanto, «Rifai»: un tasto piccolo che chiede conferma, perché costa gemme */
+.sot-punti-riga { display: flex; align-items: center; gap: 8px; flex: none }
+.sot-punti-riga .sot-eroe-punti { flex: 1; margin: 0 }
+.sot-riassegna {
+  flex: none; padding: 6px 11px; font: inherit; font-size: 12.5px; font-weight: 700; color: var(--sot-oro);
+  background: none; border: 1px solid #ffd23f55; border-radius: 999px; cursor: pointer; white-space: nowrap;
+}
+.sot-riassegna.sot-sicuro { color: #2a1a00; background: var(--sot-oro); border-color: var(--sot-oro) }
+.sot-riassegna:disabled { opacity: .45; cursor: default }
+.sot-gradi em { font-style: normal; font-size: 10px; font-weight: 900; color: var(--sot-oro); margin-left: 2px; line-height: 7px }
 .sot-glifo-energia { vertical-align: -3px; color: #5fb8ff }
 .sot-scambio-abilita .sot-glifo, .sot-stati .sot-glifo { vertical-align: -2px }
 

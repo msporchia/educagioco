@@ -3,6 +3,8 @@
 // parole e colori: i numeri li dà il motore (seLoMetto in motore/corredo.js). Il perché:
 // docs/sotterraneo/rarita.md e docs/sotterraneo/bottega.md.
 import { RARITA } from '../dati/pezzi.js'
+import { requisitoDi } from '../dati/eroi.js'
+import { CARATTERISTICHE } from '../dati/livelli.js'
 
 // i colori di Diablo: bianco il comune, blu il magico, giallo il raro, arancio-oro il leggendario. Una cosa che si
 // consuma (pozioni, torce) non ha rarità e sta nel bianco
@@ -27,9 +29,11 @@ export function tipoDi(c) {
   return ''
 }
 
-// «Spada · a una mano · livello 7 · magico»: la riga sotto il nome
-export const comeEDi = c => [tipoDi(c), c && c.dove ? `livello ${c.liv || 1}` : null, c && c.dove ? GRADINI[gradinoDi(c)].nome : null]
-  .filter(Boolean).join(' · ')
+// «Spada · a una mano · livello 7 · magico · Forza 4»: la riga sotto il nome, col requisito dell'arma (dati/eroi.js)
+const NOMI_CAR = Object.fromEntries(CARATTERISTICHE.map(x => [x.chiave, x.nome]))
+export const requisitoScritto = c => { const r = requisitoDi(c); return r ? `${NOMI_CAR[r.car]} ${r.serve}` : '' }
+export const comeEDi = c => [tipoDi(c), c && c.dove ? `livello ${c.liv || 1}` : null, c && c.dove ? GRADINI[gradinoDi(c)].nome : null,
+  requisitoScritto(c)].filter(Boolean).join(' · ')
 
 const virgola = n => String(n).replace('.', ',')
 

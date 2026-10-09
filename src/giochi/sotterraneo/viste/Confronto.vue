@@ -9,7 +9,7 @@ import { computed } from 'vue'
 import Icona from './Icona.vue'
 import { PEZZI } from '../dati/atlante.js'
 import { COSE } from '../dati/cose.js'
-import { GRADINI, gradinoDi, tipoDi, confrontoDi, ABILITA, POSTO, conArticolo } from './pezzo.js'
+import { GRADINI, gradinoDi, tipoDi, requisitoScritto, confrontoDi, ABILITA, POSTO, conArticolo } from './pezzo.js'
 
 const props = defineProps({
   cosa: { type: Object, required: true },   // il pezzo guardato (COSE[k] con la chiave)
@@ -63,7 +63,7 @@ const mani = computed(() => {
         <small>Addosso</small>
         <div v-for="v in vecchi" :key="v.chiave" class="sot-cart-pezzo" :style="{ '--sot-gradino': colore(v) }" :data-pezzo="v.chiave">
           <i class="sot-tab-icona"><Icona :sprite="v.sprite" :em="v.em" :scala="scala(v)" :emAlto="22" /></i>
-          <span><b>{{ v.nome }}</b><em>{{ tipoDi(v) }} · liv. {{ v.liv || 1 }} · {{ GRADINI[gradinoDi(v)].nome }}</em></span>
+          <span><b>{{ v.nome }}</b><em>{{ tipoDi(v) }} · liv. {{ v.liv || 1 }} · {{ GRADINI[gradinoDi(v)].nome }}<template v-if="requisitoScritto(v)"> · {{ requisitoScritto(v) }}</template></em></span>
         </div>
         <div v-if="!vecchi.length" class="sot-cart-pezzo sot-tab-niente" data-niente>
           <i class="sot-tab-icona"><span class="em">{{ posto.em }}</span></i>
@@ -78,7 +78,7 @@ const mani = computed(() => {
         <small>Questo</small>
         <div class="sot-cart-pezzo" :data-pezzo="cosa.chiave">
           <i class="sot-tab-icona"><Icona :sprite="cosa.sprite" :em="cosa.em" :scala="scala(cosa)" :emAlto="22" /></i>
-          <span><b>{{ cosa.nome }}</b><em>{{ tipoDi(cosa) }} · liv. {{ cosa.liv || 1 }} · {{ GRADINI[gradinoDi(cosa)].nome }}</em></span>
+          <span><b>{{ cosa.nome }}</b><em>{{ tipoDi(cosa) }} · liv. {{ cosa.liv || 1 }} · {{ GRADINI[gradinoDi(cosa)].nome }}<template v-if="requisitoScritto(cosa)"> · {{ requisitoScritto(cosa) }}</template></em></span>
         </div>
         <ul class="sot-cart-numeri">
           <li v-for="r in destra" :key="r.campo" :data-valore="r.campo + '-questo'" :data-n="r.valore"><span class="em">{{ r.em }}</span> {{ r.valore }}

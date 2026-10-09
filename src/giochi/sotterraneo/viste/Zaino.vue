@@ -82,7 +82,10 @@ const note = computed(() => {
   const c = cosa.value
   if (!c) return []
   if (!nelloZaino.value) return []
-  if (c.nonPuoi) return [{ em: '✋', testo: c.nonPuoi + (c.prezzo ? ' Il mercante te lo compra.' : ''), tono: 'ambra', dato: 'data-non-puoi' }]
+  if (c.nonPuoi) {
+    const frase = /[.!?]$/.test(c.nonPuoi) ? c.nonPuoi : `${c.nonPuoi}.`   // due frasi, non una sola senza punto
+    return [{ em: '✋', testo: frase + (c.prezzo ? ' Il mercante te lo compra.' : ''), tono: 'ambra', dato: 'data-non-puoi' }]
+  }
   if (c.prova && c.prova.bloccata) return [{ em: '✋', testo: `${props.mano.nome} vuole tutte e due le mani.`, tono: 'ambra' }]
   return []
 })

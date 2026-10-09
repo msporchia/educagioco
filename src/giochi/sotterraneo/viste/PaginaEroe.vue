@@ -3,10 +3,11 @@
 // (vita, attacco, difesa: non stanno più in cima allo schermo, si leggono qui), le quattro caratteristiche coi punti da
 // dare (un «+» grande che dice prima cosa cambia) e la porta per i Tesori. Nella stessa cornice dello zaino. I numeri
 // li dà il motore (Corredo.seDoUnPunto): qui si mostrano e si dice cosa è stato toccato
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import Cornice from './Cornice.vue'
 import Armato from './Armato.vue'
 import Glifo from './Glifo.vue'
+import Medaglione from './Medaglione.vue'
 
 const props = defineProps({
   eroe: { type: Object, required: true },        // la scheda: nome, sprite, em
@@ -22,8 +23,16 @@ const props = defineProps({
   tratti: { type: Array, default: () => [] },    // quello che la roba addosso dà oltre ai numeri («💎 ×1,5»), sopra
   cambia: { type: Boolean, default: false },     // sopra c'è «Cambia eroe»: la scelta delle avventure; giù si cambia dal velo
   puntiAbilita: { type: Number, default: 0 },    // i punti dell'albero: sul tasto delle abilità
+  costoRiassegnare: { type: Number, default: 0 },   // i punti dati tornano da dare, e si paga in gemme
 })
-defineEmits(['dai', 'tesori', 'cambia', 'chiudi', 'fuori', 'abilita'])
+const emit = defineEmits(['dai', 'tesori', 'cambia', 'chiudi', 'fuori', 'abilita', 'riassegna'])
+// riassegnare costa gemme: il primo tocco chiede, il secondo fa
+const sicuro = ref(false)
+function riassegna() {
+  if (!sicuro.value) { sicuro.value = true; return }
+  sicuro.value = false
+  emit('riassegna')
+}
 
 const quota = computed(() => Math.max(0, Math.min(1, props.fatto / Math.max(1, props.serve))))
 const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: '' }).nome.toLowerCase()
@@ -54,24 +63,31 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
       <span v-for="t in tratti" :key="t">{{ t }}</span>
     </span>
 
-    <p v-if="punti" class="sot-eroe-punti" data-punti-da-dare :data-n="punti">
-      <span class="em">✨</span> {{ punti === 1 ? 'Hai un punto da dare' : `Hai ${punti} punti da dare` }}
-    </p>
-    <p v-else class="sot-eroe-punti sot-tenue">Batti i mostri: a ogni livello, un punto da dare.</p>
+    <div class="sot-punti-riga">
+      <p v-if="punti" class="sot-eroe-punti" data-punti-da-dare :data-n="punti">
+        {{ punti === 1 ? 'Hai un punto da dare' : `Hai ${punti} punti da dare` }}
+      </p>
+      <p v-else class="sot-eroe-punti sot-tenue">A ogni livello, un punto da dare.</p>
+      <!-- riassegnare: i punti dati tornano da dare, a cinque gemme l'uno (niente scelte per sempre) -->
+      <button v-if="costoRiassegnare" type="button" class="sot-riassegna" :class="{ 'sot-sicuro': sicuro }" data-azione="riassegna"
+              :data-costo="costoRiassegnare" :disabled="numeri.gemme < costoRiassegnare" @click="riassegna">
+        {{ sicuro ? 'Sicuro?' : 'Rifai' }} <span class="em">💎</span>{{ costoRiassegnare }}
+      </button>
+    </div>
 
     <!-- il «+» di chi correrebbe troppo avanti è spento, e quella rimasta indietro brilla: «prima un po' di questa» -->
     <ul class="sot-eroe-car">
       <li v-for="c in caratteristiche" :key="c.chiave" :data-caratteristica="c.chiave" :data-valore="c.valore"
           :data-dati="c.dati" :data-indietro="punti && c.indietro ? 1 : null" :data-trattenuta="punti && c.trattenuta ? 1 : null"
           :class="{ 'sot-car-indietro': punti && c.indietro }">
-        <span class="sot-car-em em">{{ c.em }}</span>
+        <Medaglione :glifo="c.glifo" :tinta="c.tinta" tondo :misura="36" />
         <span class="sot-car-nome"><b>{{ c.nome }} <em>{{ c.valore }}</em></b>
           <i v-if="punti && c.indietro" class="sot-car-prima">prima un po' di questa</i>
           <i v-else-if="punti && c.trattenuta">prima un po' di {{ nomeDi(c.dietro) }}</i>
           <i v-else>{{ c.fa }}</i></span>
         <span class="sot-car-cambia em">
           <template v-if="punti && !c.trattenuta">
-            <span v-for="x in c.cambia" :key="x.em" data-cambia>{{ x.em }} {{ x.prima }} → <b>{{ x.dopo }}</b></span>
+            <span v-for="x in c.cambia" :key="x.em || x.glifo" data-cambia><Glifo v-if="x.glifo" :nome="x.glifo" :misura="12" class="sot-glifo-energia" />{{ x.em }} {{ x.prima }} → <b>{{ x.dopo }}</b></span>
           </template>
         </span>
         <button type="button" class="sot-car-piu" :disabled="!punti || c.trattenuta" data-azione="dai" :data-dai="c.chiave"

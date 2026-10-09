@@ -472,11 +472,11 @@ const pagina = computed(() => {
     eroe: c.io, mano: c.mano, mancina: c.mancina,
     livello: q.livello, fatto: q.fatto, serve: q.serve, punti: puntiDaDare(c.crescita),
     numeri: { vita: c.vita ?? c.vitaConLaRoba, vitaMax: c.vitaMax ?? c.vitaConLaRoba, att: c.att, dif: c.dif,
-              fortuna: c.fortuna, gemme: c.gemme },
+              gemme: c.gemme },
     caratteristiche: c.caratteristiche(),
     cambia: !corsa.value, tratti: corsa.value ? [] : robaSopra.value.tratti,
     tesori: { trovati: tesoriTrovati.value.length, tutti: Object.keys(LEGGENDARI).length },
-    puntiAbilita: puntiAbilita(c.crescita),
+    puntiAbilita: puntiAbilita(c.crescita), costoRiassegnare: c.costoRiassegnare,
   }
 })
 // l'albero delle abilità (viste/PaginaAbilita.vue, docs/sotterraneo/abilita.md): i numeri li dà il Corredo
@@ -489,6 +489,7 @@ const albero = computed(() => {
     energia: c.energia ?? c.energiaMax, energiaMax: c.energiaMax,
     armi: Object.fromEntries(['mano', 'mancina'].map(d => [d, c[d]])),
     haLArma: a => c.haLArma(a),
+    gemme: c.gemme, costoDimenticare: c.costoDimenticare,
   }
 })
 // un punto all'albero o una casella cambiata: giù sulla corsa (e la sosta), sopra sull'avventura
@@ -497,7 +498,7 @@ function sullAlbero(fai) {
   if (c) {
     const vitaPrima = c.vitaMax, energiaPrima = c.energiaMax
     if (!fai(c)) return false
-    // Cuore saldo e Pozzo di magia alzano il tetto: quello in più arriva subito, come la tempra
+    // Cuore saldo e l'intelligenza alzano il tetto: quello in più arriva subito, come la tempra; riassegnando può scendere
     c.vita = Math.min(c.vitaMax, c.vita + Math.max(0, c.vitaMax - vitaPrima))
     c.energia = Math.min(c.energiaMax, c.energia + Math.max(0, c.energiaMax - energiaPrima))
     tic.value++
@@ -506,10 +507,14 @@ function sullAlbero(fai) {
   }
   const b = new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
   if (!fai(b)) return false
-  nellAvventura({ crescita: b.crescita }, { subito: true })
+  // anche la roba: riassegnare costa gemme, e quello che non si può più indossare torna in tasca
+  nellAvventura({ crescita: b.crescita, roba: b.roba }, { subito: true })
   tic.value++
   return true
 }
+// riassegnare i punti o dimenticare l'albero: si paga in gemme (docs/sotterraneo/livelli.md, «Riassegnare»)
+function riassegnaPunti() { if (sullAlbero(c => c.riassegnaPunti())) suono.nota(659, 330, 0.3, 'triangle', 0.1) }
+function dimenticaAlbero() { if (sullAlbero(c => c.dimenticaAlbero())) suono.nota(659, 330, 0.3, 'triangle', 0.1) }
 function imparaAbilita(id) {
   if (sullAlbero(c => c.impara(id))) suono.nota(523, 784, 0.18, 'triangle', 0.12)
 }
@@ -790,7 +795,7 @@ function pianoDaProva(c) {
 // festa senza aspettare la fortuna di una sera intera
 function leggendarioDaProva(c) {
   if (new URLSearchParams(location.hash.slice(1)).get('sotterraneo') !== 'leggendario') return
-  const k = pescaLeggendario({ livello: c.livelloDelBottino, rnd: Math.random, tua: x => c.posso(x) })
+  const k = pescaLeggendario({ livello: c.livelloDelBottino, rnd: Math.random, tua: x => c.porta(x) })
   c.posaPezzo(k, { x: Math.floor(c.eroe.x) + 1, y: Math.floor(c.eroe.y) })
 }
 
@@ -892,7 +897,7 @@ function guarda(c) {
             `|${c.mano}|${c.mancina}|${c.corpo}|${c.dito}` +
             `|${c.torciaResta}|${c.torceInScorta}` +   // la torcia cala da sola, camminando
             `|${c.foglio ? c.foglio.cosa || '' : ''}|${c.livello.robe.length}` +   // due cose trovate di fila hanno lo stesso `che`
-            `|${c.crescita.esp}|${c.crescita.forza}.${c.crescita.tempra}.${c.crescita.scorza}.${c.crescita.fortuna}` +
+            `|${c.crescita.esp}|${c.crescita.forza}.${c.crescita.destrezza}.${c.crescita.intelligenza}.${c.crescita.tempra}` +
             `|${c.energia}|${c.pronta}|${JSON.stringify(c.crescita.albero)}|${c.crescita.caselle}` +   // le abilità
             `|${c.livello.robe.reduce((n, r) => n + (r.che === 'mostro' && r.sveglio ? 1 : 0), 0)}`   // il mostro grosso che si sveglia
   if (f !== firma) { firma = f; tic.value++ }
@@ -1559,11 +1564,11 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
       <!-- la pagina dell'eroe e i Tesori, sopra e sotto: si chiudono con la ✕ o toccando fuori (e il tocco cammina) -->
       <PaginaAbilita v-if="albero && !tesoriAperti && !(corsa && foglio && foglio.che === 'scontro')" v-bind="albero"
-                     @impara="imparaAbilita" @casella="casellaAbilita" @eroe="facciaEroe = 'eroe'" @chiudi="paginaEroe = false"
+                     @impara="imparaAbilita" @casella="casellaAbilita" @dimentica="dimenticaAlbero" @eroe="facciaEroe = 'eroe'" @chiudi="paginaEroe = false"
                      @fuori="e => { paginaEroe = false; corsa ? toccoFuori(e) : fuoriDallaBottega(e) }" />
       <PaginaEroe v-else-if="pagina && facciaEroe === 'eroe' && !tesoriAperti && !(corsa && foglio && foglio.che === 'scontro')" v-bind="pagina"
                   @dai="daiUnPunto" @tesori="tesoriAperti = true" @cambia="cambiaEroe" @chiudi="paginaEroe = false"
-                  @abilita="facciaEroe = 'abilita'"
+                  @abilita="facciaEroe = 'abilita'" @riassegna="riassegnaPunti"
                   @fuori="e => { paginaEroe = false; corsa ? toccoFuori(e) : fuoriDallaBottega(e) }" />
       <Tesori v-if="paginaEroe && tesoriAperti" :trovati="tesoriTrovati" @indietro="tesoriAperti = false"
               @chiudi="paginaEroe = false; tesoriAperti = false"

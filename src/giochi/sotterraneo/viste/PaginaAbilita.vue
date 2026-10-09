@@ -19,6 +19,8 @@ const props = defineProps({
   energia: { type: Number, default: 0 },
   energiaMax: { type: Number, default: 10 },
   haLArma: { type: Function, required: true },   // il Corredo: quell'arma ce l'ha in mano?
+  gemme: { type: Number, default: 0 },           // per dimenticare l'albero, che si paga
+  costoDimenticare: { type: Number, default: 0 },
 })
 
 const rami = computed(() => RAMI[props.eroe.chiave] || [])
@@ -27,7 +29,14 @@ const caselle = computed(() => caselleDella(props.crescita).map(id => (id ? NODI
 // la casella toccata, che aspetta la sua abilità; le abilità che si sanno, da proporre
 const casella = ref(null)
 const sapute = computed(() => rami.value.flatMap(r => r.nodi).filter(n => !n.sempre && gradoDi(props.crescita, n.id)))
-const emit = defineEmits(['impara', 'casella', 'eroe', 'chiudi', 'fuori'])
+const emit = defineEmits(['impara', 'casella', 'eroe', 'chiudi', 'fuori', 'dimentica'])
+// dimenticare costa gemme: il primo tocco chiede, il secondo fa (e un tocco altrove ci ripensa)
+const sicuro = ref(false)
+function dimentica() {
+  if (!sicuro.value) { sicuro.value = true; return }
+  sicuro.value = false
+  emit('dimentica')
+}
 function tocca(n) {
   // con una casella aperta, toccare un'abilità saputa nell'albero la mette lì
   if (casella.value != null && !n.sempre && g(n.id)) { scegli(n.id); return }
@@ -64,7 +73,7 @@ const dettaglio = computed(() => {
   return {
     ...n, grado: ora, tinta: tintaDi(n.id), stato: stato(n),
     ora: ora ? n.fa(ora) : null,
-    dopo: ora < GRADI ? n.fa(ora + 1) : null,
+    dopo: n.fa(ora + 1),
     perche: perchéNonImpari(props.crescita, props.eroe.chiave, n.id),
     senzArma: n.arma && !props.haLArma(n.arma) ? n.arma : null,
   }
@@ -79,10 +88,17 @@ const dettaglio = computed(() => {
       <span class="sot-albero-energia" :data-energia="energia"><Glifo nome="energia" :misura="17" /> {{ energia }}/{{ energiaMax }}</span>
     </header>
 
-    <p v-if="punti" class="sot-eroe-punti" data-punti-abilita :data-n="punti">
-      {{ punti === 1 ? 'Hai un punto da imparare' : `Hai ${punti} punti da imparare` }}
-    </p>
-    <p v-else class="sot-eroe-punti sot-tenue">A ogni livello, un punto per l'albero.</p>
+    <div class="sot-punti-riga">
+      <p v-if="punti" class="sot-eroe-punti" data-punti-abilita :data-n="punti">
+        {{ punti === 1 ? 'Hai un punto da imparare' : `Hai ${punti} punti da imparare` }}
+      </p>
+      <p v-else class="sot-eroe-punti sot-tenue">A ogni livello, un punto per l'albero.</p>
+      <!-- dimenticare l'albero: i punti tornano da dare, a cinque gemme l'uno -->
+      <button v-if="costoDimenticare" type="button" class="sot-riassegna" :class="{ 'sot-sicuro': sicuro }" data-azione="dimentica"
+              :data-costo="costoDimenticare" :disabled="gemme < costoDimenticare" @click="dimentica">
+        {{ sicuro ? 'Sicuro?' : 'Rifai' }} <span class="em">💎</span>{{ costoDimenticare }}
+      </button>
+    </div>
 
     <!-- le tre abilità che compaiono nello scontro, sopra la domanda: si tocca una casella e si sceglie cosa metterci -->
     <div class="sot-albero-caselle" data-caselle-albero>
@@ -136,6 +152,7 @@ const dettaglio = computed(() => {
             <b>{{ n.nome }}</b>
             <span class="sot-gradi" aria-hidden="true">
               <i v-for="k in GRADI" :key="k" :class="{ 'sot-pieno': k <= g(n.id) }"></i>
+              <em v-if="g(n.id) > GRADI">{{ g(n.id) }}</em>
             </span>
             <small v-if="quando(n)">{{ quando(n) }}</small>
           </button>
@@ -162,7 +179,7 @@ const dettaglio = computed(() => {
         <button type="button" class="sot-grosso" data-azione="impara" :data-impara="dettaglio.id" :disabled="!!dettaglio.perche"
                 @click="$emit('impara', dettaglio.id)">
           <template v-if="!dettaglio.perche">{{ dettaglio.grado ? 'Migliora' : 'Impara' }} <small>un punto</small></template>
-          <template v-else>{{ dettaglio.grado >= GRADI ? 'Al massimo' : 'Impara' }} <small>{{ dettaglio.grado >= GRADI ? '' : dettaglio.perche }}</small></template>
+          <template v-else>{{ dettaglio.grado ? 'Migliora' : 'Impara' }} <small>{{ dettaglio.perche }}</small></template>
         </button>
       </div>
     </div>
