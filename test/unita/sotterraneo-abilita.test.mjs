@@ -73,7 +73,7 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
 /* ══════════ 3. l'energia ══════════ */
 {
   const { c, m } = scontro('cavaliere', conAlbero(3, { fendente: 1 }), 'spada')
-  uguale('si scende con l\'energia piena', c.energia, ENERGIA)
+  uguale('si scende con l\'energia piena', c.energia, c.energiaMax)
   c.energia = 4
   c.rispondi(false)
   uguale('sbagliare non la toglie e non la dà', c.energia, 4)
@@ -99,11 +99,11 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   const solito = c.colpo(m)
   controlla('si prepara', c.prepara('fendente') && c.pronta === 'fendente')
   c.rispondi(false)
-  controlla('sbagliando resta pronta e non costa', c.pronta === 'fendente' && c.energia === ENERGIA)
+  controlla('sbagliando resta pronta e non costa', c.pronta === 'fendente' && c.energia === c.energiaMax)
   const ossa = m.ossa
   const e = c.rispondi(true)
   controlla('rispondendo giusto parte: il doppio', e.usata && e.usata.id === 'fendente' && ossa - m.ossa === solito * 2, `${ossa - m.ossa} contro ${solito}`)
-  uguale('e costa la sua energia (più la risposta giusta)', c.energia, ENERGIA - NODI.fendente.costo + 1)
+  uguale('e costa la sua energia (più la risposta giusta)', c.energia, c.energiaMax - NODI.fendente.costo + 1)
   controlla('dopo, torna il colpo solito', c.pronta === null)
   c.energia = 1
   controlla('senza energia non si prepara', !c.prepara('fendente') && /energia/.test(c.perchéNonUsi('fendente')))

@@ -6,13 +6,15 @@
    rarità stanno in `unita/sotterraneo-rarita`.
    `node test/esegui.mjs sotterraneo-livelli --niente-build` */
 import { CARATTERISTICHE, sogliaDi, livelloDi, quotaDi, espDi, guastiDeiLivelli, VITA_PER_TEMPRA, PUNTI_PER_LIVELLO,
-         DOTE_OGNI } from '../../src/giochi/sotterraneo/dati/livelli.js'
-import { EROI, eroeDi, guastiDegliEroi } from '../../src/giochi/sotterraneo/dati/eroi.js'
+         DOTE_OGNI, TEMPRA_PER_DIFESA, SCHIVATA_PER_DESTREZZA, GEMME_PER_RIASSEGNARE } from '../../src/giochi/sotterraneo/dati/livelli.js'
+import { EROI, eroeDi, guastiDegliEroi, requisitoDi, REQUISITO_DEL_GRADINO } from '../../src/giochi/sotterraneo/dati/eroi.js'
+import { COSE, chiaveDelPezzo, aLivello } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { CRESCITA_NUOVA, rileggiCrescita, puntiDaDare, dai, stannoInsieme, chiTrattiene, puoiDare, daiTutti,
          caratteristica, crescitaA, SCARTO_AMMESSO } from '../../src/giochi/sotterraneo/motore/crescita.js'
-import { Corredo, schedaConLaRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
+import { Corredo, schedaConLaRoba, ROBA_VUOTA } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
@@ -24,7 +26,7 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   const g = [...guastiDeiLivelli(), ...guastiDegliEroi()]
   controlla('i livelli e gli eroi stanno in piedi', !g.length, g.join(' · '))
   stessaLista('quattro caratteristiche coi nomi che un bambino capisce', CARATTERISTICHE.map(c => c.nome),
-              ['Forza', 'Tempra', 'Scorza', 'Fortuna'])
+              ['Forza', 'Destrezza', 'Intelligenza', 'Tempra'])
   uguale('si comincia al livello 1', livelloDi(0), 1)
   uguale('sulla soglia si è al livello nuovo', livelloDi(sogliaDi(5)), 5)
   uguale('un punto prima no', livelloDi(sogliaDi(5) - 1), 4)
@@ -77,21 +79,29 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   controlla('un\'avventura con esperienza è cominciata', cominciata({ tappa: 0, stelle: {}, crescita: { esp: 3 } }))
 }
 
-/* ══════════ 4. le caratteristiche e quanto rendono ══════════ */
+/* ══════════ 4. le caratteristiche e quanto rendono ══════════
+   Forza, destrezza, intelligenza e tempra (9 ottobre 2026: via scorza e fortuna). L'attacco viene dalla
+   caratteristica dell'arma in mano; a tutti la forza dà difesa, la destrezza schivata, l'intelligenza energia. */
 {
   for (const e of EROI) {
     const nudo = new Corredo({ eroe: e.chiave })
-    uguale(`${e.chiave}: la forza di partenza è il suo braccio`, caratteristica(e, CRESCITA_NUOVA(), 'forza'), e.att)
-    uguale(`${e.chiave}: la scorza di partenza vale la sua difesa (due punti per uno)`, Math.floor(caratteristica(e, CRESCITA_NUOVA(), 'scorza') / 2), e.dif)
     uguale(`${e.chiave}: al livello 1 i numeri sono quelli di sempre`, `${nudo.att}/${nudo.dif}/${nudo.vitaConLaRoba}`, `${e.att}/${e.dif}/${e.vita}`)
   }
   const liv = 6, base = { esp: sogliaDi(liv) }
-  const con = k => new Corredo({ eroe: 'elfa', crescita: { ...base, [k]: 4 } })
-  const zero = new Corredo({ eroe: 'elfa', crescita: base })
-  uguale('quattro punti di forza: quattro di attacco', con('forza').att - zero.att, 4)
-  uguale('quattro di tempra: dodici di vita', con('tempra').vitaConLaRoba - zero.vitaConLaRoba, 4 * VITA_PER_TEMPRA)
-  uguale('quattro di scorza: due di difesa', con('scorza').dif - zero.dif, 2)
-  controlla('quattro di fortuna: le gemme valgono di più', con('fortuna').valoreGemme > zero.valoreGemme)
+  const con = (k, mano = null) => new Corredo({ eroe: 'elfa', crescita: { ...base, [k]: 4 }, roba: { ...ROBA_VUOTA(), mano } })
+  const zero = (mano = null) => new Corredo({ eroe: 'elfa', crescita: base, roba: { ...ROBA_VUOTA(), mano } })
+  uguale('con la spada, quattro punti di forza: quattro di attacco', con('forza', 'spada').att - zero('spada').att, 4)
+  uguale('con l\'arco la forza non tocca l\'attacco', con('forza', 'arco-corto').att - zero('arco-corto').att, 0)
+  uguale('con l\'arco, quattro di destrezza: quattro di attacco', con('destrezza', 'arco-corto').att - zero('arco-corto').att, 4)
+  uguale('a mani nude conta la caratteristica più alta', con('intelligenza').att, eroeDi('elfa').att + 4)
+  uguale('la tempra dà difesa, una ogni tre punti', con('tempra').dif - zero().dif, Math.floor(4 / TEMPRA_PER_DIFESA))
+  uguale('la forza no', con('forza').dif - zero().dif, 0)
+  uguale('la destrezza fa schivare', con('destrezza').schivata - zero().schivata, 4 * SCHIVATA_PER_DESTREZZA)
+  uguale('l\'intelligenza alza l\'energia', con('intelligenza').energiaMax - zero().energiaMax, 4)
+  uguale('quattro di tempra: dodici di vita', con('tempra').vitaConLaRoba - zero().vitaConLaRoba, 4 * VITA_PER_TEMPRA)
+  uguale('la fortuna non è più una caratteristica: viene solo dai pezzi', zero().fortuna, 0)
+  const mago = new Corredo({ eroe: 'mago' }), cavaliere = new Corredo({ eroe: 'cavaliere' })
+  controlla('il mago parte con più energia del cavaliere', mago.energiaMax > cavaliere.energiaMax, `${mago.energiaMax} ${cavaliere.energiaMax}`)
   // le classi crescono diverse: la vita per livello e la dote
   const a5 = n => new Corredo({ eroe: n, crescita: { esp: sogliaDi(1 + DOTE_OGNI) } })
   controlla('salendo, il cavaliere prende più vita del mago', a5('cavaliere').vitaConLaRoba - eroeDi('cavaliere').vita >
@@ -99,9 +109,46 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   for (const e of EROI)
     uguale(`${e.chiave}: ogni ${DOTE_OGNI} livelli un punto da sé nella sua dote (${e.dote})`,
            caratteristica(e, { esp: sogliaDi(1 + DOTE_OGNI) }, e.dote) - (e.parte[e.dote] || 0), 1)
-  stessaLista('le doti non sono tutte uguali', new Set(EROI.map(e => e.dote)).size > 2, true)
+  stessaLista('le doti non sono tutte uguali', new Set(EROI.map(e => e.dote)).size > 1, true)
   const scheda = schedaConLaRoba('nano', null, { esp: sogliaDi(4) })
   uguale('la scheda delle avventure dice il livello', scheda.livello, 4)
+  // una crescita di prima (con scorza e fortuna) tiene esperienza e albero, e i punti tornano da dare
+  const vecchia = rileggiCrescita({ esp: sogliaDi(6), forza: 3, tempra: 1, scorza: 1, fortuna: 0, albero: { fendente: 1 } }, 'cavaliere')
+  controlla('una crescita di prima: i punti tornano da dare', vecchia.forza === 0 && puntiDaDare(vecchia) === 5 && vecchia.albero.fendente === 1,
+            JSON.stringify(vecchia))
+}
+
+/* ══════════ 4b. i requisiti delle armi (rigidi: sotto non si indossa) ══════════ */
+{
+  const r = requisitoDi(COSE[chiaveDelPezzo('spadone', 13)])
+  controlla('lo spadone vuole forza, tanta quanto il gradino e il livello', r && r.car === 'forza' && r.serve === REQUISITO_DEL_GRADINO[2] + 3, JSON.stringify(r))
+  uguale('l\'arco vuole destrezza', requisitoDi(COSE['arco-lungo']).car, 'destrezza')
+  uguale('la bacchetta intelligenza', requisitoDi(COSE[chiaveDelPezzo('scettro', 9)]).car, 'intelligenza')
+  uguale('uno scudo niente', requisitoDi(COSE['scudo-ferro']), null)
+  const debole = new Corredo({ eroe: 'cavaliere', crescita: { esp: sogliaDi(14) }, roba: { ...ROBA_VUOTA(), zaino: [chiaveDelPezzo('spadone', 30)] } })
+  controlla('sotto il requisito non si indossa, e si dice perché', !debole.posso(debole.zaino[0]) && /Serve Forza/.test(debole.perchéNo(debole.zaino[0])),
+            debole.perchéNo(debole.zaino[0]))
+  uguale('la tasca resta piena: non si mette addosso', debole.indossaDallaTasca(0).che, 'niente')
+  controlla('ma il bottino resta della classe (la porta)', debole.porta(debole.zaino[0]))
+  uguale('il mercante lo propone al livello che si impugna', debole.posso(aLivello('spadone', debole.livelloPortabile('spadone', 30))), true)
+  // la storia: la roba attesa a ogni discesa si indossa con la crescita attesa
+  const fuori = []
+  for (const e of EROI) for (let k = 0; k <= CAMPAGNA.length; k++) {
+    const c = new Corredo({ eroe: e.chiave, roba: robaAttesa(e.chiave, k), crescita: crescitaAttesa(e.chiave, k) })
+    for (const x of [c.mano, c.mancina].filter(Boolean)) if (!c.posso(x)) fuori.push(`${e.chiave} ${k}: ${x} (${c.perchéNo(x)})`)
+    for (const x of c.zaino) if (COSE[x] && COSE[x].dove === 'mano' && !c.posso(x)) fuori.push(`${e.chiave} ${k}: ${x} in tasca`)
+  }
+  uguale('la roba della storia si indossa con i punti dati come il banco', fuori.join(' · '), '')
+}
+
+/* ══════════ 4c. riassegnare si paga in gemme ══════════ */
+{
+  const c = new Corredo({ eroe: 'nano', crescita: { esp: sogliaDi(6), forza: 3, tempra: 2 }, roba: { ...ROBA_VUOTA(), gemme: 30 } })
+  uguale('cinque gemme a punto', c.costoRiassegnare, 5 * GEMME_PER_RIASSEGNARE)
+  controlla('si riassegna: i punti tornano da dare, le gemme calano', c.riassegnaPunti() && puntiDaDare(c.crescita) === 5 && c.gemme === 5)
+  uguale('niente da riassegnare, niente da pagare', c.riassegnaPunti(), false)
+  const povero = new Corredo({ eroe: 'nano', crescita: { esp: sogliaDi(6), forza: 3, tempra: 2 }, roba: { ...ROBA_VUOTA(), gemme: 4 } })
+  uguale('senza gemme non si riassegna', povero.riassegnaPunti(), false)
 }
 
 /* ══════════ 5. il bilanciamento dei punti (la regola dell'utente) ══════════
@@ -114,8 +161,8 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   uguale('50 e 30 sì', stannoInsieme(50, 30), true)
   uguale('al bordo: otto di differenza sì', stannoInsieme(SCARTO_AMMESSO, 0), true)
   uguale('nove no', stannoInsieme(SCARTO_AMMESSO + 1, 0), false)
-  const cr = { esp: sogliaDi(20), forza: 9, tempra: 1, scorza: 1, fortuna: 1 }
-  uguale('il decimo punto di forza con le altre a uno no: trattiene la prima delle più basse', chiTrattiene(cr, 'forza'), 'tempra')
+  const cr = { esp: sogliaDi(20), forza: 9, destrezza: 1, intelligenza: 1, tempra: 1 }
+  uguale('il decimo punto di forza con le altre a uno no: trattiene la prima delle più basse', chiTrattiene(cr, 'forza'), 'destrezza')
   uguale('e dai() lo rifiuta', dai(cr, 'forza'), null)
   controlla('alla tempra sì', puoiDare(cr, 'tempra') && dai(cr, 'tempra').tempra === 2)
   // un «+» acceso c'è sempre: diecimila mani di punti dati a caso, finché si può
@@ -148,14 +195,14 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
 
 /* ══════════ 6. la pagina dell'eroe ══════════ */
 {
-  const c = new Corredo({ eroe: 'nano', crescita: { esp: sogliaDi(14), forza: 9, tempra: 1, scorza: 1, fortuna: 0 } })
+  const c = new Corredo({ eroe: 'nano', crescita: { esp: sogliaDi(14), forza: 9, destrezza: 1, intelligenza: 0, tempra: 1 } })
   const car = Object.fromEntries(c.caratteristiche().map(x => [x.chiave, x]))
-  controlla('la forza ha il «+» spento: la fortuna è rimasta indietro', car.forza.trattenuta && car.forza.dietro === 'fortuna')
-  controlla('e la fortuna lo dice («prima un po\' di questa»)', car.fortuna.indietro && !car.fortuna.trattenuta)
+  controlla('la forza ha il «+» spento: l\'intelligenza è rimasta indietro', car.forza.trattenuta && car.forza.dietro === 'intelligenza')
+  controlla('e l\'intelligenza lo dice («prima un po\' di questa»)', car.intelligenza.indietro && !car.intelligenza.trattenuta)
   controlla('la tempra dice prima cosa cambia', car.tempra.cambia.some(x => x.em === '❤️' && x.dopo - x.prima === VITA_PER_TEMPRA))
-  controlla('la scorza va a mezzi scudi', car.scorza.cambia.some(x => x.em === '🛡️' && /½/.test(String(x.prima) + String(x.dopo))),
-            JSON.stringify(car.scorza.cambia))
-  controlla('la fortuna si legge sulle gemme', car.fortuna.cambia.some(x => x.em === '💎'))
+  controlla('l\'intelligenza dice l\'energia', car.intelligenza.cambia.some(x => x.glifo === 'energia' && x.dopo - x.prima === 1))
+  controlla('la destrezza dice la schivata', car.destrezza.cambia.some(x => x.em === '🌀'))
+  controlla('ogni caratteristica ha il suo medaglione', c.caratteristiche().every(x => x.glifo && x.tinta))
   // giù: dare un punto di tempra alza subito vita e tetto
   const d = new Corsa(CAMPAGNA[0], { seme: 2, eroe: 'mago', rnd: seminato(2), crescita: { esp: sogliaDi(3) } })
   const v = d.vita, t = d.vitaMax

@@ -5,7 +5,7 @@
    grosso in fondo a ogni discesa e il suo bottino sicuro, il leggendario
    che si festeggia e finisce fra i Tesori, i mercanti a tono.
    `node test/esegui.mjs sotterraneo-rarita --niente-build` */
-import { COSE, chiaveDelPezzo, baseDi, livelloDelPezzo, raritaDi, nomeDelPezzo, guastiDelleCose } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { COSE, chiaveDelPezzo, aLivello, baseDi, livelloDelPezzo, raritaDi, nomeDelPezzo, guastiDelleCose } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { RARITA, ABILITA_DEI_PEZZI, LEGGENDARI, DEI_GROSSI, UNICI } from '../../src/giochi/sotterraneo/dati/pezzi.js'
 import { GROSSI, GROSSO_DELLA_DISCESA, GROSSO_OGNI, grossoDi, guastiDeiGrossi } from '../../src/giochi/sotterraneo/dati/grossi.js'
 import { CAMPAGNA, L_ABISSO } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -172,7 +172,9 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
 {
   const b = new Bottega({ eroe: 'cavaliere', finite: 3, crescita: { esp: sogliaDi(7) }, rnd: seminato(4) })
   const roba = [...b.banco('armaiolo').roba, ...b.vetrina('armaiolo').map(v => v.chiave)]
-  controlla('l\'armaiolo porta la roba al livello dell\'eroe', roba.length && roba.every(k => livelloDelPezzo(k) === 7), roba.join(', '))
+  // al livello dell'eroe, o più sotto se lì il requisito non si raggiunge: un'arma da impugnare, non da guardare
+  controlla('l\'armaiolo porta la roba al livello dell\'eroe', roba.length && roba.every(k => livelloDelPezzo(k) === 7 ||
+            (b.posso(k) && !b.posso(aLivello(k, 7)))), roba.join(', '))
   let magici = 0, tutti = 0
   for (let s = 0; s < 40; s++) {
     const x = new Bottega({ eroe: 'nano', finite: 2, crescita: { esp: sogliaDi(5) }, rnd: seminato(s + 1) })

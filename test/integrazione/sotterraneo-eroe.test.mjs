@@ -2,8 +2,8 @@
    L'EROE CHE SALE DI LIVELLO, IL MOSTRO GROSSO E UN LEGGENDARIO, COL DITO
 
    (docs/sotterraneo/livelli.md, grossi.md, rarita.md)
-   Sopra: il «+» d'oro sul globo dell'esperienza dice che ci sono punti
-   da dare; la pagina dell'eroe si apre dal globo e dal ritratto, dice
+   Sopra: il «+» d'oro sul livello dice che ci sono punti da dare (e
+   «Rifai», che costa gemme); la pagina dell'eroe si apre dal globo e dal ritratto, dice
    livello, esperienza e i numeri, e il «+» di una caratteristica che
    correrebbe troppo avanti è spento mentre quella rimasta indietro
    brilla (la regola del bilanciamento); un punto dato si vede subito; i
@@ -66,7 +66,7 @@ await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: 1, libera: false, stelle: { 0: 3 },
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: avventura({
-      crescita: { esp: sogliaDi(12), forza: 9, tempra: 0, scorza: 0, fortuna: 0 }, tesori: ['zanna-del-drago'] }) } } } },
+      crescita: { v: 2, esp: sogliaDi(12), forza: 9, destrezza: 0, intelligenza: 0, tempra: 0 }, tesori: ['zanna-del-drago'] }) } } } },
 })
 await scegli(page, 'sotterraneo')
 await page.waitForSelector('[data-terra]', { timeout: 5000 })
@@ -116,8 +116,13 @@ const att = Number(await page.locator('[data-numero="att"] b').textContent())
 controlla('e i numeri che decidono uno scontro: attacco e difesa stanno qui', att > 3 && (await page.locator('[data-numero="dif"]').count()) === 1, String(att))
 uguale('la forza correrebbe troppo avanti: il suo «+» è spento', await riga('forza').locator('[data-azione="dai"]').isDisabled(), true)
 uguale('e lo dice', await riga('forza').getAttribute('data-trattenuta'), '1')
-uguale('la tempra, rimasta indietro, brilla', await riga('tempra').getAttribute('data-indietro'), '1')
-controlla('«prima un po\' di questa»', /prima un po' di questa/.test(await riga('tempra').innerText()), await riga('tempra').innerText())
+uguale('la destrezza, rimasta indietro, brilla', await riga('destrezza').getAttribute('data-indietro'), '1')
+controlla('«prima un po\' di questa»', /prima un po' di questa/.test(await riga('destrezza').innerText()), await riga('destrezza').innerText())
+uguale('quattro caratteristiche: forza, destrezza, intelligenza, tempra',
+       (await page.locator('[data-caratteristica]').evaluateAll(es => es.map(e => e.dataset.caratteristica))).join(), 'forza,destrezza,intelligenza,tempra')
+// riassegnare costa cinque gemme a punto: nove punti dati, 45 gemme, e se ne hanno 40
+uguale('«Rifai» dice quanto costa', await page.locator('[data-azione="riassegna"]').getAttribute('data-costo'), '45')
+uguale('e senza abbastanza gemme è spento', await page.locator('[data-azione="riassegna"]').isDisabled(), true)
 await scatto(page, 'eroe-pagina')
 {
   const vita0 = Number(await page.locator('[data-numero="vita"] b').textContent())

@@ -30,6 +30,7 @@ import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { gioca, costoDeiPiani, finoADove } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { crescitaA } from '../../src/giochi/sotterraneo/motore/crescita.js'
 import { scrivi, leggi, dice, VERSIONE } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { TAPPE_DEL_GIOCO } from '../../src/data/portata-giochi.js'
 import manifesto from '../../src/giochi/sotterraneo/gioco.js'
@@ -417,10 +418,13 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
 
   /* la forbice: se «tutto» costasse quanto «il minimo», in mezzo non ci
      sarebbe più niente da scegliere — ed è la scelta il motivo per cui
-     un posto è un posto */
-  const t = c.tutto.filter(n => n > 0)
-  const mediaT = t.reduce((a, b) => a + b, 0) / t.length
-  const mediaM = piani.reduce((a, b) => a + b, 0) / piani.length
+     un posto è un posto. Si misura con l'eroe del livello con cui
+     all'abisso si arriva (12, LIVELLI_ATTESI): dai requisiti delle armi
+     (9 ottobre) un eroe di livello 1 non impugna il bottino dell'abisso,
+     e il suo «minimo» costa come un «tutto» */
+  const c12 = costoDeiPiani(L_ABISSO, { fino: 11, seme: 41, crescita: crescitaA(EROI[0], 12) })
+  const media = x => x.reduce((a, b) => a + b, 0) / x.length
+  const mediaT = media(c12.tutto.filter(n => n > 0)), mediaM = media(c12.minimo.filter(n => n > 0))
   controlla('chi ripulisce un piano paga molto di più', mediaT > mediaM * 1.8,
             `minimo ${mediaM.toFixed(1)}, tutto ${mediaT.toFixed(1)}`)
 
