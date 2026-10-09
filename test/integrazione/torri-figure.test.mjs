@@ -421,10 +421,10 @@ await scatto(page, 'castello-radura')
       m.tabellone.stato.onda = o - 1
       T.chiamaOnda()
       const fine = Date.now() + 8000
-      let e = null, m = null
+      let e = null, med = null
       // si apre la scheda di chi è in campo, toccando il suo medaglione sullo stendardo
-      while (!(m = document.querySelector('[data-stendardo] [data-in-campo]')) && Date.now() < fine) await attesa(100)
-      if (m) m.click()
+      while (!(med = document.querySelector('[data-stendardo] [data-in-campo]')) && Date.now() < fine) await attesa(100)
+      if (med) med.click()
       while (!(e = document.querySelector('[data-scheda-abilita]')) && Date.now() < fine) await attesa(100)
       if (!e) return null
       const fondo = n => getComputedStyle(n).backgroundColor
