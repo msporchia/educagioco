@@ -56,9 +56,13 @@ const vaiA = meta => camminaVerso(page, meta, { tocca })
 const pallino = nome => page.locator(`[data-pallino="${nome}"]`)
 async function apriIlPosto(chiave) {
   const nome = POSTO_DI[chiave]
-  await vaiA(POSTI[nome].piede)
-  await toccaIl(`[data-posto="${nome}"]`)
-  await page.waitForSelector(`[data-fumetto-di="${nome}"]`, { timeout: 15000 })
+  // sotto carico un tocco può cadere mentre la vista ancora scorre: si riprova, come farebbe un bambino
+  for (let n = 0; n < 3 && !(await page.locator(`[data-fumetto-di="${nome}"]`).count()); n++) {
+    await vaiA(POSTI[nome].piede)
+    await toccaIl(`[data-posto="${nome}"]`)
+    await page.waitForSelector(`[data-fumetto-di="${nome}"]`, { timeout: 8000 }).catch(() => {})
+  }
+  await page.waitForSelector(`[data-fumetto-di="${nome}"]`, { timeout: 2000 })
   await attendi(page, 300)
 }
 

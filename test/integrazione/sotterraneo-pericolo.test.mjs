@@ -172,7 +172,19 @@ uguale('e due pozioni sulla casella', await pozioni(), 2)
 const vita0 = await numeroDel('vita')
 await sbagliaEFermati()
 {
+  // il tocco cieco per primo: le prove qui sotto fanno passare i 320 ms
   const subito = await stop().getAttribute('data-pronto')   // null: i primi 320 ms
+  if (subito === null) {
+    // il dito ancora premuto sulla risposta lascia un click: nei primi 320 ms non conta. Un tocco secco, senza
+    // tenere il dito giù: col tocco normale (60 ms) sotto carico il click arrivava a finestra già chiusa
+    const b = await page.locator('[data-azione="ringhio-bevi"]').boundingBox()
+    const p = { x: b.x + b.width / 2, y: b.y + b.height / 2 }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [p] })
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+    await attendi(page, 80)
+    uguale('un tocco subito non sceglie niente', await stop().count(), 1)
+    uguale('né beve', await pozioni(), 2)
+  } else nota('(la pagina è lenta: la finestra cieca era già passata)')
   uguale('lo stop compare con la ragione «duro»', await stop().getAttribute('data-perche'), 'duro')
   uguale('al posto della domanda', await page.locator('.sot-domanda').count(), 0)
   uguale('e del tasto «scappo via» di sempre', await page.locator('[data-azione="scappa"]').count(), 0)
@@ -182,13 +194,6 @@ await sbagliaEFermati()
   controlla('lo scontro è ancora lì, modale', await page.locator('.sot-velo-scontro').count() === 1)
   controlla('la vita è scesa', (await numeroDel('vita')) < vita0, `${vita0} → ${await numeroDel('vita')}`)
   await scatto(page, 'pericolo')
-  if (subito === null) {
-    // il dito ancora premuto sulla risposta lascia un click: nei primi 320 ms non conta
-    await toccaIl('[data-azione="ringhio-bevi"]')
-    await attendi(page, 80)
-    uguale('un tocco subito non sceglie niente', await stop().count(), 1)
-    uguale('né beve', await pozioni(), 2)
-  } else nota('(la pagina è lenta: la finestra cieca era già passata)')
 }
 await page.waitForSelector('[data-ringhio][data-pronto]', { timeout: 3000 })
 await scatto(page, 'pericolo-pronto')
