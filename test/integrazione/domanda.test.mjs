@@ -32,7 +32,7 @@
    `node test/esegui.mjs domanda`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, leggiProfilo, scegli,
+import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, leggiProfilo, scegli, scegliAttacco,
          scendiNelSotterraneo, scegliAvventura } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -521,7 +521,7 @@ let inBattaglia = false
 for (let i = 0; i < 24 && !inBattaglia; i++) {
   await versoEst()
   await attendi(page, 800)
-  inBattaglia = await page.locator('.sot-velo').count() > 0
+  inBattaglia = await page.locator('.sot-velo, .sot-velo-scontro').count() > 0
   if (!inBattaglia && await page.locator('.sot-foglio').count())
     await page.locator('.sot-foglio .sot-grosso').last().click()
 }
@@ -559,6 +559,7 @@ controlla('lo scontro è una modale in mezzo allo schermo',
 let risposteDate = 0
 let diFretta = 0
 for (let giro = 0; giro < 2; giro++) {
+  await scegliAttacco(page)   // lo scontro è in due fasi: prima il colpo, poi la domanda (docs/sotterraneo/abilita.md)
   const cEDaRispondere = await page.locator('.qz-tasto').count() > 0
   controlla(`la ${giro + 1}ª domanda è lì da rispondere`, cEDaRispondere)
   if (!cEDaRispondere) break
