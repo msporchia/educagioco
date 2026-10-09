@@ -28,7 +28,7 @@ export const CALMA = 3   // il tempo di uscire dalla stanza, o lo scontro si ria
 export const ARREDI = {
   appeso: ['stendardo', 'candelabro'],
   posato: ['barile', 'cassa', 'ossa', 'teschio-scena'],
-  fuoco: ['braciere', 'lanterna'],
+  fuoco: ['lanterna'],
 }
 
 export const ARREDO_DICE = {
@@ -36,7 +36,6 @@ export const ARREDO_DICE = {
   cassa: 'Una cassa sfondata: dentro non c\'è più niente.',
   ossa: 'Vecchie ossa. Meglio non chiedersi di chi.',
   'teschio-scena': 'Un teschio. Ti guarda male e basta.',
-  braciere: 'Un braciere acceso. Scalda, e fa luce.',
   lanterna: 'Una lanterna appesa. La luce ce l\'hai già.',
   stendardo: 'Uno stendardo scolorito, di nessuno.',
   candelabro: 'Un candelabro con tre candele storte.',

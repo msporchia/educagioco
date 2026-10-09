@@ -82,14 +82,13 @@ export const SCENARI = {
     // l'arredo generico (ARREDI in dati/mondo.js) cambia pelle e frase: restano le stesse regole di dove sta e di chi fa luce
     arredo: {
       barile: 'fornace-botte', cassa: 'fornace-carbone', ossa: 'fornace-incudine', 'teschio-scena': 'fornace-gargoyle-0',
-      braciere: 'fornace-calderone', lanterna: 'fornace-calderone', stendardo: 'fornace-rastrelliera', candelabro: 'fornace-banco',
+      lanterna: 'fornace-calderone', stendardo: 'fornace-rastrelliera', candelabro: 'fornace-banco',
     },
     dice: {
       barile: 'Una botte di ferro, vuota.',
       cassa: 'Carbone. Nero, e non scalda più.',
       ossa: 'Un\'incudine: troppo pesante per spostarla.',
       'teschio-scena': 'Un gargoyle di pietra. Ti guarda male e basta.',
-      braciere: 'Un calderone sulle braci. Scalda, e fa luce.',
       lanterna: 'Un calderone sulle braci. Scalda, e fa luce.',
       stendardo: 'Catene appese, di nessuno.',
       candelabro: 'Un banco da fabbro, con gli attrezzi.',

@@ -37,7 +37,6 @@
     "chiave-oro": { "da": [284, 83], "cella": [9, 15], "buchi": true },
     "torcia": { "da": [209, 175], "cella": [9, 15] },
 
-    "braciere": { "da": [303, 151], "cella": [12, 11] },
     "candelabro": { "da": [385, 202], "cella": [13, 11] },
     "lanterna": { "da": [289, 175], "cella": [11, 16] },
     "stendardo": { "da": [357, 257], "cella": [18, 25] },

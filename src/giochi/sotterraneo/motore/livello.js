@@ -277,7 +277,7 @@ export class Livello {
 
   // roba che non fa niente (barili, ossa...): sta contro le pareti, non in mezzo dove si cammina
   arredaLeStanze() {
-    // uno solo acceso per stanza: due bracieri nella stessa cantina illuminano tutto
+    // uno solo acceso per stanza: due lanterne nella stessa cantina illuminano tutto
     const { appeso: APPESO, posato: POSATO, fuoco: FUOCO } = ARREDI
     const pesca = quali => quali[Math.floor(this.rnd() * quali.length)]
 

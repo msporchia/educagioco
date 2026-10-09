@@ -130,13 +130,14 @@ in Node) e si prova in `unita/muri-sotterraneo`.
   suo segno non si usano più dal 7 ottobre 2026: il mercante è salito sulla
   terra di sopra ([terra-di-sopra.md](terra-di-sopra.md#i-mercanti)).
 - **L'arredo cambia pelle e frase con lo scenario**: il piano decide *cosa*
-  (`barile`, `ossa`, `braciere`... in `ARREDI`, `dati/mondo.js`) e dove sta e
+  (`barile`, `ossa`, `lanterna`... in `ARREDI`, `dati/mondo.js`) e dove sta e
   chi fa luce; `arredo` nella voce di `SCENARI` dice con quale sprite si
   disegna e `dice` cosa risponde a chi lo tocca. Vuoti, vale quello di tutti
   (cantine, cripta). La fornace: botte, carbone, incudine, gargoyle,
   calderone, rastrelliera, banco.
-- **L'arredo** (barili, casse, ossa, uno stendardo, un braciere che fa luce)
+- **L'arredo** (barili, casse, ossa, uno stendardo, una lanterna che fa luce)
   non si tocca, non blocca e non vale niente: serve a far sembrare che qui
   sotto ci abbia vissuto qualcuno. Un sotterraneo di stanze vuote si legge
-  come un diagramma. È disegnato più spento delle cose toccabili, che hanno un
-  filo di luce dorato.
+  come un diagramma. È disegnato più spento delle cose toccabili, che restano
+  come sono. Il braciere è stato tolto: a quella misura non si capiva cosa
+  fosse.
