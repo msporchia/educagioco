@@ -73,6 +73,8 @@ const VELOCE = 230                  // pixel della mappa al secondo
 const eroe = reactive({ x: 0, y: 0, i: null, cammina: false, fr: 0, specchio: false })
 let viaggio = null                  // le tappe che restano da raggiungere, [[x, y, i]]
 
+// i torrioni in giro attorno al castello, come stanno sulla mappa
+const GIRO = ['libera-bosco', 'libera-sotterraneo', 'libera-mura', 'libera-palude']
 const postoDi = i => (typeof i === 'string' ? LIBERE_POSTI[i] : POSTI[i])
 function mettiA(i) {
   [eroe.x, eroe.y] = postoDi(i); eroe.i = i; ultimo = i
@@ -87,6 +89,18 @@ function vai(a) {
   if (eroe.i === null) return mettiA(a)
   let qui_ = eroe.i
   const punti = []
+  // da un torrione all'altro si gira attorno al castello, dalla parte più corta
+  if (typeof qui_ === 'string' && typeof a === 'string') {
+    const da = GIRO.indexOf(qui_), fino = GIRO.indexOf(a)
+    if (da < 0 || fino < 0 || da === fino) return
+    const avanti = (fino - da + GIRO.length) % GIRO.length, passo = avanti <= GIRO.length / 2 ? 1 : -1
+    for (let j = da; j !== fino;) {
+      j = (j + passo + GIRO.length) % GIRO.length
+      punti.push([...LIBERE_POSTI[GIRO[j]], GIRO[j]])
+    }
+    viaggio = punti
+    return
+  }
   // da un torrione si torna alla sua isola per il ponte
   if (typeof qui_ === 'string') {
     if (qui_ === a) return

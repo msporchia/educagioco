@@ -31,7 +31,8 @@ introduttiva è quella brutta»).
   da fare. Toccata una tappa aperta ci va a piedi, scudo dopo scudo — gli
   scudi stanno sul sentiero e ai capi dei ponti, quindi così resta sulla
   strada — e la vista lo segue. A un torrione ci va dalla tappa della sua
-  isola per il suo ponte (`centro` nel foglietto). Dopo una tappa vinta parte da dov'era e va
+  isola per il suo ponte (`centro` nel foglietto); da un torrione all'altro
+  gira attorno alle mura, dalla parte più corta, senza tornare sulle isole. Dopo una tappa vinta parte da dov'era e va
   alla prossima. Dove si è fermato dura la sessione, non va nel profilo.
 - **Si naviga**: la mappa è larga almeno 760 px, il doppio del telefono,
   perché si senta enorme; si trascina in tutte e due le direzioni e si apre
