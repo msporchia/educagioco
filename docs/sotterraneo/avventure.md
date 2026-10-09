@@ -19,7 +19,7 @@ campagna), `Gioco.vue` (chi legge e scrive), `viste/Eroi.vue` (la scelta).
   discese già passate per lei (`aperta(…, fatte)` con le discese
   dell'avventura): il lucchetto guarda l'avventura, la portata il bambino.
 - **Dalla terra di sopra si torna alla scelta** con «Cambia eroe» in fondo alla
-  pagina dell'eroe (`[data-azione="eroe"]`, si apre dal globo dell'esperienza;
+  pagina dell'eroe (`[data-azione="eroe"]`, si apre dal livello sulla barra;
   prima era un «cambio» sulla carta di chi scende, sulla mappa), senza perdere niente: la terra rinasce con
   la nebbia e il posto dell'eroe scelto (`:key` sull'eroe in `Gioco.vue`).
   **Da dentro una discesa** si cambia dal velo della pausa («scelgo un altro

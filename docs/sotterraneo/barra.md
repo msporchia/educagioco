@@ -1,8 +1,10 @@
 # La barra in basso
 
 La barra è quella di Diablo III, **la stessa sopra e sotto**: il globo rosso
-della vita a sinistra, il globo viola dell'esperienza a destra con
-«fatta/serve» del livello, in mezzo le caselle, tutto in una cornice di pietra. L'utente, 8
+della vita a sinistra, il globo blu dell'energia delle abilità a destra, in
+mezzo l'esperienza in una riga col livello e sotto le caselle, tutto in una
+cornice di pietra. Dal 9 ottobre (l'albero delle abilità, [abilita.md](abilita.md))
+l'esperienza non è più un globo: il posto a destra è dell'energia. L'utente, 8
 ottobre: «è tutt'altra cosa e penso si possa migliorare molto»; poi, lo
 stesso giorno, il globo di destra all'esperienza, la barra anche sulla terra
 di sopra, via attacco e difesa dalla barra in cima, via la casella delle
@@ -20,8 +22,9 @@ restano in codice anche dopo: si muovono.
 ## Com'è fatta
 
 - **Sta sotto il campo, non sopra**: la tela finisce dove comincia la barra,
-  e solo i globi sporgono in su di una decina di pixel. Alta 64 px (più
-  l'area sicura in fondo). Un foglio che sale dal basso la copre; la
+  e solo i globi sporgono in su di una decina di pixel. Alta al più 70 px
+  (più l'area sicura in fondo): la riga dell'esperienza (14 px) l'ha
+  alzata, e le caselle sono scese da 47 a 40 px per farcela stare. Un foglio che sale dal basso la copre; la
   telecamera conta solo la parte di foglio che sta sopra la tela
   (`misuraFoglio` in `Gioco.vue`). Sopra sta sotto la terra, che arriva fino
   alla barra: in fondo non c'è più nessuna carta, e l'eroe non ci finisce sotto.
@@ -32,14 +35,17 @@ restano in codice anche dopo: si muovono.
 - **La vita** cala in mezzo secondo quando si è colpiti, e il globo
   sobbalza: il colpo si vede anche con gli occhi sul mostro. Sopra è piena
   (sopra non si combatte), col tetto della roba e del livello.
-- **L'esperienza** ([livelli.md](livelli.md)) si riempie verso il livello
-  dopo, e al centro dice l'esperienza fatta in questo livello su quella che
-  serve («35/120»). Col numero del livello sembrava un contatore, non un
-  globo che si riempie (l'utente, 9 ottobre): il livello sta sulla pagina
-  dell'eroe e sul tasto (`data-livello`). È un tasto: apre la pagina
-  dell'eroe, che sopra ha anche «Cambia eroe» ([livelli.md](livelli.md#la-pagina-delleroe)). Quando ci sono punti da dare porta un «+» d'oro che pulsa
-  (`[data-punti]`), finché non si danno; salendo di livello il vetro si
-  accende d'oro e il globo si gonfia un attimo.
+- **L'esperienza** ([livelli.md](livelli.md)) è una riga d'oro sopra le
+  caselle, come in Diablo, con dentro «35/120» (l'esperienza fatta in questo
+  livello su quella che serve). Oro e arancio, come nei giochi: viola
+  (com'era) non si legge come esperienza (l'utente). A sinistra il **livello**, una placchetta
+  d'oro col numero: è il tasto della pagina dell'eroe, che sopra ha anche
+  «Cambia eroe» ([livelli.md](livelli.md#la-pagina-delleroe)). Quando ci
+  sono punti da dare porta un «+» d'oro che pulsa (`[data-punti]`); salendo
+  di livello la riga si accende d'oro.
+- **L'energia** ([abilita.md](abilita.md)) è il globo blu di destra, col
+  numero al centro. È un tasto: apre l'albero delle abilità, e porta il «+»
+  d'oro quando ci sono punti da imparare. Sopra è piena, come la vita.
 - **Le caselle**, da sinistra: 🧪 le pozioni col numero (un tocco beve), la
   bisaccia (lo zaino) con le tasche piene, 📖 il diario delle missioni col numero delle
   aperte (in oro se una è da consegnare), 🗺️ la mappa grande, 💎 le gemme (un
@@ -60,13 +66,13 @@ restano in codice anche dopo: si muovono.
   che si stringe), agli sgoccioli e senza scorta lo dice una riga in mezzo al
   campo («🔥 Torcia sta per finire: ancora due stanze», `bruciaLaTorcia`), e
   per esteso nello zaino ([roba.md](roba.md#la-torcia-si-accende-da-sé-e-finisce)).
-- **Niente scanalatura dell'esperienza** sopra le caselle: l'esperienza è il
-  globo, e due posti per la stessa cosa sono un doppione.
+- **L'esperienza sta in un posto solo**: la riga sopra le caselle. Quando era
+  un globo, una scanalatura in più sarebbe stata un doppione.
 - **Attacco e difesa non stanno più in cima**, accanto al titolo: si leggono
   sull'eroe, nella pagina dell'eroe e nello zaino.
 - **Niente lucchetti**: in Diablo una casella chiusa è una cosa che
-  arriverà, e qui oggi non c'è niente che arrivi (le abilità dei livelli le
-  deve ancora decidere l'utente).
+  arriverà. Le abilità non stanno nella barra: stanno nello scontro, sopra
+  la domanda ([abilita.md](abilita.md)).
 - **Le coppe che reggono i globi**: pietra, un filo d'oro, due riccioli e un
   rombo d'oro sotto. Niente teste né artigli: devono reggere, non far paura.
 - **A 320 px ci sta**: i globi scendono a 59 px e le caselle a una trentina
@@ -78,6 +84,7 @@ restano in codice anche dopo: si muovono.
 |---|---|---|
 | ❤️ vita | quella della discesa | piena, col tetto della roba e del livello |
 | esperienza | sale battendo i mostri | quella dell'avventura |
+| 🔷 energia | quella della discesa | piena; apre l'albero |
 | 🧪 | beve la pozione giusta | «❤️ sei già in piena forma» |
 | bisaccia | lo zaino della discesa | lo zaino di sopra: ci si veste e ci si spoglia, ma non si beve e non si butta |
 | 📖 | il diario, senza «vai da …» | il diario della terra di sopra, con «vai da …» |
@@ -111,9 +118,11 @@ spento o col suo significato di sopra.
   ([../core/interfaccia.md](../core/interfaccia.md#un-tocco-altrove-chiude)).
 
 Nei test: `[data-barra-giu]` con `data-barra="giu|sopra"`;
-`[data-globo="vita|esperienza"]` con `data-quota` (0..1), il numero in
-`.sot-globo-numero` (la vita, o «fatta/serve» dell'esperienza); il tasto del
-globo `[data-azione="eroe-pagina"]` con `data-livello` e `data-punti`; `[data-casella-barra="pozione|zaino|diario|mappa|gemme"]` con
+`[data-globo="vita|energia"]` con `data-quota` (0..1), il numero in
+`.sot-globo-numero`; la riga dell'esperienza `[data-esperienza-barra]` con
+`data-quota` e «fatta/serve» in `.sot-esp-numero`; il livello
+`[data-azione="eroe-pagina"]` con `data-livello` e `data-punti`; il globo
+dell'energia `[data-azione="abilita"]` con `data-punti-abilita`; `[data-casella-barra="pozione|zaino|diario|mappa|gemme"]` con
 `data-n`; `[data-azione="bevi"]`, `[data-azione="zaino"]`,
 `[data-azione="diario-giu"]` (giù) e `[data-azione="diario"]` con
 `[data-diario-n]` (sopra), `[data-azione="mappina"]` (con `aria-pressed`),

@@ -47,16 +47,18 @@ dà un terzo dell'esperienza, e cresce come prima.
 ## Salire di livello
 
 - **A ogni livello**: la vita della classe (`vitaPerLivello`: 3 il
-  cavaliere, l'elfa e il nano, 2 il mago) e un punto da dare
-  (`PUNTI_PER_LIVELLO`). La vita in più arriva subito.
+  cavaliere, l'elfa e il nano, 2 il mago), un punto da dare
+  (`PUNTI_PER_LIVELLO`) e un punto per l'albero delle abilità
+  ([abilita.md](abilita.md)). La vita in più arriva subito.
 - **Non si torna in piena forma.** Provato, come in Diablo: a metà discesa
   era una pozione gratis, e siccome l'esperienza arriva combattendo, chi
   sbagliava di più (e combatteva più a lungo) si ritrovava curato più spesso.
 - **Si festeggia**: la colonna di luce d'oro sull'eroe (`colonneDiLuce` in
-  `scena/tela.js`), il globo dell'esperienza che si accende, un arpeggio suo
-  (`suoniDellaFesta` in `Gioco.vue`) e in mezzo al campo «✨ Livello 5! Tocca
-  il globo viola: hai un punto da dare». Il gioco ricorda a chi gioca di rado
-  dove si danno i punti: il «+» d'oro sul globo resta finché non li dà.
+  `scena/tela.js`), la riga dell'esperienza che si accende, un arpeggio suo
+  (`suoniDellaFesta` in `Gioco.vue`) e in mezzo al campo «✨ Livello 5!» con
+  sotto «Un punto per l'eroe e uno per le abilità». Il gioco ricorda a chi gioca di rado
+  dove si danno i punti: il «+» d'oro sul livello (e sul globo blu, per
+  l'albero) resta finché non li dà.
 
 ## Le quattro caratteristiche
 
@@ -117,8 +119,9 @@ se la più bassa è almeno la metà della più alta: 18 e 12 sì, 18 e 7 no, 50 
 
 ## La pagina dell'eroe
 
-`viste/PaginaEroe.vue`, nella cornice dello zaino. Si apre dal globo
-dell'esperienza della barra in basso (sopra e sotto, [barra.md](barra.md)).
+`viste/PaginaEroe.vue`, nella cornice dello zaino. Si apre dal livello
+nella barra in basso (sopra e sotto, [barra.md](barra.md)), e porta
+all'albero delle abilità col tasto «🔷 Abilità» ([abilita.md](abilita.md)).
 Dall'alto: il
 ritratto armato, il nome, il livello e la barra dell'esperienza («✨ 5 /
 72»); i numeri che decidono uno scontro (❤️ ⚔️ 🛡️ 💎: attacco e difesa non
@@ -158,11 +161,11 @@ mostri e tanta quanto sono forti, il livello salito giù con la sua vita e la
 festa, quanto rende ogni caratteristica, le doti, la regola coi tre esempi
 dell'utente e il «+» acceso sempre, la pagina coi «+» spenti e la
 caratteristica indietro), `misure/sotterraneo` (due livelli sotto e tre
-sopra), `integrazione/sotterraneo-eroe` (col dito: il «+» d'oro sul globo,
-la pagina dal globo, la mappa senza la carta e il «Cambia eroe» della pagina, il «+» spento e quello che brilla, un
+sopra), `integrazione/sotterraneo-eroe` (col dito: il «+» d'oro sul livello,
+la pagina dal livello, la mappa senza la carta e il «Cambia eroe» della pagina, il «+» spento e quello che brilla, un
 punto dato, i Tesori, il livello salito battendo il mostro grosso). Sulla
-barra `[data-azione="eroe-pagina"]` con `data-livello` e `data-punti`, il globo
-`[data-globo="esperienza"]` con fatta/serve in `.sot-globo-numero`; sopra non
+barra `[data-azione="eroe-pagina"]` con `data-livello` e `data-punti`, la riga
+`[data-esperienza-barra]` con fatta/serve in `.sot-esp-numero`; sopra non
 c'è più la carta (`[data-chi-sopra]`, `[data-roba-sopra]` e `[data-azione="ritratto"]`
 non esistono); la pagina `[data-pagina-eroe]` con `[data-livello-eroe][data-livello]`,
 `[data-esperienza]` (`data-fatto`, `data-serve`), `[data-numero="vita|att|dif|gemme"]`,

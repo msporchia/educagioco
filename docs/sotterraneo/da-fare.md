@@ -83,8 +83,9 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
 ## I livelli e la roba
 
-- **Le abilità attive delle classi** (un colpo speciale, una magia): fuori
-  dal lavoro dei livelli dell'8 ottobre, di proposito.
+- **L'albero delle abilità da tarare**: c'è (9 ottobre), ma il banco non lo
+  usa e le misure non lo vedono. Cosa manca e da dove si comincia:
+  [abilita.md](abilita.md#cosa-non-è-ancora-fatto).
 - **L'abisso coi livelli**: non è stato ritarato. I mostri crescono col
   piano come prima, l'eroe arriva al livello 12 o più con pezzi rari e i
   pezzi dei grossi: i primi piani sono facili. Va rifatto insieme al bottino

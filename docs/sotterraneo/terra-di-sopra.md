@@ -202,7 +202,7 @@ chi vende cosa e perché sta in [bottega.md](bottega.md#i-mercanti-di-sopra).
   è pronto, `<sprite>-fermo-0` nell'atlante (`armaiolo-fermo-0`…) si usa da
   solo, come per il minatore.
 - **Sulla mappa non c'è la carta di chi scende.** C'era in fondo (ritratto,
-  livello, armatura e «cambio»): il livello sta sul globo dell'esperienza,
+  livello, armatura e «cambio»): il livello sta sulla barra in basso,
   i numeri, i tratti della roba e «Cambia eroe» nella pagina dell'eroe
   ([livelli.md](livelli.md#la-pagina-delleroe)), che si apre dal globo, e la
   mappa arriva fino alla barra. Era una fascia che toglieva una mano di
