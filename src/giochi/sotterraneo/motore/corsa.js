@@ -74,7 +74,7 @@ export class Corsa extends Corredo {
     this.svenimentiQui = 0   // spesi su QUESTO piano: solo l'abisso li azzera scendendo
     this.ultimoSvenimento = false   // l'ultima occasione è stata usata: riprendi() risale invece di rimettere in piedi
     this.perche = null
-    this.dettoDellArredo = false   // la regola del filo di luce si spiega una volta per discesa
+    this.dettoDellArredo = false   // la regola dell'arredo si spiega una volta per discesa
     this.domande = 0
     this.giuste = 0   // quante di quelle `domande` erano giuste: paga l'abisso, risalendo (docs/sotterraneo/abisso-progetto.md)
     this.mostriBattuti = 0
@@ -275,7 +275,7 @@ export class Corsa extends Corredo {
     return vicina
   }
 
-  // la prima volta spiega la regola del filo di luce, dopo dice solo cos'è (una volta per discesa, o diventa rumore)
+  // la prima volta spiega la regola dell'arredo, dopo dice solo cos'è (una volta per discesa, o diventa rumore)
   diCheCosaC(c) {
     const a = this.livello.robe.find(r => r.che === 'arredo' && r.x === c.x && r.y === c.y)
     if (!a) return

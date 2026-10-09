@@ -42,7 +42,7 @@ export const ARREDO_DICE = {
   candelabro: 'Un candelabro con tre candele storte.',
 }
 export const ARREDO_LA_PRIMA_VOLTA =
-  'Quello che si può toccare ha la luce intorno. Questo no: è arredamento.'
+  'Questo non si tocca: è arredamento, per questo è più spento.'
 
 export const SORSO = 8, RIPOSO_SCALA = 4, VITA_PER_PIANO = 2
 

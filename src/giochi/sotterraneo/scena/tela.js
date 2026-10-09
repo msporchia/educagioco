@@ -384,7 +384,7 @@ export class Tela {
       return
     }
 
-    // un braciere acceso fa luce, e la luce trema: la differenza fra una stanza arredata e una con dentro delle icone
+    // un fuoco acceso fa luce, e la luce trema: la differenza fra una stanza arredata e una con dentro delle icone
     if (r.arde) {
       const q = 0.22 + 0.07 * Math.sin(t * 6 + r.x * 1.7 + r.y)
       const alone = ctx.createRadialGradient(px * T, py * T, T * 0.2, px * T, py * T, T * 2.2)
@@ -419,11 +419,8 @@ export class Tela {
       this.auraDelBersaglio(px, py, t, alfa)
       this.ingrandisci(px, py + 0.5, BERSAGLIO.scala)
     }
-    // il filo di luce dice "questo si tocca", la convenzione di tutti i giochi del genere; solo in piena luce
+    // quello che si tocca è disegnato com'è, senza contorno (lo sfasava): a distinguerlo basta l'arredo più spento
     if (bersaglio && nome) this.contornoDelBersaglio(nome, px - 0.5, py - 0.5 + su, t, alfa)
-    else if (tocca && nome) this.filo(nome, px - 0.5, py - 0.5 + su, t)
-    // un'emoji non ha sagoma da contornare: un'aureola dietro fa lo stesso lavoro (ripiego per un pezzo mancante)
-    if (tocca && !nome) this.aureola(px, py + su, t)
     if (!nome || !this.posa(nome, px - 0.5, py - 0.5 + su, { alfa }))
       this.emoji(r.em, px, py + su, alfa)
     if (bersaglio) this.ctx.restore()
@@ -534,16 +531,6 @@ export class Tela {
     const q = 0.62 + 0.28 * Math.sin(t * 2.4)   // sotto l'unità non si sale, o un contorno che arriva a 1 sembra un allarme
     this.foglio.alone(this.ctx, nome, (cx + 0.5) * T, (cy + 1) * T,
                       { ...opz, colore: '#ffd27a', alfa: q, raggio: 1 })
-  }
-
-  aureola(px, py, t) {
-    const ctx = this.ctx
-    const q = 0.16 + 0.07 * Math.sin(t * 2.4)
-    const a = ctx.createRadialGradient(px * T, py * T, T * 0.15, px * T, py * T, T * 0.75)
-    a.addColorStop(0, `rgba(255,210,122,${q})`)
-    a.addColorStop(1, 'rgba(255,210,122,0)')
-    ctx.fillStyle = a
-    ctx.beginPath(); ctx.arc(px * T, py * T, T * 0.75, 0, 7); ctx.fill()
   }
 
   // la scala di un bersaglio: tutto quello che si disegna fino al `restore()` cresce attorno ai piedi (px, py: il centro della

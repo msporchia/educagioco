@@ -1086,7 +1086,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   c.avvisi = []
   c.vaiVerso({ x: a.x, y: a.y }, true)
   uguale('toccandolo la prima volta si spiega la regola', c.avvisi.length, 1)
-  controlla('e la riga parla della luce intorno', /luce/.test(String(c.avvisi[0])),
+  controlla('e la riga dice che l\'arredo è più spento', /spento/.test(String(c.avvisi[0])),
             String(c.avvisi[0]))
   c.avvisi = []
   c.vaiVerso({ x: a.x, y: a.y }, true)

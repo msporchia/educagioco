@@ -161,8 +161,10 @@ roba con livello e rarità: [rarita.md](rarita.md).
 
 ## L'arredo dice che non si tocca
 
-Barili, casse, ossa, bracieri: arredo, **disegnato più spento** delle cose
-che rispondono (che hanno un filo di luce dorato). Toccandolo si ottiene una
-riga — la prima volta la regola, «quello che si può toccare ha la luce
-intorno», poi una battuta. Una cosa che non fa niente e non dice niente si
+Barili, casse, ossa, lanterne: arredo, **disegnato più spento** delle cose
+che rispondono, che sono disegnate come sono, senza contorno. Provato un
+filo di luce dorato intorno a quello che si tocca: sfasava la figura, e lo
+spento dell'arredo basta già. Toccandolo si ottiene una riga — la prima
+volta la regola («questo non si tocca: è arredamento, per questo è più
+spento»), poi una battuta. Una cosa che non fa niente e non dice niente si
 legge come rotta; una stanza senza arredo è vuota, che è il difetto opposto.
