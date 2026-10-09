@@ -323,7 +323,7 @@ sei di fronte, in `sorgenti/castello/cammino/<creatura>.png` — e il video
 non si conserva. `vesti.py --atlante` li porta alla misura della creatura
 **senza ridurli alla grana dei fogli**: i mostri fatti così sono più
 nitidi degli altri, ed è una scelta (meglio alcuni belli e altri come
-prima che tutti uguali e brutti). Fatti: il drago (29 settembre), il lupo (1 ottobre), lo scorpione (2 ottobre), la melma (5 ottobre), il ragno (7 ottobre).
+prima che tutti uguali e brutti). Fatti: il drago (29 settembre), il lupo (1 ottobre), lo scorpione (2 ottobre), la melma (5 ottobre), il ragno (7 ottobre), il troll (9 ottobre: Grok l'ha tenuto di fronte solo dal fotogramma 88 al 113, e il giro di fronte si è cercato lì dentro, 99:10).
 
 I prompt **non nominano mai la creatura** («the creature in the attached
 image»): col nome dentro basta allegare l'immagine sbagliata, o il prompt
