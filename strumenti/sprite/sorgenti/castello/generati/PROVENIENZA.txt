@@ -7,6 +7,10 @@ scheda PROMPT-scenario.md qui accanto e i prompt di
 (terreno-*.png) e il foglio delle torri (torri-2.png). I mostri vengono
 dai fogli del sotterraneo e dai video di cammino.py (../cammino/).
 
+regno-2.png, la mappa del regno, viene da ChatGPT il 9 ottobre 2026: la
+pianta a isole coi ritagli dei quattro campi, poi una correzione nella
+stessa chat (docs/castello/regno.md).
+
 Due fogli di provenienza non documentata sono stati tolti il 29
 settembre 2026, quando il castello a sprite è diventato il castello di
 tutti:

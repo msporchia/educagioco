@@ -1,0 +1,27 @@
+{
+  "__": "La mappa del regno del castello: cosa ne sa il gioco. Lo legge strumenti/sprite/regno-castello.py, che rifa' src/giochi/castello/dati/regno.js. Coordinate in pixel della mappa generata (1024x1536). 'ponte' e' il ponte vero da copiare (i due capi dell'impalcato); 'ponti' quelli che la generazione ha perso, posati copiando quello; 'terra' il riquadro di terra battuta con cui si stendono i 'sentieri' che li collegano alle radure. 'posti' sono le venti tappe nell'ordine di TAPPE (bosco, sotterraneo sulla lava, mura sulla neve, palude), cinque per isola, l'ultima di ogni isola e' il capo; 'libere' i quattro torrioni del castello in mezzo, uno per terra.",
+  "sorgente": "generati/regno-2.png",
+  "ponte": { "da": [254, 984], "a": [338, 1059] },
+  "ponti": [
+    [[224, 482], [318, 352]],
+    [[784, 338], [844, 470]]
+  ],
+  "terra": [380, 1075, 412, 1100],
+  "sentieri": [
+    [[182, 532], [205, 505], [226, 478]],
+    [[700, 298], [745, 318], [782, 340]],
+    [[842, 470], [850, 515], [862, 560]]
+  ],
+  "posti": [
+    [690, 1435], [790, 1345], [575, 1250], [455, 1160], [375, 1080],
+    [225, 965], [130, 845], [205, 740], [125, 632], [185, 530],
+    [375, 300], [430, 212], [525, 132], [648, 258], [700, 298],
+    [862, 578], [925, 655], [860, 735], [940, 855], [830, 975]
+  ],
+  "libere": {
+    "libera-bosco": [510, 775],
+    "libera-sotterraneo": [395, 675],
+    "libera-mura": [525, 548],
+    "libera-palude": [625, 675]
+  }
+}
