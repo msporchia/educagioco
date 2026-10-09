@@ -125,6 +125,16 @@ function tocca(a) {
   const stesso = s && s.tipo === a.tipo && s.i === a.i && s.chiave === a.chiave
   aperto.value = stesso ? null : a
   if (!stesso && a.tipo === 'tappa' && statoDi(a.i) !== 'chiusa') vai(a.i)
+  if (!stesso) nextTick(dentroDiLato)
+}
+// il fumetto scorre la mappa in verticale da sé; di lato ci pensa questa
+async function dentroDiLato() {
+  await nextTick()
+  const s = scorre(), f = radice.value && radice.value.querySelector('[data-fumetto]')
+  if (!s || !f) return
+  const rf = f.getBoundingClientRect(), rs = s.getBoundingClientRect()
+  if (rf.left < rs.left + 8) s.scrollLeft -= rs.left + 8 - rf.left
+  else if (rf.right > rs.right - 8) s.scrollLeft += rf.right - rs.right + 8
 }
 
 let osserva = null, parte = 0
@@ -134,7 +144,8 @@ onMounted(async () => {
   osserva = new ResizeObserver(misura)
   osserva.observe(radice.value)
   // il cavaliere riparte da dove si era fermato; la prima volta sta già sulla tappa da fare
-  const meta = qui.value ? qui.value.i : null
+  // (a campagna finita, sull'ultima)
+  const meta = qui.value ? qui.value.i : props.fatte > 0 ? Math.min(props.fatte, props.tappe.length) - 1 : null
   const da = ultimo !== null && ultimo < props.tappe.length ? ultimo : meta ?? 0
   mettiA(da)
   id = requestAnimationFrame(giro)
