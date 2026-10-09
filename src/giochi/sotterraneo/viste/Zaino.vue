@@ -9,6 +9,8 @@ import Addosso from './Addosso.vue'
 import Casella from './Casella.vue'
 import Pannello from './Pannello.vue'
 import Icona from './Icona.vue'
+import Pixel from './Pixel.vue'
+import { BISACCIA } from './pixel.js'
 
 const props = defineProps({
   eroe: { type: Object, required: true },     // la scheda di chi scende
@@ -90,7 +92,7 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
 <template>
   <Cornice data-zaino @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
     <header class="sot-targa">
-      <span class="sot-targa-ritratto sot-targa-em em">🎒</span>
+      <span class="sot-targa-ritratto sot-targa-em"><Pixel :figura="BISACCIA" :scala="3" /></span>
       <span class="sot-targa-nome">
         <b>Lo zaino</b>
         <i v-if="sopra" class="em">🏘️ al villaggio</i>
@@ -138,7 +140,7 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
           </button>
         </div>
         <button v-else type="button" class="sot-grosso sot-chiaro" data-azione="riponi" @click="fai('riponi', scelto.dove)">
-          <span class="em">🎒</span> Togli
+          <Pixel :figura="BISACCIA" :scala="1" /> Togli
         </button>
       </Pannello>
     </div>

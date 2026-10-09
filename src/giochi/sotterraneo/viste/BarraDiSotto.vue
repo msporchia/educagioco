@@ -4,6 +4,8 @@
 // pietra. Tutto in CSS e SVG finché la cornice dipinta non è approvata (docs/sotterraneo/barra.md). Le regole non le
 // sa: dice solo cosa è stato toccato. `sopra`: sulla terra di sopra la mappa grande non c'è (la terra è già la mappa)
 import Globo from './Globo.vue'
+import Pixel from './Pixel.vue'
+import { BISACCIA } from './pixel.js'
 
 defineProps({
   vita: { type: Number, required: true },
@@ -44,7 +46,7 @@ defineEmits(['bevi', 'zaino', 'diario', 'mappa', 'eroe'])
         </button>
         <button type="button" class="sot-cella" data-casella-barra="zaino" data-azione="zaino" :data-n="pieni"
                 aria-label="zaino" @click="$emit('zaino')">
-          <span class="em">🎒</span><b>{{ pieni }}/{{ tasche }}</b>
+          <Pixel :figura="BISACCIA" :scala="2" /><b>{{ pieni }}/{{ tasche }}</b>
         </button>
         <button type="button" class="sot-cella" :class="{ 'sot-pronta': pronta }" data-casella-barra="diario"
                 :data-azione="sopra ? 'diario' : 'diario-giu'" aria-label="le missioni" @click="$emit('diario')">
@@ -68,7 +70,7 @@ defineEmits(['bevi', 'zaino', 'diario', 'mappa', 'eroe'])
               :aria-label="`livello ${livello}${punti ? `: ${punti} ${punti === 1 ? 'punto' : 'punti'} da dare` : ''}`"
               @click="$emit('eroe')">
         <!-- un globo dice quanto è pieno, come quello della vita: l'esperienza di questo livello su quella che serve.
-             Il livello sta nella pagina dell'eroe e sulla carta di chi scende -->
+             Il livello sta nella pagina dell'eroe e sul tasto (data-livello) -->
         <Globo tipo="esperienza" :quota="esperienza" :numero="espServe ? `${espFatta}/${espServe}` : ''" :acceso="sale"
                :etichetta="`livello ${livello}, esperienza ${espFatta} su ${espServe}`" />
         <b v-if="punti" class="sot-punti" aria-hidden="true">+</b>

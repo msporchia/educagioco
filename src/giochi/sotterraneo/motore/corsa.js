@@ -424,7 +424,7 @@ export class Corsa extends Corredo {
     if (this.vaAddosso(r.cosa)) return this.vesti(r, this.confronto(r.cosa))
     if (this.zaino.length >= TASCHE) {
       if (c.rarita === 'leggendario') this.trovati.delete(c.unico)
-      this.dillo('🎒 lo zaino è pieno'); return
+      this.dillo('⚠️ lo zaino è pieno'); return
     }
     this.zaino.push(r.cosa)
     r.presa = true
@@ -781,7 +781,7 @@ export class Corsa extends Corredo {
     if (this.zaino.length) {
       const quante = this.zaino.length
       this.zaino = []
-      this.dillo(`🎒 ${quante === 1 ? 'quello che avevi in tasca' : 'quello che avevi nelle tasche'} non c'è più`)
+      this.dillo(`🫳 ${quante === 1 ? 'quello che avevi in tasca' : 'quello che avevi nelle tasche'} non c'è più`)
     }
     const dentro = this.livello.stanze[0]
     this.eroe = { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }

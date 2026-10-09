@@ -315,3 +315,22 @@ export const BOSCAIOLO = pixel([
   '....kkkk.kkkk...',
 ], { k: '#241a14', G: '#3f6b3a', s: '#dca27a', e: '#241a14', h: '#6a4428', R: '#b8322a', r: '#7a1f1a',
      M: '#b9c0c6', g: '#8a5a32', D: '#3d4a5e', o: '#2b211c' })
+
+// la bisaccia di cuoio dell'avventuriero: il tasto dello zaino nella barra in basso e la targa dello zaino
+// (docs/sotterraneo/barra.md). Un'emoji 🎒 era lo zainetto rosso da scuola; qui la lavorazione è quella dei pezzi
+// del foglio: contorno scuro, luce dall'alto a sinistra, fibbia d'oro. Dodici pixel, a scala 2 sta nelle caselle
+export const BISACCIA = pixel([
+  '....kkkk....',
+  '...kddddk...',
+  '...kd..dk...',
+  '..kkkkkkkk..',
+  '.kHHHHHHHmk.',
+  '.kHmmmmmmdk.',
+  '.kmmmmmmmdk.',
+  '.kmmmggmmdk.',
+  'kbkmmgGmdkbk',
+  'kbbkkgGkkbbk',
+  'kbbbbbbbbbBk',
+  '.kbbbbbbBBk.',
+  '..kkkkkkkk..',
+], { k: '#1c120b', d: '#55341a', m: '#9a642f', H: '#c9914c', b: '#6a4120', B: '#432810', g: '#ffd23f', G: '#b9831a' })

@@ -430,7 +430,7 @@ export class Corredo {
     if (c.dove && !this.posso(k)) { this.dillo(this.perchéNo(k)); return { che: 'niente' } }
     const costa = this.quantoCosta(k)
     if (this.gemme < costa) return { che: 'niente' }
-    if (this.nonCiStarebbe(k)) { this.dillo('🎒 lo zaino è pieno'); return { che: 'pieno' } }
+    if (this.nonCiStarebbe(k)) { this.dillo('⚠️ lo zaino è pieno'); return { che: 'pieno' } }
     this.gemme -= costa
     if (scorta) banco.roba.splice(banco.roba.indexOf(k), 1)   // il pescato è unico e se ne va; una cura no
     return this.prendi(k)
@@ -470,7 +470,7 @@ export class Corredo {
   riponi(dove) {
     const k = this.casella(dove)
     if (!k) return null
-    if (this.zaino.length >= TASCHE) { this.dillo('🎒 lo zaino è pieno'); return { che: 'pieno' } }
+    if (this.zaino.length >= TASCHE) { this.dillo('⚠️ lo zaino è pieno'); return { che: 'pieno' } }
     this.metti(dove, null)
     this.zaino.push(k)
     return { che: 'riposta', cosa: k }
