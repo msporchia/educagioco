@@ -295,6 +295,14 @@ basta: l'attrezzo non cambia.
   Si compone col dito da `npm run mondo` → «i ritagli»: si segnano i pezzi
   col `+`, si preme **unisci**, e l'ordine è quello in cui li hai segnati.
 
+### Un foglio dipinto che non deve sgranare (`"nitido": true`)
+
+Sul foglio, accanto a `fondo`: oltre al pezzo ridotto alla griglia,
+`atlante.py` ritaglia lo stesso rettangolo dal foglio com'è dipinto e lo
+mette nell'atlante `NITIDO` dello stesso modulo. La misura resta quella del
+pezzo piccolo, il gioco disegna con quello grande. Il perché e i limiti:
+`docs/core/sprite.md`, «I pezzi nitidi».
+
 ### Un foglio senza griglia, senza un file di `ritagli` a parte
 
 `ritagli` punta a un file esterno perché di solito **esiste già** —

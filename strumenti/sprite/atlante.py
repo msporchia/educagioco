@@ -50,10 +50,13 @@ from catalogo import Catalogo, VERSI, breve, scrivi
 
 from attori import allaga, allaga_ombra, e_fondo, fondi_di, sfrangia
 
+from codifica import webp
+
 QUI = Path(__file__).parent
 REPO = Path(__file__).resolve().parents[2]
 SORGENTI = QUI / 'sorgenti'
 LARGO = 256                       # larghezza dell'atlante, in pixel
+LARGO_NITIDO = 1024               # e di quello nitido (`nitidi_di`)
 
 # I marcatori fra cui vive l'atlante dentro un prototipo. Un `poc/` è un
 # file solo apribile col doppio click, quindi non può importare un
@@ -108,6 +111,16 @@ export const VERSI = ['giu', 'lato', 'su']
 export const ATTORI = vociDi('attore').map(v => v.id)
 export const pezzoAttore = (chi, verso, fr) => PEZZI[pezziDi(chi, verso)[fr]] || null
 export const fotogrammi = (chi, verso = 'giu') => pezziDi(chi, verso).length
+"""
+
+CODA_NITIDA = """
+/* NITIDO e NITIDI: gli stessi pezzi dei fogli col foglietto `nitido`, presi
+   dal foglio com'è dipinto ({kb} KB di WebP senza perdita, colori a passo
+   12: codifica.py). La misura resta quella di PEZZI, che impagina; chi
+   disegna prende questo se c'è (docs/core/sprite.md, «I pezzi nitidi»). */
+export const NITIDO = 'data:image/webp;base64,{b64}'
+
+export const NITIDI = {pezzi}
 """
 
 
@@ -678,7 +691,42 @@ def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima):
                 anima[chi] = dichiarato
 
 
-def impacchetta(ritagli):
+def nitidi_di(f, fg, ridotto, nitidi):
+    """Gli stessi pezzi, presi dal foglio **com'è dipinto** invece che
+    ridotto alla sua griglia (`"nitido": true` nel foglietto).
+
+    Un foglio dipinto a 1254 px e ridotto di 3 o di 5 lascia una spada di
+    venti pixel: nel campo, dove è piccola, regge; nella scheda dello
+    zaino ingrandita tre volte è sgranata. Qui si ritaglia lo stesso
+    rettangolo (le coordinate del foglietto, riportate al foglio grande),
+    col fondo tolto allo stesso modo ma sui pixel veri, e `buchi` con
+    `max` scalato all'area. Il gioco impagina con il pezzo piccolo, che
+    resta la misura, e disegna con questo (docs/core/sprite.md)."""
+    grande = Image.open(f).convert('RGBA')
+    kx, ky = grande.width / ridotto.width, grande.height / ridotto.height
+    fg = {**fg, 'colori': 0}
+    grande = pulisci(senza_alone(grande, fg), fg)
+    cw, ch = fg['cella']
+    for nome, d in fg['sprite'].items():
+        if nome.startswith('__'):
+            continue
+        if d.get('quanti', 1) != 1 or any(k in d for k in ('cancella', 'toppa', 'misura')):
+            print(f'  ! {nome}: «nitido» non sa ancora fare quanti, cancella, toppa e misura: resta solo piccolo')
+            continue
+        pw, ph = d.get('cella', [cw, ch])
+        x, y = d['da'][0] * cw, d['da'][1] * ch
+        pezzo = grande.crop((round(x * kx), round(y * ky), round((x + pw) * kx), round((y + ph) * ky)))
+        if d.get('specchia'):
+            pezzo = ImageOps.mirror(pezzo)
+        regola = d.get('buchi')
+        if isinstance(regola, dict) and regola.get('max') is not None:
+            regola = {**regola, 'max': regola['max'] * kx * ky}
+        elif regola is not True and isinstance(regola, (int, float)) and regola:
+            regola = regola * kx * ky
+        nitidi[nome] = buchi_in(pezzo, regola, fg.get('_fondi'), nome)
+
+
+def impacchetta(ritagli, largo=LARGO):
     x = y = riga = 0
     mappa, dove = {}, {}
     # per altezza decrescente, e a parità per nome: senza il secondo
@@ -686,13 +734,13 @@ def impacchetta(ritagli):
     # file generato che cambia da solo non si distingue da uno che cambia
     # perché è cambiato qualcosa
     for nome, im in sorted(ritagli.items(), key=lambda kv: (-kv[1].height, kv[0])):
-        if x + im.width > LARGO:
+        if x + im.width > largo:
             x, y, riga = 0, y + riga, 0
         dove[nome] = (x, y, im)
         mappa[nome] = [x, y, im.width, im.height]
         x += im.width
         riga = max(riga, im.height)
-    atlante = Image.new('RGBA', (LARGO, y + riga), (0, 0, 0, 0))
+    atlante = Image.new('RGBA', (largo, y + riga), (0, 0, 0, 0))
     for nome, (px, py, im) in dove.items():
         atlante.paste(im, (px, py))
     return atlante, mappa
@@ -956,6 +1004,7 @@ def costruisci(bers, fogli, con_provini):
     tipo_di_file = {}
     agganci_di_file = {}          # nome del file → `agganci` del foglietto, già controllati
     ritagli, provenienza, famiglie, trasforma, anima = {}, {}, {}, {}, {}
+    nitidi = {}                   # gli stessi pezzi presi dal foglio grande, dove il foglietto dice `nitido`
     cose = {}                     # i gruppi dichiarati dai foglietti
     print(f'{bersaglio}:')
     for f, fg in fogli:
@@ -988,7 +1037,9 @@ def costruisci(bers, fogli, con_provini):
         prima = len(ritagli)
         ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima)
         cose_di(fg, cose, f.name)
-        print(f'  {f.name}: {len(ritagli) - prima} pezzi')
+        if fg.get('nitido'):
+            nitidi_di(f, fg, im, nitidi)
+        print(f'  {f.name}: {len(ritagli) - prima} pezzi' + (' (anche nitidi)' if fg.get('nitido') else ''))
 
     # Le copie: uno sprite che è un altro sprite ridipinto. La bambina è
     # il bimbo con altri capelli e un'altra tunica — stesso scheletro,
@@ -1044,6 +1095,13 @@ def costruisci(bers, fogli, con_provini):
 
     atlante, mappa = impacchetta(ritagli)
     dest = REPO / bers['modulo']
+    coda_nitida, kb_nitido = '', 0
+    if nitidi:
+        grande, mappa_nitida = impacchetta(nitidi, LARGO_NITIDO)
+        dati = webp(grande)
+        kb_nitido = len(dati) // 1024
+        coda_nitida = CODA_NITIDA.format(kb=kb_nitido, b64=base64.b64encode(dati).decode(),
+                                         pezzi=breve(mappa_nitida))
     kb, b64 = scrivi(dest, attrezzo='atlante.py', atlante=atlante, pezzi=mappa,
                 voci=catalogo_di(ritagli, famiglie, trasforma, provenienza,
                                  anima, cose).elenco(mappa),
@@ -1051,10 +1109,12 @@ def costruisci(bers, fogli, con_provini):
                 extra_doc=EXTRA_DOC, coda=CODA.format(
                     provenienza=breve(provenienza),
                     persone=breve(persone), bestie=breve(bestie),
-                    agganci=breve(agganci)))
+                    agganci=breve(agganci)) + coda_nitida)
 
     print(f'  atlante {atlante.width}×{atlante.height}, {kb} KB di PNG, '
           f'{len(mappa)} pezzi → {dest.relative_to(REPO)}')
+    if nitidi:
+        print(f'  e nitido {grande.width}×{grande.height}, {kb_nitido} KB di WebP, {len(nitidi)} pezzi')
 
     # lo stesso atlante dentro il prototipo, se ne ha uno: il poc e il
     # gioco devono disegnare con gli stessi pixel, o quello che si prova

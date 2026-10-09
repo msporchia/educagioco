@@ -1,8 +1,16 @@
 // Un foglio di sprite e come si posa: vedi docs/core/grafica.md. Non
 // sostituisce PITTORI, gli sta accanto.
-export function creaFoglio({ pezzi, immagine, tessera = 32 }) {
+// `nitidi` ({ pezzi, immagine }): gli stessi pezzi presi dal foglio dipinto, più grandi; la misura resta quella
+// di `pezzi`, e `pezzo` disegna con loro ammorbidendo (docs/core/sprite.md, «I pezzi nitidi»)
+export function creaFoglio({ pezzi, immagine, tessera = 32, nitidi = null }) {
   let img = null
   let attesa = null
+  let imgN = null
+  if (nitidi && typeof Image !== 'undefined') {
+    const i = new Image()
+    i.onload = () => { imgN = i }
+    i.src = nitidi.immagine
+  }
 
   // una promessa sola: chiamarla due volte non scarica due volte
   function carica() {
@@ -26,17 +34,21 @@ export function creaFoglio({ pezzi, immagine, tessera = 32 }) {
     const p = pezzi[nome]
     if (!p || !img) return false
     const [sx, sy, w, h] = p
+    const n = imgN && nitidi.pezzi[nome]
+    const [fonte, fx, fy, fw, fh] = n ? [imgN, ...n] : [img, sx, sy, w, h]
     const prima = ctx.globalAlpha
     if (alfa !== 1) ctx.globalAlpha = alfa
+    if (n) { ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high' }
     if (specchia) {
       ctx.save()
       ctx.translate(Math.round(x) + w, Math.round(y))
       ctx.scale(-1, 1)
-      ctx.drawImage(img, sx, sy, w, h, 0, 0, w, h)
+      ctx.drawImage(fonte, fx, fy, fw, fh, 0, 0, w, h)
       ctx.restore()
     } else {
-      ctx.drawImage(img, sx, sy, w, h, Math.round(x), Math.round(y), w, h)
+      ctx.drawImage(fonte, fx, fy, fw, fh, Math.round(x), Math.round(y), w, h)
     }
+    if (n) ctx.imageSmoothingEnabled = false
     if (alfa !== 1) ctx.globalAlpha = prima
     return true
   }

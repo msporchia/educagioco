@@ -154,4 +154,20 @@ for (const [nome, A] of ATLANTI) {
             'se quasi tutti i gruppi risultano animati, il ripiego si è ribaltato e il campo lampeggia')
 }
 
+/* ═══════════ i pezzi nitidi (docs/core/sprite.md) ═══════════ */
+{
+  nota('i pezzi nitidi del sotterraneo')
+  const { NITIDO, NITIDI, PEZZI } = SOTTERRANEO
+  controlla('l\'atlante nitido è un WebP', typeof NITIDO === 'string' && NITIDO.startsWith('data:image/webp;base64,'))
+  const nomi = Object.keys(NITIDI)
+  controlla('e porta la roba', nomi.length > 200 && ['spada', 'corpo-piastre', 'scudo-leone', 'zanna-del-drago'].every(n => NITIDI[n]))
+  const storti = nomi.filter(n => {
+    const p = PEZZI[n], q = NITIDI[n]
+    if (!p) return true
+    // la gabbia è quella del pezzo piccolo: se il grande ha un'altra forma, a schermo esce schiacciato
+    return Math.abs(q[2] / q[3] - p[2] / p[3]) > 0.12 * (p[2] / p[3]) || q[2] < p[2] * 2
+  })
+  controlla('ogni pezzo nitido ha il suo piccolo, con la stessa forma e più grande', !storti.length, storti.join(', '))
+}
+
 riassunto('il patto degli atlanti')

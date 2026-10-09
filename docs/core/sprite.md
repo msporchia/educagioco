@@ -43,6 +43,32 @@ strumenti/sprite/sorgenti/<gioco>/generati/<foglio>.png + .json   ← «i ritagl
   foglietto**: buttare il generato e rifarlo dà lo stesso risultato al
   pixel.
 
+## I pezzi nitidi
+
+**Un foglio dipinto non perde la definizione nell'atlante.** `atlante.py`
+riduce ogni foglio alla sua griglia vera (scala 3 o 5 per la roba del
+sotterraneo), e lì una spada dipinta a cento pixel diventa di venti: nel
+campo regge, ma nello zaino, nel confronto o nei Tesori, ingrandita due o tre
+volte, era sgranata. Con `"nitido": true` nel foglietto lo stesso strumento
+ritaglia gli stessi pezzi anche **dal foglio com'è dipinto**: stesse
+coordinate riportate al foglio grande, fondo tolto sui pixel veri, `buchi`
+con `max` scalato all'area. Il risultato è un secondo atlante, `NITIDO` (WebP
+senza perdita a passo 12, come gli altri dipinti) con `NITIDI` accanto,
+nello stesso modulo.
+
+- **La misura resta quella di `PEZZI`**: chi impagina (la mano dell'eroe,
+  la casella, il confronto) non cambia. Chi disegna prende il pezzo nitido
+  se c'è: `figura` in `viste/figura.js` per l'HTML, `pezzo` di
+  `creaFoglio` (`grafica/atlante.js`, opzione `nitidi`) per la tela,
+  ammorbidendo solo lì (`imageSmoothingEnabled` torna spento subito dopo).
+- **I contorni (`alone`) restano dal pezzo piccolo**: sono un filo di un
+  pixel di sprite, e da lì vengono uguali.
+- **Peso**: per i tre fogli della roba del sotterraneo, 260 pezzi, 451 KB.
+- Il foglietto lo dichiara per i fogli dipinti di oggetti (`bottino-e-arredo`,
+  `scudi`, `armature-e-vesti`), non per la pixel art vera (0x72), che è
+  già alla sua misura. `quanti`, `cancella`, `toppa` e `misura` non li sa
+  ancora fare: quel pezzo resta solo piccolo, e lo strumento lo dice.
+
 ## Il banco — `npm run mondo`
 
 Una pagina sola, `strumenti/banco/mondo.html`, con due metà che sono i due

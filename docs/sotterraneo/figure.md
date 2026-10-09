@@ -91,7 +91,9 @@ si rilancia `--gioco`.
 - 4 di forma che nessun pezzo ha: la frusta, il maglio, la mazza (la porta
   solo Grumo) e l'arco con la lama.
 
-Pesano nell'atlante: con gli aspetti passa da 244 a 316 KB di PNG.
+Pesano nell'atlante: con gli aspetti passa da 244 a 316 KB di PNG, più i
+pezzi nitidi (451 KB di WebP: [../core/sprite.md](../core/sprite.md)), che
+sono quelli che si vedono nello zaino e in scena.
 
 ## I pezzi col nome hanno la loro figura
 

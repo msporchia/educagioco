@@ -6,7 +6,7 @@
 // zona). La scala sta nella trasformazione (dpr × scala), mai nei conti:
 // da lì in poi tutto è in pixel di sprite — altrimenti una riga prima o
 // poi la moltiplica due volte (il difetto trovato nel bestiario).
-import { ATLANTE, PEZZI, TESSERA } from '../dati/atlante.js'
+import { ATLANTE, PEZZI, TESSERA, NITIDO, NITIDI } from '../dati/atlante.js'
 import { T, SCALA_MIN, SCALA_MAX, SCALA_INIZIALE, ROCCIA, PAVIMENTO, PORTA, BERSAGLIO } from '../dati/mondo.js'
 import { SCENARI, SCENARIO, PEZZO_DI, pezzoAndante } from '../dati/tessere.js'
 import { MOSTRI } from '../dati/mostri.js'
@@ -29,7 +29,8 @@ export class Tela {
     this.vista = { x: 0, y: 0 }          // l'angolo in alto a sinistra, in pixel di sprite
     this.L = 0; this.A = 0; this.dpr = 1
     // il foglio si carica da sé: disegnare prima che sia pronto non rompe niente, `posa` risponde `false`
-    this.foglio = creaFoglio({ pezzi: PEZZI, immagine: ATLANTE, tessera: TESSERA })
+    this.foglio = creaFoglio({ pezzi: PEZZI, immagine: ATLANTE, tessera: TESSERA,
+                              nitidi: { pezzi: NITIDI, immagine: NITIDO } })
     this.foglio.carica().catch(() => {})
     this.quadro = null
     this.mappaGrande = false   // la mappina aperta grande dalla barra in basso
