@@ -8,6 +8,7 @@ import { ref, computed, watch } from 'vue'
 import Cornice from './Cornice.vue'
 import Medaglione from './Medaglione.vue'
 import Glifo from './Glifo.vue'
+import SchedeEroe from './SchedeEroe.vue'
 import { RAMI, NODI, GRADI } from '../dati/abilita.js'
 import { gradoDi, perchéNonImpari, caselleDella } from '../motore/abilita.js'
 
@@ -19,6 +20,8 @@ const props = defineProps({
   energia: { type: Number, default: 0 },
   energiaMax: { type: Number, default: 10 },
   haLArma: { type: Function, required: true },   // il Corredo: quell'arma ce l'ha in mano?
+  puntiEroe: { type: Number, default: 0 },       // quelli delle caratteristiche, sulla scheda «Eroe»
+  vitaMax: { type: Number, default: 0 },         // cure e scudi dicono il numero vero («cura 12 di vita»)
   gemme: { type: Number, default: 0 },           // per dimenticare l'albero, che si paga
   costoDimenticare: { type: Number, default: 0 },
 })
@@ -29,7 +32,7 @@ const caselle = computed(() => caselleDella(props.crescita).map(id => (id ? NODI
 // la casella toccata, che aspetta la sua abilità; le abilità che si sanno, da proporre
 const casella = ref(null)
 const sapute = computed(() => rami.value.flatMap(r => r.nodi).filter(n => !n.sempre && gradoDi(props.crescita, n.id)))
-const emit = defineEmits(['impara', 'casella', 'eroe', 'chiudi', 'fuori', 'dimentica'])
+const emit = defineEmits(['impara', 'casella', 'scheda', 'chiudi', 'fuori', 'dimentica'])
 // dimenticare costa gemme: il primo tocco chiede, il secondo fa (e un tocco altrove ci ripensa)
 const sicuro = ref(false)
 function dimentica() {
@@ -61,6 +64,7 @@ const stato = n => {
   if (g(n.id)) return 'preso'
   return perchéNonImpari(props.crescita, props.eroe.chiave, n.id) ? 'chiuso' : 'pronto'
 }
+const maiuscola = t => t.charAt(0).toUpperCase() + t.slice(1)
 // sotto un medaglione ancora da prendere: il livello, se è quello che manca (il grado dopo lo dice il riquadro in fondo)
 const quando = n => {
   const p = !g(n.id) && perchéNonImpari(props.crescita, props.eroe.chiave, n.id).match(/^dal livello (\d+)/)
@@ -72,8 +76,8 @@ const dettaglio = computed(() => {
   const ora = g(n.id)
   return {
     ...n, grado: ora, tinta: tintaDi(n.id), stato: stato(n),
-    ora: ora ? n.fa(ora) : null,
-    dopo: n.fa(ora + 1),
+    ora: ora ? n.fa(ora, props.vitaMax) : null,
+    dopo: maiuscola(n.fa(ora + 1, props.vitaMax)),
     perche: perchéNonImpari(props.crescita, props.eroe.chiave, n.id),
     senzArma: n.arma && !props.haLArma(n.arma) ? n.arma : null,
   }
@@ -82,11 +86,7 @@ const dettaglio = computed(() => {
 
 <template>
   <Cornice alta data-pagina-abilita @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
-    <header class="sot-albero-testa">
-      <button type="button" class="sot-albero-torna" data-azione="eroe-faccia" @click="$emit('eroe')">‹ {{ eroe.nome }}</button>
-      <b>Abilità</b>
-      <span class="sot-albero-energia" :data-energia="energia"><Glifo nome="energia" :misura="17" /> {{ energia }}/{{ energiaMax }}</span>
-    </header>
+    <SchedeEroe attiva="abilita" :punti="puntiEroe" :punti-abilita="punti" @scheda="s => $emit('scheda', s)" />
 
     <div class="sot-punti-riga">
       <p v-if="punti" class="sot-eroe-punti" data-punti-abilita :data-n="punti">
@@ -102,7 +102,9 @@ const dettaglio = computed(() => {
 
     <!-- le tre abilità che compaiono nello scontro, sopra la domanda: si tocca una casella e si sceglie cosa metterci -->
     <div class="sot-albero-caselle" data-caselle-albero>
-      <span class="sot-albero-dida">Nello scontro</span>
+      <span class="sot-albero-dida">Nello scontro
+        <span class="sot-albero-energia" :data-energia="energia"><Glifo nome="energia" :misura="14" /> {{ energia }}/{{ energiaMax }}</span>
+      </span>
       <div class="sot-albero-zoccoli">
         <button v-for="(c, i) in caselle" :key="c ? c.id : 'v' + i" type="button" class="sot-zoccolo"
                 :class="{ 'sot-vuota': !c, 'sot-aperto': casella === i }" data-azione="zoccolo" :data-zoccolo="i"
@@ -172,7 +174,7 @@ const dettaglio = computed(() => {
       </div>
       <p v-if="dettaglio.ora">Grado {{ dettaglio.grado }}: {{ dettaglio.ora }}</p>
       <p v-if="dettaglio.dopo" :class="{ 'sot-tenue': !!dettaglio.grado }">
-        {{ dettaglio.grado ? `Al grado ${dettaglio.grado + 1}` : 'Fa' }}: {{ dettaglio.dopo }}
+        <template v-if="dettaglio.grado">Al grado {{ dettaglio.grado + 1 }}: </template>{{ dettaglio.dopo }}
       </p>
       <p v-if="dettaglio.senzArma" class="sot-manca">Ci vuole {{ dettaglio.senzArma.nome }} in mano</p>
       <div class="sot-nodo-tasti">

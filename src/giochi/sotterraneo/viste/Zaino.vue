@@ -11,6 +11,7 @@ import Pannello from './Pannello.vue'
 import Icona from './Icona.vue'
 import Pixel from './Pixel.vue'
 import { BISACCIA } from './pixel.js'
+import SchedeEroe from './SchedeEroe.vue'
 
 const props = defineProps({
   eroe: { type: Object, required: true },     // la scheda di chi scende
@@ -28,8 +29,10 @@ const props = defineProps({
   piano: { type: Number, required: true },
   piani: { type: Number, default: null },   // l'abisso non lo sa: "26/" col numero mancante sembrerebbe un guasto
   sopra: { type: Boolean, default: false },  // lo zaino della terra di sopra: ci si veste, ma non si butta niente
+  punti: { type: Number, default: 0 },        // le schede della finestra dell'eroe: i «+» delle altre due
+  puntiAbilita: { type: Number, default: 0 },
 })
-const emit = defineEmits(['usa', 'butta', 'riponi', 'chiudi', 'fuori'])
+const emit = defineEmits(['usa', 'butta', 'riponi', 'chiudi', 'fuori', 'scheda'])
 
 // una tasca ({ dove: 'zaino', i }) o una casella addosso ({ dove: 'mano' }); null è lo stato normale
 const scelto = ref(null)
@@ -93,15 +96,13 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
 </script>
 
 <template>
-  <Cornice data-zaino @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
-    <header class="sot-targa">
-      <span class="sot-targa-ritratto sot-targa-em"><Pixel :figura="BISACCIA" :scala="3" /></span>
-      <span class="sot-targa-nome">
-        <b>Lo zaino</b>
-        <i v-if="sopra" class="em">🏘️ al villaggio</i>
-        <i v-else class="em">🪜 piano {{ piano }}<template v-if="piani">/{{ piani }}</template></i>
-      </span>
-    </header>
+  <Cornice alta data-zaino @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
+    <SchedeEroe attiva="zaino" :punti="punti" :punti-abilita="puntiAbilita" @scheda="s => $emit('scheda', s)" />
+    <!-- il nome lo dice la scheda: qui solo dove si è -->
+    <p class="sot-zaino-dove em" data-zaino-dove>
+      <template v-if="sopra">🏘️ al villaggio</template>
+      <template v-else>🪜 piano {{ piano }}<template v-if="piani">/{{ piani }}</template></template>
+    </p>
 
     <Addosso :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :dito="dito"
              :scelto="scelto && scelto.dove !== 'zaino' ? scelto.dove : null" :va="prova ? prova.dove : null"

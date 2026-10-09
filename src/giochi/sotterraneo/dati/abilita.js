@@ -48,7 +48,8 @@ const ASCIA = { famiglie: ['asce'], glifo: 'ascia', nome: 'un\'ascia', corto: 's
 const BACCHETTA = { famiglie: ['bacchette'], glifo: 'bacchetta', nome: 'una bacchetta', corto: 'serve la bacchetta', con: 'con la bacchetta' }
 const SCUDO = { scudo: true, glifo: 'scudo', nome: 'uno scudo', corto: 'serve lo scudo', con: 'con lo scudo' }
 
-// `fa(g)` è la riga corta della pagina, al grado g (1..3): dice il numero, non la storia. Niente emoji: le icone
+// `fa(g, vm)` è la riga corta della pagina, al grado g: dice il numero, non la storia (`vm`: la vita massima dell'eroe,
+// per le cure e gli scudi). Niente emoji: le icone
 // sono disegnate in codice (`glifo`, viste/glifi.js), e `tinta` è il colore del ramo
 // il valore al grado g: scritto fino al terzo, poi metà del passo fra il secondo e il terzo a ogni grado (interi se
 // erano interi: gli scambi e i punti non si spezzano)
@@ -61,7 +62,11 @@ export function n(v, g) {
 }
 const volte = v => (v === 2 ? 'il doppio' : v === 3 ? 'il triplo' : `×${String(v).replace('.', ',')}`)
 const scambi = v => `${v} ${v === 1 ? 'scambio' : 'scambi'}`
-const quarti = v => `${Math.round(v * 25)}% della vita`
+// le cure e gli scudi si contano in quarti della vita massima (motore/corsa.js, usaAbilita): con la vita dell'eroe
+// (`vm`, la pagina la passa) la riga dice il numero vero, «cura 12 di vita»; senza, la parte della vita
+export const inVita = (v, vm) => Math.max(1, Math.round(Math.round(vm / 4) * v))
+const cura = (v, vm) => (vm ? `cura ${inVita(v, vm)} di vita` : `cura un quarto della vita${v > 1 ? ` e oltre (×${String(v).replace('.', ',')})` : ''}`)
+const scudo = (v, vm) => `uno scudo che para ${vm ? `${inVita(v, vm)} danni` : 'un quarto della vita'}, finché dura lo scontro`
 
 // La regola dell'utente (9 ottobre): ogni classe ha un modo di difendersi al livello 2, in un ramo che non vuole armi,
 // e uno di curarsi entro il livello 4 (guastiDelleAbilita lo controlla)
@@ -89,7 +94,7 @@ export const RAMI = {
     ] },
     { chiave: 'giuramento', nome: 'Giuramento', glifo: 'cuore', tinta: '#c0393b', nodi: [
       { id: 'preghiera', nome: 'Preghiera', glifo: 'preghiera', costo: 3, cura: [1, 1.4, 1.8], difende: true,
-        fa: g => `cura il ${quarti(n([1, 1.4, 1.8], g))}` },
+        fa: (g, vm) => cura(n([1, 1.4, 1.8], g), vm) },
       { id: 'cuore-saldo', nome: 'Cuore saldo', glifo: 'cuore', sempre: true, vitaPiu: [5, 10, 15],
         fa: g => `+${n([5, 10, 15], g)} di vita` },
       { id: 'grido', nome: 'Grido di guerra', glifo: 'corno', costo: 4, stanza: true, debole: [3, 4, 5], per: [1, 1, 1],
@@ -124,7 +129,7 @@ export const RAMI = {
       { id: 'rovi', nome: 'Rovi', glifo: 'rovi', costo: 3, debole: [3, 4, 5], difende: true,
         fa: g => `il mostro colpisce a metà per ${scambi(n([3, 4, 5], g))}` },
       { id: 'linfa', nome: 'Linfa', glifo: 'germoglio', costo: 3, linfa: [4, 5, 6], cura: [0.4, 0.6, 0.8],
-        fa: g => `cura il ${quarti(n([0.4, 0.6, 0.8], g))}, e poi un po' a ogni scambio per ${scambi(n([4, 5, 6], g))}` },
+        fa: (g, vm) => `${cura(n([0.4, 0.6, 0.8], g), vm)}, e poi ${vm ? Math.max(1, Math.round(vm / 10)) : 'un po\''} a ogni scambio per ${scambi(n([4, 5, 6], g))}` },
       { id: 'respiro', nome: 'Respiro del bosco', glifo: 'foglia', sempre: true, energiaPerMostro: [1, 2, 3],
         fa: g => `+${n([1, 2, 3], g)} di energia a ogni mostro battuto` },
       { id: 'radici', nome: 'Radici', glifo: 'radici', costo: 6, stanza: true, fermo: [2, 2, 3], per: [1, 1.5, 1.5],
@@ -156,9 +161,9 @@ export const RAMI = {
     ] },
     { chiave: 'arcano', nome: 'Arcano', glifo: 'sfera', tinta: '#9b4fd0', nodi: [
       { id: 'scudo-arcano', nome: 'Scudo arcano', glifo: 'sfera', costo: 3, scudo: [1, 1.4, 1.8], difende: true,
-        fa: g => `uno scudo che assorbe il ${quarti(n([1, 1.4, 1.8], g))}` },
+        fa: (g, vm) => scudo(n([1, 1.4, 1.8], g), vm) },
       { id: 'fonte-arcana', nome: 'Fonte arcana', glifo: 'calice', costo: 4, cura: [1, 1.4, 1.8],
-        fa: g => `cura il ${quarti(n([1, 1.4, 1.8], g))}` },
+        fa: (g, vm) => cura(n([1, 1.4, 1.8], g), vm) },
       { id: 'fulmine', nome: 'Fulmine', glifo: 'fulmine', costo: 4, passa: true, per: [2.5, 3, 3.5],
         fa: g => `passa la difesa e colpisce ${volte(n([2.5, 3, 3.5], g))}` },
       { id: 'specchio', nome: 'Specchio', glifo: 'specchio', costo: 6, specchio: [1, 1.5, 2],
@@ -189,9 +194,9 @@ export const RAMI = {
     ] },
     { chiave: 'pietra', nome: 'Pietra', glifo: 'montagna', tinta: '#8a7f6a', nodi: [
       { id: 'pelle-di-pietra', nome: 'Pelle di pietra', glifo: 'pietra', costo: 3, scudo: [1, 1.4, 1.8], difende: true,
-        fa: g => `uno scudo che assorbe il ${quarti(n([1, 1.4, 1.8], g))}` },
+        fa: (g, vm) => scudo(n([1, 1.4, 1.8], g), vm) },
       { id: 'rune', nome: 'Rune di guarigione', glifo: 'runa', costo: 4, cura: [1.2, 1.6, 2],
-        fa: g => `cura il ${quarti(n([1.2, 1.6, 2], g))}` },
+        fa: (g, vm) => cura(n([1.2, 1.6, 2], g), vm) },
       { id: 'testa-dura', nome: 'Testa dura', glifo: 'elmo', sempre: true, testaDura: [1, 2, 3],
         fa: g => `${g === 1 ? 'il primo colpo pieno' : `i primi ${n([1, 2, 3], g)} colpi pieni`} di uno scontro fanno metà` },
       { id: 'montagna', nome: 'Montagna', glifo: 'montagna', costo: 6, intoccabile: [2, 3, 4],

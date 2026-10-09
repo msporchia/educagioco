@@ -28,7 +28,7 @@ import { dai as daiPunto } from './crescita.js'
 import { indiceDella, premioPer } from './storia.js'
 import { robaDellaMissione } from './missioni.js'
 import { pericoloDi } from './pericolo.js'
-import { NODI, ENERGIA_PER_RISPOSTA, aGrado } from '../dati/abilita.js'
+import { NODI, ENERGIA_PER_RISPOSTA, aGrado, inVita } from '../dati/abilita.js'
 
 // nella storia i forzieri e i mostri di tutti i giorni danno solo quello che si consuma: la roba la dà la riga
 // della storia (dati/storia.js), o la discesa diventerebbe una lotteria e la tabella una bugia
@@ -654,13 +654,12 @@ export class Corsa extends Corredo {
       // stordito non risponde al colpo che lo stordisce, e poi salta i suoi N scambi
       if (nodo.fermo) x.stati.fermo = Math.max(x.stati.fermo || 0, vale('fermo') + 1)
     }
-    const quarto = Math.round(this.vitaMax / 4)
     if (nodo.cura) {
-      const c = Math.max(1, Math.round(quarto * vale('cura')))
+      const c = inVita(vale('cura'), this.vitaMax)   // lo stesso conto della riga dell'albero
       this.vita = Math.min(this.vitaMax, this.vita + c)
       this.dillo(`${nodo.nome}: ❤️ +${c}`)
     }
-    if (nodo.scudo) io.scudo = (io.scudo || 0) + Math.max(1, Math.round(quarto * vale('scudo')))
+    if (nodo.scudo) io.scudo = (io.scudo || 0) + inVita(vale('scudo'), this.vitaMax)
     if (nodo.parato) io.parato = Math.max(io.parato || 0, vale('parato'))
     if (nodo.intoccabile) io.intoccabile = Math.max(io.intoccabile || 0, vale('intoccabile'))
     if (nodo.specchio) io.specchio = vale('specchio')

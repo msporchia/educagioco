@@ -8,6 +8,7 @@ import Cornice from './Cornice.vue'
 import Armato from './Armato.vue'
 import Glifo from './Glifo.vue'
 import Medaglione from './Medaglione.vue'
+import SchedeEroe from './SchedeEroe.vue'
 
 const props = defineProps({
   eroe: { type: Object, required: true },        // la scheda: nome, sprite, em
@@ -25,7 +26,7 @@ const props = defineProps({
   puntiAbilita: { type: Number, default: 0 },    // i punti dell'albero: sul tasto delle abilità
   costoRiassegnare: { type: Number, default: 0 },   // i punti dati tornano da dare, e si paga in gemme
 })
-const emit = defineEmits(['dai', 'tesori', 'cambia', 'chiudi', 'fuori', 'abilita', 'riassegna'])
+const emit = defineEmits(['dai', 'tesori', 'cambia', 'chiudi', 'fuori', 'scheda', 'riassegna'])
 // riassegnare costa gemme: il primo tocco chiede, il secondo fa
 const sicuro = ref(false)
 function riassegna() {
@@ -39,7 +40,8 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
 </script>
 
 <template>
-  <Cornice data-pagina-eroe @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
+  <Cornice alta data-pagina-eroe @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
+    <SchedeEroe attiva="eroe" :punti="punti" :punti-abilita="puntiAbilita" @scheda="s => $emit('scheda', s)" />
     <header class="sot-eroe-testa">
       <span class="sot-eroe-ritratto"><Armato :eroe="eroe" :mano="mano" :mancina="mancina" :scala="3" /></span>
       <span class="sot-eroe-nome">
@@ -95,15 +97,9 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
       </li>
     </ul>
 
-    <div class="sot-eroe-porte">
-      <!-- l'albero delle abilità: la stessa pagina che apre il globo blu della barra (docs/sotterraneo/abilita.md) -->
-      <button type="button" class="sot-grosso sot-chiaro sot-eroe-tesori" data-azione="abilita-pagina" @click="$emit('abilita')">
-        <Glifo nome="energia" :misura="18" class="sot-glifo-energia" /> Abilità <small v-if="puntiAbilita" class="sot-eroe-nuovi">+{{ puntiAbilita }}</small>
-      </button>
-      <button type="button" class="sot-grosso sot-chiaro sot-eroe-tesori" data-azione="tesori" @click="$emit('tesori')">
-        <span class="em">🏆</span> Tesori <small>{{ tesori.trovati }} / {{ tesori.tutti }}</small>
-      </button>
-    </div>
+    <button type="button" class="sot-grosso sot-chiaro sot-eroe-tesori" data-azione="tesori" @click="$emit('tesori')">
+      <span class="em">🏆</span> Tesori <small>{{ tesori.trovati }} / {{ tesori.tutti }}</small>
+    </button>
 
     <!-- le quattro avventure: la scelta è un altro foglio, e questa avventura resta com'è -->
     <button v-if="cambia" type="button" class="sot-eroe-cambia" data-azione="eroe" @click="$emit('cambia')">

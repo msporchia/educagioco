@@ -490,6 +490,7 @@ const albero = computed(() => {
     armi: Object.fromEntries(['mano', 'mancina'].map(d => [d, c[d]])),
     haLArma: a => c.haLArma(a),
     gemme: c.gemme, costoDimenticare: c.costoDimenticare,
+    puntiEroe: puntiDaDare(c.crescita), vitaMax: c.vitaMax ?? c.vitaConLaRoba,
   }
 })
 // un punto all'albero o una casella cambiata: giù sulla corsa (e la sosta), sopra sull'avventura
@@ -1026,6 +1027,21 @@ function apriDallaBarra(che) {
   zainoAperto.value = che === 'zaino'
   diarioGiu.value = che === 'diario'
 }
+// La finestra dell'eroe ha tre schede (viste/SchedeEroe.vue): lo zaino, le caratteristiche, l'albero. Si passa
+// dall'una all'altra senza chiudere; sopra lo zaino è quello della terra (zainoSopra), giù quello della discesa
+function apriScheda(s) {
+  if (s === 'zaino') {
+    paginaEroe.value = false
+    tesoriAperti.value = false
+    if (corsa.value) zainoAperto.value = true
+    else { chiudiBottega(); zainoSopra.value = true }
+    return
+  }
+  zainoAperto.value = false
+  zainoSopra.value = false
+  facciaEroe.value = s === 'abilita' ? 'abilita' : 'eroe'
+  paginaEroe.value = true
+}
 watch(mappaGrande, g => { if (pittore) pittore.mappaGrande = g })
 // un foglio che si apre (un mostro, una porta) chiude la mappa grande: si guarda quello
 watch(foglio, f => { if (f) mappaGrande.value = false })
@@ -1316,9 +1332,10 @@ function ridimensiona() { if (pittore) pittore.misura() }
                       :energia="barra.energia" :energia-max="barra.energiaMax" :punti-abilita="barra.puntiAbilita"
                       :tasche="TASCHE" :gemme="barra.gemme" :missioni="missioniAperte" :pronta="missioniPronte"
                       @bevi="dilloSopra(barra.pozioni ? '❤️ sei già in piena forma' : '🧪 non hai pozioni')"
-                      @zaino="chiudiBottega(); paginaEroe = false; zainoSopra = true"
+                      @zaino="apriScheda('zaino')"
                       @diario="campagnaEl && campagnaEl.apriDiario()" @eroe="apriPaginaEroe()" @abilita="apriPaginaEroe('abilita')" />
         <Zaino v-if="zainoDiSopra" v-bind="zainoDiSopra" :eroe="eroeScheda" :piano="0" sopra
+               :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
                @usa="usaSopra" @riponi="riponiSopra" @butta="() => {}"
                @chiudi="zainoSopra = false" @fuori="e => { zainoSopra = false; fuoriDallaBottega(e) }" />
         <!-- la bottega di un mercante di sopra: quasi a tutto schermo, la ✕ in alto a destra, niente domande.
@@ -1552,6 +1569,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                :att="eroe.att" :dif="eroe.dif" :gemme="eroe.gemme"
                :vita="eroe.vita" :vitaMax="eroe.vitaMax"
                :piano="eroe.piano" :piani="eroe.piani"
+               :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
                @usa="usa" @butta="butta" @riponi="riponi"
                @chiudi="zainoAperto = false" @fuori="toccoFuori" />
 
@@ -1564,11 +1582,11 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
       <!-- la pagina dell'eroe e i Tesori, sopra e sotto: si chiudono con la ✕ o toccando fuori (e il tocco cammina) -->
       <PaginaAbilita v-if="albero && !tesoriAperti && !(corsa && foglio && foglio.che === 'scontro')" v-bind="albero"
-                     @impara="imparaAbilita" @casella="casellaAbilita" @dimentica="dimenticaAlbero" @eroe="facciaEroe = 'eroe'" @chiudi="paginaEroe = false"
+                     @impara="imparaAbilita" @casella="casellaAbilita" @dimentica="dimenticaAlbero" @scheda="apriScheda" @chiudi="paginaEroe = false"
                      @fuori="e => { paginaEroe = false; corsa ? toccoFuori(e) : fuoriDallaBottega(e) }" />
       <PaginaEroe v-else-if="pagina && facciaEroe === 'eroe' && !tesoriAperti && !(corsa && foglio && foglio.che === 'scontro')" v-bind="pagina"
                   @dai="daiUnPunto" @tesori="tesoriAperti = true" @cambia="cambiaEroe" @chiudi="paginaEroe = false"
-                  @abilita="facciaEroe = 'abilita'" @riassegna="riassegnaPunti"
+                  @scheda="apriScheda" @riassegna="riassegnaPunti"
                   @fuori="e => { paginaEroe = false; corsa ? toccoFuori(e) : fuoriDallaBottega(e) }" />
       <Tesori v-if="paginaEroe && tesoriAperti" :trovati="tesoriTrovati" @indietro="tesoriAperti = false"
               @chiudi="paginaEroe = false; tesoriAperti = false"
