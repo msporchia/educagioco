@@ -15,7 +15,7 @@ Node), `viste/Dialogo.vue` (il riquadro), `viste/Terra.vue` (`parla`,
 
 ## Com'è fatto
 
-- **In fondo alla mappa, al posto della carta di chi scende**: legno scuro e
+- **In fondo alla mappa**: legno scuro e
   oro come la bottega, il ritratto nel tondo d'oro, il nome, il testo. Sta
   nella fascia in basso che la vista già misura, quindi l'eroe e chi gli
   parla restano visibili sopra. Niente velo: la mappa resta lì.

@@ -7,7 +7,7 @@ gli indica la strada; nel villaggio stanno i mercanti. Il codice:
 `motore/terra.js` (strada e nebbia, gira in Node), `dati/terra.js` (quale
 discesa sta dove, cosa dicono minatore e cartello), `dati/mercanti.js` (chi
 vende cosa), `dati/terra-mappa.js` (generato). `viste/Campagna.vue` ci mette
-sopra la discesa a metà e chi scende, con la sua roba e le gemme.
+sopra la discesa a metà; chi scende (nome, livello, «Cambia eroe») sta nella pagina dell'eroe, non sulla mappa.
 
 ## La mappa
 
@@ -50,7 +50,7 @@ sopra la discesa a metà e chi scende, con la sua roba e le gemme.
   gli scorre dietro e mostra il pezzo dopo; il tocco seguente va più in là.
 - **All'avvio la vista è sull'eroe**, senza scorrere: lui a metà dello
   spazio libero.
-- **Le carte in cima e in fondo** (la discesa a metà, chi scende) coprono la
+- **Le carte in cima e in fondo** (la discesa a metà, gli avvisi e il dialogo) coprono la
   mappa: la vista le misura (`ResizeObserver`), tiene l'eroe nello spazio
   libero, e la mappa può scorrere fin sotto di loro, così il suo bordo non
   resta mai nascosto.
@@ -201,9 +201,12 @@ chi vende cosa e perché sta in [bottega.md](bottega.md#i-mercanti-di-sopra).
   `RIGATTIERE` in `viste/pixel.js`) finché non arrivano gli sprite: il posto
   è pronto, `<sprite>-fermo-0` nell'atlante (`armaiolo-fermo-0`…) si usa da
   solo, come per il minatore.
-- **La carta di chi scende dice la roba**: braccio e difesa con quello che
-  ha addosso, e le gemme da spendere; il suo «cambio» riapre la scelta delle
-  avventure ([avventure.md](avventure.md)).
+- **Sulla mappa non c'è la carta di chi scende.** C'era in fondo (ritratto,
+  livello, armatura e «cambio»): il livello sta sul globo dell'esperienza,
+  i numeri, i tratti della roba e «Cambia eroe» nella pagina dell'eroe
+  ([livelli.md](livelli.md#la-pagina-delleroe)), che si apre dal globo, e la
+  mappa arriva fino alla barra. Era una fascia che toglieva una mano di
+  campo e diceva due volte quello che la barra dice già.
 - **L'eroe che cammina tiene in mano l'arma che ha addosso**, e lo scudo
   dall'altra parte, come nella scelta delle avventure: è `viste/Armato.vue`
   con la posa e il fotogramma del passo.
@@ -260,8 +263,7 @@ cartello di divieto delle chiuse), `[data-minatore]`, `[data-cartello]`, `[data-
 `[data-chiusa-perche]`, `[data-avviso-terra]`, il dialogo di chi sta fermo in
 [dialoghi.md](dialoghi.md), `[data-pallino="<posto>"]` (il
 pallino, con `data-colore`; la sentinella e i colori in [zone.md](zone.md)), `[data-sotto-livello]` (nel fumetto di una discesa), `[data-mercante="<chi>"]`,
-`[data-personaggio="<chi>"]` (con `data-segno`, [missioni.md](missioni.md)), `[data-roba-sopra]` (la carta di chi
-scende, con le gemme), `[data-portale]` (il gemello) col suo fumetto
+`[data-personaggio="<chi>"]` (con `data-segno`, [missioni.md](missioni.md)), `[data-portale]` (il gemello) col suo fumetto
 `[data-fumetto-di="portale"]` e `[data-azione="portale-giu"]`, `[data-ritaglio]`
 (l'icona ritagliata, nella carta in cima, nel fumetto, nella scelta e in
 home); nella bottega e nello zaino quelli di

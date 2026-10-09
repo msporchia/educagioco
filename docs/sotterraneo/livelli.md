@@ -116,14 +116,21 @@ se la più bassa è almeno la metà della più alta: 18 e 12 sì, 18 e 7 no, 50 
 ## La pagina dell'eroe
 
 `viste/PaginaEroe.vue`, nella cornice dello zaino. Si apre dal globo
-dell'esperienza della barra in basso (sopra e sotto, [barra.md](barra.md)) e
-dal ritratto della carta di chi scende sulla terra di sopra. Dall'alto: il
+dell'esperienza della barra in basso (sopra e sotto, [barra.md](barra.md)).
+Dall'alto: il
 ritratto armato, il nome, il livello e la barra dell'esperienza («✨ 5 /
 72»); i numeri che decidono uno scontro (❤️ ⚔️ 🛡️ 💎: attacco e difesa non
 stanno più in cima allo schermo); «Hai 2 punti da dare» in oro, o senza punti
 «Batti i mostri: a ogni livello, un punto da dare»; le quattro righe con
 l'icona, il nome, il valore, la frase corta, prima → dopo e un «+» grande
 (52 px); in fondo la porta dei Tesori ([rarita.md](rarita.md#i-leggendari-e-i-tesori)).
+Sopra, sotto i numeri, i tratti della roba addosso («💎 ×1,5», «🔦 vedi più
+lontano»), e in fondo **«Cambia eroe»**: un tasto piccolo a bordo d'oro, non
+un altro tasto grosso, che chiude la pagina e apre la scelta delle avventure
+([avventure.md](avventure.md)). Stava in una carta in fondo alla mappa,
+insieme al ritratto e al livello: la carta è stata tolta perché diceva due
+volte quello che il globo e la pagina dicono già (l'utente, 9 ottobre). Giù
+non c'è: si cambia dal velo della pausa ([portale-e-sosta.md](portale-e-sosta.md)).
 Si chiude con la ✕ o toccando fuori; giù non si apre durante uno scontro.
 I numeri li dà il motore (`Corredo.caratteristiche()`): la pagina li mostra.
 
@@ -150,15 +157,15 @@ festa, quanto rende ogni caratteristica, le doti, la regola coi tre esempi
 dell'utente e il «+» acceso sempre, la pagina coi «+» spenti e la
 caratteristica indietro), `misure/sotterraneo` (due livelli sotto e tre
 sopra), `integrazione/sotterraneo-eroe` (col dito: il «+» d'oro sul globo,
-la pagina dal ritratto e dal globo, il «+» spento e quello che brilla, un
+la pagina dal globo, la mappa senza la carta e il «Cambia eroe» della pagina, il «+» spento e quello che brilla, un
 punto dato, i Tesori, il livello salito battendo il mostro grosso). Sulla
-barra `[data-azione="eroe-pagina"]` con `data-punti`, il globo
-`[data-globo="esperienza"]` col livello in `.sot-globo-numero`; la carta di
-sopra `[data-azione="ritratto"]`, `[data-roba-sopra]` con `data-livello`;
-la pagina `[data-pagina-eroe]` con `[data-livello-eroe][data-livello]`,
+barra `[data-azione="eroe-pagina"]` con `data-livello` e `data-punti`, il globo
+`[data-globo="esperienza"]` con fatta/serve in `.sot-globo-numero`; sopra non
+c'è più la carta (`[data-chi-sopra]`, `[data-roba-sopra]` e `[data-azione="ritratto"]`
+non esistono); la pagina `[data-pagina-eroe]` con `[data-livello-eroe][data-livello]`,
 `[data-esperienza]` (`data-fatto`, `data-serve`), `[data-numero="vita|att|dif|gemme"]`,
 `[data-punti-da-dare][data-n]`, le righe `[data-caratteristica="<chiave>"]` con
 `data-valore`, `data-dati`, `data-trattenuta`, `data-indietro`, dentro
 `[data-cambia]` e il «+» `[data-azione="dai"][data-dai="<chiave>"]`,
-`[data-azione="tesori"]`; giù la festa `[data-livello-su][data-livello]`,
+`[data-azione="tesori"]`, `[data-tratti-eroe]` (sopra), `[data-azione="eroe"]` («Cambia eroe», solo sopra); giù la festa `[data-livello-su][data-livello]`,
 nel cartello di fine `[data-esp-presa]`.

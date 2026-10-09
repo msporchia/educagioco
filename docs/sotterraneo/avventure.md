@@ -18,8 +18,9 @@ campagna), `Gioco.vue` (chi legge e scrive), `viste/Eroi.vue` (la scelta).
   nebbia nuova e il minatore che non ha ancora parlato. L'età apre lo stesso le
   discese già passate per lei (`aperta(…, fatte)` con le discese
   dell'avventura): il lucchetto guarda l'avventura, la portata il bambino.
-- **Dalla terra di sopra si torna alla scelta** col «cambio» della carta di chi
-  scende (`[data-azione="eroe"]`), senza perdere niente: la terra rinasce con
+- **Dalla terra di sopra si torna alla scelta** con «Cambia eroe» in fondo alla
+  pagina dell'eroe (`[data-azione="eroe"]`, si apre dal globo dell'esperienza;
+  prima era un «cambio» sulla carta di chi scende, sulla mappa), senza perdere niente: la terra rinasce con
   la nebbia e il posto dell'eroe scelto (`:key` sull'eroe in `Gioco.vue`).
   **Da dentro una discesa** si cambia dal velo della pausa («scelgo un altro
   eroe»: la discesa si salva com'è): uscendo con la ✕ non si passa dalla terra di
@@ -37,8 +38,7 @@ campagna), `Gioco.vue` (chi legge e scrive), `viste/Eroi.vue` (la scelta).
   con i tratti che contano (`💎 ×1,5`, `🔦 vedi più lontano`) e il livello dell'eroe («liv. 5»); un'avventura
   nuova ha lo zaino vuoto e quindi quelli di base. Il ritratto (`viste/Armato.vue`,
   alla scala della figura) impugna l'arma e imbraccia lo scudo; l'armatura e il
-  gioiello restano due iconcine accanto. Vale anche per la carta di chi
-  scende in fondo alla terra di sopra. Le barre della scelta si misurano sul
+  gioiello restano due iconcine accanto. Le barre della scelta si misurano sul
   più forte di loro, con la sua roba, e non sbordano.
 
 ## Dove sta, nel salvataggio
@@ -143,6 +143,6 @@ qui»). Nella scelta `.sot-eroe[data-eroe="<eroe>"]` con `data-nuova` (1 se mai
 cominciata), `[data-punto]` (a che punto è), `[data-addosso="<cosa>"]` (l'arma
 in mano, l'armatura e il gioiello), `[data-in-mano]` / `[data-in-braccio]` sul
 ritratto, `[data-tratti]`, `[data-fondo]`, `[data-a-meta]` (col suo
-`[data-ritaglio]`), `[data-livello-avventura]`; `[data-azione="eroe"]` la apre dalla terra di sopra;
+`[data-ritaglio]`), `[data-livello-avventura]`; `[data-azione="eroe"]` («Cambia eroe», nella pagina dell'eroe) la apre dalla terra di sopra;
 `scegliAvventura` in `test/aiuto/browser.mjs` per chi deve solo scegliere. In
 home `[data-riprendi] [data-ritaglio]`.

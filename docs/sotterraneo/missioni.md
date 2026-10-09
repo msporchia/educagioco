@@ -127,7 +127,7 @@ Zannagrigia, lanterna) sono radici senza seguito.
 ## Il diario e il promemoria
 
 - **Il diario** (`viste/Diario.vue`, `diario` in `motore/missioni.js`): un
-  tasto 📖 sempre sulla terra di sopra, accanto alla carta di chi scende, col
+  tasto 📖 sempre sulla terra di sopra, nella barra in basso, col
   numero delle aperte (bordo d'oro se una è da consegnare). Si apre al centro,
   si chiude con la ✕ o toccando fuori (e il tocco passa alla mappa). Quattro elenchi: **da consegnare** (le fatte, in cima e
   in oro: «Torna dal mugnaio: hai il sacco di farina buona», «… hai battuto

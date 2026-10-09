@@ -23,8 +23,8 @@ restano in codice anche dopo: si muovono.
   e solo i globi sporgono in su di una decina di pixel. Alta 64 px (più
   l'area sicura in fondo). Un foglio che sale dal basso la copre; la
   telecamera conta solo la parte di foglio che sta sopra la tela
-  (`misuraFoglio` in `Gioco.vue`). Sopra sta sotto la terra, e la carta di
-  chi scende le galleggia sopra.
+  (`misuraFoglio` in `Gioco.vue`). Sopra sta sotto la terra, che arriva fino
+  alla barra: in fondo non c'è più nessuna carta, e l'eroe non ci finisce sotto.
 - **I globi** (`--globo`: da 54 px a 74 px, il 18,5% della larghezza): un
   anello di pietra, il vetro scuro, il liquido che si svuota dall'alto con
   due onde a velocità diverse (un'onda sola sembra un nastro che scorre), il
@@ -36,17 +36,25 @@ restano in codice anche dopo: si muovono.
   dopo, e al centro dice l'esperienza fatta in questo livello su quella che
   serve («35/120»). Col numero del livello sembrava un contatore, non un
   globo che si riempie (l'utente, 9 ottobre): il livello sta sulla pagina
-  dell'eroe e sulla carta di chi scende (`data-livello` sul tasto). È un tasto: apre la pagina
-  dell'eroe. Quando ci sono punti da dare porta un «+» d'oro che pulsa
+  dell'eroe e sul tasto (`data-livello`). È un tasto: apre la pagina
+  dell'eroe, che sopra ha anche «Cambia eroe» ([livelli.md](livelli.md#la-pagina-delleroe)). Quando ci sono punti da dare porta un «+» d'oro che pulsa
   (`[data-punti]`), finché non si danno; salendo di livello il vetro si
   accende d'oro e il globo si gonfia un attimo.
-- **Le caselle**, da sinistra: 🧪 le pozioni col numero (un tocco beve), 🎒
-  lo zaino con le tasche piene, 📖 il diario delle missioni col numero delle
+- **Le caselle**, da sinistra: 🧪 le pozioni col numero (un tocco beve), la
+  bisaccia (lo zaino) con le tasche piene, 📖 il diario delle missioni col numero delle
   aperte (in oro se una è da consegnare), 🗺️ la mappa grande, 💎 le gemme (un
   tocco apre lo zaino, dove le gemme stanno con la roba). **Tutte della
   stessa forma e della stessa larghezza**: un contatore più stretto e senza
   bordo era una cosa in più da capire. Vuota, una casella si spegne in
   grigio.
+- **Lo zaino è una bisaccia di cuoio, non un'emoji.** Il 🎒 di Twemoji è lo
+  zainetto rosso da scuola, fuori posto in un gioco serio (l'utente, 9
+  ottobre: «abbastanza terribile»). Nell'atlante non c'è una sacca, quindi
+  `BISACCIA` in `viste/pixel.js`: dodici pixel disegnati in codice, contorno
+  scuro, luce dall'alto a sinistra, fibbia d'oro, a scala 2 (26 px contro i
+  19 dell'emoji: i margini negativi di `.sot-cella svg` la tengono nel posto
+  delle altre). La usano anche la targa dello zaino e il «Togli». Quando
+  arriverà una sacca dipinta nel foglio, si cambia solo lì.
 - **Niente luce nella barra.** Il globo d'oro della torcia e la casella delle
   torce alla cintura non ci sono più: la luce si vede nella scena (il buio
   che si stringe), agli sgoccioli e senza scorta lo dice una riga in mezzo al
@@ -71,7 +79,7 @@ restano in codice anche dopo: si muovono.
 | ❤️ vita | quella della discesa | piena, col tetto della roba e del livello |
 | esperienza | sale battendo i mostri | quella dell'avventura |
 | 🧪 | beve la pozione giusta | «❤️ sei già in piena forma» |
-| 🎒 | lo zaino della discesa | lo zaino di sopra: ci si veste e ci si spoglia, ma non si beve e non si butta |
+| bisaccia | lo zaino della discesa | lo zaino di sopra: ci si veste e ci si spoglia, ma non si beve e non si butta |
 | 📖 | il diario, senza «vai da …» | il diario della terra di sopra, con «vai da …» |
 | 🗺️ | la mappa grande | spenta: la terra è già la mappa |
 | 💎 | le gemme, apre lo zaino | uguale |
