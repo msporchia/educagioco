@@ -83,6 +83,14 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
 ## I livelli e la roba
 
+- **Le abilità dopo lo scontro in due fasi** (9 ottobre, in coda dietro la grafica): costi più alti e energia più scarsa,
+  con le boccette di mana comprabili; pozioni e torce dello stesso tipo in una casella sola; spazio dello zaino a diamanti;
+  l'ultima abilità di ogni ramo come colpo forte contro i boss (al posto dell'area, che non si vede contro un mostro solo) e i
+  bonus fissi in percentuale; spiegare le passive; il fabbro (più scelta, rari ed epici molto più cari a parità di livello, i
+  pezzi non equipaggiabili in vista, cosa fa «+1 fuoco»); la forza del mago; calibrare i livelli con l'effetto finito
+  dell'equipaggiamento. La grafica del duello: animazioni più lunghe e leggibili, una per tipo d'attacco (scudo e cura non
+  scattano in avanti), e il mostro che attacca davvero nel disegno. Vedi [abilita.md](abilita.md).
+
 - **L'albero delle abilità da tarare**: c'è (9 ottobre), ma il banco non lo
   usa e le misure non lo vedono. Cosa manca e da dove si comincia:
   [abilita.md](abilita.md#cosa-non-è-ancora-fatto).

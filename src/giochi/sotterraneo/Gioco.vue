@@ -60,6 +60,7 @@ import PaginaEroe from './viste/PaginaEroe.vue'
 import PaginaAbilita from './viste/PaginaAbilita.vue'
 import CaselleAbilita from './viste/CaselleAbilita.vue'
 import Medaglione from './viste/Medaglione.vue'
+import Cornice from './viste/Cornice.vue'
 import Tesori from './viste/Tesori.vue'
 import Grosso from './viste/Grosso.vue'
 import LaBottega from './viste/Bottega.vue'   // la bottega dei mercanti di sopra
@@ -1453,8 +1454,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <!-- lo scontro sta al centro, non sale dal basso: un mostro addosso arriva mentre si cammina, e in
              fondo allo schermo chi guarda il proprio eroe non lo vedrebbe. Niente classe `sot-foglio`
              apposta: `misuraFoglio()` cerca quella, e non trovandola la telecamera non fa spazio a un pannello -->
-        <div v-if="foglio && foglio.che === 'scontro'" class="sot-velo sot-velo-scontro">
-          <div class="sot-modale">
+        <Cornice v-if="foglio && foglio.che === 'scontro'" scontro>
+          <div class="sot-modale sot-modale-cornice">
             <Scontro v-bind="nemico" :scosso="scosso" :scambio="scambio" />
             <!-- prima si sceglie cosa fare (attacco, abilità, bere, scappare), poi compare la domanda per quel colpo
                  (docs/sotterraneo/abilita.md). Il pericolo non ha più un menu suo: è una riga sopra la stessa scelta -->
@@ -1472,7 +1473,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
               </div>
             </template>
           </div>
-        </div>
+        </Cornice>
 
         <Foglio v-else-if="foglio && foglio.che === 'porta'" em="🚪" titolo="Una porta chiusa"
                 :dice="segno ? segno.em + ' ' + segno.dice : ''">

@@ -907,6 +907,10 @@
   animation: sot-cresce .16s ease-out;
 }
 .sot-cornice.sot-alta { height: 100% }
+/* il duello nella stessa cornice (Cornice.vue, `scontro`): sopra la barra coi globi (64 px); la modale di dentro non ha più carta, ombra né tetto suoi */
+.sot-sipario.sot-velo-scontro { padding-bottom: calc(10px + 64px + env(safe-area-inset-bottom)); z-index: 12 }
+.sot-modale.sot-modale-cornice { background: none; box-shadow: none; padding: 0; border-radius: 0; animation: none; max-height: none; overflow-y: auto; min-height: 0; flex: 1 1 auto }
+.sot-cornice:has(.sot-modale-cornice) { padding-top: 12px }
 .sot-angolo { position: absolute; width: 30px; height: 30px; z-index: 3; pointer-events: none }
 .sot-alto-sx { top: -6px; left: -6px }
 .sot-alto-dx { top: -6px; right: -6px; transform: scaleX(-1) }
