@@ -1,34 +1,50 @@
-/* il regno: la mappa a tutta larghezza, i segnalini sopra (docs/castello/regno.md) */
+/* il regno: la mappa, gli scudi delle tappe sopra, il cavaliere (docs/castello/regno.md) */
 /* più larga del telefono: si naviga trascinando, e si apre su dove sei */
-.regno { position:relative; width:clamp(640px, 100%, 760px); margin:0 auto; flex:none; line-height:0;
+.regno { position:relative; width:clamp(760px, 100%, 900px); margin:0 auto; flex:none; line-height:0;
          -webkit-user-select:none; user-select:none }
-.fondo { display:block; width:100%; height:auto; image-rendering:auto; pointer-events:none }
+.fondo { display:block; width:100%; height:auto; pointer-events:none }
 .tappe { position:absolute; inset:0; line-height:normal }
 
-/* un segnalino: tondo, col numero dentro l'isola; grande quello del capo */
-.tap { position:absolute; transform:translate(-50%,-50%); width:36px; height:36px; padding:0;
-       border-radius:50%; border:3px solid #fff; display:grid; place-items:center;
-       font-size:15px; font-weight:900; color:#fff; background:#8b93a6;
-       box-shadow:0 3px 0 #0006, 0 0 0 2px #0003; touch-action:manipulation }
-.tap.capo { width:44px; height:44px; font-size:17px }
-.tap .corona { position:absolute; top:-15px; font-size:15px; line-height:1 }
-.tap.fatta { background:#38c172 }
-.tap.ora { background:linear-gradient(180deg,#ffd76a,#ffa91f); color:#5a3500;
-           animation:pulsa 1.4s ease-in-out infinite }
-.tap.aperta { background:#fff; color:#5b3fa8 }
-.tap.chiusa { background:#8b93a6cc; color:#ffffffcc }
-.tap.libera { background:linear-gradient(180deg,#b78cff,#7d4fd8); font-size:20px }
-.tap.libera.chiusa { background:#8b93a6cc }
-.tap.scelta { box-shadow:0 3px 0 #0006, 0 0 0 4px #ffe066 }
-.tap:active { transform:translate(-50%,-50%) scale(.94) }
-@keyframes pulsa { 50% { box-shadow:0 3px 0 #0006, 0 0 0 7px #ffd76a66 } }
+/* uno scudo: il bordo chiaro, dentro il colore della sua isola, il numero in fila su tutto il regno */
+.tap { position:absolute; transform:translate(-50%,-50%); width:32px; height:37px; padding:0;
+       border:0; background:none; display:grid; place-items:center; touch-action:manipulation;
+       filter:drop-shadow(0 3px 0 #0008); --chiaro:#7cc84a; --scuro:#2f7a2c; --orlo:#f6ecd2 }
+.tap .scudo, .tap .scudo::before {
+  position:absolute; clip-path:polygon(50% 100%, 8% 74%, 0 14%, 50% 0, 100% 14%, 92% 74%) }
+.tap .scudo { inset:0; background:var(--orlo) }
+.tap .scudo::before { content:''; inset:3px;
+  background:linear-gradient(180deg, #ffffff38 0 34%, transparent 34%),
+             linear-gradient(160deg, var(--chiaro), var(--scuro)) }
+.tap .n { position:relative; margin-top:-4px; font-size:13px; font-weight:900; color:#fff; line-height:1;
+          text-shadow:0 1px 0 #0009, 0 0 3px #0006 }
+.tap.capo { width:39px; height:45px }
+.tap.capo .n { font-size:15px }
+.tap .corona { position:absolute; top:-14px; font-size:14px; line-height:1 }
+.tap .spunta { position:absolute; right:-6px; top:-5px; width:15px; height:15px; border-radius:50%;
+               display:grid; place-items:center; font-size:10px; font-weight:900; line-height:1;
+               color:#fff; background:#38c172; border:2px solid #fff }
 
-/* la bandierina di dove sei, sopra la tappa da fare */
-.qui { position:absolute; width:0; height:0; pointer-events:none;
-       border-left:9px solid transparent; border-right:9px solid transparent; border-top:14px solid #e8463c;
-       transform:translate(-50%,-44px); filter:drop-shadow(0 2px 0 #fff) drop-shadow(0 1px 1px #0008);
-       animation:salta 1.4s ease-in-out infinite }
-@keyframes salta { 50% { transform:translate(-50%,-50px) } }
+.tap.bosco { --chiaro:#86d057; --scuro:#2e7d2b }
+.tap.lava { --chiaro:#ff9a4a; --scuro:#a3301a }
+.tap.neve { --chiaro:#a9dcff; --scuro:#3b6ab3 }
+.tap.palude { --chiaro:#c2c35a; --scuro:#5a6320 }
+.tap.libera { --chiaro:#ffe07a; --scuro:#c27c00; width:36px; height:42px }
+.tap .coppa { font-size:16px; text-shadow:none }
+
+.tap.chiusa { --chiaro:#a3a9b4; --scuro:#5f6672; --orlo:#d5d9df }
+.tap.chiusa .n { color:#ffffffb0 }
+.tap.chiusa .coppa { opacity:.55 }
+.tap.ora { --orlo:#ffd23f; animation:brilla 1.4s ease-in-out infinite }
+.tap.scelta { --orlo:#fff8a8 }
+.tap:active { transform:translate(-50%,-50%) scale(.94) }
+@keyframes brilla { 50% { filter:drop-shadow(0 3px 0 #0008) drop-shadow(0 0 7px #ffd23f) } }
+
+/* il cavaliere: i piedi sul bordo in alto dello scudo */
+.eroe { position:absolute; z-index:2; pointer-events:none; line-height:0;
+        transform:translate(-50%, calc(-100% - 10px)); filter:drop-shadow(0 2px 0 #0007) }
+.eroe .gabbia { display:block; position:relative; overflow:hidden }
+.eroe .gabbia > span { display:block }
+.eroe.specchio .gabbia { transform:scaleX(-1) }
 
 /* i potenziamenti delle libere: uno per tutto il castello, sotto la rocca */
 .dote { position:absolute; transform:translate(-50%,-50%); white-space:nowrap; line-height:normal;
@@ -41,4 +57,4 @@
 .riga.perche { margin-top:4px; font-weight:700 }
 .bottone.stretto { margin-top:8px; width:100%; font-size:14px; padding:9px 14px; min-height:0 }
 
-@media (prefers-reduced-motion: reduce) { .tap.ora, .qui { animation:none } }
+@media (prefers-reduced-motion: reduce) { .tap.ora { animation:none } }
