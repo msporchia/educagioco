@@ -1107,7 +1107,7 @@
 .sot-eroe-porte { display: flex; gap: 8px; flex: none }
 .sot-eroe-porte .sot-grosso { flex: 1; padding: 11px 8px }
 .sot-eroe-nuovi { color: var(--sot-oro); font-weight: 900; opacity: 1 !important }
-/* i punti da dare e, accanto, «Rifai»: un tasto piccolo che chiede conferma, perché costa gemme */
+/* i punti da dare e, accanto, «Riassegna»: un tasto piccolo che chiede conferma, perché costa gemme */
 .sot-punti-riga { display: flex; align-items: center; gap: 8px; flex: none }
 .sot-punti-riga .sot-eroe-punti { flex: 1; margin: 0 }
 .sot-riassegna {

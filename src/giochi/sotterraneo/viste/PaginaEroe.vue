@@ -71,7 +71,7 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
       <!-- riassegnare: i punti dati tornano da dare, a cinque gemme l'uno (niente scelte per sempre) -->
       <button v-if="costoRiassegnare" type="button" class="sot-riassegna" :class="{ 'sot-sicuro': sicuro }" data-azione="riassegna"
               :data-costo="costoRiassegnare" :disabled="numeri.gemme < costoRiassegnare" @click="riassegna">
-        {{ sicuro ? 'Sicuro?' : 'Rifai' }} <span class="em">💎</span>{{ costoRiassegnare }}
+        {{ sicuro ? 'Sicuro?' : 'Riassegna' }} <span class="em">💎</span>{{ costoRiassegnare }}
       </button>
     </div>
 

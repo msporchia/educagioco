@@ -133,7 +133,7 @@ sente, chi la lascia indietro sì.
 Niente scelte per sempre (l'utente): i punti delle caratteristiche e quelli
 dell'albero si possono riassegnare, a **5 gemme a punto da rimettere**
 (`GEMME_PER_RIASSEGNARE`). Abbastanza per non farlo a ogni discesa, poco per
-rimediare a un errore. «Rifai 💎 40» sta accanto ai punti da dare, nella
+rimediare a un errore. «Riassegna 💎 40» sta accanto ai punti da dare, nella
 pagina dell'eroe e nell'albero; il primo tocco chiede «Sicuro?», il secondo
 fa. Sopra e sotto.
 

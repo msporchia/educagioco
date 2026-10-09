@@ -96,7 +96,7 @@ const dettaglio = computed(() => {
       <!-- dimenticare l'albero: i punti tornano da dare, a cinque gemme l'uno -->
       <button v-if="costoDimenticare" type="button" class="sot-riassegna" :class="{ 'sot-sicuro': sicuro }" data-azione="dimentica"
               :data-costo="costoDimenticare" :disabled="gemme < costoDimenticare" @click="dimentica">
-        {{ sicuro ? 'Sicuro?' : 'Rifai' }} <span class="em">💎</span>{{ costoDimenticare }}
+        {{ sicuro ? 'Sicuro?' : 'Riassegna' }} <span class="em">💎</span>{{ costoDimenticare }}
       </button>
     </div>
 

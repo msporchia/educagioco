@@ -158,7 +158,7 @@ se lo ritrova nello scontro.
   dalla caratteristica dell'arma.
 
 **Rifare l'albero** si paga in gemme, come riassegnare i punti
-([livelli.md](livelli.md#riassegnare)): «Rifai» accanto ai punti da
+([livelli.md](livelli.md#riassegnare)): «Riassegna» accanto ai punti da
 imparare, e le caselle si svuotano.
 
 Nei test: `unita/sotterraneo-abilita` (i rami in piedi, difesa e cura per

@@ -3,7 +3,7 @@
 
    (docs/sotterraneo/livelli.md, grossi.md, rarita.md)
    Sopra: il «+» d'oro sul livello dice che ci sono punti da dare (e
-   «Rifai», che costa gemme); la pagina dell'eroe si apre dal globo e dal ritratto, dice
+   «Riassegna», che costa gemme); la pagina dell'eroe si apre dal globo e dal ritratto, dice
    livello, esperienza e i numeri, e il «+» di una caratteristica che
    correrebbe troppo avanti è spento mentre quella rimasta indietro
    brilla (la regola del bilanciamento); un punto dato si vede subito; i
@@ -121,7 +121,7 @@ controlla('«prima un po\' di questa»', /prima un po' di questa/.test(await rig
 uguale('quattro caratteristiche: forza, destrezza, intelligenza, tempra',
        (await page.locator('[data-caratteristica]').evaluateAll(es => es.map(e => e.dataset.caratteristica))).join(), 'forza,destrezza,intelligenza,tempra')
 // riassegnare costa cinque gemme a punto: nove punti dati, 45 gemme, e se ne hanno 40
-uguale('«Rifai» dice quanto costa', await page.locator('[data-azione="riassegna"]').getAttribute('data-costo'), '45')
+uguale('«Riassegna» dice quanto costa', await page.locator('[data-azione="riassegna"]').getAttribute('data-costo'), '45')
 uguale('e senza abbastanza gemme è spento', await page.locator('[data-azione="riassegna"]').isDisabled(), true)
 await scatto(page, 'eroe-pagina')
 {
