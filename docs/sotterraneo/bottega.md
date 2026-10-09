@@ -53,9 +53,17 @@ più nessuno.
   dal 3–12% all'11–29%): è il premio per averle messe da parte. Curve provate
   sul giocatore che gira tutto: ×1,5 per la prima riga e +0,5 a ogni altra
   regalavano la grotta (a 4/10 il 41% contro il 3%), troppo.
+- **Il prezzo segue la potenza** (l'utente, 9 ottobre: un raro dà più di un comune a parità
+  di livello, quindi costa molto di più): al banco un pezzo costa base × livello × `acq` della
+  rarità (comune 1, magico 2,6, raro 6, leggendario 14, `dati/pezzi.js`); rivendendo si incassa
+  ancora la metà del vecchio valore (`molt`), così la roba che cade non gonfia le gemme.
+  Le varianti sono tre per ogni rarità, con abilità diverse. **I pezzi da meritare**
+  (`daMeritare`, `DA_MERITARE` = 2 per linguetta): quelli che la classe porta ma che chiedono più
+  caratteristica di quella che ha («Serve Intelligenza 6 (hai 5)»), più forti di quello che ha
+  addosso; si vedono spenti e non si comprano, sono il traguardo.
 - **Mai una linguetta vuota** (`rialzi` in `motore/bottega.js`): ogni
   linguetta che veste (armi, scudi e armature, gioielli) ha sempre almeno
-  tre pezzi (`PEZZI_PER_LINGUETTA`), tutti che migliorano quello che l'eroe
+  sei pezzi (`PEZZI_PER_LINGUETTA`, prima tre: l'utente voleva più scelta), tutti che migliorano quello che l'eroe
   ha addosso in quel posto. Se fra quelli del suo livello (il passo e la
   vetrina) non bastano, il mercante ne propone di livello o rarità più alti
   dello stesso tipo — comune al livello dopo, magico e raro con le abilità

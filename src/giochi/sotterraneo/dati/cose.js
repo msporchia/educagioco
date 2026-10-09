@@ -198,6 +198,8 @@ function componi(k) {
     c[a] = Math.round(((c[a] || 0) + v) * 100) / 100
   }
   c.prezzo = Math.max(1, Math.round((b.prezzo || 1) * valoreDelLivello(liv) * RARITA[rarita].molt))
+  // al banco costa di più: la rarità pesa molto più di quanto si incassa rivendendo (dati/pezzi.js, `acq`)
+  c.prezzoAcquisto = Math.max(1, Math.round((b.prezzo || 1) * valoreDelLivello(liv) * RARITA[rarita].acq))
   c.nome = nome || nomeDelPezzo(b, rarita, abilita, liv)
   return c
 }

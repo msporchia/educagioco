@@ -44,7 +44,7 @@ export const ABILITA = [
   { campo: 'dif', em: '🛡️', nome: 'Difesa', scrivi: v => `+${virgola(v)}`, dice: v => `+${virgola(v)} difesa` },
   { campo: 'vita', em: '❤️', nome: 'Vita', scrivi: v => `+${virgola(v)}`, dice: v => `+${virgola(v)} vita` },
   { campo: 'rigenera', em: '💚', nome: 'Rigenera', scrivi: v => `+${virgola(v)}`, dice: v => `+${virgola(v)} vita a ogni mostro battuto` },
-  { campo: 'fuoco', em: '🔥', nome: 'Fuoco', scrivi: v => `+${virgola(v)}`, dice: v => `+${virgola(v)} a ogni colpo, anche a chi para` },
+  { campo: 'fuoco', em: '🔥', nome: 'Fuoco', scrivi: v => `+${virgola(v)}`, dice: v => `+${virgola(v)} danno di fuoco a ogni colpo: passa anche la difesa` },
   { campo: 'schivata', em: '🌀', nome: 'Schivata', scrivi: v => `${virgola(v)}%`, dice: v => `${virgola(v)} graffi su cento schivati` },
   { campo: 'gemme', em: '💎', nome: 'Gemme', scrivi: v => `×${virgola(Math.round((1 + v) * 100) / 100)}`,
     dice: v => `ogni gemma vale ×${virgola(Math.round((1 + v) * 100) / 100)}` },

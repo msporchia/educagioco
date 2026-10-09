@@ -11,7 +11,9 @@ import { bancoDelPasso, vetrinaDelPasso, righeAvanti } from './storia.js'
 
 // quanti pezzi, almeno, ha ogni linguetta di un mercante che veste (docs/sotterraneo/bottega.md, «Mai una linguetta
 // vuota»), e fin dove si spinge il livello dei pezzi in più per trovarli
-export const PEZZI_PER_LINGUETTA = 3
+export const PEZZI_PER_LINGUETTA = 6
+// e quanti pezzi «da meritare» (che richiedono più caratteristica di quella che hai) si vedono, spenti, per linguetta
+export const DA_MERITARE = 2
 const RIALZO_MASSIMO = 80
 
 export class Bottega extends Corredo {
@@ -76,7 +78,7 @@ export class Bottega extends Corredo {
 
   // quanto costa qui: il prezzo pieno, e di più se il pezzo nella storia viene dopo il passo (sovrapprezzo)
   quantoCosta(k) {
-    return prezzoAvanti(this.prezzoDi(k), righeAvanti(this.chiEro, this.finite, k))
+    return prezzoAvanti(super.quantoCosta(k), righeAvanti(this.chiEro, this.finite, k))
   }
 
   // i pezzi delle righe dopo che il banco non porta: si comprano lo stesso, a un prezzo più alto
@@ -126,9 +128,42 @@ export class Bottega extends Corredo {
       if (s.vendi || !s.dove) continue
       const qui = vista.filter(r => COSE[r.chiave].dove && schedaDi(m, r.chiave) === s)
       const manca = PEZZI_PER_LINGUETTA - qui.length
-      if (manca > 0) fuori.push(...this.rialziDi(m, s, manca, new Set(vista.map(r => r.chiave))))
+      const visti = new Set(vista.map(r => r.chiave))
+      if (manca > 0) fuori.push(...this.rialziDi(m, s, manca, visti))
+      fuori.push(...this.daMeritare(m, s, DA_MERITARE, new Set([...visti, ...fuori.map(r => r.chiave)])))
     }
     return fuori
+  }
+
+  // I pezzi «da meritare» (l'utente, 9 ottobre): quelli che la classe porta ma che chiedono più caratteristica di quella che
+  // ha adesso. Si vedono spenti, col «Serve Forza 15 (hai 10)», e non si comprano: sono quello a cui puntare. Solo quelli più
+  // forti di quello che c'è addosso in quel posto, dal meno caro, uno per base e con i rari in testa
+  daMeritare(m, scheda, quanti, visti) {
+    const valore = c => (c ? (c.att || 0) + (c.dif || 0) + (c.vita || 0) / 3 + (c.fuoco || 0) + (c.rigenera || 0) + (c.schivata || 0) / 8 : 0)
+    const addosso = Math.max(0, ...scheda.dove.map(d => valore(COSE[this.casella(d)])))
+    const basi = A_SORTE.filter(b => COSE[b].dove && scheda.dove.includes(COSE[b].dove) && vendeLa(m, b) &&
+                                     !m.sempre.includes(b) && this.porta(b))
+    const L = this.livelloEroe
+    const buoni = []
+    const prova = k => {
+      if (visti.has(k) || this.possiedo(k) || !COSE[k] || this.posso(k) || !this.porta(k) || valore(COSE[k]) <= addosso) return
+      visti.add(k)
+      buoni.push({ chiave: k, sempre: false, avanti: righeAvanti(this.chiEro, this.finite, k), rialzo: true, meritare: true,
+                   costa: this.quantoCosta(k) })
+    }
+    for (let su = 0; su <= RIALZO_MASSIMO && buoni.length < quanti * 4; su++)
+      for (const b of basi) {
+        prova(chiaveDelPezzo(b, L + su))
+        const possibili = CHIAVI_ABILITA.filter(a => ABILITA_DEI_PEZZI[a].dove.includes(COSE[b].dove))
+        if (possibili.length < 3) continue
+        const seme = [...b].reduce((x, ch) => x + ch.charCodeAt(0), 0) + su
+        const abilita = [possibili[seme % possibili.length], possibili[(seme + 3) % possibili.length]]
+        if (new Set(abilita).size === 2) prova(chiaveDelPezzo(b, L + su, 'raro', abilita))
+      }
+    buoni.sort((a, b) => a.costa - b.costa || (a.chiave < b.chiave ? -1 : 1))
+    const presi = [], basiPrese = new Set()
+    for (const r of buoni) if (presi.length < quanti && !basiPrese.has(baseDi(r.chiave))) { presi.push(r); basiPrese.add(baseDi(r.chiave)) }
+    return presi.map(({ costa, ...r }) => r)
   }
 
   rialziDi(m, scheda, quanti, visti) {
@@ -148,11 +183,12 @@ export class Bottega extends Corredo {
     for (let su = 0; su <= RIALZO_MASSIMO && buoni.length < quanti + 2; su++)
       for (const b of basi) {
         prova(chiaveDelPezzo(b, L + su))
-        for (const rarita of ['magico', 'raro']) {
+        // tre varianti per ogni rarità: abilità diverse, così il banco ha scelta (l'utente, 9 ottobre)
+        for (const rarita of ['magico', 'raro']) for (let v = 0; v < 3; v++) {
           const possibili = CHIAVI_ABILITA.filter(a => ABILITA_DEI_PEZZI[a].dove.includes(COSE[b].dove))
           const n = rarita === 'magico' ? 1 : 2
           if (possibili.length < n + 1) continue
-          const seme = [...b].reduce((x, ch) => x + ch.charCodeAt(0), 0) + su
+          const seme = [...b].reduce((x, ch) => x + ch.charCodeAt(0), 0) + su + v * 5
           const abilita = Array.from({ length: n }, (_, i) => possibili[(seme + i * 3) % possibili.length])
           if (new Set(abilita).size === n) prova(chiaveDelPezzo(b, L + su, rarita, abilita))
         }

@@ -577,7 +577,7 @@ export class Corredo {
   }
 
   // quanto si paga al banco: il prezzo della cosa (la Bottega ci aggiunge il sovrapprezzo dei pezzi più avanti)
-  quantoCosta(k) { return this.prezzoDi(k) }
+  quantoCosta(k) { const c = COSE[k]; return c && c.prezzoAcquisto ? c.prezzoAcquisto : this.prezzoDi(k) }
 
   nonCiStarebbe(k) {
     const prova = this.copia()
