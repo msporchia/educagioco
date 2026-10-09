@@ -101,7 +101,7 @@ async function fermoGiu() {
     await attendi(page, 300)
   }
 }
-const apertoGiu = async () => (await page.locator('.sot-domanda, [data-azione="portale"], [data-azione="scappa"]').count()) > 0
+const apertoGiu = async () => (await page.locator('.sot-domanda, [data-azione="portale"], [data-azione="scappa"], .sot-velo-scontro').count()) > 0
 // cammina verso la cosa in `a` toccando la cella più lontana della strada che sta sullo schermo, finché si è
 // accanto; poi tocca la cosa, che da accanto è in luce (una cosa al buio non si tocca: si cammina lì)
 async function vaiGiu(a, { toccala = true } = {}) {

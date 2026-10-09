@@ -15,6 +15,7 @@ defineProps({
   male: { type: Number, required: true },     // e quello che arriva sbagliando
   vita: { type: Number, required: true },
   vitaMax: { type: Number, required: true },
+  puoiScappare: { type: Boolean, default: true },   // lo usa il tasto sotto (Gioco.vue): qui solo per non finire sul div
   scosso: { type: Number, default: 0 },
   scambio: { type: Object, default: null },   // com'è andato l'ultimo scambio: { dato, preso, caduto }
 })

@@ -15,6 +15,7 @@ defineProps({
   male: { type: Number, required: true },     // il colpo pieno, quello che arriva sbagliando
   graffio: { type: Number, required: true },  // e quello che passa anche rispondendo bene: il costo di scappare
   puoiBere: { type: Boolean, default: false },
+  puoiScappare: { type: Boolean, default: true },   // falso se il graffio della fuga lo farebbe cadere: il tasto non c'è
   cura: { type: Number, default: 0 },         // quanto rende la pozione che si berrebbe (0: l'elisir)
 })
 const emit = defineEmits(['bevi', 'scappa', 'continua'])
@@ -38,7 +39,7 @@ const scegli = che => { if (pronto.value) emit(che) }
       <span class="em">🧪</span> bevi
       <small v-if="cura">❤️ +{{ cura }}</small>
     </button>
-    <button type="button" class="sot-grosso sot-chiaro" data-azione="ringhio-scappa" @click="scegli('scappa')">
+    <button v-if="puoiScappare" type="button" class="sot-grosso sot-chiaro" data-azione="ringhio-scappa" @click="scegli('scappa')">
       <span class="em">🏃</span> scappo via
       <small>ti graffia ❤️ −{{ graffio }}</small>
     </button>

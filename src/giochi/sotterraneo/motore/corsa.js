@@ -143,6 +143,8 @@ export class Corsa extends Corredo {
 
   // un mostro picchia sempre: metà del colpo pieno anche rispondendo bene, o le pozioni non servirebbero a niente (docs/sotterraneo/regole.md)
   graffio(m) { return Math.max(1, Math.floor(this.danno(m) / 2)) }
+  // scappare costa un graffio: se il graffio fa cadere non è una fuga, e il tasto non si offre
+  puoScappare(m) { return this.graffio(m) < this.vita }
 
   durezza(rincaro = 0) {
     return Math.max(0, Math.min(1, durezzaDi(this.tappa, this.piano) + rincaro))
@@ -526,7 +528,9 @@ export class Corsa extends Corredo {
   chiediOFerma(m) {
     const f = this.foglio
     const perche = pericoloDi({ vita: this.vita, vitaMax: this.vitaMax, male: this.danno(m), fermate: f.fermate || 0 })
-    if (!perche) { this.chiedi('scontro', this.rincaroDi(m)); return null }
+    // uno stop senza niente da bere né da dove scappare offrirebbe solo «continuo»: non si ferma
+    const scelte = this.pozioneGiusta() != null || this.puoScappare(m)
+    if (!perche || !scelte) { this.chiedi('scontro', this.rincaroDi(m)); return null }
     f.fermate = (f.fermate || 0) + 1
     f.pericolo = perche
     this.chiesta = null

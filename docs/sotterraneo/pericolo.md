@@ -48,9 +48,13 @@ sparisce, perché è una delle tre scelte.
   della barra (`pozioneGiusta`: la più piccola che riempie la vita, o la più
   grande), dice sul tasto quanto rende («❤️ +10»), e **si riprende a
   domandare**. Non si beve mai da sola: lo stop non agisce, aspetta.
-- **🏃 scappo via** — col graffio di oggi (sul tasto: «ti graffia ❤️ −5»),
-  e può far svenire come sempre.
+- **🏃 scappo via** — col graffio di oggi (sul tasto: «ti graffia ❤️ −5»).
+  **Se il graffio lo farebbe cadere il tasto non c'è** (`puoScappare`), qui
+  come nello scontro: offrirlo sarebbe offrire di svenire.
 - **⚔️ continuo** — si torna alla domanda, senza costo.
+- **Uno stop con solo «continuo» non compare**: senza niente da bere e
+  senza fuga possibile, lo scontro va avanti alla domanda dopo e la
+  fermata non si conta.
 - **Resta modale**: il velo non si chiude toccandolo, come tutto lo
   scontro. **I tasti sono ciechi per 320 ms** (`CIECA`, [../core/interfaccia.md](../core/interfaccia.md#i-tempi)):
   il dito che ha toccato la risposta lascia un click che atterrerebbe sul

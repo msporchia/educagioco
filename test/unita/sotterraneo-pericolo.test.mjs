@@ -7,6 +7,7 @@
    `node test/esegui.mjs sotterraneo-pericolo --niente-build` */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
+import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { pericoloDi, DETTO_DEL_PERICOLO, FERMATE_PER_SCONTRO } from '../../src/giochi/sotterraneo/motore/pericolo.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
@@ -68,8 +69,9 @@ function scontro({ male = 3, vita = null, zaino = [] } = {}) {
 }
 
 {
-  // una volta per scontro: al secondo stop (un colpo pieno e cade) e basta
-  const { c } = scontro({ male: 3, vita: 7 })
+  // una volta per scontro: al secondo stop (un colpo pieno e cade) e basta. Con una pozione in tasca: a 1 di vita
+  // scappare farebbe cadere, e senza niente da bere lo stop non avrebbe scelte (vedi sotto)
+  const { c } = scontro({ male: 3, vita: 7, zaino: [Object.keys(COSE).find(k => COSE[k].usa === 'cura')] })
   let stop = 0
   let ultimo = null
   for (let i = 0; i < 6 && c.foglio && c.foglio.che === 'scontro'; i++) {
@@ -149,6 +151,30 @@ function scontro({ male = 3, vita = null, zaino = [] } = {}) {
   uguale('si ferma', c.rispondi(false).ringhia, 'duro')
   const e = c.rispondi(true)
   controlla('rispondere continua', e && e.che !== undefined && !c.foglio?.pericolo)
+}
+
+{
+  // senza pozioni e con un graffio che farebbe cadere, lo stop offrirebbe solo «continuo»: non si ferma
+  const { c, m } = scontro({ male: 10, vita: 12 })
+  const e = c.rispondi(false)
+  controlla('la vita è sotto il graffio della fuga', c.vita <= c.graffio(m), `${c.vita} contro ${c.graffio(m)}`)
+  uguale('scappare non si può', c.puoScappare(m), false)
+  uguale('niente stop', e.ringhia, null)
+  controlla('e la domanda dopo arriva', c.chiesta !== null && !c.foglio.pericolo)
+}
+
+{
+  // con una pozione invece lo stop c'è, anche se scappare non si può (il riquadro mostra solo bevi e continuo)
+  const pozione = Object.keys(COSE).find(k => COSE[k].usa === 'cura')
+  const { c, m } = scontro({ male: 10, vita: 12, zaino: [pozione] })
+  uguale('si ferma', c.rispondi(false).ringhia, 'duro')
+  uguale('ma scappare non si può', c.puoScappare(m), false)
+}
+
+{
+  // con vita a sufficienza scappare si può
+  const { c, m } = scontro({ male: 3, vita: 9 })
+  uguale('il graffio non fa cadere: si scappa', c.puoScappare(m), true)
 }
 
 riassunto('lo stop dello scontro')

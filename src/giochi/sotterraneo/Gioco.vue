@@ -580,7 +580,7 @@ const nemico = dallaCorsa(c => {
     sprite: scheda.sprite ? pezzoAndante(scheda.sprite, 'fermo', 0) : null,   // la stessa faccia del campo
     grosso: f.chi.grosso ? GROSSI[f.chi.grosso] : null,                        // il mostro grosso ha la sua, disegnata in codice
     graffio: c.graffio(f.chi), male: c.danno(f.chi),   // detti PRIMA di rispondere: con questi si decide restare o scappare
-    vita: c.vita, vitaMax: c.vitaMax,
+    vita: c.vita, vitaMax: c.vitaMax, puoiScappare: c.puoScappare(f.chi),
   }
 })
 
@@ -591,7 +591,7 @@ const ringhio = dallaCorsa(c => {
   const i = c.pozioneGiusta()
   const k = i == null ? null : c.zaino[i]
   return { perche: f.pericolo, em: f.chi.em, nome: f.chi.nome, vita: c.vita, male: c.danno(f.chi), graffio: c.graffio(f.chi),
-           puoiBere: i != null, cura: k && COSE[k].usa === 'cura' ? c.curaDi(k) : 0 }
+           puoiBere: i != null, cura: k && COSE[k].usa === 'cura' ? c.curaDi(k) : 0, puoiScappare: c.puoScappare(f.chi) }
 })
 
 const pieni = dallaCorsa(c => c.zaino.length, 0)   // sei su sei vuol dire che la prossima cosa resta per terra
@@ -1269,8 +1269,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
                        :origine="domanda" gioco="sotterraneo" :respiro="900"
                        @risposto="risposto" />
             </div>
-            <!-- il costo sta sul tasto: si vede prima, non nell'avviso che arriva dopo -->
-            <button v-if="!ringhio" class="sot-grosso sot-chiaro" data-azione="scappa" @click="scappa">
+            <!-- il costo sta sul tasto: si vede prima, non nell'avviso che arriva dopo. Se il graffio fa cadere, niente tasto -->
+            <button v-if="!ringhio && nemico && nemico.puoiScappare" class="sot-grosso sot-chiaro" data-azione="scappa" @click="scappa">
               <span class="em">🏃</span> scappo via
               <small v-if="nemico">ti graffia ❤️ −{{ nemico.graffio }}</small>
             </button>

@@ -185,7 +185,7 @@ uguale('toccato, il leggendario finisce nello zaino o addosso', await page.locat
 
 /* ---------- 5. il mostro grosso: la sua vita in cima, la sua figura nello scontro ---------- */
 const vuota = (x, y) => L.calpestabile(x, y) && !L.robe.some(r => r.x === x && r.y === y && !['gemme', 'scala-su', 'cosa'].includes(r.che))
-for (let giro = 0; giro < 30 && !(await page.locator('[data-azione="scappa"]').count()); giro++) {
+for (let giro = 0; giro < 30 && !(await page.locator('.sot-velo-scontro').count()); giro++) {
   // un tocco accanto a una curiosità la apre: si lascia perdere e si va avanti
   if (await page.locator('[data-azione="dopo"]').count()) { await page.locator('[data-azione="dopo"]').first().click(); await attendi(page, 300) }
   const [ex, ey] = (await cellaGiu()).split(',').map(Number)
@@ -196,14 +196,14 @@ for (let giro = 0; giro < 30 && !(await page.locator('[data-azione="scappa"]').c
   await attendi(page, 500)
   await fermoGiu()
 }
-await page.waitForSelector('[data-azione="scappa"]', { timeout: 10000 })
+await page.waitForSelector('.sot-velo-scontro', { timeout: 10000 })   // lo scontro: il tasto della fuga può mancare
 uguale('la vita del mostro grosso è in cima allo schermo', await page.locator('[data-grosso]').getAttribute('data-chi'), 'ossuto')
 controlla('col suo nome', (await page.locator('[data-grosso]').innerText()).includes('Re Ossuto'))
 uguale('nello scontro c\'è la sua figura, disegnata in codice', await page.locator('.sot-modale [data-figura-grosso]').count(), 1)
 await scatto(page, 'eroe-grosso')
 const ossa0 = Number(await page.locator('[data-grosso]').getAttribute('data-ossa'))
 let calata = false
-for (let n = 0; n < 12 && (await page.locator('[data-azione="scappa"]').count()); n++) {
+for (let n = 0; n < 12 && (await page.locator('.sot-velo-scontro').count()); n++) {
   await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 5000 }).catch(() => {})
   await attendi(page, 400)
   const t = page.locator('.sot-domanda .qz-tasto[data-giusta]')
