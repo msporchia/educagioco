@@ -49,8 +49,12 @@ uguale('e sono quattro avventure nuove', await page.locator('.sot-eroe[data-nuov
 await page.locator('[data-eroe="cavaliere"]').click()
 await attendi(page, 300)
 uguale('scelto, la scelta sparisce', await page.locator('[data-eroe]').count(), 0)
-controlla('e la mappa dice con chi si scende',
-          (await page.locator('[data-chi-sopra]').textContent()).includes('Cavaliere'))
+await page.locator('[data-azione="eroe-pagina"]').click()
+await page.waitForSelector('[data-pagina-eroe]', { timeout: 3000 })
+controlla('e la pagina dell\'eroe dice con chi si scende',
+          (await page.locator('[data-pagina-eroe] .sot-eroe-nome b').textContent()).includes('Cavaliere'))
+await page.locator('[data-pagina-eroe] [data-chiudi]').click()
+await page.waitForFunction(() => !document.querySelector('[data-pagina-eroe]'), null, { timeout: 3000 })
 /* le discese stanno sulla terra di sopra (docs/sotterraneo/terra-di-sopra.md):
    si arriva a piedi, e lì la prova col dito vero è `integrazione/sotterraneo-terra` */
 uguale('ci sono sette discese sulla mappa', await page.locator('[data-discesa]').count(), 7)

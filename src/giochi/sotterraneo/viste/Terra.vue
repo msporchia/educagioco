@@ -821,10 +821,9 @@ const chiusaPerche = p => {
     <div ref="sottoEl" class="sot-terra-sotto">
       <p v-if="avviso" class="sot-trovato" data-avviso-terra>{{ avviso }}</p>
       <p v-else-if="primaVolta" class="sot-trovato sot-piano">Tocca dove vuoi andare.</p>
-      <!-- il dialogo sta in fondo, al posto della carta di chi scende: la vista lo misura e tiene l'eroe sopra -->
+      <!-- il dialogo sta in fondo: la vista lo misura e tiene l'eroe sopra -->
       <Dialogo v-if="dialogo" :chi="dialogo.chi" :nome="dialogo.nome" :pagine="dialogo.pagine" :giro="dialogo.giro"
                :scelte="scelteDelDialogo" @scegli="scegli" />
-      <slot v-else name="sotto" />
     </div>
   </div>
 </template>

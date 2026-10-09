@@ -18,8 +18,10 @@ const props = defineProps({
   numeri: { type: Object, required: true },      // { vita, vitaMax, att, dif, fortuna, gemme }
   caratteristiche: { type: Array, required: true },   // Corredo.caratteristiche(): [{ chiave, nome, em, fa, valore, cambia, trattenuta, dietro, indietro }]
   tesori: { type: Object, default: () => ({ trovati: 0, tutti: 0 }) },
+  tratti: { type: Array, default: () => [] },    // quello che la roba addosso dà oltre ai numeri («💎 ×1,5»), sopra
+  cambia: { type: Boolean, default: false },     // sopra c'è «Cambia eroe»: la scelta delle avventure; giù si cambia dal velo
 })
-defineEmits(['dai', 'tesori', 'chiudi', 'fuori'])
+defineEmits(['dai', 'tesori', 'cambia', 'chiudi', 'fuori'])
 
 const quota = computed(() => Math.max(0, Math.min(1, props.fatto / Math.max(1, props.serve))))
 const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: '' }).nome.toLowerCase()
@@ -46,6 +48,9 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
       <span data-numero="dif">🛡️ <b>{{ numeri.dif }}</b></span>
       <span data-numero="gemme">💎 <b>{{ numeri.gemme }}</b></span>
     </div>
+    <span v-if="tratti.length" class="sot-tratti sot-eroe-tratti em" data-tratti-eroe>
+      <span v-for="t in tratti" :key="t">{{ t }}</span>
+    </span>
 
     <p v-if="punti" class="sot-eroe-punti" data-punti-da-dare :data-n="punti">
       <span class="em">✨</span> {{ punti === 1 ? 'Hai un punto da dare' : `Hai ${punti} punti da dare` }}
@@ -74,6 +79,11 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
 
     <button type="button" class="sot-grosso sot-chiaro sot-eroe-tesori" data-azione="tesori" @click="$emit('tesori')">
       <span class="em">🏆</span> Tesori <small>{{ tesori.trovati }} / {{ tesori.tutti }}</small>
+    </button>
+
+    <!-- le quattro avventure: la scelta è un altro foglio, e questa avventura resta com'è -->
+    <button v-if="cambia" type="button" class="sot-eroe-cambia" data-azione="eroe" @click="$emit('cambia')">
+      Cambia eroe
     </button>
   </Cornice>
 </template>

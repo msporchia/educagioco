@@ -207,7 +207,7 @@
 .sot-fum-portale .sot-ritaglio { width: 52px; height: 52px }
 
 /* ═══════════ il dialogo (viste/Dialogo.vue, docs/sotterraneo/dialoghi.md) ═══════════
-   In fondo alla mappa, dove sta la carta di chi scende: legno scuro e oro come la bottega, il ritratto nel tondo
+   In fondo alla mappa: legno scuro e oro come la bottega, il ritratto nel tondo
    d'oro, il testo a pagine che non scorre (alto sempre uguale, o le pagine ballerebbero), le domande sotto */
 .sot-terra-sotto .sot-dialogo { justify-self: stretch }
 .sot-dialogo {
@@ -267,7 +267,7 @@
 .sot-dialogo-scelte.sot-ciechi .sot-dialogo-scelta { pointer-events: none }
 @media (prefers-reduced-motion: reduce) { .sot-dialogo-avanti, .sot-dialogo, .sot-dialogo-riga { animation: none } }
 
-/* le carte che galleggiano: in cima la discesa a metà, in fondo chi scende */
+/* le carte che galleggiano: in cima la discesa a metà, in fondo gli avvisi e il dialogo */
 .sot-terra-sopra, .sot-terra-sotto {
   position: absolute; left: 0; right: 0; z-index: 4; padding: 10px 12px;
   display: grid; gap: 8px; pointer-events: none;
@@ -278,8 +278,6 @@
 .sot-terra-sopra .sot-ripresa { box-shadow: 0 10px 30px #000a }
 .sot-ripresa-tasti { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px }
 .sot-ripresa-tasti .sot-grosso { margin-top: 6px; padding: 11px 8px; font-size: 14.5px }
-.sot-terra-sotto .sot-chi { width: auto; padding: 6px 10px 6px 6px; gap: 9px; background: #141826e8; box-shadow: 0 6px 20px #0008 }
-.sot-terra-sotto .sot-chi .sot-testo b { font-size: 14px }
 .sot-trovato {
   justify-self: center; margin: 0; padding: 7px 13px; border-radius: 14px; pointer-events: none !important;
   font-size: 13.5px; color: #f3ece0; background: #24202be6; border: 1px solid #4a4252;
@@ -378,6 +376,9 @@
   box-shadow: inset 0 0 0 1px #5e586a, inset 0 3px 6px #000c, 0 1px 0 #ffffff14;
 }
 .sot-cella .em { font-size: 19px; line-height: 1 }
+/* la bisaccia (viste/pixel.js) è alta 26 px contro i 19 dell'emoji: i margini negativi la tengono nel posto delle altre,
+   e il numero sotto resta alla stessa altezza */
+.sot-cella svg { display: block; margin: -5px 0 -2px }
 .sot-cella b {
   font-size: 10.5px; font-weight: 800; line-height: 1; color: #fff; white-space: nowrap;
   text-shadow: 0 1px 2px #000, 0 0 3px #000;
@@ -585,26 +586,6 @@
 .sot-armato > .sot-ritratto { position: absolute; top: 0 }
 .sot-armato > .sot-pezzo { position: absolute; display: block }
 .sot-armato > .sot-pezzo > i { position: absolute; top: 0; left: 0; display: block }
-
-.sot-chi {
-  display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px;
-  color: inherit; font: inherit; text-align: left;
-  background: var(--sot-carta); border: 1px solid var(--sot-bordo); border-radius: 16px;
-}
-.sot-chi .sot-testo { flex: 1; min-width: 0; display: grid }
-.sot-chi .sot-testo b { font-size: 15px }
-.sot-chi .sot-testo i { font-style: normal; font-size: 12.5px; color: var(--sot-tenue) }
-.sot-chi .sot-testo i.sot-veste { display: flex; align-items: center; gap: 6px; margin-top: 2px; color: var(--sot-oro) }
-.sot-chi .sot-cambia {
-  font: inherit; font-size: 12px; color: var(--sot-oro); border: 1px solid #ffd23f55; background: none;
-  border-radius: 999px; padding: 6px 10px;
-}
-/* la carta di chi scende, sopra: il ritratto apre la pagina dell'eroe, «cambio» le quattro avventure */
-.sot-chi-ritratto {
-  display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; padding: 0; margin: 0;
-  color: inherit; font: inherit; text-align: left; background: none; border: 0; cursor: pointer;
-}
-.sot-chi-ritratto:active { transform: scale(.97) }
 
 /* il diario (viste/Diario.vue) */
 .sot-diario-sezione h3 {
@@ -1060,6 +1041,14 @@
 .sot-car-piu:disabled { color: #6b6272; background: #24202b; border-color: #3a3442; box-shadow: none; cursor: default }
 .sot-eroe-tesori { margin-top: 10px; flex: none }
 .sot-eroe-tesori small { margin-left: 6px; opacity: .8 }
+.sot-eroe-tratti { justify-content: center; margin: 2px 0 4px; flex: none }
+/* un tasto piccolo e a bordo d'oro, non un altro tasto grosso: serve di rado, e non deve farsi premere per sbaglio */
+.sot-eroe-cambia {
+  flex: none; align-self: center; margin-top: 12px; padding: 8px 18px;
+  font: inherit; font-size: 13px; color: var(--sot-oro); background: none;
+  border: 1px solid #ffd23f55; border-radius: 999px; cursor: pointer;
+}
+.sot-eroe-cambia:active { transform: translateY(1px) }
 
 /* ═══════════ i Tesori (viste/Tesori.vue) ═══════════ */
 .sot-tesori { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 7px; overflow-y: auto; min-height: 0 }

@@ -88,20 +88,29 @@ const riga = k => page.locator(`[data-caratteristica="${k}"]`)
 uguale('il tasto del globo sa il livello', await page.locator('[data-azione="eroe-pagina"]').getAttribute('data-livello'), '12')
 controlla('il globo dice fatta/serve', /^\d+\/\d+$/.test((await page.locator('[data-globo="esperienza"] .sot-globo-numero').textContent()).trim()))
 uguale('e il «+» d\'oro dice che ci sono punti da dare', await page.locator('[data-azione="eroe-pagina"]').getAttribute('data-punti'), '2')
-uguale('la carta di chi scende dice il livello', await page.locator('[data-roba-sopra]').getAttribute('data-livello'), '12')
+uguale('sopra non c\'è la carta di chi scende: il livello sta sul globo e nella pagina',
+       await page.locator('[data-chi-sopra], [data-roba-sopra], [data-azione="ritratto"], [data-azione="eroe"]').count(), 0)
+{
+  /* la mappa si guarda tutta fino alla barra: l'eroe non finisce sotto, e in fondo non c'è una fascia vuota */
+  const eroe = await page.locator('[data-eroe-terra]').boundingBox()
+  const barra = await page.locator('[data-barra-giu]').boundingBox()
+  controlla('l\'eroe sta sopra la barra', eroe.y + eroe.height < barra.y, `${eroe.y + eroe.height} contro ${barra.y}`)
+}
 
-/* ---------- 2. la pagina dell'eroe, dal ritratto e dal globo ---------- */
-await toccaIl('[data-azione="ritratto"]')
+/* ---------- 2. la pagina dell'eroe, dal globo ---------- */
+await toccaIl('[data-azione="eroe-pagina"]')
 await page.waitForSelector('[data-pagina-eroe]', { timeout: 3000 })
 await attendi(page, 300)
-uguale('il ritratto apre la pagina dell\'eroe', await page.locator('[data-livello-eroe]').getAttribute('data-livello'), '12')
+uguale('il globo apre la pagina dell\'eroe', await page.locator('[data-livello-eroe]').getAttribute('data-livello'), '12')
+controlla('e c\'è «Cambia eroe», che sta nella pagina e non sulla mappa',
+          /cambia eroe/i.test(await page.locator('[data-pagina-eroe] [data-azione="eroe"]').innerText()))
 await toccaIl('[data-pagina-eroe] [data-chiudi]')
 await attendi(page, 300)
 uguale('la ✕ la chiude', await page.locator('[data-pagina-eroe]').count(), 0)
 await toccaIl('[data-azione="eroe-pagina"]')
 await page.waitForSelector('[data-pagina-eroe]', { timeout: 3000 })
 await attendi(page, 300)
-uguale('anche il globo la apre', await page.locator('[data-pagina-eroe]').count(), 1)
+uguale('e il globo la riapre', await page.locator('[data-pagina-eroe]').count(), 1)
 uguale('dice i punti da dare', await page.locator('[data-punti-da-dare]').getAttribute('data-n'), '2')
 const att = Number(await page.locator('[data-numero="att"] b').textContent())
 controlla('e i numeri che decidono uno scontro: attacco e difesa stanno qui', att > 3 && (await page.locator('[data-numero="dif"]').count()) === 1, String(att))

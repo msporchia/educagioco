@@ -299,7 +299,7 @@ function annuncioSentito() {
   nellAvventura({ zone: { ...zoneDi(qui.value), sentita: true } }, { subito: true })
 }
 
-// la carta di chi scende, sulla mappa: vita, braccio e difesa con quello che ha addosso, e le gemme da spendere
+// chi scende con la roba addosso (vita, braccio, difesa, tratti, gemme): la barra in basso e la pagina dell'eroe, sulla mappa
 const robaSopra = computed(() => schedaConLaRoba(eroeQui(), roba.value, crescita.value))
 
 /* ═══════════ i mercanti di sopra (motore/bottega.js) ═══════════
@@ -437,8 +437,8 @@ const barra = computed(() => {
 const missioniPronte = computed(() => diario(missioni.value, tappe.value, segui.value).inMano.some(v => v.stato === 'fatta'))
 
 /* ═══════════ la pagina dell'eroe e i Tesori (viste/PaginaEroe.vue, viste/Tesori.vue) ═══════════
-   Si apre dal globo dell'esperienza, sopra e sotto, e dal ritratto della carta di chi scende. Giù i punti si danno
-   alla corsa (la vita della tempra arriva subito), sopra all'avventura */
+   Si apre dal globo dell'esperienza, sopra e sotto. Giù i punti si danno alla corsa (la vita della tempra arriva
+   subito), sopra all'avventura; sopra ha anche «Cambia eroe», che riapre la scelta delle avventure */
 const paginaEroe = ref(false)
 const tesoriAperti = ref(false)
 function apriPaginaEroe() {
@@ -462,9 +462,16 @@ const pagina = computed(() => {
     numeri: { vita: c.vita ?? c.vitaConLaRoba, vitaMax: c.vitaMax ?? c.vitaConLaRoba, att: c.att, dif: c.dif,
               fortuna: c.fortuna, gemme: c.gemme },
     caratteristiche: c.caratteristiche(),
+    cambia: !corsa.value, tratti: corsa.value ? [] : robaSopra.value.tratti,
     tesori: { trovati: tesoriTrovati.value.length, tutti: Object.keys(LEGGENDARI).length },
   }
 })
+// «Cambia eroe», dalla pagina dell'eroe di sopra: la pagina si chiude e si apre la scelta, senza perdere niente
+function cambiaEroe() {
+  paginaEroe.value = false
+  tesoriAperti.value = false
+  scegliEroe.value = true
+}
 function daiUnPunto(k) {
   const c = corsa.value
   if (c) {
@@ -1203,8 +1210,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
                   :annuncio="annuncio" @sentito="annuncioSentito"
                   :missioni="missioni" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
-                  @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda" @pagina-eroe="apriPaginaEroe"
-                  @eroe="scegliEroe = true" @bottega="apriBottega" />
+                  @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda" @bottega="apriBottega" />
         <p v-if="detto" class="sot-avviso sot-avviso-sopra" data-detto-sopra>{{ detto }}</p>
         <!-- la stessa barra di giù (docs/sotterraneo/barra.md): sopra la vita è piena e la mappa grande non c'è -->
         <BarraDiSotto sopra :vita="barra.vita" :vita-max="barra.vitaMax" :livello="barra.livello"
@@ -1456,7 +1462,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
       <!-- la pagina dell'eroe e i Tesori, sopra e sotto: si chiudono con la ✕ o toccando fuori (e il tocco cammina) -->
       <PaginaEroe v-if="pagina && !tesoriAperti && !(corsa && foglio && foglio.che === 'scontro')" v-bind="pagina"
-                  @dai="daiUnPunto" @tesori="tesoriAperti = true" @chiudi="paginaEroe = false"
+                  @dai="daiUnPunto" @tesori="tesoriAperti = true" @cambia="cambiaEroe" @chiudi="paginaEroe = false"
                   @fuori="e => { paginaEroe = false; corsa ? toccoFuori(e) : fuoriDallaBottega(e) }" />
       <Tesori v-if="paginaEroe && tesoriAperti" :trovati="tesoriTrovati" @indietro="tesoriAperti = false"
               @chiudi="paginaEroe = false; tesoriAperti = false"

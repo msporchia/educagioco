@@ -3,9 +3,6 @@
 // discesa lasciata a metà sta in cima; scenderne un'altra avverte invece di buttare la partita in silenzio.
 import { riprendiSeChiesta } from '../../ripresa.js'
 import { ref, computed } from 'vue'
-import Icona from './Icona.vue'
-import Armato from './Armato.vue'
-import { COSE } from '../dati/cose.js'
 import Terra from './Terra.vue'
 import Diario from './Diario.vue'
 import LascioPerdere from './LascioPerdere.vue'
@@ -22,11 +19,8 @@ const props = defineProps({
   roba: { type: Object, default: null },     // quello che ci si porta dietro, già contato (schedaConLaRoba): { vita, att, dif, gemme, mano, mancina, corpo, tratti… }
   annuncio: { type: Object, default: null }, // la zona potenziata che il minatore racconta (motore/zone.js): { chiave, nome, livello, detto, sentita }
 })
-const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe', 'terra', 'bottega', 'segui', 'pagina-eroe', 'sentito'])
+const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'terra', 'bottega', 'segui', 'sentito'])
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
-
-// l'armatura non si vede sul ritratto (come in discesa): sta accanto ai numeri, con la sua figura
-const veste = computed(() => (props.roba && props.roba.corpo ? COSE[props.roba.corpo] || null : null))
 
 const chiede = ref(null)   // quale tappa si sta per cominciare avendo una discesa in sospeso
 const perdere = ref(false)   // «lascio perdere questa discesa»: il foglio che dice cosa resta e cosa no
@@ -94,26 +88,6 @@ function comincia() {
               lascio perdere
             </button>
           </div>
-        </div>
-      </template>
-
-      <template #sotto>
-        <!-- chi scende: il ritratto apre la pagina dell'eroe (i numeri stanno lì e nella barra in basso), «cambio»
-             torna alle quattro avventure, senza perdere niente di questa. Il diario sta nella barra in basso -->
-        <div class="sot-chi" data-chi-sopra>
-          <button type="button" class="sot-chi-ritratto" data-azione="ritratto" :aria-label="`${eroe.nome}: la pagina dell'eroe`"
-                  @click="$emit('pagina-eroe')">
-            <Armato :eroe="eroe" :mano="roba ? roba.mano : null" :mancina="roba ? roba.mancina : null" :scala="2" />
-            <span class="sot-testo">
-              <b>{{ eroe.nome }}</b>
-              <i class="em" data-roba-sopra :data-livello="roba ? roba.livello : 1">livello {{ roba ? roba.livello : 1 }}</i>
-              <i v-if="veste || (roba && roba.tratti.length)" class="sot-veste" data-veste-sopra>
-                <Icona v-if="veste" :sprite="veste.sprite" :em="veste.em" :emAlto="14" :scala="1" />
-                <span v-for="t in (roba ? roba.tratti : [])" :key="t" class="em">{{ t }}</span>
-              </i>
-            </span>
-          </button>
-          <button type="button" class="sot-cambia" data-azione="eroe" @click="$emit('eroe')">cambio</button>
         </div>
       </template>
     </Terra>

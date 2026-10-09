@@ -104,7 +104,7 @@ uguale('sopra la testa il «?» grigio', await page.locator('[data-personaggio="
   uguale('un tocco sul prato chiude il dialogo', await page.locator('[data-dialogo]').count(), 0)
   await page.waitForFunction(c => document.querySelector('[data-eroe-terra]').dataset.cella !== c, prima, { timeout: 5000 })
   controlla('e l\'eroe va dove si è toccato', true)
-  uguale('e torna la carta di chi scende', await page.locator('[data-chi-sopra]').count(), 1)
+  uguale('e la barra in basso è al suo posto', await page.locator('[data-barra-giu]').count(), 1)
 }
 
 /* ---------- 5. il mugnaio: la consegna, e il premio detto ---------- */

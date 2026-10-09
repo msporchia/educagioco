@@ -51,7 +51,16 @@ async function toccaIl(sel) {
 }
 const cella = () => page.locator('[data-eroe-terra]').getAttribute('data-cella')
 const gemme = async () => Number(await page.locator('[data-gemme-barra]').getAttribute('data-n'))
-const chiScende = () => page.locator('[data-chi-sopra]').innerText()
+/* chi scende lo dice la pagina dell'eroe (si apre dal globo): sulla mappa non c'è più la carta */
+async function chiScende() {
+  await toccaIl('[data-azione="eroe-pagina"]')
+  await page.waitForSelector('[data-pagina-eroe]', { timeout: 3000 })
+  const chi = await page.locator('[data-pagina-eroe] .sot-eroe-nome b').innerText()
+  await toccaIl('[data-pagina-eroe] [data-chiudi]')
+  await page.waitForFunction(() => !document.querySelector('[data-pagina-eroe]'), null, { timeout: 3000 })
+  await attendi(page, 200)
+  return chi
+}
 const trovati = () => page.locator('[data-posto][data-trovato="1"]').count()
 async function fermo() {
   await page.waitForFunction(() => document.querySelector('[data-eroe-terra]')?.dataset.cammina === '0',
@@ -64,8 +73,13 @@ async function unPasso() {
   await tocca(v.x + 60, v.y + v.height * 0.45)
   await fermo()
 }
+/* «Cambia eroe» sta in fondo alla pagina dell'eroe: la pagina si chiude e si apre la scelta */
 async function apriLaScelta() {
-  await toccaIl('[data-azione="eroe"]')
+  await toccaIl('[data-azione="eroe-pagina"]')
+  await page.waitForSelector('[data-pagina-eroe] [data-azione="eroe"]', { timeout: 3000 })
+  await attendi(page, 250)
+  await toccaIl('[data-pagina-eroe] [data-azione="eroe"]')
+  await page.waitForFunction(() => !document.querySelector('[data-pagina-eroe]'), null, { timeout: 3000 })
   await page.waitForSelector('.sot-eroe[data-eroe]', { timeout: 3000 })
   await attendi(page, 250)
 }
@@ -102,7 +116,9 @@ await semina(page, {
 await scegli(page, 'sotterraneo')
 await page.waitForSelector('[data-terra]', { timeout: 5000 })
 await attendi(page, 500)
-controlla('la carta di chi scende è del cavaliere', (await chiScende()).includes('Cavaliere'))
+controlla('la pagina dell\'eroe è del cavaliere', (await chiScende()).includes('Cavaliere'))
+uguale('e sulla mappa non c\'è la carta di chi scende né il «cambio»',
+       await page.locator('[data-chi-sopra], [data-azione="eroe"]').count(), 0)
 uguale('con le sue gemme', await gemme(), 60)
 uguale('e il pozzo gli è aperto', await page.locator('[data-discesa="1"]').getAttribute('data-aperta'), '1')
 const trovatiCav = await trovati()
@@ -159,7 +175,7 @@ await scatto(page, 'avventure-scelta')
 
 /* ---------- 4. il mago comincia da capo ---------- */
 await scegliCol('mago')
-controlla('la carta di chi scende è del mago', (await chiScende()).includes('Mago'))
+controlla('la pagina dell\'eroe è del mago', (await chiScende()).includes('Mago'))
 uguale('dalla scalinata di casa', await cella(), PARTENZA.piede.join(','))
 uguale('con lo zaino vuoto', await gemme(), 0)
 uguale('senza discese a metà', await page.locator('[data-ripresa]').count(), 0)

@@ -375,8 +375,10 @@ export async function camminaVerso(page, meta, { tocca = null, giri = 30 } = {})
   const { MASCHERA, CELLA, MINATORE, MERCANTI, PERSONAGGI } = await import('../../src/giochi/sotterraneo/dati/terra-mappa.js')
   const { creaTerra } = await import('../../src/giochi/sotterraneo/motore/terra.js')
   const { SCALA_TERRA: S } = await import('../../src/giochi/sotterraneo/dati/terra.js')
-  const terra = creaTerra(MASCHERA, { ostacoli: [MINATORE.piede, ...Object.values(MERCANTI).map(m => m.piede),
-                                                 ...Object.values(PERSONAGGI || {}).map(m => m.piede)] })
+  const fermi = [MINATORE.piede, ...Object.values(MERCANTI).map(m => m.piede), ...Object.values(PERSONAGGI || {}).map(m => m.piede)]
+  const terra = creaTerra(MASCHERA, { ostacoli: fermi })
+  // un tocco sul corpo di chi sta fermo apre il suo dialogo invece di camminare: la figura è alta due celle sopra i piedi
+  const suUnoFermo = c => fermi.some(([fx, fy]) => Math.hypot(c.x - fx, c.y - fy) < 1.9 || (Math.abs(c.x - fx) <= 1 && c.y - fy <= 0 && c.y - fy >= -2))
   const premi = tocca || ((x, y) => page.mouse.click(x, y))
   const cella = async () => (await page.locator('[data-eroe-terra]').getAttribute('data-cella')).split(',').map(Number)
   const fermo = async () => {
@@ -395,9 +397,15 @@ export async function camminaVerso(page, meta, { tocca = null, giri = 30 } = {})
     const [cx, cy] = (await page.locator('[data-terra]').getAttribute('data-camera')).split(',').map(Number)
     const schermo = c => [v.x + ((c.x + 0.5) * CELLA - cx) * S, v.y + ((c.y + 0.5) * CELLA - cy) * S]
     const dentro = ([sx, sy]) => sx > v.x + 24 && sx < v.x + v.width - 24 && sy > v.y + su + 30 && sy < v.y + v.height - giu - 30
-    const passo = [...via].reverse().find(c => dentro(schermo(c)))
-    if (!passo) break
-    await premi(...schermo(passo))
+    const passo = [...via].reverse().find(c => dentro(schermo(c)) && !suUnoFermo(c))
+    if (passo) await premi(...schermo(passo))
+    else {
+      // nessun punto della strada sta sullo schermo fuori dal corpo di chi sta fermo (la strada gira stretta accanto
+      // al minatore): si tocca verso la strada, sul bordo della vista, e la vista scorre
+      const [sx, sy] = schermo(via[Math.min(via.length - 1, 12)])
+      await premi(Math.max(v.x + 24, Math.min(v.x + v.width - 24, sx)),
+                  Math.max(v.y + su + 30, Math.min(v.y + v.height - giu - 30, sy)))
+    }
     await fermo()
   }
   return cella()
@@ -516,12 +524,15 @@ export async function vendiNellaBottega(page, chiave, { tocca = null } = {}) {
 }
 
 /* Apre l'avventura di un eroe del sotterraneo (docs/sotterraneo/avventure.md):
-   la prima volta la scelta c'è già, poi la si apre dal «cambio» della carta
-   in fondo alla terra di sopra. Aspetta la terra dell'eroe scelto. Col
+   la prima volta la scelta c'è già, poi la si apre da «Cambia eroe» in fondo
+   alla pagina dell'eroe (il globo dell'esperienza). Aspetta la terra dell'eroe scelto. Col
    mouse: il dito vero lo prova `integrazione/sotterraneo-avventure`. */
 export async function scegliAvventura(page, eroe) {
   await page.waitForSelector('[data-terra], .sot-eroe[data-eroe]', { timeout: 5000 })
-  if (!(await page.locator('.sot-eroe[data-eroe]').count())) await page.click('[data-azione="eroe"]')
+  if (!(await page.locator('.sot-eroe[data-eroe]').count())) {
+    await page.click('[data-azione="eroe-pagina"]')
+    await page.click('[data-pagina-eroe] [data-azione="eroe"]')
+  }
   await page.click(`.sot-eroe[data-eroe="${eroe}"]`)
   await page.waitForSelector('.sot-eroe[data-eroe]', { state: 'detached', timeout: 3000 })
   await page.waitForSelector('[data-terra]', { timeout: 5000 })
