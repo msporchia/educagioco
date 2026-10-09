@@ -12,9 +12,11 @@ mostra intero e ci posa sopra le caselle, il segnalino, i blocchi e il
 fumetto. Quello che il codice sa del fondale sta nel foglietto
 (`sorgenti/passo-passo/`): per ogni isola la linea dei sentieri (una
 spezzata in pixel dell'immagine), i ponti, le tane, le caselle speciali.
+Sulla stessa isola possono stare le caselle del coniglio e quelle del cane
+(`cane` dell'isola e dei sentieri): ognuno vede solo le sue.
 Lo strumento distribuisce le caselle sui sentieri, cuce sentieri e ponti in
 un grafo (incroci dove una linea tocca l'altra) e lo copia nel modulo insieme
-all'immagine in WebP. Il perché: `docs/passo-passo/mappa.md`.
+all'immagine in WebP. Il perché: `docs/passo-passo/foglietto.md`.
 
 Serve `pillow` (con WebP).
 """
@@ -45,18 +47,22 @@ TESTA = """/* GENERATO da strumenti/sprite/isole-passo-passo.py — non si scriv
 
    Il fondale della mappa delle isole e il grafo che ci sta sopra, ricavati
    dal foglietto `strumenti/sprite/sorgenti/passo-passo/{foglietto}`: si
-   corregge lì e si rilancia lo strumento. Vedi docs/passo-passo/mappa.md.
+   corregge lì e si rilancia lo strumento. Vedi docs/passo-passo/foglietto.md.
 
    MAPPA   il fondale ({largo}×{alto}), WebP in base64 ({kb} KB): senza perdita,
            colori a passo 12 (strumenti/sprite/codifica.py)
-   ISOLE   per isola (la chiave è quella di motore/strade.js): quante caselle, dove sta il cartello
-   NODI    {{ id, tipo, isola, x, y }}: `casella` (con `k`, l'ordine sull'isola), `incrocio`, `capo`
+   ISOLE   per isola del fondale: quante caselle del coniglio (la chiave è la sua isola in
+           motore/strade.js), dove sta il cartello, e `cane` (l'isola del cane che ci sta sopra,
+           quante caselle, il suo cartello)
+   NODI    {{ id, tipo, isola, x, y }}: `casella` (con `k`, l'ordine sull'isola; quelle del cane
+           con `di`, la sua isola in motore/strade.js, e `cane`), `incrocio`, `capo`
            (un sentiero che finisce), `sosta` (a metà di un arco lungo: su un ponte
            non è di un'isola), `tana` (con `nuvola` se sul fondale non c'è il buco: l'animale
            cambia in una nuvoletta), `passaggio` (la tana che porta all'altro mondo, con
            `freccia` [x, y], dove la punta dell'insegna tocca la bocca, e `scosta`, di quanto la
            stoffa sta a destra della punta), `sentiero` (le caselle speciali, con
-           `etichetta` [x, y], dove comincia il nome: a metà altezza, da lì verso destra)
+           `etichetta` [x, y], dove comincia il nome: a metà altezza, da lì verso destra; quella
+           del cane con `cane`)
    ARCHI   {{ a, b, tipo: terra | erba | ponte | tunnel, ponte?, punti }}: i pezzi di strada fra due nodi
    PONTI   per ponte: le due isole e il blocco di ciascun capo [x, y, gradi]
    LIBERE  le isole sempre aperte (la riva da cui si arriva): non hanno caselle
@@ -209,25 +215,34 @@ class Grafo:
 
     def costruisci(self):
         fg = self.fg
-        # 1. le caselle, distribuite sui sentieri della loro isola, nell'ordine del foglietto
+        # 1. le caselle, distribuite sui sentieri della loro isola, nell'ordine del foglietto: quelle
+        #    del coniglio e, a parte, quelle del cane (con `rovescio-cane` contate dall'altro capo)
         prossima = {}
         for st in self.strade:
-            n = st['dati'].get('caselle', 0)
-            if not n:
-                continue
-            m0, m1 = st['dati'].get('margini', [30, 30])
-            for s in distribuisci(st['punti'], st['cum'], n, m0, m1):
-                k = prossima.get(st['isola'], 0)
-                prossima[st['isola']] = k + 1
-                id = self.nodo(f"{st['isola']}:{k}", 'casella', st['isola'], punto_a(st['punti'], st['cum'], s), k=k)
-                st['tagli'].append((s, id))
+            for cane in (False, True):
+                d = st['dati']
+                n = d.get('cane' if cane else 'caselle', 0)
+                if not n:
+                    continue
+                m0, m1 = d.get('margini-cane' if cane else 'margini', [30, 30])
+                rovescio = cane and d.get('rovescio-cane')
+                L = st['cum'][-1]
+                posti = distribuisci(st['punti'], st['cum'], n, m1 if rovescio else m0, m0 if rovescio else m1)
+                for s in (sorted(posti, reverse=True) if rovescio else posti):
+                    chi = fg['isole'][st['isola']]['cane']['isola'] if cane else st['isola']
+                    k = prossima.get(chi, 0)
+                    prossima[chi] = k + 1
+                    extra = {'di': chi, 'cane': True} if cane else {}
+                    id = self.nodo(f"{chi}:{k}", 'casella', st['isola'], punto_a(st['punti'], st['cum'], s), k=k, **extra)
+                    st['tagli'].append((s, id))
         # 2. le caselle speciali, sul sentiero più vicino della loro isola
         for nome, sp in fg.get('speciali', {}).items():
             st, s, d = self.vicina(sp['isola'], sp['punto'])
             if d > 20:
                 raise SystemExit(f'{nome}: {sp["punto"]} sta a {d:.0f} px dal sentiero più vicino')
             self.taglia(st, s, lambda p, nome=nome, sp=sp: self.nodo(nome, 'sentiero', sp['isola'], p,
-                                                                     etichetta=sp['etichetta']))
+                                                                     etichetta=sp['etichetta'],
+                                                                     **({'cane': True} if sp.get('cane') else {})))
         # 3. i capi dei sentieri: dove toccano un altro sentiero della stessa isola, un incrocio
         for st in self.strade:
             for capo in (0, -1):
@@ -355,8 +370,11 @@ def controlla(fg, g, im):
             guasti.append(f'{n["id"]} esce dal fondale')
     def mezzo(n):
         return lato * (0.68 if n['tipo'] == 'sentiero' else 0.5)
+    # due caselle si toccano solo se sono dello stesso protagonista: l'altro non le vede
     for i, a in enumerate(caselle):
         for b in caselle[i + 1:]:
+            if bool(a.get('cane')) != bool(b.get('cane')):
+                continue
             d = stacco((a['x'], a['y']), (b['x'], b['y'])) - mezzo(a) - mezzo(b)
             if d < SPAZIO:
                 guasti.append(f'{a["id"]} e {b["id"]} si toccano (fra i bordi {d:.0f} px, ne servono {SPAZIO})')
@@ -368,9 +386,13 @@ def controlla(fg, g, im):
                 if abs(n['x'] - x) < 27 + m and n['y'] - m < y + 9 and n['y'] + m > y - 22:
                     guasti.append(f'il blocco del ponte {nome} dalla parte di {isola} copre {n["id"]}')
     for isola, dati in fg['isole'].items():
-        n = sum(1 for x in g.nodi.values() if x['tipo'] == 'casella' and x['isola'] == isola)
-        if n != dati['caselle']:
-            guasti.append(f'{isola}: {n} caselle, il foglietto ne vuole {dati["caselle"]} (contando i "caselle" dei suoi sentieri)')
+        n = sum(1 for x in g.nodi.values() if x['tipo'] == 'casella' and x['isola'] == isola and not x.get('cane'))
+        if n != dati.get('caselle', 0):
+            guasti.append(f'{isola}: {n} caselle, il foglietto ne vuole {dati.get("caselle", 0)} (contando i "caselle" dei suoi sentieri)')
+        if 'cane' in dati:
+            n = sum(1 for x in g.nodi.values() if x['tipo'] == 'casella' and x.get('di') == dati['cane']['isola'])
+            if n != dati['cane']['caselle']:
+                guasti.append(f'{isola}: {n} caselle del cane, il foglietto ne vuole {dati["cane"]["caselle"]} (contando i "cane" dei suoi sentieri)')
     # tutto si raggiunge da tutto
     vicini = {id: set() for id in g.nodi}
     for e in g.archi:
@@ -442,10 +464,12 @@ def provino(mondo):
     for n in g.nodi.values():
         x, y = n['x'], n['y']
         if n['tipo'] == 'casella':
-            h = lato / 2
-            d.rounded_rectangle([x - h, y - h, x + h, y + h], radius=12, outline=(255, 255, 255, 255), width=3,
+            # quelle del cane un po' più piccole e marroni: stanno sugli stessi sentieri
+            h = lato / 2 - (6 if n.get('cane') else 0)
+            d.rounded_rectangle([x - h, y - h, x + h, y + h], radius=12,
+                                outline=(150, 80, 20, 255) if n.get('cane') else (255, 255, 255, 255), width=3,
                                 fill=(255, 255, 255, 70))
-            d.text((x - 12, y - 6), f"{n['isola'][:4]}{n['k']}", fill=(20, 20, 20, 255))
+            d.text((x - 12, y - 6), f"{(n.get('di') or n['isola'])[:4]}{n['k']}", fill=(20, 20, 20, 255))
         elif n['tipo'] == 'sentiero':
             h = lato * 0.68
             d.ellipse([x - h, y - h, x + h, y + h], outline=(255, 210, 40, 255), width=4, fill=(255, 240, 160, 90))
@@ -471,11 +495,15 @@ def provino(mondo):
         for isola, (x, y, gradi) in pn['blocchi'].items():
             d.rectangle([x - 14, y - 9, x + 14, y + 9], outline=(230, 30, 30, 255), width=3)
     for isola, dati in fg['isole'].items():
-        x, y = dati['cartello']
-        mx, my = (14, 14) if dati.get('stemma') else (90, 27)
-        d.rectangle([x - mx, y - my, x + mx, y + my], fill=(255, 250, 240, 200),
-                            outline=(110, 50, 10, 255), width=2)
-        d.text((x - mx + 3, y - 6), isola[:3] if dati.get('stemma') else isola, fill=(110, 50, 10, 255))
+        cartelli = [(isola, dati)] if dati.get('caselle') else []
+        if 'cane' in dati:
+            cartelli.append((dati['cane']['isola'], {**dati, **dati['cane']}))
+        for nome, c in cartelli:
+            x, y = c['cartello']
+            mx, my = (14, 14) if c.get('stemma') else (90, 27)
+            d.rectangle([x - mx, y - my, x + mx, y + my], fill=(255, 250, 240, 200),
+                                outline=(110, 50, 10, 255), width=2)
+            d.text((x - mx + 3, y - 6), nome[:3] if c.get('stemma') else nome, fill=(110, 50, 10, 255))
     TMP.mkdir(parents=True, exist_ok=True)
     nome = 'provino.png' if mondo == 'valle' else f'provino-{mondo}.png'
     Image.alpha_composite(im, velo).save(TMP / nome)
