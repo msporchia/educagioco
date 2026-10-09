@@ -289,6 +289,25 @@ export async function parti(page, quale) {
   await page.click('[data-fumetto] [data-azione="parti"]')
 }
 
+/* Apre una tappa (o una partita libera) del castello dal regno: il tocco sul
+   segnalino apre il fumetto e «Gioca ▶» la comincia (docs/castello/regno.md).
+   `quale` è un selettore o un locator del segnalino; di un selettore si prende
+   il primo. */
+export async function difendi(page, quale) {
+  const segno = typeof quale === 'string' ? page.locator(quale).first() : quale
+  await segno.click()
+  await page.click('[data-fumetto] [data-azione="gioca"]')
+}
+
+/* Il fumetto di un segnalino del regno, letto e richiuso: è lì che una
+   partita libera dice il suo record. */
+export async function fumettoDel(page, quale) {
+  await page.locator(quale).first().click()
+  const testo = (await page.locator('[data-fumetto]').textContent()).replace(/\s+/g, ' ').trim()
+  await page.locator(quale).first().click()
+  return testo
+}
+
 /* Apre una giornata della bancarella dal giro del mondo
    (docs/bancarella/mappa.md): il tocco su una città apre il fumetto e
    «▶ entra» porta nella sua piazza; lì il tocco su un banco apre il suo e

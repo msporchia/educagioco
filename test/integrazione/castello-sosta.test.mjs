@@ -3,7 +3,7 @@
    com'era. Anche dopo aver ricaricato la pagina, e mai in silenzio: una
    tappa nuova chiede prima di buttarla. Vedi docs/castello/sosta.md.
    `node test/esegui.mjs castello-sosta` */
-import { apriBrowser, apriGioco, attendi, scatto, scegli } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, attendi, scatto, scegli, difendi } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -79,7 +79,7 @@ await entra()
 uguale('anche dopo aver ricaricato la pagina', await page.locator('[data-ripresa]').count(), 1)
 
 /* toccare un'altra tappa non la butta in silenzio */
-await page.click('.tap:not(.chiusa)')
+await difendi(page, '.tap:not(.chiusa)')
 uguale('una tappa nuova chiede prima', await page.locator('[data-chiede]').count(), 1)
 await page.click('[data-chiede] [data-azione="comincia"]')
 await attendi(page, 200)
@@ -92,7 +92,7 @@ await page.click('[data-ripresa] [data-azione="scorda"]')
 uguale('«lascio perdere» toglie la carta', await page.locator('[data-ripresa]').count(), 0)
 
 /* dalla pausa si esce senza far ripartire il campo: il velo copre il ← */
-await page.click('.tap:not(.chiusa)')
+await difendi(page, '.tap:not(.chiusa)')
 await attendi(page, 200)
 await page.evaluate(() => {
   const T = window.__td

@@ -11,7 +11,7 @@
 
    `node test/esegui.mjs torri-libere`
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, semina, leggiProfilo, attendi, scatto, scegli } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, semina, leggiProfilo, attendi, scatto, scegli, difendi, fumettoDel } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -34,8 +34,10 @@ controlla('in home il record di ieri sta sotto il bosco', /radura grande.*21 ond
 await scegli(page, 'torri')
 await page.waitForSelector('.tappe')
 
-const tasti = await page.$$eval('[data-tappa^="libera-"]', bs =>
-  bs.map(b => ({ chiave: b.dataset.tappa, testo: b.textContent.replace(/\s+/g, ' ').trim() })))
+// sul regno le libere sono i quattro torrioni; il record lo dice il fumetto
+const chiavi = await page.$$eval('[data-tappa^="libera-"]', bs => bs.map(b => b.dataset.tappa))
+const tasti = []
+for (const chiave of chiavi) tasti.push({ chiave, testo: await fumettoDel(page, `[data-tappa="${chiave}"]`) })
 uguale('sulla mappa ci sono quattro partite libere', tasti.length, 4)
 uguale('nell\'ordine dei terreni', tasti.map(t => t.chiave).join(','),
        'libera-bosco,libera-sotterraneo,libera-mura,libera-palude')
@@ -49,7 +51,7 @@ controlla('i regali si vedono, una volta per tutte e quattro',
 
 /* si entra nel bastione, e si perde in fretta: nessuna torre, ondata
    chiamata subito, campo a tutta velocità */
-await page.click('[data-tappa="libera-mura"]')
+await difendi(page, '[data-tappa="libera-mura"]')
 await attendi(page, 300)
 const dentro = await page.evaluate(() => {
   const T = window.__td
@@ -108,8 +110,8 @@ controlla('il bosco non ha ancora un quaderno suo', !torri.primati['libera-bosco
 /* tornati alla mappa, il tasto delle mura porta il suo record e il bosco il suo */
 await page.click('.banco .bottone.chiaro')
 await page.waitForSelector('[data-tappa="libera-mura"]')
-const dopo = await page.$$eval('[data-tappa^="libera-"]', bs =>
-  Object.fromEntries(bs.map(b => [b.dataset.tappa, b.textContent.replace(/\s+/g, ' ').trim()])))
+const dopo = {}
+for (const chiave of chiavi) dopo[chiave] = await fumettoDel(page, `[data-tappa="${chiave}"]`)
 controlla('le mura adesso hanno il loro record', /record/.test(dopo['libera-mura']), dopo['libera-mura'])
 controlla('e il bosco tiene il suo', /21 ondate/.test(dopo['libera-bosco']), dopo['libera-bosco'])
 
@@ -119,7 +121,7 @@ controlla('e il bosco tiene il suo', /21 ondate/.test(dopo['libera-bosco']), dop
    la partita finisce a 29 superate. Tornati in mappa **senza
    ricaricare** il tasto del bosco deve dire 29, non 21 — e la home,
    che racconta il record più recente, deve dire lo stesso. */
-await page.click('[data-tappa="libera-bosco"]')
+await difendi(page, '[data-tappa="libera-bosco"]')
 await attendi(page, 300)
 const cadutaBosco = await perdi(30)
 uguale('anche nel bosco il castello cade', cadutaBosco.fase, 'fine')
@@ -128,9 +130,9 @@ const cartelloBosco = await page.locator('[data-primato]').textContent()
 controlla('e il cartello festeggia il record', /record/i.test(cartelloBosco), cartelloBosco)
 await page.click('.banco .bottone.chiaro')
 await page.waitForSelector('[data-tappa="libera-bosco"]')
-await page.locator('[data-tappa="libera-palude"]').scrollIntoViewIfNeeded()
-await scatto(page, 'torri-libere-mappa')      // i quattro tasti coi record
-const subito = await page.locator('[data-tappa="libera-bosco"]').textContent()
+await page.locator('[data-tappa="libera-bosco"]').click()
+await scatto(page, 'torri-libere-mappa')      // il torrione del bosco col suo record
+const subito = await page.locator('[data-fumetto]').textContent()
 const nuovo = `${cadutaBosco.onda - 1} ondate`
 controlla(`il tasto del bosco dice subito il record nuovo (${nuovo})`, subito.includes(nuovo), subito)
 controlla('e non più quello di ieri', !/21 ondate/.test(subito), subito)
