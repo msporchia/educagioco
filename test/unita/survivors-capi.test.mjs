@@ -15,7 +15,9 @@ import { CFG } from '../../src/giochi/survivors/dati/taratura.js'
 import { MOSTRI } from '../../src/giochi/survivors/dati/mostri.js'
 import { OGGETTI } from '../../src/giochi/survivors/dati/oggetti.js'
 import { Partita, Regole } from '../../src/giochi/survivors/motore/partita.js'
-import { caso } from '../../src/giochi/survivors/motore/banco.js'
+import { caso as casoFisso } from '../../src/giochi/survivors/motore/banco.js'
+import { spostaSemi } from '../aiuto/semi.mjs'
+const caso = spostaSemi(casoFisso)
 import { scrivi, leggi } from '../../src/giochi/survivors/motore/sosta.js'
 
 const t = CAMPAGNA[4]

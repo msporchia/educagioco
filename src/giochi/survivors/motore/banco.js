@@ -323,8 +323,13 @@ export function misura(regole, {
   }
 }
 
+// il seme si rimescola prima di partire: con un seme piccolo lo xorshift
+// dava primi numeri vicini a zero (il muro entrava sempre dallo stesso lato)
+// e semi vicini davano sequenze quasi uguali — vedi docs/core/test.md
 export function caso(seme = 1) {
-  let s = seme >>> 0 || 1
+  let s = Math.imul((seme >>> 0) ^ 0x9e3779b9, 0x85ebca6b)
+  s ^= s >>> 13; s = Math.imul(s, 0xc2b2ae35); s ^= s >>> 16
+  s = s >>> 0 || 1
   return () => {
     s ^= s << 13; s >>>= 0
     s ^= s >>> 17

@@ -83,6 +83,18 @@ controlli: importa da `../aiuto/`.
   banco; quello che uno scenario ha di suo si dichiara nel campo
   `verifiche`, e una chiave sconosciuta è un guasto (contratto in testa a
   `test/aiuto/livello.mjs`).
+- **Una quota a giocatore finto non si giudica su un seme solo.** Un test
+  a seme fisso è deterministico, ma un cambiamento qualsiasi che consuma il
+  caso in un altro ordine lo rimescola: una tappa al 46% su ventiquattro
+  partite oscilla di dieci punti. L'attesa si misura su molti semi
+  (`SEMI=1000 node test/esegui.mjs survivors` sposta tutti i semi del
+  file, `test/aiuto/semi.mjs`) e la soglia sta tre deviazioni e mezza
+  sotto (`regge` in `misure/survivors`); quello che serve vivo o vinto per
+  provare altro (una sosta, un salvataggio) si gioca con l'eroe
+  intoccabile. Provato a scegliere un seme che passa: si rompe al
+  ritocco dopo. Un generatore come lo xorshift vuole il seme rimescolato,
+  o i semi piccoli danno primi numeri vicini a zero (`caso` in
+  `survivors/motore/banco.js`).
 - **I lenti si dichiarano**: `tempo: 100` (o più) su una riga sua fra i
   primi 1200 caratteri del file. È la stessa riga che allunga il tempo
   massimo (240 s, poi ⏱) e tiene il file fuori da `--svelti`; chi non dice

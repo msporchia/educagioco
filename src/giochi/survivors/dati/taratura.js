@@ -129,8 +129,9 @@ export function guastiDellaTaratura(cfg = CFG) {
     guasti.push(`la prima Calamita tira da ${cal.prima} pixel: o non si sente o è già il gioco da fermi`)
   if (!(cal.inPiu >= 20 && cal.inPiu <= 60))
     guasti.push(`ogni copia di Calamita in più allarga di ${cal.inPiu} pixel`)
-  if (!(cal.prima + 4 * cal.inPiu <= 200))
-    guasti.push(`a cinque copie la Calamita tira da ${cal.prima + 4 * cal.inPiu} pixel: più di mezzo schermo`)
+  // le copie si alternano: a cinque, tre hanno allargato il raggio
+  if (!(cal.prima + 2 * cal.inPiu <= 200))
+    guasti.push(`a cinque copie la Calamita tira da ${cal.prima + 2 * cal.inPiu} pixel: più di mezzo schermo`)
 
   if (!(cfg.velocitaFreccia > cfg.velocitaEroe))
     guasti.push('le frecce non sono più veloci dell\'eroe')

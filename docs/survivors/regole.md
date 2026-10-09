@@ -57,7 +57,8 @@ verso il grumo quando ha un'arma che guarda avanti.
 - **I muri**: dopo dodici secondi la prima volta, poi sempre più spesso con
   la marea, una fila di mostri deboli attraversa lo schermo dritta da un lato
   a caso, con **un varco**; l'eroe è più svelto di lei. Un muro prende chi non
-  muove il dito dieci volte su dieci, chi si sposta zero. **Nessun avviso**:
+  muove il dito due volte su tre (la terza il varco gli cade
+  addosso), chi si sposta non lo prende mai. **Nessun avviso**:
   provato un bordo rosso un secondo prima, e capire da che parte scansarsi è
   il gioco. Resta un brontolio basso, che non dice da dove.
 - **Due armi guardano dove corri.** L'arco tira al più vicino; il

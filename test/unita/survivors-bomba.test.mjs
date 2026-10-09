@@ -13,7 +13,9 @@ import { CAMPAGNA } from '../../src/giochi/survivors/dati/campagna.js'
 import { CFG } from '../../src/giochi/survivors/dati/taratura.js'
 import { pescaOggetto, guastiDegliOggetti } from '../../src/giochi/survivors/dati/oggetti.js'
 import { Partita, Regole } from '../../src/giochi/survivors/motore/partita.js'
-import { caso } from '../../src/giochi/survivors/motore/banco.js'
+import { caso as casoFisso } from '../../src/giochi/survivors/motore/banco.js'
+import { spostaSemi } from '../aiuto/semi.mjs'
+const caso = spostaSemi(casoFisso)
 import { scrivi, leggi } from '../../src/giochi/survivors/motore/sosta.js'
 
 uguale('gli oggetti stanno in piedi', guastiDegliOggetti().join('; '), '')

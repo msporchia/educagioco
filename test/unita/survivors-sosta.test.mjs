@@ -6,15 +6,18 @@
    `node test/esegui.mjs survivors-sosta --niente-build` */
 import { CAMPAGNA, LIBERO } from '../../src/giochi/survivors/dati/campagna.js'
 import { Partita, Regole } from '../../src/giochi/survivors/motore/partita.js'
-import { Pilota, gioca, caso } from '../../src/giochi/survivors/motore/banco.js'
+import { Pilota, gioca, caso as casoFisso } from '../../src/giochi/survivors/motore/banco.js'
+import { spostaSemi } from '../aiuto/semi.mjs'
+const caso = spostaSemi(casoFisso)
 import { scrivi, leggi, dice, VERSIONE, SPAZIO, MAX_NEMICI, MAX_OGGETTI }
   from '../../src/giochi/survivors/motore/sosta.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* una partita giocata davvero, fino a un certo secondo, e poi lasciata
    lì com'è: è quello che succede quando suonano alla porta */
-function fino(regole, secondi, rnd, bravura = 0.85, esattezza = null) {
+function fino(regole, secondi, rnd, bravura = 0.85, esattezza = null, intoccabile = false) {
   const p = new Partita(regole, { rnd })
+  if (intoccabile) p.eroe.invuln = Infinity
   const pilota = new Pilota({ rnd, bravura, esattezza })
   while (p.tempo < secondi && !p.finita) {
     if (p.inPausa) { pilota.rispondi(p); continue }
@@ -99,12 +102,14 @@ const distanza = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
 {
   const t = CAMPAGNA[4]
   const regole = new Regole(t)
-  const p = fino(regole, t.durata * 0.6, caso(75), 0.85, 1)
+  /* l'eroe è intoccabile prima e dopo: qui si prova la ripresa, non la
+     taratura della grotta — quella sta in `misure/survivors`, e con un
+     eroe che può cadere il controllo dipendeva dal seme */
+  const p = fino(regole, t.durata * 0.6, caso(75), 0.85, 1, true)
   controlla('si interrompe una partita viva', !p.finita && p.eroe.cuori > 0)
 
-  /* chi riprende risponde a tutto: qui si prova la ripresa, non la
-     taratura della grotta — quella sta in `misure/survivors` */
   const ripresa = leggi(scrivi(p, 4), t, { rnd: caso(76) })
+  ripresa.eroe.invuln = Infinity
   const { partita } = gioca(regole, { rnd: caso(76), bravura: 1, esattezza: 1, da: ripresa })
   controlla('una partita ripresa arriva al traguardo', partita.vinta,
             `finita a ${partita.tempo.toFixed(1)}s con ${partita.eroe.cuori} cuori`)
@@ -177,7 +182,9 @@ const distanza = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
    tappa due volte. */
 {
   const t = CAMPAGNA[0]
-  const { partita } = gioca(new Regole(t), { rnd: caso(3), bravura: 1 })
+  const vincente = new Partita(new Regole(t), { rnd: caso(3) })
+  vincente.eroe.invuln = Infinity                 // serve una tappa vinta, non fortunata
+  const { partita } = gioca(new Regole(t), { rnd: caso(3), bravura: 1, da: vincente })
   controlla('la tappa è stata vinta', partita.vinta)
   uguale('una tappa vinta non lascia soste', scrivi(partita, 0), null)
   partita.continua()
