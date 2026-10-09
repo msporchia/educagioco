@@ -4,8 +4,9 @@
    Quando l'eroe rischia di cadere (docs/sotterraneo/pericolo.md) lo
    scontro si ferma fra una domanda e l'altra: il mostro ringhia e si
    sceglie bevi / scappa / continuo. Qui, nell'ultima discesa (la miniera:
-   un eroe nudo prende un colpo da quasi metà della sua vita) e con due
-   pozioni in tasca:
+   un mago nudo al livello 8, un gradino sotto, prende un colpo da quasi
+   metà della sua vita; più in basso la sentinella non lo farebbe
+   scendere, docs/sotterraneo/zone.md) e con due pozioni in tasca:
    - un mostro forte, una risposta sbagliata → compare lo stop, al posto
      della domanda; per i primi 320 ms i tasti non sentono il tocco;
    - «continuo» riprende a domandare, e con una risposta giusta che lo
@@ -27,17 +28,22 @@ import { T } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { percorso } from '../../src/motore/passi.js'
+import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 
 const MINIERA = CAMPAGNA.length - 1
 const roba = { v: 1, gemme: 0, zaino: ['pozione-piccola', 'pozione'], mano: null, mancina: null, corpo: null,
                dito: null, torcia: 0, torce: 0 }
+// al livello 8, un gradino sotto la miniera: più in basso il pallino è rosso e la sentinella non fa scendere
+// (docs/sotterraneo/zone.md). Il mago, coi punti non dati: il più fragile, così un colpo pesa ancora
+const crescita = { esp: sogliaDi(8) }
+const EROE = 'mago'
 
 /* ── il piano: il mostro più vicino all'ingresso, senza altri mostri né porte per strada, e il primo colpo che
    lo ferma. Poi, lo dice il motore: cosa succede se si continua e si risponde giusto ── */
 function scegliIlPiano() {
   let meglio = null
   for (let seme = 1; seme < 400; seme++) {
-    const c = new Corsa(CAMPAGNA[MINIERA], { seme, eroe: 'cavaliere', roba })
+    const c = new Corsa(CAMPAGNA[MINIERA], { seme, eroe: EROE, roba, crescita })
     const L = c.livello
     const da = { x: Math.floor(c.eroe.x), y: Math.floor(c.eroe.y) }
     const stanza = q => L.stanzaDi(q.x, q.y)?.id
@@ -47,7 +53,7 @@ function scegliIlPiano() {
       const via = percorso(libera, da, m)
       if (!via || via.some(q => mostri.some(o => o !== m && stanza(o) === stanza(q)))) continue
       // lo stesso scontro in Node: una risposta sbagliata ferma? e continuando, una giusta?
-      const s = new Corsa(CAMPAGNA[MINIERA], { seme, eroe: 'cavaliere', roba })
+      const s = new Corsa(CAMPAGNA[MINIERA], { seme, eroe: EROE, roba, crescita })
       const sm = s.livello.robe.find(r => r.che === 'mostro' && r.x === m.x && r.y === m.y)
       s.scontro(sm)
       const primo = s.rispondi(false)
@@ -55,6 +61,9 @@ function scegliIlPiano() {
       const vita1 = s.vita
       s.continua()
       const secondo = s.rispondi(true)
+      if (secondo.che === 'caduto') continue   // il mostro deve restare in piedi: dopo si sbaglia ancora, o si beve
+      // il secondo stop, a risposta giusta: da lì si prova «bevi» senza dover sbagliare ancora
+      if (!secondo.ringhia) continue
       if (!meglio || via.length < meglio.costo)
         meglio = { seme, costo: via.length, c, mostro: m, vita1, secondo: secondo.ringhia || null, L }
     }
@@ -133,12 +142,12 @@ const pozioni = async () => Number(await page.locator('[data-casella-barra="pozi
 // un eroe nudo nella miniera, davanti al mostro scelto, con la domanda aperta
 async function entra() {
   await azzera(page)
-  const avventura = { tappa: MINIERA, libera: false, stelle: {}, missioni: {}, roba,
+  const avventura = { tappa: MINIERA, libera: false, stelle: {}, missioni: {}, roba, crescita,
     terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } }
   await semina(page, {
     coins: 300, settings: { sperimentali: true },
     campagne: { sotterraneo: { tappa: MINIERA, libera: false, stelle: {},
-      cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: avventura } } } },
+      cfg: { mondo: MONDO, eroe: EROE, avventure: { [EROE]: avventura } } } },
   })
   await scegli(page, 'sotterraneo')
   await page.waitForSelector('[data-terra]', { timeout: 5000 })
