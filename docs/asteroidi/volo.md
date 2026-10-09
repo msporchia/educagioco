@@ -105,12 +105,12 @@ Quello che esce, per livello (misurato in `misure/asteroidi`):
 
 ### Il record, e da dove si riparte
 
-- **Chi ha un record riparte due livelli sotto** (`partenzaDalRecord`,
-  dai dettagli del quaderno): dieci calcoli di scaldamento dentro la sua
-  fascia. Due e non tre perché da 11 si riparte da 9, dove le grandi sono
-  metà del magazzino; da 8 sarebbero una su quattro, forse nessuna nei
-  primi dieci calcoli. Sassi e velocità leggono quel livello: la partita è quella di
-  livello 9 in tutto. Senza record si parte da 1.
+- **Un volo nuovo parte sempre da livello 1**, record o no: chi vuole
+  tornare dov'era ha la sosta ([sosta.md](sosta.md)), e chi ricomincia
+  parte rilassato. Provato: ripartire due livelli sotto il record
+  (`partenzaDalRecord`) — si entrava già nel fitto, con la sosta che
+  c'era già per riprendere. `hud.partenza` resta, sempre 1, perché le
+  soste salvate prima si rileggano.
 - **Il record è in punti** (`senzaFine` di `mate` in `src/data/giochi.js`,
   misura `punti`), raccontato «livello 7 · 43 centri · serie 12».
 - **Un volo lasciato a metà** scrive il suo record quando finisce o quando si

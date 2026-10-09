@@ -19,7 +19,7 @@ import { poolDi, esercizioDaChiave, eNuovo, stellaDi as stellaStazione,
 import { poolTappa, dellaTabellina,
          insiemeDi, chiaviDelle, distrattoriTabellina } from '../store/tabelline.js'
 import { poolVoloTabelline, poolVoloMente, chiaviDelVolo, creaAlternanza,
-         tagliaDelVolo, giraLaGrande, partenzaDalRecord }
+         tagliaDelVolo, giraLaGrande }
   from '../store/volo.js'
 import { CAPITOLI, SCALETTA, VOLO, superata, dopoDi,
          posizioneOra, filaDi, cieloDi, cieloDelVolo, voceDelVolo } from '../data/asteroidi.js'
@@ -151,7 +151,7 @@ const tabelle = computed(() =>
   !mente.value && campagna.value ? tappa.value.tabelle : VOLO.tabelle)
 
 // `serieMax`: il filotto più lungo, per il record del volo
-// `partenza`: il livello di inizio, sotto il record nel volo (vedi docs/asteroidi/volo.md)
+// `partenza`: il livello di inizio, sempre 1; resta per le soste di prima (docs/asteroidi/volo.md)
 const hud = reactive({ vite: 3, punti: 0, giuste: 0, mirate: 0, sbagliate: 0, livello: 1,
                        partenza: 1, serie: 0, serieMax: 0 })
 const cartello = reactive({ testo: '', colore: '', n: 0 })
@@ -918,10 +918,8 @@ function inizia(i = posizione.value, dato = null) {
   togli()
   posizione.value = i
   hud.vite = CFG.vite; hud.punti = 0; hud.giuste = 0; hud.mirate = 0; hud.sbagliate = 0
-  // il volo riparte da sotto il record (`partenzaDalRecord`, docs/asteroidi/volo.md);
-  // va letto PRIMA di `ondata()`, che costruisce già il primo pool su questo livello
-  const record = campagna.value ? null : primatoDi('mate')
-  hud.partenza = record && record.dettagli ? partenzaDalRecord(record.dettagli.livello) : 1
+  // anche il volo riparte da 1, record o no (docs/asteroidi/volo.md)
+  hud.partenza = 1
   hud.livello = hud.partenza; hud.serie = 0; hud.serieMax = 0
   finale.primato = null
   particelle = []; anelli = []; frammenti = []; raggi = []; pezzi = []
@@ -933,8 +931,6 @@ function inizia(i = posizione.value, dato = null) {
   // la nave torna nuova a ogni partita, e la tasca si svuota: i gettoni
   // sono il premio di *questa* partita e non un salvataggio — il perché
   // sta in `data/potenziamenti.js`
-  // chi riparte da livello 8 riparte con l'incrociatore, senza il
-  // cartello che lo annuncia: non l'ha appena guadagnato, ce l'aveva
   nave.lv = stazzaDi(hud.partenza); nave.gelo = 0
   nave.botta = 0; nave.riparata = 0; nave.mira = -Math.PI / 2
   tasca.gelo = 0; tasca.mirino = 0

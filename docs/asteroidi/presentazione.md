@@ -122,9 +122,8 @@ arriverebbe alla risposta per esclusione invece che calcolando.
 livello**: a livello 1 escono il 2 e il 3 e le somme entro il dieci, a
 livello 9 il 7×8 e le centinaia, e **dal nove continua oltre il
 catalogo** con le tabelline grandi (11×8, 12×5, 132 : 11) e conti a mente
-più grossi. Le grandi non contano da nessun'altra parte. **Chi ha un
-record non riparte da 2×3**: la partita comincia due livelli sotto quello
-del record.
+più grossi. Le grandi non contano da nessun'altra parte. Ogni volo nuovo
+comincia da livello 1; chi è uscito a metà riprende da dov'era.
 
 Il record è in punti, e si legge prima di entrare («record 1240 punti ·
 livello 7 · 43 centri · serie 12»); a fine partita si legge di quanto è

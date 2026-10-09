@@ -44,8 +44,8 @@ un numero per sasso, uno giusto, scendono dritti.
 - **A ogni livello un balzo**: le stelle diventano scie per un attimo, e il
   cartello dice il livello e il nome del posto. Il fondale si ridipinge
   solo se il cielo cambia.
-- Chi riparte due livelli sotto il record riparte da quel posto, non da
-  «Fino al dieci».
+- Chi riprende un volo lasciato a metà riparte dal posto del suo livello,
+  non da «Fino al dieci».
 
 Nei test: ogni sasso ha `specie` (`window.__mate.asteroidi()`), e le bombe
 della nave madre hanno `specie: 'bomba'`.

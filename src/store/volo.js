@@ -133,19 +133,6 @@ export const poolVoloMente = (livello, quanti = QUANTI, sorte = Math.random) =>
 export const QUOTA_GIRATA = 1 / 3
 export const giraLaGrande = (k, sorte = Math.random) => eGrande(k) && sorte() < QUOTA_GIRATA
 
-/* ── DA DOVE SI PARTE ──
-   Il livello di partenza dato quello del record: due gradini sotto, e
-   mai sotto l'1. Due perché una partita sale di un livello ogni cinque
-   giuste, quindi sono dieci calcoli di scaldamento — una decina di
-   secondi l'uno — prima di tornare dove si era arrivati: di più sarebbe
-   la solita fila di 2×3, di meno un tuffo a freddo nel punto in cui si
-   è perso. Ed è misurato sulle grandi: chi ha un record a 11 riparte da
-   9, dove sono metà del magazzino, e le rivede nelle prime domande;
-   a 8 sarebbero una su quattro, cioè forse nessuna prima del boss. */
-export const SCALINI_SOTTO = 2
-export const partenzaDalRecord = livelloRecord =>
-  Math.max(1, Math.floor(Number(livelloRecord) || 0) - SCALINI_SOTTO)
-
 /* tutto quello che il volo può chiedere, per il «da ripassare» di fine
    partita: lì si guarda cosa è andato storto, non cosa è alla mira */
 export const chiaviDelVolo = () => [...CASELLE_DEL_VOLO, ...CHIAVI_MENTE]
