@@ -34,13 +34,15 @@ di un mostro), `dati/eroi.js` (`parte`, `vitaPerLivello`, `dote`),
 `ESP_A · n + ESP_B` (14 e 16), quindi il totale cresce col quadrato, mai
 esponenziale ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md#le-curve-mai-esponenziali)).
 Oltre il livello 12 (`ESP_OLTRE`, dove finisce la storia) ogni livello costa
-anche `20 · (n − 12)³`: nell'abisso i mostri crescono a ogni piano, e senza
-il cubo l'eroe saliva più in fretta di loro (misurato: livello 34 al piano
-30).
+anche `120 + 10 · (2m + 1)`, con m i livelli sopra il 12 (`ESP_R`, `ESP_Q`):
+una retta come l'esperienza di una zona, così una zona verde vinta vale più o
+meno un livello a ogni altezza ([zone.md](zone.md#lesperienza)). Provato: il
+cubo di m, messo per l'abisso; dal 18 una zona valeva 0,2 livelli. L'abisso
+dà un terzo dell'esperienza, e cresce come prima.
 
-| livello | 2 | 3 | 5 | 8 | 10 | 12 | 15 | 20 |
-|---|---|---|---|---|---|---|---|---|
-| esperienza | 30 | 74 | 204 | 504 | 774 | 1100 | 2234 | 13204 |
+| livello | 2 | 3 | 5 | 8 | 10 | 12 | 15 | 20 | 30 |
+|---|---|---|---|---|---|---|---|---|---|
+| esperienza | 30 | 74 | 204 | 504 | 774 | 1100 | 2144 | 4564 | 11954 |
 
 ## Salire di livello
 
@@ -141,7 +143,7 @@ Il livello con cui si entra in ogni discesa (`LIVELLI_ATTESI` in
 volte su dieci e rifacendo quella persa, misurato col banco sulla storia
 giocata davvero (`misuraConLaRoba`, fila `minimo`): 1 · 1,7 · 3,1 · 4,8 ·
 6,8 · 8,5 · 10,3, e l'abisso dopo la miniera. Chi gira tutto arriva tre
-livelli sopra: 1 · 2 · 4,3 · 6,6 · 8,9 · 11 · 13,4.
+livelli sopra: 1 · 2 · 4,2 · 6,5 · 8,9 · 11 · 13.
 
 | entra in | cripta | scalinata | torre | grotta | sommersa | botola | miniera | abisso |
 |---|---|---|---|---|---|---|---|---|

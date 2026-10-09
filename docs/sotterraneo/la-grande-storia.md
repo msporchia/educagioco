@@ -177,7 +177,7 @@ forte, e senza scudo non reggi: passa dal fabbro» (`dettoDelLivello`,
 quando indica la prossima. Non vieta niente: si scende lo stesso. Vieta
 solo il colore del pallino, quando la discesa è due gradini sopra l'eroe:
 davanti c'è la sentinella ([zone.md](zone.md#il-pallino-e-la-sentinella)).
-Finita la storia, le discese si potenziano una alla volta: [zone.md](zone.md).
+Finita la storia ogni discesa è una zona con una fascia di livelli fissa: [zone.md](zone.md).
 
 ## Le misure
 

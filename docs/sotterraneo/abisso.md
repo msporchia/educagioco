@@ -7,8 +7,11 @@ sta il record e fin dove regge. Il progetto (bottino graduato, monete):
 stato ritarato: ha un mostro grosso ogni cinque piani ([grossi.md](grossi.md))
 e il bottino a tono ([rarita.md](rarita.md)), il resto è com'era. Dall'8/10 non è
 più il posto dove farsi le ossa dopo la storia (riscendere trenta piani per
-trovare mostri all'altezza era noioso): lo fanno le zone che si potenziano
-([zone.md](zone.md)), e l'abisso resta la sfida del primato.
+trovare mostri all'altezza era noioso): lo fanno le zone
+([zone.md](zone.md)), e l'abisso resta la sfida del primato. Dal 9/10 i suoi
+mostri danno un terzo dell'esperienza (`esp` in `L_ABISSO`): con la curva
+nuova oltre il 12 rendeva per domanda tre volte una zona
+([zone.md](zone.md#lesperienza)).
 
 ## Cos'è, e perché non è una settima tappa
 

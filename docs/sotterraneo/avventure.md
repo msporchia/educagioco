@@ -62,7 +62,7 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
                    segui,                   // l'id della missione che le freccine seguono, scelta nel diario (missioni-freccina.md)
                    crescita,                // { esp, forza, tempra, scorza, fortuna }: il livello e i punti dati (livelli.md)
                    tesori,                  // gli id dei leggendari trovati, per la pagina dei Tesori (rarita.md)
-                   zone },                  // { n, livelli, sentita }: le zone che si potenziano dopo la storia (zone.md)
+                   zone },                  // { sentita }: la zona appena nata che il minatore ha raccontato (zone.md)
       mago: { … },
     },
   },
