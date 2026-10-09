@@ -69,7 +69,7 @@ const verbo = computed(() => {
   if (c.dove === 'mano') return 'Impugna'
   if (c.dove === 'mancina') return 'Imbraccia'
   if (c.dove) return 'Indossa'
-  if (c.usa === 'cura' || c.usa === 'cresci') return 'Bevi'
+  if (c.usa === 'cura' || c.usa === 'cresci' || c.usa === 'energia') return 'Bevi'
   if (c.usa === 'luce') return 'Accendi'
   if (c.usa === 'porta') return 'Apri una porta'
   return 'Usa'

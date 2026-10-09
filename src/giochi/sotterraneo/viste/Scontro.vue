@@ -4,6 +4,7 @@
 // numeri già fatti dal motore.
 import Icona from './Icona.vue'
 import Grosso from './Grosso.vue'
+import Glifo from './Glifo.vue'
 
 defineProps({
   mostro: { type: Object, required: true },   // { em, nome, ossa, ossaMax, att, dif, chiave }
@@ -17,7 +18,9 @@ defineProps({
   vitaMax: { type: Number, required: true },
   puoiScappare: { type: Boolean, default: true },   // lo usa il tasto sotto (Gioco.vue): qui solo per non finire sul div
   scosso: { type: Number, default: 0 },
-  scambio: { type: Object, default: null },   // com'è andato l'ultimo scambio: { dato, preso, caduto }
+  scambio: { type: Object, default: null },   // com'è andato l'ultimo scambio: { dato, preso, caduto, usata, veleno, colpiti, rimandato }
+  stati: { type: Array, default: () => [] },   // cosa sta succedendo al mostro (avvelenato, gelato…): [{ glifo, n, dice }]
+  mie: { type: Array, default: () => [] },     // e cosa protegge l'eroe in questo scontro (scudo, parato…)
 })
 </script>
 
@@ -39,6 +42,9 @@ defineProps({
         <span class="em">⚔️ {{ mostro.att }}</span>
         <span class="em">🛡️ {{ mostro.dif }}</span>
       </div>
+      <div v-if="stati.length" class="sot-stati em" data-stati-mostro>
+        <span v-for="x in stati" :key="x.chiave" :data-stato="x.chiave" :title="x.dice"><Glifo :nome="x.glifo" :misura="14" /> {{ x.n }}</span>
+      </div>
       <div class="sot-costo">
         gli togli {{ colpo }} a colpo — ancora
         <b>{{ restano }}</b> {{ restano === 1 ? 'risposta' : 'risposte' }}
@@ -46,8 +52,12 @@ defineProps({
     </div>
   </div>
   <!-- il mostro picchia anche rispondendo bene: senza questi due numeri sembra "hai sbagliato" -->
-  <p v-if="scambio" class="sot-scambio" :class="{ 'sot-male': !scambio.dato }">
+  <p v-if="scambio" class="sot-scambio" :class="{ 'sot-male': !scambio.dato && !scambio.veleno }" :data-usata="scambio.usata ? scambio.usata.id : null">
+    <span v-if="scambio.usata" class="sot-scambio-abilita"><Glifo :nome="scambio.usata.glifo" :misura="16" /> {{ scambio.usata.nome }}: </span>
     <span v-if="scambio.dato" class="em">⚔️ gli hai tolto <b>{{ scambio.dato }}</b></span>
+    <span v-if="scambio.veleno" class="sot-scambio-abilita"> · <Glifo nome="veleno" :misura="14" /> −{{ scambio.veleno }}</span>
+    <span v-if="scambio.colpiti" class="em"> · e altri {{ scambio.colpiti }}</span>
+    <span v-if="scambio.rimandato"> · gli torna {{ scambio.rimandato }}</span>
     <span v-if="scambio.dato && scambio.preso"> · </span>
     <span v-if="scambio.preso" class="em">
       {{ scambio.dato ? 'ti ha graffiato' : 'ti ha colpito' }} <b>{{ scambio.preso }}</b>
@@ -63,6 +73,9 @@ defineProps({
     <span class="sot-botte em">
       ti graffia <b>{{ graffio }}</b> · se sbagli <b>{{ male }}</b>
     </span>
+  </div>
+  <div v-if="mie.length" class="sot-stati sot-stati-mie em" data-stati-eroe>
+    <span v-for="x in mie" :key="x.chiave" :data-stato="x.chiave"><Glifo :nome="x.glifo" :misura="14" /> {{ x.dice }}</span>
   </div>
   </div>
 </template>

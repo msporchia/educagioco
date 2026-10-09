@@ -21,6 +21,7 @@ export function tipoDi(c) {
   if (c.dove === 'dito') return 'Gioiello'
   if (c.usa === 'cura') return 'Pozione'
   if (c.usa === 'cresci') return 'Elisir'
+  if (c.usa === 'energia') return 'Pozione dell\'energia'
   if (c.usa === 'luce') return 'Torcia'
   if (c.usa === 'porta') return 'Chiave'
   return ''

@@ -1,7 +1,7 @@
 <script setup>
 // La barra in basso, come quella di Diablo, la stessa sopra e sotto: a sinistra il globo della vita, a destra quello
-// dell'esperienza col numero del livello, in mezzo le caselle (bevi, zaino, diario, mappa, gemme) in una cornice di
-// pietra. Tutto in CSS e SVG finché la cornice dipinta non è approvata (docs/sotterraneo/barra.md). Le regole non le
+// dell'energia delle abilità, in mezzo l'esperienza in una riga col livello e sotto le caselle (bevi, zaino, diario,
+// mappa, gemme) in una cornice di pietra. Tutto in CSS e SVG finché la cornice dipinta non è approvata (docs/sotterraneo/barra.md). Le regole non le
 // sa: dice solo cosa è stato toccato. `sopra`: sulla terra di sopra la mappa grande non c'è (la terra è già la mappa)
 import Globo from './Globo.vue'
 import Pixel from './Pixel.vue'
@@ -15,8 +15,11 @@ defineProps({
   esperienza: { type: Number, default: 0 },     // 0..1 verso il livello dopo
   espFatta: { type: Number, default: 0 },       // e in numeri, dentro questo livello: il globo dice «fatta/serve»
   espServe: { type: Number, default: 0 },
-  punti: { type: Number, default: 0 },          // i punti da dare: un «+» sul globo, finché non si danno
-  sale: { type: Boolean, default: false },      // un livello appena salito: il globo si accende
+  punti: { type: Number, default: 0 },          // i punti da dare: un «+» sul livello, finché non si danno
+  sale: { type: Boolean, default: false },      // un livello appena salito: la riga si accende
+  energia: { type: Number, default: 0 },        // l'energia delle abilità (docs/sotterraneo/abilita.md)
+  energiaMax: { type: Number, default: 10 },
+  puntiAbilita: { type: Number, default: 0 },   // i punti dell'albero: un «+» sul globo dell'energia
   pozioni: { type: Number, default: 0 },
   pieni: { type: Number, default: 0 },          // le tasche occupate
   tasche: { type: Number, default: 6 },
@@ -26,7 +29,7 @@ defineProps({
   mappa: { type: Boolean, default: false },     // la mappina è aperta grande
   sopra: { type: Boolean, default: false },
 })
-defineEmits(['bevi', 'zaino', 'diario', 'mappa', 'eroe'])
+defineEmits(['bevi', 'zaino', 'diario', 'mappa', 'eroe', 'abilita'])
 </script>
 
 <template>
@@ -38,6 +41,21 @@ defineEmits(['bevi', 'zaino', 'diario', 'mappa', 'eroe'])
     </div>
 
     <div class="sot-plancia-mezzo">
+      <!-- l'esperienza è una riga sopra le caselle, come in Diablo; il livello a sinistra apre la pagina dell'eroe, e
+           il «+» d'oro dice che ci sono punti da dare alle caratteristiche -->
+      <div class="sot-esp-riga" :class="{ 'sot-acceso': sale }">
+        <button type="button" class="sot-livello" data-azione="eroe-pagina" :data-livello="livello" :data-punti="punti || null"
+                :aria-label="`livello ${livello}${punti ? `: ${punti} ${punti === 1 ? 'punto' : 'punti'} da dare` : ''}`"
+                @click="$emit('eroe')">
+          <b>{{ livello }}</b>
+          <i v-if="punti" class="sot-punti sot-punti-piccolo" aria-hidden="true">+</i>
+        </button>
+        <span class="sot-esp" data-esperienza-barra :data-quota="Math.max(0, Math.min(1, esperienza)).toFixed(2)" role="img"
+              :aria-label="`esperienza ${espFatta} su ${espServe}`">
+          <u :style="{ width: Math.max(0, Math.min(1, esperienza)) * 100 + '%' }"></u>
+          <small class="sot-esp-numero">{{ espServe ? `${espFatta}/${espServe}` : '' }}</small>
+        </span>
+      </div>
       <div class="sot-caselle">
         <button type="button" class="sot-cella" :class="{ 'sot-vuota': !pozioni }" data-casella-barra="pozione"
                 data-azione="bevi" :data-n="pozioni" :aria-label="pozioni ? 'bevi una pozione' : 'nessuna pozione'"
@@ -65,15 +83,13 @@ defineEmits(['bevi', 'zaino', 'diario', 'mappa', 'eroe'])
     </div>
 
     <div class="sot-plancia-lato sot-plancia-dx">
-      <!-- l'esperienza: un tocco apre la pagina dell'eroe; il «+» dice che ci sono punti da dare -->
-      <button type="button" class="sot-globo-tasto" data-azione="eroe-pagina" :data-livello="livello" :data-punti="punti || null"
-              :aria-label="`livello ${livello}${punti ? `: ${punti} ${punti === 1 ? 'punto' : 'punti'} da dare` : ''}`"
-              @click="$emit('eroe')">
-        <!-- un globo dice quanto è pieno, come quello della vita: l'esperienza di questo livello su quella che serve.
-             Il livello sta nella pagina dell'eroe e sul tasto (data-livello) -->
-        <Globo tipo="esperienza" :quota="esperienza" :numero="espServe ? `${espFatta}/${espServe}` : ''" :acceso="sale"
-               :etichetta="`livello ${livello}, esperienza ${espFatta} su ${espServe}`" />
-        <b v-if="punti" class="sot-punti" aria-hidden="true">+</b>
+      <!-- l'energia delle abilità: un tocco apre l'albero; il «+» dice che ci sono punti da dare all'albero -->
+      <button type="button" class="sot-globo-tasto" data-azione="abilita" :data-punti-abilita="puntiAbilita || null"
+              :aria-label="`energia ${energia} su ${energiaMax}${puntiAbilita ? `: ${puntiAbilita} da imparare` : ''}`"
+              @click="$emit('abilita')">
+        <Globo tipo="energia" :quota="energia / Math.max(1, energiaMax)" :numero="energia"
+               :etichetta="`energia ${energia} su ${energiaMax}`" />
+        <b v-if="puntiAbilita" class="sot-punti" aria-hidden="true">+</b>
       </button>
       <svg class="sot-reggi" viewBox="0 0 100 44" aria-hidden="true"><use href="#sot-reggi" /></svg>
     </div>

@@ -6,6 +6,7 @@
 import { computed } from 'vue'
 import Cornice from './Cornice.vue'
 import Armato from './Armato.vue'
+import Glifo from './Glifo.vue'
 
 const props = defineProps({
   eroe: { type: Object, required: true },        // la scheda: nome, sprite, em
@@ -20,8 +21,9 @@ const props = defineProps({
   tesori: { type: Object, default: () => ({ trovati: 0, tutti: 0 }) },
   tratti: { type: Array, default: () => [] },    // quello che la roba addosso dà oltre ai numeri («💎 ×1,5»), sopra
   cambia: { type: Boolean, default: false },     // sopra c'è «Cambia eroe»: la scelta delle avventure; giù si cambia dal velo
+  puntiAbilita: { type: Number, default: 0 },    // i punti dell'albero: sul tasto delle abilità
 })
-defineEmits(['dai', 'tesori', 'cambia', 'chiudi', 'fuori'])
+defineEmits(['dai', 'tesori', 'cambia', 'chiudi', 'fuori', 'abilita'])
 
 const quota = computed(() => Math.max(0, Math.min(1, props.fatto / Math.max(1, props.serve))))
 const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: '' }).nome.toLowerCase()
@@ -77,9 +79,15 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
       </li>
     </ul>
 
-    <button type="button" class="sot-grosso sot-chiaro sot-eroe-tesori" data-azione="tesori" @click="$emit('tesori')">
-      <span class="em">🏆</span> Tesori <small>{{ tesori.trovati }} / {{ tesori.tutti }}</small>
-    </button>
+    <div class="sot-eroe-porte">
+      <!-- l'albero delle abilità: la stessa pagina che apre il globo blu della barra (docs/sotterraneo/abilita.md) -->
+      <button type="button" class="sot-grosso sot-chiaro sot-eroe-tesori" data-azione="abilita-pagina" @click="$emit('abilita')">
+        <Glifo nome="energia" :misura="18" class="sot-glifo-energia" /> Abilità <small v-if="puntiAbilita" class="sot-eroe-nuovi">+{{ puntiAbilita }}</small>
+      </button>
+      <button type="button" class="sot-grosso sot-chiaro sot-eroe-tesori" data-azione="tesori" @click="$emit('tesori')">
+        <span class="em">🏆</span> Tesori <small>{{ tesori.trovati }} / {{ tesori.tutti }}</small>
+      </button>
+    </div>
 
     <!-- le quattro avventure: la scelta è un altro foglio, e questa avventura resta com'è -->
     <button v-if="cambia" type="button" class="sot-eroe-cambia" data-azione="eroe" @click="$emit('cambia')">

@@ -28,6 +28,8 @@ import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo } from './motore/corredo.js'
 import { rileggiCrescita, puntiDaDare, dai as daiPunto, livelloDella } from './motore/crescita.js'
+import { puntiAbilita, caselleDella } from './motore/abilita.js'
+import { NODI, RAMI } from './dati/abilita.js'
 import { zonaDi } from './dati/zone.js'
 import { notiziaDi, potenzaDi, livelloDellaZona, coloreDi } from './motore/zone.js'
 import { pescaLeggendario } from './motore/bottino.js'
@@ -56,6 +58,8 @@ import Zaino from './viste/Zaino.vue'
 import Diario from './viste/Diario.vue'
 import BarraDiSotto from './viste/BarraDiSotto.vue'
 import PaginaEroe from './viste/PaginaEroe.vue'
+import PaginaAbilita from './viste/PaginaAbilita.vue'
+import CaselleAbilita from './viste/CaselleAbilita.vue'
 import Tesori from './viste/Tesori.vue'
 import Grosso from './viste/Grosso.vue'
 import LaBottega from './viste/Bottega.vue'   // la bottega dei mercanti di sopra
@@ -154,7 +158,7 @@ const avventure = computed(() => EROI.map(e => {
 // riparte più nudi (docs/sotterraneo/la-roba-che-resta.md). Un'avventura nuova comincia con lo zaino vuoto
 const roba = computed(() => rileggiRoba(qui.value.roba) || ROBA_VUOTA())
 // l'esperienza e i punti dati (motore/crescita.js), anche loro dell'avventura; i leggendari trovati, per i Tesori
-const crescita = computed(() => rileggiCrescita(qui.value.crescita))
+const crescita = computed(() => rileggiCrescita(qui.value.crescita, eroeQui()))
 const tesoriTrovati = computed(() => (Array.isArray(qui.value.tesori) ? qui.value.tesori.filter(id => LEGGENDARI[id]) : []))
 const conITrovati = c => {
   const nuovi = [...c.trovati].filter(id => !tesoriTrovati.value.includes(id))
@@ -414,6 +418,7 @@ const eroe = dallaCorsa(c => {
     pozioni: c.pozioni,               // le cure in tasca, sulla casella 🧪 della barra
     pieni: c.zaino.length,
     esp: c.crescita.esp, crescita: c.crescita,
+    energia: c.energia, energiaMax: c.energiaMax,   // il globo blu della barra (docs/sotterraneo/abilita.md)
   }
 })
 
@@ -430,6 +435,9 @@ const barra = computed(() => {
   return {
     vita: giu ? giu.vita : n.vita, vitaMax: giu ? giu.vitaMax : n.vita,
     livello: q.livello, esperienza: q.quota, espFatta: q.fatto, espServe: q.serve, punti: puntiDaDare(cr),
+    // l'energia giù è quella della discesa; sopra è piena, come la vita
+    energia: giu ? giu.energia : robaSopra.value.energiaMax,
+    energiaMax: giu ? giu.energiaMax : robaSopra.value.energiaMax, puntiAbilita: puntiAbilita(cr),
     pozioni: giu ? giu.pozioni : r.zaino.filter(k => COSE[k] && (COSE[k].usa === 'cura' || COSE[k].usa === 'cresci')).length,
     pieni: giu ? giu.pieni : r.zaino.length,
     gemme: giu ? giu.gemme : r.gemme,
@@ -442,11 +450,14 @@ const missioniPronte = computed(() => diario(missioni.value, tappe.value, segui.
    subito), sopra all'avventura; sopra ha anche «Cambia eroe», che riapre la scelta delle avventure */
 const paginaEroe = ref(false)
 const tesoriAperti = ref(false)
-function apriPaginaEroe() {
+// la pagina dell'eroe ha due facce: le caratteristiche ('eroe') e l'albero delle abilità ('abilita', dal globo blu)
+const facciaEroe = ref('eroe')
+function apriPaginaEroe(faccia = 'eroe') {
   zainoAperto.value = false
   diarioGiu.value = false
   zainoSopra.value = false
   tesoriAperti.value = false
+  facciaEroe.value = faccia === 'abilita' ? 'abilita' : 'eroe'
   paginaEroe.value = true
   suono.ok()
 }
@@ -465,8 +476,46 @@ const pagina = computed(() => {
     caratteristiche: c.caratteristiche(),
     cambia: !corsa.value, tratti: corsa.value ? [] : robaSopra.value.tratti,
     tesori: { trovati: tesoriTrovati.value.length, tutti: Object.keys(LEGGENDARI).length },
+    puntiAbilita: puntiAbilita(c.crescita),
   }
 })
+// l'albero delle abilità (viste/PaginaAbilita.vue, docs/sotterraneo/abilita.md): i numeri li dà il Corredo
+const albero = computed(() => {
+  tic.value
+  if (!paginaEroe.value || facciaEroe.value !== 'abilita') return null
+  const c = chiGuardo()
+  return {
+    eroe: c.io, livello: c.livelloEroe, punti: puntiAbilita(c.crescita), crescita: c.crescita,
+    energia: c.energia ?? c.energiaMax, energiaMax: c.energiaMax,
+    armi: Object.fromEntries(['mano', 'mancina'].map(d => [d, c[d]])),
+    haLArma: a => c.haLArma(a),
+  }
+})
+// un punto all'albero o una casella cambiata: giù sulla corsa (e la sosta), sopra sull'avventura
+function sullAlbero(fai) {
+  const c = corsa.value
+  if (c) {
+    const vitaPrima = c.vitaMax, energiaPrima = c.energiaMax
+    if (!fai(c)) return false
+    // Cuore saldo e Pozzo di magia alzano il tetto: quello in più arriva subito, come la tempra
+    c.vita = Math.min(c.vitaMax, c.vita + Math.max(0, c.vitaMax - vitaPrima))
+    c.energia = Math.min(c.energiaMax, c.energia + Math.max(0, c.energiaMax - energiaPrima))
+    tic.value++
+    salva({ subito: true })
+    return true
+  }
+  const b = new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
+  if (!fai(b)) return false
+  nellAvventura({ crescita: b.crescita }, { subito: true })
+  tic.value++
+  return true
+}
+function imparaAbilita(id) {
+  if (sullAlbero(c => c.impara(id))) suono.nota(523, 784, 0.18, 'triangle', 0.12)
+}
+function casellaAbilita({ i, id }) {
+  if (sullAlbero(c => c.mettiInCasella(i, id))) suono.ok()
+}
 // «Cambia eroe», dalla pagina dell'eroe di sopra: la pagina si chiude e si apre la scelta, senza perdere niente
 function cambiaEroe() {
   paginaEroe.value = false
@@ -609,10 +658,53 @@ const nemico = dallaCorsa(c => {
     mostro: f.chi, colpo: c.colpo(f.chi), restano: c.colpiPer(f.chi),
     sprite: scheda.sprite ? pezzoAndante(scheda.sprite, 'fermo', 0) : null,   // la stessa faccia del campo
     grosso: f.chi.grosso ? GROSSI[f.chi.grosso] : null,                        // il mostro grosso ha la sua, disegnata in codice
-    graffio: c.graffio(f.chi), male: c.danno(f.chi),   // detti PRIMA di rispondere: con questi si decide restare o scappare
+    // detti PRIMA di rispondere: con questi si decide restare o scappare. Con gli effetti delle abilità (Corsa.botta)
+    graffio: c.botta(f.chi, true), male: c.botta(f.chi, false),
     vita: c.vita, vitaMax: c.vitaMax, puoiScappare: c.puoScappare(f.chi),
+    stati: statiDel(f.chi), mie: statiMiei(f.io || {}),
   }
 })
+// cosa sta succedendo al mostro e all'eroe in questo scontro (docs/sotterraneo/abilita.md): le pastiglie sotto la vita
+function statiDel(m) {
+  const st = m.stati || {}
+  return [
+    st.veleno && st.veleno.scambi > 0 ? { chiave: 'veleno', glifo: 'veleno', n: `−${st.veleno.quanto} ×${st.veleno.scambi}`, dice: 'avvelenato' } : null,
+    st.debole > 0 ? { chiave: 'debole', glifo: 'fiocco', n: `a metà ×${st.debole}`, dice: 'colpisce a metà' } : null,
+    st.fermo > 0 ? { chiave: 'fermo', glifo: 'stelle', n: `fermo ×${st.fermo}`, dice: 'stordito: non colpisce' } : null,
+    st.rotto && m.dif ? { chiave: 'rotto', glifo: 'scudo-rotto', n: 'senza difesa', dice: 'senza difesa' } : null,
+  ].filter(Boolean)
+}
+function statiMiei(io) {
+  return [
+    io.parato > 0 ? { chiave: 'parato', glifo: 'scudo', dice: `niente graffi ×${io.parato}` } : null,
+    io.scudo > 0 ? { chiave: 'scudo', glifo: 'sfera', dice: `scudo ${io.scudo}` } : null,
+    io.intoccabile > 0 ? { chiave: 'intoccabile', glifo: 'montagna', dice: `nessun danno ×${io.intoccabile}` } : null,
+    io.specchio ? { chiave: 'specchio', glifo: 'specchio', dice: 'il prossimo colpo torna indietro' } : null,
+    io.linfa && io.linfa.scambi > 0 ? { chiave: 'linfa', glifo: 'germoglio', dice: `+${io.linfa.quanto} ×${io.linfa.scambi}` } : null,
+  ].filter(Boolean)
+}
+
+// le tre caselle delle abilità sopra la domanda: cosa c'è, se è pronta, e se no perché (Corsa.perchéNonUsi)
+const abilitaScontro = dallaCorsa(c => {
+  const f = c.foglio
+  if (!f || f.che !== 'scontro') return null
+  const caselle = caselleDella(c.crescita).map(id => {
+    const nodo = id && NODI[id]
+    if (!nodo) return null
+    const ramo = RAMI[c.io.chiave].find(r => r.chiave === nodo.ramo)
+    return { id, glifo: nodo.glifo, tinta: ramo && ramo.tinta, nome: nodo.nome, costo: nodo.costo, pronta: c.pronta === id,
+             perche: c.perchéNonUsi(id) }
+  })
+  if (!caselle.some(Boolean)) return null
+  return { caselle, energia: c.energia, energiaMax: c.energiaMax }
+})
+function prepara(id) {
+  const c = corsa.value
+  if (!c || !c.prepara(id)) return
+  tic.value++
+  if (c.pronta) suono.nota(659, 988, 0.14, 'triangle', 0.1)
+  else suoni.passo()
+}
 
 // lo stop quando l'eroe rischia di cadere (docs/sotterraneo/pericolo.md): al posto della domanda, finché non si sceglie
 const ringhio = dallaCorsa(c => {
@@ -801,6 +893,7 @@ function guarda(c) {
             `|${c.torciaResta}|${c.torceInScorta}` +   // la torcia cala da sola, camminando
             `|${c.foglio ? c.foglio.cosa || '' : ''}|${c.livello.robe.length}` +   // due cose trovate di fila hanno lo stesso `che`
             `|${c.crescita.esp}|${c.crescita.forza}.${c.crescita.tempra}.${c.crescita.scorza}.${c.crescita.fortuna}` +
+            `|${c.energia}|${c.pronta}|${JSON.stringify(c.crescita.albero)}|${c.crescita.caselle}` +   // le abilità
             `|${c.livello.robe.reduce((n, r) => n + (r.che === 'mostro' && r.sveglio ? 1 : 0), 0)}`   // il mostro grosso che si sveglia
   if (f !== firma) { firma = f; tic.value++ }
   while (c.eventi.length) festeggia(c.eventi.shift(), c)
@@ -849,7 +942,9 @@ function risolvi(giusto, saltata = false) {
   scosso.value++
   // resta a schermo un paio di secondi: il tempo di leggerlo mentre la domanda dopo si sta già montando
   if (esito.dato != null || esito.preso != null) {
-    scambio.value = { dato: esito.dato || 0, preso: esito.preso || 0, caduto: esito.che === 'caduto' }
+    scambio.value = { dato: esito.dato || 0, preso: esito.preso || 0, caduto: esito.che === 'caduto',
+                      usata: esito.usata || null, veleno: esito.veleno || 0, colpiti: esito.colpiti || 0,
+                      rimandato: esito.rimandato || 0 }
     scambioFinoA = orologio + 2.4
   }
   if (esito.ringhia) setTimeout(() => suono.nota(110, 60, 0.45, 'sawtooth', 0.1), 420)   // il mostro ringhia
@@ -1213,10 +1308,11 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <!-- la stessa barra di giù (docs/sotterraneo/barra.md): sopra la vita è piena e la mappa grande non c'è -->
         <BarraDiSotto sopra :vita="barra.vita" :vita-max="barra.vitaMax" :livello="barra.livello"
                       :esperienza="barra.esperienza" :esp-fatta="barra.espFatta" :esp-serve="barra.espServe" :punti="barra.punti" :pozioni="barra.pozioni" :pieni="barra.pieni"
+                      :energia="barra.energia" :energia-max="barra.energiaMax" :punti-abilita="barra.puntiAbilita"
                       :tasche="TASCHE" :gemme="barra.gemme" :missioni="missioniAperte" :pronta="missioniPronte"
                       @bevi="dilloSopra(barra.pozioni ? '❤️ sei già in piena forma' : '🧪 non hai pozioni')"
                       @zaino="chiudiBottega(); paginaEroe = false; zainoSopra = true"
-                      @diario="campagnaEl && campagnaEl.apriDiario()" @eroe="apriPaginaEroe" />
+                      @diario="campagnaEl && campagnaEl.apriDiario()" @eroe="apriPaginaEroe()" @abilita="apriPaginaEroe('abilita')" />
         <Zaino v-if="zainoDiSopra" v-bind="zainoDiSopra" :eroe="eroeScheda" :piano="0" sopra
                @usa="usaSopra" @riponi="riponiSopra" @butta="() => {}"
                @chiudi="zainoSopra = false" @fuori="e => { zainoSopra = false; fuoriDallaBottega(e) }" />
@@ -1274,7 +1370,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
           <!-- le feste: un livello salito, un leggendario caduto. Non si toccano: il campo sotto sì -->
           <div v-if="festa && festa.che === 'livello'" class="sot-festa sot-festa-livello" data-livello-su :data-livello="festa.livello">
             <b>✨ Livello {{ festa.livello }}!</b>
-            <small>Tocca il globo viola: hai un punto da dare</small>
+            <small>Un punto per l'eroe e uno per le abilità</small>
           </div>
           <div v-else-if="festa && festa.che === 'leggendario'" class="sot-festa sot-festa-leggendario" data-leggendario
                :data-cosa="festa.cosa">
@@ -1288,10 +1384,11 @@ function ridimensiona() { if (pittore) pittore.misura() }
              sopra (docs/sotterraneo/barra.md) -->
         <BarraDiSotto :vita="barra.vita" :vita-max="barra.vitaMax" :colpito="colpito" :livello="barra.livello"
                       :esperienza="barra.esperienza" :esp-fatta="barra.espFatta" :esp-serve="barra.espServe" :punti="barra.punti" :sale="sale"
+                      :energia="barra.energia" :energia-max="barra.energiaMax" :punti-abilita="barra.puntiAbilita"
                       :pozioni="barra.pozioni" :pieni="barra.pieni" :tasche="TASCHE" :gemme="barra.gemme"
                       :missioni="missioniAperte" :mappa="mappaGrande"
                       @bevi="bevi" @zaino="apriDallaBarra('zaino')" @diario="apriDallaBarra('diario')"
-                      @mappa="mappaGrande = !mappaGrande" @eroe="apriPaginaEroe" />
+                      @mappa="mappaGrande = !mappaGrande" @eroe="apriPaginaEroe()" @abilita="apriPaginaEroe('abilita')" />
 
         <!-- lo scontro sta al centro, non sale dal basso: un mostro addosso arriva mentre si cammina, e in
              fondo allo schermo chi guarda il proprio eroe non lo vedrebbe. Niente classe `sot-foglio`
@@ -1299,6 +1396,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <div v-if="foglio && foglio.che === 'scontro'" class="sot-velo sot-velo-scontro">
           <div class="sot-modale">
             <Scontro v-bind="nemico" :scosso="scosso" :scambio="scambio" />
+            <!-- le abilità sopra la domanda: un tocco la prepara, la risposta giusta la lancia (docs/sotterraneo/abilita.md) -->
+            <CaselleAbilita v-if="abilitaScontro && !ringhio" v-bind="abilitaScontro" @prepara="prepara" />
             <!-- il pericolo ferma lo scontro fra una domanda e la successiva: al posto della domanda, tre scelte -->
             <Ringhio v-if="ringhio" v-bind="ringhio" @bevi="ringhioBevi" @scappa="scappa" @continua="ringhioContinua" />
             <div v-else-if="domanda" class="sot-domanda">
@@ -1459,8 +1558,12 @@ function ridimensiona() { if (pittore) pittore.misura() }
       </template>
 
       <!-- la pagina dell'eroe e i Tesori, sopra e sotto: si chiudono con la ✕ o toccando fuori (e il tocco cammina) -->
-      <PaginaEroe v-if="pagina && !tesoriAperti && !(corsa && foglio && foglio.che === 'scontro')" v-bind="pagina"
+      <PaginaAbilita v-if="albero && !tesoriAperti && !(corsa && foglio && foglio.che === 'scontro')" v-bind="albero"
+                     @impara="imparaAbilita" @casella="casellaAbilita" @eroe="facciaEroe = 'eroe'" @chiudi="paginaEroe = false"
+                     @fuori="e => { paginaEroe = false; corsa ? toccoFuori(e) : fuoriDallaBottega(e) }" />
+      <PaginaEroe v-else-if="pagina && facciaEroe === 'eroe' && !tesoriAperti && !(corsa && foglio && foglio.che === 'scontro')" v-bind="pagina"
                   @dai="daiUnPunto" @tesori="tesoriAperti = true" @cambia="cambiaEroe" @chiudi="paginaEroe = false"
+                  @abilita="facciaEroe = 'abilita'"
                   @fuori="e => { paginaEroe = false; corsa ? toccoFuori(e) : fuoriDallaBottega(e) }" />
       <Tesori v-if="paginaEroe && tesoriAperti" :trovati="tesoriTrovati" @indietro="tesoriAperti = false"
               @chiudi="paginaEroe = false; tesoriAperti = false"

@@ -1,11 +1,11 @@
 <script setup>
 // Un globo della barra in basso, come in Diablo: una sfera di vetro col liquido che cala dall'alto, l'onda che si
-// muove alla superficie e il riflesso del vetro. Rosso la vita, viola l'esperienza (docs/sotterraneo/barra.md).
-// Non è un tasto: si guarda (quello dell'esperienza sta dentro un tasto, in BarraDiSotto.vue).
+// muove alla superficie e il riflesso del vetro. Rosso la vita, blu l'energia (docs/sotterraneo/barra.md).
+// Non è un tasto: si guarda (quello dell'energia sta dentro un tasto, in BarraDiSotto.vue).
 import { computed } from 'vue'
 
 const props = defineProps({
-  tipo: { type: String, required: true },      // 'vita' | 'esperienza'
+  tipo: { type: String, required: true },      // 'vita' | 'energia'
   quota: { type: Number, default: 0 },         // 0..1, quanto è pieno
   numero: { type: [String, Number], default: '' },
   guizza: { type: Boolean, default: false },   // agli sgoccioli: il liquido trema
