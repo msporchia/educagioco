@@ -42,6 +42,7 @@ pubblicato.** Per controllare solo che il build passi:
 | `python3 strumenti/sprite/vesti.py --atlante` | `src/giochi/castello/dati/vestiti.js` e `figure.js` | quando arriva un foglio del castello o cambia il bestiario |
 | `python3 strumenti/sprite/cammino.py <video> <creatura> --lato i:p --fronte i:p` | `strumenti/sprite/sorgenti/castello/cammino/<creatura>.png` e `.json` | quando arriva un video di Grok di una creatura che cammina (`--cerca` e `--provino` per trovare i giri, `--misura area` per chi salta); poi `vesti.py --atlante` |
 | `python3 strumenti/sprite/roba.py [categorie o id] [--elemento --stile --libere]` (`--foglietto id…`: le righe da incollare) | `tmp/roba/catalogo.png` | per scegliere una figura di roba del sotterraneo dal catalogo descritto ([../sotterraneo/figure.md](../sotterraneo/figure.md)) |
+| `python3 strumenti/sprite/roba.py --gioco` | il blocco `__aspetti` dei foglietti del sotterraneo e `src/giochi/sotterraneo/dati/aspetti.js` | dopo aver cambiato il `pezzo` di una figura in `roba.json`; poi `atlante.py sotterraneo` |
 | `python3 strumenti/sprite/scenario.py`, `scacchiera.py` | gli schemi da allegare ai prompt | dopo aver toccato la pianta di un prompt |
 | `python3 strumenti/sprite/terra-di-sopra.py` (`--proponi`, `--provino`, `--giunta` in `tmp/terra/`) | `src/giochi/sotterraneo/dati/terra-mappa.js` | dopo aver corretto la maschera o i posti nel foglietto, o quando cambia uno dei due pezzi della mappa o la giunta ([../sotterraneo/terra-di-sopra.md](../sotterraneo/terra-di-sopra.md)) |
 | `python3 strumenti/sprite/regno-castello.py` (`--provino` in `tmp/regno/`) | `src/giochi/castello/dati/regno.js` | dopo aver spostato un posto o un ponte nel foglietto `castello/regno.json`, o quando cambia la mappa ([../castello/regno.md](../castello/regno.md)) |
@@ -97,6 +98,7 @@ testa, e una modifica sparisce senza rumore alla prossima rigenerazione.
 | `src/giochi/castello/dati/regno.js` | `regno-castello.py` — `unita/castello-regno` diventa rosso se il foglietto è cambiato dopo |
 | `src/giochi/passo-passo/dati/isole-mappa.js`, `zaino-mappa.js` | `isole-passo-passo.py` — `unita/passo-passo-valle` diventa rosso se il foglietto è cambiato dopo |
 | `src/components/home/copertine-dipinte.js` | `copertine.py` |
+| `src/giochi/sotterraneo/dati/aspetti.js` (e il blocco `__aspetti` dei foglietti) | `roba.py --gioco` — `unita/sotterraneo-rarita` diventa rosso se non è quello del catalogo `roba.json` |
 | `docs/apprendimento/livelli-delle-domande.md` | `npm run quiz:livelli` |
 | `docs/img/*` | `npm run scatti` |
 
