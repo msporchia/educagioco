@@ -56,7 +56,21 @@ export const SCENARI = {
     fontana: { piena: 'cripta-fontana-piena', asciutta: 'cripta-fontana-asciutta' },
     perTerra: ['cripta-foglie', 'cripta-schegge', 'cripta-lastra'],
     ragnatele: { sx: 'cripta-ragnatela-sx', dx: 'cripta-ragnatela-dx' },
-    arredo: {}, dice: {},
+    // arredo-cripta-2.png: niente ossa né teschi, l'arredo è di pietra e ferro
+    arredo: {
+      barile: 'cripta-sarcofago-liscio', cassa: 'cripta-altare', ossa: 'cripta-cavaliere-caduto',
+      'teschio-scena': 'cripta-cavaliere-spada', lanterna: 'cripta-candelabro-alto',
+      stendardo: 'cripta-muro-cavaliere', candelabro: 'cripta-nicchia-lampada',
+    },
+    dice: {
+      barile: 'Un sarcofago di pietra, chiuso. Meglio non aprirlo.',
+      cassa: 'Un altare di pietra, spoglio.',
+      ossa: 'Un cavaliere di pietra, caduto da tanto.',
+      'teschio-scena': 'Un cavaliere di pietra. Ti guarda male e basta.',
+      lanterna: 'Un candelabro di ferro, acceso. La luce ce l\'hai già.',
+      stendardo: 'Un cavaliere scolpito nel muro, consumato.',
+      candelabro: 'Una nicchia con una lampada spenta.',
+    },
   },
   // la fornace (sotterraneo_5*.png): ritagliata da una scena, più un foglio coi pezzi che la scena non ha
   fornace: {

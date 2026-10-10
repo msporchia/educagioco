@@ -1,5 +1,5 @@
 {
-  "__": "Il foglietto di arredo-cripta-2.png: 48 pezzi d'arredo della cripta (ChatGPT, 10 ottobre 2026, chat della scena, allegata la scena), griglia 6×8 su fondo magenta. I rettangoli sono i riquadri stretti di ogni pezzo, misurati sul non-magenta nella casella; NON provato con atlante.py, e manca 'misura'. Vista quasi isometrica: da guardare prima di montare.",
+  "__": "Il foglietto di arredo-cripta-2.png: 48 pezzi d'arredo della cripta (ChatGPT, 10 ottobre 2026, chat della scena, allegata la scena), griglia 6×8 su fondo magenta. I rettangoli sono i riquadri stretti di ogni pezzo, misurati sul non-magenta nella casella; Misura a un decimo del foglio (come l'arredo della fornace, 14 px di foglio per pixel di gioco, ma qui i pezzi stanno in 48 per foglio). Montati nel gioco solo sette: sarcofago-liscio, altare, cavaliere-caduto, cavaliere-spada, candelabro-alto, muro-cavaliere, nicchia-lampada (SCENARI.cripta.arredo in dati/tessere.js). Vista quasi isometrica: da guardare prima di montare.",
   "prompt": {
     "scheda": "PROMPT-scenario.md",
     "base": "sotterraneo_4.png",
@@ -13,6 +13,13 @@
   ],
   "ombra": true,
   "colori": 0,
+  "cella": [
+    1,
+    1
+  ],
+  "famiglie": {
+    "cripta-": "oggetto"
+  },
   "sprite": {
     "cripta-sarcofago-liscio": {
       "da": [
@@ -22,6 +29,10 @@
       "cella": [
         134,
         130
+      ],
+      "misura": [
+        13,
+        13
       ]
     },
     "cripta-sarcofago-spada": {
@@ -32,6 +43,10 @@
       "cella": [
         139,
         131
+      ],
+      "misura": [
+        14,
+        13
       ]
     },
     "cripta-sarcofago-stemma": {
@@ -42,6 +57,10 @@
       "cella": [
         138,
         134
+      ],
+      "misura": [
+        14,
+        13
       ]
     },
     "cripta-sarcofago-croce": {
@@ -52,6 +71,10 @@
       "cella": [
         136,
         132
+      ],
+      "misura": [
+        14,
+        13
       ]
     },
     "cripta-sarcofago-crepato": {
@@ -62,6 +85,10 @@
       "cella": [
         134,
         135
+      ],
+      "misura": [
+        13,
+        14
       ]
     },
     "cripta-sarcofago-aperto": {
@@ -72,6 +99,10 @@
       "cella": [
         137,
         129
+      ],
+      "misura": [
+        14,
+        13
       ]
     },
     "cripta-cavaliere-spada": {
@@ -82,6 +113,10 @@
       "cella": [
         77,
         173
+      ],
+      "misura": [
+        8,
+        17
       ]
     },
     "cripta-cavaliere-inginocchiato": {
@@ -92,6 +127,10 @@
       "cella": [
         105,
         139
+      ],
+      "misura": [
+        10,
+        14
       ]
     },
     "cripta-cavaliere-seduto": {
@@ -102,6 +141,10 @@
       "cella": [
         110,
         153
+      ],
+      "misura": [
+        11,
+        15
       ]
     },
     "cripta-cavaliere-scudo": {
@@ -112,6 +155,10 @@
       "cella": [
         81,
         174
+      ],
+      "misura": [
+        8,
+        17
       ]
     },
     "cripta-cavaliere-mani": {
@@ -122,6 +169,10 @@
       "cella": [
         74,
         171
+      ],
+      "misura": [
+        7,
+        17
       ]
     },
     "cripta-cavaliere-caduto": {
@@ -132,6 +183,10 @@
       "cella": [
         139,
         110
+      ],
+      "misura": [
+        14,
+        11
       ]
     },
     "cripta-colonna": {
@@ -142,6 +197,10 @@
       "cella": [
         73,
         177
+      ],
+      "misura": [
+        7,
+        18
       ]
     },
     "cripta-colonna-spezzata": {
@@ -152,6 +211,10 @@
       "cella": [
         79,
         172
+      ],
+      "misura": [
+        8,
+        17
       ]
     },
     "cripta-colonna-moncone": {
@@ -162,6 +225,10 @@
       "cella": [
         73,
         119
+      ],
+      "misura": [
+        7,
+        12
       ]
     },
     "cripta-colonna-inclinata": {
@@ -172,6 +239,10 @@
       "cella": [
         90,
         161
+      ],
+      "misura": [
+        9,
+        16
       ]
     },
     "cripta-colonna-doppia": {
@@ -182,6 +253,10 @@
       "cella": [
         95,
         170
+      ],
+      "misura": [
+        10,
+        17
       ]
     },
     "cripta-base": {
@@ -192,6 +267,10 @@
       "cella": [
         95,
         84
+      ],
+      "misura": [
+        10,
+        8
       ]
     },
     "cripta-candelabro-1": {
@@ -202,6 +281,10 @@
       "cella": [
         50,
         184
+      ],
+      "misura": [
+        5,
+        18
       ]
     },
     "cripta-candelabro-5bracci": {
@@ -212,6 +295,10 @@
       "cella": [
         109,
         179
+      ],
+      "misura": [
+        11,
+        18
       ]
     },
     "cripta-candelabro-3": {
@@ -222,6 +309,10 @@
       "cella": [
         56,
         174
+      ],
+      "misura": [
+        6,
+        17
       ]
     },
     "cripta-candelabro-alto": {
@@ -232,6 +323,10 @@
       "cella": [
         55,
         176
+      ],
+      "misura": [
+        6,
+        18
       ]
     },
     "cripta-candelabro-tre": {
@@ -242,6 +337,10 @@
       "cella": [
         77,
         171
+      ],
+      "misura": [
+        8,
+        17
       ]
     },
     "cripta-candelabro-singolo": {
@@ -252,6 +351,10 @@
       "cella": [
         44,
         182
+      ],
+      "misura": [
+        4,
+        18
       ]
     },
     "cripta-altare": {
@@ -262,6 +365,10 @@
       "cella": [
         133,
         127
+      ],
+      "misura": [
+        13,
+        13
       ]
     },
     "cripta-leggio": {
@@ -272,6 +379,10 @@
       "cella": [
         93,
         145
+      ],
+      "misura": [
+        9,
+        14
       ]
     },
     "cripta-fonte": {
@@ -282,6 +393,10 @@
       "cella": [
         93,
         102
+      ],
+      "misura": [
+        9,
+        10
       ]
     },
     "cripta-nicchia-lampada": {
@@ -292,6 +407,10 @@
       "cella": [
         90,
         145
+      ],
+      "misura": [
+        9,
+        14
       ]
     },
     "cripta-tavolo": {
@@ -302,6 +421,10 @@
       "cella": [
         138,
         114
+      ],
+      "misura": [
+        14,
+        11
       ]
     },
     "cripta-panca": {
@@ -312,6 +435,10 @@
       "cella": [
         125,
         115
+      ],
+      "misura": [
+        12,
+        12
       ]
     },
     "cripta-arco-murato": {
@@ -322,6 +449,10 @@
       "cella": [
         117,
         163
+      ],
+      "misura": [
+        12,
+        16
       ]
     },
     "cripta-blocchi-caduti": {
@@ -332,6 +463,10 @@
       "cella": [
         128,
         118
+      ],
+      "misura": [
+        13,
+        12
       ]
     },
     "cripta-lastra-funeraria": {
@@ -342,6 +477,10 @@
       "cella": [
         79,
         150
+      ],
+      "misura": [
+        8,
+        15
       ]
     },
     "cripta-pilastro-grata": {
@@ -352,6 +491,10 @@
       "cella": [
         81,
         161
+      ],
+      "misura": [
+        8,
+        16
       ]
     },
     "cripta-braciere": {
@@ -362,6 +505,10 @@
       "cella": [
         104,
         102
+      ],
+      "misura": [
+        10,
+        10
       ]
     },
     "cripta-trono": {
@@ -372,6 +519,10 @@
       "cella": [
         89,
         157
+      ],
+      "misura": [
+        9,
+        16
       ]
     },
     "cripta-cancello": {
@@ -382,6 +533,10 @@
       "cella": [
         123,
         139
+      ],
+      "misura": [
+        12,
+        14
       ]
     },
     "cripta-campana": {
@@ -392,6 +547,10 @@
       "cella": [
         98,
         130
+      ],
+      "misura": [
+        10,
+        13
       ]
     },
     "cripta-scudo-cavalletto": {
@@ -402,6 +561,10 @@
       "cella": [
         87,
         135
+      ],
+      "misura": [
+        9,
+        14
       ]
     },
     "cripta-rastrelliera": {
@@ -412,6 +575,10 @@
       "cella": [
         107,
         149
+      ],
+      "misura": [
+        11,
+        15
       ]
     },
     "cripta-forziere": {
@@ -422,6 +589,10 @@
       "cella": [
         127,
         118
+      ],
+      "misura": [
+        13,
+        12
       ]
     },
     "cripta-lampadario": {
@@ -432,6 +603,10 @@
       "cella": [
         114,
         132
+      ],
+      "misura": [
+        11,
+        13
       ]
     },
     "cripta-muro-cavaliere": {
@@ -442,6 +617,10 @@
       "cella": [
         106,
         122
+      ],
+      "misura": [
+        11,
+        12
       ]
     },
     "cripta-muro-nicchia": {
@@ -452,6 +631,10 @@
       "cella": [
         94,
         125
+      ],
+      "misura": [
+        9,
+        12
       ]
     },
     "cripta-muro-edera": {
@@ -462,6 +645,10 @@
       "cella": [
         86,
         125
+      ],
+      "misura": [
+        9,
+        12
       ]
     },
     "cripta-muro-stemma": {
@@ -472,6 +659,10 @@
       "cella": [
         89,
         116
+      ],
+      "misura": [
+        9,
+        12
       ]
     },
     "cripta-muro-rosone": {
@@ -482,6 +673,10 @@
       "cella": [
         112,
         116
+      ],
+      "misura": [
+        11,
+        12
       ]
     },
     "cripta-muro-grata": {
@@ -492,6 +687,10 @@
       "cella": [
         94,
         94
+      ],
+      "misura": [
+        9,
+        9
       ]
     }
   }

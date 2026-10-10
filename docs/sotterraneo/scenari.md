@@ -133,7 +133,9 @@ in Node) e si prova in `unita/muri-sotterraneo`.
   (`barile`, `ossa`, `lanterna`... in `ARREDI`, `dati/mondo.js`) e dove sta e
   chi fa luce; `arredo` nella voce di `SCENARI` dice con quale sprite si
   disegna e `dice` cosa risponde a chi lo tocca. Vuoti, vale quello di tutti
-  (cantine, cripta). La fornace: botte, carbone, incudine, gargoyle,
+  (cantine). La cripta (da `arredo-cripta-2.png`): sarcofago, altare, cavaliere
+  caduto, cavaliere in piedi, candelabro, bassorilievo, nicchia con lampada.
+  La fornace: botte, carbone, incudine, gargoyle,
   calderone, rastrelliera, banco.
 - **L'arredo** (barili, casse, ossa, uno stendardo, una lanterna che fa luce)
   non si tocca, non blocca e non vale niente: serve a far sembrare che qui

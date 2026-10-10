@@ -44,11 +44,10 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   alla fornace e alla grotta. Le immagini si chiedono a fogli fitti
   (decine di pezzi per foglio), non otto alla volta.
 - **Le fuliggini della fornace** non sono state usate (alone magenta).
-- **L'arredo della cripta**: la fornace ha il suo (`arredo` e `dice` nella voce
-  di `SCENARI`), le cantine e la cripta no, e botti, casse e stendardi rossi
-  nella cripta sembrano portati dalle cantine. La scena della cripta ha
-  sarcofagi, statue, candelabri e colonne spezzate ma col pavimento dietro:
-  vanno chiesti su fondo magenta e mappati con `arredo`.
+- **Più varietà nell'arredo della cripta**: dal 10 ottobre ha il suo (sette dei
+  48 pezzi di `arredo-cripta-2.png`: sarcofago, altare, cavalieri di pietra,
+  candelabro, bassorilievo, nicchia); gli altri 41 aspettano che un genere di
+  arredo possa scegliere fra più pelli. Cantine e fornace restano con le loro.
 - **La fontana della cripta** è ancora quella di `sotterraneo_3.png`, piena e
   asciutta: quella del foglio dei pezzi è a muro, e bevendo cambierebbe forma.
 - **Un mostro di quinta fascia per ogni posto**: oggi il golem sta in tutti
