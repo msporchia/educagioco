@@ -21,7 +21,7 @@
    `node test/esegui.mjs sotterraneo-barra`
    tempo: 150
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, scendiNelSotterraneo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -152,7 +152,8 @@ const vuota = (x, y) => L.calpestabile(x, y) && !L.robe.some(r => r.x === x && r
 async function vaiGiu(a, { toccala = true } = {}) {
   for (let giro = 0; giro < 30; giro++) {
     if (a.che !== 'mostro' && await page.locator('[data-azione="scappa"]').count()) {
-      await page.locator('[data-azione="scappa"]').click()
+      await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 3000 })   // i primi 320 ms il tocco non conta
+    await page.locator('[data-azione="scappa"]').click()
       await attendi(page, 300)
       continue
     }
@@ -190,6 +191,7 @@ async function unaCellaLibera(min = 3) {
   return meglio
 }
 async function rispondi(giusto = true) {
+  await scegliAttacco(page)
   await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 5000 })
   await attendi(page, 400)
   const tasto = page.locator(giusto ? '.sot-domanda .qz-tasto[data-giusta]' : '.sot-domanda .qz-tasto:not([data-giusta])')
@@ -252,6 +254,7 @@ await page.waitForFunction(v => Number(document.querySelector('[data-globo="vita
 const vita1 = await numeroDel('vita')
 controlla('sbagliando, il mostro colpisce e il numero cala', vita1 < vita0, `${vita0} → ${vita1}`)
 controlla('e il globo si svuota', (await quota('vita')) < 1, await globo('vita'))
+await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 3000 })   // i primi 320 ms il tocco non conta
 await page.locator('[data-azione="scappa"]').click()
 await attendi(page, 500)
 await fermoGiu()
@@ -299,6 +302,7 @@ await scatto(page, 'barra-colpito')
   uguale('e si riaccende', await page.locator('[data-casella-barra="pozione"].sot-vuota').count(), 0)
   // girando per terra può essersi svegliato un mostro: si scappa, il resto della prova vuole il campo libero
   if (await page.locator('[data-azione="scappa"]').count()) {
+    await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 3000 })   // i primi 320 ms il tocco non conta
     await page.locator('[data-azione="scappa"]').click()
     await attendi(page, 500)
     await fermoGiu()

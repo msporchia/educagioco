@@ -19,7 +19,7 @@
    `node test/esegui.mjs sotterraneo-portale`
    tempo: 120
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo,
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, leggiProfilo, scendiNelSotterraneo,
          compraNellaBottega, nelDialogo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -150,6 +150,7 @@ async function vaiGiu(a, { toccala = true } = {}) {
   }
 }
 async function rispondi(giusto = true) {
+  await scegliAttacco(page)
   await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 5000 })
   await attendi(page, 300)
   const tasto = page.locator(giusto ? '.sot-domanda .qz-tasto[data-giusta]' : '.sot-domanda .qz-tasto:not([data-giusta])')

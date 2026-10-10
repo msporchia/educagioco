@@ -228,7 +228,7 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
   uguale('e la corazza da addosso', b.corpo, null)
   controlla('ma finiscono in tasca, non nel niente',
             b.zaino.includes('ascia') && b.zaino.includes('corazza'), b.zaino.join())
-  const d = leggi(dato, CAMPAGNA[0], { ...ROBA_VUOTA(), mano: 'ascia', zaino: new Array(TASCHE).fill('pozione') })
+  const d = leggi(dato, CAMPAGNA[0], { ...ROBA_VUOTA(), mano: 'ascia', zaino: ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'chiave', 'corazza'] })
   uguale('con lo zaino pieno il pugno si svuota lo stesso', d.mano, null)
   controlla('e l\'ascia è per terra, non persa',
             d.livello.robe.some(r => r.che === 'cosa' && r.cosa === 'ascia' && !r.presa))

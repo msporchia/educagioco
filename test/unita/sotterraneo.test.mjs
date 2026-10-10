@@ -273,8 +273,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   c.chiudi()
 
   /* lo zaino è un limite vero */
-  for (let i = 0; i < TASCHE + 3; i++) c.zaino.push('pozione')
-  c.zaino.length = TASCHE
+  c.zaino = ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'chiave', 'corazza']   // sei cose diverse: le pozioni uguali stanno in una tasca sola
   uguale('le tasche sono quelle dichiarate', c.zaino.length, TASCHE)
 
   /* quello che si aveva in mano torna nello zaino, non sparisce: una
@@ -404,7 +403,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   /* con le tasche piene lo scambio non perde niente: il vecchio prende
      il posto per terra del nuovo */
   c.mancina = null
-  c.zaino = new Array(TASCHE).fill('pozione')
+  c.zaino = ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'chiave', 'corazza']
   const ascia = { che: 'cosa', cosa: 'spadone', x: dove.x, y: dove.y, em: COSE.spadone.em }
   c.livello.robe.push(ascia)
   c.interagisci(ascia)

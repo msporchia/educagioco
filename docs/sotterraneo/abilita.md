@@ -73,16 +73,22 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
 
 ## L'energia
 
-- **Cinque più l'intelligenza** (`ENERGIA`, `energiaMax`): il mago parte da
-  dieci, l'elfa da sette, il cavaliere e il nano da sei, e alzare
+- **Otto più l'intelligenza** (`ENERGIA`, `energiaMax`): il mago parte da
+  tredici, l'elfa da dieci, il cavaliere e il nano da nove, e alzare
   l'intelligenza alza il globo ([livelli.md](livelli.md#le-quattro-caratteristiche)).
-  Nessuna abilità costa più di sei. Si scende con l'energia piena, come con
-  la vita.
-- **Si riempie solo rispondendo giusto**: un punto per risposta giusta,
-  dovunque (porte, forzieri, fonti, mostri), dopo aver pagato l'abilità.
-  Sbagliare non la toglie. In più la fonte la riempie tutta, la pozione blu
-  (`pozione-blu`, dalla guaritrice e nei forzieri) ne dà sei, e il Respiro
-  del bosco la ridà battendo i mostri.
+  Un'abilità costa **per il gradino del suo posto nel ramo** (`COSTO_DEL_GRADINO`:
+  5, 6, 7, 9): nessuna più di nove, l'energia di chi ne ha meno. Si scende con
+  l'energia piena, come con la vita.
+- **Si riempie piano, solo rispondendo giusto**: un punto ogni **due** risposte
+  giuste (`RISPOSTE_PER_ENERGIA`), dovunque (porte, forzieri, fonti, mostri),
+  dopo aver pagato l'abilità. Sbagliare non la toglie. L'utente, 9 ottobre:
+  *un'abilità non si usa a ogni scontro, e non ne avanza*. Misurato a mano: il mago
+  vince un mostro in 1–2 risposte nelle prime discese e in 5–6 in fondo, quindi
+  una da 5 si ripaga in due-cinque scontri, e le prime due sono già pagate
+  dall'energia di partenza. In più la fonte la riempie tutta, la pozione blu
+  (`pozione-blu`, dall'erborista e nei forzieri) ne dà otto, e il Respiro
+  del bosco la ridà battendo i mostri. **Da fare:** misurarlo col banco, una strada
+  per classe.
 - **Mai col tempo**: sotto una domanda l'orologio è fermo, e una ricarica a
   tempo premierebbe chi legge piano o posa il telefono. È la ragione per cui
   la torcia si conta a stanze ([roba.md](roba.md)).
@@ -90,11 +96,27 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
 
 ## Nello scontro
 
-- **Le tre caselle stanno sopra la domanda** (`CASELLE_ABILITA`). L'energia
-  non si ripete qui: la dice il globo blu, che sotto il velo si vede (l'utente).
-  Un tocco prepara un'abilità (si accende d'oro,
-  «pronta»), un altro la toglie. Non si apre niente: chi non tocca niente
-  attacca come sempre.
+- **Lo scontro è in due fasi** (l'utente, 9 ottobre): prima si sceglie cosa fare, poi compare la domanda per quel colpo, a
+  ogni scambio. La scelta (`CaselleAbilita.vue`) è un elenco con bordi d'oro: «Attacco» in cima («fai 6 di danno»), le tre
+  abilità col costo e quello che fanno **contro questo mostro, coi numeri veri** (`Corsa.descrizione`: «fai 6 di danno · poi 3 a turno
+  per 3 turni»), poi **«Bevi una pozione»** e **«Scappa via»** col loro prezzo. Un tocco sceglie e va avanti; per i primi 320 ms il
+  tocco non conta (il click lasciato dalla risposta). Un'abilità senza energia o senz'arma resta grigia e dice cosa manca. Sopra la
+  domanda resta la riga della scelta fatta. Chi non ha abilità vede comunque Attacco, bere e scappare. L'energia non si ripete:
+  la dice il globo blu.
+- **Il duello** (`Scontro.vue`, `Palco.vue`), alla Monkey Island: l'eroe a sinistra e il mostro a destra, grandi, sul fondale
+  vero dello scenario (la parete e il pavimento delle stanze, dallo stesso foglio del campo). Del mostro si vede solo la barra della
+  vita in alto a destra, **senza numeri** (il brivido di non sapere quanto resiste); la vita dell'eroe sta nel globo. A ogni
+  scambio chi colpisce scatta in avanti, chi è colpito trema, salgono i numeri del danno; un'abilità fa volare il suo glifo dall'eroe
+  al mostro, del colore del suo ramo; gli effetti che durano stanno addosso al mostro (fiamma, brina, stelle, goccia) e ne
+  cambiano il colore, e lo scudo dà un alone all'eroe. Lo scambio ha un ordine, per leggerlo (`Scontro.vue`, i ritardi in
+  `stile.css`): l'eroe colpisce (0 s: da lontano vola l'abilità o una freccia/scintilla, da vicino si fa sotto e lampeggia il
+  fendente), il mostro incassa e il numero sale (0,3), il mostro risponde facendosi sotto (0,65), l'eroe incassa col graffio
+  rosso (0,95). **Scudo e cura non colpiscono**: niente scatto, solo un alone del colore dell'abilità sull'eroe. La cornice è
+  quella delle finestre dell'eroe e del fabbro (`Cornice.vue`, senza ✕).
+- **Una difesa prende il posto dell'attacco, e nel turno il mostro colpisce comunque**: per questo lo Scudo arcano e la Pelle
+  di pietra parano la metà della vita massima al primo grado (due quarti, poi 2,6 e 3,2: `scudo` in `dati/abilita.js`; anche le cure sono raddoppiate, per lo stesso motivo), e non
+  più un quarto (l'utente, 9 ottobre). La pozione blu si beve anche dal menu dello scontro («Bevi una pozione blu», senza
+  perdere il turno) e il suo pannello dice «+8 energia», non vita.
 - **Rispondendo giusto parte**, e si paga. **Sbagliando resta pronta e non
   costa**: un'abilità non è un modo di perdere di più quando si sbaglia.
   Non passa da uno scontro all'altro.
@@ -109,10 +131,16 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
   intoccabile, specchio, linfa. Si vedono come pastiglie sotto la vita del
   mostro e sotto quella dell'eroe.
 - **La stanza intera** (Turbine, Pioggia di frecce, Palla di fuoco…): lo
-  stesso colpo e gli stessi effetti a tutti i mostri svegli della stanza; chi
+  stesso colpo e gli stessi effetti a tutti i mostri della stanza; chi
   cade dà esperienza e bottino come sempre.
 - **«ti graffia 2 · se sbagli 4»** dice quello che arriva davvero, con gli
   effetti (`botta`). Lo stop del pericolo conta lo stesso numero.
+- **Le parole** (l'utente, 9 ottobre): si parla di danno e di turni, mai di «scambi» o «mezzo colpo»: «fa il doppio del danno»,
+  «il mostro arde: metà del tuo danno a ogni turno, per 3 turni», «protezione dai danni per 2 turni». Il nome dell'abilità sta già
+  sopra la riga, quindi la riga dice solo l'effetto. Nello scontro i numeri sono quelli veri.
+- **La riga dell'attacco ha una voce per fonte** (`Scontro.vue`, `data-scambio`): «fai 10 di danno (il tuo colpo di 5 ×2)», «altri 3 di
+  danno a ogni turno», «subisci 1 di danno (il gelo gli dimezza il colpo)», o perché non subisci niente (stordito, invulnerabile,
+  la barriera). I dati li porta l'esito di `rispostaScontro` (`base`, `volte`, `salvo`, `gelato`, `assorbito`).
 - **Il primo tiro** (elfa, con l'arco): la prima risposta giusta di ogni
   scontro arriva da lontano, e il mostro non risponde.
 - **L'ultimo fiato** (cavaliere): una volta per discesa, invece di svenire si

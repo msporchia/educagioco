@@ -264,6 +264,14 @@ export const moneteInHome = page =>
 
 export const attendi = (page, ms) => page.waitForTimeout(ms)
 
+/* Lo scontro è in due fasi (docs/sotterraneo/abilita.md): prima si sceglie il colpo, poi compare la domanda. Chi
+   vuole rispondere sceglie l'attacco di sempre (la prima riga); dove non c'è la scelta (una porta, un forziere) non fa niente. */
+export async function scegliAttacco(page) {
+  await page.waitForSelector('.sot-domanda .qz-tasto, [data-caselle-abilita][data-pronto]', { timeout: 8000 }).catch(() => {})
+  const b = page.locator('[data-caselle-abilita] [data-azione="attacco"]')
+  if (await b.count()) await b.first().click()
+}
+
 /* Apre un gioco dalla home: la copertina si porta in mezzo dall'indice, e
    solo quella in mezzo apre (docs/core/home.md). */
 export async function scegli(page, chiave) {

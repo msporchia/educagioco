@@ -68,7 +68,7 @@ le classi si somigliavano. La fortuna resta solo sulla roba.
 
 | | dà l'attacco a | a tutti, per punto | è il requisito di |
 |---|---|---|---|
-| Forza | spade e asce | — | spade e asce |
+| Forza | spade e asce | una tasca in più ogni tre punti oltre il primo | spade e asce |
 | Destrezza | archi | 1% di schivata dei graffi | archi |
 | Intelligenza | bacchette e bastoni | un punto di energia massima | bacchette e bastoni |
 | Tempra | — | tre di vita, e una difesa ogni tre punti | — |
@@ -87,9 +87,15 @@ le classi si somigliavano. La fortuna resta solo sulla roba.
   l'attacco prendeva anche la difesa, e il nano e l'elfa (la loro dote è la
   forza) a quattro su dieci vincevano quasi tutto; il mago, che la forza non
   la alza, restava senza difesa e non arrivava in fondo.
-- **L'intelligenza è il mana**: l'energia massima è 5 più l'intelligenza
-  ([abilita.md](abilita.md)), quindi il mago parte da dieci, il cavaliere e
-  il nano da sei.
+- **L'intelligenza è il mana**: l'energia massima è 8 più l'intelligenza
+  ([abilita.md](abilita.md)), quindi il mago parte da tredici, il cavaliere e
+  il nano da nove.
+- **La forza dà posto a tutti** (l'utente, 9 ottobre: a un mago la forza non serviva a
+  niente): una tasca dello zaino in più ogni tre punti oltre il primo (`FORZA_PER_TASCA`,
+  `tascheDallaForza` in `motore/corredo.js`), che si somma a quelle comprate con le gemme
+  ([roba.md](roba.md)). Non ho dato requisiti di forza a scudi e armature: le classi li
+  portano già per famiglia (`porta`), e un requisito in più avrebbe solo chiuso la strada
+  al mago.
 - **Le caratteristiche di partenza raccontano i numeri della classe**
   (`parte` in `dati/eroi.js`): la caratteristica di ogni arma che la classe
   porta vale il suo braccio, più o meno uno (`guastiDegliEroi` lo

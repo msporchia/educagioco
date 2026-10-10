@@ -28,7 +28,7 @@ import { dai as daiPunto } from './crescita.js'
 import { indiceDella, premioPer } from './storia.js'
 import { robaDellaMissione } from './missioni.js'
 import { pericoloDi } from './pericolo.js'
-import { NODI, ENERGIA_PER_RISPOSTA, aGrado, inVita } from '../dati/abilita.js'
+import { NODI, RISPOSTE_PER_ENERGIA, aGrado, inVita, colpisce } from '../dati/abilita.js'
 
 // nella storia i forzieri e i mostri di tutti i giorni danno solo quello che si consuma: la roba la dà la riga
 // della storia (dati/storia.js), o la discesa diventerebbe una lotteria e la tabella una bugia
@@ -67,6 +67,7 @@ export class Corsa extends Corredo {
     this.stanzaOra = null   // unità in cui brucia la torcia (bruciaLaTorcia)
 
     this.foglio = null          // cosa è aperto adesso, o niente
+    this.energiaResto = 0       // le risposte giuste che non hanno ancora fatto un punto di energia (RISPOSTE_PER_ENERGIA)
     this.pronta = null          // l'abilità preparata per la prossima risposta giusta (docs/sotterraneo/abilita.md)
     this.fiatoUsato = false     // «Ultimo fiato»: una volta per discesa
     this.chiesta = null         // la domanda che serve: { id, che, difficolta }
@@ -147,9 +148,14 @@ export class Corsa extends Corredo {
     const g = nodo ? this.grado(nodo.id) : 0
     const st = m.stati || {}
     const passa = st.rotto || (nodo && (nodo.passa || this.delRamo(nodo, 'passa')))
-    const base = Math.max(1, this.att + this.sempre('colpoPiu') + this.delRamo(nodo, 'piu') + (st.debole > 0 ? this.sempre('geloPiu') : 0)
-      - (passa ? 0 : m.dif))
+    // I bonus del colpo sono percentuali (l'utente, 9 ottobre: un +1 fisso non tiene il passo con l'attacco che cresce):
+    // Filo affilato e simili, la punta del ramo e Gelo profondo sul gelato si sommano fra loro, poi si moltiplica
+    const esposto = st.esposto && st.esposto.scambi > 0 ? st.esposto.piu : 0
+    const piu = this.sempre('colpoPiu') + this.delRamo(nodo, 'piu') + (st.debole > 0 ? this.sempre('geloPiu') : 0) + esposto
+    const base = Math.max(1, Math.round((this.att - (passa ? 0 : m.dif)) * (1 + piu / 100)))
     let per = nodo ? (aGrado(nodo, 'per', g) || 1) : 1
+    // l'ultimo gradino dei rami: contro un capo o un mostro grosso vale molto di più
+    if (nodo && nodo.capi && this.èCapo(m)) per = aGrado(nodo, 'capi', g)
     if (nodo && nodo.seStordito && !(st.veleno || st.debole > 0 || st.fermo > 0)) per = nodo.altrimenti || 1
     return Math.round(base * per) + this.addosso('fuoco')
   }
@@ -454,7 +460,7 @@ export class Corsa extends Corredo {
     if (c.rarita === 'leggendario') this.trovati.add(c.unico)
     // uno scudo si imbraccia da sé solo a mano libera: con un'arma leggera già lì, la scelta la fa chi gioca, dallo zaino
     if (this.vaAddosso(r.cosa)) return this.vesti(r, this.confronto(r.cosa))
-    if (this.zaino.length >= TASCHE) {
+    if (!this.cista(r.cosa)) {
       if (c.rarita === 'leggendario') this.trovati.delete(c.unico)
       this.dillo('⚠️ lo zaino è pieno'); return
     }
@@ -500,7 +506,7 @@ export class Corsa extends Corredo {
     this.metti(dove, r.cosa)
     r.presa = true
     if (vecchio) {
-      if (this.zaino.length < TASCHE) this.zaino.push(vecchio)
+      if (this.cista(vecchio)) this.zaino.push(vecchio)
       else this.livello.robe.push({ che: 'cosa', cosa: vecchio, x: r.x, y: r.y,
                                     em: COSE[vecchio].em })
     }
@@ -546,8 +552,9 @@ export class Corsa extends Corredo {
     this.chiesta = { id: ++this.contaChieste, che, difficolta: this.durezza(rincaro) }
   }
 
-  // il capo della tappa e il mostro grosso chiedono domande più toste
-  rincaroDi(m) { return m.grosso || MOSTRI[m.tipo].capo ? RINCARO.capo : RINCARO.mostro }
+  // il capo della tappa e il mostro grosso: chiedono domande più toste, e subiscono di più dai colpi forti (`capi`)
+  èCapo(m) { return !!(m.grosso || (MOSTRI[m.tipo] && MOSTRI[m.tipo].capo)) }
+  rincaroDi(m) { return this.èCapo(m) ? RINCARO.capo : RINCARO.mostro }
 
   // `io`: gli effetti sull'eroe che durano lo scontro (parato, scudo, intoccabile, specchio, linfa); `pieni` i colpi pieni
   // presi (Testa dura), `tirato` se il primo tiro è già partito. L'abilità preparata non passa da uno scontro all'altro
@@ -605,7 +612,10 @@ export class Corsa extends Corredo {
     const esito = this.rispostaA(f, giusto)
     // l'energia viene dalle risposte giuste, dovunque (porte, forzieri, mostri): dopo, così un'abilità si paga con
     // l'energia che c'era quando la si è preparata. Sbagliare non la toglie
-    if (giusto) this.energia = Math.min(this.energiaMax, this.energia + ENERGIA_PER_RISPOSTA)
+    if (giusto && ++this.energiaResto >= RISPOSTE_PER_ENERGIA) {
+      this.energiaResto = 0
+      this.energia = Math.min(this.energiaMax, this.energia + 1)
+    }
     return esito
   }
 
@@ -632,6 +642,26 @@ export class Corsa extends Corredo {
     return true
   }
 
+  // Cosa farebbe l'abilità adesso, contro questo mostro, coi numeri veri (la riga della scelta nello scontro): «fai 12 di
+  // danno · poi 3 a turno per 3 turni». Le difese e le cure non attaccano di più: dicono la riga dell'albero (`fa`)
+  descrizione(nodo, m) {
+    const g = this.grado(nodo.id) || 1
+    const vale = c => aGrado(nodo, c, g)
+    const turni = n => `${n} ${n === 1 ? 'turno' : 'turni'}`
+    if (!colpisce(nodo)) return nodo.fa(g, this.vitaMax)
+    const parti = [`fai ${this.colpo(m, nodo)} di danno${nodo.stanza ? ' a tutti i mostri della stanza' : ''}`]
+    if (nodo.seStordito) parti.push('di più su chi è gelato, avvelenato o stordito')
+    if (nodo.rompe) parti.push('spezza la sua difesa')
+    else if (nodo.passa) parti.push('ignora la sua difesa')
+    if (nodo.veleno) parti.push(`poi ${Math.max(1, Math.ceil(this.colpo(m) / 2))} a turno per ${turni(vale('veleno'))}`)
+    if (nodo.debole) parti.push(`fa metà danno per ${turni(vale('debole'))}`)
+    if (nodo.fermo) parti.push(`stordito per ${turni(vale('fermo'))}`)
+    if (nodo.esposto) parti.push(`subisce il ${vale('esposto')}% in più`)
+    if (nodo.quieto) parti.push('non risponde')
+    if (nodo.capi && !this.èCapo(m)) parti.push('molto di più contro i capi')
+    return parti.join(' · ')
+  }
+
   // perché un'abilità delle caselle non si può usare adesso ('' se si può): la riga sul tasto spento
   perchéNonUsi(id) {
     const nodo = NODI[id]
@@ -649,10 +679,12 @@ export class Corsa extends Corredo {
     const sulMostro = (x, base) => {
       x.stati = { ...(x.stati || {}) }
       if (nodo.rompe) x.stati.rotto = true
-      if (nodo.veleno) x.stati.veleno = { quanto: Math.max(1, Math.ceil(base / 2)), scambi: vale('veleno') }
+      if (nodo.veleno) x.stati.veleno = { quanto: Math.max(1, Math.ceil(base / 2)), scambi: vale('veleno'), fuoco: nodo.ramo === 'fuoco' || nodo.id === 'chiodi-roventi' }
       if (nodo.debole) x.stati.debole = Math.max(x.stati.debole || 0, vale('debole'))
       // stordito non risponde al colpo che lo stordisce, e poi salta i suoi N scambi
       if (nodo.fermo) x.stati.fermo = Math.max(x.stati.fermo || 0, vale('fermo') + 1)
+      // Radici: bloccato, il mostro è un bersaglio facile per tutto il tempo che resta fermo
+      if (nodo.esposto) x.stati.esposto = { scambi: vale('fermo') + 1, piu: vale('esposto') }
     }
     if (nodo.cura) {
       const c = inVita(vale('cura'), this.vitaMax)   // lo stesso conto della riga dell'albero
@@ -702,8 +734,9 @@ export class Corsa extends Corredo {
       io.linfa = io.linfa.scambi > 1 ? { ...io.linfa, scambi: io.linfa.scambi - 1 } : null
     }
 
-    let dato = 0, usata = null, quieto = false, colpiti = []
+    let dato = 0, usata = null, quieto = false, colpiti = [], base = 0, primo = false
     if (giusto) {
+      base = this.colpo(m)   // il colpo senza l'abilità, per dire da dove viene il danno
       const nodo = this.pronta && !this.perchéNonUsi(this.pronta) ? NODI[this.pronta] : null
       // prima gli effetti, poi il colpo: «Spaccaroccia» toglie la difesa al colpo stesso che la toglie
       if (nodo) {
@@ -713,12 +746,16 @@ export class Corsa extends Corredo {
         quieto = !!nodo.quieto
         colpiti = this.usaAbilita(nodo, m)
       }
-      dato = this.colpo(m, nodo)
+      // un'abilità difensiva (scudo, cura, parata…) prende il posto dell'attacco: niente colpo
+      dato = !nodo || colpisce(nodo) ? this.colpo(m, nodo) : 0
       // il primo tiro dell'arco: la prima risposta giusta di uno scontro arriva da lontano, e il mostro non risponde
-      if (!f.tirato && this.ha('primoTiro')) { f.tirato = true; quieto = true; dato += this.sempre('primoTiro') }
+      if (!f.tirato && this.ha('primoTiro') && (!nodo || colpisce(nodo))) { f.tirato = true; quieto = true; primo = true; dato = Math.round(dato * (1 + this.sempre('primoTiro') / 100)) }
       m.ossa -= dato
     }
-    const detto = { dato, veleno, usata: usata ? { id: usata.id, nome: usata.nome, glifo: usata.glifo } : null, colpiti: colpiti.length }
+    // come si è arrivati al danno, da mostrare a ogni scambio: il colpo di base, quante volte (l'abilità), il primo tiro
+    const volteDi = usata ? (aGrado(usata, 'per', this.grado(usata.id)) || 1) : 1
+    const detto = { dato, veleno, usata: usata ? { id: usata.id, nome: usata.nome, glifo: usata.glifo } : null, colpiti: colpiti.length,
+                    base, volte: volteDi, primoTiro: primo }
     if (m.ossa <= 0) {
       this.cade(m)
       this.chiudi()
@@ -727,15 +764,22 @@ export class Corsa extends Corredo {
 
     // il mostro è ancora in piedi, quindi risponde: con gli effetti (botta), lo scudo che assorbe, lo specchio che rimanda.
     // La schivata (🌀) a volte evita il graffio
+    // cosa si porta via il danno, da dire a chi guarda: stordito, invulnerabile, parato, il mostro che non fa in tempo, il gelo
+    const gelato = (m.stati || {}).debole > 0
+    const salvo = (m.stati || {}).fermo > 0 ? 'fermo' : io.intoccabile > 0 ? 'intoccabile' : giusto && io.parato > 0 ? 'parato' : giusto && quieto ? 'quieto' : null
     let male = this.botta(m, giusto, { quieto })
+    const pieno = male
     if (!giusto) f.pieni = (f.pieni || 0) + 1
     const schiva = giusto && male > 0 && this.schivata > 0 && this.rnd() * 100 < this.schivata
     if (schiva) { male = 0; this.dillo('🌀 schivato!') }
+    let assorbito = 0
     if (male > 0 && io.scudo > 0) {
       const preso = Math.min(io.scudo, male)
       io.scudo -= preso
       male -= preso
+      assorbito = preso
     }
+    Object.assign(detto, { salvo: male > 0 ? null : salvo, gelato: gelato && pieno > 0 ? true : false, assorbito })
     let rimandato = 0
     if (male > 0 && io.specchio) {
       rimandato = Math.round(male * io.specchio)
@@ -747,6 +791,8 @@ export class Corsa extends Corredo {
     const ora = m.stati || {}
     if (ora.debole > 0 || ora.fermo > 0)
       m.stati = { ...ora, debole: Math.max(0, (ora.debole || 0) - 1), fermo: Math.max(0, (ora.fermo || 0) - 1) }
+    if (ora.esposto && ora.esposto.scambi > 0)
+      m.stati = { ...(m.stati || ora), esposto: ora.esposto.scambi > 1 ? { ...ora.esposto, scambi: ora.esposto.scambi - 1 } : null }
     if (io.parato > 0) io.parato--
     if (io.intoccabile > 0) io.intoccabile--
     if (rimandato && m.ossa <= 0) {

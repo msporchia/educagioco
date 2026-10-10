@@ -83,6 +83,20 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
 ## I livelli e la roba
 
+- **Le abilità dopo lo scontro in due fasi** (9 ottobre): fatti costi per gradino, energia più scarsa, l'ultimo
+  gradino contro i boss, i bonus in percentuale, la legenda delle passive, pozioni impilate e tasche a gemme, il
+  fabbro con più scelta e prezzi per rarità. **Restano:** (1) la **forza del mago** — oggi la forza è requisito e
+  attacco solo di spade e asce, quindi a un mago non serve a niente (come in Diablo, ma qui pesa): proposta, darle un
+  secondo uso a tutti — armature e scudi pesanti che la chiedono, e una tasca in più ogni quattro punti; (2)
+  **calibrare coi numeri finiti dell'equipaggiamento**: il banco deve usare le abilità dell'albero e quelle dei pezzi,
+  non solo `att` e `dif` della roba, o la taratura sbaglia (regola dell'utente, 9 ottobre); una strada per ramo, due per
+  classe nelle misure; (3) le **boccette di mana** ci sono già (`pozione-blu`, dall'erborista e nei forzieri): da vedere se
+  ne servono di più grandi, con nomi epici e lo stesso disegno; (4) la **grafica del duello**: animazioni più lunghe e
+  leggibili, una per tipo d'attacco (scudo e cura non scattano in avanti), e il mostro che attacca davvero nel disegno.
+  (5) **un effetto grafico diverso per ogni abilità** (l'utente, 9 ottobre): oggi tutte volano con il loro simbolo e il colore
+  del ramo, e c'è solo il fendente da vicino; vanno disegnate una per una (fiamma che esplode, lancia di ghiaccio che
+  gela il mostro, fulmine che scende, radici che escono dal pavimento, scudo che si forma…).
+  Vedi [abilita.md](abilita.md).
 - **L'albero delle abilità da tarare**: c'è (9 ottobre), ma il banco non lo
   usa e le misure non lo vedono. Cosa manca e da dove si comincia:
   [abilita.md](abilita.md#cosa-non-è-ancora-fatto).

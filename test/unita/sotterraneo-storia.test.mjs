@@ -178,7 +178,7 @@ const tappeAl = n => CAMPAGNA.map((t, i) => ({ chiave: t.chiave, aperta: i <= n,
   uguale('consegnarla di nuovo non dà niente', consegna(r.stati, 'collana', b), null)
 
   // un premio in roba: va addosso o in tasca; a tasche piene la consegna aspetta
-  const pieno = new Corredo({ eroe: 'mago', roba: { ...robaAttesa('mago', 4), dito: 'amuleto-rosso', zaino: new Array(6).fill('pozione') } })
+  const pieno = new Corredo({ eroe: 'mago', roba: { ...robaAttesa('mago', 4), dito: 'amuleto-rosso', zaino: ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'chiave', 'corazza'] } })
   const s2 = { rosicchione: FATTA }
   uguale('a tasche piene il gioiello non entra', consegna(s2, 'rosicchione', pieno).esito, 'pieno')
   const vuoto = new Corredo({ eroe: 'mago', roba: { ...robaAttesa('mago', 2, { pozioni: false }), dito: null } })

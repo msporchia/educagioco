@@ -129,6 +129,12 @@ const dettaglio = computed(() => {
       </div>
     </div>
 
+    <!-- cosa vuol dire gemma e cosa vuol dire tondo (l'utente, 9 ottobre: non si capiva che Fiamma viva è una passiva) -->
+    <p class="sot-legenda" data-legenda-albero>
+      <span><Medaglione glifo="spada" tinta="#c9a24a" stato="preso" :misura="22" /> <b>Abilità</b>: la scegli nello scontro, costa energia</span>
+      <span><Medaglione glifo="spada" tinta="#c9a24a" stato="preso" :tondo="true" :misura="22" /> <b>Passiva</b>: lavora da sola, sempre, senza energia</span>
+    </p>
+
     <div class="sot-albero">
       <section v-for="r in rami" :key="r.chiave" class="sot-ramo" :data-ramo="r.chiave" :style="{ '--tinta': r.tinta }">
         <!-- lo stendardo del ramo: il suo colore, la sua icona, e l'arma che vuole -->
@@ -168,7 +174,7 @@ const dettaglio = computed(() => {
         <Medaglione :glifo="dettaglio.glifo" :tinta="dettaglio.tinta" :tondo="!!dettaglio.sempre" :stato="dettaglio.stato" :misura="44" />
         <span>
           <b>{{ dettaglio.nome }}</b>
-          <small v-if="dettaglio.sempre">vale sempre</small>
+          <small v-if="dettaglio.sempre">passiva · vale sempre</small>
           <small v-else class="sot-costo-energia"><Glifo nome="energia" :misura="13" /> {{ dettaglio.costo }} di energia</small>
         </span>
       </div>
@@ -176,6 +182,7 @@ const dettaglio = computed(() => {
       <p v-if="dettaglio.dopo" :class="{ 'sot-tenue': !!dettaglio.grado }">
         <template v-if="dettaglio.grado">Al grado {{ dettaglio.grado + 1 }}: </template>{{ dettaglio.dopo }}
       </p>
+      <p v-if="dettaglio.sempre" class="sot-tenue" data-passiva>Una passiva lavora da sola: non costa energia e non va nelle caselle dello scontro. Basta averla imparata.</p>
       <p v-if="dettaglio.senzArma" class="sot-manca">Ci vuole {{ dettaglio.senzArma.nome }} in mano</p>
       <div class="sot-nodo-tasti">
         <button type="button" class="sot-grosso" data-azione="impara" :data-impara="dettaglio.id" :disabled="!!dettaglio.perche"

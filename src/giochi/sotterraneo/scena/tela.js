@@ -357,11 +357,15 @@ export class Tela {
       // `unaPosa`: i mostri del bestiario nuovo non hanno una corsa separata, e chiederla darebbe un mostro invisibile senza errore
       const posa = r.sveglio && !scheda.unaPosa ? 'corsa' : 'fermo'
       const fr = (t * (r.sveglio ? 8 : 4)) | 0
-      const q = r.sveglio ? 0.3 + 0.14 * Math.sin(t * 7) : 0.14   // l'alone pulsa da sveglio: si vede prima di arrivargli addosso
-      ctx.fillStyle = `rgba(224,100,79,${q * alfa})`
-      ctx.beginPath()
-      ctx.arc(px * T, py * T + T * 0.2, T * 0.5, 0, 7)
-      ctx.fill()
+      // l'alone rosso resta solo per chi conta (un capo, il custode della chiave, il bersaglio di una missione): gli altri
+      // mostri sono abbastanza riconoscibili da soli, e l'alone sporcava il terreno (l'utente, 9 ottobre)
+      if (scheda.capo || r.chiave || r.missione) {
+        const q = r.sveglio ? 0.3 + 0.14 * Math.sin(t * 7) : 0.14   // l'alone pulsa da sveglio: si vede prima di arrivargli addosso
+        ctx.fillStyle = `rgba(224,100,79,${q * alfa})`
+        ctx.beginPath()
+        ctx.arc(px * T, py * T + T * 0.2, T * 0.5, 0, 7)
+        ctx.fill()
+      }
 
       const suo = pezzoAndante(scheda.sprite, posa, fr)
       // il bersaglio di una missione è più grande dei suoi simili e ha un'aura sua (dati/mondo.js, BERSAGLIO)
@@ -369,7 +373,7 @@ export class Tela {
       if (r.missione) this.auraDelBersaglio(px, py, t, alfa)
       if (grande !== 1) this.ingrandisci(px, py + 0.5, grande)
       if (r.missione) this.contornoDelBersaglio(suo, px - 0.5, py - 0.5, t, alfa, { specchia: r.guarda === 'sx' })
-      // un mostro ha già il suo alone rosso: il filo qui serve solo a dire "ci si arriva col dito da qui"
+      // un mostro importante ha già il suo alone rosso: il filo qui serve solo a dire "ci si arriva col dito da qui"
       else if (tocca) this.filo(suo, px - 0.5, py - 0.5, t, { specchia: r.guarda === 'sx' })
       if (!this.posa(suo, px - 0.5, py - 0.5, { alfa, specchia: r.guarda === 'sx' }))
         this.emoji(r.em, px, py, alfa)

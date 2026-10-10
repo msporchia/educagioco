@@ -4,6 +4,7 @@
 import { CHIAVI_CARATTERISTICHE, PUNTI_PER_LIVELLO, DOTE_OGNI, VITA_PER_TEMPRA, TEMPRA_PER_DIFESA,
          GEMME_PER_RIASSEGNARE, livelloDi, sogliaDi } from '../dati/livelli.js'
 import { rileggiAlbero } from './abilita.js'
+import { TASCHE_EXTRA_MAX } from '../dati/mondo.js'
 
 // in `cfg.avventure[eroe].crescita`: l'esperienza e i punti dati, caratteristica per caratteristica (quelli di
 // partenza della classe e la sua dote non ci stanno: si contano dal livello). `albero` e `caselle`: le abilità
@@ -12,7 +13,7 @@ import { rileggiAlbero } from './abilita.js'
 // intelligenza e tempra (9 ottobre 2026); prima erano forza, tempra, scorza e fortuna
 export const VERSIONE_CRESCITA = 2
 export const CRESCITA_NUOVA = () => ({ v: VERSIONE_CRESCITA, esp: 0, forza: 0, destrezza: 0, intelligenza: 0, tempra: 0,
-  albero: {}, caselle: [null, null, null] })
+  albero: {}, caselle: [null, null, null], tasche: 0 })
 
 const intero = n => (Number.isFinite(n) && n > 0 ? Math.floor(n) : 0)
 
@@ -23,6 +24,7 @@ export function rileggiCrescita(dato, classe = null) {
   const c = CRESCITA_NUOVA()
   if (!dato || typeof dato !== 'object') return c
   c.esp = intero(dato.esp)
+  c.tasche = Math.min(TASCHE_EXTRA_MAX, intero(dato.tasche))   // le tasche comprate in più (dati/mondo.js)
   // di prima: la versione vecchia, o senza versione ma con la scorza o la fortuna (si scrivevano sempre tutte e quattro)
   const diPrima = dato.v != null ? dato.v !== VERSIONE_CRESCITA : ('scorza' in dato || 'fortuna' in dato)
   if (diPrima) return { ...c, ...rileggiAlbero(dato, c.esp, classe) }

@@ -78,7 +78,9 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   c.rispondi(false)
   uguale('sbagliare non la toglie e non la dà', c.energia, 4)
   c.rispondi(true)
-  uguale('una risposta giusta, un punto', c.energia, 5)
+  uguale('una risposta giusta sola non basta a fare un punto', c.energia, 4)
+  c.rispondi(true)
+  uguale('ogni due risposte giuste, un punto', c.energia, 5)
   m.ossa = -1; c.chiudi()
   const fonte = { che: 'fonte', x: 1, y: 1 }
   c.energia = 0; c.vita = 1
@@ -89,7 +91,7 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   c.energia = 0
   c.zaino = ['pozione-blu']
   c.usa(0)
-  controlla('la pozione blu ne dà sei', c.energia === 6 && !c.zaino.length)
+  controlla('la pozione blu ne dà otto', c.energia === 8 && !c.zaino.length)
 }
 
 /* ══════════ 4. lo scontro ══════════ */
@@ -103,7 +105,7 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   const ossa = m.ossa
   const e = c.rispondi(true)
   controlla('rispondendo giusto parte: il doppio', e.usata && e.usata.id === 'fendente' && ossa - m.ossa === solito * 2, `${ossa - m.ossa} contro ${solito}`)
-  uguale('e costa la sua energia (più la risposta giusta)', c.energia, c.energiaMax - NODI.fendente.costo + 1)
+  uguale('e costa la sua energia', c.energia, c.energiaMax - NODI.fendente.costo)
   controlla('dopo, torna il colpo solito', c.pronta === null)
   c.energia = 1
   controlla('senza energia non si prepara', !c.prepara('fendente') && /energia/.test(c.perchéNonUsi('fendente')))
@@ -128,6 +130,18 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   c.prepara('raggio-di-gelo')
   c.rispondi(true)
   uguale('gelato: sbagliando arriva la metà', c.botta(m, false), Math.floor(pieno / 2))
+  controlla('la riga della scelta dice il danno vero', c.descrizione(NODI['raggio-di-gelo'], m).startsWith(`fai ${c.colpo(m, NODI['raggio-di-gelo'])} di danno`) && /metà danno per 2 turni/.test(c.descrizione(NODI['raggio-di-gelo'], m)), c.descrizione(NODI['raggio-di-gelo'], m))
+  // lo scambio dice da dove viene il danno e cosa se lo è portato via (la riga dello scontro, viste/Scontro.vue)
+  const eg = c.rispondi(false)
+  controlla('col gelo lo scambio lo dice', eg.gelato === true && eg.preso === Math.floor(pieno / 2), JSON.stringify(eg))
+  // un'abilità difensiva prende il posto dell'attacco: lo scudo arcano non fa danno, e non uccide
+  {
+  const { c: cs, m: ms } = scontro('mago', conAlbero(2, { 'scudo-arcano': 1 }), 'verga', null, { ossa: 3, ossaMax: 3, att: 1 })
+  cs.prepara('scudo-arcano')
+  const eScudo = cs.rispondi(true)
+  controlla('lo scudo non colpisce: il mostro è ancora in piedi', ms.ossa === 3 && eScudo.dato === 0 && eScudo.che !== 'caduto', JSON.stringify(eScudo))
+  controlla('ma lo scudo c\'è', (cs.foglio ? cs.foglio.io.scudo : 0) > 0)
+}
   ;({ c, m } = scontro('nano', conAlbero(9, { spaccaroccia: 1, 'mani-pesanti': 1, stordisce: 1 }), 'ascia'))
   c.prepara('stordisce')
   c.rispondi(true)
@@ -145,17 +159,39 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   c.rispondi(true); c.rispondi(true)
   uguale('Scudo alzato: due scambi senza graffio', c.vita, v2)
 
-  // la stanza intera: gli altri mostri svegli prendono lo stesso colpo
-  ;({ c, m } = scontro('elfa', conAlbero(12, { 'dardo-avvelenato': 1, 'primo-tiro': 1, 'freccia-mirata': 1, pioggia: 1 }), 'arco-corto'))
+  // la stanza intera: gli altri mostri svegli prendono lo stesso colpo (il Grido di guerra, l'unica area rimasta)
+  ;({ c, m } = scontro('cavaliere', conAlbero(12, { preghiera: 1, 'cuore-saldo': 1, grido: 1 }), 'spada'))
   const stanza = c.livello.stanzaDi(Math.floor(c.eroe.x), Math.floor(c.eroe.y))
   const altro = { che: 'mostro', tipo: m.tipo, nome: 'altro', em: m.em, x: stanza.cx, y: stanza.cy, casa: { x: stanza.cx, y: stanza.cy },
                   ossa: 100, ossaMax: 100, att: 3, dif: 0, sveglio: true }
   m.casa = { x: stanza.cx, y: stanza.cy }
   c.livello.robe.push(altro)
-  c.prepara('pioggia')
+  c.prepara('grido')
   const e3 = c.rispondi(true)
-  controlla('Pioggia di frecce: colpito anche l\'altro', altro.ossa < 100 && e3.colpiti === 1, `${altro.ossa}`)
-  controlla('il primo tiro con l\'arco: il mostro non risponde', e3.preso === 0)
+  controlla('Grido di guerra: colpito anche l\'altro', altro.ossa < 100 && e3.colpiti === 1, `${altro.ossa}`)
+  controlla('e anche l\'altro colpisce a metà', altro.stati && altro.stati.debole > 0)
+
+  // il primo tiro con l'arco: la prima risposta giusta non fa rispondere il mostro
+  ;({ c, m } = scontro('elfa', conAlbero(12, { 'dardo-avvelenato': 1, 'primo-tiro': 1 }), 'arco-corto'))
+  const e4 = c.rispondi(true)
+  controlla('il primo tiro con l\'arco: il mostro non risponde', e4.preso === 0)
+
+  // Radici: il mostro bloccato non attacca e subisce di più finché resta fermo
+  ;({ c, m } = scontro('elfa', conAlbero(12, { 'dardo-avvelenato': 1, radici: 1 }), 'arco-corto', null, { ossa: 500, ossaMax: 500, att: 9 }))
+  const colpoPrima = c.colpo(m)
+  c.prepara('radici')
+  const eR = c.rispondi(true)
+  controlla('Radici: il mostro è bloccato e esposto', m.stati.esposto && m.stati.esposto.piu === 50 && eR.preso === 0, JSON.stringify(m.stati))
+  controlla('e subisce di più mentre dura', c.colpo(m) > colpoPrima, `${colpoPrima} → ${c.colpo(m)}`)
+  for (let i = 0; i < 5; i++) c.rispondi(true)
+  controlla('poi le radici cedono', !(m.stati.esposto && m.stati.esposto.scambi > 0))
+
+  // l'ultimo gradino: molto di più contro un capo, normale contro uno qualunque
+  ;({ c, m } = scontro('mago', conAlbero(12, { 'dardo-di-fuoco': 1, 'palla-di-fuoco': 1 }), 'verga'))
+  const normale = c.colpo(m, NODI['palla-di-fuoco'])
+  const capo = { ...m, grosso: 'ossuto' }
+  controlla('Meteora: contro un grosso vale più del doppio di un mostro comune', c.èCapo(capo) && c.colpo(capo, NODI['palla-di-fuoco']) >= normale * 1.7, `${normale} contro ${c.colpo(capo, NODI['palla-di-fuoco'])}`)
+  controlla('e non è più un\'area', !NODI['palla-di-fuoco'].stanza)
 
   // l'ultimo fiato: una volta per discesa
   ;({ c, m } = scontro('cavaliere', conAlbero(12, { preghiera: 1, 'cuore-saldo': 1, grido: 1, 'ultimo-fiato': 1 }), 'spada'))

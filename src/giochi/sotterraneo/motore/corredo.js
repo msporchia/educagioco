@@ -2,7 +2,7 @@
 // eroe), e resta fra una discesa e l'altra (docs/sotterraneo/la-roba-che-resta.md). Qui
 // le regole che valgono sotto e sopra: cosa si porta, dove va un'arma, cosa vale, come si compra e si vende.
 // La discesa (motore/corsa.js) e i mercanti di sopra (motore/bottega.js) la estendono; gira in Node.
-import { TASCHE } from '../dati/mondo.js'
+import { TASCHE, TASCHE_EXTRA_MAX, prezzoTasca, FORZA_PER_TASCA } from '../dati/mondo.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta, FAMIGLIE, requisitoDi } from '../dati/eroi.js'
 import { COSE, STANZE_TORCIA, aLivello } from '../dati/cose.js'
 import { GEMME_PER_FORTUNA, ATT_PER_PUNTO, SCHIVATA_PER_DESTREZZA, ENERGIA_PER_INTELLIGENZA } from '../dati/livelli.js'
@@ -30,6 +30,22 @@ const PESI = { att: 2, dif: 4, vita: 0.4, rigenera: 1, fuoco: 1.6, schivata: 0.1
 export const SCHIVATA_MASSIMA = 60
 const CASELLE = ['mano', 'mancina', 'corpo', 'dito']
 
+// Le pozioni dello stesso tipo stanno nella stessa tasca (l'utente, 9 ottobre): «Pozione ×3» è un posto solo. Lo zaino resta
+// una lista di chiavi, una per pezzo; i posti si contano e si mostrano raggruppando. Solo le pozioni (le torce non vanno in
+// tasca): ogni altra cosa, anche due spade uguali, occupa il suo.
+export const impilabile = k => !!(COSE[k] && ['cura', 'energia', 'cresci'].includes(COSE[k].usa))
+// [{ k, n, i }]: una voce per tasca, nell'ordine in cui compaiono; `i` è il primo posto di quella cosa nella lista
+export function tascheDello(zaino) {
+  const fuori = []
+  zaino.forEach((k, i) => {
+    const gia = impilabile(k) && fuori.find(t => t.k === k)
+    if (gia) gia.n++
+    else fuori.push({ k, n: 1, i })
+  })
+  return fuori
+}
+export const postiDello = zaino => tascheDello(zaino).length
+
 export const ROBA_VUOTA = () => ({
   v: VERSIONE_ROBA, gemme: 0, zaino: [], mano: null, mancina: null, corpo: null, dito: null,
   torcia: 0, torce: 0,
@@ -43,7 +59,7 @@ export function rileggiRoba(dato) {
   return {
     v: VERSIONE_ROBA,
     gemme: numero(dato.gemme),
-    zaino: (Array.isArray(dato.zaino) ? dato.zaino : []).filter(k => COSE[k]).slice(0, TASCHE),
+    zaino: (Array.isArray(dato.zaino) ? dato.zaino : []).filter(k => COSE[k]).slice(0, 64),
     mano: vera(dato.mano), mancina: vera(dato.mancina), corpo: vera(dato.corpo), dito: vera(dato.dito),
     torcia: numero(dato.torcia), torce: numero(dato.torce),
   }
@@ -61,7 +77,7 @@ export function schedaConLaRoba(eroe, roba = null, crescita = null) {
   if (gemme) tratti.push(`💎 ×${(Math.round((1 + gemme) * 100) / 100).toString().replace('.', ',')}`)
   if (luce) tratti.push('🔦 vedi più lontano')
   return {
-    vita: c.vitaConLaRoba, att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.zaino.length,
+    vita: c.vitaConLaRoba, att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.postiUsati(), capienza: c.capienza,
     mano: c.mano, mancina: c.mancina, corpo: c.corpo, dito: c.dito, tratti, livello: c.livelloEroe, energiaMax: c.energiaMax,
   }
 }
@@ -239,6 +255,7 @@ export class Corredo {
       if (piu) cambia.push({ em: '❤️', prima: tetto, dopo: tetto + piu })
       if (prova.schivata !== this.schivata) cambia.push({ em: '🌀', prima: `${this.schivata}%`, dopo: `${prova.schivata}%` })
       if (prova.energiaMax !== this.energiaMax) cambia.push({ glifo: 'energia', prima: this.energiaMax, dopo: prova.energiaMax })
+      if (prova.capienza !== this.capienza) cambia.push({ em: '🎒', prima: this.capienza, dopo: prova.capienza })
       return { ...c, valore: caratteristica(this.io, this.crescita, c.chiave), dati: this.crescita[c.chiave] || 0, cambia,
                trattenuta: !!dietro[c.chiave], dietro: dietro[c.chiave], indietro: fermate.has(c.chiave) }
     })
@@ -331,9 +348,30 @@ export class Corredo {
   // chi compra prova prima su una copia (compra) e non arriva mai a sforare
   nonCiSta(k) { this.zaino.push(k) }
 
+  // quante tasche ci sono: sei, e quelle comprate con le gemme (crescita.tasche, fino a TASCHE_EXTRA_MAX)
+  get capienza() { return TASCHE + Math.min(TASCHE_EXTRA_MAX, (this.crescita && this.crescita.tasche) || 0) + this.tascheDallaForza }
+  // la forza porta un posto in più ogni FORZA_PER_TASCA punti oltre il primo: serve a tutti, anche a chi non picchia con spade e asce
+  get tascheDallaForza() { return Math.floor(Math.max(0, this.car('forza') - 1) / FORZA_PER_TASCA) }
+  // quante sono occupate (le pozioni uguali fanno un posto solo), e la lista per tasca: [{ k, n, i }]
+  postiUsati(zaino = this.zaino) { return postiDello(zaino) }
+  tasche() { return tascheDello(this.zaino) }
+  // il posto della lista che sta sotto la tasca `t` della griglia (null se la tasca è vuota)
+  indiceDellaTasca(t) { const x = this.tasche()[t]; return x ? x.i : null }
+  // la tasca in più: quanto costa (null al tetto), e comprarla
+  get costoTasca() { const e = (this.crescita && this.crescita.tasche) || 0; return e >= TASCHE_EXTRA_MAX ? null : prezzoTasca(e) }
+  compraTasca() {
+    const costo = this.costoTasca
+    if (costo == null || this.gemme < costo) return false
+    this.gemme -= costo
+    this.crescita = { ...this.crescita, tasche: ((this.crescita && this.crescita.tasche) || 0) + 1 }
+    return true
+  }
+  // c'è posto per `k`? Una pozione uguale a una che c'è già ci sta sempre
+  cista(k) { return this.postiUsati([...this.zaino, k]) <= this.capienza }
+
   // in tasca se c'è posto, se no dove dice nonCiSta
   inTasca(k) {
-    if (this.zaino.length < TASCHE) this.zaino.push(k)
+    if (this.cista(k)) this.zaino.push(k)
     else this.nonCiSta(k)
   }
 
@@ -542,12 +580,12 @@ export class Corredo {
   }
 
   // quanto si paga al banco: il prezzo della cosa (la Bottega ci aggiunge il sovrapprezzo dei pezzi più avanti)
-  quantoCosta(k) { return this.prezzoDi(k) }
+  quantoCosta(k) { const c = COSE[k]; return c && c.prezzoAcquisto ? c.prezzoAcquisto : this.prezzoDi(k) }
 
   nonCiStarebbe(k) {
     const prova = this.copia()
     prova.prendi(k)
-    return prova.zaino.length > TASCHE
+    return prova.postiUsati() > this.capienza
   }
 
   // dalla tasca addosso, nello zaino di sotto e in quello di sopra: quello che si aveva addosso torna in tasca, non
@@ -575,7 +613,7 @@ export class Corredo {
   riponi(dove) {
     const k = this.casella(dove)
     if (!k) return null
-    if (this.zaino.length >= TASCHE) { this.dillo('⚠️ lo zaino è pieno'); return { che: 'pieno' } }
+    if (!this.cista(k)) { this.dillo('⚠️ lo zaino è pieno'); return { che: 'pieno' } }
     this.metti(dove, null)
     this.zaino.push(k)
     return { che: 'riposta', cosa: k }

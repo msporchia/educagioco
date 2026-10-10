@@ -250,7 +250,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   controlla('le monete non finiscono nella roba', !('monete' in b))
   uguale('una missione senza regalo ne porta zero', consegna({ collana: FATTA }, 'collana', palestra('cavaliere', 1)).monete, 0)
   uguale('a tasche piene la consegna aspetta e le monete con lei', consegna({ rosicchione: FATTA }, 'rosicchione',
-         new Corredo({ eroe: 'mago', roba: { ...robaAttesa('mago', 4), dito: 'amuleto-rosso', zaino: new Array(6).fill('pozione') } })).monete, 0)
+         new Corredo({ eroe: 'mago', roba: { ...robaAttesa('mago', 4), dito: 'amuleto-rosso', zaino: ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'chiave', 'corazza'] } })).monete, 0)
   uguale('il premio si dice con le monete', premioDetto(missioneDi('zannagrigia').premio), '💎 30 · 🪙 2')
   uguale('o con la roba', premioDetto(missioneDi('chela').premio), 'Anello d\'ambra · 🪙 1')
   uguale('non si consegna due volte', consegna(r.stati, 'zannagrigia', b), null)

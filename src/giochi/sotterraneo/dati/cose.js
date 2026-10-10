@@ -128,8 +128,11 @@ const BASI = {
   'pozione-grande': { em: '🍷', nome: 'Ampolla', sprite: 'pozione-grande', usa: 'cura', cura: 18, genere: 'f',
                       prezzo: 16, dice: 'Diciotto punti di vita: ti rimette in piedi.' },
   // l'energia delle abilità (docs/sotterraneo/abilita.md): si beve dallo zaino, fra uno scontro e l'altro
-  'pozione-blu': { em: '🧪', nome: 'Pozione blu', sprite: 'pozione-blu', usa: 'energia', energia: 6, prezzo: 8, genere: 'f',
-                   dice: 'Sei punti di energia, per le abilità.' },
+  'pozione-blu': { em: '🧪', nome: 'Pozione blu', sprite: 'pozione-blu', usa: 'energia', energia: 8, prezzo: 8, genere: 'f',
+                   dice: 'Otto punti di energia, per le abilità.' },
+  // la boccetta grande dell'energia: stesso disegno, nome epico (l'utente, 9 ottobre)
+  'ampolla-blu': { em: '🧪', nome: 'Ampolla delle stelle', sprite: 'pozione-blu', usa: 'energia', energia: 16, prezzo: 18, genere: 'f',
+                   dice: 'Sedici punti di energia: un fiume per le abilità.' },
   // l'unica che non torna indietro: alza la vita massima per il resto della discesa
   'elisir-toro': { em: '🐂', nome: 'Elisir del toro', sprite: 'pozione-rossa',
                    usa: 'cresci', cresce: 3, prezzo: 22,
@@ -198,6 +201,8 @@ function componi(k) {
     c[a] = Math.round(((c[a] || 0) + v) * 100) / 100
   }
   c.prezzo = Math.max(1, Math.round((b.prezzo || 1) * valoreDelLivello(liv) * RARITA[rarita].molt))
+  // al banco costa di più: la rarità pesa molto più di quanto si incassa rivendendo (dati/pezzi.js, `acq`)
+  c.prezzoAcquisto = Math.max(1, Math.round((b.prezzo || 1) * valoreDelLivello(liv) * RARITA[rarita].acq))
   c.nome = nome || nomeDelPezzo(b, rarita, abilita, liv)
   return c
 }
@@ -333,7 +338,7 @@ export const NEI_FORZIERI = [
   'amuleto-osso', 'teschio-cercatore',
   'scudo-ferro', 'scudo-crociato', 'scudo-leone', 'scudo-teschio',
   'bipenne-solare', 'spada-del-ladro', 'pugnale-vampiro', 'spada-di-ghiaccio',
-  'pozione-grande', 'elisir-toro', 'torcia', 'pozione-blu',
+  'pozione-grande', 'elisir-toro', 'torcia', 'pozione-blu', 'ampolla-blu',
 ]
 
 // non mente mai: dietro un teschio c'è davvero una guardia

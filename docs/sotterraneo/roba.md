@@ -49,6 +49,16 @@ la roba con livello e rarità: [rarita.md](rarita.md).
 - **Addosso: la mano, la mano debole, il corpo, il dito. In tasca: sei
   posti** (`TASCHE` in `dati/mondo.js`). Le tasche sono il limite: scegliere
   cosa lasciare per terra è il bivio fatto con le mani.
+- **Le pozioni uguali stanno in una tasca sola** (l'utente, 9 ottobre: sei posti
+  sono pochi con tutto quello che cade): «Pozione ×3» è un posto, e così si portano
+  più tipi (la rossa per la vita, la blu per l'energia). **Solo le pozioni**
+  (`impilabile` in `motore/corredo.js`: cure, energia, l'elisir); ogni altro pezzo, anche
+  due spade uguali, ha il suo posto; le torce non vanno in tasca. Lo zaino resta una lista di
+  chiavi, una per pezzo: i posti si contano e si mostrano raggruppando (`tascheDello`).
+- **Le tasche in più si comprano con le gemme**, dallo zaino (sopra e giù), una alla
+  volta: `prezzoTasca` cresce in linea retta (30, 60, 90…), fino a otto in più
+  (`TASCHE_EXTRA_MAX`), e restano all'eroe (`crescita.tasche`). Nei test: `unita/sotterraneo-zaino`,
+  `[data-azione="piu-posto"]` sullo zaino.
 - **Quattro famiglie d'arma in tre gradini, e a parità di gradino valgono lo
   stesso** — la regola dei due rami del castello: cambia la forma, mai la
   quantità.
