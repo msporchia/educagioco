@@ -2,7 +2,8 @@
 
 Dove si dipinge la nave coi pezzi regalati dalle navi madri
 ([boss.md](boss.md)). Si apre dal tasto «Hangar» in basso a sinistra sulla
-rotta, quando il volo infinito è aperto.
+rotta, dal primo pezzo regalato (la prima nave madre abbattuta) o quando il
+volo infinito è aperto.
 
 ## Dove sta cosa
 
