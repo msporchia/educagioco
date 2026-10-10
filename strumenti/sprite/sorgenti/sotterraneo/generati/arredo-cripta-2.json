@@ -1,5 +1,5 @@
 {
-  "__": "Il foglietto di arredo-cripta-2.png: 48 pezzi d'arredo della cripta (ChatGPT, 10 ottobre 2026, chat della scena, allegata la scena), griglia 6×8 su fondo magenta. I rettangoli sono i riquadri stretti di ogni pezzo, misurati sul non-magenta nella casella; Misura a un decimo del foglio (come l'arredo della fornace, 14 px di foglio per pixel di gioco, ma qui i pezzi stanno in 48 per foglio). Montati nel gioco solo sette: sarcofago-liscio, altare, cavaliere-caduto, cavaliere-spada, candelabro-alto, muro-cavaliere, nicchia-lampada (SCENARI.cripta.arredo in dati/tessere.js). Vista quasi isometrica: da guardare prima di montare.",
+  "__": "Il foglietto di arredo-cripta-2.png: 48 pezzi d'arredo della cripta (ChatGPT, 10 ottobre 2026, chat della scena, allegata la scena), griglia 6×8 su fondo magenta. I rettangoli sono i riquadri stretti di ogni pezzo, misurati sul non-magenta nella casella; Misura a un sesto del foglio (a un decimo i pezzi venivano 9 pixel di trono, una macchia). Montati tutti, in dati/orpelli.js. Vista quasi isometrica: da guardare prima di montare.",
   "prompt": {
     "scheda": "PROMPT-scenario.md",
     "base": "sotterraneo_4.png",
@@ -31,8 +31,8 @@
         130
       ],
       "misura": [
-        13,
-        13
+        22,
+        22
       ]
     },
     "cripta-sarcofago-spada": {
@@ -45,8 +45,8 @@
         131
       ],
       "misura": [
-        14,
-        13
+        23,
+        22
       ]
     },
     "cripta-sarcofago-stemma": {
@@ -59,8 +59,8 @@
         134
       ],
       "misura": [
-        14,
-        13
+        23,
+        22
       ]
     },
     "cripta-sarcofago-croce": {
@@ -73,8 +73,8 @@
         132
       ],
       "misura": [
-        14,
-        13
+        23,
+        22
       ]
     },
     "cripta-sarcofago-crepato": {
@@ -87,8 +87,8 @@
         135
       ],
       "misura": [
-        13,
-        14
+        22,
+        22
       ]
     },
     "cripta-sarcofago-aperto": {
@@ -101,8 +101,8 @@
         129
       ],
       "misura": [
-        14,
-        13
+        23,
+        22
       ]
     },
     "cripta-cavaliere-spada": {
@@ -115,8 +115,8 @@
         173
       ],
       "misura": [
-        8,
-        17
+        13,
+        29
       ]
     },
     "cripta-cavaliere-inginocchiato": {
@@ -129,8 +129,8 @@
         139
       ],
       "misura": [
-        10,
-        14
+        18,
+        23
       ]
     },
     "cripta-cavaliere-seduto": {
@@ -143,8 +143,8 @@
         153
       ],
       "misura": [
-        11,
-        15
+        18,
+        26
       ]
     },
     "cripta-cavaliere-scudo": {
@@ -157,8 +157,8 @@
         174
       ],
       "misura": [
-        8,
-        17
+        14,
+        29
       ]
     },
     "cripta-cavaliere-mani": {
@@ -171,8 +171,8 @@
         171
       ],
       "misura": [
-        7,
-        17
+        12,
+        28
       ]
     },
     "cripta-cavaliere-caduto": {
@@ -185,8 +185,8 @@
         110
       ],
       "misura": [
-        14,
-        11
+        23,
+        18
       ]
     },
     "cripta-colonna": {
@@ -199,8 +199,8 @@
         177
       ],
       "misura": [
-        7,
-        18
+        12,
+        30
       ]
     },
     "cripta-colonna-spezzata": {
@@ -213,8 +213,8 @@
         172
       ],
       "misura": [
-        8,
-        17
+        13,
+        29
       ]
     },
     "cripta-colonna-moncone": {
@@ -227,8 +227,8 @@
         119
       ],
       "misura": [
-        7,
-        12
+        12,
+        20
       ]
     },
     "cripta-colonna-inclinata": {
@@ -241,8 +241,8 @@
         161
       ],
       "misura": [
-        9,
-        16
+        15,
+        27
       ]
     },
     "cripta-colonna-doppia": {
@@ -255,8 +255,8 @@
         170
       ],
       "misura": [
-        10,
-        17
+        16,
+        28
       ]
     },
     "cripta-base": {
@@ -269,8 +269,8 @@
         84
       ],
       "misura": [
-        10,
-        8
+        16,
+        14
       ]
     },
     "cripta-candelabro-1": {
@@ -283,8 +283,8 @@
         184
       ],
       "misura": [
-        5,
-        18
+        8,
+        31
       ]
     },
     "cripta-candelabro-5bracci": {
@@ -297,8 +297,8 @@
         179
       ],
       "misura": [
-        11,
-        18
+        18,
+        30
       ]
     },
     "cripta-candelabro-3": {
@@ -311,8 +311,8 @@
         174
       ],
       "misura": [
-        6,
-        17
+        9,
+        29
       ]
     },
     "cripta-candelabro-alto": {
@@ -325,8 +325,8 @@
         176
       ],
       "misura": [
-        6,
-        18
+        9,
+        29
       ]
     },
     "cripta-candelabro-tre": {
@@ -339,8 +339,8 @@
         171
       ],
       "misura": [
-        8,
-        17
+        13,
+        28
       ]
     },
     "cripta-candelabro-singolo": {
@@ -353,8 +353,8 @@
         182
       ],
       "misura": [
-        4,
-        18
+        7,
+        30
       ]
     },
     "cripta-altare": {
@@ -367,8 +367,8 @@
         127
       ],
       "misura": [
-        13,
-        13
+        22,
+        21
       ]
     },
     "cripta-leggio": {
@@ -381,8 +381,8 @@
         145
       ],
       "misura": [
-        9,
-        14
+        16,
+        24
       ]
     },
     "cripta-fonte": {
@@ -395,8 +395,8 @@
         102
       ],
       "misura": [
-        9,
-        10
+        16,
+        17
       ]
     },
     "cripta-nicchia-lampada": {
@@ -409,8 +409,8 @@
         145
       ],
       "misura": [
-        9,
-        14
+        15,
+        24
       ]
     },
     "cripta-tavolo": {
@@ -423,8 +423,8 @@
         114
       ],
       "misura": [
-        14,
-        11
+        23,
+        19
       ]
     },
     "cripta-panca": {
@@ -437,8 +437,8 @@
         115
       ],
       "misura": [
-        12,
-        12
+        21,
+        19
       ]
     },
     "cripta-arco-murato": {
@@ -451,8 +451,8 @@
         163
       ],
       "misura": [
-        12,
-        16
+        20,
+        27
       ]
     },
     "cripta-blocchi-caduti": {
@@ -465,8 +465,8 @@
         118
       ],
       "misura": [
-        13,
-        12
+        21,
+        20
       ]
     },
     "cripta-lastra-funeraria": {
@@ -479,8 +479,8 @@
         150
       ],
       "misura": [
-        8,
-        15
+        13,
+        25
       ]
     },
     "cripta-pilastro-grata": {
@@ -493,8 +493,8 @@
         161
       ],
       "misura": [
-        8,
-        16
+        14,
+        27
       ]
     },
     "cripta-braciere": {
@@ -507,8 +507,8 @@
         102
       ],
       "misura": [
-        10,
-        10
+        17,
+        17
       ]
     },
     "cripta-trono": {
@@ -521,8 +521,8 @@
         157
       ],
       "misura": [
-        9,
-        16
+        15,
+        26
       ]
     },
     "cripta-cancello": {
@@ -535,8 +535,8 @@
         139
       ],
       "misura": [
-        12,
-        14
+        20,
+        23
       ]
     },
     "cripta-campana": {
@@ -549,8 +549,8 @@
         130
       ],
       "misura": [
-        10,
-        13
+        16,
+        22
       ]
     },
     "cripta-scudo-cavalletto": {
@@ -563,8 +563,8 @@
         135
       ],
       "misura": [
-        9,
-        14
+        14,
+        22
       ]
     },
     "cripta-rastrelliera": {
@@ -577,8 +577,8 @@
         149
       ],
       "misura": [
-        11,
-        15
+        18,
+        25
       ]
     },
     "cripta-forziere": {
@@ -591,8 +591,8 @@
         118
       ],
       "misura": [
-        13,
-        12
+        21,
+        20
       ]
     },
     "cripta-lampadario": {
@@ -605,8 +605,8 @@
         132
       ],
       "misura": [
-        11,
-        13
+        19,
+        22
       ]
     },
     "cripta-muro-cavaliere": {
@@ -619,8 +619,8 @@
         122
       ],
       "misura": [
-        11,
-        12
+        18,
+        20
       ]
     },
     "cripta-muro-nicchia": {
@@ -633,8 +633,8 @@
         125
       ],
       "misura": [
-        9,
-        12
+        16,
+        21
       ]
     },
     "cripta-muro-edera": {
@@ -647,8 +647,8 @@
         125
       ],
       "misura": [
-        9,
-        12
+        14,
+        21
       ]
     },
     "cripta-muro-stemma": {
@@ -661,8 +661,8 @@
         116
       ],
       "misura": [
-        9,
-        12
+        15,
+        19
       ]
     },
     "cripta-muro-rosone": {
@@ -675,8 +675,8 @@
         116
       ],
       "misura": [
-        11,
-        12
+        19,
+        19
       ]
     },
     "cripta-muro-grata": {
@@ -689,8 +689,8 @@
         94
       ],
       "misura": [
-        9,
-        9
+        16,
+        16
       ]
     }
   }
