@@ -1215,7 +1215,7 @@ function vistaDellaBolla() {
   v.punti = punti
   v.visti = visti
   v.gettoni = visti.map((g, i) => ({
-    pezzo: g.pezzo, testo: g.testo, colmo: g.colmo, spento: g.spento,
+    pezzo: g.pezzo, testo: g.testo, colmo: g.colmo, spento: g.spento, hai: g.hai,
     preso: !!(inMano && inMano.mosso && tenuto === i) }))
   const g = visti[tenuto] || null
   const cosaFa = g && (g.ricetta || g.coltura)

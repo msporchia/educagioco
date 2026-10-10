@@ -538,15 +538,16 @@ export class Tela {
   // Un tondino oro col numero: con la fila una macchina può avere pronti mentre lavora il prossimo.
   numerino(n, cx, cy, lato) {
     const ctx = this.ctx
+    const vuoto = n === 0   // lo 0 si scrive, ma smorto: «non ne hai»
     const r = Math.max(7, lato / 2)
     ctx.save()
     ctx.beginPath()
     ctx.arc(cx, cy, r, 0, 7)
-    ctx.fillStyle = '#ffd98a'
+    ctx.fillStyle = vuoto ? '#e4dcc8' : '#ffd98a'
     ctx.strokeStyle = '#2a1c12'
     ctx.lineWidth = 2
     ctx.fill(); ctx.stroke()
-    ctx.fillStyle = '#2a1c12'
+    ctx.fillStyle = vuoto ? '#8a7a66' : '#2a1c12'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.font = `700 ${Math.round(r * 1.25)}px "Emoji Gioco", system-ui,sans-serif`
