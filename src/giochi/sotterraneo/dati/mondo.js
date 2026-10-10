@@ -1,4 +1,5 @@
 // Le misure del sotterraneo: dato puro, nessuna funzione che gioca, nessun canvas.
+import { ORPELLI } from './orpelli.js'
 
 // 16px: la misura degli eroi di 0x72 ("16×16 DungeonTileset II"), a cui si riducono tutti i fogli generati
 export const T = 16                               // la tessera, in pixel
@@ -30,22 +31,9 @@ export const PASSO_EROE = 5.4, PASSO_MOSTRO = 3.1, PASSO_RIENTRO = 2.2
 export const CALMA = 3   // il tempo di uscire dalla stanza, o lo scontro si riaprirebbe nel fotogramma dopo
 
 // arredo (barili, casse...): non toccabile, disegnato più spento delle cose che rispondono (scena/tela.js).
-// I tre generi decidono dove possono stare: appeso contro la parete di fondo, posato su un bordo, fuoco cambia la vista.
-export const ARREDI = {
-  appeso: ['stendardo', 'candelabro'],
-  posato: ['barile', 'cassa', 'ossa', 'teschio-scena'],
-  fuoco: ['lanterna'],
-}
-
-export const ARREDO_DICE = {
-  barile: 'Un barile vuoto.',
-  cassa: 'Una cassa sfondata: dentro non c\'è più niente.',
-  ossa: 'Vecchie ossa. Meglio non chiedersi di chi.',
-  'teschio-scena': 'Un teschio. Ti guarda male e basta.',
-  lanterna: 'Una lanterna appesa. La luce ce l\'hai già.',
-  stendardo: 'Uno stendardo scolorito, di nessuno.',
-  candelabro: 'Un candelabro con tre candele storte.',
-}
+// Cosa c'è, dove sta e quanto è epico lo dice dati/orpelli.js; qui resta la frase del generico, quella di chi non
+// dichiara lo scenario (le cantine)
+export const ARREDO_DICE = Object.fromEntries(ORPELLI.cantine.map(o => [o.pezzo, o.dice]))
 export const ARREDO_LA_PRIMA_VOLTA =
   'Questo non si tocca: è arredamento, per questo è più spento.'
 
@@ -66,8 +54,5 @@ export function guastiDelMondo() {
   if (TASCHE < 3) g.push('meno di tre tasche: lo zaino non è una scelta, è un intoppo')
   if (RAGGIO_TORCIA <= RAGGIO) g.push('la torcia non fa vedere più lontano')
   if (RAGGIO_SGOCCIOLI <= RAGGIO || RAGGIO_SGOCCIOLI >= RAGGIO_TORCIA) g.push('la torcia agli sgoccioli deve stare fra il buio e la torcia piena')
-  for (const quali of Object.values(ARREDI))
-    for (const k of quali)
-      if (!ARREDO_DICE[k]) g.push(`l'arredo "${k}" non dice niente a chi lo tocca`)
   return g
 }

@@ -28,6 +28,7 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [figure.md](figure.md) — le 244 figure da indossare dei fogli dipinti, descritte una per una (elemento, materia, a chi sta bene): il catalogo, `roba.py` per guardarle e ritagliarle, i pezzi col nome con la figura loro
 - [bottega.md](bottega.md) — i mercanti di sopra, i pezzi avanti a sovrapprezzo, la bottega e lo zaino da gioco di ruolo, il confronto affiancato
 - [scenari.md](scenari.md) — come è disegnato: lo scenario generato da un prompt, il muro alto una cella, i fogli e l'atlante
+- [arredo.md](arredo.md) — gli orpelli: una lista per scenario che può crescere, ogni pezzo sa come si piazza (appeso, posato, angolo, fondo, coppia) e quanto è epico, il piano decide quanto è epica una stanza (la sala del mostro grosso è la più ricca)
 - [abisso.md](abisso.md) — l'abisso com'è oggi: perché, formule della crescita, svenimenti, record, fin dove regge
 - [abisso-progetto.md](abisso-progetto.md) — la parte decisa e non ancora costruita: `cosa(k)`, bottino graduato, scala che risale, monete
 - [da-fare.md](da-fare.md) — le voci aperte e quello che va guardato col dito

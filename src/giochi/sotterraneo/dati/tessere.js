@@ -5,6 +5,7 @@
 import { EROI } from './eroi.js'
 import { MOSTRI } from './mostri.js'
 import { CAMPAGNA, TRATTI_DELL_ABISSO } from './campagna.js'
+import { ORPELLI, POSE } from './orpelli.js'
 
 export const SCENARI = {
   cantine: {
@@ -31,7 +32,7 @@ export const SCENARI = {
     fontana: { piena: 'cantine-fontana-piena', asciutta: 'cantine-fontana-asciutta' },   // bevuta resta lì, asciutta
     perTerra: ['cantine-terriccio', 'cantine-sassolini', 'cantine-radice'],
     ragnatele: { sx: 'cantine-ragnatela-sx', dx: 'cantine-ragnatela-dx' },
-    arredo: {}, dice: {},   // vuoti: l'arredo è quello di tutti (botti, casse, ossa) e dice quello di ARREDO_DICE
+    orpelli: ORPELLI.cantine,   // l'arredo: cosa c'è, dove sta, quanto è epico (dati/orpelli.js)
   },
   // la cripta (sotterraneo_4*.png): ritagliata da una scena, più due fogli coi pezzi che la scena non ha
   cripta: {
@@ -56,21 +57,7 @@ export const SCENARI = {
     fontana: { piena: 'cripta-fontana-piena', asciutta: 'cripta-fontana-asciutta' },
     perTerra: ['cripta-foglie', 'cripta-schegge', 'cripta-lastra'],
     ragnatele: { sx: 'cripta-ragnatela-sx', dx: 'cripta-ragnatela-dx' },
-    // arredo-cripta-2.png: niente ossa né teschi, l'arredo è di pietra e ferro
-    arredo: {
-      barile: 'cripta-sarcofago-liscio', cassa: 'cripta-altare', ossa: 'cripta-cavaliere-caduto',
-      'teschio-scena': 'cripta-cavaliere-spada', lanterna: 'cripta-candelabro-alto',
-      stendardo: 'cripta-muro-cavaliere', candelabro: 'cripta-nicchia-lampada',
-    },
-    dice: {
-      barile: 'Un sarcofago di pietra, chiuso. Meglio non aprirlo.',
-      cassa: 'Un altare di pietra, spoglio.',
-      ossa: 'Un cavaliere di pietra, caduto da tanto.',
-      'teschio-scena': 'Un cavaliere di pietra. Ti guarda male e basta.',
-      lanterna: 'Un candelabro di ferro, acceso. La luce ce l\'hai già.',
-      stendardo: 'Un cavaliere scolpito nel muro, consumato.',
-      candelabro: 'Una nicchia con una lampada spenta.',
-    },
+    orpelli: ORPELLI.cripta,
   },
   // la fornace (sotterraneo_5*.png): ritagliata da una scena, più un foglio coi pezzi che la scena non ha
   fornace: {
@@ -93,20 +80,7 @@ export const SCENARI = {
     fontana: { piena: 'fornace-fontana-piena', asciutta: 'fornace-fontana-asciutta' },
     perTerra: ['fornace-cenere', 'fornace-sassi', 'fornace-scoria'],
     ragnatele: { sx: 'fornace-ragnatela-sx', dx: 'fornace-ragnatela-dx' },
-    // l'arredo generico (ARREDI in dati/mondo.js) cambia pelle e frase: restano le stesse regole di dove sta e di chi fa luce
-    arredo: {
-      barile: 'fornace-botte', cassa: 'fornace-carbone', ossa: 'fornace-incudine', 'teschio-scena': 'fornace-gargoyle-0',
-      lanterna: 'fornace-calderone', stendardo: 'fornace-rastrelliera', candelabro: 'fornace-banco',
-    },
-    dice: {
-      barile: 'Una botte di ferro, vuota.',
-      cassa: 'Carbone. Nero, e non scalda più.',
-      ossa: 'Un\'incudine: troppo pesante per spostarla.',
-      'teschio-scena': 'Un gargoyle di pietra. Ti guarda male e basta.',
-      lanterna: 'Un calderone sulle braci. Scalda, e fa luce.',
-      stendardo: 'Catene appese, di nessuno.',
-      candelabro: 'Un banco da fabbro, con gli attrezzi.',
-    },
+    orpelli: ORPELLI.fornace,
   },
 }
 
@@ -121,7 +95,7 @@ export const pezzoDelleGemme = (quante, t) =>
 // una funzione per genere, nessuna sa di canvas
 export const PEZZO_DI = {
   scala: (r, t, sc, { chiusa } = {}) => (chiusa ? sc.scala.chiusa : sc.scala.aperta),
-  arredo: (r, t, sc) => sc.arredo[r.pezzo] || r.pezzo,   // quale arredo è nato col piano (motore/livello.js); lo scenario gli cambia solo la pelle
+  arredo: r => r.pezzo,   // il piano pesca già col pezzo dello scenario (motore/livello.js, arredaLeStanze)
   // quello d'oro è raro (vedendolo da lontano si decide se vale la strada); le altre famiglie solo chiuse
   forziere: r => (r.aperto ? 'forziere-aperto' : (r.pelle || 'forziere-chiuso')),
   porta: (r, t, sc, { verso = 'davanti' } = {}) => {
@@ -144,7 +118,10 @@ export function pezziDelloScenario(sc) {
     else if (Array.isArray(v)) v.forEach(giu)
     else if (v && typeof v === 'object') Object.values(v).forEach(giu)
   }
-  for (const [k, v] of Object.entries(sc)) if (k !== 'colori' && k !== 'dice') giu(v)
+  for (const [k, v] of Object.entries(sc)) {
+    if (k === 'orpelli') v.forEach(o => fuori.push(o.pezzo))
+    else if (k !== 'colori') giu(v)
+  }
   return fuori
 }
 
@@ -161,8 +138,16 @@ export function guastiDelleTessere(nomi = null) {
     if (Object.keys(sc).sort().join() !== chiavi)
       g.push(`lo scenario ${k} non ha le stesse voci di ${SCENARIO}`)
     for (const n of pezziDelloScenario(sc)) chiedi(n, `scenario ${k}`)
-    for (const q of Object.keys(sc.dice || {}))
-      if (!(sc.arredo || {})[q]) g.push(`scenario ${k}: la frase dell'arredo "${q}" non ha il suo pezzo`)
+    const visti = new Set()
+    for (const o of sc.orpelli || []) {
+      if (visti.has(o.pezzo)) g.push(`scenario ${k}: l'orpello "${o.pezzo}" c'è due volte`)
+      visti.add(o.pezzo)
+      if (!o.dice) g.push(`scenario ${k}: l'orpello "${o.pezzo}" non dice niente a chi lo tocca`)
+      if (!POSE.includes(o.posa)) g.push(`scenario ${k}: l'orpello "${o.pezzo}" ha una posa che non esiste (${o.posa})`)
+      if (!(o.epica >= 1 && o.epica <= 10)) g.push(`scenario ${k}: l'orpello "${o.pezzo}" ha un'epicità fuori da 1–10`)
+    }
+    if (!(sc.orpelli || []).some(o => o.epica <= 1 && o.posa !== 'coppia'))
+      g.push(`scenario ${k}: nessun orpello da stanza qualunque (epicità 1)`)
     for (const verso of ['davanti', 'fianco'])
       for (const pelle of ['guardia', 'tesoro', 'fonte', 'vuoto', 'aperta'])
         if (!(sc.porte && sc.porte[verso] && sc.porte[verso][pelle]))

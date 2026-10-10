@@ -13,6 +13,7 @@ import { readFileSync } from 'node:fs'
 import { ref, shallowRef } from 'vue'
 import { CAMPAGNA, QUANTE_TAPPE, durezzaDi, guardianoDi, stelleDella,
          svenimentiDi, guastiDellaCampagna } from '../../src/giochi/sotterraneo/dati/campagna.js'
+import { ORPELLI } from '../../src/giochi/sotterraneo/dati/orpelli.js'
 import { guastiDelMondo, EROE, TASCHE, ARREDO_DICE, SVEGLIA } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { guastiDeiMostri, MOSTRI, colpiPer } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { guastiDelleCose, COSE, ARMI_DI, CURE, A_SORTE, NEI_FORZIERI,
@@ -325,6 +326,68 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
     uguale('un barile non si tocca: è scenografia', c.toccabile(q), false)
     uguale('e non sbarra la strada', c.bloccata(q.x, q.y), false)
   }
+}
+
+/* ══════════ 5a bis. gli orpelli e l'epicità delle stanze ══════════
+   Ogni stanza ha un'epicità (livello.js, epicaDellaStanza) e gli orpelli le stanno dietro: nessuno più epico di
+   lei, uno solo ai piedi di un trono. Dove c'è un mostro grosso la stanza è la più ricca del piano. */
+{
+  const PIANI = []
+  for (let i = 0; i < 12; i++)
+    PIANI.push(new Livello({ seme: 5100 + i * 211, piano: i % 4, largo: 40, alto: 40, giri: 3,
+                             grosso: i % 2 ? 'ossuto' : null, scenario: 'cripta' }))
+  const dentro = (r, s) => r.x >= s.x && r.y >= s.y && r.x < s.x + s.w && r.y < s.y + s.h
+  const conStanza = PIANI.flatMap(l => l.robe.filter(r => r.che === 'arredo')
+    .map(r => ({ r, l, s: l.stanze.find(s => dentro(r, s)) })))
+  controlla('gli orpelli stanno tutti in una stanza', conStanza.every(x => !!x.s))
+  controlla('nessun orpello più epico della sua stanza (salvo i più semplici)',
+            conStanza.every(({ r, s }) => r.epica <= s.epica + (r.epica <= 1 ? 1 : 0)))
+  controlla('e nessuno davanti a una porta o sopra altra roba',
+            conStanza.every(({ r, l }) => !l.porteVicine(r.x, r.y) && l.robeSu(r.x, r.y).length === 1))
+  uguale('e ogni pezzo esiste nell\'atlante',
+         [...new Set(conStanza.map(x => x.r.pezzo).filter(n => !Object.keys(PEZZI).includes(n)))].join(), '')
+
+  const dellaScala = PIANI.filter(l => l.grosso).map(l => l.stanze.find(s => s.ruolo === 'uscita')).filter(Boolean)
+  controlla('la stanza di un mostro grosso è epica', dellaScala.length > 3 && dellaScala.every(s => s.epica >= 8),
+            dellaScala.map(s => s.epica).join())
+  const ingressi = PIANI.map(l => l.stanze[0].epica)
+  controlla('l\'ingresso è la stanza meno epica', ingressi.every(e => e <= 2), ingressi.join())
+  const conta = (l, s) => l.robe.filter(r => r.che === 'arredo' && dentro(r, s)).length
+  const ricche = PIANI.filter(l => l.grosso).map(l => conta(l, l.stanze.find(s => s.ruolo === 'uscita')))
+  const povere = PIANI.map(l => conta(l, l.stanze[0]))
+  controlla('la sala del mostro grosso è più ricca dell\'ingresso',
+            Math.min(...ricche) >= 3 && Math.max(...povere) <= 3, `${ricche} contro ${povere}`)
+
+  // la posa: l'appeso sta sulla fila di faccia, il «fondo» al centro, la «coppia» a due, uno per lato
+  const dove = o => conStanza.filter(({ r }) => r.pezzo === o.pezzo)
+  const POSE_ATTESE = {
+    appeso: ({ r, s }) => r.y === s.y,
+    fondo: ({ r, s }) => r.y === s.y && r.x === s.cx,
+    angolo: ({ r, s }) => (r.x === s.x || r.x === s.x + s.w - 1) && (r.y === s.y || r.y === s.y + s.h - 1),
+    posato: ({ r, s }) => r.x === s.x || r.y === s.y || r.x === s.x + s.w - 1 || r.y === s.y + s.h - 1,
+    coppia: ({ r, s }) => r.y === s.y,
+  }
+  const storte = ORPELLI.cripta.flatMap(o => dove(o).filter(x => !POSE_ATTESE[o.posa](x)).map(() => o.pezzo))
+  uguale('ogni orpello sta dove la sua posa dice', [...new Set(storte)].join(), '')
+  const coppie = ORPELLI.cripta.filter(o => o.posa === 'coppia')
+  controlla('le coppie sono sempre due per stanza',
+            coppie.every(o => PIANI.every(l => l.stanze.every(s => {
+              const n = l.robe.filter(r => r.che === 'arredo' && r.pezzo === o.pezzo && dentro(r, s)).length
+              return n === 0 || n === 2
+            }))))
+  controlla('e al più uno acceso per stanza, coppie a parte',
+            PIANI.every(l => l.stanze.every(s => l.robe.filter(r => r.che === 'arredo' && r.arde && dentro(r, s)).length <= 2)))
+
+  // chi non dichiara lo scenario ha le cantine, e lo stesso seme dà lo stesso piano
+  const a = new Livello({ seme: 31, piano: 1, largo: 34, alto: 34, giri: 3, scenario: 'cripta' })
+  const b = new Livello({ seme: 31, piano: 1, largo: 34, alto: 34, giri: 3, scenario: 'cripta' })
+  uguale('lo stesso seme arreda allo stesso modo', JSON.stringify(a.robe), JSON.stringify(b.robe))
+  const senza = new Livello({ seme: 31, piano: 1, largo: 34, alto: 34, giri: 3 })
+  controlla('senza scenario l\'arredo è quello delle cantine',
+            senza.robe.filter(r => r.che === 'arredo').every(r => ORPELLI.cantine.some(o => o.pezzo === r.pezzo)))
+  uguale('e lo scenario non sposta nient\'altro del piano',
+         JSON.stringify(a.robe.filter(r => r.che !== 'arredo')),
+         JSON.stringify(new Livello({ seme: 31, piano: 1, largo: 34, alto: 34, giri: 3 }).robe.filter(r => r.che !== 'arredo')))
 }
 
 /* ══════════ 5b. la roba per terra ══════════

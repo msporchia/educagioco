@@ -3,7 +3,8 @@
 // ritaglio, unisce con corridoi a elle. Stesso seme, stesso piano (serve al banco di prova). `guasti()`
 // cammina davvero dall'ingresso alla scala trattando le porte chiuse come attraversabili (si aprono
 // rispondendo); `serveUnaPorta` dice comunque quanto costa arrivarci senza aprire nulla. Gira in Node.
-import { ROCCIA, PAVIMENTO, PORTA, ARREDI } from '../dati/mondo.js'
+import { ROCCIA, PAVIMENTO, PORTA } from '../dati/mondo.js'
+import { ORPELLI } from '../dati/orpelli.js'
 import { CURIOSITA } from '../dati/curiosita.js'
 import { MOSTRI, BRANCO, PASSO_DEL_BRANCO } from '../dati/mostri.js'
 import { GROSSI } from '../dati/grossi.js'
@@ -22,7 +23,7 @@ export function seminato(seme) {
 export class Livello {
   // `guardiano`: chi porta la chiave della scala, dichiarato dalla tappa (l'unica cosa che non si può aggirare)
   constructor({ seme = 1, piano = 0, largo = 52, alto = 52, giri = 4,
-                guardiano = 'scheletro', crescita = null, branco = BRANCO, grosso = null } = {}) {
+                guardiano = 'scheletro', crescita = null, branco = BRANCO, grosso = null, scenario = null } = {}) {
     this.seme = seme
     this.piano = piano
     this.largo = largo
@@ -38,6 +39,9 @@ export class Livello {
     this.stanze = []
     this.robe = []                    // tutto ciò che sta su una cella e si tocca
     this.rnd = seminato(seme + piano * 7919)
+    // l'arredo ha il suo caso e il suo scenario: cambiarli non sposta nient'altro del piano (docs/sotterraneo/arredo.md)
+    this.rndArredo = seminato(seme * 17 + piano * 104729 + 99)
+    this.orpelli = ORPELLI[scenario] || ORPELLI.cantine
     this.scava()
     this.arreda()
   }
@@ -275,32 +279,65 @@ export class Livello {
     }
   }
 
-  // roba che non fa niente (barili, ossa...): sta contro le pareti, non in mezzo dove si cammina
-  arredaLeStanze() {
-    // uno solo acceso per stanza: due lanterne nella stessa cantina illuminano tutto
-    const { appeso: APPESO, posato: POSATO, fuoco: FUOCO } = ARREDI
-    const pesca = quali => quali[Math.floor(this.rnd() * quali.length)]
+  // quanto è epica una stanza, da 0 a 10: un'entrata è niente, una stanza del tesoro e la sua guardia qualcosa, la
+  // stanza della scala di più, e dove sta un mostro grosso è la sala del trono. Più si scende, più sale un poco.
+  epicaDellaStanza(s) {
+    const dentro = this.robe.filter(r => r.che === 'mostro' && this.dentroStanza(r, s))
+    const base = { ingresso: 0, uscita: 4, portale: 2, fonte: 3, tesoro: 3 }[s.ruolo] ?? 1
+    const guardia = s.ruolo === 'tesoro' && dentro.length ? 1 : 0
+    const grosso = dentro.some(r => r.grosso) ? 5 : 0
+    return Math.min(10, base + guardia + grosso + Math.min(2, Math.floor(this.piano / 4)))
+  }
 
+  // gli orpelli (dati/orpelli.js): più la stanza è epica, più ne ha e più sono epici; ognuno sa come si piazza.
+  // Mai davanti a una porta né sopra altra roba, e uno solo acceso per stanza
+  arredaLeStanze() {
+    const rnd = this.rndArredo
     for (const s of this.stanze) {
-      const quanti = 1 + Math.floor(this.rnd() * 3)
+      s.epica = this.epicaDellaStanza(s)
+      let quanti = 1 + Math.floor(s.epica / 3) + Math.floor(rnd() * 3)
       let acceso = false
-      for (let i = 0; i < quanti; i++) {
-        const appeso = this.rnd() < 0.35
-        const fuoco = !appeso && !acceso && this.rnd() < 0.4
-        // appeso: sulla fila in alto, contro la parete di faccia. posato: su un bordo qualunque
-        const x = appeso || this.rnd() < 0.6
-          ? s.x + Math.floor(this.rnd() * s.w)
-          : (this.rnd() < 0.5 ? s.x : s.x + s.w - 1)
-        const y = appeso ? s.y
-          : (this.rnd() < 0.5 ? s.y : s.y + s.h - 1)
-        if (!this.calpestabile(x, y) || this.robeSu(x, y).length) continue
-        if (this.porteVicine(x, y)) continue
-        if (fuoco) acceso = true
-        this.robe.push({ che: 'arredo', x, y, em: fuoco ? '🔥' : appeso ? '🎌' : '📦',
-                         pezzo: pesca(fuoco ? FUOCO : appeso ? APPESO : POSATO),
-                         arde: fuoco })
+      const usati = new Set(), provati = new Set()   // messi, e già tentati senza trovare posto
+      let forte = s.epica >= 5   // il pezzo forte della stanza epica va messo per primo
+      for (let giro = 0; quanti > 0 && giro < 40; giro++) {
+        const adatti = this.orpelli.filter(o => o.epica <= s.epica + (o.epica <= 1 ? 1 : 0) &&
+          (!forte || o.epica >= s.epica - 3) && !usati.has(o.pezzo) && !provati.has(o.pezzo) && !(o.arde && acceso))
+        if (!adatti.length) { if (forte) { forte = false; continue } break }
+        const peso = o => 1 + o.epica
+        let tiro = rnd() * adatti.reduce((n, o) => n + peso(o), 0)
+        const o = adatti.find(q => (tiro -= peso(q)) < 0) || adatti[adatti.length - 1]
+        const celle = this.cellePer(o, s, rnd)
+        if (!celle) { provati.add(o.pezzo); continue }
+        usati.add(o.pezzo)
+        forte = false
+        if (o.arde) acceso = true
+        for (const [x, y] of celle)
+          this.robe.push({ che: 'arredo', x, y, em: o.arde ? '🔥' : o.posa === 'appeso' ? '🎌' : '📦',
+                           pezzo: o.pezzo, arde: !!o.arde, epica: o.epica })
+        quanti -= celle.length
       }
     }
+  }
+
+  // le celle dove sta un orpello di questa stanza, o null se la posa non trova posto (si pesca un altro)
+  cellePer(o, s, rnd) {
+    const libera = (x, y) => this.calpestabile(x, y) && !this.robeSu(x, y).length && !this.porteVicine(x, y)
+    const caso = n => Math.floor(rnd() * n)
+    const destra = s.x + s.w - 1, basso = s.y + s.h - 1
+    if (o.posa === 'coppia') {
+      const [a, b] = [[s.x + 1, s.y], [destra - 1, s.y]]
+      return libera(...a) && libera(...b) ? [a, b] : null
+    }
+    if (o.posa === 'fondo') return libera(s.cx, s.y) ? [[s.cx, s.y]] : null
+    for (let prova = 0; prova < 10; prova++) {
+      let x, y
+      if (o.posa === 'appeso') { x = s.x + caso(s.w); y = s.y }
+      else if (o.posa === 'angolo') { x = caso(2) ? s.x : destra; y = caso(2) ? s.y : basso }
+      else if (caso(2)) { x = s.x + caso(s.w); y = caso(2) ? s.y : basso }   // posato: sul bordo
+      else { x = caso(2) ? s.x : destra; y = s.y + caso(s.h) }
+      if (libera(x, y)) return [[x, y]]
+    }
+    return null
   }
 
   // l'arredo si tiene a distanza da una porta, o si rischia di chiuderla con una cassa

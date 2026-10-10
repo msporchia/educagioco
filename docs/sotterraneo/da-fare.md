@@ -44,10 +44,8 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   alla fornace e alla grotta. Le immagini si chiedono a fogli fitti
   (decine di pezzi per foglio), non otto alla volta.
 - **Le fuliggini della fornace** non sono state usate (alone magenta).
-- **Più varietà nell'arredo della cripta**: dal 10 ottobre ha il suo (sette dei
-  48 pezzi di `arredo-cripta-2.png`: sarcofago, altare, cavalieri di pietra,
-  candelabro, bassorilievo, nicchia); gli altri 41 aspettano che un genere di
-  arredo possa scegliere fra più pelli. Cantine e fornace restano con le loro.
+- **Gli orpelli della grotta di cristallo e delle cantine nuove**: ogni scenario ha la sua
+  lista in `dati/orpelli.js` ([arredo.md](arredo.md)); un posto nuovo ne vuole una, a fogli fitti.
 - **La fontana della cripta** è ancora quella di `sotterraneo_3.png`, piena e
   asciutta: quella del foglio dei pezzi è a muro, e bevendo cambierebbe forma.
 - **Un mostro di quinta fascia per ogni posto**: oggi il golem sta in tutti

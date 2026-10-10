@@ -200,6 +200,7 @@ export class Corsa extends Corredo {
       grosso: grossoDi(t, p),
       crescita: crescitaDi(t),
       branco: brancoDi(t, p),
+      scenario: scenarioDi(t, p),
     })
     // nell'abisso il primo piano non ha da dove risalire: là la strada su è il portale
     if (p > 0 || !t.abisso) {
@@ -322,8 +323,8 @@ export class Corsa extends Corredo {
       this.dillo(ARREDO_LA_PRIMA_VOLTA)
       return
     }
-    const sua = (SCENARI[this.scenario || SCENARIO] || {}).dice || {}
-    this.dillo(sua[a.pezzo] || ARREDO_DICE[a.pezzo] || 'Non c\'è niente da fare, qui.')
+    const sua = ((SCENARI[this.scenario || SCENARIO] || {}).orpelli || []).find(o => o.pezzo === a.pezzo)
+    this.dillo((sua && sua.dice) || ARREDO_DICE[a.pezzo] || 'Non c\'è niente da fare, qui.')
   }
 
   sopra(che) { return ['scala', 'scala-su', 'fonte', 'cosa', 'gemme'].includes(che) }
