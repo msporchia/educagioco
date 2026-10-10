@@ -1288,8 +1288,8 @@ onUnmounted(() => {
         </div>
       </RottaAsteroidi>
       <button class="cosa-so" data-azione="cosa-so" @click="apriTavola">📊 Cosa so</button>
-      <!-- l'hangar: si apre col volo infinito (docs/asteroidi/hangar.md) -->
-      <button v-if="progresso.libera" class="cosa-so al-hangar" data-azione="hangar" @click="hangarAperto = true">
+      <!-- l'hangar: compare col primo pezzo preso, o col volo infinito (docs/asteroidi/hangar.md) -->
+      <button v-if="progresso.libera || hangarMappa.presi.length" class="cosa-so al-hangar" data-azione="hangar" @click="hangarAperto = true">
         Hangar<i v-if="hangarMappa.nuovi.length" class="nuovi" data-nuovi>{{ hangarMappa.nuovi.length }}</i></button>
       <HangarAsteroidi v-if="hangarAperto" @chiudi="chiudiHangar" />
     </div>
