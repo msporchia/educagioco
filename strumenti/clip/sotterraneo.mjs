@@ -58,6 +58,8 @@ import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { tappaDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { viaVerso } from '../../src/motore/passi.js'
 import { T, SCALA_INIZIALE, PASSO_EROE } from '../../src/giochi/sotterraneo/dati/mondo.js'
+import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
+import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { scendiNelSotterraneo } from '../../test/aiuto/browser.mjs'
 
 const PIXEL_PER_CELLA = T * SCALA_INIZIALE
@@ -125,8 +127,19 @@ const TROVATO = cercaSemeConMostro()
 export default {
   file: 'clip-sotterraneo', dove: 'sotterraneo', attesa: '[data-terra]',
   profilo: p => {
+    /* un cavaliere che ha già giocato: livello 5, tre abilità nelle caselle,
+       spada e scudo in mano. Uno nudo e senza abilità mostrava un gioco
+       che non è quello di chi ci gioca davvero */
+    const avventura = { tappa: 3, libera: false, stelle: {}, missioni: {},
+      roba: { v: 1, gemme: 12, zaino: ['pozione-piccola', 'pozione'], mano: 'spada', mancina: 'scudo-legno',
+              corpo: null, dito: null, torcia: 0, torce: 0 },
+      crescita: { v: 2, esp: sogliaDi(5), forza: 0, destrezza: 0, intelligenza: 0, tempra: 0, tasche: 0,
+                  albero: { fendente: 1, 'scudo-alzato': 1, preghiera: 1 },
+                  caselle: ['fendente', 'scudo-alzato', 'preghiera'] },
+      terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } }
     p.campagne = { ...p.campagne,
-      sotterraneo: { tappa: 3, libera: false, stelle: {}, cfg: { eroe: 'cavaliere' } } }
+      sotterraneo: { tappa: 3, libera: false, stelle: {},
+        cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: avventura } } } }
     return p
   },
   passi: [
@@ -168,6 +181,17 @@ export default {
       }
       async function rispondiFinche (fine) {
         while (Date.now() < fine) {
+          /* a ogni giro lo scontro offre la scelta (Attacco, Scappa via):
+             si tocca l'attacco, e solo dopo arriva la domanda */
+          const attacco = page.locator('[data-caselle-abilita] [data-azione="attacco"]')
+          if (await attacco.count() && await page.locator('.sot-domanda').count() === 0) {
+            await page.waitForTimeout(LETTURA)
+            /* con le abilità in mano si usa la prima che l'energia permette
+               (fendente, poi quel che resta); senza energia, l'attacco */
+            const abilita = page.locator('[data-caselle-abilita] [data-azione="prepara"]:not([disabled])')
+            const scelta = await abilita.count() ? abilita.first() : attacco.first()
+            await scelta.click({ timeout: 1000 }).catch(() => {})
+          }
           /* un tetto corto per il singolo tentativo: appena il mostro
              cade il foglio si chiude e non arriva più nessuna domanda
              nuova, e aspettare il tetto intero (`fine`) per scoprirlo
@@ -181,7 +205,7 @@ export default {
             await page.locator('.qz-tasto[data-giusta]').click({ timeout: 1000 }).catch(() => {})
             continue
           }
-          if (await page.locator('.sot-domanda').count() === 0) return   // il mostro è caduto
+          if (await page.locator('.sot-domanda, [data-caselle-abilita]').count() === 0) return   // il mostro è caduto
         }
       }
 
@@ -202,7 +226,7 @@ export default {
       await page.waitForTimeout(400 + (TROVATO.passiAvvicina / PASSO_EROE) * 1000)
       await toccaVerso(TROVATO.mirinoDelta)
 
-      const scontro = await page.waitForSelector('.sot-domanda', { timeout: 4000 }).catch(() => null)
+      const scontro = await page.waitForSelector('.sot-domanda, [data-caselle-abilita]', { timeout: 4000 }).catch(() => null)
       if (!scontro)
         throw new Error(`avvicinato al mostro del seme ${TROVATO.seme}, ma lo scontro non è partito`)
 
