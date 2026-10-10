@@ -1,0 +1,498 @@
+{
+  "__": "Il foglietto di arredo-cripta-2.png: 48 pezzi d'arredo della cripta (ChatGPT, 10 ottobre 2026, chat della scena, allegata la scena), griglia 6×8 su fondo magenta. I rettangoli sono i riquadri stretti di ogni pezzo, misurati sul non-magenta nella casella; NON provato con atlante.py, e manca 'misura'. Vista quasi isometrica: da guardare prima di montare.",
+  "prompt": {
+    "scheda": "PROMPT-scenario.md",
+    "base": "sotterraneo_4.png",
+    "generatore": "ChatGPT, 10 ottobre 2026",
+    "testo": "griglia 6×8, 48 pezzi d'arredo della cripta su magenta: sarcofagi, cavalieri, colonne, candelabri, altari, rovine, ferro e legno, decorazioni da muro"
+  },
+  "fondo": [
+    255,
+    0,
+    255
+  ],
+  "ombra": true,
+  "colori": 0,
+  "sprite": {
+    "cripta-sarcofago-liscio": {
+      "da": [
+        26,
+        55
+      ],
+      "cella": [
+        134,
+        130
+      ]
+    },
+    "cripta-sarcofago-spada": {
+      "da": [
+        192,
+        54
+      ],
+      "cella": [
+        139,
+        131
+      ]
+    },
+    "cripta-sarcofago-stemma": {
+      "da": [
+        359,
+        52
+      ],
+      "cella": [
+        138,
+        134
+      ]
+    },
+    "cripta-sarcofago-croce": {
+      "da": [
+        527,
+        54
+      ],
+      "cella": [
+        136,
+        132
+      ]
+    },
+    "cripta-sarcofago-crepato": {
+      "da": [
+        695,
+        51
+      ],
+      "cella": [
+        134,
+        135
+      ]
+    },
+    "cripta-sarcofago-aperto": {
+      "da": [
+        860,
+        56
+      ],
+      "cella": [
+        137,
+        129
+      ]
+    },
+    "cripta-cavaliere-spada": {
+      "da": [
+        50,
+        213
+      ],
+      "cella": [
+        77,
+        173
+      ]
+    },
+    "cripta-cavaliere-inginocchiato": {
+      "da": [
+        199,
+        248
+      ],
+      "cella": [
+        105,
+        139
+      ]
+    },
+    "cripta-cavaliere-seduto": {
+      "da": [
+        371,
+        236
+      ],
+      "cella": [
+        110,
+        153
+      ]
+    },
+    "cripta-cavaliere-scudo": {
+      "da": [
+        554,
+        213
+      ],
+      "cella": [
+        81,
+        174
+      ]
+    },
+    "cripta-cavaliere-mani": {
+      "da": [
+        724,
+        216
+      ],
+      "cella": [
+        74,
+        171
+      ]
+    },
+    "cripta-cavaliere-caduto": {
+      "da": [
+        859,
+        275
+      ],
+      "cella": [
+        139,
+        110
+      ]
+    },
+    "cripta-colonna": {
+      "da": [
+        52,
+        409
+      ],
+      "cella": [
+        73,
+        177
+      ]
+    },
+    "cripta-colonna-spezzata": {
+      "da": [
+        213,
+        414
+      ],
+      "cella": [
+        79,
+        172
+      ]
+    },
+    "cripta-colonna-moncone": {
+      "da": [
+        385,
+        468
+      ],
+      "cella": [
+        73,
+        119
+      ]
+    },
+    "cripta-colonna-inclinata": {
+      "da": [
+        546,
+        424
+      ],
+      "cella": [
+        90,
+        161
+      ]
+    },
+    "cripta-colonna-doppia": {
+      "da": [
+        718,
+        420
+      ],
+      "cella": [
+        95,
+        170
+      ]
+    },
+    "cripta-base": {
+      "da": [
+        888,
+        501
+      ],
+      "cella": [
+        95,
+        84
+      ]
+    },
+    "cripta-candelabro-1": {
+      "da": [
+        62,
+        607
+      ],
+      "cella": [
+        50,
+        184
+      ]
+    },
+    "cripta-candelabro-5bracci": {
+      "da": [
+        201,
+        612
+      ],
+      "cella": [
+        109,
+        179
+      ]
+    },
+    "cripta-candelabro-3": {
+      "da": [
+        399,
+        615
+      ],
+      "cella": [
+        56,
+        174
+      ]
+    },
+    "cripta-candelabro-alto": {
+      "da": [
+        562,
+        613
+      ],
+      "cella": [
+        55,
+        176
+      ]
+    },
+    "cripta-candelabro-tre": {
+      "da": [
+        726,
+        621
+      ],
+      "cella": [
+        77,
+        171
+      ]
+    },
+    "cripta-candelabro-singolo": {
+      "da": [
+        910,
+        610
+      ],
+      "cella": [
+        44,
+        182
+      ]
+    },
+    "cripta-altare": {
+      "da": [
+        28,
+        840
+      ],
+      "cella": [
+        133,
+        127
+      ]
+    },
+    "cripta-leggio": {
+      "da": [
+        214,
+        823
+      ],
+      "cella": [
+        93,
+        145
+      ]
+    },
+    "cripta-fonte": {
+      "da": [
+        381,
+        851
+      ],
+      "cella": [
+        93,
+        102
+      ]
+    },
+    "cripta-nicchia-lampada": {
+      "da": [
+        543,
+        822
+      ],
+      "cella": [
+        90,
+        145
+      ]
+    },
+    "cripta-tavolo": {
+      "da": [
+        693,
+        850
+      ],
+      "cella": [
+        138,
+        114
+      ]
+    },
+    "cripta-panca": {
+      "da": [
+        870,
+        843
+      ],
+      "cella": [
+        125,
+        115
+      ]
+    },
+    "cripta-arco-murato": {
+      "da": [
+        31,
+        1002
+      ],
+      "cella": [
+        117,
+        163
+      ]
+    },
+    "cripta-blocchi-caduti": {
+      "da": [
+        196,
+        1035
+      ],
+      "cella": [
+        128,
+        118
+      ]
+    },
+    "cripta-lastra-funeraria": {
+      "da": [
+        382,
+        1011
+      ],
+      "cella": [
+        79,
+        150
+      ]
+    },
+    "cripta-pilastro-grata": {
+      "da": [
+        549,
+        1002
+      ],
+      "cella": [
+        81,
+        161
+      ]
+    },
+    "cripta-braciere": {
+      "da": [
+        710,
+        1041
+      ],
+      "cella": [
+        104,
+        102
+      ]
+    },
+    "cripta-trono": {
+      "da": [
+        898,
+        1007
+      ],
+      "cella": [
+        89,
+        157
+      ]
+    },
+    "cripta-cancello": {
+      "da": [
+        31,
+        1197
+      ],
+      "cella": [
+        123,
+        139
+      ]
+    },
+    "cripta-campana": {
+      "da": [
+        210,
+        1199
+      ],
+      "cella": [
+        98,
+        130
+      ]
+    },
+    "cripta-scudo-cavalletto": {
+      "da": [
+        377,
+        1198
+      ],
+      "cella": [
+        87,
+        135
+      ]
+    },
+    "cripta-rastrelliera": {
+      "da": [
+        538,
+        1188
+      ],
+      "cella": [
+        107,
+        149
+      ]
+    },
+    "cripta-forziere": {
+      "da": [
+        703,
+        1213
+      ],
+      "cella": [
+        127,
+        118
+      ]
+    },
+    "cripta-lampadario": {
+      "da": [
+        878,
+        1201
+      ],
+      "cella": [
+        114,
+        132
+      ]
+    },
+    "cripta-muro-cavaliere": {
+      "da": [
+        36,
+        1372
+      ],
+      "cella": [
+        106,
+        122
+      ]
+    },
+    "cripta-muro-nicchia": {
+      "da": [
+        212,
+        1367
+      ],
+      "cella": [
+        94,
+        125
+      ]
+    },
+    "cripta-muro-edera": {
+      "da": [
+        382,
+        1370
+      ],
+      "cella": [
+        86,
+        125
+      ]
+    },
+    "cripta-muro-stemma": {
+      "da": [
+        548,
+        1378
+      ],
+      "cella": [
+        89,
+        116
+      ]
+    },
+    "cripta-muro-rosone": {
+      "da": [
+        710,
+        1375
+      ],
+      "cella": [
+        112,
+        116
+      ]
+    },
+    "cripta-muro-grata": {
+      "da": [
+        888,
+        1387
+      ],
+      "cella": [
+        94,
+        94
+      ]
+    }
+  }
+}

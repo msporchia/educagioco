@@ -38,3 +38,5 @@ altri fogli no:
 non è stato conservato. Vale quello che vale per la fattoria: rigenerare
 nello stesso stile è la cosa che serve ogni volta che manca un pezzo, e
 senza il prompt si riparte a occhio.
+
+arredo-cripta-2.png — ChatGPT, 10 ottobre 2026, 48 pezzi d'arredo della cripta su magenta (griglia 6x8). Foglietto arredo-cripta-2.json fatto a misura, non ancora provato con atlante.py.
