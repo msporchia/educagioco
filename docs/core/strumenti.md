@@ -35,6 +35,11 @@ quelli servono a guardare un difetto, questi a far vedere il gioco.
   scriverle a mano, quindi un gioco cambiato si rifotografa col comando; se
   una clip esce storta lo strumento lo dice in coda, e il commento in testa
   alla ricetta dice da cosa dipende.
+- `clip: { dallaMappa: true }`: i `passi` si fanno davanti alla telecamera,
+  e il filmato comincia dalla schermata di scelta del livello (asteroidi,
+  passo passo, pozioni, Survivors, il Robot); `secondi` conta da lì, passi compresi.
+  `dallaMappa: n` lascia fuori campo i primi `n` passi (una semina che
+  ricarica la pagina).
 - Un gioco nuovo nel README è una ricetta nuova, sul calco di `passo.mjs`.
 - Vogliono `dist/` fresco: prima `npm run build`.
 
