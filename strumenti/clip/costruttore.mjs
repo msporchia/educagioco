@@ -54,8 +54,9 @@ export default {
   file: 'clip-costruttore', dove: 'costruttore', attesa: '[data-scheda-robot] [data-livello]',
   passi: [seminaProgramma, apriIlCantiere],
   clip: {
+    dallaMappa: 1,       // la semina ricarica la pagina, fuori campo; la scheda e il tocco sul livello sono filmati
     // prima colonna a passo normale (si legge il progetto), poi 🚀 fino al velo
-    secondi: 14,
+    secondi: 17,
     coda: 1500,
     async durante (page) {
       if (!LIV) throw new Error('il livello della clip non c\'è più')

@@ -1215,7 +1215,7 @@ function vistaDellaBolla() {
   v.punti = punti
   v.visti = visti
   v.gettoni = visti.map((g, i) => ({
-    pezzo: g.pezzo, testo: g.testo, colmo: g.colmo, spento: g.spento,
+    pezzo: g.pezzo, testo: g.testo, colmo: g.colmo, spento: g.spento, hai: g.hai,
     preso: !!(inMano && inMano.mosso && tenuto === i) }))
   const g = visti[tenuto] || null
   const cosaFa = g && (g.ricetta || g.coltura)
@@ -1596,7 +1596,8 @@ function gancioDiProva() {
     gettoni: () => {
       if (!bolla || !bolla.vista.punti) return []
       const r = riquadro()
-      return bolla.vista.visti.map((g, i) => ({ chiave: g.chiave, spento: !!g.spento,
+      // hai: quello che la tela riceve per il numerino
+      return bolla.vista.visti.map((g, i) => ({ chiave: g.chiave, spento: !!g.spento, hai: bolla.vista.gettoni[i].hai,
         x: Math.round(r.left + bolla.vista.punti[i].x), y: Math.round(r.top + bolla.vista.punti[i].y) }))
     },
     // i posti della fila sotto una macchina: { come, prezzo?, x, y } in pixel della pagina

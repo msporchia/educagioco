@@ -123,6 +123,7 @@ const campo = await cerca(b => b.tipo === 'semina')
 controlla('toccando un campo vuoto spuntano i semi', !!campo)
 uguale('e non un foglio', await page.locator('.fa-velo').count(), 0)
 controlla('fra i semi c\'è il grano da trascinare', !!(await gettone('grano')))
+controlla('il seme dice quanti ne hai, anche 0 (arriva alla tela)', Number.isInteger((await gettone('grano')).hai))
 await scatto(page, 'bolla-semi')
 
 /* ---------- 2. il seme strisciato sulla fila li semina tutti ---------- */

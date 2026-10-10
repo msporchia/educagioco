@@ -55,7 +55,8 @@ export default {
   // il tocco apre il fumetto della casella, «gioca» la comincia (docs/passo-passo/mappa.md)
   passi: [[`[data-mappa] [data-tappa="${INDICE}"]`, 900], ['[data-fumetto] [data-azione="parti"]', 900]],
   clip: {
-    secondi: 8,
+    dallaMappa: true,                // dalla mappa: il tocco sulla tappa, «gioca», poi le frecce
+    secondi: 11,
     async durante (page) {
       if (!SOLUZIONE || !SOLUZIONE.length) return   // la tappa non c'è più, o non si vince: niente da giocare
       for (const mossa of SOLUZIONE) {

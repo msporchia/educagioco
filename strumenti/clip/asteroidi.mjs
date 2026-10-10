@@ -42,7 +42,8 @@ export default {
      l'altra passano secondi di cielo vuoto: dodici secondi di gioco
      visti in otto */
   clip: {
-    secondi: 12,
+    dallaMappa: true,            // la rotta, il tocco sul pianeta, «▶ parti»: poi il volo
+    secondi: 15,
     accelera: 1.5,
     async durante (page) {
       const fine = Date.now() + 11200

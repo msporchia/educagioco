@@ -42,6 +42,8 @@ import { Fattoria } from '../src/giochi/fattoria/motore/fattoria.js'
 import { PRIMA, CELLE } from '../src/giochi/fattoria/dati/mondo.js'
 import { PER_COLTURA, PER_RICETTA, MINUTO } from '../src/giochi/fattoria/dati/coltivazioni.js'
 import { sogliaDi } from '../src/giochi/fattoria/dati/livelli.js'
+import { SOSTA } from './clip/survivors.mjs'
+import ricettaFattoria, { FATTORIA as FATTORIA_CLIP, puntoSchermo } from './clip/fattoria.mjs'
 import { FILA_ATTUALE } from '../src/giochi/costruttore/dati/campagna.js'
 // le discese del sotterraneo stanno sulla terra di sopra: ci si va a piedi, come nelle prove
 import { scendiNelSotterraneo, giocaGiornata } from '../test/aiuto/browser.mjs'
@@ -138,6 +140,14 @@ function fattoriaGiocata() {
 
 PROFILO.campagne = {
   survivors: { tappa: 6, libera: true, stelle: {}, cfg: {} },
+  /* la nave dipinta: scafo, ali e fiamme di tinte vinte, un disegno sulle ali e uno stemma
+     (docs/asteroidi/hangar.md) — quella di serie è bianca e non dice che c'è un hangar */
+  mate: { tappa: 5, libera: true, stelle: {}, cfg: {},
+          hangar: { presi: ['scafo:nero', 'ali:rubino', 'fiamma:arancio', 'd:fiamme', 'colDisegno:oro',
+                            'colStemma:oro', 's:corona'],
+                    nuovi: [],
+                    nave: { scafo: 'nero', ali: 'rubino', fiamma: 'arancio', disegno: 'fiamme',
+                            colDisegno: 'oro', stemma: 'corona', colStemma: 'oro' } } },
   codice: { tappa: 5, libera: true, stelle: {}, cfg: {} },
   fattoria: { tappa: 0, libera: false, stelle: {}, cfg: { stato: fattoriaGiocata() } },
   // tre tappe del primo mondo vinte: la mappa ha un sentiero battuto e la nave a metà
@@ -338,12 +348,16 @@ const RICETTE = [
 
   { file: 'survivors-mappa', dove: 'survivors', attesa: '.sv-mappa' },
   { file: 'survivors-gioco', dove: 'survivors', attesa: '.sv-mappa',
-    passi: [['.sv-tappa.sv-adesso, .sv-tappa', 2200]] },
+    /* una partita già avanti (la sosta della clip): al primo livello il prato è vuoto e
+       non dice niente, al ghiacciaio ci sono mostri, gemme e frecce */
+    profilo: p => { p.campagne.survivors.sosta = SOSTA; return p },
+    passi: [['button[data-azione="riprendi"]', 700], ['button[data-azione="riprendi"]', 1400]] },
 
   { file: 'sotterraneo-mappa', dove: 'sotterraneo', attesa: '[data-terra]' },
   /* il campo dopo un paio di secondi: appena entrati la luce è ancora
      tutta addosso all'eroe, e lo scatto racconterebbe una stanza sola */
   { file: 'sotterraneo-gioco', dove: 'sotterraneo', attesa: '[data-terra]',
+    profilo: p => { p.campagne.sotterraneo = { tappa: 3, libera: false, stelle: {}, cfg: { eroe: 'cavaliere' } }; return p },
     passi: [async page => { await scendiNelSotterraneo(page, 0); await page.waitForTimeout(2200) }] },
 
   /* ── i due dei piccoli ──
@@ -381,7 +395,15 @@ const RICETTE = [
      campo di grano pronto col cestino sopra, uno che cresce, il mulino al
      lavoro. Appena aperta è un prato vuoto, e lo è per scelta. */
   { file: 'fattoria-gioco', dove: 'fattoria', attesa: '.fa-tela',
-    passi: [['.fa-tela', 1500]] },
+    /* l'orto grande della clip, e un campo pronto toccato: spunta il cesto */
+    profilo: ricettaFattoria.profilo,
+    passi: [async page => {
+      const box = await page.locator('.fa-tela').boundingBox()
+      const { x, y } = puntoSchermo(box, FATTORIA_CLIP.pronti[0].x, FATTORIA_CLIP.pronti[0].y)
+      await page.waitForTimeout(6500)          // il fumetto d'avvio se ne va da sé
+      await page.mouse.click(x, y)
+      await page.waitForTimeout(900)
+    }] },
 
   /* tre domande di tre materie, per il README: una col disegno del tempo,
      una di matematica disegnata, una di ragionamento a parole. Si ritaglia
@@ -461,6 +483,18 @@ async function mostraITocchi (page) {
   })
 }
 
+/* quanti passi iniziali si fanno prima di registrare: `dallaMappa: n` ne lascia fuori n
+   (una semina che ricarica la pagina non è da filmare), `true` nessuno */
+const fuoriCampo = r => typeof r.clip?.dallaMappa === 'number' ? r.clip.dallaMappa : 0
+
+/* un passo di ricetta: [selettore, attesa dopo] o una funzione */
+async function faiIlPasso (page, passo) {
+  if (typeof passo === 'function') return passo(page)
+  const [sel, attesa] = passo
+  await page.click(sel, { timeout: 6000 })
+  await page.waitForTimeout(attesa)
+}
+
 async function registra (page, r) {
   if (r.clip.tocchi !== false) await mostraITocchi(page)
   const cdp = await page.context().newCDPSession(page)
@@ -478,7 +512,16 @@ async function registra (page, r) {
   })
   await cdp.send('Page.startScreencast',
     { format: 'jpeg', quality: 90, maxWidth: 780, maxHeight: 1688, everyNthFrame: 1 })
-  const partita = r.clip.durante ? r.clip.durante(page).catch(e => e) : null
+  /* `dallaMappa: true`: i passi si fanno **registrando**, così il filmato
+     comincia dalla schermata di scelta e si vede il tocco che apre il
+     livello (`secondi` conta da lì, passi compresi) */
+  const davanti = r.clip.dallaMappa ? (r.passi || []).slice(fuoriCampo(r)) : []
+  const partita = r.clip.durante || davanti.length
+    ? (async () => {
+        if (davanti.length) await page.waitForTimeout(900)     // la mappa si legge
+        for (const passo of davanti) await faiIlPasso(page, passo)
+        if (r.clip.durante) await r.clip.durante(page)
+      })().catch(e => e) : null
   /* `secondi` è il tetto; con `coda` la registrazione si chiude anche
      prima, quel tanto dopo che la partita è finita — un cartello di
      vittoria fermo per metà filmato non racconta niente */
@@ -558,15 +601,8 @@ for (const r of scelte) {
   try {
     await page.goto(GIOCO + (r.dove ? '#' + r.dove : ''))
     await page.waitForSelector(r.attesa, { timeout: 12000 })
-    for (const passo of r.passi || []) {
-      try {
-        if (typeof passo === 'function') await passo(page)
-        else {
-          const [sel, attesa] = passo
-          await page.click(sel, { timeout: 6000 })
-          await page.waitForTimeout(attesa)
-        }
-      } catch (e) {
+    for (const passo of (r.passi || []).slice(0, r.clip?.dallaMappa ? fuoriCampo(r) : undefined)) {
+      try { await faiIlPasso(page, passo) } catch (e) {
         nota = '(un passo non è riuscito: ' + String(e.message).split('\n')[0].slice(0, 70) + ')'
         storte++
       }
