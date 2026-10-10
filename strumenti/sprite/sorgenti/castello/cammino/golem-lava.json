@@ -1,0 +1,36 @@
+{
+ "video": "golem.mp4",
+ "passi": 6,
+ "lato": {
+  "inizio": 46,
+  "periodo": 33,
+  "fotogrammi": [
+   46,
+   52,
+   57,
+   62,
+   68,
+   74
+  ]
+ },
+ "fronte": {
+  "inizio": 102,
+  "periodo": 20,
+  "fotogrammi": [
+   102,
+   105,
+   109,
+   112,
+   115,
+   119
+  ]
+ },
+ "righe": [
+  "lato",
+  "fronte"
+ ],
+ "cella": [
+  227,
+  160
+ ]
+}
