@@ -238,9 +238,7 @@ export class Tela {
     const medaglione = new Map(), perTerra = new Map()
     const stanze = liv.stanze || []
     const pietra = (x, y) => liv.a(x, y) === ROCCIA
-    for (const s of stanze)
-      for (let x = s.x; x < s.x + s.w; x++)
-        for (let y = s.y; y < s.y + s.h; y++) stanza[y * L + x] = s.id
+    for (let k = 0; k < stanza.length; k++) stanza[k] = liv.nelle ? liv.nelle[k] : -1   // dove la stanza è davvero (non il riquadro)
     for (const s of stanze) {
       // il medaglione sta sotto la fontana: la stanza della fonte si riconosce da lontano
       if (s.ruolo === 'fonte')
@@ -248,11 +246,12 @@ export class Tela {
           const x = s.cx + i, y = s.cy + j
           if (stanza[y * L + x] === s.id) medaglione.set(y * L + x, [i + 1, j + 1])
         }
-      // ragnatele negli angoli in alto: una stanza su due, sempre la stessa
+      // ragnatele negli angoli in alto: una stanza su due, sempre la stessa. Gli angoli sono i capi della fila più alta
       if (sorteDi(s.x, s.y, 3) % 2) continue
-      if (pietra(s.x, s.y - 1) && pietra(s.x - 1, s.y))
-        perTerra.set(s.y * L + s.x, { nome: sc.ragnatele.sx, dove: 'no' })
-      const xd = s.x + s.w - 1
+      const fila = s.suolo.filter(c => c.y === s.y).map(c => c.x)
+      const xs = Math.min(...fila), xd = Math.max(...fila)
+      if (pietra(xs, s.y - 1) && pietra(xs - 1, s.y))
+        perTerra.set(s.y * L + xs, { nome: sc.ragnatele.sx, dove: 'no' })
       if (pietra(xd, s.y - 1) && pietra(xd + 1, s.y))
         perTerra.set(s.y * L + xd, { nome: sc.ragnatele.dx, dove: 'ne' })
     }
@@ -404,6 +403,7 @@ export class Tela {
         this.emoji(r.em, px, py, alfa)
       if (grande !== 1) ctx.restore()
       if (r.chiave) this.emoji('🗝️', px + 0.42, py - 0.55, alfa, 0.42)
+      if (r.caporale) this.galloni(px, py, alfa)
       // il mostro col nome di una missione porta la corona e il nome sopra la testa, quando è in vista
       if (r.missione) {
         this.emoji('👑', px - 0.05, py - 1.3 + Math.sin(t * 3) * 0.05, alfa, 0.5)
@@ -642,6 +642,24 @@ export class Tela {
     ctx.textBaseline = 'middle'
     ctx.font = `${Math.round(T * quanto)}px "Emoji Gioco","Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`
     ctx.fillText(em, px * T, py * T)
+    ctx.restore()
+  }
+
+  // i galloni di un caporale (docs/sotterraneo/piani.md): due V d'oro sopra la testa e un anello d'oro ai piedi, disegnati
+  // in codice. Niente emoji: il sotterraneo è un gioco serio
+  galloni(px, py, alfa) {
+    const ctx = this.ctx
+    ctx.save()
+    ctx.globalAlpha = alfa
+    ctx.strokeStyle = 'rgba(240,194,74,.75)'; ctx.lineWidth = 1
+    ctx.beginPath(); ctx.ellipse(px * T, py * T + T * 0.38, T * 0.44, T * 0.14, 0, 0, 7); ctx.stroke()
+    const x = px * T, y = (py - 0.5) * T - 2
+    for (const dy of [0, 3]) {
+      ctx.beginPath()
+      ctx.moveTo(x - 4, y + dy - 2); ctx.lineTo(x, y + dy + 1); ctx.lineTo(x + 4, y + dy - 2)
+      ctx.strokeStyle = '#3a2a0a'; ctx.lineWidth = 3.2; ctx.stroke()
+      ctx.strokeStyle = '#f0c24a'; ctx.lineWidth = 1.6; ctx.stroke()
+    }
     ctx.restore()
   }
 

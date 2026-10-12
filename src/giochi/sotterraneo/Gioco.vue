@@ -906,6 +906,21 @@ function pianoDaProva(c) {
   c.posaLeMissioni()
 }
 
+// `#stanza=sala` porta l'eroe nella prima stanza di quella forma (`sala`, `elle`, `tu`, `croce`, `doppia`,
+// `caverna`) o di quel ruolo (`anticamera`, `uscita`, `tesoro`...): per guardare i piani senza girarli (docs/sotterraneo/piani.md)
+function stanzaDaProva(c) {
+  const q = new URLSearchParams(location.hash.slice(1)).get('stanza')
+  const s = q && c.livello.stanze.find(r => r.forma === q || r.ruolo === q)
+  if (!s) return
+  // la cella della stanza più lontana da ogni mostro (al centro c'è spesso un branco: sarebbe uno scontro subito)
+  const mostri = c.livello.robe.filter(r => r.che === 'mostro')
+  const lontano = r => mostri.reduce((m, o) => Math.min(m, Math.hypot(o.x - r.x, o.y - r.y)), 99)
+  const dove = s.suolo.reduce((b, r) => (lontano(r) > lontano(b) ? r : b), s.suolo[0])
+  c.eroe = { x: dove.x + 0.5, y: dove.y + 0.5 }
+  c.segnaLaStanza()
+  c.aggiornaLuce()
+}
+
 // `#sotterraneo=leggendario` posa un leggendario accanto all'ingresso, come se fosse appena caduto: per guardare la
 // festa senza aspettare la fortuna di una sera intera
 function leggendarioDaProva(c) {
@@ -960,6 +975,7 @@ function avvia(i) {
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
   pianoDaProva(corsa.value)
+  stanzaDaProva(corsa.value)
   leggendarioDaProva(corsa.value)
   brancoDaProva(corsa.value)
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)

@@ -48,10 +48,13 @@ nello scontro e nella barra in cima).
 ## Dove sta
 
 - **Nella stanza della scala, al posto del guardiano** (`mostroGrosso`):
-  accanto alla scala, sopra o sotto, o ai lati se lì non c'è posto. Non
-  tocca il caso del piano: il piano nasce identico, cambia solo chi porta la
-  chiave. Se nella stanza non c'è posto diventa grosso il mostro più lontano
-  dall'ingresso.
+  accanto alla scala, sopra o sotto, o ai lati se lì non c'è posto. Se nella
+  stanza non c'è posto diventa grosso il mostro più lontano dall'ingresso.
+- **Davanti a lui l'anticamera coi caporali** (nelle sette discese, non
+  nell'abisso): la stanza subito prima sulla strada, con due o tre mostri
+  più duri e col segno dei galloni ([piani.md](piani.md#i-mostri-branchi-appostati-caporali)).
+  Per questo il piano col grosso nasce diverso da quello senza: ha una stanza
+  col suo ruolo e il resto dei mostri è tre quarti per stanza meno i caporali.
 - **Nell'abisso uno ogni cinque piani** (`GROSSO_OGNI`: il 5°, il 10°…), a
   giro (`GIRO_DELL_ABISSO`), più forti perché cresce il piano.
 - **Come gli altri mostri dorme finché non si entra nella sua stanza.**

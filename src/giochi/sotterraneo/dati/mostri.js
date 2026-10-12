@@ -163,6 +163,10 @@ export const BRANCO = [
 // ogni volta che se ne aggiungeva una in fondo (misurato: la scala sommersa passava da 36 a 58 risposte obbligate)
 export const PASSO_DEL_BRANCO = 2.4
 
+// i caporali dell'anticamera del mostro grosso (docs/sotterraneo/piani.md): un mostro di strada con le ossa moltiplicate e un
+// colpo in più. Non una fascia sopra: la fascia sopra sarebbe un salto di risposte che il tetto delle domande non regge
+export const CAPORALE = { ossa: 1.25, att: 1 }
+
 export const NEL_BRANCO = [...new Set(BRANCO.flat())]
 
 // nell'abisso ogni posto ha il suo branco (TRATTI_DELL_ABISSO in dati/campagna.js): stesse cinque fasce, e

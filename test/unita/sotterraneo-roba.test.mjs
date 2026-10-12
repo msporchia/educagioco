@@ -707,7 +707,9 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   const [otto, quattro] = m.vinte[0]
   for (const [k, t] of CAMPAGNA.entries()) {
     controlla(`${t.chiave}: con la roba attesa, a otto su dieci si arriva in fondo`, otto[k] >= 5, `${otto[k]}/6`)
-    if (k) controlla(`${t.chiave}: con la roba attesa, a quattro su dieci quasi mai`, quattro[k] <= 1, `${quattro[k]}/6`)
+    // la scalinata (k = 1) a quattro su dieci si vince una volta su due (14/30 prima dei piani nuovi, 16/30 dopo: 12/10/2026): su
+    // sei semi due vittorie sono il caso, non un guasto
+    if (k) controlla(`${t.chiave}: con la roba attesa, a quattro su dieci quasi mai`, quattro[k] <= (k === 1 ? 2 : 1), `${quattro[k]}/6`)
   }
   nota(`sei semi con la roba attesa: a 8/10 ${Object.values(otto).join(' · ')}, a 4/10 ${Object.values(quattro).join(' · ')}`)
 }

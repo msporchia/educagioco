@@ -180,6 +180,7 @@ export class Corsa extends Corredo {
       largo: forma.largo, alto: forma.alto, giri: forma.giri,
       guardiano: guardianoDi(t, p),
       grosso: grossoDi(t, p),
+      caporali: !t.abisso,   // davanti al grosso dell'abisso niente anticamera: docs/sotterraneo/piani.md
       crescita: crescitaDi(t),
       branco: brancoDi(t, p),
       scenario: scenarioDi(t, p),
@@ -426,12 +427,21 @@ export class Corsa extends Corredo {
       let nx = m.fx + dx / d * Math.min(v, d), ny = m.fy + dy / d * Math.min(v, d)
       // non esce mai dalla sua stanza: il muro ferma l'asse che lo porterebbe fuori e lascia libero l'altro
       if (sua) {
-        if (nx < sua.x || nx > sua.x + sua.w) nx = m.fx
-        if (ny < sua.y || ny > sua.y + sua.h) ny = m.fy
+        if (!this.livello.dentro(sua, Math.floor(nx), Math.floor(m.fy))) nx = m.fx
+        if (!this.livello.dentro(sua, Math.floor(nx), Math.floor(ny))) ny = m.fy
       }
       if (Math.abs(dx) > 0.05) m.guarda = dx < 0 ? 'sx' : 'dx'
+      const fx0 = m.fx, fy0 = m.fy
       if (this.livello.calpestabile(Math.floor(nx), Math.floor(m.fy))) m.fx = nx
       if (this.livello.calpestabile(Math.floor(m.fx), Math.floor(ny))) m.fy = ny
+      // fermo contro una colonna (la stanza ne ha): scivola di lato invece di restare a guardarla
+      if (m.fx === fx0 && m.fy === fy0 && sua) {
+        const verso = (m.casa.x + m.casa.y) % 2 ? 1 : -1
+        for (const s of [verso, -verso]) {
+          const sx = m.fx - dy / d * v * s, sy = m.fy + dx / d * v * s
+          if (this.livello.dentro(sua, Math.floor(sx), Math.floor(sy)) && this.livello.calpestabile(Math.floor(sx), Math.floor(sy))) { m.fx = sx; m.fy = sy; break }
+        }
+      }
       m.x = Math.floor(m.fx); m.y = Math.floor(m.fy)
     }
   }

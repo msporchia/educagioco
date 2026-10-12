@@ -49,7 +49,7 @@ function scegliIlPiano() {
     if (L.robe.some(r => r.che === 'mostro' && stanze.has(L.stanzaDi(r.x, r.y)?.id))) continue
     const porta = L.robe.filter(r => r.che === 'porta').sort((a, b) => lungo(a) - lungo(b))[0]
     const mostro = L.robe.filter(r => r.che === 'mostro' && !r.chiave && r.ossa > c.colpo(r))
-      .sort((a, b) => lungo(a) - lungo(b))[0]
+        .sort((a, b) => lungo(a) - lungo(b))[0]
     if (!porta || !mostro) continue
     const costo = strada.length + lungo(porta) + lungo(mostro)
     if (!meglio || costo < meglio.costo) meglio = { seme, costo, c, porta, mostro, portale }
@@ -202,8 +202,9 @@ controlla('la discesa è nella sosta, coi cambiamenti e non il piano', !!sosta?.
           JSON.stringify(sosta?.robe)?.slice(0, 120))
 const cambio = i => (sosta?.robe?.cambi || {})[i] || {}
 uguale('con la porta aperta', cambio(indice(piano.porta)).aperta, true)
-controlla('e il mostro ferito', cambio(indice(piano.mostro)).ossa < piano.mostro.ossaMax,
-          JSON.stringify(cambio(indice(piano.mostro))))
+// chi si è ferito è il primo del branco che ci ha raggiunti, non per forza quello che si cercava
+const ferito = L.robe.find(r => r.che === 'mostro' && cambio(indice(r)).ossa < r.ossaMax)
+controlla('e il mostro ferito', !!ferito, JSON.stringify(sosta?.robe?.cambi))
 uguale('e l\'eroe dov\'era', `${Math.floor(sosta?.dove?.x)},${Math.floor(sosta?.dove?.y)}`, dovEro)
 nota(`la sosta pesa ${JSON.stringify(sosta).length} byte`)
 
@@ -246,8 +247,8 @@ p = await leggiProfilo(page)
 const dopo = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta
 uguale('la sosta ora è un\'uscita, non un portale', dopo?.via, 'uscita')
 uguale('la porta è ancora aperta', ((dopo?.robe?.cambi || {})[indice(piano.porta)] || {}).aperta, true)
-uguale('e il mostro ha le ossa di prima', ((dopo?.robe?.cambi || {})[indice(piano.mostro)] || {}).ossa,
-       cambio(indice(piano.mostro)).ossa)
+uguale('e il mostro ha le ossa di prima', ((dopo?.robe?.cambi || {})[indice(ferito)] || {}).ossa,
+       cambio(indice(ferito)).ossa)
 uguale('e l\'eroe è dove era', `${Math.floor(dopo?.dove?.x)},${Math.floor(dopo?.dove?.y)}`, dovEro)
 
 /* ---------- 8. «riprendi da qui» in home, nello stesso punto, senza passare di sopra ---------- */
