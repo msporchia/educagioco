@@ -1,29 +1,32 @@
 /* ═══════════ lo scontro a gruppi (viste/Scontro.vue, FilaDeiTurni.vue; docs/sotterraneo/scontro.md, «La vista») ═══════════
-   Il palco: l'eroe a sinistra, i mostri a destra in una o due file (il grosso al centro), la fila dei turni sul bordo destro.
+   Il palco è un pezzo di stanza: uno zoccolo di parete e il pavimento, con l'eroe a sinistra e i mostri a colonne sul lato destro
+   (viste/campo.js, `piazza`: ogni figura ha i piedi in un punto `--x`, `--y`), la fila dei turni sul bordo destro.
    Tutto in un riquadro di altezza fissa: lo scontro non cambia misura mentre i mostri cadono. Il palco sta fermo in cima alla
    finestra (`sticky`): su un telefono stretto scorre al più la scelta, mai il fondale. */
 .sot-scontro { display: contents }
 .sot-duello {
-  position: sticky; top: 0; z-index: 5; overflow: hidden; height: 244px; margin: 0 -4px;
+  position: sticky; top: 0; z-index: 5; overflow: hidden; height: var(--alto, 264px); margin: 0 -4px;
   background: #0e0b16;
   border-radius: 14px; box-shadow: inset 0 0 0 1px #c9a24a55, inset 0 -30px 40px -20px #000;
   animation: sot-entra .35s ease-out;
 }
-.sot-duello[data-file="2"] { height: 292px }
-.sot-palco { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; z-index: 0 }
+.sot-palco { position: absolute; left: 0; top: 0; image-rendering: pixelated; z-index: 0 }   /* la misura la dà Palco.vue: la scala degli sprite */
 .sot-duello::after {   /* la penombra ai bordi: il palco è la scena vera, ma non deve rubare l'occhio ai personaggi */
   content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: radial-gradient(ellipse at 50% 70%, transparent 35%, #000000b0 100%);
+  background: radial-gradient(ellipse at 50% 60%, transparent 45%, #00000090 100%);
 }
 
 /* ── l'eroe, e il posto vuoto del compagno ── */
-.sot-attore-eroe { position: absolute; z-index: 3; left: 8px; bottom: 70px }
-.sot-duello[data-file="2"] .sot-attore-eroe { bottom: 108px }
-.sot-compagno {
-  position: absolute; z-index: 2; left: 14px; bottom: 16px; width: 54px; height: 18px;
+.sot-attore-eroe { position: absolute; z-index: 3; left: var(--x); top: var(--y); translate: -50% -100% }   /* i piedi nel punto */
+.sot-compagno {   /* il posto del compagno: sfalsato sotto l'eroe, in diagonale */
+  position: absolute; z-index: 2; left: var(--x); top: var(--y); translate: -50% -50%; width: 54px; height: 18px;
   border: 1.5px dashed #ffffff2e; border-radius: 50%; background: #0000004d;
 }
-.sot-duello[data-file="2"] .sot-compagno { bottom: 24px }
+/* l'ombra ovale sotto i piedi di ognuno: la figura sta sul pavimento, non ci galleggia */
+.sot-ombra {
+  position: absolute; left: 50%; bottom: -6px; z-index: 0; translate: -50% 0; height: 13px; min-width: 24px; pointer-events: none;
+  background: radial-gradient(closest-side, #000000d6 60%, #00000000); border-radius: 50%;
+}
 .sot-nome-abilita {
   position: absolute; left: 0; top: -22px; z-index: 5; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 5px;
   font-size: 11.5px; font-weight: 800; white-space: nowrap; color: var(--tinta, #ffd23f);
@@ -31,17 +34,14 @@
 }
 
 /* ── i mostri ── */
-.sot-schiera {
-  position: absolute; z-index: 3; left: var(--ae, 80px); right: 44px; top: 10px; bottom: 6px;
-  display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-rows: 1fr;
-}
-.sot-m {
-  position: relative; min-width: 0; margin: 0; padding: 0 0 4px; font: inherit; color: inherit; cursor: pointer;
+.sot-schiera { position: absolute; z-index: 3; inset: 0; pointer-events: none }
+.sot-m {   /* in fondo ai piedi ci sono la barra della vita (3 + 6) e 4 px di margine: i piedi stanno 13 px sopra il fondo */
+  position: absolute; left: var(--x); top: calc(var(--y) + 13px); translate: -50% -100%; pointer-events: auto;
+  min-width: 48px; margin: 0; padding: 0 0 4px; font: inherit; color: inherit; cursor: pointer;
   background: none; border: 0; border-radius: 12px; -webkit-tap-highlight-color: transparent;
   display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px;
   transition: opacity .55s ease, transform .55s ease;
 }
-.sot-duello[data-file="1"] .sot-m { padding-bottom: 50px }
 .sot-m-corpo { position: relative; display: flex; justify-content: center; align-items: flex-end }
 .sot-m:disabled { cursor: default }
 .sot-m.sot-morto { opacity: 0; transform: translateY(10px) scale(.9); pointer-events: none }
@@ -81,7 +81,7 @@
 .sot-chip-rotto { color: #c8c8d4 }
 
 /* ── le figure: tre strati, perché ognuno ha la sua animazione (chi si fa sotto, chi trema, chi respira) ── */
-.sot-figura { position: relative; display: grid; place-items: end center; filter: drop-shadow(0 6px 4px #000a) }
+.sot-figura { position: relative; display: grid; place-items: end center; filter: drop-shadow(0 1px 1px #0008) }
 .sot-corpo { display: grid; place-items: end center }
 .sot-respira { display: block; animation: sot-respira 2.2s ease-in-out infinite }
 .sot-m-fig .sot-respira { scale: -1 1 }   /* guarda l'eroe (la proprietà `scale` non litiga con il respiro, che muove) */

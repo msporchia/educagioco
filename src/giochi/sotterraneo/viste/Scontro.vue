@@ -1,13 +1,13 @@
 <script setup>
-// Lo scontro a gruppi (docs/sotterraneo/scontro.md, «La vista»), sul fondale vero dello scenario: l'eroe a sinistra con un
-// posto vuoto sotto per il compagno, i mostri a destra in una o due file (il grosso grande al centro), la fila dei turni in
+// Lo scontro a gruppi (docs/sotterraneo/scontro.md, «La vista»), su un pezzo di stanza vero: l'eroe a sinistra con il posto del
+// compagno sfalsato sotto, i mostri a colonne sul pavimento a destra (il grosso davanti e al centro), la fila dei turni in
 // una colonna sul bordo destro. Sotto ogni mostro la sua barra della vita, senza numeri (il brivido di non sapere quanto
 // resiste), e sopra «ti colpisce 3». Toccando un mostro lo si fa bersaglio. Non calcola niente: riceve i numeri già fatti
 // dal motore (viste/campo.js) e il racconto del turno che si sta facendo (viste/racconto.js, `fx`).
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { CIECA } from '../../pausa.js'
 import { PEZZI } from '../dati/atlante.js'
-import { scalaDelMostro } from './campo.js'
+import { scalaDelMostro, piazza, SCALA_PALCO } from './campo.js'
 import Icona from './Icona.vue'
 import Grosso from './Grosso.vue'
 import Glifo from './Glifo.vue'
@@ -45,21 +45,16 @@ const quanti = computed(() => props.mostri.length)
 // UNA scala per tutti, eroe compreso: i fogli sono già in proporzione fra loro (il ratto più piccolo del cavaliere,
 // l'orco più grosso: strumenti/sprite/sorgenti/sotterraneo/generati/mostri-1.json). Una scala per i mostri e una per
 // l'eroe faceva il ratto grande come il cavaliere (l'utente, 12 ottobre: «grotteschi, vanno proporzionati»)
-const lEroe = computed(() => 16 * 3 + 18)                   // quanto spazio prende a sinistra
-const lFila = 44                                            // e la colonna dei turni a destra
-const cella = computed(() => (larg.value - lEroe.value - lFila) / 3)   // sei colonne a due a due: tre mostri per fila
-const larghissimo = computed(() => Math.max(16, ...props.mostri.filter(m => !m.grosso).map(m => (PEZZI[m.sprite] ? PEZZI[m.sprite][2] : 16))))
-const scala = computed(() => 2)
+const scala = computed(() => SCALA_PALCO)
 const scalaEroe = scala
-const scalaM = m => scalaDelMostro(m.tipo, PEZZI[m.sprite] ? PEZZI[m.sprite][3] : 16, scala.value)
+// dove stanno i piedi di ognuno (colonne sul pavimento, viste/campo.js); chi sta più in alto è un filo più piccolo, a quarti
+const piano = computed(() => piazza(props.posti, props.mostri, larg.value))
+const scalaM = (m, k) => scalaDelMostro(m.tipo, PEZZI[m.sprite] ? PEZZI[m.sprite][3] : 16, Math.round(scala.value * piano.value.mostri[k].prof * 4) / 4)
 const scalaGrosso = computed(() => scala.value + 1)   // il grosso un passo sopra: è il re della stanza
-const stretto = computed(() => cella.value < 72)   // tre per fila a 320 px: la riga della minaccia si accorcia
-const barra = computed(() => (quanti.value === 1 ? 96 : Math.min(64, Math.round(cella.value - 14))))
-
-const celleDi = computed(() => props.mostri.map((m, k) => {
-  const c = props.posti.celle[k]
-  return { gridColumn: `${c.col} / span 2`, gridRow: `${c.riga} / span ${c.file}` }
-}))
+const stretto = computed(() => larg.value < 340)   // a 320 px la riga della minaccia si accorcia
+const barra = computed(() => (quanti.value === 1 ? 72 : 56))
+// il punto dei piedi di un mostro e l'ordine in cui si disegna (chi sta più in basso sta davanti)
+const postoDi = k => ({ '--x': piano.value.mostri[k].x + 'px', '--y': piano.value.mostri[k].y + 'px', zIndex: piano.value.mostri[k].z })
 
 /* ── cosa si vede di ognuno: durante il racconto le ossa e i caduti sono quelli di quel momento, non ancora quelli veri ── */
 const ossaDi = m => (props.fx.attivo && props.fx.ossa[m.i] != null ? props.fx.ossa[m.i] : m.ossa)
@@ -74,7 +69,7 @@ const soloMiaUna = computed(() => props.mostri.filter(m => m.colpito).length > 1
 const statiDi = m => (props.fx.attivo && props.fx.stati[m.i] ? props.fx.stati[m.i] : m.stati)
 const addosso = m => statiDi(m).map(x => 'sot-addosso-' + (x.fuoco ? 'fuoco' : x.gelo ? 'gelo' : x.chiave === 'debole' ? 'fiacco' : x.chiave))
 // quanto è larga la figura (le stelle dello stordito girano in proporzione)
-const largoDi = m => (m.grosso ? 32 * scalaGrosso.value : (PEZZI[m.sprite] ? PEZZI[m.sprite][2] : 16) * scalaM(m))
+const largoDi = (m, k) => (m.grosso ? 32 * scalaGrosso.value : (PEZZI[m.sprite] ? PEZZI[m.sprite][2] : 16) * scalaM(m, k))
 const protetto = computed(() => props.mie.some(x => ['parato', 'scudo'].includes(x.chiave)))
 const diPietra = computed(() => props.mie.some(x => x.chiave === 'intoccabile'))
 const specchiato = computed(() => props.mie.some(x => x.chiave === 'specchio'))
@@ -108,11 +103,12 @@ function punto(chi) {
   <div class="sot-scontro">
     <div ref="duello" class="sot-duello" data-duello :data-file="posti.file" :data-mostri="quanti"
          :data-racconto="fx.attivo ? 'in-corso' : null" :class="{ 'sot-veloce': fx.veloce, 'sot-trema': fx.scuote }"
-         :style="{ '--ae': lEroe + 'px', '--barra': barra + 'px' }" @click="sulDuello">
-      <Palco v-bind="palco" />
+         :style="{ '--alto': piano.alto + 'px', '--barra': barra + 'px' }" @click="sulDuello">
+      <Palco v-bind="palco" :larg="larg" :alto="piano.alto" />
 
       <!-- l'eroe, a sinistra; sotto di lui il posto vuoto del compagno (solo il posto, niente scritta) -->
-      <div ref="elEroe" class="sot-attore-eroe" data-eroe-scontro>
+      <div ref="elEroe" class="sot-attore-eroe" data-eroe-scontro :style="{ '--x': piano.eroe.x + 'px', '--y': piano.eroe.y + 'px', zIndex: piano.eroe.y * 10 }">
+        <i class="sot-ombra" :style="{ width: 16 * scalaEroe * 1.25 + 'px' }" aria-hidden="true"></i>
         <div :key="chiaveFx('eroe')" class="sot-figura sot-eroe-fig" :class="classeFx('eroe')" :style="tintaEroe">
           <div class="sot-corpo">
             <div class="sot-respira" :class="{ 'sot-protetto': protetto, 'sot-guarisce': guarisce, 'sot-di-pietra': diPietra, 'sot-specchiato': specchiato }">
@@ -126,14 +122,14 @@ function punto(chi) {
         </span>
         <span v-for="n in numeriDi('eroe')" :key="n.id" class="sot-numero" :class="'sot-numero-' + n.tipo" data-cifra>{{ n.testo }}</span>
       </div>
-      <div class="sot-compagno" data-posto-compagno aria-hidden="true"></div>
+      <div class="sot-compagno" data-posto-compagno aria-hidden="true" :style="{ '--x': piano.compagno.x + 'px', '--y': piano.compagno.y + 'px' }"></div>
 
-      <!-- i mostri: sei colonne, ognuno ne prende due; il grosso sta al centro e occupa le due file -->
+      <!-- i mostri: colonne sul pavimento, sfalsati; il grosso davanti e al centro (viste/campo.js, `piazza`) -->
       <div class="sot-schiera" data-campo>
         <button v-for="(m, k) in mostri" :key="m.i" type="button" class="sot-m"
                 :class="{ 'sot-morto': mortoDi(m), 'sot-m-grosso': m.grosso, 'sot-bersaglio': pulita(m) && m.bersaglio,
                           'sot-colpito-da-me': pulita(m) && m.colpito && soloMiaUna }"
-                :style="[celleDi[k], { '--f': m.colpito }]" :aria-label="m.nome" :disabled="mortoDi(m)"
+                :style="[postoDi(k), { '--f': m.colpito }]" :aria-label="m.nome" :disabled="mortoDi(m)"
                 data-mostro :data-i="m.i" :data-tipo="m.tipo" :data-nome="m.nome" :data-grande="m.grosso || null"
                 :data-bersaglio="pulita(m) && m.bersaglio ? '' : null" :data-colpito="pulita(m) && m.colpito ? m.colpito : null"
                 :data-morto="mortoDi(m) ? '' : null" :data-porta-chiave="m.chiave ? '' : null" @click.stop="tocca(m)">
@@ -143,15 +139,16 @@ function punto(chi) {
             <template v-else><span v-if="!stretto">ti </span>colpisce <b>{{ m.colpisce }}</b></template>
           </span>
           <span :ref="el => { elC[m.i] = el }" class="sot-m-corpo">
+            <i class="sot-ombra" :style="{ width: Math.round(largoDi(m, k) * 1.25) + 'px' }" aria-hidden="true"></i>
             <span :key="chiaveFx(m.i)" class="sot-figura sot-m-fig" :class="classeFx(m.i)">
               <span class="sot-corpo">
                 <span class="sot-respira" :class="addosso(m)">
                   <Grosso v-if="m.grosso" :chi="m.grosso" :scala="scalaGrosso" />
-                  <Icona v-else :sprite="m.sprite" :em="m.em" :scala="scalaM(m)" :emAlto="48" />
+                  <Icona v-else :sprite="m.sprite" :em="m.em" :scala="scalaM(m, k)" :emAlto="48" />
                 </span>
               </span>
             </span>
-            <SegniAddosso :stati="statiDi(m)" :largo="largoDi(m)" />
+            <SegniAddosso :stati="statiDi(m)" :largo="largoDi(m, k)" />
             <i class="sot-anello" aria-hidden="true"></i>
             <svg v-if="m.chiave" class="sot-m-chiave" viewBox="0 0 24 24" width="14" height="14" aria-label="porta la chiave" data-segno-chiave>
               <circle cx="7" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2.4" /><path d="M10 11 L20 21 M16 17 L19 14 M13 14 L16 11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
