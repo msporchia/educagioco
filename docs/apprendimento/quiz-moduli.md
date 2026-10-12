@@ -131,7 +131,8 @@ solo.
 
 Un file in `moduli/`, più uno in `grafica/pittori/` se disegna. Nient'altro:
 il registro (`nucleo/registro.js`) e il banco raccolgono dalla cartella, e il
-modulo compare **in tutti i giochi** la sera stessa.
+modulo compare **in tutti i giochi** la sera stessa
+(salvo `soloSuRichiesta: true`: lo pesca solo chi lo nomina, vedi [quiz-conti.md](quiz-conti.md)).
 
 1. **La chiave è il concetto, non l'istanza**: `orto:gn`, non «lavagna». Il
    prefisso nuovo si sceglie guardando quelli presi in `store/progressi.js`
@@ -208,6 +209,9 @@ const q = ref(domandaPerGioco({ difficolta: 0.6, evita: ultimoModulo }))
 <Domanda v-if="q" :domanda="q.domanda" :pittori="q.pittori"
          :titolo="`${q.icona} ${q.nome}`" @risposto="incassa" />
 ```
+
+Un gioco può anche nominare un modulo e fissarne tipo e grandezza
+(`moduli`, `tipi`, `grado`: [quiz-conti.md](quiz-conti.md)).
 
 `risposto` porta `{ giusto, indice, chiave, tempo }`; il gioco decide cosa
 vale e non sa la materia. Un gioco può restringere le materie

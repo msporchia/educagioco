@@ -41,13 +41,13 @@ export const SAPERI = [
     chiave: 'moltiplicazioni', nome: 'Le moltiplicazioni', ico: '✖️', materia: 'matematica',
     che: 'moltiplicare: le tabelline e la moltiplicazione in colonna',
     esempio: '«24 × 3»',
-    spegne: 'le moltiplicazioni in colonna del castello — la torre Ghiaccio chiede sottrazioni più difficili, e le Bombe scendono con lei',
+    spegne: 'le moltiplicazioni in colonna del castello — la torre Ghiaccio chiede sottrazioni più difficili, e le Bombe scendono con lei — e i conti puri di tabelline e prodotti',
   },
   {
     chiave: 'divisioni', nome: 'Le divisioni', ico: '➗', materia: 'matematica',
     che: 'dividere: in colonna e a mente',
     esempio: '«84 : 4»',
-    spegne: 'le divisioni in colonna del castello — la torre Bombe chiede moltiplicazioni più difficili',
+    spegne: 'le divisioni in colonna del castello — la torre Bombe chiede moltiplicazioni più difficili — e i conti puri di divisioni esatte',
   },
   // il gioco le spiega nella carta (sotto i pezzi, sopra i colorati): da terza in su restano accese anche a chi è indietro
   {

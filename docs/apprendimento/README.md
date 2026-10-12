@@ -6,6 +6,7 @@ per scontato, e quanto vale una moneta.
 - [presentazione.md](presentazione.md) — le domande spiegate a chi arriva da fuori
 - [srs.md](srs.md) — il motore di ripasso (`src/store/srs.js`) e la marea; prima di toccarlo
 - [quiz-moduli.md](quiz-moduli.md) — il contratto di un modulo, come aggiungerlo, provarlo e usarlo in un gioco
+- [quiz-conti.md](quiz-conti.md) — i conti puri (7 × 8): un tipo e una grandezza a scelta, solo su richiesta, i falsi, il prefisso `conti:`
 - [quiz-livelli.md](quiz-livelli.md) — la difficoltà 0–100, ammissione e mira, la banda, si pesca una classe
 - [quiz-ripasso.md](quiz-ripasso.md) — la banda 1.5/0.5, le chiavi dei concetti e i loro prefissi
 - [la-domanda.md](la-domanda.md) — dopo la risposta: tempo per leggere, fretta, perché e come si fa, il muro

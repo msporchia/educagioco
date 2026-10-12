@@ -54,7 +54,8 @@ export const gradini = n => Math.max(-RITOCCO_MAX, Math.min(RITOCCO_MAX, Math.ro
 
 export class Modulo {
   constructor({ id, nome, icona, materia, chiaro, scaletta,
-                saperi = null, tipi = null, pittori = {}, livelli = null }) {
+                saperi = null, tipi = null, pittori = {}, livelli = null,
+                soloSuRichiesta = false }) {
     this.id = id                  // 'ortografia' — anche il prefisso delle chiavi
     this.nome = nome              // 'Ortografia' — quello che si legge
     this.icona = icona            // un'emoji sola
@@ -68,6 +69,8 @@ export class Modulo {
     this.pittori = pittori        // { nomeScena: (pennello, scena) => … }
     this.livelli = perGradoLivello(livelli, scaletta.length) // 0-100 per grado; chi tace ricade sul ripiego
     this.livelloDichiarato = Array.isArray(livelli) && livelli.length > 0
+    // fuori dai mazzi generali: lo pesca solo chi lo nomina in `moduli` (scelta.js, docs/apprendimento/quiz-moduli.md)
+    this.soloSuRichiesta = soloSuRichiesta
   }
 
   get gradi() { return this.scaletta.length }
@@ -150,6 +153,19 @@ export class Modulo {
     if (!liberi.length) return null
     const sotto = liberi.filter(g => g <= grado)
     return sotto.length ? sotto[sotto.length - 1] : liberi[0]
+  }
+
+  // lo stesso modulo ridotto a certe tipologie (per chiave intera o dopo i due punti: 'conti:prodotto' o 'prodotto');
+  // niente combacia → se stesso, perché un gioco senza domanda è rotto
+  soloTipi(chiavi) {
+    if (!chiavi?.length) return this
+    const vuole = t => chiavi.some(c => t.chiave === c || t.chiave.endsWith(':' + c))
+    const restano = this.tipi.filter(vuole)
+    if (!restano.length || restano.length === this.tipi.length) return this
+    const ridotto = Object.create(this)
+    ridotto.tipi = restano
+    ridotto.saperi = saperiDaiTipi(restano, this.gradi)
+    return ridotto
   }
 
   // l'unico metodo che un modulo deve scrivere; `tipo` è già pescato, null per i moduli senza tipi
