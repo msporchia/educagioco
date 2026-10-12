@@ -53,8 +53,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   const prova = (ids, contro, secondi) => {
     const p = new Partita({ rnd: caso(3) })
     p.muri = []; p.caserme = []
-    for (const t of p.torri) t.hp = 0                           // un campo vuoto: solo truppe
-    p.torri.find(t => t.lato === 'nem' && t.tipo === 're').hp = 1e6
+    for (const t of p.torri) t.hp = t.tipo === 're' ? 1e6 : 0   // un campo vuoto: solo truppe, e le basi non cadono
     for (const id of ids) p.schiera('io', id, 180, 300)
     for (const id of contro) p.schiera('nem', id, 180, 230)
     p.avanza(secondi)
