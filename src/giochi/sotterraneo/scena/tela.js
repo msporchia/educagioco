@@ -138,24 +138,40 @@ export class Tela {
     const sc = SCENARI[corsa.scenario] || SCENARI[SCENARIO]
     const forma = this.forma(liv, sc)
     const pietra = (x, y) => liv.a(x, y) === ROCCIA
-    const alfaDi = luce => (luce === 2 ? 1 : 0.5)
+    // il cono sfuma ai bordi: la forza di una cella in luce (da 0,2 a 1) la porta dal ricordo (mezzo spento) alla luce
+    // piena, senza gradini; il velo del ricordo si alleggerisce di conseguenza (docs/sotterraneo/luce.md)
+    const forza = (x, y) => (corsa.forzaDi ? corsa.forzaDi(x, y) : 1)
+    const alfaDi = (luce, x, y) => (luce === 2 ? 0.5 + 0.5 * forza(x, y) : 0.5)
     for (let y = c0y; y < c1y; y++) for (let x = c0x; x < c1x; x++) {
       const luce = corsa.luceDi(x, y)
-      if (luce && !pietra(x, y)) this.pavimento(sc, forma, x, y, alfaDi(luce))
+      if (luce && !pietra(x, y)) this.pavimento(sc, forma, x, y, alfaDi(luce, x, y))
     }
     for (let y = c0y; y < c1y; y++) for (let x = c0x; x < c1x; x++) {
       const luce = corsa.luceDi(x, y)
-      if (luce && tetto(pietra, x, y)) this.tetto(sc, pietra, x, y, alfaDi(luce))
+      if (luce && tetto(pietra, x, y)) this.tetto(sc, pietra, x, y, alfaDi(luce, x, y))
     }
     const torce = []
     for (let y = c0y; y < c1y; y++) for (let x = c0x; x < c1x; x++) {
       const luce = corsa.luceDi(x, y)
       if (!luce || !faccia(pietra, x, y)) continue
-      if (this.faccia(sc, liv, pietra, x, y, alfaDi(luce)) && luce === 2) torce.push([x, y])
+      if (this.faccia(sc, liv, pietra, x, y, alfaDi(luce, x, y)) && luce === 2 && forza(x, y) > 0.6) torce.push([x, y])
     }
     for (const [x, y] of torce) this.fiamma(x, y, orologio)
-    for (let y = c0y; y < c1y; y++) for (let x = c0x; x < c1x; x++)
-      if (corsa.luceDi(x, y) === 1) this.velo(x, y)
+    // i veli delle caselle in luce si posano a gradini di un quarto, ognuno in un tracciato solo: due rettangoli che si
+    // sovrappongono (velo() sbordando di mezzo pixel) lascerebbero la riga della giunzione più scura
+    const ambra = corsa.torciaAccesa ? 0.16 : 0.09   // la luce è calda davanti e si raffredda ai bordi
+    const scuri = [[], [], [], []], caldi = [[], [], [], []]
+    for (let y = c0y; y < c1y; y++) for (let x = c0x; x < c1x; x++) {
+      const luce = corsa.luceDi(x, y)
+      if (luce === 1) this.velo(x, y)
+      else if (luce === 2) {
+        const f = forza(x, y)
+        if (f < 0.88) scuri[Math.max(0, Math.round((1 - f) * 4) - 1)].push([x, y])
+        caldi[Math.max(0, Math.round(f * 4) - 1)].push([x, y])
+      }
+    }
+    scuri.forEach((celle, i) => this.veli(celle, '8,12,30', 0.5 * (i + 1) / 4))
+    caldi.forEach((celle, i) => this.veli(celle, '255,172,76', ambra * (i + 1) / 4))
 
     this.etichette = []
     for (const r of liv.robe) {
@@ -199,9 +215,18 @@ export class Tela {
   }
 
   // il ricordo si spegne E si raffredda (velo blu): spegnere e basta non basta, due tessere scure sono la stessa cosa
-  velo(cx, cy) {
+  veli(celle, colore, alfa) {
+    if (!celle.length) return
     const ctx = this.ctx
-    ctx.fillStyle = 'rgba(8,12,30,.5)'
+    ctx.fillStyle = `rgba(${colore},${alfa})`
+    ctx.beginPath()
+    for (const [x, y] of celle) ctx.rect(x * T, y * T, T, T)
+    ctx.fill()
+  }
+
+  velo(cx, cy, alfa = 0.5) {
+    const ctx = this.ctx
+    ctx.fillStyle = `rgba(8,12,30,${alfa})`
     ctx.fillRect(cx * T, cy * T, T + 0.5, T + 0.5)
   }
 
