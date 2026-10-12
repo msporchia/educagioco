@@ -110,16 +110,18 @@ chiave. La 🗺️ della barra in basso la apre grande ([barra.md](barra.md)).
   il raggio scende a 4,2 (`RAGGIO_SGOCCIOLI`), la stanza non si accende più
   tutta: si nota dalle caselle che si spengono, senza un avviso in più. Con una torcia alla
   cintura non si stringe: la prossima si accende da sé.
-- **La sveglia dei mostri non dipende dalla luce, ma da sveglio un mostro si
-  vede sempre** (`occhi` e `inLuce` in `Corsa`, anche fuori dal raggio e al
-  buio, e si può toccare). Così non c'è colpo preso da un buio in cui non
-  potevi vedere: lo vedi arrivare, ed è più lento di te. Con la torcia lo vedi
-  dormire da lontano; al buio lo vedi quando si è già svegliato. Provato: mostri
-  che si svegliano solo se li vede la luce (mezzo secondo dopo che entrano nel
-  raggio): senza torcia il gioco diventava **più facile** (la botola da 62 a 39
-  risposte obbligate, la miniera da 60 a 40, il cavaliere a 6/10 nelle cantine da
-  7 a 13 vinte su 20), il buio premiava invece di costare. Legata alla distanza
-  (sette celle, la stanza di prima) i numeri tornano quelli di prima.
+- **La sveglia dei mostri non dipende dalla luce, e un mostro si vede solo
+  se sta in una cella accesa adesso** (`inLuce` in `Corsa`; sveglio o no, e
+  solo allora si può toccare). Nelle celle ricordate la tela disegna porte,
+  forzieri, scala, fonte, arredo e roba per terra, mai i mostri: il ricordo non
+  si muove. Sulla mappina il custode della chiave è un segno fisso, sta dov'è
+  la sua casa. Il perché: l'utente, 12 ottobre 2026: vedere lontano deve
+  servire; la regola di prima la toglieva, gli agguati arriveranno con lo
+  scontro a gruppi. Si sveglia a distanza (sette celle, la stanza di prima),
+  non quando li vede la luce: provato, e senza torcia il gioco diventava
+  **più facile** (la botola da 62 a 39 risposte obbligate, la miniera da 60 a
+  40, il cavaliere a 6/10 nelle cantine da 7 a 13 vinte su 20), il buio
+  premiava invece di costare.
 - **Contare le stanze (`stanzeViste`, la torcia che brucia, le missioni) non
   dipende dalla luce**: è l'eroe a entrarci.
 - **Misurato**: il banco gioca a torcia spenta, quindi le tabelle di

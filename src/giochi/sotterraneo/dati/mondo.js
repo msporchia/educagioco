@@ -21,8 +21,8 @@ export const FORZA_PER_TASCA = 3
 // e una stanza si accende tutta; all'ultima stanza della torcia il raggio si stringe (docs/sotterraneo/regole.md, «La luce»)
 export const RAGGIO = 2.3, RAGGIO_TORCIA = 6.2, RAGGIO_SGOCCIOLI = 4.2
 // un mostro si sveglia quando ti avvicini a meno di SVEGLIA celle nella sua stanza, con la luce o senza: è quasi la
-// stanza di prima (la sveglia non dipende dalla luce, o la torcia cambierebbe l'equilibrio), ma da sveglio si vede sempre,
-// e al buio il raggio (2,3) è molto meno di sette: lo vedi arrivare, non lo vedi dormire (docs/sotterraneo/regole.md, «La luce»)
+// stanza di prima (la sveglia non dipende dalla luce, o la torcia cambierebbe l'equilibrio); si vede solo in luce
+// (docs/sotterraneo/regole.md, «La luce»)
 export const SVEGLIA = 7
 
 // il mostro è più lento apposta: scappare deve funzionare sempre, o la stanza è una trappola
