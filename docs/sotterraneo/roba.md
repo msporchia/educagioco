@@ -14,9 +14,12 @@ la roba con livello e rarità: [rarita.md](rarita.md).
 |---|---|---|---|---|
 | 🛡️ Cavaliere | 18 | 3 | 1 | spade, asce, ferro |
 | 🧝 Elfa | 15 | 4 | 1 | spade, archi, stoffa |
-| 🧙 Mago | 12 | 5 | 0 | bacchette, stoffa |
+| 🧙 Mago | 12 | 5 | 0 | bacchette, spade, stoffa |
 | 🧔 Nano | 20 | 3 | 2 | asce, archi, ferro |
 
+- **Il mago porta anche le spade** (il mago guerriero, [abilita-elementi.md](abilita-elementi.md#il-mago-guerriero)): la
+  bacchetta resta la sua arma, la spada gli serve per la Lama arcana e vuole forza come per tutti (`secondarie` in
+  `dati/eroi.js`: la pagina non pretende che la forza combaci col braccio).
 - **La scelta cambia i conti, e si legge in numeri e icone**, mai in tratti
   nascosti: un tratto da spiegare in un gioco che non si spiega lo sanno solo
   i grandi.

@@ -76,7 +76,8 @@ le classi si somigliavano. La fortuna resta solo sulla roba.
 - **L'attacco viene dalla caratteristica dell'arma in mano** (`carDellArma`
   in `motore/corredo.js`, `car` delle famiglie in `dati/eroi.js`): l'elfa con
   la spada cresce di forza, con l'arco di destrezza. **Le abilità** colpiscono con l'attacco della loro arma
-  (anche nella mancina) o, se il ramo non vuole armi, con la caratteristica del ramo (`attDelRamo`:
+  (anche nella mancina) o, se il ramo non vuole armi, con la caratteristica del ramo (e la Lama arcana del mago, che
+  vuole la spada e colpisce con l'intelligenza: [abilita-elementi.md](abilita-elementi.md#il-mago-guerriero)) (`attDelRamo`:
   [scontro.md](scontro.md#le-caratteristiche)). **A mani nude e con
   un'arma senza famiglia** (la mazza, i pezzi dei grossi) **conta la più
   alta** delle tre. Provato con la forza: il mago con la Mazza di Grumo, e a

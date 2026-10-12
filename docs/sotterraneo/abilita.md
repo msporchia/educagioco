@@ -7,22 +7,33 @@ un albero da scegliere, abilità che danno qualcosa (veleno, gelo,
 protezione, colpo migliore), da preparare prima di rispondere senza fermare
 il ritmo, legate alle armi che si hanno in mano.
 
-Il codice: `dati/abilita.js` (i rami, i nodi, l'energia), `motore/abilita.js`
-(i punti, le caselle, cosa si può imparare e perché no), `motore/corsa.js`
-(`prepara`, `perchéNonUsi`, `usaAbilita`, `rispostaScontro`, `botta`),
-`motore/corredo.js` (`sempre`, `ha`, `haLArma`, `energiaMax`),
-`viste/PaginaAbilita.vue`, `viste/CaselleAbilita.vue`, `viste/Medaglione.vue`,
-`viste/Glifo.vue` e `viste/glifi.js` (le icone).
+Il codice: `dati/abilita.js` (i rami, i nodi, l'energia), `dati/elementi.js` (gli
+elementi e gli stati), `motore/abilita.js` (i punti, le caselle, cosa si può imparare e
+perché no), `motore/scontro.js` (`prepara`, `perchéNonUsi`, `usaAbilita`, `descrizione`:
+vedi [scontro.md](scontro.md)), `motore/corredo.js` (`sempre`, `ha`, `haLArma`,
+`attDelRamo`, `energiaMax`), `viste/PaginaAbilita.vue`, `viste/CaselleAbilita.vue`,
+`viste/Medaglione.vue`, `viste/Glifo.vue` e `viste/glifi.js` con `glifi-rami.js` (le icone).
+
+**12 ottobre 2026, un albero più largo.** L'utente: «i bambini si divertono tantissimo con le
+abilità», quindi un tech-tree più ricco dove si mischiano cose: tipi di attacco con mostri che
+hanno forze e debolezze (resistente al fuoco, al veleno, che non si stordisce), più abilità fra
+cui scegliere «per non fare tre colonnine risicate per ogni eroe», alcune a catena, la palla di
+fuoco che prende il bersaglio e i vicini, e il mago che diventa **mago guerriero**. E: «solo il 30%
+in più di danno con una passiva è significativo», quindi **più scelta, non più forza**. I rami
+classe per classe: [abilita-rami.md](abilita-rami.md); le resistenze dei mostri: [mostri.md](mostri.md).
 
 ## L'albero
 
-- **Tre rami per classe, quattro gradini per ramo**, che si aprono ai
-  livelli 2, 4, 8 e 12 (`GRADINI`). Il nodo sopra nel ramo va imparato
-  prima: è quello che fa un albero.
+- **Quattro rami per classe, sette nodi per ramo in cinque righe** (uno, uno, due, due,
+  uno), che si aprono ai livelli 2, 4, 6, 8 e 12 (`GRADINI`). **Nelle righe da due si
+  sceglie**: due abilità diverse allo stesso livello, se ne prende una o l'altra o tutte e
+  due coi punti. Una riga si apre quando si è imparato almeno un nodo di quella sopra: è
+  quello che fa un albero.
 - **Un punto per livello dal 2** (`PUNTI_ABILITA_PER_LIVELLO`), separato dai
   punti delle caratteristiche. Al 12, dove finisce la storia, undici punti
-  per dodici nodi: non si prende tutto, e le zone dopo la storia hanno
-  ancora qualcosa da comprare.
+  per ventotto nodi: non si prende nemmeno un ramo e mezzo, e le zone dopo la storia hanno
+  ancora qualcosa da comprare. **Non più forza, più varietà**: un nodo nuovo non batte i
+  vecchi del suo gradino, e i colpi a più bersagli hanno il colpo del singolo più basso.
 - **I gradi non hanno tetto** (l'utente: al livello 50 c'è ancora qualcosa
   da fare con le abilità). Ogni grado vuole due livelli sopra il gradino del
   nodo (`LIVELLI_PER_GRADO`) e alza i numeri, non cambia cosa fa. I primi tre
@@ -36,7 +47,7 @@ Il codice: `dati/abilita.js` (i rami, i nodi, l'energia), `motore/abilita.js`
   qualcosa da toccare.
 - **Un ramo può volere un'arma** (`arma` del ramo): l'arco per le frecce, la
   bacchetta per il fuoco e il gelo, lo scudo nella mancina per il ramo dello
-  scudo. Senza, l'abilità non si prepara e la casella dice cosa manca («ci
+  scudo, la spada per la Lama arcana (che in più colpisce con l'intelligenza). Senza, l'abilità non si prepara e la casella dice cosa manca («ci
   vuole un arco»); i nodi «sempre» del ramo non valgono. L'elfa con la spada
   colpisce lo stesso: è il suo ramo dell'arco che resta fermo.
 - **Ogni classe sa difendersi al livello 2 e curarsi entro il 4** (regola
@@ -47,16 +58,17 @@ Il codice: `dati/abilita.js` (i rami, i nodi, l'energia), `motore/abilita.js`
 - **Gli id dei nodi sono chiavi del salvataggio** (`crescita.albero`), come
   quelli dello SRS: non si rinominano.
 
-| | ramo 1 | ramo 2 | ramo 3 |
-|---|---|---|---|
-| 🛡️ Cavaliere | ⚔️ Lama (spada o ascia) | 🛡️ Scudo (scudo in mano) | ❤️ Giuramento |
-| 🧝 Elfa | 🏹 Arco | 🗡️ Lame (spada) | 🌿 Bosco |
-| 🧙 Mago | 🔥 Fuoco (bacchetta) | ❄️ Gelo (bacchetta) | ✨ Arcano |
-| 🧔 Nano | 🪓 Ascia | 🏹 Balestra (arco) | ⛰️ Pietra |
+| | ramo 1 | ramo 2 | ramo 3 | ramo 4 |
+|---|---|---|---|---|
+| Cavaliere | Lama (spada o ascia) | Scudo (scudo in mano) | Giuramento | Furia |
+| Elfa | Arco | Lame (spada) | Bosco | Luna |
+| Mago | Fuoco (bacchetta) | Gelo (bacchetta) | Arcano | **Lama arcana** (spada) |
+| Nano | Ascia | Balestra (arco) | Pietra | Fucina |
 
-Il mago ha una famiglia d'arma sola: i suoi rami sono elementi. I nodi uno
-per uno, coi numeri, stanno in `dati/abilita.js`: la riga `fa(g)` di ogni
-nodo è anche quella che legge il bambino, e non ha emoji.
+I nodi uno per uno, coi numeri, stanno in `dati/abilita.js` e la loro mappa in
+[abilita-rami.md](abilita-rami.md): la riga `fa(g)` di ogni nodo è anche quella che legge
+il bambino, e non ha emoji. **Gli id non si rinominano**: sono chiavi del salvataggio, e i
+dodici di prima ci sono tutti, nel loro ramo (quelli del terzo e del quarto gradino sono scesi di una riga, allo stesso livello).
 
 ## Le icone sono disegnate in codice
 
@@ -68,7 +80,9 @@ un fondo del colore del ramo, dentro un anello d'oro: **gemma a otto lati**
 per le abilità da usare, **tondo** per quelle che valgono sempre; chiuso è
 ferro e grigio, pronto da imparare pulsa d'oro, preso è acceso del suo
 colore. Gli stessi glifi fanno l'energia (il cristallo blu) e gli stati dello
-scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima in codice, poi dipinto, come la cornice della
+scontro (la goccia del veleno, il fiocco, le stelle, il sangue). I nodi del 12 ottobre stanno in
+`viste/glifi-rami.js`, i pezzi comuni (cerchio, stella, fiammella, `astro`, `poli`) in `glifi-base.js`.
+Sono la prima mano (prima in codice, poi dipinto, come la cornice della
 [barra](barra.md)): quando l'albero piace si fanno dipingere con la stessa forma.
 
 ## L'energia
@@ -131,12 +145,14 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
   Punta d'acciaio: `rami.piu`) sono solo **+30%, +40%, +50%** di danno per le
   abilità del ramo, senza `passa`. Lo scudo spezzato (`rompe`, Spaccaroccia e
   Affondo) resta: azzera la difesa, ma costa un'abilità e un turno.
-- **Gli effetti si contano nei turni di chi li porta** (docs: [scontro.md](scontro.md)). Sul mostro: veleno (metà colpo
+- **Gli effetti si contano nei turni di chi li porta** (docs: [scontro.md](scontro.md)). Sul mostro: veleno o fiamme (metà colpo
   quando tocca a lui, quindi anche se l'eroe sbaglia), gelato (colpisce a metà), stordito (salta i suoi
-  prossimi N turni), senza difesa. Sull'eroe: parato (i colpi presi fanno metà per N turni dell'eroe), scudo che
+  prossimi N turni), **sanguina**, senza difesa. Sull'eroe: parato (i colpi presi fanno metà per N turni dell'eroe), scudo che
   assorbe, intoccabile, specchio, linfa. Si vedono come pastiglie sotto la vita del mostro e sotto quella dell'eroe.
-- **La forma** (`forma` in `dati/abilita.js`): `uno`, `vicini`, `catena`, `tutti`. Gli effetti vanno a tutti i mostri
-  presi; chi cade dà esperienza e bottino come sempre. Il Grido di guerra è `tutti`.
+- **La forma** (`forma` in `dati/abilita.js`): `uno`, `vicini`, `catena`, `tutti`, con abilità vere: la Palla di fuoco e la
+  Spazzata `vicini`, la Catena di fulmini e la Freccia che trapassa `catena`, il Mulinello e la Luna piena `tutti`. Gli
+  effetti vanno a tutti i mostri presi, e **l'elemento si conta per ognuno**: la palla di fuoco fa di più alla melma accanto
+  e meno a Fiammetta. Chi cade dà esperienza e bottino come sempre.
 - **«ti colpisce 3»** dice quello che arriva davvero dal mostro, con gli effetti (`botta`). Lo stop del pericolo conta la
   somma dei colpi in arrivo.
 - **Le parole** (l'utente, 9 ottobre): si parla di danno e di turni, mai di «scambi» o «mezzo colpo»: «fa il doppio del danno»,
@@ -153,6 +169,13 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
   (frecce da lontano, mostri congelati per passare): sarebbero un modo di
   saltare le domande.
 
+## Gli elementi, gli stati, il mago guerriero
+
+Ogni abilità che colpisce ha un **elemento** (fisico, fuoco, gelo, fulmine, veleno, sacro); ogni mostro può resistere (metà),
+temere (un danno e mezzo) o rifiutare uno stato ([mostri.md](mostri.md)); l'attacco solito non ha elemento. C'è un solo
+stato nuovo, il sangue; il mago porta anche le spade e ha il ramo **Lama arcana**, che vuole la spada e colpisce con
+l'intelligenza. Le regole, il perché e le parole dell'utente (12 ottobre 2026): [abilita-elementi.md](abilita-elementi.md).
+
 ## La barra e le pagine
 
 La barra cambia così ([barra.md](barra.md)): l'esperienza diventa una riga
@@ -167,12 +190,15 @@ Nella pagina dell'albero, che è epica e non una tabella (l'utente): in cima
 metterci**: sotto compaiono le abilità che si sanno (e «vuota»), oppure si
 tocca il medaglione nell'albero; un'abilità che stava in un'altra casella si
 scambia di posto (`metti`). Provato un tasto «Porta/Togli dallo scontro» nel
-riquadro del nodo: poco epico. Sotto i tre rami ognuno col suo
-**stendardo** (il colore del ramo, il glifo, il nome e l'arma che vuole) e i
-quattro medaglioni legati da una **catena** che si accende d'oro quando il
-nodo sopra è preso; i gradi sono tre gemme sotto il nome, e un nodo che
-aspetta il livello lo dice («livello 8»). In fondo il medaglione toccato con
-cosa fa adesso e al grado dopo (senza «Fa:»: si è già nella pagina che lo dice),
+riquadro del nodo: poco epico. **Sette medaglioni a ramo, quattro rami, non starebbero in 390 px**
+(provato: quattro colonne da sei righe, i nomi si spezzano a metà parola): si guarda **un ramo alla volta**. In cima
+alla parte che scorre la **fila dei quattro stendardi** (il colore del ramo, il glifo, il nome, quanti nodi si hanno su sette e un
+«+» d'oro se c'è qualcosa da imparare), che resta ferma mentre il ramo scorre; toccarne uno lo apre. Sotto, il ramo in
+**cinque righe di uno o due medaglioni**: in cima l'arma che vuole, con cosa colpisce quando non è l'arma e l'elemento,
+poi le **catene** che si accendono d'oro quando un nodo sopra è preso (dritte, o a forcella verso le righe da due, con una «o» in
+mezzo ai due fra cui scegliere); i gradi sono tre gemme sotto il nome, e un nodo che
+aspetta il livello lo dice («livello 8»). In fondo alla parte che scorre la legenda. Sotto il medaglione toccato con
+cosa fa adesso e al grado dopo (senza «Fa:»: si è già nella pagina che lo dice), il suo elemento e chi prende il colpo («colpisce il mostro e i due accanto»),
 e «Impara»/«Migliora». Le cure e gli scudi dicono il numero vero con la vita
 dell'eroe: «cura 12 di vita», «uno scudo che para 10 danni, finché dura lo
 scontro» (`inVita`, lo stesso conto del motore). Un
@@ -197,12 +223,18 @@ se lo ritrova nello scontro.
 ([livelli.md](livelli.md#riassegnare)): «Riassegna» accanto ai punti da
 imparare, e le caselle si svuotano.
 
-Nei test: `unita/sotterraneo-abilita` (i rami in piedi, difesa e cura per
-ogni classe, ogni icona disegnata e nessuna emoji, i punti e le loro
-regole, le caselle, la rilettura di un dato storto, l'energia dalle risposte,
+Nei test: `unita/sotterraneo-abilita` (i rami in piedi: quattro per classe, sette nodi in
+cinque righe, difesa e cura per ogni classe, gli id di prima, ogni icona disegnata e nessuna
+emoji, i punti e le loro regole, le righe da due, le caselle, la rilettura di un dato storto, l'energia dalle risposte,
 dalla fonte e dalla pozione blu, il colpo doppio, l'abilità che sbagliando
 resta pronta, il veleno che brucia al turno del mostro, gelato e stordito, la parata,
-la stanza intera e il primo tiro, l'ultimo fiato, l'energia nella sosta).
+la stanza intera e il primo tiro, l'ultimo fiato, l'energia nella sosta);
+`unita/sotterraneo-elementi` (le difese dei mostri, resistenza, debolezza e immunità applicate, il sangue, le forme a più
+bersagli con abilità vere, le passive nuove, il mago guerriero); `integrazione/sotterraneo-albero` (la pagina a 390 px: gli
+stendardi, le righe da due, la Lama arcana, nessun medaglione che sborda).
+La pagina ha gli stendardi `[data-azione="ramo"][data-ramo-scheda="<chiave>"]` (`data-aperto`, `data-presi`) e un solo
+`[data-ramo]` aperto con le sue `[data-riga="0..4"]`, `[data-car]`, `[data-elemento-ramo]`; il riquadro del nodo ha
+`[data-natura]` con `[data-elemento]`, `[data-chi]`, `[data-con]`.
 Sulla barra `[data-azione="abilita"]` con `data-punti-abilita` e il globo
 `[data-globo="energia"]`; nello scontro `[data-caselle-abilita][data-energia]`,
 `[data-azione="prepara"][data-abilita="<id>"]` con `data-pronta`, le pastiglie

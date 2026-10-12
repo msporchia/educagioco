@@ -164,6 +164,10 @@ così per ogni mostro che batte, ed è il livello 20.
   pagate (ne servono 10–18, l'eroe parte da 9–13 e la ricarica con le risposte
   giuste). Gli effetti che non fanno danno (stordire, gelare, parare) non
   contano come difesa; i capi e i grossi non ci sono.
+- **Il mostro di riferimento è neutro**: lo scheletro tipico senza le difese di [mostri.md](mostri.md) (nel conto non ha `tipo`),
+  e la formula conta il colpo senza elemento. Un eroe che vive di veleno non vale meno solo perché lo scheletro non si
+  avvelena; nel gioco la scelta fra le abilità è di chi ha il mostro davanti. Il sangue, le spine e il furto di vita
+  ([abilita-rami.md](abilita-rami.md#le-passive-nuove)) non entrano nel conto; la velocità sì (`c.velocita`).
 - **Le abilità non sono nelle misure** della storia
   ([abilita.md](abilita.md), «Cosa non è ancora fatto»): la forza le conta, i mostri
   no.
