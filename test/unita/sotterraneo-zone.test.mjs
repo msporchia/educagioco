@@ -7,6 +7,7 @@
    i mostri e il bottino del suo livello), la sosta che la rifà uguale,
    l'esperienza (un quarto nelle grigie, la curva oltre la storia).
    `node test/esegui.mjs sotterraneo-zone --niente-build` */
+import { conLaStrada } from '../../src/giochi/sotterraneo/motore/abilita.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { ORDINE_DELLE_ZONE, VOLTI, voltoDi, zonaPotenziata, zonaDi, forzaDellaZona, spintaDellaZona, guastiDelleZone,
          DETTI_DEL_COLORE, PIANI_DELLA_ZONA, NASCITA, GIRO, LARGA, ESP_GRIGIA, PRIMA_NOTIZIA, ANNUNCIO_IN_CODA }
@@ -206,7 +207,7 @@ uguale('e l\'abisso resta l\'abisso', zonaDi(-1).abisso, true)
   const z = zonaPotenziata(indiceDi('torre'), 14)
   const esp = eroeA => {
     // con la roba attesa: il grigio si legge dalla forza (docs/sotterraneo/forza.md), e a mani nude un eroe del 18 vale molto meno
-    const c = new Corsa(z, { seme: 5, eroe: 'cavaliere', rnd: seminato(5), crescita: crescitaAttesaA('cavaliere', eroeA),
+    const c = new Corsa(z, { seme: 5, eroe: 'cavaliere', rnd: seminato(5), crescita: conLaStrada(crescitaAttesaA('cavaliere', eroeA), 'cavaliere'),   // l'eroe atteso ha le abilità della strada (motore/abilita.js)
                              roba: robaAttesaA('cavaliere', eroeA) })
     const m = c.livello.robe.find(r => r.che === 'mostro' && !r.chiave)
     const prima = c.crescita.esp

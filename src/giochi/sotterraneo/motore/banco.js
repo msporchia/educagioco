@@ -108,7 +108,7 @@ function daiIPunti(corsa, come) {
    - le caselle: l'abilità che colpisce di più un mostro solo, quella ad area (se no la seconda) e una cura o uno scudo;
    - a ogni turno, una cura o uno scudo se la vita è sotto la metà; se no, un'abilità forte (fino a FORTI_A_SCONTRO a scontro)
      quando il colpo solito non basta a chiudere, e l'area appena i mostri sono tre o più;
-   - non si volta e non beve dentro lo scontro: resta il caso peggiore per gli agguati */
+   - non si volta e non beve dentro lo scontro (provato: bere costa il turno e il banco peggiora), resta il caso peggiore per gli agguati */
 const riparoDi = n => !colpisce(n) && (n.cura || n.scudo || n.linfa)
 function riempiLeCaselle(corsa) {
   const m = mostroDiRiferimento(corsa.livelloEroe)

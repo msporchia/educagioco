@@ -261,7 +261,7 @@ for (const e of esempi) nota(e)
   const c = eroe('elfa', 12)
   const a = forzaDelCorredo(c), b = forzaDi('elfa', c.roba, c.crescita)
   uguale('forzaDi e forzaDelCorredo dicono la stessa cosa', a, b)
-  const cambiato = { ...c.roba, mano: null }
+  const cambiato = { ...c.roba, mano: null, mancina: null, corpo: null }
   controlla('toglierle l\'arma la cambia (la memoria non si inganna)', forzaDi('elfa', cambiato, c.crescita) < a)
 }
 
