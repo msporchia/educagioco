@@ -254,11 +254,11 @@ export class Livello {
       : t < 0.45 ? 'forziere-scuro-chiuso' : 'forziere-chiuso'
   }
 
-  // mai nella stanza d'ingresso; due o tre per piano (tre o quattro sui grandi), la stessa densità dei
-  // forzieri: non cambia il costo della discesa (si passa oltre), cambia quello che c'è da guardare
+  // mai nella stanza d'ingresso; una o due per piano a ogni misura (12/10/2026, vedi docs/sotterraneo/roba.md):
+  // un tiro solo per il numero, che ogni tiro in più o in meno sposta il piano a valle
   spargiLeCuriosita(st) {
     const buone = st.filter(s => s.ruolo !== 'ingresso')
-    const quante = (buone.length >= 8 ? 3 : 2) + (this.rnd() < 0.6 ? 1 : 0)
+    const quante = 1 + (this.rnd() < 0.5 ? 1 : 0)
     for (let n = 0; n < quante; n++) {
       const s = buone[Math.floor(this.rnd() * buone.length)]
       if (!s) return

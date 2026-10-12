@@ -170,8 +170,10 @@ roba con livello e rarità: [rarita.md](rarita.md).
   mite (`MALUS`: 2 di vita o 2–6 gemme). Un malus vero farebbe evitare le
   curiosità. Il costo lo dichiara la singola frase.
 - **L'invito dice sempre che può andare male**, prima di rispondere.
-- **Due o tre per piano, tre o quattro sui piani grandi**: una ogni tre
-  stanze, come i forzieri. Non sono un pedaggio: si passa oltre.
+- **Una o due per piano, a ogni misura** (anche nell'abisso e nelle zone: il
+  piano è sempre `generaPiano`). Erano due o tre, tre o quattro sui piani
+  grandi; il 12/10/2026: «non ne metterei troppe, lasciamo che si divertano
+  di più a combattere». Non sono un pedaggio: si passa oltre.
 
 ## L'arredo dice che non si tocca
 
