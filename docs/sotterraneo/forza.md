@@ -55,9 +55,11 @@ eroe atteso). Niente caso: due chiamate danno lo stesso numero.
 3. **La resistenza** (`resistenza`): la vita con la roba (`vitaConLaRoba`, senza
    la vita dei piani) più una cura o uno scudo (`riparo`): la migliore fra
    quelle che l'eroe ha in casella, una sola, col conto di `inVita` come
-   `usaAbilita`. Contro il danno che il mostro fa a un turno (`dannoPerTurno`):
-   il graffio se si risponde bene (la metà del colpo, meno la Parata, per la
-   schivata), il colpo pieno se si sbaglia (i primi, a metà con Testa dura).
+   `usaAbilita`. Contro il danno che il mostro fa (`dannoPerTurno`): il suo
+   colpo, `COLPO_DEL_MOSTRO` × (attacco − difesa) almeno 1, qualunque sia la
+   risposta ([scontro.md](scontro.md)), ridotto dalla Parata e dalla schivata, e per i primi dimezzato
+   dalla Testa dura; i suoi turni sono quelli che la sua velocità gli dà mentre
+   l'eroe, con la sua (10 più la destrezza), gioca i `turni` che gli servono.
    Il tempo per cadere è `resistenza / danno a turno` (`TTD`).
 4. **Il rapporto** `R = TTD / TTK`: quanti mostri così regge per ogni mostro
    che ci mette a battere.

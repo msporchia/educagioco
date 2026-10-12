@@ -185,29 +185,34 @@ possibilissimi.
   `PASSO_EROE` 5,4, in `dati/mondo.js`), e dopo una fuga c'è `CALMA`: tre
   secondi. Scappare deve funzionare sempre: si scappa uscendo, non con un
   bottone.
-- **Scappare costa un graffio**: quello che prenderesti rispondendo bene.
-  Gratis era la mossa migliore del gioco. Il numero sta scritto sul tasto.
+- **Scappare costa un colpo**, quello del mostro più forte in campo (non
+  la somma). Gratis era la mossa migliore del gioco. Il numero sta scritto sul
+  tasto, e se quel colpo farebbe svenire il tasto non c'è.
 
 ## Lo scontro
 
-- **Un mostro picchia sempre.** Rispondendo bene si para e resta un graffio,
-  metà del colpo: `(attacco del mostro − la tua difesa) / 2`; sbagliando
-  arriva tutto. Senza il graffio le pozioni restavano in fondo allo zaino, e
-  con loro spariva il motivo di cercare una fonte o l'erborista. Il conto vero
-  diventa la **lunghezza della battaglia**: con l'arma buona il gigante cade
-  in quattro risposte e otto graffi, a mani nude il doppio.
-- **Si dice prima**: «ti graffia 2 · se sbagli 4» sotto il mostro. **Si
-  racconta dopo**: «⚔️ gli hai tolto 8 · ti ha graffiato 3». Il graffio ha un
-  suono suo, sordo e breve: col suono dell'errore chi aveva risposto giusto
-  credeva di aver sbagliato.
+**Uno contro tanti, a turni, con l'iniziativa**: chi entra, chi parte, la fila
+dei turni, le forme dei colpi, l'agguato, le caratteristiche per ramo sono in
+[scontro.md](scontro.md). Qui restano le cose che non dipendono dal gruppo.
+
+- **Un mostro colpisce sulla difesa, non sulla risposta**: `COLPO_DEL_MOSTRO`
+  × (attacco − difesa), almeno 1, a ogni suo turno. Le risposte servono ad
+  attaccare: sbagliando si perde il turno, e i mostri colpiscono lo stesso.
+  Senza questi colpi le pozioni restavano in fondo allo zaino, e con loro
+  spariva il motivo di cercare una fonte o l'erborista. Il conto vero è la
+  **lunghezza della battaglia**.
+- **Si dice prima**: «ti colpisce 3» sotto ogni mostro. **Si racconta dopo**:
+  «⚔️ gli hai tolto 8 · ti hanno colpito per 3». Il colpo ha un suono suo,
+  sordo e breve: col suono dell'errore chi aveva risposto giusto credeva di
+  aver sbagliato.
 - **Lo scontro è una modale al centro** e la scena resta ferma (`.sot-velo`,
   `.sot-modale` in `stile.css`); il velo non si chiude toccandolo: da uno
   scontro si esce rispondendo o scappando. Provato un foglio dal basso:
   compariva dove non si guardava, e la telecamera si spostava da sola.
-- **Con uno scontro aperto lo zaino non si apre**: si beve fra un mostro e
-  l'altro, o allo **stop del pericolo**: quando dopo un colpo l'eroe rischia
-  di cadere lo scontro si ferma e si sceglie bevi, scappo o continuo
-  ([pericolo.md](pericolo.md)).
+- **Con uno scontro aperto lo zaino non si apre**: si beve nella scelta (la
+  pozione rossa costa il turno), o allo **stop del pericolo**: quando i colpi
+  in arrivo rischiano di farlo cadere lo scontro si ferma e si sceglie bevi,
+  scappo o continuo ([pericolo.md](pericolo.md)).
 - Misurato: chi corre dritto alla scala sviene una o due volte per discesa,
   chi gira e raccoglie quasi mai.
 
@@ -252,7 +257,7 @@ mercante, i banchi del passo), `unita/sotterraneo-storia` (la tabella, chi la
 dà, le missioni: [la-grande-storia.md](la-grande-storia.md), [missioni.md](missioni.md)), `unita/sotterraneo-sosta` (la ripresa esatta cosa per
 cosa, il peso, il portale), `misure/sotterraneo` (la tabella della storia),
 `integrazione/sotterraneo` (ci si arriva con `scendiNelSotterraneo`: la mappa
-sta in [terra-di-sopra.md](terra-di-sopra.md)), `unita/sotterraneo-pericolo` e `integrazione/sotterraneo-pericolo` (lo stop dello scontro: [pericolo.md](pericolo.md)), `integrazione/sotterraneo-portale`
+sta in [terra-di-sopra.md](terra-di-sopra.md)), `unita/sotterraneo-gruppi` (lo scontro a gruppi: [scontro.md](scontro.md)), `unita/sotterraneo-pericolo` e `integrazione/sotterraneo-pericolo` (lo stop dello scontro: [pericolo.md](pericolo.md)), `integrazione/sotterraneo-portale`
 (col dito: porta, mostro ferito, portale, erborista, ritorno nel punto esatto,
 la ✕ che porta in home e «riprendi da qui» che riprende giù, senza gemello). Il foglio del
 portale: `[data-azione="portale"]`; la tela dice `data-eroe`, `data-eroe-schermo` e `data-scala` per toccare

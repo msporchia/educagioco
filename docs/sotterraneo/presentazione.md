@@ -91,7 +91,7 @@ finisce.
 
 Tutte le materie, alla difficoltà della sua età. E una cosa che una scheda
 non chiede: **decidere dove spendere lo sforzo** — il forziere tosto o la
-porta facile, restare a combattere o scappare con un graffio, ripulire il
+porta facile, restare a combattere o scappare pagando un colpo, ripulire il
 piano o correre alla scala.
 
 ## Note per i genitori

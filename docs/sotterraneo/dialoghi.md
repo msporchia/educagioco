@@ -89,7 +89,7 @@ all'epicità»*. Tolti, nel giro dell'8 ottobre: «Costa di più: è roba per
 più giù», «Finisce nello zaino», «Ne hai 2», «Ce l'hai addosso», «Te lo pago
 la metà» (lo dice il tasto), «🚪 la porta si apre», «🎁 si apre!», «piano
 2», «✨ livello 3! un punto da dare» (lo dice la festa), «👑 Re Ossuto è
-caduto!», «🏃 scappi — ti graffia» (lo diceva già il tasto), «… per terra»,
+caduto!», «🏃 scappi — ti costa un colpo» (lo diceva già il tasto), «… per terra»,
 «… nello zaino», l'arma messa dallo zaino, «Hai trovato l'erborista!»,
 «Missione presa», «Missione compiuta! 🪙 2» (lo dice il dialogo).
 

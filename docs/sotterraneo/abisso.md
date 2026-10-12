@@ -174,7 +174,7 @@ dall'abisso.
   massima cresciuta con l'elisir (`vitaBase`).
 - **Le pozioni reggono**: una pozione bevuta vale sempre più di una tenuta da
   parte, che è il comportamento che si voleva togliere. Con uno scontro
-  aperto lo zaino non si apre, ma i due numeri del graffio si leggono prima e
+  aperto lo zaino non si apre, ma il colpo di ogni mostro si legge prima e
   si può scappare: chi sviene con cinque pozioni aveva l'informazione.
 - **Tre occasioni per piano, e ripartono scendendo**
   (`SVENIMENTI_PER_PIANO`, `svenimentiSpesi`): scendere è la cosa
@@ -232,8 +232,8 @@ Il 6 è un piano fortunato (guardiano a due
 stanze dall'ingresso): il generatore non promette dove mette la scala, e la
 soglia del test è larga in basso apposta.
 
-**La difesa vale più dell'attacco, quaggiù**: il graffio si prende a ogni
-scambio, quindi un punto di difesa vale il doppio di un punto di vita. Nudi,
+**La difesa vale più dell'attacco, quaggiù**: il colpo del mostro si prende a ogni
+suo turno, quindi un punto di difesa vale il doppio di un punto di vita. Nudi,
 sei semi:
 
 | chi scende | fin dove arriva |

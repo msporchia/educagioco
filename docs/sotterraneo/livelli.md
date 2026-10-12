@@ -69,13 +69,15 @@ le classi si somigliavano. La fortuna resta solo sulla roba.
 | | dà l'attacco a | a tutti, per punto | è il requisito di |
 |---|---|---|---|
 | Forza | spade e asce | una tasca in più ogni tre punti oltre il primo | spade e asce |
-| Destrezza | archi | 1% di schivata dei graffi | archi |
+| Destrezza | archi, e il ramo Bosco | 1% di schivata dei colpi, e un punto di velocità nella fila dei turni (10 più la destrezza) | archi |
 | Intelligenza | bacchette e bastoni | un punto di energia massima | bacchette e bastoni |
 | Tempra | — | tre di vita, e una difesa ogni tre punti | — |
 
 - **L'attacco viene dalla caratteristica dell'arma in mano** (`carDellArma`
   in `motore/corredo.js`, `car` delle famiglie in `dati/eroi.js`): l'elfa con
-  la spada cresce di forza, con l'arco di destrezza. **A mani nude e con
+  la spada cresce di forza, con l'arco di destrezza. **Le abilità** colpiscono con l'attacco della loro arma
+  (anche nella mancina) o, se il ramo non vuole armi, con la caratteristica del ramo (`attDelRamo`:
+  [scontro.md](scontro.md#le-caratteristiche)). **A mani nude e con
   un'arma senza famiglia** (la mazza, i pezzi dei grossi) **conta la più
   alta** delle tre. Provato con la forza: il mago con la Mazza di Grumo, e a
   mani nude nella scalinata, non picchiava più. Un arco può picchiare meno
