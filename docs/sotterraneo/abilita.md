@@ -123,6 +123,14 @@ scontro (la goccia del veleno, il fiocco, le stelle). Sono la prima mano (prima 
 - **Ogni abilità è il colpo solito più qualcosa**: `per` volte il colpo, e
   l'effetto. Prima gli effetti, poi il colpo: Spaccaroccia toglie la difesa
   al colpo stesso che la toglie.
+- **«Ignora la difesa» non è un bonus fisso, è un moltiplicatore** (l'utente,
+  12 ottobre: il colpo è attacco meno difesa, quindi contro un mostro con
+  attacco 8 e difesa 4 passava da 4 a 8, e contro difese alte anche di più).
+  Perciò le attive con `passa` (Stoccata, Fulmine) ignorano **metà** della
+  difesa (`passa: 0,5`, danno `att − dif/2`), e le passive di ramo (Fiamma viva,
+  Punta d'acciaio: `rami.piu`) sono solo **+30%, +40%, +50%** di danno per le
+  abilità del ramo, senza `passa`. Lo scudo spezzato (`rompe`, Spaccaroccia e
+  Affondo) resta: azzera la difesa, ma costa un'abilità e un turno.
 - **Gli effetti si contano a scambi**, e contano anche quello in cui
   arrivano. Sul mostro: veleno (metà colpo a ogni scambio, **anche
   sbagliando**), gelato (colpisce a metà), stordito (non colpisce, neanche

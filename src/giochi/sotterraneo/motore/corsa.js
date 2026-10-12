@@ -143,16 +143,17 @@ export class Corsa extends Corredo {
   }
 
   // il fuoco dei pezzi brucia anche chi para: si somma dopo la difesa del mostro. Con un'abilità (`nodo`, dati/abilita.js)
-  // il colpo vale `per` volte, e `passa` o un mostro rotto non contano la difesa. Un mostro gelato prende di più (Gelo profondo)
+  // il colpo vale `per` volte; `passa` (una frazione) toglie quella parte della difesa, un mostro rotto non ne ha. Un mostro gelato prende di più (Gelo profondo)
   colpo(m, nodo = null) {
     const g = nodo ? this.grado(nodo.id) : 0
     const st = m.stati || {}
-    const passa = st.rotto || (nodo && (nodo.passa || this.delRamo(nodo, 'passa')))
+    // «ignora metà della difesa» vale 0,5 (`passa: true` sarebbe tutta); la passiva di un ramo ormai è solo percentuale
+    const ignora = st.rotto ? 1 : nodo && nodo.passa ? (nodo.passa === true ? 1 : nodo.passa) : 0
     // I bonus del colpo sono percentuali (l'utente, 9 ottobre: un +1 fisso non tiene il passo con l'attacco che cresce):
     // Filo affilato e simili, la punta del ramo e Gelo profondo sul gelato si sommano fra loro, poi si moltiplica
     const esposto = st.esposto && st.esposto.scambi > 0 ? st.esposto.piu : 0
     const piu = this.sempre('colpoPiu') + this.delRamo(nodo, 'piu') + (st.debole > 0 ? this.sempre('geloPiu') : 0) + esposto
-    const base = Math.max(1, Math.round((this.att - (passa ? 0 : m.dif)) * (1 + piu / 100)))
+    const base = Math.max(1, Math.round((this.att - m.dif * (1 - ignora)) * (1 + piu / 100)))
     let per = nodo ? (aGrado(nodo, 'per', g) || 1) : 1
     // l'ultimo gradino dei rami: contro un capo o un mostro grosso vale molto di più
     if (nodo && nodo.capi && this.èCapo(m)) per = aGrado(nodo, 'capi', g)
@@ -652,7 +653,7 @@ export class Corsa extends Corredo {
     const parti = [`fai ${this.colpo(m, nodo)} di danno${nodo.stanza ? ' a tutti i mostri della stanza' : ''}`]
     if (nodo.seStordito) parti.push('di più su chi è gelato, avvelenato o stordito')
     if (nodo.rompe) parti.push('spezza la sua difesa')
-    else if (nodo.passa) parti.push('ignora la sua difesa')
+    else if (nodo.passa) parti.push(nodo.passa === true || nodo.passa >= 1 ? 'ignora la sua difesa' : 'ignora metà della sua difesa')
     if (nodo.veleno) parti.push(`poi ${Math.max(1, Math.ceil(this.colpo(m) / 2))} a turno per ${turni(vale('veleno'))}`)
     if (nodo.debole) parti.push(`fa metà danno per ${turni(vale('debole'))}`)
     if (nodo.fermo) parti.push(`stordito per ${turni(vale('fermo'))}`)

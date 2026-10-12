@@ -201,6 +201,29 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   c.rispondi(false)
   controlla('la seconda volta si sviene', c.foglio && c.foglio.che === 'svenuto')
 
+  // la passiva del ramo è solo una percentuale (il 30% al primo grado), l'attiva con `passa` ignora metà della difesa
+  // (l'utente, 12 ottobre: «ignora la difesa» valeva il doppio o più, in base al mostro)
+  const dif = { ossa: 500, ossaMax: 500, att: 9, dif: 4 }
+  {
+    const { c: c0, m: m0 } = scontro('mago', conAlbero(12, { 'dardo-di-fuoco': 1 }), 'verga', null, dif)
+    const { c: c1, m: m1 } = scontro('mago', conAlbero(12, { 'dardo-di-fuoco': 1, 'fiamma-viva': 1 }), 'verga', null, dif)
+    const senza = c0.colpo(m0, NODI['dardo-di-fuoco'])
+    controlla('Fiamma viva al primo grado: il colpo del ramo vale 1,3 volte, la difesa conta ancora',
+      NODI['fiamma-viva'].rami.passa === undefined && c1.colpo(m1, NODI['dardo-di-fuoco']) === Math.round(Math.round((c0.att - 4) * 1.3) * 2.0),
+      `${senza} → ${c1.colpo(m1, NODI['dardo-di-fuoco'])}`)
+    controlla('e la riga lo dice', NODI['fiamma-viva'].fa(1) === 'il fuoco fa il 30% di danno in più' && NODI['perforante'].rami.passa === undefined && NODI['perforante'].fa(3) === 'i quadrelli fanno il 50% di danno in più')
+    controlla('fuori dal ramo la passiva non c\'è', c1.colpo(m1) === c0.colpo(m0))
+  }
+  {
+    const { c: ca, m: ma } = scontro('mago', conAlbero(12, { fulmine: 1 }), 'verga', null, dif)
+    const nodo = NODI.fulmine
+    uguale('Fulmine ignora metà della difesa: att − dif/2, per 2,5', ca.colpo(ma, nodo), Math.round(Math.round(ca.att - 4 / 2) * 2.5))
+    uguale('e Stoccata ha lo stesso valore di campo', NODI.stoccata.passa, 0.5)
+    controlla('lo scontro e la riga lo dicono', /ignora metà della sua difesa/.test(ca.descrizione(nodo, ma)) && /metà della difesa/.test(nodo.fa(1)), ca.descrizione(nodo, ma))
+    ma.stati = { rotto: true }
+    uguale('un mostro rotto non ha difesa del tutto', ca.colpo(ma, nodo), Math.round(ca.att * 2.5))
+  }
+
   // la sosta tiene l'energia
   ;({ c } = scontro('cavaliere', conAlbero(3, { fendente: 1 }), 'spada'))
   c.chiudi()
