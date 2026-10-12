@@ -45,9 +45,12 @@ const lingue = { inglese: 'en', verbi: 'en', spagnolo: 'es' }
 function dallIndirizzo() {
   if (typeof location === 'undefined') return
   const chiave = (location.hash || '').replace(/^#/, '')
-  if (Object.prototype.hasOwnProperty.call(viste, chiave)) vista.value = chiave
+  const ha = k => Object.prototype.hasOwnProperty.call(viste, k)
+  if (ha(chiave)) vista.value = chiave
   // il cheat della fattoria si legge ENTRANDO nella fattoria, quindi ci porta anche l'indirizzo
   else if (/(?:^|&)fattoria-tipo=\d/i.test(chiave)) vista.value = 'fattoria'
+  // un cheat che porta il nome di un gioco (`#sotterraneo=branco&mostri=6`) apre anche quel gioco
+  else { const k = [...new URLSearchParams(chiave).keys()].find(ha); if (k) vista.value = k }
 }
 
 onMounted(async () => {

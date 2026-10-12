@@ -43,8 +43,10 @@ node test/esegui.mjs --alla-volta=1     # uno alla volta (di solito otto)
 **La cadenza.** Le unità girano **a ogni commit**: costano secondi. Il
 browser gira **prima del push**, non prima di ogni commit: sui telefoni
 finisce la punta, non i passaggi. Chi ha toccato una schermata lancia il suo
-file (`node test/esegui.mjs pozioni`). Un agente in un worktree lancia i test
-con `--niente-build` e non fa la build: la build si fa su main. La CI lancia
+file (`node test/esegui.mjs pozioni`). Nel checkout condiviso la build
+la fa solo chi pubblica; un agente in un worktree suo la fa lì (il `dist/` è
+del suo worktree) e non usa `--niente-build` con una build vecchia, che prova
+un altro gioco. La CI lancia
 solo le unità, quindi un guasto che vive in `test/integrazione/` o in
 `test/misure/` (l'equilibrio dei giochi) lo scopre solo chi l'ha lanciato a
 mano. Tutti i comandi, gli strumenti che riscrivono
@@ -114,6 +116,11 @@ Generale), `strumenti/sprite/*.md` (fogli e foglietti degli sprite),
   di difetto. → `docs/core/test.md`
 - **Niente cose una tantum**: quello che si genera si rifà con un comando
   (`npm run tara`, `npm run quiz:livelli`, `npm run scatti`), mai a mano.
+- **Niente script usa e getta per provare**: una schermata si guarda con
+  `strumenti/scatta-app.mjs` e i cheat dell'indirizzo (`--dist`, senza
+  server), una misura col banco del gioco. Se lo strumento manca o non basta
+  si aggiunge o si allarga in `strumenti/` e si scrive in
+  `docs/core/comandi.md`: domani serve di nuovo. → `docs/core/comandi.md`
 - **Nei giochi una scelta non nasce fatta**: niente valori di comodo sulla
   riga (il «?» da scegliere). → `docs/costruttore/linguaggio.md`
 

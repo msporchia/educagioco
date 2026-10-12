@@ -77,7 +77,7 @@ scrivono niente: stanno in [sprite.md](sprite.md).
 | `node strumenti/generale/piani.mjs` | il simulatore dei piani del Generale |
 | `node strumenti/passo-passo/minimi.mjs` | le strade più corte di Passo passo, messe alla prova |
 | `node strumenti/passo-passo/sentiero.mjs` | i sentieri senza fine di Passo passo: mille posti per famiglia, il programma più corto in carte con la mano del bambino (`--mano=`), le mosse, se serve il ciclo o il se, la strada più corta, le forme, il tempo (su più processi; il cane una ventina di minuti) |
-| `node strumenti/scatta-app.mjs <schermata>` | un PNG dell'app servita da Vite (`--porta`, `--tocca`, `--attesa`), in `tmp/` |
+| `node strumenti/scatta-app.mjs <schermata>` | un PNG dell'app servita da Vite (`--porta`), o del file costruito (`--dist`); `--tocca`, `--attesa`, `--larghezza`, `--nome`; la schermata è un indirizzo coi [cheat](#i-cheat-dellindirizzo) (`'sotterraneo=branco&mostri=6'`), in `tmp/scatti/`; dice gli errori della console |
 
 **I banchi sono pagine e vogliono un server**: importano i moduli veri, e
 da `file://` Chrome non li carica. `-- --host` per aprirli dal telefono.
@@ -119,6 +119,7 @@ dell'indirizzo): si usano dal browser.
 | `#fattoria=40` | alza il livello della fattoria (non lo abbassa mai), il prato resta |
 | `#fattoria-tipo=30` | mette una fattoria già giocata di quel livello (1–99, `giochi/fattoria/motore/tipo.js`); **butta quella del bambino attivo** nel cestino: si usa con un bambino di prova |
 | `#stagione=natale` | la fattoria a Natale (o `halloween`) fuori stagione |
+| `#eroe=mago&giu=3` | il sotterraneo con quell'eroe, già giù in quella discesa (l'indice della storia, o `abisso`): con gli altri cheat qui sotto una schermata si guarda senza camminare (`node strumenti/scatta-app.mjs 'sotterraneo=branco&mostri=6&eroe=mago&giu=1' --dist`) |
 | `#sotterraneo=roba` | si scende equipaggiati |
 | `#sotterraneo=branco&mostri=6` | si scende e si apre subito uno scontro con quei mostri attorno (`&grosso=ossuto`, `&agguato=1`, `&sorpresa=1`, `&tipo=goblin`) |
 | `#abisso=12` | l'abisso da quel piano |

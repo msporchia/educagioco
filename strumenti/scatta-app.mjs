@@ -10,13 +10,18 @@
      npx vite --port 5201 --strictPort &            # una porta tua
      node strumenti/scatta-app.mjs survivors --porta 5201
      node strumenti/scatta-app.mjs survivors --tocca ".carta.tappa" --attesa 900
+     node strumenti/scatta-app.mjs 'sotterraneo=branco&mostri=6' --dist   # il file costruito, senza server
+     node strumenti/scatta-app.mjs 'seme=7&stanza=sala' --dist --larghezza 320 --nome sala-stretta
+
+   `--dist` apre dist/index.html (o il percorso dopo, se c'è) invece del
+   server di Vite: è quello che provano i test, e non serve una porta.
 
    `--tocca` accetta più selettori separati da virgola: si toccano in
    fila, aspettando `--attesa` fra l'uno e l'altro. Un selettore che non
    c'è viene detto e non ferma lo scatto.
    ═══════════════════════════════════════════════════════════════════ */
 
-import { chromium } from 'playwright'
+import { apriBrowser, apriGioco } from '../test/aiuto/browser.mjs'
 import { existsSync, mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
@@ -31,29 +36,26 @@ const opz = (nome, difetto) => {
   return i >= 0 ? args[i + 1] : difetto
 }
 const dove = args.find(a => !a.startsWith('--') && args[args.indexOf(a) - 1]?.startsWith('--') !== true)
-if (!dove) { console.error('uso: node strumenti/scatta-app.mjs <schermata> [--porta 5173] [--tocca sel,sel] [--attesa 700]'); process.exit(1) }
+if (!dove) { console.error('uso: node strumenti/scatta-app.mjs <schermata> [--porta 5173 | --dist [index.html]] [--tocca sel,sel] [--attesa 700] [--larghezza 390] [--nome nome]'); process.exit(1) }
 
 const porta = opz('porta', '5173')
 const attesa = Number(opz('attesa', 700))
 const tocchi = (opz('tocca', '') || '').split(',').map(s => s.trim()).filter(Boolean)
 mkdirSync(SCATTI, { recursive: true })
-const esce = opz('file', resolve(SCATTI, `${dove}.png`))
+const nome = opz('nome', dove.replace(/[^\w=-]+/g, '_'))
+const esce = opz('file', resolve(SCATTI, `${nome}.png`))
+const conDist = args.includes('--dist')
+const dist = conDist && opz('dist', '') && !opz('dist', '').startsWith('--') ? resolve(opz('dist')) : resolve(QUI, '../dist/index.html')
+if (conDist && !existsSync(dist)) { console.error(`manca ${dist}: prima npm run build`); process.exit(1) }
+const larghezza = Number(opz('larghezza', TELEFONO.width))
 
-const exe = process.env.CHROME ||
-  ['/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'].find(p => existsSync(p))
-const browser = await chromium.launch(exe ? { executablePath: exe } : {})
-const page = await browser.newPage({ viewport: TELEFONO, deviceScaleFactor: 2, hasTouch: true })
-
-const errori = []
-page.on('pageerror', e => errori.push('errore JS: ' + e.message))
-page.on('console', m => {
-  if (m.type() !== 'error') return
-  const t = m.text()
-  if (t.includes('favicon') || t.includes('Failed to load resource')) return
-  errori.push('console: ' + t)
+// lo stesso browser e la stessa partenza dei test (un giocatore di prova, le spiegazioni già viste): senza, un
+// browser nuovo si ferma su «come ti chiami?»
+const browser = await apriBrowser()
+const { page, errori } = await apriGioco(browser, {
+  viewport: { ...TELEFONO, width: larghezza }, hash: dove, attesa: null,
+  indirizzo: conDist ? `file://${dist}` : `http://localhost:${porta}/`,
 })
-
-await page.goto(`http://localhost:${porta}/#${dove}`)
 await page.waitForTimeout(1200)                 // l'app aspetta il profilo
 
 for (const sel of tocchi) {

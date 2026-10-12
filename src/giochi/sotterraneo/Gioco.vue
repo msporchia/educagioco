@@ -958,10 +958,11 @@ function brancoDaProva(c) {
   c.scontro(fatti[0], { tocco: !!h.get('sorpresa') })
 }
 
-function avvia(i) {
-  // una discesa rossa non si scende: la guardia sta davanti all'ingresso (viste/Terra.vue, docs/sotterraneo/zone.md)
+function avvia(i, { prova = false } = {}) {
+  // una discesa rossa non si scende: la guardia sta davanti all'ingresso (viste/Terra.vue, docs/sotterraneo/zone.md).
+  // `prova`: il cheat `#giu=` scende lo stesso, per guardarla
   const z = tappe.value[i]
-  if (z && z.colore === 'rosso') return
+  if (!prova && z && z.colore === 'rosso') return
   togli()          // vedi `riprendiDiscesa`: si scende, non si scende in pausa
   scorda()
   tappaIdx.value = i
@@ -1446,7 +1447,19 @@ function seSparisce(e) {
 
 // rientrando con la discesa lasciata con la ✕ si nasce già giù: decisa qui, prima del primo disegno, perché la carta
 // della terra di sopra (che alla richiesta di «riprendi da qui» parte da sola) non faccia in tempo a nascere
-if (!scegliEroe.value) riprendiSeUscito()
+// `#eroe=mago` sceglie l'eroe e `#giu=3` scende subito in quella discesa (l'indice della storia, o `abisso`): con gli altri
+// cheat (`sotterraneo=branco`, `stanza=sala`, `seme=`) una schermata qualunque si guarda senza camminare (strumenti/scatta-app.mjs)
+function scesaDaProva() {
+  const h = new URLSearchParams(location.hash.slice(1))
+  const e = h.get('eroe')
+  if (e && EROI.some(x => x.chiave === e)) { chiEro.value = ricorda(CHIAVE, 'eroe', e); scegliEroe.value = false }
+  const g = h.get('giu')
+  if (g == null || corsa.value) return
+  const i = g === 'abisso' ? INDICE_ABISSO : Number(g)
+  if (i === INDICE_ABISSO || (Number.isInteger(i) && i >= 0 && i < CAMPAGNA.length)) avvia(i, { prova: true })
+}
+scesaDaProva()
+if (!scegliEroe.value && !corsa.value) riprendiSeUscito()
 
 onMounted(() => {
   if (corsa.value) nextTick(accendi)   // la tela esiste solo adesso
@@ -1482,7 +1495,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
                   :annuncio="annuncio" @sentito="annuncioSentito"
                   :missioni="missioni" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
-                  @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda" @bottega="apriBottega" />
+                  @gioca="i => avvia(i)" @riprendi="riprendiDiscesa" @scorda="scorda" @bottega="apriBottega" />
         <p v-if="detto" class="sot-avviso sot-avviso-sopra" data-detto-sopra>{{ detto }}</p>
         <!-- la stessa barra di giù (docs/sotterraneo/barra.md): sopra la vita è piena e la mappa grande non c'è -->
         <BarraDiSotto sopra :vita="barra.vita" :vita-max="barra.vitaMax" :livello="barra.livello"
