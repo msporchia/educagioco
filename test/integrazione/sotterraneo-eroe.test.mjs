@@ -237,7 +237,9 @@ for (let n = 0; n < 12 && (await page.locator('.sot-velo-scontro').count()); n++
   await attendi(page, 400)
   const t = page.locator('.sot-domanda .qz-tasto[data-giusta]')
   if (await t.count()) await t.first().click()
-  await attendi(page, 1200)
+  // il turno si racconta (docs/sotterraneo/scontro-interfaccia.md): si aspetta che la scelta torni, o che lo scontro sia finito
+  await page.waitForFunction(() => !document.querySelector('.sot-velo-scontro') || document.querySelector('[data-caselle-abilita][data-pronto]'), null, { timeout: 15000 })
+  await attendi(page, 200)
   if (await page.locator('[data-grosso]').count() && Number(await page.locator('[data-grosso]').getAttribute('data-ossa')) < ossa0) calata = true
 }
 controlla('rispondendo giusto la sua vita in cima cala (o cade al primo colpo)', calata || ossa0 <= 0 ||

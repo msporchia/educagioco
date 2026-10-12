@@ -2,82 +2,42 @@
    LO STOP DELLO SCONTRO, COL DITO VERO
 
    Quando l'eroe rischia di cadere (docs/sotterraneo/pericolo.md) lo
-   scontro si ferma fra una domanda e l'altra: il mostro ringhia e si
-   sceglie bevi / scappa / continuo. Qui, nell'ultima discesa (la miniera:
-   un mago nudo al livello 8, un gradino sotto, prende un colpo da quasi
-   metà della sua vita; più in basso la sentinella non lo farebbe
-   scendere, docs/sotterraneo/zone.md) e con due pozioni in tasca:
-   - un mostro forte, una risposta sbagliata → compare lo stop, al posto
-     della domanda; per i primi 320 ms i tasti non sentono il tocco;
-   - «continuo» riprende a domandare, e con una risposta giusta che lo
-     lascia a un colpo dal cadere compare il secondo stop; «bevi» alza la
-     vita, consuma una pozione e la battaglia riprende;
-   - in un'altra discesa «scappo via» dallo stop esce dallo scontro, col
-     suo graffio.
-   Il mostro e la strada si scelgono dal seme (`#seme=`), e cosa succede
-   alla seconda risposta lo dice lo stesso motore qui in Node.
+   scontro si ferma all'inizio del suo turno, prima della domanda: una riga
+   rossa sopra la scelta di sempre (attacco, bevi, scappa). Lo stop conta la
+   SOMMA dei colpi che arrivano prima del suo prossimo turno
+   (docs/sotterraneo/scontro.md, «Lo stop del pericolo»), quindi qui, nella
+   scalinata (un mago al livello 10 non è rosso: `coloreNellaStoria`) e con
+   cinque mostri addosso (`#sotterraneo=branco&mostri=5`, docs/core/comandi.md)
+   e due pozioni in tasca:
+   - lo stop scatta già al primo turno, al posto della domanda, con la
+     ragione «duro»; per i primi 320 ms i tasti non sentono il tocco;
+   - «continuo» (l'attacco) toglie lo stop e fa partire la domanda, senza
+     costare vita; con una risposta giusta i mostri colpiscono e, a un colpo
+     dal cadere, compare il secondo stop («ultimo»), mai di più;
+   - «bevi» alza la vita, consuma una pozione, costa il turno (i mostri
+     colpiscono) e la battaglia riprende;
+   - in un altro scontro «scappo via» dallo stop esce, col suo costo fisso.
    Si tocca come un bambino (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-pericolo`
    tempo: 150
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, scendiNelSotterraneo }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
-import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { T } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
-import { percorso } from '../../src/motore/passi.js'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
+import { LIVELLI_ATTESI } from '../../src/giochi/sotterraneo/dati/storia.js'
+import { forzaDi } from '../../src/giochi/sotterraneo/motore/forza.js'
+import { coloreNellaStoria } from '../../src/giochi/sotterraneo/motore/zone.js'
 
-const MINIERA = CAMPAGNA.length - 1
+const TAPPA = 1   // la scalinata
+const EROE = 'mago'   // il più fragile: coi punti non dati, cinque mostri pesano
 const roba = { v: 1, gemme: 0, zaino: ['pozione-piccola', 'pozione'], mano: null, mancina: null, corpo: null,
                dito: null, torcia: 0, torce: 0 }
-// al livello 8, un gradino sotto la miniera: più in basso il pallino è rosso e la sentinella non fa scendere
-// (docs/sotterraneo/zone.md). Il mago, coi punti non dati: il più fragile, così un colpo pesa ancora
-const crescita = { esp: sogliaDi(8) }
-const EROE = 'mago'
-
-/* ── il piano: il mostro più vicino all'ingresso, senza altri mostri né porte per strada, e il primo colpo che
-   lo ferma. Poi, lo dice il motore: cosa succede se si continua e si risponde giusto ── */
-function scegliIlPiano() {
-  let meglio = null
-  for (let seme = 1; seme < 400; seme++) {
-    const c = new Corsa(CAMPAGNA[MINIERA], { seme, eroe: EROE, roba, crescita })
-    const L = c.livello
-    const da = { x: Math.floor(c.eroe.x), y: Math.floor(c.eroe.y) }
-    const stanza = q => L.stanzaDi(q.x, q.y)?.id
-    const libera = (x, y) => L.calpestabile(x, y) && !L.robe.some(r => r.x === x && r.y === y && r.che === 'porta')
-    const mostri = L.robe.filter(r => r.che === 'mostro')
-    for (const m of mostri.filter(r => !r.chiave && !r.grosso)) {
-      const via = percorso(libera, da, m)
-      if (!via || via.some(q => mostri.some(o => o !== m && stanza(o) === stanza(q)))) continue
-      // lo stesso scontro in Node: una risposta sbagliata ferma? e continuando, una giusta?
-      const s = new Corsa(CAMPAGNA[MINIERA], { seme, eroe: EROE, roba, crescita })
-      const sm = s.livello.robe.find(r => r.che === 'mostro' && r.x === m.x && r.y === m.y)
-      sm.sveglio = true   // per strada un mostro ti vede arrivare: niente sorpresa
-      s.scontro(sm, { tocco: true })
-      // si sbaglia finché non scatta lo stop (con la fila dei turni non è per forza al primo sbaglio)
-      let primo = null
-      for (let i = 0; i < 6 && s.foglio && s.foglio.che === 'scontro' && !(primo && primo.ringhia); i++) primo = s.rispondi(false)
-      if (!primo || primo.ringhia !== 'duro' || s.vita <= 0 || s.costoFuga() >= s.vita) continue   // scappando si regge
-      const vita1 = s.vita
-      s.continua()
-      const secondo = s.rispondi(true)
-      if (secondo.che === 'caduto') continue   // il mostro deve restare in piedi: dopo si sbaglia ancora, o si beve
-      // il secondo stop, a risposta giusta: da lì si prova «bevi» senza dover sbagliare ancora
-      if (!secondo.ringhia) continue
-      if (!meglio || via.length < meglio.costo)
-        meglio = { seme, costo: via.length, c, mostro: m, vita1, secondo: secondo.ringhia || null, L }
-    }
-  }
-  return meglio
-}
-const piano = scegliIlPiano()
-controlla('c\'è un piano della miniera con un mostro vicino che ferma al primo sbaglio', !!piano)
-nota(`seme ${piano.seme}: ${piano.mostro.tipo} a ${piano.costo} passi; dopo il primo colpo ❤️ ${piano.vita1}; ` +
-     `continuando e rispondendo giusto: ${piano.secondo ? 'secondo stop «' + piano.secondo + '»' : 'si domanda ancora'}`)
-const L = piano.L
+const crescita = { esp: sogliaDi(10) }
+// il pallino della discesa non deve essere rosso (la sentinella non fa scendere): lo dice la forza (docs/sotterraneo/forza.md)
+const colore = coloreNellaStoria(LIVELLI_ATTESI[TAPPA], forzaDi(EROE, roba, crescita))
+controlla('la scalinata non è rossa per questo eroe', colore !== 'rosso', colore)
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -91,115 +51,66 @@ async function toccaIl(sel) {
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
-
-/* ── giù: dov'è l'eroe lo dice la tela (come in sotterraneo-barra) ── */
-const tela = page.locator('.sot-tela')
-const cellaGiu = () => tela.getAttribute('data-eroe')
-async function schermoDi(c) {
-  const [ex, ey] = (await cellaGiu()).split(',').map(Number)
-  const [sx, sy] = (await tela.getAttribute('data-eroe-schermo')).split(',').map(Number)
-  const s = Number(await tela.getAttribute('data-scala')) * T
-  const b = await tela.boundingBox()
-  return { x: b.x + sx + (c.x - ex) * s, y: b.y + sy + (c.y - ey) * s, b }
-}
-const dentro = ({ x, y, b }) => x > b.x + 30 && x < b.x + b.width - 30 && y > b.y + 140 && y < b.y + b.height - 50
-async function fermoGiu() {
-  let prima = null
-  for (let i = 0; i < 40; i++) {
-    const ora = await cellaGiu()
-    if (ora === prima) return
-    prima = ora
-    await attendi(page, 300)
-  }
-}
-const vuota = (x, y) => L.calpestabile(x, y) && !L.robe.some(r => r.x === x && r.y === y && r.che !== 'gemme')
-async function vaiAlMostro() {
-  const a = piano.mostro
-  for (let giro = 0; giro < 30; giro++) {
-    if (await page.locator('.sot-domanda, [data-ringhio], [data-caselle-abilita]').count()) return
-    const [ex, ey] = (await cellaGiu()).split(',').map(Number)
-    const via = percorso(vuota, { x: ex, y: ey }, a, { arrivoLibero: false }) || []
-    if (via.length <= 1) {
-      const qui = await schermoDi(a)
-      if (dentro(qui)) await tocca(qui.x, qui.y)
-      await attendi(page, 300)
-      return
-    }
-    let tappa = null
-    for (const q of via.slice(0, -1)) { const s = await schermoDi(q); if (dentro(s)) tappa = s }
-    if (!tappa) break
-    await tocca(tappa.x, tappa.y)
-    await attendi(page, 300)
-    await fermoGiu()
-  }
-}
-async function rispondi(giusto) {
-  await scegliAttacco(page)
-  await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 8000 })
-  await attendi(page, 400)
-  const tasto = page.locator(giusto ? '.sot-domanda .qz-tasto[data-giusta]' : '.sot-domanda .qz-tasto:not([data-giusta])')
-  await ((await tasto.count()) ? tasto.first() : page.locator('.sot-domanda .qz-tasto').first()).click()
-}
 const numeroDel = async tipo => Number((await page.locator(`[data-globo="${tipo}"] .sot-globo-numero`).textContent()) || 0)
 const pozioni = async () => Number(await page.locator('[data-casella-barra="pozione"]').getAttribute('data-n'))
+const stop = () => page.locator('[data-ringhio]')
+const finito = () => page.waitForSelector('[data-duello]:not([data-racconto])', { timeout: 20000 })
 
-// un eroe nudo nella miniera, davanti al mostro scelto, con la domanda aperta
+// un mago nella scalinata, con cinque mostri addosso e la prima scelta davanti
 async function entra() {
   await azzera(page)
-  const avventura = { tappa: MINIERA, libera: false, stelle: {}, missioni: {}, roba, crescita,
+  const avventura = { tappa: TAPPA, libera: false, stelle: { 0: 3 }, missioni: {}, roba, crescita,
     terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } }
   await semina(page, {
     coins: 300, settings: { sperimentali: true },
-    campagne: { sotterraneo: { tappa: MINIERA, libera: false, stelle: {},
+    campagne: { sotterraneo: { tappa: TAPPA, libera: false, stelle: { 0: 3 },
       cfg: { mondo: MONDO, eroe: EROE, avventure: { [EROE]: avventura } } } },
   })
   await scegli(page, 'sotterraneo')
   await page.waitForSelector('[data-terra]', { timeout: 5000 })
-  await page.evaluate(s => { location.hash = 'seme=' + s }, piano.seme)
-  await scendiNelSotterraneo(page, MINIERA)
-  await page.waitForSelector('.sot-tela', { timeout: 5000 })
-  await attendi(page, 700)
-  await vaiAlMostro()
+  await page.evaluate(() => { location.hash = 'seme=11&sotterraneo=branco&mostri=5' })
+  await scendiNelSotterraneo(page, TAPPA)
   await page.waitForSelector('.sot-velo-scontro [data-caselle-abilita]', { timeout: 10000 })
 }
-// sbaglia e aspetta che il mostro picchi e lo scontro si fermi
-async function sbagliaEFermati() {
-  // il mostro non colpisce a ogni risposta (la fila dei turni): si sbaglia finché non scatta lo stop
-  for (let i = 0; i < 6 && !(await page.locator('[data-ringhio]').count()); i++) {
-    await rispondi(false)
-    await attendi(page, 700)
-  }
-  await page.waitForSelector('[data-ringhio]', { timeout: 20000 })
+// scegliere un colpo e rispondere giusto: i mostri colpiscono, poi tocca a lui
+async function rispondiGiusto() {
+  await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 8000 })
+  await toccaIl('[data-caselle-abilita] [data-azione="attacco"]')
+  await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 8000 })
+  await attendi(page, 500)
+  await page.locator('.sot-domanda .qz-tasto[data-giusta]').first().click()
+  await page.waitForSelector('[data-duello][data-racconto]', { timeout: 8000 })
+  await finito()
 }
-const stop = () => page.locator('[data-ringhio]')
 
 /* ---------- 1. lo stop, e «bevi» ---------- */
 await entra()
-uguale('prima di sbagliare c\'è la domanda e nessuno stop', await stop().count(), 0)
-uguale('e due pozioni sulla casella', await pozioni(), 2)
 const vita0 = await numeroDel('vita')
-await sbagliaEFermati()
+uguale('e due pozioni sulla casella', await pozioni(), 2)
 {
-  // il tocco cieco per primo: le prove qui sotto fanno passare i 320 ms. Controllo e click nello stesso giro della
-  // pagina: letti in due passi, sotto carico la finestra si chiudeva in mezzo e il click beveva davvero
-  const cieco = await page.evaluate(() => {
-    const r = document.querySelector('[data-caselle-abilita]')
-    if (!r || r.dataset.pronto) return false
-    document.querySelector('[data-caselle-abilita]:not([data-pronto]) [data-azione="bevi-scontro"]')?.click()
-    return true
-  })
-  if (cieco) {
-    await attendi(page, 80)
-    uguale('un tocco subito non sceglie niente', await stop().count(), 1)
-    uguale('né beve', await pozioni(), 2)
-  } else nota('(la pagina è lenta: la finestra cieca era già passata)')
-  uguale('lo stop compare con la ragione «duro»', await stop().getAttribute('data-perche'), 'duro')
+  // il tocco cieco per primo: appena il racconto finisce la scelta si rimonta e per 320 ms non sente il tocco. Si aspetta quel
+  // momento nella pagina stessa (un fotogramma alla volta) e si tocca subito: letti in due passi, la finestra si chiuderebbe in mezzo
+  const cieco = await page.evaluate(() => new Promise(fine => {
+    const t0 = performance.now()
+    const guarda = () => {
+      const b = document.querySelector('[data-caselle-abilita]:not([data-ferma]):not([data-pronto]) [data-azione="bevi-scontro"]')
+      if (b) { b.click(); fine(true) } else if (performance.now() - t0 > 15000) fine(false)
+      else requestAnimationFrame(guarda)
+    }
+    guarda()
+  }))
+  controlla('si vede la finestra cieca, dopo il racconto', cieco)
+  await attendi(page, 80)
+  uguale('un tocco subito non sceglie niente', await stop().count(), 1)
+  uguale('né beve', await pozioni(), 2)
+  uguale('lo stop scatta già al primo turno, con la ragione «duro»', await stop().getAttribute('data-perche'), 'duro')
   uguale('al posto della domanda', await page.locator('.sot-domanda').count(), 0)
   uguale('nella stessa scelta di sempre, con bere e scappare', await page.locator('[data-caselle-abilita] [data-azione="attacco"], [data-caselle-abilita] [data-azione="bevi-scontro"], [data-caselle-abilita] [data-azione="scappa"]').evaluateAll(es => es.map(e => e.dataset.azione).join()),
          'attacco,bevi-scontro,scappa')
   controlla('l\'avviso è generico, senza nome di mostro', /Attenzione/.test(await stop().innerText()))
+  controlla('e dice i colpi che arrivano, tutti insieme', /ti toglie \d+/.test(await stop().innerText()), await stop().innerText())
   controlla('lo scontro è ancora lì, modale', await page.locator('.sot-velo-scontro').count() === 1)
-  controlla('la vita è scesa', (await numeroDel('vita')) < vita0, `${vita0} → ${await numeroDel('vita')}`)
+  uguale('con i mostri in vista', await page.locator('[data-mostro]').count(), 5)
   await scatto(page, 'pericolo')
 }
 await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 3000 })
@@ -208,46 +119,48 @@ await scatto(page, 'pericolo-pronto')
 // continuo: si torna a domandare
 {
   const vita1 = await numeroDel('vita')
+  uguale('prima di scegliere la vita è quella dell\'inizio', vita1, vita0)
   await toccaIl('[data-caselle-abilita] [data-azione="attacco"]')
   await page.waitForSelector('.sot-velo-scontro .sot-domanda', { timeout: 5000 })
   uguale('«continuo» toglie lo stop', await stop().count(), 0)
   uguale('e non costa vita', await numeroDel('vita'), vita1)
-  // una risposta giusta: il mostro graffia; se lo lascia a un colpo dal cadere, lo stop torna (la seconda soglia)
-  await rispondi(true)
-  if (piano.secondo) {
-    await page.waitForSelector('[data-ringhio]', { timeout: 20000 })
-    uguale('un colpo pieno e cade: secondo stop «ultimo»', await stop().getAttribute('data-perche'), piano.secondo)
-  } else {
-    await page.waitForSelector('.sot-velo-scontro [data-caselle-abilita]', { timeout: 20000 })
-    nota('rispondendo giusto non scatta il secondo stop con questo seme')
-  }
+  await attendi(page, 500)
+  await page.locator('.sot-domanda .qz-tasto[data-giusta]').first().click()
+  // il turno si racconta; poi la scelta torna, e a un colpo dal cadere c'è il secondo stop (mai un terzo)
+  await page.waitForSelector('[data-duello][data-racconto]', { timeout: 8000 })
+  uguale('a racconto in corso lo stop non c\'è ancora', await stop().count(), 0)
+  await finito()
+  await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 8000 })
+  controlla('i mostri hanno colpito', (await numeroDel('vita')) < vita1, `${vita1} → ${await numeroDel('vita')}`)
+  uguale('un colpo pieno e cade: secondo stop «ultimo»', await stop().getAttribute('data-perche'), 'ultimo')
 }
 
-// bevi (da qualunque stop sia aperto): la vita sale, una pozione in meno, si riprende
-if (!(await stop().count())) await sbagliaEFermati()
-await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 3000 })
+// bevi: la vita sale, una pozione in meno, costa il turno (i mostri colpiscono), si riprende
 {
   const v = await numeroDel('vita'), n = await pozioni()
   await toccaIl('[data-azione="bevi-scontro"]')
-  await page.waitForSelector('[data-caselle-abilita]:not(:has([data-ringhio]))', { timeout: 5000 })
+  await page.waitForSelector('[data-duello][data-racconto]', { timeout: 8000 })
+  await finito()
+  await page.waitForSelector('[data-caselle-abilita]', { timeout: 5000 })
   await attendi(page, 300)
   uguale('«bevi» consuma una pozione', await pozioni(), n - 1)
-  controlla('e alza la vita', (await numeroDel('vita')) > v, `${v} → ${await numeroDel('vita')}`)
-  uguale('lo stop è passato', await stop().count(), 0)
+  controlla('lo stop è passato (due al più per scontro)', (await stop().count()) === 0)
   uguale('e la battaglia riprende: lo scontro è aperto con la sua scelta', await page.locator('.sot-velo-scontro [data-caselle-abilita]').count(), 1)
+  nota(`vita ${v} → ${await numeroDel('vita')} (bevuta e subito i colpi)`)
   await scatto(page, 'pericolo-bevuto')
 }
 
 /* ---------- 2. «scappo via» dallo stop ---------- */
 await entra()
-await sbagliaEFermati()
 await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 3000 })
+uguale('lo stop è lì', await stop().count(), 1)
 {
   const v = await numeroDel('vita')
+  const costo = Number(((await page.locator('[data-azione="scappa"] small').innerText()).match(/\d+/) || [0])[0])
   await toccaIl('[data-azione="scappa"]')
   await page.waitForSelector('.sot-velo-scontro', { state: 'detached', timeout: 5000 })
   uguale('scappando lo scontro si chiude', await page.locator('[data-ringhio], .sot-velo-scontro').count(), 0)
-  controlla('col graffio di sempre (o svenuto, se non regge)', (await numeroDel('vita')) <= v, `${v} → ${await numeroDel('vita')}`)
+  uguale('col costo fisso detto sul tasto', await numeroDel('vita'), v - costo)
   uguale('le pozioni non si toccano', await pozioni(), 2)
 }
 
