@@ -9,7 +9,7 @@
 import { COSE, chiaveDelPezzo, aLivello, baseDi, livelloDelPezzo, raritaDi, nomeDelPezzo, guastiDelleCose } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { RARITA, ABILITA_DEI_PEZZI, LEGGENDARI, DEI_GROSSI, UNICI, TINTE_DELLE_ABILITA } from '../../src/giochi/sotterraneo/dati/pezzi.js'
 import { ASPETTI } from '../../src/giochi/sotterraneo/dati/aspetti.js'
-import { GROSSI, GROSSO_DELLA_DISCESA, GROSSO_OGNI, grossoDi, guastiDeiGrossi } from '../../src/giochi/sotterraneo/dati/grossi.js'
+import { GROSSI, GROSSO_DELLA_DISCESA, GROSSO_OGNI, grossoDi, guastiDeiGrossi, figuraDelGrosso, spriteDelGrosso, LATO_DEL_GROSSO } from '../../src/giochi/sotterraneo/dati/grossi.js'
 import { CAMPAGNA, L_ABISSO } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { pezzoNuovo, pescaRarita, pescaAbilita, pezzoDelGrosso, guastiDelBottino, livelloDelBottino }
   from '../../src/giochi/sotterraneo/motore/bottino.js'
@@ -20,7 +20,8 @@ import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { ABILITA_CONFRONTATE } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { ABILITA } from '../../src/giochi/sotterraneo/viste/pezzo.js'
-import { righeDelGrosso, LATO, TAVOLOZZE } from '../../src/giochi/sotterraneo/scena/grossi.js'
+import { PEZZI } from '../../src/giochi/sotterraneo/dati/atlante.js'
+import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { readFileSync } from 'node:fs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -148,12 +149,24 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   }
   uguale('il pezzo di Grumo è la sua mazza, col nome', COSE[pezzoDelGrosso('mazza-di-grumo', 3)].nome, 'Mazza di Grumo')
   controlla('i pezzi dei grossi li porta chiunque', Object.values(DEI_GROSSI).every(u => !COSE[u.base].famiglia))
-  // la figura: due caselle per due, coi suoi colori
+  // la figura: lo sprite della sua specie ingrandito a coprire due caselle di altezza (con la corona), a meno che l'atlante
+  // abbia il suo dipinto (`grosso-<chiave>-fermo-0`), che prende il posto del ripiego da solo
   for (const [k, x] of Object.entries(GROSSI)) {
-    const righe = righeDelGrosso(x.disegno, x.colori)
-    controlla(`${k}: una figura di ${LATO}×${LATO}`, righe.length === LATO && righe.every(r => r.length === LATO))
-    controlla(`${k}: ogni lettera ha il suo colore`, righe.join('').split('').every(ch => ch === '.' || TAVOLOZZE[x.colori][ch]))
+    const f = figuraDelGrosso(k)
+    controlla(`${k}: ha una figura`, !!f)
+    uguale(`${k}: senza dipinto, è lo sprite della sua specie`, f.sprite, MOSTRI[x.tipo].sprite)
+    controlla(`${k}: ingrandito a coprire le sue due caselle`, f.alto * f.k >= LATO_DEL_GROSSO - 0.01 && f.k > 1.2, `${f.alto} × ${f.k}`)
+    controlla(`${k}: e il suo fotogramma c'è nell'atlante`, !!PEZZI[spriteDelGrosso(f, false)] && !!PEZZI[spriteDelGrosso(f, true, 3)])
+    controlla(`${k}: la tinta è un colore`, /^#[0-9a-f]{6}$/i.test(x.tinta))
   }
+  // il dipinto vince: una chiave `grosso-ossuto-fermo-0` nell'atlante lo prende al posto del ripiego, a misura vera e senza corona
+  PEZZI['grosso-ossuto-fermo-0'] = [0, 0, 32, 32]
+  try {
+    const d = figuraDelGrosso('ossuto')
+    controlla('con il suo dipinto nell\'atlante, ossuto usa quello', d.dipinto && d.sprite === 'grosso-ossuto' && d.k === 1, JSON.stringify(d))
+    uguale('e il fotogramma è il suo', spriteDelGrosso(d, true, 5), 'grosso-ossuto-fermo-0')
+    controlla('gli altri restano al ripiego', !figuraDelGrosso('grumo').dipinto)
+  } finally { delete PEZZI['grosso-ossuto-fermo-0'] }
 }
 
 /* ══════════ 7. i leggendari ══════════ */

@@ -1,26 +1,28 @@
 // I mostri grossi: uno in fondo a ogni discesa della storia, uno ogni GROSSO_OGNI piani nell'abisso
 // (docs/sotterraneo/grossi.md). Il nome è suo, sta nella stanza della scala e ne porta la chiave, e quando cade
-// lascia di sicuro un pezzo raro o meglio più il suo pezzo col nome (dati/pezzi.js, DEI_GROSSI). Dato puro: come
-// si disegna (in codice, 2×2 caselle) sta in scena/grossi.js.
+// lascia di sicuro un pezzo raro o meglio più il suo pezzo col nome (dati/pezzi.js, DEI_GROSSI). Come si vede:
+// `figuraDelGrosso` più sotto (lo sprite della sua specie ingrandito con la corona, finché non c'è quello dipinto).
 // `tipo`: il mostro del bestiario su cui si regge (dati/mostri.js): ossa e attacco di partenza, il rincaro della
-// domanda; `ossa` moltiplica le sue ossa, `att` aggiunge al suo attacco. `disegno` e `colori` dicono la figura.
+// domanda e lo sprite di ripiego; `ossa` moltiplica le sue ossa, `att` aggiunge al suo attacco. `tinta`: il colore
+// del chiarore che gli sta intorno, per distinguere due grossi della stessa specie (Re Ossuto e Carbonchio).
 import { MOSTRI } from './mostri.js'
 import { DEI_GROSSI } from './pezzi.js'
+import { PEZZI } from './atlante.js'
 
 export const GROSSI = {
-  ossuto: { nome: 'Re Ossuto', tipo: 'scheletro', ossa: 1.15, att: 0, disegno: 'scheletro', colori: 'osso',
+  ossuto: { nome: 'Re Ossuto', tipo: 'scheletro', ossa: 1.15, att: 0, tinta: '#e8dcc0',
             pezzo: 'ciondolo-di-ossuto', dice: 'Il re delle ossa vecchie. Scricchiola, ma picchia.' },
-  grumo: { nome: 'Grumo', tipo: 'orco', ossa: 1.25, att: 1, disegno: 'bruto', colori: 'verde',
+  grumo: { nome: 'Grumo', tipo: 'orco', ossa: 1.25, att: 1, tinta: '#7fd16a',
            pezzo: 'mazza-di-grumo', dice: 'Un orco grosso come una porta, con la sua mazza preferita.' },
-  fiammetta: { nome: 'Fiammetta', tipo: 'troll', ossa: 1.1, att: 1, disegno: 'melma', colori: 'fuoco',
+  fiammetta: { nome: 'Fiammetta', tipo: 'troll', ossa: 1.1, att: 1, tinta: '#ff8a3c',
                pezzo: 'scudo-di-fiammetta', dice: 'Una melma di fuoco: dove passa, i sassi fumano.' },
-  zannaverde: { nome: 'Zannaverde', tipo: 'orco', ossa: 1.3, att: 1, disegno: 'ragno', colori: 'ragno',
+  zannaverde: { nome: 'Zannaverde', tipo: 'orco', ossa: 1.3, att: 1, tinta: '#9cff4a',
                 pezzo: 'anello-di-zannaverde', dice: 'Un ragno lungo come un carro, con otto zampe e otto occhi.' },
-  gorgo: { nome: 'Gorgo', tipo: 'gigante', ossa: 1.15, att: 1, disegno: 'melma', colori: 'acqua',
+  gorgo: { nome: 'Gorgo', tipo: 'gigante', ossa: 1.15, att: 1, tinta: '#5aa8ff',
            pezzo: 'amuleto-di-gorgo', dice: 'Una melma d\'acqua nera che non smette di gorgogliare.' },
-  minotto: { nome: 'Minotto', tipo: 'troll', ossa: 1.1, att: 1, disegno: 'bruto', colori: 'corna',
+  minotto: { nome: 'Minotto', tipo: 'troll', ossa: 1.1, att: 1, tinta: '#d49a55',
              pezzo: 'giubbone-di-minotto', dice: 'Ha le corna, e la botola è casa sua.' },
-  carbonchio: { nome: 'Carbonchio', tipo: 'gigante', ossa: 1.1, att: 1, disegno: 'scheletro', colori: 'brace',
+  carbonchio: { nome: 'Carbonchio', tipo: 'gigante', ossa: 1.1, att: 1, tinta: '#ff5a1c',
                 pezzo: 'martello-di-carbonchio', dice: 'Il re di brace della miniera: le sue ossa sono carbone acceso.' },
 }
 
@@ -44,6 +46,31 @@ export function grossoDi(tappa, piano) {
   return piano >= tappa.piani - 1 ? GROSSO_DELLA_DISCESA[tappa.chiave] || null : null
 }
 
+// Come si vede un mostro grosso (docs/sotterraneo/grossi.md, «Come si vede»). Se l'atlante ha il suo sprite dipinto
+// (`grosso-<chiave>-fermo-0`, come `armaiolo-fermo-0` per i mercanti) si usa quello, a misura vera: 32×32 pixel di
+// gioco, due caselle per due. Se no, il ripiego: lo sprite del bestiario della sua specie, ingrandito a coprire due
+// caselle di altezza (almeno ×1,3, o un gigante già alto resterebbe com'è) e con la corona sopra la testa.
+// Torna { sprite, dipinto, alto, k, unaPosa } (`alto`: l'altezza dello sprite in pixel, `k` il suo ingrandimento) o null.
+export const LATO_DEL_GROSSO = 32
+export function figuraDelGrosso(chiave) {
+  const G = GROSSI[chiave]
+  if (!G) return null
+  const dipinto = `grosso-${chiave}`
+  if (PEZZI[`${dipinto}-fermo-0`]) return { sprite: dipinto, dipinto: true, alto: PEZZI[`${dipinto}-fermo-0`][3], k: 1, unaPosa: false }
+  const scheda = MOSTRI[G.tipo]
+  const p = scheda && PEZZI[`${scheda.sprite}-fermo-0`]
+  if (!p) return null
+  return { sprite: scheda.sprite, dipinto: false, alto: p[3], k: Math.max(1.3, LATO_DEL_GROSSO / p[3]), unaPosa: !!scheda.unaPosa }
+}
+
+// il nome del fotogramma da posare: da sveglio la corsa (se la sua specie ce l'ha), da addormentato il fermo; `fr` gira sui fotogrammi che ci sono
+export function spriteDelGrosso(f, sveglio, fr = 0) {
+  const posa = sveglio && !f.unaPosa && PEZZI[`${f.sprite}-corsa-0`] ? 'corsa' : 'fermo'
+  let n = 0
+  while (n < 4 && PEZZI[`${f.sprite}-${posa}-${n}`]) n++
+  return `${f.sprite}-${posa}-${n ? fr % n : 0}`
+}
+
 export function guastiDeiGrossi(campagna = []) {
   const g = []
   for (const [k, x] of Object.entries(GROSSI)) {
@@ -51,7 +78,8 @@ export function guastiDeiGrossi(campagna = []) {
     if (!MOSTRI[x.tipo]) g.push(`${k}: si regge su "${x.tipo}", che non è nel bestiario`)
     if (!DEI_GROSSI[x.pezzo]) g.push(`${k}: il suo pezzo "${x.pezzo}" non c'è`)
     if (!(x.ossa >= 1 && x.ossa <= 3)) g.push(`${k}: ossa ×${x.ossa}, fuori da 1..3`)
-    if (!['bruto', 'scheletro', 'ragno', 'melma'].includes(x.disegno)) g.push(`${k}: il disegno "${x.disegno}" non c'è`)
+    if (!/^#[0-9a-f]{6}$/i.test(x.tinta || '')) g.push(`${k}: la tinta "${x.tinta}" non è un colore #rrggbb`)
+    if (!figuraDelGrosso(k)) g.push(`${k}: lo sprite di "${x.tipo}" non è nell'atlante`)
   }
   for (const t of campagna) if (!GROSSI[GROSSO_DELLA_DISCESA[t.chiave]]) g.push(`${t.chiave}: in fondo non c'è nessun mostro grosso`)
   for (const k of GIRO_DELL_ABISSO) if (!GROSSI[k]) g.push(`l'abisso chiama "${k}", che non c'è`)

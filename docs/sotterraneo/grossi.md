@@ -8,21 +8,21 @@ migliore più il suo pezzo col nome. Richiesta dell'utente dell'8 ottobre
 
 Il codice: `dati/grossi.js` (chi sono, dove stanno, quanto sono grossi),
 `motore/livello.js` (`mostroGrosso`: lo mette al posto del guardiano),
-`motore/corsa.js` (`cade`: il bottino), `scena/grossi.js` (la figura
-disegnata in codice), `scena/tela.js` (`grosso`), `viste/Grosso.vue` (la
-figura nello scontro e nella barra in cima).
+`motore/corsa.js` (`cade`: il bottino), `figuraDelGrosso` in `dati/grossi.js`
+(quale sprite), `scena/tela.js` (`grosso`), `viste/Grosso.vue` (la figura
+nello scontro e nella barra in cima).
 
 ## Chi sono
 
-| discesa | mostro grosso | disegno | lascia |
-|---|---|---|---|
-| la cripta dell'altare | Re Ossuto | il re scheletro col mantello e la corona | il Ciondolo di Re Ossuto (difesa, vita) |
-| la scalinata antica | Grumo | l'orco con la mazza alzata | la Mazza di Grumo (vita, rigenera) |
-| la torre in rovina | Fiammetta | la melma di fuoco | lo Scudo di Fiammetta (difesa, torcia, vita) |
-| la grotta della scaletta | Zannaverde | il ragno con otto occhi | l'Anello di Zannaverde (schivata, fortuna) |
-| la scala sommersa | Gorgo | la melma d'acqua nera | l'Amuleto di Gorgo (rigenera, vita, pozioni) |
-| la botola segreta | Minotto | il bruto con le corna | il Giubbone di Minotto (difesa, vita, rigenera) |
-| la miniera abbandonata | Carbonchio | il re scheletro di brace | il Martello di Carbonchio (attacco, fuoco) |
+| discesa | mostro grosso | com'è (da dipingere) | sprite di ripiego | lascia |
+|---|---|---|---|---|
+| la cripta dell'altare | Re Ossuto | il re scheletro col mantello e la corona | `scheletro` | il Ciondolo di Re Ossuto (difesa, vita) |
+| la scalinata antica | Grumo | l'orco con la mazza alzata | `orco` | la Mazza di Grumo (vita, rigenera) |
+| la torre in rovina | Fiammetta | la melma di fuoco | `troll` | lo Scudo di Fiammetta (difesa, torcia, vita) |
+| la grotta della scaletta | Zannaverde | il ragno con otto occhi | `orco` | l'Anello di Zannaverde (schivata, fortuna) |
+| la scala sommersa | Gorgo | la melma d'acqua nera | `mostro-grosso` (il gigante) | l'Amuleto di Gorgo (rigenera, vita, pozioni) |
+| la botola segreta | Minotto | il bruto con le corna | `troll` | il Giubbone di Minotto (difesa, vita, rigenera) |
+| la miniera abbandonata | Carbonchio | il re scheletro di brace | `mostro-grosso` (il gigante) | il Martello di Carbonchio (attacco, fuoco) |
 
 - **Si regge su un mostro del bestiario** (`tipo`: lo scheletro, l'orco, il
   troll, il gigante) con le ossa moltiplicate (`ossa`: da 1,1 a 1,3) e un
@@ -58,13 +58,24 @@ figura nello scontro e nella barra in cima).
 
 ## Come si vede
 
-- **La figura è disegnata in codice** (`scena/grossi.js`): 32×32 pixel, due
-  caselle per due, fatta di ovali, rettangoli e linee su una griglia e poi
-  contornata di scuro come gli sprite del bestiario. Quattro disegni (il
-  bruto, il re scheletro, il ragno, la melma) e sette tavolozze. Sulla tela
-  respira (più svelto da sveglio), guarda verso l'eroe, ha l'alone rosso più
-  largo, il nome sopra la testa quando è in luce, la chiave, il sonno e la
-  barretta come gli altri. Si fa dipingere dopo, quando piace: la scheda
+- **Lo sprite della sua specie, ingrandito, con la corona** (`figuraDelGrosso`
+  in `dati/grossi.js`; l'utente, 12 ottobre 2026: i boss li fa dipingere
+  ChatGPT, perché lo stile resti lo stesso del bestiario, e finché non ci sono
+  si prende uno sprite che c'è già, ingrandito e con la corona). `tipo` dice
+  quale: lo sprite `fermo`/`corsa` di quella specie a coprire due caselle di
+  altezza (almeno ×1,3: un gigante già alto non resterebbe com'è), la corona
+  👑 sopra la testa (quella del bersaglio di una missione, più grande) e un
+  chiarore della sua `tinta` dietro, che distingue Re Ossuto da Carbonchio.
+  Sulla tela respira (più svelto da sveglio), guarda verso l'eroe, ha l'alone
+  rosso più largo, il nome sopra la corona quando è in luce, la chiave, il sonno
+  e la barretta come gli altri; nello scontro e in cima è lo stesso sprite, a
+  scala intera, con la stessa corona (`viste/Grosso.vue`). La figura
+  disegnata in codice (`scena/grossi.js`, 32×32) è stata tolta: non serve più,
+  e un boss dipinto da chi non è il modello avrebbe cambiato stile.
+- **L'immagine dipinta prende il posto da sola**: se l'atlante ha
+  `grosso-<chiave>-fermo-0` (come `armaiolo-fermo-0` per i mercanti) si usa
+  quella, a misura vera (32×32), senza corona né ingrandimento; se no il
+  ripiego. I prompt, uno per volta e nell'ordine della tabella:
   `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-grossi.md`.
 - **La sua vita in cima allo schermo** (`[data-grosso]` in `Gioco.vue`): da
   quando si sveglia (si entra nella sua stanza) e mentre lo si combatte, con
@@ -89,9 +100,10 @@ figura nello scontro e nella barra in cima).
 Nei test: `unita/sotterraneo-rarita` (in fondo a ogni discesa il suo mostro
 grosso, nella stanza della scala, con la chiave e il nome, più grosso del
 suo simile; battuto lascia il suo pezzo e un raro o meglio; nell'abisso ogni
-cinque piani; la figura è 32×32 e ogni lettera ha il suo colore),
+cinque piani; la figura è lo sprite della sua specie ingrandito a due caselle,
+o la chiave d'atlante dipinta se c'è, e ogni tinta è un colore),
 `unita/sotterraneo-storia` (in fondo alla discesa la chiave ce l'ha il
 grosso), `integrazione/sotterraneo-eroe` (col dito: Re Ossuto con la sua
-vita in cima e la sua figura nello scontro, battuto la vita in cima se ne
-va). La barra in cima `[data-grosso]` con `data-chi` e `data-ossa`; la
-figura `[data-figura-grosso]`.
+vita in cima e la sua figura nello scontro con la corona `.sot-corona`,
+battuto la vita in cima se ne va). La barra in cima `[data-grosso]` con
+`data-chi` e `data-ossa`; la figura `[data-figura-grosso]`.
