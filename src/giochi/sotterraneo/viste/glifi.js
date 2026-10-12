@@ -213,6 +213,8 @@ export const GLIFI = {
   energia: [['p', 'M12 1.8L19.2 7V17L12 22.2L4.8 17V7Z'], ['c', 'M12 1.8L19.2 7L12 10.2L4.8 7Z'], ['o', 'M12 10.2V22.2L19.2 17V7Z']],
   veleno: [['p', goccia(12, 2.2, 2.2)], ['c', cerchio(9.6, 13.8, 1.4)]],
   'scudo-rotto': [['p', SCUDO], ['d', 'M12.6 3.4L10.6 8.8L13.6 12L11 17.8L12.4 21']],
+  // chi colpisce a metà senza essere gelato: una freccia che scende
+  fiacco: [['l', 'M12 3V12'], ['p', 'M5.4 11.4H18.6L12 20.4Z'], ['o', 'M12 11.4H18.6L12 20.4Z']],
 }
 
 export const glifoDi = nome => GLIFI[nome] || GLIFI.sfera

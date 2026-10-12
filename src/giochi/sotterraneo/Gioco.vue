@@ -27,7 +27,7 @@ import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo, tascheDello, postiDello } from './motore/corredo.js'
 import { rileggiCrescita, puntiDaDare, dai as daiPunto, livelloDella } from './motore/crescita.js'
 import { puntiAbilita, caselleDella } from './motore/abilita.js'
-import { NODI, RAMI, colpisce } from './dati/abilita.js'
+import { NODI, RAMI } from './dati/abilita.js'
 import { zonaDi } from './dati/zone.js'
 import { notiziaDi, potenzaDi, livelloDellaZona, coloreDi, zoneConForza, zoneConSentita } from './motore/zone.js'
 import { forzaDi, forzaDelCorredo } from './motore/forza.js'
@@ -51,7 +51,7 @@ import Foglio from './viste/Foglio.vue'
 import Icona from './viste/Icona.vue'
 import { occhio } from './viste/occhio.js'
 import Scontro from './viste/Scontro.vue'
-import { nuovoRacconto } from './viste/racconto.js'
+import { nuovoRacconto, modoDelColpo } from './viste/racconto.js'
 import { vistaDelloScontro } from './viste/campo.js'
 import Zaino from './viste/Zaino.vue'
 import Diario from './viste/Diario.vue'
@@ -68,6 +68,7 @@ import Fine from './viste/Fine.vue'
 import LascioPerdere from './viste/LascioPerdere.vue'   // la frase chiara prima di buttare una discesa
 import './stile.css'
 import './stile-scontro.css'
+import './stile-effetti.css'
 
 defineOptions({ name: 'IlSotterraneo' })
 const emit = defineEmits(['vai'])
@@ -715,20 +716,16 @@ function fotoPrima(c) {
   const f = c.foglio
   if (!f || f.che !== 'scontro') return null
   const v = vistaDelloScontro(c)
-  return { campo: [...f.campo], ossa: f.campo.map(m => Math.max(0, m.ossa)), morti: f.campo.map(m => !!m.morto), turni: v.turni }
+  return { campo: [...f.campo], ossa: f.campo.map(m => Math.max(0, m.ossa)), morti: f.campo.map(m => !!m.morto), turni: v.turni,
+           stati: v.mostri.map(m => m.stati) }
 }
-// come colpisce l'eroe in un'azione, per il racconto: da lontano (arco, bacchetta) vola il colpo, da vicino l'eroe si fa sotto;
-// un'abilità che non colpisce (scudo, cura) non fa né l'uno né l'altro
+// come colpisce l'eroe in un'azione, per il racconto: l'effetto che si vede (dati/effetti.js: dall'abilità, o dall'arma in mano
+// per l'attacco solito) e il colore del suo ramo, per il nome
 function comeColpisce(a) {
   const c = corsa.value
   const nodo = a.usata ? NODI[a.usata.id] : null
-  const fa = !nodo || colpisce(nodo)
   const famiglia = c && c.mano && COSE[c.mano] ? COSE[c.mano].famiglia : null
-  const lontano = famiglia === 'archi' || famiglia === 'bacchette' || !!(nodo && nodo.arma && nodo.arma.famiglie && nodo.arma.famiglie.some(f => f === 'archi' || f === 'bacchette'))
-  const tinta = nodo ? tintaDi(nodo.id) : '#ffe39a'
-  let volo = null
-  if (fa && lontano) volo = nodo ? { glifo: nodo.glifo, tinta } : { glifo: famiglia === 'archi' ? 'freccia' : 'fulmine', tinta }
-  return { colpisce: fa, lontano, volo, tinta }
+  return modoDelColpo({ nodo, famiglia, tinta: nodo ? tintaDi(nodo.id) : '#ffe39a' })
 }
 // il colore del ramo di un'abilità: il glifo che vola verso il mostro è di quel colore
 function tintaDi(id) {

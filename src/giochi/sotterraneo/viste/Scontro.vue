@@ -12,6 +12,8 @@ import Grosso from './Grosso.vue'
 import Glifo from './Glifo.vue'
 import Palco from './Palco.vue'
 import FilaDeiTurni from './FilaDeiTurni.vue'
+import Scene from './Scene.vue'
+import SegniAddosso from './SegniAddosso.vue'
 
 const props = defineProps({
   mostri: { type: Array, required: true },    // [{ i, nome, sprite, em, grosso, chiave, ossa, ossaMax, morto, stati, colpisce, salta, bersaglio, colpito }] nell'ordine dei posti
@@ -66,8 +68,14 @@ const chiaveFx = chi => chi + '-' + (effettoDi(chi) ? effettoDi(chi).n : 0)
 const numeriDi = chi => props.fx.numeri.filter(n => n.su === chi)
 const pulita = m => !props.fx.attivo && !mortoDi(m)
 const soloMiaUna = computed(() => props.mostri.filter(m => m.colpito).length > 1)
-const addosso = m => m.stati.map(x => 'sot-addosso-' + (x.fuoco ? 'fuoco' : x.chiave))
-const protetto = computed(() => props.mie.some(x => ['parato', 'scudo', 'intoccabile', 'specchio'].includes(x.chiave)))
+// gli stati addosso: durante il racconto quelli di quel momento (un'abilità li posa quando arriva), poi la verità
+const statiDi = m => (props.fx.attivo && props.fx.stati[m.i] ? props.fx.stati[m.i] : m.stati)
+const addosso = m => statiDi(m).map(x => 'sot-addosso-' + (x.fuoco ? 'fuoco' : x.gelo ? 'gelo' : x.chiave === 'debole' ? 'fiacco' : x.chiave))
+// quanto è larga la figura (le stelle dello stordito girano in proporzione)
+const largoDi = m => (m.grosso ? 32 * scalaGrosso.value : (PEZZI[m.sprite] ? PEZZI[m.sprite][2] : 16) * scalaM.value)
+const protetto = computed(() => props.mie.some(x => ['parato', 'scudo'].includes(x.chiave)))
+const diPietra = computed(() => props.mie.some(x => x.chiave === 'intoccabile'))
+const specchiato = computed(() => props.mie.some(x => x.chiave === 'specchio'))
 const guarisce = computed(() => props.mie.some(x => x.chiave === 'linfa'))
 const tintaEroe = computed(() => (props.fx.nome ? { '--tinta': props.fx.nome.tinta } : null))
 
@@ -83,24 +91,21 @@ function tocca(m) {
   emit('bersaglio', m.i)
 }
 
-/* ── il glifo che vola dall'eroe a chi colpisce: il vettore si misura sul palco, quando compare ── */
+/* ── dove stanno le figure sul palco, per gli effetti (Scene.vue): il centro e la misura di chi agisce o prende, misurati quando servono ── */
 const elEroe = ref(null)
-const elM = {}
-function volo(v) {
+const elC = {}
+function punto(chi) {
   const d = duello.value && duello.value.getBoundingClientRect()
-  const a = elEroe.value && elEroe.value.getBoundingClientRect()
-  const b = elM[v.a] && elM[v.a].getBoundingClientRect()
-  if (!d || !a || !b) return { display: 'none' }
-  const x0 = a.right - d.left - 6, y0 = a.top + a.height * 0.42 - d.top
-  return { left: x0 + 'px', top: y0 + 'px', '--dx': (b.left + b.width / 2 - d.left - x0) + 'px',
-           '--dy': (b.top + b.height * 0.5 - d.top - y0) + 'px', '--tinta': v.tinta, '--ritardo': v.ritardo + 'ms' }
+  const r = chi === 'eroe' ? elEroe.value && elEroe.value.getBoundingClientRect() : elC[chi] && elC[chi].getBoundingClientRect()
+  if (!d || !r) return null
+  return { x: r.left + r.width / 2 - d.left, y: r.top + r.height / 2 - d.top, w: r.width, h: r.height }
 }
 </script>
 
 <template>
   <div class="sot-scontro">
     <div ref="duello" class="sot-duello" data-duello :data-file="posti.file" :data-mostri="quanti"
-         :data-racconto="fx.attivo ? 'in-corso' : null" :class="{ 'sot-veloce': fx.veloce }"
+         :data-racconto="fx.attivo ? 'in-corso' : null" :class="{ 'sot-veloce': fx.veloce, 'sot-trema': fx.scuote }"
          :style="{ '--ae': lEroe + 'px', '--barra': barra + 'px' }" @click="sulDuello">
       <Palco v-bind="palco" />
 
@@ -108,11 +113,12 @@ function volo(v) {
       <div ref="elEroe" class="sot-attore-eroe" data-eroe-scontro>
         <div :key="chiaveFx('eroe')" class="sot-figura sot-eroe-fig" :class="classeFx('eroe')" :style="tintaEroe">
           <div class="sot-corpo">
-            <div class="sot-respira" :class="{ 'sot-protetto': protetto, 'sot-guarisce': guarisce }">
+            <div class="sot-respira" :class="{ 'sot-protetto': protetto, 'sot-guarisce': guarisce, 'sot-di-pietra': diPietra, 'sot-specchiato': specchiato }">
               <Icona :sprite="eroe.sprite" :em="eroe.em" :scala="scalaEroe" :emAlto="64" />
             </div>
           </div>
         </div>
+        <SegniAddosso :stati="mie" :largo="16 * scalaEroe" />
         <span v-if="fx.nome" :key="'n' + fx.nome.nome" class="sot-nome-abilita" data-abilita-usata :style="{ '--tinta': fx.nome.tinta }">
           <Glifo :nome="fx.nome.glifo" :misura="14" /> {{ fx.nome.nome }}
         </span>
@@ -122,7 +128,7 @@ function volo(v) {
 
       <!-- i mostri: sei colonne, ognuno ne prende due; il grosso sta al centro e occupa le due file -->
       <div class="sot-schiera" data-campo>
-        <button v-for="(m, k) in mostri" :key="m.i" :ref="el => { elM[m.i] = el }" type="button" class="sot-m"
+        <button v-for="(m, k) in mostri" :key="m.i" type="button" class="sot-m"
                 :class="{ 'sot-morto': mortoDi(m), 'sot-m-grosso': m.grosso, 'sot-bersaglio': pulita(m) && m.bersaglio,
                           'sot-colpito-da-me': pulita(m) && m.colpito && soloMiaUna }"
                 :style="[celleDi[k], { '--f': m.colpito }]" :aria-label="m.nome" :disabled="mortoDi(m)"
@@ -134,7 +140,7 @@ function volo(v) {
             <template v-if="m.salta"><Glifo nome="stelle" :misura="11" /> salta il turno</template>
             <template v-else><span v-if="!stretto">ti </span>colpisce <b>{{ m.colpisce }}</b></template>
           </span>
-          <span class="sot-m-corpo">
+          <span :ref="el => { elC[m.i] = el }" class="sot-m-corpo">
             <span :key="chiaveFx(m.i)" class="sot-figura sot-m-fig" :class="classeFx(m.i)">
               <span class="sot-corpo">
                 <span class="sot-respira" :class="addosso(m)">
@@ -143,15 +149,25 @@ function volo(v) {
                 </span>
               </span>
             </span>
+            <SegniAddosso :stati="statiDi(m)" :largo="largoDi(m)" />
             <i class="sot-anello" aria-hidden="true"></i>
             <svg v-if="m.chiave" class="sot-m-chiave" viewBox="0 0 24 24" width="14" height="14" aria-label="porta la chiave" data-segno-chiave>
               <circle cx="7" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2.4" /><path d="M10 11 L20 21 M16 17 L19 14 M13 14 L16 11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
             </svg>
+            <span v-if="pulita(m) && m.segni.length" class="sot-m-segni" data-segni>
+              <span v-for="g in m.segni" :key="g.tipo + g.glifo" class="sot-segno-pre" :class="'sot-segno-pre-' + g.tipo" :style="{ '--tinta': g.tinta }"
+                    :data-segno-pre="g.tipo" :title="g.dice">
+                <Glifo :nome="g.glifo" :misura="11" />
+                <svg v-if="g.tipo === 'resiste'" class="sot-freccetta" viewBox="0 0 6 6" width="6" height="6"><path d="M0.5 1H5.5L3 5.5Z" /></svg>
+                <svg v-else-if="g.tipo === 'teme'" class="sot-freccetta" viewBox="0 0 6 6" width="6" height="6"><path d="M0.5 5H5.5L3 0.5Z" /></svg>
+              </span>
+            </span>
             <span class="sot-m-stati" data-effetti>
-              <span v-for="x in m.stati" :key="x.chiave" class="sot-chip" :class="'sot-chip-' + (x.fuoco ? 'fuoco' : x.chiave)"
+              <span v-for="x in statiDi(m)" :key="x.chiave" class="sot-chip" :class="'sot-chip-' + (x.fuoco ? 'fuoco' : x.chiave)"
                     :data-stato="x.chiave" :title="x.dice"><Glifo :nome="x.glifo" :misura="12" /><b v-if="x.t">{{ x.t }}</b></span>
             </span>
-            <span v-for="n in numeriDi(m.i)" :key="n.id" class="sot-numero" :class="'sot-numero-' + n.tipo" data-cifra>{{ n.testo }}</span>
+            <span v-for="n in numeriDi(m.i)" :key="n.id" class="sot-numero" :class="['sot-numero-' + n.tipo, n.tono && 'sot-segno-' + n.tono, n.barrato && 'sot-segno-barrato']"
+                  :style="n.riga != null ? { '--riga': n.riga } : null" data-cifra><Glifo v-if="n.glifo" :nome="n.glifo" :misura="11" />{{ n.testo }}</span>
           </span>
           <span class="sot-vita" data-vita :data-ossa="ossaDi(m)"><i :style="{ width: Math.max(0, ossaDi(m) / m.ossaMax * 100) + '%' }"></i></span>
         </button>
@@ -159,10 +175,8 @@ function volo(v) {
 
       <FilaDeiTurni :turni="fx.fila || turni" :mostri="mostri" :eroe="eroe" />
 
-      <!-- da lontano (arco, bacchetta) vola il colpo: l'abilità col suo simbolo e il suo colore, verso ognuno dei colpiti -->
-      <span v-for="v in fx.voli" :key="v.id" class="sot-dardo" data-dardo :style="volo(v)">
-        <Glifo :nome="v.glifo" :misura="30" />
-      </span>
+      <!-- gli effetti dell'abilità: quello che vola, cade, esce dal pavimento (viste/Scene.vue) -->
+      <Scene :scene="fx.scene" :punto="punto" :larg="larg" />
 
       <!-- l'agguato e la sorpresa: una riga che si vede, poi sparisce -->
       <p v-if="fx.riga" class="sot-apertura" data-apertura>{{ fx.riga }}</p>

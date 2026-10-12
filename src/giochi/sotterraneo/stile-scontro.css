@@ -90,7 +90,6 @@
 @keyframes sot-respira { 50% { transform: translateY(-3px) } }
 /* gli effetti che durano cambiano il colore della figura */
 .sot-addosso-fuoco { filter: drop-shadow(0 0 7px #ff7a2a) sepia(.35) saturate(2) brightness(1.1) }
-.sot-addosso-debole { filter: drop-shadow(0 0 7px #7cc8ff) hue-rotate(150deg) saturate(1.2) brightness(1.2) }
 .sot-addosso-veleno { filter: drop-shadow(0 0 7px #7ae04a) hue-rotate(60deg) saturate(1.5) }
 .sot-addosso-fermo { filter: drop-shadow(0 0 5px #ffd23f) grayscale(.4) }
 .sot-addosso-esposto { filter: drop-shadow(0 0 7px #6fbf3a) saturate(1.3) }
@@ -131,18 +130,6 @@
 .sot-numero-nota { color: #e8e2d4; font-size: 12.5px; font-weight: 800; letter-spacing: .02em }
 .sot-attore-eroe .sot-numero { top: -6px }
 @keyframes sot-numero-sale { 0% { opacity: 0; transform: translateY(10px) scale(.7) } 20% { opacity: 1; transform: translateY(0) scale(1.15) } 100% { opacity: 0; transform: translateY(-34px) } }
-
-/* il glifo che vola dall'eroe a chi colpisce */
-.sot-dardo {
-  position: absolute; z-index: 7; margin: -15px 0 0 -15px; color: var(--tinta, #ffd23f); pointer-events: none; opacity: 0;
-  filter: drop-shadow(0 0 8px var(--tinta, #ffd23f)) drop-shadow(0 0 3px #fff);
-  animation: sot-vola .38s var(--ritardo, 0s) ease-in both;
-}
-@keyframes sot-vola {
-  0% { transform: translate(0, 0) scale(.7); opacity: 0 }
-  15% { opacity: 1 }
-  100% { transform: translate(var(--dx, 100px), var(--dy, 0)) scale(1.2); opacity: 0 }
-}
 
 /* la riga d'apertura (l'agguato, la sorpresa) */
 .sot-apertura {
