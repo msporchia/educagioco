@@ -1,5 +1,6 @@
 // Le zone, in movimento (docs/sotterraneo/zone.md): che fascia ha ogni zona per l'eroe di adesso, di che colore è il
-// suo pallino, qual è la zona appena nata che il minatore racconta, e la roba attesa oltre la storia.
+// suo pallino, qual è la zona appena nata che il minatore racconta, e la roba attesa oltre la storia. Il colore si legge
+// dal livello di FORZA dell'eroe (motore/forza.js, docs/sotterraneo/forza.md), non dal livello che ha scritto sulla barra.
 // Funzioni pure sull'avventura (motore/avventure.js): girano in Node, e Gioco.vue le passa a ritocca().
 import { CAMPAGNA } from '../dati/campagna.js'
 import { ORDINE_DELLE_ZONE, NASCITA, LARGA, MARGINE, GIRO, voltaDi, voltoDi, ANNUNCIO_IN_CODA, PRIMA_NOTIZIA }
@@ -15,55 +16,75 @@ const indiceDi = chiave => CAMPAGNA.findIndex(t => t.chiave === chiave)
 
 /* ═══════════ la fascia di una zona ═══════════
    Nasce a NASCITA[chiave] e ci resta; quando l'eroe la supera di più di MARGINE livelli (sopra la fine della fascia)
-   rinasce GIRO livelli più su, sopra la più alta. Non serve scriverlo: dipende solo dal livello dell'eroe, che non
-   scende mai, quindi è la più bassa delle sue fasce (NASCITA + GIRO·n) che non è ancora sparita */
-export function fasciaDi(chiave, livelloEroe) {
-  const minimo = (livelloEroe || 1) - (LARGA - 1) - MARGINE
+   rinasce GIRO livelli più su, sopra la più alta. Dipende da `rinasce`, il livello che non scende mai (rinascitaDi): è la
+   più bassa delle sue fasce (NASCITA + GIRO·n) che non è ancora sparita */
+export function fasciaDi(chiave, rinasce) {
+  const minimo = (rinasce || 1) - (LARGA - 1) - MARGINE
   const da = NASCITA[chiave] + GIRO * Math.ceil((minimo - NASCITA[chiave]) / GIRO)
   return { chiave, da, a: da + LARGA - 1, volta: voltaDi(chiave, da) }
 }
 
 // Il colore di una fascia per l'eroe: dentro verde; sotto di poco (fino a MARGINE) arancio, oltre rosso; sopra grigio.
-// Il grigio finisce dove la zona rinasce (fasciaDi): una fascia viva non è mai più di MARGINE sotto l'eroe
+// Il grigio finisce dove la zona rinasce (fasciaDi): una fascia viva non è mai più di MARGINE sotto l'eroe. `forza` è il
+// livello di forza dell'eroe (motore/forza.js); chi non lo sa passa il suo livello, che per l'eroe atteso è lo stesso
 export const COLORI = ['grigio', 'verde', 'arancio', 'rosso']
-export function coloreDellaFascia(da, livelloEroe) {
-  if (livelloEroe < da - MARGINE) return 'rosso'
-  if (livelloEroe < da) return 'arancio'
-  if (livelloEroe <= da + LARGA - 1) return 'verde'
+export function coloreDellaFascia(da, forza) {
+  if (forza < da - MARGINE) return 'rosso'
+  if (forza < da) return 'arancio'
+  if (forza <= da + LARGA - 1) return 'verde'
   return 'grigio'
 }
 
-// tutte le zone per l'eroe al livello `livelloEroe`, dalla più bassa: { chiave, da, a, volta, colore, nome }
-export const disposizioneDi = livelloEroe => ORDINE_DELLE_ZONE
-  .map(k => { const f = fasciaDi(k, livelloEroe); return { ...f, colore: coloreDellaFascia(f.da, livelloEroe), nome: voltoDi(k, f.volta).nome } })
+// tutte le zone, dalla più bassa: le fasce da `rinasce`, i colori da `forza` (se non c'è, lo stesso livello):
+// { chiave, da, a, volta, colore, nome }
+export const disposizioneDi = (rinasce, forza = rinasce) => ORDINE_DELLE_ZONE
+  .map(k => { const f = fasciaDi(k, rinasce); return { ...f, colore: coloreDellaFascia(f.da, forza), nome: voltoDi(k, f.volta).nome } })
   .sort((x, y) => x.da - y.da)
 
-// Lo stato nell'avventura: `zone: { sentita }`, la zona appena nata che il minatore ha già raccontato
-// («cantine:20», la chiave e dove comincia la fascia). Un campo storto, o quello di prima ({ n, livelli, sentita: true },
-// le zone che si svegliavano), vale come mai sentita
+// Lo stato nell'avventura: `zone: { sentita, forza }`. `sentita`: la zona appena nata che il minatore ha già raccontato
+// («cantine:20», la chiave e dove comincia la fascia); un campo storto, o quello di prima ({ n, livelli, sentita: true },
+// le zone che si svegliavano), vale come mai sentita. `forza`: il livello di forza più alto mai raggiunto (0 se non c'è:
+// i salvataggi di prima), che fa ruotare le zone anche se l'eroe, vendendo l'arma, si indebolisce (rinascitaDi)
 export function zoneDi(a) {
   const z = a && oggetto(a.zone) ? a.zone : {}
-  return { sentita: typeof z.sentita === 'string' ? z.sentita : null }
+  return { sentita: typeof z.sentita === 'string' ? z.sentita : null,
+           forza: Number.isFinite(z.forza) && z.forza > 0 ? Math.floor(z.forza) : 0 }
 }
+
+// Il livello da cui le zone rinascono: il più alto fra il livello dell'eroe (che non scende mai), il livello di forza più
+// alto mai scritto e quello di adesso. Chi è forte fa ruotare le zone prima; chi vende un'arma non le fa tornare indietro
+export const rinascitaDi = (a, livelloEroe, forza = 0) => Math.max(livelloEroe || 1, zoneDi(a).forza, forza || 0)
+
+// Cosa scrivere in `zone` quando il livello di forza di adesso supera sia il massimo scritto sia il livello dell'eroe
+// (se no non cambierebbe niente: rinascitaDi prende già il più alto): l'oggetto nuovo, con la notizia sentita al suo
+// posto, o null se non c'è niente da cambiare. Si scrive sulla terra di sopra (Gioco.vue)
+export function zoneConForza(a, forza, livelloEroe = 1) {
+  const z = zoneDi(a)
+  if (!(forza > Math.max(z.forza, livelloEroe || 1))) return null
+  return { ...(a && oggetto(a.zone) ? a.zone : {}), forza: Math.floor(forza) }
+}
+// La notizia sentita, senza perdere il resto di `zone`
+export const zoneConSentita = (a, id) => ({ ...(a && oggetto(a.zone) ? a.zone : {}), sentita: id })
 
 // Con che potenza si scende nella discesa `k`: finita la storia l'inizio della sua fascia (almeno 1), o se si è scesi e
 // la si è lasciata a metà quella scritta nella sosta (una zona lasciata a metà non cambia mentre si fa la spesa).
-// Nella storia null: la discesa è quella di sempre
-export function potenzaDi(a, k, livelloEroe) {
+// Nella storia null: la discesa è quella di sempre. Le fasce vengono da rinascitaDi(livello dell'eroe, forza)
+export function potenzaDi(a, k, livelloEroe, forza = 0) {
   const t = CAMPAGNA[k]
   if (!t || !a || !a.libera) return null
   const s = a.sosta
   if (s && s.tappa === k && Number.isFinite(s.potenza)) return s.potenza
-  return Math.max(1, fasciaDi(t.chiave, livelloEroe).da)
+  return Math.max(1, fasciaDi(t.chiave, rinascitaDi(a, livelloEroe, forza)).da)
 }
 
 // il livello della discesa `k`: la potenza, o quello atteso dalla storia (dati/storia.js)
-export const livelloDellaZona = (a, k, livelloEroe) => potenzaDi(a, k, livelloEroe) || LIVELLI_ATTESI[k] || 1
+export const livelloDellaZona = (a, k, livelloEroe, forza = 0) => potenzaDi(a, k, livelloEroe, forza) || LIVELLI_ATTESI[k] || 1
 
 /* ═══════════ nella storia: i gradini ═══════════
    Un gradino è il passo fra due discese di fila della storia: i livelli attesi 1 · 2 · 3 · 5 · 7 · 8 · 10 · 12 (dati/
    storia.js) sono i primi otto, e oltre il 12 uno ogni PASSO_OLTRE livelli. Il colore dice quanti gradini stanno fra
-   la discesa e l'eroe: due sopra rosso (la guardia non fa scendere), uno sopra arancio, due sotto grigio, il resto verde */
+   la discesa e la forza dell'eroe: due sopra rosso (la guardia non fa scendere), uno sopra arancio, due sotto grigio, il
+   resto verde */
 export const PASSO_OLTRE = 2
 export function gradinoDi(L) {
   const ultimo = LIVELLI_ATTESI.length - 1
@@ -72,22 +93,23 @@ export function gradinoDi(L) {
   while (g < ultimo && LIVELLI_ATTESI[g + 1] <= L) g++
   return g
 }
-export function coloreNellaStoria(livelloDiscesa, livelloEroe) {
-  const d = gradinoDi(livelloDiscesa) - gradinoDi(livelloEroe)
+export function coloreNellaStoria(livelloDiscesa, forza) {
+  const d = gradinoDi(livelloDiscesa) - gradinoDi(forza)
   return d >= 2 ? 'rosso' : d === 1 ? 'arancio' : d <= -2 ? 'grigio' : 'verde'
 }
 
-// il colore del pallino della discesa `k`: dopo la storia dalla fascia, nella storia dai gradini
-export function coloreDi(a, k, livelloEroe) {
-  const p = potenzaDi(a, k, livelloEroe)
-  return p ? coloreDellaFascia(p, livelloEroe) : coloreNellaStoria(LIVELLI_ATTESI[k] || 1, livelloEroe)
+// il colore del pallino della discesa `k`: dopo la storia dalla fascia, nella storia dai gradini; sempre dalla FORZA
+// dell'eroe (senza, dal suo livello: l'eroe atteso ha le due cose uguali)
+export function coloreDi(a, k, livelloEroe, forza = livelloEroe) {
+  const p = potenzaDi(a, k, livelloEroe, forza)
+  return p ? coloreDellaFascia(p, forza) : coloreNellaStoria(LIVELLI_ATTESI[k] || 1, forza)
 }
 
 // La notizia: la zona nata per ultima (la fascia più alta, sempre rossa), che il minatore racconta finché non l'ha
 // detta. null finché la storia non è finita. `prima`: la prima notizia dopo la storia, che dice anche cosa è cambiato
-export function notiziaDi(a, livelloEroe) {
+export function notiziaDi(a, livelloEroe, forza = 0) {
   if (!a || !a.libera) return null
-  const f = disposizioneDi(livelloEroe).at(-1)
+  const f = disposizioneDi(rinascitaDi(a, livelloEroe, forza)).at(-1)
   const id = `${f.chiave}:${f.da}`
   const z = zoneDi(a)
   const volto = voltoDi(f.chiave, f.volta)
