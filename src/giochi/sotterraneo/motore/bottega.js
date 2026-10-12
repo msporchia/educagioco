@@ -21,6 +21,8 @@ export const DA_MERITARE = 2
 export const RARI_PER_LINGUETTA = 1
 // a ogni giro, per ogni linguetta che veste, se ne vanno i più deboli e ne entrano altrettanti nuovi
 export const SE_NE_VANNO = 3
+// quanti pezzi venduti il rigattiere tiene da parte
+export const ULTIMI_VENDUTI = 5
 const RIALZO_MASSIMO = 80
 // il traguardo di un'arma sta al più a due punti di caratteristica da quello che l'eroe regge (tosta, non troppo)
 const FINESTRA_DEL_TRAGUARDO = 2 * LIVELLI_PER_REQUISITO
@@ -28,6 +30,11 @@ const MARGINE_DELLA_SCELTA = 6
 
 // un pezzo che il banco può portare: mai un leggendario, né uno col nome (dei mostri grossi)
 export const consentito = k => !!COSE[k] && COSE[k].rarita !== 'leggendario' && !COSE[k].unico
+
+// i pezzi venduti, riletti dall'avventura: [{ k, prezzo }], i più vecchi prima
+const leggiVenduti = dato => (Array.isArray(dato) ? dato : [])
+  .filter(x => x && typeof x.k === 'string' && COSE[x.k] && Number.isFinite(x.prezzo) && x.prezzo > 0)
+  .map(x => ({ k: x.k, prezzo: Math.round(x.prezzo) })).slice(-ULTIMI_VENDUTI)
 
 // Il giro nuovo (finita una discesa): il banco di ogni mercante che ne aveva uno si cambia poco alla volta, la prima
 // volta che si riapre (`prepara`). Torna il record `botteghe` dell'avventura con la richiesta, o null se non c'era banco
@@ -42,8 +49,8 @@ export class Bottega extends Corredo {
   // `finite`: discese finite (avanza.tappa). `banchi`: quello che è già stato pescato in questo giro
   // ({ armaiolo: ['spada', …] }, le botteghe dell'avventura); senza, si pesca alla prima apertura. `scaffali`: i pezzi
   // in più che stanno in mostra accanto al banco, scritti anch'essi; `ruota`: i mercanti il cui banco cambia a metà
-  // (il giro nuovo, alGiroNuovo)
-  constructor({ eroe, roba = null, finite = 0, banchi = null, scaffali = null, ruota = null,
+  // (il giro nuovo, alGiroNuovo). `venduti`: gli ultimi pezzi che l'eroe ha venduto al rigattiere, [{ k, prezzo }]
+  constructor({ eroe, roba = null, finite = 0, banchi = null, scaffali = null, ruota = null, venduti = null,
                 rnd = Math.random, crescita = null } = {}) {
     super({ eroe, roba, crescita })
     this.finite = finite
@@ -55,6 +62,7 @@ export class Bottega extends Corredo {
     for (const [k, v] of Object.entries(scaffali || {}))
       if (Array.isArray(v) && mercanteDi(k)) this.scaffali[k] = v.filter(x => typeof x === 'string' && consentito(x) && this.porta(x))
     this.ruota = (Array.isArray(ruota) ? ruota : []).filter(mercanteDi)
+    this.venduti = leggiVenduti(venduti)
   }
 
   // quello che si scrive nell'avventura (`botteghe`): i banchi e gli scaffali, e chi deve ancora cambiare
@@ -325,10 +333,36 @@ export class Bottega extends Corredo {
     return this.compra(k, b)
   }
 
-  // compra solo chi lo dice (il rigattiere): gli altri vendono e basta
+  // compra solo chi lo dice (il rigattiere): gli altri vendono e basta. Quello che compra lo tiene da parte, gli ultimi
+  // ULTIMI_VENDUTI, al prezzo a cui l'ha pagato: si può riprendere (`riacquistaDa`)
   vendiA(chiave, i) {
     const m = mercanteDi(chiave)
-    return m && m.compra ? this.vendi(i) : null
+    if (!(m && m.compra)) return null
+    const e = this.vendi(i)
+    if (e) {
+      this.venduti.push({ k: e.cosa, prezzo: e.gemme })
+      while (this.venduti.length > ULTIMI_VENDUTI) this.venduti.shift()
+    }
+    return e
+  }
+
+  // le cose da riprendere, dalla più recente: [{ k, prezzo, i }]
+  daRiacquistare(chiave) {
+    const m = mercanteDi(chiave)
+    return m && m.compra ? this.venduti.map((x, i) => ({ ...x, i })).reverse() : []
+  }
+
+  // riprende la cosa `i` dei venduti, allo stesso prezzo a cui l'ha pagata il mercante (non al prezzo del banco); come ogni
+  // cosa comprata, se è migliore va addosso, se no in tasca; zaino pieno, niente
+  riacquistaDa(chiave, i) {
+    const m = mercanteDi(chiave)
+    const x = m && m.compra ? this.venduti[i] : null
+    if (!x) return null
+    if (this.gemme < x.prezzo) return { che: 'niente' }
+    if (this.nonCiStarebbe(x.k)) { this.dillo('⚠️ lo zaino è pieno'); return { che: 'pieno' } }
+    this.gemme -= x.prezzo
+    this.venduti.splice(i, 1)
+    return this.prendi(x.k)
   }
 
   // sopra non c'è buio: una torcia comprata aspetta alla cintura, e si accende scendendo (Corsa)

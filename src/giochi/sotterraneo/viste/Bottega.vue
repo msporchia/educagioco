@@ -25,6 +25,7 @@ const props = defineProps({
   chi: { type: Object, required: true },        // il mercante (dati/mercanti.js)
   roba: { type: Array, required: true },        // [{ chiave, …COSE, costa, avanti, posso, nonPuoi, mancano, quante, prova, va }]
   tasche: { type: Array, default: null },       // [{ chiave, …COSE, vale } | null]; null: non compra
+  riacquisto: { type: Array, default: null },   // le ultime cose vendute: [{ chiave, …COSE, costa, i, posso, mancano, serve, prova, va }]; null: non compra
   eroe: { type: Object, required: true },       // la scheda (Armato)
   addosso: { type: Object, required: true },    // { mano, mancina, corpo, dito }: voci o null
   numeri: { type: Object, required: true },     // { vita, att, dif, gemme }
@@ -32,7 +33,7 @@ const props = defineProps({
   chiCompra: { type: String, default: '' },     // «al mercante, vicino al carro»: detto da chi non compra
   scheda: { type: String, default: null },      // la linguetta da cui aprire (dal dialogo: «ho roba da vendere»)
 })
-const emit = defineEmits(['compra', 'vendi', 'chiudi', 'fuori'])
+const emit = defineEmits(['compra', 'vendi', 'riacquista', 'chiudi', 'fuori'])
 
 const pronto = ref(false)
 let cieco = 0
@@ -46,9 +47,10 @@ const ritratto = computed(() => (haFigura(`${props.chi.sprite}-fermo-0`)
 const scheda = ref(props.chi.schede.some(s => s.chiave === props.scheda) ? props.scheda : props.chi.schede[0].chiave)
 const laScheda = computed(() => props.chi.schede.find(s => s.chiave === scheda.value))
 const vende = computed(() => !!(laScheda.value && laScheda.value.vendi))
+const ricompra = computed(() => !!(laScheda.value && laScheda.value.riacquista))
 const qui = computed(() => props.roba.filter(r => (schedaDi(props.chi, r.chiave) || {}).chiave === scheda.value))
 
-// { che: 'merce', k } | { che: 'tasca', i } | { che: 'addosso', dove }
+// { che: 'merce', k } | { che: 'tasca', i } | { che: 'riacquisto', i } | { che: 'addosso', dove }
 const scelto = ref(null)
 let sceltoAlle = 0
 const cosa = computed(() => {
@@ -56,6 +58,7 @@ const cosa = computed(() => {
   if (!s) return null
   if (s.che === 'merce') return props.roba.find(r => r.chiave === s.k) || null
   if (s.che === 'tasca') return (props.tasche || [])[s.i] || null
+  if (s.che === 'riacquisto') return (props.riacquisto || []).find(r => r.i === s.i) || null
   return props.addosso[s.dove] || null
 })
 // comprato un pezzo unico se ne va, venduta una tasca le altre scalano: la scelta non resta su un buco
@@ -88,6 +91,19 @@ function toccaMerce(r) {
   }
   scegli({ che: 'merce', k: r.chiave })
 }
+// ripreso, i posti dell'elenco scalano: la scelta non resta su un'altra cosa
+function riprendi(i) {
+  scelto.value = null
+  emit('riacquista', i)
+}
+function toccaRiacquisto(r) {
+  if (!pronto.value) return
+  if (sceltoQui('riacquisto', r.i)) {
+    if (performance.now() - sceltoAlle > RIPENSO && puoiComprare(r)) riprendi(r.i)
+    return
+  }
+  scegli({ che: 'riacquisto', i: r.i })
+}
 function toccaTasca(i) {
   if (!pronto.value || !props.tasche[i]) return
   if (sceltoQui('tasca', i)) {
@@ -101,7 +117,11 @@ function toccaAddosso(dove) {
   if (sceltoQui('addosso', dove) || !props.addosso[dove]) { scelto.value = null; return }
   scegli({ che: 'addosso', dove })
 }
-function compra() { if (pronto.value && puoiComprare(cosa.value)) emit('compra', cosa.value.chiave) }
+function compra() {
+  if (!pronto.value || !puoiComprare(cosa.value)) return
+  if (scelto.value.che === 'riacquisto') riprendi(scelto.value.i)
+  else emit('compra', cosa.value.chiave)
+}
 function vendi(i) {
   scelto.value = null
   emit('vendi', i)
@@ -111,7 +131,7 @@ function vendi(i) {
 // alto dei pezzi avanti lo dice il cartellino, quante ne hai la casella (×2), dove va il confronto
 const note = computed(() => {
   const c = cosa.value, s = scelto.value
-  if (!c || s.che !== 'merce') return []
+  if (!c || (s.che !== 'merce' && s.che !== 'riacquisto')) return []
   if (c.nonPuoi) return [{ em: '✋', testo: c.nonPuoi, tono: 'ambra', dato: 'data-non-puoi' }]
   // si compra lo stesso: va nello zaino, e si indossa quando la caratteristica c'è
   if (c.serve) return [{ em: '🔒', testo: c.serve, tono: 'ambra', dato: 'data-serve' }]
@@ -119,8 +139,8 @@ const note = computed(() => {
     return [{ em: '✋', testo: `${COSE[c.prova.bloccata].nome} tiene tutte e due le mani: questo resta in tasca.`, tono: 'ambra' }]
   return []
 })
-// il confronto solo per quello che si compra: addosso è già lì, e chi vende non si mette niente
-const prova = computed(() => (scelto.value && scelto.value.che === 'merce' && cosa.value && cosa.value.prova &&
+// il confronto solo per quello che si compra o si riprende: addosso è già lì, e chi vende non si mette niente
+const prova = computed(() => (scelto.value && (scelto.value.che === 'merce' || scelto.value.che === 'riacquisto') && cosa.value && cosa.value.prova &&
   cosa.value.prova.prima ? cosa.value.prova : null))
 const va = computed(() => (prova.value ? prova.value.dove : null))
 
@@ -159,7 +179,7 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
     </nav>
 
     <div class="sot-banco-griglia">
-      <template v-if="!vende">
+      <template v-if="!vende && !ricompra">
         <div class="sot-griglia">
           <Casella v-for="r in qui" :key="r.chiave" :cosa="r" :sotto="sottoMerce(r)"
                    :spenta="!puoiComprare(r)" :rosso="!r.posso"
@@ -171,6 +191,17 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
         <!-- ogni linguetta che veste ha sempre i suoi pezzi (motore/bottega.js, rialzi): questa riga non serve a chi veste.
              Un mercante non dice mai «niente per te» (docs/sotterraneo/dialoghi.md) -->
         <p v-if="!qui.length" class="sot-banco-voce">«Su questo banco, oggi, niente alla tua altezza. Guarda l'altro.»</p>
+      </template>
+      <template v-else-if="ricompra">
+        <div class="sot-griglia">
+          <Casella v-for="r in riacquisto" :key="r.i + r.chiave" :cosa="r" :sotto="`💎 ${r.costa}`"
+                   :spenta="!puoiComprare(r)" :rosso="!r.posso" :segno="r.serve ? '🔒' : ''"
+                   :scelta="sceltoQui('riacquisto', r.i)" :data-riacquisto="r.chiave"
+                   :data-posso="puoiComprare(r) ? '1' : '0'" @click="toccaRiacquisto(r)" />
+        </div>
+        <p v-if="!riacquisto.length" class="sot-banco-voce" data-riacquisto-vuoto>
+          «Da parte non ho niente. Se mi vendi qualcosa, lo trovi qui.»
+        </p>
       </template>
       <template v-else>
         <div class="sot-griglia">
@@ -191,7 +222,12 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
         {{ detto.testo }}
       </p>
       <Pannello v-if="cosa" :cosa="cosa" :prova="prova" :note="note">
-        <template v-if="scelto.che === 'merce'">
+        <button v-if="scelto.che === 'riacquisto'" type="button" class="sot-grosso sot-compra" data-azione="riacquista"
+                :disabled="!puoiComprare(cosa)" @click="compra">
+          <template v-if="!cosa.posso">ti mancano <span class="em">💎</span> {{ cosa.mancano }}</template>
+          <template v-else>Riacquista <span class="em">💎</span> {{ cosa.costa }}</template>
+        </button>
+        <template v-else-if="scelto.che === 'merce'">
           <button type="button" class="sot-grosso sot-compra" data-azione="compra" :disabled="!puoiComprare(cosa)"
                   @click="compra">
             <template v-if="cosa.nonPuoi">non fa per te</template>
@@ -206,7 +242,8 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
       </Pannello>
       <!-- niente di scelto: parla il mercante -->
       <div v-else class="sot-battuta" data-battuta>
-        <p>«{{ vende ? 'Fammi vedere cos\'hai in tasca: te lo pago la metà di quello che vale.' : chi.dice }}»</p>
+        <p>«{{ vende ? 'Fammi vedere cos\'hai in tasca: te lo pago la metà di quello che vale.'
+          : ricompra ? 'Le tue cose le tengo da parte. Le rivuoi? Allo stesso prezzo.' : chi.dice }}»</p>
         <p v-if="!tasche && chiCompra" class="sot-battuta-poi" data-chi-compra>
           «Roba da vendere? Portala {{ chiCompra }}.»
         </p>

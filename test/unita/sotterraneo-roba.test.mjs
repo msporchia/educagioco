@@ -16,7 +16,7 @@ import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti, schedaDi, so
 import { MERCANTI as DOVE_MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Corredo, ROBA_VUOTA, rileggiRoba, ABILITA_CONFRONTATE } from '../../src/giochi/sotterraneo/motore/corredo.js'
-import { Bottega, PEZZI_PER_LINGUETTA, RARI_PER_LINGUETTA, alGiroNuovo } from '../../src/giochi/sotterraneo/motore/bottega.js'
+import { Bottega, PEZZI_PER_LINGUETTA, RARI_PER_LINGUETTA, ULTIMI_VENDUTI, alGiroNuovo } from '../../src/giochi/sotterraneo/motore/bottega.js'
 import { ABILITA, affiancatoDi, sintesiDi } from '../../src/giochi/sotterraneo/viste/pezzo.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
@@ -542,6 +542,50 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   controlla('al giro dopo ruota come uno nuovo', mercanteDi('armaiolo').schede.filter(x => x.dove).every(sc => conta(v2, sc) >= 3))
   uguale('alGiroNuovo senza banchi non chiede niente', alGiroNuovo(null), null)
   uguale('né con un record storto', alGiroNuovo({ banchi: 3 }), null)
+}
+
+/* ══════════ 7b3. il rigattiere tiene gli ultimi cinque pezzi venduti ══════════
+   Li ricompra allo stesso prezzo a cui li ha pagati (non a quello del banco);
+   il sesto fa uscire il più vecchio (docs/sotterraneo/bottega.md, «Riacquista»). */
+{
+  const tutto = ['spada', 'ascia', 'scudo-legno', 'panciotto', 'amuleto-rosso', 'spadone']
+  const r = new Bottega({ roba: { ...ROBA_VUOTA(), zaino: [...tutto] } })
+  const pagati = tutto.map(k => r.quantoVale(k))
+  for (let i = 0; i < 6; i++) r.vendiA('rigattiere', 0)
+  uguale('il rigattiere tiene gli ultimi cinque', r.daRiacquistare('rigattiere').length, ULTIMI_VENDUTI)
+  uguale('dal più recente', r.daRiacquistare('rigattiere').map(x => x.k).join(), [...tutto].slice(1).reverse().join())
+  uguale('il più vecchio è uscito: la spada non c\'è più', r.daRiacquistare('rigattiere').some(x => x.k === 'spada'), false)
+  uguale('il prezzo è quello che ha pagato', r.daRiacquistare('rigattiere')[0].prezzo, pagati[5])
+  uguale('l\'armaiolo non tiene niente: non compra', new Bottega({ roba: { ...ROBA_VUOTA(), zaino: ['spada'] } }).vendiA('armaiolo', 0), null)
+  uguale('né ha nulla da far riprendere', r.daRiacquistare('armaiolo').length, 0)
+
+  const gemme = r.gemme
+  const spadone = r.daRiacquistare('rigattiere').find(x => x.k === 'spadone')
+  controlla('al banco costa di più di quanto l\'ha pagato', r.quantoCosta('spadone') > spadone.prezzo, `${r.quantoCosta('spadone')} / ${spadone.prezzo}`)
+  uguale('si riprende', r.riacquistaDa('rigattiere', spadone.i)?.che, 'comprato')
+  uguale('allo stesso prezzo a cui l\'ha pagato', r.gemme, gemme - spadone.prezzo)
+  controlla('e ce l\'hai', r.possiedo('spadone'))
+  uguale('l\'elenco scala', r.daRiacquistare('rigattiere').length, ULTIMI_VENDUTI - 1)
+  uguale('l\'armaiolo non lo ridà', r.riacquistaDa('armaiolo', 0), null)
+
+  const scarso = new Bottega({ roba: { ...ROBA_VUOTA(), zaino: ['spadone'] } })
+  scarso.vendiA('rigattiere', 0)
+  scarso.gemme = 0
+  uguale('senza gemme non si riprende', scarso.riacquistaDa('rigattiere', 0)?.che, 'niente')
+  uguale('e resta da parte', scarso.daRiacquistare('rigattiere').length, 1)
+  const strapieno = new Bottega({ roba: { ...ROBA_VUOTA(), zaino: ['saio', 'verga', 'manto', 'amuleto-azzurro', 'chiave', 'ascia'], gemme: 9 } })
+  strapieno.venduti.push({ k: 'pozione', prezzo: 3 })
+  uguale('a zaino pieno non entra niente', strapieno.riacquistaDa('rigattiere', 0)?.che, 'pieno')
+  uguale('e le gemme restano', strapieno.gemme, 9)
+
+  /* nell'avventura: riletti uguali, e i dati storti si buttano */
+  const letto = new Bottega({ venduti: JSON.parse(JSON.stringify(r.venduti)) })
+  uguale('riletti dal salvataggio', JSON.stringify(letto.venduti), JSON.stringify(r.venduti))
+  const storti = new Bottega({ venduti: [{ k: 'inventato', prezzo: 4 }, { k: 'spada', prezzo: -1 }, { k: 'spada', prezzo: 5 }, 'x', null] })
+  uguale('i pezzi che non esistono e i prezzi storti si buttano', JSON.stringify(storti.venduti), JSON.stringify([{ k: 'spada', prezzo: 5 }]))
+  uguale('un record che non è una lista non fa danni', new Bottega({ venduti: 3 }).venduti.length, 0)
+  /* sopravvivono al giro: stanno fuori da `botteghe` */
+  uguale('il giro nuovo non li tocca', JSON.stringify(alGiroNuovo({ banchi: { armaiolo: [] } })), JSON.stringify({ banchi: { armaiolo: [] }, ruota: ['armaiolo'] }))
 }
 
 /* ══════════ 7c. il confronto affiancato, riga per riga ══════════

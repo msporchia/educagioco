@@ -550,6 +550,17 @@ export async function vendiNellaBottega(page, chiave, { tocca = null } = {}) {
   await attendi(page, 250)
 }
 
+/* Dal rigattiere si riprende una cosa venduta, allo stesso prezzo: la linguetta «Riacquista», un tocco sceglie e il tasto
+   riacquista (docs/sotterraneo/bottega.md, «Riacquista») */
+export async function riacquistaNellaBottega(page, chiave, { tocca = null } = {}) {
+  await toccaIlCentro(page, '[data-bottega] [data-scheda="riacquista"]', tocca)
+  await attendi(page, 120)
+  await toccaIlCentro(page, `[data-bottega] [data-riacquisto="${chiave}"]`, tocca)
+  await page.waitForSelector(`[data-pannello][data-cosa="${chiave}"]`, { timeout: 3000 })
+  await toccaIlCentro(page, '[data-bottega] [data-azione="riacquista"]', tocca)
+  await attendi(page, 250)
+}
+
 /* Apre l'avventura di un eroe del sotterraneo (docs/sotterraneo/avventure.md):
    la prima volta la scelta c'è già, poi la si apre da «Cambia eroe» in fondo
    alla pagina dell'eroe (il globo dell'esperienza). Aspetta la terra dell'eroe scelto. Col
