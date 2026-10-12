@@ -195,10 +195,11 @@ for (const e of esempi) nota(e)
   }
   const mago = eroe('mago', 20, { abilita: true })
   const m = { ossa: 100, att: 20, dif: 6 }
-  const pieno = colpoContro(mago, m, NODI.fulmine), nulla = colpoContro(mago, m, { ...NODI.fulmine, passa: false })
+  const pieno = colpoContro(mago, m, { ...NODI.fulmine, passa: true }), nulla = colpoContro(mago, m, { ...NODI.fulmine, passa: false })
   const meta = colpoContro(mago, m, { ...NODI.fulmine, passa: 0.5 })
   controlla('passa a metà è fra niente e tutto', nulla < meta && meta < pieno, `${nulla} < ${meta} < ${pieno}`)
   uguale('passa true vale uno', colpoContro(mago, m, { ...NODI.fulmine, passa: 1 }), pieno)
+  uguale('il Fulmine ignora metà della difesa', colpoContro(mago, m, NODI.fulmine), meta)
 }
 
 /* ══════════ 6. i colori seguono la forza ══════════ */
