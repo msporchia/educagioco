@@ -1,0 +1,5 @@
+{
+  "__": "Le creature non hanno un atlante loro: i due fogli dipinti e i passi dai video sono il catalogo comune (creature.json, docs/core/creature.md), e ogni gioco ne prende solo quelle che dicono il suo nome fra i `giochi`: il sotterraneo con `atlante.py` (il suo atlante.json dichiara `creature`), il castello con `vesti.py --atlante`. Questo file serve a dire ad `atlante.py` che i passi in passi/ non sono un foglio da ritagliare.",
+  "nome": "creature",
+  "attrezzo": "creature"
+}

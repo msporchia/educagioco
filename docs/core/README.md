@@ -17,6 +17,8 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [grafica.md](grafica.md) — `src/grafica/`: tela, telecamera, pittori, scheletri, sprite e tessere
 - [passi.md](passi.md) — `src/motore/passi.js`: celle raggiungibili, percorso, la cella da cui toccare una cosa
 - [sprite.md](sprite.md) — gli strumenti degli sprite e il banco `npm run mondo`
+- [creature.md](creature.md) — le creature dipinte in un catalogo solo (`sorgenti/creature/`): fotogrammi, passi dai video, `giochi`, come le prendono il sotterraneo e il castello, come se ne aggiunge una
+- [creature-catalogo-1.md](creature-catalogo-1.md), [creature-catalogo-2.md](creature-catalogo-2.md) — il catalogo descritto, generato dal JSON: com'è fatta ogni creatura, elemento, come combatte, dove sta bene, tenuta o scartata
 - [sprite-a-mano-dal-codice.md](sprite-a-mano-dal-codice.md) — disegnare uno sprite come dato nel codice, quando l'atlante non ce l'ha
 - [strumenti.md](strumenti.md) — voci, scatti e clip, icone, la guardia dei commenti
 - [convenzione-giochi.md](convenzione-giochi.md) — come è fatto un gioco nuovo in `src/giochi/`

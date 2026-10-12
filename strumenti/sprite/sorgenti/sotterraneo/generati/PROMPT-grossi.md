@@ -20,7 +20,7 @@ corona: se il mostro ne ha una, la dipinge il modello.
 
 - Ogni fotogramma sta in un quadrato di **32×32 pixel di gioco**, cioè
   128×128 px nell'immagine (un pixel di gioco è un quadrato pieno di 4×4 px,
-  scala 4 come `mostri-1.json`), con i piedi sul bordo basso della figura.
+  scala 4 come i fogli di `sorgenti/creature/`), con i piedi sul bordo basso della figura.
 - **Guarda verso destra** (il codice lo specchia quando serve).
 - Quattro fotogrammi di **respiro** (`fermo-0` … `fermo-3`): la figura è la
   stessa, cambia di un pixel o due l'altezza del petto e della testa. Da
@@ -32,7 +32,7 @@ corona: se il mostro ne ha una, la dipinge il modello.
 ## Come si fa (per ognuno dei fogli)
 
 1. **Una chat nuova per ogni foglio.**
-2. Si allega **`mostri-1.png`** (in questa cartella): è il riferimento di
+2. Si allega **`mostri-1.png`** (in `strumenti/sprite/sorgenti/creature/`): è il riferimento di
    stile, la mano, il contorno scuro e i bagliori dei mostri che il gioco usa
    già. Non si allega altro: il resto lo dice il prompt.
 3. Si incolla il prompt **uno per volta**, nell'ordine qui sotto: il primo
@@ -90,8 +90,8 @@ un ragno e una melma anche a mezza dimensione.
 
 ## Dopo l'immagine
 
-1. Si salva con il suo foglietto `.json` (il foglio `mostri-1.json` è il
-   modello: `famiglia: "attore"`, `scala: 4`, `fondo: [255, 0, 255]`, e per
+1. Si salva con il suo foglietto `.json` (com'erano quelli dei mostri, in
+   `git log -- strumenti/sprite/sorgenti/sotterraneo/generati/mostri-1.json`: `famiglia: "attore"`, `scala: 4`, `fondo: [255, 0, 255]`, e per
    ogni fotogramma `grosso-<chiave>-fermo-<n>` con `da` e `cella`).
 2. Si rifà l'atlante (`python3 strumenti/sprite/atlante.py sotterraneo`,
    `docs/core/comandi.md`): `grosso-ossuto-fermo-0` e gli altri prendono da soli

@@ -8,6 +8,13 @@ gesto), `strumenti/sprite/FORMATO.md` (il foglietto, campo per campo),
 `strumenti/sprite/STANDARD.md` (le regole dei fogli),
 `strumenti/sprite/DA-GENERARE.md` (le immagini che mancano, coi prompt).
 
+## Le creature dipinte
+
+I due fogli di mostri e i passi dai video non hanno più un foglietto per gioco: sono **un catalogo
+solo**, `strumenti/sprite/sorgenti/creature/creature.json`, che `atlante.py` (sotterraneo) e
+`vesti.py` (castello) leggono con la stessa libreria, `strumenti/sprite/creature.py`. Ogni gioco
+porta solo le creature che nomina. Per esteso: [creature.md](creature.md).
+
 ## Il giro
 
 ```

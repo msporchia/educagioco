@@ -19,7 +19,7 @@ terreno col bianco tolto), e il castello si è giocato così nel browser.
 **Una cella è 16 pixel del disegno, in tutti e due i giochi.** Le scene
 del castello (`td_1.png`…) sono dipinte con celle da 64 px, cioè
 quattro pixel dello schermo per pixel del disegno; i fogli di creature
-del sotterraneo (`mostri-1.png`, `mostri-2.png`) sono a scala 4 anche
+del sotterraneo (`mostri-1.png`, `mostri-2.png`, in `sorgenti/creature/`) sono a scala 4 anche
 loro; e la cella del sotterraneo è di 16 px. Quindi un mostro preso
 **alla misura del suo foglio**, senza ridurlo né ingrandirlo, ha la
 stessa grana della scena in tutti e due i giochi. Nella prima prova i
@@ -38,8 +38,8 @@ di 4×4 px».
   gioco un mostro è solo resistenza, volo e nome, quindi **la figura
   cambia da vestito a vestito** senza toccare l'equilibrio: quaranta
   creature per i quattro vestiti, tutte ritagliate ✅ (il 26 settembre; le
-  coordinate delle nuove stanno in `creature-castello.json`, quelle che
-  il sotterraneo aveva già nei suoi foglietti). Chi fa chi lo dice
+  coordinate stanno nel catalogo comune, `sorgenti/creature/creature.json`:
+  docs/core/creature.md). Chi fa chi lo dice
   `src/giochi/castello/scena/bestiario.js`, e questa tabella è la sua
   copia da leggere — com'è descritta la creatura nel foglio, perché è
   così che la cercano i prompt del cammino:
@@ -319,7 +319,7 @@ Non si riprova.
 ritagliata stretta e centrata su fondo bianco, animata **sul posto**,
 prima di lato e poi di fronte nello stesso video (i crediti gratuiti ne
 danno uno al giorno). `cammino.py` ne tiene solo i passi — sei di lato e
-sei di fronte, in `sorgenti/castello/cammino/<creatura>.png` — e il video
+sei di fronte, in `sorgenti/creature/passi/<creatura>.png` — e il video
 non si conserva. `vesti.py --atlante` li porta alla misura della creatura
 **senza ridurli alla grana dei fogli**: i mostri fatti così sono più
 nitidi degli altri, ed è una scelta (meglio alcuni belli e altri come
@@ -382,7 +382,7 @@ un foglio del cammino non ce l'ha ancora — quindi i fogli si possono
 fare uno alla volta, e ognuno si vede subito.
 
 Sette fogli, sempre con lo stesso prompt; cambia solo l'elenco in coda.
-**Allegati**: `mostri-1.png` e `mostri-2.png` (sono loro che si
+**Allegati**: `mostri-1.png` e `mostri-2.png` (in `sorgenti/creature/`: sono loro che si
 ridisegnano). Chat nuova, e i fogli dopo il primo nella stessa chat.
 
 ```text
@@ -447,7 +447,7 @@ memoria sugli scenari del sotterraneo).
 | 3 — | la lava più calma (non serve più) | 1 | (chat di `td_3`) | — (il nome `td_4.png` è andato alla palude) | un vestito che si legge |
 | 4 ✅ | fogli del terreno, neve e lava | 2 | la scena del vestito | `terreno-neve.png`, `terreno-lava.png` | gli altri due vestiti |
 | 4b ✅ | la scena e il foglio del terreno della palude | 2 | `terreno-neve`, `td_4`, chat nuova | `td_4.png`, `terreno-palude.png` | la palude col suo vestito |
-| 5 | i mostri che camminano, un video per creatura | 1 al giorno | la creatura ritagliata | `castello/cammino/<creatura>.png` (`cammino.py`) | mostri che camminano, di lato e di fronte |
+| 5 | i mostri che camminano, un video per creatura | 1 al giorno | la creatura ritagliata | `creature/passi/<creatura>.png` (`cammino.py`) | mostri che camminano, di lato e di fronte |
 | 6 | gli eroi | 1 | `mostri-1`, una scena | — | l'addio a 0x72 |
 
 Il **minimo per rifare il gioco** sono l'1 e il 2: col bosco, le torri
