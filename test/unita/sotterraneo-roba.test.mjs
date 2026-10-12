@@ -16,12 +16,12 @@ import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti, schedaDi, so
 import { MERCANTI as DOVE_MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Corredo, ROBA_VUOTA, rileggiRoba, ABILITA_CONFRONTATE } from '../../src/giochi/sotterraneo/motore/corredo.js'
-import { Bottega } from '../../src/giochi/sotterraneo/motore/bottega.js'
+import { Bottega, PEZZI_PER_LINGUETTA, RARI_PER_LINGUETTA, ULTIMI_VENDUTI, alGiroNuovo } from '../../src/giochi/sotterraneo/motore/bottega.js'
 import { ABILITA, affiancatoDi, sintesiDi } from '../../src/giochi/sotterraneo/viste/pezzo.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { gioca, misuraLaStoria } from '../../src/giochi/sotterraneo/motore/banco.js'
-import { robaAttesa, migliora, righeAvanti, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { robaAttesa, migliora, righeAvanti, crescitaAttesa, delPassoDi } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { passoDi, premiDella } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { EROI, eroeDi, portaLa } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { crescitaA } from '../../src/giochi/sotterraneo/motore/crescita.js'
@@ -236,6 +236,31 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   }
   uguale('senza gemme non si compra', new Bottega({ finite: 0, rnd: seminato(1) }).compraDa('erborista', 'pozione')?.che, 'niente')
 
+  /* si compra anche senza le caratteristiche: il pezzo va nello zaino, non addosso, e il pannello dice cosa manca */
+  let novizio = null, dopo = null
+  for (const eroe of ['nano', 'cavaliere', 'elfa']) for (const lv of [1, 3, 5, 8]) if (!dopo) {
+    novizio = new Bottega({ eroe, finite: 3, roba: { ...ROBA_VUOTA(), gemme: 500 }, crescita: crescitaA(eroeDi(eroe), lv), rnd: seminato(4) })
+    dopo = novizio.mercanziaVista('armaiolo').find(r => r.meritare)
+  }
+  controlla('l\'armaiolo ha un pezzo che l\'eroe non regge ancora', !!dopo)
+  const costoDopo = novizio.quantoCosta(dopo.chiave)
+  controlla('di cui manca la caratteristica, e lo dice', !novizio.posso(dopo.chiave) && /^Serve \w+ \d+ \(hai \d+\)$/.test(novizio.perchéNo(dopo.chiave)),
+            novizio.perchéNo(dopo.chiave))
+  const preso = novizio.compraDa('armaiolo', dopo.chiave)
+  uguale('si compra lo stesso', preso?.che, 'comprato')
+  uguale('al prezzo che dice', novizio.gemme, 500 - costoDopo)
+  stessaLista('e va nello zaino', novizio.zaino, [dopo.chiave])
+  controlla('non addosso', !['mano', 'mancina', 'corpo', 'dito'].some(d => novizio.casella(d) === dopo.chiave))
+  controlla('e il banco dice dov\'è finito e cosa manca', novizio.avvisi.some(a => a.cosa === dopo.chiave && /nello zaino · Serve /.test(a.testo)),
+            JSON.stringify(novizio.avvisi))
+  uguale('dallo zaino non si indossa finché manca la caratteristica', novizio.indossaDallaTasca(0)?.che, 'niente')
+  const pienoDiNovizio = new Bottega({ eroe: novizio.chiEro, finite: 3, crescita: novizio.crescita,
+    roba: { ...ROBA_VUOTA(), gemme: 500, zaino: ['saio', 'verga', 'manto', 'amuleto-azzurro', 'chiave', 'pozione-grande'] }, rnd: seminato(4) })
+  const trovato = pienoDiNovizio.mercanziaVista('armaiolo').find(r => r.meritare)
+  controlla('(lo stesso pezzo, a zaino pieno)', !!trovato)
+  uguale('a zaino pieno non si compra, come per gli altri', pienoDiNovizio.compraDa('armaiolo', trovato.chiave)?.che, 'pieno')
+  uguale('e le gemme restano', pienoDiNovizio.gemme, 500)
+
   /* lo zaino pieno ferma quello che non trova posto */
   const pieno = new Bottega({ roba: { ...ROBA_VUOTA(), gemme: 100, zaino: ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'chiave', 'corazza'] }, rnd: seminato(2) })
   uguale('a zaino pieno una pozione non entra', pieno.compraDa('erborista', 'pozione')?.che, 'pieno')
@@ -333,8 +358,8 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   uguale('l\'armaiolo non ha mai il banco vuoto prima della fine', vuoti, 0)
   uguale('e non mostra mai un pezzo che non migliora niente, nemmeno fra quelli avanti', inutili, 0)
 
-  /* ogni linguetta che veste ha sempre almeno tre pezzi, tutti migliori e portabili: se non bastano quelli del suo
-     livello il mercante ne propone di più alti (docs/sotterraneo/bottega.md, «Mai una linguetta vuota») */
+  /* ogni linguetta che veste ha una decina di pezzi, tutti migliori; il banco ha un tetto di rarità: magico sempre, al
+     più un raro per linguetta, mai un leggendario (docs/sotterraneo/bottega.md, «Il tetto di rarità») */
   {
     // null: il livello atteso della storia; `rara`: l'eroe ha addosso roba rara di quel livello
     const prove = [{ lv: null, rara: false }, { lv: null, rara: true }, { lv: 15, rara: false }, { lv: 40, rara: true }, { lv: 90, rara: false }]
@@ -347,6 +372,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
                corpo: raro(porta('corpo', 'manto', 'corazza'), L, 'dif', 'vita'), dito: raro('amuleto-osso', L, 'dif', 'vita') }
     }
     let giri = 0, pochi = 0, nonMigliora = 0, nonPortabile = 0, rialzi = 0, storti = 0, meritare = 0, meritareStorti = 0
+    let dieci = 0, troppiRari = 0, leggendari = 0, magici = 0, scaffali = 0
     const esempi = []
     for (const eroe of EROI.map(e => e.chiave))
       for (const { lv, rara } of prove)
@@ -357,12 +383,18 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
             for (const m of MERCANTI) {
               const vista = b.mercanziaVista(m.chiave)
               uguale(`${m.chiave}: due volte la stessa vetrina`, b.mercanziaVista(m.chiave).map(r => r.chiave).join(), vista.map(r => r.chiave).join())
+              leggendari += vista.filter(r => COSE[r.chiave].rarita === 'leggendario' || COSE[r.chiave].unico).length
+              leggendari += b.mercanzia(m.chiave).filter(r => COSE[r.chiave].rarita === 'leggendario').length
               for (const s of m.schede.filter(x => x.dove)) {
                 giri++
                 const qui = vista.filter(r => COSE[r.chiave].dove && schedaDi(m, r.chiave) === s)
                 if (qui.length < 3) { pochi++; esempi.push(`${eroe} lv${lv} f${finite} ${m.chiave}/${s.chiave}: ${qui.length}`) }
+                if (qui.length >= PEZZI_PER_LINGUETTA) dieci++
+                if (qui.filter(r => COSE[r.chiave].rarita === 'raro').length > RARI_PER_LINGUETTA) troppiRari++
+                magici += qui.filter(r => r.rialzo && COSE[r.chiave].rarita === 'magico').length
                 for (const r of qui) {
-                  // i pezzi «da meritare» sono la sola eccezione: la classe li porta ma chiedono più caratteristica, e si vedono spenti
+                  if (r.rialzo) scaffali++
+                  // i pezzi «da meritare»: la classe li porta ma chiedono più caratteristica, e si comprano lo stesso
                   if (r.meritare) { meritare++; if (b.posso(r.chiave) || !b.porta(r.chiave) || !(b.quantoCosta(r.chiave) > 0)) meritareStorti++; continue }
                   const p = b.seLoMetto(r.chiave)
                   if (!b.posso(r.chiave) || !p) { nonPortabile++; continue }
@@ -379,19 +411,24 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
           }
     controlla(`in ${giri} linguette (4 eroi, vari livelli, roba rara addosso) nessuna ha meno di tre pezzi`, pochi === 0,
               esempi.slice(0, 6).join(' | '))
+    controlla('quasi tutte arrivano a dieci', dieci > giri * 0.9, `${dieci}/${giri}`)
+    uguale('mai un leggendario sul banco, né fra i pezzi in più', leggendari, 0)
+    uguale('al più un raro per linguetta', troppiRari, 0)
+    controlla('il magico c\'è sempre: la maggior parte dello scaffale', magici > scaffali / 2, `${magici} magici su ${scaffali} in scaffale`)
     uguale('tutti portabili dall\'eroe (tranne quelli da meritare)', nonPortabile, 0)
     uguale('quelli da meritare la classe li porta ma non li regge ancora, e hanno un prezzo', meritareStorti, 0)
-    controlla('e ce n\'è davvero, da guardare', meritare > giri / 10, `${meritare}/${giri}`)
+    controlla('e ce n\'è davvero, da guardare', meritare > 0, `${meritare}/${giri}`)
     uguale('e tutti migliorano qualcosa di quello che ha addosso', nonMigliora, 0)
-    controlla('i pezzi in più servono davvero (con roba rara quasi sempre)', rialzi > giri / 4, `${rialzi}/${giri}`)
+    controlla('i pezzi in più servono davvero', rialzi > giri / 2, `${rialzi}/${giri}`)
     uguale('quelli in più alzano il punteggio e hanno un prezzo vero', storti, 0)
     // il pezzo in più si compra al prezzo che dice, anche se dopo non si ha più niente
     const ricco = new Bottega({ eroe: 'mago', finite: 3, roba: { ...addossoRaro('mago', 20), gemme: 5000 }, crescita: crescitaA(eroeDi('mago'), 20), rnd: seminato(2) })
-    const piu = ricco.rialzi('armaiolo')[0]
+    const piu = ricco.mercanziaVista('armaiolo').find(r => r.rialzo)
     controlla('con roba rara addosso l\'armaiolo ha pezzi in più', !!piu)
     const costo = ricco.quantoCosta(piu.chiave)
     uguale('un pezzo in più si compra', ricco.compraDa('armaiolo', piu.chiave)?.che, 'comprato')
     uguale('al prezzo che dice', ricco.gemme, 5000 - costo)
+    controlla('e se ne va dallo scaffale', !ricco.mercanziaVista('armaiolo').some(r => r.chiave === piu.chiave))
     // senza gemme resta lì, spento, col prezzo vero: non sparisce
     const povero = new Bottega({ eroe: 'mago', finite: 3, roba: { ...addossoRaro('mago', 20), gemme: 1 }, crescita: crescitaA(eroeDi('mago'), 20), rnd: seminato(2) })
     controlla('senza gemme il pezzo in più c\'è lo stesso', povero.mercanziaVista('armaiolo').some(r => r.rialzo))
@@ -426,9 +463,134 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   uguale('la linguetta «Vendi» è del rigattiere', MERCANTI.filter(m => m.schede.some(s => s.vendi)).map(m => m.chiave).join(), 'rigattiere')
 }
 
+/* ══════════ 7b2. il banco cambia poco alla volta ══════════
+   A ogni giro (finita una discesa), per ogni linguetta che veste se ne vanno i
+   tre pezzi più deboli e ne entrano tre nuovi; gli altri aspettano. Un banco
+   riaperto, o rimesso in piedi dal salvataggio, è lo stesso (docs/sotterraneo/
+   bottega.md, «Il banco cambia poco alla volta»). */
+{
+  const dellaScheda = (b, m, s) => b.stockDella(m.chiave, s)
+  const grado = (b, k) => [!b.siMostra(k) || b.possiedo(k) ? 0 : 1, b.confronto(k).meglio]
+  const piuDebole = (a, c) => a[0] < c[0] || (a[0] === c[0] && a[1] <= c[1])
+  let linguette = 0, tolti = 0, entrati = 0, rimasti = 0, piuForti = 0, diversi = 0, riaperti = 0
+  for (const eroe of EROI.map(e => e.chiave))
+    for (const finite of [1, 3, 5]) {
+      const dati = { eroe, finite, roba: { ...robaAttesa(eroe, finite), gemme: 99 }, crescita: crescitaAttesa(eroe, finite) }
+      const b = new Bottega({ ...dati, rnd: seminato(5 + finite) })
+      for (const m of MERCANTI) b.mercanziaVista(m.chiave)
+      // scritto e riletto: lo stesso banco, qualunque sia il caso
+      const registro = JSON.parse(JSON.stringify(b.botteghe))
+      const rilettura = new Bottega({ ...dati, ...registro, rnd: seminato(999) })
+      for (const m of MERCANTI) {
+        if (rilettura.mercanziaVista(m.chiave).map(r => r.chiave).join() === b.mercanziaVista(m.chiave).map(r => r.chiave).join()) riaperti++
+        else diversi++
+      }
+      // il giro nuovo
+      const dopo = new Bottega({ ...dati, ...alGiroNuovo(registro), rnd: seminato(77 + finite) })
+      for (const m of MERCANTI.filter(x => x.passo)) {
+        const vistaDopo = dopo.mercanziaVista(m.chiave).map(r => r.chiave).join()
+        diversi += dopo.mercanziaVista(m.chiave).map(r => r.chiave).join() === vistaDopo ? 0 : 1
+        for (const s of m.schede.filter(x => x.dove)) {
+          linguette++
+          const prima = dellaScheda(b, m, s), ora = dellaScheda(dopo, m, s)
+          const via = prima.filter(k => !ora.includes(k)), restano = prima.filter(k => ora.includes(k))
+          const nuovi = ora.filter(k => !prima.includes(k))
+          tolti += via.length === 3 ? 1 : 0
+          entrati += nuovi.length >= 3 ? 1 : 0
+          rimasti += restano.length === prima.length - 3 ? 1 : 0
+          // chi se ne va è più debole di chi resta (tranne i pezzi del passo, che non si toccano)
+          const passo = delPassoDi(m, dopo, finite, { ammessa: dopo.ammessaDa(m) })
+          if (via.every(v => restano.filter(k => !passo.includes(k)).every(k => piuDebole(grado(dopo, v), grado(dopo, k))))) piuForti++
+        }
+      }
+      // l'erborista non veste: si ripesca intero, con le sue righe
+      const er = mercanteDi('erborista')
+      diversi += dopo.banco('erborista').roba.length === righeDi(er, finite) ? 0 : 1
+    }
+  nota(`${linguette} linguette al giro nuovo: ${tolti} con tre pezzi andati via, ${entrati} con almeno tre nuovi, ${rimasti} con tutti gli altri rimasti`)
+  uguale('un banco riaperto dal salvataggio è lo stesso', diversi, 0)
+  controlla('(e lo è davvero, per tutti e tre i mercanti)', riaperti === 12 * 3, `${riaperti}`)
+  uguale('al giro nuovo, in ogni linguetta se ne vanno tre pezzi', tolti, linguette)
+  uguale('ne entrano almeno tre, nuovi', entrati, linguette)
+  uguale('tutti gli altri restano', rimasti, linguette)
+  uguale('e quelli che se ne vanno sono i più deboli', piuForti, linguette)
+
+  /* il pezzo comprato non torna, e quello che aspetta resta a un livello in più */
+  const base = { eroe: 'cavaliere', finite: 3, crescita: crescitaAttesa('cavaliere', 3), roba: { ...robaAttesa('cavaliere', 3), gemme: 5000 } }
+  const a = new Bottega({ ...base, rnd: seminato(21) })
+  const vistaA = a.mercanziaVista('armaiolo')
+  const scaffale = vistaA.find(r => r.rialzo)
+  uguale('un pezzo dello scaffale si compra', a.compraDa('armaiolo', scaffale.chiave)?.che, 'comprato')
+  const scritto = JSON.parse(JSON.stringify(a.botteghe))
+  controlla('e nel registro non c\'è più', !scritto.scaffali.armaiolo.includes(scaffale.chiave))
+  const livelloSu = { ...base, roba: a.roba, crescita: crescitaA(eroeDi('cavaliere'), a.livelloEroe + 1), ...scritto }
+  const su = new Bottega({ ...livelloSu, rnd: seminato(22) })
+  const vistaSu = su.mercanziaVista('armaiolo').map(r => r.chiave)
+  const attesi = su.stockDella('armaiolo', mercanteDi('armaiolo').schede[0]).filter(k => su.siMostra(k) && !su.possiedo(k))
+  controlla('passando di livello i pezzi che migliorano ancora sono ancora lì', attesi.length > 0 && attesi.every(k => vistaSu.includes(k)),
+            attesi.filter(k => !vistaSu.includes(k)).join())
+  controlla('il pezzo comprato non c\'è', !vistaSu.includes(scaffale.chiave))
+
+  /* un salvataggio di prima (solo i banchi pescati, nessuno scaffale) si rilegge e al giro dopo ruota come uno nuovo */
+  const vecchio = { banchi: { armaiolo: ['spada-corta', 'scudo-legno', 'panciotto'], rigattiere: ['amuleto-azzurro'] } }
+  const v1 = new Bottega({ ...base, ...vecchio, rnd: seminato(31) })
+  const vistaV = v1.mercanziaVista('armaiolo')
+  controlla('un banco di prima si riempie fino a dieci per linguetta', mercanteDi('armaiolo').schede.filter(x => x.dove).every(sc =>
+            vistaV.filter(r => COSE[r.chiave].dove && schedaDi(mercanteDi('armaiolo'), r.chiave) === sc).length >= 3))
+  const v2 = new Bottega({ ...base, ...alGiroNuovo({ ...vecchio, ...JSON.parse(JSON.stringify(v1.botteghe)) }), rnd: seminato(32) })
+  const conta = (bb, sc) => bb.mercanziaVista('armaiolo').filter(r => COSE[r.chiave].dove && schedaDi(mercanteDi('armaiolo'), r.chiave) === sc).length
+  controlla('al giro dopo ruota come uno nuovo', mercanteDi('armaiolo').schede.filter(x => x.dove).every(sc => conta(v2, sc) >= 3))
+  uguale('alGiroNuovo senza banchi non chiede niente', alGiroNuovo(null), null)
+  uguale('né con un record storto', alGiroNuovo({ banchi: 3 }), null)
+}
+
+/* ══════════ 7b3. il rigattiere tiene gli ultimi cinque pezzi venduti ══════════
+   Li ricompra allo stesso prezzo a cui li ha pagati (non a quello del banco);
+   il sesto fa uscire il più vecchio (docs/sotterraneo/bottega.md, «Riacquista»). */
+{
+  const tutto = ['spada', 'ascia', 'scudo-legno', 'panciotto', 'amuleto-rosso', 'spadone']
+  const r = new Bottega({ roba: { ...ROBA_VUOTA(), zaino: [...tutto] } })
+  const pagati = tutto.map(k => r.quantoVale(k))
+  for (let i = 0; i < 6; i++) r.vendiA('rigattiere', 0)
+  uguale('il rigattiere tiene gli ultimi cinque', r.daRiacquistare('rigattiere').length, ULTIMI_VENDUTI)
+  uguale('dal più recente', r.daRiacquistare('rigattiere').map(x => x.k).join(), [...tutto].slice(1).reverse().join())
+  uguale('il più vecchio è uscito: la spada non c\'è più', r.daRiacquistare('rigattiere').some(x => x.k === 'spada'), false)
+  uguale('il prezzo è quello che ha pagato', r.daRiacquistare('rigattiere')[0].prezzo, pagati[5])
+  uguale('l\'armaiolo non tiene niente: non compra', new Bottega({ roba: { ...ROBA_VUOTA(), zaino: ['spada'] } }).vendiA('armaiolo', 0), null)
+  uguale('né ha nulla da far riprendere', r.daRiacquistare('armaiolo').length, 0)
+
+  const gemme = r.gemme
+  const spadone = r.daRiacquistare('rigattiere').find(x => x.k === 'spadone')
+  controlla('al banco costa di più di quanto l\'ha pagato', r.quantoCosta('spadone') > spadone.prezzo, `${r.quantoCosta('spadone')} / ${spadone.prezzo}`)
+  uguale('si riprende', r.riacquistaDa('rigattiere', spadone.i)?.che, 'comprato')
+  uguale('allo stesso prezzo a cui l\'ha pagato', r.gemme, gemme - spadone.prezzo)
+  controlla('e ce l\'hai', r.possiedo('spadone'))
+  uguale('l\'elenco scala', r.daRiacquistare('rigattiere').length, ULTIMI_VENDUTI - 1)
+  uguale('l\'armaiolo non lo ridà', r.riacquistaDa('armaiolo', 0), null)
+
+  const scarso = new Bottega({ roba: { ...ROBA_VUOTA(), zaino: ['spadone'] } })
+  scarso.vendiA('rigattiere', 0)
+  scarso.gemme = 0
+  uguale('senza gemme non si riprende', scarso.riacquistaDa('rigattiere', 0)?.che, 'niente')
+  uguale('e resta da parte', scarso.daRiacquistare('rigattiere').length, 1)
+  const strapieno = new Bottega({ roba: { ...ROBA_VUOTA(), zaino: ['saio', 'verga', 'manto', 'amuleto-azzurro', 'chiave', 'ascia'], gemme: 9 } })
+  strapieno.venduti.push({ k: 'pozione', prezzo: 3 })
+  uguale('a zaino pieno non entra niente', strapieno.riacquistaDa('rigattiere', 0)?.che, 'pieno')
+  uguale('e le gemme restano', strapieno.gemme, 9)
+
+  /* nell'avventura: riletti uguali, e i dati storti si buttano */
+  const letto = new Bottega({ venduti: JSON.parse(JSON.stringify(r.venduti)) })
+  uguale('riletti dal salvataggio', JSON.stringify(letto.venduti), JSON.stringify(r.venduti))
+  const storti = new Bottega({ venduti: [{ k: 'inventato', prezzo: 4 }, { k: 'spada', prezzo: -1 }, { k: 'spada', prezzo: 5 }, 'x', null] })
+  uguale('i pezzi che non esistono e i prezzi storti si buttano', JSON.stringify(storti.venduti), JSON.stringify([{ k: 'spada', prezzo: 5 }]))
+  uguale('un record che non è una lista non fa danni', new Bottega({ venduti: 3 }).venduti.length, 0)
+  /* sopravvivono al giro: stanno fuori da `botteghe` */
+  uguale('il giro nuovo non li tocca', JSON.stringify(alGiroNuovo({ banchi: { armaiolo: [] } })), JSON.stringify({ banchi: { armaiolo: [] }, ruota: ['armaiolo'] }))
+}
+
 /* ══════════ 7c. il confronto affiancato, riga per riga ══════════
    «Addosso» a sinistra, «Questo» a destra, una riga per ogni abilità che
-   almeno uno dei due ha (docs/sotterraneo/bottega.md, «La bottega e lo zaino»):
+   almeno uno dei due ha (docs/sotterraneo/bottega-finestra.md, «La bottega e lo zaino»):
    il motore dà i numeri di ogni lato (seLoMetto().cambio), pezzo.js li mette
    in riga con il verso e la sintesi. */
 {

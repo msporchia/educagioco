@@ -7,7 +7,7 @@
    vedere l'eroe andarci e il banco aprirsi, comprare, vendere al
    rigattiere, scendere con la roba comprata, risalire e ritrovarla, e
    alla discesa dopo ritrovarla nello zaino. La bottega è quella da gioco
-   di ruolo (docs/sotterraneo/bottega.md, «La bottega e lo zaino»): le
+   di ruolo (docs/sotterraneo/bottega-finestra.md, «La bottega e lo zaino»): le
    linguette, un tocco che sceglie e il tasto che compra, il confronto coi
    numeri giusti, i pezzi più su che si vedono spenti; e lo zaino che
    indossa e fa bere.
@@ -20,7 +20,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo, nelDialogo,
-         lasciaLaDiscesa, vendiNellaBottega, allaLinguettaDi } from '../aiuto/browser.mjs'
+         lasciaLaDiscesa, vendiNellaBottega, riacquistaNellaBottega, allaLinguettaDi } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { MERCANTI, CELLA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
@@ -188,6 +188,20 @@ uguale('e le gemme salgono di metà del suo prezzo', await gemmeBottega(), 60 - 
 await toccaIl('[data-vendo="medaglione"]')
 await attendi(page, 300)
 controlla('il medaglione si può vendere', (await page.locator('[data-azione="vendi"]').innerText()).includes(String(COSE.medaglione.prezzo / 2 | 0)))
+/* l'ascia venduta è da parte, nella linguetta «Riacquista», allo stesso prezzo a cui l'ha pagata il mercante
+   (riprenderla, e il resto della linguetta: `integrazione/sotterraneo-riacquisto`) */
+const pagata = COSE.ascia.prezzo / 2 | 0
+await toccaIl('[data-scheda="riacquista"]')
+await attendi(page, 200)
+uguale('«Riacquista» ha l\'ascia venduta', (await page.locator('[data-riacquisto]').evaluateAll(els => els.map(e => e.dataset.riacquisto))).join(), 'ascia')
+controlla('col prezzo a cui l\'ha pagata', (await page.locator('[data-riacquisto="ascia"]').innerText()).includes(String(pagata)))
+await toccaIl('[data-riacquisto="ascia"]')
+await page.waitForSelector('[data-pannello][data-cosa="ascia"]', { timeout: 3000 })
+await attendi(page, 200)
+uguale('il tasto dice il prezzo pagato', (await page.locator('[data-azione="riacquista"]').innerText()).replace(/\s+/g, ' ').trim(), `Riacquista 💎 ${pagata}`)
+await scatto(page, 'mercanti-banco-riacquista')
+await toccaIl('[data-scheda="vendi"]')
+await attendi(page, 200)
 await scatto(page, 'mercanti-banco-rigattiere')
 await chiudiBanco()
 let dopo = 60 - spese + COSE.ascia.prezzo / 2

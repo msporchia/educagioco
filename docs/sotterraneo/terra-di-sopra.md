@@ -267,7 +267,7 @@ pallino, con `data-colore`; la sentinella e i colori in [zone.md](zone.md)), `[d
 `[data-fumetto-di="portale"]` e `[data-azione="portale-giu"]`, `[data-ritaglio]`
 (l'icona ritagliata, nella carta in cima, nel fumetto, nella scelta e in
 home); nella bottega e nello zaino quelli di
-[bottega.md](bottega.md#la-bottega-e-lo-zaino);
+[bottega-finestra.md](bottega-finestra.md#la-bottega-e-lo-zaino);
 `unita/sotterraneo-terra` (anche: il portale gemello raggiungibile, chi sta
 fermo non chiude la strada), `unita/sotterraneo-avventure` (un'icona per
 discesa), `integrazione/sotterraneo-terra`, `integrazione/sotterraneo-mercanti`,

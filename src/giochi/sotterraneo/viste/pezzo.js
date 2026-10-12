@@ -1,7 +1,7 @@
 // Come si dice un pezzo nella bottega, nello zaino e per terra: la rarità (il colore del bordo e dell'aura), che
 // cos'è, il livello, i numeri in elenco e il confronto con quello che si ha addosso. Sta nelle viste perché sono
 // parole e colori: i numeri li dà il motore (seLoMetto in motore/corredo.js). Il perché:
-// docs/sotterraneo/rarita.md e docs/sotterraneo/bottega.md.
+// docs/sotterraneo/rarita.md e docs/sotterraneo/bottega-finestra.md.
 import { RARITA } from '../dati/pezzi.js'
 import { requisitoDi } from '../dati/eroi.js'
 import { CARATTERISTICHE } from '../dati/livelli.js'

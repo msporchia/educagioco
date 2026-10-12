@@ -55,7 +55,8 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
       cavaliere: { tappa, libera, stelle,   // le sue discese
                    roba,                    // gemme, addosso, tasche, torce (motore/corredo.js)
                    terra,                   // { nebbia, dove, parlato }
-                   botteghe,                // i banchi pescati in questo giro
+                   botteghe,                // { banchi, scaffali, ruota }: i banchi di questo giro, i pezzi in più, chi deve cambiare (bottega.md)
+                   venduti,                 // [{ k, prezzo }]: gli ultimi cinque pezzi venduti al rigattiere, per riprenderli allo stesso prezzo (bottega.md)
                    sosta,                   // la discesa lasciata a metà (motore/sosta.js); `via: 'portale'` la rende anche il gemello di sopra, `'uscita'` (la ✕) si riprende giù
                    abisso,                  // { fondo }
                    missioni,                // { [id]: 'presa' | 'fatta' | 'consegnata' } (missioni.md)

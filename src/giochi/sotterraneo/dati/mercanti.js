@@ -9,7 +9,8 @@ import { CAMPAGNA, QUANTE_TAPPE } from './campagna.js'
 // non costano più di quel pezzo (motore/storia.js, bancoDelPasso); `righe`: chi pesca e basta, quante ne pesca
 // per discese finite; `compra`: chi si prende la roba a metà prezzo. `dice` è la sua battuta, in voce sua.
 // `schede`: le linguette in cima alla bottega (viste/Bottega.vue), ognuna coi posti (`dove`) o gli usi (`usa`) che
-// raccoglie; `vendi` è quella delle tasche, solo per chi compra (docs/sotterraneo/bottega.md, "La bottega e lo zaino")
+// raccoglie; `vendi` è quella delle tasche e `riacquista` quella delle ultime cose vendute, solo per chi compra
+// (docs/sotterraneo/bottega-finestra.md, "La bottega e lo zaino")
 export const MERCANTI = [
   // la roba del passo dopo, non quella della miniera: chi ha le gemme non scende col meglio
   // le chiavi restano quelle di prima (salvataggi, sprite); i nomi sono parole che un bambino conosce
@@ -31,7 +32,8 @@ export const MERCANTI = [
   { chiave: 'rigattiere', nome: 'Il mercante', em: '🧺', sprite: 'rigattiere',
     dice: 'Anelli, amuleti, roba che luccica. E quello che non ti serve, te lo compro io.',
     schede: [{ chiave: 'gioielli', nome: 'Gioielli', em: '💍', dove: ['dito'], usa: ['porta'] },
-             { chiave: 'vendi', nome: 'Vendi', em: '💎', vendi: true }],
+             { chiave: 'vendi', nome: 'Vendi', em: '💎', vendi: true },
+             { chiave: 'riacquista', nome: 'Riacquista', em: '🔄', riacquista: true }],
     vende: { dove: ['dito'], chiavi: ['chiave'] }, sempre: [], compra: true,
     passo: ['dito'], altre: 1 },
 ]
@@ -43,7 +45,7 @@ export const vendeLa = (m, k) => !!COSE[k] && IN_VENDITA.includes(baseDi(k)) &&
 
 // la linguetta di una cosa: la prima che ne raccoglie il posto o l'uso
 export const schedaDi = (m, k) => (COSE[k]
-  ? m.schede.find(s => !s.vendi && ((s.dove || []).includes(COSE[k].dove) || (s.usa || []).includes(COSE[k].usa))) || null
+  ? m.schede.find(s => !s.vendi && !s.riacquista && ((s.dove || []).includes(COSE[k].dove) || (s.usa || []).includes(COSE[k].usa))) || null
   : null)
 
 // Un pezzo delle righe dopo della storia si compra lo stesso, se hai le gemme: ogni riga avanti al passo costa un
@@ -76,10 +78,11 @@ export function guastiDeiMercanti() {
     for (const c of m.passo || []) if (!(m.vende.dove || []).includes(c)) g.push(`${m.chiave}: porta il passo su ${c}, ma non lo vende`)
     for (const k of m.sempre) if (!COSE[k] || !COSE[k].prezzo) g.push(`${m.chiave}: "${k}" sempre sul banco, ma non si vende`)
     // ogni cosa del banco sta sotto una linguetta, e quella delle tasche ce l'ha solo chi compra
-    if (!m.schede || !m.schede.some(s => !s.vendi)) g.push(`${m.chiave}: senza linguette`)
+    if (!m.schede || !m.schede.some(s => !s.vendi && !s.riacquista)) g.push(`${m.chiave}: senza linguette`)
     for (const k of IN_VENDITA)
       if ((vendeLa(m, k) || m.sempre.includes(k)) && m.schede && !schedaDi(m, k)) g.push(`${m.chiave}: "${k}" non sta sotto nessuna linguetta`)
     if ((m.schede || []).some(s => s.vendi) !== !!m.compra) g.push(`${m.chiave}: la linguetta «Vendi» va a chi compra, e solo a lui`)
+    if ((m.schede || []).some(s => s.riacquista) !== !!m.compra) g.push(`${m.chiave}: la linguetta «Riacquista» va a chi compra, e solo a lui`)
     const pescabili = IN_VENDITA.filter(k => vendeLa(m, k) && !m.sempre.includes(k))
     if (Math.max(0, ...(m.righe || [])) > pescabili.length)
       g.push(`${m.chiave}: vuole ${Math.max(...m.righe)} righe e ha ${pescabili.length} cose da pescare`)

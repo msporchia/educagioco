@@ -512,7 +512,7 @@ export async function lasciaLaDiscesa(page) {
   await page.waitForSelector('[data-terra]', { timeout: 5000 })
 }
 
-/* La bottega di un mercante del sotterraneo (docs/sotterraneo/bottega.md, «La bottega e lo zaino»): un tocco
+/* La bottega di un mercante del sotterraneo (docs/sotterraneo/bottega-finestra.md, «La bottega e lo zaino»): un tocco
    sceglie, il tasto compra o vende. `tocca(x, y)`: il dito (CDP) o, di difetto, il mouse. La bottega
    appena aperta è cieca per 320 ms: chi chiama l'ha già aspettata. */
 async function toccaIlCentro(page, sel, tocca) {
@@ -547,6 +547,17 @@ export async function vendiNellaBottega(page, chiave, { tocca = null } = {}) {
   await toccaIlCentro(page, `[data-bottega] [data-vendo="${chiave}"]`, tocca)
   await page.waitForSelector(`[data-pannello][data-cosa="${chiave}"]`, { timeout: 3000 })
   await toccaIlCentro(page, '[data-bottega] [data-azione="vendi"]', tocca)
+  await attendi(page, 250)
+}
+
+/* Dal rigattiere si riprende una cosa venduta, allo stesso prezzo: la linguetta «Riacquista», un tocco sceglie e il tasto
+   riacquista (docs/sotterraneo/bottega.md, «Riacquista») */
+export async function riacquistaNellaBottega(page, chiave, { tocca = null } = {}) {
+  await toccaIlCentro(page, '[data-bottega] [data-scheda="riacquista"]', tocca)
+  await attendi(page, 120)
+  await toccaIlCentro(page, `[data-bottega] [data-riacquisto="${chiave}"]`, tocca)
+  await page.waitForSelector(`[data-pannello][data-cosa="${chiave}"]`, { timeout: 3000 })
+  await toccaIlCentro(page, '[data-bottega] [data-azione="riacquista"]', tocca)
   await attendi(page, 250)
 }
 

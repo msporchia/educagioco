@@ -559,7 +559,8 @@ export class Corredo {
       return { che: 'comprato', cosa: k, addosso: true }
     }
     this.zaino.push(k)
-    this.dilloDi(k)
+    // un pezzo che si porta ma non si regge ancora resta nello zaino: si dice una volta sola, e cosa manca
+    this.dilloDi(k, c.dove && !this.posso(k) ? ` nello zaino · ${this.perchéNo(k)}` : '')
     return { che: 'comprato', cosa: k }
   }
 
@@ -569,8 +570,10 @@ export class Corredo {
     const c = COSE[k]
     const scorta = !!banco && (banco.roba || []).includes(k)
     if (!c || !(scorta || (banco && (banco.sempre || []).includes(k)))) return null
-    // comprare quello che non si può impugnare sarebbe l'unico modo di perdere gemme senza guadagnare niente
-    if (c.dove && !this.posso(k)) { this.dillo(this.perchéNo(k)); return { che: 'niente' } }
+    // quello che la classe non porta non si compra (sarebbe perdere gemme senza guadagnare niente); quello che porta ma
+    // chiede più caratteristica di quella che si ha sì: va nello zaino, e si indossa quando la caratteristica c'è
+    // (docs/sotterraneo/bottega.md, «Si compra anche senza le caratteristiche»)
+    if (c.dove && !this.porta(k)) { this.dillo(this.perchéNo(k)); return { che: 'niente' } }
     const costa = this.quantoCosta(k)
     if (this.gemme < costa) return { che: 'niente' }
     if (this.nonCiStarebbe(k)) { this.dillo('⚠️ lo zaino è pieno'); return { che: 'pieno' } }
