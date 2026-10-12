@@ -327,7 +327,10 @@ export const MetodiDelloScontro = {
       else rubato = 0
     }
     const volte = nodo ? (aGrado(nodo, 'per', this.grado(nodo.id)) || 1) : 1
-    return { chi: 'eroe', che: nodo ? 'abilita' : 'attacco', bersaglio, forma: (nodo && nodo.forma) || 'uno', colpiti,
+    // `presi`: chi prende l'abilità anche se non fa danno (Rovi, Ninna nanna, Grido…), con gli stati che rifiuta: la vista ci posa
+    // sopra il suo effetto (viste/racconto.js)
+    const presiDa = presi.map(({ chi: x }) => ({ chi: x, rifiutati: nodo ? this.effettiBloccati(x, nodo).stati : [] }))
+    return { chi: 'eroe', che: nodo ? 'abilita' : 'attacco', bersaglio, forma: (nodo && nodo.forma) || 'uno', colpiti, presi: presiDa,
              usata: nodo ? { id: nodo.id, nome: nodo.nome, glifo: nodo.glifo, elemento: nodo.elemento } : null, base: this.colpo(bersaglio), volte, primoTiro, rubato }
   },
 
@@ -386,6 +389,7 @@ export const MetodiDelloScontro = {
     const ora = x.stati || {}
     if (ora.debole > 0 || ora.fermo > 0 || (ora.esposto && ora.esposto.scambi > 0))
       x.stati = { ...ora, debole: Math.max(0, (ora.debole || 0) - 1), fermo: Math.max(0, (ora.fermo || 0) - 1),
+                  ...(ora.gelo ? { gelo: (ora.debole || 0) > 1 || (ora.fermo || 0) > 1 } : {}),
                   ...(ora.esposto ? { esposto: ora.esposto.scambi > 1 ? { ...ora.esposto, scambi: ora.esposto.scambi - 1 } : null } : {}) }
     return eventi
   },
@@ -537,6 +541,8 @@ export const MetodiDelloScontro = {
       if (nodo.rompe) x.stati.rotto = true
       if (nodo.veleno && !no.veleno) x.stati.veleno = { quanto: Math.max(1, Math.ceil(base * fattore / 2)), scambi: vale('veleno'), fuoco: nodo.elemento === 'fuoco' }
       if (nodo.debole && !no.debole) x.stati.debole = Math.max(x.stati.debole || 0, vale('debole'))
+      // `gelo` dice solo come si disegna (brina e azzurro, non un mostro «fiacco»): non cambia nessun conto
+      if (nodo.elemento === 'gelo' && ((nodo.debole && !no.debole) || ((nodo.fermo || nodo.quieto) && !no.fermo))) x.stati.gelo = true
       // stordito salta i suoi prossimi N turni; Freccia mirata ne fa saltare uno
       if (nodo.fermo && !no.fermo) x.stati.fermo = Math.max(x.stati.fermo || 0, vale('fermo'))
       if (nodo.quieto && !no.fermo) x.stati.fermo = Math.max(x.stati.fermo || 0, 1)
