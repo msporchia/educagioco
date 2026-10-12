@@ -37,6 +37,15 @@ volte lo stesso pezzo nella stessa stanza, mai davanti a una porta (si
 rischia di chiuderla con una cassa), mai su altra roba, e un solo candelabro
 acceso per stanza (le coppie a parte).
 
+## Dove sta un pezzo, in una stanza che non è un rettangolo
+
+Le pose guardano la roccia accanto, non il riquadro della stanza
+([piani.md](piani.md#una-stanza-è-la-sua-mappa-di-celle)): `appeso` su una cella
+con la roccia a nord, `angolo` con roccia da due lati che si toccano (anche una
+colonna), `posato` con roccia da un lato qualunque, `fondo` in cima alla colonna
+di celle del centro, `coppia` ai capi della fila più alta. Sempre dentro la
+stanza (`dentro`), mai davanti a una porta.
+
 ## Cosa sapere
 
 - **L'arredo ha il suo caso** (`rndArredo`, dal seme e dal piano): aggiungere

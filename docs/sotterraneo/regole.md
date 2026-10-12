@@ -48,17 +48,17 @@ finto che scende davvero, e fa la spesa sopra).
 Misurato dal banco, una discesa per riga col seme del banco e la roba con cui
 ci si entra secondo la storia (`robaAttesa` e il livello atteso, il cavaliere: [la-grande-storia.md](la-grande-storia.md);
 il numero balla da un seme all'altro: serve a leggere la forbice, non a
-confrontare due tappe):
+confrontare due tappe; numeri dopo i piani con le sale del 12/10/2026, quelli di prima in [piani.md](piani.md#il-costo-in-domande)):
 
 | discesa | piani | solo il guardiano | tutto il piano |
 |---|---|---|---|
-| La cripta dell'altare | 2 | 15 | 26 |
-| La scalinata antica | 2 | 15 | 59 |
-| La torre in rovina | 3 | 21 | 60 |
-| La grotta della scaletta | 5 | 44 | 69 |
-| La scala sommersa | 3 | 36 | 78 |
-| La botola segreta | 3 | 62 | 201 |
-| La miniera abbandonata | 4 | 60 | 167 |
+| La cripta dell'altare | 2 | 12 | 22 |
+| La scalinata antica | 2 | 13 | 57 |
+| La torre in rovina | 3 | 29 | 74 |
+| La grotta della scaletta | 5 | 46 | 78 |
+| La scala sommersa | 3 | 39 | 91 |
+| La botola segreta | 3 | 37 | 158 |
+| La miniera abbandonata | 4 | 65 | 156 |
 
 - **La forbice è il punto**: se «tutto» costasse quanto «il minimo» non ci
   sarebbe niente da scegliere.
@@ -67,7 +67,9 @@ confrontare due tappe):
 - **Il patto del banco**: rispondendo bene otto volte su dieci, con la roba
   che ci si porta dietro, si arriva in fondo quasi tutte le volte.
 - **Stanze per piano: da quattro a sedici** (la scalinata e la botola ne
-  hanno sedici, la cripta e la grotta quattro). La forma del piano
+  hanno sedici, la cripta e la grotta quattro); non sono tutte rettangoli di
+  5–10 per 4–8: ci sono sale grandi con le colonne e stanze a L, T, croce,
+  caverna ([piani.md](piani.md)). La forma del piano
   (`misura`, o `largo` e `alto`; `giri` 2..4) la controlla
   `guastiDellaCampagna`, che pretende anche che ogni tappa chieda più della
   precedente.
@@ -139,7 +141,8 @@ chiave. La 🗺️ della barra in basso la apre grande ([barra.md](barra.md)).
 `BRANCO` è una **scaletta di fasce**: la profondità sceglie la fascia, il
 caso la faccia. Dentro una fascia i mostri costano le stesse risposte e
 picchiano quasi uguale; scendendo cambia *quanto è dura*, fra una stanza e
-l'altra *chi trovi*.
+l'altra *chi trovi*. Come stanno nelle stanze (a branchi nelle sale, uno
+appostato in un angolo, i caporali davanti al grosso): [piani.md](piani.md).
 
 | fascia | chi | a mani nude |
 |---|---|---|
@@ -177,7 +180,9 @@ possibilissimi.
 ## La stanza è il confine
 
 - **I mostri dormono finché non ti avvicini nella loro stanza (a meno di
-  sette celle, `SVEGLIA`), e smettono appena esci.** Uno che insegue per tutto
+  sette celle, `SVEGLIA`), e smettono appena esci.** «Nella loro stanza» è la
+  mappa di celle della stanza (`Livello.dentro`), non il riquadro: una stanza
+  può essere una L o una croce ([piani.md](piani.md#una-stanza-è-la-sua-mappa-di-celle)). Uno che insegue per tutto
   il piano farebbe una fuga continua, uno fermo un percorso a ostacoli: così il
   corridoio è sicuro e la soglia è una decisione. La luce non c'entra
   ([La luce](#la-luce-la-torcia-e-la-mappina)).
@@ -242,7 +247,7 @@ nel punto esatto e cosa si salva: [portale-e-sosta.md](portale-e-sosta.md).
 In due righe: **il portale porta su al villaggio e il gemello riporta giù; la
 ✕ non è un portale** — porta in home, e rientrando si è già giù.
 
-Nei test: `unita/sotterraneo` (§ «la torcia conta»: la luce senza, con e agli sgoccioli, la sveglia dei mostri),
+Nei test: `unita/sotterraneo-piani` (le stanze, le sale, i branchi, l'anticamera: [piani.md](piani.md)), `unita/sotterraneo` (§ «la torcia conta»: la luce senza, con e agli sgoccioli, la sveglia dei mostri),
 `integrazione/sotterraneo-luce` (i pixel accesi della tela con, senza e agli sgoccioli; `--scatti` lascia le tre foto),
 `unita/sotterraneo-scala-su` (la scala che sale e il bersaglio lontano: [scala-che-sale.md](scala-che-sale.md)),
 `unita/sotterraneo` (le sette discese col giocatore finto e la roba di
