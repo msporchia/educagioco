@@ -8,7 +8,7 @@ import { CAMPAGNA, OSSA_PER_PIANO } from '../dati/campagna.js'
 import { LIVELLI_ATTESI } from '../dati/storia.js'
 import { forzaDellaZona, spintaDellaZona } from '../dati/zone.js'
 import { eroeDi } from '../dati/eroi.js'
-import { caselleDella, gradoDi } from './abilita.js'
+import { caselleDella, gradoDi, conLaStrada } from './abilita.js'
 import { Corredo } from './corredo.js'
 import { robaAttesa } from './storia.js'
 import { robaAttesaA, crescitaAttesaA } from './zone.js'
@@ -157,9 +157,10 @@ export function rapporto(c, L, o = {}) {
 }
 
 /* ═══════════ l'eroe atteso ═══════════
-   Quello che il gioco si aspetta a livello L, senza abilità (è così che i mostri sono tarati): nella storia la roba con
-   cui si entra nella discesa del livello atteso, oltre la roba attesa delle zone (motore/zone.js); la crescita come la
-   dà il banco */
+   Quello che il gioco si aspetta a livello L, con le abilità della strada della sua classe (è così che i mostri sono tarati:
+   il banco di prova le usa, motore/banco.js): nella storia la roba con cui si entra nella discesa del livello atteso, oltre la
+   roba attesa delle zone (motore/zone.js); la crescita come la dà il banco, coi punti dell'albero spesi (STRADA) e le caselle
+   vuote, quindi vale quello che sa fare */
 export function robaDelLivello(eroe, L) {
   if (L >= 12) return robaAttesaA(eroe, L, { pozioni: false })
   let k = 0
@@ -167,7 +168,8 @@ export function robaDelLivello(eroe, L) {
   return robaAttesa(eroe, k, { pozioni: false })
 }
 export function eroeAtteso(eroe, L) {
-  const c = new Corredo({ eroe, roba: robaDelLivello(eroe, L), crescita: L >= 12 ? crescitaAttesaA(eroe, L) : crescitaA(eroeDi(eroe), L) })
+  const cr = L >= 12 ? crescitaAttesaA(eroe, L) : crescitaA(eroeDi(eroe), L)
+  const c = new Corredo({ eroe, roba: robaDelLivello(eroe, L), crescita: { ...conLaStrada(cr, eroe), caselle: [null, null, null] } })
   c.sistemaIlCorredo()
   return c
 }

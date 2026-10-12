@@ -13,7 +13,7 @@ import { zonaPotenziata, forzaDellaZona, spintaDellaZona } from '../../src/gioch
 import { Corredo } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { crescitaA } from '../../src/giochi/sotterraneo/motore/crescita.js'
-import { impara, metti } from '../../src/giochi/sotterraneo/motore/abilita.js'
+import { impara, metti, conLaStrada } from '../../src/giochi/sotterraneo/motore/abilita.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { fasciaDi, coloreDi, coloreNellaStoria, potenzaDi, zoneDi, rinascitaDi, zoneConForza, zoneConSentita, notiziaDi }
   from '../../src/giochi/sotterraneo/motore/zone.js'
@@ -27,8 +27,10 @@ const NUDA = { v: 1, gemme: 0, zaino: [], mano: null, mancina: null, corpo: null
 const indiceDi = k => CAMPAGNA.findIndex(t => t.chiave === k)
 
 // un eroe del livello L con la roba che gli si dà (o quella attesa) e le abilità imparate, ognuna una volta
-function eroe(chi, L, { roba = null, abilita = false } = {}) {
+// (`strada`: i punti dell'albero spesi sulla strada del banco, come ha l'eroe atteso; senza, l'albero è vuoto)
+function eroe(chi, L, { roba = null, abilita = false, strada = false } = {}) {
   let cr = crescitaA(eroeDi(chi), L)
+  if (strada) cr = { ...conLaStrada(cr, chi), caselle: [null, null, null] }
   if (abilita) for (let giro = 0; giro < 12; giro++) {
     let fatto = false
     for (const r of RAMI[chi]) for (const n of r.nodi) {
@@ -84,9 +86,11 @@ for (const chi of CHIAVI) {
 
 /* ══════════ 2. i pezzi del calcolo ══════════ */
 {
-  const c = eroeAtteso('cavaliere', 20)
+  const c = eroe('cavaliere', 20)   // la roba attesa del 20 ma senza albero: l'eroe atteso, invece, la strada delle abilità la fa
   const m = mostroDiRiferimento(20)
   const o = offesa(c, m)
+  controlla('l\'eroe atteso le abilità le ha: sono quelle della strada della sua classe (motore/abilita.js)',
+            offesa(eroeAtteso('cavaliere', 20), m).forti.length === 2)
   controlla('senza abilità l\'offesa è il colpo di sempre, e basta', o.forti.length === 0, o.forti.join())
   uguale('le risposte giuste sono le ossa diviso il colpo', Math.round(o.risposte * 1000) / 1000,
          Math.round(Math.max(1, m.ossa / o.colpo) * 1000) / 1000)
@@ -113,16 +117,18 @@ for (const chi of CHIAVI) {
 const esempi = []
 for (const chi of CHIAVI) {
   for (const L of [12, 20]) {
-    const atteso = forza(chi, L)
-    const nudo = forza(chi, L, { roba: NUDA })
-    const meglio = forza(chi, L, { roba: robaDelLivello(chi, L + 12) })
-    const arma = forza(chi, L, { roba: { ...robaDelLivello(chi, L), mano: robaDelLivello(chi, L + 12).mano } })
+    // tutti con la strada del banco, come l'eroe atteso: si confronta la roba, non l'albero
+    const atteso = forza(chi, L, { strada: true })
+    const nudo = forza(chi, L, { roba: NUDA, strada: true })
+    const meglio = forza(chi, L, { roba: robaDelLivello(chi, L + 12), strada: true })
+    const arma = forza(chi, L, { roba: { ...robaDelLivello(chi, L), mano: robaDelLivello(chi, L + 12).mano }, strada: true })
     const abil = forza(chi, L, { abilita: true })
     esempi.push(`${chi} ${L}: atteso ${atteso}, nudo ${nudo}, arma+12 ${arma}, roba+12 ${meglio}, con abilità ${abil}`)
     controlla(`${chi} ${L}: nudo vale meno dell'atteso`, nudo < atteso - 3, `${nudo} contro ${atteso}`)
     controlla(`${chi} ${L}: con la roba di dodici livelli più su vale di più`, meglio >= atteso + 2, `${meglio} contro ${atteso}`)
     controlla(`${chi} ${L}: con la sola arma migliore non vale di meno`, arma >= atteso, `${arma} contro ${atteso}`)
-    controlla(`${chi} ${L}: con le abilità imparate vale di più`, abil >= atteso, `${abil} contro ${atteso}`)
+    const senzaAlbero = forza(chi, L)
+    controlla(`${chi} ${L}: con le abilità imparate vale di più di senza albero`, abil >= senzaAlbero, `${abil} contro ${senzaAlbero}`)
   }
 }
 for (const e of esempi) nota(e)
