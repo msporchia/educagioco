@@ -458,7 +458,7 @@ export class Tela {
     let alto = 2   // in caselle: quanto sale la figura, per mettere la corona, il nome e la chiave sopra la testa
     let metà = 1
     if (m) {
-      alto = m.h * F.k * respiro / T
+      alto = (m.h - (this.foglio.vuotoSopra ? this.foglio.vuotoSopra(nome) : 0)) * F.k * respiro / T   // fin dove arriva la testa
       metà = m.w * F.k / 2 / T
       // il chiarore della sua tinta dietro la figura: distingue Re Ossuto da Carbonchio, che sono tutti e due scheletri
       const R = Math.max(alto, metà * 2) * T * 0.62

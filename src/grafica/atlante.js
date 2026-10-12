@@ -99,6 +99,24 @@ export function creaFoglio({ pezzi, immagine, tessera = 32, nitidi = null }) {
     return c
   }
 
+  // quante righe vuote ha in cima un pezzo (i fotogrammi del bestiario sono quadrati): per appoggiare qualcosa sulla testa
+  const vuoti = new Map()
+  function vuotoSopra(nome) {
+    if (vuoti.has(nome)) return vuoti.get(nome)
+    const p = pezzi[nome]
+    if (!p || !img) return 0
+    const [sx, sy, w, h] = p
+    const c = document.createElement('canvas')
+    c.width = w; c.height = h
+    const g = c.getContext('2d')
+    g.drawImage(img, sx, sy, w, h, 0, 0, w, h)
+    const d = g.getImageData(0, 0, w, h).data
+    let r = 0
+    while (r < h && ![...Array(w).keys()].some(x => d[(r * w + x) * 4 + 3] > 0)) r++
+    vuoti.set(nome, r)
+    return r
+  }
+
   // appoggiato come posa; va chiamato PRIMA della figura, o le mangia i bordi. raggio: 1 = filo, 2 = fiamma
   const INTORNO = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]
   function alone(ctx, nome, x, y, { colore = '#ffd27a', alfa = 1, raggio = 1,
@@ -125,7 +143,7 @@ export function creaFoglio({ pezzi, immagine, tessera = 32, nitidi = null }) {
   }
 
   const foglio = {
-    carica, misura, pezzo, ritaglio, posa, posaTessera, tessera, alone,
+    carica, misura, vuotoSopra, pezzo, ritaglio, posa, posaTessera, tessera, alone,
     get pronto() { return !!img },
     get immagine() { return img },
     ha: nome => !!pezzi[nome],
