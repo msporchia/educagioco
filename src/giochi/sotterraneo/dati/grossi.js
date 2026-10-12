@@ -5,7 +5,10 @@
 // `tipo`: il mostro del bestiario su cui si regge (dati/mostri.js): ossa e attacco di partenza, il rincaro della
 // domanda e lo sprite di ripiego; `ossa` moltiplica le sue ossa, `att` aggiunge al suo attacco. `tinta`: il colore
 // del chiarore che gli sta intorno, per distinguere due grossi della stessa specie (Re Ossuto e Carbonchio).
+// `difese`: le sue resistenze, debolezze e immunità (dati/elementi.js) al posto di quelle della specie: Carbonchio, il re di
+// brace, non brucia; senza `difese` ha quelle di `tipo`.
 import { MOSTRI } from './mostri.js'
+import { guastiDelleDifese } from './elementi.js'
 import { DEI_GROSSI } from './pezzi.js'
 import { PEZZI } from './atlante.js'
 
@@ -15,15 +18,27 @@ export const GROSSI = {
   grumo: { nome: 'Grumo', tipo: 'orco', ossa: 1.25, att: 1, tinta: '#7fd16a',
            pezzo: 'mazza-di-grumo', dice: 'Un orco grosso come una porta, con la sua mazza preferita.' },
   fiammetta: { nome: 'Fiammetta', tipo: 'troll', ossa: 1.1, att: 1, tinta: '#ff8a3c',
+               difese: { resiste: ['fuoco'], teme: ['gelo'], immune: ['brucia'] },
                pezzo: 'scudo-di-fiammetta', dice: 'Una melma di fuoco: dove passa, i sassi fumano.' },
   zannaverde: { nome: 'Zannaverde', tipo: 'orco', ossa: 1.3, att: 1, tinta: '#9cff4a',
+                difese: { resiste: ['veleno'], teme: ['fuoco'], immune: ['avvelena'] },
                 pezzo: 'anello-di-zannaverde', dice: 'Un ragno lungo come un carro, con otto zampe e otto occhi.' },
   gorgo: { nome: 'Gorgo', tipo: 'gigante', ossa: 1.15, att: 1, tinta: '#5aa8ff',
+           difese: { resiste: ['fuoco', 'gelo'], teme: ['fulmine'], immune: ['brucia'] },
            pezzo: 'amuleto-di-gorgo', dice: 'Una melma d\'acqua nera che non smette di gorgogliare.' },
   minotto: { nome: 'Minotto', tipo: 'troll', ossa: 1.1, att: 1, tinta: '#d49a55',
+             difese: { resiste: ['veleno'], teme: ['fuoco'], immune: ['stordisce'] },
              pezzo: 'giubbone-di-minotto', dice: 'Ha le corna, e la botola è casa sua.' },
   carbonchio: { nome: 'Carbonchio', tipo: 'gigante', ossa: 1.1, att: 1, tinta: '#ff5a1c',
+                difese: { resiste: ['fuoco'], teme: ['gelo'], immune: ['brucia'] },
                 pezzo: 'martello-di-carbonchio', dice: 'Il re di brace della miniera: le sue ossa sono carbone acceso.' },
+}
+
+// Le difese di un mostro del piano (`m.tipo`, e `m.grosso` se è un grosso): { resiste, teme, immune }, mai undefined
+export function difeseDi(m) {
+  const g = m && m.grosso && GROSSI[m.grosso]
+  const d = (g && g.difese) || (m && MOSTRI[m.tipo]) || {}
+  return { resiste: d.resiste || [], teme: d.teme || [], immune: d.immune || [] }
 }
 
 // chi aspetta in fondo a ogni discesa della storia (la chiave della tappa in dati/campagna.js)
@@ -80,6 +95,7 @@ export function guastiDeiGrossi(campagna = []) {
     if (!(x.ossa >= 1 && x.ossa <= 3)) g.push(`${k}: ossa ×${x.ossa}, fuori da 1..3`)
     if (!/^#[0-9a-f]{6}$/i.test(x.tinta || '')) g.push(`${k}: la tinta "${x.tinta}" non è un colore #rrggbb`)
     if (!figuraDelGrosso(k)) g.push(`${k}: lo sprite di "${x.tipo}" non è nell'atlante`)
+    g.push(...guastiDelleDifese(k, x.difese))
   }
   for (const t of campagna) if (!GROSSI[GROSSO_DELLA_DISCESA[t.chiave]]) g.push(`${t.chiave}: in fondo non c'è nessun mostro grosso`)
   for (const k of GIRO_DELL_ABISSO) if (!GROSSI[k]) g.push(`l'abisso chiama "${k}", che non c'è`)
