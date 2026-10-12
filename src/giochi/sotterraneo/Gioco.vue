@@ -38,7 +38,7 @@ import { LEGGENDARI } from './dati/pezzi.js'
 import { GROSSI } from './dati/grossi.js'
 import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer, promemoria,
          rotta as rottaDi, seguita, diario } from './motore/missioni.js'
-import { Bottega } from './motore/bottega.js'
+import { Bottega, alGiroNuovo } from './motore/bottega.js'
 import { scrivi, leggi, dice, viaDi, PORTALE as VIA_PORTALE } from './motore/sosta.js'
 import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata }
   from './motore/avventure.js'
@@ -310,7 +310,9 @@ const robaSopra = computed(() => schedaConLaRoba(eroeQui(), roba.value, crescita
 
 /* ═══════════ i mercanti di sopra (motore/bottega.js) ═══════════
    Il banco si pesca una volta per giro e si scrive nell'avventura (botteghe): un banco che cambiasse a ogni
-   apertura sarebbe una slot machine. Il giro cambia quando una discesa finisce (chiudi); quanta roba c'è lo
+   apertura sarebbe una slot machine. Il giro cambia quando una discesa finisce (chiudi), e il banco di chi veste non
+   si ripesca: se ne vanno i pezzi più deboli e ne entrano di nuovi, gli altri aspettano (alGiroNuovo, `prepara`).
+   Quanta roba c'è lo
    dicono le discese finite di quest'avventura */
 const aperto = ref(null)          // la chiave del mercante col banco aperto
 const tocco = ref(0)              // batte a ogni compra/vendi: la bottega non è reattiva
@@ -321,9 +323,9 @@ let bottega = null
 function apriBottega(k, scheda = null) {
   if (!mercanteDi(k)) return
   bottega = new Bottega({ eroe: eroeQui(), roba: roba.value, finite: qui.value.tappa, crescita: crescita.value,
-                          banchi: (qui.value.botteghe || {}).banchi })
-  bottega.banco(k)
-  nellAvventura({ botteghe: { banchi: bottega.banchi } })
+                          ...(qui.value.botteghe || {}) })
+  bottega.prepara(k)   // il banco di questo giro, o il suo cambio a metà se è finita una discesa
+  nellAvventura({ botteghe: bottega.botteghe })
   dettoBanco.value = null
   schedaBanco.value = scheda
   aperto.value = k
@@ -368,7 +370,8 @@ function dopoIlBanco(e) {
   const a = bottega.avvisi.pop()
   bottega.avvisi = []
   if (a) dettoBanco.value = typeof a === 'string' ? { testo: a } : { ...(COSE[a.cosa] || {}), testo: a.testo }
-  nellAvventura({ roba: bottega.roba, botteghe: { banchi: bottega.banchi } })
+  bottega.prepara(aperto.value)   // una linguetta che si è svuotata si rimette a metà giro
+  nellAvventura({ roba: bottega.roba, botteghe: bottega.botteghe })
   tocco.value++
   return e
 }
@@ -1185,7 +1188,7 @@ function chiudi({ senzaCartello = false } = {}) {
   if (!c.finita) c.risali()
   // la roba viene su (vinta, persa o finita la sera): quello che è rimasto per terra resta giù. Un giro nuovo: i
   // mercanti hanno roba nuova sul banco
-  nellAvventura({ roba: c.roba, crescita: c.crescita, botteghe: null, ...fatteGiu(c), ...conITrovati(c) })
+  nellAvventura({ roba: c.roba, crescita: c.crescita, botteghe: alGiroNuovo(qui.value.botteghe), ...fatteGiu(c), ...conITrovati(c) })
   const e = c.esito
   const stelle = stelleDella(e)
   // l'abisso non si butta (finisce la sera, non la discesa): si scrive il punto da cui si rientra

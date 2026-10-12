@@ -141,18 +141,26 @@ export function bancoDelPasso(m, corredo, finite, { rnd = Math.random, ammessa =
   const L = corredo.livelloEroe
   const riga = passoDi(corredo.chiEro, finite)
   const caselle = m.passo || []
-  const aL = x => aLivello(x, corredo.livelloPortabile(x, L))   // a tono, ma un'arma che si impugna
-  const delPasso = caselle.map(c => riga[c]).filter(x => x && ammessa(x) && migliora(corredo, aL(x)))
+  const delPasso = delPassoDi(m, corredo, finite, { ammessa })
   const tetto = Math.max(0, ...caselle.map(c => (riga[c] ? COSE[riga[c]].prezzo : 0)))
   const avanti = new Set()
   for (let r = finite + 1; r <= QUANTE_TAPPE; r++) for (const c of CASELLE) avanti.add(passoDi(corredo.chiEro, r)[c])
   const altre = m.altre ? pescaMerce(null, {
     quante: m.altre, rnd,
-    ammessa: k => A_SORTE.includes(k) && ammessa(k) && corredo.posso(k) && !delPasso.includes(k) && !corredo.possiedo(k) &&
+    ammessa: k => A_SORTE.includes(k) && ammessa(k) && corredo.posso(k) && !delPasso.some(x => baseDi(x) === k) && !corredo.possiedo(k) &&
       COSE[k].prezzo <= tetto && !avanti.has(k),
     tua: k => corredo.porta(k),
   }) : []
-  return [...delPasso.map(aL), ...altre.map(x => aTono(x, corredo.livelloPortabile(x, L), rnd))]
+  return [...delPasso, ...altre.map(x => aTono(x, corredo.livelloPortabile(x, L), rnd))]
+}
+
+// I pezzi della riga con cui si entra nella prossima discesa che mancano, a tono col livello dell'eroe (ma un'arma
+// che si impugna): il banco li porta sempre, e al giro nuovo non se ne vanno (motore/bottega.js, ruotaLa)
+export function delPassoDi(m, corredo, finite, { ammessa = () => true } = {}) {
+  const L = corredo.livelloEroe
+  const riga = passoDi(corredo.chiEro, finite)
+  const aL = x => aLivello(x, corredo.livelloPortabile(x, L))
+  return (m.passo || []).map(c => riga[c]).filter(x => x && ammessa(x) && migliora(corredo, aL(x))).map(aL)
 }
 
 // La vetrina: i pezzi delle righe dopo che il banco non porta ancora, al più `quanti` per casella, ognuno con la
