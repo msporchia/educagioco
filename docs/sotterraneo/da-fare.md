@@ -119,8 +119,10 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 - **La scalinata a mani nude** (con la roba di una discesa prima) non si fa
   più neanche a otto su dieci: il minatore lo dice, l'armaiolo ha la spada
   corta.
-- **Dipingere i mostri grossi**, se piacciono disegnati in codice: la
-  scheda `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-grossi.md`.
+- **Gli sprite dei mostri grossi**: oggi sono lo sprite della loro specie
+  ingrandito con la corona; `grosso-<chiave>-fermo-0` nell'atlante prende il
+  loro posto da solo. I prompt per ChatGPT, in ordine, sono nella scheda
+  `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-grossi.md`.
 - **Le porte che si aprono**: una discesa appena aperta non ha ancora un
   momento suo sulla mappa (le assi che cadono, la grata che si alza).
 - Da guardare col dito: la velocità del passo (`PASSO_TERRA`), quanto
