@@ -183,12 +183,12 @@ export class Corredo {
     if (arma.scudo) return !!(this.mancina && COSE[this.mancina] && COSE[this.mancina].dove === 'mancina')
     return [this.mano, this.mancina].some(k => k && COSE[k] && arma.famiglie.includes(COSE[k].famiglia))
   }
-  // i nodi «sempre» dello stesso ramo di un'abilità che la rinforzano (Fiamma viva: il fuoco passa la difesa)
+  // i nodi «sempre» dello stesso ramo di un'abilità che la rinforzano (Fiamma viva: il fuoco fa più danno)
   delRamo(nodo, campo) {
     if (!nodo) return 0
     let v = 0
     for (const x of this.nodiSempre())
-      if (x.nodo.ramo === nodo.ramo && x.nodo.rami) v += campo === 'passa' ? (x.nodo.rami.passa ? 1 : 0) : (aGrado(x.nodo.rami, 'piu', x.g) || 0)
+      if (x.nodo.ramo === nodo.ramo && x.nodo.rami) v += aGrado(x.nodo.rami, campo, x.g) || 0
     return v
   }
   // Riassegnare i punti delle caratteristiche o dell'albero: tornano da dare, e si paga in gemme (GEMME_PER_RIASSEGNARE
