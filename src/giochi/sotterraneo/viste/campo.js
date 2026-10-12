@@ -59,10 +59,8 @@ export function statiMiei(io) {
   ].filter(Boolean)
 }
 
-// Come stanno i mostri sul palco. Una griglia a sei colonne, ogni mostro ne prende due: così una fila da tre, da due e da uno
-// si centrano da sole. Fino a tre mostri una fila sola (più grandi), da quattro due file (2+2, 3+2, 3+3, nell'ordine dei
-// posti: la prima fila poi la seconda). Il mostro grosso sta al centro e occupa le due file, con gli altri ai lati: a destra e
-// a sinistra, prima in basso, dalla parte dell'eroe. Le file a schermo non sono regole: davanti o dietro non conta.
+// Le celle di una griglia a sei colonne (ognuno ne prende due): oggi dicono quanti ne stanno «in fila» (fino a tre una fila, da quattro
+// due: l'altezza del palco) e chi è il grosso (al centro, su due file). Dove stanno davvero le figure lo dice `piazza`, più sotto.
 // `campo`: [{ grosso }] nell'ordine dei posti. Torna { file, grande, celle: [{ col, riga, file }] } (`celle` per posto)
 export function disponi(campo) {
   const n = campo.length
@@ -76,6 +74,59 @@ export function disponi(campo) {
   const celle = []
   file.forEach((k, r) => { for (let j = 0; j < k; j++) celle.push({ col: 4 - k + 2 * j, riga: r + 1, file: 1 }) })
   return { file: file.length, grande: -1, celle }
+}
+
+// ── Dove stanno le figure sul palco (docs/sotterraneo/scontro-interfaccia.md, «Il palco») ──
+// Il palco è un pezzo di stanza: un zoccolo di parete in cima e il pavimento che riempie il resto, con le figure in piedi sul
+// pavimento. I mostri non stanno in file ma in COLONNE verticali sul lato destro (come i nemici dei Final Fantasy): la colonna
+// più vicina all'eroe è davanti, dentro una colonna i mostri sono uno sopra l'altro e sfalsati a scaletta. Ogni posto ha un
+// punto (u, v): u da 0 (vicino all'eroe) a 1 (in fondo a destra), v da 0 (lontano, in alto sul pavimento) a 1 (vicino, in
+// basso). I posti restano quelli del motore; i consecutivi stanno nella stessa colonna o in colonne accanto, così i «vicini»
+// del motore lo sono anche nel disegno.
+export const SCALA_PALCO = 2         // pixel di schermo per pixel di foglio: figure e piastrelle del pavimento
+export const ZOCCOLO = 40            // la parete: una fascia (20 px di foglio ×2)
+export const ALTO_PALCO = { 1: 264, 2: 316 }
+const PIEDI_SOTTO = 26               // sotto i piedi del più avanti: la barra della vita e un po' di pavimento
+const PIEDI_SOPRA = 72               // i piedi del più lontano stanno almeno qui sotto la parete (ci sta la figura e il suo «ti colpisce»)
+// i punti stanno lontani quanto serve perché «ti colpisce N» di uno non cada sull'altro: due vicini di colonna sono distanti in
+// v, due di colonne accanto o lo sono in u o lo sono in v
+const SLOT = {
+  1: [[.5, .55]],
+  2: [[.4, .3], [.6, .8]],
+  3: [[.2, .2], [.28, .8], [.74, .5]],
+  4: [[.2, .15], [.28, .8], [.76, .4], [.68, .96]],
+  5: [[.08, .1], [.14, .6], [.5, .32], [.44, .97], [.9, .58]],
+  6: [[.08, .08], [.14, .55], [.5, .28], [.44, .97], [.9, .14], [.82, .68]],
+}
+// il grosso al centro e più avanti, gli altri ai lati e fra le sue gambe: prima a sinistra e a destra davanti, poi dietro
+const SLOT_GROSSO = { grosso: [.5, .76], altri: [[.08, .62], [.92, .7], [.1, .1], [.9, .14], [.5, .04]] }
+// un numero stabile per ogni posto, mai a caso a ogni render: i piccoli scarti non devono ballare
+const sfasa = (i, k) => (((Math.sin(i * 12.9898 + k * 78.233) * 43758.5453) % 1) + 1) % 1 * 2 - 1   // fra -1 e 1
+
+// `posti`: l'uscita di `disponi`; `campo`: [{ grosso }]; `larg`: la larghezza del palco. Torna { alto, eroe: {x, y}, compagno: {x, y},
+// mostri: [{ x, y, prof, z }] } (x, y sono i piedi, in px dal bordo alto a sinistra del palco; `prof` 1 davanti, meno lontano)
+export function piazza(posti, campo, larg) {
+  const alto = ALTO_PALCO[posti.file] || ALTO_PALCO[1]
+  const stretto = larg < 340   // a 320 px l'eroe sta un po' più a sinistra e le colonne si allargano
+  const xa = stretto ? 88 : 104, xb = Math.max(xa + 40, larg - 48 - 22)
+  const ya = ZOCCOLO + PIEDI_SOPRA, yb = alto - PIEDI_SOTTO
+  const punto = (u, v, i) => {
+    const uu = Math.max(0, Math.min(1, u + sfasa(i, 1) * 0.02)), vv = Math.max(0, Math.min(1, v + sfasa(i, 2) * 0.025))
+    return { x: Math.round(xa + uu * (xb - xa)), y: Math.round(ya + vv * (yb - ya)), prof: vv < 0.4 ? 0.875 : 1 }
+  }
+  let altri = 0
+  const n = campo.length
+  const mostri = campo.map((m, i) => {
+    const uv = posti.grande >= 0
+      ? (i === posti.grande ? SLOT_GROSSO.grosso : SLOT_GROSSO.altri[Math.min(altri++, SLOT_GROSSO.altri.length - 1)])
+      : (SLOT[Math.min(n, 6)] || SLOT[6])[i % 6]
+    const p = punto(uv[0], uv[1], i)
+    if (i === posti.grande) p.prof = 1
+    return { ...p, z: p.y * 10 + Math.round((1 - uv[0]) * 8) }
+  })
+  // l'eroe a sinistra, e il posto del compagno sfalsato sotto di lui, in diagonale (come la fila del gruppo nei Final Fantasy)
+  const ey = Math.round(ya + (yb - ya) * 0.3)
+  return { alto, eroe: { x: stretto ? 34 : 40, y: ey }, compagno: { x: stretto ? 52 : 60, y: ey + 58 }, mostri }
 }
 
 // il fondale del duello: la parete e il pavimento dello scenario in cui si combatte (viste/Palco.vue)

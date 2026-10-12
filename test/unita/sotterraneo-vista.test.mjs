@@ -5,7 +5,7 @@
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
-import { disponi, vistaDelloScontro, statiDel, segniDel } from '../../src/giochi/sotterraneo/viste/campo.js'
+import { disponi, piazza, ZOCCOLO, vistaDelloScontro, statiDel, segniDel } from '../../src/giochi/sotterraneo/viste/campo.js'
 import { nuovoRacconto, modoDelColpo } from '../../src/giochi/sotterraneo/viste/racconto.js'
 import { NODI } from '../../src/giochi/sotterraneo/dati/abilita.js'
 import { EFFETTI, CORPI, SEGNI, effettoDi, effettoDelColpo, aureDelNodo, statiDelNodo, guastiDegliEffetti } from '../../src/giochi/sotterraneo/dati/effetti.js'
@@ -50,6 +50,38 @@ function scena(n, { grosso = -1 } = {}) {
   uguale('in due file', g.file, 2)
   uguale('la cella del grosso è il suo posto', g.grande, 1)
   controlla('nessuna cella si sovrappone', new Set(g.celle.flatMap(c => (c.file === 2 ? [`${c.col}.1`, `${c.col}.2`] : [`${c.col}.${c.riga}`]))).size === 6)
+}
+
+/* ══════════ 1b. dove stanno le figure sul pavimento ══════════ */
+{
+  const nessuno = k => Array.from({ length: k }, () => ({ grosso: null }))
+  for (const larg of [320, 352, 390]) {
+    for (let k = 1; k <= 6; k++) {
+      const pi = piazza(disponi(nessuno(k)), nessuno(k), larg)
+      const campo = `${k} mostri a ${larg}`
+      controlla(`${campo}: tutti coi piedi sul pavimento, mai sulla parete`, pi.mostri.every(m => m.y >= ZOCCOLO + 60) && pi.eroe.y > ZOCCOLO + 60 && pi.compagno.y > ZOCCOLO)
+      controlla(`${campo}: dentro il palco, a destra dell'eroe`, pi.mostri.every(m => m.x > pi.eroe.x + 40 && m.x < larg - 40 && m.y < pi.alto - 10))
+      uguale(`${campo}: uno per posto`, pi.mostri.length, k)
+      const colonne = pi.mostri.map(m => m.x).sort((a, b) => a - b).reduce((n, x, j, v) => (j && x - v[j - 1] > 30 ? n + 1 : n), 1)   // un salto di 30 px è una colonna nuova
+      if (k >= 3) controlla(`${campo}: in colonne, più di una e meno dei mostri`, colonne >= 2 && colonne < k, String(colonne))
+      controlla(`${campo}: due mostri mai sullo stesso punto`, new Set(pi.mostri.map(m => `${Math.round(m.x / 20)}.${Math.round(m.y / 20)}`)).size === k)
+      controlla(`${campo}: chi sta più in basso sta davanti (z)`, pi.mostri.every(a => pi.mostri.every(b => a.y <= b.y + 10 || a.z >= b.z)))
+      controlla(`${campo}: chi sta in alto è un filo più piccolo, mai più grande`, pi.mostri.every(m => m.prof === 1 || (m.prof === 0.875 && pi.mostri.every(b => b.prof === 0.875 || b.y > m.y))))
+      stessaLista(`${campo}: gli scarti sono stabili, non a caso`, pi.mostri.map(m => `${m.x},${m.y}`), piazza(disponi(nessuno(k)), nessuno(k), larg).mostri.map(m => `${m.x},${m.y}`))
+    }
+  }
+  const uno = piazza(disponi(nessuno(1)), nessuno(1), 390)
+  controlla('un mostro solo sta al centro del pavimento, non in un angolo', Math.abs(uno.mostri[0].x - (104 + (390 - 70 - 104) / 2)) < 12 && uno.mostri[0].y > ZOCCOLO + 80 && uno.mostri[0].y < uno.alto - 60)
+  // i posti consecutivi del motore stanno vicini nel disegno (i «vicini» delle forme a catena)
+  const sei = piazza(disponi(nessuno(6)), nessuno(6), 390).mostri
+  const dist = (a, b) => Math.hypot(sei[a].x - sei[b].x, (sei[a].y - sei[b].y) * 0.6)
+  controlla('i posti consecutivi sono vicini nel disegno', [0, 1, 2, 3, 4].every(i => dist(i, i + 1) < 130), [0, 1, 2, 3, 4].map(i => Math.round(dist(i, i + 1))).join())
+  // il grosso davanti e al centro, gli altri ai lati
+  const gr = [{ grosso: null }, { grosso: 'grumo' }, { grosso: null }, { grosso: null }, { grosso: null }]
+  const pg = piazza(disponi(gr), gr, 390)
+  controlla('il grosso sta al centro', Math.abs(pg.mostri[1].x - (104 + (390 - 70 - 104) / 2)) < 12)
+  controlla('e più in basso (davanti) di chi gli sta ai lati', pg.mostri.filter((_, i) => i !== 1).every(m => m.y < pg.mostri[1].y + 20) && pg.mostri[1].prof === 1)
+  controlla('gli altri quattro ai due lati', pg.mostri.filter((_, i) => i !== 1).filter(m => m.x < pg.mostri[1].x).length === 2)
 }
 
 /* ══════════ 2. cosa legge la vista ══════════ */
