@@ -123,23 +123,21 @@ essere in un pezzo solo (`connessa`).
 
 ## Il costo in domande
 
-Il giocatore finto combatte ancora uno contro uno ([scontro.md](scontro.md)):
-le misure vere arrivano con lo scontro a gruppi. Il tetto di 85 risposte
+Il giocatore finto combatte i gruppi veri e usa le abilità ([scontro-bilancio.md](scontro-bilancio.md)). Il tetto di 85 risposte
 obbligate a seduta regge, per tutti e quattro gli eroi.
 
-| discesa | minimo, prima → dopo (cavaliere, seme 7) | media su otto semi, prima → dopo |
+| discesa | minimo, con le sale (12/10, mattina) → dopo la taratura | tutto il piano, prima → dopo |
 |---|---|---|
-| La cripta dell'altare | 15 → 12 | 12 → 13 |
-| La scalinata antica | 14 → 13 | 14 → 15 |
-| La torre in rovina | 19 → 29 | 21 → 30 |
-| La grotta della scaletta | 44 → 46 | 40 → 45 |
-| La scala sommersa | 45 → 39 | 39 → 45 |
-| La botola segreta | 62 → 37 | 65 → 60 |
-| La miniera abbandonata | 60 → 65 | 67 → 57 |
+| La cripta dell'altare | 12 → 9 | 22 → 16 |
+| La scalinata antica | 13 → 6 | 57 → 50 |
+| La torre in rovina | 29 → 21 | 74 → 55 |
+| La grotta della scaletta | 46 → 31 | 78 → 40 |
+| La scala sommersa | 39 → 26 | 91 → 65 |
+| La botola segreta | 37 → 24 | 158 → 98 |
+| La miniera abbandonata | 65 → 25 | 156 → 98 |
 
-«Tutto il piano» sale poco (media: cripta 22 → 21, torre 58 → 71, botola
-194 → 170, miniera 160 → 151). A otto risposte giuste su dieci le sette
-discese si vincono 30 volte su 30. Mostri per stanza: 0,79 (erano 0,81).
+(cavaliere, seme del banco). Il minimo cala perché le abilità chiudono un mostro in meno risposte; «tutto» cala di meno e la grotta
+resta con una forbice stretta. Mostri per stanza: 0,79 (come prima).
 
 - **Provato**: lo stesso numero di mostri *per stanza* nelle sale
   (due-cinque più l'appostato, tutto sopra il vecchio numero): il minimo della

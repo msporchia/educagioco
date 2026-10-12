@@ -1,5 +1,5 @@
 // Chi abita il sotterraneo. `ossa`/`att`/`dif`: il costo in domande non sta qui, è vita/attacco, e cambia
-// con quello che hai trovato (docs/sotterraneo/regole.md, "il branco a fasce"). La difesa è la manopola
+// con quello che hai trovato (docs/sotterraneo/mostri.md, le coppie). La difesa è la manopola
 // velenosa: il tetto (~8 risposte contro l'eroe nudo, `guastiDeiMostri`) si vede solo contando, non a occhio.
 // `unaPosa: true`: il foglio disegna solo il respiro, niente corsa separata (scena/tela.js non cerca `-corsa-`).
 // Ogni mostro dichiara `droppa` (quanto spesso lascia qualcosa): un mostro comune non deve intasare lo zaino, e la sua
@@ -44,8 +44,8 @@ export const MOSTRI = {
     lascia: [...ARMI_DI(3), 'manto', 'amuleto-rosso'],
   },
 
-  // undici creature dai due fogli nuovi, lette per fascia (BRANCO): dentro una fascia si equivalgono, cambia
-  // solo la forma (poca vita e picchia forte, para e lascia scudi...) mai la quantità
+  // undici creature dai due fogli nuovi: tutte con otto ossa, cambia solo la forma (veloce e fragile, para e lascia
+  // scudi...) mai la quantità; quanto sono forti lo dice la discesa (docs/sotterraneo/mostri.md)
 
   // la fascia dei piccoli, accanto al goblin
   ratto: {
@@ -124,8 +124,7 @@ export const MOSTRI = {
     lascia: [...ARMI_DI(2), 'saio', 'corazza', 'pozione'],
   },
 
-  // la fascia che serviva all'abisso: BRANCO finiva sull'orco, dal quinto piano in giù cambiavano solo le
-  // cifre. Il golem sta fra l'orco e un capo: sette risposte a mani nude, dentro il tetto
+  // il golem: il più lento (5) e quello che picchia di più (6), l'ultimo della scaletta e il mostro della miniera
   golem: {
     em: '🪨', sprite: 'golem', nome: 'Un golem', unaPosa: true,
     ossa: 8, att: 6, dif: 1, gemme: 10,

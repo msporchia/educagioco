@@ -200,39 +200,30 @@ dall'abisso.
 
 ## Fin dove regge, oggi
 
-Il bottino non ha gradi: l'eroe si ferma al gradino 3 delle armi, i mostri no.
-Sei semi, bravura 0,8:
+Si entra come si esce dalla storia: la roba e il livello dell'ultima riga ([la-grande-storia.md](la-grande-storia.md)), non più
+nudi (i mostri hanno la forza di una zona, [mostri.md](mostri.md): nudi non è un modo di entrare). Sei semi, bravura 0,8,
+`npm run sotterraneo -- --abisso`:
 
-| come si scende | fin dove si arriva |
-|---|---|
-| con l'equipaggiamento migliore (spadone, corazza, anello) | 8 · 9 · 9 · 11 · 12 · 13 — **media 10,3** (due o tre sere) |
-| con la roba di chi ha finito le sei andando dritto (`robaPer(6)`, ⚔️7 🛡️3) | 8 · 8 · 9 · 10 · 10 · 11 — media 9,3 |
-| nudi, dritti alla scala | dal 3 al 13, mediana **5** |
-| nudi, ripulendo ogni piano | 6 quasi sempre: un 52×52 profondo giocato tutto sono venti battaglie, ognuna un graffio |
+| chi scende | fin dove arriva (sei semi, 31 = oltre il tetto di 30 piani) | media |
+|---|---|---|
+| Cavaliere | 6 · 6 · 22 · 23 · 31 · 31 | 19,8 |
+| Elfa | 6 · 7 · 11 · 15 · 16 · 21 | 12,7 |
+| Mago | 3 · 6 · 6 · 11 · 14 · 31 | 11,8 |
+| Nano | 6 · 6 · 15 · 16 · 31 · 31 | 17,5 |
 
-**Il costo di un piano non cresce** — domande obbligate dal 1° all'11°: 10 ·
-6 · 19 · 13 · 18 · 25 · 15 · 15 · 10 · 17 · 16 — e la forbice fra «il minimo»
-e «tutto» resta oltre il doppio (misurata col cavaliere al livello 12, quello
-con cui all'abisso si arriva: dai requisiti delle armi un eroe di livello 1 non
-impugna il bottino dell'abisso, [livelli.md](livelli.md#i-requisiti-delle-armi)).
-Il 6 è un piano fortunato (guardiano a due
-stanze dall'ingresso): il generatore non promette dove mette la scala, e la
-soglia del test è larga in basso apposta.
+Prima (con la roba di chi ha finito le sei, andando dritto) si arrivava al piano 8–11, media 9,3, e nudi dal 3 al 13, mediana 5.
+Adesso la mediana è tra l'11 e il 16 e i due più robusti qualche volta non si fermano: il cavaliere e il nano hanno la vita e le
+cure che durano. Il patto del test resta «almeno tre piani».
 
-**La difesa vale più dell'attacco, quaggiù**: il colpo del mostro si prende a ogni
-suo turno, quindi un punto di difesa vale il doppio di un punto di vita. Nudi,
-sei semi:
+**Il costo di un piano non cresce** (il cavaliere che esce dalla storia, seme 41): domande obbligate dal 1° all'11°: 5 · 4 · 12 ·
+12 · 12 · 10 · 5 · 10 · 17 · 16 · 25, e la seconda metà costa 1,5 volte la prima, sotto il 1,6 del test. I primi due piani costano poco
+(la scalinata di un abisso che parte morbido: i ratti), e il test li accetta da 3 a 30 (prima da 5). La forbice fra «il minimo» e
+«tutto» resta oltre il doppio (il cavaliere con la roba dell'ultima riga).
 
-| chi scende | fin dove arriva |
-|---|---|
-| Nano (❤️20 ⚔️3 🛡️2) | 4 · 6 · 6 · 8 · 13 · 13 |
-| Elfa (❤️15 ⚔️4 🛡️1) | 3 · 4 · 5 · 6 · 11 · 13 |
-| Mago (❤️12 ⚔️5 🛡️0) | 4 · 4 · 5 · 5 · 6 · 6 |
-| Cavaliere (❤️18 ⚔️3 🛡️1) | 3 · 4 · 4 · 4 · 6 · 11 |
-
-Il cavaliere, che in campagna perdona di più, qui si ferma per primo. Non è
-un guasto, ma è la riga da guardare col bottino graduato: se la corazza cresce
-come l'arma, il divario si allarga.
+**La difesa vale più dell'attacco, quaggiù**: il colpo del mostro si prende a ogni suo turno, quindi un punto di difesa vale il
+doppio di un punto di vita. Il mago (la vita più bassa) è quello che arriva meno in fondo (media 11,8, mediana 8,5); il cavaliere e il nano, che durano, arrivano
+più in fondo. Non è un guasto, ma è la riga da guardare col bottino
+graduato.
 
 ## Dove guardare
 

@@ -49,17 +49,18 @@ finto che scende davvero, e fa la spesa sopra).
 Misurato dal banco, una discesa per riga col seme del banco e la roba con cui
 ci si entra secondo la storia (`robaAttesa` e il livello atteso, il cavaliere: [la-grande-storia.md](la-grande-storia.md);
 il numero balla da un seme all'altro: serve a leggere la forbice, non a
-confrontare due tappe; numeri dopo i piani con le sale del 12/10/2026, quelli di prima in [piani.md](piani.md#il-costo-in-domande)):
+confrontare due tappe; numeri dopo la taratura del 12/10/2026, col banco che usa le abilità e le coppie di mostri: i due giri di prima sono in
+[piani.md](piani.md#il-costo-in-domande) e [scontro-bilancio.md](scontro-bilancio.md); la grotta è stretta perché quasi tutto sta sulla strada della scala):
 
 | discesa | piani | solo il guardiano | tutto il piano |
 |---|---|---|---|
-| La cripta dell'altare | 2 | 12 | 22 |
-| La scalinata antica | 2 | 13 | 57 |
-| La torre in rovina | 3 | 29 | 74 |
-| La grotta della scaletta | 5 | 46 | 78 |
-| La scala sommersa | 3 | 39 | 91 |
-| La botola segreta | 3 | 37 | 158 |
-| La miniera abbandonata | 4 | 65 | 156 |
+| La cripta dell'altare | 2 | 9 | 16 |
+| La scalinata antica | 2 | 6 | 50 |
+| La torre in rovina | 3 | 21 | 55 |
+| La grotta della scaletta | 5 | 31 | 40 |
+| La scala sommersa | 3 | 26 | 65 |
+| La botola segreta | 3 | 24 | 98 |
+| La miniera abbandonata | 4 | 25 | 98 |
 
 - **La forbice è il punto**: se «tutto» costasse quanto «il minimo» non ci
   sarebbe niente da scegliere.
