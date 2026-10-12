@@ -11,7 +11,6 @@ const props = defineProps({
   pannello: { type: Object, required: true },     // { caserme: [], azioni: [] }
   avviso: { type: String, default: '' },
   dritta: { type: Boolean, default: true },        // «tocca una caserma»
-  ammesse: { type: Array, default: () => ['+'] },  // le operazioni di questa tappa
 })
 const emit = defineEmits(['tela', 'scegli', 'dettagli'])
 const tela = ref(null)
@@ -48,7 +47,9 @@ const NOME = { miniera: 'Più monete', ripara: 'Ripara', castello: 'Castello' }
       <button v-for="c in pannello.caserme" :key="c.id" class="ar-carta"
               :class="{ 'ar-no': !c.puoi, 'ar-nuova': !c.presente }"
               :data-caserma="c.id" @click="emit('scegli', { azione: c.presente ? 'potenzia' : 'costruisci', id: c.id })">
-        <span class="ar-segno">{{ c.op }}</span>
+        <svg v-if="c.presente && c.prezzo !== null" class="ar-su" viewBox="0 0 12 12" aria-label="si può potenziare">
+          <path d="M6 0.8 L11.2 6.6 H8 V11.2 H4 V6.6 H0.8 Z" />
+        </svg>
         <span class="ar-info em" role="button" aria-label="dettagli" :data-dettagli="c.id"
               @click.stop="emit('dettagli', { id: c.id })">?</span>
         <Ritratto :id="c.id" :lato="40" />
@@ -57,7 +58,7 @@ const NOME = { miniera: 'Più monete', ripara: 'Ripara', castello: 'Castello' }
         <span class="ar-prezzo em">
           <template v-if="c.riposo > 0">💤 {{ Math.ceil(c.riposo) }}s</template>
           <template v-else-if="c.prezzo === null">MAX</template>
-          <template v-else>{{ c.presente ? '⬆️' : '🛖' }} {{ c.prezzo }} 🪙</template>
+          <template v-else>{{ c.prezzo }} 🪙</template>
         </span>
         <i v-if="c.presente" class="ar-prog"><b :style="{ width: (c.avanza * 100) + '%' }"></b></i>
       </button>
@@ -65,7 +66,9 @@ const NOME = { miniera: 'Più monete', ripara: 'Ripara', castello: 'Castello' }
       <button v-for="a in pannello.azioni" :key="a.azione" class="ar-carta ar-azione"
               :class="{ 'ar-no': !a.puoi }"
               :data-azione="a.azione" @click="emit('scegli', { azione: a.azione })">
-        <span class="ar-segno">{{ ammesse.includes(a.op) ? a.op : '' }}</span>
+        <svg v-if="a.azione !== 'ripara' && a.prezzo !== null" class="ar-su" viewBox="0 0 12 12" aria-label="si può potenziare">
+          <path d="M6 0.8 L11.2 6.6 H8 V11.2 H4 V6.6 H0.8 Z" />
+        </svg>
         <span class="ar-info em" role="button" aria-label="dettagli" :data-dettagli="a.azione"
               @click.stop="emit('dettagli', { azione: a.azione })">?</span>
         <Ritratto v-if="a.azione === 'castello'" torre :livello="a.livello" :lato="40" />

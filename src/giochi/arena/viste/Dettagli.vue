@@ -31,21 +31,28 @@ defineEmits(['chiudi', 'procedi'])
         <li v-for="r in d.ruolo" :key="r">{{ r }}</li>
       </ul>
 
-      <table class="ar-righe">
-        <thead v-if="d.righe.some(r => r.dopo !== null)">
-          <tr><th></th><th>adesso</th><th></th><th>{{ d.livello ? 'livello ' + (d.livello + 1) : 'dopo' }}</th></tr>
-        </thead>
-        <tbody>
-          <tr v-for="r in d.righe" :key="r.nome">
-            <td>{{ r.nome }}</td>
-            <td><b>{{ r.ora }}</b></td>
-            <td>{{ r.dopo !== null ? '→' : '' }}</td>
-            <td><b class="ar-meglio">{{ r.dopo !== null ? r.dopo : '' }}</b></td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- adesso e al livello dopo: gli stessi numeri veri, uno accanto all'altro -->
+      <div class="ar-due" :class="{ 'ar-uno': d.righe.every(r => r.dopo === null) }">
+        <section class="ar-riquadro">
+          <h3>{{ d.etichette.ora }}</h3>
+          <dl>
+            <template v-for="r in d.righe" :key="r.nome">
+              <dt>{{ r.nome }}</dt>
+              <dd>{{ r.ora }}</dd>
+            </template>
+          </dl>
+        </section>
+        <section v-if="d.righe.some(r => r.dopo !== null)" class="ar-riquadro ar-dopo">
+          <h3>{{ d.etichette.dopo }}</h3>
+          <dl>
+            <template v-for="r in d.righe" :key="r.nome">
+              <dt>{{ r.nome }}</dt>
+              <dd :class="{ 'ar-cambia': r.dopo !== r.ora }">{{ r.dopo }}<span v-if="r.dopo !== r.ora" class="em"> ▲</span></dd>
+            </template>
+          </dl>
+        </section>
+      </div>
 
-      <p v-if="d.cosa" class="ar-cosa">{{ d.cosa }}</p>
       <p class="ar-calcolo em">Per farlo si risolve {{ d.calcolo }}.</p>
 
       <button v-if="d.prezzo !== null" class="ar-grosso" :class="{ 'ar-spento': !d.puoi }" data-procedi

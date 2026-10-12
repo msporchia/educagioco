@@ -36,17 +36,26 @@ export function numeriTruppa(id, liv) {
   }
 }
 
-/* Le righe «ora → dopo» di una caserma. `liv` 0 = ancora da costruire (si mostra solo il livello 1). */
+/* Le etichette dei due riquadri: «adesso fa così» e «al livello dopo fa così». Da costruire
+   (liv 0) il primo è la caserma appena nata e il secondo cosa succede potenziandola. */
+const etichette = liv => (liv >= 1
+  ? { ora: `Adesso (livello ${liv})`, dopo: `Al livello ${liv + 1}` }
+  : { ora: 'Appena costruita (livello 1)', dopo: 'Potenziata (livello 2)' })
+
+/* Le righe di una caserma: gli stessi numeri veri, adesso e al livello dopo. */
 export function dettaglioTruppa(id, liv) {
-  const ora = numeriTruppa(id, Math.max(1, liv))
-  const costruita = liv >= 1
-  const fine = liv >= LIV_MAX
-  const dopo = costruita && !fine ? numeriTruppa(id, liv + 1) : null
+  const k = TRUPPE[id]
+  const base = Math.max(1, liv)
+  const fine = base >= LIV_MAX
+  const ora = numeriTruppa(id, base)
+  const dopo = fine ? null : numeriTruppa(id, base + 1)
   const riga = (nome, v, d, fmt) => ({ nome, ora: fmt(v), dopo: d === null ? null : fmt(d) })
   return {
     livello: liv,
-    prezzo: costruita ? (fine ? null : CRESCITA.salita(liv)) : TRUPPE[id].costo,
+    etichette: etichette(liv),
+    prezzo: liv >= 1 ? (fine ? null : CRESCITA.salita(liv)) : k.costo,
     righe: [
+      riga('Truppe per squadra', k.n, dopo && k.n, num),
       riga('Una squadra ogni', ora.squadra, dopo && dopo.squadra, secondi),
       riga('Vita di ogni truppa', ora.vita, dopo && dopo.vita, num),
       riga('Danno di ogni colpo', ora.danno, dopo && dopo.danno, num),
@@ -63,6 +72,7 @@ export function dettaglioAzione(azione, { miniera = 1, castello = 1 } = {}) {
     const base = GIOCATORE.moneteAlSecondo
     return {
       livello: miniera,
+      etichette: etichette(miniera),
       prezzo: fine ? null : CRESCITA.miniera.prezzo[miniera],
       righe: [{ nome: 'Monete al secondo', ora: dec(r(miniera) * base), dopo: fine ? null : dec(r(miniera + 1) * base) },
               { nome: 'Rende', ora: `×${dec(r(miniera))}`, dopo: fine ? null : `×${dec(r(miniera + 1))}` }],
@@ -75,6 +85,7 @@ export function dettaglioAzione(azione, { miniera = 1, castello = 1 } = {}) {
     const colpi = l => c.cadenza(l) / CASTELLO.rate
     return {
       livello: castello,
+      etichette: etichette(castello),
       prezzo: fine ? null : c.prezzo(castello),
       righe: [
         { nome: 'Danno di ogni colpo', ora: num(dmg(castello)), dopo: fine ? null : num(dmg(castello + 1)) },
@@ -87,15 +98,11 @@ export function dettaglioAzione(azione, { miniera = 1, castello = 1 } = {}) {
   // ripara: non ha livelli
   return {
     livello: 0,
+    etichette: { ora: 'Cosa fa', dopo: '' },
     prezzo: AZIONI.ripara.prezzo,
     righe: [{ nome: 'Rimette in sesto', ora: `${Math.round(RIPARA * 100)}% della vita`, dopo: null },
             { nome: 'Il muro crollato', ora: `torna in piedi con ${num(MURO.hp * RIPARA)} di vita`, dopo: null }],
   }
-}
-
-/* Il testo che spiega cosa cambia salendo. */
-export function cosaCambia(id) {
-  return `Ogni livello: la caserma manda una squadra più spesso (−${Math.round((1 - 1 / 1.12) * 100)}% circa di attesa) e le sue truppe sono più forti (+25% di vita e di danno rispetto al livello 1). Costa sempre di più.`
 }
 
 export function guastiDeiDettagli() {
@@ -104,7 +111,8 @@ export function guastiDeiDettagli() {
     for (const liv of [0, 1, 5, LIV_MAX]) {
       const d = dettaglioTruppa(id, liv)
       if (!d.righe.length || d.righe.some(r => !r.nome || r.ora === undefined)) g.push(`${id} liv ${liv}: righe storte`)
-      if (liv >= 1 && liv < LIV_MAX && d.righe.some(r => r.dopo === null)) g.push(`${id} liv ${liv}: manca il «dopo»`)
+      if (liv < LIV_MAX && d.righe.some(r => r.dopo === null)) g.push(`${id} liv ${liv}: manca il «dopo»`)
+      if (!d.etichette || !d.etichette.ora) g.push(`${id} liv ${liv}: mancano le etichette`)
     }
     if (ruoloDi(id).length < 4) g.push(`${id}: ruolo incompleto`)
   }

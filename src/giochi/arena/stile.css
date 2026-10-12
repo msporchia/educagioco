@@ -72,7 +72,8 @@
 .ar-carta.ar-nuova { border-style: dashed }
 .ar-carta.ar-azione { border-color: #6b5a9a; background: linear-gradient(180deg, #33305a, #1d1b3a) }
 .ar-carta.ar-no { opacity: .45 }
-.ar-segno { position: absolute; top: 2px; right: 5px; font-size: 14px; font-weight: 800; color: #ffd24a }
+/* la freccia in su: «si può potenziare» */
+.ar-su { position: absolute; top: 5px; right: 6px; width: 16px; height: 16px; fill: #7ee08c; filter: drop-shadow(0 1px 1px #0008) }
 .ar-icona { font-size: 30px; height: 40px; display: flex; align-items: center }
 .ar-nome { font-size: 10.5px; font-weight: 700; color: #c8d2ee; text-align: center }
 .ar-liv { font-size: 10.5px; font-weight: 800; color: #ffd24a }
@@ -115,12 +116,15 @@
 .ar-grande { font-size: 44px }
 .ar-nota-grande { margin: 0; font-size: 14.5px; line-height: 1.4; color: #dbe5ff }
 .ar-ruolo { margin: 0; padding-left: 18px; font-size: 13px; color: #b9c8ee; line-height: 1.5 }
-.ar-righe { width: 100%; border-collapse: collapse; font-size: 14px }
-.ar-righe th { font-size: 11px; font-weight: 700; color: #8a96b8; text-transform: uppercase; letter-spacing: .05em; text-align: left; padding: 2px 4px }
-.ar-righe td { padding: 6px 4px; border-top: 1px solid #ffffff14 }
-.ar-righe td:first-child { color: #c8d2ee }
-.ar-meglio { color: #7ee08c }
-.ar-cosa { margin: 0; font-size: 12.5px; color: #9fb0d8; line-height: 1.4 }
+.ar-due { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.ar-due.ar-uno { grid-template-columns: 1fr }
+.ar-riquadro { background: #ffffff0d; border: 1px solid #ffffff1c; border-radius: 14px; padding: 9px 10px }
+.ar-riquadro.ar-dopo { background: #1f7a3c22; border-color: #4be07b55 }
+.ar-riquadro h3 { margin: 0 0 8px; font-size: 12.5px; color: #ffe98a; line-height: 1.25; min-height: 2.5em }
+.ar-riquadro dl { margin: 0; display: grid; gap: 7px }
+.ar-riquadro dt { font-size: 11.5px; color: #9fb0d8; line-height: 1.2 }
+.ar-riquadro dd { margin: 0; font-size: 17px; font-weight: 800; color: #fff }
+.ar-riquadro dd.ar-cambia { color: #7ee08c }
 .ar-calcolo { margin: 0; font-size: 13px; color: #e9c8ff; font-weight: 700 }
 .ar-motivo { margin: -4px 0 0; font-size: 12.5px; color: #ffb3a8; text-align: center }
 .ar-grosso.ar-spento { opacity: .45 }

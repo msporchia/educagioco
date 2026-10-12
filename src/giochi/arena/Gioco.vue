@@ -22,7 +22,7 @@ import { TRUPPE, AZIONI, LIV_MAX, MINIERA_MAX } from './dati/regole.js'
 import { Partita } from './motore/partita.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Campo } from './scena/campo.js'
-import { dettaglioTruppa, dettaglioAzione, ruoloDi, cosaCambia } from './motore/dettagli.js'
+import { dettaglioTruppa, dettaglioAzione, ruoloDi } from './motore/dettagli.js'
 import { domandaDi } from './domande.js'
 
 import Mappa from './viste/Mappa.vue'
@@ -242,7 +242,7 @@ function apriDettagli({ id, azione }) {
     const cal = p.calcoloDi('io', az, id)
     d = { azione: az, id }
     scheda = { truppa: id, titolo: k.nome, nota: k.nota, ruolo: ruoloDi(id), livello: liv, sottotitolo: 'da costruire',
-               ...det, cosa: cosaCambia(id), calcolo: NOME_CALCOLO[operazionePer(cal.op, ammesse)],
+               ...det, calcolo: NOME_CALCOLO[operazionePer(cal.op, ammesse)],
                verbo: c ? '⬆️ Potenzia' : '🛖 Costruisci',
                puoi: p.puoFare('io', az, id) && !p.inRiposo('io', id),
                motivo: p.inRiposo('io', id) ? 'la caserma riposa ancora un po\'' : 'servono più monete',
@@ -252,7 +252,7 @@ function apriDettagli({ id, azione }) {
     const cal = p.calcoloDi('io', azione)
     d = { azione }
     scheda = { titolo: AZIONI[azione].nome, nota: AZIONI[azione].nota, ruolo: [], sottotitolo: '', icona: azione === 'miniera' ? '⛏️' : '🔧',
-               castello: azione === 'castello', ...det, cosa: '', calcolo: NOME_CALCOLO[operazionePer(cal.op, ammesse)],
+               castello: azione === 'castello', ...det, calcolo: NOME_CALCOLO[operazionePer(cal.op, ammesse)],
                verbo: azione === 'ripara' ? '🔧 Ripara' : '⬆️ Potenzia',
                puoi: p.puoFare('io', azione), motivo: azione === 'ripara' && !p.riparabili('io').length ? 'non c\'è niente da riparare' : 'servono più monete',
                fine: 'È già al livello massimo.' }
@@ -416,7 +416,7 @@ onUnmounted(() => {
              @gioca="avvia" @riprendi="riprendiPartita" @scorda="scorda" />
 
       <CampoVista v-else :cruscotto="cruscotto" :pannello="pannello" :avviso="avviso"
-                  :dritta="!toccato && !finale" :ammesse="operazioniDi(tappa)"
+                  :dritta="!toccato && !finale"
                   @tela="prendiTela" @scegli="scegli" @dettagli="apriDettagli" />
 
       <!-- il calcolo prende tutto lo schermo; il campo intanto rallenta (non si ferma) -->
