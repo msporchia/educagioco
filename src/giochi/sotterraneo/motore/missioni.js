@@ -313,7 +313,7 @@ export function postoPer(livello, m) {
     if (!ordinate.includes(s)) ordinate.push(s)
   for (const s of ordinate) {
     for (let giro = 0; giro < 30; giro++) {
-      const x = s.x + 1 + Math.floor(rnd() * Math.max(1, s.w - 2)), y = s.y + 1 + Math.floor(rnd() * Math.max(1, s.h - 2))
+      const { x, y } = livello.cellaDellaStanza(s, rnd, true)   // una cella della stanza lontana dai muri
       if (livello.calpestabile(x, y) && !livello.robeSu(x, y).length && !livello.porteVicine(x, y)) return { x, y }
     }
   }
