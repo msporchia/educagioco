@@ -43,7 +43,7 @@ onUnmounted(() => osserva && osserva.disconnect())
 
 const quanti = computed(() => props.mostri.length)
 // UNA scala per tutti, eroe compreso: i fogli sono già in proporzione fra loro (il ratto più piccolo del cavaliere,
-// l'orco più grosso: strumenti/sprite/sorgenti/sotterraneo/generati/mostri-1.json). Una scala per i mostri e una per
+// l'orco più grosso: strumenti/sprite/sorgenti/creature/creature.json). Una scala per i mostri e una per
 // l'eroe faceva il ratto grande come il cavaliere (l'utente, 12 ottobre: «grotteschi, vanno proporzionati»)
 const lEroe = computed(() => 16 * 3 + 18)                   // quanto spazio prende a sinistra
 const lFila = 44                                            // e la colonna dei turni a destra

@@ -97,7 +97,7 @@ in Node) e si prova in `unita/muri-sotterraneo`.
 
 - **Da dove vengono**: il posto dallo scenario generato; mostri e cose da
   raccogliere da fogli generati della stessa famiglia (`mostri-1.png`,
-  `mostri-2.png`, `bottino-e-arredo.png`, `scudi.png`,
+  `mostri-2.png`, nel catalogo comune delle creature: [../core/creature.md](../core/creature.md); `bottino-e-arredo.png`, `scudi.png`,
   `armature-e-vesti.png`); eroi, forzieri e monete ancora da **0x72, «16×16
   DungeonTileset II», CC-0**.
 - **L'atlante** lo monta `strumenti/sprite/atlante.py sotterraneo` (formato

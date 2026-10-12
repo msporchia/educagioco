@@ -38,6 +38,10 @@ mostri stanno in `src/data/mostri.js`, le file delle tappe in
   mostro, quindi a decidere è **la fila** della tappa (chi manda, in che
   ordine). Nel commento accanto a ogni fila, ondata per ondata, le torri che
   quel mostro lascia fuori; il «—» è un comune.
+- **Le creature stanno nel catalogo comune** ([../core/creature.md](../core/creature.md)): le coordinate dei
+  fotogrammi, i passi dai video (`strumenti/sprite/sorgenti/creature/passi/`) e la descrizione di ognuna
+  ([../core/creature-catalogo-1.md](../core/creature-catalogo-1.md)). `vesti.py --atlante` prende quelle col
+  `castello` fra i `giochi`, e il bestiario ne nomina tutte e sole.
 - **La figura dice l'immunità** (`src/giochi/castello/scena/bestiario.js`,
   uno per i quattro vestiti del castello): al bambino serve capire
   che torre mettergli davanti, non chi è. Vocabolario corto, uguale in tutti
